@@ -80,7 +80,7 @@ h1,h2{text-wrap:balance;}
 
 /* Aurora pozadí hero */
 .aurora{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0;}
-.aurora span{position:absolute; border-radius:50%; filter:blur(80px); opacity:0.5;}
+.aurora span{position:absolute; border-radius:50%; filter:blur(80px); opacity:0.6;}
 .aurora .a1{width:420px; height:420px; background:radial-gradient(circle, rgba(201,152,47,0.45), transparent 70%); top:-120px; right:-80px; animation:float1 14s ease-in-out infinite;}
 .aurora .a2{width:360px; height:360px; background:radial-gradient(circle, rgba(76,122,158,0.4), transparent 70%); bottom:-140px; left:-100px; animation:float2 18s ease-in-out infinite;}
 .aurora .a3{width:300px; height:300px; background:radial-gradient(circle, rgba(62,142,91,0.28), transparent 70%); top:40%; left:40%; animation:float1 16s ease-in-out infinite reverse;}
@@ -142,8 +142,8 @@ nav a:not(.btn-primary).active{color:var(--text-ondark);}
 nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--copper-bright); border-radius:2px;}
 @media (max-width:880px){ nav a:not(.btn-primary).active::after{display:none;} }
 
-.btn-primary{background:var(--copper); color:var(--ink); font-weight:600; font-size:14px; padding:10px 20px; border-radius:3px; text-decoration:none; border:1px solid var(--copper); transition:background .15s ease, transform .1s ease; white-space:nowrap; cursor:pointer;}
-.btn-primary:hover{background:var(--copper-bright);}
+.btn-primary{background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); font-weight:600; font-size:14px; padding:10px 20px; border-radius:4px; text-decoration:none; border:1px solid var(--copper); transition:filter .15s ease, transform .1s ease, box-shadow .15s ease; white-space:nowrap; cursor:pointer;}
+.btn-primary:hover{filter:brightness(1.07);}
 .btn-primary:active{transform:translateY(1px);}
 
 .nav-toggle{display:none; flex-direction:column; gap:5px; background:none; border:0; cursor:pointer; padding:6px;}
@@ -152,13 +152,26 @@ nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; rig
 .nav-toggle[aria-expanded="true"] span:nth-child(2){opacity:0;}
 .nav-toggle[aria-expanded="true"] span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
 
-/* Hero */
+/* ===== Hero s mapou (raketový styl) ===== */
+.hero-map{position:relative; overflow:hidden; padding:46px 0 66px;}
+.hero-map::before{content:""; position:absolute; inset:0; background:radial-gradient(130% 90% at 50% -20%, rgba(201,152,47,0.12), transparent 55%); pointer-events:none; z-index:0;}
+.hero-map .wrap{position:relative; z-index:1;}
+.hero-head{text-align:center; max-width:860px; margin:0 auto 38px; display:flex; flex-direction:column; align-items:center;}
+.hero-head .eyebrow{margin-bottom:18px;}
+.hero-head h1{font-size:58px; line-height:1.03; margin-bottom:18px;}
+.hero-head .sub{font-size:18px; color:var(--text-ondark-mute); max-width:600px; margin-bottom:26px;}
+.hero-head .hero-ctas{justify-content:center; margin-bottom:20px;}
+.hero-head .trust-line{justify-content:center; margin:0;}
+.hero-map .map-app{margin-top:6px;}
+@media (max-width:880px){ .hero-head h1{font-size:34px;} .hero-map{padding:26px 0 44px;} .hero-head .sub{font-size:16px;} }
+
+/* Hero (starý, zachováno pro jistotu) */
 .hero{padding:76px 0 84px;}
 .hero-grid{display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:center;}
 .eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--copper-bright); margin-bottom:22px;}
 .eyebrow::before{content:""; width:16px; height:1px; background:var(--copper-bright);}
 h1{font-family:'Fraunces',serif; font-weight:500; font-size:52px; line-height:1.06; letter-spacing:-0.01em; margin-bottom:22px;}
-h1 em{font-style:italic; color:var(--copper-bright); font-weight:500;}
+h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(--copper), var(--copper-bright) 55%, #F1CB6E); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;}
 .hero p.sub{font-size:17px; color:var(--text-ondark-mute); max-width:450px; margin-bottom:34px;}
 .hero-ctas{display:flex; align-items:center; gap:22px; margin-bottom:48px; flex-wrap:wrap;}
 .link-ghost{color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; border-bottom:1px solid var(--line); padding-bottom:2px; transition:border-color .15s ease;}

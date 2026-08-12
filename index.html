@@ -63,62 +63,19 @@
 
 <main>
 
-  <!-- 1 · HERO -->
-  <section class="hero">
+  <!-- 1 · MAPA JAKO HRDINA -->
+  <section class="hero-map" id="mapa">
     <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
-    <div class="wrap hero-grid">
-      <div class="hero-copy reveal">
+    <div class="wrap">
+      <div class="hero-head reveal">
         <div class="eyebrow"><span class="live-dot"></span>Živá mapa příležitostí</div>
         <h1>Najděte pozemek <em>dřív</em>, než ho najdou ostatní.</h1>
-        <p class="sub">Dražby, exekuce, pozemky na prodej i obecní záměry — všechny příležitosti z veřejných zdrojů na jedné interaktivní mapě. Klik a jste rovnou v katastru.</p>
+        <p class="sub">Dražby, exekuce, prodeje i obecní záměry z veřejných zdrojů — na jedné interaktivní mapě. Zkuste si to hned tady.</p>
         <div class="hero-ctas">
-          <a href="#mapa" class="btn-primary btn-lg btn-glow">Otevřít mapu ↓</a>
-          <a href="#upozorneni" class="link-ghost">Chci hlídat lokalitu →</a>
+          <a href="#upozorneni" class="btn-primary btn-lg btn-glow">Hlídat mou lokalitu zdarma</a>
+          <a href="#jak-funguje" class="link-ghost">Jak to funguje →</a>
         </div>
-        <div class="trust-line">
-          <span>✓ Data z veřejných zdrojů</span><span>✓ Zdarma</span><span>✓ Bez registrace</span>
-        </div>
-      </div>
-
-      <div class="hero-visual reveal">
-        <div class="feed-card">
-          <div class="feed-head"><span class="live-dot"></span>Právě na mapě</div>
-          <div class="feed-item"><span class="feed-dot" style="background:var(--c-drazba)"></span><div class="feed-main"><b>Dražba · Kolín</b><span>1 240 m² · termín za 12 dní</span></div><span class="feed-go">→</span></div>
-          <div class="feed-item"><span class="feed-dot" style="background:var(--c-sale)"></span><div class="feed-main"><b>Na prodej · Nymburk</b><span>2 100 m² · 1 890 000 Kč</span></div><span class="feed-go">→</span></div>
-          <div class="feed-item"><span class="feed-dot" style="background:var(--c-exekuce)"></span><div class="feed-main"><b>Exekuce · Mělník</b><span>1 500 m² · signál prodeje</span></div><span class="feed-go">→</span></div>
-          <div class="feed-item"><span class="feed-dot" style="background:var(--c-obec)"></span><div class="feed-main"><b>Obecní záměr · Poděbrady</b><span>650 m² · záměr obce</span></div><span class="feed-go">→</span></div>
-          <a class="feed-cta" href="#mapa">Zobrazit všechny na mapě →</a>
-        </div>
-      </div>
-    </div>
-    <a class="scroll-cue" href="#mapa" aria-label="Posunout na mapu"><span></span></a>
-  </section>
-
-  <!-- 2 · ŽIVÝ TICKER -->
-  <div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker-track"></div></div>
-
-  <!-- 3 · ZDROJE (důvěra) -->
-  <section class="sources" id="zdroje">
-    <div class="wrap">
-      <p class="sources-lead mono">Data z veřejných zdrojů — nic tajného, vše dohledatelné:</p>
-      <div class="source-row">
-        <div class="source-chip"><span class="s-dot" style="background:var(--c-drazba);"></span>Portál dražeb</div>
-        <div class="source-chip"><span class="s-dot" style="background:var(--c-exekuce);"></span>Insolvenční rejstřík</div>
-        <div class="source-chip"><span class="s-dot" style="background:var(--c-obec);"></span>Úřední desky obcí</div>
-        <div class="source-chip"><span class="s-dot" style="background:var(--c-sale);"></span>Inzertní portály</div>
-        <div class="source-chip"><span class="s-dot" style="background:var(--copper);"></span>Katastr nemovitostí</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 4 · MAPA -->
-  <section class="section map-section" id="mapa">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <div class="eyebrow">Vyzkoušejte si to</div>
-        <h2>Tohle web umí — hrajte si.</h2>
-        <p class="section-sub">Filtrujte podle druhu, hledejte lokalitu, klikněte na bod. Uvidíte detail a proklik do katastru. Na mapě jsou jen pozemky, kde se něco děje.</p>
-        <p class="map-tip"><span class="tip-ico">💡</span> Tip: odemkněte mapu a klikněte na barevný bod.</p>
+        <div class="trust-line"><span>✓ Data z veřejných zdrojů</span><span>✓ Zdarma</span><span>✓ Bez registrace</span></div>
       </div>
       <div class="map-app reveal">
         <aside class="map-side">
@@ -146,7 +103,24 @@
     </div>
   </section>
 
-  <!-- 5 · POČÍTADLA -->
+  <!-- 2 · ŽIVÝ TICKER -->
+  <div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker-track"></div></div>
+
+  <!-- 3 · ZDROJE (důvěra) -->
+  <section class="sources" id="zdroje">
+    <div class="wrap">
+      <p class="sources-lead mono">Data z veřejných zdrojů — nic tajného, vše dohledatelné:</p>
+      <div class="source-row">
+        <div class="source-chip"><span class="s-dot" style="background:var(--c-drazba);"></span>Portál dražeb</div>
+        <div class="source-chip"><span class="s-dot" style="background:var(--c-exekuce);"></span>Insolvenční rejstřík</div>
+        <div class="source-chip"><span class="s-dot" style="background:var(--c-obec);"></span>Úřední desky obcí</div>
+        <div class="source-chip"><span class="s-dot" style="background:var(--c-sale);"></span>Inzertní portály</div>
+        <div class="source-chip"><span class="s-dot" style="background:var(--copper);"></span>Katastr nemovitostí</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · POČÍTADLA -->
   <section class="counters reveal">
     <div class="wrap counters-row">
       <div class="counter"><div class="c-num" data-count="14" data-suffix="+">0</div><div class="c-lbl">příležitostí na mapě</div></div>
