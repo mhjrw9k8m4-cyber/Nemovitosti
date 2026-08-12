@@ -265,8 +265,9 @@ h1 em{font-style:italic; color:var(--copper-bright); font-weight:500;}
 
 /* Steps */
 .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:36px;}
-.step{border-top:1px solid var(--line); padding-top:22px;}
-.step .idx{color:var(--copper-bright); font-size:13px; margin-bottom:14px;}
+.step{border-top:1px solid var(--line); padding-top:24px;}
+.step .icon-badge{margin-bottom:14px;}
+.step .idx{color:var(--copper-bright); font-size:12px; letter-spacing:0.1em; margin-bottom:6px;}
 .step h3{font-family:'Fraunces',serif; font-weight:500; font-size:20px; margin-bottom:10px;}
 .step p{font-size:14.5px; color:var(--text-ondark-mute);}
 
