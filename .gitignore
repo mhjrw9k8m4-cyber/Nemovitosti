@@ -1,0 +1,13 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Logs / deps (pokud by přibyl build)
+node_modules/
+npm-debug.log*
+dist/
