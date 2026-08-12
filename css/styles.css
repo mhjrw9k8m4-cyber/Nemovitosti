@@ -19,10 +19,13 @@
 .icon-badge .ic{width:22px; height:22px;}
 
 *{box-sizing:border-box; margin:0; padding:0;}
-html{scroll-behavior:smooth;}
+html{scroll-behavior:smooth; overflow-x:hidden;}
 @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} *{animation:none !important; transition:none !important;} }
 
-body{background:var(--ink); color:var(--text-ondark); font-family:'Inter',sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+html, body{max-width:100%;}
+body{background:var(--ink); color:var(--text-ondark); font-family:'Inter',sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:hidden; overscroll-behavior-x:none;}
+h1, h2, h3, h4{overflow-wrap:break-word; word-break:break-word;}
+img, svg, table, pre{max-width:100%;}
 .wrap{max-width:1180px; margin:0 auto; padding:0 32px;}
 .mono{font-family:'IBM Plex Mono',monospace; letter-spacing:0.02em;}
 .pt-0{padding-top:0;}
