@@ -57,10 +57,15 @@
   /* ---------- Sticky header shrink + back-to-top ---------- */
   var header = document.getElementById('header');
   var toTop = document.getElementById('to-top');
+  var progress = document.getElementById('progress-bar');
   window.addEventListener('scroll', function () {
     var y = window.pageYOffset;
     if (header) header.classList.toggle('shrink', y > 20);
     if (toTop) toTop.classList.toggle('show', y > 500);
+    if (progress) {
+      var h = document.documentElement.scrollHeight - window.innerHeight;
+      progress.style.width = (h > 0 ? (y / h) * 100 : 0) + '%';
+    }
   }, { passive: true });
   if (toTop) toTop.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
@@ -146,6 +151,17 @@
     });
   }
 
+  /* ---------- Živý ticker příležitostí ---------- */
+  var tickTrack = document.getElementById('ticker-track');
+  if (tickTrack) {
+    var html = '';
+    DATA.forEach(function (d) {
+      html += '<span class="tick-item"><span class="td" style="background:' + TYPE[d.type].color + '"></span>' +
+        TYPE[d.type].label + ' · <b>' + d.place + '</b> · ' + fmt(d.area) + ' m² · ' + d.extra + '</span>';
+    });
+    tickTrack.innerHTML = html + html; // zdvojení pro plynulou smyčku
+  }
+
   /* ---------- Interaktivní mapa (Leaflet) ---------- */
   var mapEl = document.getElementById('leaflet-map');
   if (!mapEl || typeof L === 'undefined') return;
@@ -167,9 +183,10 @@
   var markers = [];
 
   function markerIcon(type) {
+    var col = TYPE[type].color;
     return L.divIcon({
       className: '',
-      html: '<div class="marker-dot" style="width:18px;height:18px;background:' + TYPE[type].color + ';"></div>',
+      html: '<div class="marker-pulse" style="width:18px;height:18px;background:' + col + ';color:' + col + ';"></div>',
       iconSize: [18, 18], iconAnchor: [9, 9]
     });
   }

@@ -26,6 +26,44 @@ a{color:inherit;}
 .skip-link{position:absolute; left:-9999px; top:0; z-index:100; background:var(--copper); color:var(--ink); padding:10px 16px; font-weight:600; border-radius:0 0 4px 0;}
 .skip-link:focus{left:0;}
 
+/* Lišta postupu scrollování */
+.progress-bar{position:fixed; top:0; left:0; height:3px; width:0; background:linear-gradient(90deg, var(--copper), var(--copper-bright)); z-index:2000; transition:width .1s linear;}
+
+/* Živá tečka (pulzující) */
+.live-dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--c-sale); margin-right:7px; position:relative; vertical-align:middle;}
+.live-dot::after{content:""; position:absolute; inset:0; border-radius:50%; background:var(--c-sale); animation:livepulse 1.8s ease-out infinite;}
+@keyframes livepulse{0%{transform:scale(1); opacity:0.7;} 100%{transform:scale(3); opacity:0;}}
+.topbar .live-dot{background:var(--ink);} .topbar .live-dot::after{background:var(--ink);}
+
+/* Záře tlačítka */
+.btn-glow{box-shadow:0 0 0 rgba(224,174,67,0.6); animation:btnglow 2.4s ease-in-out infinite;}
+@keyframes btnglow{0%,100%{box-shadow:0 6px 18px -6px rgba(224,174,67,0.5);} 50%{box-shadow:0 6px 30px -2px rgba(224,174,67,0.8);}}
+
+/* Aurora pozadí hero */
+.aurora{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0;}
+.aurora span{position:absolute; border-radius:50%; filter:blur(80px); opacity:0.5;}
+.aurora .a1{width:420px; height:420px; background:radial-gradient(circle, rgba(201,152,47,0.45), transparent 70%); top:-120px; right:-80px; animation:float1 14s ease-in-out infinite;}
+.aurora .a2{width:360px; height:360px; background:radial-gradient(circle, rgba(76,122,158,0.4), transparent 70%); bottom:-140px; left:-100px; animation:float2 18s ease-in-out infinite;}
+.aurora .a3{width:300px; height:300px; background:radial-gradient(circle, rgba(62,142,91,0.28), transparent 70%); top:40%; left:40%; animation:float1 16s ease-in-out infinite reverse;}
+@keyframes float1{0%,100%{transform:translate(0,0);} 50%{transform:translate(-30px,40px);}}
+@keyframes float2{0%,100%{transform:translate(0,0);} 50%{transform:translate(40px,-30px);}}
+.hero{position:relative; overflow:hidden;}
+.hero .hero-grid{position:relative; z-index:1;}
+
+/* Živý ticker */
+.ticker{background:var(--ink-soft); border-top:1px solid var(--line); border-bottom:1px solid var(--line); overflow:hidden; padding:12px 0;}
+.ticker-track{display:flex; gap:36px; white-space:nowrap; width:max-content; animation:tick 40s linear infinite;}
+.ticker:hover .ticker-track{animation-play-state:paused;}
+.tick-item{display:inline-flex; align-items:center; gap:9px; font-size:13px; color:var(--text-ondark-mute); font-family:'IBM Plex Mono',monospace;}
+.tick-item .td{width:8px; height:8px; border-radius:50%; flex:none;}
+.tick-item b{color:var(--text-ondark); font-weight:600;}
+@keyframes tick{from{transform:translateX(0);} to{transform:translateX(-50%);}}
+
+/* Pulzující marker na mapě */
+.marker-pulse{position:relative; border-radius:50%; border:2.5px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.4);}
+.marker-pulse::before{content:""; position:absolute; inset:-4px; border-radius:50%; border:2px solid currentColor; opacity:0.6; animation:mpulse 2s ease-out infinite;}
+@keyframes mpulse{0%{transform:scale(0.8); opacity:0.6;} 100%{transform:scale(2.2); opacity:0;}}
+
 /* Header */
 header{border-bottom:1px solid var(--line); padding:20px 0; position:sticky; top:0; z-index:1000; background:rgba(22,35,47,0.85); backdrop-filter:blur(10px); transition:padding .2s ease;}
 header.shrink{padding:12px 0;}
