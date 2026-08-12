@@ -41,8 +41,8 @@
 
 <div class="topbar" id="topbar">
   <div class="wrap topbar-in">
-    <span><span class="live-dot"></span><strong>Beta zdarma</strong> pro prvních 100 uživatelů — <span class="tb-count">zbývá 37 míst</span></span>
-    <a href="#upozorneni" class="tb-cta">Rezervovat místo →</a>
+    <span><span class="live-dot"></span>Spouštíme betu — vyzkoušejte Pozemkomat mezi prvními, zdarma.</span>
+    <a href="#upozorneni" class="tb-cta">Přidat se →</a>
     <button class="tb-close" id="tb-close" aria-label="Zavřít oznámení">×</button>
   </div>
 </div>
@@ -81,7 +81,7 @@
         </div>
         <div class="social-proof">
           <div class="avatars"><span></span><span></span><span></span><span></span></div>
-          <p><strong>340+ zájemců</strong> už si hlídá svou lokalitu · ★★★★★</p>
+          <p>Přidejte se k prvním, kdo si nechává hlídat svou lokalitu.</p>
         </div>
       </div>
 
@@ -143,7 +143,13 @@
         </aside>
         <div class="map-holder">
           <div id="leaflet-map" role="application" aria-label="Interaktivní mapa příležitostí"></div>
-          <div class="map-activate" id="map-activate"><span>👆 Klepnutím aktivujete mapu</span></div>
+          <div class="map-lock" id="map-lock">
+            <button class="map-lock-btn" id="map-unlock" type="button">
+              <svg class="ic" style="width:18px;height:18px"><use href="#i-map"/></svg> Prozkoumat mapu
+            </button>
+            <span class="map-lock-hint">Mapa je zamčená — scrollování stránky s ní nehýbe</span>
+          </div>
+          <button class="map-relock" id="map-relock" type="button">🔒 Zamknout mapu</button>
           <div class="map-note mono">Ukázková data · piny jsou ilustrační</div>
         </div>
       </div>
@@ -351,16 +357,16 @@
     <div class="wrap">
       <div class="alert-box reveal">
         <div class="alert-copy">
-          <div class="eyebrow"><span class="live-dot"></span>Hlídací pes</div>
-          <h2>Rezervujte si místo v bezplatné betě.</h2>
-          <p>Zadejte e-mail a okres. Dáme vědět, jakmile spustíme hlídání ve vaší lokalitě — a máte přístup zdarma. Žádný spam.</p>
+          <div class="eyebrow"><span class="live-dot"></span>Váš hlídací pes</div>
+          <h2>Nechte si hlídat svou lokalitu.</h2>
+          <p>Zadejte e-mail a okres. Ozveme se, jen když se objeví něco zajímavého ve vašem okolí. Klidně a bez spamu.</p>
         </div>
         <form class="alert-form" id="alert-form" novalidate>
           <label class="visually-hidden" for="okres">Okres</label>
           <input id="okres" name="okres" type="text" placeholder="Okres nebo obec (např. Kolín)" autocomplete="off">
           <label class="visually-hidden" for="email">E-mail</label>
           <input id="email" name="email" type="email" placeholder="vas@email.cz" autocomplete="email" required>
-          <button type="submit" class="btn-primary btn-glow">Rezervovat místo zdarma</button>
+          <button type="submit" class="btn-primary btn-glow">Přidat se zdarma</button>
           <p class="form-msg" id="form-msg" role="status" aria-live="polite"></p>
           <p class="form-fine">Odesláním souhlasíte se zpracováním e-mailu pro zaslání upozornění. Kdykoliv se odhlásíte.</p>
         </form>
@@ -406,7 +412,7 @@
   <section class="section pt-0">
     <div class="wrap">
       <div class="cta-banner reveal">
-        <div><h2>Najděte svou první příležitost ještě dnes.</h2><p class="cta-sub">Zdarma, bez registrace. Beta místa mizí.</p></div>
+        <div><h2>Najděte svou první příležitost.</h2><p class="cta-sub">Zdarma a bez registrace. Otevřené komukoliv.</p></div>
         <a href="#mapa" class="btn-primary btn-lg">Otevřít mapu zdarma</a>
       </div>
     </div>

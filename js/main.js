@@ -190,20 +190,31 @@
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     subdomains: 'abcd', maxZoom: 19
   }).addTo(map);
-  map.on('focus', function () { map.scrollWheelZoom.enable(); });
-  map.on('blur', function () { map.scrollWheelZoom.disable(); });
-
-  // Na dotykových zařízeních: mapa nechytá scroll, dokud ji nepustíte klepnutím
-  var activateEl = document.getElementById('map-activate');
-  var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-  if (isTouch && activateEl) {
-    map.dragging.disable();
-    activateEl.classList.add('show');
-    activateEl.addEventListener('click', function () {
-      map.dragging.enable();
-      activateEl.classList.remove('show');
-    });
+  // Zámek mapy — dokud je zamčená, scrollování stránky s ní nehýbe.
+  // Odemkne se tlačítkem a chová se jako plnohodnotná součást webu.
+  var lockEl = document.getElementById('map-lock');
+  var unlockBtn = document.getElementById('map-unlock');
+  var relockBtn = document.getElementById('map-relock');
+  function setMap(enabled) {
+    var fns = ['dragging', 'scrollWheelZoom', 'doubleClickZoom', 'touchZoom', 'boxZoom', 'keyboard'];
+    fns.forEach(function (f) { if (map[f]) map[f][enabled ? 'enable' : 'disable'](); });
   }
+  function lockMap() {
+    setMap(false);
+    if (lockEl) lockEl.classList.remove('hidden');
+    if (relockBtn) relockBtn.classList.remove('show');
+  }
+  function unlockMap() {
+    setMap(true);
+    if (lockEl) lockEl.classList.add('hidden');
+    if (relockBtn) relockBtn.classList.add('show');
+    setTimeout(function () { map.invalidateSize(); }, 80);
+  }
+  lockMap();
+  if (unlockBtn) unlockBtn.addEventListener('click', function (e) { e.stopPropagation(); unlockMap(); });
+  if (lockEl) lockEl.addEventListener('click', function (e) { if (e.target === lockEl) unlockMap(); });
+  if (relockBtn) relockBtn.addEventListener('click', lockMap);
+  window.addEventListener('resize', function () { map.invalidateSize(); });
 
   var listEl = document.getElementById('opp-list');
   var countEl = document.getElementById('map-count');

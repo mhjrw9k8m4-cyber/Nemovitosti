@@ -44,11 +44,10 @@ a{color:inherit;}
 .live-dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--c-sale); margin-right:7px; position:relative; vertical-align:middle;}
 .live-dot::after{content:""; position:absolute; inset:0; border-radius:50%; background:var(--c-sale); animation:livepulse 1.8s ease-out infinite;}
 @keyframes livepulse{0%{transform:scale(1); opacity:0.7;} 100%{transform:scale(3); opacity:0;}}
-.topbar .live-dot{background:var(--ink);} .topbar .live-dot::after{background:var(--ink);}
+.topbar .live-dot{background:var(--copper-bright);} .topbar .live-dot::after{background:var(--copper-bright);}
 
-/* Záře tlačítka */
-.btn-glow{box-shadow:0 0 0 rgba(224,174,67,0.6); animation:btnglow 2.4s ease-in-out infinite;}
-@keyframes btnglow{0%,100%{box-shadow:0 6px 18px -6px rgba(224,174,67,0.5);} 50%{box-shadow:0 6px 30px -2px rgba(224,174,67,0.8);}}
+/* Jemná záře tlačítka (statická, ne blikající) */
+.btn-glow{box-shadow:0 10px 28px -10px rgba(224,174,67,0.55);}
 
 /* Aurora pozadí hero */
 .aurora{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0;}
@@ -60,6 +59,15 @@ a{color:inherit;}
 @keyframes float2{0%,100%{transform:translate(0,0);} 50%{transform:translate(40px,-30px);}}
 .hero{position:relative; overflow:hidden;}
 .hero .hero-grid{position:relative; z-index:1;}
+/* teplá záře shora — útulnost + šmrnc */
+.hero::before{content:""; position:absolute; inset:0; background:radial-gradient(120% 80% at 50% -15%, rgba(201,152,47,0.09), transparent 58%); pointer-events:none; z-index:0;}
+/* elegantní podtržení zvýrazněného slova */
+h1 em{position:relative;}
+h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; height:3px; border-radius:3px; background:linear-gradient(90deg, var(--copper), var(--copper-bright)); transform:scaleX(0); transform-origin:left; opacity:0.55; animation:undersweep 0.9s var(--ease) 0.6s forwards;}
+@keyframes undersweep{to{transform:scaleX(1);}}
+/* jemné vznášení náhledu mapy */
+.hero-visual .map-card{animation:cardfloat 7s ease-in-out infinite;}
+@keyframes cardfloat{0%,100%{transform:translateY(0);} 50%{transform:translateY(-7px);}}
 
 /* Živý ticker */
 .ticker{background:var(--ink-soft); border-top:1px solid var(--line); border-bottom:1px solid var(--line); overflow:hidden; padding:12px 0;}
@@ -177,9 +185,16 @@ h1 em{font-style:italic; color:var(--copper-bright); font-weight:500;}
 .map-holder{position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line); min-height:0;}
 #leaflet-map{position:absolute; inset:0; background:var(--ink-soft);}
 .map-note{position:absolute; bottom:8px; left:8px; z-index:500; background:rgba(22,35,47,0.82); color:var(--text-ondark-mute); font-size:10px; padding:4px 9px; border-radius:4px; pointer-events:none;}
-.map-activate{position:absolute; inset:0; z-index:600; display:none; align-items:center; justify-content:center; background:rgba(22,35,47,0.35); backdrop-filter:blur(1px); cursor:pointer;}
-.map-activate.show{display:flex;}
-.map-activate span{background:var(--ink); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:24px; padding:11px 20px; font-size:13px; font-weight:600; box-shadow:var(--shadow);}
+/* Zámek mapy — mapa se hýbe jen když je odemčená */
+.map-lock{position:absolute; inset:0; z-index:600; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; background:rgba(22,35,47,0.55); backdrop-filter:blur(2px); cursor:pointer; transition:opacity .35s var(--ease), visibility .35s;}
+.map-lock.hidden{opacity:0; visibility:hidden;}
+.map-lock-btn{display:inline-flex; align-items:center; gap:9px; background:var(--copper); color:var(--ink); border:0; border-radius:28px; padding:14px 26px; font-family:inherit; font-weight:700; font-size:15px; cursor:pointer; box-shadow:var(--shadow-lg); transition:background .15s ease, transform .1s ease;}
+.map-lock-btn:hover{background:var(--copper-bright);}
+.map-lock-btn:active{transform:translateY(1px);}
+.map-lock-hint{font-size:12.5px; color:var(--text-ondark); background:rgba(22,35,47,0.72); border:1px solid var(--line); padding:6px 14px; border-radius:14px;}
+.map-relock{position:absolute; top:12px; right:12px; z-index:600; display:none; background:var(--ink); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:22px; padding:8px 15px; font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer; box-shadow:var(--shadow);}
+.map-relock:hover{border-color:var(--copper-bright);}
+.map-relock.show{display:block;}
 
 /* Leaflet popup přebarvení */
 .leaflet-popup-content-wrapper{background:var(--ink); color:var(--text-ondark); border-radius:8px; box-shadow:0 18px 40px -12px rgba(0,0,0,0.7);}
@@ -268,14 +283,13 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .foot-links a{text-decoration:none; color:var(--text-ondark-mute); font-size:13px;}
 .foot-links a:hover{color:var(--text-ondark);}
 
-/* ===== Oznamovací lišta ===== */
-.topbar{background:linear-gradient(90deg, var(--copper) 0%, var(--copper-bright) 100%); color:var(--ink);}
+/* ===== Oznamovací lišta (jemná, ne křiklavá) ===== */
+.topbar{background:var(--ink-soft); border-bottom:1px solid var(--line); color:var(--text-ondark-mute);}
 .topbar.hide{display:none;}
-.topbar-in{display:flex; align-items:center; justify-content:center; gap:16px; padding:9px 0; font-size:13px; font-weight:500; flex-wrap:wrap; position:relative;}
-.topbar .tb-count{font-weight:700; text-decoration:underline;}
-.tb-cta{color:var(--ink); font-weight:700; text-decoration:none; white-space:nowrap;}
+.topbar-in{display:flex; align-items:center; justify-content:center; gap:16px; padding:10px 0; font-size:13px; font-weight:500; flex-wrap:wrap; position:relative;}
+.tb-cta{color:var(--copper-bright); font-weight:600; text-decoration:none; white-space:nowrap;}
 .tb-cta:hover{text-decoration:underline;}
-.tb-close{position:absolute; right:32px; background:none; border:0; color:var(--ink); font-size:20px; line-height:1; cursor:pointer; opacity:0.7;}
+.tb-close{position:absolute; right:32px; background:none; border:0; color:var(--text-ondark-mute); font-size:20px; line-height:1; cursor:pointer; opacity:0.7;}
 .tb-close:hover{opacity:1;}
 
 /* Velké tlačítko */
