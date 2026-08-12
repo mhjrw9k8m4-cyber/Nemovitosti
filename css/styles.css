@@ -5,7 +5,18 @@
   --copper:#C9982F; --copper-bright:#E0AE43;
   --c-sale:#3E8E5B; --c-drazba:#D9A441; --c-exekuce:#C15B44; --c-obec:#4C7A9E;
   --line: rgba(237,230,214,0.14);
+  --line-strong: rgba(237,230,214,0.24);
+  --panel:#1a2a39;
+  --radius:10px; --radius-lg:16px;
+  --shadow:0 12px 34px -14px rgba(0,0,0,0.55);
+  --shadow-lg:0 30px 70px -22px rgba(0,0,0,0.62);
+  --ease:cubic-bezier(.22,.61,.36,1);
 }
+
+/* Ikony */
+.ic{width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex:none;}
+.icon-badge{width:44px; height:44px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:20px; background:rgba(237,230,214,0.06); border:1px solid var(--line);}
+.icon-badge .ic{width:22px; height:22px;}
 
 *{box-sizing:border-box; margin:0; padding:0;}
 html{scroll-behavior:smooth;}
@@ -356,6 +367,39 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .foot-col a:hover{color:var(--text-ondark);}
 .foot-bottom{display:flex; justify-content:space-between; padding-top:20px; font-size:12px; color:var(--text-ondark-mute); flex-wrap:wrap; gap:10px;}
 
+/* ===== Jak tečou data (data flow) ===== */
+.dataflow{display:grid; grid-template-columns:1fr auto 1fr auto 1fr; gap:18px; align-items:stretch;}
+.df-box{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--radius); padding:26px; text-align:center; transition:border-color .2s var(--ease), transform .2s var(--ease);}
+.df-box:hover{border-color:var(--line-strong); transform:translateY(-3px);}
+.df-box .icon-badge{margin:0 auto 16px;}
+.df-box h4{font-family:'Fraunces',serif; font-size:18px; font-weight:500; margin-bottom:10px;}
+.df-box p{font-size:13px; color:var(--text-ondark-mute);}
+.df-box .df-list{list-style:none; margin-top:12px; display:flex; flex-direction:column; gap:6px;}
+.df-box .df-list li{font-size:12px; color:var(--text-ondark-mute); display:flex; align-items:center; gap:7px; justify-content:center;}
+.df-box .df-list .d{width:7px; height:7px; border-radius:50%; flex:none;}
+.df-arrow{display:flex; align-items:center; color:var(--copper-bright); font-size:22px;}
+
+/* Risk reversal / záruky */
+.guarantees{display:flex; flex-wrap:wrap; gap:14px; justify-content:center; margin-top:26px;}
+.guarantee{display:inline-flex; align-items:center; gap:9px; font-size:13px; color:var(--text-ondark-mute); background:var(--ink-soft); border:1px solid var(--line); border-radius:24px; padding:9px 16px;}
+.guarantee .ic{width:16px; height:16px; color:var(--c-sale);}
+
+/* Kicker linka nad nadpisem sekce (grády) */
+.section-head h2{position:relative;}
+
+/* Jemné vypilování karet */
+.feature-card:hover, .status-card:hover, .df-box:hover, .gl-item:hover{box-shadow:var(--shadow);}
+.gl-item{transition:border-color .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);}
+.gl-item:hover{border-color:var(--line-strong); transform:translateY(-2px);}
+.price-card{transition:border-color .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);}
+.price-card:not(.featured):hover{border-color:var(--line-strong); transform:translateY(-4px); box-shadow:var(--shadow);}
+.review{transition:border-color .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);}
+.review:hover{border-color:var(--line-strong); transform:translateY(-3px); box-shadow:var(--shadow);}
+
+/* Feature/step ikona barevná */
+.feature-card .icon-badge .ic{color:var(--copper-bright);}
+.status-top .ic{width:20px; height:20px;}
+
 /* Back to top */
 .to-top{position:fixed; bottom:24px; right:24px; width:46px; height:46px; border-radius:50%; background:var(--copper); color:var(--ink); border:0; font-size:20px; cursor:pointer; box-shadow:0 8px 20px rgba(0,0,0,0.4); opacity:0; pointer-events:none; transform:translateY(10px); transition:opacity .2s ease, transform .2s ease; z-index:900;}
 .to-top.show{opacity:1; pointer-events:auto; transform:none;}
@@ -368,6 +412,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   .glossary{grid-template-columns:repeat(2,1fr);} .reviews{grid-template-columns:1fr;} .cs-steps{grid-template-columns:1fr;}
   .pricing{grid-template-columns:1fr; max-width:440px; margin:0 auto;} .price-card.featured{transform:none;}
   .foot-grid{grid-template-columns:1fr 1fr;}
+  .dataflow{grid-template-columns:1fr; gap:12px;} .df-arrow{justify-content:center; transform:rotate(90deg);}
 }
 @media (max-width:880px){
   .nav-toggle{display:flex;}
