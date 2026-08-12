@@ -59,4 +59,27 @@
       }
     });
   });
+
+  // Alert form (demo — zatím bez serveru, jen ověří e-mail a poděkuje)
+  var form = document.getElementById('alert-form');
+  var msg = document.getElementById('form-msg');
+  if (form && msg) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = form.querySelector('#email').value.trim();
+      var okres = form.querySelector('#okres').value.trim();
+      var valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+      if (!valid) {
+        msg.textContent = 'Zadejte prosím platný e-mail.';
+        msg.classList.add('err');
+        return;
+      }
+      msg.classList.remove('err');
+      msg.textContent = okres
+        ? 'Hotovo! Budeme hlídat okolí „' + okres + '" a dáme vědět. (ukázka — zatím se nikam neodesílá)'
+        : 'Hotovo! Přihlášeno k odběru. (ukázka — zatím se nikam neodesílá)';
+      form.reset();
+    });
+  }
 })();
