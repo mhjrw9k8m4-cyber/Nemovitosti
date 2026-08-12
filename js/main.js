@@ -30,6 +30,13 @@
 
   function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
 
+  /* ---------- Oznamovací lišta ---------- */
+  var tbClose = document.getElementById('tb-close');
+  var topbar = document.getElementById('topbar');
+  if (tbClose && topbar) {
+    tbClose.addEventListener('click', function () { topbar.classList.add('hide'); });
+  }
+
   /* ---------- Mobilní menu ---------- */
   var toggle = document.querySelector('.nav-toggle');
   var nav = document.getElementById('nav');
