@@ -40,8 +40,28 @@ a{color:inherit;}
 :focus-visible{outline:2px solid var(--copper-bright); outline-offset:3px; border-radius:2px;}
 
 /* Scroll reveal */
-.reveal{opacity:0; transform:translateY(22px); transition:opacity .6s ease, transform .6s ease;}
+.reveal{opacity:0; transform:translateY(22px); transition:opacity .6s var(--ease), transform .6s var(--ease);}
 .reveal.in{opacity:1; transform:none;}
+
+/* Postupné nabíhání karet (stagger) */
+.steps>.reveal:nth-child(2),.features>.reveal:nth-child(2),.status-grid>.reveal:nth-child(2),.reviews>.reveal:nth-child(2),.pricing>.reveal:nth-child(2){transition-delay:.09s;}
+.steps>.reveal:nth-child(3),.features>.reveal:nth-child(3),.status-grid>.reveal:nth-child(3),.reviews>.reveal:nth-child(3),.pricing>.reveal:nth-child(3){transition-delay:.18s;}
+.status-grid>.reveal:nth-child(4){transition-delay:.27s;}
+
+/* ===== Jemné detaily (polish) ===== */
+::selection{background:var(--copper); color:var(--ink);}
+section[id]{scroll-margin-top:88px;}
+h1,h2{text-wrap:balance;}
+.c-num,.pc-price,.stat .num,.compare td{font-variant-numeric:tabular-nums;}
+.btn-primary:hover{transform:translateY(-1px);}
+.btn-outline:hover{transform:translateY(-1px);}
+.link-ghost{transition:border-color .15s var(--ease), color .15s var(--ease);}
+/* Vlastní scrollbar */
+*{scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent;}
+::-webkit-scrollbar{width:10px; height:10px;}
+::-webkit-scrollbar-thumb{background:var(--line-strong); border-radius:6px; border:2px solid var(--ink);}
+::-webkit-scrollbar-thumb:hover{background:var(--text-ondark-mute);}
+::-webkit-scrollbar-track{background:transparent;}
 
 .skip-link{position:absolute; left:-9999px; top:0; z-index:100; background:var(--copper); color:var(--ink); padding:10px 16px; font-weight:600; border-radius:0 0 4px 0;}
 .skip-link:focus{left:0;}
@@ -77,6 +97,13 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 /* jemné vznášení náhledu mapy */
 .hero-visual .map-card{animation:cardfloat 7s ease-in-out infinite;}
 @keyframes cardfloat{0%,100%{transform:translateY(0);} 50%{transform:translateY(-7px);}}
+
+/* Ukazatel „posuň se dolů" */
+.scroll-cue{position:absolute; left:50%; bottom:18px; transform:translateX(-50%); z-index:2; width:30px; height:30px; display:flex; align-items:center; justify-content:center; animation:cuebounce 2.2s var(--ease) infinite; opacity:0.65;}
+.scroll-cue:hover{opacity:1;}
+.scroll-cue span{width:12px; height:12px; border-right:2px solid var(--copper-bright); border-bottom:2px solid var(--copper-bright); transform:rotate(45deg);}
+@keyframes cuebounce{0%,100%{transform:translate(-50%,0);} 50%{transform:translate(-50%,8px);}}
+@media (max-width:880px){ .scroll-cue{display:none;} }
 
 /* Živý ticker */
 .ticker{background:var(--ink-soft); border-top:1px solid var(--line); border-bottom:1px solid var(--line); overflow:hidden; padding:12px 0;}
@@ -451,7 +478,8 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 @media (max-width:880px){
   .nav-toggle{display:flex;}
   nav{position:absolute; top:100%; left:0; right:0; flex-direction:column; align-items:stretch; gap:0; background:var(--ink); border-bottom:1px solid var(--line); padding:12px 32px 22px; display:none;}
-  nav.open{display:flex;}
+  nav.open{display:flex; animation:navdrop .24s var(--ease);}
+  @keyframes navdrop{from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:none;}}
   nav a{padding:14px 0; border-bottom:1px solid var(--line); font-size:15px;}
   nav a.btn-primary{text-align:center; margin-top:14px; border-bottom:1px solid var(--copper); padding:12px 20px;}
   .hero{padding:48px 0 68px;}
