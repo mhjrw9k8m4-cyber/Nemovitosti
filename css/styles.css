@@ -22,10 +22,16 @@
 html{scroll-behavior:smooth; overflow-x:hidden;}
 @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} *{animation:none !important; transition:none !important;} }
 
-html, body{max-width:100%;}
-body{background:var(--ink); color:var(--text-ondark); font-family:'Inter',sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:hidden; overscroll-behavior-x:none;}
+html{overflow-x:clip;}
+html, body{max-width:100%; width:100%;}
+body{background:var(--ink); color:var(--text-ondark); font-family:'Inter',sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:clip; overscroll-behavior-x:none; position:relative;}
 h1, h2, h3, h4{overflow-wrap:break-word; word-break:break-word;}
 img, svg, table, pre{max-width:100%;}
+/* Grid/flex sloupce se musí umět zmenšit — jinak vytlačí stránku do stran */
+.hero-grid > *, .map-app > *, .embed-demo > *, .alert-box > *, .beforeafter > *,
+.dataflow > *, .counters-row > *, .foot-grid > *, .steps > *, .features > *,
+.status-grid > *, .glossary > *, .reviews > *, .pricing > *, .cs-steps > *{min-width:0;}
+.opp-list, .code-block, .compare{min-width:0; max-width:100%;}
 .wrap{max-width:1180px; margin:0 auto; padding:0 32px;}
 .mono{font-family:'IBM Plex Mono',monospace; letter-spacing:0.02em;}
 .pt-0{padding-top:0;}
@@ -163,6 +169,11 @@ h1 em{font-style:italic; color:var(--copper-bright); font-weight:500;}
 .section-head .eyebrow{margin-bottom:16px;}
 .section-head h2{font-family:'Fraunces',serif; font-weight:500; font-size:34px; line-height:1.15;}
 .section-sub{font-size:15px; color:var(--text-ondark-mute); margin-top:14px;}
+
+/* Rotující tip u mapy */
+.map-tip{display:inline-flex; align-items:center; gap:9px; margin-top:16px; background:var(--ink-soft); border:1px solid var(--line); border-radius:22px; padding:8px 15px; font-size:13px; color:var(--text-ondark-mute);}
+.map-tip .tip-ico{font-size:14px;}
+#map-tip-text{transition:opacity .3s var(--ease);}
 
 /* ===== Interaktivní mapa ===== */
 .map-app{display:grid; grid-template-columns:360px 1fr; gap:20px; height:560px;}

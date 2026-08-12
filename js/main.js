@@ -151,6 +151,24 @@
     });
   }
 
+  /* ---------- Rotující tipy u mapy ---------- */
+  var tipText = document.getElementById('map-tip-text');
+  if (tipText) {
+    var tips = [
+      'Tip: odemkněte mapu a klikněte na barevný bod.',
+      'Tip: filtrujte jen dražby nebo jen prodeje.',
+      'Tip: hledejte konkrétní lokalitu podle názvu.',
+      'Tip: klik v seznamu přeletí mapu na daný bod.',
+      'Tip: každá barva = jiný druh příležitosti.'
+    ];
+    var ti = 0;
+    setInterval(function () {
+      ti = (ti + 1) % tips.length;
+      tipText.style.opacity = '0';
+      setTimeout(function () { tipText.textContent = tips[ti]; tipText.style.opacity = '1'; }, 300);
+    }, 4200);
+  }
+
   /* ---------- Scroll-spy: aktivní sekce v menu ---------- */
   var navLinks = Array.prototype.slice.call(document.querySelectorAll('#nav a:not(.btn-primary)'));
   var spyTargets = navLinks.map(function (a) {
