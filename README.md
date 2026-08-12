@@ -1,50 +1,50 @@
 # Pozemkomat
 
-Landing page pro **Pozemkomat** — katastrální mapu nové generace, která barevně
-odlišuje stav každého pozemku (na prodej, exekuce, státní, soukromé) a nabízí
-proklik do katastru nebo na inzerát.
-
-Vychází z vizuálního náčrtu (verze 0.2) a je z něj čistě strukturovaný,
-responzivní statický web.
+Web pro **Pozemkomat** — mapa příležitostí u pozemků. Na jedné interaktivní mapě
+ukazuje pozemky, kde se něco děje: **dražby, exekuce, prodeje a obecní záměry**,
+sbírané z veřejných zdrojů. Klik na bod → detail + proklik do katastru.
 
 ## Struktura
 
 ```
 .
-├── index.html        # struktura stránky (hero, jak to funguje, features, widget, CTA)
-├── css/styles.css    # design system — paleta, typografie, layout, responsivita
-├── js/main.js        # mobilní menu, kopírování embed kódu
+├── index.html        # celá stránka (hero, mapa, jak to funguje, FAQ, formulář…)
+├── css/styles.css    # design system, mapa, animace, responsivita
+├── js/main.js        # interaktivní mapa (Leaflet), filtry, hledání, počítadla…
 └── assets/favicon.svg
 ```
 
+## Vychytávky
+
+- 🗺️ **Skutečná interaktivní mapa** (Leaflet + tmavé podklady CARTO) s klikacími body
+- 🎛️ **Filtry** podle druhu příležitosti (prodej / dražba / exekuce / obec)
+- 🔍 **Hledání lokality** — synchronně filtruje seznam i mapu
+- 📋 **Seznam příležitostí** propojený s mapou (klik → přeletí na bod)
+- 🔢 **Animovaná počítadla** při scrollování
+- ✨ **Plynulé odkrývání sekcí** (scroll reveal), sticky header, tlačítko nahoru
+- ❓ **FAQ** (rozbalovací), formulář na hlídání lokality, widget pro realitky
+
+## Data
+
+Body na mapě jsou zatím **ukázková** (ilustrační). V ostré verzi by je nahradila
+data z veřejných zdrojů:
+
+- Portál dražeb
+- Insolvenční rejstřík
+- Úřední desky obcí (záměry prodeje)
+- Veřejné inzertní portály
+- Katastr nemovitostí (ČÚZK)
+
 ## Spuštění lokálně
 
-Jde o statický web bez build kroku — stačí otevřít `index.html` v prohlížeči,
-nebo spustit jednoduchý server:
+Statický web bez build kroku:
 
 ```bash
-python3 -m http.server 8000
-# → http://localhost:8000
+python3 -m http.server 8000   # → http://localhost:8000
 ```
 
-## Design
+## Poznámka
 
-- **Fonty:** Fraunces (nadpisy), Inter (text), IBM Plex Mono (technické popisky)
-- **Paleta:** tmavá „ink" plocha, pergamenová mapa, měděné akcenty
-- **Stavy pozemku:** zelená (prodej), cihlová (exekuce), šedá (státní), modrá (soukromé)
-
-Barvy a rozměry jsou vedené jako CSS proměnné v `:root` (`css/styles.css`),
-takže se dají snadno upravit na jednom místě.
-
-## Co je hotové oproti náčrtu
-
-- Rozdělení do samostatných souborů (HTML / CSS / JS) místo jednoho inline souboru
-- Funkční mobilní menu (hamburger)
-- Sticky header s blur pozadím
-- Tlačítko „Kopírovat" u embed kódu
-- Přístupnost: skip-link, `aria` atributy, focus stavy, `prefers-reduced-motion`
-- SEO / Open Graph meta tagy, favicon
-
-## Stav
-
-Verze 0.2 · neveřejný náhled / koncept.
+Mapa běží na knihovně [Leaflet](https://leafletjs.com/) načítané z CDN.
+Formulář a data jsou zatím ukázkové — web je funkční prototyp vzhledu a chování,
+ne ostrý produkt s živými daty.

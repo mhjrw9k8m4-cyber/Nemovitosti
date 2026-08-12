@@ -4,25 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pozemkomat — příležitosti u pozemků na jedné mapě</title>
-  <meta name="description" content="Dražby, exekuce, pozemky na prodej i obecní záměry — všechny příležitosti z veřejných zdrojů na jedné mapě. Proklik rovnou do katastru nebo na inzerát. Upozornění e-mailem.">
+  <meta name="description" content="Dražby, exekuce, pozemky na prodej i obecní záměry z veřejných zdrojů na jedné interaktivní mapě. Filtrujte, klikejte, proklik rovnou do katastru. Upozornění e-mailem zdarma.">
   <meta name="theme-color" content="#16232F">
 
   <meta property="og:type" content="website">
   <meta property="og:title" content="Pozemkomat — příležitosti u pozemků na jedné mapě">
-  <meta property="og:description" content="Dražby, exekuce, prodeje a obecní záměry z veřejných zdrojů na jedné mapě.">
+  <meta property="og:description" content="Dražby, exekuce, prodeje a obecní záměry z veřejných zdrojů na jedné interaktivní mapě.">
   <meta property="og:locale" content="cs_CZ">
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Leaflet (interaktivní mapa) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-<a class="skip-link" href="#main">Přeskočit na obsah</a>
+<a class="skip-link" href="#mapa">Přeskočit na mapu</a>
 
-<header>
+<header id="header">
   <div class="wrap">
     <a class="logo" href="#" aria-label="Pozemkomat — domů">
       <span class="logo-mark" aria-hidden="true"></span>Pozemkomat
@@ -33,65 +38,64 @@
     </button>
 
     <nav id="nav" aria-label="Hlavní navigace">
+      <a href="#mapa">Mapa</a>
       <a href="#jak-funguje">Jak to funguje</a>
       <a href="#zdroje">Odkud data</a>
       <a href="#realitky">Pro realitky</a>
-      <a href="#mapa" class="btn-primary">Otevřít mapu</a>
+      <a href="#faq">Časté dotazy</a>
+      <a href="#upozorneni" class="btn-primary">Hlídat lokalitu</a>
     </nav>
   </div>
 </header>
 
-<main id="main">
+<main>
 
   <!-- HERO -->
   <section class="hero">
     <div class="wrap hero-grid">
-      <div class="hero-copy">
+      <div class="hero-copy reveal">
         <div class="eyebrow">Mapa příležitostí u pozemků</div>
         <h1>Najděte pozemek <em>dřív</em>, než ho najdou ostatní.</h1>
-        <p class="sub">Dražby, exekuce, pozemky na prodej i obecní záměry — všechny příležitosti z veřejných zdrojů na jedné mapě. Klik a jste rovnou v katastru nebo na inzerátu.</p>
+        <p class="sub">Dražby, exekuce, pozemky na prodej i obecní záměry — všechny příležitosti z veřejných zdrojů na jedné interaktivní mapě. Klik a jste rovnou v katastru nebo na inzerátu.</p>
         <div class="hero-ctas">
           <a href="#mapa" class="btn-primary">Otevřít mapu zdarma</a>
           <a href="#upozorneni" class="link-ghost">Chci upozornění e-mailem →</a>
         </div>
         <div class="stat-strip">
-          <div class="stat"><div class="num">4</div><div class="lbl mono">druhy příležitostí</div></div>
-          <div class="stat"><div class="num">100 %</div><div class="lbl mono">veřejné zdroje</div></div>
-          <div class="stat"><div class="num">0 Kč</div><div class="lbl mono">za prohlížení mapy</div></div>
+          <div class="stat"><div class="num" data-count="4">0</div><div class="lbl mono">druhy příležitostí</div></div>
+          <div class="stat"><div class="num" data-count="14" data-suffix="+">0</div><div class="lbl mono">lokalit na mapě</div></div>
+          <div class="stat"><div class="num">0 Kč</div><div class="lbl mono">za prohlížení</div></div>
         </div>
       </div>
 
-      <div class="map-card" role="img" aria-label="Ukázka mapy s barevně odlišenými příležitostmi u pozemků">
-        <div class="frame-label">
-          <span>MAPA PŘÍLEŽITOSTÍ</span>
-          <span>ČR · živě</span>
-        </div>
-        <div class="last-updated mono">aktualizováno dnes</div>
-        <div class="plot-field">
-          <!-- podkladové pozemky (jen náznak) -->
-          <div class="plot ghost" style="top:40px;  left:30px;  width:90px;  height:64px;"></div>
-          <div class="plot ghost" style="top:150px; left:60px;  width:120px; height:70px;"></div>
-          <div class="plot ghost" style="top:70px;  left:200px; width:80px;  height:96px;"></div>
-
-          <!-- příležitosti = piny -->
-          <button class="pin sale"    style="top:60px;  left:80px;"  aria-label="Na prodej"><span></span>Na prodej</button>
-          <button class="pin drazba"  style="top:120px; left:210px;" aria-label="Dražba"><span></span>Dražba</button>
-          <button class="pin exekuce" style="top:200px; left:110px;" aria-label="Exekuce"><span></span>Exekuce</button>
-          <button class="pin obec"    style="top:250px; left:60px;"  aria-label="Obecní záměr"><span></span>Obecní záměr</button>
-
-          <!-- vyskakovací karta detailu -->
-          <div class="plot-pop">
-            <div class="pop-head"><span class="pop-dot drazba"></span>Dražba · parc. č. 412/3</div>
-            <div class="pop-row"><span>Výměra</span><b>1 240 m²</b></div>
-            <div class="pop-row"><span>Termín</span><b>za 12 dní</b></div>
-            <div class="pop-link mono">→ otevřít v katastru</div>
+      <div class="hero-visual reveal">
+        <div class="map-card">
+          <div class="frame-label">
+            <span>MAPA PŘÍLEŽITOSTÍ</span>
+            <span>ČR · živě</span>
           </div>
-        </div>
-        <div class="legend-float">
-          <div class="legend-item"><span class="legend-dot" style="background:var(--c-sale);"></span>Na prodej</div>
-          <div class="legend-item"><span class="legend-dot" style="background:var(--c-drazba);"></span>Dražba</div>
-          <div class="legend-item"><span class="legend-dot" style="background:var(--c-exekuce);"></span>Exekuce</div>
-          <div class="legend-item"><span class="legend-dot" style="background:var(--c-obec);"></span>Obecní záměr</div>
+          <div class="last-updated mono">aktualizováno dnes</div>
+          <div class="plot-field">
+            <div class="plot ghost" style="top:40px;  left:30px;  width:90px;  height:64px;"></div>
+            <div class="plot ghost" style="top:150px; left:60px;  width:120px; height:70px;"></div>
+            <div class="plot ghost" style="top:70px;  left:200px; width:80px;  height:96px;"></div>
+            <span class="pin sale"    style="top:60px;  left:80px;"><span></span>Na prodej</span>
+            <span class="pin drazba"  style="top:120px; left:210px;"><span></span>Dražba</span>
+            <span class="pin exekuce" style="top:205px; left:110px;"><span></span>Exekuce</span>
+            <span class="pin obec"    style="top:255px; left:60px;"><span></span>Obecní záměr</span>
+            <div class="plot-pop">
+              <div class="pop-head"><span class="pop-dot drazba"></span>Dražba · parc. č. 412/3</div>
+              <div class="pop-row"><span>Výměra</span><b>1 240 m²</b></div>
+              <div class="pop-row"><span>Termín</span><b>za 12 dní</b></div>
+              <div class="pop-link mono">→ otevřít v katastru</div>
+            </div>
+          </div>
+          <div class="legend-float">
+            <div class="legend-item"><span class="legend-dot" style="background:var(--c-sale);"></span>Prodej</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--c-drazba);"></span>Dražba</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--c-exekuce);"></span>Exekuce</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--c-obec);"></span>Obec</div>
+          </div>
         </div>
       </div>
     </div>
@@ -111,25 +115,67 @@
     </div>
   </section>
 
+  <!-- ŽIVÁ INTERAKTIVNÍ MAPA -->
+  <section class="section map-section" id="mapa">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="eyebrow">Živá mapa</div>
+        <h2>Prozkoumejte příležitosti na mapě.</h2>
+        <p class="section-sub">Filtrujte podle druhu, hledejte lokalitu a klikněte na bod — uvidíte detail a proklik rovnou do katastru. Na mapě jsou jen pozemky, kde se něco děje.</p>
+      </div>
+
+      <div class="map-app reveal">
+        <aside class="map-side">
+          <div class="map-search">
+            <input type="text" id="map-search" placeholder="🔍  Hledat lokalitu (např. Kolín)" autocomplete="off" aria-label="Hledat lokalitu">
+          </div>
+          <div class="map-filters" id="map-filters" role="group" aria-label="Filtr příležitostí">
+            <button class="filter-chip active" data-type="all">Vše</button>
+            <button class="filter-chip" data-type="sale"><span class="c" style="background:var(--c-sale)"></span>Prodej</button>
+            <button class="filter-chip" data-type="drazba"><span class="c" style="background:var(--c-drazba)"></span>Dražba</button>
+            <button class="filter-chip" data-type="exekuce"><span class="c" style="background:var(--c-exekuce)"></span>Exekuce</button>
+            <button class="filter-chip" data-type="obec"><span class="c" style="background:var(--c-obec)"></span>Obec</button>
+          </div>
+          <div class="map-count mono" id="map-count">Načítám…</div>
+          <ul class="opp-list" id="opp-list" aria-label="Seznam příležitostí"></ul>
+        </aside>
+        <div class="map-holder">
+          <div id="leaflet-map" role="application" aria-label="Interaktivní mapa příležitostí"></div>
+          <div class="map-note mono">Ukázková data · piny jsou ilustrační</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POČÍTADLA -->
+  <section class="counters reveal">
+    <div class="wrap counters-row">
+      <div class="counter"><div class="c-num" data-count="14" data-suffix="+">0</div><div class="c-lbl">příležitostí na mapě</div></div>
+      <div class="counter"><div class="c-num" data-count="4">0</div><div class="c-lbl">druhy stavů</div></div>
+      <div class="counter"><div class="c-num" data-count="5">0</div><div class="c-lbl">veřejné zdroje</div></div>
+      <div class="counter"><div class="c-num" data-count="24" data-suffix="/7">0</div><div class="c-lbl">hlídání lokalit</div></div>
+    </div>
+  </section>
+
   <!-- JAK TO FUNGUJE -->
   <section class="section" id="jak-funguje">
     <div class="wrap">
-      <div class="section-head">
+      <div class="section-head reveal">
         <div class="eyebrow">Postup</div>
         <h2>Od otevření mapy k příležitosti — tři kroky.</h2>
       </div>
       <div class="steps">
-        <div class="step">
+        <div class="step reveal">
           <div class="idx mono">01 / OTEVŘETE MAPU</div>
           <h3>Podívejte se na mapu</h3>
           <p>Na mapě jsou jen pozemky, kde se něco děje. Prázdné parcely bez příležitosti vás nezdržují.</p>
         </div>
-        <div class="step">
+        <div class="step reveal">
           <div class="idx mono">02 / KLIKNĚTE</div>
           <h3>Zjistěte detaily</h3>
           <p>Klik na bod ukáže výměru, typ pozemku, druh příležitosti a termín. Proklik rovnou do katastru nebo na inzerát.</p>
         </div>
-        <div class="step">
+        <div class="step reveal">
           <div class="idx mono">03 / SLEDUJTE</div>
           <h3>Nechte si hlídat lokalitu</h3>
           <p>Zadejte e-mail a okres. Napíšeme vám, jakmile se ve vaší oblasti objeví nová příležitost.</p>
@@ -141,24 +187,24 @@
   <!-- CO JE NA MAPĚ -->
   <section class="section pt-0">
     <div class="wrap">
-      <div class="section-head">
+      <div class="section-head reveal">
         <div class="eyebrow">Co na mapě uvidíte</div>
         <h2>Čtyři druhy příležitostí — každá svou barvou.</h2>
       </div>
       <div class="status-grid">
-        <div class="status-card">
+        <div class="status-card reveal">
           <div class="status-top"><span class="dot" style="background:var(--c-sale);"></span>Na prodej</div>
           <p>Pozemky aktivně nabízené k prodeji. Proklik přímo na inzerát.</p>
         </div>
-        <div class="status-card">
+        <div class="status-card reveal">
           <div class="status-top"><span class="dot" style="background:var(--c-drazba);"></span>Dražba</div>
           <p>Nadcházející dražby z veřejného portálu — často pod cenou, s jasným termínem.</p>
         </div>
-        <div class="status-card">
+        <div class="status-card reveal">
           <div class="status-top"><span class="dot" style="background:var(--c-exekuce);"></span>Exekuce</div>
           <p>Pozemky spojené s exekucí či insolvencí — signál budoucího prodeje, s předstihem.</p>
         </div>
-        <div class="status-card">
+        <div class="status-card reveal">
           <div class="status-top"><span class="dot" style="background:var(--c-obec);"></span>Obecní záměr</div>
           <p>Obce ze zákona zveřejňují záměr prodat pozemek. Málokdo to sleduje — vy ano.</p>
         </div>
@@ -169,22 +215,22 @@
   <!-- FEATURES -->
   <section class="section pt-0">
     <div class="wrap">
-      <div class="section-head">
+      <div class="section-head reveal">
         <div class="eyebrow">Proč Pozemkomat</div>
         <h2>Tři věci, které jinde na jednom místě nenajdete.</h2>
       </div>
       <div class="features">
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="dot" style="background:var(--c-sale);"></div>
           <h3>Vše na jedné mapě</h3>
           <p>Dražby, exekuce, prodeje i obecní záměry pohromadě. Konec proklikávání deseti webů.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="dot" style="background:var(--copper);"></div>
           <h3>Vždy aktuální</h3>
           <p>Zdroje kontrolujeme automaticky a mapu průběžně obnovujeme. U každé lokality vidíte, kdy naposledy.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="dot" style="background:var(--c-obec);"></div>
           <h3>Upozornění na míru</h3>
           <p>Nemusíte se vracet a hlídat ručně — dáme vědět, jakmile se ve vaší lokalitě objeví příležitost.</p>
@@ -196,7 +242,7 @@
   <!-- UPOZORNĚNÍ / E-MAIL FORM -->
   <section class="section pt-0" id="upozorneni">
     <div class="wrap">
-      <div class="alert-box">
+      <div class="alert-box reveal">
         <div class="alert-copy">
           <div class="eyebrow">Hlídací pes</div>
           <h2>Nechte si hlídat příležitosti ve své lokalitě.</h2>
@@ -217,11 +263,11 @@
   <!-- PRO REALITKY -->
   <section class="section pt-0" id="realitky">
     <div class="wrap">
-      <div class="section-head">
+      <div class="section-head reveal">
         <div class="eyebrow">Pro realitky a obce</div>
         <h2>Vložte si mapu vaší lokality přímo na svůj web.</h2>
       </div>
-      <div class="embed-demo">
+      <div class="embed-demo reveal">
         <div>
           <h3>Jeden řádek kódu</h3>
           <p>Zkopírujte kód a vložte na svůj web. Mapa se aktualizuje spolu s naší datovou vrstvou — vy o nic nepečujete.</p>
@@ -236,12 +282,44 @@
     </div>
   </section>
 
-  <!-- CTA -->
-  <section class="section pt-0" id="mapa">
+  <!-- FAQ -->
+  <section class="section pt-0" id="faq">
     <div class="wrap">
-      <div class="cta-banner">
+      <div class="section-head reveal">
+        <div class="eyebrow">Časté dotazy</div>
+        <h2>Na co se lidé ptají nejčastěji.</h2>
+      </div>
+      <div class="faq reveal">
+        <details class="faq-item">
+          <summary>Odkud berete data?</summary>
+          <p>Výhradně z veřejných zdrojů: portál dražeb, insolvenční rejstřík, úřední desky obcí, veřejné inzeráty a katastr nemovitostí. Nic tajného, vše dohledatelné.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Je to zdarma?</summary>
+          <p>Prohlížení mapy a základní upozornění jsou zdarma. Rozšířené funkce pro realitky a obce (widget na web, pokročilé hlídání) budou placené.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Jak často se mapa aktualizuje?</summary>
+          <p>Zdroje kontrolujeme automaticky každý den. U každé lokality vidíte, kdy proběhla poslední aktualizace.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Ukazujete vlastníky pozemků?</summary>
+          <p>Ne. Zobrazujeme jen příležitosti z veřejných zdrojů — neprodáváme osobní údaje ani kontakty na majitele.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Můžu mapu vložit na svůj web?</summary>
+          <p>Ano. Pro realitky a obce máme widget — jeden řádek kódu a mapa vaší lokality běží na vašem webu.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section pt-0">
+    <div class="wrap">
+      <div class="cta-banner reveal">
         <h2>Otevřete mapu a najděte první příležitost.</h2>
-        <a href="#" class="btn-primary">Otevřít mapu zdarma</a>
+        <a href="#mapa" class="btn-primary">Otevřít mapu zdarma</a>
       </div>
     </div>
   </section>
@@ -255,14 +333,20 @@
       <span>Pozemkomat</span>
     </div>
     <nav class="foot-links" aria-label="Patička">
+      <a href="#mapa">Mapa</a>
       <a href="#jak-funguje">Jak to funguje</a>
       <a href="#zdroje">Odkud data</a>
       <a href="#realitky">Pro realitky</a>
+      <a href="#faq">Časté dotazy</a>
     </nav>
     <span class="mono foot-note">Data z veřejných zdrojů · koncept</span>
   </div>
 </footer>
 
+<button class="to-top" id="to-top" aria-label="Nahoru">↑</button>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="js/main.js" defer></script>
 </body>
 </html>
