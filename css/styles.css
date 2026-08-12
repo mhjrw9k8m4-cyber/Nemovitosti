@@ -83,9 +83,12 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .logo-mark{width:26px; height:26px; border-radius:50%; background:conic-gradient(var(--c-sale) 0 25%, var(--c-exekuce) 25% 50%, var(--c-obec) 50% 75%, var(--c-drazba) 75% 100%); box-shadow:inset 0 0 0 2px var(--ink), 0 0 0 1px var(--line);}
 .logo-mark.small{width:18px; height:18px;}
 nav{display:flex; gap:26px; align-items:center;}
-nav a{color:var(--text-ondark-mute); text-decoration:none; font-size:14px; font-weight:500; transition:color .15s ease;}
+nav a{color:var(--text-ondark-mute); text-decoration:none; font-size:14px; font-weight:500; transition:color .15s ease; position:relative;}
 nav a:hover{color:var(--text-ondark);}
 nav a.btn-primary:hover{color:var(--ink);}
+nav a:not(.btn-primary).active{color:var(--text-ondark);}
+nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--copper-bright); border-radius:2px;}
+@media (max-width:880px){ nav a:not(.btn-primary).active::after{display:none;} }
 
 .btn-primary{background:var(--copper); color:var(--ink); font-weight:600; font-size:14px; padding:10px 20px; border-radius:3px; text-decoration:none; border:1px solid var(--copper); transition:background .15s ease, transform .1s ease; white-space:nowrap; cursor:pointer;}
 .btn-primary:hover{background:var(--copper-bright);}
@@ -174,6 +177,9 @@ h1 em{font-style:italic; color:var(--copper-bright); font-weight:500;}
 .map-holder{position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line); min-height:0;}
 #leaflet-map{position:absolute; inset:0; background:var(--ink-soft);}
 .map-note{position:absolute; bottom:8px; left:8px; z-index:500; background:rgba(22,35,47,0.82); color:var(--text-ondark-mute); font-size:10px; padding:4px 9px; border-radius:4px; pointer-events:none;}
+.map-activate{position:absolute; inset:0; z-index:600; display:none; align-items:center; justify-content:center; background:rgba(22,35,47,0.35); backdrop-filter:blur(1px); cursor:pointer;}
+.map-activate.show{display:flex;}
+.map-activate span{background:var(--ink); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:24px; padding:11px 20px; font-size:13px; font-weight:600; box-shadow:var(--shadow);}
 
 /* Leaflet popup přebarvení */
 .leaflet-popup-content-wrapper{background:var(--ink); color:var(--text-ondark); border-radius:8px; box-shadow:0 18px 40px -12px rgba(0,0,0,0.7);}

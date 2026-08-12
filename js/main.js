@@ -151,6 +151,25 @@
     });
   }
 
+  /* ---------- Scroll-spy: aktivní sekce v menu ---------- */
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('#nav a:not(.btn-primary)'));
+  var spyTargets = navLinks.map(function (a) {
+    var id = a.getAttribute('href');
+    return (id && id.charAt(0) === '#' && id.length > 1) ? document.getElementById(id.slice(1)) : null;
+  });
+  if ('IntersectionObserver' in window) {
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var idx = spyTargets.indexOf(en.target);
+        if (idx === -1) return;
+        navLinks.forEach(function (a) { a.classList.remove('active'); });
+        navLinks[idx].classList.add('active');
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    spyTargets.forEach(function (t) { if (t) spy.observe(t); });
+  }
+
   /* ---------- Živý ticker příležitostí ---------- */
   var tickTrack = document.getElementById('ticker-track');
   if (tickTrack) {
@@ -173,6 +192,18 @@
   }).addTo(map);
   map.on('focus', function () { map.scrollWheelZoom.enable(); });
   map.on('blur', function () { map.scrollWheelZoom.disable(); });
+
+  // Na dotykových zařízeních: mapa nechytá scroll, dokud ji nepustíte klepnutím
+  var activateEl = document.getElementById('map-activate');
+  var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (isTouch && activateEl) {
+    map.dragging.disable();
+    activateEl.classList.add('show');
+    activateEl.addEventListener('click', function () {
+      map.dragging.enable();
+      activateEl.classList.remove('show');
+    });
+  }
 
   var listEl = document.getElementById('opp-list');
   var countEl = document.getElementById('map-count');
@@ -226,15 +257,22 @@
       var t = TYPE[d.type];
       var li = document.createElement('li');
       li.className = 'opp-item'; li.setAttribute('data-id', d._id);
+      li.setAttribute('tabindex', '0');
+      li.setAttribute('role', 'button');
+      li.setAttribute('aria-label', t.label + ' · ' + d.place + ' · ' + fmt(d.area) + ' m²');
       li.innerHTML =
         '<div class="opp-top"><span class="opp-place">' + d.place + '</span>' +
         '<span class="opp-tag ' + d.type + '">' + t.label + '</span></div>' +
         '<div class="opp-meta"><span>parc. <b>' + d.parcel + '</b></span>' +
         '<span><b>' + fmt(d.area) + '</b> m²</span><span>' + d.extra + '</span></div>';
-      li.addEventListener('click', function () {
+      function openThis() {
         map.flyTo([d.lat, d.lng], 12, { duration: 0.8 });
         markers[d._id].openPopup();
         highlightList(d._id);
+      }
+      li.addEventListener('click', openThis);
+      li.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openThis(); }
       });
       li.addEventListener('mouseenter', function () { highlightList(d._id); });
       listEl.appendChild(li);
