@@ -99,18 +99,6 @@
       "lng": 14.64676
     },
     {
-      "place": "Žítková",
-      "okres": "Uherské Hradiště",
-      "type": "drazba",
-      "parcel": "384/1",
-      "druh": "trvalý travní porost",
-      "area": 4517,
-      "price": 790000,
-      "extra": "dražba 2026-09-16",
-      "lat": 49.06541,
-      "lng": 17.42947
-    },
-    {
       "place": "Seninka",
       "okres": "Vsetín",
       "type": "drazba",
@@ -625,18 +613,6 @@
       "extra": "dražba 2026-09-24",
       "lat": 49.11824,
       "lng": 16.52412
-    },
-    {
-      "place": "Šternberk",
-      "okres": "Olomouc",
-      "type": "drazba",
-      "parcel": "465",
-      "druh": "zahrada",
-      "area": 314,
-      "price": 4152667,
-      "extra": "dražba 2026-08-25",
-      "lat": 49.59012,
-      "lng": 17.26782
     },
     {
       "place": "Jičín",
