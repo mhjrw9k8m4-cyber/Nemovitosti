@@ -94,8 +94,8 @@
       var ms = document.getElementById('wm-msg');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ms.textContent = 'Zadejte prosím platný e-mail.'; ms.classList.add('err'); return; }
       ms.classList.remove('err');
-      ms.textContent = okres ? ('Hotovo! Hlídáme okolí „' + okres + '". (ukázka)') : 'Hotovo! Přihlášeno. (ukázka)';
-      setTimeout(closeWatch, 1700);
+      ms.textContent = okres ? ('Díky! Jakmile se v okolí „' + okres + '" něco objeví, dáme vám vědět. (ukázka)') : 'Díky! Přihlášeno — ozveme se, až bude co. (ukázka)';
+      setTimeout(closeWatch, 1900);
     });
   }
 
@@ -190,8 +190,8 @@
       }
       msg.classList.remove('err');
       msg.textContent = okres
-        ? 'Hotovo! Budeme hlídat okolí „' + okres + '". (ukázka — zatím se nikam neodesílá)'
-        : 'Hotovo! Přihlášeno k odběru. (ukázka — zatím se nikam neodesílá)';
+        ? 'Díky! Hlídáme okolí „' + okres + '" za vás. (ukázka — zatím se nikam neodesílá)'
+        : 'Díky! Přihlášeno k odběru. (ukázka — zatím se nikam neodesílá)';
       form.reset();
     });
   }
@@ -451,7 +451,7 @@
 
     countEl.innerHTML = 'Nejžádanější příležitosti · <span class="mc-sub">' + matched + ' na mapě</span>';
     if (matched === 0) {
-      listEl.innerHTML = '<li class="map-count" style="padding:20px 6px;">Nic nenalezeno — zkuste jiný filtr.</li>';
+      listEl.innerHTML = '<li class="map-count" style="padding:20px 6px; text-transform:none; font-weight:400;">Tady zrovna nic není — zkuste jiný filtr. Příležitostí přibývá každý týden.</li>';
     } else if (matched > LIST_LIMIT) {
       var more = document.createElement('li');
       more.className = 'opp-more';
