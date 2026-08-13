@@ -424,18 +424,24 @@
     markers.push(m);
   });
 
-  // Vrstva tvarů parcel — objeví se po přiblížení
-  var polyLayer = L.layerGroup();
-  DATA.forEach(function (d) {
+  // Tvary parcel — vytvoří se líně až při přiblížení a respektují filtr
+  // (dřív se tvořilo všech 234 hned = zbytečná zátěž, a filtr je neschovával).
+  function polyObj(d) {
+    if (d._polyObj) return d._polyObj;
     var p = L.polygon(polyFor(d), { color: TYPE[d.type].color, weight: 1.4, fillColor: TYPE[d.type].color, fillOpacity: 0.22, opacity: 0.85 });
     p.on('click', function () { showDetail(d); highlightList(d._id); });
-    polyLayer.addLayer(p);
-  });
-  function updatePolyVisibility() {
-    if (map.getZoom() >= 12) { if (!map.hasLayer(polyLayer)) polyLayer.addTo(map); }
-    else if (map.hasLayer(polyLayer)) map.removeLayer(polyLayer);
+    d._polyObj = p;
+    return p;
   }
-  map.on('zoomend', updatePolyVisibility);
+  function updatePolys() {
+    var show = map.getZoom() >= 12;
+    DATA.forEach(function (d) {
+      var want = show && visible(d);
+      if (want && !d._polyOn) { polyObj(d).addTo(map); d._polyOn = true; }
+      else if (!want && d._polyOn) { map.removeLayer(d._polyObj); d._polyOn = false; }
+    });
+  }
+  map.on('zoomend', updatePolys);
 
   function visible(d) {
     var okType = activeType === 'all' || d.type === activeType;
@@ -522,6 +528,7 @@
       more.textContent = '+ ' + (matched - LIST_LIMIT) + ' dalších příležitostí najdete na mapě';
       listEl.appendChild(more);
     }
+    updatePolys(); // tvary parcel podle aktuálního filtru
   }
 
   function highlightList(id) {

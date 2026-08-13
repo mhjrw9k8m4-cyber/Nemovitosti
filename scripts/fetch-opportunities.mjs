@@ -184,17 +184,6 @@ async function fetchDrazby() {
   return out;
 }
 
-// Insolvenční rejstřík (ISIR) — majetek v úpadku, který půjde na prodej.
-// TODO: napojit veřejnou službu ISIR, vytáhnout nemovitosti.
-async function fetchInsolvence() {
-  return [];
-}
-
-// Úřední desky obcí — záměry obcí prodat pozemek.
-// TODO: sbírat z úředních desek (mnoho zdrojů), normalizovat.
-async function fetchUredniDesky() {
-  return [];
-}
 
 // Státní pozemkový úřad — nabídky pozemků k prodeji podle § 12 zákona č. 503/2012.
 // SPÚ zveřejňuje kompletní seznam jako CSV (kódování Windows-1250, oddělovač ;).
@@ -368,8 +357,6 @@ function valid(o) {
 async function main() {
   const results = await Promise.allSettled([
     fetchDrazby(),
-    fetchInsolvence(),
-    fetchUredniDesky(),
     fetchProdejSPU(),
     fetchBezrealitky(),
     fetchFarmy(),
