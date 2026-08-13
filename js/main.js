@@ -627,18 +627,9 @@
     chunkedLoading: true,
     iconCreateFunction: function (c) {
       var n = c.getChildCount();
-      // Prstenec podle skladby kategorií ve shluku (mini „koláč") — ať mapa žije
-      var cnt = { sale: 0, drazba: 0, exekuce: 0, obec: 0 };
-      c.getAllChildMarkers().forEach(function (m) { if (cnt[m.pkType] != null) cnt[m.pkType]++; });
-      var stops = [], acc = 0;
-      ['sale', 'drazba', 'exekuce', 'obec'].forEach(function (tp) {
-        var frac = cnt[tp] / n;
-        if (frac > 0) { stops.push(TYPE[tp].color + ' ' + (acc * 100).toFixed(1) + '% ' + ((acc + frac) * 100).toFixed(1) + '%'); acc += frac; }
-      });
-      var ring = 'conic-gradient(' + (stops.length ? stops.join(',') : (TYPE.sale.color + ' 0 100%')) + ')';
-      var px = n < 10 ? 36 : (n < 40 ? 44 : 52);
+      var px = n < 10 ? 38 : (n < 40 ? 46 : 56);
       var cls = n < 10 ? 'sm' : (n < 40 ? 'md' : 'lg');
-      return L.divIcon({ html: '<div class="pk-cluster ' + cls + '" style="background:' + ring + '"><span>' + n + '</span></div>', className: '', iconSize: [px, px], iconAnchor: [px / 2, px / 2] });
+      return L.divIcon({ html: '<div class="pk-cluster ' + cls + '"><span>' + n + '</span></div>', className: '', iconSize: [px, px], iconAnchor: [px / 2, px / 2] });
     }
   }) : null;
   if (cluster) map.addLayer(cluster);

@@ -104,18 +104,22 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 @keyframes tick{from{transform:translateX(0);} to{transform:translateX(-50%);}}
 
 /* Marker na mapě — pevný bod s efektem při najetí a výběru */
-.marker-pulse{position:relative; border-radius:50%; border:2.5px solid #fff; box-shadow:inset 0 2px 3px rgba(255,255,255,0.45), inset 0 -2px 3px rgba(0,0,0,0.25), 0 3px 8px rgba(0,0,0,0.5); transition:transform .15s var(--ease), box-shadow .15s var(--ease);}
+.marker-pulse{position:relative; border-radius:50%; border:2px solid rgba(255,255,255,0.92); box-shadow:0 2px 7px rgba(0,0,0,0.45), 0 0 9px -1px currentColor; transition:transform .15s var(--ease), box-shadow .15s var(--ease);}
 .marker-pulse:hover{transform:scale(1.45); box-shadow:0 5px 16px rgba(0,0,0,0.55); z-index:1000;}
 .marker-pulse.sel{transform:scale(1.5); box-shadow:0 0 0 4px rgba(255,255,255,0.35), 0 5px 16px rgba(0,0,0,0.55);}
 .marker-pulse.sel::after{content:""; position:absolute; inset:-7px; border-radius:50%; border:2px solid #fff; opacity:0.7; animation:mping 1.5s ease-out infinite;}
-/* Shluky bodů — mini „koláč" podle skladby kategorií kolem tmavého středu */
-.pk-cluster{position:relative; display:flex; align-items:center; justify-content:center; width:100%; height:100%; border-radius:50%; font-family:'Inter',sans-serif; font-weight:700; box-shadow:0 5px 16px -4px rgba(0,0,0,0.6); transition:transform .12s ease;}
-.pk-cluster::before{content:""; position:absolute; inset:5px; border-radius:50%; background:radial-gradient(circle at 34% 28%, #24384a, var(--ink) 78%); box-shadow:inset 0 1px 3px rgba(0,0,0,0.5);}
-.pk-cluster span{position:relative; z-index:1; line-height:1; color:var(--parchment); text-shadow:0 1px 2px rgba(0,0,0,0.65);}
-.pk-cluster.sm{font-size:12px;}
-.pk-cluster.md{font-size:13.5px;}
-.pk-cluster.lg{font-size:15px;}
-.leaflet-marker-icon:hover .pk-cluster{transform:scale(1.09);}
+/* Shluky bodů — čistě a s duší: číslo patkovým písmem, jemná měděná záře */
+.pk-cluster{position:relative; display:flex; align-items:center; justify-content:center; width:100%; height:100%; border-radius:50%;
+  background:radial-gradient(circle at 50% 42%, rgba(224,174,67,0.20), rgba(20,32,44,0.92) 70%);
+  border:1.5px solid rgba(224,174,67,0.75);
+  box-shadow:0 6px 20px -6px rgba(0,0,0,0.65), 0 0 0 7px rgba(224,174,67,0.05);
+  font-family:'Fraunces',serif; font-weight:500; color:var(--copper-bright);
+  transition:transform .18s var(--ease), box-shadow .18s var(--ease);}
+.pk-cluster span{line-height:1; text-shadow:0 1px 3px rgba(0,0,0,0.55);}
+.pk-cluster.sm{font-size:15px;}
+.pk-cluster.md{font-size:17px;}
+.pk-cluster.lg{font-size:20px;}
+.leaflet-marker-icon:hover .pk-cluster{transform:scale(1.08); box-shadow:0 8px 24px -6px rgba(0,0,0,0.7), 0 0 0 9px rgba(224,174,67,0.09);}
 /* Blížící se dražba (≤ 7 dní) — pulzující kroužek v barvě kategorie */
 .marker-pulse.urgent::before{content:""; position:absolute; inset:-6px; border-radius:50%; border:2px solid currentColor; opacity:0.85; animation:mping 1.7s ease-out infinite;}
 @keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(2.2); opacity:0;}}
