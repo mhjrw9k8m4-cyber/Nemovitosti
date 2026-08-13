@@ -1004,19 +1004,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949475-nabidka-prodej-pozemku-kropacova-vrutice"
     },
     {
-      "place": "Klimkovice – Klimkovice",
-      "okres": "Ostrava-město",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "orná půda",
-      "area": 3979,
-      "price": 159000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.765825,
-      "lng": 18.12095,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1044761-nabidka-prodej-pozemku-klimkovice"
-    },
-    {
       "place": "Nový Poddvorov – Nový Poddvorov",
       "okres": "Břeclav",
       "type": "sale",
@@ -1561,6 +1548,19 @@
       "lat": 50.352237,
       "lng": 14.860317,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1035381-nabidka-prodej-pozemku-brodce"
+    },
+    {
+      "place": "Žabovřesky nad Ohří – Žabovřesky nad Ohří",
+      "okres": "Litoměřice",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 16851,
+      "price": 889000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.417725,
+      "lng": 14.093471,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1003567-nabidka-prodej-pozemku-zabovresky-nad-ohri"
     },
     {
       "place": "Stráž pod Ralskem",
