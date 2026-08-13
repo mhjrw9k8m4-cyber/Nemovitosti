@@ -1,0 +1,16 @@
+name: Průzkum zdrojů dat
+
+# Jednorázový průzkum — co je venku dostupné (spouští se ručně).
+on:
+  workflow_dispatch: {}
+
+jobs:
+  recon:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Průzkum
+        run: node scripts/recon.mjs
