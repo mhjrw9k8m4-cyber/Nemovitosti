@@ -30,8 +30,9 @@
   // rovnou IDENTIFIKUJE a vyznačí (ukáže bublinu s parcelou), ne jen vycentruje.
   function katastrUrl(d){ return 'https://www.ikatastr.cz/#info=' + d.lat + ',' + d.lng; }
   function mapyUrl(d){ return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat; }
-  // Stabilní klíč pozemku (přežije změnu pořadí dat) — pro oblíbené i sdílení
-  function pkey(d){ return (d.parcel || '?') + '@' + d.lat + ',' + d.lng; }
+  // Stabilní klíč pozemku (přežije nové stažení dat i drobný posun GPS) —
+  // pro oblíbené i sdílení. Záměrně bez souřadnic, které se mohou mírně měnit.
+  function pkey(d){ return [d.place || '', d.parcel || '', d.okres || ''].join('|'); }
   // Zkopírování textu do schránky s bezpečnou zálohou pro starší prohlížeče
   function copyText(text, onDone){
     function fallback(){
