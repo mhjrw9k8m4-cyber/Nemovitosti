@@ -34,6 +34,18 @@
   function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
   function hasArea(d){ return typeof d.area === 'number' && d.area > 0; }
   function areaTxt(d){ return hasArea(d) ? fmt(d.area) + ' m²' : 'neuvedena'; }
+  // Sloučení mnoha variant druhu do pár skupin pro filtr
+  function druhGroup(s){
+    s = (s || '').toLowerCase();
+    if (s.indexOf('les') !== -1) return 'Lesní pozemek';
+    if (s.indexOf('stavební') !== -1 || s.indexOf('zastav') !== -1) return 'Stavební / zastavěná';
+    if (s.indexOf('orná') !== -1) return 'Orná půda';
+    if (s.indexOf('zahrad') !== -1) return 'Zahrada';
+    if (s.indexOf('travní') !== -1 || s.indexOf('louk') !== -1 || s.indexOf('pastvin') !== -1) return 'Louka / travní porost';
+    if (s.indexOf('vinice') !== -1 || s.indexOf('sad') !== -1) return 'Vinice / sad';
+    if (s.indexOf('ostatní') !== -1) return 'Ostatní plocha';
+    return 'Jiný pozemek';
+  }
 
   /* ---------- Oznamovací lišta ---------- */
   var tbClose = document.getElementById('tb-close');
@@ -264,10 +276,25 @@
   var countEl = document.getElementById('map-count');
   var searchEl = document.getElementById('map-search');
   var filtersEl = document.getElementById('map-filters');
+  var druhEl = document.getElementById('map-druh');
+  var sortEl = document.getElementById('map-sort');
   var detailEl = document.getElementById('opp-detail');
   var activeType = 'all';
+  var activeDruh = 'all';
+  var sortMode = 'demand';
   var searchTerm = '';
   var markers = [];
+
+  // Naplníme filtr druhů podle toho, co je v datech (s počty)
+  if (druhEl) {
+    var gc = {};
+    DATA.forEach(function (d) { var g = druhGroup(d.druh); gc[g] = (gc[g] || 0) + 1; });
+    Object.keys(gc).sort(function (a, b) { return gc[b] - gc[a]; }).forEach(function (g) {
+      var o = document.createElement('option');
+      o.value = g; o.textContent = g + ' (' + gc[g] + ')';
+      druhEl.appendChild(o);
+    });
+  }
 
   // Filtr kategorie ukážeme jen tehdy, když v datech opravdu nějaká je
   // (prázdné kategorie, např. obecní záměry, tak nevytvářejí mrtvý tab —
@@ -413,7 +440,17 @@
   function visible(d) {
     var okType = activeType === 'all' || d.type === activeType;
     var okSearch = !searchTerm || d.place.toLowerCase().indexOf(searchTerm) !== -1;
-    return okType && okSearch;
+    var okDruh = activeDruh === 'all' || druhGroup(d.druh) === activeDruh;
+    return okType && okSearch && okDruh;
+  }
+  function perM2Val(d){ return hasArea(d) ? d.price / d.area : Infinity; }
+  function sortVis(arr){
+    if (sortMode === 'price_asc') arr.sort(function (a, b) { return a.price - b.price; });
+    else if (sortMode === 'price_desc') arr.sort(function (a, b) { return b.price - a.price; });
+    else if (sortMode === 'area_desc') arr.sort(function (a, b) { return (b.area || 0) - (a.area || 0); });
+    else if (sortMode === 'perm2_asc') arr.sort(function (a, b) { return perM2Val(a) - perM2Val(b); });
+    else arr.sort(function (a, b) { return demand(b) - demand(a); });
+    return arr;
   }
 
   // Míra zájmu — čím výhodnější cena/m² a lákavější typ, tím víc zájemců
@@ -426,7 +463,7 @@
     return d._demand;
   }
 
-  var LIST_LIMIT = 6;
+  var LIST_LIMIT = 8;
   function renderList() {
     listEl.innerHTML = '';
     var vis = [];
@@ -437,7 +474,7 @@
       if (v) vis.push(d);
     });
     var matched = vis.length;
-    vis.sort(function (a, b) { return demand(b) - demand(a); });
+    sortVis(vis);
     var top = vis.slice(0, LIST_LIMIT);
 
     top.forEach(function (d, rank) {
@@ -471,7 +508,8 @@
       listEl.appendChild(li);
     });
 
-    countEl.innerHTML = 'Nejžádanější příležitosti · <span class="mc-sub">' + matched + ' na mapě</span>';
+    var headLabel = sortMode === 'demand' ? 'Nejžádanější příležitosti' : 'Vybrané příležitosti';
+    countEl.innerHTML = headLabel + ' · <span class="mc-sub">' + matched + ' na mapě</span>';
     if (matched === 0) {
       listEl.innerHTML = '<li class="map-count" style="padding:20px 6px; text-transform:none; font-weight:400;">Tady zrovna nic není — zkuste jiný filtr. Příležitostí přibývá každý týden.</li>';
     } else if (matched > LIST_LIMIT) {
@@ -500,6 +538,8 @@
     searchTerm = searchEl.value.trim().toLowerCase();
     renderList();
   });
+  if (druhEl) druhEl.addEventListener('change', function () { activeDruh = druhEl.value; renderList(); });
+  if (sortEl) sortEl.addEventListener('change', function () { sortMode = sortEl.value; renderList(); });
 
   renderList();
   setTimeout(function () { map.invalidateSize(); }, 300);
