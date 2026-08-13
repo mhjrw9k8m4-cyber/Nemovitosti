@@ -229,9 +229,10 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .md-actions{flex:none; display:flex; flex-direction:column; gap:6px; width:172px;}
 .md-actions .lp-btn{flex:none;}
 @media (max-width:760px){
-  .map-detail{max-height:55%; overflow-y:auto; padding:14px 40px 16px 16px;}
-  .md-body{flex-direction:column; align-items:stretch; gap:12px;}
-  .md-shape{width:100%; height:84px;}
+  .map-detail{max-height:60%; overflow-y:auto; padding:12px 38px 14px 14px;}
+  .md-body{flex-direction:column; align-items:stretch; gap:10px;}
+  .md-shape{width:60px; height:60px; align-self:flex-start;}
+  .md-facts{gap:5px 12px;}
   .md-actions{width:auto; flex-direction:row; flex-wrap:wrap;}
   .md-actions .lp-btn{flex:1; min-width:72px;}
   .md-actions .lp-watch{flex-basis:100%;}
@@ -479,7 +480,11 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 
 /* Responsive */
 @media (max-width:960px){
-  .map-app{grid-template-columns:1fr; height:auto;} .map-side{max-height:340px;} .map-holder{height:480px; position:relative;} #leaflet-map{position:absolute; inset:0;}
+  .map-app{grid-template-columns:1fr; height:auto;}
+  .map-holder{height:460px; order:-1;}
+  .map-side{max-height:none;}
+  .opp-list{max-height:none; overflow:visible; flex:none;}
+  #leaflet-map{position:absolute; inset:0;}
   .status-grid{grid-template-columns:repeat(2,1fr);} .counters-row{grid-template-columns:repeat(2,1fr); gap:36px 24px;}
   .glossary{grid-template-columns:repeat(2,1fr);} .reviews{grid-template-columns:1fr;}
   .pricing{grid-template-columns:1fr; max-width:440px; margin:0 auto;} .price-card.featured{transform:none;}

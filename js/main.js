@@ -336,6 +336,7 @@
     setTimeout(function () { map.invalidateSize(); }, 60);
     setTimeout(function () { map.invalidateSize(); }, 340);
   }
+  var holderEl = document.querySelector('.map-holder');
   function showDetail(d) {
     if (!detailEl) return;
     detailEl.innerHTML = detailHtml(d);
@@ -344,6 +345,7 @@
     highlightMarker(d._id);
     highlightShape(d);
     resizeMapSoon();
+    if (window.innerWidth <= 960 && holderEl) holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
   function hideDetail() {
     if (!detailEl) return;
