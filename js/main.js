@@ -546,7 +546,7 @@
     return L.divIcon({
       className: '',
       html: '<span class="pk-dot' + (isUrgent(d) ? ' urgent' : '') + '" style="background:' + col + '; color:' + col + '"></span>',
-      iconSize: [14, 14], iconAnchor: [7, 7]
+      iconSize: [7, 7], iconAnchor: [3.5, 3.5]
     });
   }
   // Přibližný tvar parcely (deterministický, cache) — ukázková geometrie
