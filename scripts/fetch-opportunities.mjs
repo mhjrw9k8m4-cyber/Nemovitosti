@@ -96,10 +96,20 @@ function parseArea(text) {
 }
 function parseDruh(text) {
   const t = String(text).toLowerCase();
+  // Pořadí = priorita. Nejžádanější druhy (stavební, les) mají přednost.
   const kinds = [
-    ['orná půda', 'orná půda'], ['zahrad', 'zahrada'], ['ostatní plocha', 'ostatní plocha'],
-    ['trvalý travní', 'trvalý travní porost'], ['louk', 'louka'], ['lesní', 'lesní pozemek'],
-    ['stavební', 'stavební'], ['vinice', 'vinice'], ['sad', 'ovocný sad'],
+    ['stavební', 'stavební pozemek'], ['k výstavb', 'stavební pozemek'],
+    ['pro výstavb', 'stavební pozemek'], ['zasíťovan', 'stavební pozemek'],
+    ['určený k stavb', 'stavební pozemek'], ['stavebn', 'stavební pozemek'],
+    ['lesní', 'lesní pozemek'], ['les ', 'lesní pozemek'], ['lesa', 'lesní pozemek'],
+    ['lesy', 'lesní pozemek'], ['lesem', 'lesní pozemek'], ['porost lesní', 'lesní pozemek'],
+    ['vinice', 'vinice'], ['ovocný sad', 'ovocný sad'],
+    ['zahrad', 'zahrada'],
+    ['orná', 'orná půda'], ['ornou', 'orná půda'], ['orné', 'orná půda'],
+    ['trvalý travní', 'trvalý travní porost'], ['travní porost', 'trvalý travní porost'],
+    ['louk', 'louka'], ['pastvin', 'pastvina'],
+    ['ostatní plocha', 'ostatní plocha'],
+    ['zemědělsk', 'zemědělský pozemek'],
   ];
   for (const [k, v] of kinds) if (t.includes(k)) return v;
   return 'pozemek';
@@ -251,7 +261,7 @@ async function fetchBezrealitky() {
   const query = `query($limit:Int,$offset:Int,$order:ResultOrder,$offerType:[OfferType],$estateType:[EstateType]){
     listAdverts(limit:$limit,offset:$offset,order:$order,offerType:$offerType,estateType:$estateType){
       totalCount
-      list{ id uri title address(locale: CS) price surface surfaceLand gps{ lat lng } }
+      list{ id uri title description address(locale: CS) price surface surfaceLand gps{ lat lng } }
     }
   }`;
   const out = [];
@@ -280,10 +290,13 @@ async function fetchBezrealitky() {
       const place = (parts[0] || a.title || 'Pozemek').replace(/\s*-\s*/g, ' – ').slice(0, 60);
       let okres = hasGps ? nearestOkres(gps.lat, gps.lng) : null;
       if (!okres) okres = (parts[parts.length - 1] || place).replace(/\s*kraj$/i, '').slice(0, 40);
+      // Druh vytáhneme z popisu + názvu (API druh pozemku neuvádí) —
+      // takhle se zviditelní stavební pozemky i lesy.
+      const druh = parseDruh((a.description || '') + ' ' + (a.title || ''));
       out.push({
         place, okres, type: 'sale',
         parcel: '—', _key: 'br-' + a.id, // dedup podle inzerátu, ne parcely
-        druh: 'pozemek', area, price,
+        druh, area, price,
         extra: 'inzerát – Bezrealitky',
         lat: typeof gps.lat === 'number' ? gps.lat : undefined,
         lng: typeof gps.lng === 'number' ? gps.lng : undefined,
@@ -327,7 +340,7 @@ async function fetchFarmy() {
     const obec = (text.match(/Obec\s+(.+?)\s+Okres/i) || [])[1];
     const ku = (text.match(/Katastrální území\s+([^\d]+?)\s+(?:Výměra|Poloha|Cena|Číslo)/i) || [])[1];
     const place = (obec || ku || 'Pozemek').trim().slice(0, 60);
-    const druh = /ornou|orná/i.test(text) ? 'orná půda' : parseDruh(text.slice(0, 600));
+    const druh = parseDruh(text.slice(0, 900));
     out.push({
       place, okres: okres.trim().slice(0, 40), type: 'sale',
       parcel: '—', _key: 'fa-' + id,
