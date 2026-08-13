@@ -118,8 +118,10 @@ async function fetchDrazby() {
     const arr = Array.isArray(data) ? data : (Object.values(data).find(Array.isArray) || []);
     for (const rec of arr) {
       const zi = rec.zakladniInformace || {};
-      const konani = zi.konaniDrazby;
-      const zah = konani && (konani.zahajeni || konani.konec);
+      const konani = zi.konaniDrazby || {};
+      const zah = konani.zacatek || konani.zahajeni || konani.konec;
+      // Odkaz na dražbu: platforma, kde dražba probíhá (u elektronických dražeb).
+      const drazbaUrl = typeof konani.url === 'string' && /^https?:\/\//.test(konani.url) ? konani.url : undefined;
       // Nucená (nedobrovolná) dražba = nucený prodej → kategorie "exekuce"
       const nucena = zi.typDrazby === 'Nucená';
       const type = nucena ? 'exekuce' : 'drazba';
@@ -161,6 +163,7 @@ async function fetchDrazby() {
           lat: typeof vn.gpsLat === 'number' ? vn.gpsLat : undefined,
           lng: typeof vn.gpsLng === 'number' ? vn.gpsLng : undefined,
           _gps: typeof vn.gpsLat === 'number' && typeof vn.gpsLng === 'number',
+          url: drazbaUrl,
         };
         break;
       }
