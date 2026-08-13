@@ -24,16 +24,43 @@ sbírané z veřejných zdrojů. Klik na bod → detail + proklik do katastru.
 - ✨ **Plynulé odkrývání sekcí** (scroll reveal), sticky header, tlačítko nahoru
 - ❓ **FAQ** (rozbalovací), formulář na hlídání lokality, widget pro realitky
 
-## Data
+## Data (datová linka)
 
-Body na mapě jsou zatím **ukázková** (ilustrační). V ostré verzi by je nahradila
-data z veřejných zdrojů:
+Web už nemá data natvrdo — načítá je ze souboru:
 
-- Portál dražeb
-- Insolvenční rejstřík
-- Úřední desky obcí (záměry prodeje)
-- Veřejné inzertní portály
-- Katastr nemovitostí (ČÚZK)
+```
+data/opportunities.json   # příležitosti, které web zobrazí
+data/okresy.json          # okres → přibližné GPS (geokódování)
+scripts/fetch-opportunities.mjs   # robot: sběr ze zdrojů → JSON
+.github/workflows/update-data.yml # denní automatické spuštění robota
+```
+
+Web soubor `data/opportunities.json` načítá přes `fetch` a má bezpečnou zálohu
+(když se soubor nenačte, použije vestavěná ukázková data — nikdy není prázdný).
+
+### Formát jedné příležitosti
+
+```json
+{
+  "place": "Kolín", "okres": "Kolín", "type": "drazba",
+  "parcel": "412/3", "druh": "stavební", "area": 1240,
+  "price": 640000, "extra": "dražba za 12 dní",
+  "lat": 50.0281, "lng": 15.2003
+}
+```
+
+`type` ∈ `sale` (na prodej) · `drazba` · `exekuce` · `obec` (obecní záměr).
+`lat`/`lng` jsou nepovinné — když chybí, robot je doplní podle `okres`.
+
+### Jak zapojit reálný zdroj
+
+V `scripts/fetch-opportunities.mjs` jsou funkce `fetchDrazby()`,
+`fetchInsolvence()`, `fetchUredniDesky()`, `fetchInzeraty()` — každá vrátí pole
+příležitostí v uvedeném formátu. Robot je sjednotí, geokóduje, odstraní duplicity,
+seřadí podle výhodnosti a zapíše. Stačí doplnit jednu z funkcí.
+
+**Pozor:** u každého zdroje respektujte jeho podmínky (robots.txt, zákaz
+automatického stahování). Nejčistší je zdroj, který sám nabízí otevřená data.
 
 ## Spuštění lokálně
 

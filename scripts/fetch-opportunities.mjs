@@ -20,6 +20,23 @@ import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = join(__dirname, '..', 'data', 'opportunities.json');
+const OKRESY = join(__dirname, '..', 'data', 'okresy.json');
+
+// Geokódování: okres → přibližné souřadnice (s malým rozptylem, ať se body nekryjí)
+let OKRESY_MAP = {};
+try { OKRESY_MAP = JSON.parse(readFileSync(OKRESY, 'utf8')).okresy || {}; } catch { /* ok */ }
+
+function geocode(o, seedStr) {
+  if (typeof o.lat === 'number' && typeof o.lng === 'number') return o;
+  const base = OKRESY_MAP[o.okres];
+  if (!base) return o;
+  // deterministický rozptyl ~±0.03° podle názvu parcely
+  let h = 0;
+  const s = (seedStr || o.parcel || o.place || '') + o.okres;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  const jitter = (n) => (((h >> n) & 255) / 255 - 0.5) * 0.06;
+  return { ...o, lat: +(base[0] + jitter(0)).toFixed(5), lng: +(base[1] + jitter(8)).toFixed(5) };
+}
 
 /* ---------- Zdroje (doplnit reálné stahování) ---------- */
 
@@ -66,10 +83,22 @@ async function main() {
     fetchInzeraty(),
   ]);
 
-  const fresh = results
+  const raw = results
     .filter((r) => r.status === 'fulfilled')
     .flatMap((r) => r.value || [])
-    .filter(valid);
+    .map((o) => geocode(o));
+
+  // odstranění duplicit (okres + parcela) a seřazení podle výhodnosti
+  const seen = new Set();
+  const fresh = raw
+    .filter(valid)
+    .filter((o) => {
+      const k = (o.okres + '|' + o.parcel).toLowerCase();
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    })
+    .sort((a, b) => a.price / a.area - b.price / b.area);
 
   if (fresh.length === 0) {
     console.log('Žádný zdroj zatím nevrací data — ponechávám stávající soubor beze změny.');
