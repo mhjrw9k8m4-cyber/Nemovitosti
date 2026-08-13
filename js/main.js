@@ -617,12 +617,53 @@
     selPoly = L.polygon(polyFor(d), { color: '#fff', weight: 2.5, fillColor: TYPE[d.type].color, fillOpacity: 0.4, opacity: 1 }).addTo(map);
   }
 
+  // Shlukování bodů — blízké značky se spojí do jednoho kolečka s počtem,
+  // při přiblížení se rozbalí. Odstraní „přeplácanost" při pohledu na celou ČR.
+  var hasCluster = typeof L.markerClusterGroup === 'function';
+  var cluster = hasCluster ? L.markerClusterGroup({
+    showCoverageOnHover: false,
+    maxClusterRadius: 48,
+    spiderfyOnMaxZoom: true,
+    chunkedLoading: true,
+    iconCreateFunction: function (c) {
+      var n = c.getChildCount();
+      var px = n < 10 ? 34 : (n < 40 ? 40 : 48);
+      var cls = n < 10 ? 'sm' : (n < 40 ? 'md' : 'lg');
+      return L.divIcon({ html: '<div class="pk-cluster ' + cls + '"><span>' + n + '</span></div>', className: '', iconSize: [px, px], iconAnchor: [px / 2, px / 2] });
+    }
+  }) : null;
+  if (cluster) map.addLayer(cluster);
+
   DATA.forEach(function (d, i) {
     d._id = i;
-    var m = L.marker([d.lat, d.lng], { icon: markerIcon(d.type, isUrgent(d)) }).addTo(map);
+    var m = L.marker([d.lat, d.lng], { icon: markerIcon(d.type, isUrgent(d)) });
     m.on('click', function () { showDetail(d); highlightList(i); });
     markers.push(m);
+    if (!cluster) m.addTo(map); // záloha bez knihovny shlukování
   });
+
+  // Do shluku vkládáme jen viditelné body; přepínání filtru je řeší přírůstkově.
+  var inCluster = {};
+  function syncMarkers(visIds) {
+    if (!cluster) {
+      DATA.forEach(function (d) {
+        var v = visIds.indexOf(d._id) !== -1;
+        markers[d._id].setOpacity(v ? 1 : 0);
+        if (markers[d._id]._icon) markers[d._id]._icon.style.pointerEvents = v ? 'auto' : 'none';
+      });
+      return;
+    }
+    var want = {};
+    visIds.forEach(function (id) { want[id] = true; });
+    var add = [], rem = [];
+    DATA.forEach(function (d) {
+      var id = d._id;
+      if (want[id] && !inCluster[id]) { add.push(markers[id]); inCluster[id] = true; }
+      else if (!want[id] && inCluster[id]) { rem.push(markers[id]); inCluster[id] = false; }
+    });
+    if (rem.length) cluster.removeLayers(rem);
+    if (add.length) cluster.addLayers(add);
+  }
 
   // Oddálí mapu tak, aby byla vidět celá rozloha nabídek (celá ČR).
   // Přizpůsobí se velikosti displeje – na mobilu i na počítači.
@@ -697,13 +738,11 @@
   var LIST_LIMIT = 8;
   function renderList() {
     listEl.innerHTML = '';
-    var vis = [];
+    var vis = [], visIds = [];
     DATA.forEach(function (d) {
-      var v = visible(d);
-      markers[d._id].setOpacity(v ? 1 : 0);
-      markers[d._id]._icon && (markers[d._id]._icon.style.pointerEvents = v ? 'auto' : 'none');
-      if (v) vis.push(d);
+      if (visible(d)) { vis.push(d); visIds.push(d._id); }
     });
+    syncMarkers(visIds);
     var matched = vis.length;
     sortVis(vis);
     // „Výhodná cena" jen pro skutečně nejlevnější špičku (podle Kč/m²),
@@ -808,7 +847,11 @@
     var target = null;
     DATA.forEach(function (d) { if (pkey(d) === key) target = d; });
     if (!target) return false;
-    map.setView([target.lat, target.lng], 14, { animate: false });
+    if (cluster && cluster.hasLayer(markers[target._id]) && cluster.zoomToShowLayer) {
+      cluster.zoomToShowLayer(markers[target._id], function () { highlightMarker(target._id); });
+    } else {
+      map.setView([target.lat, target.lng], 14, { animate: false });
+    }
     showDetail(target);
     highlightList(target._id);
     if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);

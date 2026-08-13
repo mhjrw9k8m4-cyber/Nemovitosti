@@ -108,6 +108,13 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 .marker-pulse:hover{transform:scale(1.45); box-shadow:0 5px 16px rgba(0,0,0,0.55); z-index:1000;}
 .marker-pulse.sel{transform:scale(1.5); box-shadow:0 0 0 4px rgba(255,255,255,0.35), 0 5px 16px rgba(0,0,0,0.55);}
 .marker-pulse.sel::after{content:""; position:absolute; inset:-7px; border-radius:50%; border:2px solid #fff; opacity:0.7; animation:mping 1.5s ease-out infinite;}
+/* Shluky bodů (marker cluster) — v měděném stylu webu */
+.pk-cluster{display:flex; align-items:center; justify-content:center; width:100%; height:100%; border-radius:50%; font-family:'Inter',sans-serif; font-weight:700; color:var(--ink); background:rgba(224,174,67,0.95); border:2px solid rgba(237,230,214,0.9); box-shadow:0 3px 12px rgba(0,0,0,0.5); transition:transform .12s ease;}
+.pk-cluster span{line-height:1;}
+.pk-cluster.sm{font-size:12px;}
+.pk-cluster.md{font-size:13px; background:rgba(201,152,47,0.96);}
+.pk-cluster.lg{font-size:15px; background:rgba(201,152,47,0.98);}
+.leaflet-marker-icon:hover .pk-cluster{transform:scale(1.08);}
 /* Blížící se dražba (≤ 7 dní) — pulzující kroužek v barvě kategorie */
 .marker-pulse.urgent::before{content:""; position:absolute; inset:-6px; border-radius:50%; border:2px solid currentColor; opacity:0.85; animation:mping 1.7s ease-out infinite;}
 @keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(2.2); opacity:0;}}
