@@ -1,21 +1,22 @@
 #!/usr/bin/env node
+// Bezrealitky: pole s popisem inzerátu (pro detekci druhu: stavební/les/zahrada…)
 const UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
-async function get(u) { try { const r = await fetch(u, { headers: UA }); const t = await r.text(); return { s: r.status, t }; } catch (e) { return { s: 0, t: '', err: e.message }; } }
-
-// ---- ikatastr bundle: jak čte hash / vyznačení parcely ----
-console.log('=== ikatastr ik2d bundle: hash/marker/parcela ===');
-const b = await get('https://www.ikatastr.cz/dist/ik2d-26.06.07.js?v3');
-console.log('bundle:', b.s, b.t.length + 'B');
-for (const kw of ['location.hash', 'kde=', "'kde'", '"kde"', 'marker', 'parcela', 'wsgp', 'identifik', 'centerMarker', 'L.marker', 'setView', 'hash']) {
-  const i = b.t.indexOf(kw);
-  if (i >= 0) console.log(`  "${kw}" @${i}: …${b.t.slice(i - 25, i + 75).replace(/\s+/g, ' ')}…`);
-}
-
-// ---- Bezrealitky: Disposition enum (druh pozemku) + tags ----
-console.log('\n=== Bezrealitky: Disposition enum + tagy ===');
 async function gql(query) { const r = await fetch('https://api.bezrealitky.cz/graphql/', { method: 'POST', headers: { ...UA, 'content-type': 'application/json' }, body: JSON.stringify({ query }) }); return r.json().catch(() => null); }
-const disp = await gql(`{ __type(name:"Disposition"){ enumValues{ name } } }`);
-console.log('Disposition:', JSON.stringify(disp && disp.data && disp.data.__type && disp.data.__type.enumValues.map((e) => e.name)));
-const sample = await gql(`{ listAdverts(limit:5, order:TIMEORDER_DESC, offerType:[PRODEJ], estateType:[POZEMEK]){ list{ id title disposition tags(locale: CS) } } }`);
-console.log('ukázka inzerátů:', JSON.stringify(sample && sample.data));
+
+// pole typu Advert obsahující desc/text/popis/anot/nadpis
+const t = await gql(`{ __type(name:"Advert"){ fields{ name type{ name kind ofType{ name } } } } }`);
+const fields = (t && t.data && t.data.__type && t.data.__type.fields) || [];
+console.log('textová pole:', JSON.stringify(fields.filter((f) => /desc|text|popis|anot|nadpis|content|body|summary|title/i.test(f.name)).map((f) => f.name)));
+
+// zkusíme description
+for (const fld of ['description(locale: CS)', 'text(locale: CS)', 'descriptionNormalized']) {
+  const q = `{ listAdverts(limit:2, order:TIMEORDER_DESC, offerType:[PRODEJ], estateType:[POZEMEK]){ list{ id ${fld} } } }`;
+  const r = await gql(q);
+  if (r && r.data) {
+    const s = JSON.stringify(r.data.listAdverts.list).slice(0, 400);
+    console.log(`\n${fld} → OK:`, s);
+  } else {
+    console.log(`\n${fld} → chyba:`, JSON.stringify(r && r.errors && r.errors[0] && r.errors[0].message));
+  }
+}
 console.log('\nHotovo.');
