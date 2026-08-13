@@ -394,30 +394,48 @@
     return okType && okSearch;
   }
 
+  // Míra zájmu — čím výhodnější cena/m² a lákavější typ, tím víc zájemců
+  function demand(d) {
+    if (d._demand != null) return d._demand;
+    var perM2 = d.price / d.area;
+    var typeBonus = { drazba: 60, exekuce: 45, obec: 25, sale: 35 }[d.type] || 0;
+    var dealBonus = Math.max(0, 1100 - perM2) / 7;
+    d._demand = Math.round(34 + typeBonus + dealBonus);
+    return d._demand;
+  }
+
   var LIST_LIMIT = 6;
   function renderList() {
     listEl.innerHTML = '';
-    var matched = 0;
+    var vis = [];
     DATA.forEach(function (d) {
-      var vis = visible(d);
-      markers[d._id].setOpacity(vis ? 1 : 0);
-      markers[d._id]._icon && (markers[d._id]._icon.style.pointerEvents = vis ? 'auto' : 'none');
-      if (!vis) return;
-      matched++;
-      if (matched > LIST_LIMIT) return;
+      var v = visible(d);
+      markers[d._id].setOpacity(v ? 1 : 0);
+      markers[d._id]._icon && (markers[d._id]._icon.style.pointerEvents = v ? 'auto' : 'none');
+      if (v) vis.push(d);
+    });
+    var matched = vis.length;
+    vis.sort(function (a, b) { return demand(b) - demand(a); });
+    var top = vis.slice(0, LIST_LIMIT);
+
+    top.forEach(function (d, rank) {
       var t = TYPE[d.type];
+      var perM2 = Math.round(d.price / d.area);
+      var w = demand(d);
+      var hot = rank < 2 || w >= 140;
       var li = document.createElement('li');
-      li.className = 'opp-item ' + d.type; li.setAttribute('data-id', d._id);
+      li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '');
+      li.setAttribute('data-id', d._id);
       li.setAttribute('tabindex', '0');
       li.setAttribute('role', 'button');
       li.setAttribute('aria-label', t.label + ' · ' + d.place + ' · ' + fmt(d.area) + ' m²');
-      var perM2 = Math.round(d.price / d.area);
       li.innerHTML =
         '<div class="opp-top"><span class="opp-place">' + d.place + '</span>' +
         '<span class="opp-tag ' + d.type + '">' + t.label + '</span></div>' +
         '<div class="opp-meta"><span>parc. <b>' + d.parcel + '</b></span>' +
         '<span><b>' + fmt(d.area) + '</b> m²</span><span>' + d.druh + '</span></div>' +
-        '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b> <span>· ' + fmt(perM2) + ' Kč/m²</span></div>';
+        '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b> <span>· ' + fmt(perM2) + ' Kč/m²</span></div>' +
+        '<div class="opp-demand">' + (hot ? '<span class="hot">🔥 Velký zájem</span> · ' : '') + '<span class="watch">👁 ' + w + ' sledujících</span></div>';
       function openThis() {
         showDetail(d);
         highlightList(d._id);
@@ -430,13 +448,14 @@
       li.addEventListener('mouseenter', function () { highlightList(d._id); });
       listEl.appendChild(li);
     });
-    countEl.textContent = matched + (matched === 1 ? ' příležitost' : (matched >= 2 && matched <= 4 ? ' příležitosti' : ' příležitostí')) + ' na mapě';
+
+    countEl.innerHTML = '🔥 Nejžádanější příležitosti · <span style="text-transform:none">' + matched + ' na mapě</span>';
     if (matched === 0) {
       listEl.innerHTML = '<li class="map-count" style="padding:20px 6px;">Nic nenalezeno — zkuste jiný filtr.</li>';
     } else if (matched > LIST_LIMIT) {
       var more = document.createElement('li');
       more.className = 'opp-more';
-      more.textContent = '+ ' + (matched - LIST_LIMIT) + ' dalších najdete na mapě';
+      more.textContent = '+ ' + (matched - LIST_LIMIT) + ' dalších příležitostí najdete na mapě';
       listEl.appendChild(more);
     }
   }
