@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://mhjrw9k8m4-cyber.github.io/Nemovitosti/sitemap.xml
