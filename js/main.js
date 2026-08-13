@@ -278,10 +278,12 @@
   var filtersEl = document.getElementById('map-filters');
   var druhEl = document.getElementById('map-druh');
   var sortEl = document.getElementById('map-sort');
+  var cenaEl = document.getElementById('map-cena');
   var detailEl = document.getElementById('opp-detail');
   var activeType = 'all';
   var activeDruh = 'all';
   var sortMode = 'demand';
+  var maxPrice = 0;
   var searchTerm = '';
   var markers = [];
 
@@ -447,7 +449,8 @@
     var okType = activeType === 'all' || d.type === activeType;
     var okSearch = !searchTerm || (d.place + ' ' + d.okres).toLowerCase().indexOf(searchTerm) !== -1;
     var okDruh = activeDruh === 'all' || druhGroup(d.druh) === activeDruh;
-    return okType && okSearch && okDruh;
+    var okPrice = !maxPrice || !d.price || d.price <= maxPrice;
+    return okType && okSearch && okDruh && okPrice;
   }
   function perM2Val(d){ return hasArea(d) ? d.price / d.area : Infinity; }
   function sortVis(arr){
@@ -551,6 +554,7 @@
   });
   if (druhEl) druhEl.addEventListener('change', function () { activeDruh = druhEl.value; renderList(); });
   if (sortEl) sortEl.addEventListener('change', function () { sortMode = sortEl.value; renderList(); });
+  if (cenaEl) cenaEl.addEventListener('change', function () { maxPrice = parseInt(cenaEl.value, 10) || 0; renderList(); });
 
   renderList();
   setTimeout(function () { map.invalidateSize(); }, 300);
