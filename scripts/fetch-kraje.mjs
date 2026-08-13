@@ -3,7 +3,10 @@
 // převodníkem TopoJSON→GeoJSON (bez závislostí). Spouští se v GitHub Actions.
 import { writeFileSync } from 'node:fs';
 
-const SRC = 'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/czech-republic/czech-republic-regions.json';
+const SOURCES = [
+  'https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/czech-republic.geojson',
+  'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/czech-republic/czech-republic-regions.json'
+];
 
 // Název kraje (i anglické varianty) → náš klíč (shodný s OKRES_KRAJ v js/main.js)
 const NAME_KRAJ = {
@@ -69,21 +72,36 @@ function simpGeom(g) {
   return p.length ? { type: 'MultiPolygon', coordinates: p } : null;
 }
 
-const res = await fetch(SRC);
-if (!res.ok) { console.error('Stažení selhalo:', res.status); process.exit(1); }
-const topo = await res.json();
-console.log('typ:', topo.type, '| objekty:', Object.keys(topo.objects || {}).join(','));
-const objKey = Object.keys(topo.objects)[0];
-const geoms = topo.objects[objKey].geometries || [];
-console.log('geometrií:', geoms.length, '| vzorek props:', JSON.stringify(geoms[0] && geoms[0].properties));
+let data = null, used = null;
+for (const url of SOURCES) {
+  try { const r = await fetch(url); if (r.ok) { data = await r.json(); used = url; break; } console.warn('přeskočeno', r.status, url); }
+  catch (e) { console.warn('chyba', e.message, url); }
+}
+if (!data) { console.error('Žádný zdroj nedostupný'); process.exit(1); }
+console.log('zdroj:', used, '| typ:', data.type);
+
+// Sjednotíme na pole { properties, geometry(GeoJSON) }
+let features;
+if (data.type === 'Topology') {
+  const objKey = Object.keys(data.objects)[0];
+  features = (data.objects[objKey].geometries || []).map(g => ({ properties: g.properties || {}, geometry: geomToGeoJSON(data, g) }));
+} else {
+  features = (data.features || []).map(f => ({ properties: f.properties || {}, geometry: f.geometry }));
+}
+console.log('features:', features.length, '| vzorek props:', JSON.stringify(features[0] && features[0].properties));
+
+function resolveKraj(p) {
+  const raw = String(p.name || p.NAME_1 || p.NAME || p.name_1 || p.NÁZEV || '').trim();
+  const cands = [raw, raw.replace(/\s+kraj$/i, '').trim(), raw.replace(/\s+region$/i, '').trim(), raw.replace(/\s+region$/i, '').replace(/\s+kraj$/i, '').trim()];
+  for (const c of cands) if (NAME_KRAJ[c]) return NAME_KRAJ[c];
+  return null;
+}
 
 const out = {};
-for (const geom of geoms) {
-  const p = geom.properties || {};
-  const nm = (p.name || p.NAME_1 || p.NAME || p.name_1 || '').trim();
-  const key = NAME_KRAJ[nm];
-  if (!key) { console.warn('Nepřiřazeno:', nm); continue; }
-  const g = simpGeom(geomToGeoJSON(topo, geom));
+for (const f of features) {
+  const key = resolveKraj(f.properties || {});
+  if (!key) { console.warn('Nepřiřazeno:', JSON.stringify(f.properties)); continue; }
+  const g = f.geometry && simpGeom(f.geometry);
   if (g) out[key] = g;
 }
 
