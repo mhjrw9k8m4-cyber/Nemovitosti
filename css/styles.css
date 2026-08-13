@@ -252,7 +252,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .md-actions{flex:none; display:flex; flex-direction:column; gap:6px; width:172px;}
 .md-actions .lp-btn{flex:none;}
 @media (max-width:760px){
-  .map-detail{max-height:60%; overflow-y:auto; padding:12px 14px 14px;}
+  .map-detail{max-height:none; overflow:visible; padding:12px 14px 14px;}
   .md-body{flex-direction:column; align-items:stretch; gap:10px;}
   .md-shape{width:60px; height:60px; align-self:flex-start;}
   .md-facts{gap:5px 12px;}
@@ -506,7 +506,8 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 /* Responsive */
 @media (max-width:960px){
   .map-app{grid-template-columns:1fr; height:auto;}
-  .map-holder{height:460px; order:-1;}
+  .map-holder{height:auto; order:-1;}
+  .map-canvas{height:460px; flex:none;}
   .map-side{max-height:none;}
   .opp-list{max-height:none; overflow:visible; flex:none;}
   #leaflet-map{position:absolute; inset:0;}
