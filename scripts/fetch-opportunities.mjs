@@ -293,6 +293,50 @@ async function fetchBezrealitky() {
   return out;
 }
 
+// Farmy.cz — inzeráty zemědělské půdy a pozemků. Server-rendered HTML,
+// robots.txt povoluje. Detail nabídky má výměru, okres, cenu i GPS.
+async function fetchFarmy() {
+  const BASE = 'https://farmy.cz';
+  let listHtml;
+  try { const r = await fetch(BASE + '/inzerce_aktualni_nabidky', { headers: UA }); if (!r.ok) return []; listHtml = await r.text(); }
+  catch { return []; }
+  const ids = [...new Set([...listHtml.matchAll(/nabidka_detail\?nab=(\d+)/g)].map((m) => m[1]))].slice(0, 40);
+  const out = [];
+  for (const id of ids) {
+    let html;
+    try { const r = await fetch(BASE + '/nabidka_detail?nab=' + id, { headers: UA }); if (!r.ok) { await sleep(200); continue; } html = await r.text(); }
+    catch { continue; }
+    await sleep(200); // slušnost k serveru
+    const text = html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+    const g = text.match(/Poloha GPS\s+([\d.]+)N,?\s*([\d.]+)E/i);
+    const lat = g ? parseFloat(g[1]) : undefined;
+    const lng = g ? parseFloat(g[2]) : undefined;
+    const am = text.match(/Výměra\s+([\d\s]+?)\s*m2/i);
+    const area = am ? parseInt(am[1].replace(/\s/g, ''), 10) || null : null;
+    const pm = text.match(/Cena\s+([\d\s.]+),\d{2}\s*Kč\s*\/\s*m2/i);
+    const tm = text.match(/Cena\s+([\d\s.]+),\d{2}\s*Kč(?!\s*\/\s*m2)/i);
+    let price = null;
+    if (pm && area) price = Math.round(parseInt(pm[1].replace(/[\s.]/g, ''), 10) * area);
+    else if (tm) price = parseInt(tm[1].replace(/[\s.]/g, ''), 10) || null;
+    let okres = (text.match(/v okrese\s+(.+?)\s+v\s+\S+\s+kraji/i) || [])[1];
+    if (!okres && typeof lat === 'number') okres = nearestOkres(lat, lng);
+    if (!okres || !price) continue;
+    const obec = (text.match(/Obec\s+(.+?)\s+Okres/i) || [])[1];
+    const ku = (text.match(/Katastrální území\s+([^\d]+?)\s+(?:Výměra|Poloha|Cena|Číslo)/i) || [])[1];
+    const place = (obec || ku || 'Pozemek').trim().slice(0, 60);
+    const druh = /ornou|orná/i.test(text) ? 'orná půda' : parseDruh(text.slice(0, 600));
+    out.push({
+      place, okres: okres.trim().slice(0, 40), type: 'sale',
+      parcel: '—', _key: 'fa-' + id,
+      druh: druh || 'pozemek', area, price,
+      extra: 'inzerát – Farmy.cz',
+      lat, lng, _gps: typeof lat === 'number' && typeof lng === 'number',
+      url: BASE + '/nabidka_detail?nab=' + id,
+    });
+  }
+  return out;
+}
+
 /* ---------- Sjednocení a zápis ---------- */
 
 // 'area' není povinná (u exekucí výměra v evidenci často chybí)
@@ -312,6 +356,7 @@ async function main() {
     fetchUredniDesky(),
     fetchProdejSPU(),
     fetchBezrealitky(),
+    fetchFarmy(),
   ]);
 
   const raw = results
