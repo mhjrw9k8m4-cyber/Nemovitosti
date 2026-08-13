@@ -26,9 +26,9 @@
     exekuce: { label:'Exekuce',      color:'#C15B44', link:{ label:'Insolvenční rejstřík', url:'https://isir.justice.cz/isir/common/index.do' } },
     obec:    { label:'Obecní záměr', color:'#4C7A9E', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } }
   };
-  // Katastrální mapa (ikatastr.cz) přímo na souřadnicích parcely — ukáže vrstvu
-  // parcel, takže uživatel vidí konkrétní pozemek, ne jen úvodní stránku.
-  function katastrUrl(d){ return 'https://www.ikatastr.cz/#kde=' + d.lat + ',' + d.lng + ',18&mapa=zakladni&vrstva=parcely'; }
+  // Katastrální mapa (ikatastr.cz) — parametr "info" na souřadnicích parcelu
+  // rovnou IDENTIFIKUJE a vyznačí (ukáže bublinu s parcelou), ne jen vycentruje.
+  function katastrUrl(d){ return 'https://www.ikatastr.cz/#info=' + d.lat + ',' + d.lng; }
   function mapyUrl(d){ return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat; }
 
   function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
