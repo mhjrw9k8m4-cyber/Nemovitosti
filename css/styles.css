@@ -204,6 +204,9 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-tag{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 8px; border-radius:12px; color:#fff; white-space:nowrap;}
 .opp-tag.sale{background:var(--c-sale);} .opp-tag.drazba{background:var(--c-drazba); color:#3a2c05;} .opp-tag.exekuce{background:var(--c-exekuce);} .opp-tag.obec{background:var(--c-obec);}
 .opp-meta{font-size:12.5px; color:var(--text-ondark-mute); display:flex; gap:14px; flex-wrap:wrap;}
+.opp-price{margin-top:7px; font-size:12.5px;}
+.opp-price b{color:var(--copper-bright); font-weight:600;}
+.opp-price span{color:var(--text-ondark-mute);}
 .opp-meta b{color:var(--text-ondark); font-weight:600;}
 .map-holder{position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line); min-height:0;}
 #leaflet-map{position:absolute; inset:0; background:var(--ink-soft);}
@@ -222,13 +225,19 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 /* Leaflet popup přebarvení */
 .leaflet-popup-content-wrapper{background:var(--ink); color:var(--text-ondark); border-radius:8px; box-shadow:0 18px 40px -12px rgba(0,0,0,0.7);}
 .leaflet-popup-tip{background:var(--ink);}
-.leaflet-popup-content{margin:14px 16px; font-family:'Inter',sans-serif;}
-.lp-head{display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; margin-bottom:8px;}
+.leaflet-popup-content{margin:15px 16px; font-family:'Inter',sans-serif; min-width:236px;}
+.lp-head{display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; margin-bottom:3px;}
 .lp-dot{width:10px; height:10px; border-radius:50%;}
-.lp-row{display:flex; justify-content:space-between; gap:18px; font-size:13px; color:var(--text-ondark-mute); margin-bottom:4px;}
-.lp-row b{color:var(--text-ondark);}
-.lp-link{display:inline-block; margin-top:8px; color:var(--copper-bright); font-weight:600; font-size:13px; text-decoration:none;}
-.lp-link:hover{text-decoration:underline;}
+.lp-place{font-size:12.5px; color:var(--text-ondark-mute); margin-bottom:12px;}
+.lp-grid{display:grid; grid-template-columns:1fr 1fr; gap:9px 14px; margin-bottom:13px;}
+.lp-grid > div{display:flex; flex-direction:column; gap:1px;}
+.lp-grid span{font-size:10.5px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:0.03em;}
+.lp-grid b{font-size:13px; color:var(--text-ondark); font-weight:600;}
+.lp-links{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:9px;}
+.lp-btn{flex:1; min-width:62px; text-align:center; background:var(--ink-soft2); border:1px solid var(--line); border-radius:6px; padding:7px 8px; font-size:12px; font-weight:600; color:var(--text-ondark); text-decoration:none; transition:border-color .15s ease, background .15s ease;}
+.lp-btn:hover{border-color:var(--copper-bright); background:rgba(201,152,47,0.12);}
+.lp-watch{display:block; text-align:center; background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); border-radius:6px; padding:9px; font-size:12.5px; font-weight:700; text-decoration:none; transition:filter .15s ease;}
+.lp-watch:hover{filter:brightness(1.07);}
 .marker-dot{border-radius:50%; border:2.5px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.4);}
 
 /* Počítadla */
@@ -257,6 +266,9 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .alert-box{background:linear-gradient(135deg, var(--ink-soft) 0%, var(--ink-soft2) 100%); border:1px solid var(--line); border-radius:12px; padding:44px; display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center;}
 .alert-copy h2{font-family:'Fraunces',serif; font-weight:500; font-size:28px; line-height:1.15; margin-bottom:12px;}
 .alert-copy p{font-size:14.5px; color:var(--text-ondark-mute);}
+.alert-benefits{list-style:none; display:flex; flex-direction:column; gap:11px; margin-top:20px;}
+.alert-benefits li{display:flex; align-items:center; gap:11px; font-size:14px; color:var(--text-ondark);}
+.alert-benefits .ic{width:17px; height:17px; color:var(--c-sale); flex:none;}
 .alert-form{display:flex; flex-direction:column; gap:12px;}
 .alert-form input{background:var(--ink); border:1px solid var(--line); border-radius:5px; padding:14px 16px; font-size:15px; color:var(--text-ondark); font-family:inherit;}
 .alert-form input::placeholder{color:#6f8090;}

@@ -4,29 +4,30 @@
 
   /* ---------- Ukázková data příležitostí (ilustrační) ---------- */
   var DATA = [
-    { place:'Kolín',              type:'drazba',  parcel:'412/3',  area:1240, extra:'dražba za 12 dní', lat:50.0281, lng:15.2003 },
-    { place:'Kutná Hora',         type:'exekuce', parcel:'88/1',   area:890,  extra:'v exekuci',        lat:49.9484, lng:15.2680 },
-    { place:'Nymburk',            type:'sale',    parcel:'305',    area:2100, extra:'1 890 000 Kč',     lat:50.1850, lng:15.0410 },
-    { place:'Poděbrady',          type:'obec',    parcel:'27/2',   area:650,  extra:'záměr obce',       lat:50.1425, lng:15.1190 },
-    { place:'Čáslav',             type:'drazba',  parcel:'560/4',  area:3400, extra:'dražba za 5 dní',  lat:49.9110, lng:15.3910 },
-    { place:'Kladno',             type:'sale',    parcel:'190',    area:780,  extra:'1 250 000 Kč',     lat:50.1470, lng:14.1030 },
-    { place:'Mělník',             type:'exekuce', parcel:'44/7',   area:1500, extra:'v exekuci',        lat:50.3500, lng:14.4740 },
-    { place:'Brandýs nad Labem',  type:'obec',    parcel:'611',    area:4200, extra:'záměr obce',       lat:50.1860, lng:14.6610 },
-    { place:'Benešov',            type:'sale',    parcel:'72/3',   area:950,  extra:'1 490 000 Kč',     lat:49.7830, lng:14.6860 },
-    { place:'Příbram',            type:'drazba',  parcel:'238',    area:1120, extra:'dražba za 20 dní', lat:49.6890, lng:14.0100 },
-    { place:'Beroun',             type:'sale',    parcel:'15/1',   area:610,  extra:'980 000 Kč',       lat:49.9640, lng:14.0720 },
-    { place:'Rakovník',           type:'exekuce', parcel:'402',    area:2750, extra:'v exekuci',        lat:50.1040, lng:13.7330 },
-    { place:'Mladá Boleslav',     type:'obec',    parcel:'318/2',  area:1800, extra:'záměr obce',       lat:50.4110, lng:14.9040 },
-    { place:'Slaný',              type:'sale',    parcel:'96',     area:1340, extra:'1 340 000 Kč',     lat:50.2300, lng:14.0860 }
+    { place:'Kolín',             okres:'Kolín',         type:'drazba',  parcel:'412/3', druh:'stavební',  area:1240, price:640000,  extra:'dražba za 12 dní', lat:50.0281, lng:15.2003 },
+    { place:'Kutná Hora',        okres:'Kutná Hora',    type:'exekuce', parcel:'88/1',  druh:'orná půda', area:890,  price:780000,  extra:'v exekuci',        lat:49.9484, lng:15.2680 },
+    { place:'Nymburk',           okres:'Nymburk',       type:'sale',    parcel:'305',   druh:'stavební',  area:2100, price:1890000, extra:'na prodej',        lat:50.1850, lng:15.0410 },
+    { place:'Poděbrady',         okres:'Nymburk',       type:'obec',    parcel:'27/2',  druh:'zahrada',   area:650,  price:590000,  extra:'záměr obce',       lat:50.1425, lng:15.1190 },
+    { place:'Čáslav',            okres:'Kutná Hora',    type:'drazba',  parcel:'560/4', druh:'louka',     area:3400, price:1200000, extra:'dražba za 5 dní',  lat:49.9110, lng:15.3910 },
+    { place:'Kladno',            okres:'Kladno',        type:'sale',    parcel:'190',   druh:'stavební',  area:780,  price:1250000, extra:'na prodej',        lat:50.1470, lng:14.1030 },
+    { place:'Mělník',            okres:'Mělník',        type:'exekuce', parcel:'44/7',  druh:'orná půda', area:1500, price:1100000, extra:'v exekuci',        lat:50.3500, lng:14.4740 },
+    { place:'Brandýs nad Labem', okres:'Praha-východ',  type:'obec',    parcel:'611',   druh:'louka',     area:4200, price:2900000, extra:'záměr obce',       lat:50.1860, lng:14.6610 },
+    { place:'Benešov',           okres:'Benešov',       type:'sale',    parcel:'72/3',  druh:'stavební',  area:950,  price:1490000, extra:'na prodej',        lat:49.7830, lng:14.6860 },
+    { place:'Příbram',           okres:'Příbram',       type:'drazba',  parcel:'238',   druh:'zahrada',   area:1120, price:720000,  extra:'dražba za 20 dní', lat:49.6890, lng:14.0100 },
+    { place:'Beroun',            okres:'Beroun',        type:'sale',    parcel:'15/1',  druh:'stavební',  area:610,  price:980000,  extra:'na prodej',        lat:49.9640, lng:14.0720 },
+    { place:'Rakovník',          okres:'Rakovník',      type:'exekuce', parcel:'402',   druh:'orná půda', area:2750, price:1650000, extra:'v exekuci',        lat:50.1040, lng:13.7330 },
+    { place:'Mladá Boleslav',    okres:'Mladá Boleslav',type:'obec',    parcel:'318/2', druh:'stavební',  area:1800, price:2400000, extra:'záměr obce',       lat:50.4110, lng:14.9040 },
+    { place:'Slaný',             okres:'Kladno',        type:'sale',    parcel:'96',    druh:'zahrada',   area:1340, price:1340000, extra:'na prodej',        lat:50.2300, lng:14.0860 }
   ];
 
   var TYPE = {
-    sale:    { label:'Na prodej',    color:'#3E8E5B' },
-    drazba:  { label:'Dražba',       color:'#D9A441' },
-    exekuce: { label:'Exekuce',      color:'#C15B44' },
-    obec:    { label:'Obecní záměr', color:'#4C7A9E' }
+    sale:    { label:'Na prodej',    color:'#3E8E5B', link:{ label:'Zobrazit inzerát',    url:'https://www.sreality.cz/hledani/prodej/pozemky' } },
+    drazba:  { label:'Dražba',       color:'#D9A441', link:{ label:'Detail dražby',       url:'https://www.portaldrazeb.cz/' } },
+    exekuce: { label:'Exekuce',      color:'#C15B44', link:{ label:'Insolvenční rejstřík', url:'https://isir.justice.cz/isir/common/index.do' } },
+    obec:    { label:'Obecní záměr', color:'#4C7A9E', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } }
   };
   var KATASTR = 'https://nahlizenidokatastru.cuzk.cz/';
+  function mapyUrl(d){ return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=17&source=coor&id=' + d.lng + ',' + d.lat; }
 
   function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
 
@@ -234,12 +235,24 @@
   }
   function popupHtml(d) {
     var t = TYPE[d.type];
+    var perM2 = Math.round(d.price / d.area);
+    var priceLabel = d.type === 'drazba' ? 'Vyvolávací' : (d.type === 'sale' ? 'Cena' : 'Odhad');
     return '<div class="lp-head"><span class="lp-dot" style="background:' + t.color + '"></span>' + t.label + '</div>' +
-      '<div class="lp-row"><span>Lokalita</span><b>' + d.place + '</b></div>' +
-      '<div class="lp-row"><span>Parcela</span><b>č. ' + d.parcel + '</b></div>' +
-      '<div class="lp-row"><span>Výměra</span><b>' + fmt(d.area) + ' m²</b></div>' +
-      '<div class="lp-row"><span>Stav</span><b>' + d.extra + '</b></div>' +
-      '<a class="lp-link" href="' + KATASTR + '" target="_blank" rel="noopener">→ otevřít v katastru</a>';
+      '<div class="lp-place">' + d.place + ' · okres ' + d.okres + '</div>' +
+      '<div class="lp-grid">' +
+        '<div><span>Parcela</span><b>č. ' + d.parcel + '</b></div>' +
+        '<div><span>Druh</span><b>' + d.druh + '</b></div>' +
+        '<div><span>Výměra</span><b>' + fmt(d.area) + ' m²</b></div>' +
+        '<div><span>' + priceLabel + '</span><b>' + fmt(d.price) + ' Kč</b></div>' +
+        '<div><span>Cena / m²</span><b>' + fmt(perM2) + ' Kč</b></div>' +
+        '<div><span>Stav</span><b>' + d.extra + '</b></div>' +
+      '</div>' +
+      '<div class="lp-links">' +
+        '<a class="lp-btn" href="' + KATASTR + '" target="_blank" rel="noopener">Katastr</a>' +
+        '<a class="lp-btn" href="' + mapyUrl(d) + '" target="_blank" rel="noopener">Mapa</a>' +
+        '<a class="lp-btn" href="' + t.link.url + '" target="_blank" rel="noopener">' + t.link.label + '</a>' +
+      '</div>' +
+      '<a class="lp-watch" href="#upozorneni">🔔 Hlídat tuto lokalitu</a>';
   }
 
   DATA.forEach(function (d, i) {
@@ -271,11 +284,13 @@
       li.setAttribute('tabindex', '0');
       li.setAttribute('role', 'button');
       li.setAttribute('aria-label', t.label + ' · ' + d.place + ' · ' + fmt(d.area) + ' m²');
+      var perM2 = Math.round(d.price / d.area);
       li.innerHTML =
         '<div class="opp-top"><span class="opp-place">' + d.place + '</span>' +
         '<span class="opp-tag ' + d.type + '">' + t.label + '</span></div>' +
         '<div class="opp-meta"><span>parc. <b>' + d.parcel + '</b></span>' +
-        '<span><b>' + fmt(d.area) + '</b> m²</span><span>' + d.extra + '</span></div>';
+        '<span><b>' + fmt(d.area) + '</b> m²</span><span>' + d.druh + '</span></div>' +
+        '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b> <span>· ' + fmt(perM2) + ' Kč/m²</span></div>';
       function openThis() {
         map.flyTo([d.lat, d.lng], 12, { duration: 0.8 });
         markers[d._id].openPopup();
