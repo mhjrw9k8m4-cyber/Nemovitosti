@@ -4,7 +4,7 @@
 import { writeFileSync } from 'node:fs';
 
 const SOURCES = [
-  'https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/czech-republic.geojson',
+  'https://raw.githubusercontent.com/siwekm/czech-geojson/master/kraje.json',
   'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/czech-republic/czech-republic-regions.json'
 ];
 
@@ -92,7 +92,8 @@ console.log('features:', features.length, '| vzorek props:', JSON.stringify(feat
 
 function resolveKraj(p) {
   const raw = String(p.name || p.NAME_1 || p.NAME || p.name_1 || p.NÁZEV || '').trim();
-  const cands = [raw, raw.replace(/\s+kraj$/i, '').trim(), raw.replace(/\s+region$/i, '').trim(), raw.replace(/\s+region$/i, '').replace(/\s+kraj$/i, '').trim()];
+  const base = raw.replace(/^kraj\s+/i, '').replace(/\s+kraj$/i, '').replace(/\s+region$/i, '').trim();
+  const cands = [raw, base];
   for (const c of cands) if (NAME_KRAJ[c]) return NAME_KRAJ[c];
   return null;
 }
