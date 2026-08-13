@@ -60,6 +60,14 @@
   }
 
   function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  // Kompaktní cena pro cenovku na mapě (jako Zillow/Idealista): „280 tis.", „1,9 mil."
+  function priceTag(price){
+    if (!price || price < 0) return '?';
+    if (price < 1000) return price + ' Kč';
+    if (price < 1000000) return Math.round(price / 1000) + ' tis.';
+    var m = price / 1000000;
+    return (m >= 10 ? String(Math.round(m)) : (Math.round(m * 10) / 10).toFixed(1).replace('.', ',')) + ' mil.';
+  }
   // Počet dní do termínu dražby z reálného data v poli extra (např. „dražba 2026-09-02")
   function daysUntil(extra){
     var m = /(\d{4})-(\d{2})-(\d{2})/.exec(extra || '');
@@ -505,12 +513,17 @@
     var dd = daysUntil(d.extra);
     return dd != null && dd >= 0 && dd <= 7;
   }
-  function markerIcon(type, urgent) {
-    var col = TYPE[type].color;
+  // Cenovka pozemku na mapě (styl zahraničních realitních webů) — místo tečky
+  // ukáže rovnou cenu; barevný puntík značí kategorii.
+  function markerIcon(d) {
+    var col = TYPE[d.type].color;
+    var urgent = isUrgent(d);
     return L.divIcon({
       className: '',
-      html: '<div class="marker-pulse' + (urgent ? ' urgent' : '') + '" style="width:18px;height:18px;background:' + col + ';color:' + col + ';"></div>',
-      iconSize: [18, 18], iconAnchor: [9, 9]
+      html: '<div class="pk-pin ' + d.type + (urgent ? ' urgent' : '') + '">' +
+              '<i class="pk-pin-dot" style="background:' + col + '"></i>' + priceTag(d.price) +
+            '</div>',
+      iconSize: [0, 0], iconAnchor: [0, 0]
     });
   }
   // Přibližný tvar parcely (deterministický, cache) — ukázková geometrie
@@ -607,8 +620,8 @@
   function highlightMarker(id) {
     markers.forEach(function (m, i) {
       if (m._icon) {
-        var dot = m._icon.querySelector('.marker-pulse');
-        if (dot) dot.classList.toggle('sel', i === id);
+        var pin = m._icon.querySelector('.pk-pin');
+        if (pin) pin.classList.toggle('sel', i === id);
       }
     });
   }
@@ -627,17 +640,16 @@
     chunkedLoading: true,
     iconCreateFunction: function (c) {
       var n = c.getChildCount();
-      var px = n < 10 ? 38 : (n < 40 ? 46 : 56);
       var cls = n < 10 ? 'sm' : (n < 40 ? 'md' : 'lg');
-      return L.divIcon({ html: '<div class="pk-cluster ' + cls + '"><span>' + n + '</span></div>', className: '', iconSize: [px, px], iconAnchor: [px / 2, px / 2] });
+      return L.divIcon({ html: '<div class="pk-cluster ' + cls + '">' + n + '</div>', className: '', iconSize: [0, 0], iconAnchor: [0, 0] });
     }
   }) : null;
   if (cluster) map.addLayer(cluster);
 
   DATA.forEach(function (d, i) {
     d._id = i;
-    var m = L.marker([d.lat, d.lng], { icon: markerIcon(d.type, isUrgent(d)) });
-    m.pkType = d.type; // pro barevný prstenec shluku
+    var m = L.marker([d.lat, d.lng], { icon: markerIcon(d) });
+    m.pkType = d.type;
     m.on('click', function () { showDetail(d); highlightList(i); });
     markers.push(m);
     if (!cluster) m.addTo(map); // záloha bez knihovny shlukování
