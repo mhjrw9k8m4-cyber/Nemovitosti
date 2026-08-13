@@ -12,6 +12,23 @@ const ISO_KRAJ = {
   'CZ-53': 'Pardubický', 'CZ-63': 'Vysočina', 'CZ-64': 'Jihomoravský', 'CZ-71': 'Olomoucký',
   'CZ-72': 'Zlínský', 'CZ-80': 'Moravskoslezský'
 };
+// Záloha podle názvu (Natural Earth používá různé varianty)
+const NAME_KRAJ = {
+  'Praha': 'Praha', 'Prague': 'Praha', 'Hlavní město Praha': 'Praha',
+  'Středočeský': 'Středočeský', 'Central Bohemian': 'Středočeský', 'Central Bohemia': 'Středočeský',
+  'Jihočeský': 'Jihočeský', 'South Bohemian': 'Jihočeský', 'South Bohemia': 'Jihočeský',
+  'Plzeňský': 'Plzeňský', 'Plzeň': 'Plzeňský', 'Pilsen': 'Plzeňský',
+  'Karlovarský': 'Karlovarský', 'Karlovy Vary': 'Karlovarský',
+  'Ústecký': 'Ústecký', 'Ústí nad Labem': 'Ústecký', 'Usti nad Labem': 'Ústecký',
+  'Liberecký': 'Liberecký', 'Liberec': 'Liberecký',
+  'Královéhradecký': 'Královéhradecký', 'Hradec Králové': 'Královéhradecký', 'Kralovehradecky': 'Královéhradecký',
+  'Pardubický': 'Pardubický', 'Pardubice': 'Pardubický',
+  'Vysočina': 'Vysočina', 'Kraj Vysočina': 'Vysočina', 'Vysocina': 'Vysočina',
+  'Jihomoravský': 'Jihomoravský', 'South Moravian': 'Jihomoravský', 'South Moravia': 'Jihomoravský',
+  'Olomoucký': 'Olomoucký', 'Olomouc': 'Olomoucký',
+  'Zlínský': 'Zlínský', 'Zlín': 'Zlínský', 'Zlin': 'Zlínský',
+  'Moravskoslezský': 'Moravskoslezský', 'Moravian-Silesian': 'Moravskoslezský', 'Moravia-Silesia': 'Moravskoslezský'
+};
 
 function round(n) { return Math.round(n * 1000) / 1000; } // ~100 m přesnost stačí
 function simplifyRing(ring) {
@@ -42,12 +59,18 @@ const res = await fetch(SRC);
 if (!res.ok) { console.error('Stažení selhalo:', res.status); process.exit(1); }
 const gj = await res.json();
 
-const out = {};
-for (const f of gj.features) {
+const cz = gj.features.filter(function (f) {
   const p = f.properties || {};
-  if (p.iso_a2 !== 'CZ' && p.admin !== 'Czechia' && p.admin !== 'Czech Republic') continue;
-  const key = ISO_KRAJ[p.iso_3166_2];
-  if (!key) continue;
+  return p.adm0_a3 === 'CZE' || p.admin === 'Czechia' || p.admin === 'Czech Republic' || p.iso_a2 === 'CZ';
+});
+console.log('CZ features:', cz.length);
+console.log('vzorek props:', cz.slice(0, 3).map(function (f) { return { iso: f.properties.iso_3166_2, name: f.properties.name }; }));
+
+const out = {};
+for (const f of cz) {
+  const p = f.properties || {};
+  const key = ISO_KRAJ[p.iso_3166_2] || NAME_KRAJ[(p.name || '').trim()] || NAME_KRAJ[(p.name_local || '').trim()];
+  if (!key) { console.warn('Nepřiřazeno:', p.iso_3166_2, '/', p.name); continue; }
   const g = simplifyGeom(f.geometry);
   if (g) out[key] = g;
 }
