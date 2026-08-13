@@ -184,6 +184,8 @@ async function fetchProdejSPU() {
     if (pod && pod[1] !== pod[2]) continue;
     const area = parseInt(String(c[3] || '').replace(/[^\d]/g, ''), 10) || null;
     const druh = (c[4] || '').trim() || parseDruh(c[5] || '');
+    // Cena za m² pod 5 Kč = spíš roční nájem/pacht než prodej → vynecháme.
+    if (area && price / area < 5) continue;
     out.push({
       place, okres: normOkres(okres), type: 'sale',
       parcel: String(c[2] || '—').trim().slice(0, 40) || '—',
