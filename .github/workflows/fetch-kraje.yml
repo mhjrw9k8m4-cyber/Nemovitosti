@@ -1,0 +1,37 @@
+name: Hranice krajů (jednorázově)
+
+# Stáhne hranice 14 krajů ČR a uloží data/kraje.json. Stačí spustit jednou
+# (hranice se nemění). Ruční spuštění přes „Run workflow".
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  kraje:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Stáhnout hranice krajů
+        run: node scripts/fetch-kraje.mjs
+
+      - name: Commit
+        run: |
+          if [[ -n "$(git status --porcelain data/kraje.json)" ]]; then
+            git config user.name "pozemkomat-bot"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/kraje.json
+            git commit -m "data: hranice krajů (choropleth)"
+            git push
+          else
+            echo "Beze změny."
+          fi
