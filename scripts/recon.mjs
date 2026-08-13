@@ -1,43 +1,33 @@
 #!/usr/bin/env node
 /**
- * Průzkum dostupnosti reálných zdrojů (běží na GitHub Actions, kde je internet).
- * Nic nestahuje k použití — jen zjišťuje, co je dostupné a co dovolují pravidla,
- * a vypisuje to do logu.
+ * Průzkum struktury oficiálního datasetu dražeb (Centrální evidence veřejných
+ * dražeb, cevd.gov.cz — otevřená data z Národního katalogu otevřených dat).
+ * Běží na GitHub Actions (internet). Jen vypisuje strukturu do logu.
  */
-
 const UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
+const URL = 'https://cevd.gov.cz/opendata/drazby/drazby_2026.json';
 
-async function show(label, url, opts = {}) {
-  try {
-    const r = await fetch(url, { headers: UA, ...opts });
-    const body = await r.text();
-    console.log(`\n=== ${label} → HTTP ${r.status} (${body.length} B) ===`);
-    console.log(body.slice(0, opts.max || 1200));
-  } catch (e) {
-    console.log(`\n=== ${label} → CHYBA: ${e.message} ===`);
-  }
+const r = await fetch(URL, { headers: UA });
+console.log(`HTTP ${r.status}, content-type: ${r.headers.get('content-type')}`);
+const j = await r.json();
+
+const arr = Array.isArray(j) ? j : (j.drazby || j.items || j.data || j.results || Object.values(j).find(Array.isArray) || []);
+console.log('Kořen je pole:', Array.isArray(j), '| počet záznamů:', arr.length);
+
+if (!Array.isArray(j)) {
+  console.log('Klíče kořene:', Object.keys(j).slice(0, 30).join(', '));
 }
 
-console.log('Ověřuji internet a zdroje...');
-await show('Test internetu (example.com)', 'https://example.com/', { max: 200 });
+if (arr.length) {
+  console.log('\n--- KLÍČE PRVNÍHO ZÁZNAMU ---');
+  console.log(Object.keys(arr[0]).join(', '));
+  console.log('\n--- PRVNÍ ZÁZNAM (JSON) ---');
+  console.log(JSON.stringify(arr[0], null, 2).slice(0, 3500));
 
-// Pravidla portálů — smíme vůbec stahovat?
-await show('robots.txt · portaldrazeb.cz', 'https://www.portaldrazeb.cz/robots.txt');
-await show('robots.txt · exdrazby.cz', 'https://www.exdrazby.cz/robots.txt');
-
-// Národní katalog otevřených dat — hledáme dataset o dražbách / pozemcích
-const sparql = `PREFIX dcterms:<http://purl.org/dc/terms/>
-PREFIX dcat:<http://www.w3.org/ns/dcat#>
-SELECT DISTINCT ?title ?dl WHERE {
-  ?d a dcat:Dataset ; dcterms:title ?title .
-  OPTIONAL { ?d dcat:distribution/dcat:downloadURL ?dl . }
-  FILTER(LANG(?title)="cs")
-  FILTER(CONTAINS(LCASE(STR(?title)), "dražb") || CONTAINS(LCASE(STR(?title)), "pozemk"))
-} LIMIT 30`;
-await show(
-  'NKOD SPARQL (dražby/pozemky)',
-  'https://data.gov.cz/sparql?query=' + encodeURIComponent(sparql) + '&format=application%2Fsparql-results%2Bjson',
-  { headers: { ...UA, accept: 'application/sparql-results+json' }, max: 4000 }
-);
-
+  // hledáme, jestli jsou mezi předměty pozemky
+  const asText = JSON.stringify(arr.slice(0, 50)).toLowerCase();
+  console.log('\nObsahuje slovo "pozem":', asText.includes('pozem'));
+  console.log('Obsahuje "parcel":', asText.includes('parcel'));
+  console.log('Obsahuje "gps"/"lat"/"souřad":', asText.includes('gps') || asText.includes('lat') || asText.includes('souřad') || asText.includes('souradn'));
+}
 console.log('\nHotovo.');
