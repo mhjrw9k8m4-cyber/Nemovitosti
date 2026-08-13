@@ -1,36 +1,29 @@
 #!/usr/bin/env node
-// Najde v oficiálním datasetu dražeb první POZEMEK a vypíše jeho strukturu.
+// Vypíše přesná pole čistého POZEMKU (kategorie "Pozemky") z datasetu dražeb.
 const UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
 const r = await fetch('https://cevd.gov.cz/opendata/drazby/drazby_2026.json', { headers: UA });
 const j = await r.json();
 const arr = Array.isArray(j) ? j : (Object.values(j).find(Array.isArray) || []);
-console.log('Počet dražeb:', arr.length);
-console.log('Klíče záznamu:', Object.keys(arr[0]).join(', '));
 
-function isLand(p) {
-  const s = JSON.stringify(p).toLowerCase();
-  return s.includes('pozem') || s.includes('parcel');
-}
-
-let found = 0;
+let shown = 0;
+const stavy = {};
 for (const rec of arr) {
-  const predmety = rec.predmetyDrazby || rec.predmety || [];
-  const land = predmety.find(isLand);
-  if (!land) continue;
-  found++;
-  if (found === 1) {
-    console.log('\n=== PRVNÍ DRAŽBA S POZEMKEM — horní úroveň ===');
-    for (const k of Object.keys(rec)) {
-      const v = rec[k];
-      console.log(k, '→', typeof v === 'object' ? (Array.isArray(v) ? '[' + v.length + ']' : Object.keys(v || {}).join('/')) : JSON.stringify(v));
+  for (const p of (rec.predmetyDrazby || [])) {
+    stavy[p.stavPredmetu] = (stavy[p.stavPredmetu] || 0) + 1;
+    const v = (p.veci || [])[0];
+    if (!v) continue;
+    const kat = (v.kategorie || '').toLowerCase();
+    const isLand = kat.includes('pozem') && v.vecNemovita && v.vecNemovita.pozemek;
+    if (isLand && shown < 2) {
+      shown++;
+      console.log(`\n=== POZEMEK #${shown} (kategorie: ${v.kategorie}, stav: ${p.stavPredmetu}) ===`);
+      console.log('vecNemovita:', JSON.stringify(v.vecNemovita, null, 2).slice(0, 1600));
+      console.log('vyvolavaciCena:', JSON.stringify(p.vyvolavaciCena));
+      console.log('obvyklaCena:', JSON.stringify(p.obvyklaCena));
+      console.log('konaniDrazby:', JSON.stringify(rec.zakladniInformace?.konaniDrazby).slice(0, 400));
     }
-    console.log('\n=== PŘEDMĚT (POZEMEK) — celý ===');
-    console.log(JSON.stringify(land, null, 2).slice(0, 4500));
-  }
-  if (found >= 3 && found <= 5) {
-    const nazev = (land.veci && land.veci[0] && land.veci[0].nazev) || land.nazevPredmetu;
-    console.log(`\n--- další pozemek #${found}: ${nazev}`);
   }
 }
-console.log('\nDražeb s pozemkem:', found, 'z', arr.length);
+console.log('\n--- Stavy předmětů (kolik čeho) ---');
+console.log(JSON.stringify(stavy, null, 2));
 console.log('Hotovo.');
