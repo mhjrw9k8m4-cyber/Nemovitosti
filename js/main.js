@@ -668,67 +668,61 @@
     markers.push(m);
   });
 
-  // Kraje – čisté ohraničení s jemnou jednotnou výplní (počty jsou v popiscích)
-  function styleKraj(f) {
-    var has = krajCounts[f.properties.kraj] && krajCounts[f.properties.kraj].total;
-    return { color: 'rgba(224,174,67,0.7)', weight: 1.2, fillColor: '#E0AE43', fillOpacity: has ? 0.1 : 0.03 };
-  }
+  // Teplotní mapa (heatmapa) — plynulá „žhavá" plocha podle hustoty nabídek.
+  var heatLayer = (typeof L.heatLayer === 'function') ? L.heatLayer([], {
+    radius: 30, blur: 24, minOpacity: 0.30, maxZoom: KRAJ_ZOOM,
+    gradient: { 0.15: 'rgba(62,142,91,0.55)', 0.4: '#3E8E5B', 0.62: '#E0AE43', 0.82: '#D9822B', 1.0: '#C15B44' }
+  }) : null;
+  var krajByName = {};
+  function buildHeat(vis) { if (heatLayer) heatLayer.setLatLngs(vis.map(function (d) { return [d.lat, d.lng, 0.65]; })); }
+
+  // Jemné obrysy krajů jen pro orientaci (bez výplně), počet je v popisku při najetí.
+  function styleKraj() { return { color: 'rgba(224,174,67,0.32)', weight: 1, fill: true, fillColor: '#E0AE43', fillOpacity: 0.02 }; }
   if (KRAJE_GEOM) {
     var feats = Object.keys(KRAJE_GEOM).map(function (k) { return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] }; });
     krajLayer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
       style: styleKraj,
       onEachFeature: function (f, layer) {
+        krajByName[f.properties.kraj] = layer;
         layer.bindTooltip(f.properties.kraj + ' kraj', { sticky: true, direction: 'top', className: 'kraj-tip' });
         layer.on('click', function () { map.fitBounds(layer.getBounds(), { maxZoom: 11, padding: [16, 16] }); });
-        layer.on('mouseover', function () { layer.setStyle({ weight: 2.4, color: '#F2D79A' }); layer.bringToFront(); });
+        layer.on('mouseover', function () { layer.setStyle({ weight: 2, color: '#F2D79A', fillOpacity: 0.06 }); layer.bringToFront(); });
         layer.on('mouseout', function () { if (krajLayer) krajLayer.resetStyle(layer); });
       }
     });
   }
-  function renderKraje(vis) {
-    krajCounts = {}; krajMax = 0;
-    vis.forEach(function (d) {
-      var k = krajOf(d); if (!k) return;
-      var o = krajCounts[k] || (krajCounts[k] = { total: 0 });
-      o.total++; o[d.type] = (o[d.type] || 0) + 1;
-    });
-    Object.keys(krajCounts).forEach(function (k) { if (krajCounts[k].total > krajMax) krajMax = krajCounts[k].total; });
-    if (krajLayer) krajLayer.setStyle(styleKraj);
-    labelLayer.clearLayers();
-    Object.keys(KRAJE).forEach(function (k) {
-      var o = krajCounts[k], n = o ? o.total : 0;
-      var brk = '';
-      if (o) ['sale', 'drazba', 'exekuce', 'obec'].forEach(function (tp) {
-        if (o[tp]) brk += '<span style="color:' + TYPE[tp].color + '">' + o[tp] + '</span>';
-      });
-      var html = '<div class="kraj-lbl' + (n ? '' : ' empty') + '"><b>' + n + '</b>' +
-        (brk ? '<span class="kraj-brk">' + brk + '</span>' : '') + '</div>';
-      var icon = L.divIcon({ className: '', html: html, iconSize: [0, 0], iconAnchor: [0, 0] });
-      var m = L.marker(KRAJE[k].c, { icon: icon });
-      m.on('click', function () { map.setView(KRAJE[k].c, KRAJ_ZOOM + 1, { animate: true }); });
-      labelLayer.addLayer(m);
+  function refreshKrajTips(vis) {
+    krajCounts = {};
+    vis.forEach(function (d) { var k = krajOf(d); if (!k) return; var o = krajCounts[k] || (krajCounts[k] = { total: 0 }); o.total++; o[d.type] = (o[d.type] || 0) + 1; });
+    Object.keys(krajByName).forEach(function (k) {
+      var o = krajCounts[k];
+      var parts = [];
+      if (o) ['sale', 'drazba', 'exekuce', 'obec'].forEach(function (tp) { if (o[tp]) parts.push(o[tp] + '× ' + TYPE[tp].label.toLowerCase()); });
+      var txt = '<b>' + k + ' kraj</b><br>' + (o ? o.total + ' pozemků' + (parts.length ? ' · ' + parts.join(', ') : '') : 'žádné nabídky');
+      krajByName[k].setTooltipContent(txt);
     });
   }
   function renderDots(vis) {
     dotLayer.clearLayers();
     vis.forEach(function (d) { dotLayer.addLayer(markers[d._id]); });
   }
-  // Přepne mezi kraji (oddáleno) a jednotlivými pozemky (přiblíženo)
+  // Oddáleno = teplotní mapa + obrysy krajů; přiblíženo = jednotlivé pozemky
   function updateMapView() {
     if (map.getZoom() < KRAJ_ZOOM) {
       if (map.hasLayer(dotLayer)) map.removeLayer(dotLayer);
-      renderKraje(lastVis);
+      buildHeat(lastVis);
+      if (heatLayer && !map.hasLayer(heatLayer)) heatLayer.addTo(map);
       if (krajLayer && !map.hasLayer(krajLayer)) krajLayer.addTo(map);
-      if (!map.hasLayer(labelLayer)) labelLayer.addTo(map);
     } else {
+      if (heatLayer && map.hasLayer(heatLayer)) map.removeLayer(heatLayer);
       if (krajLayer && map.hasLayer(krajLayer)) map.removeLayer(krajLayer);
-      if (map.hasLayer(labelLayer)) map.removeLayer(labelLayer);
       renderDots(lastVis);
       if (!map.hasLayer(dotLayer)) dotLayer.addTo(map);
     }
   }
   function syncMarkers(visIds) {
     lastVis = visIds.map(function (id) { return DATA[id]; });
+    refreshKrajTips(lastVis);
     updateMapView();
   }
 
@@ -750,6 +744,7 @@
       if (present2[tp]) lh += '<span class="lg-item"><span class="lg-dot" style="background:' + TYPE[tp].color + '"></span>' + TYPE[tp].label + '</span>';
     });
     if (urgentN) lh += '<span class="lg-item lg-urgent"><span class="lg-dot lg-ring"></span>dražba do 7 dní</span>';
+    lh += '<span class="lg-item lg-heat"><span class="lg-scale"></span>málo → hodně</span>';
     legendEl.innerHTML = lh;
   }
 

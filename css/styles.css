@@ -349,6 +349,11 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .lg-ring{position:relative; background:var(--c-drazba);}
 .lg-ring::after{content:""; position:absolute; inset:-4px; border-radius:50%; border:1.5px solid var(--c-drazba); opacity:0.75; animation:mping 1.7s ease-out infinite;}
 .lg-urgent{color:var(--copper-bright);}
+.lg-heat{margin-top:2px; padding-top:6px; border-top:1px solid rgba(237,230,214,0.12); color:var(--text-ondark-mute);}
+.lg-scale{width:44px; height:8px; border-radius:4px; flex:none; background:linear-gradient(90deg, rgba(62,142,91,0.6), #3E8E5B, #E0AE43, #D9822B, #C15B44);}
+.kraj-tip{background:rgba(15,24,33,0.95) !important; border:1px solid var(--line-strong) !important; color:var(--text-ondark) !important; font-family:'Inter',sans-serif !important; font-size:12px !important; box-shadow:0 6px 18px -4px rgba(0,0,0,0.6) !important;}
+.kraj-tip b{color:var(--copper-bright);}
+.kraj-tip::before{border-top-color:var(--line-strong) !important;}
 @media (max-width:560px){ .map-legend{font-size:10px; padding:6px 8px; gap:4px;} }
 /* Zámek mapy — mapa se hýbe jen když je odemčená */
 /* Lehké přepínání posouvání mapy (bez těžkého overlay) */
