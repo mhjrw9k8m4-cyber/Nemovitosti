@@ -157,7 +157,7 @@ async function fetchProdejSPU() {
   const m = page.match(/href="([^"]*pozemky\d[^"]*\.csv)"/i);
   if (!m) return [];
   let url = m[1];
-  if (!url.startsWith('http')) url = 'https://spu.gov.cz' + url.replace(/^(\/frontend\/webroot\/(?:\.\.\/)*)?/, '/');
+  if (!url.startsWith('http')) url = 'https://spu.gov.cz' + (url.startsWith('/') ? url : '/' + url);
   // 2) stáhneme a dekódujeme (Windows-1250)
   let buf;
   try { const r = await fetch(url, { headers: UA }); if (!r.ok) return []; buf = Buffer.from(await r.arrayBuffer()); }
