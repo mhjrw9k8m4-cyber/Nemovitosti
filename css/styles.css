@@ -108,6 +108,8 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 .marker-pulse:hover{transform:scale(1.45); box-shadow:0 5px 16px rgba(0,0,0,0.55); z-index:1000;}
 .marker-pulse.sel{transform:scale(1.5); box-shadow:0 0 0 4px rgba(255,255,255,0.35), 0 5px 16px rgba(0,0,0,0.55);}
 .marker-pulse.sel::after{content:""; position:absolute; inset:-7px; border-radius:50%; border:2px solid #fff; opacity:0.7; animation:mping 1.5s ease-out infinite;}
+/* Blížící se dražba (≤ 7 dní) — pulzující kroužek v barvě kategorie */
+.marker-pulse.urgent::before{content:""; position:absolute; inset:-6px; border-radius:50%; border:2px solid currentColor; opacity:0.85; animation:mping 1.7s ease-out infinite;}
 @keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(2.2); opacity:0;}}
 
 /* Header */
@@ -321,6 +323,15 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .map-canvas{position:relative; flex:1; min-height:0;}
 #leaflet-map{position:absolute; inset:0; background:var(--ink-soft);}
 .map-note{position:absolute; bottom:8px; left:8px; z-index:500; background:rgba(22,35,47,0.82); color:var(--text-ondark-mute); font-size:10px; padding:4px 9px; border-radius:4px; pointer-events:none;}
+/* Legenda mapy (vpravo nahoře) */
+.map-legend{position:absolute; top:84px; left:10px; z-index:500; display:flex; flex-direction:column; gap:5px; background:rgba(22,35,47,0.85); border:1px solid var(--line); border-radius:7px; padding:8px 10px; font-size:11px; font-weight:600; color:var(--text-ondark); pointer-events:none; backdrop-filter:blur(3px);}
+.map-legend:empty{display:none;}
+.lg-item{display:flex; align-items:center; gap:6px; white-space:nowrap;}
+.lg-dot{width:9px; height:9px; border-radius:50%; border:1.5px solid #fff; flex:none;}
+.lg-ring{position:relative; background:var(--c-drazba);}
+.lg-ring::after{content:""; position:absolute; inset:-4px; border-radius:50%; border:1.5px solid var(--c-drazba); opacity:0.75; animation:mping 1.7s ease-out infinite;}
+.lg-urgent{color:var(--copper-bright);}
+@media (max-width:560px){ .map-legend{font-size:10px; padding:6px 8px; gap:4px;} }
 /* Zámek mapy — mapa se hýbe jen když je odemčená */
 /* Lehké přepínání posouvání mapy (bez těžkého overlay) */
 .map-pan-toggle{position:absolute; top:12px; right:12px; z-index:600; max-width:calc(100% - 24px); background:rgba(22,35,47,0.92); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:22px; padding:9px 16px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}

@@ -452,11 +452,16 @@
     });
   }
 
-  function markerIcon(type) {
+  function isUrgent(d) {
+    if (d.type !== 'drazba' && d.type !== 'exekuce') return false;
+    var dd = daysUntil(d.extra);
+    return dd != null && dd >= 0 && dd <= 7;
+  }
+  function markerIcon(type, urgent) {
     var col = TYPE[type].color;
     return L.divIcon({
       className: '',
-      html: '<div class="marker-pulse" style="width:18px;height:18px;background:' + col + ';color:' + col + ';"></div>',
+      html: '<div class="marker-pulse' + (urgent ? ' urgent' : '') + '" style="width:18px;height:18px;background:' + col + ';color:' + col + ';"></div>',
       iconSize: [18, 18], iconAnchor: [9, 9]
     });
   }
@@ -565,10 +570,25 @@
 
   DATA.forEach(function (d, i) {
     d._id = i;
-    var m = L.marker([d.lat, d.lng], { icon: markerIcon(d.type) }).addTo(map);
+    var m = L.marker([d.lat, d.lng], { icon: markerIcon(d.type, isUrgent(d)) }).addTo(map);
     m.on('click', function () { showDetail(d); highlightList(i); });
     markers.push(m);
   });
+
+  // Legenda mapy — jen kategorie, které v datech opravdu jsou, + upozornění na
+  // blížící se dražby (pulzující body). Vysvětlí barvy přímo nad mapou.
+  var legendEl = document.getElementById('map-legend');
+  if (legendEl) {
+    var present2 = {};
+    DATA.forEach(function (d) { present2[d.type] = true; });
+    var urgentN = DATA.filter(isUrgent).length;
+    var lh = '';
+    ['sale', 'drazba', 'exekuce', 'obec'].forEach(function (tp) {
+      if (present2[tp]) lh += '<span class="lg-item"><span class="lg-dot" style="background:' + TYPE[tp].color + '"></span>' + TYPE[tp].label + '</span>';
+    });
+    if (urgentN) lh += '<span class="lg-item lg-urgent"><span class="lg-dot lg-ring"></span>dražba do 7 dní</span>';
+    legendEl.innerHTML = lh;
+  }
 
   // Tvary parcel — vytvoří se líně až při přiblížení a respektují filtr
   // (dřív se tvořilo všech 234 hned = zbytečná zátěž, a filtr je neschovával).
