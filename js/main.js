@@ -475,6 +475,9 @@
     });
     var matched = vis.length;
     sortVis(vis);
+    // Práh „výhodné ceny" = nejlevnější třetina viditelných podle Kč/m²
+    var pv = vis.map(perM2Val).filter(function (x) { return isFinite(x) && x > 0; }).sort(function (a, b) { return a - b; });
+    var dealMax = pv.length >= 4 ? pv[Math.floor(pv.length * 0.33)] : 0;
     var top = vis.slice(0, LIST_LIMIT);
 
     top.forEach(function (d, rank) {
@@ -493,7 +496,8 @@
         '<span class="opp-tag ' + d.type + '">' + t.label + '</span></div>' +
         '<div class="opp-meta"><span>parc. <b>' + d.parcel + '</b></span>' +
         '<span>' + (hasArea(d) ? '<b>' + fmt(d.area) + '</b> m²' : 'výměra neuvedena') + '</span><span>' + d.druh + '</span></div>' +
-        '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? ' <span>· ' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
+        '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? ' <span>· ' + fmt(perM2) + ' Kč/m²</span>' : '') +
+          (perM2 && dealMax && perM2 <= dealMax ? ' <span class="opp-deal">výhodná cena</span>' : '') + '</div>' +
         '<div class="opp-demand">' + (hot ? '<span class="hot">Velký zájem</span> · ' : '') + '<span class="watch">' + w + ' sledujících</span></div>';
       function openThis() {
         showDetail(d);
