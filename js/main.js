@@ -267,6 +267,18 @@
   var searchTerm = '';
   var markers = [];
 
+  // Filtr kategorie ukážeme jen tehdy, když v datech opravdu nějaká je
+  // (prázdné kategorie, např. obecní záměry, tak nevytvářejí mrtvý tab —
+  // a jakmile se data objeví, tlačítko se samo vrátí).
+  if (filtersEl) {
+    var present = {};
+    DATA.forEach(function (d) { present[d.type] = true; });
+    filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
+      var tp = b.getAttribute('data-type');
+      if (tp && tp !== 'all' && !present[tp]) b.style.display = 'none';
+    });
+  }
+
   if (detailEl) {
     detailEl.addEventListener('click', function (e) {
       if (e.target.closest('[data-detail-back]')) hideDetail();
