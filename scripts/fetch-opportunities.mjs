@@ -235,14 +235,25 @@ async function main() {
     })
     .sort(byDeal);
 
-  // Vyvážený výběr — ať žádná kategorie nepřeváží (jinak by 700 prodejů
-  // zaplavilo mapu). Z každé kategorie bereme nejvýhodnější kusy.
+  // Vyvážený výběr — ať žádná kategorie nepřeváží (jinak by stovky prodejů
+  // zaplavily mapu). Dražby/exekuce bereme podle výhodnosti; u prodeje vybíráme
+  // pestrý vzorek napříč cenami (ne jen nejlevnější slivery), ať je mapa zajímavá.
   const CAP = { sale: 130, drazba: 90, exekuce: 40, obec: 40 };
-  const perType = {};
-  const fresh = clean.filter((o) => {
-    perType[o.type] = (perType[o.type] || 0) + 1;
-    return perType[o.type] <= (CAP[o.type] || 40);
-  });
+  const byType = {};
+  for (const o of clean) (byType[o.type] || (byType[o.type] = [])).push(o);
+  function spread(arr, n) {
+    if (arr.length <= n) return arr;
+    const step = arr.length / n, out = [];
+    for (let i = 0; i < n; i++) out.push(arr[Math.floor(i * step)]);
+    return out;
+  }
+  const saleByPrice = (byType.sale || []).slice().sort((a, b) => a.price - b.price);
+  const fresh = [
+    ...spread(saleByPrice, CAP.sale),
+    ...(byType.drazba || []).slice(0, CAP.drazba),
+    ...(byType.exekuce || []).slice(0, CAP.exekuce),
+    ...(byType.obec || []).slice(0, CAP.obec),
+  ];
 
   if (fresh.length === 0) {
     console.log('Žádný zdroj zatím nevrací data — ponechávám stávající soubor beze změny.');
