@@ -1,31 +1,27 @@
 #!/usr/bin/env node
-// edesky.cz — agregátor úředních desek. Má API/hledání na "záměr prodeje pozemku"?
+// edesky.cz bez API klíče — jde procházet záměry prodeje pozemků z HTML?
 const UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
-async function get(u, opts = {}) {
-  try { const r = await fetch(u, { headers: { ...UA, ...(opts.headers || {}) }, redirect: 'follow' }); const t = await r.text(); return { s: r.status, ct: r.headers.get('content-type'), t }; }
-  catch (e) { return { s: 0, t: '', err: e.message }; }
-}
+async function get(u) { try { const r = await fetch(u, { headers: UA, redirect: 'follow' }); const t = await r.text(); return { s: r.status, ct: r.headers.get('content-type'), t }; } catch (e) { return { s: 0, t: '', err: e.message }; } }
+const strip = (h) => h.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
 
-const rob = await get('https://edesky.cz/robots.txt');
-console.log('robots.txt:', rob.s, JSON.stringify(rob.t.slice(0, 300)));
+// homepage – najdi vyhledávací formulář (action) a odkazy
+const home = await get('https://edesky.cz/');
+console.log('home:', home.s, home.t.length + 'B');
+const forms = [...home.t.matchAll(/<form[^>]*action="([^"]*)"[^>]*>/gi)].map((m) => m[1]);
+console.log('formuláře action:', JSON.stringify(forms.slice(0, 6)));
+const navlinks = [...new Set([...home.t.matchAll(/href="(\/[^"]+)"/gi)].map((m) => m[1]).filter((h) => /hleda|dokument|zamer|zám|obec|kategor|vyhled/i.test(h)))].slice(0, 15);
+console.log('odkazy:', JSON.stringify(navlinks));
 
-// API? edesky historicky mělo veřejné API (api.edesky.cz)
-console.log('\n-- API tipy --');
+// zkusíme běžné hledací cesty (Rails) bez klíče
+console.log('\n-- hledání bez klíče --');
 for (const u of [
-  'https://edesky.cz/api/v1/documents?query=z%C3%A1m%C4%9Br+prodej+pozemek',
-  'https://api.edesky.cz/api/v1/documents?query=prodej+pozemku',
-  'https://edesky.cz/api',
-  'https://edesky.cz/api_v1',
-  'https://edesky.cz/documents.json?q=prodej+pozemku',
+  'https://edesky.cz/hledej?q=z%C3%A1m%C4%9Br+prodeje+pozemku',
+  'https://edesky.cz/search?q=z%C3%A1m%C4%9Br+prodeje+pozemku',
+  'https://edesky.cz/dokumenty?q=z%C3%A1m%C4%9Br+prodeje+pozemku',
+  'https://edesky.cz/hledani?q=prodej+pozemku',
 ]) {
-  const r = await get(u, { headers: { accept: 'application/json' } });
-  console.log(u.replace('https://', '').slice(0, 55), '→', r.s, r.ct, (r.t || '').length + 'B', (r.t || '').slice(0, 80).replace(/\s+/g, ' '));
+  const r = await get(u);
+  const docs = [...new Set([...r.t.matchAll(/href="(\/dokument[^"]*)"/gi)].map((m) => m[1]))];
+  console.log(u.replace('https://edesky.cz', ''), '→', r.s, r.t.length + 'B', 'dokumentů:', docs.length, docs.slice(0, 2));
 }
-
-// hledání přes web (HTML) — najdeme formát dokumentů
-console.log('\n-- webové hledání --');
-const s = await get('https://edesky.cz/vyhledavani?text=z%C3%A1m%C4%9Br+prodeje+pozemku');
-console.log('search:', s.s, s.t.length + 'B', /dokument|zám[ěe]r|pozem/i.test(s.t) ? '(má výsledky?)' : '');
-const links = [...new Set([...s.t.matchAll(/href="(\/dokument[^"]*)"/gi)].map((m) => m[1]))].slice(0, 6);
-console.log('odkazy na dokumenty:', JSON.stringify(links));
 console.log('\nHotovo.');
