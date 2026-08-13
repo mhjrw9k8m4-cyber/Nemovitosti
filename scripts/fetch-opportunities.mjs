@@ -40,10 +40,69 @@ function geocode(o, seedStr) {
 
 /* ---------- Zdroje (doplnit reálné stahování) ---------- */
 
-// Portál dražeb — veřejné dražby pozemků.
-// TODO: stáhnout a rozparsovat nabídky, vyfiltrovat pozemky, doplnit GPS.
+// Centrální evidence veřejných dražeb (cevd.gov.cz) — oficiální otevřená data.
+// Vybíráme jen aktivní dražby (stav "Uveřejněno"), kde je předmětem pozemek.
+const UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
+
+function parseArea(text) {
+  const m = String(text).match(/(\d[\d\s.]*)\s*m(?:2|²)/i);
+  if (!m) return null;
+  const n = parseInt(m[1].replace(/[\s.]/g, ''), 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+function parseDruh(text) {
+  const t = String(text).toLowerCase();
+  const kinds = [
+    ['orná půda', 'orná půda'], ['zahrad', 'zahrada'], ['ostatní plocha', 'ostatní plocha'],
+    ['trvalý travní', 'trvalý travní porost'], ['louk', 'louka'], ['lesní', 'lesní pozemek'],
+    ['stavební', 'stavební'], ['vinice', 'vinice'], ['sad', 'ovocný sad'],
+  ];
+  for (const [k, v] of kinds) if (t.includes(k)) return v;
+  return 'pozemek';
+}
+
 async function fetchDrazby() {
-  return [];
+  const year = new Date().getFullYear();
+  const out = [];
+  for (const y of [year, year - 1]) {
+    let data;
+    try {
+      const r = await fetch(`https://cevd.gov.cz/opendata/drazby/drazby_${y}.json`, { headers: UA });
+      if (!r.ok) continue;
+      data = await r.json();
+    } catch { continue; }
+    const arr = Array.isArray(data) ? data : (Object.values(data).find(Array.isArray) || []);
+    for (const rec of arr) {
+      const konani = rec.zakladniInformace && rec.zakladniInformace.konaniDrazby;
+      const zah = konani && (konani.zahajeni || konani.konec);
+      for (const p of (rec.predmetyDrazby || [])) {
+        if (p.stavPredmetu !== 'Uveřejněno') continue; // jen aktivní/nadcházející
+        for (const v of (p.veci || [])) {
+          const vn = v.vecNemovita;
+          if (!vn || !vn.pozemek || vn.jednotka || vn.stavba) continue; // jen čisté pozemky
+          const ku = vn.katastralniUzemi || {};
+          const okres = ku.okres, place = ku.obec || ku.nazev;
+          if (!okres || !place) continue;
+          const blob = `${v.nazev || ''} ${p.nazevPredmetu || ''} ${p.popisPredmetu || ''}`;
+          const area = vn.pozemek.vymera || parseArea(blob);
+          const price = (p.vyvolavaciCena && p.vyvolavaciCena.castka && p.vyvolavaciCena.castka.vyse)
+            || (p.obvyklaCena && p.obvyklaCena.vyse) || 0;
+          if (!area || !price) continue;
+          out.push({
+            place, okres, type: 'drazba',
+            parcel: String(vn.pozemek.parcelniCislo || '—').slice(0, 40),
+            druh: vn.pozemek.druhPozemku || parseDruh(blob),
+            area: Math.round(area), price: Math.round(price),
+            extra: zah ? ('dražba ' + String(zah).slice(0, 10)) : 'nadcházející dražba',
+            lat: typeof vn.gpsLat === 'number' ? vn.gpsLat : undefined,
+            lng: typeof vn.gpsLng === 'number' ? vn.gpsLng : undefined,
+          });
+        }
+      }
+    }
+    if (out.length) break; // aktuální rok stačí
+  }
+  return out;
 }
 
 // Insolvenční rejstřík (ISIR) — majetek v úpadku, který půjde na prodej.
@@ -98,7 +157,8 @@ async function main() {
       seen.add(k);
       return true;
     })
-    .sort((a, b) => a.price / a.area - b.price / b.area);
+    .sort((a, b) => a.price / a.area - b.price / b.area)
+    .slice(0, 200); // strop, ať je soubor svižný
 
   if (fresh.length === 0) {
     console.log('Žádný zdroj zatím nevrací data — ponechávám stávající soubor beze změny.');
