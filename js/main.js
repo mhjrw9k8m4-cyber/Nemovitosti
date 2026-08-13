@@ -4,12 +4,20 @@
 
   /* ---------- Ukázková data příležitostí (ilustrační) ---------- */
   var DATA = [
-    { place:'Kolín',     okres:'Kolín',   type:'drazba',  parcel:'412/3', druh:'stavební',  area:1240, price:640000,  extra:'dražba za 12 dní', lat:50.0281, lng:15.2003 },
-    { place:'Nymburk',   okres:'Nymburk', type:'sale',    parcel:'305',   druh:'stavební',  area:2100, price:1890000, extra:'na prodej',        lat:50.1850, lng:15.0410 },
-    { place:'Mělník',    okres:'Mělník',  type:'exekuce', parcel:'44/7',  druh:'orná půda', area:1500, price:1100000, extra:'v exekuci',        lat:50.3500, lng:14.4740 },
-    { place:'Poděbrady', okres:'Nymburk', type:'obec',    parcel:'27/2',  druh:'zahrada',   area:650,  price:590000,  extra:'záměr obce',       lat:50.1425, lng:15.1190 },
-    { place:'Beroun',    okres:'Beroun',  type:'sale',    parcel:'15/1',  druh:'stavební',  area:610,  price:980000,  extra:'na prodej',        lat:49.9640, lng:14.0720 },
-    { place:'Příbram',   okres:'Příbram', type:'drazba',  parcel:'238',   druh:'zahrada',   area:1120, price:720000,  extra:'dražba za 20 dní', lat:49.6890, lng:14.0100 }
+    { place:'Kolín',             okres:'Kolín',         type:'drazba',  parcel:'412/3', druh:'stavební',  area:1240, price:640000,  extra:'dražba za 12 dní', lat:50.0281, lng:15.2003 },
+    { place:'Kutná Hora',        okres:'Kutná Hora',    type:'exekuce', parcel:'88/1',  druh:'orná půda', area:890,  price:780000,  extra:'v exekuci',        lat:49.9484, lng:15.2680 },
+    { place:'Nymburk',           okres:'Nymburk',       type:'sale',    parcel:'305',   druh:'stavební',  area:2100, price:1890000, extra:'na prodej',        lat:50.1850, lng:15.0410 },
+    { place:'Poděbrady',         okres:'Nymburk',       type:'obec',    parcel:'27/2',  druh:'zahrada',   area:650,  price:590000,  extra:'záměr obce',       lat:50.1425, lng:15.1190 },
+    { place:'Čáslav',            okres:'Kutná Hora',    type:'drazba',  parcel:'560/4', druh:'louka',     area:3400, price:1200000, extra:'dražba za 5 dní',  lat:49.9110, lng:15.3910 },
+    { place:'Kladno',            okres:'Kladno',        type:'sale',    parcel:'190',   druh:'stavební',  area:780,  price:1250000, extra:'na prodej',        lat:50.1470, lng:14.1030 },
+    { place:'Mělník',            okres:'Mělník',        type:'exekuce', parcel:'44/7',  druh:'orná půda', area:1500, price:1100000, extra:'v exekuci',        lat:50.3500, lng:14.4740 },
+    { place:'Brandýs nad Labem', okres:'Praha-východ',  type:'obec',    parcel:'611',   druh:'louka',     area:4200, price:2900000, extra:'záměr obce',       lat:50.1860, lng:14.6610 },
+    { place:'Benešov',           okres:'Benešov',       type:'sale',    parcel:'72/3',  druh:'stavební',  area:950,  price:1490000, extra:'na prodej',        lat:49.7830, lng:14.6860 },
+    { place:'Příbram',           okres:'Příbram',       type:'drazba',  parcel:'238',   druh:'zahrada',   area:1120, price:720000,  extra:'dražba za 20 dní', lat:49.6890, lng:14.0100 },
+    { place:'Beroun',            okres:'Beroun',        type:'sale',    parcel:'15/1',  druh:'stavební',  area:610,  price:980000,  extra:'na prodej',        lat:49.9640, lng:14.0720 },
+    { place:'Rakovník',          okres:'Rakovník',      type:'exekuce', parcel:'402',   druh:'orná půda', area:2750, price:1650000, extra:'v exekuci',        lat:50.1040, lng:13.7330 },
+    { place:'Mladá Boleslav',    okres:'Mladá Boleslav',type:'obec',    parcel:'318/2', druh:'stavební',  area:1800, price:2400000, extra:'záměr obce',       lat:50.4110, lng:14.9040 },
+    { place:'Slaný',             okres:'Kladno',        type:'sale',    parcel:'96',    druh:'zahrada',   area:1340, price:1340000, extra:'na prodej',        lat:50.2300, lng:14.0860 }
   ];
 
   var TYPE = {
@@ -386,15 +394,17 @@
     return okType && okSearch;
   }
 
+  var LIST_LIMIT = 6;
   function renderList() {
     listEl.innerHTML = '';
-    var shown = 0;
+    var matched = 0;
     DATA.forEach(function (d) {
       var vis = visible(d);
       markers[d._id].setOpacity(vis ? 1 : 0);
       markers[d._id]._icon && (markers[d._id]._icon.style.pointerEvents = vis ? 'auto' : 'none');
       if (!vis) return;
-      shown++;
+      matched++;
+      if (matched > LIST_LIMIT) return;
       var t = TYPE[d.type];
       var li = document.createElement('li');
       li.className = 'opp-item ' + d.type; li.setAttribute('data-id', d._id);
@@ -420,8 +430,15 @@
       li.addEventListener('mouseenter', function () { highlightList(d._id); });
       listEl.appendChild(li);
     });
-    countEl.textContent = shown + (shown === 1 ? ' příležitost' : (shown >= 2 && shown <= 4 ? ' příležitosti' : ' příležitostí')) + ' na mapě';
-    if (shown === 0) listEl.innerHTML = '<li class="map-count" style="padding:20px 6px;">Nic nenalezeno — zkuste jiný filtr.</li>';
+    countEl.textContent = matched + (matched === 1 ? ' příležitost' : (matched >= 2 && matched <= 4 ? ' příležitosti' : ' příležitostí')) + ' na mapě';
+    if (matched === 0) {
+      listEl.innerHTML = '<li class="map-count" style="padding:20px 6px;">Nic nenalezeno — zkuste jiný filtr.</li>';
+    } else if (matched > LIST_LIMIT) {
+      var more = document.createElement('li');
+      more.className = 'opp-more';
+      more.textContent = '+ ' + (matched - LIST_LIMIT) + ' dalších najdete na mapě';
+      listEl.appendChild(more);
+    }
   }
 
   function highlightList(id) {
