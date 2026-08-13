@@ -168,17 +168,21 @@ async function fetchProdejSPU() {
   if (lines.length < 2) return [];
   const header = splitCsvLine(lines[0]).map((h) => h.toLowerCase());
   const col = (needle) => header.findIndex((h) => h.includes(needle));
+  // Sloupce 0–4 (Okres, Název k.ú., Parcela, Výměra, Druh) jsou před textovými
+  // poli, takže jejich pozice je stabilní. Cena je až za poznámkou, která může
+  // obsahovat středník → cenu proto hledáme podle tokenu „… Kč" v celém řádku.
   const iOkres = col('okres'), iKu = col('k.'), iParc = col('parcela'),
-    iVym = col('výměra'), iDruh = col('druh'), iVyuz = col('využit'),
-    iCena = col('cena'), iStazeno = col('staženo');
+    iVym = col('výměra'), iDruh = col('druh'), iVyuz = col('využit');
   const out = [];
   for (let i = 1; i < lines.length; i++) {
-    const c = splitCsvLine(lines[i]);
+    const line = lines[i];
+    const c = splitCsvLine(line);
     if (c.length < 5) continue;
-    if (iStazeno >= 0 && /ano/i.test(c[iStazeno] || '')) continue; // staženo z nabídky
+    if (/;\s*ano\s*$/i.test(line)) continue; // poslední sloupec "Staženo" = ano
     const okres = (c[iOkres] || '').trim();
     const place = (iKu >= 0 ? c[iKu] : '').trim();
-    const price = parseInt((c[iCena] || '').replace(/\s/g, '').split(',')[0].replace(/[^\d]/g, ''), 10);
+    const money = line.match(/(\d[\d\s ]*),\d{2}\s*K/); // "16 865,00 Kč"
+    const price = money ? parseInt(money[1].replace(/[^\d]/g, ''), 10) : null;
     if (!okres || !place || !price) continue;
     const area = parseInt(String(iVym >= 0 ? c[iVym] : '').replace(/[^\d]/g, ''), 10) || null;
     const druh = (iDruh >= 0 ? c[iDruh] : '').trim() || parseDruh(iVyuz >= 0 ? c[iVyuz] : '');
