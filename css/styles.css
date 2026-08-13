@@ -214,6 +214,15 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c9982f' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 11px center;}
 .map-select:focus-visible{border-color:var(--copper-bright); outline:none;}
 .map-select option{background:var(--ink); color:var(--text-ondark);}
+.fav-toggle{background-image:none; padding:9px 12px; text-align:center; transition:border-color .15s ease, background .15s ease, color .15s ease;}
+.fav-toggle:hover{border-color:var(--copper-bright);}
+.fav-toggle.on{background:rgba(193,91,68,0.16); border-color:var(--c-exekuce); color:#F0B7A6;}
+.opp-topr{display:inline-flex; align-items:center; gap:8px;}
+.opp-fav{background:none; border:0; padding:0 2px; font-size:18px; line-height:1; cursor:pointer; color:var(--text-ondark-mute); transition:color .15s ease, transform .1s ease;}
+.opp-fav:hover{color:#F0B7A6;}
+.opp-fav.on{color:#E3705A;}
+.opp-fav:active{transform:scale(1.25);}
+.lp-fav.on{background:rgba(193,91,68,0.16); border-color:var(--c-exekuce); color:#F0B7A6;}
 .opp-deal{display:inline-block; font-size:10px; font-weight:700; color:var(--c-sale); background:rgba(62,142,91,0.14); border:1px solid rgba(62,142,91,0.4); border-radius:4px; padding:1px 6px; margin-left:5px; letter-spacing:0.02em; text-transform:uppercase;}
 .map-count{font-size:13.5px; color:var(--text-ondark); font-weight:600; letter-spacing:0.01em; margin-bottom:12px;}
 .mc-sub{font-weight:400; color:var(--text-ondark-mute); font-size:12.5px;}
@@ -260,8 +269,9 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .md-facts{display:flex; flex-wrap:wrap; gap:6px 14px;}
 .md-facts span{font-size:12px; color:var(--text-ondark-mute);}
 .md-facts b{color:var(--text-ondark); font-weight:600;}
-.md-actions{flex:none; display:flex; flex-direction:column; gap:6px; width:172px;}
-.md-actions .lp-btn{flex:none;}
+.md-actions{flex:none; display:flex; flex-wrap:wrap; gap:6px; width:186px; align-content:flex-start;}
+.md-actions .lp-btn{flex:1 1 calc(50% - 3px); min-width:0;}
+.md-actions .lp-watch{flex-basis:100%;}
 @media (max-width:760px){
   .map-detail{padding:12px 14px 14px;}
   .md-body{flex-direction:column; align-items:stretch; gap:10px;}

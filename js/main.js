@@ -30,6 +30,21 @@
   // rovnou IDENTIFIKUJE a vyznačí (ukáže bublinu s parcelou), ne jen vycentruje.
   function katastrUrl(d){ return 'https://www.ikatastr.cz/#info=' + d.lat + ',' + d.lng; }
   function mapyUrl(d){ return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat; }
+  // Stabilní klíč pozemku (přežije změnu pořadí dat) — pro oblíbené i sdílení
+  function pkey(d){ return (d.parcel || '?') + '@' + d.lat + ',' + d.lng; }
+  // Zkopírování textu do schránky s bezpečnou zálohou pro starší prohlížeče
+  function copyText(text, onDone){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); onDone && onDone(); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function(){ onDone && onDone(); }).catch(fallback);
+    } else { fallback(); }
+  }
 
   function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
   function hasArea(d){ return typeof d.area === 'number' && d.area > 0; }
@@ -280,12 +295,32 @@
   var sortEl = document.getElementById('map-sort');
   var cenaEl = document.getElementById('map-cena');
   var detailEl = document.getElementById('opp-detail');
+  var favEl = document.getElementById('map-fav');
   var activeType = 'all';
   var activeDruh = 'all';
   var sortMode = 'demand';
   var maxPrice = 0;
   var searchTerm = '';
+  var favOnly = false;
   var markers = [];
+
+  /* ---------- Oblíbené pozemky (uložené v prohlížeči) ---------- */
+  var FAV_KEY = 'pk_fav_v1';
+  var favs = (function () { try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch (e) { return []; } })();
+  function saveFavs(){ try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch (e) {} }
+  function isFav(d){ return favs.indexOf(pkey(d)) !== -1; }
+  function toggleFav(d){
+    var k = pkey(d), i = favs.indexOf(k);
+    if (i === -1) favs.push(k); else favs.splice(i, 1);
+    saveFavs(); refreshFavBtn();
+  }
+  function refreshFavBtn(){
+    if (!favEl) return;
+    var n = favs.length;
+    favEl.textContent = (favOnly ? '♥' : '♡') + ' Oblíbené' + (n ? ' (' + n + ')' : '');
+    favEl.classList.toggle('on', favOnly);
+    favEl.setAttribute('aria-pressed', String(favOnly));
+  }
 
   // Naplníme filtr druhů podle toho, co je v datech (s počty)
   if (druhEl) {
@@ -312,7 +347,32 @@
 
   if (detailEl) {
     detailEl.addEventListener('click', function (e) {
-      if (e.target.closest('[data-detail-back]')) hideDetail();
+      if (e.target.closest('[data-detail-back]')) { hideDetail(); return; }
+      if (!curDetail) return;
+      var favBtn = e.target.closest('[data-fav-detail]');
+      if (favBtn) {
+        toggleFav(curDetail);
+        var on = isFav(curDetail);
+        favBtn.classList.toggle('on', on);
+        favBtn.textContent = on ? '♥ Uloženo' : '♡ Uložit';
+        renderList();
+        return;
+      }
+      var shareBtn = e.target.closest('[data-share]');
+      if (shareBtn) {
+        var url = location.origin + location.pathname + '?p=' + encodeURIComponent(pkey(curDetail));
+        var title = 'Pozemek ' + curDetail.place + ' — Pozemkomat';
+        if (navigator.share) {
+          navigator.share({ title: title, url: url }).catch(function () {});
+        } else {
+          copyText(url, function () {
+            var orig = shareBtn.textContent;
+            shareBtn.textContent = 'Odkaz zkopírován ✓';
+            shareBtn.classList.add('on');
+            setTimeout(function () { shareBtn.textContent = orig; shareBtn.classList.remove('on'); }, 1800);
+          });
+        }
+      }
     });
   }
 
@@ -378,6 +438,8 @@
           '<a class="lp-btn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">Katastr</a>' +
           '<a class="lp-btn" href="' + mapyUrl(d) + '" target="_blank" rel="noopener">Mapa</a>' +
           '<a class="lp-btn" href="' + (d.url || t.link.url) + '" target="_blank" rel="noopener">' + (d.url ? (d.type === 'sale' ? 'Inzerát' : 'K dražbě') : t.link.label) + '</a>' +
+          '<button class="lp-btn lp-fav' + (isFav(d) ? ' on' : '') + '" type="button" data-fav-detail>' + (isFav(d) ? '♥ Uloženo' : '♡ Uložit') + '</button>' +
+          '<button class="lp-btn" type="button" data-share>Sdílet</button>' +
           '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">Hlídat okres ' + d.okres + '</a>' +
         '</div>' +
       '</div>';
@@ -388,8 +450,10 @@
     setTimeout(function () { map.invalidateSize(); }, 340);
   }
   var holderEl = document.querySelector('.map-holder');
+  var curDetail = null;
   function showDetail(d) {
     if (!detailEl) return;
+    curDetail = d;
     detailEl.innerHTML = detailHtml(d);
     detailEl.removeAttribute('hidden');
     requestAnimationFrame(function () { detailEl.classList.add('show'); });
@@ -450,7 +514,8 @@
     var okSearch = !searchTerm || (d.place + ' ' + d.okres).toLowerCase().indexOf(searchTerm) !== -1;
     var okDruh = activeDruh === 'all' || druhGroup(d.druh) === activeDruh;
     var okPrice = !maxPrice || !d.price || d.price <= maxPrice;
-    return okType && okSearch && okDruh && okPrice;
+    var okFav = !favOnly || isFav(d);
+    return okType && okSearch && okDruh && okPrice && okFav;
   }
   function perM2Val(d){ return hasArea(d) ? d.price / d.area : Infinity; }
   function sortVis(arr){
@@ -502,7 +567,10 @@
       li.setAttribute('aria-label', t.label + ' · ' + d.place + ' · ' + areaTxt(d));
       li.innerHTML =
         '<div class="opp-top"><span class="opp-place">' + d.place + '</span>' +
-        '<span class="opp-tag ' + d.type + '">' + t.label + '</span></div>' +
+        '<span class="opp-topr">' +
+          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z oblíbených' : 'Uložit do oblíbených') + '">' + (isFav(d) ? '♥' : '♡') + '</button>' +
+          '<span class="opp-tag ' + d.type + '">' + t.label + '</span>' +
+        '</span></div>' +
         '<div class="opp-meta"><span>parc. <b>' + d.parcel + '</b></span>' +
         '<span>' + (hasArea(d) ? '<b>' + fmt(d.area) + '</b> m²' : 'výměra neuvedena') + '</span><span>' + d.druh + '</span></div>' +
         '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? ' <span>· ' + fmt(perM2) + ' Kč/m²</span>' : '') +
@@ -518,13 +586,22 @@
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openThis(); }
       });
       li.addEventListener('mouseenter', function () { highlightList(d._id); });
+      var favBtn = li.querySelector('.opp-fav');
+      if (favBtn) favBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggleFav(d);
+        favBtn.classList.toggle('on', isFav(d));
+        favBtn.textContent = isFav(d) ? '♥' : '♡';
+        favBtn.setAttribute('aria-label', isFav(d) ? 'Odebrat z oblíbených' : 'Uložit do oblíbených');
+        if (favOnly) renderList();
+      });
       listEl.appendChild(li);
     });
 
     var headLabel = sortMode === 'demand' ? 'Nejžádanější příležitosti' : 'Vybrané příležitosti';
     countEl.innerHTML = headLabel + ' · <span class="mc-sub">' + matched + ' na mapě</span>';
     if (matched === 0) {
-      var anyFilter = activeType !== 'all' || activeDruh !== 'all' || maxPrice || searchTerm;
+      var anyFilter = activeType !== 'all' || activeDruh !== 'all' || maxPrice || searchTerm || favOnly;
       listEl.innerHTML = '<li class="map-count" style="padding:20px 6px; text-transform:none; font-weight:400; line-height:1.6;">Tady zrovna nic není — zkuste jiný filtr. Příležitostí přibývá každý týden.' +
         (anyFilter ? '<br><button type="button" id="reset-filtry" class="reset-btn">Zrušit filtry</button>' : '') + '</li>';
       var eb = listEl.querySelector('#reset-filtry');
@@ -539,14 +616,30 @@
   }
 
   function resetFilters() {
-    activeType = 'all'; activeDruh = 'all'; maxPrice = 0; searchTerm = '';
+    activeType = 'all'; activeDruh = 'all'; maxPrice = 0; searchTerm = ''; favOnly = false;
     if (searchEl) searchEl.value = '';
     if (druhEl) druhEl.value = 'all';
     if (cenaEl) cenaEl.value = '0';
     filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-type') === 'all');
     });
+    refreshFavBtn();
     renderList();
+  }
+
+  // Sdílený odkaz ?p=<klíč> otevře konkrétní pozemek a odscrolluje na mapu
+  function openFromUrl() {
+    var m = /[?&]p=([^&]+)/.exec(location.search);
+    if (!m) return;
+    var key;
+    try { key = decodeURIComponent(m[1]); } catch (e) { return; }
+    var target = null;
+    DATA.forEach(function (d) { if (pkey(d) === key) target = d; });
+    if (!target) return;
+    map.setView([target.lat, target.lng], 14, { animate: false });
+    showDetail(target);
+    highlightList(target._id);
+    if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
   }
 
   function highlightList(id) {
@@ -570,8 +663,11 @@
   if (druhEl) druhEl.addEventListener('change', function () { activeDruh = druhEl.value; renderList(); });
   if (sortEl) sortEl.addEventListener('change', function () { sortMode = sortEl.value; renderList(); });
   if (cenaEl) cenaEl.addEventListener('change', function () { maxPrice = parseInt(cenaEl.value, 10) || 0; renderList(); });
+  if (favEl) favEl.addEventListener('click', function () { favOnly = !favOnly; refreshFavBtn(); renderList(); });
 
+  refreshFavBtn();
   renderList();
+  openFromUrl();
   setTimeout(function () { map.invalidateSize(); }, 300);
   }
 
