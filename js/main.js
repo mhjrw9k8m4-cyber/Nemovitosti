@@ -439,7 +439,7 @@
 
   function visible(d) {
     var okType = activeType === 'all' || d.type === activeType;
-    var okSearch = !searchTerm || d.place.toLowerCase().indexOf(searchTerm) !== -1;
+    var okSearch = !searchTerm || (d.place + ' ' + d.okres).toLowerCase().indexOf(searchTerm) !== -1;
     var okDruh = activeDruh === 'all' || druhGroup(d.druh) === activeDruh;
     return okType && okSearch && okDruh;
   }
