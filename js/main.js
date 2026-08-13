@@ -337,7 +337,8 @@
   var mapEl = document.getElementById('leaflet-map');
   if (!mapEl || typeof L === 'undefined') return;
 
-  var map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: true }).setView([49.95, 14.75], 8);
+  // Start oddálený na celou ČR (přesné vyrovnání na data řeší fitAllCZ níže).
+  var map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: true }).setView([49.82, 15.47], 7);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     subdomains: 'abcd', maxZoom: 19
@@ -623,6 +624,12 @@
     markers.push(m);
   });
 
+  // Oddálí mapu tak, aby byla vidět celá rozloha nabídek (celá ČR).
+  // Přizpůsobí se velikosti displeje – na mobilu i na počítači.
+  var czBounds = L.latLngBounds(DATA.map(function (d) { return [d.lat, d.lng]; }));
+  function fitAllCZ() { if (czBounds.isValid()) map.fitBounds(czBounds, { padding: [18, 18], maxZoom: 9 }); }
+  fitAllCZ();
+
   // Legenda mapy — jen kategorie, které v datech opravdu jsou, + upozornění na
   // blížící se dražby (pulzující body). Vysvětlí barvy přímo nad mapou.
   var legendEl = document.getElementById('map-legend');
@@ -795,16 +802,17 @@
   // Sdílený odkaz ?p=<klíč> otevře konkrétní pozemek a odscrolluje na mapu
   function openFromUrl() {
     var m = /[?&]p=([^&]+)/.exec(location.search);
-    if (!m) return;
+    if (!m) return false;
     var key;
-    try { key = decodeURIComponent(m[1]); } catch (e) { return; }
+    try { key = decodeURIComponent(m[1]); } catch (e) { return false; }
     var target = null;
     DATA.forEach(function (d) { if (pkey(d) === key) target = d; });
-    if (!target) return;
+    if (!target) return false;
     map.setView([target.lat, target.lng], 14, { animate: false });
     showDetail(target);
     highlightList(target._id);
     if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
+    return true;
   }
 
   function highlightList(id) {
@@ -832,8 +840,10 @@
 
   refreshFavBtn();
   renderList();
-  openFromUrl();
-  setTimeout(function () { map.invalidateSize(); }, 300);
+  var deepLinked = openFromUrl();
+  // Po dopočítání rozměrů mapy znovu vyrovnáme na celou ČR (pokud nejde o
+  // sdílený odkaz na konkrétní parcelu, který si drží vlastní přiblížení).
+  setTimeout(function () { map.invalidateSize(); if (!deepLinked) fitAllCZ(); }, 300);
   }
 
   /* ---------- Načtení reálných dat s bezpečnou zálohou ---------- */
