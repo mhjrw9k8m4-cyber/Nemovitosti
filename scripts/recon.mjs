@@ -1,42 +1,40 @@
 #!/usr/bin/env node
-// (1) CEVD: najdi ID/odkaz na detail dražby.  (2) obec: feasibility úředních desek.
+// CEVD: jak odkázat na konkrétní dražbu? (detail web + pole drazebnik/podrobnosti)
 const UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
 async function get(u, opts = {}) {
   try { const r = await fetch(u, { headers: { ...UA, ...(opts.headers || {}) }, redirect: 'follow' }); const t = await r.text(); return { s: r.status, ct: r.headers.get('content-type'), t }; }
   catch (e) { return { s: 0, t: '', err: e.message }; }
 }
 
-// ---------- CEVD: struktura záznamu dražby ----------
-console.log('=== CEVD: pole záznamu dražby (hledám ID/odkaz) ===');
+// 1) homepage evidence dražeb — je to JS app? jaké odkazy/skripty?
+const home = await get('https://cevd.gov.cz/');
+console.log('cevd.gov.cz:', home.s, home.t.length + 'B');
+console.log('CELÝ HTML:\n', home.t.slice(0, 2000));
+
+// 2) záznam dražby: drazebnik.url + podrobnostiODrazbe (hledám odkaz na dražbu)
+console.log('\n=== pole záznamu (drazebnik, konani, podrobnosti) ===');
 try {
   const y = new Date().getFullYear();
   const data = await (await fetch(`https://cevd.gov.cz/opendata/drazby/drazby_${y}.json`, { headers: UA })).json();
   const arr = Array.isArray(data) ? data : (Object.values(data).find(Array.isArray) || []);
   const rec = arr.find((r) => (r.predmetyDrazby || []).some((p) => p.stavPredmetu === 'Uveřejněno')) || arr[0];
-  console.log('klíče záznamu:', JSON.stringify(Object.keys(rec)));
-  console.log('klíče zakladniInformace:', JSON.stringify(Object.keys(rec.zakladniInformace || {})));
-  // vypiš všechna pole vypadající jako id/číslo/url
-  const flat = JSON.stringify(rec);
-  const idFields = [...new Set([...flat.matchAll(/"(\w*(?:[iI]d|[cČ]islo|[uU]rl|odkaz|evidencni|spisov)\w*)":\s*("?[^",{}\[\]]+"?)/g)].map((m) => m[1] + '=' + m[2]))].slice(0, 25);
-  console.log('id/číslo/url pole:', JSON.stringify(idFields, null, 0));
-} catch (e) { console.log('CEVD chyba:', e.message); }
+  const zi = rec.zakladniInformace || {};
+  console.log('cisloDrazby:', zi.cisloDrazby, '| formaDrazby:', zi.formaDrazby, '| zpusobDrazby:', zi.zpusobDrazby);
+  console.log('drazebnik:', JSON.stringify(zi.drazebnik).slice(0, 400));
+  console.log('konaniDrazby:', JSON.stringify(zi.konaniDrazby).slice(0, 300));
+  console.log('podrobnostiODrazbe klíče:', JSON.stringify(Object.keys(rec.podrobnostiODrazbe || {})));
+  console.log('podrobnosti (url pole):', JSON.stringify([...new Set([...JSON.stringify(rec.podrobnostiODrazbe || {}).matchAll(/"(\w*url\w*)":\s*("[^"]*")/gi)].map((m) => m[1] + '=' + m[2]))]));
+} catch (e) { console.log('chyba:', e.message); }
 
-// zkusíme, jestli má CEVD veřejný detail (podle evidenčního čísla)
-console.log('\n=== CEVD detail web ===');
-for (const u of ['https://cevd.gov.cz/', 'https://www.centralniadresa.cz/']) {
-  const r = await get(u);
-  console.log(u, '→', r.s, r.ct, (r.t || '').length + 'B', (r.t || '').slice(0, 80).replace(/\s+/g, ' '));
-}
-
-// ---------- OBEC: národní úřední desky (open data) ----------
-console.log('\n=== OBEC: úřední desky přes NKOD/OFN ===');
-// registr úředních desek – seznam desek v OFN
+// 3) zkusíme detail na cevd.gov.cz podle čísla dražby
+console.log('\n=== detail tipy ===');
 for (const u of [
-  'https://data.gov.cz/zdroj/lokální-katalogy',
-  'https://portal.gov.cz/rozhrani-pro-cteni-udaju/uredni-desky',
-  'https://opendata.gov.cz/datové-sady:úřední-deska',
+  'https://cevd.gov.cz/detail/CEVD-2026-000001',
+  'https://cevd.gov.cz/drazba/CEVD-2026-000001',
+  'https://cevd.gov.cz/?cisloDrazby=CEVD-2026-000001',
+  'https://cevd.gov.cz/verejnost/detail/CEVD-2026-000001',
 ]) {
-  const r = await get(u, { headers: { accept: 'application/json' } });
-  console.log(u.slice(0, 55), '→', r.s, r.ct, (r.t || '').length + 'B');
+  const r = await get(u);
+  console.log(u.replace('https://cevd.gov.cz', ''), '→', r.s, (r.t || '').length + 'B', /CEVD-2026|dražb/i.test(r.t) ? '(zmiňuje dražbu)' : '');
 }
 console.log('\nHotovo.');
