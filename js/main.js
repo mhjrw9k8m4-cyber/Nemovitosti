@@ -84,6 +84,39 @@
     if (days <= 30) return ' soon';
     return '';
   }
+  // Termín dražby jako YYYYMMDD (z reálného data v extra) — pro kalendář (.ics)
+  function auctionYMD(extra){
+    var m = /(\d{4})-(\d{2})-(\d{2})/.exec(extra || '');
+    return m ? m[1] + m[2] + m[3] : null;
+  }
+  function icsEsc(s){ return String(s).replace(/([,;\\])/g, '\\$1').replace(/\r?\n/g, '\\n'); }
+  function pad2(n){ return (n < 10 ? '0' : '') + n; }
+  // Sestaví .ics událost (celodenní na den dražby) s připomínkou den předem
+  function icsFor(d){
+    var ymd = auctionYMD(d.extra);
+    if (!ymd) return null;
+    var y = +ymd.slice(0, 4), mo = +ymd.slice(4, 6), da = +ymd.slice(6, 8);
+    var end = new Date(y, mo - 1, da + 1);
+    var endYMD = end.getFullYear() + pad2(end.getMonth() + 1) + pad2(end.getDate());
+    var stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+    var url = location.origin + location.pathname + '?p=' + encodeURIComponent(pkey(d));
+    var kind = d.type === 'exekuce' ? 'Exekuční dražba' : 'Dražba';
+    var summary = kind + ': ' + d.place + ' (parc. ' + d.parcel + ')';
+    var desc = [d.druh, hasArea(d) ? fmt(d.area) + ' m²' : '', 'vyvolávací ' + fmt(d.price) + ' Kč', url].filter(Boolean).join(', ');
+    return [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Pozemkomat//CS', 'CALSCALE:GREGORIAN',
+      'BEGIN:VEVENT',
+      'UID:' + encodeURIComponent(pkey(d)) + '@pozemkomat',
+      'DTSTAMP:' + stamp,
+      'DTSTART;VALUE=DATE:' + ymd,
+      'DTEND;VALUE=DATE:' + endYMD,
+      'SUMMARY:' + icsEsc(summary),
+      'DESCRIPTION:' + icsEsc(desc),
+      'LOCATION:' + icsEsc(d.place + ', okres ' + d.okres),
+      'BEGIN:VALARM', 'TRIGGER:-P1D', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(summary), 'END:VALARM',
+      'END:VEVENT', 'END:VCALENDAR'
+    ].join('\r\n');
+  }
   function hasArea(d){ return typeof d.area === 'number' && d.area > 0; }
   function areaTxt(d){ return hasArea(d) ? fmt(d.area) + ' m²' : 'neuvedena'; }
   // Sloučení mnoha variant druhu do pár skupin pro filtr
@@ -434,6 +467,20 @@
         renderList();
         return;
       }
+      var calBtn = e.target.closest('[data-cal]');
+      if (calBtn) {
+        var ics = icsFor(curDetail);
+        if (ics) {
+          var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+          var u = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = u;
+          a.download = 'drazba-' + String(curDetail.place || 'pozemek').replace(/[^\w]+/g, '-') + '.ics';
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(function () { URL.revokeObjectURL(u); }, 1000);
+        }
+        return;
+      }
       var shareBtn = e.target.closest('[data-share]');
       if (shareBtn) {
         var url = location.origin + location.pathname + '?p=' + encodeURIComponent(pkey(curDetail));
@@ -523,6 +570,7 @@
           '<a class="lp-btn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">Katastr</a>' +
           '<a class="lp-btn" href="' + mapyUrl(d) + '" target="_blank" rel="noopener">Mapa</a>' +
           (function () { var s = sourceLink(d); return '<a class="lp-btn lp-src" href="' + s.url + '" target="_blank" rel="noopener">' + s.label + '</a>'; })() +
+          (auctionYMD(d.extra) ? '<button class="lp-btn" type="button" data-cal>📅 Kalendář</button>' : '') +
           '<button class="lp-btn lp-fav' + (isFav(d) ? ' on' : '') + '" type="button" data-fav-detail>' + BM_SVG + '<span>' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
           '<button class="lp-btn" type="button" data-share>Sdílet</button>' +
           '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">Hlídat okres ' + d.okres + '</a>' +
