@@ -107,19 +107,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949413-nabidka-prodej-pozemku-koberovy"
     },
     {
-      "place": "Česká Kamenice – Dolní Kamenice",
-      "okres": "Česká Lípa",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "pozemek",
-      "area": 108179,
-      "price": 2060000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 50.790627,
-      "lng": 14.404782,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1044717-nabidka-prodej-pozemku-ceska-kamenice"
-    },
-    {
       "place": "Planá – Svahy",
       "okres": "Tachov",
       "type": "sale",
@@ -1030,19 +1017,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949475-nabidka-prodej-pozemku-kropacova-vrutice"
     },
     {
-      "place": "Klimkovice – Klimkovice",
-      "okres": "Ostrava-město",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "pozemek",
-      "area": 3979,
-      "price": 159000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.765825,
-      "lng": 18.12095,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1044761-nabidka-prodej-pozemku-klimkovice"
-    },
-    {
       "place": "Nový Poddvorov – Nový Poddvorov",
       "okres": "Břeclav",
       "type": "sale",
@@ -1171,6 +1145,32 @@
       "lat": 50.510236,
       "lng": 15.4336,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949851-nabidka-prodej-pozemku"
+    },
+    {
+      "place": "Plchovice – Plchovice",
+      "okres": "Rychnov nad Kněžnou",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "pozemek",
+      "area": 5119,
+      "price": 215000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.058307,
+      "lng": 16.167404,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1045206-nabidka-prodej-pozemku-plchovice"
+    },
+    {
+      "place": "Lipová – Hrochov",
+      "okres": "Prostějov",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "pozemek",
+      "area": 9000,
+      "price": 389000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.538439,
+      "lng": 16.862518,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949836-nabidka-prodej-pozemku"
     },
     {
       "place": "Stráž pod Ralskem",
@@ -2126,7 +2126,8 @@
       "price": 14500,
       "extra": "dražba 2026-09-02",
       "lat": 49.64008,
-      "lng": 14.63396
+      "lng": 14.63396,
+      "url": "https://www.drazbyprost.cz/2092-podil-1-8-na-pozemcich-stavbe-budenin"
     },
     {
       "place": "Velké Opatovice",
@@ -2138,7 +2139,8 @@
       "price": 280200,
       "extra": "dražba 2026-08-20",
       "lat": 49.61793,
-      "lng": 16.68311
+      "lng": 16.68311,
+      "url": "https://okdrazby.cz/drazba/26074"
     },
     {
       "place": "Trubín",
@@ -2150,7 +2152,8 @@
       "price": 1875000,
       "extra": "dražba 2026-08-20",
       "lat": 49.94967,
-      "lng": 14.00066
+      "lng": 14.00066,
+      "url": "https://okdrazby.cz/drazba/26073"
     },
     {
       "place": "Seninka",
@@ -2162,7 +2165,8 @@
       "price": 209000,
       "extra": "dražba 2026-08-27",
       "lat": 49.27099,
-      "lng": 17.96241
+      "lng": 17.96241,
+      "url": "https://okdrazby.cz/drazba/26370"
     },
     {
       "place": "Seninka",
@@ -2174,7 +2178,8 @@
       "price": 143000,
       "extra": "dražba 2026-08-27",
       "lat": 49.27104,
-      "lng": 17.96764
+      "lng": 17.96764,
+      "url": "https://okdrazby.cz/drazba/26369"
     },
     {
       "place": "Miřejovice",
@@ -2186,7 +2191,8 @@
       "price": 121800,
       "extra": "dražba 2026-03-31",
       "lat": 50.54908,
-      "lng": 14.10971
+      "lng": 14.10971,
+      "url": "https://www.e-drazby.cz"
     },
     {
       "place": "Stebno",
@@ -2198,7 +2204,8 @@
       "price": 150000,
       "extra": "dražba 2026-08-28",
       "lat": 50.61974,
-      "lng": 14.0226
+      "lng": 14.0226,
+      "url": "https://www.drazby-exekutori.cz/DR020853/Verejna-drazba-spoluvlastnickeho-podilu-na-RD-s-pozemky-Stebno-u-Dubic/"
     },
     {
       "place": "Borkovice",
@@ -2210,7 +2217,8 @@
       "price": 190211,
       "extra": "dražba 2026-08-27",
       "lat": 49.21456,
-      "lng": 14.65173
+      "lng": 14.65173,
+      "url": "https://www.exdrazby.cz/drazba/29647"
     },
     {
       "place": "Seninka",
@@ -2222,7 +2230,8 @@
       "price": 155000,
       "extra": "dražba 2026-08-27",
       "lat": 49.27692,
-      "lng": 17.95719
+      "lng": 17.95719,
+      "url": "https://okdrazby.cz/drazba/26368"
     },
     {
       "place": "Děčín",
@@ -2234,7 +2243,8 @@
       "price": 150000,
       "extra": "dražba 2026-08-20",
       "lat": 50.78174,
-      "lng": 14.21997
+      "lng": 14.21997,
+      "url": "https://www.drazby-exekutori.cz/DR020854/Zahrada-v-zahradkarske-kolonii-k-u-Podmokly-Decin/"
     },
     {
       "place": "Ondřejov",
@@ -2246,7 +2256,8 @@
       "price": 54330,
       "extra": "dražba 2026-08-25",
       "lat": 49.89928,
-      "lng": 14.78126
+      "lng": 14.78126,
+      "url": "https://www.drazbystupka.cz/drazba/zahrada-spoluvlastnicky-podil-16-ondrejov-tremblat-praha-vychod-iv/218"
     },
     {
       "place": "Velemyšleves",
@@ -2258,7 +2269,8 @@
       "price": 459650,
       "extra": "dražba 2026-08-26",
       "lat": 50.3930042,
-      "lng": 13.5790286
+      "lng": 13.5790286,
+      "url": "https://exdrazby.cz/drazba/29640"
     },
     {
       "place": "Karlovice",
@@ -2270,7 +2282,8 @@
       "price": 1500000,
       "extra": "dražba 2026-09-21",
       "lat": 49.18189,
-      "lng": 17.58783
+      "lng": 17.58783,
+      "url": "https://www.edrazebnik.cz"
     },
     {
       "place": "Kamenický Šenov",
@@ -2282,7 +2295,8 @@
       "price": 133333,
       "extra": "dražba 2026-09-02",
       "lat": 50.77686,
-      "lng": 14.47878
+      "lng": 14.47878,
+      "url": "https://www.drazbyprost.cz/2093-podil-na-pozemcich-kamenicky-senov"
     },
     {
       "place": "Seninka",
@@ -2294,7 +2308,8 @@
       "price": 166000,
       "extra": "dražba 2026-08-27",
       "lat": 49.27114,
-      "lng": 17.96604
+      "lng": 17.96604,
+      "url": "https://okdrazby.cz/drazba/26367"
     },
     {
       "place": "Chleby",
@@ -2306,7 +2321,8 @@
       "price": 870000,
       "extra": "dražba 2026-09-25",
       "lat": 50.218695,
-      "lng": 15.0914011
+      "lng": 15.0914011,
+      "url": "https://okdrazby.cz/drazba/18037"
     },
     {
       "place": "Karviná",
@@ -2318,7 +2334,8 @@
       "price": 1824000,
       "extra": "dražba 2026-08-24",
       "lat": 49.8748472,
-      "lng": 18.5507425
+      "lng": 18.5507425,
+      "url": "https://aukce.karvina.cz/"
     },
     {
       "place": "Karviná",
@@ -2330,7 +2347,8 @@
       "price": 1803000,
       "extra": "dražba 2026-08-24",
       "lat": 49.8747297,
-      "lng": 18.55041
+      "lng": 18.55041,
+      "url": "https://aukce.karvina.cz/"
     },
     {
       "place": "Karviná",
@@ -2342,7 +2360,8 @@
       "price": 1689000,
       "extra": "dražba 2026-08-25",
       "lat": 49.8751947,
-      "lng": 18.5515017
+      "lng": 18.5515017,
+      "url": "https://aukce.karvina.cz/"
     },
     {
       "place": "Karviná",
@@ -2354,7 +2373,8 @@
       "price": 1666500,
       "extra": "dražba 2026-08-25",
       "lat": 49.85091,
-      "lng": 18.53754
+      "lng": 18.53754,
+      "url": "https://aukce.karvina.cz/"
     },
     {
       "place": "Karviná",
@@ -2366,7 +2386,8 @@
       "price": 1578000,
       "extra": "dražba 2026-08-25",
       "lat": 49.8754056,
-      "lng": 18.5520675
+      "lng": 18.5520675,
+      "url": "https://aukce.karvina.cz/"
     },
     {
       "place": "Karviná",
@@ -2378,7 +2399,8 @@
       "price": 1572000,
       "extra": "dražba 2026-08-26",
       "lat": 49.8750183,
-      "lng": 18.5524458
+      "lng": 18.5524458,
+      "url": "https://aukce.karvina.cz/"
     },
     {
       "place": "Karviná",
@@ -2390,7 +2412,8 @@
       "price": 1432500,
       "extra": "dražba 2026-08-26",
       "lat": 49.8753089,
-      "lng": 18.5517967
+      "lng": 18.5517967,
+      "url": "https://aukce.karvina.cz/"
     },
     {
       "place": "Karviná",
@@ -2402,7 +2425,8 @@
       "price": 1285500,
       "extra": "dražba 2026-08-26",
       "lat": 49.87432,
-      "lng": 18.5508014
+      "lng": 18.5508014,
+      "url": "https://aukce.karvina.cz/"
     },
     {
       "place": "Karviná",
@@ -2414,7 +2438,8 @@
       "price": 1269000,
       "extra": "dražba 2026-08-27",
       "lat": 49.8745328,
-      "lng": 18.5512736
+      "lng": 18.5512736,
+      "url": "https://aukce.karvina.cz/"
     },
     {
       "place": "Karviná",
@@ -2426,7 +2451,8 @@
       "price": 1251000,
       "extra": "dražba 2026-08-27",
       "lat": 49.874415,
-      "lng": 18.5510214
+      "lng": 18.5510214,
+      "url": "https://aukce.karvina.cz/"
     },
     {
       "place": "Karviná",
@@ -2438,7 +2464,8 @@
       "price": 1201500,
       "extra": "dražba 2026-08-27",
       "lat": 49.8749025,
-      "lng": 18.552215
+      "lng": 18.552215,
+      "url": "https://aukce.karvina.cz/"
     },
     {
       "place": "Karviná",
@@ -2450,7 +2477,8 @@
       "price": 1198500,
       "extra": "dražba 2026-08-28",
       "lat": 49.8746536,
-      "lng": 18.5515578
+      "lng": 18.5515578,
+      "url": "https://aukce.karvina.cz/"
     },
     {
       "place": "Karviná",
@@ -2462,7 +2490,8 @@
       "price": 1182000,
       "extra": "dražba 2026-08-28",
       "lat": 49.8748006,
-      "lng": 18.5520192
+      "lng": 18.5520192,
+      "url": "https://aukce.karvina.cz/"
     },
     {
       "place": "Karviná",
@@ -2474,7 +2503,8 @@
       "price": 1162500,
       "extra": "dražba 2026-08-28",
       "lat": 49.8747281,
-      "lng": 18.5517914
+      "lng": 18.5517914,
+      "url": "https://aukce.karvina.cz/"
     },
     {
       "place": "Tábor",
@@ -2486,7 +2516,8 @@
       "price": 132031,
       "extra": "dražba 2026-08-27",
       "lat": 49.41893,
-      "lng": 14.65503
+      "lng": 14.65503,
+      "url": "https://www.exdrazby.cz/drazba/29642"
     },
     {
       "place": "Jablonné nad Orlicí",
@@ -2498,7 +2529,8 @@
       "price": 1975600,
       "extra": "dražba 2026-08-31",
       "lat": 50.03099,
-      "lng": 16.5953
+      "lng": 16.5953,
+      "url": "https://drazby.jablonneno.cz/"
     },
     {
       "place": "Přehořov",
@@ -2510,7 +2542,8 @@
       "price": 452167,
       "extra": "dražba 2026-08-27",
       "lat": 49.24781,
-      "lng": 14.76025
+      "lng": 14.76025,
+      "url": "https://www.exdrazby.cz/drazba/29652"
     },
     {
       "place": "Lanškroun",
@@ -2522,7 +2555,8 @@
       "price": 2955000,
       "extra": "dražba 2026-08-12",
       "lat": 49.91453,
-      "lng": 16.61729
+      "lng": 16.61729,
+      "url": "https://aukce.mulanskroun.cz/"
     },
     {
       "place": "Jičín",
@@ -2534,7 +2568,8 @@
       "price": 3555520,
       "extra": "dražba 2026-09-01",
       "lat": 50.43858,
-      "lng": 15.34777
+      "lng": 15.34777,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Jičín",
@@ -2546,7 +2581,8 @@
       "price": 3516160,
       "extra": "dražba 2026-09-01",
       "lat": 50.43693,
-      "lng": 15.35426
+      "lng": 15.35426,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Jičín",
@@ -2558,7 +2594,8 @@
       "price": 3489920,
       "extra": "dražba 2026-09-01",
       "lat": 50.43401,
-      "lng": 15.34593
+      "lng": 15.34593,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Jičín",
@@ -2570,7 +2607,8 @@
       "price": 3739200,
       "extra": "dražba 2026-09-01",
       "lat": 50.43237,
-      "lng": 15.35243
+      "lng": 15.35243,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Jičín",
@@ -2582,7 +2620,8 @@
       "price": 3909760,
       "extra": "dražba 2026-09-01",
       "lat": 50.43985,
-      "lng": 15.35054
+      "lng": 15.35054,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Jičín",
@@ -2594,7 +2633,8 @@
       "price": 4867520,
       "extra": "dražba 2026-09-02",
       "lat": 50.44277,
-      "lng": 15.34683
+      "lng": 15.34683,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Jičín",
@@ -2606,7 +2646,8 @@
       "price": 3634240,
       "extra": "dražba 2026-09-02",
       "lat": 50.43543,
-      "lng": 15.3552
+      "lng": 15.3552,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Jičín",
@@ -2618,7 +2659,8 @@
       "price": 3752320,
       "extra": "dražba 2026-09-02",
       "lat": 50.43834,
-      "lng": 15.35149
+      "lng": 15.35149,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Jičín",
@@ -2630,7 +2672,8 @@
       "price": 4034400,
       "extra": "dražba 2026-09-03",
       "lat": 50.44281,
-      "lng": 15.35149
+      "lng": 15.35149,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Jičín",
@@ -2642,7 +2685,8 @@
       "price": 3981920,
       "extra": "dražba 2026-09-03",
       "lat": 50.43877,
-      "lng": 15.34687
+      "lng": 15.34687,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Jičín",
@@ -2654,7 +2698,8 @@
       "price": 4834720,
       "extra": "dražba 2026-09-03",
       "lat": 50.44169,
-      "lng": 15.3552
+      "lng": 15.3552,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Jičín",
@@ -2666,7 +2711,8 @@
       "price": 4874080,
       "extra": "dražba 2026-09-03",
       "lat": 50.43712,
-      "lng": 15.35337
+      "lng": 15.35337,
+      "url": "http://www.drazebni-portal.cz"
     },
     {
       "place": "Jičín",
@@ -2678,7 +2724,8 @@
       "price": 4080320,
       "extra": "dražba 2026-09-07",
       "lat": 50.43971,
-      "lng": 15.3561
+      "lng": 15.3561,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Jičín",
@@ -2690,7 +2737,8 @@
       "price": 2840480,
       "extra": "dražba 2026-09-02",
       "lat": 50.43114,
-      "lng": 15.35431
+      "lng": 15.35431,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Jičín",
@@ -2702,7 +2750,8 @@
       "price": 4500160,
       "extra": "dražba 2026-09-07",
       "lat": 50.43679,
-      "lng": 15.34777
+      "lng": 15.34777,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Dubenec",
@@ -2714,7 +2763,8 @@
       "price": 8000000,
       "extra": "dražba 2026-08-24",
       "lat": 49.68966,
-      "lng": 14.07654
+      "lng": 14.07654,
+      "url": "https://drazby.dubenec.cz/drazby/"
     },
     {
       "place": "Pozořice",
@@ -2726,7 +2776,8 @@
       "price": 10000000,
       "extra": "dražba 2026-09-24",
       "lat": 49.21317,
-      "lng": 16.79161
+      "lng": 16.79161,
+      "url": "https://www.verejnedrazby.cz/A8007"
     },
     {
       "place": "Jičín",
@@ -2738,7 +2789,8 @@
       "price": 82500000,
       "extra": "dražba 2026-09-07",
       "lat": 50.43547,
-      "lng": 15.34781
+      "lng": 15.34781,
+      "url": "https://www.drazebni-portal.cz/"
     },
     {
       "place": "Praha",
@@ -2750,7 +2802,8 @@
       "price": 6000000,
       "extra": "dražba 2026-08-13",
       "lat": 50.1201461,
-      "lng": 14.4647156
+      "lng": 14.4647156,
+      "url": "https://www.exdrazby.cz/drazba/29527"
     },
     {
       "place": "Trmice",
@@ -2762,7 +2815,8 @@
       "price": 3590000,
       "extra": "nucená dražba 2026-09-11",
       "lat": 50.63892,
-      "lng": 13.98901
+      "lng": 13.98901,
+      "url": "https://www.exdrazby.cz"
     },
     {
       "place": "Blovice",
@@ -2772,9 +2826,10 @@
       "druh": "pozemek",
       "area": null,
       "price": 1353334,
-      "extra": "nucená dražba 2026-09-10",
+      "extra": "nucená dražba 2026-09-09",
       "lat": 49.58079,
-      "lng": 13.53449
+      "lng": 13.53449,
+      "url": "https://www.ElektronickeDrazby.cz/"
     },
     {
       "place": "Most",
@@ -2786,7 +2841,8 @@
       "price": 11800000,
       "extra": "nucená dražba 2026-09-17",
       "lat": 50.50423,
-      "lng": 13.6415
+      "lng": 13.6415,
+      "url": "https://www.eurodrazby.cz/seznam-nemovitosti/drazba?id=10400"
     }
   ]
 }
