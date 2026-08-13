@@ -217,6 +217,10 @@
 
   /* ---------- Sestavení webu z dat (ticker + mapa) ---------- */
   function boot(DATA) {
+  // Počítadlo „příležitostí na mapě" napojíme na skutečný počet dat
+  var realCount = document.querySelector('.counters .c-num');
+  if (realCount) realCount.setAttribute('data-count', String(DATA.length));
+
   /* ---------- Živý ticker příležitostí ---------- */
   var tickTrack = document.getElementById('ticker-track');
   if (tickTrack) {
