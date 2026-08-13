@@ -459,18 +459,6 @@
       "lng": 15.026
     },
     {
-      "place": "Velké Pavlovice",
-      "okres": "Břeclav",
-      "type": "sale",
-      "parcel": "KN 5621",
-      "druh": "vinice",
-      "area": 1924,
-      "price": 4608,
-      "extra": "prodej státní půdy (SPÚ, § 12)",
-      "lat": 48.75512,
-      "lng": 16.91059
-    },
-    {
       "place": "Vejprnice",
       "okres": "Plzeň-sever",
       "type": "sale",
@@ -517,18 +505,6 @@
       "extra": "prodej státní půdy (SPÚ, § 12)",
       "lat": 49.95147,
       "lng": 16.997
-    },
-    {
-      "place": "Újezd u Brna",
-      "okres": "Brno-venkov",
-      "type": "sale",
-      "parcel": "KN 4243",
-      "druh": "orná půda",
-      "area": 5652,
-      "price": 15189,
-      "extra": "prodej státní půdy (SPÚ, § 12)",
-      "lat": 49.09,
-      "lng": 16.50765
     },
     {
       "place": "Záluží u Třemošné",
@@ -1047,18 +1023,6 @@
       "lng": 15.078
     },
     {
-      "place": "Žebětín",
-      "okres": "Brno-město",
-      "type": "sale",
-      "parcel": "KN 2927/300",
-      "druh": "trvalý travní porost",
-      "area": 476,
-      "price": 1522,
-      "extra": "prodej státní půdy (SPÚ, § 12)",
-      "lat": 49.169,
-      "lng": 16.58365
-    },
-    {
       "place": "Skalka u Blíževedel",
       "okres": "Česká Lípa",
       "type": "sale",
@@ -1153,18 +1117,6 @@
       "extra": "prodej státní půdy (SPÚ, § 12)",
       "lat": 50.40859,
       "lng": 16.18
-    },
-    {
-      "place": "Pravlov",
-      "okres": "Brno-venkov",
-      "type": "sale",
-      "parcel": "KN 902",
-      "druh": "vinice",
-      "area": 1149,
-      "price": 3830,
-      "extra": "prodej státní půdy (SPÚ, § 12)",
-      "lat": 49.08153,
-      "lng": 16.47659
     },
     {
       "place": "Doksy u Máchova jezera",
@@ -1287,18 +1239,6 @@
       "lng": 17.18106
     },
     {
-      "place": "Újezd u Brna",
-      "okres": "Brno-venkov",
-      "type": "sale",
-      "parcel": "KN 5133",
-      "druh": "orná půda",
-      "area": 2758,
-      "price": 9653,
-      "extra": "prodej státní půdy (SPÚ, § 12)",
-      "lat": 49.09776,
-      "lng": 16.48365
-    },
-    {
       "place": "Jirkov u Železného Brodu",
       "okres": "Jablonec nad Nisou",
       "type": "sale",
@@ -1393,18 +1333,6 @@
       "extra": "prodej státní půdy (SPÚ, § 12)",
       "lat": 49.801,
       "lng": 12.61671
-    },
-    {
-      "place": "Újezd u Brna",
-      "okres": "Brno-venkov",
-      "type": "sale",
-      "parcel": "KN 4304",
-      "druh": "orná půda",
-      "area": 18060,
-      "price": 64715,
-      "extra": "prodej státní půdy (SPÚ, § 12)",
-      "lat": 49.08859,
-      "lng": 16.52765
     },
     {
       "place": "Pulečný",
@@ -1561,6 +1489,78 @@
       "extra": "prodej státní půdy (SPÚ, § 12)",
       "lat": 50.41212,
       "lng": 16.17929
+    },
+    {
+      "place": "Otaslavice",
+      "okres": "Prostějov",
+      "type": "sale",
+      "parcel": "KN 3355",
+      "druh": "orná půda",
+      "area": 4255,
+      "price": 16031,
+      "extra": "prodej státní půdy (SPÚ, § 12)",
+      "lat": 49.47376,
+      "lng": 17.13041
+    },
+    {
+      "place": "Otaslavice",
+      "okres": "Prostějov",
+      "type": "sale",
+      "parcel": "KN 3004",
+      "druh": "orná půda",
+      "area": 3148,
+      "price": 11891,
+      "extra": "prodej státní půdy (SPÚ, § 12)",
+      "lat": 49.47353,
+      "lng": 17.13818
+    },
+    {
+      "place": "Smržov u Českého Dubu",
+      "okres": "Liberec",
+      "type": "sale",
+      "parcel": "KN 85/2",
+      "druh": "trvalý travní porost",
+      "area": 588,
+      "price": 2224,
+      "extra": "prodej státní půdy (SPÚ, § 12)",
+      "lat": 50.74147,
+      "lng": 15.05353
+    },
+    {
+      "place": "Stráž u Tachova",
+      "okres": "Tachov",
+      "type": "sale",
+      "parcel": "KN 4219",
+      "druh": "ostatní plocha",
+      "area": 2707,
+      "price": 10296,
+      "extra": "prodej státní půdy (SPÚ, § 12)",
+      "lat": 49.80171,
+      "lng": 12.64259
+    },
+    {
+      "place": "Čekanice u Tábora",
+      "okres": "Tábor",
+      "type": "sale",
+      "parcel": "KN 731/43",
+      "druh": "trvalý travní porost",
+      "area": 27,
+      "price": 104,
+      "extra": "prodej státní půdy (SPÚ, § 12)",
+      "lat": 49.38447,
+      "lng": 14.67641
+    },
+    {
+      "place": "Vejprnice",
+      "okres": "Plzeň-sever",
+      "type": "sale",
+      "parcel": "KN 1287/2",
+      "druh": "lesní pozemek",
+      "area": 480,
+      "price": 1852,
+      "extra": "prodej státní půdy (SPÚ, § 12)",
+      "lat": 49.82118,
+      "lng": 13.28012
     },
     {
       "place": "Votice",
