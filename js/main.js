@@ -235,33 +235,19 @@
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     subdomains: 'abcd', maxZoom: 19
   }).addTo(map);
-  // Zámek mapy — dokud je zamčená, scrollování stránky s ní nehýbe.
-  // Odemkne se tlačítkem a chová se jako plnohodnotná součást webu.
-  var lockEl = document.getElementById('map-lock');
-  var unlockBtn = document.getElementById('map-unlock');
-  var relockBtn = document.getElementById('map-relock');
-  function setMap(enabled) {
-    var fns = ['dragging', 'scrollWheelZoom', 'doubleClickZoom', 'touchZoom', 'boxZoom', 'keyboard'];
-    fns.forEach(function (f) { if (map[f]) map[f][enabled ? 'enable' : 'disable'](); });
-  }
+  // Lehké ovládání: mapa je hned použitelná (body klikací, stránka přes ni
+  // normálně scrolluje). Tlačítko zapne režim posouvání/přibližování mapy.
+  var panBtn = document.getElementById('map-pan-toggle');
   var mapLocked = true;
-  function lockMap() {
-    mapLocked = true;
-    setMap(false);
-    if (lockEl) lockEl.classList.remove('hidden');
-    if (relockBtn) relockBtn.classList.remove('show');
+  function setPan(on) {
+    mapLocked = !on;
+    var fns = ['dragging', 'scrollWheelZoom', 'doubleClickZoom', 'touchZoom', 'boxZoom', 'keyboard'];
+    fns.forEach(function (f) { if (map[f]) map[f][on ? 'enable' : 'disable'](); });
+    if (panBtn) { panBtn.innerHTML = on ? '🔒 Zamknout mapu' : '✋ Posouvat mapu'; panBtn.classList.toggle('on', on); }
+    if (on) setTimeout(function () { map.invalidateSize(); }, 60);
   }
-  function unlockMap() {
-    mapLocked = false;
-    setMap(true);
-    if (lockEl) lockEl.classList.add('hidden');
-    if (relockBtn) relockBtn.classList.add('show');
-    setTimeout(function () { map.invalidateSize(); }, 80);
-  }
-  lockMap();
-  if (unlockBtn) unlockBtn.addEventListener('click', function (e) { e.stopPropagation(); unlockMap(); });
-  if (lockEl) lockEl.addEventListener('click', function (e) { if (e.target === lockEl) unlockMap(); });
-  if (relockBtn) relockBtn.addEventListener('click', lockMap);
+  setPan(false);
+  if (panBtn) panBtn.addEventListener('click', function () { setPan(mapLocked); });
   window.addEventListener('resize', function () { map.invalidateSize(); });
 
   var listEl = document.getElementById('opp-list');
