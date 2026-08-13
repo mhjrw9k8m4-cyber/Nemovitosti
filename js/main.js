@@ -315,35 +315,41 @@
       return px.toFixed(1) + ',' + py.toFixed(1);
     }).join(' ');
     var col = TYPE[d.type].color;
-    return '<div class="shape-wrap"><svg class="shape-svg" viewBox="0 0 100 100"><polygon points="' + pts +
-      '" fill="' + col + '30" stroke="' + col + '" stroke-width="1.8"/></svg>' +
-      '<span class="shape-lbl mono">tvar parcely</span></div>';
+    return '<svg viewBox="0 0 100 100"><polygon points="' + pts +
+      '" fill="' + col + '30" stroke="' + col + '" stroke-width="2.2"/></svg>';
   }
 
   function detailHtml(d) {
     var t = TYPE[d.type];
     var perM2 = Math.round(d.price / d.area);
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací' : (d.type === 'sale' ? 'Cena' : 'Odhad');
-    return '<button class="detail-back" type="button" data-detail-back>← Zpět na seznam</button>' +
-      '<div class="detail-head"><span class="lp-dot" style="background:' + t.color + '"></span>' + t.label + '</div>' +
-      '<div class="detail-place">' + d.place + ' · okres ' + d.okres + '</div>' +
-      shapeSvg(d) +
-      '<div class="lp-grid">' +
-        '<div><span>Parcela</span><b>č. ' + d.parcel + '</b></div>' +
-        '<div><span>Druh</span><b>' + d.druh + '</b></div>' +
-        '<div><span>Výměra</span><b>' + fmt(d.area) + ' m²</b></div>' +
-        '<div><span>' + priceLabel + '</span><b>' + fmt(d.price) + ' Kč</b></div>' +
-        '<div><span>Cena / m²</span><b>' + fmt(perM2) + ' Kč</b></div>' +
-        '<div><span>Stav</span><b>' + d.extra + '</b></div>' +
-      '</div>' +
-      '<div class="lp-links">' +
-        '<a class="lp-btn" href="' + KATASTR + '" target="_blank" rel="noopener">Katastr</a>' +
-        '<a class="lp-btn" href="' + mapyUrl(d) + '" target="_blank" rel="noopener">Mapa</a>' +
-        '<a class="lp-btn" href="' + t.link.url + '" target="_blank" rel="noopener">' + t.link.label + '</a>' +
-      '</div>' +
-      '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">🔔 Hlídat okres ' + d.okres + '</a>';
+    return '<button class="md-close" type="button" data-detail-back aria-label="Zavřít detail">×</button>' +
+      '<div class="md-body">' +
+        '<div class="md-shape">' + shapeSvg(d) + '</div>' +
+        '<div class="md-info">' +
+          '<div class="md-top"><span class="lp-dot" style="background:' + t.color + '"></span><b>' + t.label + '</b> · ' + d.place + ', okres ' + d.okres + '</div>' +
+          '<div class="md-facts">' +
+            '<span>Parcela <b>č. ' + d.parcel + '</b></span>' +
+            '<span>Druh <b>' + d.druh + '</b></span>' +
+            '<span>Výměra <b>' + fmt(d.area) + ' m²</b></span>' +
+            '<span>' + priceLabel + ' <b>' + fmt(d.price) + ' Kč</b></span>' +
+            '<span>Cena/m² <b>' + fmt(perM2) + ' Kč</b></span>' +
+            '<span>Stav <b>' + d.extra + '</b></span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="md-actions">' +
+          '<a class="lp-btn" href="' + KATASTR + '" target="_blank" rel="noopener">Katastr</a>' +
+          '<a class="lp-btn" href="' + mapyUrl(d) + '" target="_blank" rel="noopener">Mapa</a>' +
+          '<a class="lp-btn" href="' + t.link.url + '" target="_blank" rel="noopener">' + t.link.label + '</a>' +
+          '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">🔔 Hlídat okres ' + d.okres + '</a>' +
+        '</div>' +
+      '</div>';
   }
   var selPoly = null;
+  function resizeMapSoon() {
+    setTimeout(function () { map.invalidateSize(); }, 60);
+    setTimeout(function () { map.invalidateSize(); }, 340);
+  }
   function showDetail(d) {
     if (!detailEl) return;
     detailEl.innerHTML = detailHtml(d);
@@ -351,13 +357,15 @@
     requestAnimationFrame(function () { detailEl.classList.add('show'); });
     highlightMarker(d._id);
     highlightShape(d);
+    resizeMapSoon();
   }
   function hideDetail() {
     if (!detailEl) return;
     detailEl.classList.remove('show');
-    setTimeout(function () { detailEl.setAttribute('hidden', ''); }, 200);
+    detailEl.setAttribute('hidden', '');
     highlightMarker(-1);
     if (selPoly) { map.removeLayer(selPoly); selPoly = null; }
+    resizeMapSoon();
   }
   function highlightMarker(id) {
     markers.forEach(function (m, i) {
