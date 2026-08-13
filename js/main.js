@@ -26,8 +26,10 @@
     exekuce: { label:'Exekuce',      color:'#C15B44', link:{ label:'Insolvenční rejstřík', url:'https://isir.justice.cz/isir/common/index.do' } },
     obec:    { label:'Obecní záměr', color:'#4C7A9E', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } }
   };
-  var KATASTR = 'https://nahlizenidokatastru.cuzk.cz/';
-  function mapyUrl(d){ return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=17&source=coor&id=' + d.lng + ',' + d.lat; }
+  // Katastrální mapa (ikatastr.cz) přímo na souřadnicích parcely — ukáže vrstvu
+  // parcel, takže uživatel vidí konkrétní pozemek, ne jen úvodní stránku.
+  function katastrUrl(d){ return 'https://www.ikatastr.cz/#kde=' + d.lat + ',' + d.lng + ',18&mapa=zakladni&vrstva=parcely'; }
+  function mapyUrl(d){ return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat; }
 
   function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
   function hasArea(d){ return typeof d.area === 'number' && d.area > 0; }
@@ -344,7 +346,7 @@
           '</div>' +
         '</div>' +
         '<div class="md-actions">' +
-          '<a class="lp-btn" href="' + KATASTR + '" target="_blank" rel="noopener">Katastr</a>' +
+          '<a class="lp-btn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">Katastr</a>' +
           '<a class="lp-btn" href="' + mapyUrl(d) + '" target="_blank" rel="noopener">Mapa</a>' +
           '<a class="lp-btn" href="' + t.link.url + '" target="_blank" rel="noopener">' + t.link.label + '</a>' +
           '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">Hlídat okres ' + d.okres + '</a>' +

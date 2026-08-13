@@ -21,21 +21,54 @@ import { dirname, join } from 'node:path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = join(__dirname, '..', 'data', 'opportunities.json');
 const OKRESY = join(__dirname, '..', 'data', 'okresy.json');
+const GEOCACHE = join(__dirname, '..', 'data', 'geocode-cache.json');
 
 // Geokódování: okres → přibližné souřadnice (s malým rozptylem, ať se body nekryjí)
 let OKRESY_MAP = {};
 try { OKRESY_MAP = JSON.parse(readFileSync(OKRESY, 'utf8')).okresy || {}; } catch { /* ok */ }
 
+// Cache geokódování podle názvu katastrálního území (ať Nominatim neptáme opakovaně)
+let GEO_CACHE = {};
+try { GEO_CACHE = JSON.parse(readFileSync(GEOCACHE, 'utf8')); } catch { /* ok */ }
+let geoCacheDirty = false;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// deterministický malý rozptyl (ať se parcely ve stejné obci nekryjí)
+function jitterAround(lat, lng, seedStr, amp) {
+  let h = 0;
+  const s = String(seedStr || '');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  const j = (n) => (((h >> n) & 255) / 255 - 0.5) * amp;
+  return { lat: +(lat + j(0)).toFixed(5), lng: +(lng + j(8)).toFixed(5) };
+}
+
+// Přesnější poloha podle názvu katastrálního území (Nominatim / OpenStreetMap).
+const GEO_UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
+async function geocodeName(place, okres) {
+  const key = (place + '|' + okres).toLowerCase();
+  if (key in GEO_CACHE) return GEO_CACHE[key];
+  let coord = null;
+  try {
+    const q = encodeURIComponent(place + ', Česko');
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=cz&q=${q}`, { headers: GEO_UA });
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j) && j.length) coord = [+parseFloat(j[0].lat).toFixed(5), +parseFloat(j[0].lon).toFixed(5)];
+    }
+  } catch { /* síť selhala – necháme null */ }
+  GEO_CACHE[key] = coord;
+  geoCacheDirty = true;
+  await sleep(1100); // Nominatim: max ~1 dotaz/s
+  return coord;
+}
+
+// Okresní fallback (méně přesné) – když název KÚ nedohledáme.
 function geocode(o, seedStr) {
   if (typeof o.lat === 'number' && typeof o.lng === 'number') return o;
   const base = OKRESY_MAP[o.okres];
   if (!base) return o;
-  // deterministický rozptyl ~±0.03° podle názvu parcely
-  let h = 0;
-  const s = (seedStr || o.parcel || o.place || '') + o.okres;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  const jitter = (n) => (((h >> n) & 255) / 255 - 0.5) * 0.06;
-  return { ...o, lat: +(base[0] + jitter(0)).toFixed(5), lng: +(base[1] + jitter(8)).toFixed(5) };
+  const j = jitterAround(base[0], base[1], (seedStr || o.parcel || o.place || '') + o.okres, 0.06);
+  return { ...o, lat: j.lat, lng: j.lng };
 }
 
 /* ---------- Zdroje (doplnit reálné stahování) ---------- */
@@ -116,6 +149,7 @@ async function fetchDrazby() {
           extra: (nucena ? 'nucená dražba' : 'dražba') + (datum ? ' ' + datum : ''),
           lat: typeof vn.gpsLat === 'number' ? vn.gpsLat : undefined,
           lng: typeof vn.gpsLng === 'number' ? vn.gpsLng : undefined,
+          _gps: typeof vn.gpsLat === 'number' && typeof vn.gpsLng === 'number',
         };
         break;
       }
@@ -259,6 +293,22 @@ async function main() {
     console.log('Žádný zdroj zatím nevrací data — ponechávám stávající soubor beze změny.');
     return;
   }
+
+  // Zpřesnění polohy: až u vybraných příležitostí dohledáme souřadnice podle
+  // názvu katastrálního území (Nominatim). Body pak sedí na správné obci, ne
+  // jen ve středu okresu. Přeskakujeme záznamy s reálnou GPS z evidence dražeb.
+  let refined = 0;
+  for (const o of fresh) {
+    if (o._gps) continue;
+    const nm = await geocodeName(o.place, o.okres);
+    if (nm) {
+      const j = jitterAround(nm[0], nm[1], (o.parcel || '') + o.place, 0.012);
+      o.lat = j.lat; o.lng = j.lng; refined++;
+    }
+  }
+  fresh.forEach((o) => { delete o._gps; });
+  if (geoCacheDirty) writeFileSync(GEOCACHE, JSON.stringify(GEO_CACHE, null, 0) + '\n', 'utf8');
+  console.log(`Zpřesněno podle názvu KÚ: ${refined}/${fresh.length}.`);
 
   const payload = {
     updated: new Date().toISOString().slice(0, 10),

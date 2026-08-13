@@ -32,10 +32,10 @@ jobs:
 
       - name: Commit změn (jen pokud se data změnila)
         run: |
-          if [[ -n "$(git status --porcelain data/opportunities.json)" ]]; then
+          if [[ -n "$(git status --porcelain data/opportunities.json data/geocode-cache.json)" ]]; then
             git config user.name "pozemkomat-bot"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add data/opportunities.json
+            git add data/opportunities.json data/geocode-cache.json
             git commit -m "data: automatická aktualizace příležitostí"
             git push
           else
