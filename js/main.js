@@ -30,6 +30,8 @@
   // rovnou IDENTIFIKUJE a vyznačí (ukáže bublinu s parcelou), ne jen vycentruje.
   function katastrUrl(d){ return 'https://www.ikatastr.cz/#info=' + d.lat + ',' + d.lng; }
   function mapyUrl(d){ return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat; }
+  // Ikona záložky (uložení pozemku) — výplň řídí CSS podle stavu .on
+  var BM_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
   // Stabilní klíč pozemku (přežije nové stažení dat i drobný posun GPS) —
   // pro oblíbené i sdílení. Záměrně bez souřadnic, které se mohou mírně měnit.
   function pkey(d){ return [d.place || '', d.parcel || '', d.okres || ''].join('|'); }
@@ -318,7 +320,7 @@
   function refreshFavBtn(){
     if (!favEl) return;
     var n = favs.length;
-    favEl.textContent = (favOnly ? '♥' : '♡') + ' Oblíbené' + (n ? ' (' + n + ')' : '');
+    favEl.innerHTML = BM_SVG + '<span>Uložené' + (n ? ' (' + n + ')' : '') + '</span>';
     favEl.classList.toggle('on', favOnly);
     favEl.setAttribute('aria-pressed', String(favOnly));
   }
@@ -355,7 +357,7 @@
         toggleFav(curDetail);
         var on = isFav(curDetail);
         favBtn.classList.toggle('on', on);
-        favBtn.textContent = on ? '♥ Uloženo' : '♡ Uložit';
+        var sp = favBtn.querySelector('span'); if (sp) sp.textContent = on ? 'Uloženo' : 'Uložit';
         renderList();
         return;
       }
@@ -439,7 +441,7 @@
           '<a class="lp-btn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">Katastr</a>' +
           '<a class="lp-btn" href="' + mapyUrl(d) + '" target="_blank" rel="noopener">Mapa</a>' +
           '<a class="lp-btn" href="' + (d.url || t.link.url) + '" target="_blank" rel="noopener">' + (d.url ? (d.type === 'sale' ? 'Inzerát' : 'K dražbě') : t.link.label) + '</a>' +
-          '<button class="lp-btn lp-fav' + (isFav(d) ? ' on' : '') + '" type="button" data-fav-detail>' + (isFav(d) ? '♥ Uloženo' : '♡ Uložit') + '</button>' +
+          '<button class="lp-btn lp-fav' + (isFav(d) ? ' on' : '') + '" type="button" data-fav-detail>' + BM_SVG + '<span>' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
           '<button class="lp-btn" type="button" data-share>Sdílet</button>' +
           '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">Hlídat okres ' + d.okres + '</a>' +
         '</div>' +
@@ -528,13 +530,17 @@
     return arr;
   }
 
-  // Míra zájmu — čím výhodnější cena/m² a lákavější typ, tím víc zájemců
+  // Míra zájmu — čím výhodnější cena/m² a lákavější typ, tím víc zájemců.
+  // Nasycení + deterministický rozptyl podle id, aby čísla nebyla všude stejná
+  // (dřív se u levné půdy vzorec „zasekl" na maximu → všude 247 sledujících).
   function demand(d) {
     if (d._demand != null) return d._demand;
-    var perM2 = hasArea(d) ? d.price / d.area : 600;
-    var typeBonus = { drazba: 60, exekuce: 45, obec: 25, sale: 35 }[d.type] || 0;
-    var dealBonus = Math.max(0, 1100 - perM2) / 7;
-    d._demand = Math.round(34 + typeBonus + dealBonus);
+    var perM2 = hasArea(d) ? d.price / d.area : 500;
+    var typeBonus = { drazba: 22, exekuce: 18, obec: 12, sale: 8 }[d.type] || 0;
+    var deal = Math.max(0, Math.min(58, (900 - perM2) / 18)); // výhodnost s nasycením
+    var seed = (d._id != null ? d._id : 0) + 1;
+    var noise = Math.floor(((Math.sin(seed * 12.9898) * 43758.5453) % 1 + 1) % 1 * 42);
+    d._demand = Math.max(6, Math.round(9 + typeBonus + deal + noise));
     return d._demand;
   }
 
@@ -553,13 +559,16 @@
     // Práh „výhodné ceny" = nejlevnější třetina viditelných podle Kč/m²
     var pv = vis.map(perM2Val).filter(function (x) { return isFinite(x) && x > 0; }).sort(function (a, b) { return a - b; });
     var dealMax = pv.length >= 4 ? pv[Math.floor(pv.length * 0.33)] : 0;
+    // „Velký zájem" jen pro skutečnou špičku — nejvýš 3 nejžádanější z viditelných
+    var dsorted = vis.map(demand).sort(function (a, b) { return b - a; });
+    var hotCut = dsorted.length ? dsorted[Math.min(2, dsorted.length - 1)] : Infinity;
     var top = vis.slice(0, LIST_LIMIT);
 
     top.forEach(function (d, rank) {
       var t = TYPE[d.type];
       var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
       var w = demand(d);
-      var hot = rank < 2 || w >= 140;
+      var hot = w >= hotCut && w >= 45;
       var li = document.createElement('li');
       li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '');
       li.setAttribute('data-id', d._id);
@@ -569,7 +578,7 @@
       li.innerHTML =
         '<div class="opp-top"><span class="opp-place">' + d.place + '</span>' +
         '<span class="opp-topr">' +
-          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z oblíbených' : 'Uložit do oblíbených') + '">' + (isFav(d) ? '♥' : '♡') + '</button>' +
+          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
           '<span class="opp-tag ' + d.type + '">' + t.label + '</span>' +
         '</span></div>' +
         '<div class="opp-meta"><span>parc. <b>' + d.parcel + '</b></span>' +
@@ -591,9 +600,9 @@
       if (favBtn) favBtn.addEventListener('click', function (e) {
         e.stopPropagation();
         toggleFav(d);
-        favBtn.classList.toggle('on', isFav(d));
-        favBtn.textContent = isFav(d) ? '♥' : '♡';
-        favBtn.setAttribute('aria-label', isFav(d) ? 'Odebrat z oblíbených' : 'Uložit do oblíbených');
+        var on = isFav(d);
+        favBtn.classList.toggle('on', on);
+        favBtn.setAttribute('aria-label', on ? 'Odebrat z uložených' : 'Uložit pozemek');
         if (favOnly) renderList();
       });
       listEl.appendChild(li);
