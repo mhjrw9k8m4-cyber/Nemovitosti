@@ -300,6 +300,10 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .md-bar-track{position:relative; height:8px; border-radius:5px; background:linear-gradient(90deg, rgba(62,142,91,0.55), rgba(217,164,65,0.55) 50%, rgba(193,91,68,0.55));}
 .md-bar-med{position:absolute; top:-3px; width:2px; height:14px; background:var(--text-ondark); opacity:0.5;}
 .md-bar-dot{position:absolute; top:50%; width:12px; height:12px; border-radius:50%; background:#fff; border:2px solid var(--ink); transform:translate(-50%,-50%); box-shadow:0 1px 4px rgba(0,0,0,0.55);}
+.md-note{margin-top:11px; font-size:11.5px; line-height:1.5; color:var(--text-ondark-mute); border-left:2px solid var(--c-sale); padding-left:9px;}
+.md-note b{color:var(--text-ondark); font-weight:600;}
+.lp-src{border-color:var(--copper); background:rgba(201,152,47,0.14); color:var(--copper-bright);}
+.lp-src:hover{border-color:var(--copper-bright); background:rgba(201,152,47,0.22);}
 .md-actions{flex:none; display:flex; flex-wrap:wrap; gap:6px; width:186px; align-content:flex-start;}
 .md-actions .lp-btn{flex:1 1 calc(50% - 3px); min-width:0;}
 .md-actions .lp-watch{flex-basis:100%;}

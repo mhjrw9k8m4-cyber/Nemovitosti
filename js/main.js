@@ -30,6 +30,16 @@
   // rovnou IDENTIFIKUJE a vyznačí (ukáže bublinu s parcelou), ne jen vycentruje.
   function katastrUrl(d){ return 'https://www.ikatastr.cz/#info=' + d.lat + ',' + d.lng; }
   function mapyUrl(d){ return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat; }
+  // Státní půda SPÚ (§ 12) nemá stránku pro konkrétní parcelu — prodává se přes
+  // veřejnou nabídku, kam se podává žádost. Odkážeme tedy na skutečný seznam nabídek.
+  var SPU_OFFERS = 'https://spu.gov.cz/nabidky/prehled-cela-cr';
+  function isSPU(d){ return d.type === 'sale' && !d.url && /SPÚ|státní půd/i.test(d.extra || ''); }
+  // Konkrétní akční odkaz „kde se to kupuje / kde s tím něco udělám"
+  function sourceLink(d){
+    if (d.url) return { url: d.url, label: d.type === 'sale' ? 'Inzerát' : 'K dražbě' };
+    if (isSPU(d)) return { url: SPU_OFFERS, label: 'Nabídka SPÚ' };
+    return { url: TYPE[d.type].link.url, label: TYPE[d.type].link.label };
+  }
   // Ikona záložky (uložení pozemku) — výplň řídí CSS podle stavu .on
   var BM_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
   // Stabilní klíč pozemku (přežije nové stažení dat i drobný posun GPS) —
@@ -502,11 +512,12 @@
             '<span>Stav <b>' + d.extra + '</b></span>' +
           '</div>' +
           priceBarHtml(d) +
+          (isSPU(d) ? '<div class="md-note">Státní půda se prodává přes <b>veřejnou nabídku SPÚ (§ 12)</b> — otevřete „Nabídka SPÚ", parcelu ověříte přes „Katastr".</div>' : '') +
         '</div>' +
         '<div class="md-actions">' +
           '<a class="lp-btn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">Katastr</a>' +
           '<a class="lp-btn" href="' + mapyUrl(d) + '" target="_blank" rel="noopener">Mapa</a>' +
-          '<a class="lp-btn" href="' + (d.url || t.link.url) + '" target="_blank" rel="noopener">' + (d.url ? (d.type === 'sale' ? 'Inzerát' : 'K dražbě') : t.link.label) + '</a>' +
+          (function () { var s = sourceLink(d); return '<a class="lp-btn lp-src" href="' + s.url + '" target="_blank" rel="noopener">' + s.label + '</a>'; })() +
           '<button class="lp-btn lp-fav' + (isFav(d) ? ' on' : '') + '" type="button" data-fav-detail>' + BM_SVG + '<span>' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
           '<button class="lp-btn" type="button" data-share>Sdílet</button>' +
           '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">Hlídat okres ' + d.okres + '</a>' +
