@@ -276,19 +276,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1044775-nabidka-prodej-pozemku-vetrni"
     },
     {
-      "place": "Nové Dvory – Nové Dvory u Dobříše",
-      "okres": "Praha-západ",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "pozemek",
-      "area": 1388,
-      "price": 35000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.797435,
-      "lng": 14.350791,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1013632-nabidka-prodej-pozemku"
-    },
-    {
       "place": "Maňovice – Maňovice u Pačejova",
       "okres": "Plzeň-jih",
       "type": "sale",
@@ -300,19 +287,6 @@
       "lat": 49.390417,
       "lng": 13.639861,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1024709-nabidka-prodej-pozemku-manovice"
-    },
-    {
-      "place": "Nové Dvory – Nové Dvory u Dobříše",
-      "okres": "Praha-západ",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "pozemek",
-      "area": 3723,
-      "price": 95000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.809368,
-      "lng": 14.359284,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1013631-nabidka-prodej-pozemku"
     },
     {
       "place": "Petrůvka – Petrůvka u Slavičína",
@@ -430,6 +404,19 @@
       "lat": 49.922213,
       "lng": 12.643553,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/992701-nabidka-prodej-pozemku"
+    },
+    {
+      "place": "Pasečnice – Pasečnice",
+      "okres": "Domažlice",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "pozemek",
+      "area": 1655,
+      "price": 50470,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.402317,
+      "lng": 12.885662,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1055394-nabidka-prodej-pozemku-pasecnice"
     },
     {
       "place": "Petrůvka – Petrůvka u Slavičína",
@@ -1171,6 +1158,19 @@
       "lat": 49.623991,
       "lng": 14.887434,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949774-nabidka-prodej-pozemku-pravonin"
+    },
+    {
+      "place": "Syřenov – Syřenov",
+      "okres": "Jičín",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "pozemek",
+      "area": 13943,
+      "price": 579000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.510236,
+      "lng": 15.4336,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949851-nabidka-prodej-pozemku"
     },
     {
       "place": "Stráž pod Ralskem",
