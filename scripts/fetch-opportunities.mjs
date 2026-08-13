@@ -178,6 +178,10 @@ async function fetchProdejSPU() {
     const money = (c[c.length - 4] || '').match(/(\d[\d\s\u00a0]*),\d{2}/); // sloupec Cena
     const price = money ? parseInt(money[1].replace(/[^\d]/g, ''), 10) : null;
     if (!okres || !place || !price || price < 100) continue; // jen prodejní cena, ne nájem
+    // Jen celé parcely (podíl SPÚ 1/1). Zlomkové spoluvlastnické podíly mají
+    // cenu za malý podíl, což by zkreslovalo cenu za m². Podíl = 5. sloupec odzadu.
+    const pod = (c[c.length - 5] || '').match(/(\d+)\s*\/\s*(\d+)/);
+    if (pod && pod[1] !== pod[2]) continue;
     const area = parseInt(String(c[3] || '').replace(/[^\d]/g, ''), 10) || null;
     const druh = (c[4] || '').trim() || parseDruh(c[5] || '');
     out.push({
