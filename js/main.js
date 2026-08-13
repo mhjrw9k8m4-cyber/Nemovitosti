@@ -21,7 +21,7 @@
   ];
 
   var TYPE = {
-    sale:    { label:'Na prodej',    color:'#3E8E5B', link:{ label:'Zobrazit inzerát',    url:'https://www.sreality.cz/hledani/prodej/pozemky' } },
+    sale:    { label:'Na prodej',    color:'#3E8E5B', link:{ label:'Nabídka SPÚ',          url:'https://spu.gov.cz/nabidky' } },
     drazba:  { label:'Dražba',       color:'#D9A441', link:{ label:'Detail dražby',       url:'https://www.portaldrazeb.cz/' } },
     exekuce: { label:'Exekuce',      color:'#C15B44', link:{ label:'Insolvenční rejstřík', url:'https://isir.justice.cz/isir/common/index.do' } },
     obec:    { label:'Obecní záměr', color:'#4C7A9E', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } }

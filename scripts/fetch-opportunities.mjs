@@ -138,10 +138,59 @@ async function fetchUredniDesky() {
   return [];
 }
 
-// Veřejné inzertní portály — pozemky na prodej.
-// TODO: pouze v souladu s podmínkami daného portálu.
-async function fetchInzeraty() {
-  return [];
+// Státní pozemkový úřad — nabídky pozemků k prodeji podle § 12 zákona č. 503/2012.
+// SPÚ zveřejňuje kompletní seznam jako CSV (kódování Windows-1250, oddělovač ;).
+function normOkres(name) {
+  if (OKRESY_MAP[name]) return name;
+  const hy = name.replace(/\s+/g, '-'); // "Brno město" → "Brno-město"
+  if (OKRESY_MAP[hy]) return hy;
+  return name;
+}
+function splitCsvLine(line) {
+  return line.split(';').map((s) => s.replace(/^="?|"?$/g, '').trim());
+}
+async function fetchProdejSPU() {
+  // 1) na přehledové stránce najdeme odkaz na aktuální CSV pozemků
+  let page;
+  try { page = await (await fetch('https://spu.gov.cz/nabidky/prehled-cela-cr', { headers: UA })).text(); }
+  catch { return []; }
+  const m = page.match(/href="([^"]*pozemky\d[^"]*\.csv)"/i);
+  if (!m) return [];
+  let url = m[1];
+  if (!url.startsWith('http')) url = 'https://spu.gov.cz' + url.replace(/^(\/frontend\/webroot\/(?:\.\.\/)*)?/, '/');
+  // 2) stáhneme a dekódujeme (Windows-1250)
+  let buf;
+  try { const r = await fetch(url, { headers: UA }); if (!r.ok) return []; buf = Buffer.from(await r.arrayBuffer()); }
+  catch { return []; }
+  let txt;
+  try { txt = new TextDecoder('windows-1250').decode(buf); } catch { txt = buf.toString('latin1'); }
+  const lines = txt.split(/\r?\n/).filter((l) => l.trim());
+  if (lines.length < 2) return [];
+  const header = splitCsvLine(lines[0]).map((h) => h.toLowerCase());
+  const col = (needle) => header.findIndex((h) => h.includes(needle));
+  const iOkres = col('okres'), iKu = col('k.'), iParc = col('parcela'),
+    iVym = col('výměra'), iDruh = col('druh'), iVyuz = col('využit'),
+    iCena = col('cena'), iStazeno = col('staženo');
+  const out = [];
+  for (let i = 1; i < lines.length; i++) {
+    const c = splitCsvLine(lines[i]);
+    if (c.length < 5) continue;
+    if (iStazeno >= 0 && /ano/i.test(c[iStazeno] || '')) continue; // staženo z nabídky
+    const okres = (c[iOkres] || '').trim();
+    const place = (iKu >= 0 ? c[iKu] : '').trim();
+    const price = parseInt((c[iCena] || '').replace(/\s/g, '').split(',')[0].replace(/[^\d]/g, ''), 10);
+    if (!okres || !place || !price) continue;
+    const area = parseInt(String(iVym >= 0 ? c[iVym] : '').replace(/[^\d]/g, ''), 10) || null;
+    const druh = (iDruh >= 0 ? c[iDruh] : '').trim() || parseDruh(iVyuz >= 0 ? c[iVyuz] : '');
+    out.push({
+      place, okres: normOkres(okres), type: 'sale',
+      parcel: String(iParc >= 0 ? c[iParc] : '—').trim().slice(0, 40) || '—',
+      druh: druh || 'pozemek',
+      area, price,
+      extra: 'prodej státní půdy (SPÚ, § 12)',
+    });
+  }
+  return out;
 }
 
 /* ---------- Sjednocení a zápis ---------- */
@@ -161,7 +210,7 @@ async function main() {
     fetchDrazby(),
     fetchInsolvence(),
     fetchUredniDesky(),
-    fetchInzeraty(),
+    fetchProdejSPU(),
   ]);
 
   const raw = results
@@ -171,16 +220,25 @@ async function main() {
 
   // odstranění duplicit (okres + parcela) a seřazení podle výhodnosti
   const seen = new Set();
-  const fresh = raw
+  const byDeal = (a, b) => (a.area ? a.price / a.area : Infinity) - (b.area ? b.price / b.area : Infinity);
+  const clean = raw
     .filter(valid)
     .filter((o) => {
-      const k = (o.okres + '|' + o.parcel).toLowerCase();
+      const k = (o.type + '|' + o.okres + '|' + o.parcel).toLowerCase();
       if (seen.has(k)) return false;
       seen.add(k);
       return true;
     })
-    .sort((a, b) => (a.area ? a.price / a.area : Infinity) - (b.area ? b.price / b.area : Infinity))
-    .slice(0, 200); // strop, ať je soubor svižný
+    .sort(byDeal);
+
+  // Vyvážený výběr — ať žádná kategorie nepřeváží (jinak by 700 prodejů
+  // zaplavilo mapu). Z každé kategorie bereme nejvýhodnější kusy.
+  const CAP = { sale: 130, drazba: 90, exekuce: 40, obec: 40 };
+  const perType = {};
+  const fresh = clean.filter((o) => {
+    perType[o.type] = (perType[o.type] || 0) + 1;
+    return perType[o.type] <= (CAP[o.type] || 40);
+  });
 
   if (fresh.length === 0) {
     console.log('Žádný zdroj zatím nevrací data — ponechávám stávající soubor beze změny.');
@@ -189,11 +247,12 @@ async function main() {
 
   const payload = {
     updated: new Date().toISOString().slice(0, 10),
-    source: 'automatický sběr z veřejných zdrojů',
+    source: 'Centrální evidence veřejných dražeb + Státní pozemkový úřad',
     opportunities: fresh,
   };
   writeFileSync(OUT, JSON.stringify(payload, null, 2) + '\n', 'utf8');
-  console.log(`Zapsáno ${fresh.length} příležitostí do ${OUT}.`);
+  const counts = fresh.reduce((a, o) => ((a[o.type] = (a[o.type] || 0) + 1), a), {});
+  console.log(`Zapsáno ${fresh.length} příležitostí do ${OUT}. Dle typu:`, JSON.stringify(counts));
 }
 
 main().catch((err) => {
