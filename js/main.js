@@ -2,8 +2,8 @@
 (function () {
   'use strict';
 
-  /* ---------- Ukázková data příležitostí (ilustrační) ---------- */
-  var DATA = [
+  /* ---------- Záložní data (když se nenačte data/opportunities.json) ---------- */
+  var FALLBACK_DATA = [
     { place:'Kolín',             okres:'Kolín',         type:'drazba',  parcel:'412/3', druh:'stavební',  area:1240, price:640000,  extra:'dražba za 12 dní', lat:50.0281, lng:15.2003 },
     { place:'Kutná Hora',        okres:'Kutná Hora',    type:'exekuce', parcel:'88/1',  druh:'orná půda', area:890,  price:780000,  extra:'v exekuci',        lat:49.9484, lng:15.2680 },
     { place:'Nymburk',           okres:'Nymburk',       type:'sale',    parcel:'305',   druh:'stavební',  area:2100, price:1890000, extra:'na prodej',        lat:50.1850, lng:15.0410 },
@@ -215,6 +215,8 @@
     spyTargets.forEach(function (t) { if (t) spy.observe(t); });
   }
 
+  /* ---------- Sestavení webu z dat (ticker + mapa) ---------- */
+  function boot(DATA) {
   /* ---------- Živý ticker příležitostí ---------- */
   var tickTrack = document.getElementById('ticker-track');
   if (tickTrack) {
@@ -481,4 +483,14 @@
 
   renderList();
   setTimeout(function () { map.invalidateSize(); }, 300);
+  }
+
+  /* ---------- Načtení reálných dat s bezpečnou zálohou ---------- */
+  fetch('data/opportunities.json', { cache: 'no-store' })
+    .then(function (r) { if (!r.ok) throw new Error('data nedostupná'); return r.json(); })
+    .then(function (j) {
+      var arr = Array.isArray(j) ? j : (j && j.opportunities);
+      boot(arr && arr.length ? arr : FALLBACK_DATA);
+    })
+    .catch(function () { boot(FALLBACK_DATA); });
 })();
