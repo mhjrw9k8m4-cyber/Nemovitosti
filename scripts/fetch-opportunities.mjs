@@ -80,32 +80,43 @@ async function fetchDrazby() {
       const nucena = zi.typDrazby === 'Nucená';
       const type = nucena ? 'exekuce' : 'drazba';
       const datum = zah ? String(zah).slice(0, 10) : null;
-      // Jeden záznam na dražbu — první pozemek v aktivní dražbě.
+      // Jeden záznam na dražbu — pozemek v aktivní dražbě.
+      // Dobrovolná dražba (drazba): jen čistý pozemek bez budovy.
+      // Nucená dražba (exekuce): i pozemek se stavbou/jednotkou — u exekucí
+      //   jde skoro vždy o nemovitost, kde je pozemek součástí.
       let picked = null;
       for (const p of (rec.predmetyDrazby || [])) {
         if (p.stavPredmetu !== 'Uveřejněno') continue; // jen aktivní/nadcházející
+        // vyber nejvhodnější věc s pozemkem (preferuj čistý pozemek)
+        let cand = null, candBudova = false;
         for (const v of (p.veci || [])) {
           const vn = v.vecNemovita;
-          if (!vn || !vn.pozemek || vn.jednotka || vn.stavba) continue; // jen čisté pozemky
-          const ku = vn.katastralniUzemi || {};
-          const okres = ku.okres, place = ku.obec || ku.nazev;
-          if (!okres || !place) continue;
-          const area = vn.pozemek.vymera || parseArea(v.nazev) || parseArea(p.nazevPredmetu);
-          const price = (p.vyvolavaciCena && p.vyvolavaciCena.castka && p.vyvolavaciCena.castka.vyse)
-            || (p.obvyklaCena && p.obvyklaCena.vyse) || 0;
-          if (!area || !price) continue;
-          picked = {
-            place, okres, type,
-            parcel: String(vn.pozemek.parcelniCislo || '—').slice(0, 40),
-            druh: vn.pozemek.druhPozemku || parseDruh(v.nazev),
-            area: Math.round(area), price: Math.round(price),
-            extra: (nucena ? 'nucená dražba' : 'dražba') + (datum ? ' ' + datum : ''),
-            lat: typeof vn.gpsLat === 'number' ? vn.gpsLat : undefined,
-            lng: typeof vn.gpsLng === 'number' ? vn.gpsLng : undefined,
-          };
-          break;
+          if (!vn || !vn.pozemek) continue;
+          const budova = !!(vn.jednotka || vn.stavba);
+          if (budova && !nucena) continue; // dobrovolná: budovy vynecháváme
+          if (!cand || (candBudova && !budova)) { cand = { vn, v }; candBudova = budova; }
+          if (!budova) break; // čistý pozemek má přednost, dál nehledáme
         }
-        if (picked) break;
+        if (!cand) continue;
+        const { vn, v } = cand;
+        const ku = vn.katastralniUzemi || {};
+        const okres = ku.okres, place = ku.obec || ku.nazev;
+        if (!okres || !place) continue;
+        const area = vn.pozemek.vymera || parseArea(v.nazev) || parseArea(p.nazevPredmetu);
+        const price = (p.vyvolavaciCena && p.vyvolavaciCena.castka && p.vyvolavaciCena.castka.vyse)
+          || (p.obvyklaCena && p.obvyklaCena.vyse) || 0;
+        if (!area || !price) continue;
+        const druhBase = vn.pozemek.druhPozemku || parseDruh(v.nazev);
+        picked = {
+          place, okres, type,
+          parcel: String(vn.pozemek.parcelniCislo || '—').slice(0, 40),
+          druh: candBudova ? (druhBase + ' se stavbou') : druhBase,
+          area: Math.round(area), price: Math.round(price),
+          extra: (nucena ? 'nucená dražba' : 'dražba') + (datum ? ' ' + datum : ''),
+          lat: typeof vn.gpsLat === 'number' ? vn.gpsLat : undefined,
+          lng: typeof vn.gpsLng === 'number' ? vn.gpsLng : undefined,
+        };
+        break;
       }
       if (picked) out.push(picked);
     }
