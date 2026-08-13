@@ -1,35 +1,61 @@
 #!/usr/bin/env node
-// Průzkum API exdrazby.cz (API Platform / Symfony) — najít reálné cesty.
-const UA = {
-  'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)',
-  accept: 'application/ld+json, application/json, */*',
-};
+// Průzkum zdrojů pro kategorie: exekuce, prodej, obec. Kompaktní výstup.
+const UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
 
-async function get(url, opts = {}) {
+async function head(label, url, opts = {}) {
   try {
-    const r = await fetch(url, { headers: UA, redirect: 'follow', ...opts });
+    const r = await fetch(url, { headers: { ...UA, ...(opts.headers || {}) }, redirect: 'follow' });
     const t = await r.text();
-    return { ok: r.ok, status: r.status, ct: r.headers.get('content-type'), len: t.length, text: t };
-  } catch (e) { return { ok: false, status: 0, err: e.message, text: '' }; }
+    console.log(`[${label}] ${r.status} ${r.headers.get('content-type')} ${t.length}B`);
+    return { status: r.status, ct: r.headers.get('content-type'), text: t };
+  } catch (e) { console.log(`[${label}] CHYBA ${e.message}`); return { status: 0, text: '' }; }
 }
 
-// 1) API Platform entrypoint — /api obvykle vrací seznam kolekcí (Hydra)
-console.log('=== API Platform discovery ===');
-for (const p of ['/api', '/api/', '/api/docs.jsonld', '/api/docs.json', '/api/v3', '/api/v2', '/api/v1']) {
-  const r = await get('https://www.exdrazby.cz' + p);
-  console.log(p, '→', r.status, r.ct, r.len + 'B', '::', r.text.slice(0, 200).replace(/\s+/g, ' '));
-}
+// ---------- 1) EXEKUCE: rozbor CEVD (typy dražeb, kolik nucených s pozemkem) ----------
+console.log('=== CEVD: typy dražeb a nucené s pozemkem ===');
+try {
+  const y = new Date().getFullYear();
+  const r = await fetch(`https://cevd.gov.cz/opendata/drazby/drazby_${y}.json`, { headers: UA });
+  const data = await r.json();
+  const arr = Array.isArray(data) ? data : (Object.values(data).find(Array.isArray) || []);
+  const typy = {};
+  let nucenaLand = 0, nucenaAny = 0;
+  for (const rec of arr) {
+    const zi = rec.zakladniInformace || {};
+    const t = zi.typDrazby || '(none)';
+    typy[t] = (typy[t] || 0) + 1;
+    if (/nucen/i.test(t)) {
+      nucenaAny++;
+      for (const p of (rec.predmetyDrazby || [])) {
+        for (const v of (p.veci || [])) {
+          const vn = v.vecNemovita;
+          if (vn && vn.pozemek && !vn.jednotka && !vn.stavba) { nucenaLand++; break; }
+        }
+      }
+    }
+  }
+  console.log('celkem dražeb:', arr.length);
+  console.log('typDrazby:', JSON.stringify(typy));
+  console.log('nucených celkem:', nucenaAny, '| nucených s pozemkem:', nucenaLand);
+} catch (e) { console.log('CEVD chyba:', e.message); }
 
-// 2) vytáhnout z JS bundlu route stringy typu `api/...` (i bez lomítka na začátku)
-console.log('\n=== route stringy z JS bundlu ===');
-const home = await get('https://www.exdrazby.cz/');
-const bundle = (home.text.match(/src="(\/static\/js\/main[^"]+\.js)"/) || [])[1];
-if (bundle) {
-  const js = await get('https://www.exdrazby.cz' + bundle);
-  const paths = [...new Set([...js.text.matchAll(/["'`]((?:\/)?api\/[a-z0-9_\-\/{}.:]{2,60})["'`]/gi)].map((m) => m[1]))].slice(0, 40);
-  console.log('api/... stringy:', JSON.stringify(paths));
-  // slova blízko "auction", "drazb", "nemovit", "search", "filter", "items"
-  const words = [...new Set([...js.text.matchAll(/["'`]([a-z_]{4,30}(?:s|Items|List|Collection))["'`]/g)].map((m) => m[1]))].filter((w) => /auction|drazb|item|nemovit|realt|estate|proper|search|filter|result/i.test(w)).slice(0, 40);
-  console.log('podezřelá slova:', JSON.stringify(words));
-}
+// ---------- 2) PRODEJ: oficiální nabídky státní půdy ----------
+console.log('\n=== PRODEJ: státní nabídky (ÚZSVM, SPÚ) ===');
+await head('uzsvm-web', 'https://www.uzsvm.cz/');
+await head('nabidkamajetku', 'https://nabidkamajetku.cz/');
+await head('nabidka-api?', 'https://nabidkamajetku.cz/api/items');
+await head('spucr', 'https://www.spucr.cz/');
+await head('spu-prodej', 'https://spu.gov.cz/');
+// data.gov.cz katalog — hledáme "pozem" datové sady
+console.log('\n--- NKOD katalog: hledám sady s "pozem"/"nemovit"/"prodej" ---');
+const q = encodeURIComponent('pozemek prodej nemovitost');
+await head('nkod-hledani', `https://data.gov.cz/api/3/action/package_search?q=${q}&rows=5`);
+
+// ---------- 3) OBEC: úřední desky jako otevřená data ----------
+console.log('\n=== OBEC: úřední desky (OFN) přes NKOD ===');
+// úřední desky mají v NKOD typ dat — zkusíme SPARQL na jejich distribuce
+const sparql = `PREFIX dcterms:<http://purl.org/dc/terms/>
+SELECT ?dist WHERE { ?d a <https://data.gov.cz/slovník/nkod/DatováSada> ; dcterms:title ?t . FILTER(CONTAINS(LCASE(STR(?t)),"úřední deska")) } LIMIT 3`;
+await head('nkod-sparql-deska', 'https://data.gov.cz/sparql?query=' + encodeURIComponent(sparql), { headers: { accept: 'application/sparql-results+json' } });
+
 console.log('\nHotovo.');
