@@ -30,6 +30,8 @@
   function mapyUrl(d){ return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=17&source=coor&id=' + d.lng + ',' + d.lat; }
 
   function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  function hasArea(d){ return typeof d.area === 'number' && d.area > 0; }
+  function areaTxt(d){ return hasArea(d) ? fmt(d.area) + ' m²' : 'neuvedena'; }
 
   /* ---------- Oznamovací lišta ---------- */
   var tbClose = document.getElementById('tb-close');
@@ -227,7 +229,7 @@
     var html = '';
     DATA.forEach(function (d) {
       html += '<span class="tick-item"><span class="td" style="background:' + TYPE[d.type].color + '"></span>' +
-        TYPE[d.type].label + ' · <b>' + d.place + '</b> · ' + fmt(d.area) + ' m² · ' + d.extra + '</span>';
+        TYPE[d.type].label + ' · <b>' + d.place + '</b> · ' + areaTxt(d) + ' · ' + d.extra + '</span>';
     });
     tickTrack.innerHTML = html + html; // zdvojení pro plynulou smyčku
   }
@@ -282,7 +284,7 @@
   // Přibližný tvar parcely (deterministický, cache) — ukázková geometrie
   function polyFor(d) {
     if (d._poly) return d._poly;
-    var side = Math.sqrt(d.area);
+    var side = Math.sqrt(hasArea(d) ? d.area : 1500);
     var hLat = (side / 2) / 111320;
     var hLng = (side / 2) / (111320 * Math.cos(d.lat * Math.PI / 180));
     var seed = (d._id != null ? d._id : 0) + 1;
@@ -313,7 +315,7 @@
 
   function detailHtml(d) {
     var t = TYPE[d.type];
-    var perM2 = Math.round(d.price / d.area);
+    var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací' : (d.type === 'sale' ? 'Cena' : 'Odhad');
     return '<button class="md-topbar" type="button" data-detail-back><span>Zavřít detail</span><span class="mx">✕</span></button>' +
       '<div class="md-body">' +
@@ -323,9 +325,9 @@
           '<div class="md-facts">' +
             '<span>Parcela <b>č. ' + d.parcel + '</b></span>' +
             '<span>Druh <b>' + d.druh + '</b></span>' +
-            '<span>Výměra <b>' + fmt(d.area) + ' m²</b></span>' +
+            '<span>Výměra <b>' + areaTxt(d) + '</b></span>' +
             '<span>' + priceLabel + ' <b>' + fmt(d.price) + ' Kč</b></span>' +
-            '<span>Cena/m² <b>' + fmt(perM2) + ' Kč</b></span>' +
+            (perM2 ? '<span>Cena/m² <b>' + fmt(perM2) + ' Kč</b></span>' : '') +
             '<span>Stav <b>' + d.extra + '</b></span>' +
           '</div>' +
         '</div>' +
@@ -403,7 +405,7 @@
   // Míra zájmu — čím výhodnější cena/m² a lákavější typ, tím víc zájemců
   function demand(d) {
     if (d._demand != null) return d._demand;
-    var perM2 = d.price / d.area;
+    var perM2 = hasArea(d) ? d.price / d.area : 600;
     var typeBonus = { drazba: 60, exekuce: 45, obec: 25, sale: 35 }[d.type] || 0;
     var dealBonus = Math.max(0, 1100 - perM2) / 7;
     d._demand = Math.round(34 + typeBonus + dealBonus);
@@ -426,7 +428,7 @@
 
     top.forEach(function (d, rank) {
       var t = TYPE[d.type];
-      var perM2 = Math.round(d.price / d.area);
+      var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
       var w = demand(d);
       var hot = rank < 2 || w >= 140;
       var li = document.createElement('li');
@@ -434,13 +436,13 @@
       li.setAttribute('data-id', d._id);
       li.setAttribute('tabindex', '0');
       li.setAttribute('role', 'button');
-      li.setAttribute('aria-label', t.label + ' · ' + d.place + ' · ' + fmt(d.area) + ' m²');
+      li.setAttribute('aria-label', t.label + ' · ' + d.place + ' · ' + areaTxt(d));
       li.innerHTML =
         '<div class="opp-top"><span class="opp-place">' + d.place + '</span>' +
         '<span class="opp-tag ' + d.type + '">' + t.label + '</span></div>' +
         '<div class="opp-meta"><span>parc. <b>' + d.parcel + '</b></span>' +
-        '<span><b>' + fmt(d.area) + '</b> m²</span><span>' + d.druh + '</span></div>' +
-        '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b> <span>· ' + fmt(perM2) + ' Kč/m²</span></div>' +
+        '<span>' + (hasArea(d) ? '<b>' + fmt(d.area) + '</b> m²' : 'výměra neuvedena') + '</span><span>' + d.druh + '</span></div>' +
+        '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? ' <span>· ' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
         '<div class="opp-demand">' + (hot ? '<span class="hot">Velký zájem</span> · ' : '') + '<span class="watch">' + w + ' sledujících</span></div>';
       function openThis() {
         showDetail(d);

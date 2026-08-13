@@ -105,13 +105,14 @@ async function fetchDrazby() {
         const area = vn.pozemek.vymera || parseArea(v.nazev) || parseArea(p.nazevPredmetu);
         const price = (p.vyvolavaciCena && p.vyvolavaciCena.castka && p.vyvolavaciCena.castka.vyse)
           || (p.obvyklaCena && p.obvyklaCena.vyse) || 0;
-        if (!area || !price) continue;
+        if (!price) continue;
+        if (!area && !nucena) continue; // dobrovolná bez výměry vynecháme; u exekucí výměra často chybí
         const druhBase = vn.pozemek.druhPozemku || parseDruh(v.nazev);
         picked = {
           place, okres, type,
           parcel: String(vn.pozemek.parcelniCislo || '—').slice(0, 40),
           druh: candBudova ? (druhBase + ' se stavbou') : druhBase,
-          area: Math.round(area), price: Math.round(price),
+          area: area ? Math.round(area) : null, price: Math.round(price),
           extra: (nucena ? 'nucená dražba' : 'dražba') + (datum ? ' ' + datum : ''),
           lat: typeof vn.gpsLat === 'number' ? vn.gpsLat : undefined,
           lng: typeof vn.gpsLng === 'number' ? vn.gpsLng : undefined,
@@ -145,7 +146,8 @@ async function fetchInzeraty() {
 
 /* ---------- Sjednocení a zápis ---------- */
 
-const REQUIRED = ['place', 'okres', 'type', 'parcel', 'druh', 'area', 'price', 'lat', 'lng'];
+// 'area' není povinná (u exekucí výměra v evidenci často chybí)
+const REQUIRED = ['place', 'okres', 'type', 'parcel', 'druh', 'price', 'lat', 'lng'];
 const TYPES = new Set(['sale', 'drazba', 'exekuce', 'obec']);
 
 function valid(o) {
@@ -177,7 +179,7 @@ async function main() {
       seen.add(k);
       return true;
     })
-    .sort((a, b) => a.price / a.area - b.price / b.area)
+    .sort((a, b) => (a.area ? a.price / a.area : Infinity) - (b.area ? b.price / b.area : Infinity))
     .slice(0, 200); // strop, ať je soubor svižný
 
   if (fresh.length === 0) {
