@@ -1,29 +1,23 @@
 #!/usr/bin/env node
-// Kde jsou data v nabidkamajetku.cz? Tabulka v HTML, nebo JSON blob v <script>?
+// SPÚ /nabidky — je to serverově vykreslený seznam prodejů státní půdy?
 const UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
-const r = await fetch('https://nabidkamajetku.cz/', { headers: UA });
-const t = await r.text();
-console.log('home:', r.status, t.length + 'B');
-
-// 1) tabulky a řádky
-console.log('počet <table>:', (t.match(/<table/gi) || []).length);
-console.log('počet <tr>:', (t.match(/<tr/gi) || []).length);
-console.log('počet data-* atributů:', (t.match(/\sdata-[a-z-]+=/gi) || []).length);
-
-// 2) JSON bloky v <script> (application/json nebo přiřazení proměnné)
-const jsonScripts = [...t.matchAll(/<script[^>]*type="application\/json"[^>]*>([\s\S]*?)<\/script>/gi)].map((m) => m[1]);
-console.log('application/json scriptů:', jsonScripts.length);
-jsonScripts.slice(0, 3).forEach((s, i) => console.log(`  [${i}] ${s.slice(0, 160).replace(/\s+/g, ' ')}`));
-
-// 3) přiřazení proměnné s polem (var X = [ ... ]) — hledáme velké pole
-const varArrays = [...t.matchAll(/(?:var|let|const)\s+(\w+)\s*=\s*(\[[\s\S]{40,}?\]);/g)]
-  .map((m) => ({ name: m[1], len: m[2].length, head: m[2].slice(0, 120).replace(/\s+/g, ' ') }));
-console.log('var = [..] pole:', JSON.stringify(varArrays.slice(0, 8)));
-
-// 4) hledej klíčová slova okolo dat
-for (const kw of ['pozemek', 'parc', 'Properties', 'dataSrc', 'ajax', 'aaData', '"data"', 'okres', 'Kč', 'm²', 'm2']) {
-  const idx = t.indexOf(kw);
-  if (idx >= 0) console.log(`"${kw}" @${idx}: …${t.slice(idx - 20, idx + 90).replace(/\s+/g, ' ')}…`);
-  else console.log(`"${kw}": nenalezeno`);
+async function get(u) {
+  try { const r = await fetch(u, { headers: UA, redirect: 'follow' }); const t = await r.text(); return { s: r.status, ct: r.headers.get('content-type'), t }; }
+  catch (e) { return { s: 0, t: '', err: e.message }; }
+}
+for (const path of ['/nabidky', '/nabidka-nepotrebneho-majetku']) {
+  const r = await get('https://spu.gov.cz' + path);
+  console.log(`\n=== ${path} → ${r.s} ${r.ct} ${r.t.length}B ===`);
+  if (!r.t) continue;
+  console.log('tabulky:', (r.t.match(/<table/gi) || []).length, '| tr:', (r.t.match(/<tr/gi) || []).length, '| JS app:', /id="root"|__NUXT__|__NEXT_DATA__/.test(r.t));
+  // odkazy na detaily nabídek + zmínky pozemek/parc/výměra
+  const links = [...new Set([...r.t.matchAll(/href="([^"]+)"/gi)].map((m) => m[1]).filter((h) => /nabid|prode|pozemk|detail|zamer|katalog|dokument/i.test(h)))].slice(0, 20);
+  console.log('odkazy:', JSON.stringify(links, null, 0));
+  for (const kw of ['pozemek', 'parc', 'výměr', 'm2', 'okres', 'katastr', 'Kč', 'nabídkové řízení', 'prodej']) {
+    const i = r.t.indexOf(kw); if (i >= 0) console.log(`  "${kw}" @${i}: …${r.t.slice(i - 10, i + 70).replace(/\s+/g, ' ')}…`);
+  }
+  // odkaz na strojová data (xlsx/csv/xml/pdf seznamy)
+  const files = [...new Set([...r.t.matchAll(/href="([^"]+\.(?:xlsx?|csv|xml|json|pdf))"/gi)].map((m) => m[1]))].slice(0, 15);
+  console.log('soubory:', JSON.stringify(files, null, 0));
 }
 console.log('\nHotovo.');
