@@ -309,7 +309,8 @@
     var t = TYPE[d.type];
     var perM2 = Math.round(d.price / d.area);
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací' : (d.type === 'sale' ? 'Cena' : 'Odhad');
-    return '<div class="md-body">' +
+    return '<button class="md-topbar" type="button" data-detail-back><span>Zavřít detail</span><span class="mx">✕</span></button>' +
+      '<div class="md-body">' +
         '<div class="md-shape" style="border-color:' + t.color + '55">' + shapeSvg(d) + '</div>' +
         '<div class="md-info">' +
           '<div class="md-top"><span class="lp-dot" style="background:' + t.color + '"></span><b>' + t.label + '</b> · ' + d.place + ', okres ' + d.okres + '</div>' +
@@ -328,8 +329,7 @@
           '<a class="lp-btn" href="' + t.link.url + '" target="_blank" rel="noopener">' + t.link.label + '</a>' +
           '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">Hlídat okres ' + d.okres + '</a>' +
         '</div>' +
-      '</div>' +
-      '<button class="md-exit" type="button" data-detail-back>Zavřít detail</button>';
+      '</div>';
   }
   var selPoly = null;
   function resizeMapSoon() {

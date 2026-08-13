@@ -234,12 +234,15 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-price span{color:var(--text-ondark-mute);}
 
 /* Informační tabulka NAD mapou — výrazně orámovaná, zmenší mapu */
-.map-detail{position:relative; flex:none; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border-bottom:2px solid var(--copper); box-shadow:0 8px 22px -8px rgba(201,152,47,0.5); padding:14px 16px; z-index:10; animation:mdin .3s var(--ease);}
+.map-detail{position:relative; flex:none; min-height:0; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border-bottom:2px solid var(--copper); box-shadow:0 8px 22px -8px rgba(201,152,47,0.5); padding:14px 16px; z-index:10; animation:mdin .3s var(--ease); overflow-y:auto;}
 .map-detail::after{content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px; background:linear-gradient(90deg, var(--copper), var(--copper-bright), var(--copper));}
 .map-detail[hidden]{display:none;}
 @keyframes mdin{from{opacity:0; transform:translateY(-12px);} to{opacity:1; transform:none;}}
-.md-exit{width:100%; margin-top:12px; background:var(--ink); border:1px solid var(--line-strong); border-radius:8px; padding:12px; color:var(--text-ondark-mute); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:border-color .15s ease, color .15s ease;}
-.md-exit:hover{border-color:var(--c-exekuce); color:var(--text-ondark);}
+/* Zavírací lišta přes celou šířku nahoře */
+.md-topbar{display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; margin-bottom:14px; padding:12px 15px; background:var(--ink); border:1px solid var(--line-strong); border-radius:9px; color:var(--text-ondark); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:border-color .15s ease, background .15s ease;}
+.md-topbar:hover{border-color:var(--c-exekuce); background:var(--ink-soft2);}
+.md-topbar .mx{font-size:18px; color:var(--text-ondark-mute); line-height:1;}
+.md-topbar:hover .mx{color:var(--c-exekuce);}
 .md-body{display:flex; gap:16px; align-items:center;}
 .md-shape{flex:none; width:74px; height:74px; background:var(--ink); border:1px solid var(--line); border-radius:8px; padding:6px;}
 .md-shape svg{display:block; width:100%; height:100%;}
@@ -252,7 +255,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .md-actions{flex:none; display:flex; flex-direction:column; gap:6px; width:172px;}
 .md-actions .lp-btn{flex:none;}
 @media (max-width:760px){
-  .map-detail{max-height:none; overflow:visible; padding:12px 14px 14px;}
+  .map-detail{padding:12px 14px 14px;}
   .md-body{flex-direction:column; align-items:stretch; gap:10px;}
   .md-shape{width:60px; height:60px; align-self:flex-start;}
   .md-facts{gap:5px 12px;}
@@ -506,8 +509,9 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 /* Responsive */
 @media (max-width:960px){
   .map-app{grid-template-columns:1fr; height:auto;}
-  .map-holder{height:auto; order:-1;}
-  .map-canvas{height:460px; flex:none;}
+  .map-holder{height:74vh; max-height:640px; min-height:500px; order:-1;}
+  .map-canvas{flex:1; min-height:0;}
+  .map-detail{max-height:56%;}
   .map-side{max-height:none;}
   .opp-list{max-height:none; overflow:visible; flex:none;}
   #leaflet-map{position:absolute; inset:0;}
