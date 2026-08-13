@@ -337,6 +337,26 @@
 
 <button class="to-top" id="to-top" aria-label="Nahoru">↑</button>
 
+<!-- Okno pro hlídání lokality -->
+<div class="modal" id="watch-modal" role="dialog" aria-modal="true" aria-labelledby="wm-title" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-card">
+    <button class="modal-x" data-close aria-label="Zavřít">×</button>
+    <div class="eyebrow"><span class="live-dot"></span>Váš hlídací pes</div>
+    <h3 id="wm-title">Hlídat lokalitu zdarma</h3>
+    <p class="modal-sub">Ozveme se, jakmile se ve vaší lokalitě objeví dražba, exekuce, prodej nebo obecní záměr. Bez spamu.</p>
+    <form class="modal-form" id="watch-form" novalidate>
+      <label class="visually-hidden" for="wm-okres">Okres</label>
+      <input id="wm-okres" type="text" placeholder="Okres nebo obec (např. Kolín)" autocomplete="off">
+      <label class="visually-hidden" for="wm-email">E-mail</label>
+      <input id="wm-email" type="email" placeholder="vas@email.cz" required autocomplete="email">
+      <button type="submit" class="btn-primary btn-glow">Hlídat zdarma</button>
+      <p class="form-msg" id="wm-msg" role="status" aria-live="polite"></p>
+      <p class="modal-fine">✓ První lokalita zdarma · ✓ Bez karty · ✓ Odhlásíte kdykoliv</p>
+    </form>
+  </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="js/main.js" defer></script>

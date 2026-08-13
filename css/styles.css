@@ -427,6 +427,25 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .feature-card .icon-badge .ic{color:var(--copper-bright);}
 .status-top .ic{width:20px; height:20px;}
 
+/* ===== Okno hlídání (modal) ===== */
+.modal{position:fixed; inset:0; z-index:3000; display:flex; align-items:center; justify-content:center; padding:20px;}
+.modal[hidden]{display:none;}
+.modal-backdrop{position:absolute; inset:0; background:rgba(9,15,21,0.74); backdrop-filter:blur(3px); opacity:0; transition:opacity .25s var(--ease);}
+.modal.open .modal-backdrop{opacity:1;}
+.modal-card{position:relative; z-index:1; width:100%; max-width:420px; background:linear-gradient(160deg, var(--ink-soft), var(--ink-soft2)); border:1px solid var(--line-strong); border-radius:16px; padding:34px; box-shadow:var(--shadow-lg); transform:translateY(18px) scale(.97); opacity:0; transition:transform .28s var(--ease), opacity .28s var(--ease);}
+.modal.open .modal-card{transform:none; opacity:1;}
+.modal-x{position:absolute; top:14px; right:16px; background:none; border:0; color:var(--text-ondark-mute); font-size:26px; line-height:1; cursor:pointer;}
+.modal-x:hover{color:var(--text-ondark);}
+.modal-card .eyebrow{margin-bottom:12px;}
+.modal-card h3{font-family:'Fraunces',serif; font-size:24px; font-weight:500; margin-bottom:8px;}
+.modal-sub{font-size:14px; color:var(--text-ondark-mute); margin-bottom:20px;}
+.modal-form{display:flex; flex-direction:column; gap:12px;}
+.modal-form input{background:var(--ink); border:1px solid var(--line); border-radius:6px; padding:13px 15px; font-size:15px; color:var(--text-ondark); font-family:inherit;}
+.modal-form input::placeholder{color:#6f8090;}
+.modal-form input:focus-visible{border-color:var(--copper-bright); outline:none;}
+.modal-form .btn-primary{padding:14px; font-size:15px; text-align:center;}
+.modal-fine{font-size:11.5px; color:var(--text-ondark-mute); text-align:center; margin-top:2px;}
+
 /* Back to top */
 .to-top{position:fixed; bottom:24px; right:24px; width:46px; height:46px; border-radius:50%; background:var(--copper); color:var(--ink); border:0; font-size:20px; cursor:pointer; box-shadow:0 8px 20px rgba(0,0,0,0.4); opacity:0; pointer-events:none; transform:translateY(10px); transition:opacity .2s ease, transform .2s ease; z-index:900;}
 .to-top.show{opacity:1; pointer-events:auto; transform:none;}

@@ -55,6 +55,50 @@
     });
   }
 
+  /* ---------- Okno hlídání lokality (modal) ---------- */
+  var wModal = document.getElementById('watch-modal');
+  function openWatch(okres) {
+    if (!wModal) return;
+    var ok = document.getElementById('wm-okres');
+    var ti = document.getElementById('wm-title');
+    var ms = document.getElementById('wm-msg');
+    if (ms) { ms.textContent = ''; ms.classList.remove('err'); }
+    if (ok) ok.value = okres || '';
+    if (ti) ti.textContent = okres ? ('Hlídat okres ' + okres) : 'Hlídat lokalitu zdarma';
+    wModal.removeAttribute('hidden');
+    requestAnimationFrame(function () { wModal.classList.add('open'); });
+    document.body.style.overflow = 'hidden';
+    var em = document.getElementById('wm-email');
+    if (em) setTimeout(function () { em.focus(); }, 80);
+  }
+  function closeWatch() {
+    if (!wModal) return;
+    wModal.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(function () { wModal.setAttribute('hidden', ''); }, 250);
+  }
+  // Každý odkaz na #upozorneni otevře okno (místo skoku po stránce)
+  document.addEventListener('click', function (e) {
+    var trigger = e.target.closest('a[href="#upozorneni"]');
+    if (trigger) { e.preventDefault(); openWatch(trigger.getAttribute('data-okres') || ''); return; }
+    if (e.target.closest('[data-close]')) closeWatch();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeWatch(); });
+
+  var wForm = document.getElementById('watch-form');
+  if (wForm) {
+    wForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = document.getElementById('wm-email').value.trim();
+      var okres = document.getElementById('wm-okres').value.trim();
+      var ms = document.getElementById('wm-msg');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ms.textContent = 'Zadejte prosím platný e-mail.'; ms.classList.add('err'); return; }
+      ms.classList.remove('err');
+      ms.textContent = okres ? ('Hotovo! Hlídáme okolí „' + okres + '". (ukázka)') : 'Hotovo! Přihlášeno. (ukázka)';
+      setTimeout(closeWatch, 1700);
+    });
+  }
+
   /* ---------- Sticky header shrink + back-to-top ---------- */
   var header = document.getElementById('header');
   var toTop = document.getElementById('to-top');
@@ -252,7 +296,7 @@
         '<a class="lp-btn" href="' + mapyUrl(d) + '" target="_blank" rel="noopener">Mapa</a>' +
         '<a class="lp-btn" href="' + t.link.url + '" target="_blank" rel="noopener">' + t.link.label + '</a>' +
       '</div>' +
-      '<a class="lp-watch" href="#upozorneni">🔔 Hlídat tuto lokalitu</a>';
+      '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">🔔 Hlídat okres ' + d.okres + '</a>';
   }
 
   DATA.forEach(function (d, i) {
