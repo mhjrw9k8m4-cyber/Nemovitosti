@@ -1,56 +1,47 @@
 #!/usr/bin/env node
-// Detail: proč se ztrácejí nucené dražby (exekuce) + jak číst SPÚ (prodej).
+// Prodej: struktura nabidkamajetku.cz (ÚZSVM). Exekuce: kolik živých nucených.
 const UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
+async function get(u, opts = {}) {
+  try { const r = await fetch(u, { headers: { ...UA, ...(opts.headers || {}) }, redirect: 'follow' }); const t = await r.text(); return { s: r.status, ct: r.headers.get('content-type'), t }; }
+  catch (e) { return { s: 0, t: '', err: e.message }; }
+}
 
-// ---------- EXEKUCE: dump nucených s pozemkem ----------
-console.log('=== CEVD nucené s pozemkem — proč se filtrují ===');
+// ---------- EXEKUCE: stav živých nucených dražeb ----------
+console.log('=== CEVD nucené — rozložení stavů + živé (Uveřejněno) ===');
 try {
   const y = new Date().getFullYear();
-  const r = await fetch(`https://cevd.gov.cz/opendata/drazby/drazby_${y}.json`, { headers: UA });
-  const data = await r.json();
+  const data = await (await fetch(`https://cevd.gov.cz/opendata/drazby/drazby_${y}.json`, { headers: UA })).json();
   const arr = Array.isArray(data) ? data : (Object.values(data).find(Array.isArray) || []);
-  let shown = 0;
+  const stavy = {};
+  let liveNucenaLand = 0, liveNucenaAny = 0;
   for (const rec of arr) {
     const zi = rec.zakladniInformace || {};
     if (!/nucen/i.test(zi.typDrazby || '')) continue;
     for (const p of (rec.predmetyDrazby || [])) {
-      for (const v of (p.veci || [])) {
-        const vn = v.vecNemovita;
-        if (!vn || !vn.pozemek || vn.jednotka || vn.stavba) continue;
-        const ku = vn.katastralniUzemi || {};
-        console.log(JSON.stringify({
-          stav: p.stavPredmetu,
-          okres: ku.okres, obec: ku.obec || ku.nazev,
-          vymera: vn.pozemek.vymera, druh: vn.pozemek.druhPozemku,
-          vyvol: p.vyvolavaciCena && p.vyvolavaciCena.castka && p.vyvolavaciCena.castka.vyse,
-          obvykla: p.obvyklaCena && p.obvyklaCena.vyse,
-          nazev: (v.nazev || '').slice(0, 50),
-        }));
-        shown++;
-        break;
+      stavy[p.stavPredmetu] = (stavy[p.stavPredmetu] || 0) + 1;
+      if (p.stavPredmetu === 'Uveřejněno') {
+        liveNucenaAny++;
+        for (const v of (p.veci || [])) { const vn = v.vecNemovita; if (vn && vn.pozemek) { liveNucenaLand++; break; } }
       }
-      if (shown >= 12) break;
     }
-    if (shown >= 12) break;
   }
+  console.log('stavy nucených předmětů:', JSON.stringify(stavy));
+  console.log('ŽIVÝCH nucených předmětů:', liveNucenaAny, '| z toho s pozemkem:', liveNucenaLand);
 } catch (e) { console.log('chyba:', e.message); }
 
-// ---------- PRODEJ: struktura SPÚ ----------
-console.log('\n=== SPÚ (spu.gov.cz): odkazy na prodej/nabídky + open data ===');
-async function get(u, opts = {}) {
-  try { const r = await fetch(u, { headers: UA, redirect: 'follow', ...opts }); const t = await r.text(); return { s: r.status, ct: r.headers.get('content-type'), t }; }
-  catch (e) { return { s: 0, t: '', err: e.message }; }
-}
-const home = await get('https://spu.gov.cz/');
+// ---------- PRODEJ: nabidkamajetku.cz struktura ----------
+console.log('\n=== nabidkamajetku.cz (ÚZSVM) ===');
+const home = await get('https://nabidkamajetku.cz/');
 console.log('home:', home.s, home.t.length + 'B');
-if (home.t) {
-  const links = [...new Set([...home.t.matchAll(/href="([^"]+)"/gi)].map((m) => m[1])
-    .filter((h) => /prode|nabid|pozemk|drazb|zamer|volne/i.test(h)))].slice(0, 25);
-  console.log('relevantní odkazy:', JSON.stringify(links, null, 0));
-}
-// zkusíme sitemap a robots — hledáme strojově čitelný seznam
-for (const p of ['/robots.txt', '/sitemap.xml']) {
-  const r = await get('https://spu.gov.cz' + p);
-  console.log(p, '→', r.s, (r.t || '').slice(0, 200).replace(/\s+/g, ' '));
+// embedded JSON? (Nuxt/Next/Angular state)
+console.log('má __NUXT__/__NEXT_DATA__/ng-state:', /__NUXT__|__NEXT_DATA__|ng-state|window\.__/.test(home.t));
+// odkazy na detaily/kategorie
+const links = [...new Set([...home.t.matchAll(/href="([^"]+)"/gi)].map((m) => m[1])
+  .filter((h) => /pozemk|nemovit|katalog|nabid|detail|vyhled|kategorie|majetek/i.test(h)))].slice(0, 25);
+console.log('odkazy:', JSON.stringify(links, null, 0));
+// zkusíme běžné API/list cesty
+for (const p of ['/api/nabidky', '/api/v1/nabidky', '/nabidky', '/katalog', '/vyhledavani', '/api/search', '/api/majetek', '/sitemap.xml', '/robots.txt']) {
+  const r = await get('https://nabidkamajetku.cz' + p);
+  console.log(p, '→', r.s, r.ct, (r.t || '').length + 'B', (r.t || '').slice(0, 90).replace(/\s+/g, ' '));
 }
 console.log('\nHotovo.');
