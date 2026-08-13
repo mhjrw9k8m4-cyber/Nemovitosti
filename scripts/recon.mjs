@@ -1,61 +1,56 @@
 #!/usr/bin/env node
-// Průzkum zdrojů pro kategorie: exekuce, prodej, obec. Kompaktní výstup.
+// Detail: proč se ztrácejí nucené dražby (exekuce) + jak číst SPÚ (prodej).
 const UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
 
-async function head(label, url, opts = {}) {
-  try {
-    const r = await fetch(url, { headers: { ...UA, ...(opts.headers || {}) }, redirect: 'follow' });
-    const t = await r.text();
-    console.log(`[${label}] ${r.status} ${r.headers.get('content-type')} ${t.length}B`);
-    return { status: r.status, ct: r.headers.get('content-type'), text: t };
-  } catch (e) { console.log(`[${label}] CHYBA ${e.message}`); return { status: 0, text: '' }; }
-}
-
-// ---------- 1) EXEKUCE: rozbor CEVD (typy dražeb, kolik nucených s pozemkem) ----------
-console.log('=== CEVD: typy dražeb a nucené s pozemkem ===');
+// ---------- EXEKUCE: dump nucených s pozemkem ----------
+console.log('=== CEVD nucené s pozemkem — proč se filtrují ===');
 try {
   const y = new Date().getFullYear();
   const r = await fetch(`https://cevd.gov.cz/opendata/drazby/drazby_${y}.json`, { headers: UA });
   const data = await r.json();
   const arr = Array.isArray(data) ? data : (Object.values(data).find(Array.isArray) || []);
-  const typy = {};
-  let nucenaLand = 0, nucenaAny = 0;
+  let shown = 0;
   for (const rec of arr) {
     const zi = rec.zakladniInformace || {};
-    const t = zi.typDrazby || '(none)';
-    typy[t] = (typy[t] || 0) + 1;
-    if (/nucen/i.test(t)) {
-      nucenaAny++;
-      for (const p of (rec.predmetyDrazby || [])) {
-        for (const v of (p.veci || [])) {
-          const vn = v.vecNemovita;
-          if (vn && vn.pozemek && !vn.jednotka && !vn.stavba) { nucenaLand++; break; }
-        }
+    if (!/nucen/i.test(zi.typDrazby || '')) continue;
+    for (const p of (rec.predmetyDrazby || [])) {
+      for (const v of (p.veci || [])) {
+        const vn = v.vecNemovita;
+        if (!vn || !vn.pozemek || vn.jednotka || vn.stavba) continue;
+        const ku = vn.katastralniUzemi || {};
+        console.log(JSON.stringify({
+          stav: p.stavPredmetu,
+          okres: ku.okres, obec: ku.obec || ku.nazev,
+          vymera: vn.pozemek.vymera, druh: vn.pozemek.druhPozemku,
+          vyvol: p.vyvolavaciCena && p.vyvolavaciCena.castka && p.vyvolavaciCena.castka.vyse,
+          obvykla: p.obvyklaCena && p.obvyklaCena.vyse,
+          nazev: (v.nazev || '').slice(0, 50),
+        }));
+        shown++;
+        break;
       }
+      if (shown >= 12) break;
     }
+    if (shown >= 12) break;
   }
-  console.log('celkem dražeb:', arr.length);
-  console.log('typDrazby:', JSON.stringify(typy));
-  console.log('nucených celkem:', nucenaAny, '| nucených s pozemkem:', nucenaLand);
-} catch (e) { console.log('CEVD chyba:', e.message); }
+} catch (e) { console.log('chyba:', e.message); }
 
-// ---------- 2) PRODEJ: oficiální nabídky státní půdy ----------
-console.log('\n=== PRODEJ: státní nabídky (ÚZSVM, SPÚ) ===');
-await head('uzsvm-web', 'https://www.uzsvm.cz/');
-await head('nabidkamajetku', 'https://nabidkamajetku.cz/');
-await head('nabidka-api?', 'https://nabidkamajetku.cz/api/items');
-await head('spucr', 'https://www.spucr.cz/');
-await head('spu-prodej', 'https://spu.gov.cz/');
-// data.gov.cz katalog — hledáme "pozem" datové sady
-console.log('\n--- NKOD katalog: hledám sady s "pozem"/"nemovit"/"prodej" ---');
-const q = encodeURIComponent('pozemek prodej nemovitost');
-await head('nkod-hledani', `https://data.gov.cz/api/3/action/package_search?q=${q}&rows=5`);
-
-// ---------- 3) OBEC: úřední desky jako otevřená data ----------
-console.log('\n=== OBEC: úřední desky (OFN) přes NKOD ===');
-// úřední desky mají v NKOD typ dat — zkusíme SPARQL na jejich distribuce
-const sparql = `PREFIX dcterms:<http://purl.org/dc/terms/>
-SELECT ?dist WHERE { ?d a <https://data.gov.cz/slovník/nkod/DatováSada> ; dcterms:title ?t . FILTER(CONTAINS(LCASE(STR(?t)),"úřední deska")) } LIMIT 3`;
-await head('nkod-sparql-deska', 'https://data.gov.cz/sparql?query=' + encodeURIComponent(sparql), { headers: { accept: 'application/sparql-results+json' } });
-
+// ---------- PRODEJ: struktura SPÚ ----------
+console.log('\n=== SPÚ (spu.gov.cz): odkazy na prodej/nabídky + open data ===');
+async function get(u, opts = {}) {
+  try { const r = await fetch(u, { headers: UA, redirect: 'follow', ...opts }); const t = await r.text(); return { s: r.status, ct: r.headers.get('content-type'), t }; }
+  catch (e) { return { s: 0, t: '', err: e.message }; }
+}
+const home = await get('https://spu.gov.cz/');
+console.log('home:', home.s, home.t.length + 'B');
+if (home.t) {
+  const links = [...new Set([...home.t.matchAll(/href="([^"]+)"/gi)].map((m) => m[1])
+    .filter((h) => /prode|nabid|pozemk|drazb|zamer|volne/i.test(h)))].slice(0, 25);
+  console.log('relevantní odkazy:', JSON.stringify(links, null, 0));
+}
+// zkusíme sitemap a robots — hledáme strojově čitelný seznam
+for (const p of ['/robots.txt', '/sitemap.xml']) {
+  const r = await get('https://spu.gov.cz' + p);
+  console.log(p, '→', r.s, (r.t || '').slice(0, 200).replace(/\s+/g, ' '));
+}
 console.log('\nHotovo.');
