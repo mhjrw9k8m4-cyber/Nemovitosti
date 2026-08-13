@@ -59,6 +59,13 @@ const res = await fetch(SRC);
 if (!res.ok) { console.error('Stažení selhalo:', res.status); process.exit(1); }
 const gj = await res.json();
 
+// DIAGNOSTIKA — abychom viděli skutečnou strukturu dat
+console.log('typ:', gj.type, '| features:', (gj.features || []).length);
+if (gj.features && gj.features[0]) console.log('klíče props:', Object.keys(gj.features[0].properties || {}).join(','));
+const czAny = (gj.features || []).filter(function (f) { return JSON.stringify(f.properties || {}).toLowerCase().includes('czech'); });
+console.log('features s "czech":', czAny.length);
+czAny.slice(0, 16).forEach(function (f) { var p = f.properties || {}; console.log('  ', p.adm0_a3, '|', p.iso_3166_2, '|', p.name, '|', p.name_local, '|', p.gn_name); });
+
 const cz = gj.features.filter(function (f) {
   const p = f.properties || {};
   return p.adm0_a3 === 'CZE' || p.admin === 'Czechia' || p.admin === 'Czech Republic' || p.iso_a2 === 'CZ';
