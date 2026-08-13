@@ -596,17 +596,15 @@
     return arr;
   }
 
-  // Míra zájmu — čím výhodnější cena/m² a lákavější typ, tím víc zájemců.
-  // Nasycení + deterministický rozptyl podle id, aby čísla nebyla všude stejná
-  // (dřív se u levné půdy vzorec „zasekl" na maximu → všude 247 sledujících).
+  // Interní skóre pro řazení „Doporučené" a výběr špičky (★ Doporučujeme).
+  // Čím výhodnější cena/m² a zajímavější typ, tím vyšší. Není to počet lidí —
+  // slouží jen k pořadí, žádné vymyšlené „sledující" se nikde nezobrazují.
   function demand(d) {
     if (d._demand != null) return d._demand;
     var perM2 = hasArea(d) ? d.price / d.area : 500;
     var typeBonus = { drazba: 22, exekuce: 18, obec: 12, sale: 8 }[d.type] || 0;
     var deal = Math.max(0, Math.min(58, (900 - perM2) / 18)); // výhodnost s nasycením
-    var seed = (d._id != null ? d._id : 0) + 1;
-    var noise = Math.floor(((Math.sin(seed * 12.9898) * 43758.5453) % 1 + 1) % 1 * 42);
-    d._demand = Math.max(6, Math.round(9 + typeBonus + deal + noise));
+    d._demand = Math.max(6, Math.round(9 + typeBonus + deal));
     return d._demand;
   }
 
@@ -626,16 +624,19 @@
     // ne pro třetinu — aby badge nesvítil skoro všude.
     var pv = vis.map(perM2Val).filter(function (x) { return isFinite(x) && x > 0; }).sort(function (a, b) { return a - b; });
     var dealMax = pv.length >= 5 ? pv[Math.min(2, pv.length - 1)] : 0;
-    // „Velký zájem" jen pro skutečnou špičku — nejvýš 3 nejžádanější z viditelných
-    var dsorted = vis.map(demand).sort(function (a, b) { return b - a; });
-    var hotCut = dsorted.length ? dsorted[Math.min(2, dsorted.length - 1)] : Infinity;
+    // „★ Doporučujeme" jen pro 3 nejlepší podle interního skóre (nezávisle na řazení),
+    // a jen když je z čeho vybírat (min. 5 nabídek).
+    var hotIds = {};
+    if (vis.length >= 5) {
+      vis.slice().sort(function (a, b) { return demand(b) - demand(a); }).slice(0, 3)
+        .forEach(function (d) { hotIds[d._id] = true; });
+    }
     var top = vis.slice(0, LIST_LIMIT);
 
     top.forEach(function (d, rank) {
       var t = TYPE[d.type];
       var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
-      var w = demand(d);
-      var hot = w >= hotCut && w >= 45;
+      var hot = !!hotIds[d._id];
       var li = document.createElement('li');
       li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '');
       li.setAttribute('data-id', d._id);
@@ -656,11 +657,10 @@
           '<span>' + (hasArea(d) ? '<b>' + fmt(d.area) + '</b> m²' : 'výměra neuvedena') + '</span><span>' + d.druh + '</span></div>' +
           '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? ' <span>· ' + fmt(perM2) + ' Kč/m²</span>' : '') +
             (perM2 && dealMax && perM2 <= dealMax ? ' <span class="opp-deal">výhodná cena</span>' : '') + '</div>' +
-          '<div class="opp-demand">' + [
-            cd,
-            hot ? '<span class="hot">Velký zájem</span>' : '',
-            '<span class="watch">' + w + ' sledujících</span>'
-          ].filter(Boolean).join(' <span class="sep">·</span> ') + '</div>' +
+          (function () {
+            var badges = [cd, hot ? '<span class="hot">★ Doporučujeme</span>' : ''].filter(Boolean);
+            return badges.length ? '<div class="opp-demand">' + badges.join(' <span class="sep">·</span> ') + '</div>' : '';
+          })() +
         '</div>';
       function openThis() {
         showDetail(d);
@@ -684,7 +684,7 @@
       listEl.appendChild(li);
     });
 
-    var headLabel = sortMode === 'demand' ? 'Nejžádanější příležitosti' : 'Vybrané příležitosti';
+    var headLabel = sortMode === 'demand' ? 'Doporučené příležitosti' : 'Vybrané příležitosti';
     countEl.innerHTML = headLabel + ' · <span class="mc-sub">' + matched + ' na mapě</span>';
     if (matched === 0) {
       var anyFilter = activeType !== 'all' || activeDruh !== 'all' || maxPrice || searchTerm || favOnly;
