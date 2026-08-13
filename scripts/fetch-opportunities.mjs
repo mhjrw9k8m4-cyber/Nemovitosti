@@ -166,29 +166,23 @@ async function fetchProdejSPU() {
   try { txt = new TextDecoder('windows-1250').decode(buf); } catch { txt = buf.toString('latin1'); }
   const lines = txt.split(/\r?\n/).filter((l) => l.trim());
   if (lines.length < 2) return [];
-  const header = splitCsvLine(lines[0]).map((h) => h.toLowerCase());
-  const col = (needle) => header.findIndex((h) => h.includes(needle));
-  // Sloupce 0–4 (Okres, Název k.ú., Parcela, Výměra, Druh) jsou před textovými
-  // poli, takže jejich pozice je stabilní. Cena je až za poznámkou, která může
-  // obsahovat středník → cenu proto hledáme podle tokenu „… Kč" v celém řádku.
-  const iOkres = col('okres'), iKu = col('k.'), iParc = col('parcela'),
-    iVym = col('výměra'), iDruh = col('druh'), iVyuz = col('využit');
   const out = [];
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    const c = splitCsvLine(line);
-    if (c.length < 5) continue;
-    if (/;\s*ano\s*$/i.test(line)) continue; // poslední sloupec "Staženo" = ano
-    const okres = (c[iOkres] || '').trim();
-    const place = (iKu >= 0 ? c[iKu] : '').trim();
-    const money = line.match(/(\d[\d\s ]*),\d{2}\s*K/); // "16 865,00 Kč"
+    const c = splitCsvLine(lines[i]);
+    if (c.length < 8) continue;
+    // Zadní sloupce (…;Cena;Nájem/pacht;Číslo OP;Staženo) čteme zprava — poznámka
+    // uprostřed může mít středník; konec řádku je vždy stejný. Cena = 4. odzadu.
+    if (/^ano$/i.test((c[c.length - 1] || '').trim())) continue; // Staženo = ano
+    const okres = (c[0] || '').trim();
+    const place = (c[1] || '').trim();
+    const money = (c[c.length - 4] || '').match(/(\d[\d\s\u00a0]*),\d{2}/); // sloupec Cena
     const price = money ? parseInt(money[1].replace(/[^\d]/g, ''), 10) : null;
-    if (!okres || !place || !price) continue;
-    const area = parseInt(String(iVym >= 0 ? c[iVym] : '').replace(/[^\d]/g, ''), 10) || null;
-    const druh = (iDruh >= 0 ? c[iDruh] : '').trim() || parseDruh(iVyuz >= 0 ? c[iVyuz] : '');
+    if (!okres || !place || !price || price < 100) continue; // jen prodejní cena, ne nájem
+    const area = parseInt(String(c[3] || '').replace(/[^\d]/g, ''), 10) || null;
+    const druh = (c[4] || '').trim() || parseDruh(c[5] || '');
     out.push({
       place, okres: normOkres(okres), type: 'sale',
-      parcel: String(iParc >= 0 ? c[iParc] : '—').trim().slice(0, 40) || '—',
+      parcel: String(c[2] || '—').trim().slice(0, 40) || '—',
       druh: druh || 'pozemek',
       area, price,
       extra: 'prodej státní půdy (SPÚ, § 12)',
