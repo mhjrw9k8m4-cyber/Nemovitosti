@@ -86,7 +86,11 @@ if (data.type === 'Topology') {
   const objKey = Object.keys(data.objects)[0];
   features = (data.objects[objKey].geometries || []).map(g => ({ properties: g.properties || {}, geometry: geomToGeoJSON(data, g) }));
 } else {
-  features = (data.features || []).map(f => ({ properties: f.properties || {}, geometry: f.geometry }));
+  // Některé zdroje mají metadata (name…) na úrovni feature, ne v properties.
+  features = (data.features || []).map(f => ({
+    properties: (f.properties && Object.keys(f.properties).length) ? f.properties : f,
+    geometry: f.geometry
+  }));
 }
 console.log('features:', features.length, '| vzorek props:', JSON.stringify(features[0] && features[0].properties));
 
