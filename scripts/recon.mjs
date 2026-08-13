@@ -1,32 +1,29 @@
 #!/usr/bin/env node
-// Farmy.cz — struktura výpisu nabídek + detailu (pole: typ, lokalita, výměra, cena).
+// Diagnostika Farmy.cz — proč projde jen málo nabídek? Co u nich chybí.
 const UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
-async function get(u) {
-  try { const r = await fetch(u, { headers: UA, redirect: 'follow' }); const t = await r.text(); return { s: r.status, t }; }
-  catch (e) { return { s: 0, t: '', err: e.message }; }
-}
-const strip = (h) => h.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function get(u) { try { const r = await fetch(u, { headers: UA }); return await r.text(); } catch { return ''; } }
 
-// 1) výpis nabídek
-const list = await get('https://farmy.cz/inzerce_aktualni_nabidky');
-console.log('výpis:', list.s, list.t.length + 'B');
-// najdi bloky kolem odkazů nabidka_detail?nab=
-const ids = [...new Set([...list.t.matchAll(/nabidka_detail\?nab=(\d+)/g)].map((m) => m[1]))];
-console.log('počet nabídek na stránce:', ids.length, '| první id:', ids.slice(0, 5));
-// ukázka HTML kolem prvního odkazu (ať vidím okolní data)
-const i0 = list.t.indexOf('nabidka_detail?nab=');
-if (i0 >= 0) console.log('okolí odkazu:', strip(list.t.slice(i0 - 400, i0 + 400)).slice(0, 500));
-
-// 2) detail jedné nabídky
-if (ids.length) {
-  const det = await get('https://farmy.cz/nabidka_detail?nab=' + ids[0]);
-  console.log(`\ndetail nab=${ids[0]}:`, det.s, det.t.length + 'B');
-  for (const kw of ['pozem', 'výmě', 'vymer', 'cena', 'Kč', 'lokalit', 'okres', 'kraj', 'obec', 'druh', 'ha', 'm2', 'm²', 'gps', 'lat', 'katastr']) {
-    const i = det.t.toLowerCase().indexOf(kw.toLowerCase());
-    if (i >= 0) console.log(`  "${kw}": …${strip(det.t.slice(i - 25, i + 75))}…`);
+const listHtml = await get('https://farmy.cz/inzerce_aktualni_nabidky');
+const ids = [...new Set([...listHtml.matchAll(/nabidka_detail\?nab=(\d+)/g)].map((m) => m[1]))];
+console.log('nabídek:', ids.length);
+let okGps = 0, okArea = 0, okPm2 = 0, okTot = 0, okOkres = 0, full = 0;
+for (const id of ids) {
+  const html = await get('https://farmy.cz/nabidka_detail?nab=' + id);
+  await sleep(150);
+  const text = html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+  const gps = /Poloha GPS\s+([\d.]+)N/i.test(text);
+  const area = /Výměra\s+[\d\s]+?\s*m2/i.test(text);
+  const pm2 = /Cena\s+[\d\s.]+,\d{2}\s*Kč\s*\/\s*m2/i.test(text);
+  const tot = /Cena\s+[\d\s.]+,\d{2}\s*Kč(?!\s*\/\s*m2)/i.test(text);
+  const okr = /v okrese\s+.+?\s+v\s+\S+\s+kraji/i.test(text);
+  if (gps) okGps++; if (area) okArea++; if (pm2) okPm2++; if (tot) okTot++; if (okr) okOkres++;
+  if (gps && area && (pm2 || tot)) full++;
+  // ukázka ceny u těch bez ceny
+  if (!pm2 && !tot) {
+    const ci = text.search(/cena/i);
+    console.log(`  nab ${id} BEZ CENY:`, ci >= 0 ? text.slice(ci, ci + 70) : '(žádná zmínka ceny)');
   }
-  // tabulkové řádky detailu
-  const rows = [...det.t.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)].map((m) => strip(m[1])).filter((s) => s.length > 2 && s.length < 120);
-  console.log('  řádky tabulky:', JSON.stringify(rows.slice(0, 12)));
 }
-console.log('\nHotovo.');
+console.log(`\nSouhrn z ${ids.length}: gps=${okGps} area=${okArea} cena/m2=${okPm2} cena_celkem=${okTot} okres(text)=${okOkres} | KOMPLETNÍ=${full}`);
+console.log('Hotovo.');
