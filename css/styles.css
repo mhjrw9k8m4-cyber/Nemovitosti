@@ -230,6 +230,8 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-demand .hot{color:#E8863F; font-weight:700;}
 .opp-demand .watch{color:var(--text-ondark-mute);}
 .opp-more{list-style:none; text-align:center; padding:14px 6px 6px; font-size:13px; color:var(--copper-bright); font-weight:600;}
+.reset-btn{display:inline-block; margin-top:12px; padding:8px 16px; font-size:13px; font-weight:600; color:var(--ink); background:var(--copper-bright); border:0; border-radius:8px; cursor:pointer;}
+.reset-btn:hover{background:var(--copper);}
 .opp-top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;}
 .opp-place{font-family:'Fraunces',serif; font-size:16px; font-weight:500;}
 .opp-tag{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 8px; border-radius:12px; color:#fff; white-space:nowrap;}

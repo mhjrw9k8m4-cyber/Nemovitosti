@@ -524,7 +524,11 @@
     var headLabel = sortMode === 'demand' ? 'Nejžádanější příležitosti' : 'Vybrané příležitosti';
     countEl.innerHTML = headLabel + ' · <span class="mc-sub">' + matched + ' na mapě</span>';
     if (matched === 0) {
-      listEl.innerHTML = '<li class="map-count" style="padding:20px 6px; text-transform:none; font-weight:400;">Tady zrovna nic není — zkuste jiný filtr. Příležitostí přibývá každý týden.</li>';
+      var anyFilter = activeType !== 'all' || activeDruh !== 'all' || maxPrice || searchTerm;
+      listEl.innerHTML = '<li class="map-count" style="padding:20px 6px; text-transform:none; font-weight:400; line-height:1.6;">Tady zrovna nic není — zkuste jiný filtr. Příležitostí přibývá každý týden.' +
+        (anyFilter ? '<br><button type="button" id="reset-filtry" class="reset-btn">Zrušit filtry</button>' : '') + '</li>';
+      var eb = listEl.querySelector('#reset-filtry');
+      if (eb) eb.addEventListener('click', resetFilters);
     } else if (matched > LIST_LIMIT) {
       var more = document.createElement('li');
       more.className = 'opp-more';
@@ -532,6 +536,17 @@
       listEl.appendChild(more);
     }
     updatePolys(); // tvary parcel podle aktuálního filtru
+  }
+
+  function resetFilters() {
+    activeType = 'all'; activeDruh = 'all'; maxPrice = 0; searchTerm = '';
+    if (searchEl) searchEl.value = '';
+    if (druhEl) druhEl.value = 'all';
+    if (cenaEl) cenaEl.value = '0';
+    filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-type') === 'all');
+    });
+    renderList();
   }
 
   function highlightList(id) {
