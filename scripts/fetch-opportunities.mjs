@@ -75,6 +75,8 @@ async function fetchDrazby() {
     for (const rec of arr) {
       const konani = rec.zakladniInformace && rec.zakladniInformace.konaniDrazby;
       const zah = konani && (konani.zahajeni || konani.konec);
+      // Jeden záznam na dražbu — první pozemek v aktivní dražbě.
+      let picked = null;
       for (const p of (rec.predmetyDrazby || [])) {
         if (p.stavPredmetu !== 'Uveřejněno') continue; // jen aktivní/nadcházející
         for (const v of (p.veci || [])) {
@@ -83,22 +85,24 @@ async function fetchDrazby() {
           const ku = vn.katastralniUzemi || {};
           const okres = ku.okres, place = ku.obec || ku.nazev;
           if (!okres || !place) continue;
-          const blob = `${v.nazev || ''} ${p.nazevPredmetu || ''} ${p.popisPredmetu || ''}`;
-          const area = vn.pozemek.vymera || parseArea(blob);
+          const area = vn.pozemek.vymera || parseArea(v.nazev) || parseArea(p.nazevPredmetu);
           const price = (p.vyvolavaciCena && p.vyvolavaciCena.castka && p.vyvolavaciCena.castka.vyse)
             || (p.obvyklaCena && p.obvyklaCena.vyse) || 0;
           if (!area || !price) continue;
-          out.push({
+          picked = {
             place, okres, type: 'drazba',
             parcel: String(vn.pozemek.parcelniCislo || '—').slice(0, 40),
-            druh: vn.pozemek.druhPozemku || parseDruh(blob),
+            druh: vn.pozemek.druhPozemku || parseDruh(v.nazev),
             area: Math.round(area), price: Math.round(price),
             extra: zah ? ('dražba ' + String(zah).slice(0, 10)) : 'nadcházející dražba',
             lat: typeof vn.gpsLat === 'number' ? vn.gpsLat : undefined,
             lng: typeof vn.gpsLng === 'number' ? vn.gpsLng : undefined,
-          });
+          };
+          break;
         }
+        if (picked) break;
       }
+      if (picked) out.push(picked);
     }
     if (out.length) break; // aktuální rok stačí
   }
