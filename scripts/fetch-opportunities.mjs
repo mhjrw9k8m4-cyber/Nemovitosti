@@ -73,8 +73,13 @@ async function fetchDrazby() {
     } catch { continue; }
     const arr = Array.isArray(data) ? data : (Object.values(data).find(Array.isArray) || []);
     for (const rec of arr) {
-      const konani = rec.zakladniInformace && rec.zakladniInformace.konaniDrazby;
+      const zi = rec.zakladniInformace || {};
+      const konani = zi.konaniDrazby;
       const zah = konani && (konani.zahajeni || konani.konec);
+      // Nucená (nedobrovolná) dražba = nucený prodej → kategorie "exekuce"
+      const nucena = zi.typDrazby === 'Nucená';
+      const type = nucena ? 'exekuce' : 'drazba';
+      const datum = zah ? String(zah).slice(0, 10) : null;
       // Jeden záznam na dražbu — první pozemek v aktivní dražbě.
       let picked = null;
       for (const p of (rec.predmetyDrazby || [])) {
@@ -90,11 +95,11 @@ async function fetchDrazby() {
             || (p.obvyklaCena && p.obvyklaCena.vyse) || 0;
           if (!area || !price) continue;
           picked = {
-            place, okres, type: 'drazba',
+            place, okres, type,
             parcel: String(vn.pozemek.parcelniCislo || '—').slice(0, 40),
             druh: vn.pozemek.druhPozemku || parseDruh(v.nazev),
             area: Math.round(area), price: Math.round(price),
-            extra: zah ? ('dražba ' + String(zah).slice(0, 10)) : 'nadcházející dražba',
+            extra: (nucena ? 'nucená dražba' : 'dražba') + (datum ? ' ' + datum : ''),
             lat: typeof vn.gpsLat === 'number' ? vn.gpsLat : undefined,
             lng: typeof vn.gpsLng === 'number' ? vn.gpsLng : undefined,
           };
