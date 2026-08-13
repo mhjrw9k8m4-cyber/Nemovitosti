@@ -111,12 +111,14 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 .pk-dot.sel{transform:scale(1.55); box-shadow:0 0 0 4px rgba(255,255,255,0.35), 0 4px 12px rgba(0,0,0,0.55);}
 .pk-dot.urgent{animation:dotpulse 1.6s ease-out infinite;}
 @keyframes dotpulse{0%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 0 rgba(217,164,65,0.5);} 100%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 10px rgba(217,164,65,0);}}
-/* Přehled po krajích (choropleth) — počet uprostřed kraje */
-.kraj-lbl{position:absolute; left:0; top:0; transform:translate(-50%,-50%); font-family:'Fraunces',serif; font-weight:600; font-size:22px; line-height:1;
-  color:#fff; text-shadow:0 1px 4px rgba(0,0,0,0.9), 0 0 3px rgba(0,0,0,0.95); cursor:pointer; pointer-events:auto;
-  transition:transform .15s var(--ease), color .15s var(--ease);}
-.kraj-lbl:hover{transform:translate(-50%,-50%) scale(1.18); color:var(--copper-bright);}
-.kraj-lbl.empty{font-size:15px; color:rgba(237,230,214,0.35); text-shadow:none;}
+/* Přehled po krajích — počet nad krajem + rozdělení po kategoriích */
+.kraj-lbl{position:absolute; left:0; top:0; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; line-height:1; cursor:pointer; pointer-events:auto;
+  transition:transform .15s var(--ease);}
+.kraj-lbl b{font-family:'Fraunces',serif; font-weight:600; font-size:23px; color:#fff; text-shadow:0 1px 4px rgba(0,0,0,0.95), 0 0 3px rgba(0,0,0,1);}
+.kraj-brk{display:flex; gap:6px; margin-top:3px; font-family:'Inter',sans-serif; font-size:12px; font-weight:800;}
+.kraj-brk span{text-shadow:0 1px 3px rgba(0,0,0,1), 0 0 2px rgba(0,0,0,1);}
+.kraj-lbl:hover{transform:translate(-50%,-50%) scale(1.12);}
+.kraj-lbl.empty b{font-size:15px; color:rgba(237,230,214,0.4); text-shadow:none;}
 .leaflet-tooltip.kraj-tip{background:rgba(20,32,44,0.95); border:1px solid var(--copper); color:var(--parchment); font-weight:600; font-size:12px; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.5);}
 .leaflet-tooltip.kraj-tip::before{border-top-color:var(--copper);}
 @keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(2.2); opacity:0;}}

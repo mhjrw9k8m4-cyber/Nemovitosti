@@ -668,10 +668,10 @@
     markers.push(m);
   });
 
-  // Vybarvení kraje podle počtu (měděná, tím sytější, čím víc pozemků)
-  function fillFor(n) { return !n ? 0.05 : 0.12 + Math.min(1, n / (krajMax || 1)) * 0.44; }
+  // Kraje – čisté ohraničení s jemnou jednotnou výplní (počty jsou v popiscích)
   function styleKraj(f) {
-    return { color: 'rgba(224,174,67,0.55)', weight: 1, fillColor: '#E0AE43', fillOpacity: fillFor(krajCounts[f.properties.kraj] || 0) };
+    var has = krajCounts[f.properties.kraj] && krajCounts[f.properties.kraj].total;
+    return { color: 'rgba(224,174,67,0.7)', weight: 1.2, fillColor: '#E0AE43', fillOpacity: has ? 0.1 : 0.03 };
   }
   if (KRAJE_GEOM) {
     var feats = Object.keys(KRAJE_GEOM).map(function (k) { return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] }; });
@@ -687,13 +687,23 @@
   }
   function renderKraje(vis) {
     krajCounts = {}; krajMax = 0;
-    vis.forEach(function (d) { var k = krajOf(d); if (k) krajCounts[k] = (krajCounts[k] || 0) + 1; });
-    Object.keys(krajCounts).forEach(function (k) { if (krajCounts[k] > krajMax) krajMax = krajCounts[k]; });
+    vis.forEach(function (d) {
+      var k = krajOf(d); if (!k) return;
+      var o = krajCounts[k] || (krajCounts[k] = { total: 0 });
+      o.total++; o[d.type] = (o[d.type] || 0) + 1;
+    });
+    Object.keys(krajCounts).forEach(function (k) { if (krajCounts[k].total > krajMax) krajMax = krajCounts[k].total; });
     if (krajLayer) krajLayer.setStyle(styleKraj);
     labelLayer.clearLayers();
     Object.keys(KRAJE).forEach(function (k) {
-      var n = krajCounts[k] || 0;
-      var icon = L.divIcon({ className: '', html: '<div class="kraj-lbl' + (n ? '' : ' empty') + '">' + n + '</div>', iconSize: [0, 0], iconAnchor: [0, 0] });
+      var o = krajCounts[k], n = o ? o.total : 0;
+      var brk = '';
+      if (o) ['sale', 'drazba', 'exekuce', 'obec'].forEach(function (tp) {
+        if (o[tp]) brk += '<span style="color:' + TYPE[tp].color + '">' + o[tp] + '</span>';
+      });
+      var html = '<div class="kraj-lbl' + (n ? '' : ' empty') + '"><b>' + n + '</b>' +
+        (brk ? '<span class="kraj-brk">' + brk + '</span>' : '') + '</div>';
+      var icon = L.divIcon({ className: '', html: html, iconSize: [0, 0], iconAnchor: [0, 0] });
       var m = L.marker(KRAJE[k].c, { icon: icon });
       m.on('click', function () { map.setView(KRAJE[k].c, KRAJ_ZOOM + 1, { animate: true }); });
       labelLayer.addLayer(m);
