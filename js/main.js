@@ -349,31 +349,37 @@
     favEl.setAttribute('aria-pressed', String(favOnly));
   }
 
-  // Obvyklá (mediánová) cena za m² podle druhu — orientační reference do detailu
-  var medianPerM2 = (function () {
-    var byG = {};
+  // Index cen za m² podle typu+druhu — pro poctivé srovnání v detailu.
+  // Percentil (0–100) je omezený, takže nikdy nevznikne nesmysl typu „+7130 %".
+  var perM2Index = (function () {
+    var idx = {};
     DATA.forEach(function (d) {
-      if (hasArea(d) && d.price) { var g = druhGroup(d.druh); (byG[g] = byG[g] || []).push(d.price / d.area); }
+      if (hasArea(d) && d.price) {
+        var k = d.type + '|' + druhGroup(d.druh);
+        (idx[k] = idx[k] || []).push(d.price / d.area);
+      }
     });
-    var med = {};
-    Object.keys(byG).forEach(function (g) {
-      var a = byG[g].sort(function (x, y) { return x - y; });
-      if (a.length >= 6) med[g] = a[Math.floor(a.length / 2)]; // jen dost velký vzorek
-    });
-    return med;
+    Object.keys(idx).forEach(function (k) { idx[k].sort(function (a, b) { return a - b; }); });
+    return idx;
   })();
   function priceBarHtml(d) {
     if (!hasArea(d) || !d.price) return '';
-    var g = druhGroup(d.druh), med = medianPerM2[g];
-    if (!med || med <= 0) return '';
+    var g = druhGroup(d.druh);
+    var arr = perM2Index[d.type + '|' + g];
+    if (!arr || arr.length < 8) return ''; // bez dostatečného vzorku srovnání neukazujeme
+    if (arr[arr.length - 1] <= arr[0] * 1.15) return ''; // skoro stejné ceny → srovnání nedává smysl
     var val = d.price / d.area;
-    var pct = Math.round((val / med - 1) * 100);
-    var pos = Math.max(4, Math.min(96, (val / (med * 2)) * 100));
-    var cls = pct <= -8 ? 'good' : (pct >= 8 ? 'bad' : 'mid');
-    var label = pct <= -8 ? ('o ' + Math.abs(pct) + ' % levnější') : (pct >= 8 ? ('o ' + pct + ' % dražší') : 'kolem obvyklé');
+    var below = 0;
+    for (var i = 0; i < arr.length; i++) { if (arr[i] <= val) below++; }
+    var pct = Math.max(2, Math.min(98, Math.round(below / arr.length * 100))); // 0 = nejlevnější
+    var cls, label;
+    if (pct <= 35) { cls = 'good'; label = 'levnější než ' + (100 - pct) + ' % podobných'; }
+    else if (pct >= 65) { cls = 'bad'; label = 'dražší než ' + pct + ' % podobných'; }
+    else { cls = 'mid'; label = 'průměrná cena mezi podobnými'; }
+    var typeWord = d.type === 'sale' ? 'v prodeji' : (d.type === 'drazba' ? 'v dražbě' : 'v nabídce');
     return '<div class="md-bar ' + cls + '">' +
-      '<div class="md-bar-head"><span>Cena/m² vs. obvyklá u „' + g.toLowerCase() + '"</span><b>' + label + '</b></div>' +
-      '<div class="md-bar-track"><span class="md-bar-med" style="left:50%"></span><span class="md-bar-dot" style="left:' + pos + '%"></span></div>' +
+      '<div class="md-bar-head"><span>Cena/m² mezi „' + g.toLowerCase() + '" ' + typeWord + '</span><b>' + label + '</b></div>' +
+      '<div class="md-bar-track"><span class="md-bar-med" style="left:50%"></span><span class="md-bar-dot" style="left:' + pct + '%"></span></div>' +
       '</div>';
   }
 
