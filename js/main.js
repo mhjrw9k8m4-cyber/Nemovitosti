@@ -348,7 +348,7 @@
         '<div class="md-actions">' +
           '<a class="lp-btn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">Katastr</a>' +
           '<a class="lp-btn" href="' + mapyUrl(d) + '" target="_blank" rel="noopener">Mapa</a>' +
-          '<a class="lp-btn" href="' + t.link.url + '" target="_blank" rel="noopener">' + t.link.label + '</a>' +
+          '<a class="lp-btn" href="' + (d.url || t.link.url) + '" target="_blank" rel="noopener">' + (d.url ? 'Inzerát' : t.link.label) + '</a>' +
           '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">Hlídat okres ' + d.okres + '</a>' +
         '</div>' +
       '</div>';

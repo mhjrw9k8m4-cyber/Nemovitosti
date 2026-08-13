@@ -231,6 +231,56 @@ async function fetchProdejSPU() {
   return out;
 }
 
+// Bezrealitky.cz — inzeráty pozemků na prodej od majitelů.
+// Veřejné GraphQL API (robots.txt dovoluje). Vrací i GPS a odkaz na inzerát.
+async function fetchBezrealitky() {
+  const query = `query($limit:Int,$offset:Int,$order:ResultOrder,$offerType:[OfferType],$estateType:[EstateType]){
+    listAdverts(limit:$limit,offset:$offset,order:$order,offerType:$offerType,estateType:$estateType){
+      totalCount
+      list{ id uri title address price surface surfaceLand gps{ lat lng } }
+    }
+  }`;
+  const out = [];
+  const PER = 60, PAGES = 4; // ~240 inzerátů strop
+  for (let p = 0; p < PAGES; p++) {
+    let list;
+    try {
+      const r = await fetch('https://api.bezrealitky.cz/graphql/', {
+        method: 'POST',
+        headers: { ...UA, 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({ query, variables: { limit: PER, offset: p * PER, order: 'TIMEORDER_DESC', offerType: ['PRODEJ'], estateType: ['POZEMEK'] } }),
+      });
+      if (!r.ok) break;
+      const j = await r.json();
+      list = j && j.data && j.data.listAdverts && j.data.listAdverts.list;
+    } catch { break; }
+    if (!Array.isArray(list) || !list.length) break;
+    for (const a of list) {
+      const price = a.price || 0;
+      if (!price) continue;
+      const area = a.surfaceLand || a.surface || null;
+      const gps = a.gps || {};
+      // místo a okres z adresy ("Obec, okres Y" apod.)
+      const parts = String(a.address || '').split(',').map((s) => s.trim()).filter(Boolean);
+      const place = (parts[0] || a.title || 'Pozemek').slice(0, 60);
+      let okres = parts.find((s) => /okres/i.test(s)) || parts[parts.length - 1] || place;
+      okres = okres.replace(/^okres\s+/i, '').slice(0, 40);
+      out.push({
+        place, okres, type: 'sale',
+        parcel: '—', _key: 'br-' + a.id, // dedup podle inzerátu, ne parcely
+        druh: 'pozemek', area, price,
+        extra: 'inzerát – Bezrealitky',
+        lat: typeof gps.lat === 'number' ? gps.lat : undefined,
+        lng: typeof gps.lng === 'number' ? gps.lng : undefined,
+        _gps: typeof gps.lat === 'number' && typeof gps.lng === 'number',
+        url: a.uri ? 'https://www.bezrealitky.cz/nemovitosti-byty-domy/' + a.uri : undefined,
+      });
+    }
+    if (list.length < PER) break;
+  }
+  return out;
+}
+
 /* ---------- Sjednocení a zápis ---------- */
 
 // 'area' není povinná (u exekucí výměra v evidenci často chybí)
@@ -249,6 +299,7 @@ async function main() {
     fetchInsolvence(),
     fetchUredniDesky(),
     fetchProdejSPU(),
+    fetchBezrealitky(),
   ]);
 
   const raw = results
@@ -262,7 +313,7 @@ async function main() {
   const clean = raw
     .filter(valid)
     .filter((o) => {
-      const k = (o.type + '|' + o.okres + '|' + o.parcel).toLowerCase();
+      const k = (o.type + '|' + o.okres + '|' + (o._key || o.parcel)).toLowerCase();
       if (seen.has(k)) return false;
       seen.add(k);
       return true;
@@ -272,7 +323,7 @@ async function main() {
   // Vyvážený výběr — ať žádná kategorie nepřeváží (jinak by stovky prodejů
   // zaplavily mapu). Dražby/exekuce bereme podle výhodnosti; u prodeje vybíráme
   // pestrý vzorek napříč cenami (ne jen nejlevnější slivery), ať je mapa zajímavá.
-  const CAP = { sale: 130, drazba: 90, exekuce: 40, obec: 40 };
+  const CAP = { sale: 160, drazba: 90, exekuce: 40, obec: 40 };
   const byType = {};
   for (const o of clean) (byType[o.type] || (byType[o.type] = [])).push(o);
   function spread(arr, n) {
@@ -306,7 +357,7 @@ async function main() {
       o.lat = j.lat; o.lng = j.lng; refined++;
     }
   }
-  fresh.forEach((o) => { delete o._gps; });
+  fresh.forEach((o) => { delete o._gps; delete o._key; });
   if (geoCacheDirty) writeFileSync(GEOCACHE, JSON.stringify(GEO_CACHE, null, 0) + '\n', 'utf8');
   console.log(`Zpřesněno podle názvu KÚ: ${refined}/${fresh.length}.`);
 
