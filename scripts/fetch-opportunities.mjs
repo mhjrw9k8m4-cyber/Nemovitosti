@@ -347,7 +347,7 @@ async function fetchFarmy() {
       druh: druh || 'pozemek', area, price,
       extra: 'inzerát – Farmy.cz',
       lat, lng, _gps: typeof lat === 'number' && typeof lng === 'number',
-      url: BASE + '/nabidka_detail?nab=' + id,
+      url: 'https://www.farmy.cz/nabidka_detail?nab=' + id,
     });
   }
   return out;
@@ -409,10 +409,12 @@ async function main() {
   // inzeráty od lidí (Bezrealitky), zemědělská půda (Farmy) i státní půda (SPÚ).
   const sale = byType.sale || [];
   const byPrice = (a, b) => a.price - b.price;
-  const bez = sale.filter((o) => /Bezrealitky/i.test(o.extra || '')).slice(0, 90);
+  // Bezrealitky i Farmy vedou přímo na inzerát → dáme jim víc prostoru.
+  // SPÚ (státní půda) nemá odkaz na konkrétní parcelu, tak jí ubereme.
+  const bez = sale.filter((o) => /Bezrealitky/i.test(o.extra || '')).slice(0, 120);
   const farmy = sale.filter((o) => /Farmy/i.test(o.extra || ''));
   const spuSale = sale.filter((o) => /státní/i.test(o.extra || '')).sort(byPrice);
-  const saleSel = [...bez, ...farmy, ...spread(spuSale, 70)];
+  const saleSel = [...bez, ...farmy, ...spread(spuSale, 50)];
   const fresh = [
     ...saleSel,
     ...(byType.drazba || []).slice(0, CAP.drazba),
