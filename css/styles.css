@@ -104,17 +104,18 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 @keyframes tick{from{transform:translateX(0);} to{transform:translateX(-50%);}}
 
 /* Marker na mapě — pevný bod s efektem při najetí a výběru */
-.marker-pulse{position:relative; border-radius:50%; border:2.5px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.45); transition:transform .15s var(--ease), box-shadow .15s var(--ease);}
+.marker-pulse{position:relative; border-radius:50%; border:2.5px solid #fff; box-shadow:inset 0 2px 3px rgba(255,255,255,0.45), inset 0 -2px 3px rgba(0,0,0,0.25), 0 3px 8px rgba(0,0,0,0.5); transition:transform .15s var(--ease), box-shadow .15s var(--ease);}
 .marker-pulse:hover{transform:scale(1.45); box-shadow:0 5px 16px rgba(0,0,0,0.55); z-index:1000;}
 .marker-pulse.sel{transform:scale(1.5); box-shadow:0 0 0 4px rgba(255,255,255,0.35), 0 5px 16px rgba(0,0,0,0.55);}
 .marker-pulse.sel::after{content:""; position:absolute; inset:-7px; border-radius:50%; border:2px solid #fff; opacity:0.7; animation:mping 1.5s ease-out infinite;}
-/* Shluky bodů (marker cluster) — v měděném stylu webu */
-.pk-cluster{display:flex; align-items:center; justify-content:center; width:100%; height:100%; border-radius:50%; font-family:'Inter',sans-serif; font-weight:700; color:var(--ink); background:rgba(224,174,67,0.95); border:2px solid rgba(237,230,214,0.9); box-shadow:0 3px 12px rgba(0,0,0,0.5); transition:transform .12s ease;}
-.pk-cluster span{line-height:1;}
+/* Shluky bodů — mini „koláč" podle skladby kategorií kolem tmavého středu */
+.pk-cluster{position:relative; display:flex; align-items:center; justify-content:center; width:100%; height:100%; border-radius:50%; font-family:'Inter',sans-serif; font-weight:700; box-shadow:0 5px 16px -4px rgba(0,0,0,0.6); transition:transform .12s ease;}
+.pk-cluster::before{content:""; position:absolute; inset:5px; border-radius:50%; background:radial-gradient(circle at 34% 28%, #24384a, var(--ink) 78%); box-shadow:inset 0 1px 3px rgba(0,0,0,0.5);}
+.pk-cluster span{position:relative; z-index:1; line-height:1; color:var(--parchment); text-shadow:0 1px 2px rgba(0,0,0,0.65);}
 .pk-cluster.sm{font-size:12px;}
-.pk-cluster.md{font-size:13px; background:rgba(201,152,47,0.96);}
-.pk-cluster.lg{font-size:15px; background:rgba(201,152,47,0.98);}
-.leaflet-marker-icon:hover .pk-cluster{transform:scale(1.08);}
+.pk-cluster.md{font-size:13.5px;}
+.pk-cluster.lg{font-size:15px;}
+.leaflet-marker-icon:hover .pk-cluster{transform:scale(1.09);}
 /* Blížící se dražba (≤ 7 dní) — pulzující kroužek v barvě kategorie */
 .marker-pulse.urgent::before{content:""; position:absolute; inset:-6px; border-radius:50%; border:2px solid currentColor; opacity:0.85; animation:mping 1.7s ease-out infinite;}
 @keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(2.2); opacity:0;}}
@@ -217,7 +218,14 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .filter-chip{display:inline-flex; align-items:center; gap:6px; background:var(--ink); border:1px solid var(--line); color:var(--text-ondark-mute); border-radius:18px; padding:7px 12px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; transition:all .15s ease;}
 .filter-chip .c{width:8px; height:8px; border-radius:50%;}
 .filter-chip:hover{color:var(--text-ondark); border-color:rgba(237,230,214,0.3);}
-.filter-chip.active{background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); border-color:var(--copper);}
+/* Aktivní filtr „svítí" vlastní barvou kategorie — ať „Vše" a „Dražba" nesplývají */
+.filter-chip.active{color:#fff; border-color:transparent; box-shadow:0 4px 14px -4px rgba(0,0,0,0.5);}
+.filter-chip.active[data-type="all"]{background:linear-gradient(135deg, #F3ECDC, var(--parchment)); color:var(--ink); box-shadow:0 4px 14px -4px rgba(237,230,214,0.4);}
+.filter-chip.active[data-type="sale"]{background:linear-gradient(135deg, #47A268, var(--c-sale));}
+.filter-chip.active[data-type="drazba"]{background:linear-gradient(135deg, var(--copper-bright), var(--c-drazba)); color:#3a2c05;}
+.filter-chip.active[data-type="exekuce"]{background:linear-gradient(135deg, #CE6A52, var(--c-exekuce));}
+.filter-chip.active[data-type="obec"]{background:linear-gradient(135deg, #5A89AD, var(--c-obec));}
+.filter-chip.active .c{box-shadow:0 0 0 2px rgba(255,255,255,0.55);}
 .map-controls{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px;}
 .map-select{flex:1 1 45%; min-width:130px; background:var(--ink); border:1px solid var(--line); color:var(--text-ondark); border-radius:8px; padding:9px 30px 9px 11px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; appearance:none; -webkit-appearance:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c9982f' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 11px center;}
