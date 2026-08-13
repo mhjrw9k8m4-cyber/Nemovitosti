@@ -103,27 +103,22 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 .tick-item b{color:var(--text-ondark); font-weight:600;}
 @keyframes tick{from{transform:translateX(0);} to{transform:translateX(-50%);}}
 
-/* Cenovka pozemku na mapě (styl zahraničních realitních webů, Zillow/Idealista) */
-.pk-pin{position:absolute; left:0; top:0; transform:translate(-50%,-50%); display:inline-flex; align-items:center; gap:5px; white-space:nowrap;
-  background:rgba(19,30,41,0.94); border:1px solid rgba(237,230,214,0.26); color:var(--parchment);
-  font-family:'Inter',sans-serif; font-size:12px; font-weight:600; line-height:1; padding:5px 9px; border-radius:13px;
-  box-shadow:0 3px 10px -2px rgba(0,0,0,0.6); cursor:pointer;
-  transition:transform .12s var(--ease), box-shadow .12s var(--ease), background .12s var(--ease), border-color .12s var(--ease);}
-.pk-pin-dot{width:7px; height:7px; border-radius:50%; flex:none; box-shadow:0 0 0 1.5px rgba(255,255,255,0.22);}
-.pk-pin:hover{transform:translate(-50%,-50%) scale(1.07); background:var(--ink-soft2); border-color:rgba(237,230,214,0.5); z-index:1000; box-shadow:0 6px 18px -3px rgba(0,0,0,0.7);}
-.pk-pin.sel{background:var(--copper-bright); color:var(--ink); border-color:#fff; z-index:1001; box-shadow:0 6px 18px -3px rgba(0,0,0,0.7);}
-.pk-pin.sel .pk-pin-dot{box-shadow:0 0 0 1.5px rgba(0,0,0,0.3);}
-.pk-pin.urgent{border-color:var(--c-drazba); box-shadow:0 3px 10px -2px rgba(0,0,0,0.6), 0 0 0 3px rgba(217,164,65,0.18);}
-/* Shluk — kompaktní počet v měděné pilulce (jako Airbnb/Zillow shluky) */
-.pk-cluster{position:absolute; left:0; top:0; transform:translate(-50%,-50%); display:inline-flex; align-items:center; justify-content:center;
-  background:linear-gradient(135deg, var(--copper-bright), var(--copper)); color:var(--ink);
-  font-family:'Inter',sans-serif; font-weight:800; line-height:1; padding:6px 11px; border-radius:14px;
-  border:1.5px solid rgba(237,230,214,0.55); box-shadow:0 4px 14px -3px rgba(0,0,0,0.6);
-  transition:transform .15s var(--ease), box-shadow .15s var(--ease);}
-.pk-cluster.sm{font-size:12.5px;}
-.pk-cluster.md{font-size:13.5px; padding:7px 12px;}
-.pk-cluster.lg{font-size:15px; padding:8px 14px;}
-.leaflet-marker-icon:hover .pk-cluster{transform:translate(-50%,-50%) scale(1.08); box-shadow:0 7px 20px -3px rgba(0,0,0,0.7);}
+/* Jednotlivý pozemek = čistá tečka v barvě kategorie (po přiblížení) */
+.pk-dot{display:block; width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,0.9);
+  box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 8px -1px currentColor; cursor:pointer;
+  transition:transform .13s var(--ease), box-shadow .13s var(--ease);}
+.pk-dot:hover{transform:scale(1.4); z-index:1000; box-shadow:0 4px 12px rgba(0,0,0,0.55), 0 0 12px currentColor;}
+.pk-dot.sel{transform:scale(1.55); box-shadow:0 0 0 4px rgba(255,255,255,0.35), 0 4px 12px rgba(0,0,0,0.55);}
+.pk-dot.urgent{animation:dotpulse 1.6s ease-out infinite;}
+@keyframes dotpulse{0%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 0 rgba(217,164,65,0.5);} 100%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 10px rgba(217,164,65,0);}}
+/* Přehled po krajích (choropleth) — počet uprostřed kraje */
+.kraj-lbl{position:absolute; left:0; top:0; transform:translate(-50%,-50%); font-family:'Fraunces',serif; font-weight:600; font-size:22px; line-height:1;
+  color:#fff; text-shadow:0 1px 4px rgba(0,0,0,0.9), 0 0 3px rgba(0,0,0,0.95); cursor:pointer; pointer-events:auto;
+  transition:transform .15s var(--ease), color .15s var(--ease);}
+.kraj-lbl:hover{transform:translate(-50%,-50%) scale(1.18); color:var(--copper-bright);}
+.kraj-lbl.empty{font-size:15px; color:rgba(237,230,214,0.35); text-shadow:none;}
+.leaflet-tooltip.kraj-tip{background:rgba(20,32,44,0.95); border:1px solid var(--copper); color:var(--parchment); font-weight:600; font-size:12px; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.5);}
+.leaflet-tooltip.kraj-tip::before{border-top-color:var(--copper);}
 @keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(2.2); opacity:0;}}
 
 /* Header */

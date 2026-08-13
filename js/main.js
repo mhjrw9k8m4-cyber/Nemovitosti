@@ -26,6 +26,41 @@
     exekuce: { label:'Exekuce',      color:'#C15B44', link:{ label:'Insolvenční rejstřík', url:'https://isir.justice.cz/isir/common/index.do' } },
     obec:    { label:'Obecní záměr', color:'#4C7A9E', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } }
   };
+  // 14 krajů ČR — přehled po krajích (rozdělení mapy). Okres → kraj + střed kraje.
+  var KRAJE = {
+    'Praha':            { c: [50.075, 14.44] },
+    'Středočeský':      { c: [49.88, 14.90] },
+    'Jihočeský':        { c: [49.05, 14.47] },
+    'Plzeňský':         { c: [49.63, 13.30] },
+    'Karlovarský':      { c: [50.15, 12.80] },
+    'Ústecký':          { c: [50.55, 13.82] },
+    'Liberecký':        { c: [50.70, 15.02] },
+    'Královéhradecký':  { c: [50.35, 15.90] },
+    'Pardubický':       { c: [49.92, 16.22] },
+    'Vysočina':         { c: [49.42, 15.60] },
+    'Jihomoravský':     { c: [48.98, 16.70] },
+    'Olomoucký':        { c: [49.78, 17.25] },
+    'Zlínský':          { c: [49.15, 17.75] },
+    'Moravskoslezský':  { c: [49.82, 18.05] }
+  };
+  var OKRES_KRAJ = {
+    'Hlavní město Praha':'Praha','Praha':'Praha',
+    'Benešov':'Středočeský','Beroun':'Středočeský','Kladno':'Středočeský','Kolín':'Středočeský','Kutná Hora':'Středočeský','Mělník':'Středočeský','Mladá Boleslav':'Středočeský','Nymburk':'Středočeský','Praha-východ':'Středočeský','Praha-západ':'Středočeský','Příbram':'Středočeský','Rakovník':'Středočeský',
+    'České Budějovice':'Jihočeský','Český Krumlov':'Jihočeský','Jindřichův Hradec':'Jihočeský','Písek':'Jihočeský','Prachatice':'Jihočeský','Strakonice':'Jihočeský','Tábor':'Jihočeský',
+    'Domažlice':'Plzeňský','Klatovy':'Plzeňský','Plzeň-město':'Plzeňský','Plzeň-jih':'Plzeňský','Plzeň-sever':'Plzeňský','Rokycany':'Plzeňský','Tachov':'Plzeňský',
+    'Cheb':'Karlovarský','Karlovy Vary':'Karlovarský','Sokolov':'Karlovarský',
+    'Děčín':'Ústecký','Chomutov':'Ústecký','Litoměřice':'Ústecký','Louny':'Ústecký','Most':'Ústecký','Teplice':'Ústecký','Ústí nad Labem':'Ústecký',
+    'Česká Lípa':'Liberecký','Jablonec nad Nisou':'Liberecký','Liberec':'Liberecký','Semily':'Liberecký',
+    'Hradec Králové':'Královéhradecký','Jičín':'Královéhradecký','Náchod':'Královéhradecký','Rychnov nad Kněžnou':'Královéhradecký','Trutnov':'Královéhradecký',
+    'Chrudim':'Pardubický','Pardubice':'Pardubický','Svitavy':'Pardubický','Ústí nad Orlicí':'Pardubický',
+    'Havlíčkův Brod':'Vysočina','Jihlava':'Vysočina','Pelhřimov':'Vysočina','Třebíč':'Vysočina','Žďár nad Sázavou':'Vysočina',
+    'Blansko':'Jihomoravský','Brno-město':'Jihomoravský','Brno-venkov':'Jihomoravský','Břeclav':'Jihomoravský','Hodonín':'Jihomoravský','Vyškov':'Jihomoravský','Znojmo':'Jihomoravský',
+    'Jeseník':'Olomoucký','Olomouc':'Olomoucký','Prostějov':'Olomoucký','Přerov':'Olomoucký','Šumperk':'Olomoucký',
+    'Kroměříž':'Zlínský','Uherské Hradiště':'Zlínský','Vsetín':'Zlínský','Zlín':'Zlínský',
+    'Bruntál':'Moravskoslezský','Frýdek-Místek':'Moravskoslezský','Karviná':'Moravskoslezský','Nový Jičín':'Moravskoslezský','Opava':'Moravskoslezský','Ostrava-město':'Moravskoslezský'
+  };
+  function krajOf(d){ return OKRES_KRAJ[(d.okres || '').trim()] || null; }
+
   // Katastrální mapa (ikatastr.cz) — parametr "info" na souřadnicích parcelu
   // rovnou IDENTIFIKUJE a vyznačí (ukáže bublinu s parcelou), ne jen vycentruje.
   function katastrUrl(d){ return 'https://www.ikatastr.cz/#info=' + d.lat + ',' + d.lng; }
@@ -60,14 +95,6 @@
   }
 
   function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
-  // Kompaktní cena pro cenovku na mapě (jako Zillow/Idealista): „280 tis.", „1,9 mil."
-  function priceTag(price){
-    if (!price || price < 0) return '?';
-    if (price < 1000) return price + ' Kč';
-    if (price < 1000000) return Math.round(price / 1000) + ' tis.';
-    var m = price / 1000000;
-    return (m >= 10 ? String(Math.round(m)) : (Math.round(m * 10) / 10).toFixed(1).replace('.', ',')) + ' mil.';
-  }
   // Počet dní do termínu dražby z reálného data v poli extra (např. „dražba 2026-09-02")
   function daysUntil(extra){
     var m = /(\d{4})-(\d{2})-(\d{2})/.exec(extra || '');
@@ -325,7 +352,7 @@
   }
 
   /* ---------- Sestavení webu z dat (ticker + mapa) ---------- */
-  function boot(DATA) {
+  function boot(DATA, KRAJE_GEOM) {
   // Počítadlo „příležitostí na mapě" napojíme na skutečný počet dat
   var realCount = document.querySelector('.counters .c-num');
   if (realCount) realCount.setAttribute('data-count', String(DATA.length));
@@ -513,17 +540,13 @@
     var dd = daysUntil(d.extra);
     return dd != null && dd >= 0 && dd <= 7;
   }
-  // Cenovka pozemku na mapě (styl zahraničních realitních webů) — místo tečky
-  // ukáže rovnou cenu; barevný puntík značí kategorii.
+  // Jednotlivý pozemek = čistá tečka v barvě kategorie (ukáže se po přiblížení)
   function markerIcon(d) {
     var col = TYPE[d.type].color;
-    var urgent = isUrgent(d);
     return L.divIcon({
       className: '',
-      html: '<div class="pk-pin ' + d.type + (urgent ? ' urgent' : '') + '">' +
-              '<i class="pk-pin-dot" style="background:' + col + '"></i>' + priceTag(d.price) +
-            '</div>',
-      iconSize: [0, 0], iconAnchor: [0, 0]
+      html: '<span class="pk-dot' + (isUrgent(d) ? ' urgent' : '') + '" style="background:' + col + '; color:' + col + '"></span>',
+      iconSize: [14, 14], iconAnchor: [7, 7]
     });
   }
   // Přibližný tvar parcely (deterministický, cache) — ukázková geometrie
@@ -620,7 +643,7 @@
   function highlightMarker(id) {
     markers.forEach(function (m, i) {
       if (m._icon) {
-        var pin = m._icon.querySelector('.pk-pin');
+        var pin = m._icon.querySelector('.pk-dot');
         if (pin) pin.classList.toggle('sel', i === id);
       }
     });
@@ -630,52 +653,73 @@
     selPoly = L.polygon(polyFor(d), { color: '#fff', weight: 2.5, fillColor: TYPE[d.type].color, fillOpacity: 0.4, opacity: 1 }).addTo(map);
   }
 
-  // Shlukování bodů — blízké značky se spojí do jednoho kolečka s počtem,
-  // při přiblížení se rozbalí. Odstraní „přeplácanost" při pohledu na celou ČR.
-  var hasCluster = typeof L.markerClusterGroup === 'function';
-  var cluster = hasCluster ? L.markerClusterGroup({
-    showCoverageOnHover: false,
-    maxClusterRadius: 48,
-    spiderfyOnMaxZoom: true,
-    chunkedLoading: true,
-    iconCreateFunction: function (c) {
-      var n = c.getChildCount();
-      var cls = n < 10 ? 'sm' : (n < 40 ? 'md' : 'lg');
-      return L.divIcon({ html: '<div class="pk-cluster ' + cls + '">' + n + '</div>', className: '', iconSize: [0, 0], iconAnchor: [0, 0] });
-    }
-  }) : null;
-  if (cluster) map.addLayer(cluster);
+  // Přehled po krajích: oddáleno = kraje vybarvené podle počtu pozemků
+  // (choropleth) s počtem u každého kraje; přiblíženo = jednotlivé pozemky.
+  var KRAJ_ZOOM = 9; // pod = kraje, nad = jednotlivé pozemky
+  var dotLayer = L.layerGroup();
+  var labelLayer = L.layerGroup();
+  var krajLayer = null;
+  var lastVis = [], krajCounts = {}, krajMax = 0;
 
   DATA.forEach(function (d, i) {
     d._id = i;
     var m = L.marker([d.lat, d.lng], { icon: markerIcon(d) });
-    m.pkType = d.type;
     m.on('click', function () { showDetail(d); highlightList(i); });
     markers.push(m);
-    if (!cluster) m.addTo(map); // záloha bez knihovny shlukování
   });
 
-  // Do shluku vkládáme jen viditelné body; přepínání filtru je řeší přírůstkově.
-  var inCluster = {};
-  function syncMarkers(visIds) {
-    if (!cluster) {
-      DATA.forEach(function (d) {
-        var v = visIds.indexOf(d._id) !== -1;
-        markers[d._id].setOpacity(v ? 1 : 0);
-        if (markers[d._id]._icon) markers[d._id]._icon.style.pointerEvents = v ? 'auto' : 'none';
-      });
-      return;
-    }
-    var want = {};
-    visIds.forEach(function (id) { want[id] = true; });
-    var add = [], rem = [];
-    DATA.forEach(function (d) {
-      var id = d._id;
-      if (want[id] && !inCluster[id]) { add.push(markers[id]); inCluster[id] = true; }
-      else if (!want[id] && inCluster[id]) { rem.push(markers[id]); inCluster[id] = false; }
+  // Vybarvení kraje podle počtu (měděná, tím sytější, čím víc pozemků)
+  function fillFor(n) { return !n ? 0.05 : 0.12 + Math.min(1, n / (krajMax || 1)) * 0.44; }
+  function styleKraj(f) {
+    return { color: 'rgba(224,174,67,0.55)', weight: 1, fillColor: '#E0AE43', fillOpacity: fillFor(krajCounts[f.properties.kraj] || 0) };
+  }
+  if (KRAJE_GEOM) {
+    var feats = Object.keys(KRAJE_GEOM).map(function (k) { return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] }; });
+    krajLayer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
+      style: styleKraj,
+      onEachFeature: function (f, layer) {
+        layer.bindTooltip(f.properties.kraj + ' kraj', { sticky: true, direction: 'top', className: 'kraj-tip' });
+        layer.on('click', function () { map.fitBounds(layer.getBounds(), { maxZoom: 11, padding: [16, 16] }); });
+        layer.on('mouseover', function () { layer.setStyle({ weight: 2.4, color: '#F2D79A' }); layer.bringToFront(); });
+        layer.on('mouseout', function () { if (krajLayer) krajLayer.resetStyle(layer); });
+      }
     });
-    if (rem.length) cluster.removeLayers(rem);
-    if (add.length) cluster.addLayers(add);
+  }
+  function renderKraje(vis) {
+    krajCounts = {}; krajMax = 0;
+    vis.forEach(function (d) { var k = krajOf(d); if (k) krajCounts[k] = (krajCounts[k] || 0) + 1; });
+    Object.keys(krajCounts).forEach(function (k) { if (krajCounts[k] > krajMax) krajMax = krajCounts[k]; });
+    if (krajLayer) krajLayer.setStyle(styleKraj);
+    labelLayer.clearLayers();
+    Object.keys(KRAJE).forEach(function (k) {
+      var n = krajCounts[k] || 0;
+      var icon = L.divIcon({ className: '', html: '<div class="kraj-lbl' + (n ? '' : ' empty') + '">' + n + '</div>', iconSize: [0, 0], iconAnchor: [0, 0] });
+      var m = L.marker(KRAJE[k].c, { icon: icon });
+      m.on('click', function () { map.setView(KRAJE[k].c, KRAJ_ZOOM + 1, { animate: true }); });
+      labelLayer.addLayer(m);
+    });
+  }
+  function renderDots(vis) {
+    dotLayer.clearLayers();
+    vis.forEach(function (d) { dotLayer.addLayer(markers[d._id]); });
+  }
+  // Přepne mezi kraji (oddáleno) a jednotlivými pozemky (přiblíženo)
+  function updateMapView() {
+    if (map.getZoom() < KRAJ_ZOOM) {
+      if (map.hasLayer(dotLayer)) map.removeLayer(dotLayer);
+      renderKraje(lastVis);
+      if (krajLayer && !map.hasLayer(krajLayer)) krajLayer.addTo(map);
+      if (!map.hasLayer(labelLayer)) labelLayer.addTo(map);
+    } else {
+      if (krajLayer && map.hasLayer(krajLayer)) map.removeLayer(krajLayer);
+      if (map.hasLayer(labelLayer)) map.removeLayer(labelLayer);
+      renderDots(lastVis);
+      if (!map.hasLayer(dotLayer)) dotLayer.addTo(map);
+    }
+  }
+  function syncMarkers(visIds) {
+    lastVis = visIds.map(function (id) { return DATA[id]; });
+    updateMapView();
   }
 
   // Oddálí mapu tak, aby byla vidět celá rozloha nabídek (celá ČR).
@@ -716,7 +760,7 @@
       else if (!want && d._polyOn) { map.removeLayer(d._polyObj); d._polyOn = false; }
     });
   }
-  map.on('zoomend', updatePolys);
+  map.on('zoomend', function () { updateMapView(); updatePolys(); });
 
   function visible(d) {
     var okType = activeType === 'all' || d.type === activeType;
@@ -860,11 +904,8 @@
     var target = null;
     DATA.forEach(function (d) { if (pkey(d) === key) target = d; });
     if (!target) return false;
-    if (cluster && cluster.hasLayer(markers[target._id]) && cluster.zoomToShowLayer) {
-      cluster.zoomToShowLayer(markers[target._id], function () { highlightMarker(target._id); });
-    } else {
-      map.setView([target.lat, target.lng], 14, { animate: false });
-    }
+    map.setView([target.lat, target.lng], 14, { animate: false });
+    updateMapView();
     showDetail(target);
     highlightList(target._id);
     if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
@@ -903,11 +944,11 @@
   }
 
   /* ---------- Načtení reálných dat s bezpečnou zálohou ---------- */
-  fetch('data/opportunities.json', { cache: 'no-store' })
-    .then(function (r) { if (!r.ok) throw new Error('data nedostupná'); return r.json(); })
-    .then(function (j) {
+  function loadJSON(url) { return fetch(url, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
+  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json')])
+    .then(function (res) {
+      var j = res[0], kraje = res[1];
       var arr = Array.isArray(j) ? j : (j && j.opportunities);
-      boot(arr && arr.length ? arr : FALLBACK_DATA);
-    })
-    .catch(function () { boot(FALLBACK_DATA); });
+      boot(arr && arr.length ? arr : FALLBACK_DATA, kraje || null);
+    });
 })();

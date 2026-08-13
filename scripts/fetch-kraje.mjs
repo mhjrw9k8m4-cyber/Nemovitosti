@@ -57,14 +57,27 @@ function geomToGeoJSON(topo, geom) {
 }
 
 // --- Zjednodušení (zaokrouhlení na ~100 m) ---
-function round(n) { return Math.round(n * 1000) / 1000; }
+// Douglas–Peucker zjednodušení (výrazně zmenší soubor, tvar krajů zůstane)
+const EPS = 0.005; // ~0,5 km tolerance stačí pro pohled na celou ČR
+function r4(n) { return Math.round(n * 10000) / 10000; }
+function perp(p, a, b) { const dx = b[0] - a[0], dy = b[1] - a[1]; const L = Math.hypot(dx, dy) || 1e-9; return Math.abs((p[0] - a[0]) * dy - (p[1] - a[1]) * dx) / L; }
+function dp(pts, eps) {
+  if (pts.length < 3) return pts.slice();
+  let idx = -1, dmax = 0;
+  for (let i = 1; i < pts.length - 1; i++) { const d = perp(pts[i], pts[0], pts[pts.length - 1]); if (d > dmax) { dmax = d; idx = i; } }
+  if (dmax > eps && idx > 0) return dp(pts.slice(0, idx + 1), eps).slice(0, -1).concat(dp(pts.slice(idx), eps));
+  return [pts[0], pts[pts.length - 1]];
+}
 function simpRing(ring) {
-  const out = []; let prev = null;
-  for (const pt of ring) {
-    const p = [round(pt[0]), round(pt[1])];
-    if (!prev || p[0] !== prev[0] || p[1] !== prev[1]) { out.push(p); prev = p; }
-  }
-  return out.length >= 4 ? out : null;
+  let o = ring.slice();
+  if (o.length > 1 && o[0][0] === o[o.length - 1][0] && o[0][1] === o[o.length - 1][1]) o = o.slice(0, -1);
+  if (o.length < 3) return null;
+  // uzavřenou smyčku rozdělíme v nejvzdálenějším bodě od začátku a DP na obě půlky
+  let fi = 0, fd = -1;
+  for (let i = 1; i < o.length; i++) { const d = Math.hypot(o[i][0] - o[0][0], o[i][1] - o[0][1]); if (d > fd) { fd = d; fi = i; } }
+  const s = dp(o.slice(0, fi + 1), EPS).slice(0, -1).concat(dp(o.slice(fi).concat([o[0]]), EPS)).map(p => [r4(p[0]), r4(p[1])]);
+  if (s.length > 1 && (s[0][0] !== s[s.length - 1][0] || s[0][1] !== s[s.length - 1][1])) s.push([s[0][0], s[0][1]]);
+  return s.length >= 4 ? s : null;
 }
 function simpGeom(g) {
   if (g.type === 'Polygon') { const r = g.coordinates.map(simpRing).filter(Boolean); return r.length ? { type: 'Polygon', coordinates: r } : null; }
