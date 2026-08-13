@@ -243,7 +243,7 @@
     mapLocked = !on;
     var fns = ['dragging', 'scrollWheelZoom', 'doubleClickZoom', 'touchZoom', 'boxZoom', 'keyboard'];
     fns.forEach(function (f) { if (map[f]) map[f][on ? 'enable' : 'disable'](); });
-    if (panBtn) { panBtn.innerHTML = on ? '🔒 Zamknout mapu' : '✋ Posouvat mapu'; panBtn.classList.toggle('on', on); }
+    if (panBtn) { panBtn.textContent = on ? 'Kliknutím zde zastavíte mapu' : 'Kliknutím zde rozhýbete mapu'; panBtn.classList.toggle('on', on); }
     if (on) setTimeout(function () { map.invalidateSize(); }, 60);
   }
   setPan(false);
@@ -326,10 +326,10 @@
           '<a class="lp-btn" href="' + KATASTR + '" target="_blank" rel="noopener">Katastr</a>' +
           '<a class="lp-btn" href="' + mapyUrl(d) + '" target="_blank" rel="noopener">Mapa</a>' +
           '<a class="lp-btn" href="' + t.link.url + '" target="_blank" rel="noopener">' + t.link.label + '</a>' +
-          '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">🔔 Hlídat okres ' + d.okres + '</a>' +
+          '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">Hlídat okres ' + d.okres + '</a>' +
         '</div>' +
       '</div>' +
-      '<button class="md-exit" type="button" data-detail-back>✕ Zavřít detail</button>';
+      '<button class="md-exit" type="button" data-detail-back>Zavřít detail</button>';
   }
   var selPoly = null;
   function resizeMapSoon() {
@@ -435,7 +435,7 @@
         '<div class="opp-meta"><span>parc. <b>' + d.parcel + '</b></span>' +
         '<span><b>' + fmt(d.area) + '</b> m²</span><span>' + d.druh + '</span></div>' +
         '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b> <span>· ' + fmt(perM2) + ' Kč/m²</span></div>' +
-        '<div class="opp-demand">' + (hot ? '<span class="hot">🔥 Velký zájem</span> · ' : '') + '<span class="watch">👁 ' + w + ' sledujících</span></div>';
+        '<div class="opp-demand">' + (hot ? '<span class="hot">Velký zájem</span> · ' : '') + '<span class="watch">' + w + ' sledujících</span></div>';
       function openThis() {
         showDetail(d);
         highlightList(d._id);
@@ -449,7 +449,7 @@
       listEl.appendChild(li);
     });
 
-    countEl.innerHTML = '🔥 Nejžádanější příležitosti · <span style="text-transform:none">' + matched + ' na mapě</span>';
+    countEl.innerHTML = 'Nejžádanější příležitosti · <span class="mc-sub">' + matched + ' na mapě</span>';
     if (matched === 0) {
       listEl.innerHTML = '<li class="map-count" style="padding:20px 6px;">Nic nenalezeno — zkuste jiný filtr.</li>';
     } else if (matched > LIST_LIMIT) {

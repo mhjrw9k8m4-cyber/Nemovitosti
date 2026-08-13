@@ -197,8 +197,9 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .filter-chip{display:inline-flex; align-items:center; gap:6px; background:var(--ink); border:1px solid var(--line); color:var(--text-ondark-mute); border-radius:18px; padding:7px 12px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; transition:all .15s ease;}
 .filter-chip .c{width:8px; height:8px; border-radius:50%;}
 .filter-chip:hover{color:var(--text-ondark); border-color:rgba(237,230,214,0.3);}
-.filter-chip.active{background:var(--copper); color:var(--ink); border-color:var(--copper);}
+.filter-chip.active{background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); border-color:var(--copper);}
 .map-count{font-size:13.5px; color:var(--text-ondark); font-weight:600; letter-spacing:0.01em; margin-bottom:12px;}
+.mc-sub{font-weight:400; color:var(--text-ondark-mute); font-size:12.5px;}
 .opp-list{list-style:none; overflow-y:auto; flex:1; margin:0 -6px; padding:0 6px;}
 .opp-item{border:1px solid var(--line); border-radius:8px; padding:13px 14px; margin-bottom:9px; cursor:pointer; transition:border-color .15s ease, background .15s ease, transform .1s ease; background:var(--ink);}
 .opp-item{border-left-width:5px; border-color:var(--line);}
@@ -222,7 +223,8 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-price span{color:var(--text-ondark-mute);}
 
 /* Informační tabulka NAD mapou — výrazně orámovaná, zmenší mapu */
-.map-detail{position:relative; flex:none; background:var(--ink-soft); border-bottom:2px solid var(--copper); box-shadow:0 8px 22px -8px rgba(201,152,47,0.5); padding:14px 16px; z-index:10; animation:mdin .3s var(--ease);}
+.map-detail{position:relative; flex:none; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border-bottom:2px solid var(--copper); box-shadow:0 8px 22px -8px rgba(201,152,47,0.5); padding:14px 16px; z-index:10; animation:mdin .3s var(--ease);}
+.map-detail::after{content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px; background:linear-gradient(90deg, var(--copper), var(--copper-bright), var(--copper));}
 .map-detail[hidden]{display:none;}
 @keyframes mdin{from{opacity:0; transform:translateY(-12px);} to{opacity:1; transform:none;}}
 .md-exit{width:100%; margin-top:12px; background:var(--ink); border:1px solid var(--line-strong); border-radius:8px; padding:12px; color:var(--text-ondark-mute); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:border-color .15s ease, color .15s ease;}
@@ -254,10 +256,10 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .map-note{position:absolute; bottom:8px; left:8px; z-index:500; background:rgba(22,35,47,0.82); color:var(--text-ondark-mute); font-size:10px; padding:4px 9px; border-radius:4px; pointer-events:none;}
 /* Zámek mapy — mapa se hýbe jen když je odemčená */
 /* Lehké přepínání posouvání mapy (bez těžkého overlay) */
-.map-pan-toggle{position:absolute; top:12px; right:12px; z-index:600; background:var(--ink); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:22px; padding:9px 15px; font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease;}
+.map-pan-toggle{position:absolute; top:12px; right:12px; z-index:600; max-width:calc(100% - 24px); background:rgba(22,35,47,0.92); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:22px; padding:9px 16px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}
 .map-pan-toggle:hover{border-color:var(--copper-bright);}
 .map-pan-toggle:active{transform:translateY(1px);}
-.map-pan-toggle.on{background:var(--copper); color:var(--ink); border-color:var(--copper);}
+.map-pan-toggle.on{background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); border-color:var(--copper);}
 
 /* Leaflet popup přebarvení */
 .leaflet-popup-content-wrapper{background:var(--ink); color:var(--text-ondark); border-radius:8px; box-shadow:0 18px 40px -12px rgba(0,0,0,0.7);}
@@ -278,7 +280,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .marker-dot{border-radius:50%; border:2.5px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.4);}
 
 /* Počítadla */
-.counters{padding:56px 0; background:var(--ink-soft); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+.counters{padding:56px 0; background:linear-gradient(180deg, var(--ink-soft2) 0%, var(--ink-soft) 55%, var(--ink) 100%); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
 .counters-row{display:grid; grid-template-columns:repeat(4,1fr); gap:24px; text-align:center;}
 .c-num{font-family:'Fraunces',serif; font-size:44px; font-weight:600; color:var(--copper-bright); line-height:1;}
 .c-lbl{font-size:13px; color:var(--text-ondark-mute); margin-top:8px;}
