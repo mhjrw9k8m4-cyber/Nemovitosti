@@ -50,6 +50,30 @@
   }
 
   function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  // Počet dní do termínu dražby z reálného data v poli extra (např. „dražba 2026-09-02")
+  function daysUntil(extra){
+    var m = /(\d{4})-(\d{2})-(\d{2})/.exec(extra || '');
+    if (!m) return null;
+    var target = new Date(+m[1], +m[2] - 1, +m[3]);
+    if (isNaN(target)) return null;
+    var now = new Date(); now.setHours(0, 0, 0, 0);
+    return Math.round((target - now) / 86400000);
+  }
+  function countdownText(days){
+    if (days < 0) return 'proběhlo';
+    if (days === 0) return 'dnes';
+    if (days === 1) return 'zítra';
+    if (days <= 6) return 'za ' + days + (days <= 4 ? ' dny' : ' dní');
+    if (days <= 13) return 'za týden';
+    if (days <= 27) return 'za ' + Math.round(days / 7) + ' týdny';
+    return 'za ' + Math.round(days / 30) + ' měs.';
+  }
+  function countdownClass(days){
+    if (days == null || days < 0) return '';
+    if (days <= 7) return ' urg';
+    if (days <= 30) return ' soon';
+    return '';
+  }
   function hasArea(d){ return typeof d.area === 'number' && d.area > 0; }
   function areaTxt(d){ return hasArea(d) ? fmt(d.area) + ' m²' : 'neuvedena'; }
   // Sloučení mnoha variant druhu do pár skupin pro filtr
@@ -340,11 +364,16 @@
   // (prázdné kategorie, např. obecní záměry, tak nevytvářejí mrtvý tab —
   // a jakmile se data objeví, tlačítko se samo vrátí).
   if (filtersEl) {
-    var present = {};
-    DATA.forEach(function (d) { present[d.type] = true; });
+    var present = {}, typeCount = {};
+    DATA.forEach(function (d) { present[d.type] = true; typeCount[d.type] = (typeCount[d.type] || 0) + 1; });
     filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
       var tp = b.getAttribute('data-type');
-      if (tp && tp !== 'all' && !present[tp]) b.style.display = 'none';
+      if (tp && tp !== 'all' && !present[tp]) { b.style.display = 'none'; return; }
+      var n = tp === 'all' ? DATA.length : (typeCount[tp] || 0);
+      var badge = document.createElement('span');
+      badge.className = 'chip-n';
+      badge.textContent = n;
+      b.appendChild(badge);
     });
   }
 
@@ -423,11 +452,13 @@
     var t = TYPE[d.type];
     var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací' : (d.type === 'sale' ? 'Cena' : 'Odhad');
+    var days = daysUntil(d.extra);
+    var cdBig = days != null && days >= 0 ? '<span class="md-cd' + countdownClass(days) + '">⏳ Termín ' + countdownText(days) + '</span>' : '';
     return '<button class="md-topbar" type="button" data-detail-back><span>Zavřít detail</span><span class="mx">✕</span></button>' +
       '<div class="md-body">' +
         '<div class="md-shape" style="border-color:' + t.color + '55">' + shapeSvg(d) + '</div>' +
         '<div class="md-info">' +
-          '<div class="md-top"><span class="lp-dot" style="background:' + t.color + '"></span><b>' + t.label + '</b> · ' + d.place + ', okres ' + d.okres + '</div>' +
+          '<div class="md-top"><span class="lp-dot" style="background:' + t.color + '"></span><b>' + t.label + '</b> · ' + d.place + ', okres ' + d.okres + cdBig + '</div>' +
           '<div class="md-facts">' +
             '<span>Parcela <b>č. ' + d.parcel + '</b></span>' +
             '<span>Druh <b>' + d.druh + '</b></span>' +
@@ -556,9 +587,10 @@
     });
     var matched = vis.length;
     sortVis(vis);
-    // Práh „výhodné ceny" = nejlevnější třetina viditelných podle Kč/m²
+    // „Výhodná cena" jen pro skutečně nejlevnější špičku (podle Kč/m²),
+    // ne pro třetinu — aby badge nesvítil skoro všude.
     var pv = vis.map(perM2Val).filter(function (x) { return isFinite(x) && x > 0; }).sort(function (a, b) { return a - b; });
-    var dealMax = pv.length >= 4 ? pv[Math.floor(pv.length * 0.33)] : 0;
+    var dealMax = pv.length >= 5 ? pv[Math.min(2, pv.length - 1)] : 0;
     // „Velký zájem" jen pro skutečnou špičku — nejvýš 3 nejžádanější z viditelných
     var dsorted = vis.map(demand).sort(function (a, b) { return b - a; });
     var hotCut = dsorted.length ? dsorted[Math.min(2, dsorted.length - 1)] : Infinity;
@@ -575,17 +607,26 @@
       li.setAttribute('tabindex', '0');
       li.setAttribute('role', 'button');
       li.setAttribute('aria-label', t.label + ' · ' + d.place + ' · ' + areaTxt(d));
+      var days = daysUntil(d.extra);
+      var cd = days != null && days >= 0 ? '<span class="opp-cd' + countdownClass(days) + '">' + countdownText(days) + '</span>' : '';
       li.innerHTML =
-        '<div class="opp-top"><span class="opp-place">' + d.place + '</span>' +
-        '<span class="opp-topr">' +
-          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
-          '<span class="opp-tag ' + d.type + '">' + t.label + '</span>' +
-        '</span></div>' +
-        '<div class="opp-meta"><span>parc. <b>' + d.parcel + '</b></span>' +
-        '<span>' + (hasArea(d) ? '<b>' + fmt(d.area) + '</b> m²' : 'výměra neuvedena') + '</span><span>' + d.druh + '</span></div>' +
-        '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? ' <span>· ' + fmt(perM2) + ' Kč/m²</span>' : '') +
-          (perM2 && dealMax && perM2 <= dealMax ? ' <span class="opp-deal">výhodná cena</span>' : '') + '</div>' +
-        '<div class="opp-demand">' + (hot ? '<span class="hot">Velký zájem</span> · ' : '') + '<span class="watch">' + w + ' sledujících</span></div>';
+        '<div class="opp-thumb" style="border-color:' + t.color + '44">' + shapeSvg(d) + '</div>' +
+        '<div class="opp-content">' +
+          '<div class="opp-top"><span class="opp-place">' + d.place + '</span>' +
+          '<span class="opp-topr">' +
+            '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
+            '<span class="opp-tag ' + d.type + '">' + t.label + '</span>' +
+          '</span></div>' +
+          '<div class="opp-meta"><span>parc. <b>' + d.parcel + '</b></span>' +
+          '<span>' + (hasArea(d) ? '<b>' + fmt(d.area) + '</b> m²' : 'výměra neuvedena') + '</span><span>' + d.druh + '</span></div>' +
+          '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? ' <span>· ' + fmt(perM2) + ' Kč/m²</span>' : '') +
+            (perM2 && dealMax && perM2 <= dealMax ? ' <span class="opp-deal">výhodná cena</span>' : '') + '</div>' +
+          '<div class="opp-demand">' + [
+            cd,
+            hot ? '<span class="hot">Velký zájem</span>' : '',
+            '<span class="watch">' + w + ' sledujících</span>'
+          ].filter(Boolean).join(' <span class="sep">·</span> ') + '</div>' +
+        '</div>';
       function openThis() {
         showDetail(d);
         highlightList(d._id);

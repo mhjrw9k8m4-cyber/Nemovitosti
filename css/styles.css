@@ -234,7 +234,10 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .map-count{font-size:13.5px; color:var(--text-ondark); font-weight:600; letter-spacing:0.01em; margin-bottom:12px;}
 .mc-sub{font-weight:400; color:var(--text-ondark-mute); font-size:12.5px;}
 .opp-list{list-style:none; overflow-y:auto; flex:1; margin:0 -6px; padding:0 6px;}
-.opp-item{border:1px solid var(--line); border-radius:8px; padding:13px 14px; margin-bottom:9px; cursor:pointer; transition:border-color .15s ease, background .15s ease, transform .1s ease; background:var(--ink);}
+.opp-item{display:flex; gap:12px; align-items:flex-start; border:1px solid var(--line); border-radius:8px; padding:13px 14px; margin-bottom:9px; cursor:pointer; transition:border-color .15s ease, background .15s ease, transform .1s ease; background:var(--ink);}
+.opp-thumb{flex:none; width:48px; height:48px; border-radius:8px; background:var(--ink-soft2); border:1px solid var(--line); padding:5px; margin-top:2px;}
+.opp-thumb svg{display:block; width:100%; height:100%;}
+.opp-content{flex:1; min-width:0;}
 .opp-item{border-left-width:5px; border-color:var(--line);}
 .opp-item.sale{border-left-color:var(--c-sale); background:rgba(62,142,91,0.11);}
 .opp-item.drazba{border-left-color:var(--c-drazba); background:rgba(217,164,65,0.11);}
@@ -245,6 +248,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-demand{margin-top:10px; display:flex; align-items:center; gap:8px; font-size:12px; flex-wrap:wrap;}
 .opp-demand .hot{color:#E8863F; font-weight:700;}
 .opp-demand .watch{color:var(--text-ondark-mute);}
+.opp-demand .sep{color:var(--text-ondark-mute); opacity:0.55;}
 .opp-more{list-style:none; text-align:center; padding:14px 6px 6px; font-size:13px; color:var(--copper-bright); font-weight:600;}
 .reset-btn{display:inline-block; margin-top:12px; padding:8px 16px; font-size:13px; font-weight:600; color:var(--ink); background:var(--copper-bright); border:0; border-radius:8px; cursor:pointer;}
 .reset-btn:hover{background:var(--copper);}
@@ -256,6 +260,16 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-price{margin-top:7px; font-size:12.5px;}
 .opp-price b{color:var(--copper-bright); font-weight:600;}
 .opp-price span{color:var(--text-ondark-mute);}
+/* Odpočet do termínu dražby (reálné datum) */
+.opp-cd{display:inline-block; font-size:10.5px; font-weight:700; padding:1px 8px; border-radius:10px; background:rgba(143,160,175,0.14); color:var(--text-ondark); letter-spacing:0.01em; white-space:nowrap;}
+.opp-cd.soon{background:rgba(217,164,65,0.16); color:var(--copper-bright);}
+.opp-cd.urg{background:rgba(193,91,68,0.22); color:#EDA08C;}
+.md-cd{display:inline-flex; align-items:center; margin-left:9px; font-size:12px; font-weight:700; padding:2px 10px; border-radius:11px; background:rgba(143,160,175,0.16); color:var(--text-ondark); white-space:nowrap;}
+.md-cd.soon{background:rgba(217,164,65,0.18); color:var(--copper-bright);}
+.md-cd.urg{background:rgba(193,91,68,0.24); color:#EDA08C;}
+/* Počet nabídek na filtračních tlačítkách */
+.chip-n{display:inline-block; margin-left:6px; font-size:10.5px; font-weight:700; padding:0 6px; border-radius:9px; background:rgba(237,230,214,0.12); color:var(--text-ondark-mute); min-width:16px; line-height:16px; text-align:center; vertical-align:middle;}
+.filter-chip.active .chip-n{background:rgba(22,35,47,0.28); color:inherit;}
 
 /* Informační tabulka NAD mapou — výrazně orámovaná, zmenší mapu */
 .map-detail{position:relative; flex:none; min-height:0; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border-bottom:2px solid var(--copper); box-shadow:0 8px 22px -8px rgba(201,152,47,0.5); padding:14px 16px; z-index:10; animation:mdin .3s var(--ease); overflow-y:auto;}
