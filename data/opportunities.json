@@ -3,18 +3,6 @@
   "source": "Centrální evidence veřejných dražeb + Státní pozemkový úřad",
   "opportunities": [
     {
-      "place": "Jeřmanice",
-      "okres": "Liberec",
-      "type": "sale",
-      "parcel": "KN 902/2",
-      "druh": "trvalý travní porost",
-      "area": 390,
-      "price": 11,
-      "extra": "prodej státní půdy (SPÚ, § 12)",
-      "lat": 50.77818,
-      "lng": 15.02694
-    },
-    {
       "place": "Hraničná nad Nisou",
       "okres": "Jablonec nad Nisou",
       "type": "sale",
@@ -685,6 +673,18 @@
       "extra": "prodej státní půdy (SPÚ, § 12)",
       "lat": 49.44718,
       "lng": 12.92541
+    },
+    {
+      "place": "Jeřmanice",
+      "okres": "Liberec",
+      "type": "sale",
+      "parcel": "KN 902/2",
+      "druh": "trvalý travní porost",
+      "area": 390,
+      "price": 1126,
+      "extra": "prodej státní půdy (SPÚ, § 12)",
+      "lat": 50.77818,
+      "lng": 15.02694
     },
     {
       "place": "Huť",
