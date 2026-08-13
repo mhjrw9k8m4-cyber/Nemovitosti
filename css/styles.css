@@ -207,6 +207,18 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-price{margin-top:7px; font-size:12.5px;}
 .opp-price b{color:var(--copper-bright); font-weight:600;}
 .opp-price span{color:var(--text-ondark-mute);}
+
+/* Detail pozemku v panelu (místo bubliny na mapě) */
+.map-side{position:relative;}
+.opp-detail{position:absolute; inset:0; background:var(--ink-soft); border-radius:10px; padding:16px; display:flex; flex-direction:column; overflow-y:auto; z-index:6; opacity:0; transform:translateX(10px); transition:opacity .2s var(--ease), transform .2s var(--ease);}
+.opp-detail.show{opacity:1; transform:none;}
+.opp-detail[hidden]{display:none;}
+.detail-back{align-self:flex-start; background:none; border:0; color:var(--copper-bright); font-size:13px; font-weight:600; cursor:pointer; margin-bottom:16px; font-family:inherit; padding:0;}
+.detail-back:hover{text-decoration:underline;}
+.detail-head{display:flex; align-items:center; gap:8px; font-weight:700; font-size:16px; margin-bottom:3px;}
+.detail-place{font-size:13px; color:var(--text-ondark-mute); margin-bottom:16px;}
+.opp-detail .lp-grid{margin-bottom:16px;}
+.opp-detail .lp-links{margin-bottom:12px;}
 .opp-meta b{color:var(--text-ondark); font-weight:600;}
 .map-holder{position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line); min-height:0;}
 #leaflet-map{position:absolute; inset:0; background:var(--ink-soft);}

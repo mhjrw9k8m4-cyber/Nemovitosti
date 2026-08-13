@@ -244,12 +244,15 @@
     var fns = ['dragging', 'scrollWheelZoom', 'doubleClickZoom', 'touchZoom', 'boxZoom', 'keyboard'];
     fns.forEach(function (f) { if (map[f]) map[f][enabled ? 'enable' : 'disable'](); });
   }
+  var mapLocked = true;
   function lockMap() {
+    mapLocked = true;
     setMap(false);
     if (lockEl) lockEl.classList.remove('hidden');
     if (relockBtn) relockBtn.classList.remove('show');
   }
   function unlockMap() {
+    mapLocked = false;
     setMap(true);
     if (lockEl) lockEl.classList.add('hidden');
     if (relockBtn) relockBtn.classList.add('show');
@@ -265,9 +268,16 @@
   var countEl = document.getElementById('map-count');
   var searchEl = document.getElementById('map-search');
   var filtersEl = document.getElementById('map-filters');
+  var detailEl = document.getElementById('opp-detail');
   var activeType = 'all';
   var searchTerm = '';
   var markers = [];
+
+  if (detailEl) {
+    detailEl.addEventListener('click', function (e) {
+      if (e.target.closest('[data-detail-back]')) hideDetail();
+    });
+  }
 
   function markerIcon(type) {
     var col = TYPE[type].color;
@@ -277,12 +287,13 @@
       iconSize: [18, 18], iconAnchor: [9, 9]
     });
   }
-  function popupHtml(d) {
+  function detailHtml(d) {
     var t = TYPE[d.type];
     var perM2 = Math.round(d.price / d.area);
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací' : (d.type === 'sale' ? 'Cena' : 'Odhad');
-    return '<div class="lp-head"><span class="lp-dot" style="background:' + t.color + '"></span>' + t.label + '</div>' +
-      '<div class="lp-place">' + d.place + ' · okres ' + d.okres + '</div>' +
+    return '<button class="detail-back" type="button" data-detail-back>← Zpět na seznam</button>' +
+      '<div class="detail-head"><span class="lp-dot" style="background:' + t.color + '"></span>' + t.label + '</div>' +
+      '<div class="detail-place">' + d.place + ' · okres ' + d.okres + '</div>' +
       '<div class="lp-grid">' +
         '<div><span>Parcela</span><b>č. ' + d.parcel + '</b></div>' +
         '<div><span>Druh</span><b>' + d.druh + '</b></div>' +
@@ -298,12 +309,23 @@
       '</div>' +
       '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">🔔 Hlídat okres ' + d.okres + '</a>';
   }
+  function showDetail(d) {
+    if (!detailEl) return;
+    detailEl.innerHTML = detailHtml(d);
+    detailEl.removeAttribute('hidden');
+    requestAnimationFrame(function () { detailEl.classList.add('show'); });
+    if (window.innerWidth <= 960) detailEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  function hideDetail() {
+    if (!detailEl) return;
+    detailEl.classList.remove('show');
+    setTimeout(function () { detailEl.setAttribute('hidden', ''); }, 200);
+  }
 
   DATA.forEach(function (d, i) {
     d._id = i;
     var m = L.marker([d.lat, d.lng], { icon: markerIcon(d.type) }).addTo(map);
-    m.bindPopup(popupHtml(d));
-    m.on('click', function () { highlightList(i); });
+    m.on('click', function () { showDetail(d); highlightList(i); });
     markers.push(m);
   });
 
@@ -336,9 +358,9 @@
         '<span><b>' + fmt(d.area) + '</b> m²</span><span>' + d.druh + '</span></div>' +
         '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b> <span>· ' + fmt(perM2) + ' Kč/m²</span></div>';
       function openThis() {
-        map.flyTo([d.lat, d.lng], 12, { duration: 0.8 });
-        markers[d._id].openPopup();
+        showDetail(d);
         highlightList(d._id);
+        if (!mapLocked) map.panTo([d.lat, d.lng], { animate: true, duration: 0.5 });
       }
       li.addEventListener('click', openThis);
       li.addEventListener('keydown', function (e) {
