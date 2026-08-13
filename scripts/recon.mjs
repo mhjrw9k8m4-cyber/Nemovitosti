@@ -1,36 +1,32 @@
 #!/usr/bin/env node
-// Farmy.cz — jak číst nabídky pozemků na prodej? (API / __NEXT_DATA__ / sitemap)
+// Farmy.cz — struktura výpisu nabídek + detailu (pole: typ, lokalita, výměra, cena).
 const UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
-async function get(u, opts = {}) {
-  try { const r = await fetch(u, { headers: { ...UA, ...(opts.headers || {}) }, redirect: 'follow', ...opts }); const t = await r.text(); return { s: r.status, ct: r.headers.get('content-type'), t }; }
+async function get(u) {
+  try { const r = await fetch(u, { headers: UA, redirect: 'follow' }); const t = await r.text(); return { s: r.status, t }; }
   catch (e) { return { s: 0, t: '', err: e.message }; }
 }
+const strip = (h) => h.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
 
-const home = await get('https://farmy.cz/');
-console.log('home:', home.s, home.t.length + 'B');
-console.log('JS app:', /__NEXT_DATA__|__NUXT__|id="app"|id="root"/.test(home.t));
-// odkazy na katalog/nabídky/pozemky/prodej
-const links = [...new Set([...home.t.matchAll(/href="([^"]+)"/gi)].map((m) => m[1]).filter((h) => /pozemk|prodej|nabidk|katalog|inzer|nemovit/i.test(h)))].slice(0, 20);
-console.log('odkazy:', JSON.stringify(links, null, 0));
+// 1) výpis nabídek
+const list = await get('https://farmy.cz/inzerce_aktualni_nabidky');
+console.log('výpis:', list.s, list.t.length + 'B');
+// najdi bloky kolem odkazů nabidka_detail?nab=
+const ids = [...new Set([...list.t.matchAll(/nabidka_detail\?nab=(\d+)/g)].map((m) => m[1]))];
+console.log('počet nabídek na stránce:', ids.length, '| první id:', ids.slice(0, 5));
+// ukázka HTML kolem prvního odkazu (ať vidím okolní data)
+const i0 = list.t.indexOf('nabidka_detail?nab=');
+if (i0 >= 0) console.log('okolí odkazu:', strip(list.t.slice(i0 - 400, i0 + 400)).slice(0, 500));
 
-// __NEXT_DATA__ blok?
-const nd = home.t.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-if (nd) {
-  console.log('__NEXT_DATA__ délka:', nd[1].length);
-  try { const j = JSON.parse(nd[1]); console.log('build/props klíče:', JSON.stringify(Object.keys(j)), JSON.stringify(Object.keys(j.props || {}))); } catch { console.log('  (nelze parsovat)'); }
-}
-
-// zkusíme typické API / feed cesty
-console.log('\n-- tipy na API/feed --');
-for (const p of ['/api/nemovitosti', '/api/inzeraty', '/api/listings', '/api/nabidky', '/api/v1/adverts', '/rss.xml', '/feed', '/export/xml', '/sitemap.xml']) {
-  const r = await get('https://farmy.cz' + p);
-  console.log(p, '→', r.s, r.ct, (r.t || '').length + 'B', /<item>|<rss|"data"|"id"|<url>/i.test(r.t || '') ? '(struktura?)' : '');
-}
-
-// zkusíme přímo stránku výpisu pozemků na prodej (běžné cesty)
-console.log('\n-- výpis pozemků --');
-for (const p of ['/pozemky', '/prodej/pozemky', '/nemovitosti/pozemky', '/katalog/pozemky', '/nemovitosti?typ=pozemek']) {
-  const r = await get('https://farmy.cz' + p);
-  console.log(p, '→', r.s, (r.t || '').length + 'B', /pozem/i.test(r.t) ? '(zmiňuje pozemek)' : '');
+// 2) detail jedné nabídky
+if (ids.length) {
+  const det = await get('https://farmy.cz/nabidka_detail?nab=' + ids[0]);
+  console.log(`\ndetail nab=${ids[0]}:`, det.s, det.t.length + 'B');
+  for (const kw of ['pozem', 'výmě', 'vymer', 'cena', 'Kč', 'lokalit', 'okres', 'kraj', 'obec', 'druh', 'ha', 'm2', 'm²', 'gps', 'lat', 'katastr']) {
+    const i = det.t.toLowerCase().indexOf(kw.toLowerCase());
+    if (i >= 0) console.log(`  "${kw}": …${strip(det.t.slice(i - 25, i + 75))}…`);
+  }
+  // tabulkové řádky detailu
+  const rows = [...det.t.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)].map((m) => strip(m[1])).filter((s) => s.length > 2 && s.length < 120);
+  console.log('  řádky tabulky:', JSON.stringify(rows.slice(0, 12)));
 }
 console.log('\nHotovo.');
