@@ -637,6 +637,42 @@
       "extra": "dražba 2026-08-13",
       "lat": 50.1201461,
       "lng": 14.4647156
+    },
+    {
+      "place": "Trmice",
+      "okres": "Ústí nad Labem",
+      "type": "exekuce",
+      "parcel": "550",
+      "druh": "zastavěná plocha a nádvoří",
+      "area": null,
+      "price": 3590000,
+      "extra": "nucená dražba 2026-09-11",
+      "lat": 50.663,
+      "lng": 14.03047
+    },
+    {
+      "place": "Blovice",
+      "okres": "Plzeň-jih",
+      "type": "exekuce",
+      "parcel": "st. 191/1",
+      "druh": "pozemek",
+      "area": null,
+      "price": 1353334,
+      "extra": "nucená dražba 2026-09-10",
+      "lat": 49.59376,
+      "lng": 13.52906
+    },
+    {
+      "place": "Most",
+      "okres": "Most",
+      "type": "exekuce",
+      "parcel": "6257/11",
+      "druh": "pozemek",
+      "area": null,
+      "price": 11800000,
+      "extra": "nucená dražba 2026-09-17",
+      "lat": 50.50782,
+      "lng": 13.66294
     }
   ]
 }
