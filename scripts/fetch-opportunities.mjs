@@ -237,7 +237,7 @@ async function fetchBezrealitky() {
   const query = `query($limit:Int,$offset:Int,$order:ResultOrder,$offerType:[OfferType],$estateType:[EstateType]){
     listAdverts(limit:$limit,offset:$offset,order:$order,offerType:$offerType,estateType:$estateType){
       totalCount
-      list{ id uri title address price surface surfaceLand gps{ lat lng } }
+      list{ id uri title address(locale: CS) price surface surfaceLand gps{ lat lng } }
     }
   }`;
   const out = [];
