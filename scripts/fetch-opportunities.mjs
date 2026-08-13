@@ -389,9 +389,14 @@ async function main() {
     for (let i = 0; i < n; i++) out.push(arr[Math.floor(i * step)]);
     return out;
   }
-  const saleByPrice = (byType.sale || []).slice().sort((a, b) => a.price - b.price);
+  // Inzeráty (Bezrealitky, Farmy) zahrneme všechny; státní půda (SPÚ) doplní
+  // zbytek do stropu pestrým vzorkem napříč cenami.
+  const sale = byType.sale || [];
+  const inzeraty = sale.filter((o) => /inzerát/i.test(o.extra || ''));
+  const spuSale = sale.filter((o) => !/inzerát/i.test(o.extra || '')).sort((a, b) => a.price - b.price);
+  const saleSel = [...inzeraty, ...spread(spuSale, Math.max(0, CAP.sale - inzeraty.length))];
   const fresh = [
-    ...spread(saleByPrice, CAP.sale),
+    ...saleSel,
     ...(byType.drazba || []).slice(0, CAP.drazba),
     ...(byType.exekuce || []).slice(0, CAP.exekuce),
     ...(byType.obec || []).slice(0, CAP.obec),
