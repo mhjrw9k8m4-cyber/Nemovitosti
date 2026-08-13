@@ -103,8 +103,12 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 .tick-item b{color:var(--text-ondark); font-weight:600;}
 @keyframes tick{from{transform:translateX(0);} to{transform:translateX(-50%);}}
 
-/* Marker na mapě — čistý pevný bod (bez neustálého poletování) */
-.marker-pulse{position:relative; border-radius:50%; border:2.5px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.45);}
+/* Marker na mapě — pevný bod s efektem při najetí a výběru */
+.marker-pulse{position:relative; border-radius:50%; border:2.5px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.45); transition:transform .15s var(--ease), box-shadow .15s var(--ease);}
+.marker-pulse:hover{transform:scale(1.45); box-shadow:0 5px 16px rgba(0,0,0,0.55); z-index:1000;}
+.marker-pulse.sel{transform:scale(1.5); box-shadow:0 0 0 4px rgba(255,255,255,0.35), 0 5px 16px rgba(0,0,0,0.55);}
+.marker-pulse.sel::after{content:""; position:absolute; inset:-7px; border-radius:50%; border:2px solid #fff; opacity:0.7; animation:mping 1.5s ease-out infinite;}
+@keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(2.2); opacity:0;}}
 
 /* Header */
 header{border-bottom:1px solid var(--line); padding:20px 0; position:sticky; top:0; z-index:1000; background:rgba(22,35,47,0.85); backdrop-filter:blur(10px); transition:padding .2s ease;}
@@ -210,15 +214,28 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 
 /* Detail pozemku v panelu (místo bubliny na mapě) */
 .map-side{position:relative;}
-.opp-detail{position:absolute; inset:0; background:var(--ink-soft); border-radius:10px; padding:16px; display:flex; flex-direction:column; overflow-y:auto; z-index:6; opacity:0; transform:translateX(10px); transition:opacity .2s var(--ease), transform .2s var(--ease);}
+.opp-detail{position:absolute; inset:0; background:var(--ink-soft); border:1px solid var(--copper); border-radius:10px; padding:16px; display:flex; flex-direction:column; overflow-y:auto; z-index:6; opacity:0; transform:translateX(10px); transition:opacity .2s var(--ease), transform .2s var(--ease); box-shadow:inset 0 0 0 1px rgba(201,152,47,0.25);}
 .opp-detail.show{opacity:1; transform:none;}
 .opp-detail[hidden]{display:none;}
-.detail-back{align-self:flex-start; background:none; border:0; color:var(--copper-bright); font-size:13px; font-weight:600; cursor:pointer; margin-bottom:16px; font-family:inherit; padding:0;}
+.detail-back{align-self:flex-start; background:none; border:0; color:var(--copper-bright); font-size:13px; font-weight:600; cursor:pointer; margin-bottom:14px; font-family:inherit; padding:0;}
 .detail-back:hover{text-decoration:underline;}
 .detail-head{display:flex; align-items:center; gap:8px; font-weight:700; font-size:16px; margin-bottom:3px;}
-.detail-place{font-size:13px; color:var(--text-ondark-mute); margin-bottom:16px;}
+.detail-place{font-size:13px; color:var(--text-ondark-mute); margin-bottom:14px;}
 .opp-detail .lp-grid{margin-bottom:16px;}
 .opp-detail .lp-links{margin-bottom:12px;}
+
+/* Náhled tvaru parcely v detailu */
+.shape-wrap{position:relative; background:var(--ink); border:1px solid var(--line); border-radius:8px; padding:8px; margin-bottom:14px;}
+.shape-svg{display:block; width:100%; height:120px;}
+.shape-lbl{position:absolute; bottom:8px; right:10px; font-size:10px; color:var(--text-ondark-mute);}
+
+/* Mobil: detail jako výrazný vysouvací panel zdola */
+@media (max-width:960px){
+  .opp-detail{position:fixed; inset:auto 0 0 0; max-height:80vh; border-radius:18px 18px 0 0; border:0; border-top:2px solid var(--copper); padding:22px 18px 26px; transform:translateY(100%); opacity:1; box-shadow:0 -22px 55px -12px rgba(0,0,0,0.65); z-index:2500;}
+  .opp-detail.show{transform:none;}
+  .opp-detail::before{content:""; position:absolute; top:9px; left:50%; transform:translateX(-50%); width:42px; height:4px; border-radius:2px; background:var(--line-strong);}
+  .detail-back{margin-top:10px;}
+}
 .opp-meta b{color:var(--text-ondark); font-weight:600;}
 .map-holder{position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line); min-height:0;}
 #leaflet-map{position:absolute; inset:0; background:var(--ink-soft);}

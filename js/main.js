@@ -287,6 +287,39 @@
       iconSize: [18, 18], iconAnchor: [9, 9]
     });
   }
+  // Přibližný tvar parcely (deterministický, cache) — ukázková geometrie
+  function polyFor(d) {
+    if (d._poly) return d._poly;
+    var side = Math.sqrt(d.area);
+    var hLat = (side / 2) / 111320;
+    var hLng = (side / 2) / (111320 * Math.cos(d.lat * Math.PI / 180));
+    var seed = (d._id != null ? d._id : 0) + 1;
+    function rnd(i) { var x = Math.sin(seed * 99.9 + i * 7.13) * 10000; return x - Math.floor(x); }
+    var pts = [], n = 5;
+    for (var i = 0; i < n; i++) {
+      var ang = (i / n) * Math.PI * 2 + rnd(i + 20) * 0.4;
+      var r = 0.7 + rnd(i) * 0.6;
+      pts.push([ d.lat + Math.sin(ang) * hLat * r, d.lng + Math.cos(ang) * hLng * r ]);
+    }
+    d._poly = pts; return pts;
+  }
+  function shapeSvg(d) {
+    var p = polyFor(d);
+    var lats = p.map(function (x) { return x[0]; }), lngs = p.map(function (x) { return x[1]; });
+    var minLat = Math.min.apply(null, lats), maxLat = Math.max.apply(null, lats);
+    var minLng = Math.min.apply(null, lngs), maxLng = Math.max.apply(null, lngs);
+    var scale = Math.max(maxLat - minLat, maxLng - minLng) || 1;
+    var pts = p.map(function (x) {
+      var px = ((x[1] - minLng) / scale) * 80 + 10;
+      var py = (1 - (x[0] - minLat) / scale) * 80 + 10;
+      return px.toFixed(1) + ',' + py.toFixed(1);
+    }).join(' ');
+    var col = TYPE[d.type].color;
+    return '<div class="shape-wrap"><svg class="shape-svg" viewBox="0 0 100 100"><polygon points="' + pts +
+      '" fill="' + col + '30" stroke="' + col + '" stroke-width="1.8"/></svg>' +
+      '<span class="shape-lbl mono">tvar parcely</span></div>';
+  }
+
   function detailHtml(d) {
     var t = TYPE[d.type];
     var perM2 = Math.round(d.price / d.area);
@@ -294,6 +327,7 @@
     return '<button class="detail-back" type="button" data-detail-back>← Zpět na seznam</button>' +
       '<div class="detail-head"><span class="lp-dot" style="background:' + t.color + '"></span>' + t.label + '</div>' +
       '<div class="detail-place">' + d.place + ' · okres ' + d.okres + '</div>' +
+      shapeSvg(d) +
       '<div class="lp-grid">' +
         '<div><span>Parcela</span><b>č. ' + d.parcel + '</b></div>' +
         '<div><span>Druh</span><b>' + d.druh + '</b></div>' +
@@ -309,17 +343,33 @@
       '</div>' +
       '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">🔔 Hlídat okres ' + d.okres + '</a>';
   }
+  var selPoly = null;
   function showDetail(d) {
     if (!detailEl) return;
     detailEl.innerHTML = detailHtml(d);
     detailEl.removeAttribute('hidden');
     requestAnimationFrame(function () { detailEl.classList.add('show'); });
-    if (window.innerWidth <= 960) detailEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    highlightMarker(d._id);
+    highlightShape(d);
   }
   function hideDetail() {
     if (!detailEl) return;
     detailEl.classList.remove('show');
     setTimeout(function () { detailEl.setAttribute('hidden', ''); }, 200);
+    highlightMarker(-1);
+    if (selPoly) { map.removeLayer(selPoly); selPoly = null; }
+  }
+  function highlightMarker(id) {
+    markers.forEach(function (m, i) {
+      if (m._icon) {
+        var dot = m._icon.querySelector('.marker-pulse');
+        if (dot) dot.classList.toggle('sel', i === id);
+      }
+    });
+  }
+  function highlightShape(d) {
+    if (selPoly) { map.removeLayer(selPoly); selPoly = null; }
+    selPoly = L.polygon(polyFor(d), { color: '#fff', weight: 2.5, fillColor: TYPE[d.type].color, fillOpacity: 0.4, opacity: 1 }).addTo(map);
   }
 
   DATA.forEach(function (d, i) {
@@ -328,6 +378,19 @@
     m.on('click', function () { showDetail(d); highlightList(i); });
     markers.push(m);
   });
+
+  // Vrstva tvarů parcel — objeví se po přiblížení
+  var polyLayer = L.layerGroup();
+  DATA.forEach(function (d) {
+    var p = L.polygon(polyFor(d), { color: TYPE[d.type].color, weight: 1.4, fillColor: TYPE[d.type].color, fillOpacity: 0.22, opacity: 0.85 });
+    p.on('click', function () { showDetail(d); highlightList(d._id); });
+    polyLayer.addLayer(p);
+  });
+  function updatePolyVisibility() {
+    if (map.getZoom() >= 12) { if (!map.hasLayer(polyLayer)) polyLayer.addTo(map); }
+    else if (map.hasLayer(polyLayer)) map.removeLayer(polyLayer);
+  }
+  map.on('zoomend', updatePolyVisibility);
 
   function visible(d) {
     var okType = activeType === 'all' || d.type === activeType;
