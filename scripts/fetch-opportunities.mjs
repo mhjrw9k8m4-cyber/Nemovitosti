@@ -62,6 +62,17 @@ async function geocodeName(place, okres) {
   return coord;
 }
 
+// Okres podle GPS (nejbližší okresní středisko) – pro zdroje bez názvu okresu.
+function nearestOkres(lat, lng) {
+  let best = null, bestD = Infinity;
+  for (const name of Object.keys(OKRESY_MAP)) {
+    const c = OKRESY_MAP[name];
+    const d = (c[0] - lat) ** 2 + (c[1] - lng) ** 2;
+    if (d < bestD) { bestD = d; best = name; }
+  }
+  return best;
+}
+
 // Okresní fallback (méně přesné) – když název KÚ nedohledáme.
 function geocode(o, seedStr) {
   if (typeof o.lat === 'number' && typeof o.lng === 'number') return o;
@@ -260,11 +271,12 @@ async function fetchBezrealitky() {
       if (!price) continue;
       const area = a.surfaceLand || a.surface || null;
       const gps = a.gps || {};
-      // místo a okres z adresy ("Obec, okres Y" apod.)
+      const hasGps = typeof gps.lat === 'number' && typeof gps.lng === 'number';
+      // místo z adresy; okres podle GPS (ať ladí se zbytkem webu)
       const parts = String(a.address || '').split(',').map((s) => s.trim()).filter(Boolean);
-      const place = (parts[0] || a.title || 'Pozemek').slice(0, 60);
-      let okres = parts.find((s) => /okres/i.test(s)) || parts[parts.length - 1] || place;
-      okres = okres.replace(/^okres\s+/i, '').slice(0, 40);
+      const place = (parts[0] || a.title || 'Pozemek').replace(/\s*-\s*/g, ' – ').slice(0, 60);
+      let okres = hasGps ? nearestOkres(gps.lat, gps.lng) : null;
+      if (!okres) okres = (parts[parts.length - 1] || place).replace(/\s*kraj$/i, '').slice(0, 40);
       out.push({
         place, okres, type: 'sale',
         parcel: '—', _key: 'br-' + a.id, // dedup podle inzerátu, ne parcely
