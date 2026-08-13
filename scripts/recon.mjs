@@ -1,40 +1,30 @@
 #!/usr/bin/env node
-// Ověř správnou adresu detailu inzerátu (Bezrealitky) + zda SPÚ má detail.
-const UA = { 'user-agent': 'Mozilla/5.0 PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
-async function gql(query) { const r = await fetch('https://api.bezrealitky.cz/graphql/', { method: 'POST', headers: { ...UA, 'content-type': 'application/json' }, body: JSON.stringify({ query }) }); return r.json().catch(() => null); }
-async function head(u) {
-  try { const r = await fetch(u, { headers: UA, redirect: 'manual' }); return { s: r.status, loc: r.headers.get('location') }; }
-  catch (e) { return { s: 0, err: e.message }; }
+// Otestuj skutečné odkazy z živých dat podle zdroje — kam vedou (200 / redirect / generic).
+import { readFileSync } from 'node:fs';
+const UA = { 'user-agent': 'Mozilla/5.0 PozemkomatBot/0.1' };
+const data = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8'));
+const ops = data.opportunities;
+
+function src(o) {
+  if (o.type !== 'sale') return o.type;
+  const e = o.extra || '';
+  if (/Bezrealitky/.test(e)) return 'Bezrealitky';
+  if (/Farmy/.test(e)) return 'Farmy';
+  if (/SPÚ|státní/.test(e)) return 'SPÚ';
+  return 'sale?';
 }
+// spočítej, kolik má odkaz (url) a kolik ne, podle zdroje
+const stat = {};
+for (const o of ops) { const s = src(o); (stat[s] = stat[s] || { total: 0, withUrl: 0 }); stat[s].total++; if (o.url) stat[s].withUrl++; }
+console.log('odkazy podle zdroje:', JSON.stringify(stat));
 
-// 1) pole Advertu s URL
-const t = await gql(`{ __type(name:"Advert"){ fields{ name } } }`);
-const fields = (t && t.data && t.data.__type && t.data.__type.fields || []).map((f) => f.name).filter((n) => /uri|url|link|slug|absolut|path/i.test(n));
-console.log('URL pole Advertu:', JSON.stringify(fields));
-
-// 2) vezmi reálný inzerát a jeho uri
-const s = await gql(`{ listAdverts(limit:2, order:TIMEORDER_DESC, offerType:[PRODEJ], estateType:[POZEMEK]){ list{ id uri } } }`);
-const adv = s && s.data && s.data.listAdverts && s.data.listAdverts.list || [];
-console.log('inzeráty:', JSON.stringify(adv));
-
-// 3) otestuj varianty URL detailu
-if (adv[0]) {
-  const uri = adv[0].uri;
-  const cands = [
-    'https://www.bezrealitky.cz/nemovitosti-byty-domy/' + uri,
-    'https://www.bezrealitky.cz/nabidka/' + uri,
-    'https://www.bezrealitky.cz/' + uri,
-    'https://www.bezrealitky.cz/nemovitost/' + uri,
-  ];
-  for (const u of cands) {
-    const r = await head(u);
-    console.log(u.replace('https://www.bezrealitky.cz', ''), '→', r.s, r.loc ? ('→ ' + r.loc) : '');
-  }
+// otestuj jeden reálný url z každého zdroje
+async function head(u) { try { const r = await fetch(u, { headers: UA, redirect: 'manual' }); return r.status + (r.headers.get('location') ? ' → ' + r.headers.get('location') : ''); } catch (e) { return 'CHYBA ' + e.message; } }
+const seen = {};
+for (const o of ops) {
+  const s = src(o);
+  if (seen[s] || !o.url) continue; seen[s] = 1;
+  console.log(`\n[${s}] ${o.place} → ${o.url}`);
+  console.log('   HTTP', await head(o.url));
 }
-
-// 4) SPÚ – má nabídka detail podle Čísla OP? mrkneme na strukturu odkazu
-console.log('\n=== SPÚ detail? ===');
-const spu = await (await fetch('https://spu.gov.cz/nabidky', { headers: UA })).text();
-const links = [...new Set([...spu.matchAll(/href="([^"]*(?:detail|nabidka)[^"]*)"/gi)].map((m) => m[1]))].slice(0, 8);
-console.log('SPÚ odkazy detail:', JSON.stringify(links));
 console.log('\nHotovo.');
