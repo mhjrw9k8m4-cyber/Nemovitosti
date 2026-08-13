@@ -290,6 +290,16 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .md-facts{display:flex; flex-wrap:wrap; gap:6px 14px;}
 .md-facts span{font-size:12px; color:var(--text-ondark-mute);}
 .md-facts b{color:var(--text-ondark); font-weight:600;}
+/* Mini graf: cena/m² vs. obvyklá cena u daného druhu */
+.md-bar{margin-top:12px;}
+.md-bar-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:11px; color:var(--text-ondark-mute); margin-bottom:6px;}
+.md-bar-head b{font-weight:700; white-space:nowrap;}
+.md-bar.good .md-bar-head b{color:var(--c-sale);}
+.md-bar.bad .md-bar-head b{color:#EDA08C;}
+.md-bar.mid .md-bar-head b{color:var(--copper-bright);}
+.md-bar-track{position:relative; height:8px; border-radius:5px; background:linear-gradient(90deg, rgba(62,142,91,0.55), rgba(217,164,65,0.55) 50%, rgba(193,91,68,0.55));}
+.md-bar-med{position:absolute; top:-3px; width:2px; height:14px; background:var(--text-ondark); opacity:0.5;}
+.md-bar-dot{position:absolute; top:50%; width:12px; height:12px; border-radius:50%; background:#fff; border:2px solid var(--ink); transform:translate(-50%,-50%); box-shadow:0 1px 4px rgba(0,0,0,0.55);}
 .md-actions{flex:none; display:flex; flex-wrap:wrap; gap:6px; width:186px; align-content:flex-start;}
 .md-actions .lp-btn{flex:1 1 calc(50% - 3px); min-width:0;}
 .md-actions .lp-watch{flex-basis:100%;}

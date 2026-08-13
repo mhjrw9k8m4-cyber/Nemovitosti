@@ -349,6 +349,34 @@
     favEl.setAttribute('aria-pressed', String(favOnly));
   }
 
+  // Obvyklá (mediánová) cena za m² podle druhu — orientační reference do detailu
+  var medianPerM2 = (function () {
+    var byG = {};
+    DATA.forEach(function (d) {
+      if (hasArea(d) && d.price) { var g = druhGroup(d.druh); (byG[g] = byG[g] || []).push(d.price / d.area); }
+    });
+    var med = {};
+    Object.keys(byG).forEach(function (g) {
+      var a = byG[g].sort(function (x, y) { return x - y; });
+      if (a.length >= 6) med[g] = a[Math.floor(a.length / 2)]; // jen dost velký vzorek
+    });
+    return med;
+  })();
+  function priceBarHtml(d) {
+    if (!hasArea(d) || !d.price) return '';
+    var g = druhGroup(d.druh), med = medianPerM2[g];
+    if (!med || med <= 0) return '';
+    var val = d.price / d.area;
+    var pct = Math.round((val / med - 1) * 100);
+    var pos = Math.max(4, Math.min(96, (val / (med * 2)) * 100));
+    var cls = pct <= -8 ? 'good' : (pct >= 8 ? 'bad' : 'mid');
+    var label = pct <= -8 ? ('o ' + Math.abs(pct) + ' % levnější') : (pct >= 8 ? ('o ' + pct + ' % dražší') : 'kolem obvyklé');
+    return '<div class="md-bar ' + cls + '">' +
+      '<div class="md-bar-head"><span>Cena/m² vs. obvyklá u „' + g.toLowerCase() + '"</span><b>' + label + '</b></div>' +
+      '<div class="md-bar-track"><span class="md-bar-med" style="left:50%"></span><span class="md-bar-dot" style="left:' + pos + '%"></span></div>' +
+      '</div>';
+  }
+
   // Naplníme filtr druhů podle toho, co je v datech (s počty)
   if (druhEl) {
     var gc = {};
@@ -467,6 +495,7 @@
             (perM2 ? '<span>Cena/m² <b>' + fmt(perM2) + ' Kč</b></span>' : '') +
             '<span>Stav <b>' + d.extra + '</b></span>' +
           '</div>' +
+          priceBarHtml(d) +
         '</div>' +
         '<div class="md-actions">' +
           '<a class="lp-btn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">Katastr</a>' +
