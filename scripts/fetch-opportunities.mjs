@@ -389,12 +389,14 @@ async function main() {
     for (let i = 0; i < n; i++) out.push(arr[Math.floor(i * step)]);
     return out;
   }
-  // Inzeráty (Bezrealitky, Farmy) zahrneme všechny; státní půda (SPÚ) doplní
-  // zbytek do stropu pestrým vzorkem napříč cenami.
+  // Prodej má tři zdroje – každý dostane svůj díl, ať je mapa vyvážená:
+  // inzeráty od lidí (Bezrealitky), zemědělská půda (Farmy) i státní půda (SPÚ).
   const sale = byType.sale || [];
-  const inzeraty = sale.filter((o) => /inzerát/i.test(o.extra || ''));
-  const spuSale = sale.filter((o) => !/inzerát/i.test(o.extra || '')).sort((a, b) => a.price - b.price);
-  const saleSel = [...inzeraty, ...spread(spuSale, Math.max(0, CAP.sale - inzeraty.length))];
+  const byPrice = (a, b) => a.price - b.price;
+  const bez = sale.filter((o) => /Bezrealitky/i.test(o.extra || '')).slice(0, 90);
+  const farmy = sale.filter((o) => /Farmy/i.test(o.extra || ''));
+  const spuSale = sale.filter((o) => /státní/i.test(o.extra || '')).sort(byPrice);
+  const saleSel = [...bez, ...farmy, ...spread(spuSale, 70)];
   const fresh = [
     ...saleSel,
     ...(byType.drazba || []).slice(0, CAP.drazba),
