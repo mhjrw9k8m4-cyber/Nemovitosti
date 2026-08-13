@@ -1,30 +1,27 @@
 #!/usr/bin/env node
-// edesky /dokumenty – struktura výpisu (název, obec, odkaz) pro obecní záměry.
+// (1) ikatastr.cz – jak vyznačit konkrétní parcelu URL parametrem?
+// (2) Bezrealitky – má inzerát druh pozemku (stavební/zahrada/les)?
 const UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
-async function get(u) { try { const r = await fetch(u, { headers: UA, redirect: 'follow' }); const t = await r.text(); return { s: r.status, t }; } catch (e) { return { s: 0, t: '', err: e.message }; } }
-const strip = (h) => h.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+async function get(u) { try { const r = await fetch(u, { headers: UA }); const t = await r.text(); return { s: r.status, t }; } catch (e) { return { s: 0, t: '', err: e.message }; } }
 
-const r = await get('https://edesky.cz/dokumenty?q=' + encodeURIComponent('záměr prodeje pozemku'));
-console.log('dokumenty:', r.s, r.t.length + 'B');
-// rozděl podle odkazů na dokument a ukaž okolí (název + obec)
-const idx = [...r.t.matchAll(/href="(\/dokument\/\d+[^"]*)"/gi)];
-console.log('dokumentů:', idx.length);
-// vypiš 5 bloků: odkaz + okolní text
-for (let i = 0; i < Math.min(5, idx.length); i++) {
-  const pos = idx[i].index;
-  console.log(`\n[${i}] ${idx[i][1]}`);
-  console.log('   okolí:', strip(r.t.slice(pos - 250, pos + 250)).slice(0, 320));
+// ---- ikatastr param scheme ----
+console.log('=== ikatastr.cz URL parametry ===');
+const home = await get('https://www.ikatastr.cz/');
+const js = [...new Set([...home.t.matchAll(/src="([^"]+\.js[^"]*)"/gi)].map((m) => m[1]))];
+console.log('skripty:', JSON.stringify(js.slice(0, 8)));
+// stáhni hlavní bundle a hledej názvy hash parametrů
+for (const s of js.filter((x) => /app|main|bundle|ikatastr/i.test(x)).slice(0, 3)) {
+  const u = s.startsWith('http') ? s : 'https://www.ikatastr.cz/' + s.replace(/^\//, '');
+  const b = await get(u);
+  const params = [...new Set([...b.t.matchAll(/["'`](kde|marker|parcela|par|bod|gps|mi|info|znacka|hledej|q|x|y|lat|lon|centrum)["'`]\s*[:=]/gi)].map((m) => m[1]))];
+  console.log(`  ${u.slice(-40)} (${b.s}, ${b.t.length}B) params:`, JSON.stringify(params.slice(0, 20)));
+  const kdeCtx = b.t.indexOf('kde'); if (kdeCtx >= 0) console.log('    "kde" kontext:', b.t.slice(kdeCtx - 30, kdeCtx + 80).replace(/\s+/g, ' '));
 }
-// detail jednoho dokumentu – jak vypadá + odkaz na originál/PDF a obec
-if (idx.length) {
-  const det = await get('https://edesky.cz' + idx[0][1]);
-  console.log('\n=== detail dokumentu ===', det.s, det.t.length + 'B');
-  console.log('název (title):', (det.t.match(/<title>([^<]+)<\/title>/) || [])[1]);
-  for (const kw of ['obec', 'katastr', 'parc', 'výmě', 'm2', 'Kč', 'zdroj', 'pdf', 'originál', 'úřední deska']) {
-    const i = det.t.toLowerCase().indexOf(kw.toLowerCase());
-    if (i >= 0) console.log(`  "${kw}": …${strip(det.t.slice(i - 20, i + 80))}…`);
-  }
-  const pdf = [...new Set([...det.t.matchAll(/href="(https?:\/\/[^"]+\.pdf[^"]*)"/gi)].map((m) => m[1]))].slice(0, 3);
-  console.log('  PDF odkazy:', JSON.stringify(pdf));
-}
+
+// ---- Bezrealitky: pole s druhem pozemku ----
+console.log('\n=== Bezrealitky: druh pozemku v inzerátu ===');
+const q = `query{ listAdverts(limit:3, order:TIMEORDER_DESC, offerType:[PRODEJ], estateType:[POZEMEK]){ list{ id title(locale: CS) mainCategory{ name(locale: CS) } surfaceLand tags{ name(locale: CS) } } } }`;
+const r = await fetch('https://api.bezrealitky.cz/graphql/', { method: 'POST', headers: { ...UA, 'content-type': 'application/json' }, body: JSON.stringify({ query: q }) });
+const j = await r.json().catch(() => null);
+console.log(JSON.stringify(j).slice(0, 700));
 console.log('\nHotovo.');
