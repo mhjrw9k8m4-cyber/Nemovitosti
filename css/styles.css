@@ -133,8 +133,9 @@ nav a:not(.btn-primary).active{color:var(--text-ondark);}
 nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--copper-bright); border-radius:2px;}
 @media (max-width:880px){ nav a:not(.btn-primary).active::after{display:none;} }
 /* Přihlášení / profil v hlavičce */
-.nav-login{background:none; border:0; color:var(--text-ondark-mute); font-family:inherit; font-size:14px; font-weight:500; cursor:pointer; padding:0; transition:color .15s ease;}
-.nav-login:hover{color:var(--text-ondark);}
+.nav-login{display:inline-flex; align-items:center; gap:7px; background:rgba(201,152,47,0.12); border:1px solid var(--copper); color:var(--copper-bright); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; padding:8px 16px; border-radius:20px; transition:background .15s ease, border-color .15s ease, box-shadow .15s ease;}
+.nav-login .ic{width:16px; height:16px;}
+.nav-login:hover{background:rgba(201,152,47,0.22); border-color:var(--copper-bright); box-shadow:0 0 0 3px rgba(201,152,47,0.14);}
 .nav-profile{position:relative;}
 .profile-chip{display:inline-flex; align-items:center; gap:8px; background:var(--ink-soft2); border:1px solid var(--line); border-radius:20px; padding:4px 12px 4px 4px; font-family:inherit; font-size:13px; font-weight:600; color:var(--text-ondark); cursor:pointer; transition:border-color .15s ease;}
 .profile-chip:hover{border-color:var(--copper);}
@@ -678,7 +679,13 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   nav.open{display:flex; animation:navdrop .24s var(--ease);}
   @keyframes navdrop{from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:none;}}
   nav a{padding:14px 0; border-bottom:1px solid var(--line); font-size:15px;}
-  nav a.btn-primary{text-align:center; margin-top:14px; border-bottom:1px solid var(--copper); padding:12px 20px;}
+  nav a.btn-primary{text-align:center; margin-top:10px; border-bottom:1px solid var(--copper); padding:12px 20px;}
+  /* Přihlášení v mobilním menu — výrazné, přes celou šířku, nahoře */
+  .nav-login{order:-1; justify-content:center; width:100%; margin-bottom:6px; padding:14px; font-size:16px; font-weight:700; border-radius:10px; border-width:1.5px; background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); box-shadow:0 6px 18px -6px rgba(201,152,47,0.6);}
+  .nav-login .ic{width:18px; height:18px;}
+  .nav-profile{order:-1; width:100%; margin-bottom:6px;}
+  .nav-profile .profile-chip{width:100%; justify-content:center; padding:11px; font-size:15px;}
+  .profile-menu{position:static; margin-top:8px; min-width:0; width:100%;}
   .steps, .embed-demo, .alert-box{grid-template-columns:1fr;}
   .beforeafter{grid-template-columns:1fr;} .ba-arrow{transform:rotate(90deg); justify-self:center;}
   .tb-close{right:16px;} .topbar-in{padding-right:36px;}

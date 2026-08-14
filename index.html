@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>if('scrollRestoration' in history){history.scrollRestoration='manual';}</script>
   <title>Pozemkomat — příležitosti u pozemků na jedné mapě</title>
   <meta name="description" content="Dražby, exekuce, pozemky na prodej i obecní záměry z veřejných zdrojů na jedné interaktivní mapě. Filtrujte, klikejte, proklik do katastru. Hlídání lokality e-mailem zdarma.">
   <meta name="theme-color" content="#16232F">
@@ -58,6 +59,7 @@
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
   <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
 </svg>
 
 <div class="topbar" id="topbar">
@@ -77,7 +79,7 @@
       <a href="#jak-funguje">Jak to funguje</a>
       <a href="#cenik">Ceník</a>
       <a href="#faq">Dotazy</a>
-      <button type="button" class="nav-login" id="btn-login">Přihlásit</button>
+      <button type="button" class="nav-login" id="btn-login"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg>Přihlásit</button>
       <div class="nav-profile" id="nav-profile" hidden>
         <button type="button" class="profile-chip" id="profile-chip" aria-haspopup="true" aria-expanded="false">
           <span class="avatar" id="avatar" aria-hidden="true"></span><span id="profile-name"></span>

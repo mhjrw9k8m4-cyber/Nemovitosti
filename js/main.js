@@ -3,12 +3,16 @@
   'use strict';
 
   /* ---------- Start vždy nahoře na mapě (ne odscrollovaný dolů) ---------- */
-  // Prohlížeč jinak obnoví předchozí pozici scrollu — to vypneme a začneme nahoře.
+  // Prohlížeč jinak obnoví předchozí pozici scrollu (i z bfcache na iOS) — začneme nahoře.
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   (function () {
     var deep = location.hash || location.search.indexOf('p=') !== -1;
     if (deep) return; // sdílený odkaz na sekci/parcelu si drží svou pozici
-    window.scrollTo(0, 0);
+    function toTop() { window.scrollTo(0, 0); }
+    toTop();
+    document.addEventListener('DOMContentLoaded', toTop);
+    // pageshow pokryje návrat z bfcache (typicky Safari na iOS)
+    window.addEventListener('pageshow', function (e) { if (e.persisted) toTop(); });
   })();
 
   /* ---------- Záložní data (když se nenačte data/opportunities.json) ---------- */
