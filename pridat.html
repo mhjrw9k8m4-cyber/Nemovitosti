@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Přidat pozemek — Pozemkomat</title>
+  <meta name="description" content="Přidejte na Pozemkomat vlastní pozemek — na prodej nebo do inzerce. Vyplníte formulář, my ho ověříme a zveřejníme na mapě.">
+  <meta name="theme-color" content="#16232F">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://mhjrw9k8m4-cyber.github.io/Nemovitosti/pridat.html">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=20260814z">
+
+  <style>
+    /* Styl jen pro tuto stránku — sdílený web (mapu) se nedotýká. */
+    .add-hero{padding:120px 0 20px;}
+    .add-hero h1{font-family:'Fraunces',serif; font-weight:500; font-size:38px; line-height:1.14; max-width:720px;}
+    .add-hero .sub{font-size:16px; color:var(--text-ondark-mute); margin-top:16px; max-width:640px;}
+    .add-wrap{max-width:720px;}
+    .add-tabs{margin:28px 0 22px;}
+    .add-panel{display:none;}
+    .add-panel.active{display:block;}
+    .add-lead{font-size:14.5px; color:var(--text-ondark-mute); margin-bottom:20px; padding:14px 16px; background:var(--ink-soft); border:1px solid var(--line); border-radius:10px;}
+    .add-form{display:flex; flex-direction:column; gap:16px;}
+    .add-field{display:flex; flex-direction:column; gap:6px;}
+    .add-field label{font-size:13px; font-weight:600; color:var(--text-ondark);}
+    .add-field .req{color:var(--copper-bright);}
+    .add-field .hint{font-size:12px; color:var(--text-ondark-mute); font-weight:400;}
+    .add-form input, .add-form select, .add-form textarea{
+      background:var(--ink); border:1px solid var(--line); border-radius:8px; padding:13px 15px;
+      font-size:15px; color:var(--text-ondark); font-family:inherit; width:100%;
+    }
+    .add-form textarea{resize:vertical; min-height:96px;}
+    .add-form input::placeholder, .add-form textarea::placeholder{color:#6f8090;}
+    .add-form input:focus-visible, .add-form select:focus-visible, .add-form textarea:focus-visible{border-color:var(--copper-bright); outline:none;}
+    .add-row{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+    .add-check{display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--text-ondark-mute); line-height:1.45;}
+    .add-check input{width:18px; height:18px; flex:none; margin-top:1px; accent-color:var(--copper);}
+    .add-check a{color:var(--copper-bright);}
+    .add-form .btn-primary{padding:15px; font-size:15.5px; text-align:center; margin-top:4px;}
+    .add-msg{font-size:13.5px; min-height:16px; color:var(--c-sale); margin-top:2px;}
+    .add-msg.err{color:var(--c-exekuce);}
+    .add-steps{display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:12px;}
+    .add-step{background:var(--ink-soft); border:1px solid var(--line); border-radius:12px; padding:22px;}
+    .add-step .n{font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--copper-bright); margin-bottom:10px;}
+    .add-step h3{font-size:16px; margin-bottom:8px;}
+    .add-step p{font-size:14px; color:var(--text-ondark-mute); line-height:1.5;}
+    .add-honest{margin-top:34px; padding:18px 20px; border:1px solid var(--line); border-left:3px solid var(--copper); border-radius:10px; background:rgba(201,152,47,0.05);}
+    .add-honest h4{font-size:14px; margin-bottom:6px;}
+    .add-honest p{font-size:13.5px; color:var(--text-ondark-mute); line-height:1.55;}
+    @media (max-width:640px){
+      .add-hero{padding:100px 0 12px;}
+      .add-hero h1{font-size:30px;}
+      .add-row{grid-template-columns:1fr;}
+      .add-steps{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<a class="skip-link" href="#pridat-obsah">Přeskočit na obsah</a>
+
+<header id="header">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="Pozemkomat — domů"><span class="logo-mark" aria-hidden="true"></span>Pozemkomat</a>
+    <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+    <nav id="nav" aria-label="Hlavní navigace">
+      <a href="index.html#mapa">Mapa</a>
+      <a href="index.html#jak-funguje">Jak to funguje</a>
+      <a href="index.html#cenik">Ceník</a>
+      <a href="index.html#faq">Dotazy</a>
+      <a href="index.html#mapa" class="btn-primary">Zpět na mapu</a>
+    </nav>
+  </div>
+</header>
+
+<main id="pridat-obsah">
+
+  <section class="add-hero">
+    <div class="wrap add-wrap">
+      <div class="eyebrow"><span class="live-dot"></span>Přidat vlastní pozemek</div>
+      <h1>Máte pozemek? Přidejte ho na mapu Pozemkomatu.</h1>
+      <p class="sub">Prodáváte pozemek, nebo chcete oslovit lidi, kteří pozemky hledají? Vyplňte formulář níže. My si nabídku ověříme a poté ji přidáme na mapu i do seznamu příležitostí — ke stovkám nabídek z veřejných zdrojů.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:24px;">
+    <div class="wrap add-wrap">
+
+      <div class="login-tabs add-tabs" role="tablist" aria-label="Typ nabídky">
+        <button type="button" class="login-tab active" data-panel="prodej" role="tab" aria-selected="true">Prodej pozemku</button>
+        <button type="button" class="login-tab" data-panel="inzerce" role="tab" aria-selected="false">Inzerce</button>
+      </div>
+
+      <!-- PRODEJ -->
+      <div class="add-panel active" id="panel-prodej" role="tabpanel">
+        <p class="add-lead">Nabízíte konkrétní pozemek na prodej. Čím víc vyplníte, tím líp — zájemci hned uvidí, o co jde, a vy dostanete relevantní poptávky.</p>
+        <form class="add-form" id="form-prodej" novalidate>
+          <div class="add-row">
+            <div class="add-field">
+              <label for="p-obec">Obec / lokalita <span class="req">*</span></label>
+              <input id="p-obec" type="text" placeholder="např. Kolín" required>
+            </div>
+            <div class="add-field">
+              <label for="p-okres">Okres <span class="hint">(nepovinné)</span></label>
+              <input id="p-okres" type="text" placeholder="např. Kolín">
+            </div>
+          </div>
+          <div class="add-row">
+            <div class="add-field">
+              <label for="p-vymera">Výměra (m²) <span class="req">*</span></label>
+              <input id="p-vymera" type="number" inputmode="numeric" min="1" placeholder="např. 1200" required>
+            </div>
+            <div class="add-field">
+              <label for="p-cena">Cena (Kč) <span class="req">*</span></label>
+              <input id="p-cena" type="number" inputmode="numeric" min="1" placeholder="např. 850000" required>
+            </div>
+          </div>
+          <div class="add-row">
+            <div class="add-field">
+              <label for="p-druh">Druh pozemku</label>
+              <select id="p-druh">
+                <option value="">Vyberte…</option>
+                <option>Stavební</option>
+                <option>Orná půda</option>
+                <option>Louka / pastvina</option>
+                <option>Les</option>
+                <option>Zahrada</option>
+                <option>Ostatní</option>
+              </select>
+            </div>
+            <div class="add-field">
+              <label for="p-parcela">Parcelní číslo / k. ú. <span class="hint">(nepovinné)</span></label>
+              <input id="p-parcela" type="text" placeholder="např. 512/3, k. ú. Kolín">
+            </div>
+          </div>
+          <div class="add-field">
+            <label for="p-popis">Popis pozemku</label>
+            <textarea id="p-popis" placeholder="Přístup, sítě (voda, elektřina), tvar, okolí, územní plán… cokoliv důležitého."></textarea>
+          </div>
+          <div class="add-field">
+            <label for="p-odkaz">Odkaz na inzerát nebo katastr <span class="hint">(nepovinné)</span></label>
+            <input id="p-odkaz" type="url" placeholder="https://…">
+          </div>
+          <div class="add-row">
+            <div class="add-field">
+              <label for="p-jmeno">Vaše jméno <span class="req">*</span></label>
+              <input id="p-jmeno" type="text" autocomplete="name" placeholder="Jméno a příjmení" required>
+            </div>
+            <div class="add-field">
+              <label for="p-kontakt">Telefon nebo e-mail <span class="req">*</span></label>
+              <input id="p-kontakt" type="text" placeholder="777 123 456 nebo vas@email.cz" required>
+            </div>
+          </div>
+          <label class="add-check">
+            <input type="checkbox" id="p-souhlas" required>
+            <span>Potvrzuji, že jsem oprávněn pozemek nabízet, a souhlasím s tím, že údaje z formuláře použijeme ke zveřejnění nabídky na Pozemkomatu.</span>
+          </label>
+          <button type="submit" class="btn-primary btn-glow">Odeslat pozemek ke zveřejnění</button>
+          <p class="add-msg" id="msg-prodej" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <!-- INZERCE -->
+      <div class="add-panel" id="panel-inzerce" role="tabpanel" hidden>
+        <p class="add-lead">Ostatní nabídky kolem pozemků — když nejde přímo o prodej. Třeba že pozemek <b>hledáte</b> (poptávka), nabízíte ho k <b>pronájmu</b>, nebo máte zájem o <b>směnu</b>.</p>
+        <form class="add-form" id="form-inzerce" novalidate>
+          <div class="add-field">
+            <label for="i-typ">Typ inzerátu <span class="req">*</span></label>
+            <select id="i-typ" required>
+              <option value="">Vyberte…</option>
+              <option>Poptávka — hledám pozemek ke koupi</option>
+              <option>Pronájem pozemku</option>
+              <option>Směna pozemku</option>
+              <option>Jiné</option>
+            </select>
+          </div>
+          <div class="add-row">
+            <div class="add-field">
+              <label for="i-lokalita">Lokalita / kde <span class="req">*</span></label>
+              <input id="i-lokalita" type="text" placeholder="např. okres Kolín, Středočeský kraj" required>
+            </div>
+            <div class="add-field">
+              <label for="i-castka">Rozpočet / cena (Kč) <span class="hint">(nepovinné)</span></label>
+              <input id="i-castka" type="number" inputmode="numeric" min="1" placeholder="např. 500000">
+            </div>
+          </div>
+          <div class="add-field">
+            <label for="i-popis">Popis <span class="req">*</span></label>
+            <textarea id="i-popis" placeholder="Co hledáte nebo nabízíte, jaká výměra, jaké podmínky…" required></textarea>
+          </div>
+          <div class="add-row">
+            <div class="add-field">
+              <label for="i-jmeno">Vaše jméno <span class="req">*</span></label>
+              <input id="i-jmeno" type="text" autocomplete="name" placeholder="Jméno a příjmení" required>
+            </div>
+            <div class="add-field">
+              <label for="i-kontakt">Telefon nebo e-mail <span class="req">*</span></label>
+              <input id="i-kontakt" type="text" placeholder="777 123 456 nebo vas@email.cz" required>
+            </div>
+          </div>
+          <label class="add-check">
+            <input type="checkbox" id="i-souhlas" required>
+            <span>Souhlasím se zveřejněním inzerátu na Pozemkomatu a s použitím uvedených údajů k tomuto účelu.</span>
+          </label>
+          <button type="submit" class="btn-primary btn-glow">Odeslat inzerát ke zveřejnění</button>
+          <p class="add-msg" id="msg-inzerce" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <div class="add-honest">
+        <h4>Jak to funguje — bez klamání</h4>
+        <p>Pozemkomat běží na veřejných datech a nabídky od lidí procházejí ruční kontrolou, než se objeví na mapě. Neslibujeme okamžité zveřejnění „na jedno kliknutí". Nabídku si projdeme, případně vás doplníme na detaily a pak ji přidáme. Vaše kontaktní údaje slouží jen ke zpracování nabídky.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section pt-0">
+    <div class="wrap add-wrap">
+      <div class="section-head"><div class="eyebrow">Postup</div><h2>Od formuláře na mapu ve třech krocích.</h2></div>
+      <div class="add-steps">
+        <div class="add-step"><div class="n">01</div><h3>Vyplníte nabídku</h3><p>Prodej pozemku, nebo inzerát (poptávka, pronájem, směna). Zabere to pár minut.</p></div>
+        <div class="add-step"><div class="n">02</div><h3>My ji ověříme</h3><p>Zkontrolujeme, že údaje dávají smysl. U pozemku na prodej pomůže odkaz na katastr nebo inzerát.</p></div>
+        <div class="add-step"><div class="n">03</div><h3>Zveřejníme na mapě</h3><p>Nabídku přidáme na mapu i do seznamu příležitostí, kde ji lidé najdou mezi ostatními.</p></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div class="foot-brand-col">
+      <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Pozemkomat</span></div>
+      <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého. Děláme to s péčí, protože jsme se v tom sami hrabali.</p>
+    </div>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Mapa</a><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#cenik">Ceník</a><a href="pridat.html">Přidat pozemek</a></nav>
+    <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#druhy">Druhy pozemků</a><a href="index.html#slib">Náš slib</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
+    <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="index.html#realitky">Kontakt</a><a href="index.html#mapa">Zpět na mapu</a></nav>
+  </div>
+  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Pozemkomat</span></div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="js/pridat.js?v=20260814z" defer></script>
+</body>
+</html>
