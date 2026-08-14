@@ -541,12 +541,19 @@
   /* ---------- Živý ticker příležitostí ---------- */
   var tickTrack = document.getElementById('ticker-track');
   if (tickTrack) {
+    // Jen pár položek, ať pás není přehnaně dlouhý (dřív všech 234 → letělo to jak blesk)
+    var tickItems = DATA.slice(0, 18);
     var html = '';
-    DATA.forEach(function (d) {
+    tickItems.forEach(function (d) {
       html += '<span class="tick-item"><span class="td" style="background:' + TYPE[d.type].color + '"></span>' +
         TYPE[d.type].label + ' · <b>' + d.place + '</b> · ' + areaTxt(d) + ' · ' + d.extra + '</span>';
     });
-    tickTrack.innerHTML = html + html; // zdvojení pro plynulou smyčku
+    tickTrack.innerHTML = html + html; // zdvojení pro plynulou nekonečnou smyčku
+    // Rychlost nastavíme podle skutečné šířky ~ pohodlných 55 px/s (plynulé, čitelné)
+    requestAnimationFrame(function () {
+      var w = tickTrack.scrollWidth / 2;
+      if (w > 0) tickTrack.style.animationDuration = Math.max(30, Math.round(w / 55)) + 's';
+    });
   }
 
   /* ---------- Interaktivní mapa (Leaflet) ---------- */
