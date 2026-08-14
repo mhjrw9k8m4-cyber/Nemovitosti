@@ -312,6 +312,22 @@
   });
   renderAuth();
 
+  /* ---------- Přepínač fakturace v ceníku ---------- */
+  var billToggle = document.querySelector('.bill-toggle');
+  if (billToggle) {
+    billToggle.addEventListener('click', function (e) {
+      var btn = e.target.closest('.bt-opt');
+      if (!btn) return;
+      var mode = btn.getAttribute('data-bill');
+      billToggle.querySelectorAll('.bt-opt').forEach(function (b) { b.classList.toggle('active', b === btn); });
+      document.querySelectorAll('.price-card').forEach(function (card) {
+        var html = card.getAttribute('data-price-' + mode);
+        var el = card.querySelector('.pc-price');
+        if (html && el) el.innerHTML = html;
+      });
+    });
+  }
+
   /* ---------- Sticky header shrink + back-to-top ---------- */
   var header = document.getElementById('header');
   var toTop = document.getElementById('to-top');

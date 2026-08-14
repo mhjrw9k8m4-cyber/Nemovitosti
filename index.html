@@ -308,19 +308,23 @@
   <section class="section pt-0" id="cenik">
     <div class="wrap">
       <div class="section-head reveal"><div class="eyebrow">Ceník</div><h2>Začněte zdarma. Plaťte, až když vám to ušetří čas.</h2></div>
+      <div class="bill-toggle reveal" role="group" aria-label="Způsob fakturace">
+        <button type="button" class="bt-opt active" data-bill="month">Měsíčně</button>
+        <button type="button" class="bt-opt" data-bill="year">Ročně <span class="bt-save">2 měsíce zdarma</span></button>
+      </div>
       <div class="pricing">
-        <div class="price-card reveal">
+        <div class="price-card reveal" data-price-month="0 Kč<span>/ navždy</span>" data-price-year="0 Kč<span>/ navždy</span>">
           <div class="pc-name">Zdarma</div><div class="pc-price">0 Kč<span>/ navždy</span></div>
           <ul><li>✓ Prohlížení celé mapy</li><li>✓ Filtry a hledání</li><li>✓ 1 hlídaná lokalita</li><li>✓ Proklik do katastru</li></ul>
           <a href="#upozorneni" class="btn-outline">Začít zdarma</a>
         </div>
-        <div class="price-card featured reveal">
+        <div class="price-card featured reveal" data-price-month="199 Kč<span>/ měsíc</span>" data-price-year="1 990 Kč<span>/ rok</span>">
           <div class="pc-badge">Nejoblíbenější</div>
           <div class="pc-name">Pro</div><div class="pc-price">199 Kč<span>/ měsíc</span></div>
           <ul><li>✓ Vše ze Zdarma</li><li>✓ <b>Neomezené</b> hlídání lokalit</li><li>✓ Upozornění e-mailem i SMS</li><li>✓ Historie a export dat</li><li>✓ Přednostní novinky</li></ul>
           <a href="#upozorneni" class="btn-primary">Vyzkoušet Pro</a>
         </div>
-        <div class="price-card reveal">
+        <div class="price-card reveal" data-price-month="od 990 Kč<span>/ měsíc</span>" data-price-year="od 9 900 Kč<span>/ rok</span>">
           <div class="pc-name">Realitky &amp; obce</div><div class="pc-price">od 990 Kč<span>/ měsíc</span></div>
           <ul><li>✓ Widget mapy na váš web</li><li>✓ Více uživatelů v týmu</li><li>✓ Napojení přes API</li><li>✓ Přednostní podpora</li></ul>
           <a href="#realitky" class="btn-outline">Domluvit se</a>
@@ -365,7 +369,24 @@
   <!-- 12 · PRO REALITKY -->
   <section class="section pt-0" id="realitky">
     <div class="wrap">
-      <div class="section-head reveal"><div class="eyebrow">Pro realitky a obce</div><h2>Vložte si mapu vaší lokality na svůj web.</h2></div>
+      <div class="section-head reveal"><div class="eyebrow">Pro realitky a obce</div><h2>Buďte u příležitostí dřív než vaše konkurence.</h2><p class="section-sub">Ať už hledáte pozemky pro klienty, nebo chcete mapu na vlastní web — Pozemkomat vám dá náskok.</p></div>
+      <div class="realtor-grid reveal">
+        <div class="realtor-card">
+          <div class="rc-ico"><svg class="ic"><use href="#i-map"/></svg></div>
+          <h3>Náskok pro klienty</h3>
+          <p>Dražby, exekuce i obecní záměry na jednom místě. Nabídnete klientům pozemek dřív, než se objeví na běžných portálech.</p>
+        </div>
+        <div class="realtor-card">
+          <div class="rc-ico"><svg class="ic"><use href="#i-layers"/></svg></div>
+          <h3>Widget na váš web</h3>
+          <p>Interaktivní mapa vaší lokality přímo u vás. Aktualizuje se s naší datovou vrstvou — vy se o nic nestaráte.</p>
+        </div>
+        <div class="realtor-card">
+          <div class="rc-ico"><svg class="ic"><use href="#i-database"/></svg></div>
+          <h3>Napojení přes API</h3>
+          <p>Data o příležitostech přímo do vašich systémů a CRM. Pro týmy, obce i portály s vlastními procesy.</p>
+        </div>
+      </div>
       <div class="embed-demo reveal">
         <div>
           <h3>Jeden řádek kódu</h3>
@@ -407,6 +428,9 @@
         <details class="faq-item"><summary>Ukazujete osobní údaje vlastníků?</summary><p>Ne. Zobrazujeme jen příležitosti z veřejných zdrojů — neprodáváme osobní údaje ani kontakty. Ověření vlastníka je vždy přes oficiální katastr.</p></details>
         <details class="faq-item"><summary>Musím být odborník?</summary><p>Vůbec ne. Máme slovníček, který vysvětluje každý pojem česky. Mapa je navržená tak, aby jí rozuměl každý.</p></details>
         <details class="faq-item"><summary>Můžu mapu vložit na svůj web?</summary><p>Ano. Pro realitky a obce máme widget — jeden řádek kódu a mapa vaší lokality běží na vašem webu.</p></details>
+        <details class="faq-item"><summary>Můžu si založit účet a uložit si pozemky?</summary><p>Ano. Po přihlášení si <b>uložíte oblíbené pozemky</b> a rychle se k nim vrátíte. Zatím účet běží jen ve vašem prohlížeči — bez hesla a bez odesílání dat. Plnohodnotné účty se synchronizací připravujeme.</p></details>
+        <details class="faq-item"><summary>Pokrýváte celou Českou republiku?</summary><p>Ano. Data sbíráme ze všech krajů ČR. Na mapě vidíte příležitosti napříč republikou a můžete si je filtrovat podle okresu, druhu i ceny.</p></details>
+        <details class="faq-item"><summary>Můžu hledat jen pozemky do určité ceny?</summary><p>Ano. Přímo na mapě je filtr „Cena do" — nastavíte si rozpočet a uvidíte jen pozemky, které se do něj vejdou. K tomu filtr druhu a vyhledávání podle místa.</p></details>
       </div>
     </div>
   </section>
