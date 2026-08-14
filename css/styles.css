@@ -195,6 +195,21 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .promise h4{font-family:'Fraunces',serif; font-size:19px; font-weight:500; margin-bottom:9px;}
 .promise p{font-size:14px; color:var(--text-ondark-mute);}
 @media (max-width:760px){ .promise-grid{grid-template-columns:1fr;} }
+/* Druhy pozemků */
+.druhy-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+.druhy-grid > *{min-width:0;}
+.druh-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:12px; padding:22px 22px 22px 24px; position:relative; overflow:hidden; transition:border-color .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);}
+.druh-card::before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:linear-gradient(180deg, var(--acc), transparent);}
+.druh-card:hover{border-color:var(--line-strong); transform:translateY(-3px); box-shadow:var(--shadow);}
+.druh-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+.druh-top h4{font-family:'Fraunces',serif; font-size:19px; font-weight:500;}
+.druh-card p{font-size:14px; color:var(--text-ondark-mute);}
+.druh-demand{font-size:10px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; padding:3px 9px; border-radius:11px; white-space:nowrap;}
+.druh-demand.high{color:var(--c-sale); background:rgba(62,142,91,0.15); border:1px solid rgba(62,142,91,0.4);}
+.druh-demand.mid{color:var(--copper-bright); background:rgba(201,152,47,0.15); border:1px solid rgba(201,152,47,0.4);}
+.druh-demand.niche{color:var(--text-ondark-mute); background:rgba(237,230,214,0.08); border:1px solid var(--line);}
+@media (max-width:900px){ .druhy-grid{grid-template-columns:repeat(2,1fr);} }
+@media (max-width:600px){ .druhy-grid{grid-template-columns:1fr;} }
 
 /* Vypilovaná mapa-hrdina */
 .map-holder{box-shadow:inset 0 0 0 1px var(--line), 0 24px 60px -28px rgba(0,0,0,0.6);}
