@@ -18,11 +18,17 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260814B">
+  <link rel="stylesheet" href="css/styles.css?v=20260814C">
 </head>
 <body>
 
 <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+</svg>
 
 <header id="header">
   <div class="wrap">
@@ -41,82 +47,122 @@
 <main id="obsah">
 
   <section class="add-hero">
+    <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
     <div class="wrap add-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Přidat pozemek na prodej</div>
       <h1>Prodáváte pozemek? Přidejte ho na mapu Pozemkomatu.</h1>
-      <p class="sub">Vyplňte údaje o pozemku a kontakt na sebe. My si nabídku ověříme a poté ji zveřejníme na mapě i v seznamu příležitostí — ke stovkám nabídek z veřejných zdrojů, kde ji uvidí lidé, kteří pozemky aktivně hledají.</p>
+      <p class="sub">Vyplňte údaje o pozemku a kontakt na sebe. My si nabídku ověříme a poté ji zveřejníme na mapě i v seznamu příležitostí — kde ji uvidí lidé, kteří pozemky aktivně hledají.</p>
     </div>
   </section>
 
-  <section class="section" style="padding-top:24px;">
-    <div class="wrap add-wrap">
+  <section class="section" style="padding-top:20px;">
+    <div class="wrap">
+      <div class="add-grid">
 
-      <p class="add-lead"><b>Jak to funguje:</b> vyplníte formulář níže a necháte na sebe kontakt. Nic se nezveřejní automaticky — nabídku si nejdřív <b>ručně projdeme a ověříme</b>, případně vás doplníme na detaily, a teprve pak ji přidáme na mapu. Vaše kontaktní údaje použijeme jen ke zpracování a zveřejnění nabídky.</p>
+        <!-- Formulář v elevované kartě -->
+        <div>
+          <div class="add-card">
+            <p class="add-lead" style="margin-top:0;"><b>Jak to funguje:</b> vyplníte formulář a necháte na sebe kontakt. Nic se nezveřejní automaticky — nabídku si nejdřív <b>ručně projdeme a ověříme</b>, a teprve pak ji přidáme na mapu. Kontaktní údaje použijeme jen ke zpracování nabídky.</p>
+            <form class="add-form" id="form-prodej" novalidate>
+              <div class="add-row">
+                <div class="add-field">
+                  <label for="p-obec">Obec / lokalita <span class="req">*</span></label>
+                  <input id="p-obec" type="text" placeholder="např. Kolín" required>
+                </div>
+                <div class="add-field">
+                  <label for="p-okres">Okres <span class="hint">(nepovinné)</span></label>
+                  <input id="p-okres" type="text" placeholder="např. Kolín">
+                </div>
+              </div>
+              <div class="add-row">
+                <div class="add-field">
+                  <label for="p-vymera">Výměra (m²) <span class="req">*</span></label>
+                  <input id="p-vymera" type="number" inputmode="numeric" min="1" placeholder="např. 1200" required>
+                </div>
+                <div class="add-field">
+                  <label for="p-cena">Cena (Kč) <span class="req">*</span></label>
+                  <input id="p-cena" type="number" inputmode="numeric" min="1" placeholder="např. 850000" required>
+                </div>
+              </div>
+              <div class="add-row">
+                <div class="add-field">
+                  <label for="p-druh">Druh pozemku</label>
+                  <select id="p-druh">
+                    <option value="">Vyberte…</option>
+                    <option>Stavební</option>
+                    <option>Orná půda</option>
+                    <option>Louka / pastvina</option>
+                    <option>Les</option>
+                    <option>Zahrada</option>
+                    <option>Ostatní</option>
+                  </select>
+                </div>
+                <div class="add-field">
+                  <label for="p-parcela">Parcelní číslo / k. ú. <span class="hint">(nepovinné)</span></label>
+                  <input id="p-parcela" type="text" placeholder="např. 512/3, k. ú. Kolín">
+                </div>
+              </div>
+              <div class="add-field">
+                <label for="p-popis">Popis pozemku</label>
+                <textarea id="p-popis" placeholder="Přístup, sítě (voda, elektřina), tvar, okolí, územní plán… cokoliv důležitého."></textarea>
+              </div>
+              <div class="add-field">
+                <label for="p-odkaz">Odkaz na inzerát nebo katastr <span class="hint">(nepovinné)</span></label>
+                <input id="p-odkaz" type="url" placeholder="https://…">
+              </div>
+              <div class="add-row">
+                <div class="add-field">
+                  <label for="p-jmeno">Vaše jméno <span class="req">*</span></label>
+                  <input id="p-jmeno" type="text" autocomplete="name" placeholder="Jméno a příjmení" required>
+                </div>
+                <div class="add-field">
+                  <label for="p-kontakt">Telefon nebo e-mail <span class="req">*</span></label>
+                  <input id="p-kontakt" type="text" placeholder="777 123 456 nebo vas@email.cz" required>
+                </div>
+              </div>
+              <label class="add-check">
+                <input type="checkbox" id="p-souhlas" required>
+                <span>Potvrzuji, že jsem oprávněn pozemek nabízet, a souhlasím s tím, že údaje z formuláře použijeme ke zveřejnění nabídky na Pozemkomatu.</span>
+              </label>
+              <button type="submit" class="btn-primary btn-glow">Odeslat pozemek ke zveřejnění</button>
+              <p class="add-msg" id="msg-prodej" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
 
-      <form class="add-form" id="form-prodej" novalidate>
-        <div class="add-row">
-          <div class="add-field">
-            <label for="p-obec">Obec / lokalita <span class="req">*</span></label>
-            <input id="p-obec" type="text" placeholder="např. Kolín" required>
+        <!-- Boční panel: náhled na mapě, výhody, postup -->
+        <aside class="add-aside">
+          <div class="aside-card">
+            <div class="embed-preview" aria-hidden="true">
+              <span class="ep-dot sale" style="left:24%; top:34%"></span>
+              <span class="ep-dot drazba" style="left:64%; top:26%"></span>
+              <span class="ep-dot sale" style="left:42%; top:62%"></span>
+              <span class="ep-dot exekuce" style="left:76%; top:54%"></span>
+              <span class="ep-dot sale" style="left:30%; top:76%"></span>
+              <span class="ep-dot you" style="left:50%; top:46%"></span>
+            </div>
+            <p class="amp-cap">Takhle se vaše nabídka objeví na mapě — mezi ostatními příležitostmi.</p>
           </div>
-          <div class="add-field">
-            <label for="p-okres">Okres <span class="hint">(nepovinné)</span></label>
-            <input id="p-okres" type="text" placeholder="např. Kolín">
+
+          <div class="aside-card">
+            <h3>Proč přidat právě sem</h3>
+            <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg></span><span class="b-txt"><b>Na mapě celé ČR</b><span>Vidí ji lidé, kteří pozemky aktivně hledají.</span></span></div>
+            <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span><span class="b-txt"><b>Mezi ověřenými daty</b><span>Stojí vedle příležitostí z veřejných zdrojů.</span></span></div>
+            <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg></span><span class="b-txt"><b>Přímý kontakt</b><span>Zájemci se ozvou přímo vám, bez provize.</span></span></div>
+            <div class="add-stats"><span>Zdarma</span><span>Celá ČR</span><span>Bez provize</span></div>
           </div>
-        </div>
-        <div class="add-row">
-          <div class="add-field">
-            <label for="p-vymera">Výměra (m²) <span class="req">*</span></label>
-            <input id="p-vymera" type="number" inputmode="numeric" min="1" placeholder="např. 1200" required>
+
+          <div class="aside-card">
+            <h3>Postup</h3>
+            <div class="add-timeline">
+              <div class="atl-step"><b>1 · Vyplníte údaje</b><span>O pozemku i kontakt na sebe.</span></div>
+              <div class="atl-step"><b>2 · My je ověříme</b><span>Zkontrolujeme, že dávají smysl.</span></div>
+              <div class="atl-step"><b>3 · Zveřejníme na mapě</b><span>Nabídku uvidí zájemci mezi ostatními.</span></div>
+            </div>
           </div>
-          <div class="add-field">
-            <label for="p-cena">Cena (Kč) <span class="req">*</span></label>
-            <input id="p-cena" type="number" inputmode="numeric" min="1" placeholder="např. 850000" required>
-          </div>
-        </div>
-        <div class="add-row">
-          <div class="add-field">
-            <label for="p-druh">Druh pozemku</label>
-            <select id="p-druh">
-              <option value="">Vyberte…</option>
-              <option>Stavební</option>
-              <option>Orná půda</option>
-              <option>Louka / pastvina</option>
-              <option>Les</option>
-              <option>Zahrada</option>
-              <option>Ostatní</option>
-            </select>
-          </div>
-          <div class="add-field">
-            <label for="p-parcela">Parcelní číslo / k. ú. <span class="hint">(nepovinné)</span></label>
-            <input id="p-parcela" type="text" placeholder="např. 512/3, k. ú. Kolín">
-          </div>
-        </div>
-        <div class="add-field">
-          <label for="p-popis">Popis pozemku</label>
-          <textarea id="p-popis" placeholder="Přístup, sítě (voda, elektřina), tvar, okolí, územní plán… cokoliv důležitého."></textarea>
-        </div>
-        <div class="add-field">
-          <label for="p-odkaz">Odkaz na inzerát nebo katastr <span class="hint">(nepovinné)</span></label>
-          <input id="p-odkaz" type="url" placeholder="https://…">
-        </div>
-        <div class="add-row">
-          <div class="add-field">
-            <label for="p-jmeno">Vaše jméno <span class="req">*</span></label>
-            <input id="p-jmeno" type="text" autocomplete="name" placeholder="Jméno a příjmení" required>
-          </div>
-          <div class="add-field">
-            <label for="p-kontakt">Telefon nebo e-mail <span class="req">*</span></label>
-            <input id="p-kontakt" type="text" placeholder="777 123 456 nebo vas@email.cz" required>
-          </div>
-        </div>
-        <label class="add-check">
-          <input type="checkbox" id="p-souhlas" required>
-          <span>Potvrzuji, že jsem oprávněn pozemek nabízet, a souhlasím s tím, že údaje z formuláře použijeme ke zveřejnění nabídky na Pozemkomatu.</span>
-        </label>
-        <button type="submit" class="btn-primary btn-glow">Odeslat pozemek ke zveřejnění</button>
-        <p class="add-msg" id="msg-prodej" role="status" aria-live="polite"></p>
-      </form>
+        </aside>
+
+      </div>
 
       <!-- Proklik na druhou stránku: Inzerce -->
       <div class="add-cross">
@@ -127,17 +173,6 @@
         <a href="inzerce.html" class="btn-primary btn-glow">Přejít na inzerci →</a>
       </div>
 
-    </div>
-  </section>
-
-  <section class="section pt-0">
-    <div class="wrap add-wrap">
-      <div class="section-head"><div class="eyebrow">Postup</div><h2>Od formuláře na mapu ve třech krocích.</h2></div>
-      <div class="add-steps">
-        <div class="add-step"><div class="n">01</div><h3>Vyplníte údaje</h3><p>O pozemku i kontakt na sebe. Zabere to pár minut, čím víc vyplníte, tím líp.</p></div>
-        <div class="add-step"><div class="n">02</div><h3>My je ověříme</h3><p>Zkontrolujeme, že údaje dávají smysl. Pomůže odkaz na katastr nebo stávající inzerát.</p></div>
-        <div class="add-step"><div class="n">03</div><h3>Zveřejníme na mapě</h3><p>Nabídku přidáme na mapu i do seznamu, kde ji lidé najdou mezi ostatními příležitostmi.</p></div>
-      </div>
     </div>
   </section>
 
@@ -158,6 +193,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/pridat.js?v=20260814B" defer></script>
+<script src="js/pridat.js?v=20260814C" defer></script>
 </body>
 </html>

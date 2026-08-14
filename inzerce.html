@@ -18,11 +18,17 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260814B">
+  <link rel="stylesheet" href="css/styles.css?v=20260814C">
 </head>
 <body>
 
 <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+</svg>
 
 <header id="header">
   <div class="wrap">
@@ -41,6 +47,7 @@
 <main id="obsah">
 
   <section class="add-hero">
+    <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
     <div class="wrap add-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Inzerce pozemků</div>
       <h1>Hledáte pozemek, nebo nabízíte pronájem či směnu?</h1>
@@ -48,53 +55,92 @@
     </div>
   </section>
 
-  <section class="section" style="padding-top:24px;">
-    <div class="wrap add-wrap">
+  <section class="section" style="padding-top:20px;">
+    <div class="wrap">
+      <div class="add-grid">
 
-      <p class="add-lead"><b>Jak to funguje:</b> vyplníte inzerát níže a necháte na sebe kontakt. Nic se nezveřejní automaticky — inzerát si nejdřív <b>ručně projdeme a ověříme</b>, a teprve pak ho přidáme. Vaše kontaktní údaje použijeme jen ke zpracování a zveřejnění inzerátu.</p>
+        <!-- Formulář v elevované kartě -->
+        <div>
+          <div class="add-card">
+            <p class="add-lead" style="margin-top:0;"><b>Jak to funguje:</b> vyplníte inzerát a necháte na sebe kontakt. Nic se nezveřejní automaticky — inzerát si nejdřív <b>ručně projdeme a ověříme</b>, a teprve pak ho přidáme. Kontaktní údaje použijeme jen ke zpracování inzerátu.</p>
+            <form class="add-form" id="form-inzerce" novalidate>
+              <div class="add-field">
+                <label for="i-typ">Typ inzerátu <span class="req">*</span></label>
+                <select id="i-typ" required>
+                  <option value="">Vyberte…</option>
+                  <option>Poptávka — hledám pozemek ke koupi</option>
+                  <option>Pronájem pozemku</option>
+                  <option>Směna pozemku</option>
+                  <option>Jiné</option>
+                </select>
+              </div>
+              <div class="add-row">
+                <div class="add-field">
+                  <label for="i-lokalita">Lokalita / kde <span class="req">*</span></label>
+                  <input id="i-lokalita" type="text" placeholder="např. okres Kolín, Středočeský kraj" required>
+                </div>
+                <div class="add-field">
+                  <label for="i-castka">Rozpočet / cena (Kč) <span class="hint">(nepovinné)</span></label>
+                  <input id="i-castka" type="number" inputmode="numeric" min="1" placeholder="např. 500000">
+                </div>
+              </div>
+              <div class="add-field">
+                <label for="i-popis">Popis <span class="req">*</span></label>
+                <textarea id="i-popis" placeholder="Co hledáte nebo nabízíte, jaká výměra, jaké podmínky…" required></textarea>
+              </div>
+              <div class="add-row">
+                <div class="add-field">
+                  <label for="i-jmeno">Vaše jméno <span class="req">*</span></label>
+                  <input id="i-jmeno" type="text" autocomplete="name" placeholder="Jméno a příjmení" required>
+                </div>
+                <div class="add-field">
+                  <label for="i-kontakt">Telefon nebo e-mail <span class="req">*</span></label>
+                  <input id="i-kontakt" type="text" placeholder="777 123 456 nebo vas@email.cz" required>
+                </div>
+              </div>
+              <label class="add-check">
+                <input type="checkbox" id="i-souhlas" required>
+                <span>Souhlasím se zveřejněním inzerátu na Pozemkomatu a s použitím uvedených údajů k tomuto účelu.</span>
+              </label>
+              <button type="submit" class="btn-primary btn-glow">Odeslat inzerát ke zveřejnění</button>
+              <p class="add-msg" id="msg-inzerce" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
 
-      <form class="add-form" id="form-inzerce" novalidate>
-        <div class="add-field">
-          <label for="i-typ">Typ inzerátu <span class="req">*</span></label>
-          <select id="i-typ" required>
-            <option value="">Vyberte…</option>
-            <option>Poptávka — hledám pozemek ke koupi</option>
-            <option>Pronájem pozemku</option>
-            <option>Směna pozemku</option>
-            <option>Jiné</option>
-          </select>
-        </div>
-        <div class="add-row">
-          <div class="add-field">
-            <label for="i-lokalita">Lokalita / kde <span class="req">*</span></label>
-            <input id="i-lokalita" type="text" placeholder="např. okres Kolín, Středočeský kraj" required>
+        <!-- Boční panel: náhled na mapě, výhody, postup -->
+        <aside class="add-aside">
+          <div class="aside-card">
+            <div class="embed-preview" aria-hidden="true">
+              <span class="ep-dot sale" style="left:24%; top:34%"></span>
+              <span class="ep-dot drazba" style="left:64%; top:26%"></span>
+              <span class="ep-dot sale" style="left:42%; top:62%"></span>
+              <span class="ep-dot exekuce" style="left:76%; top:54%"></span>
+              <span class="ep-dot sale" style="left:30%; top:76%"></span>
+              <span class="ep-dot you" style="left:50%; top:46%"></span>
+            </div>
+            <p class="amp-cap">Takhle se váš inzerát objeví na Pozemkomatu — mezi zájemci o pozemky.</p>
           </div>
-          <div class="add-field">
-            <label for="i-castka">Rozpočet / cena (Kč) <span class="hint">(nepovinné)</span></label>
-            <input id="i-castka" type="number" inputmode="numeric" min="1" placeholder="např. 500000">
+
+          <div class="aside-card">
+            <h3>Proč inzerovat právě sem</h3>
+            <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg></span><span class="b-txt"><b>Cílená návštěvnost</b><span>Chodí sem lidé, kteří řeší pozemky, ne náhodní.</span></span></div>
+            <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span><span class="b-txt"><b>Ověřený inzerát</b><span>Každý inzerát projde ruční kontrolou.</span></span></div>
+            <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg></span><span class="b-txt"><b>Přímý kontakt</b><span>Zájemci se ozvou přímo vám, bez provize.</span></span></div>
+            <div class="add-stats"><span>Zdarma</span><span>Celá ČR</span><span>Bez provize</span></div>
           </div>
-        </div>
-        <div class="add-field">
-          <label for="i-popis">Popis <span class="req">*</span></label>
-          <textarea id="i-popis" placeholder="Co hledáte nebo nabízíte, jaká výměra, jaké podmínky…" required></textarea>
-        </div>
-        <div class="add-row">
-          <div class="add-field">
-            <label for="i-jmeno">Vaše jméno <span class="req">*</span></label>
-            <input id="i-jmeno" type="text" autocomplete="name" placeholder="Jméno a příjmení" required>
+
+          <div class="aside-card">
+            <h3>Postup</h3>
+            <div class="add-timeline">
+              <div class="atl-step"><b>1 · Vyplníte inzerát</b><span>Co hledáte nebo nabízíte a kontakt.</span></div>
+              <div class="atl-step"><b>2 · My ho ověříme</b><span>Projdeme si ho, ať dává smysl.</span></div>
+              <div class="atl-step"><b>3 · Zveřejníme</b><span>Uvidí ho lidé se zájmem o pozemky.</span></div>
+            </div>
           </div>
-          <div class="add-field">
-            <label for="i-kontakt">Telefon nebo e-mail <span class="req">*</span></label>
-            <input id="i-kontakt" type="text" placeholder="777 123 456 nebo vas@email.cz" required>
-          </div>
-        </div>
-        <label class="add-check">
-          <input type="checkbox" id="i-souhlas" required>
-          <span>Souhlasím se zveřejněním inzerátu na Pozemkomatu a s použitím uvedených údajů k tomuto účelu.</span>
-        </label>
-        <button type="submit" class="btn-primary btn-glow">Odeslat inzerát ke zveřejnění</button>
-        <p class="add-msg" id="msg-inzerce" role="status" aria-live="polite"></p>
-      </form>
+        </aside>
+
+      </div>
 
       <!-- Proklik na druhou stránku: Prodej -->
       <div class="add-cross">
@@ -105,17 +151,6 @@
         <a href="pridat.html" class="btn-primary btn-glow">Přidat pozemek na prodej →</a>
       </div>
 
-    </div>
-  </section>
-
-  <section class="section pt-0">
-    <div class="wrap add-wrap">
-      <div class="section-head"><div class="eyebrow">Postup</div><h2>Od inzerátu ke zveřejnění ve třech krocích.</h2></div>
-      <div class="add-steps">
-        <div class="add-step"><div class="n">01</div><h3>Vyplníte inzerát</h3><p>Co hledáte nebo nabízíte, lokalitu a kontakt na sebe.</p></div>
-        <div class="add-step"><div class="n">02</div><h3>My ho ověříme</h3><p>Projdeme si ho, ať dává smysl, případně se vás doptáme na detaily.</p></div>
-        <div class="add-step"><div class="n">03</div><h3>Zveřejníme</h3><p>Inzerát přidáme na Pozemkomat, kde ho uvidí lidé se zájmem o pozemky.</p></div>
-      </div>
     </div>
   </section>
 
@@ -136,6 +171,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/pridat.js?v=20260814B" defer></script>
+<script src="js/pridat.js?v=20260814C" defer></script>
 </body>
 </html>

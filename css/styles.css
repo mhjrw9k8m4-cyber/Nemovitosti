@@ -851,3 +851,40 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   .add-steps{grid-template-columns:1fr;}
   .add-cross{flex-direction:column; align-items:flex-start;}
 }
+
+/* ---------- „Spicy" vzhled stránek Přidat/Inzerce ---------- */
+.add-hero{position:relative; overflow:hidden;}
+.add-hero .wrap{position:relative; z-index:1;}
+.add-grid{display:grid; grid-template-columns:1.5fr 1fr; gap:36px; align-items:start;}
+.add-card{position:relative; background:linear-gradient(180deg, var(--ink-soft), rgba(29,46,61,0.35));
+  border:1px solid var(--line-strong); border-radius:16px; padding:28px 26px;
+  box-shadow:0 26px 64px -34px rgba(0,0,0,0.75);}
+.add-card::before{content:""; position:absolute; top:0; left:24px; right:24px; height:1px;
+  background:linear-gradient(90deg, transparent, var(--copper), transparent); opacity:0.75;}
+.add-aside{display:flex; flex-direction:column; gap:18px; position:sticky; top:96px;}
+.aside-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:14px; padding:22px;}
+.aside-card > h3{font-size:14px; margin-bottom:16px; letter-spacing:0.01em;}
+.benefit{display:flex; gap:13px; align-items:flex-start; margin-bottom:15px;}
+.benefit:last-child{margin-bottom:0;}
+.benefit .rc-ico{flex:none; margin-bottom:0; width:38px; height:38px;}
+.benefit .rc-ico .ic{width:19px; height:19px;}
+.benefit .b-txt b{display:block; font-size:13.5px; color:var(--text-ondark); margin-bottom:2px;}
+.benefit .b-txt span{font-size:12.5px; color:var(--text-ondark-mute); line-height:1.45;}
+.add-stats{display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;}
+.add-stats span{font-size:12px; font-weight:600; color:var(--copper-bright); background:rgba(201,152,47,0.10);
+  border:1px solid rgba(201,152,47,0.25); border-radius:20px; padding:5px 12px;}
+.amp-cap{font-size:11.5px; color:var(--text-ondark-mute); margin-top:12px; text-align:center;}
+.ep-dot.you{width:16px; height:16px; background:var(--copper-bright); color:var(--copper-bright);
+  border-color:#fff; z-index:2; animation:youpulse 1.9s ease-out infinite;}
+@keyframes youpulse{0%{box-shadow:0 0 0 0 rgba(224,174,67,0.55);}70%{box-shadow:0 0 0 13px rgba(224,174,67,0);}100%{box-shadow:0 0 0 0 rgba(224,174,67,0);}}
+.add-timeline{padding-left:5px;}
+.atl-step{position:relative; padding:0 0 16px 24px; border-left:1px solid var(--line);}
+.atl-step:last-child{border-left-color:transparent; padding-bottom:0;}
+.atl-step::before{content:""; position:absolute; left:-5px; top:3px; width:9px; height:9px; border-radius:50%;
+  background:var(--copper); box-shadow:0 0 0 3px var(--ink-soft);}
+.atl-step b{display:block; font-size:13.5px; margin-bottom:2px;}
+.atl-step span{font-size:12.5px; color:var(--text-ondark-mute); line-height:1.45;}
+@media (max-width:900px){
+  .add-grid{grid-template-columns:1fr; gap:24px;}
+  .add-aside{position:static;}
+}
