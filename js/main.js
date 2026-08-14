@@ -951,6 +951,8 @@
 
   // Tečkovaná mapa: každý pozemek = tečka. Navíc obrysy krajů pro orientaci.
   var krajByName = {};
+  // Na dotykových zařízeních není „myš pryč" → popisek kraje sám plynule zmizí.
+  var isTouch = (typeof matchMedia === 'function' && matchMedia('(hover: none)').matches) || ('ontouchstart' in window);
   function styleKraj() { return { color: 'rgba(224,174,67,0.4)', weight: 1.2, fill: true, fillColor: '#E0AE43', fillOpacity: 0.03 }; }
   if (KRAJE_GEOM) {
     var feats = Object.keys(KRAJE_GEOM).map(function (k) { return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] }; });
@@ -962,9 +964,23 @@
         layer.on('click', function () { map.fitBounds(layer.getBounds(), { maxZoom: 11, padding: [16, 16] }); });
         layer.on('mouseover', function () { layer.setStyle({ weight: 2, color: '#F2D79A', fillOpacity: 0.06 }); layer.bringToFront(); });
         layer.on('mouseout', function () { if (krajLayer) krajLayer.resetStyle(layer); });
+        // Dotyk: po 2 s popisek plynule zhasne, ať nezůstane „viset" a nebrání dalšímu klikání.
+        layer.on('tooltipopen', function (e) {
+          if (!isTouch) return;
+          var tip = e.tooltip;
+          clearTimeout(layer._tipTimer);
+          layer._tipTimer = setTimeout(function () {
+            var c = tip && (tip.getElement ? tip.getElement() : tip._container);
+            if (c) { c.style.transition = 'opacity .45s ease'; c.style.opacity = '0'; }
+            setTimeout(function () { layer.closeTooltip(); if (krajLayer) krajLayer.resetStyle(layer); }, 470);
+          }, 2000);
+        });
+        layer.on('tooltipclose', function () { clearTimeout(layer._tipTimer); });
       }
     });
   }
+  // České skloňování: 1 pozemek · 2–4 pozemky · 5+ pozemků
+  function plPozemek(n) { return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků'); }
   function refreshKrajTips(vis) {
     krajCounts = {};
     vis.forEach(function (d) { var k = krajOf(d); if (!k) return; var o = krajCounts[k] || (krajCounts[k] = { total: 0 }); o.total++; o[d.type] = (o[d.type] || 0) + 1; });
@@ -972,7 +988,7 @@
       var o = krajCounts[k];
       var parts = [];
       if (o) ['sale', 'drazba', 'exekuce', 'obec'].forEach(function (tp) { if (o[tp]) parts.push(o[tp] + '× ' + TYPE[tp].label.toLowerCase()); });
-      var txt = '<b>' + k + ' kraj</b><br>' + (o ? o.total + ' pozemků' + (parts.length ? ' · ' + parts.join(', ') : '') : 'žádné nabídky');
+      var txt = '<b>' + k + ' kraj</b><br>' + (o ? o.total + ' ' + plPozemek(o.total) + (parts.length ? ' · ' + parts.join(', ') : '') : 'žádné nabídky');
       krajByName[k].setTooltipContent(txt);
     });
   }
