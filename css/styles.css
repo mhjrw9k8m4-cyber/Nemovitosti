@@ -113,9 +113,9 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 @keyframes dotpulse{0%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 0 rgba(217,164,65,0.5);} 100%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 10px rgba(217,164,65,0);}}
 .data-updated{margin:-6px 0 14px; font-size:12px; color:var(--copper-bright); opacity:0.85;}
 .data-updated:empty{display:none;}
-.leaflet-tooltip.kraj-tip{background:rgba(20,32,44,0.96); border:1px solid var(--copper); color:var(--parchment); font-family:'Inter',sans-serif; font-weight:500; font-size:12px; line-height:1.5; border-radius:7px; box-shadow:0 6px 18px -4px rgba(0,0,0,0.6);}
-.leaflet-tooltip.kraj-tip b{color:var(--copper-bright); font-weight:700;}
-.leaflet-tooltip.kraj-tip::before{border-top-color:var(--copper);}
+.leaflet-tooltip.kraj-tip{background:rgba(20,32,44,0.97); border:1px solid rgba(224,174,67,0.6); color:var(--parchment); font-family:'Inter',sans-serif; font-weight:500; font-size:12px; line-height:1.55; padding:8px 12px; border-radius:10px; box-shadow:0 10px 26px -6px rgba(0,0,0,0.65);}
+.leaflet-tooltip.kraj-tip b{display:inline-block; font-family:'Fraunces',serif; color:var(--copper-bright); font-weight:600; font-size:14.5px; margin-bottom:1px;}
+.leaflet-tooltip.kraj-tip::before{border-top-color:rgba(224,174,67,0.6);}
 @keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(2.2); opacity:0;}}
 
 /* Header */
@@ -400,10 +400,29 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 @media (max-width:560px){ .map-legend{font-size:10px; padding:6px 8px; gap:4px;} }
 /* Zámek mapy — mapa se hýbe jen když je odemčená */
 /* Lehké přepínání posouvání mapy (bez těžkého overlay) */
-.map-pan-toggle{position:absolute; top:12px; right:12px; z-index:600; max-width:calc(100% - 24px); background:rgba(22,35,47,0.92); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:22px; padding:9px 16px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}
+.map-pan-toggle{position:absolute; bottom:12px; right:12px; z-index:600; max-width:calc(100% - 24px); background:rgba(22,35,47,0.92); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:22px; padding:9px 16px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}
 .map-pan-toggle:hover{border-color:var(--copper-bright);}
 .map-pan-toggle:active{transform:translateY(1px);}
 .map-pan-toggle.on{background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); border-color:var(--copper);}
+
+/* Výběr kraje: dokud není vybrán, tečky (pozemky) nejsou klikací → klik vždy trefí kraj.
+   Značky mají v Leafletu vlastní pointer-events, proto je nutné je přebít napřímo. */
+.kraj-lock .leaflet-marker-pane{pointer-events:none;}
+.kraj-lock .leaflet-marker-icon, .kraj-lock .leaflet-marker-icon *{pointer-events:none !important;}
+/* Nápověda „vyberte kraj" (fáze 1) */
+.kraj-hint{position:absolute; top:12px; left:12px; z-index:600; display:inline-flex; align-items:center; gap:8px; background:rgba(20,32,44,0.92); border:1px solid var(--line-strong); color:var(--parchment); font-size:12.5px; font-weight:600; padding:8px 13px; border-radius:22px; box-shadow:var(--shadow); backdrop-filter:blur(4px); pointer-events:none; max-width:calc(100% - 90px);}
+.kraj-hint[hidden]{display:none;}
+.kraj-hint .kh-pin{width:9px; height:9px; border-radius:50%; background:var(--copper-bright); box-shadow:0 0 0 4px rgba(224,174,67,0.22); flex:none;}
+/* Vymazlený nadpis vybraného kraje (fáze 2) */
+.kraj-head{position:absolute; top:12px; left:12px; z-index:600; max-width:calc(100% - 90px); display:inline-flex; align-items:center; gap:11px; background:linear-gradient(135deg, rgba(20,32,44,0.97), rgba(30,46,62,0.97)); border:1px solid rgba(224,174,67,0.45); border-radius:13px; padding:8px 14px 8px 8px; box-shadow:0 12px 30px -12px rgba(0,0,0,0.75); backdrop-filter:blur(6px);}
+.kraj-head[hidden]{display:none;}
+.kh-back{flex:none; width:38px; height:38px; border-radius:9px; border:1px solid var(--line-strong); background:rgba(255,255,255,0.05); color:var(--parchment); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .15s ease, border-color .15s ease, transform .1s ease;}
+.kh-back:hover{background:rgba(224,174,67,0.16); border-color:var(--copper-bright);}
+.kh-back:active{transform:translateY(1px);}
+.kh-back svg{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2.3; stroke-linecap:round; stroke-linejoin:round;}
+.kh-txt{display:flex; flex-direction:column; gap:1px; min-width:0;}
+.kh-txt b{font-family:'Fraunces',serif; font-size:18px; font-weight:600; color:var(--parchment); line-height:1.12; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.kh-txt span{font-size:11.5px; color:var(--copper-bright); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 
 /* Leaflet popup přebarvení */
 .leaflet-popup-content-wrapper{background:var(--ink); color:var(--text-ondark); border-radius:8px; box-shadow:0 18px 40px -12px rgba(0,0,0,0.7);}

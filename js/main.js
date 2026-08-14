@@ -714,6 +714,7 @@
 
   // Start oddálený na celou ČR (přesné vyrovnání na data řeší fitAllCZ níže).
   var map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: true }).setView([49.82, 15.47], 7);
+  if (map.zoomControl) map.zoomControl.setPosition('topright'); // uvolní místo pro nadpis kraje
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     subdomains: 'abcd', maxZoom: 19
@@ -1017,9 +1018,9 @@
       onEachFeature: function (f, layer) {
         krajByName[f.properties.kraj] = layer;
         layer.bindTooltip(f.properties.kraj + ' kraj', { sticky: true, direction: 'top', className: 'kraj-tip' });
-        layer.on('click', function () { map.fitBounds(layer.getBounds(), { maxZoom: 11, padding: [16, 16] }); });
-        layer.on('mouseover', function () { layer.setStyle({ weight: 2, color: '#F2D79A', fillOpacity: 0.06 }); layer.bringToFront(); });
-        layer.on('mouseout', function () { if (krajLayer) krajLayer.resetStyle(layer); });
+        layer.on('click', function () { selectKraj(f.properties.kraj); });
+        layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2, color: '#F2D79A', fillOpacity: 0.06 }); layer.bringToFront(); } });
+        layer.on('mouseout', function () { if (!krajLayer) return; krajLayer.resetStyle(layer); if (selectedKraj === f.properties.kraj) styleSelectedKraj(layer); });
         // Dotyk: po 2 s popisek plynule zhasne, ať nezůstane „viset" a nebrání dalšímu klikání.
         layer.on('tooltipopen', function (e) {
           if (!isTouch) return;
@@ -1063,6 +1064,7 @@
     lastVis = visIds.map(function (id) { return DATA[id]; });
     refreshKrajTips(lastVis);
     updateMapView();
+    if (typeof updateKrajHead === 'function') updateKrajHead(); // počet v nadpisu drží krok s filtry
   }
 
   // Oddálí mapu tak, aby byla vidět celá rozloha nabídek (celá ČR).
@@ -1070,6 +1072,51 @@
   var czBounds = L.latLngBounds(DATA.map(function (d) { return [d.lat, d.lng]; }));
   function fitAllCZ() { if (czBounds.isValid()) map.fitBounds(czBounds, { padding: [18, 18], maxZoom: 9 }); }
   fitAllCZ();
+
+  /* ---------- Výběr kraje: nejdřív kraj, teprve pak klikací tečky ----------
+     Dokud si člověk nevybere kraj, jsou tečky (pozemky) zamčené a klepnutí
+     vždy trefí kraj — i tam, kde přes něj leží kulička. Po výběru kraje se
+     přiblížíme a tečky se stanou interaktivní. Nadpis kraje nahoře napoví, kde je. */
+  var selectedKraj = null;
+  var krajHintEl = document.getElementById('kraj-hint');
+  var krajHeadEl = document.getElementById('kraj-head');
+  function styleSelectedKraj(layer) { layer.setStyle({ weight: 2.6, color: '#F2D79A', fillColor: '#E0AE43', fillOpacity: 0.09 }); layer.bringToFront(); }
+  function lockDots(lock) { mapEl.classList.toggle('kraj-lock', lock); }
+  function updateKrajHead() {
+    if (krajHeadEl) {
+      if (!selectedKraj) { krajHeadEl.hidden = true; }
+      else {
+        var o = krajCounts[selectedKraj];
+        var n = o ? o.total : 0;
+        krajHeadEl.innerHTML =
+          '<button class="kh-back" type="button" aria-label="Zpět na výběr kraje"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>' +
+          '<div class="kh-txt"><b>' + selectedKraj + ' kraj</b><span>' + (n ? (n + ' ' + plPozemek(n) + ' — klepněte na bod') : 'zatím žádné nabídky') + '</span></div>';
+        krajHeadEl.hidden = false;
+        var back = krajHeadEl.querySelector('.kh-back');
+        if (back) back.addEventListener('click', clearKraj);
+      }
+    }
+    if (krajHintEl) krajHintEl.hidden = !!selectedKraj;
+  }
+  function selectKraj(k, skipFit) {
+    if (selectedKraj === k) return;
+    selectedKraj = k;
+    if (krajLayer) krajLayer.setStyle(styleKraj);
+    var layer = krajByName[k];
+    if (layer) { styleSelectedKraj(layer); if (!skipFit) map.fitBounds(layer.getBounds(), { maxZoom: 11, padding: [16, 16] }); }
+    lockDots(false);   // tečky teď klikací
+    updateKrajHead();
+  }
+  function clearKraj() {
+    selectedKraj = null;
+    if (krajLayer) krajLayer.setStyle(styleKraj);
+    hideDetail();
+    lockDots(true);    // zpět: klikají se zase kraje
+    fitAllCZ();
+    updateKrajHead();
+  }
+  lockDots(true);      // start: nejdřív se vybírá kraj
+  updateKrajHead();
 
   // Legenda mapy — jen kategorie, které v datech opravdu jsou, + upozornění na
   // blížící se dražby (pulzující body). Vysvětlí barvy přímo nad mapou.
@@ -1247,6 +1294,10 @@
     var target = null;
     DATA.forEach(function (d) { if (pkey(d) === key) target = d; });
     if (!target) return false;
+    // Sdílený odkaz míří na konkrétní parcelu → rovnou odemkneme tečky
+    // (bez přeskládání zoomu na celý kraj), ať se dá klikat i na sousední.
+    var k = krajOf(target);
+    if (k) selectKraj(k, true);
     map.setView([target.lat, target.lng], 14, { animate: false });
     updateMapView();
     showDetail(target);
