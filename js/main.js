@@ -462,7 +462,7 @@
         '<li><b>Účet a uložené pozemky:</b> běží zatím jen ve vašem prohlížeči (localStorage). Nic se neodesílá na server.</li>' +
         '<li><b>Data o pozemcích:</b> pocházejí z veřejných zdrojů (dražby, SPÚ, inzeráty, katastr). Nezveřejňujeme osobní údaje vlastníků.</li>' +
         '<li><b>Provoz:</b> web běží na GitHub Pages. Žádné reklamní ani sledovací skripty třetích stran.</li>' +
-        '</ul><p>Dotaz? Napište na <a href="mailto:ahoj@pozemkomat.cz">ahoj@pozemkomat.cz</a>.</p>'
+        '</ul><p>Dotaz? Napište nám přes <a href="#realitky" data-close>kontaktní formulář</a>.</p>'
     },
     podminky: {
       t: 'Podmínky použití',
@@ -471,7 +471,7 @@
         '<li>Data mají <b>informativní charakter</b>. Vždy si je ověřte v oficiálním katastru a u zdroje (dražba, úřad, prodejce). Pozemkomat neručí za jejich úplnost ani aktuálnost.</li>' +
         '<li>Pozemkomat <b>není účastníkem</b> dražeb ani prodejů a neposkytuje právní ani investiční poradenství.</li>' +
         '<li>Během bety se funkce mohou měnit. Prohlížení mapy zůstane zdarma.</li>' +
-        '</ul><p>Otázky? <a href="mailto:ahoj@pozemkomat.cz">ahoj@pozemkomat.cz</a>.</p>'
+        '</ul><p>Otázky? Napište nám přes <a href="#realitky" data-close>kontaktní formulář</a>.</p>'
     }
   };
   var iModal = document.getElementById('info-modal');
@@ -612,7 +612,7 @@
       var org = document.getElementById('rc-org').value.trim();
       var text = document.getElementById('rc-msg').value.trim();
       if (!FORM_ENDPOINT) {
-        out.textContent = 'Díky, ' + name.split(' ')[0] + '! Poptávkový formulář teprve dokončujeme — než ho spustíme, napište nám prosím přímo e-mailem.';
+        out.textContent = 'Díky, ' + name.split(' ')[0] + '! Odesílání poptávek právě zprovozňujeme — zkuste to prosím za chvíli znovu.';
         return;
       }
       out.textContent = 'Odesílám…';
