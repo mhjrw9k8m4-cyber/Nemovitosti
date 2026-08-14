@@ -9,7 +9,9 @@ name: Aktualizace dat příležitostí
 
 on:
   schedule:
-    - cron: '0 4 * * *'   # každý den ve 4:00 UTC
+    # 4× denně (každých 6 h) — zdroje se aktualizují v různou dobu (po půlnoci,
+    # kolem poledne…), tak je chytáme vícekrát. Časy jsou v UTC.
+    - cron: '0 */6 * * *'
   workflow_dispatch: {}
 
 permissions:

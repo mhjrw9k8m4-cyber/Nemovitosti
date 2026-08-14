@@ -110,6 +110,9 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 .pk-dot:hover{transform:scale(1.4); z-index:1000; box-shadow:0 4px 12px rgba(0,0,0,0.55), 0 0 12px currentColor;}
 .pk-dot.sel{transform:scale(1.55); box-shadow:0 0 0 4px rgba(255,255,255,0.35), 0 4px 12px rgba(0,0,0,0.55);}
 .pk-dot.urgent{animation:dotpulse 1.6s ease-out infinite;}
+/* Značka „vaše poloha" (režim Nejblíž ke mně) */
+.pk-me{display:block; width:16px; height:16px; border-radius:50%; background:#3B82F6; border:3px solid #fff; box-shadow:0 0 0 4px rgba(59,130,246,0.35), 0 2px 6px rgba(0,0,0,0.5);}
+.opp-km{color:var(--copper-bright); font-weight:600;}
 @keyframes dotpulse{0%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 0 rgba(217,164,65,0.5);} 100%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 10px rgba(217,164,65,0);}}
 .data-updated{margin:-6px 0 14px; font-size:12px; color:var(--copper-bright); opacity:0.85;}
 .data-updated:empty{display:none;}
@@ -466,6 +469,10 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .status-n{margin-left:auto; font-family:'Inter',sans-serif; font-size:11px; font-weight:700; letter-spacing:0.01em; color:var(--copper-bright); background:rgba(201,152,47,0.12); border:1px solid rgba(201,152,47,0.35); border-radius:11px; padding:3px 9px; white-space:nowrap;}
 .status-n.is-zero{color:var(--text-ondark-mute); background:rgba(237,230,214,0.06); border-color:var(--line);}
 .status-card p{font-size:13.5px; color:var(--text-ondark-mute);}
+.status-list{list-style:none; display:flex; flex-direction:column; gap:8px; margin:0;}
+.status-list li{position:relative; padding-left:20px; font-size:13.5px; line-height:1.5; color:var(--text-ondark-mute);}
+.status-list li::before{content:""; position:absolute; left:2px; top:8px; width:6px; height:6px; border-radius:50%; background:var(--copper-bright); opacity:0.85;}
+.status-list li b{color:var(--text-ondark);}
 
 /* Alert form */
 .alert-box{background:linear-gradient(135deg, var(--ink-soft) 0%, var(--ink-soft2) 100%); border:1px solid var(--line); border-radius:12px; padding:44px; display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center;}

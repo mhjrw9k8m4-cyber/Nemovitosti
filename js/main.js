@@ -1088,28 +1088,46 @@
      vždy trefí kraj — i tam, kde přes něj leží kulička. Po výběru kraje se
      přiblížíme a tečky se stanou interaktivní. Nadpis kraje nahoře napoví, kde je. */
   var selectedKraj = null;
+  var nearMode = false, userPos = null, userMarker = null;
   var krajHintEl = document.getElementById('kraj-hint');
   var krajHeadEl = document.getElementById('kraj-head');
+  // Vzdálenost pozemku od uživatele (km) — pro řazení „nejblíž ke mně".
+  function kmFromUser(d) {
+    if (!userPos || typeof d.lat !== 'number') return Infinity;
+    var R = 6371, r = Math.PI / 180;
+    var dLat = (d.lat - userPos.lat) * r, dLng = (d.lng - userPos.lng) * r;
+    var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(userPos.lat * r) * Math.cos(d.lat * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+  }
   function styleSelectedKraj(layer) { layer.setStyle({ weight: 2.6, color: '#F2D79A', fillColor: '#E0AE43', fillOpacity: 0.09 }); layer.bringToFront(); }
   function lockDots(lock) { mapEl.classList.toggle('kraj-lock', lock); }
+  var BACK_BTN = '<button class="kh-back" type="button" aria-label="Zpět"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>';
   function updateKrajHead() {
     if (krajHeadEl) {
-      if (!selectedKraj) { krajHeadEl.hidden = true; }
-      else {
+      if (nearMode) {
+        krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>Ve vašem okolí</b><span>seřazeno podle vzdálenosti</span></div>';
+        krajHeadEl.hidden = false;
+        var b0 = krajHeadEl.querySelector('.kh-back'); if (b0) b0.addEventListener('click', clearKraj);
+      } else if (!selectedKraj) {
+        krajHeadEl.hidden = true;
+      } else {
         var o = krajCounts[selectedKraj];
         var n = o ? o.total : 0;
-        krajHeadEl.innerHTML =
-          '<button class="kh-back" type="button" aria-label="Zpět na výběr kraje"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>' +
-          '<div class="kh-txt"><b>' + selectedKraj + ' kraj</b><span>' + (n ? (n + ' ' + plPozemek(n) + ' — klepněte na bod') : 'zatím žádné nabídky') + '</span></div>';
+        krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>' + selectedKraj + ' kraj</b><span>' + (n ? (n + ' ' + plPozemek(n) + ' — klepněte na bod') : 'zatím žádné nabídky') + '</span></div>';
         krajHeadEl.hidden = false;
-        var back = krajHeadEl.querySelector('.kh-back');
-        if (back) back.addEventListener('click', clearKraj);
+        var b1 = krajHeadEl.querySelector('.kh-back'); if (b1) b1.addEventListener('click', clearKraj);
       }
     }
-    if (krajHintEl) krajHintEl.hidden = !!selectedKraj;
+    if (krajHintEl) krajHintEl.hidden = !!(selectedKraj || nearMode);
+  }
+  function clearNear() {
+    if (!nearMode) return;
+    nearMode = false;
+    if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
   }
   function selectKraj(k, skipFit) {
-    if (selectedKraj === k) return;
+    if (selectedKraj === k && !nearMode) return;
+    clearNear();       // výběr kraje ruší režim „okolí"
     selectedKraj = k;
     if (krajLayer) krajLayer.setStyle(styleKraj);
     var layer = krajByName[k];
@@ -1119,11 +1137,37 @@
   }
   function clearKraj() {
     selectedKraj = null;
+    var wasNear = nearMode;
+    clearNear();
+    if (wasNear) { sortMode = 'demand'; if (sortEl) sortEl.value = 'demand'; }
     if (krajLayer) krajLayer.setStyle(styleKraj);
     hideDetail();
     lockDots(true);    // zpět: klikají se zase kraje
     fitAllCZ();
     updateKrajHead();
+    renderList();
+  }
+  // „Nejblíž ke mně" — zeptá se na polohu a seřadí pozemky podle vzdálenosti.
+  function enterNear() {
+    if (!navigator.geolocation) { showToast('Váš prohlížeč neumí zjistit polohu.'); if (sortEl) sortEl.value = sortMode; return; }
+    showToast('Zjišťuji vaši polohu…');
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      selectedKraj = null;
+      if (krajLayer) krajLayer.setStyle(styleKraj);
+      nearMode = true;
+      if (userMarker) map.removeLayer(userMarker);
+      userMarker = L.marker([userPos.lat, userPos.lng], { icon: L.divIcon({ className: 'pk-me-wrap', html: '<span class="pk-me"></span>', iconSize: [18, 18], iconAnchor: [9, 9] }), zIndexOffset: 1000, interactive: false }).addTo(map);
+      lockDots(false);
+      map.setView([userPos.lat, userPos.lng], 11, { animate: true });
+      sortMode = 'near';
+      updateKrajHead();
+      renderList();
+      showToast('Hotovo — pozemky seřazené podle vzdálenosti od vás.');
+    }, function () {
+      if (sortEl) sortEl.value = sortMode;
+      showToast('Polohu se nepodařilo zjistit. Povolte ji prosím v prohlížeči a zkuste to znovu.');
+    }, { enableHighAccuracy: false, timeout: 9000, maximumAge: 300000 });
   }
   lockDots(true);      // start: nejdřív se vybírá kraj
   updateKrajHead();
@@ -1176,6 +1220,7 @@
     else if (sortMode === 'price_desc') arr.sort(function (a, b) { return b.price - a.price; });
     else if (sortMode === 'area_desc') arr.sort(function (a, b) { return (b.area || 0) - (a.area || 0); });
     else if (sortMode === 'perm2_asc') arr.sort(function (a, b) { return perM2Val(a) - perM2Val(b); });
+    else if (sortMode === 'near' && userPos) arr.sort(function (a, b) { return kmFromUser(a) - kmFromUser(b); });
     else arr.sort(function (a, b) { return demand(b) - demand(a); });
     return arr;
   }
@@ -1236,7 +1281,8 @@
             '<span class="opp-tag ' + d.type + '">' + t.label + '</span>' +
           '</span></div>' +
           '<div class="opp-meta">' + (hasParcel(d) ? '<span>parc. <b>' + d.parcel + '</b></span>' : '') +
-          '<span>' + (hasArea(d) ? '<b>' + fmt(d.area) + '</b> m²' : 'výměra neuvedena') + '</span><span>' + d.druh + '</span></div>' +
+          '<span>' + (hasArea(d) ? '<b>' + fmt(d.area) + '</b> m²' : 'výměra neuvedena') + '</span><span>' + d.druh + '</span>' +
+          (sortMode === 'near' && userPos && isFinite(kmFromUser(d)) ? '<span class="opp-km">📍 ' + (kmFromUser(d) < 1 ? '<1' : Math.round(kmFromUser(d))) + ' km</span>' : '') + '</div>' +
           '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? ' <span>· ' + fmt(perM2) + ' Kč/m²</span>' : '') +
             (perM2 && dealMax && perM2 <= dealMax ? ' <span class="opp-deal">výhodná cena</span>' : '') + '</div>' +
           (function () {
@@ -1335,7 +1381,10 @@
     renderList();
   });
   if (druhEl) druhEl.addEventListener('change', function () { activeDruh = druhEl.value; renderList(); });
-  if (sortEl) sortEl.addEventListener('change', function () { sortMode = sortEl.value; renderList(); });
+  if (sortEl) sortEl.addEventListener('change', function () {
+    if (sortEl.value === 'near') { enterNear(); return; } // vyžádá polohu, pak seřadí
+    sortMode = sortEl.value; renderList();
+  });
   if (cenaEl) cenaEl.addEventListener('change', function () { maxPrice = parseInt(cenaEl.value, 10) || 0; renderList(); });
   if (favEl) favEl.addEventListener('click', function () { favOnly = !favOnly; refreshFavBtn(); renderList(); });
 
