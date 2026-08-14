@@ -888,3 +888,16 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   .add-grid{grid-template-columns:1fr; gap:24px;}
   .add-aside{position:static;}
 }
+
+/* ---------- Pravidla inzerce / nahlášení ---------- */
+.rules-sect{margin-bottom:6px;}
+.rules-sect + .rules-sect{margin-top:20px;}
+.rules-sect h2{font-family:'Fraunces',serif; font-weight:500; font-size:22px; margin-bottom:14px;}
+.rule-list{list-style:none; display:flex; flex-direction:column; gap:11px;}
+.rule-list li{position:relative; padding-left:28px; font-size:14.5px; color:var(--text-ondark-mute); line-height:1.55;}
+.rule-list li b{color:var(--text-ondark);}
+.rule-list li::before{content:""; position:absolute; left:2px; top:2px; width:16px; height:16px; border-radius:50%;
+  background:rgba(62,142,91,0.15); border:1px solid rgba(62,142,91,0.5);}
+.rule-list.no li::before{background:rgba(193,91,68,0.14); border-color:rgba(193,91,68,0.5);}
+.rules-note{font-size:13px; color:var(--text-ondark-mute); line-height:1.6; margin-top:8px;}
+.rules-note a{color:var(--copper-bright);}

@@ -586,6 +586,7 @@
         '<ul>' +
         '<li>Data mají <b>informativní charakter</b>. Vždy si je ověřte v oficiálním katastru a u zdroje (dražba, úřad, prodejce). Pozemkomat neručí za jejich úplnost ani aktuálnost.</li>' +
         '<li>Pozemkomat <b>není účastníkem</b> dražeb ani prodejů a neposkytuje právní ani investiční poradenství.</li>' +
+        '<li><b>Inzeráty od uživatelů</b> se řídí <a href="pravidla-inzerce.html">Pravidly inzerce</a>. Za obsah inzerátu odpovídá ten, kdo ho vložil; závadný inzerát na nahlášení odstraníme.</li>' +
         '<li>Během bety se funkce mohou měnit. Prohlížení mapy zůstane zdarma.</li>' +
         '</ul><p>Otázky? Napište nám přes <a href="#realitky" data-close>kontaktní formulář</a>.</p>'
     }

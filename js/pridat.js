@@ -56,9 +56,11 @@
 
   var OFFLINE = 'Formulář zatím dokončujeme — odesílání spustíme, jakmile připojíme e-mail. Děkujeme za trpělivost.';
 
-  function handle(formId, msgId, buildData, validate) {
+  function handle(formId, msgId, buildData, validate, okMsg, toastMsg) {
     var form = document.getElementById(formId);
     if (!form) return;
+    okMsg = okMsg || 'Děkujeme! Nabídku jsme přijali. Projdeme si ji a ozveme se, jakmile ji zveřejníme.';
+    toastMsg = toastMsg || 'Nabídka odeslána ke zveřejnění.';
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var ms = document.getElementById(msgId);
@@ -69,8 +71,8 @@
       ms.textContent = 'Odesílám…';
       sendForm(buildData()).then(function (r) {
         if (r === 'ok') {
-          ms.textContent = 'Děkujeme! Nabídku jsme přijali. Projdeme si ji a ozveme se, jakmile ji zveřejníme.';
-          showToast('Nabídka odeslána ke zveřejnění.');
+          ms.textContent = okMsg;
+          showToast(toastMsg);
           form.reset();
         } else {
           ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.';
@@ -120,9 +122,28 @@
       if (!val('i-popis')) return 'Napište prosím krátký popis.';
       if (!val('i-jmeno')) return 'Uveďte prosím své jméno.';
       if (!validContact(val('i-kontakt'))) return 'Zadejte platný telefon (9 číslic) nebo e-mail.';
-      if (!checked('i-souhlas')) return 'Potvrďte prosím souhlas se zveřejněním.';
+      if (!checked('i-souhlas')) return 'Potvrďte prosím souhlas s pravidly a zveřejněním.';
       return '';
     }
+  );
+
+  // --- Nahlášení inzerátu (pravidla-inzerce.html) ---
+  handle('form-report', 'msg-report',
+    function () {
+      return {
+        _subject: 'Nahlášení inzerátu — Pozemkomat',
+        typ: 'Nahlášení inzerátu',
+        inzerat: val('r-ident'), duvod: val('r-duvod') || '(neuvedeno)',
+        popis: val('r-popis') || '(bez popisu)', kontakt: val('r-kontakt') || '(neuvedeno)'
+      };
+    },
+    function () {
+      if (!val('r-ident')) return 'Uveďte prosím, kterého inzerátu se to týká.';
+      if (!val('r-duvod')) return 'Vyberte prosím důvod nahlášení.';
+      return '';
+    },
+    'Děkujeme za nahlášení. Podíváme se na to a případně inzerát stáhneme.',
+    'Nahlášení odesláno.'
   );
 
 })();
