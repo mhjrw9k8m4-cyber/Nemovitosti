@@ -6,25 +6,33 @@
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <script>
-  /* Start vždy nahoře na mapě. iOS Safari rád obnoví předchozí pozici scrollu —
-     držíme stránku nahoře v každém snímku, dokud uživatel sám aktivně nescrolluje.
-     Je to přímo v HTML, takže to funguje hned (nezávisle na cache main.js). */
+  /* Start vždy nahoře na mapě. iOS Safari si pamatuje předchozí pozici scrollu
+     (bfcache / obnova) a rád web otevře „uprostřed". Bráníme se třívrstvě:
+     1) history.scrollRestoration='manual' — vypne automatickou obnovu,
+     2) před odchodem ze stránky (pagehide/beforeunload) srolujeme nahoru,
+        takže to, co si prohlížeč uloží k obnovení, JE vršek,
+     3) krátká pojistka po načtení, která ustoupí, jakmile uživatel sám scrolluje.
+     Je to přímo v HTML, funguje hned a nezávisle na cache main.js. */
   (function(){
     try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }catch(e){}
-    if(location.hash || location.search.indexOf('p=')!==-1) return;
+    if(location.hash || /[?&]p=/.test(location.search)) return; // respektuj sdílené odkazy
     var released=false, start=0;
+    function toTop(){ if(window.pageYOffset || document.documentElement.scrollTop){ window.scrollTo(0,0); } }
+    function softTop(){ if(!released) toTop(); }   // ustoupí, jakmile uživatel sám scrolluje
     function rel(){ released=true; }
-    addEventListener('touchmove', rel, {passive:true, once:true});
-    addEventListener('wheel', rel, {passive:true, once:true});
-    addEventListener('keydown', function(e){ if(['ArrowDown','PageDown','End',' ','ArrowUp','Home','PageUp'].indexOf(e.key)!==-1) released=true; }, {once:true});
-    function pin(ts){
-      if(released) return;
-      if(window.pageYOffset!==0 || document.documentElement.scrollTop!==0){ window.scrollTo(0,0); }
-      if(!start) start=ts;
-      if(ts-start < 2500) requestAnimationFrame(pin);
-    }
-    requestAnimationFrame(pin);
-    addEventListener('pageshow', function(){ released=false; start=0; requestAnimationFrame(pin); });
+    addEventListener('touchmove', rel, {passive:true});
+    addEventListener('wheel', rel, {passive:true});
+    addEventListener('keydown', function(e){ if(['ArrowDown','PageDown','End',' ','ArrowUp','Home','PageUp'].indexOf(e.key)!==-1) released=true; });
+    function guard(ts){ if(released) return; if(!start) start=ts; toTop(); if(ts-start < 1800) requestAnimationFrame(guard); }
+    toTop();
+    requestAnimationFrame(guard);
+    addEventListener('DOMContentLoaded', softTop);
+    addEventListener('load', function(){ softTop(); setTimeout(softTop,60); setTimeout(softTop,200); setTimeout(softTop,500); });
+    // Obnova z bfcache: znovu vynutit vršek (i kdyby byl guard dřív uvolněný)
+    addEventListener('pageshow', function(){ released=false; start=0; toTop(); setTimeout(softTop,0); setTimeout(softTop,120); requestAnimationFrame(guard); });
+    // Před opuštěním stránky srolovat nahoru → co si prohlížeč uloží k obnovení, bude vršek
+    addEventListener('pagehide', toTop);
+    addEventListener('beforeunload', toTop);
   })();
   </script>
   <title>Pozemkomat — příležitosti u pozemků na jedné mapě</title>
@@ -68,7 +76,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260814e">
+  <link rel="stylesheet" href="css/styles.css?v=20260814f">
 </head>
 <body>
 
@@ -582,6 +590,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="js/main.js?v=20260814e" defer></script>
+<script src="js/main.js?v=20260814f" defer></script>
 </body>
 </html>
