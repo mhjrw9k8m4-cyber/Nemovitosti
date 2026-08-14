@@ -69,9 +69,22 @@
   // veřejnou nabídku, kam se podává žádost. Odkážeme tedy na skutečný seznam nabídek.
   var SPU_OFFERS = 'https://spu.gov.cz/nabidky/prehled-cela-cr';
   function isSPU(d){ return d.type === 'sale' && !d.url && /SPÚ|státní půd/i.test(d.extra || ''); }
+  // Vede odkaz na KONKRÉTNÍ inzerát/dražbu (má cestu nebo parametr),
+  // nebo jen na úvodní stránku portálu? Podle toho volíme poctivý štítek,
+  // ať tlačítko neslibuje konkrétní stránku, když otevře jen rozcestník.
+  function isDeepLink(url){
+    try {
+      var u = new URL(url);
+      return (u.pathname && u.pathname.replace(/\/+$/, '').length > 1) || !!u.search;
+    } catch (e) { return false; }
+  }
   // Konkrétní akční odkaz „kde se to kupuje / kde s tím něco udělám"
   function sourceLink(d){
-    if (d.url) return { url: d.url, label: d.type === 'sale' ? 'Inzerát' : 'K dražbě' };
+    if (d.url) {
+      if (isDeepLink(d.url)) return { url: d.url, label: d.type === 'sale' ? 'Inzerát' : 'K dražbě' };
+      // jen homepage portálu → řekneme to na rovinu, ať proklik nemate
+      return { url: d.url, label: d.type === 'sale' ? 'Web prodejce' : 'Dražební portál' };
+    }
     if (isSPU(d)) return { url: SPU_OFFERS, label: 'Nabídka SPÚ' };
     return { url: TYPE[d.type].link.url, label: TYPE[d.type].link.label };
   }
