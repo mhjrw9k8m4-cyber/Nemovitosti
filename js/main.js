@@ -264,12 +264,12 @@
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ms.textContent = 'Zadejte prosím platný e-mail.'; ms.classList.add('err'); return; }
       ms.classList.remove('err');
       if (!FORM_ENDPOINT) {
-        ms.textContent = 'Upozornění teprve dokončujeme — spustíme je, jakmile přidáme odesílání. Díky za trpělivost!';
+        ms.textContent = 'Upozornění teprve dokončujeme — spustíme je, jakmile přidáme odesílání. Děkujeme za trpělivost.';
         return;
       }
       ms.textContent = 'Odesílám…';
       sendForm({ _subject: 'Hlídání lokality — Pozemkomat', typ: 'Hlídání lokality', okres: okres || '(neuvedeno)', email: email }).then(function (r) {
-        if (r === 'ok') { ms.textContent = okres ? ('Hotovo! Budeme hlídat okres „' + okres + '" a dáme vědět.') : 'Hotovo! Ozveme se, jakmile se objeví něco ve vašem okolí.'; setTimeout(closeWatch, 1900); }
+        if (r === 'ok') { ms.textContent = okres ? ('Budeme hlídat okres „' + okres + '" a dáme vědět, jakmile se objeví nová příležitost.') : 'Ozveme se, jakmile se ve vašem okolí objeví nová příležitost.'; setTimeout(closeWatch, 1900); }
         else { ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; ms.classList.add('err'); }
       });
     });
@@ -425,7 +425,7 @@
       hashPass(phone, pass).then(function (h) {
         setAcct({ phone: phone, name: name, passHash: h });
         setUser({ phone: phone, name: name });
-        ms.textContent = 'Účet vytvořen, vítejte!';
+        ms.textContent = 'Účet vytvořen. Vítejte.';
         showToast('Účet vytvořen. Uložené pozemky teď najdete v profilu.');
         setTimeout(closeLogin, 900);
       });
@@ -436,8 +436,8 @@
       hashPass(phone, pass).then(function (h) {
         if (h !== acct.passHash) { ms.textContent = 'Nesprávné heslo.'; ms.classList.add('err'); return; }
         setUser({ phone: phone, name: acct.name || name });
-        ms.textContent = 'Přihlášeno, vítejte zpět!';
-        showToast('Vítejte zpět' + (acct.name ? ', ' + acct.name.split(' ')[0] : '') + '!');
+        ms.textContent = 'Přihlášeno. Vítejte zpět.';
+        showToast('Vítejte zpět' + (acct.name ? ', ' + acct.name.split(' ')[0] : '') + '.');
         setTimeout(closeLogin, 900);
       });
     }
@@ -600,13 +600,13 @@
       }
       msg.classList.remove('err');
       if (!FORM_ENDPOINT) {
-        msg.textContent = 'Upozornění teprve dokončujeme — spustíme je, jakmile přidáme odesílání. Díky!';
+        msg.textContent = 'Upozornění teprve dokončujeme — spustíme je, jakmile přidáme odesílání. Děkujeme za trpělivost.';
         return;
       }
       msg.textContent = 'Odesílám…';
       sendForm({ _subject: 'Hlídání lokality — Pozemkomat', typ: 'Hlídání lokality', okres: okres || '(neuvedeno)', email: email }).then(function (r) {
         if (r === 'ok') {
-          msg.textContent = okres ? ('Hotovo! Budeme hlídat okres „' + okres + '" a dáme vědět.') : 'Hotovo! Ozveme se, jakmile se objeví něco ve vašem okolí.';
+          msg.textContent = okres ? ('Budeme hlídat okres „' + okres + '" a dáme vědět, jakmile se objeví nová příležitost.') : 'Ozveme se, jakmile se ve vašem okolí objeví nová příležitost.';
           form.reset();
         } else { msg.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; msg.classList.add('err'); }
       });
@@ -627,12 +627,12 @@
       var org = document.getElementById('rc-org').value.trim();
       var text = document.getElementById('rc-msg').value.trim();
       if (!FORM_ENDPOINT) {
-        out.textContent = 'Díky, ' + name.split(' ')[0] + '! Odesílání poptávek právě zprovozňujeme — zkuste to prosím za chvíli znovu.';
+        out.textContent = 'Děkujeme, ' + name.split(' ')[0] + '. Odesílání poptávek právě zprovozňujeme — zkuste to prosím za chvíli znovu.';
         return;
       }
       out.textContent = 'Odesílám…';
       sendForm({ _subject: 'Poptávka realitky/obce — Pozemkomat', typ: 'Poptávka realitky/obce', jmeno: name, firma: org || '(neuvedeno)', email: email, zprava: text || '(bez zprávy)' }).then(function (r) {
-        if (r === 'ok') { out.textContent = 'Díky, ' + name.split(' ')[0] + '! Poptávka dorazila, ozveme se vám na ' + email + '.'; rForm.reset(); }
+        if (r === 'ok') { out.textContent = 'Děkujeme, ' + name.split(' ')[0] + '. Poptávka dorazila, ozveme se vám na ' + email + '.'; rForm.reset(); }
         else { out.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; out.classList.add('err'); }
       });
     });
@@ -879,7 +879,7 @@
       if (shareBtn) {
         var url = location.origin + location.pathname + '?p=' + encodeURIComponent(pkey(curDetail));
         var title = 'Pozemek ' + curDetail.place + ' — Pozemkomat';
-        var text = TYPE[curDetail.type].label + ' · ' + curDetail.place + ' · ' + areaTxt(curDetail) + ' · ' + fmt(curDetail.price) + ' Kč — koukni na Pozemkomatu:';
+        var text = TYPE[curDetail.type].label + ' · ' + curDetail.place + ' · ' + areaTxt(curDetail) + ' · ' + fmt(curDetail.price) + ' Kč — detail na Pozemkomatu:';
         if (navigator.share) {
           navigator.share({ title: title, text: text, url: url }).catch(function () {});
         } else {
@@ -1181,7 +1181,7 @@
       if (sortEl) sortEl.value = 'near';
       updateKrajHead();
       renderList();
-      showToast('Hotovo — pozemky seřazené podle vzdálenosti od vás.');
+      showToast('Seřazeno podle vzdálenosti od vás.');
     }, function () {
       if (sortEl) sortEl.value = sortMode;
       showToast('Polohu se nepodařilo zjistit. Povolte ji prosím v prohlížeči a zkuste to znovu.');
