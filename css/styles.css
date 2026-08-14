@@ -269,6 +269,12 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .map-search input{width:100%; background:var(--ink); border:1px solid var(--line); border-radius:6px; padding:12px 14px; font-size:14px; color:var(--text-ondark); font-family:inherit;}
 .map-search input::placeholder{color:#6f8090;}
 .map-search input:focus-visible{border-color:var(--copper-bright); outline:none;}
+/* Nápadné tlačítko „pozemky ve vašem okolí" (geolokace) */
+.map-near-btn{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:9px; padding:12px 14px; border-radius:8px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; color:var(--ink); background:linear-gradient(135deg, var(--copper), var(--copper-bright)); border:1px solid var(--copper); box-shadow:0 6px 18px -8px rgba(201,152,47,0.7); transition:transform .1s ease, box-shadow .15s ease, filter .15s ease;}
+.map-near-btn:hover{filter:brightness(1.05); box-shadow:0 8px 22px -8px rgba(201,152,47,0.85);}
+.map-near-btn:active{transform:translateY(1px);}
+.map-near-btn .mnb-pin{font-size:16px; line-height:1;}
+.map-near-btn.on{background:var(--ink); color:var(--copper-bright); border-color:var(--copper-bright); box-shadow:none;}
 .map-filters{display:flex; flex-wrap:wrap; gap:7px; margin:14px 0;}
 .filter-chip{display:inline-flex; align-items:center; gap:6px; background:var(--ink); border:1px solid var(--line); color:var(--text-ondark-mute); border-radius:18px; padding:7px 12px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; transition:all .15s ease;}
 .filter-chip .c{width:8px; height:8px; border-radius:50%;}

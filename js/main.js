@@ -1091,6 +1091,8 @@
   var nearMode = false, userPos = null, userMarker = null;
   var krajHintEl = document.getElementById('kraj-hint');
   var krajHeadEl = document.getElementById('kraj-head');
+  var nearBtn = document.getElementById('map-near');
+  if (nearBtn) nearBtn.addEventListener('click', enterNear);
   // Vzdálenost pozemku od uživatele (km) — pro řazení „nejblíž ke mně".
   function kmFromUser(d) {
     if (!userPos || typeof d.lat !== 'number') return Infinity;
@@ -1124,6 +1126,7 @@
     if (!nearMode) return;
     nearMode = false;
     if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+    if (nearBtn) nearBtn.classList.remove('on');
   }
   function selectKraj(k, skipFit) {
     if (selectedKraj === k && !nearMode) return;
@@ -1159,8 +1162,10 @@
       if (userMarker) map.removeLayer(userMarker);
       userMarker = L.marker([userPos.lat, userPos.lng], { icon: L.divIcon({ className: 'pk-me-wrap', html: '<span class="pk-me"></span>', iconSize: [18, 18], iconAnchor: [9, 9] }), zIndexOffset: 1000, interactive: false }).addTo(map);
       lockDots(false);
+      if (nearBtn) nearBtn.classList.add('on');
       map.setView([userPos.lat, userPos.lng], 11, { animate: true });
       sortMode = 'near';
+      if (sortEl) sortEl.value = 'near';
       updateKrajHead();
       renderList();
       showToast('Hotovo — pozemky seřazené podle vzdálenosti od vás.');
