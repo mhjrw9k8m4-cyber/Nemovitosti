@@ -251,7 +251,32 @@
   var navProfile = document.getElementById('nav-profile');
   function getUser() { try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch (e) { return null; } }
   function setUser(u) { try { u ? localStorage.setItem(USER_KEY, JSON.stringify(u)) : localStorage.removeItem(USER_KEY); } catch (e) {} renderAuth(); }
-  function favCount() { try { return (JSON.parse(localStorage.getItem('pk_fav_v1')) || []).length; } catch (e) { return 0; } }
+  function favKeys() { try { return JSON.parse(localStorage.getItem('pk_fav_v1')) || []; } catch (e) { return []; } }
+  function favCount() { return favKeys().length; }
+  // Krátká oznamovací hláška (toast)
+  var toastEl = document.getElementById('toast');
+  var toastT = null;
+  function showToast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.removeAttribute('hidden');
+    requestAnimationFrame(function () { toastEl.classList.add('show'); });
+    clearTimeout(toastT);
+    toastT = setTimeout(function () {
+      toastEl.classList.remove('show');
+      setTimeout(function () { toastEl.setAttribute('hidden', ''); }, 300);
+    }, 2600);
+  }
+  // Seznam uložených pozemků v profilu (názvy obcí z klíčů place|parcel|okres)
+  function renderSavedList() {
+    var el = document.getElementById('pm-saved-list');
+    if (!el) return;
+    var keys = favKeys();
+    if (!keys.length) { el.innerHTML = '<div class="pm-empty">Zatím žádné. Uložte si pozemek záložkou u nabídky.</div>'; return; }
+    el.innerHTML = keys.slice(0, 4).map(function (k) {
+      var p = k.split('|'); return '<div class="pm-saved-item"><b>' + (p[0] || 'Pozemek') + '</b><span>parc. ' + (p[1] || '—') + '</span></div>';
+    }).join('') + (keys.length > 4 ? '<div class="pm-saved-more">+ ' + (keys.length - 4) + ' dalších</div>' : '');
+  }
   function openLogin() {
     if (!lModal) return;
     var ms = document.getElementById('login-msg'); if (ms) { ms.textContent = ''; ms.classList.remove('err'); }
@@ -277,6 +302,7 @@
       document.getElementById('avatar').textContent = (name[0] || '?').toUpperCase();
       document.getElementById('pm-email').textContent = u.email;
       document.getElementById('pm-saved-n').textContent = favCount();
+      renderSavedList();
     } else {
       navLoginBtn.removeAttribute('hidden');
       navProfile.setAttribute('hidden', '');
@@ -292,9 +318,10 @@
     var ms = document.getElementById('login-msg');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ms.textContent = 'Zadejte prosím platný e-mail.'; ms.classList.add('err'); return; }
     ms.classList.remove('err');
-    ms.textContent = 'Přihlášeno! Vítejte v Pozemkomatu.';
+    ms.textContent = 'Hotovo, vítejte!';
     setUser({ email: email, name: name });
-    setTimeout(closeLogin, 1100);
+    showToast('Vítejte' + (name ? ', ' + name.split(' ')[0] : '') + '! Vaše uložené pozemky teď najdete v profilu.');
+    setTimeout(closeLogin, 1000);
   });
   // Rozbalení profilového menu
   var profChip = document.getElementById('profile-chip');
@@ -302,7 +329,7 @@
     e.stopPropagation();
     var pm = document.getElementById('profile-menu');
     var open = pm.hasAttribute('hidden');
-    if (open) { pm.removeAttribute('hidden'); document.getElementById('pm-saved-n').textContent = favCount(); }
+    if (open) { pm.removeAttribute('hidden'); document.getElementById('pm-saved-n').textContent = favCount(); renderSavedList(); }
     else pm.setAttribute('hidden', '');
     profChip.setAttribute('aria-expanded', String(open));
   });
@@ -311,12 +338,12 @@
     if (pm && !pm.hasAttribute('hidden') && !e.target.closest('#nav-profile')) pm.setAttribute('hidden', '');
   });
   var pmLogout = document.getElementById('pm-logout');
-  if (pmLogout) pmLogout.addEventListener('click', function () { setUser(null); });
-  var pmSaved = document.getElementById('pm-saved');
-  if (pmSaved) pmSaved.addEventListener('click', function () {
+  if (pmLogout) pmLogout.addEventListener('click', function () { setUser(null); showToast('Odhlášeno. Uložené pozemky zůstávají ve vašem prohlížeči.'); });
+  var pmViewMap = document.getElementById('pm-view-map');
+  if (pmViewMap) pmViewMap.addEventListener('click', function () {
     var favBtn = document.getElementById('map-fav');
     document.getElementById('profile-menu').setAttribute('hidden', '');
-    var mapa = document.getElementById('mapa'); if (mapa) mapa.scrollIntoView({ behavior: 'smooth' });
+    if (!favCount()) { showToast('Zatím nemáte uložené pozemky. Uložte si je záložkou u nabídky.'); return; }
     if (favBtn && favBtn.getAttribute('aria-pressed') !== 'true') setTimeout(function () { favBtn.click(); }, 500);
   });
   renderAuth();
