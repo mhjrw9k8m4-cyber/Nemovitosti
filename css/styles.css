@@ -216,6 +216,12 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 h1{font-family:'Fraunces',serif; font-weight:500; font-size:52px; line-height:1.06; letter-spacing:-0.01em; margin-bottom:22px;}
 h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(--copper), var(--copper-bright) 55%, #F1CB6E); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;}
 .hero-ctas{display:flex; align-items:center; gap:22px; margin-bottom:48px; flex-wrap:wrap;}
+/* Výrazné druhé tlačítko v heru — proklik na „Přidat pozemek" */
+.btn-add{display:inline-flex; align-items:center; justify-content:center; gap:6px; width:auto;
+  padding:15px 30px; font-size:15px; font-weight:600; text-decoration:none; border-radius:4px;
+  background:rgba(201,152,47,0.10); color:var(--copper-bright); border:1.5px solid var(--copper);
+  transition:background .15s ease, border-color .15s ease, transform .1s ease, box-shadow .15s ease;}
+.btn-add:hover{background:rgba(201,152,47,0.18); border-color:var(--copper-bright); transform:translateY(-1px); box-shadow:0 8px 22px -10px rgba(201,152,47,0.5);}
 .link-ghost{color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; border-bottom:1px solid var(--line); padding-bottom:2px; transition:border-color .15s ease;}
 .link-ghost:hover{border-color:var(--copper-bright);}
 
