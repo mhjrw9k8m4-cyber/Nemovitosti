@@ -27,6 +27,8 @@ html, body{max-width:100%; width:100%;}
 body{background:var(--ink); color:var(--text-ondark); font-family:'Inter',sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:clip; overscroll-behavior-x:none; position:relative;}
 h1, h2, h3, h4{overflow-wrap:break-word; word-break:break-word;}
 img, svg, table, pre{max-width:100%;}
+/* Přístupnost: čistý focus rámeček při ovládání klávesnicí (nezobrazí se u myši/dotyku) */
+a:focus-visible, button:focus-visible, select:focus-visible, [role="button"]:focus-visible, [tabindex]:focus-visible, summary:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px; border-radius:5px;}
 /* Grid/flex sloupce se musí umět zmenšit — jinak vytlačí stránku do stran */
 .hero-head > *, .map-app > *, .embed-demo > *, .alert-box > *, .beforeafter > *,
 .counters-row > *, .foot-grid > *, .steps > *,
@@ -314,7 +316,15 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-deal{display:inline-block; font-size:10px; font-weight:700; color:var(--c-sale); background:rgba(62,142,91,0.14); border:1px solid rgba(62,142,91,0.4); border-radius:4px; padding:1px 6px; margin-left:5px; letter-spacing:0.02em; text-transform:uppercase;}
 .map-count{font-size:13.5px; color:var(--text-ondark); font-weight:600; letter-spacing:0.01em; margin-bottom:12px;}
 .mc-sub{font-weight:400; color:var(--text-ondark-mute); font-size:12.5px;}
-.opp-list{list-style:none; overflow-y:auto; flex:1; margin:0 -6px; padding:0 6px;}
+.opp-list{list-style:none; overflow-y:auto; flex:1; margin:0 -6px; padding:0 6px; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;}
+/* Skeleton (načítání) — jako u Facebooku/YouTube: než dorazí data, svítí placeholder */
+.opp-skel{display:flex; gap:12px; align-items:flex-start; border:1px solid var(--line); border-radius:8px; padding:13px 14px; margin-bottom:9px; background:var(--ink);}
+.opp-skel .skel-thumb{flex:none; width:48px; height:48px; border-radius:8px;}
+.opp-skel .skel-body{flex:1; display:flex; flex-direction:column; gap:9px; padding-top:4px;}
+.sk{background:linear-gradient(90deg, var(--ink-soft2) 25%, rgba(237,230,214,0.10) 37%, var(--ink-soft2) 63%); background-size:400% 100%; border-radius:5px; animation:skShimmer 1.4s ease infinite;}
+.sk-l1{height:12px; width:58%;} .sk-l2{height:10px; width:85%;} .sk-l3{height:10px; width:42%;}
+@keyframes skShimmer{0%{background-position:100% 0;} 100%{background-position:0 0;}}
+@media (prefers-reduced-motion:reduce){ .sk{animation:none;} }
 .opp-item{display:flex; gap:12px; align-items:flex-start; border:1px solid var(--line); border-radius:8px; padding:13px 14px; margin-bottom:9px; cursor:pointer; transition:border-color .15s ease, background .15s ease, transform .1s ease; background:var(--ink);}
 .opp-thumb{flex:none; width:48px; height:48px; border-radius:8px; background:var(--ink-soft2); border:1px solid var(--line); padding:5px; margin-top:2px;}
 .opp-thumb svg{display:block; width:100%; height:100%;}
@@ -353,7 +363,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .filter-chip.active .chip-n{background:rgba(22,35,47,0.28); color:inherit;}
 
 /* Informační tabulka NAD mapou — výrazně orámovaná, zmenší mapu */
-.map-detail{position:relative; flex:none; min-height:0; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border-bottom:2px solid var(--copper); box-shadow:0 8px 22px -8px rgba(201,152,47,0.5); padding:14px 16px; z-index:10; animation:mdin .3s var(--ease); overflow-y:auto; touch-action:pan-y;}
+.map-detail{position:relative; flex:none; min-height:0; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border-bottom:2px solid var(--copper); box-shadow:0 8px 22px -8px rgba(201,152,47,0.5); padding:14px 16px; z-index:10; animation:mdin .3s var(--ease); overflow-y:auto; touch-action:pan-y; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;}
 .map-detail::after{content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px; background:linear-gradient(90deg, var(--copper), var(--copper-bright), var(--copper));}
 .map-detail[hidden]{display:none;}
 @keyframes mdin{from{opacity:0; transform:translateY(-12px);} to{opacity:1; transform:none;}}

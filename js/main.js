@@ -879,8 +879,9 @@
       if (shareBtn) {
         var url = location.origin + location.pathname + '?p=' + encodeURIComponent(pkey(curDetail));
         var title = 'Pozemek ' + curDetail.place + ' — Pozemkomat';
+        var text = TYPE[curDetail.type].label + ' · ' + curDetail.place + ' · ' + areaTxt(curDetail) + ' · ' + fmt(curDetail.price) + ' Kč — koukni na Pozemkomatu:';
         if (navigator.share) {
-          navigator.share({ title: title, url: url }).catch(function () {});
+          navigator.share({ title: title, text: text, url: url }).catch(function () {});
         } else {
           copyText(url, function () {
             var orig = shareBtn.textContent;
