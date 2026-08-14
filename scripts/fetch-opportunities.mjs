@@ -356,6 +356,11 @@ function valid(o) {
   // (např. cena za m² spletená s celkovou cenou) — takové raději nezobrazujeme.
   const price = Number(o.price);
   if (!isFinite(price) || price < 5000 || price > 2e9) return false;
+  // Cena za m² nesmí být absurdně vysoká. Přes 25 000 Kč/m² jde skoro vždy
+  // o chybu (přehozené číslo, spoluvlastnický podíl…) — nejdražší reálné
+  // stavební pozemky se drží hluboko pod tím.
+  const area = Number(o.area);
+  if (isFinite(area) && area > 0 && price / area > 25000) return false;
   // Jen pozemky v ČR — souřadnice musí padnout do hranic republiky.
   const lat = Number(o.lat), lng = Number(o.lng);
   if (!isFinite(lat) || !isFinite(lng) || lat < 48.4 || lat > 51.2 || lng < 12.0 || lng > 18.95) return false;

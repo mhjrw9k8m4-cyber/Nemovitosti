@@ -2629,32 +2629,6 @@
       "url": "https://www.verejnedrazby.cz/A8007"
     },
     {
-      "place": "Jičín",
-      "okres": "Jičín",
-      "type": "drazba",
-      "parcel": "1296/66",
-      "druh": "pozemek",
-      "area": 1826,
-      "price": 82500000,
-      "extra": "dražba 2026-09-07",
-      "lat": 50.43547,
-      "lng": 15.34781,
-      "url": "https://www.drazebni-portal.cz/"
-    },
-    {
-      "place": "Praha",
-      "okres": "Hlavní město Praha",
-      "type": "drazba",
-      "parcel": "1227/7, 1227/8, 1227/9 a 1227/10",
-      "druh": "zastavěná plocha a nádvoří",
-      "area": 42,
-      "price": 6000000,
-      "extra": "dražba 2026-08-13",
-      "lat": 50.1201461,
-      "lng": 14.4647156,
-      "url": "https://www.exdrazby.cz/drazba/29527"
-    },
-    {
       "place": "Trmice",
       "okres": "Ústí nad Labem",
       "type": "exekuce",
