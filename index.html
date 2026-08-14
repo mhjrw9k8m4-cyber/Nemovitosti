@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <script>
@@ -33,6 +33,16 @@
     // Před opuštěním stránky srolovat nahoru → co si prohlížeč uloží k obnovení, bude vršek
     addEventListener('pagehide', toTop);
     addEventListener('beforeunload', toTop);
+  })();
+  </script>
+  <script>
+  /* iOS Safari: pinch (dva prsty) občas přiblíží CELOU stránku (detail pozemku
+     i web). Vypneme přiblížení prohlížeče — mapa má vlastní zoom přes Leaflet
+     (dotykové události), takže ta se přibližuje dál normálně. */
+  (function(){
+    ['gesturestart','gesturechange','gestureend'].forEach(function(ev){
+      document.addEventListener(ev, function(e){ e.preventDefault(); }, { passive:false });
+    });
   })();
   </script>
   <title>Pozemkomat — příležitosti u pozemků na jedné mapě</title>
@@ -76,7 +86,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260814s">
+  <link rel="stylesheet" href="css/styles.css?v=20260814t">
 </head>
 <body>
 
@@ -612,6 +622,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/main.js?v=20260814s" defer></script>
+<script src="js/main.js?v=20260814t" defer></script>
 </body>
 </html>
