@@ -724,6 +724,11 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .modal-form input:focus-visible{border-color:var(--copper-bright); outline:none;}
 .modal-form .btn-primary{padding:14px; font-size:15px; text-align:center;}
 .modal-fine{font-size:11.5px; color:var(--text-ondark-mute); text-align:center; margin-top:2px;}
+.lf-pass{position:relative; display:flex;}
+.lf-pass input{flex:1; padding-right:84px;}
+.lf-pass-toggle{position:absolute; top:50%; right:6px; transform:translateY(-50%); background:none; border:0; padding:6px 10px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--copper-bright); cursor:pointer; border-radius:5px;}
+.lf-pass-toggle:hover{color:var(--text-ondark);}
+.lf-pass-toggle:focus-visible{outline:2px solid var(--copper-bright); outline-offset:1px;}
 .modal-close-bar{width:100%; margin-top:16px; background:none; border:0; border-top:1px solid var(--line); padding:14px 0 2px; color:var(--text-ondark-mute); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:color .15s ease;}
 .modal-close-bar:hover{color:var(--text-ondark);}
 .info-card{max-width:520px;}

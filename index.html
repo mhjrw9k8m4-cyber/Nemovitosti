@@ -86,7 +86,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260814w">
+  <link rel="stylesheet" href="css/styles.css?v=20260814x">
 </head>
 <body>
 
@@ -607,14 +607,13 @@
       <label class="visually-hidden" for="login-phone">Telefonní číslo</label>
       <input id="login-phone" type="tel" inputmode="tel" placeholder="Telefon (např. 777 123 456)" required autocomplete="tel">
       <label class="visually-hidden" for="login-pass">Heslo</label>
-      <input id="login-pass" type="password" placeholder="Heslo" required autocomplete="current-password">
-      <div class="lf-row" id="lf-pass2-row" hidden>
-        <label class="visually-hidden" for="login-pass2">Heslo znovu</label>
-        <input id="login-pass2" type="password" placeholder="Heslo znovu" autocomplete="new-password">
+      <div class="lf-pass">
+        <input id="login-pass" type="password" placeholder="Heslo (aspoň 6 znaků)" required autocomplete="current-password">
+        <button type="button" class="lf-pass-toggle" id="login-pass-toggle" aria-pressed="false" aria-label="Zobrazit heslo">Zobrazit</button>
       </div>
       <button type="submit" class="btn-primary btn-glow" id="login-submit">Přihlásit se</button>
       <p class="form-msg" id="login-msg" role="status" aria-live="polite"></p>
-      <p class="modal-fine" id="login-fine">Ověření kódem přes SMS teprve chystáme — to půjde, až přidáme server. Zatím účet i heslo zůstávají jen v tomto prohlížeči a nikam se neodesílají.</p>
+      <p class="modal-fine" id="login-fine">Účet i heslo zůstávají jen v tomto prohlížeči a nikam se neodesílají. Heslo si tlačítkem „Zobrazit" můžete zkontrolovat.</p>
     </form>
     <button class="modal-close-bar" type="button" data-close>Zavřít</button>
   </div>
@@ -622,6 +621,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/main.js?v=20260814w" defer></script>
+<script src="js/main.js?v=20260814x" defer></script>
 </body>
 </html>

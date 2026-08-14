@@ -338,9 +338,7 @@
     loginMode = (mode === 'register') ? 'register' : 'login';
     var isReg = loginMode === 'register';
     var nameRow = document.getElementById('lf-name-row');
-    var pass2Row = document.getElementById('lf-pass2-row');
     if (nameRow) nameRow.hidden = !isReg;
-    if (pass2Row) pass2Row.hidden = !isReg;
     var submit = document.getElementById('login-submit'); if (submit) submit.textContent = isReg ? 'Vytvořit účet' : 'Přihlásit se';
     var title = document.getElementById('login-title'); if (title) title.textContent = isReg ? 'Vytvořit účet' : 'Přihlášení';
     var sub = document.getElementById('login-sub');
@@ -361,9 +359,10 @@
     setLoginMode(acct ? 'login' : 'register');
     var phoneInput = document.getElementById('login-phone');
     if (phoneInput) phoneInput.value = acct ? fmtPhone(acct.phone) : '';
-    var p1 = document.getElementById('login-pass'); if (p1) p1.value = '';
-    var p2 = document.getElementById('login-pass2'); if (p2) p2.value = '';
+    var p1 = document.getElementById('login-pass'); if (p1) { p1.value = ''; p1.type = 'password'; }
     var nm = document.getElementById('login-name'); if (nm) nm.value = '';
+    var pt = document.getElementById('login-pass-toggle');
+    if (pt) { pt.textContent = 'Zobrazit'; pt.setAttribute('aria-pressed', 'false'); pt.setAttribute('aria-label', 'Zobrazit heslo'); }
     lModal.removeAttribute('hidden');
     requestAnimationFrame(function () { lModal.classList.add('open'); });
     document.body.style.overflow = 'hidden';
@@ -395,6 +394,36 @@
       var pm = document.getElementById('profile-menu'); if (pm) pm.setAttribute('hidden', '');
     }
   }
+  // Po přihlášení/registraci dá jasně najevo, že jste přihlášeni:
+  // na mobilu rozbalí menu a otevře profil, ať účet hned vidíte.
+  function revealProfile() {
+    var np = document.getElementById('nav-profile');
+    if (!np || np.hasAttribute('hidden')) return;
+    if (nav && toggle && !nav.classList.contains('open') && getComputedStyle(toggle).display !== 'none') {
+      nav.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+      toggle.setAttribute('aria-label', 'Zavřít menu');
+    }
+    var pm = document.getElementById('profile-menu');
+    if (pm) {
+      pm.removeAttribute('hidden');
+      document.getElementById('pm-saved-n').textContent = favCount();
+      renderSavedList();
+    }
+    var chip = document.getElementById('profile-chip');
+    if (chip) chip.setAttribute('aria-expanded', 'true');
+  }
+  // Zobrazit / skrýt heslo (aby nešlo přepsat se překlepem)
+  var passToggle = document.getElementById('login-pass-toggle');
+  if (passToggle) passToggle.addEventListener('click', function () {
+    var p = document.getElementById('login-pass'); if (!p) return;
+    var show = p.type === 'password';
+    p.type = show ? 'text' : 'password';
+    passToggle.textContent = show ? 'Skrýt' : 'Zobrazit';
+    passToggle.setAttribute('aria-pressed', String(show));
+    passToggle.setAttribute('aria-label', show ? 'Skrýt heslo' : 'Zobrazit heslo');
+    p.focus();
+  });
   if (navLoginBtn) navLoginBtn.addEventListener('click', openLogin);
   document.querySelectorAll('.login-tab').forEach(function (t) {
     t.addEventListener('click', function () {
@@ -416,18 +445,16 @@
     var phone = normPhone(phoneRaw);
 
     if (loginMode === 'register') {
-      var pass2 = document.getElementById('login-pass2').value;
-      if (pass !== pass2) { ms.textContent = 'Hesla se neshodují.'; ms.classList.add('err'); return; }
       var existing = getAcct();
       if (existing && existing.phone !== phone) {
         ms.textContent = 'V tomto prohlížeči už je účet pro jiné číslo. Nejdřív se odhlaste.'; ms.classList.add('err'); return;
       }
       hashPass(phone, pass).then(function (h) {
         setAcct({ phone: phone, name: name, passHash: h });
-        setUser({ phone: phone, name: name });
-        ms.textContent = 'Účet vytvořen. Vítejte.';
-        showToast('Účet vytvořen. Uložené pozemky teď najdete v profilu.');
-        setTimeout(closeLogin, 900);
+        setUser({ phone: phone, name: name });   // rovnou přihlásí → renderAuth ukáže profil
+        ms.textContent = 'Účet vytvořen — jste přihlášeni.';
+        showToast('Účet vytvořen. Jste přihlášeni' + (name ? ', ' + name.split(' ')[0] : '') + '.');
+        setTimeout(function () { closeLogin(); revealProfile(); }, 700);
       });
     } else {
       var acct = getAcct();
@@ -438,7 +465,7 @@
         setUser({ phone: phone, name: acct.name || name });
         ms.textContent = 'Přihlášeno. Vítejte zpět.';
         showToast('Vítejte zpět' + (acct.name ? ', ' + acct.name.split(' ')[0] : '') + '.');
-        setTimeout(closeLogin, 900);
+        setTimeout(function () { closeLogin(); revealProfile(); }, 700);
       });
     }
   });
