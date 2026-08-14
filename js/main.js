@@ -154,6 +154,8 @@
   }
   function hasArea(d){ return typeof d.area === 'number' && d.area > 0; }
   function areaTxt(d){ return hasArea(d) ? fmt(d.area) + ' m²' : 'neuvedena'; }
+  // Číslo parcely nemají všechny zdroje (typicky inzeráty) — pak ho nezobrazujeme jako „—".
+  function hasParcel(d){ return d.parcel && d.parcel !== '—' && d.parcel !== ''; }
   // Sloučení mnoha variant druhu do pár skupin pro filtr
   function druhGroup(s){
     s = (s || '').toLowerCase();
@@ -918,7 +920,7 @@
         '<div class="md-info">' +
           '<div class="md-top"><span class="lp-dot" style="background:' + t.color + '"></span><b>' + t.label + '</b> · ' + d.place + ', okres ' + d.okres + cdBig + '</div>' +
           '<div class="md-facts">' +
-            '<span>Parcela <b>č. ' + d.parcel + '</b></span>' +
+            (hasParcel(d) ? '<span>Parcela <b>č. ' + d.parcel + '</b></span>' : '') +
             '<span>Druh <b>' + d.druh + '</b></span>' +
             '<span>Výměra <b>' + areaTxt(d) + '</b></span>' +
             '<span>' + priceLabel + ' <b>' + fmt(d.price) + ' Kč</b></span>' +
@@ -1163,7 +1165,7 @@
             '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
             '<span class="opp-tag ' + d.type + '">' + t.label + '</span>' +
           '</span></div>' +
-          '<div class="opp-meta"><span>parc. <b>' + d.parcel + '</b></span>' +
+          '<div class="opp-meta">' + (hasParcel(d) ? '<span>parc. <b>' + d.parcel + '</b></span>' : '') +
           '<span>' + (hasArea(d) ? '<b>' + fmt(d.area) + '</b> m²' : 'výměra neuvedena') + '</span><span>' + d.druh + '</span></div>' +
           '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? ' <span>· ' + fmt(perM2) + ' Kč/m²</span>' : '') +
             (perM2 && dealMax && perM2 <= dealMax ? ' <span class="opp-deal">výhodná cena</span>' : '') + '</div>' +
