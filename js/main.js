@@ -736,8 +736,14 @@
   var mapLocked = true;
   function setPan(on) {
     mapLocked = !on;
-    var fns = ['dragging', 'scrollWheelZoom', 'doubleClickZoom', 'touchZoom', 'boxZoom', 'keyboard'];
+    // touchZoom (pinch dvěma prsty) NECHÁVÁME zapnutý pořád — aby dva prsty
+    // přiblížily MAPU, ne celou stránku (na iOS jinak pinch zoomuje celý web).
+    var fns = ['dragging', 'scrollWheelZoom', 'doubleClickZoom', 'boxZoom', 'keyboard'];
     fns.forEach(function (f) { if (map[f]) map[f][on ? 'enable' : 'disable'](); });
+    if (map.touchZoom) map.touchZoom.enable();
+    // touch-action: zamčeno → stránka jde svisle scrollovat prstem, ale pinch
+    //   chytne mapa (prohlížeč nezoomuje web); puštěno → mapou jde volně hýbat.
+    mapEl.style.touchAction = on ? 'none' : 'pan-y';
     if (panBtn) { panBtn.textContent = on ? '🔒 Zastavit mapu' : '✋ Hýbat mapou'; panBtn.classList.toggle('on', on); }
     if (on) setTimeout(function () { map.invalidateSize(); }, 60);
   }

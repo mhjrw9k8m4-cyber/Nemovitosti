@@ -353,7 +353,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .filter-chip.active .chip-n{background:rgba(22,35,47,0.28); color:inherit;}
 
 /* Informační tabulka NAD mapou — výrazně orámovaná, zmenší mapu */
-.map-detail{position:relative; flex:none; min-height:0; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border-bottom:2px solid var(--copper); box-shadow:0 8px 22px -8px rgba(201,152,47,0.5); padding:14px 16px; z-index:10; animation:mdin .3s var(--ease); overflow-y:auto;}
+.map-detail{position:relative; flex:none; min-height:0; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border-bottom:2px solid var(--copper); box-shadow:0 8px 22px -8px rgba(201,152,47,0.5); padding:14px 16px; z-index:10; animation:mdin .3s var(--ease); overflow-y:auto; touch-action:pan-y;}
 .map-detail::after{content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px; background:linear-gradient(90deg, var(--copper), var(--copper-bright), var(--copper));}
 .map-detail[hidden]{display:none;}
 @keyframes mdin{from{opacity:0; transform:translateY(-12px);} to{opacity:1; transform:none;}}
