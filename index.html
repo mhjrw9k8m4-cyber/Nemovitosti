@@ -62,8 +62,8 @@
 
 <div class="topbar" id="topbar">
   <div class="wrap topbar-in">
-    <span><span class="live-dot"></span>Spouštíme betu — vyzkoušejte Pozemkomat mezi prvními, zdarma.</span>
-    <a href="#upozorneni" class="tb-cta">Přidat se →</a>
+    <span><span class="live-dot"></span>Pozemkomat je ve veřejné bétě — zkuste ho a řekněte nám, co zlepšit.</span>
+    <a href="#upozorneni" class="tb-cta">Ozvat se →</a>
     <button class="tb-close" id="tb-close" aria-label="Zavřít oznámení">×</button>
   </div>
 </div>
@@ -180,7 +180,7 @@
       <div class="counter"><div class="c-num" data-count="14" data-suffix="+">0</div><div class="c-lbl">příležitostí na mapě</div></div>
       <div class="counter"><div class="c-num" data-count="4">0</div><div class="c-lbl">druhy stavů</div></div>
       <div class="counter"><div class="c-num" data-count="5">0</div><div class="c-lbl">veřejné zdroje</div></div>
-      <div class="counter"><div class="c-num" data-count="24" data-suffix="/7">0</div><div class="c-lbl">hlídání lokalit</div></div>
+      <div class="counter"><div class="c-num" data-count="14">0</div><div class="c-lbl">krajů ČR pokryto</div></div>
     </div>
   </section>
 
@@ -306,33 +306,29 @@
   <!-- 10 · CENÍK -->
   <section class="section pt-0" id="cenik">
     <div class="wrap">
-      <div class="section-head reveal"><div class="eyebrow">Ceník</div><h2>Začněte zdarma. Plaťte, až když vám to ušetří čas.</h2></div>
-      <div class="bill-toggle reveal" role="group" aria-label="Způsob fakturace">
-        <button type="button" class="bt-opt active" data-bill="month">Měsíčně</button>
-        <button type="button" class="bt-opt" data-bill="year">Ročně <span class="bt-save">2 měsíce zdarma</span></button>
-      </div>
+      <div class="section-head reveal"><div class="eyebrow">Ceník</div><h2>V bétě je vše zdarma.</h2><p class="section-sub">Prémiové funkce zatím nejsou hotové. Takhle bude ceník vypadat, až je přidáme — ať víte předem, co čekat. Nic se nepředplácí a nikam nezadáváte kartu.</p></div>
       <div class="pricing">
-        <div class="price-card reveal" data-price-month="0 Kč<span>/ navždy</span>" data-price-year="0 Kč<span>/ navždy</span>">
-          <div class="pc-name">Zdarma</div><div class="pc-price">0 Kč<span>/ navždy</span></div>
-          <ul><li>✓ Prohlížení celé mapy</li><li>✓ Filtry a hledání</li><li>✓ 1 hlídaná lokalita</li><li>✓ Proklik do katastru</li></ul>
-          <a href="#upozorneni" class="btn-outline">Začít zdarma</a>
+        <div class="price-card featured reveal">
+          <div class="pc-badge pc-badge-live">Teď aktivní</div>
+          <div class="pc-name">Zdarma</div><div class="pc-price">0 Kč<span>/ navždy zdarma</span></div>
+          <ul><li>✓ Prohlížení celé mapy</li><li>✓ Filtry, hledání a cena</li><li>✓ Uložené pozemky</li><li>✓ Proklik do katastru a na inzerát</li></ul>
+          <a href="#upozorneni" class="btn-primary">Začít používat</a>
         </div>
-        <div class="price-card featured reveal" data-price-month="199 Kč<span>/ měsíc</span>" data-price-year="1 990 Kč<span>/ rok</span>">
-          <div class="pc-badge">Nejoblíbenější</div>
-          <div class="pc-name">Pro</div><div class="pc-price">199 Kč<span>/ měsíc</span></div>
-          <ul><li>✓ Vše ze Zdarma</li><li>✓ <b>Neomezené</b> hlídání lokalit</li><li>✓ Upozornění e-mailem i SMS</li><li>✓ Historie a export dat</li><li>✓ Přednostní novinky</li></ul>
-          <a href="#upozorneni" class="btn-primary">Vyzkoušet Pro</a>
+        <div class="price-card reveal is-planned">
+          <div class="pc-badge">Připravujeme</div>
+          <div class="pc-name">Pro</div><div class="pc-price">199 Kč<span>/ měsíc (plán)</span></div>
+          <ul><li>Vše ze Zdarma</li><li>Neomezené hlídání lokalit</li><li>Upozornění e-mailem</li><li>Historie a export dat</li></ul>
+          <a href="#upozorneni" class="btn-outline">Dát vědět, až spustíme</a>
         </div>
-        <div class="price-card reveal" data-price-month="od 990 Kč<span>/ měsíc</span>" data-price-year="od 9 900 Kč<span>/ rok</span>">
-          <div class="pc-name">Realitky &amp; obce</div><div class="pc-price">od 990 Kč<span>/ měsíc</span></div>
-          <ul><li>✓ Widget mapy na váš web</li><li>✓ Více uživatelů v týmu</li><li>✓ Napojení přes API</li><li>✓ Přednostní podpora</li></ul>
-          <a href="#realitky" class="btn-outline">Domluvit se</a>
+        <div class="price-card reveal is-planned">
+          <div class="pc-name">Realitky a obce</div><div class="pc-price">individuální</div>
+          <ul><li>Widget mapy na váš web</li><li>Více uživatelů v týmu</li><li>Napojení přes API</li><li>Přednostní podpora</li></ul>
+          <a href="#realitky" class="btn-outline">Napsat nám</a>
         </div>
       </div>
       <div class="guarantees reveal">
         <span class="guarantee"><svg class="ic"><use href="#i-check"/></svg>Bez registrace</span>
         <span class="guarantee"><svg class="ic"><use href="#i-check"/></svg>Bez platební karty</span>
-        <span class="guarantee"><svg class="ic"><use href="#i-check"/></svg>Zrušíte kdykoliv</span>
         <span class="guarantee"><svg class="ic"><use href="#i-check"/></svg>Data z veřejných zdrojů</span>
       </div>
     </div>
@@ -343,13 +339,13 @@
     <div class="wrap">
       <div class="alert-box reveal">
         <div class="alert-copy">
-          <div class="eyebrow"><span class="live-dot"></span>Váš hlídací pes</div>
-          <h2>Buďte první, kdo se dozví o nové příležitosti.</h2>
-          <p>Zadejte e-mail a okres. Ozveme se, jen když se ve vašem okolí objeví dražba, exekuce, prodej nebo obecní záměr.</p>
+          <div class="eyebrow"><span class="live-dot"></span>E-mailová upozornění</div>
+          <h2>Upozorníme vás na nové příležitosti ve vaší lokalitě.</h2>
+          <p>Necháte okres a e-mail. Upozornění právě dokončujeme — jakmile je spustíme, dáme vám vědět pokaždé, když se ve vašem okolí objeví dražba, exekuce, prodej nebo obecní záměr.</p>
           <ul class="alert-benefits">
-            <li><svg class="ic"><use href="#i-check"/></svg>První hlídaná lokalita zdarma</li>
-            <li><svg class="ic"><use href="#i-check"/></svg>E-mail hned, jakmile se něco objeví</li>
-            <li><svg class="ic"><use href="#i-check"/></svg>Bez spamu — odhlásíte se kdykoliv</li>
+            <li><svg class="ic"><use href="#i-check"/></svg>Zdarma</li>
+            <li><svg class="ic"><use href="#i-check"/></svg>Jen skutečné příležitosti z veřejných zdrojů</li>
+            <li><svg class="ic"><use href="#i-check"/></svg>Bez spamu, odhlásíte se kdykoliv</li>
           </ul>
         </div>
         <form class="alert-form" id="alert-form" novalidate>
@@ -357,9 +353,9 @@
           <input id="okres" name="okres" type="text" placeholder="Okres nebo obec (např. Kolín)" autocomplete="off">
           <label class="visually-hidden" for="email">E-mail</label>
           <input id="email" name="email" type="email" placeholder="vas@email.cz" autocomplete="email" required>
-          <button type="submit" class="btn-primary btn-glow">Přidat se zdarma</button>
+          <button type="submit" class="btn-primary btn-glow">Chci upozornění</button>
           <p class="form-msg" id="form-msg" role="status" aria-live="polite"></p>
-          <p class="form-fine">Odesláním souhlasíte se zpracováním e-mailu pro zaslání upozornění. Kdykoliv se odhlásíte.</p>
+          <p class="form-fine">E-mail použijeme jen pro tato upozornění. Neprodáváme ho a kdykoliv se odhlásíte.</p>
         </form>
       </div>
     </div>
@@ -368,7 +364,7 @@
   <!-- 12 · PRO REALITKY -->
   <section class="section pt-0" id="realitky">
     <div class="wrap">
-      <div class="section-head reveal"><div class="eyebrow">Pro realitky a obce</div><h2>Buďte u příležitostí dřív než vaše konkurence.</h2><p class="section-sub">Ať už hledáte pozemky pro klienty, nebo chcete mapu na vlastní web — Pozemkomat vám dá náskok.</p></div>
+      <div class="section-head reveal"><div class="eyebrow">Pro realitky a obce</div><h2>Pozemkomat pro váš tým nebo web.</h2><p class="section-sub">Hledáte pozemky pro klienty, nebo chcete mapu vaší lokality na vlastní web? Tyto funkce připravujeme — ozvěte se a domluvíme se na konkrétní podobě.</p></div>
       <div class="realtor-grid reveal">
         <div class="realtor-card">
           <div class="rc-ico"><svg class="ic"><use href="#i-map"/></svg></div>
@@ -465,15 +461,15 @@
 <div class="modal" id="watch-modal" role="dialog" aria-modal="true" aria-labelledby="wm-title" hidden>
   <div class="modal-backdrop" data-close></div>
   <div class="modal-card">
-    <div class="eyebrow"><span class="live-dot"></span>Váš hlídací pes</div>
-    <h3 id="wm-title">Hlídat lokalitu zdarma</h3>
-    <p class="modal-sub">Ozveme se, jakmile se ve vaší lokalitě objeví dražba, exekuce, prodej nebo obecní záměr. Bez spamu.</p>
+    <div class="eyebrow"><span class="live-dot"></span>E-mailová upozornění</div>
+    <h3 id="wm-title">Upozornění na lokalitu</h3>
+    <p class="modal-sub">Necháte okres a e-mail. Upozornění dokončujeme — jakmile je spustíme, dáme vám vědět, když se ve vaší lokalitě objeví dražba, exekuce, prodej nebo obecní záměr. Bez spamu.</p>
     <form class="modal-form" id="watch-form" novalidate>
       <label class="visually-hidden" for="wm-okres">Okres</label>
       <input id="wm-okres" type="text" placeholder="Okres nebo obec (např. Kolín)" autocomplete="off">
       <label class="visually-hidden" for="wm-email">E-mail</label>
       <input id="wm-email" type="email" placeholder="vas@email.cz" required autocomplete="email">
-      <button type="submit" class="btn-primary btn-glow">Hlídat zdarma</button>
+      <button type="submit" class="btn-primary btn-glow">Chci upozornění</button>
       <p class="form-msg" id="wm-msg" role="status" aria-live="polite"></p>
       <p class="modal-fine">✓ První lokalita zdarma · ✓ Bez karty · ✓ Odhlásíte kdykoliv</p>
     </form>
@@ -485,9 +481,9 @@
 <div class="modal" id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-title" hidden>
   <div class="modal-backdrop" data-close></div>
   <div class="modal-card">
-    <div class="eyebrow"><span class="live-dot"></span>Váš účet</div>
-    <h3 id="login-title">Přihlásit se</h3>
-    <p class="modal-sub">Účet si zapamatuje vaše <b>uložené pozemky</b> a <b>hlídané lokality</b>. Zatím běží jen ve vašem prohlížeči — bez hesla, bez odesílání.</p>
+    <div class="eyebrow"><span class="live-dot"></span>Účet</div>
+    <h3 id="login-title">Uložte si své pozemky</h3>
+    <p class="modal-sub">Účet si drží vaše <b>uložené pozemky</b>, ať se k nim snadno vrátíte. V bétě funguje jen ve vašem prohlížeči — nezakládáme žádný server a data zůstávají u vás. Synchronizaci mezi zařízeními připravujeme.</p>
     <form class="modal-form" id="login-form" novalidate>
       <label class="visually-hidden" for="login-name">Jméno</label>
       <input id="login-name" type="text" placeholder="Jméno (nepovinné)" autocomplete="name">
@@ -495,7 +491,7 @@
       <input id="login-email" type="email" placeholder="vas@email.cz" required autocomplete="email">
       <button type="submit" class="btn-primary btn-glow">Pokračovat</button>
       <p class="form-msg" id="login-msg" role="status" aria-live="polite"></p>
-      <p class="modal-fine">✓ Zdarma · ✓ Bez hesla · ✓ Data zůstávají u vás</p>
+      <p class="modal-fine">Zdarma · bez hesla · data zůstávají ve vašem prohlížeči</p>
     </form>
     <button class="modal-close-bar" type="button" data-close>Zavřít</button>
   </div>

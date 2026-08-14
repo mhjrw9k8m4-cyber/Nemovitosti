@@ -200,7 +200,7 @@
     var ms = document.getElementById('wm-msg');
     if (ms) { ms.textContent = ''; ms.classList.remove('err'); }
     if (ok) ok.value = okres || '';
-    if (ti) ti.textContent = okres ? ('Hlídat okres ' + okres) : 'Hlídat lokalitu zdarma';
+    if (ti) ti.textContent = okres ? ('Upozornění na okres ' + okres) : 'Upozornění na lokalitu';
     wModal.removeAttribute('hidden');
     requestAnimationFrame(function () { wModal.classList.add('open'); });
     document.body.style.overflow = 'hidden';
@@ -230,7 +230,7 @@
       var ms = document.getElementById('wm-msg');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ms.textContent = 'Zadejte prosím platný e-mail.'; ms.classList.add('err'); return; }
       ms.classList.remove('err');
-      ms.textContent = okres ? ('Díky! Jakmile se v okolí „' + okres + '" něco objeví, dáme vám vědět. (ukázka)') : 'Díky! Přihlášeno — ozveme se, až bude co. (ukázka)';
+      ms.textContent = okres ? ('Díky! Poznamenali jsme si okres „' + okres + '". Ozveme se, jakmile upozornění spustíme.') : 'Díky! Poznamenali jsme si váš zájem. Ozveme se, jakmile upozornění spustíme.';
       setTimeout(closeWatch, 1900);
     });
   }
@@ -311,22 +311,6 @@
     if (favBtn && favBtn.getAttribute('aria-pressed') !== 'true') setTimeout(function () { favBtn.click(); }, 500);
   });
   renderAuth();
-
-  /* ---------- Přepínač fakturace v ceníku ---------- */
-  var billToggle = document.querySelector('.bill-toggle');
-  if (billToggle) {
-    billToggle.addEventListener('click', function (e) {
-      var btn = e.target.closest('.bt-opt');
-      if (!btn) return;
-      var mode = btn.getAttribute('data-bill');
-      billToggle.querySelectorAll('.bt-opt').forEach(function (b) { b.classList.toggle('active', b === btn); });
-      document.querySelectorAll('.price-card').forEach(function (card) {
-        var html = card.getAttribute('data-price-' + mode);
-        var el = card.querySelector('.pc-price');
-        if (html && el) el.innerHTML = html;
-      });
-    });
-  }
 
   /* ---------- Sticky header shrink + back-to-top ---------- */
   var header = document.getElementById('header');
@@ -419,8 +403,8 @@
       }
       msg.classList.remove('err');
       msg.textContent = okres
-        ? 'Díky! Hlídáme okolí „' + okres + '" za vás. (ukázka — zatím se nikam neodesílá)'
-        : 'Díky! Přihlášeno k odběru. (ukázka — zatím se nikam neodesílá)';
+        ? 'Díky! Poznamenali jsme si okres „' + okres + '". Ozveme se, jakmile upozornění spustíme.'
+        : 'Díky! Poznamenali jsme si váš zájem. Ozveme se, jakmile upozornění spustíme.';
       form.reset();
     });
   }
@@ -722,7 +706,7 @@
           (auctionYMD(d.extra) ? '<button class="lp-btn" type="button" data-cal>📅 Kalendář</button>' : '') +
           '<button class="lp-btn lp-fav' + (isFav(d) ? ' on' : '') + '" type="button" data-fav-detail>' + BM_SVG + '<span>' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
           '<button class="lp-btn" type="button" data-share>Sdílet</button>' +
-          '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">Hlídat okres ' + d.okres + '</a>' +
+          '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">Upozornit na okres ' + d.okres + '</a>' +
         '</div>' +
       '</div>';
   }
