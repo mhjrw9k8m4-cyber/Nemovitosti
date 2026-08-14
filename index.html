@@ -76,7 +76,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260814j">
+  <link rel="stylesheet" href="css/styles.css?v=20260814k">
 </head>
 <body>
 
@@ -348,32 +348,50 @@
   <!-- 10 · CENÍK -->
   <section class="section pt-0" id="cenik">
     <div class="wrap">
-      <div class="section-head reveal"><div class="eyebrow">Ceník</div><h2>V bétě je vše zdarma.</h2><p class="section-sub">Prémiové funkce zatím nejsou hotové. Takhle bude ceník vypadat, až je přidáme — ať víte předem, co čekat. Nic se nepředplácí a nikam nezadáváte kartu.</p></div>
+      <div class="section-head reveal"><div class="eyebrow">Ceník</div><h2>Mapa je zdarma. Za náskok se připlácí.</h2><p class="section-sub">Prohlížení mapy je a zůstane bez placení. Pro ty, kdo pozemky hledají opravdu aktivně, chystáme tarif Pro — dá vám navíc čas a náskok. Zatím není hotový, takže tady předem ukazujeme, co bude umět a proč to stojí za to. Nic se teď nepředplácí a nikam nezadáváte kartu.</p></div>
       <div class="pricing">
         <div class="price-card featured reveal">
           <div class="pc-badge pc-badge-live">Teď aktivní</div>
           <div class="pc-name">Zdarma</div><div class="pc-price">0 Kč<span>/ navždy</span></div>
-          <ul><li>✓ Prohlížení celé mapy</li><li>✓ Filtry, hledání a cena</li><li>✓ Uložené pozemky</li><li>✓ Proklik do katastru a na inzerát</li></ul>
-          <a href="#upozorneni" class="btn-primary">Začít používat</a>
+          <ul class="pc-feats">
+            <li><b>Celá mapa příležitostí</b><span>Všechny dražby, exekuce i prodeje pohromadě na jedné mapě, bez omezení a bez placení.</span></li>
+            <li><b>Filtry, hledání a cena</b><span>Zúžíte si nabídku podle okresu, druhu pozemku i rozpočtu, ať se neztratíte v desítkách bodů.</span></li>
+            <li><b>Uložené pozemky</b><span>Zajímavé kousky si označíte a kdykoliv se k nim vrátíte, i po zavření prohlížeče.</span></li>
+            <li><b>Ověření u zdroje</b><span>U každého pozemku se prokliknete do katastru i na původní inzerát nebo dražbu a ověříte si to sami.</span></li>
+          </ul>
+          <a href="#mapa" class="btn-primary">Začít používat</a>
         </div>
         <div class="price-card reveal is-planned">
           <div class="pc-badge">Připravujeme</div>
-          <div class="pc-name">Pro</div><div class="pc-price">199 Kč<span>/ měsíc (plán)</span></div>
-          <ul><li>Vše ze Zdarma</li><li>Neomezené hlídání lokalit</li><li>Upozornění e-mailem</li><li>Historie a export dat</li></ul>
+          <div class="pc-name">Pro</div><div class="pc-price">149 Kč<span>/ měsíc · plánujeme</span></div>
+          <div class="pc-annual mono">nebo 1 490 Kč / rok (dva měsíce zdarma)</div>
+          <ul class="pc-feats">
+            <li><b>Hlídání lokalit e-mailem</b><span>Vyberete si okresy a druhy pozemků a e-mail přijde hned, jak se objeví nová příležitost. Přestanete obcházet weby a o zajímavém pozemku víte mezi prvními.</span></li>
+            <li><b>Neomezený počet míst</b><span>Sledujte klidně několik okresů nebo celý kraj naráz — hodí se, když hledáte na víc místech nebo pro víc lidí.</span></li>
+            <li><b>Historie a vývoj cen</b><span>Uvidíte, co se v okolí dražilo a prodávalo dřív a za kolik. Než podáte nabídku, budete mít lepší odhad reálné ceny.</span></li>
+            <li><b>Export do tabulky</b><span>Vybrané pozemky si stáhnete do Excelu nebo CSV a zpracujete po svém — vlastní přehled nebo sdílení v rodině či týmu.</span></li>
+          </ul>
+          <p class="pc-why"><b>Proč se to vyplatí:</b> dobré pozemky zmizí během pár dní. Pro vám dá náskok — o příležitosti víte první a máte čas ji v klidu prověřit. Stačí jeden dobře koupený pozemek a předplatné se vrátí mnohonásobně.</p>
           <a href="#upozorneni" class="btn-outline">Dát vědět, až spustíme</a>
         </div>
         <div class="price-card reveal is-planned">
+          <div class="pc-badge">Připravujeme</div>
           <div class="pc-name">Realitky a obce</div><div class="pc-price">individuální</div>
-          <ul><li>Widget mapy na váš web</li><li>Více uživatelů v týmu</li><li>Napojení přes API</li><li>Přednostní podpora</li></ul>
+          <ul class="pc-feats">
+            <li><b>Widget mapy na váš web</b><span>Interaktivní mapa vaší lokality přímo na vašich stránkách. Aktualizuje se s naší datovou vrstvou — vy se o nic nestaráte.</span></li>
+            <li><b>Přístup pro celý tým</b><span>Víc uživatelů pod jednou firmou nebo obcí, každý se svým přihlášením.</span></li>
+            <li><b>Napojení přes API</b><span>Data o příležitostech rovnou do vašich systémů a CRM, bez ručního přepisování.</span></li>
+            <li><b>Přednostní podpora</b><span>Vaše požadavky a přání řešíme přednostně, s člověkem na druhé straně.</span></li>
+          </ul>
           <a href="#realitky" class="btn-outline">Napsat nám</a>
         </div>
       </div>
       <div class="guarantees reveal">
         <span class="guarantee"><svg class="ic"><use href="#i-check"/></svg>Bez registrace</span>
         <span class="guarantee"><svg class="ic"><use href="#i-check"/></svg>Bez platební karty</span>
-        <span class="guarantee"><svg class="ic"><use href="#i-check"/></svg>Data z veřejných zdrojů</span>
+        <span class="guarantee"><svg class="ic"><use href="#i-check"/></svg>Zrušíte kdykoliv</span>
       </div>
-      <p class="cenik-note mono reveal">Prohlížení mapy a uložené pozemky zůstanou zdarma i po spuštění prémiových funkcí. Kdo je s námi v bétě, dostane Pro na vyzkoušení.</p>
+      <p class="cenik-note mono reveal">Prohlížení mapy a uložené pozemky zůstanou zdarma i po spuštění Pro. Kdo je s námi teď v bétě, dostane Pro na vyzkoušení zdarma.</p>
     </div>
   </section>
 
@@ -590,6 +608,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="js/main.js?v=20260814j" defer></script>
+<script src="js/main.js?v=20260814k" defer></script>
 </body>
 </html>

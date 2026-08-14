@@ -608,6 +608,14 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .price-card ul{list-style:none; display:flex; flex-direction:column; gap:11px; margin-bottom:24px; flex:1;}
 .price-card li{font-size:14px; color:var(--text-ondark-mute);}
 .price-card li b{color:var(--text-ondark);}
+.pc-annual{font-size:12px; color:var(--copper-bright); margin:-12px 0 18px;}
+.pc-feats{gap:15px !important;}
+.pc-feats li{display:flex; flex-direction:column; gap:3px; padding-left:24px; position:relative;}
+.pc-feats li b{color:var(--text-ondark); font-size:14px; font-weight:600;}
+.pc-feats li b::before{content:"✓"; position:absolute; left:0; top:0; color:var(--copper-bright); font-weight:700;}
+.pc-feats li span{font-size:12.5px; line-height:1.55; color:var(--text-ondark-mute);}
+.pc-why{font-size:12.5px; line-height:1.6; color:var(--text-ondark); background:rgba(201,152,47,0.09); border:1px solid rgba(201,152,47,0.24); border-radius:8px; padding:12px 14px; margin:0 0 20px;}
+.pc-why b{color:var(--copper-bright);}
 .btn-outline{display:block; text-align:center; background:transparent; color:var(--text-ondark); border:1px solid var(--line); border-radius:3px; padding:13px; font-weight:600; font-size:14px; text-decoration:none; transition:border-color .15s ease, background .15s ease;}
 .btn-outline:hover{border-color:var(--copper-bright); background:rgba(201,152,47,0.08);}
 .price-card .btn-primary{text-align:center; padding:13px;}
