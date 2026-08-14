@@ -110,8 +110,11 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 .pk-dot:hover{transform:scale(1.4); z-index:1000; box-shadow:0 4px 12px rgba(0,0,0,0.55), 0 0 12px currentColor;}
 .pk-dot.sel{transform:scale(1.55); box-shadow:0 0 0 4px rgba(255,255,255,0.35), 0 4px 12px rgba(0,0,0,0.55);}
 .pk-dot.urgent{animation:dotpulse 1.6s ease-out infinite;}
-/* Značka „vaše poloha" (režim Nejblíž ke mně) */
-.pk-me{display:block; width:16px; height:16px; border-radius:50%; background:#3B82F6; border:3px solid #fff; box-shadow:0 0 0 4px rgba(59,130,246,0.35), 0 2px 6px rgba(0,0,0,0.5);}
+/* Značka „vaše poloha" (režim Nejblíž ke mně) — s jemným pulzem */
+.pk-me{display:block; width:16px; height:16px; border-radius:50%; background:#3B82F6; border:3px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,0.5); position:relative;}
+.pk-me::after{content:""; position:absolute; inset:-3px; border-radius:50%; background:rgba(59,130,246,0.4); z-index:-1; animation:mePulse 2s ease-out infinite;}
+@keyframes mePulse{0%{transform:scale(1); opacity:0.7;} 70%{transform:scale(3); opacity:0;} 100%{opacity:0;}}
+@media (prefers-reduced-motion:reduce){ .pk-me::after{animation:none; box-shadow:0 0 0 4px rgba(59,130,246,0.3);} }
 .opp-km{color:var(--copper-bright); font-weight:600;}
 @keyframes dotpulse{0%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 0 rgba(217,164,65,0.5);} 100%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 10px rgba(217,164,65,0);}}
 .data-updated{margin:-6px 0 14px; font-size:12px; color:var(--copper-bright); opacity:0.85;}

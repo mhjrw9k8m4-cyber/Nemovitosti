@@ -725,6 +725,7 @@
   // Start oddálený na celou ČR (přesné vyrovnání na data řeší fitAllCZ níže).
   var map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: true }).setView([49.82, 15.47], 7);
   if (map.zoomControl) map.zoomControl.setPosition('topright'); // uvolní místo pro nadpis kraje
+  if (map.attributionControl) map.attributionControl.setPosition('bottomleft'); // ať se nekryje s tlačítkem posunu vpravo
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     subdomains: 'abcd', maxZoom: 19
@@ -737,7 +738,7 @@
     mapLocked = !on;
     var fns = ['dragging', 'scrollWheelZoom', 'doubleClickZoom', 'touchZoom', 'boxZoom', 'keyboard'];
     fns.forEach(function (f) { if (map[f]) map[f][on ? 'enable' : 'disable'](); });
-    if (panBtn) { panBtn.textContent = on ? 'Kliknutím zde zastavíte mapu' : 'Kliknutím zde rozhýbete mapu'; panBtn.classList.toggle('on', on); }
+    if (panBtn) { panBtn.textContent = on ? '🔒 Zastavit mapu' : '✋ Hýbat mapou'; panBtn.classList.toggle('on', on); }
     if (on) setTimeout(function () { map.invalidateSize(); }, 60);
   }
   setPan(false);
@@ -1107,7 +1108,12 @@
   function updateKrajHead() {
     if (krajHeadEl) {
       if (nearMode) {
-        krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>Ve vašem okolí</b><span>seřazeno podle vzdálenosti</span></div>';
+        var within = 0, nearest = Infinity;
+        lastVis.forEach(function (d) { var km = kmFromUser(d); if (km < nearest) nearest = km; if (km <= 50) within++; });
+        var sub = !isFinite(nearest) ? 'seřazeno podle vzdálenosti'
+          : (within > 0 ? (within + ' ' + plPozemek(within) + ' do 50 km od vás')
+            : ('nejbližší ' + Math.round(nearest) + ' km od vás'));
+        krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>Ve vašem okolí</b><span>' + sub + '</span></div>';
         krajHeadEl.hidden = false;
         var b0 = krajHeadEl.querySelector('.kh-back'); if (b0) b0.addEventListener('click', clearKraj);
       } else if (!selectedKraj) {
