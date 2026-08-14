@@ -217,9 +217,9 @@
   document.addEventListener('click', function (e) {
     var trigger = e.target.closest('a[href="#upozorneni"]');
     if (trigger) { e.preventDefault(); openWatch(trigger.getAttribute('data-okres') || ''); return; }
-    if (e.target.closest('[data-close]')) closeWatch();
+    if (e.target.closest('[data-close]')) { closeWatch(); closeLogin(); }
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeWatch(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeWatch(); closeLogin(); } });
 
   var wForm = document.getElementById('watch-form');
   if (wForm) {
@@ -234,6 +234,83 @@
       setTimeout(closeWatch, 1900);
     });
   }
+
+  /* ---------- Přihlášení / lokální profil ---------- */
+  var USER_KEY = 'pk_user_v1';
+  var lModal = document.getElementById('login-modal');
+  var navLoginBtn = document.getElementById('btn-login');
+  var navProfile = document.getElementById('nav-profile');
+  function getUser() { try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch (e) { return null; } }
+  function setUser(u) { try { u ? localStorage.setItem(USER_KEY, JSON.stringify(u)) : localStorage.removeItem(USER_KEY); } catch (e) {} renderAuth(); }
+  function favCount() { try { return (JSON.parse(localStorage.getItem('pk_fav_v1')) || []).length; } catch (e) { return 0; } }
+  function openLogin() {
+    if (!lModal) return;
+    var ms = document.getElementById('login-msg'); if (ms) { ms.textContent = ''; ms.classList.remove('err'); }
+    lModal.removeAttribute('hidden');
+    requestAnimationFrame(function () { lModal.classList.add('open'); });
+    document.body.style.overflow = 'hidden';
+    var em = document.getElementById('login-email'); if (em) setTimeout(function () { em.focus(); }, 80);
+  }
+  function closeLogin() {
+    if (!lModal) return;
+    lModal.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(function () { lModal.setAttribute('hidden', ''); }, 250);
+  }
+  function renderAuth() {
+    var u = getUser();
+    if (!navLoginBtn || !navProfile) return;
+    if (u) {
+      navLoginBtn.setAttribute('hidden', '');
+      navProfile.removeAttribute('hidden');
+      var name = u.name || u.email.split('@')[0];
+      document.getElementById('profile-name').textContent = name;
+      document.getElementById('avatar').textContent = (name[0] || '?').toUpperCase();
+      document.getElementById('pm-email').textContent = u.email;
+      document.getElementById('pm-saved-n').textContent = favCount();
+    } else {
+      navLoginBtn.removeAttribute('hidden');
+      navProfile.setAttribute('hidden', '');
+      var pm = document.getElementById('profile-menu'); if (pm) pm.setAttribute('hidden', '');
+    }
+  }
+  if (navLoginBtn) navLoginBtn.addEventListener('click', openLogin);
+  var lForm = document.getElementById('login-form');
+  if (lForm) lForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = document.getElementById('login-email').value.trim();
+    var name = document.getElementById('login-name').value.trim();
+    var ms = document.getElementById('login-msg');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ms.textContent = 'Zadejte prosím platný e-mail.'; ms.classList.add('err'); return; }
+    ms.classList.remove('err');
+    ms.textContent = 'Přihlášeno! Vítejte v Pozemkomatu.';
+    setUser({ email: email, name: name });
+    setTimeout(closeLogin, 1100);
+  });
+  // Rozbalení profilového menu
+  var profChip = document.getElementById('profile-chip');
+  if (profChip) profChip.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var pm = document.getElementById('profile-menu');
+    var open = pm.hasAttribute('hidden');
+    if (open) { pm.removeAttribute('hidden'); document.getElementById('pm-saved-n').textContent = favCount(); }
+    else pm.setAttribute('hidden', '');
+    profChip.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('click', function (e) {
+    var pm = document.getElementById('profile-menu');
+    if (pm && !pm.hasAttribute('hidden') && !e.target.closest('#nav-profile')) pm.setAttribute('hidden', '');
+  });
+  var pmLogout = document.getElementById('pm-logout');
+  if (pmLogout) pmLogout.addEventListener('click', function () { setUser(null); });
+  var pmSaved = document.getElementById('pm-saved');
+  if (pmSaved) pmSaved.addEventListener('click', function () {
+    var favBtn = document.getElementById('map-fav');
+    document.getElementById('profile-menu').setAttribute('hidden', '');
+    var mapa = document.getElementById('mapa'); if (mapa) mapa.scrollIntoView({ behavior: 'smooth' });
+    if (favBtn && favBtn.getAttribute('aria-pressed') !== 'true') setTimeout(function () { favBtn.click(); }, 500);
+  });
+  renderAuth();
 
   /* ---------- Sticky header shrink + back-to-top ---------- */
   var header = document.getElementById('header');

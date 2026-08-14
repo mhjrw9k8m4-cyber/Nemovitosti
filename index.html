@@ -77,6 +77,18 @@
       <a href="#jak-funguje">Jak to funguje</a>
       <a href="#cenik">Ceník</a>
       <a href="#faq">Dotazy</a>
+      <button type="button" class="nav-login" id="btn-login">Přihlásit</button>
+      <div class="nav-profile" id="nav-profile" hidden>
+        <button type="button" class="profile-chip" id="profile-chip" aria-haspopup="true" aria-expanded="false">
+          <span class="avatar" id="avatar" aria-hidden="true"></span><span id="profile-name"></span>
+        </button>
+        <div class="profile-menu" id="profile-menu" hidden role="menu">
+          <div class="pm-email mono" id="pm-email"></div>
+          <div class="pm-item" id="pm-saved" role="menuitem">Uložené pozemky<b id="pm-saved-n">0</b></div>
+          <a href="#upozorneni" class="pm-item" role="menuitem">Hlídat lokalitu<span class="pm-arrow">→</span></a>
+          <button type="button" class="pm-item pm-logout" id="pm-logout" role="menuitem">Odhlásit se</button>
+        </div>
+      </div>
       <a href="#upozorneni" class="btn-primary">Začít zdarma</a>
     </nav>
   </div>
@@ -441,6 +453,26 @@
       <button type="submit" class="btn-primary btn-glow">Hlídat zdarma</button>
       <p class="form-msg" id="wm-msg" role="status" aria-live="polite"></p>
       <p class="modal-fine">✓ První lokalita zdarma · ✓ Bez karty · ✓ Odhlásíte kdykoliv</p>
+    </form>
+    <button class="modal-close-bar" type="button" data-close>Zavřít</button>
+  </div>
+</div>
+
+<!-- Přihlášení / účet -->
+<div class="modal" id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-title" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-card">
+    <div class="eyebrow"><span class="live-dot"></span>Váš účet</div>
+    <h3 id="login-title">Přihlásit se</h3>
+    <p class="modal-sub">Účet si zapamatuje vaše <b>uložené pozemky</b> a <b>hlídané lokality</b>. Zatím běží jen ve vašem prohlížeči — bez hesla, bez odesílání.</p>
+    <form class="modal-form" id="login-form" novalidate>
+      <label class="visually-hidden" for="login-name">Jméno</label>
+      <input id="login-name" type="text" placeholder="Jméno (nepovinné)" autocomplete="name">
+      <label class="visually-hidden" for="login-email">E-mail</label>
+      <input id="login-email" type="email" placeholder="vas@email.cz" required autocomplete="email">
+      <button type="submit" class="btn-primary btn-glow">Pokračovat</button>
+      <p class="form-msg" id="login-msg" role="status" aria-live="polite"></p>
+      <p class="modal-fine">✓ Zdarma · ✓ Bez hesla · ✓ Data zůstávají u vás</p>
     </form>
     <button class="modal-close-bar" type="button" data-close>Zavřít</button>
   </div>
