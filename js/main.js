@@ -3,16 +3,23 @@
   'use strict';
 
   /* ---------- Start vždy nahoře na mapě (ne odscrollovaný dolů) ---------- */
-  // Prohlížeč jinak obnoví předchozí pozici scrollu (i z bfcache na iOS) — začneme nahoře.
+  // Prohlížeč jinak obnoví předchozí pozici scrollu (i z bfcache na iOS). Držíme
+  // stránku nahoře prvních ~700 ms — dokud uživatel sám aktivně nescrolluje.
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   (function () {
     var deep = location.hash || location.search.indexOf('p=') !== -1;
     if (deep) return; // sdílený odkaz na sekci/parcelu si drží svou pozici
-    function toTop() { window.scrollTo(0, 0); }
+    var userScrolled = false;
+    function onUser() { userScrolled = true; }
+    window.addEventListener('wheel', onUser, { passive: true, once: true });
+    window.addEventListener('touchmove', onUser, { passive: true, once: true });
+    window.addEventListener('keydown', function (e) { if (['ArrowDown', 'PageDown', 'End', ' '].indexOf(e.key) !== -1) userScrolled = true; }, { once: true });
+    function toTop() { if (!userScrolled && window.pageYOffset !== 0) window.scrollTo(0, 0); }
     toTop();
+    [30, 90, 200, 400, 700].forEach(function (t) { setTimeout(toTop, t); });
     document.addEventListener('DOMContentLoaded', toTop);
-    // pageshow pokryje návrat z bfcache (typicky Safari na iOS)
-    window.addEventListener('pageshow', function (e) { if (e.persisted) toTop(); });
+    window.addEventListener('load', toTop);
+    window.addEventListener('pageshow', function () { userScrolled = false; toTop(); setTimeout(toTop, 60); });
   })();
 
   /* ---------- Záložní data (když se nenačte data/opportunities.json) ---------- */
@@ -230,9 +237,9 @@
   document.addEventListener('click', function (e) {
     var trigger = e.target.closest('a[href="#upozorneni"]');
     if (trigger) { e.preventDefault(); openWatch(trigger.getAttribute('data-okres') || ''); return; }
-    if (e.target.closest('[data-close]')) { closeWatch(); closeLogin(); }
+    if (e.target.closest('[data-close]')) { closeWatch(); closeLogin(); closeInfo(); }
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeWatch(); closeLogin(); } });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeWatch(); closeLogin(); closeInfo(); } });
 
   var wForm = document.getElementById('watch-form');
   if (wForm) {
@@ -351,6 +358,48 @@
     if (favBtn && favBtn.getAttribute('aria-pressed') !== 'true') setTimeout(function () { favBtn.click(); }, 500);
   });
   renderAuth();
+
+  /* ---------- Zásady soukromí / Podmínky (info modal) ---------- */
+  var INFO = {
+    soukromi: {
+      t: 'Zásady soukromí',
+      h: '<p>Pozemkomat je ve veřejné bétě. Upřímně, jak zacházíme s daty:</p>' +
+        '<ul>' +
+        '<li><b>E-mail:</b> použijeme jen pro upozornění nebo poptávku, o kterou si sami řeknete. Neprodáváme ho a neposíláme spam — kdykoli se odhlásíte.</li>' +
+        '<li><b>Účet a uložené pozemky:</b> běží zatím jen ve vašem prohlížeči (localStorage). Nic se neodesílá na server.</li>' +
+        '<li><b>Data o pozemcích:</b> pocházejí z veřejných zdrojů (dražby, SPÚ, inzeráty, katastr). Nezveřejňujeme osobní údaje vlastníků.</li>' +
+        '<li><b>Provoz:</b> web běží na GitHub Pages. Žádné reklamní ani sledovací skripty třetích stran.</li>' +
+        '</ul><p>Dotaz? Napište na <a href="mailto:ahoj@pozemkomat.cz">ahoj@pozemkomat.cz</a>.</p>'
+    },
+    podminky: {
+      t: 'Podmínky použití',
+      h: '<p>Pozemkomat je bezplatný nástroj ve veřejné bétě. Sbírá a zobrazuje příležitosti u pozemků z veřejných zdrojů.</p>' +
+        '<ul>' +
+        '<li>Data mají <b>informativní charakter</b>. Vždy si je ověřte v oficiálním katastru a u zdroje (dražba, úřad, prodejce). Pozemkomat neručí za jejich úplnost ani aktuálnost.</li>' +
+        '<li>Pozemkomat <b>není účastníkem</b> dražeb ani prodejů a neposkytuje právní ani investiční poradenství.</li>' +
+        '<li>Během bety se funkce mohou měnit. Prohlížení mapy zůstane zdarma.</li>' +
+        '</ul><p>Otázky? <a href="mailto:ahoj@pozemkomat.cz">ahoj@pozemkomat.cz</a>.</p>'
+    }
+  };
+  var iModal = document.getElementById('info-modal');
+  function openInfo(key) {
+    var d = INFO[key]; if (!iModal || !d) return;
+    document.getElementById('info-title').textContent = d.t;
+    document.getElementById('info-body').innerHTML = d.h;
+    iModal.removeAttribute('hidden');
+    requestAnimationFrame(function () { iModal.classList.add('open'); });
+    document.body.style.overflow = 'hidden';
+  }
+  function closeInfo() {
+    if (!iModal) return;
+    iModal.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(function () { iModal.setAttribute('hidden', ''); }, 250);
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-info]');
+    if (t) { e.preventDefault(); openInfo(t.getAttribute('data-info')); }
+  });
 
   /* ---------- Sticky header shrink + back-to-top ---------- */
   var header = document.getElementById('header');

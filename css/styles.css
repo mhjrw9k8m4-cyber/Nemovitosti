@@ -180,7 +180,19 @@ nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; rig
 .hero-head .hero-ctas{justify-content:center; margin-bottom:20px;}
 .hero-head .trust-line{justify-content:center; margin:0;}
 .hero-map .map-app{margin-top:6px;}
-@media (max-width:880px){ .hero-head h1{font-size:34px;} .hero-map{padding:26px 0 44px;} .hero-head .sub{font-size:16px;} }
+@media (max-width:880px){
+  .hero-map{padding:16px 0 40px;}
+  .hero-head{margin-bottom:18px;}
+  .hero-head .eyebrow{margin-bottom:11px;}
+  .hero-head h1{font-size:29px; margin-bottom:11px;}
+  .hero-head .sub{font-size:15px; margin-bottom:16px;}
+  .hero-head .hero-ctas{margin-bottom:12px;}
+}
+@media (max-width:560px){
+  .hero-head h1{font-size:26px;}
+  .hero-head .sub{display:none;}
+  .hero-head .trust-line{display:none;}
+}
 
 /* Hero prvky (sdílené) */
 .eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--copper-bright); margin-bottom:22px;}
@@ -653,6 +665,15 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .modal-fine{font-size:11.5px; color:var(--text-ondark-mute); text-align:center; margin-top:2px;}
 .modal-close-bar{width:100%; margin-top:16px; background:none; border:0; border-top:1px solid var(--line); padding:14px 0 2px; color:var(--text-ondark-mute); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:color .15s ease;}
 .modal-close-bar:hover{color:var(--text-ondark);}
+.info-card{max-width:520px;}
+.info-card h3{margin-bottom:14px;}
+.info-body{font-size:14px; color:var(--text-ondark-mute); line-height:1.65; max-height:60vh; overflow-y:auto;}
+.info-body p{margin-bottom:12px;}
+.info-body ul{list-style:none; display:flex; flex-direction:column; gap:10px; margin:0 0 12px;}
+.info-body li{position:relative; padding-left:16px;}
+.info-body li::before{content:""; position:absolute; left:0; top:8px; width:6px; height:6px; border-radius:50%; background:var(--copper);}
+.info-body b{color:var(--text-ondark);}
+.info-body a{color:var(--copper-bright);}
 
 /* Back to top */
 .to-top{position:fixed; bottom:24px; right:24px; width:46px; height:46px; border-radius:50%; background:var(--copper); color:var(--ink); border:0; font-size:20px; cursor:pointer; box-shadow:0 8px 20px rgba(0,0,0,0.4); opacity:0; pointer-events:none; transform:translateY(10px); transition:opacity .2s ease, transform .2s ease; z-index:900;}

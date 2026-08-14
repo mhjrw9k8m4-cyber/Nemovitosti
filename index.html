@@ -480,7 +480,7 @@
     </div>
     <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="#mapa">Mapa</a><a href="#jak-funguje">Jak to funguje</a><a href="#cenik">Ceník</a><a href="#realitky">Pro realitky</a></nav>
     <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="#druhy">Druhy pozemků</a><a href="#slib">Náš slib</a><a href="#slovnicek">Slovníček</a><a href="#faq">Časté dotazy</a></nav>
-    <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="#">Zásady soukromí</a><a href="#">Podmínky použití</a><a href="#">Kontakt</a></nav>
+    <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="#" data-info="soukromi">Zásady soukromí</a><a href="#" data-info="podminky">Podmínky použití</a><a href="mailto:ahoj@pozemkomat.cz">Kontakt</a></nav>
   </div>
   <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Pozemkomat</span></div>
 </footer>
@@ -504,6 +504,16 @@
       <p class="form-msg" id="wm-msg" role="status" aria-live="polite"></p>
       <p class="modal-fine">✓ První lokalita zdarma · ✓ Bez karty · ✓ Odhlásíte kdykoliv</p>
     </form>
+    <button class="modal-close-bar" type="button" data-close>Zavřít</button>
+  </div>
+</div>
+
+<!-- Zásady soukromí / Podmínky (info) -->
+<div class="modal" id="info-modal" role="dialog" aria-modal="true" aria-labelledby="info-title" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-card info-card">
+    <h3 id="info-title"></h3>
+    <div class="info-body" id="info-body"></div>
     <button class="modal-close-bar" type="button" data-close>Zavřít</button>
   </div>
 </div>
