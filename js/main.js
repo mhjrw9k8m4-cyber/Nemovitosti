@@ -333,13 +333,6 @@
     return Promise.resolve('x' + (n >>> 0).toString(16));
   }
 
-  /* ---------- Priority zobrazení (jemné nastavení pořadí „Doporučené") ---------- */
-  var PREFS_KEY = 'pk_prefs_v1';
-  function getPrefs() { try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || {}; } catch (e) { return {}; } }
-  function setPrefs(p) { try { localStorage.setItem(PREFS_KEY, JSON.stringify(p)); } catch (e) {} }
-  var PREFS = getPrefs();
-  var applyPrefsToMap = null; // boot() sem zaregistruje přepočet pořadí
-
   var loginMode = 'login';
   function setLoginMode(mode) {
     loginMode = (mode === 'register') ? 'register' : 'login';
@@ -500,16 +493,8 @@
     if (favBtn && favBtn.getAttribute('aria-pressed') !== 'true') setTimeout(function () { favBtn.click(); }, 500);
   });
 
-  /* ---------- Nastavení účtu: údaje + priority ---------- */
+  /* ---------- Nastavení účtu: úprava údajů ---------- */
   var aModal = document.getElementById('account-modal');
-  // Naplnění krajů do preference (ze stejného seznamu jako mapa)
-  (function () {
-    var sel = document.getElementById('pref-kraj');
-    if (!sel) return;
-    Object.keys(KRAJE).forEach(function (k) {
-      var o = document.createElement('option'); o.value = k; o.textContent = k; sel.appendChild(o);
-    });
-  })();
   function openAccount() {
     if (!aModal) return;
     var u = getUser(); var acct = getAcct();
@@ -520,10 +505,6 @@
     if (f('acct-phone')) f('acct-phone').value = phone ? fmtPhone(phone) : '';
     if (f('acct-pass')) { f('acct-pass').value = ''; f('acct-pass').type = 'password'; }
     var pt = f('acct-pass-toggle'); if (pt) { pt.textContent = 'Zobrazit'; pt.setAttribute('aria-pressed', 'false'); }
-    PREFS = getPrefs();
-    if (f('pref-type')) f('pref-type').value = PREFS.prefType || 'all';
-    if (f('pref-kraj')) f('pref-kraj').value = PREFS.prefKraj || '';
-    if (f('pref-budget')) f('pref-budget').value = String(PREFS.prefBudget || 0);
     var ms = f('acct-msg'); if (ms) { ms.textContent = ''; ms.classList.remove('err'); }
     var pm = document.getElementById('profile-menu'); if (pm) pm.setAttribute('hidden', '');
     aModal.removeAttribute('hidden');
@@ -561,27 +542,17 @@
     if (newPass && newPass.length < 6) { ms.textContent = 'Nové heslo musí mít aspoň 6 znaků.'; ms.classList.add('err'); return; }
     var phone = normPhone(phoneRaw);
 
-    // Uložení priorit (platí i bez účtu)
-    var prefs = {
-      prefType: document.getElementById('pref-type').value,
-      prefKraj: document.getElementById('pref-kraj').value,
-      prefBudget: parseInt(document.getElementById('pref-budget').value, 10) || 0
-    };
-    setPrefs(prefs); PREFS = prefs;
-    if (applyPrefsToMap) applyPrefsToMap();
-
     var acct = getAcct();
     function finishAcct(passHash) {
       setAcct({ phone: phone, name: name, passHash: passHash });
       setUser({ phone: phone, name: name });   // překreslí profil (jméno/telefon)
       ms.textContent = 'Uloženo.';
-      showToast('Údaje a priority uloženy.');
+      showToast('Údaje uloženy.');
       setTimeout(closeAccount, 700);
     }
     if (!acct) {
-      // Bez účtu: priority se uložily; na změnu údajů je potřeba se přihlásit.
-      ms.textContent = 'Priority uloženy. Pro uložení údajů se prosím přihlaste.';
-      setTimeout(closeAccount, 1100);
+      ms.textContent = 'Pro úpravu údajů se prosím nejdřív přihlaste.';
+      ms.classList.add('err');
       return;
     }
     var phoneChanged = phone !== acct.phone;
@@ -1381,16 +1352,9 @@
     var perM2 = hasArea(d) ? d.price / d.area : 500;
     var typeBonus = { drazba: 22, exekuce: 18, obec: 12, sale: 8 }[d.type] || 0;
     var deal = Math.max(0, Math.min(58, (900 - perM2) / 18)); // výhodnost s nasycením
-    // Jemné priority uživatele (Nastavení účtu) — nic neschovají, jen posunou pořadí.
-    var pref = 0;
-    if (PREFS.prefType && PREFS.prefType !== 'all' && d.type === PREFS.prefType) pref += 16;
-    if (PREFS.prefKraj && krajOf(d) === PREFS.prefKraj) pref += 16;
-    if (PREFS.prefBudget) { if (d.price <= PREFS.prefBudget) pref += 8; else if (d.price > PREFS.prefBudget * 1.6) pref -= 12; }
-    d._demand = Math.max(6, Math.round(9 + typeBonus + deal + pref));
+    d._demand = Math.max(6, Math.round(9 + typeBonus + deal));
     return d._demand;
   }
-  // Umožní stránce přepočítat pořadí, když uživatel změní priority.
-  applyPrefsToMap = function () { DATA.forEach(function (d) { d._demand = null; }); renderList(); };
 
   var LIST_LIMIT = 8;
   function renderList() {

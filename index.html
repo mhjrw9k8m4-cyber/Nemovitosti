@@ -86,7 +86,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260814y">
+  <link rel="stylesheet" href="css/styles.css?v=20260814z">
 </head>
 <body>
 
@@ -140,7 +140,7 @@
           <div class="pm-saved-head">Uložené pozemky<b id="pm-saved-n">0</b></div>
           <div class="pm-saved-list" id="pm-saved-list"></div>
           <a href="#mapa" class="pm-item" id="pm-view-map" role="menuitem">Zobrazit na mapě<span class="pm-arrow">→</span></a>
-          <button type="button" class="pm-item" id="pm-settings-item" role="menuitem">Upravit údaje a priority<span class="pm-arrow">→</span></button>
+          <button type="button" class="pm-item" id="pm-settings-item" role="menuitem">Upravit údaje<span class="pm-arrow">→</span></button>
           <a href="#upozorneni" class="pm-item" role="menuitem">Upozornění na lokalitu<span class="pm-arrow">→</span></a>
           <button type="button" class="pm-item pm-logout" id="pm-logout" role="menuitem">Odhlásit se</button>
         </div>
@@ -630,40 +630,15 @@
   <div class="modal-card">
     <div class="eyebrow"><span class="live-dot"></span>Účet</div>
     <h3 id="acct-title">Nastavení účtu</h3>
-    <p class="modal-sub">Upravte si údaje a nastavte, co vám máme ukazovat přednostně. Vše zůstává jen v tomto prohlížeči.</p>
+    <p class="modal-sub">Upravte si své údaje. Vše zůstává jen v tomto prohlížeči a nikam se neodesílá.</p>
     <form class="modal-form" id="acct-form" novalidate>
-      <div class="acct-sect">
-        <h4 class="acct-h">Vaše údaje</h4>
-        <label class="visually-hidden" for="acct-name">Jméno</label>
-        <input id="acct-name" type="text" placeholder="Jméno (nepovinné)" autocomplete="name">
-        <label class="visually-hidden" for="acct-phone">Telefonní číslo</label>
-        <input id="acct-phone" type="tel" inputmode="tel" placeholder="Telefon (např. 777 123 456)" autocomplete="tel">
-        <div class="lf-pass">
-          <input id="acct-pass" type="password" placeholder="Nové heslo (nepovinné)" autocomplete="new-password">
-          <button type="button" class="lf-pass-toggle" id="acct-pass-toggle" aria-pressed="false" aria-label="Zobrazit heslo">Zobrazit</button>
-        </div>
-      </div>
-      <div class="acct-sect">
-        <h4 class="acct-h">Co ukazovat přednostně</h4>
-        <p class="acct-note">Jen jemně upraví pořadí v „Doporučené" — nic neschová ani nesmaže.</p>
-        <label class="acct-lbl" for="pref-type">Druh příležitosti</label>
-        <select class="map-select" id="pref-type">
-          <option value="all">Bez preference</option>
-          <option value="sale">Prodej</option>
-          <option value="drazba">Dražba</option>
-          <option value="exekuce">Exekuce</option>
-          <option value="obec">Obecní</option>
-        </select>
-        <label class="acct-lbl" for="pref-kraj">Kraj</label>
-        <select class="map-select" id="pref-kraj"><option value="">Celá ČR</option></select>
-        <label class="acct-lbl" for="pref-budget">Rozpočet</label>
-        <select class="map-select" id="pref-budget">
-          <option value="0">Bez limitu</option>
-          <option value="250000">do 250 tis. Kč</option>
-          <option value="500000">do 500 tis. Kč</option>
-          <option value="1000000">do 1 mil. Kč</option>
-          <option value="3000000">do 3 mil. Kč</option>
-        </select>
+      <label class="visually-hidden" for="acct-name">Jméno</label>
+      <input id="acct-name" type="text" placeholder="Jméno (nepovinné)" autocomplete="name">
+      <label class="visually-hidden" for="acct-phone">Telefonní číslo</label>
+      <input id="acct-phone" type="tel" inputmode="tel" placeholder="Telefon (např. 777 123 456)" autocomplete="tel">
+      <div class="lf-pass">
+        <input id="acct-pass" type="password" placeholder="Nové heslo (nepovinné)" autocomplete="new-password">
+        <button type="button" class="lf-pass-toggle" id="acct-pass-toggle" aria-pressed="false" aria-label="Zobrazit heslo">Zobrazit</button>
       </div>
       <button type="submit" class="btn-primary btn-glow" id="acct-save">Uložit změny</button>
       <p class="form-msg" id="acct-msg" role="status" aria-live="polite"></p>
@@ -674,6 +649,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/main.js?v=20260814y" defer></script>
+<script src="js/main.js?v=20260814z" defer></script>
 </body>
 </html>
