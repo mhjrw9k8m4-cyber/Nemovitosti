@@ -56,22 +56,44 @@
 
   var OFFLINE = 'Formulář zatím dokončujeme — odesílání spustíme, jakmile připojíme e-mail. Děkujeme za trpělivost.';
 
+  // Chyba s odkazem na konkrétní pole (ať ho můžeme zvýraznit a odscrollovat)
+  function E(msg, id) { return { msg: msg, id: id }; }
+  function fieldWrap(id) {
+    var el = document.getElementById(id); if (!el) return null;
+    return el.closest('.add-field') || el.closest('.add-check');
+  }
+
   function handle(formId, msgId, buildData, validate, okMsg, toastMsg) {
     var form = document.getElementById(formId);
     if (!form) return;
     okMsg = okMsg || 'Děkujeme! Nabídku jsme přijali. Projdeme si ji a ozveme se, jakmile ji zveřejníme.';
     toastMsg = toastMsg || 'Nabídka odeslána ke zveřejnění.';
+    // Zvýraznění chyby zmizí, jakmile ho uživatel začne opravovat
+    function clearOne(e) {
+      var w = e.target.closest && (e.target.closest('.add-field') || e.target.closest('.add-check'));
+      if (w) w.classList.remove('err');
+    }
+    form.addEventListener('input', clearOne);
+    form.addEventListener('change', clearOne);
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var ms = document.getElementById(msgId);
-      ms.classList.remove('err'); ms.textContent = '';
-      var err = validate();
-      if (err) { ms.textContent = err; ms.classList.add('err'); return; }
+      ms.classList.remove('err', 'ok'); ms.textContent = '';
+      Array.prototype.forEach.call(form.querySelectorAll('.add-field.err, .add-check.err'), function (w) { w.classList.remove('err'); });
+      var err = validate();   // '' když OK, jinak {msg, id}
+      if (err) {
+        ms.textContent = err.msg || err; ms.classList.add('err');
+        var w = err.id ? fieldWrap(err.id) : null;
+        if (w) w.classList.add('err');
+        var el = err.id ? document.getElementById(err.id) : null;
+        if (el) { try { el.focus({ preventScroll: true }); } catch (x) { el.focus(); } el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+        return;
+      }
       if (!FORM_ENDPOINT) { ms.textContent = OFFLINE; return; }
       ms.textContent = 'Odesílám…';
       sendForm(buildData()).then(function (r) {
         if (r === 'ok') {
-          ms.textContent = okMsg;
+          ms.textContent = okMsg; ms.classList.add('ok');
           showToast(toastMsg);
           form.reset();
         } else {
@@ -96,12 +118,12 @@
       };
     },
     function () {
-      if (!val('p-obec')) return 'Vyplňte prosím obec / lokalitu.';
-      if (!(parseInt(val('p-vymera'), 10) > 0)) return 'Zadejte prosím výměru v m².';
-      if (!(parseInt(val('p-cena'), 10) > 0)) return 'Zadejte prosím cenu v Kč.';
-      if (!val('p-jmeno')) return 'Uveďte prosím své jméno.';
-      if (!validContact(val('p-kontakt'))) return 'Zadejte platný telefon (9 číslic) nebo e-mail.';
-      if (!checked('p-souhlas')) return 'Potvrďte prosím souhlas se zveřejněním.';
+      if (!val('p-obec')) return E('Vyplňte prosím obec / lokalitu.', 'p-obec');
+      if (!(parseInt(val('p-vymera'), 10) > 0)) return E('Zadejte prosím výměru v m².', 'p-vymera');
+      if (!(parseInt(val('p-cena'), 10) > 0)) return E('Zadejte prosím cenu v Kč.', 'p-cena');
+      if (!val('p-jmeno')) return E('Uveďte prosím své jméno.', 'p-jmeno');
+      if (!validContact(val('p-kontakt'))) return E('Zadejte platný telefon (9 číslic) nebo e-mail.', 'p-kontakt');
+      if (!checked('p-souhlas')) return E('Potvrďte prosím souhlas s pravidly a zveřejněním.', 'p-souhlas');
       return '';
     }
   );
@@ -117,12 +139,12 @@
       };
     },
     function () {
-      if (!val('i-typ')) return 'Vyberte prosím typ inzerátu.';
-      if (!val('i-lokalita')) return 'Vyplňte prosím lokalitu.';
-      if (!val('i-popis')) return 'Napište prosím krátký popis.';
-      if (!val('i-jmeno')) return 'Uveďte prosím své jméno.';
-      if (!validContact(val('i-kontakt'))) return 'Zadejte platný telefon (9 číslic) nebo e-mail.';
-      if (!checked('i-souhlas')) return 'Potvrďte prosím souhlas s pravidly a zveřejněním.';
+      if (!val('i-typ')) return E('Vyberte prosím typ inzerátu.', 'i-typ');
+      if (!val('i-lokalita')) return E('Vyplňte prosím lokalitu.', 'i-lokalita');
+      if (!val('i-popis')) return E('Napište prosím krátký popis.', 'i-popis');
+      if (!val('i-jmeno')) return E('Uveďte prosím své jméno.', 'i-jmeno');
+      if (!validContact(val('i-kontakt'))) return E('Zadejte platný telefon (9 číslic) nebo e-mail.', 'i-kontakt');
+      if (!checked('i-souhlas')) return E('Potvrďte prosím souhlas s pravidly a zveřejněním.', 'i-souhlas');
       return '';
     }
   );
@@ -138,8 +160,8 @@
       };
     },
     function () {
-      if (!val('r-ident')) return 'Uveďte prosím, kterého inzerátu se to týká.';
-      if (!val('r-duvod')) return 'Vyberte prosím důvod nahlášení.';
+      if (!val('r-ident')) return E('Uveďte prosím, kterého inzerátu se to týká.', 'r-ident');
+      if (!val('r-duvod')) return E('Vyberte prosím důvod nahlášení.', 'r-duvod');
       return '';
     },
     'Děkujeme za nahlášení. Podíváme se na to a případně inzerát stáhneme.',
