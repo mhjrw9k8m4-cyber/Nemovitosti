@@ -352,10 +352,18 @@
   }
 
   /* ---------- Sestavení webu z dat (ticker + mapa) ---------- */
-  function boot(DATA, KRAJE_GEOM) {
+  function boot(DATA, KRAJE_GEOM, updated) {
   // Počítadlo „příležitostí na mapě" napojíme na skutečný počet dat
   var realCount = document.querySelector('.counters .c-num');
   if (realCount) realCount.setAttribute('data-count', String(DATA.length));
+
+  // „Naposledy aktualizováno" — signál čerstvosti dat (z pole updated)
+  (function () {
+    var el = document.getElementById('data-updated');
+    if (!el || !updated) return;
+    var m = /(\d{4})-(\d{2})-(\d{2})/.exec(updated);
+    el.textContent = m ? ('Data aktualizována ' + (+m[3]) + '. ' + (+m[2]) + '. ' + m[1]) : '';
+  })();
 
   /* ---------- Živý ticker příležitostí ---------- */
   var tickTrack = document.getElementById('ticker-track');
@@ -653,13 +661,10 @@
     selPoly = L.polygon(polyFor(d), { color: '#fff', weight: 2.5, fillColor: TYPE[d.type].color, fillOpacity: 0.4, opacity: 1 }).addTo(map);
   }
 
-  // Přehled po krajích: oddáleno = kraje vybarvené podle počtu pozemků
-  // (choropleth) s počtem u každého kraje; přiblíženo = jednotlivé pozemky.
-  var KRAJ_ZOOM = 9; // pod = kraje, nad = jednotlivé pozemky
+  // Tečkovaná mapa pozemků + obrysy krajů pro orientaci
   var dotLayer = L.layerGroup();
-  var labelLayer = L.layerGroup();
   var krajLayer = null;
-  var lastVis = [], krajCounts = {}, krajMax = 0;
+  var lastVis = [], krajCounts = {};
 
   DATA.forEach(function (d, i) {
     d._id = i;
@@ -939,6 +944,6 @@
     .then(function (res) {
       var j = res[0], kraje = res[1];
       var arr = Array.isArray(j) ? j : (j && j.opportunities);
-      boot(arr && arr.length ? arr : FALLBACK_DATA, kraje || null);
+      boot(arr && arr.length ? arr : FALLBACK_DATA, kraje || null, j && j.updated);
     });
 })();
