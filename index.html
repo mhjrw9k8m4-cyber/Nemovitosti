@@ -3,7 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script>if('scrollRestoration' in history){history.scrollRestoration='manual';}</script>
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <script>
+  /* Start vždy nahoře na mapě. iOS Safari rád obnoví předchozí pozici scrollu —
+     držíme stránku nahoře v každém snímku, dokud uživatel sám aktivně nescrolluje.
+     Je to přímo v HTML, takže to funguje hned (nezávisle na cache main.js). */
+  (function(){
+    try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }catch(e){}
+    if(location.hash || location.search.indexOf('p=')!==-1) return;
+    var released=false, start=0;
+    function rel(){ released=true; }
+    addEventListener('touchmove', rel, {passive:true, once:true});
+    addEventListener('wheel', rel, {passive:true, once:true});
+    addEventListener('keydown', function(e){ if(['ArrowDown','PageDown','End',' ','ArrowUp','Home','PageUp'].indexOf(e.key)!==-1) released=true; }, {once:true});
+    function pin(ts){
+      if(released) return;
+      if(window.pageYOffset!==0 || document.documentElement.scrollTop!==0){ window.scrollTo(0,0); }
+      if(!start) start=ts;
+      if(ts-start < 2500) requestAnimationFrame(pin);
+    }
+    requestAnimationFrame(pin);
+    addEventListener('pageshow', function(){ released=false; start=0; requestAnimationFrame(pin); });
+  })();
+  </script>
   <title>Pozemkomat — příležitosti u pozemků na jedné mapě</title>
   <meta name="description" content="Dražby, exekuce, pozemky na prodej i obecní záměry z veřejných zdrojů na jedné interaktivní mapě. Filtrujte, klikejte, proklik do katastru. Hlídání lokality e-mailem zdarma.">
   <meta name="theme-color" content="#16232F">
@@ -39,7 +62,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260814">
+  <link rel="stylesheet" href="css/styles.css?v=20260814b">
 </head>
 <body>
 
@@ -545,6 +568,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="js/main.js?v=20260814" defer></script>
+<script src="js/main.js?v=20260814b" defer></script>
 </body>
 </html>

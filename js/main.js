@@ -2,28 +2,6 @@
 (function () {
   'use strict';
 
-  /* ---------- Start vždy nahoře na mapě (ne odscrollovaný dolů) ---------- */
-  // iOS Safari rád obnoví předchozí pozici scrollu. Držíme stránku nahoře v
-  // každém snímku (~1,5 s) přes requestAnimationFrame — dokud uživatel sám
-  // aktivně nescrolluje (dotyk/kolečko). Přežije i bfcache (pageshow).
-  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-  (function () {
-    var deep = location.hash || location.search.indexOf('p=') !== -1;
-    if (deep) return; // sdílený odkaz na sekci/parcelu si drží svou pozici
-    var released = false, start = 0;
-    ['touchmove', 'wheel'].forEach(function (ev) {
-      window.addEventListener(ev, function () { released = true; }, { passive: true, once: true });
-    });
-    function pin(ts) {
-      if (released) return;
-      if (window.pageYOffset !== 0 || document.documentElement.scrollTop !== 0) window.scrollTo(0, 0);
-      if (!start) start = ts;
-      if (ts - start < 1500) requestAnimationFrame(pin);
-    }
-    requestAnimationFrame(pin);
-    window.addEventListener('pageshow', function () { released = false; start = 0; requestAnimationFrame(pin); });
-  })();
-
   /* ---------- Záložní data (když se nenačte data/opportunities.json) ---------- */
   var FALLBACK_DATA = [
     { place:'Kolín',             okres:'Kolín',         type:'drazba',  parcel:'412/3', druh:'stavební',  area:1240, price:640000,  extra:'dražba za 12 dní', lat:50.0281, lng:15.2003 },
