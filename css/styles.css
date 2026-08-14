@@ -430,6 +430,9 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .alert-benefits{list-style:none; display:flex; flex-direction:column; gap:11px; margin-top:20px;}
 .alert-benefits li{display:flex; align-items:center; gap:11px; font-size:14px; color:var(--text-ondark);}
 .alert-benefits .ic{width:17px; height:17px; color:var(--c-sale); flex:none;}
+.modal-benefits{list-style:none; display:flex; flex-direction:column; gap:9px; margin:0 0 20px;}
+.modal-benefits li{display:flex; align-items:flex-start; gap:10px; font-size:13.5px; color:var(--text-ondark); line-height:1.4;}
+.modal-benefits .ic{width:16px; height:16px; color:var(--c-sale); flex:none; margin-top:2px;}
 .alert-form{display:flex; flex-direction:column; gap:12px;}
 .alert-form input{background:var(--ink); border:1px solid var(--line); border-radius:5px; padding:14px 16px; font-size:15px; color:var(--text-ondark); font-family:inherit;}
 .alert-form input::placeholder{color:#6f8090;}
@@ -448,6 +451,18 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .realtor-card h3{font-family:'Fraunces',serif; font-size:18px; font-weight:500; margin-bottom:9px;}
 .realtor-card p{font-size:14px; color:var(--text-ondark-mute);}
 @media (max-width:820px){ .realtor-grid{grid-template-columns:1fr;} }
+/* Poptávka pro realitky/obce */
+.realtor-contact{margin-top:20px; background:linear-gradient(135deg, var(--ink-soft) 0%, var(--ink-soft2) 100%); border:1px solid var(--line); border-radius:12px; padding:34px; display:grid; grid-template-columns:1fr 1.1fr; gap:36px; align-items:center;}
+.rct-copy h3{font-family:'Fraunces',serif; font-size:23px; font-weight:500; margin-bottom:10px;}
+.rct-copy p{font-size:14.5px; color:var(--text-ondark-mute); line-height:1.6;}
+.rct-form{display:flex; flex-direction:column; gap:11px;}
+.rct-row{display:grid; grid-template-columns:1fr 1fr; gap:11px;}
+.rct-form input, .rct-form textarea{background:var(--ink); border:1px solid var(--line); border-radius:6px; padding:13px 15px; font-size:14.5px; color:var(--text-ondark); font-family:inherit; width:100%;}
+.rct-form textarea{resize:vertical; min-height:70px;}
+.rct-form input::placeholder, .rct-form textarea::placeholder{color:#6f8090;}
+.rct-form input:focus-visible, .rct-form textarea:focus-visible{border-color:var(--copper-bright); outline:none;}
+.rct-form .btn-primary{padding:13px; font-size:15px; text-align:center;}
+@media (max-width:820px){ .realtor-contact{grid-template-columns:1fr; padding:26px;} .rct-row{grid-template-columns:1fr;} }
 .embed-demo{background:var(--ink-soft); border:1px solid var(--line); border-radius:8px; padding:32px; display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:center;}
 .embed-demo h3{font-family:'Fraunces',serif; font-size:22px; font-weight:500; margin-bottom:12px;}
 .embed-demo p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:18px;}
@@ -549,6 +564,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 /* Ceník */
 .pricing{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; align-items:stretch;}
 .pc-badge-live{background:var(--c-sale); color:#fff;}
+.cenik-note{text-align:center; max-width:620px; margin:22px auto 0; font-size:12.5px; line-height:1.6; color:var(--text-ondark-mute);}
 .price-card.is-planned{opacity:0.8;}
 .price-card.is-planned .pc-price{color:var(--text-ondark-mute); font-size:30px;}
 .price-card.is-planned li{color:var(--text-ondark-mute);}

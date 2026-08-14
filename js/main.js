@@ -2,6 +2,15 @@
 (function () {
   'use strict';
 
+  /* ---------- Start vždy nahoře na mapě (ne odscrollovaný dolů) ---------- */
+  // Prohlížeč jinak obnoví předchozí pozici scrollu — to vypneme a začneme nahoře.
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  (function () {
+    var deep = location.hash || location.search.indexOf('p=') !== -1;
+    if (deep) return; // sdílený odkaz na sekci/parcelu si drží svou pozici
+    window.scrollTo(0, 0);
+  })();
+
   /* ---------- Záložní data (když se nenačte data/opportunities.json) ---------- */
   var FALLBACK_DATA = [
     { place:'Kolín',             okres:'Kolín',         type:'drazba',  parcel:'412/3', druh:'stavební',  area:1240, price:640000,  extra:'dražba za 12 dní', lat:50.0281, lng:15.2003 },
@@ -406,6 +415,22 @@
         ? 'Díky! Poznamenali jsme si okres „' + okres + '". Ozveme se, jakmile upozornění spustíme.'
         : 'Díky! Poznamenali jsme si váš zájem. Ozveme se, jakmile upozornění spustíme.';
       form.reset();
+    });
+  }
+
+  /* ---------- Poptávkový formulář pro realitky/obce ---------- */
+  var rForm = document.getElementById('realtor-form');
+  if (rForm) {
+    rForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = document.getElementById('rc-name').value.trim();
+      var email = document.getElementById('rc-email').value.trim();
+      var out = document.getElementById('rc-msg-out');
+      if (!name) { out.textContent = 'Napište prosím jméno.'; out.classList.add('err'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { out.textContent = 'Zadejte prosím platný e-mail.'; out.classList.add('err'); return; }
+      out.classList.remove('err');
+      out.textContent = 'Díky, ' + name.split(' ')[0] + '! Poznamenali jsme si vaši poptávku a ozveme se vám na ' + email + '.';
+      rForm.reset();
     });
   }
 

@@ -331,6 +331,7 @@
         <span class="guarantee"><svg class="ic"><use href="#i-check"/></svg>Bez platební karty</span>
         <span class="guarantee"><svg class="ic"><use href="#i-check"/></svg>Data z veřejných zdrojů</span>
       </div>
+      <p class="cenik-note mono reveal">Prohlížení mapy a uložené pozemky zůstanou zdarma i po spuštění prémiových funkcí. Kdo je s námi v bétě, dostane Pro na vyzkoušení.</p>
     </div>
   </section>
 
@@ -393,6 +394,22 @@
           </div>
         </div>
         <div class="embed-preview" aria-hidden="true">náhled mapy ve widgetu</div>
+      </div>
+      <div class="realtor-contact reveal">
+        <div class="rct-copy">
+          <h3>Máte zájem? Ozvěte se.</h3>
+          <p>Napište nám, co potřebujete — widget na web, data pro tým, nebo napojení přes API. Domluvíme se na konkrétní podobě i ceně. Bez závazku.</p>
+        </div>
+        <form class="rct-form" id="realtor-form" novalidate>
+          <div class="rct-row">
+            <input id="rc-name" type="text" placeholder="Jméno" autocomplete="name" required>
+            <input id="rc-org" type="text" placeholder="Firma / obec" autocomplete="organization">
+          </div>
+          <input id="rc-email" type="email" placeholder="vas@email.cz" autocomplete="email" required>
+          <textarea id="rc-msg" rows="3" placeholder="Co byste potřebovali? (nepovinné)"></textarea>
+          <button type="submit" class="btn-primary btn-glow">Odeslat poptávku</button>
+          <p class="form-msg" id="rc-msg-out" role="status" aria-live="polite"></p>
+        </form>
       </div>
     </div>
   </section>
@@ -483,7 +500,12 @@
   <div class="modal-card">
     <div class="eyebrow"><span class="live-dot"></span>Účet</div>
     <h3 id="login-title">Uložte si své pozemky</h3>
-    <p class="modal-sub">Účet si drží vaše <b>uložené pozemky</b>, ať se k nim snadno vrátíte. V bétě funguje jen ve vašem prohlížeči — nezakládáme žádný server a data zůstávají u vás. Synchronizaci mezi zařízeními připravujeme.</p>
+    <p class="modal-sub">Uložte si zajímavé pozemky a vraťte se k nim kdykoliv.</p>
+    <ul class="modal-benefits">
+      <li><svg class="ic"><use href="#i-check"/></svg>Uložené pozemky na jednom místě</li>
+      <li><svg class="ic"><use href="#i-check"/></svg>Zdarma a bez hesla</li>
+      <li><svg class="ic"><use href="#i-check"/></svg>Data zůstávají ve vašem prohlížeči — synchronizaci připravujeme</li>
+    </ul>
     <form class="modal-form" id="login-form" novalidate>
       <label class="visually-hidden" for="login-name">Jméno</label>
       <input id="login-name" type="text" placeholder="Jméno (nepovinné)" autocomplete="name">
