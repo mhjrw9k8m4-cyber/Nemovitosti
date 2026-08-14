@@ -539,12 +539,12 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .compare tr:last-child td{border-bottom:0;}
 
 /* Recenze */
-.reviews{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
-.review{background:var(--ink-soft); border:1px solid var(--line); border-radius:10px; padding:26px;}
-.stars{color:var(--copper-bright); letter-spacing:2px; margin-bottom:14px; font-size:14px;}
-.review blockquote{font-size:15px; line-height:1.55; margin-bottom:16px; font-family:'Fraunces',serif; font-weight:400;}
-.review figcaption{font-size:13px; color:var(--text-ondark-mute);}
-.reviews-note{margin-top:18px; font-size:11px; color:var(--text-ondark-mute); text-align:center;}
+/* Upřímná beta sekce (místo vymyšlených recenzí) */
+.beta-note{text-align:center; max-width:640px; margin:0 auto; background:var(--ink-soft); border:1px solid var(--line); border-radius:16px; padding:44px 34px;}
+.beta-note .eyebrow{display:inline-flex; justify-content:center; margin-bottom:12px;}
+.beta-note h2{margin-bottom:14px;}
+.beta-note p{color:var(--text-ondark-mute); font-size:15px; line-height:1.65; margin-bottom:26px;}
+.beta-note p b{color:var(--text-ondark);}
 
 /* Ceník */
 .bill-toggle{display:flex; width:max-content; gap:4px; margin:0 auto 28px; padding:4px; background:var(--ink-soft); border:1px solid var(--line); border-radius:24px;}
@@ -595,8 +595,6 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .gl-item:hover{border-color:var(--line-strong); transform:translateY(-2px);}
 .price-card{transition:border-color .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);}
 .price-card:not(.featured):hover{border-color:var(--line-strong); transform:translateY(-4px); box-shadow:var(--shadow);}
-.review{transition:border-color .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);}
-.review:hover{border-color:var(--line-strong); transform:translateY(-3px); box-shadow:var(--shadow);}
 
 /* Feature/step ikona barevná */
 .feature-card .icon-badge .ic{color:var(--copper-bright);}
