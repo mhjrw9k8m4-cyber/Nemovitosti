@@ -682,7 +682,7 @@
     var upd = new Date(+m[1], +m[2] - 1, +m[3]);
     var days = Math.floor((Date.now() - upd.getTime()) / 86400000);
     if (isFinite(days) && days >= 4) {
-      el.textContent += ' · ⚠ možná zastaralá (' + days + ' dní)';
+      el.textContent += ' · možná zastaralá (' + days + ' dní)';
       el.classList.add('is-stale');
     } else {
       el.classList.remove('is-stale');
@@ -744,7 +744,7 @@
     // touch-action: zamčeno → stránka jde svisle scrollovat prstem, ale pinch
     //   chytne mapa (prohlížeč nezoomuje web); puštěno → mapou jde volně hýbat.
     mapEl.style.touchAction = on ? 'none' : 'pan-y';
-    if (panBtn) { panBtn.textContent = on ? '🔒 Zastavit mapu' : '✋ Hýbat mapou'; panBtn.classList.toggle('on', on); }
+    if (panBtn) { panBtn.textContent = on ? 'Zastavit mapu' : 'Hýbat mapou'; panBtn.classList.toggle('on', on); }
     if (on) setTimeout(function () { map.invalidateSize(); }, 60);
   }
   setPan(false);
@@ -945,7 +945,7 @@
     var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací' : (d.type === 'sale' ? 'Cena' : 'Odhad');
     var days = daysUntil(d.extra);
-    var cdBig = days != null && days >= 0 ? '<span class="md-cd' + countdownClass(days) + '">⏳ Termín ' + countdownText(days) + '</span>' : '';
+    var cdBig = days != null && days >= 0 ? '<span class="md-cd' + countdownClass(days) + '">Termín ' + countdownText(days) + '</span>' : '';
     return '<button class="md-topbar" type="button" data-detail-back><span>Zavřít detail</span><span class="mx">✕</span></button>' +
       '<div class="md-body">' +
         '<div class="md-shape" style="border-color:' + t.color + '55">' + shapeSvg(d) + '</div>' +
@@ -966,7 +966,7 @@
           '<a class="lp-btn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">Katastr</a>' +
           '<a class="lp-btn" href="' + mapyUrl(d) + '" target="_blank" rel="noopener">Mapa</a>' +
           (function () { var s = sourceLink(d); return '<a class="lp-btn lp-src" href="' + s.url + '" target="_blank" rel="noopener">' + s.label + '</a>'; })() +
-          (auctionYMD(d.extra) ? '<button class="lp-btn" type="button" data-cal>📅 Kalendář</button>' : '') +
+          (auctionYMD(d.extra) ? '<button class="lp-btn" type="button" data-cal>Do kalendáře</button>' : '') +
           '<button class="lp-btn lp-fav' + (isFav(d) ? ' on' : '') + '" type="button" data-fav-detail>' + BM_SVG + '<span>' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
           '<button class="lp-btn" type="button" data-share>Sdílet</button>' +
           '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">Upozornit na okres ' + d.okres + '</a>' +
@@ -1300,11 +1300,11 @@
           '</span></div>' +
           '<div class="opp-meta">' + (hasParcel(d) ? '<span>parc. <b>' + d.parcel + '</b></span>' : '') +
           '<span>' + (hasArea(d) ? '<b>' + fmt(d.area) + '</b> m²' : 'výměra neuvedena') + '</span><span>' + d.druh + '</span>' +
-          (sortMode === 'near' && userPos && isFinite(kmFromUser(d)) ? '<span class="opp-km">📍 ' + (kmFromUser(d) < 1 ? '<1' : Math.round(kmFromUser(d))) + ' km</span>' : '') + '</div>' +
+          (sortMode === 'near' && userPos && isFinite(kmFromUser(d)) ? '<span class="opp-km">' + (kmFromUser(d) < 1 ? '<1' : Math.round(kmFromUser(d))) + ' km</span>' : '') + '</div>' +
           '<div class="opp-price"><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? ' <span>· ' + fmt(perM2) + ' Kč/m²</span>' : '') +
             (perM2 && dealMax && perM2 <= dealMax ? ' <span class="opp-deal">výhodná cena</span>' : '') + '</div>' +
           (function () {
-            var badges = [cd, hot ? '<span class="hot">★ Doporučujeme</span>' : ''].filter(Boolean);
+            var badges = [cd, hot ? '<span class="hot">Doporučujeme</span>' : ''].filter(Boolean);
             return badges.length ? '<div class="opp-demand">' + badges.join(' <span class="sep">·</span> ') + '</div>' : '';
           })() +
         '</div>';
