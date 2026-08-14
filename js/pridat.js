@@ -168,4 +168,56 @@
     'Nahlášení odesláno.'
   );
 
+  /* ---------- Výpis „Pozemky od lidí" (data/user-listings.json) ---------- */
+  var ulGrid = document.getElementById('user-listings');
+  if (ulGrid) {
+    fetch('data/user-listings.json', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .catch(function () { return []; })
+      .then(function (list) { renderListings(Array.isArray(list) ? list : []); });
+  }
+  function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function czk(n) { n = parseInt(n, 10); return n > 0 ? n.toLocaleString('cs-CZ') + ' Kč' : ''; }
+  function badgeFor(typ) {
+    var t = (typ || '').toLowerCase();
+    if (t.indexOf('prodej') !== -1) return { label: 'Prodej', color: 'var(--c-sale)' };
+    if (t.indexOf('poptáv') !== -1 || t.indexOf('hled') !== -1) return { label: 'Poptávka', color: 'var(--c-obec)' };
+    if (t.indexOf('pronáj') !== -1) return { label: 'Pronájem', color: 'var(--c-drazba)' };
+    if (t.indexOf('směn') !== -1) return { label: 'Směna', color: 'var(--c-obec)' };
+    return { label: 'Inzerát', color: 'var(--c-obec)' };
+  }
+  function renderListings(list) {
+    var count = document.getElementById('ul-count');
+    if (!list.length) {
+      ulGrid.className = 'ul-empty';
+      ulGrid.innerHTML = '<b>Zatím tu nejsou žádné pozemky od lidí.</b>' +
+        '<span>Buďte první — přidejte svůj pozemek. Nové nabídky se objeví tady, hned jak je ověříme.</span>';
+      if (count) count.textContent = '';
+      return;
+    }
+    if (count) count.textContent = list.length + (list.length === 1 ? ' nabídka' : (list.length < 5 ? ' nabídky' : ' nabídek'));
+    ulGrid.className = 'ul-grid';
+    ulGrid.innerHTML = list.map(function (d) {
+      var b = badgeFor(d.typ);
+      var place = escHtml(d.obec || d.lokalita || 'Pozemek');
+      var meta = [];
+      if (d.okres) meta.push('okres ' + escHtml(d.okres));
+      if (d.vymera) meta.push(escHtml(d.vymera) + ' m²');
+      var price = czk(d.cena || d.castka);
+      var link = d.odkaz ? '<a class="ul-src" href="' + escHtml(d.odkaz) + '" target="_blank" rel="noopener nofollow">Více &rarr;</a>' : '';
+      return '<div class="ul-card">' +
+        '<span class="ul-badge" style="background:' + b.color + '">' + b.label + '</span>' +
+        '<h3>' + place + '</h3>' +
+        (meta.length ? '<div class="ul-meta">' + meta.join(' · ') + '</div>' : '') +
+        (price ? '<div class="ul-price">' + price + '</div>' : '') +
+        (d.popis ? '<div class="ul-desc">' + escHtml(d.popis) + '</div>' : '') +
+        link +
+        '</div>';
+    }).join('');
+  }
+
 })();
