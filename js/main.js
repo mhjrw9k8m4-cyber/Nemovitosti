@@ -515,9 +515,17 @@
 
   /* ---------- Sestavení webu z dat (ticker + mapa) ---------- */
   function boot(DATA, KRAJE_GEOM, updated) {
-  // Počítadlo „příležitostí na mapě" napojíme na skutečný počet dat
-  var realCount = document.querySelector('.counters .c-num');
-  if (realCount) realCount.setAttribute('data-count', String(DATA.length));
+  // Počítadla napojíme na skutečná data (počet příležitostí, počet okresů)
+  (function () {
+    var nums = document.querySelectorAll('.counters .c-num');
+    if (!nums.length) return;
+    if (nums[0]) nums[0].setAttribute('data-count', String(DATA.length));
+    if (nums[1]) {
+      var okr = {};
+      DATA.forEach(function (d) { if (d.okres) okr[d.okres] = 1; });
+      nums[1].setAttribute('data-count', String(Object.keys(okr).length));
+    }
+  })();
 
   // „Naposledy aktualizováno" — signál čerstvosti dat (z pole updated)
   (function () {

@@ -594,6 +594,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 /* Ceník */
 .pricing{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; align-items:stretch;}
 .pc-badge-live{background:var(--c-sale); color:#fff;}
+.soon-tag{display:inline-block; vertical-align:middle; margin-left:8px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:500; text-transform:uppercase; letter-spacing:0.05em; color:var(--copper-bright,#E0B65C); background:rgba(201,152,47,0.14); border:1px solid rgba(201,152,47,0.35); padding:2px 8px; border-radius:20px;}
 .cenik-note{text-align:center; max-width:620px; margin:22px auto 0; font-size:12.5px; line-height:1.6; color:var(--text-ondark-mute);}
 .price-card.is-planned{opacity:0.8;}
 .price-card.is-planned .pc-price{color:var(--text-ondark-mute); font-size:30px;}
