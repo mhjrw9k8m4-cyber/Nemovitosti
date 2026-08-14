@@ -365,6 +365,17 @@
     el.textContent = m ? ('Data aktualizována ' + (+m[3]) + '. ' + (+m[2]) + '. ' + m[1]) : '';
   })();
 
+  // Živé počty u kategorií v sekci „Co na mapě uvidíte"
+  (function () {
+    var byType = {};
+    DATA.forEach(function (d) { byType[d.type] = (byType[d.type] || 0) + 1; });
+    document.querySelectorAll('.status-n').forEach(function (el) {
+      var n = byType[el.getAttribute('data-type')] || 0;
+      el.textContent = n ? (n + ' teď na mapě') : 'zatím žádné';
+      if (!n) el.classList.add('is-zero');
+    });
+  })();
+
   /* ---------- Živý ticker příležitostí ---------- */
   var tickTrack = document.getElementById('ticker-track');
   if (tickTrack) {
