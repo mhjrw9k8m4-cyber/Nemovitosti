@@ -811,7 +811,17 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .add-wrap{max-width:720px;}
 .add-lead{font-size:14.5px; color:var(--text-ondark-mute); margin:0 0 22px; padding:14px 16px; background:var(--ink-soft); border:1px solid var(--line); border-radius:10px; line-height:1.55;}
 .add-lead b{color:var(--text-ondark);}
-.add-form{display:flex; flex-direction:column; gap:16px;}
+.add-form{display:flex; flex-direction:column; gap:18px;}
+/* Rozbalovací „další údaje" — formulář je na první pohled kratší a lehčí */
+.add-more{border:1px solid var(--line); border-radius:10px; background:rgba(237,230,214,0.02);}
+.add-more > summary{list-style:none; cursor:pointer; padding:13px 16px; font-size:13.5px; font-weight:600;
+  color:var(--copper-bright); display:flex; align-items:center; justify-content:space-between; gap:12px;}
+.add-more > summary::-webkit-details-marker{display:none;}
+.add-more > summary::after{content:"+"; font-size:19px; line-height:1; color:var(--text-ondark-mute); font-weight:400;}
+.add-more[open] > summary::after{content:"\2013";}
+.add-more[open] > summary{border-bottom:1px solid var(--line);}
+.add-more .add-more-body{padding:16px; display:flex; flex-direction:column; gap:18px;}
+.add-more summary:focus-visible{outline:2px solid var(--copper-bright); outline-offset:-2px; border-radius:10px;}
 .add-field{display:flex; flex-direction:column; gap:6px;}
 .add-field label{font-size:13px; font-weight:600; color:var(--text-ondark);}
 .add-field .req{color:var(--copper-bright);}
@@ -862,9 +872,9 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .add-hero{position:relative; overflow:hidden;}
 .add-hero .wrap{position:relative; z-index:1;}
 .add-grid{display:grid; grid-template-columns:1.5fr 1fr; gap:36px; align-items:start;}
-.add-card{position:relative; background:linear-gradient(180deg, var(--ink-soft), rgba(29,46,61,0.35));
-  border:1px solid var(--line-strong); border-radius:16px; padding:28px 26px;
-  box-shadow:0 26px 64px -34px rgba(0,0,0,0.75);}
+.add-card{position:relative; background:linear-gradient(180deg, var(--ink-soft), rgba(29,46,61,0.25));
+  border:1px solid var(--line); border-radius:16px; padding:30px 28px;
+  box-shadow:0 16px 44px -30px rgba(0,0,0,0.6);}
 .add-card::before{content:""; position:absolute; top:0; left:24px; right:24px; height:1px;
   background:linear-gradient(90deg, transparent, var(--copper), transparent); opacity:0.75;}
 .add-aside{display:flex; flex-direction:column; gap:18px; position:sticky; top:96px;}
