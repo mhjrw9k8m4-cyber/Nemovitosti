@@ -351,7 +351,15 @@ const TYPES = new Set(['sale', 'drazba', 'exekuce', 'obec']);
 function valid(o) {
   if (!o || typeof o !== 'object') return false;
   if (!TYPES.has(o.type)) return false;
-  return REQUIRED.every((k) => o[k] !== undefined && o[k] !== null && o[k] !== '');
+  if (!REQUIRED.every((k) => o[k] !== undefined && o[k] !== null && o[k] !== '')) return false;
+  // Cena musí být důvěryhodná. Pod 5 000 Kč jde skoro vždy o chybu stahování
+  // (např. cena za m² spletená s celkovou cenou) — takové raději nezobrazujeme.
+  const price = Number(o.price);
+  if (!isFinite(price) || price < 5000 || price > 2e9) return false;
+  // Jen pozemky v ČR — souřadnice musí padnout do hranic republiky.
+  const lat = Number(o.lat), lng = Number(o.lng);
+  if (!isFinite(lat) || !isFinite(lng) || lat < 48.4 || lat > 51.2 || lng < 12.0 || lng > 18.95) return false;
+  return true;
 }
 
 async function main() {

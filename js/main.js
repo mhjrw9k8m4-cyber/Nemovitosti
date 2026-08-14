@@ -221,6 +221,24 @@
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeWatch(); closeLogin(); closeInfo(); } });
 
+  /* ---------- Odesílání formulářů (bez serveru, přes Formspree) ----------
+     Aby formuláře (hlídání lokality i poptávka realitek) opravdu někam dorazily,
+     stačí bezplatná služba Formspree — nepotřebuje vlastní server:
+       1) Založ si účet na https://formspree.io (zdarma, ~2 minuty).
+       2) Vytvoř formulář a zkopíruj jeho URL (např. https://formspree.io/f/abcdwxyz).
+       3) Vlož ji níže do FORM_ENDPOINT — a je to živé.
+     Dokud je prázdné, formuláře fungují „nanečisto": nic se neodešle a nikde
+     netvrdíme, že zpráva opravdu dorazila. */
+  var FORM_ENDPOINT = ''; // ← sem vlož URL z Formspree
+  function sendForm(data) {
+    if (!FORM_ENDPOINT) return Promise.resolve('unset');
+    return fetch(FORM_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(function (r) { return r.ok ? 'ok' : 'error'; }).catch(function () { return 'error'; });
+  }
+
   var wForm = document.getElementById('watch-form');
   if (wForm) {
     wForm.addEventListener('submit', function (e) {
@@ -230,8 +248,15 @@
       var ms = document.getElementById('wm-msg');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ms.textContent = 'Zadejte prosím platný e-mail.'; ms.classList.add('err'); return; }
       ms.classList.remove('err');
-      ms.textContent = okres ? ('Díky! Poznamenali jsme si okres „' + okres + '". Ozveme se, jakmile upozornění spustíme.') : 'Díky! Poznamenali jsme si váš zájem. Ozveme se, jakmile upozornění spustíme.';
-      setTimeout(closeWatch, 1900);
+      if (!FORM_ENDPOINT) {
+        ms.textContent = 'Upozornění teprve dokončujeme — spustíme je, jakmile přidáme odesílání. Díky za trpělivost!';
+        return;
+      }
+      ms.textContent = 'Odesílám…';
+      sendForm({ _subject: 'Hlídání lokality — Pozemkomat', typ: 'Hlídání lokality', okres: okres || '(neuvedeno)', email: email }).then(function (r) {
+        if (r === 'ok') { ms.textContent = okres ? ('Hotovo! Budeme hlídat okres „' + okres + '" a dáme vědět.') : 'Hotovo! Ozveme se, jakmile se objeví něco ve vašem okolí.'; setTimeout(closeWatch, 1900); }
+        else { ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; ms.classList.add('err'); }
+      });
     });
   }
 
@@ -559,10 +584,17 @@
         msg.textContent = 'Zadejte prosím platný e-mail.'; msg.classList.add('err'); return;
       }
       msg.classList.remove('err');
-      msg.textContent = okres
-        ? 'Díky! Poznamenali jsme si okres „' + okres + '". Ozveme se, jakmile upozornění spustíme.'
-        : 'Díky! Poznamenali jsme si váš zájem. Ozveme se, jakmile upozornění spustíme.';
-      form.reset();
+      if (!FORM_ENDPOINT) {
+        msg.textContent = 'Upozornění teprve dokončujeme — spustíme je, jakmile přidáme odesílání. Díky!';
+        return;
+      }
+      msg.textContent = 'Odesílám…';
+      sendForm({ _subject: 'Hlídání lokality — Pozemkomat', typ: 'Hlídání lokality', okres: okres || '(neuvedeno)', email: email }).then(function (r) {
+        if (r === 'ok') {
+          msg.textContent = okres ? ('Hotovo! Budeme hlídat okres „' + okres + '" a dáme vědět.') : 'Hotovo! Ozveme se, jakmile se objeví něco ve vašem okolí.';
+          form.reset();
+        } else { msg.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; msg.classList.add('err'); }
+      });
     });
   }
 
@@ -577,8 +609,17 @@
       if (!name) { out.textContent = 'Napište prosím jméno.'; out.classList.add('err'); return; }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { out.textContent = 'Zadejte prosím platný e-mail.'; out.classList.add('err'); return; }
       out.classList.remove('err');
-      out.textContent = 'Díky, ' + name.split(' ')[0] + '! Poznamenali jsme si vaši poptávku a ozveme se vám na ' + email + '.';
-      rForm.reset();
+      var org = document.getElementById('rc-org').value.trim();
+      var text = document.getElementById('rc-msg').value.trim();
+      if (!FORM_ENDPOINT) {
+        out.textContent = 'Díky, ' + name.split(' ')[0] + '! Poptávkový formulář teprve dokončujeme — než ho spustíme, napište nám prosím přímo e-mailem.';
+        return;
+      }
+      out.textContent = 'Odesílám…';
+      sendForm({ _subject: 'Poptávka realitky/obce — Pozemkomat', typ: 'Poptávka realitky/obce', jmeno: name, firma: org || '(neuvedeno)', email: email, zprava: text || '(bez zprávy)' }).then(function (r) {
+        if (r === 'ok') { out.textContent = 'Díky, ' + name.split(' ')[0] + '! Poptávka dorazila, ozveme se vám na ' + email + '.'; rForm.reset(); }
+        else { out.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; out.classList.add('err'); }
+      });
     });
   }
 
