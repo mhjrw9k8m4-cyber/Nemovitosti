@@ -1,9 +1,11 @@
-/* Stránka „Přidat pozemek" — přepínání Prodej/Inzerce + odeslání formulářů.
-   Samostatné od main.js, ať se mapy (hlavní stránky) vůbec nedotýkáme. */
+/* Sdílený skript pro stránky „Přidat pozemek na prodej" (pridat.html)
+   a „Inzerce" (inzerce.html). Každá stránka má jeden formulář; skript
+   napojí ten, který na stránce je. Samostatné od main.js — mapy hlavní
+   stránky se vůbec nedotýká. */
 (function () {
   'use strict';
 
-  /* ---------- Mobilní menu (stejné chování jako na hlavní stránce) ---------- */
+  /* ---------- Mobilní menu ---------- */
   var toggle = document.querySelector('.nav-toggle');
   var nav = document.getElementById('nav');
   if (toggle && nav) {
@@ -30,23 +32,6 @@
     toastT = setTimeout(function () { toastEl.classList.remove('show'); setTimeout(function () { toastEl.setAttribute('hidden', ''); }, 300); }, 3200);
   }
 
-  /* ---------- Přepínání Prodej / Inzerce ---------- */
-  var tabs = Array.prototype.slice.call(document.querySelectorAll('.add-tabs .login-tab'));
-  function selectPanel(name) {
-    tabs.forEach(function (t) {
-      var on = t.getAttribute('data-panel') === name;
-      t.classList.toggle('active', on); t.setAttribute('aria-selected', String(on));
-    });
-    ['prodej', 'inzerce'].forEach(function (n) {
-      var p = document.getElementById('panel-' + n);
-      if (!p) return;
-      var on = n === name;
-      p.classList.toggle('active', on);
-      if (on) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
-    });
-  }
-  tabs.forEach(function (t) { t.addEventListener('click', function () { selectPanel(t.getAttribute('data-panel')); }); });
-
   /* ---------- Odeslání (bez serveru, přes Formspree) ----------
      DŮLEŽITÉ: až doplníte Formspree URL do FORM_ENDPOINT (stejnou jako v js/main.js),
      začnou formuláře opravdu odesílat. Dokud je prázdné, běží „nanečisto":
@@ -69,7 +54,9 @@
     return (v.replace(/\D/g, '').length >= 9);
   }
 
-  function handle(formId, msgId, buildData, validate, offlineMsg) {
+  var OFFLINE = 'Formulář zatím dokončujeme — odesílání spustíme, jakmile připojíme e-mail. Děkujeme za trpělivost.';
+
+  function handle(formId, msgId, buildData, validate) {
     var form = document.getElementById(formId);
     if (!form) return;
     form.addEventListener('submit', function (e) {
@@ -78,10 +65,7 @@
       ms.classList.remove('err'); ms.textContent = '';
       var err = validate();
       if (err) { ms.textContent = err; ms.classList.add('err'); return; }
-      if (!FORM_ENDPOINT) {
-        ms.textContent = offlineMsg;
-        return;
-      }
+      if (!FORM_ENDPOINT) { ms.textContent = OFFLINE; return; }
       ms.textContent = 'Odesílám…';
       sendForm(buildData()).then(function (r) {
         if (r === 'ok') {
@@ -96,7 +80,7 @@
     });
   }
 
-  // --- Prodej ---
+  // --- Prodej (pridat.html) ---
   handle('form-prodej', 'msg-prodej',
     function () {
       return {
@@ -117,11 +101,10 @@
       if (!validContact(val('p-kontakt'))) return 'Zadejte platný telefon (9 číslic) nebo e-mail.';
       if (!checked('p-souhlas')) return 'Potvrďte prosím souhlas se zveřejněním.';
       return '';
-    },
-    'Formulář zatím dokončujeme — odesílání spustíme, jakmile připojíme e-mail. Děkujeme za trpělivost.'
+    }
   );
 
-  // --- Inzerce ---
+  // --- Inzerce (inzerce.html) ---
   handle('form-inzerce', 'msg-inzerce',
     function () {
       return {
@@ -139,8 +122,7 @@
       if (!validContact(val('i-kontakt'))) return 'Zadejte platný telefon (9 číslic) nebo e-mail.';
       if (!checked('i-souhlas')) return 'Potvrďte prosím souhlas se zveřejněním.';
       return '';
-    },
-    'Formulář zatím dokončujeme — odesílání spustíme, jakmile připojíme e-mail. Děkujeme za trpělivost.'
+    }
   );
 
 })();

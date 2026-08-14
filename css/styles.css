@@ -795,3 +795,53 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   .status-grid, .counters-row{grid-template-columns:1fr;}
   .c-num{font-size:38px;}
 }
+
+/* ---------- Stránky „Přidat pozemek na prodej" a „Inzerce" ----------
+   Vlastní vrstva pro pridat.html / inzerce.html. Mapy (hlavní stránky)
+   se nedotýká — jen nové třídy .add-*. */
+.add-hero{padding:120px 0 20px;}
+.add-hero h1{font-family:'Fraunces',serif; font-weight:500; font-size:38px; line-height:1.14; max-width:720px;}
+.add-hero .sub{font-size:16px; color:var(--text-ondark-mute); margin-top:16px; max-width:640px;}
+.add-wrap{max-width:720px;}
+.add-lead{font-size:14.5px; color:var(--text-ondark-mute); margin:0 0 22px; padding:14px 16px; background:var(--ink-soft); border:1px solid var(--line); border-radius:10px; line-height:1.55;}
+.add-lead b{color:var(--text-ondark);}
+.add-form{display:flex; flex-direction:column; gap:16px;}
+.add-field{display:flex; flex-direction:column; gap:6px;}
+.add-field label{font-size:13px; font-weight:600; color:var(--text-ondark);}
+.add-field .req{color:var(--copper-bright);}
+.add-field .hint{font-size:12px; color:var(--text-ondark-mute); font-weight:400;}
+.add-form input, .add-form select, .add-form textarea{
+  background:var(--ink); border:1px solid var(--line); border-radius:8px; padding:13px 15px;
+  font-size:15px; color:var(--text-ondark); font-family:inherit; width:100%;
+}
+.add-form textarea{resize:vertical; min-height:96px;}
+.add-form input::placeholder, .add-form textarea::placeholder{color:#6f8090;}
+.add-form input:focus-visible, .add-form select:focus-visible, .add-form textarea:focus-visible{border-color:var(--copper-bright); outline:none;}
+.add-row{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+.add-check{display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--text-ondark-mute); line-height:1.45;}
+.add-check input{width:18px; height:18px; flex:none; margin-top:1px; accent-color:var(--copper);}
+.add-check a{color:var(--copper-bright);}
+.add-form .btn-primary{padding:15px; font-size:15.5px; text-align:center; margin-top:4px;}
+.add-msg{font-size:13.5px; min-height:16px; color:var(--c-sale); margin-top:2px;}
+.add-msg.err{color:var(--c-exekuce);}
+.add-steps{display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:12px;}
+.add-step{background:var(--ink-soft); border:1px solid var(--line); border-radius:12px; padding:22px;}
+.add-step .n{font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--copper-bright); margin-bottom:10px;}
+.add-step h3{font-size:16px; margin-bottom:8px;}
+.add-step p{font-size:14px; color:var(--text-ondark-mute); line-height:1.5;}
+.add-honest{margin-top:34px; padding:18px 20px; border:1px solid var(--line); border-left:3px solid var(--copper); border-radius:10px; background:rgba(201,152,47,0.05);}
+.add-honest h4{font-size:14px; margin-bottom:6px;}
+.add-honest p{font-size:13.5px; color:var(--text-ondark-mute); line-height:1.55;}
+/* Proklik na druhou stránku (Prodej ↔ Inzerce) */
+.add-cross{display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
+  margin-top:30px; padding:20px 22px; background:var(--ink-soft2); border:1px solid var(--line-strong); border-radius:12px;}
+.add-cross .acx-copy h3{font-size:17px; margin-bottom:4px;}
+.add-cross .acx-copy p{font-size:13.5px; color:var(--text-ondark-mute); line-height:1.5; max-width:420px;}
+.add-cross .btn-primary{white-space:nowrap;}
+@media (max-width:640px){
+  .add-hero{padding:100px 0 12px;}
+  .add-hero h1{font-size:30px;}
+  .add-row{grid-template-columns:1fr;}
+  .add-steps{grid-template-columns:1fr;}
+  .add-cross{flex-direction:column; align-items:flex-start;}
+}
