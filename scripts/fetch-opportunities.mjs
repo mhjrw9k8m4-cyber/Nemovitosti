@@ -254,7 +254,7 @@ async function fetchBezrealitky() {
     }
   }`;
   const out = [];
-  const PER = 60, PAGES = 4; // ~240 inzerátů strop
+  const PER = 60, PAGES = 6; // ~360 inzerátů strop (víc reálných nabídek)
   for (let p = 0; p < PAGES; p++) {
     let list;
     try {
@@ -305,7 +305,7 @@ async function fetchFarmy() {
   let listHtml;
   try { const r = await fetch(BASE + '/inzerce_aktualni_nabidky', { headers: UA }); if (!r.ok) return []; listHtml = await r.text(); }
   catch { return []; }
-  const ids = [...new Set([...listHtml.matchAll(/nabidka_detail\?nab=(\d+)/g)].map((m) => m[1]))].slice(0, 40);
+  const ids = [...new Set([...listHtml.matchAll(/nabidka_detail\?nab=(\d+)/g)].map((m) => m[1]))].slice(0, 65);
   const out = [];
   for (const id of ids) {
     let html;
@@ -418,7 +418,7 @@ async function main() {
   const byPrice = (a, b) => a.price - b.price;
   // Bezrealitky i Farmy vedou přímo na inzerát → dáme jim víc prostoru.
   // SPÚ (státní půda) nemá odkaz na konkrétní parcelu, tak jí ubereme.
-  const bez = sale.filter((o) => /Bezrealitky/i.test(o.extra || '')).slice(0, 120);
+  const bez = sale.filter((o) => /Bezrealitky/i.test(o.extra || '')).slice(0, 180);
   const farmy = sale.filter((o) => /Farmy/i.test(o.extra || ''));
   const spuSale = sale.filter((o) => /státní/i.test(o.extra || '')).sort(byPrice);
   const saleSel = [...bez, ...farmy, ...spread(spuSale, 50)];
