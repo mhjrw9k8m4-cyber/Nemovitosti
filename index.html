@@ -86,7 +86,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260814x">
+  <link rel="stylesheet" href="css/styles.css?v=20260814y">
 </head>
 <body>
 
@@ -107,6 +107,7 @@
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
   <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></symbol>
   <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
 </svg>
 
 <div class="topbar" id="topbar">
@@ -132,10 +133,14 @@
           <span class="avatar" id="avatar" aria-hidden="true"></span><span id="profile-name"></span>
         </button>
         <div class="profile-menu" id="profile-menu" hidden role="menu">
-          <div class="pm-email mono" id="pm-email"></div>
+          <div class="pm-head">
+            <div class="pm-email mono" id="pm-email"></div>
+            <button type="button" class="pm-gear" id="pm-settings" aria-label="Nastavení účtu" title="Nastavení účtu"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></button>
+          </div>
           <div class="pm-saved-head">Uložené pozemky<b id="pm-saved-n">0</b></div>
           <div class="pm-saved-list" id="pm-saved-list"></div>
           <a href="#mapa" class="pm-item" id="pm-view-map" role="menuitem">Zobrazit na mapě<span class="pm-arrow">→</span></a>
+          <button type="button" class="pm-item" id="pm-settings-item" role="menuitem">Upravit údaje a priority<span class="pm-arrow">→</span></button>
           <a href="#upozorneni" class="pm-item" role="menuitem">Upozornění na lokalitu<span class="pm-arrow">→</span></a>
           <button type="button" class="pm-item pm-logout" id="pm-logout" role="menuitem">Odhlásit se</button>
         </div>
@@ -619,8 +624,56 @@
   </div>
 </div>
 
+<!-- Nastavení účtu: údaje + priority zobrazení -->
+<div class="modal" id="account-modal" role="dialog" aria-modal="true" aria-labelledby="acct-title" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-card">
+    <div class="eyebrow"><span class="live-dot"></span>Účet</div>
+    <h3 id="acct-title">Nastavení účtu</h3>
+    <p class="modal-sub">Upravte si údaje a nastavte, co vám máme ukazovat přednostně. Vše zůstává jen v tomto prohlížeči.</p>
+    <form class="modal-form" id="acct-form" novalidate>
+      <div class="acct-sect">
+        <h4 class="acct-h">Vaše údaje</h4>
+        <label class="visually-hidden" for="acct-name">Jméno</label>
+        <input id="acct-name" type="text" placeholder="Jméno (nepovinné)" autocomplete="name">
+        <label class="visually-hidden" for="acct-phone">Telefonní číslo</label>
+        <input id="acct-phone" type="tel" inputmode="tel" placeholder="Telefon (např. 777 123 456)" autocomplete="tel">
+        <div class="lf-pass">
+          <input id="acct-pass" type="password" placeholder="Nové heslo (nepovinné)" autocomplete="new-password">
+          <button type="button" class="lf-pass-toggle" id="acct-pass-toggle" aria-pressed="false" aria-label="Zobrazit heslo">Zobrazit</button>
+        </div>
+      </div>
+      <div class="acct-sect">
+        <h4 class="acct-h">Co ukazovat přednostně</h4>
+        <p class="acct-note">Jen jemně upraví pořadí v „Doporučené" — nic neschová ani nesmaže.</p>
+        <label class="acct-lbl" for="pref-type">Druh příležitosti</label>
+        <select class="map-select" id="pref-type">
+          <option value="all">Bez preference</option>
+          <option value="sale">Prodej</option>
+          <option value="drazba">Dražba</option>
+          <option value="exekuce">Exekuce</option>
+          <option value="obec">Obecní</option>
+        </select>
+        <label class="acct-lbl" for="pref-kraj">Kraj</label>
+        <select class="map-select" id="pref-kraj"><option value="">Celá ČR</option></select>
+        <label class="acct-lbl" for="pref-budget">Rozpočet</label>
+        <select class="map-select" id="pref-budget">
+          <option value="0">Bez limitu</option>
+          <option value="250000">do 250 tis. Kč</option>
+          <option value="500000">do 500 tis. Kč</option>
+          <option value="1000000">do 1 mil. Kč</option>
+          <option value="3000000">do 3 mil. Kč</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-primary btn-glow" id="acct-save">Uložit změny</button>
+      <p class="form-msg" id="acct-msg" role="status" aria-live="polite"></p>
+    </form>
+    <button class="modal-close-bar" type="button" data-close>Zavřít</button>
+  </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/main.js?v=20260814x" defer></script>
+<script src="js/main.js?v=20260814y" defer></script>
 </body>
 </html>

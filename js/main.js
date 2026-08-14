@@ -232,9 +232,9 @@
   document.addEventListener('click', function (e) {
     var trigger = e.target.closest('a[href="#upozorneni"]');
     if (trigger) { e.preventDefault(); openWatch(trigger.getAttribute('data-okres') || ''); return; }
-    if (e.target.closest('[data-close]')) { closeWatch(); closeLogin(); closeInfo(); }
+    if (e.target.closest('[data-close]')) { closeWatch(); closeLogin(); closeInfo(); closeAccount(); }
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeWatch(); closeLogin(); closeInfo(); } });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeWatch(); closeLogin(); closeInfo(); closeAccount(); } });
 
   /* ---------- Odesílání formulářů (bez serveru, přes Formspree) ----------
      Aby formuláře (hlídání lokality i poptávka realitek) opravdu někam dorazily,
@@ -332,6 +332,13 @@
     var n = 5381; for (var i = 0; i < txt.length; i++) { n = ((n << 5) + n) ^ txt.charCodeAt(i); }
     return Promise.resolve('x' + (n >>> 0).toString(16));
   }
+
+  /* ---------- Priority zobrazení (jemné nastavení pořadí „Doporučené") ---------- */
+  var PREFS_KEY = 'pk_prefs_v1';
+  function getPrefs() { try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || {}; } catch (e) { return {}; } }
+  function setPrefs(p) { try { localStorage.setItem(PREFS_KEY, JSON.stringify(p)); } catch (e) {} }
+  var PREFS = getPrefs();
+  var applyPrefsToMap = null; // boot() sem zaregistruje přepočet pořadí
 
   var loginMode = 'login';
   function setLoginMode(mode) {
@@ -492,6 +499,102 @@
     if (!favCount()) { showToast('Zatím nemáte uložené pozemky. Uložte si je záložkou u nabídky.'); return; }
     if (favBtn && favBtn.getAttribute('aria-pressed') !== 'true') setTimeout(function () { favBtn.click(); }, 500);
   });
+
+  /* ---------- Nastavení účtu: údaje + priority ---------- */
+  var aModal = document.getElementById('account-modal');
+  // Naplnění krajů do preference (ze stejného seznamu jako mapa)
+  (function () {
+    var sel = document.getElementById('pref-kraj');
+    if (!sel) return;
+    Object.keys(KRAJE).forEach(function (k) {
+      var o = document.createElement('option'); o.value = k; o.textContent = k; sel.appendChild(o);
+    });
+  })();
+  function openAccount() {
+    if (!aModal) return;
+    var u = getUser(); var acct = getAcct();
+    var name = (acct && acct.name) || (u && u.name) || '';
+    var phone = (acct && acct.phone) || (u && u.phone) || '';
+    var f = function (id) { return document.getElementById(id); };
+    if (f('acct-name')) f('acct-name').value = name;
+    if (f('acct-phone')) f('acct-phone').value = phone ? fmtPhone(phone) : '';
+    if (f('acct-pass')) { f('acct-pass').value = ''; f('acct-pass').type = 'password'; }
+    var pt = f('acct-pass-toggle'); if (pt) { pt.textContent = 'Zobrazit'; pt.setAttribute('aria-pressed', 'false'); }
+    PREFS = getPrefs();
+    if (f('pref-type')) f('pref-type').value = PREFS.prefType || 'all';
+    if (f('pref-kraj')) f('pref-kraj').value = PREFS.prefKraj || '';
+    if (f('pref-budget')) f('pref-budget').value = String(PREFS.prefBudget || 0);
+    var ms = f('acct-msg'); if (ms) { ms.textContent = ''; ms.classList.remove('err'); }
+    var pm = document.getElementById('profile-menu'); if (pm) pm.setAttribute('hidden', '');
+    aModal.removeAttribute('hidden');
+    requestAnimationFrame(function () { aModal.classList.add('open'); });
+    document.body.style.overflow = 'hidden';
+  }
+  function closeAccount() {
+    if (!aModal) return;
+    aModal.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(function () { aModal.setAttribute('hidden', ''); }, 250);
+  }
+  var pmSettings = document.getElementById('pm-settings');
+  if (pmSettings) pmSettings.addEventListener('click', function (e) { e.stopPropagation(); openAccount(); });
+  var pmSettingsItem = document.getElementById('pm-settings-item');
+  if (pmSettingsItem) pmSettingsItem.addEventListener('click', function (e) { e.stopPropagation(); openAccount(); });
+  var acctPassToggle = document.getElementById('acct-pass-toggle');
+  if (acctPassToggle) acctPassToggle.addEventListener('click', function () {
+    var p = document.getElementById('acct-pass'); if (!p) return;
+    var show = p.type === 'password';
+    p.type = show ? 'text' : 'password';
+    acctPassToggle.textContent = show ? 'Skrýt' : 'Zobrazit';
+    acctPassToggle.setAttribute('aria-pressed', String(show));
+    p.focus();
+  });
+  var aForm = document.getElementById('acct-form');
+  if (aForm) aForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var ms = document.getElementById('acct-msg'); if (!ms) return;
+    ms.classList.remove('err');
+    var name = (document.getElementById('acct-name').value || '').trim();
+    var phoneRaw = document.getElementById('acct-phone').value;
+    var newPass = document.getElementById('acct-pass').value;
+    if (!validPhone(phoneRaw)) { ms.textContent = 'Zadejte platné české číslo (9 číslic).'; ms.classList.add('err'); return; }
+    if (newPass && newPass.length < 6) { ms.textContent = 'Nové heslo musí mít aspoň 6 znaků.'; ms.classList.add('err'); return; }
+    var phone = normPhone(phoneRaw);
+
+    // Uložení priorit (platí i bez účtu)
+    var prefs = {
+      prefType: document.getElementById('pref-type').value,
+      prefKraj: document.getElementById('pref-kraj').value,
+      prefBudget: parseInt(document.getElementById('pref-budget').value, 10) || 0
+    };
+    setPrefs(prefs); PREFS = prefs;
+    if (applyPrefsToMap) applyPrefsToMap();
+
+    var acct = getAcct();
+    function finishAcct(passHash) {
+      setAcct({ phone: phone, name: name, passHash: passHash });
+      setUser({ phone: phone, name: name });   // překreslí profil (jméno/telefon)
+      ms.textContent = 'Uloženo.';
+      showToast('Údaje a priority uloženy.');
+      setTimeout(closeAccount, 700);
+    }
+    if (!acct) {
+      // Bez účtu: priority se uložily; na změnu údajů je potřeba se přihlásit.
+      ms.textContent = 'Priority uloženy. Pro uložení údajů se prosím přihlaste.';
+      setTimeout(closeAccount, 1100);
+      return;
+    }
+    var phoneChanged = phone !== acct.phone;
+    // Otisk hesla je svázaný s číslem — při změně čísla se musí přepočítat,
+    // takže je potřeba zadat heslo znovu.
+    if (phoneChanged && !newPass) {
+      ms.textContent = 'Měníte telefonní číslo — zadejte prosím i heslo, ať ho můžeme bezpečně přepojit.';
+      ms.classList.add('err'); return;
+    }
+    if (newPass) { hashPass(phone, newPass).then(finishAcct); }
+    else { finishAcct(acct.passHash); }   // číslo i heslo beze změny
+  });
+
   renderAuth();
 
   /* ---------- Zásady soukromí / Podmínky (info modal) ---------- */
@@ -1278,9 +1381,16 @@
     var perM2 = hasArea(d) ? d.price / d.area : 500;
     var typeBonus = { drazba: 22, exekuce: 18, obec: 12, sale: 8 }[d.type] || 0;
     var deal = Math.max(0, Math.min(58, (900 - perM2) / 18)); // výhodnost s nasycením
-    d._demand = Math.max(6, Math.round(9 + typeBonus + deal));
+    // Jemné priority uživatele (Nastavení účtu) — nic neschovají, jen posunou pořadí.
+    var pref = 0;
+    if (PREFS.prefType && PREFS.prefType !== 'all' && d.type === PREFS.prefType) pref += 16;
+    if (PREFS.prefKraj && krajOf(d) === PREFS.prefKraj) pref += 16;
+    if (PREFS.prefBudget) { if (d.price <= PREFS.prefBudget) pref += 8; else if (d.price > PREFS.prefBudget * 1.6) pref -= 12; }
+    d._demand = Math.max(6, Math.round(9 + typeBonus + deal + pref));
     return d._demand;
   }
+  // Umožní stránce přepočítat pořadí, když uživatel změní priority.
+  applyPrefsToMap = function () { DATA.forEach(function (d) { d._demand = null; }); renderList(); };
 
   var LIST_LIMIT = 8;
   function renderList() {
