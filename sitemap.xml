@@ -5,4 +5,14 @@
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
+  <url>
+    <loc>https://mhjrw9k8m4-cyber.github.io/Nemovitosti/pridat.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mhjrw9k8m4-cyber.github.io/Nemovitosti/inzerce.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
