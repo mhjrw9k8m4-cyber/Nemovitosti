@@ -368,12 +368,19 @@ function valid(o) {
 }
 
 async function main() {
-  const results = await Promise.allSettled([
-    fetchDrazby(),
-    fetchProdejSPU(),
-    fetchBezrealitky(),
-    fetchFarmy(),
-  ]);
+  // Pojmenované zdroje → v logu Actions je hned vidět, který přestal vracet data.
+  const SOURCES = [
+    ['Dražby', fetchDrazby],
+    ['SPÚ', fetchProdejSPU],
+    ['Bezrealitky', fetchBezrealitky],
+    ['Farmy', fetchFarmy],
+  ];
+  const results = await Promise.allSettled(SOURCES.map(([, fn]) => fn()));
+  results.forEach((r, i) => {
+    const name = SOURCES[i][0];
+    if (r.status === 'fulfilled') console.log(`Zdroj ${name}: ${(r.value || []).length} záznamů.`);
+    else console.error(`Zdroj ${name} SELHAL: ${r.reason && r.reason.message ? r.reason.message : r.reason}`);
+  });
 
   const raw = results
     .filter((r) => r.status === 'fulfilled')
@@ -425,6 +432,19 @@ async function main() {
   if (fresh.length === 0) {
     console.log('Žádný zdroj zatím nevrací data — ponechávám stávající soubor beze změny.');
     return;
+  }
+
+  // Pojistka proti „utržení" dat: když je nově staženo výrazně míň než minule
+  // (nejspíš se rozbil některý zdroj), NEPŘEPISUJEME — necháme stará data a
+  // skončíme s chybou, aby úloha spadla a GitHub poslal majiteli upozornění.
+  let prevCount = 0;
+  try { prevCount = (JSON.parse(readFileSync(OUT, 'utf8')).opportunities || []).length; } catch { /* první běh */ }
+  if (prevCount >= 30 && fresh.length < prevCount * 0.6) {
+    console.error(
+      `CHYBA: staženo jen ${fresh.length} příležitostí (minule ${prevCount}). ` +
+      'Nejspíš se rozbil některý zdroj — ponechávám stará data a končím s chybou, ať přijde upozornění.'
+    );
+    process.exit(1);
   }
 
   // Zpřesnění polohy: až u vybraných příležitostí dohledáme souřadnice podle

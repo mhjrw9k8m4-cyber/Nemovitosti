@@ -113,6 +113,7 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 @keyframes dotpulse{0%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 0 rgba(217,164,65,0.5);} 100%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 10px rgba(217,164,65,0);}}
 .data-updated{margin:-6px 0 14px; font-size:12px; color:var(--copper-bright); opacity:0.85;}
 .data-updated:empty{display:none;}
+.data-updated.is-stale{color:#E0A33A; opacity:1; font-weight:600;}
 .leaflet-tooltip.kraj-tip{background:rgba(20,32,44,0.97); border:1px solid rgba(224,174,67,0.6); color:var(--parchment); font-family:'Inter',sans-serif; font-weight:500; font-size:12px; line-height:1.55; padding:8px 12px; border-radius:10px; box-shadow:0 10px 26px -6px rgba(0,0,0,0.65);}
 .leaflet-tooltip.kraj-tip b{display:inline-block; font-family:'Fraunces',serif; color:var(--copper-bright); font-weight:600; font-size:14.5px; margin-bottom:1px;}
 .leaflet-tooltip.kraj-tip::before{border-top-color:rgba(224,174,67,0.6);}

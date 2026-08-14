@@ -671,12 +671,22 @@
     }
   })();
 
-  // „Naposledy aktualizováno" — signál čerstvosti dat (z pole updated)
+  // „Naposledy aktualizováno" — signál čerstvosti dat (z pole updated).
+  // Když robot pár dní neproběhl (data starší než 4 dny), decentně upozorníme.
   (function () {
     var el = document.getElementById('data-updated');
     if (!el || !updated) return;
     var m = /(\d{4})-(\d{2})-(\d{2})/.exec(updated);
-    el.textContent = m ? ('Data aktualizována ' + (+m[3]) + '. ' + (+m[2]) + '. ' + m[1]) : '';
+    if (!m) { el.textContent = ''; return; }
+    el.textContent = 'Data aktualizována ' + (+m[3]) + '. ' + (+m[2]) + '. ' + m[1];
+    var upd = new Date(+m[1], +m[2] - 1, +m[3]);
+    var days = Math.floor((Date.now() - upd.getTime()) / 86400000);
+    if (isFinite(days) && days >= 4) {
+      el.textContent += ' · ⚠ možná zastaralá (' + days + ' dní)';
+      el.classList.add('is-stale');
+    } else {
+      el.classList.remove('is-stale');
+    }
   })();
 
   // Živé počty u kategorií v sekci „Co na mapě uvidíte"
