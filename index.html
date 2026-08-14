@@ -62,7 +62,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260814c">
+  <link rel="stylesheet" href="css/styles.css?v=20260814d">
 </head>
 <body>
 
@@ -477,7 +477,7 @@
         <details class="faq-item"><summary>Ukazujete osobní údaje vlastníků?</summary><p>Ne. Zobrazujeme jen příležitosti z veřejných zdrojů — neprodáváme osobní údaje ani kontakty. Ověření vlastníka je vždy přes oficiální katastr.</p></details>
         <details class="faq-item"><summary>Musím být odborník?</summary><p>Vůbec ne. Máme slovníček, který vysvětluje každý pojem česky. Mapa je navržená tak, aby jí rozuměl každý.</p></details>
         <details class="faq-item"><summary>Můžu mapu vložit na svůj web?</summary><p>Ano. Pro realitky a obce máme widget — jeden řádek kódu a mapa vaší lokality běží na vašem webu.</p></details>
-        <details class="faq-item"><summary>Můžu si založit účet a uložit si pozemky?</summary><p>Ano. Po přihlášení si <b>uložíte oblíbené pozemky</b> a rychle se k nim vrátíte. Zatím účet běží jen ve vašem prohlížeči — bez hesla a bez odesílání dat. Plnohodnotné účty se synchronizací připravujeme.</p></details>
+        <details class="faq-item"><summary>Jak funguje účet a přihlášení?</summary><p>Účet si založíte telefonním číslem a heslem a hned si <b>uložíte oblíbené pozemky</b>. Zatím účet i heslo běží jen ve vašem prohlížeči (heslo se ukládá jen jako zašifrovaný otisk, ne čitelně) a nic se neodesílá na server. Ověřovací kód přes SMS a synchronizaci mezi zařízeními připravujeme — půjde to, až přidáme backend.</p></details>
         <details class="faq-item"><summary>Pokrýváte celou Českou republiku?</summary><p>Ano. Data sbíráme ze všech krajů ČR. Na mapě vidíte příležitosti napříč republikou a můžete si je filtrovat podle okresu, druhu i ceny.</p></details>
         <details class="faq-item"><summary>Můžu hledat jen pozemky do určité ceny?</summary><p>Ano. Přímo na mapě je filtr „Cena do" — nastavíte si rozpočet a uvidíte jen pozemky, které se do něj vejdou. K tomu filtr druhu a vyhledávání podle místa.</p></details>
       </div>
@@ -547,21 +547,28 @@
   <div class="modal-backdrop" data-close></div>
   <div class="modal-card">
     <div class="eyebrow"><span class="live-dot"></span>Účet</div>
-    <h3 id="login-title">Uložte si své pozemky</h3>
-    <p class="modal-sub">Uložte si zajímavé pozemky a vraťte se k nim kdykoliv.</p>
-    <ul class="modal-benefits">
-      <li><svg class="ic"><use href="#i-check"/></svg>Uložené pozemky na jednom místě</li>
-      <li><svg class="ic"><use href="#i-check"/></svg>Rychlé, bez hesla</li>
-      <li><svg class="ic"><use href="#i-check"/></svg>Data zůstávají ve vašem prohlížeči — synchronizaci připravujeme</li>
-    </ul>
+    <h3 id="login-title">Přihlášení</h3>
+    <p class="modal-sub" id="login-sub">Přihlaste se telefonním číslem a heslem. Uložíte si pozemky a vrátíte se k nim.</p>
+    <div class="login-tabs" role="tablist">
+      <button type="button" class="login-tab active" data-mode="login" role="tab" aria-selected="true">Přihlásit se</button>
+      <button type="button" class="login-tab" data-mode="register" role="tab" aria-selected="false">Vytvořit účet</button>
+    </div>
     <form class="modal-form" id="login-form" novalidate>
-      <label class="visually-hidden" for="login-name">Jméno</label>
-      <input id="login-name" type="text" placeholder="Jméno (nepovinné)" autocomplete="name">
-      <label class="visually-hidden" for="login-email">E-mail</label>
-      <input id="login-email" type="email" placeholder="vas@email.cz" required autocomplete="email">
-      <button type="submit" class="btn-primary btn-glow">Pokračovat</button>
+      <div class="lf-row" id="lf-name-row" hidden>
+        <label class="visually-hidden" for="login-name">Jméno</label>
+        <input id="login-name" type="text" placeholder="Jméno (nepovinné)" autocomplete="name">
+      </div>
+      <label class="visually-hidden" for="login-phone">Telefonní číslo</label>
+      <input id="login-phone" type="tel" inputmode="tel" placeholder="Telefon (např. 777 123 456)" required autocomplete="tel">
+      <label class="visually-hidden" for="login-pass">Heslo</label>
+      <input id="login-pass" type="password" placeholder="Heslo" required autocomplete="current-password">
+      <div class="lf-row" id="lf-pass2-row" hidden>
+        <label class="visually-hidden" for="login-pass2">Heslo znovu</label>
+        <input id="login-pass2" type="password" placeholder="Heslo znovu" autocomplete="new-password">
+      </div>
+      <button type="submit" class="btn-primary btn-glow" id="login-submit">Přihlásit se</button>
       <p class="form-msg" id="login-msg" role="status" aria-live="polite"></p>
-      <p class="modal-fine">Bez hesla · data zůstávají ve vašem prohlížeči</p>
+      <p class="modal-fine" id="login-fine">Ověření kódem přes SMS teprve chystáme — to půjde, až přidáme server. Zatím účet i heslo zůstávají jen v tomto prohlížeči a nikam se neodesílají.</p>
     </form>
     <button class="modal-close-bar" type="button" data-close>Zavřít</button>
   </div>
@@ -569,6 +576,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="js/main.js?v=20260814c" defer></script>
+<script src="js/main.js?v=20260814d" defer></script>
 </body>
 </html>

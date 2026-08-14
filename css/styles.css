@@ -658,7 +658,13 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .modal-card .eyebrow{margin-bottom:12px;}
 .modal-card h3{font-family:'Fraunces',serif; font-size:24px; font-weight:500; margin-bottom:8px;}
 .modal-sub{font-size:14px; color:var(--text-ondark-mute); margin-bottom:20px;}
+.login-tabs{display:flex; gap:6px; background:var(--ink); border:1px solid var(--line); border-radius:8px; padding:4px; margin-bottom:18px;}
+.login-tab{flex:1; background:none; border:0; border-radius:6px; padding:10px 8px; font-family:inherit; font-size:14px; font-weight:600; color:var(--text-ondark-mute); cursor:pointer; transition:background .15s ease, color .15s ease;}
+.login-tab:hover{color:var(--text-ondark);}
+.login-tab.active{background:var(--copper); color:var(--ink);}
+.lf-row[hidden]{display:none;}
 .modal-form{display:flex; flex-direction:column; gap:12px;}
+.modal-form .lf-row{display:flex; flex-direction:column;}
 .modal-form input{background:var(--ink); border:1px solid var(--line); border-radius:6px; padding:13px 15px; font-size:15px; color:var(--text-ondark); font-family:inherit;}
 .modal-form input::placeholder{color:#6f8090;}
 .modal-form input:focus-visible{border-color:var(--copper-bright); outline:none;}

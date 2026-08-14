@@ -268,13 +268,66 @@
       var p = k.split('|'); return '<div class="pm-saved-item"><b>' + (p[0] || 'Pozemek') + '</b><span>parc. ' + (p[1] || '—') + '</span></div>';
     }).join('') + (keys.length > 4 ? '<div class="pm-saved-more">+ ' + (keys.length - 4) + ' dalších</div>' : '');
   }
+  /* ---------- Účet: telefon + heslo (lokálně, hesla se hashují) ---------- */
+  var ACCT_KEY = 'pk_acct_v1';
+  function getAcct() { try { return JSON.parse(localStorage.getItem(ACCT_KEY)); } catch (e) { return null; } }
+  function setAcct(a) { try { a ? localStorage.setItem(ACCT_KEY, JSON.stringify(a)) : localStorage.removeItem(ACCT_KEY); } catch (e) {} }
+  // Telefon → jen 9 číslic (bez +420 / mezer), pro porovnání a uložení
+  function normPhone(v) {
+    var d = (v || '').replace(/\s|-|\(|\)/g, '');
+    if (d.indexOf('+420') === 0) d = d.slice(4);
+    else if (d.indexOf('00420') === 0) d = d.slice(5);
+    return d.replace(/\D/g, '');
+  }
+  function validPhone(v) { return /^\d{9}$/.test(normPhone(v)); }
+  function fmtPhone(v) { var d = normPhone(v); return d.length === 9 ? (d.slice(0, 3) + ' ' + d.slice(3, 6) + ' ' + d.slice(6)) : d; }
+  // Heslo neukládáme v čitelné podobě — uložíme jen jeho otisk (SHA-256).
+  function hashPass(phone, pass) {
+    var txt = 'pk|' + normPhone(phone) + '|' + pass;
+    if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt)).then(function (h) {
+        return Array.prototype.map.call(new Uint8Array(h), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+      });
+    }
+    var n = 5381; for (var i = 0; i < txt.length; i++) { n = ((n << 5) + n) ^ txt.charCodeAt(i); }
+    return Promise.resolve('x' + (n >>> 0).toString(16));
+  }
+
+  var loginMode = 'login';
+  function setLoginMode(mode) {
+    loginMode = (mode === 'register') ? 'register' : 'login';
+    var isReg = loginMode === 'register';
+    var nameRow = document.getElementById('lf-name-row');
+    var pass2Row = document.getElementById('lf-pass2-row');
+    if (nameRow) nameRow.hidden = !isReg;
+    if (pass2Row) pass2Row.hidden = !isReg;
+    var submit = document.getElementById('login-submit'); if (submit) submit.textContent = isReg ? 'Vytvořit účet' : 'Přihlásit se';
+    var title = document.getElementById('login-title'); if (title) title.textContent = isReg ? 'Vytvořit účet' : 'Přihlášení';
+    var sub = document.getElementById('login-sub');
+    if (sub) sub.textContent = isReg
+      ? 'Zadejte číslo a zvolte si heslo. Účet se uloží v tomto prohlížeči.'
+      : 'Přihlaste se telefonním číslem a heslem.';
+    var passEl = document.getElementById('login-pass'); if (passEl) passEl.setAttribute('autocomplete', isReg ? 'new-password' : 'current-password');
+    document.querySelectorAll('.login-tab').forEach(function (t) {
+      var on = t.getAttribute('data-mode') === loginMode;
+      t.classList.toggle('active', on); t.setAttribute('aria-selected', String(on));
+    });
+    var ms = document.getElementById('login-msg'); if (ms) { ms.textContent = ''; ms.classList.remove('err'); }
+  }
+
   function openLogin() {
     if (!lModal) return;
-    var ms = document.getElementById('login-msg'); if (ms) { ms.textContent = ''; ms.classList.remove('err'); }
+    var acct = getAcct();
+    setLoginMode(acct ? 'login' : 'register');
+    var phoneInput = document.getElementById('login-phone');
+    if (phoneInput) phoneInput.value = acct ? fmtPhone(acct.phone) : '';
+    var p1 = document.getElementById('login-pass'); if (p1) p1.value = '';
+    var p2 = document.getElementById('login-pass2'); if (p2) p2.value = '';
+    var nm = document.getElementById('login-name'); if (nm) nm.value = '';
     lModal.removeAttribute('hidden');
     requestAnimationFrame(function () { lModal.classList.add('open'); });
     document.body.style.overflow = 'hidden';
-    var em = document.getElementById('login-email'); if (em) setTimeout(function () { em.focus(); }, 80);
+    setTimeout(function () { var t = acct ? p1 : phoneInput; if (t) t.focus(); }, 80);
   }
   function closeLogin() {
     if (!lModal) return;
@@ -286,12 +339,14 @@
     var u = getUser();
     if (!navLoginBtn || !navProfile) return;
     if (u) {
+      var ident = u.phone ? fmtPhone(u.phone) : (u.email || '');
+      var name = u.name || (u.phone ? fmtPhone(u.phone) : (u.email ? u.email.split('@')[0] : 'Účet'));
+      var initial = (u.name && u.name.trim()[0]) || (u.email && u.email[0]) || (u.phone && u.phone.slice(-2, -1)) || '?';
       navLoginBtn.setAttribute('hidden', '');
       navProfile.removeAttribute('hidden');
-      var name = u.name || u.email.split('@')[0];
       document.getElementById('profile-name').textContent = name;
-      document.getElementById('avatar').textContent = (name[0] || '?').toUpperCase();
-      document.getElementById('pm-email').textContent = u.email;
+      document.getElementById('avatar').textContent = String(initial).toUpperCase();
+      document.getElementById('pm-email').textContent = ident;
       document.getElementById('pm-saved-n').textContent = favCount();
       renderSavedList();
     } else {
@@ -301,18 +356,51 @@
     }
   }
   if (navLoginBtn) navLoginBtn.addEventListener('click', openLogin);
+  document.querySelectorAll('.login-tab').forEach(function (t) {
+    t.addEventListener('click', function () {
+      setLoginMode(t.getAttribute('data-mode'));
+      var acct = getAcct(); var phoneInput = document.getElementById('login-phone');
+      if (loginMode === 'login' && acct && phoneInput && !phoneInput.value) phoneInput.value = fmtPhone(acct.phone);
+    });
+  });
   var lForm = document.getElementById('login-form');
   if (lForm) lForm.addEventListener('submit', function (e) {
     e.preventDefault();
-    var email = document.getElementById('login-email').value.trim();
-    var name = document.getElementById('login-name').value.trim();
-    var ms = document.getElementById('login-msg');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ms.textContent = 'Zadejte prosím platný e-mail.'; ms.classList.add('err'); return; }
+    var ms = document.getElementById('login-msg'); if (!ms) return;
     ms.classList.remove('err');
-    ms.textContent = 'Hotovo, vítejte!';
-    setUser({ email: email, name: name });
-    showToast('Vítejte' + (name ? ', ' + name.split(' ')[0] : '') + '! Vaše uložené pozemky teď najdete v profilu.');
-    setTimeout(closeLogin, 1000);
+    var phoneRaw = document.getElementById('login-phone').value;
+    var pass = document.getElementById('login-pass').value;
+    var name = (document.getElementById('login-name').value || '').trim();
+    if (!validPhone(phoneRaw)) { ms.textContent = 'Zadejte platné české číslo (9 číslic).'; ms.classList.add('err'); return; }
+    if (!pass || pass.length < 6) { ms.textContent = 'Heslo musí mít aspoň 6 znaků.'; ms.classList.add('err'); return; }
+    var phone = normPhone(phoneRaw);
+
+    if (loginMode === 'register') {
+      var pass2 = document.getElementById('login-pass2').value;
+      if (pass !== pass2) { ms.textContent = 'Hesla se neshodují.'; ms.classList.add('err'); return; }
+      var existing = getAcct();
+      if (existing && existing.phone !== phone) {
+        ms.textContent = 'V tomto prohlížeči už je účet pro jiné číslo. Nejdřív se odhlaste.'; ms.classList.add('err'); return;
+      }
+      hashPass(phone, pass).then(function (h) {
+        setAcct({ phone: phone, name: name, passHash: h });
+        setUser({ phone: phone, name: name });
+        ms.textContent = 'Účet vytvořen, vítejte!';
+        showToast('Účet vytvořen. Uložené pozemky teď najdete v profilu.');
+        setTimeout(closeLogin, 900);
+      });
+    } else {
+      var acct = getAcct();
+      if (!acct) { ms.textContent = 'Na tohle číslo tu ještě není účet — vytvořte si ho.'; ms.classList.add('err'); setLoginMode('register'); return; }
+      if (acct.phone !== phone) { ms.textContent = 'Na tohle číslo tu není účet. Zkontrolujte číslo, nebo si vytvořte účet.'; ms.classList.add('err'); return; }
+      hashPass(phone, pass).then(function (h) {
+        if (h !== acct.passHash) { ms.textContent = 'Nesprávné heslo.'; ms.classList.add('err'); return; }
+        setUser({ phone: phone, name: acct.name || name });
+        ms.textContent = 'Přihlášeno, vítejte zpět!';
+        showToast('Vítejte zpět' + (acct.name ? ', ' + acct.name.split(' ')[0] : '') + '!');
+        setTimeout(closeLogin, 900);
+      });
+    }
   });
   // Rozbalení profilového menu
   var profChip = document.getElementById('profile-chip');
