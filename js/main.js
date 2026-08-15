@@ -189,12 +189,10 @@
     tbClose.addEventListener('click', function () { topbar.classList.add('hide'); });
   }
   /* ---------- Zpětná vazba (okno) ----------
-     Cíl odeslání DOPLNÍTE níže (zatím prázdné → okno upřímně řekne, že odesílání brzy spustíme):
-       • FEEDBACK_ENDPOINT — odkaz z Formspree apod. (https://formspree.io/f/xxxx) → tiché odeslání
-       • FEEDBACK_EMAIL    — nebo váš e-mail (např. 'vas@email.cz') → otevře se poštovní aplikace
-     Stačí vyplnit jedno z nich. */
-  var FEEDBACK_ENDPOINT = '';
-  var FEEDBACK_EMAIL = '';
+     Cíl odeslání se nastavuje na JEDNOM místě: js/config.js (PK_FORM_ENDPOINT / PK_FORM_EMAIL).
+     Dokud je prázdné, okno upřímně řekne, že odesílání dokončujeme. */
+  var FEEDBACK_ENDPOINT = (typeof window !== 'undefined' && window.PK_FORM_ENDPOINT) || '';
+  var FEEDBACK_EMAIL = (typeof window !== 'undefined' && window.PK_FORM_EMAIL) || '';
   var fbModal = document.getElementById('feedback-modal');
   function openFeedback() {
     if (!fbModal) return;
@@ -297,8 +295,9 @@
        2) Vytvoř formulář a zkopíruj jeho URL (např. https://formspree.io/f/abcdwxyz).
        3) Vlož ji níže do FORM_ENDPOINT — a je to živé.
      Dokud je prázdné, formuláře fungují „nanečisto": nic se neodešle a nikde
-     netvrdíme, že zpráva opravdu dorazila. */
-  var FORM_ENDPOINT = ''; // ← sem vlož URL z Formspree
+     netvrdíme, že zpráva opravdu dorazila.
+     Nastavuje se centrálně v js/config.js (PK_FORM_ENDPOINT). */
+  var FORM_ENDPOINT = (typeof window !== 'undefined' && window.PK_FORM_ENDPOINT) || '';
   function sendForm(data) {
     if (!FORM_ENDPOINT) return Promise.resolve('unset');
     return fetch(FORM_ENDPOINT, {

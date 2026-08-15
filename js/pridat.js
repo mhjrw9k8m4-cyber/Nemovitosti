@@ -33,10 +33,10 @@
   }
 
   /* ---------- Odeslání (bez serveru, přes Formspree) ----------
-     DŮLEŽITÉ: až doplníte Formspree URL do FORM_ENDPOINT (stejnou jako v js/main.js),
-     začnou formuláře opravdu odesílat. Dokud je prázdné, běží „nanečisto":
-     nic se neodešle a nikde netvrdíme, že zpráva dorazila. */
-  var FORM_ENDPOINT = ''; // ← sem vlož URL z Formspree (např. https://formspree.io/f/abcdwxyz)
+     Cíl odeslání se nastavuje centrálně v js/config.js (PK_FORM_ENDPOINT).
+     Dokud je prázdné, běží „nanečisto": nic se neodešle a nikde netvrdíme,
+     že zpráva dorazila. */
+  var FORM_ENDPOINT = (typeof window !== 'undefined' && window.PK_FORM_ENDPOINT) || '';
   function sendForm(data) {
     if (!FORM_ENDPOINT) return Promise.resolve('unset');
     var isFD = (typeof FormData !== 'undefined') && (data instanceof FormData);
