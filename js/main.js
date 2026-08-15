@@ -21,10 +21,10 @@
   ];
 
   var TYPE = {
-    sale:    { label:'Na prodej',    color:'#3E8E5B', link:{ label:'Nabídka SPÚ',          url:'https://spu.gov.cz/nabidky' } },
+    sale:    { label:'Na prodej',    color:'#3E9B63', link:{ label:'Nabídka SPÚ',          url:'https://spu.gov.cz/nabidky' } },
     drazba:  { label:'Dražba',       color:'#D9A441', link:{ label:'Detail dražby',       url:'https://www.portaldrazeb.cz/' } },
     exekuce: { label:'Exekuce',      color:'#C15B44', link:{ label:'Insolvenční rejstřík', url:'https://isir.justice.cz/isir/common/index.do' } },
-    obec:    { label:'Obecní záměr', color:'#4C7A9E', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } }
+    obec:    { label:'Obecní záměr', color:'#5E86C4', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } }
   };
   // 14 krajů ČR — přehled po krajích (rozdělení mapy). Okres → kraj + střed kraje.
   var KRAJE = {
@@ -1275,7 +1275,7 @@
   var krajByName = {};
   // Na dotykových zařízeních není „myš pryč" → popisek kraje sám plynule zmizí.
   var isTouch = (typeof matchMedia === 'function' && matchMedia('(hover: none)').matches) || ('ontouchstart' in window);
-  function styleKraj() { return { color: 'rgba(224,174,67,0.4)', weight: 1.2, fill: true, fillColor: '#E0AE43', fillOpacity: 0.03 }; }
+  function styleKraj() { return { color: 'rgba(91,184,214,0.4)', weight: 1.2, fill: true, fillColor: '#5BB8D6', fillOpacity: 0.03 }; }
   if (KRAJE_GEOM) {
     var feats = Object.keys(KRAJE_GEOM).map(function (k) { return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] }; });
     krajLayer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
@@ -1359,7 +1359,7 @@
     var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(userPos.lat * r) * Math.cos(d.lat * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
     return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
   }
-  function styleSelectedKraj(layer) { layer.setStyle({ weight: 2.6, color: '#F2D79A', fillColor: '#E0AE43', fillOpacity: 0.09 }); layer.bringToFront(); }
+  function styleSelectedKraj(layer) { layer.setStyle({ weight: 2.6, color: '#F2D79A', fillColor: '#5BB8D6', fillOpacity: 0.09 }); layer.bringToFront(); }
   // Zámek teček: dokud není vybraný kraj, klik na tečku ignorujeme (klik pod tečkami vybere kraj).
   var dotsLocked = true;
   function lockDots(lock) {
