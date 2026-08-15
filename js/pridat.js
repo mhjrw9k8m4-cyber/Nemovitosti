@@ -308,7 +308,8 @@
       if (d.okres) meta.push('okres ' + escHtml(d.okres));
       if (d.vymera) meta.push(escHtml(d.vymera) + ' m²');
       var price = czk(d.cena || d.castka);
-      var link = d.odkaz ? '<a class="ul-src" href="' + escHtml(d.odkaz) + '" target="_blank" rel="noopener nofollow">Více &rarr;</a>' : '';
+      var _touch = (typeof matchMedia === 'function' && matchMedia('(hover: none)').matches) || ('ontouchstart' in window);
+      var link = d.odkaz ? '<a class="ul-src" href="' + escHtml(d.odkaz) + '"' + (_touch ? ' rel="nofollow"' : ' target="_blank" rel="noopener nofollow"') + '>Více &rarr;</a>' : '';
       return '<div class="ul-card">' +
         '<span class="ul-badge" style="background:' + b.color + '">' + b.label + '</span>' +
         '<h3>' + place + '</h3>' +

@@ -1065,6 +1065,9 @@
 
   function detailHtml(d) {
     var t = TYPE[d.type];
+    // Na dotyku (mobil) otevíráme externí odkazy ve STEJNÉ záložce — ať funguje tlačítko/gesto
+    // Zpět a člověk se vrátí na naši stránku. Na počítači necháváme novou záložku (dá se přepnout).
+    var extAttr = isTouch ? '' : ' target="_blank" rel="noopener"';
     var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací' : (d.type === 'sale' ? 'Cena' : 'Odhad');
     var days = daysUntil(d.extra);
@@ -1086,9 +1089,9 @@
           (isSPU(d) ? '<div class="md-note">Státní půda se prodává přes <b>veřejnou nabídku SPÚ (§ 12)</b> — otevřete „Nabídka SPÚ", parcelu ověříte přes „Katastr".</div>' : '') +
         '</div>' +
         '<div class="md-actions">' +
-          '<a class="lp-btn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">Katastr</a>' +
-          '<a class="lp-btn" href="' + mapyUrl(d) + '" target="_blank" rel="noopener">Mapa</a>' +
-          (function () { var s = sourceLink(d); return '<a class="lp-btn lp-src" href="' + s.url + '" target="_blank" rel="noopener">' + s.label + '</a>'; })() +
+          '<a class="lp-btn" href="' + katastrUrl(d) + '"' + extAttr + '>Katastr</a>' +
+          '<a class="lp-btn" href="' + mapyUrl(d) + '"' + extAttr + '>Mapa</a>' +
+          (function () { var s = sourceLink(d); return '<a class="lp-btn lp-src" href="' + s.url + '"' + extAttr + '>' + s.label + '</a>'; })() +
           (auctionYMD(d.extra) ? '<button class="lp-btn" type="button" data-cal>Do kalendáře</button>' : '') +
           '<button class="lp-btn lp-fav' + (isFav(d) ? ' on' : '') + '" type="button" data-fav-detail>' + BM_SVG + '<span>' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
           '<button class="lp-btn" type="button" data-share>Sdílet</button>' +
