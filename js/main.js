@@ -1164,25 +1164,39 @@
   }
   var holderEl = document.querySelector('.map-holder');
   var curDetail = null;
+  var detailHideTimer = null, detailOpening = false;
   function showDetail(d) {
     if (!detailEl) return;
+    clearTimeout(detailHideTimer);
+    // ochrana: klik na tečku na mapě probublá až sem — ať hned zase nezavře detail
+    detailOpening = true; setTimeout(function () { detailOpening = false; }, 0);
     curDetail = d;
     detailEl.innerHTML = detailHtml(d);
+    detailEl.scrollTop = 0;
     detailEl.removeAttribute('hidden');
+    if (holderEl) holderEl.classList.add('detail-open');
+    // na mobilu přijede mapa s panelem do zorného pole (panel je nad mapou)
+    if (window.innerWidth <= 960 && holderEl) holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     requestAnimationFrame(function () { detailEl.classList.add('show'); });
     highlightMarker(d._id);
     highlightShape(d);
-    resizeMapSoon();
-    if (window.innerWidth <= 960 && holderEl) holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
   function hideDetail() {
     if (!detailEl) return;
     detailEl.classList.remove('show');
-    detailEl.setAttribute('hidden', '');
+    if (holderEl) holderEl.classList.remove('detail-open');
+    curDetail = null;
+    clearTimeout(detailHideTimer);
+    detailHideTimer = setTimeout(function () { detailEl.setAttribute('hidden', ''); }, 300);
     highlightMarker(-1);
     if (selPoly) { map.removeLayer(selPoly); selPoly = null; }
-    resizeMapSoon();
   }
+  // Klepnutí na ztmavenou mapu vedle panelu detail zavře
+  if (holderEl) holderEl.addEventListener('click', function (e) {
+    if (detailOpening) return;
+    if (!holderEl.classList.contains('detail-open')) return;
+    if (detailEl && !detailEl.contains(e.target)) hideDetail();
+  });
   var selMarkerId = -1;
   function highlightMarker(id) {
     if (selMarkerId === id) return;
