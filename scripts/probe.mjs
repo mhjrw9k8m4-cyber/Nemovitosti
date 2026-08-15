@@ -1,40 +1,30 @@
 #!/usr/bin/env node
-/* Sonda v3: najít API endpoint, ze kterého Vue SPA Portálu dražeb tahá
- * seznam dražeb. Stáhneme JS bundly a vyhrabeme cesty/URL, které vypadají
- * jako API pro dražby. */
+/* Sonda v4 (rozhodující): stáhnout auctions bundle a vypsat VŠECHNY cesty
+ * a HTTP volání — buď najdeme statickou API adresu, nebo potvrdíme, že je
+ * dynamická (a Portál dražeb pak jako zdroj opustíme). */
 
 const UA = { 'user-agent': 'Mozilla/5.0 (compatible; PozemkomatBot/0.1)' };
-const P = 'https://www.portaldrazeb.cz';
+const url = 'https://www.portaldrazeb.cz/build/js/web/auctions/auctions.f08f130a.js';
+const r = await fetch(url, { headers: UA });
+const js = Buffer.from(await r.arrayBuffer()).toString('utf8');
+console.log('bundle status=' + r.status + ' len=' + js.length);
 
-async function get(url) {
-  const r = await fetch(url, { headers: UA, redirect: 'follow' });
-  return { status: r.status, txt: Buffer.from(await r.arrayBuffer()).toString('utf8') };
+// všechny absolutní cesty v uvozovkách
+const paths = new Set();
+for (const m of js.matchAll(/["'`](\/[a-z0-9][a-z0-9_\-\/{}.:%]{2,70})["'`]/gi)) paths.add(m[1]);
+console.log('\nAbsolutní cesty (' + paths.size + '):');
+[...paths].sort().slice(0, 60).forEach((p) => console.log('  ' + p));
+
+// kontexty HTTP volání (axios/$http/fetch/get/post)
+console.log('\nHTTP volání (kontexty):');
+const calls = new Set();
+for (const m of js.matchAll(/(?:\$http|axios|fetch|\.get|\.post|\$axios|api)\s*[.(]?\s*[`'"([]?([^`'")\s]{0,60})/gi)) {
+  const s = m[0].replace(/\s+/g, ' ').slice(0, 80);
+  if (/[/a-z]/i.test(m[1])) calls.add(s);
 }
+[...calls].slice(0, 40).forEach((c) => console.log('  ' + c));
 
-const { txt: html } = await get(P + '/drazby/online');
-// JS bundly
-const scripts = [...new Set([...html.matchAll(/<script[^>]+src="([^"]+\.js[^"]*)"/gi)].map((m) => m[1]))];
-console.log('JS bundly (' + scripts.length + '):');
-scripts.forEach((s) => console.log('  ' + s));
-
-// data- atributy na kořeni appky (často nesou API URL nebo initial data)
-const dataAttrs = [...html.matchAll(/data-(page|api|url|endpoint|props|component)="([^"]{0,120})"/gi)].slice(0, 15);
-console.log('\ndata- atributy (app):');
-dataAttrs.forEach((m) => console.log('  data-' + m[1] + '="' + m[2].replace(/&quot;/g, '"').slice(0, 100) + '"'));
-
-// projdeme bundly a hledáme cesty vypadající jako API
-const found = new Set();
-for (const s of scripts.slice(0, 8)) {
-  const url = s.startsWith('http') ? s : P + (s.startsWith('/') ? s : '/' + s);
-  let js;
-  try { js = (await get(url)).txt; } catch { continue; }
-  // řetězce v uvozovkách, které vypadají jako cesta a nesou klíčové slovo
-  for (const m of js.matchAll(/["'`](\/[a-z0-9_\-\/{}.:]*(?:drazb|drazeb|aukce|aukc|verejn|public|api|search|list|nemovit)[a-z0-9_\-\/{}.:]*)["'`]/gi)) {
-    if (m[1].length < 80) found.add(m[1]);
-  }
-  // axios/fetch base URL
-  for (const m of js.matchAll(/(?:baseURL|apiUrl|API_URL)\s*[:=]\s*["'`]([^"'`]{0,80})["'`]/gi)) found.add('BASE=' + m[1]);
-}
-console.log('\nMožné API cesty z JS (' + found.size + '):');
-[...found].sort().forEach((f) => console.log('  ' + f));
+// hledáme i "url:" v konfiguracích
+console.log('\n"url:" konfigurace:');
+[...new Set([...js.matchAll(/url\s*:\s*["'`]([^"'`]{2,70})["'`]/gi)].map((m) => m[1]))].slice(0, 30).forEach((u) => console.log('  ' + u));
 console.log('\n### HOTOVO');
