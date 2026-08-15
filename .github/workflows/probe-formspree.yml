@@ -1,0 +1,24 @@
+name: probe-formspree
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST test submission to Formspree (AJAX/JSON, with site Origin)
+        run: |
+          echo "===== A) JSON + Accept:application/json + Origin (jako web) ====="
+          curl -sS -i -X POST https://formspree.io/f/moeanjaz \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -H "Origin: https://mhjrw9k8m4-cyber.github.io" \
+            -H "Referer: https://mhjrw9k8m4-cyber.github.io/Nemovitosti/" \
+            -d '{"_subject":"Diagnostika Pozemkomat","zprava":"Test odeslani z CI","kde":"probe-A"}' \
+            | sed -e 's/\r$//' | head -60
+          echo
+          echo "===== B) bez Origin (server-to-server) ====="
+          curl -sS -o /tmp/b.txt -w "HTTP %{http_code}\n" -X POST https://formspree.io/f/moeanjaz \
+            -H "Content-Type: application/json" -H "Accept: application/json" \
+            -d '{"_subject":"Diagnostika Pozemkomat B","zprava":"Test bez origin","kde":"probe-B"}'
+          echo "--- telo odpovedi B ---"; cat /tmp/b.txt | head -30
