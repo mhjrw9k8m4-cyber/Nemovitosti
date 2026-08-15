@@ -86,7 +86,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260814G">
+  <link rel="stylesheet" href="css/styles.css?v=20260814H">
 </head>
 <body>
 
@@ -124,7 +124,7 @@
     <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
     <nav id="nav" aria-label="Hlavní navigace">
       <a href="#mapa">Naše mapa</a>
-      <a href="pozemky-od-lidi.html">Pozemky od lidí</a>
+      <a href="#lide">Pozemky od lidí</a>
       <a href="#jak-funguje">Jak to funguje</a>
       <a href="#cenik">Ceník</a>
       <a href="#faq">Dotazy</a>
@@ -164,11 +164,16 @@
         <div class="hero-ctas">
           <a href="#jak-funguje" class="btn-primary btn-lg btn-glow">Jak to funguje</a>
           <a href="pridat.html" class="btn-add">Přidat vlastní pozemek →</a>
-          <a href="#mapa" class="link-ghost">Prohlédnout mapu →</a>
         </div>
         <div class="trust-line"><span>✓ Data z veřejných zdrojů</span><span>✓ Celá Česká republika</span><span>✓ Bez registrace</span></div>
       </div>
-      <div class="map-app reveal">
+
+      <div class="view-switch" role="tablist" aria-label="Přepnout zobrazení">
+        <button type="button" class="vs-btn active" data-view="mapa" role="tab" aria-selected="true">Naše mapa</button>
+        <button type="button" class="vs-btn" data-view="lide" role="tab" aria-selected="false">Pozemky od lidí</button>
+      </div>
+
+      <div class="map-app reveal" id="view-mapa">
         <aside class="map-side">
           <div class="map-search"><input type="text" id="map-search" placeholder="Hledat obec nebo okres (např. Kolín)" autocomplete="off" aria-label="Hledat obec nebo okres"></div>
           <button type="button" class="map-near-btn" id="map-near"><svg class="mnb-pin" aria-hidden="true"><use href="#i-map"/></svg>Pozemky ve vašem okolí</button>
@@ -212,6 +217,18 @@
             <button class="map-pan-toggle" id="map-pan-toggle" type="button">Hýbat mapou</button>
           </div>
         </div>
+      </div>
+
+      <div id="view-lide" hidden>
+        <div class="lide-intro">
+          <p>Nabídky, které přidali sami lidé — oddělené od naší mapy z veřejných zdrojů. Každou ručně ověřujeme, než se objeví.</p>
+          <div class="od-cta">
+            <a href="pridat.html" class="btn-primary btn-glow">Přidat pozemek na prodej</a>
+            <a href="inzerce.html" class="btn-add">Inzerce (poptávka, pronájem…) →</a>
+          </div>
+        </div>
+        <div class="ul-head"><h2>Aktuální nabídky od lidí</h2><span class="ul-count" id="ul-count"></span></div>
+        <div id="user-listings" class="ul-grid" aria-live="polite"><div class="ul-empty"><b>Načítám nabídky…</b></div></div>
       </div>
     </div>
   </section>
@@ -555,7 +572,7 @@
       <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Pozemkomat</span></div>
       <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého. Děláme to s péčí, protože jsme se v tom sami hrabali.</p>
     </div>
-    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="#mapa">Naše mapa</a><a href="pozemky-od-lidi.html">Pozemky od lidí</a><a href="pridat.html">Přidat pozemek</a><a href="inzerce.html">Inzerce</a><a href="#realitky">Pro realitky</a></nav>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="#mapa">Naše mapa</a><a href="#lide">Pozemky od lidí</a><a href="pridat.html">Přidat pozemek</a><a href="inzerce.html">Inzerce</a><a href="#realitky">Pro realitky</a></nav>
     <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="#druhy">Druhy pozemků</a><a href="#slib">Náš slib</a><a href="#slovnicek">Slovníček</a><a href="#faq">Časté dotazy</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="#" data-info="soukromi">Zásady soukromí</a><a href="#" data-info="podminky">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="#realitky">Kontakt</a></nav>
   </div>
@@ -651,6 +668,79 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/main.js?v=20260814G" defer></script>
+<script src="js/main.js?v=20260814H" defer></script>
+<script>
+/* Přepínač „Naše mapa" ↔ „Pozemky od lidí" — dvě verze na jedné stránce.
+   Samostatné, nezávislé na main.js. Mapa má vlastní kód; my jen přepínáme,
+   co je vidět, a při návratu na mapu spustíme resize (Leaflet se dorovná). */
+(function () {
+  var sw = document.querySelector('.view-switch'); if (!sw) return;
+  var vMapa = document.getElementById('view-mapa');
+  var vLide = document.getElementById('view-lide');
+  var btns = [].slice.call(sw.querySelectorAll('.vs-btn'));
+  var loaded = false;
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function czk(n) { n = parseInt(n, 10); return n > 0 ? n.toLocaleString('cs-CZ') + ' Kč' : ''; }
+  function badge(t) {
+    t = (t || '').toLowerCase();
+    if (t.indexOf('prodej') !== -1) return { l: 'Prodej', c: 'var(--c-sale)' };
+    if (t.indexOf('poptáv') !== -1 || t.indexOf('hled') !== -1) return { l: 'Poptávka', c: 'var(--c-obec)' };
+    if (t.indexOf('pronáj') !== -1) return { l: 'Pronájem', c: 'var(--c-drazba)' };
+    if (t.indexOf('směn') !== -1) return { l: 'Směna', c: 'var(--c-obec)' };
+    return { l: 'Inzerát', c: 'var(--c-obec)' };
+  }
+  function render(list) {
+    var grid = document.getElementById('user-listings'), count = document.getElementById('ul-count');
+    if (!grid) return;
+    if (!list.length) {
+      grid.className = 'ul-empty';
+      grid.innerHTML = '<b>Zatím tu nejsou žádné pozemky od lidí.</b><span>Buďte první — přidejte svůj pozemek. Nové nabídky se objeví tady, hned jak je ověříme.</span>';
+      if (count) count.textContent = ''; return;
+    }
+    if (count) count.textContent = list.length + (list.length === 1 ? ' nabídka' : (list.length < 5 ? ' nabídky' : ' nabídek'));
+    grid.className = 'ul-grid';
+    grid.innerHTML = list.map(function (d) {
+      var b = badge(d.typ), place = esc(d.obec || d.lokalita || 'Pozemek'), meta = [];
+      if (d.okres) meta.push('okres ' + esc(d.okres));
+      if (d.vymera) meta.push(esc(d.vymera) + ' m²');
+      var price = czk(d.cena || d.castka);
+      var link = d.odkaz ? '<a class="ul-src" href="' + esc(d.odkaz) + '" target="_blank" rel="noopener nofollow">Více &rarr;</a>' : '';
+      return '<div class="ul-card"><span class="ul-badge" style="background:' + b.c + '">' + b.l + '</span><h3>' + place + '</h3>' +
+        (meta.length ? '<div class="ul-meta">' + meta.join(' · ') + '</div>' : '') +
+        (price ? '<div class="ul-price">' + price + '</div>' : '') +
+        (d.popis ? '<div class="ul-desc">' + esc(d.popis) + '</div>' : '') + link + '</div>';
+    }).join('');
+  }
+  function loadListings() {
+    if (loaded) return; loaded = true;
+    fetch('data/user-listings.json', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .catch(function () { return []; })
+      .then(function (l) { render(Array.isArray(l) ? l : []); });
+  }
+  function show(view) {
+    var mapa = view !== 'lide';
+    btns.forEach(function (b) { var on = b.getAttribute('data-view') === (mapa ? 'mapa' : 'lide'); b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on)); });
+    if (vMapa) { vMapa.hidden = !mapa; vMapa.classList.add('in'); }   // .in kvůli reveal-animaci
+    if (vLide) vLide.hidden = mapa;
+    if (mapa) { setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 40); }
+    else { loadListings(); }
+  }
+  btns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var v = b.getAttribute('data-view'); show(v);
+      if (history.replaceState) history.replaceState(null, '', v === 'lide' ? '#lide' : '#mapa');
+    });
+  });
+  if (location.hash === '#lide' || location.hash === '#pozemky-od-lidi') {
+    show('lide');
+    setTimeout(function () { sw.scrollIntoView({ block: 'start' }); }, 120);
+  }
+  window.addEventListener('hashchange', function () {
+    if (location.hash === '#lide') show('lide');
+    else if (location.hash === '#mapa' || location.hash === '') show('mapa');
+  });
+})();
+</script>
 </body>
 </html>
