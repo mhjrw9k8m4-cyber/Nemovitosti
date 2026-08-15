@@ -34,7 +34,7 @@ a:focus-visible, button:focus-visible, select:focus-visible, [role="button"]:foc
 .counters-row > *, .foot-grid > *, .steps > *,
 .status-grid > *, .glossary > *, .reviews > *, .pricing > *{min-width:0;}
 .opp-list, .code-block, .compare{min-width:0; max-width:100%;}
-.wrap{max-width:1180px; margin:0 auto; padding:0 32px;}
+.wrap{max-width:1200px; margin:0 auto; padding:0 32px;}
 .mono{font-family:'IBM Plex Mono',monospace; letter-spacing:0.02em;}
 .pt-0{padding-top:0;}
 a{color:inherit;}
@@ -206,9 +206,9 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .hero-head .trust-line{justify-content:center; margin:0;}
 /* Mapa je hlavní produkt — dopřejeme jí víc šířky (jako velké realitní weby),
    nadpis nad ní zůstává vycentrovaný v užší míře. */
-.hero-map .map-wide{position:relative; z-index:1; max-width:1320px; margin:0 auto; padding:0 32px;}
+.hero-map .map-wide{position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:0 32px;}
 .hero-map .map-app{margin-top:6px;}
-@media (max-width:1180px){ .hero-map .map-wide{max-width:100%;} }
+@media (max-width:1200px){ .hero-map .map-wide{max-width:100%;} }
 @media (max-width:520px){ .hero-map .map-wide{padding:0 20px;} }
 @media (max-width:880px){
   .hero-map{padding:16px 0 40px;}
