@@ -86,7 +86,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260815l">
+  <link rel="stylesheet" href="css/styles.css?v=20260815m">
 </head>
 <body>
 
@@ -112,11 +112,8 @@
 
 <div class="topbar" id="topbar">
   <div class="wrap topbar-in">
-    <form class="tb-form" id="tb-feedback" novalidate>
-      <label for="tb-msg" class="tb-label"><span class="live-dot"></span>Co zlepšit?</label>
-      <input type="text" id="tb-msg" class="tb-input" placeholder="Napište nám nápad nebo co nefunguje…" aria-label="Zpětná vazba — co zlepšit" maxlength="500" autocomplete="off" required>
-      <button type="submit" class="tb-cta" id="tb-send">Odeslat</button>
-    </form>
+    <span class="tb-msg"><span class="live-dot"></span>Něco chybí nebo nefunguje? Pomozte nám Pozemkomat vylepšit.</span>
+    <button class="tb-cta" id="fb-open" type="button">Napište nám →</button>
     <button class="tb-close" id="tb-close" aria-label="Zavřít oznámení">×</button>
   </div>
 </div>
@@ -609,6 +606,26 @@
   </div>
 </div>
 
+<!-- Zpětná vazba -->
+<div class="modal" id="feedback-modal" role="dialog" aria-modal="true" aria-labelledby="fb-title" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-card">
+    <div class="eyebrow"><span class="live-dot"></span>Zpětná vazba</div>
+    <h3 id="fb-title">Co bychom měli zlepšit?</h3>
+    <p class="modal-sub">Nápad, chyba nebo funkce, která vám chybí — napište nám cokoliv. Každý podnět nám pomáhá Pozemkomat vylepšovat.</p>
+    <form class="modal-form" id="fb-form" novalidate>
+      <label class="visually-hidden" for="fb-msg">Vaše zpráva</label>
+      <textarea id="fb-msg" rows="4" placeholder="Sem napište, co vám chybí nebo co nefunguje…" maxlength="1000" required></textarea>
+      <label class="visually-hidden" for="fb-email">E-mail (nepovinné)</label>
+      <input id="fb-email" type="email" placeholder="Váš e-mail (nepovinné) — kdybychom se chtěli ozvat" autocomplete="email">
+      <button type="submit" class="btn-primary btn-glow" id="fb-send">Odeslat</button>
+      <p class="form-msg" id="fb-status" role="status" aria-live="polite"></p>
+      <p class="modal-fine">Nepovinné údaje · nikam vás nepřihlašujeme</p>
+    </form>
+    <button class="modal-close-bar" type="button" data-close>Zavřít</button>
+  </div>
+</div>
+
 <!-- Zásady soukromí / Podmínky (info) -->
 <div class="modal" id="info-modal" role="dialog" aria-modal="true" aria-labelledby="info-title" hidden>
   <div class="modal-backdrop" data-close></div>
@@ -675,7 +692,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/main.js?v=20260815l" defer></script>
+<script src="js/main.js?v=20260815m" defer></script>
 <script>
 /* Přepínač „Naše mapa" ↔ „Pozemky od lidí" — dvě verze na jedné stránce.
    Samostatné, nezávislé na main.js. Mapa má vlastní kód; my jen přepínáme,

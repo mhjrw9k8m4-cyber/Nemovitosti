@@ -188,32 +188,57 @@
   if (tbClose && topbar) {
     tbClose.addEventListener('click', function () { topbar.classList.add('hide'); });
   }
-  /* ---------- Zpětná vazba z lišty ----------
-     Cíl odeslání DOPLNÍTE níže (zatím prázdné → formulář jen upřímně řekne, že brzy spustíme):
+  /* ---------- Zpětná vazba (okno) ----------
+     Cíl odeslání DOPLNÍTE níže (zatím prázdné → okno upřímně řekne, že odesílání brzy spustíme):
        • FEEDBACK_ENDPOINT — odkaz z Formspree apod. (https://formspree.io/f/xxxx) → tiché odeslání
        • FEEDBACK_EMAIL    — nebo váš e-mail (např. 'vas@email.cz') → otevře se poštovní aplikace
      Stačí vyplnit jedno z nich. */
   var FEEDBACK_ENDPOINT = '';
   var FEEDBACK_EMAIL = '';
-  var fbForm = document.getElementById('tb-feedback');
+  var fbModal = document.getElementById('feedback-modal');
+  function openFeedback() {
+    if (!fbModal) return;
+    var st = document.getElementById('fb-status');
+    if (st) { st.textContent = ''; st.classList.remove('err'); }
+    fbModal.removeAttribute('hidden');
+    requestAnimationFrame(function () { fbModal.classList.add('open'); });
+    document.body.style.overflow = 'hidden';
+    var ta = document.getElementById('fb-msg');
+    if (ta) setTimeout(function () { ta.focus(); }, 80);
+  }
+  function closeFeedback() {
+    if (!fbModal) return;
+    fbModal.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(function () { fbModal.setAttribute('hidden', ''); }, 250);
+  }
+  var fbOpen = document.getElementById('fb-open');
+  if (fbOpen) fbOpen.addEventListener('click', openFeedback);
+  var fbForm = document.getElementById('fb-form');
   if (fbForm) {
     fbForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      var inp = document.getElementById('tb-msg');
-      var btn = document.getElementById('tb-send');
-      var msg = ((inp && inp.value) || '').trim();
-      if (!msg) { if (inp) inp.focus(); return; }
+      var ta = document.getElementById('fb-msg');
+      var em = document.getElementById('fb-email');
+      var btn = document.getElementById('fb-send');
+      var st = document.getElementById('fb-status');
+      var msg = ((ta && ta.value) || '').trim();
+      var mail = ((em && em.value) || '').trim();
+      function say(txt, err) { if (st) { st.textContent = txt; st.classList.toggle('err', !!err); } }
+      if (!msg) { if (ta) ta.focus(); say('Napište prosím pár slov.', true); return; }
       if (FEEDBACK_ENDPOINT) {
         if (btn) btn.disabled = true;
-        fetch(FEEDBACK_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ zprava: msg, kde: 'lišta zpětné vazby' }) })
-          .then(function (r) { if (!r.ok) throw new Error(); if (inp) inp.value = ''; showToast('Děkujeme! Zpětnou vazbu jsme odeslali.'); })
-          .catch(function () { showToast('Odeslání se teď nepovedlo, zkuste to prosím později.'); })
+        say('Odesílám…');
+        fetch(FEEDBACK_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ zprava: msg, email: mail, kde: 'zpětná vazba' }) })
+          .then(function (r) { if (!r.ok) throw new Error(); if (ta) ta.value = ''; if (em) em.value = ''; say('Děkujeme! Zprávu jsme dostali.'); setTimeout(closeFeedback, 1400); })
+          .catch(function () { say('Odeslání se teď nepovedlo, zkuste to prosím za chvíli.', true); })
           .then(function () { if (btn) btn.disabled = false; });
       } else if (FEEDBACK_EMAIL) {
-        window.location.href = 'mailto:' + FEEDBACK_EMAIL + '?subject=' + encodeURIComponent('Pozemkomat — co zlepšit') + '&body=' + encodeURIComponent(msg);
+        window.location.href = 'mailto:' + FEEDBACK_EMAIL + '?subject=' + encodeURIComponent('Pozemkomat — zpětná vazba') + '&body=' + encodeURIComponent(msg + (mail ? '\n\nKontakt: ' + mail : ''));
+        say('Otevírám poštovní aplikaci…');
       } else {
         // Cíl zatím nenastaven — buďme upřímní, netvrdíme, že se odeslalo.
-        showToast('Formulář brzy spustíme. Děkujeme za trpělivost!');
+        say('Děkujeme za podnět! Odesílání právě dokončujeme — brzy bude plně funkční.');
       }
     });
   }
@@ -261,9 +286,9 @@
   document.addEventListener('click', function (e) {
     var trigger = e.target.closest('a[href="#upozorneni"]');
     if (trigger) { e.preventDefault(); openWatch(trigger.getAttribute('data-okres') || ''); return; }
-    if (e.target.closest('[data-close]')) { closeWatch(); closeLogin(); closeInfo(); closeAccount(); }
+    if (e.target.closest('[data-close]')) { closeWatch(); closeLogin(); closeInfo(); closeAccount(); closeFeedback(); }
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeWatch(); closeLogin(); closeInfo(); closeAccount(); } });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeWatch(); closeLogin(); closeInfo(); closeAccount(); closeFeedback(); } });
 
   /* ---------- Odesílání formulářů (bez serveru, přes Formspree) ----------
      Aby formuláře (hlídání lokality i poptávka realitek) opravdu někam dorazily,
