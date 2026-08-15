@@ -834,6 +834,9 @@
   map.getPane('dotsPane').style.pointerEvents = 'none'; // canvas nechytá kliky → projdou na kraje
   var dotsRenderer = L.canvas({ pane: 'dotsPane', padding: 0.5 });
   if (map.attributionControl) map.attributionControl.setPosition('bottomleft'); // ať se nekryje s tlačítky
+  // Ovládání zoomu +/− — jen na počítačích (na mobilu se přibližuje prsty). Umístěno
+  // vlevo (přes CSS na volný levý okraj), ať se nepere s ostatními tlačítky.
+  L.control.zoom({ position: 'topleft' }).addTo(map);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     subdomains: 'abcd', maxZoom: 19
