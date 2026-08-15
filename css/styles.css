@@ -204,7 +204,12 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .hero-head .sub{font-size:18px; color:var(--text-ondark-mute); max-width:600px; margin-bottom:26px;}
 .hero-head .hero-ctas{justify-content:center; margin-bottom:20px;}
 .hero-head .trust-line{justify-content:center; margin:0;}
+/* Mapa je hlavní produkt — dopřejeme jí víc šířky (jako velké realitní weby),
+   nadpis nad ní zůstává vycentrovaný v užší míře. */
+.hero-map .map-wide{position:relative; z-index:1; max-width:1320px; margin:0 auto; padding:0 32px;}
 .hero-map .map-app{margin-top:6px;}
+@media (max-width:1180px){ .hero-map .map-wide{max-width:100%;} }
+@media (max-width:520px){ .hero-map .map-wide{padding:0 20px;} }
 @media (max-width:880px){
   .hero-map{padding:16px 0 40px;}
   .hero-head{margin-bottom:18px;}
@@ -243,8 +248,11 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .s-dot{width:8px; height:8px; border-radius:50%;}
 
 /* Sections */
-.section{padding:92px 0;}
-.section-head{max-width:620px; margin-bottom:44px;}
+.section{padding:76px 0;}
+/* Pruhy: střídavé jemně světlejší pozadí přes celou šířku dávají webu rytmus
+   (jako u velkých webů) — sekce pak nejsou ostrůvky textu v prázdnu. */
+.section.band{background:var(--ink-soft); border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding-top:76px; padding-bottom:76px;}
+.section-head{max-width:640px; margin-bottom:40px;}
 .section-head .eyebrow{margin-bottom:16px;}
 .section-head h2{font-family:'Fraunces',serif; font-weight:500; font-size:34px; line-height:1.15;}
 .section-sub{font-size:15px; color:var(--text-ondark-mute); margin-top:14px;}
@@ -557,7 +565,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 
 /* Status grid */
 .status-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:18px;}
-.status-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:8px; padding:24px; transition:border-color .15s ease, transform .15s ease;}
+.status-card{background:var(--ink-soft2); border:1px solid var(--line); border-radius:12px; padding:24px; transition:border-color .15s ease, transform .15s ease;}
 .status-card:hover{border-color:rgba(224,236,244,0.28); transform:translateY(-2px);}
 .status-top{display:flex; align-items:center; gap:9px; font-family:'Fraunces',serif; font-size:17px; font-weight:500; margin-bottom:12px;}
 .status-top .dot{width:11px; height:11px; border-radius:50%;}
@@ -691,7 +699,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 
 /* Slovníček */
 .glossary{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
-.gl-item{background:var(--ink-soft); border:1px solid var(--line); border-radius:8px; padding:22px;}
+.gl-item{background:var(--ink-soft2); border:1px solid var(--line); border-radius:12px; padding:22px;}
 .gl-item h4{font-family:'Fraunces',serif; font-size:17px; font-weight:600; margin-bottom:9px; color:var(--copper-bright);}
 .gl-item p{font-size:13.5px; color:var(--text-ondark-mute);}
 
