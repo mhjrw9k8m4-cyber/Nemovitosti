@@ -227,7 +227,7 @@
       if (FEEDBACK_ENDPOINT) {
         if (btn) btn.disabled = true;
         say('Odesílám…');
-        fetch(FEEDBACK_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ _subject: 'Zpětná vazba — Pozemkomat', _captcha: 'false', zprava: msg, email: mail, kde: 'zpětná vazba' }) })
+        fetch(FEEDBACK_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ _subject: 'Zpětná vazba — Pozemkomat', zprava: msg, email: mail, kde: 'zpětná vazba' }) })
           .then(function (r) { if (!r.ok) throw new Error(); if (ta) ta.value = ''; if (em) em.value = ''; say('Děkujeme! Zprávu jsme dostali.'); setTimeout(closeFeedback, 1400); })
           .catch(function () { say('Odeslání se teď nepovedlo, zkuste to prosím za chvíli.', true); })
           .then(function () { if (btn) btn.disabled = false; });
@@ -303,7 +303,7 @@
     return fetch(FORM_ENDPOINT, {
       method: 'POST',
       headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(Object.assign({ _captcha: 'false' }, data)) // _captcha:false kvůli FormSubmit AJAX
+      body: JSON.stringify(data)
     }).then(function (r) { return r.ok ? 'ok' : 'error'; }).catch(function () { return 'error'; });
   }
 

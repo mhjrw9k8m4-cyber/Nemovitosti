@@ -40,9 +40,6 @@
   function sendForm(data) {
     if (!FORM_ENDPOINT) return Promise.resolve('unset');
     var isFD = (typeof FormData !== 'undefined') && (data instanceof FormData);
-    // FormSubmit.co: vypnout captcha challenge, ať odeslání proběhne tiše přes AJAX.
-    if (isFD) { if (!data.has('_captcha')) data.append('_captcha', 'false'); }
-    else { data = Object.assign({ _captcha: 'false' }, data); }
     return fetch(FORM_ENDPOINT, {
       method: 'POST',
       // U FormData (s fotkami) necháme prohlížeč nastavit multipart hlavičku sám.
