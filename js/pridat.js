@@ -48,19 +48,33 @@
     }).then(function (r) { return r.ok ? 'ok' : 'error'; }).catch(function () { return 'error'; });
   }
 
-  // Fotky pozemku: okamžitý náhled v prohlížeči (nic se nikam neposílá teď hned)
+  // Fotky pozemku: okamžitý náhled v prohlížeči + titulka do živého náhledu
   var fotkyInput = document.getElementById('p-fotky');
   if (fotkyInput) fotkyInput.addEventListener('change', function () {
-    var prev = document.getElementById('p-fotky-preview'); if (!prev) return;
-    prev.innerHTML = '';
-    [].slice.call(fotkyInput.files).slice(0, 8).forEach(function (f) {
-      if (!/^image\//.test(f.type)) return;
-      var url = URL.createObjectURL(f);
-      var wrap = document.createElement('div'); wrap.className = 'pp';
-      var img = document.createElement('img'); img.src = url; img.alt = '';
-      img.onload = function () { URL.revokeObjectURL(url); };
-      wrap.appendChild(img); prev.appendChild(wrap);
-    });
+    var imgs = [].slice.call(fotkyInput.files).filter(function (f) { return /^image\//.test(f.type); });
+    var prev = document.getElementById('p-fotky-preview');
+    if (prev) {
+      prev.innerHTML = '';
+      imgs.slice(0, 8).forEach(function (f) {
+        var url = URL.createObjectURL(f);
+        var wrap = document.createElement('div'); wrap.className = 'pp';
+        var img = document.createElement('img'); img.src = url; img.alt = '';
+        img.onload = function () { URL.revokeObjectURL(url); };
+        wrap.appendChild(img); prev.appendChild(wrap);
+      });
+    }
+    var lpThumb = document.getElementById('lp-thumb');
+    if (lpThumb) {
+      if (imgs[0]) {
+        var u = URL.createObjectURL(imgs[0]);
+        lpThumb.innerHTML = '';
+        var im = document.createElement('img'); im.src = u; im.alt = '';
+        im.onload = function () { URL.revokeObjectURL(u); };
+        lpThumb.appendChild(im);
+      } else {
+        lpThumb.innerHTML = '<span class="ph"><svg viewBox="0 0 24 24"><use href="#i-map"/></svg></span>';
+      }
+    }
   });
   // Živý přepočet ceny za m²
   function updPerm2() {
@@ -68,7 +82,32 @@
     var v = parseInt(val('p-vymera'), 10), c = parseInt(val('p-cena'), 10);
     h.textContent = (v > 0 && c > 0) ? ('≈ ' + Math.round(c / v).toLocaleString('cs-CZ') + ' Kč/m²') : '';
   }
-  ['p-vymera', 'p-cena'].forEach(function (id) { var e = document.getElementById(id); if (e) e.addEventListener('input', updPerm2); });
+  // Živý náhled inzerátu — skládá se, jak uživatel vyplňuje
+  var previewCard = document.getElementById('live-preview');
+  var flashT = null;
+  function setTxt(id, t) { var e = document.getElementById(id); if (e) e.textContent = t; }
+  function updatePreview() {
+    if (!previewCard) return;
+    setTxt('lp-place', val('p-obec') || 'Vaše obec');
+    var meta = [];
+    if (val('p-okres')) meta.push('okres ' + val('p-okres'));
+    if (val('p-vymera')) meta.push(val('p-vymera') + ' m²');
+    setTxt('lp-meta', meta.join(' · ') || 'výměra · okres');
+    var c = parseInt(val('p-cena'), 10), v = parseInt(val('p-vymera'), 10);
+    setTxt('lp-price', c > 0 ? (c.toLocaleString('cs-CZ') + ' Kč') : 'Cena');
+    setTxt('lp-perm2', (c > 0 && v > 0) ? (Math.round(c / v).toLocaleString('cs-CZ') + ' Kč/m²') : '');
+    var tags = []; var pr = val('p-pristup'); if (pr) tags.push(pr);
+    [].slice.call(document.querySelectorAll('input[name="site"]:checked')).forEach(function (x) { tags.push(x.value); });
+    var tg = document.getElementById('lp-tags');
+    if (tg) tg.innerHTML = tags.map(function (t) { return '<span>' + escHtml(t) + '</span>'; }).join('');
+    previewCard.classList.add('flash');
+    clearTimeout(flashT); flashT = setTimeout(function () { previewCard.classList.remove('flash'); }, 220);
+  }
+  var prodejForm = document.getElementById('form-prodej');
+  if (prodejForm) {
+    prodejForm.addEventListener('input', function () { updPerm2(); updatePreview(); });
+    prodejForm.addEventListener('change', updatePreview);
+  }
 
   function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
   function checked(id) { var el = document.getElementById(id); return !!(el && el.checked); }

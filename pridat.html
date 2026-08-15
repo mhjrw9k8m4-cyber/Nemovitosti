@@ -48,8 +48,9 @@
     <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
     <div class="wrap add-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Přidat pozemek na prodej</div>
-      <h1>Prodáváte pozemek? Přidejte ho na Pozemkomat.</h1>
-      <p class="sub">Vyplňte údaje o pozemku a kontakt na sebe. Po ověření se nabídka objeví v sekci <b>Pozemky od lidí</b>, kde ji najdou zájemci. Zdarma a bez provize. (Naše hlavní mapa zůstává jen pro data z veřejných zdrojů.)</p>
+      <h1>Prodáváte pozemek? Vytvořte hezký inzerát za pár minut.</h1>
+      <p class="sub">Vyplňujte a vpravo <b>živě sledujte</b>, jak vaše nabídka vypadá. Po ověření se objeví v sekci <b>Pozemky od lidí</b>, kde ji najdou zájemci — zdarma a bez provize.</p>
+      <div class="add-chips"><span>Zdarma</span><span>Bez provize</span><span>Ověřená nabídka</span><span>Na mapě celé ČR</span></div>
     </div>
   </section>
 
@@ -162,18 +163,20 @@
           </div>
         </div>
 
-        <!-- Boční panel: náhled na mapě, výhody, postup -->
+        <!-- Boční panel: živý náhled inzerátu + výhody -->
         <aside class="add-aside">
-          <div class="aside-card">
-            <div class="embed-preview" aria-hidden="true">
-              <span class="ep-dot sale" style="left:24%; top:34%"></span>
-              <span class="ep-dot drazba" style="left:64%; top:26%"></span>
-              <span class="ep-dot sale" style="left:42%; top:62%"></span>
-              <span class="ep-dot exekuce" style="left:76%; top:54%"></span>
-              <span class="ep-dot sale" style="left:30%; top:76%"></span>
-              <span class="ep-dot you" style="left:50%; top:46%"></span>
+          <div class="aside-card preview-card">
+            <div class="pc-eyebrow"><span class="live-dot"></span>Živý náhled</div>
+            <div class="ul-card" id="live-preview">
+              <div class="ul-thumb" id="lp-thumb"><span class="ph"><svg viewBox="0 0 24 24"><use href="#i-map"/></svg></span></div>
+              <span class="ul-badge" style="background:var(--c-sale)">Prodej</span>
+              <h3 id="lp-place">Vaše obec</h3>
+              <div class="ul-meta" id="lp-meta">výměra · okres</div>
+              <div class="ul-topline"><span class="ul-price" id="lp-price">Cena</span><span class="ul-perm2" id="lp-perm2"></span></div>
+              <div class="ul-tags" id="lp-tags"></div>
+              <div class="ul-topline" style="margin-top:4px;"><span class="ul-verified"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg>Ověříme před zveřejněním</span></div>
             </div>
-            <p class="amp-cap">Takhle se vaše nabídka objeví mezi pozemky od lidí.</p>
+            <p class="pc-note">Přesně takhle se nabídka ukáže v „Pozemky od lidí". Vyplňujte a sledujte, jak roste.</p>
           </div>
 
           <div class="aside-card">
@@ -181,8 +184,6 @@
             <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg></span><span class="b-txt"><b>Uvidí ji zájemci</b><span>Lidé, kteří na Pozemkomatu hledají pozemky.</span></span></div>
             <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span><span class="b-txt"><b>Ověřená nabídka</b><span>Každou nabídku napřed ručně schválíme.</span></span></div>
             <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg></span><span class="b-txt"><b>Přímý kontakt</b><span>Zájemci se ozvou přímo vám, bez provize.</span></span></div>
-            <div class="add-stats"><span>Zdarma</span><span>Celá ČR</span><span>Bez provize</span></div>
-            <p class="amp-cap" style="text-align:left; margin-top:16px;">Vyplníte → ověříme → zveřejníme. Nic se nezveřejní automaticky.</p>
           </div>
         </aside>
 
