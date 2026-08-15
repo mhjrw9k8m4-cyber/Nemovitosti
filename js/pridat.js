@@ -39,12 +39,36 @@
   var FORM_ENDPOINT = ''; // ← sem vlož URL z Formspree (např. https://formspree.io/f/abcdwxyz)
   function sendForm(data) {
     if (!FORM_ENDPOINT) return Promise.resolve('unset');
+    var isFD = (typeof FormData !== 'undefined') && (data instanceof FormData);
     return fetch(FORM_ENDPOINT, {
       method: 'POST',
-      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      // U FormData (s fotkami) necháme prohlížeč nastavit multipart hlavičku sám.
+      headers: isFD ? { 'Accept': 'application/json' } : { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: isFD ? data : JSON.stringify(data)
     }).then(function (r) { return r.ok ? 'ok' : 'error'; }).catch(function () { return 'error'; });
   }
+
+  // Fotky pozemku: okamžitý náhled v prohlížeči (nic se nikam neposílá teď hned)
+  var fotkyInput = document.getElementById('p-fotky');
+  if (fotkyInput) fotkyInput.addEventListener('change', function () {
+    var prev = document.getElementById('p-fotky-preview'); if (!prev) return;
+    prev.innerHTML = '';
+    [].slice.call(fotkyInput.files).slice(0, 8).forEach(function (f) {
+      if (!/^image\//.test(f.type)) return;
+      var url = URL.createObjectURL(f);
+      var wrap = document.createElement('div'); wrap.className = 'pp';
+      var img = document.createElement('img'); img.src = url; img.alt = '';
+      img.onload = function () { URL.revokeObjectURL(url); };
+      wrap.appendChild(img); prev.appendChild(wrap);
+    });
+  });
+  // Živý přepočet ceny za m²
+  function updPerm2() {
+    var h = document.getElementById('perm2-hint'); if (!h) return;
+    var v = parseInt(val('p-vymera'), 10), c = parseInt(val('p-cena'), 10);
+    h.textContent = (v > 0 && c > 0) ? ('≈ ' + Math.round(c / v).toLocaleString('cs-CZ') + ' Kč/m²') : '';
+  }
+  ['p-vymera', 'p-cena'].forEach(function (id) { var e = document.getElementById(id); if (e) e.addEventListener('input', updPerm2); });
 
   function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
   function checked(id) { var el = document.getElementById(id); return !!(el && el.checked); }
@@ -107,15 +131,27 @@
   // --- Prodej (pridat.html) ---
   handle('form-prodej', 'msg-prodej',
     function () {
-      return {
-        _subject: 'Nový pozemek na prodej — Pozemkomat',
-        typ: 'Prodej pozemku',
-        obec: val('p-obec'), okres: val('p-okres') || '(neuvedeno)',
-        vymera_m2: val('p-vymera'), cena_kc: val('p-cena'),
-        druh: val('p-druh') || '(neuvedeno)', parcela: val('p-parcela') || '(neuvedeno)',
-        popis: val('p-popis') || '(bez popisu)', odkaz: val('p-odkaz') || '(neuvedeno)',
-        jmeno: val('p-jmeno'), kontakt: val('p-kontakt')
-      };
+      var fd = new FormData();
+      var v = parseInt(val('p-vymera'), 10), c = parseInt(val('p-cena'), 10);
+      var site = [].slice.call(document.querySelectorAll('input[name="site"]:checked')).map(function (x) { return x.value; });
+      fd.append('_subject', 'Nový pozemek na prodej — Pozemkomat');
+      fd.append('typ', 'Prodej pozemku');
+      fd.append('obec', val('p-obec'));
+      fd.append('okres', val('p-okres') || '(neuvedeno)');
+      fd.append('vymera_m2', val('p-vymera'));
+      fd.append('cena_kc', val('p-cena'));
+      fd.append('cena_za_m2', (v > 0 && c > 0) ? (Math.round(c / v) + ' Kč/m²') : '(neuvedeno)');
+      fd.append('druh', val('p-druh') || '(neuvedeno)');
+      fd.append('pristup', val('p-pristup') || '(neuvedeno)');
+      fd.append('site', site.length ? site.join(', ') : '(neuvedeno)');
+      fd.append('parcela', val('p-parcela') || '(neuvedeno)');
+      fd.append('popis', val('p-popis') || '(bez popisu)');
+      fd.append('odkaz', val('p-odkaz') || '(neuvedeno)');
+      fd.append('jmeno', val('p-jmeno'));
+      fd.append('kontakt', val('p-kontakt'));
+      var fEl = document.getElementById('p-fotky');
+      if (fEl && fEl.files) { [].slice.call(fEl.files).slice(0, 8).forEach(function (f, i) { fd.append('fotka' + (i + 1), f); }); }
+      return fd;
     },
     function () {
       if (!val('p-obec')) return E('Vyplňte prosím obec / lokalitu.', 'p-obec');

@@ -60,7 +60,7 @@
         <!-- Formulář v elevované kartě -->
         <div>
           <div class="add-card">
-            <p class="add-lead" style="margin-top:0;"><b>Jak to funguje:</b> vyplníte formulář a necháte na sebe kontakt. Nic se nezveřejní automaticky — nabídku si nejdřív <b>ručně projdeme a ověříme</b>, a teprve pak ji přidáme na mapu. Kontaktní údaje použijeme jen ke zpracování nabídky.</p>
+            <p class="add-lead" style="margin-top:0;"><b>Tip:</b> čím víc vyplníte — <b>fotky, sítě i přístup</b> — tím víc zájemců oslovíte. Nic se nezveřejní automaticky: nabídku si nejdřív <b>ručně projdeme a ověříme</b> (dostane odznak „Ověřeno"), a teprve pak ji přidáme. Kontakt použijeme jen ke zpracování.</p>
             <form class="add-form" id="form-prodej" novalidate>
               <div class="add-field">
                 <label for="p-obec">Obec / lokalita <span class="req">*</span></label>
@@ -76,15 +76,19 @@
                   <input id="p-cena" type="number" inputmode="numeric" min="1" placeholder="např. 850000" required>
                 </div>
               </div>
+              <p class="calc-hint" id="perm2-hint" aria-live="polite"></p>
+
+              <div class="add-field photo-field">
+                <label for="p-fotky">Fotky pozemku <span class="hint">(nepovinné, ale hodně pomůžou)</span></label>
+                <label class="photo-drop" for="p-fotky"><b>Přidat fotky</b><span>Klepněte a vyberte fotky pozemku — klidně několik naráz</span></label>
+                <input id="p-fotky" type="file" accept="image/*" multiple>
+                <div class="photo-preview" id="p-fotky-preview"></div>
+              </div>
 
               <details class="add-more">
                 <summary>Další údaje o pozemku (nepovinné)</summary>
                 <div class="add-more-body">
                   <div class="add-row">
-                    <div class="add-field">
-                      <label for="p-okres">Okres</label>
-                      <input id="p-okres" type="text" placeholder="např. Kolín">
-                    </div>
                     <div class="add-field">
                       <label for="p-druh">Druh pozemku</label>
                       <select id="p-druh">
@@ -97,14 +101,39 @@
                         <option>Ostatní</option>
                       </select>
                     </div>
+                    <div class="add-field">
+                      <label for="p-pristup">Přístup k pozemku</label>
+                      <select id="p-pristup">
+                        <option value="">Vyberte…</option>
+                        <option>Zpevněná cesta</option>
+                        <option>Polní / nezpevněná cesta</option>
+                        <option>Přes cizí pozemek</option>
+                        <option>Bez přístupu</option>
+                      </select>
+                    </div>
                   </div>
                   <div class="add-field">
-                    <label for="p-parcela">Parcelní číslo / k. ú.</label>
-                    <input id="p-parcela" type="text" placeholder="např. 512/3, k. ú. Kolín">
+                    <label>Sítě na pozemku nebo u hranice</label>
+                    <div class="check-group">
+                      <label class="chip-check"><input type="checkbox" name="site" value="Elektřina">Elektřina</label>
+                      <label class="chip-check"><input type="checkbox" name="site" value="Voda">Voda</label>
+                      <label class="chip-check"><input type="checkbox" name="site" value="Kanalizace">Kanalizace</label>
+                      <label class="chip-check"><input type="checkbox" name="site" value="Plyn">Plyn</label>
+                    </div>
+                  </div>
+                  <div class="add-row">
+                    <div class="add-field">
+                      <label for="p-okres">Okres</label>
+                      <input id="p-okres" type="text" placeholder="např. Kolín">
+                    </div>
+                    <div class="add-field">
+                      <label for="p-parcela">Parcelní číslo / k. ú.</label>
+                      <input id="p-parcela" type="text" placeholder="např. 512/3, k. ú. Kolín">
+                    </div>
                   </div>
                   <div class="add-field">
                     <label for="p-popis">Popis pozemku</label>
-                    <textarea id="p-popis" placeholder="Přístup, sítě (voda, elektřina), tvar, okolí, územní plán…"></textarea>
+                    <textarea id="p-popis" placeholder="Tvar a terén, orientace, okolí, územní plán, proč je zajímavý… cokoliv, co pomůže kupujícímu se rozhodnout."></textarea>
                   </div>
                   <div class="add-field">
                     <label for="p-odkaz">Odkaz na inzerát nebo katastr</label>

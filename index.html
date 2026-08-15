@@ -86,7 +86,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260814K">
+  <link rel="stylesheet" href="css/styles.css?v=20260814L">
 </head>
 <body>
 
@@ -669,7 +669,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/main.js?v=20260814K" defer></script>
+<script src="js/main.js?v=20260814L" defer></script>
 <script>
 /* Přepínač „Naše mapa" ↔ „Pozemky od lidí" — dvě verze na jedné stránce.
    Samostatné, nezávislé na main.js. Mapa má vlastní kód; my jen přepínáme,
@@ -703,11 +703,24 @@
       if (d.okres) meta.push('okres ' + esc(d.okres));
       if (d.vymera) meta.push(esc(d.vymera) + ' m²');
       var price = czk(d.cena || d.castka);
+      var perm2 = (d.cena && d.vymera && d.vymera > 0) ? (Math.round(d.cena / d.vymera).toLocaleString('cs-CZ') + ' Kč/m²') : '';
+      var thumb = d.foto
+        ? '<div class="ul-thumb"><img src="' + esc(d.foto) + '" alt="" loading="lazy"></div>'
+        : '<div class="ul-thumb"><span class="ph"><svg viewBox="0 0 24 24"><use href="#i-map"/></svg></span></div>';
+      var tags = [];
+      if (d.pristup) tags.push(esc(d.pristup));
+      if (Array.isArray(d.site)) d.site.forEach(function (s) { tags.push(esc(s)); });
+      var verified = (d.overeno !== false) ? '<span class="ul-verified"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg>Ověřeno</span>' : '';
       var link = d.odkaz ? '<a class="ul-src" href="' + esc(d.odkaz) + '" target="_blank" rel="noopener nofollow">Více &rarr;</a>' : '';
-      return '<div class="ul-card"><span class="ul-badge" style="background:' + b.c + '">' + b.l + '</span><h3>' + place + '</h3>' +
+      return '<div class="ul-card">' + thumb +
+        '<span class="ul-badge" style="background:' + b.c + '">' + b.l + '</span>' +
+        '<h3>' + place + '</h3>' +
         (meta.length ? '<div class="ul-meta">' + meta.join(' · ') + '</div>' : '') +
-        (price ? '<div class="ul-price">' + price + '</div>' : '') +
-        (d.popis ? '<div class="ul-desc">' + esc(d.popis) + '</div>' : '') + link + '</div>';
+        (price ? '<div class="ul-topline"><span class="ul-price">' + price + '</span>' + (perm2 ? '<span class="ul-perm2">' + perm2 + '</span>' : '') + '</div>' : '') +
+        (tags.length ? '<div class="ul-tags">' + tags.map(function (t) { return '<span>' + t + '</span>'; }).join('') + '</div>' : '') +
+        (d.popis ? '<div class="ul-desc">' + esc(d.popis) + '</div>' : '') +
+        '<div class="ul-topline" style="margin-top:4px;">' + verified + link + '</div>' +
+        '</div>';
     }).join('');
   }
   function loadListings() {
