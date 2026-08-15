@@ -86,7 +86,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260814I">
+  <link rel="stylesheet" href="css/styles.css?v=20260814J">
 </head>
 <body>
 
@@ -226,8 +226,10 @@
             <a href="pridat.html" class="btn-primary btn-glow">Přidat pozemek na prodej</a>
           </div>
         </div>
-        <div class="ul-head"><h2>Aktuální nabídky od lidí</h2><span class="ul-count" id="ul-count"></span></div>
-        <div id="user-listings" class="ul-grid" aria-live="polite"><div class="ul-empty"><b>Načítám nabídky…</b></div></div>
+        <div id="lide-listings" hidden>
+          <div class="ul-head"><h2>Aktuální nabídky od lidí</h2><span class="ul-count" id="ul-count"></span></div>
+          <div id="user-listings" class="ul-grid" aria-live="polite"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -667,7 +669,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/main.js?v=20260814I" defer></script>
+<script src="js/main.js?v=20260814J" defer></script>
 <script>
 /* Přepínač „Naše mapa" ↔ „Pozemky od lidí" — dvě verze na jedné stránce.
    Samostatné, nezávislé na main.js. Mapa má vlastní kód; my jen přepínáme,
@@ -689,13 +691,11 @@
     return { l: 'Inzerát', c: 'var(--c-obec)' };
   }
   function render(list) {
+    var wrap = document.getElementById('lide-listings');
     var grid = document.getElementById('user-listings'), count = document.getElementById('ul-count');
     if (!grid) return;
-    if (!list.length) {
-      grid.className = 'ul-empty';
-      grid.innerHTML = '<b>Zatím tu nejsou žádné pozemky od lidí.</b><span>Buďte první — přidejte svůj pozemek. Nové nabídky se objeví tady, hned jak je ověříme.</span>';
-      if (count) count.textContent = ''; return;
-    }
+    if (!list.length) { if (wrap) wrap.hidden = true; return; }   // dokud nejsou nabídky, sekci vůbec neukazujeme
+    if (wrap) wrap.hidden = false;
     if (count) count.textContent = list.length + (list.length === 1 ? ' nabídka' : (list.length < 5 ? ' nabídky' : ' nabídek'));
     grid.className = 'ul-grid';
     grid.innerHTML = list.map(function (d) {
