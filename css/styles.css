@@ -290,8 +290,13 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 #map-tip-text{transition:opacity .3s var(--ease);}
 
 /* ===== Interaktivní mapa ===== */
-.map-app{display:grid; grid-template-columns:360px 1fr; gap:20px; height:600px;}
-.map-side{display:flex; flex-direction:column; background:var(--ink-soft); border:1px solid var(--line); border-radius:10px; padding:16px; min-height:0;}
+/* Layout: vlevo nahoře hledání a filtry, vlevo dole výsledky, vpravo mapa přes obě řady.
+   Na mobilu se skládá: hledání → mapa → výsledky (ať je vyhledávání hned nahoře). */
+.map-app{display:grid; grid-template-columns:360px 1fr; grid-template-rows:auto 1fr; gap:14px 20px; height:600px;}
+.map-controls-panel{grid-column:1; grid-row:1; background:var(--ink-soft); border:1px solid var(--line); border-radius:10px; padding:16px;}
+.map-side{grid-column:1; grid-row:2; display:flex; flex-direction:column; background:var(--ink-soft); border:1px solid var(--line); border-radius:10px; padding:16px; min-height:0;}
+.map-holder{grid-column:2; grid-row:1 / span 2;}
+.map-controls-panel .map-search{margin-top:0;}
 .map-search input{width:100%; background:var(--ink); border:1px solid var(--line); border-radius:6px; padding:12px 14px; font-size:14px; color:var(--text-ondark); font-family:inherit;}
 .map-search input::placeholder{color:#6f8090;}
 .map-search input:focus-visible{border-color:var(--copper-bright); outline:none;}
@@ -808,8 +813,10 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 
 /* Responsive */
 @media (max-width:960px){
-  .map-app{grid-template-columns:1fr; height:auto;}
-  .map-holder{height:74vh; max-height:640px; min-height:500px; order:-1;}
+  .map-app{display:flex; flex-direction:column; grid-template-columns:1fr; height:auto; gap:14px;}
+  .map-controls-panel{order:1;}
+  .map-holder{order:2; height:74vh; max-height:640px; min-height:500px;}
+  .map-side{order:3;}
   .map-canvas{flex:1; min-height:0;}
   .map-detail{max-height:84%;}
   .map-side{max-height:none;}
