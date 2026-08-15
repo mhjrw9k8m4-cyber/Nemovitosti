@@ -252,7 +252,9 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 /* Pruhy: střídavé jemně světlejší pozadí přes celou šířku dávají webu rytmus
    (jako u velkých webů) — sekce pak nejsou ostrůvky textu v prázdnu. */
 .section.band{background:var(--ink-soft); border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding-top:76px; padding-bottom:76px;}
-.section-head{max-width:640px; margin-bottom:40px;}
+/* Úvody sekcí vycentrované — vyvážené, konzistentní s úvodem a pruhem zdrojů
+   (jako Stripe/Linear), místo nadpisu vlevo s prázdnem vedle. */
+.section-head{max-width:680px; margin:0 auto 44px; text-align:center;}
 .section-head .eyebrow{margin-bottom:16px;}
 .section-head h2{font-family:'Fraunces',serif; font-weight:500; font-size:34px; line-height:1.15;}
 .section-sub{font-size:15px; color:var(--text-ondark-mute); margin-top:14px;}
