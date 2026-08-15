@@ -100,13 +100,38 @@
     [].slice.call(document.querySelectorAll('input[name="site"]:checked')).forEach(function (x) { tags.push(x.value); });
     var tg = document.getElementById('lp-tags');
     if (tg) tg.innerHTML = tags.map(function (t) { return '<span>' + escHtml(t) + '</span>'; }).join('');
+    updateStrength();
     previewCard.classList.add('flash');
     clearTimeout(flashT); flashT = setTimeout(function () { previewCard.classList.remove('flash'); }, 220);
+  }
+  // „Síla inzerátu" — motivační ukazatel, kolik toho je vyplněné
+  function updateStrength() {
+    var fEl = document.getElementById('p-fotky');
+    var hasFotky = !!(fEl && fEl.files && fEl.files.length);
+    var hasObec = !!val('p-obec'), hasV = parseInt(val('p-vymera'), 10) > 0, hasC = parseInt(val('p-cena'), 10) > 0;
+    var hasSite = document.querySelectorAll('input[name="site"]:checked').length > 0;
+    var hasPristup = !!val('p-pristup'), hasPopis = val('p-popis').length > 15;
+    var pct = 0;
+    if (hasObec) pct += 20; if (hasV) pct += 15; if (hasC) pct += 15; if (hasFotky) pct += 20;
+    if (val('p-druh')) pct += 8; if (hasPristup) pct += 7; if (hasSite) pct += 8; if (hasPopis) pct += 7;
+    var fill = document.getElementById('pcs-fill'), pctEl = document.getElementById('pcs-pct'), hint = document.getElementById('pcs-hint');
+    if (fill) { fill.style.width = pct + '%'; fill.classList.toggle('full', pct >= 100); }
+    if (pctEl) pctEl.textContent = pct + ' %';
+    if (hint) {
+      var msg;
+      if (!hasObec || !hasV || !hasC) msg = 'Vyplňte <b>obec, výměru a cenu</b> — základ inzerátu.';
+      else if (!hasFotky) msg = 'Přidejte <b>fotky</b> — nabídky s fotkou přitáhnou nejvíc zájemců.';
+      else if (!hasPopis) msg = 'Napište pár vět do <b>popisu</b>, ať zájemci vědí, o co jde.';
+      else if (!hasSite || !hasPristup) msg = 'Doplňte <b>sítě a přístup</b> — kupující je řeší jako první.';
+      else msg = '<b>Skvělé — inzerát je připravený.</b> Můžete odeslat.';
+      hint.innerHTML = msg;
+    }
   }
   var prodejForm = document.getElementById('form-prodej');
   if (prodejForm) {
     prodejForm.addEventListener('input', function () { updPerm2(); updatePreview(); });
     prodejForm.addEventListener('change', updatePreview);
+    if (previewCard) updateStrength();   // počáteční stav ukazatele
   }
 
   function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
