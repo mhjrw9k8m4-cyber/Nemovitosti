@@ -1077,15 +1077,17 @@
   }
   // Jednotlivý pozemek = čistá tečka v barvě kategorie (ukáže se po přiblížení).
   // Kreslí se přes canvas (L.circleMarker) — proto styl, ne HTML.
-  var DOT_R = 3.6, DOT_R_SEL = 5.6;
+  var DOT_R = 3.3, DOT_R_SEL = 5.8;
   function dotStyle(d) {
     var col = TYPE[d.type].color, urgent = isUrgent(d);
+    // Klidnější body: nespěšné mají jen jemný okraj (ne výrazný bílý kroužek),
+    // ať mapa při celostátním pohledu nepůsobí přeplácaně. Urgentní zůstávají výrazné.
     return {
       renderer: dotsRenderer,
-      radius: DOT_R,
-      fillColor: col, fillOpacity: 0.95,
-      color: urgent ? '#fff' : 'rgba(255,255,255,0.85)',
-      weight: urgent ? 1.6 : 1,
+      radius: urgent ? DOT_R + 0.6 : DOT_R,
+      fillColor: col, fillOpacity: 0.9,
+      color: urgent ? '#fff' : 'rgba(255,255,255,0.35)',
+      weight: urgent ? 1.8 : 0.7,
       opacity: 1
     };
   }
