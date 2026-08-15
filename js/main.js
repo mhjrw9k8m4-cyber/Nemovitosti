@@ -825,7 +825,7 @@
   if (!mapEl || typeof L === 'undefined') return;
 
   // Start oddálený na celou ČR (přesné vyrovnání na data řeší fitAllCZ níže).
-  var map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: true }).setView([49.82, 15.47], 7);
+  var map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: false }).setView([49.82, 15.47], 7);
   // Tečky kreslíme přes CANVAS (jeden obraz místo tisíce HTML značek) → plynulé i s ~1000 pozemky na mobilu.
   // Vrstva teček je vizuálně nad kraji, ale klikání propouští dolů (pointer-events:none),
   // takže se dá vždy vybrat kraj pod ní. Klik na tečku řešíme ručně (map click + nejbližší bod).
@@ -833,8 +833,7 @@
   map.getPane('dotsPane').style.zIndex = 450; // nad overlayPane (kraje) = 400, pod popupy
   map.getPane('dotsPane').style.pointerEvents = 'none'; // canvas nechytá kliky → projdou na kraje
   var dotsRenderer = L.canvas({ pane: 'dotsPane', padding: 0.5 });
-  if (map.zoomControl) map.zoomControl.setPosition('topright'); // uvolní místo pro nadpis kraje
-  if (map.attributionControl) map.attributionControl.setPosition('bottomleft'); // ať se nekryje s tlačítkem posunu vpravo
+  if (map.attributionControl) map.attributionControl.setPosition('bottomleft'); // ať se nekryje s tlačítky
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     subdomains: 'abcd', maxZoom: 19
@@ -857,6 +856,9 @@
     if (on) setTimeout(function () { map.invalidateSize(); }, 60);
   }
   setPan(false);
+  // Tlačítko „Celá ČR" — vrátí pohled nad celou mapu a zruší výběr kraje (místo +/− ovládání zoomu).
+  var resetBtn = document.getElementById('map-reset');
+  if (resetBtn) resetBtn.addEventListener('click', function () { clearKraj(); });
   if (panBtn) panBtn.addEventListener('click', function () { setPan(mapLocked); });
   window.addEventListener('resize', function () { map.invalidateSize(); });
 
