@@ -4631,6 +4631,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949217-nabidka-prodej-pozemku"
     },
     {
+      "place": "Dobev – Nepodřice",
+      "okres": "Písek",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 22597,
+      "price": 949000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.302219,
+      "lng": 14.076463,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1019597-nabidka-prodej-pozemku-dobev"
+    },
+    {
       "place": "Plchovice – Plchovice",
       "okres": "Rychnov nad Kněžnou",
       "type": "sale",
@@ -5175,19 +5188,6 @@
       "lat": 48.976858,
       "lng": 15.909687,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1004507-nabidka-prodej-pozemku-pavlice"
-    },
-    {
-      "place": "Loket – Bezděkov u Dolních Kralovic",
-      "okres": "Pelhřimov",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "louka",
-      "area": 2040,
-      "price": 89960,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.6811783,
-      "lng": 15.1635935,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1044741-nabidka-prodej-pozemku-loket"
     },
     {
       "place": "Třemošná – Třemošná",
@@ -6917,6 +6917,19 @@
       "lat": 50.157132,
       "lng": 12.548648,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1055785-nabidka-prodej-pozemku-chlum-svate-mari"
+    },
+    {
+      "place": "Žižice – Vítov",
+      "okres": "Kladno",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 8607,
+      "price": 449000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.24045,
+      "lng": 14.134865,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1019564-nabidka-prodej-pozemku-zizice"
     },
     {
       "place": "Habry – Habry",
@@ -8802,19 +8815,6 @@
       "lat": 49.121577,
       "lng": 16.737177,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1040972-nabidka-prodej-pozemku-sokolnice"
-    },
-    {
-      "place": "Senožaty – Tukleky",
-      "okres": "Pelhřimov",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "zahrada",
-      "area": 438,
-      "price": 36081,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.5587244,
-      "lng": 15.2427722,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1036873-nabidka-prodej-pozemku-senozaty"
     },
     {
       "place": "Františkovy Lázně – Františkovy Lázně",
