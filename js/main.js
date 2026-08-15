@@ -841,9 +841,11 @@
   // Lehké ovládání: mapa je hned použitelná (body klikací, stránka přes ni
   // normálně scrolluje). Tlačítko zapne režim posouvání/přibližování mapy.
   var mapLocked = true;
+  var lockBtn = document.getElementById('map-lock');
   // Mapa je „zamčená" na přehledu (stránka přes ni normálně roluje prstem). Jakmile
   // člověk klepne na kraj (na republiku), sama se odemkne a jde s ní volně hýbat.
-  // Tlačítko „Celá ČR" ji zase zamkne. Žádné zvláštní tlačítko na hýbání není potřeba.
+  // Když je odemčená, dole se ukáže tlačítko „Zamknout mapu" (jen zamkne, ať jde
+  // zase rolovat stránkou). „Celá ČR" nahoře vrátí přehled a taky zamkne.
   function setPan(on) {
     mapLocked = !on;
     // touchZoom (pinch dvěma prsty) NECHÁVÁME zapnutý pořád — aby dva prsty
@@ -854,9 +856,11 @@
     // touch-action: zamčeno → stránka jde svisle scrollovat prstem, ale pinch
     //   chytne mapa (prohlížeč nezoomuje web); puštěno → mapou jde volně hýbat.
     mapEl.style.touchAction = on ? 'none' : 'pan-y';
+    if (lockBtn) lockBtn.hidden = !on; // tlačítko „Zamknout mapu" jen když je odemčeno
     if (on) setTimeout(function () { map.invalidateSize(); }, 60);
   }
   setPan(false);
+  if (lockBtn) lockBtn.addEventListener('click', function () { setPan(false); }); // jen zamkne (výběr kraje zůstává)
   // Tlačítko „Celá ČR" — vrátí pohled nad celou mapu a zruší výběr kraje (místo +/− ovládání zoomu).
   var resetBtn = document.getElementById('map-reset');
   if (resetBtn) resetBtn.addEventListener('click', function () { clearKraj(); });

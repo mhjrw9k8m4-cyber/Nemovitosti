@@ -441,7 +441,12 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .map-reset:hover{border-color:var(--copper-bright);}
 .map-reset:active{transform:translateY(1px);}
 .map-reset .mr-ic{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none;}
-@media (max-width:560px){ .map-reset{font-size:11px; padding:7px 11px; gap:6px;} .map-reset .mr-ic{width:14px; height:14px;} }
+.map-lock{position:absolute; bottom:12px; right:12px; z-index:600; display:inline-flex; align-items:center; gap:7px; max-width:calc(100% - 24px); background:rgba(22,35,47,0.92); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:22px; padding:9px 15px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}
+.map-lock[hidden]{display:none;}
+.map-lock:hover{border-color:var(--copper-bright);}
+.map-lock:active{transform:translateY(1px);}
+.map-lock .ml-ic{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none;}
+@media (max-width:560px){ .map-reset{font-size:11px; padding:7px 11px; gap:6px;} .map-reset .mr-ic{width:14px; height:14px;} .map-lock{font-size:11px; padding:8px 13px;} .map-lock .ml-ic{width:14px; height:14px;} }
 
 /* Výběr kraje: dokud není vybrán, tečky (pozemky) nejsou klikací → klik vždy trefí kraj.
    Značky mají v Leafletu vlastní pointer-events, proto je nutné je přebít napřímo. */
