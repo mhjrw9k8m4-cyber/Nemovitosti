@@ -362,7 +362,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .lp-fav svg{width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round;}
 .lp-fav.on{background:rgba(201,152,47,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
 .lp-fav.on svg{fill:currentColor;}
-.opp-deal{display:inline-block; font-size:10px; font-weight:700; color:var(--c-sale); background:rgba(62,142,91,0.14); border:1px solid rgba(62,142,91,0.4); border-radius:4px; padding:1px 6px; margin-left:5px; letter-spacing:0.02em; text-transform:uppercase;}
+.opp-deal{display:inline-block; font-size:10.5px; font-weight:700; color:var(--c-sale); background:rgba(62,142,91,0.14); border:1px solid rgba(62,142,91,0.4); border-radius:10px; padding:1px 8px; letter-spacing:0.02em; text-transform:uppercase;}
 .map-count{font-size:13.5px; color:var(--text-ondark); font-weight:600; letter-spacing:0.01em; margin-bottom:12px;}
 .mc-sub{font-weight:400; color:var(--text-ondark-mute); font-size:12.5px;}
 .opp-list{list-style:none; overflow-y:auto; flex:1; margin:0 -6px; padding:0 6px; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;}
@@ -392,14 +392,19 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-more{list-style:none; text-align:center; padding:14px 6px 6px; font-size:13px; color:var(--copper-bright); font-weight:600;}
 .reset-btn{display:inline-block; margin-top:12px; padding:8px 16px; font-size:13px; font-weight:600; color:var(--ink); background:var(--copper-bright); border:0; border-radius:8px; cursor:pointer;}
 .reset-btn:hover{background:var(--copper);}
-.opp-top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;}
-.opp-place{font-family:'Fraunces',serif; font-size:16px; font-weight:500;}
-.opp-tag{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 8px; border-radius:12px; color:#fff; white-space:nowrap;}
+.opp-top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px;}
+.opp-place{font-family:'Fraunces',serif; font-size:16px; font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.opp-tag{flex:none; display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 8px; border-radius:12px; color:#fff; white-space:nowrap;}
 .opp-tag.sale{background:var(--c-sale);} .opp-tag.drazba{background:var(--c-drazba); color:#3a2c05;} .opp-tag.exekuce{background:var(--c-exekuce);} .opp-tag.obec{background:var(--c-obec);}
-.opp-meta{font-size:12.5px; color:var(--text-ondark-mute); display:flex; gap:14px; flex-wrap:wrap;}
-.opp-price{margin-top:7px; font-size:12.5px;}
-.opp-price b{color:var(--copper-bright); font-weight:600;}
-.opp-price span{color:var(--text-ondark-mute);}
+/* Podřádek „co to je" — jeden řádek, konzistentní, ořízne se tečkami */
+.opp-sub{font-size:12.5px; color:var(--text-ondark-mute); margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+/* Hodnotový řádek — cena, výměra, Kč/m² zarovnané na účaří */
+.opp-figures{display:flex; align-items:baseline; flex-wrap:wrap; gap:3px 12px; margin-bottom:9px;}
+.opp-figures .price{color:var(--copper-bright); font-weight:700; font-size:15px; letter-spacing:0.01em;}
+.opp-figures .m{font-size:12.5px; color:var(--text-ondark-mute);}
+/* Řádek odznaků — všechny stavy pohromadě, stejný tvar */
+.opp-chips{display:flex; flex-wrap:wrap; gap:6px;}
+.opp-hot{display:inline-block; font-size:10.5px; font-weight:700; color:#E8863F; background:rgba(232,134,63,0.14); border:1px solid rgba(232,134,63,0.4); border-radius:10px; padding:1px 8px; letter-spacing:0.02em; text-transform:uppercase;}
 /* Odpočet do termínu dražby (reálné datum) */
 .opp-cd{display:inline-block; font-size:10.5px; font-weight:700; padding:1px 8px; border-radius:10px; background:rgba(143,160,175,0.14); color:var(--text-ondark); letter-spacing:0.01em; white-space:nowrap;}
 .opp-cd.soon{background:rgba(217,164,65,0.16); color:var(--copper-bright);}
