@@ -826,6 +826,11 @@
 
   // Start oddálený na celou ČR (přesné vyrovnání na data řeší fitAllCZ níže).
   var map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: true }).setView([49.82, 15.47], 7);
+  // Tečky kreslíme přes CANVAS (jeden obraz místo tisíce HTML značek) → plynulé i s ~1000 pozemky na mobilu.
+  // Vlastní vrstva (pane) nad kraji, aby šla vypnout klikání (kraj-lock) prostým pointer-events.
+  map.createPane('dotsPane');
+  map.getPane('dotsPane').style.zIndex = 450; // nad overlayPane (kraje) = 400, pod popupy
+  var dotsRenderer = L.canvas({ pane: 'dotsPane', padding: 0.5 });
   if (map.zoomControl) map.zoomControl.setPosition('topright'); // uvolní místo pro nadpis kraje
   if (map.attributionControl) map.attributionControl.setPosition('bottomleft'); // ať se nekryje s tlačítkem posunu vpravo
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -1001,14 +1006,19 @@
     var dd = daysUntil(d.extra);
     return dd != null && dd >= 0 && dd <= 7;
   }
-  // Jednotlivý pozemek = čistá tečka v barvě kategorie (ukáže se po přiblížení)
-  function markerIcon(d) {
-    var col = TYPE[d.type].color;
-    return L.divIcon({
-      className: '',
-      html: '<span class="pk-dot' + (isUrgent(d) ? ' urgent' : '') + '" style="background:' + col + '; color:' + col + '"></span>',
-      iconSize: [7, 7], iconAnchor: [3.5, 3.5]
-    });
+  // Jednotlivý pozemek = čistá tečka v barvě kategorie (ukáže se po přiblížení).
+  // Kreslí se přes canvas (L.circleMarker) — proto styl, ne HTML.
+  var DOT_R = 3.6, DOT_R_SEL = 5.6;
+  function dotStyle(d) {
+    var col = TYPE[d.type].color, urgent = isUrgent(d);
+    return {
+      renderer: dotsRenderer,
+      radius: DOT_R,
+      fillColor: col, fillOpacity: 0.95,
+      color: urgent ? '#fff' : 'rgba(255,255,255,0.85)',
+      weight: urgent ? 1.6 : 1,
+      opacity: 1
+    };
   }
   // Přibližný tvar parcely (deterministický, cache) — ukázková geometrie
   function polyFor(d) {
@@ -1101,13 +1111,14 @@
     if (selPoly) { map.removeLayer(selPoly); selPoly = null; }
     resizeMapSoon();
   }
+  var selMarkerId = -1;
   function highlightMarker(id) {
-    markers.forEach(function (m, i) {
-      if (m._icon) {
-        var pin = m._icon.querySelector('.pk-dot');
-        if (pin) pin.classList.toggle('sel', i === id);
-      }
-    });
+    if (selMarkerId === id) return;
+    var prev = markers[selMarkerId];
+    if (prev && prev.setStyle) prev.setStyle({ radius: DOT_R, weight: dotStyle(prev._d).weight, color: dotStyle(prev._d).color });
+    var m = markers[id];
+    if (m && m.setStyle) { m.setStyle({ radius: DOT_R_SEL, weight: 2.4, color: '#fff' }); if (m.bringToFront) m.bringToFront(); }
+    selMarkerId = id;
   }
   function highlightShape(d) {
     if (selPoly) { map.removeLayer(selPoly); selPoly = null; }
@@ -1121,7 +1132,8 @@
 
   DATA.forEach(function (d, i) {
     d._id = i;
-    var m = L.marker([d.lat, d.lng], { icon: markerIcon(d) });
+    var m = L.circleMarker([d.lat, d.lng], dotStyle(d));
+    m._d = d;
     m.on('click', function () { showDetail(d); highlightList(i); });
     markers.push(m);
   });
@@ -1212,7 +1224,12 @@
     return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
   }
   function styleSelectedKraj(layer) { layer.setStyle({ weight: 2.6, color: '#F2D79A', fillColor: '#E0AE43', fillOpacity: 0.09 }); layer.bringToFront(); }
-  function lockDots(lock) { mapEl.classList.toggle('kraj-lock', lock); }
+  // Zámek teček: canvas-vrstvu (dotsPane) prostě přestaneme klikat → klik projde na kraje pod ní.
+  function lockDots(lock) {
+    mapEl.classList.toggle('kraj-lock', lock);
+    var pane = map.getPane('dotsPane');
+    if (pane) pane.style.pointerEvents = lock ? 'none' : 'auto';
+  }
   var BACK_BTN = '<button class="kh-back" type="button" aria-label="Zpět"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>';
   function updateKrajHead() {
     if (krajHeadEl) {
