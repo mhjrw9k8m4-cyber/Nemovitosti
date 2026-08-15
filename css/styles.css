@@ -607,8 +607,17 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .topbar-in{display:flex; align-items:center; justify-content:center; gap:16px; padding:10px 0; font-size:13px; font-weight:500; flex-wrap:wrap; position:relative;}
 .tb-cta{color:var(--copper-bright); font-weight:600; text-decoration:none; white-space:nowrap;}
 .tb-cta:hover{text-decoration:underline;}
-.tb-close{position:absolute; right:32px; background:none; border:0; color:var(--text-ondark-mute); font-size:20px; line-height:1; cursor:pointer; opacity:0.7;}
+.tb-form{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center; width:100%; max-width:640px; padding:0 40px;}
+.tb-label{display:inline-flex; align-items:center; color:var(--text-ondark-mute); font-weight:600; white-space:nowrap;}
+.tb-input{flex:1 1 200px; min-width:0; background:var(--ink); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:8px; padding:7px 12px; font-family:inherit; font-size:13px;}
+.tb-input::placeholder{color:var(--text-ondark-mute); opacity:0.75;}
+.tb-input:focus{outline:none; border-color:var(--copper-bright);}
+button.tb-cta{background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); border:1px solid var(--copper); border-radius:8px; padding:7px 15px; font-family:inherit; font-weight:700; cursor:pointer; font-size:13px; white-space:nowrap;}
+button.tb-cta:hover{filter:brightness(1.05); text-decoration:none;}
+button.tb-cta:disabled{opacity:0.6; cursor:default;}
+.tb-close{position:absolute; right:16px; top:50%; transform:translateY(-50%); background:none; border:0; color:var(--text-ondark-mute); font-size:20px; line-height:1; cursor:pointer; opacity:0.7;}
 .tb-close:hover{opacity:1;}
+@media (max-width:560px){ .tb-form{padding:0 34px; gap:8px;} .tb-label{font-size:12px;} .tb-input{font-size:12px; padding:6px 10px;} button.tb-cta{padding:6px 12px; font-size:12px;} }
 
 /* Velké tlačítko */
 .btn-lg{padding:15px 30px; font-size:15px;}

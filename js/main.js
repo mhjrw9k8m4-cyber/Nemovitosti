@@ -188,6 +188,35 @@
   if (tbClose && topbar) {
     tbClose.addEventListener('click', function () { topbar.classList.add('hide'); });
   }
+  /* ---------- Zpětná vazba z lišty ----------
+     Cíl odeslání DOPLNÍTE níže (zatím prázdné → formulář jen upřímně řekne, že brzy spustíme):
+       • FEEDBACK_ENDPOINT — odkaz z Formspree apod. (https://formspree.io/f/xxxx) → tiché odeslání
+       • FEEDBACK_EMAIL    — nebo váš e-mail (např. 'vas@email.cz') → otevře se poštovní aplikace
+     Stačí vyplnit jedno z nich. */
+  var FEEDBACK_ENDPOINT = '';
+  var FEEDBACK_EMAIL = '';
+  var fbForm = document.getElementById('tb-feedback');
+  if (fbForm) {
+    fbForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var inp = document.getElementById('tb-msg');
+      var btn = document.getElementById('tb-send');
+      var msg = ((inp && inp.value) || '').trim();
+      if (!msg) { if (inp) inp.focus(); return; }
+      if (FEEDBACK_ENDPOINT) {
+        if (btn) btn.disabled = true;
+        fetch(FEEDBACK_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ zprava: msg, kde: 'lišta zpětné vazby' }) })
+          .then(function (r) { if (!r.ok) throw new Error(); if (inp) inp.value = ''; showToast('Děkujeme! Zpětnou vazbu jsme odeslali.'); })
+          .catch(function () { showToast('Odeslání se teď nepovedlo, zkuste to prosím později.'); })
+          .then(function () { if (btn) btn.disabled = false; });
+      } else if (FEEDBACK_EMAIL) {
+        window.location.href = 'mailto:' + FEEDBACK_EMAIL + '?subject=' + encodeURIComponent('Pozemkomat — co zlepšit') + '&body=' + encodeURIComponent(msg);
+      } else {
+        // Cíl zatím nenastaven — buďme upřímní, netvrdíme, že se odeslalo.
+        showToast('Formulář brzy spustíme. Děkujeme za trpělivost!');
+      }
+    });
+  }
 
   /* ---------- Mobilní menu ---------- */
   var toggle = document.querySelector('.nav-toggle');

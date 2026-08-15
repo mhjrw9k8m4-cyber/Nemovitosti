@@ -86,7 +86,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260815k">
+  <link rel="stylesheet" href="css/styles.css?v=20260815l">
 </head>
 <body>
 
@@ -112,8 +112,11 @@
 
 <div class="topbar" id="topbar">
   <div class="wrap topbar-in">
-    <span><span class="live-dot"></span>Pozemkomat je ve veřejné bétě — zkuste ho a řekněte nám, co zlepšit.</span>
-    <a href="#upozorneni" class="tb-cta">Ozvat se →</a>
+    <form class="tb-form" id="tb-feedback" novalidate>
+      <label for="tb-msg" class="tb-label"><span class="live-dot"></span>Co zlepšit?</label>
+      <input type="text" id="tb-msg" class="tb-input" placeholder="Napište nám nápad nebo co nefunguje…" aria-label="Zpětná vazba — co zlepšit" maxlength="500" autocomplete="off" required>
+      <button type="submit" class="tb-cta" id="tb-send">Odeslat</button>
+    </form>
     <button class="tb-close" id="tb-close" aria-label="Zavřít oznámení">×</button>
   </div>
 </div>
@@ -224,7 +227,7 @@
 
       <div id="view-lide" hidden>
         <div class="lide-intro">
-          <p>Nabídky, které přidali sami lidé — oddělené od naší mapy z veřejných zdrojů. Každou ručně ověřujeme, než se objeví.</p>
+          <p>Nabídky, které přidali sami lidé — oddělené od naší mapy z veřejných zdrojů. Procházejí automatickou kontrolou údajů; vlastníka a parcelu si vždy ověříte v katastru.</p>
           <div class="od-cta">
             <a href="pridat.html" class="btn-primary btn-glow">Přidat pozemek na prodej</a>
           </div>
@@ -672,7 +675,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/main.js?v=20260815k" defer></script>
+<script src="js/main.js?v=20260815l" defer></script>
 <script>
 /* Přepínač „Naše mapa" ↔ „Pozemky od lidí" — dvě verze na jedné stránce.
    Samostatné, nezávislé na main.js. Mapa má vlastní kód; my jen přepínáme,
