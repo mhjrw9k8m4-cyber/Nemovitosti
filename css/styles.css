@@ -199,7 +199,8 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .hero-map .wrap{position:relative; z-index:1;}
 .hero-head{text-align:center; max-width:860px; margin:0 auto 38px; display:flex; flex-direction:column; align-items:center;}
 .hero-head .eyebrow{margin-bottom:18px;}
-.hero-head h1{font-size:58px; line-height:1.03; margin-bottom:18px;}
+.hero-head h1{font-size:54px; font-weight:360; line-height:1.1; letter-spacing:-0.005em; margin-bottom:18px;}
+.hero-head h1 em{font-weight:400;}
 .hero-head .sub{font-size:18px; color:var(--text-ondark-mute); max-width:600px; margin-bottom:26px;}
 .hero-head .hero-ctas{justify-content:center; margin-bottom:20px;}
 .hero-head .trust-line{justify-content:center; margin:0;}
