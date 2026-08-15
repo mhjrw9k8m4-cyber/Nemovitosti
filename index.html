@@ -86,7 +86,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260815f">
+  <link rel="stylesheet" href="css/styles.css?v=20260815g">
 </head>
 <body>
 
@@ -214,8 +214,10 @@
             <div class="kraj-head" id="kraj-head" hidden></div>
             <div class="kraj-hint" id="kraj-hint"><span class="kh-pin" aria-hidden="true"></span>Vyberte kraj klepnutím na mapu</div>
             <div class="map-legend" id="map-legend" aria-hidden="true"></div>
-            <button class="map-reset" id="map-reset" type="button" aria-label="Zobrazit celou mapu"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h6M3 3v6M3 3l7 7M21 21h-6M21 21v-6M21 21l-7-7"/></svg>Celá ČR</button>
-            <button class="map-pan-toggle" id="map-pan-toggle" type="button">Hýbat mapou</button>
+            <div class="map-tools">
+              <button class="map-reset" id="map-reset" type="button" aria-label="Zobrazit celou mapu"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h6M3 3v6M3 3l7 7M21 21h-6M21 21v-6M21 21l-7-7"/></svg>Celá ČR</button>
+              <button class="map-pan-toggle" id="map-pan-toggle" type="button">Hýbat mapou</button>
+            </div>
           </div>
         </div>
       </div>
@@ -670,7 +672,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/main.js?v=20260815f" defer></script>
+<script src="js/main.js?v=20260815g" defer></script>
 <script>
 /* Přepínač „Naše mapa" ↔ „Pozemky od lidí" — dvě verze na jedné stránce.
    Samostatné, nezávislé na main.js. Mapa má vlastní kód; my jen přepínáme,
