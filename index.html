@@ -86,7 +86,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260815x">
+  <link rel="stylesheet" href="css/styles.css?v=20260815y">
 </head>
 <body>
 
@@ -176,42 +176,65 @@
         <aside class="map-side">
           <div class="map-search"><input type="text" id="map-search" placeholder="Hledat obec nebo okres (např. Kolín)" autocomplete="off" aria-label="Hledat obec nebo okres"></div>
           <button type="button" class="map-near-btn" id="map-near"><svg class="mnb-pin" aria-hidden="true"><use href="#i-map"/></svg>Pozemky ve vašem okolí</button>
-          <div class="map-filters" id="map-filters" role="group" aria-label="Filtr příležitostí">
-            <button class="filter-chip active" data-type="all">Vše</button>
-            <button class="filter-chip" data-type="sale"><span class="c" style="background:var(--c-sale)"></span>Prodej</button>
-            <button class="filter-chip" data-type="drazba"><span class="c" style="background:var(--c-drazba)"></span>Dražba</button>
-            <button class="filter-chip" data-type="exekuce"><span class="c" style="background:var(--c-exekuce)"></span>Exekuce</button>
-            <button class="filter-chip" data-type="obec"><span class="c" style="background:var(--c-obec)"></span>Obec</button>
+          <div class="ms-group">
+            <span class="ms-label" id="ms-lbl-typ">Co hledáte</span>
+            <div class="map-filters" id="map-filters" role="group" aria-labelledby="ms-lbl-typ">
+              <button class="filter-chip active" data-type="all">Vše</button>
+              <button class="filter-chip" data-type="sale"><span class="c" style="background:var(--c-sale)"></span>Prodej</button>
+              <button class="filter-chip" data-type="drazba"><span class="c" style="background:var(--c-drazba)"></span>Dražba</button>
+              <button class="filter-chip" data-type="exekuce"><span class="c" style="background:var(--c-exekuce)"></span>Exekuce</button>
+              <button class="filter-chip" data-type="obec"><span class="c" style="background:var(--c-obec)"></span>Obec</button>
+            </div>
           </div>
-          <div class="map-controls">
-            <select class="map-select" id="map-druh" aria-label="Druh pozemku"><option value="all">Všechny druhy</option></select>
-            <select class="map-select" id="map-sort" aria-label="Řazení příležitostí">
-              <option value="demand">Doporučené</option>
-              <option value="near">Nejblíž ke mně</option>
-              <option value="perm2_asc">Nejlepší cena/m²</option>
-              <option value="price_asc">Nejlevnější</option>
-              <option value="price_desc">Nejdražší</option>
-              <option value="area_desc">Největší výměra</option>
-            </select>
-            <select class="map-select" id="map-cena" aria-label="Maximální cena">
-              <option value="0">Cena: bez limitu</option>
-              <option value="250000">do 250 tis. Kč</option>
-              <option value="500000">do 500 tis. Kč</option>
-              <option value="1000000">do 1 mil. Kč</option>
-              <option value="3000000">do 3 mil. Kč</option>
-              <option value="10000000">do 10 mil. Kč</option>
-            </select>
-            <select class="map-select" id="map-area" aria-label="Minimální výměra">
-              <option value="0">Výměra: bez limitu</option>
-              <option value="500">od 500 m²</option>
-              <option value="1000">od 1 000 m²</option>
-              <option value="2000">od 2 000 m²</option>
-              <option value="5000">od 5 000 m²</option>
-              <option value="10000">od 1 ha (10 000 m²)</option>
-            </select>
-            <button type="button" class="map-select urgent-toggle" id="map-urgent" aria-pressed="false">Končí do 14 dní</button>
-            <button type="button" class="map-select fav-toggle" id="map-fav" aria-pressed="false">Uložené</button>
-          </div>
+
+          <details class="ms-filters" id="ms-filters">
+            <summary class="msf-summary">
+              <svg class="msf-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+              <span class="msf-text">Cena, výměra a řazení</span>
+              <span class="msf-badge" id="msf-badge" hidden></span>
+              <svg class="msf-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <div class="map-controls">
+              <label class="mc-field"><span class="mc-cap">Cena</span>
+                <select class="map-select" id="map-cena" aria-label="Maximální cena">
+                  <option value="0">Bez limitu</option>
+                  <option value="250000">do 250 tis. Kč</option>
+                  <option value="500000">do 500 tis. Kč</option>
+                  <option value="1000000">do 1 mil. Kč</option>
+                  <option value="3000000">do 3 mil. Kč</option>
+                  <option value="10000000">do 10 mil. Kč</option>
+                </select>
+              </label>
+              <label class="mc-field"><span class="mc-cap">Výměra</span>
+                <select class="map-select" id="map-area" aria-label="Minimální výměra">
+                  <option value="0">Bez limitu</option>
+                  <option value="500">od 500 m²</option>
+                  <option value="1000">od 1 000 m²</option>
+                  <option value="2000">od 2 000 m²</option>
+                  <option value="5000">od 5 000 m²</option>
+                  <option value="10000">od 1 ha (10 000 m²)</option>
+                </select>
+              </label>
+              <label class="mc-field"><span class="mc-cap">Druh pozemku</span>
+                <select class="map-select" id="map-druh" aria-label="Druh pozemku"><option value="all">Všechny druhy</option></select>
+              </label>
+              <label class="mc-field"><span class="mc-cap">Seřadit</span>
+                <select class="map-select" id="map-sort" aria-label="Řazení příležitostí">
+                  <option value="demand">Doporučené</option>
+                  <option value="near">Nejblíž ke mně</option>
+                  <option value="perm2_asc">Nejlepší cena/m²</option>
+                  <option value="price_asc">Nejlevnější</option>
+                  <option value="price_desc">Nejdražší</option>
+                  <option value="area_desc">Největší výměra</option>
+                </select>
+              </label>
+              <div class="mc-toggles">
+                <button type="button" class="map-select urgent-toggle" id="map-urgent" aria-pressed="false">Končí do 14 dní</button>
+                <button type="button" class="map-select fav-toggle" id="map-fav" aria-pressed="false">Uložené</button>
+              </div>
+            </div>
+          </details>
+
           <div class="map-count mono" id="map-count">Načítám…</div>
           <ul class="opp-list" id="opp-list" aria-label="Seznam příležitostí"><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li></ul>
         </aside>
@@ -516,8 +539,8 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/config.js?v=20260815x" defer></script>
-<script src="js/main.js?v=20260815x" defer></script>
+<script src="js/config.js?v=20260815y" defer></script>
+<script src="js/main.js?v=20260815y" defer></script>
 <script>
 /* Přepínač „Naše mapa" ↔ „Pozemky od lidí" — dvě verze na jedné stránce.
    Samostatné, nezávislé na main.js. Mapa má vlastní kód; my jen přepínáme,

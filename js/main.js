@@ -1506,7 +1506,24 @@
   }
 
   var LIST_LIMIT = 8;
+  // Ukazatel u „Cena, výměra a řazení" — kolik doplňkových filtrů je aktivních,
+  // ať uživatel pozná, že něco filtruje, i když je panel sbalený.
+  var msfBadge = document.getElementById('msf-badge');
+  function updateFilterBadge() {
+    if (!msfBadge) return;
+    var n = 0;
+    if (maxPrice) n++;
+    if (minArea) n++;
+    if (activeDruh && activeDruh !== 'all') n++;
+    if (urgentOnly) n++;
+    if (favOnly) n++;
+    if (sortMode && sortMode !== 'demand') n++;
+    if (n > 0) { msfBadge.textContent = n; msfBadge.hidden = false; }
+    else { msfBadge.hidden = true; }
+  }
+
   function renderList() {
+    updateFilterBadge();
     listEl.innerHTML = '';
     var vis = [], visIds = [];
     DATA.forEach(function (d) {

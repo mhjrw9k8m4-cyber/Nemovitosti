@@ -301,7 +301,10 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .map-near-btn:active{transform:translateY(1px);}
 .map-near-btn .mnb-pin{width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none;}
 .map-near-btn.on{background:var(--ink); color:var(--copper-bright); border-color:var(--copper-bright); box-shadow:none;}
-.map-filters{display:flex; flex-wrap:wrap; gap:7px; margin:14px 0;}
+/* Skupiny ovládání v postranním panelu — čitelná hierarchie místo hromady prvků */
+.ms-group{margin-top:14px;}
+.ms-label{display:block; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-ondark-mute); margin-bottom:8px;}
+.map-filters{display:flex; flex-wrap:wrap; gap:7px;}
 .filter-chip{display:inline-flex; align-items:center; gap:6px; background:var(--ink); border:1px solid var(--line); color:var(--text-ondark-mute); border-radius:18px; padding:7px 12px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; transition:all .15s ease;}
 .filter-chip .c{width:8px; height:8px; border-radius:50%;}
 .filter-chip:hover{color:var(--text-ondark); border-color:rgba(237,230,214,0.3);}
@@ -313,8 +316,23 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .filter-chip.active[data-type="exekuce"]{background:linear-gradient(135deg, #CE6A52, var(--c-exekuce));}
 .filter-chip.active[data-type="obec"]{background:linear-gradient(135deg, #5A89AD, var(--c-obec));}
 .filter-chip.active .c{box-shadow:0 0 0 2px rgba(255,255,255,0.55);}
-.map-controls{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px;}
-.map-select{flex:1 1 45%; min-width:130px; background:var(--ink); border:1px solid var(--line); color:var(--text-ondark); border-radius:8px; padding:9px 30px 9px 11px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; appearance:none; -webkit-appearance:none;
+/* Rozbalovací panel „Cena, výměra a řazení" — výchozí stav je klidný, detaily na klepnutí */
+.ms-filters{margin-top:12px; border:1px solid var(--line); border-radius:10px; background:var(--ink); overflow:hidden;}
+.msf-summary{display:flex; align-items:center; gap:9px; padding:11px 13px; font-size:13px; font-weight:600; color:var(--text-ondark); cursor:pointer; list-style:none; -webkit-tap-highlight-color:transparent; user-select:none;}
+.msf-summary::-webkit-details-marker{display:none;}
+.msf-summary:hover{color:#fff;}
+.msf-ic{width:16px; height:16px; flex:none; fill:none; stroke:var(--copper-bright); stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+.msf-text{flex:1;}
+.msf-badge{min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:var(--copper); color:var(--ink); font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center;}
+.msf-chev{width:16px; height:16px; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; transition:transform .2s ease;}
+.ms-filters[open] .msf-chev{transform:rotate(180deg);}
+.ms-filters[open] .msf-summary{border-bottom:1px solid var(--line);}
+.map-controls{display:grid; grid-template-columns:1fr 1fr; gap:11px; padding:13px;}
+.mc-field{display:flex; flex-direction:column; gap:5px; min-width:0;}
+.mc-cap{font-size:11px; font-weight:600; color:var(--text-ondark-mute); letter-spacing:0.02em;}
+.mc-toggles{grid-column:1 / -1; display:flex; gap:8px;}
+.mc-toggles .map-select{flex:1 1 0; min-width:0;}
+.map-select{width:100%; background:var(--ink-soft); border:1px solid var(--line); color:var(--text-ondark); border-radius:8px; padding:9px 30px 9px 11px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; appearance:none; -webkit-appearance:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c9982f' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 11px center;}
 .map-select:focus-visible{border-color:var(--copper-bright); outline:none;}
 .map-select option{background:var(--ink); color:var(--text-ondark);}
