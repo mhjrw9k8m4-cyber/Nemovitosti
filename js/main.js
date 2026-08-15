@@ -1132,8 +1132,37 @@
   var krajLayer = null;
   var lastVis = [], krajCounts = {};
 
+  // Do kterého kraje bod PATŘÍ podle geometrie (ne podle okresu) — aby „klikací v tomto kraji"
+  // odpovídalo tomu, co člověk na mapě VIDÍ. (Okres občas nesedí s polohou kvůli geokódování.)
+  function ptInRing(lng, lat, ring) {
+    var inside = false;
+    for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      var xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+      if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
+  }
+  function ptInGeom(lng, lat, geom) {
+    if (!geom) return false;
+    var polys = geom.type === 'MultiPolygon' ? geom.coordinates : (geom.type === 'Polygon' ? [geom.coordinates] : []);
+    for (var p = 0; p < polys.length; p++) {
+      var rings = polys[p];
+      if (ptInRing(lng, lat, rings[0])) {
+        var inHole = false;
+        for (var h = 1; h < rings.length; h++) { if (ptInRing(lng, lat, rings[h])) { inHole = true; break; } }
+        if (!inHole) return true;
+      }
+    }
+    return false;
+  }
+  function krajGeoOf(d) {
+    if (KRAJE_GEOM) { for (var k in KRAJE_GEOM) { if (ptInGeom(d.lng, d.lat, KRAJE_GEOM[k])) return k; } }
+    return krajOf(d); // záloha pro body mimo polygon (nepřesné geokódování)
+  }
+
   DATA.forEach(function (d, i) {
     d._id = i;
+    d._gkraj = krajGeoOf(d); // kraj podle geometrie = kde bod na mapě leží
     var st = dotStyle(d); st.interactive = false; // klik řešíme ručně (canvas nechytá události)
     var m = L.circleMarker([d.lat, d.lng], st);
     m._d = d;
@@ -1141,12 +1170,17 @@
   });
 
   // Klik na tečku: canvas kliky nechytá, tak najdeme nejbližší viditelný bod ke kliknutí.
-  // Funguje jen po výběru kraje (dokud je zamčeno, klik vybírá kraj pod tečkami).
+  // Interaktivní jsou JEN tečky ve vybraném kraji. Klik do jiného kraje ten kraj jen
+  // vybere (předchozí se zamkne) — teprve další klik na tečku v něm otevře detail.
+  var krajJustSelected = false; // klik, který právě přepnul kraj, neotevírá detail
   map.on('click', function (e) {
-    if (dotsLocked || !lastVis.length) return;
+    if (krajJustSelected) { krajJustSelected = false; return; }
+    if (dotsLocked || !selectedKraj || !lastVis.length) return;
     var cp = e.containerPoint, best = null, bestDist = Infinity;
     for (var i = 0; i < lastVis.length; i++) {
-      var d = lastVis[i], p = map.latLngToContainerPoint([d.lat, d.lng]);
+      var d = lastVis[i];
+      if (d._gkraj !== selectedKraj) continue; // jen tečky ve vybraném kraji (dle geometrie)
+      var p = map.latLngToContainerPoint([d.lat, d.lng]);
       var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
       if (dist < bestDist) { bestDist = dist; best = d; }
     }
@@ -1165,7 +1199,10 @@
       onEachFeature: function (f, layer) {
         krajByName[f.properties.kraj] = layer;
         layer.bindTooltip(f.properties.kraj + ' kraj', { sticky: true, direction: 'top', className: 'kraj-tip' });
-        layer.on('click', function () { selectKraj(f.properties.kraj); });
+        layer.on('click', function () {
+          if (selectedKraj !== f.properties.kraj) krajJustSelected = true; // přepnutí kraje neotevírá detail
+          selectKraj(f.properties.kraj);
+        });
         layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2, color: '#F2D79A', fillOpacity: 0.06 }); layer.bringToFront(); } });
         layer.on('mouseout', function () { if (!krajLayer) return; krajLayer.resetStyle(layer); if (selectedKraj === f.properties.kraj) styleSelectedKraj(layer); });
         // Dotyk: po 2 s popisek plynule zhasne, ať nezůstane „viset" a nebrání dalšímu klikání.
@@ -1187,7 +1224,7 @@
   function plPozemek(n) { return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků'); }
   function refreshKrajTips(vis) {
     krajCounts = {};
-    vis.forEach(function (d) { var k = krajOf(d); if (!k) return; var o = krajCounts[k] || (krajCounts[k] = { total: 0 }); o.total++; o[d.type] = (o[d.type] || 0) + 1; });
+    vis.forEach(function (d) { var k = d._gkraj; if (!k) return; var o = krajCounts[k] || (krajCounts[k] = { total: 0 }); o.total++; o[d.type] = (o[d.type] || 0) + 1; });
     Object.keys(krajByName).forEach(function (k) {
       var o = krajCounts[k];
       var parts = [];
