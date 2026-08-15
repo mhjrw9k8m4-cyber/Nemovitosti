@@ -1,0 +1,18 @@
+name: probe-formspree
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST čerstvý test na Formspree (jako web)
+        run: |
+          echo "===== odeslání testu ====="
+          curl -sS -i -X POST https://formspree.io/f/moeanjaz \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -H "Origin: https://mhjrw9k8m4-cyber.github.io" \
+            -H "Referer: https://mhjrw9k8m4-cyber.github.io/Nemovitosti/" \
+            -d '{"_subject":"TEST Pozemkomat — kontrola doruceni","zprava":"Toto je kontrolni test odeslani formulare. Pokud tuto zpravu vidite ve schrance nebo v dashboardu, odesilani funguje.","jmeno":"Test Pozemkomat","kontakt":"test@pozemkomat.cz","kde":"kontrolni test"}' \
+            | sed -e 's/\r$//' | tail -20
