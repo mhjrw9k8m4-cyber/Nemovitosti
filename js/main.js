@@ -827,9 +827,11 @@
   // Start oddálený na celou ČR (přesné vyrovnání na data řeší fitAllCZ níže).
   var map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: true }).setView([49.82, 15.47], 7);
   // Tečky kreslíme přes CANVAS (jeden obraz místo tisíce HTML značek) → plynulé i s ~1000 pozemky na mobilu.
-  // Vlastní vrstva (pane) nad kraji, aby šla vypnout klikání (kraj-lock) prostým pointer-events.
+  // Vrstva teček je vizuálně nad kraji, ale klikání propouští dolů (pointer-events:none),
+  // takže se dá vždy vybrat kraj pod ní. Klik na tečku řešíme ručně (map click + nejbližší bod).
   map.createPane('dotsPane');
   map.getPane('dotsPane').style.zIndex = 450; // nad overlayPane (kraje) = 400, pod popupy
+  map.getPane('dotsPane').style.pointerEvents = 'none'; // canvas nechytá kliky → projdou na kraje
   var dotsRenderer = L.canvas({ pane: 'dotsPane', padding: 0.5 });
   if (map.zoomControl) map.zoomControl.setPosition('topright'); // uvolní místo pro nadpis kraje
   if (map.attributionControl) map.attributionControl.setPosition('bottomleft'); // ať se nekryje s tlačítkem posunu vpravo
@@ -1132,10 +1134,23 @@
 
   DATA.forEach(function (d, i) {
     d._id = i;
-    var m = L.circleMarker([d.lat, d.lng], dotStyle(d));
+    var st = dotStyle(d); st.interactive = false; // klik řešíme ručně (canvas nechytá události)
+    var m = L.circleMarker([d.lat, d.lng], st);
     m._d = d;
-    m.on('click', function () { showDetail(d); highlightList(i); });
     markers.push(m);
+  });
+
+  // Klik na tečku: canvas kliky nechytá, tak najdeme nejbližší viditelný bod ke kliknutí.
+  // Funguje jen po výběru kraje (dokud je zamčeno, klik vybírá kraj pod tečkami).
+  map.on('click', function (e) {
+    if (dotsLocked || !lastVis.length) return;
+    var cp = e.containerPoint, best = null, bestDist = Infinity;
+    for (var i = 0; i < lastVis.length; i++) {
+      var d = lastVis[i], p = map.latLngToContainerPoint([d.lat, d.lng]);
+      var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
+      if (dist < bestDist) { bestDist = dist; best = d; }
+    }
+    if (best && bestDist <= 12 * 12) { showDetail(best); highlightList(best._id); }
   });
 
   // Tečkovaná mapa: každý pozemek = tečka. Navíc obrysy krajů pro orientaci.
@@ -1224,11 +1239,11 @@
     return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
   }
   function styleSelectedKraj(layer) { layer.setStyle({ weight: 2.6, color: '#F2D79A', fillColor: '#E0AE43', fillOpacity: 0.09 }); layer.bringToFront(); }
-  // Zámek teček: canvas-vrstvu (dotsPane) prostě přestaneme klikat → klik projde na kraje pod ní.
+  // Zámek teček: dokud není vybraný kraj, klik na tečku ignorujeme (klik pod tečkami vybere kraj).
+  var dotsLocked = true;
   function lockDots(lock) {
+    dotsLocked = lock;
     mapEl.classList.toggle('kraj-lock', lock);
-    var pane = map.getPane('dotsPane');
-    if (pane) pane.style.pointerEvents = lock ? 'none' : 'auto';
   }
   var BACK_BTN = '<button class="kh-back" type="button" aria-label="Zpět"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>';
   function updateKrajHead() {
@@ -1266,7 +1281,7 @@
     selectedKraj = k;
     if (krajLayer) krajLayer.setStyle(styleKraj);
     var layer = krajByName[k];
-    if (layer) { styleSelectedKraj(layer); if (!skipFit) map.fitBounds(layer.getBounds(), { maxZoom: 11, padding: [16, 16] }); }
+    if (layer) styleSelectedKraj(layer); // jen zvýraznit — bez přibližování (uživatel si nepřeje auto-zoom)
     lockDots(false);   // tečky teď klikací
     updateKrajHead();
   }
