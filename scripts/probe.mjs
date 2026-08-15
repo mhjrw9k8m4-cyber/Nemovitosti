@@ -1,30 +1,41 @@
 #!/usr/bin/env node
-/* Sonda v4 (rozhodující): stáhnout auctions bundle a vypsat VŠECHNY cesty
- * a HTTP volání — buď najdeme statickou API adresu, nebo potvrdíme, že je
- * dynamická (a Portál dražeb pak jako zdroj opustíme). */
+/* Sonda v5 (poslední): /router.json Portálu dražeb — najít routu pro seznam
+ * dražeb / vyhledávání, a hned ji zkusit zavolat a podívat se na odpověď. */
 
-const UA = { 'user-agent': 'Mozilla/5.0 (compatible; PozemkomatBot/0.1)' };
-const url = 'https://www.portaldrazeb.cz/build/js/web/auctions/auctions.f08f130a.js';
-const r = await fetch(url, { headers: UA });
-const js = Buffer.from(await r.arrayBuffer()).toString('utf8');
-console.log('bundle status=' + r.status + ' len=' + js.length);
+const UA = { 'user-agent': 'Mozilla/5.0 (compatible; PozemkomatBot/0.1)', accept: 'application/json' };
+const P = 'https://www.portaldrazeb.cz';
 
-// všechny absolutní cesty v uvozovkách
-const paths = new Set();
-for (const m of js.matchAll(/["'`](\/[a-z0-9][a-z0-9_\-\/{}.:%]{2,70})["'`]/gi)) paths.add(m[1]);
-console.log('\nAbsolutní cesty (' + paths.size + '):');
-[...paths].sort().slice(0, 60).forEach((p) => console.log('  ' + p));
+const rj = await fetch(P + '/router.json', { headers: UA });
+console.log('router.json status=' + rj.status + ' ct=' + rj.headers.get('content-type'));
+let routes = {};
+try {
+  const j = JSON.parse(await rj.text());
+  routes = j.routes || j;
+} catch (e) { console.log('router.json neparsuje: ' + e.message); }
 
-// kontexty HTTP volání (axios/$http/fetch/get/post)
-console.log('\nHTTP volání (kontexty):');
-const calls = new Set();
-for (const m of js.matchAll(/(?:\$http|axios|fetch|\.get|\.post|\$axios|api)\s*[.(]?\s*[`'"([]?([^`'")\s]{0,60})/gi)) {
-  const s = m[0].replace(/\s+/g, ' ').slice(0, 80);
-  if (/[/a-z]/i.test(m[1])) calls.add(s);
+const names = Object.keys(routes);
+console.log('celkem rout: ' + names.length);
+// routy, které vypadají jako seznam/vyhledávání/dražby/mapa/api
+const rel = names.filter((n) => /auction|drazb|search|list|map|filtr|hledej|verejn|public|api/i.test(n));
+console.log('\nRelevantní routy (' + rel.length + '):');
+for (const n of rel.slice(0, 40)) {
+  const r = routes[n];
+  const tokens = (r && r.tokens) ? r.tokens.map((t) => t[1] || t[3] || '').reverse().join('') : '';
+  const path = (r && (r.path || r.pattern)) || tokens || JSON.stringify(r).slice(0, 80);
+  console.log('  ' + n + '  ->  ' + (r && r.methods ? r.methods.join(',') : '') + ' ' + path);
 }
-[...calls].slice(0, 40).forEach((c) => console.log('  ' + c));
 
-// hledáme i "url:" v konfiguracích
-console.log('\n"url:" konfigurace:');
-[...new Set([...js.matchAll(/url\s*:\s*["'`]([^"'`]{2,70})["'`]/gi)].map((m) => m[1]))].slice(0, 30).forEach((u) => console.log('  ' + u));
+// zkusíme pár nejpravděpodobnějších GET rout zavolat
+const tryNames = rel.filter((n) => /list|search|map|public|verejn|auction.*(list|index|search|map)/i.test(n)).slice(0, 6);
+for (const n of tryNames) {
+  const r = routes[n];
+  let path = (r && (r.path || r.pattern)) || '';
+  if (!path && r && r.tokens) path = r.tokens.map((t) => t[1] || '').reverse().join('');
+  if (!path || /\{/.test(path)) { console.log('\n(přeskakuji ' + n + ' – parametrická cesta ' + path + ')'); continue; }
+  try {
+    const rr = await fetch(P + path, { headers: UA });
+    const txt = (await rr.text()).slice(0, 300);
+    console.log('\nCALL ' + n + ' ' + path + ' -> ' + rr.status + ' ct=' + rr.headers.get('content-type') + '\n  ' + txt.replace(/\s+/g, ' '));
+  } catch (e) { console.log('\nCALL ' + n + ' CHYBA ' + e.message); }
+}
 console.log('\n### HOTOVO');
