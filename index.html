@@ -86,7 +86,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260814J">
+  <link rel="stylesheet" href="css/styles.css?v=20260814K">
 </head>
 <body>
 
@@ -163,7 +163,7 @@
         <p class="sub">Příležitosti u pozemků jsou roztroušené po desítkách portálů a úředních desek. Pozemkomat je sbírá z veřejných zdrojů a ukazuje na jedné interaktivní mapě celé ČR. Kliknete na bod a hned vidíte výměru, druh, cenu i termín — s proklikem do katastru na ověření.</p>
         <div class="hero-ctas">
           <a href="#jak-funguje" class="btn-primary btn-lg btn-glow">Jak to funguje</a>
-          <a href="pridat.html" class="btn-add">Přidat vlastní pozemek →</a>
+          <a href="pridat.html" class="btn-add" id="hero-add">Přidat vlastní pozemek →</a>
         </div>
         <div class="trust-line"><span>✓ Data z veřejných zdrojů</span><span>✓ Celá Česká republika</span><span>✓ Bez registrace</span></div>
       </div>
@@ -669,7 +669,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/main.js?v=20260814J" defer></script>
+<script src="js/main.js?v=20260814K" defer></script>
 <script>
 /* Přepínač „Naše mapa" ↔ „Pozemky od lidí" — dvě verze na jedné stránce.
    Samostatné, nezávislé na main.js. Mapa má vlastní kód; my jen přepínáme,
@@ -717,11 +717,13 @@
       .catch(function () { return []; })
       .then(function (l) { render(Array.isArray(l) ? l : []); });
   }
+  var heroAdd = document.getElementById('hero-add');
   function show(view) {
     var mapa = view !== 'lide';
     btns.forEach(function (b) { var on = b.getAttribute('data-view') === (mapa ? 'mapa' : 'lide'); b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on)); });
     if (vMapa) { vMapa.hidden = !mapa; vMapa.classList.add('in'); }   // .in kvůli reveal-animaci
     if (vLide) vLide.hidden = mapa;
+    if (heroAdd) heroAdd.style.display = mapa ? '' : 'none';          // na „od lidí" schovat duplicitní tlačítko z hera
     if (mapa) { setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 40); }
     else { loadListings(); }
   }
