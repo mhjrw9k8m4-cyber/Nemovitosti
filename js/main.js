@@ -840,8 +840,10 @@
   }).addTo(map);
   // Lehké ovládání: mapa je hned použitelná (body klikací, stránka přes ni
   // normálně scrolluje). Tlačítko zapne režim posouvání/přibližování mapy.
-  var panBtn = document.getElementById('map-pan-toggle');
   var mapLocked = true;
+  // Mapa je „zamčená" na přehledu (stránka přes ni normálně roluje prstem). Jakmile
+  // člověk klepne na kraj (na republiku), sama se odemkne a jde s ní volně hýbat.
+  // Tlačítko „Celá ČR" ji zase zamkne. Žádné zvláštní tlačítko na hýbání není potřeba.
   function setPan(on) {
     mapLocked = !on;
     // touchZoom (pinch dvěma prsty) NECHÁVÁME zapnutý pořád — aby dva prsty
@@ -852,14 +854,12 @@
     // touch-action: zamčeno → stránka jde svisle scrollovat prstem, ale pinch
     //   chytne mapa (prohlížeč nezoomuje web); puštěno → mapou jde volně hýbat.
     mapEl.style.touchAction = on ? 'none' : 'pan-y';
-    if (panBtn) { panBtn.textContent = on ? 'Zastavit mapu' : 'Hýbat mapou'; panBtn.classList.toggle('on', on); }
     if (on) setTimeout(function () { map.invalidateSize(); }, 60);
   }
   setPan(false);
   // Tlačítko „Celá ČR" — vrátí pohled nad celou mapu a zruší výběr kraje (místo +/− ovládání zoomu).
   var resetBtn = document.getElementById('map-reset');
   if (resetBtn) resetBtn.addEventListener('click', function () { clearKraj(); });
-  if (panBtn) panBtn.addEventListener('click', function () { setPan(mapLocked); });
   window.addEventListener('resize', function () { map.invalidateSize(); });
 
   var listEl = document.getElementById('opp-list');
@@ -1325,6 +1325,7 @@
       // Lehké přiblížení ke kraji — nízký strop zoomu, ať se nezanoří moc (jen se přiblíží).
       if (!skipFit) map.fitBounds(layer.getBounds(), { maxZoom: 8, padding: [24, 24] });
     }
+    setPan(true);      // po výběru kraje jde s mapou volně hýbat (bez zvláštního tlačítka)
     lockDots(false);   // tečky teď klikací
     updateKrajHead();
   }
@@ -1336,6 +1337,7 @@
     if (krajLayer) krajLayer.setStyle(styleKraj);
     hideDetail();
     lockDots(true);    // zpět: klikají se zase kraje
+    setPan(false);     // na přehledu mapu zase zamkneme (stránka přes ni roluje)
     fitAllCZ();
     updateKrajHead();
     renderList();
@@ -1352,6 +1354,7 @@
       if (userMarker) map.removeLayer(userMarker);
       userMarker = L.marker([userPos.lat, userPos.lng], { icon: L.divIcon({ className: 'pk-me-wrap', html: '<span class="pk-me"></span>', iconSize: [18, 18], iconAnchor: [9, 9] }), zIndexOffset: 1000, interactive: false }).addTo(map);
       lockDots(false);
+      setPan(true);      // v režimu „okolí" jde s mapou taky volně hýbat
       if (nearBtn) nearBtn.classList.add('on');
       map.setView([userPos.lat, userPos.lng], 11, { animate: true });
       sortMode = 'near';

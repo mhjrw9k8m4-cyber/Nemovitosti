@@ -437,10 +437,6 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 /* Zámek mapy — mapa se hýbe jen když je odemčená */
 /* Lehké přepínání posouvání mapy (bez těžkého overlay) */
 .map-tools{position:absolute; top:12px; right:12px; z-index:600; display:flex; flex-direction:column; align-items:flex-end; gap:8px; max-width:calc(100% - 24px);}
-.map-pan-toggle{background:rgba(22,35,47,0.92); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:22px; padding:9px 16px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}
-.map-pan-toggle:hover{border-color:var(--copper-bright);}
-.map-pan-toggle:active{transform:translateY(1px);}
-.map-pan-toggle.on{background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); border-color:var(--copper);}
 .map-reset{display:inline-flex; align-items:center; gap:7px; background:rgba(22,35,47,0.92); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:22px; padding:8px 14px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}
 .map-reset:hover{border-color:var(--copper-bright);}
 .map-reset:active{transform:translateY(1px);}
@@ -452,11 +448,11 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .kraj-lock .leaflet-marker-pane{pointer-events:none;}
 .kraj-lock .leaflet-marker-icon, .kraj-lock .leaflet-marker-icon *{pointer-events:none !important;}
 /* Nápověda „vyberte kraj" (fáze 1) */
-.kraj-hint{position:absolute; top:12px; left:12px; z-index:600; display:inline-flex; align-items:center; gap:8px; background:rgba(20,32,44,0.92); border:1px solid var(--line-strong); color:var(--parchment); font-size:12.5px; font-weight:600; padding:8px 13px; border-radius:22px; box-shadow:var(--shadow); backdrop-filter:blur(4px); pointer-events:none; max-width:calc(100% - 138px);}
+.kraj-hint{position:absolute; top:12px; left:12px; z-index:600; display:inline-flex; align-items:center; gap:8px; background:rgba(20,32,44,0.92); border:1px solid var(--line-strong); color:var(--parchment); font-size:12.5px; font-weight:600; padding:8px 13px; border-radius:22px; box-shadow:var(--shadow); backdrop-filter:blur(4px); pointer-events:none; max-width:calc(100% - 118px);}
 .kraj-hint[hidden]{display:none;}
 .kraj-hint .kh-pin{width:9px; height:9px; border-radius:50%; background:var(--copper-bright); box-shadow:0 0 0 4px rgba(224,174,67,0.22); flex:none;}
 /* Vymazlený nadpis vybraného kraje (fáze 2) */
-.kraj-head{position:absolute; top:12px; left:12px; z-index:600; max-width:calc(100% - 138px); display:inline-flex; align-items:center; gap:11px; background:linear-gradient(135deg, rgba(20,32,44,0.97), rgba(30,46,62,0.97)); border:1px solid rgba(224,174,67,0.45); border-radius:13px; padding:8px 14px 8px 8px; box-shadow:0 12px 30px -12px rgba(0,0,0,0.75); backdrop-filter:blur(6px);}
+.kraj-head{position:absolute; top:12px; left:12px; z-index:600; max-width:calc(100% - 118px); display:inline-flex; align-items:center; gap:11px; background:linear-gradient(135deg, rgba(20,32,44,0.97), rgba(30,46,62,0.97)); border:1px solid rgba(224,174,67,0.45); border-radius:13px; padding:8px 14px 8px 8px; box-shadow:0 12px 30px -12px rgba(0,0,0,0.75); backdrop-filter:blur(6px);}
 .kraj-head[hidden]{display:none;}
 .kh-back{flex:none; width:38px; height:38px; border-radius:9px; border:1px solid var(--line-strong); background:rgba(255,255,255,0.05); color:var(--parchment); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .15s ease, border-color .15s ease, transform .1s ease;}
 .kh-back:hover{background:rgba(224,174,67,0.16); border-color:var(--copper-bright);}
