@@ -1318,7 +1318,11 @@
     selectedKraj = k;
     if (krajLayer) krajLayer.setStyle(styleKraj);
     var layer = krajByName[k];
-    if (layer) styleSelectedKraj(layer); // jen zvýraznit — bez přibližování (uživatel si nepřeje auto-zoom)
+    if (layer) {
+      styleSelectedKraj(layer);
+      // Lehké přiblížení ke kraji — nízký strop zoomu, ať se nezanoří moc (jen se přiblíží).
+      if (!skipFit) map.fitBounds(layer.getBounds(), { maxZoom: 8, padding: [24, 24] });
+    }
     lockDots(false);   // tečky teď klikací
     updateKrajHead();
   }
