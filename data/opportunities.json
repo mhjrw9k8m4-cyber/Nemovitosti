@@ -1420,6 +1420,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1012443-nabidka-prodej-pozemku"
     },
     {
+      "place": "Podkopná Lhota – Podkopná Lhota",
+      "okres": "Vsetín",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "trvalý travní porost",
+      "area": 2922,
+      "price": 85000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.3056533,
+      "lng": 17.8313601,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1052702-nabidka-prodej-pozemku-podkopna-lhota"
+    },
+    {
       "place": "Bojkovice – Bzová u Uherského Brodu",
       "okres": "Zlín",
       "type": "sale",
@@ -1730,19 +1743,6 @@
       "lat": 49.402317,
       "lng": 12.885662,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1055394-nabidka-prodej-pozemku-pasecnice"
-    },
-    {
-      "place": "Podkopná Lhota – Podkopná Lhota",
-      "okres": "Vsetín",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "trvalý travní porost",
-      "area": 2445,
-      "price": 75000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.3056533,
-      "lng": 17.8313601,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1052702-nabidka-prodej-pozemku-podkopna-lhota"
     },
     {
       "place": "Částkov – Částkov",
