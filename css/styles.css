@@ -315,6 +315,9 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .fav-toggle:hover{border-color:var(--copper-bright);}
 .fav-toggle.on{background:rgba(201,152,47,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
 .fav-toggle.on svg{fill:currentColor;}
+.urgent-toggle{background-image:none; padding:9px 12px; text-align:center; transition:border-color .15s ease, background .15s ease, color .15s ease;}
+.urgent-toggle:hover{border-color:var(--copper-bright);}
+.urgent-toggle.on{background:rgba(201,152,47,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
 .opp-topr{display:inline-flex; align-items:center; gap:9px;}
 .opp-fav{background:none; border:0; padding:2px; line-height:0; cursor:pointer; color:var(--text-ondark-mute); transition:color .15s ease, transform .1s ease;}
 .opp-fav svg{display:block; width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round;}

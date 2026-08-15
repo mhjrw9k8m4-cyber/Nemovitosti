@@ -632,6 +632,7 @@
         '<li><b>Účet a uložené pozemky:</b> běží zatím jen ve vašem prohlížeči (localStorage). Nic se neodesílá na server.</li>' +
         '<li><b>Data o pozemcích:</b> pocházejí z veřejných zdrojů (dražby, SPÚ, inzeráty, katastr). Nezveřejňujeme osobní údaje vlastníků.</li>' +
         '<li><b>Provoz:</b> web běží na GitHub Pages. Žádné reklamní ani sledovací skripty třetích stran.</li>' +
+        '<li><b>Vaše práva (GDPR):</b> e-mail zpracováváme jen na základě vašeho souhlasu (upozornění nebo poptávka). Máte právo na přístup k údajům, jejich opravu i výmaz — napište nám a údaje bez zbytečného odkladu smažeme.</li>' +
         '</ul><p>Dotaz? Napište nám přes <a href="#realitky" data-close>kontaktní formulář</a>.</p>'
     },
     podminky: {
@@ -930,12 +931,16 @@
   var druhEl = document.getElementById('map-druh');
   var sortEl = document.getElementById('map-sort');
   var cenaEl = document.getElementById('map-cena');
+  var areaEl = document.getElementById('map-area');
+  var urgentEl = document.getElementById('map-urgent');
   var detailEl = document.getElementById('opp-detail');
   var favEl = document.getElementById('map-fav');
   var activeType = 'all';
   var activeDruh = 'all';
   var sortMode = 'demand';
   var maxPrice = 0;
+  var minArea = 0;         // filtr minimální výměry (m²)
+  var urgentOnly = false;  // filtr: jen dražby/exekuce končící brzy (do 14 dní)
   var searchTerm = '';
   var favOnly = false;
   var markers = [];
@@ -1473,8 +1478,10 @@
     var okSearch = !searchTerm || (d.place + ' ' + d.okres).toLowerCase().indexOf(searchTerm) !== -1;
     var okDruh = activeDruh === 'all' || druhGroup(d.druh) === activeDruh;
     var okPrice = !maxPrice || !d.price || d.price <= maxPrice;
+    var okArea = !minArea || (hasArea(d) && d.area >= minArea);
+    var okUrgent = !urgentOnly || (function () { var dd = daysUntil(d.extra); return (d.type === 'drazba' || d.type === 'exekuce') && dd != null && dd >= 0 && dd <= 14; })();
     var okFav = !favOnly || isFav(d);
-    return okType && okSearch && okDruh && okPrice && okFav;
+    return okType && okSearch && okDruh && okPrice && okArea && okUrgent && okFav;
   }
   function perM2Val(d){ return hasArea(d) ? d.price / d.area : Infinity; }
   function sortVis(arr){
@@ -1577,8 +1584,16 @@
     var headLabel = sortMode === 'demand' ? 'Doporučené příležitosti' : 'Vybrané příležitosti';
     countEl.innerHTML = headLabel + ' · <span class="mc-sub">' + matched + ' na mapě</span>';
     if (matched === 0) {
-      var anyFilter = activeType !== 'all' || activeDruh !== 'all' || maxPrice || searchTerm || favOnly;
-      listEl.innerHTML = '<li class="map-count" style="padding:20px 6px; text-transform:none; font-weight:400; line-height:1.6;">Tady zrovna nic není — zkuste jiný filtr. Příležitostí přibývá každý týden.' +
+      var anyFilter = activeType !== 'all' || activeDruh !== 'all' || maxPrice || searchTerm || favOnly || urgentOnly || minArea;
+      var emptyMsg;
+      if (favOnly && !favCount()) {
+        emptyMsg = 'Zatím nemáte uložené žádné pozemky. U každé nabídky klepněte na záložku a najdete je tady pohromadě.';
+      } else if (anyFilter) {
+        emptyMsg = 'Nic neodpovídá vybraným filtrům. Zkuste je zmírnit — třeba zvýšit cenu, zvětšit rozsah výměry nebo vybrat „Vše".';
+      } else {
+        emptyMsg = 'Tady zrovna nic není. Příležitostí přibývá každý týden — zkuste to za pár dní.';
+      }
+      listEl.innerHTML = '<li class="map-count" style="padding:20px 6px; text-transform:none; font-weight:400; line-height:1.6;">' + emptyMsg +
         (anyFilter ? '<br><button type="button" id="reset-filtry" class="reset-btn">Zrušit filtry</button>' : '') + '</li>';
       var eb = listEl.querySelector('#reset-filtry');
       if (eb) eb.addEventListener('click', resetFilters);
@@ -1592,10 +1607,12 @@
   }
 
   function resetFilters() {
-    activeType = 'all'; activeDruh = 'all'; maxPrice = 0; searchTerm = ''; favOnly = false;
+    activeType = 'all'; activeDruh = 'all'; maxPrice = 0; minArea = 0; urgentOnly = false; searchTerm = ''; favOnly = false;
     if (searchEl) searchEl.value = '';
     if (druhEl) druhEl.value = 'all';
     if (cenaEl) cenaEl.value = '0';
+    if (areaEl) areaEl.value = '0';
+    if (urgentEl) { urgentEl.classList.remove('on'); urgentEl.setAttribute('aria-pressed', 'false'); }
     filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-type') === 'all');
     });
@@ -1648,6 +1665,8 @@
     sortMode = sortEl.value; renderList();
   });
   if (cenaEl) cenaEl.addEventListener('change', function () { maxPrice = parseInt(cenaEl.value, 10) || 0; renderList(); });
+  if (areaEl) areaEl.addEventListener('change', function () { minArea = parseInt(areaEl.value, 10) || 0; renderList(); });
+  if (urgentEl) urgentEl.addEventListener('click', function () { urgentOnly = !urgentOnly; urgentEl.classList.toggle('on', urgentOnly); urgentEl.setAttribute('aria-pressed', String(urgentOnly)); renderList(); });
   if (favEl) favEl.addEventListener('click', function () { favOnly = !favOnly; refreshFavBtn(); renderList(); });
 
   refreshFavBtn();
