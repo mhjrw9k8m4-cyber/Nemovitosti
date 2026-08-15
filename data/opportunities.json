@@ -6919,19 +6919,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1055785-nabidka-prodej-pozemku-chlum-svate-mari"
     },
     {
-      "place": "Žižice – Vítov",
-      "okres": "Kladno",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "orná půda",
-      "area": 8607,
-      "price": 449000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 50.24045,
-      "lng": 14.134865,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1019564-nabidka-prodej-pozemku-zizice"
-    },
-    {
       "place": "Habry – Habry",
       "okres": "Havlíčkův Brod",
       "type": "sale",
@@ -9101,6 +9088,19 @@
       "lat": 49.061256,
       "lng": 16.850857,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949158-nabidka-prodej-pozemku"
+    },
+    {
+      "place": "Mosty u Jablunkova – Mosty u Jablunkova",
+      "okres": "Karviná",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "trvalý travní porost",
+      "area": 368,
+      "price": 35000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.520096,
+      "lng": 18.758271,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1044782-nabidka-prodej-pozemku-mosty-u-jablunkova"
     },
     {
       "place": "Stráž pod Ralskem",
