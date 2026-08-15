@@ -879,7 +879,7 @@
   if (!mapEl || typeof L === 'undefined') return;
 
   // Start oddálený na celou ČR (přesné vyrovnání na data řeší fitAllCZ níže).
-  var map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: false }).setView([49.82, 15.47], 7);
+  var map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: false, boxZoom: false }).setView([49.82, 15.47], 7);
   // Tečky kreslíme přes CANVAS (jeden obraz místo tisíce HTML značek) → plynulé i s ~1000 pozemky na mobilu.
   // Vrstva teček je vizuálně nad kraji, ale klikání propouští dolů (pointer-events:none),
   // takže se dá vždy vybrat kraj pod ní. Klik na tečku řešíme ručně (map click + nejbližší bod).
@@ -907,7 +907,7 @@
     mapLocked = !on;
     // touchZoom (pinch dvěma prsty) NECHÁVÁME zapnutý pořád — aby dva prsty
     // přiblížily MAPU, ne celou stránku (na iOS jinak pinch zoomuje celý web).
-    var fns = ['dragging', 'scrollWheelZoom', 'doubleClickZoom', 'boxZoom', 'keyboard'];
+    var fns = ['dragging', 'scrollWheelZoom', 'doubleClickZoom', 'keyboard'];
     fns.forEach(function (f) { if (map[f]) map[f][on ? 'enable' : 'disable'](); });
     if (map.touchZoom) map.touchZoom.enable();
     // touch-action: zamčeno → stránka jde svisle scrollovat prstem, ale pinch

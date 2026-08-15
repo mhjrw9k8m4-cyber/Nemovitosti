@@ -40,6 +40,14 @@ a:focus-visible, button:focus-visible, select:focus-visible, [role="button"]:foc
 a{color:inherit;}
 .visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;}
 :focus-visible{outline:2px solid var(--copper-bright); outline-offset:3px; border-radius:2px;}
+/* Mapa: SVG kraje i canvas mají od Leafletu tabindex, takže je prohlížeč po klepnutí
+   zaostřil a globální :focus-visible kolem nich kreslil OBDÉLNÍK (rámeček kolem tvaru).
+   Na mapových vrstvách proto žádný obdélníkový focus rámeček nechceme. */
+.leaflet-container:focus, .leaflet-container:focus-visible,
+.leaflet-container :focus, .leaflet-container :focus-visible,
+.leaflet-interactive:focus, .leaflet-interactive:focus-visible,
+path.leaflet-interactive:focus, path.leaflet-interactive:focus-visible{ outline:none !important; }
+.leaflet-zoom-box{display:none !important;}
 
 /* Scroll reveal */
 .reveal{opacity:0; transform:translateY(22px); transition:opacity .6s var(--ease), transform .6s var(--ease);}
