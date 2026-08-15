@@ -179,7 +179,8 @@ async function fetchDrazby() {
       }
       if (picked) out.push(picked);
     }
-    if (out.length) break; // aktuální rok stačí
+    // Bereme oba roky — aktivní dražby (stav „Uveřejněno") mohou přesahovat
+    // přes přelom roku; neaktivní stejně odfiltruje stavPredmetu výše.
   }
   return out;
 }
@@ -254,7 +255,7 @@ async function fetchBezrealitky() {
     }
   }`;
   const out = [];
-  const PER = 60, PAGES = 6; // ~360 inzerátů strop (víc reálných nabídek)
+  const PER = 60, PAGES = 12; // až ~720 inzerátů — bereme co nejvíc reálných nabídek
   for (let p = 0; p < PAGES; p++) {
     let list;
     try {
@@ -305,7 +306,7 @@ async function fetchFarmy() {
   let listHtml;
   try { const r = await fetch(BASE + '/inzerce_aktualni_nabidky', { headers: UA }); if (!r.ok) return []; listHtml = await r.text(); }
   catch { return []; }
-  const ids = [...new Set([...listHtml.matchAll(/nabidka_detail\?nab=(\d+)/g)].map((m) => m[1]))].slice(0, 65);
+  const ids = [...new Set([...listHtml.matchAll(/nabidka_detail\?nab=(\d+)/g)].map((m) => m[1]))].slice(0, 130);
   const out = [];
   for (const id of ids) {
     let html;
@@ -403,7 +404,7 @@ async function main() {
   // Vyvážený výběr — ať žádná kategorie nepřeváží (jinak by stovky prodejů
   // zaplavily mapu). Dražby/exekuce bereme podle výhodnosti; u prodeje vybíráme
   // pestrý vzorek napříč cenami (ne jen nejlevnější slivery), ať je mapa zajímavá.
-  const CAP = { sale: 160, drazba: 90, exekuce: 40, obec: 40 };
+  const CAP = { sale: 160, drazba: 260, exekuce: 160, obec: 80 };
   const byType = {};
   for (const o of clean) (byType[o.type] || (byType[o.type] = [])).push(o);
   function spread(arr, n) {
@@ -418,10 +419,10 @@ async function main() {
   const byPrice = (a, b) => a.price - b.price;
   // Bezrealitky i Farmy vedou přímo na inzerát → dáme jim víc prostoru.
   // SPÚ (státní půda) nemá odkaz na konkrétní parcelu, tak jí ubereme.
-  const bez = sale.filter((o) => /Bezrealitky/i.test(o.extra || '')).slice(0, 180);
+  const bez = sale.filter((o) => /Bezrealitky/i.test(o.extra || '')).slice(0, 450);
   const farmy = sale.filter((o) => /Farmy/i.test(o.extra || ''));
   const spuSale = sale.filter((o) => /státní/i.test(o.extra || '')).sort(byPrice);
-  const saleSel = [...bez, ...farmy, ...spread(spuSale, 50)];
+  const saleSel = [...bez, ...farmy, ...spread(spuSale, 170)];
   const fresh = [
     ...saleSel,
     ...(byType.drazba || []).slice(0, CAP.drazba),
