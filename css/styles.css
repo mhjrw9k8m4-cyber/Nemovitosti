@@ -1045,3 +1045,41 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .pcs-bar i.full{background:linear-gradient(90deg, var(--c-sale), #5FB07E);}
 .pcs-hint{font-size:11.5px; color:var(--text-ondark-mute); margin-top:8px; line-height:1.45;}
 .pcs-hint b{color:var(--text-ondark);}
+/* Úroveň inzerátu (Začínáme … Špičkový) */
+.pcs-right{display:inline-flex; align-items:center; gap:8px;}
+.pc-strength .pcs-tier{font-size:11px; font-weight:700; letter-spacing:.02em; padding:2px 9px; border-radius:20px; background:rgba(237,230,214,0.08); color:var(--text-ondark-mute); transition:color .3s ease, background .3s ease;}
+.pc-strength[data-lvl="2"] .pcs-tier{color:#E7C77A; background:rgba(201,152,47,0.12);}
+.pc-strength[data-lvl="3"] .pcs-tier{color:var(--copper-bright); background:rgba(201,152,47,0.16);}
+.pc-strength[data-lvl="4"] .pcs-tier{color:var(--copper-bright); background:rgba(201,152,47,0.24);}
+.pc-strength[data-lvl="5"] .pcs-tier{color:#0E1A12; background:linear-gradient(90deg, var(--c-sale), #5FB07E);}
+
+/* Hero — 3 kroky, jak přidání funguje */
+.add-steps{list-style:none; display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:26px; max-width:720px; padding:0;}
+.add-steps li{display:flex; gap:11px; align-items:flex-start; background:rgba(22,35,47,0.5); border:1px solid var(--line); border-radius:12px; padding:13px 14px;}
+.as-num{flex:none; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:13px; color:var(--ink); background:linear-gradient(135deg,var(--copper),var(--copper-bright)); box-shadow:0 4px 12px -4px rgba(201,152,47,0.6);}
+.as-txt{display:flex; flex-direction:column;}
+.as-txt b{font-size:13.5px; color:var(--text-ondark); margin-bottom:2px;}
+.as-txt > span{font-size:12px; color:var(--text-ondark-mute); line-height:1.4;}
+
+/* Tipy na skvělý inzerát */
+.tips-list{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px;}
+.tips-list li{position:relative; padding-left:22px; font-size:12.5px; color:var(--text-ondark-mute); line-height:1.5;}
+.tips-list li b{color:var(--text-ondark);}
+.tips-list li::before{content:""; position:absolute; left:0; top:5px; width:9px; height:9px; border-radius:50%; border:2px solid var(--copper-bright);}
+
+/* Oslavné potvrzení po odeslání */
+.add-success{background:var(--ink-soft); border:1px solid rgba(95,176,126,0.4); border-radius:16px; padding:40px 28px; text-align:center; box-shadow:0 24px 60px -30px rgba(0,0,0,0.7); animation:addfade .45s var(--ease) both;}
+.add-success[hidden]{display:none;}
+.add-success h2{font-family:'Fraunces',serif; font-weight:500; font-size:26px; margin:18px 0 8px; color:var(--parchment);}
+.add-success p{font-size:14.5px; color:var(--text-ondark-mute); line-height:1.6; max-width:440px; margin:0 auto 22px;}
+.asx-check{width:72px; height:72px; margin:0 auto; border-radius:50%; background:rgba(95,176,126,0.14); display:grid; place-items:center;}
+.asx-check svg{width:52px; height:52px; fill:none; stroke:#5FB07E; stroke-width:3.5; stroke-linecap:round; stroke-linejoin:round;}
+.asx-check circle{stroke:rgba(95,176,126,0.5); stroke-dasharray:151; stroke-dashoffset:151; animation:asxCircle .5s var(--ease) forwards;}
+.asx-check path{stroke-dasharray:44; stroke-dashoffset:44; animation:asxCheck .35s var(--ease) .45s forwards;}
+@keyframes asxCircle{to{stroke-dashoffset:0;}}
+@keyframes asxCheck{to{stroke-dashoffset:0;}}
+.asx-actions{display:flex; flex-wrap:wrap; gap:10px; justify-content:center;}
+.btn-ghost{background:none; border:1px solid var(--line-strong); color:var(--text-ondark); border-radius:10px; padding:12px 18px; font-family:inherit; font-weight:600; font-size:14px; cursor:pointer; transition:border-color .15s ease;}
+.btn-ghost:hover{border-color:var(--copper-bright);}
+@media (prefers-reduced-motion:reduce){ .asx-check circle,.asx-check path{animation:none; stroke-dashoffset:0;} }
+@media (max-width:640px){ .add-steps{grid-template-columns:1fr; gap:10px; margin-top:20px;} }

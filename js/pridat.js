@@ -117,16 +117,22 @@
     var pct = 0;
     if (hasObec) pct += 20; if (hasV) pct += 15; if (hasC) pct += 15; if (hasFotky) pct += 20;
     if (val('p-druh')) pct += 8; if (hasPristup) pct += 7; if (hasSite) pct += 8; if (hasPopis) pct += 7;
-    var fill = document.getElementById('pcs-fill'), pctEl = document.getElementById('pcs-pct'), hint = document.getElementById('pcs-hint');
+    var fill = document.getElementById('pcs-fill'), pctEl = document.getElementById('pcs-pct'), hint = document.getElementById('pcs-hint'), tierEl = document.getElementById('pcs-tier');
     if (fill) { fill.style.width = pct + '%'; fill.classList.toggle('full', pct >= 100); }
     if (pctEl) pctEl.textContent = pct + ' %';
+    // Úroveň inzerátu — motivace vyplnit víc (1 = začátek … 5 = špička)
+    var lvl = pct >= 100 ? 5 : pct >= 75 ? 4 : pct >= 50 ? 3 : pct >= 25 ? 2 : 1;
+    var tier = ['', 'Začínáme', 'Dobrý základ', 'Silný inzerát', 'Skvělý inzerát', 'Špičkový inzerát'][lvl];
+    if (tierEl) tierEl.textContent = tier;
+    var sc = document.querySelector('.pc-strength'); if (sc) sc.setAttribute('data-lvl', String(lvl));
     if (hint) {
       var msg;
       if (!hasObec || !hasV || !hasC) msg = 'Vyplňte <b>obec, výměru a cenu</b> — základ inzerátu.';
       else if (!hasFotky) msg = 'Přidejte <b>fotky</b> — nabídky s fotkou přitáhnou nejvíc zájemců.';
       else if (!hasPopis) msg = 'Napište pár vět do <b>popisu</b>, ať zájemci vědí, o co jde.';
       else if (!hasSite || !hasPristup) msg = 'Doplňte <b>sítě a přístup</b> — kupující je řeší jako první.';
-      else msg = '<b>Skvělé — inzerát je připravený.</b> Můžete odeslat.';
+      else if (pct >= 100) msg = '<b>Špičkový inzerát!</b> Máte vyplněno vše důležité — směle odešlete.';
+      else msg = '<b>Skvělé — inzerát je připravený.</b> Můžete odeslat, nebo doladit detaily.';
       hint.innerHTML = msg;
     }
   }
@@ -136,6 +142,18 @@
     prodejForm.addEventListener('change', updatePreview);
     if (previewCard) updateStrength();   // počáteční stav ukazatele
   }
+  // „Přidat další pozemek" po úspěšném odeslání — vrátí formulář a vynuluje náhled
+  var addAnother = document.getElementById('add-another');
+  if (addAnother) addAnother.addEventListener('click', function () {
+    var succ = document.getElementById('add-success'); if (succ) succ.hidden = true;
+    var card = prodejForm && prodejForm.closest('.add-card');
+    if (card) { card.hidden = false; try { card.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (x) {} }
+    if (prodejForm) prodejForm.reset();
+    var lpThumb = document.getElementById('lp-thumb'); if (lpThumb) lpThumb.innerHTML = '<span class="ph"><svg viewBox="0 0 24 24"><use href="#i-map"/></svg></span>';
+    var prev = document.getElementById('p-fotky-preview'); if (prev) prev.innerHTML = '';
+    var msg = document.getElementById('msg-prodej'); if (msg) { msg.textContent = ''; msg.className = 'add-msg'; }
+    updPerm2(); updatePreview();
+  });
 
   function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
   function checked(id) { var el = document.getElementById(id); return !!(el && el.checked); }
@@ -187,6 +205,14 @@
           ms.textContent = okMsg; ms.classList.add('ok');
           showToast(toastMsg);
           form.reset();
+          // Oslavné potvrzení — schová formulář a ukáže „Hotovo!" (pokud stránka takový blok má)
+          var succ = document.querySelector('[data-success-for="' + formId + '"]');
+          if (succ) {
+            var card = form.closest('.add-card');
+            if (card) card.hidden = true;
+            succ.hidden = false;
+            try { succ.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (x) {}
+          }
         } else {
           ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.';
           ms.classList.add('err');
