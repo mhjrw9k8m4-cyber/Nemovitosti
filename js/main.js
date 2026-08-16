@@ -1085,19 +1085,23 @@
     var dd = daysUntil(d.extra);
     return dd != null && dd >= 0 && dd <= 7;
   }
+  // Zvýrazněný (placený) inzerát — drží se výš v seznamu, má výraznější bod
+  // a odznak „Zvýrazněno". Nastavuje se příznakem featured:true v datech.
+  function isFeatured(d) { return !!d.featured; }
   // Jednotlivý pozemek = čistá tečka v barvě kategorie (ukáže se po přiblížení).
   // Kreslí se přes canvas (L.circleMarker) — proto styl, ne HTML.
   var DOT_R = 3.3, DOT_R_SEL = 5.8;
   function dotStyle(d) {
-    var col = TYPE[d.type].color, urgent = isUrgent(d);
+    var col = TYPE[d.type].color, urgent = isUrgent(d), feat = isFeatured(d);
     // Klidnější body: nespěšné mají jen jemný okraj (ne výrazný bílý kroužek),
     // ať mapa při celostátním pohledu nepůsobí přeplácaně. Urgentní zůstávají výrazné.
+    // Zvýrazněné (placené) inzeráty jsou o něco větší s plnějším okrajem.
     return {
       renderer: dotsRenderer,
-      radius: urgent ? DOT_R + 0.6 : DOT_R,
+      radius: urgent ? DOT_R + 0.6 : (feat ? DOT_R + 0.9 : DOT_R),
       fillColor: col, fillOpacity: 0.9,
-      color: urgent ? '#fff' : 'rgba(255,255,255,0.35)',
-      weight: urgent ? 1.8 : 0.7,
+      color: (urgent || feat) ? '#fff' : 'rgba(255,255,255,0.35)',
+      weight: urgent ? 1.8 : (feat ? 1.6 : 0.7),
       opacity: 1
     };
   }
@@ -1146,7 +1150,7 @@
       '<div class="md-body">' +
         '<div class="md-shape" style="border-color:' + t.color + '55">' + shapeSvg(d) + '</div>' +
         '<div class="md-info">' +
-          '<div class="md-top"><span class="lp-dot" style="background:' + t.color + '"></span><b>' + t.label + '</b> · ' + d.place + ', okres ' + d.okres + cdBig + '</div>' +
+          '<div class="md-top"><span class="lp-dot" style="background:' + t.color + '"></span><b>' + t.label + '</b> · ' + d.place + ', okres ' + d.okres + (isFeatured(d) ? '<span class="md-feat">Zvýrazněno</span>' : '') + cdBig + '</div>' +
           '<div class="md-facts">' +
             (hasParcel(d) ? '<span>Parcela <b>č. ' + d.parcel + '</b></span>' : '') +
             '<span>Druh <b>' + d.druh + '</b></span>' +
@@ -1550,6 +1554,8 @@
     else if (sortMode === 'perm2_asc') arr.sort(function (a, b) { return perM2Val(a) - perM2Val(b); });
     else if (sortMode === 'near' && userPos) arr.sort(function (a, b) { return kmFromUser(a) - kmFromUser(b); });
     else arr.sort(function (a, b) { return demand(b) - demand(a); });
+    // Zvýrazněné (placené) inzeráty nahoru — stabilní dořazení zachová pořadí uvnitř skupin.
+    arr.sort(function (a, b) { return (isFeatured(b) ? 1 : 0) - (isFeatured(a) ? 1 : 0); });
     return arr;
   }
 
@@ -1610,7 +1616,7 @@
       var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
       var hot = !!hotIds[d._id];
       var li = document.createElement('li');
-      li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '');
+      li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '') + (isFeatured(d) ? ' is-featured' : '');
       li.setAttribute('data-id', d._id);
       li.setAttribute('tabindex', '0');
       li.setAttribute('role', 'button');
@@ -1630,6 +1636,7 @@
         (sortMode === 'near' && userPos && isFinite(kmFromUser(d)) ? '<span class="opp-km">' + (kmFromUser(d) < 1 ? '<1' : Math.round(kmFromUser(d))) + ' km</span>' : '');
       // Stavové odznaky pohromadě na jednom řádku
       var chips = [];
+      if (isFeatured(d)) chips.push('<span class="opp-feat">Zvýrazněno</span>');
       if (cd) chips.push(cd);
       if (perM2 && dealMax && perM2 <= dealMax) chips.push('<span class="opp-deal">výhodná cena</span>');
       if (hot) chips.push('<span class="opp-hot">Doporučujeme</span>');

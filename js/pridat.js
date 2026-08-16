@@ -241,6 +241,7 @@
       fd.append('odkaz', val('p-odkaz') || '(neuvedeno)');
       fd.append('jmeno', val('p-jmeno'));
       fd.append('kontakt', val('p-kontakt'));
+      fd.append('zvyraznit', checked('p-zvyraznit') ? 'ANO — zájem o zvýraznění (299 Kč)' : 'ne');
       var fEl = document.getElementById('p-fotky');
       if (fEl && fEl.files) { [].slice.call(fEl.files).slice(0, 8).forEach(function (f, i) { fd.append('fotka' + (i + 1), f); }); }
       return fd;

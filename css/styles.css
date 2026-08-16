@@ -417,6 +417,10 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 /* Řádek odznaků — všechny stavy pohromadě, stejný tvar */
 .opp-chips{display:flex; flex-wrap:wrap; gap:6px;}
 .opp-hot{display:inline-block; font-size:10.5px; font-weight:700; color:#E8863F; background:rgba(232,134,63,0.14); border:1px solid rgba(232,134,63,0.4); border-radius:10px; padding:1px 8px; letter-spacing:0.02em; text-transform:uppercase;}
+/* Zvýrazněný (placený) inzerát — prémiový plný odznak + jemné orámování karty */
+.opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:#08222C; background:linear-gradient(135deg, var(--copper-bright), var(--copper)); border:0; border-radius:10px; padding:2px 9px; letter-spacing:0.03em; text-transform:uppercase; box-shadow:0 1px 5px rgba(46,144,180,0.35);}
+.opp-item.is-featured{border-color:rgba(91,184,214,0.5); box-shadow:inset 0 0 0 1px rgba(91,184,214,0.3);}
+.md-feat{display:inline-flex; align-items:center; margin-left:9px; font-size:11px; font-weight:700; padding:2px 10px; border-radius:11px; color:#08222C; background:linear-gradient(135deg, var(--copper-bright), var(--copper)); letter-spacing:0.03em; text-transform:uppercase; white-space:nowrap; box-shadow:0 1px 5px rgba(46,144,180,0.35);}
 /* Odpočet do termínu dražby (reálné datum) */
 .opp-cd{display:inline-block; font-size:10.5px; font-weight:700; padding:1px 8px; border-radius:10px; background:rgba(143,160,175,0.14); color:var(--text-ondark); letter-spacing:0.01em; white-space:nowrap;}
 .opp-cd.soon{background:rgba(217,164,65,0.16); color:var(--copper-bright);}
@@ -933,6 +937,15 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .add-check{display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--text-ondark-mute); line-height:1.45;}
 .add-check input{width:18px; height:18px; flex:none; margin-top:1px; accent-color:var(--copper);}
 .add-check a{color:var(--copper-bright);}
+/* Volitelné zvýraznění inzerátu (placený upsell, poctivě označený) */
+.add-boost{border:1px solid rgba(91,184,214,0.4); background:linear-gradient(180deg, rgba(46,144,180,0.10), rgba(46,144,180,0.04)); border-radius:12px; padding:16px 18px;}
+.boost-head{display:flex; align-items:flex-start; gap:12px; cursor:pointer;}
+.boost-head input{width:20px; height:20px; flex:none; margin-top:2px; accent-color:var(--copper);}
+.boost-txt{display:flex; flex-direction:column; gap:3px;}
+.boost-txt b{color:var(--text-ondark); font-size:15px; display:flex; align-items:center; gap:9px;}
+.boost-price{font-size:12px; font-weight:700; color:#08222C; background:linear-gradient(135deg, var(--copper-bright), var(--copper)); border-radius:8px; padding:2px 9px; letter-spacing:0.02em;}
+.boost-desc{font-size:13.5px; color:var(--text-ondark-mute); line-height:1.5;}
+.boost-note{font-size:12.5px; color:var(--text-ondark-mute); margin:11px 0 0; padding-top:11px; border-top:1px dashed var(--line);}
 .add-form .btn-primary{padding:15px; font-size:15.5px; text-align:center; margin-top:4px;}
 .add-msg{font-size:13.5px; min-height:16px; color:var(--text-ondark-mute); margin-top:2px;}
 .add-msg.ok{color:var(--c-sale);}
