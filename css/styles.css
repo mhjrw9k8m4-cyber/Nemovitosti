@@ -220,7 +220,8 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 }
 @media (max-width:560px){
   .hero-head h1{font-size:26px;}
-  .hero-head .sub{display:none;}
+  /* podnadpis necháme i na mobilu — vysvětluje smysl webu (na první dobrou) */
+  .hero-head .sub{font-size:14.5px; margin-bottom:14px;}
   .hero-head .trust-line{display:none;}
 }
 
