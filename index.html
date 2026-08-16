@@ -86,7 +86,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260815zs">
+  <link rel="stylesheet" href="css/styles.css?v=20260815zt">
 </head>
 <body>
 
@@ -492,95 +492,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/config.js?v=20260815zs" defer></script>
-<script src="js/main.js?v=20260815zs" defer></script>
-<script>
-/* Přepínač „Naše mapa" ↔ „Pozemky od lidí" — dvě verze na jedné stránce.
-   Samostatné, nezávislé na main.js. Mapa má vlastní kód; my jen přepínáme,
-   co je vidět, a při návratu na mapu spustíme resize (Leaflet se dorovná). */
-(function () {
-  var sw = document.querySelector('.view-switch'); if (!sw) return;
-  var vMapa = document.getElementById('view-mapa');
-  var vLide = document.getElementById('view-lide');
-  var btns = [].slice.call(sw.querySelectorAll('.vs-btn'));
-  var loaded = false;
-  // Na dotyku (mobil) otevíráme odkaz inzerátu ve stejné záložce — ať funguje Zpět na naši stránku.
-  var IS_TOUCH = (typeof matchMedia === 'function' && matchMedia('(hover: none)').matches) || ('ontouchstart' in window);
-  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function czk(n) { n = parseInt(n, 10); return n > 0 ? n.toLocaleString('cs-CZ') + ' Kč' : ''; }
-  function badge(t) {
-    t = (t || '').toLowerCase();
-    if (t.indexOf('prodej') !== -1) return { l: 'Prodej', c: 'var(--c-sale)' };
-    if (t.indexOf('poptáv') !== -1 || t.indexOf('hled') !== -1) return { l: 'Poptávka', c: 'var(--c-obec)' };
-    if (t.indexOf('pronáj') !== -1) return { l: 'Pronájem', c: 'var(--c-drazba)' };
-    if (t.indexOf('směn') !== -1) return { l: 'Směna', c: 'var(--c-obec)' };
-    return { l: 'Inzerát', c: 'var(--c-obec)' };
-  }
-  function render(list) {
-    var wrap = document.getElementById('lide-listings');
-    var empty = document.getElementById('lide-empty');
-    var grid = document.getElementById('user-listings'), count = document.getElementById('ul-count');
-    if (!grid) return;
-    if (!list.length) { if (wrap) wrap.hidden = true; if (empty) empty.hidden = false; return; }  // prázdný stav (výzva „Buďte první")
-    if (empty) empty.hidden = true;
-    if (wrap) wrap.hidden = false;
-    if (count) count.textContent = list.length + (list.length === 1 ? ' nabídka' : (list.length < 5 ? ' nabídky' : ' nabídek'));
-    grid.className = 'ul-grid';
-    grid.innerHTML = list.map(function (d) {
-      var b = badge(d.typ), place = esc(d.obec || d.lokalita || 'Pozemek'), meta = [];
-      if (d.okres) meta.push('okres ' + esc(d.okres));
-      if (d.vymera) meta.push(esc(d.vymera) + ' m²');
-      var price = czk(d.cena || d.castka);
-      var perm2 = (d.cena && d.vymera && d.vymera > 0) ? (Math.round(d.cena / d.vymera).toLocaleString('cs-CZ') + ' Kč/m²') : '';
-      var thumb = d.foto
-        ? '<div class="ul-thumb"><img src="' + esc(d.foto) + '" alt="" loading="lazy"></div>'
-        : '<div class="ul-thumb"><span class="ph"><svg viewBox="0 0 24 24"><use href="#i-map"/></svg></span></div>';
-      var tags = [];
-      if (d.pristup) tags.push(esc(d.pristup));
-      if (Array.isArray(d.site)) d.site.forEach(function (s) { tags.push(esc(s)); });
-      var verified = (d.overeno !== false) ? '<span class="ul-verified"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg>Zkontrolováno</span>' : '';
-      var link = d.odkaz ? '<a class="ul-src" href="' + esc(d.odkaz) + '"' + (IS_TOUCH ? ' rel="nofollow"' : ' target="_blank" rel="noopener nofollow"') + '>Více &rarr;</a>' : '';
-      return '<div class="ul-card">' + thumb +
-        '<span class="ul-badge" style="background:' + b.c + '">' + b.l + '</span>' +
-        '<h3>' + place + '</h3>' +
-        (meta.length ? '<div class="ul-meta">' + meta.join(' · ') + '</div>' : '') +
-        (price ? '<div class="ul-topline"><span class="ul-price">' + price + '</span>' + (perm2 ? '<span class="ul-perm2">' + perm2 + '</span>' : '') + '</div>' : '') +
-        (tags.length ? '<div class="ul-tags">' + tags.map(function (t) { return '<span>' + t + '</span>'; }).join('') + '</div>' : '') +
-        (d.popis ? '<div class="ul-desc">' + esc(d.popis) + '</div>' : '') +
-        '<div class="ul-topline" style="margin-top:4px;">' + verified + link + '</div>' +
-        '</div>';
-    }).join('');
-  }
-  function loadListings() {
-    if (loaded) return; loaded = true;
-    fetch('data/user-listings.json', { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : []; })
-      .catch(function () { return []; })
-      .then(function (l) { render(Array.isArray(l) ? l : []); });
-  }
-  function show(view) {
-    var mapa = view !== 'lide';
-    btns.forEach(function (b) { var on = b.getAttribute('data-view') === (mapa ? 'mapa' : 'lide'); b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on)); });
-    if (vMapa) { vMapa.hidden = !mapa; vMapa.classList.add('in'); }   // .in kvůli reveal-animaci
-    if (vLide) vLide.hidden = mapa;
-    if (mapa) { setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 40); }
-    else { loadListings(); }
-  }
-  btns.forEach(function (b) {
-    b.addEventListener('click', function () {
-      var v = b.getAttribute('data-view'); show(v);
-      if (history.replaceState) history.replaceState(null, '', v === 'lide' ? '#lide' : '#mapa');
-    });
-  });
-  if (location.hash === '#lide' || location.hash === '#pozemky-od-lidi') {
-    show('lide');
-    setTimeout(function () { sw.scrollIntoView({ block: 'start' }); }, 120);
-  }
-  window.addEventListener('hashchange', function () {
-    if (location.hash === '#lide') show('lide');
-    else if (location.hash === '#mapa' || location.hash === '') show('mapa');
-  });
-})();
-</script>
+<script src="js/config.js?v=20260815zt" defer></script>
+<script src="js/main.js?v=20260815zt" defer></script>
 </body>
 </html>
