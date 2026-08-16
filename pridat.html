@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260815zf">
+  <link rel="stylesheet" href="css/styles.css?v=20260815zp">
 </head>
 <body>
 
@@ -48,8 +48,8 @@
     <a class="logo" href="index.html" aria-label="Pozemkomat — domů"><span class="logo-mark" aria-hidden="true"></span>Pozemkomat</a>
     <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
     <nav id="nav" aria-label="Hlavní navigace">
-      <a href="index.html#mapa">Naše mapa</a>
-      <a href="index.html#lide">Pozemky od lidí</a>
+      <a href="index.html#mapa">Dražby a prodeje</a>
+      <a href="index.html#lide">Od majitelů</a>
       <a href="index.html#mapa" class="btn-primary">Zpět na mapu</a>
     </nav>
   </div>
@@ -62,7 +62,7 @@
     <div class="wrap add-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Přidat pozemek na prodej</div>
       <h1>Prodáváte pozemek? <em>Vytvořte hezký inzerát</em> za pár minut.</h1>
-      <p class="sub">Vyplňujte a vpravo <b>živě sledujte</b>, jak vaše nabídka vypadá. Po automatické kontrole se objeví v sekci <b>Pozemky od lidí</b>, kde ji najdou zájemci — zdarma a bez provize.</p>
+      <p class="sub">Vyplňujte a vpravo <b>živě sledujte</b>, jak vaše nabídka vypadá. Po automatické kontrole se objeví v sekci <b>Od majitelů</b>, kde ji najdou zájemci — zdarma a bez provize.</p>
       <div class="add-chips"><span>Zdarma</span><span>Bez provize</span><span>Na mapě celé ČR</span><span>Přímý kontakt</span></div>
       <ol class="add-steps" aria-label="Jak přidání funguje">
         <li><span class="as-num">1</span><span class="as-txt"><b>Vyplníte základ</b><span>Obec, výměra, cena — a hned vidíte náhled.</span></span></li>
@@ -79,7 +79,7 @@
         <!-- Formulář v elevované kartě -->
         <div>
           <div class="add-card">
-            <p class="add-lead" style="margin-top:0;"><b>Tip:</b> čím víc vyplníte — <b>fotky, sítě i přístup</b> — tím víc zájemců oslovíte. Nabídka projde <b>automatickou kontrolou údajů</b> a pak se objeví v sekci „Pozemky od lidí". Kontakt použijeme jen ke zpracování.</p>
+            <p class="add-lead" style="margin-top:0;"><b>Tip:</b> čím víc vyplníte — <b>fotky, sítě i přístup</b> — tím víc zájemců oslovíte. Nabídka projde <b>automatickou kontrolou údajů</b> a pak se objeví v sekci „Od majitelů". Kontakt použijeme jen ke zpracování.</p>
             <form class="add-form" id="form-prodej" novalidate>
               <div class="add-field">
                 <label for="p-obec">Obec / lokalita <span class="req">*</span></label>
@@ -182,9 +182,9 @@
           <div class="add-success" id="add-success" data-success-for="form-prodej" hidden>
             <div class="asx-check"><svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></div>
             <h2>Hotovo! Nabídka je odeslaná.</h2>
-            <p>Projde automatickou kontrolou a pak se objeví v sekci <b>Pozemky od lidí</b> na mapě celé ČR. Díky, že jste ji přidali sem.</p>
+            <p>Projde automatickou kontrolou a pak se objeví v sekci <b>Od majitelů</b> na mapě celé ČR. Díky, že jste ji přidali sem.</p>
             <div class="asx-actions">
-              <a href="index.html#lide" class="btn-primary btn-glow">Zobrazit Pozemky od lidí</a>
+              <a href="index.html#lide" class="btn-primary btn-glow">Zobrazit nabídky od majitelů</a>
               <button type="button" class="btn-ghost" id="add-another">Přidat další pozemek</button>
             </div>
           </div>
@@ -252,7 +252,7 @@
       <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Pozemkomat</span></div>
       <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého. Děláme to s péčí, protože jsme se v tom sami hrabali.</p>
     </div>
-    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Naše mapa</a><a href="index.html#lide">Pozemky od lidí</a><a href="pridat.html">Přidat pozemek</a></nav>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Dražby a prodeje</a><a href="index.html#lide">Od majitelů</a><a href="pridat.html">Přidat pozemek</a></nav>
     <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="pravidla-inzerce.html#nahlasit">Nahlásit inzerát</a><a href="index.html#realitky">Kontakt</a></nav>
   </div>
@@ -261,7 +261,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260815zf" defer></script>
-<script src="js/pridat.js?v=20260815zf" defer></script>
+<script src="js/config.js?v=20260815zp" defer></script>
+<script src="js/pridat.js?v=20260815zp" defer></script>
 </body>
 </html>

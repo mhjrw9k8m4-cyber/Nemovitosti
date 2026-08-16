@@ -86,7 +86,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260815zo">
+  <link rel="stylesheet" href="css/styles.css?v=20260815zp">
 </head>
 <body>
 
@@ -123,8 +123,8 @@
     <a class="logo" href="#mapa" aria-label="Pozemkomat — domů"><span class="logo-mark" aria-hidden="true"></span>Pozemkomat</a>
     <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
     <nav id="nav" aria-label="Hlavní navigace">
-      <a href="#mapa">Naše mapa</a>
-      <a href="#lide">Pozemky od lidí</a>
+      <a href="#mapa">Dražby a prodeje</a>
+      <a href="#lide">Od majitelů</a>
       <a href="#jak-funguje">Jak to funguje</a>
       <a href="#faq">Dotazy</a>
       <button type="button" class="nav-login" id="btn-login"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg>Přihlásit</button>
@@ -166,8 +166,8 @@
 
     <div class="map-wide">
       <div class="view-switch" role="tablist" aria-label="Přepnout zobrazení">
-        <button type="button" class="vs-btn active" data-view="mapa" role="tab" aria-selected="true">Naše mapa</button>
-        <button type="button" class="vs-btn" data-view="lide" role="tab" aria-selected="false">Pozemky od lidí</button>
+        <button type="button" class="vs-btn active" data-view="mapa" role="tab" aria-selected="true">Dražby a prodeje</button>
+        <button type="button" class="vs-btn" data-view="lide" role="tab" aria-selected="false">Od majitelů</button>
       </div>
 
       <div class="map-app reveal" id="view-mapa">
@@ -260,7 +260,7 @@
 
       <div id="view-lide" hidden>
         <div class="lide-hero">
-          <div class="eyebrow"><span class="live-dot"></span>Pozemky od lidí</div>
+          <div class="eyebrow"><span class="live-dot"></span>Od majitelů</div>
           <h2>Nabídky přímo od majitelů — <em>bez provize.</em></h2>
           <p>Pozemky, které sem přidali sami lidé — odděleně od naší mapy z veřejných zdrojů. Se zájemci jste v přímém kontaktu a vlastníka i parcelu si vždy ověříte v katastru.</p>
           <div class="add-chips lide-badges"><span>Zdarma</span><span>Bez provize</span><span>Přímý kontakt</span><span>Kontrolované údaje</span></div>
@@ -430,7 +430,7 @@
       <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Pozemkomat</span></div>
       <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého. Děláme to s péčí, protože jsme se v tom sami hrabali.</p>
     </div>
-    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="#mapa">Naše mapa</a><a href="#lide">Pozemky od lidí</a><a href="pridat.html">Přidat pozemek</a><a href="#upozorneni">Upozornění</a></nav>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="#mapa">Dražby a prodeje</a><a href="#lide">Od majitelů</a><a href="pridat.html">Přidat pozemek</a><a href="#upozorneni">Upozornění</a></nav>
     <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="#jak-funguje">Jak to funguje</a><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="exekuce-pozemku.html">Exekuce na pozemku</a><a href="#slovnicek">Slovníček</a><a href="#faq">Časté dotazy</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="#" data-info="soukromi">Zásady soukromí</a><a href="#" data-info="podminky">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="#realitky">Kontakt</a></nav>
   </div>
@@ -544,8 +544,8 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/config.js?v=20260815zo" defer></script>
-<script src="js/main.js?v=20260815zo" defer></script>
+<script src="js/config.js?v=20260815zp" defer></script>
+<script src="js/main.js?v=20260815zp" defer></script>
 <script>
 /* Přepínač „Naše mapa" ↔ „Pozemky od lidí" — dvě verze na jedné stránce.
    Samostatné, nezávislé na main.js. Mapa má vlastní kód; my jen přepínáme,
