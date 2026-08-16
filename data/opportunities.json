@@ -4709,19 +4709,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1045206-nabidka-prodej-pozemku-plchovice"
     },
     {
-      "place": "Brodek u Konice – Brodek u Konice",
-      "okres": "Blansko",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "orná půda",
-      "area": 2138,
-      "price": 90000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.539131,
-      "lng": 16.827317,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1030361-nabidka-prodej-pozemku-brodek-u-konice"
-    },
-    {
       "place": "Katov – Katov",
       "okres": "Brno-venkov",
       "type": "sale",
@@ -9101,6 +9088,19 @@
       "lat": 49.035563,
       "lng": 17.2618,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1023708-nabidka-prodej-pozemku-ujezdec"
+    },
+    {
+      "place": "Němčice – Němčice",
+      "okres": "Blansko",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": 1596,
+      "price": 149000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.445944,
+      "lng": 16.716385,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/973791-nabidka-prodej-pozemku"
     },
     {
       "place": "Stráž pod Ralskem",
