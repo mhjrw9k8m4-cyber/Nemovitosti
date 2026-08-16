@@ -148,7 +148,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 #nav a.btn-primary:hover{color:var(--ink);}
 #nav a:not(.btn-primary).active{color:var(--text-ondark);}
 #nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--copper-bright); border-radius:2px;}
-@media (max-width:880px){ #nav a:not(.btn-primary).active::after{display:none;} }
+@media (max-width:880px){ #nav a:not(.btn-primary).active::after{content:"→"; position:static; display:inline; left:auto; right:auto; bottom:auto; width:auto; height:auto; background:none; border-radius:0; color:var(--copper-bright); opacity:0.55; font-family:'Inter',sans-serif; font-size:17px;} #nav a:not(.btn-primary).active{color:var(--copper-bright);} }
 /* Přihlášení / profil v hlavičce */
 .nav-login{display:inline-flex; align-items:center; gap:7px; background:rgba(46,144,180,0.12); border:1px solid var(--copper); color:var(--copper-bright); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; padding:8px 16px; border-radius:20px; transition:background .15s ease, border-color .15s ease, box-shadow .15s ease;}
 .nav-login .ic{width:16px; height:16px;}
@@ -864,18 +864,21 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 }
 @media (max-width:880px){
   .nav-toggle{display:flex;}
-  /* Mobilní menu = čistý celoobrazovkový panel, nic pod ním neprosvítá */
-  #nav{position:fixed; top:100%; left:0; right:0; height:100vh; flex-direction:column; align-items:stretch; gap:0; background:var(--ink); padding:22px 32px calc(28px + env(safe-area-inset-bottom, 0px)); display:none; overflow-y:auto; z-index:5;}
+  /* Mobilní menu = čistý celoobrazovkový panel; velké elegantní odkazy, akce dole */
+  #nav{position:fixed; top:100%; left:0; right:0; height:100vh; flex-direction:column; align-items:stretch; gap:0; background:var(--ink); padding:14px 28px calc(26px + env(safe-area-inset-bottom, 0px)); display:none; overflow-y:auto; z-index:5;}
   #nav.open{display:flex; animation:navdrop .2s var(--ease);}
   body.nav-open{overflow:hidden;}
   @keyframes navdrop{from{opacity:0;} to{opacity:1;}}
-  #nav a{padding:18px 2px; border-bottom:1px solid var(--line); font-size:18px; font-weight:600; color:var(--text-ondark);}
-  #nav a.btn-primary{text-align:center; margin-top:20px; border-bottom:0; padding:15px 20px; font-size:16px; color:var(--ink);}
-  /* Přihlášení v mobilním menu — výrazné, přes celou šířku, nahoře */
-  .nav-login{order:-1; justify-content:center; width:100%; margin-bottom:6px; padding:14px; font-size:16px; font-weight:700; border-radius:10px; border-width:1.5px; background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); box-shadow:0 6px 18px -6px rgba(46,144,180,0.6);}
+  #nav a:not(.btn-primary){display:flex; align-items:center; justify-content:space-between; padding:21px 2px; border-bottom:1px solid rgba(228,236,244,0.07); font-family:'Fraunces',serif; font-size:23px; font-weight:500; color:var(--text-ondark); letter-spacing:-0.01em;}
+  #nav a:not(.btn-primary)::after{content:"→"; font-family:'Inter',sans-serif; font-size:17px; color:var(--copper-bright); opacity:0.55;}
+  #nav a:not(.btn-primary):active{color:var(--copper-bright);}
+  #nav a.btn-primary{text-align:center; margin-top:auto; border-bottom:0; padding:17px 20px; font-size:16px; font-weight:700; color:var(--ink); border-radius:12px;}
+  /* Přihlášení = decentní obrys nahoře (ne křiklavé) */
+  .nav-login{order:-1; justify-content:center; width:100%; margin:4px 0 18px; padding:14px; font-size:15px; font-weight:600; border-radius:12px; border:1.5px solid var(--line-strong); background:transparent; color:var(--text-ondark); box-shadow:none;}
+  .nav-login:hover, .nav-login:active{border-color:var(--copper-bright); color:var(--copper-bright); background:rgba(46,144,180,0.08);}
   .nav-login .ic{width:18px; height:18px;}
-  .nav-profile{order:-1; width:100%; margin-bottom:6px;}
-  .nav-profile .profile-chip{width:100%; justify-content:center; padding:11px; font-size:15px;}
+  .nav-profile{order:-1; width:100%; margin:4px 0 18px;}
+  .nav-profile .profile-chip{width:100%; justify-content:center; padding:13px; font-size:15px; border-radius:12px;}
   .profile-menu{position:static; margin-top:8px; min-width:0; width:100%;}
   .steps, .embed-demo, .alert-box{grid-template-columns:1fr;}
   .beforeafter{grid-template-columns:1fr;} .ba-arrow{transform:rotate(90deg); justify-self:center;}
