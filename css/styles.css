@@ -864,11 +864,13 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 }
 @media (max-width:880px){
   .nav-toggle{display:flex;}
-  #nav{position:absolute; top:100%; left:0; right:0; flex-direction:column; align-items:stretch; gap:0; background:var(--ink); border-bottom:1px solid var(--line); padding:12px 32px 22px; display:none;}
-  #nav.open{display:flex; animation:navdrop .24s var(--ease);}
-  @keyframes navdrop{from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:none;}}
-  #nav a{padding:14px 0; border-bottom:1px solid var(--line); font-size:15px;}
-  #nav a.btn-primary{text-align:center; margin-top:10px; border-bottom:1px solid var(--copper); padding:12px 20px;}
+  /* Mobilní menu = čistý celoobrazovkový panel, nic pod ním neprosvítá */
+  #nav{position:fixed; top:100%; left:0; right:0; height:100vh; flex-direction:column; align-items:stretch; gap:0; background:var(--ink); padding:22px 32px calc(28px + env(safe-area-inset-bottom, 0px)); display:none; overflow-y:auto; z-index:5;}
+  #nav.open{display:flex; animation:navdrop .2s var(--ease);}
+  body.nav-open{overflow:hidden;}
+  @keyframes navdrop{from{opacity:0;} to{opacity:1;}}
+  #nav a{padding:18px 2px; border-bottom:1px solid var(--line); font-size:18px; font-weight:600; color:var(--text-ondark);}
+  #nav a.btn-primary{text-align:center; margin-top:20px; border-bottom:0; padding:15px 20px; font-size:16px; color:var(--ink);}
   /* Přihlášení v mobilním menu — výrazné, přes celou šířku, nahoře */
   .nav-login{order:-1; justify-content:center; width:100%; margin-bottom:6px; padding:14px; font-size:16px; font-weight:700; border-radius:10px; border-width:1.5px; background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); box-shadow:0 6px 18px -6px rgba(46,144,180,0.6);}
   .nav-login .ic{width:18px; height:18px;}

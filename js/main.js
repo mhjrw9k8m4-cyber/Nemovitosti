@@ -249,11 +249,13 @@
       var open = nav.classList.toggle('open');
       toggle.setAttribute('aria-expanded', String(open));
       toggle.setAttribute('aria-label', open ? 'Zavřít menu' : 'Otevřít menu');
+      document.body.classList.toggle('nav-open', open); // zamkne scroll pozadí
     });
     nav.addEventListener('click', function (e) {
       if (e.target.tagName === 'A' && nav.classList.contains('open')) {
         nav.classList.remove('open');
         toggle.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('nav-open');
       }
     });
   }
