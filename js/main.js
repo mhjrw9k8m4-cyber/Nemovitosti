@@ -1199,6 +1199,27 @@
     if (!holderEl.classList.contains('detail-open')) return;
     if (detailEl && !detailEl.contains(e.target)) hideDetail();
   });
+
+  // Přepínač Mapa / Seznam (mobil): zobrazí jedno místo obojího nad sebou.
+  (function () {
+    var appEl = document.querySelector('.map-app');
+    var mvBtns = document.querySelectorAll('.mv-toggle .mvt-btn');
+    if (!appEl || !mvBtns.length) return;
+    function setView(mv) {
+      var seznam = mv === 'seznam';
+      appEl.classList.toggle('mv-seznam', seznam);
+      mvBtns.forEach(function (b) {
+        var on = b.getAttribute('data-mv') === mv;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', String(on));
+      });
+      // mapa byla schovaná → po zobrazení ji přepočítat, ať se správně vykreslí
+      if (!seznam) { setTimeout(function () { map.invalidateSize(); }, 60); }
+    }
+    mvBtns.forEach(function (b) {
+      b.addEventListener('click', function () { setView(b.getAttribute('data-mv')); });
+    });
+  })();
   var selMarkerId = -1;
   function highlightMarker(id) {
     if (selMarkerId === id) return;
@@ -1625,6 +1646,7 @@
 
     var headLabel = sortMode === 'demand' ? 'Doporučené příležitosti' : 'Vybrané příležitosti';
     countEl.innerHTML = headLabel + ' · <span class="mc-sub">' + matched + ' na mapě</span>';
+    var mvCount = document.getElementById('mvt-count'); if (mvCount) mvCount.textContent = matched ? '(' + matched + ')' : '';
     if (matched === 0) {
       var anyFilter = activeType !== 'all' || activeDruh !== 'all' || maxPrice || searchTerm || favOnly || urgentOnly || minArea;
       var emptyMsg;

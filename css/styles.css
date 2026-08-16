@@ -835,13 +835,26 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .to-top:hover{background:var(--copper-bright);}
 
 /* Responsive */
+/* Přepínač Mapa / Seznam — jen na mobilu, ať seznam není zahrabaný pod mapou */
+.mv-toggle{display:none;}
+.mv-toggle .mvt-btn{display:inline-flex; align-items:center; justify-content:center; gap:7px;}
+.mv-toggle .mvt-btn svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+.mvt-n{font-size:11px; opacity:0.8;}
 @media (max-width:960px){
   .map-app{display:flex; flex-direction:column; grid-template-columns:1fr; height:auto; gap:0; border-radius:16px;}
   .map-controls-panel{order:1; border-right:0; border-bottom:1px solid var(--line);}
   .map-holder{order:2; height:74vh; max-height:640px; min-height:460px;}
-  .map-side{order:3; border-right:0; border-top:1px solid var(--line);}
+  .map-side{order:3; border-right:0;}
   .map-canvas{flex:1; min-height:0;}
   .map-side{max-height:none;}
+  /* Toggle viditelný a funkční na mobilu */
+  .mv-toggle{display:flex; gap:5px; margin-top:14px; background:var(--ink); border:1px solid var(--line); border-radius:11px; padding:4px;}
+  .mvt-btn{flex:1; padding:10px; border:0; border-radius:8px; background:none; color:var(--text-ondark-mute); font-weight:600; font-family:inherit; font-size:14px; cursor:pointer; transition:background .15s ease, color .15s ease;}
+  .mvt-btn.active{background:var(--copper); color:var(--ink);}
+  /* Výchozí: mapa; při .mv-seznam: seznam. Vždy jen jedno. */
+  .map-app.mv-seznam .map-holder{display:none;}
+  .map-app:not(.mv-seznam) .map-side{display:none;}
+  .map-app.mv-seznam .map-side{border-top:0;}
   .opp-list{max-height:none; overflow:visible; flex:none;}
   #leaflet-map{position:absolute; inset:0;}
   .status-grid{grid-template-columns:repeat(2,1fr);} .counters-row{grid-template-columns:repeat(2,1fr); gap:36px 24px;}
