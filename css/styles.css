@@ -183,7 +183,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px); z-index:4000; max-width:calc(100% - 32px); background:var(--ink-soft2); border:1px solid var(--copper); color:var(--text-ondark); font-size:13.5px; font-weight:500; padding:13px 20px; border-radius:10px; box-shadow:0 14px 36px -10px rgba(0,0,0,0.7); opacity:0; transition:opacity .3s var(--ease), transform .3s var(--ease); pointer-events:none;}
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
-.btn-primary{background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); font-weight:600; font-size:14px; padding:10px 20px; border-radius:4px; text-decoration:none; border:1px solid var(--copper); transition:filter .15s ease, transform .1s ease, box-shadow .15s ease; white-space:nowrap; cursor:pointer;}
+.btn-primary{background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); font-weight:700; font-size:14px; padding:10px 20px; border-radius:10px; text-decoration:none; border:1px solid var(--copper); transition:filter .15s ease, transform .1s ease, box-shadow .15s ease; white-space:nowrap; cursor:pointer;}
 .btn-primary:hover{filter:brightness(1.07);}
 .btn-primary:active{transform:translateY(1px);}
 
@@ -233,7 +233,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .hero-ctas{display:flex; align-items:center; gap:22px; margin-bottom:48px; flex-wrap:wrap;}
 /* Výrazné druhé tlačítko v heru — proklik na „Přidat pozemek" */
 .btn-add{display:inline-flex; align-items:center; justify-content:center; gap:6px; width:auto;
-  padding:15px 30px; font-size:15px; font-weight:600; text-decoration:none; border-radius:4px;
+  padding:15px 30px; font-size:15px; font-weight:600; text-decoration:none; border-radius:10px;
   background:rgba(46,144,180,0.10); color:var(--copper-bright); border:1.5px solid var(--copper);
   transition:background .15s ease, border-color .15s ease, transform .1s ease, box-shadow .15s ease;}
 .btn-add:hover{background:rgba(46,144,180,0.18); border-color:var(--copper-bright); transform:translateY(-1px); box-shadow:0 8px 22px -10px rgba(46,144,180,0.5);}
@@ -351,7 +351,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .mc-toggles{grid-column:1 / -1; display:flex; gap:8px;}
 .mc-toggles .map-select{flex:1 1 0; min-width:0;}
 .map-select{width:100%; background:var(--ink-soft); border:1px solid var(--line); color:var(--text-ondark); border-radius:8px; padding:9px 30px 9px 11px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; appearance:none; -webkit-appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c9982f' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 11px center;}
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%235BB8D6' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 11px center;}
 .map-select:focus-visible{border-color:var(--copper-bright); outline:none;}
 .map-select option{background:var(--ink); color:var(--text-ondark);}
 .fav-toggle{background-image:none; padding:9px 12px; display:inline-flex; align-items:center; justify-content:center; gap:6px; transition:border-color .15s ease, background .15s ease, color .15s ease;}
@@ -610,7 +610,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 @media (max-width:820px){ .realtor-grid{grid-template-columns:1fr;} }
 /* Poptávka pro realitky/obce */
 .realtor-contact{margin-top:20px; background:linear-gradient(135deg, var(--ink-soft) 0%, var(--ink-soft2) 100%); border:1px solid var(--line); border-radius:12px; padding:34px; display:grid; grid-template-columns:1fr 1.1fr; gap:36px; align-items:center;}
-.rct-copy h3{font-family:'Fraunces',serif; font-size:23px; font-weight:500; margin-bottom:10px;}
+.rct-copy h2{font-family:'Fraunces',serif; font-size:23px; font-weight:500; margin-bottom:10px;}
 .rct-copy p{font-size:14.5px; color:var(--text-ondark-mute); line-height:1.6;}
 .rct-form{display:flex; flex-direction:column; gap:11px;}
 .rct-row{display:grid; grid-template-columns:1fr 1fr; gap:11px;}
@@ -750,7 +750,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .pc-feats li span{font-size:12.5px; line-height:1.55; color:var(--text-ondark-mute);}
 .pc-why{font-size:12.5px; line-height:1.6; color:var(--text-ondark); background:rgba(46,144,180,0.09); border:1px solid rgba(46,144,180,0.24); border-radius:8px; padding:12px 14px; margin:0 0 20px;}
 .pc-why b{color:var(--copper-bright);}
-.btn-outline{display:block; text-align:center; background:transparent; color:var(--text-ondark); border:1px solid var(--line); border-radius:3px; padding:13px; font-weight:600; font-size:14px; text-decoration:none; transition:border-color .15s ease, background .15s ease;}
+.btn-outline{display:block; text-align:center; background:transparent; color:var(--text-ondark); border:1px solid var(--line); border-radius:10px; padding:13px; font-weight:600; font-size:14px; text-decoration:none; transition:border-color .15s ease, background .15s ease;}
 .btn-outline:hover{border-color:var(--copper-bright); background:rgba(46,144,180,0.08);}
 .price-card .btn-primary{text-align:center; padding:13px;}
 
@@ -1142,7 +1142,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 /* Úroveň inzerátu (Začínáme … Špičkový) */
 .pcs-right{display:inline-flex; align-items:center; gap:8px;}
 .pc-strength .pcs-tier{font-size:11px; font-weight:700; letter-spacing:.02em; padding:2px 9px; border-radius:20px; background:rgba(224,236,244,0.08); color:var(--text-ondark-mute); transition:color .3s ease, background .3s ease;}
-.pc-strength[data-lvl="2"] .pcs-tier{color:#E7C77A; background:rgba(46,144,180,0.12);}
+.pc-strength[data-lvl="2"] .pcs-tier{color:#7FCBE0; background:rgba(46,144,180,0.12);}
 .pc-strength[data-lvl="3"] .pcs-tier{color:var(--copper-bright); background:rgba(46,144,180,0.16);}
 .pc-strength[data-lvl="4"] .pcs-tier{color:var(--copper-bright); background:rgba(46,144,180,0.24);}
 .pc-strength[data-lvl="5"] .pcs-tier{color:#0E1A12; background:linear-gradient(90deg, var(--c-sale), #5FB07E);}
