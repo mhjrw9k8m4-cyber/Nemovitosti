@@ -157,6 +157,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 /* Když je uživatel přihlášený, tlačítko „Přihlásit" musí zmizet — jinak by
    svítilo vedle profilu. Atributová selektor přebije .nav-login{display:…}. */
 .nav-login[hidden], .nav-profile[hidden]{display:none !important;}
+.nav-cta-note{display:none;}
 .profile-chip{display:inline-flex; align-items:center; gap:8px; background:var(--ink-soft2); border:1px solid var(--line); border-radius:20px; padding:4px 12px 4px 4px; font-family:inherit; font-size:13px; font-weight:600; color:var(--text-ondark); cursor:pointer; transition:border-color .15s ease;}
 .profile-chip:hover{border-color:var(--copper);}
 .avatar{width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); font-weight:700; font-size:13px; flex:none;}
@@ -870,15 +871,22 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 }
 @media (max-width:880px){
   .nav-toggle{display:flex;}
-  /* Mobilní menu = čistý celoobrazovkový panel; velké elegantní odkazy, akce dole */
-  #nav{position:fixed; top:100%; left:0; right:0; height:100vh; flex-direction:column; align-items:stretch; gap:0; background:var(--ink); padding:14px 28px calc(26px + env(safe-area-inset-bottom, 0px)); display:none; overflow-y:auto; z-index:5;}
+  /* Mobilní menu = čistý celoobrazovkový panel; velké elegantní odkazy, akce dole.
+     Výška končí přesně na spodku obrazovky: panel začíná pod hlavičkou (top:100%
+     = výška hlavičky, protože hlavička je díky backdrop-filter kontejnerem),
+     takže height = viditelná výška (dvh) minus hlavička. dvh řeší lištu iOS Safari,
+     aby se panel nepřetahoval mimo obrazovku a tlačítko nezmizelo dole. */
+  #nav{position:fixed; top:100%; left:0; right:0; height:calc(100vh - 100%); height:calc(100dvh - 100%); flex-direction:column; align-items:stretch; gap:0; background:var(--ink); padding:16px 28px calc(24px + env(safe-area-inset-bottom, 0px)); display:none; overflow-y:auto; overscroll-behavior:contain; z-index:5;}
   #nav.open{display:flex; animation:navdrop .2s var(--ease);}
   body.nav-open{overflow:hidden;}
   @keyframes navdrop{from{opacity:0;} to{opacity:1;}}
-  #nav a:not(.btn-primary){display:flex; align-items:center; justify-content:space-between; padding:21px 2px; border-bottom:1px solid rgba(228,236,244,0.07); font-family:'Fraunces',serif; font-size:23px; font-weight:500; color:var(--text-ondark); letter-spacing:-0.01em;}
+  #nav a:not(.btn-primary){display:flex; align-items:center; justify-content:space-between; padding:20px 2px; border-bottom:1px solid rgba(228,236,244,0.07); font-family:'Fraunces',serif; font-size:23px; font-weight:500; color:var(--text-ondark); letter-spacing:-0.01em;}
   #nav a:not(.btn-primary)::after{content:"→"; font-family:'Inter',sans-serif; font-size:17px; color:var(--copper-bright); opacity:0.55;}
   #nav a:not(.btn-primary):active{color:var(--copper-bright);}
-  #nav a.btn-primary{text-align:center; margin-top:auto; border-bottom:0; padding:17px 20px; font-size:16px; font-weight:700; color:var(--ink); border-radius:12px;}
+  #nav a.btn-primary{text-align:center; margin-top:auto; border-bottom:0; padding:17px 20px; font-size:16.5px; font-weight:700; color:var(--ink); border-radius:12px;}
+  /* Popisek pod hlavní akcí — ať „Přidat pozemek" má dole jasné, ne prázdné místo */
+  .nav-cta-note{display:none;}
+  #nav .nav-cta-note{display:block; text-align:center; margin-top:12px; font-size:13px; color:var(--text-ondark-mute); line-height:1.45;}
   /* Přihlášení = decentní obrys nahoře (ne křiklavé) */
   .nav-login{order:-1; justify-content:center; width:100%; margin:4px 0 18px; padding:14px; font-size:15px; font-weight:600; border-radius:12px; border:1.5px solid var(--line-strong); background:transparent; color:var(--text-ondark); box-shadow:none;}
   .nav-login:hover, .nav-login:active{border-color:var(--copper-bright); color:var(--copper-bright); background:rgba(46,144,180,0.08);}
