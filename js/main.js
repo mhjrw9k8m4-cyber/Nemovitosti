@@ -1201,10 +1201,12 @@
   });
 
   // Přepínač Mapa / Seznam (mobil): zobrazí jedno místo obojího nad sebou.
+  // Na mobilu ukážeme rovnou SEZNAM pozemků (obsah), mapa je na klepnutí.
   (function () {
     var appEl = document.querySelector('.map-app');
     var mvBtns = document.querySelectorAll('.mv-toggle .mvt-btn');
     if (!appEl || !mvBtns.length) return;
+    var mapFittedVisible = false;
     function setView(mv) {
       var seznam = mv === 'seznam';
       appEl.classList.toggle('mv-seznam', seznam);
@@ -1213,12 +1215,20 @@
         b.classList.toggle('active', on);
         b.setAttribute('aria-selected', String(on));
       });
-      // mapa byla schovaná → po zobrazení ji přepočítat, ať se správně vykreslí
-      if (!seznam) { setTimeout(function () { map.invalidateSize(); }, 60); }
+      // Mapa byla schovaná → po zobrazení přepočítat velikost; při prvním
+      // zobrazení i znovu vystředit na ČR (fit z inicializace proběhl naprázdno).
+      if (!seznam) {
+        setTimeout(function () {
+          map.invalidateSize();
+          if (!mapFittedVisible) { fitAllCZ(); mapFittedVisible = true; }
+        }, 70);
+      }
     }
     mvBtns.forEach(function (b) {
       b.addEventListener('click', function () { setView(b.getAttribute('data-mv')); });
     });
+    // Výchozí zobrazení na mobilu = seznam (rovnou vidíš nabídky)
+    if (window.matchMedia && window.matchMedia('(max-width:960px)').matches) setView('seznam');
   })();
   var selMarkerId = -1;
   function highlightMarker(id) {
