@@ -1229,8 +1229,9 @@
     mvBtns.forEach(function (b) {
       b.addEventListener('click', function () { setView(b.getAttribute('data-mv')); });
     });
-    // Výchozí zobrazení na mobilu = seznam (rovnou vidíš nabídky)
-    if (window.matchMedia && window.matchMedia('(max-width:960px)').matches) setView('seznam');
+    // Výchozí zobrazení = MAPA (web je hlavně mapa). Seznam je na jedno klepnutí,
+    // takže není zahrabaný pod mapou jako dřív.
+    setView('mapa');
   })();
   var selMarkerId = -1;
   function highlightMarker(id) {
