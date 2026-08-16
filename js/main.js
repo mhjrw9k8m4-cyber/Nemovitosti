@@ -24,7 +24,8 @@
     sale:    { label:'Na prodej',    color:'#3E9B63', link:{ label:'Nabídka SPÚ',          url:'https://spu.gov.cz/nabidky' } },
     drazba:  { label:'Dražba',       color:'#D9A441', link:{ label:'Detail dražby',       url:'https://www.portaldrazeb.cz/' } },
     exekuce: { label:'Exekuce',      color:'#C15B44', link:{ label:'Insolvenční rejstřík', url:'https://isir.justice.cz/isir/common/index.do' } },
-    obec:    { label:'Obecní záměr', color:'#5E86C4', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } }
+    obec:    { label:'Obecní záměr', color:'#5E86C4', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } },
+    majitel: { label:'Od majitele',  color:'#8E6FB8', link:{ label:'Ověřit v katastru',    url:'https://www.ikatastr.cz/' } }
   };
   // 14 krajů ČR — přehled po krajích (rozdělení mapy). Okres → kraj + střed kraje.
   var KRAJE = {
@@ -65,6 +66,13 @@
   // rovnou IDENTIFIKUJE a vyznačí (ukáže bublinu s parcelou), ne jen vycentruje.
   function katastrUrl(d){ return 'https://www.ikatastr.cz/#info=' + d.lat + ',' + d.lng; }
   function mapyUrl(d){ return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat; }
+  // Kontakt na majitele z inzerátu — e-mail → mailto:, jinak telefon → tel:
+  function contactHref(c){
+    c = String(c || '').trim();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)) return 'mailto:' + c;
+    var tel = c.replace(/[^\d+]/g, '');
+    return tel ? 'tel:' + tel : '#';
+  }
   // Státní půda SPÚ (§ 12) nemá stránku pro konkrétní parcelu — prodává se přes
   // veřejnou nabídku, kam se podává žádost. Odkážeme tedy na skutečný seznam nabídek.
   var SPU_OFFERS = 'https://spu.gov.cz/nabidky/prehled-cela-cr';
@@ -1131,7 +1139,7 @@
     // Zpět a člověk se vrátí na naši stránku. Na počítači necháváme novou záložku (dá se přepnout).
     var extAttr = isTouch ? '' : ' target="_blank" rel="noopener"';
     var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
-    var priceLabel = d.type === 'drazba' ? 'Vyvolávací' : (d.type === 'sale' ? 'Cena' : 'Odhad');
+    var priceLabel = d.type === 'drazba' ? 'Vyvolávací' : (d.type === 'sale' || d.type === 'majitel' ? 'Cena' : 'Odhad');
     var days = daysUntil(d.extra);
     var cdBig = days != null && days >= 0 ? '<span class="md-cd' + countdownClass(days) + '">Termín ' + countdownText(days) + '</span>' : '';
     return '<button class="md-topbar" type="button" data-detail-back><span>Zavřít detail</span><span class="mx">✕</span></button>' +
@@ -1149,11 +1157,13 @@
           '</div>' +
           priceBarHtml(d) +
           (isSPU(d) ? '<div class="md-note">Státní půda se prodává přes <b>veřejnou nabídku SPÚ (§ 12)</b> — otevřete „Nabídka SPÚ", parcelu ověříte přes „Katastr".</div>' : '') +
+          (d.type === 'majitel' ? '<div class="md-note">Inzerát vložil <b>majitel pozemku</b>. Pozemkomat je jen platforma — vlastníka a parcelu si ověřte v katastru.</div>' : '') +
         '</div>' +
         '<div class="md-actions">' +
+          (d.type === 'majitel' && d.contact ? '<a class="lp-btn lp-src" href="' + contactHref(d.contact) + '">Kontakt na majitele</a>' : '') +
           '<a class="lp-btn" href="' + katastrUrl(d) + '"' + extAttr + '>Katastr</a>' +
           '<a class="lp-btn" href="' + mapyUrl(d) + '"' + extAttr + '>Mapa</a>' +
-          (function () { var s = sourceLink(d); return '<a class="lp-btn lp-src" href="' + s.url + '"' + extAttr + '>' + s.label + '</a>'; })() +
+          (d.type === 'majitel' ? '' : (function () { var s = sourceLink(d); return '<a class="lp-btn lp-src" href="' + s.url + '"' + extAttr + '>' + s.label + '</a>'; })()) +
           (auctionYMD(d.extra) ? '<button class="lp-btn" type="button" data-cal>Do kalendáře</button>' : '') +
           '<button class="lp-btn lp-fav' + (isFav(d) ? ' on' : '') + '" type="button" data-fav-detail>' + BM_SVG + '<span>' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
           '<button class="lp-btn" type="button" data-share>Sdílet</button>' +
@@ -1348,7 +1358,7 @@
     Object.keys(krajByName).forEach(function (k) {
       var o = krajCounts[k];
       var parts = [];
-      if (o) ['sale', 'drazba', 'exekuce', 'obec'].forEach(function (tp) { if (o[tp]) parts.push(o[tp] + '× ' + TYPE[tp].label.toLowerCase()); });
+      if (o) ['sale', 'drazba', 'exekuce', 'obec', 'majitel'].forEach(function (tp) { if (o[tp]) parts.push(o[tp] + '× ' + TYPE[tp].label.toLowerCase()); });
       var txt = '<b>' + k + ' kraj</b><br>' + (o ? o.total + ' ' + plPozemek(o.total) + (parts.length ? ' · ' + parts.join(', ') : '') : 'žádné nabídky');
       krajByName[k].setTooltipContent(txt);
     });
@@ -1496,7 +1506,7 @@
     DATA.forEach(function (d) { present2[d.type] = true; });
     var urgentN = DATA.filter(isUrgent).length;
     var lh = '';
-    ['sale', 'drazba', 'exekuce', 'obec'].forEach(function (tp) {
+    ['sale', 'drazba', 'exekuce', 'obec', 'majitel'].forEach(function (tp) {
       if (present2[tp]) lh += '<span class="lg-item"><span class="lg-dot" style="background:' + TYPE[tp].color + '"></span>' + TYPE[tp].label + '</span>';
     });
     if (urgentN) lh += '<span class="lg-item lg-urgent"><span class="lg-dot lg-ring"></span>dražba do 7 dní</span>';
@@ -1549,7 +1559,7 @@
   function demand(d) {
     if (d._demand != null) return d._demand;
     var perM2 = hasArea(d) ? d.price / d.area : 500;
-    var typeBonus = { drazba: 22, exekuce: 18, obec: 12, sale: 8 }[d.type] || 0;
+    var typeBonus = { drazba: 22, exekuce: 18, obec: 12, sale: 8, majitel: 10 }[d.type] || 0;
     var deal = Math.max(0, Math.min(58, (900 - perM2) / 18)); // výhodnost s nasycením
     d._demand = Math.max(6, Math.round(9 + typeBonus + deal));
     return d._demand;
@@ -1756,10 +1766,22 @@
 
   /* ---------- Načtení reálných dat s bezpečnou zálohou ---------- */
   function loadJSON(url) { return fetch(url, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
-  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json')])
+  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json')])
     .then(function (res) {
-      var j = res[0], kraje = res[1];
+      var j = res[0], kraje = res[1], ul = res[2];
       var arr = Array.isArray(j) ? j : (j && j.opportunities);
-      boot(arr && arr.length ? arr : FALLBACK_DATA, kraje || null, j && j.updated);
+      var base = (arr && arr.length ? arr.slice() : FALLBACK_DATA.slice());
+      // Pozemky od majitelů — schválené inzeráty z data/user-listings.json
+      // přidáme na mapu MEZI ostatní (ne do zvláštní sekce), jako kategorie „Od majitele".
+      var users = Array.isArray(ul) ? ul : (ul && ul.listings);
+      if (users && users.length) {
+        users.forEach(function (u) {
+          if (!u || typeof u.lat !== 'number' || typeof u.lng !== 'number') return;
+          u.type = 'majitel';
+          if (!u.extra) u.extra = 'od majitele';
+          base.push(u);
+        });
+      }
+      boot(base, kraje || null, j && j.updated);
     });
 })();

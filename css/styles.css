@@ -3,7 +3,7 @@
   --parchment:#EAF1F6; --parchment-dim:#D6E1EA;
   --text-onlight:#20293A; --text-ondark:#E4ECF2; --text-ondark-mute:#8698A8;
   --copper:#2E90B4; --copper-bright:#5BB8D6;
-  --c-sale:#3E9B63; --c-drazba:#D9A441; --c-exekuce:#C15B44; --c-obec:#5E86C4;
+  --c-sale:#3E9B63; --c-drazba:#D9A441; --c-exekuce:#C15B44; --c-obec:#5E86C4; --c-majitel:#8E6FB8;
   --line: rgba(224,236,244,0.13);
   --line-strong: rgba(224,236,244,0.24);
   --panel:#1a2a39;
@@ -333,6 +333,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .filter-chip.active[data-type="drazba"]{background:linear-gradient(135deg, #E8B95A, var(--c-drazba)); color:#3a2c05;}
 .filter-chip.active[data-type="exekuce"]{background:linear-gradient(135deg, #CE6A52, var(--c-exekuce));}
 .filter-chip.active[data-type="obec"]{background:linear-gradient(135deg, #5A89AD, var(--c-obec));}
+.filter-chip.active[data-type="majitel"]{background:linear-gradient(135deg, #9B7FC7, var(--c-majitel));}
 .filter-chip.active .c{box-shadow:0 0 0 2px rgba(255,255,255,0.55);}
 /* Rozbalovací panel „Cena, výměra a řazení" — výchozí stav je klidný, detaily na klepnutí */
 .ms-filters{margin-top:12px; border:1px solid var(--line); border-radius:10px; background:var(--ink); overflow:hidden;}
