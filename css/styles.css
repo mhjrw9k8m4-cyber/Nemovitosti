@@ -866,7 +866,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 @media (max-width:960px){
   .map-app{display:flex; flex-direction:column; grid-template-columns:1fr; height:auto; gap:0; border-radius:16px;}
   .map-controls-panel{order:1; border-right:0; border-bottom:1px solid var(--line);}
-  .map-holder{order:2; height:74vh; max-height:640px; min-height:460px;}
+  .map-holder{order:2; height:56vh; max-height:520px; min-height:380px;}
   .map-side{order:3; border-right:0;}
   .map-canvas{flex:1; min-height:0;}
   .map-side{max-height:none;}

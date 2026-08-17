@@ -1361,18 +1361,25 @@
   // Interaktivní jsou JEN tečky ve vybraném kraji. Klik do jiného kraje ten kraj jen
   // vybere (předchozí se zamkne) — teprve další klik na tečku v něm otevře detail.
   var krajJustSelected = false; // klik, který právě přepnul kraj, neotevírá detail
-  map.on('click', function (e) {
-    if (krajJustSelected) { krajJustSelected = false; return; }
-    if (dotsLocked || !selectedKraj || !lastVis.length) return;
-    var cp = e.containerPoint, best = null, bestDist = Infinity;
+  // Najdi pozemek pod klepnutím (napříč všemi viditelnými body) a otevři ho.
+  // Díky tomu jde na bod klepnout HNED — i bez předchozího výběru kraje.
+  // Vrací true, když se nějaký pozemek otevřel.
+  function tryOpenDotAt(cp) {
+    if (!lastVis.length) return false;
+    var best = null, bestDist = Infinity;
     for (var i = 0; i < lastVis.length; i++) {
       var d = lastVis[i];
-      if (d._gkraj !== selectedKraj) continue; // jen tečky ve vybraném kraji (dle geometrie)
       var p = map.latLngToContainerPoint([d.lat, d.lng]);
       var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
       if (dist < bestDist) { bestDist = dist; best = d; }
     }
-    if (best && bestDist <= 12 * 12) { showDetail(best); highlightList(best._id); }
+    var TH = 15; // px – pohodlný dotykový cíl
+    if (best && bestDist <= TH * TH) { showDetail(best); highlightList(best._id); return true; }
+    return false;
+  }
+  map.on('click', function (e) {
+    if (krajJustSelected) { krajJustSelected = false; return; }
+    tryOpenDotAt(e.containerPoint);
   });
 
   // Tečkovaná mapa: každý pozemek = tečka. Navíc obrysy krajů pro orientaci.
@@ -1387,8 +1394,10 @@
       onEachFeature: function (f, layer) {
         krajByName[f.properties.kraj] = layer;
         layer.bindTooltip(f.properties.kraj + ' kraj', { sticky: true, direction: 'top', className: 'kraj-tip' });
-        layer.on('click', function () {
-          if (selectedKraj !== f.properties.kraj) krajJustSelected = true; // přepnutí kraje neotevírá detail
+        layer.on('click', function (e) {
+          krajJustSelected = true; // klik obsloužíme tady; navazující map-click přeskoč
+          // Klepnutí přímo na bod pozemku otevře pozemek (ne výběr kraje) — intuitivnější.
+          if (tryOpenDotAt(e.containerPoint)) return;
           selectKraj(f.properties.kraj);
         });
         layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2, color: '#F2D79A', fillOpacity: 0.06 }); layer.bringToFront(); } });
@@ -1656,11 +1665,12 @@
     // ne pro třetinu — aby badge nesvítil skoro všude.
     var pv = vis.map(perM2Val).filter(function (x) { return isFinite(x) && x > 0; }).sort(function (a, b) { return a - b; });
     var dealMax = pv.length >= 5 ? pv[Math.min(2, pv.length - 1)] : 0;
-    // „★ Doporučujeme" jen pro 3 nejlepší podle interního skóre (nezávisle na řazení),
-    // a jen když je z čeho vybírat (min. 5 nabídek).
+    // „★ Doporučujeme" jen pro JEDINOU nejlepší nabídku podle interního skóre
+    // (nezávisle na řazení), a jen když je z čeho vybírat (min. 5 nabídek).
+    // Dřív svítilo na 3 kartách za sebou = působilo to jako spam.
     var hotIds = {};
     if (vis.length >= 5) {
-      vis.slice().sort(function (a, b) { return demand(b) - demand(a); }).slice(0, 3)
+      vis.slice().sort(function (a, b) { return demand(b) - demand(a); }).slice(0, 1)
         .forEach(function (d) { hotIds[d._id] = true; });
     }
     var top = vis.slice(0, LIST_LIMIT);
