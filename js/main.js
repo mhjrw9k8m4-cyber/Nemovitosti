@@ -1071,6 +1071,18 @@
       '<div class="md-bar-track"><span class="md-bar-med" style="left:50%"></span><span class="md-bar-dot" style="left:' + pct + '%"></span></div>' +
       '</div>';
   }
+  // Jak výhodná je cena za m² oproti podobným (stejný typ+druh) — vrací percentil
+  // (0 = nejlevnější) a „levnější než X %". null, když není dost srovnání.
+  function dealInfo(d) {
+    if (!hasArea(d) || !d.price) return null;
+    var arr = perM2Index[d.type + '|' + druhGroup(d.druh)];
+    if (!arr || arr.length < 10) return null;
+    if (arr[arr.length - 1] <= arr[0] * 1.2) return null; // ceny skoro stejné → nemá smysl
+    var val = d.price / d.area, below = 0;
+    for (var i = 0; i < arr.length; i++) { if (arr[i] <= val) below++; }
+    var pct = Math.max(2, Math.min(98, Math.round(below / arr.length * 100)));
+    return { pct: pct, cheaper: 100 - pct, sample: arr.length };
+  }
 
   // Naplníme filtr druhů podle toho, co je v datech (s počty)
   if (druhEl) {
@@ -1821,6 +1833,18 @@
   }
 
   // Sdílený odkaz ?p=<klíč> otevře konkrétní pozemek a odscrolluje na mapu
+  // Otevři konkrétní pozemek: přiblíž mapu na jeho okolí, otevři detail a
+  // sroluj mapu do zorného pole. Sdílí ho sdílený odkaz i „Nejvýhodnější".
+  function openParcel(target) {
+    if (!target) return;
+    var k = krajOf(target);
+    if (k) selectKraj(k, true);
+    map.setView([target.lat, target.lng], 14, { animate: false });
+    updateMapView();
+    showDetail(target);
+    highlightList(target._id);
+    if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
+  }
   function openFromUrl() {
     var m = /[?&]p=([^&]+)/.exec(location.search);
     if (!m) return false;
@@ -1829,17 +1853,55 @@
     var target = null;
     DATA.forEach(function (d) { if (pkey(d) === key) target = d; });
     if (!target) return false;
-    // Sdílený odkaz míří na konkrétní parcelu → rovnou odemkneme tečky
-    // (bez přeskládání zoomu na celý kraj), ať se dá klikat i na sousední.
-    var k = krajOf(target);
-    if (k) selectKraj(k, true);
-    map.setView([target.lat, target.lng], 14, { animate: false });
-    updateMapView();
-    showDetail(target);
-    highlightList(target._id);
-    if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
+    openParcel(target);
     return true;
   }
+  // „Nejvýhodnější právě teď" — přidaná hodnota ukázaná čísly: pozemky, které
+  // vyšly nejlevněji oproti podobným nabídkám. Reálná data, žádné sliby.
+  function renderDeals() {
+    var grid = document.getElementById('deals-grid');
+    var sec = document.getElementById('vyhodne');
+    if (!grid || !sec) return;
+    // Jen jeden nejvýhodnější z každého druhu — ať to není 6× stejná levná
+    // orná půda, ale pestrá ukázka (stavební, zahrada, louka…). Pestřejší =
+    // uvěřitelnější a užitečnější.
+    var byGroup = {};
+    DATA.forEach(function (d) {
+      var di = dealInfo(d);
+      if (!di || di.cheaper < 65) return;
+      var g = druhGroup(d.druh);
+      var cur = byGroup[g];
+      if (!cur || di.cheaper > cur.di.cheaper || (di.cheaper === cur.di.cheaper && perM2Val(d) < perM2Val(cur.d))) {
+        byGroup[g] = { d: d, di: di };
+      }
+    });
+    var scored = Object.keys(byGroup).map(function (g) { return byGroup[g]; });
+    scored.sort(function (a, b) { return b.di.cheaper - a.di.cheaper || perM2Val(a.d) - perM2Val(b.d); });
+    var top = scored.slice(0, 6);
+    if (top.length < 3) { sec.hidden = true; return; } // radši nic než pár náhod
+    grid.innerHTML = top.map(function (o) {
+      var d = o.d, t = TYPE[d.type];
+      var perM2 = Math.round(d.price / d.area);
+      return '<button type="button" class="deal-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
+        '<div class="deal-badge">levnější než ' + o.di.cheaper + ' % podobných</div>' +
+        '<div class="deal-place"><span class="deal-dot" style="background:' + t.color + '"></span>' + d.place + '</div>' +
+        '<div class="deal-sub">' + t.label + ' · ' + (d.druh || 'pozemek') + ' · okres ' + d.okres + '</div>' +
+        '<div class="deal-figs"><b>' + fmt(d.price) + ' Kč</b><span>' + fmt(d.area) + ' m²</span><span>' + fmt(perM2) + ' Kč/m²</span></div>' +
+      '</button>';
+    }).join('');
+    sec.hidden = false;
+  }
+  (function () {
+    var grid = document.getElementById('deals-grid');
+    if (!grid) return;
+    grid.addEventListener('click', function (e) {
+      var card = e.target.closest('.deal-card');
+      if (!card) return;
+      var k; try { k = decodeURIComponent(card.getAttribute('data-rkey')); } catch (x) { return; }
+      var d = keyIndex()[k];
+      if (d) openParcel(d);
+    });
+  })();
 
   function highlightList(id) {
     document.querySelectorAll('.opp-item').forEach(function (el) {
@@ -1872,6 +1934,7 @@
   refreshFavBtn();
   renderList();
   renderRecent();
+  renderDeals();
   var deepLinked = openFromUrl();
   // Po dopočítání rozměrů mapy znovu vyrovnáme na celou ČR (pokud nejde o
   // sdílený odkaz na konkrétní parcelu, který si drží vlastní přiblížení).
