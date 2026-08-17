@@ -1947,6 +1947,42 @@
     });
   })();
 
+  // Sekce „Pozemky od lidí" — nabídky vložené majiteli (type:'majitel').
+  // Dokud žádné nejsou, ukáže vlídný prázdný stav („buďte první"). Jakmile
+  // se objeví (přes user-listings.json), vypíšou se jako karty a otevřou na mapě.
+  function renderUserListings() {
+    var wrap = document.getElementById('user-listings');
+    if (!wrap) return;
+    var items = DATA.filter(function (d) { return d.type === 'majitel'; });
+    if (!items.length) {
+      wrap.className = 'odl-wrap odl-empty reveal is-visible';
+      wrap.innerHTML = '<b>Zatím tu žádné nejsou — buďte první.</b>' +
+        '<span>Vložte svůj pozemek a objeví se tady i na mapě mezi ostatními, hned jak ho ověříme.</span>';
+      return;
+    }
+    wrap.className = 'odl-wrap odl-grid reveal is-visible';
+    wrap.innerHTML = items.slice(0, 9).map(function (d) {
+      var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
+      return '<button type="button" class="odl-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
+        '<span class="odl-badge">Od majitele</span>' +
+        '<span class="odl-place">' + d.place + '</span>' +
+        '<span class="odl-sub">' + (d.druh || 'pozemek') + (d.okres ? ' · okres ' + d.okres : '') + '</span>' +
+        '<span class="odl-figs"><b>' + fmt(d.price) + ' Kč</b>' + (hasArea(d) ? '<span>' + fmt(d.area) + ' m²</span>' : '') + (perM2 ? '<span>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</span>' +
+      '</button>';
+    }).join('');
+  }
+  (function () {
+    var wrap = document.getElementById('user-listings');
+    if (!wrap) return;
+    wrap.addEventListener('click', function (e) {
+      var card = e.target.closest('.odl-card');
+      if (!card) return;
+      var k; try { k = decodeURIComponent(card.getAttribute('data-rkey')); } catch (x) { return; }
+      var d = keyIndex()[k];
+      if (d) openParcel(d);
+    });
+  })();
+
   function highlightList(id) {
     document.querySelectorAll('.opp-item').forEach(function (el) {
       el.classList.toggle('hl', el.getAttribute('data-id') == id);
@@ -1979,6 +2015,7 @@
   renderList();
   renderRecent();
   renderDeals();
+  renderUserListings();
   var deepLinked = openFromUrl();
   // Po dopočítání rozměrů mapy znovu vyrovnáme na celou ČR (pokud nejde o
   // sdílený odkaz na konkrétní parcelu, který si drží vlastní přiblížení).

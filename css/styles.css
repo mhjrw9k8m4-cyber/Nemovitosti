@@ -522,6 +522,26 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .md-near-item .mn-txt b{font-size:13.5px; color:var(--text-ondark); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .md-near-item .mn-txt span{font-size:11.5px; color:var(--text-ondark-mute);}
 .md-near-item .mn-price{font-size:13px; font-weight:700; color:var(--copper-bright); white-space:nowrap; font-variant-numeric:tabular-nums;}
+/* Sekce „Pozemky od lidí" (od majitelů) */
+.odl-wrap{margin-top:24px;}
+.odl-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:14px;}
+.odl-card{text-align:left; font:inherit; cursor:pointer; background:var(--ink-soft); border:1px solid var(--line); border-radius:14px; padding:16px 17px; display:flex; flex-direction:column; gap:6px; transition:border-color .15s ease, transform .1s ease, box-shadow .15s ease;}
+.odl-card:hover{border-color:var(--c-majitel); transform:translateY(-2px); box-shadow:0 14px 30px -16px rgba(0,0,0,0.7);}
+.odl-card:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px;}
+.odl-badge{align-self:flex-start; font-size:11px; font-weight:700; color:#fff; background:var(--c-majitel); border-radius:999px; padding:3px 10px; letter-spacing:0.02em; text-transform:uppercase;}
+.odl-place{font-family:'Fraunces',serif; font-size:19px; font-weight:600; color:var(--text-ondark); margin-top:2px;}
+.odl-sub{font-size:12.5px; color:var(--text-ondark-mute);}
+.odl-figs{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-top:3px; font-variant-numeric:tabular-nums;}
+.odl-figs b{font-size:17px; font-weight:700; color:var(--copper-bright);}
+.odl-figs span{font-size:12.5px; color:var(--text-ondark-mute);}
+.odl-empty{text-align:center; padding:44px 24px; border:1px dashed var(--line-strong); border-radius:16px; background:var(--ink-soft);}
+.odl-empty b{display:block; font-family:'Fraunces',serif; font-weight:600; font-size:19px; color:var(--text-ondark); margin-bottom:8px;}
+.odl-empty span{color:var(--text-ondark-mute); font-size:14px; line-height:1.55; max-width:44ch; display:inline-block;}
+.odl-cta{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-top:20px; padding:20px 24px; background:linear-gradient(135deg, rgba(142,111,184,0.14), rgba(142,111,184,0.05)); border:1px solid rgba(142,111,184,0.35); border-radius:16px;}
+.odl-cta-txt{display:flex; flex-direction:column; gap:3px;}
+.odl-cta-txt b{font-size:16px; color:var(--text-ondark); font-weight:700;}
+.odl-cta-txt span{font-size:13.5px; color:var(--text-ondark-mute);}
+@media (max-width:560px){ .odl-cta{flex-direction:column; align-items:stretch; text-align:center;} .odl-cta .btn-primary{text-align:center;} }
 .lp-src{border-color:var(--copper); background:rgba(46,144,180,0.14); color:var(--copper-bright);}
 .lp-src:hover{border-color:var(--copper-bright); background:rgba(46,144,180,0.22);}
 .md-actions{flex:none; display:flex; flex-wrap:wrap; gap:6px; width:186px; align-content:flex-start;}
