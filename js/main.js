@@ -689,6 +689,12 @@
     var t = e.target.closest('[data-info]');
     if (t) { e.preventDefault(); openInfo(t.getAttribute('data-info')); }
   });
+  // Otevři zásady/podmínky i z jiných stránek — přes odkaz index.html#soukromi
+  // / #podminky. Díky tomu jsou právní informace dostupné z patičky všude.
+  (function () {
+    var m = /^#(soukromi|podminky)$/.exec(location.hash || '');
+    if (m) setTimeout(function () { openInfo(m[1]); }, 300);
+  })();
 
   /* ---------- Sticky header shrink + back-to-top ---------- */
   var header = document.getElementById('header');
