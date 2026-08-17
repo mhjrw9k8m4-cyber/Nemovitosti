@@ -87,7 +87,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260816o">
+  <link rel="stylesheet" href="css/styles.css?v=20260816p">
 </head>
 <body>
 
@@ -263,10 +263,16 @@
     </div>
   </section>
 
-  <!-- 3 · ZDROJE (důvěra) -->
+  <!-- 3 · ZDROJE (důvěra + hodnota v číslech) -->
   <section class="sources" id="zdroje">
     <div class="wrap">
-      <p class="sources-lead mono">Data z veřejných zdrojů — nic tajného, vše dohledatelné:</p>
+      <div class="src-stats reveal">
+        <div class="src-stat"><b id="stat-count">—</b><span>příležitostí na mapě</span></div>
+        <div class="src-stat"><b id="stat-okres">—</b><span>okresů po celé ČR</span></div>
+        <div class="src-stat"><b>6</b><span>veřejných zdrojů</span></div>
+        <div class="src-stat"><b>denně</b><span>obnovuje robot</span></div>
+      </div>
+      <p class="sources-lead mono">Tyhle zdroje jsou roztroušené po internetu i úředních deskách obcí — my je každý den projdeme a dáme na jednu mapu. Nic tajného, vše dohledatelné:</p>
       <p class="data-updated mono" id="data-updated" aria-live="polite"></p>
       <div class="source-row">
         <div class="source-chip"><span class="s-dot" style="background:var(--c-drazba);"></span>Centrální evidence veřejných dražeb</div>
@@ -521,7 +527,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/config.js?v=20260816o" defer></script>
-<script src="js/main.js?v=20260816o" defer></script>
+<script src="js/config.js?v=20260816p" defer></script>
+<script src="js/main.js?v=20260816p" defer></script>
 </body>
 </html>

@@ -848,14 +848,17 @@
   function boot(DATA, KRAJE_GEOM, updated) {
   // Počítadla napojíme na skutečná data (počet příležitostí, počet okresů)
   (function () {
+    var okr = {};
+    DATA.forEach(function (d) { if (d.okres) okr[d.okres] = 1; });
+    var okresN = Object.keys(okr).length;
     var nums = document.querySelectorAll('.counters .c-num');
-    if (!nums.length) return;
-    if (nums[0]) nums[0].setAttribute('data-count', String(DATA.length));
-    if (nums[1]) {
-      var okr = {};
-      DATA.forEach(function (d) { if (d.okres) okr[d.okres] = 1; });
-      nums[1].setAttribute('data-count', String(Object.keys(okr).length));
+    if (nums.length) {
+      if (nums[0]) nums[0].setAttribute('data-count', String(DATA.length));
+      if (nums[1]) nums[1].setAttribute('data-count', String(okresN));
     }
+    // Statistiky v sekci zdrojů (důvěra + hodnota v číslech)
+    var sc = document.getElementById('stat-count'); if (sc) sc.textContent = fmt(DATA.length);
+    var so = document.getElementById('stat-okres'); if (so) so.textContent = String(okresN);
   })();
 
   // „Naposledy aktualizováno" — signál čerstvosti dat (z pole updated).
