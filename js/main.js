@@ -1152,6 +1152,44 @@
       '" fill="' + col + '30" stroke="' + col + '" stroke-width="2.2"/></svg>';
   }
 
+  // „Co byste měli vědět" — poctivé, obecné vysvětlení: dá se tu stavět (podle
+  // druhu pozemku) a na co si dát pozor (podle typu příležitosti). Přesně tohle
+  // u pozemků každý řeší, ale portály to nikde nepíšou. Není to právní rada ke
+  // konkrétní parcele — proto dole upozornění „ověřte na úřadě a v katastru".
+  function buildInfo(g) {
+    switch (g) {
+      case 'Stavební / zastavěná': return { lvl: 'ok', txt: 'Územním plánem <b>určeno k zástavbě</b>. Konkrétní podmínky (co a jak velké) si ověřte na stavebním úřadě.' };
+      case 'Orná půda': return { lvl: 'warn', txt: '<b>Zemědělská půda.</b> Pro stavbu je nutná změna územního plánu a <b>vynětí ze ZPF</b> — bývá zdlouhavé a není jisté.' };
+      case 'Louka / travní porost': return { lvl: 'warn', txt: '<b>Zemědělská půda</b> (travní porost). Ke stavbě je potřeba změna územního plánu a vynětí ze ZPF.' };
+      case 'Zahrada': return { lvl: 'mid', txt: 'Zahrada bývá v zastavěném území, ale <b>ne vždy je stavební</b>. Ověřte si územní plán obce.' };
+      case 'Lesní pozemek': return { lvl: 'warn', txt: '<b>Lesní pozemek</b> pod ochranou lesního zákona — výstavba je prakticky vyloučená.' };
+      case 'Vinice / sad': return { lvl: 'warn', txt: 'Zemědělská kultura (vinice/sad). Ke stavbě je potřeba změna využití a vynětí ze ZPF.' };
+      default: return { lvl: 'mid', txt: 'Ověřte v <b>územním plánu</b> obce, jak se pozemek smí využívat a zda se na něm dá stavět.' };
+    }
+  }
+  function typeCaution(d) {
+    switch (d.type) {
+      case 'drazba': return 'Řiďte se <b>dražební vyhláškou</b>. Financování a prohlídku si zajistěte předem — skládá se dražební jistota.';
+      case 'exekuce': return 'Prodej se může <b>protáhnout</b>. Aktuální stav ověřte v insolvenčním rejstříku nebo u exekutora.';
+      case 'obec': return 'Obec zveřejňuje záměr na <b>úřední desce</b>. Nabídku podejte ve stanovené lhůtě.';
+      case 'majitel': return 'Jednáte <b>přímo s vlastníkem</b>. Ověřte vlastnictví a případná omezení (zástavy, věcná břemena) na listu vlastnictví.';
+      default: return 'Před koupí ověřte <b>přístup k pozemku, sítě</b> a zápis v katastru (list vlastnictví).';
+    }
+  }
+  var GTK_INFO_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="7.6" x2="12" y2="8"/></svg>';
+  function goodToKnowHtml(d) {
+    var b = buildInfo(druhGroup(d.druh));
+    var c = typeCaution(d);
+    return '<details class="md-gtk">' +
+      '<summary>' + GTK_INFO_SVG + '<span>Co byste měli vědět</span><span class="gtk-hint">stavba · na co pozor</span></summary>' +
+      '<div class="gtk-body">' +
+        '<div class="gtk-row gtk-' + b.lvl + '"><span class="gtk-k">Dá se tu stavět?</span><span class="gtk-v">' + b.txt + '</span></div>' +
+        '<div class="gtk-row gtk-warn"><span class="gtk-k">Na co si dát pozor</span><span class="gtk-v">' + c + '</span></div>' +
+        '<p class="gtk-foot">Obecné informace, ne právní rada ke konkrétní parcele. Vždy ověřte na úřadě a v katastru.</p>' +
+      '</div>' +
+    '</details>';
+  }
+
   function detailHtml(d) {
     var t = TYPE[d.type];
     // Na dotyku (mobil) otevíráme externí odkazy ve STEJNÉ záložce — ať funguje tlačítko/gesto
@@ -1177,6 +1215,7 @@
           priceBarHtml(d) +
           (isSPU(d) ? '<div class="md-note">Státní půda se prodává přes <b>veřejnou nabídku SPÚ (§ 12)</b> — otevřete „Nabídka SPÚ", parcelu ověříte přes „Katastr".</div>' : '') +
           (d.type === 'majitel' ? '<div class="md-note">Inzerát vložil <b>majitel pozemku</b>. Pozemkomat je jen platforma — vlastníka a parcelu si ověřte v katastru.</div>' : '') +
+          goodToKnowHtml(d) +
         '</div>' +
         '<div class="md-actions">' +
           (d.type === 'majitel' && d.contact ? '<a class="lp-btn lp-src" href="' + contactHref(d.contact) + '">Kontakt na majitele</a>' : '') +
