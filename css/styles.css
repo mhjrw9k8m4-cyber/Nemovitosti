@@ -290,7 +290,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
    Na mobilu se skládá: hledání → mapa → výsledky (ať je vyhledávání hned nahoře). */
 /* Jeden ucelený panel „aplikace" (jako velké realitní weby) — místo roztroušených
    boxů má vše společný rám, stín a oblé rohy; uvnitř dělí sekce jemné linky. */
-.map-app{display:grid; grid-template-columns:380px 1fr; grid-template-rows:auto 1fr; gap:0; height:min(76vh, 820px); min-height:600px; background:var(--ink-soft); border:1px solid var(--line-strong); border-radius:18px; overflow:hidden; box-shadow:0 40px 90px -44px rgba(0,0,0,0.8);}
+.map-app{display:grid; grid-template-columns:380px 1fr; grid-template-rows:auto 1fr; gap:0; height:min(76vh, 820px); height:min(76dvh, 820px); min-height:600px; background:var(--ink-soft); border:1px solid var(--line-strong); border-radius:18px; overflow:hidden; box-shadow:0 40px 90px -44px rgba(0,0,0,0.8);}
 .map-controls-panel{grid-column:1; grid-row:1; background:transparent; border:0; border-right:1px solid var(--line); border-bottom:1px solid var(--line); border-radius:0; padding:18px;}
 .map-side{grid-column:1; grid-row:2; display:flex; flex-direction:column; background:transparent; border:0; border-right:1px solid var(--line); border-radius:0; padding:16px 18px; min-height:0;}
 .map-holder{grid-column:2; grid-row:1 / span 2;}
@@ -900,7 +900,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 @media (max-width:960px){
   .map-app{display:flex; flex-direction:column; grid-template-columns:1fr; height:auto; gap:0; border-radius:16px;}
   .map-controls-panel{order:1; border-right:0; border-bottom:1px solid var(--line);}
-  .map-holder{order:2; height:74vh; max-height:640px; min-height:460px;}
+  .map-holder{order:2; height:74vh; height:74dvh; max-height:640px; min-height:460px;}
   .map-side{order:3; border-right:0;}
   .map-canvas{flex:1; min-height:0;}
   .map-side{max-height:none;}
@@ -936,7 +936,6 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
      že se dlouhé menu vejde a nepřeteče přes lištu iOS. */
   #nav{position:fixed; top:100%; left:0; right:0; max-height:calc(100dvh - 100%); flex-direction:column; align-items:stretch; gap:0; background:var(--ink); padding:12px 24px calc(20px + env(safe-area-inset-bottom, 0px)); border-radius:0 0 22px 22px; box-shadow:0 26px 52px -14px rgba(0,0,0,0.65); border-bottom:1px solid var(--line); display:none; overflow-y:auto; overscroll-behavior:contain; z-index:5;}
   #nav.open{display:flex; animation:navdrop .22s var(--ease);}
-  body.nav-open{overflow:hidden;}
   /* Ztmavené pozadí pod panelem (bez zásahu do HTML — pseudo na body) */
   body.nav-open::before{content:""; position:fixed; inset:0; background:rgba(6,12,16,0.55); z-index:4; animation:navdrop .22s var(--ease);}
   @keyframes navdrop{from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);}}

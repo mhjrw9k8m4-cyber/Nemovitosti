@@ -257,7 +257,7 @@
       var open = nav.classList.toggle('open');
       toggle.setAttribute('aria-expanded', String(open));
       toggle.setAttribute('aria-label', open ? 'Zavřít menu' : 'Otevřít menu');
-      document.body.classList.toggle('nav-open', open); // zamkne scroll pozadí
+      document.body.classList.toggle('nav-open', open); // ztmaví pozadí (scrim)
     });
     nav.addEventListener('click', function (e) {
       if (e.target.tagName === 'A' && nav.classList.contains('open')) {
