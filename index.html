@@ -454,59 +454,6 @@
 </div>
 
 <!-- Přihlášení / účet -->
-<div class="modal" id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-title" hidden>
-  <div class="modal-backdrop" data-close></div>
-  <div class="modal-card">
-    <div class="eyebrow"><span class="live-dot"></span>Účet</div>
-    <h3 id="login-title">Přihlášení</h3>
-    <p class="modal-sub" id="login-sub">Přihlaste se telefonním číslem a heslem. Uložíte si pozemky a vrátíte se k nim.</p>
-    <div class="login-tabs" role="tablist">
-      <button type="button" class="login-tab active" data-mode="login" role="tab" aria-selected="true">Přihlásit se</button>
-      <button type="button" class="login-tab" data-mode="register" role="tab" aria-selected="false">Vytvořit účet</button>
-    </div>
-    <form class="modal-form" id="login-form" novalidate>
-      <div class="lf-row" id="lf-name-row" hidden>
-        <label class="visually-hidden" for="login-name">Jméno</label>
-        <input id="login-name" type="text" placeholder="Jméno (nepovinné)" autocomplete="name">
-      </div>
-      <label class="visually-hidden" for="login-phone">Telefonní číslo</label>
-      <input id="login-phone" type="tel" inputmode="tel" placeholder="Telefon (např. 777 123 456)" required autocomplete="tel">
-      <label class="visually-hidden" for="login-pass">Heslo</label>
-      <div class="lf-pass">
-        <input id="login-pass" type="password" placeholder="Heslo (aspoň 6 znaků)" required autocomplete="current-password">
-        <button type="button" class="lf-pass-toggle" id="login-pass-toggle" aria-pressed="false" aria-label="Zobrazit heslo">Zobrazit</button>
-      </div>
-      <button type="submit" class="btn-primary btn-glow" id="login-submit">Přihlásit se</button>
-      <p class="form-msg" id="login-msg" role="status" aria-live="polite"></p>
-      <p class="modal-fine" id="login-fine">Účet i heslo zůstávají jen v tomto prohlížeči a nikam se neodesílají. Heslo si tlačítkem „Zobrazit" můžete zkontrolovat.</p>
-    </form>
-    <button class="modal-close-bar" type="button" data-close>Zavřít</button>
-  </div>
-</div>
-
-<!-- Nastavení účtu: údaje + priority zobrazení -->
-<div class="modal" id="account-modal" role="dialog" aria-modal="true" aria-labelledby="acct-title" hidden>
-  <div class="modal-backdrop" data-close></div>
-  <div class="modal-card">
-    <div class="eyebrow"><span class="live-dot"></span>Účet</div>
-    <h3 id="acct-title">Nastavení účtu</h3>
-    <p class="modal-sub">Upravte si své údaje. Vše zůstává jen v tomto prohlížeči a nikam se neodesílá.</p>
-    <form class="modal-form" id="acct-form" novalidate>
-      <label class="visually-hidden" for="acct-name">Jméno</label>
-      <input id="acct-name" type="text" placeholder="Jméno (nepovinné)" autocomplete="name">
-      <label class="visually-hidden" for="acct-phone">Telefonní číslo</label>
-      <input id="acct-phone" type="tel" inputmode="tel" placeholder="Telefon (např. 777 123 456)" autocomplete="tel">
-      <div class="lf-pass">
-        <input id="acct-pass" type="password" placeholder="Nové heslo (nepovinné)" autocomplete="new-password">
-        <button type="button" class="lf-pass-toggle" id="acct-pass-toggle" aria-pressed="false" aria-label="Zobrazit heslo">Zobrazit</button>
-      </div>
-      <button type="submit" class="btn-primary btn-glow" id="acct-save">Uložit změny</button>
-      <p class="form-msg" id="acct-msg" role="status" aria-live="polite"></p>
-    </form>
-    <button class="modal-close-bar" type="button" data-close>Zavřít</button>
-  </div>
-</div>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
 <script src="js/config.js?v=20260816t" defer></script>
