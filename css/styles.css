@@ -637,8 +637,10 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .lp-links{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:9px;}
 .lp-btn{flex:1; min-width:62px; text-align:center; background:var(--ink-soft2); border:1px solid var(--line); border-radius:6px; padding:7px 8px; font-size:12px; font-weight:600; color:var(--text-ondark); text-decoration:none; transition:border-color .15s ease, background .15s ease;}
 .lp-btn:hover{border-color:var(--copper-bright); background:rgba(46,144,180,0.12);}
-.lp-watch{display:block; text-align:center; background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); border-radius:6px; padding:9px; font-size:12.5px; font-weight:700; text-decoration:none; transition:filter .15s ease;}
-.lp-watch:hover{filter:brightness(1.07);}
+/* Sekundární akce — decentní odkaz, ne největší tlačítko v detailu
+   (dřív přebíjelo hlavní akce jako Katastr / Inzerát). */
+.lp-watch{display:block; text-align:center; background:transparent; color:var(--copper-bright); border:1px solid var(--line); border-radius:8px; padding:9px; font-size:12.5px; font-weight:600; text-decoration:none; transition:border-color .15s ease, color .15s ease;}
+.lp-watch:hover{border-color:var(--copper); color:var(--text-ondark);}
 .marker-dot{border-radius:50%; border:2.5px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.4);}
 
 /* Počítadla */
