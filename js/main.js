@@ -1756,7 +1756,10 @@
       var chips = [];
       if (isFeatured(d)) chips.push('<span class="opp-feat">Zvýrazněno</span>');
       if (cd) chips.push(cd);
-      if (perM2 && dealMax && perM2 <= dealMax) chips.push('<span class="opp-deal">výhodná cena</span>');
+      if (perM2 && dealMax && perM2 <= dealMax) {
+        var _di = dealInfo(d);
+        chips.push('<span class="opp-deal">' + (_di && _di.cheaper >= 70 ? 'levnější než ' + _di.cheaper + ' %' : 'výhodná cena') + '</span>');
+      }
       if (hot) chips.push('<span class="opp-hot">Doporučujeme</span>');
       li.innerHTML =
         '<div class="opp-thumb" style="border-color:' + t.color + '44">' + shapeSvg(d) + '</div>' +
