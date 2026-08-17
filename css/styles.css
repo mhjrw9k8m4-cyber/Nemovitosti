@@ -364,8 +364,8 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .deal-card:hover{border-color:var(--c-sale); transform:translateY(-2px); box-shadow:0 14px 30px -16px rgba(0,0,0,0.7);}
 .deal-card:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px;}
 .deal-badge{align-self:flex-start; font-size:12px; font-weight:700; color:#08240F; background:linear-gradient(135deg, #6FD79A, var(--c-sale)); border-radius:999px; padding:4px 11px; letter-spacing:0.01em; box-shadow:0 1px 6px rgba(62,155,99,0.35);}
-.deal-place{display:flex; align-items:center; gap:8px; font-family:'Fraunces',serif; font-size:19px; font-weight:600; color:var(--text-ondark); margin-top:2px;}
-.deal-dot{width:9px; height:9px; border-radius:50%; flex:none;}
+.deal-place{display:flex; align-items:flex-start; gap:8px; font-family:'Fraunces',serif; font-size:19px; font-weight:600; line-height:1.25; color:var(--text-ondark); margin-top:2px;}
+.deal-dot{width:9px; height:9px; border-radius:50%; flex:none; margin-top:7px;}
 .deal-sub{font-size:12.5px; color:var(--text-ondark-mute); line-height:1.4;}
 .deal-figs{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-top:3px; font-variant-numeric:tabular-nums;}
 .deal-figs b{font-size:17px; font-weight:700; color:var(--copper-bright);}
@@ -452,7 +452,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .md-topbar:hover{border-color:var(--c-exekuce); background:var(--ink-soft2);}
 .md-topbar .mx{font-size:18px; color:var(--text-ondark-mute); line-height:1;}
 .md-topbar:hover .mx{color:var(--c-exekuce);}
-.md-body{display:flex; gap:16px; align-items:center;}
+.md-body{display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start;}
 .md-shape{flex:none; width:74px; height:74px; background:var(--ink); border:1px solid var(--line); border-radius:8px; padding:6px;}
 .md-shape svg{display:block; width:100%; height:100%;}
 .md-info{flex:1; min-width:0;}
@@ -490,7 +490,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .gtk-v b{font-weight:700;}
 .gtk-foot{margin:2px 0 0; font-size:11px; line-height:1.45; color:var(--text-ondark-mute); font-style:italic;}
 /* Podobné pozemky poblíž — v detailu, pro další objevování */
-.md-near{margin-top:14px; padding-top:14px; border-top:1px solid var(--line);}
+.md-near{flex-basis:100%; margin-top:14px; padding-top:14px; border-top:1px solid var(--line);}
 .md-near-head{font-size:11px; letter-spacing:0.09em; text-transform:uppercase; color:var(--text-ondark-mute); font-weight:700; margin-bottom:9px;}
 .md-near-item{display:flex; align-items:center; gap:10px; width:100%; text-align:left; font:inherit; cursor:pointer; background:var(--ink-soft); border:1px solid var(--line); border-radius:10px; padding:9px 12px; margin-bottom:7px; transition:border-color .15s ease, background .15s ease;}
 .md-near-item:last-child{margin-bottom:0;}
@@ -529,7 +529,8 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .md-actions .lp-watch{flex-basis:100%;}
 @media (max-width:760px){
   .map-detail{max-height:92%; padding:22px 15px 18px;}
-  .md-body{flex-direction:column; align-items:stretch; gap:14px;}
+  .md-body{flex-direction:column; flex-wrap:nowrap; align-items:stretch; gap:14px;}
+  .md-near{flex-basis:auto;}
   .md-shape{width:56px; height:56px; align-self:flex-start;}
   .md-facts{gap:7px 16px;}
   .md-actions{width:auto; flex-direction:row; flex-wrap:wrap; gap:7px;}
