@@ -543,6 +543,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .odl-empty{text-align:center; padding:44px 24px; border:1px dashed var(--line-strong); border-radius:16px; background:var(--ink-soft);}
 .odl-empty b{display:block; font-family:'Fraunces',serif; font-weight:600; font-size:19px; color:var(--text-ondark); margin-bottom:8px;}
 .odl-empty span{color:var(--text-ondark-mute); font-size:14px; line-height:1.55; max-width:44ch; display:inline-block;}
+.odl-empty-btn{display:inline-block; margin-top:18px;}
 .odl-cta{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-top:20px; padding:20px 24px; background:linear-gradient(135deg, rgba(142,111,184,0.14), rgba(142,111,184,0.05)); border:1px solid rgba(142,111,184,0.35); border-radius:16px;}
 .odl-cta-txt{display:flex; flex-direction:column; gap:3px;}
 .odl-cta-txt b{font-size:16px; color:var(--text-ondark); font-weight:700;}

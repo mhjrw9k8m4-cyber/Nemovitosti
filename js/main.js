@@ -1924,7 +1924,7 @@
     });
     var scored = Object.keys(byGroup).map(function (g) { return byGroup[g]; });
     scored.sort(function (a, b) { return b.di.cheaper - a.di.cheaper || perM2Val(a.d) - perM2Val(b.d); });
-    var top = scored.slice(0, 6);
+    var top = scored.slice(0, 4);
     if (top.length < 3) { sec.hidden = true; return; } // radši nic než pár náhod
     grid.innerHTML = top.map(function (o) {
       var d = o.d, t = TYPE[d.type];
@@ -1957,12 +1957,17 @@
     var wrap = document.getElementById('user-listings');
     if (!wrap) return;
     var items = DATA.filter(function (d) { return d.type === 'majitel'; });
+    var cta = document.querySelector('.odl-cta');
     if (!items.length) {
+      // Prázdný stav rovnou s tlačítkem — a schováme zdvojený CTA box níž.
       wrap.className = 'odl-wrap odl-empty reveal is-visible';
       wrap.innerHTML = '<b>Zatím tu žádné nejsou — buďte první.</b>' +
-        '<span>Vložte svůj pozemek a objeví se tady i na mapě mezi ostatními, hned jak ho ověříme.</span>';
+        '<span>Vložte svůj pozemek a objeví se tady i na mapě mezi ostatními, hned jak ho ověříme.</span>' +
+        '<a href="pridat.html" class="btn-primary odl-empty-btn">Přidat pozemek zdarma →</a>';
+      if (cta) cta.style.display = 'none';
       return;
     }
+    if (cta) cta.style.display = '';
     wrap.className = 'odl-wrap odl-grid reveal is-visible';
     wrap.innerHTML = items.slice(0, 9).map(function (d) {
       var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
