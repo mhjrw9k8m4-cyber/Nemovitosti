@@ -1434,13 +1434,30 @@
     return okType && okSearch && okDruh && okPrice && okArea && okUrgent && okFav;
   }
   function perM2Val(d){ return hasArea(d) ? d.price / d.area : Infinity; }
+  // „Rozprostření": u řazení Doporučené nechceme 5 dražeb (nebo 2× stejná obec)
+  // za sebou. Zachová pořadí podle skóre, jen bere vždy nejlepší kousek, který
+  // není stejného typu ani ze stejné obce jako ten předchozí. Výsledek = pestrá,
+  // reprezentativní ukázka (prodej i dražba) místo jednotvárného shluku.
+  function declump(arr){
+    if (arr.length < 4) return;
+    var pool = arr.slice(), out = [], lastType = null, lastPlace = null, pick;
+    while (pool.length){
+      pick = -1;
+      for (var i = 0; i < pool.length; i++){ if (pool[i].type !== lastType && pool[i].place !== lastPlace){ pick = i; break; } }
+      if (pick === -1) for (var j = 0; j < pool.length; j++){ if (pool[j].place !== lastPlace){ pick = j; break; } }
+      if (pick === -1) pick = 0;
+      var d = pool.splice(pick, 1)[0];
+      out.push(d); lastType = d.type; lastPlace = d.place;
+    }
+    for (var k = 0; k < out.length; k++) arr[k] = out[k];
+  }
   function sortVis(arr){
     if (sortMode === 'price_asc') arr.sort(function (a, b) { return a.price - b.price; });
     else if (sortMode === 'price_desc') arr.sort(function (a, b) { return b.price - a.price; });
     else if (sortMode === 'area_desc') arr.sort(function (a, b) { return (b.area || 0) - (a.area || 0); });
     else if (sortMode === 'perm2_asc') arr.sort(function (a, b) { return perM2Val(a) - perM2Val(b); });
     else if (sortMode === 'near' && userPos) arr.sort(function (a, b) { return kmFromUser(a) - kmFromUser(b); });
-    else arr.sort(function (a, b) { return demand(b) - demand(a); });
+    else { arr.sort(function (a, b) { return demand(b) - demand(a); }); declump(arr); }
     // Zvýrazněné (placené) inzeráty nahoru — stabilní dořazení zachová pořadí uvnitř skupin.
     arr.sort(function (a, b) { return (isFeatured(b) ? 1 : 0) - (isFeatured(a) ? 1 : 0); });
     return arr;
