@@ -1115,6 +1115,13 @@
   if (detailEl) {
     detailEl.addEventListener('click', function (e) {
       if (e.target.closest('[data-detail-back]')) { hideDetail(); return; }
+      var nearBtn = e.target.closest('[data-near]');
+      if (nearBtn) {
+        var nk; try { nk = decodeURIComponent(nearBtn.getAttribute('data-near')); } catch (x) { return; }
+        var nd = keyIndex()[nk];
+        if (nd) openParcel(nd);
+        return;
+      }
       if (!curDetail) return;
       var favBtn = e.target.closest('[data-fav-detail]');
       if (favBtn) {
@@ -1253,6 +1260,39 @@
     '</details>';
   }
 
+  // Vzdálenost mezi dvěma body (km) — pro „Podobné pozemky poblíž".
+  function kmBetween(la1, ln1, la2, ln2) {
+    var R = 6371, r = Math.PI / 180;
+    var dLat = (la2 - la1) * r, dLng = (ln2 - ln1) * r;
+    var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+  }
+  // Nejbližší pozemky stejného druhu (nebo aspoň typu) — bez sebe sama.
+  function nearbySimilar(d, n) {
+    if (typeof d.lat !== 'number') return [];
+    var g = druhGroup(d.druh);
+    var pool = DATA.filter(function (x) { return x !== d && typeof x.lat === 'number' && druhGroup(x.druh) === g; });
+    if (pool.length < n) pool = DATA.filter(function (x) { return x !== d && typeof x.lat === 'number' && x.type === d.type; });
+    pool.forEach(function (x) { x._nd = kmBetween(d.lat, d.lng, x.lat, x.lng); });
+    pool.sort(function (a, b) { return a._nd - b._nd; });
+    return pool.slice(0, n);
+  }
+  function nearbyHtml(d) {
+    var near = nearbySimilar(d, 3);
+    if (near.length < 2) return '';
+    var items = near.map(function (x) {
+      var t2 = TYPE[x.type];
+      var per = hasArea(x) ? Math.round(x.price / x.area) : null;
+      var dist = x._nd < 1 ? '< 1 km' : Math.round(x._nd) + ' km';
+      return '<button type="button" class="md-near-item" data-near="' + encodeURIComponent(pkey(x)) + '">' +
+        '<span class="mn-dot" style="background:' + t2.color + '"></span>' +
+        '<span class="mn-txt"><b>' + x.place + '</b><span>' + (x.druh || 'pozemek') + ' · ' + dist + '</span></span>' +
+        '<span class="mn-price">' + fmt(x.price) + ' Kč</span>' +
+      '</button>';
+    }).join('');
+    return '<div class="md-near"><div class="md-near-head">Podobné pozemky poblíž</div>' + items + '</div>';
+  }
+
   function detailHtml(d) {
     var t = TYPE[d.type];
     // Na dotyku (mobil) otevíráme externí odkazy ve STEJNÉ záložce — ať funguje tlačítko/gesto
@@ -1290,6 +1330,7 @@
           '<button class="lp-btn" type="button" data-share>Sdílet</button>' +
           '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">Upozornit na okres ' + d.okres + '</a>' +
         '</div>' +
+        nearbyHtml(d) +
       '</div>';
   }
   var selPoly = null;
