@@ -161,6 +161,10 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .btn-primary{background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); font-weight:700; font-size:14px; padding:10px 20px; border-radius:10px; text-decoration:none; border:1px solid var(--copper); transition:filter .15s ease, transform .1s ease, box-shadow .15s ease; white-space:nowrap; cursor:pointer;}
 .btn-primary:hover{filter:brightness(1.07);}
 .btn-primary:active{transform:translateY(1px);}
+/* Stálé CTA „Přidat pozemek" v liště. Na počítači je akce už v navigaci,
+   tady se skryje; na mobilu se ukáže přímo v liště (aby bylo vidět hned,
+   ne schované v menu). */
+.header-cta{display:none;}
 
 .nav-toggle{display:none; flex-direction:column; gap:5px; background:none; border:0; cursor:pointer; padding:6px;}
 .nav-toggle span{display:block; width:24px; height:2px; background:var(--text-ondark); border-radius:2px; transition:transform .2s ease, opacity .2s ease;}
@@ -917,6 +921,14 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 }
 @media (max-width:880px){
   .nav-toggle{display:flex;}
+  /* „Přidat pozemek" stále v liště (ne schované v menu). Kompaktní, hned viditelné. */
+  .logo{font-size:20px;}
+  .header-cta{display:inline-flex; align-items:center; margin-left:auto; margin-right:12px; padding:9px 14px; font-size:13px; border-radius:10px; flex:none;}
+  .header-cta .cta-short{display:none;}
+  /* Duplicitní odkaz na „Přidat pozemek" + popisek uvnitř menu už netřeba
+     (akce je stále v liště). Skryjeme je jen na mobilu. Vyšší specificita
+     (#header) přebije obecné pravidlo pro odkazy v menu. */
+  #header #nav .nav-add, #header #nav .nav-cta-note{display:none;}
   /* Mobilní menu = kompaktní panel u horní lišty (jen na výšku obsahu), sjíždí
      zpod hlavičky se zaoblenými spodními rohy. Pod ním je stránka jen zjemněná,
      menu zůstává nahoře v liště — nezabírá celou obrazovku. top:100% = výška
@@ -931,10 +943,9 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   #nav a:not(.btn-primary){display:flex; align-items:center; justify-content:space-between; padding:17px 2px; border-bottom:1px solid rgba(228,236,244,0.07); font-family:'Fraunces',serif; font-size:21px; font-weight:500; color:var(--text-ondark); letter-spacing:-0.01em;}
   #nav a:not(.btn-primary)::after{content:"→"; font-family:'Inter',sans-serif; font-size:16px; color:var(--copper-bright); opacity:0.55;}
   #nav a:not(.btn-primary):active{color:var(--copper-bright);}
-  #nav a.btn-primary{text-align:center; margin-top:16px; border-bottom:0; padding:16px 20px; font-size:16.5px; font-weight:700; color:var(--ink); border-radius:12px;}
-  /* Popisek pod hlavní akcí — ať „Přidat pozemek" má dole jasné, ne prázdné místo */
-  .nav-cta-note{display:none;}
-  #nav .nav-cta-note{display:block; text-align:center; margin-top:11px; font-size:12.5px; color:var(--text-ondark-mute); line-height:1.45;}
+  /* Případné tlačítko, které v menu zůstává (např. „Zpět na mapu" na podstránkách),
+     dole jako plná akce. „Přidat pozemek" je stále v liště (.header-cta). */
+  #nav a.btn-primary{text-align:center; margin-top:16px; border-bottom:0; padding:15px 20px; font-size:16px; font-weight:700; color:var(--ink); border-radius:12px;}
   .steps, .embed-demo, .alert-box{grid-template-columns:1fr;}
   .beforeafter{grid-template-columns:1fr;} .ba-arrow{transform:rotate(90deg); justify-self:center;}
   .tb-close{right:16px;} .topbar-in{padding-right:36px;}
@@ -943,6 +954,11 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   .cta-banner{flex-direction:column; align-items:flex-start; padding:40px;}
   h1{font-size:38px;} .section-head h2{font-size:28px;}
   footer .wrap{flex-direction:column; align-items:flex-start;}
+}
+/* Úzké telefony (iPhone mini/SE): CTA zkrátíme na „Přidat", ať se nekříží s logem. */
+@media (max-width:384px){
+  .header-cta .cta-full{display:none;}
+  .header-cta .cta-short{display:inline;}
 }
 @media (max-width:520px){
   .wrap{padding:0 20px;}
