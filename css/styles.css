@@ -153,36 +153,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 #nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--copper-bright); border-radius:2px;}
 @media (max-width:880px){ #nav a:not(.btn-primary).active::after{content:"→"; position:static; display:inline; left:auto; right:auto; bottom:auto; width:auto; height:auto; background:none; border-radius:0; color:var(--copper-bright); opacity:0.55; font-family:'Inter',sans-serif; font-size:17px;} #nav a:not(.btn-primary).active{color:var(--copper-bright);} }
 /* Přihlášení / profil v hlavičce */
-.nav-login{display:inline-flex; align-items:center; gap:7px; background:rgba(46,144,180,0.12); border:1px solid var(--copper); color:var(--copper-bright); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; padding:8px 16px; border-radius:20px; transition:background .15s ease, border-color .15s ease, box-shadow .15s ease;}
-.nav-login .ic{width:16px; height:16px;}
-.nav-login:hover{background:rgba(46,144,180,0.22); border-color:var(--copper-bright); box-shadow:0 0 0 3px rgba(46,144,180,0.14);}
-.nav-profile{position:relative;}
-/* Když je uživatel přihlášený, tlačítko „Přihlásit" musí zmizet — jinak by
-   svítilo vedle profilu. Atributová selektor přebije .nav-login{display:…}. */
-.nav-login[hidden], .nav-profile[hidden]{display:none !important;}
 .nav-cta-note{display:none;}
-.profile-chip{display:inline-flex; align-items:center; gap:8px; background:var(--ink-soft2); border:1px solid var(--line); border-radius:20px; padding:4px 12px 4px 4px; font-family:inherit; font-size:13px; font-weight:600; color:var(--text-ondark); cursor:pointer; transition:border-color .15s ease;}
-.profile-chip:hover{border-color:var(--copper);}
-.avatar{width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg, var(--copper), var(--copper-bright)); color:var(--ink); font-weight:700; font-size:13px; flex:none;}
-.profile-menu{position:absolute; right:0; top:calc(100% + 10px); min-width:210px; background:var(--ink-soft2); border:1px solid var(--line-strong); border-radius:10px; padding:8px; box-shadow:0 12px 30px -8px rgba(0,0,0,0.6); z-index:1200; animation:navdrop .16s var(--ease);}
-.pm-head{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 4px 10px 0; border-bottom:1px solid var(--line); margin-bottom:6px;}
-.pm-email{font-size:11px; color:var(--text-ondark-mute); padding:6px 6px 0 10px; word-break:break-all; flex:1; min-width:0;}
-.pm-gear{flex:none; display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:none; border:1px solid var(--line); border-radius:8px; color:var(--text-ondark-mute); cursor:pointer; transition:color .12s ease, border-color .12s ease;}
-.pm-gear:hover{color:var(--copper-bright); border-color:var(--copper);}
-.pm-gear .ic{width:16px; height:16px;}
-.pm-item{display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; text-align:left; background:none; border:0; color:var(--text-ondark); font-family:inherit; font-size:13.5px; font-weight:500; padding:9px 10px; border-radius:7px; cursor:pointer; text-decoration:none; transition:background .12s ease;}
-.pm-item:hover{background:rgba(224,236,244,0.07);}
-.pm-item b{color:var(--copper-bright); font-weight:700;}
-.pm-logout{color:var(--c-exekuce); margin-top:2px; border-top:1px solid var(--line); border-radius:0 0 7px 7px;}
-.pm-logout:hover{background:rgba(193,91,68,0.12);}
-.pm-saved-head{display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--text-ondark-mute); padding:4px 10px 6px;}
-.pm-saved-head b{color:var(--copper-bright);}
-.pm-saved-list{max-height:180px; overflow-y:auto; margin-bottom:4px;}
-.pm-saved-item{display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:6px 10px; border-radius:6px; font-size:13px;}
-.pm-saved-item b{font-weight:600; color:var(--text-ondark);}
-.pm-saved-item span{font-size:11px; color:var(--text-ondark-mute); white-space:nowrap;}
-.pm-saved-more{font-size:11px; color:var(--text-ondark-mute); padding:2px 10px 4px;}
-.pm-empty{font-size:12px; color:var(--text-ondark-mute); line-height:1.5; padding:6px 10px 10px;}
 /* Toast */
 .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px); z-index:4000; max-width:calc(100% - 32px); background:var(--ink-soft2); border:1px solid var(--copper); color:var(--text-ondark); font-size:13.5px; font-weight:500; padding:13px 20px; border-radius:10px; box-shadow:0 14px 36px -10px rgba(0,0,0,0.7); opacity:0; transition:opacity .3s var(--ease), transform .3s var(--ease); pointer-events:none;}
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
@@ -891,24 +862,13 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .modal-card .eyebrow{margin-bottom:12px;}
 .modal-card h3{font-family:'Fraunces',serif; font-size:24px; font-weight:500; margin-bottom:8px;}
 .modal-sub{font-size:14px; color:var(--text-ondark-mute); margin-bottom:20px;}
-.login-tabs{display:flex; gap:6px; background:var(--ink); border:1px solid var(--line); border-radius:8px; padding:4px; margin-bottom:18px;}
-.login-tab{flex:1; background:none; border:0; border-radius:6px; padding:10px 8px; font-family:inherit; font-size:14px; font-weight:600; color:var(--text-ondark-mute); cursor:pointer; transition:background .15s ease, color .15s ease;}
-.login-tab:hover{color:var(--text-ondark);}
-.login-tab.active{background:var(--copper); color:var(--ink);}
-.lf-row[hidden]{display:none;}
 .modal-form{display:flex; flex-direction:column; gap:12px;}
-.modal-form .lf-row{display:flex; flex-direction:column;}
 .modal-form input, .modal-form textarea{background:var(--ink); border:1px solid var(--line); border-radius:6px; padding:13px 15px; font-size:15px; color:var(--text-ondark); font-family:inherit;}
 .modal-form textarea{resize:vertical; min-height:96px; line-height:1.5;}
 .modal-form input::placeholder, .modal-form textarea::placeholder{color:#6f8090;}
 .modal-form input:focus-visible, .modal-form textarea:focus-visible{border-color:var(--copper-bright); outline:none;}
 .modal-form .btn-primary{padding:14px; font-size:15px; text-align:center;}
 .modal-fine{font-size:11.5px; color:var(--text-ondark-mute); text-align:center; margin-top:2px;}
-.lf-pass{position:relative; display:flex;}
-.lf-pass input{flex:1; padding-right:84px;}
-.lf-pass-toggle{position:absolute; top:50%; right:6px; transform:translateY(-50%); background:none; border:0; padding:6px 10px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--copper-bright); cursor:pointer; border-radius:5px;}
-.lf-pass-toggle:hover{color:var(--text-ondark);}
-.lf-pass-toggle:focus-visible{outline:2px solid var(--copper-bright); outline-offset:1px;}
 .modal-close-bar{width:100%; margin-top:16px; background:none; border:0; border-top:1px solid var(--line); padding:14px 0 2px; color:var(--text-ondark-mute); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:color .15s ease;}
 .modal-close-bar:hover{color:var(--text-ondark);}
 .info-card{max-width:520px;}
@@ -973,13 +933,6 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   /* Popisek pod hlavní akcí — ať „Přidat pozemek" má dole jasné, ne prázdné místo */
   .nav-cta-note{display:none;}
   #nav .nav-cta-note{display:block; text-align:center; margin-top:11px; font-size:12.5px; color:var(--text-ondark-mute); line-height:1.45;}
-  /* Přihlášení = decentní obrys nahoře (ne křiklavé) */
-  .nav-login{order:-1; justify-content:center; width:100%; margin:4px 0 18px; padding:14px; font-size:15px; font-weight:600; border-radius:12px; border:1.5px solid var(--line-strong); background:transparent; color:var(--text-ondark); box-shadow:none;}
-  .nav-login:hover, .nav-login:active{border-color:var(--copper-bright); color:var(--copper-bright); background:rgba(46,144,180,0.08);}
-  .nav-login .ic{width:18px; height:18px;}
-  .nav-profile{order:-1; width:100%; margin:4px 0 18px;}
-  .nav-profile .profile-chip{width:100%; justify-content:center; padding:13px; font-size:15px; border-radius:12px;}
-  .profile-menu{position:static; margin-top:8px; min-width:0; width:100%;}
   .steps, .embed-demo, .alert-box{grid-template-columns:1fr;}
   .beforeafter{grid-template-columns:1fr;} .ba-arrow{transform:rotate(90deg); justify-self:center;}
   .tb-close{right:16px;} .topbar-in{padding-right:36px;}
