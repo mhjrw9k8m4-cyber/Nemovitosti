@@ -718,19 +718,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949408-nabidka-prodej-pozemku"
     },
     {
-      "place": "Jasenná – Jasenná na Moravě",
-      "okres": "Vsetín",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "lesní pozemek",
-      "area": 517,
-      "price": 12000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.268451,
-      "lng": 17.929834,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1020446-nabidka-prodej-pozemku-jasenna"
-    },
-    {
       "place": "Petrov – Petrov",
       "okres": "Blansko",
       "type": "sale",
@@ -4930,19 +4917,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1010989-nabidka-prodej-pozemku"
     },
     {
-      "place": "Týnec – Týnec na Moravě",
-      "okres": "Břeclav",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "orná půda",
-      "area": 5576,
-      "price": 239000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 48.781662,
-      "lng": 16.994294,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1020443-nabidka-prodej-pozemku-tynec"
-    },
-    {
       "place": "Hranice – Velká u Hranic",
       "okres": "Přerov",
       "type": "sale",
@@ -8778,19 +8752,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1025867-nabidka-prodej-pozemku-mezimesti"
     },
     {
-      "place": "Nové Sedlo – Nové Sedlo u Žatce",
-      "okres": "Chomutov",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "orná půda",
-      "area": 5985,
-      "price": 499000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 50.339885,
-      "lng": 13.471082,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1020441-nabidka-prodej-pozemku-nove-sedlo"
-    },
-    {
       "place": "Sokolnice – Sokolnice",
       "okres": "Brno-město",
       "type": "sale",
@@ -9101,6 +9062,45 @@
       "lat": 49.415133,
       "lng": 16.460886,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/951070-nabidka-prodej-pozemku-rasov"
+    },
+    {
+      "place": "Pasečnice – Pasečnice",
+      "okres": "Domažlice",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "trvalý travní porost",
+      "area": 1786,
+      "price": 175100,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.398945,
+      "lng": 12.887008,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1055393-nabidka-prodej-pozemku-pasecnice"
+    },
+    {
+      "place": "Mníšek – Mníšek u Liberce",
+      "okres": "Liberec",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "trvalý travní porost",
+      "area": 20300,
+      "price": 1999000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.840553,
+      "lng": 15.034923,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1041419-nabidka-prodej-pozemku-mnisek"
+    },
+    {
+      "place": "Lužná – Lužná u Rakovníka",
+      "okres": "Rakovník",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 3035,
+      "price": 299000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.122815,
+      "lng": 13.786011,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949453-nabidka-prodej-pozemku-luzna"
     },
     {
       "place": "Stráž pod Ralskem",
