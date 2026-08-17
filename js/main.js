@@ -1656,12 +1656,11 @@
     // ne pro třetinu — aby badge nesvítil skoro všude.
     var pv = vis.map(perM2Val).filter(function (x) { return isFinite(x) && x > 0; }).sort(function (a, b) { return a - b; });
     var dealMax = pv.length >= 5 ? pv[Math.min(2, pv.length - 1)] : 0;
-    // „★ Doporučujeme" jen pro JEDINOU nejlepší nabídku podle interního skóre
-    // (nezávisle na řazení), a jen když je z čeho vybírat (min. 5 nabídek).
-    // Dřív svítilo na 3 kartách za sebou = působilo to jako spam.
+    // „★ Doporučujeme" jen pro 3 nejlepší podle interního skóre (nezávisle na řazení),
+    // a jen když je z čeho vybírat (min. 5 nabídek).
     var hotIds = {};
     if (vis.length >= 5) {
-      vis.slice().sort(function (a, b) { return demand(b) - demand(a); }).slice(0, 1)
+      vis.slice().sort(function (a, b) { return demand(b) - demand(a); }).slice(0, 3)
         .forEach(function (d) { hotIds[d._id] = true; });
     }
     var top = vis.slice(0, LIST_LIMIT);
