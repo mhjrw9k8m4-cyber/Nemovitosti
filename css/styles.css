@@ -145,6 +145,9 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 #nav{display:flex; gap:26px; align-items:center;}
 #nav a{color:var(--text-ondark-mute); text-decoration:none; font-size:14px; font-weight:500; transition:color .15s ease; position:relative;}
 #nav a:hover{color:var(--text-ondark);}
+/* CTA v hlavičce musí být tmavý text na teal HNED (ne až po najetí myší) —
+   #nav a jinak přebíjelo barvu tlačítka a text byl šedý a špatně čitelný. */
+#nav a.btn-primary{color:var(--ink);}
 #nav a.btn-primary:hover{color:var(--ink);}
 #nav a:not(.btn-primary).active{color:var(--text-ondark);}
 #nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--copper-bright); border-radius:2px;}
