@@ -917,11 +917,12 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 }
 @media (max-width:880px){
   .nav-toggle{display:flex;}
-  /* Mobilní menu = celoobrazovkový panel pod hlavičkou (ne jen proužek nahoře).
-     top:100% = výška hlavičky (ta je díky backdrop-filter kontejnerem), height
-     s dvh vyplní zbytek obrazovky až dolů — nic neprosvítá zespodu. Odkazy jsou
-     nahoře, hlavní akce „Přidat pozemek" ukotvená dole (margin-top:auto). */
-  #nav{position:fixed; top:100%; left:0; right:0; height:calc(100dvh - 100%); flex-direction:column; align-items:stretch; gap:0; background:var(--ink); padding:14px 24px calc(24px + env(safe-area-inset-bottom, 0px)); box-shadow:0 26px 52px -14px rgba(0,0,0,0.65); display:none; overflow-y:auto; overscroll-behavior:contain; z-index:5;}
+  /* Mobilní menu = kompaktní panel u horní lišty (jen na výšku obsahu), sjíždí
+     zpod hlavičky se zaoblenými spodními rohy. Pod ním je stránka jen zjemněná,
+     menu zůstává nahoře v liště — nezabírá celou obrazovku. top:100% = výška
+     hlavičky (ta je díky backdrop-filter kontejnerem), max-height s dvh pojistí,
+     že se dlouhé menu vejde a nepřeteče přes lištu iOS. */
+  #nav{position:fixed; top:100%; left:0; right:0; max-height:calc(100dvh - 100%); flex-direction:column; align-items:stretch; gap:0; background:var(--ink); padding:12px 24px calc(20px + env(safe-area-inset-bottom, 0px)); border-radius:0 0 22px 22px; box-shadow:0 26px 52px -14px rgba(0,0,0,0.65); border-bottom:1px solid var(--line); display:none; overflow-y:auto; overscroll-behavior:contain; z-index:5;}
   #nav.open{display:flex; animation:navdrop .22s var(--ease);}
   body.nav-open{overflow:hidden;}
   /* Ztmavené pozadí pod panelem (bez zásahu do HTML — pseudo na body) */
@@ -930,7 +931,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   #nav a:not(.btn-primary){display:flex; align-items:center; justify-content:space-between; padding:17px 2px; border-bottom:1px solid rgba(228,236,244,0.07); font-family:'Fraunces',serif; font-size:21px; font-weight:500; color:var(--text-ondark); letter-spacing:-0.01em;}
   #nav a:not(.btn-primary)::after{content:"→"; font-family:'Inter',sans-serif; font-size:16px; color:var(--copper-bright); opacity:0.55;}
   #nav a:not(.btn-primary):active{color:var(--copper-bright);}
-  #nav a.btn-primary{text-align:center; margin-top:auto; border-bottom:0; padding:16px 20px; font-size:16.5px; font-weight:700; color:var(--ink); border-radius:12px;}
+  #nav a.btn-primary{text-align:center; margin-top:16px; border-bottom:0; padding:16px 20px; font-size:16.5px; font-weight:700; color:var(--ink); border-radius:12px;}
   /* Popisek pod hlavní akcí — ať „Přidat pozemek" má dole jasné, ne prázdné místo */
   .nav-cta-note{display:none;}
   #nav .nav-cta-note{display:block; text-align:center; margin-top:11px; font-size:12.5px; color:var(--text-ondark-mute); line-height:1.45;}
