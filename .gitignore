@@ -11,3 +11,9 @@ Thumbs.db
 node_modules/
 npm-debug.log*
 dist/
+
+# Tajné klíče a lokální nastavení — NIKDY do repozitáře
+.env
+.env.*
+!.env.example
+.vercel/

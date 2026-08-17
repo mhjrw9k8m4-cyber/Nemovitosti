@@ -1,0 +1,12 @@
+{
+  "name": "pozemkomat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pozemkomat — mapa příležitostí u pozemků na jedné mapě",
+  "scripts": {
+    "fetch-data": "node scripts/fetch-opportunities.mjs"
+  },
+  "dependencies": {
+    "stripe": "^17.5.0"
+  }
+}
