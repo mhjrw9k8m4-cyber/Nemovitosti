@@ -987,6 +987,51 @@
     favEl.setAttribute('aria-pressed', String(favOnly));
   }
 
+  // „Naposledy prohlédnuté" — malá vychytávka: parcely, které jste otevřeli,
+  // si zapamatujeme v prohlížeči a nabídneme je pro rychlý návrat. Nic se
+  // neodesílá, jen localStorage. Nesahá na chování mapy.
+  var RECENT_KEY = 'pk_recent_v1';
+  var _keyIdx = null;
+  function keyIndex(){ if (_keyIdx) return _keyIdx; _keyIdx = {}; DATA.forEach(function (d) { _keyIdx[pkey(d)] = d; }); return _keyIdx; }
+  function recentKeys(){ try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; } catch (e) { return []; } }
+  function pushRecent(d){
+    var k = pkey(d);
+    var arr = recentKeys().filter(function (x) { return x !== k; });
+    arr.unshift(k);
+    arr = arr.slice(0, 8);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(arr)); } catch (e) {}
+    renderRecent();
+  }
+  function renderRecent(){
+    var el = document.getElementById('recent-strip');
+    if (!el) return;
+    var idx = keyIndex();
+    var items = recentKeys().map(function (k) { return idx[k]; }).filter(Boolean).slice(0, 8);
+    if (items.length < 2) { el.hidden = true; el.innerHTML = ''; return; } // ukaž až od 2, jinak zbytečné
+    var h = '<div class="rs-head">Naposledy prohlédnuté</div><div class="rs-row">';
+    items.forEach(function (d) {
+      h += '<button type="button" class="rs-chip" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
+        '<span class="rs-dot" style="background:' + TYPE[d.type].color + '"></span>' +
+        '<span class="rs-place">' + d.place + '</span>' +
+        '<span class="rs-price">' + fmt(d.price) + ' Kč</span>' +
+      '</button>';
+    });
+    h += '</div>';
+    el.innerHTML = h;
+    el.hidden = false;
+  }
+  (function () {
+    var el = document.getElementById('recent-strip');
+    if (!el) return;
+    el.addEventListener('click', function (e) {
+      var chip = e.target.closest('.rs-chip');
+      if (!chip) return;
+      var k; try { k = decodeURIComponent(chip.getAttribute('data-rkey')); } catch (x) { return; }
+      var d = keyIndex()[k];
+      if (d) { showDetail(d); highlightList(d._id); }
+    });
+  })();
+
   // Index cen za m² podle typu+druhu — pro poctivé srovnání v detailu.
   // Percentil (0–100) je omezený, takže nikdy nevznikne nesmysl typu „+7130 %".
   var perM2Index = (function () {
@@ -1243,6 +1288,7 @@
     // ochrana: klik na tečku na mapě probublá až sem — ať hned zase nezavře detail
     detailOpening = true; setTimeout(function () { detailOpening = false; }, 0);
     curDetail = d;
+    pushRecent(d);   // zapamatuj pro „Naposledy prohlédnuté"
     detailEl.innerHTML = detailHtml(d);
     detailEl.scrollTop = 0;
     detailEl.removeAttribute('hidden');
@@ -1819,6 +1865,7 @@
 
   refreshFavBtn();
   renderList();
+  renderRecent();
   var deepLinked = openFromUrl();
   // Po dopočítání rozměrů mapy znovu vyrovnáme na celou ČR (pokud nejde o
   // sdílený odkaz na konkrétní parcelu, který si drží vlastní přiblížení).
