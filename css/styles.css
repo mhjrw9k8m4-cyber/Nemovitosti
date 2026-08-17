@@ -871,22 +871,23 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 }
 @media (max-width:880px){
   .nav-toggle{display:flex;}
-  /* Mobilní menu = čistý celoobrazovkový panel; velké elegantní odkazy, akce dole.
-     Výška končí přesně na spodku obrazovky: panel začíná pod hlavičkou (top:100%
-     = výška hlavičky, protože hlavička je díky backdrop-filter kontejnerem),
-     takže height = viditelná výška (dvh) minus hlavička. dvh řeší lištu iOS Safari,
-     aby se panel nepřetahoval mimo obrazovku a tlačítko nezmizelo dole. */
-  #nav{position:fixed; top:100%; left:0; right:0; height:calc(100vh - 100%); height:calc(100dvh - 100%); flex-direction:column; align-items:stretch; gap:0; background:var(--ink); padding:16px 28px calc(24px + env(safe-area-inset-bottom, 0px)); display:none; overflow-y:auto; overscroll-behavior:contain; z-index:5;}
-  #nav.open{display:flex; animation:navdrop .2s var(--ease);}
+  /* Mobilní menu = kompaktní rozbalovací panel (jen na výšku obsahu), sjíždí zpod
+     hlavičky se zaoblenými rohy a ztmaveným pozadím pod ním. Žádné prázdné místo.
+     top:100% = výška hlavičky (ta je díky backdrop-filter kontejnerem), max-height
+     s dvh pojistí, že se dlouhé menu vejde a nepřeteče přes lištu iOS. */
+  #nav{position:fixed; top:100%; left:0; right:0; max-height:calc(100dvh - 100%); flex-direction:column; align-items:stretch; gap:0; background:var(--ink); padding:12px 24px calc(20px + env(safe-area-inset-bottom, 0px)); border-radius:0 0 22px 22px; box-shadow:0 26px 52px -14px rgba(0,0,0,0.65); border-bottom:1px solid var(--line); display:none; overflow-y:auto; overscroll-behavior:contain; z-index:5;}
+  #nav.open{display:flex; animation:navdrop .22s var(--ease);}
   body.nav-open{overflow:hidden;}
-  @keyframes navdrop{from{opacity:0;} to{opacity:1;}}
-  #nav a:not(.btn-primary){display:flex; align-items:center; justify-content:space-between; padding:20px 2px; border-bottom:1px solid rgba(228,236,244,0.07); font-family:'Fraunces',serif; font-size:23px; font-weight:500; color:var(--text-ondark); letter-spacing:-0.01em;}
-  #nav a:not(.btn-primary)::after{content:"→"; font-family:'Inter',sans-serif; font-size:17px; color:var(--copper-bright); opacity:0.55;}
+  /* Ztmavené pozadí pod panelem (bez zásahu do HTML — pseudo na body) */
+  body.nav-open::before{content:""; position:fixed; inset:0; background:rgba(6,12,16,0.55); z-index:4; animation:navdrop .22s var(--ease);}
+  @keyframes navdrop{from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);}}
+  #nav a:not(.btn-primary){display:flex; align-items:center; justify-content:space-between; padding:17px 2px; border-bottom:1px solid rgba(228,236,244,0.07); font-family:'Fraunces',serif; font-size:21px; font-weight:500; color:var(--text-ondark); letter-spacing:-0.01em;}
+  #nav a:not(.btn-primary)::after{content:"→"; font-family:'Inter',sans-serif; font-size:16px; color:var(--copper-bright); opacity:0.55;}
   #nav a:not(.btn-primary):active{color:var(--copper-bright);}
-  #nav a.btn-primary{text-align:center; margin-top:auto; border-bottom:0; padding:17px 20px; font-size:16.5px; font-weight:700; color:var(--ink); border-radius:12px;}
+  #nav a.btn-primary{text-align:center; margin-top:16px; border-bottom:0; padding:16px 20px; font-size:16.5px; font-weight:700; color:var(--ink); border-radius:12px;}
   /* Popisek pod hlavní akcí — ať „Přidat pozemek" má dole jasné, ne prázdné místo */
   .nav-cta-note{display:none;}
-  #nav .nav-cta-note{display:block; text-align:center; margin-top:12px; font-size:13px; color:var(--text-ondark-mute); line-height:1.45;}
+  #nav .nav-cta-note{display:block; text-align:center; margin-top:11px; font-size:12.5px; color:var(--text-ondark-mute); line-height:1.45;}
   /* Přihlášení = decentní obrys nahoře (ne křiklavé) */
   .nav-login{order:-1; justify-content:center; width:100%; margin:4px 0 18px; padding:14px; font-size:15px; font-weight:600; border-radius:12px; border:1.5px solid var(--line-strong); background:transparent; color:var(--text-ondark); box-shadow:none;}
   .nav-login:hover, .nav-login:active{border-color:var(--copper-bright); color:var(--copper-bright); background:rgba(46,144,180,0.08);}

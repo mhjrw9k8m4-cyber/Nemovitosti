@@ -266,6 +266,21 @@
         document.body.classList.remove('nav-open');
       }
     });
+    // Zavřít menu klepnutím na ztmavené pozadí (mimo panel i mimo tlačítko)
+    function closeNav() {
+      nav.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-label', 'Otevřít menu');
+      document.body.classList.remove('nav-open');
+    }
+    document.addEventListener('click', function (e) {
+      if (!nav.classList.contains('open')) return;
+      if (nav.contains(e.target) || toggle.contains(e.target)) return;
+      closeNav();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && nav.classList.contains('open')) closeNav();
+    });
   }
 
   /* ---------- Okno hlídání lokality (modal) ---------- */
