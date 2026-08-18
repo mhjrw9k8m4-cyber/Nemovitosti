@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const listingRef = String(body.listingRef || '').slice(0, 120);
     const email = String(body.email || '').slice(0, 200);
-    const site = (process.env.SITE_URL || 'https://pozemkomat.vercel.app').trim();
+    const site = (process.env.SITE_URL || 'https://parcelaka.cz').trim();
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',

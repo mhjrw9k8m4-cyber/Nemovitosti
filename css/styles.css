@@ -708,7 +708,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .copy-btn.copied{background:var(--c-sale); color:#fff;}
 .embed-preview{background:radial-gradient(circle at 50% 40%, #1c2c3a, var(--ink) 80%); border:1px solid var(--line); border-radius:8px; height:200px; position:relative; overflow:hidden;}
 .embed-preview::before{content:""; position:absolute; inset:0; background-image:linear-gradient(rgba(91,184,214,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(91,184,214,0.05) 1px, transparent 1px); background-size:26px 26px;}
-.embed-preview::after{content:"mapa poskytnuta Pozemkomat.cz"; position:absolute; bottom:8px; right:12px; font-size:10px; font-family:'IBM Plex Mono',monospace; color:var(--text-ondark-mute);}
+.embed-preview::after{content:"mapa poskytnuta parcelaka.cz"; position:absolute; bottom:8px; right:12px; font-size:10px; font-family:'IBM Plex Mono',monospace; color:var(--text-ondark-mute);}
 .ep-dot{position:absolute; width:11px; height:11px; border-radius:50%; border:2px solid rgba(255,255,255,0.85); box-shadow:0 1px 4px rgba(0,0,0,0.5), 0 0 8px -1px currentColor; transform:translate(-50%,-50%);}
 .ep-dot.sale{background:var(--c-sale); color:var(--c-sale);}
 .ep-dot.drazba{background:var(--c-drazba); color:var(--c-drazba);}

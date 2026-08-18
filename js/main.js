@@ -162,7 +162,7 @@
     return [
       'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Parcelka//CS', 'CALSCALE:GREGORIAN',
       'BEGIN:VEVENT',
-      'UID:' + encodeURIComponent(pkey(d)) + '@pozemkomat',
+      'UID:' + encodeURIComponent(pkey(d)) + '@parcelka',
       'DTSTAMP:' + stamp,
       'DTSTART;VALUE=DATE:' + ymd,
       'DTEND;VALUE=DATE:' + endYMD,
