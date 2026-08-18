@@ -22,8 +22,8 @@ function rawBody(req) {
 module.exports = async (req, res) => {
   if (req.method !== 'POST') { res.status(405).end(); return; }
 
-  const key = process.env.STRIPE_SECRET_KEY;
-  const whSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const key = (process.env.STRIPE_SECRET_KEY || '').trim();
+  const whSecret = (process.env.STRIPE_WEBHOOK_SECRET || '').trim();
   if (!key || !whSecret) { res.status(500).send('Chybí Stripe klíče'); return; }
 
   const stripe = new Stripe(key);

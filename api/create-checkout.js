@@ -16,7 +16,9 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Jen POST' }); return; }
 
-  const key = process.env.STRIPE_SECRET_KEY;
+  // .trim() zahodí případný přebytečný konec řádku / mezeru z proměnných
+  // (na mobilu se do hodnoty snadno vloudí „enter") — ať to nerozbije URL ani klíč.
+  const key = (process.env.STRIPE_SECRET_KEY || '').trim();
   if (!key) { res.status(500).json({ error: 'Chybí STRIPE_SECRET_KEY' }); return; }
 
   try {
@@ -24,7 +26,7 @@ module.exports = async (req, res) => {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const listingRef = String(body.listingRef || '').slice(0, 120);
     const email = String(body.email || '').slice(0, 200);
-    const site = process.env.SITE_URL || 'https://pozemkomat.vercel.app';
+    const site = (process.env.SITE_URL || 'https://pozemkomat.vercel.app').trim();
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
