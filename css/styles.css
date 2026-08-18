@@ -690,6 +690,8 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .realtor-contact{margin-top:20px; background:linear-gradient(135deg, var(--ink-soft) 0%, var(--ink-soft2) 100%); border:1px solid var(--line); border-radius:12px; padding:34px; display:grid; grid-template-columns:1fr 1.1fr; gap:36px; align-items:center;}
 .rct-copy h2{font-family:'Fraunces',serif; font-size:23px; font-weight:500; margin-bottom:10px;}
 .rct-copy p{font-size:14.5px; color:var(--text-ondark-mute); line-height:1.6;}
+.rct-fb{display:block; margin-top:10px; font-size:13px; color:var(--text-ondark-mute);}
+.rct-fb a{color:var(--copper-bright); text-decoration:underline; text-underline-offset:2px;}
 .rct-form{display:flex; flex-direction:column; gap:11px;}
 .rct-row{display:grid; grid-template-columns:1fr 1fr; gap:11px;}
 .rct-form input, .rct-form textarea{background:var(--ink); border:1px solid var(--line); border-radius:6px; padding:13px 15px; font-size:14.5px; color:var(--text-ondark); font-family:inherit; width:100%;}
