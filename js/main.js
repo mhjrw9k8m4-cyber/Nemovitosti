@@ -220,6 +220,8 @@
   }
   var fbOpen = document.getElementById('fb-open');
   if (fbOpen) fbOpen.addEventListener('click', openFeedback);
+  var fbBeta = document.getElementById('beta-feedback');
+  if (fbBeta) fbBeta.addEventListener('click', function (e) { e.preventDefault(); openFeedback(); });
   var fbForm = document.getElementById('fb-form');
   if (fbForm) {
     fbForm.addEventListener('submit', function (e) {
