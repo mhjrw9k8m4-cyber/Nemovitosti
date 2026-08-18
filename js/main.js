@@ -210,7 +210,7 @@
     requestAnimationFrame(function () { fbModal.classList.add('open'); });
     document.body.style.overflow = 'hidden';
     var ta = document.getElementById('fb-msg');
-    if (ta) setTimeout(function () { ta.focus(); }, 80);
+    if (ta) setTimeout(function () { try { ta.focus({ preventScroll: true }); } catch (e) { ta.focus(); } }, 80);
   }
   function closeFeedback() {
     if (!fbModal) return;
@@ -224,7 +224,13 @@
   if (fbBeta) fbBeta.addEventListener('click', function (e) { e.preventDefault(); openFeedback(); });
   // Otevři formulář zpětné vazby i přes odkaz #zpetna-vazba (funguje i z podstránek:
   // odkaz index.html#zpetna-vazba přejde na domovskou stránku a okno se otevře samo).
-  function openFeedbackFromHash() { if (location.hash === '#zpetna-vazba') openFeedback(); }
+  function openFeedbackFromHash() {
+    if (location.hash !== '#zpetna-vazba') return;
+    openFeedback();
+    // Kotvu z adresy hned odstraníme, ať web při příštím otevření nezůstává „dole"
+    // a formulář se sám znovu neotevírá.
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  }
   openFeedbackFromHash();
   window.addEventListener('hashchange', openFeedbackFromHash);
   var fbForm = document.getElementById('fb-form');
@@ -301,7 +307,7 @@
     requestAnimationFrame(function () { wModal.classList.add('open'); });
     document.body.style.overflow = 'hidden';
     var em = document.getElementById('wm-email');
-    if (em) setTimeout(function () { em.focus(); }, 80);
+    if (em) setTimeout(function () { try { em.focus({ preventScroll: true }); } catch (e) { em.focus(); } }, 80);
   }
   function closeWatch() {
     if (!wModal) return;
