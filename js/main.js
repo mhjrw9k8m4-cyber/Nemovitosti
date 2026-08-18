@@ -222,6 +222,11 @@
   if (fbOpen) fbOpen.addEventListener('click', openFeedback);
   var fbBeta = document.getElementById('beta-feedback');
   if (fbBeta) fbBeta.addEventListener('click', function (e) { e.preventDefault(); openFeedback(); });
+  // Otevři formulář zpětné vazby i přes odkaz #zpetna-vazba (funguje i z podstránek:
+  // odkaz index.html#zpetna-vazba přejde na domovskou stránku a okno se otevře samo).
+  function openFeedbackFromHash() { if (location.hash === '#zpetna-vazba') openFeedback(); }
+  openFeedbackFromHash();
+  window.addEventListener('hashchange', openFeedbackFromHash);
   var fbForm = document.getElementById('fb-form');
   if (fbForm) {
     fbForm.addEventListener('submit', function (e) {
