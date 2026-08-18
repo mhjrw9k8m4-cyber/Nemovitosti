@@ -48,20 +48,37 @@
     toastT = setTimeout(function () { toastEl.classList.remove('show'); setTimeout(function () { toastEl.setAttribute('hidden', ''); }, 300); }, 3200);
   }
 
-  /* ---------- Odeslání (bez serveru, přes Formspree) ----------
-     Cíl odeslání se nastavuje centrálně v js/config.js (PK_FORM_ENDPOINT).
-     Dokud je prázdné, běží „nanečisto": nic se neodešle a nikde netvrdíme,
-     že zpráva dorazila. */
-  var FORM_ENDPOINT = (typeof window !== 'undefined' && window.PK_FORM_ENDPOINT) || '';
-  function sendForm(data) {
-    if (!FORM_ENDPOINT) return Promise.resolve('unset');
-    var isFD = (typeof FormData !== 'undefined') && (data instanceof FormData);
-    return fetch(FORM_ENDPOINT, {
+  /* ---------- Odeslání (do databáze Supabase) ----------
+     Poptávky (přidání pozemku, nahlášení inzerátu) se ukládají do Supabase
+     (tabulka messages). Majitel je vidí v Supabase → Table Editor.
+     Fotky se zatím neukládají (jen se spočítají) — úložiště fotek přidáme
+     později. Nastavuje se v js/config.js. */
+  var SB_URL = (typeof window !== 'undefined' && window.PK_SUPABASE_URL) || '';
+  var SB_KEY = (typeof window !== 'undefined' && window.PK_SUPABASE_KEY) || '';
+  var SB_READY = !!(SB_URL && SB_KEY);
+  function sbInsert(table, row) {
+    if (!SB_READY) return Promise.resolve('unset');
+    return fetch(SB_URL + '/rest/v1/' + table, {
       method: 'POST',
-      // U FormData (s fotkami) necháme prohlížeč nastavit multipart hlavičku sám.
-      headers: isFD ? { 'Accept': 'application/json' } : { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-      body: isFD ? data : JSON.stringify(data)
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(row)
     }).then(function (r) { return r.ok ? 'ok' : 'error'; }).catch(function () { return 'error'; });
+  }
+  function sendForm(data) {
+    if (!SB_READY) return Promise.resolve('unset');
+    var fields = {}, photos = 0;
+    if (typeof FormData !== 'undefined' && data instanceof FormData) {
+      data.forEach(function (value, key) {
+        if (typeof File !== 'undefined' && value instanceof File) { if (value && value.size) photos++; }
+        else if (key.charAt(0) !== '_') fields[key] = value;
+      });
+    } else if (data && typeof data === 'object') {
+      Object.keys(data).forEach(function (k) { if (k.charAt(0) !== '_') fields[k] = data[k]; });
+    }
+    var kind = /nahl/i.test(fields.typ || '') ? 'nahlaseni' : 'inzerat';
+    var lines = Object.keys(fields).map(function (k) { return k + ': ' + fields[k]; });
+    if (photos) lines.push('fotky: ' + photos + ' (úložiště fotek spustíme později)');
+    return sbInsert('messages', { kind: kind, name: fields.jmeno || null, email: fields.kontakt || null, message: lines.join('\n') });
   }
 
   // Fotky pozemku: okamžitý náhled v prohlížeči + titulka do živého náhledu
@@ -211,7 +228,7 @@
         if (el) { try { el.focus({ preventScroll: true }); } catch (x) { el.focus(); } el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
         return;
       }
-      if (!FORM_ENDPOINT) { ms.textContent = OFFLINE; return; }
+      if (!SB_READY) { ms.textContent = OFFLINE; return; }
       ms.textContent = 'Odesílám…';
       sendForm(buildData()).then(function (r) {
         if (r === 'ok') {

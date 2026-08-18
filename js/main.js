@@ -232,16 +232,13 @@
       var mail = ((em && em.value) || '').trim();
       function say(txt, err) { if (st) { st.textContent = txt; st.classList.toggle('err', !!err); } }
       if (!msg) { if (ta) ta.focus(); say('Napište prosím pár slov.', true); return; }
-      if (FEEDBACK_ENDPOINT) {
+      if (SB_READY) {
         if (btn) btn.disabled = true;
         say('Odesílám…');
-        fetch(FEEDBACK_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ _subject: 'Zpětná vazba — Parcelka', zprava: msg, email: mail, kde: 'zpětná vazba' }) })
-          .then(function (r) { if (!r.ok) throw new Error(); if (ta) ta.value = ''; if (em) em.value = ''; say('Děkujeme! Zprávu jsme dostali.'); setTimeout(closeFeedback, 1400); })
+        sbInsert('messages', { kind: 'zpetna_vazba', email: mail || null, message: msg })
+          .then(function (r) { if (r !== 'ok') throw new Error(); if (ta) ta.value = ''; if (em) em.value = ''; say('Děkujeme! Zprávu jsme dostali.'); setTimeout(closeFeedback, 1400); })
           .catch(function () { say('Odeslání se teď nepovedlo, zkuste to prosím za chvíli.', true); })
           .then(function () { if (btn) btn.disabled = false; });
-      } else if (FEEDBACK_EMAIL) {
-        window.location.href = 'mailto:' + FEEDBACK_EMAIL + '?subject=' + encodeURIComponent('Parcelka — zpětná vazba') + '&body=' + encodeURIComponent(msg + (mail ? '\n\nKontakt: ' + mail : ''));
-        say('Otevírám poštovní aplikaci…');
       } else {
         // Cíl zatím nenastaven — buďme upřímní, netvrdíme, že se odeslalo.
         say('Děkujeme za podnět! Odesílání právě dokončujeme — brzy bude plně funkční.');
@@ -313,22 +310,25 @@
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeWatch(); closeInfo(); closeFeedback(); } });
 
-  /* ---------- Odesílání formulářů (bez serveru, přes Formspree) ----------
-     Aby formuláře (hlídání lokality i poptávka realitek) opravdu někam dorazily,
-     stačí bezplatná služba Formspree — nepotřebuje vlastní server:
-       1) Založ si účet na https://formspree.io (zdarma, ~2 minuty).
-       2) Vytvoř formulář a zkopíruj jeho URL (např. https://formspree.io/f/abcdwxyz).
-       3) Vlož ji níže do FORM_ENDPOINT — a je to živé.
-     Dokud je prázdné, formuláře fungují „nanečisto": nic se neodešle a nikde
-     netvrdíme, že zpráva opravdu dorazila.
-     Nastavuje se centrálně v js/config.js (PK_FORM_ENDPOINT). */
-  var FORM_ENDPOINT = (typeof window !== 'undefined' && window.PK_FORM_ENDPOINT) || '';
-  function sendForm(data) {
-    if (!FORM_ENDPOINT) return Promise.resolve('unset');
-    return fetch(FORM_ENDPOINT, {
+  /* ---------- Odesílání formulářů (do databáze Supabase) ----------
+     Formuláře (hlídání lokality, kontakt, zpětná vazba) ukládají poptávky
+     přímo do Supabase — tabulky watch_subscriptions a messages. Veřejný
+     „publishable" klíč je bezpečný v prohlížeči: pravidla RLS dovolí z webu
+     jen VKLÁDAT, ne číst cizí data. Nastavuje se v js/config.js. */
+  var SB_URL = (typeof window !== 'undefined' && window.PK_SUPABASE_URL) || '';
+  var SB_KEY = (typeof window !== 'undefined' && window.PK_SUPABASE_KEY) || '';
+  var SB_READY = !!(SB_URL && SB_KEY);
+  function sbInsert(table, row) {
+    if (!SB_READY) return Promise.resolve('unset');
+    return fetch(SB_URL + '/rest/v1/' + table, {
       method: 'POST',
-      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(row)
     }).then(function (r) { return r.ok ? 'ok' : 'error'; }).catch(function () { return 'error'; });
   }
 
@@ -341,12 +341,12 @@
       var ms = document.getElementById('wm-msg');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ms.textContent = 'Zadejte prosím platný e-mail.'; ms.classList.add('err'); return; }
       ms.classList.remove('err');
-      if (!FORM_ENDPOINT) {
+      if (!SB_READY) {
         ms.textContent = 'Upozornění teprve dokončujeme — spustíme je, jakmile přidáme odesílání. Děkujeme za trpělivost.';
         return;
       }
       ms.textContent = 'Odesílám…';
-      sendForm({ _subject: 'Hlídání lokality — Parcelka', typ: 'Hlídání lokality', okres: okres || '(neuvedeno)', email: email }).then(function (r) {
+      sbInsert('watch_subscriptions', { email: email, okres: okres || null }).then(function (r) {
         if (r === 'ok') { ms.textContent = okres ? ('Budeme hlídat okres „' + okres + '" a dáme vědět, jakmile se objeví nová příležitost.') : 'Ozveme se, jakmile se ve vašem okolí objeví nová příležitost.'; setTimeout(closeWatch, 1900); }
         else { ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; ms.classList.add('err'); }
       });
@@ -511,12 +511,12 @@
         msg.textContent = 'Zadejte prosím platný e-mail.'; msg.classList.add('err'); return;
       }
       msg.classList.remove('err');
-      if (!FORM_ENDPOINT) {
+      if (!SB_READY) {
         msg.textContent = 'Upozornění teprve dokončujeme — spustíme je, jakmile přidáme odesílání. Děkujeme za trpělivost.';
         return;
       }
       msg.textContent = 'Odesílám…';
-      sendForm({ _subject: 'Hlídání lokality — Parcelka', typ: 'Hlídání lokality', okres: okres || '(neuvedeno)', email: email }).then(function (r) {
+      sbInsert('watch_subscriptions', { email: email, okres: okres || null }).then(function (r) {
         if (r === 'ok') {
           msg.textContent = okres ? ('Budeme hlídat okres „' + okres + '" a dáme vědět, jakmile se objeví nová příležitost.') : 'Ozveme se, jakmile se ve vašem okolí objeví nová příležitost.';
           form.reset();
@@ -538,12 +538,12 @@
       out.classList.remove('err');
       var org = document.getElementById('rc-org').value.trim();
       var text = document.getElementById('rc-msg').value.trim();
-      if (!FORM_ENDPOINT) {
+      if (!SB_READY) {
         out.textContent = 'Děkujeme, ' + name.split(' ')[0] + '. Odesílání poptávek právě zprovozňujeme — zkuste to prosím za chvíli znovu.';
         return;
       }
       out.textContent = 'Odesílám…';
-      sendForm({ _subject: 'Poptávka realitky/obce — Parcelka', typ: 'Poptávka realitky/obce', jmeno: name, firma: org || '(neuvedeno)', email: email, zprava: text || '(bez zprávy)' }).then(function (r) {
+      sbInsert('messages', { kind: 'kontakt', name: name, org: org || null, email: email, message: text || null }).then(function (r) {
         if (r === 'ok') { out.textContent = 'Děkujeme, ' + name.split(' ')[0] + '. Poptávka dorazila, ozveme se vám na ' + email + '.'; rForm.reset(); }
         else { out.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; out.classList.add('err'); }
       });
