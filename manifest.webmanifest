@@ -1,6 +1,6 @@
 {
-  "name": "Pozemkomat",
-  "short_name": "Pozemkomat",
+  "name": "Parcelka",
+  "short_name": "Parcelka",
   "description": "Dražby, exekuce, prodej i obecní záměry u pozemků z veřejných zdrojů na jedné interaktivní mapě celé ČR.",
   "lang": "cs",
   "start_url": "./",

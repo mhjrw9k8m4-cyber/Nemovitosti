@@ -1,8 +1,8 @@
 {
-  "name": "pozemkomat",
+  "name": "parcelka",
   "version": "1.0.0",
   "private": true,
-  "description": "Pozemkomat — mapa příležitostí u pozemků na jedné mapě",
+  "description": "Parcelka — mapa příležitostí u pozemků na jedné mapě",
   "scripts": {
     "fetch-data": "node scripts/fetch-opportunities.mjs"
   },

@@ -1,4 +1,4 @@
-// Pozemkomat — Stripe webhook. Stripe sem pošle zprávu po zaplacení.
+// Parcelka — Stripe webhook. Stripe sem pošle zprávu po zaplacení.
 // Ověříme podpis a při úspěšné platbě zapneme inzerátu zvýraznění.
 //
 // Poběží na Vercelu. Potřebuje STRIPE_SECRET_KEY a STRIPE_WEBHOOK_SECRET.

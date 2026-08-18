@@ -1,4 +1,4 @@
-// Pozemkomat — interaktivita webu
+// Parcelka — interaktivita webu
 (function () {
   'use strict';
 
@@ -160,7 +160,7 @@
     var summary = kind + ': ' + d.place + ' (parc. ' + d.parcel + ')';
     var desc = [d.druh, hasArea(d) ? fmt(d.area) + ' m²' : '', 'vyvolávací ' + fmt(d.price) + ' Kč', url].filter(Boolean).join(', ');
     return [
-      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Pozemkomat//CS', 'CALSCALE:GREGORIAN',
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Parcelka//CS', 'CALSCALE:GREGORIAN',
       'BEGIN:VEVENT',
       'UID:' + encodeURIComponent(pkey(d)) + '@pozemkomat',
       'DTSTAMP:' + stamp,
@@ -235,12 +235,12 @@
       if (FEEDBACK_ENDPOINT) {
         if (btn) btn.disabled = true;
         say('Odesílám…');
-        fetch(FEEDBACK_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ _subject: 'Zpětná vazba — Pozemkomat', zprava: msg, email: mail, kde: 'zpětná vazba' }) })
+        fetch(FEEDBACK_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ _subject: 'Zpětná vazba — Parcelka', zprava: msg, email: mail, kde: 'zpětná vazba' }) })
           .then(function (r) { if (!r.ok) throw new Error(); if (ta) ta.value = ''; if (em) em.value = ''; say('Děkujeme! Zprávu jsme dostali.'); setTimeout(closeFeedback, 1400); })
           .catch(function () { say('Odeslání se teď nepovedlo, zkuste to prosím za chvíli.', true); })
           .then(function () { if (btn) btn.disabled = false; });
       } else if (FEEDBACK_EMAIL) {
-        window.location.href = 'mailto:' + FEEDBACK_EMAIL + '?subject=' + encodeURIComponent('Pozemkomat — zpětná vazba') + '&body=' + encodeURIComponent(msg + (mail ? '\n\nKontakt: ' + mail : ''));
+        window.location.href = 'mailto:' + FEEDBACK_EMAIL + '?subject=' + encodeURIComponent('Parcelka — zpětná vazba') + '&body=' + encodeURIComponent(msg + (mail ? '\n\nKontakt: ' + mail : ''));
         say('Otevírám poštovní aplikaci…');
       } else {
         // Cíl zatím nenastaven — buďme upřímní, netvrdíme, že se odeslalo.
@@ -346,7 +346,7 @@
         return;
       }
       ms.textContent = 'Odesílám…';
-      sendForm({ _subject: 'Hlídání lokality — Pozemkomat', typ: 'Hlídání lokality', okres: okres || '(neuvedeno)', email: email }).then(function (r) {
+      sendForm({ _subject: 'Hlídání lokality — Parcelka', typ: 'Hlídání lokality', okres: okres || '(neuvedeno)', email: email }).then(function (r) {
         if (r === 'ok') { ms.textContent = okres ? ('Budeme hlídat okres „' + okres + '" a dáme vědět, jakmile se objeví nová příležitost.') : 'Ozveme se, jakmile se ve vašem okolí objeví nová příležitost.'; setTimeout(closeWatch, 1900); }
         else { ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; ms.classList.add('err'); }
       });
@@ -375,7 +375,7 @@
   var INFO = {
     soukromi: {
       t: 'Zásady soukromí',
-      h: '<p>Pozemkomat je ve veřejné bétě. Upřímně, jak zacházíme s daty:</p>' +
+      h: '<p>Parcelka je ve veřejné bétě. Upřímně, jak zacházíme s daty:</p>' +
         '<ul>' +
         '<li><b>E-mail:</b> použijeme jen pro upozornění nebo poptávku, o kterou si sami řeknete. Neprodáváme ho a neposíláme spam — kdykoli se odhlásíte.</li>' +
         '<li><b>Účet a uložené pozemky:</b> běží zatím jen ve vašem prohlížeči (localStorage). Nic se neodesílá na server.</li>' +
@@ -386,10 +386,10 @@
     },
     podminky: {
       t: 'Podmínky použití',
-      h: '<p>Pozemkomat je bezplatný nástroj ve veřejné bétě. Sbírá a zobrazuje příležitosti u pozemků z veřejných zdrojů.</p>' +
+      h: '<p>Parcelka je bezplatný nástroj ve veřejné bétě. Sbírá a zobrazuje příležitosti u pozemků z veřejných zdrojů.</p>' +
         '<ul>' +
-        '<li>Data mají <b>informativní charakter</b>. Vždy si je ověřte v oficiálním katastru a u zdroje (dražba, úřad, prodejce). Pozemkomat neručí za jejich úplnost ani aktuálnost.</li>' +
-        '<li>Pozemkomat <b>není účastníkem</b> dražeb ani prodejů a neposkytuje právní ani investiční poradenství.</li>' +
+        '<li>Data mají <b>informativní charakter</b>. Vždy si je ověřte v oficiálním katastru a u zdroje (dražba, úřad, prodejce). Parcelka neručí za jejich úplnost ani aktuálnost.</li>' +
+        '<li>Parcelka <b>není účastníkem</b> dražeb ani prodejů a neposkytuje právní ani investiční poradenství.</li>' +
         '<li><b>Inzeráty od uživatelů</b> se řídí <a href="pravidla-inzerce.html">Pravidly inzerce</a>. Za obsah inzerátu odpovídá ten, kdo ho vložil; závadný inzerát na nahlášení odstraníme.</li>' +
         '<li>Během bety se funkce mohou měnit. Prohlížení mapy zůstane zdarma.</li>' +
         '</ul><p>Otázky? Napište nám přes <a href="#realitky" data-close>kontaktní formulář</a>.</p>'
@@ -516,7 +516,7 @@
         return;
       }
       msg.textContent = 'Odesílám…';
-      sendForm({ _subject: 'Hlídání lokality — Pozemkomat', typ: 'Hlídání lokality', okres: okres || '(neuvedeno)', email: email }).then(function (r) {
+      sendForm({ _subject: 'Hlídání lokality — Parcelka', typ: 'Hlídání lokality', okres: okres || '(neuvedeno)', email: email }).then(function (r) {
         if (r === 'ok') {
           msg.textContent = okres ? ('Budeme hlídat okres „' + okres + '" a dáme vědět, jakmile se objeví nová příležitost.') : 'Ozveme se, jakmile se ve vašem okolí objeví nová příležitost.';
           form.reset();
@@ -543,7 +543,7 @@
         return;
       }
       out.textContent = 'Odesílám…';
-      sendForm({ _subject: 'Poptávka realitky/obce — Pozemkomat', typ: 'Poptávka realitky/obce', jmeno: name, firma: org || '(neuvedeno)', email: email, zprava: text || '(bez zprávy)' }).then(function (r) {
+      sendForm({ _subject: 'Poptávka realitky/obce — Parcelka', typ: 'Poptávka realitky/obce', jmeno: name, firma: org || '(neuvedeno)', email: email, zprava: text || '(bez zprávy)' }).then(function (r) {
         if (r === 'ok') { out.textContent = 'Děkujeme, ' + name.split(' ')[0] + '. Poptávka dorazila, ozveme se vám na ' + email + '.'; rForm.reset(); }
         else { out.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; out.classList.add('err'); }
       });
@@ -877,8 +877,8 @@
       var shareBtn = e.target.closest('[data-share]');
       if (shareBtn) {
         var url = location.origin + location.pathname + '?p=' + encodeURIComponent(pkey(curDetail));
-        var title = 'Pozemek ' + curDetail.place + ' — Pozemkomat';
-        var text = TYPE[curDetail.type].label + ' · ' + curDetail.place + ' · ' + areaTxt(curDetail) + ' · ' + fmt(curDetail.price) + ' Kč — detail na Pozemkomatu:';
+        var title = 'Pozemek ' + curDetail.place + ' — Parcelka';
+        var text = TYPE[curDetail.type].label + ' · ' + curDetail.place + ' · ' + areaTxt(curDetail) + ' · ' + fmt(curDetail.price) + ' Kč — detail na Parcelkau:';
         if (navigator.share) {
           navigator.share({ title: title, text: text, url: url }).catch(function () {});
         } else {
@@ -1045,7 +1045,7 @@
           '</div>' +
           priceBarHtml(d) +
           (isSPU(d) ? '<div class="md-note">Státní půda se prodává přes <b>veřejnou nabídku SPÚ (§ 12)</b> — otevřete „Nabídka SPÚ", parcelu ověříte přes „Katastr".</div>' : '') +
-          (d.type === 'majitel' ? '<div class="md-note">Inzerát vložil <b>majitel pozemku</b>. Pozemkomat je jen platforma — vlastníka a parcelu si ověřte v katastru.</div>' : '') +
+          (d.type === 'majitel' ? '<div class="md-note">Inzerát vložil <b>majitel pozemku</b>. Parcelka je jen platforma — vlastníka a parcelu si ověřte v katastru.</div>' : '') +
           goodToKnowHtml(d) +
         '</div>' +
         '<div class="md-actions">' +

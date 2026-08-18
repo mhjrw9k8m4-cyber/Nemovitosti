@@ -1,5 +1,5 @@
 /* =====================================================================
-   Pozemkomat — JEDNO místo pro odesílání formulářů.
+   Parcelka — JEDNO místo pro odesílání formulářů.
 
    Všechny formuláře (upozornění na lokalitu, zpětná vazba, přidání
    pozemku, nahlášení inzerátu) čtou nastavení odsud.

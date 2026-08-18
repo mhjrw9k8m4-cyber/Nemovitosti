@@ -1,4 +1,4 @@
-// Pozemkomat — vytvoření platby za zvýraznění inzerátu (299 Kč) přes Stripe.
+// Parcelka — vytvoření platby za zvýraznění inzerátu (299 Kč) přes Stripe.
 //
 // Web sem pošle POST { listingRef, email }. Funkce založí Stripe Checkout
 // a vrátí { url } — na tu adresu web zákazníka přesměruje. Po zaplacení
@@ -36,7 +36,7 @@ module.exports = async (req, res) => {
           currency: 'czk',
           unit_amount: 29900, // 299 Kč v haléřích
           product_data: {
-            name: 'Zvýraznění inzerátu — Pozemkomat',
+            name: 'Zvýraznění inzerátu — Parcelka',
             description: 'Inzerát se drží výš v seznamu, má výraznější bod na mapě a odznak „Zvýrazněno".'
           }
         }

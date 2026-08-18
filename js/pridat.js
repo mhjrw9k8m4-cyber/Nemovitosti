@@ -240,7 +240,7 @@
       var fd = new FormData();
       var v = parseInt(val('p-vymera'), 10), c = parseInt(val('p-cena'), 10);
       var site = [].slice.call(document.querySelectorAll('input[name="site"]:checked')).map(function (x) { return x.value; });
-      fd.append('_subject', 'Nový pozemek na prodej — Pozemkomat');
+      fd.append('_subject', 'Nový pozemek na prodej — Parcelka');
       fd.append('typ', 'Prodej pozemku');
       fd.append('obec', val('p-obec'));
       fd.append('okres', val('p-okres') || '(neuvedeno)');
@@ -275,7 +275,7 @@
   handle('form-inzerce', 'msg-inzerce',
     function () {
       return {
-        _subject: 'Nová inzerce pozemku — Pozemkomat',
+        _subject: 'Nová inzerce pozemku — Parcelka',
         typ: 'Inzerce: ' + (val('i-typ') || '(neuvedeno)'),
         lokalita: val('i-lokalita'), castka_kc: val('i-castka') || '(neuvedeno)',
         popis: val('i-popis'), jmeno: val('i-jmeno'), kontakt: val('i-kontakt')
@@ -296,7 +296,7 @@
   handle('form-report', 'msg-report',
     function () {
       return {
-        _subject: 'Nahlášení inzerátu — Pozemkomat',
+        _subject: 'Nahlášení inzerátu — Parcelka',
         typ: 'Nahlášení inzerátu',
         inzerat: val('r-ident'), duvod: val('r-duvod') || '(neuvedeno)',
         popis: val('r-popis') || '(bez popisu)', kontakt: val('r-kontakt') || '(neuvedeno)'
