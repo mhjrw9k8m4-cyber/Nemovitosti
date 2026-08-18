@@ -83,5 +83,33 @@ create policy "verejne cteni schvalenych"
   on listings for select
   using (status = 'approved');
 
--- watch_subscriptions a payments: žádný veřejný přístup (jen server přes service_role,
--- který RLS obchází). Proto zde záměrně nejsou policy pro anon.
+-- watch_subscriptions a payments: čtení jen přes server (service_role, obchází RLS).
+-- Vkládání z prohlížeče (odeslání formuláře) povolíme níže.
+
+-- ============================================================
+-- 4) ZPRÁVY Z FORMULÁŘŮ (kontakt, zpětná vazba, nahlášení)
+-- ============================================================
+create table if not exists messages (
+  id          uuid primary key default gen_random_uuid(),
+  created_at  timestamptz not null default now(),
+  kind        text,        -- 'kontakt' | 'zpetna_vazba' | 'nahlaseni'
+  name        text,
+  email       text,
+  org         text,
+  okres       text,
+  message     text
+);
+alter table messages enable row level security;
+
+-- ============================================================
+-- VEŘEJNÉ VKLÁDÁNÍ Z PROHLÍŽEČE (odeslání formuláře přes anon klíč)
+-- Návštěvník smí jen VLOŽIT (odeslat), ne číst cizí data. Čtení má jen
+-- majitel v Supabase (service_role / přihlášený do dashboardu).
+-- ============================================================
+drop policy if exists "verejne vkladani zprav" on messages;
+create policy "verejne vkladani zprav"
+  on messages for insert to anon with check (true);
+
+drop policy if exists "verejne vkladani hlidani" on watch_subscriptions;
+create policy "verejne vkladani hlidani"
+  on watch_subscriptions for insert to anon with check (true);
