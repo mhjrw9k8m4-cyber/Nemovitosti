@@ -1009,6 +1009,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .boost-txt b{color:var(--text-ondark); font-size:15px; display:flex; align-items:center; gap:9px;}
 .boost-price{font-size:12px; font-weight:700; color:#08222C; background:linear-gradient(135deg, var(--copper-bright), var(--copper)); border-radius:8px; padding:2px 9px; letter-spacing:0.02em;}
 .boost-desc{font-size:13.5px; color:var(--text-ondark-mute); line-height:1.5;}
+.boost-pay{display:inline-block; margin:14px 0 2px; text-align:center;}
 .boost-note{font-size:12.5px; color:var(--text-ondark-mute); margin:11px 0 0; padding-top:11px; border-top:1px dashed var(--line);}
 .add-form .btn-primary{padding:15px; font-size:15.5px; text-align:center; margin-top:4px;}
 .add-msg{font-size:13.5px; min-height:16px; color:var(--text-ondark-mute); margin-top:2px;}
