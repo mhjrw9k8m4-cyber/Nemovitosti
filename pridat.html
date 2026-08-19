@@ -32,7 +32,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260818i">
+  <link rel="stylesheet" href="css/styles.css?v=20260818j">
 </head>
 <body>
 
@@ -122,7 +122,7 @@
               <p class="calc-hint" id="perm2-hint" aria-live="polite"></p>
 
               <div class="add-field photo-field">
-                <label for="p-fotky">Fotky pozemku <span class="hint">(nepovinné, ale hodně pomůžou)</span></label>
+                <label for="p-fotky">Fotky pozemku <span class="hint">(nepovinné — brzy je zobrazíme u inzerátu)</span></label>
                 <label class="photo-drop" for="p-fotky"><b>Přidat fotky</b><span>Klepněte a vyberte fotky pozemku — klidně několik naráz</span></label>
                 <input id="p-fotky" type="file" accept="image/*" multiple>
                 <div class="photo-preview" id="p-fotky-preview"></div>
@@ -202,7 +202,7 @@
                   <input id="p-jmeno" type="text" autocomplete="name" placeholder="Jméno a příjmení" required>
                 </div>
                 <div class="add-field">
-                  <label for="p-kontakt">Telefon nebo e-mail <span class="req">*</span></label>
+                  <label for="p-kontakt">Telefon nebo e-mail <span class="req">*</span> <span class="hint">(uvidí ho zájemci v inzerátu)</span></label>
                   <input id="p-kontakt" type="text" placeholder="777 123 456 nebo vas@email.cz" required>
                 </div>
               </div>
@@ -296,8 +296,8 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260818i" defer></script>
-<script src="js/pridat.js?v=20260818i" defer></script>
+<script src="js/config.js?v=20260818j" defer></script>
+<script src="js/pridat.js?v=20260818j" defer></script>
 <!-- Vercel Web Analytics (navstevnost) -->
 <script defer src="/_vercel/insights/script.js"></script>
 </body>

@@ -1073,7 +1073,7 @@
           '</div>' +
           priceBarHtml(d) +
           (isSPU(d) ? '<div class="md-note">Státní půda se prodává přes <b>veřejnou nabídku SPÚ (§ 12)</b> — otevřete „Nabídka SPÚ", parcelu ověříte přes „Katastr".</div>' : '') +
-          (d.type === 'majitel' ? '<div class="md-note">Inzerát vložil <b>majitel pozemku</b>. Parcelka je jen platforma — vlastníka a parcelu si ověřte v katastru.</div>' : '') +
+          (d.type === 'majitel' ? '<div class="md-note">Inzerát vložil <b>majitel pozemku</b>. Parcelka je jen platforma — vlastníka a parcelu si ověřte v katastru.' + (d._lid && typeof d.views === 'number' ? ' · <b>' + d.views + '×</b> zobrazeno' : '') + '</div>' : '') +
           goodToKnowHtml(d) +
         '</div>' +
         '<div class="md-actions">' +

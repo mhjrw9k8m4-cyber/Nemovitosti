@@ -90,16 +90,24 @@
     }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
   }
   // Najde přibližnou polohu obce (aby se pozemek dal ukázat na mapě).
-  function geocodeCz(obec, okres) {
-    var q = obec + (okres ? ', okres ' + okres : '') + ', Česko';
+  function geocodeQuery(q) {
     var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=cz&q=' + encodeURIComponent(q);
     return fetch(url, { headers: { 'Accept': 'application/json' } })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (a) {
         if (a && a.length && a[0].lat && a[0].lon) return { lat: parseFloat(a[0].lat), lng: parseFloat(a[0].lon) };
-        if (okres) return geocodeCz(obec, '');   // zkus jen obec bez okresu
         return null;
       }).catch(function () { return null; });
+  }
+  function geocodeCz(obec, okres) {
+    var tries = [obec + (okres ? ', okres ' + okres : '') + ', Česko', obec + ', Česko'];
+    if (okres) tries.push('okres ' + okres + ', Česko');   // poslední záchrana — aspoň okres
+    var i = 0;
+    function next() {
+      if (i >= tries.length) return Promise.resolve(null);
+      return geocodeQuery(tries[i++]).then(function (p) { return p || next(); });
+    }
+    return next();
   }
   // Odeslání prodeje = automatické zveřejnění na mapě + přesměrování na „Můj inzerát".
   function publishListing() {
