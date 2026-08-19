@@ -129,7 +129,14 @@
         p_area: area, p_price: price, p_lat: pos.lat, p_lng: pos.lng,
         p_description: val('p-popis'), p_contact: val('p-kontakt')
       }, true).then(function (res) {
-        if (!res || !res.ok) return 'error';
+        if (!res || !res.ok) {
+          if (res && res.expired) return 'auth';
+          var m = (res && res.error && (res.error.message || res.error.msg)) || '';
+          if (/nevhodn/i.test(m)) return 'bad';
+          if (/limit/i.test(m)) return 'limit';
+          if (/přihlášen|prihlasen/i.test(m)) return 'auth';
+          return 'error';
+        }
         var row = Array.isArray(res.data) ? res.data[0] : res.data;
         if (!row || !row.id) return 'error';
         window.location.href = 'muj-inzerat.html';
@@ -307,7 +314,10 @@
           ms.textContent = 'Text obsahuje nevhodná slova. Upravte prosím inzerát a zkuste to znovu.';
           ms.classList.add('err');
         } else if (r === 'auth') {
-          ms.textContent = 'Nejprve se prosím přihlaste (nahoře).';
+          ms.textContent = 'Přihlášení vypršelo — přihlaste se prosím znovu (nahoře).';
+          ms.classList.add('err');
+        } else if (r === 'limit') {
+          ms.textContent = 'Dosáhli jste limitu inzerátů (30 na účet). Smažte starší v „Moje inzeráty".';
           ms.classList.add('err');
         } else {
           ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.';

@@ -1829,21 +1829,26 @@
         });
       }
       // Živé inzeráty od majitelů ze Supabase (automatické zveřejnění) — přidáme na mapu.
+      // BEZPEČNOST: text od cizích lidí očistíme — odstraníme nebezpečné znaky (< > "),
+      // ať nikdo nemůže vložit škodlivý kód (ochrana proti XSS). Ořežeme i délku.
+      function clean(s, max) {
+        return String(s == null ? '' : s).replace(/[<>"]/g, '').replace(/\s+/g, ' ').trim().slice(0, max || 120);
+      }
       if (Array.isArray(live)) {
         live.forEach(function (u) {
           if (!u || typeof u.lat !== 'number' || typeof u.lng !== 'number') return;
           base.push({
             type: 'majitel',
-            place: u.place || '', okres: u.okres || '',
-            druh: u.druh || 'pozemek',
-            parcel: u.parcel || '—',
+            place: clean(u.place, 80) || 'Neuvedeno', okres: clean(u.okres, 60),
+            druh: clean(u.druh, 40) || 'pozemek',
+            parcel: clean(u.parcel, 40) || '—',
             area: (typeof u.area === 'number' ? u.area : 0),
             price: (typeof u.price === 'number' ? u.price : 0),
             lat: u.lat, lng: u.lng,
             extra: 'od majitele',
-            contact: u.contact || '',
-            description: u.description || '',
-            _lid: u.id, views: u.views || 0
+            contact: clean(u.contact, 80),
+            description: clean(u.description, 600),
+            _lid: u.id, views: (typeof u.views === 'number' ? u.views : 0)
           });
         });
       }

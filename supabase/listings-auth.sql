@@ -27,6 +27,15 @@ begin
   if uid is null then raise exception 'musíte být přihlášeni'; end if;
   if p_place is null or length(trim(p_place))=0 then raise exception 'obec je povinná'; end if;
   if p_lat is null or p_lng is null then raise exception 'poloha je povinná'; end if;
+  -- Serverová ochrana: filtr nevhodných slov (nejde obejít z prohlížeče)
+  if (coalesce(p_place,'') || ' ' || coalesce(p_description,'') || ' ' || coalesce(p_parcel,''))
+       ~* '(kokot|kurv|piča|\mmrd|debil|čur[aá]k|zmrd|\mjeb|hovn)' then
+    raise exception 'obsah obsahuje nevhodná slova';
+  end if;
+  -- Limit proti spamu: max 30 inzerátů na účet
+  if (select count(*) from listings where user_id = uid) >= 30 then
+    raise exception 'dosažen limit inzerátů na účet (30)';
+  end if;
   insert into listings(status,user_id,place,okres,druh,parcel,area,price,lat,lng,description,contact_phone,featured,views)
   values('approved',uid,trim(p_place),nullif(trim(coalesce(p_okres,'')),''),nullif(trim(coalesce(p_druh,'')),''),
          nullif(trim(coalesce(p_parcel,'')),''),p_area,p_price,p_lat,p_lng,
