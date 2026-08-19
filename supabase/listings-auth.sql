@@ -36,6 +36,10 @@ begin
   if (select count(*) from listings where user_id = uid) >= 30 then
     raise exception 'dosažen limit inzerátů na účet (30)';
   end if;
+  -- Cooldown proti hromadnému spamu: další inzerát nejdřív za 90 sekund
+  if exists (select 1 from listings where user_id = uid and created_at > now() - interval '90 seconds') then
+    raise exception 'chvíli počkejte před přidáním dalšího inzerátu';
+  end if;
   insert into listings(status,user_id,place,okres,druh,parcel,area,price,lat,lng,description,contact_phone,featured,views)
   values('approved',uid,trim(p_place),nullif(trim(coalesce(p_okres,'')),''),nullif(trim(coalesce(p_druh,'')),''),
          nullif(trim(coalesce(p_parcel,'')),''),p_area,p_price,p_lat,p_lng,

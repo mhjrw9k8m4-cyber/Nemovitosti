@@ -133,6 +133,7 @@
           if (res && res.expired) return 'auth';
           var m = (res && res.error && (res.error.message || res.error.msg)) || '';
           if (/nevhodn/i.test(m)) return 'bad';
+          if (/počkejte|pockejte|chvíli|chvili/i.test(m)) return 'wait';
           if (/limit/i.test(m)) return 'limit';
           if (/přihlášen|prihlasen/i.test(m)) return 'auth';
           return 'error';
@@ -318,6 +319,9 @@
           ms.classList.add('err');
         } else if (r === 'limit') {
           ms.textContent = 'Dosáhli jste limitu inzerátů (30 na účet). Smažte starší v „Moje inzeráty".';
+          ms.classList.add('err');
+        } else if (r === 'wait') {
+          ms.textContent = 'Chvíli prosím počkejte (asi minutu) a zkuste přidat další inzerát znovu.';
           ms.classList.add('err');
         } else {
           ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.';

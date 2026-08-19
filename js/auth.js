@@ -5,6 +5,20 @@
   var KEY = (window.PK_SUPABASE_KEY || '');
   var LSKEY = 'pk_auth';
 
+  // Stabilní ID tohoto zařízení/prohlížeče — vygeneruje se jednou a pamatuje se.
+  // Slouží k rozpoznání zařízení (pomoc proti zneužití) a přežije i odhlášení.
+  function deviceId() {
+    try {
+      var d = localStorage.getItem('pk_device');
+      if (!d) {
+        d = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+            : (Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
+        localStorage.setItem('pk_device', d);
+      }
+      return d;
+    } catch (e) { return ''; }
+  }
+
   function getSession() { try { return JSON.parse(localStorage.getItem(LSKEY) || 'null'); } catch (e) { return null; } }
   function setSession(s) { try { if (s) localStorage.setItem(LSKEY, JSON.stringify(s)); else localStorage.removeItem(LSKEY); } catch (e) {} }
   function loggedIn() { var s = getSession(); return !!(s && s.access_token); }
@@ -79,9 +93,11 @@
       }).catch(function () { return { ok: false }; });
   }
 
+  deviceId();   // zajistí, že si zařízení hned zapamatujeme
+
   window.PKAuth = {
     ready: !!(URL && KEY),
-    getSession: getSession, loggedIn: loggedIn, email: email,
+    getSession: getSession, loggedIn: loggedIn, email: email, deviceId: deviceId,
     signup: signup, login: login, logout: logout, rpc: rpc
   };
 })();
