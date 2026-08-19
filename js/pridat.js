@@ -80,6 +80,47 @@
     if (photos) lines.push('fotky: ' + photos + ' (úložiště fotek spustíme později)');
     return sbInsert('messages', { kind: kind, name: fields.jmeno || null, email: fields.kontakt || null, message: lines.join('\n') });
   }
+  // Volání Supabase funkce (RPC) — pro automatické zveřejnění inzerátu.
+  function sbRpc(fn, args) {
+    if (!SB_READY) return Promise.resolve(null);
+    return fetch(SB_URL + '/rest/v1/rpc/' + fn, {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(args || {})
+    }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+  }
+  // Najde přibližnou polohu obce (aby se pozemek dal ukázat na mapě).
+  function geocodeCz(obec, okres) {
+    var q = obec + (okres ? ', okres ' + okres : '') + ', Česko';
+    var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=cz&q=' + encodeURIComponent(q);
+    return fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (a) {
+        if (a && a.length && a[0].lat && a[0].lon) return { lat: parseFloat(a[0].lat), lng: parseFloat(a[0].lon) };
+        if (okres) return geocodeCz(obec, '');   // zkus jen obec bez okresu
+        return null;
+      }).catch(function () { return null; });
+  }
+  // Odeslání prodeje = automatické zveřejnění na mapě + přesměrování na „Můj inzerát".
+  function publishListing() {
+    var obec = val('p-obec'), okres = val('p-okres');
+    var area = parseInt(val('p-vymera'), 10) || 0;
+    var price = parseInt(val('p-cena'), 10) || 0;
+    return geocodeCz(obec, okres).then(function (pos) {
+      if (!pos) return 'geo';
+      return sbRpc('create_listing', {
+        p_place: obec, p_okres: okres, p_druh: val('p-druh'), p_parcel: val('p-parcela'),
+        p_area: area, p_price: price, p_lat: pos.lat, p_lng: pos.lng,
+        p_description: val('p-popis'), p_contact: val('p-kontakt')
+      }).then(function (res) {
+        var row = Array.isArray(res) ? res[0] : res;
+        if (!row || !row.id || !row.token) return 'error';
+        try { localStorage.setItem('pk_my_listing', JSON.stringify({ id: row.id, token: row.token, place: obec })); } catch (e) {}
+        window.location.href = 'muj-inzerat.html?id=' + encodeURIComponent(row.id) + '&t=' + encodeURIComponent(row.token);
+        return 'ok';
+      });
+    });
+  }
 
   // Fotky pozemku: okamžitý náhled v prohlížeči + titulka do živého náhledu
   var fotkyInput = document.getElementById('p-fotky');
@@ -202,7 +243,7 @@
     return el.closest('.add-field') || el.closest('.add-check');
   }
 
-  function handle(formId, msgId, buildData, validate, okMsg, toastMsg) {
+  function handle(formId, msgId, buildData, validate, okMsg, toastMsg, sender) {
     var form = document.getElementById(formId);
     if (!form) return;
     okMsg = okMsg || 'Děkujeme! Nabídku jsme přijali. Projdeme si ji a ozveme se, jakmile ji zveřejníme.';
@@ -229,8 +270,8 @@
         return;
       }
       if (!SB_READY) { ms.textContent = OFFLINE; return; }
-      ms.textContent = 'Odesílám…';
-      sendForm(buildData()).then(function (r) {
+      ms.textContent = sender ? 'Zveřejňuji na mapě…' : 'Odesílám…';
+      (sender ? sender() : sendForm(buildData())).then(function (r) {
         if (r === 'ok') {
           ms.textContent = okMsg; ms.classList.add('ok');
           showToast(toastMsg);
@@ -243,6 +284,9 @@
             succ.hidden = false;
             try { succ.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (x) {}
           }
+        } else if (r === 'geo') {
+          ms.textContent = 'Nepodařilo se najít obec na mapě. Zkontrolujte prosím název obce (např. „Kolín").';
+          ms.classList.add('err');
         } else {
           ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.';
           ms.classList.add('err');
@@ -285,7 +329,10 @@
       if (!validContact(val('p-kontakt'))) return E('Zadejte platný telefon (9 číslic) nebo e-mail.', 'p-kontakt');
       if (!checked('p-souhlas')) return E('Potvrďte prosím souhlas s pravidly a zveřejněním.', 'p-souhlas');
       return '';
-    }
+    },
+    'Zveřejněno! Přesměrováváme na váš inzerát…',
+    'Inzerát zveřejněn na mapě.',
+    publishListing   // automatické zveřejnění na mapě místo odeslání do zpráv
   );
 
   // --- Inzerce (inzerce.html) ---

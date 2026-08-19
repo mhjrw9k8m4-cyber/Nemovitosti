@@ -344,6 +344,21 @@
       body: JSON.stringify(row)
     }).then(function (r) { return r.ok ? 'ok' : 'error'; }).catch(function () { return 'error'; });
   }
+  // Které živé inzeráty už jsme v této návštěvě započítali (ať se zhlédnutí nenafukuje).
+  var viewedLids = {};
+  // Volání Supabase funkce (RPC) — pro živé inzeráty od majitelů.
+  function sbRpc(fn, args) {
+    if (!SB_READY) return Promise.resolve(null);
+    return fetch(SB_URL + '/rest/v1/rpc/' + fn, {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(args || {})
+    }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+  }
 
   var wForm = document.getElementById('watch-form');
   if (wForm) {
@@ -1089,6 +1104,8 @@
     detailOpening = true; setTimeout(function () { detailOpening = false; }, 0);
     curDetail = d;
     pushRecent(d);   // zapamatuj pro „Naposledy prohlédnuté"
+    // Počítání zhlédnutí u živých inzerátů od majitelů (jednou za návštěvu webu).
+    if (d._lid && !viewedLids[d._lid]) { viewedLids[d._lid] = 1; d.views = (d.views || 0) + 1; sbRpc('bump_view', { p_id: d._lid }); }
     detailEl.innerHTML = detailHtml(d);
     detailEl.scrollTop = 0;
     detailEl.removeAttribute('hidden');
@@ -1787,9 +1804,9 @@
 
   /* ---------- Načtení reálných dat s bezpečnou zálohou ---------- */
   function loadJSON(url) { return fetch(url, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
-  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json')])
+  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), sbRpc('public_listings')])
     .then(function (res) {
-      var j = res[0], kraje = res[1], ul = res[2];
+      var j = res[0], kraje = res[1], ul = res[2], live = res[3];
       var arr = Array.isArray(j) ? j : (j && j.opportunities);
       var base = (arr && arr.length ? arr.slice() : FALLBACK_DATA.slice());
       // Pozemky od majitelů — schválené inzeráty z data/user-listings.json
@@ -1801,6 +1818,25 @@
           u.type = 'majitel';
           if (!u.extra) u.extra = 'od majitele';
           base.push(u);
+        });
+      }
+      // Živé inzeráty od majitelů ze Supabase (automatické zveřejnění) — přidáme na mapu.
+      if (Array.isArray(live)) {
+        live.forEach(function (u) {
+          if (!u || typeof u.lat !== 'number' || typeof u.lng !== 'number') return;
+          base.push({
+            type: 'majitel',
+            place: u.place || '', okres: u.okres || '',
+            druh: u.druh || 'pozemek',
+            parcel: u.parcel || '—',
+            area: (typeof u.area === 'number' ? u.area : 0),
+            price: (typeof u.price === 'number' ? u.price : 0),
+            lat: u.lat, lng: u.lng,
+            extra: 'od majitele',
+            contact: u.contact || '',
+            description: u.description || '',
+            _lid: u.id, views: u.views || 0
+          });
         });
       }
       boot(base, kraje || null, j && j.updated);
