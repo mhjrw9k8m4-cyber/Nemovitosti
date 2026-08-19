@@ -835,19 +835,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1010566-nabidka-prodej-pozemku"
     },
     {
-      "place": "Nový Bor – Arnultovice u Nového Boru",
-      "okres": "Česká Lípa",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "trvalý travní porost",
-      "area": 28595,
-      "price": 699000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 50.779548,
-      "lng": 14.541655,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1010567-nabidka-prodej-pozemku"
-    },
-    {
       "place": "Podolí – Podolí u Valašského Meziříčí",
       "okres": "Vsetín",
       "type": "sale",
@@ -1561,6 +1548,19 @@
       "lat": 49.33317,
       "lng": 13.169365,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949415-nabidka-prodej-pozemku-beharov"
+    },
+    {
+      "place": "Městečko Trnávka – Bohdalov u Městečka Trnávky",
+      "okres": "Šumperk",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "trvalý travní porost",
+      "area": 3629,
+      "price": 104133,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.738648,
+      "lng": 16.779449,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1057457-nabidka-prodej-pozemku-mestecko-trnavka"
     },
     {
       "place": "Ostrava – Bartovice",
@@ -3058,19 +3058,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/968541-nabidka-prodej-pozemku"
     },
     {
-      "place": "Kvasice – Kvasice",
-      "okres": "Kroměříž",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "orná půda",
-      "area": 557,
-      "price": 20000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.223437,
-      "lng": 17.459235,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1010558-nabidka-prodej-pozemku"
-    },
-    {
       "place": "Životice – Životice u Kasejovic",
       "okres": "Plzeň-jih",
       "type": "sale",
@@ -3355,6 +3342,19 @@
       "lat": 50.173328,
       "lng": 13.716588,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1035375-nabidka-prodej-pozemku-krupa"
+    },
+    {
+      "place": "Prostějovičky – Prostějovičky",
+      "okres": "Prostějov",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 2079,
+      "price": 77250,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.434005,
+      "lng": 17.009914,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1057455-nabidka-prodej-pozemku-prostejovicky"
     },
     {
       "place": "Provodovice – Provodovice",
@@ -3901,19 +3901,6 @@
       "lat": 50.4714,
       "lng": 14.579718,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1012001-nabidka-prodej-pozemku"
-    },
-    {
-      "place": "Kvasice – Kvasice",
-      "okres": "Kroměříž",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "orná půda",
-      "area": 825,
-      "price": 32000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.221005,
-      "lng": 17.462839,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1010559-nabidka-prodej-pozemku"
     },
     {
       "place": "Nahořany – Městec u Nahořan",
@@ -5970,6 +5957,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1052252-nabidka-prodej-pozemku-horni-bojanovice"
     },
     {
+      "place": "Bakov nad Jizerou – Zvířetice",
+      "okres": "Mladá Boleslav",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "trvalý travní porost",
+      "area": 127688,
+      "price": 5922500,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.462534,
+      "lng": 14.915725,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1057459-nabidka-prodej-pozemku-bakov-nad-jizerou"
+    },
+    {
       "place": "Čejč – Čejč",
       "okres": "Břeclav",
       "type": "sale",
@@ -6072,6 +6072,19 @@
       "lat": 50.0502055,
       "lng": 16.1048747,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1052263-nabidka-prodej-pozemku-horni-jeleni"
+    },
+    {
+      "place": "Kostomlaty nad Labem – Hronětice",
+      "okres": "Nymburk",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 16987,
+      "price": 800310,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.221335,
+      "lng": 14.924708,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1057458-nabidka-prodej-pozemku-kostomlaty-nad-labem"
     },
     {
       "place": "Hrušky – Hrušky",
@@ -6867,19 +6880,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1035770-nabidka-prodej-pozemku-vysker"
     },
     {
-      "place": "Kobylí – Kobylí na Moravě",
-      "okres": "Břeclav",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "ovocný sad",
-      "area": 880,
-      "price": 45000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 48.930467,
-      "lng": 16.928129,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1010560-nabidka-prodej-pozemku-kobyli"
-    },
-    {
       "place": "Křinec – Mečíř",
       "okres": "Nymburk",
       "type": "sale",
@@ -7049,19 +7049,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/990488-nabidka-prodej-pozemku"
     },
     {
-      "place": "Libošovice – Dobšice",
-      "okres": "Semily",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "orná půda",
-      "area": 19019,
-      "price": 999000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 50.514866,
-      "lng": 15.140183,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/980445-nabidka-prodej-pozemku"
-    },
-    {
       "place": "Drahouš – Tlestky",
       "okres": "Rakovník",
       "type": "sale",
@@ -7229,6 +7216,19 @@
       "lat": 50.080096,
       "lng": 15.110917,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1023713-nabidka-prodej-pozemku-velim"
+    },
+    {
+      "place": "Bakov nad Jizerou – Zvířetice",
+      "okres": "Mladá Boleslav",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "trvalý travní porost",
+      "area": 5068,
+      "price": 272950,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.464306,
+      "lng": 14.917273,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1057460-nabidka-prodej-pozemku-bakov-nad-jizerou"
     },
     {
       "place": "Katov – Katov",
@@ -7413,6 +7413,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1057035-nabidka-prodej-pozemku-sadska"
     },
     {
+      "place": "Bakov nad Jizerou – Zvířetice",
+      "okres": "Mladá Boleslav",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "trvalý travní porost",
+      "area": 3921,
+      "price": 216300,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.471439,
+      "lng": 14.925473,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1057464-nabidka-prodej-pozemku-bakov-nad-jizerou"
+    },
+    {
       "place": "Čejkovice – Čejkovice",
       "okres": "Břeclav",
       "type": "sale",
@@ -7476,6 +7489,19 @@
       "lat": 49.522753,
       "lng": 16.27977,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1001899-nabidka-prodej-pozemku-bystrice-nad-pernstejnem"
+    },
+    {
+      "place": "Bakov nad Jizerou – Zvířetice",
+      "okres": "Mladá Boleslav",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "trvalý travní porost",
+      "area": 6030,
+      "price": 340930,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.466354,
+      "lng": 14.919898,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1057463-nabidka-prodej-pozemku-bakov-nad-jizerou"
     },
     {
       "place": "Morkůvky – Morkůvky",
@@ -7985,6 +8011,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1055747-nabidka-prodej-pozemku-pritluky"
     },
     {
+      "place": "Bakov nad Jizerou – Zvířetice",
+      "okres": "Mladá Boleslav",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "trvalý travní porost",
+      "area": 4707,
+      "price": 307970,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.465368,
+      "lng": 14.91564,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1057461-nabidka-prodej-pozemku-bakov-nad-jizerou"
+    },
+    {
       "place": "Myslejovice – Křenůvky",
       "okres": "Prostějov",
       "type": "sale",
@@ -8477,6 +8516,19 @@
       "lat": 49.919437,
       "lng": 14.697311,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/950675-nabidka-prodej-pozemku-kunice"
+    },
+    {
+      "place": "Chržín – Chržín",
+      "okres": "Mělník",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 3301,
+      "price": 256470,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.319647,
+      "lng": 14.26172,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1057456-nabidka-prodej-pozemku-chrzin"
     },
     {
       "place": "Trstěnice – Trstěnice u Mariánských Lázní",
@@ -9049,58 +9101,6 @@
       "lat": 50.191032,
       "lng": 13.999433,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1022179-nabidka-prodej-pozemku-hradecno"
-    },
-    {
-      "place": "Lodhéřov – Najdek u Lodhéřova",
-      "okres": "Jindřichův Hradec",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "trvalý travní porost",
-      "area": 4955,
-      "price": 499000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.239904,
-      "lng": 14.96847,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1032660-nabidka-prodej-pozemku-lodherov"
-    },
-    {
-      "place": "Kopidlno – Kopidlno",
-      "okres": "Jičín",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "zahrada",
-      "area": 4746,
-      "price": 479000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 50.324121,
-      "lng": 15.264573,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1051975-nabidka-prodej-pozemku-kopidlno"
-    },
-    {
-      "place": "Popice – Popice",
-      "okres": "Brno-venkov",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "ovocný sad",
-      "area": 2936,
-      "price": 298700,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 48.932031,
-      "lng": 16.674578,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1052966-nabidka-prodej-pozemku-popice"
-    },
-    {
-      "place": "Popice – Popice",
-      "okres": "Brno-venkov",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "ovocný sad",
-      "area": 2936,
-      "price": 298700,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 48.932031,
-      "lng": 16.674578,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1052965-nabidka-prodej-pozemku-popice"
     },
     {
       "place": "Stráž pod Ralskem",
