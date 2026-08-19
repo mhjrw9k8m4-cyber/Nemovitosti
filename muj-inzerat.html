@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
-  <title>Můj inzerát — Parcelka</title>
-  <meta name="description" content="Přehled vašeho inzerátu na Parcelka — stav zveřejnění, počet zhlédnutí a možnost inzerát smazat.">
+  <title>Moje inzeráty — Parcelka</title>
+  <meta name="description" content="Přehled vašich inzerátů na Parcelka — stav zveřejnění, počet zhlédnutí a možnost inzerát smazat.">
   <meta name="theme-color" content="#16232F">
   <meta name="robots" content="noindex,follow">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260818k">
+  <link rel="stylesheet" href="css/styles.css?v=20260818l">
 </head>
 <body>
 
@@ -39,37 +39,40 @@
   <section class="add-hero">
     <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
     <div class="wrap add-wrap">
-      <div class="eyebrow"><span class="live-dot"></span>Můj inzerát</div>
-      <h1>Váš inzerát na Parcelka.</h1>
-      <p class="sub">Tady vidíte, jak si váš inzerát vede — jestli je zveřejněný a kolik lidí ho vidělo. Tuhle stránku si uložte, ať se k inzerátu vždycky dostanete.</p>
+      <div class="eyebrow"><span class="live-dot"></span>Moje inzeráty</div>
+      <h1>Vaše inzeráty na Parcelka.</h1>
+      <p class="sub">Přehled vašich pozemků — jestli jsou zveřejněné a kolik lidí je vidělo. Přihlaste se stejným účtem, jakým jste inzerát přidali.</p>
     </div>
   </section>
 
   <section class="section" style="padding-top:20px;">
     <div class="wrap add-wrap">
-      <div class="add-card" id="mi-card">
-        <p class="add-msg" id="mi-status" role="status" aria-live="polite">Načítám…</p>
-        <div id="mi-body" hidden>
-          <div class="rules-sect">
-            <h2 id="mi-place">—</h2>
-            <ul class="rule-list" style="list-style:none;padding-left:0;">
-              <li>Stav: <b id="mi-state">—</b></li>
-              <li>Zhlédnutí: <b id="mi-views">0</b></li>
-              <li>Výměra: <b id="mi-area">—</b></li>
-              <li>Cena: <b id="mi-price">—</b></li>
-            </ul>
-          </div>
-          <div class="md-actions" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;">
-            <a class="lp-btn" id="mi-maplink" href="index.html#mapa">Zobrazit na mapě</a>
-            <button class="lp-btn" type="button" id="mi-copy">Zkopírovat odkaz</button>
-            <button class="lp-btn lp-src" type="button" id="mi-delete">Smazat inzerát</button>
-          </div>
-          <p class="rules-note" style="margin-top:16px;">Odkaz na tuhle stránku si uložte (nebo přidejte do záložek) — je to jediný způsob, jak se k inzerátu bez přihlášení vrátíte.</p>
+
+      <!-- Přihlášení -->
+      <div class="add-card" id="mi-auth" hidden>
+        <div class="rules-sect">
+          <h2>Přihlaste se</h2>
+          <p class="rules-note" style="margin-top:0;">Zadejte e-mail a heslo, kterými jste si vytvořili účet při přidání pozemku.</p>
         </div>
-        <div id="mi-empty" hidden>
-          <p class="rules-note">Zatím tu žádný inzerát nemáte. <a href="pridat.html">Přidejte pozemek</a> a hned se objeví na mapě.</p>
-        </div>
+        <form class="add-form" id="mi-auth-form" novalidate>
+          <div class="add-field"><label for="mi-email">E-mail</label><input id="mi-email" type="email" autocomplete="email" placeholder="vas@email.cz" required></div>
+          <div class="add-field"><label for="mi-pass">Heslo</label><input id="mi-pass" type="password" autocomplete="current-password" minlength="6" placeholder="••••••" required></div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button type="submit" class="btn-primary btn-glow" id="mi-login">Přihlásit se</button>
+            <a class="lp-btn" href="pridat.html">Nemám účet — přidat pozemek</a>
+          </div>
+          <p class="add-msg" id="mi-auth-msg" role="status" aria-live="polite"></p>
+        </form>
       </div>
+
+      <!-- Seznam inzerátů -->
+      <div id="mi-panel" hidden>
+        <div class="auth-bar" id="mi-bar">Přihlášen: <b id="mi-who"></b> · <a href="pridat.html">Přidat další</a> · <button type="button" id="mi-logout" class="linklike">Odhlásit</button></div>
+        <p class="add-msg" id="mi-status" role="status" aria-live="polite">Načítám…</p>
+        <div id="mi-list"></div>
+        <div id="mi-empty" hidden><div class="add-card"><p class="rules-note">Zatím tu žádný inzerát nemáte. <a href="pridat.html">Přidejte pozemek</a> a hned se objeví na mapě.</p></div></div>
+      </div>
+
     </div>
   </section>
 </main>
@@ -80,67 +83,80 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260818k" defer></script>
+<script src="js/config.js?v=20260818l" defer></script>
+<script src="js/auth.js?v=20260818l" defer></script>
 <script>
 (function () {
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
   ready(function () {
-    var SB_URL = window.PK_SUPABASE_URL || '', SB_KEY = window.PK_SUPABASE_KEY || '';
-    var SB_READY = !!(SB_URL && SB_KEY);
-    function rpc(fn, args){
-      if(!SB_READY) return Promise.resolve(null);
-      return fetch(SB_URL + '/rest/v1/rpc/' + fn, {
-        method:'POST',
-        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
-        body: JSON.stringify(args||{})
-      }).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
-    }
+    var A = window.PKAuth;
     function q(id){ return document.getElementById(id); }
     function fmt(n){ return (typeof n==='number' && isFinite(n)) ? n.toLocaleString('cs-CZ') : '—'; }
-    function param(name){ var m = new RegExp('[?&]'+name+'=([^&]+)').exec(location.search); try { return m ? decodeURIComponent(m[1]) : ''; } catch(e){ return ''; } }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+    var authBox = q('mi-auth'), panel = q('mi-panel'), statusEl = q('mi-status'), listEl = q('mi-list'), emptyEl = q('mi-empty');
 
-    var id = param('id'), token = param('t');
-    if(!id || !token){
-      try { var saved = JSON.parse(localStorage.getItem('pk_my_listing')||'null'); if(saved){ id = saved.id; token = saved.token; } } catch(e){}
+    if (!A || !A.ready) { authBox.hidden = false; q('mi-auth-msg').textContent = 'Připojení k databázi zatím není nastavené.'; return; }
+
+    function show() {
+      var on = A.loggedIn();
+      authBox.hidden = on; panel.hidden = !on;
+      if (on) { var w = q('mi-who'); if (w) w.textContent = A.email(); load(); }
     }
-    var statusEl = q('mi-status'), bodyEl = q('mi-body'), emptyEl = q('mi-empty');
-
-    if(!id || !token){
-      statusEl.hidden = true; emptyEl.hidden = false; return;
-    }
-    if(!SB_READY){ statusEl.textContent = 'Připojení k databázi zatím není nastavené.'; return; }
-
-    rpc('my_listing', { p_id: id, p_token: token }).then(function(res){
-      var row = Array.isArray(res) ? res[0] : (res && res.id ? res : null);
-      if(!row){ statusEl.textContent = 'Inzerát nebyl nalezen (možná byl smazaný, nebo je odkaz neplatný).'; return; }
-      try { localStorage.setItem('pk_my_listing', JSON.stringify({ id:id, token:token, place: row.place })); } catch(e){}
-      q('mi-place').textContent = row.place + (row.okres ? ', okres ' + row.okres : '');
-      q('mi-state').textContent = (row.status === 'approved') ? 'Zveřejněno na mapě' : row.status;
-      q('mi-views').textContent = fmt(row.views);
-      q('mi-area').textContent = (row.area ? fmt(row.area) + ' m²' : 'neuvedena');
-      q('mi-price').textContent = (row.price ? fmt(row.price) + ' Kč' : 'neuvedena');
-      var ml = q('mi-maplink'); if(ml) ml.href = 'index.html?lid=' + encodeURIComponent(id) + '#mapa';
-      statusEl.hidden = true; bodyEl.hidden = false;
-
-      q('mi-copy').addEventListener('click', function(){
-        var url = location.origin + location.pathname + '?id=' + encodeURIComponent(id) + '&t=' + encodeURIComponent(token);
-        if(navigator.clipboard){ navigator.clipboard.writeText(url); }
-        var t = q('toast'); if(t){ t.textContent='Odkaz zkopírován.'; t.hidden=false; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.hidden=true; },300); }, 1800); }
+    function load() {
+      statusEl.hidden = false; statusEl.textContent = 'Načítám…'; listEl.innerHTML = ''; emptyEl.hidden = true;
+      A.rpc('my_listings', {}, true).then(function (res) {
+        if (!res || !res.ok) { statusEl.textContent = 'Načtení se nepovedlo. Zkuste to prosím znovu.'; return; }
+        var rows = Array.isArray(res.data) ? res.data : [];
+        if (!rows.length) { statusEl.hidden = true; emptyEl.hidden = false; return; }
+        statusEl.hidden = true;
+        listEl.innerHTML = rows.map(function (r) {
+          return '<div class="add-card" style="margin-bottom:14px;" data-id="' + esc(r.id) + '">' +
+            '<div class="rules-sect">' +
+              '<h2 style="margin-bottom:8px;">' + esc(r.place) + (r.okres ? ', okres ' + esc(r.okres) : '') + '</h2>' +
+              '<ul class="rule-list" style="list-style:none;padding-left:0;">' +
+                '<li>Stav: <b>' + (r.status === 'approved' ? 'Zveřejněno na mapě' : esc(r.status)) + '</b></li>' +
+                '<li>Zhlédnutí: <b>' + fmt(r.views) + '</b></li>' +
+                '<li>Výměra: <b>' + (r.area ? fmt(r.area) + ' m²' : 'neuvedena') + '</b></li>' +
+                '<li>Cena: <b>' + (r.price ? fmt(r.price) + ' Kč' : 'neuvedena') + '</b></li>' +
+              '</ul>' +
+            '</div>' +
+            '<div class="md-actions" style="display:flex;flex-wrap:wrap;gap:10px;">' +
+              '<a class="lp-btn" href="index.html?lid=' + encodeURIComponent(r.id) + '#mapa">Zobrazit na mapě</a>' +
+              '<button class="lp-btn lp-src" type="button" data-del="' + esc(r.id) + '">Smazat</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+        Array.prototype.forEach.call(listEl.querySelectorAll('[data-del]'), function (btn) {
+          btn.addEventListener('click', function () {
+            var lid = btn.getAttribute('data-del');
+            if (!confirm('Opravdu smazat tento inzerát? Zmizí z mapy a nepůjde vrátit.')) return;
+            btn.disabled = true;
+            A.rpc('delete_listing', { p_id: lid }, true).then(function (r) {
+              if (r && r.ok && r.data === true) { load(); }
+              else { btn.disabled = false; alert('Smazání se teď nepovedlo, zkuste to prosím znovu.'); }
+            });
+          });
+        });
       });
-      q('mi-delete').addEventListener('click', function(){
-        if(!confirm('Opravdu smazat tento inzerát? Zmizí z mapy a nepůjde vrátit.')) return;
-        this.disabled = true;
-        rpc('delete_listing', { p_id: id, p_token: token }).then(function(ok){
-          if(ok === true){
-            try { localStorage.removeItem('pk_my_listing'); } catch(e){}
-            bodyEl.hidden = true; statusEl.hidden = false;
-            statusEl.textContent = 'Inzerát byl smazán a odstraněn z mapy.'; statusEl.className = 'add-msg ok';
-          } else {
-            this.disabled = false; alert('Smazání se teď nepovedlo, zkuste to prosím znovu.');
-          }
-        }.bind(this));
+    }
+
+    // Přihlášení
+    var af = q('mi-auth-form'), amsg = q('mi-auth-msg');
+    function say(t, err){ if(amsg){ amsg.textContent=t; amsg.className='add-msg'+(err?' err':' ok'); } }
+    if (af) af.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var em = (q('mi-email').value||'').trim(), pw = q('mi-pass').value||'';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { say('Zadejte platný e-mail.', true); return; }
+      if (pw.length < 6) { say('Heslo musí mít aspoň 6 znaků.', true); return; }
+      say('Přihlašuji…');
+      A.login(em, pw).then(function (r) {
+        if (r.ok) { say(''); show(); }
+        else { say((r.data && (r.data.error_description||r.data.msg||r.data.message)) || 'Přihlášení se nepovedlo — zkontrolujte e-mail a heslo.', true); }
       });
     });
+    var lo = q('mi-logout'); if (lo) lo.addEventListener('click', function () { A.logout(); show(); });
+
+    show();
   });
 })();
 </script>

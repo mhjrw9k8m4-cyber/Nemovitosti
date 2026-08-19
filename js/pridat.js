@@ -113,25 +113,26 @@
   // ale zachytí zjevné vulgarity — nevhodné jde navíc nahlásit a smazat.
   var BAD = /(kokot|\bkkt\b|kurv|piča|pича|\bpica\b|mrd|debil|sr[aá]č|čur[aá]k|curak|\bhovn|zmrd|jebn|jebat)/i;
   function looksBad(s) { return BAD.test(String(s || '')); }
-  // Odeslání prodeje = automatické zveřejnění na mapě + přesměrování na „Můj inzerát".
+  // Odeslání prodeje = automatické zveřejnění na mapě (jako přihlášený) + přesměrování na „Moje inzeráty".
   function publishListing() {
     if (looksBad(val('p-obec')) || looksBad(val('p-popis')) || looksBad(val('p-parcela'))) {
       return Promise.resolve('bad');
     }
+    if (!(window.PKAuth && PKAuth.loggedIn())) return Promise.resolve('auth');
     var obec = val('p-obec'), okres = val('p-okres');
     var area = parseInt(val('p-vymera'), 10) || 0;
     var price = parseInt(val('p-cena'), 10) || 0;
     return geocodeCz(obec, okres).then(function (pos) {
       if (!pos) return 'geo';
-      return sbRpc('create_listing', {
+      return PKAuth.rpc('create_listing', {
         p_place: obec, p_okres: okres, p_druh: val('p-druh'), p_parcel: val('p-parcela'),
         p_area: area, p_price: price, p_lat: pos.lat, p_lng: pos.lng,
         p_description: val('p-popis'), p_contact: val('p-kontakt')
-      }).then(function (res) {
-        var row = Array.isArray(res) ? res[0] : res;
-        if (!row || !row.id || !row.token) return 'error';
-        try { localStorage.setItem('pk_my_listing', JSON.stringify({ id: row.id, token: row.token, place: obec })); } catch (e) {}
-        window.location.href = 'muj-inzerat.html?id=' + encodeURIComponent(row.id) + '&t=' + encodeURIComponent(row.token);
+      }, true).then(function (res) {
+        if (!res || !res.ok) return 'error';
+        var row = Array.isArray(res.data) ? res.data[0] : res.data;
+        if (!row || !row.id) return 'error';
+        window.location.href = 'muj-inzerat.html';
         return 'ok';
       });
     });
@@ -305,6 +306,9 @@
         } else if (r === 'bad') {
           ms.textContent = 'Text obsahuje nevhodná slova. Upravte prosím inzerát a zkuste to znovu.';
           ms.classList.add('err');
+        } else if (r === 'auth') {
+          ms.textContent = 'Nejprve se prosím přihlaste (nahoře).';
+          ms.classList.add('err');
         } else {
           ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.';
           ms.classList.add('err');
@@ -398,5 +402,48 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
     });
   }
+
+  // --- Přihlášení (ochrana proti spamu) — jen na pridat.html ---
+  (function initAuth() {
+    var gate = document.getElementById('auth-gate');
+    var card = document.getElementById('prodej-card');
+    var bar = document.getElementById('auth-bar');
+    if (!gate || !card) return;
+    function refresh() {
+      var on = !!(window.PKAuth && PKAuth.loggedIn());
+      gate.hidden = on; card.hidden = !on; if (bar) bar.hidden = !on;
+      var em = document.getElementById('auth-email'); if (em) em.textContent = (window.PKAuth ? PKAuth.email() : '');
+    }
+    refresh();
+    var msg = document.getElementById('au-msg');
+    function say(t, err) { if (msg) { msg.textContent = t; msg.className = 'add-msg' + (err ? ' err' : ' ok'); } }
+    function creds() { return { e: ((document.getElementById('au-email') || {}).value || '').trim(), p: (document.getElementById('au-pass') || {}).value || '' }; }
+    function okCreds(c) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e)) { say('Zadejte platný e-mail.', true); return false; }
+      if (c.p.length < 6) { say('Heslo musí mít aspoň 6 znaků.', true); return false; }
+      return true;
+    }
+    function errText(d) { return (d && (d.error_description || d.msg || d.message || d.error)) || ''; }
+    var af = document.getElementById('auth-form');
+    if (af) af.addEventListener('submit', function (e) {
+      e.preventDefault(); var c = creds(); if (!okCreds(c) || !window.PKAuth) return;
+      say('Přihlašuji…');
+      PKAuth.login(c.e, c.p).then(function (r) {
+        if (r.ok) { refresh(); } else { say(errText(r.data) || 'Přihlášení se nepovedlo — zkontrolujte e-mail a heslo.', true); }
+      });
+    });
+    var su = document.getElementById('au-signup');
+    if (su) su.addEventListener('click', function () {
+      var c = creds(); if (!okCreds(c) || !window.PKAuth) return;
+      say('Vytvářím účet…');
+      PKAuth.signup(c.e, c.p).then(function (r) {
+        if (r.ok && r.session) { refresh(); }
+        else if (r.ok) { say('Účet vytvořen. Pokud přijde potvrzovací e-mail, potvrďte ho a pak se přihlaste.'); }
+        else { say(errText(r.data) || 'Účet se nepovedlo vytvořit (možná už existuje — zkuste se přihlásit).', true); }
+      });
+    });
+    var lo = document.getElementById('au-logout');
+    if (lo) lo.addEventListener('click', function () { if (window.PKAuth) { PKAuth.logout(); refresh(); } });
+  })();
 
 })();

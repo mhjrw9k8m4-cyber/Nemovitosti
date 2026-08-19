@@ -32,7 +32,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260818k">
+  <link rel="stylesheet" href="css/styles.css?v=20260818l">
 </head>
 <body>
 
@@ -73,7 +73,7 @@
     <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
     <nav id="nav" aria-label="Hlavní navigace">
       <a href="index.html#mapa">Mapa</a>
-      <a href="muj-inzerat.html">Můj inzerát</a>
+      <a href="muj-inzerat.html">Moje inzeráty</a>
       <a href="index.html#mapa" class="btn-primary">Zpět na mapu</a>
     </nav>
   </div>
@@ -102,8 +102,34 @@
 
         <!-- Formulář v elevované kartě -->
         <div>
-          <div class="add-card">
-            <p class="add-lead" style="margin-top:0;"><b>Tip:</b> čím víc vyplníte — <b>fotky, sítě i přístup</b> — tím víc zájemců oslovíte. Nabídka se po odeslání <b>hned objeví na mapě</b> mezi ostatními. Spravovat ji pak můžete přes „Můj inzerát".</p>
+          <!-- Přihlášení (ochrana proti spamu) — ukáže se, když uživatel není přihlášený -->
+          <div class="add-card" id="auth-gate" hidden>
+            <div class="rules-sect">
+              <h2 id="auth-title">Přihlaste se a přidejte pozemek</h2>
+              <p class="rules-note" style="margin-top:0;">Kvůli ochraně před spamem je přidání inzerátu jen pro přihlášené. Stačí e-mail a heslo — zdarma, za půl minuty.</p>
+            </div>
+            <form class="add-form" id="auth-form" novalidate>
+              <div class="add-field">
+                <label for="au-email">E-mail</label>
+                <input id="au-email" type="email" autocomplete="email" placeholder="vas@email.cz" required>
+              </div>
+              <div class="add-field">
+                <label for="au-pass">Heslo <span class="hint">(aspoň 6 znaků)</span></label>
+                <input id="au-pass" type="password" autocomplete="current-password" minlength="6" placeholder="••••••" required>
+              </div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button type="submit" class="btn-primary btn-glow" id="au-login">Přihlásit se</button>
+                <button type="button" class="lp-btn" id="au-signup">Vytvořit účet</button>
+              </div>
+              <p class="add-msg" id="au-msg" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+
+          <!-- Lišta „přihlášen jako…" nad formulářem -->
+          <div class="auth-bar" id="auth-bar" hidden>Přihlášen: <b id="auth-email"></b> · <a href="muj-inzerat.html">Moje inzeráty</a> · <button type="button" id="au-logout" class="linklike">Odhlásit</button></div>
+
+          <div class="add-card" id="prodej-card" hidden>
+            <p class="add-lead" style="margin-top:0;"><b>Tip:</b> čím víc vyplníte — <b>fotky, sítě i přístup</b> — tím víc zájemců oslovíte. Nabídka se po odeslání <b>hned objeví na mapě</b> mezi ostatními. Spravovat ji pak můžete přes „Moje inzeráty".</p>
             <form class="add-form" id="form-prodej" novalidate>
               <div class="add-field">
                 <label for="p-obec">Obec / lokalita <span class="req">*</span></label>
@@ -217,7 +243,7 @@
           <div class="add-success" id="add-success" data-success-for="form-prodej" hidden>
             <div class="asx-check"><svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></div>
             <h2>Hotovo! Nabídka je odeslaná.</h2>
-            <p>Nabídka je hned na mapě mezi ostatními. Odkaz na její správu (stav a zhlédnutí) najdete na stránce „Můj inzerát".</p>
+            <p>Nabídka je hned na mapě mezi ostatními. Spravovat ji (stav, zhlédnutí, smazání) můžete na stránce „Moje inzeráty" — přihlášené stejným účtem.</p>
             <div class="asx-actions">
               <a href="index.html#mapa" class="btn-primary btn-glow">Zpět na mapu</a>
               <button type="button" class="btn-ghost" id="add-another">Přidat další pozemek</button>
@@ -272,7 +298,7 @@
     <div class="wrap add-wrap">
       <div class="section-head"><div class="eyebrow">Časté dotazy prodejců</div><h2>Než přidáte pozemek.</h2></div>
       <details class="faq-item"><summary>Kolik to stojí?</summary><p>Nic. Přidání i zobrazení nabídky je zdarma a bez provize — platíte jen tehdy, když se s kupujícím sami domluvíte.</p></details>
-      <details class="faq-item"><summary>Kdy se nabídka objeví na mapě?</summary><p>Hned po odeslání — objeví se u vaší obce jako „Od majitele". Spravovat ji (stav, zhlédnutí, smazání) můžete přes stránku „Můj inzerát", jejíž odkaz dostanete po odeslání.</p></details>
+      <details class="faq-item"><summary>Kdy se nabídka objeví na mapě?</summary><p>Hned po odeslání — objeví se u vaší obce jako „Od majitele". Spravovat ji (stav, zhlédnutí, smazání) můžete přes stránku „Moje inzeráty" po přihlášení stejným účtem.</p></details>
       <details class="faq-item"><summary>Kdo mě může kontaktovat?</summary><p>Přímo zájemci o pozemek. Kontakt uvádíte vy a slouží jen ke spojení s kupujícím — nikam ho neprodáváme.</p></details>
       <details class="faq-item"><summary>Musím být vlastník pozemku?</summary><p>Inzerovat smí vlastník nebo osoba, kterou vlastník zmocnil (např. makléř s dohodou). Podrobnosti najdete v <a href="pravidla-inzerce.html">pravidlech inzerce</a>.</p></details>
       <details class="faq-item"><summary>Můžu nabídku později upravit nebo stáhnout?</summary><p>Ano. Napište nám přes <a href="index.html#realitky">kontakt</a> a nabídku upravíme nebo stáhneme bez zbytečného odkladu.</p></details>
@@ -296,8 +322,9 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260818k" defer></script>
-<script src="js/pridat.js?v=20260818k" defer></script>
+<script src="js/config.js?v=20260818l" defer></script>
+<script src="js/auth.js?v=20260818l" defer></script>
+<script src="js/pridat.js?v=20260818l" defer></script>
 <!-- Vercel Web Analytics (navstevnost) -->
 <script defer src="/_vercel/insights/script.js"></script>
 </body>

@@ -87,6 +87,12 @@ h1,h2{text-wrap:balance;}
 .beta-close:hover{color:var(--text-ondark); border-color:var(--line-strong);}
 @media (max-width:560px){ .beta-text{font-size:12.5px;} .beta-wrap{gap:9px; padding:8px 0;} }
 
+/* Lišta „přihlášen jako…" nad formulářem přidání */
+.auth-bar{margin:0 0 14px; padding:11px 15px; background:var(--ink-soft); border:1px solid var(--line); border-radius:10px; font-size:13.5px; color:var(--text-ondark-mute);}
+.auth-bar b{color:var(--text-ondark);}
+.auth-bar a{color:var(--copper-bright); text-decoration:underline; text-underline-offset:2px;}
+.linklike{background:none; border:0; padding:0; font:inherit; color:var(--copper-bright); text-decoration:underline; text-underline-offset:2px; cursor:pointer;}
+
 /* Lišta postupu scrollování */
 .progress-bar{position:fixed; top:0; left:0; height:3px; width:0; background:linear-gradient(90deg, var(--copper), var(--copper-bright)); z-index:2000; transition:width .1s linear;}
 
