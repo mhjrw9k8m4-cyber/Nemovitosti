@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260818j">
+  <link rel="stylesheet" href="css/styles.css?v=20260818k">
 </head>
 <body>
 
@@ -60,7 +60,7 @@
             </ul>
           </div>
           <div class="md-actions" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;">
-            <a class="lp-btn" href="index.html#mapa">Zobrazit na mapě</a>
+            <a class="lp-btn" id="mi-maplink" href="index.html#mapa">Zobrazit na mapě</a>
             <button class="lp-btn" type="button" id="mi-copy">Zkopírovat odkaz</button>
             <button class="lp-btn lp-src" type="button" id="mi-delete">Smazat inzerát</button>
           </div>
@@ -80,7 +80,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260818j" defer></script>
+<script src="js/config.js?v=20260818k" defer></script>
 <script>
 (function () {
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
@@ -119,6 +119,7 @@
       q('mi-views').textContent = fmt(row.views);
       q('mi-area').textContent = (row.area ? fmt(row.area) + ' m²' : 'neuvedena');
       q('mi-price').textContent = (row.price ? fmt(row.price) + ' Kč' : 'neuvedena');
+      var ml = q('mi-maplink'); if(ml) ml.href = 'index.html?lid=' + encodeURIComponent(id) + '#mapa';
       statusEl.hidden = true; bodyEl.hidden = false;
 
       q('mi-copy').addEventListener('click', function(){

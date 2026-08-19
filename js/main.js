@@ -1665,6 +1665,14 @@
     if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
   }
   function openFromUrl() {
+    // ?lid=<id> — otevři konkrétní živý inzerát od majitele (z „Můj inzerát").
+    var ml = /[?&]lid=([^&]+)/.exec(location.search);
+    if (ml) {
+      var lid; try { lid = decodeURIComponent(ml[1]); } catch (e) { lid = ''; }
+      var lt = null;
+      DATA.forEach(function (d) { if (d._lid && d._lid === lid) lt = d; });
+      if (lt) { openParcel(lt); return true; }
+    }
     var m = /[?&]p=([^&]+)/.exec(location.search);
     if (!m) return false;
     var key;

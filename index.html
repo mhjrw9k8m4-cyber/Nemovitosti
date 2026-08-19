@@ -15,7 +15,7 @@
      Je to přímo v HTML, funguje hned a nezávisle na cache main.js. */
   (function(){
     try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }catch(e){}
-    if((location.hash && location.hash !== '#zpetna-vazba') || /[?&]p=/.test(location.search)) return; // respektuj sdílené odkazy (ale #zpetna-vazba není sekce → drž vršek)
+    if((location.hash && location.hash !== '#zpetna-vazba') || /[?&](p|lid)=/.test(location.search)) return; // respektuj sdílené odkazy (ale #zpetna-vazba není sekce → drž vršek)
     var released=false, start=0;
     function toTop(){ if(window.pageYOffset || document.documentElement.scrollTop){ window.scrollTo(0,0); } }
     function softTop(){ if(!released) toTop(); }   // ustoupí, jakmile uživatel sám scrolluje
@@ -88,7 +88,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260818j">
+  <link rel="stylesheet" href="css/styles.css?v=20260818k">
 </head>
 <body>
 
@@ -480,8 +480,8 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/config.js?v=20260818j" defer></script>
-<script src="js/main.js?v=20260818j" defer></script>
+<script src="js/config.js?v=20260818k" defer></script>
+<script src="js/main.js?v=20260818k" defer></script>
 <!-- Vercel Web Analytics (navstevnost) -->
 <script defer src="/_vercel/insights/script.js"></script>
 </body>

@@ -109,8 +109,15 @@
     }
     return next();
   }
+  // Lehká pojistka proti sprostému spamu (nezveřejní se). Není to dokonalé,
+  // ale zachytí zjevné vulgarity — nevhodné jde navíc nahlásit a smazat.
+  var BAD = /(kokot|\bkkt\b|kurv|piča|pича|\bpica\b|mrd|debil|sr[aá]č|čur[aá]k|curak|\bhovn|zmrd|jebn|jebat)/i;
+  function looksBad(s) { return BAD.test(String(s || '')); }
   // Odeslání prodeje = automatické zveřejnění na mapě + přesměrování na „Můj inzerát".
   function publishListing() {
+    if (looksBad(val('p-obec')) || looksBad(val('p-popis')) || looksBad(val('p-parcela'))) {
+      return Promise.resolve('bad');
+    }
     var obec = val('p-obec'), okres = val('p-okres');
     var area = parseInt(val('p-vymera'), 10) || 0;
     var price = parseInt(val('p-cena'), 10) || 0;
@@ -294,6 +301,9 @@
           }
         } else if (r === 'geo') {
           ms.textContent = 'Nepodařilo se najít obec na mapě. Zkontrolujte prosím název obce (např. „Kolín").';
+          ms.classList.add('err');
+        } else if (r === 'bad') {
+          ms.textContent = 'Text obsahuje nevhodná slova. Upravte prosím inzerát a zkuste to znovu.';
           ms.classList.add('err');
         } else {
           ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.';
