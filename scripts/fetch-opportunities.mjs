@@ -449,7 +449,11 @@ function valid(o) {
     const sq = dLat * dLat + dLng * dLng;
     if (sq < nearestSq) nearestSq = sq;
   }
-  if (nearestSq > 42 * 42) return false;
+  if (nearestSq > 40 * 40) return false;
+  // Druhá pojistka pro příhraničí: zjevně NĚMECKÝ název místa (ß, Straße, -weg,
+  // Mühle, Pfarr…) — takové znaky se v českých názvech obcí prakticky nevyskytují,
+  // takže jde o zahraniční inzerát se souřadnicemi za hranicí. Nezobrazujeme.
+  if (/ß|stra(ss|ß)e|m[üu]hle|pfarr|hausen|kirchen|\bweg\b|weg\s*\d|holz\b|\bdorf\b/i.test(String(o.place || ''))) return false;
   return true;
 }
 
