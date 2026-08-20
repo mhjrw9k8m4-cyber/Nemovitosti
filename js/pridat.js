@@ -426,6 +426,8 @@
     function refresh() {
       var on = !!(window.PKAuth && PKAuth.loggedIn());
       gate.hidden = on; card.hidden = !on; if (bar) bar.hidden = !on;
+      // Živý náhled + síla inzerátu dávají smysl až u vyplňování — ukážeme je jen přihlášeným.
+      var pv = document.getElementById('live-preview-card'); if (pv) pv.hidden = !on;
       var em = document.getElementById('auth-email'); if (em) em.textContent = (window.PKAuth ? PKAuth.email() : '');
     }
     refresh();
