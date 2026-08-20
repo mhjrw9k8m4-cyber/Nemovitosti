@@ -186,12 +186,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-melnik.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-kutna-hora.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-kutna-hora.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-melnik.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -236,12 +236,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-ceske-budejovice.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-pisek.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-pisek.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-ceske-budejovice.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -276,12 +276,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-domazlice.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-tachov.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-tachov.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-domazlice.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
