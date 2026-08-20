@@ -1519,7 +1519,7 @@
       li.innerHTML =
         '<div class="opp-thumb" style="border-color:' + t.color + '44">' + shapeSvg(d) + '</div>' +
         '<div class="opp-content">' +
-          '<div class="opp-top"><span class="opp-place">' + d.place + '</span>' +
+          '<div class="opp-top"><span class="opp-place"><span class="opp-dot" style="background:' + t.color + '" aria-hidden="true"></span>' + d.place + '</span>' +
           '<span class="opp-topr">' +
             '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
             '<span class="opp-tag ' + d.type + '">' + t.label + '</span>' +

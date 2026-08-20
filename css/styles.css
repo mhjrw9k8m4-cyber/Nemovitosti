@@ -444,6 +444,8 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .reset-btn:hover{background:var(--copper);}
 .opp-top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px;}
 .opp-place{font-family:'Inter',sans-serif; font-size:16px; font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+/* Barevná odrážka podle kategorie (prodej/dražba/exekuce…) — rychlá orientace v seznamu */
+.opp-dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:9px; vertical-align:middle; flex:none;}
 .opp-tag{flex:none; display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 8px; border-radius:12px; color:#fff; white-space:nowrap;}
 .opp-tag.sale{background:var(--c-sale);} .opp-tag.drazba{background:var(--c-drazba); color:#3a2c05;} .opp-tag.exekuce{background:var(--c-exekuce);} .opp-tag.obec{background:var(--c-obec);}
 /* Podřádek „co to je" — jeden řádek, konzistentní, ořízne se tečkami */
