@@ -32,14 +32,19 @@ jobs:
       - name: Stáhnout data
         run: node scripts/fetch-opportunities.mjs
 
-      - name: Commit změn (jen pokud se data změnila)
+      - name: Přegenerovat regionální stránky (kraje, okresy, dražby, rozcestník + sitemap)
+        run: node scripts/generate-region-pages.mjs
+
+      - name: Commit změn (jen pokud se něco změnilo)
         run: |
-          if [[ -n "$(git status --porcelain data/opportunities.json data/geocode-cache.json)" ]]; then
+          git add data/opportunities.json data/geocode-cache.json sitemap.xml pozemky-podle-okresu.html drazby-pozemku-nabidky.html pozemky-okres-*.html pozemky-*-kraj.html
+          # Odstraněné (sirotčí) stránky, které generátor smazal, ať zmizí i z repozitáře:
+          git add -A -- 'pozemky-okres-*.html' 'pozemky-*-kraj.html'
+          if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "pozemkomat-bot"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add data/opportunities.json data/geocode-cache.json
-            git commit -m "data: automatická aktualizace příležitostí"
+            git commit -m "data: automatická aktualizace příležitostí + regionální stránky"
             git push
           else
-            echo "Data beze změny."
+            echo "Beze změny."
           fi
