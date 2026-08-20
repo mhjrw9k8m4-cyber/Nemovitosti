@@ -900,11 +900,11 @@
     var yf = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
     var xt = Math.floor(xf), yt = Math.floor(yf);
     var s = ['a', 'b', 'c', 'd'][(xt + yt) % 4];
-    var url = 'https://' + s + '.basemaps.cartocdn.com/dark_all/' + z + '/' + xt + '/' + yt + '@2x.png';
+    var url = 'https://' + s + '.basemaps.cartocdn.com/dark_all/' + z + '/' + xt + '/' + yt + '.png';
     // object-position i špendlík na stejné zlomkové pozici → špendlík přesně na pozemku
     var fx = ((xf - xt) * 100).toFixed(1), fy = ((yf - yt) * 100).toFixed(1);
     var col = TYPE[d.type].color;
-    return '<img class="opp-map" loading="lazy" alt="" src="' + url + '" style="object-position:' + fx + '% ' + fy + '%">' +
+    return '<img class="opp-map" alt="" src="' + url + '" onerror="this.style.display=\'none\'" style="object-position:' + fx + '% ' + fy + '%">' +
       '<span class="opp-mgrad"></span>' +
       '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>' +
       '<span class="opp-pin" style="left:' + fx + '%;top:' + fy + '%;background:' + col + '"></span>';
