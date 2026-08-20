@@ -169,7 +169,7 @@ function footer(){
       <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého.</p>
     </div>
     <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Mapa</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a></nav>
-    <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="drazby-pozemku-nabidky.html">Dražby — nabídky</a><a href="exekuce-pozemku.html">Exekuce na pozemku</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="vecne-bremeno-pozemek.html">Věcné břemeno</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
+    <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="index.html#soukromi">Zásady soukromí</a><a href="index.html#podminky">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="index.html#realitky">Kontakt</a></nav>
   </div>
   <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
@@ -272,17 +272,6 @@ ${rows}
         </div>
       </div>
 
-      <div class="add-card" style="margin-top:22px;">
-        <div class="rules-sect">
-          <h2>Než koupíte v okrese ${esc(okres)}</h2>
-          <ul class="rule-list">
-            <li>Kolik k ceně přibude na poplatcích a daních: <a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi pozemku</a>.</li>
-            <li>Chcete koupit levněji v dražbě? <a href="drazby-pozemku.html">Jak koupit pozemek v dražbě</a>.</li>
-            <li>Ověřte přístupovou cestu: <a href="pristupova-cesta-pozemek.html">Pozemek bez přístupové cesty</a>.</li>
-            <li>Stavební, nebo zemědělský? <a href="stavebni-vs-zemedelsky-pozemek.html">Rozdíly a přeměna</a>.</li>
-          </ul>
-        </div>
-      </div>
 ${sibLinks ? `
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
@@ -293,6 +282,8 @@ ${sibLinks ? `
           <p class="okr-more">${krajBack}</p>
         </div>
       </div>` : ''}
+
+      <p class="okr-more" style="margin-top:22px;">Než koupíte, projděte si <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> a <a href="list-vlastnictvi-katastr.html">jak číst list vlastnictví</a>.</p>
 
     </div>
   </section>
@@ -381,17 +372,7 @@ ${rows}
         </div>
       </div>
 
-      <div class="add-card" style="margin-top:22px;">
-        <div class="rules-sect">
-          <h2>Než koupíte</h2>
-          <ul class="rule-list">
-            <li>Kolik k ceně přibude: <a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi pozemku</a>.</li>
-            <li>Levněji v dražbě: <a href="drazby-pozemku.html">Jak koupit pozemek v dražbě</a> · <a href="drazby-pozemku-nabidky.html">aktuální dražby</a>.</li>
-            <li>Od obce: <a href="pozemek-od-obce.html">Jak koupit pozemek od obce</a>.</li>
-            <li>Všechny kraje a okresy: <a href="pozemky-podle-okresu.html">Pozemky podle okresů</a>.</li>
-          </ul>
-        </div>
-      </div>
+      <p class="okr-more" style="margin-top:22px;">Než koupíte, projděte si <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> nebo <a href="pozemky-podle-okresu.html">všechny kraje a okresy</a>.</p>
 
     </div>
   </section>
@@ -452,17 +433,7 @@ ${rows}
         </div>
       </div>
 
-      <div class="add-card" style="margin-top:22px;">
-        <div class="rules-sect">
-          <h2>Souvisí s tím</h2>
-          <ul class="rule-list">
-            <li>Kompletní návod: <a href="drazby-pozemku.html">Jak koupit pozemek v dražbě</a>.</li>
-            <li>Co znamená pozemek v exekuci: <a href="exekuce-pozemku.html">Exekuce a pozemek</a>.</li>
-            <li>Kolik zaplatíte navíc k ceně: <a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a>.</li>
-            <li>Pozemky podle regionu: <a href="pozemky-podle-okresu.html">Pozemky podle okresů</a>.</li>
-          </ul>
-        </div>
-      </div>
+      <p class="okr-more" style="margin-top:22px;">Návod krok za krokem: <a href="drazby-pozemku.html">Jak koupit pozemek v dražbě</a> · <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a>.</p>
 
     </div>
   </section>
