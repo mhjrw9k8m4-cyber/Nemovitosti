@@ -1,38 +1,42 @@
-// Průzkum v8 — backend JSON API okdrazby (portal/auctions). Klíčový!
+// Průzkum v9 — najít SEZNAM/SEARCH endpoint + pole s cenou + RSC enumerace ID.
 const API = 'https://d1ws838f4e5d65.cloudfront.net/api/v1/portal';
 const UA = { 'user-agent': 'ParcelkaBot/0.1 (+https://parcelaka.cz)', accept: 'application/json' };
-const get = async (u) => { const r = await fetch(u, { headers: UA, signal: AbortSignal.timeout(25000) }); const ct = r.headers.get('content-type') || ''; const t = await r.text(); return { s: r.status, ct, t }; };
+const get = async (u, opt = {}) => { const r = await fetch(u, { headers: UA, signal: AbortSignal.timeout(25000), ...opt }); return { s: r.status, ct: r.headers.get('content-type') || '', t: await r.text() }; };
 const out = [];
 
-// 1) DETAIL jedné dražby (pozemek 26367)
+// 1) pole s cenou z detailu
 try {
-  const r = await get(`${API}/auctions/26367`);
-  out.push(`DETAIL /auctions/26367 -> ${r.s} ${r.ct} ${r.t.length}B`);
-  if (/json/i.test(r.ct)) { const j = JSON.parse(r.t); out.push('  klíče: ' + Object.keys(j).join(',')); out.push('  vzorek: ' + JSON.stringify(j).slice(0, 1200)); }
-  else out.push('  (není JSON) ' + r.t.slice(0, 150));
+  const j = JSON.parse((await get(`${API}/auctions/26367`)).t);
+  const money = Object.entries(j).filter(([k]) => /price|bid|security|estimat|minimal|castka|amount|value|deposit|reserve/i.test(k));
+  out.push('CENOVÁ pole detailu: ' + JSON.stringify(money).slice(0, 500));
+  out.push('biddingMethodAttributes: ' + JSON.stringify(j.biddingMethodAttributes).slice(0, 400));
+  out.push('categoriesLocalized: ' + JSON.stringify(j.categoriesLocalized).slice(0, 200) + ' | county:' + j.county + ' | region:' + j.region);
 } catch (e) { out.push('detail chyba: ' + e.message); }
 
-// 2) SEZNAM + filtry/stránkování
-for (const u of [
-  `${API}/auctions`,
-  `${API}/auctions?page=1&size=20`,
-  `${API}/auctions?category=pozemky`,
-  `${API}/auctions?type=LAND`,
-  `${API}/auctions?estateType=pozemky`,
-  `${API}/auctions?realEstateType=LAND&page=1`,
-]) {
-  try {
-    const r = await get(u);
-    let info = `${u} -> ${r.s} ${r.ct.slice(0,16)} ${r.t.length}B`;
-    if (/json/i.test(r.ct)) {
-      const j = JSON.parse(r.t);
-      const arr = Array.isArray(j) ? j : (j.content || j.items || j.data || j.results || j.auctions || null);
-      info += ` | pole:${Array.isArray(arr) ? arr.length : '?'} | topKlíče:${Object.keys(j).slice(0,8).join(',')}`;
-      if (Array.isArray(arr) && arr[0]) info += ` | prvekKlíče:${Object.keys(arr[0]).join(',').slice(0,200)}`;
-    }
-    out.push(info);
-  } catch (e) { out.push(`${u} -> ${e.message}`); }
+// 2) SEARCH/LIST endpointy
+const guesses = [
+  `${API}/auctions/search?page=0&size=10`,
+  `${API}/auctions/filter?page=0&size=10`,
+  `${API}/auctions/list?page=0&size=10`,
+  `${API}/search/auctions?page=0&size=10`,
+  `${API}/search?page=0&size=10`,
+  `${API}/catalogue?page=0&size=10`,
+  `${API}/auction/search?page=0&size=10`,
+];
+for (const u of guesses) {
+  try { const r = await get(u); let i = `${u.replace(API,'')} -> ${r.s}`; if (/json/i.test(r.ct) && r.s < 400) { const j = JSON.parse(r.t); const arr = j.content || j.items || j.data || j.results || (Array.isArray(j) ? j : null); i += ` OK pole:${Array.isArray(arr) ? arr.length : '?'} top:${Object.keys(j).slice(0,6).join(',')}`; } out.push(i); } catch (e) { out.push(`${u.replace(API,'')} -> ${e.message}`); }
 }
-console.log('\n===== API VÝSLEDEK =====');
+// POST search?
+try { const r = await get(`${API}/auctions/search`, { method: 'POST', headers: { ...UA, 'content-type': 'application/json' }, body: JSON.stringify({ page: 0, size: 10 }) }); out.push(`POST /auctions/search -> ${r.s} ${r.ct.slice(0,16)} ${r.t.slice(0,120)}`); } catch (e) { out.push('POST search: ' + e.message); }
+
+// 3) RSC enumerace ID pozemků (fallback)
+try {
+  const r = await get('https://www.okdrazby.cz/drazby/pozemky?_rsc=1', { headers: { ...UA, RSC: '1' } });
+  const ids = [...new Set([...r.t.matchAll(/auctions\/(\d+)\/images/g)].map(m => m[1]))];
+  const ids2 = [...new Set([...r.t.matchAll(/"id":(\d{3,7})/g)].map(m => m[1]))];
+  out.push(`RSC pozemky: ${r.t.length}B | ID z images:${ids.length} ${ids.slice(0,5)} | "id":${ids2.length}`);
+} catch (e) { out.push('RSC chyba: ' + e.message); }
+
+console.log('\n===== V9 =====');
 for (const l of out) console.log(l);
 console.log('--- hotovo ---');
