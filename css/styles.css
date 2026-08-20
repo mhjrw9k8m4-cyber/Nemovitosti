@@ -1,10 +1,10 @@
 :root{
-  --ink:#0A0E13; --ink-soft:#1A222B; --ink-soft2:#26313C;
+  --ink:#152030; --ink-soft:#213041; --ink-soft2:#2C3E52;
   --parchment:#EAF1F6; --parchment-dim:#D6E1EA;
   --text-onlight:#20293A; --text-ondark:#F1F5F9; --text-ondark-mute:#AFBDCA;
   --copper:#3B7DD8; --copper-bright:#6AA6F2;
   --c-sale:#4FA877; --c-drazba:#D6A657; --c-exekuce:#D06E5A; --c-obec:#6E95D0; --c-majitel:#9A80C4;
-  --surface-2:#26313C;
+  --surface-2:#2C3E52;
   --line: rgba(226,235,244,0.13);
   --line-strong: rgba(226,235,244,0.26);
   --panel:#212b35;
@@ -1318,3 +1318,15 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .add-card .rules-note, .rules-sect .rules-note{ color:var(--text-ondark-mute); }
 .rule-list li{ color:var(--text-ondark); line-height:1.62; }
 .add-hero .sub, .hero-head .sub{ color:#CAD5E0; }
+
+/* ---------- Detail pozemku: kompaktní cena + skládací „Detaily" ---------- */
+.md-price{font-size:15.5px; margin:6px 0 12px; color:var(--text-ondark-mute);}
+.md-price b{color:var(--text-ondark); font-weight:700;}
+.md-price-sep{color:var(--line-strong);}
+.md-details{margin:0 0 4px; border:1px solid var(--line-strong); border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.02);}
+.md-details > summary{list-style:none; cursor:pointer; padding:11px 14px; font-weight:600; font-size:14px; color:var(--copper-bright); display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.md-details > summary::-webkit-details-marker{display:none;}
+.md-details > summary::after{content:"\25BE"; color:var(--text-ondark-mute); transition:transform .2s ease;}
+.md-details[open] > summary::after{transform:rotate(180deg);}
+.md-det-body{padding:4px 14px 14px;}
+.md-det-body .md-facts{margin-top:0;}
