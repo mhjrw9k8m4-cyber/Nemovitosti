@@ -161,13 +161,13 @@ function head(title, desc, canonicalPath, ld, crumbs){
   <meta property="og:locale" content="cs_CZ">
   <meta property="og:site_name" content="Parcelka">
   <meta property="og:url" content="https://parcelaka.cz/${canonicalPath}">
-  <meta property="og:image" content="https://parcelaka.cz/assets/og.png">
+  <meta property="og:image" content="https://parcelaka.cz/assets/og.png?v=2">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${attr(title)}">
   <meta name="twitter:description" content="${attr(desc)}">
-  <meta name="twitter:image" content="https://parcelaka.cz/assets/og.png">
+  <meta name="twitter:image" content="https://parcelaka.cz/assets/og.png?v=2">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
