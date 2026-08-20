@@ -901,9 +901,9 @@
       var py = (1 - (x[0] - minLat) / scale) * 80 + 10;
       return px.toFixed(1) + ',' + py.toFixed(1);
     }).join(' ');
-    var col = TYPE[d.type].color;
+    // Neutrální jemný obrys — tvar dává kartě „mapový" charakter, ale nepřidává barvu
     return '<svg viewBox="0 0 100 100"><polygon points="' + pts +
-      '" fill="' + col + '30" stroke="' + col + '" stroke-width="2.2"/></svg>';
+      '" fill="rgba(166,184,202,0.12)" stroke="#8fa2b5" stroke-width="2.2"/></svg>';
   }
 
   // „Co byste měli vědět" — poctivé, obecné vysvětlení: dá se tu stavět (podle
@@ -1517,9 +1517,9 @@
       }
       if (hot) chips.push('<span class="opp-hot">Doporučujeme</span>');
       li.innerHTML =
-        '<div class="opp-thumb" style="border-color:' + t.color + '44">' + shapeSvg(d) + '</div>' +
+        '<div class="opp-thumb">' + shapeSvg(d) + '</div>' +
         '<div class="opp-content">' +
-          '<div class="opp-top"><span class="opp-place"><span class="opp-dot" style="background:' + t.color + '" aria-hidden="true"></span>' + d.place + '</span>' +
+          '<div class="opp-top"><span class="opp-place">' + d.place + '</span>' +
           '<span class="opp-topr">' +
             '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
             '<span class="opp-tag ' + d.type + '">' + t.label + '</span>' +
