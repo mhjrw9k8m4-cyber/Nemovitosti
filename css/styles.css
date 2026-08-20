@@ -218,7 +218,8 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
   .hero-head h1{font-size:26px;}
   /* podnadpis necháme i na mobilu — vysvětluje smysl webu (na první dobrou) */
   .hero-head .sub{font-size:14.5px; margin-bottom:14px;}
-  .hero-head .trust-line{display:none;}
+  /* Číselný proužek (důvěra) necháme i na mobilu, jen kompaktnější. */
+  .hero-head .trust-line.hero-stats{display:flex; gap:6px 8px; font-size:13px; margin-bottom:4px;}
 }
 
 /* Hero prvky (sdílené) */
@@ -1303,3 +1304,9 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .crumbs a:hover{color:var(--copper-bright,#5BB8D6); text-decoration:underline;}
 .crumbs span[aria-current="page"]{color:var(--text-ondark,#EAE6DD); font-weight:600;}
 .crumbs .crumb-sep{color:var(--line-strong,#3a4d5f);}
+
+/* ---------- Hero číselný proužek (sociální důkaz) ---------- */
+.hero-stats{align-items:baseline;}
+.hero-stats .ts-n{color:var(--text-ondark,#EAE6DD);}
+.hero-stats .ts-n b{color:var(--copper-bright,#5BB8D6); font-weight:700; font-size:1.08em;}
+.hero-stats .ts-sep{color:var(--line-strong,#3a4d5f);}

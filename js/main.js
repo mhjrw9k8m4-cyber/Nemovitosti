@@ -612,6 +612,9 @@
     // Statistiky v sekci zdrojů (důvěra + hodnota v číslech)
     var sc = document.getElementById('stat-count'); if (sc) sc.textContent = fmt(DATA.length);
     var so = document.getElementById('stat-okres'); if (so) so.textContent = String(okresN);
+    // Živá čísla v hero proužku (sociální důkaz hned nahoře).
+    var hc = document.getElementById('hero-n-count'); if (hc) hc.textContent = fmt(DATA.length);
+    var ho = document.getElementById('hero-n-okres'); if (ho) ho.textContent = String(okresN);
   })();
 
   // „Naposledy aktualizováno" — signál čerstvosti dat (z pole updated).
