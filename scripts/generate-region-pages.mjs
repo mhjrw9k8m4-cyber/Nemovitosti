@@ -100,7 +100,11 @@ function priceStats(list){
   for(const o of list){
     if(!(o.price>0 && o.area>=100 && o.area<=500000)) continue;
     const g=druhGroup(o.druh); if(g==='Ostatní') continue;
-    (buckets[g]=buckets[g]||[]).push(o.price/o.area);
+    const perm2 = o.price/o.area;
+    // Pole/les nad 500 Kč/m² jsou fakticky stavební parcely (jen vedené jako „orná"),
+    // do ceny zemědělské půdy/lesa nepatří — jinak by zkreslily medián okresu nahoru.
+    if((g==='Zemědělská půda' || g==='Lesní pozemek') && perm2>500) continue;
+    (buckets[g]=buckets[g]||[]).push(perm2);
   }
   const out={};
   for(const g of Object.keys(buckets)){
@@ -535,6 +539,17 @@ ${rows}
       </div>`;
   }).join('\n');
 
+  // Výrazný souhrn: nejlevnější a nejdražší okresy (zemědělská půda).
+  const cheapest = okrData.slice(-3).reverse();
+  const dearest  = okrData.slice(0,3);
+  const okrLink = ok => hasOkresPage.has(ok) ? okresFile(ok) : ('index.html?kraj='+encodeURIComponent((KRAJ_META[OKRES_KRAJ[ok]]||{}).mapName||'')+'#mapa');
+  const chips = list => list.map(x=>`<a class="okr-place" href="${okrLink(x.ok)}" style="text-decoration:none;">${esc(x.ok)} <b>${fmt(x.s.med)} Kč/m²</b></a>`).join('<span class="crumb-sep" aria-hidden="true">·</span> ');
+  const highlight = (cheapest.length && dearest.length) ? `
+      <div class="okr-stats" style="gap:14px;">
+        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span style="color:var(--c-sale,#3E9B63);">Nejlevnější zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(cheapest)}</div></div>
+        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span style="color:var(--c-exekuce,#C15B44);">Nejdražší zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(dearest)}</div></div>
+      </div>` : '';
+
   const natZ = priceNational[key];
   const title = 'Ceny pozemků v ČR — kolik stojí m² pole, lesa a zahrady | Parcelka';
   const desc = `Kolik stojí metr čtvereční pozemku v Česku? Orientační medián cen z aktuálních nabídek podle druhu (zemědělská půda, les, zahrada) a podle kraje.${natZ?' Zemědělská půda medián '+fmt(natZ.med)+' Kč/m².':''} Zdarma, z veřejných zdrojů.`;
@@ -565,6 +580,13 @@ ${rows}
           <p class="rules-note">Jde o <b>medián nabídkových cen</b> (ne realizovaných prodejů) z pozemků, u kterých známe cenu i výměru. Rozpětí ukazuje typické ceny (25.–75. percentil, tj. bez krajních výkyvů). Skutečná cena závisí na kvalitě půdy (BPEJ), přístupu, sítích i lokalitě — berte to jako orientaci, ne odhad konkrétního pozemku.</p>
         </div>
       </div>
+${highlight ? `
+      <div class="add-card" style="margin-top:22px;">
+        <div class="rules-sect">
+          <h2>Kde je půda nejlevnější a nejdražší</h2>
+${highlight}
+        </div>
+      </div>` : ''}
 
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
