@@ -186,6 +186,75 @@ async function fetchDrazby() {
   return out;
 }
 
+// OK dražby (okdrazby.cz) — veřejné i exekuční dražby nemovitostí. robots.txt
+// povoluje /drazby/. Data bereme z jejich veřejného JSON API (portal/auctions).
+// Seznamový endpoint není, ale ID jdou po sobě → projdeme okno posledních ID
+// a přes detailní API vybereme jen aktivní POZEMKY.
+const OKD_API = 'https://d1ws838f4e5d65.cloudfront.net/api/v1/portal';
+const OKD_DRUH = {
+  'Meadows': 'trvalý travní porost', 'Arable land': 'orná půda', 'Fields': 'orná půda',
+  'Forests': 'lesní pozemek', 'Forest land': 'lesní pozemek', 'Gardens': 'zahrada',
+  'Lands for housing': 'stavební pozemek', 'Building land': 'stavební pozemek',
+  'Other areas': 'ostatní plocha', 'Vineyards': 'vinice', 'Orchards': 'sad',
+};
+async function fetchOkdrazby() {
+  // 1) nejvyšší ID z homepage (okno pro sken)
+  let maxId = 27100;
+  try {
+    const h = await (await fetch('https://www.okdrazby.cz/', { headers: UA })).text();
+    const ids = [...h.matchAll(/\/drazba\/(\d+)-/g)].map((m) => +m[1]);
+    if (ids.length) maxId = Math.max(maxId, ...ids);
+  } catch { /* necháme výchozí odhad */ }
+  const HI = maxId + 20, LO = maxId - 1000;
+  const ids = [];
+  for (let id = HI; id >= LO; id--) ids.push(id);
+
+  const out = [];
+  let idx = 0;
+  async function worker() {
+    while (idx < ids.length) {
+      const id = ids[idx++];
+      try {
+        const r = await fetch(`${OKD_API}/auctions/${id}`, { headers: { ...UA, accept: 'application/json' }, signal: AbortSignal.timeout(20000) });
+        if (r.status !== 200) continue;
+        const j = await r.json();
+        const cats = j.categoriesLocalized || [];
+        if (!cats.includes('Land')) continue;                 // jen pozemky
+        if (!/Prepared|Ongoing|Running|Published/i.test(j.statusLocalized || '')) continue; // jen aktivní/nadcházející
+        const bma = j.biddingMethodAttributes || {};
+        const price = Math.round(+(bma.lowestSubmission || bma.estimatedPrice || j.auctionSecurity || 0)) || 0;
+        if (!price) continue;
+        const txt = (j.name || '') + ' ' + (j.description || '');
+        const area = parseArea(j.name) || parseArea(j.description);
+        // okres: z GPS (spolehlivé), jinak z textu „okres X"
+        let okres = (typeof j.lat === 'number' && typeof j.lon === 'number') ? nearestOkres(j.lat, j.lon) : null;
+        const om = txt.match(/okres\s+([A-Za-zÁ-Žá-ž.\-]+(?:\s[A-Za-zÁ-Žá-ž.\-]+){0,2})/);
+        if (om) { const cand = normOkres(om[1].trim().replace(/[.,;].*$/, '')); if (OKRESY_MAP[cand]) okres = cand; }
+        if (!okres) continue;
+        const km = j.name && j.name.match(/k\.?\s*ú\.?\s*([A-Za-zÁ-Žá-ž0-9 .\-]+?)(?:\s*,|\s+okres|\s*$)/i);
+        const place = (km ? km[1] : (j.name || '').replace(/\s*,.*$/, '')).trim().slice(0, 60) || okres;
+        const pm = (j.description || '').match(/p\.?\s*č\.?\s*([\d/]+)/);
+        const nucena = /exekuc|nedobrovoln|nucen|insolven/i.test(txt + ' ' + (j.typeLocalized || '') + ' ' + (j.preparationTypeLocalized || '') + ' ' + (j.compulsoryDesc || ''));
+        const druhCat = cats[cats.length - 1];
+        const druh = OKD_DRUH[druhCat] || parseDruh(txt) || 'pozemek';
+        const datum = j.start ? String(j.start).slice(0, 10) : (j.finish ? String(j.finish).slice(0, 10) : null);
+        out.push({
+          place, okres, type: nucena ? 'exekuce' : 'drazba',
+          parcel: (pm ? pm[1] : '—').slice(0, 40), _key: 'okd-' + id,
+          druh, area: area || null, price,
+          extra: (nucena ? 'nucená dražba' : 'dražba') + (datum ? ' ' + datum : '') + ' · OK dražby',
+          lat: typeof j.lat === 'number' ? j.lat : undefined,
+          lng: typeof j.lon === 'number' ? j.lon : undefined,
+          _gps: typeof j.lat === 'number' && typeof j.lon === 'number',
+          url: 'https://www.okdrazby.cz/drazba/' + id,
+        });
+      } catch { /* přeskoč rozbité ID */ }
+    }
+  }
+  await Promise.all(Array.from({ length: 8 }, worker));
+  return out;
+}
+
 
 // Státní pozemkový úřad — nabídky pozemků k prodeji podle § 12 zákona č. 503/2012.
 // SPÚ zveřejňuje kompletní seznam jako CSV (kódování Windows-1250, oddělovač ;).
@@ -373,6 +442,7 @@ async function main() {
   // Pojmenované zdroje → v logu Actions je hned vidět, který přestal vracet data.
   const SOURCES = [
     ['Dražby', fetchDrazby],
+    ['OK dražby', fetchOkdrazby],
     ['SPÚ', fetchProdejSPU],
     ['Bezrealitky', fetchBezrealitky],
     ['Farmy', fetchFarmy],
@@ -405,7 +475,7 @@ async function main() {
   // Vyvážený výběr — ať žádná kategorie nepřeváží (jinak by stovky prodejů
   // zaplavily mapu). Dražby/exekuce bereme podle výhodnosti; u prodeje vybíráme
   // pestrý vzorek napříč cenami (ne jen nejlevnější slivery), ať je mapa zajímavá.
-  const CAP = { sale: 160, drazba: 260, exekuce: 160, obec: 80 };
+  const CAP = { sale: 160, drazba: 600, exekuce: 400, obec: 80 };
   const byType = {};
   for (const o of clean) (byType[o.type] || (byType[o.type] = [])).push(o);
   function spread(arr, n) {
