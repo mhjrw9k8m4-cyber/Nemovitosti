@@ -39,28 +39,6 @@
 
 <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
 
-<!-- Beta oznámení (zavíratelné, uložené v prohlížeči) -->
-<div class="beta-bar" id="beta-bar" role="note" hidden>
-  <div class="wrap beta-wrap">
-    <span class="beta-tag">Beta</span>
-    <span class="beta-text">Parcelka je nová a ještě ji ladíme. <a class="beta-link" href="mailto:info@parcelaka.cz?subject=Zp%C4%9Btn%C3%A1%20vazba%20%E2%80%93%20Parcelka">Budeme rádi za vaši zpětnou vazbu.</a></span>
-    <button type="button" class="beta-close" id="beta-close" aria-label="Zavřít oznámení">&times;</button>
-  </div>
-</div>
-<script>
-(function(){
-  try{
-    if(localStorage.getItem('pk_beta_dismissed')==='1') return;
-    var bar=document.getElementById('beta-bar'); if(!bar) return;
-    bar.removeAttribute('hidden');
-    var x=document.getElementById('beta-close');
-    if(x) x.addEventListener('click', function(){
-      bar.setAttribute('hidden','');
-      try{ localStorage.setItem('pk_beta_dismissed','1'); }catch(e){}
-    });
-  }catch(e){}
-})();
-</script>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="i-map" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
