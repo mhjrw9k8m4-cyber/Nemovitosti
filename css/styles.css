@@ -427,7 +427,10 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-item{position:relative; display:flex; gap:12px; align-items:flex-start; border:1px solid var(--line); border-radius:8px; padding:13px 14px; margin-bottom:14px; cursor:pointer; transition:border-color .15s ease, background .15s ease, transform .1s ease; background:var(--ink);}
 /* Oddělovací čára mezi položkami seznamu — jasnější předěl mezi pozemky */
 .opp-item:not(:last-child)::after{content:""; position:absolute; left:6px; right:6px; bottom:-8px; height:1px; background:rgba(228,236,244,0.34); pointer-events:none;}
-.opp-thumb{flex:none; width:48px; height:48px; border-radius:8px; background:var(--ink-soft2); border:1px solid var(--line); padding:5px; margin-top:2px;}
+/* Náhled = skutečná mini-mapa polohy (jako fotka u realitky), ne placeholder */
+.opp-thumb{position:relative; flex:none; width:94px; height:94px; border-radius:11px; overflow:hidden; background:var(--ink-soft2); border:1px solid var(--line);}
+.opp-map{position:absolute; inset:0; background-size:cover; background-position:center; background-repeat:no-repeat;}
+.opp-pin{position:absolute; width:12px; height:12px; border-radius:50%; border:2px solid #fff; transform:translate(-50%,-50%); box-shadow:0 1px 5px rgba(0,0,0,0.6); z-index:1;}
 .opp-thumb svg{display:block; width:100%; height:100%;}
 .opp-content{flex:1; min-width:0;}
 /* Klidné karty: jednotné pozadí, kategorii nese jen tenký barevný proužek vlevo */

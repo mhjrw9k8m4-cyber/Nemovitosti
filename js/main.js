@@ -890,6 +890,23 @@
     }
     d._poly = pts; return pts;
   }
+  // Skutečný náhled mapy v kartě (jako fotka u realitky) — dlaždice CARTO
+  // vycentrovaná na pozemek se špendlíkem. Tmavé okraje splynou s tématem.
+  function mapThumb(d) {
+    var z = 14;
+    var n = Math.pow(2, z);
+    var latRad = d.lat * Math.PI / 180;
+    var xf = (d.lng + 180) / 360 * n;
+    var yf = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
+    var xt = Math.floor(xf), yt = Math.floor(yf);
+    var s = ['a', 'b', 'c', 'd'][(xt + yt) % 4];
+    var url = 'https://' + s + '.basemaps.cartocdn.com/dark_all/' + z + '/' + xt + '/' + yt + '@2x.png';
+    // celá dlaždice vyplní náhled, špendlík na přesné pozici pozemku
+    var fx = ((xf - xt) * 100).toFixed(1), fy = ((yf - yt) * 100).toFixed(1);
+    var col = TYPE[d.type].color;
+    return '<span class="opp-thumb"><span class="opp-map" style="background-image:url(' + url + ')"></span>' +
+      '<span class="opp-pin" style="left:' + fx + '%;top:' + fy + '%;background:' + col + '"></span></span>';
+  }
   function shapeSvg(d) {
     var p = polyFor(d);
     var lats = p.map(function (x) { return x[0]; }), lngs = p.map(function (x) { return x[1]; });
@@ -1517,7 +1534,7 @@
       }
       if (hot) chips.push('<span class="opp-hot">Doporučujeme</span>');
       li.innerHTML =
-        '<div class="opp-thumb">' + shapeSvg(d) + '</div>' +
+        mapThumb(d) +
         '<div class="opp-content">' +
           '<div class="opp-top"><span class="opp-place">' + d.place + '</span>' +
           '<span class="opp-topr">' +
