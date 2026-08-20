@@ -201,63 +201,7 @@
      Dokud je prázdné, okno upřímně řekne, že odesílání dokončujeme. */
   var FEEDBACK_ENDPOINT = (typeof window !== 'undefined' && window.PK_FORM_ENDPOINT) || '';
   var FEEDBACK_EMAIL = (typeof window !== 'undefined' && window.PK_FORM_EMAIL) || '';
-  var fbModal = document.getElementById('feedback-modal');
-  function openFeedback() {
-    if (!fbModal) return;
-    var st = document.getElementById('fb-status');
-    if (st) { st.textContent = ''; st.classList.remove('err'); }
-    fbModal.removeAttribute('hidden');
-    requestAnimationFrame(function () { fbModal.classList.add('open'); });
-    document.body.style.overflow = 'hidden';
-    var ta = document.getElementById('fb-msg');
-    if (ta) setTimeout(function () { try { ta.focus({ preventScroll: true }); } catch (e) { ta.focus(); } }, 80);
-  }
-  function closeFeedback() {
-    if (!fbModal) return;
-    fbModal.classList.remove('open');
-    document.body.style.overflow = '';
-    setTimeout(function () { fbModal.setAttribute('hidden', ''); }, 250);
-  }
-  var fbOpen = document.getElementById('fb-open');
-  if (fbOpen) fbOpen.addEventListener('click', openFeedback);
-  var fbBeta = document.getElementById('beta-feedback');
-  if (fbBeta) fbBeta.addEventListener('click', function (e) { e.preventDefault(); openFeedback(); });
-  // Otevři formulář zpětné vazby i přes odkaz #zpetna-vazba (funguje i z podstránek:
-  // odkaz index.html#zpetna-vazba přejde na domovskou stránku a okno se otevře samo).
-  function openFeedbackFromHash() {
-    if (location.hash !== '#zpetna-vazba') return;
-    openFeedback();
-    // Kotvu z adresy hned odstraníme, ať web při příštím otevření nezůstává „dole"
-    // a formulář se sám znovu neotevírá.
-    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
-  }
-  openFeedbackFromHash();
-  window.addEventListener('hashchange', openFeedbackFromHash);
-  var fbForm = document.getElementById('fb-form');
-  if (fbForm) {
-    fbForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var ta = document.getElementById('fb-msg');
-      var em = document.getElementById('fb-email');
-      var btn = document.getElementById('fb-send');
-      var st = document.getElementById('fb-status');
-      var msg = ((ta && ta.value) || '').trim();
-      var mail = ((em && em.value) || '').trim();
-      function say(txt, err) { if (st) { st.textContent = txt; st.classList.toggle('err', !!err); } }
-      if (!msg) { if (ta) ta.focus(); say('Napište prosím pár slov.', true); return; }
-      if (SB_READY) {
-        if (btn) btn.disabled = true;
-        say('Odesílám…');
-        sbInsert('messages', { kind: 'zpetna_vazba', email: mail || null, message: msg })
-          .then(function (r) { if (r !== 'ok') throw new Error(); if (ta) ta.value = ''; if (em) em.value = ''; say('Děkujeme! Zprávu jsme dostali.'); setTimeout(closeFeedback, 1400); })
-          .catch(function () { say('Odeslání se teď nepovedlo, zkuste to prosím za chvíli.', true); })
-          .then(function () { if (btn) btn.disabled = false; });
-      } else {
-        // Cíl zatím nenastaven — buďme upřímní, netvrdíme, že se odeslalo.
-        say('Děkujeme za podnět! Odesílání právě dokončujeme — brzy bude plně funkční.');
-      }
-    });
-  }
+  // Zpětná vazba i kontakt jdou napřímo na e-mail info@parcelaka.cz (žádný formulář ani databáze).
 
   /* ---------- Mobilní menu ---------- */
   var toggle = document.querySelector('.nav-toggle');
@@ -554,29 +498,7 @@
   }
 
   /* ---------- Poptávkový formulář pro realitky/obce ---------- */
-  var rForm = document.getElementById('realtor-form');
-  if (rForm) {
-    rForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var name = document.getElementById('rc-name').value.trim();
-      var email = document.getElementById('rc-email').value.trim();
-      var out = document.getElementById('rc-msg-out');
-      if (!name) { out.textContent = 'Napište prosím jméno.'; out.classList.add('err'); return; }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { out.textContent = 'Zadejte prosím platný e-mail.'; out.classList.add('err'); return; }
-      out.classList.remove('err');
-      var org = document.getElementById('rc-org').value.trim();
-      var text = document.getElementById('rc-msg').value.trim();
-      if (!SB_READY) {
-        out.textContent = 'Děkujeme, ' + name.split(' ')[0] + '. Odesílání poptávek právě zprovozňujeme — zkuste to prosím za chvíli znovu.';
-        return;
-      }
-      out.textContent = 'Odesílám…';
-      sbInsert('messages', { kind: 'kontakt', name: name, org: org || null, email: email, message: text || null }).then(function (r) {
-        if (r === 'ok') { out.textContent = 'Děkujeme, ' + name.split(' ')[0] + '. Poptávka dorazila, ozveme se vám na ' + email + '.'; rForm.reset(); }
-        else { out.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; out.classList.add('err'); }
-      });
-    });
-  }
+  // Kontakt jde napřímo na e-mail (viz sekce #realitky) — bez formuláře a databáze.
 
   /* ---------- Scroll-spy: aktivní sekce v menu ---------- */
   var navLinks = Array.prototype.slice.call(document.querySelectorAll('#nav a:not(.btn-primary)'));

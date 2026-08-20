@@ -7,7 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const V = 'v=20260820q';
+const V = 'v=20260820r';
 const MIN_OKRES = 10;   // okres musí mít aspoň tolik nabídek pro vlastní stránku
 const MIN_KRAJ = 15;    // kraj musí mít aspoň tolik nabídek pro vlastní stránku
 
@@ -184,7 +184,7 @@ ${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\
 <div class="beta-bar" id="beta-bar" role="note" hidden>
   <div class="wrap beta-wrap">
     <span class="beta-tag">Beta</span>
-    <span class="beta-text">Parcelka je nová a ještě ji ladíme. <a class="beta-link" href="index.html#zpetna-vazba">Budeme rádi za vaši zpětnou vazbu.</a></span>
+    <span class="beta-text">Parcelka je nová a ještě ji ladíme. <a class="beta-link" href="mailto:info@parcelaka.cz?subject=Zp%C4%9Btn%C3%A1%20vazba%20%E2%80%93%20Parcelka">Budeme rádi za vaši zpětnou vazbu.</a></span>
     <button type="button" class="beta-close" id="beta-close" aria-label="Zavřít oznámení">&times;</button>
   </div>
 </div>

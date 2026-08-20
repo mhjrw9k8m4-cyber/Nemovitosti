@@ -92,7 +92,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260820q">
+  <link rel="stylesheet" href="css/styles.css?v=20260820r">
 </head>
 <body>
 
@@ -103,7 +103,7 @@
 <div class="beta-bar" id="beta-bar" role="note" hidden>
   <div class="wrap beta-wrap">
     <span class="beta-tag">Beta</span>
-    <span class="beta-text">Parcelka je nová a ještě ji ladíme. <a class="beta-link" id="beta-feedback" href="#zpetna-vazba">Budeme rádi za vaši zpětnou vazbu.</a></span>
+    <span class="beta-text">Parcelka je nová a ještě ji ladíme. <a class="beta-link" href="mailto:info@parcelaka.cz?subject=Zp%C4%9Btn%C3%A1%20vazba%20%E2%80%93%20Parcelka">Budeme rádi za vaši zpětnou vazbu.</a></span>
     <button type="button" class="beta-close" id="beta-close" aria-label="Zavřít oznámení">&times;</button>
   </div>
 </div>
@@ -368,18 +368,15 @@
         <div class="rct-copy">
           <div class="eyebrow"><span class="live-dot"></span>Kontakt</div>
           <h2>Ozvěte se nám.</h2>
-          <p>Máte dotaz nebo zájem o spolupráci — třeba mapu pro obec, realitní kancelář či firmu? Napište nám a ozveme se. Bez závazku. <span class="rct-fb">Chcete jen nahlásit chybu nebo poslat nápad na zlepšení? Použijte <a href="#zpetna-vazba">zpětnou vazbu</a>.</span></p>
+          <p>Máte dotaz, nápad na zlepšení, nebo zájem o spolupráci — třeba mapu pro obec, realitní kancelář či firmu? Napište nám přímo na e-mail a ozveme se. Bez závazku.</p>
         </div>
-        <form class="rct-form" id="realtor-form" novalidate>
-          <div class="rct-row">
-            <input id="rc-name" type="text" placeholder="Jméno" autocomplete="name" required>
-            <input id="rc-org" type="text" placeholder="Firma / obec (nepovinné)" autocomplete="organization">
-          </div>
-          <input id="rc-email" type="email" placeholder="vas@email.cz" autocomplete="email" required>
-          <textarea id="rc-msg" rows="3" placeholder="S čím vám můžeme pomoci?"></textarea>
-          <button type="submit" class="btn-primary btn-glow">Odeslat</button>
-          <p class="form-msg" id="rc-msg-out" role="status" aria-live="polite"></p>
-        </form>
+        <div class="rct-form">
+          <a class="kt-mail" href="mailto:info@parcelaka.cz">
+            <span class="kt-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            <span class="kt-txt"><small>Napište nám</small><b>info@parcelaka.cz</b></span>
+          </a>
+          <p class="rules-note" style="margin-top:12px;">Víc kontaktních možností najdete na <a href="kontakt.html">stránce Kontakt</a>.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -450,24 +447,6 @@
       <button type="submit" class="btn-primary btn-glow">Chci upozornění</button>
       <p class="form-msg" id="wm-msg" role="status" aria-live="polite"></p>
       <p class="modal-fine">✓ Bez karty · ✓ Bez hesla · ✓ Odhlásíte kdykoliv · <a href="#" data-info="soukromi" data-close>Zásady soukromí</a></p>
-    </form>
-    <button class="modal-close-bar" type="button" data-close>Zavřít</button>
-  </div>
-</div>
-
-<!-- Zpětná vazba -->
-<div class="modal" id="feedback-modal" role="dialog" aria-modal="true" aria-labelledby="fb-title" hidden>
-  <div class="modal-backdrop" data-close></div>
-  <div class="modal-card">
-    <div class="eyebrow"><span class="live-dot"></span>Zpětná vazba</div>
-    <h3 id="fb-title">Co bychom měli zlepšit?</h3>
-    <p class="modal-sub">Nápad, chyba nebo funkce, která vám chybí — napište nám cokoliv. Každý podnět nám pomáhá Parcelka vylepšovat.</p>
-    <form class="modal-form" id="fb-form" novalidate>
-      <label class="visually-hidden" for="fb-msg">Vaše zpráva</label>
-      <textarea id="fb-msg" rows="4" placeholder="Sem napište, co vám chybí nebo co nefunguje…" maxlength="1000" required></textarea>
-      <button type="submit" class="btn-primary btn-glow" id="fb-send">Odeslat</button>
-      <p class="form-msg" id="fb-status" role="status" aria-live="polite"></p>
-      <p class="modal-fine">Nepovinné údaje · nikam vás nepřihlašujeme · <a href="#" data-info="soukromi" data-close>Zásady soukromí</a></p>
     </form>
     <button class="modal-close-bar" type="button" data-close>Zavřít</button>
   </div>

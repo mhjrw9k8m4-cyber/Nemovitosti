@@ -1097,6 +1097,15 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .auth-trust span{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text-ondark-mute);}
 .auth-trust svg{width:15px; height:15px; color:var(--c-sale); flex:none;}
 @media (max-width:560px){ .auth-card{padding:27px 19px 22px; border-radius:18px;} .auth-title{font-size:20px;} }
+
+/* ---------- Kontaktní e-mail karta (kontakt + „Ozvěte se nám") ---------- */
+.kt-mail{display:inline-flex; align-items:center; gap:14px; margin:6px 0 4px; padding:16px 18px; background:rgba(106,166,242,0.08); border:1px solid rgba(106,166,242,0.24); border-radius:14px; text-decoration:none; transition:border-color .15s ease, background .15s ease;}
+.kt-mail .kt-ico{flex:none; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--copper-bright),var(--copper));}
+.kt-mail .kt-ico svg{width:23px; height:23px; color:#08111C;}
+.kt-mail .kt-txt{min-width:0;}
+.kt-mail .kt-txt small{display:block; font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:var(--text-ondark-mute); font-weight:600;}
+.kt-mail .kt-txt b{font-size:18px; color:var(--text-ondark); word-break:break-word;}
+.kt-mail:hover{border-color:var(--copper-bright); background:rgba(106,166,242,0.13);}
 .add-check.err input{outline:2px solid var(--c-exekuce); outline-offset:1px;}
 .add-steps{display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:12px;}
 .add-step{background:var(--ink-soft); border:1px solid var(--line); border-radius:12px; padding:22px;}
