@@ -130,7 +130,7 @@
           <div class="auth-bar" id="auth-bar" hidden>Přihlášen: <b id="auth-email"></b> · <a href="muj-inzerat.html">Můj profil</a> · <button type="button" id="au-logout" class="linklike">Odhlásit</button></div>
 
           <div class="add-card" id="prodej-card" hidden>
-            <p class="add-lead" style="margin-top:0;"><b>Tip:</b> čím víc vyplníte — <b>fotky, sítě i přístup</b> — tím víc zájemců oslovíte. Nabídka se po odeslání <b>hned objeví na mapě</b> mezi ostatními. Spravovat ji pak můžete přes „Moje inzeráty".</p>
+            <p class="add-lead" style="margin-top:0;">Stačí vyplnit <b>obec, výměru a cenu</b> — zbytek je nepovinný. Po odeslání se nabídka <b>hned objeví na mapě</b> mezi ostatními. Spravovat ji pak můžete v <b>Mém profilu</b>. Zdarma a bez provize.</p>
             <form class="add-form" id="form-prodej" novalidate>
               <div class="add-field">
                 <label for="p-obec">Obec / lokalita <span class="req">*</span></label>
@@ -230,7 +230,7 @@
                 </div>
                 <div class="add-field">
                   <label for="p-kontakt">Telefon nebo e-mail <span class="req">*</span> <span class="hint">(uvidí ho zájemci v inzerátu)</span></label>
-                  <input id="p-kontakt" type="text" placeholder="777 123 456 nebo vas@email.cz" required>
+                  <input id="p-kontakt" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="777 123 456 nebo vas@email.cz" required>
                 </div>
               </div>
               <label class="add-check">
@@ -244,7 +244,7 @@
           <div class="add-success" id="add-success" data-success-for="form-prodej" hidden>
             <div class="asx-check"><svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></div>
             <h2>Hotovo! Nabídka je odeslaná.</h2>
-            <p>Nabídka je hned na mapě mezi ostatními. Spravovat ji (stav, zhlédnutí, smazání) můžete na stránce „Moje inzeráty" — přihlášené stejným účtem.</p>
+            <p>Nabídka je hned na mapě mezi ostatními. Spravovat ji (stav, zhlédnutí, smazání) můžete ve svém <b>profilu</b> — přihlášeném stejným účtem.</p>
             <div class="asx-actions">
               <a href="index.html#mapa" class="btn-primary btn-glow">Zpět na mapu</a>
               <button type="button" class="btn-ghost" id="add-another">Přidat další pozemek</button>
