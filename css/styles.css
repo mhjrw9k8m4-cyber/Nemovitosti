@@ -509,15 +509,18 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .mv-fill{position:absolute; left:0; top:0; bottom:0; background:var(--vc); border-radius:5px; opacity:0.85;}
 .mv-dot{position:absolute; top:50%; width:13px; height:13px; border-radius:50%; background:#fff; border:2px solid var(--vc); transform:translate(-50%,-50%); box-shadow:0 1px 5px rgba(0,0,0,0.5);}
 .mv-scale{display:flex; justify-content:space-between; margin-top:6px; font-size:10px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-ondark-mute);}
-.md-note{margin-top:11px; font-size:11.5px; line-height:1.5; color:var(--text-ondark-mute); border-left:2px solid var(--c-sale); padding-left:9px;}
+.md-note{margin-top:11px; font-size:12px; line-height:1.55; color:var(--text-ondark-mute); border-left:2px solid var(--copper-bright); background:rgba(106,166,242,0.06); border-radius:0 8px 8px 0; padding:9px 11px;}
 .md-note b{color:var(--text-ondark); font-weight:600;}
 /* „Co byste měli vědět" — rozbalovací poradna v detailu (stavba + na co pozor) */
-.md-gtk{margin-top:12px; border:1px solid var(--line); border-radius:11px; background:var(--ink-soft); overflow:hidden;}
-.md-gtk summary{display:flex; align-items:center; gap:9px; padding:12px 14px; cursor:pointer; font-size:13.5px; font-weight:700; color:var(--text-ondark); list-style:none;}
+.md-gtk{margin-top:12px; border:1px solid rgba(106,166,242,0.22); border-radius:11px; background:rgba(106,166,242,0.06); overflow:hidden; transition:border-color .15s ease, background .15s ease;}
+.md-gtk:hover{border-color:rgba(106,166,242,0.42); background:rgba(106,166,242,0.10);}
+.md-gtk summary{display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; font-size:13.5px; font-weight:700; color:var(--text-ondark); list-style:none;}
 .md-gtk summary::-webkit-details-marker{display:none;}
-.md-gtk summary svg{width:17px; height:17px; color:var(--copper-bright); flex:none;}
+.md-gtk summary svg{width:18px; height:18px; color:var(--copper-bright); flex:none; padding:5px; box-sizing:content-box; background:rgba(106,166,242,0.16); border-radius:50%;}
 .md-gtk .gtk-hint{margin-left:auto; font-size:11px; font-weight:600; color:var(--text-ondark-mute); text-transform:lowercase;}
-.md-gtk[open] summary{border-bottom:1px solid var(--line);}
+.md-gtk summary::after{content:"\25BE"; flex:none; color:var(--copper-bright); font-size:12px; transition:transform .2s ease;}
+.md-gtk[open] summary::after{transform:rotate(180deg);}
+.md-gtk[open] summary{border-bottom:1px solid rgba(106,166,242,0.18);}
 .gtk-body{padding:12px 14px; display:flex; flex-direction:column; gap:11px;}
 .gtk-row{display:flex; flex-direction:column; gap:2px; padding-left:11px; border-left:2px solid var(--copper);}
 .gtk-row.gtk-ok{border-left-color:var(--c-sale);}
