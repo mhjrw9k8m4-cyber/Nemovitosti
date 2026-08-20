@@ -78,6 +78,47 @@ const eligibleKraj  = KRAJ_ORDER.filter(k=>byKraj[k] && byKraj[k].length>=MIN_KR
 const hasOkresPage = new Set(eligibleOkres);
 const hasKrajPage  = new Set(eligibleKraj);
 
+/* ---------- Cenový přehled (unikátní funkce): medián Kč/m² podle druhu a regionu ----------
+   Poctivě: počítá se jen z nabídek, kde je cena i výměra; Kč/m² dává smysl jen
+   v rámci jednoho druhu (stavební × pole × les), proto rozdělené podle druhu.
+   Číslo se ukáže jen tam, kde je dost vzorků (MIN_PRICE), a vždy se uvádí počet. */
+const MIN_PRICE = 10;
+const DRUH_GROUPS = ['Zemědělská půda','Lesní pozemek','Zahrada','Stavební'];
+function druhGroup(s){
+  s=(s||'').toLowerCase();
+  if(/stav/.test(s)) return 'Stavební';
+  if(/les/.test(s)) return 'Lesní pozemek';
+  if(/zahrad/.test(s)) return 'Zahrada';
+  if(/orná|orna|louka|travní|travni|pastvin|zeměděl|zemedel|chmel|vinice|sad|ovocn|pole/.test(s)) return 'Zemědělská půda';
+  return 'Ostatní';
+}
+function median(a){ if(!a.length) return 0; a=a.slice().sort((x,y)=>x-y); const n=a.length; return n%2 ? a[(n-1)/2] : (a[n/2-1]+a[n/2])/2; }
+function pctl(a,p){ if(!a.length) return 0; a=a.slice().sort((x,y)=>x-y); return a[Math.max(0,Math.min(a.length-1,Math.floor(a.length*p)))]; }
+// Vrátí mapu skupina -> {n, med, lo, hi} pro danou sadu nabídek (jen platné Kč/m²).
+function priceStats(list){
+  const buckets={};
+  for(const o of list){
+    if(!(o.price>0 && o.area>=100 && o.area<=500000)) continue;
+    const g=druhGroup(o.druh); if(g==='Ostatní') continue;
+    (buckets[g]=buckets[g]||[]).push(o.price/o.area);
+  }
+  const out={};
+  for(const g of Object.keys(buckets)){
+    const v=buckets[g];
+    if(v.length>=MIN_PRICE) out[g]={ n:v.length, med:Math.round(median(v)), lo:Math.round(pctl(v,0.25)), hi:Math.round(pctl(v,0.75)) };
+  }
+  return out;
+}
+const priceNational = priceStats(all);
+const priceByKraj = {}; for(const k of KRAJ_ORDER){ if(byKraj[k]) priceByKraj[k]=priceStats(byKraj[k]); }
+// Kompaktní věta o ceně pro region (nejsilnější skupina = nejvíc vzorků).
+function priceLine(stats){
+  const groups=Object.keys(stats).sort((a,b)=>stats[b].n-stats[a].n);
+  if(!groups.length) return '';
+  const g=groups[0], s=stats[g];
+  return `Medián ceny (${g.toLowerCase()}): <b>${fmt(s.med)} Kč/m²</b> <span class="okr-more" style="display:inline">(orientačně, z ${s.n} nabídek)</span>`;
+}
+
 const SITE = 'https://parcelaka.cz/';
 function crumbNav(items){
   if(!items || !items.length) return '';
@@ -168,7 +209,7 @@ function footer(){
       <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
       <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého.</p>
     </div>
-    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Mapa</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a></nav>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Mapa</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="cena-pozemku.html">Ceny pozemků</a><a href="pridat.html">Přidat pozemek</a></nav>
     <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="index.html#soukromi">Zásady soukromí</a><a href="index.html#podminky">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="index.html#realitky">Kontakt</a></nav>
   </div>
@@ -253,6 +294,7 @@ for(const okres of eligibleOkres){
         ${byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b><span>exekuce</span></div>`:''}
         ${byType.obec?`<div class="okr-stat"><b>${byType.obec}</b><span>záměry obcí</span></div>`:''}
       </div>
+${priceLine(priceStats(list)) ? `      <p class="okr-more" style="margin-top:2px;">${priceLine(priceStats(list))} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
 
       <div class="add-cross" style="margin-top:0;">
         <div class="acx-copy">
@@ -344,6 +386,7 @@ for(const kraj of eligibleKraj){
         ${byType.drazba?`<div class="okr-stat"><b>${byType.drazba}</b><span>dražby</span></div>`:''}
         ${byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b><span>exekuce</span></div>`:''}
       </div>
+${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more" style="margin-top:2px;">${priceLine(priceByKraj[kraj]||{})} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
 
       <div class="add-cross" style="margin-top:0;">
         <div class="acx-copy">
@@ -443,6 +486,97 @@ ${rows}
   write(file, html);
 }
 
+// ---------- CENOVÝ PŘEHLED (unikátní: kolik stojí m² podle druhu a kraje) ----------
+{
+  const file='cena-pozemku.html';
+  // Národní karty podle druhu (jen skupiny s dost vzorky).
+  const natGroups = DRUH_GROUPS.filter(g=>priceNational[g]);
+  const natCards = natGroups.map(g=>{
+    const s=priceNational[g];
+    return `<div class="okr-stat" style="min-width:150px;"><b>${fmt(s.med)} Kč/m²</b><span>${esc(g)} · ${s.lo}–${s.hi} Kč/m² · ${s.n} nabídek</span></div>`;
+  }).join('\n        ');
+
+  // Kraje seřazené podle mediánu zemědělské půdy (nejvíc dat) – barevná „teplota".
+  const key='Zemědělská půda';
+  const rowsData = eligibleKraj
+    .map(k=>({k, s:priceByKraj[k] && priceByKraj[k][key]}))
+    .filter(x=>x.s)
+    .sort((a,b)=>b.s.med-a.s.med);
+  const meds = rowsData.map(x=>x.s.med);
+  const minM=Math.min.apply(null,meds), maxM=Math.max.apply(null,meds);
+  function heat(v){ // 0..1 → jemné copper pozadí
+    const t = maxM>minM ? (v-minM)/(maxM-minM) : 0.5;
+    return `background:rgba(91,184,214,${(0.06+t*0.20).toFixed(3)});`;
+  }
+  const krajRows = rowsData.map(x=>{
+    const les = priceByKraj[x.k] && priceByKraj[x.k]['Lesní pozemek'];
+    const disp = (KRAJ_META[x.k]||{}).disp || (x.k+' kraj');
+    const link = hasKrajPage.has(x.k) ? krajFile(x.k) : ('index.html?kraj='+encodeURIComponent((KRAJ_META[x.k]||{}).mapName||x.k)+'#mapa');
+    return `      <div class="okr-item" style="${heat(x.s.med)}">
+        <a class="okr-place" href="${link}" style="text-decoration:none;">${esc(disp)}</a>
+        <span class="okr-meta">Zemědělská půda <b>${fmt(x.s.med)} Kč/m²</b> · rozpětí ${x.s.lo}–${x.s.hi} · ${x.s.n} nab.${les?` &nbsp;·&nbsp; les <b>${fmt(les.med)} Kč/m²</b> (${les.n})`:''}</span>
+      </div>`;
+  }).join('\n');
+
+  const natZ = priceNational[key];
+  const title = 'Ceny pozemků v ČR — kolik stojí m² pole, lesa a zahrady | Parcelka';
+  const desc = `Kolik stojí metr čtvereční pozemku v Česku? Orientační medián cen z aktuálních nabídek podle druhu (zemědělská půda, les, zahrada) a podle kraje.${natZ?' Zemědělská půda medián '+fmt(natZ.med)+' Kč/m².':''} Zdarma, z veřejných zdrojů.`;
+  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Ceny pozemků v ČR","inLanguage":"cs","description":"Orientační medián cen pozemků (Kč/m²) podle druhu a kraje z aktuálních nabídek.","mainEntityOfPage":`https://parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"}};
+  const crumbs=[{name:'Mapa',href:'index.html',abs:SITE},{name:'Ceny pozemků',abs:SITE+file}];
+
+  const html = head(title,desc,file,jsonld,crumbs) + `
+<main id="obsah">
+
+  <section class="add-hero">
+    <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+    <div class="wrap add-wrap">
+      <div class="eyebrow"><span class="live-dot"></span>Cenový přehled · celá ČR</div>
+      <h1>Kolik stojí pozemek?</h1>
+      <p class="sub">Jednoduchá odpověď na otázku, kterou si klade každý kupující: <b>kolik je metr čtvereční pozemku?</b> Spočítáme <b>orientační medián</b> z aktuálních nabídek na Parcelce — zvlášť pro pole, les i zahradu, protože cena za m² se u nich zásadně liší. Takový přehled zdarma nikde jinde nenajdete.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:20px;">
+    <div class="wrap add-wrap">
+
+      <div class="add-card">
+        <div class="rules-sect">
+          <h2>Medián ceny podle druhu (celá ČR)</h2>
+          <div class="okr-stats" style="margin-bottom:0;">
+        ${natCards || '<p class="rules-note" style="margin:0;">Zatím není dost dat pro spolehlivý výpočet.</p>'}
+          </div>
+          <p class="rules-note">Jde o <b>medián nabídkových cen</b> (ne realizovaných prodejů) z pozemků, u kterých známe cenu i výměru. Rozpětí ukazuje typické ceny (25.–75. percentil, tj. bez krajních výkyvů). Skutečná cena závisí na kvalitě půdy (BPEJ), přístupu, sítích i lokalitě — berte to jako orientaci, ne odhad konkrétního pozemku.</p>
+        </div>
+      </div>
+
+      <div class="add-card" style="margin-top:22px;">
+        <div class="rules-sect">
+          <h2>Zemědělská půda podle kraje</h2>
+          <p class="rules-note" style="margin-top:0;">Seřazeno od nejdražšího kraje. Klepnutím otevřete nabídky v kraji. Tmavší = dražší.</p>
+          <div class="okr-list">
+${krajRows || '      <p class="rules-note" style="margin:0;">Zatím není dost dat po krajích.</p>'}
+          </div>
+        </div>
+      </div>
+
+      <div class="add-cross" style="margin-top:22px;">
+        <div class="acx-copy">
+          <h3>Najděte konkrétní pozemek</h3>
+          <p>Otevřete mapu a porovnejte ceny přímo v místě, které vás zajímá — s prokliky do katastru.</p>
+        </div>
+        <a href="index.html#mapa" class="btn-primary btn-glow">Otevřít mapu →</a>
+      </div>
+
+      <p class="okr-more" style="margin-top:22px;">Souvisí: <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> · <a href="stavebni-vs-zemedelsky-pozemek.html">stavební vs. zemědělský pozemek</a> · <a href="pozemky-podle-okresu.html">pozemky podle regionu</a>.</p>
+
+    </div>
+  </section>
+
+</main>
+` + footer();
+  write(file, html);
+}
+
 // ---------- ROZCESTNÍK ----------
 const totalListed = okresPages.reduce((s,p)=>s+p.count,0);
 let krajGrid = '';
@@ -527,6 +661,7 @@ const staticUrls=[
   {loc:'stavebni-vs-zemedelsky-pozemek.html',cf:'monthly',pr:'0.7'},
   {loc:'list-vlastnictvi-katastr.html',cf:'monthly',pr:'0.7'},
   {loc:'vecne-bremeno-pozemek.html',cf:'monthly',pr:'0.7'},
+  {loc:'cena-pozemku.html',cf:'weekly',pr:'0.8'},
   {loc:'pravidla-inzerce.html',cf:'monthly',pr:'0.4'},
 ];
 let sm='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
