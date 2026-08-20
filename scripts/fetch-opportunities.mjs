@@ -438,6 +438,18 @@ function valid(o) {
   // Jen pozemky v ČR — souřadnice musí padnout do hranic republiky.
   const lat = Number(o.lat), lng = Number(o.lng);
   if (!isFinite(lat) || !isFinite(lng) || lat < 48.4 || lat > 51.2 || lng < 12.0 || lng > 18.95) return false;
+  // Obdélník ale zahrnuje i kus Německa/Rakouska/Polska u hranic. Přesnější test:
+  // bod MUSÍ ležet blízko některého okresního střediska (ČR je hustě pokrytá 76 okresy,
+  // každé místo v ČR je od nějakého do ~30 km). Když je nejbližší okres přes 42 km
+  // daleko, bod leží za hranicemi (např. inzerát se zahraniční GPS) → zahodíme.
+  let nearestSq = Infinity;
+  for (const k in OKRESY_MAP) {
+    const c = OKRESY_MAP[k];
+    const dLat = (c[0] - lat) * 111, dLng = (c[1] - lng) * 71;
+    const sq = dLat * dLat + dLng * dLng;
+    if (sq < nearestSq) nearestSq = sq;
+  }
+  if (nearestSq > 42 * 42) return false;
   return true;
 }
 
