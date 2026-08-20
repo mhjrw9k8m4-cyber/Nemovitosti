@@ -1066,14 +1066,14 @@
         '<div class="md-shape" style="border-color:' + t.color + '55">' + shapeSvg(d) + '</div>' +
         '<div class="md-info">' +
           '<div class="md-top"><span class="lp-dot" style="background:' + t.color + '"></span><b>' + t.label + '</b> · ' + d.place + ', okres ' + d.okres + (isFeatured(d) ? '<span class="md-feat">Zvýrazněno</span>' : '') + cdBig + '</div>' +
-          '<div class="md-price">' + priceLabel + ' <b>' + fmt(d.price) + ' Kč</b>' + (hasArea(d) ? ' <span class="md-price-sep">·</span> <b>' + areaTxt(d) + '</b>' : '') + (perM2 ? ' <span class="md-price-sep">·</span> <b>' + fmt(perM2) + ' Kč/m²</b>' : '') + '</div>' +
+          '<div class="md-sub">' + d.druh + (hasArea(d) ? ' <span class="md-price-sep">·</span> ' + areaTxt(d) : '') + '</div>' +
+          '<div class="md-price">' + priceLabel + ' <b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? ' <span class="md-price-sep">·</span> ' + fmt(perM2) + ' Kč/m²' : '') + '</div>' +
+          priceBarHtml(d) +
           '<details class="md-details"><summary>Detaily o pozemku</summary><div class="md-det-body">' +
             '<div class="md-facts">' +
               (hasParcel(d) ? '<span>Parcela <b>č. ' + d.parcel + '</b></span>' : '') +
-              '<span>Druh <b>' + d.druh + '</b></span>' +
               '<span>Stav <b>' + d.extra + '</b></span>' +
             '</div>' +
-            priceBarHtml(d) +
             (isSPU(d) ? '<div class="md-note">Státní půda se prodává přes <b>veřejnou nabídku SPÚ (§ 12)</b> — otevřete „Nabídka SPÚ", parcelu ověříte přes „Katastr".</div>' : '') +
             (d.type === 'majitel' ? '<div class="md-note">Inzerát vložil <b>majitel pozemku</b>. Parcelka je jen platforma — vlastníka a parcelu si ověřte v katastru.' + (d._lid && typeof d.views === 'number' ? ' · <b>' + d.views + '×</b> zobrazeno' : '') + '</div>' : '') +
             goodToKnowHtml(d) +

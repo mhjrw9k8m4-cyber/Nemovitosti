@@ -1330,3 +1330,5 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .md-details[open] > summary::after{transform:rotate(180deg);}
 .md-det-body{padding:4px 14px 14px;}
 .md-det-body .md-facts{margin-top:0;}
+.md-sub{font-size:14px; color:var(--text-ondark-mute); margin:2px 0 6px; text-transform:capitalize;}
+.md-price{margin-top:0;}
