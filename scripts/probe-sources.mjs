@@ -1,46 +1,46 @@
-// Cílený průzkum okdrazby.cz + portaldrazeb.cz — struktura + robots + detail.
+// Průzkum struktury okdrazby /drazby/pozemky → __NEXT_DATA__ JSON.
 const UA = { 'user-agent': 'ParcelkaBot/0.1 (+https://parcelaka.cz)' };
-const get = async (u) => { const r = await fetch(u, { headers: UA, redirect: 'follow', signal: AbortSignal.timeout(20000) }); return { s: r.status, ct: r.headers.get('content-type') || '', t: await r.text() }; };
+const get = async (u) => (await fetch(u, { headers: UA, redirect: 'follow', signal: AbortSignal.timeout(20000) })).text();
 
-async function robots(base) {
-  try { const r = await get(base + '/robots.txt'); console.log(`\n### robots ${base}\n${r.t.slice(0, 400)}`); } catch (e) { console.log(`robots ${base} chyba: ${e.message}`); }
+function nextData(html) {
+  const m = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
+  return m ? JSON.parse(m[1]) : null;
+}
+// najdi první pole objektů, které vypadá jako seznam dražeb (má hodně prvků s cenou/názvem)
+function findList(obj, depth = 0, path = '') {
+  if (depth > 8 || !obj || typeof obj !== 'object') return null;
+  if (Array.isArray(obj) && obj.length >= 3 && typeof obj[0] === 'object' && obj[0]) {
+    const keys = Object.keys(obj[0]).join(',').toLowerCase();
+    if (/(cena|price|nazev|name|slug|id).*(cena|price|nazev|name|slug|id)/.test(keys) || obj.length >= 8) return { path, arr: obj };
+  }
+  for (const k of Object.keys(obj)) {
+    const r = findList(obj[k], depth + 1, path + '.' + k);
+    if (r) return r;
+  }
+  return null;
 }
 
-console.log('===== ROBOTS =====');
-await robots('https://www.okdrazby.cz');
-await robots('https://www.portaldrazeb.cz');
-
-// okdrazby: najdi odkazy na detail + kategorie pozemky
-console.log('\n===== OKDRAZBY homepage odkazy =====');
 try {
-  const h = await get('https://www.okdrazby.cz/');
-  const links = [...new Set([...h.t.matchAll(/href="(\/[^"]*(?:drazba|detail|polozka|aukce)[^"]*)"/gi)].map(m => m[1]))].slice(0, 10);
-  console.log('vzorek odkazů:', JSON.stringify(links, null, 0).slice(0, 800));
-  // zkusíme kategorii pozemky (běžné filtry)
-  for (const u of ['https://www.okdrazby.cz/drazby/pozemky', 'https://www.okdrazby.cz/katalog?category=pozemky', 'https://www.okdrazby.cz/api/items', 'https://www.okdrazby.cz/drazby?typ=nemovitost']) {
-    try { const r = await get(u); console.log(`  ${u} -> ${r.s} ${r.ct} ${r.t.length}B ${/json/i.test(r.ct) ? 'JSON:' + r.t.slice(0, 200) : ''}`); } catch (e) { console.log(`  ${u} -> chyba ${e.message}`); }
+  const html = await get('https://www.okdrazby.cz/drazby/pozemky');
+  console.log('HTML délka:', html.length);
+  const nd = nextData(html);
+  if (!nd) { console.log('__NEXT_DATA__ NENALEZENO'); }
+  else {
+    const pp = nd.props && nd.props.pageProps;
+    console.log('pageProps klíče:', pp ? Object.keys(pp).join(', ') : '(žádné)');
+    const found = findList(nd);
+    if (found) {
+      console.log('\n>>> seznam na cestě:', found.path, '| počet:', found.arr.length);
+      console.log('klíče prvku:', Object.keys(found.arr[0]).join(', '));
+      console.log('\nUKÁZKA 1. prvku:', JSON.stringify(found.arr[0]).slice(0, 900));
+      console.log('\nUKÁZKA 2. prvku:', JSON.stringify(found.arr[1]).slice(0, 700));
+    } else {
+      console.log('Seznam dražeb v NEXT_DATA nenalezen. Klíče props:', Object.keys(nd.props || {}).join(','));
+    }
+    // hledáme i pagination / total
+    const s = JSON.stringify(nd);
+    const tot = s.match(/"(total|totalCount|count|pocet|totalItems|pages?)":\s*\d+/gi);
+    if (tot) console.log('\npočty/pagination:', [...new Set(tot)].slice(0, 8).join('  '));
   }
-  // stáhni první detail a hledej JSON-LD / schema
-  if (links.length) {
-    const durl = links[0].startsWith('http') ? links[0] : 'https://www.okdrazby.cz' + links[0];
-    const d = await get(durl);
-    console.log(`\n--- DETAIL ${durl} (${d.t.length}B) ---`);
-    const ld = [...d.t.matchAll(/<script[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)].map(m => m[1].trim());
-    if (ld.length) console.log('JSON-LD nalezeno:', ld.map(x => x.slice(0, 400)).join('\n---\n'));
-    else console.log('JSON-LD: NE');
-    // hledej pozemek/výměra/cena v textu
-    const grab = (re) => (d.t.match(re) || []).slice(0, 3).map(s => s.replace(/\s+/g, ' ').trim());
-    console.log('výměra?', grab(/[^<>]{0,30}(m2|m²|výmĕr|výměr)[^<>]{0,30}/gi));
-    console.log('cena?', grab(/[^<>]{0,20}(vyvolávací|nejnižší podání|odhad)[^<>]{0,40}/gi));
-    console.log('druh?', grab(/[^<>]{0,10}(pozemek|orná|zahrada|louka|les|stavební)[^<>]{0,20}/gi));
-  }
-} catch (e) { console.log('okdrazby chyba:', e.message); }
-
-console.log('\n===== PORTALDRAZEB /drazby odkazy =====');
-try {
-  const h = await get('https://www.portaldrazeb.cz/drazby');
-  const links = [...new Set([...h.t.matchAll(/href="([^"]*(?:drazba|detail|zverejnena)[^"]*)"/gi)].map(m => m[1]))].slice(0, 8);
-  console.log('vzorek odkazů:', JSON.stringify(links).slice(0, 700));
-} catch (e) { console.log('portaldrazeb chyba:', e.message); }
-
+} catch (e) { console.log('CHYBA:', e.message); }
 console.log('\n--- hotovo ---');
