@@ -832,8 +832,9 @@
       var shareBtn = e.target.closest('[data-share]');
       if (shareBtn) {
         var url = location.origin + location.pathname + '?p=' + encodeURIComponent(pkey(curDetail));
+        var perM2s = (hasArea(curDetail) && curDetail.price) ? Math.round(curDetail.price / curDetail.area) : null;
         var title = 'Pozemek ' + curDetail.place + ' — Parcelka';
-        var text = TYPE[curDetail.type].label + ' · ' + curDetail.place + ' · ' + areaTxt(curDetail) + ' · ' + fmt(curDetail.price) + ' Kč — detail na Parcelkau:';
+        var text = TYPE[curDetail.type].label + ' · ' + curDetail.place + ', okres ' + curDetail.okres + ' · ' + areaTxt(curDetail) + ' · ' + fmt(curDetail.price) + ' Kč' + (perM2s ? ' (' + fmt(perM2s) + ' Kč/m²)' : '') + '\nDetail na Parcelce:';
         if (navigator.share) {
           navigator.share({ title: title, text: text, url: url }).catch(function () {});
         } else {
