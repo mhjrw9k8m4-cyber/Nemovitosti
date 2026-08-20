@@ -16032,19 +16032,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1051064-nabidka-prodej-pozemku-davle"
     },
     {
-      "place": "Windmühlenweg 7",
-      "okres": "Teplice",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "pozemek",
-      "area": 1047,
-      "price": 250000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 50.97051,
-      "lng": 13.71424,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1051230-nabidka-prodej-pozemku-windmuhlenweg-7-bannewitz-ot-possendorf"
-    },
-    {
       "place": "Trutnov",
       "okres": "Trutnov",
       "type": "sale",
@@ -20803,6 +20790,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1038554-nabidka-prodej-pozemku-roztoky"
     },
     {
+      "place": "Žampiónová",
+      "okres": "Praha-východ",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": 1393,
+      "price": 26467000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.0206383,
+      "lng": 14.5800086,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/804559-nabidka-prodej-pozemku-zampionova-praha"
+    },
+    {
       "place": "Stráž pod Ralskem",
       "okres": "Česká Lípa",
       "type": "sale",
@@ -24616,6 +24616,19 @@
       "url": "https://www.okdrazby.cz/drazba/26856"
     },
     {
+      "place": "Lhota u Nečemic",
+      "okres": "Louny",
+      "type": "drazba",
+      "parcel": "—",
+      "druh": "zemědělský pozemek",
+      "area": null,
+      "price": 1102000,
+      "extra": "dražba 2026-09-22 · OK dražby",
+      "lat": 50.2644361,
+      "lng": 13.5955244,
+      "url": "https://www.okdrazby.cz/drazba/26717"
+    },
+    {
       "place": "Líčkov",
       "okres": "Rakovník",
       "type": "drazba",
@@ -24642,17 +24655,17 @@
       "url": "https://www.okdrazby.cz/drazba/26716"
     },
     {
-      "place": "Lhota u Nečemic",
-      "okres": "Louny",
+      "place": "Mladá Boleslav",
+      "okres": "Mladá Boleslav",
       "type": "drazba",
       "parcel": "—",
-      "druh": "zemědělský pozemek",
+      "druh": "stavební pozemek",
       "area": null,
-      "price": 1102000,
-      "extra": "dražba 2026-09-22 · OK dražby",
-      "lat": 50.2644361,
-      "lng": 13.5955244,
-      "url": "https://www.okdrazby.cz/drazba/26717"
+      "price": 2050000,
+      "extra": "dražba 2026-09-01 · OK dražby",
+      "lat": 50.399894,
+      "lng": 15.01514,
+      "url": "https://www.okdrazby.cz/drazba/26255"
     },
     {
       "place": "Předonín",
@@ -24666,19 +24679,6 @@
       "lat": 50.440393,
       "lng": 14.326133,
       "url": "https://www.okdrazby.cz/drazba/26256"
-    },
-    {
-      "place": "Mladá Boleslav",
-      "okres": "Mladá Boleslav",
-      "type": "drazba",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": null,
-      "price": 2050000,
-      "extra": "dražba 2026-09-01 · OK dražby",
-      "lat": 50.399894,
-      "lng": 15.01514,
-      "url": "https://www.okdrazby.cz/drazba/26255"
     },
     {
       "place": "Havlíčkův Brod",
