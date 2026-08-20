@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260820o">
+  <link rel="stylesheet" href="css/styles.css?v=20260820p">
 </head>
 <body>
 
@@ -104,26 +104,37 @@
         <!-- Formulář v elevované kartě -->
         <div>
           <!-- Přihlášení (ochrana proti spamu) — ukáže se, když uživatel není přihlášený -->
-          <div class="add-card" id="auth-gate" hidden>
-            <div class="rules-sect">
-              <h2 id="auth-title">Přihlaste se a přidejte pozemek</h2>
-              <p class="rules-note" style="margin-top:0;">Kvůli ochraně před spamem je přidání inzerátu jen pro přihlášené. Stačí e-mail a heslo — zdarma, za půl minuty.</p>
+          <div class="auth-card" id="auth-gate" hidden>
+            <div class="auth-head">
+              <div class="auth-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+              <h2 class="auth-title" id="auth-title">Přihlaste se a přidejte pozemek</h2>
+              <p class="auth-sub">Přidání inzerátu je jen pro přihlášené — chrání to mapu před spamem. Účet si vytvoříte zdarma za půl minuty.</p>
             </div>
-            <form class="add-form" id="auth-form" novalidate>
-              <div class="add-field">
+            <form class="auth-form" id="auth-form" novalidate>
+              <div class="auth-field">
                 <label for="au-email">E-mail</label>
-                <input id="au-email" type="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" placeholder="vas@email.cz" required>
+                <div class="auth-inp">
+                  <svg class="auth-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                  <input id="au-email" type="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" placeholder="vas@email.cz" required>
+                </div>
               </div>
-              <div class="add-field">
+              <div class="auth-field">
                 <label for="au-pass">Heslo <span class="hint">(aspoň 6 znaků)</span></label>
-                <input id="au-pass" type="password" autocomplete="current-password" minlength="6" placeholder="••••••" required>
+                <div class="auth-inp">
+                  <svg class="auth-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                  <input id="au-pass" type="password" autocomplete="current-password" minlength="6" placeholder="••••••" required>
+                  <button type="button" class="auth-eye" data-pw-toggle="au-pass" aria-label="Zobrazit heslo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                </div>
               </div>
-              <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <button type="submit" class="btn-primary btn-glow" id="au-login">Přihlásit se</button>
-                <button type="button" class="lp-btn" id="au-signup">Vytvořit účet</button>
-              </div>
-              <p class="add-msg" id="au-msg" role="status" aria-live="polite"></p>
+              <button type="submit" class="btn-primary auth-submit" id="au-login">Přihlásit se</button>
+              <p class="auth-alt">Nemáte účet? <button type="button" class="auth-link" id="au-signup">Vytvořit zdarma</button></p>
+              <p class="add-msg auth-msg" id="au-msg" role="status" aria-live="polite"></p>
             </form>
+            <div class="auth-trust">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v6c0 4 3 6.5 7 9 4-2.5 7-5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>Zabezpečené</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>Žádný spam</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>Zdarma</span>
+            </div>
           </div>
 
           <!-- Lišta „přihlášen jako…" nad formulářem -->
@@ -326,6 +337,19 @@
 <script src="js/config.js?v=20260820i" defer></script>
 <script src="js/auth.js?v=20260818n" defer></script>
 <script src="js/pridat.js?v=20260820i" defer></script>
+<script>
+/* Zobrazit/skrýt heslo v přihlašovací kartě */
+document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('[data-pw-toggle]');
+  if (!b) return;
+  var inp = document.getElementById(b.getAttribute('data-pw-toggle'));
+  if (!inp) return;
+  var show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  b.classList.toggle('on', show);
+  b.setAttribute('aria-label', show ? 'Skrýt heslo' : 'Zobrazit heslo');
+});
+</script>
 <!-- Vercel Web Analytics (navstevnost) -->
 <script defer src="/_vercel/insights/script.js"></script>
 </body>

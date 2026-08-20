@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260820o">
+  <link rel="stylesheet" href="css/styles.css?v=20260820p">
   <style>
     .pf-head{display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
     .pf-avatar{flex:none; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center;
@@ -64,20 +64,37 @@
     <div class="wrap add-wrap">
 
       <!-- Přihlášení -->
-      <div class="add-card" id="mi-auth" hidden>
-        <div class="rules-sect">
-          <h2>Přihlaste se ke svému profilu</h2>
-          <p class="rules-note" style="margin-top:0;">Zadejte e-mail a heslo, kterými jste si vytvořili účet. Nemáte účet? Vytvořte si ho zdarma u přidání pozemku.</p>
+      <div class="auth-card" id="mi-auth" hidden>
+        <div class="auth-head">
+          <div class="auth-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+          <h2 class="auth-title">Přihlaste se ke svému profilu</h2>
+          <p class="auth-sub">Zadejte e-mail a heslo, kterými jste si vytvořili účet. Uvidíte své inzeráty, jejich zhlédnutí i uložené pozemky.</p>
         </div>
-        <form class="add-form" id="mi-auth-form" novalidate>
-          <div class="add-field"><label for="mi-email">E-mail</label><input id="mi-email" type="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" placeholder="vas@email.cz" required></div>
-          <div class="add-field"><label for="mi-pass">Heslo</label><input id="mi-pass" type="password" autocomplete="current-password" minlength="6" placeholder="••••••" required></div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button type="submit" class="btn-primary btn-glow" id="mi-login">Přihlásit se</button>
-            <a class="lp-btn" href="pridat.html">Nemám účet — vytvořit</a>
+        <form class="auth-form" id="mi-auth-form" novalidate>
+          <div class="auth-field">
+            <label for="mi-email">E-mail</label>
+            <div class="auth-inp">
+              <svg class="auth-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+              <input id="mi-email" type="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" placeholder="vas@email.cz" required>
+            </div>
           </div>
-          <p class="add-msg" id="mi-auth-msg" role="status" aria-live="polite"></p>
+          <div class="auth-field">
+            <label for="mi-pass">Heslo</label>
+            <div class="auth-inp">
+              <svg class="auth-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+              <input id="mi-pass" type="password" autocomplete="current-password" minlength="6" placeholder="••••••" required>
+              <button type="button" class="auth-eye" data-pw-toggle="mi-pass" aria-label="Zobrazit heslo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary auth-submit" id="mi-login">Přihlásit se</button>
+          <p class="auth-alt">Nemáte účet? <a class="auth-link" href="pridat.html">Vytvořit zdarma</a></p>
+          <p class="add-msg auth-msg" id="mi-auth-msg" role="status" aria-live="polite"></p>
         </form>
+        <div class="auth-trust">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v6c0 4 3 6.5 7 9 4-2.5 7-5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>Zabezpečené</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>Žádný spam</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>Zdarma</span>
+        </div>
       </div>
 
       <!-- Profil (přihlášený) -->
@@ -264,6 +281,19 @@
     renderSaved();
   });
 })();
+</script>
+<script>
+/* Zobrazit/skrýt heslo v přihlašovací kartě */
+document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('[data-pw-toggle]');
+  if (!b) return;
+  var inp = document.getElementById(b.getAttribute('data-pw-toggle'));
+  if (!inp) return;
+  var show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  b.classList.toggle('on', show);
+  b.setAttribute('aria-label', show ? 'Skrýt heslo' : 'Zobrazit heslo');
+});
 </script>
 </body>
 </html>
