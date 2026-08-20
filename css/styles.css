@@ -1,16 +1,25 @@
 :root{
-  --ink:#233650; --ink-soft:#2E4256; --ink-soft2:#3B5169;
+  /* Neutrály — vrstvená hloubka ploch (architektura + stínování).
+     Modrošedá navy: důvěra a profesionalita, sladěný kontrast. */
+  --bg:#182634;                 /* pozadí stránky — nejhlubší vrstva */
+  --ink:#223243;                /* základní plocha: vstupy, položky, zapuštěné prvky */
+  --ink-soft:#2B3E52;           /* zvýšená plocha: karty a panely */
+  --ink-soft2:#375069;          /* nejvyšší plocha: hover, aktivní */
   --parchment:#EAF1F6; --parchment-dim:#D6E1EA;
-  --text-onlight:#20293A; --text-ondark:#F1F5F9; --text-ondark-mute:#AFBDCA;
-  --copper:#3B7DD8; --copper-bright:#6AA6F2;
-  --c-sale:#4FA877; --c-drazba:#D6A657; --c-exekuce:#D06E5A; --c-obec:#6E95D0; --c-majitel:#9A80C4;
-  --surface-2:#3B5169;
-  --line: rgba(226,235,244,0.13);
-  --line-strong: rgba(226,235,244,0.26);
-  --panel:#293646;
+  --text-onlight:#1B2536;
+  --text-ondark:#EEF4FA;        /* jasný text — vysoký kontrast */
+  --text-ondark-mute:#A6B8CA;   /* tlumený text */
+  /* Primární — modrá (důvěra, jistota, kompetence) */
+  --copper:#3E80DB; --copper-bright:#74ADF7;
+  /* Sémantické: zeleň = půda/růst/hodnota, zlatá = dražba, teracota = exekuce */
+  --c-sale:#4BA97D; --c-drazba:#D8AC5E; --c-exekuce:#D66F59; --c-obec:#6E95D0; --c-majitel:#9E86C8;
+  --surface-2:#375069;
+  --line: rgba(226,235,244,0.12);
+  --line-strong: rgba(226,235,244,0.24);
+  --panel:#223243;
   --radius:10px; --radius-lg:16px;
-  --shadow:0 12px 34px -14px rgba(0,0,0,0.55);
-  --shadow-lg:0 30px 70px -22px rgba(0,0,0,0.62);
+  --shadow:0 14px 38px -14px rgba(0,0,0,0.60);
+  --shadow-lg:0 34px 76px -22px rgba(0,0,0,0.66);
   --ease:cubic-bezier(.22,.61,.36,1);
 }
 
@@ -25,7 +34,7 @@ html{scroll-behavior:smooth; overflow-x:hidden;}
 
 html{overflow-x:clip;}
 html, body{max-width:100%; width:100%;}
-body{background:var(--ink); color:var(--text-ondark); font-family:'Inter',sans-serif; line-height:1.58; -webkit-font-smoothing:antialiased; overflow-x:clip; overscroll-behavior-x:none; position:relative;}
+body{background:var(--bg); color:var(--text-ondark); font-family:'Inter',sans-serif; line-height:1.58; -webkit-font-smoothing:antialiased; overflow-x:clip; overscroll-behavior-x:none; position:relative;}
 h1, h2, h3, h4{overflow-wrap:break-word; word-break:break-word;}
 img, svg, table, pre{max-width:100%;}
 /* Přístupnost: čistý focus rámeček při ovládání klávesnicí (nezobrazí se u myši/dotyku) */
@@ -154,7 +163,7 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 @keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(2.2); opacity:0;}}
 
 /* Header */
-header{border-bottom:1px solid var(--line); padding:20px 0; position:sticky; top:0; z-index:1000; background:rgba(22,35,47,0.85); backdrop-filter:blur(10px); transition:padding .2s ease;}
+header{border-bottom:1px solid var(--line); padding:20px 0; position:sticky; top:0; z-index:1000; background:rgba(24,38,52,0.82); backdrop-filter:blur(12px); transition:padding .2s ease;}
 header.shrink{padding:12px 0;}
 header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .logo{font-family:'Inter',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:22px; display:flex; align-items:center; gap:10px; text-decoration:none;}
@@ -176,8 +185,8 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px); z-index:4000; max-width:calc(100% - 32px); background:var(--ink-soft2); border:1px solid var(--copper); color:var(--text-ondark); font-size:13.5px; font-weight:500; padding:13px 20px; border-radius:10px; box-shadow:0 14px 36px -10px rgba(0,0,0,0.7); opacity:0; transition:opacity .3s var(--ease), transform .3s var(--ease); pointer-events:none;}
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
-.btn-primary{background:var(--copper-bright); color:#0B1017; font-weight:650; font-size:14px; padding:10px 20px; border-radius:9px; text-decoration:none; border:1px solid var(--copper-bright); transition:filter .15s ease, transform .1s ease, box-shadow .15s ease; white-space:nowrap; cursor:pointer;}
-.btn-primary:hover{filter:brightness(1.07);}
+.btn-primary{background:linear-gradient(135deg, var(--copper-bright), var(--copper)); color:#08111C; font-weight:700; font-size:14px; padding:10px 20px; border-radius:9px; text-decoration:none; border:1px solid rgba(116,173,247,0.55); box-shadow:0 8px 22px -8px rgba(62,128,219,0.55); transition:filter .15s ease, transform .1s ease, box-shadow .15s ease; white-space:nowrap; cursor:pointer;}
+.btn-primary:hover{filter:brightness(1.06); box-shadow:0 12px 28px -8px rgba(62,128,219,0.68);}
 .btn-primary:active{transform:translateY(1px);}
 /* Stálé CTA „Přidat pozemek" v liště. Na počítači je akce už v navigaci,
    tady se skryje; na mobilu se ukáže přímo v liště (aby bylo vidět hned,
