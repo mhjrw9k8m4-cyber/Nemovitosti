@@ -149,7 +149,7 @@ function footer(){
       <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého.</p>
     </div>
     <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Mapa</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a></nav>
-    <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="drazby-pozemku-nabidky.html">Dražby — nabídky</a><a href="exekuce-pozemku.html">Exekuce na pozemku</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
+    <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="drazby-pozemku-nabidky.html">Dražby — nabídky</a><a href="exekuce-pozemku.html">Exekuce na pozemku</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="vecne-bremeno-pozemek.html">Věcné břemeno</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="index.html#soukromi">Zásady soukromí</a><a href="index.html#podminky">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="index.html#realitky">Kontakt</a></nav>
   </div>
   <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
@@ -517,6 +517,8 @@ const staticUrls=[
   {loc:'pozemek-od-obce.html',cf:'monthly',pr:'0.7'},
   {loc:'pristupova-cesta-pozemek.html',cf:'monthly',pr:'0.7'},
   {loc:'stavebni-vs-zemedelsky-pozemek.html',cf:'monthly',pr:'0.7'},
+  {loc:'list-vlastnictvi-katastr.html',cf:'monthly',pr:'0.7'},
+  {loc:'vecne-bremeno-pozemek.html',cf:'monthly',pr:'0.7'},
   {loc:'pravidla-inzerce.html',cf:'monthly',pr:'0.4'},
 ];
 let sm='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
