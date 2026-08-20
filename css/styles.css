@@ -982,14 +982,22 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
      menu zůstává nahoře v liště — nezabírá celou obrazovku. top:100% = výška
      hlavičky (ta je díky backdrop-filter kontejnerem), max-height s dvh pojistí,
      že se dlouhé menu vejde a nepřeteče přes lištu iOS. */
-  #nav{position:fixed; top:100%; left:0; right:0; max-height:calc(100dvh - 100%); flex-direction:column; align-items:stretch; gap:0; background:var(--ink); padding:12px 24px calc(20px + env(safe-area-inset-bottom, 0px)); border-radius:0 0 22px 22px; box-shadow:0 26px 52px -14px rgba(0,0,0,0.65); border-bottom:1px solid var(--line); display:none; overflow-y:auto; overscroll-behavior:contain; z-index:5;}
+  #nav{position:fixed; top:100%; left:0; right:0; max-height:calc(100dvh - 100%); flex-direction:column; align-items:stretch; gap:0; background:var(--ink); padding:12px 12px calc(18px + env(safe-area-inset-bottom, 0px)); border-radius:0 0 22px 22px; box-shadow:0 26px 52px -14px rgba(0,0,0,0.65); border-bottom:1px solid var(--line); display:none; overflow-y:auto; overscroll-behavior:contain; z-index:5;}
   #nav.open{display:flex; animation:navdrop .22s var(--ease);}
   /* Ztmavené pozadí pod panelem (bez zásahu do HTML — pseudo na body) */
   body.nav-open::before{content:""; position:fixed; inset:0; background:rgba(6,12,16,0.55); z-index:4; animation:navdrop .22s var(--ease);}
   @keyframes navdrop{from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);}}
-  #nav a:not(.btn-primary){display:flex; align-items:center; justify-content:space-between; padding:17px 2px; border-bottom:1px solid rgba(228,236,244,0.07); font-family:'Inter',sans-serif; font-size:21px; font-weight:500; color:var(--text-ondark); letter-spacing:-0.01em;}
-  #nav a:not(.btn-primary)::after{content:"→"; font-family:'Inter',sans-serif; font-size:16px; color:var(--copper-bright); opacity:0.55;}
-  #nav a:not(.btn-primary):active{color:var(--copper-bright);}
+  /* Položky menu jako řádky aplikace: ikona + název + jemná šipka, zaoblené, reagují na dotek */
+  #nav a:not(.btn-primary){display:flex; align-items:center; gap:15px; padding:15px 14px; margin-bottom:2px; border-radius:14px; border-bottom:none; font-family:'Inter',sans-serif; font-size:18px; font-weight:600; color:var(--text-ondark); letter-spacing:-0.01em; transition:background .15s ease, color .15s ease;}
+  #nav a:not(.btn-primary)::before{content:""; flex:none; width:24px; height:24px; background-repeat:no-repeat; background-position:center; background-size:22px 22px; opacity:0.92;}
+  #nav a:not(.btn-primary)::after{content:"›"; position:static; margin-left:auto; width:auto; height:auto; background:none; border-radius:0; font-family:'Inter',sans-serif; font-size:22px; font-weight:600; color:var(--text-ondark-mute); opacity:0.75; transition:transform .15s ease, color .15s ease;}
+  #nav a:not(.btn-primary):active, #nav a:not(.btn-primary).active{background:rgba(106,166,242,0.13); color:var(--copper-bright);}
+  #nav a:not(.btn-primary):active::after, #nav a:not(.btn-primary).active::after{content:"›"; color:var(--copper-bright); opacity:1; transform:translateX(2px);}
+  /* Ikony podle cíle odkazu (bez zásahu do HTML) */
+  #nav a[href$="#mapa"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239fb4c8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");}
+  #nav a[href$="cena-pozemku.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239fb4c8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-8-8V3h9.6l8.4 8.4a2 2 0 0 1 0 2.8z'/%3E%3Cline x1='7.5' y1='7.5' x2='7.51' y2='7.5'/%3E%3C/svg%3E");}
+  #nav a[href$="muj-inzerat.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239fb4c8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4 4-6 8-6s8 2 8 6'/%3E%3C/svg%3E");}
+  #nav a[href$="#faq"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239fb4c8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M9.5 9.2a2.5 2.5 0 1 1 3.4 2.4c-.7.3-1.1.9-1.1 1.7'/%3E%3Cline x1='12' y1='16.6' x2='12.01' y2='16.6'/%3E%3C/svg%3E");}
   /* Případné tlačítko, které v menu zůstává (např. „Zpět na mapu" na podstránkách),
      dole jako plná akce. „Přidat pozemek" je stále v liště (.header-cta). */
   #nav a.btn-primary{text-align:center; margin-top:16px; border-bottom:0; padding:15px 20px; font-size:16px; font-weight:700; color:var(--ink); border-radius:12px;}
