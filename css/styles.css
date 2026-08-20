@@ -1,13 +1,13 @@
 :root{
-  --ink:#0F141A; --ink-soft:#171E26; --ink-soft2:#1F2831;
+  --ink:#0A0E13; --ink-soft:#1A222B; --ink-soft2:#26313C;
   --parchment:#EAF1F6; --parchment-dim:#D6E1EA;
-  --text-onlight:#20293A; --text-ondark:#EFF3F7; --text-ondark-mute:#98A6B4;
+  --text-onlight:#20293A; --text-ondark:#F1F5F9; --text-ondark-mute:#AFBDCA;
   --copper:#3B7DD8; --copper-bright:#6AA6F2;
   --c-sale:#4FA877; --c-drazba:#D6A657; --c-exekuce:#D06E5A; --c-obec:#6E95D0; --c-majitel:#9A80C4;
-  --surface-2:#1E2831;
-  --line: rgba(226,235,244,0.12);
-  --line-strong: rgba(226,235,244,0.24);
-  --panel:#1b232c;
+  --surface-2:#26313C;
+  --line: rgba(226,235,244,0.13);
+  --line-strong: rgba(226,235,244,0.26);
+  --panel:#212b35;
   --radius:10px; --radius-lg:16px;
   --shadow:0 12px 34px -14px rgba(0,0,0,0.55);
   --shadow-lg:0 30px 70px -22px rgba(0,0,0,0.62);
@@ -1311,3 +1311,10 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .hero-stats .ts-n{color:var(--text-ondark,#EAE6DD);}
 .hero-stats .ts-n b{color:var(--copper-bright,#5BB8D6); font-weight:700; font-size:1.08em;}
 .hero-stats .ts-sep{color:var(--line-strong,#3a4d5f);}
+
+/* ---------- Čitelnost obsahových stránek (rádce, regiony, ceny) ---------- */
+.add-card p{ color:var(--text-ondark); font-size:15.5px; line-height:1.68; }
+.rules-sect p{ color:var(--text-ondark); }
+.add-card .rules-note, .rules-sect .rules-note{ color:var(--text-ondark-mute); }
+.rule-list li{ color:var(--text-ondark); line-height:1.62; }
+.add-hero .sub, .hero-head .sub{ color:#CAD5E0; }
