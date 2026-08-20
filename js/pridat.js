@@ -431,7 +431,7 @@
     refresh();
     var msg = document.getElementById('au-msg');
     function say(t, err) { if (msg) { msg.textContent = t; msg.className = 'add-msg' + (err ? ' err' : ' ok'); } }
-    function creds() { return { e: ((document.getElementById('au-email') || {}).value || '').trim(), p: (document.getElementById('au-pass') || {}).value || '' }; }
+    function creds() { return { e: ((document.getElementById('au-email') || {}).value || '').trim().toLowerCase(), p: (document.getElementById('au-pass') || {}).value || '' }; }
     function okCreds(c) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e)) { say('Zadejte platný e-mail.', true); return false; }
       if (c.p.length < 6) { say('Heslo musí mít aspoň 6 znaků.', true); return false; }

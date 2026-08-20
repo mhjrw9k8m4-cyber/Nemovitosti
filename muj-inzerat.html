@@ -43,7 +43,7 @@
     <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
     <nav id="nav" aria-label="Hlavní navigace">
       <a href="index.html#mapa">Mapa</a>
-      <a href="pridat.html" class="nav-add">Přidat pozemek</a>
+      <a href="muj-inzerat.html">Můj profil</a><a href="pridat.html" class="nav-add">Přidat pozemek</a>
       <a href="index.html#mapa" class="btn-primary">Zpět na mapu</a>
     </nav>
   </div>
@@ -69,7 +69,7 @@
           <p class="rules-note" style="margin-top:0;">Zadejte e-mail a heslo, kterými jste si vytvořili účet. Nemáte účet? Vytvořte si ho zdarma u přidání pozemku.</p>
         </div>
         <form class="add-form" id="mi-auth-form" novalidate>
-          <div class="add-field"><label for="mi-email">E-mail</label><input id="mi-email" type="email" autocomplete="email" placeholder="vas@email.cz" required></div>
+          <div class="add-field"><label for="mi-email">E-mail</label><input id="mi-email" type="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" placeholder="vas@email.cz" required></div>
           <div class="add-field"><label for="mi-pass">Heslo</label><input id="mi-pass" type="password" autocomplete="current-password" minlength="6" placeholder="••••••" required></div>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button type="submit" class="btn-primary btn-glow" id="mi-login">Přihlásit se</button>
@@ -198,7 +198,7 @@
     function say(t, err){ if(amsg){ amsg.textContent=t; amsg.className='add-msg'+(err?' err':' ok'); } }
     if (af) af.addEventListener('submit', function (e) {
       e.preventDefault();
-      var em = (q('mi-email').value||'').trim(), pw = q('mi-pass').value||'';
+      var em = (q('mi-email').value||'').trim().toLowerCase(), pw = q('mi-pass').value||'';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { say('Zadejte platný e-mail.', true); return; }
       if (pw.length < 6) { say('Heslo musí mít aspoň 6 znaků.', true); return; }
       say('Přihlašuji…');
