@@ -21,6 +21,26 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://parcelaka.cz/kolik-stoji-koupe-pozemku.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemek-od-obce.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pristupova-cesta-pozemek.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/stavebni-vs-zemedelsky-pozemek.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://parcelaka.cz/pravidla-inzerce.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
