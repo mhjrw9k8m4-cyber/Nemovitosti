@@ -78,7 +78,27 @@ const eligibleKraj  = KRAJ_ORDER.filter(k=>byKraj[k] && byKraj[k].length>=MIN_KR
 const hasOkresPage = new Set(eligibleOkres);
 const hasKrajPage  = new Set(eligibleKraj);
 
-function head(title, desc, canonicalPath, jsonld){
+const SITE = 'https://parcelaka.cz/';
+function crumbNav(items){
+  if(!items || !items.length) return '';
+  const inner = items.map(it=> it.href
+    ? `<a href="${attr(it.href)}">${esc(it.name)}</a>`
+    : `<span aria-current="page">${esc(it.name)}</span>`
+  ).join('<span class="crumb-sep" aria-hidden="true">›</span>');
+  return `\n<nav class="crumbs" aria-label="Drobečková navigace">${inner}</nav>\n`;
+}
+function crumbLd(items){
+  return {"@type":"BreadcrumbList","itemListElement":items.map((it,i)=>{
+    const li={"@type":"ListItem","position":i+1,"name":it.name};
+    if(it.abs) li.item = it.abs;
+    return li;
+  })};
+}
+function head(title, desc, canonicalPath, ld, crumbs){
+  // ld může být objekt nebo pole; přidáme BreadcrumbList, je-li předán.
+  let ldArr = Array.isArray(ld) ? ld.slice() : (ld ? [ld] : []);
+  if(crumbs && crumbs.length) ldArr.push(crumbLd(crumbs));
+  const jsonld = ldArr.length ? JSON.stringify(ldArr.length===1 ? ldArr[0] : ldArr) : '';
   return `<!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -138,7 +158,7 @@ ${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\
     </nav>
   </div>
 </header>
-`;
+${crumbNav(crumbs)}`;
 }
 function footer(){
   return `
@@ -197,15 +217,21 @@ for(const okres of eligibleOkres){
   const title = `Pozemky v okrese ${okres} — prodej, dražby, exekuce | Parcelka`;
   const desc = `${count} ${pluralPozemek(count)} v okrese ${okres}${kraj?', '+dispK:''} na jedné mapě — prodeje, dražby i exekuce z veřejných zdrojů. ${minP?('Ceny od '+fmt(minP)+' Kč. '):''}Ověřte si nabídku v katastru.`;
   const items = list.slice(0,20).map((o,i)=>({"@type":"ListItem","position":i+1,"name":`${o.place} — ${TYPE_LABEL[o.type]||o.type}${o.area?', '+o.area+' m²':''}`}));
-  const jsonld = JSON.stringify({"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky v okrese ${okres}`,"inLanguage":"cs","description":`Nabídky pozemků v okrese ${okres} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}});
+  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky v okrese ${okres}`,"inLanguage":"cs","description":`Nabídky pozemků v okrese ${okres} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}};
   const rows = list.map(itemRow).join('\n');
   const mapName = (KRAJ_META[kraj]||{}).mapName || kraj;
   const krajLink = mapName ? `index.html?kraj=${encodeURIComponent(mapName)}#mapa` : 'index.html#mapa';
   const siblings = eligibleOkres.filter(x=>x!==okres && OKRES_KRAJ[x]===kraj).sort((a,b)=>byOkres[b].length-byOkres[a].length).slice(0,6);
   const sibLinks = siblings.map(x=>`<a href="${okresFile(x)}">Pozemky ${esc(x)} <span>${byOkres[x].length}</span></a>`).join('');
   const krajBack = hasKrajPage.has(kraj) ? `<a href="${krajFile(kraj)}">Celý ${esc(dispK)} →</a>` : `<a href="pozemky-podle-okresu.html">Všechny okresy →</a>`;
+  const crumbs = [
+    {name:'Mapa', href:'index.html', abs:SITE},
+    {name:'Pozemky podle okresů', href:'pozemky-podle-okresu.html', abs:SITE+'pozemky-podle-okresu.html'},
+  ];
+  if(hasKrajPage.has(kraj)) crumbs.push({name:dispK, href:krajFile(kraj), abs:SITE+krajFile(kraj)});
+  crumbs.push({name:'Okres '+okres, abs:SITE+file});
 
-  const html = head(title,desc,file,jsonld) + `
+  const html = head(title,desc,file,jsonld,crumbs) + `
 <main id="obsah">
 
   <section class="add-hero">
@@ -299,9 +325,14 @@ for(const kraj of eligibleKraj){
 
   const title = `Pozemky ${meta.disp} — prodej, dražby, exekuce | Parcelka`;
   const desc = `Pozemky ${meta.loc} na jedné mapě — ${count} ${pluralPozemek(count)} z veřejných zdrojů: prodeje, dražby i exekuce. ${minP?('Ceny od '+fmt(minP)+' Kč. '):''}Vyberte okres a ověřte nabídku v katastru.`;
-  const jsonld = JSON.stringify({"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky ${meta.disp}`,"inLanguage":"cs","description":`Nabídky pozemků ${meta.loc} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"}});
+  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky ${meta.disp}`,"inLanguage":"cs","description":`Nabídky pozemků ${meta.loc} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"}};
+  const crumbs = [
+    {name:'Mapa', href:'index.html', abs:SITE},
+    {name:'Pozemky podle okresů', href:'pozemky-podle-okresu.html', abs:SITE+'pozemky-podle-okresu.html'},
+    {name:meta.disp, abs:SITE+file},
+  ];
 
-  const html = head(title,desc,file,jsonld) + `
+  const html = head(title,desc,file,jsonld,crumbs) + `
 <main id="obsah">
 
   <section class="add-hero">
@@ -382,8 +413,13 @@ const drazby = all.filter(o=>o.type==='drazba').sort((a,b)=>(a.price||1e15)-(b.p
   const title = `Dražby pozemků — aktuální nabídky v ČR | Parcelka`;
   const desc = `${count} ${pluralPozemek(count)} v dražbě z celé ČR na jedné mapě — z veřejné evidence dražeb. ${minP?('Vyvolávací ceny od '+fmt(minP)+' Kč. '):''}Jak dražba funguje i na co si dát pozor.`;
   const items = drazby.slice(0,20).map((o,i)=>({"@type":"ListItem","position":i+1,"name":`${o.place} — dražba${o.area?', '+o.area+' m²':''}`}));
-  const jsonld = JSON.stringify({"@context":"https://schema.org","@type":"CollectionPage","name":"Dražby pozemků v ČR","inLanguage":"cs","description":`Aktuální nabídky pozemků v dražbě z veřejné evidence dražeb.`,"mainEntityOfPage":`https://parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}});
-  const html = head(title,desc,file,jsonld) + `
+  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Dražby pozemků v ČR","inLanguage":"cs","description":`Aktuální nabídky pozemků v dražbě z veřejné evidence dražeb.`,"mainEntityOfPage":`https://parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}};
+  const crumbs = [
+    {name:'Mapa', href:'index.html', abs:SITE},
+    {name:'Koupě v dražbě', href:'drazby-pozemku.html', abs:SITE+'drazby-pozemku.html'},
+    {name:'Aktuální dražby', abs:SITE+file},
+  ];
+  const html = head(title,desc,file,jsonld,crumbs) + `
 <main id="obsah">
 
   <section class="add-hero">
@@ -459,8 +495,9 @@ if(lastKraj!==null) okresBody += `          </div>\n`;
 
 const idxTitle='Pozemky podle krajů a okresů — prodej, dražby a exekuce | Parcelka';
 const idxDesc=`Přehled pozemků v ${krajPages.length} krajích a ${okresPages.length} okresech Česka — prodeje, dražby a exekuce z veřejných zdrojů na jedné mapě. Vyberte region a prohlédněte si aktuální nabídky.`;
-const idxJsonld=JSON.stringify({"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky podle krajů a okresů","inLanguage":"cs","description":idxDesc,"mainEntityOfPage":"https://parcelaka.cz/pozemky-podle-okresu.html","publisher":{"@type":"Organization","name":"Parcelka"}});
-const idxHtml = head(idxTitle,idxDesc,'pozemky-podle-okresu.html',idxJsonld) + `
+const idxJsonld={"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky podle krajů a okresů","inLanguage":"cs","description":idxDesc,"mainEntityOfPage":"https://parcelaka.cz/pozemky-podle-okresu.html","publisher":{"@type":"Organization","name":"Parcelka"}};
+const idxCrumbs=[{name:'Mapa', href:'index.html', abs:SITE},{name:'Pozemky podle krajů a okresů', abs:SITE+'pozemky-podle-okresu.html'}];
+const idxHtml = head(idxTitle,idxDesc,'pozemky-podle-okresu.html',idxJsonld,idxCrumbs) + `
 <main id="obsah">
 
   <section class="add-hero">

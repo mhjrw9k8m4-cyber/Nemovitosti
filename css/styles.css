@@ -1296,3 +1296,10 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .okr-index-grid a:hover{border-color:var(--copper-bright,#5BB8D6);}
 .okr-index-grid a span{color:var(--muted,#9DB0BE); font-weight:500; font-size:13px;}
 .okr-kraj-h{margin:24px 0 4px; font-size:14px; text-transform:uppercase; letter-spacing:.05em; color:var(--copper-bright,#5BB8D6);}
+
+/* ---------- Drobečková navigace na regionálních/rádcových stránkách ---------- */
+.crumbs{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; max-width:var(--maxw,1120px); margin:0 auto; padding:14px 24px 0; font-size:13px; color:var(--muted,#9DB0BE);}
+.crumbs a{color:var(--muted,#9DB0BE); text-decoration:none;}
+.crumbs a:hover{color:var(--copper-bright,#5BB8D6); text-decoration:underline;}
+.crumbs span[aria-current="page"]{color:var(--text-ondark,#EAE6DD); font-weight:600;}
+.crumbs .crumb-sep{color:var(--line-strong,#3a4d5f);}
