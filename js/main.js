@@ -820,14 +820,16 @@
     var below = 0;
     for (var i = 0; i < arr.length; i++) { if (arr[i] <= val) below++; }
     var pct = Math.max(2, Math.min(98, Math.round(below / arr.length * 100))); // 0 = nejlevnější
-    var cls, label;
-    if (pct <= 35) { cls = 'good'; label = 'levnější než ' + (100 - pct) + ' % podobných'; }
-    else if (pct >= 65) { cls = 'bad'; label = 'dražší než ' + pct + ' % podobných'; }
-    else { cls = 'mid'; label = 'průměrná cena mezi podobnými'; }
     var typeWord = d.type === 'sale' ? 'v prodeji' : (d.type === 'drazba' ? 'v dražbě' : 'v nabídce');
-    return '<div class="md-bar ' + cls + '">' +
-      '<div class="md-bar-head"><span>Cena/m² mezi „' + g.toLowerCase() + '" ' + typeWord + '</span><b>' + label + '</b></div>' +
-      '<div class="md-bar-track"><span class="md-bar-med" style="left:50%"></span><span class="md-bar-dot" style="left:' + pct + '%"></span></div>' +
+    var cls, badge, text;
+    if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + (100 - pct) + ' %</b> podobných pozemků ' + typeWord + '.'; }
+    else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> podobných pozemků ' + typeWord + '.'; }
+    else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> podobných pozemků ' + typeWord + '.'; }
+    return '<div class="md-verdict ' + cls + '">' +
+      '<div class="mv-top"><span class="mv-badge">' + badge + '</span><span class="mv-cmp">Cena za m²</span></div>' +
+      '<div class="mv-text">' + text + '</div>' +
+      '<div class="mv-track"><span class="mv-fill" style="width:' + pct + '%"></span><span class="mv-dot" style="left:' + pct + '%"></span></div>' +
+      '<div class="mv-scale"><span>levné</span><span>drahé</span></div>' +
       '</div>';
   }
   // Jak výhodná je cena za m² oproti podobným (stejný typ+druh) — vrací percentil

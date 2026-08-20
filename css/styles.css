@@ -494,6 +494,21 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .md-bar-track{position:relative; height:8px; border-radius:5px; background:linear-gradient(90deg, rgba(62,142,91,0.55), rgba(217,164,65,0.55) 50%, rgba(193,91,68,0.55));}
 .md-bar-med{position:absolute; top:-3px; width:2px; height:14px; background:var(--text-ondark); opacity:0.5;}
 .md-bar-dot{position:absolute; top:50%; width:12px; height:12px; border-radius:50%; background:#fff; border:2px solid var(--ink); transform:translate(-50%,-50%); box-shadow:0 1px 4px rgba(0,0,0,0.55);}
+/* Hodnocení ceny — barevná karta s odznakem (výhodná / průměrná / vyšší cena) */
+.md-verdict{--vc:var(--copper-bright); margin:0 0 14px; padding:12px 14px 13px; border-radius:12px; border:1px solid rgba(255,255,255,0.10); background:rgba(255,255,255,0.03);}
+.md-verdict.good{--vc:#4FA877; border-color:rgba(79,168,119,0.30); background:rgba(79,168,119,0.09);}
+.md-verdict.mid{--vc:var(--copper-bright); border-color:rgba(106,166,242,0.30); background:rgba(106,166,242,0.08);}
+.md-verdict.bad{--vc:#E58A72; border-color:rgba(208,110,90,0.32); background:rgba(208,110,90,0.10);}
+.mv-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:7px;}
+.mv-badge{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; letter-spacing:0.01em; color:#0C1720; background:var(--vc); border-radius:999px; padding:4px 11px 4px 10px;}
+.mv-badge::before{content:""; width:6px; height:6px; border-radius:50%; background:#0C1720; opacity:0.55;}
+.mv-cmp{font-size:10.5px; font-weight:700; letter-spacing:0.09em; text-transform:uppercase; color:var(--text-ondark-mute);}
+.mv-text{font-size:13px; line-height:1.5; color:var(--text-ondark); margin-bottom:10px;}
+.mv-text b{color:var(--vc); font-weight:700;}
+.mv-track{position:relative; height:7px; border-radius:5px; background:rgba(255,255,255,0.10);}
+.mv-fill{position:absolute; left:0; top:0; bottom:0; background:var(--vc); border-radius:5px; opacity:0.85;}
+.mv-dot{position:absolute; top:50%; width:13px; height:13px; border-radius:50%; background:#fff; border:2px solid var(--vc); transform:translate(-50%,-50%); box-shadow:0 1px 5px rgba(0,0,0,0.5);}
+.mv-scale{display:flex; justify-content:space-between; margin-top:6px; font-size:10px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-ondark-mute);}
 .md-note{margin-top:11px; font-size:11.5px; line-height:1.5; color:var(--text-ondark-mute); border-left:2px solid var(--c-sale); padding-left:9px;}
 .md-note b{color:var(--text-ondark); font-weight:600;}
 /* „Co byste měli vědět" — rozbalovací poradna v detailu (stavba + na co pozor) */
