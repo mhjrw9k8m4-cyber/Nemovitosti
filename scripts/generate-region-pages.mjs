@@ -111,6 +111,7 @@ function priceStats(list){
 }
 const priceNational = priceStats(all);
 const priceByKraj = {}; for(const k of KRAJ_ORDER){ if(byKraj[k]) priceByKraj[k]=priceStats(byKraj[k]); }
+const priceByOkres = {}; for(const ok of Object.keys(byOkres)){ priceByOkres[ok]=priceStats(byOkres[ok]); }
 // Kompaktní věta o ceně pro region (nejsilnější skupina = nejvíc vzorků).
 function priceLine(stats){
   const groups=Object.keys(stats).sort((a,b)=>stats[b].n-stats[a].n);
@@ -518,6 +519,22 @@ ${rows}
       </div>`;
   }).join('\n');
 
+  // Tabulka po okresech (zemědělská půda, jen kde dost vzorků), seřazeno od nejdražšího.
+  const okrData = Object.keys(priceByOkres)
+    .map(ok=>({ok, s:priceByOkres[ok] && priceByOkres[ok][key]}))
+    .filter(x=>x.s)
+    .sort((a,b)=>b.s.med-a.s.med);
+  const okrMeds = okrData.map(x=>x.s.med);
+  const okMin = okrMeds.length?Math.min.apply(null,okrMeds):0, okMax = okrMeds.length?Math.max.apply(null,okrMeds):1;
+  function heatOk(v){ const t = okMax>okMin ? (v-okMin)/(okMax-okMin) : 0.5; return `background:rgba(91,184,214,${(0.06+t*0.20).toFixed(3)});`; }
+  const okresRows = okrData.map(x=>{
+    const link = hasOkresPage.has(x.ok) ? okresFile(x.ok) : ('index.html?kraj='+encodeURIComponent((KRAJ_META[OKRES_KRAJ[x.ok]]||{}).mapName||'')+'#mapa');
+    return `      <div class="okr-item" style="${heatOk(x.s.med)}">
+        <a class="okr-place" href="${link}" style="text-decoration:none;">${esc(x.ok)}</a>
+        <span class="okr-meta">Zemědělská půda <b>${fmt(x.s.med)} Kč/m²</b> · rozpětí ${x.s.lo}–${x.s.hi} · ${x.s.n} nab.</span>
+      </div>`;
+  }).join('\n');
+
   const natZ = priceNational[key];
   const title = 'Ceny pozemků v ČR — kolik stojí m² pole, lesa a zahrady | Parcelka';
   const desc = `Kolik stojí metr čtvereční pozemku v Česku? Orientační medián cen z aktuálních nabídek podle druhu (zemědělská půda, les, zahrada) a podle kraje.${natZ?' Zemědělská půda medián '+fmt(natZ.med)+' Kč/m².':''} Zdarma, z veřejných zdrojů.`;
@@ -558,6 +575,16 @@ ${krajRows || '      <p class="rules-note" style="margin:0;">Zatím není dost d
           </div>
         </div>
       </div>
+${okresRows ? `
+      <div class="add-card" style="margin-top:22px;">
+        <div class="rules-sect">
+          <h2>Zemědělská půda podle okresu</h2>
+          <p class="rules-note" style="margin-top:0;">Okresy s dostatkem nabídek, seřazeno od nejdražšího. Klepnutím otevřete okres.</p>
+          <div class="okr-list">
+${okresRows}
+          </div>
+        </div>
+      </div>` : ''}
 
       <div class="add-cross" style="margin-top:22px;">
         <div class="acx-copy">
