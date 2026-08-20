@@ -1505,7 +1505,7 @@
       // Hodnotový řádek: cena · výměra · Kč/m² pohromadě
       var figs = '<span class="price">' + fmt(d.price) + ' Kč</span>' +
         (hasArea(d) ? '<span class="m">' + fmt(d.area) + ' m²</span>' : '<span class="m">výměra neuvedena</span>') +
-        (perM2 ? '<span class="m">' + fmt(perM2) + ' Kč/m²</span>' : '') +
+        (perM2 ? '<span class="opp-perm2">' + fmt(perM2) + ' Kč/m²</span>' : '') +
         (sortMode === 'near' && userPos && isFinite(kmFromUser(d)) ? '<span class="opp-km">' + (kmFromUser(d) < 1 ? '<1' : Math.round(kmFromUser(d))) + ' km</span>' : '');
       // Stavové odznaky pohromadě na jednom řádku
       var chips = [];
@@ -1524,6 +1524,7 @@
             '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
             '<span class="opp-tag ' + d.type + '">' + t.label + '</span>' +
           '</span></div>' +
+          (d.okres ? '<div class="opp-loc">okres ' + d.okres + '</div>' : '') +
           (sub ? '<div class="opp-sub">' + sub + '</div>' : '') +
           '<div class="opp-figures">' + figs + '</div>' +
           (chips.length ? '<div class="opp-chips">' + chips.join('') + '</div>' : '') +

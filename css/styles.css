@@ -445,17 +445,22 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .reset-btn{display:inline-block; margin-top:12px; padding:8px 16px; font-size:13px; font-weight:600; color:var(--ink); background:var(--copper-bright); border:0; border-radius:8px; cursor:pointer;}
 .reset-btn:hover{background:var(--copper);}
 .opp-top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px;}
-.opp-place{font-family:'Inter',sans-serif; font-size:16px; font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.opp-place{font-family:'Inter',sans-serif; font-size:17px; font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:-0.01em;}
 /* Barevná odrážka podle kategorie (prodej/dražba/exekuce…) — rychlá orientace v seznamu */
 .opp-dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:9px; vertical-align:middle; flex:none;}
 .opp-tag{flex:none; display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 8px; border-radius:12px; color:#fff; white-space:nowrap;}
 .opp-tag.sale{background:var(--c-sale);} .opp-tag.drazba{background:var(--c-drazba); color:#3a2c05;} .opp-tag.exekuce{background:var(--c-exekuce);} .opp-tag.obec{background:var(--c-obec);}
 /* Podřádek „co to je" — jeden řádek, konzistentní, ořízne se tečkami */
-.opp-sub{font-size:12.5px; color:var(--text-ondark-mute); margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+/* Řádek s okresem (poloha) — víc informací, jemně pod názvem */
+.opp-loc{display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text-ondark-mute); margin:1px 0 5px;}
+.opp-loc::before{content:""; width:12px; height:12px; flex:none; background-size:contain; background-repeat:no-repeat; background-position:center; opacity:0.85; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239fb4c8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");}
+.opp-sub{font-size:12.5px; color:var(--text-ondark-mute); margin-bottom:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 /* Hodnotový řádek — cena, výměra, Kč/m² zarovnané na účaří */
-.opp-figures{display:flex; align-items:baseline; flex-wrap:wrap; gap:3px 12px; margin-bottom:9px;}
-.opp-figures .price{color:var(--copper-bright); font-weight:700; font-size:15px; letter-spacing:0.01em;}
-.opp-figures .m{font-size:12.5px; color:var(--text-ondark-mute);}
+.opp-figures{display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 11px; margin-bottom:10px;}
+.opp-figures .price{color:var(--copper-bright); font-weight:700; font-size:19px; letter-spacing:-0.01em; font-variant-numeric:tabular-nums;}
+.opp-figures .m{font-size:13px; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+/* Kč/m² jako jemný štítek — vypadá hodnotněji a hned odliší od výměry */
+.opp-perm2{align-self:center; font-size:11.5px; font-weight:600; color:var(--copper-bright); background:rgba(106,166,242,0.13); border:1px solid rgba(106,166,242,0.22); border-radius:8px; padding:2px 8px; font-variant-numeric:tabular-nums; white-space:nowrap;}
 /* Řádek odznaků — všechny stavy pohromadě, stejný tvar */
 .opp-chips{display:flex; flex-wrap:wrap; gap:6px;}
 .opp-hot{display:inline-block; font-size:10.5px; font-weight:700; color:#E8863F; background:rgba(232,134,63,0.14); border:1px solid rgba(232,134,63,0.4); border-radius:10px; padding:1px 8px; letter-spacing:0.02em; text-transform:uppercase;}
