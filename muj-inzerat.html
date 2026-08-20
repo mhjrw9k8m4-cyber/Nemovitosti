@@ -107,6 +107,14 @@
         <div id="mi-empty" hidden><div class="add-card"><p class="rules-note">Zatím tu žádný inzerát nemáte. <a href="pridat.html">Přidejte pozemek</a> a hned se objeví na mapě.</p></div></div>
       </div>
 
+      <!-- Uložené pozemky (lokální, funguje i bez přihlášení) -->
+      <div id="mi-saved-wrap" style="margin-top:26px;">
+        <div class="rules-sect" style="margin:0 2px 0;"><h2>Uložené pozemky</h2></div>
+        <p class="rules-note" style="margin:6px 2px 14px;">Pozemky, které jste si na mapě označili záložkou. Uloženo přímo ve vašem prohlížeči — zůstanou vám, dokud si je nesmažete.</p>
+        <div class="okr-list" id="mi-saved"></div>
+        <div id="mi-saved-empty" hidden><div class="add-card"><p class="rules-note">Zatím nemáte uložený žádný pozemek. Na <a href="index.html#mapa">mapě</a> klepněte u pozemku na <b>záložku</b> (ikonu uložení) a objeví se tady.</p></div></div>
+      </div>
+
     </div>
   </section>
 </main>
@@ -201,7 +209,59 @@
     });
     var lo = q('mi-logout'); if (lo) lo.addEventListener('click', function () { A.logout(); show(); });
 
+    // ---------- Uložené pozemky (lokální oblíbené) ----------
+    var TYPE = { sale:{l:'Prodej',c:'sale'}, drazba:{l:'Dražba',c:'drazba'}, exekuce:{l:'Exekuce',c:'exekuce'}, obec:{l:'Záměr obce',c:'obec'}, majitel:{l:'Od majitele',c:'majitel'} };
+    function favKeys(){ try { return JSON.parse(localStorage.getItem('pk_fav_v1'))||[]; } catch(e){ return []; } }
+    function saveFavKeys(a){ try { localStorage.setItem('pk_fav_v1', JSON.stringify(a)); } catch(e){} }
+    function pkeyOf(o){ return [o.place||'', o.parcel||'', o.okres||''].join('|'); }
+    var savedEl = q('mi-saved'), savedEmpty = q('mi-saved-empty');
+    var dataIndex = null;
+
+    function renderSaved(){
+      var keys = favKeys();
+      var favTile = q('pf-fav'); if (favTile) favTile.textContent = keys.length.toLocaleString('cs-CZ');
+      if (!keys.length){ if(savedEl) savedEl.innerHTML=''; if(savedEmpty) savedEmpty.hidden=false; return; }
+      if (savedEmpty) savedEmpty.hidden = true;
+      var render = function(){
+        savedEl.innerHTML = keys.map(function(k){
+          var o = dataIndex && dataIndex[k];
+          var t = o && TYPE[o.type];
+          var badge = t ? '<span class="okr-badge t-'+t.c+'">'+t.l+'</span>' : '<span class="okr-badge t-majitel">Uložený</span>';
+          var parts = k.split('|'); var place = (o && o.place) || parts[0] || 'Pozemek';
+          var okres = (o && o.okres) || parts[2] || '';
+          var bits = [];
+          if (o){ if(o.druh && o.druh!=='—') bits.push(esc(o.druh)); if(o.area) bits.push('<b>'+fmt(o.area)+' m²</b>'); if(o.price) bits.push('<b>'+fmt(o.price)+' Kč</b>'); }
+          if (okres) bits.push('okres '+esc(okres));
+          var mapHref = 'index.html?p='+encodeURIComponent(k)+'#mapa';
+          return '<div class="okr-item" data-key="'+esc(k)+'">' +
+            badge +
+            '<span class="okr-place">'+esc(place)+'</span>' +
+            '<span class="okr-meta">'+bits.join(' · ')+'</span>' +
+            '<a class="okr-src" href="'+mapHref+'">Na mapě →</a>' +
+            '<button type="button" class="okr-src" style="background:none;border:0;cursor:pointer;color:var(--c-exekuce);" data-unfav="'+esc(k)+'">Odebrat</button>' +
+          '</div>';
+        }).join('');
+        Array.prototype.forEach.call(savedEl.querySelectorAll('[data-unfav]'), function(btn){
+          btn.addEventListener('click', function(){
+            var k = btn.getAttribute('data-unfav');
+            var arr = favKeys(); var i = arr.indexOf(k); if(i!==-1){ arr.splice(i,1); saveFavKeys(arr); }
+            renderSaved();
+          });
+        });
+      };
+      if (dataIndex){ render(); return; }
+      fetch('data/opportunities.json', {cache:'no-store'}).then(function(r){ return r.ok?r.json():null; }).then(function(j){
+        dataIndex = {};
+        var arr = (j && j.opportunities) || [];
+        arr.forEach(function(o){ dataIndex[pkeyOf(o)] = o; });
+        render();
+      }).catch(function(){ dataIndex = {}; render(); });
+    }
+    // Dlaždice „Uložené pozemky" v hlavičce sroluje k seznamu
+    var favTileEl = q('pf-fav'); if (favTileEl && favTileEl.closest){ var st = favTileEl.closest('.pf-stat'); if(st){ st.style.cursor='pointer'; st.addEventListener('click', function(){ var w=q('mi-saved-wrap'); if(w) w.scrollIntoView({behavior:'smooth', block:'start'}); }); } }
+
     show();
+    renderSaved();
   });
 })();
 </script>
