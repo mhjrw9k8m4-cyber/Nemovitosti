@@ -348,7 +348,9 @@ async function fetchBezrealitky() {
       const hasGps = typeof gps.lat === 'number' && typeof gps.lng === 'number';
       // místo z adresy; okres podle GPS (ať ladí se zbytkem webu)
       const parts = String(a.address || '').split(',').map((s) => s.trim()).filter(Boolean);
-      const place = (parts[0] || a.title || 'Pozemek').replace(/\s*-\s*/g, ' – ').slice(0, 60);
+      // Adresa mívá tvar „Obec - katastrální území" — pro přehlednost bereme
+      // jen obec (první část), ať se nezobrazuje dlouhý zdvojený název.
+      const place = (parts[0] || a.title || 'Pozemek').split(/\s*-\s*/)[0].trim().slice(0, 60) || 'Pozemek';
       let okres = hasGps ? nearestOkres(gps.lat, gps.lng) : null;
       if (!okres) okres = (parts[parts.length - 1] || place).replace(/\s*kraj$/i, '').slice(0, 40);
       // Druh vytáhneme z popisu + názvu (API druh pozemku neuvádí) —
