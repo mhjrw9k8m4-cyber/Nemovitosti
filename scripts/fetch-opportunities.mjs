@@ -205,7 +205,7 @@ async function fetchOkdrazby() {
     const ids = [...h.matchAll(/\/drazba\/(\d+)-/g)].map((m) => +m[1]);
     if (ids.length) maxId = Math.max(maxId, ...ids);
   } catch { /* necháme výchozí odhad */ }
-  const HI = maxId + 20, LO = maxId - 1000;
+  const HI = maxId + 20, LO = maxId - 1800;
   const ids = [];
   for (let id = HI; id >= LO; id--) ids.push(id);
 
@@ -232,7 +232,8 @@ async function fetchOkdrazby() {
         if (om) { const cand = normOkres(om[1].trim().replace(/[.,;].*$/, '')); if (OKRESY_MAP[cand]) okres = cand; }
         if (!okres) continue;
         const km = j.name && j.name.match(/k\.?\s*ú\.?\s*([A-Za-zÁ-Žá-ž0-9 .\-]+?)(?:\s*,|\s+okres|\s*$)/i);
-        const place = (km ? km[1] : (j.name || '').replace(/\s*,.*$/, '')).trim().slice(0, 60) || okres;
+        // místo = katastrální území (obec); když v názvu není, použijeme okresní město
+        const place = (km ? km[1].trim().slice(0, 60) : okres);
         const pm = (j.description || '').match(/p\.?\s*č\.?\s*([\d/]+)/);
         const nucena = /exekuc|nedobrovoln|nucen|insolven/i.test(txt + ' ' + (j.typeLocalized || '') + ' ' + (j.preparationTypeLocalized || '') + ' ' + (j.compulsoryDesc || ''));
         const druhCat = cats[cats.length - 1];
