@@ -19256,19 +19256,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1057420-nabidka-prodej-pozemku-hostomice"
     },
     {
-      "place": "Držková – Držková",
-      "okres": "Zlín",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": 1070,
-      "price": 3745000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.323656173431,
-      "lng": 17.796242512881,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1036501-nabidka-prodej-pozemku-drzkova"
-    },
-    {
       "place": "Dobev – Nepodřice",
       "okres": "Písek",
       "type": "sale",
@@ -20801,6 +20788,19 @@
       "lat": 49.994636509539,
       "lng": 14.216092492525,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/857095-nabidka-prodej-pozemku-u-rybnicka-vysoky-ujezd"
+    },
+    {
+      "place": "Karla Lípy",
+      "okres": "Praha-východ",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": 681,
+      "price": 10500000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.1802835,
+      "lng": 14.6663538,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1037088-nabidka-prodej-pozemku-karla-lipy-brandys-nad-labem-stara-boleslav"
     },
     {
       "place": "Stráž pod Ralskem",
