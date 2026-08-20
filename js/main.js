@@ -1665,6 +1665,20 @@
     if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
   }
   function openFromUrl() {
+    // ?kraj=<název> — přiblíž mapu na daný kraj (odkaz z krajských/okresních stránek).
+    var mk = /[?&]kraj=([^&]+)/.exec(location.search);
+    if (mk) {
+      var kraj = ''; try { kraj = decodeURIComponent(mk[1]).trim(); } catch (e) { kraj = ''; }
+      if (kraj && krajByName) {
+        var hit = null, low = kraj.toLowerCase();
+        Object.keys(krajByName).forEach(function (name) { if (name.toLowerCase() === low) hit = name; });
+        if (hit) {
+          selectKraj(hit);
+          if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
+          return true;
+        }
+      }
+    }
     // ?lid=<id> — otevři konkrétní živý inzerát od majitele (z „Můj inzerát").
     var ml = /[?&]lid=([^&]+)/.exec(location.search);
     if (ml) {
