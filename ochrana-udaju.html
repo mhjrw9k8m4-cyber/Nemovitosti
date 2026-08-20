@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>Ochrana osobních údajů — Parcelka</title>
+  <meta name="description" content="Jak Parcelka nakládá s osobními údaji: jaké údaje sbíráme, proč, jak dlouho je uchováváme a jaká máte práva podle GDPR.">
+  <meta name="theme-color" content="#16232F">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://parcelaka.cz/ochrana-udaju.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Ochrana osobních údajů — Parcelka">
+  <meta property="og:description" content="Jak Parcelka nakládá s osobními údaji a jaká máte práva podle GDPR.">
+  <meta property="og:locale" content="cs_CZ">
+  <meta property="og:site_name" content="Parcelka">
+  <meta property="og:url" content="https://parcelaka.cz/ochrana-udaju.html">
+  <meta property="og:image" content="https://parcelaka.cz/assets/og.png?v=2">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Ochrana osobních údajů — Parcelka">
+  <meta name="twitter:image" content="https://parcelaka.cz/assets/og.png?v=2">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=20260820q">
+</head>
+<body>
+
+<a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+
+<!-- Beta oznámení (zavíratelné, uložené v prohlížeči) -->
+<div class="beta-bar" id="beta-bar" role="note" hidden>
+  <div class="wrap beta-wrap">
+    <span class="beta-tag">Beta</span>
+    <span class="beta-text">Parcelka je nová a ještě ji ladíme. <a class="beta-link" href="index.html#zpetna-vazba">Budeme rádi za vaši zpětnou vazbu.</a></span>
+    <button type="button" class="beta-close" id="beta-close" aria-label="Zavřít oznámení">&times;</button>
+  </div>
+</div>
+<script>
+(function(){
+  try{
+    if(localStorage.getItem('pk_beta_dismissed')==='1') return;
+    var bar=document.getElementById('beta-bar'); if(!bar) return;
+    bar.removeAttribute('hidden');
+    var x=document.getElementById('beta-close');
+    if(x) x.addEventListener('click', function(){
+      bar.setAttribute('hidden','');
+      try{ localStorage.setItem('pk_beta_dismissed','1'); }catch(e){}
+    });
+  }catch(e){}
+})();
+</script>
+
+<header id="header">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="Parcelka — domů"><span class="logo-mark" aria-hidden="true"></span>Parcelka</a>
+    <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
+    <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+    <nav id="nav" aria-label="Hlavní navigace">
+      <a href="index.html#mapa">Mapa</a>
+      <a href="muj-inzerat.html">Můj profil</a><a href="pridat.html" class="nav-add">Přidat pozemek</a>
+      <a href="index.html#mapa" class="btn-primary">Zpět na mapu</a>
+    </nav>
+  </div>
+</header>
+
+<main id="obsah">
+
+  <section class="add-hero">
+    <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+    <div class="wrap add-wrap">
+      <div class="eyebrow"><span class="live-dot"></span>Ochrana osobních údajů</div>
+      <h1>Vaše soukromí bereme vážně.</h1>
+      <p class="sub">Parcelka je hlavně mapa veřejně dostupných informací o pozemcích. Osobní údaje od vás sbíráme jen v nezbytné míře — a tady se dočtete jaké, proč a jaká máte práva.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:20px;">
+    <div class="wrap add-wrap">
+
+      <div class="add-card">
+        <div class="rules-sect">
+          <h2>Kdo údaje spravuje</h2>
+          <ul class="rule-list">
+            <li>Provozovatelem webu Parcelka (parcelaka.cz) je <b>soukromá osoba</b> — fyzická osoba nepodnikající.</li>
+            <li>Kontakt ve věci osobních údajů: <b><a href="mailto:info@parcelaka.cz">info@parcelaka.cz</a></b>.</li>
+          </ul>
+          <p class="rules-note">Tento dokument je psaný srozumitelně, aby mu rozuměl každý. Vychází z nařízení EU <b>GDPR</b> (2016/679).</p>
+        </div>
+
+        <div class="rules-sect">
+          <h2>Jaké údaje sbíráme a proč</h2>
+          <ul class="rule-list">
+            <li><b>E-mail pro upozornění.</b> Když si necháte hlídat okres, uložíme váš e-mail a vybraný okres, abychom vám mohli dát vědět o nové příležitosti. Právní základ: <b>váš souhlas</b>.</li>
+            <li><b>Účet pro přidání inzerátu.</b> Při registraci ukládáme e-mail a (zašifrované) heslo, abyste mohli vkládat a spravovat vlastní inzeráty. Právní základ: <b>plnění služby</b>.</li>
+            <li><b>Údaje z inzerátu.</b> Co sami vyplníte u pozemku (obec, výměra, cena, případně kontakt na vás). Tyto údaje jsou <b>veřejné</b> — zobrazí se na mapě. Právní základ: <b>plnění služby</b>.</li>
+            <li><b>Zpráva přes formulář.</b> Když nám napíšete zpětnou vazbu nebo dotaz, uložíme text a e-mail, který uvedete, abychom vám mohli odpovědět. Právní základ: <b>oprávněný zájem</b>.</li>
+            <li><b>Základní návštěvnost.</b> Anonymní statistiky návštěvnosti (kolik lidí web navštívilo, které stránky). Právní základ: <b>oprávněný zájem</b> na zlepšování webu.</li>
+          </ul>
+          <p class="rules-note">Nesbíráme nic navíc. Neprodáváme ani nepronajímáme vaše údaje třetím stranám pro reklamu.</p>
+        </div>
+
+        <div class="rules-sect">
+          <h2>Komu se údaje mohou dostat (zpracovatelé)</h2>
+          <ul class="rule-list">
+            <li><b>Supabase</b> — databáze a přihlašování (uložení e-mailů, účtů a inzerátů).</li>
+            <li><b>Vercel</b> a <b>GitHub Pages</b> — hosting webu a anonymní statistiky návštěvnosti.</li>
+            <li><b>Stripe</b> — zpracování platby, pokud si zaplatíte volitelné zvýraznění inzerátu. Platební údaje (číslo karty) zadáváte přímo u Stripe — <b>my je nevidíme ani neukládáme</b>.</li>
+            <li><b>Google Fonts</b> — web načítá písma ze serverů Googlu, kterým se přitom předá vaše IP adresa.</li>
+          </ul>
+          <p class="rules-note">Se všemi těmito službami spolupracujeme jen v rozsahu nutném pro fungování webu. Někteří poskytovatelé mohou data zpracovávat i mimo EU, vždy ale se zárukami podle GDPR.</p>
+        </div>
+
+        <div class="rules-sect">
+          <h2>Cookies a úložiště v prohlížeči</h2>
+          <ul class="rule-list">
+            <li>Parcelka <b>nepoužívá reklamní ani sledovací cookies</b>.</li>
+            <li>Používáme jen <b>úložiště ve vašem prohlížeči</b> (localStorage) pro věci jako uložené oblíbené pozemky nebo zavření beta lišty. Tyto informace <b>zůstávají u vás v zařízení</b> a neodesílají se nám.</li>
+          </ul>
+        </div>
+
+        <div class="rules-sect">
+          <h2>Jak dlouho údaje uchováváme</h2>
+          <ul class="rule-list">
+            <li>E-mail pro upozornění a účet — <b>dokud službu využíváte</b> nebo dokud nepožádáte o výmaz.</li>
+            <li>Zprávy z formuláře — po dobu nutnou k vyřízení a přiměřenou dobu poté.</li>
+            <li>Inzerát — dokud je aktivní, nebo dokud jej nesmažete či nepožádáte o stažení.</li>
+          </ul>
+        </div>
+
+        <div class="rules-sect">
+          <h2>Jaká máte práva</h2>
+          <ul class="rule-list">
+            <li>Právo na <b>přístup</b> k údajům a na jejich <b>opravu</b>.</li>
+            <li>Právo na <b>výmaz</b> („právo být zapomenut") a na <b>omezení</b> zpracování.</li>
+            <li>Právo na <b>přenositelnost</b> údajů a právo <b>vznést námitku</b>.</li>
+            <li>Právo <b>odvolat souhlas</b> (např. odhlásit se z upozornění) — kdykoliv, bez udání důvodu.</li>
+            <li>Právo podat <b>stížnost</b> u dozorového úřadu — <a href="https://uoou.gov.cz" target="_blank" rel="noopener">Úřad pro ochranu osobních údajů</a>.</li>
+          </ul>
+          <p class="rules-note">Kterékoliv z těchto práv uplatníte e-mailem na <b><a href="mailto:info@parcelaka.cz">info@parcelaka.cz</a></b>. Ozveme se bez zbytečného odkladu.</p>
+        </div>
+
+        <div class="rules-sect">
+          <h2>Změny tohoto dokumentu</h2>
+          <ul class="rule-list">
+            <li>Znění můžeme časem upravit (např. když přidáme novou funkci). Aktuální verze je vždy na této stránce.</li>
+          </ul>
+          <p class="rules-note">Toto je srozumitelný přehled, ne vyčerpávající právní text. Poslední úprava: srpen 2026.</p>
+        </div>
+      </div>
+
+      <div class="add-cross">
+        <div class="acx-copy">
+          <h3>Máte dotaz k soukromí?</h3>
+          <p>Napište nám — rádi vysvětlíme nebo údaje na požádání smažeme.</p>
+        </div>
+        <a href="kontakt.html" class="btn-primary btn-glow">Kontakt →</a>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div class="foot-brand-col">
+      <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
+      <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého. Děláme to s péčí, protože jsme se v tom sami hrabali.</p>
+    </div>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Mapa</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a></nav>
+    <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
+    <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
+  </div>
+  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<!-- Vercel Web Analytics (navstevnost) -->
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>

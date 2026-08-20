@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>Kontakt — Parcelka</title>
+  <meta name="description" content="Kontakt na Parcelka. Napište nám s dotazem, zpětnou vazbou nebo žádostí o stažení inzerátu.">
+  <meta name="theme-color" content="#16232F">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://parcelaka.cz/kontakt.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Kontakt — Parcelka">
+  <meta property="og:description" content="Napište nám s dotazem, zpětnou vazbou nebo žádostí o stažení inzerátu.">
+  <meta property="og:locale" content="cs_CZ">
+  <meta property="og:site_name" content="Parcelka">
+  <meta property="og:url" content="https://parcelaka.cz/kontakt.html">
+  <meta property="og:image" content="https://parcelaka.cz/assets/og.png?v=2">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kontakt — Parcelka">
+  <meta name="twitter:image" content="https://parcelaka.cz/assets/og.png?v=2">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=20260820q">
+  <style>
+    .kt-mail{display:flex; align-items:center; gap:14px; margin:6px 0 4px; padding:16px 18px; background:rgba(106,166,242,0.08); border:1px solid rgba(106,166,242,0.24); border-radius:14px; text-decoration:none;}
+    .kt-mail .kt-ico{flex:none; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--copper-bright),var(--copper));}
+    .kt-mail .kt-ico svg{width:23px; height:23px; color:#08111C;}
+    .kt-mail .kt-txt{min-width:0;}
+    .kt-mail .kt-txt small{display:block; font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:var(--text-ondark-mute); font-weight:600;}
+    .kt-mail .kt-txt b{font-size:18px; color:var(--text-ondark); word-break:break-word;}
+    .kt-mail:hover{border-color:var(--copper-bright);}
+  </style>
+</head>
+<body>
+
+<a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+
+<!-- Beta oznámení (zavíratelné, uložené v prohlížeči) -->
+<div class="beta-bar" id="beta-bar" role="note" hidden>
+  <div class="wrap beta-wrap">
+    <span class="beta-tag">Beta</span>
+    <span class="beta-text">Parcelka je nová a ještě ji ladíme. <a class="beta-link" href="index.html#zpetna-vazba">Budeme rádi za vaši zpětnou vazbu.</a></span>
+    <button type="button" class="beta-close" id="beta-close" aria-label="Zavřít oznámení">&times;</button>
+  </div>
+</div>
+<script>
+(function(){
+  try{
+    if(localStorage.getItem('pk_beta_dismissed')==='1') return;
+    var bar=document.getElementById('beta-bar'); if(!bar) return;
+    bar.removeAttribute('hidden');
+    var x=document.getElementById('beta-close');
+    if(x) x.addEventListener('click', function(){
+      bar.setAttribute('hidden','');
+      try{ localStorage.setItem('pk_beta_dismissed','1'); }catch(e){}
+    });
+  }catch(e){}
+})();
+</script>
+
+<header id="header">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="Parcelka — domů"><span class="logo-mark" aria-hidden="true"></span>Parcelka</a>
+    <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
+    <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+    <nav id="nav" aria-label="Hlavní navigace">
+      <a href="index.html#mapa">Mapa</a>
+      <a href="muj-inzerat.html">Můj profil</a><a href="pridat.html" class="nav-add">Přidat pozemek</a>
+      <a href="index.html#mapa" class="btn-primary">Zpět na mapu</a>
+    </nav>
+  </div>
+</header>
+
+<main id="obsah">
+
+  <section class="add-hero">
+    <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+    <div class="wrap add-wrap">
+      <div class="eyebrow"><span class="live-dot"></span>Kontakt</div>
+      <h1>Ozvěte se nám.</h1>
+      <p class="sub">Máte dotaz, nápad na vylepšení, nebo je váš pozemek inzerovaný bez souhlasu? Napište — čteme všechno a snažíme se odpovídat rychle.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:20px;">
+    <div class="wrap add-wrap">
+
+      <div class="add-card">
+        <div class="rules-sect">
+          <h2>Napište nám e-mail</h2>
+          <a class="kt-mail" href="mailto:info@parcelaka.cz">
+            <span class="kt-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            <span class="kt-txt"><small>E-mail</small><b>info@parcelaka.cz</b></span>
+          </a>
+          <p class="rules-note">Provozovatelem webu Parcelka je soukromá osoba. Píšeme z Česka, odpovídáme obvykle do pár dnů.</p>
+        </div>
+
+        <div class="rules-sect">
+          <h2>S čím vám můžeme pomoct</h2>
+          <ul class="rule-list">
+            <li><b>Dotaz nebo zpětná vazba</b> — co vám na webu chybí nebo nefunguje.</li>
+            <li><b>Nahlášení inzerátu</b> — pokud něco není v pořádku, použijte rovnou <a href="pravidla-inzerce.html#nahlasit">formulář pro nahlášení</a>.</li>
+            <li><b>Ochrana osobních údajů</b> — žádost o výmaz či opravu údajů podle <a href="ochrana-udaju.html">GDPR</a>.</li>
+            <li><b>Spolupráce</b> — jste realitka nebo obec a chcete se domluvit? Napište.</li>
+          </ul>
+        </div>
+
+        <div class="rules-sect">
+          <h2>Rychlá zpětná vazba</h2>
+          <p class="rules-note" style="margin-top:0;">Nechcete psát e-mail? Krátký vzkaz nám můžete poslat i přes <a href="index.html#zpetna-vazba">formulář zpětné vazby</a> přímo na hlavní stránce.</p>
+        </div>
+      </div>
+
+      <div class="add-cross">
+        <div class="acx-copy">
+          <h3>Prodáváte pozemek?</h3>
+          <p>Přidejte ho na mapu — zdarma a bez provize.</p>
+        </div>
+        <a href="pridat.html" class="btn-primary btn-glow">Přidat pozemek →</a>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div class="foot-brand-col">
+      <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
+      <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého. Děláme to s péčí, protože jsme se v tom sami hrabali.</p>
+    </div>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Mapa</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a></nav>
+    <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
+    <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
+  </div>
+  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<!-- Vercel Web Analytics (navstevnost) -->
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>

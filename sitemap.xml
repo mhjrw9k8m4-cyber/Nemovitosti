@@ -81,6 +81,21 @@
     <priority>0.4</priority>
   </url>
   <url>
+    <loc>https://parcelaka.cz/podminky.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/ochrana-udaju.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/kontakt.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>https://parcelaka.cz/pozemky-stredocesky-kraj.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>

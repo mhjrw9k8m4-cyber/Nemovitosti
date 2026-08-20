@@ -7,7 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const V = 'v=20260820p';
+const V = 'v=20260820q';
 const MIN_OKRES = 10;   // okres musí mít aspoň tolik nabídek pro vlastní stránku
 const MIN_KRAJ = 15;    // kraj musí mít aspoň tolik nabídek pro vlastní stránku
 
@@ -217,7 +217,7 @@ function footer(){
     </div>
     <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Mapa</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="cena-pozemku.html">Ceny pozemků</a><a href="pridat.html">Přidat pozemek</a></nav>
     <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
-    <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="index.html#soukromi">Zásady soukromí</a><a href="index.html#podminky">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="index.html#realitky">Kontakt</a></nav>
+    <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
   <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
 </footer>
@@ -715,6 +715,9 @@ const staticUrls=[
   {loc:'uzemni-plan-pozemek.html',cf:'monthly',pr:'0.7'},
   {loc:'cena-pozemku.html',cf:'weekly',pr:'0.8'},
   {loc:'pravidla-inzerce.html',cf:'monthly',pr:'0.4'},
+  {loc:'podminky.html',cf:'yearly',pr:'0.3'},
+  {loc:'ochrana-udaju.html',cf:'yearly',pr:'0.3'},
+  {loc:'kontakt.html',cf:'yearly',pr:'0.3'},
 ];
 let sm='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 for(const u of staticUrls) sm+=`  <url>\n    <loc>https://parcelaka.cz/${u.loc}</loc>\n    <changefreq>${u.cf}</changefreq>\n    <priority>${u.pr}</priority>\n  </url>\n`;
