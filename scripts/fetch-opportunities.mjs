@@ -235,7 +235,9 @@ async function fetchOkdrazby() {
         // místo = katastrální území (obec); když v názvu není, použijeme okresní město
         const place = (km ? km[1].trim().slice(0, 60) : okres);
         const pm = (j.description || '').match(/p\.?\s*č\.?\s*([\d/]+)/);
-        const nucena = /exekuc|nedobrovoln|nucen|insolven/i.test(txt + ' ' + (j.typeLocalized || '') + ' ' + (j.preparationTypeLocalized || '') + ' ' + (j.compulsoryDesc || ''));
+        // Typ dražby z API: „Foreclosure auction (nonvoluntary)" / typeId 2 = nucený
+        // prodej (exekuce/insolvence). Ostatní (veřejná / dobrovolná) = běžná dražba.
+        const nucena = j.typeId === 2 || /nonvoluntary/i.test(j.typeLocalized || '') || /exekuc|nedobrovoln|nucen|insolven/i.test(txt);
         const druhCat = cats[cats.length - 1];
         const druh = OKD_DRUH[druhCat] || parseDruh(txt) || 'pozemek';
         const datum = j.start ? String(j.start).slice(0, 10) : (j.finish ? String(j.finish).slice(0, 10) : null);
