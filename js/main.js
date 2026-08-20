@@ -905,6 +905,8 @@
     var fx = ((xf - xt) * 100).toFixed(1), fy = ((yf - yt) * 100).toFixed(1);
     var col = TYPE[d.type].color;
     return '<span class="opp-thumb"><span class="opp-map" style="background-image:url(' + url + ')"></span>' +
+      '<span class="opp-mgrad"></span>' +
+      '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>' +
       '<span class="opp-pin" style="left:' + fx + '%;top:' + fy + '%;background:' + col + '"></span></span>';
   }
   function shapeSvg(d) {
@@ -1539,7 +1541,6 @@
           '<div class="opp-top"><span class="opp-place">' + d.place + '</span>' +
           '<span class="opp-topr">' +
             '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
-            '<span class="opp-tag ' + d.type + '">' + t.label + '</span>' +
           '</span></div>' +
           (d.okres ? '<div class="opp-loc">okres ' + d.okres + '</div>' : '') +
           (sub ? '<div class="opp-sub">' + sub + '</div>' : '') +
