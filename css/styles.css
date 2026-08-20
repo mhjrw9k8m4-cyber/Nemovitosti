@@ -1,13 +1,13 @@
 :root{
-  --ink:#1B2A3B; --ink-soft:#26384C; --ink-soft2:#33485E;
+  --ink:#233650; --ink-soft:#2E4256; --ink-soft2:#3B5169;
   --parchment:#EAF1F6; --parchment-dim:#D6E1EA;
   --text-onlight:#20293A; --text-ondark:#F1F5F9; --text-ondark-mute:#AFBDCA;
   --copper:#3B7DD8; --copper-bright:#6AA6F2;
   --c-sale:#4FA877; --c-drazba:#D6A657; --c-exekuce:#D06E5A; --c-obec:#6E95D0; --c-majitel:#9A80C4;
-  --surface-2:#33485E;
+  --surface-2:#3B5169;
   --line: rgba(226,235,244,0.13);
   --line-strong: rgba(226,235,244,0.26);
-  --panel:#212b35;
+  --panel:#293646;
   --radius:10px; --radius-lg:16px;
   --shadow:0 12px 34px -14px rgba(0,0,0,0.55);
   --shadow-lg:0 30px 70px -22px rgba(0,0,0,0.62);
@@ -479,7 +479,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .md-shape{flex:none; width:74px; height:74px; background:var(--ink); border:1px solid var(--line); border-radius:8px; padding:6px;}
 .md-shape svg{display:block; width:100%; height:100%;}
 .md-info{flex:1; min-width:0;}
-.md-top{font-size:14px; margin-bottom:9px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.md-top{font-size:14px; margin-bottom:0; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
 .md-top .lp-dot{width:10px; height:10px; border-radius:50%; flex:none;}
 .md-facts{display:grid; grid-template-columns:1fr 1fr; gap:8px 18px;}
 .md-facts span{font-size:12.5px; color:var(--text-ondark-mute); display:flex; justify-content:space-between; gap:8px; padding-bottom:7px; border-bottom:1px solid rgba(224,236,244,0.07);}
@@ -1319,16 +1319,29 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .rule-list li{ color:var(--text-ondark); line-height:1.62; }
 .add-hero .sub, .hero-head .sub{ color:#CAD5E0; }
 
-/* ---------- Detail pozemku: kompaktní cena + skládací „Detaily" ---------- */
-.md-price{font-size:15.5px; margin:6px 0 12px; color:var(--text-ondark-mute);}
-.md-price b{color:var(--text-ondark); font-weight:700;}
+/* ---------- Detail pozemku: přehledná hlavička + hero cena + skládací „Detaily" ---------- */
+/* Typový štítek nahoře (barevná tečka + název druhu nabídky) */
+.md-chip{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700; letter-spacing:0.01em; color:var(--text-ondark); background:rgba(255,255,255,0.05); border:1px solid var(--line-strong); border-radius:999px; padding:5px 12px 5px 10px;}
+/* Místo jako nadpis detailu — dává panelu tvář */
+.md-place{font-family:'Inter',sans-serif; font-size:23px; line-height:1.18; font-weight:600; color:var(--text-ondark); margin:12px 0 4px; letter-spacing:-0.01em;}
+.md-okr{display:block; font-size:13px; font-weight:500; color:var(--text-ondark-mute); margin-top:3px; letter-spacing:0;}
+.md-sub{font-size:14px; color:var(--text-ondark-mute); margin:0 0 14px;}
+.md-sub::first-letter{text-transform:uppercase;}
 .md-price-sep{color:var(--line-strong);}
-.md-details{margin:0 0 4px; border:1px solid var(--line-strong); border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.02);}
+/* Hero cena — hlavní číslo detailu */
+.md-price{display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 12px; margin:0 0 14px; padding:12px 15px; background:linear-gradient(135deg, rgba(106,166,242,0.10), rgba(106,166,242,0.03)); border:1px solid rgba(106,166,242,0.22); border-radius:12px;}
+.md-price-lbl{font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-ondark-mute); flex-basis:100%;}
+.md-price b{font-size:24px; font-weight:700; color:var(--text-ondark); letter-spacing:-0.01em; font-variant-numeric:tabular-nums;}
+.md-price-per{font-size:14px; font-weight:600; color:var(--copper-bright); font-variant-numeric:tabular-nums;}
+.md-details{margin:2px 0 4px; border:1px solid var(--line-strong); border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.02);}
 .md-details > summary{list-style:none; cursor:pointer; padding:11px 14px; font-weight:600; font-size:14px; color:var(--copper-bright); display:flex; align-items:center; justify-content:space-between; gap:8px;}
 .md-details > summary::-webkit-details-marker{display:none;}
 .md-details > summary::after{content:"\25BE"; color:var(--text-ondark-mute); transition:transform .2s ease;}
 .md-details[open] > summary::after{transform:rotate(180deg);}
 .md-det-body{padding:4px 14px 14px;}
 .md-det-body .md-facts{margin-top:0;}
-.md-sub{font-size:14px; color:var(--text-ondark-mute); margin:2px 0 6px; text-transform:capitalize;}
-.md-price{margin-top:0;}
+@media (max-width:760px){
+  .md-shape{display:none;}      /* dekorativní ikona tvaru — na mobilu pryč, ať detail plyne čistě */
+  .md-place{font-size:21px;}
+  .md-price b{font-size:22px;}
+}

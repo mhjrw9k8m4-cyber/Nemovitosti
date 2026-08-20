@@ -1065,9 +1065,10 @@
       '<div class="md-body">' +
         '<div class="md-shape" style="border-color:' + t.color + '55">' + shapeSvg(d) + '</div>' +
         '<div class="md-info">' +
-          '<div class="md-top"><span class="lp-dot" style="background:' + t.color + '"></span><b>' + t.label + '</b> · ' + d.place + ', okres ' + d.okres + (isFeatured(d) ? '<span class="md-feat">Zvýrazněno</span>' : '') + cdBig + '</div>' +
+          '<div class="md-top"><span class="md-chip"><span class="lp-dot" style="background:' + t.color + '"></span>' + t.label + '</span>' + (isFeatured(d) ? '<span class="md-feat">Zvýrazněno</span>' : '') + cdBig + '</div>' +
+          '<h3 class="md-place">' + d.place + '<span class="md-okr">okres ' + d.okres + '</span></h3>' +
           '<div class="md-sub">' + d.druh + (hasArea(d) ? ' <span class="md-price-sep">·</span> ' + areaTxt(d) : '') + '</div>' +
-          '<div class="md-price">' + priceLabel + ' <b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? ' <span class="md-price-sep">·</span> ' + fmt(perM2) + ' Kč/m²' : '') + '</div>' +
+          '<div class="md-price"><span class="md-price-lbl">' + priceLabel + '</span><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? '<span class="md-price-per">' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
           priceBarHtml(d) +
           '<details class="md-details"><summary>Detaily o pozemku</summary><div class="md-det-body">' +
             '<div class="md-facts">' +
