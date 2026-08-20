@@ -1,10 +1,10 @@
 :root{
-  --ink:#152030; --ink-soft:#213041; --ink-soft2:#2C3E52;
+  --ink:#1B2A3B; --ink-soft:#26384C; --ink-soft2:#33485E;
   --parchment:#EAF1F6; --parchment-dim:#D6E1EA;
   --text-onlight:#20293A; --text-ondark:#F1F5F9; --text-ondark-mute:#AFBDCA;
   --copper:#3B7DD8; --copper-bright:#6AA6F2;
   --c-sale:#4FA877; --c-drazba:#D6A657; --c-exekuce:#D06E5A; --c-obec:#6E95D0; --c-majitel:#9A80C4;
-  --surface-2:#2C3E52;
+  --surface-2:#33485E;
   --line: rgba(226,235,244,0.13);
   --line-strong: rgba(226,235,244,0.26);
   --panel:#212b35;
