@@ -7,7 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const V = 'v=20260820t';
+const V = 'v=20260820u';
 const MIN_OKRES = 10;   // okres musí mít aspoň tolik nabídek pro vlastní stránku
 const MIN_KRAJ = 15;    // kraj musí mít aspoň tolik nabídek pro vlastní stránku
 
@@ -192,6 +192,7 @@ ${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\
       <a href="cena-pozemku.html">Ceny pozemků</a>
       <a href="muj-inzerat.html">Můj profil</a>
       <a href="index.html#faq">Dotazy</a>
+      <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
     </nav>
