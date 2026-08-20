@@ -1,27 +1,39 @@
-// Průzkum v6 — je CENA v serverovém HTML detailu? + sitemap enumerace. (důležité výstupy na konci)
-const UA = { 'user-agent': 'ParcelkaBot/0.1 (+https://parcelaka.cz)' };
-const get = async (u) => { const r = await fetch(u, { headers: UA, redirect: 'follow', signal: AbortSignal.timeout(25000) }); return { s: r.status, ct: r.headers.get('content-type') || '', t: await r.text() }; };
+// Průzkum v7 — najít klientské API okdrazby (seznam dražeb). Důležité výstupy na konci.
+const UA = { 'user-agent': 'ParcelkaBot/0.1 (+https://parcelaka.cz)', 'accept-language': 'cs' };
+const get = async (u, extra = {}) => { const r = await fetch(u, { headers: { ...UA, ...extra }, redirect: 'follow', signal: AbortSignal.timeout(25000) }); return { s: r.status, ct: r.headers.get('content-type') || '', t: await r.text() }; };
 
-// CENA v detailu
-const durl = 'https://www.okdrazby.cz/drazba/26367-pozemky-o-velikosti-4-765-m-2-v';
+const out = [];
 try {
-  const { t } = await get(durl);
-  const kc = [...new Set([...t.matchAll(/(\d[\d  .,]{3,})\s*Kč/gi)].map(m => m[1].trim()))].slice(0, 8);
-  console.log('CENA "… Kč" v HTML:', JSON.stringify(kc));
-  const flds = [...new Set([...t.matchAll(/"([a-zA-Z_]*(?:price|cena|podani|bid|castka|amount|odhad|vymera|vyvolav)[a-zA-Z_]*)"\s*:\s*"?(\d[\d.]*)/gi)].map(m => m[1] + '=' + m[2]))].slice(0, 12);
-  console.log('číselná pole v datech:', JSON.stringify(flds));
-} catch (e) { console.log('detail chyba:', e.message); }
+  const home = await get('https://www.okdrazby.cz/');
+  // hosty a api URL v HTML
+  const hosts = [...new Set([...home.t.matchAll(/https?:\/\/([a-z0-9.-]+)/gi)].map(m => m[1]))].filter(h => /okdrazby|api|amazonaws|cdn|backend/i.test(h));
+  out.push('hosty(api-ish): ' + JSON.stringify(hosts.slice(0, 12)));
+  const apiUrls = [...new Set([...home.t.matchAll(/["'`](https?:\/\/[^"'`]*(?:api|auction|drazb)[^"'`]*|\/api\/[^"'`]*)["'`]/gi)].map(m => m[1]))];
+  out.push('api URL v HTML: ' + JSON.stringify(apiUrls.slice(0, 10)));
+  // JS chunky
+  const chunks = [...new Set([...home.t.matchAll(/\/_next\/static\/chunks\/[^"']+\.js/g)].map(m => m[0]))];
+  out.push('JS chunků: ' + chunks.length);
+  // projdi pár největších/hlavních chunků a hledej fetch/URL
+  let apiHits = new Set();
+  for (const c of chunks.slice(0, 8)) {
+    try {
+      const j = await get('https://www.okdrazby.cz' + c);
+      for (const m of j.t.matchAll(/["'`](https?:\/\/[a-z0-9.-]*(?:api|okdrazby|backend)[a-z0-9.\-\/]*|\/api\/[a-z0-9._\-\/?=&]*)["'`]/gi)) apiHits.add(m[1]);
+      for (const m of j.t.matchAll(/(drazby|auctions?|items|listing|search)[a-z]*\?[a-z0-9=&_]*/gi)) apiHits.add('?' + m[0]);
+    } catch {}
+  }
+  out.push('API stopy z JS: ' + JSON.stringify([...apiHits].slice(0, 15)));
+} catch (e) { out.push('home chyba: ' + e.message); }
 
-// SITEMAP enumerace (na konci = tail ji ukáže)
-let smInfo = [];
-for (const sm of ['https://www.okdrazby.cz/sitemap.xml', 'https://www.okdrazby.cz/server-sitemap.xml', 'https://www.okdrazby.cz/sitemap-0.xml']) {
-  try {
-    const r = await get(sm);
-    const drazby = [...new Set([...r.t.matchAll(/\/drazba\/\d+-[a-z0-9-]+/gi)].map(m => m[0]))];
-    const subs = [...new Set([...r.t.matchAll(/https?:\/\/[^<\s"']+\.xml/gi)].map(m => m[0]))];
-    smInfo.push(`${sm} -> ${r.s} ${r.t.length}B | dražeb:${drazby.length} | .xml odkazů:${subs.length}` + (subs.length ? ' :: ' + subs.slice(0, 5).join(' ') : '') + (drazby.length ? ' :: ' + drazby.slice(0, 2).join(' ') : ''));
-  } catch (e) { smInfo.push(`${sm} chyba: ${e.message}`); }
+// RSC endpoint a API guesses
+for (const [u, h] of [
+  ['https://www.okdrazby.cz/drazby/pozemky?_rsc=1', { RSC: '1' }],
+  ['https://www.okdrazby.cz/api/drazby?category=pozemky', {}],
+  ['https://www.okdrazby.cz/api/auctions?type=pozemky', {}],
+  ['https://api.okdrazby.cz/drazby', {}],
+]) {
+  try { const r = await get(u, h); const nd = [...new Set([...r.t.matchAll(/\/drazba\/\d+-/g)].map(m => m[0]))].length; const json = /json/i.test(r.ct); out.push(`${u} -> ${r.s} ${r.ct.slice(0,20)} ${r.t.length}B drazby:${nd}${json ? ' JSON:' + r.t.slice(0,120) : ''}`); } catch (e) { out.push(`${u} -> ${e.message}`); }
 }
-console.log('\n===== SITEMAP =====');
-for (const l of smInfo) console.log(l);
+console.log('\n===== VÝSLEDEK =====');
+for (const l of out) console.log(l);
 console.log('--- hotovo ---');
