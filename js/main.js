@@ -901,13 +901,13 @@
     var xt = Math.floor(xf), yt = Math.floor(yf);
     var s = ['a', 'b', 'c', 'd'][(xt + yt) % 4];
     var url = 'https://' + s + '.basemaps.cartocdn.com/dark_all/' + z + '/' + xt + '/' + yt + '@2x.png';
-    // celá dlaždice vyplní náhled, špendlík na přesné pozici pozemku
+    // object-position i špendlík na stejné zlomkové pozici → špendlík přesně na pozemku
     var fx = ((xf - xt) * 100).toFixed(1), fy = ((yf - yt) * 100).toFixed(1);
     var col = TYPE[d.type].color;
-    return '<span class="opp-thumb"><span class="opp-map" style="background-image:url(' + url + ')"></span>' +
+    return '<img class="opp-map" loading="lazy" alt="" src="' + url + '" style="object-position:' + fx + '% ' + fy + '%">' +
       '<span class="opp-mgrad"></span>' +
       '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>' +
-      '<span class="opp-pin" style="left:' + fx + '%;top:' + fy + '%;background:' + col + '"></span></span>';
+      '<span class="opp-pin" style="left:' + fx + '%;top:' + fy + '%;background:' + col + '"></span>';
   }
   function shapeSvg(d) {
     var p = polyFor(d);
@@ -1521,8 +1521,8 @@
       if (druhCap) subParts.push(druhCap);
       if (hasParcel(d)) subParts.push('parc. ' + d.parcel);
       var sub = subParts.join(' · ');
-      // Hodnotový řádek: cena · výměra · Kč/m² pohromadě
-      var figs = '<span class="price">' + fmt(d.price) + ' Kč</span>' +
+      // Řádek s výměrou a Kč/m² (cena je zvlášť, velká, nahoře v těle karty)
+      var figs =
         (hasArea(d) ? '<span class="m">' + fmt(d.area) + ' m²</span>' : '<span class="m">výměra neuvedena</span>') +
         (perM2 ? '<span class="opp-perm2">' + fmt(perM2) + ' Kč/m²</span>' : '') +
         (sortMode === 'near' && userPos && isFinite(kmFromUser(d)) ? '<span class="opp-km">' + (kmFromUser(d) < 1 ? '<1' : Math.round(kmFromUser(d))) + ' km</span>' : '');
@@ -1536,12 +1536,13 @@
       }
       if (hot) chips.push('<span class="opp-hot">Doporučujeme</span>');
       li.innerHTML =
-        mapThumb(d) +
-        '<div class="opp-content">' +
-          '<div class="opp-top"><span class="opp-place">' + d.place + '</span>' +
-          '<span class="opp-topr">' +
-            '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
-          '</span></div>' +
+        '<div class="opp-media">' +
+          mapThumb(d) +
+          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
+        '</div>' +
+        '<div class="opp-body">' +
+          '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
+          '<span class="opp-place">' + d.place + '</span>' +
           (d.okres ? '<div class="opp-loc">okres ' + d.okres + '</div>' : '') +
           (sub ? '<div class="opp-sub">' + sub + '</div>' : '') +
           '<div class="opp-figures">' + figs + '</div>' +
