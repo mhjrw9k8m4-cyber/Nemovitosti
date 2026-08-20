@@ -13,7 +13,12 @@
   <url>
     <loc>https://parcelaka.cz/pozemky-podle-okresu.html</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/drazby-pozemku-nabidky.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://parcelaka.cz/drazby-pozemku.html</loc>
@@ -49,6 +54,66 @@
     <loc>https://parcelaka.cz/pravidla-inzerce.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-stredocesky-kraj.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-jihocesky-kraj.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-plzensky-kraj.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-ustecky-kraj.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-liberecky-kraj.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-kralovehradecky-kraj.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-pardubicky-kraj.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-vysocina-kraj.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-jihomoravsky-kraj.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-olomoucky-kraj.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-zlinsky-kraj.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-moravskoslezsky-kraj.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://parcelaka.cz/pozemky-okres-praha-zapad.html</loc>
