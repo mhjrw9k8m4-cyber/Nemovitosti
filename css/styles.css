@@ -1,12 +1,13 @@
 :root{
   --ink:#152230; --ink-soft:#1C2E3E; --ink-soft2:#22374B;
   --parchment:#EAF1F6; --parchment-dim:#D6E1EA;
-  --text-onlight:#20293A; --text-ondark:#E4ECF2; --text-ondark-mute:#8698A8;
-  --copper:#2E90B4; --copper-bright:#5BB8D6;
-  --c-sale:#3E9B63; --c-drazba:#D9A441; --c-exekuce:#C15B44; --c-obec:#5E86C4; --c-majitel:#8E6FB8;
-  --line: rgba(224,236,244,0.13);
-  --line-strong: rgba(224,236,244,0.24);
-  --panel:#1a2a39;
+  --text-onlight:#20293A; --text-ondark:#EAF1F6; --text-ondark-mute:#A7B8C6;
+  --copper:#2E90B4; --copper-bright:#6BC5E2;
+  --c-sale:#49AC72; --c-drazba:#E3B24E; --c-exekuce:#D06B52; --c-obec:#6E95D0; --c-majitel:#9C7EC6;
+  --surface-2:#213443;
+  --line: rgba(224,236,244,0.18);
+  --line-strong: rgba(224,236,244,0.32);
+  --panel:#1e2f3f;
   --radius:10px; --radius-lg:16px;
   --shadow:0 12px 34px -14px rgba(0,0,0,0.55);
   --shadow-lg:0 30px 70px -22px rgba(0,0,0,0.62);
@@ -24,7 +25,7 @@ html{scroll-behavior:smooth; overflow-x:hidden;}
 
 html{overflow-x:clip;}
 html, body{max-width:100%; width:100%;}
-body{background:var(--ink); color:var(--text-ondark); font-family:'Inter',sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:clip; overscroll-behavior-x:none; position:relative;}
+body{background:var(--ink); color:var(--text-ondark); font-family:'Inter',sans-serif; line-height:1.58; -webkit-font-smoothing:antialiased; overflow-x:clip; overscroll-behavior-x:none; position:relative;}
 h1, h2, h3, h4{overflow-wrap:break-word; word-break:break-word;}
 img, svg, table, pre{max-width:100%;}
 /* Přístupnost: čistý focus rámeček při ovládání klávesnicí (nezobrazí se u myši/dotyku) */
@@ -1067,8 +1068,8 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .add-hero{position:relative; overflow:hidden;}
 .add-hero .wrap{position:relative; z-index:1;}
 .add-grid{display:grid; grid-template-columns:1.5fr 1fr; gap:36px; align-items:start;}
-.add-card{position:relative; background:linear-gradient(180deg, var(--ink-soft), rgba(29,46,61,0.25));
-  border:1px solid var(--line); border-radius:16px; padding:30px 28px;
+.add-card{position:relative; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft));
+  border:1px solid var(--line-strong); border-radius:16px; padding:30px 28px;
   box-shadow:0 16px 44px -30px rgba(0,0,0,0.6);}
 .add-card::before{content:""; position:absolute; top:0; left:24px; right:24px; height:1px;
   background:linear-gradient(90deg, transparent, var(--copper), transparent); opacity:0.75;}
