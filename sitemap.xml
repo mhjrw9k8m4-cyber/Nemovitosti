@@ -331,12 +331,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-prostejov.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-prerov.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-prerov.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-prostejov.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
