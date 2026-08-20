@@ -140,7 +140,10 @@ async function fetchDrazby() {
       // Dobrovolná dražba (drazba): jen čistý pozemek bez budovy.
       // Nucená dražba (exekuce): i pozemek se stavbou/jednotkou — u exekucí
       //   jde skoro vždy o nemovitost, kde je pozemek součástí.
-      let picked = null;
+      // Jeden záznam na PŘEDMĚT dražby (= jeden dražební celek s vlastní vyvolávací
+      // cenou). Dřív jsme z každé dražby brali jen první předmět — teď bereme
+      // všechny, ať se ukážou i dražby s víc pozemkovými celky. Cena je vždy za
+      // daný celek, takže je to poctivé (neopakujeme jednu cenu u víc parcel).
       for (const p of (rec.predmetyDrazby || [])) {
         if (p.stavPredmetu !== 'Uveřejněno') continue; // jen aktivní/nadcházející
         // vyber nejvhodnější věc s pozemkem (preferuj čistý pozemek)
@@ -164,7 +167,7 @@ async function fetchDrazby() {
         if (!price) continue;
         if (!area && !nucena) continue; // dobrovolná bez výměry vynecháme; u exekucí výměra často chybí
         const druhBase = vn.pozemek.druhPozemku || parseDruh(v.nazev);
-        picked = {
+        out.push({
           place, okres, type,
           parcel: String(vn.pozemek.parcelniCislo || '—').slice(0, 40),
           druh: candBudova ? (druhBase + ' se stavbou') : druhBase,
@@ -174,10 +177,8 @@ async function fetchDrazby() {
           lng: typeof vn.gpsLng === 'number' ? vn.gpsLng : undefined,
           _gps: typeof vn.gpsLat === 'number' && typeof vn.gpsLng === 'number',
           url: drazbaUrl,
-        };
-        break;
+        });
       }
-      if (picked) out.push(picked);
     }
     // Bereme oba roky — aktivní dražby (stav „Uveřejněno") mohou přesahovat
     // přes přelom roku; neaktivní stejně odfiltruje stavPredmetu výše.
