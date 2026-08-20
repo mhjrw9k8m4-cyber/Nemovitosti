@@ -1353,7 +1353,7 @@
       } else {
         var o = krajCounts[selectedKraj];
         var n = o ? o.total : 0;
-        krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>' + selectedKraj + ' kraj</b><span>' + (n ? (n + ' ' + plPozemek(n) + ' — klepněte na bod') : 'zatím žádné nabídky') + '</span></div>';
+        krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>' + selectedKraj + ' kraj</b><span>' + (n ? ('Krok 2: klepněte na pozemek (' + n + ' ' + plPozemek(n) + ')') : 'zatím žádné nabídky') + '</span></div>';
         krajHeadEl.hidden = false;
         var b1 = krajHeadEl.querySelector('.kh-back'); if (b1) b1.addEventListener('click', clearKraj);
       }

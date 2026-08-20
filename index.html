@@ -163,7 +163,7 @@
       <div class="hero-head reveal">
         <div class="eyebrow"><span class="live-dot"></span>Pozemky na prodej i v dražbě · celá ČR</div>
         <h1>Hledáte pozemek? <em>Najdete ho tady.</em></h1>
-        <p class="sub">Parcelka sbírá pozemky na prodej i v dražbě z celé ČR na jednu mapu — z veřejných zdrojů, které jinak musíte hledat na desítkách webů a úředních desek. Klepnete na bod a hned vidíte výměru, cenu i termín.</p>
+        <p class="sub">Pozemky na prodej i v dražbě z celé ČR na jedné mapě. Vyberte kraj a klepněte na pozemek — hned uvidíte výměru, cenu i termín.</p>
         <div class="trust-line hero-stats"><span class="ts-n"><b id="hero-n-count">970+</b> pozemků</span><span class="ts-sep" aria-hidden="true">·</span><span class="ts-n"><b id="hero-n-okres">76</b> okresů</span><span class="ts-sep" aria-hidden="true">·</span><span>celá ČR</span><span class="ts-sep" aria-hidden="true">·</span><span>zdarma, bez registrace</span></div>
       </div>
     </div>
@@ -171,8 +171,8 @@
     <div class="map-wide">
       <div class="map-app reveal" id="view-mapa">
         <div class="map-controls-panel">
-          <div class="map-search"><input type="text" id="map-search" placeholder="Hledat obec nebo okres (např. Kolín)" autocomplete="off" aria-label="Hledat obec nebo okres"></div>
-          <button type="button" class="map-near-btn" id="map-near"><svg class="mnb-pin" aria-hidden="true"><use href="#i-map"/></svg>Pozemky ve vašem okolí</button>
+          <div class="map-search"><input type="text" id="map-search" placeholder="Hledat obec (např. Kolín)" autocomplete="off" aria-label="Hledat obec nebo okres"></div>
+          <button type="button" class="map-near-btn" id="map-near"><svg class="mnb-pin" aria-hidden="true"><use href="#i-map"/></svg>Pozemky u mě</button>
           <div class="ms-group">
             <span class="ms-label" id="ms-lbl-typ">Co hledáte</span>
             <div class="map-filters" id="map-filters" role="group" aria-labelledby="ms-lbl-typ">
@@ -249,7 +249,7 @@
           <div class="map-canvas">
             <div id="leaflet-map" role="application" aria-label="Interaktivní mapa příležitostí"></div>
             <div class="kraj-head" id="kraj-head" hidden></div>
-            <div class="kraj-hint" id="kraj-hint"><span class="kh-pin" aria-hidden="true"></span>Vyberte kraj klepnutím na mapu</div>
+            <div class="kraj-hint" id="kraj-hint"><span class="kh-pin" aria-hidden="true"></span><b>Krok 1:</b>&nbsp;klepněte na kraj</div>
             <div class="map-legend" id="map-legend" aria-hidden="true"></div>
             <div class="map-tools">
               <button class="map-reset" id="map-reset" type="button" aria-label="Zobrazit celou mapu"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h6M3 3v6M3 3l7 7M21 21h-6M21 21v-6M21 21l-7-7"/></svg>Celá ČR</button>
@@ -268,7 +268,7 @@
       <div class="section-head reveal">
         <div class="eyebrow">Nejvýhodnější právě teď</div>
         <h2>Kde koupíte pod cenou okolí.</h2>
-        <p class="section-sub">U každého pozemku porovnáme cenu za m² s podobnými nabídkami. Tady jsou ty, které vyšly nejlevněji — reálná čísla z aktuálních dat, žádné sliby.</p>
+        <p class="section-sub">Pozemky, které vyšly nejlevněji oproti podobným nabídkám. Reálná čísla, žádné sliby.</p>
       </div>
       <div class="deals-grid" id="deals-grid"></div>
     </div>
@@ -299,7 +299,7 @@
   <!-- 6 · JAK TO FUNGUJE -->
   <section class="section" id="jak-funguje">
     <div class="wrap">
-      <div class="section-head reveal"><div class="eyebrow">Jak to funguje</div><h2>Od veřejných dat k vaší příležitosti — tři kroky.</h2><p class="section-sub">Parcelka není realitka ani inzertní portál. Je to rozcestník: každý den projde veřejné zdroje o pozemcích, sesbírá z nich příležitosti a vykreslí je na jednu mapu. Nic vlastního neprodáváme — jen ukazujeme, kde se něco děje, a posíláme vás k ověření přímo do katastru nebo na původní inzerát.</p></div>
+      <div class="section-head reveal"><div class="eyebrow">Jak to funguje</div><h2>Od veřejných dat k vaší příležitosti — tři kroky.</h2><p class="section-sub">Parcelka není realitka. Každý den projdeme veřejné zdroje o pozemcích a vykreslíme je na jednu mapu — vy se pak proklikněte k ověření do katastru nebo na původní inzerát.</p></div>
       <div class="steps">
         <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-map"/></svg></div><div class="idx mono">01</div><h3>Otevřete mapu</h3><p>Sbíráme data z veřejných zdrojů a spojíme je na jednu mapu. Jsou tam jen pozemky, kde se něco děje — barva napoví druh příležitosti.</p></div>
         <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-click"/></svg></div><div class="idx mono">02</div><h3>Klikněte na příležitost</h3><p>Detail ukáže výměru, druh a termín. Proklik rovnou do katastru pro ověření, nebo na inzerát.</p></div>
@@ -486,7 +486,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
 <script src="js/config.js?v=20260820a" defer></script>
-<script src="js/main.js?v=20260820a" defer></script>
+<script src="js/main.js?v=20260820b" defer></script>
 <!-- Vercel Web Analytics (navstevnost) -->
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
