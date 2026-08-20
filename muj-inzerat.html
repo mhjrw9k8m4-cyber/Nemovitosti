@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
-  <title>Moje inzeráty — Parcelka</title>
-  <meta name="description" content="Přehled vašich inzerátů na Parcelka — stav zveřejnění, počet zhlédnutí a možnost inzerát smazat.">
-  <meta name="theme-color" content="#16232F">
+  <title>Můj profil — Parcelka</title>
+  <meta name="description" content="Váš profil na Parcelce — vaše inzeráty, počet zhlédnutí a uložené pozemky na jednom místě.">
+  <meta name="theme-color" content="#0A0E13">
   <meta name="robots" content="noindex,follow">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
@@ -18,6 +18,19 @@
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css?v=20260820e">
+  <style>
+    .pf-head{display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
+    .pf-avatar{flex:none; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:22px; color:#0B1017; background:linear-gradient(135deg,var(--copper-bright),var(--copper)); letter-spacing:.02em;}
+    .pf-id{min-width:0;}
+    .pf-id .pf-hello{font-size:13px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:.05em;}
+    .pf-id .pf-mail{font-size:18px; font-weight:700; color:var(--text-ondark); word-break:break-word;}
+    .pf-stats{display:flex; flex-wrap:wrap; gap:10px; margin-top:18px;}
+    .pf-stat{flex:1 1 120px; background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:14px 16px;}
+    .pf-stat b{display:block; font-size:24px; line-height:1.1; color:var(--copper-bright);}
+    .pf-stat span{font-size:12.5px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:.04em;}
+    .pf-actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:18px;}
+  </style>
 </head>
 <body>
 
@@ -40,9 +53,9 @@
   <section class="add-hero">
     <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
     <div class="wrap add-wrap">
-      <div class="eyebrow"><span class="live-dot"></span>Moje inzeráty</div>
-      <h1>Vaše inzeráty na Parcelka.</h1>
-      <p class="sub">Přehled vašich pozemků — jestli jsou zveřejněné a kolik lidí je vidělo. Přihlaste se stejným účtem, jakým jste inzerát přidali.</p>
+      <div class="eyebrow"><span class="live-dot"></span>Můj profil</div>
+      <h1>Váš profil.</h1>
+      <p class="sub">Vaše inzeráty, jejich zhlédnutí i uložené pozemky — všechno na jednom místě. Přihlaste se stejným účtem, kterým jste inzerát přidali.</p>
     </div>
   </section>
 
@@ -52,23 +65,43 @@
       <!-- Přihlášení -->
       <div class="add-card" id="mi-auth" hidden>
         <div class="rules-sect">
-          <h2>Přihlaste se</h2>
-          <p class="rules-note" style="margin-top:0;">Zadejte e-mail a heslo, kterými jste si vytvořili účet při přidání pozemku.</p>
+          <h2>Přihlaste se ke svému profilu</h2>
+          <p class="rules-note" style="margin-top:0;">Zadejte e-mail a heslo, kterými jste si vytvořili účet. Nemáte účet? Vytvořte si ho zdarma u přidání pozemku.</p>
         </div>
         <form class="add-form" id="mi-auth-form" novalidate>
           <div class="add-field"><label for="mi-email">E-mail</label><input id="mi-email" type="email" autocomplete="email" placeholder="vas@email.cz" required></div>
           <div class="add-field"><label for="mi-pass">Heslo</label><input id="mi-pass" type="password" autocomplete="current-password" minlength="6" placeholder="••••••" required></div>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button type="submit" class="btn-primary btn-glow" id="mi-login">Přihlásit se</button>
-            <a class="lp-btn" href="pridat.html">Nemám účet — přidat pozemek</a>
+            <a class="lp-btn" href="pridat.html">Nemám účet — vytvořit</a>
           </div>
           <p class="add-msg" id="mi-auth-msg" role="status" aria-live="polite"></p>
         </form>
       </div>
 
-      <!-- Seznam inzerátů -->
+      <!-- Profil (přihlášený) -->
       <div id="mi-panel" hidden>
-        <div class="auth-bar" id="mi-bar">Přihlášen: <b id="mi-who"></b> · <a href="pridat.html">Přidat další</a> · <button type="button" id="mi-logout" class="linklike">Odhlásit</button></div>
+        <div class="add-card">
+          <div class="pf-head">
+            <div class="pf-avatar" id="pf-avatar" aria-hidden="true">?</div>
+            <div class="pf-id">
+              <div class="pf-hello">Přihlášeno jako</div>
+              <div class="pf-mail" id="pf-mail">—</div>
+            </div>
+          </div>
+          <div class="pf-stats">
+            <div class="pf-stat"><b id="pf-count">—</b><span>Moje inzeráty</span></div>
+            <div class="pf-stat"><b id="pf-views">—</b><span>Zhlédnutí celkem</span></div>
+            <div class="pf-stat"><b id="pf-fav">—</b><span>Uložené pozemky</span></div>
+          </div>
+          <div class="pf-actions">
+            <a class="btn-primary" href="pridat.html">Přidat pozemek</a>
+            <a class="lp-btn" href="index.html#mapa">Uložené na mapě</a>
+            <button type="button" id="mi-logout" class="lp-btn">Odhlásit se</button>
+          </div>
+        </div>
+
+        <div class="rules-sect" style="margin:26px 2px 0;"><h2>Moje inzeráty</h2></div>
         <p class="add-msg" id="mi-status" role="status" aria-live="polite">Načítám…</p>
         <div id="mi-list"></div>
         <div id="mi-empty" hidden><div class="add-card"><p class="rules-note">Zatím tu žádný inzerát nemáte. <a href="pridat.html">Přidejte pozemek</a> a hned se objeví na mapě.</p></div></div>
@@ -84,8 +117,8 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260818n" defer></script>
-<script src="js/auth.js?v=20260818n" defer></script>
+<script src="js/config.js?v=20260820e" defer></script>
+<script src="js/auth.js?v=20260820e" defer></script>
 <script>
 (function () {
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
@@ -94,6 +127,8 @@
     function q(id){ return document.getElementById(id); }
     function fmt(n){ return (typeof n==='number' && isFinite(n)) ? n.toLocaleString('cs-CZ') : '—'; }
     function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+    function favCount(){ try { return (JSON.parse(localStorage.getItem('pk_fav_v1'))||[]).length; } catch(e){ return 0; } }
+    function initials(mail){ var s=(mail||'').trim(); if(!s) return '?'; var name=s.split('@')[0].replace(/[^A-Za-z0-9]/g,''); return (name.slice(0,2)||s.slice(0,1)).toUpperCase(); }
     var authBox = q('mi-auth'), panel = q('mi-panel'), statusEl = q('mi-status'), listEl = q('mi-list'), emptyEl = q('mi-empty');
 
     if (!A || !A.ready) { authBox.hidden = false; q('mi-auth-msg').textContent = 'Připojení k databázi zatím není nastavené.'; return; }
@@ -101,13 +136,22 @@
     function show() {
       var on = A.loggedIn();
       authBox.hidden = on; panel.hidden = !on;
-      if (on) { var w = q('mi-who'); if (w) w.textContent = A.email(); load(); }
+      if (on) {
+        var mail = A.email() || '';
+        var m = q('pf-mail'); if (m) m.textContent = mail;
+        var av = q('pf-avatar'); if (av) av.textContent = initials(mail);
+        var f = q('pf-fav'); if (f) f.textContent = fmt(favCount());
+        load();
+      }
     }
     function load() {
       statusEl.hidden = false; statusEl.textContent = 'Načítám…'; listEl.innerHTML = ''; emptyEl.hidden = true;
       A.rpc('my_listings', {}, true).then(function (res) {
         if (!res || !res.ok) { statusEl.textContent = 'Načtení se nepovedlo. Zkuste to prosím znovu.'; return; }
         var rows = Array.isArray(res.data) ? res.data : [];
+        var totalViews = rows.reduce(function(s,r){ return s + (typeof r.views==='number'?r.views:0); }, 0);
+        var pc = q('pf-count'); if (pc) pc.textContent = fmt(rows.length);
+        var pv = q('pf-views'); if (pv) pv.textContent = fmt(totalViews);
         if (!rows.length) { statusEl.hidden = true; emptyEl.hidden = false; return; }
         statusEl.hidden = true;
         listEl.innerHTML = rows.map(function (r) {
