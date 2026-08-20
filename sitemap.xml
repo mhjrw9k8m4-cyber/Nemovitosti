@@ -61,6 +61,16 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://parcelaka.cz/hypoteka-na-pozemek.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/uzemni-plan-pozemek.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://parcelaka.cz/cena-pozemku.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

@@ -711,6 +711,8 @@ const staticUrls=[
   {loc:'stavebni-vs-zemedelsky-pozemek.html',cf:'monthly',pr:'0.7'},
   {loc:'list-vlastnictvi-katastr.html',cf:'monthly',pr:'0.7'},
   {loc:'vecne-bremeno-pozemek.html',cf:'monthly',pr:'0.7'},
+  {loc:'hypoteka-na-pozemek.html',cf:'monthly',pr:'0.7'},
+  {loc:'uzemni-plan-pozemek.html',cf:'monthly',pr:'0.7'},
   {loc:'cena-pozemku.html',cf:'weekly',pr:'0.8'},
   {loc:'pravidla-inzerce.html',cf:'monthly',pr:'0.4'},
 ];
