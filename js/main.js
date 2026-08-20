@@ -1229,16 +1229,18 @@
   var krajJustSelected = false; // klik, který právě přepnul kraj, neotevírá detail
   map.on('click', function (e) {
     if (krajJustSelected) { krajJustSelected = false; return; }
-    if (dotsLocked || !selectedKraj || !lastVis.length) return;
+    // Tečky jsou klikací, když nejsou zamčené (po výběru kraje NEBO po přiblížení mapy).
+    if (dotsLocked || !lastVis.length) return;
     var cp = e.containerPoint, best = null, bestDist = Infinity;
     for (var i = 0; i < lastVis.length; i++) {
       var d = lastVis[i];
-      if (d._gkraj !== selectedKraj) continue; // jen tečky ve vybraném kraji (dle geometrie)
+      // Když je vybraný kraj, bereme jen jeho tečky; bez kraje (přiblíženo) bereme kteroukoli viditelnou.
+      if (selectedKraj && d._gkraj !== selectedKraj) continue;
       var p = map.latLngToContainerPoint([d.lat, d.lng]);
       var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
       if (dist < bestDist) { bestDist = dist; best = d; }
     }
-    if (best && bestDist <= 12 * 12) { showDetail(best); highlightList(best._id); }
+    if (best && bestDist <= 16 * 16) { showDetail(best); highlightList(best._id); }
   });
 
   // Tečkovaná mapa: každý pozemek = tečka. Navíc obrysy krajů pro orientaci.
@@ -1455,6 +1457,14 @@
     });
   }
   map.on('zoomend', updatePolys);
+
+  // Po přiblížení mapy zpřístupníme tečky přímo (netřeba nejdřív vybírat kraj).
+  // Na přehledu (oddálené) zůstává výběr kraje — tam se tečky překrývají.
+  map.on('zoomend', function () {
+    if (nearMode) return;
+    if (map.getZoom() >= 10) { if (dotsLocked) lockDots(false); }
+    else if (!selectedKraj) { if (!dotsLocked) lockDots(true); }
+  });
 
   function visible(d) {
     var okType = activeType === 'all' || d.type === activeType;
