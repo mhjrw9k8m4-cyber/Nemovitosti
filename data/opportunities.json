@@ -23368,7 +23368,46 @@
       "lng": 14.61123
     },
     {
-      "place": "Dražba spoluvlastnického podílu id. 1/2 na zemědělských poze",
+      "place": "Zlín",
+      "okres": "Zlín",
+      "type": "drazba",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": 285761,
+      "price": 24000,
+      "extra": "dražba 2026-08-27 · OK dražby",
+      "lat": 49.217401,
+      "lng": 17.949962,
+      "url": "https://www.okdrazby.cz/drazba/25331"
+    },
+    {
+      "place": "Dlouhopolsko",
+      "okres": "Kolín",
+      "type": "drazba",
+      "parcel": "85",
+      "druh": "orná půda",
+      "area": 11042,
+      "price": 28000,
+      "extra": "dražba 2026-08-26 · OK dražby",
+      "lat": 50.176601,
+      "lng": 15.313501,
+      "url": "https://www.okdrazby.cz/drazba/25344"
+    },
+    {
+      "place": "Blatnička",
+      "okres": "Hodonín",
+      "type": "drazba",
+      "parcel": "3620",
+      "druh": "orná půda",
+      "area": 4928,
+      "price": 31333,
+      "extra": "dražba 2026-08-26 · OK dražby",
+      "lat": 48.931404,
+      "lng": 17.533038,
+      "url": "https://www.okdrazby.cz/drazba/25345"
+    },
+    {
+      "place": "Písek",
       "okres": "Písek",
       "type": "drazba",
       "parcel": "—",
@@ -23379,6 +23418,32 @@
       "lat": 49.354772,
       "lng": 14.294373,
       "url": "https://www.okdrazby.cz/drazba/26821"
+    },
+    {
+      "place": "Vůsí",
+      "okres": "Písek",
+      "type": "drazba",
+      "parcel": "274/3",
+      "druh": "orná půda",
+      "area": 5622,
+      "price": 56000,
+      "extra": "dražba 2026-09-16 · OK dražby",
+      "lat": 49.410976,
+      "lng": 14.261993,
+      "url": "https://www.okdrazby.cz/drazba/26081"
+    },
+    {
+      "place": "Zdeslavice u Chlístovic",
+      "okres": "Kutná Hora",
+      "type": "drazba",
+      "parcel": "612",
+      "druh": "orná půda",
+      "area": 7977,
+      "price": 93000,
+      "extra": "dražba 2026-08-26 · OK dražby",
+      "lat": 49.870182,
+      "lng": 15.218353,
+      "url": "https://www.okdrazby.cz/drazba/25349"
     },
     {
       "place": "Kluček",
@@ -23537,7 +23602,7 @@
       "url": "https://okdrazby.cz/drazba/26369"
     },
     {
-      "place": "Dražba spoluvlastnického podílu ve výši id. 1/6 pozemek 514 ",
+      "place": "Strakonice",
       "okres": "Strakonice",
       "type": "drazba",
       "parcel": "—",
@@ -23561,6 +23626,19 @@
       "lat": 50.54908,
       "lng": 14.10971,
       "url": "https://www.e-drazby.cz"
+    },
+    {
+      "place": "Prostějov",
+      "okres": "Prostějov",
+      "type": "drazba",
+      "parcel": "3740/1",
+      "druh": "zahrada",
+      "area": 479,
+      "price": 36667,
+      "extra": "dražba 2026-08-26 · OK dražby",
+      "lat": 49.467629,
+      "lng": 17.127021,
+      "url": "https://www.okdrazby.cz/drazba/25336"
     },
     {
       "place": "Lazec",
@@ -23587,6 +23665,32 @@
       "lat": 50.61974,
       "lng": 14.0226,
       "url": "https://www.drazby-exekutori.cz/DR020853/Verejna-drazba-spoluvlastnickeho-podilu-na-RD-s-pozemky-Stebno-u-Dubic/"
+    },
+    {
+      "place": "Svitavy",
+      "okres": "Svitavy",
+      "type": "drazba",
+      "parcel": "171/4",
+      "druh": "stavební pozemek",
+      "area": 1240,
+      "price": 170380,
+      "extra": "dražba 2026-09-02 · OK dražby",
+      "lat": 49.787539,
+      "lng": 16.646034999999983,
+      "url": "https://www.okdrazby.cz/drazba/25564"
+    },
+    {
+      "place": "Jičín",
+      "okres": "Jičín",
+      "type": "drazba",
+      "parcel": "—",
+      "druh": "zahrada",
+      "area": 72,
+      "price": 10000,
+      "extra": "dražba 2026-09-08 · OK dražby",
+      "lat": 50.505616,
+      "lng": 15.495077,
+      "url": "https://www.okdrazby.cz/drazba/25658"
     },
     {
       "place": "Borkovice",
@@ -23628,6 +23732,19 @@
       "url": "https://www.okdrazby.cz/drazba/27038"
     },
     {
+      "place": "Praha",
+      "okres": "Praha",
+      "type": "drazba",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 2688,
+      "price": 1080667,
+      "extra": "dražba 2026-09-02 · OK dražby",
+      "lat": 50.162593,
+      "lng": 14.312751,
+      "url": "https://www.okdrazby.cz/drazba/25771"
+    },
+    {
       "place": "Seninka",
       "okres": "Vsetín",
       "type": "drazba",
@@ -23641,6 +23758,19 @@
       "url": "https://okdrazby.cz/drazba/26368"
     },
     {
+      "place": "Svitavy",
+      "okres": "Svitavy",
+      "type": "drazba",
+      "parcel": "1716/1",
+      "druh": "zahrada",
+      "area": 154,
+      "price": 68000,
+      "extra": "dražba 2026-08-25 · OK dražby",
+      "lat": 49.78972218308407,
+      "lng": 16.34254260995147,
+      "url": "https://www.okdrazby.cz/drazba/26079"
+    },
+    {
       "place": "Děčín",
       "okres": "Děčín",
       "type": "drazba",
@@ -23652,6 +23782,32 @@
       "lat": 50.78174,
       "lng": 14.21997,
       "url": "https://www.drazby-exekutori.cz/DR020854/Zahrada-v-zahradkarske-kolonii-k-u-Podmokly-Decin/"
+    },
+    {
+      "place": "Kolín",
+      "okres": "Kolín",
+      "type": "drazba",
+      "parcel": "711/1",
+      "druh": "stavební pozemek",
+      "area": 1763,
+      "price": 812000,
+      "extra": "dražba 2026-09-10 · OK dražby",
+      "lat": 50.04767,
+      "lng": 14.83584099999996,
+      "url": "https://www.okdrazby.cz/drazba/25657"
+    },
+    {
+      "place": "Bedihošť",
+      "okres": "Prostějov",
+      "type": "drazba",
+      "parcel": "284",
+      "druh": "orná půda",
+      "area": 2528,
+      "price": 1296000,
+      "extra": "dražba 2026-08-26 · OK dražby",
+      "lat": 49.446896407,
+      "lng": 17.161148783,
+      "url": "https://www.okdrazby.cz/drazba/25350"
     },
     {
       "place": "Mnich",
@@ -23719,6 +23875,58 @@
       "url": "https://www.okdrazby.cz/drazba/26609"
     },
     {
+      "place": "Sobětice u Klatov",
+      "okres": "Klatovy",
+      "type": "drazba",
+      "parcel": "3/1",
+      "druh": "zahrada",
+      "area": 424,
+      "price": 281333,
+      "extra": "dražba 2026-09-02 · OK dražby",
+      "lat": 49.374572,
+      "lng": 13.318647,
+      "url": "https://www.okdrazby.cz/drazba/25763"
+    },
+    {
+      "place": "Hněvkov u Mačkova",
+      "okres": "Strakonice",
+      "type": "drazba",
+      "parcel": "546/10",
+      "druh": "zahrada",
+      "area": 348,
+      "price": 255700,
+      "extra": "dražba 2026-09-02 · OK dražby",
+      "lat": 49.396966,
+      "lng": 13.908358,
+      "url": "https://www.okdrazby.cz/drazba/25565"
+    },
+    {
+      "place": "Kotenčice",
+      "okres": "Příbram",
+      "type": "drazba",
+      "parcel": "123/7",
+      "druh": "orná půda",
+      "area": 204,
+      "price": 160667,
+      "extra": "dražba 2026-09-09 · OK dražby",
+      "lat": 49.735114,
+      "lng": 14.104856,
+      "url": "https://www.okdrazby.cz/drazba/25778"
+    },
+    {
+      "place": "Konstantinovy Lázně",
+      "okres": "Tachov",
+      "type": "drazba",
+      "parcel": "480/45",
+      "druh": "zahrada",
+      "area": 418,
+      "price": 346000,
+      "extra": "dražba 2026-08-26 · OK dražby",
+      "lat": 49.88125,
+      "lng": 12.988492,
+      "url": "https://www.okdrazby.cz/drazba/25338"
+    },
+    {
       "place": "Karlovice",
       "okres": "Bruntál",
       "type": "drazba",
@@ -23756,6 +23964,19 @@
       "lat": 50.77686,
       "lng": 14.47878,
       "url": "https://www.drazbyprost.cz/2093-podil-na-pozemcich-kamenicky-senov"
+    },
+    {
+      "place": "Hradešín",
+      "okres": "Kolín",
+      "type": "drazba",
+      "parcel": "29/44",
+      "druh": "orná půda",
+      "area": 1801,
+      "price": 2272000,
+      "extra": "dražba 2026-09-09 · OK dražby",
+      "lat": 50.039222,
+      "lng": 14.758309,
+      "url": "https://www.okdrazby.cz/drazba/25770"
     },
     {
       "place": "Jáchymov",
@@ -24003,6 +24224,19 @@
       "lat": 49.84407,
       "lng": 14.52753,
       "url": "https://okdrazby.cz/drazba/18019"
+    },
+    {
+      "place": "Šumperk",
+      "okres": "Šumperk",
+      "type": "drazba",
+      "parcel": "42/1",
+      "druh": "stavební pozemek",
+      "area": 322,
+      "price": 684000,
+      "extra": "dražba 2026-09-02 · OK dražby",
+      "lat": 49.850065146,
+      "lng": 16.773403845,
+      "url": "https://www.okdrazby.cz/drazba/25765"
     },
     {
       "place": "Jablonné nad Orlicí",
@@ -24265,7 +24499,7 @@
       "url": "https://www.drazebni-portal.cz/"
     },
     {
-      "place": "Dražba souboru zemědělských pozemků",
+      "place": "Pelhřimov",
       "okres": "Pelhřimov",
       "type": "drazba",
       "parcel": "70",
@@ -24330,7 +24564,7 @@
       "url": "https://www.verejnedrazby.cz/A8031"
     },
     {
-      "place": "Spoluvlastnický podíl ve výši 1/2 na pozemcích ve městě Hruš",
+      "place": "Znojmo",
       "okres": "Znojmo",
       "type": "drazba",
       "parcel": "—",
@@ -24343,7 +24577,7 @@
       "url": "https://www.okdrazby.cz/drazba/27074"
     },
     {
-      "place": "Dražba pozemků v Javorníku",
+      "place": "Jeseník",
       "okres": "Jeseník",
       "type": "drazba",
       "parcel": "2122",
@@ -24356,7 +24590,7 @@
       "url": "https://www.okdrazby.cz/drazba/27070"
     },
     {
-      "place": "4. KOLO - soubor nezastavěných pozemků v Kozomíně",
+      "place": "Mělník",
       "okres": "Mělník",
       "type": "drazba",
       "parcel": "—",
@@ -24369,7 +24603,7 @@
       "url": "https://www.okdrazby.cz/drazba/27064"
     },
     {
-      "place": "OPAKOVANÁ DRAŽBA - Pozemek v obci Zabrušany",
+      "place": "Teplice",
       "okres": "Teplice",
       "type": "drazba",
       "parcel": "—",
@@ -24382,7 +24616,7 @@
       "url": "https://www.okdrazby.cz/drazba/26925"
     },
     {
-      "place": "id. 1/2 pozemků v obci Vacov",
+      "place": "Strakonice",
       "okres": "Strakonice",
       "type": "drazba",
       "parcel": "161",
@@ -24393,19 +24627,6 @@
       "lat": 49.136189,
       "lng": 13.730278999999996,
       "url": "https://www.okdrazby.cz/drazba/26856"
-    },
-    {
-      "place": "Holedeč",
-      "okres": "Louny",
-      "type": "drazba",
-      "parcel": "—",
-      "druh": "lesní pozemek",
-      "area": null,
-      "price": 3400000,
-      "extra": "dražba 2026-09-22 · OK dražby",
-      "lat": 50.2653592,
-      "lng": 13.5922308,
-      "url": "https://www.okdrazby.cz/drazba/26716"
     },
     {
       "place": "Lhota u Nečemic",
@@ -24419,6 +24640,19 @@
       "lat": 50.2644361,
       "lng": 13.5955244,
       "url": "https://www.okdrazby.cz/drazba/26717"
+    },
+    {
+      "place": "Holedeč",
+      "okres": "Louny",
+      "type": "drazba",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": null,
+      "price": 3400000,
+      "extra": "dražba 2026-09-22 · OK dražby",
+      "lat": 50.2653592,
+      "lng": 13.5922308,
+      "url": "https://www.okdrazby.cz/drazba/26716"
     },
     {
       "place": "Líčkov",
@@ -24447,7 +24681,7 @@
       "url": "https://www.okdrazby.cz/drazba/26256"
     },
     {
-      "place": "Stavební pozemek v obci Březno",
+      "place": "Mladá Boleslav",
       "okres": "Mladá Boleslav",
       "type": "drazba",
       "parcel": "—",
@@ -24460,7 +24694,7 @@
       "url": "https://www.okdrazby.cz/drazba/26255"
     },
     {
-      "place": "Pozemek orné půdy - stavební parcela v obci Krásná Hora",
+      "place": "Havlíčkův Brod",
       "okres": "Havlíčkův Brod",
       "type": "drazba",
       "parcel": "—",
@@ -24473,7 +24707,7 @@
       "url": "https://www.okdrazby.cz/drazba/26245"
     },
     {
-      "place": "id. 1/16 pozemků v Rousínově",
+      "place": "Vyškov",
       "okres": "Vyškov",
       "type": "drazba",
       "parcel": "—",
@@ -24486,7 +24720,7 @@
       "url": "https://www.okdrazby.cz/drazba/26188"
     },
     {
-      "place": "Opakovaná dražba spoluvlastnického podílu výši id. 1/3",
+      "place": "Praha-východ",
       "okres": "Praha-východ",
       "type": "drazba",
       "parcel": "—",
@@ -24497,6 +24731,19 @@
       "lat": 49.996088,
       "lng": 14.635449,
       "url": "https://www.okdrazby.cz/drazba/26186"
+    },
+    {
+      "place": "Rakovník",
+      "okres": "Rakovník",
+      "type": "drazba",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": null,
+      "price": 6392580,
+      "extra": "dražba 2026-09-09 · OK dražby",
+      "lat": 50.022373,
+      "lng": 13.758799,
+      "url": "https://www.okdrazby.cz/drazba/25719"
     },
     {
       "place": "Trmice",
