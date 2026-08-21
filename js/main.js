@@ -1440,7 +1440,7 @@
     if (sortEl) sortEl.value = 'near';
     updateKrajHead();
     renderList();
-    showToast(approx ? 'Přibližná poloha (podle připojení). Seřazeno podle vzdálenosti.' : 'Seřazeno podle vzdálenosti od vás.');
+    showToast(approx ? 'Přibližná poloha podle připojení — pro přesnou povolte GPS.' : 'Seřazeno podle vzdálenosti od vás.');
   }
   // Přibližná poloha podle IP — když GPS není povolená. Zkusí dva zdroje (HTTPS, bez klíče).
   function ipLocate() {
@@ -1468,7 +1468,7 @@
       enterNearAt({ lat: pos.coords.latitude, lng: pos.coords.longitude }, false);
     }, function (err) {
       ipThenSearch(err && err.code === 1);
-    }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 });
+    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 120000 });
   }
   lockDots(true);      // start: nejdřív se vybírá kraj
   updateKrajHead();
