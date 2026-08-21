@@ -2,6 +2,17 @@
 (function () {
   'use strict';
 
+  // Reset stránky = začni nahoře (ne tam, kde jsem byl). Safari jinak při
+  // znovunačtení/otevření panelu vrací starou pozici scrollu — to nechceme.
+  // Výjimka: sdílený odkaz na konkrétní pozemek/kraj (?p=/?kraj=/?lid=) nebo
+  // kotva (#…) — tam scroll řídí sama stránka.
+  try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
+  window.addEventListener('pageshow', function () {
+    if (!location.hash && !/[?&](p|kraj|lid)=/.test(location.search)) {
+      try { window.scrollTo(0, 0); } catch (e) {}
+    }
+  });
+
   /* ---------- Záložní data (když se nenačte data/opportunities.json) ---------- */
   var FALLBACK_DATA = [
     { place:'Kolín',             okres:'Kolín',         type:'drazba',  parcel:'412/3', druh:'stavební',  area:1240, price:640000,  extra:'dražba za 12 dní', lat:50.0281, lng:15.2003 },
