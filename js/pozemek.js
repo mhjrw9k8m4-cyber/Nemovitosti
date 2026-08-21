@@ -277,6 +277,27 @@
       '</div>';
   }
 
+  // Sítě, vybavení a přístup — ukáže se jen když to majitel vyplnil (u inzerátů
+  // od lidí). U dat z veřejných zdrojů tyhle údaje nemáme, tak se sekce neukáže.
+  var FEAT_ICON = {
+    'Elektřina': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>',
+    'Voda': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6 6 11a6 6 0 0 1-12 0c0-5 6-11 6-11z"/></svg>',
+    'Kanalizace': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3C9.5 5.5 9.5 18.5 12 21"/></svg>',
+    'Plyn': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 3 5 6 5 9a5 5 0 0 1-10 0c0-1 .5-2 1-3 .5 2 2 2 2 2 0-2 1-6 2-8z"/></svg>',
+    'Oplocení': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l2-3 2 3v9H4zM10 10l2-3 2 3v9h-4zM16 10l2-3 2 3v9h-4zM2 13h20"/></svg>'
+  };
+  var ACCESS_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l6-16M20 20l-6-16M9 12h6"/></svg>';
+  function pzFeaturesHtml(d) {
+    var feats = Array.isArray(d.features) ? d.features : [];
+    var chips = feats.map(function (f) {
+      return '<span class="pz-feat">' + (FEAT_ICON[f] || '') + esc(f) + '</span>';
+    });
+    if (d.access) chips.push('<span class="pz-feat pz-feat-acc">' + ACCESS_SVG + esc(d.access) + '</span>');
+    if (!chips.length) return '';
+    return '<div class="pz-sect-h">Sítě a vybavení</div>' +
+      '<div class="pz-feats">' + chips.join('') + '</div>';
+  }
+
   function render(d) {
     var t = TYPE[d.type];
     var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
@@ -318,6 +339,8 @@
       '<div class="pz-specs">' +
         facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v + '</span></div>'; }).join('') +
       '</div>' +
+
+      pzFeaturesHtml(d) +
 
       '<div class="pz-cta">' +
         '<a class="pz-btn primary" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Zobrazit na mapě</a>' +

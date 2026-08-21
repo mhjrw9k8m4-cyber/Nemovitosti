@@ -183,12 +183,14 @@
     var price = parseInt(val('p-cena'), 10) || 0;
     return geocodeCz(obec, okres).then(function (pos) {
       if (!pos) return 'geo';
+      var features = [].slice.call(document.querySelectorAll('input[name="site"]:checked')).map(function (x) { return x.value; });
       return uploadPhotos().then(function (photoUrls) {
       return PKAuth.rpc('create_listing', {
         p_place: obec, p_okres: okres, p_druh: val('p-druh'), p_parcel: val('p-parcela'),
         p_area: area, p_price: price, p_lat: pos.lat, p_lng: pos.lng,
         p_description: val('p-popis'), p_contact: val('p-kontakt'),
-        p_photos: photoUrls || []
+        p_photos: photoUrls || [],
+        p_features: features, p_access: val('p-pristup') || null
       }, true).then(function (res) {
         if (!res || !res.ok) {
           if (res && res.expired) return 'auth';

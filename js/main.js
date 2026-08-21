@@ -1926,6 +1926,12 @@
             /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/listing-photos\//.test(p);
         }).slice(0, 8);
       }
+      // Vybavení — jen povolené hodnoty (stejná pojistka jako na serveru)
+      var OK_FEAT = { 'Elektřina': 1, 'Voda': 1, 'Kanalizace': 1, 'Plyn': 1, 'Oplocení': 1 };
+      function cleanFeatures(a) {
+        if (!Array.isArray(a)) return [];
+        return a.filter(function (f) { return OK_FEAT[f]; }).slice(0, 6);
+      }
       if (Array.isArray(live)) {
         live.forEach(function (u) {
           if (!u || typeof u.lat !== 'number' || typeof u.lng !== 'number') return;
@@ -1941,6 +1947,7 @@
             contact: clean(u.contact, 80),
             description: clean(u.description, 600),
             photos: cleanPhotos(u.photos),
+            features: cleanFeatures(u.features), access: (u.access ? clean(u.access, 40) : ''),
             _lid: u.id, views: (typeof u.views === 'number' ? u.views : 0)
           });
         });

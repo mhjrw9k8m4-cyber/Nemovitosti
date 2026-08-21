@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260821x">
+  <link rel="stylesheet" href="css/styles.css?v=20260821y">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -78,6 +78,10 @@
     .pz-spec:last-child{border-bottom:none;}
     .pz-spec .k{color:var(--text-ondark-mute); font-size:14.5px; flex:none;}
     .pz-spec .v{color:var(--text-ondark); font-weight:600; font-size:15px; text-align:right; font-variant-numeric:tabular-nums; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    .pz-feats{display:flex; flex-wrap:wrap; gap:9px;}
+    .pz-feat{display:inline-flex; align-items:center; gap:7px; font-size:14px; font-weight:600; color:var(--text-ondark); background:var(--ink-soft); border:1px solid var(--line-strong); padding:8px 13px; border-radius:11px;}
+    .pz-feat svg{width:17px; height:17px; color:var(--copper-bright);}
+    .pz-feat-acc svg{color:var(--text-ondark-mute);}
 
     .pz-term{display:inline-flex; align-items:center; gap:7px; font-size:13.5px; font-weight:600; color:#E6B980; background:rgba(216,172,94,0.14); border:1px solid rgba(216,172,94,0.4); padding:7px 13px; border-radius:11px; margin:14px 0 2px; white-space:nowrap;}
     .pz-term svg{width:16px; height:16px; flex:none;}
@@ -149,7 +153,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/pozemek.js?v=20260821x"></script>
+<script src="js/pozemek.js?v=20260821y"></script>
 <!-- Vercel Web Analytics -->
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
