@@ -299,16 +299,6 @@
       body: JSON.stringify(row)
     }).then(function (r) { return r.ok ? 'ok' : 'error'; }).catch(function () { return 'error'; });
   }
-  // Prosté čtení z tabulky (veřejné) — pro doplňky sítí/přístupu.
-  function sbGet(path) {
-    if (!SB_READY) return Promise.resolve(null);
-    return fetch(SB_URL + '/rest/v1/' + path, { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } })
-      .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
-  }
-  // Stabilní otisk pozemku (musí se shodovat s pozemek.js) — klíč pro doplňky.
-  function oppKey(d) {
-    return [d.type || '', d.okres || '', d.place || '', d.parcel || '', d.price || '', d.area || ''].join('|').slice(0, 240);
-  }
   // Které živé inzeráty už jsme v této návštěvě započítali (ať se zhlédnutí nenafukuje).
   var viewedLids = {};
   // Volání Supabase funkce (RPC) — pro živé inzeráty od majitelů.
@@ -1905,9 +1895,9 @@
 
   /* ---------- Načtení reálných dat s bezpečnou zálohou ---------- */
   function loadJSON(url) { return fetch(url, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
-  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), sbRpc('public_listings'), sbGet('opp_extras?select=key,features,access')])
+  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), sbRpc('public_listings')])
     .then(function (res) {
-      var j = res[0], kraje = res[1], ul = res[2], live = res[3], extras = res[4];
+      var j = res[0], kraje = res[1], ul = res[2], live = res[3];
       var arr = Array.isArray(j) ? j : (j && j.opportunities);
       var base = (arr && arr.length ? arr.slice() : FALLBACK_DATA.slice());
       // Pozemky od majitelů — schválené inzeráty z data/user-listings.json
@@ -1960,22 +1950,6 @@
             features: cleanFeatures(u.features), access: (u.access ? clean(u.access, 40) : ''),
             _lid: u.id, views: (typeof u.views === 'number' ? u.views : 0)
           });
-        });
-      }
-      // Doplňky sítí/přístupu k pozemkům z veřejných zdrojů (od uživatelů, neověřené).
-      // Přiřadíme podle stabilního otisku; vlastní inzeráty (majitel) mají svoje.
-      if (Array.isArray(extras) && extras.length) {
-        var exMap = {};
-        extras.forEach(function (e) { if (e && e.key) exMap[e.key] = e; });
-        base.forEach(function (d) {
-          if (d.type === 'majitel') return;
-          var e = exMap[oppKey(d)];
-          if (!e) return;
-          var f = cleanFeatures(e.features);
-          var acc = e.access ? clean(e.access, 40) : '';
-          if (f.length) d.features = f;
-          if (acc) d.access = acc;
-          if (f.length || acc) d._extraUser = true;   // neověřeno · od uživatele
         });
       }
       boot(base, kraje || null, j && j.updated);
