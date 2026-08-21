@@ -1,22 +1,22 @@
 :root{
   /* Neutrály — vrstvená hloubka ploch (architektura + stínování).
      Modrošedá navy: důvěra a profesionalita, sladěný kontrast. */
-  --bg:#182634;                 /* pozadí stránky — nejhlubší vrstva */
-  --ink:#223243;                /* základní plocha: vstupy, položky, zapuštěné prvky */
-  --ink-soft:#2B3E52;           /* zvýšená plocha: karty a panely */
-  --ink-soft2:#375069;          /* nejvyšší plocha: hover, aktivní */
+  --bg:#101a26;                 /* pozadí stránky — hlubší, prémiovější navy */
+  --ink:#1a2735;                /* základní plocha: vstupy, položky, zapuštěné prvky */
+  --ink-soft:#213142;           /* zvýšená plocha: karty a panely (víc odlišené od pozadí) */
+  --ink-soft2:#2c4459;          /* nejvyšší plocha: hover, aktivní */
   --parchment:#EAF1F6; --parchment-dim:#D6E1EA;
   --text-onlight:#1B2536;
-  --text-ondark:#EEF4FA;        /* jasný text — vysoký kontrast */
-  --text-ondark-mute:#A6B8CA;   /* tlumený text */
+  --text-ondark:#F0F5FB;        /* jasný text — vysoký kontrast */
+  --text-ondark-mute:#9CB0C6;   /* tlumený text */
   /* Primární — modrá (důvěra, jistota, kompetence) */
-  --copper:#3E80DB; --copper-bright:#74ADF7;
+  --copper:#4A90E8; --copper-bright:#7EB6FB;
   /* Sémantické: zeleň = půda/růst/hodnota, zlatá = dražba, teracota = exekuce */
-  --c-sale:#4BA97D; --c-drazba:#D8AC5E; --c-exekuce:#D66F59; --c-obec:#6E95D0; --c-majitel:#9E86C8;
-  --surface-2:#375069;
-  --line: rgba(226,235,244,0.12);
-  --line-strong: rgba(226,235,244,0.24);
-  --panel:#223243;
+  --c-sale:#4FB487; --c-drazba:#E0B460; --c-exekuce:#DE7259; --c-obec:#6E95D0; --c-majitel:#A488D2;
+  --surface-2:#2c4459;
+  --line: rgba(220,232,244,0.11);
+  --line-strong: rgba(220,232,244,0.22);
+  --panel:#213142;
   --radius:10px; --radius-lg:16px;
   --shadow:0 14px 38px -14px rgba(0,0,0,0.60);
   --shadow-lg:0 34px 76px -22px rgba(0,0,0,0.66);
