@@ -1697,6 +1697,9 @@
     // spolehlivě sedne PŘÍMO na pozemek, ne jen „někam nad mapu".
     setTimeout(frame, 500);
   }
+  // Po použití sdíleného odkazu uklidíme adresu na čisté „/", ať další
+  // znovunačtení začne na výchozím stavu (celá ČR), ne zase na tom pozemku.
+  function cleanUrl() { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
   function openFromUrl() {
     // ?kraj=<název> — přiblíž mapu na daný kraj (odkaz z krajských/okresních stránek).
     var mk = /[?&]kraj=([^&]+)/.exec(location.search);
@@ -1708,6 +1711,7 @@
         if (hit) {
           selectKraj(hit);
           if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
+          cleanUrl();
           return true;
         }
       }
@@ -1718,7 +1722,7 @@
       var lid; try { lid = decodeURIComponent(ml[1]); } catch (e) { lid = ''; }
       var lt = null;
       DATA.forEach(function (d) { if (d._lid && d._lid === lid) lt = d; });
-      if (lt) { openParcel(lt); return true; }
+      if (lt) { openParcel(lt); cleanUrl(); return true; }
     }
     var m = /[?&]p=([^&]+)/.exec(location.search);
     if (!m) return false;
@@ -1726,8 +1730,9 @@
     try { key = decodeURIComponent(m[1]); } catch (e) { return false; }
     var target = null;
     DATA.forEach(function (d) { if (pkey(d) === key) target = d; });
-    if (!target) return false;
+    if (!target) { cleanUrl(); return false; }
     openParcel(target);
+    cleanUrl();
     return true;
   }
   // „Nejvýhodnější právě teď" — přidaná hodnota ukázaná čísly: pozemky, které
