@@ -7956,7 +7956,7 @@
       "extra": "inzerát – Bezrealitky",
       "lat": 49.416047,
       "lng": 17.728897,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1012929-nabidka-prodej-pozemku"
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1012929-nabidka-prodej-pozemku-loukov"
     },
     {
       "place": "Bílovec",
@@ -10559,19 +10559,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/967395-nabidka-prodej-pozemku-vojkovice"
     },
     {
-      "place": "Přísnotice",
-      "okres": "Brno-venkov",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "orná půda",
-      "area": 3061,
-      "price": 155000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 48.989837,
-      "lng": 16.641686,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/993099-nabidka-prodej-pozemku-prisnotice"
-    },
-    {
       "place": "Okřínek",
       "okres": "Kolín",
       "type": "sale",
@@ -12857,7 +12844,7 @@
       "extra": "inzerát – Bezrealitky",
       "lat": 49.418281,
       "lng": 17.710351,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1012442-nabidka-prodej-pozemku"
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1012442-nabidka-prodej-pozemku-loukov"
     },
     {
       "place": "Přibice",
@@ -18788,6 +18775,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1051863-nabidka-prodej-pozemku-bystra"
     },
     {
+      "place": "Prosenická Lhota",
+      "okres": "Benešov",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": 961,
+      "price": 2490000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.691582551182,
+      "lng": 14.481083193626,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1018356-nabidka-prodej-pozemku-prosenicka-lhota"
+    },
+    {
       "place": "Vendryně",
       "okres": "Karviná",
       "type": "sale",
@@ -18812,19 +18812,6 @@
       "lat": 50.6333983,
       "lng": 14.0539529,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1017198-nabidka-prodej-pozemku-jasanova-usti-nad-labem"
-    },
-    {
-      "place": "Prosenická Lhota",
-      "okres": "Benešov",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": 961,
-      "price": 2590000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.691582551182,
-      "lng": 14.481083193626,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1018356-nabidka-prodej-pozemku-prosenicka-lhota"
     },
     {
       "place": "Dětřichov",
@@ -19930,6 +19917,19 @@
       "lat": 50.6027498,
       "lng": 15.1655768,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/881339-nabidka-prodej-pozemku-na-teplici-turnov"
+    },
+    {
+      "place": "Popůvky",
+      "okres": "Brno-venkov",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "pozemek",
+      "area": 1186,
+      "price": 6600000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.18206085,
+      "lng": 16.474238210845,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/971872-nabidka-prodej-pozemku-popuvky"
     },
     {
       "place": "Svinaře",
@@ -24707,19 +24707,6 @@
       "url": "https://www.okdrazby.cz/drazba/26715"
     },
     {
-      "place": "Předonín",
-      "okres": "Mělník",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": null,
-      "price": 1346400,
-      "extra": "nucená dražba 2026-09-17 · OK dražby",
-      "lat": 50.440393,
-      "lng": 14.326133,
-      "url": "https://www.okdrazby.cz/drazba/26256"
-    },
-    {
       "place": "Mladá Boleslav",
       "okres": "Mladá Boleslav",
       "type": "exekuce",
@@ -24731,6 +24718,19 @@
       "lat": 50.399894,
       "lng": 15.01514,
       "url": "https://www.okdrazby.cz/drazba/26255"
+    },
+    {
+      "place": "Předonín",
+      "okres": "Mělník",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": null,
+      "price": 1346400,
+      "extra": "nucená dražba 2026-09-17 · OK dražby",
+      "lat": 50.440393,
+      "lng": 14.326133,
+      "url": "https://www.okdrazby.cz/drazba/26256"
     },
     {
       "place": "Havlíčkův Brod",
