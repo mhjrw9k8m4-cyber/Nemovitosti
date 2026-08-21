@@ -964,8 +964,16 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .to-top svg{width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round;}
 .to-top span{line-height:1;}
 .to-top.show{opacity:1; pointer-events:auto; transform:none;}
+.to-top.show svg{animation:toTopNudge 2.6s ease-in-out infinite;}
 .to-top:hover{box-shadow:0 12px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.16) inset; transform:translateY(-1px);}
+.to-top:hover svg{animation-play-state:paused;}
 .to-top:active{transform:translateY(0) scale(.97);}
+@keyframes toTopNudge{
+  0%,58%,100%{transform:translateY(0);}
+  70%{transform:translateY(-4px);}
+  84%{transform:translateY(-1px);}
+}
+@media (prefers-reduced-motion:reduce){ .to-top.show svg{animation:none;} }
 @media (max-width:420px){ .to-top{bottom:18px; right:16px; height:44px; padding:0 16px 0 13px; font-size:14px;} }
 
 /* Responsive */
