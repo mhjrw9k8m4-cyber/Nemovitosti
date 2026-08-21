@@ -170,25 +170,43 @@
       '<defs><linearGradient id="pzbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d2e3e"/><stop offset="1" stop-color="#141f2b"/></linearGradient></defs>' +
       '<rect width="320" height="200" fill="url(#pzbg)"/>' +
       '<g stroke="rgba(200,216,232,0.05)" stroke-width="1"><path d="M40 0V200M80 0V200M120 0V200M160 0V200M200 0V200M240 0V200M280 0V200"/><path d="M0 40H320M0 80H320M0 120H320M0 160H320"/></g>' +
-      '<polygon points="' + pts + '" fill="' + col + '" fill-opacity="0.22" stroke="' + col + '" stroke-width="2.4" stroke-linejoin="round"/>' +
       '</svg>';
   }
-  // Letecký snímek (větší, pro hero). z=16 stejně jako v seznamu (spolehlivější dlaždice).
+  // Letecký snímek (pro hero) s OBRYSEM CELÉHO POZEMKU (ne jen tečkou).
+  // Hero: letecký snímek SLOŽENÝ z dlaždic tak, aby byl POZEMEK PŘESNĚ UPROSTŘED,
+  // a přes něj OBRYS CELÉHO POZEMKU (podle skutečné výměry). Jako u realitního
+  // portálu — jen místo domu je vidět pozemek shora. z=17 = detail + spolehlivost.
   function heroLayers(d) {
     var col = TYPE[d.type].color;
-    var z = 16, n = Math.pow(2, z);
-    var latRad = d.lat * Math.PI / 180;
-    var xf = (d.lng + 180) / 360 * n;
-    var yf = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
-    var xt = Math.floor(xf), yt = Math.floor(yf);
-    var fx = xf - xt, fy = yf - yt;
-    var fxp = (fx * 100).toFixed(1), fyp = (fy * 100).toFixed(1);
-    var sat = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + z + '/' + yt + '/' + xt;
-    return planSvg(d, col, fx, fy) +
-      '<img class="opp-map" alt="Letecký snímek pozemku" src="' + sat + '" onerror="this.style.display=\'none\'" style="object-position:' + fxp + '% ' + fyp + '%">' +
+    var z = 17, n = Math.pow(2, z);
+    function worldX(lng) { return (lng + 180) / 360 * 256 * n; }
+    function worldY(lat) { var r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * 256 * n; }
+    var WX = worldX(d.lng), WY = worldY(d.lat);   // pozemek ve world-pixelech
+    var Vw = 384, Vh = 256;                        // výřez (3:2), střed = pozemek
+    var ox = WX - Vw / 2, oy = WY - Vh / 2;        // levý horní roh výřezu
+    // dlaždice, které výřez pokrývají (2×2 až 3×2), poskládané na správné místo
+    var minTx = Math.floor(ox / 256), maxTx = Math.floor((ox + Vw) / 256);
+    var minTy = Math.floor(oy / 256), maxTy = Math.floor((oy + Vh) / 256);
+    var imgs = '';
+    for (var tx = minTx; tx <= maxTx; tx++) {
+      for (var ty = minTy; ty <= maxTy; ty++) {
+        var u = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + z + '/' + ty + '/' + tx;
+        imgs += '<image href="' + u + '" xlink:href="' + u + '" x="' + (tx * 256 - ox).toFixed(1) + '" y="' + (ty * 256 - oy).toFixed(1) + '" width="256" height="256" preserveAspectRatio="none"/>';
+      }
+    }
+    // Obrys pozemku: vrcholy → world-pixely → souřadnice výřezu (pozemek je uprostřed).
+    var pp = polyFor(d).map(function (v) {
+      return (worldX(v[1]) - ox).toFixed(1) + ',' + (worldY(v[0]) - oy).toFixed(1);
+    }).join(' ');
+    return '<svg class="opp-map" viewBox="0 0 ' + Vw + ' ' + Vh + '" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
+      '<rect width="' + Vw + '" height="' + Vh + '" fill="#141f2b"/>' +
+      '<g stroke="rgba(200,216,232,0.06)" stroke-width="1"><path d="M64 0V256M128 0V256M192 0V256M256 0V256M320 0V256M0 64H384M0 128H384M0 192H384"/></g>' +
+      imgs +
+      '<polygon points="' + pp + '" fill="' + col + '" fill-opacity="0.26" stroke="#fff" stroke-width="2.6" stroke-linejoin="round" paint-order="stroke"/>' +
+      '<polygon points="' + pp + '" fill="none" stroke="' + col + '" stroke-width="1.3" stroke-linejoin="round"/>' +
+      '</svg>' +
       '<span class="opp-mgrad"></span>' +
-      '<span class="opp-badge ' + d.type + '">' + esc(TYPE[d.type].label) + '</span>' +
-      '<span class="opp-pin" style="left:' + fxp + '%;top:' + fyp + '%;background:' + col + '"></span>';
+      '<span class="opp-badge ' + d.type + '">' + esc(TYPE[d.type].label) + '</span>';
   }
 
   // Oblíbené (sdílené s hlavní aplikací přes stejný localStorage klíč)
@@ -217,7 +235,9 @@
     var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'sale' || d.type === 'majitel' ? 'Cena' : 'Odhadní cena');
     var days = daysUntil(d.extra);
-    var mapHref = 'index.html?p=' + encodeURIComponent(pkey(d)) + '#mapa';
+    // „Zobrazit na mapě" vede na SKUTEČNOU mapu (Mapy.cz letecká) na daném místě,
+    // ne na naši tečkovanou mapu. Přesný obrys pozemku je pak přes „Katastr".
+    var mapHref = 'https://mapy.cz/letecka?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat;
     var src = sourceLink(d);
     var favOn = isFav(d);
 
@@ -256,13 +276,12 @@
       '</div>' +
 
       '<div class="pz-cta">' +
-        '<a class="btn-primary btn-glow" href="' + mapHref + '">' + MAP_SVG + ' Zobrazit na mapě</a>' +
+        '<a class="btn-primary btn-glow" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + ' Zobrazit na mapě</a>' +
         (d.type === 'majitel' ? '' : '<a class="btn-primary" style="background:var(--ink-soft2);color:var(--text-ondark);box-shadow:none;border:1px solid var(--line)" href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.label) + ' →</a>') +
       '</div>' +
 
       '<div class="pz-actions">' +
-        '<a class="lp-btn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">Katastr</a>' +
-        '<a class="lp-btn" href="' + mapyUrl(d) + '" target="_blank" rel="noopener">Mapy.cz</a>' +
+        '<a class="lp-btn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">Přesný obrys (katastr)</a>' +
         '<button class="lp-btn lp-fav' + (favOn ? ' on' : '') + '" type="button" id="pz-fav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg><span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
         '<button class="lp-btn" type="button" id="pz-share">Sdílet</button>' +
       '</div>' +
@@ -276,11 +295,12 @@
     // titulek stránky
     try { document.title = d.place + ' — ' + fmt(d.price) + ' Kč · Parcelka'; } catch (e) {}
 
-    // klik na snímek → mapa
+    // klik na snímek → skutečná mapa (Mapy.cz) v nové záložce
+    function openMap() { var w = window.open(mapHref, '_blank', 'noopener'); if (!w) location.href = mapHref; }
     var media = document.getElementById('pz-media');
     if (media) {
-      media.addEventListener('click', function () { location.href = mapHref; });
-      media.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); location.href = mapHref; } });
+      media.addEventListener('click', openMap);
+      media.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openMap(); } });
     }
     // uložit
     var favBtn = document.getElementById('pz-fav');
