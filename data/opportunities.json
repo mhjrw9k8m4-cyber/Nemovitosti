@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-20",
+  "updated": "2026-08-21",
   "source": "Centrální evidence veřejných dražeb + Státní pozemkový úřad",
   "opportunities": [
     {
@@ -5606,19 +5606,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1033459-nabidka-prodej-pozemku-kvicovice"
     },
     {
-      "place": "Čížkov",
-      "okres": "Plzeň-jih",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "trvalý travní porost",
-      "area": 10742,
-      "price": 410000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.533084,
-      "lng": 13.640644,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/961444-nabidka-prodej-pozemku"
-    },
-    {
       "place": "Moravský Písek",
       "okres": "Uherské Hradiště",
       "type": "sale",
@@ -5630,6 +5617,19 @@
       "lat": 48.996231,
       "lng": 17.320195,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/986166-nabidka-prodej-pozemku-moravsky-pisek"
+    },
+    {
+      "place": "Čížkov",
+      "okres": "Plzeň-jih",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "trvalý travní porost",
+      "area": 10742,
+      "price": 410000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.533084,
+      "lng": 13.640644,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/961444-nabidka-prodej-pozemku"
     },
     {
       "place": "Moravský Písek",
@@ -18294,19 +18294,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1057136-nabidka-prodej-pozemku-postupice"
     },
     {
-      "place": "Žihobce",
-      "okres": "Strakonice",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": 1337,
-      "price": 2249996,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.2104843,
-      "lng": 13.5982258,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/944817-nabidka-prodej-pozemku-zihobce"
-    },
-    {
       "place": "Blatno",
       "okres": "Chomutov",
       "type": "sale",
@@ -18801,6 +18788,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1054729-nabidka-prodej-pozemku"
     },
     {
+      "place": "Jasanová",
+      "okres": "Ústí nad Labem",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": 1210,
+      "price": 3200000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.6333983,
+      "lng": 14.0539529,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1017198-nabidka-prodej-pozemku-jasanova-usti-nad-labem"
+    },
+    {
       "place": "Prosenická Lhota",
       "okres": "Benešov",
       "type": "sale",
@@ -18851,6 +18851,19 @@
       "lat": 50.010818,
       "lng": 14.294626,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/950353-nabidka-prodej-pozemku-orech"
+    },
+    {
+      "place": "Brno",
+      "okres": "Brno-město",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "zahrada",
+      "area": 1130,
+      "price": 3200000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.197779419398,
+      "lng": 16.559866471976,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1004826-nabidka-prodej-pozemku"
     },
     {
       "place": "Buková u Příbramě",
@@ -20788,19 +20801,6 @@
       "lat": 50.1608299,
       "lng": 14.3824148,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1038554-nabidka-prodej-pozemku-roztoky"
-    },
-    {
-      "place": "Žampiónová",
-      "okres": "Praha-východ",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": 1393,
-      "price": 26467000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 50.0206383,
-      "lng": 14.5800086,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/804559-nabidka-prodej-pozemku-zampionova-praha"
     },
     {
       "place": "Stráž pod Ralskem",
@@ -23394,32 +23394,6 @@
       "url": "https://www.immodrazby.cz/pozemek-rataje-u-kromerize-216"
     },
     {
-      "place": "Velké Opatovice",
-      "okres": "Blansko",
-      "type": "drazba",
-      "parcel": "459/15",
-      "druh": "trvalý travní porost",
-      "area": 9340,
-      "price": 280200,
-      "extra": "dražba 2026-08-20",
-      "lat": 49.61793,
-      "lng": 16.68311,
-      "url": "https://okdrazby.cz/drazba/26074"
-    },
-    {
-      "place": "Trubín",
-      "okres": "Beroun",
-      "type": "drazba",
-      "parcel": "487",
-      "druh": "lesní pozemek",
-      "area": 62499,
-      "price": 1875000,
-      "extra": "dražba 2026-08-20",
-      "lat": 49.94967,
-      "lng": 14.00066,
-      "url": "https://okdrazby.cz/drazba/26073"
-    },
-    {
       "place": "Seninka",
       "okres": "Vsetín",
       "type": "drazba",
@@ -23860,6 +23834,32 @@
       "lat": 49.8747281,
       "lng": 18.5517914,
       "url": "https://aukce.karvina.cz/"
+    },
+    {
+      "place": "Police nad Metují",
+      "okres": "Náchod",
+      "type": "drazba",
+      "parcel": "769/279",
+      "druh": "pozemek",
+      "area": 719,
+      "price": 1078500,
+      "extra": "dražba 2026-09-17",
+      "lat": 50.53605,
+      "lng": 16.2347,
+      "url": "https://drazby.policenm.cz/drazby/detail/uu2kya8sx7ryoly1oj1y0z4hxlampx4wgq28k7a2"
+    },
+    {
+      "place": "Police nad Metují",
+      "okres": "Náchod",
+      "type": "drazba",
+      "parcel": "769/278",
+      "druh": "pozemek",
+      "area": 719,
+      "price": 1078500,
+      "extra": "dražba 2026-09-24",
+      "lat": 50.53459,
+      "lng": 16.23611,
+      "url": "https://drazby.policenm.cz/drazby/detail/170qjoy7v519ins03vwxbhyvf2avgo9gw9453oss"
     },
     {
       "place": "Tábor",
@@ -24707,19 +24707,6 @@
       "url": "https://www.okdrazby.cz/drazba/26715"
     },
     {
-      "place": "Mladá Boleslav",
-      "okres": "Mladá Boleslav",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": null,
-      "price": 2050000,
-      "extra": "nucená dražba 2026-09-01 · OK dražby",
-      "lat": 50.399894,
-      "lng": 15.01514,
-      "url": "https://www.okdrazby.cz/drazba/26255"
-    },
-    {
       "place": "Předonín",
       "okres": "Mělník",
       "type": "exekuce",
@@ -24731,6 +24718,19 @@
       "lat": 50.440393,
       "lng": 14.326133,
       "url": "https://www.okdrazby.cz/drazba/26256"
+    },
+    {
+      "place": "Mladá Boleslav",
+      "okres": "Mladá Boleslav",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": null,
+      "price": 2050000,
+      "extra": "nucená dražba 2026-09-01 · OK dražby",
+      "lat": 50.399894,
+      "lng": 15.01514,
+      "url": "https://www.okdrazby.cz/drazba/26255"
     },
     {
       "place": "Havlíčkův Brod",
