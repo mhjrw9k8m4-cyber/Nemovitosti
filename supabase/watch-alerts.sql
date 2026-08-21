@@ -12,8 +12,34 @@
 -- Odesílání e-mailů dělá GitHub Action (scripts/send-alerts.mjs) přes Resend.
 -- =====================================================================
 
+-- ---------- Jistota: tabulka hlídání a všechny potřebné sloupce ----------
+create table if not exists watch_subscriptions (
+  id                 uuid primary key default gen_random_uuid(),
+  created_at         timestamptz not null default now(),
+  email              text not null,
+  okres              text,
+  types              text[] default '{}',
+  active             boolean not null default true,
+  confirmed          boolean not null default false,
+  confirm_token      text,
+  unsubscribe_token  text default gen_random_uuid()::text,
+  last_notified_at   timestamptz
+);
+alter table watch_subscriptions add column if not exists types text[] default '{}';
+alter table watch_subscriptions add column if not exists active boolean not null default true;
+alter table watch_subscriptions add column if not exists confirmed boolean not null default false;
+alter table watch_subscriptions add column if not exists confirm_token text;
+alter table watch_subscriptions add column if not exists unsubscribe_token text default gen_random_uuid()::text;
+alter table watch_subscriptions add column if not exists last_notified_at timestamptz;
 -- Kdy jsme naposledy poslali potvrzovací e-mail (ať ho neposíláme dokola)
 alter table watch_subscriptions add column if not exists confirm_sent_at timestamptz;
+-- Starým řádkům bez odhlašovacího tokenu ho doplníme
+update watch_subscriptions set unsubscribe_token = gen_random_uuid()::text where unsubscribe_token is null;
+alter table watch_subscriptions enable row level security;
+-- Vkládání z prohlížeče (odeslání formuláře přes anon klíč) — jistota
+drop policy if exists "verejne vkladani hlidani" on watch_subscriptions;
+create policy "verejne vkladani hlidani"
+  on watch_subscriptions for insert to anon with check (true);
 
 -- ---------- Evidence už viděných příležitostí ----------
 create table if not exists alert_seen (
