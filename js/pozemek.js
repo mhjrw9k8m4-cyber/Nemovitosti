@@ -194,20 +194,17 @@
         imgs += '<image href="' + u + '" xlink:href="' + u + '" x="' + (tx * 256 - ox).toFixed(1) + '" y="' + (ty * 256 - oy).toFixed(1) + '" width="256" height="256" preserveAspectRatio="none"/>';
       }
     }
-    // Značka pozemku: kruh se SKUTEČNOU velikostí (podle výměry) na přesném místě.
-    // Nepředstírá konkrétní tvar hranic (ten přesný je v katastru) — jen poctivě
-    // ukazuje „tady je pozemek a je zhruba takhle velký".
-    var pxPerM = 256 * n / (40075016.686 * Math.cos(d.lat * Math.PI / 180));
-    var rU = Math.max(9, Math.sqrt((hasArea(d) ? d.area : 1500) / Math.PI) * pxPerM);
-    var cx = (Vw / 2).toFixed(1), cy = (Vh / 2).toFixed(1);
+    // Značka pozemku: jednoduchý špendlík na přesném místě (jako Google Maps).
+    var cx = Vw / 2, cy = Vh / 2;   // pozemek je vycentrovaný uprostřed
+    var pin = '<g transform="translate(' + cx + ',' + cy + ')" filter="url(#pinsh)">' +
+      '<path d="M0 0C-7 -12 -12 -18 -12 -25 A12 12 0 1 1 12 -25 C12 -18 7 -12 0 0Z" fill="' + col + '" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>' +
+      '<circle cx="0" cy="-25" r="4.6" fill="#fff"/></g>';
     return '<svg class="opp-map" viewBox="0 0 ' + Vw + ' ' + Vh + '" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
+      '<defs><filter id="pinsh" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="rgba(0,0,0,0.5)"/></filter></defs>' +
       '<rect width="' + Vw + '" height="' + Vh + '" fill="#dbe1e8"/>' +
       '<g stroke="rgba(16,24,40,0.06)" stroke-width="1"><path d="M64 0V256M128 0V256M192 0V256M256 0V256M320 0V256M0 64H384M0 128H384M0 192H384"/></g>' +
       imgs +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="' + rU.toFixed(1) + '" fill="' + col + '" fill-opacity="0.18" stroke="#fff" stroke-width="3" paint-order="stroke"/>' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="' + rU.toFixed(1) + '" fill="none" stroke="' + col + '" stroke-width="1.6"/>' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="4.5" fill="#fff"/>' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="2.6" fill="' + col + '"/>' +
+      pin +
       '</svg>' +
       '<span class="opp-mgrad"></span>' +
       '<span class="opp-badge ' + d.type + '">' + esc(TYPE[d.type].label) + '</span>';

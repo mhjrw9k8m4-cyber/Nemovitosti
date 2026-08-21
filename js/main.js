@@ -1158,16 +1158,13 @@
   }
   function highlightShape(d) {
     if (selPoly) { map.removeLayer(selPoly); selPoly = null; }
-    // Značka pozemku: kruh se SKUTEČNOU velikostí (podle výměry) + přesný střed.
-    // Poctivé — nepředstírá konkrétní tvar hranic (ten je v katastru), ale ukáže
-    // přesné místo a jak je pozemek zhruba velký.
+    // Značka pozemku = jednoduchý špendlík na přesném místě (jako Google Maps).
     var col = TYPE[d.type].color;
-    var r = Math.sqrt((hasArea(d) ? d.area : 1500) / Math.PI); // poloměr v metrech z výměry
-    var area = L.circle([d.lat, d.lng], { radius: r, color: col, weight: 3, opacity: 1, fillColor: col, fillOpacity: 0.16 });
-    var dot = L.circleMarker([d.lat, d.lng], { radius: 6, color: '#fff', weight: 3, fillColor: col, fillOpacity: 1 });
-    selPoly = L.featureGroup([area, dot]).addTo(map);
-    if (selPoly.bringToFront) selPoly.bringToFront();
-    if (selPoly.bindTooltip) selPoly.bindTooltip('Přibližné umístění a velikost pozemku · přesné hranice v katastru', { sticky: true, direction: 'top', className: 'kraj-tip' });
+    var html = '<svg viewBox="0 0 24 34" width="30" height="42" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M12 1C6.2 1 1.5 5.7 1.5 11.5 1.5 19 12 33 12 33s10.5-14 10.5-21.5C22.5 5.7 17.8 1 12 1z" fill="' + col + '" stroke="#fff" stroke-width="2"/>' +
+      '<circle cx="12" cy="11.5" r="4.4" fill="#fff"/></svg>';
+    var icon = L.divIcon({ html: html, className: 'sel-pin', iconSize: [30, 42], iconAnchor: [15, 40] });
+    selPoly = L.marker([d.lat, d.lng], { icon: icon, interactive: false, keyboard: false, zIndexOffset: 1000 }).addTo(map);
   }
 
   // Tečkovaná mapa pozemků + obrysy krajů pro orientaci
@@ -1678,14 +1675,10 @@
     if (!target) return;
     var k = krajOf(target);
     if (k) selectKraj(k, true);
-    highlightShape(target);                 // nakresli obrys pozemku
+    highlightShape(target);                 // špendlík na místě pozemku
     function frame() {
       map.invalidateSize();
-      if (selPoly && selPoly.getBounds) {
-        map.fitBounds(selPoly.getBounds(), { padding: [80, 80], maxZoom: 18, animate: false });
-      } else {
-        map.setView([target.lat, target.lng], 17, { animate: false });
-      }
+      map.setView([target.lat, target.lng], 17, { animate: false });
     }
     frame();
     updateMapView();
