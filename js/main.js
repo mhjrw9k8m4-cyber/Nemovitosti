@@ -1641,6 +1641,15 @@
   // z „Podobných pozemků" — všude vede pozemek na svou vlastní stránku.
   function gotoInzerat(d) {
     if (!d) return;
+    // Předáme pozemek přes sessionStorage, ať se stránka inzerátu zobrazí OKAMŽITĚ
+    // (nemusí čekat na stažení celého seznamu). Plynulé, bez „zaseknutí".
+    try {
+      sessionStorage.setItem('pk_open', JSON.stringify({
+        place: d.place, okres: d.okres, parcel: d.parcel, druh: d.druh,
+        price: d.price, area: d.area, type: d.type, lat: d.lat, lng: d.lng,
+        extra: d.extra, url: d.url, featured: d.featured
+      }));
+    } catch (e) {}
     location.href = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng;
   }
   // „Zobrazit na mapě" / sdílený odkaz: přiblíž mapu na pozemek a zvýrazni ho

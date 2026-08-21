@@ -248,10 +248,11 @@
 
       (days != null && days >= 0 ? '<div style="margin:6px 0 2px"><span class="md-cd' + countdownClass(days) + '">Termín ' + countdownText(days) + '</span></div>' : '') +
 
-      priceBarHtml(d) +
+      '<div id="pz-verdict">' + priceBarHtml(d) + '</div>' +
 
-      '<div class="pz-facts">' +
-        facts.map(function (f) { return '<div class="pz-fact"><div class="fk">' + f.k + '</div><div class="fv">' + f.v + '</div></div>'; }).join('') +
+      '<div class="pz-sect-h">Parametry pozemku</div>' +
+      '<div class="pz-specs">' +
+        facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v + '</span></div>'; }).join('') +
       '</div>' +
 
       '<div class="pz-cta">' +
@@ -341,12 +342,36 @@
     return fetch(url, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
   }
 
+  function fillVerdict(d) {
+    var el = document.getElementById('pz-verdict');
+    if (el) el.innerHTML = priceBarHtml(d);
+  }
+
+  // 1) OKAMŽITĚ vykresli z předaného pozemku (sessionStorage) — bez čekání na data.
+  var quick = null;
+  try { quick = JSON.parse(sessionStorage.getItem('pk_open') || 'null'); } catch (e) {}
+  // předaný pozemek použij jen když sedí na adresu (?p=), ať se neukáže špatný
+  var mp = /[?&]p=([^&]+)/.exec(location.search);
+  var wantKey = null; if (mp) { try { wantKey = decodeURIComponent(mp[1]); } catch (e) {} }
+  var rendered = false;
+  if (quick && quick.place && (wantKey == null || pkey(quick) === wantKey)) {
+    quick._id = 0;
+    render(quick);
+    rendered = true;
+  }
+
+  // 2) Dotáhni celá data pro cenové srovnání (a jako záloha, když handoff chybí).
   loadJSON('data/opportunities.json').then(function (j) {
     var DATA = (j && (j.opportunities || j.items || (Array.isArray(j) ? j : []))) || [];
     DATA.forEach(function (d, i) { d._id = i; });
     buildIndex(DATA);
-    var target = findTarget(DATA);
-    if (target) render(target); else renderEmpty();
+    var target = findTarget(DATA) || quick;
+    if (target) {
+      if (!rendered) render(target);
+      fillVerdict(target);   // cenový verdikt teď máme z čeho spočítat
+    } else if (!rendered) {
+      renderEmpty();
+    }
   });
 
   // mobilní menu

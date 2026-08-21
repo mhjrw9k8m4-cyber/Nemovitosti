@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260821e">
+  <link rel="stylesheet" href="css/styles.css?v=20260821f">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     .pz-wrap{max-width:760px; margin:0 auto; padding:18px 16px 60px;}
@@ -45,14 +45,14 @@
     .pz-price .pl{font-size:12px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--text-ondark-mute); width:100%;}
     .pz-price .pv{font-size:30px; font-weight:700; letter-spacing:-0.02em; color:var(--text-ondark); font-variant-numeric:tabular-nums;}
     .pz-price .pm{font-size:14px; font-weight:600; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
-    .pz-facts{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:18px 0;}
-    .pz-fact{background:var(--ink-soft); border:1px solid var(--line); border-radius:12px; padding:11px 13px;}
-    .pz-fact .fk{font-size:11.5px; letter-spacing:.03em; text-transform:uppercase; color:var(--text-ondark-mute); font-weight:600;}
-    .pz-fact .fv{font-size:16px; font-weight:600; color:var(--text-ondark); margin-top:3px; font-variant-numeric:tabular-nums;}
+    .pz-specs{margin:10px 0 4px; border:1px solid var(--line); border-radius:14px; overflow:hidden; background:var(--ink-soft);}
+    .pz-spec{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 15px; border-bottom:1px solid var(--line);}
+    .pz-spec:last-child{border-bottom:none;}
+    .pz-spec .k{color:var(--text-ondark-mute); font-size:14px; flex:none;}
+    .pz-spec .v{color:var(--text-ondark); font-weight:600; font-size:15px; text-align:right; font-variant-numeric:tabular-nums; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
     .pz-cta{display:flex; flex-wrap:wrap; gap:10px; margin:20px 0 8px;}
     .pz-cta .btn-primary{flex:1 1 180px; display:inline-flex; align-items:center; justify-content:center; gap:8px; text-align:center;}
     .pz-cta .btn-primary svg{width:18px; height:18px; flex:none;}
-    .pz-facts .fv{overflow:hidden; text-overflow:ellipsis;}
     .pz-actions{display:flex; flex-wrap:wrap; gap:9px; margin:14px 0;}
     .pz-sect-h{font-size:13px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--text-ondark-mute); margin:24px 0 10px;}
     .pz-loading, .pz-empty{padding:60px 16px; text-align:center; color:var(--text-ondark-mute);}
@@ -102,7 +102,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/pozemek.js?v=20260821e"></script>
+<script src="js/pozemek.js?v=20260821f"></script>
 <!-- Vercel Web Analytics -->
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
