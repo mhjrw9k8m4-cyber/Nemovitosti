@@ -1422,35 +1422,53 @@
     updateKrajHead();
     renderList();
   }
-  // „Nejblíž ke mně" — zeptá se na polohu a seřadí pozemky podle vzdálenosti.
+  // Je bod přibližně v ČR? (pojistka proti nesmyslné IP poloze, např. přes VPN)
+  function inCz(lat, lng) { return lat > 48.4 && lat < 51.2 && lng > 12.0 && lng < 18.95; }
+  // Přejde do režimu „okolí" na dané poloze. approx = přibližná (podle IP).
+  function enterNearAt(pos, approx) {
+    userPos = { lat: pos.lat, lng: pos.lng };
+    selectedKraj = null;
+    if (krajLayer) krajLayer.setStyle(styleKraj);
+    nearMode = true;
+    if (userMarker) map.removeLayer(userMarker);
+    userMarker = L.marker([userPos.lat, userPos.lng], { icon: L.divIcon({ className: 'pk-me-wrap' + (approx ? ' approx' : ''), html: '<span class="pk-me"></span>', iconSize: [18, 18], iconAnchor: [9, 9] }), zIndexOffset: 1000, interactive: false }).addTo(map);
+    lockDots(false);
+    setPan(true);
+    if (nearBtn) nearBtn.classList.add('on');
+    map.setView([userPos.lat, userPos.lng], approx ? 10 : 11, { animate: true });
+    sortMode = 'near';
+    if (sortEl) sortEl.value = 'near';
+    updateKrajHead();
+    renderList();
+    showToast(approx ? 'Přibližná poloha (podle připojení). Seřazeno podle vzdálenosti.' : 'Seřazeno podle vzdálenosti od vás.');
+  }
+  // Přibližná poloha podle IP — když GPS není povolená. Zkusí dva zdroje (HTTPS, bez klíče).
+  function ipLocate() {
+    function grab(url, pick) {
+      return fetch(url).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { var p = j && pick(j); return (p && inCz(p.lat, p.lng)) ? p : null; })
+        .catch(function () { return null; });
+    }
+    return grab('https://ipapi.co/json/', function (j) { return (j.latitude && j.longitude) ? { lat: +j.latitude, lng: +j.longitude } : null; })
+      .then(function (p) { return p || grab('https://ipwho.is/', function (j) { return (j && j.success && j.latitude) ? { lat: +j.latitude, lng: +j.longitude } : null; }); });
+  }
+  // „Pozemky v okolí" — nejdřív přesná GPS; když nejde, přibližná IP; a když ani to, ruční hledání.
   function enterNear() {
-    if (!navigator.geolocation) { showToast('Váš prohlížeč neumí zjistit polohu.'); if (sortEl) sortEl.value = sortMode; return; }
     showToast('Zjišťuji vaši polohu…');
+    function ipThenSearch(denied) {
+      ipLocate().then(function (pos) {
+        if (pos) { enterNearAt(pos, true); return; }
+        if (sortEl) sortEl.value = sortMode;
+        showToast('Polohu se nepodařilo zjistit. Napište své město do vyhledávání nahoře — najdu pozemky v okolí.');
+        if (searchEl) { try { searchEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); searchEl.focus(); } catch (e) {} }
+      });
+    }
+    if (!navigator.geolocation) { ipThenSearch(false); return; }
     navigator.geolocation.getCurrentPosition(function (pos) {
-      userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      selectedKraj = null;
-      if (krajLayer) krajLayer.setStyle(styleKraj);
-      nearMode = true;
-      if (userMarker) map.removeLayer(userMarker);
-      userMarker = L.marker([userPos.lat, userPos.lng], { icon: L.divIcon({ className: 'pk-me-wrap', html: '<span class="pk-me"></span>', iconSize: [18, 18], iconAnchor: [9, 9] }), zIndexOffset: 1000, interactive: false }).addTo(map);
-      lockDots(false);
-      setPan(true);      // v režimu „okolí" jde s mapou taky volně hýbat
-      if (nearBtn) nearBtn.classList.add('on');
-      map.setView([userPos.lat, userPos.lng], 11, { animate: true });
-      sortMode = 'near';
-      if (sortEl) sortEl.value = 'near';
-      updateKrajHead();
-      renderList();
-      showToast('Seřazeno podle vzdálenosti od vás.');
+      enterNearAt({ lat: pos.coords.latitude, lng: pos.coords.longitude }, false);
     }, function (err) {
-      if (sortEl) sortEl.value = sortMode;
-      var denied = err && err.code === 1;   // 1 = uživatel polohu nepovolil
-      showToast(denied
-        ? 'Poloha není povolená. Napište své město do vyhledávání nahoře — najdu pozemky v okolí.'
-        : 'Polohu se teď nepodařilo zjistit. Napište své město do vyhledávání nahoře.');
-      // Slepá ulička → nabídneme ruční cestu: zaostříme vyhledávání obce.
-      if (searchEl) { try { searchEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); searchEl.focus(); } catch (e) {} }
-    }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 });
+      ipThenSearch(err && err.code === 1);
+    }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 });
   }
   lockDots(true);      // start: nejdřív se vybírá kraj
   updateKrajHead();
