@@ -315,6 +315,17 @@
     }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
   }
 
+  // Přihlášení k hlídání lokality. Použije funkci subscribe_watch (s potvrzením
+  // e-mailu / double opt-in); dokud není v Supabase nasazená, spadne na přímý
+  // zápis (staré chování), ať formulář funguje vždy.
+  function subscribeWatch(email, okres, types) {
+    if (!SB_READY) return Promise.resolve('unset');
+    return sbRpc('subscribe_watch', { p_email: email, p_okres: okres || null, p_types: types || [] }).then(function (res) {
+      if (res === true) return 'ok';
+      return sbInsert('watch_subscriptions', { email: email, okres: okres || null });
+    });
+  }
+
   var wForm = document.getElementById('watch-form');
   if (wForm) {
     wForm.addEventListener('submit', function (e) {
@@ -329,7 +340,7 @@
         return;
       }
       ms.textContent = 'Odesílám…';
-      sbInsert('watch_subscriptions', { email: email, okres: okres || null }).then(function (r) {
+      subscribeWatch(email, okres).then(function (r) {
         if (r === 'ok') { ms.textContent = okres ? ('Budeme hlídat okres „' + okres + '" a dáme vědět, jakmile se objeví nová příležitost.') : 'Ozveme se, jakmile se ve vašem okolí objeví nová příležitost.'; setTimeout(closeWatch, 1900); }
         else { ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; ms.classList.add('err'); }
       });
@@ -499,7 +510,7 @@
         return;
       }
       msg.textContent = 'Odesílám…';
-      sbInsert('watch_subscriptions', { email: email, okres: okres || null }).then(function (r) {
+      subscribeWatch(email, okres).then(function (r) {
         if (r === 'ok') {
           msg.textContent = okres ? ('Budeme hlídat okres „' + okres + '" a dáme vědět, jakmile se objeví nová příležitost.') : 'Ozveme se, jakmile se ve vašem okolí objeví nová příležitost.';
           form.reset();

@@ -1,0 +1,41 @@
+name: Rozesílání upozornění na lokalitu
+
+# Robot pošle e-mailem nové příležitosti lidem, kteří si nechali hlídat okres.
+# Běží 30 minut po aktualizaci dat (ta běží v 0 */6). Ručně přes „Run workflow".
+#
+# BEZPEČNOST: ve výchozím stavu je ZKUŠEBNÍ REŽIM (nic se neodešle). Ostré
+# odesílání se zapne nastavením proměnné (Variable) ALERTS_LIVE = 1.
+#
+# Potřebná nastavení v repu (Settings → Secrets and variables → Actions):
+#   Secrets:   SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY
+#   Variables: ALERT_FROM, SITE_URL, ALERTS_LIVE (nepovinné; 1 = ostrý režim)
+
+on:
+  schedule:
+    - cron: '30 */6 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: send-alerts
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Rozeslat upozornění
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_FROM: ${{ vars.ALERT_FROM }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          ALERTS_LIVE: ${{ vars.ALERTS_LIVE }}
+        run: node scripts/send-alerts.mjs
