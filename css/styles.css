@@ -1,31 +1,32 @@
 :root{
-  /* Neutrály — vrstvená hloubka ploch (architektura + stínování).
-     Modrošedá navy: důvěra a profesionalita, sladěný kontrast. */
-  --bg:#182634;                 /* pozadí stránky — nejhlubší vrstva */
-  --ink:#223243;                /* základní plocha: vstupy, položky, zapuštěné prvky */
-  --ink-soft:#2B3E52;           /* zvýšená plocha: karty a panely */
-  --ink-soft2:#375069;          /* nejvyšší plocha: hover, aktivní */
-  --parchment:#EAF1F6; --parchment-dim:#D6E1EA;
-  --text-onlight:#1B2536;
-  --text-ondark:#EEF4FA;        /* jasný text — vysoký kontrast */
-  --text-ondark-mute:#A6B8CA;   /* tlumený text */
-  /* Primární — modrá (důvěra, jistota, kompetence) */
-  --copper:#3E80DB; --copper-bright:#74ADF7;
-  /* Sémantické: zeleň = půda/růst/hodnota, zlatá = dražba, teracota = exekuce */
-  --c-sale:#4BA97D; --c-drazba:#D8AC5E; --c-exekuce:#D66F59; --c-obec:#6E95D0; --c-majitel:#9E86C8;
-  --surface-2:#375069;
-  --line: rgba(226,235,244,0.12);
-  --line-strong: rgba(226,235,244,0.24);
-  --panel:#223243;
+  /* SVĚTLÝ režim — čistý, prostorný, prémiový (styl realitního portálu).
+     Názvy tokenů zůstávají (kvůli kompatibilitě), jen mají světlé hodnoty:
+     --text-ondark = hlavní tmavý text, --bg = světlé pozadí, --ink* = bílé plochy. */
+  --bg:#eef1f5;                 /* pozadí stránky */
+  --ink:#ffffff;                /* základní plocha: vstupy, položky */
+  --ink-soft:#ffffff;           /* karty a panely */
+  --ink-soft2:#f1f4f8;          /* hover / aktivní / zapuštěné */
+  --parchment:#101828; --parchment-dim:#475467;
+  --text-onlight:#101828;
+  --text-ondark:#101828;        /* hlavní text (tmavý na světlém) */
+  --text-ondark-mute:#667085;   /* tlumený text */
+  /* Primární — modrá (důvěra, jistota) */
+  --copper:#2563eb; --copper-bright:#2f6fed;
+  /* Sémantické: zeleň = půda/hodnota, zlatá = dražba, teracota = exekuce */
+  --c-sale:#2f9e63; --c-drazba:#c79127; --c-exekuce:#d0503f; --c-obec:#3f6fd0; --c-majitel:#8259c0;
+  --surface-2:#f1f4f8;
+  --line: rgba(16,24,40,0.10);
+  --line-strong: rgba(16,24,40,0.18);
+  --panel:#ffffff;
   --radius:10px; --radius-lg:16px;
-  --shadow:0 14px 38px -14px rgba(0,0,0,0.60);
-  --shadow-lg:0 34px 76px -22px rgba(0,0,0,0.66);
+  --shadow:0 1px 2px rgba(16,24,40,0.06), 0 14px 34px -18px rgba(16,24,40,0.22);
+  --shadow-lg:0 2px 6px rgba(16,24,40,0.08), 0 34px 70px -26px rgba(16,24,40,0.26);
   --ease:cubic-bezier(.22,.61,.36,1);
 }
 
 /* Ikony */
 .ic{width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex:none;}
-.icon-badge{width:44px; height:44px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:20px; background:rgba(224,236,244,0.06); border:1px solid var(--line);}
+.icon-badge{width:44px; height:44px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:20px; background:rgba(16,24,40,0.06); border:1px solid var(--line);}
 .icon-badge .ic{width:22px; height:22px;}
 
 *{box-sizing:border-box; margin:0; padding:0;}
@@ -166,7 +167,7 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 @keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(2.2); opacity:0;}}
 
 /* Header */
-header{border-bottom:1px solid var(--line); padding:20px 0; position:sticky; top:0; z-index:1000; background:rgba(24,38,52,0.82); backdrop-filter:blur(12px); transition:padding .2s ease;}
+header{border-bottom:1px solid var(--line); padding:20px 0; position:sticky; top:0; z-index:1000; background:rgba(255,255,255,0.85); backdrop-filter:blur(12px); transition:padding .2s ease;}
 header.shrink{padding:12px 0;}
 header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .logo{font-family:'Inter',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:22px; display:flex; align-items:center; gap:10px; text-decoration:none;}
@@ -188,7 +189,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px); z-index:4000; max-width:calc(100% - 32px); background:var(--ink-soft2); border:1px solid var(--copper); color:var(--text-ondark); font-size:13.5px; font-weight:500; padding:13px 20px; border-radius:10px; box-shadow:0 14px 36px -10px rgba(0,0,0,0.7); opacity:0; transition:opacity .3s var(--ease), transform .3s var(--ease); pointer-events:none;}
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
-.btn-primary{background:linear-gradient(135deg, var(--copper-bright), var(--copper)); color:#08111C; font-weight:700; font-size:14px; padding:10px 20px; border-radius:9px; text-decoration:none; border:1px solid rgba(116,173,247,0.55); box-shadow:0 8px 22px -8px rgba(62,128,219,0.55); transition:filter .15s ease, transform .1s ease, box-shadow .15s ease; white-space:nowrap; cursor:pointer;}
+.btn-primary{background:linear-gradient(135deg, var(--copper-bright), var(--copper)); color:#fff; font-weight:700; font-size:14px; padding:10px 20px; border-radius:9px; text-decoration:none; border:1px solid transparent; box-shadow:0 8px 22px -8px rgba(37,99,235,0.55); transition:filter .15s ease, transform .1s ease, box-shadow .15s ease; white-space:nowrap; cursor:pointer;}
 .btn-primary:hover{filter:brightness(1.06); box-shadow:0 12px 28px -8px rgba(62,128,219,0.68);}
 .btn-primary:active{transform:translateY(1px);}
 /* Stálé CTA „Přidat pozemek" v liště. Na počítači je akce už v navigaci,
@@ -303,7 +304,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .druh-demand{font-size:10px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; padding:3px 9px; border-radius:11px; white-space:nowrap;}
 .druh-demand.high{color:var(--c-sale); background:rgba(62,142,91,0.15); border:1px solid rgba(62,142,91,0.4);}
 .druh-demand.mid{color:var(--copper-bright); background:rgba(46,144,180,0.15); border:1px solid rgba(46,144,180,0.4);}
-.druh-demand.niche{color:var(--text-ondark-mute); background:rgba(224,236,244,0.08); border:1px solid var(--line);}
+.druh-demand.niche{color:var(--text-ondark-mute); background:rgba(16,24,40,0.08); border:1px solid var(--line);}
 @media (max-width:900px){ .druhy-grid{grid-template-columns:repeat(2,1fr);} }
 @media (max-width:600px){ .druhy-grid{grid-template-columns:1fr;} }
 
@@ -341,10 +342,10 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .map-filters{display:flex; flex-wrap:wrap; gap:7px;}
 .filter-chip{display:inline-flex; align-items:center; gap:6px; background:var(--ink); border:1px solid var(--line); color:var(--text-ondark-mute); border-radius:18px; padding:7px 12px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; transition:all .15s ease;}
 .filter-chip .c{width:8px; height:8px; border-radius:50%;}
-.filter-chip:hover{color:var(--text-ondark); border-color:rgba(224,236,244,0.3);}
+.filter-chip:hover{color:var(--text-ondark); border-color:rgba(16,24,40,0.3);}
 /* Aktivní filtr „svítí" vlastní barvou kategorie — ať „Vše" a „Dražba" nesplývají */
 .filter-chip.active{color:#fff; border-color:transparent; box-shadow:0 4px 14px -4px rgba(0,0,0,0.5);}
-.filter-chip.active[data-type="all"]{background:linear-gradient(135deg, #EAF1F6, var(--parchment)); color:var(--ink); box-shadow:0 4px 14px -4px rgba(224,236,244,0.4);}
+.filter-chip.active[data-type="all"]{background:linear-gradient(135deg, #EAF1F6, var(--parchment)); color:var(--ink); box-shadow:0 4px 14px -4px rgba(16,24,40,0.4);}
 .filter-chip.active[data-type="sale"]{background:linear-gradient(135deg, #47A268, var(--c-sale));}
 .filter-chip.active[data-type="drazba"]{background:linear-gradient(135deg, #E8B95A, var(--c-drazba)); color:#3a2c05;}
 .filter-chip.active[data-type="exekuce"]{background:linear-gradient(135deg, #CE6A52, var(--c-exekuce));}
@@ -423,7 +424,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-skel{display:flex; gap:12px; align-items:flex-start; border:1px solid var(--line); border-radius:8px; padding:13px 14px; margin-bottom:9px; background:var(--ink);}
 .opp-skel .skel-thumb{flex:none; width:48px; height:48px; border-radius:8px;}
 .opp-skel .skel-body{flex:1; display:flex; flex-direction:column; gap:9px; padding-top:4px;}
-.sk{background:linear-gradient(90deg, var(--ink-soft2) 25%, rgba(224,236,244,0.10) 37%, var(--ink-soft2) 63%); background-size:400% 100%; border-radius:5px; animation:skShimmer 1.4s ease infinite;}
+.sk{background:linear-gradient(90deg, var(--ink-soft2) 25%, rgba(16,24,40,0.10) 37%, var(--ink-soft2) 63%); background-size:400% 100%; border-radius:5px; animation:skShimmer 1.4s ease infinite;}
 .sk-l1{height:12px; width:58%;} .sk-l2{height:10px; width:85%;} .sk-l3{height:10px; width:42%;}
 @keyframes skShimmer{0%{background-position:100% 0;} 100%{background-position:0 0;}}
 @media (prefers-reduced-motion:reduce){ .sk{animation:none;} }
@@ -432,7 +433,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 /* Karta ve stylu realitního portálu (Sreality): náhled mapy nahoře přes celou
    šířku jako fotka, pod ním velká cena a detaily. */
 .opp-item{position:relative; display:block; padding:0; border:1px solid var(--line); border-radius:14px; overflow:hidden; margin-bottom:14px; cursor:pointer; background:var(--ink-soft); box-shadow:0 1px 2px rgba(0,0,0,0.28), 0 12px 28px -20px rgba(0,0,0,0.8); transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease;}
-.opp-item:hover, .opp-item.hl{border-color:rgba(224,236,244,0.26); transform:translateY(-2px); box-shadow:0 3px 6px rgba(0,0,0,0.32), 0 18px 38px -20px rgba(0,0,0,0.9);}
+.opp-item:hover, .opp-item.hl{border-color:rgba(16,24,40,0.26); transform:translateY(-2px); box-shadow:0 3px 6px rgba(0,0,0,0.32), 0 18px 38px -20px rgba(0,0,0,0.9);}
 .opp-item.is-hot{border-color:rgba(217,164,65,0.34);}
 /* Náhled mapy jako fotka inzerátu */
 .opp-media{position:relative; width:100%; aspect-ratio:16/10; min-height:150px; overflow:hidden; background:var(--ink-soft2) linear-gradient(135deg, rgba(110,130,150,0.10), rgba(110,130,150,0) 60%);}
@@ -465,7 +466,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-place{display:block; font-family:'Inter',sans-serif; font-size:15px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:-0.01em; color:var(--text-ondark); margin-bottom:2px;}
 /* Barevná odrážka podle kategorie (prodej/dražba/exekuce…) — rychlá orientace v seznamu */
 .opp-dot{display:none;}
-.opp-tag{flex:none; display:inline-flex; align-items:center; font-size:11px; font-weight:600; padding:2px 9px; border-radius:7px; white-space:nowrap; background:rgba(224,236,244,0.05); border:1px solid rgba(224,236,244,0.14);}
+.opp-tag{flex:none; display:inline-flex; align-items:center; font-size:11px; font-weight:600; padding:2px 9px; border-radius:7px; white-space:nowrap; background:rgba(16,24,40,0.05); border:1px solid rgba(16,24,40,0.14);}
 .opp-tag.sale{color:#8AD5AC;} .opp-tag.drazba{color:#E6C583;} .opp-tag.exekuce{color:#EDA08C;} .opp-tag.obec{color:#A9C4EC;}
 /* Podřádek „co to je" — jeden řádek, konzistentní, ořízne se tečkami */
 /* Řádek s okresem (poloha) — víc informací, jemně pod názvem */
@@ -476,24 +477,24 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-figures{display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin-top:8px; margin-bottom:2px;}
 .opp-figures .m{font-size:13px; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
 /* Kč/m² jako jemný neutrální štítek — hodnotný, ale bez dalších barev */
-.opp-perm2{align-self:center; font-size:11.5px; font-weight:600; color:var(--text-ondark-mute); background:rgba(224,236,244,0.05); border:1px solid rgba(224,236,244,0.13); border-radius:7px; padding:2px 8px; font-variant-numeric:tabular-nums; white-space:nowrap;}
+.opp-perm2{align-self:center; font-size:11.5px; font-weight:600; color:var(--text-ondark-mute); background:rgba(16,24,40,0.05); border:1px solid rgba(16,24,40,0.13); border-radius:7px; padding:2px 8px; font-variant-numeric:tabular-nums; white-space:nowrap;}
 /* Řádek odznaků — všechny stavy pohromadě, stejný tvar */
 .opp-chips{display:flex; flex-wrap:wrap; gap:6px;}
-.opp-hot{display:inline-block; font-size:10.5px; font-weight:700; color:var(--text-ondark-mute); background:rgba(224,236,244,0.06); border:1px solid rgba(224,236,244,0.16); border-radius:7px; padding:1px 8px; letter-spacing:0.02em; text-transform:uppercase;}
+.opp-hot{display:inline-block; font-size:10.5px; font-weight:700; color:var(--text-ondark-mute); background:rgba(16,24,40,0.06); border:1px solid rgba(16,24,40,0.16); border-radius:7px; padding:1px 8px; letter-spacing:0.02em; text-transform:uppercase;}
 /* Zvýrazněný (placený) inzerát — prémiový plný odznak + jemné orámování karty */
 .opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:#08222C; background:linear-gradient(135deg, var(--copper-bright), var(--copper)); border:0; border-radius:10px; padding:2px 9px; letter-spacing:0.03em; text-transform:uppercase; box-shadow:0 1px 5px rgba(46,144,180,0.35);}
 .opp-item.is-featured{border-color:rgba(91,184,214,0.5); box-shadow:inset 0 0 0 1px rgba(91,184,214,0.3);}
 .md-feat{display:inline-flex; align-items:center; margin-left:9px; font-size:11px; font-weight:700; padding:2px 10px; border-radius:11px; color:#08222C; background:linear-gradient(135deg, var(--copper-bright), var(--copper)); letter-spacing:0.03em; text-transform:uppercase; white-space:nowrap; box-shadow:0 1px 5px rgba(46,144,180,0.35);}
 /* Odpočet do termínu dražby (reálné datum) */
-.opp-cd{display:inline-block; font-size:10.5px; font-weight:700; padding:1px 8px; border-radius:7px; background:rgba(224,236,244,0.06); border:1px solid rgba(224,236,244,0.14); color:var(--text-ondark-mute); letter-spacing:0.01em; white-space:nowrap;}
+.opp-cd{display:inline-block; font-size:10.5px; font-weight:700; padding:1px 8px; border-radius:7px; background:rgba(16,24,40,0.06); border:1px solid rgba(16,24,40,0.14); color:var(--text-ondark-mute); letter-spacing:0.01em; white-space:nowrap;}
 .opp-cd.soon{color:#E6C583; border-color:rgba(217,164,65,0.30);}
 .opp-cd.urg{color:#EDA08C; border-color:rgba(193,91,68,0.34);}
 .md-cd{display:inline-flex; align-items:center; margin-left:9px; font-size:12px; font-weight:700; padding:2px 10px; border-radius:11px; background:rgba(143,160,175,0.16); color:var(--text-ondark); white-space:nowrap;}
 .md-cd.soon{background:rgba(217,164,65,0.18); color:var(--copper-bright);}
 .md-cd.urg{background:rgba(193,91,68,0.24); color:#EDA08C;}
 /* Počet nabídek na filtračních tlačítkách */
-.chip-n{display:inline-block; margin-left:6px; font-size:10.5px; font-weight:700; padding:0 6px; border-radius:9px; background:rgba(224,236,244,0.12); color:var(--text-ondark-mute); min-width:16px; line-height:16px; text-align:center; vertical-align:middle;}
-.filter-chip.active .chip-n{background:rgba(22,35,47,0.28); color:inherit;}
+.chip-n{display:inline-block; margin-left:6px; font-size:10.5px; font-weight:700; padding:0 6px; border-radius:9px; background:rgba(16,24,40,0.12); color:var(--text-ondark-mute); min-width:16px; line-height:16px; text-align:center; vertical-align:middle;}
+.filter-chip.active .chip-n{background:rgba(255,255,255,0.28); color:inherit;}
 
 /* Detail pozemku — vysouvací panel PŘES mapu (jako v mapových aplikacích),
    místo aby odsouval mapu dolů. Přijede zespodu, mapa se ztmaví za ním. */
@@ -516,7 +517,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .md-top{font-size:14px; margin-bottom:0; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
 .md-top .lp-dot{width:10px; height:10px; border-radius:50%; flex:none;}
 .md-facts{display:grid; grid-template-columns:1fr 1fr; gap:8px 18px;}
-.md-facts span{font-size:12.5px; color:var(--text-ondark-mute); display:flex; justify-content:space-between; gap:8px; padding-bottom:7px; border-bottom:1px solid rgba(224,236,244,0.07);}
+.md-facts span{font-size:12.5px; color:var(--text-ondark-mute); display:flex; justify-content:space-between; gap:8px; padding-bottom:7px; border-bottom:1px solid rgba(16,24,40,0.07);}
 .md-facts b{color:var(--text-ondark); font-weight:600; text-align:right;}
 /* Mini graf: cena/m² vs. obvyklá cena u daného druhu */
 .md-bar{margin-top:12px;}
@@ -618,9 +619,9 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
    spolehlivě překryje mapu a nic z ní neprosvítá */
 .map-canvas{position:relative; flex:1; min-height:0; isolation:isolate;}
 #leaflet-map{position:absolute; inset:0; background:var(--ink-soft);}
-.map-note{position:absolute; bottom:8px; left:8px; z-index:500; background:rgba(22,35,47,0.82); color:var(--text-ondark-mute); font-size:10px; padding:4px 9px; border-radius:4px; pointer-events:none;}
+.map-note{position:absolute; bottom:8px; left:8px; z-index:500; background:rgba(255,255,255,0.82); color:var(--text-ondark-mute); font-size:10px; padding:4px 9px; border-radius:4px; pointer-events:none;}
 /* Legenda mapy (vpravo nahoře) */
-.map-legend{position:absolute; top:84px; left:10px; z-index:500; display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:5px 13px; max-width:calc(100% - 20px); background:rgba(22,35,47,0.85); border:1px solid var(--line); border-radius:7px; padding:7px 11px; font-size:11px; font-weight:600; color:var(--text-ondark); pointer-events:none; backdrop-filter:blur(3px);}
+.map-legend{position:absolute; top:84px; left:10px; z-index:500; display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:5px 13px; max-width:calc(100% - 20px); background:rgba(255,255,255,0.85); border:1px solid var(--line); border-radius:7px; padding:7px 11px; font-size:11px; font-weight:600; color:var(--text-ondark); pointer-events:none; backdrop-filter:blur(3px);}
 .map-legend:empty{display:none;}
 .lg-item{display:flex; align-items:center; gap:6px; white-space:nowrap;}
 .lg-dot{width:9px; height:9px; border-radius:50%; border:1.5px solid #fff; flex:none;}
@@ -631,11 +632,11 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 /* Zámek mapy — mapa se hýbe jen když je odemčená */
 /* Lehké přepínání posouvání mapy (bez těžkého overlay) */
 .map-tools{position:absolute; top:12px; right:12px; z-index:600; display:flex; flex-direction:column; align-items:flex-end; gap:8px; max-width:calc(100% - 24px);}
-.map-reset{display:inline-flex; align-items:center; gap:7px; background:rgba(22,35,47,0.92); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:22px; padding:8px 14px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}
+.map-reset{display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,0.92); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:22px; padding:8px 14px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}
 .map-reset:hover{border-color:var(--copper-bright);}
 .map-reset:active{transform:translateY(1px);}
 .map-reset .mr-ic{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none;}
-.map-lock{position:absolute; bottom:12px; right:12px; z-index:600; display:inline-flex; align-items:center; gap:7px; max-width:calc(100% - 24px); background:rgba(22,35,47,0.92); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:22px; padding:9px 15px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}
+.map-lock{position:absolute; bottom:12px; right:12px; z-index:600; display:inline-flex; align-items:center; gap:7px; max-width:calc(100% - 24px); background:rgba(255,255,255,0.92); color:var(--text-ondark); border:1px solid var(--line-strong); border-radius:22px; padding:9px 15px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}
 .map-lock[hidden]{display:none;}
 .map-lock:hover{border-color:var(--copper-bright);}
 .map-lock:active{transform:translateY(1px);}
@@ -645,10 +646,10 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .leaflet-control-zoom{display:none;}
 @media (min-width:961px){
   .leaflet-control-zoom{display:block; margin:122px 0 0 10px !important; border:none; box-shadow:var(--shadow); border-radius:9px; overflow:hidden;}
-  .leaflet-control-zoom a{width:34px; height:34px; line-height:32px; font-size:19px; font-weight:600; background:rgba(22,35,47,0.94); color:var(--text-ondark); border:1px solid var(--line-strong); backdrop-filter:blur(4px);}
+  .leaflet-control-zoom a{width:34px; height:34px; line-height:32px; font-size:19px; font-weight:600; background:rgba(255,255,255,0.94); color:var(--text-ondark); border:1px solid var(--line-strong); backdrop-filter:blur(4px);}
   .leaflet-control-zoom a:last-child{border-top:none;}
   .leaflet-control-zoom a:hover{background:rgba(30,46,62,0.98); color:var(--copper-bright); border-color:var(--copper-bright);}
-  .leaflet-control-zoom a.leaflet-disabled{opacity:0.45; color:var(--text-ondark); background:rgba(22,35,47,0.7);}
+  .leaflet-control-zoom a.leaflet-disabled{opacity:0.45; color:var(--text-ondark); background:rgba(255,255,255,0.7);}
 }
 
 /* Výběr kraje: dokud není vybrán, tečky (pozemky) nejsou klikací → klik vždy trefí kraj.
@@ -660,10 +661,10 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .kraj-hint[hidden]{display:none;}
 .kraj-hint .kh-pin{width:9px; height:9px; border-radius:50%; background:var(--copper-bright); box-shadow:0 0 0 4px rgba(91,184,214,0.22); flex:none;}
 /* Vymazlený nadpis vybraného kraje (fáze 2) */
-.kraj-head{position:absolute; top:12px; left:12px; z-index:600; max-width:calc(100% - 118px); display:inline-flex; align-items:center; gap:11px; background:linear-gradient(135deg, rgba(20,32,44,0.97), rgba(30,46,62,0.97)); border:1px solid rgba(91,184,214,0.45); border-radius:13px; padding:8px 14px 8px 8px; box-shadow:0 12px 30px -12px rgba(0,0,0,0.75); backdrop-filter:blur(6px);}
+.kraj-head{position:absolute; top:12px; left:12px; z-index:600; max-width:calc(100% - 118px); display:inline-flex; align-items:center; gap:11px; background:rgba(255,255,255,0.96); border:1px solid rgba(16,24,40,0.10); border-radius:13px; padding:8px 14px 8px 8px; box-shadow:0 12px 30px -14px rgba(16,24,40,0.35); backdrop-filter:blur(6px);}
 .kraj-head[hidden]{display:none;}
-.kh-back{flex:none; width:38px; height:38px; border-radius:9px; border:1px solid var(--line-strong); background:rgba(255,255,255,0.05); color:var(--parchment); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .15s ease, border-color .15s ease, transform .1s ease;}
-.kh-back:hover{background:rgba(91,184,214,0.16); border-color:var(--copper-bright);}
+.kh-back{flex:none; width:38px; height:38px; border-radius:9px; border:1px solid rgba(16,24,40,0.12); background:rgba(16,24,40,0.03); color:var(--parchment); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .15s ease, border-color .15s ease, transform .1s ease;}
+.kh-back:hover{background:rgba(37,99,235,0.10); border-color:var(--copper-bright);}
 .kh-back:active{transform:translateY(1px);}
 .kh-back svg{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2.3; stroke-linecap:round; stroke-linejoin:round;}
 .kh-txt{display:flex; flex-direction:column; gap:1px; min-width:0;}
@@ -707,11 +708,11 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 /* Status grid */
 .status-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:18px;}
 .status-card{background:var(--ink-soft2); border:1px solid var(--line); border-radius:12px; padding:24px; transition:border-color .15s ease, transform .15s ease;}
-.status-card:hover{border-color:rgba(224,236,244,0.28); transform:translateY(-2px);}
+.status-card:hover{border-color:rgba(16,24,40,0.28); transform:translateY(-2px);}
 .status-top{display:flex; align-items:center; gap:9px; font-family:'Inter',sans-serif; font-size:17px; font-weight:500; margin-bottom:12px;}
 .status-top .dot{width:11px; height:11px; border-radius:50%;}
 .status-n{margin-left:auto; font-family:'Inter',sans-serif; font-size:11px; font-weight:700; letter-spacing:0.01em; color:var(--copper-bright); background:rgba(46,144,180,0.12); border:1px solid rgba(46,144,180,0.35); border-radius:11px; padding:3px 9px; white-space:nowrap;}
-.status-n.is-zero{color:var(--text-ondark-mute); background:rgba(224,236,244,0.06); border-color:var(--line);}
+.status-n.is-zero{color:var(--text-ondark-mute); background:rgba(16,24,40,0.06); border-color:var(--line);}
 .status-card p{font-size:13.5px; color:var(--text-ondark-mute);}
 .status-list{list-style:none; display:flex; flex-direction:column; gap:8px; margin:0;}
 .status-list li{position:relative; padding-left:20px; font-size:13.5px; line-height:1.5; color:var(--text-ondark-mute);}
@@ -775,7 +776,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .ep-dot.sale{background:var(--c-sale); color:var(--c-sale);}
 .ep-dot.drazba{background:var(--c-drazba); color:var(--c-drazba);}
 .ep-dot.exekuce{background:var(--c-exekuce); color:var(--c-exekuce);}
-.ep-badge{position:absolute; top:10px; left:10px; background:rgba(22,35,47,0.85); border:1px solid var(--line); color:var(--text-ondark-mute); font-size:10.5px; font-family:'IBM Plex Mono',monospace; padding:4px 9px; border-radius:5px;}
+.ep-badge{position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.85); border:1px solid var(--line); color:var(--text-ondark-mute); font-size:10.5px; font-family:'IBM Plex Mono',monospace; padding:4px 9px; border-radius:5px;}
 
 /* FAQ */
 .faq{display:grid; grid-template-columns:1fr 1fr; gap:10px 18px; align-items:start;}
@@ -1059,7 +1060,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .add-lead b{color:var(--text-ondark);}
 .add-form{display:flex; flex-direction:column; gap:18px;}
 /* Rozbalovací „další údaje" — formulář je na první pohled kratší a lehčí */
-.add-more{border:1px solid var(--line); border-radius:10px; background:rgba(224,236,244,0.02);}
+.add-more{border:1px solid var(--line); border-radius:10px; background:rgba(16,24,40,0.02);}
 .add-more > summary{list-style:none; cursor:pointer; padding:13px 16px; font-size:13.5px; font-weight:600;
   color:var(--copper-bright); display:flex; align-items:center; justify-content:space-between; gap:12px;}
 .add-more > summary::-webkit-details-marker{display:none;}
@@ -1265,7 +1266,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .lide-steps{margin-left:auto; margin-right:auto; text-align:left;}
 
 /* Prázdný stav — „Buďte první" + ukázková karta */
-.lide-empty{max-width:600px; margin:42px auto 0; text-align:center; border:1px dashed var(--line-strong); border-radius:18px; padding:40px 26px; background:rgba(22,35,47,0.4);}
+.lide-empty{max-width:600px; margin:42px auto 0; text-align:center; border:1px dashed var(--line-strong); border-radius:18px; padding:40px 26px; background:rgba(255,255,255,0.4);}
 .lide-empty[hidden]{display:none;}
 .le-badge{display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--copper-bright); background:rgba(46,144,180,0.12); border:1px solid rgba(46,144,180,0.32); padding:4px 13px; border-radius:20px;}
 .lide-empty h3{font-family:'Inter',sans-serif; font-weight:500; font-size:23px; margin:15px 0 8px;}
@@ -1303,7 +1304,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .ul-verified svg{width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2.4;}
 .ul-perm2{font-size:12px; color:var(--text-ondark-mute);}
 .ul-tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:3px;}
-.ul-tags span{font-size:11px; color:var(--text-ondark-mute); background:rgba(224,236,244,0.06); border:1px solid var(--line); border-radius:6px; padding:2px 8px;}
+.ul-tags span{font-size:11px; color:var(--text-ondark-mute); background:rgba(16,24,40,0.06); border:1px solid var(--line); border-radius:6px; padding:2px 8px;}
 
 /* ---------- Grády: živý náhled inzerátu + víc energie ---------- */
 .add-chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
@@ -1332,7 +1333,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .pc-strength{margin-top:16px; padding-top:15px; border-top:1px solid var(--line);}
 .pcs-top{display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text-ondark-mute); margin-bottom:7px;}
 .pcs-top b{color:var(--copper-bright); font-size:13px;}
-.pcs-bar{height:8px; border-radius:20px; background:rgba(224,236,244,0.08); overflow:hidden;}
+.pcs-bar{height:8px; border-radius:20px; background:rgba(16,24,40,0.08); overflow:hidden;}
 .pcs-bar i{display:block; height:100%; width:0; border-radius:20px;
   background:linear-gradient(90deg, var(--copper), var(--copper-bright), #8FD3E8);
   transition:width .35s var(--ease);}
@@ -1341,7 +1342,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .pcs-hint b{color:var(--text-ondark);}
 /* Úroveň inzerátu (Začínáme … Špičkový) */
 .pcs-right{display:inline-flex; align-items:center; gap:8px;}
-.pc-strength .pcs-tier{font-size:11px; font-weight:700; letter-spacing:.02em; padding:2px 9px; border-radius:20px; background:rgba(224,236,244,0.08); color:var(--text-ondark-mute); transition:color .3s ease, background .3s ease;}
+.pc-strength .pcs-tier{font-size:11px; font-weight:700; letter-spacing:.02em; padding:2px 9px; border-radius:20px; background:rgba(16,24,40,0.08); color:var(--text-ondark-mute); transition:color .3s ease, background .3s ease;}
 .pc-strength[data-lvl="2"] .pcs-tier{color:#7FCBE0; background:rgba(46,144,180,0.12);}
 .pc-strength[data-lvl="3"] .pcs-tier{color:var(--copper-bright); background:rgba(46,144,180,0.16);}
 .pc-strength[data-lvl="4"] .pcs-tier{color:var(--copper-bright); background:rgba(46,144,180,0.24);}
@@ -1349,7 +1350,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 
 /* Hero — 3 kroky, jak přidání funguje */
 .add-steps{list-style:none; display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:26px; max-width:720px; padding:0;}
-.add-steps li{display:flex; gap:11px; align-items:flex-start; background:rgba(22,35,47,0.5); border:1px solid var(--line); border-radius:12px; padding:13px 14px;}
+.add-steps li{display:flex; gap:11px; align-items:flex-start; background:rgba(255,255,255,0.5); border:1px solid var(--line); border-radius:12px; padding:13px 14px;}
 .as-num{flex:none; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:13px; color:var(--ink); background:linear-gradient(135deg,var(--copper),var(--copper-bright)); box-shadow:0 4px 12px -4px rgba(46,144,180,0.6);}
 .as-txt{display:flex; flex-direction:column;}
 .as-txt b{font-size:13.5px; color:var(--text-ondark); margin-bottom:2px;}

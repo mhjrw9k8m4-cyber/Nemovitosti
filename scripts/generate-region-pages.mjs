@@ -7,7 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const V = 'v=20260821p';
+const V = 'v=20260821q';
 const MIN_OKRES = 10;   // okres musí mít aspoň tolik nabídek pro vlastní stránku
 const MIN_KRAJ = 15;    // kraj musí mít aspoň tolik nabídek pro vlastní stránku
 
@@ -152,7 +152,7 @@ function head(title, desc, canonicalPath, ld, crumbs){
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${esc(title)}</title>
   <meta name="description" content="${attr(desc)}">
-  <meta name="theme-color" content="#16232F">
+  <meta name="theme-color" content="#ffffff">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://parcelaka.cz/${canonicalPath}">
   <meta property="og:type" content="website">
