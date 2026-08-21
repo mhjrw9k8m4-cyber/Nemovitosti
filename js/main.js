@@ -1572,20 +1572,15 @@
           '<div class="opp-figures">' + figs + '</div>' +
           (chips.length ? '<div class="opp-chips">' + chips.join('') + '</div>' : '') +
         '</div>';
-      // Ťuknutí na kartu → samostatná stránka inzerátu; ťuknutí na snímek → mapa.
+      // Ťuknutí kamkoli na kartu (i na snímek) → samostatná stránka inzerátu.
+      // Na mapu se dostaneš z inzerátu (snímek nebo tlačítko „Zobrazit na mapě").
       var pozHref = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng;
-      var mapHref = 'index.html?p=' + encodeURIComponent(pkey(d)) + '#mapa';
       function openInzerat() { location.href = pozHref; }
       li.addEventListener('click', openInzerat);
       li.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInzerat(); }
       });
       li.addEventListener('mouseenter', function () { highlightList(d._id); });
-      var mediaEl = li.querySelector('.opp-media');
-      if (mediaEl) mediaEl.addEventListener('click', function (e) {
-        e.stopPropagation();   // snímek nevede na inzerát, ale rovnou na mapu
-        location.href = mapHref;
-      });
       var favBtn = li.querySelector('.opp-fav');
       if (favBtn) favBtn.addEventListener('click', function (e) {
         e.stopPropagation();

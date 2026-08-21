@@ -173,10 +173,10 @@
       '<polygon points="' + pts + '" fill="' + col + '" fill-opacity="0.22" stroke="' + col + '" stroke-width="2.4" stroke-linejoin="round"/>' +
       '</svg>';
   }
-  // Letecký snímek (větší, pro hero). z=17 pro víc detailu.
+  // Letecký snímek (větší, pro hero). z=16 stejně jako v seznamu (spolehlivější dlaždice).
   function heroLayers(d) {
     var col = TYPE[d.type].color;
-    var z = 17, n = Math.pow(2, z);
+    var z = 16, n = Math.pow(2, z);
     var latRad = d.lat * Math.PI / 180;
     var xf = (d.lng + 180) / 360 * n;
     var yf = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
