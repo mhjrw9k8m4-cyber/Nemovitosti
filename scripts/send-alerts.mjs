@@ -150,6 +150,22 @@ async function main() {
     .filter(o => o && typeof o.lat === 'number' && typeof o.lng === 'number');
   log('Příležitostí v datech:', opps.length);
 
+  // Přidáme i schválené inzeráty od lidí — ať upozorníme i na nově přidané pozemky.
+  try {
+    const ul = await sb('listings?select=place,okres,druh,parcel,area,price,lat,lng&status=eq.approved');
+    if (Array.isArray(ul)) {
+      let added = 0;
+      ul.forEach(u => {
+        if (u && typeof u.lat === 'number' && typeof u.lng === 'number') {
+          opps.push({ type: 'majitel', place: u.place, okres: u.okres, druh: u.druh,
+            parcel: u.parcel, area: u.area, price: u.price, lat: u.lat, lng: u.lng });
+          added++;
+        }
+      });
+      log('Inzerátů od lidí:', added);
+    }
+  } catch (e) { log('Inzeráty od lidí se nepodařilo načíst:', e.message); }
+
   // je tabulka alert_seen prázdná? (první běh → jen seed, nic neposílat)
   const seenCount = await sb('alert_seen?select=key&limit=1');
   const firstRun = !(Array.isArray(seenCount) && seenCount.length);
