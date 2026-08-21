@@ -16,6 +16,12 @@ insert into storage.buckets (id, name, public)
 values ('listing-photos', 'listing-photos', true)
 on conflict (id) do update set public = true;
 
+-- ---------- 1b) Jistota: sloupce, které funkce potřebují ----------
+alter table listings add column if not exists user_id uuid;
+alter table listings add column if not exists views integer not null default 0;
+alter table listings add column if not exists photos jsonb default '[]'::jsonb;
+alter table listings add column if not exists contact_phone text;
+
 -- ---------- 2) Bezpečnost úložiště (Row Level Security na storage.objects) ----------
 -- Veřejné čtení (fotka se ukáže v inzerátu)
 drop policy if exists "listing photos public read" on storage.objects;
