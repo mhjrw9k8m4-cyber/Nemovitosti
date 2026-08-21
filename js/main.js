@@ -75,7 +75,7 @@
 
   // Katastrální mapa (ikatastr.cz) — parametr "info" na souřadnicích parcelu
   // rovnou IDENTIFIKUJE a vyznačí (ukáže bublinu s parcelou), ne jen vycentruje.
-  function katastrUrl(d){ return 'https://www.ikatastr.cz/#info=' + d.lat + ',' + d.lng; }
+  function katastrUrl(d){ return 'https://ikatastr.cz/#zoom=18&lat=' + d.lat + '&lon=' + d.lng + '&info=' + d.lat + ',' + d.lng; }
   function mapyUrl(d){ return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat; }
   // Kontakt na majitele z inzerátu — e-mail → mailto:, jinak telefon → tel:
   function contactHref(c){

@@ -56,7 +56,7 @@
   }
 
   function pkey(d) { return [d.place || '', d.parcel || '', d.okres || ''].join('|'); }
-  function katastrUrl(d) { return 'https://www.ikatastr.cz/#info=' + d.lat + ',' + d.lng; }
+  function katastrUrl(d) { return 'https://ikatastr.cz/#zoom=18&lat=' + d.lat + '&lon=' + d.lng + '&info=' + d.lat + ',' + d.lng; }
   function mapyUrl(d) { return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat; }
   var SPU_OFFERS = 'https://spu.gov.cz/nabidky/prehled-cela-cr';
   function isSPU(d) { return d.type === 'sale' && !d.url && /SPÚ|státní půd/i.test(d.extra || ''); }
