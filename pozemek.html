@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260821ac">
+  <link rel="stylesheet" href="css/styles.css?v=20260821ad">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -94,10 +94,12 @@
     .pz-btn.ghost{background:var(--ink-soft2); color:var(--text-ondark); border-color:var(--line-strong);}
     .pz-btn.ghost:hover{border-color:var(--copper-bright);}
     .pz-actions{display:flex; gap:9px; flex-wrap:wrap; margin:14px 0 4px;}
-    .pz-abtn{display:inline-flex; align-items:center; gap:7px; height:42px; padding:0 15px; border-radius:11px; background:var(--ink); border:1px solid var(--line); color:var(--text-ondark-mute); font-size:13.5px; font-weight:600; text-decoration:none; cursor:pointer;}
-    .pz-abtn:hover{border-color:var(--copper-bright); color:var(--text-ondark);}
-    .pz-abtn.on{color:var(--copper-bright); border-color:var(--copper); background:rgba(62,128,219,0.14);}
-    .pz-abtn svg{width:16px; height:16px;}
+    .pz-abtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:46px; padding:0 17px; border-radius:12px; background:var(--ink-soft2); border:1px solid var(--line-strong); color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent;}
+    .pz-abtn:hover{border-color:var(--copper-bright); background:var(--ink-soft);}
+    .pz-abtn:active{transform:scale(.98);}
+    .pz-abtn.on{color:var(--copper-bright); border-color:var(--copper); background:rgba(62,128,219,0.16);}
+    .pz-abtn svg{width:17px; height:17px; color:var(--copper-bright);}
+    .pz-abtn.on svg{color:var(--copper-bright);}
 
     .pz-gtk{background:var(--ink-soft); border:1px solid var(--line); border-radius:16px; padding:16px 17px;}
     .pz-gtk .g-row{display:flex; flex-direction:column; gap:3px; padding:11px 0; border-bottom:1px solid var(--line);}
@@ -153,7 +155,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/pozemek.js?v=20260821ac"></script>
+<script src="js/pozemek.js?v=20260821ad"></script>
 <!-- Vercel Web Analytics -->
 <script defer src="/_vercel/insights/script.js"></script>
 </body>

@@ -348,7 +348,7 @@
       '</div>' +
 
       '<div class="pz-actions">' +
-        '<a class="pz-abtn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">Přesný obrys (katastr)</a>' +
+        '<a class="pz-abtn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">' + PIN_SVG + 'Otevřít v katastru</a>' +
         '<button class="pz-abtn' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">' + HEART_SVG + '<span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
         '<button class="pz-abtn" type="button" id="pz-share">' + SHARE_SVG + 'Sdílet</button>' +
       '</div>' +
