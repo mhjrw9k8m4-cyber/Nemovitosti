@@ -201,8 +201,8 @@
       '<circle cx="0" cy="-25" r="4.6" fill="#fff"/></g>';
     return '<svg class="opp-map" viewBox="0 0 ' + Vw + ' ' + Vh + '" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
       '<defs><filter id="pinsh" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="rgba(0,0,0,0.5)"/></filter></defs>' +
-      '<rect width="' + Vw + '" height="' + Vh + '" fill="#dbe1e8"/>' +
-      '<g stroke="rgba(16,24,40,0.06)" stroke-width="1"><path d="M64 0V256M128 0V256M192 0V256M256 0V256M320 0V256M0 64H384M0 128H384M0 192H384"/></g>' +
+      '<rect width="' + Vw + '" height="' + Vh + '" fill="#141f2b"/>' +
+      '<g stroke="rgba(200,216,232,0.06)" stroke-width="1"><path d="M64 0V256M128 0V256M192 0V256M256 0V256M320 0V256M0 64H384M0 128H384M0 192H384"/></g>' +
       imgs +
       pin +
       '</svg>' +

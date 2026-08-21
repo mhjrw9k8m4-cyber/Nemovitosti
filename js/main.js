@@ -614,7 +614,7 @@
   // Ovládání zoomu +/− — jen na počítačích (na mobilu se přibližuje prsty). Umístěno
   // vlevo (přes CSS na volný levý okraj), ať se nepere s ostatními tlačítky.
   L.control.zoom({ position: 'topleft' }).addTo(map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     subdomains: 'abcd', maxZoom: 19
   }).addTo(map);
