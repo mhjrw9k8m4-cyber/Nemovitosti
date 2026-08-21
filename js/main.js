@@ -890,45 +890,48 @@
     }
     d._poly = pts; return pts;
   }
-  // Náhled pozemku v kartě — čistý „plán parcely": tvar pozemku na jemném
-  // plánovém podkladu se špendlíkem. Vše vykreslené přímo v SVG, bez internetu,
-  // takže se vždy zobrazí (nezávisí na načtení mapových dlaždic).
-  function mapThumb(d) {
-    var col = TYPE[d.type].color;
+  // Záložní „plán parcely" (SVG, bez internetu) — tvar pozemku na jemné mřížce.
+  // Ukáže se jen tehdy, když se nenačte satelitní snímek. Tvar je umístěn na
+  // stejné zlomkové pozici jako špendlík, aby seděl.
+  function planSvg(d, col, fx, fy) {
     var p = polyFor(d);
     var lats = p.map(function (x) { return x[0]; }), lngs = p.map(function (x) { return x[1]; });
     var minLat = Math.min.apply(null, lats), maxLat = Math.max.apply(null, lats);
     var minLng = Math.min.apply(null, lngs), maxLng = Math.max.apply(null, lngs);
     var midLat = (minLat + maxLat) / 2, midLng = (minLng + maxLng) / 2;
     var spanLat = (maxLat - minLat) || 1e-6, spanLng = (maxLng - minLng) || 1e-6;
-    var scale = Math.min(150 / spanLng, 96 / spanLat);
-    var cx = 0, cy = 0;
+    var sc = Math.min(78 / spanLng, 50 / spanLat);
+    var cxT = Math.max(55, Math.min(265, fx * 320));
+    var cyT = Math.max(45, Math.min(155, fy * 200));
     var pts = p.map(function (x) {
-      var px = 160 + (x[1] - midLng) * scale;
-      var py = 100 - (x[0] - midLat) * scale;
-      cx += px; cy += py;
-      return px.toFixed(1) + ',' + py.toFixed(1);
+      return (cxT + (x[1] - midLng) * sc).toFixed(1) + ',' + (cyT - (x[0] - midLat) * sc).toFixed(1);
     }).join(' ');
-    cx = (cx / p.length).toFixed(1); cy = (cy / p.length).toFixed(1);
     var gid = 'm' + d._id;
-    var svg = '<svg class="opp-map" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-      '<defs>' +
-        '<linearGradient id="bg' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d2e3e"/><stop offset="1" stop-color="#141f2b"/></linearGradient>' +
-        '<radialGradient id="gl' + gid + '" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="' + col + '" stop-opacity="0.20"/><stop offset="1" stop-color="' + col + '" stop-opacity="0"/></radialGradient>' +
-      '</defs>' +
+    return '<svg class="opp-plan" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<defs><linearGradient id="bg' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d2e3e"/><stop offset="1" stop-color="#141f2b"/></linearGradient></defs>' +
       '<rect width="320" height="200" fill="url(#bg' + gid + ')"/>' +
-      '<g stroke="rgba(200,216,232,0.05)" stroke-width="1">' +
-        '<path d="M40 0V200M80 0V200M120 0V200M160 0V200M200 0V200M240 0V200M280 0V200"/>' +
-        '<path d="M0 40H320M0 80H320M0 120H320M0 160H320"/>' +
-      '</g>' +
-      '<rect width="320" height="200" fill="url(#gl' + gid + ')"/>' +
-      '<polygon points="' + pts + '" fill="' + col + '" fill-opacity="0.20" stroke="' + col + '" stroke-width="2.6" stroke-linejoin="round"/>' +
-      '<g transform="translate(' + (cx - 15) + ',' + (cy - 27.5) + ') scale(1.25)">' +
-        '<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#fff" stroke="rgba(0,0,0,0.28)" stroke-width="0.6"/>' +
-        '<circle cx="12" cy="9" r="3.3" fill="' + col + '"/>' +
-      '</g>' +
+      '<g stroke="rgba(200,216,232,0.05)" stroke-width="1"><path d="M40 0V200M80 0V200M120 0V200M160 0V200M200 0V200M240 0V200M280 0V200"/><path d="M0 40H320M0 80H320M0 120H320M0 160H320"/></g>' +
+      '<polygon points="' + pts + '" fill="' + col + '" fill-opacity="0.22" stroke="' + col + '" stroke-width="2.4" stroke-linejoin="round"/>' +
       '</svg>';
-    return svg + '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>';
+  }
+  // Náhled pozemku = SKUTEČNÝ letecký/satelitní snímek toho místa (Esri World
+  // Imagery), vycentrovaný na pozemek se špendlíkem. Když se snímek nenačte,
+  // pod ním prosvítá záložní plán parcely, takže karta není nikdy prázdná.
+  function mapThumb(d) {
+    var col = TYPE[d.type].color;
+    var z = 16, n = Math.pow(2, z);
+    var latRad = d.lat * Math.PI / 180;
+    var xf = (d.lng + 180) / 360 * n;
+    var yf = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
+    var xt = Math.floor(xf), yt = Math.floor(yf);
+    var fx = xf - xt, fy = yf - yt;
+    var fxp = (fx * 100).toFixed(1), fyp = (fy * 100).toFixed(1);
+    var sat = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + z + '/' + yt + '/' + xt;
+    return planSvg(d, col, fx, fy) +
+      '<img class="opp-map" alt="Letecký snímek pozemku" src="' + sat + '" onerror="this.style.display=\'none\'" style="object-position:' + fxp + '% ' + fyp + '%">' +
+      '<span class="opp-mgrad"></span>' +
+      '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>' +
+      '<span class="opp-pin" style="left:' + fxp + '%;top:' + fyp + '%;background:' + col + '"></span>';
   }
   function shapeSvg(d) {
     var p = polyFor(d);

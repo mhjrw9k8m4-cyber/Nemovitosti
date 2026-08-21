@@ -434,7 +434,10 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 /* Náhled mapy jako fotka inzerátu */
 .opp-media{position:relative; width:100%; aspect-ratio:16/10; min-height:150px; overflow:hidden; background:var(--ink-soft2) linear-gradient(135deg, rgba(110,130,150,0.10), rgba(110,130,150,0) 60%);}
 /* Vrstvy náhledu nechytají klik — ťuknutí projde na celou kartu (jinak na iOS obrázek „spolkne" klik) */
-.opp-map{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; pointer-events:none;}
+/* Záložní plán parcely (prosvítá, když se nenačte satelit) */
+.opp-plan{position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none;}
+/* Skutečný letecký snímek — kryje plán, když se načte */
+.opp-map{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; z-index:1; pointer-events:none;}
 .opp-mgrad{position:absolute; inset:0; background:linear-gradient(180deg, rgba(8,14,20,0.32) 0%, rgba(8,14,20,0) 30%, rgba(8,14,20,0) 56%, rgba(8,14,20,0.5) 100%); pointer-events:none; z-index:1;}
 .opp-pin{position:absolute; width:16px; height:16px; border-radius:50%; border:3px solid #fff; transform:translate(-50%,-50%); box-shadow:0 1px 6px rgba(0,0,0,0.8); z-index:2; pointer-events:none;}
 /* Odznak kategorie na fotce (vlevo nahoře) */
