@@ -158,9 +158,9 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 .data-updated{margin:-6px 0 14px; font-size:12px; color:var(--copper-bright); opacity:0.85;}
 .data-updated:empty{display:none;}
 .data-updated.is-stale{color:#E0A33A; opacity:1; font-weight:600;}
-.leaflet-tooltip.kraj-tip{background:rgba(20,32,44,0.97); border:1px solid rgba(91,184,214,0.6); color:var(--parchment); font-family:'Inter',sans-serif; font-weight:500; font-size:12px; line-height:1.55; padding:8px 12px; border-radius:10px; box-shadow:0 10px 26px -6px rgba(0,0,0,0.65);}
+.leaflet-tooltip.kraj-tip{background:rgba(255,255,255,0.98); border:1px solid rgba(16,24,40,0.12); color:var(--text-ondark); font-family:'Inter',sans-serif; font-weight:500; font-size:12px; line-height:1.55; padding:8px 12px; border-radius:10px; box-shadow:0 10px 26px -8px rgba(16,24,40,0.30);}
 .leaflet-tooltip.kraj-tip b{display:inline-block; font-family:'Inter',sans-serif; color:var(--copper-bright); font-weight:600; font-size:14.5px; margin-bottom:1px;}
-.leaflet-tooltip.kraj-tip::before{border-top-color:rgba(91,184,214,0.6);}
+.leaflet-tooltip.kraj-tip::before{border-top-color:rgba(255,255,255,0.98);}
 /* Špendlík vybraného pozemku na mapě — bez rámečku divIconu, s jemným stínem */
 .sel-pin{background:none; border:none;}
 .sel-pin svg{display:block; filter:drop-shadow(0 3px 4px rgba(0,0,0,0.45));}
@@ -648,7 +648,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
   .leaflet-control-zoom{display:block; margin:122px 0 0 10px !important; border:none; box-shadow:var(--shadow); border-radius:9px; overflow:hidden;}
   .leaflet-control-zoom a{width:34px; height:34px; line-height:32px; font-size:19px; font-weight:600; background:rgba(255,255,255,0.94); color:var(--text-ondark); border:1px solid var(--line-strong); backdrop-filter:blur(4px);}
   .leaflet-control-zoom a:last-child{border-top:none;}
-  .leaflet-control-zoom a:hover{background:rgba(30,46,62,0.98); color:var(--copper-bright); border-color:var(--copper-bright);}
+  .leaflet-control-zoom a:hover{background:rgba(241,244,248,0.98); color:var(--copper-bright); border-color:var(--copper-bright);}
   .leaflet-control-zoom a.leaflet-disabled{opacity:0.45; color:var(--text-ondark); background:rgba(255,255,255,0.7);}
 }
 
@@ -657,7 +657,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .kraj-lock .leaflet-marker-pane{pointer-events:none;}
 .kraj-lock .leaflet-marker-icon, .kraj-lock .leaflet-marker-icon *{pointer-events:none !important;}
 /* Nápověda „vyberte kraj" (fáze 1) */
-.kraj-hint{position:absolute; top:12px; left:12px; z-index:600; display:inline-flex; align-items:center; gap:8px; background:rgba(20,32,44,0.92); border:1px solid var(--line-strong); color:var(--parchment); font-size:12.5px; font-weight:600; padding:8px 13px; border-radius:22px; box-shadow:var(--shadow); backdrop-filter:blur(4px); pointer-events:none; max-width:calc(100% - 118px);}
+.kraj-hint{position:absolute; top:12px; left:12px; z-index:600; display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.95); border:1px solid rgba(16,24,40,0.10); color:var(--text-ondark); font-size:12.5px; font-weight:600; padding:8px 13px; border-radius:22px; box-shadow:0 8px 22px -12px rgba(16,24,40,0.35); backdrop-filter:blur(4px); pointer-events:none; max-width:calc(100% - 118px);}
 .kraj-hint[hidden]{display:none;}
 .kraj-hint .kh-pin{width:9px; height:9px; border-radius:50%; background:var(--copper-bright); box-shadow:0 0 0 4px rgba(91,184,214,0.22); flex:none;}
 /* Vymazlený nadpis vybraného kraje (fáze 2) */
