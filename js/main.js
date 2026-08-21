@@ -931,18 +931,32 @@
   function mapThumb(d) {
     var col = TYPE[d.type].color;
     var z = 16, n = Math.pow(2, z);
-    var latRad = d.lat * Math.PI / 180;
-    var xf = (d.lng + 180) / 360 * n;
-    var yf = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
-    var xt = Math.floor(xf), yt = Math.floor(yf);
-    var fx = xf - xt, fy = yf - yt;
-    var fxp = (fx * 100).toFixed(1), fyp = (fy * 100).toFixed(1);
-    var sat = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + z + '/' + yt + '/' + xt;
-    return planSvg(d, col, fx, fy) +
-      '<img class="opp-map" alt="Letecký snímek pozemku" src="' + sat + '" onerror="this.style.display=\'none\'" style="object-position:' + fxp + '% ' + fyp + '%">' +
+    function worldX(lng) { return (lng + 180) / 360 * 256 * n; }
+    function worldY(lat) { var r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * 256 * n; }
+    var WX = worldX(d.lng), WY = worldY(d.lat);
+    var Vw = 384, Vh = 240;                         // 16:10, pozemek uprostřed
+    var ox = WX - Vw / 2, oy = WY - Vh / 2;
+    var minTx = Math.floor(ox / 256), maxTx = Math.floor((ox + Vw) / 256);
+    var minTy = Math.floor(oy / 256), maxTy = Math.floor((oy + Vh) / 256);
+    var imgs = '';
+    for (var tx = minTx; tx <= maxTx; tx++) {
+      for (var ty = minTy; ty <= maxTy; ty++) {
+        var u = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + z + '/' + ty + '/' + tx;
+        imgs += '<image href="' + u + '" xlink:href="' + u + '" x="' + (tx * 256 - ox).toFixed(1) + '" y="' + (ty * 256 - oy).toFixed(1) + '" width="256" height="256" preserveAspectRatio="none"/>';
+      }
+    }
+    var fid = 'ts' + d._id;
+    var pin = '<g transform="translate(' + (Vw / 2) + ',' + (Vh / 2) + ')" filter="url(#' + fid + ')">' +
+      '<path d="M0 0C-7 -12 -12 -18 -12 -25 A12 12 0 1 1 12 -25 C12 -18 7 -12 0 0Z" fill="' + col + '" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>' +
+      '<circle cx="0" cy="-25" r="4.6" fill="#fff"/></g>';
+    return '<svg class="opp-map" viewBox="0 0 ' + Vw + ' ' + Vh + '" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
+      '<defs><filter id="' + fid + '" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="rgba(0,0,0,0.5)"/></filter></defs>' +
+      '<rect width="' + Vw + '" height="' + Vh + '" fill="#141f2b"/>' +
+      '<g stroke="rgba(200,216,232,0.06)" stroke-width="1"><path d="M64 0V240M128 0V240M192 0V240M256 0V240M320 0V240M0 60H384M0 120H384M0 180H384"/></g>' +
+      imgs + pin +
+      '</svg>' +
       '<span class="opp-mgrad"></span>' +
-      '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>' +
-      '<span class="opp-pin" style="left:' + fxp + '%;top:' + fyp + '%;background:' + col + '"></span>';
+      '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>';
   }
   function shapeSvg(d) {
     var p = polyFor(d);
