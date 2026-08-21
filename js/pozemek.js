@@ -178,6 +178,16 @@
   // portálu — jen místo domu je vidět pozemek shora. z=17 = detail + spolehlivost.
   function heroLayers(d) {
     var col = TYPE[d.type].color;
+    // Majitel nahrál skutečné fotky pozemku → listovací galerie (swipe na mobilu).
+    if (d.photos && d.photos.length) {
+      var shots = d.photos.map(function (p, i) {
+        return '<img class="pz-shot" src="' + p + '" alt="Fotka pozemku ' + (i + 1) + '" loading="' + (i === 0 ? 'eager' : 'lazy') + '" decoding="async">';
+      }).join('');
+      var cnt = d.photos.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + d.photos.length + '</span>' : '';
+      return '<div class="pz-gallery">' + shots + '</div>' +
+        '<span class="opp-mgrad"></span>' +
+        '<span class="opp-badge ' + d.type + '">' + esc(TYPE[d.type].label) + '</span>' + cnt;
+    }
     var z = 17, n = Math.pow(2, z);
     function worldX(lng) { return (lng + 180) / 360 * 256 * n; }
     function worldY(lat) { var r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * 256 * n; }
@@ -228,6 +238,7 @@
     setTimeout(function () { t.classList.remove('show'); t.hidden = true; }, 2200);
   }
 
+  var GALLERY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
   var PIN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
   var MAP_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3z"/><path d="M9 3v15M15 6v15"/></svg>';
   var CLOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';

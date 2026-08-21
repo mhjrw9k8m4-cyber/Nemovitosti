@@ -113,6 +113,65 @@
   // ale zachytí zjevné vulgarity — nevhodné jde navíc nahlásit a smazat.
   var BAD = /(kokot|\bkkt\b|kurv|piča|pича|\bpica\b|mrd|debil|sr[aá]č|čur[aá]k|curak|\bhovn|zmrd|jebn|jebat)/i;
   function looksBad(s) { return BAD.test(String(s || '')); }
+  /* ---------- Nahrání fotek do úložiště (Supabase Storage) ----------
+     Fotky se před nahráním automaticky zmenší (max 1600 px) a překódují na
+     JPEG — tím se: 1) zmenší objem dat (rychlejší na mobilu), 2) odstraní
+     skrytá EXIF data včetně GPS polohy fotky (soukromí). Nahráváme jen
+     obrázky, jen přihlášený uživatel, do vlastní složky. Vrací pole URL. */
+  var PH_MAX = 8, PH_DIM = 1600, PH_Q = 0.82, PH_SRC_MAX = 25 * 1024 * 1024;
+  function isImage(t) { return /^image\/(jpe?g|png|webp)$/i.test(t || ''); }
+  function processImage(file) {
+    return new Promise(function (resolve) {
+      if (!isImage(file.type) || file.size > PH_SRC_MAX) { resolve(null); return; }
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        var w = img.naturalWidth, h = img.naturalHeight;
+        if (!w || !h) { resolve(null); return; }
+        var scale = Math.min(1, PH_DIM / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+        try {
+          var cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+          cv.getContext('2d').drawImage(img, 0, 0, cw, ch);
+          cv.toBlob(function (blob) { resolve(blob || null); }, 'image/jpeg', PH_Q);
+        } catch (e) { resolve(null); }
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); resolve(null); };
+      img.src = url;
+    });
+  }
+  function uploadOne(blob, i) {
+    if (!blob) return Promise.resolve(null);
+    var uid = (window.PKAuth && PKAuth.uid && PKAuth.uid()) || 'anon';
+    var tok = (window.PKAuth && PKAuth.token && PKAuth.token()) || SB_KEY;
+    var rnd = Math.random().toString(36).slice(2, 8);
+    var name = uid + '/' + Date.now() + '-' + i + '-' + rnd + '.jpg';
+    return fetch(SB_URL + '/storage/v1/object/listing-photos/' + encodeURI(name), {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + tok, 'Content-Type': 'image/jpeg', 'x-upsert': 'false' },
+      body: blob
+    }).then(function (r) {
+      return r.ok ? (SB_URL + '/storage/v1/object/public/listing-photos/' + encodeURI(name)) : null;
+    }).catch(function () { return null; });
+  }
+  function uploadPhotos() {
+    var fEl = document.getElementById('p-fotky');
+    var files = (fEl && fEl.files) ? [].slice.call(fEl.files) : [];
+    files = files.filter(function (f) { return isImage(f.type); }).slice(0, PH_MAX);
+    if (!files.length) return Promise.resolve([]);
+    showToast('Nahrávám fotky…');
+    var urls = [];
+    // Sekvenčně — na mobilním připojení šetrnější a spolehlivější.
+    return files.reduce(function (p, f, i) {
+      return p.then(function () {
+        return processImage(f).then(function (blob) {
+          return uploadOne(blob, i).then(function (u) { if (u) urls.push(u); });
+        });
+      });
+    }, Promise.resolve()).then(function () { return urls; });
+  }
+
   // Odeslání prodeje = automatické zveřejnění na mapě (jako přihlášený) + přesměrování na „Moje inzeráty".
   function publishListing() {
     if (looksBad(val('p-obec')) || looksBad(val('p-popis')) || looksBad(val('p-parcela'))) {
@@ -124,10 +183,12 @@
     var price = parseInt(val('p-cena'), 10) || 0;
     return geocodeCz(obec, okres).then(function (pos) {
       if (!pos) return 'geo';
+      return uploadPhotos().then(function (photoUrls) {
       return PKAuth.rpc('create_listing', {
         p_place: obec, p_okres: okres, p_druh: val('p-druh'), p_parcel: val('p-parcela'),
         p_area: area, p_price: price, p_lat: pos.lat, p_lng: pos.lng,
-        p_description: val('p-popis'), p_contact: val('p-kontakt')
+        p_description: val('p-popis'), p_contact: val('p-kontakt'),
+        p_photos: photoUrls || []
       }, true).then(function (res) {
         if (!res || !res.ok) {
           if (res && res.expired) return 'auth';
@@ -142,6 +203,7 @@
         if (!row || !row.id) return 'error';
         window.location.href = 'muj-inzerat.html';
         return 'ok';
+      });
       });
     });
   }

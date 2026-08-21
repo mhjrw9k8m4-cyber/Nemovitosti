@@ -925,11 +925,25 @@
       '<polygon points="' + pts + '" fill="' + col + '" fill-opacity="0.22" stroke="' + col + '" stroke-width="2.4" stroke-linejoin="round"/>' +
       '</svg>';
   }
+  // Ikonka „víc fotek" (počet fotek v rohu náhledu)
+  var GALLERY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
   // Náhled pozemku = SKUTEČNÝ letecký/satelitní snímek toho místa (Esri World
   // Imagery), vycentrovaný na pozemek se špendlíkem. Když se snímek nenačte,
   // pod ním prosvítá záložní plán parcely, takže karta není nikdy prázdná.
+  // Když ale majitel nahrál vlastní fotku pozemku, má přednost ta fotka.
   function mapThumb(d) {
     var col = TYPE[d.type].color;
+    // Když majitel nahrál skutečnou fotku pozemku, ukážeme ji místo satelitu.
+    if (d.photos && d.photos.length) {
+      var p0 = d.photos[0];
+      var cnt = d.photos.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + (d.photos.length) + '</span>' : '';
+      return '<svg class="opp-map" viewBox="0 0 384 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
+        '<rect width="384" height="240" fill="#141f2b"/>' +
+        '<image href="' + p0 + '" xlink:href="' + p0 + '" x="0" y="0" width="384" height="240" preserveAspectRatio="xMidYMid slice"/>' +
+        '</svg>' +
+        '<span class="opp-mgrad"></span>' +
+        '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>' + cnt;
+    }
     var z = 16, n = Math.pow(2, z);
     function worldX(lng) { return (lng + 180) / 360 * 256 * n; }
     function worldY(lat) { var r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * 256 * n; }
@@ -1892,6 +1906,15 @@
       function clean(s, max) {
         return String(s == null ? '' : s).replace(/[<>"]/g, '').replace(/\s+/g, ' ').trim().slice(0, max || 120);
       }
+      // Fotky přijmeme jen jako odkazy do NAŠEHO úložiště (stejná pojistka jako
+      // na serveru) — nikdy ne cizí adresu. Bez uvozovek, ať se nedá rozbít HTML.
+      function cleanPhotos(a) {
+        if (!Array.isArray(a)) return [];
+        return a.filter(function (p) {
+          return typeof p === 'string' && p.indexOf('"') === -1 &&
+            /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/listing-photos\//.test(p);
+        }).slice(0, 8);
+      }
       if (Array.isArray(live)) {
         live.forEach(function (u) {
           if (!u || typeof u.lat !== 'number' || typeof u.lng !== 'number') return;
@@ -1906,6 +1929,7 @@
             extra: 'od majitele',
             contact: clean(u.contact, 80),
             description: clean(u.description, 600),
+            photos: cleanPhotos(u.photos),
             _lid: u.id, views: (typeof u.views === 'number' ? u.views : 0)
           });
         });

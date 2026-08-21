@@ -23,6 +23,8 @@
   function setSession(s) { try { if (s) localStorage.setItem(LSKEY, JSON.stringify(s)); else localStorage.removeItem(LSKEY); } catch (e) {} }
   function loggedIn() { var s = getSession(); return !!(s && s.access_token); }
   function email() { var s = getSession(); return (s && s.user && s.user.email) || ''; }
+  function uid() { var s = getSession(); return (s && s.user && s.user.id) || ''; }
+  function token() { var s = getSession(); return (s && s.access_token) || ''; }
 
   function headers(useUser) {
     var h = { 'apikey': KEY, 'Content-Type': 'application/json' };
@@ -97,7 +99,7 @@
 
   window.PKAuth = {
     ready: !!(URL && KEY),
-    getSession: getSession, loggedIn: loggedIn, email: email, deviceId: deviceId,
+    getSession: getSession, loggedIn: loggedIn, email: email, uid: uid, token: token, deviceId: deviceId,
     signup: signup, login: login, logout: logout, rpc: rpc
   };
 })();
