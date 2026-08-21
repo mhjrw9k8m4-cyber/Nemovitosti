@@ -1072,9 +1072,10 @@
 
   function detailHtml(d) {
     var t = TYPE[d.type];
-    // Na dotyku (mobil) otevíráme externí odkazy ve STEJNÉ záložce — ať funguje tlačítko/gesto
-    // Zpět a člověk se vrátí na naši stránku. Na počítači necháváme novou záložku (dá se přepnout).
-    var extAttr = isTouch ? '' : ' target="_blank" rel="noopener"';
+    // Externí odkazy (Mapy.cz, katastr) otevíráme vždy v NOVÉ záložce — i na mobilu.
+    // Mapy.cz jsou aplikace, která si do historie ukládá každý pohyb; kdyby se
+    // otevřely ve stejné záložce, tlačítko Zpět by se pak vracelo „krok po kroku".
+    var extAttr = ' target="_blank" rel="noopener"';
     var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací' : (d.type === 'sale' || d.type === 'majitel' ? 'Cena' : 'Odhad');
     var days = daysUntil(d.extra);
@@ -1441,10 +1442,15 @@
       updateKrajHead();
       renderList();
       showToast('Seřazeno podle vzdálenosti od vás.');
-    }, function () {
+    }, function (err) {
       if (sortEl) sortEl.value = sortMode;
-      showToast('Polohu se nepodařilo zjistit. Povolte ji prosím v prohlížeči a zkuste to znovu.');
-    }, { enableHighAccuracy: false, timeout: 9000, maximumAge: 300000 });
+      var denied = err && err.code === 1;   // 1 = uživatel polohu nepovolil
+      showToast(denied
+        ? 'Poloha není povolená. Napište své město do vyhledávání nahoře — najdu pozemky v okolí.'
+        : 'Polohu se teď nepodařilo zjistit. Napište své město do vyhledávání nahoře.');
+      // Slepá ulička → nabídneme ruční cestu: zaostříme vyhledávání obce.
+      if (searchEl) { try { searchEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); searchEl.focus(); } catch (e) {} }
+    }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 });
   }
   lockDots(true);      // start: nejdřív se vybírá kraj
   updateKrajHead();
