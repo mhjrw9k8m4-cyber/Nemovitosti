@@ -1452,22 +1452,52 @@
     return grab('https://ipapi.co/json/', function (j) { return (j.latitude && j.longitude) ? { lat: +j.latitude, lng: +j.longitude } : null; })
       .then(function (p) { return p || grab('https://ipwho.is/', function (j) { return (j && j.success && j.latitude) ? { lat: +j.latitude, lng: +j.longitude } : null; }); });
   }
-  // „Pozemky v okolí" — nejdřív přesná GPS; když nejde, přibližná IP; a když ani to, ruční hledání.
+  // Zaostři ruční hledání obce (když se poloha nepovede).
+  function focusSearch() {
+    if (sortEl) sortEl.value = sortMode;
+    if (searchEl) { try { searchEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); searchEl.focus(); } catch (e) {} }
+  }
+  // Obrazovka „Zapněte polohu" — jasně vysvětlí, co dělat, s tlačítky.
+  var LOC_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  function showLocModal(err) {
+    var denied = err && err.code === 1;
+    var ov = document.createElement('div'); ov.className = 'loc-ov';
+    ov.innerHTML =
+      '<div class="loc-card" role="dialog" aria-modal="true" aria-label="Zapněte polohu">' +
+        '<button class="loc-x" type="button" aria-label="Zavřít">✕</button>' +
+        '<div class="loc-ic">' + LOC_PIN + '</div>' +
+        '<h3>Zapněte polohu</h3>' +
+        '<p>Ať vám ukážeme pozemky přímo ve vašem okolí, potřebujeme přístup k poloze. ' +
+        (denied
+          ? 'Máte ji teď zakázanou — povolte ji prosím v prohlížeči a zkuste to znovu.'
+          : 'Až se objeví okno prohlížeče, ťukněte <b>Povolit</b>.') +
+        '</p>' +
+        (denied ? '<p class="loc-hint">V Safari nahoře u adresy ťukněte <b>аА → Nastavení webu → Poloha → Zeptat se</b>. Pak dole „Povolit a zkusit znovu".</p>' : '') +
+        '<div class="loc-btns">' +
+          '<button class="loc-btn primary" type="button" data-loc="retry">Povolit a zkusit znovu</button>' +
+          '<button class="loc-btn ghost" type="button" data-loc="ip">Ukázat přibližně (podle připojení)</button>' +
+          '<button class="loc-btn ghost" type="button" data-loc="city">Radši zadám město</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+    function close() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function (e) {
+      if (e.target === ov || e.target.closest('.loc-x')) { close(); focusSearch(); return; }
+      var b = e.target.closest('[data-loc]'); if (!b) return;
+      var act = b.getAttribute('data-loc'); close();
+      if (act === 'retry') { enterNear(); }
+      else if (act === 'ip') { showToast('Zjišťuji přibližnou polohu…'); ipLocate().then(function (pos) { if (pos) enterNearAt(pos, true); else focusSearch(); }); }
+      else { focusSearch(); }
+    });
+  }
+  // „Pozemky v okolí" — nejdřív přesná GPS; když se nepovede, ukáž obrazovku „Zapněte polohu".
   function enterNear() {
+    if (!navigator.geolocation) { showLocModal({ code: 2 }); return; }
     showToast('Zjišťuji vaši polohu…');
-    function ipThenSearch(denied) {
-      ipLocate().then(function (pos) {
-        if (pos) { enterNearAt(pos, true); return; }
-        if (sortEl) sortEl.value = sortMode;
-        showToast('Polohu se nepodařilo zjistit. Napište své město do vyhledávání nahoře — najdu pozemky v okolí.');
-        if (searchEl) { try { searchEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); searchEl.focus(); } catch (e) {} }
-      });
-    }
-    if (!navigator.geolocation) { ipThenSearch(false); return; }
     navigator.geolocation.getCurrentPosition(function (pos) {
       enterNearAt({ lat: pos.coords.latitude, lng: pos.coords.longitude }, false);
     }, function (err) {
-      ipThenSearch(err && err.code === 1);
+      showLocModal(err);
     }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 120000 });
   }
   lockDots(true);      // start: nejdřív se vybírá kraj

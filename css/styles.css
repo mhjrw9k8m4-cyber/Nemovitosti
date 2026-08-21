@@ -979,6 +979,24 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 @media (prefers-reduced-motion:reduce){ .to-top.show svg{animation:none;} }
 @media (max-width:420px){ .to-top{bottom:18px; right:16px; height:44px; padding:0 16px 0 13px; font-size:14px;} }
 
+/* Obrazovka „Zapněte polohu" (modal při selhání geolokace) */
+.loc-ov{position:fixed; inset:0; z-index:1300; display:flex; align-items:center; justify-content:center; padding:22px; background:rgba(8,13,20,0.68); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);}
+.loc-card{position:relative; max-width:390px; width:100%; background:var(--ink-soft); border:1px solid var(--line-strong); border-radius:18px; padding:28px 22px 22px; text-align:center; color:var(--text-ondark); box-shadow:0 24px 64px -20px rgba(0,0,0,0.85);}
+.loc-x{position:absolute; top:12px; right:12px; width:32px; height:32px; border:0; background:none; color:var(--text-ondark-mute); font-size:16px; cursor:pointer; border-radius:8px;}
+.loc-x:hover{color:var(--text-ondark);}
+.loc-ic{width:60px; height:60px; margin:0 auto 14px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--ink-soft2);}
+.loc-ic svg{width:30px; height:30px; color:var(--copper-bright);}
+.loc-card h3{font-size:19px; font-weight:700; margin-bottom:8px;}
+.loc-card p{font-size:14.5px; color:var(--text-ondark-mute); line-height:1.5; margin-bottom:14px;}
+.loc-card p.loc-hint{font-size:13px; background:var(--ink-soft2); border:1px solid var(--line); border-radius:10px; padding:10px 12px;}
+.loc-card b{color:var(--text-ondark);}
+.loc-btns{display:flex; flex-direction:column; gap:9px; margin-top:6px;}
+.loc-btn{height:48px; border-radius:12px; font-size:15px; font-weight:700; border:1px solid transparent; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+.loc-btn.primary{background:linear-gradient(135deg,var(--copper-bright),var(--copper)); color:#fff;}
+.loc-btn.primary:hover{filter:brightness(1.06);}
+.loc-btn.ghost{background:var(--ink-soft2); color:var(--text-ondark); border-color:var(--line-strong);}
+.loc-btn.ghost:hover{border-color:var(--copper-bright);}
+
 /* Responsive */
 /* Přepínač Mapa / Seznam — jen na mobilu, ať seznam není zahrabaný pod mapou */
 .mv-toggle{display:none;}
