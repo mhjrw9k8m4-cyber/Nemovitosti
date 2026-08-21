@@ -1147,7 +1147,17 @@
   }
   function highlightShape(d) {
     if (selPoly) { map.removeLayer(selPoly); selPoly = null; }
-    selPoly = L.polygon(polyFor(d), { color: '#fff', weight: 2.5, fillColor: TYPE[d.type].color, fillOpacity: 0.4, opacity: 1 }).addTo(map);
+    // Ohraničení pozemku na mapě. Poloha a VELIKOST (podle výměry) jsou reálné;
+    // přesný tvar hranic nemáme, proto přerušovaná čára = přibližný obrys. Přesné
+    // hranice jsou v katastru (odkaz „Katastr" na stránce inzerátu).
+    var col = TYPE[d.type].color;
+    selPoly = L.polygon(polyFor(d), {
+      color: col, weight: 3, opacity: 0.98,
+      fillColor: col, fillOpacity: 0.18,
+      dashArray: '7 5', lineJoin: 'round'
+    }).addTo(map);
+    if (selPoly.bringToFront) selPoly.bringToFront();
+    if (selPoly.bindTooltip) selPoly.bindTooltip('Přibližné umístění a velikost pozemku (přesné hranice v katastru)', { sticky: true, direction: 'top', className: 'kraj-tip' });
   }
 
   // Tečkovaná mapa pozemků + obrysy krajů pro orientaci
@@ -1652,16 +1662,20 @@
     } catch (e) {}
     location.href = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng;
   }
-  // „Zobrazit na mapě" / sdílený odkaz: přiblíž mapu na pozemek a zvýrazni ho
-  // (bez starého vysouvacího panelu — detail má teď vlastní stránku inzerátu).
+  // „Zobrazit na mapě" / sdílený odkaz: přiblíž mapu tak, aby byl pozemek
+  // VYZNAČENÝ OHRANIČENÍM (ne jen tečkou) a pěkně zarámovaný na celou obrazovku.
   function openParcel(target) {
     if (!target) return;
     var k = krajOf(target);
     if (k) selectKraj(k, true);
-    map.setView([target.lat, target.lng], 15, { animate: false });
+    highlightShape(target);                 // nakresli obrys pozemku
+    if (selPoly && selPoly.getBounds) {
+      map.fitBounds(selPoly.getBounds(), { padding: [80, 80], maxZoom: 18, animate: false });
+    } else {
+      map.setView([target.lat, target.lng], 17, { animate: false });
+    }
     updateMapView();
     highlightMarker(target._id);
-    highlightShape(target);
     highlightList(target._id);
     if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
   }
