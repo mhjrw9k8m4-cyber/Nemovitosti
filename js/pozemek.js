@@ -199,8 +199,8 @@
       return (worldX(v[1]) - ox).toFixed(1) + ',' + (worldY(v[0]) - oy).toFixed(1);
     }).join(' ');
     return '<svg class="opp-map" viewBox="0 0 ' + Vw + ' ' + Vh + '" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
-      '<rect width="' + Vw + '" height="' + Vh + '" fill="#141f2b"/>' +
-      '<g stroke="rgba(200,216,232,0.06)" stroke-width="1"><path d="M64 0V256M128 0V256M192 0V256M256 0V256M320 0V256M0 64H384M0 128H384M0 192H384"/></g>' +
+      '<rect width="' + Vw + '" height="' + Vh + '" fill="#dbe1e8"/>' +
+      '<g stroke="rgba(16,24,40,0.06)" stroke-width="1"><path d="M64 0V256M128 0V256M192 0V256M256 0V256M320 0V256M0 64H384M0 128H384M0 192H384"/></g>' +
       imgs +
       '<polygon points="' + pp + '" fill="' + col + '" fill-opacity="0.26" stroke="#fff" stroke-width="2.6" stroke-linejoin="round" paint-order="stroke"/>' +
       '<polygon points="' + pp + '" fill="none" stroke="' + col + '" stroke-width="1.3" stroke-linejoin="round"/>' +
@@ -229,6 +229,41 @@
 
   var PIN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
   var MAP_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3z"/><path d="M9 3v15M15 6v15"/></svg>';
+  var CLOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  var HEART_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
+  var SHARE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>';
+
+  // Cenový verdikt (světlá verze)
+  function pzVerdictHtml(d) {
+    if (!hasArea(d) || !d.price) return '';
+    var arr = perM2Index[d.type + '|' + druhGroup(d.druh)];
+    if (!arr || arr.length < 8) return '';
+    if (arr[arr.length - 1] <= arr[0] * 1.15) return '';
+    var val = d.price / d.area, below = 0;
+    for (var i = 0; i < arr.length; i++) { if (arr[i] <= val) below++; }
+    var pct = Math.max(2, Math.min(98, Math.round(below / arr.length * 100)));
+    var typeWord = d.type === 'sale' ? 'v prodeji' : (d.type === 'drazba' ? 'v dražbě' : 'v nabídce');
+    var cls, badge, text;
+    if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + (100 - pct) + ' %</b> podobných pozemků ' + typeWord + '.'; }
+    else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> podobných pozemků ' + typeWord + '.'; }
+    else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> podobných pozemků ' + typeWord + '.'; }
+    return '<div class="pz-verdict ' + cls + '">' +
+      '<div class="pv-top"><span class="pv-badge">' + badge + '</span><span class="pv-cmp">Cena za m²</span></div>' +
+      '<div class="pv-text">' + text + '</div>' +
+      '<div class="pv-track"><span class="pv-fill" style="width:' + pct + '%"></span><span class="pv-dot" style="left:' + pct + '%"></span></div>' +
+      '<div class="pv-scale"><span>levné</span><span>drahé</span></div>' +
+      '</div>';
+  }
+  // „Co byste měli vědět" (světlá verze)
+  function pzGtkHtml(d) {
+    var b = buildInfo(druhGroup(d.druh));
+    var c = typeCaution(d);
+    return '<div class="pz-gtk">' +
+      '<div class="g-row"><span class="g-k">Dá se tu stavět?</span><span class="g-v">' + b.txt + '</span></div>' +
+      '<div class="g-row"><span class="g-k">Na co si dát pozor</span><span class="g-v">' + c + '</span></div>' +
+      '<p class="g-foot">Obecné informace, ne právní rada ke konkrétní parcele. Vždy ověřte na úřadě a v katastru.</p>' +
+      '</div>';
+  }
 
   function render(d) {
     var t = TYPE[d.type];
@@ -260,15 +295,15 @@
         (d.okres ? '<div class="pz-okres">' + PIN_SVG + 'okres ' + esc(d.okres) + '</div>' : '') +
       '</div>' +
 
-      '<div class="pz-price">' +
-        '<span class="pl">' + priceLabel + '</span>' +
-        '<span class="pv">' + fmt(d.price) + ' Kč</span>' +
-        (perM2 ? '<span class="pm">' + fmt(perM2) + ' Kč/m²</span>' : '') +
+      '<div class="pz-priceblock">' +
+        '<div class="pz-pl">' + priceLabel + '</div>' +
+        '<div class="pz-price"><span class="pv">' + fmt(d.price) + ' Kč</span>' +
+          (perM2 ? '<span class="pm">' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
       '</div>' +
 
-      (days != null && days >= 0 ? '<div style="margin:6px 0 2px"><span class="md-cd' + countdownClass(days) + '">Termín ' + countdownText(days) + '</span></div>' : '') +
+      (days != null && days >= 0 ? '<div class="pz-term">' + CLOCK_SVG + 'Termín ' + countdownText(days) + '</div>' : '') +
 
-      '<div id="pz-verdict">' + priceBarHtml(d) + '</div>' +
+      '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
 
       '<div class="pz-sect-h">Parametry pozemku</div>' +
       '<div class="pz-specs">' +
@@ -276,18 +311,18 @@
       '</div>' +
 
       '<div class="pz-cta">' +
-        '<a class="btn-primary btn-glow" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + ' Zobrazit na mapě</a>' +
-        (d.type === 'majitel' ? '' : '<a class="btn-primary" style="background:var(--ink-soft2);color:var(--text-ondark);box-shadow:none;border:1px solid var(--line)" href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.label) + ' →</a>') +
+        '<a class="pz-btn primary" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Zobrazit na mapě</a>' +
+        (d.type === 'majitel' ? '' : '<a class="pz-btn ghost" href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.label) + '</a>') +
       '</div>' +
 
       '<div class="pz-actions">' +
-        '<a class="lp-btn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">Přesný obrys (katastr)</a>' +
-        '<button class="lp-btn lp-fav' + (favOn ? ' on' : '') + '" type="button" id="pz-fav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg><span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
-        '<button class="lp-btn" type="button" id="pz-share">Sdílet</button>' +
+        '<a class="pz-abtn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">Přesný obrys (katastr)</a>' +
+        '<button class="pz-abtn' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">' + HEART_SVG + '<span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
+        '<button class="pz-abtn" type="button" id="pz-share">' + SHARE_SVG + 'Sdílet</button>' +
       '</div>' +
 
-      '<div class="pz-sect-h">Informace k pozemku</div>' +
-      goodToKnowHtml(d);
+      '<div class="pz-sect-h">Co byste měli vědět</div>' +
+      pzGtkHtml(d);
 
     var host = document.getElementById('pz-detail');
     host.innerHTML = html;
@@ -364,7 +399,7 @@
 
   function fillVerdict(d) {
     var el = document.getElementById('pz-verdict');
-    if (el) el.innerHTML = priceBarHtml(d);
+    if (el) el.innerHTML = pzVerdictHtml(d);
   }
 
   // 1) OKAMŽITĚ vykresli z předaného pozemku (sessionStorage) — bez čekání na data.
