@@ -39,6 +39,11 @@ create policy "listing photos owner delete"
 -- p_photos je JSON pole odkazů (URL) na fotky. Server přijme jen odkazy,
 -- které skutečně vedou do našeho veřejného úložiště listing-photos —
 -- tím je zaručené, že se nepodstrčí cizí/škodlivá adresa. Max 8 fotek.
+-- Nejdřív zahodíme starší verze funkcí (mění se návratový typ / počet parametrů).
+drop function if exists create_listing(text,text,text,text,integer,integer,double precision,double precision,text,text);
+drop function if exists public_listings();
+drop function if exists my_listings();
+
 create or replace function create_listing(
   p_place text, p_okres text, p_druh text, p_parcel text,
   p_area integer, p_price integer, p_lat double precision, p_lng double precision,
