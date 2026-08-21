@@ -194,16 +194,20 @@
         imgs += '<image href="' + u + '" xlink:href="' + u + '" x="' + (tx * 256 - ox).toFixed(1) + '" y="' + (ty * 256 - oy).toFixed(1) + '" width="256" height="256" preserveAspectRatio="none"/>';
       }
     }
-    // Obrys pozemku: vrcholy → world-pixely → souřadnice výřezu (pozemek je uprostřed).
-    var pp = polyFor(d).map(function (v) {
-      return (worldX(v[1]) - ox).toFixed(1) + ',' + (worldY(v[0]) - oy).toFixed(1);
-    }).join(' ');
+    // Značka pozemku: kruh se SKUTEČNOU velikostí (podle výměry) na přesném místě.
+    // Nepředstírá konkrétní tvar hranic (ten přesný je v katastru) — jen poctivě
+    // ukazuje „tady je pozemek a je zhruba takhle velký".
+    var pxPerM = 256 * n / (40075016.686 * Math.cos(d.lat * Math.PI / 180));
+    var rU = Math.max(9, Math.sqrt((hasArea(d) ? d.area : 1500) / Math.PI) * pxPerM);
+    var cx = (Vw / 2).toFixed(1), cy = (Vh / 2).toFixed(1);
     return '<svg class="opp-map" viewBox="0 0 ' + Vw + ' ' + Vh + '" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
       '<rect width="' + Vw + '" height="' + Vh + '" fill="#dbe1e8"/>' +
       '<g stroke="rgba(16,24,40,0.06)" stroke-width="1"><path d="M64 0V256M128 0V256M192 0V256M256 0V256M320 0V256M0 64H384M0 128H384M0 192H384"/></g>' +
       imgs +
-      '<polygon points="' + pp + '" fill="' + col + '" fill-opacity="0.26" stroke="#fff" stroke-width="2.6" stroke-linejoin="round" paint-order="stroke"/>' +
-      '<polygon points="' + pp + '" fill="none" stroke="' + col + '" stroke-width="1.3" stroke-linejoin="round"/>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + rU.toFixed(1) + '" fill="' + col + '" fill-opacity="0.18" stroke="#fff" stroke-width="3" paint-order="stroke"/>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + rU.toFixed(1) + '" fill="none" stroke="' + col + '" stroke-width="1.6"/>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="4.5" fill="#fff"/>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="2.6" fill="' + col + '"/>' +
       '</svg>' +
       '<span class="opp-mgrad"></span>' +
       '<span class="opp-badge ' + d.type + '">' + esc(TYPE[d.type].label) + '</span>';
@@ -285,10 +289,7 @@
     if (d.extra) facts.push({ k: 'Stav / zdroj', v: esc(d.extra) });
 
     var html =
-      '<div class="pz-media" id="pz-media" role="button" tabindex="0" aria-label="Zobrazit na mapě">' +
-        heroLayers(d) +
-        '<span class="pz-maphint">' + MAP_SVG + 'Zobrazit na mapě</span>' +
-      '</div>' +
+      '<div class="pz-media">' + heroLayers(d) + '</div>' +
 
       '<div class="pz-head">' +
         '<h1 class="pz-place">' + esc(d.place) + '</h1>' +
@@ -330,13 +331,6 @@
     // titulek stránky
     try { document.title = d.place + ' — ' + fmt(d.price) + ' Kč · Parcelka'; } catch (e) {}
 
-    // klik na snímek → skutečná mapa (Mapy.cz) v nové záložce
-    function openMap() { var w = window.open(mapHref, '_blank', 'noopener'); if (!w) location.href = mapHref; }
-    var media = document.getElementById('pz-media');
-    if (media) {
-      media.addEventListener('click', openMap);
-      media.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openMap(); } });
-    }
     // uložit
     var favBtn = document.getElementById('pz-fav');
     if (favBtn) favBtn.addEventListener('click', function () {
