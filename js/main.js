@@ -1158,17 +1158,16 @@
   }
   function highlightShape(d) {
     if (selPoly) { map.removeLayer(selPoly); selPoly = null; }
-    // Ohraničení pozemku na mapě. Poloha a VELIKOST (podle výměry) jsou reálné;
-    // přesný tvar hranic nemáme, proto přerušovaná čára = přibližný obrys. Přesné
-    // hranice jsou v katastru (odkaz „Katastr" na stránce inzerátu).
+    // Značka pozemku: kruh se SKUTEČNOU velikostí (podle výměry) + přesný střed.
+    // Poctivé — nepředstírá konkrétní tvar hranic (ten je v katastru), ale ukáže
+    // přesné místo a jak je pozemek zhruba velký.
     var col = TYPE[d.type].color;
-    selPoly = L.polygon(polyFor(d), {
-      color: col, weight: 3, opacity: 0.98,
-      fillColor: col, fillOpacity: 0.18,
-      dashArray: '7 5', lineJoin: 'round'
-    }).addTo(map);
+    var r = Math.sqrt((hasArea(d) ? d.area : 1500) / Math.PI); // poloměr v metrech z výměry
+    var area = L.circle([d.lat, d.lng], { radius: r, color: col, weight: 3, opacity: 1, fillColor: col, fillOpacity: 0.16 });
+    var dot = L.circleMarker([d.lat, d.lng], { radius: 6, color: '#fff', weight: 3, fillColor: col, fillOpacity: 1 });
+    selPoly = L.featureGroup([area, dot]).addTo(map);
     if (selPoly.bringToFront) selPoly.bringToFront();
-    if (selPoly.bindTooltip) selPoly.bindTooltip('Přibližné umístění a velikost pozemku (přesné hranice v katastru)', { sticky: true, direction: 'top', className: 'kraj-tip' });
+    if (selPoly.bindTooltip) selPoly.bindTooltip('Přibližné umístění a velikost pozemku · přesné hranice v katastru', { sticky: true, direction: 'top', className: 'kraj-tip' });
   }
 
   // Tečkovaná mapa pozemků + obrysy krajů pro orientaci
