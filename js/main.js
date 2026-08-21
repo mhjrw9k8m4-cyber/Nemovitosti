@@ -1572,16 +1572,20 @@
           '<div class="opp-figures">' + figs + '</div>' +
           (chips.length ? '<div class="opp-chips">' + chips.join('') + '</div>' : '') +
         '</div>';
-      function openThis() {
-        showDetail(d);
-        highlightList(d._id);
-        if (!mapLocked) map.panTo([d.lat, d.lng], { animate: true, duration: 0.5 });
-      }
-      li.addEventListener('click', openThis);
+      // Ťuknutí na kartu → samostatná stránka inzerátu; ťuknutí na snímek → mapa.
+      var pozHref = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng;
+      var mapHref = 'index.html?p=' + encodeURIComponent(pkey(d)) + '#mapa';
+      function openInzerat() { location.href = pozHref; }
+      li.addEventListener('click', openInzerat);
       li.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openThis(); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInzerat(); }
       });
       li.addEventListener('mouseenter', function () { highlightList(d._id); });
+      var mediaEl = li.querySelector('.opp-media');
+      if (mediaEl) mediaEl.addEventListener('click', function (e) {
+        e.stopPropagation();   // snímek nevede na inzerát, ale rovnou na mapu
+        location.href = mapHref;
+      });
       var favBtn = li.querySelector('.opp-fav');
       if (favBtn) favBtn.addEventListener('click', function (e) {
         e.stopPropagation();

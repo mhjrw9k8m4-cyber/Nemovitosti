@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>Pozemek — Parcelka</title>
+  <meta name="description" content="Detail pozemku na Parcelce — cena, výměra, poloha na mapě a na co si dát pozor.">
+  <meta name="theme-color" content="#16232F">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://parcelaka.cz/pozemek.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Pozemek — Parcelka">
+  <meta property="og:description" content="Detail pozemku — cena, výměra, poloha na mapě a na co si dát pozor.">
+  <meta property="og:locale" content="cs_CZ">
+  <meta property="og:site_name" content="Parcelka">
+  <meta property="og:image" content="https://parcelaka.cz/assets/og.png?v=2">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=20260821c">
+  <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
+  <style>
+    .pz-wrap{max-width:760px; margin:0 auto; padding:18px 16px 60px;}
+    .pz-back{display:inline-flex; align-items:center; gap:7px; font-size:14px; font-weight:600; color:var(--text-ondark-mute); text-decoration:none; margin-bottom:14px;}
+    .pz-back:hover{color:var(--text-ondark);}
+    .pz-back svg{width:16px; height:16px;}
+    .pz-media{position:relative; width:100%; aspect-ratio:3/2; max-height:360px; border-radius:16px; overflow:hidden; background:var(--ink-soft2); border:1px solid var(--line); cursor:pointer;}
+    .pz-media .opp-badge{font-size:12px; padding:5px 12px 5px 10px;}
+    .pz-media .opp-pin{width:20px; height:20px; border-width:3px;}
+    .pz-maphint{position:absolute; z-index:3; right:10px; bottom:10px; display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:#fff; background:rgba(8,14,20,0.62); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); padding:6px 11px; border-radius:10px; pointer-events:none;}
+    .pz-maphint svg{width:15px; height:15px;}
+    .pz-head{margin:16px 0 4px;}
+    .pz-place{font-size:24px; font-weight:700; letter-spacing:-0.02em; color:var(--text-ondark); line-height:1.15;}
+    .pz-okres{display:flex; align-items:center; gap:6px; font-size:14px; color:var(--text-ondark-mute); margin-top:5px;}
+    .pz-okres svg{width:15px; height:15px;}
+    .pz-price{display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 12px; margin:14px 0 4px;}
+    .pz-price .pl{font-size:12px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--text-ondark-mute); width:100%;}
+    .pz-price .pv{font-size:30px; font-weight:700; letter-spacing:-0.02em; color:var(--text-ondark); font-variant-numeric:tabular-nums;}
+    .pz-price .pm{font-size:14px; font-weight:600; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .pz-facts{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:18px 0;}
+    .pz-fact{background:var(--ink-soft); border:1px solid var(--line); border-radius:12px; padding:11px 13px;}
+    .pz-fact .fk{font-size:11.5px; letter-spacing:.03em; text-transform:uppercase; color:var(--text-ondark-mute); font-weight:600;}
+    .pz-fact .fv{font-size:16px; font-weight:600; color:var(--text-ondark); margin-top:3px; font-variant-numeric:tabular-nums;}
+    .pz-cta{display:flex; flex-wrap:wrap; gap:10px; margin:20px 0 8px;}
+    .pz-cta .btn-primary{flex:1 1 180px; display:inline-flex; align-items:center; justify-content:center; gap:8px; text-align:center;}
+    .pz-cta .btn-primary svg{width:18px; height:18px; flex:none;}
+    .pz-facts .fv{overflow:hidden; text-overflow:ellipsis;}
+    .pz-actions{display:flex; flex-wrap:wrap; gap:9px; margin:14px 0;}
+    .pz-sect-h{font-size:13px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--text-ondark-mute); margin:24px 0 10px;}
+    .pz-loading, .pz-empty{padding:60px 16px; text-align:center; color:var(--text-ondark-mute);}
+    .pz-empty a{color:var(--copper-bright); font-weight:600;}
+  </style>
+</head>
+<body>
+
+<a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+
+<header id="header">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="Parcelka — domů"><span class="logo-mark" aria-hidden="true"></span>Parcelka</a>
+    <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
+    <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+    <nav id="nav" aria-label="Hlavní navigace">
+      <a href="index.html#mapa">Mapa</a>
+      <a href="cena-pozemku.html">Ceny pozemků</a>
+      <a href="muj-inzerat.html">Můj profil</a>
+      <a href="index.html#faq">Dotazy</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
+      <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
+    </nav>
+  </div>
+</header>
+
+<main id="obsah">
+  <div class="pz-wrap">
+    <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
+    <div id="pz-detail"><div class="pz-loading">Načítám pozemek…</div></div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div class="foot-brand-col">
+      <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
+      <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého.</p>
+    </div>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Mapa</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a></nav>
+    <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
+    <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="kontakt.html">Kontakt</a></nav>
+  </div>
+  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="js/pozemek.js?v=20260821c"></script>
+<!-- Vercel Web Analytics -->
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
