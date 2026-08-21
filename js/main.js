@@ -890,24 +890,45 @@
     }
     d._poly = pts; return pts;
   }
-  // Skutečný náhled mapy v kartě (jako fotka u realitky) — dlaždice CARTO
-  // vycentrovaná na pozemek se špendlíkem. Tmavé okraje splynou s tématem.
+  // Náhled pozemku v kartě — čistý „plán parcely": tvar pozemku na jemném
+  // plánovém podkladu se špendlíkem. Vše vykreslené přímo v SVG, bez internetu,
+  // takže se vždy zobrazí (nezávisí na načtení mapových dlaždic).
   function mapThumb(d) {
-    var z = 14;
-    var n = Math.pow(2, z);
-    var latRad = d.lat * Math.PI / 180;
-    var xf = (d.lng + 180) / 360 * n;
-    var yf = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
-    var xt = Math.floor(xf), yt = Math.floor(yf);
-    var s = ['a', 'b', 'c', 'd'][(xt + yt) % 4];
-    var url = 'https://' + s + '.basemaps.cartocdn.com/dark_all/' + z + '/' + xt + '/' + yt + '.png';
-    // object-position i špendlík na stejné zlomkové pozici → špendlík přesně na pozemku
-    var fx = ((xf - xt) * 100).toFixed(1), fy = ((yf - yt) * 100).toFixed(1);
     var col = TYPE[d.type].color;
-    return '<img class="opp-map" alt="" src="' + url + '" onerror="this.style.display=\'none\'" style="object-position:' + fx + '% ' + fy + '%">' +
-      '<span class="opp-mgrad"></span>' +
-      '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>' +
-      '<span class="opp-pin" style="left:' + fx + '%;top:' + fy + '%;background:' + col + '"></span>';
+    var p = polyFor(d);
+    var lats = p.map(function (x) { return x[0]; }), lngs = p.map(function (x) { return x[1]; });
+    var minLat = Math.min.apply(null, lats), maxLat = Math.max.apply(null, lats);
+    var minLng = Math.min.apply(null, lngs), maxLng = Math.max.apply(null, lngs);
+    var midLat = (minLat + maxLat) / 2, midLng = (minLng + maxLng) / 2;
+    var spanLat = (maxLat - minLat) || 1e-6, spanLng = (maxLng - minLng) || 1e-6;
+    var scale = Math.min(150 / spanLng, 96 / spanLat);
+    var cx = 0, cy = 0;
+    var pts = p.map(function (x) {
+      var px = 160 + (x[1] - midLng) * scale;
+      var py = 100 - (x[0] - midLat) * scale;
+      cx += px; cy += py;
+      return px.toFixed(1) + ',' + py.toFixed(1);
+    }).join(' ');
+    cx = (cx / p.length).toFixed(1); cy = (cy / p.length).toFixed(1);
+    var gid = 'm' + d._id;
+    var svg = '<svg class="opp-map" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<defs>' +
+        '<linearGradient id="bg' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d2e3e"/><stop offset="1" stop-color="#141f2b"/></linearGradient>' +
+        '<radialGradient id="gl' + gid + '" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="' + col + '" stop-opacity="0.20"/><stop offset="1" stop-color="' + col + '" stop-opacity="0"/></radialGradient>' +
+      '</defs>' +
+      '<rect width="320" height="200" fill="url(#bg' + gid + ')"/>' +
+      '<g stroke="rgba(200,216,232,0.05)" stroke-width="1">' +
+        '<path d="M40 0V200M80 0V200M120 0V200M160 0V200M200 0V200M240 0V200M280 0V200"/>' +
+        '<path d="M0 40H320M0 80H320M0 120H320M0 160H320"/>' +
+      '</g>' +
+      '<rect width="320" height="200" fill="url(#gl' + gid + ')"/>' +
+      '<polygon points="' + pts + '" fill="' + col + '" fill-opacity="0.20" stroke="' + col + '" stroke-width="2.6" stroke-linejoin="round"/>' +
+      '<g transform="translate(' + (cx - 15) + ',' + (cy - 27.5) + ') scale(1.25)">' +
+        '<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#fff" stroke="rgba(0,0,0,0.28)" stroke-width="0.6"/>' +
+        '<circle cx="12" cy="9" r="3.3" fill="' + col + '"/>' +
+      '</g>' +
+      '</svg>';
+    return svg + '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>';
   }
   function shapeSvg(d) {
     var p = polyFor(d);
