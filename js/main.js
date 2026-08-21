@@ -802,7 +802,7 @@
       if (nearBtn) {
         var nk; try { nk = decodeURIComponent(nearBtn.getAttribute('data-near')); } catch (x) { return; }
         var nd = keyIndex()[nk];
-        if (nd) openParcel(nd);
+        if (nd) gotoInzerat(nd);
         return;
       }
       if (!curDetail) return;
@@ -1209,7 +1209,7 @@
       var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
       if (dist < bestDist) { bestDist = dist; best = d; }
     }
-    if (best && bestDist <= 16 * 16) { showDetail(best); highlightList(best._id); }
+    if (best && bestDist <= 16 * 16) { gotoInzerat(best); }
   });
 
   // Tečkovaná mapa: každý pozemek = tečka. Navíc obrysy krajů pro orientaci.
@@ -1636,13 +1636,23 @@
   // Sdílený odkaz ?p=<klíč> otevře konkrétní pozemek a odscrolluje na mapu
   // Otevři konkrétní pozemek: přiblíž mapu na jeho okolí, otevři detail a
   // sroluj mapu do zorného pole. Sdílí ho sdílený odkaz i „Nejvýhodnější".
+  // Otevři samostatnou stránku inzerátu (jako listing na realitce). Používá se
+  // z mapy (klik na tečku), z „Nejvýhodnějších", „Naposledy prohlédnutých" i
+  // z „Podobných pozemků" — všude vede pozemek na svou vlastní stránku.
+  function gotoInzerat(d) {
+    if (!d) return;
+    location.href = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng;
+  }
+  // „Zobrazit na mapě" / sdílený odkaz: přiblíž mapu na pozemek a zvýrazni ho
+  // (bez starého vysouvacího panelu — detail má teď vlastní stránku inzerátu).
   function openParcel(target) {
     if (!target) return;
     var k = krajOf(target);
     if (k) selectKraj(k, true);
-    map.setView([target.lat, target.lng], 14, { animate: false });
+    map.setView([target.lat, target.lng], 15, { animate: false });
     updateMapView();
-    showDetail(target);
+    highlightMarker(target._id);
+    highlightShape(target);
     highlightList(target._id);
     if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
   }
@@ -1722,7 +1732,7 @@
       if (!card) return;
       var k; try { k = decodeURIComponent(card.getAttribute('data-rkey')); } catch (x) { return; }
       var d = keyIndex()[k];
-      if (d) openParcel(d);
+      if (d) gotoInzerat(d);
     });
   })();
 
@@ -1763,7 +1773,7 @@
       if (!card) return;
       var k; try { k = decodeURIComponent(card.getAttribute('data-rkey')); } catch (x) { return; }
       var d = keyIndex()[k];
-      if (d) openParcel(d);
+      if (d) gotoInzerat(d);
     });
   })();
 
