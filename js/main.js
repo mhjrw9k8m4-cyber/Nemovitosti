@@ -1460,33 +1460,25 @@
   // Obrazovka „Zapněte polohu" — jasně vysvětlí, co dělat, s tlačítky.
   var LOC_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
   function showLocModal(err) {
-    var denied = err && err.code === 1;
     var ov = document.createElement('div'); ov.className = 'loc-ov';
     ov.innerHTML =
-      '<div class="loc-card" role="dialog" aria-modal="true" aria-label="Zapněte polohu">' +
+      '<div class="loc-card" role="dialog" aria-modal="true" aria-label="Zapnout polohu">' +
         '<button class="loc-x" type="button" aria-label="Zavřít">✕</button>' +
         '<div class="loc-ic">' + LOC_PIN + '</div>' +
-        '<h3>Zapněte polohu</h3>' +
-        '<p>Ať vám ukážeme pozemky přímo ve vašem okolí, potřebujeme přístup k poloze. ' +
-        (denied
-          ? 'Máte ji teď zakázanou — povolte ji prosím v prohlížeči a zkuste to znovu.'
-          : 'Až se objeví okno prohlížeče, ťukněte <b>Povolit</b>.') +
-        '</p>' +
-        (denied ? '<p class="loc-hint">V Safari nahoře u adresy ťukněte <b>аА → Nastavení webu → Poloha → Zeptat se</b>. Pak dole „Povolit a zkusit znovu".</p>' : '') +
+        '<h3>Ukázat pozemky u vás</h3>' +
+        '<p>Zapněte polohu a uvidíte pozemky přímo ve vašem okolí.</p>' +
         '<div class="loc-btns">' +
-          '<button class="loc-btn primary" type="button" data-loc="retry">Povolit a zkusit znovu</button>' +
-          '<button class="loc-btn ghost" type="button" data-loc="ip">Ukázat přibližně (podle připojení)</button>' +
-          '<button class="loc-btn ghost" type="button" data-loc="city">Radši zadám město</button>' +
+          '<button class="loc-btn primary" type="button" data-loc="retry">Zapnout polohu</button>' +
+          '<button class="loc-btn ghost" type="button" data-loc="city">Radši napíšu město</button>' +
         '</div>' +
       '</div>';
     document.body.appendChild(ov);
     function close() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
     ov.addEventListener('click', function (e) {
-      if (e.target === ov || e.target.closest('.loc-x')) { close(); focusSearch(); return; }
+      if (e.target === ov || e.target.closest('.loc-x')) { close(); return; }
       var b = e.target.closest('[data-loc]'); if (!b) return;
       var act = b.getAttribute('data-loc'); close();
       if (act === 'retry') { enterNear(); }
-      else if (act === 'ip') { showToast('Zjišťuji přibližnou polohu…'); ipLocate().then(function (pos) { if (pos) enterNearAt(pos, true); else focusSearch(); }); }
       else { focusSearch(); }
     });
   }
