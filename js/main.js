@@ -1669,15 +1669,22 @@
     var k = krajOf(target);
     if (k) selectKraj(k, true);
     highlightShape(target);                 // nakresli obrys pozemku
-    if (selPoly && selPoly.getBounds) {
-      map.fitBounds(selPoly.getBounds(), { padding: [80, 80], maxZoom: 18, animate: false });
-    } else {
-      map.setView([target.lat, target.lng], 17, { animate: false });
+    function frame() {
+      map.invalidateSize();
+      if (selPoly && selPoly.getBounds) {
+        map.fitBounds(selPoly.getBounds(), { padding: [80, 80], maxZoom: 18, animate: false });
+      } else {
+        map.setView([target.lat, target.lng], 17, { animate: false });
+      }
     }
+    frame();
     updateMapView();
     highlightMarker(target._id);
     highlightList(target._id);
-    if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
+    if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150);
+    // Znovu zarámuj po dorovnání rozměrů mapy (po scrollu/layoutu) — ať to
+    // spolehlivě sedne PŘÍMO na pozemek, ne jen „někam nad mapu".
+    setTimeout(frame, 500);
   }
   function openFromUrl() {
     // ?kraj=<název> — přiblíž mapu na daný kraj (odkaz z krajských/okresních stránek).
