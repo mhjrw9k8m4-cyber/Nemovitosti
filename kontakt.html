@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260822i">
+  <link rel="stylesheet" href="css/styles.css?v=20260822j">
   <style>
     .kt-mail{display:flex; align-items:center; gap:14px; margin:6px 0 4px; padding:16px 18px; background:rgba(106,166,242,0.08); border:1px solid rgba(106,166,242,0.24); border-radius:14px; text-decoration:none;}
     .kt-mail .kt-ico{flex:none; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--copper-bright),var(--copper));}
@@ -130,5 +130,30 @@
 
 <!-- Vercel Web Analytics (navstevnost) -->
 <script defer src="/_vercel/insights/script.js"></script>
+<script>
+/* Mobilní menu (hamburger) — statická stránka bez main.js, obsloužíme ho přímo tady. */
+(function () {
+  var toggle = document.querySelector('.nav-toggle');
+  var nav = document.getElementById('nav');
+  if (!toggle || !nav) return;
+  function closeNav() {
+    nav.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Otevřít menu');
+    document.body.classList.remove('nav-open');
+  }
+  toggle.addEventListener('click', function () {
+    var open = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Zavřít menu' : 'Otevřít menu');
+    document.body.classList.toggle('nav-open', open);
+  });
+  nav.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A' && nav.classList.contains('open')) closeNav();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNav(); });
+})();
+</script>
+
 </body>
 </html>
