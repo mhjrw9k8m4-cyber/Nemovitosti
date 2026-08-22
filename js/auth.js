@@ -62,10 +62,14 @@
   function logout() { setSession(null); }
 
   // Zapomenuté heslo — pošle na e-mail odkaz pro nastavení nového hesla.
+  // redirect_to říká Supabase, kam odkaz z e-mailu vede zpět (náš web).
   function recover(mail) {
-    return fetch(URL + '/auth/v1/recover', {
+    var redir = '';
+    try { redir = location.origin + '/muj-inzerat.html'; } catch (e) {}
+    var ep = URL + '/auth/v1/recover' + (redir ? ('?redirect_to=' + encodeURIComponent(redir)) : '');
+    return fetch(ep, {
       method: 'POST', headers: { 'apikey': KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: mail })
+      body: JSON.stringify({ email: mail, redirect_to: redir || undefined })
     }).then(function (r) { return { ok: r.ok }; }).catch(function () { return { ok: false }; });
   }
   // Nastavení nového hesla po kliknutí na odkaz z e-mailu.
@@ -105,6 +109,14 @@
       });
     }).catch(function () { return false; });
   }
+  // Udrž přihlášení naživu i po zavření prohlížeče: pokud máme uložený účet,
+  // tiše obnovíme token. Session je v localStorage, takže účet se pamatuje.
+  function keepAlive() {
+    var s = getSession();
+    if (!s || !s.access_token) return Promise.resolve(false);
+    if (!s.refresh_token) return Promise.resolve(true);
+    return refresh().then(function (ok) { return ok || loggedIn(); });
+  }
   function parse(r) {
     if (!r.ok) return r.json().then(function (j) { return { ok: false, error: j, status: r.status }; }).catch(function () { return { ok: false, status: r.status }; });
     return r.json().then(function (j) { return { ok: true, data: j }; }).catch(function () { return { ok: true, data: null }; });
@@ -130,7 +142,7 @@
   window.PKAuth = {
     ready: !!(URL && KEY),
     getSession: getSession, loggedIn: loggedIn, email: email, uid: uid, token: token, deviceId: deviceId,
-    signup: signup, login: login, logout: logout, rpc: rpc,
+    signup: signup, login: login, logout: logout, rpc: rpc, keepAlive: keepAlive,
     recover: recover, recoveryToken: recoveryToken, setPassword: setPassword
   };
 })();

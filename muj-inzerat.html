@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260821aj">
+  <link rel="stylesheet" href="css/styles.css?v=20260822a">
   <style>
     .pf-head{display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
     .pf-avatar{flex:none; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center;
@@ -168,8 +168,8 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260821aj" defer></script>
-<script src="js/auth.js?v=20260821aj" defer></script>
+<script src="js/config.js?v=20260822a" defer></script>
+<script src="js/auth.js?v=20260822a" defer></script>
 <script>
 (function () {
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
@@ -349,7 +349,8 @@
     // Dlaždice „Uložené pozemky" v hlavičce sroluje k seznamu
     var favTileEl = q('pf-fav'); if (favTileEl && favTileEl.closest){ var st = favTileEl.closest('.pf-stat'); if(st){ st.style.cursor='pointer'; st.addEventListener('click', function(){ var w=q('mi-saved-wrap'); if(w) w.scrollIntoView({behavior:'smooth', block:'start'}); }); } }
 
-    show();
+    // Obnoví přihlášení (ať účet zůstane zapamatovaný) a pak vykreslí.
+    if (A.keepAlive) { A.keepAlive().then(show); } else { show(); }
     renderSaved();
   });
 })();
