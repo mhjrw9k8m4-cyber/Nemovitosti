@@ -17,12 +17,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260822e">
+  <link rel="stylesheet" href="css/styles.css?v=20260822f">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:20px; padding:24px 22px 22px;
       background:linear-gradient(155deg, var(--ink-soft2), var(--ink-soft));
-      border:1px solid var(--line-strong); box-shadow:0 22px 50px -28px rgba(0,0,0,.7);}
+      border:1px solid var(--line-strong); box-shadow:0 22px 50px -28px rgba(0,0,0,.7);
+      animation:authFade .35s var(--ease) both;}
     .pf-card::before{content:""; position:absolute; inset:0; pointer-events:none;
       background:radial-gradient(120% 90% at 88% -10%, rgba(116,173,247,.16), transparent 60%);}
     .pf-head{position:relative; display:flex; align-items:center; gap:15px;}
@@ -210,7 +211,14 @@
         <div class="rules-sect" style="margin:0 2px 0;"><h2>Uložené pozemky</h2></div>
         <p class="rules-note" style="margin:6px 2px 14px;">Pozemky, které jste si na mapě označili záložkou. Uloženo přímo ve vašem prohlížeči — zůstanou vám, dokud si je nesmažete.</p>
         <div class="okr-list" id="mi-saved"></div>
-        <div id="mi-saved-empty" hidden><div class="add-card"><p class="rules-note">Zatím nemáte uložený žádný pozemek. Na <a href="index.html#mapa">mapě</a> klepněte u pozemku na <b>záložku</b> (ikonu uložení) a objeví se tady.</p></div></div>
+        <div id="mi-saved-empty" hidden>
+          <div class="pf-empty">
+            <div class="pf-empty-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"/></svg></div>
+            <h3>Zatím nemáte uložený žádný pozemek</h3>
+            <p>Na mapě klepněte u pozemku na <b>záložku</b> (ikonu uložení) a objeví se vám tady — ať se k němu snadno vrátíte.</p>
+            <a class="btn-primary pf-add" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 20 3 17V4l6 3 6-3 6 3v13l-6-3-6 3Z"/><path d="M9 7v13M15 4v13"/></svg>Otevřít mapu</a>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -223,8 +231,8 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260822e" defer></script>
-<script src="js/auth.js?v=20260822e" defer></script>
+<script src="js/config.js?v=20260822f" defer></script>
+<script src="js/auth.js?v=20260822f" defer></script>
 <script>
 (function () {
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
