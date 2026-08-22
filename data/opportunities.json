@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-21",
+  "updated": "2026-08-22",
   "source": "Centrální evidence veřejných dražeb + Státní pozemkový úřad",
   "opportunities": [
     {
@@ -23511,19 +23511,6 @@
       "url": "https://okdrazby.cz/drazba/26368"
     },
     {
-      "place": "Děčín",
-      "okres": "Děčín",
-      "type": "drazba",
-      "parcel": "2758/65",
-      "druh": "zahrada",
-      "area": 331,
-      "price": 150000,
-      "extra": "dražba 2026-08-20",
-      "lat": 50.78174,
-      "lng": 14.21997,
-      "url": "https://www.drazby-exekutori.cz/DR020854/Zahrada-v-zahradkarske-kolonii-k-u-Podmokly-Decin/"
-    },
-    {
       "place": "Mnich",
       "okres": "Pelhřimov",
       "type": "drazba",
@@ -23574,6 +23561,19 @@
       "lat": 50.35416,
       "lng": 13.80127,
       "url": "https://okdrazby.cz/drazba/13060"
+    },
+    {
+      "place": "Police nad Metují",
+      "okres": "Náchod",
+      "type": "drazba",
+      "parcel": "1103/1",
+      "druh": "trvalý travní porost",
+      "area": 2353,
+      "price": 1647100,
+      "extra": "dražba 2026-10-08",
+      "lat": 50.53275,
+      "lng": 16.23658,
+      "url": "https://drazby.policenm.cz/drazby/detail/fn3cfvf3ihgb1q9gjdw2jf7ud5iqxnpe63trc0aw"
     },
     {
       "place": "Karlovice",
@@ -23849,6 +23849,19 @@
       "url": "https://drazby.policenm.cz/drazby/detail/170qjoy7v519ins03vwxbhyvf2avgo9gw9453oss"
     },
     {
+      "place": "Police nad Metují",
+      "okres": "Náchod",
+      "type": "drazba",
+      "parcel": "769/277",
+      "druh": "pozemek",
+      "area": 719,
+      "price": 1078500,
+      "extra": "dražba 2026-10-15",
+      "lat": 50.53313,
+      "lng": 16.23752,
+      "url": "https://drazby.policenm.cz/drazby/detail/vasl1s9wiqnm4hsoldyj8geh1of11pdte397lie6"
+    },
+    {
       "place": "Tábor",
       "okres": "Tábor",
       "type": "drazba",
@@ -23938,6 +23951,19 @@
       "lat": 48.850588,
       "lng": 16.07535,
       "url": "https://www.okdrazby.cz/drazba/26364"
+    },
+    {
+      "place": "Jáchymov",
+      "okres": "Karlovy Vary",
+      "type": "drazba",
+      "parcel": "st. 1887",
+      "druh": "zastavěná plocha a nádvoří",
+      "area": 208,
+      "price": 1000000,
+      "extra": "dražba 2026-09-29",
+      "lat": 50.35924,
+      "lng": 12.92671,
+      "url": "https://okdrazby.cz/drazba/27213"
     },
     {
       "place": "Jičín",
@@ -24668,6 +24694,19 @@
       "url": "https://www.okdrazby.cz/drazba/26856"
     },
     {
+      "place": "Líčkov",
+      "okres": "Rakovník",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": null,
+      "price": 16922667,
+      "extra": "nucená dražba 2026-09-22 · OK dražby",
+      "lat": 50.2670183,
+      "lng": 13.5946064,
+      "url": "https://www.okdrazby.cz/drazba/26715"
+    },
+    {
       "place": "Holedeč",
       "okres": "Louny",
       "type": "exekuce",
@@ -24694,17 +24733,17 @@
       "url": "https://www.okdrazby.cz/drazba/26717"
     },
     {
-      "place": "Líčkov",
-      "okres": "Rakovník",
+      "place": "Předonín",
+      "okres": "Mělník",
       "type": "exekuce",
       "parcel": "—",
-      "druh": "lesní pozemek",
+      "druh": "stavební pozemek",
       "area": null,
-      "price": 16922667,
-      "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2670183,
-      "lng": 13.5946064,
-      "url": "https://www.okdrazby.cz/drazba/26715"
+      "price": 1346400,
+      "extra": "nucená dražba 2026-09-17 · OK dražby",
+      "lat": 50.440393,
+      "lng": 14.326133,
+      "url": "https://www.okdrazby.cz/drazba/26256"
     },
     {
       "place": "Mladá Boleslav",
@@ -24718,19 +24757,6 @@
       "lat": 50.399894,
       "lng": 15.01514,
       "url": "https://www.okdrazby.cz/drazba/26255"
-    },
-    {
-      "place": "Předonín",
-      "okres": "Mělník",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": null,
-      "price": 1346400,
-      "extra": "nucená dražba 2026-09-17 · OK dražby",
-      "lat": 50.440393,
-      "lng": 14.326133,
-      "url": "https://www.okdrazby.cz/drazba/26256"
     },
     {
       "place": "Havlíčkův Brod",
