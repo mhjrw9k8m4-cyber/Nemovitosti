@@ -116,13 +116,18 @@ h1,h2{text-wrap:balance;}
 .btn-glow{box-shadow:0 8px 22px -12px rgba(106,166,242,0.40);}
 
 /* Aurora pozadí hero */
-.aurora{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0;}
-.aurora span{position:absolute; border-radius:50%; filter:blur(90px); opacity:0.32;}
+.aurora{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; contain:strict;}
+.aurora span{position:absolute; border-radius:50%; filter:blur(70px); opacity:0.32; transform:translateZ(0); will-change:transform;}
 .aurora .a1{width:420px; height:420px; background:radial-gradient(circle, rgba(59,125,216,0.34), transparent 70%); top:-120px; right:-80px; animation:float1 14s ease-in-out infinite;}
 .aurora .a2{width:360px; height:360px; background:radial-gradient(circle, rgba(70,90,120,0.30), transparent 70%); bottom:-140px; left:-100px; animation:float2 18s ease-in-out infinite;}
 .aurora .a3{width:300px; height:300px; background:radial-gradient(circle, rgba(79,168,119,0.20), transparent 70%); top:40%; left:40%; animation:float1 16s ease-in-out infinite reverse;}
 @keyframes float1{0%,100%{transform:translate(0,0);} 50%{transform:translate(-30px,40px);}}
 @keyframes float2{0%,100%{transform:translate(0,0);} 50%{transform:translate(40px,-30px);}}
+/* Mobil: animované rozmazané „aurora" koule žraly výkon a scroll sekal —
+   na dotykových displejích je necháme staticky (vzhled zůstane, sekání zmizí). */
+@media (max-width:768px){
+  .aurora span{animation:none !important; will-change:auto; filter:blur(60px); opacity:0.26;}
+}
 .hero{position:relative; overflow:hidden;}
 .hero .hero-grid{position:relative; z-index:1;}
 /* teplá záře shora — útulnost + šmrnc */
@@ -166,7 +171,9 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 @keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(2.2); opacity:0;}}
 
 /* Header */
-header{border-bottom:1px solid var(--line); padding:20px 0; position:sticky; top:0; z-index:1000; background:rgba(24,38,52,0.82); backdrop-filter:blur(12px); transition:padding .2s ease;}
+header{border-bottom:1px solid var(--line); padding:20px 0; position:sticky; top:0; z-index:1000; background:rgba(24,38,52,0.86); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:padding .2s ease;}
+/* Mobil: silnější podklad + slabší blur = plynulejší scroll na iPhonu */
+@media (max-width:768px){ header{background:rgba(24,38,52,0.94); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);} }
 header.shrink{padding:12px 0;}
 header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .logo{font-family:'Inter',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:22px; display:flex; align-items:center; gap:10px; text-decoration:none;}
