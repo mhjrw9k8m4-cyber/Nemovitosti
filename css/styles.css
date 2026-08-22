@@ -1141,6 +1141,10 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 
 /* ---------- Přihlášení / registrace: prémiová karta ---------- */
 .auth-card{position:relative; z-index:1; max-width:440px; margin:0 auto; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border:1px solid var(--line-strong); border-radius:20px; padding:34px 30px 26px; box-shadow:var(--shadow-lg);}
+.auth-tabs{display:flex; gap:6px; padding:5px; background:var(--ink); border:1px solid var(--line); border-radius:13px; margin-bottom:20px;}
+.auth-tab{flex:1; padding:11px 8px; border:0; border-radius:9px; background:none; color:var(--text-ondark-mute); font:inherit; font-size:14.5px; font-weight:700; cursor:pointer; transition:background .15s ease, color .15s ease;}
+.auth-tab.active{background:linear-gradient(135deg,var(--copper-bright),var(--copper)); color:#fff;}
+.auth-forgot{text-align:center; margin-top:2px;}
 .auth-head{text-align:center; margin-bottom:24px;}
 .auth-mark{width:56px; height:56px; margin:0 auto 17px; border-radius:16px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, var(--copper-bright), var(--copper)); box-shadow:0 12px 28px -10px rgba(62,128,219,0.6);}
 .auth-mark svg{width:29px; height:29px; color:#08111C;}

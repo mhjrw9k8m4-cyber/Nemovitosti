@@ -6,6 +6,11 @@
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <script>
+  /* Odkaz z e-mailu na reset hesla přistane na úvodní stránce (#type=recovery).
+     Přesměrujeme ho na profil, kde se nastaví nové heslo. */
+  (function(){ try{ if(/type=recovery/.test(location.hash)) location.replace('muj-inzerat.html' + location.hash); }catch(e){} })();
+  </script>
+  <script>
   /* Start vždy nahoře na mapě. iOS Safari si pamatuje předchozí pozici scrollu
      (bfcache / obnova) a rád web otevře „uprostřed". Bráníme se třívrstvě:
      1) history.scrollRestoration='manual' — vypne automatickou obnovu,
@@ -452,8 +457,8 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/config.js?v=20260820i" defer></script>
-<script src="js/main.js?v=20260821aj2" defer></script>
+<script src="js/config.js?v=20260821aj" defer></script>
+<script src="js/main.js?v=20260821aj" defer></script>
 <!-- Vercel Web Analytics (navstevnost) -->
 <script defer src="/_vercel/insights/script.js"></script>
 </body>

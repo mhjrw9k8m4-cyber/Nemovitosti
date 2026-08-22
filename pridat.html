@@ -86,11 +86,14 @@
         <!-- Formulář v elevované kartě -->
         <div>
           <!-- Přihlášení (ochrana proti spamu) — ukáže se, když uživatel není přihlášený -->
-          <div class="auth-card" id="auth-gate" hidden>
+          <div class="auth-card" id="auth-gate" data-mode="login" hidden>
+            <div class="auth-tabs" role="tablist">
+              <button type="button" class="auth-tab active" data-mode="login" id="tab-login">Přihlásit se</button>
+              <button type="button" class="auth-tab" data-mode="signup" id="tab-signup">Vytvořit účet</button>
+            </div>
             <div class="auth-head">
-              <div class="auth-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
-              <h2 class="auth-title" id="auth-title">Přihlaste se a přidejte pozemek</h2>
-              <p class="auth-sub">Přidání inzerátu je jen pro přihlášené — chrání to mapu před spamem. Účet si vytvoříte zdarma za půl minuty.</p>
+              <h2 class="auth-title" id="auth-title">Přihlaste se</h2>
+              <p class="auth-sub" id="auth-sub">Máte už účet? Zadejte e-mail a heslo.</p>
             </div>
             <form class="auth-form" id="auth-form" novalidate>
               <div class="auth-field">
@@ -101,15 +104,15 @@
                 </div>
               </div>
               <div class="auth-field">
-                <label for="au-pass">Heslo <span class="hint">(aspoň 6 znaků)</span></label>
+                <label for="au-pass">Heslo <span class="hint" id="au-pass-hint"></span></label>
                 <div class="auth-inp">
                   <svg class="auth-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
                   <input id="au-pass" type="password" autocomplete="current-password" minlength="6" placeholder="••••••" required>
                   <button type="button" class="auth-eye" data-pw-toggle="au-pass" aria-label="Zobrazit heslo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                 </div>
               </div>
-              <button type="submit" class="btn-primary auth-submit" id="au-login">Přihlásit se</button>
-              <p class="auth-alt">Nemáte účet? <button type="button" class="auth-link" id="au-signup">Vytvořit zdarma</button></p>
+              <button type="submit" class="btn-primary auth-submit" id="au-submit">Přihlásit se</button>
+              <p class="auth-forgot" id="auth-forgot"><button type="button" class="auth-link" id="au-forgot">Zapomněli jste heslo?</button></p>
               <p class="add-msg auth-msg" id="au-msg" role="status" aria-live="polite"></p>
             </form>
             <div class="auth-trust">
@@ -317,9 +320,9 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260820i" defer></script>
-<script src="js/auth.js?v=20260818n" defer></script>
-<script src="js/pridat.js?v=20260820i" defer></script>
+<script src="js/config.js?v=20260821aj" defer></script>
+<script src="js/auth.js?v=20260821aj" defer></script>
+<script src="js/pridat.js?v=20260821aj" defer></script>
 <script>
 /* Zobrazit/skrýt heslo v přihlašovací kartě */
 document.addEventListener('click', function (e) {

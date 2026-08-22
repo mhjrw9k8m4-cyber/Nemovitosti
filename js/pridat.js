@@ -504,23 +504,55 @@
       return true;
     }
     function errText(d) { return (d && (d.error_description || d.msg || d.message || d.error)) || ''; }
+
+    // Přepínač Přihlásit se / Vytvořit účet — ať je jasné, co člověk dělá.
+    var gateEl = document.getElementById('auth-gate');
+    var titleEl = document.getElementById('auth-title'), subEl = document.getElementById('auth-sub');
+    var submitBtn = document.getElementById('au-submit'), passHint = document.getElementById('au-pass-hint');
+    var forgotWrap = document.getElementById('auth-forgot');
+    var tabLogin = document.getElementById('tab-login'), tabSignup = document.getElementById('tab-signup');
+    var mode = 'login';
+    function setMode(m) {
+      mode = (m === 'signup') ? 'signup' : 'login';
+      if (gateEl) gateEl.setAttribute('data-mode', mode);
+      if (tabLogin) tabLogin.classList.toggle('active', mode === 'login');
+      if (tabSignup) tabSignup.classList.toggle('active', mode === 'signup');
+      if (titleEl) titleEl.textContent = mode === 'signup' ? 'Vytvořte si účet' : 'Přihlaste se';
+      if (subEl) subEl.textContent = mode === 'signup' ? 'Nový účet zdarma — stačí e-mail a heslo.' : 'Máte už účet? Zadejte e-mail a heslo.';
+      if (submitBtn) submitBtn.textContent = mode === 'signup' ? 'Vytvořit účet zdarma' : 'Přihlásit se';
+      if (passHint) passHint.textContent = mode === 'signup' ? '(aspoň 6 znaků)' : '';
+      var pw = document.getElementById('au-pass'); if (pw) pw.setAttribute('autocomplete', mode === 'signup' ? 'new-password' : 'current-password');
+      if (forgotWrap) forgotWrap.hidden = (mode === 'signup');
+      say('');
+    }
+    if (tabLogin) tabLogin.addEventListener('click', function () { setMode('login'); });
+    if (tabSignup) tabSignup.addEventListener('click', function () { setMode('signup'); });
+    setMode('login');
+
     var af = document.getElementById('auth-form');
     if (af) af.addEventListener('submit', function (e) {
       e.preventDefault(); var c = creds(); if (!okCreds(c) || !window.PKAuth) return;
-      say('Přihlašuji…');
-      PKAuth.login(c.e, c.p).then(function (r) {
-        if (r.ok) { refresh(); } else { say(errText(r.data) || 'Přihlášení se nepovedlo — zkontrolujte e-mail a heslo.', true); }
-      });
+      if (mode === 'signup') {
+        say('Vytvářím účet…');
+        PKAuth.signup(c.e, c.p).then(function (r) {
+          if (r.ok && r.session) { refresh(); }
+          else if (r.ok) { say('Účet vytvořen. Pokud přijde potvrzovací e-mail, potvrďte ho a přihlaste se.'); setMode('login'); }
+          else { say(errText(r.data) || 'Účet se nepovedlo vytvořit — možná už existuje. Zkuste se přihlásit.', true); }
+        });
+      } else {
+        say('Přihlašuji…');
+        PKAuth.login(c.e, c.p).then(function (r) {
+          if (r.ok) { refresh(); } else { say(errText(r.data) || 'Přihlášení se nepovedlo — zkontrolujte e-mail a heslo, nebo si dole resetujte heslo.', true); }
+        });
+      }
     });
-    var su = document.getElementById('au-signup');
-    if (su) su.addEventListener('click', function () {
-      var c = creds(); if (!okCreds(c) || !window.PKAuth) return;
-      say('Vytvářím účet…');
-      PKAuth.signup(c.e, c.p).then(function (r) {
-        if (r.ok && r.session) { refresh(); }
-        else if (r.ok) { say('Účet vytvořen. Pokud přijde potvrzovací e-mail, potvrďte ho a pak se přihlaste.'); }
-        else { say(errText(r.data) || 'Účet se nepovedlo vytvořit (možná už existuje — zkuste se přihlásit).', true); }
-      });
+    // Zapomenuté heslo → pošle odkaz na e-mail
+    var fg = document.getElementById('au-forgot');
+    if (fg) fg.addEventListener('click', function () {
+      var c = creds();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e)) { say('Napište nahoře svůj e-mail a pak klepněte na „Zapomněli jste heslo".', true); return; }
+      say('Posílám odkaz…');
+      PKAuth.recover(c.e).then(function () { say('Poslali jsme vám na e-mail odkaz pro nastavení nového hesla. Zkontrolujte i spam.'); });
     });
     var lo = document.getElementById('au-logout');
     if (lo) lo.addEventListener('click', function () { if (window.PKAuth) { PKAuth.logout(); refresh(); } });

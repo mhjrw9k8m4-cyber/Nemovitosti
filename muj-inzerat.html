@@ -91,6 +91,7 @@
             </div>
           </div>
           <button type="submit" class="btn-primary auth-submit" id="mi-login">Přihlásit se</button>
+          <p class="auth-forgot" style="text-align:center;margin:12px 0 0;"><button type="button" class="auth-link" id="mi-forgot" style="background:none;border:0;cursor:pointer;font:inherit;padding:0;">Zapomněli jste heslo?</button></p>
           <p class="auth-alt">Nemáte účet? <a class="auth-link" href="pridat.html">Vytvořit zdarma</a></p>
           <p class="add-msg auth-msg" id="mi-auth-msg" role="status" aria-live="polite"></p>
         </form>
@@ -99,6 +100,27 @@
           <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>Žádný spam</span>
           <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>Zdarma</span>
         </div>
+      </div>
+
+      <!-- Nastavení nového hesla (po kliknutí na odkaz z e-mailu) -->
+      <div class="auth-card" id="mi-newpw" hidden>
+        <div class="auth-head">
+          <div class="auth-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+          <h2 class="auth-title">Nastavte si nové heslo</h2>
+          <p class="auth-sub">Zadejte nové heslo ke svému účtu. Po uložení vás rovnou přihlásíme.</p>
+        </div>
+        <form class="auth-form" id="mi-newpw-form" novalidate>
+          <div class="auth-field">
+            <label for="mi-newpass">Nové heslo</label>
+            <div class="auth-inp">
+              <svg class="auth-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+              <input id="mi-newpass" type="password" autocomplete="new-password" minlength="6" placeholder="Aspoň 6 znaků" required>
+              <button type="button" class="auth-eye" data-pw-toggle="mi-newpass" aria-label="Zobrazit heslo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary auth-submit" id="mi-savepw">Uložit nové heslo</button>
+          <p class="add-msg auth-msg" id="mi-newpw-msg" role="status" aria-live="polite"></p>
+        </form>
       </div>
 
       <!-- Profil (přihlášený) -->
@@ -146,8 +168,8 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260820i" defer></script>
-<script src="js/auth.js?v=20260820e" defer></script>
+<script src="js/config.js?v=20260821aj" defer></script>
+<script src="js/auth.js?v=20260821aj" defer></script>
 <script>
 (function () {
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
@@ -159,10 +181,36 @@
     function favCount(){ try { return (JSON.parse(localStorage.getItem('pk_fav_v1'))||[]).length; } catch(e){ return 0; } }
     function initials(mail){ var s=(mail||'').trim(); if(!s) return '?'; var name=s.split('@')[0].replace(/[^A-Za-z0-9]/g,''); return (name.slice(0,2)||s.slice(0,1)).toUpperCase(); }
     var authBox = q('mi-auth'), panel = q('mi-panel'), statusEl = q('mi-status'), listEl = q('mi-list'), emptyEl = q('mi-empty');
+    var newpwBox = q('mi-newpw');
 
     if (!A || !A.ready) { authBox.hidden = false; q('mi-auth-msg').textContent = 'Připojení k databázi zatím není nastavené.'; return; }
 
+    // Přišel uživatel z odkazu „obnovit heslo" v e-mailu? → ukázat formulář pro nové heslo.
+    var recTok = A.recoveryToken ? A.recoveryToken() : '';
+    if (recTok) {
+      authBox.hidden = true; panel.hidden = true; newpwBox.hidden = false;
+      var nf = q('mi-newpw-form'), nmsg = q('mi-newpw-msg');
+      function nsay(t, err){ if(nmsg){ nmsg.textContent=t; nmsg.className='add-msg'+(err?' err':' ok'); } }
+      nf.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var np = q('mi-newpass').value||'';
+        if (np.length < 6) { nsay('Heslo musí mít aspoň 6 znaků.', true); return; }
+        nsay('Ukládám…');
+        A.setPassword(np, recTok).then(function (r) {
+          if (r && r.ok) {
+            try { history.replaceState(null, '', location.pathname); } catch(e){}
+            nsay('Heslo změněno. Přihlašuji…');
+            setTimeout(function(){ show(); }, 700);
+          } else {
+            nsay('Odkaz už vypršel nebo byl použit. Nechte si prosím poslat nový.', true);
+          }
+        });
+      });
+      return;
+    }
+
     function show() {
+      newpwBox.hidden = true;
       var on = A.loggedIn();
       authBox.hidden = on; panel.hidden = !on;
       if (on) {
@@ -238,6 +286,17 @@
       });
     });
     var lo = q('mi-logout'); if (lo) lo.addEventListener('click', function () { A.logout(); show(); });
+
+    // Zapomenuté heslo
+    var fg = q('mi-forgot');
+    if (fg) fg.addEventListener('click', function () {
+      var em = (q('mi-email').value||'').trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { say('Nejdřív vyplňte svůj e-mail výše, pošleme na něj odkaz pro nové heslo.', true); q('mi-email').focus(); return; }
+      say('Posílám odkaz na e-mail…');
+      A.recover(em).then(function () {
+        say('Hotovo. Pokud u nás účet s tímto e-mailem existuje, dorazí na něj odkaz pro nastavení nového hesla. Mrkněte i do spamu.');
+      });
+    });
 
     // ---------- Uložené pozemky (lokální oblíbené) ----------
     var TYPE = { sale:{l:'Prodej',c:'sale'}, drazba:{l:'Dražba',c:'drazba'}, exekuce:{l:'Exekuce',c:'exekuce'}, obec:{l:'Záměr obce',c:'obec'}, majitel:{l:'Od majitele',c:'majitel'} };

@@ -61,6 +61,36 @@
 
   function logout() { setSession(null); }
 
+  // Zapomenuté heslo — pošle na e-mail odkaz pro nastavení nového hesla.
+  function recover(mail) {
+    return fetch(URL + '/auth/v1/recover', {
+      method: 'POST', headers: { 'apikey': KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: mail })
+    }).then(function (r) { return { ok: r.ok }; }).catch(function () { return { ok: false }; });
+  }
+  // Nastavení nového hesla po kliknutí na odkaz z e-mailu.
+  // Odkaz z Supabase přijde s tokenem v adrese (#access_token=…&type=recovery).
+  function recoveryToken() {
+    try {
+      var h = (location.hash || '').replace(/^#/, '');
+      if (h.indexOf('type=recovery') === -1) return '';
+      var m = /access_token=([^&]+)/.exec(h);
+      return m ? decodeURIComponent(m[1]) : '';
+    } catch (e) { return ''; }
+  }
+  function setPassword(newPw, accessToken) {
+    return fetch(URL + '/auth/v1/user', {
+      method: 'PUT',
+      headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: newPw })
+    }).then(function (r) {
+      return r.json().then(function (j) {
+        if (r.ok) { setSession({ access_token: accessToken, user: j }); }
+        return { ok: r.ok, data: j };
+      });
+    }).catch(function () { return { ok: false }; });
+  }
+
   // Automatické obnovení přihlášení (aby po hodině nevypadl) — přes refresh token.
   function refresh() {
     var s = getSession();
@@ -100,6 +130,7 @@
   window.PKAuth = {
     ready: !!(URL && KEY),
     getSession: getSession, loggedIn: loggedIn, email: email, uid: uid, token: token, deviceId: deviceId,
-    signup: signup, login: login, logout: logout, rpc: rpc
+    signup: signup, login: login, logout: logout, rpc: rpc,
+    recover: recover, recoveryToken: recoveryToken, setPassword: setPassword
   };
 })();
