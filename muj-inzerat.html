@@ -17,20 +17,45 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260822b">
+  <link rel="stylesheet" href="css/styles.css?v=20260822c">
   <style>
-    .pf-head{display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
-    .pf-avatar{flex:none; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-      font-weight:700; font-size:22px; color:#0B1017; background:linear-gradient(135deg,var(--copper-bright),var(--copper)); letter-spacing:.02em;}
-    .pf-id{min-width:0;}
-    .pf-id .pf-hello{font-size:13px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:.05em;}
-    .pf-id .pf-mail{font-size:18px; font-weight:700; color:var(--text-ondark); word-break:break-word;}
-    .pf-stats{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:18px;}
-    .pf-stat{background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:13px 12px; min-width:0;}
-    .pf-stat b{display:block; font-size:22px; line-height:1.1; color:var(--copper-bright);}
-    .pf-stat span{display:block; font-size:11.5px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:.03em; line-height:1.25; margin-top:3px;}
-    .pf-actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:18px;}
-    .pf-actions > *{flex:0 1 auto;}
+    /* Karta profilu */
+    .pf-card{position:relative; overflow:hidden; border-radius:20px; padding:24px 22px 22px;
+      background:linear-gradient(155deg, var(--ink-soft2), var(--ink-soft));
+      border:1px solid var(--line-strong); box-shadow:0 22px 50px -28px rgba(0,0,0,.7);}
+    .pf-card::before{content:""; position:absolute; inset:0; pointer-events:none;
+      background:radial-gradient(120% 90% at 88% -10%, rgba(116,173,247,.16), transparent 60%);}
+    .pf-head{position:relative; display:flex; align-items:center; gap:15px;}
+    .pf-avatar{flex:none; width:62px; height:62px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:23px; color:#0B1017; background:linear-gradient(135deg,var(--copper-bright),var(--copper)); letter-spacing:.02em;
+      box-shadow:0 0 0 4px rgba(116,173,247,.14), 0 10px 24px -10px rgba(116,173,247,.6);}
+    .pf-id{min-width:0; flex:1;}
+    .pf-id .pf-hello{display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:.06em; font-weight:600;}
+    .pf-dot{width:7px; height:7px; border-radius:50%; background:var(--c-sale); box-shadow:0 0 0 3px rgba(64,196,120,.18);}
+    .pf-id .pf-mail{font-size:18px; font-weight:700; color:var(--text-ondark); word-break:break-word; margin-top:3px; line-height:1.25;}
+    .pf-logout{flex:none; align-self:flex-start; display:inline-flex; align-items:center; gap:6px; background:var(--ink); border:1px solid var(--line-strong);
+      color:var(--text-ondark-mute); border-radius:11px; padding:8px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:color .15s, border-color .15s;}
+    .pf-logout svg{width:16px; height:16px;}
+    .pf-logout:hover{color:var(--text-ondark); border-color:var(--copper-bright);}
+    .pf-logout span{display:none;}
+    .pf-stats{position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:20px;}
+    .pf-stat{background:var(--ink); border:1px solid var(--line); border-radius:14px; padding:15px 12px 13px; min-width:0; text-align:center; transition:border-color .15s, transform .15s;}
+    .pf-stat:hover{border-color:var(--line-strong); transform:translateY(-2px);}
+    .pf-stat-ico{width:20px; height:20px; color:var(--text-ondark-mute); margin-bottom:7px;}
+    .pf-stat b{display:block; font-size:26px; line-height:1; color:var(--copper-bright); font-variant-numeric:tabular-nums;}
+    .pf-stat span{display:block; font-size:11px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:.03em; line-height:1.25; margin-top:5px;}
+    .pf-actions{position:relative; display:flex; margin-top:18px;}
+    .pf-add{display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;}
+    .pf-add svg{width:18px; height:18px;}
+    /* Prázdný stav */
+    .pf-empty{text-align:center; padding:34px 22px; border-radius:20px; border:1px dashed var(--line-strong); background:var(--ink-soft);}
+    .pf-empty-ico{width:66px; height:66px; margin:0 auto 16px; border-radius:18px; display:flex; align-items:center; justify-content:center;
+      background:rgba(116,173,247,.09); border:1px solid var(--line-strong);}
+    .pf-empty-ico svg{width:32px; height:32px; color:var(--text-ondark);}
+    .pf-empty h3{font-family:'Inter',sans-serif; font-size:19px; font-weight:600; color:var(--text-ondark); margin:0 0 8px;}
+    .pf-empty p{font-size:14px; line-height:1.6; color:var(--text-ondark-mute); margin:0 auto 18px; max-width:42ch;}
+    .pf-empty .pf-add{width:auto; padding-left:22px; padding-right:22px;}
+    @media (min-width:480px){ .pf-logout span{display:inline;} }
   </style>
 </head>
 <body>
@@ -133,29 +158,51 @@
 
       <!-- Profil (přihlášený) -->
       <div id="mi-panel" hidden>
-        <div class="add-card">
+        <div class="pf-card">
           <div class="pf-head">
             <div class="pf-avatar" id="pf-avatar" aria-hidden="true">?</div>
             <div class="pf-id">
-              <div class="pf-hello">Přihlášeno jako</div>
+              <div class="pf-hello"><span class="pf-dot" aria-hidden="true"></span>Přihlášeno jako</div>
               <div class="pf-mail" id="pf-mail">—</div>
             </div>
+            <button type="button" id="mi-logout" class="pf-logout" aria-label="Odhlásit se">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+              <span>Odhlásit</span>
+            </button>
           </div>
           <div class="pf-stats">
-            <div class="pf-stat"><b id="pf-count">—</b><span>Moje inzeráty</span></div>
-            <div class="pf-stat"><b id="pf-views">—</b><span>Zhlédnutí celkem</span></div>
-            <div class="pf-stat"><b id="pf-fav">—</b><span>Uložené pozemky</span></div>
+            <div class="pf-stat">
+              <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+              <b id="pf-count">—</b><span>Moje inzeráty</span>
+            </div>
+            <div class="pf-stat">
+              <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <b id="pf-views">—</b><span>Zhlédnutí celkem</span>
+            </div>
+            <div class="pf-stat">
+              <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"/></svg>
+              <b id="pf-fav">—</b><span>Uložené pozemky</span>
+            </div>
           </div>
           <div class="pf-actions">
-            <a class="btn-primary" href="pridat.html">Přidat pozemek</a>
-            <button type="button" id="mi-logout" class="lp-btn">Odhlásit se</button>
+            <a class="btn-primary pf-add" href="pridat.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              Přidat pozemek
+            </a>
           </div>
         </div>
 
-        <div class="rules-sect" style="margin:26px 2px 0;"><h2>Moje inzeráty</h2></div>
+        <div class="rules-sect" style="margin:28px 2px 0;"><h2>Moje inzeráty</h2></div>
         <p class="add-msg" id="mi-status" role="status" aria-live="polite">Načítám…</p>
         <div id="mi-list"></div>
-        <div id="mi-empty" hidden><div class="add-card"><p class="rules-note">Zatím tu žádný inzerát nemáte. <a href="pridat.html">Přidejte pozemek</a> a hned se objeví na mapě.</p></div></div>
+        <div id="mi-empty" hidden>
+          <div class="pf-empty">
+            <div class="pf-empty-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M12 14v3M10.5 15.5h3" stroke="var(--copper-bright)"/></svg></div>
+            <h3>Zatím tu žádný inzerát nemáte</h3>
+            <p>Přidejte svůj pozemek — je to zdarma, bez provize a hned se objeví na mapě mezi ostatními.</p>
+            <a class="btn-primary pf-add" href="pridat.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Přidat pozemek zdarma</a>
+          </div>
+        </div>
       </div>
 
       <!-- Uložené pozemky (lokální, funguje i bez přihlášení) -->
@@ -176,8 +223,8 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260822b" defer></script>
-<script src="js/auth.js?v=20260822b" defer></script>
+<script src="js/config.js?v=20260822c" defer></script>
+<script src="js/auth.js?v=20260822c" defer></script>
 <script>
 (function () {
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
