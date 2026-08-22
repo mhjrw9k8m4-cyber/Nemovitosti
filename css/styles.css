@@ -29,6 +29,9 @@
 .icon-badge .ic{width:22px; height:22px;}
 
 *{box-sizing:border-box; margin:0; padding:0;}
+/* Atribut hidden musí vždy skrýt prvek — jinak ho pravidla s display:flex/grid
+   přebijí a prvek zůstane vidět (např. prázdný modrý puntík u filtrů). */
+[hidden]{display:none !important;}
 html{scroll-behavior:smooth; overflow-x:hidden;}
 @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} *{animation:none !important; transition:none !important;} }
 
