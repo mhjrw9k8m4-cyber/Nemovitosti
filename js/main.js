@@ -332,6 +332,7 @@
       e.preventDefault();
       var email = document.getElementById('wm-email').value.trim();
       var okres = document.getElementById('wm-okres').value.trim();
+      var types = [].slice.call(wForm.querySelectorAll('input[name="wtype"]:checked')).map(function (x) { return x.value; });
       var ms = document.getElementById('wm-msg');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ms.textContent = 'Zadejte prosím platný e-mail.'; ms.classList.add('err'); return; }
       ms.classList.remove('err');
@@ -340,7 +341,7 @@
         return;
       }
       ms.textContent = 'Odesílám…';
-      subscribeWatch(email, okres).then(function (r) {
+      subscribeWatch(email, okres, types).then(function (r) {
         if (r === 'ok') { ms.textContent = okres ? ('Budeme hlídat okres „' + okres + '" a dáme vědět, jakmile se objeví nová příležitost.') : 'Ozveme se, jakmile se ve vašem okolí objeví nová příležitost.'; setTimeout(closeWatch, 1900); }
         else { ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; ms.classList.add('err'); }
       });

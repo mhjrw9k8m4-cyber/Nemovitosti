@@ -949,6 +949,10 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .modal-form input::placeholder, .modal-form textarea::placeholder{color:#6f8090;}
 .modal-form input:focus-visible, .modal-form textarea:focus-visible{border-color:var(--copper-bright); outline:none;}
 .modal-form .btn-primary{padding:14px; font-size:15px; text-align:center;}
+.wm-types{text-align:left; margin:-2px 0 2px;}
+.wm-types-lbl{display:block; font-size:13px; color:var(--text-ondark-mute); margin-bottom:8px;}
+.wm-types-lbl em{font-style:normal; opacity:.8;}
+.wm-types .chip-check{font-size:13px; padding:8px 13px;}
 .modal-fine{font-size:11.5px; color:var(--text-ondark-mute); text-align:center; margin-top:2px;}
 .modal-close-bar{width:100%; margin-top:16px; background:none; border:0; border-top:1px solid var(--line); padding:14px 0 2px; color:var(--text-ondark-mute); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:color .15s ease;}
 .modal-close-bar:hover{color:var(--text-ondark);}

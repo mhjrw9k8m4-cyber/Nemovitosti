@@ -92,7 +92,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260821ai">
+  <link rel="stylesheet" href="css/styles.css?v=20260821aj">
 </head>
 <body>
 
@@ -421,6 +421,15 @@
     <form class="modal-form" id="watch-form" novalidate>
       <label class="visually-hidden" for="wm-okres">Okres</label>
       <input id="wm-okres" type="text" placeholder="Okres nebo obec (např. Kolín)" autocomplete="off">
+      <div class="wm-types" role="group" aria-label="Co hlídat">
+        <span class="wm-types-lbl">Co hlídat? <em>(nevyberete-li nic, hlídáme vše)</em></span>
+        <div class="check-group">
+          <label class="chip-check"><input type="checkbox" name="wtype" value="sale">Prodej</label>
+          <label class="chip-check"><input type="checkbox" name="wtype" value="drazba">Dražba</label>
+          <label class="chip-check"><input type="checkbox" name="wtype" value="exekuce">Exekuce</label>
+          <label class="chip-check"><input type="checkbox" name="wtype" value="obec">Záměr obce</label>
+        </div>
+      </div>
       <label class="visually-hidden" for="wm-email">E-mail</label>
       <input id="wm-email" type="email" placeholder="vas@email.cz" required autocomplete="email">
       <button type="submit" class="btn-primary btn-glow">Chci upozornění</button>
@@ -444,7 +453,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
 <script src="js/config.js?v=20260820i" defer></script>
-<script src="js/main.js?v=20260821ai2" defer></script>
+<script src="js/main.js?v=20260821aj2" defer></script>
 <!-- Vercel Web Analytics (navstevnost) -->
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
