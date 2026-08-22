@@ -1568,6 +1568,27 @@
     else if (!selectedKraj) { if (!dotsLocked) lockDots(true); }
   });
 
+  // Body ROSTOU s přiblížením (jsou to canvas kroužky s pevnou velikostí v px, takže
+  // se při zoomu jinak nezvětšují a působí, že se „zmenšují" a nejdou trefit).
+  // Čím víc přiblíženo, tím větší tečka → snadné klepnutí i lepší viditelnost.
+  function dotRadiusForZoom() {
+    var z = map.getZoom();
+    return Math.max(3.2, Math.min(10, 3.2 + (z - 8) * 0.95));
+  }
+  function resizeDots() {
+    var r = dotRadiusForZoom();
+    DOT_R = r; DOT_R_SEL = r + 2.6;
+    for (var i = 0; i < markers.length; i++) {
+      var m = markers[i]; if (!m || !m._d || !m.setRadius) continue;
+      if (selMarkerId != null && i === selMarkerId) continue; // vybraný necháme zvýrazněný
+      var urgent = isUrgent(m._d), feat = isFeatured(m._d);
+      var rr = urgent ? r + 0.7 : (feat ? r + 1 : r);
+      if (m.options.radius !== rr) m.setRadius(rr);
+    }
+  }
+  map.on('zoomend', resizeDots);
+  resizeDots();
+
   function visible(d) {
     var okType = activeType === 'all' || d.type === activeType;
     var okSearch = !searchTerm || (d.place + ' ' + d.okres).toLowerCase().indexOf(searchTerm) !== -1;
