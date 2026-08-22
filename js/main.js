@@ -882,7 +882,7 @@
   function isFeatured(d) { return !!d.featured; }
   // Jednotlivý pozemek = čistá tečka v barvě kategorie (ukáže se po přiblížení).
   // Kreslí se přes canvas (L.circleMarker) — proto styl, ne HTML.
-  var DOT_R = 3.3, DOT_R_SEL = 5.8;
+  var DOT_R = 3.9, DOT_R_SEL = 6.4;
   function dotStyle(d) {
     var col = TYPE[d.type].color, urgent = isUrgent(d), feat = isFeatured(d);
     // Klidnější body: nespěšné mají jen jemný okraj (ne výrazný bílý kroužek),
@@ -1267,7 +1267,9 @@
       var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
       if (dist < bestDist) { bestDist = dist; best = d; }
     }
-    if (best && bestDist <= 16 * 16) { gotoInzerat(best); }
+    // Prstem se přesně netrefíte na 3px tečku — velká tolerance (≈ velikost prstu),
+    // aby se pozemek dal spolehlivě rozkliknout i při přiblížení.
+    if (best && bestDist <= 26 * 26) { gotoInzerat(best); }
   });
 
   // Tečkovaná mapa: každý pozemek = tečka. Navíc obrysy krajů pro orientaci.

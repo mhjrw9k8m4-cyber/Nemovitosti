@@ -200,7 +200,7 @@ header{border-bottom:1px solid var(--line); padding:20px 0; position:sticky; top
 header.shrink{padding:12px 0;}
 header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .logo{font-family:'Inter',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:22px; display:flex; align-items:center; gap:10px; text-decoration:none;}
-.logo-mark{width:26px; height:29px; background:url("../assets/logo-mark.svg") center/contain no-repeat; filter:drop-shadow(0 3px 6px rgba(63,127,216,.35));}
+.logo-mark{width:26px; height:29px; background:url("../assets/logo-mark.svg?v=2") center/contain no-repeat; filter:drop-shadow(0 3px 6px rgba(63,127,216,.35));}
 .logo-mark.small{width:16px; height:18px;}
 #nav{display:flex; gap:26px; align-items:center;}
 #nav a{color:var(--text-ondark-mute); text-decoration:none; font-size:14px; font-weight:500; transition:color .15s ease; position:relative;}
@@ -401,6 +401,25 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%235BB8D6' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 11px center;}
 .map-select:focus-visible{border-color:var(--copper-bright); outline:none;}
 .map-select option{background:var(--ink); color:var(--text-ondark);}
+/* Vlastní rozbalovací seznam (místo ošklivého systémového na iPhonu) */
+.cdd{position:relative; width:100%;}
+.cdd-native{position:absolute; width:1px; height:1px; padding:0; margin:0; overflow:hidden; clip:rect(0 0 0 0); border:0; opacity:0; pointer-events:none;}
+.cdd-btn{display:flex; align-items:center; text-align:left;}
+.cdd-btn .cdd-lbl{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.cdd.open>.cdd-btn{border-color:var(--copper-bright); background:var(--ink-soft2, var(--ink-soft));}
+.cdd-panel{position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:60; display:none; padding:6px;
+  background:var(--ink); border:1px solid var(--line-strong); border-radius:11px; box-shadow:0 20px 44px -16px rgba(0,0,0,.75);
+  max-height:280px; overflow-y:auto; -webkit-overflow-scrolling:touch; animation:cddIn .14s ease both;}
+.cdd.open>.cdd-panel{display:block;}
+@keyframes cddIn{from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:none;}}
+.cdd-opt{display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:none; border:0; cursor:pointer;
+  color:var(--text-ondark); font-family:inherit; font-size:13px; font-weight:600; padding:10px 11px; border-radius:8px; line-height:1.2;
+  -webkit-tap-highlight-color:transparent; touch-action:manipulation;}
+.cdd-opt:hover{background:var(--ink-soft);}
+.cdd-opt:active{background:var(--ink-soft2, var(--ink-soft));}
+.cdd-opt.sel{color:var(--copper-bright);}
+.cdd-opt.sel::after{content:""; margin-left:auto; width:14px; height:14px; flex:none;
+  background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath d='M4 12l5 5L20 6' fill='none' stroke='%235BB8D6' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");}
 .fav-toggle{background-image:none; padding:9px 12px; display:inline-flex; align-items:center; justify-content:center; gap:6px; transition:border-color .15s ease, background .15s ease, color .15s ease;}
 .fav-toggle svg{width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round;}
 .fav-toggle:hover{border-color:var(--copper-bright);}
