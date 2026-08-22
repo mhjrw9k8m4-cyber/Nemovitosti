@@ -549,19 +549,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1027409-nabidka-prodej-pozemku-lovcice"
     },
     {
-      "place": "Brestovec",
-      "okres": "Uherské Hradiště",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "pozemek",
-      "area": 1881,
-      "price": 37620,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 48.796710028884,
-      "lng": 17.546901547674,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1037829-nabidka-prodej-pozemku"
-    },
-    {
       "place": "Planá",
       "okres": "Tachov",
       "type": "sale",
@@ -19789,19 +19776,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1045632-nabidka-prodej-pozemku-hradecno"
     },
     {
-      "place": "Vilová",
-      "okres": "Praha-západ",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": 1001,
-      "price": 4999000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.784157270575,
-      "lng": 14.290150972493,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1026299-nabidka-prodej-pozemku-vilova-novy-knin"
-    },
-    {
       "place": "Hrazany",
       "okres": "Písek",
       "type": "sale",
@@ -20801,6 +20775,32 @@
       "lat": 50.1608299,
       "lng": 14.3824148,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1038554-nabidka-prodej-pozemku-roztoky"
+    },
+    {
+      "place": "Žampiónová",
+      "okres": "Praha-východ",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": 1393,
+      "price": 26467000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.0206383,
+      "lng": 14.5800086,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/804559-nabidka-prodej-pozemku-zampionova-praha"
+    },
+    {
+      "place": "Ibišková",
+      "okres": "Praha-východ",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": 778,
+      "price": 15521100,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.01795995423,
+      "lng": 14.563293856591,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1055059-nabidka-prodej-pozemku-ibiskova-praha"
     },
     {
       "place": "Stráž pod Ralskem",
@@ -24694,6 +24694,19 @@
       "url": "https://www.okdrazby.cz/drazba/26856"
     },
     {
+      "place": "Lhota u Nečemic",
+      "okres": "Louny",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "zemědělský pozemek",
+      "area": null,
+      "price": 1102000,
+      "extra": "nucená dražba 2026-09-22 · OK dražby",
+      "lat": 50.2644361,
+      "lng": 13.5955244,
+      "url": "https://www.okdrazby.cz/drazba/26717"
+    },
+    {
       "place": "Líčkov",
       "okres": "Rakovník",
       "type": "exekuce",
@@ -24718,19 +24731,6 @@
       "lat": 50.2653592,
       "lng": 13.5922308,
       "url": "https://www.okdrazby.cz/drazba/26716"
-    },
-    {
-      "place": "Lhota u Nečemic",
-      "okres": "Louny",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "zemědělský pozemek",
-      "area": null,
-      "price": 1102000,
-      "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2644361,
-      "lng": 13.5955244,
-      "url": "https://www.okdrazby.cz/drazba/26717"
     },
     {
       "place": "Předonín",
