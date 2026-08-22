@@ -1777,8 +1777,8 @@
     activeType = 'all'; activeDruh = 'all'; maxPrice = 0; minArea = 0; urgentOnly = false; searchTerm = ''; favOnly = false;
     if (searchEl) searchEl.value = '';
     if (druhEl) druhEl.value = 'all';
-    if (cenaEl) cenaEl.value = '0';
-    if (areaEl) areaEl.value = '0';
+    if (cenaEl) { cenaEl.value = ''; cenaEl.dispatchEvent(new Event('pk-reset')); }
+    if (areaEl) { areaEl.value = ''; areaEl.dispatchEvent(new Event('pk-reset')); }
     if (urgentEl) { urgentEl.classList.remove('on'); urgentEl.setAttribute('aria-pressed', 'false'); }
     filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-type') === 'all');
@@ -1975,8 +1975,9 @@
     if (sortEl.value === 'near') { enterNear(); return; } // vyžádá polohu, pak seřadí
     sortMode = sortEl.value; renderList();
   });
-  if (cenaEl) cenaEl.addEventListener('change', function () { maxPrice = parseInt(cenaEl.value, 10) || 0; renderList(); });
-  if (areaEl) areaEl.addEventListener('change', function () { minArea = parseInt(areaEl.value, 10) || 0; renderList(); });
+  // Cena/výměra jsou teď textová pole — reaguj i na psaní (input) a na reset.
+  if (cenaEl) ['input', 'change', 'pk-reset'].forEach(function (ev) { cenaEl.addEventListener(ev, function () { maxPrice = parseInt(cenaEl.value, 10) || 0; renderList(); }); });
+  if (areaEl) ['input', 'change', 'pk-reset'].forEach(function (ev) { areaEl.addEventListener(ev, function () { minArea = parseInt(areaEl.value, 10) || 0; renderList(); }); });
   if (urgentEl) urgentEl.addEventListener('click', function () { urgentOnly = !urgentOnly; urgentEl.classList.toggle('on', urgentOnly); urgentEl.setAttribute('aria-pressed', String(urgentOnly)); renderList(); });
   if (favEl) favEl.addEventListener('click', function () { favOnly = !favOnly; refreshFavBtn(); renderList(); });
 

@@ -1,20 +1,40 @@
-// Parcelka — vlastní hezký rozbalovací seznam místo ošklivého systémového
-// (na iPhonu vyskakoval nevzhledný nativní výběr). Původní <select> zůstává
-// skrytý jako „zdroj pravdy", takže veškerá logika mapy funguje beze změny.
+// Parcelka — vlastní hezký rozbalovací seznam (místo ošklivého systémového na iPhonu)
+// + rychlé volby (chips) u ceny a výměry. Panel se pozicuje vůči obrazovce (fixed),
+// takže ho karta neořízne a jde s ním normálně scrollovat.
 (function () {
   function ready(fn) { if (document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
   ready(function () {
     var opened = null;
     function close() {
       if (!opened) return;
+      opened.panel.style.display = 'none';
       opened.root.classList.remove('open');
       opened.btn.setAttribute('aria-expanded', 'false');
       opened = null;
     }
-    document.addEventListener('click', function (e) { if (opened && !opened.root.contains(e.target)) close(); });
+    document.addEventListener('click', function (e) {
+      if (opened && !opened.root.contains(e.target) && !opened.panel.contains(e.target)) close();
+    });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    window.addEventListener('scroll', function () { if (opened) close(); }, true);
+    window.addEventListener('resize', function () { if (opened) close(); });
 
     Array.prototype.forEach.call(document.querySelectorAll('select.map-select'), enhance);
+    Array.prototype.forEach.call(document.querySelectorAll('.mc-chips'), wireChips);
+
+    function place(btn, panel) {
+      var r = btn.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight, MAXH = 280;
+      panel.style.width = r.width + 'px';
+      panel.style.left = Math.max(8, Math.min(r.left, vw - r.width - 8)) + 'px';
+      var below = vh - r.bottom - 10, above = r.top - 10;
+      if (below >= 170 || below >= above) {
+        panel.style.top = (r.bottom + 6) + 'px'; panel.style.bottom = 'auto';
+        panel.style.maxHeight = Math.min(MAXH, Math.max(120, below)) + 'px';
+      } else {
+        panel.style.bottom = (vh - r.top + 6) + 'px'; panel.style.top = 'auto';
+        panel.style.maxHeight = Math.min(MAXH, Math.max(120, above)) + 'px';
+      }
+    }
 
     function enhance(sel) {
       var root = document.createElement('div'); root.className = 'cdd';
@@ -30,7 +50,8 @@
       root.appendChild(btn);
 
       var panel = document.createElement('div'); panel.className = 'cdd-panel'; panel.setAttribute('role', 'listbox');
-      root.appendChild(panel);
+      panel.style.display = 'none';
+      document.body.appendChild(panel); // do body → karta ho neořízne
 
       function buildOptions() {
         panel.innerHTML = '';
@@ -59,11 +80,11 @@
         e.stopPropagation();
         if (opened && opened.root === root) { close(); return; }
         close(); buildOptions(); syncLabel();
+        panel.style.display = 'block'; place(btn, panel);
         root.classList.add('open'); btn.setAttribute('aria-expanded', 'true');
-        opened = { root: root, btn: btn };
+        opened = { root: root, btn: btn, panel: panel };
       });
 
-      // Když se hodnota nastaví z kódu (např. řazení „Nejblíž ke mně"), aktualizuj popisek.
       try {
         var desc = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
         if (desc && desc.get && desc.set) {
@@ -74,11 +95,30 @@
           });
         }
       } catch (e) {}
-      // Když se doplní volby za běhu (druh pozemku), přestav seznam.
-      try { new MutationObserver(function () { if (opened && opened.root === root) buildOptions(); syncLabel(); }).observe(sel, { childList: true }); } catch (e) {}
+      try { new MutationObserver(function () { if (opened && opened.root === root) { buildOptions(); place(btn, panel); } syncLabel(); }).observe(sel, { childList: true }); } catch (e) {}
       sel.addEventListener('change', syncLabel);
-
       buildOptions(); syncLabel();
+    }
+
+    // Rychlé volby u ceny/výměry — klepnutím doplní číslo do políčka.
+    function wireChips(box) {
+      var input = document.getElementById(box.getAttribute('data-chips'));
+      if (!input) return;
+      function refresh() {
+        Array.prototype.forEach.call(box.children, function (b) {
+          b.classList.toggle('on', String(input.value) === b.getAttribute('data-v'));
+        });
+      }
+      Array.prototype.forEach.call(box.children, function (b) {
+        b.addEventListener('click', function () {
+          input.value = b.getAttribute('data-v');
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          refresh();
+        });
+      });
+      input.addEventListener('input', refresh);
+      input.addEventListener('pk-reset', refresh);
+      refresh();
     }
   });
 })();
