@@ -1168,6 +1168,14 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .auth-alt{text-align:center; font-size:13.5px; color:var(--text-ondark-mute); margin-top:1px;}
 .auth-link{background:none; border:none; font:inherit; font-weight:700; color:var(--copper-bright); cursor:pointer; padding:0; text-decoration:underline; text-underline-offset:2px;}
 .auth-msg{min-height:16px; text-align:center; margin:0;}
+.auth-sent{text-align:center; animation:authFade .3s ease both;}
+.auth-sent-ico{width:60px; height:60px; margin:2px auto 15px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(116,173,247,0.1); border:1px solid var(--line-strong);}
+.auth-sent-ico svg{width:30px; height:30px; color:var(--text-ondark);}
+.auth-sent h3{font-family:'Inter',sans-serif; font-size:19px; font-weight:600; color:var(--text-ondark); margin:0 0 9px;}
+.auth-sent p{font-size:14px; line-height:1.55; color:var(--text-ondark-mute); margin:0 auto 11px; max-width:40ch;}
+.auth-sent .auth-sent-note{font-size:12.5px; background:var(--surface-2); border:1px solid var(--line); border-radius:11px; padding:11px 13px; max-width:none;}
+.auth-sent .lp-btn{margin-top:6px;}
+@keyframes authFade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
 .auth-trust{display:flex; flex-wrap:wrap; justify-content:center; gap:9px 18px; margin-top:22px; padding-top:19px; border-top:1px solid var(--line);}
 .auth-trust span{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text-ondark-mute);}
 .auth-trust svg{width:15px; height:15px; color:var(--c-sale); flex:none;}

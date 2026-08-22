@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260822a">
+  <link rel="stylesheet" href="css/styles.css?v=20260822b">
   <style>
     .pf-head{display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
     .pf-avatar{flex:none; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center;
@@ -95,6 +95,14 @@
           <p class="auth-alt">Nemáte účet? <a class="auth-link" href="pridat.html">Vytvořit zdarma</a></p>
           <p class="add-msg auth-msg" id="mi-auth-msg" role="status" aria-live="polite"></p>
         </form>
+        <!-- Potvrzení po odeslání odkazu na reset hesla -->
+        <div class="auth-sent" id="mi-sent" hidden>
+          <div class="auth-sent-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/><path d="m8.5 13.5 2 2 4.5-4.5" stroke="var(--copper-bright)"/></svg></div>
+          <h3>Odkaz je na cestě</h3>
+          <p>Pokud u nás účet s adresou <b id="mi-sent-email">—</b> existuje, dorazí na něj během chvilky e-mail s odkazem pro nastavení nového hesla. Klepněte na něj a rovnou si zvolíte nové heslo.</p>
+          <p class="auth-sent-note">Nepřišlo to? Mrkněte do složky <b>Spam / Hromadné</b>. E-maily chodí s malým zpožděním.</p>
+          <button type="button" class="lp-btn" id="mi-sent-back">Zpět na přihlášení</button>
+        </div>
         <div class="auth-trust">
           <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v6c0 4 3 6.5 7 9 4-2.5 7-5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>Zabezpečené</span>
           <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>Žádný spam</span>
@@ -168,8 +176,8 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260822a" defer></script>
-<script src="js/auth.js?v=20260822a" defer></script>
+<script src="js/config.js?v=20260822b" defer></script>
+<script src="js/auth.js?v=20260822b" defer></script>
 <script>
 (function () {
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
@@ -191,18 +199,24 @@
       authBox.hidden = true; panel.hidden = true; newpwBox.hidden = false;
       var nf = q('mi-newpw-form'), nmsg = q('mi-newpw-msg');
       function nsay(t, err){ if(nmsg){ nmsg.textContent=t; nmsg.className='add-msg'+(err?' err':' ok'); } }
+      var nbtn = q('mi-savepw');
       nf.addEventListener('submit', function (e) {
         e.preventDefault();
         var np = q('mi-newpass').value||'';
         if (np.length < 6) { nsay('Heslo musí mít aspoň 6 znaků.', true); return; }
+        if (nbtn) { nbtn.disabled = true; nbtn.textContent = 'Ukládám…'; }
         nsay('Ukládám…');
         A.setPassword(np, recTok).then(function (r) {
           if (r && r.ok) {
             try { history.replaceState(null, '', location.pathname); } catch(e){}
-            nsay('Heslo změněno. Přihlašuji…');
-            setTimeout(function(){ show(); }, 700);
+            // Úspěch — přehledné potvrzení, pak rovnou do profilu
+            nf.innerHTML = '<div class="auth-sent" style="border:0;padding:0;">' +
+              '<div class="auth-sent-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--copper-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg></div>' +
+              '<h3>Heslo změněno</h3><p>Nové heslo je uložené. Za okamžik vás přihlásíme do profilu…</p></div>';
+            setTimeout(function(){ show(); }, 1200);
           } else {
-            nsay('Odkaz už vypršel nebo byl použit. Nechte si prosím poslat nový.', true);
+            if (nbtn) { nbtn.disabled = false; nbtn.textContent = 'Uložit nové heslo'; }
+            nsay('Odkaz už vypršel nebo byl použit. Nechte si prosím poslat nový z přihlašovací stránky.', true);
           }
         });
       });
@@ -292,10 +306,21 @@
     if (fg) fg.addEventListener('click', function () {
       var em = (q('mi-email').value||'').trim().toLowerCase();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { say('Nejdřív vyplňte svůj e-mail výše, pošleme na něj odkaz pro nové heslo.', true); q('mi-email').focus(); return; }
+      if (fg.disabled) return;
+      fg.disabled = true; fg.textContent = 'Posílám…';
       say('Posílám odkaz na e-mail…');
       A.recover(em).then(function () {
-        say('Hotovo. Pokud u nás účet s tímto e-mailem existuje, dorazí na něj odkaz pro nastavení nového hesla. Mrkněte i do spamu.');
+        // Přehledné potvrzení místo přihlašovacího formuláře
+        var sent = q('mi-sent'), se = q('mi-sent-email');
+        if (sent) { if (se) se.textContent = em; af.hidden = true; sent.hidden = false; }
+        else { say('Hotovo. Poslali jsme odkaz na ' + em + '. Mrkněte i do spamu.'); }
       });
+    });
+    var sback = q('mi-sent-back');
+    if (sback) sback.addEventListener('click', function () {
+      var sent = q('mi-sent'); if (sent) sent.hidden = true;
+      af.hidden = false; if (fg) { fg.disabled = false; fg.textContent = 'Zapomněli jste heslo?'; }
+      say('');
     });
 
     // ---------- Uložené pozemky (lokální oblíbené) ----------
