@@ -200,7 +200,7 @@ header{border-bottom:1px solid var(--line); padding:20px 0; position:sticky; top
 header.shrink{padding:12px 0;}
 header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .logo{font-family:'Inter',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:22px; display:flex; align-items:center; gap:10px; text-decoration:none;}
-.logo-mark{width:26px; height:29px; background:url("../assets/logo-mark.svg?v=3") center/contain no-repeat; filter:drop-shadow(0 3px 6px rgba(63,127,216,.35));}
+.logo-mark{width:26px; height:29px; background:url("../assets/logo-mark.svg?v=4") center/contain no-repeat; filter:drop-shadow(0 3px 6px rgba(63,127,216,.35));}
 .logo-mark.small{width:16px; height:18px;}
 #nav{display:flex; gap:26px; align-items:center;}
 #nav a{color:var(--text-ondark-mute); text-decoration:none; font-size:14px; font-weight:500; transition:color .15s ease; position:relative;}
