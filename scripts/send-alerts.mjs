@@ -202,17 +202,11 @@ async function main() {
   newOpps = newOpps.map(r => ({ ...(byKey.get(r.key) || {}), ...r }));
   log('Nových příležitostí od minule:', newOpps.length);
 
-  if (firstRun) {
-    log('PRVNÍ běh — zapamatoval jsem si současný stav, žádné e-maily se neposílají.');
-    if (!LIVE) log('(dry-run: v ostrém režimu by se teď jen naplnila evidence alert_seen)');
-    return;
-  }
-
   // 3) přihlášky
   const subs = await sb('watch_subscriptions?select=*&active=eq.true');
   log('Aktivních přihlášek:', Array.isArray(subs) ? subs.length : 0);
 
-  // 3a) potvrzovací e-maily nepotvrzeným (jen jednou — hlídá confirm_sent_at)
+  // 3a) potvrzovací e-maily nepotvrzeným (posílají se VŽDY — i při prvním běhu, hlídá confirm_sent_at)
   let confirmSent = 0;
   for (const s of (subs || [])) {
     if (s.confirmed || !s.confirm_token) continue;
@@ -227,6 +221,13 @@ async function main() {
     }
   }
   log('Potvrzovacích e-mailů:', confirmSent);
+
+  // Při PRVNÍM běhu jen zapamatujeme stav a upozornění NEposíláme (ať nikoho nezavalí starý seznam).
+  if (firstRun) {
+    log('PRVNÍ běh — zapamatoval jsem si příležitosti, upozornění zatím neposílám.');
+    log('== Hotovo ==');
+    return;
+  }
 
   // 3b) upozornění potvrzeným — jen NOVÉ příležitosti v jejich okrese/typu
   let alertSent = 0;
