@@ -1,11 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Parcelka">
   <defs>
-    <linearGradient id="pkpin" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#7EB6FB"/>
-      <stop offset="1" stop-color="#3F7FD8"/>
+    <linearGradient id="bl" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7EB6FB"/><stop offset="1" stop-color="#3F7FD8"/>
     </linearGradient>
+    <filter id="ink" x="-30%" y="-30%" width="160%" height="160%"><feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="5" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.5"/></filter>
+    <filter id="cr" x="-30%" y="-30%" width="160%" height="160%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="8" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.4"/></filter>
   </defs>
-  <path d="M16 2.6c-5.1 0-9.2 4.05-9.2 9.05 0 6.4 9.2 17.75 9.2 17.75s9.2-11.35 9.2-17.75c0-5-4.1-9.05-9.2-9.05Z" fill="url(#pkpin)"/>
-  <path d="M10.8 13.1 16 8.5l5.2 4.6v6.1H10.8Z" fill="#fff"/>
-  <path d="M14.2 19.3v-3.4h3.6v3.4Z" fill="#3F7FD8"/>
+  <g filter="url(#cr)"><path d="M16 3.4C10.4 3.4 5.8 7.8 5.8 13.1c0 6.9 10.2 15.4 10.2 15.4s10.2-8.5 10.2-15.4C26.2 7.8 21.6 3.4 16 3.4Z" fill="url(#bl)"/></g>
+  <g filter="url(#ink)"><path d="M16 3.4C10.4 3.4 5.8 7.8 5.8 13.1c0 6.9 10.2 15.4 10.2 15.4s10.2-8.5 10.2-15.4C26.2 7.8 21.6 3.4 16 3.4Z" fill="none" stroke="#1C3350" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g filter="url(#cr)"><path d="M11.4 13.6h9.2v5.4h-9.2Z" fill="#FDF6E7"/><path d="M10.4 13.9 16 9.1l5.6 4.8Z" fill="#FDF6E7"/><path d="M14 19v-3.1h4v3.1Z" fill="#3F7FD8"/></g>
+  <g filter="url(#ink)" fill="none" stroke="#1C3350" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10.4 13.9 16 9.1l5.6 4.8" stroke-width="1.5"/>
+    <path d="M11.4 13.6v5.4h9.2v-5.4" stroke-width="1.4"/>
+    <path d="M14 19v-3.1h4v3.1" stroke-width="1.2"/>
+  </g>
 </svg>
