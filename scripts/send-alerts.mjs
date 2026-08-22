@@ -139,8 +139,9 @@ function matchesType(types, o) {
 
 async function main() {
   log('== Parcelka: rozesílání upozornění ==', LIVE ? '(OSTRÝ REŽIM)' : '(zkušební — nic se neodešle)');
-  if (!SERVICE_KEY) die('chybí SUPABASE_SERVICE_ROLE_KEY');
-  if (LIVE && !RESEND_API_KEY) die('ostrý režim vyžaduje RESEND_API_KEY');
+  // Ještě není nastavené (chybí klíč) → tiše skonči ÚSPĚŠNĚ, ať nechodí „failed" e-maily.
+  if (!SERVICE_KEY) { log('SUPABASE_SERVICE_ROLE_KEY není nastavený — upozornění zatím nejsou zapnutá. Končím bez akce.'); return; }
+  if (LIVE && !RESEND_API_KEY) { log('Ostrý režim zapnutý, ale chybí RESEND_API_KEY — nic neodesílám. Doplňte klíč.'); return; }
 
   // 1) načti příležitosti
   let raw;
