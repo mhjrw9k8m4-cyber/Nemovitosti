@@ -83,6 +83,26 @@ h1,h2{text-wrap:balance;}
 ::-webkit-scrollbar-thumb:hover{background:var(--text-ondark-mute);}
 ::-webkit-scrollbar-track{background:transparent;}
 
+/* ===== Plynulost & dotyk (mobil) =====
+   Odstraní šedý záblesk při klepnutí, zruší 300ms prodlevu, dá tlačítkům
+   hmatatelnou odezvu (jemné zmáčknutí) a zapne setrvačné rolování. */
+a, button, [role="button"], input, select, textarea, label, summary{ -webkit-tap-highlight-color:transparent; }
+button, a, [role="button"], select, summary, .btn-primary, .btn-outline, .lp-btn, input[type="submit"]{ touch-action:manipulation; }
+.btn-primary, .btn-outline, .lp-btn, .header-cta, .nav-add, .pf-add, .pf-logout, .auth-submit, .map-reset, .okr-src, .beta-close{
+  transition:transform .12s var(--ease), background .15s ease, border-color .15s ease, box-shadow .2s ease, color .15s ease;
+}
+/* Hmatatelné zmáčknutí při klepnutí */
+.btn-primary:active, .btn-outline:active, .lp-btn:active, .header-cta:active, .nav-add:active, .pf-add:active, .pf-logout:active, .auth-submit:active{
+  transform:translateY(0) scale(.97);
+}
+/* Na dotykových displejích se :hover „zasekne" po klepnutí — proto tam
+   nadzvednutí a posuny vypneme, ať tlačítka po ťuknutí nezůstávají zvednutá. */
+@media (hover:none){
+  .btn-primary:hover, .btn-outline:hover, .pf-stat:hover, .lp-btn:hover, .map-reset:hover, .okr-item:hover{ transform:none; }
+}
+/* Setrvačné (momentum) rolování uvnitř posuvných oblastí */
+.opp-list, .modal-body, .loc-modal, .pz-gallery, .okr-list, .table-scroll, .code-block{ -webkit-overflow-scrolling:touch; }
+
 .skip-link{position:absolute; left:-9999px; top:0; z-index:100; background:var(--copper); color:var(--ink); padding:10px 16px; font-weight:600; border-radius:0 0 4px 0;}
 .skip-link:focus{left:0;}
 
