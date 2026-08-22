@@ -1458,19 +1458,23 @@
     if (sortEl) sortEl.value = sortMode;
     if (searchEl) { try { searchEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); searchEl.focus(); } catch (e) {} }
   }
-  // Obrazovka „Zapněte polohu" — jasně vysvětlí, co dělat, s tlačítky.
+  // Obrazovka „poloha se nepovedla" — ukáže se jen jako poslední záchrana,
+  // když selže i přibližná poloha podle připojení. Vede rovnou k napsání obce.
   var LOC_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
   function showLocModal(err) {
+    var denied = err && err.code === 1;
     var ov = document.createElement('div'); ov.className = 'loc-ov';
     ov.innerHTML =
-      '<div class="loc-card" role="dialog" aria-modal="true" aria-label="Zapnout polohu">' +
+      '<div class="loc-card" role="dialog" aria-modal="true" aria-label="Zadat obec">' +
         '<button class="loc-x" type="button" aria-label="Zavřít">✕</button>' +
         '<div class="loc-ic">' + LOC_PIN + '</div>' +
-        '<h3>Ukázat pozemky u vás</h3>' +
-        '<p>Zapněte polohu a uvidíte pozemky přímo ve vašem okolí.</p>' +
+        '<h3>Napište obec</h3>' +
+        '<p>' + (denied
+            ? 'Poloha je pro tento web vypnutá. Napište obec a najdeme pozemky ve vašem okolí — nebo polohu povolte v nastavení prohlížeče.'
+            : 'Polohu se teď nepodařilo zjistit. Napište obec a najdeme pozemky ve vašem okolí.') + '</p>' +
         '<div class="loc-btns">' +
-          '<button class="loc-btn primary" type="button" data-loc="retry">Zapnout polohu</button>' +
-          '<button class="loc-btn ghost" type="button" data-loc="city">Radši napíšu město</button>' +
+          '<button class="loc-btn primary" type="button" data-loc="city">Napsat obec</button>' +
+          '<button class="loc-btn ghost" type="button" data-loc="retry">Zkusit polohu znovu</button>' +
         '</div>' +
       '</div>';
     document.body.appendChild(ov);
@@ -1479,19 +1483,43 @@
       if (e.target === ov || e.target.closest('.loc-x')) { close(); return; }
       var b = e.target.closest('[data-loc]'); if (!b) return;
       var act = b.getAttribute('data-loc'); close();
-      if (act === 'retry') { enterNear(); }
+      if (act === 'retry') { enterNear(true); }
       else { focusSearch(); }
     });
   }
-  // „Pozemky v okolí" — nejdřív přesná GPS; když se nepovede, ukáž obrazovku „Zapněte polohu".
-  function enterNear() {
-    if (!navigator.geolocation) { showLocModal({ code: 2 }); return; }
+  // Poslední záloha, když GPS nejde: přibližná poloha podle připojení (IP).
+  // Když ani ta nevyjde, teprve pak nabídneme napsání obce.
+  function fallbackNear(err) {
+    showToast('Hledám přibližnou polohu…');
+    ipLocate().then(function (pos) {
+      if (pos) { enterNearAt(pos, true); }
+      else { showLocModal(err); }
+    });
+  }
+  // Vlastní žádost o GPS + prompt prohlížeče.
+  function askGeo() {
     showToast('Zjišťuji vaši polohu…');
     navigator.geolocation.getCurrentPosition(function (pos) {
       enterNearAt({ lat: pos.coords.latitude, lng: pos.coords.longitude }, false);
     }, function (err) {
-      showLocModal(err);
-    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 120000 });
+      fallbackNear(err);   // GPS zamítnuta/selhala → přibližná poloha podle připojení
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 });
+  }
+  // „Pozemky v okolí" — jako profesionální weby:
+  // 1) je-li poloha už zakázaná, nečekáme na tichý prompt a rovnou jdeme na přibližnou polohu,
+  // 2) jinak vyžádáme přesnou GPS (nativní prompt),
+  // 3) při zamítnutí/selhání spadneme na přibližnou polohu podle připojení,
+  // 4) a teprve když nejde nic, nabídneme napsání obce.
+  function enterNear(forcePrompt) {
+    if (!navigator.geolocation) { fallbackNear({ code: 2 }); return; }
+    if (!forcePrompt && navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then(function (st) {
+        if (st && st.state === 'denied') { fallbackNear({ code: 1 }); }
+        else { askGeo(); }
+      }).catch(askGeo);
+    } else {
+      askGeo();
+    }
   }
   lockDots(true);      // start: nejdřív se vybírá kraj
   updateKrajHead();
