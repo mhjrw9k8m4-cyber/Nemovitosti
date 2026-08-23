@@ -18762,19 +18762,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1032266-nabidka-prodej-pozemku-verovicka-studenka"
     },
     {
-      "place": "Tmaň",
-      "okres": "Beroun",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": 4059,
-      "price": 9991750,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.9049227,
-      "lng": 14.0168888,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1047623-nabidka-prodej-pozemku-lounin"
-    },
-    {
       "place": "Bystrá",
       "okres": "Pelhřimov",
       "type": "sale",
@@ -18916,19 +18903,6 @@
       "lat": 49.692576099682,
       "lng": 14.751489041655,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1049690-nabidka-prodej-pozemku-popovice"
-    },
-    {
-      "place": "Strachotín",
-      "okres": "Brno-venkov",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": 2465,
-      "price": 7190000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 48.9054423,
-      "lng": 16.6522419,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1038186-nabidka-prodej-pozemku"
     },
     {
       "place": "Vrábče",
@@ -24907,19 +24881,6 @@
       "url": "https://www.okdrazby.cz/drazba/26717"
     },
     {
-      "place": "Holedeč",
-      "okres": "Louny",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "lesní pozemek",
-      "area": null,
-      "price": 3400000,
-      "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2653592,
-      "lng": 13.5922308,
-      "url": "https://www.okdrazby.cz/drazba/26716"
-    },
-    {
       "place": "Líčkov",
       "okres": "Rakovník",
       "type": "exekuce",
@@ -24931,6 +24892,19 @@
       "lat": 50.2670183,
       "lng": 13.5946064,
       "url": "https://www.okdrazby.cz/drazba/26715"
+    },
+    {
+      "place": "Holedeč",
+      "okres": "Louny",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": null,
+      "price": 3400000,
+      "extra": "nucená dražba 2026-09-22 · OK dražby",
+      "lat": 50.2653592,
+      "lng": 13.5922308,
+      "url": "https://www.okdrazby.cz/drazba/26716"
     },
     {
       "place": "Předonín",
