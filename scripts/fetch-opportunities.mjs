@@ -447,44 +447,56 @@ const SR_HEADERS = {
 // Zjistí, který styl požadavku Sreality přijme (server umí vracet i 404/blok
 // podle hlaviček). Vyzkouší několik variant, každou zaloguje i s útržkem těla,
 // ať se z běhu Action pozná, co se děje, a vrátí ty, co fungují.
+// Warm-up: načti homepage, seber cookies (anonymní session), ať autorizuje API.
+async function srealityCookies() {
+  try {
+    const r = await fetch('https://www.sreality.cz/', { headers: SR_HEADERS, signal: AbortSignal.timeout(25000) });
+    const sc = typeof r.headers.getSetCookie === 'function' ? r.headers.getSetCookie() : [];
+    const cookie = sc.map((c) => String(c).split(';')[0]).filter(Boolean).join('; ');
+    return cookie || null;
+  } catch { return null; }
+}
 async function srealityPickRequest() {
-  // Diagnostika dosažitelnosti: dostane se runner vůbec na Sreality?
-  const diag = [
-    ['home', 'https://www.sreality.cz/'],
-    ['sitemap', 'https://www.sreality.cz/sitemap.xml'],
-    ['v2', 'https://www.sreality.cz/api/cs/v2/estates?category_main_cb=3&category_type_cb=1&per_page=20&page=1'],
-    ['v2count', 'https://www.sreality.cz/api/cs/v2/estates/count?category_main_cb=3&category_type_cb=1'],
+  const cookie = await srealityCookies();
+  console.log(`Sreality warm-up: cookie ${cookie ? 'získán (' + cookie.length + 'B)' : 'žádný'}`);
+  const H = cookie ? { ...SR_HEADERS, cookie } : SR_HEADERS;
+  // Zkus v1 endpoint s cookie i bez; u JSON zaloguj strukturu, ať se dá napsat parser.
+  const urls = [
     ['v1', 'https://www.sreality.cz/api/v1/estates?category_main_cb=3&category_type_cb=1&per_page=20&page=1'],
+    ['v2', 'https://www.sreality.cz/api/cs/v2/estates?category_main_cb=3&category_type_cb=1&per_page=20&page=1'],
   ];
-  for (const [label, url] of diag) {
+  for (const [label, url] of urls) {
     try {
-      const r = await fetch(url, { headers: SR_HEADERS, signal: AbortSignal.timeout(25000) });
+      const r = await fetch(url, { headers: H, signal: AbortSignal.timeout(25000) });
       const body = await r.text();
-      console.log(`Sreality probe [${label}]: HTTP ${r.status}, ${body.length}B, start="${body.slice(0, 80).replace(/\s+/g, ' ')}"`);
+      let j = null; try { j = JSON.parse(body); } catch { /* není JSON */ }
+      if (j) {
+        const topKeys = Object.keys(j).slice(0, 12).join(',');
+        const arr = (j._embedded && j._embedded.estates) || j.results || j.estates || j.items || [];
+        const sampleKeys = arr[0] ? Object.keys(arr[0]).slice(0, 20).join(',') : '—';
+        console.log(`Sreality probe [${label}]: HTTP ${r.status}, JSON, topKeys=[${topKeys}], count=${arr.length}, itemKeys=[${sampleKeys}]`);
+        if (arr[0]) console.log(`Sreality vzorek [${label}]: ${JSON.stringify(arr[0]).slice(0, 500)}`);
+        if (r.ok && arr.length) return { base: url.split('?')[0], headers: H, shape: label };
+      } else {
+        console.log(`Sreality probe [${label}]: HTTP ${r.status}, ${body.length}B, start="${body.slice(0, 70).replace(/\s+/g, ' ')}"`);
+      }
     } catch (e) { console.log(`Sreality probe [${label}]: selhal — ${e && e.message}`); }
-  }
-  // Zkus najít funkční estates endpoint (v2, jinak v1) a vrať jeho základ.
-  for (const base of ['https://www.sreality.cz/api/cs/v2/estates', 'https://www.sreality.cz/api/v1/estates']) {
-    try {
-      const r = await fetch(`${base}?category_main_cb=3&category_type_cb=1&per_page=20&page=1`, { headers: SR_HEADERS, signal: AbortSignal.timeout(25000) });
-      if (!r.ok) continue;
-      const j = await r.json();
-      if (j && j._embedded && Array.isArray(j._embedded.estates) && j._embedded.estates.length) return base;
-    } catch { /* zkus další */ }
   }
   return null;
 }
 async function fetchSreality() {
   const out = [];
   const PER = 100;
-  const base = await srealityPickRequest();
-  if (!base) return out; // nedosažitelné/blokované → tiše nic (zdroj je oddělený)
+  const pick = await srealityPickRequest();
+  if (!pick) return out; // nedosažitelné/blokované → tiše nic (zdroj je oddělený)
+  if (pick.shape !== 'v2') return out; // v1 má jinou strukturu — parser doplníme po zjištění tvaru
+  const base = pick.base, H = pick.headers;
   let total = Infinity;
   for (let page = 1; page <= 80 && (page - 1) * PER < total; page++) {
     let j;
     try {
       const u = `${base}?category_main_cb=3&category_type_cb=1&per_page=${PER}&page=${page}`;
-      const r = await fetch(u, { headers: SR_HEADERS, signal: AbortSignal.timeout(25000) });
+      const r = await fetch(u, { headers: H, signal: AbortSignal.timeout(25000) });
       if (!r.ok) break;
       j = await r.json();
     } catch { break; }
