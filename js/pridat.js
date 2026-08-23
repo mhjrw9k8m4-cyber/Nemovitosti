@@ -302,6 +302,24 @@
     prodejForm.addEventListener('change', updatePreview);
     if (previewCard) updateStrength();   // počáteční stav ukazatele
   }
+  // Na mobilu přesuň „živý náhled" HNED pod základní pole (obec/výměra/cena/fotky),
+  // ať uživatel vidí, jak inzerát roste, přímo při psaní — ne až na konci stránky.
+  (function () {
+    var pvCard = document.getElementById('live-preview-card');
+    var asideEl = document.querySelector('.add-aside');
+    var photoField = document.querySelector('#form-prodej .photo-field');
+    if (!pvCard || !asideEl || !photoField || !window.matchMedia) return;
+    var mq = window.matchMedia('(max-width: 900px)');
+    function place() {
+      if (mq.matches) {
+        if (photoField.nextElementSibling !== pvCard) photoField.insertAdjacentElement('afterend', pvCard);
+      } else {
+        if (pvCard.parentNode !== asideEl) asideEl.insertBefore(pvCard, asideEl.firstChild);
+      }
+    }
+    place();
+    if (mq.addEventListener) mq.addEventListener('change', place); else if (mq.addListener) mq.addListener(place);
+  })();
   // „Přidat další pozemek" po úspěšném odeslání — vrátí formulář a vynuluje náhled
   var addAnother = document.getElementById('add-another');
   if (addAnother) addAnother.addEventListener('click', function () {
