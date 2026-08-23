@@ -237,6 +237,7 @@
             <h3>Zatím tu žádný inzerát nemáte</h3>
             <p>Přidejte svůj pozemek — je to zdarma, bez provize a hned se objeví na mapě mezi ostatními.</p>
             <a class="btn-primary pf-add" href="pridat.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Přidat pozemek zdarma</a>
+            <div style="margin-top:15px;"><button type="button" id="mi-reload" class="linklike" style="font-size:13px;">Už jste inzerát přidali? Načíst znovu</button></div>
           </div>
         </div>
       </div>
@@ -325,10 +326,20 @@
         if (!skipLoad) load();          // seznam inzerátů načteme až s obnovenou session (bez chybového bliknutí)
       }
     }
-    function load() {
+    function load(attempt) {
+      attempt = attempt || 0;
       statusEl.hidden = false; statusEl.textContent = 'Načítám…'; listEl.innerHTML = ''; emptyEl.hidden = true;
       A.rpc('my_listings', {}, true).then(function (res) {
-        if (!res || !res.ok) { statusEl.textContent = 'Načtení se nepovedlo. Zkuste to prosím znovu.'; return; }
+        if (!res || !res.ok) {
+          // Občas první pokus krátce po přihlášení selže (obnova session) → chvíli počkat a zkusit znovu.
+          if (attempt < 2) { setTimeout(function () { load(attempt + 1); }, 600 * (attempt + 1)); return; }
+          // Ani po opakování → nový uživatel stejně nic nemá: ukaž přívětivý „přidejte první inzerát"
+          // a statistiky nastav na 0 (ne „—"), ať to nepůsobí rozbitě.
+          var pc0 = q('pf-count'); if (pc0) pc0.textContent = '0';
+          var pv0 = q('pf-views'); if (pv0) pv0.textContent = '0';
+          statusEl.hidden = true; emptyEl.hidden = false;
+          return;
+        }
         var rows = Array.isArray(res.data) ? res.data : [];
         var totalViews = rows.reduce(function(s,r){ return s + (typeof r.views==='number'?r.views:0); }, 0);
         var pc = q('pf-count'); if (pc) pc.textContent = fmt(rows.length);
@@ -465,6 +476,8 @@
     }
     // Dlaždice „Uložené pozemky" v hlavičce sroluje k seznamu
     var favTileEl = q('pf-fav'); if (favTileEl && favTileEl.closest){ var st = favTileEl.closest('.pf-stat'); if(st){ st.style.cursor='pointer'; st.addEventListener('click', function(){ var w=q('mi-saved-wrap'); if(w) w.scrollIntoView({behavior:'smooth', block:'start'}); }); } }
+    // „Načíst znovu" v prázdném stavu (kdyby se inzeráty nenačetly napoprvé)
+    var reloadBtn = q('mi-reload'); if (reloadBtn) reloadBtn.addEventListener('click', function(){ emptyEl.hidden = true; load(); });
 
     // HNED ukázat stav podle zapamatovaného přihlášení (žádná prázdná/nejasná stránka),
     // pak na pozadí obnovit session a doplnit seznam inzerátů.
