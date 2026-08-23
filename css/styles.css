@@ -11,6 +11,9 @@
   --text-ondark-mute:#9CB0C6;   /* tlumený text */
   /* Primární — modrá (důvěra, jistota, kompetence) */
   --copper:#4A90E8; --copper-bright:#7EB6FB;
+  /* Značkový přechod (modrá → fialová) — stejný jako logo/ikona */
+  --brand-grad:linear-gradient(135deg, #5B93FF 0%, #4A55E0 55%, #6A34D8 100%);
+  --brand-grad-soft:linear-gradient(135deg, #6BA0FF 0%, #5A63E6 55%, #7A44E0 100%);
   /* Sémantické: zeleň = půda/růst/hodnota, zlatá = dražba, teracota = exekuce */
   --c-sale:#4FB487; --c-drazba:#E0B460; --c-exekuce:#DE7259; --c-obec:#6E95D0; --c-majitel:#A488D2;
   --surface-2:#2c4459;
@@ -200,14 +203,14 @@ header{border-bottom:1px solid var(--line); padding:20px 0; position:sticky; top
 header.shrink{padding:12px 0;}
 header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .logo{font-family:'Inter',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:22px; display:flex; align-items:center; gap:10px; text-decoration:none;}
-.logo-mark{width:26px; height:29px; background:url("../assets/logo-mark.svg?v=7") center/contain no-repeat; filter:drop-shadow(0 3px 6px rgba(63,127,216,.35));}
+.logo-mark{width:26px; height:29px; background:url("../assets/logo-mark.svg?v=8") center/contain no-repeat; filter:drop-shadow(0 3px 6px rgba(63,127,216,.35));}
 .logo-mark.small{width:16px; height:18px;}
 #nav{display:flex; gap:26px; align-items:center;}
 #nav a{color:var(--text-ondark-mute); text-decoration:none; font-size:14px; font-weight:500; transition:color .15s ease; position:relative;}
 #nav a:hover{color:var(--text-ondark);}
 /* CTA v hlavičce musí být tmavý text na teal HNED (ne až po najetí myší) —
    #nav a jinak přebíjelo barvu tlačítka a text byl šedý a špatně čitelný. */
-#nav a.btn-primary{color:var(--ink);}
+#nav a.btn-primary{color:#fff;}
 #nav a.btn-primary:hover{color:var(--ink);}
 #nav a:not(.btn-primary).active{color:var(--text-ondark);}
 #nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--copper-bright); border-radius:2px;}
@@ -218,7 +221,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px); z-index:4000; max-width:calc(100% - 32px); background:var(--ink-soft2); border:1px solid var(--copper); color:var(--text-ondark); font-size:13.5px; font-weight:500; padding:13px 20px; border-radius:10px; box-shadow:0 14px 36px -10px rgba(0,0,0,0.7); opacity:0; transition:opacity .3s var(--ease), transform .3s var(--ease); pointer-events:none;}
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
-.btn-primary{background:linear-gradient(135deg, var(--copper-bright), var(--copper)); color:#08111C; font-weight:700; font-size:14px; padding:10px 20px; border-radius:9px; text-decoration:none; border:1px solid rgba(116,173,247,0.55); box-shadow:0 8px 22px -8px rgba(62,128,219,0.55); transition:filter .15s ease, transform .1s ease, box-shadow .15s ease; white-space:nowrap; cursor:pointer;}
+.btn-primary{background:var(--brand-grad); color:#fff; font-weight:700; font-size:14px; padding:10px 20px; border-radius:9px; text-decoration:none; border:1px solid rgba(122,110,230,0.55); box-shadow:0 8px 22px -8px rgba(74,80,220,0.6); transition:filter .15s ease, transform .1s ease, box-shadow .15s ease; white-space:nowrap; cursor:pointer;}
 .btn-primary:hover{filter:brightness(1.06); box-shadow:0 12px 28px -8px rgba(62,128,219,0.68);}
 .btn-primary:active{transform:translateY(1px);}
 /* Stálé CTA „Přidat pozemek" v liště. Na počítači je akce už v navigaci,
@@ -360,7 +363,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .map-search input::placeholder{color:#6f8090;}
 .map-search input:focus-visible{border-color:var(--copper-bright); outline:none;}
 /* Nápadné tlačítko „pozemky ve vašem okolí" (geolokace) */
-.map-near-btn{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:9px; padding:12px 14px; border-radius:8px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; color:var(--ink); background:linear-gradient(135deg, var(--copper), var(--copper-bright)); border:1px solid var(--copper); box-shadow:0 6px 18px -8px rgba(46,144,180,0.7); transition:transform .1s ease, box-shadow .15s ease, filter .15s ease;}
+.map-near-btn{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:9px; padding:12px 14px; border-radius:8px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; color:#fff; background:var(--brand-grad); border:1px solid rgba(122,110,230,0.55); box-shadow:0 6px 18px -8px rgba(74,80,220,0.7); transition:transform .1s ease, box-shadow .15s ease, filter .15s ease;}
 .map-near-btn:hover{filter:brightness(1.05); box-shadow:0 8px 22px -8px rgba(46,144,180,0.85);}
 .map-near-btn:active{transform:translateY(1px);}
 .map-near-btn .mnb-pin{width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none;}
