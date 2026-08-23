@@ -448,36 +448,43 @@ const SR_HEADERS = {
 // podle hlaviček). Vyzkouší několik variant, každou zaloguje i s útržkem těla,
 // ať se z běhu Action pozná, co se děje, a vrátí ty, co fungují.
 async function srealityPickRequest() {
-  const base = 'https://www.sreality.cz/api/cs/v2/estates?category_main_cb=3&category_type_cb=1&per_page=20&page=1';
-  const variants = [
-    ['browser', SR_HEADERS],
-    ['browser+xhr', { ...SR_HEADERS, 'x-requested-with': 'XMLHttpRequest', origin: 'https://www.sreality.cz' }],
-    ['bot-ua', { ...UA, accept: 'application/json' }],
-    ['minimal', { accept: 'application/json' }],
+  // Diagnostika dosažitelnosti: dostane se runner vůbec na Sreality?
+  const diag = [
+    ['home', 'https://www.sreality.cz/'],
+    ['sitemap', 'https://www.sreality.cz/sitemap.xml'],
+    ['v2', 'https://www.sreality.cz/api/cs/v2/estates?category_main_cb=3&category_type_cb=1&per_page=20&page=1'],
+    ['v2count', 'https://www.sreality.cz/api/cs/v2/estates/count?category_main_cb=3&category_type_cb=1'],
+    ['v1', 'https://www.sreality.cz/api/v1/estates?category_main_cb=3&category_type_cb=1&per_page=20&page=1'],
   ];
-  for (const [label, headers] of variants) {
+  for (const [label, url] of diag) {
     try {
-      const r = await fetch(base, { headers, signal: AbortSignal.timeout(25000) });
+      const r = await fetch(url, { headers: SR_HEADERS, signal: AbortSignal.timeout(25000) });
       const body = await r.text();
-      let ok = false, size = null;
-      try { const j = JSON.parse(body); size = j && j.result_size; ok = !!(j && j._embedded && Array.isArray(j._embedded.estates) && j._embedded.estates.length); } catch { /* není JSON */ }
-      console.log(`Sreality probe [${label}]: HTTP ${r.status}, ${body.length}B, result_size=${size}, start="${body.slice(0, 100).replace(/\s+/g, ' ')}"`);
-      if (ok) return headers;
-    } catch (e) { console.log(`Sreality probe [${label}]: fetch selhal — ${e && e.message}`); }
+      console.log(`Sreality probe [${label}]: HTTP ${r.status}, ${body.length}B, start="${body.slice(0, 80).replace(/\s+/g, ' ')}"`);
+    } catch (e) { console.log(`Sreality probe [${label}]: selhal — ${e && e.message}`); }
+  }
+  // Zkus najít funkční estates endpoint (v2, jinak v1) a vrať jeho základ.
+  for (const base of ['https://www.sreality.cz/api/cs/v2/estates', 'https://www.sreality.cz/api/v1/estates']) {
+    try {
+      const r = await fetch(`${base}?category_main_cb=3&category_type_cb=1&per_page=20&page=1`, { headers: SR_HEADERS, signal: AbortSignal.timeout(25000) });
+      if (!r.ok) continue;
+      const j = await r.json();
+      if (j && j._embedded && Array.isArray(j._embedded.estates) && j._embedded.estates.length) return base;
+    } catch { /* zkus další */ }
   }
   return null;
 }
 async function fetchSreality() {
   const out = [];
   const PER = 100;
-  const headers = await srealityPickRequest();
-  if (!headers) return out; // žádná varianta neprošla → tiše nic (zdroj je oddělený)
+  const base = await srealityPickRequest();
+  if (!base) return out; // nedosažitelné/blokované → tiše nic (zdroj je oddělený)
   let total = Infinity;
   for (let page = 1; page <= 80 && (page - 1) * PER < total; page++) {
     let j;
     try {
-      const u = `https://www.sreality.cz/api/cs/v2/estates?category_main_cb=3&category_type_cb=1&per_page=${PER}&page=${page}`;
-      const r = await fetch(u, { headers, signal: AbortSignal.timeout(25000) });
+      const u = `${base}?category_main_cb=3&category_type_cb=1&per_page=${PER}&page=${page}`;
+      const r = await fetch(u, { headers: SR_HEADERS, signal: AbortSignal.timeout(25000) });
       if (!r.ok) break;
       j = await r.json();
     } catch { break; }
