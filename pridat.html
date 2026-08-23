@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260823t">
+  <link rel="stylesheet" href="css/styles.css?v=20260823u">
 </head>
 <body>
 
@@ -151,6 +151,11 @@
                 <div class="photo-preview" id="p-fotky-preview"></div>
               </div>
 
+              <div class="add-field desc-field">
+                <label for="p-popis">Popis pozemku <span class="hint">(nepovinné — ale hodně pomůže zájemcům)</span></label>
+                <textarea id="p-popis" placeholder="Tvar a terén, orientace, okolí, územní plán, proč je zajímavý… cokoliv, co pomůže kupujícímu se rozhodnout."></textarea>
+              </div>
+
               <details class="add-more">
                 <summary>Další údaje o pozemku (nepovinné)</summary>
                 <div class="add-more-body">
@@ -197,10 +202,6 @@
                       <label for="p-parcela">Parcelní číslo / k. ú.</label>
                       <input id="p-parcela" type="text" placeholder="např. 512/3, k. ú. Kolín">
                     </div>
-                  </div>
-                  <div class="add-field">
-                    <label for="p-popis">Popis pozemku</label>
-                    <textarea id="p-popis" placeholder="Tvar a terén, orientace, okolí, územní plán, proč je zajímavý… cokoliv, co pomůže kupujícímu se rozhodnout."></textarea>
                   </div>
                   <div class="add-field">
                     <label for="p-odkaz">Odkaz na inzerát nebo katastr</label>
@@ -260,6 +261,7 @@
               <h3 id="lp-place">Vaše obec</h3>
               <div class="ul-meta" id="lp-meta">výměra · okres</div>
               <div class="ul-topline"><span class="ul-price" id="lp-price">Cena</span><span class="ul-perm2" id="lp-perm2"></span></div>
+              <p class="ul-desc" id="lp-desc" hidden></p>
               <div class="ul-tags" id="lp-tags"></div>
               <div class="ul-topline" style="margin-top:4px;"><span class="ul-verified"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg>Hned na mapě</span></div>
             </div>
@@ -322,9 +324,9 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260823t" defer></script>
-<script src="js/auth.js?v=20260823t" defer></script>
-<script src="js/pridat.js?v=20260823t" defer></script>
+<script src="js/config.js?v=20260823u" defer></script>
+<script src="js/auth.js?v=20260823u" defer></script>
+<script src="js/pridat.js?v=20260823u" defer></script>
 <script>
 /* Zobrazit/skrýt heslo v přihlašovací kartě */
 document.addEventListener('click', function (e) {

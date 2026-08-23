@@ -1422,6 +1422,8 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .ul-verified{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--c-ok);}
 .ul-verified svg{width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2.4;}
 .ul-perm2{font-size:12px; color:var(--text-ondark-mute);}
+.ul-desc{font-size:12.5px; line-height:1.5; color:var(--text-ondark-mute); margin:8px 0 0; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;}
+.ul-desc[hidden]{display:none;}
 .ul-tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:3px;}
 .ul-tags span{font-size:11px; color:var(--text-ondark-mute); background:rgba(224,236,244,0.06); border:1px solid var(--line); border-radius:6px; padding:2px 8px;}
 

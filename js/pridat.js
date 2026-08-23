@@ -258,6 +258,9 @@
     var c = parseInt(val('p-cena'), 10), v = parseInt(val('p-vymera'), 10);
     setTxt('lp-price', c > 0 ? (c.toLocaleString('cs-CZ') + ' Kč') : 'Cena');
     setTxt('lp-perm2', (c > 0 && v > 0) ? (Math.round(c / v).toLocaleString('cs-CZ') + ' Kč/m²') : '');
+    var desc = val('p-popis');
+    var dEl = document.getElementById('lp-desc');
+    if (dEl) { dEl.textContent = desc; dEl.hidden = !desc; }
     var tags = []; var dr = val('p-druh'); if (dr) tags.push(dr);
     var pr = val('p-pristup'); if (pr) tags.push(pr);
     [].slice.call(document.querySelectorAll('input[name="site"]:checked')).forEach(function (x) { tags.push(x.value); });
@@ -307,12 +310,12 @@
   (function () {
     var pvCard = document.getElementById('live-preview-card');
     var asideEl = document.querySelector('.add-aside');
-    var photoField = document.querySelector('#form-prodej .photo-field');
-    if (!pvCard || !asideEl || !photoField || !window.matchMedia) return;
+    var anchor = document.querySelector('#form-prodej .desc-field') || document.querySelector('#form-prodej .photo-field');
+    if (!pvCard || !asideEl || !anchor || !window.matchMedia) return;
     var mq = window.matchMedia('(max-width: 900px)');
     function place() {
       if (mq.matches) {
-        if (photoField.nextElementSibling !== pvCard) photoField.insertAdjacentElement('afterend', pvCard);
+        if (anchor.nextElementSibling !== pvCard) anchor.insertAdjacentElement('afterend', pvCard);
       } else {
         if (pvCard.parentNode !== asideEl) asideEl.insertBefore(pvCard, asideEl.firstChild);
       }
