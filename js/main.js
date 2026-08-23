@@ -1268,9 +1268,10 @@
       var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
       if (dist < bestDist) { bestDist = dist; best = d; }
     }
-    // Prstem se přesně netrefíte na 3px tečku — velká tolerance (≈ velikost prstu),
-    // aby se pozemek dal spolehlivě rozkliknout i při přiblížení.
-    if (best && bestDist <= 26 * 26) { gotoInzerat(best); }
+    // Prstem se přesně netrefíte na tečku — tolerance roste s velikostí tečky
+    // (a tím i s přiblížením), aby se pozemek dal spolehlivě rozkliknout.
+    var tol = Math.max(30, DOT_R + 26);
+    if (best && bestDist <= tol * tol) { gotoInzerat(best); }
   });
 
   // Tečkovaná mapa: každý pozemek = tečka. Navíc obrysy krajů pro orientaci.
@@ -1574,7 +1575,8 @@
   // Čím víc přiblíženo, tím větší tečka → snadné klepnutí i lepší viditelnost.
   function dotRadiusForZoom() {
     var z = map.getZoom();
-    return Math.max(3.2, Math.min(10, 3.2 + (z - 8) * 0.95));
+    // Čím víc přiblíženo, tím výrazně větší tečka → snadné klepnutí prstem.
+    return Math.max(3.6, Math.min(16, 3.6 + (z - 8) * 1.5));
   }
   function resizeDots() {
     var r = dotRadiusForZoom();
