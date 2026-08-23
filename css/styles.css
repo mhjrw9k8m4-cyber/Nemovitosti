@@ -1,10 +1,10 @@
 :root{
   /* Neutrály — vrstvená hloubka ploch (architektura + stínování).
      Modrošedá navy: důvěra a profesionalita, sladěný kontrast. */
-  --bg:#EAEDF6;                 /* pozadí stránky — jemný chladný nádech brandu, aby bílé karty vynikly */
-  --ink:#EEF1FB;                /* základní plocha: vstupy, zapuštěné prvky — bílá s náznakem indiga */
+  --bg:#EBEDF0;                 /* pozadí stránky — čistá neutrální světlá (ŽÁDNÝ pastelový nádech), ať bílé karty vyniknou */
+  --ink:#F4F5F7;                /* základní plocha: vstupy, zapuštěné prvky — čistá světle neutrální */
   --ink-soft:#FFFFFF;           /* zvýšená plocha: karty a panely — ČISTĚ BÍLÁ */
-  --ink-soft2:#F1F4FD;          /* nejvyšší plocha: hover, aktivní */
+  --ink-soft2:#EFF1F4;          /* nejvyšší plocha: hover, aktivní */
   --parchment:#1B2233; --parchment-dim:#39435A;
   --text-onlight:#1B2536;
   --text-ondark:#141829;        /* hlavní text — hluboká inkoustová s náznakem brandu */
@@ -18,9 +18,9 @@
   --brand-grad-soft:linear-gradient(135deg, #6BA0FF 0%, #5A63E6 55%, #7A44E0 100%);
   /* Sémantické: zeleň = půda/růst/hodnota, zlatá = dražba, teracota = exekuce */
   --c-sale:#1FA363; --c-drazba:#E5A00D; --c-exekuce:#E4483D; --c-obec:#3D63EE; --c-majitel:#8B4FE0;
-  --surface-2:#EAEEFB;
-  --line: rgba(60,72,150,0.13);
-  --line-strong: rgba(60,72,150,0.22);
+  --surface-2:#F1F3F6;
+  --line: rgba(20,26,40,0.13);
+  --line-strong: rgba(20,26,40,0.24);
   --panel:#FFFFFF;
   --radius:10px; --radius-lg:16px;
   --shadow:0 14px 38px -16px rgba(30,40,70,0.18);
@@ -1499,7 +1499,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 
 /* ---------- Krajské/okresní stránky (SEO rozcestník na reálná data) ---------- */
 .okr-stats{display:flex; flex-wrap:wrap; gap:10px; margin:0 0 20px;}
-.okr-stat{background:var(--surface-2,#1b2b3a); border:1px solid var(--line,#2a3d4f); border-radius:12px; padding:12px 16px; min-width:96px;}
+.okr-stat{background:#fff; border:1px solid var(--line); border-radius:12px; padding:13px 16px; min-width:96px; box-shadow:0 4px 14px -10px rgba(20,26,40,0.28);}
 .okr-stat b{display:block; font-size:22px; line-height:1.1; color:var(--copper-bright,#6E9BFF);}
 .okr-stat span{font-size:12px; color:var(--muted,#9DB0BE); text-transform:uppercase; letter-spacing:.04em;}
 .okr-list{display:flex; flex-direction:column; gap:10px; margin:14px 0 0;}
