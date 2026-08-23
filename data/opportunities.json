@@ -20387,6 +20387,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1039898-nabidka-prodej-pozemku-cernolice"
     },
     {
+      "place": "Jesenice",
+      "okres": "Praha",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": 900,
+      "price": 8900000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.9509975,
+      "lng": 14.5389972,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1026317-nabidka-prodej-pozemku-jesenice"
+    },
+    {
       "place": "Lochenice",
       "okres": "Hradec Králové",
       "type": "sale",
@@ -24829,19 +24842,6 @@
       "url": "https://www.okdrazby.cz/drazba/27177"
     },
     {
-      "place": "Jeseník",
-      "okres": "Jeseník",
-      "type": "exekuce",
-      "parcel": "2122",
-      "druh": "ostatní plocha",
-      "area": null,
-      "price": 766667,
-      "extra": "nucená dražba 2026-10-22 · OK dražby",
-      "lat": 50.421916,
-      "lng": 16.99702,
-      "url": "https://www.okdrazby.cz/drazba/27070"
-    },
-    {
       "place": "Znojmo",
       "okres": "Znojmo",
       "type": "exekuce",
@@ -24853,6 +24853,19 @@
       "lat": 48.832835,
       "lng": 16.391683,
       "url": "https://www.okdrazby.cz/drazba/27074"
+    },
+    {
+      "place": "Jeseník",
+      "okres": "Jeseník",
+      "type": "exekuce",
+      "parcel": "2122",
+      "druh": "ostatní plocha",
+      "area": null,
+      "price": 766667,
+      "extra": "nucená dražba 2026-10-22 · OK dražby",
+      "lat": 50.421916,
+      "lng": 16.99702,
+      "url": "https://www.okdrazby.cz/drazba/27070"
     },
     {
       "place": "Teplice",
@@ -24881,19 +24894,6 @@
       "url": "https://www.okdrazby.cz/drazba/26856"
     },
     {
-      "place": "Holedeč",
-      "okres": "Louny",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "lesní pozemek",
-      "area": null,
-      "price": 3400000,
-      "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2653592,
-      "lng": 13.5922308,
-      "url": "https://www.okdrazby.cz/drazba/26716"
-    },
-    {
       "place": "Lhota u Nečemic",
       "okres": "Louny",
       "type": "exekuce",
@@ -24905,6 +24905,19 @@
       "lat": 50.2644361,
       "lng": 13.5955244,
       "url": "https://www.okdrazby.cz/drazba/26717"
+    },
+    {
+      "place": "Holedeč",
+      "okres": "Louny",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": null,
+      "price": 3400000,
+      "extra": "nucená dražba 2026-09-22 · OK dražby",
+      "lat": 50.2653592,
+      "lng": 13.5922308,
+      "url": "https://www.okdrazby.cz/drazba/26716"
     },
     {
       "place": "Líčkov",
