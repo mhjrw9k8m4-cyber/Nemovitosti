@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260823h">
+  <link rel="stylesheet" href="css/styles.css?v=20260823i">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:20px; padding:24px 22px 22px;
@@ -244,8 +244,8 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260823h" defer></script>
-<script src="js/auth.js?v=20260823h" defer></script>
+<script src="js/config.js?v=20260823i" defer></script>
+<script src="js/auth.js?v=20260823i" defer></script>
 <script>
 (function () {
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
@@ -392,7 +392,7 @@
     });
 
     // ---------- Uložené pozemky (lokální oblíbené) ----------
-    var TYPE = { sale:{l:'Prodej',c:'sale'}, drazba:{l:'Dražba',c:'drazba'}, exekuce:{l:'Exekuce',c:'exekuce'}, obec:{l:'Záměr obce',c:'obec'}, majitel:{l:'Od majitele',c:'majitel'} };
+    var TYPE = { sale:{l:'Prodej',c:'sale'}, drazba:{l:'Dražba',c:'drazba'}, exekuce:{l:'Exekuce',c:'exekuce'}, obec:{l:'Záměr obce',c:'obec'}, majitel:{l:'Přímo od majitele',c:'majitel'} };
     function favKeys(){ try { return JSON.parse(localStorage.getItem('pk_fav_v1'))||[]; } catch(e){ return []; } }
     function saveFavKeys(a){ try { localStorage.setItem('pk_fav_v1', JSON.stringify(a)); } catch(e){} }
     function pkeyOf(o){ return [o.place||'', o.parcel||'', o.okres||''].join('|'); }

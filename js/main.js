@@ -36,7 +36,7 @@
     drazba:  { label:'Dražba',       color:'#E5A00D', link:{ label:'Detail dražby',       url:'https://www.portaldrazeb.cz/' } },
     exekuce: { label:'Exekuce',      color:'#E4483D', link:{ label:'Insolvenční rejstřík', url:'https://isir.justice.cz/isir/common/index.do' } },
     obec:    { label:'Obecní záměr', color:'#3D63EE', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } },
-    majitel: { label:'Od majitele',  color:'#8B4FE0', link:{ label:'Ověřit v katastru',    url:'https://www.ikatastr.cz/' } }
+    majitel: { label:'Přímo od majitele',  color:'#8B4FE0', link:{ label:'Ověřit v katastru',    url:'https://www.ikatastr.cz/' } }
   };
   // 14 krajů ČR — přehled po krajích (rozdělení mapy). Okres → kraj + střed kraje.
   var KRAJE = {
@@ -1097,7 +1097,7 @@
               '<span>Stav <b>' + d.extra + '</b></span>' +
             '</div>' +
             (isSPU(d) ? '<div class="md-note">Státní půda se prodává přes <b>veřejnou nabídku SPÚ (§ 12)</b> — otevřete „Nabídka SPÚ", parcelu ověříte přes „Katastr".</div>' : '') +
-            (d.type === 'majitel' ? '<div class="md-note">Inzerát vložil <b>majitel pozemku</b>. Parcelka je jen platforma — vlastníka a parcelu si ověřte v katastru.' + (d._lid && typeof d.views === 'number' ? ' · <b>' + d.views + '×</b> zobrazeno' : '') + '</div>' : '') +
+            (d.type === 'majitel' ? '<div class="md-note">Tenhle inzerát vložil <b>přímo majitel pozemku</b> tady na Parcelce — jednáte s ním <b>napřímo, bez realitky a provize</b>. Ostatní nabídky sbíráme z veřejných zdrojů. Vlastníka i parcelu si ověřte v katastru.' + (d._lid && typeof d.views === 'number' ? ' · <b>' + d.views + '×</b> zobrazeno' : '') + '</div>' : '') +
             goodToKnowHtml(d) +
           '</div></details>' +
         '</div>' +
@@ -1934,7 +1934,7 @@
     wrap.innerHTML = items.slice(0, 9).map(function (d) {
       var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
       return '<button type="button" class="odl-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
-        '<span class="odl-badge">Od majitele</span>' +
+        '<span class="odl-badge">Přímo od majitele</span>' +
         '<span class="odl-place">' + d.place + '</span>' +
         '<span class="odl-sub">' + (d.druh || 'pozemek') + (d.okres ? ' · okres ' + d.okres : '') + '</span>' +
         '<span class="odl-figs"><b>' + fmt(d.price) + ' Kč</b>' + (hasArea(d) ? '<span>' + fmt(d.area) + ' m²</span>' : '') + (perM2 ? '<span>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</span>' +
