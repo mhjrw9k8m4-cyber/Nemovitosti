@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260823s">
+  <link rel="stylesheet" href="css/styles.css?v=20260823t">
 </head>
 <body>
 
@@ -253,6 +253,7 @@
         <aside class="add-aside">
           <div class="aside-card preview-card" id="live-preview-card" hidden>
             <div class="pc-eyebrow"><span class="live-dot"></span>Živý náhled</div>
+            <p class="pc-explain">Takhle bude vaše nabídka vypadat na mapě a v seznamu. Mění se rovnou podle toho, co vyplníte výše — nic se zatím nikam neodesílá.</p>
             <div class="ul-card" id="live-preview">
               <div class="ul-thumb" id="lp-thumb"><span class="ph"><svg viewBox="0 0 24 24"><use href="#i-map"/></svg></span></div>
               <span class="ul-badge" style="background:var(--c-sale)">Prodej</span>
@@ -263,7 +264,8 @@
               <div class="ul-topline" style="margin-top:4px;"><span class="ul-verified"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg>Hned na mapě</span></div>
             </div>
             <div class="pc-strength">
-              <div class="pcs-top"><span>Síla inzerátu</span><span class="pcs-right"><b id="pcs-tier">Začínáme</b><b id="pcs-pct">0 %</b></span></div>
+              <div class="pcs-top"><span>Síla inzerátu <span class="pcs-help" title="Ukazuje, jak úplný a lákavý je váš inzerát. Čím víc vyplníte (fotky, popis, sítě…), tím vyšší číslo — a tím víc zájemců obvykle přitáhne. Není to povinné, jen vodítko.">?</span></span><span class="pcs-right"><b id="pcs-tier">Začínáme</b><b id="pcs-pct">0 %</b></span></div>
+              <div class="pcs-sub">Kolik už máte vyplněno — víc údajů = víc zájemců.</div>
               <div class="pcs-bar"><i id="pcs-fill"></i></div>
               <div class="pcs-hint" id="pcs-hint">Vyplňte obec, výměru a cenu — a sledujte, jak inzerát roste.</div>
             </div>
@@ -320,9 +322,9 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260823s" defer></script>
-<script src="js/auth.js?v=20260823s" defer></script>
-<script src="js/pridat.js?v=20260823s" defer></script>
+<script src="js/config.js?v=20260823t" defer></script>
+<script src="js/auth.js?v=20260823t" defer></script>
+<script src="js/pridat.js?v=20260823t" defer></script>
 <script>
 /* Zobrazit/skrýt heslo v přihlašovací kartě */
 document.addEventListener('click', function (e) {

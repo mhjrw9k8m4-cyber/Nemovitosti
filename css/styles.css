@@ -1437,7 +1437,11 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .preview-card{position:relative;}
 .pc-eyebrow{display:flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:11px;
   letter-spacing:0.09em; text-transform:uppercase; color:var(--copper-bright); margin-bottom:14px;}
+.pc-eyebrow{margin-bottom:8px;}
 .pc-eyebrow .live-dot{margin:0;}
+.pc-explain{font-size:12.5px; line-height:1.5; color:var(--text-ondark-mute); margin:0 0 14px;}
+.pcs-help{display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; background:var(--ink); border:1px solid var(--line-strong); color:var(--text-ondark-mute); font-size:10px; font-weight:700; cursor:help; vertical-align:middle; margin-left:3px;}
+.pcs-sub{font-size:11px; color:var(--text-ondark-mute); margin:-3px 0 8px; line-height:1.4;}
 #live-preview{border-color:var(--line-strong);
   box-shadow:0 0 0 1px rgba(74,85,224,0.16), 0 16px 44px -24px rgba(0,0,0,0.75);
   transition:box-shadow .25s ease;}
