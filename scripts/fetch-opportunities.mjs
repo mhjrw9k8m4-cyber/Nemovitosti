@@ -424,15 +424,65 @@ async function fetchFarmy() {
   return out;
 }
 
-// Sreality.cz — DOČASNĚ MIMO. Ověřeno v běhu Action (srpen 2026):
-//  • runner na Sreality dosáhne (homepage i sitemap HTTP 200 — žádný IP-blok),
-//  • staré veřejné API /api/cs/v2/estates už neexistuje (HTTP 404, nginx),
-//  • nové /api/v1/estates vrací JSON, ale vyžaduje přihlášení (HTTP 401) a ani
-//    cookie z homepage nestačí (chce reálný přihlašovací token).
-// Obcházet přihlášení nechceme (křehké a je to obcházení ochrany), takže
-// Sreality zatím nebereme. No-op — snadno se v budoucnu oživí (placené API /
-// rezidenční proxy). Není ani v seznamu SOURCES, takže se reálně nevolá.
-async function fetchSreality() { return []; }
+// Sreality.cz — přes Apify (placené API). Ověřeno v běhu Action (srpen 2026):
+// runner na Sreality dosáhne (homepage/sitemap 200), ale staré API v2 je zrušené
+// (404) a nové v1 vyžaduje přihlašovací token (401) — zdarma a spolehlivě to
+// nejde a obcházet přihlášení nechceme. Řešení: hotový Apify actor, který se
+// postará o přihlášení i proxy a vrátí čistý JSON.
+//
+// AKTIVUJE SE JEN když je nastaven tajný klíč APIFY_TOKEN
+// (GitHub → Settings → Secrets and variables → Actions → New repository secret).
+// Bez klíče je to no-op — na běžný bezplatný provoz nemá žádný vliv. Volitelně
+// APIFY_SREALITY_ACTOR přepíše použitý actor. Po prvním reálném běhu se mapování
+// polí doladí podle skutečného výstupu (viz log „Sreality/Apify vzorek").
+async function fetchSreality() {
+  const token = process.env.APIFY_TOKEN;
+  if (!token) return []; // klíč nenastaven → zdroj se nepoužije
+  const actor = process.env.APIFY_SREALITY_ACTOR || 'logiover~sreality-cz-scraper-czech-real-estate-data';
+  let items;
+  try {
+    const input = { category_main_cb: 3, category_type_cb: 1, maxItems: 4000 }; // pozemky na prodej
+    const r = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${encodeURIComponent(token)}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(input),
+      signal: AbortSignal.timeout(290000),
+    });
+    if (!r.ok) { console.error(`Sreality/Apify: HTTP ${r.status} — zkontroluj token/actor.`); return []; }
+    items = await r.json();
+  } catch (e) { console.error('Sreality/Apify selhal:', e && e.message); return []; }
+  if (!Array.isArray(items) || !items.length) { console.log('Sreality/Apify: 0 položek.'); return []; }
+  console.log(`Sreality/Apify vzorek: ${JSON.stringify(items[0]).slice(0, 500)}`);
+  const num = (v) => { const n = +String(v).replace(/[^\d.]/g, ''); return isFinite(n) ? n : NaN; };
+  const out = [];
+  for (const e of items) {
+    const price = Math.round(num(e.price ?? e.priceValue ?? e.price_czk ?? e.priceCzk)) || 0;
+    if (!price || price < 5000) continue;
+    const gps = e.gps || e.location || {};
+    const lat = num(e.lat ?? e.latitude ?? gps.lat ?? gps.latitude);
+    const lng = num(e.lng ?? e.lon ?? e.longitude ?? gps.lon ?? gps.lng ?? gps.longitude);
+    const name = String(e.name || e.title || '');
+    const loc = String(e.locality || e.address || (typeof e.location === 'string' ? e.location : '') || '');
+    const area = parseArea(name + ' ' + loc) || (num(e.area ?? e.surface ?? e.surfaceLand) || null);
+    let okres = (isFinite(lat) && isFinite(lng)) ? nearestOkres(lat, lng) : null;
+    if (!okres) { const om = loc.match(/okres\s+([A-Za-zÁ-Žá-ž.\- ]+)/i); if (om) { const c = normOkres(om[1].trim().replace(/[.,;].*$/, '')); if (OKRESY_MAP[c]) okres = c; } }
+    if (!okres) continue;
+    const parts = loc.split(',').map((s) => s.trim()).filter(Boolean);
+    const place = (parts[0] || name || 'Pozemek').split(/\s*-\s*/)[0].trim().slice(0, 60) || 'Pozemek';
+    const url = e.url || e.link || e.detailUrl || undefined;
+    const druh = parseDruh(name + ' ' + loc);
+    out.push({
+      place, okres, type: 'sale', parcel: '—',
+      _key: 'sr-' + (e.hash_id || e.id || url || (place + '-' + price)),
+      druh: druh || 'pozemek', area, price, extra: 'inzerát – Sreality',
+      lat: isFinite(lat) ? lat : undefined, lng: isFinite(lng) ? lng : undefined,
+      _gps: isFinite(lat) && isFinite(lng),
+      url,
+    });
+  }
+  console.log(`Sreality/Apify: ${out.length} pozemků.`);
+  return out;
+}
 
 /* ---------- Sjednocení a zápis ---------- */
 
@@ -482,6 +532,7 @@ async function main() {
     ['OK dražby', fetchOkdrazby],
     ['SPÚ', fetchProdejSPU],
     ['Bezrealitky', fetchBezrealitky],
+    ['Sreality (Apify)', fetchSreality], // aktivní jen s APIFY_TOKEN, jinak []
     ['Farmy', fetchFarmy],
   ];
   const results = await Promise.allSettled(SOURCES.map(([, fn]) => fn()));
@@ -530,10 +581,12 @@ async function main() {
   // nemá odkaz na konkrétní parcelu, tak jí dáme míň. Přes spread() bereme
   // pestrý vzorek napříč cenami (ne jen nejlevnější slivery), ať je mapa zajímavá.
   const bez = sale.filter((o) => /Bezrealitky/i.test(o.extra || ''));
+  const srealit = sale.filter((o) => /Sreality/i.test(o.extra || '')); // prázdné bez APIFY_TOKEN
   const farmy = sale.filter((o) => /Farmy/i.test(o.extra || ''));
   const spuSale = sale.filter((o) => /státní/i.test(o.extra || '')).sort(byPrice);
   const saleSel = [
     ...bez,                     // celá nabídka Bezrealitky (přímý odkaz na inzerát)
+    ...spread(srealit, 2500),   // Sreality přes Apify (jen s klíčem, jinak prázdné)
     ...farmy,                   // celá nabídka Farmy
     ...spread(spuSale, 900),    // státní půda doplní zbytek
   ];
@@ -580,7 +633,7 @@ async function main() {
 
   const payload = {
     updated: new Date().toISOString().slice(0, 10),
-    source: 'Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy)',
+    source: 'Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy, příp. Sreality přes Apify)',
     opportunities: fresh,
   };
   writeFileSync(OUT, JSON.stringify(payload, null, 2) + '\n', 'utf8');

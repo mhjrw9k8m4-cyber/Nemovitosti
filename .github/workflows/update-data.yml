@@ -31,6 +31,11 @@ jobs:
 
       - name: Stáhnout data
         run: node scripts/fetch-opportunities.mjs
+        env:
+          # Volitelné: když je nastaven tajný klíč APIFY_TOKEN, přidá se zdroj
+          # Sreality (přes Apify). Bez klíče se Sreality přeskočí (žádná chyba).
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          APIFY_SREALITY_ACTOR: ${{ secrets.APIFY_SREALITY_ACTOR }}
 
       - name: Přegenerovat regionální stránky (kraje, okresy, dražby, rozcestník + sitemap)
         run: node scripts/generate-region-pages.mjs
