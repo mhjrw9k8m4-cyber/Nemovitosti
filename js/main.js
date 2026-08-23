@@ -1276,7 +1276,7 @@
   var krajByName = {};
   // Na dotykových zařízeních není „myš pryč" → popisek kraje sám plynule zmizí.
   var isTouch = (typeof matchMedia === 'function' && matchMedia('(hover: none)').matches) || ('ontouchstart' in window);
-  function styleKraj() { return { color: 'rgba(91,184,214,0.4)', weight: 1.2, fill: true, fillColor: '#5BB8D6', fillOpacity: 0.03 }; }
+  function styleKraj() { return { color: 'rgba(110,120,255,0.4)', weight: 1.2, fill: true, fillColor: '#5BB8D6', fillOpacity: 0.03 }; }
   if (KRAJE_GEOM) {
     var feats = Object.keys(KRAJE_GEOM).map(function (k) { return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] }; });
     krajLayer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {

@@ -144,8 +144,8 @@ button, a, [role="button"], select, summary, .btn-primary, .btn-outline, .lp-btn
 /* Aurora pozadí hero */
 .aurora{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; contain:strict;}
 .aurora span{position:absolute; border-radius:50%; filter:blur(70px); opacity:0.32; transform:translateZ(0); will-change:transform;}
-.aurora .a1{width:420px; height:420px; background:radial-gradient(circle, rgba(59,125,216,0.34), transparent 70%); top:-120px; right:-80px; animation:float1 14s ease-in-out infinite;}
-.aurora .a2{width:360px; height:360px; background:radial-gradient(circle, rgba(70,90,120,0.30), transparent 70%); bottom:-140px; left:-100px; animation:float2 18s ease-in-out infinite;}
+.aurora .a1{width:420px; height:420px; background:radial-gradient(circle, rgba(91,147,255,0.32), transparent 70%); top:-120px; right:-80px; animation:float1 14s ease-in-out infinite;}
+.aurora .a2{width:360px; height:360px; background:radial-gradient(circle, rgba(106,52,216,0.28), transparent 70%); bottom:-140px; left:-100px; animation:float2 18s ease-in-out infinite;}
 .aurora .a3{width:300px; height:300px; background:radial-gradient(circle, rgba(79,168,119,0.20), transparent 70%); top:40%; left:40%; animation:float1 16s ease-in-out infinite reverse;}
 @keyframes float1{0%,100%{transform:translate(0,0);} 50%{transform:translate(-30px,40px);}}
 @keyframes float2{0%,100%{transform:translate(0,0);} 50%{transform:translate(40px,-30px);}}
@@ -157,7 +157,7 @@ button, a, [role="button"], select, summary, .btn-primary, .btn-outline, .lp-btn
 .hero{position:relative; overflow:hidden;}
 .hero .hero-grid{position:relative; z-index:1;}
 /* teplá záře shora — útulnost + šmrnc */
-.hero::before{content:""; position:absolute; inset:0; background:radial-gradient(120% 80% at 50% -15%, rgba(46,144,180,0.09), transparent 58%); pointer-events:none; z-index:0;}
+.hero::before{content:""; position:absolute; inset:0; background:radial-gradient(120% 80% at 50% -15%, rgba(74,85,224,0.09), transparent 58%); pointer-events:none; z-index:0;}
 /* elegantní podtržení zvýrazněného slova */
 h1 em{position:relative;}
 h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; height:3px; border-radius:3px; background:linear-gradient(90deg, var(--copper), var(--copper-bright)); transform:scaleX(0); transform-origin:left; opacity:0.55; animation:undersweep 0.9s var(--ease) 0.6s forwards;}
@@ -188,9 +188,9 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 .data-updated{margin:-6px 0 14px; font-size:12px; color:var(--copper-bright); opacity:0.85;}
 .data-updated:empty{display:none;}
 .data-updated.is-stale{color:#E0A33A; opacity:1; font-weight:600;}
-.leaflet-tooltip.kraj-tip{background:rgba(20,32,44,0.97); border:1px solid rgba(91,184,214,0.6); color:var(--parchment); font-family:'Inter',sans-serif; font-weight:500; font-size:12px; line-height:1.55; padding:8px 12px; border-radius:10px; box-shadow:0 10px 26px -6px rgba(0,0,0,0.65);}
+.leaflet-tooltip.kraj-tip{background:rgba(20,32,44,0.97); border:1px solid rgba(110,120,255,0.6); color:var(--parchment); font-family:'Inter',sans-serif; font-weight:500; font-size:12px; line-height:1.55; padding:8px 12px; border-radius:10px; box-shadow:0 10px 26px -6px rgba(0,0,0,0.65);}
 .leaflet-tooltip.kraj-tip b{display:inline-block; font-family:'Inter',sans-serif; color:var(--copper-bright); font-weight:600; font-size:14.5px; margin-bottom:1px;}
-.leaflet-tooltip.kraj-tip::before{border-top-color:rgba(91,184,214,0.6);}
+.leaflet-tooltip.kraj-tip::before{border-top-color:rgba(110,120,255,0.6);}
 /* Špendlík vybraného pozemku na mapě — bez rámečku divIconu, s jemným stínem */
 .sel-pin{background:none; border:none;}
 .sel-pin svg{display:block; filter:drop-shadow(0 3px 4px rgba(0,0,0,0.45));}
@@ -222,7 +222,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
 .btn-primary{background:var(--brand-grad); color:#fff; font-weight:700; font-size:14px; padding:10px 20px; border-radius:9px; text-decoration:none; border:1px solid rgba(122,110,230,0.55); box-shadow:0 8px 22px -8px rgba(74,80,220,0.6); transition:filter .15s ease, transform .1s ease, box-shadow .15s ease; white-space:nowrap; cursor:pointer;}
-.btn-primary:hover{filter:brightness(1.06); box-shadow:0 12px 28px -8px rgba(62,128,219,0.68);}
+.btn-primary:hover{filter:brightness(1.06); box-shadow:0 12px 28px -8px rgba(74,80,220,0.68);}
 .btn-primary:active{transform:translateY(1px);}
 /* Stálé CTA „Přidat pozemek" v liště. Na počítači je akce už v navigaci,
    tady se skryje; na mobilu se ukáže přímo v liště (aby bylo vidět hned,
@@ -237,7 +237,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 
 /* ===== Hero s mapou (raketový styl) ===== */
 .hero-map{position:relative; overflow:hidden; padding:22px 0 52px;}
-.hero-map::before{content:""; position:absolute; inset:0; background:radial-gradient(130% 90% at 50% -20%, rgba(46,144,180,0.12), transparent 55%); pointer-events:none; z-index:0;}
+.hero-map::before{content:""; position:absolute; inset:0; background:radial-gradient(130% 90% at 50% -20%, rgba(74,85,224,0.12), transparent 55%); pointer-events:none; z-index:0;}
 .hero-map .wrap{position:relative; z-index:1;}
 .hero-head{text-align:center; max-width:860px; margin:0 auto 22px; display:flex; flex-direction:column; align-items:center;}
 .hero-head .eyebrow{margin-bottom:18px;}
@@ -277,9 +277,9 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 /* Výrazné druhé tlačítko v heru — proklik na „Přidat pozemek" */
 .btn-add{display:inline-flex; align-items:center; justify-content:center; gap:6px; width:auto;
   padding:15px 30px; font-size:15px; font-weight:600; text-decoration:none; border-radius:10px;
-  background:rgba(46,144,180,0.10); color:var(--copper-bright); border:1.5px solid var(--copper);
+  background:rgba(74,85,224,0.10); color:var(--copper-bright); border:1.5px solid var(--copper);
   transition:background .15s ease, border-color .15s ease, transform .1s ease, box-shadow .15s ease;}
-.btn-add:hover{background:rgba(46,144,180,0.18); border-color:var(--copper-bright); transform:translateY(-1px); box-shadow:0 8px 22px -10px rgba(46,144,180,0.5);}
+.btn-add:hover{background:rgba(74,85,224,0.18); border-color:var(--copper-bright); transform:translateY(-1px); box-shadow:0 8px 22px -10px rgba(74,85,224,0.5);}
 .link-ghost{color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; border-bottom:1px solid var(--line); padding-bottom:2px; transition:border-color .15s ease;}
 .link-ghost:hover{border-color:var(--copper-bright);}
 
@@ -309,7 +309,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .section-sub{font-size:15px; color:var(--text-ondark-mute); margin-top:14px; max-width:640px;}
 
 /* Srdce značky — proč to děláme */
-.mission{padding:76px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); background:linear-gradient(180deg, transparent, rgba(46,144,180,0.04));}
+.mission{padding:76px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); background:linear-gradient(180deg, transparent, rgba(74,85,224,0.04));}
 .mission-text{max-width:820px; margin:0 auto; text-align:center; font-family:'Inter',sans-serif; font-weight:400; font-size:26px; line-height:1.4; color:var(--text-ondark);}
 .mission-text em{font-style:italic; background:linear-gradient(92deg, var(--copper), var(--copper-bright)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;}
 .mission-sign{text-align:center; margin-top:22px; font-family:'Inter',sans-serif; font-style:italic; font-size:16px; color:var(--copper-bright);}
@@ -335,7 +335,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .druh-card p{font-size:14px; color:var(--text-ondark-mute);}
 .druh-demand{font-size:10px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; padding:3px 9px; border-radius:11px; white-space:nowrap;}
 .druh-demand.high{color:var(--c-sale); background:rgba(62,142,91,0.15); border:1px solid rgba(62,142,91,0.4);}
-.druh-demand.mid{color:var(--copper-bright); background:rgba(46,144,180,0.15); border:1px solid rgba(46,144,180,0.4);}
+.druh-demand.mid{color:var(--copper-bright); background:rgba(74,85,224,0.15); border:1px solid rgba(74,85,224,0.4);}
 .druh-demand.niche{color:var(--text-ondark-mute); background:rgba(224,236,244,0.08); border:1px solid var(--line);}
 @media (max-width:900px){ .druhy-grid{grid-template-columns:repeat(2,1fr);} }
 @media (max-width:600px){ .druhy-grid{grid-template-columns:1fr;} }
@@ -364,7 +364,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .map-search input:focus-visible{border-color:var(--copper-bright); outline:none;}
 /* Nápadné tlačítko „pozemky ve vašem okolí" (geolokace) */
 .map-near-btn{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:9px; padding:12px 14px; border-radius:8px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; color:#fff; background:var(--brand-grad); border:1px solid rgba(122,110,230,0.55); box-shadow:0 6px 18px -8px rgba(74,80,220,0.7); transition:transform .1s ease, box-shadow .15s ease, filter .15s ease;}
-.map-near-btn:hover{filter:brightness(1.05); box-shadow:0 8px 22px -8px rgba(46,144,180,0.85);}
+.map-near-btn:hover{filter:brightness(1.05); box-shadow:0 8px 22px -8px rgba(74,85,224,0.85);}
 .map-near-btn:active{transform:translateY(1px);}
 .map-near-btn .mnb-pin{width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none;}
 .map-near-btn.on{background:var(--ink); color:var(--copper-bright); border-color:var(--copper-bright); box-shadow:none;}
@@ -435,15 +435,15 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
   border-radius:7px; padding:6px 6px; font-family:inherit; font-size:11.5px; font-weight:700; cursor:pointer;
   -webkit-tap-highlight-color:transparent; touch-action:manipulation; transition:border-color .15s ease, color .15s ease, background .15s ease;}
 .mc-chips button:hover{border-color:var(--copper-bright); color:var(--text-ondark);}
-.mc-chips button.on{background:rgba(46,144,180,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
+.mc-chips button.on{background:rgba(74,85,224,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
 .fav-toggle{background-image:none; padding:9px 12px; display:inline-flex; align-items:center; justify-content:center; gap:6px; transition:border-color .15s ease, background .15s ease, color .15s ease;}
 .fav-toggle svg{width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round;}
 .fav-toggle:hover{border-color:var(--copper-bright);}
-.fav-toggle.on{background:rgba(46,144,180,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
+.fav-toggle.on{background:rgba(74,85,224,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
 .fav-toggle.on svg{fill:currentColor;}
 .urgent-toggle{background-image:none; padding:9px 12px; text-align:center; transition:border-color .15s ease, background .15s ease, color .15s ease;}
 .urgent-toggle:hover{border-color:var(--copper-bright);}
-.urgent-toggle.on{background:rgba(46,144,180,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
+.urgent-toggle.on{background:rgba(74,85,224,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
 .opp-topr{display:inline-flex; align-items:center; gap:9px;}
 .opp-fav{background:none; border:0; padding:2px; line-height:0; cursor:pointer; color:var(--text-ondark-mute); transition:color .15s ease, transform .1s ease;}
 .opp-fav svg{display:block; width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round;}
@@ -453,7 +453,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-fav:active{transform:scale(1.2);}
 .lp-fav{display:inline-flex; align-items:center; justify-content:center; gap:6px;}
 .lp-fav svg{width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round;}
-.lp-fav.on{background:rgba(46,144,180,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
+.lp-fav.on{background:rgba(74,85,224,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
 .lp-fav.on svg{fill:currentColor;}
 .opp-deal{display:inline-block; font-size:10.5px; font-weight:700; color:#8AD5AC; background:rgba(62,142,91,0.10); border:1px solid rgba(62,142,91,0.26); border-radius:7px; padding:1px 8px; letter-spacing:0.02em; text-transform:uppercase;}
 .map-count{font-size:13.5px; color:var(--text-ondark); font-weight:600; letter-spacing:0.01em; margin-bottom:12px;}
@@ -549,9 +549,9 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .opp-chips{display:flex; flex-wrap:wrap; gap:6px;}
 .opp-hot{display:inline-block; font-size:10.5px; font-weight:700; color:var(--text-ondark-mute); background:rgba(224,236,244,0.06); border:1px solid rgba(224,236,244,0.16); border-radius:7px; padding:1px 8px; letter-spacing:0.02em; text-transform:uppercase;}
 /* Zvýrazněný (placený) inzerát — prémiový plný odznak + jemné orámování karty */
-.opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:#08222C; background:linear-gradient(135deg, var(--copper-bright), var(--copper)); border:0; border-radius:10px; padding:2px 9px; letter-spacing:0.03em; text-transform:uppercase; box-shadow:0 1px 5px rgba(46,144,180,0.35);}
-.opp-item.is-featured{border-color:rgba(91,184,214,0.5); box-shadow:inset 0 0 0 1px rgba(91,184,214,0.3);}
-.md-feat{display:inline-flex; align-items:center; margin-left:9px; font-size:11px; font-weight:700; padding:2px 10px; border-radius:11px; color:#08222C; background:linear-gradient(135deg, var(--copper-bright), var(--copper)); letter-spacing:0.03em; text-transform:uppercase; white-space:nowrap; box-shadow:0 1px 5px rgba(46,144,180,0.35);}
+.opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:#08222C; background:linear-gradient(135deg, var(--copper-bright), var(--copper)); border:0; border-radius:10px; padding:2px 9px; letter-spacing:0.03em; text-transform:uppercase; box-shadow:0 1px 5px rgba(74,85,224,0.35);}
+.opp-item.is-featured{border-color:rgba(110,120,255,0.5); box-shadow:inset 0 0 0 1px rgba(110,120,255,0.3);}
+.md-feat{display:inline-flex; align-items:center; margin-left:9px; font-size:11px; font-weight:700; padding:2px 10px; border-radius:11px; color:#08222C; background:linear-gradient(135deg, var(--copper-bright), var(--copper)); letter-spacing:0.03em; text-transform:uppercase; white-space:nowrap; box-shadow:0 1px 5px rgba(74,85,224,0.35);}
 /* Odpočet do termínu dražby (reálné datum) */
 .opp-cd{display:inline-block; font-size:10.5px; font-weight:700; padding:1px 8px; border-radius:7px; background:rgba(224,236,244,0.06); border:1px solid rgba(224,236,244,0.14); color:var(--text-ondark-mute); letter-spacing:0.01em; white-space:nowrap;}
 .opp-cd.soon{color:#E6C583; border-color:rgba(217,164,65,0.30);}
@@ -665,8 +665,8 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .odl-cta-txt b{font-size:16px; color:var(--text-ondark); font-weight:700;}
 .odl-cta-txt span{font-size:13.5px; color:var(--text-ondark-mute);}
 @media (max-width:560px){ .odl-cta{flex-direction:column; align-items:stretch; text-align:center;} .odl-cta .btn-primary{text-align:center;} }
-.lp-src{border-color:var(--copper); background:rgba(46,144,180,0.14); color:var(--copper-bright);}
-.lp-src:hover{border-color:var(--copper-bright); background:rgba(46,144,180,0.22);}
+.lp-src{border-color:var(--copper); background:rgba(74,85,224,0.14); color:var(--copper-bright);}
+.lp-src:hover{border-color:var(--copper-bright); background:rgba(74,85,224,0.22);}
 .md-actions{flex:none; display:flex; flex-wrap:wrap; gap:6px; width:186px; align-content:flex-start;}
 .md-actions .lp-btn{flex:1 1 calc(50% - 3px); min-width:0;}
 .md-actions .lp-watch{flex-basis:100%;}
@@ -726,12 +726,12 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 /* Nápověda „vyberte kraj" (fáze 1) */
 .kraj-hint{position:absolute; top:12px; left:12px; z-index:600; display:inline-flex; align-items:center; gap:8px; background:rgba(20,32,44,0.92); border:1px solid var(--line-strong); color:var(--parchment); font-size:12.5px; font-weight:600; padding:8px 13px; border-radius:22px; box-shadow:var(--shadow); backdrop-filter:blur(4px); pointer-events:none; max-width:calc(100% - 118px);}
 .kraj-hint[hidden]{display:none;}
-.kraj-hint .kh-pin{width:9px; height:9px; border-radius:50%; background:var(--copper-bright); box-shadow:0 0 0 4px rgba(91,184,214,0.22); flex:none;}
+.kraj-hint .kh-pin{width:9px; height:9px; border-radius:50%; background:var(--copper-bright); box-shadow:0 0 0 4px rgba(110,120,255,0.22); flex:none;}
 /* Vymazlený nadpis vybraného kraje (fáze 2) */
-.kraj-head{position:absolute; top:12px; left:12px; z-index:600; max-width:calc(100% - 118px); display:inline-flex; align-items:center; gap:11px; background:linear-gradient(135deg, rgba(20,32,44,0.97), rgba(30,46,62,0.97)); border:1px solid rgba(91,184,214,0.45); border-radius:13px; padding:8px 14px 8px 8px; box-shadow:0 12px 30px -12px rgba(0,0,0,0.75); backdrop-filter:blur(6px);}
+.kraj-head{position:absolute; top:12px; left:12px; z-index:600; max-width:calc(100% - 118px); display:inline-flex; align-items:center; gap:11px; background:linear-gradient(135deg, rgba(20,32,44,0.97), rgba(30,46,62,0.97)); border:1px solid rgba(110,120,255,0.45); border-radius:13px; padding:8px 14px 8px 8px; box-shadow:0 12px 30px -12px rgba(0,0,0,0.75); backdrop-filter:blur(6px);}
 .kraj-head[hidden]{display:none;}
 .kh-back{flex:none; width:38px; height:38px; border-radius:9px; border:1px solid var(--line-strong); background:rgba(255,255,255,0.05); color:var(--parchment); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .15s ease, border-color .15s ease, transform .1s ease;}
-.kh-back:hover{background:rgba(91,184,214,0.16); border-color:var(--copper-bright);}
+.kh-back:hover{background:rgba(110,120,255,0.16); border-color:var(--copper-bright);}
 .kh-back:active{transform:translateY(1px);}
 .kh-back svg{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2.3; stroke-linecap:round; stroke-linejoin:round;}
 .kh-txt{display:flex; flex-direction:column; gap:1px; min-width:0;}
@@ -751,7 +751,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .lp-grid b{font-size:13px; color:var(--text-ondark); font-weight:600;}
 .lp-links{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:9px;}
 .lp-btn{flex:1; min-width:62px; text-align:center; background:var(--ink-soft2); border:1px solid var(--line); border-radius:6px; padding:7px 8px; font-size:12px; font-weight:600; color:var(--text-ondark); text-decoration:none; transition:border-color .15s ease, background .15s ease;}
-.lp-btn:hover{border-color:var(--copper-bright); background:rgba(46,144,180,0.12);}
+.lp-btn:hover{border-color:var(--copper-bright); background:rgba(74,85,224,0.12);}
 /* Sekundární akce — decentní odkaz, ne největší tlačítko v detailu
    (dřív přebíjelo hlavní akce jako Katastr / Inzerát). */
 .lp-watch{display:block; text-align:center; background:transparent; color:var(--copper-bright); border:1px solid var(--line); border-radius:8px; padding:9px; font-size:12.5px; font-weight:600; text-decoration:none; transition:border-color .15s ease, color .15s ease;}
@@ -778,7 +778,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .status-card:hover{border-color:rgba(224,236,244,0.28); transform:translateY(-2px);}
 .status-top{display:flex; align-items:center; gap:9px; font-family:'Inter',sans-serif; font-size:17px; font-weight:500; margin-bottom:12px;}
 .status-top .dot{width:11px; height:11px; border-radius:50%;}
-.status-n{margin-left:auto; font-family:'Inter',sans-serif; font-size:11px; font-weight:700; letter-spacing:0.01em; color:var(--copper-bright); background:rgba(46,144,180,0.12); border:1px solid rgba(46,144,180,0.35); border-radius:11px; padding:3px 9px; white-space:nowrap;}
+.status-n{margin-left:auto; font-family:'Inter',sans-serif; font-size:11px; font-weight:700; letter-spacing:0.01em; color:var(--copper-bright); background:rgba(74,85,224,0.12); border:1px solid rgba(74,85,224,0.35); border-radius:11px; padding:3px 9px; white-space:nowrap;}
 .status-n.is-zero{color:var(--text-ondark-mute); background:rgba(224,236,244,0.06); border-color:var(--line);}
 .status-card p{font-size:13.5px; color:var(--text-ondark-mute);}
 .status-list{list-style:none; display:flex; flex-direction:column; gap:8px; margin:0;}
@@ -809,7 +809,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .realtor-grid > *{min-width:0;}
 .realtor-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:12px; padding:26px; transition:border-color .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);}
 .realtor-card:hover{border-color:var(--line-strong); transform:translateY(-3px); box-shadow:var(--shadow);}
-.rc-ico{width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(46,144,180,0.12); border:1px solid rgba(46,144,180,0.3); margin-bottom:16px;}
+.rc-ico{width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(74,85,224,0.12); border:1px solid rgba(74,85,224,0.3); margin-bottom:16px;}
 .rc-ico .ic{width:22px; height:22px; color:var(--copper-bright);}
 .realtor-card h3{font-family:'Inter',sans-serif; font-size:18px; font-weight:500; margin-bottom:9px;}
 .realtor-card p{font-size:14px; color:var(--text-ondark-mute);}
@@ -837,7 +837,7 @@ h1 em{font-style:italic; font-weight:500; background:linear-gradient(92deg, var(
 .copy-btn:hover{background:var(--copper-bright);}
 .copy-btn.copied{background:var(--c-sale); color:#fff;}
 .embed-preview{background:radial-gradient(circle at 50% 40%, #1c2c3a, var(--ink) 80%); border:1px solid var(--line); border-radius:8px; height:200px; position:relative; overflow:hidden;}
-.embed-preview::before{content:""; position:absolute; inset:0; background-image:linear-gradient(rgba(91,184,214,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(91,184,214,0.05) 1px, transparent 1px); background-size:26px 26px;}
+.embed-preview::before{content:""; position:absolute; inset:0; background-image:linear-gradient(rgba(110,120,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(110,120,255,0.05) 1px, transparent 1px); background-size:26px 26px;}
 .embed-preview::after{content:"mapa poskytnuta parcelaka.cz"; position:absolute; bottom:8px; right:12px; font-size:10px; font-family:'IBM Plex Mono',monospace; color:var(--text-ondark-mute);}
 .ep-dot{position:absolute; width:11px; height:11px; border-radius:50%; border:2px solid rgba(255,255,255,0.85); box-shadow:0 1px 4px rgba(0,0,0,0.5), 0 0 8px -1px currentColor; transform:translate(-50%,-50%);}
 .ep-dot.sale{background:var(--c-sale); color:var(--c-sale);}
@@ -887,9 +887,9 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .avatars{display:flex;}
 .avatars span{width:32px; height:32px; border-radius:50%; border:2px solid var(--ink); margin-left:-9px; background:var(--ink-soft2);}
 .avatars span:first-child{margin-left:0;}
-.avatars span:nth-child(1){background:linear-gradient(135deg,#3E8E5B,#4C7A9E);}
+.avatars span:nth-child(1){background:linear-gradient(135deg,#3E8E5B,#4A6BA8);}
 .avatars span:nth-child(2){background:linear-gradient(135deg,#D9A441,#C15B44);}
-.avatars span:nth-child(3){background:linear-gradient(135deg,#4C7A9E,#2E90B4);}
+.avatars span:nth-child(3){background:linear-gradient(135deg,#5B6BE8,#6A34D8);}
 .avatars span:nth-child(4){background:linear-gradient(135deg,#C15B44,#3E8E5B);}
 .social-proof p{font-size:13px; color:var(--text-ondark-mute);}
 .social-proof strong{color:var(--text-ondark);}
@@ -921,7 +921,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .compare thead th{font-family:'IBM Plex Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-ondark-mute); background:var(--ink-soft);}
 .compare tbody td:first-child{color:var(--text-ondark); font-weight:500;}
 .compare tbody td{color:var(--text-ondark-mute);}
-.compare .hl-col{background:rgba(46,144,180,0.08); color:var(--text-ondark); font-weight:600;}
+.compare .hl-col{background:rgba(74,85,224,0.08); color:var(--text-ondark); font-weight:600;}
 .compare thead .hl-col{color:var(--copper-bright);}
 .compare tr:last-child td{border-bottom:0;}
 
@@ -936,13 +936,13 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 /* Ceník */
 .pricing{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; align-items:stretch;}
 .pc-badge-live{background:var(--c-sale); color:#fff;}
-.soon-tag{display:inline-block; vertical-align:middle; margin-left:8px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:500; text-transform:uppercase; letter-spacing:0.05em; color:var(--copper-bright,#E0B65C); background:rgba(46,144,180,0.14); border:1px solid rgba(46,144,180,0.35); padding:2px 8px; border-radius:20px;}
+.soon-tag{display:inline-block; vertical-align:middle; margin-left:8px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:500; text-transform:uppercase; letter-spacing:0.05em; color:var(--copper-bright,#E0B65C); background:rgba(74,85,224,0.14); border:1px solid rgba(74,85,224,0.35); padding:2px 8px; border-radius:20px;}
 .cenik-note{text-align:center; max-width:620px; margin:22px auto 0; font-size:12.5px; line-height:1.6; color:var(--text-ondark-mute);}
 .price-card.is-planned{opacity:0.8;}
 .price-card.is-planned .pc-price{color:var(--text-ondark-mute); font-size:30px;}
 .price-card.is-planned li{color:var(--text-ondark-mute);}
 .price-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:12px; padding:30px; display:flex; flex-direction:column; position:relative;}
-.price-card.featured{border-color:var(--copper); box-shadow:0 20px 50px -20px rgba(46,144,180,0.4); transform:translateY(-6px);}
+.price-card.featured{border-color:var(--copper); box-shadow:0 20px 50px -20px rgba(74,85,224,0.4); transform:translateY(-6px);}
 .pc-badge{position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--copper); color:var(--ink); font-size:11px; font-weight:700; padding:5px 14px; border-radius:14px; white-space:nowrap; text-transform:uppercase; letter-spacing:0.04em;}
 .pc-name{font-family:'IBM Plex Mono',monospace; font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-ondark-mute); margin-bottom:12px;}
 .pc-price{font-family:'Inter',sans-serif; font-size:38px; font-weight:600; margin-bottom:20px;}
@@ -956,10 +956,10 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .pc-feats li b{color:var(--text-ondark); font-size:14px; font-weight:600;}
 .pc-feats li b::before{content:"✓"; position:absolute; left:0; top:0; color:var(--copper-bright); font-weight:700;}
 .pc-feats li span{font-size:12.5px; line-height:1.55; color:var(--text-ondark-mute);}
-.pc-why{font-size:12.5px; line-height:1.6; color:var(--text-ondark); background:rgba(46,144,180,0.09); border:1px solid rgba(46,144,180,0.24); border-radius:8px; padding:12px 14px; margin:0 0 20px;}
+.pc-why{font-size:12.5px; line-height:1.6; color:var(--text-ondark); background:rgba(74,85,224,0.09); border:1px solid rgba(74,85,224,0.24); border-radius:8px; padding:12px 14px; margin:0 0 20px;}
 .pc-why b{color:var(--copper-bright);}
 .btn-outline{display:block; text-align:center; background:transparent; color:var(--text-ondark); border:1px solid var(--line); border-radius:10px; padding:13px; font-weight:600; font-size:14px; text-decoration:none; transition:border-color .15s ease, background .15s ease;}
-.btn-outline:hover{border-color:var(--copper-bright); background:rgba(46,144,180,0.08);}
+.btn-outline:hover{border-color:var(--copper-bright); background:rgba(74,85,224,0.08);}
 .price-card .btn-primary{text-align:center; padding:13px;}
 
 /* form fine print */
@@ -1186,7 +1186,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .add-check input{width:18px; height:18px; flex:none; margin-top:1px; accent-color:var(--copper);}
 .add-check a{color:var(--copper-bright);}
 /* Volitelné zvýraznění inzerátu (placený upsell, poctivě označený) */
-.add-boost{border:1px solid rgba(91,184,214,0.4); background:linear-gradient(180deg, rgba(46,144,180,0.10), rgba(46,144,180,0.04)); border-radius:12px; padding:16px 18px;}
+.add-boost{border:1px solid rgba(110,120,255,0.4); background:linear-gradient(180deg, rgba(74,85,224,0.10), rgba(74,85,224,0.04)); border-radius:12px; padding:16px 18px;}
 .boost-head{display:flex; align-items:flex-start; gap:12px; cursor:pointer;}
 .boost-head input{width:20px; height:20px; flex:none; margin-top:2px; accent-color:var(--copper);}
 .boost-txt{display:flex; flex-direction:column; gap:3px;}
@@ -1211,7 +1211,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .auth-tab.active{background:linear-gradient(135deg,var(--copper-bright),var(--copper)); color:#fff;}
 .auth-forgot{text-align:center; margin-top:2px;}
 .auth-head{text-align:center; margin-bottom:24px;}
-.auth-mark{width:56px; height:56px; margin:0 auto 17px; border-radius:16px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, var(--copper-bright), var(--copper)); box-shadow:0 12px 28px -10px rgba(62,128,219,0.6);}
+.auth-mark{width:56px; height:56px; margin:0 auto 17px; border-radius:16px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, var(--copper-bright), var(--copper)); box-shadow:0 12px 28px -10px rgba(74,80,220,0.6);}
 .auth-mark svg{width:29px; height:29px; color:#08111C;}
 .auth-title{font-family:'Inter',sans-serif; font-size:22px; font-weight:600; letter-spacing:-0.01em; color:var(--text-ondark); margin:0 0 9px; line-height:1.25;}
 .auth-sub{font-size:14px; line-height:1.55; color:var(--text-ondark-mute); margin:0 auto; max-width:36ch;}
@@ -1260,7 +1260,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .add-step .n{font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--copper-bright); margin-bottom:10px;}
 .add-step h3{font-size:16px; margin-bottom:8px;}
 .add-step p{font-size:14px; color:var(--text-ondark-mute); line-height:1.5;}
-.add-honest{margin-top:34px; padding:18px 20px; border:1px solid var(--line); border-left:3px solid var(--copper); border-radius:10px; background:rgba(46,144,180,0.05);}
+.add-honest{margin-top:34px; padding:18px 20px; border:1px solid var(--line); border-left:3px solid var(--copper); border-radius:10px; background:rgba(74,85,224,0.05);}
 .add-honest h4{font-size:14px; margin-bottom:6px;}
 .add-honest p{font-size:13.5px; color:var(--text-ondark-mute); line-height:1.55;}
 /* Proklik na druhou stránku (Prodej ↔ Inzerce) */
@@ -1297,12 +1297,12 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .benefit .b-txt b{display:block; font-size:13.5px; color:var(--text-ondark); margin-bottom:2px;}
 .benefit .b-txt span{font-size:12.5px; color:var(--text-ondark-mute); line-height:1.45;}
 .add-stats{display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;}
-.add-stats span{font-size:12px; font-weight:600; color:var(--copper-bright); background:rgba(46,144,180,0.10);
-  border:1px solid rgba(46,144,180,0.25); border-radius:20px; padding:5px 12px;}
+.add-stats span{font-size:12px; font-weight:600; color:var(--copper-bright); background:rgba(74,85,224,0.10);
+  border:1px solid rgba(74,85,224,0.25); border-radius:20px; padding:5px 12px;}
 .amp-cap{font-size:11.5px; color:var(--text-ondark-mute); margin-top:12px; text-align:center;}
 .ep-dot.you{width:16px; height:16px; background:var(--copper-bright); color:var(--copper-bright);
   border-color:#fff; z-index:2; animation:youpulse 1.9s ease-out infinite;}
-@keyframes youpulse{0%{box-shadow:0 0 0 0 rgba(91,184,214,0.55);}70%{box-shadow:0 0 0 13px rgba(91,184,214,0);}100%{box-shadow:0 0 0 0 rgba(91,184,214,0);}}
+@keyframes youpulse{0%{box-shadow:0 0 0 0 rgba(110,120,255,0.55);}70%{box-shadow:0 0 0 13px rgba(110,120,255,0);}100%{box-shadow:0 0 0 0 rgba(110,120,255,0);}}
 .add-timeline{padding-left:5px;}
 .atl-step{position:relative; padding:0 0 16px 24px; border-left:1px solid var(--line);}
 .atl-step:last-child{border-left-color:transparent; padding-bottom:0;}
@@ -1381,7 +1381,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 /* Prázdný stav — „Buďte první" + ukázková karta */
 .lide-empty{max-width:600px; margin:42px auto 0; text-align:center; border:1px dashed var(--line-strong); border-radius:18px; padding:40px 26px; background:rgba(22,35,47,0.4);}
 .lide-empty[hidden]{display:none;}
-.le-badge{display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--copper-bright); background:rgba(46,144,180,0.12); border:1px solid rgba(46,144,180,0.32); padding:4px 13px; border-radius:20px;}
+.le-badge{display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--copper-bright); background:rgba(74,85,224,0.12); border:1px solid rgba(74,85,224,0.32); padding:4px 13px; border-radius:20px;}
 .lide-empty h3{font-family:'Inter',sans-serif; font-weight:500; font-size:23px; margin:15px 0 8px;}
 .lide-empty > p{font-size:14px; color:var(--text-ondark-mute); line-height:1.6; max-width:460px; margin:0 auto;}
 .le-sub{margin-top:24px; font-size:12px; letter-spacing:0.02em; text-transform:uppercase; color:var(--text-ondark-mute);}
@@ -1393,7 +1393,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .calc-hint{font-size:12.5px; color:var(--copper-bright); font-weight:600; min-height:15px; margin-top:-8px;}
 /* Fotky */
 .photo-drop{display:block; border:1.5px dashed var(--line-strong); border-radius:10px; padding:18px; text-align:center; cursor:pointer; transition:border-color .15s ease, background .15s ease;}
-.photo-drop:hover{border-color:var(--copper); background:rgba(46,144,180,0.05);}
+.photo-drop:hover{border-color:var(--copper); background:rgba(74,85,224,0.05);}
 .photo-drop b{color:var(--copper-bright); font-size:14px;}
 .photo-drop span{display:block; font-size:12px; color:var(--text-ondark-mute); margin-top:4px;}
 .photo-field input[type=file]{position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;}
@@ -1405,7 +1405,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .chip-check{display:inline-flex; align-items:center; gap:8px; padding:9px 14px; border:1px solid var(--line); border-radius:22px; font-size:13px; color:var(--text-ondark); cursor:pointer; transition:border-color .15s ease, background .15s ease;}
 .chip-check input{width:16px; height:16px; accent-color:var(--copper); margin:0;}
 .chip-check:hover{border-color:var(--copper);}
-.chip-check:has(input:checked){border-color:var(--copper); background:rgba(46,144,180,0.12);}
+.chip-check:has(input:checked){border-color:var(--copper); background:rgba(74,85,224,0.12);}
 /* Rozšířené karty nabídek */
 .ul-thumb{aspect-ratio:16/10; border-radius:9px; overflow:hidden; margin:-2px 0 4px; position:relative;
   background:radial-gradient(circle at 50% 38%, #22374A, var(--ink) 88%);}
@@ -1421,8 +1421,8 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 
 /* ---------- Grády: živý náhled inzerátu + víc energie ---------- */
 .add-chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
-.add-chips span{font-size:12.5px; font-weight:600; color:var(--copper-bright); background:rgba(46,144,180,0.10);
-  border:1px solid rgba(46,144,180,0.28); border-radius:20px; padding:6px 14px;}
+.add-chips span{font-size:12.5px; font-weight:600; color:var(--copper-bright); background:rgba(74,85,224,0.10);
+  border:1px solid rgba(74,85,224,0.28); border-radius:20px; padding:6px 14px;}
 /* Vstupní animace karet */
 .add-card, .add-aside > .aside-card{animation:addfade .5s var(--ease) both;}
 .add-aside > .aside-card:nth-child(2){animation-delay:.09s;}
@@ -1433,12 +1433,12 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   letter-spacing:0.09em; text-transform:uppercase; color:var(--copper-bright); margin-bottom:14px;}
 .pc-eyebrow .live-dot{margin:0;}
 #live-preview{border-color:var(--line-strong);
-  box-shadow:0 0 0 1px rgba(46,144,180,0.16), 0 16px 44px -24px rgba(0,0,0,0.75);
+  box-shadow:0 0 0 1px rgba(74,85,224,0.16), 0 16px 44px -24px rgba(0,0,0,0.75);
   transition:box-shadow .25s ease;}
 #live-preview h3{transition:color .15s ease;}
 .pc-note{font-size:11.5px; color:var(--text-ondark-mute); margin-top:13px; text-align:center; line-height:1.5;}
 /* jemné zvýraznění, když se náhled právě mění */
-#live-preview.flash{box-shadow:0 0 0 1px rgba(91,184,214,0.5), 0 16px 44px -20px rgba(46,144,180,0.4);}
+#live-preview.flash{box-shadow:0 0 0 1px rgba(110,120,255,0.5), 0 16px 44px -20px rgba(74,85,224,0.4);}
 /* větší, výraznější odesílací tlačítko */
 .add-form .btn-primary{letter-spacing:0.01em;}
 
@@ -1456,15 +1456,15 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 /* Úroveň inzerátu (Začínáme … Špičkový) */
 .pcs-right{display:inline-flex; align-items:center; gap:8px;}
 .pc-strength .pcs-tier{font-size:11px; font-weight:700; letter-spacing:.02em; padding:2px 9px; border-radius:20px; background:rgba(224,236,244,0.08); color:var(--text-ondark-mute); transition:color .3s ease, background .3s ease;}
-.pc-strength[data-lvl="2"] .pcs-tier{color:#7FCBE0; background:rgba(46,144,180,0.12);}
-.pc-strength[data-lvl="3"] .pcs-tier{color:var(--copper-bright); background:rgba(46,144,180,0.16);}
-.pc-strength[data-lvl="4"] .pcs-tier{color:var(--copper-bright); background:rgba(46,144,180,0.24);}
+.pc-strength[data-lvl="2"] .pcs-tier{color:#8FA6FF; background:rgba(74,85,224,0.12);}
+.pc-strength[data-lvl="3"] .pcs-tier{color:var(--copper-bright); background:rgba(74,85,224,0.16);}
+.pc-strength[data-lvl="4"] .pcs-tier{color:var(--copper-bright); background:rgba(74,85,224,0.24);}
 .pc-strength[data-lvl="5"] .pcs-tier{color:#0E1A12; background:linear-gradient(90deg, var(--c-sale), #5FB07E);}
 
 /* Hero — 3 kroky, jak přidání funguje */
 .add-steps{list-style:none; display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:26px; max-width:720px; padding:0;}
 .add-steps li{display:flex; gap:11px; align-items:flex-start; background:rgba(22,35,47,0.5); border:1px solid var(--line); border-radius:12px; padding:13px 14px;}
-.as-num{flex:none; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:13px; color:var(--ink); background:linear-gradient(135deg,var(--copper),var(--copper-bright)); box-shadow:0 4px 12px -4px rgba(46,144,180,0.6);}
+.as-num{flex:none; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:13px; color:var(--ink); background:linear-gradient(135deg,var(--copper),var(--copper-bright)); box-shadow:0 4px 12px -4px rgba(74,85,224,0.6);}
 .as-txt{display:flex; flex-direction:column;}
 .as-txt b{font-size:13.5px; color:var(--text-ondark); margin-bottom:2px;}
 .as-txt > span{font-size:12px; color:var(--text-ondark-mute); line-height:1.4;}
