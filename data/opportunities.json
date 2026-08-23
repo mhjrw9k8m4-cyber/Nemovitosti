@@ -24920,19 +24920,6 @@
       "url": "https://www.okdrazby.cz/drazba/26715"
     },
     {
-      "place": "Mladá Boleslav",
-      "okres": "Mladá Boleslav",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": null,
-      "price": 2050000,
-      "extra": "nucená dražba 2026-09-01 · OK dražby",
-      "lat": 50.399894,
-      "lng": 15.01514,
-      "url": "https://www.okdrazby.cz/drazba/26255"
-    },
-    {
       "place": "Předonín",
       "okres": "Mělník",
       "type": "exekuce",
@@ -24944,6 +24931,19 @@
       "lat": 50.440393,
       "lng": 14.326133,
       "url": "https://www.okdrazby.cz/drazba/26256"
+    },
+    {
+      "place": "Mladá Boleslav",
+      "okres": "Mladá Boleslav",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": null,
+      "price": 2050000,
+      "extra": "nucená dražba 2026-09-01 · OK dražby",
+      "lat": 50.399894,
+      "lng": 15.01514,
+      "url": "https://www.okdrazby.cz/drazba/26255"
     },
     {
       "place": "Havlíčkův Brod",
@@ -24959,19 +24959,6 @@
       "url": "https://www.okdrazby.cz/drazba/26245"
     },
     {
-      "place": "Vyškov",
-      "okres": "Vyškov",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": null,
-      "price": 463333,
-      "extra": "nucená dražba 2026-09-15 · OK dražby",
-      "lat": 49.20462588208005,
-      "lng": 16.89808275550604,
-      "url": "https://www.okdrazby.cz/drazba/26188"
-    },
-    {
       "place": "Praha-východ",
       "okres": "Praha-východ",
       "type": "exekuce",
@@ -24983,6 +24970,19 @@
       "lat": 49.996088,
       "lng": 14.635449,
       "url": "https://www.okdrazby.cz/drazba/26186"
+    },
+    {
+      "place": "Vyškov",
+      "okres": "Vyškov",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": null,
+      "price": 463333,
+      "extra": "nucená dražba 2026-09-15 · OK dražby",
+      "lat": 49.20462588208005,
+      "lng": 16.89808275550604,
+      "url": "https://www.okdrazby.cz/drazba/26188"
     }
   ]
 }
