@@ -331,7 +331,7 @@ async function fetchBezrealitky() {
     }
   }`;
   const out = [];
-  const PER = 60, PAGES = 45; // až ~2700 inzerátů — bereme co nejvíc reálných nabídek
+  const PER = 60, PAGES = 120; // až ~7200 inzerátů — projdeme celou nabídku pozemků (smyčka se sama zastaví)
   for (let p = 0; p < PAGES; p++) {
     let list;
     try {
@@ -384,7 +384,10 @@ async function fetchFarmy() {
   let listHtml;
   try { const r = await fetch(BASE + '/inzerce_aktualni_nabidky', { headers: UA }); if (!r.ok) return []; listHtml = await r.text(); }
   catch { return []; }
-  const ids = [...new Set([...listHtml.matchAll(/nabidka_detail\?nab=(\d+)/g)].map((m) => m[1]))].slice(0, 450);
+  const ids = [...new Set([
+    ...[...listHtml.matchAll(/nabidka_detail\?nab=(\d+)/g)].map((m) => m[1]),
+    ...[...listHtml.matchAll(/nabidka_detail\/(\d+)/g)].map((m) => m[1]),
+  ])].slice(0, 450);
   const out = [];
   for (const id of ids) {
     let html;
@@ -417,6 +420,68 @@ async function fetchFarmy() {
       lat, lng, _gps: typeof lat === 'number' && typeof lng === 'number',
       url: 'https://www.farmy.cz/nabidka_detail?nab=' + id,
     });
+  }
+  return out;
+}
+
+// Sreality.cz — největší český realitní portál. Veřejné JSON API (stejné, které
+// pohání jejich vlastní web). Bereme pozemky na prodej (category_main_cb=3,
+// category_type_cb=1). U většiny inzerátů je i GPS → body sedí přesně a odkaz
+// vede na konkrétní inzerát (Sreality přesměrovává podle koncového hash_id,
+// takže odkaz funguje spolehlivě).
+function srealitySub(druh) {
+  const d = String(druh);
+  if (/stavebn/i.test(d)) return 'bydleni';
+  if (/les/i.test(d)) return 'lesy';
+  if (/zahrad/i.test(d)) return 'zahrady';
+  if (/vinice|sad/i.test(d)) return 'sady-vinice';
+  if (/orná|pole|zeměděl|travní|louk|pastvin/i.test(d)) return 'pole';
+  return 'bydleni';
+}
+async function fetchSreality() {
+  const out = [];
+  const PER = 100;
+  let total = Infinity;
+  for (let page = 1; page <= 80 && (page - 1) * PER < total; page++) {
+    let j;
+    try {
+      const u = `https://www.sreality.cz/api/cs/v2/estates?category_main_cb=3&category_type_cb=1&per_page=${PER}&page=${page}`;
+      const r = await fetch(u, { headers: { ...UA, accept: 'application/json' }, signal: AbortSignal.timeout(25000) });
+      if (!r.ok) break;
+      j = await r.json();
+    } catch { break; }
+    total = Number(j && j.result_size) || total;
+    const items = (j && j._embedded && j._embedded.estates) || [];
+    if (!items.length) break;
+    for (const e of items) {
+      const price = Math.round(+e.price || 0);
+      if (!price || price < 5000) continue; // 0 / -1 = „cena na dotaz u RK" — vynecháme
+      const g = e.gps || {};
+      const lat = typeof g.lat === 'number' ? g.lat : undefined;
+      const lng = typeof g.lon === 'number' ? g.lon : (typeof g.lng === 'number' ? g.lng : undefined);
+      const name = e.name || '';
+      const area = parseArea(name);
+      const loc = e.locality || (e.seo && e.seo.locality) || '';
+      const parts = String(loc).split(',').map((s) => s.trim()).filter(Boolean);
+      const place = ((parts[0] || name.replace(/^Prodej[^,]*/i, '').trim() || 'Pozemek')).split(/\s*-\s*/)[0].trim().slice(0, 60) || 'Pozemek';
+      let okres = (typeof lat === 'number' && typeof lng === 'number') ? nearestOkres(lat, lng) : null;
+      if (!okres) { const om = String(loc).match(/okres\s+([A-Za-zÁ-Žá-ž.\- ]+)/i); if (om) { const c = normOkres(om[1].trim().replace(/[.,;].*$/, '')); if (OKRESY_MAP[c]) okres = c; } }
+      if (!okres) continue;
+      const hash = e.hash_id || (e._links && e._links.self && (String(e._links.self.href).match(/(\d+)$/) || [])[1]);
+      if (!hash) continue;
+      const druh = parseDruh(name + ' ' + loc);
+      const seoLoc = (e.seo && e.seo.locality) || 'pozemek';
+      out.push({
+        place, okres, type: 'sale',
+        parcel: '—', _key: 'sr-' + hash,
+        druh: druh || 'pozemek', area: area || null, price,
+        extra: 'inzerát – Sreality',
+        lat, lng, _gps: typeof lat === 'number' && typeof lng === 'number',
+        url: `https://www.sreality.cz/detail/prodej/pozemek/${srealitySub(druh)}/${seoLoc}/${hash}`,
+      });
+    }
+    if (items.length < PER) break;
+    await sleep(150); // slušnost k serveru
   }
   return out;
 }
@@ -469,6 +534,7 @@ async function main() {
     ['OK dražby', fetchOkdrazby],
     ['SPÚ', fetchProdejSPU],
     ['Bezrealitky', fetchBezrealitky],
+    ['Sreality', fetchSreality],
     ['Farmy', fetchFarmy],
   ];
   const results = await Promise.allSettled(SOURCES.map(([, fn]) => fn()));
@@ -512,12 +578,20 @@ async function main() {
   // inzeráty od lidí (Bezrealitky), zemědělská půda (Farmy) i státní půda (SPÚ).
   const sale = byType.sale || [];
   const byPrice = (a, b) => a.price - b.price;
-  // Bezrealitky i Farmy vedou přímo na inzerát → dáme jim víc prostoru.
-  // SPÚ (státní půda) nemá odkaz na konkrétní parcelu, tak jí ubereme.
-  const bez = sale.filter((o) => /Bezrealitky/i.test(o.extra || '')).slice(0, 2600);
+  // Portály s přímým odkazem na inzerát (Sreality, Bezrealitky, Farmy) dostanou
+  // nejvíc prostoru — na ně se dá kliknout a rovnou volat prodejci. Státní půda
+  // (SPÚ) nemá odkaz na konkrétní parcelu, tak jí dáme míň. Přes spread() bereme
+  // pestrý vzorek napříč cenami (ne jen nejlevnější slivery), ať je mapa zajímavá.
+  const bez = sale.filter((o) => /Bezrealitky/i.test(o.extra || ''));
+  const srealit = sale.filter((o) => /Sreality/i.test(o.extra || ''));
   const farmy = sale.filter((o) => /Farmy/i.test(o.extra || ''));
   const spuSale = sale.filter((o) => /státní/i.test(o.extra || '')).sort(byPrice);
-  const saleSel = [...bez, ...farmy, ...spread(spuSale, 1100)];
+  const saleSel = [
+    ...spread(bez, 1500),
+    ...spread(srealit, 1500),
+    ...farmy,
+    ...spread(spuSale, 600),
+  ];
   const fresh = [
     ...saleSel,
     ...(byType.drazba || []).slice(0, CAP.drazba),
@@ -561,7 +635,7 @@ async function main() {
 
   const payload = {
     updated: new Date().toISOString().slice(0, 10),
-    source: 'Centrální evidence veřejných dražeb + Státní pozemkový úřad',
+    source: 'Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Sreality, Bezrealitky, Farmy)',
     opportunities: fresh,
   };
   writeFileSync(OUT, JSON.stringify(payload, null, 2) + '\n', 'utf8');
