@@ -444,22 +444,45 @@ const SR_HEADERS = {
   'accept-language': 'cs,en;q=0.9',
   'referer': 'https://www.sreality.cz/hledani/prodej/pozemky',
 };
+// Zjistí, který styl požadavku Sreality přijme (server umí vracet i 404/blok
+// podle hlaviček). Vyzkouší několik variant, každou zaloguje i s útržkem těla,
+// ať se z běhu Action pozná, co se děje, a vrátí ty, co fungují.
+async function srealityPickRequest() {
+  const base = 'https://www.sreality.cz/api/cs/v2/estates?category_main_cb=3&category_type_cb=1&per_page=20&page=1';
+  const variants = [
+    ['browser', SR_HEADERS],
+    ['browser+xhr', { ...SR_HEADERS, 'x-requested-with': 'XMLHttpRequest', origin: 'https://www.sreality.cz' }],
+    ['bot-ua', { ...UA, accept: 'application/json' }],
+    ['minimal', { accept: 'application/json' }],
+  ];
+  for (const [label, headers] of variants) {
+    try {
+      const r = await fetch(base, { headers, signal: AbortSignal.timeout(25000) });
+      const body = await r.text();
+      let ok = false, size = null;
+      try { const j = JSON.parse(body); size = j && j.result_size; ok = !!(j && j._embedded && Array.isArray(j._embedded.estates) && j._embedded.estates.length); } catch { /* není JSON */ }
+      console.log(`Sreality probe [${label}]: HTTP ${r.status}, ${body.length}B, result_size=${size}, start="${body.slice(0, 100).replace(/\s+/g, ' ')}"`);
+      if (ok) return headers;
+    } catch (e) { console.log(`Sreality probe [${label}]: fetch selhal — ${e && e.message}`); }
+  }
+  return null;
+}
 async function fetchSreality() {
   const out = [];
   const PER = 100;
+  const headers = await srealityPickRequest();
+  if (!headers) return out; // žádná varianta neprošla → tiše nic (zdroj je oddělený)
   let total = Infinity;
   for (let page = 1; page <= 80 && (page - 1) * PER < total; page++) {
     let j;
     try {
       const u = `https://www.sreality.cz/api/cs/v2/estates?category_main_cb=3&category_type_cb=1&per_page=${PER}&page=${page}`;
-      const r = await fetch(u, { headers: SR_HEADERS, signal: AbortSignal.timeout(25000) });
-      if (page === 1) console.log(`Sreality diagnostika: HTTP ${r.status}`);
+      const r = await fetch(u, { headers, signal: AbortSignal.timeout(25000) });
       if (!r.ok) break;
       j = await r.json();
-    } catch (e) { if (page === 1) console.log('Sreality diagnostika: fetch selhal —', e && e.message); break; }
+    } catch { break; }
     total = Number(j && j.result_size) || total;
     const items = (j && j._embedded && j._embedded.estates) || [];
-    if (page === 1) console.log(`Sreality diagnostika: result_size=${j && j.result_size}, items na stránce=${items.length}`);
     if (!items.length) break;
     for (const e of items) {
       const price = Math.round(+e.price || 0);
