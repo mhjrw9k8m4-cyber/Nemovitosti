@@ -258,7 +258,8 @@
     var c = parseInt(val('p-cena'), 10), v = parseInt(val('p-vymera'), 10);
     setTxt('lp-price', c > 0 ? (c.toLocaleString('cs-CZ') + ' Kč') : 'Cena');
     setTxt('lp-perm2', (c > 0 && v > 0) ? (Math.round(c / v).toLocaleString('cs-CZ') + ' Kč/m²') : '');
-    var tags = []; var pr = val('p-pristup'); if (pr) tags.push(pr);
+    var tags = []; var dr = val('p-druh'); if (dr) tags.push(dr);
+    var pr = val('p-pristup'); if (pr) tags.push(pr);
     [].slice.call(document.querySelectorAll('input[name="site"]:checked')).forEach(function (x) { tags.push(x.value); });
     var tg = document.getElementById('lp-tags');
     if (tg) tg.innerHTML = tags.map(function (t) { return '<span>' + escHtml(t) + '</span>'; }).join('');

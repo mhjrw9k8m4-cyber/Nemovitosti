@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260823q">
+  <link rel="stylesheet" href="css/styles.css?v=20260823r">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:20px; padding:24px 22px 22px;
@@ -69,6 +69,28 @@
     .sv-map:active{opacity:.7;}
     .sv-del{flex:none; background:none; border:1px solid var(--line-strong); color:var(--text-ondark-mute); border-radius:9px; padding:7px 13px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:color .15s ease, border-color .15s ease;}
     .sv-del:hover{color:var(--c-exekuce); border-color:var(--c-exekuce);}
+    /* Moje inzeráty — čisté karty se statistikami */
+    #mi-list{display:flex; flex-direction:column; gap:14px;}
+    .mi-lcard{background:var(--ink-soft); border:1px solid var(--line); border-radius:18px; padding:15px; box-shadow:0 4px 16px -12px rgba(20,26,40,.3);}
+    .mi-lthumb{position:relative; margin-bottom:13px;}
+    .mi-lthumb img{width:100%; height:160px; object-fit:cover; border-radius:13px; display:block;}
+    .mi-lthumb .n{position:absolute; left:10px; bottom:10px; background:rgba(9,16,24,.66); color:#fff; font-size:11px; font-weight:700; padding:3px 9px; border-radius:8px;}
+    .mi-lhead{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:13px;}
+    .mi-lplace{font-size:17px; font-weight:700; color:var(--text-ondark); line-height:1.25; letter-spacing:-.01em;}
+    .mi-lstatus{flex:none; font-size:11.5px; font-weight:700; padding:5px 11px; border-radius:999px; white-space:nowrap; background:var(--ink); color:var(--text-ondark-mute); border:1px solid var(--line-strong);}
+    .mi-lstatus.ok{background:rgba(31,163,99,.12); color:#178a53; border-color:rgba(31,163,99,.4);}
+    .mi-lstats{display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:14px;}
+    .mi-lstat{background:var(--ink); border:1px solid var(--line); border-radius:12px; padding:11px 8px; text-align:center;}
+    .mi-lstat b{display:block; font-size:19px; font-weight:800; color:var(--copper-bright); font-variant-numeric:tabular-nums; line-height:1.1;}
+    .mi-lstat span{display:block; font-size:10.5px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:.03em; margin-top:5px;}
+    .mi-lactions{display:flex; gap:10px;}
+    .mi-lbtn{flex:1 1 0; display:inline-flex; align-items:center; justify-content:center; gap:7px; height:44px; border-radius:11px; font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; border:1.5px solid transparent; transition:filter .15s ease, background .15s ease, border-color .15s ease, transform .1s ease;}
+    .mi-lbtn:active{transform:scale(.98);}
+    .mi-lbtn.primary{background:var(--brand-grad); color:#fff; box-shadow:0 8px 20px -10px rgba(74,80,220,.55);}
+    .mi-lbtn.primary:hover{filter:brightness(1.05);}
+    .mi-lbtn.danger{flex:none; background:#fff; color:var(--c-exekuce); border-color:rgba(228,72,61,.35); padding:0 18px;}
+    .mi-lbtn.danger:hover{border-color:var(--c-exekuce); background:rgba(228,72,61,.06);}
+    .mi-lbtn.danger:disabled{opacity:.5; cursor:default;}
     @media (min-width:480px){ .pf-logout span{display:inline;} }
   </style>
 </head>
@@ -244,8 +266,8 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260823q" defer></script>
-<script src="js/auth.js?v=20260823q" defer></script>
+<script src="js/config.js?v=20260823r" defer></script>
+<script src="js/auth.js?v=20260823r" defer></script>
 <script>
 (function () {
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
@@ -318,24 +340,25 @@
             return typeof p === 'string' && p.indexOf('"') === -1 &&
               /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/listing-photos\//.test(p);
           }) : [];
-          var thumb = ph.length ? '<div style="position:relative;margin-bottom:10px;">' +
-              '<img src="' + ph[0] + '" alt="" loading="lazy" style="width:100%;height:150px;object-fit:cover;border-radius:12px;display:block;">' +
-              (ph.length > 1 ? '<span style="position:absolute;left:10px;bottom:10px;background:rgba(9,16,24,.65);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;">' + ph.length + ' fotky</span>' : '') +
+          var thumb = ph.length ? '<div class="mi-lthumb">' +
+              '<img src="' + ph[0] + '" alt="" loading="lazy">' +
+              (ph.length > 1 ? '<span class="n">' + ph.length + ' fotky</span>' : '') +
             '</div>' : '';
-          return '<div class="add-card" style="margin-bottom:14px;" data-id="' + esc(r.id) + '">' +
-            '<div class="rules-sect">' +
-              thumb +
-              '<h2 style="margin-bottom:8px;">' + esc(r.place) + (r.okres ? ', okres ' + esc(r.okres) : '') + '</h2>' +
-              '<ul class="rule-list" style="list-style:none;padding-left:0;">' +
-                '<li>Stav: <b>' + (r.status === 'approved' ? 'Zveřejněno na mapě' : esc(r.status)) + '</b></li>' +
-                '<li>Zhlédnutí: <b>' + fmt(r.views) + '</b></li>' +
-                '<li>Výměra: <b>' + (r.area ? fmt(r.area) + ' m²' : 'neuvedena') + '</b></li>' +
-                '<li>Cena: <b>' + (r.price ? fmt(r.price) + ' Kč' : 'neuvedena') + '</b></li>' +
-              '</ul>' +
+          var isLive = r.status === 'approved';
+          return '<div class="mi-lcard" data-id="' + esc(r.id) + '">' +
+            thumb +
+            '<div class="mi-lhead">' +
+              '<div class="mi-lplace">' + esc(r.place) + (r.okres ? ', okres ' + esc(r.okres) : '') + '</div>' +
+              '<span class="mi-lstatus' + (isLive ? ' ok' : '') + '">' + (isLive ? '● Na mapě' : esc(r.status || 'čeká')) + '</span>' +
             '</div>' +
-            '<div class="md-actions" style="display:flex;flex-wrap:wrap;gap:10px;">' +
-              '<a class="lp-btn" href="index.html?lid=' + encodeURIComponent(r.id) + '#mapa">Zobrazit na mapě</a>' +
-              '<button class="lp-btn lp-src" type="button" data-del="' + esc(r.id) + '">Smazat</button>' +
+            '<div class="mi-lstats">' +
+              '<div class="mi-lstat"><b>' + fmt(r.views || 0) + '</b><span>Zhlédnutí</span></div>' +
+              '<div class="mi-lstat"><b>' + (r.area ? fmt(r.area) : '—') + '</b><span>m² výměra</span></div>' +
+              '<div class="mi-lstat"><b>' + (r.price ? fmt(r.price) : '—') + '</b><span>Kč cena</span></div>' +
+            '</div>' +
+            '<div class="mi-lactions">' +
+              '<a class="mi-lbtn primary" href="index.html?lid=' + encodeURIComponent(r.id) + '#mapa">Zobrazit na mapě</a>' +
+              '<button class="mi-lbtn danger" type="button" data-del="' + esc(r.id) + '">Smazat</button>' +
             '</div>' +
           '</div>';
         }).join('');
