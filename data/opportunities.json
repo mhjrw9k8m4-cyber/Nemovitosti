@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-22",
+  "updated": "2026-08-23",
   "source": "Centrální evidence veřejných dražeb + Státní pozemkový úřad",
   "opportunities": [
     {
@@ -3666,7 +3666,7 @@
       "extra": "inzerát – Bezrealitky",
       "lat": 49.498879,
       "lng": 16.919309,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1017968-nabidka-prodej-pozemku-stinava"
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1017967-nabidka-prodej-pozemku-stinava"
     },
     {
       "place": "Stínava",
@@ -3679,7 +3679,7 @@
       "extra": "inzerát – Bezrealitky",
       "lat": 49.498879,
       "lng": 16.919309,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1017967-nabidka-prodej-pozemku-stinava"
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1017968-nabidka-prodej-pozemku-stinava"
     },
     {
       "place": "Javorník",
@@ -24707,19 +24707,6 @@
       "url": "https://www.okdrazby.cz/drazba/26717"
     },
     {
-      "place": "Líčkov",
-      "okres": "Rakovník",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "lesní pozemek",
-      "area": null,
-      "price": 16922667,
-      "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2670183,
-      "lng": 13.5946064,
-      "url": "https://www.okdrazby.cz/drazba/26715"
-    },
-    {
       "place": "Holedeč",
       "okres": "Louny",
       "type": "exekuce",
@@ -24731,6 +24718,19 @@
       "lat": 50.2653592,
       "lng": 13.5922308,
       "url": "https://www.okdrazby.cz/drazba/26716"
+    },
+    {
+      "place": "Líčkov",
+      "okres": "Rakovník",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": null,
+      "price": 16922667,
+      "extra": "nucená dražba 2026-09-22 · OK dražby",
+      "lat": 50.2670183,
+      "lng": 13.5946064,
+      "url": "https://www.okdrazby.cz/drazba/26715"
     },
     {
       "place": "Předonín",
