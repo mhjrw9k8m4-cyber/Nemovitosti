@@ -1349,7 +1349,7 @@
      vždy trefí kraj — i tam, kde přes něj leží kulička. Po výběru kraje se
      přiblížíme a tečky se stanou interaktivní. Nadpis kraje nahoře napoví, kde je. */
   var selectedKraj = null;
-  var nearMode = false, userPos = null, userMarker = null;
+  var nearMode = false, userPos = null, userMarker = null, nearCircle = null;
   var krajHintEl = document.getElementById('kraj-hint');
   var krajHeadEl = document.getElementById('kraj-head');
   var nearBtn = document.getElementById('map-near');
@@ -1397,6 +1397,7 @@
     if (!nearMode) return;
     nearMode = false;
     if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+    if (nearCircle) { map.removeLayer(nearCircle); nearCircle = null; }
     if (nearBtn) nearBtn.classList.remove('on');
   }
   function selectKraj(k, skipFit) {
@@ -1440,12 +1441,35 @@
     lockDots(false);
     setPan(true);
     if (nearBtn) nearBtn.classList.add('on');
-    map.setView([userPos.lat, userPos.lng], approx ? 10 : 11, { animate: true });
     sortMode = 'near';
     if (sortEl) sortEl.value = 'near';
+    frameNear(approx);        // nakresli okruh okolí + zarámuj na vás i nejbližší pozemky
     updateKrajHead();
     renderList();
     showToast(approx ? 'Přibližná poloha podle připojení — pro přesnou povolte GPS.' : 'Seřazeno podle vzdálenosti od vás.');
+  }
+  // Nakreslí kruh „okolí" kolem vás a přizpůsobí pohled tak, aby byly vidět
+  // nejbližší pozemky (ne jen prázdná mapa kolem vaší polohy).
+  function frameNear(approx) {
+    if (!userPos) return;
+    var cand = (lastVis || []).map(function (d) { return kmFromUser(d); })
+      .filter(function (km) { return isFinite(km); })
+      .sort(function (a, b) { return a - b; });
+    var radiusKm;
+    if (cand.length) {
+      var idx = Math.min(cand.length - 1, 7);   // ~8. nejbližší pozemek
+      radiusKm = Math.max(10, Math.min(70, cand[idx] * 1.2));
+    } else {
+      radiusKm = 30;
+    }
+    if (nearCircle) { map.removeLayer(nearCircle); nearCircle = null; }
+    nearCircle = L.circle([userPos.lat, userPos.lng], {
+      radius: radiusKm * 1000, pane: 'overlayPane',
+      color: '#3D63EE', weight: 1.5, opacity: 0.55,
+      fillColor: '#3D63EE', fillOpacity: 0.06, interactive: false
+    }).addTo(map);
+    try { map.fitBounds(nearCircle.getBounds(), { padding: [36, 36], maxZoom: approx ? 11 : 13, animate: true }); }
+    catch (e) { map.setView([userPos.lat, userPos.lng], approx ? 10 : 11, { animate: true }); }
   }
   // Přibližná poloha podle IP — když GPS není povolená. Zkusí dva zdroje (HTTPS, bez klíče).
   function ipLocate() {
