@@ -1,6 +1,6 @@
 {
   "updated": "2026-08-23",
-  "source": "Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy)",
+  "source": "Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy, příp. Sreality přes Apify)",
   "opportunities": [
     {
       "place": "Úštěk",
@@ -24829,19 +24829,6 @@
       "url": "https://www.okdrazby.cz/drazba/27177"
     },
     {
-      "place": "Znojmo",
-      "okres": "Znojmo",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "orná půda",
-      "area": null,
-      "price": 106000,
-      "extra": "nucená dražba 2026-09-29 · OK dražby",
-      "lat": 48.832835,
-      "lng": 16.391683,
-      "url": "https://www.okdrazby.cz/drazba/27074"
-    },
-    {
       "place": "Jeseník",
       "okres": "Jeseník",
       "type": "exekuce",
@@ -24853,6 +24840,19 @@
       "lat": 50.421916,
       "lng": 16.99702,
       "url": "https://www.okdrazby.cz/drazba/27070"
+    },
+    {
+      "place": "Znojmo",
+      "okres": "Znojmo",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": null,
+      "price": 106000,
+      "extra": "nucená dražba 2026-09-29 · OK dražby",
+      "lat": 48.832835,
+      "lng": 16.391683,
+      "url": "https://www.okdrazby.cz/drazba/27074"
     },
     {
       "place": "Teplice",
@@ -24881,19 +24881,6 @@
       "url": "https://www.okdrazby.cz/drazba/26856"
     },
     {
-      "place": "Lhota u Nečemic",
-      "okres": "Louny",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "zemědělský pozemek",
-      "area": null,
-      "price": 1102000,
-      "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2644361,
-      "lng": 13.5955244,
-      "url": "https://www.okdrazby.cz/drazba/26717"
-    },
-    {
       "place": "Holedeč",
       "okres": "Louny",
       "type": "exekuce",
@@ -24905,6 +24892,19 @@
       "lat": 50.2653592,
       "lng": 13.5922308,
       "url": "https://www.okdrazby.cz/drazba/26716"
+    },
+    {
+      "place": "Lhota u Nečemic",
+      "okres": "Louny",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "zemědělský pozemek",
+      "area": null,
+      "price": 1102000,
+      "extra": "nucená dražba 2026-09-22 · OK dražby",
+      "lat": 50.2644361,
+      "lng": 13.5955244,
+      "url": "https://www.okdrazby.cz/drazba/26717"
     },
     {
       "place": "Líčkov",
