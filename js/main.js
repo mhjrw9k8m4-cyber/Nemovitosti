@@ -1277,7 +1277,7 @@
   var krajByName = {};
   // Na dotykových zařízeních není „myš pryč" → popisek kraje sám plynule zmizí.
   var isTouch = (typeof matchMedia === 'function' && matchMedia('(hover: none)').matches) || ('ontouchstart' in window);
-  function styleKraj() { return { color: 'rgba(110,120,255,0.4)', weight: 1.2, fill: true, fillColor: '#5BB8D6', fillOpacity: 0.03 }; }
+  function styleKraj() { return { color: 'rgba(46,66,180,0.65)', weight: 1.8, fill: true, fillColor: '#3D63EE', fillOpacity: 0.025 }; }
   if (KRAJE_GEOM) {
     var feats = Object.keys(KRAJE_GEOM).map(function (k) { return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] }; });
     krajLayer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
@@ -1289,7 +1289,7 @@
           if (selectedKraj !== f.properties.kraj) krajJustSelected = true; // přepnutí kraje neotevírá detail
           selectKraj(f.properties.kraj);
         });
-        layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2, color: '#F2D79A', fillOpacity: 0.06 }); layer.bringToFront(); } });
+        layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2.6, color: '#2E42B4', fillOpacity: 0.07 }); layer.bringToFront(); } });
         layer.on('mouseout', function () { if (!krajLayer) return; krajLayer.resetStyle(layer); if (selectedKraj === f.properties.kraj) styleSelectedKraj(layer); });
         // Dotyk: po 2 s popisek plynule zhasne, ať nezůstane „viset" a nebrání dalšímu klikání.
         layer.on('tooltipopen', function (e) {
@@ -1361,7 +1361,7 @@
     var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(userPos.lat * r) * Math.cos(d.lat * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
     return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
   }
-  function styleSelectedKraj(layer) { layer.setStyle({ weight: 2.6, color: '#F2D79A', fillColor: '#5BB8D6', fillOpacity: 0.09 }); layer.bringToFront(); }
+  function styleSelectedKraj(layer) { layer.setStyle({ weight: 3, color: '#2E42B4', fillColor: '#3D63EE', fillOpacity: 0.1 }); layer.bringToFront(); }
   // Zámek teček: dokud není vybraný kraj, klik na tečku ignorujeme (klik pod tečkami vybere kraj).
   var dotsLocked = true;
   function lockDots(lock) {
