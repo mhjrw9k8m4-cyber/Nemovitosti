@@ -1353,7 +1353,9 @@
   var krajHintEl = document.getElementById('kraj-hint');
   var krajHeadEl = document.getElementById('kraj-head');
   var nearBtn = document.getElementById('map-near');
-  if (nearBtn) nearBtn.addEventListener('click', enterNear);
+  // Sroluj rovnou k mapě, ať je hned vidět, že se něco děje (jinak se zdá, že tlačítko „nic nedělá").
+  function scrollToMap() { if (holderEl) { try { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} } }
+  if (nearBtn) nearBtn.addEventListener('click', function () { scrollToMap(); enterNear(); });
   // Vzdálenost pozemku od uživatele (km) — pro řazení „nejblíž ke mně".
   function kmFromUser(d) {
     if (!userPos || typeof d.lat !== 'number') return Infinity;
@@ -1444,6 +1446,7 @@
     sortMode = 'near';
     if (sortEl) sortEl.value = 'near';
     frameNear(approx);        // nakresli okruh okolí + zarámuj na vás i nejbližší pozemky
+    if (typeof scrollToMap === 'function') scrollToMap();   // ať je mapa s výsledkem opravdu vidět
     updateKrajHead();
     renderList();
     showToast(approx ? 'Přibližná poloha podle připojení — pro přesnou povolte GPS.' : 'Seřazeno podle vzdálenosti od vás.');
