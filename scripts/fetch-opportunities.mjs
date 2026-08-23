@@ -438,6 +438,12 @@ function srealitySub(druh) {
   if (/orná|pole|zeměděl|travní|louk|pastvin/i.test(d)) return 'pole';
   return 'bydleni';
 }
+const SR_HEADERS = {
+  'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'accept': 'application/json, text/plain, */*',
+  'accept-language': 'cs,en;q=0.9',
+  'referer': 'https://www.sreality.cz/hledani/prodej/pozemky',
+};
 async function fetchSreality() {
   const out = [];
   const PER = 100;
@@ -446,12 +452,14 @@ async function fetchSreality() {
     let j;
     try {
       const u = `https://www.sreality.cz/api/cs/v2/estates?category_main_cb=3&category_type_cb=1&per_page=${PER}&page=${page}`;
-      const r = await fetch(u, { headers: { ...UA, accept: 'application/json' }, signal: AbortSignal.timeout(25000) });
+      const r = await fetch(u, { headers: SR_HEADERS, signal: AbortSignal.timeout(25000) });
+      if (page === 1) console.log(`Sreality diagnostika: HTTP ${r.status}`);
       if (!r.ok) break;
       j = await r.json();
-    } catch { break; }
+    } catch (e) { if (page === 1) console.log('Sreality diagnostika: fetch selhal —', e && e.message); break; }
     total = Number(j && j.result_size) || total;
     const items = (j && j._embedded && j._embedded.estates) || [];
+    if (page === 1) console.log(`Sreality diagnostika: result_size=${j && j.result_size}, items na stránce=${items.length}`);
     if (!items.length) break;
     for (const e of items) {
       const price = Math.round(+e.price || 0);
@@ -587,10 +595,10 @@ async function main() {
   const farmy = sale.filter((o) => /Farmy/i.test(o.extra || ''));
   const spuSale = sale.filter((o) => /státní/i.test(o.extra || '')).sort(byPrice);
   const saleSel = [
-    ...spread(bez, 1500),
-    ...spread(srealit, 1500),
-    ...farmy,
-    ...spread(spuSale, 600),
+    ...bez,                     // celá nabídka Bezrealitky (přímý odkaz na inzerát)
+    ...spread(srealit, 1800),   // Sreality – pokud projde (jinak prázdné)
+    ...farmy,                   // celá nabídka Farmy
+    ...spread(spuSale, 900),    // státní půda doplní zbytek
   ];
   const fresh = [
     ...saleSel,
