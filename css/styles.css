@@ -17,7 +17,7 @@
   --brand-grad:linear-gradient(135deg, #5B93FF 0%, #4A55E0 55%, #6A34D8 100%);
   --brand-grad-soft:linear-gradient(135deg, #6BA0FF 0%, #5A63E6 55%, #7A44E0 100%);
   /* Sémantické: zeleň = půda/růst/hodnota, zlatá = dražba, teracota = exekuce */
-  --c-sale:#4E6FD4; --c-drazba:#F0A017; --c-exekuce:#E5433A; --c-obec:#12AEBE; --c-majitel:#8B4FE0;
+  --c-sale:#4E6FD4; --c-drazba:#FFA60A; --c-exekuce:#FB2B2B; --c-obec:#12AEBE; --c-majitel:#8B4FE0;
   --c-ok:#1FA363;               /* zelená = úspěch/ověřeno/„v pořádku" (NE kategorie „na prodej") */
   --surface-2:#F1F3F6;
   --line: rgba(20,26,40,0.13);
@@ -382,8 +382,8 @@ h1 em{font-style:italic; font-weight:600; background:linear-gradient(100deg, #3D
 .filter-chip.active{color:#fff; border-color:transparent; box-shadow:0 4px 14px -4px rgba(0,0,0,0.5);}
 .filter-chip.active[data-type="all"]{background:var(--brand-grad); color:#fff; box-shadow:0 6px 16px -6px rgba(74,80,220,0.5);}
 .filter-chip.active[data-type="sale"]{background:linear-gradient(135deg, #6C8AE6, var(--c-sale));}
-.filter-chip.active[data-type="drazba"]{background:linear-gradient(135deg, #F7B53A, var(--c-drazba)); color:#3a2c05;}
-.filter-chip.active[data-type="exekuce"]{background:linear-gradient(135deg, #F0574D, var(--c-exekuce));}
+.filter-chip.active[data-type="drazba"]{background:linear-gradient(135deg, #FFC24A, var(--c-drazba)); color:#3a2c05;}
+.filter-chip.active[data-type="exekuce"]{background:linear-gradient(135deg, #FF6058, var(--c-exekuce));}
 .filter-chip.active[data-type="obec"]{background:linear-gradient(135deg, #3FCBD8, var(--c-obec));}
 .filter-chip.active[data-type="majitel"]{background:linear-gradient(135deg, #A46BEC, var(--c-majitel));}
 .filter-chip.active .c{box-shadow:0 0 0 2px rgba(255,255,255,0.55);}
