@@ -1806,6 +1806,12 @@
         price: d.price, area: d.area, type: d.type, lat: d.lat, lng: d.lng,
         extra: d.extra, url: d.url, featured: d.featured
       }));
+      // Zapamatuj si přesné místo/přiblížení mapy, ať „zpět" vrátí uživatele
+      // TAM, kde skončil (ne na výchozí pohled na celou ČR).
+      var c = map.getCenter();
+      sessionStorage.setItem('pk_map_return', JSON.stringify({
+        lat: c.lat, lng: c.lng, z: map.getZoom(), kraj: selectedKraj || null, t: Date.now()
+      }));
     } catch (e) {}
     location.href = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng;
   }
@@ -1989,7 +1995,23 @@
   renderRecent();
   renderDeals();
   renderUserListings();
-  var deepLinked = openFromUrl();
+  // Návrat z detailu pozemku (tlačítko „zpět"): vrať mapu přesně tam, kde uživatel skončil.
+  function restoreMapReturn() {
+    var ret = null;
+    try { ret = JSON.parse(sessionStorage.getItem('pk_map_return') || 'null'); } catch (e) {}
+    try { sessionStorage.removeItem('pk_map_return'); } catch (e) {}
+    if (!ret || typeof ret.lat !== 'number' || !ret.t) return false;
+    if (Date.now() - ret.t > 30 * 60 * 1000) return false; // starší než 30 min → ignoruj
+    var z = ret.z || 12;
+    if (ret.kraj) { try { selectKraj(ret.kraj, true); } catch (e) {} }
+    map.invalidateSize();
+    map.setView([ret.lat, ret.lng], z, { animate: false });
+    if (z >= 10) { try { if (dotsLocked) lockDots(false); } catch (e) {} }
+    // ukázat mapu (ne vršek stránky) — několikrát po sobě, ať to sedne i po dorovnání layoutu
+    if (holderEl) { [60, 240, 500].forEach(function (ms) { setTimeout(function () { holderEl.scrollIntoView({ block: 'center' }); }, ms); }); }
+    return true;
+  }
+  var deepLinked = openFromUrl() || restoreMapReturn();
   // Po dopočítání rozměrů mapy znovu vyrovnáme na celou ČR (pokud nejde o
   // sdílený odkaz na konkrétní parcelu, který si drží vlastní přiblížení).
   setTimeout(function () { map.invalidateSize(); if (!deepLinked) fitAllCZ(); }, 300);
