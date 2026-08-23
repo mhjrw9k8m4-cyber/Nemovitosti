@@ -130,8 +130,11 @@ async function fetchDrazby() {
       const zi = rec.zakladniInformace || {};
       const konani = zi.konaniDrazby || {};
       const zah = konani.zacatek || konani.zahajeni || konani.konec;
-      // Odkaz na dražbu: platforma, kde dražba probíhá (u elektronických dražeb).
-      const drazbaUrl = typeof konani.url === 'string' && /^https?:\/\//.test(konani.url) ? konani.url : undefined;
+      // Odkaz na dražbu: jen KONKRÉTNÍ odkaz na dražbu (musí mít cestu za doménou) —
+      // generická domovská stránka portálu (např. http://www.drazebni-portal.cz) je
+      // pro uživatele k ničemu, tak ji zahodíme. http upgradujeme na https.
+      const rawKon = (typeof konani.url === 'string' ? konani.url.trim() : '');
+      const drazbaUrl = /^https?:\/\/[^/]+\/[^\s]+/.test(rawKon) ? rawKon.replace(/^http:\/\//i, 'https://') : undefined;
       // Nucená (nedobrovolná) dražba = nucený prodej → kategorie "exekuce"
       const nucena = zi.typDrazby === 'Nucená';
       const type = nucena ? 'exekuce' : 'drazba';
