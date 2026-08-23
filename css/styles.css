@@ -1,10 +1,10 @@
 :root{
   /* Neutrály — vrstvená hloubka ploch (architektura + stínování).
      Modrošedá navy: důvěra a profesionalita, sladěný kontrast. */
-  --bg:#101a26;                 /* pozadí stránky — hlubší, prémiovější navy */
-  --ink:#1a2735;                /* základní plocha: vstupy, položky, zapuštěné prvky */
-  --ink-soft:#213142;           /* zvýšená plocha: karty a panely (víc odlišené od pozadí) */
-  --ink-soft2:#2c4459;          /* nejvyšší plocha: hover, aktivní */
+  --bg:#0F1026;                 /* pozadí stránky — hluboké indigo (rodina loga) */
+  --ink:#191A38;                /* základní plocha: vstupy, položky, zapuštěné prvky */
+  --ink-soft:#20224A;           /* zvýšená plocha: karty a panely (víc odlišené od pozadí) */
+  --ink-soft2:#2B2E5E;          /* nejvyšší plocha: hover, aktivní */
   --parchment:#EAF1F6; --parchment-dim:#D6E1EA;
   --text-onlight:#1B2536;
   --text-ondark:#F0F5FB;        /* jasný text — vysoký kontrast */
@@ -16,10 +16,10 @@
   --brand-grad-soft:linear-gradient(135deg, #6BA0FF 0%, #5A63E6 55%, #7A44E0 100%);
   /* Sémantické: zeleň = půda/růst/hodnota, zlatá = dražba, teracota = exekuce */
   --c-sale:#4FB487; --c-drazba:#E0B460; --c-exekuce:#DE7259; --c-obec:#6E95D0; --c-majitel:#A488D2;
-  --surface-2:#2c4459;
-  --line: rgba(220,232,244,0.11);
-  --line-strong: rgba(220,232,244,0.22);
-  --panel:#213142;
+  --surface-2:#2B2E5E;
+  --line: rgba(222,224,255,0.12);
+  --line-strong: rgba(222,224,255,0.22);
+  --panel:#20224A;
   --radius:10px; --radius-lg:16px;
   --shadow:0 14px 38px -14px rgba(0,0,0,0.60);
   --shadow-lg:0 34px 76px -22px rgba(0,0,0,0.66);
@@ -197,9 +197,9 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 @keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(2.2); opacity:0;}}
 
 /* Header */
-header{border-bottom:1px solid var(--line); padding:20px 0; position:sticky; top:0; z-index:1000; background:rgba(24,38,52,0.86); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:padding .2s ease;}
+header{border-bottom:1px solid var(--line); padding:20px 0; position:sticky; top:0; z-index:1000; background:rgba(22,23,50,0.86); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:padding .2s ease;}
 /* Mobil: silnější podklad + slabší blur = plynulejší scroll na iPhonu */
-@media (max-width:768px){ header{background:rgba(24,38,52,0.94); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);} }
+@media (max-width:768px){ header{background:rgba(20,21,44,0.94); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);} }
 header.shrink{padding:12px 0;}
 header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .logo{font-family:'Inter',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:22px; display:flex; align-items:center; gap:10px; text-decoration:none;}
