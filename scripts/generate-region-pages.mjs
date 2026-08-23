@@ -7,7 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const V = 'v=20260823c';
+const V = 'v=20260823d';
 const MIN_OKRES = 10;   // okres musí mít aspoň tolik nabídek pro vlastní stránku
 const MIN_KRAJ = 15;    // kraj musí mít aspoň tolik nabídek pro vlastní stránku
 

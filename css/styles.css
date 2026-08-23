@@ -1,24 +1,26 @@
 :root{
   /* Neutrály — vrstvená hloubka ploch (architektura + stínování).
      Modrošedá navy: důvěra a profesionalita, sladěný kontrast. */
-  --bg:#EDEFF4;                 /* pozadí stránky — jemně světle šedá, aby bílé karty vynikly */
-  --ink:#F1F3F8;                /* základní plocha: vstupy, zapuštěné prvky — velmi světlá */
+  --bg:#EAEDF6;                 /* pozadí stránky — jemný chladný nádech brandu, aby bílé karty vynikly */
+  --ink:#EEF1FB;                /* základní plocha: vstupy, zapuštěné prvky — bílá s náznakem indiga */
   --ink-soft:#FFFFFF;           /* zvýšená plocha: karty a panely — ČISTĚ BÍLÁ */
-  --ink-soft2:#F5F7FB;          /* nejvyšší plocha: hover, aktivní */
+  --ink-soft2:#F1F4FD;          /* nejvyšší plocha: hover, aktivní */
   --parchment:#1B2233; --parchment-dim:#39435A;
   --text-onlight:#1B2536;
   --text-ondark:#171B24;        /* hlavní text — tmavá, vysoký kontrast na bílé */
   --text-ondark-mute:#5B6474;   /* tlumený text — vyvážená šeď na světlé */
-  /* Primární — značková modrá→fialová (stejná rodina jako logo/ikona) */
-  --copper:#4A55E0; --copper-bright:#6E9BFF;
+  --muted:#5B6474;              /* alias pro tlumený text (dřív nedefinováno → vybledlé) */
+  /* Primární — značková modrá→fialová (stejná rodina jako logo/ikona).
+     Na světlém webu musí být akcent SYTĚ modrý, ať nevybledne. */
+  --copper:#4A55E0; --copper-bright:#3D63EE;
   /* Značkový přechod (modrá → fialová) — stejný jako logo/ikona */
   --brand-grad:linear-gradient(135deg, #5B93FF 0%, #4A55E0 55%, #6A34D8 100%);
   --brand-grad-soft:linear-gradient(135deg, #6BA0FF 0%, #5A63E6 55%, #7A44E0 100%);
   /* Sémantické: zeleň = půda/růst/hodnota, zlatá = dražba, teracota = exekuce */
   --c-sale:#4FB487; --c-drazba:#E0B460; --c-exekuce:#DE7259; --c-obec:#6E95D0; --c-majitel:#A488D2;
-  --surface-2:#E9ECF3;
-  --line: rgba(23,27,36,0.12);
-  --line-strong: rgba(23,27,36,0.20);
+  --surface-2:#EAEEFB;
+  --line: rgba(60,72,150,0.13);
+  --line-strong: rgba(60,72,150,0.22);
   --panel:#FFFFFF;
   --radius:10px; --radius-lg:16px;
   --shadow:0 14px 38px -16px rgba(30,40,70,0.18);
