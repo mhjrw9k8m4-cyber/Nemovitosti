@@ -691,14 +691,14 @@ h1 em{font-style:italic; font-weight:600; background:linear-gradient(100deg, #3D
 #leaflet-map{position:absolute; inset:0; background:var(--ink-soft);}
 .map-note{position:absolute; bottom:8px; left:8px; z-index:500; background:rgba(255,255,255,0.85); color:#6B7280; font-size:10px; padding:4px 9px; border-radius:4px; pointer-events:none;}
 /* Legenda mapy (vpravo nahoře) */
-.map-legend{position:absolute; top:84px; left:10px; z-index:500; display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:5px 13px; max-width:calc(100% - 20px); background:rgba(255,255,255,0.92); border:1px solid rgba(61,99,238,0.16); border-radius:11px; padding:8px 12px; font-size:11px; font-weight:600; color:#20263A; box-shadow:0 8px 22px -12px rgba(30,40,70,0.3); pointer-events:none; backdrop-filter:blur(3px);}
+.map-legend{position:absolute; top:84px; left:10px; z-index:500; display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:7px 17px; max-width:calc(100% - 20px); background:rgba(255,255,255,0.95); border:1px solid rgba(61,99,238,0.18); border-radius:14px; padding:11px 16px; font-size:14px; font-weight:600; color:#20263A; box-shadow:0 8px 22px -12px rgba(30,40,70,0.3); pointer-events:none; backdrop-filter:blur(3px);}
 .map-legend:empty{display:none;}
-.lg-item{display:flex; align-items:center; gap:6px; white-space:nowrap;}
-.lg-dot{width:9px; height:9px; border-radius:50%; border:1.5px solid #fff; flex:none;}
+.lg-item{display:flex; align-items:center; gap:8px; white-space:nowrap;}
+.lg-dot{width:14px; height:14px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px rgba(20,26,40,0.12); flex:none;}
 .lg-ring{position:relative; background:var(--c-drazba);}
 .lg-ring::after{content:""; position:absolute; inset:-4px; border-radius:50%; border:1.5px solid var(--c-drazba); opacity:0.75; animation:mping 1.7s ease-out infinite;}
 .lg-urgent{color:var(--copper-bright);}
-@media (max-width:560px){ .map-legend{font-size:10px; padding:6px 9px; gap:4px 10px;} }
+@media (max-width:560px){ .map-legend{font-size:13px; padding:10px 13px; gap:6px 13px;} .lg-dot{width:13px; height:13px;} }
 /* Zámek mapy — mapa se hýbe jen když je odemčená */
 /* Lehké přepínání posouvání mapy (bez těžkého overlay) */
 .map-tools{position:absolute; top:12px; right:12px; z-index:600; display:flex; flex-direction:column; align-items:flex-end; gap:8px; max-width:calc(100% - 24px);}
