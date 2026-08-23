@@ -53,3 +53,17 @@ jobs:
           else
             echo "Beze změny."
           fi
+
+      # Upozornění na lokalitu (e-mailem). Bezpečné: bez SUPABASE_SERVICE_ROLE_KEY
+      # tiše skončí (nic neposílá), a i s klíči je to DRY-RUN, dokud nenastavíš
+      # ALERTS_LIVE=1. Nikdy neblokuje aktualizaci dat (continue-on-error).
+      - name: Rozeslat upozornění na lokalitu
+        continue-on-error: true
+        run: node scripts/send-alerts.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_FROM: ${{ secrets.ALERT_FROM }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          ALERTS_LIVE: ${{ secrets.ALERTS_LIVE }}
