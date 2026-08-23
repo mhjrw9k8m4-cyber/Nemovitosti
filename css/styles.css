@@ -9,8 +9,8 @@
   --text-onlight:#1B2536;
   --text-ondark:#F0F5FB;        /* jasný text — vysoký kontrast */
   --text-ondark-mute:#9CB0C6;   /* tlumený text */
-  /* Primární — modrá (důvěra, jistota, kompetence) */
-  --copper:#4A90E8; --copper-bright:#7EB6FB;
+  /* Primární — značková modrá→fialová (stejná rodina jako logo/ikona) */
+  --copper:#4A55E0; --copper-bright:#6E9BFF;
   /* Značkový přechod (modrá → fialová) — stejný jako logo/ikona */
   --brand-grad:linear-gradient(135deg, #5B93FF 0%, #4A55E0 55%, #6A34D8 100%);
   --brand-grad-soft:linear-gradient(135deg, #6BA0FF 0%, #5A63E6 55%, #7A44E0 100%);
@@ -1082,7 +1082,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   /* Toggle viditelný a funkční na mobilu */
   .mv-toggle{display:flex; gap:5px; margin-top:14px; background:var(--ink); border:1px solid var(--line); border-radius:11px; padding:4px;}
   .mvt-btn{flex:1; padding:10px; border:0; border-radius:8px; background:none; color:var(--text-ondark-mute); font-weight:600; font-family:inherit; font-size:14px; cursor:pointer; transition:background .15s ease, color .15s ease;}
-  .mvt-btn.active{background:var(--copper); color:var(--ink);}
+  .mvt-btn.active{background:var(--brand-grad); color:#fff;}
   /* Výchozí: mapa; při .mv-seznam: seznam. Vždy jen jedno. */
   .map-app.mv-seznam .map-holder{display:none;}
   .map-app:not(.mv-seznam) .map-side{display:none;}
