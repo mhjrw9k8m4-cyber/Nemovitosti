@@ -12886,6 +12886,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1056338-nabidka-prodej-pozemku"
     },
     {
+      "place": "Dolní Třebonín",
+      "okres": "České Budějovice",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 20267,
+      "price": 1418960,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 48.848386056625,
+      "lng": 14.446046858231,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1058483-nabidka-prodej-pozemku"
+    },
+    {
       "place": "Postupice",
       "okres": "Benešov",
       "type": "sale",
@@ -14301,6 +14314,19 @@
       "lat": 49.711926,
       "lng": 16.818116,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1050679-nabidka-prodej-pozemku-vranova-lhota"
+    },
+    {
+      "place": "Dolní Třebonín",
+      "okres": "Český Krumlov",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 18446,
+      "price": 1826154,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 48.847824162197,
+      "lng": 14.428019485257,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1058481-nabidka-prodej-pozemku-dolni-trebonin"
     },
     {
       "place": "Bzenec",
@@ -19217,19 +19243,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1056351-nabidka-prodej-pozemku-zumberk"
     },
     {
-      "place": "Liberec",
-      "okres": "Liberec",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "zahrada",
-      "area": 379,
-      "price": 1290000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 50.758586114906,
-      "lng": 15.026497408333,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1015845-nabidka-prodej-pozemku-liberec"
-    },
-    {
       "place": "Hostomice",
       "okres": "Beroun",
       "type": "sale",
@@ -20788,19 +20801,6 @@
       "lat": 50.0206383,
       "lng": 14.5800086,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/804559-nabidka-prodej-pozemku-zampionova-praha"
-    },
-    {
-      "place": "Ibišková",
-      "okres": "Praha-východ",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": 778,
-      "price": 15521100,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 50.01795995423,
-      "lng": 14.563293856591,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1055059-nabidka-prodej-pozemku-ibiskova-praha"
     },
     {
       "place": "Stráž pod Ralskem",
