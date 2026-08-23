@@ -190,7 +190,7 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 .data-updated{margin:-6px 0 14px; font-size:12px; color:var(--copper-bright); opacity:0.85;}
 .data-updated:empty{display:none;}
 .data-updated.is-stale{color:#E0A33A; opacity:1; font-weight:600;}
-.leaflet-tooltip.kraj-tip{background:rgba(20,32,44,0.97); border:1px solid rgba(110,120,255,0.6); color:#EAEFF6; font-family:'Plus Jakarta Sans','Inter',sans-serif; font-weight:500; font-size:12px; line-height:1.55; padding:8px 12px; border-radius:10px; box-shadow:0 10px 26px -6px rgba(0,0,0,0.65);}
+.leaflet-tooltip.kraj-tip{background:rgba(255,255,255,0.97); border:1px solid rgba(61,99,238,0.3); color:#1B2233; font-family:'Plus Jakarta Sans','Inter',sans-serif; font-weight:500; font-size:12px; line-height:1.55; padding:8px 12px; border-radius:10px; box-shadow:0 12px 28px -10px rgba(30,40,70,0.28);}
 .leaflet-tooltip.kraj-tip b{display:inline-block; font-family:'Plus Jakarta Sans','Inter',sans-serif; color:var(--copper-bright); font-weight:600; font-size:14.5px; margin-bottom:1px;}
 .leaflet-tooltip.kraj-tip::before{border-top-color:rgba(110,120,255,0.6);}
 /* Špendlík vybraného pozemku na mapě — bez rámečku divIconu, s jemným stínem */
@@ -688,9 +688,9 @@ h1 em{font-style:italic; font-weight:600; background:linear-gradient(100deg, #3D
    spolehlivě překryje mapu a nic z ní neprosvítá */
 .map-canvas{position:relative; flex:1; min-height:0; isolation:isolate;}
 #leaflet-map{position:absolute; inset:0; background:var(--ink-soft);}
-.map-note{position:absolute; bottom:8px; left:8px; z-index:500; background:rgba(22,35,47,0.82); color:#C2CBD8; font-size:10px; padding:4px 9px; border-radius:4px; pointer-events:none;}
+.map-note{position:absolute; bottom:8px; left:8px; z-index:500; background:rgba(255,255,255,0.85); color:#6B7280; font-size:10px; padding:4px 9px; border-radius:4px; pointer-events:none;}
 /* Legenda mapy (vpravo nahoře) */
-.map-legend{position:absolute; top:84px; left:10px; z-index:500; display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:5px 13px; max-width:calc(100% - 20px); background:rgba(22,35,47,0.85); border:1px solid var(--line); border-radius:7px; padding:7px 11px; font-size:11px; font-weight:600; color:#F4F6FA; pointer-events:none; backdrop-filter:blur(3px);}
+.map-legend{position:absolute; top:84px; left:10px; z-index:500; display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:5px 13px; max-width:calc(100% - 20px); background:rgba(255,255,255,0.92); border:1px solid rgba(61,99,238,0.16); border-radius:11px; padding:8px 12px; font-size:11px; font-weight:600; color:#20263A; box-shadow:0 8px 22px -12px rgba(30,40,70,0.3); pointer-events:none; backdrop-filter:blur(3px);}
 .map-legend:empty{display:none;}
 .lg-item{display:flex; align-items:center; gap:6px; white-space:nowrap;}
 .lg-dot{width:9px; height:9px; border-radius:50%; border:1.5px solid #fff; flex:none;}
@@ -701,48 +701,48 @@ h1 em{font-style:italic; font-weight:600; background:linear-gradient(100deg, #3D
 /* Zámek mapy — mapa se hýbe jen když je odemčená */
 /* Lehké přepínání posouvání mapy (bez těžkého overlay) */
 .map-tools{position:absolute; top:12px; right:12px; z-index:600; display:flex; flex-direction:column; align-items:flex-end; gap:8px; max-width:calc(100% - 24px);}
-.map-reset{display:inline-flex; align-items:center; gap:7px; background:rgba(22,26,34,0.92); color:#F4F6FA; border:1px solid var(--line-strong); border-radius:22px; padding:8px 14px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}
+.map-reset{display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,0.94); color:var(--copper-bright); border:1px solid rgba(61,99,238,0.22); border-radius:22px; padding:8px 14px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}
 .map-reset:hover{border-color:var(--copper-bright);}
 .map-reset:active{transform:translateY(1px);}
 .map-reset .mr-ic{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none;}
-.map-lock{position:absolute; bottom:12px; right:12px; z-index:600; display:inline-flex; align-items:center; gap:7px; max-width:calc(100% - 24px); background:rgba(22,26,34,0.92); color:#F4F6FA; border:1px solid var(--line-strong); border-radius:22px; padding:9px 15px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}
+.map-lock{position:absolute; bottom:12px; right:12px; z-index:600; display:inline-flex; align-items:center; gap:7px; max-width:calc(100% - 24px); background:rgba(255,255,255,0.94); color:var(--copper-bright); border:1px solid rgba(61,99,238,0.22); border-radius:22px; padding:9px 15px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background .15s ease, transform .1s ease, border-color .15s ease; backdrop-filter:blur(4px);}
 .map-lock[hidden]{display:none;}
 .map-lock:hover{border-color:var(--copper-bright);}
 .map-lock:active{transform:translateY(1px);}
 .map-lock .ml-ic{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none;}
 @media (max-width:560px){ .map-reset{font-size:11px; padding:7px 11px; gap:6px;} .map-reset .mr-ic{width:14px; height:14px;} .map-lock{font-size:11px; padding:8px 13px;} .map-lock .ml-ic{width:14px; height:14px;} }
-/* Zoom +/− — jen na počítači (na mobilu/tabletu se přibližuje prsty), na volném levém okraji pod legendou. */
-.leaflet-control-zoom{display:none;}
-@media (min-width:961px){
-  .leaflet-control-zoom{display:block; margin:122px 0 0 10px !important; border:none; box-shadow:var(--shadow); border-radius:9px; overflow:hidden;}
-  .leaflet-control-zoom a{width:34px; height:34px; line-height:32px; font-size:19px; font-weight:600; background:rgba(22,35,47,0.94); color:#F4F6FA; border:1px solid var(--line-strong); backdrop-filter:blur(4px);}
-  .leaflet-control-zoom a:last-child{border-top:none;}
-  .leaflet-control-zoom a:hover{background:rgba(30,46,62,0.98); color:var(--copper-bright); border-color:var(--copper-bright);}
-  .leaflet-control-zoom a.leaflet-disabled{opacity:0.45; color:#F4F6FA; background:rgba(22,35,47,0.7);}
-}
+/* Zoom +/− — moderní bílá tlačítka, VIDITELNÁ i na mobilu (snadné přiblížení bez gest). */
+.leaflet-control-zoom{display:block; margin:0 12px 74px 0 !important; border:none !important; box-shadow:0 10px 26px -10px rgba(30,40,70,0.4); border-radius:13px; overflow:hidden;}
+.leaflet-control-zoom a{width:46px; height:46px; line-height:44px; font-size:24px; font-weight:600; background:rgba(255,255,255,0.94); color:var(--copper-bright); border:1px solid rgba(61,99,238,0.16); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);}
+.leaflet-control-zoom a:first-child{border-bottom:1px solid rgba(61,99,238,0.14);}
+.leaflet-control-zoom a:last-child{border-top:none;}
+.leaflet-control-zoom a:hover{background:#fff; color:var(--copper); }
+.leaflet-control-zoom a:active{background:#EEF2FF;}
+.leaflet-control-zoom a.leaflet-disabled{opacity:0.4; color:#9AA3B4; background:rgba(255,255,255,0.8);}
+@media (min-width:961px){ .leaflet-control-zoom a{width:40px; height:40px; line-height:38px; font-size:21px;} }
 
 /* Výběr kraje: dokud není vybrán, tečky (pozemky) nejsou klikací → klik vždy trefí kraj.
    Značky mají v Leafletu vlastní pointer-events, proto je nutné je přebít napřímo. */
 .kraj-lock .leaflet-marker-pane{pointer-events:none;}
 .kraj-lock .leaflet-marker-icon, .kraj-lock .leaflet-marker-icon *{pointer-events:none !important;}
 /* Nápověda „vyberte kraj" (fáze 1) */
-.kraj-hint{position:absolute; top:12px; left:12px; z-index:600; display:inline-flex; align-items:center; gap:8px; background:rgba(22,26,34,0.92); border:1px solid rgba(255,255,255,0.16); color:#EAEFF6; font-size:12.5px; font-weight:600; padding:8px 13px; border-radius:22px; box-shadow:var(--shadow); backdrop-filter:blur(4px); pointer-events:none; max-width:calc(100% - 118px);}
+.kraj-hint{position:absolute; top:12px; left:12px; z-index:600; display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.94); border:1px solid rgba(61,99,238,0.2); color:#232A3E; font-size:12.5px; font-weight:600; padding:8px 13px; border-radius:22px; box-shadow:var(--shadow); backdrop-filter:blur(4px); pointer-events:none; max-width:calc(100% - 118px);}
 .kraj-hint[hidden]{display:none;}
 .kraj-hint .kh-pin{width:9px; height:9px; border-radius:50%; background:var(--copper-bright); box-shadow:0 0 0 4px rgba(110,120,255,0.22); flex:none;}
 /* Vymazlený nadpis vybraného kraje (fáze 2) */
-.kraj-head{position:absolute; top:12px; left:12px; z-index:600; max-width:calc(100% - 118px); display:inline-flex; align-items:center; gap:11px; background:linear-gradient(135deg, rgba(20,32,44,0.97), rgba(30,46,62,0.97)); border:1px solid rgba(110,120,255,0.45); border-radius:13px; padding:8px 14px 8px 8px; box-shadow:0 12px 30px -12px rgba(0,0,0,0.75); backdrop-filter:blur(6px);}
+.kraj-head{position:absolute; top:12px; left:12px; z-index:600; max-width:calc(100% - 118px); display:inline-flex; align-items:center; gap:11px; background:rgba(255,255,255,0.95); border:1px solid rgba(61,99,238,0.28); border-radius:13px; padding:8px 14px 8px 8px; box-shadow:0 14px 32px -14px rgba(30,40,70,0.3); backdrop-filter:blur(6px);}
 .kraj-head[hidden]{display:none;}
-.kh-back{flex:none; width:38px; height:38px; border-radius:9px; border:1px solid var(--line-strong); background:rgba(255,255,255,0.05); color:#EAEFF6; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .15s ease, border-color .15s ease, transform .1s ease;}
+.kh-back{flex:none; width:38px; height:38px; border-radius:9px; border:1px solid rgba(61,99,238,0.22); background:rgba(61,99,238,0.06); color:var(--copper-bright); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .15s ease, border-color .15s ease, transform .1s ease;}
 .kh-back:hover{background:rgba(110,120,255,0.16); border-color:var(--copper-bright);}
 .kh-back:active{transform:translateY(1px);}
 .kh-back svg{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2.3; stroke-linecap:round; stroke-linejoin:round;}
 .kh-txt{display:flex; flex-direction:column; gap:1px; min-width:0;}
-.kh-txt b{font-family:'Plus Jakarta Sans','Inter',sans-serif; font-size:18px; font-weight:600; color:#EAEFF6; line-height:1.12; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.kh-txt b{font-family:'Plus Jakarta Sans','Inter',sans-serif; font-size:18px; font-weight:600; color:var(--text-ondark); line-height:1.12; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .kh-txt span{font-size:11.5px; color:var(--copper-bright); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 
 /* Leaflet popup přebarvení */
-.leaflet-popup-content-wrapper{background:var(--ink); color:var(--text-ondark); border-radius:8px; box-shadow:0 18px 40px -12px rgba(0,0,0,0.7);}
-.leaflet-popup-tip{background:var(--ink);}
+.leaflet-popup-content-wrapper{background:#fff; color:var(--text-ondark); border-radius:10px; box-shadow:0 18px 44px -16px rgba(30,40,70,0.35);}
+.leaflet-popup-tip{background:#fff;}
 .leaflet-popup-content{margin:15px 16px; font-family:'Plus Jakarta Sans','Inter',sans-serif; min-width:236px;}
 .lp-head{display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; margin-bottom:3px;}
 .lp-dot{width:10px; height:10px; border-radius:50%;}
@@ -752,8 +752,8 @@ h1 em{font-style:italic; font-weight:600; background:linear-gradient(100deg, #3D
 .lp-grid span{font-size:10.5px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:0.03em;}
 .lp-grid b{font-size:13px; color:var(--text-ondark); font-weight:600;}
 .lp-links{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:9px;}
-.lp-btn{flex:1; min-width:62px; text-align:center; background:var(--ink-soft2); border:1px solid var(--line); border-radius:6px; padding:7px 8px; font-size:12px; font-weight:600; color:var(--text-ondark); text-decoration:none; transition:border-color .15s ease, background .15s ease;}
-.lp-btn:hover{border-color:var(--copper-bright); background:rgba(74,85,224,0.12);}
+.lp-btn{flex:1; min-width:62px; text-align:center; background:#fff; border:1.5px solid rgba(61,99,238,0.28); border-radius:8px; padding:8px 8px; font-size:12px; font-weight:600; color:var(--text-ondark); text-decoration:none; box-shadow:0 3px 10px -7px rgba(30,40,70,0.3); transition:border-color .15s ease, background .15s ease, box-shadow .15s ease;}
+.lp-btn:hover{border-color:var(--copper-bright); background:#F6F8FF;}
 /* Sekundární akce — decentní odkaz, ne největší tlačítko v detailu
    (dřív přebíjelo hlavní akce jako Katastr / Inzerát). */
 .lp-watch{display:block; text-align:center; background:transparent; color:var(--copper-bright); border:1px solid var(--line); border-radius:8px; padding:9px; font-size:12.5px; font-weight:600; text-decoration:none; transition:border-color .15s ease, color .15s ease;}

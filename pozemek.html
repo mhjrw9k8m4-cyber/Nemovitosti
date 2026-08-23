@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260823f">
+  <link rel="stylesheet" href="css/styles.css?v=20260823g">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -91,17 +91,19 @@
     .pz-btn svg{width:19px; height:19px; flex:none;}
     .pz-btn.primary{background:linear-gradient(135deg, var(--copper-bright), var(--copper)); color:#fff; box-shadow:0 10px 22px -10px rgba(74,80,220,.6);}
     .pz-btn.primary:hover{filter:brightness(1.06);}
-    .pz-btn.ghost{background:var(--ink-soft2); color:var(--text-ondark); border-color:var(--line-strong);}
-    .pz-btn.ghost:hover{border-color:var(--copper-bright);}
+    .pz-btn.ghost{background:#fff; color:var(--copper-bright); border:1.5px solid rgba(61,99,238,0.4); box-shadow:0 5px 16px -9px rgba(30,40,70,0.3);}
+    .pz-btn.ghost:hover{border-color:var(--copper-bright); background:#F6F8FF;}
+    .pz-btn.ghost:active{transform:scale(.985);}
     .pz-actions{display:flex; gap:9px; flex-wrap:wrap; margin:14px 0 4px;}
     .pz-actions .pz-abtn{flex:1 1 0; min-width:0;}
-    .pz-actions .pz-abtn:first-child{flex-basis:100%;}
-    .pz-abtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:46px; padding:0 17px; border-radius:12px; background:var(--ink-soft2); border:1px solid var(--line-strong); color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent;}
-    .pz-abtn:hover{border-color:var(--copper-bright); background:var(--ink-soft);}
+    .pz-actions .pz-abtn:first-child{flex-basis:100%; background:rgba(61,99,238,0.07); border-color:rgba(61,99,238,0.4); color:var(--copper-bright);}
+    .pz-actions .pz-abtn:first-child svg{color:var(--copper-bright);}
+    .pz-abtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:48px; padding:0 17px; border-radius:12px; background:#fff; border:1.5px solid rgba(61,99,238,0.28); color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; box-shadow:0 4px 14px -9px rgba(30,40,70,0.28); transition:border-color .15s ease, background .15s ease, transform .1s ease, box-shadow .15s ease;}
+    .pz-abtn:hover{border-color:var(--copper-bright); background:#F6F8FF; box-shadow:0 7px 18px -9px rgba(30,40,70,0.34);}
     .pz-abtn:active{transform:scale(.98);}
-    .pz-abtn.on{color:var(--copper-bright); border-color:var(--copper); background:rgba(74,80,220,0.16);}
+    .pz-abtn.on{color:#fff; border-color:transparent; background:linear-gradient(135deg,var(--copper-bright),var(--copper)); box-shadow:0 8px 20px -10px rgba(74,80,220,0.6);}
     .pz-abtn svg{width:17px; height:17px; color:var(--copper-bright);}
-    .pz-abtn.on svg{color:var(--copper-bright);}
+    .pz-abtn.on svg{color:#fff;}
 
     .pz-gtk{background:var(--ink-soft); border:1px solid var(--line); border-radius:16px; padding:16px 17px;}
     .pz-gtk .g-row{display:flex; flex-direction:column; gap:3px; padding:11px 0; border-bottom:1px solid var(--line);}
@@ -157,7 +159,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/pozemek.js?v=20260823f"></script>
+<script src="js/pozemek.js?v=20260823g"></script>
 <!-- Vercel Web Analytics -->
 <script defer src="/_vercel/insights/script.js"></script>
 </body>

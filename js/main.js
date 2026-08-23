@@ -625,8 +625,8 @@
   if (map.attributionControl) map.attributionControl.setPosition('bottomleft'); // ať se nekryje s tlačítky
   // Ovládání zoomu +/− — jen na počítačích (na mobilu se přibližuje prsty). Umístěno
   // vlevo (přes CSS na volný levý okraj), ať se nepere s ostatními tlačítky.
-  L.control.zoom({ position: 'topleft' }).addTo(map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     subdomains: 'abcd', maxZoom: 19
   }).addTo(map);
@@ -891,9 +891,10 @@
     return {
       renderer: dotsRenderer,
       radius: urgent ? DOT_R + 0.6 : (feat ? DOT_R + 0.9 : DOT_R),
-      fillColor: col, fillOpacity: 0.9,
-      color: (urgent || feat) ? '#fff' : 'rgba(255,255,255,0.35)',
-      weight: urgent ? 1.8 : (feat ? 1.6 : 0.7),
+      fillColor: col, fillOpacity: 0.92,
+      // Světlá mapa (Positron): tečky potřebují jemný TMAVÝ okraj pro definici (bílý by zmizel).
+      color: (urgent || feat) ? 'rgba(18,24,42,0.6)' : 'rgba(18,24,42,0.32)',
+      weight: urgent ? 1.8 : (feat ? 1.6 : 0.8),
       opacity: 1
     };
   }
