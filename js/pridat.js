@@ -516,7 +516,8 @@
       var pv = document.getElementById('live-preview-card'); if (pv) pv.hidden = !on;
       var em = document.getElementById('auth-email'); if (em) em.textContent = (window.PKAuth ? PKAuth.email() : '');
     }
-    if (window.PKAuth && PKAuth.keepAlive) { PKAuth.keepAlive().then(refresh); } else { refresh(); }
+    refresh();   // hned ukázat stav podle zapamatovaného přihlášení (žádná prázdná stránka)
+    if (window.PKAuth && PKAuth.keepAlive) { PKAuth.keepAlive().then(refresh, refresh); }
     var msg = document.getElementById('au-msg');
     function say(t, err) { if (msg) { msg.textContent = t; msg.className = 'add-msg' + (err ? ' err' : ' ok'); } }
     function creds() { return { e: ((document.getElementById('au-email') || {}).value || '').trim().toLowerCase(), p: (document.getElementById('au-pass') || {}).value || '' }; }

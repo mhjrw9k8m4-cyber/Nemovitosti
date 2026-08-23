@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260823v">
+  <link rel="stylesheet" href="css/styles.css?v=20260823w">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:20px; padding:24px 22px 22px;
@@ -266,8 +266,8 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260823v" defer></script>
-<script src="js/auth.js?v=20260823v" defer></script>
+<script src="js/config.js?v=20260823w" defer></script>
+<script src="js/auth.js?v=20260823w" defer></script>
 <script>
 (function () {
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
@@ -313,7 +313,7 @@
       return;
     }
 
-    function show() {
+    function show(skipLoad) {
       newpwBox.hidden = true;
       var on = A.loggedIn();
       authBox.hidden = on; panel.hidden = !on;
@@ -322,7 +322,7 @@
         var m = q('pf-mail'); if (m) m.textContent = mail;
         var av = q('pf-avatar'); if (av) av.textContent = initials(mail);
         var f = q('pf-fav'); if (f) f.textContent = fmt(favCount());
-        load();
+        if (!skipLoad) load();          // seznam inzerátů načteme až s obnovenou session (bez chybového bliknutí)
       }
     }
     function load() {
@@ -466,8 +466,11 @@
     // Dlaždice „Uložené pozemky" v hlavičce sroluje k seznamu
     var favTileEl = q('pf-fav'); if (favTileEl && favTileEl.closest){ var st = favTileEl.closest('.pf-stat'); if(st){ st.style.cursor='pointer'; st.addEventListener('click', function(){ var w=q('mi-saved-wrap'); if(w) w.scrollIntoView({behavior:'smooth', block:'start'}); }); } }
 
-    // Obnoví přihlášení (ať účet zůstane zapamatovaný) a pak vykreslí.
-    if (A.keepAlive) { A.keepAlive().then(show); } else { show(); }
+    // HNED ukázat stav podle zapamatovaného přihlášení (žádná prázdná/nejasná stránka),
+    // pak na pozadí obnovit session a doplnit seznam inzerátů.
+    show(true);
+    // Ať se seznam načte i kdyby obnova session selhala (výpadek sítě) — nikdy nezůstane „prázdno".
+    (A.keepAlive ? A.keepAlive() : Promise.resolve()).then(function () { show(); }, function () { show(); });
     renderSaved();
   });
 })();
