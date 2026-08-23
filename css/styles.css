@@ -17,7 +17,7 @@
   --brand-grad:linear-gradient(135deg, #5B93FF 0%, #4A55E0 55%, #6A34D8 100%);
   --brand-grad-soft:linear-gradient(135deg, #6BA0FF 0%, #5A63E6 55%, #7A44E0 100%);
   /* Sémantické: zeleň = půda/růst/hodnota, zlatá = dražba, teracota = exekuce */
-  --c-sale:#4FB487; --c-drazba:#E0B460; --c-exekuce:#DE7259; --c-obec:#6E95D0; --c-majitel:#A488D2;
+  --c-sale:#1FA363; --c-drazba:#E5A00D; --c-exekuce:#E4483D; --c-obec:#3D63EE; --c-majitel:#8B4FE0;
   --surface-2:#EAEEFB;
   --line: rgba(60,72,150,0.13);
   --line-strong: rgba(60,72,150,0.22);
@@ -186,7 +186,7 @@ h1 em::after{content:""; position:absolute; left:2px; right:2px; bottom:4px; hei
 @keyframes mePulse{0%{transform:scale(1); opacity:0.7;} 70%{transform:scale(3); opacity:0;} 100%{opacity:0;}}
 @media (prefers-reduced-motion:reduce){ .pk-me::after{animation:none; box-shadow:0 0 0 4px rgba(59,130,246,0.3);} }
 .opp-km{color:var(--text-ondark-mute); font-weight:600;}
-@keyframes dotpulse{0%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 0 rgba(217,164,65,0.5);} 100%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 10px rgba(217,164,65,0);}}
+@keyframes dotpulse{0%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 0 rgba(229,160,13,0.5);} 100%{box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 10px rgba(229,160,13,0);}}
 .data-updated{margin:-6px 0 14px; font-size:12px; color:var(--copper-bright); opacity:0.85;}
 .data-updated:empty{display:none;}
 .data-updated.is-stale{color:#E0A33A; opacity:1; font-weight:600;}
@@ -336,7 +336,7 @@ h1 em{font-style:italic; font-weight:600; background:linear-gradient(100deg, #3D
 .druh-top h4{font-family:'Plus Jakarta Sans','Inter',sans-serif; font-size:19px; font-weight:500;}
 .druh-card p{font-size:14px; color:var(--text-ondark-mute);}
 .druh-demand{font-size:10px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; padding:3px 9px; border-radius:11px; white-space:nowrap;}
-.druh-demand.high{color:var(--c-sale); background:rgba(62,142,91,0.15); border:1px solid rgba(62,142,91,0.4);}
+.druh-demand.high{color:var(--c-sale); background:rgba(31,163,99,0.15); border:1px solid rgba(31,163,99,0.4);}
 .druh-demand.mid{color:var(--copper-bright); background:rgba(74,85,224,0.15); border:1px solid rgba(74,85,224,0.4);}
 .druh-demand.niche{color:var(--text-ondark-mute); background:rgba(224,236,244,0.08); border:1px solid var(--line);}
 @media (max-width:900px){ .druhy-grid{grid-template-columns:repeat(2,1fr);} }
@@ -380,11 +380,11 @@ h1 em{font-style:italic; font-weight:600; background:linear-gradient(100deg, #3D
 /* Aktivní filtr „svítí" vlastní barvou kategorie — ať „Vše" a „Dražba" nesplývají */
 .filter-chip.active{color:#fff; border-color:transparent; box-shadow:0 4px 14px -4px rgba(0,0,0,0.5);}
 .filter-chip.active[data-type="all"]{background:var(--brand-grad); color:#fff; box-shadow:0 6px 16px -6px rgba(74,80,220,0.5);}
-.filter-chip.active[data-type="sale"]{background:linear-gradient(135deg, #47A268, var(--c-sale));}
-.filter-chip.active[data-type="drazba"]{background:linear-gradient(135deg, #E8B95A, var(--c-drazba)); color:#3a2c05;}
-.filter-chip.active[data-type="exekuce"]{background:linear-gradient(135deg, #CE6A52, var(--c-exekuce));}
-.filter-chip.active[data-type="obec"]{background:linear-gradient(135deg, #5A89AD, var(--c-obec));}
-.filter-chip.active[data-type="majitel"]{background:linear-gradient(135deg, #9B7FC7, var(--c-majitel));}
+.filter-chip.active[data-type="sale"]{background:linear-gradient(135deg, #35BE7C, var(--c-sale));}
+.filter-chip.active[data-type="drazba"]{background:linear-gradient(135deg, #F5B733, var(--c-drazba)); color:#3a2c05;}
+.filter-chip.active[data-type="exekuce"]{background:linear-gradient(135deg, #F05A4F, var(--c-exekuce));}
+.filter-chip.active[data-type="obec"]{background:linear-gradient(135deg, #5E82F5, var(--c-obec));}
+.filter-chip.active[data-type="majitel"]{background:linear-gradient(135deg, #A46BEC, var(--c-majitel));}
 .filter-chip.active .c{box-shadow:0 0 0 2px rgba(255,255,255,0.55);}
 /* Rozbalovací panel „Cena, výměra a řazení" — výchozí stav je klidný, detaily na klepnutí */
 .ms-filters{margin-top:12px; border:1px solid var(--line); border-radius:10px; background:var(--ink); overflow:hidden;}
@@ -457,7 +457,7 @@ h1 em{font-style:italic; font-weight:600; background:linear-gradient(100deg, #3D
 .lp-fav svg{width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round;}
 .lp-fav.on{background:rgba(74,85,224,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
 .lp-fav.on svg{fill:currentColor;}
-.opp-deal{display:inline-block; font-size:10.5px; font-weight:700; color:#2E8F5F; background:rgba(62,142,91,0.10); border:1px solid rgba(62,142,91,0.26); border-radius:7px; padding:1px 8px; letter-spacing:0.02em; text-transform:uppercase;}
+.opp-deal{display:inline-block; font-size:10.5px; font-weight:700; color:#2E8F5F; background:rgba(31,163,99,0.10); border:1px solid rgba(31,163,99,0.26); border-radius:7px; padding:1px 8px; letter-spacing:0.02em; text-transform:uppercase;}
 .map-count{font-size:13.5px; color:var(--text-ondark); font-weight:600; letter-spacing:0.01em; margin-bottom:12px;}
 /* Nejvýhodnější — přidaná hodnota ukázaná čísly */
 .deals-sec[hidden]{display:none;}
@@ -500,7 +500,7 @@ h1 em{font-style:italic; font-weight:600; background:linear-gradient(100deg, #3D
    šířku jako fotka, pod ním velká cena a detaily. */
 .opp-item{position:relative; display:block; padding:0; border:1px solid var(--line); border-radius:14px; overflow:hidden; margin-bottom:14px; cursor:pointer; background:var(--ink-soft); box-shadow:0 1px 2px rgba(0,0,0,0.28), 0 12px 28px -20px rgba(0,0,0,0.8); transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease;}
 .opp-item:hover, .opp-item.hl{border-color:rgba(224,236,244,0.26); transform:translateY(-2px); box-shadow:0 3px 6px rgba(0,0,0,0.32), 0 18px 38px -20px rgba(0,0,0,0.9);}
-.opp-item.is-hot{border-color:rgba(217,164,65,0.34);}
+.opp-item.is-hot{border-color:rgba(229,160,13,0.34);}
 /* Náhled mapy jako fotka inzerátu */
 .opp-media{position:relative; width:100%; aspect-ratio:16/10; min-height:150px; overflow:hidden; background:var(--ink-soft2) linear-gradient(135deg, rgba(110,130,150,0.10), rgba(110,130,150,0) 60%);}
 /* Vrstvy náhledu nechytají klik — ťuknutí projde na celou kartu (jinak na iOS obrázek „spolkne" klik) */
@@ -556,11 +556,11 @@ h1 em{font-style:italic; font-weight:600; background:linear-gradient(100deg, #3D
 .md-feat{display:inline-flex; align-items:center; margin-left:9px; font-size:11px; font-weight:700; padding:2px 10px; border-radius:11px; color:#08222C; background:linear-gradient(135deg, var(--copper-bright), var(--copper)); letter-spacing:0.03em; text-transform:uppercase; white-space:nowrap; box-shadow:0 1px 5px rgba(74,85,224,0.35);}
 /* Odpočet do termínu dražby (reálné datum) */
 .opp-cd{display:inline-block; font-size:10.5px; font-weight:700; padding:1px 8px; border-radius:7px; background:rgba(224,236,244,0.06); border:1px solid rgba(224,236,244,0.14); color:var(--text-ondark-mute); letter-spacing:0.01em; white-space:nowrap;}
-.opp-cd.soon{color:#E6C583; border-color:rgba(217,164,65,0.30);}
-.opp-cd.urg{color:#EDA08C; border-color:rgba(193,91,68,0.34);}
+.opp-cd.soon{color:#E6C583; border-color:rgba(229,160,13,0.30);}
+.opp-cd.urg{color:#EDA08C; border-color:rgba(228,72,61,0.34);}
 .md-cd{display:inline-flex; align-items:center; margin-left:9px; font-size:12px; font-weight:700; padding:2px 10px; border-radius:11px; background:rgba(143,160,175,0.16); color:var(--text-ondark); white-space:nowrap;}
-.md-cd.soon{background:rgba(217,164,65,0.18); color:var(--copper-bright);}
-.md-cd.urg{background:rgba(193,91,68,0.24); color:#EDA08C;}
+.md-cd.soon{background:rgba(229,160,13,0.18); color:var(--copper-bright);}
+.md-cd.urg{background:rgba(228,72,61,0.24); color:#EDA08C;}
 /* Počet nabídek na filtračních tlačítkách */
 .chip-n{display:inline-block; margin-left:6px; font-size:10.5px; font-weight:700; padding:0 6px; border-radius:9px; background:rgba(224,236,244,0.12); color:var(--text-ondark-mute); min-width:16px; line-height:16px; text-align:center; vertical-align:middle;}
 .filter-chip.active .chip-n{background:rgba(22,35,47,0.28); color:inherit;}
@@ -595,7 +595,7 @@ h1 em{font-style:italic; font-weight:600; background:linear-gradient(100deg, #3D
 .md-bar.good .md-bar-head b{color:var(--c-sale);}
 .md-bar.bad .md-bar-head b{color:#EDA08C;}
 .md-bar.mid .md-bar-head b{color:var(--copper-bright);}
-.md-bar-track{position:relative; height:8px; border-radius:5px; background:linear-gradient(90deg, rgba(62,142,91,0.55), rgba(217,164,65,0.55) 50%, rgba(193,91,68,0.55));}
+.md-bar-track{position:relative; height:8px; border-radius:5px; background:linear-gradient(90deg, rgba(31,163,99,0.55), rgba(229,160,13,0.55) 50%, rgba(228,72,61,0.55));}
 .md-bar-med{position:absolute; top:-3px; width:2px; height:14px; background:var(--text-ondark); opacity:0.5;}
 .md-bar-dot{position:absolute; top:50%; width:12px; height:12px; border-radius:50%; background:#fff; border:2px solid var(--ink); transform:translate(-50%,-50%); box-shadow:0 1px 4px rgba(0,0,0,0.55);}
 /* Hodnocení ceny — barevná karta s odznakem (výhodná / průměrná / vyšší cena) */
@@ -662,7 +662,7 @@ h1 em{font-style:italic; font-weight:600; background:linear-gradient(100deg, #3D
 .odl-empty b{display:block; font-family:'Plus Jakarta Sans','Inter',sans-serif; font-weight:600; font-size:19px; color:var(--text-ondark); margin-bottom:8px;}
 .odl-empty span{color:var(--text-ondark-mute); font-size:14px; line-height:1.55; max-width:44ch; display:inline-block;}
 .odl-empty-btn{display:inline-block; margin-top:18px;}
-.odl-cta{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-top:20px; padding:20px 24px; background:linear-gradient(135deg, rgba(142,111,184,0.14), rgba(142,111,184,0.05)); border:1px solid rgba(142,111,184,0.35); border-radius:16px;}
+.odl-cta{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-top:20px; padding:20px 24px; background:linear-gradient(135deg, rgba(139,79,224,0.14), rgba(139,79,224,0.05)); border:1px solid rgba(139,79,224,0.35); border-radius:16px;}
 .odl-cta-txt{display:flex; flex-direction:column; gap:3px;}
 .odl-cta-txt b{font-size:16px; color:var(--text-ondark); font-weight:700;}
 .odl-cta-txt span{font-size:13.5px; color:var(--text-ondark-mute);}
@@ -901,7 +901,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .beforeafter{display:grid; grid-template-columns:1fr auto 1fr; gap:24px; align-items:center;}
 .ba-col{background:var(--ink-soft); border:1px solid var(--line); border-radius:12px; padding:28px;}
 .ba-before{opacity:0.85;}
-.ba-after{border-color:rgba(62,142,91,0.4); background:linear-gradient(135deg, var(--ink-soft), rgba(62,142,91,0.08));}
+.ba-after{border-color:rgba(31,163,99,0.4); background:linear-gradient(135deg, var(--ink-soft), rgba(31,163,99,0.08));}
 .ba-tag{font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:16px; color:var(--text-ondark-mute);}
 .ba-after .ba-tag{color:var(--c-sale);}
 .ba-col ul{list-style:none; display:flex; flex-direction:column; gap:12px;}

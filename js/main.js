@@ -32,11 +32,11 @@
   ];
 
   var TYPE = {
-    sale:    { label:'Na prodej',    color:'#3E9B63', link:{ label:'Nabídka SPÚ',          url:'https://spu.gov.cz/nabidky' } },
-    drazba:  { label:'Dražba',       color:'#D9A441', link:{ label:'Detail dražby',       url:'https://www.portaldrazeb.cz/' } },
-    exekuce: { label:'Exekuce',      color:'#C15B44', link:{ label:'Insolvenční rejstřík', url:'https://isir.justice.cz/isir/common/index.do' } },
-    obec:    { label:'Obecní záměr', color:'#5E86C4', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } },
-    majitel: { label:'Od majitele',  color:'#8E6FB8', link:{ label:'Ověřit v katastru',    url:'https://www.ikatastr.cz/' } }
+    sale:    { label:'Na prodej',    color:'#1FA363', link:{ label:'Nabídka SPÚ',          url:'https://spu.gov.cz/nabidky' } },
+    drazba:  { label:'Dražba',       color:'#E5A00D', link:{ label:'Detail dražby',       url:'https://www.portaldrazeb.cz/' } },
+    exekuce: { label:'Exekuce',      color:'#E4483D', link:{ label:'Insolvenční rejstřík', url:'https://isir.justice.cz/isir/common/index.do' } },
+    obec:    { label:'Obecní záměr', color:'#3D63EE', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } },
+    majitel: { label:'Od majitele',  color:'#8B4FE0', link:{ label:'Ověřit v katastru',    url:'https://www.ikatastr.cz/' } }
   };
   // 14 krajů ČR — přehled po krajích (rozdělení mapy). Okres → kraj + střed kraje.
   var KRAJE = {
