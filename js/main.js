@@ -32,10 +32,10 @@
   ];
 
   var TYPE = {
-    sale:    { label:'Na prodej',    color:'#1FA363', link:{ label:'Nabídka SPÚ',          url:'https://spu.gov.cz/nabidky' } },
-    drazba:  { label:'Dražba',       color:'#E5A00D', link:{ label:'Detail dražby',       url:'https://www.portaldrazeb.cz/' } },
-    exekuce: { label:'Exekuce',      color:'#E4483D', link:{ label:'Insolvenční rejstřík', url:'https://isir.justice.cz/isir/common/index.do' } },
-    obec:    { label:'Obecní záměr', color:'#3D63EE', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } },
+    sale:    { label:'Na prodej',    color:'#4E6FD4', link:{ label:'Nabídka SPÚ',          url:'https://spu.gov.cz/nabidky' } },
+    drazba:  { label:'Dražba',       color:'#F0A017', link:{ label:'Detail dražby',       url:'https://www.portaldrazeb.cz/' } },
+    exekuce: { label:'Exekuce',      color:'#E5433A', link:{ label:'Insolvenční rejstřík', url:'https://isir.justice.cz/isir/common/index.do' } },
+    obec:    { label:'Obecní záměr', color:'#12AEBE', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } },
     majitel: { label:'Přímo od majitele',  color:'#8B4FE0', link:{ label:'Ověřit v katastru',    url:'https://www.ikatastr.cz/' } }
   };
   // 14 krajů ČR — přehled po krajích (rozdělení mapy). Okres → kraj + střed kraje.

@@ -6,11 +6,11 @@
   'use strict';
 
   var TYPE = {
-    sale:    { label: 'Na prodej',    color: '#4BA97D', link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
-    drazba:  { label: 'Dražba',       color: '#D8AC5E', link: { label: 'Detail dražby',       url: 'https://www.portaldrazeb.cz/' } },
-    exekuce: { label: 'Exekuce',      color: '#D66F59', link: { label: 'Insolvenční rejstřík', url: 'https://isir.justice.cz/isir/common/index.do' } },
-    obec:    { label: 'Obecní záměr', color: '#6E95D0', link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
-    majitel: { label: 'Přímo od majitele',  color: '#8E6FB8', link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
+    sale:    { label: 'Na prodej',    color: '#4E6FD4', link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
+    drazba:  { label: 'Dražba',       color: '#F0A017', link: { label: 'Detail dražby',       url: 'https://www.portaldrazeb.cz/' } },
+    exekuce: { label: 'Exekuce',      color: '#E5433A', link: { label: 'Insolvenční rejstřík', url: 'https://isir.justice.cz/isir/common/index.do' } },
+    obec:    { label: 'Obecní záměr', color: '#12AEBE', link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
+    majitel: { label: 'Přímo od majitele',  color: '#8B4FE0', link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
   };
 
   function fmt(n) { return (n == null ? '' : n.toString()).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
