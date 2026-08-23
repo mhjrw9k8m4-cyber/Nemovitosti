@@ -424,117 +424,15 @@ async function fetchFarmy() {
   return out;
 }
 
-// Sreality.cz — největší český realitní portál. Veřejné JSON API (stejné, které
-// pohání jejich vlastní web). Bereme pozemky na prodej (category_main_cb=3,
-// category_type_cb=1). U většiny inzerátů je i GPS → body sedí přesně a odkaz
-// vede na konkrétní inzerát (Sreality přesměrovává podle koncového hash_id,
-// takže odkaz funguje spolehlivě).
-function srealitySub(druh) {
-  const d = String(druh);
-  if (/stavebn/i.test(d)) return 'bydleni';
-  if (/les/i.test(d)) return 'lesy';
-  if (/zahrad/i.test(d)) return 'zahrady';
-  if (/vinice|sad/i.test(d)) return 'sady-vinice';
-  if (/orná|pole|zeměděl|travní|louk|pastvin/i.test(d)) return 'pole';
-  return 'bydleni';
-}
-const SR_HEADERS = {
-  'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-  'accept': 'application/json, text/plain, */*',
-  'accept-language': 'cs,en;q=0.9',
-  'referer': 'https://www.sreality.cz/hledani/prodej/pozemky',
-};
-// Zjistí, který styl požadavku Sreality přijme (server umí vracet i 404/blok
-// podle hlaviček). Vyzkouší několik variant, každou zaloguje i s útržkem těla,
-// ať se z běhu Action pozná, co se děje, a vrátí ty, co fungují.
-// Warm-up: načti homepage, seber cookies (anonymní session), ať autorizuje API.
-async function srealityCookies() {
-  try {
-    const r = await fetch('https://www.sreality.cz/', { headers: SR_HEADERS, signal: AbortSignal.timeout(25000) });
-    const sc = typeof r.headers.getSetCookie === 'function' ? r.headers.getSetCookie() : [];
-    const cookie = sc.map((c) => String(c).split(';')[0]).filter(Boolean).join('; ');
-    return cookie || null;
-  } catch { return null; }
-}
-async function srealityPickRequest() {
-  const cookie = await srealityCookies();
-  console.log(`Sreality warm-up: cookie ${cookie ? 'získán (' + cookie.length + 'B)' : 'žádný'}`);
-  const H = cookie ? { ...SR_HEADERS, cookie } : SR_HEADERS;
-  // Zkus v1 endpoint s cookie i bez; u JSON zaloguj strukturu, ať se dá napsat parser.
-  const urls = [
-    ['v1', 'https://www.sreality.cz/api/v1/estates?category_main_cb=3&category_type_cb=1&per_page=20&page=1'],
-    ['v2', 'https://www.sreality.cz/api/cs/v2/estates?category_main_cb=3&category_type_cb=1&per_page=20&page=1'],
-  ];
-  for (const [label, url] of urls) {
-    try {
-      const r = await fetch(url, { headers: H, signal: AbortSignal.timeout(25000) });
-      const body = await r.text();
-      let j = null; try { j = JSON.parse(body); } catch { /* není JSON */ }
-      if (j) {
-        const topKeys = Object.keys(j).slice(0, 12).join(',');
-        const arr = (j._embedded && j._embedded.estates) || j.results || j.estates || j.items || [];
-        const sampleKeys = arr[0] ? Object.keys(arr[0]).slice(0, 20).join(',') : '—';
-        console.log(`Sreality probe [${label}]: HTTP ${r.status}, JSON, topKeys=[${topKeys}], count=${arr.length}, itemKeys=[${sampleKeys}]`);
-        if (arr[0]) console.log(`Sreality vzorek [${label}]: ${JSON.stringify(arr[0]).slice(0, 500)}`);
-        if (r.ok && arr.length) return { base: url.split('?')[0], headers: H, shape: label };
-      } else {
-        console.log(`Sreality probe [${label}]: HTTP ${r.status}, ${body.length}B, start="${body.slice(0, 70).replace(/\s+/g, ' ')}"`);
-      }
-    } catch (e) { console.log(`Sreality probe [${label}]: selhal — ${e && e.message}`); }
-  }
-  return null;
-}
-async function fetchSreality() {
-  const out = [];
-  const PER = 100;
-  const pick = await srealityPickRequest();
-  if (!pick) return out; // nedosažitelné/blokované → tiše nic (zdroj je oddělený)
-  if (pick.shape !== 'v2') return out; // v1 má jinou strukturu — parser doplníme po zjištění tvaru
-  const base = pick.base, H = pick.headers;
-  let total = Infinity;
-  for (let page = 1; page <= 80 && (page - 1) * PER < total; page++) {
-    let j;
-    try {
-      const u = `${base}?category_main_cb=3&category_type_cb=1&per_page=${PER}&page=${page}`;
-      const r = await fetch(u, { headers: H, signal: AbortSignal.timeout(25000) });
-      if (!r.ok) break;
-      j = await r.json();
-    } catch { break; }
-    total = Number(j && j.result_size) || total;
-    const items = (j && j._embedded && j._embedded.estates) || [];
-    if (!items.length) break;
-    for (const e of items) {
-      const price = Math.round(+e.price || 0);
-      if (!price || price < 5000) continue; // 0 / -1 = „cena na dotaz u RK" — vynecháme
-      const g = e.gps || {};
-      const lat = typeof g.lat === 'number' ? g.lat : undefined;
-      const lng = typeof g.lon === 'number' ? g.lon : (typeof g.lng === 'number' ? g.lng : undefined);
-      const name = e.name || '';
-      const area = parseArea(name);
-      const loc = e.locality || (e.seo && e.seo.locality) || '';
-      const parts = String(loc).split(',').map((s) => s.trim()).filter(Boolean);
-      const place = ((parts[0] || name.replace(/^Prodej[^,]*/i, '').trim() || 'Pozemek')).split(/\s*-\s*/)[0].trim().slice(0, 60) || 'Pozemek';
-      let okres = (typeof lat === 'number' && typeof lng === 'number') ? nearestOkres(lat, lng) : null;
-      if (!okres) { const om = String(loc).match(/okres\s+([A-Za-zÁ-Žá-ž.\- ]+)/i); if (om) { const c = normOkres(om[1].trim().replace(/[.,;].*$/, '')); if (OKRESY_MAP[c]) okres = c; } }
-      if (!okres) continue;
-      const hash = e.hash_id || (e._links && e._links.self && (String(e._links.self.href).match(/(\d+)$/) || [])[1]);
-      if (!hash) continue;
-      const druh = parseDruh(name + ' ' + loc);
-      const seoLoc = (e.seo && e.seo.locality) || 'pozemek';
-      out.push({
-        place, okres, type: 'sale',
-        parcel: '—', _key: 'sr-' + hash,
-        druh: druh || 'pozemek', area: area || null, price,
-        extra: 'inzerát – Sreality',
-        lat, lng, _gps: typeof lat === 'number' && typeof lng === 'number',
-        url: `https://www.sreality.cz/detail/prodej/pozemek/${srealitySub(druh)}/${seoLoc}/${hash}`,
-      });
-    }
-    if (items.length < PER) break;
-    await sleep(150); // slušnost k serveru
-  }
-  return out;
-}
+// Sreality.cz — DOČASNĚ MIMO. Ověřeno v běhu Action (srpen 2026):
+//  • runner na Sreality dosáhne (homepage i sitemap HTTP 200 — žádný IP-blok),
+//  • staré veřejné API /api/cs/v2/estates už neexistuje (HTTP 404, nginx),
+//  • nové /api/v1/estates vrací JSON, ale vyžaduje přihlášení (HTTP 401) a ani
+//    cookie z homepage nestačí (chce reálný přihlašovací token).
+// Obcházet přihlášení nechceme (křehké a je to obcházení ochrany), takže
+// Sreality zatím nebereme. No-op — snadno se v budoucnu oživí (placené API /
+// rezidenční proxy). Není ani v seznamu SOURCES, takže se reálně nevolá.
+async function fetchSreality() { return []; }
 
 /* ---------- Sjednocení a zápis ---------- */
 
@@ -584,7 +482,6 @@ async function main() {
     ['OK dražby', fetchOkdrazby],
     ['SPÚ', fetchProdejSPU],
     ['Bezrealitky', fetchBezrealitky],
-    ['Sreality', fetchSreality],
     ['Farmy', fetchFarmy],
   ];
   const results = await Promise.allSettled(SOURCES.map(([, fn]) => fn()));
@@ -628,17 +525,15 @@ async function main() {
   // inzeráty od lidí (Bezrealitky), zemědělská půda (Farmy) i státní půda (SPÚ).
   const sale = byType.sale || [];
   const byPrice = (a, b) => a.price - b.price;
-  // Portály s přímým odkazem na inzerát (Sreality, Bezrealitky, Farmy) dostanou
-  // nejvíc prostoru — na ně se dá kliknout a rovnou volat prodejci. Státní půda
-  // (SPÚ) nemá odkaz na konkrétní parcelu, tak jí dáme míň. Přes spread() bereme
+  // Portály s přímým odkazem na inzerát (Bezrealitky, Farmy) dostanou nejvíc
+  // prostoru — na ně se dá kliknout a rovnou volat prodejci. Státní půda (SPÚ)
+  // nemá odkaz na konkrétní parcelu, tak jí dáme míň. Přes spread() bereme
   // pestrý vzorek napříč cenami (ne jen nejlevnější slivery), ať je mapa zajímavá.
   const bez = sale.filter((o) => /Bezrealitky/i.test(o.extra || ''));
-  const srealit = sale.filter((o) => /Sreality/i.test(o.extra || ''));
   const farmy = sale.filter((o) => /Farmy/i.test(o.extra || ''));
   const spuSale = sale.filter((o) => /státní/i.test(o.extra || '')).sort(byPrice);
   const saleSel = [
     ...bez,                     // celá nabídka Bezrealitky (přímý odkaz na inzerát)
-    ...spread(srealit, 1800),   // Sreality – pokud projde (jinak prázdné)
     ...farmy,                   // celá nabídka Farmy
     ...spread(spuSale, 900),    // státní půda doplní zbytek
   ];
@@ -685,7 +580,7 @@ async function main() {
 
   const payload = {
     updated: new Date().toISOString().slice(0, 10),
-    source: 'Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Sreality, Bezrealitky, Farmy)',
+    source: 'Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy)',
     opportunities: fresh,
   };
   writeFileSync(OUT, JSON.stringify(payload, null, 2) + '\n', 'utf8');
