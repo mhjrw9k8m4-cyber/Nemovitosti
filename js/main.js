@@ -1475,12 +1475,21 @@
   }
   // Přibližná poloha podle IP — když GPS není povolená. Zkusí dva zdroje (HTTPS, bez klíče).
   // Zaostři ruční hledání obce (když se poloha nepovede).
-  function focusSearch() {
-    if (sortEl) sortEl.value = sortMode;
-    if (searchEl) { try { searchEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); searchEl.focus(); } catch (e) {} }
-  }
   // Obrazovka „poloha se nepovedla" — ukáže se jen jako poslední záchrana,
   // když selže i přibližná poloha podle připojení. Vede rovnou k napsání obce.
+  // Najde souřadnice napsané obce/okresu POUZE z našich dat (bez internetu):
+  // vezme skutečný pozemek v té obci → mapa se pak vystředí přesně tam, kde
+  // pozemky opravdu jsou. Když obec nenajde, zkusí okres a nakonec kraj.
+  function normTxt(s) { return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
+  function geocodeTownLocal(q) {
+    var n = normTxt(q); if (n.length < 2) return null;
+    var i, d;
+    for (i = 0; i < DATA.length; i++) { d = DATA[i]; if (typeof d.lat === 'number' && normTxt(d.place) === n) return { lat: d.lat, lng: d.lng }; }
+    for (i = 0; i < DATA.length; i++) { d = DATA[i]; if (typeof d.lat === 'number' && normTxt(d.place).indexOf(n) >= 0) return { lat: d.lat, lng: d.lng }; }
+    for (i = 0; i < DATA.length; i++) { d = DATA[i]; if (typeof d.lat === 'number' && normTxt(d.okres).indexOf(n) >= 0) return { lat: d.lat, lng: d.lng }; }
+    for (var kn in KRAJE) { if (normTxt(kn).indexOf(n) >= 0) return { lat: KRAJE[kn].c[0], lng: KRAJE[kn].c[1] }; }
+    return null;
+  }
   var LOC_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
   function showLocModal(err) {
     var denied = err && err.code === 1;
@@ -1512,20 +1521,39 @@
             ? 'Poloha je pro tento web vypnutá — sami vás do nastavení bohužel přenést nemůžeme. Zapněte ji podle návodu níže, nebo prostě napište obec (funguje hned).'
             : 'Polohu se teď nepodařilo zjistit. Napište obec a najdeme pozemky ve vašem okolí.') + '</p>' +
         steps +
+        '<div style="margin-top:4px;">' +
+          '<input type="text" id="loc-town" inputmode="text" autocomplete="off" autocapitalize="words" ' +
+            'placeholder="Napište obec nebo okres (např. Kolín)" ' +
+            'style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--line,#ccd);border-radius:12px;font-size:16px;background:var(--ink-soft,#fff);color:var(--text-ondark,#141829);">' +
+          '<div id="loc-err" hidden style="color:var(--c-exekuce,#e33);font-size:13px;margin:6px 2px 0;text-align:left;"></div>' +
+        '</div>' +
         '<div class="loc-btns">' +
-          '<button class="loc-btn primary" type="button" data-loc="city">Napsat obec</button>' +
+          '<button class="loc-btn primary" type="button" data-loc="find">Najít pozemky u obce</button>' +
           '<button class="loc-btn ghost" type="button" data-loc="retry">Zkusit polohu znovu</button>' +
         '</div>' +
       '</div>';
     document.body.appendChild(ov);
     function close() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    var inp = ov.querySelector('#loc-town');
+    var errEl = ov.querySelector('#loc-err');
+    function submitTown() {
+      var q = inp ? inp.value.trim() : '';
+      if (q.length < 2) { if (errEl) { errEl.textContent = 'Napište prosím obec (aspoň 2 písmena).'; errEl.hidden = false; } return; }
+      var pos = geocodeTownLocal(q);
+      if (!pos) { if (errEl) { errEl.textContent = 'Obec „' + q + '" jsme nenašli. Zkuste blízké větší město nebo okres.'; errEl.hidden = false; } return; }
+      close(); scrollToMap(); enterNearAt({ lat: pos.lat, lng: pos.lng }, true);
+    }
     ov.addEventListener('click', function (e) {
       if (e.target === ov || e.target.closest('.loc-x')) { close(); return; }
       var b = e.target.closest('[data-loc]'); if (!b) return;
-      var act = b.getAttribute('data-loc'); close();
-      if (act === 'retry') { enterNear(true); }
-      else { focusSearch(); }
+      var act = b.getAttribute('data-loc');
+      if (act === 'retry') { close(); enterNear(); return; }
+      if (act === 'find') { submitTown(); return; }
     });
+    if (inp) {
+      inp.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); submitTown(); } });
+      if (!denied) setTimeout(function () { try { inp.focus(); } catch (e) {} }, 80);
+    }
   }
   // Když přesná GPS nejde: polohu podle IP VĚDOMĚ nepoužíváme — na mobilu/5G
   // ukazuje město operátora (typicky Prahu), takže to lidi mátlo a házelo je
