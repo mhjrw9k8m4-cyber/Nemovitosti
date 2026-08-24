@@ -1492,44 +1492,24 @@
   }
   var LOC_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
   function showLocModal(err) {
-    var denied = err && err.code === 1;
-    var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
-    // Web NEMŮŽE sám otevřít Nastavení ani znovu vyvolat systémový dotaz na polohu
-    // (bezpečnostní pravidlo prohlížeče). Když je poloha zakázaná, aspoň jasně
-    // poradíme, jak ji zapnout — a necháme „napsat obec" jako jistotu, co funguje vždy.
-    var stepStyle = 'margin:2px 0 0;padding-left:18px;font-size:13px;line-height:1.6;color:var(--text-ondark-mute,#565F72);text-align:left;';
-    var steps = denied ? (
-      '<div style="background:var(--ink-soft2,#EFF1F4);border-radius:12px;padding:12px 14px;margin:4px 0 2px;text-align:left;">' +
-      '<div style="font-size:13px;font-weight:700;margin-bottom:4px;">Jak polohu zapnout' + (isIOS ? ' (iPhone)' : '') + ':</div>' +
-      (isIOS
-        ? '<ol style="' + stepStyle + '"><li>Vlevo v adresním řádku klepněte na <b>„aA"</b>.</li>' +
-          '<li>Zvolte <b>Nastavení webu</b>.</li>' +
-          '<li>U položky <b>Poloha</b> dejte <b>Povolit</b>.</li>' +
-          '<li>Vraťte se sem a klepněte <b>„Zkusit polohu znovu"</b>.</li></ol>'
-        : '<ol style="' + stepStyle + '"><li>Klepněte na ikonu <b>zámku</b> vedle adresy webu.</li>' +
-          '<li>U položky <b>Poloha</b> zvolte <b>Povolit</b>.</li>' +
-          '<li>Klepněte <b>„Zkusit polohu znovu"</b>.</li></ol>') +
-      '</div>'
-    ) : '';
+    // Minimalistické okno: žádné odstavce ani návody. Buď použij mou polohu,
+    // nebo napiš obec. (Systémový dotaz „Povolit polohu?" ukáže prohlížeč sám
+    // při volbě „Použít mou polohu"; pokud je zakázaný, zafunguje napsání obce.)
     var ov = document.createElement('div'); ov.className = 'loc-ov';
     ov.innerHTML =
-      '<div class="loc-card" role="dialog" aria-modal="true" aria-label="Poloha">' +
+      '<div class="loc-card" role="dialog" aria-modal="true" aria-label="Kde hledat">' +
         '<button class="loc-x" type="button" aria-label="Zavřít">✕</button>' +
         '<div class="loc-ic">' + LOC_PIN + '</div>' +
-        '<h3>' + (denied ? 'Zapněte polohu' : 'Napište obec') + '</h3>' +
-        '<p>' + (denied
-            ? 'Poloha je pro tento web vypnutá — sami vás do nastavení bohužel přenést nemůžeme. Zapněte ji podle návodu níže, nebo prostě napište obec (funguje hned).'
-            : 'Polohu se teď nepodařilo zjistit. Napište obec a najdeme pozemky ve vašem okolí.') + '</p>' +
-        steps +
+        '<h3>Kde hledat?</h3>' +
         '<div style="margin-top:4px;">' +
           '<input type="text" id="loc-town" inputmode="text" autocomplete="off" autocapitalize="words" ' +
-            'placeholder="Napište obec nebo okres (např. Kolín)" ' +
+            'placeholder="Napište obec (např. Kolín)" ' +
             'style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--line,#ccd);border-radius:12px;font-size:16px;background:var(--ink-soft,#fff);color:var(--text-ondark,#141829);">' +
           '<div id="loc-err" hidden style="color:var(--c-exekuce,#e33);font-size:13px;margin:6px 2px 0;text-align:left;"></div>' +
         '</div>' +
         '<div class="loc-btns">' +
-          '<button class="loc-btn primary" type="button" data-loc="find">Najít pozemky u obce</button>' +
-          '<button class="loc-btn ghost" type="button" data-loc="retry">Zkusit polohu znovu</button>' +
+          '<button class="loc-btn primary" type="button" data-loc="find">Najít pozemky</button>' +
+          '<button class="loc-btn ghost" type="button" data-loc="retry">Použít mou polohu</button>' +
         '</div>' +
       '</div>';
     document.body.appendChild(ov);
@@ -1552,7 +1532,6 @@
     });
     if (inp) {
       inp.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); submitTown(); } });
-      if (!denied) setTimeout(function () { try { inp.focus(); } catch (e) {} }, 80);
     }
   }
   // Když přesná GPS nejde: polohu podle IP VĚDOMĚ nepoužíváme — na mobilu/5G
