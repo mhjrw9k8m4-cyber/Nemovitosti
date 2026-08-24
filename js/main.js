@@ -1448,7 +1448,7 @@
     if (typeof scrollToMap === 'function') scrollToMap();   // ať je mapa s výsledkem opravdu vidět
     updateKrajHead();
     renderList();
-    showToast(approx ? 'Přibližná poloha podle připojení — pro přesnou povolte GPS.' : 'Seřazeno podle vzdálenosti od vás.');
+    showToast(approx ? 'Pozemky v okolí — seřazeno podle vzdálenosti.' : 'Seřazeno podle vzdálenosti od vás.');
   }
   // Nakreslí kruh „okolí" kolem vás a přizpůsobí pohled tak, aby byly vidět
   // nejbližší pozemky (ne jen prázdná mapa kolem vaší polohy).
