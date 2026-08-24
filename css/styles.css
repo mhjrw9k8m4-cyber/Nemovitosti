@@ -1069,6 +1069,20 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .loc-btn.primary:hover{filter:brightness(1.06);}
 .loc-btn.ghost{background:var(--ink-soft2); color:var(--text-ondark); border-color:var(--line-strong);}
 .loc-btn.ghost:hover{border-color:var(--copper-bright);}
+/* Plynulý příchod okna + jemné vizuální doladění */
+@keyframes locOvIn{from{opacity:0}to{opacity:1}}
+@keyframes locCardIn{from{opacity:0; transform:translateY(18px) scale(.95)}to{opacity:1; transform:none}}
+.loc-ov{animation:locOvIn .2s ease both;}
+.loc-card{animation:locCardIn .34s cubic-bezier(.2,.9,.3,1.25) both;}
+.loc-ic{background:linear-gradient(135deg,rgba(61,99,238,.16),rgba(123,52,200,.13)); box-shadow:0 8px 20px -10px rgba(61,99,238,.5);}
+.loc-btn{transition:transform .08s ease, filter .15s ease, border-color .15s ease, box-shadow .15s ease;}
+.loc-btn:active{transform:scale(.975);}
+.loc-btn.primary{box-shadow:0 12px 24px -12px var(--copper);}
+.loc-input{width:100%; box-sizing:border-box; padding:13px 15px; border:1.5px solid var(--line-strong); border-radius:13px; font-size:16px; background:var(--ink-soft2); color:var(--text-ondark); outline:none; transition:border-color .15s ease, box-shadow .15s ease, background .15s ease; -webkit-appearance:none; appearance:none;}
+.loc-input::placeholder{color:var(--text-ondark-mute);}
+.loc-input:focus{border-color:var(--copper-bright); background:var(--ink-soft); box-shadow:0 0 0 4px rgba(61,99,238,.14);}
+.loc-err{color:var(--c-exekuce); font-size:13px; margin:8px 2px 0; text-align:left;}
+@media (prefers-reduced-motion: reduce){.loc-ov,.loc-card{animation-duration:.01ms;}}
 
 /* Responsive */
 /* Přepínač Mapa / Seznam — jen na mobilu, ať seznam není zahrabaný pod mapou */

@@ -1502,10 +1502,9 @@
         '<div class="loc-ic">' + LOC_PIN + '</div>' +
         '<h3>Kde hledat?</h3>' +
         '<div style="margin-top:4px;">' +
-          '<input type="text" id="loc-town" inputmode="text" autocomplete="off" autocapitalize="words" ' +
-            'placeholder="Napište obec (např. Kolín)" ' +
-            'style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--line,#ccd);border-radius:12px;font-size:16px;background:var(--ink-soft,#fff);color:var(--text-ondark,#141829);">' +
-          '<div id="loc-err" hidden style="color:var(--c-exekuce,#e33);font-size:13px;margin:6px 2px 0;text-align:left;"></div>' +
+          '<input type="text" id="loc-town" class="loc-input" inputmode="text" autocomplete="off" autocapitalize="words" ' +
+            'placeholder="Napište obec (např. Kolín)">' +
+          '<div id="loc-err" class="loc-err" hidden></div>' +
         '</div>' +
         '<div class="loc-btns">' +
           '<button class="loc-btn primary" type="button" data-loc="find">Najít pozemky</button>' +
