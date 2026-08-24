@@ -1542,21 +1542,14 @@
       fallbackNear(err);   // GPS zamítnuta/selhala → přibližná poloha podle připojení
     }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 });
   }
-  // „Pozemky v okolí" — jako profesionální weby:
-  // 1) je-li poloha už zakázaná, nečekáme na tichý prompt a rovnou jdeme na přibližnou polohu,
-  // 2) jinak vyžádáme přesnou GPS (nativní prompt),
-  // 3) při zamítnutí/selhání spadneme na přibližnou polohu podle připojení,
-  // 4) a teprve když nejde nic, nabídneme napsání obce.
-  function enterNear(forcePrompt) {
-    if (!navigator.geolocation) { fallbackNear({ code: 2 }); return; }
-    if (!forcePrompt && navigator.permissions && navigator.permissions.query) {
-      navigator.permissions.query({ name: 'geolocation' }).then(function (st) {
-        if (st && st.state === 'denied') { fallbackNear({ code: 1 }); }
-        else { askGeo(); }
-      }).catch(askGeo);
-    } else {
-      askGeo();
-    }
+  // „Pozemky v okolí" — chováme se přesně jako běžné weby: NEkontrolujeme
+  // předem stav povolení, prostě rovnou požádáme prohlížeč o polohu. iOS/Safari
+  // pak sám ukáže buď dotaz „Povolit?", nebo (když je poloha vypnutá) svůj
+  // vlastní odkaz do Nastavení. Teprve když to prohlížeč zamítne, ukážeme
+  // vlastní návod. (Dřívější předběžná kontrola ten systémový dotaz přeskakovala.)
+  function enterNear() {
+    if (!navigator.geolocation) { showLocModal({ code: 2 }); return; }
+    askGeo();
   }
   lockDots(true);      // start: nejdřív se vybírá kraj
   updateKrajHead();
