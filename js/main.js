@@ -1431,7 +1431,6 @@
     renderList();
   }
   // Je bod přibližně v ČR? (pojistka proti nesmyslné IP poloze, např. přes VPN)
-  function inCz(lat, lng) { return lat > 48.4 && lat < 51.2 && lng > 12.0 && lng < 18.95; }
   // Přejde do režimu „okolí" na dané poloze. approx = přibližná (podle IP).
   function enterNearAt(pos, approx) {
     userPos = { lat: pos.lat, lng: pos.lng };
@@ -1475,15 +1474,6 @@
     catch (e) { map.setView([userPos.lat, userPos.lng], approx ? 10 : 11, { animate: true }); }
   }
   // Přibližná poloha podle IP — když GPS není povolená. Zkusí dva zdroje (HTTPS, bez klíče).
-  function ipLocate() {
-    function grab(url, pick) {
-      return fetch(url).then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (j) { var p = j && pick(j); return (p && inCz(p.lat, p.lng)) ? p : null; })
-        .catch(function () { return null; });
-    }
-    return grab('https://ipapi.co/json/', function (j) { return (j.latitude && j.longitude) ? { lat: +j.latitude, lng: +j.longitude } : null; })
-      .then(function (p) { return p || grab('https://ipwho.is/', function (j) { return (j && j.success && j.latitude) ? { lat: +j.latitude, lng: +j.longitude } : null; }); });
-  }
   // Zaostři ruční hledání obce (když se poloha nepovede).
   function focusSearch() {
     if (sortEl) sortEl.value = sortMode;
@@ -1518,14 +1508,11 @@
       else { focusSearch(); }
     });
   }
-  // Poslední záloha, když GPS nejde: přibližná poloha podle připojení (IP).
-  // Když ani ta nevyjde, teprve pak nabídneme napsání obce.
+  // Když přesná GPS nejde: polohu podle IP VĚDOMĚ nepoužíváme — na mobilu/5G
+  // ukazuje město operátora (typicky Prahu), takže to lidi mátlo a házelo je
+  // do Prahy. Místo toho slušně požádáme o obec — to je přesné a rychlé.
   function fallbackNear(err) {
-    showToast('Hledám přibližnou polohu…');
-    ipLocate().then(function (pos) {
-      if (pos) { enterNearAt(pos, true); }
-      else { showLocModal(err); }
-    });
+    showLocModal(err);
   }
   // Vlastní žádost o GPS + prompt prohlížeče.
   function askGeo() {
