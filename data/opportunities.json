@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23",
+  "updated": "2026-08-24",
   "source": "Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy, příp. Sreality přes Apify)",
   "opportunities": [
     {
@@ -2653,6 +2653,19 @@
       "lat": 49.642963,
       "lng": 12.520273,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1040975-nabidka-prodej-pozemku-rozvadov"
+    },
+    {
+      "place": "Pohořelice",
+      "okres": "Brno-venkov",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": 6343,
+      "price": 190290,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.0081842,
+      "lng": 16.5384796,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1058473-nabidka-prodej-pozemku-pohorelice"
     },
     {
       "place": "Vysoká",
@@ -24881,19 +24894,6 @@
       "url": "https://www.okdrazby.cz/drazba/26717"
     },
     {
-      "place": "Líčkov",
-      "okres": "Rakovník",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "lesní pozemek",
-      "area": null,
-      "price": 16922667,
-      "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2670183,
-      "lng": 13.5946064,
-      "url": "https://www.okdrazby.cz/drazba/26715"
-    },
-    {
       "place": "Holedeč",
       "okres": "Louny",
       "type": "exekuce",
@@ -24905,6 +24905,19 @@
       "lat": 50.2653592,
       "lng": 13.5922308,
       "url": "https://www.okdrazby.cz/drazba/26716"
+    },
+    {
+      "place": "Líčkov",
+      "okres": "Rakovník",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": null,
+      "price": 16922667,
+      "extra": "nucená dražba 2026-09-22 · OK dražby",
+      "lat": 50.2670183,
+      "lng": 13.5946064,
+      "url": "https://www.okdrazby.cz/drazba/26715"
     },
     {
       "place": "Předonín",
