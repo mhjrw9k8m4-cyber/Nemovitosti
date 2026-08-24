@@ -1523,11 +1523,31 @@
       if (!pos) { if (errEl) { errEl.textContent = 'Obec „' + q + '" jsme nenašli. Zkuste blízké větší město nebo okres.'; errEl.hidden = false; } return; }
       close(); scrollToMap(); enterNearAt({ lat: pos.lat, lng: pos.lng }, true);
     }
+    // „Použít mou polohu" zkusí GPS PŘÍMO tady (v rámci kliknutí = prohlížeč smí
+    // ukázat systémový dotaz). Nezavíráme a neotevíráme okno dokola — při úspěchu
+    // zaměříme, při zákazu jasně napíšeme, ať uživatel nekouká na prázdno.
+    var retryBtn = ov.querySelector('[data-loc="retry"]');
+    function tryGeoInline() {
+      if (!navigator.geolocation) { if (errEl) { errEl.textContent = 'Tento prohlížeč neumí polohu — napište obec výše.'; errEl.hidden = false; } return; }
+      if (errEl) errEl.hidden = true;
+      if (retryBtn) { retryBtn.textContent = 'Zjišťuji polohu…'; retryBtn.disabled = true; }
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        close(); scrollToMap(); enterNearAt({ lat: pos.coords.latitude, lng: pos.coords.longitude }, false);
+      }, function (er) {
+        if (retryBtn) { retryBtn.textContent = 'Použít mou polohu'; retryBtn.disabled = false; }
+        if (errEl) {
+          errEl.textContent = (er && er.code === 1)
+            ? 'Poloha je u tohoto webu vypnutá. Napište prosím obec výše 👆'
+            : 'Polohu se teď nepodařilo zjistit. Napište prosím obec výše 👆';
+          errEl.hidden = false;
+        }
+      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 });
+    }
     ov.addEventListener('click', function (e) {
       if (e.target === ov || e.target.closest('.loc-x')) { close(); return; }
       var b = e.target.closest('[data-loc]'); if (!b) return;
       var act = b.getAttribute('data-loc');
-      if (act === 'retry') { close(); enterNear(); return; }
+      if (act === 'retry') { tryGeoInline(); return; }
       if (act === 'find') { submitTown(); return; }
     });
     if (inp) {
