@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-24",
+  "updated": "2026-08-25",
   "source": "Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy, příp. Sreality přes Apify)",
   "opportunities": [
     {
@@ -12392,19 +12392,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1045585-nabidka-prodej-pozemku-hradcany-koberice"
     },
     {
-      "place": "Josefov",
-      "okres": "Břeclav",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "lesní pozemek",
-      "area": 3922,
-      "price": 249000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 48.852431,
-      "lng": 16.981744,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/980807-nabidka-prodej-pozemku"
-    },
-    {
       "place": "Orlová",
       "okres": "Karviná",
       "type": "sale",
@@ -12416,6 +12403,19 @@
       "lat": 49.867274,
       "lng": 18.412313,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/978057-nabidka-prodej-pozemku-orlova"
+    },
+    {
+      "place": "Josefov",
+      "okres": "Břeclav",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": 3922,
+      "price": 249000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 48.852431,
+      "lng": 16.981744,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/980807-nabidka-prodej-pozemku"
     },
     {
       "place": "Cotkytle",
@@ -19202,6 +19202,19 @@
       "lat": 50.247978041375,
       "lng": 14.14743935764,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/821285-nabidka-prodej-pozemku-10142-zizice"
+    },
+    {
+      "place": "Al. Jiráska",
+      "okres": "Náchod",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": 949,
+      "price": 2950000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.276561568495,
+      "lng": 16.043531940561,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1058686-nabidka-prodej-pozemku-al-jiraska-ceske-mezirici"
     },
     {
       "place": "Jablonec nad Nisou",
