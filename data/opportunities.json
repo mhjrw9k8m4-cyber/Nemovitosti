@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-25",
+  "updated": "2026-08-26",
   "source": "Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy, příp. Sreality přes Apify)",
   "opportunities": [
     {
@@ -19828,6 +19828,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1043565-nabidka-prodej-pozemku-k-laznim-praha"
     },
     {
+      "place": "Šatov",
+      "okres": "Znojmo",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": 461,
+      "price": 2250000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 48.7931741,
+      "lng": 16.0099232,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1050693-nabidka-prodej-pozemku"
+    },
+    {
       "place": "Hradečno",
       "okres": "Kladno",
       "type": "sale",
@@ -19865,19 +19878,6 @@
       "lat": 49.241758377571,
       "lng": 16.619724049411,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1052339-nabidka-prodej-pozemku"
-    },
-    {
-      "place": "Šatov",
-      "okres": "Znojmo",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": 461,
-      "price": 2400000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 48.7931741,
-      "lng": 16.0099232,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1050693-nabidka-prodej-pozemku"
     },
     {
       "place": "Sezemice",
@@ -23679,6 +23679,19 @@
       "url": "https://www.exdrazby.cz/drazba/29647"
     },
     {
+      "place": "Ondřejov",
+      "okres": "Praha-východ",
+      "type": "drazba",
+      "parcel": "1448/7",
+      "druh": "ostatní plocha",
+      "area": 98,
+      "price": 38031,
+      "extra": "dražba 2026-09-15",
+      "lat": 49.89928,
+      "lng": 14.78126,
+      "url": "https://www.drazbystupka.cz/drazba/zahrada-idpodil-16-ondrejov-tremblat-praha-vychod-16-v/221"
+    },
+    {
       "place": "Seninka",
       "okres": "Vsetín",
       "type": "drazba",
@@ -23703,19 +23716,6 @@
       "lat": 49.29717,
       "lng": 14.96677,
       "url": "https://www.bdidrazby.cz/property/57/"
-    },
-    {
-      "place": "Ondřejov",
-      "okres": "Praha-východ",
-      "type": "drazba",
-      "parcel": "1448/7",
-      "druh": "ostatní plocha",
-      "area": 98,
-      "price": 54330,
-      "extra": "dražba 2026-08-25",
-      "lat": 49.89928,
-      "lng": 14.78126,
-      "url": "https://www.drazbystupka.cz/drazba/zahrada-spoluvlastnicky-podil-16-ondrejov-tremblat-praha-vychod-iv/218"
     },
     {
       "place": "Velemyšleves",
@@ -23819,66 +23819,6 @@
       "lat": 50.218695,
       "lng": 15.0914011,
       "url": "https://okdrazby.cz/drazba/18037"
-    },
-    {
-      "place": "Karviná",
-      "okres": "Karviná",
-      "type": "drazba",
-      "parcel": "2904/26",
-      "druh": "orná půda",
-      "area": 1216,
-      "price": 1824000,
-      "extra": "dražba 2026-08-24",
-      "lat": 49.8748472,
-      "lng": 18.5507425
-    },
-    {
-      "place": "Karviná",
-      "okres": "Karviná",
-      "type": "drazba",
-      "parcel": "2904/27",
-      "druh": "orná půda",
-      "area": 1202,
-      "price": 1803000,
-      "extra": "dražba 2026-08-24",
-      "lat": 49.8747297,
-      "lng": 18.55041
-    },
-    {
-      "place": "Karviná",
-      "okres": "Karviná",
-      "type": "drazba",
-      "parcel": "2904/16",
-      "druh": "orná půda",
-      "area": 1126,
-      "price": 1689000,
-      "extra": "dražba 2026-08-25",
-      "lat": 49.8751947,
-      "lng": 18.5515017
-    },
-    {
-      "place": "Karviná",
-      "okres": "Karviná",
-      "type": "drazba",
-      "parcel": "2904/39",
-      "druh": "orná půda",
-      "area": 1111,
-      "price": 1666500,
-      "extra": "dražba 2026-08-25",
-      "lat": 49.85091,
-      "lng": 18.53754
-    },
-    {
-      "place": "Karviná",
-      "okres": "Karviná",
-      "type": "drazba",
-      "parcel": "2904/37",
-      "druh": "orná půda",
-      "area": 1052,
-      "price": 1578000,
-      "extra": "dražba 2026-08-25",
-      "lat": 49.8754056,
-      "lng": 18.5520675
     },
     {
       "place": "Karviná",
@@ -24920,19 +24860,6 @@
       "url": "https://www.okdrazby.cz/drazba/26856"
     },
     {
-      "place": "Lhota u Nečemic",
-      "okres": "Louny",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "zemědělský pozemek",
-      "area": null,
-      "price": 1102000,
-      "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2644361,
-      "lng": 13.5955244,
-      "url": "https://www.okdrazby.cz/drazba/26717"
-    },
-    {
       "place": "Holedeč",
       "okres": "Louny",
       "type": "exekuce",
@@ -24944,6 +24871,19 @@
       "lat": 50.2653592,
       "lng": 13.5922308,
       "url": "https://www.okdrazby.cz/drazba/26716"
+    },
+    {
+      "place": "Lhota u Nečemic",
+      "okres": "Louny",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "zemědělský pozemek",
+      "area": null,
+      "price": 1102000,
+      "extra": "nucená dražba 2026-09-22 · OK dražby",
+      "lat": 50.2644361,
+      "lng": 13.5955244,
+      "url": "https://www.okdrazby.cz/drazba/26717"
     },
     {
       "place": "Líčkov",
@@ -24998,19 +24938,6 @@
       "url": "https://www.okdrazby.cz/drazba/26245"
     },
     {
-      "place": "Vyškov",
-      "okres": "Vyškov",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": null,
-      "price": 463333,
-      "extra": "nucená dražba 2026-09-15 · OK dražby",
-      "lat": 49.20462588208005,
-      "lng": 16.89808275550604,
-      "url": "https://www.okdrazby.cz/drazba/26188"
-    },
-    {
       "place": "Praha-východ",
       "okres": "Praha-východ",
       "type": "exekuce",
@@ -25022,6 +24949,19 @@
       "lat": 49.996088,
       "lng": 14.635449,
       "url": "https://www.okdrazby.cz/drazba/26186"
+    },
+    {
+      "place": "Vyškov",
+      "okres": "Vyškov",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": null,
+      "price": 463333,
+      "extra": "nucená dražba 2026-09-15 · OK dražby",
+      "lat": 49.20462588208005,
+      "lng": 16.89808275550604,
+      "url": "https://www.okdrazby.cz/drazba/26188"
     }
   ]
 }
