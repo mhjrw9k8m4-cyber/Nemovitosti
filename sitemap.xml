@@ -381,11 +381,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-zdar-nad-sazavou.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://parcelaka.cz/pozemky-okres-havlickuv-brod.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -461,12 +456,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-karvina.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-novy-jicin.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-novy-jicin.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-karvina.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -482,6 +477,11 @@
   </url>
   <url>
     <loc>https://parcelaka.cz/pozemky-okres-bruntal.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-okres-opava.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
