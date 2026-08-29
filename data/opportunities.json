@@ -24647,19 +24647,6 @@
       "url": "https://www.okdrazby.cz/drazba/26856"
     },
     {
-      "place": "Holedeč",
-      "okres": "Louny",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "lesní pozemek",
-      "area": null,
-      "price": 3400000,
-      "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2653592,
-      "lng": 13.5922308,
-      "url": "https://www.okdrazby.cz/drazba/26716"
-    },
-    {
       "place": "Lhota u Nečemic",
       "okres": "Louny",
       "type": "exekuce",
@@ -24671,6 +24658,19 @@
       "lat": 50.2644361,
       "lng": 13.5955244,
       "url": "https://www.okdrazby.cz/drazba/26717"
+    },
+    {
+      "place": "Holedeč",
+      "okres": "Louny",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": null,
+      "price": 3400000,
+      "extra": "nucená dražba 2026-09-22 · OK dražby",
+      "lat": 50.2653592,
+      "lng": 13.5922308,
+      "url": "https://www.okdrazby.cz/drazba/26716"
     },
     {
       "place": "Líčkov",
@@ -24686,19 +24686,6 @@
       "url": "https://www.okdrazby.cz/drazba/26715"
     },
     {
-      "place": "Mladá Boleslav",
-      "okres": "Mladá Boleslav",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": null,
-      "price": 2050000,
-      "extra": "nucená dražba 2026-09-01 · OK dražby",
-      "lat": 50.399894,
-      "lng": 15.01514,
-      "url": "https://www.okdrazby.cz/drazba/26255"
-    },
-    {
       "place": "Předonín",
       "okres": "Mělník",
       "type": "exekuce",
@@ -24710,6 +24697,19 @@
       "lat": 50.440393,
       "lng": 14.326133,
       "url": "https://www.okdrazby.cz/drazba/26256"
+    },
+    {
+      "place": "Mladá Boleslav",
+      "okres": "Mladá Boleslav",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": null,
+      "price": 2050000,
+      "extra": "nucená dražba 2026-09-01 · OK dražby",
+      "lat": 50.399894,
+      "lng": 15.01514,
+      "url": "https://www.okdrazby.cz/drazba/26255"
     },
     {
       "place": "Vyškov",
