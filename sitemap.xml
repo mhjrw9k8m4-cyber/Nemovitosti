@@ -171,12 +171,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-praha-zapad.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-praha-vychod.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-praha-vychod.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-praha-zapad.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -206,12 +206,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-kolin.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-rakovnik.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-rakovnik.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-kolin.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -236,12 +236,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-tabor.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://parcelaka.cz/pozemky-okres-strakonice.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-ceske-budejovice.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -251,7 +246,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-ceske-budejovice.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-strakonice.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-okres-tabor.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -281,6 +281,16 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://parcelaka.cz/pozemky-okres-domazlice.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-okres-plzen-sever.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://parcelaka.cz/pozemky-okres-plzen-mesto.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -296,12 +306,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-decin.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-usti-nad-labem.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-usti-nad-labem.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-decin.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -316,22 +326,22 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-semily.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://parcelaka.cz/pozemky-okres-ceska-lipa.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-liberec.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-jablonec-nad-nisou.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-jablonec-nad-nisou.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-semily.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-okres-liberec.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -371,12 +381,17 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://parcelaka.cz/pozemky-okres-brno-mesto.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://parcelaka.cz/pozemky-okres-breclav.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-brno-mesto.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-brno-venkov.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -391,17 +406,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-brno-venkov.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-znojmo.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://parcelaka.cz/pozemky-okres-vyskov.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://parcelaka.cz/pozemky-okres-znojmo.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -446,11 +456,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-karvina.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://parcelaka.cz/pozemky-okres-frydek-mistek.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -462,6 +467,11 @@
   </url>
   <url>
     <loc>https://parcelaka.cz/pozemky-okres-bruntal.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-okres-karvina.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
