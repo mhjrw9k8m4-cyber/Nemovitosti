@@ -18255,6 +18255,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/913546-nabidka-prodej-pozemku-svaty-jan"
     },
     {
+      "place": "Heřmanice",
+      "okres": "Liberec",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": 1223,
+      "price": 1990000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.8812957,
+      "lng": 15.0188327,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1061146-nabidka-prodej-pozemku-so-pou-frydlant"
+    },
+    {
       "place": "Šumbarská",
       "okres": "Ostrava-město",
       "type": "sale",
@@ -24634,6 +24647,19 @@
       "url": "https://www.okdrazby.cz/drazba/26856"
     },
     {
+      "place": "Líčkov",
+      "okres": "Rakovník",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": null,
+      "price": 16922667,
+      "extra": "nucená dražba 2026-09-22 · OK dražby",
+      "lat": 50.2670183,
+      "lng": 13.5946064,
+      "url": "https://www.okdrazby.cz/drazba/26715"
+    },
+    {
       "place": "Lhota u Nečemic",
       "okres": "Louny",
       "type": "exekuce",
@@ -24658,19 +24684,6 @@
       "lat": 50.2653592,
       "lng": 13.5922308,
       "url": "https://www.okdrazby.cz/drazba/26716"
-    },
-    {
-      "place": "Líčkov",
-      "okres": "Rakovník",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "lesní pozemek",
-      "area": null,
-      "price": 16922667,
-      "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2670183,
-      "lng": 13.5946064,
-      "url": "https://www.okdrazby.cz/drazba/26715"
     },
     {
       "place": "Předonín",
@@ -24699,19 +24712,6 @@
       "url": "https://www.okdrazby.cz/drazba/26255"
     },
     {
-      "place": "Praha-východ",
-      "okres": "Praha-východ",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "orná půda",
-      "area": null,
-      "price": 354000,
-      "extra": "nucená dražba 2026-09-02 · OK dražby",
-      "lat": 49.996088,
-      "lng": 14.635449,
-      "url": "https://www.okdrazby.cz/drazba/26186"
-    },
-    {
       "place": "Vyškov",
       "okres": "Vyškov",
       "type": "exekuce",
@@ -24723,6 +24723,19 @@
       "lat": 49.20462588208005,
       "lng": 16.89808275550604,
       "url": "https://www.okdrazby.cz/drazba/26188"
+    },
+    {
+      "place": "Praha-východ",
+      "okres": "Praha-východ",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": null,
+      "price": 354000,
+      "extra": "nucená dražba 2026-09-02 · OK dražby",
+      "lat": 49.996088,
+      "lng": 14.635449,
+      "url": "https://www.okdrazby.cz/drazba/26186"
     }
   ]
 }
