@@ -18814,6 +18814,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1051863-nabidka-prodej-pozemku-bystra"
     },
     {
+      "place": "Zaječov",
+      "okres": "Příbram",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": 2232,
+      "price": 5577000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.764434340458,
+      "lng": 13.836634085878,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1061087-nabidka-prodej-pozemku-zajecov"
+    },
+    {
       "place": "Padlých hrdinů",
       "okres": "Kladno",
       "type": "sale",
