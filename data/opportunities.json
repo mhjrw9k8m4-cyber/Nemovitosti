@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-29",
+  "updated": "2026-08-30",
   "source": "Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy, příp. Sreality přes Apify)",
   "opportunities": [
     {
@@ -24608,6 +24608,19 @@
       "url": "https://www.okdrazby.cz/drazba/26856"
     },
     {
+      "place": "Lhota u Nečemic",
+      "okres": "Louny",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "zemědělský pozemek",
+      "area": null,
+      "price": 1102000,
+      "extra": "nucená dražba 2026-09-22 · OK dražby",
+      "lat": 50.2644361,
+      "lng": 13.5955244,
+      "url": "https://www.okdrazby.cz/drazba/26717"
+    },
+    {
       "place": "Holedeč",
       "okres": "Louny",
       "type": "exekuce",
@@ -24632,19 +24645,6 @@
       "lat": 50.2670183,
       "lng": 13.5946064,
       "url": "https://www.okdrazby.cz/drazba/26715"
-    },
-    {
-      "place": "Lhota u Nečemic",
-      "okres": "Louny",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "zemědělský pozemek",
-      "area": null,
-      "price": 1102000,
-      "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2644361,
-      "lng": 13.5955244,
-      "url": "https://www.okdrazby.cz/drazba/26717"
     },
     {
       "place": "Předonín",
