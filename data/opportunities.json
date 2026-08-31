@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-30",
+  "updated": "2026-08-31",
   "source": "Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy, příp. Sreality přes Apify)",
   "opportunities": [
     {
@@ -24647,17 +24647,17 @@
       "url": "https://www.okdrazby.cz/drazba/26856"
     },
     {
-      "place": "Líčkov",
-      "okres": "Rakovník",
+      "place": "Holedeč",
+      "okres": "Louny",
       "type": "exekuce",
       "parcel": "—",
       "druh": "lesní pozemek",
       "area": null,
-      "price": 16922667,
+      "price": 3400000,
       "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2670183,
-      "lng": 13.5946064,
-      "url": "https://www.okdrazby.cz/drazba/26715"
+      "lat": 50.2653592,
+      "lng": 13.5922308,
+      "url": "https://www.okdrazby.cz/drazba/26716"
     },
     {
       "place": "Lhota u Nečemic",
@@ -24673,30 +24673,17 @@
       "url": "https://www.okdrazby.cz/drazba/26717"
     },
     {
-      "place": "Holedeč",
-      "okres": "Louny",
+      "place": "Líčkov",
+      "okres": "Rakovník",
       "type": "exekuce",
       "parcel": "—",
       "druh": "lesní pozemek",
       "area": null,
-      "price": 3400000,
+      "price": 16922667,
       "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2653592,
-      "lng": 13.5922308,
-      "url": "https://www.okdrazby.cz/drazba/26716"
-    },
-    {
-      "place": "Předonín",
-      "okres": "Mělník",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "stavební pozemek",
-      "area": null,
-      "price": 1346400,
-      "extra": "nucená dražba 2026-09-17 · OK dražby",
-      "lat": 50.440393,
-      "lng": 14.326133,
-      "url": "https://www.okdrazby.cz/drazba/26256"
+      "lat": 50.2670183,
+      "lng": 13.5946064,
+      "url": "https://www.okdrazby.cz/drazba/26715"
     },
     {
       "place": "Mladá Boleslav",
@@ -24710,6 +24697,19 @@
       "lat": 50.399894,
       "lng": 15.01514,
       "url": "https://www.okdrazby.cz/drazba/26255"
+    },
+    {
+      "place": "Předonín",
+      "okres": "Mělník",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": null,
+      "price": 1346400,
+      "extra": "nucená dražba 2026-09-17 · OK dražby",
+      "lat": 50.440393,
+      "lng": 14.326133,
+      "url": "https://www.okdrazby.cz/drazba/26256"
     },
     {
       "place": "Vyškov",
