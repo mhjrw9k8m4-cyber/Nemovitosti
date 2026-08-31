@@ -3084,19 +3084,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949301-nabidka-prodej-pozemku-chrastovice"
     },
     {
-      "place": "Chocerady",
-      "okres": "Benešov",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "orná půda",
-      "area": 1559,
-      "price": 49000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.876811,
-      "lng": 14.842414,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1060180-nabidka-prodej-pozemku-chocerady"
-    },
-    {
       "place": "Javorník",
       "okres": "Uherské Hradiště",
       "type": "sale",
@@ -3108,6 +3095,19 @@
       "lat": 48.852144,
       "lng": 17.519,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1020870-nabidka-prodej-pozemku-javornik"
+    },
+    {
+      "place": "Chocerady",
+      "okres": "Benešov",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 1559,
+      "price": 49000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.876811,
+      "lng": 14.842414,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1060180-nabidka-prodej-pozemku-chocerady"
     },
     {
       "place": "Ostrava",
@@ -24647,19 +24647,6 @@
       "url": "https://www.okdrazby.cz/drazba/26856"
     },
     {
-      "place": "Holedeč",
-      "okres": "Louny",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "lesní pozemek",
-      "area": null,
-      "price": 3400000,
-      "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2653592,
-      "lng": 13.5922308,
-      "url": "https://www.okdrazby.cz/drazba/26716"
-    },
-    {
       "place": "Lhota u Nečemic",
       "okres": "Louny",
       "type": "exekuce",
@@ -24671,6 +24658,19 @@
       "lat": 50.2644361,
       "lng": 13.5955244,
       "url": "https://www.okdrazby.cz/drazba/26717"
+    },
+    {
+      "place": "Holedeč",
+      "okres": "Louny",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": null,
+      "price": 3400000,
+      "extra": "nucená dražba 2026-09-22 · OK dražby",
+      "lat": 50.2653592,
+      "lng": 13.5922308,
+      "url": "https://www.okdrazby.cz/drazba/26716"
     },
     {
       "place": "Líčkov",
