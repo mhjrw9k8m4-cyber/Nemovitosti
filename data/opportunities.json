@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-31",
+  "updated": "2026-09-01",
   "source": "Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy, příp. Sreality přes Apify)",
   "opportunities": [
     {
@@ -20270,6 +20270,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1040540-nabidka-prodej-pozemku-nucice"
     },
     {
+      "place": "Topolová",
+      "okres": "Plzeň-město",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": 691,
+      "price": 4999000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.6707664,
+      "lng": 13.4084755,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/998343-nabidka-prodej-pozemku-topolova-stenovice"
+    },
+    {
       "place": "Babice",
       "okres": "Praha-východ",
       "type": "sale",
@@ -23690,19 +23703,6 @@
       "extra": "dražba 2026-03-31",
       "lat": 50.54908,
       "lng": 14.10971
-    },
-    {
-      "place": "Stebno",
-      "okres": "Ústí nad Labem",
-      "type": "drazba",
-      "parcel": "34/1",
-      "druh": "zahrada",
-      "area": 1361,
-      "price": 150000,
-      "extra": "dražba 2026-08-28",
-      "lat": 50.61974,
-      "lng": 14.0226,
-      "url": "https://www.drazby-exekutori.cz/DR020853/Verejna-drazba-spoluvlastnickeho-podilu-na-RD-s-pozemky-Stebno-u-Dubic/"
     },
     {
       "place": "Březová",
