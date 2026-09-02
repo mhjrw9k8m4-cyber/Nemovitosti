@@ -67,6 +67,10 @@ a{color:inherit;}
 .leaflet-interactive:focus, .leaflet-interactive:focus-visible,
 path.leaflet-interactive:focus, path.leaflet-interactive:focus-visible{ outline:none !important; }
 .leaflet-zoom-box{display:none !important;}
+/* Podklad OSM zjemníme do světla, ať drží čistý vzhled jako dřív (CARTO začal
+   vyžadovat API klíč). Filtr je jen na vrstvě dlaždic — barevné tečky pozemků
+   jsou v jiné vrstvě, zůstávají plné barvy. */
+.leaflet-tile-pane{filter:grayscale(0.92) brightness(1.05) contrast(0.9);}
 
 /* Scroll reveal */
 .reveal{opacity:0; transform:translateY(22px); transition:opacity .6s var(--ease), transform .6s var(--ease);}

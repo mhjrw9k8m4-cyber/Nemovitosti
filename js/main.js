@@ -626,9 +626,12 @@
   // Ovládání zoomu +/− — jen na počítačích (na mobilu se přibližuje prsty). Umístěno
   // vlevo (přes CSS na volný levý okraj), ať se nepere s ostatními tlačítky.
   L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
-    subdomains: 'abcd', maxZoom: 19
+  // Podklad: OpenStreetMap (zdarma, bez API klíče). CARTO začal vyžadovat klíč
+  // (dlaždice ukazovaly „API KEY REQUIRED"). Jemný filtr (viz .pk-basemap v CSS)
+  // udrží čistý světlý vzhled; barevné tečky pozemků jsou v jiné vrstvě, filtr je nezmění.
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap',
+    subdomains: 'abc', maxZoom: 19, className: 'pk-basemap'
   }).addTo(map);
   // Lehké ovládání: mapa je hned použitelná (body klikací, stránka přes ni
   // normálně scrolluje). Tlačítko zapne režim posouvání/přibližování mapy.
