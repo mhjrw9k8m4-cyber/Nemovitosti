@@ -1892,6 +1892,26 @@
   // znovunačtení začne na výchozím stavu (celá ČR), ne zase na tom pozemku.
   function cleanUrl() { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
   function openFromUrl() {
+    // ?q=&druh=&maxc=&mina= — použij uložené hledání (odkaz ze stránky „Hlídání").
+    if (/[?&](q|druh|maxc|mina)=/.test(location.search)) {
+      var gp = function (n) { var mm = new RegExp('[?&]' + n + '=([^&]*)').exec(location.search); try { return mm ? decodeURIComponent(mm[1]) : ''; } catch (e) { return mm ? mm[1] : ''; } };
+      var qv = gp('q'), dv = gp('druh'), mc = parseInt(gp('maxc'), 10) || 0, ma = parseInt(gp('mina'), 10) || 0;
+      if (qv && searchEl) { searchEl.value = qv; searchTerm = qv.trim().toLowerCase(); }
+      if (mc && cenaEl) { cenaEl.value = mc; maxPrice = mc; }
+      if (ma && areaEl) { areaEl.value = ma; minArea = ma; }
+      if (dv && druhEl) {
+        var want = dv.toLowerCase();
+        for (var oi = 0; oi < druhEl.options.length; oi++) {
+          var ov = druhEl.options[oi];
+          if (ov.value && ov.value !== 'all' && (want.indexOf(ov.value.toLowerCase()) >= 0 || (ov.text && want.indexOf(ov.text.toLowerCase()) >= 0) || (ov.text && ov.text.toLowerCase().indexOf(want) >= 0))) { druhEl.value = ov.value; activeDruh = ov.value; break; }
+        }
+      }
+      if (typeof lockDots === 'function') lockDots(false);
+      renderList();
+      if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
+      cleanUrl();
+      return true;
+    }
     // ?kraj=<název> — přiblíž mapu na daný kraj (odkaz z krajských/okresních stránek).
     var mk = /[?&]kraj=([^&]+)/.exec(location.search);
     if (mk) {

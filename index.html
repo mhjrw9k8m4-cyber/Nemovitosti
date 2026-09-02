@@ -22,7 +22,7 @@
     try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }catch(e){}
     // Návrat z detailu pozemku (tlačítko „zpět") → nedržet vršek, mapa se sama vrátí na místo.
     try{ var _r=JSON.parse(sessionStorage.getItem('pk_map_return')||'null'); if(_r&&_r.t&&Date.now()-_r.t<60000) return; }catch(e){}
-    if((location.hash && location.hash !== '#zpetna-vazba') || /[?&](p|lid)=/.test(location.search)) return; // respektuj sdílené odkazy (ale #zpetna-vazba není sekce → drž vršek)
+    if((location.hash && location.hash !== '#zpetna-vazba') || /[?&](p|lid|q|druh|maxc|mina)=/.test(location.search)) return; // respektuj sdílené odkazy a odkazy z Hlídání (ale #zpetna-vazba není sekce → drž vršek)
     var released=false, start=0;
     function toTop(){ if(window.pageYOffset || document.documentElement.scrollTop){ window.scrollTo(0,0); } }
     function softTop(){ if(!released) toTop(); }   // ustoupí, jakmile uživatel sám scrolluje
@@ -99,7 +99,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260824j">
+  <link rel="stylesheet" href="css/styles.css?v=20260824k">
 </head>
 <body>
 
@@ -134,6 +134,7 @@
       <a href="cena-pozemku.html">Ceny pozemků</a>
       <a href="muj-inzerat.html">Můj profil</a>
       <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
+      <a href="hlidani.html">Hlídání</a>
       <a href="#faq">Dotazy</a>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
@@ -464,10 +465,10 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/config.js?v=20260824j" defer></script>
-<script src="js/auth.js?v=20260824j" defer></script>
-<script src="js/dropdown.js?v=20260824j" defer></script>
-<script src="js/main.js?v=20260824j" defer></script>
+<script src="js/config.js?v=20260824k" defer></script>
+<script src="js/auth.js?v=20260824k" defer></script>
+<script src="js/dropdown.js?v=20260824k" defer></script>
+<script src="js/main.js?v=20260824k" defer></script>
 <!-- Vercel Web Analytics (navstevnost) -->
 <script defer src="/_vercel/insights/script.js"></script>
 <script>

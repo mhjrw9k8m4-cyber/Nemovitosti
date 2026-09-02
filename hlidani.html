@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+  <title>Hlídání pozemků — Parcelka</title>
+  <meta name="description" content="Ulož si, co hledáš, a Parcelka ti v aplikaci ukáže nové pozemky, které ti sedí — podle okresu, druhu, ceny i detailů jako elektřina či přístup.">
+  <meta name="theme-color" content="#EDEFF4">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=20260824k">
+  <style>
+    #obsah{background:var(--bg); min-height:100vh;}
+    .hl-wrap{max-width:640px; margin:0 auto; padding:14px 14px 40px;}
+    .hl-top{display:flex; align-items:center; gap:10px; padding:8px 2px 14px;}
+    .hl-top a.hl-back{color:var(--text-ondark-mute); text-decoration:none; font-weight:600; font-size:14px;}
+    .hl-top .hl-logo{font-weight:800; color:var(--copper-bright); font-size:18px; margin-left:auto;}
+    .hl-h{font-size:22px; font-weight:800; color:var(--text-ondark); margin:2px 2px 4px;}
+    .hl-sub{font-size:14px; color:var(--text-ondark-mute); margin:0 2px 16px; line-height:1.5;}
+    .hl-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:16px; box-shadow:0 18px 40px -26px rgba(0,0,0,.6); margin-bottom:12px;}
+    .hl-auth{padding:22px; max-width:400px; margin:8px auto;}
+    .hl-auth h2{font-size:18px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
+    .hl-auth p{font-size:13.5px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
+    .hl-in,.hl-sel{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-strong); border-radius:12px; font-size:16px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:9px; outline:none; font-family:inherit;}
+    .hl-in:focus,.hl-sel:focus{border-color:var(--copper-bright); box-shadow:0 0 0 4px rgba(61,99,238,.14);}
+    .hl-btn{width:100%; height:48px; border:0; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; background:linear-gradient(135deg,var(--copper-bright),var(--copper)); color:#fff;}
+    .hl-btn.sec{background:var(--ink-soft2); color:var(--text-ondark); border:1px solid var(--line-strong); margin-top:8px;}
+    .hl-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--text-ondark-mute);}
+    .hl-msg.err{color:var(--c-exekuce);}
+    /* Nové hledání (formulář) */
+    .hl-new{padding:16px;}
+    .hl-lbl{font-size:12.5px; font-weight:700; color:var(--text-ondark-mute); margin:8px 2px 4px; display:block;}
+    .hl-row2{display:flex; gap:8px;}
+    .hl-row2 > *{flex:1;}
+    .hl-feats{display:flex; flex-wrap:wrap; gap:7px; margin:2px 0 6px;}
+    .hl-chip{display:inline-flex; align-items:center; gap:5px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:999px; font-size:13px; color:var(--text-ondark); cursor:pointer; user-select:none; background:var(--ink-soft2);}
+    .hl-chip.on{border-color:var(--copper-bright); background:rgba(61,99,238,.12); color:var(--copper-bright); font-weight:700;}
+    /* Seznam hledání */
+    .hl-item{padding:15px 16px; border-bottom:1px solid var(--line);}
+    .hl-item:last-child{border-bottom:0;}
+    .hl-itop{display:flex; align-items:center; gap:10px;}
+    .hl-iname{font-weight:700; font-size:15.5px; color:var(--text-ondark); flex:1; min-width:0;}
+    .hl-new-badge{background:var(--copper); color:#fff; font-size:12px; font-weight:800; padding:3px 9px; border-radius:999px; white-space:nowrap;}
+    .hl-new-badge.zero{background:var(--ink-soft2); color:var(--text-ondark-mute);}
+    .hl-crit{font-size:13px; color:var(--text-ondark-mute); margin-top:5px; line-height:1.5;}
+    .hl-count{font-size:12.5px; color:var(--text-ondark-mute); margin-top:3px;}
+    .hl-acts{display:flex; gap:8px; margin-top:11px;}
+    .hl-a{flex:1; height:40px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--line-strong); background:var(--ink-soft2); color:var(--text-ondark); display:flex; align-items:center; justify-content:center; text-decoration:none;}
+    .hl-a.pri{background:linear-gradient(135deg,var(--copper-bright),var(--copper)); color:#fff; border-color:transparent;}
+    .hl-a.del{flex:0 0 44px; color:var(--c-exekuce);}
+    .hl-empty{padding:30px 22px; text-align:center; color:var(--text-ondark-mute); font-size:14px; line-height:1.6;}
+    .hl-load{padding:26px; text-align:center; color:var(--text-ondark-mute);}
+  </style>
+</head>
+<body>
+<main id="obsah">
+  <div class="hl-wrap">
+    <div class="hl-top">
+      <a class="hl-back" href="index.html">‹ Zpět na mapu</a>
+      <span class="hl-logo">Parcelka</span>
+    </div>
+    <div class="hl-h">Hlídání pozemků</div>
+    <div class="hl-sub">Ulož si, co hledáš — a uvidíš, kolik <b>nových pozemků</b> ti sedí. Vše přehledně v aplikaci.</div>
+    <div id="hl-root"><div class="hl-card"><div class="hl-load">Načítám…</div></div></div>
+  </div>
+</main>
+
+<script src="js/config.js?v=20260824k"></script>
+<script src="js/auth.js?v=20260824k"></script>
+<script>
+(function () {
+  var A = window.PKAuth;
+  var root = document.getElementById('hl-root');
+  var DATA = [];
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); };
+  var fmt = function (n) { return (typeof n === 'number' && n > 0) ? n.toLocaleString('cs-CZ') : ''; };
+  var normd = function (s) { return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); };
+  var TYPE_LABEL = { sale: 'Na prodej', drazba: 'Dražba', exekuce: 'Exekuce', obec: 'Obecní', majitel: 'Od majitele' };
+  var DRUHY = ['stavební pozemek', 'zahrada', 'lesní pozemek', 'orná půda', 'louka', 'trvalý travní porost', 'ostatní plocha', 'vinice', 'sad'];
+  var FEATS = ['Elektřina', 'Voda', 'Kanalizace', 'Plyn', 'Oplocení'];
+
+  function keyOf(d) { return [d.type || '', normd(d.okres), normd(d.place), d.parcel || '', d.price || '', d.area || ''].join('|').slice(0, 240); }
+  function matches(s, d) {
+    if (s.ptype && d.type !== s.ptype) return false;
+    if (s.druh && normd(d.druh).indexOf(normd(s.druh)) < 0) return false;
+    if (s.max_price && !(d.price > 0 && d.price <= s.max_price)) return false;
+    if (s.min_area && !(d.area > 0 && d.area >= s.min_area)) return false;
+    if (s.okres) { var k = normd(s.okres); if (normd(d.okres).indexOf(k) < 0 && normd(d.place).indexOf(k) < 0) return false; }
+    if (s.features && s.features.length) { var f = d.features || []; for (var i = 0; i < s.features.length; i++) { if (f.indexOf(s.features[i]) < 0) return false; } }
+    return true;
+  }
+  function critText(s) {
+    var p = [];
+    p.push(s.okres ? esc(s.okres) : 'celá ČR');
+    if (s.ptype && TYPE_LABEL[s.ptype]) p.push(TYPE_LABEL[s.ptype]);
+    if (s.druh) p.push(esc(s.druh));
+    if (s.max_price) p.push('do ' + fmt(s.max_price) + ' Kč');
+    if (s.min_area) p.push('od ' + fmt(s.min_area) + ' m²');
+    if (s.features && s.features.length) p.push(s.features.map(esc).join(', '));
+    return p.join(' · ');
+  }
+
+  /* ---------- načtení pozemků (stejné zdroje jako mapa) ---------- */
+  function loadJSON(u) { return fetch(u, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
+  function loadData() {
+    return Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/user-listings.json')]).then(function (res) {
+      var arr = [], j = res[0], ul = res[1];
+      var base = j && (Array.isArray(j) ? j : j.opportunities) || [];
+      base.forEach(function (d) { if (d) arr.push(d); });
+      var users = ul && (Array.isArray(ul) ? ul : ul.listings) || [];
+      users.forEach(function (u) { if (u) { u.type = u.type || 'majitel'; arr.push(u); } });
+      // Živé inzeráty od majitelů (mají features/přístup)
+      return (A && A.rpc ? A.rpc('public_listings', {}, false) : Promise.resolve(null)).then(function (live) {
+        var rows = live && live.ok ? live.data : (Array.isArray(live) ? live : null);
+        if (Array.isArray(rows)) rows.forEach(function (u) {
+          if (u) arr.push({ type: 'majitel', place: u.place, okres: u.okres, druh: u.druh, parcel: u.parcel, area: u.area, price: u.price, features: u.features || [] });
+        });
+        DATA = arr;
+      }, function () { DATA = arr; });
+    });
+  }
+
+  /* ---------- Přihlášení ---------- */
+  function renderAuth(msg, err) {
+    root.innerHTML =
+      '<div class="hl-card hl-auth">' +
+        '<h2>Přihlaste se</h2>' +
+        '<p>Hlídání je vázané na váš účet, ať ho máte na všech zařízeních. Rychle se přihlaste, nebo si během chvilky založte účet.</p>' +
+        '<input class="hl-in" id="he" type="email" inputmode="email" autocomplete="email" placeholder="Váš e-mail">' +
+        '<input class="hl-in" id="hp" type="password" autocomplete="current-password" placeholder="Heslo">' +
+        '<button class="hl-btn" id="hlogin">Přihlásit se</button>' +
+        '<button class="hl-btn sec" id="hsignup">Vytvořit účet</button>' +
+        '<div class="hl-msg' + (err ? ' err' : '') + '" id="hauthmsg">' + (msg || '') + '</div>' +
+      '</div>';
+    var em = document.getElementById('he'), pw = document.getElementById('hp'), mEl = document.getElementById('hauthmsg');
+    function creds() { return { e: (em.value || '').trim(), p: pw.value || '' }; }
+    function okc(c) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e) && c.p.length >= 6; }
+    document.getElementById('hlogin').addEventListener('click', function () {
+      var c = creds(); if (!okc(c)) { mEl.textContent = 'Zadejte e-mail a heslo (aspoň 6 znaků).'; mEl.className = 'hl-msg err'; return; }
+      mEl.textContent = 'Přihlašuji…'; mEl.className = 'hl-msg';
+      A.login(c.e, c.p).then(function (r) { if (r && r.ok) start(); else { mEl.textContent = 'Přihlášení se nepovedlo.'; mEl.className = 'hl-msg err'; } });
+    });
+    document.getElementById('hsignup').addEventListener('click', function () {
+      var c = creds(); if (!okc(c)) { mEl.textContent = 'Zadejte e-mail a heslo (aspoň 6 znaků).'; mEl.className = 'hl-msg err'; return; }
+      mEl.textContent = 'Zakládám účet…'; mEl.className = 'hl-msg';
+      A.signup(c.e, c.p).then(function (r) {
+        if (r && r.ok) { if (r.session) start(); else A.login(c.e, c.p).then(function (r2) { if (r2 && r2.ok) start(); else { mEl.textContent = 'Účet vytvořen, přihlaste se.'; mEl.className = 'hl-msg'; } }); }
+        else { mEl.textContent = 'Účet se nepovedlo vytvořit (možná už existuje).'; mEl.className = 'hl-msg err'; }
+      });
+    });
+  }
+
+  /* ---------- Formulář nového hledání ---------- */
+  function newSearchCard() {
+    var opt = function (v, l, sel) { return '<option value="' + esc(v) + '"' + (sel ? ' selected' : '') + '>' + esc(l) + '</option>'; };
+    var druhOpts = opt('', 'jakýkoli druh', true) + DRUHY.map(function (d) { return opt(d, d.charAt(0).toUpperCase() + d.slice(1)); }).join('');
+    var typeOpts = opt('', 'vše (prodej i dražby)', true) + ['sale', 'drazba', 'exekuce', 'majitel'].map(function (t) { return opt(t, TYPE_LABEL[t]); }).join('');
+    var feats = FEATS.map(function (f) { return '<span class="hl-chip" data-feat="' + esc(f) + '">' + esc(f) + '</span>'; }).join('');
+    return '<div class="hl-card hl-new">' +
+        '<div style="font-weight:800;font-size:16px;margin-bottom:8px;">➕ Nové hledání</div>' +
+        '<label class="hl-lbl">Kde (okres nebo obec — nech prázdné pro celou ČR)</label>' +
+        '<input class="hl-in" id="ns-okres" placeholder="např. Kolín">' +
+        '<div class="hl-row2">' +
+          '<div><label class="hl-lbl">Druh</label><select class="hl-sel" id="ns-druh">' + druhOpts + '</select></div>' +
+          '<div><label class="hl-lbl">Typ</label><select class="hl-sel" id="ns-type">' + typeOpts + '</select></div>' +
+        '</div>' +
+        '<div class="hl-row2">' +
+          '<div><label class="hl-lbl">Max. cena (Kč)</label><input class="hl-in" id="ns-price" inputmode="numeric" placeholder="např. 800000"></div>' +
+          '<div><label class="hl-lbl">Min. výměra (m²)</label><input class="hl-in" id="ns-area" inputmode="numeric" placeholder="např. 500"></div>' +
+        '</div>' +
+        '<label class="hl-lbl">Detaily (u nabídek od majitelů)</label>' +
+        '<div class="hl-feats">' + feats + '</div>' +
+        '<button class="hl-btn" id="ns-save">Uložit hledání a hlídat</button>' +
+        '<div class="hl-msg" id="ns-msg"></div>' +
+      '</div>';
+  }
+  function wireNewSearch(afterSave) {
+    var chips = root.querySelectorAll('.hl-chip');
+    chips.forEach(function (c) { c.addEventListener('click', function () { c.classList.toggle('on'); }); });
+    var msg = document.getElementById('ns-msg');
+    document.getElementById('ns-save').addEventListener('click', function () {
+      var okres = document.getElementById('ns-okres').value.trim();
+      var druh = document.getElementById('ns-druh').value;
+      var type = document.getElementById('ns-type').value;
+      var price = parseInt((document.getElementById('ns-price').value || '').replace(/\D/g, ''), 10) || 0;
+      var area = parseInt((document.getElementById('ns-area').value || '').replace(/\D/g, ''), 10) || 0;
+      var features = [].slice.call(root.querySelectorAll('.hl-chip.on')).map(function (c) { return c.getAttribute('data-feat'); });
+      var label = okres || (TYPE_LABEL[type] || 'Pozemky') + (druh ? ' · ' + druh : '');
+      msg.textContent = 'Ukládám…'; msg.className = 'hl-msg';
+      A.rpc('save_search', { p_label: label, p_okres: okres, p_druh: druh, p_type: type, p_max_price: price, p_min_area: area, p_features: features }, true).then(function (res) {
+        if (!res || !res.ok) { msg.textContent = (res && res.error && res.error.message) || 'Uložení se nepovedlo.'; msg.className = 'hl-msg err'; return; }
+        var newId = res.data;
+        // hned označíme aktuální pozemky jako „viděné" → nové se počítají až od teď
+        var crit = { okres: okres, druh: druh, ptype: type, max_price: price, min_area: area, features: features };
+        var keys = DATA.filter(function (d) { return matches(crit, d); }).map(keyOf);
+        A.rpc('mark_search_seen', { p_id: newId, p_keys: keys }, true).then(function () { afterSave(); }, function () { afterSave(); });
+      });
+    });
+  }
+
+  /* ---------- Seznam hledání ---------- */
+  function renderList(rows) {
+    var html = newSearchCard();
+    if (!rows.length) {
+      html += '<div class="hl-card"><div class="hl-empty">Zatím žádné uložené hledání.<br>Nahoře si vytvoř první — a dáme ti vědět, jakmile přibude pozemek, který ti sedí. 🔔</div></div>';
+    } else {
+      html += '<div class="hl-card">';
+      rows.forEach(function (s) {
+        var cur = DATA.filter(function (d) { return matches(s, d); });
+        var seen = s.seen_keys || [];
+        var seenSet = {}; seen.forEach(function (k) { seenSet[k] = 1; });
+        var newN = cur.filter(function (d) { return !seenSet[keyOf(d)]; }).length;
+        var params = 'index.html?' + (s.okres ? 'q=' + encodeURIComponent(s.okres) + '&' : '') + (s.druh ? 'druh=' + encodeURIComponent(s.druh) + '&' : '') + (s.max_price ? 'maxc=' + s.max_price + '&' : '') + (s.min_area ? 'mina=' + s.min_area + '&' : '') + '#mapa';
+        html += '<div class="hl-item" data-id="' + s.id + '">' +
+          '<div class="hl-itop"><div class="hl-iname">' + esc(s.label || 'Hledání') + '</div>' +
+            '<span class="hl-new-badge' + (newN ? '' : ' zero') + '">' + (newN ? newN + ' nových' : 'žádné nové') + '</span></div>' +
+          '<div class="hl-crit">' + critText(s) + '</div>' +
+          '<div class="hl-count">Celkem sedí: <b>' + cur.length + '</b> pozemků</div>' +
+          '<div class="hl-acts">' +
+            '<a class="hl-a pri" href="' + params + '" data-seen="' + s.id + '">Zobrazit na mapě</a>' +
+            '<button class="hl-a del" type="button" data-del="' + s.id + '" aria-label="Smazat">🗑</button>' +
+          '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+    root.innerHTML = html;
+    wireNewSearch(function () { loadSearches(); });
+    // označit jako viděné při kliknutí na „Zobrazit" (aby nová klesla na 0)
+    root.querySelectorAll('[data-seen]').forEach(function (a) {
+      a.addEventListener('click', function () {
+        var id = a.getAttribute('data-seen');
+        var s = rows.filter(function (x) { return x.id === id; })[0]; if (!s) return;
+        var keys = DATA.filter(function (d) { return matches(s, d); }).map(keyOf);
+        try { A.rpc('mark_search_seen', { p_id: id, p_keys: keys }, true); } catch (e) {}
+      });
+    });
+    root.querySelectorAll('[data-del]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.getAttribute('data-del');
+        b.disabled = true;
+        A.rpc('delete_search', { p_id: id }, true).then(function () { loadSearches(); });
+      });
+    });
+  }
+
+  function loadSearches() {
+    A.rpc('my_searches', {}, true).then(function (res) {
+      if (!res || !res.ok) { if (res && res.expired) { renderAuth('Přihlášení vypršelo, přihlaste se znovu.', true); return; } root.innerHTML = '<div class="hl-card"><div class="hl-empty">Hlídání se teď nepovedlo načíst.</div></div>'; return; }
+      renderList(Array.isArray(res.data) ? res.data : []);
+    });
+  }
+
+  function start() {
+    if (!A || !A.loggedIn()) { renderAuth('', false); return; }
+    root.innerHTML = '<div class="hl-card"><div class="hl-load">Načítám pozemky…</div></div>';
+    loadData().then(loadSearches);
+  }
+
+  if (!window.PK_SUPABASE_URL || !window.PK_SUPABASE_KEY) { root.innerHTML = '<div class="hl-card"><div class="hl-empty">Hlídání teď není dostupné.</div></div>'; return; }
+  if (A && A.keepAlive) { A.keepAlive().then(start, start); } else { start(); }
+})();
+</script>
+</body>
+</html>
