@@ -29,13 +29,15 @@ jobs:
           echo "Stahuji model.json…"
           curl -fsSL "$BASE/model.json" -o assets/nsfw-model/model.json
           echo "Vytahuji názvy vah (shardy) z model.json…"
-          node -e "const m=require('./assets/nsfw-model/model.json');const p=[].concat.apply([],(m.weightsManifest||[]).map(function(w){return w.paths;}));process.stdout.write(p.join('\n'));" > /tmp/paths.txt
+          node -e "const m=require('./assets/nsfw-model/model.json');const p=[].concat.apply([],(m.weightsManifest||[]).map(function(w){return w.paths;}));console.log(p.join('\n'));" > /tmp/paths.txt
           echo "Shardy:"; cat /tmp/paths.txt; echo
-          while IFS= read -r f; do
+          # `|| [ -n "$f" ]` ošetří i poslední řádek bez ukončovacího \n
+          while IFS= read -r f || [ -n "$f" ]; do
             [ -z "$f" ] && continue
             echo "Stahuji $f…"
             curl -fsSL "$BASE/$f" -o "assets/nsfw-model/$f"
           done < /tmp/paths.txt
+          echo "Staženo:"; ls -la assets/nsfw-model
           echo "Obsah assets/nsfw-model:"; ls -la assets/nsfw-model
 
       - name: Ověřit kompletnost modelu (platný model.json + všechny shardy)
