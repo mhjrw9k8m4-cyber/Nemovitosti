@@ -92,7 +92,16 @@
     if (s.max_price && !(d.price > 0 && d.price <= s.max_price)) return false;
     if (s.min_area && !(d.area > 0 && d.area >= s.min_area)) return false;
     if (s.okres) { var k = normd(s.okres); if (normd(d.okres).indexOf(k) < 0 && normd(d.place).indexOf(k) < 0) return false; }
-    if (s.features && s.features.length) { var f = d.features || []; for (var i = 0; i < s.features.length; i++) { if (f.indexOf(s.features[i]) < 0) return false; } }
+    if (s.features && s.features.length) {
+      var f = d.features || [];
+      for (var i = 0; i < s.features.length; i++) {
+        var need = s.features[i];
+        if (need === 'Přístupová cesta') {
+          // vyžaduje reálnou cestu — mají jen vlastní inzeráty (pole access)
+          if ((d.access || '').indexOf('cesta') < 0) return false;
+        } else if (f.indexOf(need) < 0) return false;
+      }
+    }
     return true;
   }
   function critText(s) {
@@ -119,7 +128,7 @@
       return (A && A.rpc ? A.rpc('public_listings', {}, false) : Promise.resolve(null)).then(function (live) {
         var rows = live && live.ok ? live.data : (Array.isArray(live) ? live : null);
         if (Array.isArray(rows)) rows.forEach(function (u) {
-          if (u) arr.push({ type: 'majitel', place: u.place, okres: u.okres, druh: u.druh, parcel: u.parcel, area: u.area, price: u.price, features: u.features || [] });
+          if (u) arr.push({ type: 'majitel', place: u.place, okres: u.okres, druh: u.druh, parcel: u.parcel, area: u.area, price: u.price, features: u.features || [], access: u.access || '' });
         });
         DATA = arr;
       }, function () { DATA = arr; });
@@ -161,7 +170,7 @@
     var opt = function (v, l, sel) { return '<option value="' + esc(v) + '"' + (sel ? ' selected' : '') + '>' + esc(l) + '</option>'; };
     var druhOpts = opt('', 'jakýkoli druh', true) + DRUHY.map(function (d) { return opt(d, d.charAt(0).toUpperCase() + d.slice(1)); }).join('');
     var typeOpts = opt('', 'vše (prodej i dražby)', true) + ['sale', 'drazba', 'exekuce', 'majitel'].map(function (t) { return opt(t, TYPE_LABEL[t]); }).join('');
-    var feats = FEATS.map(function (f) { return '<span class="hl-chip" data-feat="' + esc(f) + '">' + esc(f) + '</span>'; }).join('');
+    var feats = FEATS.concat(['Přístupová cesta']).map(function (f) { return '<span class="hl-chip" data-feat="' + esc(f) + '">' + esc(f) + '</span>'; }).join('');
     return '<div class="hl-card hl-new">' +
         '<div style="font-weight:800;font-size:16px;margin-bottom:8px;">➕ Nové hledání</div>' +
         '<label class="hl-lbl">Kde (okres nebo obec — nech prázdné pro celou ČR)</label>' +
