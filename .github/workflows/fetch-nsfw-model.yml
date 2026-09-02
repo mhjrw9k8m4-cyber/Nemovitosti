@@ -1,0 +1,76 @@
+name: Stáhnout AI model na kontrolu fotek
+
+# Stáhne model NSFWJS (MobileNetV2) do assets/nsfw-model/, ověří, že se dá
+# načíst a klasifikovat, a commitne ho do větve. Web ho pak používá přímo
+# (kontrola fotek běží v prohlížeči nahrávajícího, zdarma). Ruční spuštění.
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/web-design-sketch-ewjjrr
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Stáhnout soubory modelu
+        run: |
+          set -e
+          BASE=https://raw.githubusercontent.com/infinitered/nsfwjs/master/models/mobilenet_v2
+          mkdir -p assets/nsfw-model
+          echo "Stahuji model.json…"
+          curl -fsSL "$BASE/model.json" -o assets/nsfw-model/model.json
+          echo "Vytahuji názvy vah (shardy) z model.json…"
+          node -e "const m=require('./assets/nsfw-model/model.json');const p=[].concat.apply([],(m.weightsManifest||[]).map(function(w){return w.paths;}));process.stdout.write(p.join('\n'));" > /tmp/paths.txt
+          echo "Shardy:"; cat /tmp/paths.txt; echo
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            echo "Stahuji $f…"
+            curl -fsSL "$BASE/$f" -o "assets/nsfw-model/$f"
+          done < /tmp/paths.txt
+          echo "Obsah assets/nsfw-model:"; ls -la assets/nsfw-model
+
+      - name: Ověřit, že model funguje (načtení + klasifikace)
+        run: |
+          set -e
+          npm init -y >/dev/null 2>&1
+          echo "Instaluji ověřovací knihovny…"
+          npm i --no-audit --no-fund @tensorflow/tfjs-node@4.22.0 nsfwjs@2.4.2 >/dev/null 2>&1
+          cat > verify.mjs <<'JS'
+          import * as tf from '@tensorflow/tfjs-node';
+          import * as nsfw from 'nsfwjs';
+          const path = 'file://' + process.cwd() + '/assets/nsfw-model/model.json';
+          console.log('Načítám model z', path);
+          let model;
+          try { model = await nsfw.load(path, { size: 224 }); }
+          catch (e) { console.error('LOAD FAIL:', e && e.message); process.exit(1); }
+          const t = tf.zeros([224, 224, 3]);
+          const preds = await model.classify(t);
+          console.log('Klasifikace neutrálního obrázku:', JSON.stringify(preds));
+          const names = (preds || []).map(p => p.className).sort().join(',');
+          if (!preds || preds.length !== 5) { console.error('Nečekaný počet tříd'); process.exit(1); }
+          console.log('MODEL OK — 5 tříd:', names);
+          JS
+          node verify.mjs
+          rm -f verify.mjs package.json package-lock.json
+          rm -rf node_modules
+
+      - name: Commitnout model do větve
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/nsfw-model
+          if git diff --cached --quiet; then
+            echo "Model už je v repu beze změny — nic k commitu."
+          else
+            git commit -m "AI model pro kontrolu fotek (NSFWJS MobileNetV2, self-hosted)"
+            git push origin claude/web-design-sketch-ewjjrr
+          fi

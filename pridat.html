@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260902a">
+  <link rel="stylesheet" href="css/styles.css?v=20260902b">
 </head>
 <body>
 
@@ -123,7 +123,7 @@
           </div>
 
           <!-- Lišta „přihlášen jako…" nad formulářem -->
-          <div class="auth-bar" id="auth-bar" hidden>Přihlášen: <b id="auth-email"></b> · <a href="muj-inzerat.html">Můj profil</a> · <button type="button" id="au-logout" class="linklike">Odhlásit</button></div>
+          <div class="auth-bar" id="auth-bar" hidden>Přihlášen: <b id="auth-email"></b> · <span id="quota-info"></span><a href="muj-inzerat.html">Můj profil</a> · <button type="button" id="au-logout" class="linklike">Odhlásit</button></div>
 
           <div class="add-card" id="prodej-card" hidden>
             <p class="add-lead" style="margin-top:0;">Stačí vyplnit <b>obec, výměru a cenu</b> — zbytek je nepovinný. Po odeslání se nabídka <b>hned objeví na mapě</b> mezi ostatními. Spravovat ji pak můžete v <b>Mém profilu</b>. Zdarma a bez provize.</p>
@@ -147,6 +147,7 @@
               <div class="add-field photo-field">
                 <label for="p-fotky">Fotky pozemku <span class="hint">(nepovinné — zobrazí se přímo v inzerátu, max 8)</span></label>
                 <label class="photo-drop" for="p-fotky"><b>Přidat fotky</b><span>Klepněte a vyberte fotky pozemku — klidně několik naráz</span></label>
+                <p class="hint" style="margin:6px 2px 0;">Fotky se automaticky zkontrolují (kvalita i obsah) — nahrávejte jen skutečné fotky pozemku.</p>
                 <input id="p-fotky" type="file" accept="image/*" multiple>
                 <div class="photo-preview" id="p-fotky-preview"></div>
               </div>
@@ -156,8 +157,8 @@
                 <textarea id="p-popis" placeholder="Tvar a terén, orientace, okolí, územní plán, proč je zajímavý… cokoliv, co pomůže kupujícímu se rozhodnout."></textarea>
               </div>
 
-              <details class="add-more">
-                <summary>Další údaje o pozemku (nepovinné)</summary>
+              <details class="add-more" open>
+                <summary>Detaily pozemku — druh, sítě, přístup (doporučené)</summary>
                 <div class="add-more-body">
                   <div class="add-row">
                     <div class="add-field">
@@ -324,9 +325,9 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/config.js?v=20260902a" defer></script>
-<script src="js/auth.js?v=20260902a" defer></script>
-<script src="js/pridat.js?v=20260902a" defer></script>
+<script src="js/config.js?v=20260902b" defer></script>
+<script src="js/auth.js?v=20260902b" defer></script>
+<script src="js/pridat.js?v=20260902b" defer></script>
 <script>
 /* Zobrazit/skrýt heslo v přihlašovací kartě */
 document.addEventListener('click', function (e) {

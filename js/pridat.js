@@ -109,35 +109,97 @@
     }
     return next();
   }
-  // Lehká pojistka proti sprostému spamu (nezveřejní se). Není to dokonalé,
-  // ale zachytí zjevné vulgarity — nevhodné jde navíc nahlásit a smazat.
-  var BAD = /(kokot|\bkkt\b|kurv|piča|pича|\bpica\b|mrd|debil|sr[aá]č|čur[aá]k|curak|\bhovn|zmrd|jebn|jebat)/i;
-  function looksBad(s) { return BAD.test(String(s || '')); }
-  /* ---------- Nahrání fotek do úložiště (Supabase Storage) ----------
-     Fotky se před nahráním automaticky zmenší (max 1600 px) a překódují na
-     JPEG — tím se: 1) zmenší objem dat (rychlejší na mobilu), 2) odstraní
-     skrytá EXIF data včetně GPS polohy fotky (soukromí). Nahráváme jen
-     obrázky, jen přihlášený uživatel, do vlastní složky. Vrací pole URL. */
-  var PH_MAX = 8, PH_DIM = 1600, PH_Q = 0.82, PH_SRC_MAX = 25 * 1024 * 1024;
+  // Pojistka proti sprostému/spamovému textu (nezveřejní se). Není to dokonalé,
+  // ale zachytí zjevné vulgarity a spam — nevhodné jde navíc nahlásit a smazat.
+  // Stejná ochrana je i na serveru (create_listing), tohle je jen rychlá zpětná vazba.
+  var BAD = /(kokot|\bkkt\b|kurv|piča|pича|\bpica\b|mrd|debil|sr[aá]č|čur[aá]k|curak|\bhovn|zmrd|jebn|jebat|piчovin|píčovin|picovin|hajzl|zkur|prdel|čůr|hovado|idiot|blb[eě]c|kokt|penis|vagin|porno|sex\b|naha|nahá|nudi)/i;
+  // Zjevný spam: odkazy (kromě katastru/mapy) v popisu, e-maily/telefony schované v textu,
+  // reklamní slova, nesmyslné opakování jednoho znaku.
+  var SPAM = /(viagra|casino|kasino|bitcoin|crypto|půjč[kt]|pujc[kt]|invest.{0,6}zarue|výhr[aou]|vyhr[aou]j|klikni zde|www\.|https?:\/\/(?!(nahlizenidokn|cuzk|mapy\.cz|google\.com\/maps)))/i;
+  function looksBad(s) {
+    s = String(s || '');
+    if (BAD.test(s)) return true;
+    if (SPAM.test(s)) return true;
+    if (/(.)\1{6,}/.test(s)) return true;        // 7+ stejných znaků za sebou (aaaa, !!!!)
+    return false;
+  }
+  /* ---------- Fotky: automatická kontrola + nahrání do úložiště ----------
+     Každá fotka projde třemi bránami, než se nahraje:
+       1) FORMÁT — jen obrázek (JPEG/PNG/WebP), do 25 MB.
+       2) KVALITA — dostatečné rozlišení (odfiltruje malé screenshoty/memy).
+       3) OBSAH — automatická AI kontrola (NSFWJS běží přímo v prohlížeči,
+          zdarma, nic se nikam neposílá) odmítne nahé/nevhodné fotky.
+     Fotky se pak zmenší (max 1600 px) a překódují na JPEG — menší data a
+     odstraní se skrytá EXIF/GPS. Když AI model nejde načíst (starý mobil,
+     slabá síť), kontrola obsahu se přeskočí (nezablokuje slušné lidi) —
+     formát+kvalita+serverový filtr+možnost nahlásit zůstávají. */
+  var PH_MAX = 8, PH_DIM = 1600, PH_MIN = 500, PH_Q = 0.82, PH_SRC_MAX = 25 * 1024 * 1024;
+  var photoRejects = [];   // poslední zamítnuté fotky (pro hlášku uživateli)
   function isImage(t) { return /^image\/(jpe?g|png|webp)$/i.test(t || ''); }
-  function processImage(file) {
+
+  // --- AI kontrola obsahu fotek (NSFWJS) — líně načtená, s vlastním modelem ---
+  var _nsfw = null, _nsfwState = 'idle', _nsfwProm = null;
+  function loadScript(src) {
+    return new Promise(function (res, rej) {
+      var s = document.createElement('script'); s.src = src; s.async = true;
+      s.onload = res; s.onerror = function () { rej(new Error('script')); };
+      document.head.appendChild(s);
+    });
+  }
+  function ensureNsfw() {
+    if (_nsfwState === 'ready') return Promise.resolve(_nsfw);
+    if (_nsfwState === 'failed') return Promise.resolve(null);
+    if (_nsfwProm) return _nsfwProm;
+    _nsfwState = 'loading';
+    _nsfwProm = (function () {
+      var chain = Promise.resolve();
+      if (!window.tf) chain = chain.then(function () { return loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js'); });
+      if (!window.nsfwjs) chain = chain.then(function () { return loadScript('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js'); });
+      return chain
+        .then(function () { return window.nsfwjs.load('assets/nsfw-model/', { size: 224 }); })
+        .then(function (m) { _nsfw = m; _nsfwState = 'ready'; return m; })
+        .catch(function () { _nsfwState = 'failed'; return null; });
+    })();
+    return _nsfwProm;
+  }
+  // Vrátí true = fotka je v pořádku (nebo se nedá zkontrolovat → propustíme).
+  function contentOk(imgEl) {
+    return ensureNsfw().then(function (m) {
+      if (!m) return true;   // model nejde načíst → fail-open
+      return m.classify(imgEl).then(function (preds) {
+        var p = {}; (preds || []).forEach(function (x) { p[x.className] = x.probability; });
+        var explicit = (p.Porn || 0) + (p.Hentai || 0);
+        if (explicit >= 0.6) return false;          // porno
+        if ((p.Sexy || 0) >= 0.85) return false;    // odhalené tělo
+        return true;
+      }).catch(function () { return true; });        // chyba klasifikace → propustíme
+    });
+  }
+
+  // Jedna fotka přes všechny brány → { blob } nebo { reject: 'důvod' }
+  function moderateAndProcess(file) {
     return new Promise(function (resolve) {
-      if (!isImage(file.type) || file.size > PH_SRC_MAX) { resolve(null); return; }
+      if (!isImage(file.type)) { resolve({ reject: 'nepodporovaný formát' }); return; }
+      if (file.size > PH_SRC_MAX) { resolve({ reject: 'soubor je moc velký (max 25 MB)' }); return; }
       var url = URL.createObjectURL(file);
       var img = new Image();
       img.onload = function () {
-        URL.revokeObjectURL(url);
         var w = img.naturalWidth, h = img.naturalHeight;
-        if (!w || !h) { resolve(null); return; }
-        var scale = Math.min(1, PH_DIM / Math.max(w, h));
-        var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
-        try {
-          var cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
-          cv.getContext('2d').drawImage(img, 0, 0, cw, ch);
-          cv.toBlob(function (blob) { resolve(blob || null); }, 'image/jpeg', PH_Q);
-        } catch (e) { resolve(null); }
+        if (!w || !h) { URL.revokeObjectURL(url); resolve({ reject: 'poškozený obrázek' }); return; }
+        if (Math.max(w, h) < PH_MIN) { URL.revokeObjectURL(url); resolve({ reject: 'moc malý (nahrajte skutečnou fotku pozemku)' }); return; }
+        contentOk(img).then(function (ok) {
+          if (!ok) { URL.revokeObjectURL(url); resolve({ reject: 'fotka vypadá nevhodně a nebyla přijata' }); return; }
+          try {
+            var scale = Math.min(1, PH_DIM / Math.max(w, h));
+            var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+            var cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+            cv.getContext('2d').drawImage(img, 0, 0, cw, ch);
+            URL.revokeObjectURL(url);
+            cv.toBlob(function (blob) { resolve(blob ? { blob: blob } : { reject: 'nepodařilo se zpracovat' }); }, 'image/jpeg', PH_Q);
+          } catch (e) { URL.revokeObjectURL(url); resolve({ reject: 'nepodařilo se zpracovat' }); }
+        });
       };
-      img.onerror = function () { URL.revokeObjectURL(url); resolve(null); };
+      img.onerror = function () { URL.revokeObjectURL(url); resolve({ reject: 'nepodařilo se načíst' }); };
       img.src = url;
     });
   }
@@ -155,21 +217,32 @@
       return r.ok ? (SB_URL + '/storage/v1/object/public/listing-photos/' + encodeURI(name)) : null;
     }).catch(function () { return null; });
   }
+  // Nejdřív zkontroluje VŠECHNY fotky. Když je nějaká zamítnutá, NIC se nenahraje
+  // (žádné sirotčí soubory) a vrátí se seznam zamítnutých s důvodem. Až když
+  // projdou všechny, nahraje je. Vrací { urls, rejected }.
   function uploadPhotos() {
     var fEl = document.getElementById('p-fotky');
     var files = (fEl && fEl.files) ? [].slice.call(fEl.files) : [];
     files = files.filter(function (f) { return isImage(f.type); }).slice(0, PH_MAX);
-    if (!files.length) return Promise.resolve([]);
-    showToast('Nahrávám fotky…');
-    var urls = [];
-    // Sekvenčně — na mobilním připojení šetrnější a spolehlivější.
-    return files.reduce(function (p, f, i) {
+    photoRejects = [];
+    if (!files.length) return Promise.resolve({ urls: [], rejected: [] });
+    showToast('Kontroluji fotky…');
+    var blobs = [];
+    return files.reduce(function (p, f) {
       return p.then(function () {
-        return processImage(f).then(function (blob) {
-          return uploadOne(blob, i).then(function (u) { if (u) urls.push(u); });
+        return moderateAndProcess(f).then(function (r) {
+          if (r.reject) photoRejects.push({ name: f.name || 'fotka', reason: r.reject });
+          else blobs.push(r.blob);
         });
       });
-    }, Promise.resolve()).then(function () { return urls; });
+    }, Promise.resolve()).then(function () {
+      if (photoRejects.length) return { urls: [], rejected: photoRejects };
+      showToast('Nahrávám fotky…');
+      var urls = [];
+      return blobs.reduce(function (p, blob, i) {
+        return p.then(function () { return uploadOne(blob, i).then(function (u) { if (u) urls.push(u); }); });
+      }, Promise.resolve()).then(function () { return { urls: urls, rejected: [] }; });
+    });
   }
 
   // Odeslání prodeje = automatické zveřejnění na mapě (jako přihlášený) + přesměrování na „Moje inzeráty".
@@ -184,12 +257,13 @@
     return geocodeCz(obec, okres).then(function (pos) {
       if (!pos) return 'geo';
       var features = [].slice.call(document.querySelectorAll('input[name="site"]:checked')).map(function (x) { return x.value; });
-      return uploadPhotos().then(function (photoUrls) {
+      return uploadPhotos().then(function (pr) {
+      if (pr.rejected && pr.rejected.length) return 'photos';   // zamítnuté fotky → hláška, nic se nezveřejní
       return PKAuth.rpc('create_listing', {
         p_place: obec, p_okres: okres, p_druh: val('p-druh'), p_parcel: val('p-parcela'),
         p_area: area, p_price: price, p_lat: pos.lat, p_lng: pos.lng,
         p_description: val('p-popis'), p_contact: val('p-kontakt'),
-        p_photos: photoUrls || [],
+        p_photos: (pr && pr.urls) || [],
         p_features: features, p_access: val('p-pristup') || null
       }, true).then(function (res) {
         if (!res || !res.ok) {
@@ -398,13 +472,17 @@
           ms.textContent = 'Nepodařilo se najít obec na mapě. Zkontrolujte prosím název obce (např. „Kolín").';
           ms.classList.add('err');
         } else if (r === 'bad') {
-          ms.textContent = 'Text obsahuje nevhodná slova. Upravte prosím inzerát a zkuste to znovu.';
+          ms.textContent = 'Text obsahuje nevhodná slova nebo vypadá jako spam. Upravte prosím inzerát a zkuste to znovu.';
+          ms.classList.add('err');
+        } else if (r === 'photos') {
+          var names = (typeof photoRejects !== 'undefined' ? photoRejects : []).map(function (x) { return '„' + x.name + '" (' + x.reason + ')'; }).join(', ');
+          ms.innerHTML = 'Některé fotky jsme nepřijali: ' + escHtml(names) + '. Odeberte je prosím a přidejte fotky pozemku.';
           ms.classList.add('err');
         } else if (r === 'auth') {
           ms.textContent = 'Přihlášení vypršelo — přihlaste se prosím znovu (nahoře).';
           ms.classList.add('err');
         } else if (r === 'limit') {
-          ms.textContent = 'Dosáhli jste limitu inzerátů (30 na účet). Smažte starší v „Moje inzeráty".';
+          ms.textContent = 'Dosáhli jste limitu inzerátů (10 na účet). Smažte starší v „Moje inzeráty".';
           ms.classList.add('err');
         } else if (r === 'wait') {
           ms.textContent = 'Chvíli prosím počkejte (asi minutu) a zkuste přidat další inzerát znovu.';
@@ -515,6 +593,18 @@
       // Živý náhled + síla inzerátu dávají smysl až u vyplňování — ukážeme je jen přihlášeným.
       var pv = document.getElementById('live-preview-card'); if (pv) pv.hidden = !on;
       var em = document.getElementById('auth-email'); if (em) em.textContent = (window.PKAuth ? PKAuth.email() : '');
+      if (on) loadQuota();
+    }
+    // Ukazatel „zbývá X z 10 inzerátů" — ať člověk ví, kolik ještě může přidat.
+    function loadQuota() {
+      var q = document.getElementById('quota-info'); if (!q || !(window.PKAuth && PKAuth.rpc)) return;
+      PKAuth.rpc('my_listing_quota', {}, true).then(function (res) {
+        if (!res || !res.ok) { q.textContent = ''; return; }
+        var row = Array.isArray(res.data) ? res.data[0] : res.data;
+        if (!row) { q.textContent = ''; return; }
+        var left = Math.max(0, (row.max || 10) - (row.used || 0));
+        q.innerHTML = 'Inzeráty: <b>' + row.used + ' z ' + row.max + '</b> (zbývá ' + left + ') · ';
+      }, function () { q.textContent = ''; });
     }
     refresh();   // hned ukázat stav podle zapamatovaného přihlášení (žádná prázdná stránka)
     if (window.PKAuth && PKAuth.keepAlive) { PKAuth.keepAlive().then(refresh, refresh); }
