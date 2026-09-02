@@ -17,3 +17,5 @@ jobs:
           node-version: '20'
       - name: Test chatu
         run: node scripts/test-chat.mjs
+      - name: Test chytrých upozornění (Hlídání)
+        run: node scripts/test-search.mjs
