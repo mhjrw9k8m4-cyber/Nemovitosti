@@ -16,6 +16,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css?v=20260902b">
   <style>
+    /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
+    .add-hero.app-hero{padding:30px 0 4px;}
+    .add-hero.app-hero .eyebrow{margin-bottom:12px;}
+    .add-hero.app-hero h1{font-size:27px; font-weight:600; max-width:560px;}
+    .add-hero.app-hero .sub{font-size:15px; margin-top:10px; max-width:560px;}
+    .section.app-section{padding:18px 0 52px;}
+    @media (max-width:600px){ .add-hero.app-hero{padding:22px 0 2px;} .add-hero.app-hero h1{font-size:24px;} }
     .zp-wrap{max-width:640px; margin:0 auto;}
     .zp-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:18px; box-shadow:0 4px 16px -12px rgba(20,26,40,.3);}
     /* Přihlášení */
@@ -84,16 +91,16 @@
 </header>
 
 <main id="obsah">
-  <section class="add-hero">
+  <section class="add-hero app-hero">
     <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
     <div class="wrap add-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Zprávy</div>
-      <h1>Piště <em>přímo v aplikaci.</em></h1>
+      <h1>Pište <em>přímo v aplikaci.</em></h1>
       <p class="sub">Domluvte se s majitelem pozemku soukromě tady — nikdo od vás nechce e-mail ani telefon. Vaše soukromí zůstává vaše.</p>
     </div>
   </section>
 
-  <section class="section" style="padding-top:20px;">
+  <section class="section app-section">
     <div class="wrap">
       <div class="zp-wrap">
         <div id="zp-root"></div>
