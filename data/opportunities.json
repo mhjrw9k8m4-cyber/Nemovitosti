@@ -4267,6 +4267,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1022566-nabidka-prodej-pozemku-kostelec-u-holesova"
     },
     {
+      "place": "Týček",
+      "okres": "Rokycany",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 2090,
+      "price": 73130,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.862601,
+      "lng": 13.791178,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1062272-nabidka-prodej-pozemku-tycek"
+    },
+    {
       "place": "Vranová Lhota",
       "okres": "Šumperk",
       "type": "sale",
@@ -4486,6 +4499,19 @@
       "lat": 49.523299,
       "lng": 16.500293,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1038889-nabidka-prodej-pozemku-kunstat"
+    },
+    {
+      "place": "Týček",
+      "okres": "Rokycany",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 1648,
+      "price": 58710,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.861719,
+      "lng": 13.803244,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1062271-nabidka-prodej-pozemku-tycek"
     },
     {
       "place": "Česká Lípa",
@@ -4759,6 +4785,19 @@
       "lat": 48.944263,
       "lng": 17.310786,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949486-nabidka-prodej-pozemku-bzenec"
+    },
+    {
+      "place": "Stará Paka",
+      "okres": "Jičín",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 3115,
+      "price": 113300,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.497931,
+      "lng": 15.462059,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1062273-nabidka-prodej-pozemku-stara-paka"
     },
     {
       "place": "Tatenice",
@@ -6787,6 +6826,19 @@
       "lat": 49.514781,
       "lng": 17.811425,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/977690-nabidka-prodej-pozemku-zamrsky"
+    },
+    {
+      "place": "Švihov",
+      "okres": "Klatovy",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "trvalý travní porost",
+      "area": 1974,
+      "price": 80000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.453161,
+      "lng": 13.323714,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1050312-nabidka-prodej-pozemku-svihov"
     },
     {
       "place": "Kelč",
@@ -8934,19 +8986,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949328-nabidka-prodej-pozemku"
     },
     {
-      "place": "Švihov",
-      "okres": "Klatovy",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "trvalý travní porost",
-      "area": 1974,
-      "price": 90000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.453161,
-      "lng": 13.323714,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1050312-nabidka-prodej-pozemku-svihov"
-    },
-    {
       "place": "Kbel",
       "okres": "Klatovy",
       "type": "sale",
@@ -10975,6 +11014,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/983045-nabidka-prodej-pozemku-odrepsy"
     },
     {
+      "place": "Lednice",
+      "okres": "Břeclav",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "orná půda",
+      "area": 23526,
+      "price": 1229000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 48.793896,
+      "lng": 16.778848,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1062270-nabidka-prodej-pozemku-lednice"
+    },
+    {
       "place": "Vyskeř",
       "okres": "Jablonec nad Nisou",
       "type": "sale",
@@ -11791,7 +11843,7 @@
       "extra": "inzerát – Bezrealitky",
       "lat": 50.522909,
       "lng": 14.150648,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/962455-nabidka-prodej-pozemku"
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/962455-nabidka-prodej-pozemku-terezin"
     },
     {
       "place": "Liběšice",
@@ -12405,19 +12457,6 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1045585-nabidka-prodej-pozemku-hradcany-koberice"
     },
     {
-      "place": "Orlová",
-      "okres": "Karviná",
-      "type": "sale",
-      "parcel": "—",
-      "druh": "lesní pozemek",
-      "area": 3922,
-      "price": 249000,
-      "extra": "inzerát – Bezrealitky",
-      "lat": 49.867274,
-      "lng": 18.412313,
-      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/978057-nabidka-prodej-pozemku-orlova"
-    },
-    {
       "place": "Josefov",
       "okres": "Břeclav",
       "type": "sale",
@@ -12429,6 +12468,19 @@
       "lat": 48.852431,
       "lng": 16.981744,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/980807-nabidka-prodej-pozemku"
+    },
+    {
+      "place": "Orlová",
+      "okres": "Karviná",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": 3922,
+      "price": 249000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.867274,
+      "lng": 18.412313,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/978057-nabidka-prodej-pozemku-orlova"
     },
     {
       "place": "Cotkytle",
@@ -17161,6 +17213,19 @@
       "lat": 49.15739,
       "lng": 17.185318,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/949382-nabidka-prodej-pozemku-kozusice"
+    },
+    {
+      "place": "Hostomice",
+      "okres": "Beroun",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": 1582,
+      "price": 949000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.833536509202,
+      "lng": 14.034314121809,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/935486-nabidka-prodej-pozemku-hostomice"
     },
     {
       "place": "Obory",
@@ -24843,19 +24908,6 @@
       "url": "https://www.okdrazby.cz/drazba/26856"
     },
     {
-      "place": "Holedeč",
-      "okres": "Louny",
-      "type": "exekuce",
-      "parcel": "—",
-      "druh": "lesní pozemek",
-      "area": null,
-      "price": 3400000,
-      "extra": "nucená dražba 2026-09-22 · OK dražby",
-      "lat": 50.2653592,
-      "lng": 13.5922308,
-      "url": "https://www.okdrazby.cz/drazba/26716"
-    },
-    {
       "place": "Lhota u Nečemic",
       "okres": "Louny",
       "type": "exekuce",
@@ -24867,6 +24919,19 @@
       "lat": 50.2644361,
       "lng": 13.5955244,
       "url": "https://www.okdrazby.cz/drazba/26717"
+    },
+    {
+      "place": "Holedeč",
+      "okres": "Louny",
+      "type": "exekuce",
+      "parcel": "—",
+      "druh": "lesní pozemek",
+      "area": null,
+      "price": 3400000,
+      "extra": "nucená dražba 2026-09-22 · OK dražby",
+      "lat": 50.2653592,
+      "lng": 13.5922308,
+      "url": "https://www.okdrazby.cz/drazba/26716"
     },
     {
       "place": "Líčkov",
