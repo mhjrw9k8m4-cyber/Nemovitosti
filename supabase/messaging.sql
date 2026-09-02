@@ -97,14 +97,15 @@ grant execute on function my_threads() to authenticated;
 create or replace function thread_messages(p_listing uuid, p_buyer uuid)
 returns table(id uuid, created_at timestamptz, sender_id uuid, body text, mine boolean)
 language plpgsql security definer set search_path = public as $$
+#variable_conflict use_column
 declare uid uuid := auth.uid(); owner uuid;
 begin
   select user_id into owner from listings where id = p_listing;
   if uid is null or (uid <> p_buyer and uid <> owner) then
     raise exception 'nemáte přístup k této konverzaci';
   end if;
-  update chat_messages set read_at = now()
-    where listing_id = p_listing and buyer_id = p_buyer and sender_id <> uid and read_at is null;
+  update chat_messages m set read_at = now()
+    where m.listing_id = p_listing and m.buyer_id = p_buyer and m.sender_id <> uid and m.read_at is null;
   return query
     select m.id, m.created_at, m.sender_id, m.body, (m.sender_id = uid) as mine
     from chat_messages m
