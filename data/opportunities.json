@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-01",
+  "updated": "2026-09-02",
   "source": "Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy, příp. Sreality přes Apify)",
   "opportunities": [
     {
@@ -7567,6 +7567,19 @@
       "lat": 50.304579,
       "lng": 14.685424,
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/988125-nabidka-prodej-pozemku-horni-slivno"
+    },
+    {
+      "place": "Čistá",
+      "okres": "Rakovník",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "pozemek",
+      "area": 7183,
+      "price": 305000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 50.0317229,
+      "lng": 13.565423897063,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/992431-nabidka-prodej-pozemku-cista"
     },
     {
       "place": "Tojice",
@@ -20023,6 +20036,19 @@
       "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/958524-nabidka-prodej-pozemku"
     },
     {
+      "place": "Kunovice",
+      "okres": "Uherské Hradiště",
+      "type": "sale",
+      "parcel": "—",
+      "druh": "stavební pozemek",
+      "area": 1039,
+      "price": 5290000,
+      "extra": "inzerát – Bezrealitky",
+      "lat": 49.0419231,
+      "lng": 17.466194,
+      "url": "https://www.bezrealitky.cz/nemovitosti-byty-domy/1061935-nabidka-prodej-pozemku-kunovice"
+    },
+    {
       "place": "Sezemice",
       "okres": "Pardubice",
       "type": "sale",
@@ -23847,6 +23873,19 @@
       "url": "https://www.drazbyprost.cz/2093-podil-na-pozemcich-kamenicky-senov"
     },
     {
+      "place": "Králíky",
+      "okres": "Ústí nad Orlicí",
+      "type": "drazba",
+      "parcel": "St. 258/2",
+      "druh": "zastavěná plocha a nádvoří",
+      "area": 1013,
+      "price": 1290000,
+      "extra": "dražba 2026-10-07",
+      "lat": 50.08905,
+      "lng": 16.75941,
+      "url": "https://okdrazby.cz/drazba/27754"
+    },
+    {
       "place": "Jáchymov",
       "okres": "Karlovy Vary",
       "type": "drazba",
@@ -24673,18 +24712,6 @@
       "lat": 49.6104728,
       "lng": 15.3661611,
       "url": "https://www.okdrazby.cz/drazba/26604"
-    },
-    {
-      "place": "Trmice",
-      "okres": "Ústí nad Labem",
-      "type": "exekuce",
-      "parcel": "550",
-      "druh": "zastavěná plocha a nádvoří",
-      "area": null,
-      "price": 3590000,
-      "extra": "nucená dražba 2026-09-11",
-      "lat": 50.63892,
-      "lng": 13.98901
     },
     {
       "place": "Blovice",
