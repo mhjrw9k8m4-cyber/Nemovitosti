@@ -16,21 +16,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css?v=20260902b">
   <style>
-    #obsah{background:var(--bg); min-height:100vh;}
-    .zp-wrap{max-width:640px; margin:0 auto; padding:14px 14px 40px;}
-    .zp-top{display:flex; align-items:center; gap:10px; padding:8px 2px 14px;}
-    .zp-top a.zp-back{color:var(--text-ondark-mute); text-decoration:none; font-weight:600; font-size:14px; display:inline-flex; align-items:center; gap:6px;}
-    .zp-top .zp-logo{font-weight:800; color:var(--copper-bright); font-size:18px; margin-left:auto;}
-    .zp-h{font-size:22px; font-weight:800; color:var(--text-ondark); margin:2px 2px 4px;}
-    .zp-sub{font-size:14px; color:var(--text-ondark-mute); margin:0 2px 16px; line-height:1.5;}
-    .zp-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:16px; box-shadow:0 18px 40px -26px rgba(0,0,0,.6);}
+    .zp-wrap{max-width:640px; margin:0 auto;}
+    .zp-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:18px; box-shadow:0 4px 16px -12px rgba(20,26,40,.3);}
     /* Přihlášení */
     .zp-auth{padding:22px; max-width:400px; margin:8px auto;}
     .zp-auth h2{font-size:18px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
     .zp-auth p{font-size:13.5px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
     .zp-in{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-strong); border-radius:12px; font-size:16px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:9px; outline:none;}
     .zp-in:focus{border-color:var(--copper-bright); box-shadow:0 0 0 4px rgba(61,99,238,.14);}
-    .zp-btn{width:100%; height:48px; border:0; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; background:linear-gradient(135deg,var(--copper-bright),var(--copper)); color:#fff;}
+    .zp-btn{width:100%; height:48px; border:0; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; background:var(--brand-grad); color:#fff; box-shadow:0 8px 20px -10px rgba(74,80,220,.55); transition:filter .15s ease, transform .1s ease;}
+    .zp-btn:hover{filter:brightness(1.05);} .zp-btn:active{transform:scale(.99);}
     .zp-btn.sec{background:var(--ink-soft2); color:var(--text-ondark); border:1px solid var(--line-strong); margin-top:8px;}
     .zp-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--text-ondark-mute);}
     .zp-msg.err{color:var(--c-exekuce);}
@@ -55,12 +50,12 @@
     .zp-msgs{padding:16px 14px; min-height:280px; max-height:56vh; overflow-y:auto; display:flex; flex-direction:column; gap:8px;}
     .zp-b{max-width:76%; padding:9px 13px; border-radius:16px; font-size:14.5px; line-height:1.4; word-wrap:break-word; white-space:pre-wrap;}
     .zp-b.them{align-self:flex-start; background:var(--ink-soft2); color:var(--text-ondark); border-bottom-left-radius:5px;}
-    .zp-b.me{align-self:flex-end; background:linear-gradient(135deg,var(--copper-bright),var(--copper)); color:#fff; border-bottom-right-radius:5px;}
+    .zp-b.me{align-self:flex-end; background:var(--brand-grad); color:#fff; border-bottom-right-radius:5px;}
     .zp-time{font-size:10.5px; opacity:.65; margin-top:2px; display:block;}
     .zp-compose{display:flex; gap:8px; padding:11px 12px; border-top:1px solid var(--line); align-items:flex-end;}
     .zp-ta{flex:1; resize:none; min-height:44px; max-height:120px; padding:11px 13px; border:1.5px solid var(--line-strong); border-radius:14px; font-size:16px; font-family:inherit; background:var(--ink-soft2); color:var(--text-ondark); outline:none;}
     .zp-ta:focus{border-color:var(--copper-bright);}
-    .zp-send{flex:none; width:48px; height:44px; border:0; border-radius:12px; background:linear-gradient(135deg,var(--copper-bright),var(--copper)); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+    .zp-send{flex:none; width:48px; height:44px; border:0; border-radius:12px; background:var(--brand-grad); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;}
     .zp-send:disabled{opacity:.5;}
     .zp-send svg{width:20px; height:20px;}
     .zp-note{font-size:12px; color:var(--text-ondark-mute); text-align:center; padding:8px 14px 0; line-height:1.5;}
@@ -68,17 +63,48 @@
   </style>
 </head>
 <body>
-<main id="obsah">
-  <div class="zp-wrap">
-    <div class="zp-top">
-      <a class="zp-back" href="index.html">‹ Zpět na mapu</a>
-      <span class="zp-logo">Parcelka</span>
-    </div>
-    <div class="zp-h">Zprávy</div>
-    <div class="zp-sub">Piš přímo s majitelem pozemku — soukromě v aplikaci. Nikdo od tebe nechce e-mail ani telefon.</div>
-    <div id="zp-root"></div>
+
+<a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+
+<header id="header">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="Parcelka — domů"><span class="logo-mark" aria-hidden="true"></span>Parcelka</a>
+    <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
+    <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+    <nav id="nav" aria-label="Hlavní navigace">
+      <a href="index.html#mapa">Mapa</a>
+      <a href="zpravy.html">Zprávy</a>
+      <a href="hlidani.html">Hlídání</a>
+      <a href="muj-inzerat.html">Můj profil</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
+      <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
+    </nav>
   </div>
+</header>
+
+<main id="obsah">
+  <section class="add-hero">
+    <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+    <div class="wrap add-wrap">
+      <div class="eyebrow"><span class="live-dot"></span>Zprávy</div>
+      <h1>Piště <em>přímo v aplikaci.</em></h1>
+      <p class="sub">Domluvte se s majitelem pozemku soukromě tady — nikdo od vás nechce e-mail ani telefon. Vaše soukromí zůstává vaše.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:20px;">
+    <div class="wrap">
+      <div class="zp-wrap">
+        <div id="zp-root"></div>
+      </div>
+    </div>
+  </section>
 </main>
+
+<footer>
+  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+</footer>
 
 <script src="js/config.js?v=20260902b"></script>
 <script src="js/auth.js?v=20260902b"></script>
@@ -249,6 +275,27 @@
   }
   // Nejdřív oživíme session (mohla vypršet), pak start.
   if (A && A.keepAlive) { A.keepAlive().then(start, start); } else { start(); }
+})();
+
+/* Mobilní menu (hamburger) — tato stránka nenačítá main.js, obsloužíme ho tady. */
+(function () {
+  var toggle = document.querySelector('.nav-toggle');
+  var nav = document.getElementById('nav');
+  if (!toggle || !nav) return;
+  function closeNav() {
+    nav.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Otevřít menu');
+    document.body.classList.remove('nav-open');
+  }
+  toggle.addEventListener('click', function () {
+    var open = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Zavřít menu' : 'Otevřít menu');
+    document.body.classList.toggle('nav-open', open);
+  });
+  nav.addEventListener('click', function (e) { if (e.target.tagName === 'A' && nav.classList.contains('open')) closeNav(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNav(); });
 })();
 </script>
 </body>
