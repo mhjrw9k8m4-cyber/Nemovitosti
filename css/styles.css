@@ -670,6 +670,7 @@ h1 em{font-style:italic; font-weight:600; background:linear-gradient(100deg, #3D
 @media (max-width:560px){ .odl-cta{flex-direction:column; align-items:stretch; text-align:center;} .odl-cta .btn-primary{text-align:center;} }
 .lp-src{border-color:var(--copper); background:rgba(74,85,224,0.14); color:var(--copper-bright);}
 .lp-src:hover{border-color:var(--copper-bright); background:rgba(74,85,224,0.22);}
+.nav-unread{display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; margin-left:5px; border-radius:9px; background:var(--copper); color:#fff; font-size:11px; font-weight:700; vertical-align:middle;}
 .lp-msg{background:linear-gradient(135deg,var(--copper-bright),var(--copper)); color:#fff; border-color:transparent; font-weight:700;}
 .lp-msg:hover{filter:brightness(1.06); color:#fff;}
 .md-actions .lp-msg{flex-basis:100%;}

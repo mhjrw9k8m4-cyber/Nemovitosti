@@ -99,7 +99,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=20260824i">
+  <link rel="stylesheet" href="css/styles.css?v=20260824j">
 </head>
 <body>
 
@@ -464,10 +464,25 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="js/config.js?v=20260824i" defer></script>
-<script src="js/dropdown.js?v=20260824i" defer></script>
-<script src="js/main.js?v=20260824i" defer></script>
+<script src="js/config.js?v=20260824j" defer></script>
+<script src="js/auth.js?v=20260824j" defer></script>
+<script src="js/dropdown.js?v=20260824j" defer></script>
+<script src="js/main.js?v=20260824j" defer></script>
 <!-- Vercel Web Analytics (navstevnost) -->
 <script defer src="/_vercel/insights/script.js"></script>
+<script>
+/* Odznak s počtem nepřečtených zpráv u položky „Zprávy" v menu (jen když je
+   uživatel přihlášený). Spouští se až po načtení (defer skripty jsou hotové). */
+window.addEventListener('load', function () {
+  try {
+    var A = window.PKAuth, link = document.getElementById('nav-zpravy');
+    if (!A || !link || !A.loggedIn || !A.loggedIn()) return;
+    A.rpc('unread_count', {}, true).then(function (res) {
+      var n = (res && res.ok) ? (res.data | 0) : 0;
+      if (n > 0) link.insertAdjacentHTML('beforeend', ' <span class="nav-unread">' + (n > 9 ? '9+' : n) + '</span>');
+    }, function () {});
+  } catch (e) {}
+});
+</script>
 </body>
 </html>
