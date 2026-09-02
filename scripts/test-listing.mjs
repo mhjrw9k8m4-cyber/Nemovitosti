@@ -47,39 +47,28 @@ function mkArgs(over) {
   const q0row = Array.isArray(q0.j) ? q0.j[0] : q0.j;
   ok('kvóta funguje (used 0, max 10)', q0row && q0row.used === 0 && q0row.max === 10, q0.txt && q0.txt.slice(0, 120));
 
-  // Platný inzerát s detaily
-  const cl = await rpc(A.token, 'create_listing', mkArgs());
+  // Jeden platný inzerát, který ZÁROVEŇ zkouší moderaci: cizí fotka (má se
+  // zahodit) + neplatný přístup (má se uložit null) + platné sítě.
+  // Pozn.: server má 90s cooldown mezi inzeráty, proto testujeme na jednom.
+  const cl = await rpc(A.token, 'create_listing', mkArgs({
+    p_photos: ['https://zlyweb.example.com/x.jpg'], p_access: 'VYMYŠLENÝ PŘÍSTUP',
+  }));
   const listingId = Array.isArray(cl.j) ? (cl.j[0] && cl.j[0].id) : (cl.j && cl.j.id);
-  ok('vytvořen platný inzerát s detaily', !!listingId, cl.txt && cl.txt.slice(0, 140));
+  ok('vytvořen platný inzerát', !!listingId, cl.txt && cl.txt.slice(0, 140));
 
-  // Detaily (features/access) se uložily a vrací se veřejně
   const pub = await rpc(A.token, 'public_listings', {});
   const mine = Array.isArray(pub.j) && pub.j.find((x) => x.id === listingId);
   ok('inzerát je ve veřejném seznamu', !!mine);
   ok('sítě (features) uložené', mine && Array.isArray(mine.features) && mine.features.indexOf('Elektřina') >= 0, mine && JSON.stringify(mine.features));
-  ok('přístup (access) uložený', mine && mine.access === 'Zpevněná cesta', mine && ('access=' + (mine && mine.access)));
+  ok('MODERACE: cizí fotka zahozena (photos prázdné)', mine && Array.isArray(mine.photos) && mine.photos.length === 0, mine && JSON.stringify(mine.photos));
+  ok('MODERACE: neplatný přístup zahozen (null)', mine && (mine.access == null), mine && ('access=' + (mine && mine.access)));
 
-  // MODERACE: cizí fotka (ne z našeho úložiště) se zahodí
-  const clPhoto = await rpc(A.token, 'create_listing', mkArgs({ p_photos: ['https://zlyweb.example.com/x.jpg'], p_place: 'ZKUŠEBNÍ F ' + rnd }));
-  const fId = Array.isArray(clPhoto.j) ? (clPhoto.j[0] && clPhoto.j[0].id) : (clPhoto.j && clPhoto.j.id);
-  const pub2 = await rpc(A.token, 'public_listings', {});
-  const fRow = Array.isArray(pub2.j) && pub2.j.find((x) => x.id === fId);
-  ok('MODERACE: cizí fotka zahozena (photos prázdné)', fRow && Array.isArray(fRow.photos) && fRow.photos.length === 0, fRow && JSON.stringify(fRow.photos));
+  // MODERACE textu — tyhle inzerát NEVYTVOŘÍ (odmítnou se), takže je cooldown netrápí.
+  const bad = await rpc(A.token, 'create_listing', mkArgs({ p_description: 'tohle je kokot inzerat' }));
+  ok('MODERACE: vulgarita odmítnuta serverem', bad.status >= 400 && /nevhodn/i.test(bad.txt || ''), 'status=' + bad.status + ' ' + (bad.txt || '').slice(0, 80));
 
-  // MODERACE: vulgarita v popisu → odmítnuto
-  const bad = await rpc(A.token, 'create_listing', mkArgs({ p_description: 'tohle je kokot inzerat', p_place: 'ZKUŠEBNÍ B ' + rnd }));
-  ok('MODERACE: vulgarita odmítnuta serverem', bad.status >= 400 && /nevhodn/i.test(bad.txt || ''), 'status=' + bad.status);
-
-  // MODERACE: spam → odmítnuto
-  const spam = await rpc(A.token, 'create_listing', mkArgs({ p_description: 'nejlepsi viagra a casino zdarma', p_place: 'ZKUŠEBNÍ S ' + rnd }));
-  ok('MODERACE: spam odmítnut serverem', spam.status >= 400 && /spam/i.test(spam.txt || ''), 'status=' + spam.status);
-
-  // MODERACE: neplatný přístup se zahodí (uloží se null, ne smyšlenina)
-  const clAcc = await rpc(A.token, 'create_listing', mkArgs({ p_access: 'VYMYŠLENÝ PŘÍSTUP', p_place: 'ZKUŠEBNÍ A ' + rnd }));
-  const aId = Array.isArray(clAcc.j) ? (clAcc.j[0] && clAcc.j[0].id) : (clAcc.j && clAcc.j.id);
-  const pub3 = await rpc(A.token, 'public_listings', {});
-  const aRow = Array.isArray(pub3.j) && pub3.j.find((x) => x.id === aId);
-  ok('MODERACE: neplatný přístup zahozen (null)', aRow && (aRow.access == null), aRow && ('access=' + aRow.access));
+  const spam = await rpc(A.token, 'create_listing', mkArgs({ p_description: 'nejlepsi viagra a casino zdarma' }));
+  ok('MODERACE: spam odmítnut serverem', spam.status >= 400 && /spam/i.test(spam.txt || ''), 'status=' + spam.status + ' ' + (spam.txt || '').slice(0, 80));
 
   // Kvóta po vytvoření vzrostla
   const q1 = await rpc(A.token, 'my_listing_quota', {});
