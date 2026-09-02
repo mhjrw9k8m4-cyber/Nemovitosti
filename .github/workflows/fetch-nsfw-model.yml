@@ -38,29 +38,67 @@ jobs:
           done < /tmp/paths.txt
           echo "Obsah assets/nsfw-model:"; ls -la assets/nsfw-model
 
-      - name: Ověřit, že model funguje (načtení + klasifikace)
+      - name: Ověřit kompletnost modelu (platný model.json + všechny shardy)
         run: |
           set -e
-          npm init -y >/dev/null 2>&1
-          echo "Instaluji ověřovací knihovny…"
-          npm i --no-audit --no-fund @tensorflow/tfjs-node@4.22.0 nsfwjs@2.4.2 >/dev/null 2>&1
-          cat > verify.mjs <<'JS'
-          import * as tf from '@tensorflow/tfjs-node';
-          import * as nsfw from 'nsfwjs';
-          const path = 'file://' + process.cwd() + '/assets/nsfw-model/model.json';
-          console.log('Načítám model z', path);
-          let model;
-          try { model = await nsfw.load(path, { size: 224 }); }
-          catch (e) { console.error('LOAD FAIL:', e && e.message); process.exit(1); }
-          const t = tf.zeros([224, 224, 3]);
-          const preds = await model.classify(t);
-          console.log('Klasifikace neutrálního obrázku:', JSON.stringify(preds));
-          const names = (preds || []).map(p => p.className).sort().join(',');
-          if (!preds || preds.length !== 5) { console.error('Nečekaný počet tříd'); process.exit(1); }
-          console.log('MODEL OK — 5 tříd:', names);
+          node -e '
+            const fs = require("fs");
+            const dir = "assets/nsfw-model/";
+            const m = JSON.parse(fs.readFileSync(dir + "model.json", "utf8"));
+            if (!m.modelTopology) { console.error("chybí modelTopology"); process.exit(1); }
+            const paths = [].concat.apply([], (m.weightsManifest || []).map(function (w) { return w.paths; }));
+            if (!paths.length) { console.error("žádné váhy v manifestu"); process.exit(1); }
+            let total = 0;
+            for (const p of paths) {
+              const st = fs.statSync(dir + p);          // hodí chybu, když soubor chybí
+              if (!st.size) { console.error("prázdný shard: " + p); process.exit(1); }
+              total += st.size;
+            }
+            console.log("MODEL OK — " + paths.length + " shard(ů), " + (total/1048576).toFixed(1) + " MB vah, vstup 224px");
+          '
+          # Bezpečnostní stropy: model.json rozumně malý, celková velikost do 20 MB
+          test "$(stat -c%s assets/nsfw-model/model.json)" -lt 5000000
+          test "$(du -sb assets/nsfw-model | cut -f1)" -lt 20971520
+          echo "Ověřeno."
+
+      - name: Ověřit načtení v prohlížeči (jako u lidí)
+        run: |
+          set -e
+          npm i --no-audit --no-fund playwright@1.47.2 >/dev/null 2>&1
+          npx playwright install --with-deps chromium >/dev/null 2>&1
+          cat > __nsfwtest.html <<'HTML'
+          <!doctype html><meta charset="utf-8">
+          <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+          <script src="https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js"></script>
+          <script>
+          window.run = async function () {
+            var model = await nsfwjs.load('/assets/nsfw-model/', { size: 224 });
+            var cv = document.createElement('canvas'); cv.width = 224; cv.height = 224;
+            var ctx = cv.getContext('2d'); ctx.fillStyle = '#3a7d3a'; ctx.fillRect(0, 0, 224, 224);
+            return await model.classify(cv);
+          };
+          </script>
+          HTML
+          python3 -m http.server 8099 >/dev/null 2>&1 &
+          sleep 1
+          cat > __nsfwtest.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const b = await chromium.launch({ args: ['--no-sandbox'] });
+          const p = await b.newPage();
+          p.on('console', m => console.log('  [browser]', m.text()));
+          await p.goto('http://127.0.0.1:8099/__nsfwtest.html', { waitUntil: 'load', timeout: 60000 });
+          let preds;
+          try { preds = await p.evaluate(() => window.run()); }
+          catch (e) { console.error('BROWSER LOAD FAIL:', e && e.message); await b.close(); process.exit(1); }
+          console.log('Klasifikace zeleného obrázku:', JSON.stringify(preds));
+          await b.close();
+          if (!Array.isArray(preds) || preds.length !== 5) { console.error('Nečekaný počet tříd'); process.exit(1); }
+          const m = {}; preds.forEach(x => m[x.className] = x.probability);
+          if ((m.Porn || 0) + (m.Hentai || 0) >= 0.6) { console.error('Falešný poplach na neutrálním obrázku'); process.exit(1); }
+          console.log('BROWSER OK — model se načte a klasifikuje, neutrální obrázek propuštěn.');
           JS
-          node verify.mjs
-          rm -f verify.mjs package.json package-lock.json
+          node __nsfwtest.mjs
+          rm -f __nsfwtest.html __nsfwtest.mjs package.json package-lock.json
           rm -rf node_modules
 
       - name: Commitnout model do větve
