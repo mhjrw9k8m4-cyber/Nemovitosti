@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+  <title>Zprávy — Parcelka</title>
+  <meta name="description" content="Soukromé zprávy mezi zájemcem a majitelem pozemku — přímo v aplikaci, bez sdílení e-mailu či telefonu.">
+  <meta name="theme-color" content="#EDEFF4">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=20260824i">
+  <style>
+    #obsah{background:var(--bg); min-height:100vh;}
+    .zp-wrap{max-width:640px; margin:0 auto; padding:14px 14px 40px;}
+    .zp-top{display:flex; align-items:center; gap:10px; padding:8px 2px 14px;}
+    .zp-top a.zp-back{color:var(--text-ondark-mute); text-decoration:none; font-weight:600; font-size:14px; display:inline-flex; align-items:center; gap:6px;}
+    .zp-top .zp-logo{font-weight:800; color:var(--copper-bright); font-size:18px; margin-left:auto;}
+    .zp-h{font-size:22px; font-weight:800; color:var(--text-ondark); margin:2px 2px 4px;}
+    .zp-sub{font-size:14px; color:var(--text-ondark-mute); margin:0 2px 16px; line-height:1.5;}
+    .zp-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:16px; box-shadow:0 18px 40px -26px rgba(0,0,0,.6);}
+    /* Přihlášení */
+    .zp-auth{padding:22px; max-width:400px; margin:8px auto;}
+    .zp-auth h2{font-size:18px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
+    .zp-auth p{font-size:13.5px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
+    .zp-in{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-strong); border-radius:12px; font-size:16px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:9px; outline:none;}
+    .zp-in:focus{border-color:var(--copper-bright); box-shadow:0 0 0 4px rgba(61,99,238,.14);}
+    .zp-btn{width:100%; height:48px; border:0; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; background:linear-gradient(135deg,var(--copper-bright),var(--copper)); color:#fff;}
+    .zp-btn.sec{background:var(--ink-soft2); color:var(--text-ondark); border:1px solid var(--line-strong); margin-top:8px;}
+    .zp-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--text-ondark-mute);}
+    .zp-msg.err{color:var(--c-exekuce);}
+    /* Seznam vláken */
+    .zp-thread{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); cursor:pointer; text-decoration:none; color:inherit;}
+    .zp-thread:last-child{border-bottom:0;}
+    .zp-thread:hover{background:var(--ink-soft2);}
+    .zp-ava{width:44px; height:44px; border-radius:12px; flex:none; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,rgba(139,79,224,.18),rgba(61,99,238,.14)); color:var(--copper-bright);}
+    .zp-ava svg{width:22px; height:22px;}
+    .zp-tmain{min-width:0; flex:1;}
+    .zp-tplace{font-weight:700; font-size:15px; color:var(--text-ondark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .zp-tlast{font-size:13px; color:var(--text-ondark-mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;}
+    .zp-trole{font-size:11px; color:var(--copper-bright); font-weight:600;}
+    .zp-badge{min-width:20px; height:20px; padding:0 6px; border-radius:10px; background:var(--copper); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none;}
+    .zp-empty{padding:34px 22px; text-align:center; color:var(--text-ondark-mute); font-size:14px; line-height:1.6;}
+    .zp-empty svg{width:40px; height:40px; color:var(--line-strong); margin-bottom:8px;}
+    /* Konverzace */
+    .zp-conv-head{display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid var(--line);}
+    .zp-conv-head .zp-cb{background:none; border:0; color:var(--text-ondark-mute); font-size:15px; cursor:pointer; font-weight:600; padding:4px;}
+    .zp-conv-head .zp-cti{font-weight:700; font-size:15px; color:var(--text-ondark); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    .zp-conv-head a.zp-view{margin-left:auto; font-size:12.5px; color:var(--copper-bright); text-decoration:none; font-weight:600; white-space:nowrap;}
+    .zp-msgs{padding:16px 14px; min-height:280px; max-height:56vh; overflow-y:auto; display:flex; flex-direction:column; gap:8px;}
+    .zp-b{max-width:76%; padding:9px 13px; border-radius:16px; font-size:14.5px; line-height:1.4; word-wrap:break-word; white-space:pre-wrap;}
+    .zp-b.them{align-self:flex-start; background:var(--ink-soft2); color:var(--text-ondark); border-bottom-left-radius:5px;}
+    .zp-b.me{align-self:flex-end; background:linear-gradient(135deg,var(--copper-bright),var(--copper)); color:#fff; border-bottom-right-radius:5px;}
+    .zp-time{font-size:10.5px; opacity:.65; margin-top:2px; display:block;}
+    .zp-compose{display:flex; gap:8px; padding:11px 12px; border-top:1px solid var(--line); align-items:flex-end;}
+    .zp-ta{flex:1; resize:none; min-height:44px; max-height:120px; padding:11px 13px; border:1.5px solid var(--line-strong); border-radius:14px; font-size:16px; font-family:inherit; background:var(--ink-soft2); color:var(--text-ondark); outline:none;}
+    .zp-ta:focus{border-color:var(--copper-bright);}
+    .zp-send{flex:none; width:48px; height:44px; border:0; border-radius:12px; background:linear-gradient(135deg,var(--copper-bright),var(--copper)); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+    .zp-send:disabled{opacity:.5;}
+    .zp-send svg{width:20px; height:20px;}
+    .zp-note{font-size:12px; color:var(--text-ondark-mute); text-align:center; padding:8px 14px 0; line-height:1.5;}
+    .zp-load{padding:30px; text-align:center; color:var(--text-ondark-mute); font-size:14px;}
+  </style>
+</head>
+<body>
+<main id="obsah">
+  <div class="zp-wrap">
+    <div class="zp-top">
+      <a class="zp-back" href="index.html">‹ Zpět na mapu</a>
+      <span class="zp-logo">Parcelka</span>
+    </div>
+    <div class="zp-h">Zprávy</div>
+    <div class="zp-sub">Piš přímo s majitelem pozemku — soukromě v aplikaci. Nikdo od tebe nechce e-mail ani telefon.</div>
+    <div id="zp-root"></div>
+  </div>
+</main>
+
+<script src="js/config.js?v=20260824i"></script>
+<script src="js/auth.js?v=20260824i"></script>
+<script>
+(function () {
+  var A = window.PKAuth;
+  var root = document.getElementById('zp-root');
+  var q = function (n) { var m = new RegExp('[?&]' + n + '=([^&]*)').exec(location.search); try { return m ? decodeURIComponent(m[1]) : ''; } catch (e) { return m ? m[1] : ''; } };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); };
+  var ICON_CHAT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+  var ICON_SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>';
+
+  function timeTxt(iso) {
+    try {
+      var d = new Date(iso), now = new Date();
+      var sameDay = d.toDateString() === now.toDateString();
+      var hh = ('0' + d.getHours()).slice(-2), mm = ('0' + d.getMinutes()).slice(-2);
+      if (sameDay) return hh + ':' + mm;
+      return ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '. ' + hh + ':' + mm;
+    } catch (e) { return ''; }
+  }
+
+  /* ---------- Přihlášení ---------- */
+  function renderAuth(msg, err) {
+    root.innerHTML =
+      '<div class="zp-card zp-auth">' +
+        '<h2>Přihlaste se</h2>' +
+        '<p>Zprávy jsou soukromé, tak se stačí rychle přihlásit (nebo si během chvilky vytvořit účet). Váš e-mail nikdo z prodejců ani kupujících neuvidí.</p>' +
+        '<input class="zp-in" id="ze" type="email" inputmode="email" autocomplete="email" placeholder="Váš e-mail">' +
+        '<input class="zp-in" id="zp" type="password" autocomplete="current-password" placeholder="Heslo">' +
+        '<button class="zp-btn" id="zlogin">Přihlásit se</button>' +
+        '<button class="zp-btn sec" id="zsignup">Vytvořit účet</button>' +
+        '<div class="zp-msg' + (err ? ' err' : '') + '" id="zauthmsg">' + (msg || '') + '</div>' +
+      '</div>';
+    var em = document.getElementById('ze'), pw = document.getElementById('zp'), mEl = document.getElementById('zauthmsg');
+    function creds() { return { e: (em.value || '').trim(), p: pw.value || '' }; }
+    function ok(c) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e) && c.p.length >= 6; }
+    document.getElementById('zlogin').addEventListener('click', function () {
+      var c = creds(); if (!ok(c)) { mEl.textContent = 'Zadejte e-mail a heslo (aspoň 6 znaků).'; mEl.className = 'zp-msg err'; return; }
+      mEl.textContent = 'Přihlašuji…'; mEl.className = 'zp-msg';
+      A.login(c.e, c.p).then(function (r) { if (r && r.ok) start(); else { mEl.textContent = 'Přihlášení se nepovedlo. Zkontrolujte e-mail a heslo.'; mEl.className = 'zp-msg err'; } });
+    });
+    document.getElementById('zsignup').addEventListener('click', function () {
+      var c = creds(); if (!ok(c)) { mEl.textContent = 'Zadejte e-mail a heslo (aspoň 6 znaků).'; mEl.className = 'zp-msg err'; return; }
+      mEl.textContent = 'Zakládám účet…'; mEl.className = 'zp-msg';
+      A.signup(c.e, c.p).then(function (r) {
+        if (r && r.ok) { if (r.session) start(); else A.login(c.e, c.p).then(function (r2) { if (r2 && r2.ok) start(); else { mEl.textContent = 'Účet vytvořen. Přihlaste se prosím.'; mEl.className = 'zp-msg'; } }); }
+        else { mEl.textContent = (r && r.data && (r.data.msg || r.data.error_description)) || 'Účet se nepovedlo vytvořit (možná už existuje).'; mEl.className = 'zp-msg err'; }
+      });
+    });
+  }
+
+  /* ---------- Seznam vláken ---------- */
+  function renderThreads(rows) {
+    if (!rows.length) {
+      root.innerHTML = '<div class="zp-card"><div class="zp-empty">' + ICON_CHAT +
+        '<div>Zatím tu nemáte žádnou konverzaci.</div>' +
+        '<div style="margin-top:6px;">Najděte pozemek na mapě a klepněte u něj na <b>„Napsat majiteli"</b> — a napište mu rovnou tady.</div></div></div>';
+      return;
+    }
+    var html = '<div class="zp-card">';
+    rows.forEach(function (t) {
+      var role = t.is_owner ? 'Zájemce o váš pozemek' : 'Váš dotaz majiteli';
+      html += '<a class="zp-thread" href="zpravy.html?l=' + encodeURIComponent(t.listing_id) + '&b=' + encodeURIComponent(t.buyer_id) + '&o=' + (t.is_owner ? '1' : '0') + '">' +
+        '<div class="zp-ava">' + ICON_CHAT + '</div>' +
+        '<div class="zp-tmain">' +
+          '<div class="zp-tplace">' + esc(t.place || 'Pozemek') + (t.okres ? ' <span style="font-weight:400;color:var(--text-ondark-mute)">· okr. ' + esc(t.okres) + '</span>' : '') + '</div>' +
+          '<div class="zp-trole">' + role + '</div>' +
+          '<div class="zp-tlast">' + esc((t.last_body || '').slice(0, 60)) + '</div>' +
+        '</div>' +
+        (t.unread > 0 ? '<div class="zp-badge">' + t.unread + '</div>' : '') +
+      '</a>';
+    });
+    html += '</div>';
+    root.innerHTML = html;
+  }
+
+  function loadThreads() {
+    root.innerHTML = '<div class="zp-card"><div class="zp-load">Načítám zprávy…</div></div>';
+    A.rpc('my_threads', {}, true).then(function (res) {
+      if (!res || !res.ok) { if (res && res.expired) { renderAuth('Přihlášení vypršelo, přihlaste se prosím znovu.', true); return; } root.innerHTML = '<div class="zp-card"><div class="zp-empty">Zprávy se teď nepovedlo načíst. Zkuste to prosím za chvíli.</div></div>'; return; }
+      renderThreads(Array.isArray(res.data) ? res.data : []);
+    });
+  }
+
+  /* ---------- Konverzace ---------- */
+  var pollTimer = null;
+  function openConv(listing, buyer, isOwner, isNew) {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    root.innerHTML =
+      '<div class="zp-card">' +
+        '<div class="zp-conv-head">' +
+          '<button class="zp-cb" id="zc-back">‹ Zpět</button>' +
+          '<span class="zp-cti" id="zc-title">Konverzace</span>' +
+          '<a class="zp-view" id="zc-view" href="index.html?lid=' + encodeURIComponent(listing) + '">Zobrazit pozemek</a>' +
+        '</div>' +
+        '<div class="zp-msgs" id="zc-msgs"><div class="zp-load">Načítám…</div></div>' +
+        '<div class="zp-compose">' +
+          '<textarea class="zp-ta" id="zc-ta" rows="1" placeholder="Napište zprávu…"></textarea>' +
+          '<button class="zp-send" id="zc-send" aria-label="Odeslat">' + ICON_SEND + '</button>' +
+        '</div>' +
+        '<div class="zp-note">Soukromá zpráva v aplikaci. Nesdílejte hesla ani platby předem — vždy si pozemek i vlastníka ověřte v katastru.</div>' +
+      '</div>';
+    var msgsEl = document.getElementById('zc-msgs'), ta = document.getElementById('zc-ta'), sendBtn = document.getElementById('zc-send'), titleEl = document.getElementById('zc-title');
+    document.getElementById('zc-back').addEventListener('click', function () { if (pollTimer) clearInterval(pollTimer); location.href = 'zpravy.html'; });
+    ta.addEventListener('input', function () { ta.style.height = 'auto'; ta.style.height = Math.min(120, ta.scrollHeight) + 'px'; });
+
+    function render(rows) {
+      if (!rows.length) {
+        msgsEl.innerHTML = '<div class="zp-empty" style="padding:20px 8px;">' + (isOwner
+          ? 'Zatím žádná zpráva.'
+          : 'Napište majiteli první zprávu — třeba se zeptejte na dostupnost, sítě nebo přístupovou cestu. 👇') + '</div>';
+        return;
+      }
+      var h = '';
+      rows.forEach(function (m) {
+        h += '<div class="zp-b ' + (m.mine ? 'me' : 'them') + '">' + esc(m.body) + '<span class="zp-time">' + timeTxt(m.created_at) + '</span></div>';
+      });
+      msgsEl.innerHTML = h;
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+    }
+    function load(first) {
+      A.rpc('thread_messages', { p_listing: listing, p_buyer: buyer }, true).then(function (res) {
+        if (!res || !res.ok) { if (first) msgsEl.innerHTML = '<div class="zp-empty" style="padding:18px 8px;">Konverzaci se nepovedlo načíst.</div>'; return; }
+        var rows = Array.isArray(res.data) ? res.data : [];
+        render(rows);
+        if (first && rows.length && rows[0].body) { var t = (rows[0].body || '').slice(0, 40); }
+      });
+    }
+    function send() {
+      var body = (ta.value || '').trim();
+      if (!body) return;
+      sendBtn.disabled = true;
+      var args = isOwner ? { p_listing: listing, p_buyer: buyer, p_body: body } : { p_listing: listing, p_buyer: null, p_body: body };
+      A.rpc('send_message', args, true).then(function (res) {
+        sendBtn.disabled = false;
+        if (!res || !res.ok) {
+          var em = (res && res.error && (res.error.message || res.error.hint)) || 'Zprávu se nepovedlo odeslat.';
+          msgsEl.insertAdjacentHTML('beforeend', '<div class="zp-empty" style="padding:8px; color:var(--c-exekuce)">' + esc(em) + '</div>');
+          return;
+        }
+        ta.value = ''; ta.style.height = 'auto';
+        load(false);
+      });
+    }
+    sendBtn.addEventListener('click', send);
+    ta.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+    load(true);
+    pollTimer = setInterval(function () { load(false); }, 15000);
+  }
+
+  /* ---------- Start ---------- */
+  function start() {
+    if (!A || !A.loggedIn()) { renderAuth('', false); return; }
+    var l = q('l'), b = q('b'), isNew = q('new') === '1', o = q('o') === '1';
+    if (l && (b || isNew)) {
+      // otevři konkrétní konverzaci (nová = kupující píše, buyer = já)
+      var buyer = isNew ? (A.uid() || '') : b;
+      openConv(l, buyer, o, isNew);
+    } else {
+      loadThreads();
+    }
+  }
+
+  if (!window.PK_SUPABASE_URL || !window.PK_SUPABASE_KEY) {
+    root.innerHTML = '<div class="zp-card"><div class="zp-empty">Zprávy teď nejsou dostupné. Zkuste to prosím později.</div></div>';
+    return;
+  }
+  // Nejdřív oživíme session (mohla vypršet), pak start.
+  if (A && A.keepAlive) { A.keepAlive().then(start, start); } else { start(); }
+})();
+</script>
+</body>
+</html>

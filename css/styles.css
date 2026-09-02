@@ -670,6 +670,9 @@ h1 em{font-style:italic; font-weight:600; background:linear-gradient(100deg, #3D
 @media (max-width:560px){ .odl-cta{flex-direction:column; align-items:stretch; text-align:center;} .odl-cta .btn-primary{text-align:center;} }
 .lp-src{border-color:var(--copper); background:rgba(74,85,224,0.14); color:var(--copper-bright);}
 .lp-src:hover{border-color:var(--copper-bright); background:rgba(74,85,224,0.22);}
+.lp-msg{background:linear-gradient(135deg,var(--copper-bright),var(--copper)); color:#fff; border-color:transparent; font-weight:700;}
+.lp-msg:hover{filter:brightness(1.06); color:#fff;}
+.md-actions .lp-msg{flex-basis:100%;}
 .md-actions{flex:none; display:flex; flex-wrap:wrap; gap:6px; width:186px; align-content:flex-start;}
 .md-actions .lp-btn{flex:1 1 calc(50% - 3px); min-width:0;}
 .md-actions .lp-watch{flex-basis:100%;}
