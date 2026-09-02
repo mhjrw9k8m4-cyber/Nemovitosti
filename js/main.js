@@ -2091,7 +2091,9 @@
   }
 
   /* ---------- Načtení reálných dat s bezpečnou zálohou ---------- */
-  function loadJSON(url) { return fetch(url, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
+  // Výchozí cache (ne 'no-store') — aby fungoval <link rel=preload> a vracející
+  // se návštěvník nestahoval data znovu. Čerstvost řeší ETag při novém nasazení.
+  function loadJSON(url) { return fetch(url).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
   Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), sbRpc('public_listings')])
     .then(function (res) {
       var j = res[0], kraje = res[1], ul = res[2], live = res[3];

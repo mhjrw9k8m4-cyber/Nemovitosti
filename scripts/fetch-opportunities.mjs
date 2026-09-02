@@ -636,7 +636,8 @@ async function main() {
     source: 'Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy, příp. Sreality přes Apify)',
     opportunities: fresh,
   };
-  writeFileSync(OUT, JSON.stringify(payload, null, 2) + '\n', 'utf8');
+  // Minifikovaně (bez odsazení) — menší soubor = rychlejší načtení na mobilu.
+  writeFileSync(OUT, JSON.stringify(payload) + '\n', 'utf8');
   const counts = fresh.reduce((a, o) => ((a[o.type] = (a[o.type] || 0) + 1), a), {});
   console.log(`Zapsáno ${fresh.length} příležitostí do ${OUT}. Dle typu:`, JSON.stringify(counts));
 }
