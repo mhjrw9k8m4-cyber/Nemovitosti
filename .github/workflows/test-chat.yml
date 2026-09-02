@@ -19,3 +19,5 @@ jobs:
         run: node scripts/test-chat.mjs
       - name: Test chytrých upozornění (Hlídání)
         run: node scripts/test-search.mjs
+      - name: Test přidávání inzerátů (moderace)
+        run: node scripts/test-listing.mjs
