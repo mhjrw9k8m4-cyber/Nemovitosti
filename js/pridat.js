@@ -482,7 +482,7 @@
           ms.textContent = 'Přihlášení vypršelo — přihlaste se prosím znovu (nahoře).';
           ms.classList.add('err');
         } else if (r === 'limit') {
-          ms.textContent = 'Dosáhli jste limitu inzerátů (10 na účet). Smažte starší v „Moje inzeráty".';
+          ms.innerHTML = 'Dosáhli jste limitu inzerátů pro váš účet. Smažte starší v „Moje inzeráty", nebo si účet <a href="kontakt.html">rozšiřte až na 20 inzerátů</a>.';
           ms.classList.add('err');
         } else if (r === 'wait') {
           ms.textContent = 'Chvíli prosím počkejte (asi minutu) a zkuste přidat další inzerát znovu.';
@@ -602,8 +602,11 @@
         if (!res || !res.ok) { q.textContent = ''; return; }
         var row = Array.isArray(res.data) ? res.data[0] : res.data;
         if (!row) { q.textContent = ''; return; }
-        var left = Math.max(0, (row.max || 10) - (row.used || 0));
-        q.innerHTML = 'Inzeráty: <b>' + row.used + ' z ' + row.max + '</b> (zbývá ' + left + ') · ';
+        var max = row.max || 1, left = Math.max(0, max - (row.used || 0));
+        var html = 'Inzeráty: <b>' + row.used + ' z ' + max + '</b>';
+        if (max <= 1) html += ' · <a href="kontakt.html">Rozšířit na 20</a>';   // free účet → nabídka rozšíření
+        else if (left > 0) html += ' (zbývá ' + left + ')';
+        q.innerHTML = html + ' · ';
       }, function () { q.textContent = ''; });
     }
     refresh();   // hned ukázat stav podle zapamatovaného přihlášení (žádná prázdná stránka)

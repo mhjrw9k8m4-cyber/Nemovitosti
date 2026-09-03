@@ -45,7 +45,7 @@ function mkArgs(over) {
   // Kvóta na startu
   const q0 = await rpc(A.token, 'my_listing_quota', {});
   const q0row = Array.isArray(q0.j) ? q0.j[0] : q0.j;
-  ok('kvóta funguje (used 0, max 10)', q0row && q0row.used === 0 && q0row.max === 10, q0.txt && q0.txt.slice(0, 120));
+  ok('kvóta funguje (free: used 0, max 1)', q0row && q0row.used === 0 && q0row.max === 1, q0.txt && q0.txt.slice(0, 120));
 
   // Jeden platný inzerát, který ZÁROVEŇ zkouší moderaci: cizí fotka (má se
   // zahodit) + neplatný přístup (má se uložit null) + platné sítě.
@@ -70,10 +70,15 @@ function mkArgs(over) {
   const spam = await rpc(A.token, 'create_listing', mkArgs({ p_description: 'nejlepsi viagra a casino zdarma' }));
   ok('MODERACE: spam odmítnut serverem', spam.status >= 400 && /spam/i.test(spam.txt || ''), 'status=' + spam.status + ' ' + (spam.txt || '').slice(0, 80));
 
-  // Kvóta po vytvoření vzrostla
+  // FREE LIMIT: druhý inzerát (i jinak platný) se u free účtu odmítne (limit 1).
+  // Limit se v create_listing kontroluje PŘED cooldownem, takže hláška je o limitu.
+  const second = await rpc(A.token, 'create_listing', mkArgs({ p_place: 'ZKUŠEBNÍ 2 ' + rnd }));
+  ok('FREE LIMIT: druhý inzerát odmítnut (limit 1)', second.status >= 400 && /limit/i.test(second.txt || ''), 'status=' + second.status + ' ' + (second.txt || '').slice(0, 80));
+
+  // Kvóta po vytvoření
   const q1 = await rpc(A.token, 'my_listing_quota', {});
   const q1row = Array.isArray(q1.j) ? q1.j[0] : q1.j;
-  ok('kvóta se zvýšila po přidání', q1row && q1row.used >= 1, q1row && ('used=' + q1row.used));
+  ok('kvóta ukazuje used 1 z 1 (free)', q1row && q1row.used === 1 && q1row.max === 1, q1row && ('used=' + q1row.used + ' max=' + q1row.max));
 
   // Úklid: smazat všechny zkušební inzeráty tohoto účtu
   const mine2 = await rpc(A.token, 'my_listings', {});
