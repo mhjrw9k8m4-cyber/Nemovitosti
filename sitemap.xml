@@ -466,17 +466,17 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://parcelaka.cz/pozemky-okres-karvina.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://parcelaka.cz/pozemky-okres-frydek-mistek.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://parcelaka.cz/pozemky-okres-bruntal.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://parcelaka.cz/pozemky-okres-karvina.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
