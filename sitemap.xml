@@ -286,12 +286,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-plzen-sever.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-plzen-mesto.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-plzen-mesto.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-plzen-sever.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
