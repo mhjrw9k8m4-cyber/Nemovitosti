@@ -116,7 +116,7 @@
   var normd = function (s) { return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); };
   var TYPE_LABEL = { sale: 'Na prodej', drazba: 'Dražba', exekuce: 'Exekuce', obec: 'Obecní', majitel: 'Od majitele' };
   var DRUHY = ['stavební pozemek', 'zahrada', 'lesní pozemek', 'orná půda', 'louka', 'trvalý travní porost', 'ostatní plocha', 'vinice', 'sad'];
-  var FEATS = ['Elektřina', 'Voda', 'Kanalizace', 'Plyn', 'Oplocení'];
+  var FEATS = ['Elektřina', 'Voda', 'Kanalizace', 'Plyn', 'Oplocení', 'Stavba k rekonstrukci'];
 
   function keyOf(d) { return [d.type || '', normd(d.okres), normd(d.place), d.parcel || '', d.price || '', d.area || ''].join('|').slice(0, 240); }
   function matches(s, d) {

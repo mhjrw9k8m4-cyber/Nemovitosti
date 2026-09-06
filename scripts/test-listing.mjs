@@ -32,7 +32,7 @@ function mkArgs(over) {
     p_place: 'ZKUŠEBNÍ ' + rnd, p_okres: 'Kolín', p_druh: 'stavební pozemek', p_parcel: '0/0',
     p_area: 1000, p_price: 500000, p_lat: 50.03, p_lng: 15.20,
     p_description: 'Pěkný rovinatý pozemek u obce.', p_contact: '777123456',
-    p_photos: [], p_features: ['Elektřina', 'Voda'], p_access: 'Zpevněná cesta',
+    p_photos: [], p_features: ['Elektřina', 'Voda', 'Stavba k rekonstrukci'], p_access: 'Zpevněná cesta',
   }, over || {});
 }
 
@@ -60,6 +60,7 @@ function mkArgs(over) {
   const mine = Array.isArray(pub.j) && pub.j.find((x) => x.id === listingId);
   ok('inzerát je ve veřejném seznamu', !!mine);
   ok('sítě (features) uložené', mine && Array.isArray(mine.features) && mine.features.indexOf('Elektřina') >= 0, mine && JSON.stringify(mine.features));
+  ok('„Stavba k rekonstrukci\" uložena', mine && Array.isArray(mine.features) && mine.features.indexOf('Stavba k rekonstrukci') >= 0, mine && JSON.stringify(mine.features));
   ok('MODERACE: cizí fotka zahozena (photos prázdné)', mine && Array.isArray(mine.photos) && mine.photos.length === 0, mine && JSON.stringify(mine.photos));
   ok('MODERACE: neplatný přístup zahozen (null)', mine && (mine.access == null), mine && ('access=' + (mine && mine.access)));
 
