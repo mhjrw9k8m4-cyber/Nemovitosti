@@ -152,7 +152,7 @@ function head(title, desc, canonicalPath, ld, crumbs){
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${esc(title)}</title>
   <meta name="description" content="${attr(desc)}">
-  <meta name="theme-color" content="#16232F">
+  <meta name="theme-color" content="#EDEFF4">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://parcelaka.cz/${canonicalPath}">
   <meta property="og:type" content="website">
