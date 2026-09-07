@@ -201,12 +201,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-kladno.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-rakovnik.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-rakovnik.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-kladno.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -221,12 +221,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-pribram.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-beroun.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-beroun.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-pribram.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -471,12 +471,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-karvina.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-bruntal.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-bruntal.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-karvina.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
