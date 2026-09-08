@@ -221,12 +221,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-pribram.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-nymburk.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://parcelaka.cz/pozemky-okres-nymburk.html</loc>
+    <loc>https://parcelaka.cz/pozemky-okres-pribram.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -322,6 +322,11 @@
   </url>
   <url>
     <loc>https://parcelaka.cz/pozemky-okres-chomutov.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://parcelaka.cz/pozemky-okres-teplice.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -461,6 +466,11 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://parcelaka.cz/pozemky-okres-opava.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://parcelaka.cz/pozemky-okres-frydek-mistek.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -477,11 +487,6 @@
   </url>
   <url>
     <loc>https://parcelaka.cz/pozemky-okres-karvina.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://parcelaka.cz/pozemky-okres-opava.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
