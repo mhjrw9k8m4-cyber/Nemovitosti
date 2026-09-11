@@ -124,7 +124,7 @@ function priceLine(stats){
   return `Medián ceny (${g.toLowerCase()}): <b>${fmt(s.med)} Kč/m²</b> <span class="okr-more" style="display:inline">(orientačně, z ${s.n} nabídek)</span>`;
 }
 
-const SITE = 'https://parcelaka.cz/';
+const SITE = 'https://www.parcelaka.cz/';
 function crumbNav(items){
   if(!items || !items.length) return '';
   const inner = items.map(it=> it.href
@@ -154,20 +154,20 @@ function head(title, desc, canonicalPath, ld, crumbs){
   <meta name="description" content="${attr(desc)}">
   <meta name="theme-color" content="#EDEFF4">
   <meta name="robots" content="index,follow">
-  <link rel="canonical" href="https://parcelaka.cz/${canonicalPath}">
+  <link rel="canonical" href="https://www.parcelaka.cz/${canonicalPath}">
   <meta property="og:type" content="website">
   <meta property="og:title" content="${attr(title)}">
   <meta property="og:description" content="${attr(desc)}">
   <meta property="og:locale" content="cs_CZ">
   <meta property="og:site_name" content="Parcelka">
-  <meta property="og:url" content="https://parcelaka.cz/${canonicalPath}">
-  <meta property="og:image" content="https://parcelaka.cz/assets/og.png?v=4">
+  <meta property="og:url" content="https://www.parcelaka.cz/${canonicalPath}">
+  <meta property="og:image" content="https://www.parcelaka.cz/assets/og.png?v=4">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${attr(title)}">
   <meta name="twitter:description" content="${attr(desc)}">
-  <meta name="twitter:image" content="https://parcelaka.cz/assets/og.png?v=4">
+  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og.png?v=4">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
@@ -259,7 +259,7 @@ for(const okres of eligibleOkres){
   const title = `Pozemky v okrese ${okres} — prodej, dražby, exekuce | Parcelka`;
   const desc = `${count} ${pluralPozemek(count)} v okrese ${okres}${kraj?', '+dispK:''} na jedné mapě — prodeje, dražby i exekuce z veřejných zdrojů. ${minP?('Ceny od '+fmt(minP)+' Kč. '):''}Ověřte si nabídku v katastru.`;
   const items = list.slice(0,20).map((o,i)=>({"@type":"ListItem","position":i+1,"name":`${o.place} — ${TYPE_LABEL[o.type]||o.type}${o.area?', '+o.area+' m²':''}`}));
-  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky v okrese ${okres}`,"inLanguage":"cs","description":`Nabídky pozemků v okrese ${okres} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}};
+  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky v okrese ${okres}`,"inLanguage":"cs","description":`Nabídky pozemků v okrese ${okres} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}};
   const rows = list.map(itemRow).join('\n');
   const mapName = (KRAJ_META[kraj]||{}).mapName || kraj;
   const krajLink = mapName ? `index.html?kraj=${encodeURIComponent(mapName)}#mapa` : 'index.html#mapa';
@@ -359,7 +359,7 @@ for(const kraj of eligibleKraj){
 
   const title = `Pozemky ${meta.disp} — prodej, dražby, exekuce | Parcelka`;
   const desc = `Pozemky ${meta.loc} na jedné mapě — ${count} ${pluralPozemek(count)} z veřejných zdrojů: prodeje, dražby i exekuce. ${minP?('Ceny od '+fmt(minP)+' Kč. '):''}Vyberte okres a ověřte nabídku v katastru.`;
-  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky ${meta.disp}`,"inLanguage":"cs","description":`Nabídky pozemků ${meta.loc} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"}};
+  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky ${meta.disp}`,"inLanguage":"cs","description":`Nabídky pozemků ${meta.loc} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"}};
   const crumbs = [
     {name:'Mapa', href:'index.html', abs:SITE},
     {name:'Pozemky podle okresů', href:'pozemky-podle-okresu.html', abs:SITE+'pozemky-podle-okresu.html'},
@@ -438,7 +438,7 @@ const drazby = all.filter(o=>o.type==='drazba').sort((a,b)=>(a.price||1e15)-(b.p
   const title = `Dražby pozemků — aktuální nabídky v ČR | Parcelka`;
   const desc = `${count} ${pluralPozemek(count)} v dražbě z celé ČR na jedné mapě — z veřejné evidence dražeb. ${minP?('Vyvolávací ceny od '+fmt(minP)+' Kč. '):''}Jak dražba funguje i na co si dát pozor.`;
   const items = drazby.slice(0,20).map((o,i)=>({"@type":"ListItem","position":i+1,"name":`${o.place} — dražba${o.area?', '+o.area+' m²':''}`}));
-  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Dražby pozemků v ČR","inLanguage":"cs","description":`Aktuální nabídky pozemků v dražbě z veřejné evidence dražeb.`,"mainEntityOfPage":`https://parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}};
+  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Dražby pozemků v ČR","inLanguage":"cs","description":`Aktuální nabídky pozemků v dražbě z veřejné evidence dražeb.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}};
   const crumbs = [
     {name:'Mapa', href:'index.html', abs:SITE},
     {name:'Koupě v dražbě', href:'drazby-pozemku.html', abs:SITE+'drazby-pozemku.html'},
@@ -549,7 +549,7 @@ ${rows}
   const natZ = priceNational[key];
   const title = 'Ceny pozemků v ČR — kolik stojí m² pole, lesa a zahrady | Parcelka';
   const desc = `Kolik stojí metr čtvereční pozemku v Česku? Orientační medián cen z aktuálních nabídek podle druhu (zemědělská půda, les, zahrada) a podle kraje.${natZ?' Zemědělská půda medián '+fmt(natZ.med)+' Kč/m².':''} Zdarma, z veřejných zdrojů.`;
-  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Ceny pozemků v ČR","inLanguage":"cs","description":"Orientační medián cen pozemků (Kč/m²) podle druhu a kraje z aktuálních nabídek.","mainEntityOfPage":`https://parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"}};
+  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Ceny pozemků v ČR","inLanguage":"cs","description":"Orientační medián cen pozemků (Kč/m²) podle druhu a kraje z aktuálních nabídek.","mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"}};
   const crumbs=[{name:'Mapa',href:'index.html',abs:SITE},{name:'Ceny pozemků',abs:SITE+file}];
 
   const html = head(title,desc,file,jsonld,crumbs) + `
@@ -645,7 +645,7 @@ if(lastKraj!==null) okresBody += `          </div>\n`;
 
 const idxTitle='Pozemky podle krajů a okresů — prodej, dražby a exekuce | Parcelka';
 const idxDesc=`Přehled pozemků v ${krajPages.length} krajích a ${okresPages.length} okresech Česka — prodeje, dražby a exekuce z veřejných zdrojů na jedné mapě. Vyberte region a prohlédněte si aktuální nabídky.`;
-const idxJsonld={"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky podle krajů a okresů","inLanguage":"cs","description":idxDesc,"mainEntityOfPage":"https://parcelaka.cz/pozemky-podle-okresu.html","publisher":{"@type":"Organization","name":"Parcelka"}};
+const idxJsonld={"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky podle krajů a okresů","inLanguage":"cs","description":idxDesc,"mainEntityOfPage":"https://www.parcelaka.cz/pozemky-podle-okresu.html","publisher":{"@type":"Organization","name":"Parcelka"}};
 const idxCrumbs=[{name:'Mapa', href:'index.html', abs:SITE},{name:'Pozemky podle krajů a okresů', abs:SITE+'pozemky-podle-okresu.html'}];
 const idxHtml = head(idxTitle,idxDesc,'pozemky-podle-okresu.html',idxJsonld,idxCrumbs) + `
 <main id="obsah">
@@ -715,9 +715,9 @@ const staticUrls=[
   {loc:'kontakt.html',cf:'yearly',pr:'0.3'},
 ];
 let sm='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-for(const u of staticUrls) sm+=`  <url>\n    <loc>https://parcelaka.cz/${u.loc}</loc>\n    <changefreq>${u.cf}</changefreq>\n    <priority>${u.pr}</priority>\n  </url>\n`;
-for(const p of krajPages) sm+=`  <url>\n    <loc>https://parcelaka.cz/${p.file}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
-for(const p of okresPages) sm+=`  <url>\n    <loc>https://parcelaka.cz/${p.file}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+for(const u of staticUrls) sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${u.loc}</loc>\n    <changefreq>${u.cf}</changefreq>\n    <priority>${u.pr}</priority>\n  </url>\n`;
+for(const p of krajPages) sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${p.file}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
+for(const p of okresPages) sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${p.file}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
 sm+='</urlset>\n';
 write('sitemap.xml', sm);
 
