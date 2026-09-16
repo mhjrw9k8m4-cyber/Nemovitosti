@@ -211,12 +211,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-kolin.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-beroun.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-beroun.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-kolin.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -466,12 +466,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-opava.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-ostrava-mesto.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-ostrava-mesto.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-opava.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
