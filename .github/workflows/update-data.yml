@@ -42,7 +42,7 @@ jobs:
 
       - name: Commit změn (jen pokud se něco změnilo)
         run: |
-          git add data/opportunities.json data/geocode-cache.json sitemap.xml pozemky-podle-okresu.html drazby-pozemku-nabidky.html pozemky-okres-*.html pozemky-*-kraj.html
+          git add data/opportunities.json data/geocode-cache.json sitemap.xml pozemky-podle-okresu.html drazby-pozemku-nabidky.html cena-pozemku.html pozemky-okres-*.html pozemky-*-kraj.html
           # Odstraněné (sirotčí) stránky, které generátor smazal, ať zmizí i z repozitáře:
           git add -A -- 'pozemky-okres-*.html' 'pozemky-*-kraj.html'
           if [[ -n "$(git status --porcelain)" ]]; then

@@ -590,10 +590,26 @@ async function main() {
     ...farmy,                   // celá nabídka Farmy
     ...spread(spuSale, 900),    // státní půda doplní zbytek
   ];
+  // Dražba, která už proběhla, není příležitost. Zdroje je z výpisu neodstraní
+  // hned (u některých tam visí měsíce), takže je vyhazujeme sami — jinak se
+  // počítají do „44 dražeb" a zabírají místo na mapě. Den konání ještě platí,
+  // proto porovnáváme k dnešnímu půlnočnímu času.
+  const dnes = new Date(); dnes.setHours(0, 0, 0, 0);
+  const jesteBezi = (o) => {
+    if (o.type !== 'drazba' && o.type !== 'exekuce') return true;
+    const m = /(\d{4})-(\d{2})-(\d{2})/.exec(o.extra || '');
+    if (!m) return true;                        // bez termínu nevíme — necháme
+    return new Date(+m[1], +m[2] - 1, +m[3]) >= dnes;
+  };
+  const drazby = (byType.drazba || []).filter(jesteBezi);
+  const exekuce = (byType.exekuce || []).filter(jesteBezi);
+  const vyprsele = ((byType.drazba || []).length - drazby.length) + ((byType.exekuce || []).length - exekuce.length);
+  if (vyprsele) console.log(`Vynecháno ${vyprsele} dražeb/exekucí s termínem v minulosti.`);
+
   const fresh = [
     ...saleSel,
-    ...(byType.drazba || []).slice(0, CAP.drazba),
-    ...(byType.exekuce || []).slice(0, CAP.exekuce),
+    ...drazby.slice(0, CAP.drazba),
+    ...exekuce.slice(0, CAP.exekuce),
     ...(byType.obec || []).slice(0, CAP.obec),
   ];
 
