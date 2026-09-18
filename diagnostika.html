@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diagnostika — Parcelka</title>
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#EDEFF4">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <style>
+    :root{
+      color-scheme:light;
+      --bg:#EBEDF0; --card:#fff; --ink:#141829; --dim:#565F72; --line:rgba(20,26,40,.13);
+      --ok:#1F7A4D; --okbg:#E6F4EC; --bad:#B3321F; --badbg:#FBEAE6; --warn:#8A5A00; --warnbg:#FFF4DC;
+      --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);
+      font-family:'Plus Jakarta Sans','Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      padding:24px 16px 56px;line-height:1.55;}
+    .wrap{max-width:860px;margin:0 auto}
+    h1{font-size:24px;margin:0 0 6px;letter-spacing:-.01em}
+    .lede{color:var(--dim);margin:0 0 22px;font-size:15px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 8px;margin-bottom:16px}
+    .row{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line);align-items:flex-start}
+    .row:first-child{border-top:0}
+    .dot{flex:0 0 auto;width:22px;height:22px;border-radius:999px;display:grid;place-items:center;
+      font-size:13px;font-weight:700;margin-top:1px}
+    .ok .dot{background:var(--okbg);color:var(--ok)} .bad .dot{background:var(--badbg);color:var(--bad)}
+    .warn .dot{background:var(--warnbg);color:var(--warn)} .run .dot{background:#E8EAEE;color:var(--dim)}
+    .txt{min-width:0;flex:1}
+    .name{display:block;font-weight:600;font-size:15px}
+    .det{display:block;color:var(--dim);font-size:13.5px;margin-top:2px;word-break:break-word}
+    .det code{font-family:var(--mono);font-size:12.5px;background:#F2F4F7;padding:1px 5px;border-radius:5px}
+    h2{font-size:15px;margin:18px 0 0;letter-spacing:.02em;text-transform:uppercase;color:var(--dim)}
+    button{font:inherit;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--ink);
+      padding:9px 15px;border-radius:10px;cursor:pointer}
+    button:hover{background:#F6F7F9}
+    button.primary{background:#3D63EE;border-color:#3D63EE;color:#fff}
+    button:focus-visible{outline:2px solid #3D63EE;outline-offset:2px}
+    .btns{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 18px}
+    .note{font-size:13px;color:var(--dim);margin:10px 0 16px}
+    pre{background:#12172A;color:#E6E9F2;border-radius:12px;padding:14px;overflow:auto;
+      font-family:var(--mono);font-size:12.5px;line-height:1.5;max-height:340px}
+    a{color:#3D63EE}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Diagnostika Parcelky</h1>
+  <p class="lede">Zjistí, které části webu mají spojení s databází a e-maily — a které ne.
+     Stránka nic nemaže; zápisové testy se spouští jen tlačítkem.</p>
+
+  <div class="btns">
+    <button class="primary" id="run">Spustit kontrolu</button>
+    <button id="copy">Zkopírovat výsledek</button>
+  </div>
+
+  <div class="card" id="vysledky">
+    <div class="row run"><span class="dot">•</span><span class="txt"><span class="name">Zatím nic neběželo</span>
+      <span class="det">Klepněte na „Spustit kontrolu“.</span></span></div>
+  </div>
+
+  <h2>Zápisové testy</h2>
+  <p class="note">Tyhle do databáze opravdu zapisují — každý založí jeden zkušební záznam,
+     ať je vidět, jestli to vůbec projde. Pusťte je, jen když je potřeba.</p>
+  <div class="btns">
+    <button id="testWatch">Vyzkoušet uložení hlídání</button>
+    <button id="testMsg">Vyzkoušet odeslání formuláře</button>
+    <button id="testSignup">Vyzkoušet registraci</button>
+  </div>
+  <div class="card" id="zapisy" hidden></div>
+
+  <h2>Pro poslání dál</h2>
+  <p class="note">Tlačítko „Zkopírovat výsledek“ dá do schránky text níž — ten stačí poslat.</p>
+  <pre id="raw">—</pre>
+</div>
+
+<script src="js/config.js?v=20260902f"></script>
+<script>
+(function () {
+  'use strict';
+  var URL_ = window.PK_SUPABASE_URL || '';
+  var KEY = window.PK_SUPABASE_KEY || '';
+  var H = { apikey: KEY, Authorization: 'Bearer ' + KEY };
+  var box = document.getElementById('vysledky');
+  var zapisyBox = document.getElementById('zapisy');
+  var raw = document.getElementById('raw');
+  var zaznam = [];
+
+  function radek(cil, stav, nazev, detail) {
+    var el = document.createElement('div');
+    el.className = 'row ' + stav;
+    el.innerHTML = '<span class="dot">' + (stav === 'ok' ? '✓' : stav === 'bad' ? '✕' : stav === 'warn' ? '!' : '•') + '</span>' +
+      '<span class="txt"><span class="name"></span><span class="det"></span></span>';
+    el.querySelector('.name').textContent = nazev;
+    el.querySelector('.det').innerHTML = detail || '';
+    cil.appendChild(el);
+    zaznam.push((stav === 'ok' ? '[OK]  ' : stav === 'bad' ? '[CHYBA] ' : '[POZOR] ') + nazev +
+      (detail ? ' — ' + detail.replace(/<[^>]*>/g, '') : ''));
+    raw.textContent = zaznam.join('\n');
+  }
+
+  // fetch s časovým stropem — ať se stránka nezasekne, když server neodpovídá
+  function dotaz(cesta, volby, limit) {
+    var ac = new AbortController();
+    var t = setTimeout(function () { ac.abort(); }, limit || 12000);
+    var o = Object.assign({ signal: ac.signal }, volby || {});
+    o.headers = Object.assign({}, H, (volby && volby.headers) || {});
+    return fetch(URL_ + cesta, o)
+      .then(function (r) { return r.text().then(function (t) { return { stav: r.status, telo: t }; }); })
+      .catch(function (e) { return { stav: 0, telo: String(e && e.message || e) }; })
+      .then(function (v) { clearTimeout(t); return v; });
+  }
+  function zkratka(s, n) { s = (s || '').replace(/\s+/g, ' ').trim(); return s.length > (n || 140) ? s.slice(0, n || 140) + '…' : s; }
+
+  function kontrola() {
+    box.innerHTML = ''; zaznam = [];
+    zaznam.push('Parcelka — diagnostika, ' + new Date().toLocaleString('cs') + ', ' + location.host);
+    raw.textContent = zaznam.join('\n');
+
+    if (!URL_ || !KEY) { radek(box, 'bad', 'Nastavení chybí', 'V <code>js/config.js</code> není adresa projektu nebo klíč.'); return; }
+    radek(box, 'ok', 'Nastavení načteno', 'Projekt <code>' + URL_.replace('https://', '') + '</code>');
+
+    dotaz('/rest/v1/', {}).then(function (r) {
+      if (r.stav === 0) radek(box, 'bad', 'Databáze neodpovídá', 'Spojení se nepovedlo navázat: <code>' + zkratka(r.telo, 90) + '</code>. Projekt může být uspaný (Supabase free plán uspí projekt po delší nečinnosti) nebo neexistuje.');
+      else if (r.stav === 401) radek(box, 'bad', 'Klíč databáze neplatí', 'Odpověď 401. Klíč v <code>js/config.js</code> je nejspíš starý — v Supabase → Settings → API Keys vezměte aktuální „publishable“.');
+      else radek(box, 'ok', 'Databáze odpovídá', 'HTTP ' + r.stav);
+
+      return dotaz('/rest/v1/listings?select=id,status&limit=1', {});
+    }).then(function (r) {
+      if (r.stav === 200) radek(box, 'ok', 'Čtení inzerátů funguje', 'Vrátilo <code>' + zkratka(r.telo, 60) + '</code>');
+      else if (r.stav === 404) radek(box, 'bad', 'Tabulka inzerátů chybí', 'HTTP 404 — v Supabase nejspíš neproběhl skript <code>supabase/schema.sql</code>.');
+      else radek(box, 'bad', 'Čtení inzerátů selhalo', 'HTTP ' + r.stav + ' — <code>' + zkratka(r.telo, 110) + '</code>');
+
+      return dotaz('/rest/v1/rpc/public_listings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    }).then(function (r) {
+      if (r.stav === 200) radek(box, 'ok', 'Funkce pro veřejné inzeráty běží', 'Vrátila <code>' + zkratka(r.telo, 60) + '</code>');
+      else if (r.stav === 404) radek(box, 'bad', 'Funkce public_listings chybí', 'HTTP 404 — chybí SQL z <code>supabase/listings-auth.sql</code>. Bez ní se na mapě neukážou inzeráty od lidí.');
+      else radek(box, 'warn', 'Funkce public_listings hlásí ' + r.stav, '<code>' + zkratka(r.telo, 110) + '</code>');
+
+      return dotaz('/auth/v1/settings', {});
+    }).then(function (r) {
+      var j = null; try { j = JSON.parse(r.telo); } catch (e) {}
+      if (!j) { radek(box, 'bad', 'Nastavení přihlašování se nenačetlo', 'HTTP ' + r.stav + ' — <code>' + zkratka(r.telo, 110) + '</code>'); }
+      else {
+        if (j.disable_signup) radek(box, 'bad', 'Registrace je vypnutá', 'V Supabase → Authentication → Sign In / Providers je zakázané zakládání účtů. Nikdo se nezaregistruje, takže nepřidá inzerát.');
+        else radek(box, 'ok', 'Registrace je povolená', '');
+        if (j.mailer_autoconfirm) radek(box, 'ok', 'Účet se potvrzuje sám', 'Potvrzovací e-mail se nevyžaduje — registrace nezávisí na doručení pošty.');
+        else radek(box, 'warn', 'Účet čeká na potvrzovací e-mail', 'Supabase posílá potvrzení sám a na volném plánu má přísný limit (jednotky e-mailů za hodinu), navíc často padá do spamu. Když pošta nedojde, člověk se nepřihlásí a inzerát nepřidá. Řešení: buď zapnout <b>Confirm email = OFF</b>, nebo nastavit vlastní SMTP.');
+      }
+
+      return dotaz('/storage/v1/object/public/listing-photos/__diagnostika__.png', {});
+    }).then(function (r) {
+      if (r.stav === 400 && /Bucket not found/i.test(r.telo)) radek(box, 'bad', 'Úložiště fotek chybí', 'Není vytvořený bucket <code>listing-photos</code> — fotky u inzerátů se nenahrají.');
+      else if (r.stav === 404) radek(box, 'ok', 'Úložiště fotek existuje', 'Bucket <code>listing-photos</code> odpovídá.');
+      else radek(box, 'warn', 'Úložiště fotek hlásí ' + r.stav, '<code>' + zkratka(r.telo, 110) + '</code>');
+
+      return fetch('data/opportunities.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    }).then(function (d) {
+      if (!d) radek(box, 'bad', 'Data příležitostí se nenačetla', 'Soubor <code>data/opportunities.json</code> nejde stáhnout.');
+      else radek(box, 'ok', 'Data příležitostí v pořádku', (d.opportunities || []).length + ' záznamů, aktualizováno ' + (d.updated || '?'));
+      radek(box, 'warn', 'Rozesílání e-mailů tahle stránka změřit neumí', 'Běží na serveru (GitHub Actions + Resend). Stav je vidět v <a href="https://github.com/mhjrw9k8m4-cyber/Nemovitosti/actions/workflows/send-alerts.yml" target="_blank" rel="noopener">logu úlohy „Rozesílání upozornění“</a>.');
+    });
+  }
+
+  function zapis(nazev, slib) {
+    zapisyBox.hidden = false;
+    slib.then(function (r) {
+      var dobre = r.stav >= 200 && r.stav < 300;
+      radek(zapisyBox, dobre ? 'ok' : 'bad', nazev, 'HTTP ' + r.stav + (r.telo ? ' — <code>' + zkratka(r.telo, 160) + '</code>' : ''));
+    });
+  }
+
+  document.getElementById('run').addEventListener('click', kontrola);
+  document.getElementById('testWatch').addEventListener('click', function () {
+    zapis('Uložení hlídání (tabulka watch_subscriptions)', dotaz('/rest/v1/watch_subscriptions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ email: 'diagnostika+' + Date.now() + '@parcelka.test', okres: 'ZKOUŠKA' })
+    }));
+  });
+  document.getElementById('testMsg').addEventListener('click', function () {
+    zapis('Odeslání formuláře (tabulka messages)', dotaz('/rest/v1/messages', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ kind: 'diagnostika', name: 'Zkouška', email: 'diagnostika@parcelka.test', message: 'Zkušební zápis z diagnostiky.' })
+    }));
+  });
+  document.getElementById('testSignup').addEventListener('click', function () {
+    var mail = 'diagnostika+' + Date.now() + '@parcelka.test';
+    zapis('Registrace účtu ' + mail, dotaz('/auth/v1/signup', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: mail, password: 'Diagnostika' + Date.now() })
+    }));
+  });
+  document.getElementById('copy').addEventListener('click', function () {
+    var t = raw.textContent || '';
+    if (navigator.clipboard) navigator.clipboard.writeText(t);
+    else { var ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+    this.textContent = 'Zkopírováno';
+    var b = this; setTimeout(function () { b.textContent = 'Zkopírovat výsledek'; }, 1600);
+  });
+
+  kontrola();
+})();
+</script>
+</body>
+</html>
