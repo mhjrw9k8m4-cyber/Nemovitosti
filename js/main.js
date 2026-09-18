@@ -109,9 +109,22 @@
   }
   // Ikona záložky (uložení pozemku) — výplň řídí CSS podle stavu .on
   var BM_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
-  // Stabilní klíč pozemku (přežije nové stažení dat i drobný posun GPS) —
-  // pro oblíbené i sdílení. Záměrně bez souřadnic, které se mohou mírně měnit.
-  function pkey(d){ return [d.place || '', d.parcel || '', d.okres || ''].join('|'); }
+  // Stabilní klíč pozemku — pro oblíbené i sdílení odkazu.
+  //
+  // Dřív to bylo jen místo|parcela|okres. Jenže parcelní číslo zná jen menšina
+  // záznamů (u zbytku je „—"), takže jeden klíč sedl na víc pozemků naráz:
+  // pod „Brno|—|Brno-město" jich bylo patnáct. Uložení jednoho pozemku pak
+  // označilo všechny sourozence a sdílený odkaz otevřel někoho jiného.
+  // Souřadnice to rozdělí: robot je pro jeden pozemek počítá deterministicky
+  // (jitter z názvu a parcely), takže se mezi běhy nemění, a tři desetinná
+  // místa (~100 m) snesou i drobné zpřesnění geokódování.
+  function pkey(d){
+    var la = (typeof d.lat === 'number') ? d.lat.toFixed(3) : '';
+    var ln = (typeof d.lng === 'number') ? d.lng.toFixed(3) : '';
+    return [d.place || '', d.parcel || '', d.okres || '', la, ln].join('|');
+  }
+  // Starý tvar klíče — jen pro odkazy rozeslané dřív, ať neskončí naprázdno.
+  function pkeyLegacy(d){ return [d.place || '', d.parcel || '', d.okres || ''].join('|'); }
   // Zkopírování textu do schránky s bezpečnou zálohou pro starší prohlížeče
   function copyText(text, onDone){
     function fallback(){
@@ -274,9 +287,9 @@
   document.addEventListener('click', function (e) {
     var trigger = e.target.closest('a[href="#upozorneni"]');
     if (trigger) { e.preventDefault(); openWatch(trigger.getAttribute('data-okres') || ''); return; }
-    if (e.target.closest('[data-close]')) { closeWatch(); closeInfo(); closeFeedback(); }
+    if (e.target.closest('[data-close]')) { closeWatch(); closeInfo(); }
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeWatch(); closeInfo(); closeFeedback(); } });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeWatch(); closeInfo(); } });
 
   /* ---------- Odesílání formulářů (do databáze Supabase) ----------
      Formuláře (hlídání lokality, kontakt, zpětná vazba) ukládají poptávky
@@ -1420,6 +1433,7 @@
     setPan(true);      // po výběru kraje jde s mapou volně hýbat (bez zvláštního tlačítka)
     lockDots(false);   // tečky teď klikací
     updateKrajHead();
+    renderList();      // seznam pod mapou se musí přepnout na vybraný kraj (clearKraj to dělá taky)
   }
   function clearKraj() {
     selectedKraj = null;
@@ -1654,7 +1668,8 @@
     var okDruh = activeDruh === 'all' || druhGroup(d.druh) === activeDruh;
     var okPrice = !maxPrice || !d.price || d.price <= maxPrice;
     var okArea = !minArea || (hasArea(d) && d.area >= minArea);
-    var okUrgent = !urgentOnly || (function () { var dd = daysUntil(d.extra); return (d.type === 'drazba' || d.type === 'exekuce') && dd != null && dd >= 0 && dd <= 14; })();
+    // Štítek v legendě říká „do 7 dní" — filtr musí počítat stejně (dřív pouštěl 14).
+    var okUrgent = !urgentOnly || isUrgent(d);
     var okFav = !favOnly || isFav(d);
     return okType && okSearch && okDruh && okPrice && okArea && okUrgent && okFav;
   }
@@ -1725,6 +1740,10 @@
       if (visible(d)) { vis.push(d); visIds.push(d._id); }
     });
     syncMarkers(visIds);
+    // Seznam drží vybraný kraj. Bez toho si člověk klikl na „Jihomoravský kraj"
+    // (nebo přišel odkazem ?kraj=…), mapa se přiblížila k Brnu — a pod ní se
+    // nabízely pozemky z Kroměříže a Písku.
+    if (selectedKraj) vis = vis.filter(function (d) { return krajOf(d) === selectedKraj; });
     var matched = vis.length;
     sortVis(vis);
     // „Výhodná cena" jen pro skutečně nejlevnější špičku (podle Kč/m²),
@@ -1943,7 +1962,9 @@
     var key;
     try { key = decodeURIComponent(m[1]); } catch (e) { return false; }
     var target = null;
-    DATA.forEach(function (d) { if (pkey(d) === key) target = d; });
+    DATA.forEach(function (d) { if (!target && pkey(d) === key) target = d; });
+    // Odkaz rozeslaný před sjednocením klíčů: zkusíme ještě starý tvar.
+    if (!target) DATA.forEach(function (d) { if (!target && pkeyLegacy(d) === key) target = d; });
     if (!target) { cleanUrl(); return false; }
     openParcel(target);
     cleanUrl();
