@@ -1453,8 +1453,15 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .photo-drop span{display:block; font-size:12px; color:var(--text-ondark-mute); margin-top:4px;}
 .photo-field input[type=file]{position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;}
 .photo-preview{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
-.photo-preview .pp{width:72px; height:72px; border-radius:8px; overflow:hidden; border:1px solid var(--line);}
-.photo-preview .pp img{width:100%; height:100%; object-fit:cover; display:block;}
+.photo-preview .pp{width:104px; border-radius:8px; overflow:hidden; border:1px solid var(--line); background:var(--ink-soft);}
+/* Posudek pod každou fotkou — co si o ní web myslí, hned při výběru */
+.pp-stav{display:block; font-size:10.5px; line-height:1.35; padding:4px 5px 5px; text-align:center;
+  word-break:break-word; hyphens:auto;}
+.pp-stav.ceka{color:var(--text-ondark-mute);}
+.pp-stav.dobre{color:var(--c-ok, #6BCB8B);}
+.pp-stav.pozor{color:var(--c-warn, #E8B341);}
+.pp-stav.spatne{color:var(--c-danger, #FF6B6B);}
+.photo-preview .pp img{width:100%; aspect-ratio:1/1; object-fit:cover; display:block;}
 /* Skupina štítků (sítě) */
 .check-group{display:flex; flex-wrap:wrap; gap:8px;}
 .chip-check{display:inline-flex; align-items:center; gap:8px; padding:9px 14px; border:1px solid var(--line); border-radius:22px; font-size:13px; color:var(--text-ondark); cursor:pointer; transition:border-color .15s ease, background .15s ease;}

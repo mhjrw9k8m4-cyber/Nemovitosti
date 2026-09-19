@@ -214,8 +214,7 @@
      jsou v js/fototema.js, ať se dají projet testy bez prohlížeče. */
   function temaOk(imgEl) {
     if (!window.PKFotoTema || !window.PKTridy) return Promise.resolve({ ok: true });
-    return PKFotoTema.klasifikuj(imgEl, window.PKTridy, 6)
-      .then(function (predikce) { return PKFotoTema.vyhodnot(predikce); })
+    return PKFotoTema.posud(imgEl, window.PKTridy, window.PKSkupiny)
       .catch(function () { return { ok: true }; });
   }
 
@@ -401,8 +400,9 @@
         var url = URL.createObjectURL(f);
         var wrap = document.createElement('div'); wrap.className = 'pp';
         var img = document.createElement('img'); img.src = url; img.alt = '';
-        img.onload = function () { URL.revokeObjectURL(url); };
-        wrap.appendChild(img); prev.appendChild(wrap);
+        var stav = document.createElement('span'); stav.className = 'pp-stav ceka'; stav.textContent = 'kontroluji…';
+        img.onload = function () { posudNahled(f, img, stav); };
+        wrap.appendChild(img); wrap.appendChild(stav); prev.appendChild(wrap);
       });
     }
     var lpThumb = document.getElementById('lp-thumb');
@@ -418,6 +418,36 @@
       }
     }
   });
+  /* Posudek u náhledu fotky. Dřív se fotky kontrolovaly až při odeslání,
+     takže člověk vybral osm obrázků, vyplnil formulář a teprve pak se
+     dozvěděl, že polovina neprojde. Teď to ví hned u každé fotky. */
+  function posudNahled(file, img, stav) {
+    function hotovo(trida, text) { stav.className = 'pp-stav ' + trida; stav.textContent = text; }
+    var rozm = window.PKKontrola ? PKKontrola.fotkaRozmery(img.naturalWidth, img.naturalHeight) : { ok: true };
+    if (!rozm.ok) { hotovo('spatne', rozm.msg); return; }
+    var jas = zmerJas(img);
+    if (jas && window.PKKontrola) {
+      var o = PKKontrola.fotkaObsah(jas.prumer, jas.odchylka);
+      if (!o.ok) { hotovo('spatne', o.msg); return; }
+    }
+    nactiExif(file).then(function (exif) {
+      if (window.PKKontrola) {
+        var pv = PKKontrola.fotkaPuvod(exif, file.type, img.naturalWidth, img.naturalHeight);
+        if (!pv.ok) { hotovo('spatne', pv.msg); return; }
+      }
+      var kde = (exif && typeof exif.lat === 'number') ? ' · s místem pořízení' : '';
+      if (!window.PKFotoTema || !window.PKTridy) { hotovo('dobre', 'v pořádku' + kde); return; }
+      PKFotoTema.posud(img, window.PKTridy, window.PKSkupiny).then(function (r) {
+        var d = r.detail || {};
+        if (!r.ok) { hotovo('spatne', r.msg); return; }
+        if (r.varovani) { hotovo('pozor', 'zkontrolujte — ' + ((d.nej && d.nej[0] && (d.nej[0].cesky || d.nej[0].trida.split(',')[0])) || 'nejisté')); return; }
+        var co = (d.nej || []).filter(function (x) { return x.skupina === 'V' && x.cesky; })
+          .map(function (x) { return x.cesky; }).slice(0, 2).join(', ');
+        hotovo('dobre', (co ? co : 'vypadá dobře') + kde);
+      }, function () { hotovo('dobre', 'v pořádku' + kde); });
+    });
+  }
+
   // Živý přepočet ceny za m²
   function updPerm2() {
     var h = document.getElementById('perm2-hint'); if (!h) return;
