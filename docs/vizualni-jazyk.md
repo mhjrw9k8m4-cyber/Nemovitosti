@@ -79,3 +79,46 @@ a `border-radius:17px` test spadl a obojí vypsal.
 > Test si nejdřív vyhodí komentáře a **sám si ověří, že mu to jde**. Bez
 > toho by hlásil vlastní vysvětlivky (v komentáři se běžně píše
 > „border-radius:14px") — a po „opravě" by mlčel navždy.
+
+## Barevné přechody
+
+Web měl barvu jen na tlačítkách, jinak samé plochy. Přechody jsou to, čím
+velké weby drží plochu živou: **barva se plynule přelévá místo toho, aby
+se lámala hranou.**
+
+Všechny vycházejí ze **dvou** tónů, které web má — hluboké modři a mědi.
+Duha z osmi barev není přechod, je to zmatek.
+
+| Přechod | Kde |
+|---|---|
+| `--grad-plocha` | plocha stránky, svisle přes celou výšku |
+| `--grad-karta` | lesk odshora na kartách |
+| `--grad-warm` | linka nad nadpisem sekce, důrazy |
+| `--grad-warm-soft` / `--grad-cool-soft` | štítky kategorií |
+| `--grad-predel` | předěl sekcí, do stran se vytrácí |
+| `--brand-grad` | tlačítka |
+
+**Úvodní plocha** má vrstvený mesh: teplá barva vlevo nahoře, studená
+vpravo, hluboká modř u dolního okraje. Poletující rozmazané skvrny
+(`.aurora`) se ukázaly jako slepá ulička — jsou odsunuté za okraj sekce
+a přes rozostření 80 px z nich zbude mlha. Vrstvené radiální přechody
+dělají totéž doopravdy, a navíc nic neanimují, takže nežerou výkon.
+
+**Předěly sekcí** se do stran vytrácejí. Tvrdá linka přes celou šířku
+krájí stránku na díly; vytrácející se ji jen naznačí.
+
+### Co u toho zase vyšlo najevo
+
+Test kontrastu měl **třetí díru**: prvek, jehož pozadí je *průsvitný*
+přechod, se přeskakoval úplně — a to je přesně úvodní plocha, tedy to
+nejviditelnější místo webu. Teď se průsvitné vrstvy **skládají** na
+neprůhledný podklad pod nimi a měří se i místo, kde se všechny potkají.
+
+Jakmile to začalo fungovat, test rovnou zastavil první verzi meshe:
+v nejsytějším místě měl nadřádek **2,8 : 1**. Mesh se proto zesvětlil
+a úvodní plocha si uvnitř předefinuje `--copper-bright`
+a `--text-ondark-mute` na tmavší tóny — **text na barevné ploše potřebuje
+vlastní tón.** Okem se to nepozná.
+
+> Ověřeno i obráceně: se zhoršenou barvou nadřádku test spadl a našel
+> 8 prvků na třech stránkách.

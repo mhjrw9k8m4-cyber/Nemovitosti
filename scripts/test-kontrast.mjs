@@ -37,47 +37,60 @@ const MERENI = `(() => {
     g: pop.g * pop.a + spod.g * (1 - pop.a),
     b: pop.b * pop.a + spod.b * (1 - pop.a), a: 1
   });
-  // Barevné zarážky přechodu. Dřív se prvek s přechodem přeskočil — jenže
-  // přechod je PRÁVĚ to místo, kde kontrast selže, protože text leží na
-  // dvou různých barvách najednou. Měří se proti všem zarážkám a bere se
-  // ta nejhorší; jinak by tmavý pás zůstal nezměřený.
+  // Barevné zarážky přechodu. Přechod je PRÁVĚ to místo, kde kontrast
+  // selže, protože text leží na několika barvách najednou.
+  // POZOR: tohle je uvnitř šablonového řetězce, takže lomítko v regulárním
+  // výrazu musí být ZDVOJENÉ. Jinak ho JavaScript spolkne, výraz hledá
+  // nesmysl, parseFloat vrátí NaN — a „NaN < 4,5" je vždy nepravda, takže
+  // test mlčí a tváří se, že je všechno v pořádku. Přesně to se tu stalo.
   const zarazky = (obrazek) => {
-    const out = [];
-    // POZOR: tenhle kód je uvnitř šablonového řetězce, takže lomítko musí
-    // být zdvojené — jinak ho JavaScript spolkne, výraz hledá nesmysl,
-    // parseFloat vrátí NaN a „NaN < 4,5" je vždy nepravda. Test pak mlčí
-    // a tváří se, že je všechno v pořádku. Přesně to se tu stalo.
+    const nalezene = [];
     for (const m of String(obrazek).matchAll(/rgba?\\(([^)]+)\\)/g)) {
-      const p = m[1].split(',').map((x) => parseFloat(x));
-      const a = p.length > 3 ? p[3] : 1;
-      if (a > 0.5) out.push({ r: p[0], g: p[1], b: p[2], a: 1 });   // průhledné závoje neurčují podklad
+      const c = m[1].split(',').map((x) => parseFloat(x));
+      if (c.slice(0, 3).some((x) => !isFinite(x))) continue;
+      nalezene.push({ r: c[0], g: c[1], b: c[2], a: c.length > 3 ? c[3] : 1 });
     }
-    return out;
+    return nalezene;
   };
-  // Skutečné pozadí: projdeme předky, dokud nenarazíme na neprůhledný podklad.
-  // Vrací SEZNAM možných podkladů (u přechodu jich je víc).
+
+  // Skutečný podklad pod textem — SEZNAM možností, ne jedna barva:
+  //   - u přechodu leží text na několika barvách,
+  //   - průsvitné vrstvy (barevný mesh nad plochou) se podloží tím, co je
+  //     pod nimi. Dřív se prvek s průsvitným přechodem přeskočil — a to je
+  //     přesně úvodní plocha webu, tedy to nejviditelnější místo.
   const pozadi = (el) => {
-    let vrstvy = [], e = el;
-    while (e) {
-      const s = getComputedStyle(e);
-      if (s.backgroundImage !== 'none') {
-        const z = zarazky(s.backgroundImage);
-        if (z.length) {
-          // zarážky se podloží tím, co je pod nimi, ať vyjde skutečná barva
-          const spod = vrstvy.length ? vrstvy[vrstvy.length - 1] : { r: 255, g: 255, b: 255, a: 1 };
-          return z.map((c) => (vrstvy.length ? c : c));
-        }
-        return null;      // obrázek nebo přechod bez čitelných barev — neměříme
+    const zavoje = [];
+    let zaklad = null, e = el;
+    while (e && !zaklad) {
+      const st = getComputedStyle(e);
+      if (st.backgroundImage !== 'none') {
+        const z = zarazky(st.backgroundImage);
+        if (!z.length && String(st.backgroundImage).indexOf('url(') >= 0) return null;
+        const plne = z.filter((c) => c.a >= 0.99);
+        if (plne.length) zaklad = plne;
+        else z.filter((c) => c.a > 0.02).forEach((c) => zavoje.push(c));
       }
-      const c = parse(s.backgroundColor);
-      if (c && c.a > 0) { vrstvy.push(c); if (c.a === 1) break; }
+      if (!zaklad) {
+        const c = parse(st.backgroundColor);
+        if (c && c.a >= 0.99) zaklad = [c];
+        else if (c && c.a > 0.02) zavoje.push(c);
+      }
       e = e.parentElement;
     }
-    if (!vrstvy.length) return [{ r: 255, g: 255, b: 255, a: 1 }];
-    let vysledek = vrstvy[vrstvy.length - 1];
-    for (let i = vrstvy.length - 2; i >= 0; i--) vysledek = smichej(vrstvy[i], vysledek);
-    return [vysledek];
+    if (!zaklad) zaklad = [{ r: 255, g: 255, b: 255, a: 1 }];
+    const kandidati = [];
+    for (const b of zaklad) {
+      kandidati.push(b);
+      for (const z of zavoje) kandidati.push(smichej(z, b));
+      if (zavoje.length > 1) {
+        let v = b;
+        for (let i = zavoje.length - 1; i >= 0; i--) v = smichej(zavoje[i], v);
+        kandidati.push(v);
+      }
+    }
+    return kandidati;
   };
+
   const out = [];
   const videt = (el) => {
     const s = getComputedStyle(el), r = el.getBoundingClientRect();

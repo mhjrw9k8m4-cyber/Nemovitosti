@@ -107,7 +107,19 @@
     <p class="mono" style="font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--copper-bright);">Nadřádek · strojové písmo<span class="skala">12 px · mono · verzálky</span></p>
   </div>
 
-  <h2>5. Tmavý pás</h2>
+  <h2>5. Barevné přechody</h2>
+  <p>Web měl barvu jen na tlačítkách, jinak samé plochy. Přechody jsou to, čím velké weby drží
+     plochu živou: barva se plynule přelévá místo toho, aby se lámala hranou. Všechny vycházejí
+     ze <b>dvou</b> tónů, které web má — hluboké modři a mědi. Duha z osmi barev není přechod,
+     je to zmatek.</p>
+  <div class="mrizka" id="prechody"></div>
+  <div class="pozn">Text na barevné ploše potřebuje <b>vlastní tón</b>. Tam, kde se vrstvy meshe
+     potkají, je podklad znatelně tmavší než zbytek stránky — běžný akcent tam klesl na 3,9 : 1.
+     Úvodní plocha si proto uvnitř předefinuje <code>--copper-bright</code> a
+     <code>--text-ondark-mute</code>. Okem se to nepozná; odhalil to až
+     <code>scripts/test-kontrast.mjs</code>, když se naučil měřit i přechody.</div>
+
+  <h2>6. Tmavý pás</h2>
   <p>Web byl celý světlý — jedna dlouhá plocha bez nádechu. Tmavá sekce je to, čím velké weby
      dělají rytmus: oko si odpočine a pak se znovu chytne. Na webu je <b>jedna</b>. Kdyby byly tři,
      je z toho zase jednolitá plocha, jen tmavá.</p>
@@ -120,7 +132,7 @@
        a měď by zhnědla — proto i <code style="font-family:var(--font-mono)">--accent-warm-bright</code> (8,0 : 1).</p>
   </div>
 
-  <h2>6. Odstupy</h2>
+  <h2>7. Odstupy</h2>
   <p>Násobky čtyřky. Když se míchají odstupy 13, 17 a 22 px, oko to nepozná jako rytmus,
      jen jako nepořádek.</p>
   <div id="odstupy" style="display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;"></div>
@@ -180,6 +192,21 @@
       '<div class="nazev">' + b[0] + '</div><div class="kod">var(' + b[1] + ') · ' + barva + '</div>' +
       '<div class="kod" style="margin-top:4px">' + b[3] + '</div>' +
       '<span class="pomer' + (ok ? '' : ' slabe') + '">' + p.toFixed(2) + ' : 1</span></div>';
+  }).join('');
+
+  /* --- barevné přechody --- */
+  var prechody = [
+    ['Plocha stránky', '--grad-plocha', 'svislý, přes celou stránku'],
+    ['Karta', '--grad-karta', 'lesk odshora'],
+    ['Teplý', '--grad-warm', 'linka nad nadpisem, důrazy'],
+    ['Teplý jemný', '--grad-warm-soft', 'štítky a výzvy'],
+    ['Studený jemný', '--grad-cool-soft', 'štítky kategorie prodej'],
+    ['Značkový', '--brand-grad', 'tlačítka']
+  ];
+  document.getElementById('prechody').innerHTML = prechody.map(function (g) {
+    return '<div class="vzorek"><div class="pole" style="background:' + v(g[1]) + '; border:1px solid var(--line)"></div>' +
+      '<div class="nazev">' + g[0] + '</div><div class="kod">var(' + g[1] + ')</div>' +
+      '<div class="kod" style="margin-top:4px">' + g[2] + '</div></div>';
   }).join('');
 
   /* --- odstupy --- */

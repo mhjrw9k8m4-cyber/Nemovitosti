@@ -48,6 +48,26 @@
      tvář; deset teplých tónů by z něj udělalo cirkus. 5,1 : 1 na stránce. */
   --accent-warm:#A8450F;
   --accent-warm-soft:rgba(168,69,15,0.10);
+
+  /* ---------------------------------------------------------------
+     BAREVNÉ PŘECHODY — viz předloha.html
+     Web měl barvu jen na tlačítkách, jinak plochy. Přechody jsou to,
+     čím velké weby drží plochu živou: barva se plynule přelévá místo
+     toho, aby se lámala hranou.
+
+     Všechny vycházejí ze DVOU tónů, které web má — hluboké modři
+     a mědi. Duha z osmi barev není přechod, je to zmatek.
+     --------------------------------------------------------------- */
+  --grad-warm:linear-gradient(135deg, #C2560F 0%, #A8450F 52%, #86340B 100%);
+  --grad-warm-soft:linear-gradient(135deg, rgba(194,86,15,.14), rgba(168,69,15,.05));
+  --grad-cool-soft:linear-gradient(135deg, rgba(66,114,209,.14), rgba(44,53,150,.05));
+  /* Plocha stránky: dlouhý svislý přechod. Barva se mění tak pomalu, že
+     si toho nikdo nevšimne přímo — všimne si, že stránka „dýchá". */
+  --grad-plocha:linear-gradient(180deg, #F3F1EC 0%, #EDEDEC 26%, #EBEEF1 52%, #EFEDE8 78%, #F3F1EC 100%);
+  /* Karta: jemný lesk odshora, jako světlo dopadající na papír. */
+  --grad-karta:linear-gradient(180deg, #FFFFFF 0%, #FDFCFA 100%);
+  /* Předěl sekcí: linka, která se do stran vytrácí, místo tvrdé hrany. */
+  --grad-predel:linear-gradient(90deg, transparent, var(--line-strong) 18%, var(--line-strong) 82%, transparent);
   /* Značkový přechod (modrá → fialová) — stejný jako logo/ikona */
   /* Značkový přechod. Dřív končil ve fialové (#6A34D8) — a právě ta dělala
      ten „technologický" dojem, navíc se netrefovala do modroindigového loga.
@@ -951,7 +971,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .realtor-card:hover{border-color:var(--line-strong); transform:translateY(-3px); box-shadow:var(--shadow);}
 .rc-ico{width:44px; height:44px; border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center; background:rgba(74,85,224,0.12); border:1px solid rgba(74,85,224,0.3); margin-bottom:16px;}
 .rc-ico .ic{width:22px; height:22px; color:var(--copper-bright);}
-.realtor-card h3{font-family:'Plus Jakarta Sans','Inter',sans-serif; font-size:18px; font-weight:500; margin-bottom:9px;}
+.realtor-card h3{font-family:var(--font-ui); font-size:18px; font-weight:700; margin-bottom:9px;}
 .realtor-card p{font-size:14px; color:var(--text-ondark-mute);}
 @media (max-width:820px){ .realtor-grid{grid-template-columns:1fr;} }
 /* Poptávka pro realitky/obce */
@@ -969,7 +989,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .rct-form .btn-primary{padding:13px; font-size:15px; text-align:center;}
 @media (max-width:820px){ .realtor-contact{grid-template-columns:1fr; padding:26px;} .rct-row{grid-template-columns:1fr;} }
 .embed-demo{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); padding:32px; display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:center;}
-.embed-demo h3{font-family:'Plus Jakarta Sans','Inter',sans-serif; font-size:22px; font-weight:500; margin-bottom:12px;}
+.embed-demo h3{font-family:var(--font-ui); font-size:22px; font-weight:700; margin-bottom:12px;}
 .embed-demo p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:18px;}
 .code-wrap{position:relative;}
 .code-block{background:var(--ink); border:1px solid var(--line); border-radius:var(--r-xs); padding:16px; font-size:12px; color:#3B4453; overflow-x:auto; white-space:pre;}
@@ -1147,7 +1167,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .modal-x{position:absolute; top:14px; right:16px; background:none; border:0; color:var(--text-ondark-mute); font-size:26px; line-height:1; cursor:pointer;}
 .modal-x:hover{color:var(--text-ondark);}
 .modal-card .eyebrow{margin-bottom:12px;}
-.modal-card h3{font-family:'Plus Jakarta Sans','Inter',sans-serif; font-size:24px; font-weight:500; margin-bottom:8px;}
+.modal-card h3{font-family:var(--font-display); font-variation-settings:'opsz' 72; font-size:24px; font-weight:700; margin-bottom:8px;}
 .modal-sub{font-size:14px; color:var(--text-ondark-mute); margin-bottom:20px;}
 .modal-form{display:flex; flex-direction:column; gap:12px;}
 .modal-form input, .modal-form textarea{background:var(--ink); border:1px solid var(--line); border-radius:var(--r-xs); padding:13px 15px; font-size:15px; color:var(--text-ondark); font-family:inherit;}
@@ -1327,7 +1347,9 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
    Vlastní vrstva pro pridat.html / inzerce.html. Mapy (hlavní stránky)
    se nedotýká — jen nové třídy .add-*. */
 .add-hero{padding:120px 0 20px;}
-.add-hero h1{font-family:'Plus Jakarta Sans','Inter',sans-serif; font-weight:500; font-size:38px; line-height:1.14; max-width:720px;}
+/* Nadpisy appkových stránek zůstávaly bezpatkové a ve váze 500 — vedle
+   úvodní stránky pak působily jako jiný web. */
+.add-hero h1{font-family:var(--font-display); font-variation-settings:'opsz' 96; font-weight:700; font-size:38px; line-height:1.12; letter-spacing:-0.022em; max-width:720px;}
 .add-hero .sub{font-size:16px; color:var(--text-ondark-mute); margin-top:16px; max-width:640px;}
 .add-wrap{max-width:720px;}
 .add-lead{font-size:14.5px; color:var(--text-ondark-mute); margin:0 0 22px; padding:14px 16px; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); line-height:1.55;}
@@ -1491,7 +1513,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 /* ---------- Pravidla inzerce / nahlášení ---------- */
 .rules-sect{margin-bottom:6px;}
 .rules-sect + .rules-sect{margin-top:20px;}
-.rules-sect h2{font-family:'Plus Jakarta Sans','Inter',sans-serif; font-weight:700; font-size:21px; letter-spacing:-0.015em; color:var(--text-ondark); margin-bottom:14px;}
+.rules-sect h2{font-family:var(--font-display); font-variation-settings:'opsz' 72; font-weight:700; font-size:21px; letter-spacing:-0.015em; color:var(--text-ondark); margin-bottom:14px;}
 .rule-list{list-style:none; display:flex; flex-direction:column; gap:11px;}
 .rule-list li{position:relative; padding-left:28px; font-size:14.5px; color:var(--text-ondark-mute); line-height:1.55;}
 .rule-list li b{color:var(--text-ondark);}
@@ -1547,7 +1569,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 /* Pozemky od lidí — hlavička sekce */
 .lide-hero{max-width:760px; margin:0 auto; text-align:center;}
 .lide-hero .eyebrow{margin-bottom:12px;}
-.lide-hero h2{font-family:'Plus Jakarta Sans','Inter',sans-serif; font-weight:500; font-size:32px; line-height:1.15;}
+.lide-hero h2{font-family:var(--font-display); font-variation-settings:'opsz' 96; font-weight:700; letter-spacing:-0.022em; font-size:32px; line-height:1.15;}
 .lide-hero h2 em{font-style:italic; font-weight:500; background:linear-gradient(100deg, #3D63EE 0%, #5342D6 50%, #7B34C8 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;}
 .lide-hero > p{font-size:15px; color:var(--text-ondark-mute); line-height:1.6; margin-top:14px; max-width:600px; margin-left:auto; margin-right:auto;}
 .lide-badges{justify-content:center; margin-top:18px;}
@@ -1867,3 +1889,55 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .alert-box .btn-primary{background:#fff; color:var(--ink-dark); border:0;}
 .alert-box .btn-primary:hover{background:#F3EFE9; filter:none;}
 .alert-box a{color:var(--accent-warm-bright);}
+
+
+/* =====================================================================
+   NASAZENÍ BAREVNÝCH PŘECHODŮ
+   ===================================================================== */
+
+/* 1. Plocha stránky se po výšce plynule přelévá z teplé do chladné a zpět.
+      Je to tak pomalé, že si toho nikdo nevšimne přímo — všimne si jen,
+      že stránka nepůsobí jako jeden plochý papír. Přechod je připnutý
+      k oknu (fixed), takže se při rolování „projíždí". */
+body{background:var(--bg) var(--grad-plocha) fixed; background-size:cover;}
+
+/* 2. Úvodní plocha: barevný mesh přímo na ploše. Rozmazané skvrny se
+      vedle toho ukázaly jako slepá ulička — jsou odsunuté za okraj sekce
+      a přes rozostření 80 px z nich zbude mlha. Vrstvené radiální přechody
+      dělají totéž, ale doopravdy: teplá barva vlevo nahoře, studená vpravo,
+      hluboká modř u dolního okraje. Dva tóny webu proti sobě, nic dalšího. */
+.add-hero, .hero-map{
+  background-image:
+    radial-gradient(58% 52% at 10% 4%,  rgba(232,164,106,.32), transparent 64%),
+    radial-gradient(52% 56% at 92% 10%, rgba(147,179,236,.36), transparent 64%),
+    radial-gradient(72% 58% at 52% 108%, rgba(148,157,216,.28), transparent 66%);
+  background-repeat:no-repeat;
+  /* Text na barevné ploše potřebuje vlastní tón. Tam, kde se všechny tři
+     vrstvy potkají, je podklad znatelně tmavší než zbytek stránky — běžný
+     akcent by tam klesl na 3,9 : 1. Tyhle dvě hodnoty platí jen uvnitř
+     úvodní plochy a drží 5,9 : 1 i v tom nejsytějším místě.
+     Odhalil to test kontrastu; okem se to nepozná. */
+  --copper-bright:#22368F;
+  --text-ondark-mute:#394053;}
+.add-hero .aurora, .hero-map .aurora{display:none;}
+
+/* 3. Karty dostanou jemný lesk odshora — světlo dopadající na papír. */
+.opp-item, .okr-item, .gl-item, .faq-item, .promise, .step{background-image:var(--grad-karta);}
+
+/* 4. Štítky kategorií: barva se v nich přelévá místo placaté výplně. */
+.filter-chip{background-image:var(--grad-karta);}
+.okr-badge.t-sale{background-image:var(--grad-cool-soft);}
+.okr-badge.t-drazba, .okr-badge.t-exekuce, .okr-badge.t-majitel, .okr-badge.t-obec{background-image:var(--grad-warm-soft);}
+.okr-badge{border-color:currentColor;}
+
+/* 5. Předěly sekcí se do stran vytrácejí. Tvrdá linka přes celou šířku
+      krájí stránku na díly; vytrácející se ji jen naznačí. */
+.section.band{border-top:0; border-bottom:0; position:relative;}
+.section.band::before{content:""; position:absolute; top:0; left:0; right:0; height:1px; background:var(--grad-predel);}
+.sources{border-top:0; border-bottom:0; position:relative;}
+.sources::before, .sources::after{content:""; position:absolute; left:0; right:0; height:1px; background:var(--grad-predel);}
+.sources::before{top:0;} .sources::after{bottom:0;}
+
+/* 6. Měděná linka nad nadpisem sekce je taky přechod, ne placka. */
+.section-head::before{background:var(--grad-warm);}
+.s-linka{background:var(--grad-warm);}
