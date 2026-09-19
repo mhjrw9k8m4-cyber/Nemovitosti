@@ -70,6 +70,10 @@ async function sb(path, opts = {}) {
   return txt ? JSON.parse(txt) : null;
 }
 
+// Kolik odeslání selhalo a proč — na konci podle toho úloha spadne, ať se
+// nestane, že běh skončí zeleně a přitom nikomu nic nepřišlo.
+const selhani = [];
+
 async function resendSend(to, subject, html) {
   if (!LIVE) { log('  [dry-run] e-mail →', to, '|', subject); return true; }
   const r = await fetch('https://api.resend.com/emails', {
@@ -77,7 +81,22 @@ async function resendSend(to, subject, html) {
     headers: { Authorization: 'Bearer ' + RESEND_API_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ from: ALERT_FROM, to: [to], subject, html })
   });
-  if (!r.ok) { console.error('  Resend selhal pro', to, '→', r.status, (await r.text()).slice(0, 200)); return false; }
+  if (!r.ok) {
+    const telo = (await r.text()).slice(0, 300);
+    console.error('  Resend selhal pro', to, '→', r.status, telo);
+    // Účet bez ověřené domény smí posílat jedině na adresu majitele. Je to
+    // nejčastější důvod, proč hlídání „nefunguje", a z holého 403 to nepozná
+    // nikdo — tak to napíšeme rovnou i s návodem.
+    if (r.status === 403 && /testing emails|verify a domain/i.test(telo)) {
+      selhani.push({ to, duvod: 'Resend je v testovacím režimu (bez ověřené domény)' });
+      console.error('  → Resend nemá ověřenou doménu, takže pošle jedině na adresu majitele účtu.');
+      console.error('     Resend → Domains → Add domain → vložit DNS záznamy (SPF, DKIM) → počkat na „Verified“.');
+      console.error('     Pak nastavit tajemství ALERT_FROM na adresu z té domény, např. upozorneni@parcelaka.cz.');
+    } else {
+      selhani.push({ to, duvod: 'HTTP ' + r.status + ' ' + telo.slice(0, 120) });
+    }
+    return false;
+  }
   return true;
 }
 
@@ -225,6 +244,7 @@ async function main() {
   // Při PRVNÍM běhu jen zapamatujeme stav a upozornění NEposíláme (ať nikoho nezavalí starý seznam).
   if (firstRun) {
     log('PRVNÍ běh — zapamatoval jsem si příležitosti, upozornění zatím neposílám.');
+    hlasSelhani();   // potvrzovací e-maily se posílají i při prvním běhu
     log('== Hotovo ==');
     return;
   }
@@ -249,7 +269,17 @@ async function main() {
     }
   }
   log('Upozorňovacích e-mailů:', alertSent);
+  hlasSelhani();
   log('== Hotovo ==');
+}
+
+// Neodeslané e-maily musí úlohu shodit. Dokud běh končil zeleně, vypadalo
+// všechno v pořádku — a přitom lidem přihlášeným k hlídání nechodilo nic.
+function hlasSelhani() {
+  if (!selhani.length) return;
+  const duvody = [...new Set(selhani.map(s => s.duvod))];
+  console.error(`::error::Neodesláno ${selhani.length} e-mailů. ${duvody.join(' | ')}`);
+  process.exitCode = 1;
 }
 
 main().catch(e => die(e.message));
