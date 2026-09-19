@@ -53,6 +53,9 @@ jobs:
       - name: Opakovaná kontrola odkazů a fotek
         run: node scripts/test-opakovana.mjs
 
+      - name: Psaní v aplikaci (logika schránky a odznaku)
+        run: node scripts/test-zpravy.mjs
+
       - name: Celá kontrola inzerátů (proti zkušebnímu serveru)
         run: |
           npm install --no-audit --no-fund --omit=dev jpeg-js
@@ -70,3 +73,26 @@ jobs:
 
       - name: Statická kontrola skriptů
         run: node scripts/test-staticka.mjs
+
+  # Chat se špatně zkouší ručně: potřebuje dva účty, inzerát a trpělivost.
+  # Tenhle běh projde celou cestu v opravdovém Chromiu — zájemce napíše,
+  # majitel to uvidí i se zavřeným menu na mobilu, odpoví, a odpověď dorazí
+  # zpátky bez obnovení stránky. Běží zvlášť, ať rychlé testy zůstanou rychlé.
+  chat-v-prohlizeci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Prohlížeč
+        run: |
+          npm install --no-audit --no-fund playwright-core playwright
+          npx playwright install --with-deps chromium
+
+      - name: Projít chat v prohlížeči
+        run: node scripts/test-chat-prohlizec.mjs

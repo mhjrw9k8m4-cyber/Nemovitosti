@@ -1118,7 +1118,7 @@
           '</div></details>' +
         '</div>' +
         '<div class="md-actions">' +
-          (d.type === 'majitel' && d._lid ? '<a class="lp-btn lp-msg" href="zpravy.html?l=' + encodeURIComponent(d._lid) + '&new=1">Napsat majiteli</a>' : '') +
+          (d.type === 'majitel' && d._lid ? '<a class="lp-btn lp-msg" href="zpravy.html?l=' + encodeURIComponent(d._lid) + '&new=1&p=' + encodeURIComponent(d.place || '') + '&ok=' + encodeURIComponent(d.okres || '') + '">Napsat majiteli</a>' : '') +
           (d.type === 'majitel' && d.contact ? '<a class="lp-btn lp-src" href="' + contactHref(d.contact) + '">Kontakt na majitele</a>' : '') +
           '<a class="lp-btn" href="' + katastrUrl(d) + '"' + extAttr + '>Katastr</a>' +
           '<a class="lp-btn" href="' + mapyUrl(d) + '"' + extAttr + '>Mapa</a>' +

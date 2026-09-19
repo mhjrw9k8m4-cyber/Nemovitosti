@@ -59,6 +59,18 @@
     .zp-b.them{align-self:flex-start; background:var(--ink-soft2); color:var(--text-ondark); border-bottom-left-radius:5px;}
     .zp-b.me{align-self:flex-end; background:var(--brand-grad); color:#fff; border-bottom-right-radius:5px;}
     .zp-time{font-size:10.5px; opacity:.65; margin-top:2px; display:block;}
+    .zp-cti{display:flex; flex-direction:column; line-height:1.25; min-width:0;}
+    .zp-cti b{font-size:14.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    .zp-cti span{font-size:11.5px; opacity:.7; font-weight:500;}
+    .zp-b.ceka{opacity:.55;}
+    .zp-b.chyba{outline:1.5px solid var(--c-exekuce); outline-offset:1px;}
+    .zp-err{margin:0 12px 8px; padding:9px 12px; border-radius:11px; font-size:13px;
+      background:rgba(200,60,40,.12); color:var(--c-exekuce); border:1px solid rgba(200,60,40,.3);}
+    .zp-err[hidden]{display:none;}
+    .zp-pocet{font-size:11.5px; opacity:.7; padding:0 12px 8px; text-align:right;}
+    .zp-pocet.prilis{color:var(--c-exekuce); opacity:1; font-weight:700;}
+    .zp-pocet[hidden]{display:none;}
+    .zp-tvremeno{font-size:11px; opacity:.6; flex:none; margin-left:6px;}
     .zp-compose{display:flex; gap:8px; padding:11px 12px; border-top:1px solid var(--line); align-items:flex-end;}
     .zp-ta{flex:1; resize:none; min-height:44px; max-height:120px; padding:11px 13px; border:1.5px solid var(--line-strong); border-radius:14px; font-size:16px; font-family:inherit; background:var(--ink-soft2); color:var(--text-ondark); outline:none;}
     .zp-ta:focus{border-color:var(--copper-bright);}
@@ -117,6 +129,7 @@
 
 <script src="js/config.js?v=20260902f"></script>
 <script src="js/auth.js?v=20260902f"></script>
+<script src="js/zpravy-logika.js?v=20260926a"></script>
 <script>
 (function () {
   var A = window.PKAuth;
@@ -167,6 +180,9 @@
   }
 
   /* ---------- Seznam vláken ---------- */
+  var Z = window.PKZpravy;
+  var threadTimer = null;
+
   function renderThreads(rows) {
     if (!rows.length) {
       root.innerHTML = '<div class="zp-card"><div class="zp-empty">' + ICON_CHAT +
@@ -176,12 +192,15 @@
     }
     var html = '<div class="zp-card">';
     rows.forEach(function (t) {
-      var role = t.is_owner ? 'Zájemce o váš pozemek' : 'Váš dotaz majiteli';
+      // Majitel pozemku potřebuje rozlišit jednotlivé zájemce: u téhož
+      // pozemku jich může psát víc a dřív vypadala všechna vlákna stejně.
+      var role = t.is_owner ? Z.stitekZajemce(t.buyer_id) : 'Váš dotaz majiteli';
       html += '<a class="zp-thread" href="zpravy.html?l=' + encodeURIComponent(t.listing_id) + '&b=' + encodeURIComponent(t.buyer_id) + '&o=' + (t.is_owner ? '1' : '0') + '">' +
         '<div class="zp-ava">' + ICON_CHAT + '</div>' +
         '<div class="zp-tmain">' +
-          '<div class="zp-tplace">' + esc(t.place || 'Pozemek') + (t.okres ? ' <span style="font-weight:400;color:var(--text-ondark-mute)">· okr. ' + esc(t.okres) + '</span>' : '') + '</div>' +
-          '<div class="zp-trole">' + role + '</div>' +
+          '<div class="zp-tplace">' + esc(t.place || 'Pozemek') + (t.okres ? ' <span style="font-weight:400;color:var(--text-ondark-mute)">· okr. ' + esc(t.okres) + '</span>' : '') +
+            (t.last_at ? '<span class="zp-tvremeno">' + timeTxt(t.last_at) + '</span>' : '') + '</div>' +
+          '<div class="zp-trole">' + esc(role) + '</div>' +
           '<div class="zp-tlast">' + esc((t.last_body || '').slice(0, 60)) + '</div>' +
         '</div>' +
         (t.unread > 0 ? '<div class="zp-badge">' + t.unread + '</div>' : '') +
@@ -191,38 +210,83 @@
     root.innerHTML = html;
   }
 
-  function loadThreads() {
-    root.innerHTML = '<div class="zp-card"><div class="zp-load">Načítám zprávy…</div></div>';
+  function loadThreads(prvni) {
+    if (prvni) root.innerHTML = '<div class="zp-card"><div class="zp-load">Načítám zprávy…</div></div>';
     A.rpc('my_threads', {}, true).then(function (res) {
-      if (!res || !res.ok) { if (res && res.expired) { renderAuth('Přihlášení vypršelo, přihlaste se prosím znovu.', true); return; } root.innerHTML = '<div class="zp-card"><div class="zp-empty">Zprávy se teď nepovedlo načíst. Zkuste to prosím za chvíli.</div></div>'; return; }
-      renderThreads(Array.isArray(res.data) ? res.data : []);
+      if (!res || !res.ok) {
+        if (res && res.expired) { zastavCasovace(); renderAuth('Přihlášení vypršelo, přihlaste se prosím znovu.', true); return; }
+        if (prvni) root.innerHTML = '<div class="zp-card"><div class="zp-empty">Zprávy se teď nepovedlo načíst. Zkuste to prosím za chvíli.</div></div>';
+        return;
+      }
+      var rows = Array.isArray(res.data) ? res.data : [];
+      // Překreslit jen při změně, ať se seznam pod prstem nehýbe.
+      var otisk = rows.map(function (t) { return t.listing_id + t.buyer_id + t.last_at + t.unread; }).join('|');
+      if (otisk !== loadThreads._otisk) { loadThreads._otisk = otisk; renderThreads(rows); }
     });
+    if (prvni && !threadTimer) threadTimer = setInterval(function () { if (!document.hidden) loadThreads(false); }, 20000);
+  }
+
+  function zastavCasovace() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    if (threadTimer) { clearInterval(threadTimer); threadTimer = null; }
   }
 
   /* ---------- Konverzace ---------- */
   var pollTimer = null;
-  function openConv(listing, buyer, isOwner, isNew) {
-    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  function openConv(listing, buyer, isOwner, isNew, zaloha) {
+    zastavCasovace();
     root.innerHTML =
       '<div class="zp-card">' +
         '<div class="zp-conv-head">' +
           '<button class="zp-cb" id="zc-back">‹ Zpět</button>' +
-          '<span class="zp-cti" id="zc-title">Konverzace</span>' +
+          '<span class="zp-cti" id="zc-title"><b>Konverzace</b><span id="zc-sub"></span></span>' +
           '<a class="zp-view" id="zc-view" href="index.html?lid=' + encodeURIComponent(listing) + '">Zobrazit pozemek</a>' +
         '</div>' +
         '<div class="zp-msgs" id="zc-msgs"><div class="zp-load">Načítám…</div></div>' +
+        '<div class="zp-err" id="zc-err" hidden></div>' +
+        '<div class="zp-pocet" id="zc-pocet" hidden></div>' +
         '<div class="zp-compose">' +
-          '<textarea class="zp-ta" id="zc-ta" rows="1" placeholder="Napište zprávu…"></textarea>' +
+          '<textarea class="zp-ta" id="zc-ta" rows="1" placeholder="Napište zprávu…" maxlength="' + (Z.MAX_ZPRAVA + 100) + '"></textarea>' +
           '<button class="zp-send" id="zc-send" aria-label="Odeslat">' + ICON_SEND + '</button>' +
         '</div>' +
         '<div class="zp-note">Soukromá zpráva v aplikaci. Nesdílejte hesla ani platby předem — vždy si pozemek i vlastníka ověřte v katastru.</div>' +
       '</div>';
-    var msgsEl = document.getElementById('zc-msgs'), ta = document.getElementById('zc-ta'), sendBtn = document.getElementById('zc-send'), titleEl = document.getElementById('zc-title');
-    document.getElementById('zc-back').addEventListener('click', function () { if (pollTimer) clearInterval(pollTimer); location.href = 'zpravy.html'; });
-    ta.addEventListener('input', function () { ta.style.height = 'auto'; ta.style.height = Math.min(120, ta.scrollHeight) + 'px'; });
+    var msgsEl = document.getElementById('zc-msgs'), ta = document.getElementById('zc-ta'),
+        sendBtn = document.getElementById('zc-send'), titleEl = document.getElementById('zc-title'),
+        subEl = document.getElementById('zc-sub'), errEl = document.getElementById('zc-err'),
+        pocetEl = document.getElementById('zc-pocet');
 
-    function render(rows) {
-      if (!rows.length) {
+    document.getElementById('zc-back').addEventListener('click', function () { zastavCasovace(); location.href = 'zpravy.html'; });
+
+    function chyba(text) { if (!text) { errEl.hidden = true; errEl.textContent = ''; return; } errEl.textContent = text; errEl.hidden = false; }
+
+    /* Hlavička: o který pozemek jde a s kým si píšu. Dřív tu stálo jen
+       „Konverzace" — majitel se třemi zájemci u jednoho pozemku netušil,
+       komu odpovídá. Údaje vezmeme z my_threads; když vlákno ještě nemá
+       jedinou zprávu, my_threads ho nezná, a tak se použije to, co přišlo
+       v adrese od tlačítka „Napsat majiteli". */
+    function nastavHlavicku(info) {
+      var d = Z.popisVlakna(info, { place: zaloha.place, okres: zaloha.okres, is_owner: isOwner, buyer_id: buyer });
+      titleEl.querySelector('b').textContent = d.titulek;
+      subEl.textContent = d.podtitul;
+    }
+    nastavHlavicku(null);
+    A.rpc('my_threads', {}, true).then(function (res) {
+      if (!res || !res.ok || !Array.isArray(res.data)) return;
+      for (var i = 0; i < res.data.length; i++) {
+        var t = res.data[i];
+        if (t.listing_id === listing && t.buyer_id === buyer) { nastavHlavicku(t); return; }
+      }
+    });
+
+    /* Překreslení: jen když se něco změnilo, a dolů se sjede jen tehdy,
+       když už jsem dole nebo mi přišla nová zpráva. Dřív se seznam přepsal
+       každých 15 s a pohled skočil dolů i uprostřed čtení starší zprávy. */
+    var zobrazene = [];
+    var cekajici = [];            // zprávy odeslané, ale ještě nepotvrzené
+    function uDna() { return (msgsEl.scrollHeight - msgsEl.scrollTop - msgsEl.clientHeight) < 60; }
+    function render(rows, sjed) {
+      if (!rows.length && !cekajici.length) {
         msgsEl.innerHTML = '<div class="zp-empty" style="padding:20px 8px;">' + (isOwner
           ? 'Zatím žádná zpráva.'
           : 'Napište majiteli první zprávu — třeba se zeptejte na dostupnost, sítě nebo přístupovou cestu. 👇') + '</div>';
@@ -232,49 +296,94 @@
       rows.forEach(function (m) {
         h += '<div class="zp-b ' + (m.mine ? 'me' : 'them') + '">' + esc(m.body) + '<span class="zp-time">' + timeTxt(m.created_at) + '</span></div>';
       });
+      cekajici.forEach(function (c) {
+        h += '<div class="zp-b me ' + (c.chyba ? 'chyba' : 'ceka') + '">' + esc(c.body) +
+             '<span class="zp-time">' + (c.chyba ? 'neodesláno' : 'odesílám…') + '</span></div>';
+      });
       msgsEl.innerHTML = h;
-      msgsEl.scrollTop = msgsEl.scrollHeight;
+      if (sjed) msgsEl.scrollTop = msgsEl.scrollHeight;
     }
+
     function load(first) {
       A.rpc('thread_messages', { p_listing: listing, p_buyer: buyer }, true).then(function (res) {
-        if (!res || !res.ok) { if (first) msgsEl.innerHTML = '<div class="zp-empty" style="padding:18px 8px;">Konverzaci se nepovedlo načíst.</div>'; return; }
+        if (!res || !res.ok) {
+          if (res && res.expired) { zastavCasovace(); renderAuth('Přihlášení vypršelo, přihlaste se prosím znovu.', true); return; }
+          if (first) msgsEl.innerHTML = '<div class="zp-empty" style="padding:18px 8px;">Konverzaci se nepovedlo načíst.</div>';
+          return;
+        }
         var rows = Array.isArray(res.data) ? res.data : [];
-        render(rows);
-        if (first && rows.length && rows[0].body) { var t = (rows[0].body || '').slice(0, 40); }
+        if (!first && Z.otiskZprav(rows) === Z.otiskZprav(zobrazene) && !cekajici.length) return;
+        var sjed = first || uDna() || Z.prisloNoveOdDruheho(zobrazene, rows);
+        zobrazene = rows;
+        render(rows, sjed);
       });
     }
+
+    function prepocitejDelku() {
+      var st = Z.stavDelky(ta.value);
+      pocetEl.hidden = !st.ukazat;
+      pocetEl.className = 'zp-pocet' + (st.prilis ? ' prilis' : '');
+      pocetEl.textContent = st.prilis ? ('o ' + (-st.zbyva) + ' znaků moc') : ('zbývá ' + st.zbyva + ' znaků');
+    }
+    ta.addEventListener('input', function () {
+      ta.style.height = 'auto'; ta.style.height = Math.min(120, ta.scrollHeight) + 'px';
+      prepocitejDelku(); chyba('');
+    });
+
     function send() {
       var body = (ta.value || '').trim();
       if (!body) return;
+      if (body.length > Z.MAX_ZPRAVA) { chyba('Zpráva je moc dlouhá — vejde se ' + Z.MAX_ZPRAVA + ' znaků.'); return; }
+      chyba('');
+      // Bublina se ukáže hned a teprve pak se čeká na server. Na mobilu
+      // s pomalou sítí dřív vypadalo odeslání jako by se nic nestalo.
+      var polozka = { body: body, chyba: false };
+      cekajici.push(polozka);
+      ta.value = ''; ta.style.height = 'auto'; prepocitejDelku();
+      render(zobrazene, true);
       sendBtn.disabled = true;
+
       var args = isOwner ? { p_listing: listing, p_buyer: buyer, p_body: body } : { p_listing: listing, p_buyer: null, p_body: body };
       A.rpc('send_message', args, true).then(function (res) {
         sendBtn.disabled = false;
-        if (!res || !res.ok) {
-          var em = (res && res.error && (res.error.message || res.error.hint)) || 'Zprávu se nepovedlo odeslat.';
-          msgsEl.insertAdjacentHTML('beforeend', '<div class="zp-empty" style="padding:8px; color:var(--c-exekuce)">' + esc(em) + '</div>');
-          return;
+        var i = cekajici.indexOf(polozka);
+        if (res && res.ok) {
+          if (i >= 0) cekajici.splice(i, 1);
+          load(false);
+        } else {
+          if (res && res.expired) { zastavCasovace(); renderAuth('Přihlášení vypršelo, přihlaste se prosím znovu.', true); return; }
+          polozka.chyba = true;
+          // Text zůstane v poli, ať se nemusí psát znovu.
+          ta.value = body; prepocitejDelku();
+          chyba(Z.hlaskaChyby(res && res.error));
+          render(zobrazene, true);
         }
-        ta.value = ''; ta.style.height = 'auto';
-        load(false);
       });
     }
     sendBtn.addEventListener('click', send);
     ta.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+
     load(true);
-    pollTimer = setInterval(function () { load(false); }, 15000);
+    // Na pozadí se neptáme — na mobilu to jen ujídá data a baterii.
+    pollTimer = setInterval(function () { if (!document.hidden) load(false); }, 15000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) load(false); });
   }
 
   /* ---------- Start ---------- */
   function start() {
     if (!A || !A.loggedIn()) { renderAuth('', false); return; }
     var l = q('l'), b = q('b'), isNew = q('new') === '1', o = q('o') === '1';
+    // Obec a okres nese odkaz „Napsat majiteli" (p= a ok=). U úplně nového
+    // vlákna je to jediný zdroj — my_threads ho ještě nezná, protože v něm
+    // není žádná zpráva. Okres má vlastní jméno „ok", ne „o": to už znamená
+    // „jsem majitel" a okres pojmenovaný „1" by ze zájemce udělal majitele.
+    var zaloha = { place: q('p'), okres: q('ok') };
     if (l && (b || isNew)) {
       // otevři konkrétní konverzaci (nová = kupující píše, buyer = já)
       var buyer = isNew ? (A.uid() || '') : b;
-      openConv(l, buyer, o, isNew);
+      openConv(l, buyer, o, isNew, zaloha);
     } else {
-      loadThreads();
+      loadThreads(true);
     }
   }
 

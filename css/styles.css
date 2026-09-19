@@ -258,7 +258,12 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    ne schované v menu). */
 .header-cta{display:none;}
 
-.nav-toggle{display:none; flex-direction:column; gap:5px; background:none; border:0; cursor:pointer; padding:6px;}
+.nav-toggle{display:none; flex-direction:column; gap:5px; background:none; border:0; cursor:pointer; padding:6px; position:relative;}
+/* Tečka na hamburgeru, když čekají nepřečtené zprávy. Odznak u položky
+   „Zprávy" je na mobilu schovaný uvnitř zavřeného menu — bez tohohle by
+   se o nové zprávě nikdo s telefonem nedozvěděl. */
+.nav-toggle .nav-dot{position:absolute; top:-2px; right:-2px; width:10px; height:10px; border-radius:50%;
+  background:var(--copper); box-shadow:0 0 0 2.5px #fff;}
 .nav-toggle span{display:block; width:24px; height:2px; background:var(--text-ondark); border-radius:2px; transition:transform .2s ease, opacity .2s ease;}
 .nav-toggle[aria-expanded="true"] span:nth-child(1){transform:translateY(7px) rotate(45deg);}
 .nav-toggle[aria-expanded="true"] span:nth-child(2){opacity:0;}

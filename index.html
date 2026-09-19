@@ -471,19 +471,6 @@
    neexistuje, a natvrdo vložený končil chybou 404 v konzoli — proto ho přidáme
    do stránky jen tam, kde ho má kdo obsloužit. */
 (function(){var h=location.hostname;if(/(^|\.)github\.io$/.test(h)||h==="localhost"||h==="127.0.0.1"||!h)return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
-<script>
-/* Odznak s počtem nepřečtených zpráv u položky „Zprávy" v menu (jen když je
-   uživatel přihlášený). Spouští se až po načtení (defer skripty jsou hotové). */
-window.addEventListener('load', function () {
-  try {
-    var A = window.PKAuth, link = document.getElementById('nav-zpravy');
-    if (!A || !link || !A.loggedIn || !A.loggedIn()) return;
-    A.rpc('unread_count', {}, true).then(function (res) {
-      var n = (res && res.ok) ? (res.data | 0) : 0;
-      if (n > 0) link.insertAdjacentHTML('beforeend', ' <span class="nav-unread">' + (n > 9 ? '9+' : n) + '</span>');
-    }, function () {});
-  } catch (e) {}
-});
-</script>
+<script src="js/zpravy-odznak.js?v=20260926a" defer></script>
 </body>
 </html>
