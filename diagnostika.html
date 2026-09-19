@@ -68,6 +68,7 @@
     <button id="testWatch">Vyzkoušet uložení hlídání</button>
     <button id="testMsg">Vyzkoušet odeslání formuláře</button>
     <button id="testSignup">Vyzkoušet registraci</button>
+    <button id="testMeze">Vyzkoušet serverové meze</button>
   </div>
   <div class="card" id="zapisy" hidden></div>
 
@@ -96,7 +97,8 @@
     el.querySelector('.name').textContent = nazev;
     el.querySelector('.det').innerHTML = detail || '';
     cil.appendChild(el);
-    zaznam.push((stav === 'ok' ? '[OK]  ' : stav === 'bad' ? '[CHYBA] ' : '[POZOR] ') + nazev +
+    zaznam.push((stav === 'ok' ? '[OK]  ' : stav === 'bad' ? '[CHYBA] ' :
+                 stav === 'run' ? '[INFO]  ' : '[POZOR] ') + nazev +
       (detail ? ' — ' + detail.replace(/<[^>]*>/g, '') : ''));
     raw.textContent = zaznam.join('\n');
   }
@@ -154,21 +156,16 @@
       else if (r.stav === 400 || r.stav === 401 || r.stav === 403) radek(box, 'ok', 'Přidání inzerátu: funkce odpovídá správně', 'HTTP ' + r.stav + ' — funkce existuje a ohradila se sama: <code>' + zkratka(r.telo, 90) + '</code>');
       else radek(box, 'warn', 'Přidání inzerátu hlásí ' + r.stav, '<code>' + zkratka(r.telo, 110) + '</code>');
 
-      // Proběhla malá aktualizace? Pošleme nesmyslnou výměru (1 m²): stará
-      // verze funkce se ohradí až kvůli přihlášení, nová kvůli mezím.
-      return dotaz('/rest/v1/rpc/create_listing', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ p_place: 'Zkouška', p_okres: '', p_druh: '', p_parcel: '', p_area: 1, p_price: 1,
-          p_lat: 50, p_lng: 15, p_description: '', p_contact: 'x', p_photos: [], p_features: [], p_access: null })
-      });
-    }).then(function (r) {
-      if (/výměra musí být|cena musí být|kontakt musí být/.test(r.telo || '')) {
-        radek(box, 'ok', 'Serverové meze jsou nasazené', 'Databáze odmítla nesmyslné hodnoty sama: <code>' + zkratka(r.telo, 90) + '</code>');
-      } else if (/musíte být přihlášeni/.test(r.telo || '')) {
-        radek(box, 'warn', 'Serverové meze zatím chybí', 'Funkce běží, ale ve starší podobě — nehlídá výměru, cenu ani kontakt. Spusťte <code>supabase/aktualizace.sql</code> v Supabase → SQL Editor.');
-      } else {
-        radek(box, 'warn', 'Serverové meze: nejasné', 'HTTP ' + r.stav + ' — <code>' + zkratka(r.telo, 100) + '</code>');
-      }
+      // Serverové meze (výměra, cena, kontakt) odsud změřit NEJDE a tahle
+      // stránka to nesmí předstírat: create_listing se nejdřív ptá na
+      // přihlášení a teprve potom kontroluje čísla. Nepřihlášený návštěvník
+      // proto vždycky dostane „musíte být přihlášeni“ — i když meze nasazené
+      // jsou. Dřív tady stálo „meze chybí“ a byl to planý poplach.
+      // Doopravdy to změří tlačítko „Vyzkoušet serverové meze“ níž: založí
+      // zkušební účet, teprve pod ním funkci zavolá a po sobě uklidí.
+      radek(box, 'run', 'Serverové meze: odsud se změřit nedají',
+        'Funkce se nejdřív ptá na přihlášení, takže nepřihlášená stránka se k mezím nedostane. ' +
+        'Změří je tlačítko <strong>Vyzkoušet serverové meze</strong> v zápisových testech níž.');
 
       return dotaz('/rest/v1/listing_checks?select=listing_id&limit=1', {});
     }).then(function (r) {
@@ -243,6 +240,61 @@
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: mail, password: 'Diagnostika' + Date.now() })
     }));
+  });
+  // Jediný způsob, jak serverové meze opravdu změřit: přihlásit se.
+  // Založí se zkušební účet, pod ním se funkce zavolá s výměrou 1 m² — a
+  // podle odpovědi je jasno:
+  //   „výměra musí být…“  → nová verze funkce běží, mez zabrala
+  //   vrátí id inzerátu   → běží STARÁ verze bez mezí; ten zkušební inzerát
+  //                         se hned smaže, ať na webu nezůstane viset
+  document.getElementById('testMeze').addEventListener('click', function () {
+    var tl = this; tl.disabled = true;
+    var mail = 'diagnostika+' + Date.now() + '@example.com';
+    zapisyBox.hidden = false;
+    dotaz('/auth/v1/signup', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: mail, password: 'Diagnostika' + Date.now() + '!' })
+    }).then(function (r) {
+      var token = null;
+      try { token = JSON.parse(r.telo || '{}').access_token || null; } catch (e) {}
+      if (!token) {
+        radek(zapisyBox, 'warn', 'Serverové meze: nešlo se přihlásit',
+          'Zkušební účet nevznikl, takže se meze nedají změřit. HTTP ' + r.stav +
+          ' — <code>' + zkratka(r.telo, 140) + '</code>');
+        return null;
+      }
+      var auth = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token };
+      return dotaz('/rest/v1/rpc/create_listing', {
+        method: 'POST', headers: auth,
+        body: JSON.stringify({ p_place: 'Zkouška diagnostiky', p_okres: '', p_druh: '', p_parcel: '',
+          p_area: 1, p_price: 1, p_lat: 50, p_lng: 15, p_description: '', p_contact: 'x',
+          p_photos: [], p_features: [], p_access: null })
+      }).then(function (v) { return { v: v, auth: auth }; });
+    }).then(function (x) {
+      if (!x) return;
+      var v = x.v, telo = v.telo || '';
+      if (/výměra musí být|cena musí být|kontakt musí být|cena za m/.test(telo)) {
+        radek(zapisyBox, 'ok', 'Serverové meze jsou nasazené',
+          'Databáze odmítla nesmyslné hodnoty sama: <code>' + zkratka(telo, 120) + '</code>');
+        return;
+      }
+      var id = null;
+      try { var j = JSON.parse(telo); id = (Array.isArray(j) ? j[0] : j) && (Array.isArray(j) ? j[0] : j).id; } catch (e) {}
+      if (v.stav >= 200 && v.stav < 300 && id) {
+        radek(zapisyBox, 'bad', 'Serverové meze chybí — databáze přijala pozemek o 1 m² za 1 Kč',
+          'Běží starší podoba funkce. Spusťte <code>supabase/aktualizace.sql</code> v Supabase → SQL Editor. Uklízím zkušební inzerát…');
+        dotaz('/rest/v1/rpc/delete_listing', {
+          method: 'POST', headers: x.auth, body: JSON.stringify({ p_id: id })
+        }).then(function (d) {
+          radek(zapisyBox, d.stav >= 200 && d.stav < 300 ? 'ok' : 'warn',
+            d.stav >= 200 && d.stav < 300 ? 'Zkušební inzerát smazán' : 'Zkušební inzerát se nepodařilo smazat',
+            'HTTP ' + d.stav + ' — id <code>' + id + '</code>');
+        });
+        return;
+      }
+      radek(zapisyBox, 'warn', 'Serverové meze: nejasná odpověď',
+        'HTTP ' + v.stav + ' — <code>' + zkratka(telo, 140) + '</code>');
+    }).then(function () { tl.disabled = false; });
   });
   document.getElementById('copy').addEventListener('click', function () {
     var t = raw.textContent || '';
