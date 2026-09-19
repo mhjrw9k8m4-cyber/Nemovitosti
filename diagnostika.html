@@ -139,6 +139,29 @@
       else if (r.stav === 404) radek(box, 'bad', 'Funkce public_listings chybí', 'HTTP 404 — chybí SQL z <code>supabase/listings-auth.sql</code>. Bez ní se na mapě neukážou inzeráty od lidí.');
       else radek(box, 'warn', 'Funkce public_listings hlásí ' + r.stav, '<code>' + zkratka(r.telo, 110) + '</code>');
 
+      // Ověření podpisu: funkci zavoláme se VŠEMI parametry, které web posílá,
+      // ale s prázdnou obcí. Když funkce existuje, sama se ohradí (HTTP 400) a
+      // nic nezapíše. Když v databázi běží starší verze s méně parametry,
+      // PostgREST žádnou takovou nenajde a vrátí 404 — přesně to je důvod,
+      // proč přidání inzerátu končí hláškou „nepovedlo se".
+      return dotaz('/rest/v1/rpc/create_listing', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_place: '', p_okres: '', p_druh: '', p_parcel: '', p_area: 0, p_price: 0,
+          p_lat: null, p_lng: null, p_description: '', p_contact: '', p_photos: [], p_features: [], p_access: null })
+      });
+    }).then(function (r) {
+      if (r.stav === 404) radek(box, 'bad', 'Přidání inzerátu: databáze má starou verzi funkce', 'HTTP 404 — <code>create_listing</code> v databázi nezná parametry, které web posílá (fotky, vybavení, přístup). Spusťte <code>supabase/00-vse.sql</code> v Supabase → SQL Editor.');
+      else if (r.stav === 400 || r.stav === 401 || r.stav === 403) radek(box, 'ok', 'Přidání inzerátu: funkce odpovídá správně', 'HTTP ' + r.stav + ' — funkce existuje a ohradila se sama: <code>' + zkratka(r.telo, 90) + '</code>');
+      else radek(box, 'warn', 'Přidání inzerátu hlásí ' + r.stav, '<code>' + zkratka(r.telo, 110) + '</code>');
+
+      return dotaz('/rest/v1/rpc/subscribe_watch', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_email: '', p_okres: '', p_types: [] })
+      });
+    }).then(function (r) {
+      if (r.stav === 404) radek(box, 'bad', 'Hlídání: funkce subscribe_watch chybí', 'HTTP 404 — spusťte <code>supabase/00-vse.sql</code>.');
+      else radek(box, 'ok', 'Hlídání: funkce subscribe_watch odpovídá', 'HTTP ' + r.stav + ' — <code>' + zkratka(r.telo, 80) + '</code>');
+
       return dotaz('/auth/v1/settings', {});
     }).then(function (r) {
       var j = null; try { j = JSON.parse(r.telo); } catch (e) {}

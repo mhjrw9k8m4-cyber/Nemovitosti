@@ -269,6 +269,13 @@
         if (!res || !res.ok) {
           if (res && res.expired) return 'auth';
           var m = (res && res.error && (res.error.message || res.error.msg)) || '';
+          // Databáze zná jen starší podobu create_listing (bez fotek, vybavení
+          // a přístupu), takže PostgREST volání vůbec nenajde. Uživateli to
+          // dřív vyšlo jako obecné „nepovedlo se" a nikdo nevěděl proč.
+          if ((res && res.status === 404) || /could not find the function|PGRST202/i.test(m)) {
+            if (window.console) console.error('create_listing: databáze má starší verzi funkce. Spusťte supabase/00-vse.sql v Supabase → SQL Editor.');
+            return 'db';
+          }
           if (/nevhodn/i.test(m)) return 'bad';
           if (/počkejte|pockejte|chvíli|chvili/i.test(m)) return 'wait';
           if (/limit/i.test(m)) return 'limit';
@@ -486,6 +493,9 @@
           ms.classList.add('err');
         } else if (r === 'wait') {
           ms.textContent = 'Chvíli prosím počkejte (asi minutu) a zkuste přidat další inzerát znovu.';
+          ms.classList.add('err');
+        } else if (r === 'db') {
+          ms.innerHTML = 'Inzeráty teď nejde přidávat — na naší straně neběží aktuální verze databáze. Píšeme na tom; zkuste to prosím později, nebo nám dejte vědět přes <a href="kontakt.html">kontakt</a>.';
           ms.classList.add('err');
         } else {
           ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.';
