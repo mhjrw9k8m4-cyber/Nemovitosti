@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Předloha — Parcelka</title>
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#EDEFF4">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=20260926d">
+  <style>
+    /* Předloha je vzorník, ne stránka webu — má vlastní jednoduchou sazbu. */
+    body{background:var(--bg);}
+    .pz{max-width:1080px; margin:0 auto; padding:48px 24px 96px;}
+    .pz h1{font-size:40px; margin-bottom:8px;}
+    .pz > p.lede{color:var(--text-ondark-mute); font-size:17px; max-width:62ch; margin-bottom:12px;}
+    .pz h2{font-size:24px; font-weight:800; letter-spacing:-0.02em; margin:56px 0 6px; padding-top:22px; border-top:1px solid var(--line);}
+    .pz h2:first-of-type{border-top:0;}
+    .pz h2 + p{color:var(--text-ondark-mute); font-size:15px; max-width:64ch; margin-bottom:22px;}
+    .pz h3{font-size:15px; font-weight:700; margin:26px 0 12px;}
+    .mrizka{display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));}
+    .vzorek{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:18px;}
+    .vzorek .nazev{font-weight:700; font-size:14px; margin-bottom:3px;}
+    .vzorek .kod{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--text-ondark-mute); word-break:break-all;}
+    .pole{height:66px; border-radius:var(--r-sm); margin-bottom:11px; display:grid; place-items:center;
+      font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600;}
+    .pomer{display:inline-block; margin-top:7px; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600;
+      padding:2px 7px; border-radius:999px; background:rgba(19,102,62,.12); color:var(--c-ok-ink);}
+    .pomer.slabe{background:rgba(174,30,30,.12); color:var(--c-exekuce-ink);}
+    .radaTvaru{display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;}
+    .tvar{width:96px; height:70px; background:var(--ink-soft); border:1px solid var(--line-strong);
+      display:grid; place-items:center; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-ondark-mute);}
+    .pozn{font-size:13.5px; color:var(--text-ondark-mute); line-height:1.6; margin-top:14px; padding-left:14px; border-left:3px solid var(--accent-warm);}
+    .typ p, .typ div{margin-bottom:10px;}
+    .skala{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-ondark-mute); display:block; margin-top:2px;}
+  </style>
+</head>
+<body>
+<div class="pz">
+  <div class="eyebrow"><span class="live-dot"></span>Předloha</div>
+  <h1>Vizuální jazyk Parcelky</h1>
+  <p class="lede">Vzorník, podle kterého se web staví. Vznikl proto, že v šabloně bylo
+     <b>71 různých stínů a 19 různých zaoblení</b> — nic z toho nebylo špatně samo o sobě,
+     ale dohromady to nedávalo systém, takže se všechno opticky slilo dohromady. Tomu se říká
+     „suchý" web: technicky v pořádku, ale bez tvaru.</p>
+  <p class="lede">Tahle stránka není součástí webu (<code>noindex</code>). Je to nástroj:
+     když se přidává nový prvek, vybere se odsud — ne vymyslí znovu.</p>
+
+  <h2>1. Hloubka</h2>
+  <p>Čtyři stupně, víc ne. Každý má svůj úkol; když si prvek nevybere ani jeden, nejspíš žádný
+     nepotřebuje. Stíny jsou chladně modré, ne černé — černý stín na světlém pozadí dělá špínu.</p>
+  <div class="mrizka" id="hloubka"></div>
+  <div class="pozn">Pravidlo: <b>stupeň hloubky musí odpovídat tomu, jak moc prvek „leží nahoře"</b>.
+     Karta v seznamu je 1. Vyskakovací panel je 3. Když je všechno 2, nic nevystupuje.</div>
+
+  <h2>2. Tvary</h2>
+  <p>Pět zaoblení místo devatenácti. Malé prvky mají malý rádius, velké velký — jinak vypadá
+     drobný štítek jako nafouklá bublina a velká karta jako ostrý papír.</p>
+  <div class="radaTvaru" id="tvary"></div>
+
+  <h3>Rohová značka</h3>
+  <p>Vlastní tvarový motiv. Pozemek se v katastru zaměřuje do rohů — a přesně tohle si web bere:
+     dvě vlasové linky v rohu karty. Je to nenápadné, ale je to <b>naše</b>, ne kulatý obdélník
+     jako u všech ostatních.</p>
+  <div class="mrizka">
+    <div class="vzorek s-rohy"><div class="nazev">Karta s rohovou značkou</div>
+      <div class="kod">.s-rohy</div></div>
+    <div class="vzorek s-rohy s-rohy-med"><div class="nazev">Zvýrazněná (měděná)</div>
+      <div class="kod">.s-rohy.s-rohy-med</div></div>
+  </div>
+
+  <h3>Katastrální mřížka</h3>
+  <p>Jemná síť v pozadí sekce. Dělá to, co chybělo: dává ploše texturu, aniž by křičela.
+     Je tak slabá, že si jí nikdo přímo nevšimne — všimne si jen toho, že plocha není mrtvá.</p>
+  <div class="vzorek s-mrizka" style="height:130px; display:grid; place-items:center;">
+    <span class="kod">.s-mrizka</span></div>
+
+  <h2>3. Barvy</h2>
+  <p>U každé je změřený poměr jasu proti pozadí, na kterém se používá. Zelený štítek = projde
+     normou WCAG AA pro běžný text (4,5 : 1). Hlídá to <code>scripts/test-kontrast.mjs</code>.</p>
+  <div class="mrizka" id="barvy"></div>
+  <div class="pozn">Barvy s příponou <b>-ink</b> jsou pro <b>text</b>. Syté odstíny bez přípony
+     patří na puntík v mapě a na výplň štítku — jako písmo by neprošly normou.</div>
+
+  <h2>4. Písmo</h2>
+  <p>Hierarchii dělá velikost a váha, ne bledost. Nic pod 600 u nadpisů.</p>
+  <div class="typ">
+    <div style="font-size:44px; font-weight:800; letter-spacing:-0.028em; line-height:1.06;">Nadpis stránky<span class="skala">44 px · 800 · −0,028 em</span></div>
+    <div style="font-size:30px; font-weight:800; letter-spacing:-0.026em;">Nadpis sekce<span class="skala">30 px · 800 · −0,026 em</span></div>
+    <div style="font-size:20px; font-weight:700; letter-spacing:-0.012em;">Nadpis bloku<span class="skala">20 px · 700 · −0,012 em</span></div>
+    <p style="font-size:16px; max-width:64ch;">Běžný text. Řádkování 1,58 a maximálně 64 znaků na řádek — delší řádek se špatně sleduje a oko ztrácí návaznost.<span class="skala">16 px · 400 · řádkování 1,58</span></p>
+    <p style="font-size:13.5px; color:var(--text-ondark-mute);">Doplňkový text a popisky.<span class="skala">13,5 px · 400 · tlumená</span></p>
+    <p class="mono" style="font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--copper-bright);">Nadřádek · strojové písmo<span class="skala">12 px · mono · verzálky</span></p>
+  </div>
+
+  <h2>5. Odstupy</h2>
+  <p>Násobky čtyřky. Když se míchají odstupy 13, 17 a 22 px, oko to nepozná jako rytmus,
+     jen jako nepořádek.</p>
+  <div id="odstupy" style="display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;"></div>
+</div>
+
+<script>
+/* Vzorky se generují z proměnných v CSS — vzorník tím nemůže tvrdit něco
+   jiného, než co je doopravdy v šabloně. */
+(function () {
+  var S = getComputedStyle(document.documentElement);
+  var v = function (n) { return S.getPropertyValue(n).trim(); };
+
+  /* --- hloubka --- */
+  var hloubka = [
+    ['0 — v ploše', '--e0', 'vstupy, zapuštěné prvky'],
+    ['1 — karta', '--e1', 'karty v seznamu, štítky'],
+    ['2 — zvednuté', '--e2', 'hover karty, rozbalovačka'],
+    ['3 — nad obsahem', '--e3', 'panel detailu, modální okno, toast']
+  ];
+  document.getElementById('hloubka').innerHTML = hloubka.map(function (h) {
+    return '<div class="vzorek" style="box-shadow:' + (v(h[1]) || 'none') + '">' +
+      '<div class="nazev">' + h[0] + '</div>' +
+      '<div class="kod">var(' + h[1] + ')</div>' +
+      '<div class="kod" style="margin-top:7px;color:var(--text-ondark)">' + h[2] + '</div></div>';
+  }).join('');
+
+  /* --- tvary --- */
+  var tvary = [['--r-xs','drobné'],['--r-sm','tlačítka'],['--r-md','karty'],['--r-lg','panely'],['--r-pill','štítky']];
+  document.getElementById('tvary').innerHTML = tvary.map(function (t) {
+    return '<div><div class="tvar" style="border-radius:' + v(t[0]) + '">' + v(t[0]) + '</div>' +
+      '<div class="kod" style="text-align:center;margin-top:6px">' + t[1] + '</div></div>';
+  }).join('');
+
+  /* --- barvy s měřeným kontrastem --- */
+  function lum(c) { var f = function (x) { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
+    return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); }
+  function naRgb(s) { var d = document.createElement('div'); d.style.color = s; document.body.appendChild(d);
+    var m = /rgba?\(([^)]+)\)/.exec(getComputedStyle(d).color); d.remove();
+    return m ? m[1].split(',').slice(0, 3).map(parseFloat) : [0, 0, 0]; }
+  function pomer(a, b) { var A = lum(naRgb(a)), B = lum(naRgb(b));
+    return (Math.max(A, B) + 0.05) / (Math.min(A, B) + 0.05); }
+
+  var barvy = [
+    ['Text', '--text-ondark', '#FFFFFF', 'hlavní písmo'],
+    ['Text tlumený', '--text-ondark-mute', '#FFFFFF', 'popisky'],
+    ['Akcent', '--copper-bright', '#FFFFFF', 'odkazy, čísla'],
+    ['Měď', '--accent-warm', '#FFFFFF', 'důraz — střídmě'],
+    ['Na prodej', '--c-sale-ink', '#FFFFFF', 'text štítku'],
+    ['Dražba', '--c-drazba-ink', '#FFFFFF', 'text štítku'],
+    ['Exekuce', '--c-exekuce-ink', '#FFFFFF', 'text štítku'],
+    ['V pořádku', '--c-ok-ink', '#FFFFFF', 'potvrzení']
+  ];
+  document.getElementById('barvy').innerHTML = barvy.map(function (b) {
+    var barva = v(b[1]), p = pomer(barva, b[2]), ok = p >= 4.5;
+    return '<div class="vzorek">' +
+      '<div class="pole" style="background:' + b[2] + '; color:' + barva + '; border:1px solid var(--line)">Aa · 123</div>' +
+      '<div class="nazev">' + b[0] + '</div><div class="kod">var(' + b[1] + ') · ' + barva + '</div>' +
+      '<div class="kod" style="margin-top:4px">' + b[3] + '</div>' +
+      '<span class="pomer' + (ok ? '' : ' slabe') + '">' + p.toFixed(2) + ' : 1</span></div>';
+  }).join('');
+
+  /* --- odstupy --- */
+  document.getElementById('odstupy').innerHTML = [4, 8, 12, 16, 24, 32, 48, 64].map(function (n) {
+    return '<div style="text-align:center"><div style="width:' + n + 'px; height:' + n +
+      'px; background:var(--accent-warm); border-radius:2px;"></div>' +
+      '<div class="kod" style="margin-top:6px">' + n + '</div></div>';
+  }).join('');
+})();
+</script>
+</body>
+</html>

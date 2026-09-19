@@ -80,6 +80,9 @@ jobs:
       - name: Statická kontrola skriptů
         run: node scripts/test-staticka.mjs
 
+      - name: Vizuální jazyk (hloubka a tvary z předlohy)
+        run: node scripts/test-predloha.mjs
+
   # Chat se špatně zkouší ručně: potřebuje dva účty, inzerát a trpělivost.
   # Tenhle běh projde celou cestu v opravdovém Chromiu — zájemce napíše,
   # majitel to uvidí i se zavřeným menu na mobilu, odpoví, a odpověď dorazí
