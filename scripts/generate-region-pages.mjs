@@ -191,6 +191,7 @@ ${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\
       <a href="index.html#mapa">Mapa</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
       <a href="index.html#faq">Dotazy</a>
+      <a href="upozorneni.html" id="nav-upozorneni">Upozornění</a>
       <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
       <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
       <a href="muj-inzerat.html">Můj profil</a>
@@ -226,6 +227,7 @@ function footer(){
 <script src="js/config.js?${V}" defer></script>
 <script src="js/auth.js?${V}" defer></script>
 <script src="js/hlidani-logika.js?${V}" defer></script>
+<script src="js/upozorneni-feed.js?${V}" defer></script>
 <script src="js/upozorneni.js?${V}" defer></script>
 </body>
 </html>

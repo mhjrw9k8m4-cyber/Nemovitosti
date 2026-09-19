@@ -249,6 +249,23 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 /* Toast */
 .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px); z-index:4000; max-width:calc(100% - 32px); background:var(--ink-soft2); border:1px solid var(--copper); color:var(--text-ondark); font-size:13.5px; font-weight:500; padding:13px 20px; border-radius:10px; box-shadow:0 14px 36px -10px rgba(0,0,0,0.7); opacity:0; transition:opacity .3s var(--ease), transform .3s var(--ease); pointer-events:none;}
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+/* Vyskakovací upozornění na novinku. Vlastní, ne sdílený .toast — ten
+   používá mapa pro potvrzení akcí a tyhle dvě věci se nesmí přebíjet.
+   Ukazuje se JEN když počet novinek vzroste, tedy vzácně: návody na
+   upozornění se shodují, že častý toast si lidé odnaučí vnímat. */
+.upo-toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px); z-index:4100;
+  max-width:calc(100% - 28px); width:380px; display:flex; gap:11px; align-items:flex-start;
+  background:var(--card); border:1px solid var(--line-strong); border-left:4px solid var(--copper);
+  color:var(--text-ondark); padding:13px 14px; border-radius:13px;
+  box-shadow:0 18px 44px -14px rgba(0,0,0,.55); opacity:0; transition:opacity .28s var(--ease), transform .28s var(--ease);}
+.upo-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+.upo-toast .t{flex:1; min-width:0;}
+.upo-toast b{display:block; font-size:14px; margin-bottom:2px;}
+.upo-toast a{font-size:13px; font-weight:700; color:var(--copper);}
+.upo-toast button{flex:none; appearance:none; border:0; background:none; color:var(--text-ondark-mute);
+  font-size:19px; line-height:1; cursor:pointer; padding:2px 4px; border-radius:6px;}
+.upo-toast button:hover{color:var(--text-ondark);}
+@media (prefers-reduced-motion: reduce){ .upo-toast{transition:opacity .01s;} }
 
 .btn-primary{background:var(--brand-grad); color:#fff; font-weight:700; font-size:14px; padding:10px 20px; border-radius:9px; text-decoration:none; border:1px solid rgba(122,110,230,0.55); box-shadow:0 8px 22px -8px rgba(74,80,220,0.6); transition:filter .15s ease, transform .1s ease, box-shadow .15s ease; white-space:nowrap; cursor:pointer;}
 .btn-primary:hover{filter:brightness(1.06); box-shadow:0 12px 28px -8px rgba(74,80,220,0.68);}

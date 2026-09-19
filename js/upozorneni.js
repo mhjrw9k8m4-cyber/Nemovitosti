@@ -18,8 +18,9 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var KLIC = 'pk_upozorneni_v1';
-  var PLATNOST = 60000;          // 1 minuta
+  var KLIC = 'pk_upozorneni_v1';        // krátkodobá paměť mezi stránkami
+  var ZNAMO = 'pk_upozorneni_znamo_v1'; // poslední počet, který uživatel viděl
+  var PLATNOST = 60000;                 // 1 minuta
   var DATA_URL = 'data/opportunities.json';
 
   // Na odznaku se nad devítku píše „9+" — delší číslo by rozhodilo menu.
@@ -81,10 +82,55 @@
   }
 
   function vykresli(zpravy, hlidani) {
+    var celkem = zpravy + hlidani;
+    vykresliOdkaz(document.getElementById('nav-upozorneni'), celkem, 'novinek');
     vykresliOdkaz(document.getElementById('nav-zpravy'), zpravy, 'nepřečtených zpráv');
     vykresliOdkaz(document.getElementById('nav-hlidani'), hlidani, 'nových pozemků z hlídání');
-    vykresliTecku(zpravy + hlidani);
-    try { document.title = titulekSPoctem(document.title, zpravy + hlidani); } catch (e) {}
+    vykresliTecku(celkem);
+    try { document.title = titulekSPoctem(document.title, celkem); } catch (e) {}
+    zvazToast(zpravy, hlidani);
+  }
+
+  /* Vyskakovací upozornění. Ukáže se JEN když počet vzroste oproti tomu, co
+     uživatel naposledy viděl — ne při každém načtení stránky. Návody na
+     upozornění se v tomhle shodují: toast, který vyskakuje pořád, si lidé
+     odnaučí vnímat a pak jim unikne i ten, na kterém záleží. */
+  function zvazToast(zpravy, hlidani) {
+    var celkem = zpravy + hlidani;
+    var ulozene = null;
+    try { ulozene = sessionStorage.getItem(ZNAMO); } catch (e) {}
+    try { sessionStorage.setItem(ZNAMO, String(celkem)); } catch (e) {}
+    // Poprvé v relaci se nic nevyskakuje: uživatel právě přišel a číslo
+    // v menu mu to řekne samo. Pozná se to podle TOHO, ŽE ZÁZNAM CHYBÍ —
+    // ne podle nuly. Skok z nuly na tři je totiž přesně ten případ, kdy
+    // upozornění vyskočit má.
+    if (ulozene === null) return;
+    var drive = parseInt(ulozene, 10);
+    if (!isFinite(drive)) return;
+    if (celkem <= drive) return;
+    ukazToast(celkem - drive, zpravy, hlidani);
+  }
+
+  function ukazToast(pribylo, zpravy, hlidani) {
+    if (document.querySelector('.upo-toast')) return;
+    var F = window.PKFeed;
+    var co = F
+      ? (hlidani && !zpravy ? F.cislovka(pribylo, ['nový pozemek', 'nové pozemky', 'nových pozemků'])
+        : zpravy && !hlidani ? F.cislovka(pribylo, ['nová zpráva', 'nové zprávy', 'nových zpráv'])
+        : F.cislovka(pribylo, ['novinka', 'novinky', 'novinek']))
+      : pribylo + ' novinek';
+    var el = document.createElement('div');
+    el.className = 'upo-toast';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
+    el.innerHTML = '<div class="t"><b></b><a href="upozorneni.html">Zobrazit upozornění</a></div>' +
+                   '<button type="button" aria-label="Zavřít">×</button>';
+    el.querySelector('b').textContent = 'Přibylo ' + co;
+    document.body.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add('show'); });
+    var zavri = function () { el.classList.remove('show'); setTimeout(function () { el.remove(); }, 320); };
+    el.querySelector('button').addEventListener('click', zavri);
+    setTimeout(zavri, 9000);
   }
 
   /* Kolik nových pozemků čeká. Nejdřív se zeptáme na uložená hledání —
@@ -108,14 +154,14 @@
   function start() {
     // Na stránce, které se počet týká, by odznak po přečtení lhal.
     var tady = location.pathname;
-    var naZpravach = /zpravy\.html$/i.test(tady);
-    var naHlidani = /hlidani\.html$/i.test(tady);
-    if (naZpravach || naHlidani) { zapomen(); return; }
+    // Na stránkách, které novinky samy ukazují, by odznak po přečtení lhal.
+    if (/(zpravy|hlidani|upozorneni)\.html$/i.test(tady)) { zapomen(); return; }
 
     var spust = function () {
       var A = window.PKAuth;
       if (!A || !A.loggedIn || !A.loggedIn()) return;
-      if (!document.getElementById('nav-zpravy') && !document.getElementById('nav-hlidani')) return;
+      if (!document.getElementById('nav-zpravy') && !document.getElementById('nav-hlidani') &&
+          !document.getElementById('nav-upozorneni')) return;
 
       var ted = Date.now();
       var z = nactiZPameti(ted);

@@ -647,6 +647,31 @@ async function main() {
   if (geoCacheDirty) writeFileSync(GEOCACHE, JSON.stringify(GEO_CACHE, null, 0) + '\n', 'utf8');
   console.log(`Zpřesněno podle názvu KÚ: ${refined}/${fresh.length}.`);
 
+  // Kdy se pozemek objevil poprvé. Data to dosud nenesla, takže se nedalo
+  // říct „přibylo dnes" — šlo jen spočítat, co uživatel ještě neviděl, a to
+  // je něco jiného: po smazání historie by byl najednou nový úplně všechno.
+  // Datum se přenáší ze starého souboru podle otisku; co tam nebylo, dostane
+  // dnešek. Otisk musí být shodný s keyOf() v js/hlidani-logika.js a
+  // scripts/send-alerts.mjs, jinak by se pozemky „obnovovaly" při každém běhu.
+  const bezDiakritiky = (x) => String(x == null ? '' : x)
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const otisk = (o) => [o.type || '', bezDiakritiky(o.okres), bezDiakritiky(o.place),
+    o.parcel || '', o.price || '', o.area || ''].join('|').slice(0, 240);
+  let drive = new Map();
+  try {
+    for (const o of (JSON.parse(readFileSync(OUT, 'utf8')).opportunities || [])) {
+      if (o.first_seen) drive.set(otisk(o), o.first_seen);
+    }
+  } catch { /* první běh — všechno je nové */ }
+  const dnesISO = new Date().toISOString().slice(0, 10);
+  let novych = 0;
+  for (const o of fresh) {
+    const d = drive.get(otisk(o));
+    if (d) { o.first_seen = d; } else { o.first_seen = dnesISO; novych++; }
+  }
+  console.log(`Poprvé viděno dnes: ${novych} z ${fresh.length}` +
+    (drive.size ? '' : ' (první běh se značkováním — všechno dostalo dnešek)'));
+
   const payload = {
     updated: new Date().toISOString().slice(0, 10),
     source: 'Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy, příp. Sreality přes Apify)',

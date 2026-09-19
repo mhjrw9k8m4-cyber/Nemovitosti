@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-  <title>Hlídání lokality — Parcelka</title>
-  <meta name="description" content="Potvrzení a odhlášení hlídání lokality na Parcelce.">
+  <title>Upozornění — Parcelka</title>
+  <meta name="description" content="Co je nového: zprávy od zájemců a majitelů a nové pozemky z vašeho hlídání — na jednom místě.">
   <meta name="theme-color" content="#EDEFF4">
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -13,67 +13,152 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css?v=20260902f">
   <style>
-    #obsah{background:var(--bg); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
-    .up-card{max-width:460px; width:100%; text-align:center; background:var(--ink-soft); border:1px solid var(--line);
-      border-radius:18px; padding:34px 26px; color:var(--text-ondark); box-shadow:0 20px 44px -22px rgba(0,0,0,.7);}
-    .up-logo{font-size:22px; font-weight:800; color:var(--copper-bright); margin-bottom:18px;}
-    .up-ic{width:58px; height:58px; margin:0 auto 16px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--ink-soft2);}
-    .up-ic svg{width:30px; height:30px;}
-    .up-card h1{font-size:21px; font-weight:700; margin-bottom:10px; line-height:1.25;}
-    .up-card p{font-size:15px; color:var(--text-ondark-mute); line-height:1.55;}
-    .up-card .btn-primary{margin-top:22px; display:inline-block;}
-    .ok{color:var(--c-sale);} .bad{color:var(--c-exekuce);}
+    .add-hero.app-hero{padding:30px 0 4px;}
+    .up-wrap{max-width:760px; margin:0 auto;}
+
+    /* Lišta nad seznamem: filtry vlevo, „označit vše" vpravo. Obojí musí
+       být na dosah palce, proto je to jeden řádek, který se na úzkém
+       displeji zalomí, ne vodorovný posuvník. */
+    .up-bar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:14px;}
+    .up-filters{display:flex; gap:7px; flex-wrap:wrap;}
+    .up-f{appearance:none; border:1.5px solid var(--line-strong); background:var(--card); color:var(--text-ondark);
+      padding:8px 14px; border-radius:999px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer;
+      display:inline-flex; align-items:center; gap:7px; transition:border-color .15s ease, background .15s ease;}
+    .up-f:hover{border-color:var(--copper-bright);}
+    .up-f[aria-pressed="true"]{background:var(--brand-grad); border-color:transparent; color:#fff;}
+    .up-f .n{font-size:11.5px; font-weight:700; background:rgba(0,0,0,.14); padding:1px 6px; border-radius:999px;}
+    .up-f[aria-pressed="true"] .n{background:rgba(255,255,255,.26);}
+    .up-clear{appearance:none; border:0; background:none; color:var(--copper); font:inherit; font-size:13.5px;
+      font-weight:700; cursor:pointer; padding:8px 4px; text-decoration:underline; text-underline-offset:3px;}
+    .up-clear:disabled{color:var(--text-ondark-mute); cursor:default; text-decoration:none;}
+
+    .up-group{margin:20px 0 10px; font-size:12px; font-weight:800; letter-spacing:.06em;
+      text-transform:uppercase; color:var(--text-ondark-mute);}
+    .up-card{background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden;}
+
+    /* Jedno upozornění. Vlevo ikona s barvou podle druhu, uprostřed text,
+       vpravo čas. Tečka „nepřečteno" je vedle ikony, ne přes ni. */
+    .up-item{display:flex; gap:13px; padding:15px 16px; border-top:1px solid var(--line); align-items:flex-start;}
+    .up-item:first-child{border-top:0;}
+    .up-ico{flex:none; width:38px; height:38px; border-radius:11px; display:grid; place-items:center; position:relative;}
+    .up-ico svg{width:19px; height:19px;}
+    .up-ico.zprava{background:rgba(74,80,220,.12); color:#4A50DC;}
+    .up-ico.pozemky{background:rgba(31,122,77,.12); color:#1F7A4D;}
+    .up-ico .dot{position:absolute; top:-3px; right:-3px; width:10px; height:10px; border-radius:50%;
+      background:var(--copper); box-shadow:0 0 0 2.5px var(--card);}
+    .up-main{min-width:0; flex:1;}
+    .up-head{display:flex; gap:8px; align-items:baseline; flex-wrap:wrap;}
+    .up-title{font-weight:700; font-size:15px; line-height:1.3;}
+    .up-time{font-size:11.5px; color:var(--text-ondark-mute); margin-left:auto; flex:none; white-space:nowrap;}
+    .up-where{font-size:13px; color:var(--text-ondark-mute); margin-top:2px;}
+    .up-quote{font-size:13.5px; margin-top:6px; padding-left:10px; border-left:2.5px solid var(--line-strong);
+      color:var(--text-ondark); line-height:1.45;}
+    .up-list{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:4px;}
+    .up-list li{font-size:13.5px; line-height:1.4; display:flex; gap:7px;}
+    .up-list li::before{content:"·"; color:var(--text-ondark-mute); flex:none;}
+    .up-more{font-size:12.5px; color:var(--text-ondark-mute); margin-top:5px;}
+    .up-acts{display:flex; gap:8px; flex-wrap:wrap; margin-top:11px;}
+    .up-a{display:inline-flex; align-items:center; padding:8px 14px; border-radius:10px; font-size:13.5px;
+      font-weight:700; text-decoration:none; border:1.5px solid var(--line-strong); color:var(--text-ondark); background:var(--card);}
+    .up-a.pri{background:var(--brand-grad); border-color:transparent; color:#fff;}
+    .up-a:hover{border-color:var(--copper-bright);}
+
+    .up-empty{padding:44px 24px; text-align:center; color:var(--text-ondark-mute);}
+    .up-empty svg{width:44px; height:44px; opacity:.4; margin-bottom:12px;}
+    .up-empty b{display:block; color:var(--text-ondark); font-size:16px; margin-bottom:6px;}
+    .up-empty .up-a{margin-top:16px;}
+    .up-load{padding:40px; text-align:center; color:var(--text-ondark-mute); font-size:14px;}
+
+    /* Nastavení — návody na upozornění se shodují v jednom: bez možnosti
+       si to vypnout se z upozornění stane otrava a lidé je přestanou číst. */
+    .up-prefs{margin-top:22px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px;}
+    .up-prefs h2{font-size:14px; margin:0 0 4px;}
+    .up-prefs p{font-size:12.5px; color:var(--text-ondark-mute); margin:0 0 12px;}
+    .up-sw{display:flex; align-items:center; gap:11px; padding:9px 0; font-size:14px; cursor:pointer;}
+    .up-sw input{width:19px; height:19px; accent-color:#4A50DC; cursor:pointer; flex:none;}
+    .up-note{font-size:12.5px; color:var(--text-ondark-mute); line-height:1.55; margin-top:12px;
+      padding-top:12px; border-top:1px solid var(--line);}
   </style>
 </head>
 <body>
-<main id="obsah">
-  <div class="up-card">
-    <div class="up-logo">Parcelka</div>
-    <div class="up-ic" id="up-ic" aria-hidden="true"></div>
-    <h1 id="up-title">Zpracovávám…</h1>
-    <p id="up-text">Chvíli strpení.</p>
-    <a class="btn-primary" href="index.html">Zpět na mapu</a>
+
+<a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+
+<header id="header">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="Parcelka — domů"><span class="logo-mark" aria-hidden="true"></span>Parcelka</a>
+    <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
+    <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+        <nav id="nav" aria-label="Hlavní navigace">
+      <a href="index.html#mapa">Mapa</a>
+      <a href="cena-pozemku.html">Ceny pozemků</a>
+      <a href="index.html#faq">Dotazy</a>
+      <a href="upozorneni.html" id="nav-upozorneni">Upozornění</a>
+      <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
+      <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
+      <a href="muj-inzerat.html">Můj profil</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
+      <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
+    </nav>
   </div>
+</header>
+
+<main id="obsah">
+  <section class="add-hero app-hero">
+    <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+    <div class="wrap add-wrap">
+      <div class="eyebrow"><span class="live-dot"></span>Upozornění</div>
+      <h1>Co je <em>nového.</em></h1>
+      <p class="sub">Zprávy od lidí a nové pozemky z vašeho hlídání — na jednom místě, bez hledání po webu.</p>
+    </div>
+  </section>
+
+  <section class="section app-section">
+    <div class="wrap">
+      <div class="up-wrap">
+        <!-- Hlášení pro odečítače obrazovky. Musí být v stránce od začátku a MIMO
+             překreslovanou část: oblast, která vznikne a hned se naplní, se
+             nestihne zaregistrovat a hlášení zapadne. „polite" proto, že jde
+             o novinky, ne o chybu — „assertive" by skákalo do řeči. -->
+        <div id="up-live" role="status" aria-live="polite" class="visually-hidden"></div>
+        <div id="up-root"><div class="up-card"><div class="up-load">Načítám…</div></div></div>
+      </div>
+    </div>
+  </section>
 </main>
+
+<footer>
+  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+</footer>
+
 <script src="js/config.js?v=20260902f"></script>
+<script src="js/auth.js?v=20260902f"></script>
+<script src="js/hlidani-logika.js?v=20260926b"></script>
+<script src="js/upozorneni-feed.js?v=20260926c"></script>
+<script src="js/upozorneni.js?v=20260926c"></script>
+<script src="js/centrum.js?v=20260926c"></script>
 <script>
+/* Mobilní menu (hamburger) — tato stránka nenačítá main.js. */
 (function () {
-  var URL_ = (window.PK_SUPABASE_URL || ''), KEY = (window.PK_SUPABASE_KEY || '');
-  var q = location.search;
-  function param(n) { var m = new RegExp('[?&]' + n + '=([^&]+)').exec(q); try { return m ? decodeURIComponent(m[1]) : ''; } catch (e) { return m ? m[1] : ''; } }
-  var confirmTok = param('confirm'), unsubTok = param('unsubscribe');
-  var icon = document.getElementById('up-ic'), title = document.getElementById('up-title'), text = document.getElementById('up-text');
-  var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#4FB487" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
-  var BELL = '<svg viewBox="0 0 24 24" fill="none" stroke="#6E9BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>';
-  var X = '<svg viewBox="0 0 24 24" fill="none" stroke="#DE7259" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
-  function show(ic, t, tx, cls) { icon.innerHTML = ic; title.innerHTML = t; title.className = cls || ''; text.innerHTML = tx; }
-
-  function rpc(fn, args) {
-    return fetch(URL_ + '/rest/v1/rpc/' + fn, {
-      method: 'POST',
-      headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify(args || {})
-    }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+  var toggle = document.querySelector('.nav-toggle');
+  var nav = document.getElementById('nav');
+  if (!toggle || !nav) return;
+  function closeNav() {
+    nav.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('nav-open');
   }
-
-  if (!URL_ || !KEY) { show(X, 'Něco se nepovedlo', 'Zkuste to prosím později.', 'bad'); return; }
-
-  if (confirmTok) {
-    rpc('confirm_watch', { p_token: confirmTok }).then(function (res) {
-      if (res === true) show(CHECK, 'Hotovo — hlídání potvrzeno', 'Od teď vám dáme vědět e-mailem, jakmile se objeví nová příležitost. Kdykoli se můžete odhlásit odkazem v e-mailu.', 'ok');
-      else show(BELL, 'Odkaz už neplatí', 'Buď je hlídání už potvrzené, nebo odkaz vypršel. Klidně si hlídání nastavte znovu na mapě.', '');
-    });
-  } else if (unsubTok) {
-    rpc('unsubscribe_watch', { p_token: unsubTok }).then(function (res) {
-      if (res === true) show(CHECK, 'Odhlášeno', 'Už vám nebudeme posílat upozornění. Mrzí nás to — kdykoli se můžete přihlásit zpět.', 'ok');
-      else show(X, 'Odkaz už neplatí', 'Vypadá to, že jste už odhlášeni nebo odkaz vypršel.', '');
-    });
-  } else {
-    show(BELL, 'Hlídání lokality', 'Tuto stránku otevřete odkazem z e-mailu (potvrzení nebo odhlášení). Hlídání si nastavíte přímo na mapě.', '');
-  }
+  toggle.addEventListener('click', function () {
+    var open = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+    document.body.classList.toggle('nav-open', open);
+  });
+  nav.addEventListener('click', function (e) { if (e.target.tagName === 'A' && nav.classList.contains('open')) closeNav(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNav(); });
 })();
 </script>
 </body>

@@ -17,6 +17,7 @@ const ucty = {                       // token → uid
   'tok-majitel': UID_MAJITEL, 'tok-zajemce': UID_ZAJEMCE, 'tok-zajemce2': UID_ZAJEMCE2,
 };
 let zpravy = [];                     // {id, created_at, listing_id, buyer_id, sender_id, body, read_at}
+const videno = new Map();            // id hledání → klíče pozemků označených za viděné
 let poradi = 0;
 export function stav() { return zpravy; }
 
@@ -99,8 +100,15 @@ const server = http.createServer((req, res) => {
       // na okres Tábor, nic zatím viděného: co sedí, je nové.
       if (fn === 'my_searches') {
         return send(200, JSON.stringify(uid === UID_MAJITEL
-          ? [{ id: 's1', label: 'Tábor', okres: 'Tábor', druh: '', ptype: '', max_price: 0, min_area: 0, features: [], seen_keys: [] }]
+          ? [{ id: 's1', label: 'Tábor', okres: 'Tábor', druh: '', ptype: '', max_price: 0, min_area: 0,
+               features: [], seen_keys: videno.get('s1') || [] }]
           : []));
+      }
+
+      // Označení pozemků za viděné — po něm musí upozornění z centra zmizet.
+      if (fn === 'mark_search_seen') {
+        videno.set(args.p_id, (videno.get(args.p_id) || []).concat(args.p_keys || []));
+        return send(200, 'null');
       }
 
       if (fn === 'unread_count') {

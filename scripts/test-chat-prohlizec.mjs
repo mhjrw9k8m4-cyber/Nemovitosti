@@ -152,7 +152,88 @@ je('odznak hlídání tím ale nezhasne', await pPo.locator('#nav-hlidani .nav-u
 je('tečka na menu svítí dál kvůli hlídání', await pPo.locator('.nav-toggle .nav-dot').isVisible(), true);
 await pPo.close();
 
-/* ---------- 8. žádné chyby v konzoli ---------- */
+/* ---------- 8. centrum upozornění ---------- */
+// Odznak řekne, že něco je. Teprve tahle stránka řekne CO a od koho —
+// a to je celý smysl centra upozornění.
+// Majitelova konverzace z kroku 3 se musí zavřít. Dokud je otevřená, ptá
+// se každých 15 s na nové zprávy a tím si je rovnou označuje za přečtené —
+// je to správné chování aplikace, ale nepřečtená zpráva by tu nevydržela.
+await pM.close();
+
+const pC = await cMajitel.newPage();
+pC.on('pageerror', (e) => chybyKonzole.push(String(e)));
+// ať je zas jedna nepřečtená zpráva, na které jde centrum ukázat
+await fetch(`${BASE}/rest/v1/rpc/send_message`, { method: 'POST',
+  headers: { Authorization: 'Bearer tok-zajemce', 'Content-Type': 'application/json' },
+  body: JSON.stringify({ p_listing: LISTING, p_buyer: null, p_body: 'Ještě dotaz na přístupovou cestu.' }) });
+
+await pC.goto(`${BASE}/upozorneni.html`);
+await pC.waitForSelector('.up-item', { timeout: 15000 });
+je('centrum ukáže obojí — zprávu i pozemky', await pC.locator('.up-item').count(), 2);
+je('u zprávy je vidět ukázka textu',
+  (await pC.textContent('.up-ico.zprava ~ .up-main .up-quote')).includes('přístupovou cestu'), true);
+je('u pozemků je vidět, co přibylo',
+  await pC.locator('.up-ico.pozemky ~ .up-main .up-list li').count() > 0, true);
+je('nepřečtené má tečku', await pC.locator('.up-ico .dot').count(), 2);
+je('je tam živá oblast pro odečítač obrazovky',
+  await pC.getAttribute('#up-live', 'aria-live'), 'polite');
+
+// filtry
+await pC.click('[data-f="zpravy"]');
+await pC.waitForFunction(() => document.querySelectorAll('.up-item').length === 1, null, { timeout: 5000 });
+je('filtr Zprávy nechá jen zprávy', await pC.locator('.up-ico.zprava').count(), 1);
+je('filtr Zprávy schová pozemky', await pC.locator('.up-ico.pozemky').count(), 0);
+je('vybraný filtr je označený i pro odečítač',
+  await pC.getAttribute('[data-f="zpravy"]', 'aria-pressed'), 'true');
+await pC.click('[data-f="vse"]');
+await pC.waitForFunction(() => document.querySelectorAll('.up-item').length === 2, null, { timeout: 5000 });
+
+// nastavení: co nechci vidět
+await pC.click('#pf-p');
+await pC.waitForFunction(() => document.querySelectorAll('.up-ico.pozemky').length === 0, null, { timeout: 5000 });
+je('vypnutí pozemků je schová', await pC.locator('.up-ico.pozemky').count(), 0);
+await pC.click('#pf-p');
+await pC.waitForFunction(() => document.querySelectorAll('.up-ico.pozemky').length === 1, null, { timeout: 5000 });
+
+// označit vše jako viděné
+await pC.click('#up-all');
+await pC.waitForFunction(() => document.querySelectorAll('.up-ico.pozemky').length === 0, null, { timeout: 8000 });
+je('po označení pozemky z centra zmizí', await pC.locator('.up-ico.pozemky').count(), 0);
+je('zpráva tím ale nezmizí', await pC.locator('.up-ico.zprava').count(), 1);
+je('odečítači se řekne, co se stalo',
+  (await pC.textContent('#up-live')).includes('viděné'), true);
+
+// a po obnovení stránky to platí dál (server si to opravdu zapsal)
+await pC.reload();
+await pC.waitForSelector('.up-item', { timeout: 15000 });
+je('označení přežije obnovení stránky', await pC.locator('.up-ico.pozemky').count(), 0);
+await pC.close();
+
+/* ---------- 9. vyskakovací upozornění jen při přírůstku ---------- */
+const pT = await cMajitel.newPage();
+pT.on('pageerror', (e) => chybyKonzole.push(String(e)));
+await pT.goto(`${BASE}/pozemky-okres-tabor.html`);
+await pT.waitForTimeout(1500);
+je('při prvním příchodu nic nevyskakuje', await pT.locator('.upo-toast').count(), 0);
+
+// jako by mezitím něco přibylo: snížíme poslední známý počet a zahodíme paměť
+await pT.evaluate(() => {
+  sessionStorage.setItem('pk_upozorneni_znamo_v1', '0');
+  sessionStorage.removeItem('pk_upozorneni_v1');
+});
+await pT.reload();
+await pT.waitForSelector('.upo-toast.show', { timeout: 15000 });
+je('při přírůstku vyskočí upozornění', await pT.locator('.upo-toast').isVisible(), true);
+je('a vede do centra',
+  (await pT.getAttribute('.upo-toast a', 'href')), 'upozorneni.html');
+je('vyskakovací upozornění je oznámeno šetrně, ne přes hlasitý alert',
+  await pT.getAttribute('.upo-toast', 'aria-live'), 'polite');
+await pT.click('.upo-toast button');
+await pT.waitForFunction(() => !document.querySelector('.upo-toast'), null, { timeout: 5000 });
+je('jde zavřít', await pT.locator('.upo-toast').count(), 0);
+await pT.close();
+
+/* ---------- 10. žádné chyby v konzoli ---------- */
 je('na stránkách nespadl žádný skript', chybyKonzole, []);
 
 console.log('\nChat v prohlížeči: ' + (ok + chyb) + ' kontrol');
