@@ -1,0 +1,58 @@
+name: Testy a kontrola kódu
+
+# Pustí se na každý push a na každý pull request. Chytá dvě věci, které
+# se jinak poznají až na živém webu:
+#   1) překlep nebo volání funkce, která neexistuje (to byl případ
+#      closeFeedback — chyba při každém stisku Escape),
+#   2) rozbitou kontrolu zadaných údajů (testy v scripts/test-kontrola.mjs).
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch: {}
+
+jobs:
+  testy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Syntaxe všech skriptů
+        run: |
+          set -e
+          for f in js/*.js scripts/*.mjs api/*.js; do
+            [ -f "$f" ] || continue
+            node --check "$f"
+            echo "ok  $f"
+          done
+
+      - name: Platnost datových souborů
+        run: |
+          set -e
+          for f in data/*.json manifest.webmanifest vercel.json package.json; do
+            node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))"
+            echo "ok  $f"
+          done
+
+      - name: Kontroly zadaných údajů
+        run: node scripts/test-kontrola.mjs
+
+      - name: Souhrnné SQL odpovídá dílčím souborům
+        run: |
+          node scripts/build-sql.mjs
+          if ! git diff --quiet -- supabase/00-vse.sql; then
+            echo "::error::supabase/00-vse.sql neodpovídá souborům v supabase/. Spusťte 'node scripts/build-sql.mjs' a commitněte výsledek."
+            git diff --stat -- supabase/00-vse.sql
+            exit 1
+          fi
+          echo "ok  supabase/00-vse.sql je aktuální"
+
+      - name: Statická kontrola skriptů
+        run: node scripts/test-staticka.mjs

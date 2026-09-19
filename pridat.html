@@ -239,6 +239,7 @@
                 <input type="checkbox" id="p-souhlas" required>
                 <span>Potvrzuji, že jsem oprávněn pozemek nabízet, údaje jsou pravdivé a neporušuji cizí práva. Souhlasím s <a href="pravidla-inzerce.html" target="_blank" rel="noopener">pravidly inzerce</a>.</span>
               </label>
+              <p class="add-warn" id="p-varovani" role="status" aria-live="polite" hidden></p>
               <button type="submit" class="btn-primary btn-glow">Odeslat pozemek ke zveřejnění</button>
               <p class="add-msg" id="msg-prodej" role="status" aria-live="polite"></p>
             </form>
@@ -330,6 +331,7 @@
 
 <script src="js/config.js?v=20260902f" defer></script>
 <script src="js/auth.js?v=20260902f" defer></script>
+<script src="js/kontrola.js?v=20260902f" defer></script>
 <script src="js/pridat.js?v=20260902f" defer></script>
 <script>
 /* Zobrazit/skrýt heslo v přihlašovací kartě */

@@ -123,6 +123,12 @@ button, a, [role="button"], select, summary, .btn-primary, .btn-outline, .lp-btn
   .realtor-card:hover, .gl-item:hover, .price-card:not(.featured):hover,
   .ul-card:hover{ transform:none; }
 }
+/* Upozornění u formuláře — něco vypadá podezřele, ale odeslat to jde.
+   Odlišené od chyby: chyba je červená a zastaví, tohle jen zvedne obočí. */
+.add-warn{margin:0 0 12px; padding:10px 13px; border-radius:10px; font-size:13.5px; line-height:1.5;
+  background:rgba(255,196,60,0.10); border:1px solid rgba(255,196,60,0.35); color:var(--text-ondark);}
+.add-warn b{color:var(--c-warn, #E8B341);}
+
 /* Textové tlačítko uvnitř hlášky (např. „Začít znovu" u vráceného konceptu) */
 .link-btn{background:none; border:0; padding:0; margin:0; font:inherit; font-weight:600;
   color:var(--copper-bright); text-decoration:underline; cursor:pointer;}

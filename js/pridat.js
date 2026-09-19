@@ -135,6 +135,7 @@
      formát+kvalita+serverový filtr+možnost nahlásit zůstávají. */
   var PH_MAX = 8, PH_DIM = 1600, PH_MIN = 500, PH_Q = 0.82, PH_SRC_MAX = 25 * 1024 * 1024;
   var photoRejects = [];   // poslední zamítnuté fotky (pro hlášku uživateli)
+  var posledniVarovani = [];   // co je podezřelé, ale odeslání to nebrání
   function isImage(t) { return /^image\/(jpe?g|png|webp)$/i.test(t || ''); }
 
   // --- AI kontrola obsahu fotek (NSFWJS) — líně načtená, s vlastním modelem ---
@@ -176,6 +177,26 @@
     });
   }
 
+  /* Průměrný jas a jeho rozptyl. Obrázek zmenšíme na 32 px — na rozpoznání
+     „je to jednolitá plocha?" to bohatě stačí a je to okamžité. */
+  function zmerJas(img) {
+    try {
+      var n = 32;
+      var cv = document.createElement('canvas'); cv.width = n; cv.height = n;
+      var ctx = cv.getContext('2d');
+      ctx.drawImage(img, 0, 0, n, n);
+      var d = ctx.getImageData(0, 0, n, n).data;
+      var soucet = 0, soucetKvadratu = 0, pocet = n * n;
+      for (var i = 0; i < d.length; i += 4) {
+        var jas = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        soucet += jas; soucetKvadratu += jas * jas;
+      }
+      var prumer = soucet / pocet;
+      var rozptyl = Math.max(0, soucetKvadratu / pocet - prumer * prumer);
+      return { prumer: prumer, odchylka: Math.sqrt(rozptyl) };
+    } catch (e) { return null; }   // jiný původ obrázku apod. → neblokujeme
+  }
+
   // Jedna fotka přes všechny brány → { blob } nebo { reject: 'důvod' }
   function moderateAndProcess(file) {
     return new Promise(function (resolve) {
@@ -185,8 +206,18 @@
       var img = new Image();
       img.onload = function () {
         var w = img.naturalWidth, h = img.naturalHeight;
-        if (!w || !h) { URL.revokeObjectURL(url); resolve({ reject: 'poškozený obrázek' }); return; }
-        if (Math.max(w, h) < PH_MIN) { URL.revokeObjectURL(url); resolve({ reject: 'moc malý (nahrajte skutečnou fotku pozemku)' }); return; }
+        // Rozměry a tvar — pravidla jsou v js/kontrola.js, ať je lze otestovat.
+        var rozm = window.PKKontrola ? PKKontrola.fotkaRozmery(w, h)
+          : ((!w || !h) ? { ok: false, msg: 'poškozený obrázek' }
+            : (Math.max(w, h) < PH_MIN ? { ok: false, msg: 'moc malá' } : { ok: true }));
+        if (!rozm.ok) { URL.revokeObjectURL(url); resolve({ reject: rozm.msg }); return; }
+        // Jas a pestrost: vyfocená zeď, stůl nebo prst přes objektiv mají
+        // skoro nulový rozptyl jasu. Měříme na zmenšené kopii, ať to nic nestojí.
+        var obsah = zmerJas(img);
+        if (obsah && window.PKKontrola) {
+          var oc = PKKontrola.fotkaObsah(obsah.prumer, obsah.odchylka);
+          if (!oc.ok) { URL.revokeObjectURL(url); resolve({ reject: oc.msg }); return; }
+        }
         contentOk(img).then(function (ok) {
           if (!ok) { URL.revokeObjectURL(url); resolve({ reject: 'fotka vypadá nevhodně a nebyla přijata' }); return; }
           try {
@@ -224,6 +255,14 @@
     var fEl = document.getElementById('p-fotky');
     var files = (fEl && fEl.files) ? [].slice.call(fEl.files) : [];
     files = files.filter(function (f) { return isImage(f.type); }).slice(0, PH_MAX);
+    // Stejná fotka dvakrát (snadno se stane při výběru z galerie) — poznáme ji
+    // podle názvu, velikosti a času úpravy; druhou tiše vynecháme.
+    var videne = {};
+    files = files.filter(function (f) {
+      var klic = f.name + '|' + f.size + '|' + (f.lastModified || 0);
+      if (videne[klic]) return false;
+      videne[klic] = 1; return true;
+    });
     photoRejects = [];
     if (!files.length) return Promise.resolve({ urls: [], rejected: [] });
     showToast('Kontroluji fotky…');
@@ -439,6 +478,22 @@
     }
   }
 
+  /* Upozornění (ne chyby): cena za metr mimo obvyklé rozpětí, chybějící
+     příjmení… Odeslat to jde, ale ať to člověk vidí dřív, než klikne. */
+  function ukazVarovani() {
+    var box = document.getElementById('p-varovani');
+    if (!box || !window.PKKontrola) return;
+    var v = PKKontrola.formular({
+      obec: val('p-obec'), vymera: val('p-vymera'), cena: val('p-cena'),
+      parcela: val('p-parcela'), popis: val('p-popis'), odkaz: val('p-odkaz'),
+      jmeno: val('p-jmeno'), kontakt: val('p-kontakt')
+    });
+    var zpravy = (v.varovani || []).map(function (x) { return x.msg; });
+    if (!zpravy.length) { box.hidden = true; box.textContent = ''; return; }
+    box.innerHTML = '<b>Zkontrolujte prosím:</b> ' + zpravy.join(' ');
+    box.hidden = false;
+  }
+
   var prodejForm = document.getElementById('form-prodej');
   if (prodejForm) {
     vratKoncept(prodejForm);
@@ -453,7 +508,8 @@
     // Uživatel pak přidal fotky i popis a pod formulářem pořád svítilo šedé
     // „0 %" a rada „Přidejte fotky" — vypadalo to, že web nefunguje.
     prodejForm.addEventListener('input', function () { updPerm2(); updatePreview(); updateStrength(); });
-    prodejForm.addEventListener('change', function () { updatePreview(); updateStrength(); });
+    prodejForm.addEventListener('change', function () { updatePreview(); updateStrength(); ukazVarovani(); });
+    prodejForm.addEventListener('focusout', ukazVarovani);   // po opuštění pole, ne při každém písmenu
     if (previewCard) updateStrength();   // počáteční stav ukazatele
   }
   // Na mobilu přesuň „živý náhled" HNED pod základní pole (obec/výměra/cena/fotky),
@@ -604,11 +660,24 @@
       return fd;
     },
     function () {
-      if (!val('p-obec')) return E('Vyplňte prosím obec / lokalitu.', 'p-obec');
-      if (!(parseInt(val('p-vymera'), 10) > 0)) return E('Zadejte prosím výměru v m².', 'p-vymera');
-      if (!(parseInt(val('p-cena'), 10) > 0)) return E('Zadejte prosím cenu v Kč.', 'p-cena');
-      if (!val('p-jmeno')) return E('Uveďte prosím své jméno.', 'p-jmeno');
-      if (!validContact(val('p-kontakt'))) return E('Zadejte platný telefon (9 číslic) nebo e-mail.', 'p-kontakt');
+      // Vlastní kontroly jsou v js/kontrola.js — čisté funkce, které projíždí
+      // `node scripts/test-kontrola.mjs` při každém pushi. Když se soubor
+      // nenačte, spadneme zpátky na to nejnutnější, ať formulář neumrzne.
+      if (window.PKKontrola) {
+        var v = PKKontrola.formular({
+          obec: val('p-obec'), vymera: val('p-vymera'), cena: val('p-cena'),
+          parcela: val('p-parcela'), popis: val('p-popis'), odkaz: val('p-odkaz'),
+          jmeno: val('p-jmeno'), kontakt: val('p-kontakt')
+        });
+        if (!v.ok) return E(v.msg, v.id);
+        posledniVarovani = (v.varovani || []);
+      } else {
+        if (!val('p-obec')) return E('Vyplňte prosím obec / lokalitu.', 'p-obec');
+        if (!(parseInt(val('p-vymera'), 10) > 0)) return E('Zadejte prosím výměru v m².', 'p-vymera');
+        if (!(parseInt(val('p-cena'), 10) > 0)) return E('Zadejte prosím cenu v Kč.', 'p-cena');
+        if (!val('p-jmeno')) return E('Uveďte prosím své jméno.', 'p-jmeno');
+        if (!validContact(val('p-kontakt'))) return E('Zadejte platný telefon (9 číslic) nebo e-mail.', 'p-kontakt');
+      }
       if (!checked('p-souhlas')) return E('Potvrďte prosím souhlas s pravidly a zveřejněním.', 'p-souhlas');
       return '';
     },

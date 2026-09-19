@@ -1233,6 +1233,31 @@ begin
   if blob ~ '(viagra|casino|kasino|bitcoin|\mcrypto|klikni zde|výhr[aou]|vyhr[aou]j)' then
     raise exception 'obsah vypadá jako spam'; end if;
   if blob ~ '(.)\1{6,}' then raise exception 'obsah vypadá jako spam'; end if;
+
+  -- Meze čísel a délek. Prohlížeč je hlídá taky (js/kontrola.js), ale tam je
+  -- kdokoli obejde — tohle je ta tvrdá hranice. Čísla musí sedět s MEZE
+  -- v js/kontrola.js; když se mění, mění se na obou místech.
+  if p_area is null or p_area < 10 or p_area > 5000000 then
+    raise exception 'výměra musí být mezi 10 m² a 500 ha'; end if;
+  if p_price is null or p_price < 1000 or p_price > 500000000 then
+    raise exception 'cena musí být mezi 1 000 Kč a 500 mil. Kč'; end if;
+  if p_price::numeric / p_area < 1 or p_price::numeric / p_area > 100000 then
+    raise exception 'cena za m² je mimo reálné rozpětí — zkontrolujte cenu a výměru'; end if;
+  if length(trim(p_place)) < 2 or length(trim(p_place)) > 60 then
+    raise exception 'název obce musí mít 2 až 60 znaků'; end if;
+  if p_description is not null and length(p_description) > 2000 then
+    raise exception 'popis je delší než 2000 znaků'; end if;
+  if p_description ~ '[<>]' then
+    raise exception 'popis nesmí obsahovat značky < a >'; end if;
+  if p_parcel is not null and length(trim(p_parcel)) > 20 then
+    raise exception 'parcelní číslo je moc dlouhé'; end if;
+  -- Kontakt: buď e-mail, nebo aspoň devět číslic. Bez něj je inzerát k ničemu.
+  if p_contact is null or not (
+       p_contact ~ '^[^[:space:]@]+@[^[:space:]@]+\.[A-Za-z]{2,}$'
+       or length(regexp_replace(p_contact, '[^0-9]', '', 'g')) between 9 and 13
+     ) then
+    raise exception 'kontakt musí být platný telefon nebo e-mail'; end if;
+
   lim := coalesce((select max_listings from account_tier where user_id = uid), 1);
   if (select count(*) from listings where user_id = uid) >= lim then
     raise exception 'dosažen limit inzerátů na účet (limit %)', lim; end if;
