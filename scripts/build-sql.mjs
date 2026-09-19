@@ -30,6 +30,7 @@ const PORADI = [
   ['listings-moderation.sql', 'přísnější moderace obsahu'],
   ['listings-tiers.sql', 'limity počtu inzerátů podle účtu (account_tier)'],
   ['listings-rekonstrukce.sql', 'poslední verze create_listing — tu volá web'],
+  ['listing-checks.sql', 'výsledky pravidelné kontroly odkazů a fotek'],
 ];
 
 const HLAVA = `-- =====================================================================

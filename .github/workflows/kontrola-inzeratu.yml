@@ -1,0 +1,39 @@
+name: Kontrola inzerátů
+
+# Jedna kontrola při odeslání nestačí: odkaz na cizí nabídku po čase zmizí
+# nebo se přesměruje jinam a fotka se může z úložiště ztratit. Tahle úloha
+# projde zveřejněné inzeráty znovu — každou adresu zkusí TŘIKRÁT za sebou,
+# aby jeden výpadek sítě nic neodsoudil — a výsledky zapíše do tabulky
+# listing_checks. Sama nic nemaže ani neskrývá.
+
+on:
+  schedule:
+    - cron: '20 4 * * *'      # jednou denně nad ránem (UTC)
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Kolik inzerátů projít'
+        required: false
+        default: '200'
+
+jobs:
+  kontrola:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Závislosti (jpeg-js kvůli otiskům fotek)
+        run: npm install --no-audit --no-fund --omit=dev jpeg-js
+
+      - name: Projít inzeráty
+        run: node scripts/kontrola-inzeratu.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          KONTROLA_LIMIT: ${{ github.event.inputs.limit || '200' }}

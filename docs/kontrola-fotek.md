@@ -77,3 +77,35 @@ jediná jistota fronta na schválení.
 > „hammerhead" je žralok a „acorn squash" je dýně. Proto jsou v generátoru
 > ruční výjimky — a proto test kontroluje, že každá třída v seznamech
 > v modelu opravdu existuje.
+
+## Opakovaná kontrola po zveřejnění
+
+Jedna kontrola při odeslání nestačí. Odkaz na cizí nabídku po čase zmizí
+nebo se přesměruje jinam a fotka se může z úložiště ztratit — proto
+`scripts/kontrola-inzeratu.mjs` projde zveřejněné inzeráty znovu, jednou
+denně (`.github/workflows/kontrola-inzeratu.yml`).
+
+Každá adresa se zkouší **třikrát za sebou** s rostoucí pauzou (0 s, 2 s, 6 s).
+Jedna odpověď ze sítě nic nedokazuje: server může být na deset vteřin
+nedostupný nebo shodit spojení, a kdo by na tom stavěl, stahoval by poctivé
+inzeráty kvůli výpadku. Rozhoduje se až nad všemi pokusy:
+
+| Co se stalo | Závěr |
+|---|---|
+| kdykoli odpověď 2xx/3xx | v pořádku |
+| dvakrát a vícekrát 404 nebo 410 | odkaz je mrtvý |
+| jen výpadky, 503, 429 | dočasně nedostupný (nehlásí se jako mrtvý) |
+| přesměrování na jinou doménu | hlásí se — „vede na X místo na Y" |
+| u fotky přijde `text/html` | není to obrázek, ale chybová stránka |
+
+Navíc se z každé fotky spočítá **otisk** (perceptuální hash, 64 bitů z
+šedé zmenšeniny 9×8) a porovná se s ostatními. Fotka zkopírovaná z cizího
+inzerátu se tím pozná i po zmenšení a překomprimování — a právě to je
+u realit častější podvod než nevhodný obsah.
+
+Výsledky jdou do tabulky `listing_checks`. Úloha sama **nic nemaže ani
+neskrývá** — jen zapíše, co našla.
+
+**Ověřeno testem** (`scripts/test-kontrola-e2e.mjs`): proti zkušebnímu
+serveru, na kterém jeden odkaz dvakrát po sobě shodí spojení a teprve
+potřetí odpoví. Test hlídá hlavně to, že se takový odkaz **nenahlásí**.

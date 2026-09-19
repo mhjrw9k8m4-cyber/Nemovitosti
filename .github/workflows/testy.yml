@@ -50,6 +50,14 @@ jobs:
       - name: Rozpoznání obsahu fotek
         run: node scripts/test-fototema.mjs
 
+      - name: Opakovaná kontrola odkazů a fotek
+        run: node scripts/test-opakovana.mjs
+
+      - name: Celá kontrola inzerátů (proti zkušebnímu serveru)
+        run: |
+          npm install --no-audit --no-fund --omit=dev jpeg-js
+          node scripts/test-kontrola-e2e.mjs
+
       - name: Souhrnné SQL odpovídá dílčím souborům
         run: |
           node scripts/build-sql.mjs
