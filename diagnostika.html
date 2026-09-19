@@ -175,8 +175,13 @@
 
       return dotaz('/storage/v1/object/public/listing-photos/__diagnostika__.png', {});
     }).then(function (r) {
-      if (r.stav === 400 && /Bucket not found/i.test(r.telo)) radek(box, 'bad', 'Úložiště fotek chybí', 'Není vytvořený bucket <code>listing-photos</code> — fotky u inzerátů se nenahrají.');
-      else if (r.stav === 404) radek(box, 'ok', 'Úložiště fotek existuje', 'Bucket <code>listing-photos</code> odpovídá.');
+      // Pozor na rozdíl: „Bucket not found" = úložiště chybí, kdežto
+      // „Object not found" / NoSuchKey = úložiště je v pořádku, jen v něm
+      // není soubor, na který se ptáme (a to je správně, ptáme se naschvál
+      // na neexistující). Supabase u obojího vrací HTTP 400, takže se to
+      // musí rozlišit podle těla odpovědi, ne podle kódu.
+      if (/Bucket not found/i.test(r.telo)) radek(box, 'bad', 'Úložiště fotek chybí', 'Není vytvořený bucket <code>listing-photos</code> — fotky u inzerátů se nenahrají.');
+      else if (r.stav === 404 || /not_found|NoSuchKey|Object not found/i.test(r.telo)) radek(box, 'ok', 'Úložiště fotek existuje', 'Bucket <code>listing-photos</code> odpovídá.');
       else radek(box, 'warn', 'Úložiště fotek hlásí ' + r.stav, '<code>' + zkratka(r.telo, 110) + '</code>');
 
       return fetch('data/opportunities.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
