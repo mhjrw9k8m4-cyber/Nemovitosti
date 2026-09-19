@@ -154,6 +154,30 @@
       else if (r.stav === 400 || r.stav === 401 || r.stav === 403) radek(box, 'ok', 'Přidání inzerátu: funkce odpovídá správně', 'HTTP ' + r.stav + ' — funkce existuje a ohradila se sama: <code>' + zkratka(r.telo, 90) + '</code>');
       else radek(box, 'warn', 'Přidání inzerátu hlásí ' + r.stav, '<code>' + zkratka(r.telo, 110) + '</code>');
 
+      // Proběhla malá aktualizace? Pošleme nesmyslnou výměru (1 m²): stará
+      // verze funkce se ohradí až kvůli přihlášení, nová kvůli mezím.
+      return dotaz('/rest/v1/rpc/create_listing', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_place: 'Zkouška', p_okres: '', p_druh: '', p_parcel: '', p_area: 1, p_price: 1,
+          p_lat: 50, p_lng: 15, p_description: '', p_contact: 'x', p_photos: [], p_features: [], p_access: null })
+      });
+    }).then(function (r) {
+      if (/výměra musí být|cena musí být|kontakt musí být/.test(r.telo || '')) {
+        radek(box, 'ok', 'Serverové meze jsou nasazené', 'Databáze odmítla nesmyslné hodnoty sama: <code>' + zkratka(r.telo, 90) + '</code>');
+      } else if (/musíte být přihlášeni/.test(r.telo || '')) {
+        radek(box, 'warn', 'Serverové meze zatím chybí', 'Funkce běží, ale ve starší podobě — nehlídá výměru, cenu ani kontakt. Spusťte <code>supabase/aktualizace.sql</code> v Supabase → SQL Editor.');
+      } else {
+        radek(box, 'warn', 'Serverové meze: nejasné', 'HTTP ' + r.stav + ' — <code>' + zkratka(r.telo, 100) + '</code>');
+      }
+
+      return dotaz('/rest/v1/listing_checks?select=listing_id&limit=1', {});
+    }).then(function (r) {
+      if (r.stav === 404 || /does not exist|could not find the table/i.test(r.telo || '')) {
+        radek(box, 'warn', 'Tabulka pro denní kontrolu chybí', 'Bez <code>listing_checks</code> nemá denní kontrola odkazů a fotek kam zapsat. Spusťte <code>supabase/aktualizace.sql</code>.');
+      } else {
+        radek(box, 'ok', 'Tabulka pro denní kontrolu existuje', 'HTTP ' + r.stav);
+      }
+
       return dotaz('/rest/v1/rpc/subscribe_watch', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ p_email: '', p_okres: '', p_types: [] })

@@ -1,0 +1,114 @@
+-- =====================================================================
+-- Parcelka — MALÁ AKTUALIZACE DATABÁZE
+--
+-- Tohle NENÍ celá databáze. Je to jen to, co podle diagnostiky v projektu
+-- ještě chybí — zbytek už běží a nemá smysl ho pouštět znovu:
+--
+--   1) do funkce create_listing se doplňují tvrdé meze (výměra, cena,
+--      cena za m², délka popisu, kontakt). Kontroly v prohlížeči jde
+--      obejít, tyhle ne.
+--   2) přibývá tabulka listing_checks — do ní zapisuje denní kontrola
+--      odkazů a fotek (scripts/kontrola-inzeratu.mjs).
+--
+-- Jak na to:  Supabase → SQL Editor → New query → vložit CELÉ → Run.
+-- Je to bezpečné pustit i opakovaně.
+-- =====================================================================
+
+create or replace function create_listing(
+  p_place text, p_okres text, p_druh text, p_parcel text,
+  p_area integer, p_price integer, p_lat double precision, p_lng double precision,
+  p_description text, p_contact text, p_photos jsonb default '[]'::jsonb,
+  p_features text[] default '{}', p_access text default null)
+returns table(id uuid)
+language plpgsql security definer set search_path = public as $$
+declare
+  new_id uuid; uid uuid := auth.uid(); lim integer;
+  clean_photos jsonb := '[]'::jsonb; clean_features text[] := '{}'; clean_access text;
+  ph text; ft text; ok_prefix text; blob text;
+begin
+  if uid is null then raise exception 'musíte být přihlášeni'; end if;
+  if p_place is null or length(trim(p_place))=0 then raise exception 'obec je povinná'; end if;
+  if p_lat is null or p_lng is null then raise exception 'poloha je povinná'; end if;
+  blob := lower(coalesce(p_place,'') || ' ' || coalesce(p_description,'') || ' ' || coalesce(p_parcel,''));
+  if blob ~ '(kokot|kurv|piča|píčovin|picovin|\mmrd|debil|čur[aá]k|čůr|zmrd|\mjeb|hovn|hajzl|zkur|prdel|hovado|\midiot|blb[eě]c|porno|penis|vagin)' then
+    raise exception 'obsah obsahuje nevhodná slova'; end if;
+  if blob ~ '(viagra|casino|kasino|bitcoin|\mcrypto|klikni zde|výhr[aou]|vyhr[aou]j)' then
+    raise exception 'obsah vypadá jako spam'; end if;
+  if blob ~ '(.)\1{6,}' then raise exception 'obsah vypadá jako spam'; end if;
+
+  -- Meze čísel a délek. Prohlížeč je hlídá taky (js/kontrola.js), ale tam je
+  -- kdokoli obejde — tohle je ta tvrdá hranice. Čísla musí sedět s MEZE
+  -- v js/kontrola.js; když se mění, mění se na obou místech.
+  if p_area is null or p_area < 10 or p_area > 5000000 then
+    raise exception 'výměra musí být mezi 10 m² a 500 ha'; end if;
+  if p_price is null or p_price < 1000 or p_price > 500000000 then
+    raise exception 'cena musí být mezi 1 000 Kč a 500 mil. Kč'; end if;
+  if p_price::numeric / p_area < 1 or p_price::numeric / p_area > 100000 then
+    raise exception 'cena za m² je mimo reálné rozpětí — zkontrolujte cenu a výměru'; end if;
+  if length(trim(p_place)) < 2 or length(trim(p_place)) > 60 then
+    raise exception 'název obce musí mít 2 až 60 znaků'; end if;
+  if p_description is not null and length(p_description) > 2000 then
+    raise exception 'popis je delší než 2000 znaků'; end if;
+  if p_description ~ '[<>]' then
+    raise exception 'popis nesmí obsahovat značky < a >'; end if;
+  if p_parcel is not null and length(trim(p_parcel)) > 20 then
+    raise exception 'parcelní číslo je moc dlouhé'; end if;
+  -- Kontakt: buď e-mail, nebo aspoň devět číslic. Bez něj je inzerát k ničemu.
+  if p_contact is null or not (
+       p_contact ~ '^[^[:space:]@]+@[^[:space:]@]+\.[A-Za-z]{2,}$'
+       or length(regexp_replace(p_contact, '[^0-9]', '', 'g')) between 9 and 13
+     ) then
+    raise exception 'kontakt musí být platný telefon nebo e-mail'; end if;
+
+  lim := coalesce((select max_listings from account_tier where user_id = uid), 1);
+  if (select count(*) from listings where user_id = uid) >= lim then
+    raise exception 'dosažen limit inzerátů na účet (limit %)', lim; end if;
+  if exists (select 1 from listings where user_id = uid and created_at > now() - interval '90 seconds') then
+    raise exception 'chvíli počkejte před přidáním dalšího inzerátu'; end if;
+  if p_photos is not null and jsonb_typeof(p_photos) = 'array' then
+    for ph in select value::text from jsonb_array_elements_text(p_photos) loop
+      ok_prefix := '^https://[a-z0-9-]+\.supabase\.co/storage/v1/object/public/listing-photos/';
+      if ph ~ ok_prefix and length(ph) < 500 then clean_photos := clean_photos || to_jsonb(ph); end if;
+      exit when jsonb_array_length(clean_photos) >= 8;
+    end loop; end if;
+  -- Whitelist vybavení — NOVĚ i „Stavba k rekonstrukci"
+  if p_features is not null then
+    foreach ft in array p_features loop
+      if ft in ('Elektřina','Voda','Kanalizace','Plyn','Oplocení','Stavba k rekonstrukci')
+         and not (clean_features @> array[ft]) then
+        clean_features := clean_features || ft; end if;
+    end loop; end if;
+  if p_access in ('Zpevněná cesta','Polní / nezpevněná cesta','Přes cizí pozemek','Bez přístupu') then
+    clean_access := p_access; end if;
+  insert into listings(status,user_id,place,okres,druh,parcel,area,price,lat,lng,description,contact_phone,photos,features,access,featured,views)
+  values('approved',uid,trim(p_place),nullif(trim(coalesce(p_okres,'')),''),nullif(trim(coalesce(p_druh,'')),''),
+         nullif(trim(coalesce(p_parcel,'')),''),p_area,p_price,p_lat,p_lng,
+         nullif(trim(coalesce(p_description,'')),''),nullif(trim(coalesce(p_contact,'')),''),
+         clean_photos,clean_features,clean_access,false,0)
+  returning listings.id into new_id;
+  return query select new_id;
+end; $$;
+grant execute on function create_listing(text,text,text,text,integer,integer,double precision,double precision,text,text,jsonb,text[],text) to authenticated;
+
+
+create table if not exists listing_checks (
+  listing_id   uuid primary key references listings(id) on delete cascade,
+  checked_at   timestamptz not null default now(),
+  ok           boolean not null default true,
+  -- co se našlo: [{typ:'odkaz'|'fotka', stav:'mrtvy'|'presmerovan'|…, msg:'…'}]
+  nalezy       jsonb not null default '[]'::jsonb,
+  -- otisky fotek (perceptuální hash) — podle nich se poznají kopie
+  otisky       jsonb not null default '[]'::jsonb
+);
+
+create index if not exists listing_checks_ok_idx on listing_checks(ok);
+create index if not exists listing_checks_time_idx on listing_checks(checked_at desc);
+
+-- Čte a píše jen server (service_role, který obchází RLS). Veřejně nic:
+-- návštěvníkovi je do výsledků kontroly nic, a majitel inzerátu se
+-- o problému dozví jinak než čtením cizí tabulky.
+alter table listing_checks enable row level security;
+drop policy if exists "verejne cteni kontrol" on listing_checks;
+
+comment on table listing_checks is
+  'Výsledky pravidelné kontroly odkazů a fotek u zveřejněných inzerátů (scripts/kontrola-inzeratu.mjs).';
