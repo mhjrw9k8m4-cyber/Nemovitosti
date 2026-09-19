@@ -105,3 +105,6 @@ jobs:
 
       - name: Vrstvení (co je nad čím)
         run: node scripts/test-vrstveni.mjs
+
+      - name: Kontrast textu (WCAG AA)
+        run: node scripts/test-kontrast.mjs

@@ -553,7 +553,7 @@ ${rows}
   const highlight = (cheapest.length && dearest.length) ? `
       <div class="okr-stats" style="gap:14px;">
         <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span style="color:var(--c-sale,#3E9B63);">Nejlevnější zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(cheapest)}</div></div>
-        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span style="color:var(--c-exekuce,#C15B44);">Nejdražší zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(dearest)}</div></div>
+        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span style="color:var(--c-exekuce-ink,#AE1E1E);">Nejdražší zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(dearest)}</div></div>
       </div>` : '';
 
   const natZ = priceNational[key];
