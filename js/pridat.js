@@ -210,6 +210,15 @@
       .catch(function () { return { maEXIF: false }; });
   }
 
+  /* Co je na fotce vidět (MobileNet z assets/mobilenet/). Pravidla i prahy
+     jsou v js/fototema.js, ať se dají projet testy bez prohlížeče. */
+  function temaOk(imgEl) {
+    if (!window.PKFotoTema || !window.PKTridy) return Promise.resolve({ ok: true });
+    return PKFotoTema.klasifikuj(imgEl, window.PKTridy, 6)
+      .then(function (predikce) { return PKFotoTema.vyhodnot(predikce); })
+      .catch(function () { return { ok: true }; });
+  }
+
   // Jedna fotka přes všechny brány → { blob } nebo { reject: 'důvod' }
   function moderateAndProcess(file) {
     return new Promise(function (resolve) {
@@ -244,6 +253,16 @@
         function dokonci() {
         contentOk(img).then(function (ok) {
           if (!ok) { URL.revokeObjectURL(url); resolve({ reject: 'fotka vypadá nevhodně a nebyla přijata' }); return; }
+          // Poslední brána: co je na fotce vidět. Model pozná zabalené zboží,
+          // snímek obrazovky, člověka nebo interiér — a naopak krajinu, plot
+          // či zemědělskou techniku. Když se nenačte nebo si není jistý,
+          // fotka projde (vyhodit poctivou je horší než pustit nepovedenou).
+          temaOk(img).then(function (tv) {
+            if (!tv.ok) { URL.revokeObjectURL(url); resolve({ reject: tv.msg }); return; }
+            if (tv.varovani) posledniVarovani.push({ id: 'p-fotky', msg: tv.varovani });
+            zmensiAUloz();
+          });
+          function zmensiAUloz() {
           try {
             var scale = Math.min(1, PH_DIM / Math.max(w, h));
             var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
@@ -252,6 +271,7 @@
             URL.revokeObjectURL(url);
             cv.toBlob(function (blob) { resolve(blob ? { blob: blob } : { reject: 'nepodařilo se zpracovat' }); }, 'image/jpeg', PH_Q);
           } catch (e) { URL.revokeObjectURL(url); resolve({ reject: 'nepodařilo se zpracovat' }); }
+          }
         });
         }
       };

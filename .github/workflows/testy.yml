@@ -47,6 +47,9 @@ jobs:
       - name: Čtení EXIFu a původ fotek
         run: node scripts/test-exif.mjs
 
+      - name: Rozpoznání obsahu fotek
+        run: node scripts/test-fototema.mjs
+
       - name: Souhrnné SQL odpovídá dílčím souborům
         run: |
           node scripts/build-sql.mjs
