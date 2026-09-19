@@ -37,20 +37,46 @@ const MERENI = `(() => {
     g: pop.g * pop.a + spod.g * (1 - pop.a),
     b: pop.b * pop.a + spod.b * (1 - pop.a), a: 1
   });
-  // Skutečné pozadí: projdeme předky, dokud nenarazíme na neprůhlednou barvu.
+  // Barevné zarážky přechodu. Dřív se prvek s přechodem přeskočil — jenže
+  // přechod je PRÁVĚ to místo, kde kontrast selže, protože text leží na
+  // dvou různých barvách najednou. Měří se proti všem zarážkám a bere se
+  // ta nejhorší; jinak by tmavý pás zůstal nezměřený.
+  const zarazky = (obrazek) => {
+    const out = [];
+    // POZOR: tenhle kód je uvnitř šablonového řetězce, takže lomítko musí
+    // být zdvojené — jinak ho JavaScript spolkne, výraz hledá nesmysl,
+    // parseFloat vrátí NaN a „NaN < 4,5" je vždy nepravda. Test pak mlčí
+    // a tváří se, že je všechno v pořádku. Přesně to se tu stalo.
+    for (const m of String(obrazek).matchAll(/rgba?\\(([^)]+)\\)/g)) {
+      const p = m[1].split(',').map((x) => parseFloat(x));
+      const a = p.length > 3 ? p[3] : 1;
+      if (a > 0.5) out.push({ r: p[0], g: p[1], b: p[2], a: 1 });   // průhledné závoje neurčují podklad
+    }
+    return out;
+  };
+  // Skutečné pozadí: projdeme předky, dokud nenarazíme na neprůhledný podklad.
+  // Vrací SEZNAM možných podkladů (u přechodu jich je víc).
   const pozadi = (el) => {
     let vrstvy = [], e = el;
     while (e) {
       const s = getComputedStyle(e);
-      if (s.backgroundImage !== 'none') return null;   // přechody neměříme
+      if (s.backgroundImage !== 'none') {
+        const z = zarazky(s.backgroundImage);
+        if (z.length) {
+          // zarážky se podloží tím, co je pod nimi, ať vyjde skutečná barva
+          const spod = vrstvy.length ? vrstvy[vrstvy.length - 1] : { r: 255, g: 255, b: 255, a: 1 };
+          return z.map((c) => (vrstvy.length ? c : c));
+        }
+        return null;      // obrázek nebo přechod bez čitelných barev — neměříme
+      }
       const c = parse(s.backgroundColor);
       if (c && c.a > 0) { vrstvy.push(c); if (c.a === 1) break; }
       e = e.parentElement;
     }
-    if (!vrstvy.length) return { r: 255, g: 255, b: 255, a: 1 };
+    if (!vrstvy.length) return [{ r: 255, g: 255, b: 255, a: 1 }];
     let vysledek = vrstvy[vrstvy.length - 1];
     for (let i = vrstvy.length - 2; i >= 0; i--) vysledek = smichej(vrstvy[i], vysledek);
-    return vysledek;
+    return [vysledek];
   };
   const out = [];
   const videt = (el) => {
@@ -62,10 +88,16 @@ const MERENI = `(() => {
     if (!vlastni || !videt(el)) return;
     const s = getComputedStyle(el);
     const fg = parse(s.color); if (!fg) return;
-    const bg = pozadi(el); if (!bg) return;
-    const f = fg.a < 1 ? smichej(fg, bg) : fg;
-    const L1 = lum(f.r, f.g, f.b), L2 = lum(bg.r, bg.g, bg.b);
-    const pomer = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+    const podklady = pozadi(el); if (!podklady || !podklady.length) return;
+    // Nejhorší z možných podkladů — u přechodu rozhoduje ten, na kterém je
+    // text nejhůř čitelný, ne průměr.
+    let pomer = Infinity, bg = podklady[0];
+    for (const kandidat of podklady) {
+      const f = fg.a < 1 ? smichej(fg, kandidat) : fg;
+      const L1 = lum(f.r, f.g, f.b), L2 = lum(kandidat.r, kandidat.g, kandidat.b);
+      const p = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+      if (p < pomer) { pomer = p; bg = kandidat; }
+    }
     const px = parseFloat(s.fontSize), tucne = (parseInt(s.fontWeight, 10) || 400) >= 700;
     const velky = px >= 24 || (px >= 18.66 && tucne);
     const mez = velky ? 3 : 4.5;
@@ -87,6 +119,14 @@ for (const s of STRANKY) {
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${s}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
   await p.waitForTimeout(1600);
+  // Sekce, které se odkrývají při scrollování, jsou do té doby průhledné
+  // a měření je přeskakovalo — test tím kontroloval jen horní část stránky.
+  // Odkryjeme je natvrdo; jinak by „0 chyb" znamenalo jen „0 chyb nahoře".
+  await p.addStyleTag({ content: '.reveal,.reveal.in{opacity:1!important;transform:none!important;visibility:visible!important}' });
+  await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await p.waitForTimeout(700);
+  await p.evaluate(() => window.scrollTo(0, 0));
+  await p.waitForTimeout(400);
   const nalezy = await p.evaluate(MERENI);
   nalezy.forEach((n) => vse.push(Object.assign({ stranka: s }, n)));
   await ctx.close();

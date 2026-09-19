@@ -9,7 +9,7 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css?v=20260926d">
   <style>
     /* Předloha je vzorník, ne stránka webu — má vlastní jednoduchou sazbu. */
@@ -86,6 +86,17 @@
      patří na puntík v mapě a na výplň štítku — jako písmo by neprošly normou.</div>
 
   <h2>4. Písmo</h2>
+  <p><b>Tři písma, jak to mají velké realitní weby.</b> Patkové na nadpisy dává webu tvář
+     a vážnost, bezpatkové drží čitelnost textu a ovládání, strojové odlišuje čísla a štítky.
+     Dvě písma dělají web korektní; teprve třetí mu dá charakter.</p>
+  <div class="mrizka" style="margin-bottom:24px">
+    <div class="vzorek"><div style="font-family:var(--font-display);font-size:30px;font-weight:700">Příliš žluťoučký</div>
+      <div class="nazev" style="margin-top:8px">Nadpisy — Fraunces</div><div class="kod">var(--font-display)</div></div>
+    <div class="vzorek"><div style="font-family:var(--font-ui);font-size:20px;font-weight:600">Příliš žluťoučký kůň</div>
+      <div class="nazev" style="margin-top:8px">Text a ovládání — Plus Jakarta Sans</div><div class="kod">var(--font-ui)</div></div>
+    <div class="vzorek"><div style="font-family:var(--font-mono);font-size:17px;font-weight:500">1 951 · 800 m² · Kč</div>
+      <div class="nazev" style="margin-top:8px">Čísla a štítky — IBM Plex Mono</div><div class="kod">var(--font-mono)</div></div>
+  </div>
   <p>Hierarchii dělá velikost a váha, ne bledost. Nic pod 600 u nadpisů.</p>
   <div class="typ">
     <div style="font-size:44px; font-weight:800; letter-spacing:-0.028em; line-height:1.06;">Nadpis stránky<span class="skala">44 px · 800 · −0,028 em</span></div>
@@ -96,7 +107,20 @@
     <p class="mono" style="font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--copper-bright);">Nadřádek · strojové písmo<span class="skala">12 px · mono · verzálky</span></p>
   </div>
 
-  <h2>5. Odstupy</h2>
+  <h2>5. Tmavý pás</h2>
+  <p>Web byl celý světlý — jedna dlouhá plocha bez nádechu. Tmavá sekce je to, čím velké weby
+     dělají rytmus: oko si odpočine a pak se znovu chytne. Na webu je <b>jedna</b>. Kdyby byly tři,
+     je z toho zase jednolitá plocha, jen tmavá.</p>
+  <div style="background:linear-gradient(150deg,var(--ink-dark-2),var(--ink-dark) 58%,#0E121C);
+              border-radius:var(--r-md); padding:26px; color:var(--text-ondeep); box-shadow:var(--e2);">
+    <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-warm-bright);margin-bottom:8px">Nadřádek</div>
+    <div style="font-family:var(--font-display);font-size:26px;font-weight:700;margin-bottom:6px">Nadpis na tmavém</div>
+    <p style="color:var(--text-ondeep-mute);font-size:14.5px;margin:0">Tlumený text má na tmavém pásu vlastní odstín
+       (<code style="font-family:var(--font-mono)">--text-ondeep-mute</code>, 10,8 : 1). Šeď ze světlého motivu by tu zmizela
+       a měď by zhnědla — proto i <code style="font-family:var(--font-mono)">--accent-warm-bright</code> (8,0 : 1).</p>
+  </div>
+
+  <h2>6. Odstupy</h2>
   <p>Násobky čtyřky. Když se míchají odstupy 13, 17 a 22 px, oko to nepozná jako rytmus,
      jen jako nepořádek.</p>
   <div id="odstupy" style="display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;"></div>

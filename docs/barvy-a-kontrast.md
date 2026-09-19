@@ -82,3 +82,72 @@ spadne (kód 1) — test, který nikdy nespadne, nehlídá nic.
 
 Když přidáváte barvu pro **text**, vezměte variantu `-ink`. Když pro
 **plochu nebo puntík**, vezměte sytou.
+
+---
+
+# Druhé kolo: tři písma, teplé neutrály a tmavý pás
+
+Web pořád neměl „šmrnc". Podle toho, jak to dělají velké realitní weby
+([Compass, Luxury Presence a spol.](https://www.luxurypresence.com/blogs/brand-fonts-real-estate-website/)),
+chyběly tři věci — a **žádná z nich nebyla gradient**.
+
+## 1. Tři písma místo dvou
+
+Velké weby stojí na trojici: **patkové na nadpisy** (tvář a vážnost),
+**bezpatkové na text a ovládání** (čitelnost), **strojové na čísla
+a štítky** (data). Compass to má jako Tiempos + Harmonia + Pressura Mono.
+
+Parcelka měla jen dvě. Nadpisy dostaly **Fraunces** — vybrané z pěti
+kandidátů, které se vyrenderovaly vedle sebe s českou pangramou
+a všemi háčky (`Ř Ě Š Č Ž Ů Ť Ď`). Instrument Serif a Libre Caslon jsou
+na užitkový web příliš křehké, Playfair je okoukaný.
+
+> Dvě písma dělají web korektní. Teprve třetí mu dá charakter.
+
+## 2. Teplé neutrály místo studené šedi
+
+Pozadí bylo `#EBEDF0` — studená šeď. Nově `#F1EFEA`, teplá bílá. Je to
+rozdíl, který v číslech skoro není (text 15,3 : 1 místo 15,0 : 1) a
+v dojmu je velký: **jako v bytě denní světlo místo zářivky.**
+
+## 3. Tmavý pás
+
+Tohle byla největší chybějící věc. Web byl celý světlý — jedna dlouhá
+plocha bez nádechu, takže neměl rytmus. Sekce hlídání je teď tmavá,
+s měděným nadřádkem, teplo-studeným přechodem a katastrální mřížkou.
+
+Na webu je **jedna**. Kdyby byly tři, je z toho zase jednolitá plocha,
+jen tmavá.
+
+Na tmavém pozadí platí jiné barvy: `--text-ondeep-mute` (10,8 : 1)
+a `--accent-warm-bright` (8,0 : 1). Šeď ze světlého motivu by tam zmizela
+a měď by zhnědla.
+
+## Co přitom vyšlo najevo — test kontrastu měl dvě díry
+
+Tohle je důležitější než barvy.
+
+**Díra 1: neměřily se přechody.** Prvek s přechodem na pozadí se
+přeskakoval — přitom přechod je právě to místo, kde kontrast selže,
+protože text leží na dvou různých barvách. Teď se čtou barevné zarážky
+a bere se **ta nejhorší**, ne průměr.
+
+**Díra 2: neměřilo se nic pod ohybem stránky.** Sekce s třídou `.reveal`
+jsou do doby, než se na ně doroluje, průhledné — a měření je jako
+neviditelné přeskakovalo. **„0 chyb" tedy znamenalo jen „0 chyb nahoře."**
+Test je teď před měřením odkryje a projede stránku dolů a zpět.
+
+**A za třetí: samotný test byl rozbitý.** Měřicí kód je uvnitř šablonového
+řetězce (template literal), takže zpětné lomítko v regulárním výrazu musí
+být zdvojené. Nebylo — JavaScript ho spolkl, výraz hledal nesmysl,
+`parseFloat` vrátil `NaN`, a **`NaN < 4,5` je vždy nepravda**. Test tedy
+mlčel a tvářil se, že je všechno v pořádku.
+
+Poznalo se to jedině tak, že se barva **úmyslně zhoršila a ověřilo se, že
+test spadne.** Jakmile začal fungovat, hned našel skutečnou chybu, kterou
+jsem právě udělal: drobný text pod formulářem na tmavém pásu měl 2,02 : 1,
+protože jsem na jednu třídu zapomněl.
+
+> Ponaučení: **test, o kterém nevíte, že umí spadnout, nehlídá nic.**
+> U každého hlídače v tomhle projektu je proto ověřeno i to, že při
+> porušení pravidla opravdu skončí chybou.
