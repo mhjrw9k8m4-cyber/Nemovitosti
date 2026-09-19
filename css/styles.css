@@ -110,9 +110,25 @@ button, a, [role="button"], select, summary, .btn-primary, .btn-outline, .lp-btn
 }
 /* Na dotykových displejích se :hover „zasekne" po klepnutí — proto tam
    nadzvednutí a posuny vypneme, ať tlačítka po ťuknutí nezůstávají zvednutá. */
+/* Dotykové displeje: po klepnutí zůstane prvek „navěšený" ve stavu :hover,
+   takže karta, kterou se člověk jen dotkl, se zvedne o dva pixely a už dole
+   nesedne — a stránka pod prstem poskakuje. Na myši je to hezký efekt, na
+   mobilu vada. Vypínáme ho proto všude, kde prvkem hýbe (ne jen u tlačítek,
+   jak to bylo dřív — na kartách pozemků a živém náhledu to chybělo). */
 @media (hover:none){
-  .btn-primary:hover, .btn-outline:hover, .pf-stat:hover, .lp-btn:hover, .map-reset:hover, .okr-item:hover{ transform:none; }
+  .btn-primary:hover, .btn-outline:hover, .btn-add:hover, .lp-btn:hover,
+  .map-reset:hover, .to-top:hover, .pk-dot:hover,
+  .pf-stat:hover, .okr-item:hover, .promise:hover, .druh-card:hover,
+  .deal-card:hover, .opp-item:hover, .odl-card:hover, .status-card:hover,
+  .realtor-card:hover, .gl-item:hover, .price-card:not(.featured):hover,
+  .ul-card:hover{ transform:none; }
 }
+/* Textové tlačítko uvnitř hlášky (např. „Začít znovu" u vráceného konceptu) */
+.link-btn{background:none; border:0; padding:0; margin:0; font:inherit; font-weight:600;
+  color:var(--copper-bright); text-decoration:underline; cursor:pointer;}
+.link-btn:hover{opacity:.85;}
+.link-btn:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px; border-radius:3px;}
+
 /* Setrvačné (momentum) rolování uvnitř posuvných oblastí */
 .opp-list, .modal-body, .loc-modal, .pz-gallery, .okr-list, .table-scroll, .code-block{ -webkit-overflow-scrolling:touch; }
 

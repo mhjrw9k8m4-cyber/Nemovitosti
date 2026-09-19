@@ -294,6 +294,7 @@
   // Fotky pozemku: okamžitý náhled v prohlížeči + titulka do živého náhledu
   var fotkyInput = document.getElementById('p-fotky');
   if (fotkyInput) fotkyInput.addEventListener('change', function () {
+    updateStrength();   // ať se ukazatel hne hned po výběru fotek
     var imgs = [].slice.call(fotkyInput.files).filter(function (f) { return /^image\//.test(f.type); });
     var prev = document.getElementById('p-fotky-preview');
     if (prev) {
@@ -380,10 +381,79 @@
       hint.innerHTML = msg;
     }
   }
+  /* ---------- Rozepsaný inzerát se nesmí ztratit ----------
+     Formulář je dlouhý a přidání vyžaduje přihlášení. Kdo ho vyplnil, teprve
+     pak zjistil, že se musí přihlásit, a vrátil se zpět, našel prázdná pole —
+     celá práce pryč. Proto si rozepsaný inzerát průběžně ukládáme do
+     prohlížeče (jen k sobě, nikam se neodesílá) a při návratu ho vrátíme.
+     Fotky uložit nejdou (prohlížeč je z bezpečnostních důvodů nepustí do
+     úložiště), na to upozorníme. */
+  var KONCEPT_KLIC = 'pk_add_draft_v1';
+  var konceptT = null;
+
+  function poleFormulare(form) {
+    return [].slice.call(form.querySelectorAll('input, select, textarea')).filter(function (el) {
+      return el.type !== 'file' && el.type !== 'password' && el.type !== 'submit' && (el.id || el.name);
+    });
+  }
+  function klicPole(el, i) { return el.id || (el.name + '#' + i); }
+
+  function ulozKoncept(form) {
+    try {
+      var data = {};
+      poleFormulare(form).forEach(function (el, i) {
+        data[klicPole(el, i)] = (el.type === 'checkbox' || el.type === 'radio') ? !!el.checked : el.value;
+      });
+      var neco = Object.keys(data).some(function (k) { return data[k] !== '' && data[k] !== false; });
+      if (neco) localStorage.setItem(KONCEPT_KLIC, JSON.stringify({ ulozeno: Date.now(), data: data }));
+      else localStorage.removeItem(KONCEPT_KLIC);
+    } catch (e) { /* plné nebo zakázané úložiště — koncept prostě nebude */ }
+  }
+  function smazKoncept() { try { localStorage.removeItem(KONCEPT_KLIC); } catch (e) {} }
+
+  function vratKoncept(form) {
+    var ulozeny;
+    try { ulozeny = JSON.parse(localStorage.getItem(KONCEPT_KLIC) || 'null'); } catch (e) { return; }
+    if (!ulozeny || !ulozeny.data) return;
+    // Starší než týden už nevracíme — to už člověk řeší nejspíš něco jiného.
+    if (Date.now() - (ulozeny.ulozeno || 0) > 7 * 24 * 3600 * 1000) { smazKoncept(); return; }
+    var vraceno = 0;
+    poleFormulare(form).forEach(function (el, i) {
+      var v = ulozeny.data[klicPole(el, i)];
+      if (v === undefined) return;
+      if (el.type === 'checkbox' || el.type === 'radio') { if (el.checked !== v) { el.checked = v; vraceno++; } }
+      else if (!el.value && v) { el.value = v; vraceno++; }
+    });
+    if (!vraceno) return;
+    var ms = document.getElementById('msg-prodej');
+    if (ms) {
+      ms.innerHTML = 'Vrátili jsme vám rozepsaný inzerát. <b>Fotky přidejte prosím znovu</b> — ty se uložit nedají. ' +
+        '<button type="button" id="koncept-zahodit" class="link-btn">Začít znovu</button>';
+      ms.classList.remove('err');
+      var zah = document.getElementById('koncept-zahodit');
+      if (zah) zah.addEventListener('click', function () {
+        smazKoncept(); form.reset();
+        ms.textContent = ''; ms.className = 'add-msg';
+        updPerm2(); updatePreview(); updateStrength();
+      });
+    }
+  }
+
   var prodejForm = document.getElementById('form-prodej');
   if (prodejForm) {
-    prodejForm.addEventListener('input', function () { updPerm2(); updatePreview(); });
-    prodejForm.addEventListener('change', updatePreview);
+    vratKoncept(prodejForm);
+    prodejForm.addEventListener('input', function () {
+      clearTimeout(konceptT);
+      konceptT = setTimeout(function () { ulozKoncept(prodejForm); }, 500);
+    });
+    prodejForm.addEventListener('change', function () { ulozKoncept(prodejForm); });
+  }
+  if (prodejForm) {
+    // Ukazatel „síla inzerátu" se dřív spočítal jen jednou při načtení stránky.
+    // Uživatel pak přidal fotky i popis a pod formulářem pořád svítilo šedé
+    // „0 %" a rada „Přidejte fotky" — vypadalo to, že web nefunguje.
+    prodejForm.addEventListener('input', function () { updPerm2(); updatePreview(); updateStrength(); });
+    prodejForm.addEventListener('change', function () { updatePreview(); updateStrength(); });
     if (previewCard) updateStrength();   // počáteční stav ukazatele
   }
   // Na mobilu přesuň „živý náhled" HNED pod základní pole (obec/výměra/cena/fotky),
@@ -414,7 +484,8 @@
     var lpThumb = document.getElementById('lp-thumb'); if (lpThumb) lpThumb.innerHTML = '<span class="ph"><svg viewBox="0 0 24 24"><use href="#i-map"/></svg></span>';
     var prev = document.getElementById('p-fotky-preview'); if (prev) prev.innerHTML = '';
     var msg = document.getElementById('msg-prodej'); if (msg) { msg.textContent = ''; msg.className = 'add-msg'; }
-    updPerm2(); updatePreview();
+    smazKoncept();
+    updPerm2(); updatePreview(); updateStrength();
   });
 
   function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
@@ -467,6 +538,7 @@
           ms.textContent = okMsg; ms.classList.add('ok');
           showToast(toastMsg);
           form.reset();
+          if (form.id === 'form-prodej') smazKoncept();   // inzerát je venku, koncept už netřeba
           // Oslavné potvrzení — schová formulář a ukáže „Hotovo!" (pokud stránka takový blok má)
           var succ = document.querySelector('[data-success-for="' + formId + '"]');
           if (succ) {
