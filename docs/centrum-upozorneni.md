@@ -104,3 +104,29 @@ přírůstku a dá se zavřít.
 > ptá se každých 15 s na nové zprávy a tím si je označuje za přečtené.
 > Je to správné chování aplikace, ale nepřečtená zpráva v testu nevydrží —
 > stránku je potřeba zavřít.
+
+## Vrstvení v menu
+
+Položka **Upozornění** patří k osobním stránkám (Zprávy, Hlídání, Můj
+profil), ne k veřejným. Oddělovač skupin proto vede **nad ní**, ne nad
+Zprávami — dokud byl na starém místě, vypadalo Upozornění jako součást
+veřejné části menu.
+
+Ten oddělovač měl ještě jednu vadu: položky menu mají `border-radius:14px`,
+takže se jednopixelová čára na obou koncích **zakřivila a četla se jako
+horní hrana plovoucí karty**. Působilo to, že se v menu něco špatně vrství.
+Řeší to `border-top-left-radius:0` a `border-top-right-radius:0` — oddělovač
+má být rovná vlasová linka.
+
+Ikony: **Upozornění má zvonek** (obvyklý znak centra upozornění) a
+**Hlídání dostalo oko** — dva zvonky vedle sebe se pletly a hlídání
+lokality je spíš sledování než zvonění.
+
+Hlídá to `scripts/test-vrstveni.mjs`: že jsou oddělovače dva, že první
+odděluje osobní stránky, že nejsou zaoblené a že **žádná položka menu není
+bez ikony** (prázdné místo v řádku vypadá jako chyba).
+
+> Past při měření vrstvení: hlavička je lepivá a překrývá horních ~66 px.
+> Bod, který pod ni spadne, měří hlavičku, ne to pod ní. Sám jsem na to
+> naletěl a málem „opravil" mapu, která byla celou dobu v pořádku — proto
+> si test nejdřív ověří, že měřené prvky leží pod hlavičkou.

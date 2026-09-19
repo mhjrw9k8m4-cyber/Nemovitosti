@@ -102,3 +102,6 @@ jobs:
 
       - name: Projít chat v prohlížeči
         run: node scripts/test-chat-prohlizec.mjs
+
+      - name: Vrstvení (co je nad čím)
+        run: node scripts/test-vrstveni.mjs
