@@ -119,25 +119,118 @@
     return ok();
   }
 
+  /* Domény, na které odkaz u pozemku běžně vede. Není to zákaz ostatních —
+     jen se u neznámé domény ozveme, ať si člověk zkontroluje, kam odkazuje. */
+  var ZNAME_DOMENY = /(^|\.)(bezrealitky\.cz|sreality\.cz|farmy\.cz|reality\.idnes\.cz|nahlizenidokn\.cuzk\.cz|cuzk\.cz|okdrazby\.cz|exdrazby\.cz|eurodrazby\.cz|drazby\.net|portaldrazeb\.cz|centralniadresa\.cz|spucr\.cz|justice\.cz|uzemnisouhlas\.cz|mapy\.cz|google\.com)$/i;
+  var STAHOVANI = /\.(exe|apk|zip|rar|7z|dmg|msi|bat|sh|scr|jar|iso)$/i;
+
   function odkaz(v) {
     var s = text(v);
     if (!s) return ok();                                    // odkaz je nepovinný
     if (s.length > MEZE.odkazMax) return chyba('Odkaz je moc dlouhý.');
-    if (/^(javascript|data|file|vbscript):/i.test(s)) return chyba('Tenhle odkaz nejde použít.');
+    if (/\s/.test(s)) return chyba('Odkaz nesmí obsahovat mezery — vložte jen samotnou adresu.');
+    if (/^(javascript|data|file|vbscript|blob):/i.test(s)) return chyba('Tenhle odkaz nejde použít.');
     var u = s;
     if (!/^https?:\/\//i.test(u)) u = 'https://' + u;       // „bezrealitky.cz/…" doplníme
-    var host = '';
+    var parsed;
     try {
-      var parsed = typeof URL === 'function' ? new URL(u) : null;
+      parsed = typeof URL === 'function' ? new URL(u) : null;
       if (!parsed) return chyba('Odkaz nevypadá platně.');
-      if (!/^https?:$/.test(parsed.protocol)) return chyba('Odkaz musí začínat http:// nebo https://.');
-      host = parsed.hostname.toLowerCase();
     } catch (e) { return chyba('Odkaz nevypadá platně — zkontrolujte ho.'); }
+    if (!/^https?:$/.test(parsed.protocol)) return chyba('Odkaz musí začínat http:// nebo https://.');
+
+    var host = parsed.hostname.toLowerCase();
     if (host.indexOf('.') === -1) return chyba('Odkaz nevypadá platně — chybí doména.');
-    if (/^(localhost|127\.|0\.|10\.|192\.168\.)/.test(host)) return chyba('Odkaz musí vést na veřejnou stránku.');
+    if (!/^[a-z0-9.-]+$/.test(host)) return chyba('Odkaz obsahuje nepovolené znaky v doméně.');
+    if (/\.\./.test(host) || host.charAt(0) === '.' || host.charAt(host.length - 1) === '.') return chyba('Odkaz nevypadá platně — zkontrolujte doménu.');
+    if (!/\.[a-z]{2,}$/.test(host)) return chyba('Odkaz nevypadá platně — chybí koncovka domény.');
+    if (/^(localhost|127\.|0\.|10\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) return chyba('Odkaz musí vést na veřejnou stránku, ne do vnitřní sítě.');
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return chyba('Vložte prosím adresu s doménou, ne s číselnou IP.');
+
+    // Přihlašovací údaje v adrese (https://jmeno:heslo@…) — klasický trik,
+    // jak schovat, kam odkaz opravdu vede.
+    if (parsed.username || parsed.password || /^https?:\/\/[^/@\s]*@/i.test(u)) {
+      return chyba('Odkaz nesmí obsahovat přihlašovací údaje před adresou.');
+    }
+    // Doména zapsaná znaky, které vypadají jako latinka (bezreality vs. bezreaIity).
+    if (/^xn--/i.test(host) || /(^|\.)xn--/i.test(host)) {
+      return chyba('Odkaz používá doménu se zvláštními znaky — vložte prosím běžnou adresu.');
+    }
+    if (parsed.port && parsed.port !== '80' && parsed.port !== '443') {
+      return chyba('Odkaz s vlastním portem nepřijímáme.');
+    }
+    if (STAHOVANI.test(parsed.pathname || '')) return chyba('Odkaz vede na soubor ke stažení, ne na stránku.');
     if (ZKRACOVACE.test(host)) return chyba('Zkrácené odkazy nepřijímáme — vložte prosím přímou adresu inzerátu.');
     if (/^(parcelaka\.cz|www\.parcelaka\.cz)$/.test(host)) return chyba('Odkaz má vést na jiný web (inzerát nebo katastr), ne zpět na Parcelku.');
+
+    var cesta = (parsed.pathname || '/') + (parsed.search || '');
+    if (cesta.replace(/\/+$/, '').length <= 1 && !ZNAME_DOMENY.test(host)) {
+      return ok('Odkaz vede jen na úvodní stránku webu — lepší je adresa konkrétního inzerátu nebo parcely.');
+    }
+    if (!ZNAME_DOMENY.test(host)) {
+      return ok('Odkaz vede na ' + host + ' — zkontrolujte prosím, že míří tam, kam má.');
+    }
     return ok();
+  }
+
+  /* Uklidí sledovací přívěsky (utm_*, fbclid, gclid) a mezery. Adresa zůstane
+     funkční, jen se z ní nestane půlstránkový slepenec. */
+  function ocistiOdkaz(v) {
+    var s = text(v);
+    if (!s) return '';
+    var u = /^https?:\/\//i.test(s) ? s : 'https://' + s;
+    try {
+      var p = new URL(u);
+      var pryc = [];
+      p.searchParams.forEach(function (_, k) {
+        if (/^(utm_|fbclid|gclid|mc_eid|mc_cid|igshid|ref_src)/i.test(k)) pryc.push(k);
+      });
+      pryc.forEach(function (k) { p.searchParams.delete(k); });
+      return p.toString();
+    } catch (e) { return s; }
+  }
+
+  /* Co plyne z EXIFu. Chybějící údaje nic nezamítají — messenger je z fotek
+     maže, takže „bez EXIFu" má poctivý člověk stejně často jako podvodník.
+     Zamítá se jen to, co EXIF přímo prozradí. */
+  function fotkaPuvod(info, typSouboru, w, h) {
+    info = info || {};
+    var sw = String(info.software || '');
+    // Snímek obrazovky: bez údajů o přístroji, ve formátu PNG a s rozměry
+    // přesně odpovídajícími displeji.
+    var displeje = ['1170x2532', '1179x2556', '1290x2796', '1284x2778', '1125x2436', '1080x1920', '1080x2400', '828x1792', '750x1334'];
+    var rozmer = w + 'x' + h, rozmerNaVysku = h + 'x' + w;
+    if (/png/i.test(typSouboru || '') && !info.znacka &&
+        (displeje.indexOf(rozmer) !== -1 || displeje.indexOf(rozmerNaVysku) !== -1)) {
+      return chyba('vypadá jako snímek obrazovky — nahrajte prosím vyfocený pozemek');
+    }
+    if (/screenshot|snímek|snimek/i.test(sw)) {
+      return chyba('vypadá jako snímek obrazovky — nahrajte prosím vyfocený pozemek');
+    }
+    var cas = info.datum ? datumNaCas(info.datum) : null;
+    if (cas) {
+      var ted = Date.now();
+      if (cas.getTime() > ted + 36 * 3600 * 1000) return chyba('má čas pořízení v budoucnosti — zkontrolujte datum v telefonu');
+      var roky = (ted - cas.getTime()) / (365.25 * 24 * 3600 * 1000);
+      if (roky > 10) return ok('je starší než deset let — je pozemek pořád v tomhle stavu?');
+    }
+    return ok();
+  }
+
+  // Sedí místo pořízení fotky k obci z inzerátu?
+  function fotkaMisto(vzdalenostKm) {
+    if (vzdalenostKm == null) return ok();               // fotka souřadnice nemá
+    if (vzdalenostKm > 100) return chyba('byla vyfocena ' + Math.round(vzdalenostKm) + ' km od zadané obce — patří k tomuhle pozemku?');
+    if (vzdalenostKm > 25) return ok('jedna fotka vznikla ' + Math.round(vzdalenostKm) + ' km od zadané obce — zkontrolujte, že patří k pozemku.');
+    return ok();
+  }
+
+  // „2026:09:18 14:03:22" → Date (stejný tvar jako v js/exif.js)
+  function datumNaCas(s) {
+    var m = /^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(String(s || ''));
+    if (!m) return null;
+    var d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    return isNaN(d.getTime()) ? null : d;
   }
 
   function kontakt(v) {
@@ -228,6 +321,7 @@
     obec: obec, vymera: vymera, cena: cena, cenaZaMetr: cenaZaMetr,
     popis: popis, odkaz: odkaz, kontakt: kontakt, jmeno: jmeno, parcela: parcela,
     fotkaRozmery: fotkaRozmery, fotkaObsah: fotkaObsah,
+    fotkaPuvod: fotkaPuvod, fotkaMisto: fotkaMisto, ocistiOdkaz: ocistiOdkaz,
     formular: formular,
     _jeSprosty: jeSprosty, _jeSpam: jeSpam, _podilVelkych: podilVelkych
   };

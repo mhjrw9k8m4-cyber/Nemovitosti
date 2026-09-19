@@ -96,6 +96,29 @@ neprojde('odkaz', 'vnitřní síť', K.odkaz('http://192.168.1.1/admin'));
 neprojde('odkaz', 'zkracovač', K.odkaz('https://bit.ly/3xYzAbc'));
 neprojde('odkaz', 'odkaz zpět na Parcelku', K.odkaz('https://www.parcelaka.cz/pozemek.html?p=1'));
 neprojde('odkaz', 'nekonečně dlouhý', K.odkaz('https://example.com/' + 'a'.repeat(400)));
+neprojde('odkaz', 'přihlašovací údaje v adrese', K.odkaz('https://admin:heslo@banka.cz/prihlaseni'));
+neprojde('odkaz', 'vlastní port', K.odkaz('https://example.com:8080/pozemek'));
+neprojde('odkaz', 'soubor ke stažení (.apk)', K.odkaz('https://example.com/nabidka.apk'));
+neprojde('odkaz', 'doména psaná cizími znaky (punycode)', K.odkaz('https://xn--bezreality-1ob.cz/pozemek'));
+neprojde('odkaz', 'mezera uvnitř', K.odkaz('https://example.com/pozemek u lesa'));
+neprojde('odkaz', 'číselná IP', K.odkaz('https://93.184.216.34/pozemek'));
+neprojde('odkaz', 'dvě tečky v doméně', K.odkaz('https://example..com/pozemek'));
+neprojde('odkaz', 'doména bez koncovky', K.odkaz('https://example./pozemek'));
+{
+  const r = K.odkaz('https://nejakyweb.cz/pozemek/123');
+  bezi++;
+  if (!r.ok || !r.varovani) { spadlo++; vysledky.push('  ✕ odkaz: neznámá doména má projít s upozorněním, vyšlo ' + JSON.stringify(r)); }
+}
+{
+  const r = K.odkaz('https://nejakyweb.cz/');
+  bezi++;
+  if (!r.ok || !/úvodní/.test(r.varovani || '')) { spadlo++; vysledky.push('  ✕ odkaz: samotná úvodní stránka má projít s upozorněním, vyšlo ' + JSON.stringify(r)); }
+}
+{
+  const cisty = K.ocistiOdkaz('https://sreality.cz/detail/1?utm_source=fb&fbclid=xyz&id=9');
+  bezi++;
+  if (/utm_|fbclid/.test(cisty) || !/id=9/.test(cisty)) { spadlo++; vysledky.push('  ✕ odkaz: úklid sledovacích přívěsků selhal → ' + cisty); }
+}
 
 /* ---------------- kontakt ---------------- */
 projde('kontakt', 'telefon s mezerami', K.kontakt('777 123 654'));

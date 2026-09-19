@@ -136,6 +136,7 @@
   var PH_MAX = 8, PH_DIM = 1600, PH_MIN = 500, PH_Q = 0.82, PH_SRC_MAX = 25 * 1024 * 1024;
   var photoRejects = [];   // poslední zamítnuté fotky (pro hlášku uživateli)
   var posledniVarovani = [];   // co je podezřelé, ale odeslání to nebrání
+  var mistoHlaska = '';        // fotka vyfocená daleko od zadané obce
   function isImage(t) { return /^image\/(jpe?g|png|webp)$/i.test(t || ''); }
 
   // --- AI kontrola obsahu fotek (NSFWJS) — líně načtená, s vlastním modelem ---
@@ -197,6 +198,18 @@
     } catch (e) { return null; }   // jiný původ obrázku apod. → neblokujeme
   }
 
+  /* Souřadnice z posledně zpracovaných fotek — při odesílání se porovnají
+     s obcí z inzerátu (fotka z druhého konce republiky k pozemku nepatří). */
+  var fotkyGps = [];
+
+  // Přečte EXIF z prvních 256 kB souboru — dál v JPEGu hlavička nebývá.
+  function nactiExif(file) {
+    if (!window.PKExif || !file.slice) return Promise.resolve({ maEXIF: false });
+    return file.slice(0, 256 * 1024).arrayBuffer()
+      .then(function (buf) { return PKExif.zBuferu(buf); })
+      .catch(function () { return { maEXIF: false }; });
+  }
+
   // Jedna fotka přes všechny brány → { blob } nebo { reject: 'důvod' }
   function moderateAndProcess(file) {
     return new Promise(function (resolve) {
@@ -218,6 +231,17 @@
           var oc = PKKontrola.fotkaObsah(obsah.prumer, obsah.odchylka);
           if (!oc.ok) { URL.revokeObjectURL(url); resolve({ reject: oc.msg }); return; }
         }
+        // Co o sobě fotka prozradí: přístroj, čas, souřadnice. Chybějící údaje
+        // nic nezamítají (messenger je maže) — váhu má jen to, co tam stojí.
+        nactiExif(file).then(function (exif) {
+          if (window.PKKontrola) {
+            var pv = PKKontrola.fotkaPuvod(exif, file.type, w, h);
+            if (!pv.ok) { URL.revokeObjectURL(url); resolve({ reject: pv.msg }); return; }
+          }
+          if (exif && typeof exif.lat === 'number') fotkyGps.push({ lat: exif.lat, lng: exif.lng });
+          dokonci();
+        });
+        function dokonci() {
         contentOk(img).then(function (ok) {
           if (!ok) { URL.revokeObjectURL(url); resolve({ reject: 'fotka vypadá nevhodně a nebyla přijata' }); return; }
           try {
@@ -229,6 +253,7 @@
             cv.toBlob(function (blob) { resolve(blob ? { blob: blob } : { reject: 'nepodařilo se zpracovat' }); }, 'image/jpeg', PH_Q);
           } catch (e) { URL.revokeObjectURL(url); resolve({ reject: 'nepodařilo se zpracovat' }); }
         });
+        }
       };
       img.onerror = function () { URL.revokeObjectURL(url); resolve({ reject: 'nepodařilo se načíst' }); };
       img.src = url;
@@ -264,6 +289,7 @@
       videne[klic] = 1; return true;
     });
     photoRejects = [];
+    fotkyGps = [];
     if (!files.length) return Promise.resolve({ urls: [], rejected: [] });
     showToast('Kontroluji fotky…');
     var blobs = [];
@@ -298,6 +324,19 @@
       var features = [].slice.call(document.querySelectorAll('input[name="site"]:checked')).map(function (x) { return x.value; });
       return uploadPhotos().then(function (pr) {
       if (pr.rejected && pr.rejected.length) return 'photos';   // zamítnuté fotky → hláška, nic se nezveřejní
+      // Fotky, které v sobě mají souřadnice, porovnáme s obcí z inzerátu.
+      // Fotka z druhého konce republiky k pozemku nepatří.
+      mistoHlaska = '';
+      if (window.PKKontrola && window.PKExif && pos && fotkyGps.length) {
+        var nejdal = null;
+        fotkyGps.forEach(function (g) {
+          var km = PKExif.vzdalenostKm(pos.lat, pos.lng, g.lat, g.lng);
+          if (km != null && (nejdal == null || km > nejdal)) nejdal = km;
+        });
+        var mst = PKKontrola.fotkaMisto(nejdal);
+        if (!mst.ok) { mistoHlaska = mst.msg; return 'misto'; }
+        if (mst.varovani) posledniVarovani.push({ id: 'p-fotky', msg: mst.varovani });
+      }
       return PKAuth.rpc('create_listing', {
         p_place: obec, p_okres: okres, p_druh: val('p-druh'), p_parcel: val('p-parcela'),
         p_area: area, p_price: price, p_lat: pos.lat, p_lng: pos.lng,
@@ -621,6 +660,9 @@
           ms.classList.add('err');
         } else if (r === 'wait') {
           ms.textContent = 'Chvíli prosím počkejte (asi minutu) a zkuste přidat další inzerát znovu.';
+          ms.classList.add('err');
+        } else if (r === 'misto') {
+          ms.textContent = 'Fotka ' + (mistoHlaska || 'nesedí k zadané obci') + ' Zkontrolujte prosím obec, nebo nahrajte fotky pozemku.';
           ms.classList.add('err');
         } else if (r === 'db') {
           ms.innerHTML = 'Inzeráty teď nejde přidávat — na naší straně neběží aktuální verze databáze. Píšeme na tom; zkuste to prosím později, nebo nám dejte vědět přes <a href="kontakt.html">kontakt</a>.';
