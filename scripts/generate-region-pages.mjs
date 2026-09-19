@@ -219,6 +219,13 @@ function footer(){
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script src="js/pridat.js?${V}" defer></script>
+<!-- Odznak nepřečtených zpráv u položky „Zprávy" v menu. Musí být i tady:
+     tyhle stránky se generují znovu při každém běhu datového robota, takže
+     co není v šabloně, to příští běh smaže — a lidé z vyhledávání chodí
+     nejčastěji právě na stránky okresů. -->
+<script src="js/config.js?${V}" defer></script>
+<script src="js/auth.js?${V}" defer></script>
+<script src="js/zpravy-odznak.js?${V}" defer></script>
 </body>
 </html>
 `;

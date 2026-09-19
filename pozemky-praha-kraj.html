@@ -201,8 +201,12 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script src="js/pridat.js?v=20260902f" defer></script>
-<script src="js/config.js?v=20260926a" defer></script>
-<script src="js/auth.js?v=20260926a" defer></script>
-<script src="js/zpravy-odznak.js?v=20260926a" defer></script>
+<!-- Odznak nepřečtených zpráv u položky „Zprávy" v menu. Musí být i tady:
+     tyhle stránky se generují znovu při každém běhu datového robota, takže
+     co není v šabloně, to příští běh smaže — a lidé z vyhledávání chodí
+     nejčastěji právě na stránky okresů. -->
+<script src="js/config.js?v=20260902f" defer></script>
+<script src="js/auth.js?v=20260902f" defer></script>
+<script src="js/zpravy-odznak.js?v=20260902f" defer></script>
 </body>
 </html>
