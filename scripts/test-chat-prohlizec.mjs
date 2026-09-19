@@ -68,13 +68,32 @@ await pM.goto(`${BASE}/pozemky-okres-tabor.html`);
 await pM.waitForSelector('.nav-toggle .nav-dot', { timeout: 10000 });
 je('na mobilu je nepřečtená zpráva vidět i se zavřeným menu',
   await pM.locator('.nav-toggle .nav-dot').isVisible(), true);
+// Tečka pokrývá zprávy i hlídání, proto neutrální „novinky".
 je('tlačítko menu to řekne i nevidomému',
-  await pM.getAttribute('.nav-toggle', 'aria-label'), 'Otevřít menu — máte nepřečtené zprávy');
+  await pM.getAttribute('.nav-toggle', 'aria-label'), 'Otevřít menu — čekají na vás novinky');
 je('odznak u položky Zprávy existuje', (await pM.textContent('#nav-zpravy .nav-unread')).trim(), '1');
 await pM.click('.nav-toggle');
 je('po otevření menu je odznak vidět',
   await pM.locator('#nav-zpravy .nav-unread').isVisible(), true);
-je('počet je i v titulku záložky', (await pM.title()).startsWith('(1) '), true);
+
+/* ---------- odznak hlídání: hlídací pes musí štěkat i mimo svou stránku ---------- */
+// Kolik nových pozemků má vyjít, spočítáme týmž modulem, který používá web —
+// tady se ověřuje to ostatní: že se data vůbec stáhnou, spojí s uloženým
+// hledáním a výsledek doputuje až do menu.
+const { createRequire } = await import('node:module');
+const req2 = createRequire(import.meta.url);
+const HL = req2(new URL('../js/hlidani-logika.js', import.meta.url).pathname);
+const dataSoubor = JSON.parse((await import('node:fs')).readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8'));
+const cekanoHl = HL.novychCelkem(
+  [{ okres: 'Tábor', druh: '', ptype: '', max_price: 0, min_area: 0, features: [], seen_keys: [] }],
+  dataSoubor.opportunities || []);
+je('zkušební hledání vůbec něco najde', cekanoHl > 0, true);
+
+await pM.waitForSelector('#nav-hlidani .nav-unread', { state: 'attached', timeout: 15000 });
+je('odznak hlídání ukazuje počet nových pozemků',
+  (await pM.textContent('#nav-hlidani .nav-unread')).trim(), cekanoHl > 9 ? '9+' : String(cekanoHl));
+je('titulek záložky sečte zprávy i hlídání',
+  (await pM.title()).startsWith('(' + (1 + cekanoHl > 9 ? '9+' : String(1 + cekanoHl)) + ') '), true);
 
 // na širokém displeji je menu rozbalené, tam tečka překážet nemusí
 const pSirs = await cMajitel.newPage();
@@ -121,7 +140,19 @@ je('u dlouhé zprávy se ukáže, kolik zbývá', (await pZ.textContent('#zc-poc
 await pZ.fill('#zc-ta', 'a'.repeat(2005));
 je('po překročení meze to pole řekne samo', (await pZ.textContent('#zc-pocet')).trim(), 'o 5 znaků moc');
 
-/* ---------- 7. žádné chyby v konzoli ---------- */
+/* ---------- 7. po přečtení odznak zprávy zmizí, hlídání zůstane ---------- */
+// Počet se drží minutu v paměti prohlížeče, ať se web neptá na každé
+// stránce znovu. Návštěva schránky ho proto musí zahodit — jinak by odznak
+// ještě minutu hlásil zprávu, kterou si člověk právě přečetl.
+const pPo = await cMajitel.newPage();
+await pPo.goto(`${BASE}/pozemky-okres-tabor.html`);
+await pPo.waitForSelector('#nav-hlidani .nav-unread', { state: 'attached', timeout: 15000 });
+je('po přečtení zpráv odznak u Zpráv zhasne', await pPo.locator('#nav-zpravy .nav-unread').count(), 0);
+je('odznak hlídání tím ale nezhasne', await pPo.locator('#nav-hlidani .nav-unread').count(), 1);
+je('tečka na menu svítí dál kvůli hlídání', await pPo.locator('.nav-toggle .nav-dot').isVisible(), true);
+await pPo.close();
+
+/* ---------- 8. žádné chyby v konzoli ---------- */
 je('na stránkách nespadl žádný skript', chybyKonzole, []);
 
 console.log('\nChat v prohlížeči: ' + (ok + chyb) + ' kontrol');

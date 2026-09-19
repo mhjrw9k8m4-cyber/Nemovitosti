@@ -95,6 +95,14 @@ const server = http.createServer((req, res) => {
         return send(200, JSON.stringify(out));
       }
 
+      // Uložená hledání — kvůli odznaku „Hlídání" v menu. Jedno hledání
+      // na okres Tábor, nic zatím viděného: co sedí, je nové.
+      if (fn === 'my_searches') {
+        return send(200, JSON.stringify(uid === UID_MAJITEL
+          ? [{ id: 's1', label: 'Tábor', okres: 'Tábor', druh: '', ptype: '', max_price: 0, min_area: 0, features: [], seen_keys: [] }]
+          : []));
+      }
+
       if (fn === 'unread_count') {
         const n = zpravy.filter((m) => m.sender_id !== uid && !m.read_at &&
           (m.buyer_id === uid || uid === UID_MAJITEL)).length;

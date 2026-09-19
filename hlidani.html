@@ -74,7 +74,7 @@
       <a href="cena-pozemku.html">Ceny pozemků</a>
       <a href="index.html#faq">Dotazy</a>
       <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
-      <a href="hlidani.html">Hlídání</a>
+      <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
       <a href="muj-inzerat.html">Můj profil</a>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
@@ -108,6 +108,8 @@
 
 <script src="js/config.js?v=20260902f"></script>
 <script src="js/auth.js?v=20260902f"></script>
+<script src="js/hlidani-logika.js?v=20260926b"></script>
+<script src="js/upozorneni.js?v=20260926b"></script>
 <script>
 (function () {
   var A = window.PKAuth;
@@ -115,30 +117,17 @@
   var DATA = [];
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); };
   var fmt = function (n) { return (typeof n === 'number' && n > 0) ? n.toLocaleString('cs-CZ') : ''; };
-  var normd = function (s) { return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); };
+  // Porovnávání pozemků s hledáním žije v js/hlidani-logika.js — stejný
+  // kód používá i odznak v menu, aby obě místa počítala „nové" shodně.
+  var HL = window.PKHlidani;
+  var normd = HL.normd;
   var TYPE_LABEL = { sale: 'Na prodej', drazba: 'Dražba', exekuce: 'Exekuce', obec: 'Obecní', majitel: 'Od majitele' };
   var DRUHY = ['stavební pozemek', 'zahrada', 'lesní pozemek', 'orná půda', 'louka', 'trvalý travní porost', 'ostatní plocha', 'vinice', 'sad'];
   var FEATS = ['Elektřina', 'Voda', 'Kanalizace', 'Plyn', 'Oplocení', 'Stavba k rekonstrukci'];
 
-  function keyOf(d) { return [d.type || '', normd(d.okres), normd(d.place), d.parcel || '', d.price || '', d.area || ''].join('|').slice(0, 240); }
-  function matches(s, d) {
-    if (s.ptype && d.type !== s.ptype) return false;
-    if (s.druh && normd(d.druh).indexOf(normd(s.druh)) < 0) return false;
-    if (s.max_price && !(d.price > 0 && d.price <= s.max_price)) return false;
-    if (s.min_area && !(d.area > 0 && d.area >= s.min_area)) return false;
-    if (s.okres) { var k = normd(s.okres); if (normd(d.okres).indexOf(k) < 0 && normd(d.place).indexOf(k) < 0) return false; }
-    if (s.features && s.features.length) {
-      var f = d.features || [];
-      for (var i = 0; i < s.features.length; i++) {
-        var need = s.features[i];
-        if (need === 'Přístupová cesta') {
-          // vyžaduje reálnou cestu — mají jen vlastní inzeráty (pole access)
-          if ((d.access || '').indexOf('cesta') < 0) return false;
-        } else if (f.indexOf(need) < 0) return false;
-      }
-    }
-    return true;
-  }
+  var keyOf = HL.keyOf;
+  var matches = HL.matches;
+
   function critText(s) {
     var p = [];
     p.push(s.okres ? esc(s.okres) : 'celá ČR');
@@ -332,6 +321,5 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNav(); });
 })();
 </script>
-<script src="js/zpravy-odznak.js?v=20260926a" defer></script>
 </body>
 </html>

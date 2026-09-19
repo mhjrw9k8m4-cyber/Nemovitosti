@@ -11,7 +11,7 @@ spam, a kdo se ptá, nemusí vydávat kontakt dřív, než chce.
 | tabulka a funkce | `supabase/messaging.sql` | `send_message`, `my_threads`, `thread_messages`, `unread_count` |
 | schránka a konverzace | `zpravy.html` | seznam vláken, okno chatu |
 | logika bez DOMu | `js/zpravy-logika.js` | hlavička, překreslování, hlášky, počítadlo znaků |
-| odznak v menu | `js/zpravy-odznak.js` | počet nepřečtených u položky „Zprávy" |
+| odznak v menu | `js/upozorneni.js` | počet nepřečtených u položky „Zprávy" |
 | vstup z mapy | `js/main.js` → „Napsat majiteli" | `zpravy.html?l=…&new=1&p=obec&ok=okres` |
 
 **Vlákno = dvojice (inzerát, zájemce).** Majitel je vždy `listings.user_id`.

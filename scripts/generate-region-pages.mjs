@@ -192,7 +192,7 @@ ${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\
       <a href="cena-pozemku.html">Ceny pozemků</a>
       <a href="index.html#faq">Dotazy</a>
       <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
-      <a href="hlidani.html">Hlídání</a>
+      <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
       <a href="muj-inzerat.html">Můj profil</a>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
@@ -219,13 +219,14 @@ function footer(){
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script src="js/pridat.js?${V}" defer></script>
-<!-- Odznak nepřečtených zpráv u položky „Zprávy" v menu. Musí být i tady:
-     tyhle stránky se generují znovu při každém běhu datového robota, takže
-     co není v šabloně, to příští běh smaže — a lidé z vyhledávání chodí
-     nejčastěji právě na stránky okresů. -->
+<!-- Upozornění v menu: nepřečtené zprávy a nové pozemky z hlídání. Musí
+     být i tady: tyhle stránky se generují znovu při každém běhu datového
+     robota, takže co není v šabloně, to příští běh smaže — a lidé
+     z vyhledávání chodí nejčastěji právě na stránky okresů. -->
 <script src="js/config.js?${V}" defer></script>
 <script src="js/auth.js?${V}" defer></script>
-<script src="js/zpravy-odznak.js?${V}" defer></script>
+<script src="js/hlidani-logika.js?${V}" defer></script>
+<script src="js/upozorneni.js?${V}" defer></script>
 </body>
 </html>
 `;

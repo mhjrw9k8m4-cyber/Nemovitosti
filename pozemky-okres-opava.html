@@ -48,7 +48,7 @@
       <a href="cena-pozemku.html">Ceny pozemků</a>
       <a href="index.html#faq">Dotazy</a>
       <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
-      <a href="hlidani.html">Hlídání</a>
+      <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
       <a href="muj-inzerat.html">Můj profil</a>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
@@ -228,12 +228,13 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script src="js/pridat.js?v=20260902f" defer></script>
-<!-- Odznak nepřečtených zpráv u položky „Zprávy" v menu. Musí být i tady:
-     tyhle stránky se generují znovu při každém běhu datového robota, takže
-     co není v šabloně, to příští běh smaže — a lidé z vyhledávání chodí
-     nejčastěji právě na stránky okresů. -->
+<!-- Upozornění v menu: nepřečtené zprávy a nové pozemky z hlídání. Musí
+     být i tady: tyhle stránky se generují znovu při každém běhu datového
+     robota, takže co není v šabloně, to příští běh smaže — a lidé
+     z vyhledávání chodí nejčastěji právě na stránky okresů. -->
 <script src="js/config.js?v=20260902f" defer></script>
 <script src="js/auth.js?v=20260902f" defer></script>
-<script src="js/zpravy-odznak.js?v=20260902f" defer></script>
+<script src="js/hlidani-logika.js?v=20260902f" defer></script>
+<script src="js/upozorneni.js?v=20260902f" defer></script>
 </body>
 </html>

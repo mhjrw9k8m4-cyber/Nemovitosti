@@ -1,5 +1,5 @@
 // Testy psaní v aplikaci — logika schránky a konverzace
-// (js/zpravy-logika.js) a odznak nepřečtených (js/zpravy-odznak.js).
+// (js/zpravy-logika.js) a odznak nepřečtených (js/upozorneni.js).
 //
 // Spuštění: node scripts/test-zpravy.mjs
 //
@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const req = createRequire(import.meta.url);
 const Z = req(path.join(ROOT, 'js', 'zpravy-logika.js'));
-const O = req(path.join(ROOT, 'js', 'zpravy-odznak.js'));
+const O = req(path.join(ROOT, 'js', 'upozorneni.js'));
 
 let bezi = 0, spadlo = 0;
 const vysledky = [];

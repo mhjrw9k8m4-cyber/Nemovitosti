@@ -56,6 +56,9 @@ jobs:
       - name: Psaní v aplikaci (logika schránky a odznaku)
         run: node scripts/test-zpravy.mjs
 
+      - name: Hlídání lokality (co je nový pozemek)
+        run: node scripts/test-hlidani.mjs
+
       - name: Celá kontrola inzerátů (proti zkušebnímu serveru)
         run: |
           npm install --no-audit --no-fund --omit=dev jpeg-js
