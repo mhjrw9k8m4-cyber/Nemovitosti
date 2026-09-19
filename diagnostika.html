@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Diagnostika — Parcelka</title>
   <meta name="robots" content="noindex,nofollow">
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta name="theme-color" content="#EDEFF4">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <style>
@@ -50,6 +51,10 @@
   <h1>Diagnostika Parcelky</h1>
   <p class="lede">Zjistí, které části webu mají spojení s databází a e-maily — a které ne.
      Stránka nic nemaže; zápisové testy se spouští jen tlačítkem.</p>
+
+  <p class="note" style="margin:-14px 0 18px">Verze stránky: <strong>2026-09-19 b</strong>.
+     Když je tu jiné datum, prohlížeč ukazuje starou stránku z paměti — otevřete adresu
+     s dovětkem <code>?v=2</code> na konci.</p>
 
   <div class="btns">
     <button class="primary" id="run">Spustit kontrolu</button>
@@ -124,16 +129,27 @@
     if (!URL_ || !KEY) { radek(box, 'bad', 'Nastavení chybí', 'V <code>js/config.js</code> není adresa projektu nebo klíč.'); return; }
     radek(box, 'ok', 'Nastavení načteno', 'Projekt <code>' + URL_.replace('https://', '') + '</code>');
 
-    dotaz('/rest/v1/', {}).then(function (r) {
-      if (r.stav === 0) radek(box, 'bad', 'Databáze neodpovídá', 'Spojení se nepovedlo navázat: <code>' + zkratka(r.telo, 90) + '</code>. Projekt může být uspaný (Supabase free plán uspí projekt po delší nečinnosti) nebo neexistuje.');
-      else if (r.stav === 401) radek(box, 'bad', 'Klíč databáze neplatí', 'Odpověď 401. Klíč v <code>js/config.js</code> je nejspíš starý — v Supabase → Settings → API Keys vezměte aktuální „publishable“.');
-      else radek(box, 'ok', 'Databáze odpovídá', 'HTTP ' + r.stav);
-
-      return dotaz('/rest/v1/listings?select=id,status&limit=1', {});
-    }).then(function (r) {
-      if (r.stav === 200) radek(box, 'ok', 'Čtení inzerátů funguje', 'Vrátilo <code>' + zkratka(r.telo, 60) + '</code>');
-      else if (r.stav === 404) radek(box, 'bad', 'Tabulka inzerátů chybí', 'HTTP 404 — v Supabase nejspíš neproběhl skript <code>supabase/schema.sql</code>.');
-      else radek(box, 'bad', 'Čtení inzerátů selhalo', 'HTTP ' + r.stav + ' — <code>' + zkratka(r.telo, 110) + '</code>');
+    // Platnost klíče se pozná JEN na skutečném dotazu na data. Dřív se tu
+    // volal kořen /rest/v1/ (výpis OpenAPI) — jenže ten Supabase veřejnému
+    // klíči běžně nepouští a vrací 401 i u naprosto platného klíče. Stránka
+    // pak hlásila „Klíč databáze neplatí“ a hned o řádek níž „Čtení inzerátů
+    // funguje, HTTP 200“. Dvě protichůdná tvrzení; to druhé bylo pravdivé.
+    dotaz('/rest/v1/listings?select=id,status&limit=1', {}).then(function (r) {
+      if (r.stav === 0) {
+        radek(box, 'bad', 'Databáze neodpovídá', 'Spojení se nepovedlo navázat: <code>' + zkratka(r.telo, 90) + '</code>. Projekt může být uspaný (Supabase free plán uspí projekt po delší nečinnosti) nebo neexistuje.');
+      } else if (r.stav === 401 || r.stav === 403) {
+        radek(box, 'bad', 'Klíč databáze neplatí', 'Odpověď ' + r.stav + ' na čtení dat. Klíč v <code>js/config.js</code> je nejspíš starý — v Supabase → Settings → API Keys vezměte aktuální „publishable“.');
+      } else if (r.stav === 404) {
+        radek(box, 'bad', 'Tabulka inzerátů chybí', 'HTTP 404 — v Supabase nejspíš neproběhl skript <code>supabase/schema.sql</code>.');
+      } else if (r.stav === 200) {
+        var pocet = null;
+        try { pocet = JSON.parse(r.telo || '[]').length; } catch (e) {}
+        radek(box, 'ok', 'Databáze odpovídá a klíč platí', 'Čtení inzerátů prošlo (HTTP 200).');
+        radek(box, pocet === 0 ? 'run' : 'ok', pocet === 0 ? 'Zatím tu není žádný inzerát' : 'Inzeráty se čtou',
+          pocet === 0 ? 'Není to chyba — jen zatím nikdo žádný pozemek nepřidal.' : 'Vrátilo <code>' + zkratka(r.telo, 60) + '</code>');
+      } else {
+        radek(box, 'bad', 'Čtení inzerátů selhalo', 'HTTP ' + r.stav + ' — <code>' + zkratka(r.telo, 110) + '</code>');
+      }
 
       return dotaz('/rest/v1/rpc/public_listings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     }).then(function (r) {
