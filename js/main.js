@@ -31,12 +31,23 @@
     { place:'Slaný',             okres:'Kladno',        type:'sale',    parcel:'96',    druh:'zahrada',   area:1340, price:1340000, extra:'na prodej',        lat:50.2300, lng:14.0860 }
   ];
 
+  /* Barva kategorie má JEDEN zdroj, a tím je CSS. Dřív byla opsaná tady,
+     znovu v pozemek.js a potřetí v pravidlech stylu — a když se paleta
+     měnila, mapa a karty si u téhož pozemku přestaly odpovídat. Tady se
+     tedy jen přečte proměnná ze stylu; hodnota v kódu je záloha pro případ,
+     že by styl ještě nebyl načtený. Hlídá to scripts/test-barvy.mjs. */
+  function tokenBarva(nazev, zaloha) {
+    try {
+      var v = getComputedStyle(document.documentElement).getPropertyValue(nazev).trim();
+      return v || zaloha;
+    } catch (e) { return zaloha; }
+  }
   var TYPE = {
-    sale:    { label:'Na prodej',    color:'#4E6FD4', link:{ label:'Nabídka SPÚ',          url:'https://spu.gov.cz/nabidky' } },
-    drazba:  { label:'Dražba',       color:'#FFA60A', link:{ label:'Detail dražby',       url:'https://www.portaldrazeb.cz/' } },
-    exekuce: { label:'Exekuce',      color:'#FB2B2B', link:{ label:'Insolvenční rejstřík', url:'https://isir.justice.cz/isir/common/index.do' } },
-    obec:    { label:'Obecní záměr', color:'#12AEBE', link:{ label:'Úřední deska obce',    url:'https://www.uredni-deska.cz/' } },
-    majitel: { label:'Přímo od majitele',  color:'#8B4FE0', link:{ label:'Ověřit v katastru',    url:'https://www.ikatastr.cz/' } }
+    sale:    { label: 'Na prodej',    color: tokenBarva('--c-sale', '#4361B8'), link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
+    drazba:  { label: 'Dražba',       color: tokenBarva('--c-drazba', '#CC6B33'), link: { label: 'Detail dražby',       url: 'https://www.portaldrazeb.cz/' } },
+    exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), link: { label: 'Insolvenční rejstřík', url: 'https://isir.justice.cz/isir/common/index.do' } },
+    obec:    { label: 'Obecní záměr', color: tokenBarva('--c-obec', '#12AEBE'), link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
+    majitel: { label: 'Přímo od majitele',  color: tokenBarva('--c-majitel', '#8B4FE0'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
   };
   // 14 krajů ČR — přehled po krajích (rozdělení mapy). Okres → kraj + střed kraje.
   var KRAJE = {
@@ -1157,9 +1168,9 @@
     }).join(' ');
     var gid = 'm' + d._id;
     return '<svg class="opp-plan" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-      '<defs><linearGradient id="bg' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d2e3e"/><stop offset="1" stop-color="#141f2b"/></linearGradient></defs>' +
+      '<defs><linearGradient id="bg' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1C2F26"/><stop offset="1" stop-color="#14231C"/></linearGradient></defs>' +
       '<rect width="320" height="200" fill="url(#bg' + gid + ')"/>' +
-      '<g stroke="rgba(200,216,232,0.05)" stroke-width="1"><path d="M40 0V200M80 0V200M120 0V200M160 0V200M200 0V200M240 0V200M280 0V200"/><path d="M0 40H320M0 80H320M0 120H320M0 160H320"/></g>' +
+      '<g stroke="rgba(206,228,212,0.05)" stroke-width="1"><path d="M40 0V200M80 0V200M120 0V200M160 0V200M200 0V200M240 0V200M280 0V200"/><path d="M0 40H320M0 80H320M0 120H320M0 160H320"/></g>' +
       '<polygon points="' + pts + '" fill="' + col + '" fill-opacity="0.22" stroke="' + col + '" stroke-width="2.4" stroke-linejoin="round"/>' +
       '</svg>';
   }
@@ -1176,40 +1187,17 @@
       var p0 = d.photos[0];
       var cnt = d.photos.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + (d.photos.length) + '</span>' : '';
       return '<svg class="opp-map" viewBox="0 0 384 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
-        '<rect width="384" height="240" fill="#141f2b"/>' +
+        '<rect width="384" height="240" fill="#14231C"/>' +
         '<image href="' + p0 + '" xlink:href="' + p0 + '" x="0" y="0" width="384" height="240" preserveAspectRatio="xMidYMid slice"/>' +
         '</svg>' +
         '<span class="opp-mgrad"></span>' +
         '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>' + cnt;
     }
-    var z = 16, n = Math.pow(2, z);
-    function worldX(lng) { return (lng + 180) / 360 * 256 * n; }
-    function worldY(lat) { var r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * 256 * n; }
-    var WX = worldX(d.lng), WY = worldY(d.lat);
-    var Vw = 384, Vh = 240;                         // 16:10, pozemek uprostřed
-    var ox = WX - Vw / 2, oy = WY - Vh / 2;
-    var minTx = Math.floor(ox / 256), maxTx = Math.floor((ox + Vw) / 256);
-    var minTy = Math.floor(oy / 256), maxTy = Math.floor((oy + Vh) / 256);
-    var imgs = '';
-    for (var tx = minTx; tx <= maxTx; tx++) {
-      for (var ty = minTy; ty <= maxTy; ty++) {
-        var u = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + z + '/' + ty + '/' + tx;
-        imgs += '<image href="' + u + '" xlink:href="' + u + '" x="' + (tx * 256 - ox).toFixed(1) + '" y="' + (ty * 256 - oy).toFixed(1) + '" width="256" height="256" preserveAspectRatio="none"/>';
-      }
-    }
-    var fid = 'ts' + d._id;
-    var pin = '<g transform="translate(' + (Vw / 2) + ',' + (Vh / 2) + ')" filter="url(#' + fid + ')">' +
-      '<path d="M0 0C-7 -12 -12 -18 -12 -25 A12 12 0 1 1 12 -25 C12 -18 7 -12 0 0Z" fill="' + col + '" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>' +
-      '<circle cx="0" cy="-25" r="4.6" fill="#fff"/></g>';
-    return '<svg class="opp-map" viewBox="0 0 ' + Vw + ' ' + Vh + '" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
-      '<defs><filter id="' + fid + '" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="rgba(0,0,0,0.5)"/></filter></defs>' +
-      '<rect width="' + Vw + '" height="' + Vh + '" fill="#141f2b"/>' +
-      '<g stroke="rgba(200,216,232,0.06)" stroke-width="1"><path d="M64 0V240M128 0V240M192 0V240M256 0V240M320 0V240M0 60H384M0 120H384M0 180H384"/></g>' +
-      imgs + pin +
-      '</svg>' +
+    return window.PK_SNIMEK.html(d, { sirka: 384, vyska: 240, barva: col, id: 'ts' + d._id }) +
       '<span class="opp-mgrad"></span>' +
       '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>';
   }
+
   function shapeSvg(d) {
     var p = polyFor(d);
     var lats = p.map(function (x) { return x[0]; }), lngs = p.map(function (x) { return x[1]; });
@@ -1223,7 +1211,7 @@
     }).join(' ');
     // Neutrální jemný obrys — tvar dává kartě „mapový" charakter, ale nepřidává barvu
     return '<svg viewBox="0 0 100 100"><polygon points="' + pts +
-      '" fill="rgba(166,184,202,0.12)" stroke="#8fa2b5" stroke-width="2.2"/></svg>';
+      '" fill="rgba(166,184,202,0.12)" stroke="#93AC9C" stroke-width="2.2"/></svg>';
   }
 
   /* Rádce „Co byste měli vědět" je společný s druhou půlkou webu —
@@ -1470,13 +1458,30 @@
   var krajByName = {};
   // Na dotykových zařízeních není „myš pryč" → popisek kraje sám plynule zmizí.
   var isTouch = (typeof matchMedia === 'function' && matchMedia('(hover: none)').matches) || ('ontouchstart' in window);
-  // Klidný obrys kraje. Podklad je teď ztlumený, takže čára nemusí křičet —
-  // stačí, aby se dala sledovat. Hranice se čte, ale nepřebije tečky.
-  function styleKraj() { return { color: 'rgba(38,48,84,0.42)', weight: 1.2, fill: true, fillColor: '#3D63EE', fillOpacity: 0.02 }; }
+  /* Obrys kraje. Tenká šedá čára pod stovkami teček prakticky zmizela —
+     mapa pak nebyla mapa republiky, ale rozsypaný čaj. Dvě změny:
+     čára je značkově zelená a o něco silnější, a hlavně KAŽDÝ KRAJ MÁ
+     VÝPLŇ PODLE TOHO, KOLIK V NĚM JE POZEMKŮ. Z mapy je tím na první
+     pohled poznat, kde se něco děje, ještě než se člověk začte do teček.
+     Krytí jde přes odmocninu, ne přímo úměrně: Středočeský se 413 pozemky
+     by jinak byl skoro neprůhledný a zbytek republiky bílý. */
+  function krajKrytí(k) {
+    var o = krajCounts[k];
+    var n = o ? o.total : 0;
+    if (!n) return 0.015;
+    var max = 0;
+    for (var x in krajCounts) if (krajCounts[x].total > max) max = krajCounts[x].total;
+    if (max <= 0) return 0.015;
+    return 0.03 + 0.14 * Math.sqrt(n / max);
+  }
+  function styleKraj(k) {
+    return { color: 'rgba(31,81,56,0.5)', weight: 1.4, fill: true,
+      fillColor: '#1F5138', fillOpacity: krajKrytí(k) };
+  }
   if (KRAJE_GEOM) {
     var feats = Object.keys(KRAJE_GEOM).map(function (k) { return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] }; });
     krajLayer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
-      style: styleKraj,
+      style: function (f) { return styleKraj(f.properties.kraj); },
       onEachFeature: function (f, layer) {
         krajByName[f.properties.kraj] = layer;
         layer.bindTooltip(krajTitul(f.properties.kraj), { sticky: true, direction: 'top', className: 'kraj-tip' });
@@ -1484,7 +1489,7 @@
           if (selectedKraj !== f.properties.kraj) krajJustSelected = true; // přepnutí kraje neotevírá detail
           selectKraj(f.properties.kraj);
         });
-        layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2.2, color: '#2E42B4', fillColor: '#3D63EE', fillOpacity: 0.09 }); layer.bringToFront(); } });
+        layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2.4, color: '#1F5138', fillColor: '#1F5138', fillOpacity: krajKrytí(f.properties.kraj) + 0.09 }); layer.bringToFront(); } });
         layer.on('mouseout', function () { prekresliKraje(); });
         // Dotyk: po 2 s popisek plynule zhasne, ať nezůstane „viset" a nebrání dalšímu klikání.
         layer.on('tooltipopen', function (e) {
@@ -1577,7 +1582,7 @@
   }
   // Vybraný kraj: silnější obrys a lehké podbarvení, ať je jasně vidět,
   // ve kterém kraji se hledá.
-  function styleSelectedKraj(layer) { layer.setStyle({ weight: 2.6, color: '#2E42B4', fillColor: '#3D63EE', fillOpacity: 0.07 }); layer.bringToFront(); }
+  function styleSelectedKraj(layer) { layer.setStyle({ weight: 2.6, color: '#2E42B4', fillColor: '#1F5138', fillOpacity: 0.07 }); layer.bringToFront(); }
   // Ostatní kraje, když je nějaký vybraný: překryjeme je světlým závojem.
   // Podklad pod nimi zešedne a oko jde samo tam, kde jsou nabídky.
   function styleKrajMimo() { return { color: 'rgba(30,38,66,0.16)', weight: 1, fill: true, fillColor: '#F4F2ED', fillOpacity: 0.42 }; }
@@ -1587,7 +1592,7 @@
     krajLayer.eachLayer(function (l) {
       var k = l.feature && l.feature.properties && l.feature.properties.kraj;
       if (selectedKraj && k === selectedKraj) styleSelectedKraj(l);
-      else l.setStyle(selectedKraj ? styleKrajMimo() : styleKraj());
+      else l.setStyle(selectedKraj ? styleKrajMimo() : styleKraj(k));
     });
   }
   // Zámek teček: dokud není vybraný kraj, klik na tečku ignorujeme (klik pod tečkami vybere kraj).
@@ -1699,8 +1704,8 @@
     if (nearCircle) { map.removeLayer(nearCircle); nearCircle = null; }
     nearCircle = L.circle([userPos.lat, userPos.lng], {
       radius: radiusKm * 1000, pane: 'overlayPane',
-      color: '#3D63EE', weight: 1.5, opacity: 0.55,
-      fillColor: '#3D63EE', fillOpacity: 0.06, interactive: false
+      color: '#1F5138', weight: 1.5, opacity: 0.55,
+      fillColor: '#1F5138', fillOpacity: 0.06, interactive: false
     }).addTo(map);
     try { map.fitBounds(nearCircle.getBounds(), { padding: [36, 36], maxZoom: approx ? 11 : 13, animate: true }); }
     catch (e) { map.setView([userPos.lat, userPos.lng], approx ? 10 : 11, { animate: true }); }

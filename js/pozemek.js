@@ -2,15 +2,26 @@
    Načte data, najde pozemek podle ?p=<klíč>&ll=<lat>,<lng> a vykreslí detail.
    Pomocné funkce jsou záměrně zrcadlené z js/main.js, aby stránka fungovala
    nezávisle na mapové aplikaci. */
-(function () {
+(function (global) {
   'use strict';
 
+  /* Barva kategorie má JEDEN zdroj, a tím je CSS. Dřív byla opsaná tady,
+     znovu v pozemek.js a potřetí v pravidlech stylu — a když se paleta
+     měnila, mapa a karty si u téhož pozemku přestaly odpovídat. Tady se
+     tedy jen přečte proměnná ze stylu; hodnota v kódu je záloha pro případ,
+     že by styl ještě nebyl načtený. Hlídá to scripts/test-barvy.mjs. */
+  function tokenBarva(nazev, zaloha) {
+    try {
+      var v = getComputedStyle(document.documentElement).getPropertyValue(nazev).trim();
+      return v || zaloha;
+    } catch (e) { return zaloha; }
+  }
   var TYPE = {
-    sale:    { label: 'Na prodej',    color: '#4E6FD4', link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
-    drazba:  { label: 'Dražba',       color: '#FFA60A', link: { label: 'Detail dražby',       url: 'https://www.portaldrazeb.cz/' } },
-    exekuce: { label: 'Exekuce',      color: '#FB2B2B', link: { label: 'Insolvenční rejstřík', url: 'https://isir.justice.cz/isir/common/index.do' } },
-    obec:    { label: 'Obecní záměr', color: '#12AEBE', link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
-    majitel: { label: 'Přímo od majitele',  color: '#8B4FE0', link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
+    sale:    { label: 'Na prodej',    color: tokenBarva('--c-sale', '#4361B8'), link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
+    drazba:  { label: 'Dražba',       color: tokenBarva('--c-drazba', '#CC6B33'), link: { label: 'Detail dražby',       url: 'https://www.portaldrazeb.cz/' } },
+    exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), link: { label: 'Insolvenční rejstřík', url: 'https://isir.justice.cz/isir/common/index.do' } },
+    obec:    { label: 'Obecní záměr', color: tokenBarva('--c-obec', '#12AEBE'), link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
+    majitel: { label: 'Přímo od majitele',  color: tokenBarva('--c-majitel', '#8B4FE0'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
   };
 
   function fmt(n) { return (n == null ? '' : n.toString()).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
@@ -142,15 +153,13 @@
     var cxT = Math.max(55, Math.min(265, fx * 320)), cyT = Math.max(45, Math.min(155, fy * 200));
     var pts = p.map(function (x) { return (cxT + (x[1] - midLng) * sc).toFixed(1) + ',' + (cyT - (x[0] - midLat) * sc).toFixed(1); }).join(' ');
     return '<svg class="opp-plan" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-      '<defs><linearGradient id="pzbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d2e3e"/><stop offset="1" stop-color="#141f2b"/></linearGradient></defs>' +
+      '<defs><linearGradient id="pzbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1C2F26"/><stop offset="1" stop-color="#14231C"/></linearGradient></defs>' +
       '<rect width="320" height="200" fill="url(#pzbg)"/>' +
-      '<g stroke="rgba(200,216,232,0.05)" stroke-width="1"><path d="M40 0V200M80 0V200M120 0V200M160 0V200M200 0V200M240 0V200M280 0V200"/><path d="M0 40H320M0 80H320M0 120H320M0 160H320"/></g>' +
+      '<g stroke="rgba(206,228,212,0.05)" stroke-width="1"><path d="M40 0V200M80 0V200M120 0V200M160 0V200M200 0V200M240 0V200M280 0V200"/><path d="M0 40H320M0 80H320M0 120H320M0 160H320"/></g>' +
       '</svg>';
   }
-  // Letecký snímek (pro hero) s OBRYSEM CELÉHO POZEMKU (ne jen tečkou).
-  // Hero: letecký snímek SLOŽENÝ z dlaždic tak, aby byl POZEMEK PŘESNĚ UPROSTŘED,
-  // a přes něj OBRYS CELÉHO POZEMKU (podle skutečné výměry). Jako u realitního
-  // portálu — jen místo domu je vidět pozemek shora. z=17 = detail + spolehlivost.
+  /* Velký snímek nahoře. Skládání dlaždic a obrys rozsahu dělá js/snimek.js —
+     tentýž kód používá i náhled na kartě, aby se ty dva obrázky nerozešly. */
   function heroLayers(d) {
     var col = TYPE[d.type].color;
     // Majitel nahrál skutečné fotky pozemku → listovací galerie (swipe na mobilu).
@@ -163,36 +172,11 @@
         '<span class="opp-mgrad"></span>' +
         '<span class="opp-badge ' + d.type + '">' + esc(TYPE[d.type].label) + '</span>' + cnt;
     }
-    var z = 17, n = Math.pow(2, z);
-    function worldX(lng) { return (lng + 180) / 360 * 256 * n; }
-    function worldY(lat) { var r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * 256 * n; }
-    var WX = worldX(d.lng), WY = worldY(d.lat);   // pozemek ve world-pixelech
-    var Vw = 384, Vh = 256;                        // výřez (3:2), střed = pozemek
-    var ox = WX - Vw / 2, oy = WY - Vh / 2;        // levý horní roh výřezu
-    // dlaždice, které výřez pokrývají (2×2 až 3×2), poskládané na správné místo
-    var minTx = Math.floor(ox / 256), maxTx = Math.floor((ox + Vw) / 256);
-    var minTy = Math.floor(oy / 256), maxTy = Math.floor((oy + Vh) / 256);
-    var imgs = '';
-    for (var tx = minTx; tx <= maxTx; tx++) {
-      for (var ty = minTy; ty <= maxTy; ty++) {
-        var u = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + z + '/' + ty + '/' + tx;
-        imgs += '<image href="' + u + '" xlink:href="' + u + '" x="' + (tx * 256 - ox).toFixed(1) + '" y="' + (ty * 256 - oy).toFixed(1) + '" width="256" height="256" preserveAspectRatio="none"/>';
-      }
-    }
-    // Značka pozemku: jednoduchý špendlík na přesném místě (jako Google Maps).
-    var cx = Vw / 2, cy = Vh / 2;   // pozemek je vycentrovaný uprostřed
-    var pin = '<g transform="translate(' + cx + ',' + cy + ')" filter="url(#pinsh)">' +
-      '<path d="M0 0C-7 -12 -12 -18 -12 -25 A12 12 0 1 1 12 -25 C12 -18 7 -12 0 0Z" fill="' + col + '" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>' +
-      '<circle cx="0" cy="-25" r="4.6" fill="#fff"/></g>';
-    return '<svg class="opp-map" viewBox="0 0 ' + Vw + ' ' + Vh + '" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
-      '<defs><filter id="pinsh" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="rgba(0,0,0,0.5)"/></filter></defs>' +
-      '<rect width="' + Vw + '" height="' + Vh + '" fill="#141f2b"/>' +
-      '<g stroke="rgba(200,216,232,0.06)" stroke-width="1"><path d="M64 0V256M128 0V256M192 0V256M256 0V256M320 0V256M0 64H384M0 128H384M0 192H384"/></g>' +
-      imgs +
-      pin +
-      '</svg>' +
+    var S = global.PK_SNIMEK;
+    return S.html(d, { sirka: 384, vyska: 256, barva: col, id: 'hero' }) +
       '<span class="opp-mgrad"></span>' +
-      '<span class="opp-badge ' + d.type + '">' + esc(TYPE[d.type].label) + '</span>';
+      '<span class="opp-badge ' + d.type + '">' + esc(TYPE[d.type].label) + '</span>' +
+      S.popis(d);
   }
 
   // Oblíbené (sdílené s hlavní aplikací přes stejný localStorage klíč)
@@ -446,4 +430,4 @@
       document.body.classList.toggle('nav-open', open);
     });
   }
-})();
+})(window);

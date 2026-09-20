@@ -130,6 +130,18 @@ jobs:
       - name: Čerstvost dat a stav zdrojů
         run: node scripts/test-cerstvost.mjs
 
+      - name: Barvy kategorií (jeden zdroj pro mapu i karty)
+        run: node scripts/test-barvy.mjs
+
+      - name: Mapový podklad (tlumený, ale ne vybělený)
+        run: node scripts/test-podklad.mjs
+
+      - name: Ikony (jedna sada, jedna tloušťka)
+        run: node scripts/test-ikony.mjs
+
+      - name: Letecký snímek pozemku (měřítko a poctivost)
+        run: node scripts/test-snimek.mjs
+
       - name: Patička (rozvržení na počítači i na telefonu)
         run: node scripts/test-paticka.mjs
 
