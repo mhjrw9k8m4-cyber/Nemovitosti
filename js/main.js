@@ -975,7 +975,7 @@
     return '<div class="md-verdict ' + cls + '">' +
       '<div class="mv-top"><span class="mv-badge">' + badge + '</span><span class="mv-cmp">Cena za m²</span></div>' +
       '<div class="mv-text">' + text + '</div>' +
-      '<div class="mv-track"><span class="mv-fill" style="width:' + pct + '%"></span><span class="mv-dot" style="left:' + pct + '%"></span></div>' +
+      '<div class="mv-track"><span class="mv-fill" style="--w:' + pct + '%"></span><span class="mv-dot" style="--w:' + pct + '%"></span></div>' +
       '<div class="mv-scale"><span>levné</span><span>drahé</span></div>' +
       '</div>' + odhadHtmlMapa(d);
   }
@@ -1406,6 +1406,46 @@
     m._d = d;
     markers.push(m);
   });
+
+  /* Tečka pod kurzorem trochu naroste. Není to ozdoba: tečky se na mapě
+     překrývají a bez odezvy člověk neví, KTERÝ pozemek by se mu otevřel.
+     Tečky jsou kreslené do plátna a mají interactive:false (kliky se řeší
+     hledáním nejbližšího bodu), takže přes CSS to nejde — musí se najít
+     stejně jako u kliknutí.
+     Na dotykovém displeji se nic takového neděje: tam žádné „najetí" není
+     a zvětšovat tečku pod prstem, který zrovna klepl, je na obtíž. */
+  var podKurzorem = null;
+  function zvyrazniTecku(d) {
+    if (podKurzorem === d) return;
+    [podKurzorem, d].forEach(function (x) {
+      if (!x) return;
+      var m = markers[x._id];
+      if (!m || !m.setStyle) return;
+      var st = dotStyle(x);
+      var zvyraz = (x === d);
+      m.setStyle({ radius: st.radius * (zvyraz ? 1.55 : 1), weight: st.weight + (zvyraz ? 0.8 : 0) });
+    });
+    podKurzorem = d;
+    mapEl.style.cursor = d ? 'pointer' : '';
+  }
+  if (!(typeof matchMedia === 'function' && matchMedia('(hover: none)').matches)) {
+    map.on('mousemove', function (e) {
+      if (dotsLocked || !lastVis.length) { zvyrazniTecku(null); return; }
+      var cp = e.containerPoint, best = null, bestDist = Infinity;
+      for (var i = 0; i < lastVis.length; i++) {
+        var d = lastVis[i];
+        if (selectedKraj && d._gkraj !== selectedKraj) continue;
+        var p = map.latLngToContainerPoint([d.lat, d.lng]);
+        var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
+        if (dist < bestDist) { bestDist = dist; best = d; }
+      }
+      // Užší tolerance než u kliknutí: myš míří přesně, a kdyby se zvýrazňovalo
+      // i zdaleka, poskakovalo by to po mapě samo od sebe.
+      var tol = Math.max(14, DOT_R + 8);
+      zvyrazniTecku(best && bestDist <= tol * tol ? best : null);
+    });
+    map.on('mouseout', function () { zvyrazniTecku(null); });
+  }
 
   // Klik na tečku: canvas kliky nechytá, tak najdeme nejbližší viditelný bod ke kliknutí.
   // Interaktivní jsou JEN tečky ve vybraném kraji. Klik do jiného kraje ten kraj jen

@@ -912,7 +912,18 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .mv-text{font-size:13px; line-height:1.5; color:var(--text-ondark); margin-bottom:10px;}
 .mv-text b{color:var(--vc); font-weight:700;}
 .mv-track{position:relative; height:7px; border-radius:var(--r-xs); background:rgba(255,255,255,0.10);}
-.mv-fill{position:absolute; left:0; top:0; bottom:0; background:var(--vc); border-radius:var(--r-xs); opacity:0.85;}
+/* Pruh dojede na svou hodnotu, místo aby tam rovnou stál. Je to jediný
+   údaj na kartě, který je MĚŘÍTKO — krátký pohyb řekne „tohle je škála a
+   tady na ní jsi" líp než jakýkoli popisek. Cílovou šířku nese proměnná
+   --w; kdo má vypnuté animace, dostane ji rovnou. */
+.mv-fill{position:absolute; left:0; top:0; bottom:0; background:var(--vc); border-radius:var(--r-xs); opacity:0.85;
+  width:var(--w); animation:pruhNajed .62s var(--ease) both;}
+.mv-dot{left:var(--w); animation:puntikNajed .62s var(--ease) both;}
+@keyframes pruhNajed{from{width:0;} to{width:var(--w);}}
+@keyframes puntikNajed{from{left:0;} to{left:var(--w);}}
+@media (prefers-reduced-motion:reduce){
+  .mv-fill, .mv-dot, .pv-fill, .pv-dot{animation:none;}
+}
 .mv-dot{position:absolute; top:50%; width:13px; height:13px; border-radius:50%; background:#fff; border:2px solid var(--vc); transform:translate(-50%,-50%); box-shadow:0 1px 5px rgba(0,0,0,0.5);}
 .mv-scale{display:flex; justify-content:space-between; margin-top:6px; font-size:10px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--popisek);}
 .md-note{margin-top:11px; font-size:12px; line-height:1.55; color:var(--text-ondark-mute); border-left:2px solid var(--copper-bright); background:rgba(126,196,157,0.06); border-radius:0 var(--r-sm) var(--r-sm) 0; padding:9px 11px;}

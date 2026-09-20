@@ -130,6 +130,9 @@ jobs:
       - name: Čerstvost dat a stav zdrojů
         run: node scripts/test-cerstvost.mjs
 
+      - name: Pohyb (odezva mapy a měřítka, i s vypnutými animacemi)
+        run: node scripts/test-pohyb.mjs
+
       - name: Barvy kategorií (jeden zdroj pro mapu i karty)
         run: node scripts/test-barvy.mjs
 

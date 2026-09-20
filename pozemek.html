@@ -73,9 +73,11 @@
     .pv-text{font-size:13.5px; color:var(--text-ondark-mute); line-height:1.5;}
     .pv-text b{color:var(--text-ondark);}
     .pv-track{position:relative; height:7px; border-radius:99px; background:rgba(228,240,231,0.12); margin-top:11px;}
-    .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:99px;}
+    /* Pruh dojede na svou hodnotu — viz .mv-fill ve styles.css. */
+    .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:99px;
+      width:var(--w); animation:pruhNajed .62s var(--ease) both;}
     .pz-verdict.good .pv-fill{background:var(--c-sale);} .pz-verdict.mid .pv-fill{background:var(--c-drazba);} .pz-verdict.bad .pv-fill{background:var(--c-exekuce);}
-    .pv-dot{position:absolute; top:50%; width:13px; height:13px; border-radius:50%; background:#fff; border:2.5px solid var(--ink-soft); transform:translate(-50%,-50%);}
+    .pv-dot{position:absolute; top:50%; left:var(--w); width:13px; height:13px; border-radius:50%; background:#fff; border:2.5px solid var(--ink-soft); transform:translate(-50%,-50%); animation:puntikNajed .62s var(--ease) both;}
     .pv-scale{display:flex; justify-content:space-between; font-size:11px; color:var(--text-ondark-mute); margin-top:6px;}
 
     .pz-sect-h{font-size:11.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--popisek); margin:40px 0 10px;}

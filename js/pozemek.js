@@ -227,7 +227,7 @@
     return '<div class="pz-verdict ' + cls + '">' +
       '<div class="pv-top"><span class="pv-badge">' + badge + '</span><span class="pv-cmp">Cena za m²</span></div>' +
       '<div class="pv-text">' + text + '</div>' +
-      '<div class="pv-track"><span class="pv-fill" style="width:' + pct + '%"></span><span class="pv-dot" style="left:' + pct + '%"></span></div>' +
+      '<div class="pv-track"><span class="pv-fill" style="--w:' + pct + '%"></span><span class="pv-dot" style="--w:' + pct + '%"></span></div>' +
       '<div class="pv-scale"><span>levné</span><span>drahé</span></div>' +
       '</div>' + odhadHtml(d);
   }
