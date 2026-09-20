@@ -904,13 +904,25 @@
     // Klidnější body: nespěšné mají jen jemný okraj (ne výrazný bílý kroužek),
     // ať mapa při celostátním pohledu nepůsobí přeplácaně. Urgentní zůstávají výrazné.
     // Zvýrazněné (placené) inzeráty jsou o něco větší s plnějším okrajem.
+    // Hustota podle přiblížení. Při celostátním pohledu leží přes sebe
+    // stovky bodů; když je každý neprůhledný a má obrys, vznikne z nich
+    // souvislá deska s viditelnými hranami — mapa pak vypadá jako herní
+    // plán, ne jako data. Oddálené tečky jsou proto průsvitné a bez
+    // obrysu: překryv se čte jako HUSTOTA, tmavší místo = víc nabídek.
+    // Po přiblížení, kdy už tečky stojí samostatně, se obrys vrátí,
+    // protože tam naopak pomáhá je od sebe odlišit.
+    var z = (typeof map !== 'undefined' && map.getZoom) ? map.getZoom() : 8;
+    var blizko = Math.max(0, Math.min(1, (z - 8) / 4));      // 0 = celá ČR, 1 = od zoomu 12
+    var kryti = 0.5 + blizko * 0.42;                          // 0,50 → 0,92
+    var obrys = blizko * 0.34;                                // 0 → 0,34
     return {
       renderer: dotsRenderer,
       radius: urgent ? DOT_R + 0.6 : (feat ? DOT_R + 0.9 : DOT_R),
-      fillColor: col, fillOpacity: 0.92,
-      // Světlá mapa (Positron): tečky potřebují jemný TMAVÝ okraj pro definici (bílý by zmizel).
-      color: (urgent || feat) ? 'rgba(18,24,42,0.6)' : 'rgba(18,24,42,0.32)',
-      weight: urgent ? 1.8 : (feat ? 1.6 : 0.8),
+      fillColor: col, fillOpacity: (urgent || feat) ? Math.min(0.95, kryti + 0.18) : kryti,
+      // Světlá mapa (Positron): tečky potřebují jemný TMAVÝ okraj (bílý by zmizel).
+      color: (urgent || feat) ? 'rgba(18,24,42,' + (0.25 + blizko * 0.4).toFixed(2) + ')'
+                              : 'rgba(18,24,42,' + obrys.toFixed(2) + ')',
+      weight: urgent ? 1.2 + blizko * 0.8 : (feat ? 1.0 + blizko * 0.7 : blizko * 0.9),
       opacity: 1
     };
   }
@@ -1657,6 +1669,12 @@
       var urgent = isUrgent(m._d), feat = isFeatured(m._d);
       var rr = urgent ? r + 0.7 : (feat ? r + 1 : r);
       if (m.options.radius !== rr) m.setRadius(rr);
+      // Krytí a obrys se mění se zoomem stejně jako poloměr — jinak by
+      // přiblížená mapa zůstala průsvitná a oddálená přeplácaná.
+      var st2 = dotStyle(m._d);
+      if (m.options.fillOpacity !== st2.fillOpacity || m.options.weight !== st2.weight) {
+        m.setStyle({ fillOpacity: st2.fillOpacity, weight: st2.weight, color: st2.color });
+      }
     }
   }
   map.on('zoomend', resizeDots);
