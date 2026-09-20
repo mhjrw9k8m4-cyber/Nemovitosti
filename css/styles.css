@@ -1265,27 +1265,33 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 @media (prefers-reduced-motion: reduce){.loc-ov,.loc-card{animation-duration:.01ms;}}
 
 /* Responsive */
-/* Přepínač Mapa / Seznam — jen na mobilu, ať seznam není zahrabaný pod mapou */
-.mv-toggle{display:none;}
-.mv-toggle .mvt-btn{display:inline-flex; align-items:center; justify-content:center; gap:7px;}
-.mv-toggle .mvt-btn svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
-.mvt-n{font-size:11px; opacity:0.8;}
 @media (max-width:960px){
   .map-app{display:flex; flex-direction:column; grid-template-columns:1fr; height:auto; gap:0; border-radius:var(--r-lg);}
+  /* Na mobilu se to skládá pod sebe: výběr → SEZNAM POZEMKŮ → mapa.
+     Dřív tu byl přepínač Mapa / Seznam. Znamenal ale, že si člověk musel
+     nejdřív vybrat, co vlastně chce vidět — a než na něco došlo, měl nad
+     sebou pět bloků ovládání. Teď jde rovnou o obsah: nabídky jsou hned,
+     mapa je kousek pod nimi pro ty, kdo hledají podle místa. */
   .map-controls-panel{order:1; border-right:0; border-bottom:1px solid var(--line);}
-  .map-holder{order:2; height:74vh; height:74dvh; max-height:640px; min-height:460px;}
-  .map-side{order:3; border-right:0;}
+  .map-side{order:2; border-right:0; max-height:none; border-bottom:1px solid var(--line);}
+  .map-holder{order:3; height:66vh; height:66dvh; max-height:600px; min-height:420px;}
   .map-canvas{flex:1; min-height:0;}
-  .map-side{max-height:none;}
-  /* Toggle viditelný a funkční na mobilu */
-  .mv-toggle{display:flex; gap:5px; margin-top:14px; background:var(--ink); border:1px solid var(--line); border-radius:var(--r-sm); padding:4px;}
-  .mvt-btn{flex:1; padding:10px; border:0; border-radius:var(--r-sm); background:none; color:var(--text-ondark-mute); font-weight:600; font-family:inherit; font-size:14px; cursor:pointer; transition:background .15s ease, color .15s ease;}
-  .mvt-btn.active{background:var(--brand-grad); color:#fff;}
-  /* Výchozí: mapa; při .mv-seznam: seznam. Vždy jen jedno. */
-  .map-app.mv-seznam .map-holder{display:none;}
-  .map-app:not(.mv-seznam) .map-side{display:none;}
-  .map-app.mv-seznam .map-side{border-top:0;}
   .opp-list{max-height:none; overflow:visible; flex:none;}
+  /* Karty na šířku, ne na výšku.
+     Svislá karta má náhled přes celou šířku a zabere skoro celou obrazovku —
+     osm nabídek pak znamená pět obrazovek rolování a mapa je až kdesi za nimi.
+     Na mobilu proto řádek: náhled vlevo, údaje vpravo. Stejné informace,
+     třetinová výška, a všechno podstatné je vidět naráz. */
+  .opp-item{display:flex; align-items:stretch; margin-bottom:11px;}
+  .opp-media{width:150px; flex:none; aspect-ratio:auto; min-height:0; align-self:stretch;}
+  .opp-badge{top:7px; left:7px; font-size:10px; padding:3px 8px 3px 6px; gap:5px;}
+  .opp-badge::before{width:7px; height:7px;}
+  .opp-count{display:none;}            /* počet fotek se do úzkého náhledu nevejde */
+  .opp-media .opp-fav{width:30px; height:30px; top:6px; right:6px;}
+  .opp-media .opp-fav svg{width:16px; height:16px;}
+  .opp-body{flex:1; min-width:0; padding:10px 12px 11px;}
+  .opp-price{font-size:19px;}
+  .opp-item::after{display:none;}      /* rohová značka by se na řádku bila se srdíčkem */
   #leaflet-map{position:absolute; inset:0;}
   .status-grid{grid-template-columns:repeat(2,1fr);} .counters-row{grid-template-columns:repeat(2,1fr); gap:36px 24px;}
   .glossary{grid-template-columns:repeat(2,1fr);} .reviews{grid-template-columns:1fr;}

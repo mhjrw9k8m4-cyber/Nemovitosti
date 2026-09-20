@@ -172,6 +172,7 @@ if (!vyber || vyber.x == null) { console.log(zpravy.join('\n')); await prohlizec
 const zoom0 = s.zoom;
 await p.mouse.click(vyber.x, vyber.y);
 await p.waitForTimeout(1000);
+await priprav();   // výběr kraje stránkou pohne, mapa musí zůstat celá vidět
 s = await stav();
 je('první klepnutí neotevřelo inzerát, jen vybralo kraj', new URL(p.url()).pathname, '/index.html');
 pravda('po prvním klepnutí je vybraný kraj', s.kraj.indexOf(vyber.kraj) === 0, `hlavička: „${s.kraj}"`);
