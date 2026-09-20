@@ -157,6 +157,9 @@ jobs:
       - name: Letecký snímek pozemku (měřítko a poctivost)
         run: node scripts/test-snimek.mjs
 
+      - name: Lepivá hlavička (drží nahoře, menu se otevře)
+        run: node scripts/test-hlavicka.mjs
+
       - name: Patička (rozvržení na počítači i na telefonu)
         run: node scripts/test-paticka.mjs
 

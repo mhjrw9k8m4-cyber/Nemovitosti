@@ -178,7 +178,13 @@
 /* Atribut hidden musí vždy skrýt prvek — jinak ho pravidla s display:flex/grid
    přebijí a prvek zůstane vidět (např. prázdný modrý puntík u filtrů). */
 [hidden]{display:none !important;}
-html{scroll-behavior:smooth; overflow-x:hidden;}
+/* Pozor: „overflow-x:hidden" na <html> dělá z kořene posuvný rámec a na
+   iPhonu tím rozbíjí position:sticky — lepivá hlavička se při rolování
+   odlepí a odjede nahoru pryč. Přesně to se na webu dělo. Clipping proto
+   řeší jen „overflow-x:clip" níž: ten nic posuvného nevytváří, a tedy
+   sticky neruší. Že se nic do stran nesype, hlídá scripts/test-konzole.mjs
+   na osmnácti druzích stránek, na mobilu i na monitoru. */
+html{scroll-behavior:smooth;}
 @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} *{animation:none !important; transition:none !important;} }
 
 html{overflow-x:clip;}
@@ -407,10 +413,30 @@ h1 em::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height
 @keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(2.2); opacity:0;}}
 
 /* Header */
-header{border-bottom:1px solid var(--line); padding:20px 0; position:sticky; top:0; z-index:1000; background:rgba(255,255,255,0.80); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:padding .2s ease;}
+/* „-webkit-sticky" kvůli starším iOS, kde samotné „sticky" neplatí.
+   „transform:translateZ(0)" tu NENÍ pro efekt, ale NOSNĚ: vysouvací menu
+   uvnitř hlavičky je position:fixed s „top:100%", což znamená „pod spodní
+   hranou vztažného rámce". Ten rámec dosud dělal backdrop-filter (rozmazané
+   sklo) — jenže to je dekorace. Když jsem ji na dotyku vypnul, menu se
+   propadlo na spodek okna s nulovou výškou, protože „100 %" najednou
+   znamenalo celou výšku okna. Rámec proto drží transform, který je tu
+   pořád a nezávisle na tom, jak hlavička vypadá.
+   (Vedle toho posadí hlavičku do vlastní vrstvy, což je na iOS to, co
+   potřebuje, aby se při rolování překreslovala včas.) */
+header{border-bottom:1px solid var(--line); padding:20px 0; position:-webkit-sticky; position:sticky; top:0; z-index:1000; background:rgba(255,255,255,0.80); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transform:translateZ(0); -webkit-transform:translateZ(0); transition:padding .2s ease;}
 /* Mobil: silnější podklad + slabší blur = plynulejší scroll na iPhonu */
 @media (max-width:768px){ header{background:rgba(255,255,255,0.92); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);} }
 header.shrink{padding:12px 0;}
+/* Rozmazané pozadí (backdrop-filter) je na lepivé hlavičce hezké na
+   monitoru, ale na iPhonu je to hlavní příčina toho, že hlavička při
+   rolování „ujede": rozmazaná vrstva se překresluje se zpožděním za
+   zbytkem stránky, takže pod ní na okamžik prosvítá obsah a hlavička
+   vypadá, že odskočila od horního okraje.
+   Na dotykových zařízeních proto žádné rozmazání — jen plná barva.
+   Vedle toho je to i rychlejší a text na ní drží líp. */
+@media (hover:none){
+  header{background:#F7F5F1; backdrop-filter:none; -webkit-backdrop-filter:none;}
+}
 header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .logo{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.02em; font-size:22px; display:flex; align-items:center; gap:10px; text-decoration:none;}
 .logo-mark{width:29px; height:29px; border-radius:var(--r-sm); background:url("../assets/logo-mark.svg?v=11") center/contain no-repeat; box-shadow:var(--glow);}
@@ -2158,7 +2184,14 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
       Je to tak pomalé, že si toho nikdo nevšimne přímo — všimne si jen,
       že stránka nepůsobí jako jeden plochý papír. Přechod je připnutý
       k oknu (fixed), takže se při rolování „projíždí". */
-body{background:var(--bg) var(--grad-plocha) fixed; background-size:cover;}
+/* Připnutí k oknu (fixed) je hezké na monitoru, ale iOS Safari ho neumí:
+   místo klidného přejíždění z toho jsou přeskoky při každém rolování a
+   táhne to s sebou i lepivou hlavičku. Na dotykových zařízeních proto
+   přechod jen leží na ploše — rozdíl je na telefonu stejně sotva vidět. */
+body{background:var(--bg) var(--grad-plocha); background-size:cover;}
+@media (hover:hover) and (pointer:fine){
+  body{background-attachment:fixed;}
+}
 
 /* 2. Úvodní plocha: barevný mesh přímo na ploše. Rozmazané skvrny se
       vedle toho ukázaly jako slepá ulička — jsou odsunuté za okraj sekce
