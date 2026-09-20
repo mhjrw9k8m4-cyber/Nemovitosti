@@ -8,7 +8,11 @@ import { fileURLToPath } from 'url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const V = 'v=20260902f';
-const MIN_OKRES = 10;   // okres musí mít aspoň tolik nabídek pro vlastní stránku
+/* Práh byl 10 a bez vlastní stránky kvůli tomu zůstávalo DVANÁCT okresů,
+   které data mají — mimo jiné Most. Člověk z Mostu klikl na svůj okres
+   a skončil na obecné mapě. Stránka s pěti nabídkami je pořád stránka;
+   prázdná by byla horší, ale prázdný okres v datech není ani jeden. */
+const MIN_OKRES = 3;    // okres musí mít aspoň tolik nabídek pro vlastní stránku
 const MIN_KRAJ = 15;    // kraj musí mít aspoň tolik nabídek pro vlastní stránku
 
 const OKRES_KRAJ = {

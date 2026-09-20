@@ -215,7 +215,15 @@
                 </div>
               </details>
 
-              <div class="add-boost">
+              <!-- PLACENÉ ZVÝRAZNĚNÍ — DOČASNĚ SCHOVANÉ.
+                   U zaškrtávátka stála cena „299 Kč", jenže zaplatit nešlo:
+                   políčko jen zaznamenalo zájem a do poznámky připsalo, že
+                   platbu teprve chystáme. Cenovka na formuláři, který se
+                   odesílá, ale čte jako nákup. Rozdělaná placená funkce
+                   snižuje důvěru k celému webu víc, než kolik přinese.
+                   Až bude platba hotová, stačí smazat hidden níž a řádek
+                   v js/pridat.js zůstal beze změny. -->
+              <div class="add-boost" hidden>
                 <label class="boost-head">
                   <input type="checkbox" id="p-zvyraznit">
                   <span class="boost-txt">
@@ -291,7 +299,7 @@
 
           <div class="aside-card">
             <h3>Proč přidat právě sem</h3>
-            <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg></span><span class="b-txt"><b>Uvidí ji zájemci</b><span>Lidé, kteří na Parcelkau aktivně hledají pozemky.</span></span></div>
+            <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg></span><span class="b-txt"><b>Uvidí ji zájemci</b><span>Lidé, kteří na Parcelce aktivně hledají pozemky.</span></span></div>
             <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span><span class="b-txt"><b>Hned na mapě</b><span>Nabídka se po odeslání ihned objeví mezi ostatními.</span></span></div>
             <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg></span><span class="b-txt"><b>Přímý kontakt</b><span>Zájemci se ozvou přímo vám, bez provize.</span></span></div>
           </div>

@@ -2885,3 +2885,26 @@ body.vybiram-misto .leaflet-container{cursor:crosshair;}
 body.vybiram-misto .misto-pruh{border-style:solid; border-color:var(--copper);
   background:rgba(31,81,56,0.07);}
 body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
+
+
+/* =====================================================================
+   SESKUPENÍ MENU NA POČÍTAČI
+   V liště stálo osm odkazů vedle sebe jako osm rovnocenných věcí — a čtyři
+   z nich (Upozornění, Zprávy, Hlídání, Můj profil) patří k sobě: jsou to
+   osobní stránky jednoho člověka. Mobilní menu je odděluje vlasovou linkou
+   už dlouho, lišta ne.
+   Dělá to svislá linka před skupinou a o kousek užší mezery uvnitř ní —
+   oko pak čte dva bloky místo osmi položek. Žádné nové rozbalování:
+   všechno zůstává na jedno kliknutí.
+   ------------------------------------------------------------------ */
+@media (min-width:981px){
+  #nav a[href$="upozorneni.html"]{
+    margin-left:12px; padding-left:22px; position:relative;}
+  #nav a[href$="upozorneni.html"]::after{content:""; position:absolute;
+    left:0; top:50%; transform:translateY(-50%);
+    width:1px; height:17px; background:var(--line-strong);}
+  /* Uvnitř skupiny se odkazy drží u sebe těsněji než mezi skupinami. */
+  #nav a[href$="zpravy.html"], #nav a[href$="hlidani.html"],
+  #nav a[href$="muj-inzerat.html"]{margin-left:-6px;}
+  #nav a[href$="kontakt.html"]{margin-left:12px;}
+}
