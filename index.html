@@ -171,6 +171,23 @@
       <div class="map-app reveal mv-seznam" id="view-mapa">
         <div class="map-controls-panel">
           <div class="map-search"><input type="text" id="map-search" placeholder="Hledat obec (např. Kolín)" autocomplete="off" aria-label="Hledat obec nebo okres"></div>
+          <!-- Hlídání okolí vlastního pozemku. Objeví se, až si člověk místo
+               uloží; skript ho vyplní podle toho, co u něj od minule přibylo. -->
+          <div class="misto-pruh" id="misto-pruh" hidden>
+            <div class="mp-text"><b class="mp-hlavni"></b><span class="mp-pod"></span></div>
+            <div class="mp-akce">
+              <label class="mp-okruh"><span>Okruh</span>
+                <select id="misto-km" aria-label="Okruh hlídání okolí">
+                  <option value="2">2 km</option>
+                  <option value="5">5 km</option>
+                  <option value="10">10 km</option>
+                  <option value="20">20 km</option>
+                  <option value="50">50 km</option>
+                </select>
+              </label>
+              <button type="button" class="mp-zrus" id="misto-zrus">Zrušit místo</button>
+            </div>
+          </div>
           <button type="button" class="map-near-btn" id="map-near"><svg class="mnb-pin" aria-hidden="true"><use href="#i-map"/></svg>Pozemky v okolí</button>
           <div class="ms-group">
             <div class="map-filters" id="map-filters" role="group" aria-label="Co hledáte — druh příležitosti">

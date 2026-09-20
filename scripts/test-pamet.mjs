@@ -7,7 +7,8 @@
 // Tři věci, všechny postavené na localStorage:
 //   · „Nové od minulé návštěvy" — co přibylo od posledně,
 //   · skryté pozemky („tenhle mě nezajímá"),
-//   · poslední nastavení filtrů jako výchozí.
+//   · poslední nastavení filtrů jako výchozí,
+//   · a hlídání okolí vlastního pozemku („moje místo").
 //
 // Nejzrádnější je ta první. Datum návštěvy se musí zapsat AŽ PO vykreslení;
 // kdyby se zapsalo při startu, člověk by si všechno odškrtl za viděné dřív,
@@ -167,10 +168,79 @@ const novychPoObnove = await p.evaluate(() => document.querySelectorAll('.opp-no
 pravda('po druhé návštěvě už není nové nic', novychPoObnove === 0,
   `pořád označeno ${novychPoObnove} — datum návštěvy se nejspíš neuložilo`);
 
+// --- 5) Hlídání okolí vlastního pozemku ------------------------------
+// „Kdo má dům, zajímá ho sousední pozemek." Místo se uloží v prohlížeči
+// a při návratu musí web říct, co u něj od minule přibylo.
+// Obec 1 leží na 50.03/15.21, Obec 5 na 50.07/15.25 — mezi nimi je asi
+// 5,3 km. S okruhem 2 km se tedy do okolí Obce 1 vejde jen ona sama,
+// s okruhem 20 km všechno.
+await p.evaluate(() => {
+  try {
+    localStorage.setItem('pk_misto_v1', JSON.stringify({ lat: 50.03, lng: 15.21, km: 20, nazev: 'Obec 1' }));
+    localStorage.setItem('pk_navsteva_v1', JSON.stringify('2026-09-10'));
+    localStorage.removeItem('pk_skryte_v1');
+    localStorage.removeItem('pk_filtr_v1');
+  } catch (e) {}
+});
+await p.reload({ waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(4200);
+const misto = await p.evaluate(() => {
+  const el = document.getElementById('misto-pruh');
+  if (!el || el.hidden) return null;
+  return {
+    hlavni: el.querySelector('.mp-hlavni').textContent,
+    pod: el.querySelector('.mp-pod').textContent,
+    zvyrazneno: el.classList.contains('ma-novinky'),
+    okruh: document.getElementById('misto-km').value,
+  };
+});
+pravda('proužek hlídání okolí se ukázal', !!misto, 'proužek chybí nebo je schovaný');
+if (misto) {
+  pravda('říká, kolik pozemků u místa od minule přibylo', /přibyly 2 pozemky/.test(misto.hlavni),
+    `text: „${misto.hlavni}"`);
+  pravda('a je zvýrazněný, protože novinky jsou', misto.zvyrazneno === true);
+  pravda('pod tím je okruh i celkový počet', /do 20 km/.test(misto.pod) && /5 pozemků/.test(misto.pod),
+    `text: „${misto.pod}"`);
+  pravda('rozbalovací seznam ukazuje uložený okruh', misto.okruh === '20', `vybráno ${misto.okruh}`);
+}
+
+// Zmenšením okruhu musí novinky zmizet — Obec 4 i 5 jsou dál než 2 km.
+await p.evaluate(() => {
+  const el = document.getElementById('misto-km');
+  el.value = '2';
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+});
+await p.waitForTimeout(400);
+const uzsi = await p.evaluate(() => ({
+  hlavni: document.querySelector('.mp-hlavni').textContent,
+  zvyrazneno: document.getElementById('misto-pruh').classList.contains('ma-novinky'),
+  ulozeno: (() => { try { return JSON.parse(localStorage.getItem('pk_misto_v1')); } catch (e) { return null; } })(),
+}));
+pravda('po zúžení okruhu na 2 km už novinky nejsou', /nic nového/.test(uzsi.hlavni),
+  `text: „${uzsi.hlavni}"`);
+pravda('a proužek se přestal zvýrazňovat', uzsi.zvyrazneno === false);
+pravda('nový okruh se uložil', uzsi.ulozeno && uzsi.ulozeno.km === 2, JSON.stringify(uzsi.ulozeno));
+
+// Na kartách musí být vzdálenost od místa, i když se neřadí podle okolí.
+const kmNaKartach = await p.evaluate(() => document.querySelectorAll('.opp-item .opp-km').length);
+pravda('karty ukazují vzdálenost od uloženého místa', kmNaKartach > 0,
+  'ani jedna karta nemá vzdálenost');
+
+await p.evaluate(() => document.getElementById('misto-zrus').click());
+await p.waitForTimeout(400);
+const poZruseni = await p.evaluate(() => ({
+  schovany: (document.getElementById('misto-pruh') || {}).hidden,
+  ulozeno: localStorage.getItem('pk_misto_v1'),
+  km: document.querySelectorAll('.opp-item .opp-km').length,
+}));
+pravda('„Zrušit místo" proužek schová', poZruseni.schovany === true);
+pravda('a smaže ho i z prohlížeče', poZruseni.ulozeno === null, `v úložišti zůstalo ${poZruseni.ulozeno}`);
+pravda('vzdálenosti z karet zmizí taky', poZruseni.km === 0, `zůstalo ${poZruseni.km}`);
+
 pravda('na stránce nespadl žádný skript', chyby.length === 0, chyby[0]);
 
 await prohlizec.close();
-console.log('\nPaměť prohlížeče — nové od minule, skryté, poslední filtr');
+console.log('\nPaměť prohlížeče — nové od minule, skryté, filtr, hlídání okolí');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {

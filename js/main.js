@@ -777,6 +777,39 @@
     return n;
   }
 
+  /* „Moje místo" — hlídání okolí vlastního pozemku.
+   *
+   * Kdo má dům, zajímá ho ze všeho nejvíc sousední pozemek. Web si proto
+   * zapamatuje jedno místo a při každé návštěvě spočítá, co v jeho okolí
+   * od minule přibylo.
+   *
+   * Schválně to NEBĚŽÍ přes účet a server. Zeměpisné hlídání by v databázi
+   * chtělo nové sloupce (save_search má dnes jen okres, druh, cenu a výměru)
+   * a migraci, kterou nemám jak nasadit ani ověřit. Tohle je celé
+   * v prohlížeči, funguje bez registrace a dá se to otestovat — a až
+   * jednou bude hlídání i na serveru, uložené místo se dá převzít.
+   *
+   * Souřadnice jsou jediný osobní údaj, který tu vzniká, a neopouští
+   * prohlížeč — neposílá se na server ani do žádné služby. */
+  var MISTO_KLIC = 'pk_misto_v1';
+  var mojeMisto = ctiUloz(MISTO_KLIC, null);
+  function ulozMisto(m) { mojeMisto = m; if (m) zapisUloz(MISTO_KLIC, m); else { try { localStorage.removeItem(MISTO_KLIC); } catch (e) {} } }
+  function kmOd(a, d) {
+    if (!a || typeof d.lat !== 'number') return Infinity;
+    var r = Math.PI / 180, dLat = (d.lat - a.lat) * r, dLng = (d.lng - a.lng) * r;
+    var x = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(a.lat * r) * Math.cos(d.lat * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+  }
+  /* Co u mého místa přibylo od minulé návštěvy. */
+  function novinkyUMista() {
+    if (!mojeMisto) return null;
+    var okruh = mojeMisto.km || 10;
+    var nove = DATA.filter(function (d) { return jeNovy(d) && kmOd(mojeMisto, d) <= okruh; });
+    var vse = DATA.filter(function (d) { return kmOd(mojeMisto, d) <= okruh; });
+    return { nove: nove.length, celkem: vse.length, okruh: okruh, nazev: mojeMisto.nazev || 'vašeho místa' };
+  }
+
   /* Skryté pozemky — „tenhle mě nezajímá". Kdo prochází dvě stě nabídek,
    * potřebuje odškrtávat, co už viděl. */
   var SKRYTE_KLIC = 'pk_skryte_v1';
@@ -1623,8 +1656,12 @@
   }
   // Je bod přibližně v ČR? (pojistka proti nesmyslné IP poloze, např. přes VPN)
   // Přejde do režimu „okolí" na dané poloze. approx = přibližná (podle IP).
-  function enterNearAt(pos, approx) {
+  function enterNearAt(pos, approx, nazev) {
     userPos = { lat: pos.lat, lng: pos.lng };
+    // Zapamatovat si místo má smysl jen u polohy, kterou člověk sám potvrdil
+    // (GPS nebo vybraná obec). Přibližná poloha podle IP bývá vedle o desítky
+    // kilometrů — hlídat okolí něčeho, co si nevybral, by bylo k ničemu.
+    if (!approx) ulozMisto({ lat: pos.lat, lng: pos.lng, km: (mojeMisto && mojeMisto.km) || 10, nazev: nazev || (mojeMisto && mojeMisto.nazev) || null });
     selectedKraj = null;
     prekresliKraje();
     resizeDots();
@@ -1965,7 +2002,15 @@
       var figs =
         (hasArea(d) ? '<span class="m">' + fmt(d.area) + ' m²</span>' : '<span class="m">výměra neuvedena</span>') +
         (perM2 ? '<span class="opp-perm2">' + fmt(perM2) + ' Kč/m²</span>' : '') +
-        (sortMode === 'near' && userPos && isFinite(kmFromUser(d)) ? '<span class="opp-km">' + (kmFromUser(d) < 1 ? '<1' : Math.round(kmFromUser(d))) + ' km</span>' : '');
+        // Vzdálenost se ukazuje vždycky, když je od čeho měřit — dřív jen při
+        // řazení „podle okolí", takže si jí nikdo nevšiml.
+        (function () {
+          var od = userPos || mojeMisto;
+          if (!od) return '';
+          var km = kmOd(od, d);
+          if (!isFinite(km)) return '';
+          return '<span class="opp-km">' + (km < 1 ? '<1' : Math.round(km)) + ' km</span>';
+        }());
       // Stavové odznaky pohromadě na jednom řádku
       var chips = [];
       if (isFeatured(d)) chips.push('<span class="opp-feat">Zvýrazněno</span>');
@@ -2440,6 +2485,43 @@
   // Seznam se vykresluje už dřív, takže po obnovení filtru se musí překreslit —
   // jinak by ovládací prvky ukazovaly filtr, který na výpis ještě nesedí.
   if (obnovFiltr()) renderList();
+
+  /* Proužek „u vašeho místa od minule přibylo". Tohle je celý smysl
+   * uloženého místa — jinak by si ho nikdo neukládal. */
+  var mistoPruh = document.getElementById('misto-pruh');
+  var mistoKmEl = document.getElementById('misto-km');
+  var mistoZrus = document.getElementById('misto-zrus');
+  function vykresliMisto() {
+    if (!mistoPruh) return;
+    var n = novinkyUMista();
+    if (!n) { mistoPruh.hidden = true; return; }
+    mistoPruh.hidden = false;
+    var hl = mistoPruh.querySelector('.mp-hlavni');
+    var pod = mistoPruh.querySelector('.mp-pod');
+    if (n.nove > 0) {
+      hl.textContent = 'Od minule přibyl' + (n.nove === 1 ? ' 1 pozemek' : (n.nove < 5 ? 'y ' + n.nove + ' pozemky' : 'o ' + n.nove + ' pozemků')) + ' ve vašem okolí';
+      mistoPruh.classList.add('ma-novinky');
+    } else {
+      hl.textContent = 'Ve vašem okolí od minule nic nového';
+      mistoPruh.classList.remove('ma-novinky');
+    }
+    pod.textContent = 'Hlídáme ' + (n.nazev !== 'vašeho místa' ? n.nazev + ' a okolí' : 'okolí vašeho místa') +
+      ' do ' + n.okruh + ' km · celkem tu je ' + n.celkem + ' ' +
+      (n.celkem === 1 ? 'pozemek' : (n.celkem < 5 ? 'pozemky' : 'pozemků'));
+    if (mistoKmEl) mistoKmEl.value = String(n.okruh);
+  }
+  if (mistoKmEl) mistoKmEl.addEventListener('change', function () {
+    if (!mojeMisto) return;
+    mojeMisto.km = parseInt(mistoKmEl.value, 10) || 10;
+    ulozMisto(mojeMisto);
+    vykresliMisto();
+  });
+  if (mistoZrus) mistoZrus.addEventListener('click', function () {
+    ulozMisto(null);
+    vykresliMisto();
+    renderList();
+  });
+  vykresliMisto();
 
   renderHeroLive();
   renderDeals();
