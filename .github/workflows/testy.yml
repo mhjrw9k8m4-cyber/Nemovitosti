@@ -124,6 +124,9 @@ jobs:
       - name: Shoda cen mezi mapou a stránkou pozemku
         run: node scripts/test-shoda.mjs
 
+      - name: Chyby skriptů a přetékání na všech druzích stránek
+        run: node scripts/test-konzole.mjs
+
       - name: Úvodní obrazovka (živá čísla, věrohodnost cen)
         run: node scripts/test-uvod.mjs
 

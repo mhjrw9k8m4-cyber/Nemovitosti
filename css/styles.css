@@ -707,7 +707,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .lp-fav.on svg{fill:currentColor;}
 /* Zelená #2E8F5F dávala na vlastním světle zeleném podkladu jen 3,54 : 1,
    tedy pod normou pro drobné písmo. Ztmaveno na 5,6 : 1; odstín zůstává. */
-.opp-deal{display:inline-block; font-size:10.5px; font-weight:700; color:#13663E; background:rgba(31,163,99,0.10); border:1px solid rgba(19,102,62,0.34); border-radius:var(--r-xs); padding:1px 8px; letter-spacing:0.02em; text-transform:uppercase;}
+.opp-deal{display:inline-block; font-size:11px; font-weight:700; color:#13663E; background:rgba(31,163,99,0.10); border:1px solid rgba(19,102,62,0.34); border-radius:var(--r-xs); padding:2px 8px; letter-spacing:0; white-space:nowrap; font-variant-numeric:tabular-nums;}
 .map-count{font-size:13.5px; color:var(--text-ondark); font-weight:600; letter-spacing:0.01em; margin-bottom:12px;}
 /* Nejvýhodnější — přidaná hodnota ukázaná čísly */
 .deals-sec[hidden]{display:none;}
@@ -1398,7 +1398,10 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
      Na mobilu proto řádek: náhled vlevo, údaje vpravo. Stejné informace,
      třetinová výška, a všechno podstatné je vidět naráz. */
   .opp-item{display:flex; align-items:stretch; margin-bottom:11px;}
-  .opp-media{width:150px; flex:none; aspect-ratio:auto; min-height:0; align-self:stretch;}
+  /* Náhled zúžený ze 150 na 116 px. Při 150 px zbývalo na údaje jen asi
+     200 px a každý odznak si bral vlastní řádek — karta byla sloupec
+     štítků. Užší náhled ještě pozná, kde pozemek je, a text se vejde. */
+  .opp-media{width:116px; flex:none; aspect-ratio:auto; min-height:0; align-self:stretch;}
   .opp-badge{top:7px; left:7px; font-size:10px; padding:3px 8px 3px 6px; gap:5px;}
   .opp-badge::before{width:7px; height:7px;}
   .opp-count{display:none;}            /* počet fotek se do úzkého náhledu nevejde */
@@ -1407,6 +1410,10 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   .opp-media .opp-fav{width:36px; height:36px; top:6px; right:6px;}
   .opp-media .opp-fav svg{width:17px; height:17px;}
   .opp-body{flex:1; min-width:0; padding:10px 12px 11px;}
+  /* Na mobilu se odznaky musí vejít vedle sebe, ne pod sebe. */
+  .opp-chips{gap:5px;}
+  .opp-chips > span{font-size:10.5px; padding:2px 7px;}
+  .opp-figures{gap:4px 8px; margin-top:6px;}
   .opp-price{font-size:19px;}
   .opp-item::after{display:none;}      /* rohová značka by se na řádku bila se srdíčkem */
   #leaflet-map{position:absolute; inset:0;}

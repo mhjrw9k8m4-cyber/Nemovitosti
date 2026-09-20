@@ -2007,7 +2007,10 @@
       // Jinak by dvanáctihektarový pozemek vždycky vyšel jako trhák jen proto,
       // že velké pozemky mají nižší cenu za m².
       if (_od && _od.podleVelikosti && _od.podOdhadem >= 25) {
-        chips.push('<span class="opp-deal">o ' + _od.podOdhadem + ' % pod obvyklou</span>');
+        // Na kartě musí odznak vyjít na JEDEN řádek i na úzkém displeji.
+        // „o 65 % pod obvyklou" verzálkami se na mobilu lámalo na dva.
+        chips.push('<span class="opp-deal" title="Cena je o ' + _od.podOdhadem +
+          ' % pod obvyklou cenou podobných pozemků v okolí">−' + _od.podOdhadem + ' % proti okolí</span>');
       } else if (perM2 && dealMax && perM2 <= dealMax) {
         var _di = dealInfo(d);
         chips.push('<span class="opp-deal">' + (_di && _di.cheaper >= 70 ? 'levnější než ' + _di.cheaper + ' %' : 'výhodná cena') + '</span>');
@@ -2016,6 +2019,11 @@
       // „Nové od minulé návštěvy" — první odznak v řadě, ať je hned vidět,
       // co člověk ještě neviděl.
       if (jeNovy(d)) chips.unshift('<span class="opp-nove">Nové</span>');
+      /* Nejvýš tři odznaky. Karta jich uměla vyrobit pět a na mobilu pak
+       * každý zabral vlastní řádek — místo přehledu vznikl sloupec štítků.
+       * Pořadí výš je zároveň pořadím důležitosti, takže se ořezává odzadu:
+       * „Doporučujeme" ustoupí termínu dražby i slevě. */
+      if (chips.length > 3) chips = chips.slice(0, 3);
       if (jeSkryty(d)) li.classList.add('je-skryty');
       li.innerHTML =
         '<div class="opp-media">' +
