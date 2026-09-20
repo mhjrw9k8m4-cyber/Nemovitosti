@@ -2038,7 +2038,7 @@ body{background:var(--bg) var(--grad-plocha) fixed; background-size:cover;}
 .add-hero .aurora, .hero-map .aurora{display:none;}
 
 /* 3. Karty dostanou jemný lesk odshora — světlo dopadající na papír. */
-.opp-item, .okr-item, .gl-item, .faq-item, .promise, .step{background-image:var(--grad-karta);}
+.opp-item, .okr-item, .faq-item, .promise{background-image:var(--grad-karta);}
 
 /* 4. Štítky kategorií: barva se v nich přelévá místo placaté výplně. */
 .filter-chip{background-image:var(--grad-karta);}
@@ -2058,6 +2058,45 @@ body{background:var(--bg) var(--grad-plocha) fixed; background-size:cover;}
 .section-head::before{background:var(--grad-warm);}
 .s-linka{background:var(--grad-warm);}
 
+
+/* =====================================================================
+   RYTMUS STRÁNKY
+   Osm sekcí za sebou mělo naprosto stejnou stavbu: drobný nadpis, pod ním
+   nadpis, pod ním mřížka stejně velkých světlých rámečků. Stejná šířka,
+   stejná barva, stejné zaoblení, stejná váha. Každá jednotlivě vypadala
+   dobře — dohromady z toho byla tapeta.
+   Velké weby to dělají obráceně: každá sekce má jiný TVAR. Někde karty,
+   někde jen linky, někde tmavý pás přes celou šířku, někde obří číslice.
+   Oko pak má se čeho chytit a stránka má spád.
+   ===================================================================== */
+
+/* ČÍSLA: tmavý pás přes celou šířku a obří číslice.
+   Byl to řádek drobných čísel s měděnou svislou čárkou — přesně ten druh
+   prvku, který se v záplavě rámečků ztratí. Čísla jsou přitom to nejlepší,
+   co web o sobě může říct, tak ať jsou vidět. */
+.sources{background:var(--ink-dark); color:var(--text-ondeep); padding:66px 0 56px;}
+.sources::before, .sources::after{display:none;}
+.src-stats{grid-template-columns:repeat(4,1fr); gap:30px; margin-bottom:42px;}
+.src-stat{border-left:0; padding:0; gap:8px;}
+.src-stat b{font-family:var(--font-display); font-weight:700; font-variation-settings:'opsz' 96;
+  font-size:clamp(40px,5.4vw,68px); line-height:0.92; letter-spacing:-0.035em; color:var(--text-ondeep);}
+.src-stat span{font-size:13px; color:var(--text-ondeep-mute); max-width:18ch;}
+.sources-lead{color:var(--text-ondeep-mute);}
+.sources .data-updated{color:var(--text-ondeep-mute);}
+.sources .source-chip{background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.28);
+  color:var(--text-ondeep);}
+@media (max-width:880px){
+  .sources{padding:44px 0 38px;}
+  .src-stats{grid-template-columns:repeat(2,1fr); gap:24px 18px;}
+}
+
+/* SLOVNÍČEK: definice oddělené linkou, ne rámečky.
+   Rámeček kolem odstavce textu nepřidá nic než další obdélník. */
+.glossary{gap:0 40px;}
+.gl-item{background:none; background-image:none; border:0; border-top:1px solid var(--line-strong);
+  border-radius:0; padding:18px 0 20px;}
+.gl-item:hover{border-color:var(--accent-warm); transform:none; box-shadow:none;}
+.gl-item h4{color:var(--text-ondark); font-size:16px;}
 
 /* =====================================================================
    DOTYKOVÉ TERČE
@@ -2228,3 +2267,104 @@ body::after{
   mix-blend-mode:multiply;}
 /* Na tmavých plochách by zrno dělalo špínu, tam se rozjasňuje jinak. */
 @media (prefers-reduced-motion:reduce){ body::after{opacity:.22;} }
+
+
+/* =====================================================================
+   JAK TO FUNGUJE — redakční číslovaná osa, ne tři dlaždice.
+   Krok měl číslo jako drobný text a vedle něj ještě ikonku v rámečku:
+   dva odznaky pro jednu informaci, a kolem toho karta. Ze tří kroků tak
+   byly tři další obdélníky v řadě obdélníků.
+   Číslice je teď velká a dělá práci sama — ikona ani rámeček nejsou
+   potřeba. Musí to stát až tady na konci: dřív v souboru je blok, který
+   krokům dlaždicový vzhled nastavuje, a ten by tohle přebil.
+   ===================================================================== */
+.steps{gap:46px;}
+.step{background:none; background-image:none; border:0; border-radius:0; padding:0;
+  display:block; position:relative;}
+.step .icon-badge{display:none;}
+.step .idx{display:block; font-family:var(--font-display); font-weight:700;
+  font-variation-settings:'opsz' 72; font-size:58px; line-height:0.82; letter-spacing:-0.04em;
+  color:var(--accent-warm); opacity:0.32; margin:0 0 12px;}
+.step h3{display:block; font-size:22px; margin-bottom:8px;}
+.step p{display:block;}
+.step::before{display:none;}
+@media (min-width:961px){
+  /* Vlasová linka po účaří číslic drží tři kroky pohromadě jako jednu
+     větu — bez jediného rámečku. */
+  .step::before{display:block; content:""; position:absolute; left:0; right:-46px; top:30px;
+    height:1px; background:linear-gradient(90deg, rgba(168,69,15,.40), var(--line)); z-index:0;}
+  .step:last-child::before{display:none;}
+  .step .idx, .step h3, .step p{position:relative; z-index:1;}
+  .step .idx{background:var(--bg); display:inline-block; padding-right:14px;}
+}
+@media (max-width:960px){
+  .steps{gap:28px;}
+  .step .idx{font-size:44px; margin-bottom:6px;}
+  .step h3{font-size:20px;}
+}
+
+
+/* =====================================================================
+   ČTYŘI DRUHY PŘÍLEŽITOSTÍ — barevné řádky, ne čtyři stejné dlaždice.
+   Celá sekce je o tom, že každý druh má SVOU BARVU. Když se ta barva
+   schová do drobné ikonky uvnitř šedého rámečku, sdělení zmizí a zbydou
+   čtyři obdélníky. Barva je proto teď silná svislá čára u hrany a číslo
+   stojí vedle nadpisu jako hodnota, ne jako odznak.
+   ===================================================================== */
+.status-grid{grid-template-columns:repeat(2,1fr); gap:0 44px;}
+.status-card{background:none; background-image:none; border:0; border-radius:0;
+  border-left:3px solid var(--c-sale); padding:6px 0 22px 18px; margin-bottom:22px;}
+.status-card:hover{transform:none; border-color:var(--c-sale);}
+.status-grid > *:nth-child(2).status-card, .status-grid > *:nth-child(2).status-card:hover{border-left-color:var(--c-drazba);}
+.status-grid > *:nth-child(3).status-card, .status-grid > *:nth-child(3).status-card:hover{border-left-color:var(--c-exekuce);}
+.status-grid > *:nth-child(4).status-card, .status-grid > *:nth-child(4).status-card:hover{border-left-color:var(--c-majitel);}
+.status-card .status-top{font-size:18px;}
+.status-card .status-top .ic{display:none;}   /* barvu nese čára, ikonka je navíc */
+.status-n{background:none; border:0; padding:0; color:var(--text-ondark-mute);
+  font-family:var(--font-mono); font-size:12px; font-weight:500;}
+.status-n.is-zero{background:none; border:0;}
+@media (max-width:880px){
+  .status-grid{grid-template-columns:1fr; gap:0;}
+  .status-card{padding-left:14px; margin-bottom:18px;}
+}
+
+/* =====================================================================
+   ČASTÉ DOTAZY — otázky oddělené linkou, ne rámečky.
+   Dvanáct orámovaných obdélníků na konci stránky je přesně ta tapeta,
+   kvůli které celek vypadal strojově. Odpověď se stejně rozbaluje, takže
+   rámeček nic neohraničuje — jen přidává další obrys.
+   ===================================================================== */
+.faq-item{background:none; background-image:none; border:0; border-radius:0;
+  border-top:1px solid var(--line-strong);}
+.faq-item summary{padding:16px 2px;}
+.faq-item[open] summary{color:var(--accent-warm);}
+
+
+/* =====================================================================
+   POZEMKY PODLE KRAJE — rejstřík, ne patnáct dlaždic.
+   Rozcestník jsem původně postavil jako mřížku orámovaných dlaždic, tedy
+   přesně to, co dělalo ze stránky tapetu. Je to seznam odkazů; seznam se
+   sází jako seznam — jména pod sebou, oddělená vlasovou linkou, počet
+   zarovnaný vpravo. Zabere polovinu místa a čte se rychleji.
+   ===================================================================== */
+.kraj-grid{grid-template-columns:repeat(3,1fr); gap:0 44px;}
+.kraj-item{flex-direction:row; align-items:baseline; justify-content:space-between;
+  background:none; border:0; border-top:1px solid var(--line); border-radius:0;
+  padding:12px 2px; gap:14px;}
+.kraj-item:hover{background:none; border-color:var(--accent-warm); transform:none;
+  box-shadow:none; color:var(--accent-warm);}
+.kraj-item:hover .kj-n{color:inherit;}
+.kj-n{font-size:15.5px;}
+.kj-c{font-family:var(--font-mono); font-size:12px;}
+.kraj-vse{background:none; border-style:none; border-top:1px solid var(--line-strong);}
+.kraj-vse .kj-n{color:var(--accent-warm);}
+@media (max-width:880px){
+  .kraj-grid{grid-template-columns:1fr 1fr; gap:0 22px;}
+  .kraj-item{padding:11px 1px;}
+  .kj-n{font-size:14px;}
+}
+/* Pod 620 px je na dva sloupce málo místa: „Královéhradecký" a počet vedle
+   sebe se do 170 px nevejdou a název by se ořízl. Radši jeden sloupec. */
+@media (max-width:620px){
+  .kraj-grid{grid-template-columns:1fr;}
+}
