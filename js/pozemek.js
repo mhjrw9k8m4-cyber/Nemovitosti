@@ -102,7 +102,7 @@
     // takže velký pozemek by proti mediánu z malých parcel vyšel jako trhák
     // vždycky — a nebyla by to pravda.
     if (!o || !o.podleVelikosti || o.podOdhadem < 15) return '';
-    var kde = o.uroven === 'okres' ? ('v okrese ' + o.kde) : ('v ' + o.kde + ' kraji');
+    var kde = window.PK_CENY.kdeText(o.uroven, o.kde);
     var coJe = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'exekuce' ? 'Uváděná cena' : 'Nabídková cena');
     return '<div class="md-odhad pz-odhad">' +
       '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +

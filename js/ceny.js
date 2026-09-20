@@ -50,6 +50,32 @@
   'Bruntál':'Moravskoslezský','Frýdek-Místek':'Moravskoslezský','Karviná':'Moravskoslezský','Nový Jičín':'Moravskoslezský','Opava':'Moravskoslezský','Ostrava-město':'Moravskoslezský'
   };
 
+  /* Kraj v 6. pádu. Skládat větu jako „v " + název + " kraji" dává
+   * „v Středočeský kraji" — a u Vysočiny dokonce „v Vysočina kraji".
+   * Čeština tohle neodpustí a čtenář si toho všimne dřív než čehokoli
+   * jiného, co na té stránce stojí. */
+  var KRAJ_KDE = {
+    'Praha': 'v Praze',
+    'Středočeský': 've Středočeském kraji',
+    'Jihočeský': 'v Jihočeském kraji',
+    'Plzeňský': 'v Plzeňském kraji',
+    'Karlovarský': 'v Karlovarském kraji',
+    'Ústecký': 'v Ústeckém kraji',
+    'Liberecký': 'v Libereckém kraji',
+    'Královéhradecký': 'v Královéhradeckém kraji',
+    'Pardubický': 'v Pardubickém kraji',
+    'Vysočina': 'na Vysočině',
+    'Jihomoravský': 'v Jihomoravském kraji',
+    'Olomoucký': 'v Olomouckém kraji',
+    'Zlínský': 've Zlínském kraji',
+    'Moravskoslezský': 'v Moravskoslezském kraji'
+  };
+  /** „ve Středočeském kraji" / „na Vysočině" / „v okrese Benešov". */
+  function kdeText(uroven, nazev) {
+    if (uroven === 'okres') return 'v okrese ' + nazev;
+    return KRAJ_KDE[nazev] || ('v kraji ' + nazev);
+  }
+
   function median(serazene) {
     if (!serazene.length) return null;
     var n = serazene.length, p = Math.floor(n / 2);
@@ -219,5 +245,5 @@
     };
   }
 
-  root.PK_CENY = { postav: postav, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ };
+  root.PK_CENY = { postav: postav, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ, kdeText: kdeText };
 }(typeof window !== 'undefined' ? window : globalThis));

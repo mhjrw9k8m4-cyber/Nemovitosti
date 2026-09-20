@@ -59,10 +59,20 @@ pravda('dražba za 23 dní zmíní počet dní, ale nestraší',
   (rPozd.radky.find((x) => x.klic === 'Kolik zbývá času') || {}).lvl === 'mid');
 pravda('dražba za čtyři měsíce řádek o čase nemá',
   !klice(PK_RADCE.rady(daleko)).includes('Kolik zbývá času'));
-// Tohle je ta nejtrapnější možná chyba: „do dražby zbývá −40 dní".
-pravda('prošlý termín se vůbec nepřipomíná',
-  !klice(PK_RADCE.rady(prosle)).includes('Kolik zbývá času'),
-  'rádce počítá i zpětně — vyšlo by záporné číslo dní');
+// Prošlý termín se zamlčet nedá — záznam tu zůstává kvůli historii, takže
+// o něm musí být řeč. Jen to nesmí vyjít jako „do dražby zbývá −40 dní";
+// to je ta nejtrapnější možná chyba a rovnou se podle ní pozná stroj.
+const rProsle = PK_RADCE.rady(prosle);
+const radekProsle = rProsle.radky.find((x) => x.klic === 'Kolik zbývá času') || {};
+pravda('u prošlého termínu se řekne, že už minul',
+  /už minul/.test(radekProsle.txt || ''), JSON.stringify(klice(rProsle)));
+pravda('a je to označené jako varování, ne jako běžná informace',
+  radekProsle.lvl === 'warn', `úroveň ${radekProsle.lvl}`);
+pravda('s odkazem na dražebníka, ať si člověk ověří, jak dopadla',
+  /dražebníka/.test(radekProsle.txt || ''));
+pravda('nikde nevyjde záporný počet dní',
+  !/[-−]\s?\d+\s*dn/.test(JSON.stringify(rProsle)),
+  'rádce počítá i zpětně a napsal záporné číslo dní');
 
 // --- 3) Výměra mluví jen tam, kde má co říct -------------------------
 pravda('u malé parcely se řekne, že se hodí spíš k rozšíření sousedního',

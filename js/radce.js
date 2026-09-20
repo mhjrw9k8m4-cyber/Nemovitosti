@@ -81,7 +81,7 @@
     }
     var o = model.odhad(d);
     if (o && o.podleVelikosti && o.podOdhadem >= 25) {
-      var kde = o.uroven === 'okres' ? ('v okrese ' + o.kde) : ('v ' + o.kde + ' kraji');
+      var kde = window.PK_CENY.kdeText(o.uroven, o.kde);
       return { lvl: 'ok', txt: 'Cena je <b>o ' + o.podOdhadem + ' % pod</b> obvyklou cenou podobně velkých pozemků téhož druhu ' + kde + '. Může to být příležitost — ale stejně tak důvod ptát se <b>proč</b>: přístup, břemena, tvar parcely.' };
     }
     return null;
@@ -98,7 +98,13 @@
   function termin(d) {
     if (d.type !== 'drazba' && d.type !== 'exekuce') return null;
     var n = dnyDo(d.extra);
-    if (n == null || n < 0) return null;
+    if (n == null) return null;
+    if (n < 0) {
+      // Prošlý termín se nesmí vydávat za budoucí („zbývá −40 dní"), ale
+      // ani zamlčet: kdo na takovou dražbu narazí, potřebuje vědět, že už
+      // je po ní, ne aby si myslel, že stihne přihodit.
+      return { lvl: 'warn', txt: '<b>Termín dražby už minul</b> (' + (-n) + ' dní zpátky). Záznam tu zůstává kvůli historii — u dražebníka si ověřte, jestli se vydražilo, nebo bude další kolo.' };
+    }
     if (n <= 7) {
       var kdy = n === 0 ? 'Dražba je dnes' : (n === 1 ? 'Dražba je zítra' : 'Do dražby zbývá ' + n + ' dní');
       return { lvl: 'warn', txt: '<b>' + kdy + '.</b> Na prohlídku, ověření v katastru a složení dražební jistoty už je <b>málo času</b> — jistota musí být připsaná před zahájením, ne v den dražby.' };

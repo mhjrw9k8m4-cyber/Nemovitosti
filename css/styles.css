@@ -2935,3 +2935,23 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   font-family:var(--font-mono); font-size:10.5px; font-variant-numeric:tabular-nums;
   background:rgba(255,255,255,0.12); color:var(--text-ondeep-mute);}
 .src-stav.src-zle{background:rgba(251,43,43,0.22); color:#FFD9D9;}
+
+/* Dražba po termínu. Tlumeně a šedě — je to fakt, ne varování; nemá
+   přetahovat pozornost od živých nabídek, ale musí být vidět. */
+.opp-cd.opp-proběhlo, .md-cd.md-proběhlo{
+  background:var(--ink-soft2); color:var(--text-ondark-mute);
+  border:1px solid var(--line-strong); font-weight:600;}
+.opp-item:has(.opp-proběhlo) .opp-price{color:var(--text-ondark-mute);}
+
+/* Hlášení o výpadku dat. Musí být vidět na první pohled — proto nad
+   mapou a v barvě varování, ne jako drobná poznámka pod čarou. */
+.datovy-vypadek{display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px;
+  margin:0 0 14px; padding:13px 16px; border-radius:var(--r-md);
+  border:1px solid var(--c-drazba-ink); background:rgba(232,179,65,0.14);
+  font-size:14px; line-height:1.5; color:var(--text-ondark);}
+.datovy-vypadek b{color:var(--c-drazba-ink);}
+.dv-znovu{font:inherit; font-size:13px; font-weight:700; color:var(--ink);
+  background:var(--c-drazba-ink); border:0; border-radius:var(--r-sm);
+  padding:9px 15px; min-height:38px; cursor:pointer;}
+.dv-znovu:hover{filter:brightness(1.1);}
+.dv-znovu:focus-visible{outline:2px solid var(--text-ondark); outline-offset:2px;}

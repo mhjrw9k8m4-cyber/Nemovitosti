@@ -149,6 +149,8 @@
     var now = new Date(); now.setHours(0, 0, 0, 0);
     return Math.round((target - now) / 86400000);
   }
+  /** Dražba, jejíž termín už minul. */
+  function jeProsle(d){ var n = daysUntil(d.extra); return n != null && n < 0; }
   function countdownText(days){
     if (days < 0) return 'proběhlo';
     if (days === 0) return 'dnes';
@@ -965,7 +967,7 @@
     if (!MODEL) return '';
     var o = MODEL.odhad(d);
     if (!o || !o.podleVelikosti || o.podOdhadem < 15) return '';
-    var kde = o.uroven === 'okres' ? ('v okrese ' + o.kde) : ('v ' + o.kde + ' kraji');
+    var kde = window.PK_CENY.kdeText(o.uroven, o.kde);
     var coJe = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'exekuce' ? 'Uváděná cena' : 'Nabídková cena');
     return '<div class="md-odhad">' +
       '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
@@ -1268,7 +1270,9 @@
     var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací' : (d.type === 'sale' || d.type === 'majitel' ? 'Cena' : 'Odhad');
     var days = daysUntil(d.extra);
-    var cdBig = days != null && days >= 0 ? '<span class="md-cd' + countdownClass(days) + '">Termín ' + countdownText(days) + '</span>' : '';
+    var cdBig = days == null ? ''
+      : (days < 0 ? '<span class="md-cd md-proběhlo">Dražba už proběhla</span>'
+                  : '<span class="md-cd' + countdownClass(days) + '">Termín ' + countdownText(days) + '</span>');
     return '<button class="md-topbar" type="button" data-detail-back><span>Zavřít detail</span><span class="mx">✕</span></button>' +
       '<div class="md-body">' +
         '<div class="md-shape" style="border-color:' + t.color + '55">' + shapeSvg(d) + '</div>' +
@@ -1914,6 +1918,9 @@
     else if (sortMode === 'perm2_asc') arr.sort(function (a, b) { return perM2Val(a) - perM2Val(b); });
     else if (sortMode === 'near' && userPos) arr.sort(function (a, b) { return kmFromUser(a) - kmFromUser(b); });
     else { arr.sort(function (a, b) { return demand(b) - demand(a); }); declump(arr); }
+    // Co už proběhlo, patří dolů — ať v jakémkoli řazení. Mrtvý záznam
+    // nahoře je horší než žádný.
+    arr.sort(function (a, b) { return (jeProsle(a) ? 1 : 0) - (jeProsle(b) ? 1 : 0); });
     // Zvýrazněné (placené) inzeráty nahoru — stabilní dořazení zachová pořadí uvnitř skupin.
     arr.sort(function (a, b) { return (isFeatured(b) ? 1 : 0) - (isFeatured(a) ? 1 : 0); });
     return arr;
@@ -1987,7 +1994,13 @@
       li.setAttribute('role', 'button');
       li.setAttribute('aria-label', t.label + ' · ' + d.place + ' · ' + areaTxt(d));
       var days = daysUntil(d.extra);
-      var cd = days != null && days >= 0 ? '<span class="opp-cd' + countdownClass(days) + '">' + countdownText(days) + '</span>' : '';
+      // Dražba po termínu vypisovala PRÁZDNO a vypadala jako živá nabídka.
+      // countdownText() přitom „proběhlo" umí — jen se nikdy nezavolalo,
+      // protože podmínka pouštěla dál jen budoucí termíny. Kdo klikne na
+      // dražbu, která byla minulý měsíc, se podruhé nevrátí.
+      var cd = days == null ? ''
+        : (days < 0 ? '<span class="opp-cd opp-proběhlo">proběhlo</span>'
+                    : '<span class="opp-cd' + countdownClass(days) + '">' + countdownText(days) + '</span>');
       // Podřádek „co to je": druh (s velkým písmenem) · parcela — jeden řádek, ořízne se
       var druhCap = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '';
       var subParts = [];
@@ -2608,7 +2621,28 @@
     .then(function (res) {
       var j = res[0], kraje = res[1], ul = res[2], live = res[3];
       var arr = Array.isArray(j) ? j : (j && j.opportunities);
-      var base = (arr && arr.length ? arr.slice() : FALLBACK_DATA.slice());
+      /* Když se skutečná data nenačtou, web se do téhle chvíle beze slova
+       * přepnul na čtrnáct záložních nabídek a tvářil se, že to je celá
+       * republika — v úvodu svítilo „14 pozemků". To je horší než hlásit
+       * chybu: člověk si odnese, že u nás nic není, a už se nevrátí.
+       * Záloha zůstává (prázdná mapa je taky k ničemu), ale MUSÍ to být
+       * vidět. */
+      var nouzovyRezim = !(arr && arr.length);
+      var base = (nouzovyRezim ? FALLBACK_DATA.slice() : arr.slice());
+      if (nouzovyRezim) {
+        try {
+          var pas = document.createElement('div');
+          pas.className = 'datovy-vypadek';
+          pas.setAttribute('role', 'status');
+          pas.innerHTML = '<b>Nepodařilo se načíst nabídky.</b> ' +
+            'Ukazujeme jen malou ukázku, ne celou republiku — zkuste stránku za chvíli obnovit. ' +
+            '<button type="button" class="dv-znovu">Zkusit znovu</button>';
+          var kam = document.querySelector('.map-app');
+          if (kam && kam.parentNode) kam.parentNode.insertBefore(pas, kam);
+          var bt = pas.querySelector('.dv-znovu');
+          if (bt) bt.addEventListener('click', function () { location.reload(); });
+        } catch (e) {}
+      }
       // Pozemky od majitelů — schválené inzeráty z data/user-listings.json
       // přidáme na mapu MEZI ostatní (ne do zvláštní sekce), jako kategorie „Od majitele".
       var users = Array.isArray(ul) ? ul : (ul && ul.listings);

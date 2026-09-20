@@ -130,6 +130,9 @@ jobs:
       - name: Čerstvost dat a stav zdrojů
         run: node scripts/test-cerstvost.mjs
 
+      - name: Výpadek dat a mrtvé záznamy
+        run: node scripts/test-vypadky.mjs
+
       - name: Chyby skriptů a přetékání na všech druzích stránek
         run: node scripts/test-konzole.mjs
 

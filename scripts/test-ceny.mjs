@@ -179,6 +179,33 @@ const pc = model3.percentil(levny);
 pravda('nejlevnější nabídka je v dolní části žebříčku', !!pc && pc.cheaper >= 90,
   `levnější než ${pc && pc.cheaper} % podobných`);
 
+// --- 8) Skloňování krajů ---------------------------------------------
+// Vlastní chyba, která se objevila hned na třech místech: web psal
+// „v Středočeský kraji", „v Vysočina kraji". Českému čtenáři to okamžitě
+// řekne, že text psal stroj a že se na něj nedá spolehnout. Proto je na to
+// jedna společná funkce — a proto se tu kontroluje každý kraj zvlášť.
+const KRAJE = ['Praha', 'Středočeský', 'Jihočeský', 'Plzeňský', 'Karlovarský',
+  'Ústecký', 'Liberecký', 'Královéhradecký', 'Pardubický', 'Vysočina',
+  'Jihomoravský', 'Olomoucký', 'Zlínský', 'Moravskoslezský'];
+je('Praha není kraj, takže „v Praze"', PK_CENY.kdeText('kraj', 'Praha'), 'v Praze');
+je('Vysočina se neohýbá na „v Vysočina kraji"', PK_CENY.kdeText('kraj', 'Vysočina'), 'na Vysočině');
+je('Středočeský se skloní i s předložkou', PK_CENY.kdeText('kraj', 'Středočeský'), 've Středočeském kraji');
+je('Zlínský dostane „ve", ne „v"', PK_CENY.kdeText('kraj', 'Zlínský'), 've Zlínském kraji');
+je('okres se píše jako „v okrese X"', PK_CENY.kdeText('okres', 'Benešov'), 'v okrese Benešov');
+pravda('žádný kraj nezůstal v prvním pádě',
+  KRAJE.every((k) => !new RegExp('\\b' + k + '\\b').test(PK_CENY.kdeText('kraj', k))),
+  KRAJE.map((k) => PK_CENY.kdeText('kraj', k)).filter((t, i) => new RegExp('\\b' + KRAJE[i] + '\\b').test(t)).join(', '));
+pravda('neznámý kraj text nerozbije (nevypíše undefined)',
+  /^v kraji /.test(PK_CENY.kdeText('kraj', 'Nějaký')) && !/undefined/.test(PK_CENY.kdeText('kraj', 'Nějaký')));
+
+// A hlavně: nikdo si ten text nesmí skládat po svém, jinak se to vrátí.
+for (const f of ['../js/main.js', '../js/pozemek.js', '../js/radce.js']) {
+  const t = readFileSync(new URL(f, import.meta.url), 'utf8');
+  pravda(`${f.replace('../', '')} si název kraje neskládá sám`,
+    !/'v(e)? ' \+|' kraji'/.test(t),
+    'text se lepí ručně — přesně tak vzniklo „v Vysočina kraji"');
+}
+
 console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
