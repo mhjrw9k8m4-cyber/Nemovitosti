@@ -230,12 +230,49 @@ await p.evaluate(() => document.getElementById('misto-zrus').click());
 await p.waitForTimeout(400);
 const poZruseni = await p.evaluate(() => ({
   schovany: (document.getElementById('misto-pruh') || {}).hidden,
+  pozvanka: document.getElementById('misto-pruh').classList.contains('bez-mista'),
+  jeTlacitkoVybrat: !document.getElementById('mp-akce-zadne').hidden,
   ulozeno: localStorage.getItem('pk_misto_v1'),
   km: document.querySelectorAll('.opp-item .opp-km').length,
 }));
-pravda('„Zrušit místo" proužek schová', poZruseni.schovany === true);
-pravda('a smaže ho i z prohlížeče', poZruseni.ulozeno === null, `v úložišti zůstalo ${poZruseni.ulozeno}`);
+// Proužek se po zrušení NESCHOVÁ, ale změní se v pozvánku. Kdyby zmizel,
+// nešlo by hlídání zapnout jinak než přes GPS — a kdo polohu nepovolí,
+// o funkci se nikdy nedozví.
+pravda('po zrušení zůstane pozvánka, ne prázdno', poZruseni.schovany === false && poZruseni.pozvanka === true,
+  `schovaný=${poZruseni.schovany}, pozvánka=${poZruseni.pozvanka}`);
+pravda('a je v ní tlačítko „Vybrat na mapě"', poZruseni.jeTlacitkoVybrat === true);
+pravda('místo se smazalo i z prohlížeče', poZruseni.ulozeno === null, `v úložišti zůstalo ${poZruseni.ulozeno}`);
 pravda('vzdálenosti z karet zmizí taky', poZruseni.km === 0, `zůstalo ${poZruseni.km}`);
+
+// --- 6) Místo jde určit klepnutím do mapy (bez GPS) -------------------
+// Tohle je jediná cesta pro člověka, který polohu nepovolí.
+await p.evaluate(() => document.getElementById('misto-vybrat').click());
+await p.waitForTimeout(500);
+const vyzva = await p.evaluate(() => ({
+  text: document.querySelector('.mp-hlavni').textContent,
+  rezim: document.body.classList.contains('vybiram-misto'),
+}));
+pravda('tlačítko „Vybrat na mapě" zapne režim výběru', vyzva.rezim === true);
+pravda('a proužek vyzve ke klepnutí do mapy', /Klepněte do mapy/.test(vyzva.text), `text: „${vyzva.text}"`);
+
+// Klepneme doprostřed mapy. Leaflet posílá vlastní událost, takže ji
+// vyvoláme přímo na mapě — kliknutí myší by chytil canvas s tečkami.
+await p.evaluate(() => {
+  const m = window.PK_MAPA;
+  m.fire('click', { latlng: window.L.latLng(50.03, 15.21), containerPoint: window.L.point(200, 200) });
+});
+await p.waitForTimeout(700);
+const poVyberu = await p.evaluate(() => ({
+  rezim: document.body.classList.contains('vybiram-misto'),
+  ulozeno: (() => { try { return JSON.parse(localStorage.getItem('pk_misto_v1')); } catch (e) { return null; } })(),
+  pozvanka: document.getElementById('misto-pruh').classList.contains('bez-mista'),
+  km: document.querySelectorAll('.opp-item .opp-km').length,
+}));
+pravda('klepnutí do mapy místo uloží', !!(poVyberu.ulozeno && Math.abs(poVyberu.ulozeno.lat - 50.03) < 0.01),
+  JSON.stringify(poVyberu.ulozeno));
+pravda('režim výběru se hned vypne', poVyberu.rezim === false);
+pravda('proužek přestane být pozvánkou', poVyberu.pozvanka === false);
+pravda('a na kartách se zase objeví vzdálenost', poVyberu.km > 0, `karet se vzdáleností: ${poVyberu.km}`);
 
 pravda('na stránce nespadl žádný skript', chyby.length === 0, chyby[0]);
 

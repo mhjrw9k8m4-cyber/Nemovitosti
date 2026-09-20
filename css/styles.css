@@ -705,7 +705,9 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .lp-fav svg{width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round;}
 .lp-fav.on{background:rgba(44,113,80,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
 .lp-fav.on svg{fill:currentColor;}
-.opp-deal{display:inline-block; font-size:10.5px; font-weight:700; color:#2E8F5F; background:rgba(31,163,99,0.10); border:1px solid rgba(31,163,99,0.26); border-radius:var(--r-xs); padding:1px 8px; letter-spacing:0.02em; text-transform:uppercase;}
+/* Zelená #2E8F5F dávala na vlastním světle zeleném podkladu jen 3,54 : 1,
+   tedy pod normou pro drobné písmo. Ztmaveno na 5,6 : 1; odstín zůstává. */
+.opp-deal{display:inline-block; font-size:10.5px; font-weight:700; color:#13663E; background:rgba(31,163,99,0.10); border:1px solid rgba(19,102,62,0.34); border-radius:var(--r-xs); padding:1px 8px; letter-spacing:0.02em; text-transform:uppercase;}
 .map-count{font-size:13.5px; color:var(--text-ondark); font-weight:600; letter-spacing:0.01em; margin-bottom:12px;}
 /* Nejvýhodnější — přidaná hodnota ukázaná čísly */
 .deals-sec[hidden]{display:none;}
@@ -2857,3 +2859,22 @@ h1, h2, h3,
   background:none; border:0; border-bottom:1px solid var(--line-strong); padding:0 0 1px; cursor:pointer;}
 .mp-zrus:hover{color:var(--c-exekuce-ink); border-bottom-color:var(--c-exekuce-ink);}
 @media (max-width:560px){ .mp-akce{width:100%; justify-content:space-between;} }
+
+/* Bez uloženého místa je proužek pozvánka, ne hlášení — tlumený, aby
+   nepřetahoval pozornost od vyhledávání, ale viditelný, aby se o funkci
+   vůbec vědělo. Dokud tu pozvánka nebyla, šlo hlídání zapnout jedině
+   přes GPS a kdo polohu nepovolil, funkci nikdy neobjevil. */
+.misto-pruh.bez-mista{border-style:dashed; background:none;}
+.misto-pruh.bez-mista .mp-hlavni{color:var(--text-ondark-mute); font-weight:600;}
+.mp-vybrat{font:inherit; font-size:12.5px; font-weight:600; color:var(--copper);
+  background:var(--ink-soft); border:1px solid var(--line-ui); border-radius:var(--r-sm);
+  /* Terč musí být na dotyk aspoň 38 px vysoký — při 7px odsazení vycházel
+     přesně na hranici a test dotykových terčů ho zachytil. */
+  padding:10px 14px; min-height:38px; cursor:pointer; white-space:nowrap;}
+.mp-vybrat:hover{border-color:var(--copper); background:var(--ink-soft2);}
+.mp-vybrat:focus-visible{outline:2px solid var(--copper); outline-offset:2px;}
+/* Během výběru je kurzor nad mapou zaměřovací a proužek svítí. */
+body.vybiram-misto .leaflet-container{cursor:crosshair;}
+body.vybiram-misto .misto-pruh{border-style:solid; border-color:var(--copper);
+  background:rgba(31,81,56,0.07);}
+body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}

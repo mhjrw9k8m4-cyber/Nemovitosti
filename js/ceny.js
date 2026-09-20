@@ -73,14 +73,29 @@
       // je pod trhem z podstaty věci — kdyby se počítala do průměru, srovnávali
       // bychom dražby samy se sebou a žádný rozdíl by nevyšel.
       if (d.type !== 'sale') return;
-      (nabidkyCR[g] = nabidkyCR[g] || []).push(m2);
-      if (d.okres) (nabidkyOkres[g + '|' + d.okres] = nabidkyOkres[g + '|' + d.okres] || []).push(m2);
+      // Ukládá se i výměra: cena za m² s velikostí pozemku klesá, takže
+      // dvanáctihektarový pozemek nejde poměřovat mediánem postaveným
+      // z tisícimetrových parcel — vyšel by vždycky jako trhák.
+      var z = { a: d.area, m: m2 };
+      (nabidkyCR[g] = nabidkyCR[g] || []).push(z);
+      if (d.okres) (nabidkyOkres[g + '|' + d.okres] = nabidkyOkres[g + '|' + d.okres] || []).push(z);
       var kraj = okresKraj[d.okres];
-      if (kraj) (nabidkyKraj[g + '|' + kraj] = nabidkyKraj[g + '|' + kraj] || []).push(m2);
+      if (kraj) (nabidkyKraj[g + '|' + kraj] = nabidkyKraj[g + '|' + kraj] || []).push(z);
     });
 
     function serad(idx) { Object.keys(idx).forEach(function (k) { idx[k].sort(function (a, b) { return a - b; }); }); }
-    serad(podleTypu); serad(nabidkyOkres); serad(nabidkyKraj); serad(nabidkyCR);
+    serad(podleTypu);
+    /* Výměra a cena za m² zůstávají spolu; řadí se až vybraný výřez. */
+    function ceny(pole, plocha) {
+      if (!pole) return null;
+      var out = [];
+      for (var i = 0; i < pole.length; i++) {
+        if (plocha && (pole[i].a < plocha / 3 || pole[i].a > plocha * 3)) continue;
+        out.push(pole[i].m);
+      }
+      out.sort(function (a, b) { return a - b; });
+      return out;
+    }
 
     var medianTypu = {};
     Object.keys(podleTypu).forEach(function (k) { medianTypu[k] = median(podleTypu[k]); });
@@ -96,12 +111,15 @@
      * 34 běžných nabídek v Praze, Turnově nebo Ostravě za podezřelé. */
     function hladina(d) {
       var g = druhGroup(d.druh);
-      var a = nabidkyOkres[g + '|' + d.okres];
-      if (a && a.length >= MIN_VZOREK) return median(a);
-      a = nabidkyKraj[g + '|' + okresKraj[d.okres]];
-      if (a && a.length >= MIN_VZOREK) return median(a);
-      a = nabidkyCR[g];
-      if (a && a.length >= MIN_VZOREK) return median(a);
+      var kroky = [nabidkyOkres[g + '|' + d.okres], nabidkyKraj[g + '|' + okresKraj[d.okres]], nabidkyCR[g]];
+      for (var i = 0; i < kroky.length; i++) {
+        var a = ceny(kroky[i], d.area);
+        if (a && a.length >= MIN_VZOREK) return median(a);
+      }
+      for (var j = 0; j < kroky.length; j++) {
+        var b = ceny(kroky[j], 0);
+        if (b && b.length >= MIN_VZOREK) return median(b);
+      }
       return medianTypu[d.type + '|' + g] || null;
     }
 
@@ -152,10 +170,16 @@
     function odhad(d) {
       if (!hasArea(d) || !d.price || neduveryhodna(d)) return null;
       var g = druhGroup(d.druh);
-      var kroky = [
-        { arr: nabidkyOkres[g + '|' + d.okres], uroven: 'okres', kde: d.okres },
-        { arr: nabidkyKraj[g + '|' + okresKraj[d.okres]], uroven: 'kraj', kde: okresKraj[d.okres] }
+      var zdroje = [
+        { pole: nabidkyOkres[g + '|' + d.okres], uroven: 'okres', kde: d.okres },
+        { pole: nabidkyKraj[g + '|' + okresKraj[d.okres]], uroven: 'kraj', kde: okresKraj[d.okres] }
       ];
+      /* Nejdřív srovnání s podobně velkými pozemky (třetina až trojnásobek
+       * výměry). Když jich není dost, ustoupí se k srovnání bez ohledu na
+       * velikost — a řekne se to, aby si člověk mohl číslo přebrat. */
+      var kroky = [];
+      zdroje.forEach(function (z) { kroky.push({ arr: ceny(z.pole, d.area), uroven: z.uroven, kde: z.kde, podleVelikosti: true }); });
+      zdroje.forEach(function (z) { kroky.push({ arr: ceny(z.pole, 0), uroven: z.uroven, kde: z.kde, podleVelikosti: false }); });
       for (var i = 0; i < kroky.length; i++) {
         var k = kroky[i];
         if (!k.arr || k.arr.length < MIN_VZOREK) continue;
@@ -176,6 +200,7 @@
           uroven: k.uroven,
           kde: k.kde,
           vzorek: k.arr.length,
+          podleVelikosti: k.podleVelikosti,
           druh: g,
           rozdil: castka - d.price,
           // O kolik je cena pozemku pod odhadem, v procentech odhadu.

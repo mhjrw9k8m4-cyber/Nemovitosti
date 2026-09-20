@@ -142,6 +142,13 @@ if (proužek) {
     !!(d && /^(dnes|zítra|za \d+ dn[yí])\b/.test(d.hodnota)),
     `vyšlo ${JSON.stringify(d && d.hodnota)} — čekal se tvar „zítra · Obec"`);
 
+  // Nejvýhodnější nabídka se hlásí ČÁSTKOU, ne pořadím v žebříčku.
+  // „Levnější než 92 % podobných" je pořadí a člověk si pod tím nic
+  // nepředstaví; „o 92 % pod obvyklou" je údaj.
+  pravda('nejvýhodnější se hlásí jako rozdíl proti obvyklé ceně',
+    !!(proužek.deal && /^o \d+ % pod obvyklou · .+/.test(proužek.deal.hodnota)),
+    `vyšlo „${proužek.deal && proužek.deal.hodnota}"`);
+
   // Jádro testu: nabídka s nevěrohodnou cenou se nesmí vydávat za koupi roku.
   const deal = proužek.deal;
   const misto = deal ? deal.hodnota.split('·').pop().trim() : '';

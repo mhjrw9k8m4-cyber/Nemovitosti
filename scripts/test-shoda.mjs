@@ -104,7 +104,10 @@ pravda('mapa už nemá vlastní kopii cenového indexu', kopie.vlastniIndex === 
 // žádný test to nechytil, jen tam nebyl.
 const cil = await p.evaluate((D) => {
   const M = window.PK_CENY.postav(D);
-  const n = D.filter((d) => { const o = M.odhad(d); return o && o.podOdhadem >= 15; })
+  // Stejná podmínka, jakou má vykreslování: bez srovnání s podobně velkými
+  // pozemky se sleva netvrdí, takže takový pozemek by na stránce nic neukázal
+  // a test by hlásil chybu tam, kde žádná není.
+  const n = D.filter((d) => { const o = M.odhad(d); return o && o.podleVelikosti && o.podOdhadem >= 15; })
     .sort((a, b) => M.odhad(b).podOdhadem - M.odhad(a).podOdhadem)[0];
   return n ? { klic: [n.place, n.parcel, n.okres, n.lat.toFixed(3), n.lng.toFixed(3)].join('|'),
     ll: n.lat + ',' + n.lng, castka: M.odhad(n).castka } : null;

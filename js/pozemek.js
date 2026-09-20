@@ -124,7 +124,10 @@
   function odhadHtml(d) {
     if (!MODEL) return '';
     var o = MODEL.odhad(d);
-    if (!o || o.podOdhadem < 15) return '';
+    // Jen srovnání s podobně velkými pozemky. Cena za m² s výměrou klesá,
+    // takže velký pozemek by proti mediánu z malých parcel vyšel jako trhák
+    // vždycky — a nebyla by to pravda.
+    if (!o || !o.podleVelikosti || o.podOdhadem < 15) return '';
     var kde = o.uroven === 'okres' ? ('v okrese ' + o.kde) : ('v ' + o.kde + ' kraji');
     var coJe = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'exekuce' ? 'Uváděná cena' : 'Nabídková cena');
     return '<div class="md-odhad pz-odhad">' +
@@ -133,7 +136,7 @@
       '<div class="mo-rozdil"><b>o ' + o.podOdhadem + ' % níž</b>, tedy zhruba o ' + fmt(o.rozdil) + ' Kč</div>' +
       // Pozor na pád: „u orná půda" je špatně česky, proto druh v závorce.
       '<p class="mo-pozn">Spočítáno z mediánu <b>' + fmt(Math.round(o.zaM2)) + ' Kč/m²</b> — z <b>' +
-      o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) + ') ' + kde + '. ' +
+      o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) + ') a podobné výměry ' + kde + '. ' +
       'Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly — to ve veřejných zdrojích není. ' +
       'Berte to jako vodítko, ne jako odhad znalce.</p>' +
       '</div>';

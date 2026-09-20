@@ -741,6 +741,7 @@
   var searchTerm = '';
   var favOnly = false;
   var ukazSkryte = false;   // „Zobrazit skryté" — dočasně, neukládá se
+  var vybiramMisto = false; // čeká se na klepnutí do mapy, kterým se určí „moje místo"
   var markers = [];
 
   /* ---------- Paměť prohlížeče: návštěva, skryté, filtr ----------
@@ -924,7 +925,7 @@
   function odhadHtmlMapa(d) {
     if (!MODEL) return '';
     var o = MODEL.odhad(d);
-    if (!o || o.podOdhadem < 15) return '';
+    if (!o || !o.podleVelikosti || o.podOdhadem < 15) return '';
     var kde = o.uroven === 'okres' ? ('v okrese ' + o.kde) : ('v ' + o.kde + ' kraji');
     var coJe = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'exekuce' ? 'Uváděná cena' : 'Nabídková cena');
     return '<div class="md-odhad">' +
@@ -932,7 +933,7 @@
       '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">' + fmt(o.castka) + ' Kč</span></div>' +
       '<div class="mo-rozdil"><b>o ' + o.podOdhadem + ' % níž</b>, tedy zhruba o ' + fmt(o.rozdil) + ' Kč</div>' +
       '<p class="mo-pozn">Spočítáno z mediánu <b>' + fmt(Math.round(o.zaM2)) + ' Kč/m²</b> — z <b>' +
-      o.vzorek + '</b> nabídek stejného druhu (' + o.druh.toLowerCase() + ') ' + kde + '. ' +
+      o.vzorek + '</b> nabídek stejného druhu (' + o.druh.toLowerCase() + ') a podobné výměry ' + kde + '. ' +
       'Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly.</p>' +
       '</div>';
   }
@@ -1402,6 +1403,17 @@
   // vybere (předchozí se zamkne) — teprve další klik na tečku v něm otevře detail.
   var krajJustSelected = false; // klik, který právě přepnul kraj, neotevírá detail
   map.on('click', function (e) {
+    // Výběr vlastního místa má přednost před vším ostatním: dokud je zapnutý,
+    // klepnutí do mapy neotevírá pozemek ani nevybírá kraj.
+    if (vybiramMisto) {
+      vybiramMisto = false;
+      document.body.classList.remove('vybiram-misto');
+      ulozMisto({ lat: e.latlng.lat, lng: e.latlng.lng,
+        km: (mojeMisto && mojeMisto.km) || 10, nazev: null });
+      if (typeof vykresliMisto === 'function') vykresliMisto();
+      renderList();
+      return;
+    }
     if (krajJustSelected) { krajJustSelected = false; return; }
     // Tečky jsou klikací, když nejsou zamčené (po výběru kraje NEBO po přiblížení mapy).
     if (dotsLocked || !lastVis.length) return;
@@ -1985,7 +1997,18 @@
       var chips = [];
       if (isFeatured(d)) chips.push('<span class="opp-feat">Zvýrazněno</span>');
       if (cd) chips.push(cd);
-      if (perM2 && dealMax && perM2 <= dealMax) {
+      /* Odznak výhodné ceny. Když umíme spočítat obvyklou cenu v okolí,
+       * řekneme to rovnou takhle — „o 92 % pod obvyklou v okrese" je
+       * údaj, kdežto „levnější než 92 % podobných" je pořadí v žebříčku
+       * a člověk si pod tím nic nepředstaví. Percentil zůstává jako
+       * záloha tam, kde na odhad není dost srovnání. */
+      var _od = MODEL ? MODEL.odhad(d) : null;
+      // Slevu tvrdíme jen tam, kde se srovnávalo s podobně velkými pozemky.
+      // Jinak by dvanáctihektarový pozemek vždycky vyšel jako trhák jen proto,
+      // že velké pozemky mají nižší cenu za m².
+      if (_od && _od.podleVelikosti && _od.podOdhadem >= 25) {
+        chips.push('<span class="opp-deal">o ' + _od.podOdhadem + ' % pod obvyklou</span>');
+      } else if (perM2 && dealMax && perM2 <= dealMax) {
         var _di = dealInfo(d);
         chips.push('<span class="opp-deal">' + (_di && _di.cheaper >= 70 ? 'levnější než ' + _di.cheaper + ' %' : 'výhodná cena') + '</span>');
       }
@@ -2399,13 +2422,13 @@
     //    tentýž výpočet jako karty níž, ne vlastní (jinak by si dvě čísla
     //    na jedné stránce odporovala). Holé minimum ceny za m² by sem
     //    nepatřilo: nejlevnější nabídka bývá podíl nebo chyba v inzerátu.
-    var best = null, bestI = null;
+    var best = null, bestO = null;
     DATA.forEach(function (d) {
-      var di = dealInfo(d);
-      if (!di || di.cheaper < 80) return;
-      if (!bestI || di.cheaper > bestI.cheaper) { bestI = di; best = d; }
+      var o = MODEL ? MODEL.odhad(d) : null;
+      if (!o || !o.podleVelikosti || o.podOdhadem < 25) return;
+      if (!bestO || o.podOdhadem > bestO.podOdhadem) { bestO = o; best = d; }
     });
-    vypln('deal', null, best ? ('levnější než ' + bestI.cheaper + ' % podobných · ' + best.place) : '', best);
+    vypln('deal', null, best ? ('o ' + bestO.podOdhadem + ' % pod obvyklou · ' + best.place) : '', best);
 
     if (hotovo) box.hidden = false;
   }
@@ -2461,13 +2484,31 @@
   var mistoPruh = document.getElementById('misto-pruh');
   var mistoKmEl = document.getElementById('misto-km');
   var mistoZrus = document.getElementById('misto-zrus');
+  var akceZadne = document.getElementById('mp-akce-zadne');
+  var akceMam = document.getElementById('mp-akce-mam');
+  var vybratBtn = document.getElementById('misto-vybrat');
   function vykresliMisto() {
     if (!mistoPruh) return;
-    var n = novinkyUMista();
-    if (!n) { mistoPruh.hidden = true; return; }
-    mistoPruh.hidden = false;
     var hl = mistoPruh.querySelector('.mp-hlavni');
     var pod = mistoPruh.querySelector('.mp-pod');
+    var n = novinkyUMista();
+    if (!n) {
+      /* Bez uloženého místa se proužek neschovává, ale zve. Dokud tu byla
+       * jen podmínka „když není místo, schovej", nešlo hlídání vůbec zapnout
+       * jinak než přes GPS — a kdo polohu nepovolí, o funkci nikdy nezjistil. */
+      mistoPruh.hidden = false;
+      mistoPruh.classList.remove('ma-novinky');
+      mistoPruh.classList.add('bez-mista');
+      hl.textContent = 'Hlídejte si okolí svého pozemku';
+      pod.textContent = 'Označte místo a při každé návštěvě uvidíte, co u něj přibylo.';
+      if (akceZadne) akceZadne.hidden = false;
+      if (akceMam) akceMam.hidden = true;
+      return;
+    }
+    mistoPruh.hidden = false;
+    mistoPruh.classList.remove('bez-mista');
+    if (akceZadne) akceZadne.hidden = true;
+    if (akceMam) akceMam.hidden = false;
     if (n.nove > 0) {
       hl.textContent = 'Od minule přibyl' + (n.nove === 1 ? ' 1 pozemek' : (n.nove < 5 ? 'y ' + n.nove + ' pozemky' : 'o ' + n.nove + ' pozemků')) + ' ve vašem okolí';
       mistoPruh.classList.add('ma-novinky');
@@ -2490,6 +2531,19 @@
     ulozMisto(null);
     vykresliMisto();
     renderList();
+  });
+  if (vybratBtn) vybratBtn.addEventListener('click', function () {
+    vybiramMisto = true;
+    document.body.classList.add('vybiram-misto');
+    var hl = mistoPruh.querySelector('.mp-hlavni');
+    var pod = mistoPruh.querySelector('.mp-pod');
+    hl.textContent = 'Klepněte do mapy na své místo';
+    pod.textContent = 'Stačí přibližně — okruh se pak dá nastavit.';
+    // Na mobilu je seznam nahoře a mapa pod ním; bez tohohle by člověk
+    // klepl do prázdna, protože by na mapu vůbec neviděl.
+    var mapaBtn = document.querySelector('.mvt-btn[data-mv="mapa"]');
+    if (mapaBtn && !mapaBtn.classList.contains('active')) mapaBtn.click();
+    if (typeof scrollToMap === 'function') scrollToMap();
   });
   vykresliMisto();
 

@@ -115,6 +115,34 @@ const oLevna = model.odhad(levnaDrazba);
 pravda('hluboko POD hladinou se odhad naopak udělá (o to celé jde)',
   !!oLevna && oLevna.podOdhadem === 95, `vyšlo ${oLevna && oLevna.podOdhadem}`);
 
+// --- 4c) Srovnává se s podobně VELKÝMI pozemky -----------------------
+// Cena za m² s výměrou klesá, takže velký pozemek proti mediánu z malých
+// parcel vyjde jako trhák vždycky. Na ostrých datech se takhle hlásilo
+// „o 95 % pod obvyklou" u pozemku o 12 hektarech.
+const MALE = pole(10, (i) => ({
+  place: 'M' + i, okres: 'Cheb', type: 'sale', druh: 'orná půda',
+  area: 1000, price: 100000,        // 100 Kč/m² u malých parcel
+}));
+const VELKE = pole(10, (i) => ({
+  place: 'V' + i, okres: 'Cheb', type: 'sale', druh: 'orná půda',
+  area: 100000, price: 1000000,     // 10 Kč/m² u velkých — pětkrát levněji
+}));
+const model4 = PK_CENY.postav([...MALE, ...VELKE], OKRES_KRAJ);
+const velkaDrazba = { place: 'Velká', okres: 'Cheb', type: 'drazba', druh: 'orná půda',
+  area: 100000, price: 900000 };    // 9 Kč/m², tedy jen kousek pod velkými
+const oVelka = model4.odhad(velkaDrazba);
+pravda('velký pozemek se srovnává s velkými', !!(oVelka && oVelka.podleVelikosti),
+  `podleVelikosti=${oVelka && oVelka.podleVelikosti}`);
+je('hladina je z velkých parcel, ne ze všech', oVelka && oVelka.zaM2, 10);
+je('a rozdíl proti obvyklé ceně vyjde malý, ne 90 %', oVelka && oVelka.podOdhadem, 10);
+
+// Když podobně velkých není dost, model ustoupí — ale přizná to.
+const model5 = PK_CENY.postav(MALE, OKRES_KRAJ);
+const oUstup = model5.odhad(velkaDrazba);
+pravda('bez dost podobně velkých se ustoupí ke srovnání bez ohledu na velikost',
+  !!(oUstup && oUstup.podleVelikosti === false),
+  `vyšlo ${JSON.stringify(oUstup && { u: oUstup.uroven, v: oUstup.podleVelikosti })}`);
+
 // --- 5) Nevěrohodná cena: žádný odhad, žádná „výhodná koupě" ---------
 // Stavební pozemky: devět po 2 000 Kč/m² a jeden za 3 Kč/m² (podíl).
 const STAVEBNI = pole(9, (i) => ({

@@ -175,7 +175,10 @@
                uloží; skript ho vyplní podle toho, co u něj od minule přibylo. -->
           <div class="misto-pruh" id="misto-pruh" hidden>
             <div class="mp-text"><b class="mp-hlavni"></b><span class="mp-pod"></span></div>
-            <div class="mp-akce">
+            <div class="mp-akce" id="mp-akce-zadne" hidden>
+              <button type="button" class="mp-vybrat" id="misto-vybrat">Vybrat na mapě</button>
+            </div>
+            <div class="mp-akce" id="mp-akce-mam">
               <label class="mp-okruh"><span>Okruh</span>
                 <select id="misto-km" aria-label="Okruh hlídání okolí">
                   <option value="2">2 km</option>
@@ -334,11 +337,11 @@
       <p class="sources-lead">Tyhle zdroje jsou roztroušené po internetu i úředních deskách obcí — my je každý den projdeme a dáme na jednu mapu. Nic tajného, vše dohledatelné:</p>
       <p class="data-updated mono" id="data-updated" aria-live="polite"></p>
       <div class="source-row">
-        <div class="source-chip"><span class="s-dot" style="background:var(--c-drazba);"></span>Centrální evidence veřejných dražeb</div>
-        <div class="source-chip"><span class="s-dot" style="background:var(--c-exekuce);"></span>Nucené dražby (exekuce)</div>
-        <div class="source-chip"><span class="s-dot" style="background:var(--c-sale);"></span>Státní pozemkový úřad (§ 12)</div>
-        <div class="source-chip"><span class="s-dot" style="background:var(--c-sale);"></span>Inzeráty Bezrealitky</div>
-        <div class="source-chip"><span class="s-dot" style="background:var(--c-sale);"></span>Inzeráty Farmy.cz</div>
+        <div class="source-chip"><span class="s-dot tv-kosoctverec" style="background:var(--c-drazba);"></span>Centrální evidence veřejných dražeb</div>
+        <div class="source-chip"><span class="s-dot tv-trojuhelnik" style="background:var(--c-exekuce);"></span>Nucené dražby (exekuce)</div>
+        <div class="source-chip"><span class="s-dot tv-kruh" style="background:var(--c-sale);"></span>Státní pozemkový úřad (§ 12)</div>
+        <div class="source-chip"><span class="s-dot tv-kruh" style="background:var(--c-sale);"></span>Inzeráty Bezrealitky</div>
+        <div class="source-chip"><span class="s-dot tv-kruh" style="background:var(--c-sale);"></span>Inzeráty Farmy.cz</div>
         <div class="source-chip"><span class="s-dot" style="background:var(--copper);"></span>Katastr nemovitostí</div>
       </div>
     </div>
