@@ -453,11 +453,10 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
   background-size:58px 58px;
   -webkit-mask-image:radial-gradient(ellipse 78% 76% at 50% 42%, #000 18%, transparent 100%);
           mask-image:radial-gradient(ellipse 78% 76% at 50% 42%, #000 18%, transparent 100%);}
-/* Spodní okraj pásu se rozplyne do barvy stránky, aby nevznikla ostrá hrana.
-   Je to zvlášť, ne v pozadí výš — pod ním už žádný text není a do měření
-   kontrastu tím pádem nemá co mluvit. */
-.hero-band::after{content:""; position:absolute; left:0; right:0; bottom:0; height:24%; pointer-events:none;
-  background:linear-gradient(180deg, rgba(241,239,234,0) 0%, rgba(241,239,234,0.72) 58%, var(--bg) 100%);}
+/* Spodní okraj pásu končí ostře. Rozplývání do barvy stránky znělo jako
+   dobrý nápad, ale světlý přechod přes tmavé pozadí dá na čtvrtině výšky
+   pásu šedou mlhu — a mlha byla přesně to, co na téhle ploše vadilo.
+   Ostrá hrana navíc drží, protože ji karta s mapou stejně překrývá. */
 .hero-band > .wrap{position:relative; z-index:1;}
 /* Text leží na tmavém obraze — potřebuje vlastní barvy, jinak by zmizel. */
 /* Na obraze musí i drobné písmo držet 4,5:1 i nad nejsvětlejším polem —
@@ -2412,8 +2411,8 @@ body::after{
   background-size:52px 52px;
   -webkit-mask-image:radial-gradient(ellipse 76% 80% at 50% 44%, #000 16%, transparent 100%);
           mask-image:radial-gradient(ellipse 76% 80% at 50% 44%, #000 16%, transparent 100%);}
-.okr-band::after{content:""; position:absolute; left:0; right:0; bottom:0; height:26%; pointer-events:none;
-  background:linear-gradient(180deg, rgba(241,239,234,0) 0%, var(--bg) 100%);}
+/* Ostrá hrana, žádné vytrácení. Světlý přechod přes tmavý pás dělá na
+   čtvrtině jeho výšky šedou mlhu a text úvodu do ní zasahoval. */
 .okr-band > .wrap{position:relative; z-index:1;}
 .okr-hero .eyebrow{color:#E8E4DC;}
 .okr-hero h1{color:#FFFFFF; font-size:clamp(30px,4.2vw,50px); line-height:1.04; letter-spacing:-0.028em;}
@@ -2427,6 +2426,9 @@ body::after{
 .okr-stat{background:none; border:0; border-radius:0; box-shadow:none; padding:0; min-width:0;}
 .okr-stat b{font-family:var(--font-display); font-weight:700; font-size:clamp(30px,3.6vw,44px); line-height:0.95; letter-spacing:-0.03em; color:var(--text-ondark);}
 .okr-stat span{color:var(--text-ondark-mute); text-transform:none; letter-spacing:0; font-size:13px;}
+/* Dvě čísla stejné velikosti vedle sebe oko slepí v jedno („20 20"). Mezi
+   ně patří svislice — stejně jako u čísel na hlavní stránce. */
+.okr-stat + .okr-stat{padding-left:34px; border-left:1px solid var(--line-strong);}
 
 /* Oddíly bez vnější karty — nadpis, linka, obsah. */
 .okr-blok{margin-top:34px; padding-top:26px; border-top:1px solid var(--line-strong);}
@@ -2651,3 +2653,31 @@ body::after{
   .clanek .rules-sect::before{position:absolute; left:-64px; top:24px;
     margin:0; text-align:right; width:44px; font-size:14px;}
 }
+
+
+/* =====================================================================
+   ZVÝRAZNĚNÉ SLOVO V NADPISU
+   Kurzíva plus měděný zvýrazňovač pod slovem. Dvě ozdoby na jednom
+   slově; kurzíva navíc dělá z groteskního nadpisu pohádkový a linka
+   uprostřed věty vypadá jako omylem zapnutý odkaz. Zvýraznění nese
+   barva, nic dalšího. Platí na celém webu, ne jen na tmavé desce.
+   ------------------------------------------------------------------ */
+h1 em{font-style:normal; font-weight:800;}
+h1 em::after{content:none; animation:none;}
+
+/* =====================================================================
+   HLAVIČKA APLIKAČNÍCH STRÁNEK (.app-hero)
+   Hlídání, Upozornění a Zprávy jsou nástroje, ne články — tmavá deska
+   by jim ubrala místo. Zůstávají světlé, ale bledý barevný mesh po nich
+   zmizel taky: nad nástrojem je to jen šmouha. Místo něj čistá plocha
+   a vlasová linka, která odděluje hlavičku od práce pod ní.
+   ------------------------------------------------------------------ */
+.add-hero.app-hero{background:none; background-image:none;
+  border-bottom:1px solid var(--line); padding-bottom:22px; margin-bottom:26px;}
+.add-hero.app-hero::before, .add-hero.app-hero::after{content:none;}
+
+/* Na krátkých stránkách (přihlášení, prázdné stavy) končila patička
+   uprostřed okna a pod ní zbýval pruh holého pozadí. Patička se drží dna. */
+body{display:flex; flex-direction:column; min-height:100vh;}
+body > main{flex:1 0 auto;}
+body > footer{flex:none;}
