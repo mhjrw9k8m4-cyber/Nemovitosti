@@ -2908,3 +2908,17 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   #nav a[href$="muj-inzerat.html"]{margin-left:-6px;}
   #nav a[href$="kontakt.html"]{margin-left:12px;}
 }
+
+
+/* =====================================================================
+   RÁDCE U POZEMKU — otázky k položení
+   Konkrétní věta, se kterou se dá zvednout telefon, je užitečnější než
+   odstavec teorie. Proto číslovaný seznam, ne odrážky: jsou to tři věci
+   k odbavení, ne výčet možností.
+   ------------------------------------------------------------------ */
+.gtk-otazky{display:block; padding-top:12px; margin-top:4px;
+  border-top:1px solid var(--line);}
+.gtk-otazky .gtk-k{display:block; margin-bottom:8px;}
+.gtk-ol{margin:0; padding-left:1.35em; display:flex; flex-direction:column; gap:7px;}
+.gtk-ol li{font-size:14px; line-height:1.55; color:var(--text-ondark);}
+.gtk-ol li::marker{font-family:var(--font-mono); font-size:12px; color:var(--accent-warm);}

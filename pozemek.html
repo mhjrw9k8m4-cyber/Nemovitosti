@@ -116,6 +116,16 @@
     .pz-gtk .g-row:first-child{padding-top:0;} .pz-gtk .g-row:last-of-type{border-bottom:none;}
     .pz-gtk .g-k{font-size:12px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:var(--text-ondark-mute);}
     .pz-gtk .g-v{font-size:14px; color:var(--text-ondark-mute); line-height:1.55;} .pz-gtk .g-v b{color:var(--text-ondark);}
+    /* Barva podle závažnosti — varování musí jít poznat od informace. */
+    .pz-gtk .g-warn .g-k{color:var(--accent-warm);}
+    .pz-gtk .g-ok .g-k{color:var(--c-ok-ink);}
+    /* Tři otázky k položení. Číslovaný seznam, ne odrážky: je to seznam
+       věcí k odbavení, ne výčet možností. */
+    .pz-gtk .g-otazky{padding-top:13px; margin-top:2px; border-top:1px solid var(--line);}
+    .pz-gtk .g-otazky .g-k{display:block; margin-bottom:9px;}
+    .pz-gtk .g-ol{margin:0; padding-left:1.35em; display:flex; flex-direction:column; gap:8px;}
+    .pz-gtk .g-ol li{font-size:14px; line-height:1.55; color:var(--text-ondark);}
+    .pz-gtk .g-ol li::marker{font-family:var(--font-mono); font-size:12px; color:var(--accent-warm);}
     .pz-gtk .g-foot{font-size:12px; color:var(--text-ondark-mute); line-height:1.5; margin-top:12px; font-style:italic;}
 
     .pz-loading, .pz-empty{padding:70px 16px; text-align:center; color:var(--text-ondark-mute);}
@@ -169,6 +179,7 @@
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="js/ceny.js?v=20260920a"></script>
+<script src="js/radce.js?v=20260920a"></script>
 <script src="js/pozemek.js?v=20260902f"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel. Na GitHub Pages ani lokálně
