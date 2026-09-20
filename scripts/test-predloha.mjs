@@ -58,7 +58,9 @@ hlas('Vlastní stín mimo paletku', vlastni,
 
 /* ---------- 2. tvary ---------- */
 // 2 a 3 px jsou vlasové proužky, 50 % a 999 px jsou kruhy — ty nejsou „tvar karty".
-const POVOLENA = new Set(['2px', '3px', '50%', '999px']);
+// „inherit" není nový tvar — prvek jen přebírá zaoblení rodiče, takže
+// se škále nevymyká. Ostatní hodnoty musí být z paletky.
+const POVOLENA = new Set(['2px', '3px', '50%', '999px', 'inherit']);
 const tvary = [];
 for (const m of css.matchAll(/border-radius:\s*([^;}]+)/g)) {
   const v = m[1].trim();
