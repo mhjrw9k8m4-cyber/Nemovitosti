@@ -2038,6 +2038,14 @@
     scored.sort(function (a, b) { return b.di.cheaper - a.di.cheaper || perM2Val(a.d) - perM2Val(b.d); });
     var top = scored.slice(0, 4);
     if (top.length < 3) { sec.hidden = true; return; } // radši nic než pár náhod
+    // Číslo v postranním sloupci má sedět s tím, co je vidět — ne slibovat čtyři,
+    // když se dneska našly tři.
+    var rn = document.getElementById('deals-n');
+    if (rn) {
+      rn.textContent = String(top.length);
+      var rl = rn.nextElementSibling;
+      if (rl) rl.textContent = top.length === 1 ? 'tip dnes' : (top.length < 5 ? 'tipy dnes' : 'tipů dnes');
+    }
     grid.innerHTML = top.map(function (o) {
       var d = o.d, t = TYPE[d.type];
       var perM2 = Math.round(d.price / d.area);

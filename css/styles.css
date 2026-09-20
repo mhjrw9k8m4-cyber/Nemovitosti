@@ -2520,3 +2520,39 @@ body::after{
   .hero-map .hero-head .eyebrow{margin-bottom:16px;}
   .hero-map .hero-head .hero-stats{margin-top:22px;}
 }
+
+
+/* =====================================================================
+   POSTRANNÍ SLOUPEC SEKCE (.rail)
+   Devět sekcí za sebou mělo přesně stejnou hlavu: drobný štítek, pod ním
+   nadpis, pod ním obsah. Devětkrát tentýž útvar = rytmus herního menu,
+   ne stránky. Štítek proto odchází z cesty textu do levého sloupce a
+   bere s sebou pořadové číslo. Nadpis tím zůstává sám — a čtenář má
+   napravo od sebe jeden sloupec textu, ne tři vrstvy nad sebou.
+   Na úzkém displeji se sloupec skládá zpátky do řádku, aby se neplýtvalo
+   šířkou; tam je útvar jiný, a to je v pořádku.
+   ------------------------------------------------------------------ */
+.rail-mark{display:flex; align-items:baseline; gap:10px; margin:0 0 14px;}
+.rail-mark .rm-n{font-family:var(--font-display); font-weight:700; font-size:15px;
+  letter-spacing:-0.01em; color:var(--accent-warm); font-variant-numeric:tabular-nums;}
+.rail-mark .rm-l{font-size:12px; font-weight:600; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--text-ondark-mute);}
+/* Měděná vlasovka nad nadpisem tu nemá co dělat — strukturu drží sloupec. */
+.rail .section-head::before{display:none;}
+
+@media (min-width:1000px){
+  .rail > .wrap{display:grid; grid-template-columns:172px minmax(0,1fr);
+    column-gap:52px; align-items:start;}
+  .rail > .wrap > *{grid-column:2; min-width:0;}
+  /* Značka sahá přes hlavu i obsah. Kdyby seděla jen v prvním řádku, určovala
+     by jeho výšku a pod nadpisem by zela díra. */
+  .rail > .wrap > .rail-mark{grid-column:1; grid-row:1 / span 2; align-self:start;
+    display:block; margin:0; padding-top:6px;}
+  .rail > .wrap > .rail-mark .rm-n{display:block; font-weight:600;
+    font-size:44px; line-height:1; letter-spacing:-0.035em;
+    font-variation-settings:'wdth' 92; color:var(--text-ondark); margin-bottom:12px;}
+  .rail > .wrap > .rail-mark .rm-l{display:block; max-width:13ch; line-height:1.5;
+    padding-top:12px; border-top:1px solid var(--line-strong);}
+  .rail .section-head{margin-bottom:30px; max-width:660px;}
+  .rail .section-head h2{font-size:clamp(30px, 2.7vw, 40px); max-width:19ch;}
+}

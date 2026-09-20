@@ -263,10 +263,10 @@
   <!-- 2a · PODLE KRAJE — rozcestník pro toho, kdo nechce hledat v mapě.
        Krajské stránky do téhle chvíle existovaly, ale z úvodní stránky na
        ně nevedl jediný odkaz. -->
-  <section class="section pt-0 kraje-sec" id="kraje">
+  <section class="section pt-0 kraje-sec rail" id="kraje">
     <div class="wrap">
+      <div class="rail-mark reveal"><span class="rm-n">14</span><span class="rm-l">krajů</span></div>
       <div class="section-head reveal">
-        <div class="eyebrow">Bez mapy, na dvě klepnutí</div>
         <h2>Pozemky podle kraje.</h2>
       </div>
       <div class="kraj-grid reveal">
@@ -290,12 +290,10 @@
   </section>
 
   <!-- 2b · NEJVÝHODNĚJŠÍ (přidaná hodnota ukázaná čísly) -->
-  <section class="section pt-0 deals-sec" id="vyhodne" hidden>
+  <section class="section pt-0 deals-sec rail" id="vyhodne" hidden>
     <div class="wrap">
-      <div class="section-head reveal">
-        <div class="eyebrow">Nejvýhodnější právě teď</div>
-        <h2>Tipy na dobrou koupi.</h2>
-      </div>
+      <div class="rail-mark reveal"><span class="rm-n" id="deals-n">4</span><span class="rm-l">tipy dnes</span></div>
+      <div class="section-head reveal"><h2>Tipy na dobrou koupi.</h2></div>
       <div class="deals-grid" id="deals-grid"></div>
     </div>
   </section>
@@ -323,9 +321,10 @@
   </section>
 
   <!-- 6 · JAK TO FUNGUJE -->
-  <section class="section" id="jak-funguje">
+  <section class="section rail" id="jak-funguje">
     <div class="wrap">
-      <div class="section-head reveal"><div class="eyebrow">Jak to funguje</div><h2>Jak najdete pozemek — ve třech krocích.</h2></div>
+      <div class="rail-mark reveal"><span class="rm-n">3</span><span class="rm-l">kroky</span></div>
+      <div class="section-head reveal"><h2>Jak najdete pozemek — ve třech krocích.</h2></div>
       <div class="steps">
         <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-map"/></svg></div><div class="idx mono">01</div><h3>Otevřete mapu</h3><p>Sbíráme data z veřejných zdrojů a spojíme je na jednu mapu. Jsou tam jen pozemky, kde se něco děje — barva napoví druh příležitosti.</p></div>
         <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-click"/></svg></div><div class="idx mono">02</div><h3>Klikněte na příležitost</h3><p>Detail ukáže výměru, druh a termín. Proklik rovnou do katastru pro ověření, nebo na inzerát.</p></div>
@@ -335,9 +334,10 @@
   </section>
 
   <!-- 7 · CO UVIDÍTE NA MAPĚ -->
-  <section class="section pt-0" id="stavy">
+  <section class="section pt-0 rail" id="stavy">
     <div class="wrap">
-      <div class="section-head reveal"><div class="eyebrow">Co na mapě uvidíte</div><h2>Čtyři druhy příležitostí — každá svou barvou.</h2></div>
+      <div class="rail-mark reveal"><span class="rm-n">4</span><span class="rm-l">druhy příležitostí</span></div>
+      <div class="section-head reveal"><h2>Čtyři druhy příležitostí — každá svou barvou.</h2></div>
       <div class="status-grid">
         <div class="status-card reveal"><div class="status-top"><svg class="ic" style="color:var(--c-sale)"><use href="#i-tag"/></svg>Na prodej<span class="status-n" data-type="sale"></span></div><ul class="status-list"><li>Aktivně nabízené k prodeji</li><li>Proklik přímo na inzerát</li></ul></div>
         <div class="status-card reveal"><div class="status-top"><svg class="ic" style="color:var(--c-drazba)"><use href="#i-gavel"/></svg>Dražba<span class="status-n" data-type="drazba"></span></div><ul class="status-list"><li>Nadcházející veřejné dražby</li><li>Často <b>pod tržní cenou</b></li></ul></div>
@@ -348,9 +348,10 @@
   </section>
 
   <!-- 8 · POZEMKY OD LIDÍ (přímo od majitelů) -->
-  <section class="section pt-0" id="od-lidi">
+  <section class="section pt-0 rail" id="od-lidi">
     <div class="wrap">
-      <div class="section-head reveal"><div class="eyebrow">Od lidí, ne z realitky</div><h2>Pozemky přímo od majitelů.</h2></div>
+      <div class="rail-mark reveal"><span class="rm-n">0 %</span><span class="rm-l">provize</span></div>
+      <div class="section-head reveal"><h2>Pozemky přímo od majitelů.</h2></div>
       <div id="user-listings" class="odl-wrap reveal" aria-live="polite"></div>
       <div class="odl-cta reveal">
         <div class="odl-cta-txt"><b>Máte pozemek na prodej?</b><span>Přidejte ho zdarma — bez provize, s přímým kontaktem na vás.</span></div>
@@ -381,9 +382,10 @@
   </section>
 
   <!-- 13 · SLOVNÍČEK -->
-  <section class="section pt-0" id="slovnicek">
+  <section class="section pt-0 rail" id="slovnicek">
     <div class="wrap">
-      <div class="section-head reveal"><div class="eyebrow">Slovníček</div><h2>Nevyznáte se v pojmech? Vysvětlíme.</h2></div>
+      <div class="rail-mark reveal"><span class="rm-n">5</span><span class="rm-l">pojmů</span></div>
+      <div class="section-head reveal"><h2>Nevyznáte se v pojmech? Vysvětlíme.</h2></div>
       <div class="glossary reveal">
         <div class="gl-item"><h4>Dražba</h4><p>Veřejný prodej pozemku tomu, kdo nabídne nejvíc. Startovní cena bývá pod trhem. Pevný termín a pravidla — online nebo u exekutora.</p></div>
         <div class="gl-item"><h4>Exekuce</h4><p>Vymáhání dluhu z majetku dlužníka. Pozemek v exekuci se často brzy dostane do dražby — signál příležitosti s předstihem.</p></div>
@@ -395,9 +397,10 @@
   </section>
 
   <!-- 14 · FAQ -->
-  <section class="section pt-0" id="faq">
+  <section class="section pt-0 rail" id="faq">
     <div class="wrap">
-      <div class="section-head reveal"><div class="eyebrow">Časté dotazy</div><h2>Na co se lidé ptají nejčastěji.</h2></div>
+      <div class="rail-mark reveal"><span class="rm-n">8</span><span class="rm-l">otázek</span></div>
+      <div class="section-head reveal"><h2>Na co se lidé ptají nejčastěji.</h2></div>
       <div class="faq reveal">
         <details class="faq-item"><summary>Odkud berete data?</summary><p>Z veřejných a legálních zdrojů: Centrální evidence veřejných dražeb (dobrovolné i nucené dražby), Státní pozemkový úřad (nabídky pozemků k prodeji podle § 12) a inzeráty pozemků z portálů, které to dovolují (Bezrealitky, Farmy.cz). Ověření vždy přes katastr nemovitostí. Nic tajného, vše dohledatelné.</p></details>
         <details class="faq-item"><summary>Je to opravdu zdarma?</summary><p>Ano. Prohlížení mapy, filtry, vyhledávání i uložené pozemky jsou zdarma a bez registrace — žádná platební karta, žádné skryté poplatky.</p></details>
