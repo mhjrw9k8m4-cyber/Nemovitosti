@@ -2744,3 +2744,27 @@ h1, h2, h3,
   .hl-fact:last-child{border-bottom:0;}
   .hl-fact .hl-v{font-size:16px;}
 }
+
+
+/* =====================================================================
+   TVARY DRUHŮ PŘÍLEŽITOSTI
+   Druh poznal jenom ten, kdo rozlišuje barvy. Zhruba každý dvanáctý muž
+   je nerozlišuje stejně — a zrovna červená proti oranžové (exekuce
+   proti dražbě) je nejčastější případ, kdy dva body splynou v jeden.
+   Barva zůstává, ale nese ji tvar. Platí všude, kde se druh ukazuje:
+   na mapě (kreslí se na plátno v js/main.js), v legendě i na štítcích
+   filtrů — jinak by se ten tvar nebylo kde naučit.
+   Ořez (clip-path) potřebuje čtvercový prvek, proto se u nekruhových
+   tvarů ruší zaoblení i rámeček.
+   ------------------------------------------------------------------ */
+.tv-kruh{border-radius:50%;}
+.tv-kosoctverec, .tv-trojuhelnik, .tv-ctverec, .tv-kriz{border-radius:0; border:0; box-shadow:none;}
+.tv-kosoctverec{clip-path:polygon(50% 0, 100% 50%, 50% 100%, 0 50%);}
+.tv-trojuhelnik{clip-path:polygon(50% 4%, 100% 96%, 0 96%);}
+.tv-ctverec{clip-path:polygon(6% 6%, 94% 6%, 94% 94%, 6% 94%);}
+.tv-kriz{clip-path:polygon(34% 0,66% 0,66% 34%,100% 34%,100% 66%,66% 66%,66% 100%,34% 100%,34% 66%,0 66%,0 34%,34% 34%);}
+/* Nekruhové tvary vypadají při stejném rozměru menší — trochu se zvětší,
+   stejně jako na mapě. */
+.lg-dot.tv-trojuhelnik, .filter-chip .c.tv-trojuhelnik{transform:scale(1.18);}
+.lg-dot.tv-kosoctverec, .filter-chip .c.tv-kosoctverec{transform:scale(1.14);}
+.lg-dot.tv-kriz, .filter-chip .c.tv-kriz{transform:scale(1.1);}

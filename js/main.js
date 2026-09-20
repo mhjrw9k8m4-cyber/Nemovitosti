@@ -622,6 +622,66 @@
   map.getPane('dotsPane').style.zIndex = 450; // nad overlayPane (kraje) = 400, pod popupy
   map.getPane('dotsPane').style.pointerEvents = 'none'; // canvas nechytá kliky → projdou na kraje
   var dotsRenderer = L.canvas({ pane: 'dotsPane', padding: 0.5 });
+
+  // ---------------------------------------------------------------
+  // TVARY NA MAPĚ
+  // Druh příležitosti rozlišovala jedině barva. Zhruba každý dvanáctý
+  // muž barvy rozlišuje jinak — a zrovna červená proti oranžové
+  // (exekuce proti dražbě) je nejčastější případ, kdy dva body splynou.
+  // Barva zůstává, ale nese ji TVAR: každý druh má vlastní, takže se
+  // dá číst i na černobílém tisku a na slunci.
+  // Je to zároveň jediná věc, podle které se tahle mapa pozná od jiné.
+  //
+  // Leaflet umí na plátno kreslit jen kolečka, takže si vykreslování
+  // doplňujeme sami. Chytání kliknutí to nemění — to si mapa počítá
+  // ručně podle vzdálenosti k nejbližšímu bodu.
+  // ---------------------------------------------------------------
+  var TVAR = { sale: 'kruh', drazba: 'kosoctverec', exekuce: 'trojuhelnik', obec: 'ctverec', majitel: 'kriz' };
+  // Přiřazení tvarů si sahá ověřit test (scripts/test-tvary.mjs).
+  try { window.PK_TVARY = TVAR; } catch (e) {}
+  // Stejná plocha na oko: trojúhelník musí být větší, čtverec menší.
+  var TVAR_MERITKO = { kruh: 1, kosoctverec: 1.24, trojuhelnik: 1.34, ctverec: 0.92, kriz: 1.18 };
+  function kresliTvar(ctx, tvar, x, y, r) {
+    ctx.beginPath();
+    if (tvar === 'ctverec') {
+      ctx.rect(x - r, y - r, r * 2, r * 2);
+    } else if (tvar === 'kosoctverec') {
+      ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y);
+    } else if (tvar === 'trojuhelnik') {
+      // Posun dolů o osminu výšky, ať trojúhelník opticky sedí na svém místě
+      // (těžiště má jinde než střed opsané kružnice).
+      var o = r * 0.12;
+      ctx.moveTo(x, y - r + o); ctx.lineTo(x + r * 0.92, y + r * 0.72 + o); ctx.lineTo(x - r * 0.92, y + r * 0.72 + o);
+    } else if (tvar === 'kriz') {
+      var t = r * 0.42;
+      ctx.moveTo(x - t, y - r); ctx.lineTo(x + t, y - r); ctx.lineTo(x + t, y - t);
+      ctx.lineTo(x + r, y - t); ctx.lineTo(x + r, y + t); ctx.lineTo(x + t, y + t);
+      ctx.lineTo(x + t, y + r); ctx.lineTo(x - t, y + r); ctx.lineTo(x - t, y + t);
+      ctx.lineTo(x - r, y + t); ctx.lineTo(x - r, y - t); ctx.lineTo(x - t, y - t);
+    } else {
+      ctx.arc(x, y, r, 0, Math.PI * 2, false);
+    }
+    ctx.closePath();
+  }
+  if (typeof L !== 'undefined' && L.Canvas) {
+    L.Canvas.include({
+      _updatePkTvar: function (layer) {
+        if (!this._drawing || layer._empty()) return;
+        var p = layer._point, ctx = this._ctx;
+        var tvar = layer.options.pkTvar || 'kruh';
+        var r = Math.max(layer._radius * (TVAR_MERITKO[tvar] || 1), 1);
+        kresliTvar(ctx, tvar, p.x, p.y, r);
+        this._fillStroke(ctx, layer);
+      }
+    });
+  }
+  var PkTvar = (typeof L !== 'undefined' && L.CircleMarker) ? L.CircleMarker.extend({
+    _updatePath: function () {
+      // Když by starší Leaflet naši metodu neznal, spadne to zpátky na kolečko.
+      if (this._renderer._updatePkTvar) this._renderer._updatePkTvar(this);
+      else this._renderer._updateCircle(this);
+    }
+  }) : null;
   if (map.attributionControl) map.attributionControl.setPosition('bottomleft'); // ať se nekryje s tlačítky
   // Ovládání zoomu +/− — jen na počítačích (na mobilu se přibližuje prsty). Umístěno
   // vlevo (přes CSS na volný levý okraj), ať se nepere s ostatními tlačítky.
@@ -949,6 +1009,7 @@
     }
     return {
       renderer: dotsRenderer,
+      pkTvar: TVAR[d.type] || 'kruh',
       radius: polomer,
       fillColor: col, fillOpacity: kryti,
       // Světlý podklad: tečky potřebují jemný TMAVÝ okraj (bílý by zmizel).
@@ -1275,7 +1336,7 @@
     d._id = i;
     d._gkraj = krajGeoOf(d); // kraj podle geometrie = kde bod na mapě leží
     var st = dotStyle(d); st.interactive = false; // klik řešíme ručně (canvas nechytá události)
-    var m = L.circleMarker([d.lat, d.lng], st);
+    var m = PkTvar ? new PkTvar([d.lat, d.lng], st) : L.circleMarker([d.lat, d.lng], st);
     m._d = d;
     markers.push(m);
   });
@@ -1667,7 +1728,8 @@
     var urgentN = DATA.filter(isUrgent).length;
     var lh = '';
     ['sale', 'drazba', 'exekuce', 'obec', 'majitel'].forEach(function (tp) {
-      if (present2[tp]) lh += '<span class="lg-item"><span class="lg-dot" style="background:' + TYPE[tp].color + '"></span>' + TYPE[tp].label + '</span>';
+      // Legenda musí nést i TVAR, jinak se ho není kde naučit.
+      if (present2[tp]) lh += '<span class="lg-item"><span class="lg-dot tv-' + (TVAR[tp] || 'kruh') + '" style="background:' + TYPE[tp].color + '"></span>' + TYPE[tp].label + '</span>';
     });
     if (urgentN) lh += '<span class="lg-item lg-urgent"><span class="lg-dot lg-ring"></span>končí do 7 dní</span>';
     legendEl.innerHTML = lh;
