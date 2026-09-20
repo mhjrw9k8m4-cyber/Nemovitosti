@@ -44,6 +44,12 @@ async function stranka(sirka, prihlasit) {
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`);
   await p.waitForTimeout(2200);
+  // Úvodní stránka se na mobilu otevře na SEZNAMU a mapa je za přepínačem —
+  // bez přepnutí by se měřil skrytý prvek (rect samé nuly).
+  {
+    const t = await p.$('.mv-toggle .mvt-btn[data-mv="mapa"]');
+    if (t && await t.isVisible()) { await t.click(); await p.waitForTimeout(700); }
+  }
   // odrolovat tak, aby horní okraj mapy byl jasně pod hlavičkou
   await p.evaluate(() => {
     const h = document.querySelector('.map-holder');

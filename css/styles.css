@@ -311,7 +311,9 @@ h1 em::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height
 .data-updated{margin:-6px 0 14px; font-size:12px; color:var(--copper-bright); opacity:0.85;}
 .data-updated:empty{display:none;}
 .data-updated.is-stale{color:#E0A33A; opacity:1; font-weight:600;}
-.leaflet-tooltip.kraj-tip{background:rgba(255,255,255,0.97); border:1px solid rgba(61,99,238,0.3); color:#1B2233; font-family:'Plus Jakarta Sans','Inter',sans-serif; font-weight:500; font-size:12px; line-height:1.55; padding:8px 12px; border-radius:var(--r-sm); box-shadow:var(--e2);}
+/* Popisek kraje se musí vejít do mapy — bez omezení šířky utekl dlouhý
+   výčet („381× na prodej, 13× dražba…") za okraj a uřízl se. */
+.leaflet-tooltip.kraj-tip{width:max-content; max-width:min(260px, 78vw); white-space:normal; background:rgba(255,255,255,0.97); border:1px solid rgba(61,99,238,0.3); color:#1B2233; font-family:'Plus Jakarta Sans','Inter',sans-serif; font-weight:500; font-size:12px; line-height:1.55; padding:8px 12px; border-radius:var(--r-sm); box-shadow:var(--e2);}
 .leaflet-tooltip.kraj-tip b{display:inline-block; font-family:'Plus Jakarta Sans','Inter',sans-serif; color:var(--copper-bright); font-weight:600; font-size:14.5px; margin-bottom:1px;}
 .leaflet-tooltip.kraj-tip::before{border-top-color:rgba(110,120,255,0.6);}
 /* Špendlík vybraného pozemku na mapě — bez rámečku divIconu, s jemným stínem */
@@ -1265,17 +1267,27 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 @media (prefers-reduced-motion: reduce){.loc-ov,.loc-card{animation-duration:.01ms;}}
 
 /* Responsive */
+/* Přepínač Seznam / Mapa — jen na mobilu, kde se obojí nevejde vedle sebe */
+.mv-toggle{display:none;}
+.mv-toggle .mvt-btn{display:inline-flex; align-items:center; justify-content:center; gap:7px;}
+.mv-toggle .mvt-btn svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+.mvt-n{font-size:11px; opacity:0.8;}
 @media (max-width:960px){
   .map-app{display:flex; flex-direction:column; grid-template-columns:1fr; height:auto; gap:0; border-radius:var(--r-lg);}
-  /* Na mobilu se to skládá pod sebe: výběr → SEZNAM POZEMKŮ → mapa.
-     Dřív tu byl přepínač Mapa / Seznam. Znamenal ale, že si člověk musel
-     nejdřív vybrat, co vlastně chce vidět — a než na něco došlo, měl nad
-     sebou pět bloků ovládání. Teď jde rovnou o obsah: nabídky jsou hned,
-     mapa je kousek pod nimi pro ty, kdo hledají podle místa. */
+  /* Na mobilu se vejde jen jedno: výběr nahoře, pod ním přepínač a pod ním
+     buď seznam, nebo mapa. Výchozí je SEZNAM — na úvodní stránce mají být
+     hned vidět nabídky, ne ovládání mapy. Mapa je na jedno klepnutí vedle. */
   .map-controls-panel{order:1; border-right:0; border-bottom:1px solid var(--line);}
-  .map-side{order:2; border-right:0; max-height:none; border-bottom:1px solid var(--line);}
-  .map-holder{order:3; height:66vh; height:66dvh; max-height:600px; min-height:420px;}
+  .map-side{order:2; border-right:0; max-height:none;}
+  .map-holder{order:3; height:74vh; height:74dvh; max-height:640px; min-height:460px;}
   .map-canvas{flex:1; min-height:0;}
+  .mv-toggle{display:flex; gap:5px; margin-top:14px; background:var(--ink); border:1px solid var(--line); border-radius:var(--r-sm); padding:4px;}
+  .mvt-btn{flex:1; padding:10px; border:0; border-radius:var(--r-sm); background:none; color:var(--text-ondark-mute); font-weight:600; font-family:inherit; font-size:14px; cursor:pointer; transition:background .15s ease, color .15s ease;}
+  .mvt-btn.active{background:var(--brand-grad); color:#fff;}
+  /* Vždy jen jedno: se třídou .mv-seznam seznam, bez ní mapa. */
+  .map-app.mv-seznam .map-holder{display:none;}
+  .map-app:not(.mv-seznam) .map-side{display:none;}
+  .map-app.mv-seznam .map-side{border-top:0;}
   .opp-list{max-height:none; overflow:visible; flex:none;}
   /* Karty na šířku, ne na výšku.
      Svislá karta má náhled přes celou šířku a zabere skoro celou obrazovku —

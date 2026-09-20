@@ -86,6 +86,18 @@ await p.waitForFunction(() => {
 // Stránka ještě doskakuje (obrázky, animace odkrývání), takže jedno odrolování
 // nestačí — po dorovnání výšky by mapa zase utekla. Zkoušíme to, dokud mapa
 // opravdu nesedí pod hlavičkou.
+// Na mobilu se úvodní stránka otevře na SEZNAMU a mapa je za přepínačem.
+// Test tedy nejdřív přepne na mapu, jinak by měřil skrytý prvek.
+async function naMapu() {
+  const t = await p.$('.mv-toggle .mvt-btn[data-mv="mapa"]');
+  if (!t) return false;
+  if (!(await t.isVisible())) return false;      // na širokém okně je vidět obojí
+  await t.click();
+  await p.waitForTimeout(700);
+  return true;
+}
+pravda('přepínač otevře mapu', await naMapu());
+
 let videtPx = 0;
 async function priprav() {
   for (let i = 0; i < 6; i++) {

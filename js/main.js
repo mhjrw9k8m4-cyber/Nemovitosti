@@ -622,6 +622,54 @@
     });
   }
 
+  // Přepínač Seznam / Mapa (mobil): zobrazí jedno místo obojího nad sebou.
+  // Výchozí je SEZNAM — na úvodní stránce mají být hned vidět nabídky, ne
+  // ovládání mapy. Mapa je na jedno klepnutí vedle.
+  (function () {
+    var appEl = document.querySelector('.map-app');
+    var mvBtns = document.querySelectorAll('.mv-toggle .mvt-btn');
+    if (!appEl || !mvBtns.length) return;
+    var mapFittedVisible = false;
+    function setView(mv) {
+      var seznam = mv === 'seznam';
+      appEl.classList.toggle('mv-seznam', seznam);
+      mvBtns.forEach(function (b) {
+        var on = b.getAttribute('data-mv') === mv;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', String(on));
+      });
+      // Mapa byla schovaná → po zobrazení přepočítat velikost; při prvním
+      // zobrazení i znovu vystředit na ČR (fit z inicializace proběhl naprázdno).
+      // Mapa nemusí existovat — když se nenačte Leaflet, přepínač má pořád
+      // fungovat, ať člověk nezůstane zamčený na jedné polovině.
+      // Po přepnutí na mapu k ní rovnou odrolovat. Ovládání nad ní zabere
+      // půl obrazovky, takže bez toho je z mapy vidět jen horní okraj a
+      // člověk má dojem, že klepnutí nic neudělalo.
+      if (!seznam && typeof scrollToMap === 'function') setTimeout(scrollToMap, 60);
+      // Dvakrát schválně: napoprvé už po 70 ms, ať to není vidět, a znovu po
+      // ustálení rozměrů. Jedno srovnání nestačilo — mapa se rozbalovala ještě
+      // po něm a republika pak seděla nakřivo, u spodního okraje.
+      if (!seznam && typeof map !== 'undefined' && map) {
+        var srovnej = function () {
+          map.invalidateSize();
+          if (!mapFittedVisible && !selectedKraj) fitAllCZ();
+        };
+        setTimeout(srovnej, 70);
+        setTimeout(function () { srovnej(); mapFittedVisible = true; }, 320);
+      }
+    }
+    mvBtns.forEach(function (b) {
+      b.addEventListener('click', function () { setView(b.getAttribute('data-mv')); });
+    });
+    setView('seznam');
+    // Odkaz „+ N dalších příležitostí najdete na mapě" pod seznamem musí mapu
+    // opravdu ukázat — jinak by odkazoval na něco, co není vidět.
+    document.addEventListener('click', function (e) {
+      var t = e.target && e.target.closest ? e.target.closest('.opp-more') : null;
+      if (t) setView('mapa');
+    });
+  })();
+
   /* ---------- Interaktivní mapa (Leaflet) ---------- */
   var mapEl = document.getElementById('leaflet-map');
   if (!mapEl || typeof L === 'undefined') return;
@@ -1387,7 +1435,21 @@
   var krajHeadEl = document.getElementById('kraj-head');
   var nearBtn = document.getElementById('map-near');
   // Sroluj rovnou k mapě, ať je hned vidět, že se něco děje (jinak se zdá, že tlačítko „nic nedělá").
-  function scrollToMap() { if (holderEl) { try { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} } }
+  // Odrolovat k mapě tak, aby začínala POD lepivou hlavičkou. Prosté
+  // scrollIntoView ji zarovná na úplný vrch okna, kde jí hlavička ukousne
+  // horních ~70 px — přesně pruh, ve kterém je nápověda „Krok 1: klepněte
+  // na kraj" a tlačítko „Celá ČR".
+  function scrollToMap() {
+    if (!holderEl) return;
+    try {
+      var hd = document.querySelector('header');
+      var vys = hd ? hd.getBoundingClientRect().height : 0;
+      var cil = holderEl.getBoundingClientRect().top + window.pageYOffset - vys - 10;
+      window.scrollTo({ top: Math.max(0, cil), behavior: 'smooth' });
+    } catch (e) {
+      try { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e2) {}
+    }
+  }
   if (nearBtn) nearBtn.addEventListener('click', function () { scrollToMap(); enterNear(); });
   // Vzdálenost pozemku od uživatele (km) — pro řazení „nejblíž ke mně".
   function kmFromUser(d) {
@@ -1862,6 +1924,7 @@
       listEl.appendChild(li);
     });
 
+    var mvCount = document.getElementById('mvt-count'); if (mvCount) mvCount.textContent = matched ? '(' + matched + ')' : '';
     var headLabel = sortMode === 'demand' ? 'Doporučené příležitosti' : 'Vybrané příležitosti';
     countEl.innerHTML = headLabel + ' · <span class="mc-sub">' + matched + ' na mapě</span>';
     if (matched === 0) {

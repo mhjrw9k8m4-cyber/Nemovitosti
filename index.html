@@ -157,7 +157,7 @@
     </div>
 
     <div class="map-wide">
-      <div class="map-app reveal" id="view-mapa">
+      <div class="map-app reveal mv-seznam" id="view-mapa">
         <div class="map-controls-panel">
           <div class="map-search"><input type="text" id="map-search" placeholder="Hledat obec (např. Kolín)" autocomplete="off" aria-label="Hledat obec nebo okres"></div>
           <button type="button" class="map-near-btn" id="map-near"><svg class="mnb-pin" aria-hidden="true"><use href="#i-map"/></svg>Pozemky v okolí</button>
@@ -225,6 +225,11 @@
               </div>
             </div>
           </details>
+
+          <div class="mv-toggle" role="tablist" aria-label="Přepnout seznam a mapu">
+            <button type="button" class="mvt-btn active" data-mv="seznam" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Seznam <span class="mvt-n" id="mvt-count"></span></button>
+            <button type="button" class="mvt-btn" data-mv="mapa" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-map"/></svg>Mapa</button>
+          </div>
 
         </div>
 
