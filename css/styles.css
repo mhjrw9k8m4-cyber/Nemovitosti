@@ -438,8 +438,8 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 /* Spodní okraj pásu se rozplyne do barvy stránky, aby nevznikla ostrá hrana.
    Je to zvlášť, ne v pozadí výš — pod ním už žádný text není a do měření
    kontrastu tím pádem nemá co mluvit. */
-.hero-band::after{content:""; position:absolute; left:0; right:0; bottom:0; height:30%; pointer-events:none;
-  background:linear-gradient(180deg, rgba(241,239,234,0) 0%, var(--bg) 100%);}
+.hero-band::after{content:""; position:absolute; left:0; right:0; bottom:0; height:24%; pointer-events:none;
+  background:linear-gradient(180deg, rgba(241,239,234,0) 0%, rgba(241,239,234,0.72) 58%, var(--bg) 100%);}
 .hero-band > .wrap{position:relative; z-index:1;}
 /* Text leží na tmavém obraze — potřebuje vlastní barvy, jinak by zmizel. */
 /* Na obraze musí i drobné písmo držet 4,5:1 i nad nejsvětlejším polem —
@@ -468,8 +468,10 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    nadpis nad ní zůstává vycentrovaný v užší míře. */
 .hero-map .map-wide{position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:0 32px;}
 /* Panel hledání přeloží spodek obrazu — plave nad ním, jako na velkých
-   realitních webech. */
+   realitních webech. Vlasová linka na horní hraně mu dá tloušťku: bez ní
+   vypadal jako nalepený papír, ne jako karta ležící nad obrazem. */
 .hero-map .map-wide{margin-top:-74px;}
+.hero-map .map-app{box-shadow:var(--e3), inset 0 1px 0 rgba(255,255,255,0.9);}
 .hero-map .map-app{margin-top:0;}
 @media (max-width:1200px){ .hero-map .map-wide{max-width:100%;} }
 @media (max-width:520px){ .hero-map .map-wide{padding:0 20px;} }
@@ -636,7 +638,9 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    panelem a vypadalo to, že tam žádné pole není. */
 .map-select{width:100%; background:var(--ink-soft); border:1px solid var(--line-ui); color:var(--text-ondark); border-radius:var(--r-sm); padding:10px 30px 10px 12px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; appearance:none; -webkit-appearance:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236E9BFF' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 11px center;}
-.map-select:focus-visible{border-color:var(--copper-bright); outline:none;}
+/* Zaostření klávesnicí vypadalo na seznamech jinak než na políčku hledání —
+   jen změna okraje, žádný prstenec. Teď je to stejné všude. */
+.map-select:focus-visible{border-color:var(--copper-bright); outline:none; box-shadow:0 0 0 3px rgba(110,155,255,0.22);}
 .map-select option{background:var(--ink); color:var(--text-ondark);}
 /* Vlastní rozbalovací seznam (místo ošklivého systémového na iPhonu) */
 .cdd{position:relative; width:100%;}
@@ -718,7 +722,9 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Karta ve stylu realitního portálu (Sreality): náhled mapy nahoře přes celou
    šířku jako fotka, pod ním velká cena a detaily. */
 .opp-item{position:relative; display:block; padding:0; border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden; margin-bottom:14px; cursor:pointer; background:var(--ink-soft); box-shadow:var(--e2); transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease;}
-.opp-item:hover, .opp-item.hl{border-color:rgba(224,236,244,0.26); transform:translateY(-2px); box-shadow:var(--e2);}
+/* Zvednutí karty bylo dřív jen posunutí — stín zůstal stejný, takže se karta
+   nezvedla, jen poskočila. Teď se zvedne i stínem. */
+.opp-item:hover, .opp-item.hl{border-color:var(--copper-bright); transform:translateY(-2px); box-shadow:var(--e3);}
 .opp-item.is-hot{border-color:rgba(229,160,13,0.34);}
 /* Náhled mapy jako fotka inzerátu */
 .opp-media{position:relative; width:100%; aspect-ratio:16/10; min-height:150px; overflow:hidden; background:var(--ink-soft2) linear-gradient(135deg, rgba(110,130,150,0.10), rgba(110,130,150,0) 60%);}
