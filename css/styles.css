@@ -433,9 +433,19 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 /* Pás už nemusí dělat odstupy sám — dělá je vyměřená parcela uvnitř. */
 .hero-band{position:relative; padding:34px 0 132px;
   background:
-    linear-gradient(180deg, rgba(21,26,38,.76) 0%, rgba(21,26,38,.68) 55%, rgba(21,26,38,.64) 100%),
-    url("../img/uvod-parcely.svg") center / cover no-repeat,
-    #E0D9CC;}
+    linear-gradient(180deg, #1C2333 0%, #161B28 58%, #121722 100%);}
+/* Jemná mapová mřížka. Kresba polí z leteckého pohledu, která tu byla
+   předtím, vypadala jako maskáče — nepravidelné skvrny v tlumené zeleni
+   a písku takhle dopadnou vždycky, ať se obarví jakkoli. Mřížka je
+   PRAVIDELNÁ, takže ten dojem vzniknout nemůže, a přitom odkazuje na
+   mapu: je to síť poledníků a rovnoběžek, ne textura. */
+.hero-band::before{content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.055) 1px, transparent 1px);
+  background-size:58px 58px;
+  -webkit-mask-image:radial-gradient(ellipse 78% 76% at 50% 42%, #000 18%, transparent 100%);
+          mask-image:radial-gradient(ellipse 78% 76% at 50% 42%, #000 18%, transparent 100%);}
 /* Spodní okraj pásu se rozplyne do barvy stránky, aby nevznikla ostrá hrana.
    Je to zvlášť, ne v pozadí výš — pod ním už žádný text není a do měření
    kontrastu tím pádem nemá co mluvit. */
@@ -2384,14 +2394,18 @@ body::after{
    ===================================================================== */
 .okr-wrap{max-width:1040px;}
 
-/* Úvod stránky dostane stejný obraz jako hlavní stránka, jen užší pás —
-   web tím drží pohromadě a stránka má konečně nějaký obraz. */
+/* Úvod krajské stránky: stejná tmavá plocha s mapovou mřížkou jako na
+   hlavní stránce — web tím drží pohromadě. */
 .okr-hero{position:relative; padding:0;}
 .okr-band{position:relative; padding:64px 0 52px;
-  background:
-    linear-gradient(180deg, rgba(21,26,38,.78) 0%, rgba(21,26,38,.70) 60%, rgba(21,26,38,.66) 100%),
-    url("../img/uvod-parcely.svg") center / cover no-repeat,
-    #E0D9CC;}
+  background:linear-gradient(180deg, #1C2333 0%, #161B28 62%, #121722 100%);}
+.okr-band::before{content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size:52px 52px;
+  -webkit-mask-image:radial-gradient(ellipse 76% 80% at 50% 44%, #000 16%, transparent 100%);
+          mask-image:radial-gradient(ellipse 76% 80% at 50% 44%, #000 16%, transparent 100%);}
 .okr-band::after{content:""; position:absolute; left:0; right:0; bottom:0; height:26%; pointer-events:none;
   background:linear-gradient(180deg, rgba(241,239,234,0) 0%, var(--bg) 100%);}
 .okr-band > .wrap{position:relative; z-index:1;}
@@ -2432,40 +2446,15 @@ body::after{
 
 
 /* =====================================================================
-   VYTYČENÁ PARCELA V ÚVODU
-   Hranice je RÁMEC textového bloku, ne čára kreslená někam do pásu.
-   Když se kreslila zvlášť, při jiné šířce okna se potkala s písmem a vedla
-   přímo přes něj — na mobilu to bylo vidět okamžitě. Takhle projít nemůže:
-   text má uvnitř svůj odstup a hranice je hranicí toho odstupu.
+   ÚVODNÍ BLOK
+   Zkusil jsem sem dát vyměřenou parcelu — čerchovanou hranici, zaměřovací
+   kříže v rozích, souřadnice. Nápad z oboru, ale dohromady to vypadalo
+   jako hledáček ve hře, ne jako realitní web. Profesionální dojem dělá
+   zdrženlivost, ne počet prvků, tak je to pryč.
+   Zbylo jen to, co něco nese: obraz, nadpis, čísla. A prostor kolem nich.
    ===================================================================== */
-.hero-plot{position:relative; padding:56px 48px 60px; max-width:1000px; margin:0 auto;}
-.hero-parcela{position:absolute; inset:0; width:100%; height:100%;
-  z-index:0; pointer-events:none;}
-.hp-plocha{fill:rgba(255,255,255,0.05);}
-.hp-hrana{fill:none; stroke:rgba(255,255,255,0.58); stroke-width:1.5;
-  stroke-dasharray:16 8 3 8; vector-effect:non-scaling-stroke;}
-
-/* Rohové vytyčovací značky. Sedí na rozích textového bloku, takže
-   kompozice drží na jakékoli šířce. */
-.hpb{position:absolute; width:18px; height:18px; pointer-events:none;
-  background:
-    linear-gradient(var(--accent-warm-bright), var(--accent-warm-bright)) center/100% 1.4px no-repeat,
-    linear-gradient(var(--accent-warm-bright), var(--accent-warm-bright)) center/1.4px 100% no-repeat;}
-.hpb::after{content:""; position:absolute; inset:4px; border-radius:50%;
-  border:1.6px solid var(--accent-warm-bright);}
-.hpb-lh{left:-9px; top:5px;} .hpb-ph{right:-9px; top:-5px;}
-.hpb-pd{right:-9px; bottom:-1px;} .hpb-ld{left:-9px; bottom:9px;}
-
-.hero-souradnice{position:absolute; right:0; top:-26px; z-index:1; pointer-events:none;
-  font-size:11px; letter-spacing:0.1em; color:rgba(255,255,255,0.58);}
-
-@media (max-width:880px){
-  .hero-plot{padding:40px 26px 42px;}
-  .hpb{width:14px; height:14px;}
-  .hpb-lh{left:-7px;} .hpb-ph{right:-7px;} .hpb-pd{right:-7px;} .hpb-ld{left:-7px;}
-  .hero-souradnice{top:-20px; font-size:10px;}
-}
-@media (max-width:560px){ .hero-souradnice{display:none;} }
+.hero-plot{position:relative; max-width:940px; margin:0 auto; padding:30px 0 22px;}
+@media (max-width:880px){ .hero-plot{padding:16px 0 10px;} }
 
 /* =====================================================================
    ČÍSLA V ÚVODU JAKO TYPOGRAFIE
