@@ -83,7 +83,7 @@ async function projdi(sirka, popisSirky) {
     }
   }
 
-  const sChybou = [], sPretekem = [];
+  const sChybou = [], sPretekem = [], sDoStran = [];
   for (const s of STRANKY) {
     const p = await ctx.newPage();
     const chyby = [];
@@ -121,10 +121,15 @@ async function projdi(sirka, popisSirky) {
         if (st.display === 'none' || st.visibility === 'hidden' || st.position === 'fixed') continue;
         const r = e.getBoundingClientRect();
         if (r.width === 0 || r.height === 0) continue;
-        // Prvek celý mimo obrazovku vlevo je schválně schovaný (tak se dělá
-        // „přeskočit na obsah" pro odečítače) — to není vada rozvržení.
-        if (r.right <= 0) continue;
-        if (r.right <= w + 1) continue;
+        /* POZOR, tahle výjimka tu kdysi byla a byla špatně:
+             „prvek celý mimo obrazovku vlevo je schválně schovaný,
+              tak se dělá přeskočit na obsah — to není vada rozvržení."
+           Jenže právě takový prvek (.skip-link na left:-9999px) dělá
+           stránku širokou přes deset tisíc pixelů. Vidět to není, protože
+           se to ořezává, ale na iPhonu s takovou stránkou jde posouvat do
+           stran — obsah ujede a nahoře se k tomu odlepí lepivá hlavička.
+           Schovává se zmenšením na jeden pixel a ořezem, ne odsunutím. */
+        if (r.right <= w + 1 && r.left >= -1) continue;
         if (vPosuvniku(e)) continue;
         return {
           kdo: (e.tagName.toLowerCase() + '.' + String(e.className || '').split(' ').filter(Boolean).slice(0, 2).join('.')).slice(0, 60),
@@ -134,12 +139,21 @@ async function projdi(sirka, popisSirky) {
       return null;
     });
     if (pretek) sPretekem.push({ s, pretek });
+    // Nejpřímější měřítko: jde stránkou pohnout do stran?
+    const doStran = await p.evaluate(() => {
+      const de = document.documentElement;
+      return de.scrollWidth > de.clientWidth + 1
+        ? { sirka: de.scrollWidth, okno: de.clientWidth } : null;
+    });
+    if (doStran) sDoStran.push({ s, doStran });
     await p.close();
   }
   await ctx.close();
 
   pravda(`${popisSirky}: žádná stránka nehlásí chybu skriptu`, sChybou.length === 0,
     sChybou.map((x) => `${x.s} → ${x.proc}`).join('\n      '));
+  pravda(`${popisSirky}: žádnou stránkou nejde pohnout do stran`, sDoStran.length === 0,
+    sDoStran.map((x) => `${x.s} → obsah je ${x.doStran.sirka} px široký, okno má ${x.doStran.okno}`).join('\n      '));
   pravda(`${popisSirky}: nic z žádné stránky nevyčuhuje do stran`, sPretekem.length === 0,
     sPretekem.map((x) => `${x.s} → ${x.pretek.kdo} zabírá ${x.pretek.vlevo}–${x.pretek.prave} px při šířce okna ${x.pretek.sirka}`).join('\n      '));
 }
