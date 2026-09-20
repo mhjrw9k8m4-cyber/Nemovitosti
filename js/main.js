@@ -849,8 +849,8 @@
     if (cenaNeduveryhodna(d)) {
       return '<div class="md-verdict warn">' +
         '<div class="mv-top"><span class="mv-badge">Cena k ověření</span><span class="mv-cmp">Cena za m²</span></div>' +
-        '<div class="mv-text">Cena za m² je <b>výrazně pod</b> obvyklou u tohoto druhu pozemku. ' +
-        'Často jde o <b>spoluvlastnický podíl</b> nebo chybu v inzerátu — ověřte u zdroje ' +
+        '<div class="mv-text">Cena za m² se <b>výrazně liší</b> od obvyklé u tohoto druhu pozemku. ' +
+        'Často jde o <b>spoluvlastnický podíl</b>, nebo je na pozemku stavba — ověřte u zdroje ' +
         'a v katastru, co se přesně prodává.</div>' +
         '</div>';
     }

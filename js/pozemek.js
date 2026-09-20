@@ -108,36 +108,34 @@
     '</details>';
   }
 
-  // Cenový verdikt (percentil Kč/m² vůči podobným) — potřebuje index z celých dat.
-  var perM2Index = {};
+  // Cenový model je společný s mapou (js/ceny.js) — dřív tu byla vlastní
+  // kopie výpočtu a rozešla se: stránka pozemku hlásila „Výhodná cena"
+  // i u nabídek, které mapa už odmítala jako nevěrohodné.
+  var MODEL = null;
   function buildIndex(DATA) {
-    perM2Index = {};
-    DATA.forEach(function (d) {
-      if (hasArea(d) && d.price) {
-        var k = d.type + '|' + druhGroup(d.druh);
-        (perM2Index[k] = perM2Index[k] || []).push(d.price / d.area);
-      }
-    });
-    Object.keys(perM2Index).forEach(function (k) { perM2Index[k].sort(function (a, b) { return a - b; }); });
+    MODEL = (window.PK_CENY && window.PK_CENY.postav) ? window.PK_CENY.postav(DATA) : null;
   }
-  function priceBarHtml(d) {
-    if (!hasArea(d) || !d.price) return '';
-    var arr = perM2Index[d.type + '|' + druhGroup(d.druh)];
-    if (!arr || arr.length < 8) return '';
-    if (arr[arr.length - 1] <= arr[0] * 1.15) return '';
-    var val = d.price / d.area, below = 0;
-    for (var i = 0; i < arr.length; i++) { if (arr[i] <= val) below++; }
-    var pct = Math.max(2, Math.min(98, Math.round(below / arr.length * 100)));
-    var typeWord = d.type === 'sale' ? 'v prodeji' : (d.type === 'drazba' ? 'v dražbě' : 'v nabídce');
-    var cls, badge, text;
-    if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + (100 - pct) + ' %</b> podobných pozemků ' + typeWord + '.'; }
-    else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> podobných pozemků ' + typeWord + '.'; }
-    else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> podobných pozemků ' + typeWord + '.'; }
-    return '<div class="md-verdict ' + cls + '">' +
-      '<div class="mv-top"><span class="mv-badge">' + badge + '</span><span class="mv-cmp">Cena za m²</span></div>' +
-      '<div class="mv-text">' + text + '</div>' +
-      '<div class="mv-track"><span class="mv-fill" style="width:' + pct + '%"></span><span class="mv-dot" style="left:' + pct + '%"></span></div>' +
-      '<div class="mv-scale"><span>levné</span><span>drahé</span></div>' +
+  // (Tmavá varianta verdiktu tu bývala jako priceBarHtml — na téhle stránce
+  //  se nikdy nevykreslovala, používá se světlá pzVerdictHtml níž. Smazáno.)
+
+  // Odhad obvyklé ceny v okolí. Ukazuje se jen tam, kde má co říct — tedy
+  // když je cena aspoň o 15 % pod obvyklou hladinou. Kdyby se vypisoval
+  // vždycky, byla by to u poloviny nabídek jen další řádka s číslem.
+  function odhadHtml(d) {
+    if (!MODEL) return '';
+    var o = MODEL.odhad(d);
+    if (!o || o.podOdhadem < 15) return '';
+    var kde = o.uroven === 'okres' ? ('v okrese ' + o.kde) : ('v ' + o.kde + ' kraji');
+    var coJe = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'exekuce' ? 'Uváděná cena' : 'Nabídková cena');
+    return '<div class="md-odhad pz-odhad">' +
+      '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
+      '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">' + fmt(o.castka) + ' Kč</span></div>' +
+      '<div class="mo-rozdil"><b>o ' + o.podOdhadem + ' % níž</b>, tedy zhruba o ' + fmt(o.rozdil) + ' Kč</div>' +
+      // Pozor na pád: „u orná půda" je špatně česky, proto druh v závorce.
+      '<p class="mo-pozn">Spočítáno z mediánu <b>' + fmt(Math.round(o.zaM2)) + ' Kč/m²</b> — z <b>' +
+      o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) + ') ' + kde + '. ' +
+      'Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly — to ve veřejných zdrojích není. ' +
+      'Berte to jako vodítko, ne jako odhad znalce.</p>' +
       '</div>';
   }
 
@@ -245,18 +243,24 @@
   var HEART_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
   var SHARE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>';
 
-  // Cenový verdikt (světlá verze)
+  // Cenový verdikt (světlá verze). Počítá ho společný model js/ceny.js —
+  // tenhle soubor měl dřív vlastní kopii výpočtu a ta se s mapou rozešla.
   function pzVerdictHtml(d) {
-    if (!hasArea(d) || !d.price) return '';
-    var arr = perM2Index[d.type + '|' + druhGroup(d.druh)];
-    if (!arr || arr.length < 8) return '';
-    if (arr[arr.length - 1] <= arr[0] * 1.15) return '';
-    var val = d.price / d.area, below = 0;
-    for (var i = 0; i < arr.length; i++) { if (arr[i] <= val) below++; }
-    var pct = Math.max(2, Math.min(98, Math.round(below / arr.length * 100)));
+    if (!MODEL || !hasArea(d) || !d.price) return '';
+    if (MODEL.neduveryhodna(d)) {
+      return '<div class="pz-verdict warn">' +
+        '<div class="pv-top"><span class="pv-badge">Cena k ověření</span><span class="pv-cmp">Cena za m²</span></div>' +
+        '<div class="pv-text">Cena za m² se <b>výrazně liší</b> od obvyklé u tohoto druhu pozemku. ' +
+        'Často jde o <b>spoluvlastnický podíl</b>, nebo je na pozemku stavba — ověřte u zdroje ' +
+        'a v katastru, co se přesně prodává.</div>' +
+        '</div>' + odhadHtml(d);
+    }
+    var pc = MODEL.percentil(d);
+    if (!pc) return odhadHtml(d);
+    var pct = pc.pct;
     var typeWord = d.type === 'sale' ? 'v prodeji' : (d.type === 'drazba' ? 'v dražbě' : 'v nabídce');
     var cls, badge, text;
-    if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + (100 - pct) + ' %</b> podobných pozemků ' + typeWord + '.'; }
+    if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + pc.cheaper + ' %</b> podobných pozemků ' + typeWord + '.'; }
     else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> podobných pozemků ' + typeWord + '.'; }
     else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> podobných pozemků ' + typeWord + '.'; }
     return '<div class="pz-verdict ' + cls + '">' +
@@ -264,7 +268,7 @@
       '<div class="pv-text">' + text + '</div>' +
       '<div class="pv-track"><span class="pv-fill" style="width:' + pct + '%"></span><span class="pv-dot" style="left:' + pct + '%"></span></div>' +
       '<div class="pv-scale"><span>levné</span><span>drahé</span></div>' +
-      '</div>';
+      '</div>' + odhadHtml(d);
   }
   // „Co byste měli vědět" (světlá verze)
   function pzGtkHtml(d) {

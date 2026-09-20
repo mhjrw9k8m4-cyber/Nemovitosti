@@ -118,6 +118,9 @@ jobs:
       - name: Ovládání mapy (klepání do plátna)
         run: node scripts/test-mapa.mjs
 
+      - name: Cenový model (odhad obvyklé ceny)
+        run: node scripts/test-ceny.mjs
+
       - name: Úvodní obrazovka (živá čísla, věrohodnost cen)
         run: node scripts/test-uvod.mjs
 

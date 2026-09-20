@@ -2768,3 +2768,35 @@ h1, h2, h3,
 .lg-dot.tv-trojuhelnik, .filter-chip .c.tv-trojuhelnik{transform:scale(1.18);}
 .lg-dot.tv-kosoctverec, .filter-chip .c.tv-kosoctverec{transform:scale(1.14);}
 .lg-dot.tv-kriz, .filter-chip .c.tv-kriz{transform:scale(1.1);}
+
+
+/* =====================================================================
+   ODHAD OBVYKLÉ CENY
+   „Vyvolávací 111 467 Kč, obvyklá cena v okrese 414 895 Kč" je věta,
+   kterou si člověk vyfotí. Musí být proto čitelná na první pohled —
+   dvě čísla pod sebou a rozdíl mezi nimi, ne odstavec.
+   Poznámka pod tím je stejně důležitá: jsou to ceny NABÍDKOVÉ, ne za
+   kolik se pozemky opravdu prodaly. Kdo si to splete, přeplatí.
+   ------------------------------------------------------------------ */
+.md-odhad{margin:12px 0 14px; padding:14px 15px 13px; border-radius:var(--r-md);
+  border:1px solid rgba(255,255,255,0.14); background:rgba(255,255,255,0.045);}
+.mo-radek{display:flex; align-items:baseline; justify-content:space-between; gap:14px;
+  padding:4px 0; font-size:13.5px; color:var(--text-ondeep-mute);}
+.mo-radek .mo-v{font-family:var(--font-mono); font-variant-numeric:tabular-nums; white-space:nowrap;}
+.mo-radek.mo-hlavni{border-top:1px solid rgba(255,255,255,0.12); margin-top:4px; padding-top:9px;}
+.mo-radek.mo-hlavni .mo-k{color:var(--text-ondeep);}
+.mo-radek.mo-hlavni .mo-v{font-family:var(--font-display); font-size:20px; font-weight:700;
+  color:var(--text-ondeep); letter-spacing:-0.012em;}
+.mo-rozdil{margin-top:8px; font-size:14px; color:#E4C089;}
+.mo-rozdil b{color:#E4C089;}
+.mo-pozn{margin:10px 0 0; font-size:11.5px; line-height:1.5; color:var(--text-ondeep-mute);}
+.mo-pozn b{color:var(--text-ondeep);}
+/* Světlá varianta odhadu — stránka pozemku má bílý papír, ne tmavý panel. */
+.pz-odhad{border-color:var(--line-strong); background:var(--ink-soft2);}
+.pz-odhad .mo-radek{color:var(--text-ondark-mute);}
+.pz-odhad .mo-radek.mo-hlavni{border-top-color:var(--line-strong);}
+.pz-odhad .mo-radek.mo-hlavni .mo-k, .pz-odhad .mo-radek.mo-hlavni .mo-v{color:var(--text-ondark);}
+.pz-odhad .mo-rozdil, .pz-odhad .mo-rozdil b{color:var(--accent-warm);}
+.pz-odhad .mo-pozn{color:var(--text-ondark-mute);}
+.pz-odhad .mo-pozn b{color:var(--text-ondark);}
+.pz-verdict.warn{--vc:#8A5512; border-color:rgba(138,85,18,0.34); background:rgba(138,85,18,0.08);}
