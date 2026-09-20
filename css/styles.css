@@ -378,6 +378,12 @@ h1 em::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height
 .pk-dot.sel{transform:scale(1.55); box-shadow:var(--e1);}
 .pk-dot.urgent{animation:dotpulse 1.6s ease-out infinite;}
 /* Značka „vaše poloha" (režim Nejblíž ke mně) — s jemným pulzem */
+/* Hlídané místo na mapě — mosazná značka, ať se neplete s „jste tady" (zelená)
+   ani s tečkami pozemků. Kolem ní je čárkovaný kruh s hlídaným okruhem. */
+.pk-misto-wrap{background:none; border:0;}
+.pk-misto{display:block; width:18px; height:18px; border-radius:50%;
+  background:#8A5512; border:3px solid #fff; box-shadow:var(--e2);}
+
 /* „Jste tady". Dřív jasně modrá — jenže modré jsou i tečky pozemků na prodej,
    takže se vlastní poloha mezi nimi ztratila. Zeleň je na mapě volná (dražba
    a exekuce jsou cihlové) a je to zároveň barva webu. */
@@ -663,6 +669,14 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .map-search input:focus-visible{border-color:var(--copper-bright); outline:none; box-shadow:0 0 0 3px rgba(110,155,255,0.22);}
 /* Nápadné tlačítko „pozemky ve vašem okolí" (geolokace) */
 .map-near-btn{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:9px; padding:12px 14px; border-radius:var(--r-ovladani); font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; color:#fff; background:var(--plocha-znacka); border:1px solid rgba(31,81,56,0.55); box-shadow:var(--glow); transition:transform .1s ease, box-shadow .15s ease, filter .15s ease;}
+/* Čekání na polohu musí být vidět na tlačítku, ne jen v hlášce, která po
+   dvou vteřinách zmizí. Deset sekund ticha po klepnutí se čte jako „nejde to". */
+.map-near-btn[disabled]{opacity:.78; cursor:progress;}
+.mnb-ceka{width:15px; height:15px; flex:none; border-radius:50%;
+  border:2px solid rgba(255,255,255,.35); border-top-color:#fff;
+  animation:mnbTocSe .8s linear infinite;}
+@keyframes mnbTocSe{to{transform:rotate(360deg);}}
+@media (prefers-reduced-motion:reduce){ .mnb-ceka{animation:none; border-top-color:rgba(255,255,255,.35);} }
 .map-near-btn:hover{filter:brightness(1.05); box-shadow:var(--glow);}
 .map-near-btn:active{transform:translateY(1px);}
 .map-near-btn .mnb-pin{width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none;}
@@ -701,8 +715,14 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .mc-field{display:flex; flex-direction:column; gap:5px; min-width:0;}
 /* Popisek pole. Musí být čitelný sám o sobě — ne jen tušený odstín pozadí. */
 .mc-cap{font-size:11.5px; font-weight:700; color:var(--text-ondark); letter-spacing:0.02em;}
-.mc-toggles{grid-column:1 / -1; display:flex; gap:8px;}
+.mc-toggles{grid-column:1 / -1; display:flex; gap:8px; flex-wrap:wrap;}
 .mc-toggles .map-select{flex:1 1 0; min-width:0;}
+/* Tři přepínače vedle sebe se na telefonu lámaly na tři řádky textu
+   („Pod / obvyklou / cenou"). Radši každý přes celou šířku a na jeden řádek. */
+@media (max-width:520px){
+  .mc-toggles{flex-direction:column;}
+  .mc-toggles .map-select{flex:none; width:100%; text-align:left; padding-left:14px;}
+}
 /* Okraj musí být vidět. S linkou na 18 % splývalo bílé políčko s bílým
    panelem a vypadalo to, že tam žádné pole není. */
 .map-select{width:100%; background:var(--ink-soft); border:1px solid var(--line-ui); color:var(--text-ondark); border-radius:var(--r-sm); padding:10px 30px 10px 12px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; appearance:none; -webkit-appearance:none;
@@ -735,6 +755,12 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .fav-toggle:hover{border-color:var(--copper-bright);}
 .fav-toggle.on{background:rgba(44,113,80,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
 .fav-toggle.on svg{fill:currentColor;}
+/* „Pod obvyklou cenou" se chová stejně jako ostatní přepínače, jen svítí
+   mosazně — je to jediný filtr, který stojí na našem výpočtu, ne na údaji
+   z inzerátu, a má to být poznat. */
+.levne-toggle{background-image:none; padding:9px 12px; text-align:center;
+  transition:border-color .15s ease, background .15s ease, color .15s ease;}
+.levne-toggle.on{background:rgba(138,85,18,0.14); border-color:var(--accent-warm); color:var(--accent-warm);}
 .urgent-toggle{background-image:none; padding:9px 12px; text-align:center; transition:border-color .15s ease, background .15s ease, color .15s ease;}
 .urgent-toggle:hover{border-color:var(--copper-bright);}
 .urgent-toggle.on{background:rgba(44,113,80,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
@@ -2618,10 +2644,15 @@ body::after{
 .hero-map .hero-head .hero-pod{text-align:left;}
 
 @media (max-width:880px){
-  .hero-plot{padding:26px 0 18px;}
-  .hero-map .hero-head h1{font-size:clamp(30px,8.6vw,44px); max-width:none; margin-bottom:18px;}
-  .hero-map .hero-head .eyebrow{margin-bottom:16px;}
-  .hero-map .hero-head .hero-stats{margin-top:22px;}
+  /* Úvod se na telefonu roztahoval přes celou obrazovku a hledání zůstalo
+     až pod ní. Odsazení jde dolů všude o kus — nic nemizí, jen se to
+     nedrží od sebe jako na monitoru. */
+  .hero-plot{padding:16px 0 12px;}
+  .hero-map .hero-head h1{font-size:clamp(29px,8.2vw,42px); max-width:none; margin-bottom:12px;}
+  .hero-map .hero-head .eyebrow{margin-bottom:10px;}
+  .hero-map .hero-head .hero-stats{margin-top:14px;}
+  .hero-map .hero-head .hero-pod{margin-top:8px; font-size:12px;}
+  .hero-map{padding:0 0 26px;}
 }
 
 
@@ -2831,11 +2862,19 @@ h1, h2, h3,
 .hl-fact:hover .hl-v{color:#E4C089;}
 .hl-fact:focus-visible{outline:2px solid #E4C089; outline-offset:4px; border-radius:2px;}
 @media (max-width:760px){
-  .hero-live{flex-direction:column; gap:0; margin-top:24px;}
-  .hl-fact{border-right:0; margin-right:0; padding:13px 0 0;
-    border-bottom:1px solid rgba(255,255,255,0.12); padding-bottom:13px;}
+  /* Na telefonu stály tyhle tři údaje pod sebou a každý zabral dva řádky —
+     dohromady 208 px, tedy čtvrtina obrazovky jen na ně. Než se člověk
+     dostal k hledání, musel projet celou první obrazovku.
+     Popisek a hodnota jdou vedle sebe na JEDEN řádek: totéž sdělení,
+     třetinová výška. */
+  .hero-live{flex-direction:column; gap:0; margin-top:16px;}
+  .hl-fact{flex-direction:row; align-items:baseline; justify-content:space-between;
+    gap:12px; border-right:0; margin-right:0; padding:8px 0;
+    border-bottom:1px solid rgba(255,255,255,0.12);}
   .hl-fact:last-child{border-bottom:0;}
-  .hl-fact .hl-v{font-size:16px;}
+  .hl-fact .hl-k{flex:none; font-size:9.5px; letter-spacing:0.08em;}
+  .hl-fact .hl-v{font-size:14.5px; text-align:right; min-width:0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 }
 
 

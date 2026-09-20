@@ -791,6 +791,18 @@
   var urgentEl = document.getElementById('map-urgent');
   var detailEl = document.getElementById('opp-detail');
   var favEl = document.getElementById('map-fav');
+  /* Výběr pozemku byl na kupujícího moc hrubý: cena celkem, výměra, druh.
+     Jenže pozemky se srovnávají CENOU ZA METR (deset hektarů za milion je
+     něco úplně jiného než deset arů za milion) a hledají se v konkrétním
+     kraji — a to tu nešlo jinak než klikáním do mapy. A hlavně: web umí
+     spočítat, co je pod obvyklou cenou v okolí, ale nešlo podle toho
+     filtrovat, i když je to jediné, co tu jinde nenajdete. */
+  var perm2El = document.getElementById('map-perm2');
+  var krajFiltrEl = document.getElementById('map-kraj');
+  var levneEl = document.getElementById('map-levne');
+  var maxPerM2 = 0;
+  var krajFiltr = 'all';
+  var levneOnly = false;
   var activeType = 'all';
   var activeDruh = 'all';
   var sortMode = 'demand';
@@ -1457,10 +1469,18 @@
     if (vybiramMisto) {
       vybiramMisto = false;
       document.body.classList.remove('vybiram-misto');
-      ulozMisto({ lat: e.latlng.lat, lng: e.latlng.lng,
-        km: (mojeMisto && mojeMisto.km) || 10, nazev: null });
-      if (typeof vykresliMisto === 'function') vykresliMisto();
+      var km0 = (mojeMisto && mojeMisto.km) || 10;
+      // Místo pojmenujeme podle nejbližší obce v datech — „Hlídáme Kolín a okolí"
+      // řekne víc než „okolí vašeho místa" a hlavně je na tom poznat, že to sedlo.
+      ulozMisto({ lat: e.latlng.lat, lng: e.latlng.lng, km: km0,
+        nazev: nejblizsiObec(e.latlng.lat, e.latlng.lng) });
+      vykresliMisto();
+      // Ukázat, co se vlastně hlídá. Bez toho zůstal kruh klidně mimo obraz
+      // a člověk po klepnutí nevěděl, jestli se něco stalo.
+      ramujMisto();
+      lockDots(false);
       renderList();
+      showToast('Místo uloženo — hlídáme okolí do ' + km0 + ' km.');
       return;
     }
     if (krajJustSelected) { krajJustSelected = false; return; }
@@ -1836,14 +1856,46 @@
   function fallbackNear(err) {
     showLocModal(err);
   }
-  // Vlastní žádost o GPS + prompt prohlížeče.
+  /* Žádost o polohu. Tohle bylo rozbité tak, jak se rozbíjí nejhůř — nic
+     nespadlo, jen se DESET SEKUND nedělo vůbec nic:
+       – hláška „Zjišťuji vaši polohu…" zmizela po 2,6 s,
+       – enableHighAccuracy si na telefonu bez zaměření vybere celý limit,
+       – a teprve po něm se ukázalo okno „Kde hledat?".
+     Kdo mezitím tlačítko zmáčkl podruhé, spustil druhý dotaz a čekal znovu.
+     Tři změny: tlačítko samo říká, že se čeká (a nejde zmáčknout dvakrát),
+     limit je 6 sekund, a nejdřív se zkouší poloha nepřesná — ta je na
+     telefonu skoro okamžitá a na hledání pozemků v okolí úplně stačí. */
+  var cekamNaPolohu = false;
+  function stavTlacitka(ceka) {
+    cekamNaPolohu = ceka;
+    if (!nearBtn) return;
+    if (ceka) {
+      if (!nearBtn._puvodni) nearBtn._puvodni = nearBtn.innerHTML;
+      nearBtn.innerHTML = '<span class="mnb-ceka" aria-hidden="true"></span>Zjišťuji polohu…';
+      nearBtn.disabled = true;
+      nearBtn.setAttribute('aria-busy', 'true');
+    } else {
+      if (nearBtn._puvodni) nearBtn.innerHTML = nearBtn._puvodni;
+      nearBtn.disabled = false;
+      nearBtn.removeAttribute('aria-busy');
+    }
+  }
   function askGeo() {
-    showToast('Zjišťuji vaši polohu…');
-    navigator.geolocation.getCurrentPosition(function (pos) {
+    if (cekamNaPolohu) return;
+    stavTlacitka(true);
+    var hotovo = false;
+    function uspech(pos) {
+      if (hotovo) return; hotovo = true;
+      stavTlacitka(false);
       enterNearAt({ lat: pos.coords.latitude, lng: pos.coords.longitude }, false);
-    }, function (err) {
-      fallbackNear(err);   // GPS zamítnuta/selhala → přibližná poloha podle připojení
-    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 });
+    }
+    function selhalo(err) {
+      if (hotovo) return; hotovo = true;
+      stavTlacitka(false);
+      fallbackNear(err);   // poloha nevyšla → slušně se zeptáme na obec
+    }
+    navigator.geolocation.getCurrentPosition(uspech, selhalo,
+      { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 });
   }
   // „Pozemky v okolí" — chováme se přesně jako běžné weby: NEkontrolujeme
   // předem stav povolení, prostě rovnou požádáme prohlížeč o polohu. iOS/Safari
@@ -1940,10 +1992,20 @@
     // Štítek v legendě říká „do 7 dní" — filtr musí počítat stejně (dřív pouštěl 14).
     var okUrgent = !urgentOnly || isUrgent(d);
     var okFav = !favOnly || isFav(d);
+    var okPerM2 = !maxPerM2 || (hasArea(d) && d.price && (d.price / d.area) <= maxPerM2);
+    var okKraj = krajFiltr === 'all' || (d._gkraj || krajOf(d)) === krajFiltr;
+    // „Pod obvyklou cenou" bere tentýž odhad, jaký se ukazuje na kartě —
+    // a jen tam, kde se srovnává s podobně velkými pozemky. Jinak by sem
+    // spadl každý hektar jen proto, že velké pozemky mají nižší cenu za metr.
+    var okLevne = !levneOnly || (function () {
+      var od = MODEL ? MODEL.odhad(d) : null;
+      return !!(od && od.podleVelikosti && od.podOdhadem >= 15);
+    })();
     // Skryté zmizí ze seznamu — ale jen dokud si je člověk sám nevyžádá
     // (tlačítko „Zobrazit skryté"). Nenávratně se nic neztrácí.
     var okSkryt = ukazSkryte || !jeSkryty(d);
-    return okType && okSearch && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt;
+    return okType && okSearch && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
+      && okPerM2 && okKraj && okLevne;
   }
   function perM2Val(d){ return hasArea(d) ? d.price / d.area : Infinity; }
   // „Rozprostření": u řazení Doporučené nechceme 5 dražeb (nebo 2× stejná obec)
@@ -2443,6 +2505,33 @@
   if (areaEl) ['input', 'change', 'pk-reset'].forEach(function (ev) { areaEl.addEventListener(ev, function () { minArea = parseInt(areaEl.value, 10) || 0; renderList(); }); });
   if (urgentEl) urgentEl.addEventListener('click', function () { urgentOnly = !urgentOnly; urgentEl.classList.toggle('on', urgentOnly); urgentEl.setAttribute('aria-pressed', String(urgentOnly)); renderList(); });
   if (favEl) favEl.addEventListener('click', function () { favOnly = !favOnly; refreshFavBtn(); renderList(); });
+  if (perm2El) perm2El.addEventListener('change', function () { maxPerM2 = parseInt(perm2El.value, 10) || 0; renderList(); });
+  if (levneEl) levneEl.addEventListener('click', function () {
+    levneOnly = !levneOnly;
+    levneEl.classList.toggle('on', levneOnly);
+    levneEl.setAttribute('aria-pressed', String(levneOnly));
+    renderList();
+  });
+  if (krajFiltrEl) {
+    // Nabídka krajů se plní z DAT, ne z pevného seznamu — kraj bez jediného
+    // pozemku by byl slepá ulička.
+    var pocty = {};
+    DATA.forEach(function (d) { var k = d._gkraj || krajOf(d); if (k) pocty[k] = (pocty[k] || 0) + 1; });
+    Object.keys(pocty).sort(function (a, b) { return a.localeCompare(b, 'cs'); }).forEach(function (k) {
+      var o = document.createElement('option');
+      o.value = k;
+      o.textContent = (k === 'Praha' ? 'Praha' : (k === 'Vysočina' ? 'Vysočina' : k)) + ' (' + pocty[k] + ')';
+      krajFiltrEl.appendChild(o);
+    });
+    krajFiltrEl.addEventListener('change', function () {
+      krajFiltr = krajFiltrEl.value;
+      renderList();
+      // Kraj vybraný ze seznamu má mapu rovnou ukázat — jinak by člověk
+      // filtroval naslepo a mapa by dál stála nad celou republikou.
+      if (krajFiltr !== 'all' && typeof selectKraj === 'function') { try { selectKraj(krajFiltr); } catch (e) {} }
+      else if (typeof clearKraj === 'function') { try { clearKraj(); } catch (e) {} }
+    });
+  }
 
   refreshFavBtn();
   renderList();
@@ -2543,7 +2632,8 @@
   var FILTR_KLIC = 'pk_filtr_v1';
   function ulozFiltr() {
     zapisUloz(FILTR_KLIC, { typ: activeType, druh: activeDruh, cena: maxPrice,
-      plocha: minArea, urgent: urgentOnly, razeni: sortMode });
+      plocha: minArea, urgent: urgentOnly, razeni: sortMode,
+      zaMetr: maxPerM2, kraj: krajFiltr, levne: levneOnly });
   }
   function obnovFiltr() {
     var f = ctiUloz(FILTR_KLIC, null);
@@ -2564,6 +2654,12 @@
     if (druhEl) druhEl.value = activeDruh;
     if (cenaEl && maxPrice) cenaEl.value = String(maxPrice);
     if (areaEl && minArea) areaEl.value = String(minArea);
+    if (f.zaMetr) maxPerM2 = f.zaMetr;
+    if (f.kraj) krajFiltr = f.kraj;
+    levneOnly = !!f.levne;
+    if (perm2El && maxPerM2) perm2El.value = String(maxPerM2);
+    if (krajFiltrEl && krajFiltr) krajFiltrEl.value = krajFiltr;
+    if (levneEl) { levneEl.classList.toggle('on', levneOnly); levneEl.setAttribute('aria-pressed', String(levneOnly)); }
     if (urgentEl) urgentEl.checked = urgentOnly;
     if (sortEl) sortEl.value = sortMode;
     return true;
@@ -2580,7 +2676,51 @@
   var akceZadne = document.getElementById('mp-akce-zadne');
   var akceMam = document.getElementById('mp-akce-mam');
   var vybratBtn = document.getElementById('misto-vybrat');
+  /* Hlídané místo na MAPĚ. Tohle tu do teď vůbec nebylo: funkce vykresliMisto
+     přepisovala jen text v proužku, takže člověk klepl do mapy, proužek nahoře
+     se změnil — a na mapě se nestalo nic. Kdo se díval na mapu (a při volbě
+     „klepněte do mapy na své místo" se na ni dívá každý), viděl, že se nic
+     nestalo, a měl pravdu.
+     Teď je tam značka a kolem ní kruh s hlídaným okruhem, takže je vidět
+     přesně to, co se hlídá — a mění se to hned, jak se okruh přepne. */
+  var mistoZnacka = null, mistoKruh = null;
+  function vykresliMistoNaMape() {
+    if (typeof map === 'undefined' || !map) return;
+    if (mistoZnacka) { map.removeLayer(mistoZnacka); mistoZnacka = null; }
+    if (mistoKruh) { map.removeLayer(mistoKruh); mistoKruh = null; }
+    if (!mojeMisto || !isFinite(mojeMisto.lat) || !isFinite(mojeMisto.lng)) return;
+    var km = mojeMisto.km || 10;
+    mistoKruh = L.circle([mojeMisto.lat, mojeMisto.lng], {
+      radius: km * 1000, pane: 'overlayPane', interactive: false,
+      color: '#8A5512', weight: 1.6, opacity: 0.7, dashArray: '6 5',
+      fillColor: '#8A5512', fillOpacity: 0.07
+    }).addTo(map);
+    mistoZnacka = L.marker([mojeMisto.lat, mojeMisto.lng], {
+      icon: L.divIcon({ className: 'pk-misto-wrap', html: '<span class="pk-misto"></span>',
+        iconSize: [20, 20], iconAnchor: [10, 10] }),
+      zIndexOffset: 900, interactive: false,
+      title: (mojeMisto.nazev || 'Vaše hlídané místo') + ' — okolí do ' + km + ' km'
+    }).addTo(map);
+  }
+
+  /** Zarámuje mapu na hlídaný okruh, ať je vidět přesně to, co se hlídá. */
+  function ramujMisto() {
+    if (!mistoKruh || typeof map === 'undefined' || !map) return;
+    try { map.fitBounds(mistoKruh.getBounds(), { padding: [30, 30], maxZoom: 13, animate: true }); }
+    catch (e) { map.setView([mojeMisto.lat, mojeMisto.lng], 11, { animate: true }); }
+  }
+  /** Nejbližší obec z našich dat (do 25 km) — jen na pojmenování místa. */
+  function nejblizsiObec(lat, lng) {
+    var nej = null, nejKm = Infinity;
+    for (var i = 0; i < DATA.length; i++) {
+      var km = kmOd({ lat: lat, lng: lng }, DATA[i]);
+      if (km < nejKm) { nejKm = km; nej = DATA[i]; }
+    }
+    return (nej && nejKm <= 25) ? nej.place : null;
+  }
+
   function vykresliMisto() {
+    vykresliMistoNaMape();
     if (!mistoPruh) return;
     var hl = mistoPruh.querySelector('.mp-hlavni');
     var pod = mistoPruh.querySelector('.mp-pod');
@@ -2619,6 +2759,8 @@
     mojeMisto.km = parseInt(mistoKmEl.value, 10) || 10;
     ulozMisto(mojeMisto);
     vykresliMisto();
+    ramujMisto();     // nový okruh musí být vidět celý, jinak se změna nepozná
+    renderList();
   });
   if (mistoZrus) mistoZrus.addEventListener('click', function () {
     ulozMisto(null);

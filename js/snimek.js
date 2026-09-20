@@ -7,19 +7,16 @@
  *
  * Co se kreslí:
  *   – letecký snímek poskládaný z dlaždic tak, aby byl pozemek UPROSTŘED,
- *   – ČTVEREC O SKUTEČNÉ VÝMĚŘE ve správném měřítku, čárkovaně,
  *   – špendlík na přesném bodě,
- *   – dole název místa.
+ *   – dole název místa a výměra.
  *
- * Proč čtverec a ne tvar parcely: skutečný obrys je v katastru a my ho
- * nemáme. Vymyšlený mnohoúhelník by vypadal přesvědčivě a přitom by lhal —
- * u pozemku za statisíce je to ta nejhorší možná drobnost. Čtverec o pravé
- * výměře naproti tomu říká pravdu, kterou z fotky jinak nepoznáte: JAK JE
- * TEN POZEMEK VELKÝ PROTI DOMŮM A SILNICI VEDLE. Čárkovaná čára a popisek
- * „přibližný rozsah" dodávají, že to není obrys z katastru.
+ * Čtverec o skutečné výměře tu chvíli byl a je pryč. Měl říkat, jak je
+ * pozemek velký proti domům vedle, jenže na snímku působil jako obrys
+ * parcely — a ten nemáme, je v katastru. Radši nic než čára, kterou si
+ * někdo splete s hranicí pozemku.
  *
- * Přiblížení se řídí výměrou. Dřív bylo napevno, takže hektarový pozemek
- * vypadal na snímku stejně jako zahrádka — jen špendlík v poli.
+ * Přiblížení se pořád řídí výměrou: hektarový pozemek se tak na snímku
+ * ukáže v jiném měřítku než zahrádka, což je to samé sdělení bez čáry.
  */
 (function (global) {
   'use strict';
@@ -75,22 +72,6 @@
     }
 
     var cx = Vw / 2, cy = Vh / 2;
-    // Rozsah pozemku ve správném měřítku. Dvojitá čára: tmavý podklad, ať je
-    // zelená vidět i na světlém strništi, a přes něj světlá zeleň webu.
-    var obrys = '';
-    if (d.area > 0) {
-      var pole = Math.sqrt(d.area) / metryNaBod(d.lat, z);   // strana v bodech
-      var h = pole / 2;
-      var r = Math.min(6, pole * 0.12);
-      var ctverec = function (w, c, dash) {
-        return '<rect x="' + (cx - h).toFixed(1) + '" y="' + (cy - h).toFixed(1) + '" width="' + pole.toFixed(1) +
-          '" height="' + pole.toFixed(1) + '" rx="' + r.toFixed(1) + '" fill="none" stroke="' + c +
-          '" stroke-width="' + w + '"' + (dash ? ' stroke-dasharray="7 5"' : '') + '/>';
-      };
-      obrys = '<rect x="' + (cx - h).toFixed(1) + '" y="' + (cy - h).toFixed(1) + '" width="' + pole.toFixed(1) +
-        '" height="' + pole.toFixed(1) + '" rx="' + r.toFixed(1) + '" fill="rgba(79,191,133,0.12)"/>' +
-        ctverec(5, 'rgba(10,22,15,0.55)', true) + ctverec(2.2, '#7FE0AC', true);
-    }
     var spendlik = '<g transform="translate(' + cx + ',' + cy + ')" filter="url(#' + id + ')">' +
       '<path d="M0 0C-7 -12 -12 -18 -12 -25 A12 12 0 1 1 12 -25 C12 -18 7 -12 0 0Z" fill="' + barva +
       '" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>' +
@@ -104,7 +85,7 @@
       '<g stroke="rgba(206,228,212,0.06)" stroke-width="1">' +
       '<path d="M64 0V' + Vh + 'M128 0V' + Vh + 'M192 0V' + Vh + 'M256 0V' + Vh + 'M320 0V' + Vh +
       'M0 60H' + Vw + 'M0 120H' + Vw + 'M0 180H' + Vw + '"/></g>' +
-      dlazdice + obrys + spendlik +
+      dlazdice + spendlik +
       '</svg>';
   }
 
@@ -121,7 +102,7 @@
     return '<span class="sn-popis" aria-hidden="true">' +
       '<b>' + esc(d.place) + '</b>' +
       (v ? '<i>' + v + '</i>' : '') +
-      (d.area > 0 ? '<u>přibližný rozsah, přesný obrys v katastru</u>' : '') +
+      (d.area > 0 ? '<u>přesný obrys pozemku najdete v katastru</u>' : '') +
       '</span>';
   }
 

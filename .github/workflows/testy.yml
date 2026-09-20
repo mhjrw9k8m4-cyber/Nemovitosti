@@ -130,6 +130,9 @@ jobs:
       - name: Čerstvost dat a stav zdrojů
         run: node scripts/test-cerstvost.mjs
 
+      - name: Hlídané místo a pozemky v okolí
+        run: node scripts/test-okoli.mjs
+
       - name: Pohyb (odezva mapy a měřítka, i s vypnutými animacemi)
         run: node scripts/test-pohyb.mjs
 

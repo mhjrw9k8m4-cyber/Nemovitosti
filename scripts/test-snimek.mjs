@@ -6,15 +6,13 @@
 // Snímek nahoře na stránce pozemku byl nejslabší místo celého webu: tmavý
 // obdélník se špendlíkem uprostřed. U hektarového pozemku vypadal úplně
 // stejně jako u zahrádky — přiblížení bylo napevno, takže z obrázku nešlo
-// poznat vůbec nic.
+// poznat vůbec nic. Teď se PŘIBLÍŽENÍ ŘÍDÍ VÝMĚROU: hektar se ukáže v jiném
+// měřítku než zahrádka, a velikost je tím pádem z obrázku vidět.
 //
-// Teď se kreslí čtverec o SKUTEČNÉ VÝMĚŘE ve správném měřítku a přiblížení
-// se řídí velikostí pozemku. Dvě věci se přitom musí hlídat:
-//
-// 1) MĚŘÍTKO MUSÍ SEDĚT. Kdyby čtverec neodpovídal výměře, obrázek by lhal
-//    o tom nejdůležitějším — jak je pozemek velký proti domům kolem.
-// 2) NESMÍ TO VYPADAT JAKO KATASTR. Skutečný obrys parcely nemáme. Čára je
-//    proto čárkovaná a pod snímkem stojí, že je to jen přibližný rozsah.
+// Čtverec o skutečné výměře tu chvíli byl a je pryč: na leteckém snímku
+// působil jako obrys parcely, a ten nemáme — je v katastru. Test proto
+// hlídá i to, že se žádná taková čára nevrátila. Radši nic než čára,
+// kterou si někdo splete s hranicí pozemku.
 //
 // A do třetice: skládání dlaždic bylo dřív opsané zvlášť pro kartu a zvlášť
 // pro stránku. Test hlídá, že zůstalo jedno.
@@ -83,12 +81,17 @@ const v = await p.evaluate(() => {
   const s = document.querySelector('.pz-media svg.opp-map');
   const pop = document.querySelector('.sn-popis');
   if (!s) return { jeSvg: false };
-  const carky = [...s.querySelectorAll('rect[stroke-dasharray]')];
   return {
     jeSvg: true,
     dlazdic: s.querySelectorAll('image').length,
-    carkovanych: carky.length,
-    plna: [...s.querySelectorAll('rect')].filter((r) => !r.getAttribute('stroke-dasharray') && /^\d/.test(r.getAttribute('x') || '')).length,
+    // Jakýkoli obtažený tvar uvnitř snímku by se četl jako hranice pozemku.
+    obrysu: [...s.querySelectorAll('rect, polygon, path')].filter((e) => {
+      const st = e.getAttribute('stroke') || getComputedStyle(e).stroke;
+      const d = e.getAttribute('d') || '';
+      if (d.indexOf('M0 0C-7') === 0) return false;        // špendlík
+      if (e.tagName === 'path' && /^M\d+ 0V/.test(d)) return false;  // rastr pod dlaždicemi
+      return st && st !== 'none' && st !== 'rgba(0, 0, 0, 0)';
+    }).length,
     spendlik: !!s.querySelector('path[d^="M0 0C-7"]'),
     popisText: pop ? pop.textContent.replace(/\s+/g, ' ').trim() : null,
     popisSkryty: pop ? pop.getAttribute('aria-hidden') === 'true' : false,
@@ -96,12 +99,12 @@ const v = await p.evaluate(() => {
 });
 pravda('snímek se na stránce pozemku vykreslí', v.jeSvg);
 pravda('a skládá se ze skutečných dlaždic', v.dlazdic >= 4, `dlaždic ${v.dlazdic}`);
-pravda('obrys rozsahu je vidět', v.carkovanych >= 1, 'žádný obrys se nenakreslil');
-pravda('a je ČÁRKOVANÝ, ať si ho nikdo nesplete s katastrem', v.carkovanych >= 2,
-  'plná čára by vypadala jako přesný obrys parcely');
+pravda('do snímku se nekreslí nic, co by vypadalo jako hranice pozemku',
+  v.obrysu === 0,
+  `našel jsem ${v.obrysu} obtažených tvarů — čára na leteckém snímku se čte jako obrys parcely`);
 pravda('špendlík na přesném bodě zůstal', v.spendlik === true);
-pravda('pod snímkem stojí, že jde o přibližný rozsah',
-  /přibližný rozsah/.test(v.popisText || ''), `popisek: „${v.popisText}"`);
+pravda('pod snímkem stojí, kde je přesný obrys',
+  /katastr/.test(v.popisText || ''), `popisek: „${v.popisText}"`);
 pravda('a je v něm název místa i výměra',
   /Police/.test(v.popisText || '') && /ha|m²/.test(v.popisText || ''), v.popisText);
 pravda('popisek se odečítači obrazovky nečte dvakrát', v.popisSkryty === true,
