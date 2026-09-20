@@ -20,7 +20,10 @@ const BASE = 'http://127.0.0.1:8310';
 // Místní kopie Leafletu — viz poznámka u ctx.route níž.
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const STRANKY = ['index.html', 'cena-pozemku.html', 'pozemky-okres-tabor.html',
-  'upozorneni.html', 'zpravy.html', 'hlidani.html', 'pridat.html', 'kontakt.html'];
+  'upozorneni.html', 'zpravy.html', 'hlidani.html', 'pridat.html', 'kontakt.html',
+  // Rádcovské a právní stránky mají od téhle chvíle tmavý úvod. Dokud tu
+  // nebyly, nikdo neměřil text na tmavé desce mimo hlavní stránku.
+  'hypoteka-na-pozemek.html', 'podminky.html'];
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));

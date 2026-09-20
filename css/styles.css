@@ -2556,3 +2556,60 @@ body::after{
   .rail .section-head{margin-bottom:30px; max-width:660px;}
   .rail .section-head h2{font-size:clamp(30px, 2.7vw, 40px); max-width:19ch;}
 }
+
+
+/* =====================================================================
+   ÚVODNÍ PLOCHA VNITŘNÍCH STRÁNEK
+   Devatenáct stránek mělo pod nadpisem bledý barevný mesh — tři rozpité
+   skvrny, které nic neznamenaly a vedle tmavé desky na hlavní a krajské
+   stránce působily jako jiný web. Dostávají proto tutéž desku i tutéž
+   mapovou mřížku. Jeden hlas napříč stránkami, ne tři.
+   Aplikační stránky (.app-hero — Hlídání, Upozornění, Zprávy) zůstávají
+   světlé: tam člověk pracuje a plná tmavá deska nad nástrojem jen ubírá
+   místo a křičí.
+   ------------------------------------------------------------------ */
+.add-hero:not(.app-hero){position:relative; isolation:isolate; overflow:hidden;
+  padding:104px 0 58px;
+  background:linear-gradient(180deg, #1C2333 0%, #161B28 62%, #121722 100%);
+  /* Světlé hodnoty z předchozí verze tu nemají co dělat. */
+  --copper-bright:#F3C79F; --text-ondark-mute:rgba(255,255,255,0.82);}
+.add-hero:not(.app-hero)::before{content:""; position:absolute; inset:0;
+  pointer-events:none; z-index:0;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size:52px 52px;
+  -webkit-mask-image:radial-gradient(ellipse 76% 80% at 50% 44%, #000 16%, transparent 100%);
+          mask-image:radial-gradient(ellipse 76% 80% at 50% 44%, #000 16%, transparent 100%);}
+/* Žádné vytrácení dolů. Světlý přechod přes tmavou desku dá šedý opar,
+   a text úvodu do něj na těchhle stránkách zasahuje — na hlavní stránce
+   pod ním bylo prázdné místo, tady není. Ostrá hrana je čistší a dá se
+   na ni spolehnout. Starší pravidlo pro světlou verzi se proto ruší celé
+   (nechávalo tu inset:0 a elipsovou masku). */
+.add-hero:not(.app-hero)::after{content:none;}
+.add-hero:not(.app-hero) > .wrap{position:relative; z-index:1;}
+.add-hero:not(.app-hero) .eyebrow{color:#E8E4DC;}
+.add-hero:not(.app-hero) h1{color:#FFFFFF; font-size:clamp(32px, 4.4vw, 54px);
+  line-height:1.03; letter-spacing:-0.032em; max-width:18ch;}
+/* Zvýraznění v nadpisu nese barva, ne kurzíva. */
+.add-hero:not(.app-hero) h1 em{font-style:normal; font-weight:800; color:#F3C79F;}
+/* Měděné podtržení pod zvýrazněním je na tmavém nadbytečné — barva stačí
+   a linka uprostřed věty vypadá jako omylem zapnutý odkaz. */
+.add-hero:not(.app-hero) h1 em::after{display:none;}
+/* Úvod zůstává v téže čtecí šířce jako text pod ním. Zkoušel jsem ho
+   roztáhnout přes celou stránku, ale nadpis pak začínal o 300 px vlevo
+   od prvního odstavce — dvě různé svislice na jedné stránce. Společná
+   svislice je důležitější než široký nadpis. */
+.add-hero:not(.app-hero) .sub{color:rgba(255,255,255,0.86); max-width:62ch; font-size:16.5px;}
+.add-hero:not(.app-hero) .sub b{color:#FFFFFF;}
+
+/* Co stojí uvnitř úvodní plochy (Přidat pozemek), musí na tmavém taky obstát. */
+.add-hero:not(.app-hero) .add-chips span{color:#F3C79F; background:rgba(243,199,159,0.12);
+  border-color:rgba(243,199,159,0.32);}
+.add-hero:not(.app-hero) .add-steps li{background:rgba(255,255,255,0.045);
+  border-color:rgba(255,255,255,0.16);}
+.add-hero:not(.app-hero) .as-num{color:#161B28; background:#F3C79F; box-shadow:none;}
+.add-hero:not(.app-hero) .as-txt b{color:#FFFFFF;}
+.add-hero:not(.app-hero) .as-txt > span{color:rgba(255,255,255,0.78);}
+
+@media (max-width:880px){ .add-hero:not(.app-hero){padding:84px 0 40px;} }
