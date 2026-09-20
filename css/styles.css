@@ -1150,7 +1150,11 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 
 /* Footer */
 footer{border-top:1px solid var(--line); padding:30px 0;}
-footer .wrap{display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--text-ondark-mute); flex-wrap:wrap; gap:16px;}
+/* Pozor na sílu pravidla: „footer .wrap" přebíjí .foot-grid i .foot-bottom,
+   takže se mřížka patičky nikdy nevykreslila jako mřížka — sloupce se jen
+   vystředily vedle sebe a patička působila slitě. Tohle je zbytek po staré
+   jednořádkové patičce; ať platí jen tam, kam patří. */
+footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--text-ondark-mute); flex-wrap:wrap; gap:16px;}
 .foot-brand{display:flex; align-items:center; gap:9px; font-family:var(--font-ui); font-size:16px; color:var(--text-ondark);}
 .foot-links{display:flex; gap:22px; flex-wrap:wrap;}
 .foot-links a{text-decoration:none; color:var(--text-ondark-mute); font-size:13px;}
@@ -1258,13 +1262,13 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 .cta-sub{color:rgba(32,41,58,0.7); font-size:14px; margin-top:8px;}
 
 /* Footer grid */
-.foot-grid{display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:32px; padding-bottom:28px; border-bottom:1px solid var(--line); align-items:start;}
+.foot-grid{display:grid; grid-template-columns:1.6fr repeat(4, minmax(0,1fr)); gap:32px 28px; padding-bottom:28px; border-bottom:1px solid var(--line); align-items:start;}
 .foot-brand{display:flex; align-items:center; gap:9px; font-family:var(--font-ui); font-size:17px; color:var(--text-ondark); margin-bottom:12px;}
 .foot-tag{font-size:13px; color:var(--text-ondark-mute); max-width:260px;}
 .foot-col h5{font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-ondark-mute); margin-bottom:14px; font-weight:600;}
 .foot-col a{display:block; font-size:13.5px; color:var(--text-ondark-mute); text-decoration:none; margin-bottom:9px;}
 .foot-col a:hover{color:var(--text-ondark);}
-.foot-bottom{display:flex; justify-content:space-between; padding-top:20px; font-size:12px; color:var(--text-ondark-mute); flex-wrap:wrap; gap:10px;}
+.foot-bottom{display:flex; justify-content:space-between; align-items:center; padding-top:20px; font-size:12px; color:var(--text-ondark-mute); flex-wrap:wrap; gap:10px 16px;}
 
 /* Risk reversal / záruky */
 .guarantees{display:flex; flex-wrap:wrap; gap:14px; justify-content:center; margin-top:26px;}
@@ -1420,7 +1424,8 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   .status-grid{grid-template-columns:repeat(2,1fr);} .counters-row{grid-template-columns:repeat(2,1fr); gap:36px 24px;}
   .glossary{grid-template-columns:repeat(2,1fr);} .reviews{grid-template-columns:1fr;}
   .pricing{grid-template-columns:1fr; max-width:440px; margin:0 auto;} .price-card.featured{transform:none;}
-  .foot-grid{grid-template-columns:1fr 1fr;}
+  .foot-grid{grid-template-columns:repeat(2, minmax(0,1fr)); gap:30px 24px;}
+  .foot-brand-col{grid-column:1 / -1;}
 }
 @media (max-width:880px){
   .nav-toggle{display:flex;}
@@ -1482,7 +1487,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   .section{padding:68px 0;}
   .cta-banner{flex-direction:column; align-items:flex-start; padding:40px;}
   h1{font-size:38px;} .section-head h2{font-size:28px;}
-  footer .wrap{flex-direction:column; align-items:flex-start;}
+  footer .wrap:not(.foot-grid):not(.foot-bottom){flex-direction:column; align-items:flex-start;}
 }
 /* Úzké telefony (iPhone mini/SE): CTA zkrátíme na „Přidat", ať se nekříží s logem. */
 @media (max-width:384px){
@@ -1490,7 +1495,9 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   .header-cta .cta-short{display:inline;}
 }
 @media (max-width:520px){
-  .wrap{padding:0 20px;}
+  /* Jen do stran. Zkratka „padding" by srazila i svislé odsazení, které si
+     některé obaly nesou (patička) — a ta pak na telefonu splývala v jeden blok. */
+  .wrap{padding-left:20px; padding-right:20px;}
   h1{font-size:32px;}
   .status-grid, .counters-row{grid-template-columns:1fr;}
   .c-num{font-size:38px;}
@@ -2147,9 +2154,13 @@ body{background:var(--bg) var(--grad-plocha) fixed; background-size:cover;}
   .filter-chip{min-height:40px;}
 }
 /* Odkazy v patičce a v drobečkové navigaci dostanou svislý prostor —
-   na mobilu se mezi ně jinak špatně trefuje. */
+   na mobilu se mezi ně jinak špatně trefuje.
+   Pozor: „display:inline-block" tady bylo kvůli tomu, aby plocha k trefení
+   nebyla přes celý sloupec — jenže tím odkazy přestaly být řádky a slily se
+   do jednoho odstavce („MapaCeny pozemků"). Zůstávají tedy bloky, jen široké
+   přesně na text. */
 @media (max-width:880px){
-  .foot-col a{padding:4px 0; display:inline-block;}
+  .foot-col a{padding:5px 0; display:block; width:fit-content;}
   .crumbs a{padding:3px 0; display:inline-block;}
 }
 

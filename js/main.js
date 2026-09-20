@@ -380,7 +380,14 @@
   window.addEventListener('scroll', function () {
     var y = window.pageYOffset;
     if (header) header.classList.toggle('shrink', y > 20);
-    if (toTop) toTop.classList.toggle('show', y > 500);
+    /* „Nahoru" plave u pravého dolního rohu a v patičce sedělo přímo na
+       copyrightu. Kdo je u patičky, je na konci a chce její odkazy, ne skok
+       zpátky — tak mu uhneme. */
+    if (toTop) {
+      var patka = document.querySelector('footer');
+      var vPatce = patka && patka.getBoundingClientRect().top < window.innerHeight - 60;
+      toTop.classList.toggle('show', y > 500 && !vPatce);
+    }
     if (progress) {
       var h = document.documentElement.scrollHeight - window.innerHeight;
       progress.style.width = (h > 0 ? (y / h) * 100 : 0) + '%';

@@ -130,6 +130,9 @@ jobs:
       - name: Čerstvost dat a stav zdrojů
         run: node scripts/test-cerstvost.mjs
 
+      - name: Patička (rozvržení na počítači i na telefonu)
+        run: node scripts/test-paticka.mjs
+
       - name: Výpadek dat a mrtvé záznamy
         run: node scripts/test-vypadky.mjs
 
