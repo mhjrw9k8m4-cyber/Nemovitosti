@@ -84,6 +84,12 @@
 
   /* Postaví z dat indexy cen za m². Vrací objekt s metodami, ne globální stav —
    * ať se dá v testu postavit několik modelů vedle sebe. */
+  /* Dvě hranice, o které se opírá celý web — mapa, karty i stránka pozemku.
+     Jsou tady, a ne na třech místech v kódu, protože přesně takhle se už
+     jednou rozešel cenový verdikt mezi mapou a stránkou. */
+  var MEZ_SLEVA = 15;      // od kolika % pod obvyklou cenou se o slevě vůbec mluví
+  var MEZ_POCHYBNA = 60;   // od kolika % už to není sleva, ale důvod k ověření
+
   function postav(DATA, okresKraj) {
     okresKraj = okresKraj || OKRES_KRAJ;
     var podleTypu = {};     // type|druh  → ceny za m² (na percentil a na věrohodnost)
@@ -220,6 +226,7 @@
          * vznikaly perly jako „576 000 Kč, odhad 8 062 Kč, 7 045 % nad
          * odhadem". Takový odhad radši nevydáme vůbec. */
         if (d.price > castka * 8) return null;
+        var pod = castka > 0 ? Math.round((castka - d.price) / castka * 100) : 0;
         return {
           castka: castka,
           zaM2: med,
@@ -230,7 +237,20 @@
           druh: g,
           rozdil: castka - d.price,
           // O kolik je cena pozemku pod odhadem, v procentech odhadu.
-          podOdhadem: castka > 0 ? Math.round((castka - d.price) / castka * 100) : 0
+          podOdhadem: pod,
+          /* HRANICE UVĚŘITELNOSTI. Sleva přes MEZ_POCHYBNA procent není
+             známka výhodné koupě — je to známka toho, že se ten pozemek
+             s okolím srovnat nedá. Nejčastěji je to SPOLUVLASTNICKÝ PODÍL
+             (v inzerátu je výměra celé parcely, ale cena jen za zlomek),
+             dražba s jinou výměrou než uvádí popis, nebo špatně načtená
+             cena. Doubravník na webu svítil jako „o 95 % pod obvyklou" —
+             stavební pozemek za 59 Kč/m². Takový stavební pozemek není.
+             Rozlišit skutečný trhák od podílu z dat NEJDE. Proto se to ani
+             netvrdí: tyhle nabídky se neoznačují jako výhodné, ale jako
+             „ověřit cenu". Hranice je úsudek, ne měření — rozdělení slev
+             je plynulé a žádný zlom v datech není (změřeno na 1414
+             nabídkách s odhadem podle velikosti). */
+          pochybna: pod >= MEZ_POCHYBNA
         };
       }
       return null;
@@ -238,6 +258,8 @@
 
     return {
       druhGroup: druhGroup,
+      MEZ_POCHYBNA: MEZ_POCHYBNA,
+      MEZ_SLEVA: MEZ_SLEVA,
       neduveryhodna: neduveryhodna,
       percentil: percentil,
       odhad: odhad,

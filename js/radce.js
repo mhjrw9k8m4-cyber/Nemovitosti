@@ -80,9 +80,19 @@
       return { lvl: 'warn', txt: 'Cena za m² je <b>hluboko pod</b> obvyklou u tohoto druhu pozemku v okolí. To bývá nejčastěji <b>spoluvlastnický podíl</b> (kupujete jen část, ne celou parcelu), pozemek <b>bez přístupu z veřejné cesty</b>, zatížený <b>věcným břemenem</b> — nebo je to chyba v inzerátu. Ověřte si to dřív, než cokoli podepíšete.' };
     }
     var o = model.odhad(d);
-    if (o && o.podleVelikosti && o.podOdhadem >= 25) {
+    if (o && o.podleVelikosti) {
       var kde = window.PK_CENY.kdeText(o.uroven, o.kde);
-      return { lvl: 'ok', txt: 'Cena je <b>o ' + o.podOdhadem + ' % pod</b> obvyklou cenou podobně velkých pozemků téhož druhu ' + kde + '. Může to být příležitost — ale stejně tak důvod ptát se <b>proč</b>: přístup, břemena, tvar parcely.' };
+      /* Sleva přes hranici uvěřitelnosti není příležitost. Rádce to musí
+         říct dřív, než si to člověk přečte jako trhák — a hlavně musí říct
+         totéž, co odznak na kartě. */
+      if (o.pochybna) {
+        return { lvl: 'warn', txt: 'Cena je <b>o ' + o.podOdhadem + ' % pod</b> obvyklou cenou podobně velkých pozemků téhož druhu ' + kde +
+          '. Takový rozdíl už nebývá sleva: nejčastěji je v inzerátu výměra <b>celé parcely</b>, ale prodává se jen <b>spoluvlastnický podíl</b>, ' +
+          'nebo jde o dražbu s jinou výměrou, případně o chybu v ceně. <b>Ověřte si to na listu vlastnictví</b>, než něco podepíšete.' };
+      }
+      if (o.podOdhadem >= 25) {
+        return { lvl: 'ok', txt: 'Cena je <b>o ' + o.podOdhadem + ' % pod</b> obvyklou cenou podobně velkých pozemků téhož druhu ' + kde + '. Může to být příležitost — ale stejně tak důvod ptát se <b>proč</b>: přístup, břemena, tvar parcely.' };
+      }
     }
     return null;
   }

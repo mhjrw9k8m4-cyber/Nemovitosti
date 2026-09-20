@@ -2651,7 +2651,10 @@ body::after{
   .hero-map .hero-head h1{font-size:clamp(29px,8.2vw,42px); max-width:none; margin-bottom:12px;}
   .hero-map .hero-head .eyebrow{margin-bottom:10px;}
   .hero-map .hero-head .hero-stats{margin-top:14px;}
-  .hero-map .hero-head .hero-pod{margin-top:8px; font-size:12px;}
+  /* „celá ČR · zdarma, bez registrace" říká přesně totéž co nadstavec nad
+     nadpisem („POZEMKY NA PRODEJ I V DRAŽBĚ · CELÁ ČR"). Na monitoru to
+     nevadí, na telefonu je to řádek navíc mezi člověkem a hledáním. */
+  .hero-map .hero-head .hero-pod{display:none;}
   .hero-map{padding:0 0 26px;}
 }
 
@@ -2863,18 +2866,22 @@ h1, h2, h3,
 .hl-fact:focus-visible{outline:2px solid #E4C089; outline-offset:4px; border-radius:2px;}
 @media (max-width:760px){
   /* Na telefonu stály tyhle tři údaje pod sebou a každý zabral dva řádky —
-     dohromady 208 px, tedy čtvrtina obrazovky jen na ně. Než se člověk
-     dostal k hledání, musel projet celou první obrazovku.
-     Popisek a hodnota jdou vedle sebe na JEDEN řádek: totéž sdělení,
-     třetinová výška. */
-  .hero-live{flex-direction:column; gap:0; margin-top:16px;}
-  .hl-fact{flex-direction:row; align-items:baseline; justify-content:space-between;
-    gap:12px; border-right:0; margin-right:0; padding:8px 0;
-    border-bottom:1px solid rgba(255,255,255,0.12);}
-  .hl-fact:last-child{border-bottom:0;}
-  .hl-fact .hl-k{flex:none; font-size:9.5px; letter-spacing:0.08em;}
-  .hl-fact .hl-v{font-size:14.5px; text-align:right; min-width:0;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+     dohromady 208 px, tedy čtvrtina obrazovky jen na ně. Pak jeden řádek na
+     údaj, to bylo 105 px. Pořád moc: pole „Hledat obec" kvůli tomu leželo
+     až v druhé polovině obrazovky, takže první, co člověk na webu o pozemcích
+     uvidí, není hledání pozemků.
+     Teď je z toho JEDEN vodorovný pás, po kterém se dá posunout prstem.
+     Popisek zmizel, hodnota mluví sama („zítra · Karlovice"). 44 px. */
+  .hero-live{flex-direction:row; flex-wrap:nowrap; gap:0; margin-top:12px;
+    overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch;
+    border-top:1px solid rgba(255,255,255,0.20); padding-top:9px;}
+  .hero-live::-webkit-scrollbar{display:none;}
+  .hl-fact{flex:0 0 auto; flex-direction:row; align-items:baseline; gap:6px;
+    padding:0 13px 0 0; margin-right:13px;
+    border-right:1px solid rgba(255,255,255,0.16); border-bottom:0;}
+  .hl-fact:last-child{border-right:0; margin-right:0; padding-right:0;}
+  .hl-fact .hl-k{flex:none; font-size:9px; letter-spacing:0.07em;}
+  .hl-fact .hl-v{font-size:13.5px; white-space:nowrap;}
 }
 
 
@@ -2932,6 +2939,9 @@ h1, h2, h3,
 .pz-odhad .mo-radek.mo-hlavni{border-top-color:var(--line-strong);}
 .pz-odhad .mo-radek.mo-hlavni .mo-k, .pz-odhad .mo-radek.mo-hlavni .mo-v{color:var(--text-ondark);}
 .pz-odhad .mo-rozdil, .pz-odhad .mo-rozdil b{color:var(--accent-warm);}
+/* Pochybný rozdíl je varování, ne radostná zpráva — má barvu exekuce, ne mosaz. */
+.mo-rozdil.mo-pochybna, .pz-odhad .mo-rozdil.mo-pochybna,
+.mo-rozdil.mo-pochybna b, .pz-odhad .mo-rozdil.mo-pochybna b{color:var(--c-exekuce-ink);}
 .pz-odhad .mo-pozn{color:var(--text-ondark-mute);}
 .pz-odhad .mo-pozn b{color:var(--text-ondark);}
 .pz-verdict.warn{--vc:#8A5512; border-color:rgba(138,85,18,0.34); background:rgba(138,85,18,0.08);}

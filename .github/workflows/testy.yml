@@ -136,6 +136,9 @@ jobs:
       - name: Čerstvost dat a stav zdrojů
         run: node scripts/test-cerstvost.mjs
 
+      - name: Co se doporučuje a co se má ověřit
+        run: node scripts/test-doporuceni.mjs
+
       - name: Hlídané místo a pozemky v okolí
         run: node scripts/test-okoli.mjs
 

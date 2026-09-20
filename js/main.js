@@ -999,6 +999,10 @@
    * tvrdily každá něco jiného. */
   var MODEL = (window.PK_CENY && window.PK_CENY.postav)
     ? window.PK_CENY.postav(DATA) : null;
+  // Hranice bere web z cenového modelu, ne z vlastních čísel — jinak by si
+  // mapa, karta a stránka pozemku u téhož pozemku zase odporovaly.
+  var MEZ_SLEVA = (MODEL && MODEL.MEZ_SLEVA) || 15;
+  var MEZ_POCHYBNA = (MODEL && MODEL.MEZ_POCHYBNA) || 60;
   function cenaNeduveryhodna(d) { return MODEL ? MODEL.neduveryhodna(d) : false; }
   function dealInfo(d) { return MODEL ? MODEL.percentil(d) : null; }
   function priceBarHtml(d) {
@@ -2155,10 +2159,22 @@
   // slouží jen k pořadí, žádné vymyšlené „sledující" se nikde nezobrazují.
   function demand(d) {
     if (d._demand != null) return d._demand;
-    var perM2 = hasArea(d) ? d.price / d.area : 500;
     var typeBonus = { drazba: 22, exekuce: 18, obec: 12, sale: 8, majitel: 10 }[d.type] || 0;
-    var deal = Math.max(0, Math.min(58, (900 - perM2) / 18)); // výhodnost s nasycením
-    d._demand = Math.max(6, Math.round(9 + typeBonus + deal));
+    /* Dřív se tu počítalo (900 − cena za m²) / 18 — tedy ČÍM LEVNĚJŠÍ ZA METR,
+       TÍM VÝŠ, bez ohledu na druh pozemku a na okolí. Orná půda za 6 Kč/m²
+       tím porazila všechno ostatní a web ji vystrčil nahoru se štítkem
+       „Doporučujeme" — přitom je to skoro jistě spoluvlastnický podíl.
+       Doporučení se teď opírá o SLEVU PROTI SROVNATELNÝM POZEMKŮM, ne
+       o absolutní cenu, a odmění jen pásmo, kde je sleva uvěřitelná.
+       Nad hranicí uvěřitelnosti se body nedávají vůbec: co neumíme
+       vysvětlit, to nemůžeme doporučit. */
+    var body = 0;
+    var o = MODEL ? MODEL.odhad(d) : null;
+    if (o && o.podleVelikosti && !o.pochybna && o.podOdhadem >= MEZ_SLEVA) {
+      // 15 % → 0 bodů, 50 % a výš → plných 45.
+      body = Math.min(45, Math.round((o.podOdhadem - MEZ_SLEVA) * 45 / 35));
+    }
+    d._demand = Math.max(6, Math.round(9 + typeBonus + body));
     return d._demand;
   }
 
@@ -2202,7 +2218,12 @@
     // (dřív svítil na 3 kartách za sebou = vypadalo to jako spam).
     var hotIds = {};
     if (vis.length >= 5) {
-      vis.slice().sort(function (a, b) { return demand(b) - demand(a); }).slice(0, 1)
+      /* Pojistka navíc: i kdyby se skóre někdy počítalo jinak, štítek
+         „Doporučujeme" nesmí nikdy sednout na nabídku, kterou sami
+         označujeme za pochybnou. Doporučit a zároveň varovat nejde. */
+      vis.slice()
+        .filter(function (d) { var o = MODEL ? MODEL.odhad(d) : null; return !(o && o.pochybna); })
+        .sort(function (a, b) { return demand(b) - demand(a); }).slice(0, 1)
         .forEach(function (d) { hotIds[d._id] = true; });
     }
     var top = vis.slice(0, LIST_LIMIT);
@@ -2256,14 +2277,22 @@
       // Varování o nevěrohodné ceně patří na KARTU, ne jen do detailu.
       // Kdo do detailu neklikne, dozví se to až pozdě — a zrovna tuhle
       // informaci potřebuje vidět hned.
-      if (MODEL && MODEL.neduveryhodna(d)) {
+      var _odhadPochybny = MODEL && (function () { var x = MODEL.odhad(d); return !!(x && x.podleVelikosti && x.pochybna); })();
+      if (MODEL && MODEL.neduveryhodna(d) && !_odhadPochybny) {
         chips.push('<span class="opp-overit" title="Cena za m² je hluboko pod obvyklou — bývá to spoluvlastnický podíl, pozemek bez přístupu nebo chyba v inzerátu">cena k ověření</span>');
       }
       var _od = MODEL ? MODEL.odhad(d) : null;
-      // Slevu tvrdíme jen tam, kde se srovnávalo s podobně velkými pozemky.
-      // Jinak by dvanáctihektarový pozemek vždycky vyšel jako trhák jen proto,
-      // že velké pozemky mají nižší cenu za m².
-      if (_od && _od.podleVelikosti && _od.podOdhadem >= 25) {
+      /* Sleva se tvrdí jen tam, kde se srovnávalo s podobně velkými pozemky
+         (jinak by každý dvanáctihektarový vyšel jako trhák) A ZÁROVEŇ kde
+         je uvěřitelná. „−91 % proti okolí" není sleva, je to varování:
+         u orné půdy za 6 Kč/m² jde skoro jistě o spoluvlastnický podíl,
+         jinou výměru v dražbě nebo špatně načtenou cenu. Dřív měly tyhle
+         nabídky zelený odznak se slevou a sedávaly úplně nahoře. */
+      if (_od && _od.podleVelikosti && _od.pochybna) {
+        chips.push('<span class="opp-overit" title="Cena je o ' + _od.podOdhadem +
+          ' % pod obvyklou cenou podobných pozemků — to už nebývá sleva, ale spoluvlastnický podíl, jiná výměra v dražbě nebo chyba v inzerátu. Ověřte si podklady.">' +
+          'ověřit cenu</span>');
+      } else if (_od && _od.podleVelikosti && _od.podOdhadem >= 25) {
         // Na kartě musí odznak vyjít na JEDEN řádek i na úzkém displeji.
         // „o 65 % pod obvyklou" verzálkami se na mobilu lámalo na dva.
         chips.push('<span class="opp-deal" title="Cena je o ' + _od.podOdhadem +
@@ -2754,7 +2783,12 @@
     var best = null, bestO = null;
     DATA.forEach(function (d) {
       var o = MODEL ? MODEL.odhad(d) : null;
-      if (!o || !o.podleVelikosti || o.podOdhadem < 25) return;
+      /* Tohle místo je na webu to nejvíc vidět — svítí to v úvodu jako
+         „NEJVÝHODNĚJŠÍ DNES". A dokud se bralo prosté maximum slevy, svítil
+         tu Doubravník „o 95 % pod obvyklou": stavební pozemek za 59 Kč/m²,
+         tedy skoro jistě podíl nebo špatně zařazený druh. Nejpodezřelejší
+         nabídka na webu jako titulek. Pochybné sem nepatří. */
+      if (!o || !o.podleVelikosti || o.pochybna || o.podOdhadem < 25) return;
       if (!bestO || o.podOdhadem > bestO.podOdhadem) { bestO = o; best = d; }
     });
     vypln('deal', null, best ? ('o ' + bestO.podOdhadem + ' % pod obvyklou · ' + best.place) : '', best);
@@ -2873,7 +2907,9 @@
       mistoPruh.classList.remove('ma-novinky');
       mistoPruh.classList.add('bez-mista');
       hl.textContent = 'Hlídejte si okolí svého pozemku';
-      pod.textContent = 'Označte místo a při každé návštěvě uvidíte, co u něj přibylo.';
+      // Tlačítko „Pozemky v okolí" hned pod proužkem dělá totéž, jen podle
+      // polohy telefonu — ať se o něm ví a nevznikají dvě tlačítka na totéž.
+      pod.textContent = 'Klepněte na mapu, nebo použijte „Pozemky v okolí" níž. Při každé návštěvě pak uvidíte, co u vás přibylo.';
       if (akceZadne) akceZadne.hidden = false;
       if (akceMam) akceMam.hidden = true;
       return;
@@ -2922,7 +2958,6 @@
      nic. Teď je to přepínač: buď se dívám na celou republiku, nebo na svoje
      okolí, a je vidět, ve kterém stavu jsem. */
   var zapnoutBtn = document.getElementById('misto-zapnout');
-  var polohaBtn = document.getElementById('misto-poloha');
   function obnovZapnout() {
     if (!zapnoutBtn) return;
     var zap = okoliAktivni();
@@ -2935,8 +2970,6 @@
     else if (mojeMisto) { enterNearAt({ lat: mojeMisto.lat, lng: mojeMisto.lng }, !!mojeMisto.pribl, mojeMisto.nazev); }
     obnovZapnout();
   });
-  // Poloha přímo z proužku — kdo chce hlídat, kde bydlí, nemusí trefovat mapu.
-  if (polohaBtn) polohaBtn.addEventListener('click', function () { enterNear(); });
 
   if (vybratBtn) vybratBtn.addEventListener('click', function () {
     vybiramMisto = true;
