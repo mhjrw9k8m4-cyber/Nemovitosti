@@ -33,6 +33,12 @@ jobs:
             echo "ok  $f"
           done
 
+      - name: Dotazy do databáze proti schématu
+        run: node scripts/test-sloupce.mjs
+
+      - name: Razítka verzí (aby lidem nechodila stará kopie)
+        run: node scripts/test-verze.mjs
+
       - name: Platnost datových souborů
         run: |
           set -e

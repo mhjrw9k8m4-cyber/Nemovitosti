@@ -74,9 +74,18 @@ async function kontext(pohybVypnut) {
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(4200);
 
+  /* V CI se Leaflet stahuje ze sítě, takže se hranice krajů vykreslí později
+     než na místním stroji. Pevné čekání 4 sekundy tam nestačilo a test se
+     místo poctivé hlášky ukončil výjimkou uprostřed — v logu pak nebylo
+     vidět, co vlastně neprošlo. Čeká se proto na hranice, ne na hodinky. */
   const kraje = p.locator('#leaflet-map path.leaflet-interactive');
+  await p.waitForSelector('#leaflet-map path.leaflet-interactive', { timeout: 25000 }).catch(() => {});
   const pocet = await kraje.count();
   pravda('kraje se na mapě vykreslily', pocet >= 10, `jen ${pocet}`);
+  if (pocet < 4) {
+    pravda('bez hranic krajů nemá smysl zkoušet tečky', false,
+      'mapa se nevykreslila — zbytek kontrol se přeskakuje');
+  } else {
   // Dokud není vybraný kraj, tečky nejsou klikací — a tedy ani nemají reagovat.
   const box = await p.locator('#leaflet-map').boundingBox();
   await p.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.45);
@@ -148,6 +157,7 @@ async function kontext(pohybVypnut) {
       'tečka zůstala zvýrazněná, i když už na ní kurzor není');
   }
   pravda('při najíždění po mapě nespadl žádný skript', chyby.length === 0, chyby[0]);
+  }
   await ctx.close();
 }
 

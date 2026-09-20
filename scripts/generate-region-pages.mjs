@@ -5,9 +5,28 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createHash } from 'node:crypto';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const V = 'v=20260902f';
+/* Razítko proti staré kopii v prohlížeči. Dřív to bylo ručně psané číslo
+   (v=20260902f) — a při úpravě stylu se zapomnělo přepsat, takže lidem
+   chodila pořád stará verze a z nových úprav nebylo vidět nic. Nikde přitom
+   nic nespadlo. Teď se počítá z OBSAHU souboru, takže se změní právě tehdy,
+   když se změní soubor. Hlídá to scripts/orazitkuj-verze.mjs --kontrola. */
+function razitko(rel) {
+  try {
+    return 'v=' + createHash('sha1').update(fs.readFileSync(path.join(ROOT, rel))).digest('hex').slice(0, 8);
+  } catch (e) { return 'v=0'; }
+}
+const V = {
+  css: razitko('css/styles.css'),
+  config: razitko('js/config.js'),
+  auth: razitko('js/auth.js'),
+  hlidani: razitko('js/hlidani-logika.js'),
+  feed: razitko('js/upozorneni-feed.js'),
+  upoz: razitko('js/upozorneni.js'),
+  pridat: razitko('js/pridat.js'),
+};
 /* Práh byl 10 a bez vlastní stránky kvůli tomu zůstávalo DVANÁCT okresů,
    které data mají — mimo jiné Most. Člověk z Mostu klikl na svůj okres
    a skončil na obecné mapě. Stránka s pěti nabídkami je pořád stránka;
@@ -179,7 +198,7 @@ function head(title, desc, canonicalPath, ld, crumbs){
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?${V}">
+  <link rel="stylesheet" href="css/styles.css?${V.css}">
 ${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\n' : ''}</head>
 <body>
 
@@ -223,16 +242,16 @@ function footer(){
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="js/pridat.js?${V}" defer></script>
+<script src="js/pridat.js?${V.pridat}" defer></script>
 <!-- Upozornění v menu: nepřečtené zprávy a nové pozemky z hlídání. Musí
      být i tady: tyhle stránky se generují znovu při každém běhu datového
      robota, takže co není v šabloně, to příští běh smaže — a lidé
      z vyhledávání chodí nejčastěji právě na stránky okresů. -->
-<script src="js/config.js?${V}" defer></script>
-<script src="js/auth.js?${V}" defer></script>
-<script src="js/hlidani-logika.js?${V}" defer></script>
-<script src="js/upozorneni-feed.js?${V}" defer></script>
-<script src="js/upozorneni.js?${V}" defer></script>
+<script src="js/config.js?${V.config}" defer></script>
+<script src="js/auth.js?${V.auth}" defer></script>
+<script src="js/hlidani-logika.js?${V.hlidani}" defer></script>
+<script src="js/upozorneni-feed.js?${V.feed}" defer></script>
+<script src="js/upozorneni.js?${V.upoz}" defer></script>
 </body>
 </html>
 `;

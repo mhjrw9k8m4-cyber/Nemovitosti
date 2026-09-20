@@ -87,7 +87,11 @@ async function telefon(poloha) {
   pravda('a mapu k tomu opravdu ukáže', rezim.mapaVidet,
     'web řekne „klepněte do mapy" a mapa přitom není vidět');
 
+  // V CI se Leaflet stahuje ze sítě — na mapu se čeká, ne na hodinky.
+  await p.waitForSelector('#leaflet-map .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
   const box = await p.locator('#leaflet-map').boundingBox();
+  pravda('mapa má na obrazovce svoje místo', !!box && box.height > 200,
+    box ? `jen ${Math.round(box.height)} px na výšku` : 'mapa se nevykreslila');
   await p.mouse.click(box.x + box.width / 2, box.y + Math.min(box.height / 2, 300));
   await p.waitForTimeout(1600);
   const po = await p.evaluate(() => ({

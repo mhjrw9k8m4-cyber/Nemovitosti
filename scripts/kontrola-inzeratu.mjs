@@ -127,7 +127,14 @@ async function main() {
     return;
   }
 
-  const inzeraty = await sb(`listings?select=id,place,okres,url,photos,status&status=eq.approved&order=created_at.desc&limit=${LIMIT}`);
+  /* Pozor na „url": tabulka listings takový sloupec NEMÁ a nikdy neměla —
+     odkaz ven nosí jen sbírané příležitosti, ne inzeráty od lidí. Supabase
+     na neznámý sloupec odmítne celý dotaz (400, „column listings.url does
+     not exist"), takže tahle kontrola od začátku padala hned na prvním
+     kroku a fotky v inzerátech nikdo nikdy neprověřil. Dál v kódu je
+     větev `if (inz.url)`, která to snese — chyběl jen tenhle sloupec
+     v dotazu. */
+  const inzeraty = await sb(`listings?select=id,place,okres,photos,status&status=eq.approved&order=created_at.desc&limit=${LIMIT}`);
   log(`Inzerátů ke kontrole: ${Array.isArray(inzeraty) ? inzeraty.length : 0}`);
   if (!Array.isArray(inzeraty) || !inzeraty.length) { log('== Hotovo =='); return; }
 
