@@ -1941,3 +1941,66 @@ body{background:var(--bg) var(--grad-plocha) fixed; background-size:cover;}
 /* 6. Měděná linka nad nadpisem sekce je taky přechod, ne placka. */
 .section-head::before{background:var(--grad-warm);}
 .s-linka{background:var(--grad-warm);}
+
+
+/* =====================================================================
+   DOTYKOVÉ TERČE
+   Naměřeno na mobilu: hamburger 36×28, filtry 30 px na výšku, rychlé
+   hodnoty 26 px. Norma to sice ještě propustí, ale palec ne — a právě
+   tohle dělá rozdíl mezi „web funguje" a „web se dobře ovládá".
+   Vizuálně zůstávají stejně velké; zvětšuje se plocha, na kterou jde
+   klepnout.
+   ===================================================================== */
+@media (max-width:880px){
+  .nav-toggle{width:44px; height:44px; align-items:center; justify-content:center; padding:0;}
+  .filter-chip{min-height:40px;}
+  .msf-quick button, .mc-chips button{min-height:36px;}
+}
+/* Odkazy v patičce a v drobečkové navigaci dostanou svislý prostor —
+   na mobilu se mezi ně jinak špatně trefuje. */
+@media (max-width:880px){
+  .foot-col a{padding:4px 0; display:inline-block;}
+  .crumbs a{padding:3px 0; display:inline-block;}
+}
+
+
+/* =====================================================================
+   PATIČKA
+   Byla nejslabší částí webu: světle šedá plocha s odkazy, bez barvy,
+   bez hloubky. Stránka tím končila do ztracena. Tmavá patička ji
+   uzavře — a spolu s tmavým pásem u hlídání drží web pohromadě, aby
+   ta tmavá sekce uprostřed nepůsobila jako výjimka.
+   ===================================================================== */
+footer{position:relative; isolation:isolate; overflow:hidden; border-top:0;
+  background:linear-gradient(170deg, var(--ink-dark-2) 0%, var(--ink-dark) 55%, #0E121C 100%);
+  color:var(--text-ondeep); padding:52px 0 26px; margin-top:8px;}
+/* Světlo z rohů a katastrální mřížka — stejný jazyk jako tmavý pás. */
+footer::before{content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:radial-gradient(60% 80% at 8% 0%, rgba(168,69,15,.20), transparent 62%),
+             radial-gradient(55% 75% at 96% 100%, rgba(49,79,190,.22), transparent 66%);}
+footer::after{content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background-image:linear-gradient(to right, rgba(255,255,255,.045) 1px, transparent 1px),
+                   linear-gradient(to bottom, rgba(255,255,255,.045) 1px, transparent 1px);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(ellipse 90% 90% at 25% 30%, #000 20%, transparent 100%);
+          mask-image:radial-gradient(ellipse 90% 90% at 25% 30%, #000 20%, transparent 100%);}
+
+footer .wrap{color:var(--text-ondeep-mute);}
+.foot-grid{border-bottom-color:rgba(255,255,255,.14);}
+.foot-brand{color:var(--text-ondeep); font-family:var(--font-display); font-weight:700; font-size:18px;}
+.foot-tag{color:var(--text-ondeep-mute);}
+.foot-col h5{color:var(--accent-warm-bright); letter-spacing:.07em;}
+.foot-col a{color:var(--text-ondeep-mute);}
+.foot-col a:hover{color:var(--text-ondeep);}
+.foot-bottom{color:rgba(255,255,255,.55); border-top:0;}
+.foot-links a{color:var(--text-ondeep-mute);} .foot-links a:hover{color:var(--text-ondeep);}
+footer a:focus-visible{outline-color:var(--accent-warm-bright);}
+
+/* Zbylé drobné ovládací prvky, které našel scripts/test-dotyk.mjs. */
+@media (max-width:880px){
+  .map-select, .map-reset{min-height:38px;}
+  .auth-eye{width:40px; height:40px;}
+  /* „Zapomněli jste heslo?" je tlačítko, ne odkaz ve větě — musí mít
+     plochu, na kterou jde trefit palcem. */
+  .auth-link{min-height:38px; display:inline-flex; align-items:center;}
+}

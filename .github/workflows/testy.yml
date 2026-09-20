@@ -111,3 +111,6 @@ jobs:
 
       - name: Kontrast textu (WCAG AA)
         run: node scripts/test-kontrast.mjs
+
+      - name: Dotykové terče na mobilu
+        run: node scripts/test-dotyk.mjs

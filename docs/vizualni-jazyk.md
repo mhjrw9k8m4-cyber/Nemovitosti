@@ -122,3 +122,27 @@ vlastní tón.** Okem se to nepozná.
 
 > Ověřeno i obráceně: se zhoršenou barvou nadřádku test spadl a našel
 > 8 prvků na třech stránkách.
+
+## Dotažení detailů
+
+Web se procházel stránku po stránce a měřil, ne odhadoval. Co se našlo:
+
+**Barva lišty prohlížeče byla studeně šedá** (`theme-color: #EDEFF4`) na
+všech 108 stránkách — z původní palety. Na mobilu se jí tónuje pruh nad
+stránkou, takže mezi lištou telefonu a webem byl vidět **šev**. Nově
+`#FBFAF8`, tedy barva hlavičky.
+
+**Manifest měl tmavě navy** `#16232F` pro obojí. Po přidání na plochu by
+úvodní obrazovka blikla tmavě a pak naskočila teplá bílá. Nově sedí.
+
+**Dotykové terče byly malé.** Hamburger 36×28, filtry 30 px na výšku,
+rychlé hodnoty 26 px, tlačítko „zobrazit heslo" 35×35. Norma to propustí,
+ale palec ne — a právě tohle dělá rozdíl mezi „web funguje" a „web se
+dobře ovládá". Vizuálně zůstaly stejné; zvětšila se plocha, na kterou jde
+klepnout. Hlídá to `scripts/test-dotyk.mjs` (min. 36 px).
+
+**Patička byla nejslabší část webu** — světle šedá plocha s odkazy, bez
+barvy a bez hloubky, takže stránka končila do ztracena. Je tmavá, se
+stejným jazykem jako pás u hlídání: světlo z rohů, katastrální mřížka,
+měděné nadpisy sloupců. Spolu s tím pásem drží web pohromadě — jedna
+tmavá sekce uprostřed by jinak působila jako výjimka.
