@@ -430,7 +430,8 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    by text proti světlé stránce — tedy proti něčemu, co tam vůbec není.
    Spodní barva #E2D8BC je nejsvětlejší pole z kresby: tmavý přechod nad ní
    tak drží i v tom nejnepříznivějším místě obrazu. */
-.hero-band{position:relative; padding:64px 0 148px;
+/* Pás už nemusí dělat odstupy sám — dělá je vyměřená parcela uvnitř. */
+.hero-band{position:relative; padding:34px 0 132px;
   background:
     linear-gradient(180deg, rgba(21,26,38,.76) 0%, rgba(21,26,38,.68) 55%, rgba(21,26,38,.64) 100%),
     url("../img/uvod-parcely.svg") center / cover no-repeat,
@@ -477,7 +478,10 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 @media (max-width:520px){ .hero-map .map-wide{padding:0 20px;} }
 @media (max-width:880px){
   .hero-map{padding:0 0 40px;}
-  .hero-band{padding:38px 0 96px;}
+  .hero-band{padding:20px 0 86px;}
+  /* Popisek se na úzkém displeji lámal na dvě slova; užší prostrkání
+     a o půl bodu menší písmo ho udrží na jednom řádku. */
+  .hero-map .hero-head .eyebrow{font-size:10px; letter-spacing:0.05em;}
   .hero-map .map-wide{margin-top:-62px;}
   .hero-head{margin-bottom:20px;}
   .hero-head .eyebrow{margin-bottom:12px;}
@@ -2429,47 +2433,63 @@ body::after{
 
 /* =====================================================================
    VYTYČENÁ PARCELA V ÚVODU
-   Web je o pozemcích a katastru. Dosud to byl hezký obrázek polí a na něm
-   text — obraz a sdělení vedle sebe, ne spolu. Nadpis teď stojí UVNITŘ
-   vytyčeného pozemku: čtyři rohové body, mírně nepravidelná hranice (žádná
-   parcela není obdélník), kóta s počtem a souřadnice v rohu.
-   Je to řeč oboru, ne ozdoba — a je to to, co na stránce dělá rukopis.
+   Hranice je RÁMEC textového bloku, ne čára kreslená někam do pásu.
+   Když se kreslila zvlášť, při jiné šířce okna se potkala s písmem a vedla
+   přímo přes něj — na mobilu to bylo vidět okamžitě. Takhle projít nemůže:
+   text má uvnitř svůj odstup a hranice je hranicí toho odstupu.
    ===================================================================== */
-/* Parcela musí končit NAD panelem hledání, jinak jí spodní rohy spadnou
-   na světlou plochu pod pásem a vypadají jako zbloudilé značky.
-   Pozor: samotné „bottom" nestačí — SVG si drží vlastní poměr stran a
-   výšku si určí samo. Výška se proto počítá napřímo. */
-.hero-parcela{position:absolute; left:0; right:0; top:30px; height:calc(100% - 176px);
-  width:100%; z-index:0; pointer-events:none; overflow:visible;}
-.hp-plocha{fill:rgba(255,255,255,0.045);}
-.hp-hrana{fill:none; stroke:rgba(255,255,255,0.62); stroke-width:1.6;
+.hero-plot{position:relative; padding:56px 48px 60px; max-width:1000px; margin:0 auto;}
+.hero-parcela{position:absolute; inset:0; width:100%; height:100%;
+  z-index:0; pointer-events:none;}
+.hp-plocha{fill:rgba(255,255,255,0.05);}
+.hp-hrana{fill:none; stroke:rgba(255,255,255,0.58); stroke-width:1.5;
   stroke-dasharray:16 8 3 8; vector-effect:non-scaling-stroke;}
-.hp-body circle{fill:none; stroke:var(--accent-warm-bright); stroke-width:1.8;
-  vector-effect:non-scaling-stroke;}
-.hp-body path{stroke:var(--accent-warm-bright); stroke-width:1.2; opacity:0.75;
-  vector-effect:non-scaling-stroke;}
 
-/* Kóta: dvě čárky a mezi nimi rozměr — přesně jak se kótuje ve výkresu. */
-.hero-kota{position:absolute; left:50%; transform:translateX(-50%); bottom:96px; z-index:1;
-  display:flex; align-items:center; gap:12px; pointer-events:none; width:min(760px, 72%);}
-.hk-cara{flex:1; height:1px; background:rgba(255,255,255,0.40); position:relative;}
-.hk-cara::before, .hk-cara::after{content:""; position:absolute; top:-4px; width:1px; height:9px;
-  background:rgba(255,255,255,0.40);}
-.hk-cara::before{left:0;} .hk-cara::after{right:0;}
-.hk-txt{font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
-  color:rgba(255,255,255,0.72); white-space:nowrap;}
+/* Rohové vytyčovací značky. Sedí na rozích textového bloku, takže
+   kompozice drží na jakékoli šířce. */
+.hpb{position:absolute; width:18px; height:18px; pointer-events:none;
+  background:
+    linear-gradient(var(--accent-warm-bright), var(--accent-warm-bright)) center/100% 1.4px no-repeat,
+    linear-gradient(var(--accent-warm-bright), var(--accent-warm-bright)) center/1.4px 100% no-repeat;}
+.hpb::after{content:""; position:absolute; inset:4px; border-radius:50%;
+  border:1.6px solid var(--accent-warm-bright);}
+.hpb-lh{left:-9px; top:5px;} .hpb-ph{right:-9px; top:-5px;}
+.hpb-pd{right:-9px; bottom:-1px;} .hpb-ld{left:-9px; bottom:9px;}
 
-.hero-souradnice{position:absolute; right:32px; top:26px; z-index:1; pointer-events:none;
-  font-size:11px; letter-spacing:0.1em; color:rgba(255,255,255,0.56);}
+.hero-souradnice{position:absolute; right:0; top:-26px; z-index:1; pointer-events:none;
+  font-size:11px; letter-spacing:0.1em; color:rgba(255,255,255,0.58);}
 
 @media (max-width:880px){
-  /* Na mobilu je pás nízký — spodní hrana parcely musí skončit AŽ POD
-     řádkem s čísly, jinak přes něj vede čára. Horní hrana zase musí být
-     nad popiskem, ne skrz něj. Kóta se sem už nevejde, tak ji vynecháme;
-     parcela a rohové značky myšlenku unesou samy. */
-  .hero-parcela{top:30px; height:calc(100% - 102px);}
-  .hero-kota{display:none;}
-  .hk-txt{font-size:10px; letter-spacing:0.1em;}
-  .hero-souradnice{right:18px; top:16px; font-size:10px;}
+  .hero-plot{padding:40px 26px 42px;}
+  .hpb{width:14px; height:14px;}
+  .hpb-lh{left:-7px;} .hpb-ph{right:-7px;} .hpb-pd{right:-7px;} .hpb-ld{left:-7px;}
+  .hero-souradnice{top:-20px; font-size:10px;}
 }
 @media (max-width:560px){ .hero-souradnice{display:none;} }
+
+/* =====================================================================
+   ČÍSLA V ÚVODU JAKO TYPOGRAFIE
+   Tři údaje, kterými se web představuje, byly drobný šedý řádek pod
+   nadpisem — schovaly se. Číslo je tu ta nejlepší zpráva, tak ať je psané
+   jako číslo: velká patková číslice, pod ní popisek verzálkami v mono,
+   mezi nimi svislé linky jako v tabulce listu vlastnictví.
+   ===================================================================== */
+.hero-map .hero-head .hero-stats{display:flex; justify-content:center; align-items:stretch;
+  gap:0; margin-top:26px; flex-wrap:nowrap;}
+.hero-map .hero-stats .ts-n{display:flex; flex-direction:column; align-items:center; gap:4px;
+  padding:0 26px; font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
+  color:rgba(255,255,255,0.68); font-family:var(--font-mono); white-space:nowrap;}
+.hero-map .hero-stats .ts-n b{font-family:var(--font-display); font-weight:700;
+  font-variation-settings:'opsz' 72; font-size:clamp(28px,3.4vw,42px); line-height:0.9;
+  letter-spacing:-0.03em; color:#FFFFFF; text-transform:none;}
+.hero-map .hero-stats .ts-sep{width:1px; background:rgba(255,255,255,0.22); align-self:stretch;
+  color:transparent; overflow:hidden; text-indent:-99px;}
+/* Poslední dva údaje jsou věty, ne čísla — patří pod čísla, ne mezi ně. */
+.hero-map .hero-stats > span:not(.ts-n):not(.ts-sep){display:none;}
+.hero-map .hero-head .hero-pod{margin-top:14px; font-size:13px; color:rgba(255,255,255,0.66);
+  font-family:var(--font-mono); letter-spacing:0.04em;}
+@media (max-width:880px){
+  .hero-map .hero-head .hero-stats{margin-top:20px;}
+  .hero-map .hero-stats .ts-n{padding:0 16px; font-size:10px; letter-spacing:0.08em;}
+}
+
