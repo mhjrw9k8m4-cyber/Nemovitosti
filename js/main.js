@@ -2018,8 +2018,23 @@
       var gp = function (n) { var mm = new RegExp('[?&]' + n + '=([^&]*)').exec(location.search); try { return mm ? decodeURIComponent(mm[1]) : ''; } catch (e) { return mm ? mm[1] : ''; } };
       var qv = gp('q'), dv = gp('druh'), mc = parseInt(gp('maxc'), 10) || 0, ma = parseInt(gp('mina'), 10) || 0;
       if (qv && searchEl) { searchEl.value = qv; searchTerm = qv.trim().toLowerCase(); }
-      if (mc && cenaEl) { cenaEl.value = mc; maxPrice = mc; }
-      if (ma && areaEl) { areaEl.value = ma; minArea = ma; }
+      // Cena a výměra jsou rozbalovací seznamy. Odkaz z „Hlídání" může nést
+      // i částku, která mezi nabízenými není — pak ji do seznamu doplníme,
+      // jinak by se filtr tiše nenastavil a člověk by viděl jiné výsledky,
+      // než na jaké si odkaz uložil.
+      var dosad = function (el, v, txt) {
+        if (!el || !v) return;
+        if (el.tagName === 'SELECT') {
+          var ma2 = false;
+          for (var k = 0; k < el.options.length; k++) if (String(el.options[k].value) === String(v)) { ma2 = true; break; }
+          if (!ma2) el.add(new Option(txt, String(v)));
+        }
+        el.value = String(v);
+      };
+      dosad(cenaEl, mc, 'do ' + mc.toLocaleString('cs-CZ') + ' Kč');
+      dosad(areaEl, ma, 'od ' + ma.toLocaleString('cs-CZ') + ' m²');
+      if (mc) maxPrice = mc;
+      if (ma) minArea = ma;
       if (dv && druhEl) {
         var want = dv.toLowerCase();
         for (var oi = 0; oi < druhEl.options.length; oi++) {

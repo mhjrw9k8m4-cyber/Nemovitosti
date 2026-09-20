@@ -180,31 +180,31 @@
               <svg class="msf-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             </summary>
             <div class="map-controls">
-              <label class="mc-field"><span class="mc-cap">Cena do (Kč)</span>
-                <div class="mc-num"><input class="mc-input" id="map-cena" type="number" inputmode="numeric" min="0" step="10000" placeholder="Libovolná" aria-label="Maximální cena v Kč"><span class="mc-unit">Kč</span></div>
-                <div class="mc-chips" data-chips="map-cena">
-                  <button type="button" data-v="100000">100 tis.</button>
-                  <button type="button" data-v="250000">250 tis.</button>
-                  <button type="button" data-v="500000">500 tis.</button>
-                  <button type="button" data-v="1000000">1 mil.</button>
-                  <button type="button" data-v="2000000">2 mil.</button>
-                  <button type="button" data-v="3000000">3 mil.</button>
-                  <button type="button" data-v="5000000">5 mil.</button>
-                  <button type="button" data-v="10000000">10 mil.</button>
-                </div>
+              <label class="mc-field"><span class="mc-cap">Cena do</span>
+                <select class="map-select" id="map-cena" aria-label="Maximální cena">
+                  <option value="">Libovolná cena</option>
+                  <option value="100000">do 100 tis. Kč</option>
+                  <option value="250000">do 250 tis. Kč</option>
+                  <option value="500000">do 500 tis. Kč</option>
+                  <option value="1000000">do 1 mil. Kč</option>
+                  <option value="2000000">do 2 mil. Kč</option>
+                  <option value="3000000">do 3 mil. Kč</option>
+                  <option value="5000000">do 5 mil. Kč</option>
+                  <option value="10000000">do 10 mil. Kč</option>
+                </select>
               </label>
-              <label class="mc-field"><span class="mc-cap">Výměra od (m²)</span>
-                <div class="mc-num"><input class="mc-input" id="map-area" type="number" inputmode="numeric" min="0" step="100" placeholder="Libovolná" aria-label="Minimální výměra v m²"><span class="mc-unit">m²</span></div>
-                <div class="mc-chips" data-chips="map-area">
-                  <button type="button" data-v="200">200</button>
-                  <button type="button" data-v="500">500</button>
-                  <button type="button" data-v="1000">1 000</button>
-                  <button type="button" data-v="2000">2 000</button>
-                  <button type="button" data-v="5000">5 000</button>
-                  <button type="button" data-v="10000">1 ha</button>
-                  <button type="button" data-v="20000">2 ha</button>
-                  <button type="button" data-v="50000">5 ha</button>
-                </div>
+              <label class="mc-field"><span class="mc-cap">Výměra od</span>
+                <select class="map-select" id="map-area" aria-label="Minimální výměra">
+                  <option value="">Libovolná výměra</option>
+                  <option value="200">od 200 m²</option>
+                  <option value="500">od 500 m²</option>
+                  <option value="1000">od 1 000 m²</option>
+                  <option value="2000">od 2 000 m²</option>
+                  <option value="5000">od 5 000 m²</option>
+                  <option value="10000">od 1 ha</option>
+                  <option value="20000">od 2 ha</option>
+                  <option value="50000">od 5 ha</option>
+                </select>
               </label>
               <label class="mc-field"><span class="mc-cap">Druh pozemku</span>
                 <select class="map-select" id="map-druh" aria-label="Druh pozemku"><option value="all">Všechny druhy</option></select>

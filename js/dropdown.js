@@ -1,6 +1,6 @@
-// Parcelka — vlastní hezký rozbalovací seznam (místo ošklivého systémového na iPhonu)
-// + rychlé volby (chips) u ceny a výměry. Panel se pozicuje vůči obrazovce (fixed),
-// takže ho karta neořízne a jde s ním normálně scrollovat.
+// Parcelka — vlastní hezký rozbalovací seznam (místo ošklivého systémového na iPhonu).
+// Panel se pozicuje vůči obrazovce (fixed), takže ho karta neořízne a jde s ním
+// normálně scrollovat.
 (function () {
   function ready(fn) { if (document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
   ready(function () {
@@ -20,7 +20,6 @@
     window.addEventListener('resize', function () { if (opened) close(); });
 
     Array.prototype.forEach.call(document.querySelectorAll('select.map-select'), enhance);
-    Array.prototype.forEach.call(document.querySelectorAll('.mc-chips'), wireChips);
 
     function place(btn, panel) {
       var r = btn.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight, MAXH = 280;
@@ -100,25 +99,5 @@
       buildOptions(); syncLabel();
     }
 
-    // Rychlé volby u ceny/výměry — klepnutím doplní číslo do políčka.
-    function wireChips(box) {
-      var input = document.getElementById(box.getAttribute('data-chips'));
-      if (!input) return;
-      function refresh() {
-        Array.prototype.forEach.call(box.children, function (b) {
-          b.classList.toggle('on', String(input.value) === b.getAttribute('data-v'));
-        });
-      }
-      Array.prototype.forEach.call(box.children, function (b) {
-        b.addEventListener('click', function () {
-          input.value = b.getAttribute('data-v');
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          refresh();
-        });
-      });
-      input.addEventListener('input', refresh);
-      input.addEventListener('pk-reset', refresh);
-      refresh();
-    }
   });
 })();
