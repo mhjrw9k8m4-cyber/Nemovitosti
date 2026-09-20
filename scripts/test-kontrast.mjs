@@ -11,10 +11,14 @@
 // Skript projde stránky, u každého textu dohledá skutečné pozadí (i přes
 // průhledné vrstvy) a spočítá poměr. Hlásí jen to, co normou neprojde.
 import { chromium } from 'playwright-core';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
 const BASE = 'http://127.0.0.1:8310';
+// Místní kopie Leafletu — viz poznámka u ctx.route níž.
+const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const STRANKY = ['index.html', 'cena-pozemku.html', 'pozemky-okres-tabor.html',
   'upozorneni.html', 'zpravy.html', 'hlidani.html', 'pridat.html', 'kontakt.html'];
 
@@ -60,40 +64,46 @@ const MERENI = `(() => {
   //     přesně úvodní plocha webu, tedy to nejviditelnější místo.
   const pozadi = (el) => {
     const zavoje = [];
-    let zaklad = null, e = el, dira = false;
+    let zaklad = null, e = el;
     while (e && !zaklad) {
       const st = getComputedStyle(e);
       if (st.backgroundImage !== 'none') {
         const obr = String(st.backgroundImage);
         // Přechod, který někde přechází do průhledna, holý podklad odhalí.
-        // Souvislý závoj (samé neprůhledné zarážky) ho nikde vidět nenechá.
-        if (/transparent|rgba\([^)]*,\s*0(\.0+)?\s*\)/.test(obr)) dira = true;
+        // Přechod ze samých krycích barev ho nikde vidět nenechá.
+        const dira = /transparent|rgba\([^)]*,\s*0(\.0+)?\s*\)/.test(obr);
         const z = zarazky(obr);
         if (!z.length && obr.indexOf('url(') >= 0) return null;
         const plne = z.filter((c) => c.a >= 0.99);
         if (plne.length) zaklad = plne;
-        else z.filter((c) => c.a > 0.02).forEach((c) => zavoje.push(c));
+        else z.filter((c) => c.a > 0.02).forEach((c) => zavoje.push({ c: c, kryje: !dira && c.a >= 0.5 }));
       }
       if (!zaklad) {
         const c = parse(st.backgroundColor);
+        // Barva pozadí kryje celý prvek — tady žádná díra vzniknout nemůže.
         if (c && c.a >= 0.99) zaklad = [c];
-        else if (c && c.a > 0.02) zavoje.push(c);
+        else if (c && c.a > 0.02) zavoje.push({ c: c, kryje: c.a >= 0.5 });
       }
       e = e.parentElement;
     }
     if (!zaklad) zaklad = [{ r: 255, g: 255, b: 255, a: 1 }];
-    // Holý podklad se počítá jen tam, kde je na něj vidět. Když přes něj leží
-    // souvislý tmavý závoj (třeba obraz úvodní plochy), text na něm nikdy
-    // neleží — a měřit proti němu by znamenalo hlásit chybu, která na webu
-    // není. Dřív se tak hlásil právě celý úvod.
-    const kryje = !dira && zavoje.some((z) => z.a >= 0.5);
+    // Možné podklady. Závoj, který kryje celou plochu (tmavý odznak na fotce,
+    // tmavý přechod přes úvodní obraz), je nad textem VŽDY — nesmí se z výpočtu
+    // vynechat, jinak by test hlásil barvu, která na stránce nikde není.
+    // Závoj s průhledným místem (mesh, jemný lesk) vynechat lze; zkoušíme
+    // proto všechny kombinace těch nekrycích. Bez závojů zůstane holý podklad.
+    const nekryci = zavoje.map((z, i) => (z.kryje ? -1 : i)).filter((i) => i >= 0).slice(0, 4);
+    const kombinaci = 1 << nekryci.length;
     const kandidati = [];
     for (const b of zaklad) {
-      if (!kryje) kandidati.push(b);
-      for (const z of zavoje) kandidati.push(smichej(z, b));
-      if (zavoje.length > 1) {
+      for (let maska = 0; maska < kombinaci; maska++) {
+        const vybrane = zavoje.filter((z, i) => {
+          if (z.kryje) return true;
+          const p = nekryci.indexOf(i);
+          return p < 0 ? true : !!(maska & (1 << p));
+        });
         let v = b;
-        for (let i = zavoje.length - 1; i >= 0; i--) v = smichej(zavoje[i], v);
+        for (let i = vybrane.length - 1; i >= 0; i--) v = smichej(vybrane[i].c, v);
         kandidati.push(v);
       }
     }
@@ -138,6 +148,25 @@ for (const s of STRANKY) {
   const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 900 } });
   await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  // Bez Leafletu se skript mapy ukončí dřív, než vykreslí SEZNAM NABÍDEK —
+  // a test pak měří jen horní část stránky, aniž by o tom věděl. Přesně to
+  // se stalo: lokálně (kde na unpkg.com není přístup) hlásil „všechno
+  // projde", zatímco na serveru padal na barvách v kartách.
+  // Je-li po ruce místní kopie, podstrčíme ji; jinak jde požadavek ven.
+  if (LEAFLET) {
+    await ctx.route('https://unpkg.com/leaflet@**', (r) => {
+      const soubor = path.join(LEAFLET, path.basename(new URL(r.request().url()).pathname));
+      if (!existsSync(soubor)) return r.abort();
+      return r.fulfill({ status: 200, contentType: soubor.endsWith('.css') ? 'text/css' : 'text/javascript',
+        body: readFileSync(soubor) });
+    });
+    // Podpis (integrity) místní kopii nesedí, prohlížeč by ji zahodil.
+    await ctx.route(`${BASE}/${s}`, async (r) => {
+      const o = await r.fetch();
+      return r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8',
+        body: (await o.text()).replace(/\s+integrity="[^"]*"/g, '') });
+    });
+  }
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${s}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
   await p.waitForTimeout(1600);

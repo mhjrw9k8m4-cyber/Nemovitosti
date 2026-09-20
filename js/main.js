@@ -604,6 +604,21 @@
     });
   })();
 
+  // Počty u krajů v rozcestníku. Berou se ze stejných dat jako mapa, aby
+  // se čísla nerozcházela — ručně psané počty by zastaraly hned po prvním
+  // běhu robota.
+  (function () {
+    var bunky = document.querySelectorAll('.kj-c[data-kraj]');
+    if (!bunky.length) return;
+    var poc = {};
+    DATA.forEach(function (d) { var k = krajOf(d); if (k) poc[k] = (poc[k] || 0) + 1; });
+    bunky.forEach(function (el) {
+      var n = poc[el.getAttribute('data-kraj')] || 0;
+      el.textContent = n ? (n + ' ' + plPozemek(n)) : 'zatím žádné';
+      if (!n) el.classList.add('is-zero');
+    });
+  })();
+
   /* ---------- Živý ticker příležitostí ---------- */
   var tickTrack = document.getElementById('ticker-track');
   if (tickTrack) {

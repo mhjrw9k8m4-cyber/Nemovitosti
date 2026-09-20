@@ -10,10 +10,13 @@
 // Měří se JEN samostatná tlačítka a odkazy. Odkaz uvnitř věty se zvětšit
 // nedá a nemá — na ten se míří jinak než na tlačítko.
 import { chromium } from 'playwright-core';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
 const BASE = 'http://127.0.0.1:8310';
+const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const STRANKY = ['index.html', 'pridat.html', 'pozemky-okres-tabor.html', 'upozorneni.html', 'kontakt.html'];
 const MIN = 36;   // nižší než doporučených 44, ale vyšší než dnešní stav
 
@@ -23,6 +26,22 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 const male = new Map();
 for (const s of STRANKY) {
   const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 } });
+  // Bez Leafletu se skript mapy ukončí dřív, než vykreslí karty nabídek —
+  // a jejich tlačítka (srdíčko) by se tím vůbec nezměřila. Je-li po ruce
+  // místní kopie, podstrčíme ji; jinak jde požadavek ven jako dřív.
+  if (LEAFLET) {
+    await ctx.route('https://unpkg.com/leaflet@**', (r) => {
+      const soubor = path.join(LEAFLET, path.basename(new URL(r.request().url()).pathname));
+      if (!existsSync(soubor)) return r.abort();
+      return r.fulfill({ status: 200, contentType: soubor.endsWith('.css') ? 'text/css' : 'text/javascript',
+        body: readFileSync(soubor) });
+    });
+    await ctx.route(`${BASE}/${s}`, async (r) => {
+      const o = await r.fetch();
+      return r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8',
+        body: (await o.text()).replace(/\s+integrity="[^"]*"/g, '') });
+    });
+  }
   await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   const p = await ctx.newPage();
