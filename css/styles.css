@@ -2991,7 +2991,22 @@ h1, h2, h3,
 .mp-zrus{font:inherit; font-size:12px; font-weight:600; color:var(--text-ondark-mute);
   background:none; border:0; border-bottom:1px solid var(--line-strong); padding:0 0 1px; cursor:pointer;}
 .mp-zrus:hover{color:var(--c-exekuce-ink); border-bottom-color:var(--c-exekuce-ink);}
-@media (max-width:560px){ .mp-akce{width:100%; justify-content:space-between;} }
+/* Přepínač „jen okolí". Je to hlavní ovládání celého hlídání — dokud tu
+   nebyl, šlo místo jen uložit a zrušit, a uložené místo přitom se seznamem
+   nic neudělalo. Vypadá jako tlačítko, protože něčím je. */
+.mp-zapnout{font:inherit; font-size:12.5px; font-weight:700; cursor:pointer;
+  padding:7px 13px; min-height:36px; border-radius:var(--r-ovladani);
+  border:1.5px solid var(--copper); background:var(--ink-soft); color:var(--copper);
+  transition:background .15s ease, color .15s ease, border-color .15s ease;}
+.mp-zapnout:hover{background:var(--copper); color:#fff;}
+.mp-zapnout.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
+.mp-druha{background:none;}
+@media (max-width:560px){
+  .mp-akce{width:100%; display:flex; flex-wrap:wrap; gap:8px 10px;}
+  .mp-akce .mp-vybrat, .mp-akce .mp-zapnout{flex:1 1 100%; justify-content:center; text-align:center;}
+  .mp-okruh{flex:1 1 auto;}
+  .mp-zrus{flex:none;}
+}
 
 /* Bez uloženého místa je proužek pozvánka, ne hlášení — tlumený, aby
    nepřetahoval pozornost od vyhledávání, ale viditelný, aby se o funkci

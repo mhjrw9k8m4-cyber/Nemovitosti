@@ -9,7 +9,15 @@
 //    (web ho o to sám požádal), proužek se změnil — a na mapě se nestalo nic.
 //    Kdo se přitom díval na mapu, viděl, že se nic nestalo, a měl pravdu.
 //
-// 2) „POZEMKY V OKOLÍ" MLČELY DESET SEKUND. Hláška „Zjišťuji vaši polohu…"
+// 2) OKOLÍ NEOMEZILO SEZNAM. Tohle byl ten hlavní důvod, proč obojí „moc
+//    nefungovalo". „Pozemky v okolí" seznam jen SEŘADILY podle vzdálenosti —
+//    zůstalo v něm všech 1953 pozemků z celé republiky. „Hlídat lokalitu"
+//    zase jen spočítalo, co u vás od minule přibylo, a na seznam nesáhlo
+//    vůbec. Web tedy napsal „hlídáme Loučeň a okolí do 10 km" a pod tím
+//    vypsal pozemky z celé republiky. Čísla u kategorií k tomu hlásila
+//    „Vše 1940", zatímco v seznamu bylo deset položek.
+//
+// 3) „POZEMKY V OKOLÍ" MLČELY DESET SEKUND. Hláška „Zjišťuji vaši polohu…"
 //    zmizela po 2,6 s, žádost o polohu měla limit 10 s a teprve po něm se
 //    ukázalo okno „Kde hledat?". Mezi tím se nedělo vůbec nic. Na telefonu
 //    s vypnutou polohou se to chová přesně jako rozbité tlačítko.
@@ -108,8 +116,146 @@ async function telefon(poloha) {
     'bez kruhu není poznat, jak velké okolí se vlastně hlídá');
   pravda('místo se uložilo', po.ulozeno);
   pravda('a režim výběru se ukončil', po.rezim === false);
-  pravda('proužek řekne, co se hlídá', /Hlídáme .* do \d+ km/.test(po.pod), po.pod);
+  pravda('proužek řekne, co se hlídá',
+    /Hlídané místo/.test(po.pod) && /okolí do \d+ km/.test(po.pod), po.pod);
   pravda('při výběru místa nespadl žádný skript', chyby.length === 0, chyby[0]);
+  await ctx.close();
+}
+
+// --- 1b) A hlavně: okolí opravdu OMEZÍ seznam ------------------------
+{
+  const { ctx, p, chyby } = await telefon(null);
+  // Nastavíme místo klepnutím do mapy.
+  await p.locator('#misto-vybrat').scrollIntoViewIfNeeded();
+  await p.locator('#misto-vybrat').click();
+  await p.waitForTimeout(1400);
+  await p.waitForSelector('#leaflet-map .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
+  const box = await p.locator('#leaflet-map').boundingBox();
+  const cely = await p.evaluate(() => (document.getElementById('mvt-count') || {}).textContent || '');
+  await p.mouse.click(box.x + box.width * 0.45, box.y + Math.min(box.height * 0.45, 300));
+  await p.waitForTimeout(2200);
+
+  const v = await p.evaluate(() => {
+    const cislo = (t) => { const m = String(t || '').match(/(\d+)/); return m ? +m[1] : null; };
+    const misto = (() => { try { return JSON.parse(localStorage.getItem('pk_misto_v1') || 'null'); } catch (e) { return null; } })();
+    // Vzdálenost každé vypsané karty od uloženého místa se spočítat nedá
+    // (karta nenese souřadnice), takže se porovnává to, co web tvrdí:
+    // číslo v hlavičce, počet v přepínači a čísla u kategorií.
+    return {
+      vSeznamu: cislo((document.getElementById('mvt-count') || {}).textContent),
+      hlavicka: (document.querySelector('.kh-txt b') || {}).textContent || '',
+      pod: (document.querySelector('.kh-txt span') || {}).textContent || '',
+      cipy: [...document.querySelectorAll('.filter-chip')]
+        .filter((b) => b.style.display !== 'none')
+        .map((b) => ({ typ: b.getAttribute('data-type'), n: cislo(b.querySelector('.chip-n')?.textContent) })),
+      misto,
+      karet: document.querySelectorAll('.opp-item').length,
+      // Dvě různé nabídky v jedné vsi jsou normální — duplicita je až tehdy,
+      // když se shoduje celý obsah karty (obec, cena, výměra).
+      karty: [...document.querySelectorAll('.opp-item')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
+    };
+  });
+  const celyPocet = (cely.match(/(\d+)/) || [])[1];
+  pravda('bez okolí je v seznamu celá republika', +celyPocet > 500, `bylo jen ${celyPocet}`);
+  // TOHLE je ta chyba: dřív tu zůstalo 1940.
+  pravda('po nastavení místa se seznam zúží na okolí',
+    v.vSeznamu != null && v.vSeznamu < +celyPocet / 5,
+    `v seznamu zůstalo ${v.vSeznamu} z ${celyPocet} — okolí se neprojevilo`);
+  pravda('hlavička nad mapou říká, že jde o okolí', /okolí/i.test(v.hlavicka), v.hlavicka);
+  pravda('a uvádí okruh v kilometrech', /\d+ km/.test(v.pod), v.pod);
+  // Druhá polovina té chyby: čísla u kategorií zůstávala za celou ČR.
+  const vse = v.cipy.find((c) => c.typ === 'all');
+  pravda('čísla u kategorií sedí s tím, co je v seznamu',
+    vse && vse.n === v.vSeznamu,
+    `„Vše" hlásí ${vse && vse.n}, v seznamu je ${v.vSeznamu}`);
+  const soucet = v.cipy.filter((c) => c.typ !== 'all').reduce((a, c) => a + (c.n || 0), 0);
+  pravda('a dávají dohromady součet', soucet === vse.n, `${soucet} × ${vse.n}`);
+  pravda('místo dostalo jméno podle nejbližší obce', !!(v.misto && v.misto.nazev), JSON.stringify(v.misto));
+
+  // Ve výpisu nesmí být tentýž pozemek dvakrát.
+  const dvakrat = [...new Set(v.karty.filter((o, i) => v.karty.indexOf(o) !== i))];
+  pravda('ve výpisu není táž nabídka dvakrát', dvakrat.length === 0,
+    'opakuje se: ' + dvakrat.map((x) => x.slice(0, 60)).join(' || '));
+  /* Ve vybraném okruhu duplicita být nemusí, takže by tahle kontrola sama
+     mlčela i s rozbitým odstraňováním. Spočítáme si proto rovnou z dat,
+     kolik nabídek po odstranění duplicit zbýt MÁ, a porovnáme s tím, co
+     web hlásí za celou republiku. */
+  const surova = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const klice = new Set(surova.map((d) => [d.place, d.okres, d.price, d.area, d.druh].join('|')));
+  pravda('v datech vůbec nějaké duplicity jsou (jinak test nic nedokazuje)',
+    klice.size < surova.length,
+    `v souboru je ${surova.length} nabídek a všechny jsou jedinečné`);
+  pravda('web ukazuje data bez duplicit',
+    +celyPocet === klice.size,
+    `web hlásí ${celyPocet}, po odstranění duplicit má být ${klice.size} (v souboru ${surova.length})`);
+
+  // Okruh se dá změnit a seznam na to zareaguje.
+  await p.locator('#misto-km').scrollIntoViewIfNeeded();
+  await p.selectOption('#misto-km', '50');
+  await p.waitForTimeout(1600);
+  const siroky = await p.evaluate(() => {
+    const m = String((document.getElementById('mvt-count') || {}).textContent || '').match(/(\d+)/);
+    return { n: m ? +m[1] : null, pod: (document.querySelector('.kh-txt span') || {}).textContent || '' };
+  });
+  pravda('větší okruh ukáže víc pozemků', siroky.n > v.vSeznamu,
+    `do 10 km ${v.vSeznamu}, do 50 km ${siroky.n}`);
+  pravda('a hlavička se změní taky', /50 km/.test(siroky.pod), siroky.pod);
+
+  // A dá se vrátit na celou republiku.
+  await p.locator('#misto-zapnout').scrollIntoViewIfNeeded();
+  await p.locator('#misto-zapnout').click();
+  await p.waitForTimeout(1500);
+  const zpet = await p.evaluate(() => {
+    const m = String((document.getElementById('mvt-count') || {}).textContent || '').match(/(\d+)/);
+    return { n: m ? +m[1] : null, ulozeno: !!localStorage.getItem('pk_misto_v1') };
+  });
+  pravda('přepínač vrátí celou republiku', zpet.n === +celyPocet, `${zpet.n} × ${celyPocet}`);
+  pravda('a místo přitom zůstane uložené', zpet.ulozeno,
+    'vypnutí zobrazení nesmí zahodit hlídané místo');
+  pravda('při práci s okolím nespadl žádný skript', chyby.length === 0, chyby[0]);
+  await ctx.close();
+}
+
+// --- 1c) Prázdný okruh poradí, místo aby mlčel -----------------------
+{
+  const { ctx, p } = await telefon(null);
+  await p.evaluate(() => {
+    // Místo uprostřed republiky s malým okruhem — ať je jistota, že bude prázdno.
+    localStorage.setItem('pk_misto_v1', JSON.stringify({ lat: 49.74, lng: 15.34, km: 2, nazev: null }));
+  });
+  await p.reload({ waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(4200);
+  await p.locator('#misto-zapnout').scrollIntoViewIfNeeded();
+  await p.locator('#misto-zapnout').click();
+  await p.waitForTimeout(1800);
+  const v = await p.evaluate(() => ({
+    zprava: (document.querySelector('.opp-list .map-count') || {}).textContent || '',
+    vetsi: !!document.querySelector('#okoli-vic'),
+    pryc: !!document.querySelector('#okoli-pryc'),
+  }));
+  pravda('prázdný okruh to řekne narovinu', /nic není/.test(v.zprava), v.zprava.slice(0, 90));
+  pravda('a rovnou nabídne větší okruh', v.vetsi,
+    'bez nabídky zůstane člověk u prázdného seznamu a neví, co dál');
+  pravda('i cestu zpátky na celou ČR', v.pryc);
+  // Nabídka musí opravdu fungovat.
+  if (v.vetsi) {
+    await p.locator('#okoli-vic').click();
+    await p.waitForTimeout(1600);
+    const po = await p.evaluate(() => {
+      const m = String((document.getElementById('mvt-count') || {}).textContent || '').match(/(\d+)/);
+      return m ? +m[1] : 0;
+    });
+    pravda('po zvětšení okruhu se něco najde', po > 0, `pořád ${po}`);
+  }
+  // Pády: název obce se nesmí ohýbat („od Loučeň" je stejná bota jako
+  // „v Vysočina kraji").
+  const texty = await p.evaluate(() => [
+    (document.querySelector('.kh-txt b') || {}).textContent,
+    (document.querySelector('.mp-pod') || {}).textContent,
+    (document.querySelector('.opp-list .map-count') || {}).textContent,
+  ].join(' | '));
+  pravda('nikde se neskloňuje název obce', !/\bod [A-ZŠČŘŽÝÁÍÉŮÚĎŤŇ][a-zěščřžýáíéúůďťň]+\b(?! \()/.test(texty),
+    texty.slice(0, 120));
   await ctx.close();
 }
 
@@ -128,7 +274,8 @@ async function telefon(poloha) {
   }));
   pravda('s povolenou polohou se přepne do režimu okolí', /okolí/i.test(v.hlavicka), v.hlavicka);
   pravda('a je vidět, kde jste', v.jaJsemTu);
-  pravda('podnadpis řekne, kolik je pozemků kolem', /km od vás/.test(v.pod), v.pod);
+  pravda('podnadpis řekne okruh i počet',
+    /\d+ km/.test(v.pod) && /pozem/.test(v.pod), v.pod);
   pravda('tlačítko se vrátí do normálního stavu', /Pozemky v okolí/.test(v.tlacitkoText),
     `zůstalo na „${v.tlacitkoText.trim()}"`);
   pravda('při hledání okolí nespadl žádný skript', chyby.length === 0, chyby[0]);
