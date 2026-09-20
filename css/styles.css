@@ -856,6 +856,9 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .md-verdict.good{--vc:#4FA877; border-color:rgba(79,168,119,0.30); background:rgba(79,168,119,0.09);}
 .md-verdict.mid{--vc:var(--copper-bright); border-color:rgba(106,166,242,0.30); background:rgba(106,166,242,0.08);}
 .md-verdict.bad{--vc:#E58A72; border-color:rgba(208,110,90,0.32); background:rgba(208,110,90,0.10);}
+/* Cena, která vypadá nepravděpodobně (zpravidla spoluvlastnický podíl).
+   Varování, ne verdikt — proto jantar, ne červená. */
+.md-verdict.warn{--vc:#E8B341; border-color:rgba(232,179,65,0.38); background:rgba(232,179,65,0.11);}
 .mv-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:7px;}
 .mv-badge{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; letter-spacing:0.01em; color:#0C1811; background:var(--vc); border-radius:var(--r-pill); padding:4px 11px 4px 10px;}
 .mv-badge::before{content:""; width:6px; height:6px; border-radius:50%; background:#0C1811; opacity:0.55;}
@@ -2712,3 +2715,32 @@ h1, h2, h3,
 .clanek .rules-sect h2{letter-spacing:-0.012em;}
 .hero-map .hero-head h1{letter-spacing:-0.018em; line-height:1.0;}
 .rail-mark .rm-n{font-family:var(--font-display);}
+
+
+/* =====================================================================
+   ŽIVÝ PROUŽEK V ÚVODU
+   „1 953 pozemků · 77 okresů" je pravda, ale neříká, jestli se tu něco
+   děje. Tři fakta z dat: nejbližší dražba, kolik přibylo, nejvýhodnější
+   nabídka. Každé vede rovnou na ten pozemek.
+   Klíč je v Plex Mono a prostrkaný, hodnota v antikve — ať je na první
+   pohled vidět, co je popisek a co údaj.
+   ------------------------------------------------------------------ */
+.hero-live{display:flex; flex-wrap:wrap; gap:0; margin-top:30px;
+  border-top:1px solid rgba(255,255,255,0.20);}
+.hl-fact{display:flex; flex-direction:column; gap:5px; padding:16px 26px 0 0;
+  margin-right:26px; text-decoration:none; min-width:0;
+  border-right:1px solid rgba(255,255,255,0.14);}
+.hl-fact:last-child{border-right:0; margin-right:0; padding-right:0;}
+.hl-fact .hl-k{font-family:var(--font-mono); font-size:11px; letter-spacing:0.11em;
+  text-transform:uppercase; color:rgba(255,255,255,0.72);}
+.hl-fact .hl-v{font-family:var(--font-display); font-size:17px; line-height:1.25;
+  color:#FFFFFF; letter-spacing:-0.008em;}
+.hl-fact:hover .hl-v{color:#E4C089;}
+.hl-fact:focus-visible{outline:2px solid #E4C089; outline-offset:4px; border-radius:2px;}
+@media (max-width:760px){
+  .hero-live{flex-direction:column; gap:0; margin-top:24px;}
+  .hl-fact{border-right:0; margin-right:0; padding:13px 0 0;
+    border-bottom:1px solid rgba(255,255,255,0.12); padding-bottom:13px;}
+  .hl-fact:last-child{border-bottom:0;}
+  .hl-fact .hl-v{font-size:16px;}
+}

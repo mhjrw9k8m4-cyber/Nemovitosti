@@ -758,8 +758,42 @@
     Object.keys(idx).forEach(function (k) { idx[k].sort(function (a, b) { return a - b; }); });
     return idx;
   })();
+  // Medián ceny za m² v dané skupině — pro posouzení, jestli je cena vůbec
+  // uvěřitelná.
+  var perM2Median = (function () {
+    var m = {};
+    Object.keys(perM2Index).forEach(function (k) {
+      var a = perM2Index[k];
+      m[k] = a[Math.floor(a.length / 2)];
+    });
+    return m;
+  })();
+  // Nabídka, jejíž cena za m² je pod padesátinou mediánu své skupiny, není
+  // skvělá koupě — je to skoro jistě spoluvlastnický podíl nebo chyba
+  // v inzerátu. Stavební pozemek 3 315 m² za 11 000 Kč (3 Kč/m² proti
+  // mediánu 2 888) vypadal na úvodní stránce jako „levnější než 98 %
+  // podobných". Kdo na to jednou klikne a zjistí, že jde o podíl, podruhé
+  // už žádnému našemu číslu nevěří.
+  // U zemědělské půdy pravidlo prakticky nezabírá (medián 44, nejnižší 5) —
+  // bije jen tam, kde je rozptyl obrovský, tedy u stavebních pozemků.
+  function cenaNeduveryhodna(d) {
+    if (!hasArea(d) || !d.price) return false;
+    var med = perM2Median[d.type + '|' + druhGroup(d.druh)];
+    if (!med) return false;
+    return (d.price / d.area) < med / 50;
+  }
   function priceBarHtml(d) {
     if (!hasArea(d) || !d.price) return '';
+    // Nepravděpodobně nízkou cenu je poctivější přiznat než z ní dělat
+    // „výhodnou koupi". Zpravidla za ní je spoluvlastnický podíl.
+    if (cenaNeduveryhodna(d)) {
+      return '<div class="md-verdict warn">' +
+        '<div class="mv-top"><span class="mv-badge">Cena k ověření</span><span class="mv-cmp">Cena za m²</span></div>' +
+        '<div class="mv-text">Cena za m² je <b>výrazně pod</b> obvyklou u tohoto druhu pozemku. ' +
+        'Často jde o <b>spoluvlastnický podíl</b> nebo chybu v inzerátu — ověřte u zdroje ' +
+        'a v katastru, co se přesně prodává.</div>' +
+        '</div>';
+    }
     var g = druhGroup(d.druh);
     var arr = perM2Index[d.type + '|' + g];
     if (!arr || arr.length < 8) return ''; // bez dostatečného vzorku srovnání neukazujeme
@@ -784,6 +818,7 @@
   // (0 = nejlevnější) a „levnější než X %". null, když není dost srovnání.
   function dealInfo(d) {
     if (!hasArea(d) || !d.price) return null;
+    if (cenaNeduveryhodna(d)) return null;   // podíl nebo překlep, ne příležitost
     var arr = perM2Index[d.type + '|' + druhGroup(d.druh)];
     if (!arr || arr.length < 10) return null;
     if (arr[arr.length - 1] <= arr[0] * 1.2) return null; // ceny skoro stejné → nemá smysl
@@ -2143,6 +2178,86 @@
   refreshFavBtn();
   renderList();
   renderRecent();
+  // ---------------------------------------------------------------
+  // ŽIVÝ PROUŽEK V ÚVODU
+  // Nahoře stálo jen „1 953 pozemků · 77 okresů". Je to pravda, ale nic
+  // to neříká o tom, jestli se tu něco DĚJE — a přesně to člověk na první
+  // obrazovce potřebuje vědět, dřív než začne cokoli dělat.
+  // Tři fakta, všechna počítaná ze skutečných dat při každém načtení:
+  // nejbližší termín dražby, kolik pozemků přibylo, a nejvýhodnější
+  // dnešní nabídka. Když se některé spočítat nedá, ten kousek se
+  // nezobrazí — radši nic než výplň.
+  // ---------------------------------------------------------------
+  function renderHeroLive() {
+    var box = document.getElementById('hero-live');
+    if (!box) return;
+    var dnes = new Date(); dnes.setHours(0, 0, 0, 0);
+    function den(iso) {
+      var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+      if (!m) return null;
+      var d = new Date(+m[1], +m[2] - 1, +m[3]); d.setHours(0, 0, 0, 0);
+      return d;
+    }
+    function zaKolik(d) {
+      var r = Math.round((d - dnes) / 86400000);
+      if (r <= 0) return 'dnes';
+      if (r === 1) return 'zítra';
+      if (r < 5) return 'za ' + r + ' dny';
+      return 'za ' + r + ' dní';
+    }
+    var hotovo = 0;
+    function vypln(fakt, klic, hodnota, cil) {
+      var a = box.querySelector('[data-fakt="' + fakt + '"]');
+      if (!a) return;
+      if (!hodnota) { a.hidden = true; return; }
+      if (klic) a.querySelector('.hl-k').textContent = klic;
+      a.querySelector('.hl-v').textContent = hodnota;
+      if (cil) a.addEventListener('click', function (e) { e.preventDefault(); gotoInzerat(cil); });
+      hotovo++;
+    }
+
+    // 1) Nejbližší dražba — termín je v poli extra („dražba 2026-10-12").
+    var nej = null, nejD = null;
+    DATA.forEach(function (d) {
+      if (d.type !== 'drazba' && d.type !== 'exekuce') return;
+      var m = /(\d{4}-\d{2}-\d{2})/.exec(d.extra || '');
+      if (!m) return;
+      var t = den(m[1]);
+      if (!t || t < dnes) return;                 // prošlé termíny sem nepatří
+      if (!nejD || t < nejD) { nejD = t; nej = d; }
+    });
+    vypln('drazba', null, nej ? (zaKolik(nejD) + ' · ' + nej.place) : '', nej);
+
+    // 2) Kolik přibylo. Přednost má dnešek; když dnes nic, vezmeme týden.
+    var dnesN = 0, tydenN = 0;
+    DATA.forEach(function (d) {
+      var t = den(d.first_seen);
+      if (!t) return;
+      var r = Math.round((dnes - t) / 86400000);
+      if (r === 0) dnesN++;
+      if (r >= 0 && r < 7) tydenN++;
+    });
+    function kusy(n) { return n === 1 ? '1 pozemek' : (n < 5 ? n + ' pozemky' : fmt(n) + ' pozemků'); }
+    if (dnesN > 0) vypln('nove', 'Přibylo dnes', kusy(dnesN));
+    else if (tydenN > 0) vypln('nove', 'Přibylo za týden', kusy(tydenN));
+    else vypln('nove', '', '');
+
+    // 3) Nejvýhodnější dnes — o kolik je pod podobnými nabídkami. Používáme
+    //    tentýž výpočet jako karty níž, ne vlastní (jinak by si dvě čísla
+    //    na jedné stránce odporovala). Holé minimum ceny za m² by sem
+    //    nepatřilo: nejlevnější nabídka bývá podíl nebo chyba v inzerátu.
+    var best = null, bestI = null;
+    DATA.forEach(function (d) {
+      var di = dealInfo(d);
+      if (!di || di.cheaper < 80) return;
+      if (!bestI || di.cheaper > bestI.cheaper) { bestI = di; best = d; }
+    });
+    vypln('deal', null, best ? ('levnější než ' + bestI.cheaper + ' % podobných · ' + best.place) : '', best);
+
+    if (hotovo) box.hidden = false;
+  }
+
+  renderHeroLive();
   renderDeals();
   renderUserListings();
   // Návrat z detailu pozemku (tlačítko „zpět"): vrať mapu přesně tam, kde uživatel skončil.

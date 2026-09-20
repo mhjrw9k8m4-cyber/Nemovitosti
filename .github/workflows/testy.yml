@@ -118,6 +118,9 @@ jobs:
       - name: Ovládání mapy (klepání do plátna)
         run: node scripts/test-mapa.mjs
 
+      - name: Úvodní obrazovka (živá čísla, věrohodnost cen)
+        run: node scripts/test-uvod.mjs
+
       - name: Viditelnost okrajů (WCAG 1.4.11)
         run: node scripts/test-okraje.mjs
 
