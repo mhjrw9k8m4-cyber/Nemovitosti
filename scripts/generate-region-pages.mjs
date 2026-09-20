@@ -286,17 +286,18 @@ for(const okres of eligibleOkres){
   const html = head(title,desc,file,jsonld,crumbs) + `
 <main id="obsah">
 
-  <section class="add-hero">
-    <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
-    <div class="wrap add-wrap">
+  <section class="okr-hero">
+    <div class="okr-band">
+    <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Okres ${esc(okres)}${kraj?' · '+esc(dispK):''}</div>
       <h1>Pozemky v okrese ${esc(okres)}.</h1>
       <p class="sub">Aktuálně evidujeme <b>${count} ${pluralPozemek(count)}</b> v okrese ${esc(okres)} — ${esc(typeParts.join(', '))}. Vše z <b>veřejných zdrojů</b> na jedné mapě, s prokliky na ověření v katastru. ${minP?('Ceny od <b>'+fmt(minP)+' Kč</b>'+(maxP&&maxP!==minP?' do <b>'+fmt(maxP)+' Kč</b>':'')+'.'):''}</p>
     </div>
+    </div>
   </section>
 
   <section class="section" style="padding-top:20px;">
-    <div class="wrap add-wrap">
+    <div class="wrap okr-wrap">
 
       <div class="okr-stats">
         <div class="okr-stat"><b>${count}</b><span>${pluralPozemek(count)}</span></div>
@@ -379,17 +380,18 @@ for(const kraj of eligibleKraj){
   const html = head(title,desc,file,jsonld,crumbs) + `
 <main id="obsah">
 
-  <section class="add-hero">
-    <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
-    <div class="wrap add-wrap">
+  <section class="okr-hero">
+    <div class="okr-band">
+    <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>${esc(meta.disp)}</div>
       <h1>Pozemky ${esc(meta.loc)}.</h1>
       <p class="sub">Aktuálně evidujeme <b>${count} ${pluralPozemek(count)}</b> ${esc(meta.loc)} — ${esc(typeParts.join(', '))}. Vyberte okres, nebo si otevřete celý kraj na mapě. ${minP?('Ceny od <b>'+fmt(minP)+' Kč</b>'+(maxP&&maxP!==minP?' do <b>'+fmt(maxP)+' Kč</b>':'')+'.'):''}</p>
     </div>
+    </div>
   </section>
 
   <section class="section" style="padding-top:20px;">
-    <div class="wrap add-wrap">
+    <div class="wrap okr-wrap">
 
       <div class="okr-stats">
         <div class="okr-stat"><b>${count}</b><span>${pluralPozemek(count)}</span></div>
@@ -407,7 +409,7 @@ ${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more" style="margin-to
         <a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa" class="btn-primary btn-glow">Otevřít na mapě →</a>
       </div>
 
-      <div class="add-card" style="margin-top:22px;">
+      <div class="okr-blok">
         <div class="rules-sect">
           <h2>Vyberte okres</h2>
           <div class="okr-index-grid">
@@ -416,7 +418,7 @@ ${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more" style="margin-to
         </div>
       </div>
 
-      <div class="add-card" style="margin-top:22px;">
+      <div class="okr-blok">
         <div class="rules-sect">
           <h2>Nejlevnější pozemky ${esc(meta.loc)}</h2>
           <p class="rules-note" style="margin-top:0;">Ukázka nejnižších cen napříč krajem. Data z veřejných zdrojů se mohou měnit — aktuální stav ověřte u zdroje a v katastru.</p>
@@ -457,17 +459,18 @@ const drazby = all.filter(o=>o.type==='drazba').sort((a,b)=>(a.price||1e15)-(b.p
   const html = head(title,desc,file,jsonld,crumbs) + `
 <main id="obsah">
 
-  <section class="add-hero">
-    <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
-    <div class="wrap add-wrap">
+  <section class="okr-hero">
+    <div class="okr-band">
+    <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Dražby pozemků · celá ČR</div>
       <h1>Dražby pozemků — aktuální nabídky.</h1>
       <p class="sub">Evidujeme <b>${count} ${pluralPozemek(count)}</b> v dražbě z celé České republiky, z <b>veřejné evidence dražeb</b>. ${minP?('Vyvolávací ceny od <b>'+fmt(minP)+' Kč</b>. '):''}V dražbě jde často pořídit pozemek pod tržní cenou — ale je potřeba znát pravidla.</p>
     </div>
+    </div>
   </section>
 
   <section class="section" style="padding-top:20px;">
-    <div class="wrap add-wrap">
+    <div class="wrap okr-wrap">
 
       <div class="add-cross" style="margin-top:0;">
         <div class="acx-copy">
@@ -552,7 +555,7 @@ ${rows}
   const chips = list => list.map(x=>`<a class="okr-place" href="${okrLink(x.ok)}" style="text-decoration:none;">${esc(x.ok)} <b>${fmt(x.s.med)} Kč/m²</b></a>`).join('<span class="crumb-sep" aria-hidden="true">·</span> ');
   const highlight = (cheapest.length && dearest.length) ? `
       <div class="okr-stats" style="gap:14px;">
-        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span style="color:var(--c-sale,#3E9B63);">Nejlevnější zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(cheapest)}</div></div>
+        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span style="color:var(--c-sale-ink,#3C55A2);">Nejlevnější zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(cheapest)}</div></div>
         <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span style="color:var(--c-exekuce-ink,#AE1E1E);">Nejdražší zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(dearest)}</div></div>
       </div>` : '';
 
@@ -565,17 +568,18 @@ ${rows}
   const html = head(title,desc,file,jsonld,crumbs) + `
 <main id="obsah">
 
-  <section class="add-hero">
-    <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
-    <div class="wrap add-wrap">
+  <section class="okr-hero">
+    <div class="okr-band">
+    <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Cenový přehled · celá ČR</div>
       <h1>Kolik stojí pozemek?</h1>
       <p class="sub">Jednoduchá odpověď na otázku, kterou si klade každý kupující: <b>kolik je metr čtvereční pozemku?</b> Spočítáme <b>orientační medián</b> z aktuálních nabídek na Parcelce — zvlášť pro pole, les i zahradu, protože cena za m² se u nich zásadně liší. Takový přehled zdarma nikde jinde nenajdete.</p>
     </div>
+    </div>
   </section>
 
   <section class="section" style="padding-top:20px;">
-    <div class="wrap add-wrap">
+    <div class="wrap okr-wrap">
 
       <div class="add-card">
         <div class="rules-sect">
@@ -660,17 +664,18 @@ const idxCrumbs=[{name:'Mapa', href:'index.html', abs:SITE},{name:'Pozemky podle
 const idxHtml = head(idxTitle,idxDesc,'pozemky-podle-okresu.html',idxJsonld,idxCrumbs) + `
 <main id="obsah">
 
-  <section class="add-hero">
-    <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
-    <div class="wrap add-wrap">
+  <section class="okr-hero">
+    <div class="okr-band">
+    <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Pozemky podle regionu</div>
       <h1>Pozemky podle krajů a okresů.</h1>
       <p class="sub">Vyberte kraj nebo okres a prohlédněte si aktuální nabídky pozemků — prodeje, dražby i exekuce z veřejných zdrojů. Pokryto <b>${krajPages.length} krajů</b> a <b>${okresPages.length} okresů</b>, přes <b>${fmt(totalListed)} ${pluralPozemek(totalListed)}</b> na jedné mapě.</p>
     </div>
+    </div>
   </section>
 
   <section class="section" style="padding-top:20px;">
-    <div class="wrap add-wrap">
+    <div class="wrap okr-wrap">
 
       <div class="add-cross" style="margin-top:0;">
         <div class="acx-copy">

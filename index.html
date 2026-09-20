@@ -148,6 +148,24 @@
   <!-- 1 · MAPA JAKO HRDINA -->
   <section class="hero-map" id="mapa">
     <div class="hero-band">
+      <!-- Vyměřená parcela. Web je o katastru, tak ať tak i vypadá: nadpis
+           stojí uvnitř skutečně vytyčeného pozemku — rohové body, kóta
+           s rozměrem, souřadnice. Je to kresba, ne fotka z fotobanky. -->
+      <svg class="hero-parcela" viewBox="0 0 1200 460" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <polygon class="hp-plocha" points="96,58 1104,32 1092,402 84,424"/>
+        <polygon class="hp-hrana"  points="96,58 1104,32 1092,402 84,424"/>
+        <!-- Rohové body: kroužek s křížkem, jak se značí vytyčený bod. -->
+        <g class="hp-body">
+          <g transform="translate(96,58)"><circle r="7"/><path d="M-11 0h22M0 -11v22"/></g>
+          <g transform="translate(1104,32)"><circle r="7"/><path d="M-11 0h22M0 -11v22"/></g>
+          <g transform="translate(1092,402)"><circle r="7"/><path d="M-11 0h22M0 -11v22"/></g>
+          <g transform="translate(84,424)"><circle r="7"/><path d="M-11 0h22M0 -11v22"/></g>
+        </g>
+      </svg>
+      <div class="hero-kota" aria-hidden="true">
+        <span class="hk-cara"></span><span class="hk-txt mono">1 953 parcel</span><span class="hk-cara"></span>
+      </div>
+      <div class="hero-souradnice mono" aria-hidden="true">49°48′57″ N &nbsp; 15°28′14″ E</div>
       <div class="wrap">
         <div class="hero-head reveal">
         <div class="eyebrow"><span class="live-dot"></span>Pozemky na prodej i v dražbě · celá ČR</div>
