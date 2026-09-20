@@ -31,11 +31,15 @@ jobs:
         with:
           node-version: '20'
       - name: Rozeslat upozornění
+        # Tenhle běh četl nastavení z „Variables", zatímco update-data.yml
+        # z „Secrets". Kdo je zadal jen na jednom místě, přišel o ně v tom
+        # druhém — a skript pak tiše sáhl po náhradních hodnotách a posílal
+        # z testovací adresy Resendu, kterou Resend odmítá. Bereme obojí.
         env:
-          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          ALERT_FROM: ${{ vars.ALERT_FROM }}
-          SITE_URL: ${{ vars.SITE_URL }}
-          ALERTS_LIVE: ${{ vars.ALERTS_LIVE }}
+          ALERT_FROM: ${{ vars.ALERT_FROM || secrets.ALERT_FROM }}
+          SITE_URL: ${{ vars.SITE_URL || secrets.SITE_URL }}
+          ALERTS_LIVE: ${{ vars.ALERTS_LIVE || secrets.ALERTS_LIVE }}
         run: node scripts/send-alerts.mjs

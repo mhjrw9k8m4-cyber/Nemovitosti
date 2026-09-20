@@ -123,3 +123,6 @@ jobs:
 
       - name: Odolnost proti vloženému kódu (XSS)
         run: node scripts/test-xss.mjs
+
+      - name: Funkční kontrola stránek a odkazů
+        run: node scripts/test-stranky.mjs

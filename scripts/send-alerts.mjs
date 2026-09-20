@@ -161,6 +161,18 @@ async function main() {
   // Ještě není nastavené (chybí klíč) → tiše skonči ÚSPĚŠNĚ, ať nechodí „failed" e-maily.
   if (!SERVICE_KEY) { log('SUPABASE_SERVICE_ROLE_KEY není nastavený — upozornění zatím nejsou zapnutá. Končím bez akce.'); return; }
   if (LIVE && !RESEND_API_KEY) { log('Ostrý režim zapnutý, ale chybí RESEND_API_KEY — nic neodesílám. Doplňte klíč.'); return; }
+  // Bez vlastní adresy odesílatele se posílá z testovací adresy Resendu, a ta
+  // umí doručit JEDINĚ majiteli účtu — všem ostatním vrátí 403. Dřív se to
+  // zkusilo u každého přihlášeného a teprve z chyby se poznalo, co je špatně.
+  // Nemá smysl to zkoušet: řekneme rovnou, co chybí, a nepošleme nic.
+  if (LIVE && !process.env.ALERT_FROM) {
+    console.error('CHYBA: ALERT_FROM není nastavené, takže by se posílalo z testovací adresy Resendu.');
+    console.error('       Resend z ní doručí jen na adresu majitele účtu; všem ostatním vrátí 403.');
+    console.error('       1) resend.com/domains → Add domain → vložit DNS záznamy (SPF, DKIM) → počkat na „Verified"');
+    console.error('       2) v GitHubu nastavit ALERT_FROM, např. Parcelka <upozorneni@parcelaka.cz>');
+    console.error('          (Settings → Secrets and variables → Actions; stačí Variables nebo Secrets)');
+    process.exit(1);
+  }
 
   // 1) načti příležitosti
   let raw;

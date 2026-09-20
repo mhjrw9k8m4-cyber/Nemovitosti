@@ -61,9 +61,9 @@ jobs:
         continue-on-error: true
         run: node scripts/send-alerts.mjs
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          ALERT_FROM: ${{ secrets.ALERT_FROM }}
-          SITE_URL: ${{ secrets.SITE_URL }}
-          ALERTS_LIVE: ${{ secrets.ALERTS_LIVE }}
+          ALERT_FROM: ${{ vars.ALERT_FROM || secrets.ALERT_FROM }}
+          SITE_URL: ${{ vars.SITE_URL || secrets.SITE_URL }}
+          ALERTS_LIVE: ${{ vars.ALERTS_LIVE || secrets.ALERTS_LIVE }}

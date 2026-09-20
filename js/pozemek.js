@@ -382,9 +382,15 @@
     });
   }
 
+  // I když pozemek nenajdeme, stránka musí mít hlavní nadpis. Bez něj neví,
+  // kde je, ani čtečka pro nevidomé, ani vyhledávač — a je to přesně stav,
+  // do kterého spadne každý starý odkaz na stažený inzerát.
   function renderEmpty() {
+    document.title = 'Pozemek nenalezen — Parcelka';
     document.getElementById('pz-detail').innerHTML =
-      '<div class="pz-empty"><p>Tento pozemek se nepodařilo najít — možná už byl z nabídky stažen.</p><p><a href="index.html#mapa">Zpět na mapu a seznam pozemků</a></p></div>';
+      '<div class="pz-empty"><h1>Pozemek nenalezen</h1>' +
+      '<p>Tento pozemek se nepodařilo najít — možná už byl z nabídky stažen.</p>' +
+      '<p><a href="index.html#mapa">Zpět na mapu a seznam pozemků</a></p></div>';
   }
 
   function kmBetween(la1, ln1, la2, ln2) {
