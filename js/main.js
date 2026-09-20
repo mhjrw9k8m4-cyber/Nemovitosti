@@ -472,7 +472,7 @@
   }
 
   /* ---------- Sestavení webu z dat (ticker + mapa) ---------- */
-  function boot(DATA, KRAJE_GEOM, updated) {
+  function boot(DATA, KRAJE_GEOM, updated, updatedAt, zdrojeStav) {
   // Počítadla napojíme na skutečná data (počet příležitostí, počet okresů)
   (function () {
     var okr = {};
@@ -498,7 +498,17 @@
     if (!el || !updated) return;
     var m = /(\d{4})-(\d{2})-(\d{2})/.exec(updated);
     if (!m) { el.textContent = ''; return; }
-    el.textContent = 'Data aktualizována ' + (+m[3]) + '. ' + (+m[2]) + '. ' + m[1];
+    // Když robot zapsal i přesný čas, ukáže se — „zkontrolováno dnes v 7:00"
+    // řekne o čerstvosti mnohem víc než datum. Starší datové soubory čas
+    // nemají, proto se na něj nespoléhá.
+    var dnesStr = new Date().toISOString().slice(0, 10);
+    var cas = '';
+    if (typeof updatedAt === 'string' && updatedAt) {
+      var t = new Date(updatedAt);
+      if (!isNaN(t)) cas = ' v ' + t.getHours() + ':' + String(t.getMinutes()).padStart(2, '0');
+    }
+    el.textContent = (m[0] === dnesStr ? 'Zdroje zkontrolovány dnes' + cas
+      : 'Zdroje zkontrolovány ' + (+m[3]) + '. ' + (+m[2]) + '. ' + m[1] + cas);
     var upd = new Date(+m[1], +m[2] - 1, +m[3]);
     var days = Math.floor((Date.now() - upd.getTime()) / 86400000);
     if (isFinite(days) && days >= 4) {
@@ -507,6 +517,35 @@
     } else {
       el.classList.remove('is-stale');
     }
+
+    /* Stav jednotlivých zdrojů. Jedno datum za všechno dohromady zakrývá
+     * nejnebezpečnější případ: jeden zdroj tiše přestane vracet data
+     * a web dál tvrdí, že je čerstvý. Tady je u každého vidět, kolik
+     * naposledy přinesl — a když nic nebo spadl, je to hned znát. */
+    if (!Array.isArray(zdrojeStav) || !zdrojeStav.length) return;
+    var pasy = document.querySelectorAll('.source-chip');
+    if (!pasy.length) return;
+    var podleJmena = {};
+    zdrojeStav.forEach(function (z) { if (z && z.nazev) podleJmena[z.nazev.toLowerCase()] = z; });
+    pasy.forEach(function (chip) {
+      var text = (chip.textContent || '').toLowerCase();
+      var nalez = null;
+      Object.keys(podleJmena).forEach(function (k) {
+        // Název v datech je zkratka („OK dražby"), na webu stojí celý název
+        // zdroje — hledá se tedy podřetězec oběma směry.
+        var prvni = k.split(/[\s(]/)[0];
+        if (prvni && prvni.length > 3 && text.indexOf(prvni) !== -1) nalez = podleJmena[k];
+      });
+      if (!nalez) return;
+      var znacka = document.createElement('span');
+      znacka.className = 'src-stav' + (nalez.stav === 'ok' && nalez.pocet ? '' : ' src-zle');
+      znacka.textContent = nalez.stav !== 'ok' ? 'nedostupný'
+        : (nalez.pocet ? nalez.pocet + '×' : 'bez záznamů');
+      znacka.title = nalez.stav !== 'ok'
+        ? 'Zdroj při poslední kontrole neodpověděl' + (nalez.chyba ? ': ' + nalez.chyba : '')
+        : 'Při poslední kontrole vrátil ' + nalez.pocet + ' záznamů';
+      chip.appendChild(znacka);
+    });
   })();
 
   // Živé počty u kategorií v sekci „Co na mapě uvidíte"
@@ -1834,7 +1873,11 @@
 
   function visible(d) {
     var okType = activeType === 'all' || d.type === activeType;
-    var okSearch = !searchTerm || (d.place + ' ' + d.okres).toLowerCase().indexOf(searchTerm) !== -1;
+    // Hledá se i podle PARCELNÍHO ČÍSLA. Kdo drží v ruce výpis z katastru,
+    // má po ruce číslo parcely, ne název obce — a dokud se prohledávalo jen
+    // místo a okres, nenašel nic.
+    var okSearch = !searchTerm ||
+      (d.place + ' ' + d.okres + ' ' + (d.parcel || '')).toLowerCase().indexOf(searchTerm) !== -1;
     var okDruh = activeDruh === 'all' || druhGroup(d.druh) === activeDruh;
     var okPrice = !maxPrice || !d.price || d.price <= maxPrice;
     var okArea = !minArea || (hasArea(d) && d.area >= minArea);
@@ -1973,6 +2016,12 @@
        * údaj, kdežto „levnější než 92 % podobných" je pořadí v žebříčku
        * a člověk si pod tím nic nepředstaví. Percentil zůstává jako
        * záloha tam, kde na odhad není dost srovnání. */
+      // Varování o nevěrohodné ceně patří na KARTU, ne jen do detailu.
+      // Kdo do detailu neklikne, dozví se to až pozdě — a zrovna tuhle
+      // informaci potřebuje vidět hned.
+      if (MODEL && MODEL.neduveryhodna(d)) {
+        chips.push('<span class="opp-overit" title="Cena za m² je hluboko pod obvyklou — bývá to spoluvlastnický podíl, pozemek bez přístupu nebo chyba v inzerátu">cena k ověření</span>');
+      }
       var _od = MODEL ? MODEL.odhad(d) : null;
       // Slevu tvrdíme jen tam, kde se srovnávalo s podobně velkými pozemky.
       // Jinak by dvanáctihektarový pozemek vždycky vyšel jako trhák jen proto,
@@ -2643,6 +2692,6 @@
         d.url = cistyOdkaz(d.url);
         return d;
       });
-      boot(base, kraje || null, j && j.updated);
+      boot(base, kraje || null, j && j.updated, j && j.updated_at, j && j.sources);
     });
 })();

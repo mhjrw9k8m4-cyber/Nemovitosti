@@ -536,10 +536,21 @@ async function main() {
     ['Farmy', fetchFarmy],
   ];
   const results = await Promise.allSettled(SOURCES.map(([, fn]) => fn()));
-  results.forEach((r, i) => {
-    const name = SOURCES[i][0];
-    if (r.status === 'fulfilled') console.log(`Zdroj ${name}: ${(r.value || []).length} záznamů.`);
-    else console.error(`Zdroj ${name} SELHAL: ${r.reason && r.reason.message ? r.reason.message : r.reason}`);
+  // Stav každého zdroje se ZAPISUJE do dat, nejen loguje. Na webu totiž
+  // stálo jen „aktualizováno 20. 9." — jedno datum za všechno dohromady.
+  // Když pak jeden zdroj tiše přestane vracet data, web dál tvrdí, že je
+  // čerstvý. Takhle je u každého zdroje vidět, kdy naposledy odpověděl
+  // a kolik toho přinesl.
+  const zdroje = results.map((r, i) => ({
+    nazev: SOURCES[i][0],
+    stav: r.status === 'fulfilled' ? 'ok' : 'chyba',
+    pocet: r.status === 'fulfilled' ? (r.value || []).length : 0,
+    cas: new Date().toISOString(),
+    chyba: r.status === 'rejected' ? String((r.reason && r.reason.message) || r.reason).slice(0, 140) : null,
+  }));
+  zdroje.forEach((z) => {
+    if (z.stav === 'ok') console.log(`Zdroj ${z.nazev}: ${z.pocet} záznamů.`);
+    else console.error(`Zdroj ${z.nazev} SELHAL: ${z.chyba}`);
   });
 
   const raw = results
@@ -674,7 +685,11 @@ async function main() {
 
   const payload = {
     updated: new Date().toISOString().slice(0, 10),
+    // Přesný čas, ne jen datum: „zkontrolováno dnes v 7:00" říká o čerstvosti
+    // mnohem víc než „aktualizováno 20. 9.", zvlášť když robot běží 4× denně.
+    updated_at: new Date().toISOString(),
     source: 'Veřejné dražby (CEVD, OK dražby) + Státní pozemkový úřad + inzeráty (Bezrealitky, Farmy, příp. Sreality přes Apify)',
+    sources: zdroje,
     opportunities: fresh,
   };
   // Minifikovaně (bez odsazení) — menší soubor = rychlejší načtení na mobilu.

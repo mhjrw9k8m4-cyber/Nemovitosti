@@ -2922,3 +2922,16 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 .gtk-ol{margin:0; padding-left:1.35em; display:flex; flex-direction:column; gap:7px;}
 .gtk-ol li{font-size:14px; line-height:1.55; color:var(--text-ondark);}
 .gtk-ol li::marker{font-family:var(--font-mono); font-size:12px; color:var(--accent-warm);}
+
+/* „Cena k ověření" na kartě. Jantar, ne červená: je to upozornění, ať se
+   člověk podívá, ne tvrzení, že je nabídka podvod. */
+.opp-overit{display:inline-block; font-size:11px; font-weight:700; color:#7C5105;
+  background:rgba(232,179,65,0.16); border:1px solid rgba(124,81,5,0.34);
+  border-radius:var(--r-xs); padding:2px 8px; white-space:nowrap;}
+
+/* Stav zdroje vedle jeho jména. Když jeden zdroj tiše umře, je to vidět
+   tady — ne až za měsíc, kdy si někdo všimne, že dražeb ubylo. */
+.src-stav{margin-left:8px; padding:1px 7px; border-radius:var(--r-pill);
+  font-family:var(--font-mono); font-size:10.5px; font-variant-numeric:tabular-nums;
+  background:rgba(255,255,255,0.12); color:var(--text-ondeep-mute);}
+.src-stav.src-zle{background:rgba(251,43,43,0.22); color:#FFD9D9;}

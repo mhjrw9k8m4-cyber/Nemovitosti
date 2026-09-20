@@ -16,7 +16,8 @@
 // a porovná výsledky kus po kuse na všech pozemcích. Nekontroluje text na
 // obrazovce, ale samotný výpočet — text se může lišit rozvržením, číslo ne.
 import { chromium } from 'playwright-core';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
+import pathMod from 'node:path';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -32,12 +33,34 @@ function pravda(popis, vyslo, proc) {
 const DATA = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
 
 const kde = process.env.PW_CHROMIUM || '';
+const LEAFLET = process.env.PK_LEAFLET_DIR || '';
+const PRAZDNA_DLAZDICE = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+  'base64');
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext();
+const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
+// Pořadí je důležité: Playwright bere POSLEDNÍ shodu, takže obecné pravidlo první.
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());
-  return u.hostname === '127.0.0.1' ? r.continue() : r.abort();
+  if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
+  if (r.request().resourceType() === 'image') return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA_DLAZDICE });
+  return LEAFLET ? r.abort() : r.continue();
 });
+// Bez Leafletu se mapa nespustí a s ní se nevykreslí ani SEZNAM — a právě
+// ten se tu kontroluje. Dokud se tu Leaflet nepodstrkoval, hlásil test
+// „karta se nenašla" a vypadalo to jako chyba webu.
+if (LEAFLET) {
+  await ctx.route('https://unpkg.com/leaflet@**', (r) => {
+    const f = pathMod.join(LEAFLET, pathMod.basename(new URL(r.request().url()).pathname));
+    if (!existsSync(f)) return r.abort();
+    return r.fulfill({ status: 200, contentType: f.endsWith('.css') ? 'text/css' : 'text/javascript', body: readFileSync(f) });
+  });
+  await ctx.route(`${BASE}/index.html`, async (r) => {
+    const o = await r.fetch();
+    return r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8',
+      body: (await o.text()).replace(/\s+integrity="[^"]*"/g, '') });
+  });
+}
 const p = await ctx.newPage();
 // Stačí prázdná stránka na správném původu — načteme si jen cenový model.
 await p.goto(`${BASE}/predloha.html`, { waitUntil: 'domcontentloaded' });
@@ -136,6 +159,55 @@ if (cil) {
       videt.text.slice(0, 160));
   }
   await p2.close();
+}
+
+// --- Varování o ceně musí být i na KARTĚ, nejen v detailu ------------
+// Kdo do detailu neklikne, se o podezřelé ceně nedozví — a zrovna tuhle
+// informaci potřebuje vidět hned. Zároveň se tu ověřuje hledání podle
+// PARCELNÍHO ČÍSLA: kdo drží výpis z katastru, má po ruce číslo parcely,
+// ne název obce.
+const podezrely = await p.evaluate((D) => {
+  const M = window.PK_CENY.postav(D);
+  const d = D.find((x) => M.neduveryhodna(x));
+  return d ? { place: d.place, parcel: d.parcel } : null;
+}, DATA);
+pravda('v datech je aspoň jedna nabídka s nevěrohodnou cenou', !!podezrely);
+if (podezrely) {
+  const p3 = await ctx.newPage();
+  await p3.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  await p3.waitForTimeout(4500);
+  await p3.evaluate((q) => {
+    const e = document.getElementById('map-search');
+    e.value = q; e.dispatchEvent(new Event('input', { bubbles: true }));
+  }, podezrely.place);
+  await p3.waitForTimeout(700);
+  const karta = await p3.evaluate(() => {
+    const li = document.querySelector('.opp-item');
+    return li ? { text: li.textContent.replace(/\s+/g, ' ').trim(), overit: !!li.querySelector('.opp-overit') } : null;
+  });
+  pravda('podezřelá nabídka má varování rovnou na kartě',
+    !!(karta && karta.overit), karta ? karta.text.slice(0, 120) : 'karta se nenašla');
+
+  // Hledání podle parcelního čísla.
+  const sParcelou = await p.evaluate((D) => {
+    const d = D.find((x) => x.parcel && /^\d+\/\d+$/.test(x.parcel));
+    return d ? { parcel: d.parcel, place: d.place } : null;
+  }, DATA);
+  if (sParcelou) {
+    await p3.evaluate((q) => {
+      const e = document.getElementById('map-search');
+      e.value = q; e.dispatchEvent(new Event('input', { bubbles: true }));
+    }, sParcelou.parcel);
+    await p3.waitForTimeout(700);
+    const nalez = await p3.evaluate(() => [...document.querySelectorAll('.opp-item')]
+      .map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+    pravda('hledat jde i podle parcelního čísla', nalez.length > 0,
+      `„${sParcelou.parcel}" nenašlo nic — hledá se nejspíš jen podle místa a okresu`);
+    pravda('a najde se ta správná parcela',
+      nalez.some((t) => t.indexOf(sParcelou.place) !== -1),
+      `hledáno ${sParcelou.parcel} (${sParcelou.place}), vyšlo: ${nalez[0] || '—'}`);
+  }
+  await p3.close();
 }
 
 await prohlizec.close();
