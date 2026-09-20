@@ -125,9 +125,14 @@ const PODIL = { place: 'Podíl', okres: 'Cheb', type: 'sale', druh: 'stavební p
   area: 1000, price: 3000 };   // 3 Kč/m² proti mediánu 2 000
 const model2 = PK_CENY.postav([...STAVEBNI, PODIL], OKRES_KRAJ);
 pravda('podíl je rozpoznaný jako nevěrohodná cena', model2.neduveryhodna(PODIL) === true);
+// Shora se schválně neoznačuje nic: poměr k místní hladině měří město,
+// ne kvalitu dat. Zahrada v Klatovech vyjde 56× nad hladinou a je to běžná
+// cena. Nesmyslné odhady řeší kontrola uvnitř odhadu, ne tenhle štítek.
 const NAFOUKLY = { place: 'Nafouklý', okres: 'Cheb', type: 'sale', druh: 'stavební pozemek',
-  area: 1000, price: 100000000 };  // 100 000 Kč/m² proti mediánu 2 000
-pravda('nesmyslně vysoká cena je taky nevěrohodná', model2.neduveryhodna(NAFOUKLY) === true);
+  area: 1000, price: 100000000 };  // 100 000 Kč/m² proti hladině 2 000
+pravda('vysoká cena sama o sobě štítek „k ověření" nedostane',
+  model2.neduveryhodna(NAFOUKLY) === false,
+  'označeno jako nevěrohodné — horní mez se sem nejspíš vrátila');
 pravda('běžná nabídka jako nevěrohodná označená není', model2.neduveryhodna(STAVEBNI[0]) === false);
 je('nevěrohodná nabídka nedostane odhad', model2.odhad(PODIL), null);
 je('nevěrohodná nabídka nedostane ani percentil', model2.percentil(PODIL), null);

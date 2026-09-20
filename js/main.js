@@ -886,64 +886,30 @@
 
   // Index cen za m² podle typu+druhu — pro poctivé srovnání v detailu.
   // Percentil (0–100) je omezený, takže nikdy nevznikne nesmysl typu „+7130 %".
-  var perM2Index = (function () {
-    var idx = {};
-    DATA.forEach(function (d) {
-      if (hasArea(d) && d.price) {
-        var k = d.type + '|' + druhGroup(d.druh);
-        (idx[k] = idx[k] || []).push(d.price / d.area);
-      }
-    });
-    Object.keys(idx).forEach(function (k) { idx[k].sort(function (a, b) { return a - b; }); });
-    return idx;
-  })();
-  // Medián ceny za m² v dané skupině — pro posouzení, jestli je cena vůbec
-  // uvěřitelná.
-  var perM2Median = (function () {
-    var m = {};
-    Object.keys(perM2Index).forEach(function (k) {
-      var a = perM2Index[k];
-      m[k] = a[Math.floor(a.length / 2)];
-    });
-    return m;
-  })();
-  // Nabídka, jejíž cena za m² je pod padesátinou mediánu své skupiny, není
-  // skvělá koupě — je to skoro jistě spoluvlastnický podíl nebo chyba
-  // v inzerátu. Stavební pozemek 3 315 m² za 11 000 Kč (3 Kč/m² proti
-  // mediánu 2 888) vypadal na úvodní stránce jako „levnější než 98 %
-  // podobných". Kdo na to jednou klikne a zjistí, že jde o podíl, podruhé
-  // už žádnému našemu číslu nevěří.
-  // U zemědělské půdy pravidlo prakticky nezabírá (medián 44, nejnižší 5) —
-  // bije jen tam, kde je rozptyl obrovský, tedy u stavebních pozemků.
-  function cenaNeduveryhodna(d) {
-    if (!hasArea(d) || !d.price) return false;
-    var med = perM2Median[d.type + '|' + druhGroup(d.druh)];
-    if (!med) return false;
-    return (d.price / d.area) < med / 50;
-  }
+  /* Cenový model je společný se stránkou pozemku — js/ceny.js. Mapa tu
+   * dřív měla vlastní kopii výpočtu a ta se rozešla: přísnější pravidla
+   * skončila jen v jedné z nich, takže mapa a stránka pozemku u 34 nabídek
+   * tvrdily každá něco jiného. */
+  var MODEL = (window.PK_CENY && window.PK_CENY.postav)
+    ? window.PK_CENY.postav(DATA) : null;
+  function cenaNeduveryhodna(d) { return MODEL ? MODEL.neduveryhodna(d) : false; }
+  function dealInfo(d) { return MODEL ? MODEL.percentil(d) : null; }
   function priceBarHtml(d) {
-    if (!hasArea(d) || !d.price) return '';
-    // Nepravděpodobně nízkou cenu je poctivější přiznat než z ní dělat
-    // „výhodnou koupi". Zpravidla za ní je spoluvlastnický podíl.
+    if (!MODEL || !hasArea(d) || !d.price) return '';
     if (cenaNeduveryhodna(d)) {
       return '<div class="md-verdict warn">' +
         '<div class="mv-top"><span class="mv-badge">Cena k ověření</span><span class="mv-cmp">Cena za m²</span></div>' +
-        '<div class="mv-text">Cena za m² se <b>výrazně liší</b> od obvyklé u tohoto druhu pozemku. ' +
-        'Často jde o <b>spoluvlastnický podíl</b>, nebo je na pozemku stavba — ověřte u zdroje ' +
+        '<div class="mv-text">Cena za m² je <b>hluboko pod</b> obvyklou u tohoto druhu pozemku v okolí. ' +
+        'Často jde o <b>spoluvlastnický podíl</b> nebo chybu v inzerátu — ověřte u zdroje ' +
         'a v katastru, co se přesně prodává.</div>' +
-        '</div>';
+        '</div>' + odhadHtmlMapa(d);
     }
-    var g = druhGroup(d.druh);
-    var arr = perM2Index[d.type + '|' + g];
-    if (!arr || arr.length < 8) return ''; // bez dostatečného vzorku srovnání neukazujeme
-    if (arr[arr.length - 1] <= arr[0] * 1.15) return ''; // skoro stejné ceny → srovnání nedává smysl
-    var val = d.price / d.area;
-    var below = 0;
-    for (var i = 0; i < arr.length; i++) { if (arr[i] <= val) below++; }
-    var pct = Math.max(2, Math.min(98, Math.round(below / arr.length * 100))); // 0 = nejlevnější
+    var pc = MODEL.percentil(d);
+    if (!pc) return odhadHtmlMapa(d);
+    var pct = pc.pct;
     var typeWord = d.type === 'sale' ? 'v prodeji' : (d.type === 'drazba' ? 'v dražbě' : 'v nabídce');
     var cls, badge, text;
-    if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + (100 - pct) + ' %</b> podobných pozemků ' + typeWord + '.'; }
+    if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + pc.cheaper + ' %</b> podobných pozemků ' + typeWord + '.'; }
     else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> podobných pozemků ' + typeWord + '.'; }
     else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> podobných pozemků ' + typeWord + '.'; }
     return '<div class="md-verdict ' + cls + '">' +
@@ -951,20 +917,24 @@
       '<div class="mv-text">' + text + '</div>' +
       '<div class="mv-track"><span class="mv-fill" style="width:' + pct + '%"></span><span class="mv-dot" style="left:' + pct + '%"></span></div>' +
       '<div class="mv-scale"><span>levné</span><span>drahé</span></div>' +
-      '</div>';
+      '</div>' + odhadHtmlMapa(d);
   }
-  // Jak výhodná je cena za m² oproti podobným (stejný typ+druh) — vrací percentil
-  // (0 = nejlevnější) a „levnější než X %". null, když není dost srovnání.
-  function dealInfo(d) {
-    if (!hasArea(d) || !d.price) return null;
-    if (cenaNeduveryhodna(d)) return null;   // podíl nebo překlep, ne příležitost
-    var arr = perM2Index[d.type + '|' + druhGroup(d.druh)];
-    if (!arr || arr.length < 10) return null;
-    if (arr[arr.length - 1] <= arr[0] * 1.2) return null; // ceny skoro stejné → nemá smysl
-    var val = d.price / d.area, below = 0;
-    for (var i = 0; i < arr.length; i++) { if (arr[i] <= val) below++; }
-    var pct = Math.max(2, Math.min(98, Math.round(below / arr.length * 100)));
-    return { pct: pct, cheaper: 100 - pct, sample: arr.length };
+  /* Odhad obvyklé ceny i v detailu na mapě — aby mapa a stránka pozemku
+   * říkaly totéž. Ukazuje se jen tam, kde má co říct. */
+  function odhadHtmlMapa(d) {
+    if (!MODEL) return '';
+    var o = MODEL.odhad(d);
+    if (!o || o.podOdhadem < 15) return '';
+    var kde = o.uroven === 'okres' ? ('v okrese ' + o.kde) : ('v ' + o.kde + ' kraji');
+    var coJe = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'exekuce' ? 'Uváděná cena' : 'Nabídková cena');
+    return '<div class="md-odhad">' +
+      '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
+      '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">' + fmt(o.castka) + ' Kč</span></div>' +
+      '<div class="mo-rozdil"><b>o ' + o.podOdhadem + ' % níž</b>, tedy zhruba o ' + fmt(o.rozdil) + ' Kč</div>' +
+      '<p class="mo-pozn">Spočítáno z mediánu <b>' + fmt(Math.round(o.zaM2)) + ' Kč/m²</b> — z <b>' +
+      o.vzorek + '</b> nabídek stejného druhu (' + o.druh.toLowerCase() + ') ' + kde + '. ' +
+      'Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly.</p>' +
+      '</div>';
   }
 
   // Naplníme filtr druhů podle toho, co je v datech (s počty)

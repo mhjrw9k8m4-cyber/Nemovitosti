@@ -121,6 +121,9 @@ jobs:
       - name: Cenový model (odhad obvyklé ceny)
         run: node scripts/test-ceny.mjs
 
+      - name: Shoda cen mezi mapou a stránkou pozemku
+        run: node scripts/test-shoda.mjs
+
       - name: Úvodní obrazovka (živá čísla, věrohodnost cen)
         run: node scripts/test-uvod.mjs
 

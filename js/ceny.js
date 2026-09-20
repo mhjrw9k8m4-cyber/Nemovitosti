@@ -85,21 +85,44 @@
     var medianTypu = {};
     Object.keys(podleTypu).forEach(function (k) { medianTypu[k] = median(podleTypu[k]); });
 
-    /* Cena pod padesátinou mediánu své skupiny není skvělá koupě — je to skoro
-     * jistě spoluvlastnický podíl nebo chyba v inzerátu. U zemědělské půdy
-     * pravidlo prakticky nezabírá (medián 44 Kč/m², nejnižší 5); bije jen tam,
-     * kde je rozptyl obrovský, tedy u stavebních pozemků. */
+    var MIN_VZOREK = 8;
+    /* Obvyklá cena za m² pro tenhle pozemek — MÍSTNÍ, ne celostátní.
+     * Nejdřív okres, pak kraj, pak celá ČR, a jako poslední záchrana
+     * medián stejného typu a druhu.
+     *
+     * Na místě záleží. Celostátní medián trvalého travního porostu je
+     * 39 Kč/m², jenže louka u Prahy za 1 000 Kč/m² je normální cena, ne
+     * chyba. Když se proti celostátnímu mediánu poměřovalo, označilo to
+     * 34 běžných nabídek v Praze, Turnově nebo Ostravě za podezřelé. */
+    function hladina(d) {
+      var g = druhGroup(d.druh);
+      var a = nabidkyOkres[g + '|' + d.okres];
+      if (a && a.length >= MIN_VZOREK) return median(a);
+      a = nabidkyKraj[g + '|' + okresKraj[d.okres]];
+      if (a && a.length >= MIN_VZOREK) return median(a);
+      a = nabidkyCR[g];
+      if (a && a.length >= MIN_VZOREK) return median(a);
+      return medianTypu[d.type + '|' + g] || null;
+    }
+
+    /* Cena hluboko POD místní hladinou není skvělá koupě — je to skoro jistě
+     * spoluvlastnický podíl nebo chyba v inzerátu. U zemědělské půdy pravidlo
+     * prakticky nezabírá; bije tam, kde je rozptyl obrovský, tedy u stavebních
+     * pozemků.
+     *
+     * Shora se ÚMYSLNĚ nic neoznačuje, i když to tu chvíli bylo. Poměr k místní
+     * hladině totiž neměří kvalitu dat, ale MĚSTO: zahrada v Klatovech za
+     * 1 775 Kč/m² vyjde 56× nad hladinou a je to úplně běžná cena, kdežto statek
+     * v Tišnově vedený jako orná půda vyjde 632× — a mezi těmi dvěma nevede
+     * žádná čára. Při prahu 25× to označovalo 34 normálních nabídek v Praze,
+     * Turnově nebo Ostravě za podezřelé.
+     * To, kvůli čemu tu horní mez vznikla — nevydat nesmyslný odhad — řeší
+     * kontrola přímo v odhadu (cena víc než osminásobek odhadu = nesrovnatelný
+     * pozemek), a ta je přesná, protože porovnává dvě stejná čísla. */
     function neduveryhodna(d) {
       if (!hasArea(d) || !d.price) return false;
-      var med = medianTypu[d.type + '|' + druhGroup(d.druh)];
-      if (!med) return false;
-      var m2 = d.price / d.area;
-      if (m2 < med / 50) return true;
-      /* A stejně tak shora. Na ostrých datech vyšla dražba v Tišnově za
-       * 23 334 850 Kč s odhadem 36 911 Kč, tedy „63 119 % nad odhadem" —
-       * nesmysl. Za tím bývá stavba na pozemku nebo špatně přečtená výměra;
-       * s holou parcelou se to srovnávat nedá. */
-      return m2 > med * 25;
+      var med = hladina(d);
+      return med ? (d.price / d.area) < med / 50 : false;
     }
 
     /* Percentil ceny za m² proti stejnému typu a druhu. null, když není dost
@@ -115,7 +138,6 @@
       return { pct: pct, cheaper: 100 - pct, sample: arr.length };
     }
 
-    var MIN_VZOREK = 8;
     /* Odhad obvyklé nabídkové ceny. Bere medián Kč/m² u stejného druhu —
      * nejdřív v okrese, pak v kraji. Dál NE.
      *
