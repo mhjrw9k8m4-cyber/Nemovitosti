@@ -124,6 +124,9 @@ jobs:
       - name: Druh příležitosti se pozná i bez barev
         run: node scripts/test-tvary.mjs
 
+      - name: Obecní záměr — celá cesta od dat po detail
+        run: node scripts/test-obec.mjs
+
       - name: Viditelnost okrajů (WCAG 1.4.11)
         run: node scripts/test-okraje.mjs
 
