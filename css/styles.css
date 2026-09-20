@@ -156,10 +156,9 @@ a{color:inherit;}
 .leaflet-interactive:focus, .leaflet-interactive:focus-visible,
 path.leaflet-interactive:focus, path.leaflet-interactive:focus-visible{ outline:none !important; }
 .leaflet-zoom-box{display:none !important;}
-/* Podklad OSM zjemníme do světla, ať drží čistý vzhled jako dřív (CARTO začal
-   vyžadovat API klíč). Filtr je jen na vrstvě dlaždic — barevné tečky pozemků
-   jsou v jiné vrstvě, zůstávají plné barvy. */
-.leaflet-tile-pane{filter:grayscale(0.92) brightness(1.05) contrast(0.9);}
+/* Úprava podkladu mapy je JEN na jednom místě — v pravidle .pk-basemap níž.
+   Dřív bylo tady, na .leaflet-tile-pane, a snadno se stalo, že se filtr
+   nasadil dvakrát a mapa vybledla do ztracena. */
 
 /* Scroll reveal */
 .reveal{opacity:0; transform:translateY(22px); transition:opacity .6s var(--ease), transform .6s var(--ease);}
@@ -846,18 +845,18 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    spolehlivě překryje mapu a nic z ní neprosvítá */
 .map-canvas{position:relative; flex:1; min-height:0; isolation:isolate;}
 #leaflet-map{position:absolute; inset:0; background:#EDEAE3;}
-/* Podklad mapy.
-   Syrové dlaždice OpenStreetMap jsou barevné jako atlas — zelené lesy, žluté
-   silnice, růžové dálnice. Jenže tady nese informaci BARVA TEČKY (prodej /
-   dražba / exekuce / obec). Když je podklad stejně barevný jako data, data
-   zmizí a celek vypadá jako stará mapa ze strategické hry.
-   Proto se podklad ztlumí na světlý papír v teplém tónu webu: skoro bez
-   barvy, o něco světlejší, s měkčím kontrastem. Zůstane z něj jen to, k
-   čemu je potřeba — tvary měst, silnic a řek pro orientaci. Barvu má na
-   mapě jenom to, na co se dá kliknout. */
+/* Podklad mapy — jediné místo, kde se dlaždicím sahá na barvu.
+   Barevné dlaždice OpenStreetMap by přebily tečky pozemků, protože tady nese
+   informaci právě BARVA TEČKY (prodej / dražba / exekuce / obec). Ztlumit se
+   ale dá dvěma způsoby a jeden z nich je špatně:
+     – skoro plná šeď (grayscale 0.92) udělá z mapy mrtvou betonovou desku.
+       Tak to vypadalo dřív a bylo to na webu to nejmdlejší místo;
+     – teplý papír: barva jde dolů, ale zůstane tón. Šeď se přebarví do
+       pískové (sepia) a zbytek se vrátí sytostí, takže mapa žije, jen tiše.
+   Druhá cesta je tahle. Modrá u vody zůstane jako jediná chladná plocha a
+   pomáhá v orientaci. */
 .pk-basemap{
-  filter:grayscale(0.85) sepia(0.14) saturate(0.9) brightness(1.03) contrast(0.95);
-  opacity:0.95;
+  filter:grayscale(0.62) sepia(0.12) saturate(1.3) brightness(1.03) contrast(0.95);
 }
 /* Mapa bez okraje působila jako vystřižený obdélník nalepený na stránku.
    Vnitřní stín ji do stránky zapustí — je pod povrchem, ne nad ním. */
