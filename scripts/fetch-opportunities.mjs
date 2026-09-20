@@ -652,7 +652,7 @@ async function main() {
   // je něco jiného: po smazání historie by byl najednou nový úplně všechno.
   // Datum se přenáší ze starého souboru podle otisku; co tam nebylo, dostane
   // dnešek. Otisk musí být shodný s keyOf() v js/hlidani-logika.js a
-  // scripts/send-alerts.mjs, jinak by se pozemky „obnovovaly" při každém běhu.
+  // js/hlidani-logika.js, jinak by se pozemky „obnovovaly" při každém běhu.
   const bezDiakritiky = (x) => String(x == null ? '' : x)
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   const otisk = (o) => [o.type || '', bezDiakritiky(o.okres), bezDiakritiky(o.place),

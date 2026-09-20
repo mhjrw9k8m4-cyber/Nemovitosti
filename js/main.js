@@ -261,36 +261,6 @@
     });
   }
 
-  /* ---------- Okno hlídání lokality (modal) ---------- */
-  var wModal = document.getElementById('watch-modal');
-  function openWatch(okres) {
-    if (!wModal) return;
-    var ok = document.getElementById('wm-okres');
-    var ti = document.getElementById('wm-title');
-    var ms = document.getElementById('wm-msg');
-    if (ms) { ms.textContent = ''; ms.classList.remove('err'); }
-    if (ok) ok.value = okres || '';
-    if (ti) ti.textContent = okres ? ('Upozornění na okres ' + okres) : 'Upozornění na lokalitu';
-    wModal.removeAttribute('hidden');
-    requestAnimationFrame(function () { wModal.classList.add('open'); });
-    document.body.style.overflow = 'hidden';
-    var em = document.getElementById('wm-email');
-    if (em) setTimeout(function () { try { em.focus({ preventScroll: true }); } catch (e) { em.focus(); } }, 80);
-  }
-  function closeWatch() {
-    if (!wModal) return;
-    wModal.classList.remove('open');
-    document.body.style.overflow = '';
-    setTimeout(function () { wModal.setAttribute('hidden', ''); }, 250);
-  }
-  // Každý odkaz na #upozorneni otevře okno (místo skoku po stránce)
-  document.addEventListener('click', function (e) {
-    var trigger = e.target.closest('a[href="#upozorneni"]');
-    if (trigger) { e.preventDefault(); openWatch(trigger.getAttribute('data-okres') || ''); return; }
-    if (e.target.closest('[data-close]')) { closeWatch(); closeInfo(); }
-  });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeWatch(); closeInfo(); } });
-
   /* ---------- Odesílání formulářů (do databáze Supabase) ----------
      Formuláře (hlídání lokality, kontakt, zpětná vazba) ukládají poptávky
      přímo do Supabase — tabulky watch_subscriptions a messages. Veřejný
@@ -326,39 +296,6 @@
       },
       body: JSON.stringify(args || {})
     }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
-  }
-
-  // Přihlášení k hlídání lokality. Použije funkci subscribe_watch (s potvrzením
-  // e-mailu / double opt-in); dokud není v Supabase nasazená, spadne na přímý
-  // zápis (staré chování), ať formulář funguje vždy.
-  function subscribeWatch(email, okres, types) {
-    if (!SB_READY) return Promise.resolve('unset');
-    return sbRpc('subscribe_watch', { p_email: email, p_okres: okres || null, p_types: types || [] }).then(function (res) {
-      if (res === true) return 'ok';
-      return sbInsert('watch_subscriptions', { email: email, okres: okres || null });
-    });
-  }
-
-  var wForm = document.getElementById('watch-form');
-  if (wForm) {
-    wForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var email = document.getElementById('wm-email').value.trim();
-      var okres = document.getElementById('wm-okres').value.trim();
-      var types = [].slice.call(wForm.querySelectorAll('input[name="wtype"]:checked')).map(function (x) { return x.value; });
-      var ms = document.getElementById('wm-msg');
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ms.textContent = 'Zadejte prosím platný e-mail.'; ms.classList.add('err'); return; }
-      ms.classList.remove('err');
-      if (!SB_READY) {
-        ms.textContent = 'Upozornění teprve dokončujeme — spustíme je, jakmile přidáme odesílání. Děkujeme za trpělivost.';
-        return;
-      }
-      ms.textContent = 'Odesílám…';
-      subscribeWatch(email, okres, types).then(function (r) {
-        if (r === 'ok') { ms.textContent = okres ? ('Budeme hlídat okres „' + okres + '" a dáme vědět, jakmile se objeví nová příležitost.') : 'Ozveme se, jakmile se ve vašem okolí objeví nová příležitost.'; setTimeout(closeWatch, 1900); }
-        else { ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; ms.classList.add('err'); }
-      });
-    });
   }
 
   /* ---------- Uložené pozemky (oblíbené) ---------- */
@@ -421,7 +358,12 @@
   document.addEventListener('click', function (e) {
     var t = e.target.closest('[data-info]');
     if (t) { e.preventDefault(); openInfo(t.getAttribute('data-info')); }
+    // Zavírací tlačítko i klepnutí mimo okno. Bylo to dřív svázané s oknem
+    // hlídání; to je pryč, tohle musí zůstat, jinak by okno se zásadami
+    // soukromí nešlo zavřít jinak než obnovením stránky.
+    if (e.target.closest('[data-close]')) closeInfo();
   });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeInfo(); });
   // Otevři zásady/podmínky i z jiných stránek — přes odkaz index.html#soukromi
   // / #podminky. Díky tomu jsou právní informace dostupné z patičky všude.
   (function () {
@@ -506,32 +448,6 @@
       }
     });
   });
-
-  /* ---------- Formulář upozornění (demo) ---------- */
-  var form = document.getElementById('alert-form');
-  var msg = document.getElementById('form-msg');
-  if (form && msg) {
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var email = form.querySelector('#email').value.trim();
-      var okres = form.querySelector('#okres').value.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        msg.textContent = 'Zadejte prosím platný e-mail.'; msg.classList.add('err'); return;
-      }
-      msg.classList.remove('err');
-      if (!SB_READY) {
-        msg.textContent = 'Upozornění teprve dokončujeme — spustíme je, jakmile přidáme odesílání. Děkujeme za trpělivost.';
-        return;
-      }
-      msg.textContent = 'Odesílám…';
-      subscribeWatch(email, okres).then(function (r) {
-        if (r === 'ok') {
-          msg.textContent = okres ? ('Budeme hlídat okres „' + okres + '" a dáme vědět, jakmile se objeví nová příležitost.') : 'Ozveme se, jakmile se ve vašem okolí objeví nová příležitost.';
-          form.reset();
-        } else { msg.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.'; msg.classList.add('err'); }
-      });
-    });
-  }
 
   /* ---------- Poptávkový formulář pro realitky/obce ---------- */
   // Kontakt jde napřímo na e-mail (viz sekce #realitky) — bez formuláře a databáze.
@@ -1218,7 +1134,7 @@
           (auctionYMD(d.extra) ? '<button class="lp-btn" type="button" data-cal>Do kalendáře</button>' : '') +
           '<button class="lp-btn lp-fav' + (isFav(d) ? ' on' : '') + '" type="button" data-fav-detail>' + BM_SVG + '<span>' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
           '<button class="lp-btn" type="button" data-share>Sdílet</button>' +
-          '<a class="lp-watch" href="#upozorneni" data-okres="' + d.okres + '">Upozornit na okres ' + d.okres + '</a>' +
+          '<a class="lp-watch" href="hlidani.html">Hlídat okres ' + d.okres + '</a>' +
         '</div>' +
         nearbyHtml(d) +
       '</div>';

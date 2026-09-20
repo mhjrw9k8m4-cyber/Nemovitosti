@@ -64,8 +64,8 @@ je('vybavení', 'bez cesty neprojde',
 je('otisk', 'stejný pozemek má stejný otisk', H.keyOf(P()) === H.keyOf(P()), true);
 je('otisk', 'změna ceny je jiný pozemek', H.keyOf(P()) === H.keyOf(P({ price: 600000 })), false);
 je('otisk', 'diakritika otisk nemění', H.keyOf(P({ okres: 'Kolín' })), H.keyOf(P({ okres: 'kolin' })));
-// Musí sedět s keyOf() v scripts/send-alerts.mjs, jinak by robot posílal
-// e-mailem něco, co web už ukázal jako viděné (a naopak).
+// Musí sedět s keyOf() v js/hlidani-logika.js, jinak by aplikace hlásila
+// jako nové něco, co už člověk viděl (a naopak).
 je('otisk', 'tvar otisku se nezměnil', H.keyOf(P()), 'sale|kolin|kolin|123/4|500000|800');
 
 /* ---------------- počet nových ---------------- */

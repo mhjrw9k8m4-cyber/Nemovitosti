@@ -326,7 +326,7 @@
       <div class="steps">
         <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-map"/></svg></div><div class="idx mono">01</div><h3>Otevřete mapu</h3><p>Sbíráme data z veřejných zdrojů a spojíme je na jednu mapu. Jsou tam jen pozemky, kde se něco děje — barva napoví druh příležitosti.</p></div>
         <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-click"/></svg></div><div class="idx mono">02</div><h3>Klikněte na příležitost</h3><p>Detail ukáže výměru, druh a termín. Proklik rovnou do katastru pro ověření, nebo na inzerát.</p></div>
-        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-bell"/></svg></div><div class="idx mono">03</div><h3>Nechte si hlídat lokalitu</h3><p>Zadáte e-mail a okres. Napíšeme vám, jakmile se objeví nová příležitost — žádné ruční hledání.</p></div>
+        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-bell"/></svg></div><div class="idx mono">03</div><h3>Nechte si hlídat lokalitu</h3><p>Uložíte si hledání — okres, druh, cenu. Nové pozemky, které mu sedí, pak najdete v <a href="upozorneni.html">Upozorněních</a>, aniž byste hledali znovu.</p></div>
       </div>
     </div>
   </section>
@@ -356,32 +356,6 @@
     </div>
   </section>
 
-  <!-- 11 · HLÍDÁNÍ (form) -->
-  <section class="section pt-0" id="upozorneni">
-    <div class="wrap">
-      <div class="alert-box reveal">
-        <div class="alert-copy">
-          <div class="eyebrow"><span class="live-dot"></span>E-mailová upozornění</div>
-          <h2>Upozorníme vás na nové příležitosti ve vaší lokalitě.</h2>
-          <p>Necháte okres a e-mail. Upozornění právě dokončujeme — jakmile je spustíme, dáme vám vědět pokaždé, když se ve vašem okolí objeví dražba, exekuce nebo prodej.</p>
-          <ul class="alert-benefits">
-            <li><svg class="ic"><use href="#i-check"/></svg>Vyberete si okres a druh pozemku</li>
-            <li><svg class="ic"><use href="#i-check"/></svg>Jen skutečné příležitosti z veřejných zdrojů</li>
-            <li><svg class="ic"><use href="#i-check"/></svg>Bez spamu, odhlásíte se kdykoliv</li>
-          </ul>
-        </div>
-        <form class="alert-form" id="alert-form" novalidate>
-          <label class="visually-hidden" for="okres">Okres</label>
-          <input id="okres" name="okres" type="text" placeholder="Okres nebo obec (např. Kolín)" autocomplete="off">
-          <label class="visually-hidden" for="email">E-mail</label>
-          <input id="email" name="email" type="email" placeholder="vas@email.cz" autocomplete="email" required>
-          <button type="submit" class="btn-primary btn-glow">Chci upozornění</button>
-          <p class="form-msg" id="form-msg" role="status" aria-live="polite"></p>
-          <p class="form-fine">E-mail použijeme jen pro tato upozornění. Neprodáváme ho a kdykoliv se odhlásíte.</p>
-        </form>
-      </div>
-    </div>
-  </section>
 
   <!-- KONTAKT -->
   <section class="section pt-0" id="realitky">
@@ -452,35 +426,6 @@
 
 <button class="to-top" id="to-top" aria-label="Zpět nahoru"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 12l6-6 6 6"/></svg><span>Nahoru</span></button>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-
-<!-- Okno pro hlídání lokality -->
-<div class="modal" id="watch-modal" role="dialog" aria-modal="true" aria-labelledby="wm-title" hidden>
-  <div class="modal-backdrop" data-close></div>
-  <div class="modal-card">
-    <div class="eyebrow"><span class="live-dot"></span>E-mailová upozornění</div>
-    <h3 id="wm-title">Upozornění na lokalitu</h3>
-    <p class="modal-sub">Necháte okres a e-mail. Upozornění dokončujeme — jakmile je spustíme, dáme vám vědět, když se ve vaší lokalitě objeví dražba, exekuce nebo prodej. Bez spamu.</p>
-    <form class="modal-form" id="watch-form" novalidate>
-      <label class="visually-hidden" for="wm-okres">Okres</label>
-      <input id="wm-okres" type="text" placeholder="Okres nebo obec (např. Kolín)" autocomplete="off">
-      <div class="wm-types" role="group" aria-label="Co hlídat">
-        <span class="wm-types-lbl">Co hlídat? <em>(nevyberete-li nic, hlídáme vše)</em></span>
-        <div class="check-group">
-          <label class="chip-check"><input type="checkbox" name="wtype" value="sale">Prodej</label>
-          <label class="chip-check"><input type="checkbox" name="wtype" value="drazba">Dražba</label>
-          <label class="chip-check"><input type="checkbox" name="wtype" value="exekuce">Exekuce</label>
-          <label class="chip-check"><input type="checkbox" name="wtype" value="obec">Záměr obce</label>
-        </div>
-      </div>
-      <label class="visually-hidden" for="wm-email">E-mail</label>
-      <input id="wm-email" type="email" placeholder="vas@email.cz" required autocomplete="email">
-      <button type="submit" class="btn-primary btn-glow">Chci upozornění</button>
-      <p class="form-msg" id="wm-msg" role="status" aria-live="polite"></p>
-      <p class="modal-fine">✓ Bez karty · ✓ Bez hesla · ✓ Odhlásíte kdykoliv · <a href="ochrana-udaju.html" data-info="soukromi" data-close>Zásady soukromí</a></p>
-    </form>
-    <button class="modal-close-bar" type="button" data-close>Zavřít</button>
-  </div>
-</div>
 
 <!-- Zásady soukromí / Podmínky (info) -->
 <div class="modal" id="info-modal" role="dialog" aria-modal="true" aria-labelledby="info-title" hidden>

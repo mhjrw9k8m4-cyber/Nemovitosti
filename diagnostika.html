@@ -191,13 +191,15 @@
         radek(box, 'ok', 'Tabulka pro denní kontrolu existuje', 'HTTP ' + r.stav);
       }
 
-      return dotaz('/rest/v1/rpc/subscribe_watch', {
+      // Hlídání je nově věc aplikace (uložená hledání u účtu), ne e-mailu.
+      // Kontroluje se proto save_search, ne dřívější subscribe_watch.
+      return dotaz('/rest/v1/rpc/save_search', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ p_email: '', p_okres: '', p_types: [] })
+        body: JSON.stringify({ p_label: '', p_okres: '', p_druh: '', p_type: '', p_max_price: 0, p_min_area: 0, p_features: [] })
       });
     }).then(function (r) {
-      if (r.stav === 404) radek(box, 'bad', 'Hlídání: funkce subscribe_watch chybí', 'HTTP 404 — spusťte <code>supabase/00-vse.sql</code>.');
-      else radek(box, 'ok', 'Hlídání: funkce subscribe_watch odpovídá', 'HTTP ' + r.stav + ' — <code>' + zkratka(r.telo, 80) + '</code>');
+      if (r.stav === 404) radek(box, 'bad', 'Hlídání: funkce save_search chybí', 'HTTP 404 — spusťte <code>supabase/00-vse.sql</code>.');
+      else radek(box, 'ok', 'Hlídání: funkce save_search odpovídá', 'HTTP ' + r.stav + ' — <code>' + zkratka(r.telo, 80) + '</code> (bez přihlášení odmítne — to je správně)');
 
       return dotaz('/auth/v1/settings', {});
     }).then(function (r) {
