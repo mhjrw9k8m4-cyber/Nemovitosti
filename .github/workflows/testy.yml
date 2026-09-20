@@ -130,6 +130,9 @@ jobs:
       - name: Obecní záměr — celá cesta od dat po detail
         run: node scripts/test-obec.mjs
 
+      - name: Paměť prohlížeče (nové od minule, skryté, filtr)
+        run: node scripts/test-pamet.mjs
+
       - name: Viditelnost okrajů (WCAG 1.4.11)
         run: node scripts/test-okraje.mjs
 

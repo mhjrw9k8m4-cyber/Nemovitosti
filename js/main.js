@@ -740,7 +740,53 @@
   var urgentOnly = false;  // filtr: jen dražby/exekuce končící brzy (do 14 dní)
   var searchTerm = '';
   var favOnly = false;
+  var ukazSkryte = false;   // „Zobrazit skryté" — dočasně, neukládá se
   var markers = [];
+
+  /* ---------- Paměť prohlížeče: návštěva, skryté, filtr ----------
+   * Všechno tohle jde udělat bez účtu a bez serveru — a tím pádem i bez
+   * toho, aby se kdokoli musel registrovat. Drží se to v localStorage,
+   * neodesílá se nic. Když prohlížeč úložiště nedá (anonymní okno,
+   * zakázané cookies), všechno se prostě chová jako při první návštěvě;
+   * nic se nesmí rozbít.
+   * ---------------------------------------------------------------- */
+  function ctiUloz(klic, zaloha) {
+    try { var v = localStorage.getItem(klic); return v == null ? zaloha : JSON.parse(v); }
+    catch (e) { return zaloha; }
+  }
+  function zapisUloz(klic, hodnota) {
+    try { localStorage.setItem(klic, JSON.stringify(hodnota)); } catch (e) {}
+  }
+
+  /* „Nové od minulé návštěvy". Co tuhle funkci drží, je POŘADÍ: datum se
+   * přečte do proměnné hned na začátku a teprve pak se smí přepsat.
+   * Kdyby se zapsalo dřív, porovnávalo by se s dneškem a nové by nebylo
+   * nikdy nic. (Ověřeno sabotáží — prohození těch dvou řádků shodí tři
+   * kontroly v scripts/test-pamet.mjs.)
+   * Odložení zápisu o 1,2 s má menší roli: když se stránka cestou rozbije,
+   * návštěva se nezapíše a člověk o přehled nepřijde. */
+  var NAVSTEVA_KLIC = 'pk_navsteva_v1';
+  var minulaNavsteva = ctiUloz(NAVSTEVA_KLIC, null);
+  function jeNovy(d) {
+    if (!minulaNavsteva || !d.first_seen) return false;
+    return d.first_seen > minulaNavsteva;
+  }
+  function pocetNovych() {
+    var n = 0;
+    for (var i = 0; i < DATA.length; i++) if (jeNovy(DATA[i])) n++;
+    return n;
+  }
+
+  /* Skryté pozemky — „tenhle mě nezajímá". Kdo prochází dvě stě nabídek,
+   * potřebuje odškrtávat, co už viděl. */
+  var SKRYTE_KLIC = 'pk_skryte_v1';
+  var skryte = ctiUloz(SKRYTE_KLIC, []) || [];
+  function jeSkryty(d) { return skryte.indexOf(pkey(d)) !== -1; }
+  function prepniSkryty(d) {
+    var k = pkey(d), i = skryte.indexOf(k);
+    if (i === -1) skryte.push(k); else skryte.splice(i, 1);
+    zapisUloz(SKRYTE_KLIC, skryte);
+  }
 
   /* ---------- Oblíbené pozemky (uložené v prohlížeči) ---------- */
   var FAV_KEY = 'pk_fav_v1';
@@ -1805,7 +1851,10 @@
     // Štítek v legendě říká „do 7 dní" — filtr musí počítat stejně (dřív pouštěl 14).
     var okUrgent = !urgentOnly || isUrgent(d);
     var okFav = !favOnly || isFav(d);
-    return okType && okSearch && okDruh && okPrice && okArea && okUrgent && okFav;
+    // Skryté zmizí ze seznamu — ale jen dokud si je člověk sám nevyžádá
+    // (tlačítko „Zobrazit skryté"). Nenávratně se nic neztrácí.
+    var okSkryt = ukazSkryte || !jeSkryty(d);
+    return okType && okSearch && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt;
   }
   function perM2Val(d){ return hasArea(d) ? d.price / d.area : Infinity; }
   // „Rozprostření": u řazení Doporučené nechceme 5 dražeb (nebo 2× stejná obec)
@@ -1868,6 +1917,7 @@
 
   function renderList() {
     updateFilterBadge();
+    ulozFiltr();
     listEl.innerHTML = '';
     var vis = [], visIds = [];
     DATA.forEach(function (d) {
@@ -1925,10 +1975,15 @@
         chips.push('<span class="opp-deal">' + (_di && _di.cheaper >= 70 ? 'levnější než ' + _di.cheaper + ' %' : 'výhodná cena') + '</span>');
       }
       if (hot) chips.push('<span class="opp-hot">Doporučujeme</span>');
+      // „Nové od minulé návštěvy" — první odznak v řadě, ať je hned vidět,
+      // co člověk ještě neviděl.
+      if (jeNovy(d)) chips.unshift('<span class="opp-nove">Nové</span>');
+      if (jeSkryty(d)) li.classList.add('je-skryty');
       li.innerHTML =
         '<div class="opp-media">' +
           mapThumb(d) +
           '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
+          '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '">' + (jeSkryty(d) ? '↩' : '✕') + '</button>' +
         '</div>' +
         '<div class="opp-body">' +
           '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
@@ -1956,12 +2011,26 @@
         favBtn.setAttribute('aria-label', on ? 'Odebrat z uložených' : 'Uložit pozemek');
         if (favOnly) renderList();
       });
+      var skrytBtn = li.querySelector('.opp-skryt');
+      if (skrytBtn) skrytBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        prepniSkryty(d);
+        renderList();
+      });
       listEl.appendChild(li);
     });
 
     var mvCount = document.getElementById('mvt-count'); if (mvCount) mvCount.textContent = matched ? '(' + matched + ')' : '';
     var headLabel = sortMode === 'demand' ? 'Doporučené příležitosti' : 'Vybrané příležitosti';
-    countEl.innerHTML = headLabel + ' · <span class="mc-sub">' + matched + ' na mapě</span>';
+    var pripisky = '';
+    var novych = pocetNovych();
+    if (novych) pripisky += ' <span class="mc-nove">' + novych + ' ' +
+      (novych === 1 ? 'nový od minule' : (novych < 5 ? 'nové od minule' : 'nových od minule')) + '</span>';
+    if (skryte.length) pripisky += ' <button type="button" class="mc-skryte" id="mc-skryte">' +
+      (ukazSkryte ? 'Schovat skryté' : 'Zobrazit skryté (' + skryte.length + ')') + '</button>';
+    countEl.innerHTML = headLabel + ' · <span class="mc-sub">' + matched + ' na mapě</span>' + pripisky;
+    var sb = countEl.querySelector('#mc-skryte');
+    if (sb) sb.addEventListener('click', function (e) { e.stopPropagation(); ukazSkryte = !ukazSkryte; renderList(); });
     if (matched === 0) {
       var anyFilter = activeType !== 'all' || activeDruh !== 'all' || maxPrice || searchTerm || favOnly || urgentOnly || minArea;
       var emptyMsg;
@@ -2325,6 +2394,52 @@
 
     if (hotovo) box.hidden = false;
   }
+
+  /* Zápis data návštěvy. Rozhodující bylo, že se výš už přečetlo do
+   * proměnné; tohle je jen opatrnost navíc — když se stránka mezitím
+   * rozbije, návštěva se nezapíše a přehled „co je nové" zůstane. */
+  (function () {
+    var dnes = new Date();
+    var iso = dnes.getFullYear() + '-' +
+      String(dnes.getMonth() + 1).padStart(2, '0') + '-' +
+      String(dnes.getDate()).padStart(2, '0');
+    setTimeout(function () { zapisUloz(NAVSTEVA_KLIC, iso); }, 1200);
+  }());
+
+  /* Poslední nastavení filtrů. Kdo si vybral „Ústecký kraj, stavební,
+   * do milionu", nechce to příště klikat znovu. Ukládá se jen to, co si
+   * člověk sám nastavil — vyhledávací text ne, ten je jednorázový. */
+  var FILTR_KLIC = 'pk_filtr_v1';
+  function ulozFiltr() {
+    zapisUloz(FILTR_KLIC, { typ: activeType, druh: activeDruh, cena: maxPrice,
+      plocha: minArea, urgent: urgentOnly, razeni: sortMode });
+  }
+  function obnovFiltr() {
+    var f = ctiUloz(FILTR_KLIC, null);
+    if (!f) return false;
+    if (f.typ) activeType = f.typ;
+    if (f.druh) activeDruh = f.druh;
+    if (f.cena) maxPrice = f.cena;
+    if (f.plocha) minArea = f.plocha;
+    urgentOnly = !!f.urgent;
+    // Řazení „podle vzdálenosti" se neobnovuje — potřebuje polohu, o kterou
+    // se musí požádat znovu, a bez ní by seznam vyšel v náhodném pořadí.
+    if (f.razeni && f.razeni !== 'near') sortMode = f.razeni;
+    // Ovládací prvky musí ukázat totéž, co je nastavené — jinak by filtr
+    // tiše platil a člověk by nechápal, proč vidí jen část nabídek.
+    if (filtersEl) filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-type') === activeType);
+    });
+    if (druhEl) druhEl.value = activeDruh;
+    if (cenaEl && maxPrice) cenaEl.value = String(maxPrice);
+    if (areaEl && minArea) areaEl.value = String(minArea);
+    if (urgentEl) urgentEl.checked = urgentOnly;
+    if (sortEl) sortEl.value = sortMode;
+    return true;
+  }
+  // Seznam se vykresluje už dřív, takže po obnovení filtru se musí překreslit —
+  // jinak by ovládací prvky ukazovaly filtr, který na výpis ještě nesedí.
+  if (obnovFiltr()) renderList();
 
   renderHeroLive();
   renderDeals();
