@@ -9,7 +9,7 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css?v=20260926d">
   <style>
     /* Předloha je vzorník, ne stránka webu — má vlastní jednoduchou sazbu. */
@@ -24,18 +24,18 @@
     .mrizka{display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));}
     .vzorek{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:18px;}
     .vzorek .nazev{font-weight:700; font-size:14px; margin-bottom:3px;}
-    .vzorek .kod{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--text-ondark-mute); word-break:break-all;}
+    .vzorek .kod{font-family:var(--font-mono); font-size:11.5px; color:var(--text-ondark-mute); word-break:break-all;}
     .pole{height:66px; border-radius:var(--r-sm); margin-bottom:11px; display:grid; place-items:center;
-      font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600;}
-    .pomer{display:inline-block; margin-top:7px; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600;
+      font-family:var(--font-mono); font-size:12px; font-weight:600;}
+    .pomer{display:inline-block; margin-top:7px; font-family:var(--font-mono); font-size:11px; font-weight:600;
       padding:2px 7px; border-radius:999px; background:rgba(19,102,62,.12); color:var(--c-ok-ink);}
     .pomer.slabe{background:rgba(174,30,30,.12); color:var(--c-exekuce-ink);}
     .radaTvaru{display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;}
     .tvar{width:96px; height:70px; background:var(--ink-soft); border:1px solid var(--line-strong);
-      display:grid; place-items:center; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-ondark-mute);}
+      display:grid; place-items:center; font-family:var(--font-mono); font-size:11px; color:var(--text-ondark-mute);}
     .pozn{font-size:13.5px; color:var(--text-ondark-mute); line-height:1.6; margin-top:14px; padding-left:14px; border-left:3px solid var(--accent-warm);}
     .typ p, .typ div{margin-bottom:10px;}
-    .skala{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-ondark-mute); display:block; margin-top:2px;}
+    .skala{font-family:var(--font-mono); font-size:11px; color:var(--text-ondark-mute); display:block; margin-top:2px;}
   </style>
 </head>
 <body>
@@ -97,9 +97,9 @@
      Dvě písma dělají web korektní; teprve třetí mu dá charakter.</p>
   <div class="mrizka" style="margin-bottom:24px">
     <div class="vzorek"><div style="font-family:var(--font-display);font-size:30px;font-weight:700">Příliš žluťoučký</div>
-      <div class="nazev" style="margin-top:8px">Nadpisy — Fraunces</div><div class="kod">var(--font-display)</div></div>
+      <div class="nazev" style="margin-top:8px">Nadpisy — Archivo (šířka 112)</div><div class="kod">var(--font-display)</div></div>
     <div class="vzorek"><div style="font-family:var(--font-ui);font-size:20px;font-weight:600">Příliš žluťoučký kůň</div>
-      <div class="nazev" style="margin-top:8px">Text a ovládání — Plus Jakarta Sans</div><div class="kod">var(--font-ui)</div></div>
+      <div class="nazev" style="margin-top:8px">Text a ovládání — Archivo</div><div class="kod">var(--font-ui)</div></div>
     <div class="vzorek"><div style="font-family:var(--font-mono);font-size:17px;font-weight:500">1 951 · 800 m² · Kč</div>
       <div class="nazev" style="margin-top:8px">Čísla a štítky — IBM Plex Mono</div><div class="kod">var(--font-mono)</div></div>
   </div>
