@@ -15,7 +15,12 @@ let seed = 20240917;
 const nah = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
 
 const W = 1600, H = 760, SL = 17, RD = 10;
-const barvy = ['#D8CDAB','#C9BE97','#B7C495','#A4B584','#D2B78C','#BC9A72','#A08862','#E2D8BC','#8FA477','#CDC0A0','#B3A886','#C6D0A6','#9DAF86','#DCC9A6'];
+// Paleta se drží barev webu, ne skutečných polí. Zelenohnědá krajina proti
+// královsky modrému ovládání vypadala jako dva weby slepené k sobě. Tohle
+// jsou dvě rodiny — břidlicová modř a teplý písek — tedy přesně to, z čeho
+// je zbytek stránky. Barvu navíc má na webu jenom to, na co se dá kliknout.
+const barvy = ['#AEB9CE','#9EAAC2','#C3CBDA','#8D9BB5','#B6C0D2','#D3D9E4',
+               '#D8D0C2','#C9C0B0','#E0D9CC','#BFB5A4','#A8A99F','#BCC4D3','#CBC6BA','#9FA8B8'];
 
 // mřížka bodů s rozhýbáním
 const bod = [];
@@ -46,7 +51,7 @@ for (let r = 0; r < RD; r++) {
         const t = k / kroku;
         const x1 = a[0] + (e[0] - a[0]) * t, y1 = a[1] + (e[1] - a[1]) * t;
         const x2 = b[0] + (d[0] - b[0]) * t, y2 = b[1] + (d[1] - b[1]) * t;
-        parcely += `<path d="M${x1.toFixed(0)} ${y1.toFixed(0)}L${x2.toFixed(0)} ${y2.toFixed(0)}" stroke="rgba(72,60,40,0.10)" stroke-width="1.1" fill="none"/>`;
+        parcely += `<path d="M${x1.toFixed(0)} ${y1.toFixed(0)}L${x2.toFixed(0)} ${y2.toFixed(0)}" stroke="rgba(28,36,58,0.10)" stroke-width="1.1" fill="none"/>`;
       }
     }
   }
@@ -59,7 +64,7 @@ for (let i = 0; i < 2; i++) {
   let d = '';
   for (let c = 0; c <= SL; c++) { const p = bod[r][c]; d += (c ? 'L' : 'M') + p[0].toFixed(0) + ' ' + p[1].toFixed(0); }
   cesty += `<path d="${d}" fill="none" stroke="rgba(255,250,240,0.46)" stroke-width="${3.4 - i}"/>`;
-  cesty += `<path d="${d}" fill="none" stroke="rgba(90,74,52,0.16)" stroke-width="${6.5 - i}" stroke-linecap="round" opacity="0.5"/>`;
+  cesty += `<path d="${d}" fill="none" stroke="rgba(34,42,64,0.15)" stroke-width="${6.5 - i}" stroke-linecap="round" opacity="0.5"/>`;
 }
 
 // remízky (skupinky stromů podél mezí)
@@ -68,12 +73,12 @@ for (let i = 0; i < 60; i++) {
   const r = Math.floor(nah() * (RD + 1)), c = Math.floor(nah() * (SL + 1));
   const p = bod[r][c];
   const rr = 7 + nah() * 13;
-  stromy += `<ellipse cx="${(p[0] + (nah() - .5) * 40).toFixed(0)}" cy="${(p[1] + (nah() - .5) * 30).toFixed(0)}" rx="${rr.toFixed(0)}" ry="${(rr * 0.82).toFixed(0)}" fill="rgba(58,74,44,0.30)"/>`;
+  stromy += `<ellipse cx="${(p[0] + (nah() - .5) * 40).toFixed(0)}" cy="${(p[1] + (nah() - .5) * 30).toFixed(0)}" rx="${rr.toFixed(0)}" ry="${(rr * 0.82).toFixed(0)}" fill="rgba(46,56,82,0.26)"/>`;
 }
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Letecký pohled na pole rozdělená na parcely">
 <title>Pole rozdělená na parcely</title>
-<rect width="${W}" height="${H}" fill="#BFB490"/>
+<rect width="${W}" height="${H}" fill="#B9C0CC"/>
 <g>${parcely}</g>
 <g>${meze}</g>
 <g>${cesty}</g>

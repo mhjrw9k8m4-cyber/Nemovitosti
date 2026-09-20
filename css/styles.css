@@ -432,9 +432,9 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    tak drží i v tom nejnepříznivějším místě obrazu. */
 .hero-band{position:relative; padding:64px 0 148px;
   background:
-    linear-gradient(180deg, rgba(9,12,20,.74) 0%, rgba(9,12,20,.66) 55%, rgba(9,12,20,.62) 100%),
+    linear-gradient(180deg, rgba(21,26,38,.76) 0%, rgba(21,26,38,.68) 55%, rgba(21,26,38,.64) 100%),
     url("../img/uvod-parcely.svg") center / cover no-repeat,
-    #E2D8BC;}
+    #E0D9CC;}
 /* Spodní okraj pásu se rozplyne do barvy stránky, aby nevznikla ostrá hrana.
    Je to zvlášť, ne v pozadí výš — pod ním už žádný text není a do měření
    kontrastu tím pádem nemá co mluvit. */
@@ -444,12 +444,12 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 /* Text leží na tmavém obraze — potřebuje vlastní barvy, jinak by zmizel. */
 /* Na obraze musí i drobné písmo držet 4,5:1 i nad nejsvětlejším polem —
    proto je teplá barva výrazně světlejší než jinde na webu. */
-.hero-map .hero-head .eyebrow{color:#FBE3CC;}
+.hero-map .hero-head .eyebrow{color:#E8E4DC;}
 .hero-map .hero-head h1{color:#FFFFFF;}
 .hero-map .hero-head h1 em{color:#F3C79F;}
 .hero-map .hero-head .hero-stats{color:rgba(255,255,255,0.80);}
 .hero-map .hero-head .hero-stats .ts-n{color:#FFFFFF;}
-.hero-map .hero-head .hero-stats .ts-n b{color:#FBE3CC;}
+.hero-map .hero-head .hero-stats .ts-n b{color:#FFFFFF;}
 .hero-map .hero-head .hero-stats .ts-sep{color:rgba(255,255,255,0.42);}
 .hero-map .wrap{position:relative; z-index:1;}
 .hero-head{text-align:center; max-width:860px; margin:0 auto 22px; display:flex; flex-direction:column; align-items:center;}

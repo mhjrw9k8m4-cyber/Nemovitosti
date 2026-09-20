@@ -120,3 +120,6 @@ jobs:
 
       - name: Viditelnost okrajů (WCAG 1.4.11)
         run: node scripts/test-okraje.mjs
+
+      - name: Odolnost proti vloženému kódu (XSS)
+        run: node scripts/test-xss.mjs

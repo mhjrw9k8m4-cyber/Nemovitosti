@@ -2304,6 +2304,37 @@
           });
         });
       }
+      // BEZPEČNOST — jedna branka pro VŠECHNA data, ne jen pro ta ze Supabase.
+      // Na mapu se sbíhají tři zdroje: robot (dražební rejstříky, inzertní
+      // weby), schválené inzeráty v repozitáři a živé inzeráty od majitelů.
+      // Čistily se jen ty živé. Jenže texty od robota pocházejí z CIZÍCH webů,
+      // na které nemáme vliv, a vypisují se do stránky přes innerHTML — stačilo
+      // by, aby se do popisu dostalo <img onerror=…>, a spustí se to každému
+      // návštěvníkovi. Adresa odkazu se navíc vkládá rovnou do href, takže
+      // „javascript:…" by se po klepnutí provedlo.
+      var DRUHY = { sale: 1, drazba: 1, exekuce: 1, obec: 1, majitel: 1 };
+      function cistyText(v, max) {
+        return String(v == null ? '' : v).replace(/[<>"]/g, '').replace(/\s+/g, ' ').trim().slice(0, max || 120);
+      }
+      function cistyOdkaz(v) {
+        var u = String(v == null ? '' : v).trim();
+        if (!/^https?:\/\//i.test(u)) return '';        // jen http(s), nic jiného
+        if (/["'<>\s]/.test(u)) return '';               // uvozovka by rozbila href
+        return u.slice(0, 500);
+      }
+      base = base.filter(function (d) { return d && typeof d === 'object'; }).map(function (d) {
+        if (!DRUHY[d.type]) d.type = 'sale';             // neznámý druh by shodil vykreslení
+        d.place = cistyText(d.place, 80) || 'Neuvedeno';
+        d.okres = cistyText(d.okres, 60);
+        d.parcel = cistyText(d.parcel, 40);
+        d.druh = cistyText(d.druh, 60);
+        d.extra = cistyText(d.extra, 160);
+        d.contact = cistyText(d.contact, 80);
+        d.description = cistyText(d.description, 600);
+        d.access = cistyText(d.access, 40);
+        d.url = cistyOdkaz(d.url);
+        return d;
+      });
       boot(base, kraje || null, j && j.updated);
     });
 })();
