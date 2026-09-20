@@ -2613,3 +2613,41 @@ body::after{
 .add-hero:not(.app-hero) .as-txt > span{color:rgba(255,255,255,0.78);}
 
 @media (max-width:880px){ .add-hero:not(.app-hero){padding:84px 0 40px;} }
+
+
+/* =====================================================================
+   DLOUHÝ TEXT (.clanek)
+   Rádcovské a právní stránky měly celý text zavřený v jedné velké
+   zaoblené kartě s rámečkem a stínem. Text není widget — krabice kolem
+   něj nic neříká, jen ho odděluje od stránky a přidává další hranu.
+   Karta proto mizí a text leží přímo na stránce.
+   Členění drží vlasová linka nad oddílem a číslo. Ruční „1." v nadpisu
+   bylo odstraněno ze značek — číslo teď počítá prohlížeč, takže se
+   nerozejde s pořadím, když se oddíl přidá nebo přesune.
+   ------------------------------------------------------------------ */
+.clanek{background:none; background-image:none; border:0; box-shadow:none;
+  border-radius:0; padding:0; animation:none;}
+.clanek::before{content:none;}
+/* Číslování běží přes celou sekci, ne přes jednu kartu — text bývá
+   rozdělený do dvou bloků a číslování musí pokračovat. */
+.section:has(.clanek){counter-reset:pk-oddil;}
+.clanek .rules-sect{position:relative; margin:0 0 36px; padding-top:24px;
+  border-top:1px solid var(--line-strong);}
+.clanek .rules-sect + .rules-sect{margin-top:0;}
+.clanek .rules-sect::before{counter-increment:pk-oddil;
+  content:counter(pk-oddil, decimal-leading-zero);
+  display:block; margin-bottom:10px;
+  font-family:var(--font-display); font-weight:600; font-size:13px;
+  letter-spacing:0.04em; color:var(--accent-warm); font-variant-numeric:tabular-nums;}
+.clanek .rules-sect h2{font-size:25px; line-height:1.18; letter-spacing:-0.022em;
+  margin-bottom:14px;}
+.clanek .rules-sect > p{margin-bottom:15px;}
+.clanek .rules-sect > p + .rule-list, .clanek .rules-sect > p + .rules-note{margin-top:16px;}
+.clanek .rules-sect > p:last-child, .clanek .rules-sect > ul:last-child{margin-bottom:0;}
+
+/* Na široké obrazovce číslo odejde na okraj sazby. Vedle čtecího sloupce
+   je přes 500 px prázdna — tohle je jediná věc, která tam patří. */
+@media (min-width:1100px){
+  .clanek .rules-sect::before{position:absolute; left:-64px; top:24px;
+    margin:0; text-align:right; width:44px; font-size:14px;}
+}
