@@ -18,6 +18,11 @@ const ucty = {                       // token → uid
 };
 let zpravy = [];                     // {id, created_at, listing_id, buyer_id, sender_id, body, read_at}
 const videno = new Map();            // id hledání → klíče pozemků označených za viděné
+// Uložená hledání podle uživatele. Majitel má jedno předem (kvůli odznaku
+// „Hlídání" v menu), další si testy ukládají samy přes save_search.
+const hledani = new Map();
+hledani.set(UID_MAJITEL, [{ id: 's1', label: 'Tábor', okres: 'Tábor', druh: null, ptype: null,
+  max_price: 0, min_area: 0, features: [], created_at: new Date().toISOString() }]);
 let poradi = 0;
 export function stav() { return zpravy; }
 
@@ -96,13 +101,34 @@ const server = http.createServer((req, res) => {
         return send(200, JSON.stringify(out));
       }
 
-      // Uložená hledání — kvůli odznaku „Hlídání" v menu. Jedno hledání
-      // na okres Tábor, nic zatím viděného: co sedí, je nové.
+      // Uložená hledání. Výchozí je jedno na okres Tábor (kvůli odznaku
+      // „Hlídání" v menu); zbytek si test uloží sám přes save_search.
       if (fn === 'my_searches') {
-        return send(200, JSON.stringify(uid === UID_MAJITEL
-          ? [{ id: 's1', label: 'Tábor', okres: 'Tábor', druh: '', ptype: '', max_price: 0, min_area: 0,
-               features: [], seen_keys: videno.get('s1') || [] }]
-          : []));
+        return send(200, JSON.stringify((hledani.get(uid) || []).map((h) => Object.assign({}, h, {
+          seen_keys: videno.get(h.id) || [] }))));
+      }
+
+      // Uložení hlídání. Stejné meze jako v databázi: bez přihlášení nic,
+      // nejvýš dvacet hledání na člověka.
+      if (fn === 'save_search') {
+        const moje = hledani.get(uid) || [];
+        if (moje.length >= 20) return send(400, JSON.stringify({ message: 'máte uložených už 20 hledání (víc nejde)' }));
+        const id = 's' + (++poradi);
+        moje.push({ id,
+          label: (args.p_label || '').trim() || null,
+          okres: (args.p_okres || '').trim() || null,
+          druh: (args.p_druh || '').trim() || null,
+          ptype: (args.p_type || '').trim() || null,
+          max_price: args.p_max_price || 0, min_area: args.p_min_area || 0,
+          features: args.p_features || [], created_at: new Date().toISOString() });
+        hledani.set(uid, moje);
+        return send(200, JSON.stringify(id));
+      }
+
+      if (fn === 'delete_search') {
+        hledani.set(uid, (hledani.get(uid) || []).filter((h) => h.id !== args.p_id));
+        videno.delete(args.p_id);
+        return send(200, 'null');
       }
 
       // Označení pozemků za viděné — po něm musí upozornění z centra zmizet.

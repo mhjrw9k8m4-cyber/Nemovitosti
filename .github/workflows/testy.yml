@@ -126,3 +126,6 @@ jobs:
 
       - name: Funkční kontrola stránek a odkazů
         run: node scripts/test-stranky.mjs
+
+      - name: Hlídání v aplikaci (celá cesta)
+        run: node scripts/test-hlidani-prohlizec.mjs
