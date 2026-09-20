@@ -98,7 +98,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=d842255f">
+  <link rel="stylesheet" href="css/styles.css?v=564109e5">
 </head>
 <body>
 
@@ -212,32 +212,33 @@
               <svg class="msf-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             </summary>
             <div class="map-controls">
-              <label class="mc-field"><span class="mc-cap">Cena do</span>
-                <select class="map-select" id="map-cena" aria-label="Maximální cena">
-                  <option value="">Libovolná cena</option>
-                  <option value="100000">do 100 tis. Kč</option>
-                  <option value="250000">do 250 tis. Kč</option>
-                  <option value="500000">do 500 tis. Kč</option>
-                  <option value="1000000">do 1 mil. Kč</option>
-                  <option value="2000000">do 2 mil. Kč</option>
-                  <option value="3000000">do 3 mil. Kč</option>
-                  <option value="5000000">do 5 mil. Kč</option>
-                  <option value="10000000">do 10 mil. Kč</option>
-                </select>
-              </label>
-              <label class="mc-field"><span class="mc-cap">Výměra od</span>
-                <select class="map-select" id="map-area" aria-label="Minimální výměra">
-                  <option value="">Libovolná výměra</option>
-                  <option value="200">od 200 m²</option>
-                  <option value="500">od 500 m²</option>
-                  <option value="1000">od 1 000 m²</option>
-                  <option value="2000">od 2 000 m²</option>
-                  <option value="5000">od 5 000 m²</option>
-                  <option value="10000">od 1 ha</option>
-                  <option value="20000">od 2 ha</option>
-                  <option value="50000">od 5 ha</option>
-                </select>
-              </label>
+              <div class="mc-field mc-rozsah"><span class="mc-cap">Cena (Kč)</span>
+                <div class="mc-dvoj">
+                  <input type="number" class="map-num" id="map-cena-od" inputmode="numeric" min="0" step="1000" placeholder="od" aria-label="Cena od (Kč)">
+                  <span class="mc-pomlcka" aria-hidden="true">–</span>
+                  <input type="number" class="map-num" id="map-cena" inputmode="numeric" min="0" step="1000" placeholder="do" aria-label="Cena do (Kč)">
+                </div>
+                <div class="mc-rychle" role="group" aria-label="Rychlá volba ceny">
+                  <button type="button" data-cena="0-50000">do 50 tis.</button>
+                  <button type="button" data-cena="0-150000">do 150 tis.</button>
+                  <button type="button" data-cena="150000-500000">150–500 tis.</button>
+                  <button type="button" data-cena="500000-2000000">0,5–2 mil.</button>
+                  <button type="button" data-cena="2000000-">nad 2 mil.</button>
+                </div>
+              </div>
+              <div class="mc-field mc-rozsah"><span class="mc-cap">Výměra (m²)</span>
+                <div class="mc-dvoj">
+                  <input type="number" class="map-num" id="map-area" inputmode="numeric" min="0" step="100" placeholder="od" aria-label="Výměra od (m²)">
+                  <span class="mc-pomlcka" aria-hidden="true">–</span>
+                  <input type="number" class="map-num" id="map-area-do" inputmode="numeric" min="0" step="100" placeholder="do" aria-label="Výměra do (m²)">
+                </div>
+                <div class="mc-rychle" role="group" aria-label="Rychlá volba výměry">
+                  <button type="button" data-plocha="0-1000">do 1 000 m²</button>
+                  <button type="button" data-plocha="1000-5000">1 000–5 000</button>
+                  <button type="button" data-plocha="5000-20000">0,5–2 ha</button>
+                  <button type="button" data-plocha="20000-">nad 2 ha</button>
+                </div>
+              </div>
               <label class="mc-field"><span class="mc-cap">Druh pozemku</span>
                 <select class="map-select" id="map-druh" aria-label="Druh pozemku"><option value="all">Všechny druhy</option></select>
               </label>
@@ -490,12 +491,12 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
 <script src="js/config.js?v=7f55c4e1" defer></script>
-<script src="js/auth.js?v=2eb42f1f" defer></script>
+<script src="js/auth.js?v=3f61aa2e" defer></script>
 <script src="js/dropdown.js?v=87dd79a6" defer></script>
 <script src="js/snimek.js?v=f03daf92" defer></script>
 <script src="js/ceny.js?v=a95a6303" defer></script>
 <script src="js/radce.js?v=014aaf2d" defer></script>
-<script src="js/main.js?v=17d59dec" defer></script>
+<script src="js/main.js?v=6127ac98" defer></script>
 <!-- Vercel Web Analytics (navstevnost) -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel. Na GitHub Pages ani lokálně
    neexistuje, a natvrdo vložený končil chybou 404 v konzoli — proto ho přidáme

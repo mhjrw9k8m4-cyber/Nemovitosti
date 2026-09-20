@@ -813,6 +813,14 @@
      kraji — a to tu nešlo jinak než klikáním do mapy. A hlavně: web umí
      spočítat, co je pod obvyklou cenou v okolí, ale nešlo podle toho
      filtrovat, i když je to jediné, co tu jinde nenajdete. */
+  /* Cena i výměra byly jen jedním směrem: „cena DO" a „výměra OD". Nešlo
+     tedy říct „od 200 do 500 tisíc" ani „do jednoho hektaru" — a nabízené
+     stupně navíc začínaly na sto tisících, přestože čtvrtina nabídek je
+     levnější. Teď jsou to dvě políčka (od–do) s volným číslem, takže si
+     člověk může zadat cokoli, a k tomu pár rychlých voleb pro ty časté. */
+  var cenaOdEl = document.getElementById('map-cena-od');
+  var areaDoEl = document.getElementById('map-area-do');
+  var minPrice = 0, maxArea = 0;
   var perm2El = document.getElementById('map-perm2');
   var krajFiltrEl = document.getElementById('map-kraj');
   var levneEl = document.getElementById('map-levne');
@@ -2085,8 +2093,10 @@
     var okSearch = !searchTerm ||
       (d.place + ' ' + d.okres + ' ' + (d.parcel || '')).toLowerCase().indexOf(searchTerm) !== -1;
     var okDruh = activeDruh === 'all' || druhGroup(d.druh) === activeDruh;
-    var okPrice = !maxPrice || !d.price || d.price <= maxPrice;
-    var okArea = !minArea || (hasArea(d) && d.area >= minArea);
+    var okPrice = (!maxPrice || (d.price && d.price <= maxPrice))
+      && (!minPrice || (d.price && d.price >= minPrice));
+    var okArea = (!minArea || (hasArea(d) && d.area >= minArea))
+      && (!maxArea || (hasArea(d) && d.area <= maxArea));
     // Štítek v legendě říká „do 7 dní" — filtr musí počítat stejně (dřív pouštěl 14).
     var okUrgent = !urgentOnly || isUrgent(d);
     var okFav = !favOnly || isFav(d);
@@ -2185,8 +2195,8 @@
   function updateFilterBadge() {
     if (!msfBadge) return;
     var n = 0;
-    if (maxPrice) n++;
-    if (minArea) n++;
+    if (maxPrice || minPrice) n++;
+    if (minArea || maxArea) n++;
     if (activeDruh && activeDruh !== 'all') n++;
     if (urgentOnly) n++;
     if (favOnly) n++;
@@ -2364,7 +2374,7 @@
     var sb = countEl.querySelector('#mc-skryte');
     if (sb) sb.addEventListener('click', function (e) { e.stopPropagation(); ukazSkryte = !ukazSkryte; renderList(); });
     if (matched === 0) {
-      var anyFilter = activeType !== 'all' || activeDruh !== 'all' || maxPrice || searchTerm || favOnly || urgentOnly || minArea;
+      var anyFilter = activeType !== 'all' || activeDruh !== 'all' || maxPrice || minPrice || searchTerm || favOnly || urgentOnly || minArea || maxArea;
       var emptyMsg;
       if (okoliAktivni()) {
         /* Prázdný okruh je nejčastější důvod, proč hlídání „nefunguje":
@@ -2427,8 +2437,10 @@
     activeType = 'all'; activeDruh = 'all'; maxPrice = 0; minArea = 0; urgentOnly = false; searchTerm = ''; favOnly = false;
     if (searchEl) searchEl.value = '';
     if (druhEl) druhEl.value = 'all';
-    if (cenaEl) { cenaEl.value = ''; cenaEl.dispatchEvent(new Event('pk-reset')); }
-    if (areaEl) { areaEl.value = ''; areaEl.dispatchEvent(new Event('pk-reset')); }
+    minPrice = 0; maxArea = 0;
+    [cenaEl, cenaOdEl, areaEl, areaDoEl].forEach(function (el) { if (el) el.value = ''; });
+    document.querySelectorAll('.mc-rychle button.on').forEach(function (b) { b.classList.remove('on'); });
+    if (cenaEl) cenaEl.dispatchEvent(new Event('pk-reset'));
     if (urgentEl) { urgentEl.classList.remove('on'); urgentEl.setAttribute('aria-pressed', 'false'); }
     filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-type') === 'all');
@@ -2677,8 +2689,40 @@
     sortMode = sortEl.value; renderList();
   });
   // Cena/výměra jsou teď textová pole — reaguj i na psaní (input) a na reset.
-  if (cenaEl) ['input', 'change', 'pk-reset'].forEach(function (ev) { cenaEl.addEventListener(ev, function () { maxPrice = parseInt(cenaEl.value, 10) || 0; renderList(); }); });
-  if (areaEl) ['input', 'change', 'pk-reset'].forEach(function (ev) { areaEl.addEventListener(ev, function () { minArea = parseInt(areaEl.value, 10) || 0; renderList(); }); });
+  function prectiRozsahy() {
+    maxPrice = parseInt(cenaEl && cenaEl.value, 10) || 0;
+    minPrice = parseInt(cenaOdEl && cenaOdEl.value, 10) || 0;
+    minArea = parseInt(areaEl && areaEl.value, 10) || 0;
+    maxArea = parseInt(areaDoEl && areaDoEl.value, 10) || 0;
+    renderList();
+  }
+  [cenaEl, cenaOdEl, areaEl, areaDoEl].forEach(function (el) {
+    if (!el) return;
+    ['input', 'change', 'pk-reset'].forEach(function (ev) { el.addEventListener(ev, prectiRozsahy); });
+  });
+  /* Rychlé volby. Nejsou to další omezení, jen zkratka — po klepnutí se
+     čísla objeví v políčkách a dají se dál upravit. Druhé klepnutí na tutéž
+     volbu ji zruší, ať se člověk nemusí vracet mazáním. */
+  function nastavRozsah(odEl, doEl, hodnota, tlacitko) {
+    var d = String(hodnota).split('-');
+    // „0" v zápisu volby znamená „bez dolní hranice", v políčku má být prázdno.
+    var chceOd = (d[0] && d[0] !== '0') ? d[0] : '';
+    var chceDo = d[1] || '';
+    var uzPlati = odEl.value === chceOd && doEl.value === chceDo;
+    odEl.value = uzPlati ? '' : chceOd;
+    doEl.value = uzPlati ? '' : chceDo;
+    var skupina = tlacitko.parentElement;
+    skupina.querySelectorAll('button').forEach(function (b) { b.classList.remove('on'); });
+    if (!uzPlati) tlacitko.classList.add('on');
+    prectiRozsahy();
+  }
+  document.querySelectorAll('.mc-rychle').forEach(function (g) {
+    g.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.hasAttribute('data-cena')) nastavRozsah(cenaOdEl, cenaEl, b.getAttribute('data-cena'), b);
+      else if (b.hasAttribute('data-plocha')) nastavRozsah(areaEl, areaDoEl, b.getAttribute('data-plocha'), b);
+    });
+  });
   if (urgentEl) urgentEl.addEventListener('click', function () { urgentOnly = !urgentOnly; urgentEl.classList.toggle('on', urgentOnly); urgentEl.setAttribute('aria-pressed', String(urgentOnly)); renderList(); });
   if (favEl) favEl.addEventListener('click', function () { favOnly = !favOnly; refreshFavBtn(); renderList(); });
   if (perm2El) perm2El.addEventListener('change', function () { maxPerM2 = parseInt(perm2El.value, 10) || 0; renderList(); });
@@ -2813,7 +2857,7 @@
   var FILTR_KLIC = 'pk_filtr_v1';
   function ulozFiltr() {
     zapisUloz(FILTR_KLIC, { typ: activeType, druh: activeDruh, cena: maxPrice,
-      plocha: minArea, urgent: urgentOnly, razeni: sortMode,
+      plocha: minArea, cenaOd: minPrice, plochaDo: maxArea, urgent: urgentOnly, razeni: sortMode,
       zaMetr: maxPerM2, kraj: krajFiltr, levne: levneOnly });
   }
   function obnovFiltr() {
@@ -2833,8 +2877,12 @@
       b.classList.toggle('active', b.getAttribute('data-type') === activeType);
     });
     if (druhEl) druhEl.value = activeDruh;
+    if (f.cenaOd) minPrice = f.cenaOd;
+    if (f.plochaDo) maxArea = f.plochaDo;
     if (cenaEl && maxPrice) cenaEl.value = String(maxPrice);
+    if (cenaOdEl && minPrice) cenaOdEl.value = String(minPrice);
     if (areaEl && minArea) areaEl.value = String(minArea);
+    if (areaDoEl && maxArea) areaDoEl.value = String(maxArea);
     if (f.zaMetr) maxPerM2 = f.zaMetr;
     if (f.kraj) krajFiltr = f.kraj;
     levneOnly = !!f.levne;

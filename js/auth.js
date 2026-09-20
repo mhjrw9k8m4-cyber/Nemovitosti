@@ -20,7 +20,25 @@
   }
 
   function getSession() { try { return JSON.parse(localStorage.getItem(LSKEY) || 'null'); } catch (e) { return null; } }
-  function setSession(s) { try { if (s) localStorage.setItem(LSKEY, JSON.stringify(s)); else localStorage.removeItem(LSKEY); } catch (e) {} }
+  /* K session se ukládá i ABSOLUTNÍ čas vypršení. Bez něj se nedalo poznat,
+     jestli přihlášení ještě platí, a token se proto obnovoval při každém
+     načtení stránky — viz platiJeste() a keepAlive() níž. */
+  function setSession(s) {
+    try {
+      if (s) {
+        if (!s.expires_at && s.expires_in) s.expires_at = Math.floor(Date.now() / 1000) + Number(s.expires_in);
+        localStorage.setItem(LSKEY, JSON.stringify(s));
+      } else localStorage.removeItem(LSKEY);
+    } catch (e) {}
+  }
+  /** Platí přihlášení ještě aspoň `rezerva` sekund? Bez známého času platnosti
+      raději řekneme, že ne — obnovit navíc je menší zlo než vypadnout. */
+  function platiJeste(rezerva) {
+    var s = getSession();
+    if (!s || !s.access_token) return false;
+    if (!s.expires_at) return false;
+    return (Number(s.expires_at) - Math.floor(Date.now() / 1000)) > (rezerva || 0);
+  }
   function loggedIn() { var s = getSession(); return !!(s && s.access_token); }
   function email() { var s = getSession(); return (s && s.user && s.user.email) || ''; }
   function uid() { var s = getSession(); return (s && s.user && s.user.id) || ''; }
@@ -95,26 +113,52 @@
     }).catch(function () { return { ok: false }; });
   }
 
-  // Automatické obnovení přihlášení (aby po hodině nevypadl) — přes refresh token.
-  function refresh() {
+  /* Obnovení přihlášení. Tady byly dvě chyby, kvůli kterým web lidi
+     vyhazoval:
+
+     1) Obnovovací token je JEDNORÁZOVÝ — po použití ho server vymění za nový.
+        keepAlive() ho přitom pálil při KAŽDÉM načtení stránky, a to na pěti
+        různých stránkách. Kdo prošel z „Moje inzeráty" do „Zprávy", spustil
+        dvě obnovení hned za sebou; to druhé použilo token, který už byl
+        spotřebovaný, server ho odmítl — a přihlášení bylo pryč. Totéž stačilo
+        vyrobit dvěma otevřenými kartami.
+        Teď se obnovuje, jen když platnost opravdu dochází.
+
+     2) Jakákoli neúspěšná odpověď session SMAZALA. Jenže 503 od serveru,
+        429 „moc požadavků" nebo výpadek sítě v tunelu neznamenají, že
+        přihlášení neplatí — znamenají „zkus to za chvíli". Session se teď
+        maže jedině tehdy, když server výslovně řekne, že token neplatí. */
+  var probihaObnova = null;
+  function refresh(vynutit) {
     var s = getSession();
     if (!s || !s.refresh_token) return Promise.resolve(false);
-    return fetch(URL + '/auth/v1/token?grant_type=refresh_token', {
+    if (!vynutit && platiJeste(300)) return Promise.resolve(true);   // ještě 5 minut platí
+    if (probihaObnova) return probihaObnova;                          // ať neběží dvě naráz
+    probihaObnova = fetch(URL + '/auth/v1/token?grant_type=refresh_token', {
       method: 'POST', headers: { 'apikey': KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: s.refresh_token })
     }).then(function (r) {
-      return r.json().then(function (j) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
         if (r.ok && j.access_token) { setSession(j); return true; }
-        setSession(null); return false;
+        // Odhlásit jen při výslovném „tenhle token neplatí".
+        var duvod = String((j && (j.error_code || j.error || j.msg || j.message)) || '').toLowerCase();
+        var opravduNeplati = (r.status === 400 || r.status === 401) &&
+          /invalid|expired|revoked|not\s*found|already\s*used/.test(duvod);
+        if (opravduNeplati) setSession(null);
+        return false;
       });
-    }).catch(function () { return false; });
+    }).catch(function () { return false; })      // výpadek sítě session nemaže
+      .then(function (v) { probihaObnova = null; return v; });
+    return probihaObnova;
   }
   // Udrž přihlášení naživu i po zavření prohlížeče: pokud máme uložený účet,
-  // tiše obnovíme token. Session je v localStorage, takže účet se pamatuje.
+  // tiše obnovíme token — ale jen když je to potřeba. Session je v localStorage,
+  // takže účet se pamatuje.
   function keepAlive() {
     var s = getSession();
     if (!s || !s.access_token) return Promise.resolve(false);
     if (!s.refresh_token) return Promise.resolve(true);
+    if (platiJeste(300)) return Promise.resolve(true);
     return refresh().then(function (ok) { return ok || loggedIn(); });
   }
   function parse(r) {
@@ -128,7 +172,8 @@
     return fetch(URL + '/rest/v1/rpc/' + fn, { method: 'POST', headers: headers(u), body: JSON.stringify(args || {}) })
       .then(function (r) {
         if (r.status === 401 && u) {
-          return refresh().then(function (ok) {
+          // Tady platnost opravdu došla, i kdyby hodiny tvrdily něco jiného.
+          return refresh(true).then(function (ok) {
             if (!ok) return { ok: false, expired: true };
             return fetch(URL + '/rest/v1/rpc/' + fn, { method: 'POST', headers: headers(true), body: JSON.stringify(args || {}) }).then(parse);
           });
@@ -142,7 +187,7 @@
   window.PKAuth = {
     ready: !!(URL && KEY),
     getSession: getSession, loggedIn: loggedIn, email: email, uid: uid, token: token, deviceId: deviceId,
-    signup: signup, login: login, logout: logout, rpc: rpc, keepAlive: keepAlive,
+    signup: signup, login: login, logout: logout, rpc: rpc, keepAlive: keepAlive, platiJeste: platiJeste,
     recover: recover, recoveryToken: recoveryToken, setPassword: setPassword
   };
 })();

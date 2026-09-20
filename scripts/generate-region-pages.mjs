@@ -118,6 +118,63 @@ function druhGroup(s){
 function median(a){ if(!a.length) return 0; a=a.slice().sort((x,y)=>x-y); const n=a.length; return n%2 ? a[(n-1)/2] : (a[n/2-1]+a[n/2])/2; }
 function pctl(a,p){ if(!a.length) return 0; a=a.slice().sort((x,y)=>x-y); return a[Math.max(0,Math.min(a.length-1,Math.floor(a.length*p)))]; }
 // Vrátí mapu skupina -> {n, med, lo, hi} pro danou sadu nabídek (jen platné Kč/m²).
+/* SPODNÍ MEZ UVĚŘITELNOSTI — hledá se v datech, nenastavuje se od stolu.
+ *
+ * Medián zemědělské půdy vycházel v některých okresech na 8 Kč/m². Tolik
+ * pole v Česku nestojí; jsou to spoluvlastnické podíly (v inzerátu je výměra
+ * celé parcely, cena jen za zlomek) a špatně načtené ceny. V malém okrese
+ * jich stačí pár a medián je strhnou — Znojmo 8, Česká Lípa 8. Web tím
+ * tvrdil něco, co není pravda.
+ *
+ * Nejde to ale utnout jedním číslem pro všechno. Změřeno na datech:
+ * u zemědělské půdy je rozdělení DVOUVRCHOLOVÉ — těsný shluk na 5–10 Kč/m²,
+ * pak skoro prázdno na 12–17 a teprve od 20 výš vlastní trh. U lesa žádná
+ * nabídka pod 12 Kč/m² není. U zahrad a stavebních pozemků je rozdělení
+ * plynulé a levné kusy jsou skutečné — plošný práh by tam smazal poctivé
+ * nabídky a medián vyhnal nahoru. Jinými slovy: co je u pole nesmysl, je
+ * u zahrady normální cena.
+ *
+ * Proto se hledá MEZERA v samotném rozdělení: shluk dole, za ním pásmo
+ * skoro bez nabídek, a nad ním trh. Když žádná taková mezera není,
+ * neuřízne se nic. Rozhoduje tvar dat, ne můj odhad.
+ */
+function dolniMez(v){
+  const n=v.length;
+  if(n<60) return 0;                       // z hrstky se tvar rozdělení poznat nedá
+  const m=median(v); if(!(m>0)) return 0;
+  const krok=m/20, konec=m*0.7;
+  const bin=[]; for(let a=0;a<konec;a+=krok) bin.push(v.filter(x=>x>=a&&x<a+krok).length);
+  let maxDosud=0, podNim=0;
+  for(let i=0;i<bin.length;i++){
+    if(bin[i]>maxDosud) maxDosud=bin[i];
+    podNim+=bin[i];
+    // Shluk musí být znát (2 % vzorku), pod mezerou musí něco ležet (3 %)
+    // a mezera musí být aspoň dva koše skoro prázdné.
+    if(maxDosud>=n*0.02 && podNim>=n*0.03 && bin[i]<=maxDosud*0.12 && (bin[i+1]??99)<=maxDosud*0.12){
+      return (i+2)*krok;
+    }
+  }
+  return 0;
+}
+/* Meze se počítají JEDNOU z celostátních dat a pak platí i pro kraje a okresy.
+ * V okrese s devatenácti nabídkami by se tvar rozdělení hledat nedal — a přitom
+ * právě tam ty podíly nejvíc škodí. */
+const MEZE_DRUHU = {};
+let ODFILTROVANO = 0;
+function spoctiMeze(list){
+  const b={};
+  for(const o of list){
+    if(!(o.price>0 && o.area>=100 && o.area<=500000)) continue;
+    const g=druhGroup(o.druh); if(g==='Ostatní') continue;
+    const perm2=o.price/o.area;
+    if((g==='Zemědělská půda' || g==='Lesní pozemek') && perm2>500) continue;
+    (b[g]=b[g]||[]).push(perm2);
+  }
+  for(const g of Object.keys(b)){
+    MEZE_DRUHU[g]=dolniMez(b[g]);
+    ODFILTROVANO += b[g].filter(x=>x<MEZE_DRUHU[g]).length;
+  }
+}
 function priceStats(list){
   const buckets={};
   for(const o of list){
@@ -127,6 +184,7 @@ function priceStats(list){
     // Pole/les nad 500 Kč/m² jsou fakticky stavební parcely (jen vedené jako „orná"),
     // do ceny zemědělské půdy/lesa nepatří — jinak by zkreslily medián okresu nahoru.
     if((g==='Zemědělská půda' || g==='Lesní pozemek') && perm2>500) continue;
+    if(perm2 < (MEZE_DRUHU[g]||0)) continue;   // pod mezerou v rozdělení = nejspíš podíl
     (buckets[g]=buckets[g]||[]).push(perm2);
   }
   const out={};
@@ -136,6 +194,7 @@ function priceStats(list){
   }
   return out;
 }
+spoctiMeze(all);                 // meze napřed, ať platí všude stejné
 const priceNational = priceStats(all);
 const priceByKraj = {}; for(const k of KRAJ_ORDER){ if(byKraj[k]) priceByKraj[k]=priceStats(byKraj[k]); }
 const priceByOkres = {}; for(const ok of Object.keys(byOkres)){ priceByOkres[ok]=priceStats(byOkres[ok]); }
@@ -611,6 +670,7 @@ ${rows}
         ${natCards || '<p class="rules-note" style="margin:0;">Zatím není dost dat pro spolehlivý výpočet.</p>'}
           </div>
           <p class="rules-note">Jde o <b>medián nabídkových cen</b> (ne realizovaných prodejů) z pozemků, u kterých známe cenu i výměru. Rozpětí ukazuje typické ceny (25.–75. percentil, tj. bez krajních výkyvů). Skutečná cena závisí na kvalitě půdy (BPEJ), přístupu, sítích i lokalitě — berte to jako orientaci, ne odhad konkrétního pozemku.</p>
+          <p class="rules-note">${ODFILTROVANO ? `Do výpočtu <b>nezapočítáváme ${ODFILTROVANO} ${ODFILTROVANO===1?'nabídku':(ODFILTROVANO<5?'nabídky':'nabídek')}</b>, u kterých cena za metr vychází hluboko pod trhem — bývají to <b>spoluvlastnické podíly</b> (v inzerátu je výměra celé parcely, ale prodává se jen zlomek) nebo špatně načtené ceny. Bez toho vycházel medián pole v některých okresech na 8 Kč/m², což není cena, za kterou se u nás pole prodává. Hranici nestanovujeme od stolu: hledá se mezera v samotném rozdělení cen, a kde žádná není (zahrady, stavební pozemky), nevyřazuje se nic.` : ''}</p>
         </div>
       </div>
 ${highlight ? `

@@ -36,6 +36,12 @@ jobs:
       - name: Dotazy do databáze proti schématu
         run: node scripts/test-sloupce.mjs
 
+      - name: Statistika cen (čísla odpovídají skutečnosti)
+        run: node scripts/test-statistika.mjs
+
+      - name: Přihlášení (web neodhlašuje sám od sebe)
+        run: node scripts/test-prihlaseni.mjs
+
       - name: Razítka verzí (aby lidem nechodila stará kopie)
         run: node scripts/test-verze.mjs
 
