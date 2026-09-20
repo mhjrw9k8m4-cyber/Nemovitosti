@@ -81,7 +81,7 @@
     }
     var o = model.odhad(d);
     if (o && o.podleVelikosti) {
-      var kde = window.PK_CENY.kdeText(o.uroven, o.kde);
+      var kde = (root.PK_CENY && root.PK_CENY.kdeText) ? root.PK_CENY.kdeText(o.uroven, o.kde) : '';
       /* Sleva přes hranici uvěřitelnosti není příležitost. Rádce to musí
          říct dřív, než si to člověk přečte jako trhák — a hlavně musí říct
          totéž, co odznak na kartě. */

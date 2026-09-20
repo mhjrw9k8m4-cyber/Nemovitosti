@@ -394,6 +394,74 @@ h1 em::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height
 .pk-dot.sel{transform:scale(1.55); box-shadow:var(--e1);}
 .pk-dot.urgent{animation:dotpulse 1.6s ease-out infinite;}
 /* Značka „vaše poloha" (režim Nejblíž ke mně) — s jemným pulzem */
+/* =====================================================================
+   VÝBĚR MÍSTA — vlastní mapa přes celou obrazovku
+   Kříž zůstává uprostřed a hýbe se mapa pod ním. Tak to znají lidé
+   z map v telefonu a hlavně to jde libovolněkrát opravit — dřív se
+   místo vybíralo jediným klepnutím do hlavní mapy a kdo klepl vedle,
+   musel začít znovu.
+   ===================================================================== */
+.vm-ov{position:fixed; inset:0; z-index:5000; background:rgba(12,26,18,0.55);
+  display:flex; align-items:center; justify-content:center; padding:16px;}
+body.vm-otevreno{overflow:hidden;}
+.vm-panel{position:relative; display:flex; flex-direction:column; width:min(680px,100%);
+  height:min(760px, calc(100dvh - 32px)); background:var(--ink-soft);
+  border-radius:var(--r-obraz); overflow:hidden; box-shadow:var(--e3);}
+.vm-hlava{display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:14px 14px 10px; font-family:var(--font-display); font-size:18px; color:var(--text-ondark);}
+.vm-x{width:38px; height:38px; flex:none; border:0; background:none; cursor:pointer;
+  font-size:17px; color:var(--text-ondark-mute); border-radius:var(--r-ovladani);}
+.vm-x:hover{background:var(--ink-soft2); color:var(--text-ondark);}
+.vm-radek{display:flex; gap:8px; padding:0 14px 10px;}
+.vm-hledat{flex:1 1 auto; min-width:0; font:inherit; font-size:14px; min-height:42px;
+  padding:9px 12px; border-radius:var(--r-ovladani); border:1px solid var(--line-ui);
+  background:#fff; color:var(--text-ondark);}
+.vm-hledat.vm-chyba{border-color:var(--c-exekuce); background:rgba(140,47,30,0.06);}
+.vm-kraj{flex:0 1 150px; min-width:0; font:inherit; font-size:14px; min-height:42px;
+  padding:9px 10px; border-radius:var(--r-ovladani); border:1px solid var(--line-ui);
+  background:#fff; color:var(--text-ondark);}
+.vm-mapa{flex:1 1 auto; min-height:180px; background:var(--ink-soft2);}
+/* Značka uprostřed mapy — klikat se přes ni nesmí.
+   Pozor: obal měl width:0 a display:flex, což značku stlačilo z dvaceti
+   pixelů na šest. Proto je teď umístěná posunem, ne flexem. */
+.vm-kriz{position:absolute; left:0; right:0; top:0; bottom:0; pointer-events:none; z-index:600;}
+.vm-kriz span{position:absolute; left:50%; top:50%; width:22px; height:22px; border-radius:50%;
+  background:#8A5512; border:3px solid #fff; box-shadow:var(--e2);
+  transform:translate(-50%, calc(-50% - 7px));}
+.vm-kriz span::after{content:""; position:absolute; left:50%; top:100%; width:2px; height:14px;
+  background:#8A5512; transform:translateX(-50%); border-radius:0 0 2px 2px;}
+.vm-poloha{position:absolute; right:14px; z-index:600; bottom:104px;}
+.vm-gps{display:inline-flex; align-items:center; gap:7px; font:inherit; font-size:13px;
+  font-weight:600; min-height:38px; padding:8px 13px; cursor:pointer;
+  border-radius:var(--r-pill); border:1px solid var(--line-ui); background:rgba(255,255,255,0.95);
+  color:var(--copper); box-shadow:var(--e1);}
+.vm-gps svg{width:16px; height:16px; stroke-width:2.25;}
+.vm-gps[disabled]{opacity:.75; cursor:progress;}
+.vm-pata{display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top:1px solid var(--line); background:var(--ink-soft);}
+.vm-okruh{display:inline-flex; align-items:center; gap:7px; font-size:13px; color:var(--text-ondark-mute);}
+.vm-okruh select{font:inherit; font-size:13px; min-height:38px; padding:7px 9px;
+  border-radius:var(--r-ovladani); border:1px solid var(--line-ui); background:#fff; color:var(--text-ondark);}
+.vm-pocet{flex:1 1 140px; min-width:0; font-size:13px; color:var(--text-ondark);}
+.vm-pocet b{font-size:15px;}
+.vm-obec{color:var(--text-ondark-mute);}
+.vm-ok{flex:0 0 auto; font:inherit; font-size:15px; font-weight:700; cursor:pointer;
+  min-height:46px; padding:11px 18px; border:0; border-radius:var(--r-ovladani);
+  background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
+.vm-ok:hover{filter:brightness(1.06);}
+@media (max-width:560px){
+  .vm-ov{padding:0;}
+  .vm-panel{width:100%; height:100dvh; border-radius:0;}
+  .vm-radek{flex-wrap:wrap;}
+  .vm-kraj{flex:1 1 100%;}
+  .vm-pata{gap:8px;}
+  .vm-ok{flex:1 1 100%; order:3;}
+  .vm-pocet{flex:1 1 100%; order:1;}
+  .vm-okruh{order:2;}
+  .vm-poloha{bottom:auto; top:calc(100% - 100dvh + 178px);}
+}
+
 /* Hlídané místo na mapě — mosazná značka, ať se neplete s „jste tady" (zelená)
    ani s tečkami pozemků. Kolem ní je čárkovaný kruh s hlídaným okruhem. */
 .pk-misto-wrap{background:none; border:0;}

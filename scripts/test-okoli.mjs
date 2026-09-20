@@ -79,45 +79,146 @@ async function telefon(poloha) {
   return { ctx, p, chyby };
 }
 
-// --- 1) Hlídané místo je vidět NA MAPĚ -------------------------------
+/** Otevře celoobrazovkový výběr místa a počká, až je mapa opravdu na světě. */
+async function otevriVybirac(p, spoustec) {
+  // Chybějící tlačítko má skončit poctivým ✕ u kontroly, ne pádem testu.
+  await p.locator(spoustec).scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {});
+  await p.locator(spoustec).click({ timeout: 4000 }).catch(() => {});
+  await p.waitForSelector('.vm-ov', { timeout: 8000 }).catch(() => {});
+  // V CI se Leaflet stahuje ze sítě — čeká se na mapu, ne na hodinky.
+  await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
+  await p.waitForTimeout(900);
+}
+/** Co výběr místa právě ukazuje. */
+const stavVybiraku = (p) => p.evaluate(() => {
+  const ov = document.querySelector('.vm-ov');
+  const mapa = document.getElementById('vm-mapa');
+  const kriz = document.querySelector('.vm-kriz span');
+  const r = mapa ? mapa.getBoundingClientRect() : null;
+  const kr = kriz ? kriz.getBoundingClientRect() : null;
+  return {
+    otevreno: !!ov,
+    vyska: r ? Math.round(r.height) : 0,
+    sirka: r ? Math.round(r.width) : 0,
+    dlazdice: document.querySelectorAll('#vm-mapa img.leaflet-tile').length,
+    kriz: kr ? { w: Math.round(kr.width), h: Math.round(kr.height) } : null,
+    kruh: !!document.querySelector('#vm-mapa path[stroke-dasharray]'),
+    pocet: (document.getElementById('vm-pocet') || {}).textContent || '',
+    kraju: document.querySelectorAll('#vm-kraj option').length,
+    kraj: (document.getElementById('vm-kraj') || {}).value,
+    km: (document.getElementById('vm-km') || {}).value,
+    ulozeno: !!localStorage.getItem('pk_misto_v1'),
+  };
+});
+
+// --- 1) Výběr místa je CELÁ MAPA, ne jedno klepnutí ------------------
 {
   const { ctx, p, chyby } = await telefon(null);
-  await p.locator('#misto-vybrat').scrollIntoViewIfNeeded();
-  await p.locator('#misto-vybrat').click();
-  await p.waitForTimeout(1400);
-  const rezim = await p.evaluate(() => ({
-    vyzva: (document.querySelector('.mp-hlavni') || {}).textContent || '',
-    rezim: document.body.classList.contains('vybiram-misto'),
-    mapaVidet: (() => { const m = document.getElementById('leaflet-map'); if (!m) return false;
-      const r = m.getBoundingClientRect(); return r.height > 200 && r.top < innerHeight && r.bottom > 0; })(),
-  }));
-  pravda('„Vybrat na mapě" vyzve ke klepnutí do mapy', /Klepněte do mapy/.test(rezim.vyzva), rezim.vyzva);
-  pravda('a mapu k tomu opravdu ukáže', rezim.mapaVidet,
-    'web řekne „klepněte do mapy" a mapa přitom není vidět');
+  await otevriVybirac(p, '#misto-vybrat');
+  const v = await stavVybiraku(p);
+  pravda('„Vybrat na mapě" otevře výběr místa', v.otevreno,
+    'nic se neotevřelo — tlačítko vypadá jako rozbité');
+  pravda('a je v něm opravdová mapa', v.vyska > 200 && v.sirka > 200 && v.dlazdice > 0,
+    `mapa ${v.sirka}×${v.vyska} px, ${v.dlazdice} dlaždic`);
+  // Kříž byl jednu dobu zmáčknutý na 6 px — nešlo poznat, kam se vlastně míří.
+  pravda('kříž uprostřed je vidět a není zmáčknutý',
+    v.kriz && v.kriz.w >= 16 && v.kriz.h >= 16 && Math.abs(v.kriz.w - v.kriz.h) <= 4,
+    v.kriz ? `${v.kriz.w}×${v.kriz.h} px` : 'kříž tam není');
+  pravda('kolem je vidět hlídaný okruh', v.kruh,
+    'bez kruhu není poznat, jak velké okolí se vybírá');
+  pravda('počet pozemků je vidět hned, ještě před potvrzením', /\d+ pozem/.test(v.pocet), v.pocet);
 
-  // V CI se Leaflet stahuje ze sítě — na mapu se čeká, ne na hodinky.
-  await p.waitForSelector('#leaflet-map .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
-  const box = await p.locator('#leaflet-map').boundingBox();
-  pravda('mapa má na obrazovce svoje místo', !!box && box.height > 200,
-    box ? `jen ${Math.round(box.height)} px na výšku` : 'mapa se nevykreslila');
-  await p.mouse.click(box.x + box.width / 2, box.y + Math.min(box.height / 2, 300));
-  await p.waitForTimeout(1600);
-  const po = await p.evaluate(() => ({
-    znacka: !!document.querySelector('.pk-misto'),
-    kruh: !!document.querySelector('#leaflet-map path[stroke-dasharray]'),
-    pod: (document.querySelector('.mp-pod') || {}).textContent || '',
-    rezim: document.body.classList.contains('vybiram-misto'),
-    ulozeno: (() => { try { return !!JSON.parse(localStorage.getItem('pk_misto_v1') || 'null'); } catch (e) { return false; } })(),
-  }));
-  // Tohle je jádro: značka NA MAPĚ, ne jen změněný text nad ní.
-  pravda('po klepnutí je hlídané místo vidět na mapě', po.znacka,
-    'na mapě se neobjevilo vůbec nic — text nad mapou se změnil, ale mapa zůstala stejná');
-  pravda('a je kolem něj vidět hlídaný okruh', po.kruh,
-    'bez kruhu není poznat, jak velké okolí se vlastně hlídá');
-  pravda('místo se uložilo', po.ulozeno);
-  pravda('a režim výběru se ukončil', po.rezim === false);
-  pravda('proužek řekne, co se hlídá',
-    /Hlídané místo/.test(po.pod) && /okolí do \d+ km/.test(po.pod), po.pod);
+  // Tečky pozemků: kreslí se do plátna, takže se počítají barevné body.
+  const tecek = await p.evaluate(() => {
+    const c = document.querySelector('#vm-mapa canvas');
+    if (!c) return -1;
+    try {
+      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      let n = 0;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 40) n++;
+      return n;
+    } catch (e) { return -2; }
+  });
+  pravda('na mapě jsou vidět tečky pozemků', tecek > 500,
+    `barevných bodů v plátně: ${tecek} — bez teček se vybírá naslepo`);
+
+  // --- jádro stížnosti: dá se PŘEKLIKÁVAT -----------------------------
+  pravda('kraj se dá vybrat', v.kraju >= 15, `v nabídce je jen ${v.kraju} položek`);
+  await p.selectOption('#vm-kraj', 'Jihomoravský');
+  await p.waitForTimeout(1200);
+  const jm = await stavVybiraku(p);
+  pravda('volba kraje mapu opravdu přesune', jm.pocet !== v.pocet,
+    `před: „${v.pocet.trim()}", po: „${jm.pocet.trim()}"`);
+  await p.selectOption('#vm-kraj', 'Ústecký');
+  await p.waitForTimeout(1200);
+  const us = await stavVybiraku(p);
+  pravda('a dá se přepnout na další kraj (a další, a další)', us.pocet !== jm.pocet,
+    `Jihomoravský: „${jm.pocet.trim()}", Ústecký: „${us.pocet.trim()}" — tohle dřív nešlo vůbec`);
+
+  // Mapa se dá táhnout a počet se mění při každém pohnutí.
+  const box = await p.locator('#vm-mapa').boundingBox();
+  async function tahni(dx, dy) {
+    await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await p.mouse.down();
+    await p.mouse.move(box.x + box.width / 2 + dx, box.y + box.height / 2 + dy, { steps: 12 });
+    await p.mouse.up();
+    await p.waitForTimeout(900);
+    return (await stavVybiraku(p)).pocet;
+  }
+  const t1 = await tahni(-120, -90);
+  pravda('mapa se dá táhnout a počet se hned přepočítá', t1 !== us.pocet,
+    `po tažení pořád „${t1.trim()}"`);
+  const t2 = await tahni(150, 110);
+  pravda('a dá se táhnout znovu, libovolněkrát', t2 !== t1,
+    `druhé tažení už počet nezměnilo: „${t1.trim()}" → „${t2.trim()}"`);
+
+  // Hledání obce.
+  await p.fill('#vm-hledat', 'Kolín');
+  await p.press('#vm-hledat', 'Enter');
+  await p.waitForTimeout(1400);
+  const poHledani = await stavVybiraku(p);
+  pravda('obec se dá najít napsáním', /Kolín/i.test(poHledani.pocet), poHledani.pocet);
+  pravda('a nabídka kraje pak neukazuje kraj, ve kterém mapa není',
+    poHledani.kraj === '', `zůstalo vybráno „${poHledani.kraj}"`);
+
+  /* Přiblížení se musí řídit okruhem. S pevným zoomem byl kruh o poloměru
+     10 km několikanásobně širší než obrazovka — na mapě po něm nebylo ani
+     vidu a nebylo poznat, co se vlastně vybírá. */
+  const ramec = () => p.evaluate(() => {
+    const mapa = document.getElementById('vm-mapa');
+    const k = document.querySelector('#vm-mapa path[stroke-dasharray]');
+    if (!mapa || !k) return null;
+    const m = mapa.getBoundingClientRect(), r = k.getBoundingClientRect();
+    return {
+      // Kolik z kruhu je vidět v mapě a jak velký je vůči ní.
+      vejdeSe: r.left >= m.left - 4 && r.right <= m.right + 4 && r.top >= m.top - 4 && r.bottom <= m.bottom + 4,
+      podil: Math.round(100 * r.width / m.width),
+    };
+  });
+  const r10 = await ramec();
+  pravda('po najití obce je hlídaný okruh celý vidět', r10 && r10.vejdeSe,
+    r10 ? `kruh zabírá ${r10.podil} % šířky mapy a přesahuje ven` : 'kruh na mapě není');
+  pravda('a není přitom zbytečně malý', r10 && r10.podil >= 30,
+    r10 ? `kruh je jen ${r10.podil} % šířky mapy — mapa je zbytečně oddálená` : 'kruh na mapě není');
+
+  // Okruh.
+  await p.selectOption('#vm-km', '50');
+  await p.waitForTimeout(1400);
+  const sirsi = await stavVybiraku(p);
+  pravda('větší okruh ukáže víc pozemků už ve výběru',
+    (parseInt(sirsi.pocet, 10) || 0) > (parseInt(poHledani.pocet, 10) || 0),
+    `10 km: „${poHledani.pocet.trim()}", 50 km: „${sirsi.pocet.trim()}"`);
+  const r50 = await ramec();
+  pravda('a po jeho zvětšení je pořád celý vidět', r50 && r50.vejdeSe && r50.podil >= 30,
+    r50 ? `kruh zabírá ${r50.podil} % šířky mapy` : 'kruh na mapě není');
+
+  // Zavřít se dá, aniž se cokoli uloží — to je ta možnost couvnout.
+  await p.keyboard.press('Escape');
+  await p.waitForTimeout(500);
+  const zavreno = await stavVybiraku(p);
+  pravda('výběr se dá zavřít, aniž se cokoli uloží',
+    !zavreno.otevreno && !zavreno.ulozeno,
+    `otevřeno: ${zavreno.otevreno}, uloženo: ${zavreno.ulozeno}`);
   pravda('při výběru místa nespadl žádný skript', chyby.length === 0, chyby[0]);
   await ctx.close();
 }
@@ -125,14 +226,14 @@ async function telefon(poloha) {
 // --- 1b) A hlavně: okolí opravdu OMEZÍ seznam ------------------------
 {
   const { ctx, p, chyby } = await telefon(null);
-  // Nastavíme místo klepnutím do mapy.
-  await p.locator('#misto-vybrat').scrollIntoViewIfNeeded();
-  await p.locator('#misto-vybrat').click();
-  await p.waitForTimeout(1400);
-  await p.waitForSelector('#leaflet-map .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
-  const box = await p.locator('#leaflet-map').boundingBox();
   const cely = await p.evaluate(() => (document.getElementById('mvt-count') || {}).textContent || '');
-  await p.mouse.click(box.x + box.width * 0.45, box.y + Math.min(box.height * 0.45, 300));
+  // Místo nastavíme přes výběr místa: najdeme obec a potvrdíme.
+  await otevriVybirac(p, '#misto-vybrat');
+  await p.fill('#vm-hledat', 'Kolín');
+  await p.press('#vm-hledat', 'Enter');
+  await p.waitForTimeout(1400);
+  const nabidka = (await stavVybiraku(p)).pocet;
+  await p.click('#vm-ok');
   await p.waitForTimeout(2200);
 
   const v = await p.evaluate(() => {
@@ -142,9 +243,12 @@ async function telefon(poloha) {
     // (karta nenese souřadnice), takže se porovnává to, co web tvrdí:
     // číslo v hlavičce, počet v přepínači a čísla u kategorií.
     return {
+      vybirac: !!document.querySelector('.vm-ov'),
       vSeznamu: cislo((document.getElementById('mvt-count') || {}).textContent),
       hlavicka: (document.querySelector('.kh-txt b') || {}).textContent || '',
       pod: (document.querySelector('.kh-txt span') || {}).textContent || '',
+      znacka: !!document.querySelector('.pk-misto'),
+      kruh: !!document.querySelector('#leaflet-map path[stroke-dasharray]'),
       cipy: [...document.querySelectorAll('.filter-chip')]
         .filter((b) => b.style.display !== 'none')
         .map((b) => ({ typ: b.getAttribute('data-type'), n: cislo(b.querySelector('.chip-n')?.textContent) })),
@@ -157,12 +261,22 @@ async function telefon(poloha) {
   });
   const celyPocet = (cely.match(/(\d+)/) || [])[1];
   pravda('bez okolí je v seznamu celá republika', +celyPocet > 500, `bylo jen ${celyPocet}`);
+  pravda('potvrzení výběr zavře', v.vybirac === false);
   // TOHLE je ta chyba: dřív tu zůstalo 1940.
   pravda('po nastavení místa se seznam zúží na okolí',
     v.vSeznamu != null && v.vSeznamu < +celyPocet / 5,
     `v seznamu zůstalo ${v.vSeznamu} z ${celyPocet} — okolí se neprojevilo`);
+  // Co výběr sliboval, to se má i vypsat.
+  pravda('vypsaný počet sedí s tím, co výběr sliboval',
+    v.vSeznamu === (parseInt(nabidka, 10) || -1),
+    `výběr sliboval „${nabidka.trim()}", v seznamu je ${v.vSeznamu}`);
   pravda('hlavička nad mapou říká, že jde o okolí', /okolí/i.test(v.hlavicka), v.hlavicka);
   pravda('a uvádí okruh v kilometrech', /\d+ km/.test(v.pod), v.pod);
+  // Hlídané místo musí být vidět i na hlavní mapě, ne jen v textu nad ní.
+  pravda('hlídané místo je vidět na hlavní mapě', v.znacka,
+    'na mapě se neobjevilo nic — text se změnil, ale mapa zůstala stejná');
+  pravda('a je kolem něj vidět hlídaný okruh', v.kruh,
+    'bez kruhu není poznat, jak velké okolí se vlastně hlídá');
   // Druhá polovina té chyby: čísla u kategorií zůstávala za celou ČR.
   const vse = v.cipy.find((c) => c.typ === 'all');
   pravda('čísla u kategorií sedí s tím, co je v seznamu',
@@ -200,6 +314,34 @@ async function telefon(poloha) {
   pravda('větší okruh ukáže víc pozemků', siroky.n > v.vSeznamu,
     `do 10 km ${v.vSeznamu}, do 50 km ${siroky.n}`);
   pravda('a hlavička se změní taky', /50 km/.test(siroky.pod), siroky.pod);
+
+  // Místo se dá vybrat ZNOVU — ne že jednou klepnu a je konec.
+  const jdeZmenit = await p.locator('#misto-zmenit').isVisible().catch(() => false);
+  pravda('u uloženého místa je tlačítko „Změnit místo"', jdeZmenit,
+    'jediná cesta jinam vedla přes „Zrušit místo" a začít od nuly');
+  await otevriVybirac(p, '#misto-zmenit');
+  const znovu = await stavVybiraku(p);
+  pravda('výběr místa se dá otevřít znovu', znovu.otevreno,
+    'po jednom výběru už se nedá nic změnit — přesně na tohle si člověk stěžoval');
+  pravda('a pamatuje si zvolený okruh', znovu.km === '50', `nabízí ${znovu.km} km místo 50`);
+  if (znovu.otevreno) {
+    await p.fill('#vm-hledat', 'Tábor');
+    await p.press('#vm-hledat', 'Enter');
+    await p.waitForTimeout(1400);
+    await p.click('#vm-ok');
+    await p.waitForTimeout(2200);
+    const druhe = await p.evaluate(() => ({
+      hlavicka: (document.querySelector('.kh-txt b') || {}).textContent || '',
+      misto: (() => { try { return JSON.parse(localStorage.getItem('pk_misto_v1') || 'null'); } catch (e) { return null; } })(),
+    }));
+    pravda('druhý výběr hlídané místo opravdu přepíše',
+      druhe.misto && v.misto && (Math.abs(druhe.misto.lat - v.misto.lat) > 0.1 || Math.abs(druhe.misto.lng - v.misto.lng) > 0.1),
+      `${JSON.stringify(v.misto)} → ${JSON.stringify(druhe.misto)}`);
+    pravda('a hlavička se přepíše s ním', /okolí/i.test(druhe.hlavicka), druhe.hlavicka);
+  } else {
+    pravda('druhý výběr hlídané místo opravdu přepíše', false, 'výběr místa se podruhé vůbec neotevřel');
+    pravda('a hlavička se přepíše s ním', false, 'výběr místa se podruhé vůbec neotevřel');
+  }
 
   // A dá se vrátit na celou republiku.
   await p.locator('#misto-zapnout').scrollIntoViewIfNeeded();
@@ -292,19 +434,33 @@ async function telefon(poloha) {
   await p.waitForTimeout(250);
   const hned = await p.evaluate(() => {
     const b = document.getElementById('map-near');
-    return { ceka: !!b && b.disabled, text: (b || {}).textContent || '', okno: !!document.querySelector('.loc-ov') };
+    return { ceka: !!b && b.disabled, text: (b || {}).textContent || '', okno: !!document.querySelector('.vm-ov, .loc-ov') };
   });
   pravda('tlačítko hned dá najevo, že se něco děje', hned.ceka || hned.okno,
     `po 0,25 s: tlačítko „${hned.text.trim()}", okno ${hned.okno}`);
-  await p.waitForSelector('.loc-ov', { timeout: 12000 }).catch(() => {});
+  await p.waitForSelector('.vm-ov', { timeout: 12000 }).catch(() => {});
   const cekani = (Date.now() - t0) / 1000;
-  const v = await p.evaluate(() => ({
-    okno: !!document.querySelector('.loc-ov'),
-    text: (document.querySelector('.loc-card') || {}).textContent || '',
-    tlacitko: (document.getElementById('map-near') || {}).textContent || '',
-    zakazano: !!document.getElementById('map-near')?.disabled,
-  }));
-  pravda('bez polohy se nabídne napsat obec', v.okno && /Kde hledat/.test(v.text), v.text.slice(0, 60));
+  await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
+  await p.waitForTimeout(600);
+  const v = await p.evaluate(() => {
+    const mapa = document.getElementById('vm-mapa');
+    const r = mapa ? mapa.getBoundingClientRect() : null;
+    return {
+      okno: !!document.querySelector('.vm-ov'),
+      mapa: !!r && r.height > 200,
+      hledat: !!document.getElementById('vm-hledat'),
+      kraj: document.querySelectorAll('#vm-kraj option').length,
+      tlacitko: (document.getElementById('map-near') || {}).textContent || '',
+      zakazano: !!document.getElementById('map-near')?.disabled,
+    };
+  });
+  /* Dřív se tu otevíralo okénko „Kde hledat?", které chtělo napsat obec —
+     a malou vesnici v datech nenajde, takže to končilo slepou uličkou.
+     Teď se otevře mapa, na které si místo každý ukáže sám. */
+  pravda('bez polohy se otevře mapa, kde si místo vyberu sám', v.okno && v.mapa,
+    `okno ${v.okno}, mapa ${v.mapa}`);
+  pravda('a je v ní i hledání obce a výběr kraje', v.hledat && v.kraj >= 15,
+    `hledání ${v.hledat}, krajů ${v.kraj}`);
   pravda('a nečeká se na to deset vteřin', cekani < 8,
     `okno přišlo až po ${cekani.toFixed(1)} s — tak dlouhé ticho se čte jako „nefunguje to"`);
   pravda('tlačítko se potom dá zase zmáčknout', v.zakazano === false && /Pozemky v okolí/.test(v.tlacitko),
@@ -343,14 +499,14 @@ async function telefon(poloha) {
   pravda('na polohu se čeká nejvýš šest vteřin', behem.limit <= 6000,
     `žádá se o limit ${behem.limit} ms — tak dlouhé ticho se čte jako „nefunguje to"`);
 
-  await p.waitForSelector('.loc-ov', { timeout: 15000 }).catch(() => {});
+  await p.waitForSelector('.vm-ov', { timeout: 15000 }).catch(() => {});
   const cekani = (Date.now() - t0) / 1000;
   const konec = await p.evaluate(() => ({
-    okno: !!document.querySelector('.loc-ov'),
+    okno: !!document.querySelector('.vm-ov'),
     tlacitko: (document.getElementById('map-near') || {}).textContent || '',
     zakazano: !!document.getElementById('map-near')?.disabled,
   }));
-  pravda('po marném čekání se nabídne napsat obec', konec.okno,
+  pravda('po marném čekání se otevře mapa výběru místa', konec.okno,
     `po ${cekani.toFixed(1)} s se neukázalo nic`);
   pravda('a čekání netrvá déle než sedm vteřin', cekani < 7, `trvalo ${cekani.toFixed(1)} s`);
   pravda('tlačítko se vrátí do původního stavu',

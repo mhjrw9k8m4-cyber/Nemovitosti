@@ -244,35 +244,58 @@ pravda('a je v ní tlačítko „Vybrat na mapě"', poZruseni.jeTlacitkoVybrat =
 pravda('místo se smazalo i z prohlížeče', poZruseni.ulozeno === null, `v úložišti zůstalo ${poZruseni.ulozeno}`);
 pravda('vzdálenosti z karet zmizí taky', poZruseni.km === 0, `zůstalo ${poZruseni.km}`);
 
-// --- 6) Místo jde určit klepnutím do mapy (bez GPS) -------------------
-// Tohle je jediná cesta pro člověka, který polohu nepovolí.
+// --- 6) Místo jde určit na mapě (bez GPS) -----------------------------
+// Tohle je jediná cesta pro člověka, který polohu nepovolí. Dřív to bylo
+// jedno jediné klepnutí do hlavní mapy: kdo klepl vedle, měl hotovo a
+// nedalo se couvnout. Teď se otevře vlastní mapa přes celou obrazovku.
 await p.evaluate(() => document.getElementById('misto-vybrat').click());
-await p.waitForTimeout(500);
-const vyzva = await p.evaluate(() => ({
-  text: document.querySelector('.mp-hlavni').textContent,
-  rezim: document.body.classList.contains('vybiram-misto'),
-}));
-pravda('tlačítko „Vybrat na mapě" zapne režim výběru', vyzva.rezim === true);
-pravda('a proužek vyzve ke klepnutí do mapy', /Klepněte do mapy/.test(vyzva.text), `text: „${vyzva.text}"`);
-
-// Klepneme doprostřed mapy. Leaflet posílá vlastní událost, takže ji
-// vyvoláme přímo na mapě — kliknutí myší by chytil canvas s tečkami.
-await p.evaluate(() => {
-  const m = window.PK_MAPA;
-  m.fire('click', { latlng: window.L.latLng(50.03, 15.21), containerPoint: window.L.point(200, 200) });
+await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
+await p.waitForTimeout(900);
+const vyber = await p.evaluate(() => {
+  const mapa = document.getElementById('vm-mapa');
+  const r = mapa ? mapa.getBoundingClientRect() : null;
+  return {
+    otevreno: !!document.querySelector('.vm-ov'),
+    mapa: !!r && r.height > 200,
+    kraju: document.querySelectorAll('#vm-kraj option').length,
+    pocet: (document.getElementById('vm-pocet') || {}).textContent || '',
+  };
 });
-await p.waitForTimeout(700);
+pravda('tlačítko „Vybrat na mapě" otevře mapu výběru', vyber.otevreno && vyber.mapa,
+  `otevřeno=${vyber.otevreno}, mapa=${vyber.mapa}`);
+pravda('a dá se v ní vybrat kraj', vyber.kraju >= 15, `v nabídce je ${vyber.kraju} položek`);
+pravda('rovnou ukazuje, kolik pozemků v okruhu je', /\d+ pozem/.test(vyber.pocet), vyber.pocet);
+
+/* Výběr se potvrdí tam, kde mapa stojí; okruh se roztáhne tak, aby v něm
+   vymyšlená data vůbec byla. (Hledání obce a přepínání krajů prověřuje
+   scripts/test-okoli.mjs na skutečných datech — tady jsou obce vymyšlené
+   a hledání by nemělo co najít.) */
+await p.selectOption('#vm-km', '50');
+await p.waitForTimeout(1500);
+const slib = await p.evaluate(() => (document.getElementById('vm-pocet') || {}).textContent || '');
+pravda('výběr slibuje konkrétní počet pozemků', (parseInt(slib, 10) || 0) > 0, slib);
+await p.evaluate(() => document.getElementById('vm-ok').click());
+await p.waitForTimeout(2500);
 const poVyberu = await p.evaluate(() => ({
-  rezim: document.body.classList.contains('vybiram-misto'),
+  otevreno: !!document.querySelector('.vm-ov'),
   ulozeno: (() => { try { return JSON.parse(localStorage.getItem('pk_misto_v1')); } catch (e) { return null; } })(),
   pozvanka: document.getElementById('misto-pruh').classList.contains('bez-mista'),
   km: document.querySelectorAll('.opp-item .opp-km').length,
+  jdeZmenit: !!document.getElementById('misto-zmenit'),
 }));
-pravda('klepnutí do mapy místo uloží', !!(poVyberu.ulozeno && Math.abs(poVyberu.ulozeno.lat - 50.03) < 0.01),
+pravda('potvrzení výběru místo uloží', !!(poVyberu.ulozeno && isFinite(poVyberu.ulozeno.lat)),
   JSON.stringify(poVyberu.ulozeno));
-pravda('režim výběru se hned vypne', poVyberu.rezim === false);
+pravda('výběr se přitom zavře', poVyberu.otevreno === false);
 pravda('proužek přestane být pozvánkou', poVyberu.pozvanka === false);
 pravda('a na kartách se zase objeví vzdálenost', poVyberu.km > 0, `karet se vzdáleností: ${poVyberu.km}`);
+/* Výběr počítal jen z toho, co projde i zapnutými filtry — jinak sliboval
+   „5 pozemků v okruhu" a seznam pod ním hlásil, že tam není nic. */
+pravda('a slíbený počet se opravdu vypsal', poVyberu.km === (parseInt(slib, 10) || -1),
+  `výběr sliboval „${slib.trim()}", v seznamu je ${poVyberu.km} karet`);
+// Bez tohohle tlačítka se jednou vybrané místo nedalo změnit jinak než
+// zrušit a začít od nuly — přesně to lidi na téhle funkci štvalo.
+pravda('a místo jde kdykoli změnit', poVyberu.jdeZmenit,
+  'u uloženého místa chybí tlačítko „Změnit místo"');
 
 pravda('na stránce nespadl žádný skript', chyby.length === 0, chyby[0]);
 
