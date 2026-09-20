@@ -627,7 +627,15 @@
   if (!mapEl || typeof L === 'undefined') return;
 
   // Start oddálený na celou ČR (přesné vyrovnání na data řeší fitAllCZ níže).
-  var map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: false, boxZoom: false }).setView([49.82, 15.47], 7);
+  // zoomSnap 0.25: Leaflet smí přiblížit i „mezi" celé stupně. S celými stupni
+  // se republika do mapy nevešla o kousek, spadla o stupeň níž a plavala pak
+  // uprostřed prázdné plochy — polovina mapy nebyla k ničemu.
+  var map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: false, boxZoom: false,
+    zoomSnap: 0.25, zoomDelta: 1 }).setView([49.82, 15.47], 7);
+  // Úchyt na mapu pro automatické testy a ruční prohlédnutí v konzoli.
+  // Web sám ho nikde nepoužívá — čte se jen zvenčí (poloha teček, přiblížení),
+  // aby se dalo strojově ověřit, že se mapa chová, jak má.
+  try { window.PK_MAPA = map; } catch (e) {}
   // Tečky kreslíme přes CANVAS (jeden obraz místo tisíce HTML značek) → plynulé i s ~1000 pozemky na mobilu.
   // Vrstva teček je vizuálně nad kraji, ale klikání propouští dolů (pointer-events:none),
   // takže se dá vždy vybrat kraj pod ní. Klik na tečku řešíme ručně (map click + nejbližší bod).
@@ -915,14 +923,23 @@
     var blizko = Math.max(0, Math.min(1, (z - 8) / 4));      // 0 = celá ČR, 1 = od zoomu 12
     var kryti = 0.5 + blizko * 0.42;                          // 0,50 → 0,92
     var obrys = blizko * 0.34;                                // 0 → 0,34
+    var polomer = urgent ? DOT_R + 0.6 : (feat ? DOT_R + 0.9 : DOT_R);
+    var sila = urgent ? 1.2 + blizko * 0.8 : (feat ? 1.0 + blizko * 0.7 : blizko * 0.9);
+    var okraj = (urgent || feat) ? 0.25 + blizko * 0.4 : obrys;
+    if (urgent || feat) kryti = Math.min(0.95, kryti + 0.18);
+    // Reflektor na vybraný kraj: tečky mimo něj se ztiší. Nejdou rozkliknout,
+    // takže by jen přetahovaly pozornost — takhle je na první pohled vidět,
+    // kde se právě hledá, a zbytek republiky zůstane jen jako obrys kolem.
+    if (selectedKraj && d._gkraj && d._gkraj !== selectedKraj) {
+      kryti *= 0.26; okraj = 0; sila = 0; polomer = Math.max(2.2, polomer * 0.78);
+    }
     return {
       renderer: dotsRenderer,
-      radius: urgent ? DOT_R + 0.6 : (feat ? DOT_R + 0.9 : DOT_R),
-      fillColor: col, fillOpacity: (urgent || feat) ? Math.min(0.95, kryti + 0.18) : kryti,
-      // Světlá mapa (Positron): tečky potřebují jemný TMAVÝ okraj (bílý by zmizel).
-      color: (urgent || feat) ? 'rgba(18,24,42,' + (0.25 + blizko * 0.4).toFixed(2) + ')'
-                              : 'rgba(18,24,42,' + obrys.toFixed(2) + ')',
-      weight: urgent ? 1.2 + blizko * 0.8 : (feat ? 1.0 + blizko * 0.7 : blizko * 0.9),
+      radius: polomer,
+      fillColor: col, fillOpacity: kryti,
+      // Světlý podklad: tečky potřebují jemný TMAVÝ okraj (bílý by zmizel).
+      color: 'rgba(18,24,42,' + okraj.toFixed(2) + ')',
+      weight: sila,
       opacity: 1
     };
   }
@@ -1300,27 +1317,42 @@
     // Prstem se přesně netrefíte na tečku — tolerance roste s velikostí tečky
     // (a tím i s přiblížením), aby se pozemek dal spolehlivě rozkliknout.
     var tol = Math.max(30, DOT_R + 26);
-    if (best && bestDist <= tol * tol) { gotoInzerat(best); }
+    if (best && bestDist <= tol * tol) { gotoInzerat(best); return; }
+
+    // Netrefené klepnutí dřív neudělalo VŮBEC NIC — a to je na dotyku to
+    // nejhorší: člověk klepne, nic se nestane, a neví, jestli je web
+    // rozbitý nebo se netrefil. Když je poblíž nějaký pozemek, klepnutí
+    // proto mapu přiblíží k němu; tečky se tím zvětší a další pokus už
+    // sedne. Když poblíž není nic, mapa se nehne (přiblížit se do prázdna
+    // by bylo horší než nic).
+    if (!best) return;
+    var okoli = Math.max(90, tol * 2.4);
+    if (bestDist > okoli * okoli) return;
+    var z = map.getZoom();
+    if (z >= 15) return;                       // dál už nemá smysl přibližovat
+    map.setView([best.lat, best.lng], Math.min(15, z + 2), { animate: true });
   });
 
   // Tečkovaná mapa: každý pozemek = tečka. Navíc obrysy krajů pro orientaci.
   var krajByName = {};
   // Na dotykových zařízeních není „myš pryč" → popisek kraje sám plynule zmizí.
   var isTouch = (typeof matchMedia === 'function' && matchMedia('(hover: none)').matches) || ('ontouchstart' in window);
-  function styleKraj() { return { color: 'rgba(46,66,180,0.65)', weight: 1.8, fill: true, fillColor: '#3D63EE', fillOpacity: 0.025 }; }
+  // Klidný obrys kraje. Podklad je teď ztlumený, takže čára nemusí křičet —
+  // stačí, aby se dala sledovat. Hranice se čte, ale nepřebije tečky.
+  function styleKraj() { return { color: 'rgba(38,48,84,0.42)', weight: 1.2, fill: true, fillColor: '#3D63EE', fillOpacity: 0.02 }; }
   if (KRAJE_GEOM) {
     var feats = Object.keys(KRAJE_GEOM).map(function (k) { return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] }; });
     krajLayer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
       style: styleKraj,
       onEachFeature: function (f, layer) {
         krajByName[f.properties.kraj] = layer;
-        layer.bindTooltip(f.properties.kraj + ' kraj', { sticky: true, direction: 'top', className: 'kraj-tip' });
+        layer.bindTooltip(krajTitul(f.properties.kraj), { sticky: true, direction: 'top', className: 'kraj-tip' });
         layer.on('click', function () {
           if (selectedKraj !== f.properties.kraj) krajJustSelected = true; // přepnutí kraje neotevírá detail
           selectKraj(f.properties.kraj);
         });
-        layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2.6, color: '#2E42B4', fillOpacity: 0.07 }); layer.bringToFront(); } });
-        layer.on('mouseout', function () { if (!krajLayer) return; krajLayer.resetStyle(layer); if (selectedKraj === f.properties.kraj) styleSelectedKraj(layer); });
+        layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2.2, color: '#2E42B4', fillColor: '#3D63EE', fillOpacity: 0.09 }); layer.bringToFront(); } });
+        layer.on('mouseout', function () { prekresliKraje(); });
         // Dotyk: po 2 s popisek plynule zhasne, ať nezůstane „viset" a nebrání dalšímu klikání.
         layer.on('tooltipopen', function (e) {
           if (!isTouch) return;
@@ -1329,7 +1361,7 @@
           layer._tipTimer = setTimeout(function () {
             var c = tip && (tip.getElement ? tip.getElement() : tip._container);
             if (c) { c.style.transition = 'opacity .45s ease'; c.style.opacity = '0'; }
-            setTimeout(function () { layer.closeTooltip(); if (krajLayer) krajLayer.resetStyle(layer); }, 470);
+            setTimeout(function () { layer.closeTooltip(); prekresliKraje(); }, 470);
           }, 2000);
         });
         layer.on('tooltipclose', function () { clearTimeout(layer._tipTimer); });
@@ -1338,6 +1370,9 @@
   }
   // České skloňování: 1 pozemek · 2–4 pozemky · 5+ pozemků
   function plPozemek(n) { return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků'); }
+  // Název kraje, jak se píše. Dvě výjimky: Praha není „Praha kraj" a Vysočina
+  // se píše obráceně — „Kraj Vysočina". Jinde stačí přidat slovo kraj.
+  function krajTitul(k) { return k === 'Praha' ? 'Praha' : (k === 'Vysočina' ? 'Kraj Vysočina' : k + ' kraj'); }
   function refreshKrajTips(vis) {
     krajCounts = {};
     vis.forEach(function (d) { var k = d._gkraj; if (!k) return; var o = krajCounts[k] || (krajCounts[k] = { total: 0 }); o.total++; o[d.type] = (o[d.type] || 0) + 1; });
@@ -1345,7 +1380,7 @@
       var o = krajCounts[k];
       var parts = [];
       if (o) ['sale', 'drazba', 'exekuce', 'obec', 'majitel'].forEach(function (tp) { if (o[tp]) parts.push(o[tp] + '× ' + TYPE[tp].label.toLowerCase()); });
-      var txt = '<b>' + k + ' kraj</b><br>' + (o ? o.total + ' ' + plPozemek(o.total) + (parts.length ? ' · ' + parts.join(', ') : '') : 'žádné nabídky');
+      var txt = '<b>' + krajTitul(k) + '</b><br>' + (o ? o.total + ' ' + plPozemek(o.total) + (parts.length ? ' · ' + parts.join(', ') : '') : 'žádné nabídky');
       krajByName[k].setTooltipContent(txt);
     });
   }
@@ -1370,7 +1405,7 @@
   // Oddálí mapu tak, aby byla vidět celá rozloha nabídek (celá ČR).
   // Přizpůsobí se velikosti displeje – na mobilu i na počítači.
   var czBounds = L.latLngBounds(DATA.map(function (d) { return [d.lat, d.lng]; }));
-  function fitAllCZ() { if (czBounds.isValid()) map.fitBounds(czBounds, { padding: [18, 18], maxZoom: 9 }); }
+  function fitAllCZ() { if (czBounds.isValid()) map.fitBounds(czBounds, { padding: [12, 12], maxZoom: 9 }); }
   fitAllCZ();
 
   /* ---------- Výběr kraje: nejdřív kraj, teprve pak klikací tečky ----------
@@ -1393,7 +1428,21 @@
     var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(userPos.lat * r) * Math.cos(d.lat * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
     return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
   }
-  function styleSelectedKraj(layer) { layer.setStyle({ weight: 3, color: '#2E42B4', fillColor: '#3D63EE', fillOpacity: 0.1 }); layer.bringToFront(); }
+  // Vybraný kraj: silnější obrys a lehké podbarvení, ať je jasně vidět,
+  // ve kterém kraji se hledá.
+  function styleSelectedKraj(layer) { layer.setStyle({ weight: 2.6, color: '#2E42B4', fillColor: '#3D63EE', fillOpacity: 0.07 }); layer.bringToFront(); }
+  // Ostatní kraje, když je nějaký vybraný: překryjeme je světlým závojem.
+  // Podklad pod nimi zešedne a oko jde samo tam, kde jsou nabídky.
+  function styleKrajMimo() { return { color: 'rgba(30,38,66,0.16)', weight: 1, fill: true, fillColor: '#F4F2ED', fillOpacity: 0.42 }; }
+  // Přebarví kraje podle toho, který je vybraný (nebo žádný).
+  function prekresliKraje() {
+    if (!krajLayer) return;
+    krajLayer.eachLayer(function (l) {
+      var k = l.feature && l.feature.properties && l.feature.properties.kraj;
+      if (selectedKraj && k === selectedKraj) styleSelectedKraj(l);
+      else l.setStyle(selectedKraj ? styleKrajMimo() : styleKraj());
+    });
+  }
   // Zámek teček: dokud není vybraný kraj, klik na tečku ignorujeme (klik pod tečkami vybere kraj).
   var dotsLocked = true;
   function lockDots(lock) {
@@ -1417,7 +1466,7 @@
       } else {
         var o = krajCounts[selectedKraj];
         var n = o ? o.total : 0;
-        krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>' + selectedKraj + ' kraj</b><span>' + (n ? ('Krok 2: klepněte na pozemek (' + n + ' ' + plPozemek(n) + ')') : 'zatím žádné nabídky') + '</span></div>';
+        krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>' + krajTitul(selectedKraj) + '</b><span>' + (n ? ('Krok 2: klepněte na pozemek (' + n + ' ' + plPozemek(n) + ')') : 'zatím žádné nabídky') + '</span></div>';
         krajHeadEl.hidden = false;
         var b1 = krajHeadEl.querySelector('.kh-back'); if (b1) b1.addEventListener('click', clearKraj);
       }
@@ -1435,10 +1484,10 @@
     if (selectedKraj === k && !nearMode) return;
     clearNear();       // výběr kraje ruší režim „okolí"
     selectedKraj = k;
-    if (krajLayer) krajLayer.setStyle(styleKraj);
+    prekresliKraje();   // vybraný kraj napřed, zbytek pod závoj
+    resizeDots();       // a tečky mimo něj se ztiší
     var layer = krajByName[k];
     if (layer) {
-      styleSelectedKraj(layer);
       // Lehké přiblížení ke kraji — nízký strop zoomu, ať se nezanoří moc (jen se přiblíží).
       if (!skipFit) map.fitBounds(layer.getBounds(), { maxZoom: 8, padding: [24, 24] });
     }
@@ -1452,7 +1501,8 @@
     var wasNear = nearMode;
     clearNear();
     if (wasNear) { sortMode = 'demand'; if (sortEl) sortEl.value = 'demand'; }
-    if (krajLayer) krajLayer.setStyle(styleKraj);
+    prekresliKraje();
+    resizeDots();
     hideDetail();
     lockDots(true);    // zpět: klikají se zase kraje
     setPan(false);     // na přehledu mapu zase zamkneme (stránka přes ni roluje)
@@ -1465,7 +1515,8 @@
   function enterNearAt(pos, approx) {
     userPos = { lat: pos.lat, lng: pos.lng };
     selectedKraj = null;
-    if (krajLayer) krajLayer.setStyle(styleKraj);
+    prekresliKraje();
+    resizeDots();
     nearMode = true;
     if (userMarker) map.removeLayer(userMarker);
     userMarker = L.marker([userPos.lat, userPos.lng], { icon: L.divIcon({ className: 'pk-me-wrap' + (approx ? ' approx' : ''), html: '<span class="pk-me"></span>', iconSize: [18, 18], iconAnchor: [9, 9] }), zIndexOffset: 1000, interactive: false }).addTo(map);
@@ -1621,7 +1672,7 @@
     ['sale', 'drazba', 'exekuce', 'obec', 'majitel'].forEach(function (tp) {
       if (present2[tp]) lh += '<span class="lg-item"><span class="lg-dot" style="background:' + TYPE[tp].color + '"></span>' + TYPE[tp].label + '</span>';
     });
-    if (urgentN) lh += '<span class="lg-item lg-urgent"><span class="lg-dot lg-ring"></span>dražba do 7 dní</span>';
+    if (urgentN) lh += '<span class="lg-item lg-urgent"><span class="lg-dot lg-ring"></span>končí do 7 dní</span>';
     legendEl.innerHTML = lh;
   }
 
@@ -1666,12 +1717,11 @@
     for (var i = 0; i < markers.length; i++) {
       var m = markers[i]; if (!m || !m._d || !m.setRadius) continue;
       if (selMarkerId != null && i === selMarkerId) continue; // vybraný necháme zvýrazněný
-      var urgent = isUrgent(m._d), feat = isFeatured(m._d);
-      var rr = urgent ? r + 0.7 : (feat ? r + 1 : r);
-      if (m.options.radius !== rr) m.setRadius(rr);
-      // Krytí a obrys se mění se zoomem stejně jako poloměr — jinak by
-      // přiblížená mapa zůstala průsvitná a oddálená přeplácaná.
+      // Jediné místo, kde se počítá vzhled tečky, je dotStyle — poloměr, krytí
+      // i obrys se musí měnit spolu (jinak zůstane přiblížená mapa průsvitná
+      // a oddálená přeplácaná) a ztlumení mimo vybraný kraj taky.
       var st2 = dotStyle(m._d);
+      if (m.options.radius !== st2.radius) m.setRadius(st2.radius);
       if (m.options.fillOpacity !== st2.fillOpacity || m.options.weight !== st2.weight) {
         m.setStyle({ fillOpacity: st2.fillOpacity, weight: st2.weight, color: st2.color });
       }

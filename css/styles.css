@@ -845,17 +845,41 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* isolation:isolate uzavře vnitřní z-indexy Leafletu (tečky, popisky), ať panel detailu
    spolehlivě překryje mapu a nic z ní neprosvítá */
 .map-canvas{position:relative; flex:1; min-height:0; isolation:isolate;}
-#leaflet-map{position:absolute; inset:0; background:var(--ink-soft);}
+#leaflet-map{position:absolute; inset:0; background:#EDEAE3;}
+/* Podklad mapy.
+   Syrové dlaždice OpenStreetMap jsou barevné jako atlas — zelené lesy, žluté
+   silnice, růžové dálnice. Jenže tady nese informaci BARVA TEČKY (prodej /
+   dražba / exekuce / obec). Když je podklad stejně barevný jako data, data
+   zmizí a celek vypadá jako stará mapa ze strategické hry.
+   Proto se podklad ztlumí na světlý papír v teplém tónu webu: skoro bez
+   barvy, o něco světlejší, s měkčím kontrastem. Zůstane z něj jen to, k
+   čemu je potřeba — tvary měst, silnic a řek pro orientaci. Barvu má na
+   mapě jenom to, na co se dá kliknout. */
+.pk-basemap{
+  filter:grayscale(0.86) sepia(0.16) saturate(0.85) brightness(1.07) contrast(0.88);
+  opacity:0.92;
+}
+/* Mapa bez okraje působila jako vystřižený obdélník nalepený na stránku.
+   Vnitřní stín ji do stránky zapustí — je pod povrchem, ne nad ním. */
+.map-canvas::after{
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:450;
+  box-shadow:
+    inset 0 0 0 1px rgba(20,26,40,0.10),
+    inset 0 16px 30px -20px rgba(12,18,32,0.50),
+    inset 0 -20px 38px -24px rgba(12,18,32,0.38);
+}
 .map-note{position:absolute; bottom:8px; left:8px; z-index:500; background:rgba(255,255,255,0.85); color:#6B7280; font-size:10px; padding:4px 9px; border-radius:var(--r-xs); pointer-events:none;}
 /* Legenda mapy (vpravo nahoře) */
-.map-legend{position:absolute; top:84px; left:10px; z-index:500; display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:7px 17px; max-width:calc(100% - 20px); background:rgba(255,255,255,0.95); border:1px solid rgba(61,99,238,0.18); border-radius:var(--r-md); padding:11px 16px; font-size:14px; font-weight:600; color:#20263A; box-shadow:var(--e2); pointer-events:none; backdrop-filter:blur(3px);}
+/* Legenda patří dolů k okraji, ne doprostřed mapy. Nahoře ukrajovala třetinu
+   plochy a překrývala přesně to, na co se má klikat. */
+.map-legend{position:absolute; left:12px; bottom:36px; z-index:500; display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:5px 13px; max-width:calc(100% - 96px); background:rgba(255,255,255,0.94); border:1px solid rgba(61,99,238,0.18); border-radius:var(--r-md); padding:8px 12px; font-size:12.5px; font-weight:600; color:#20263A; box-shadow:var(--e2); pointer-events:none; backdrop-filter:blur(3px);}
 .map-legend:empty{display:none;}
 .lg-item{display:flex; align-items:center; gap:8px; white-space:nowrap;}
-.lg-dot{width:14px; height:14px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px rgba(20,26,40,0.12); flex:none;}
+.lg-dot{width:11px; height:11px; border-radius:50%; border:1.5px solid #fff; box-shadow:0 0 0 1px rgba(20,26,40,0.14); flex:none;}
 .lg-ring{position:relative; background:var(--c-drazba);}
 .lg-ring::after{content:""; position:absolute; inset:-4px; border-radius:50%; border:1.5px solid var(--c-drazba); opacity:0.75; animation:mping 1.7s ease-out infinite;}
 .lg-urgent{color:var(--copper-bright);}
-@media (max-width:560px){ .map-legend{font-size:13px; padding:10px 13px; gap:6px 13px;} .lg-dot{width:13px; height:13px;} }
+@media (max-width:560px){ .map-legend{font-size:11.5px; padding:7px 10px; gap:4px 10px; max-width:calc(100% - 86px);} .lg-dot{width:10px; height:10px;} }
 /* Zámek mapy — mapa se hýbe jen když je odemčená */
 /* Lehké přepínání posouvání mapy (bez těžkého overlay) */
 .map-tools{position:absolute; top:12px; right:12px; z-index:600; display:flex; flex-direction:column; align-items:flex-end; gap:8px; max-width:calc(100% - 24px);}
