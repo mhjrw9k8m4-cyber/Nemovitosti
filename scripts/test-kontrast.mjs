@@ -60,12 +60,16 @@ const MERENI = `(() => {
   //     přesně úvodní plocha webu, tedy to nejviditelnější místo.
   const pozadi = (el) => {
     const zavoje = [];
-    let zaklad = null, e = el;
+    let zaklad = null, e = el, dira = false;
     while (e && !zaklad) {
       const st = getComputedStyle(e);
       if (st.backgroundImage !== 'none') {
-        const z = zarazky(st.backgroundImage);
-        if (!z.length && String(st.backgroundImage).indexOf('url(') >= 0) return null;
+        const obr = String(st.backgroundImage);
+        // Přechod, který někde přechází do průhledna, holý podklad odhalí.
+        // Souvislý závoj (samé neprůhledné zarážky) ho nikde vidět nenechá.
+        if (/transparent|rgba\([^)]*,\s*0(\.0+)?\s*\)/.test(obr)) dira = true;
+        const z = zarazky(obr);
+        if (!z.length && obr.indexOf('url(') >= 0) return null;
         const plne = z.filter((c) => c.a >= 0.99);
         if (plne.length) zaklad = plne;
         else z.filter((c) => c.a > 0.02).forEach((c) => zavoje.push(c));
@@ -78,9 +82,14 @@ const MERENI = `(() => {
       e = e.parentElement;
     }
     if (!zaklad) zaklad = [{ r: 255, g: 255, b: 255, a: 1 }];
+    // Holý podklad se počítá jen tam, kde je na něj vidět. Když přes něj leží
+    // souvislý tmavý závoj (třeba obraz úvodní plochy), text na něm nikdy
+    // neleží — a měřit proti němu by znamenalo hlásit chybu, která na webu
+    // není. Dřív se tak hlásil právě celý úvod.
+    const kryje = !dira && zavoje.some((z) => z.a >= 0.5);
     const kandidati = [];
     for (const b of zaklad) {
-      kandidati.push(b);
+      if (!kryje) kandidati.push(b);
       for (const z of zavoje) kandidati.push(smichej(z, b));
       if (zavoje.length > 1) {
         let v = b;

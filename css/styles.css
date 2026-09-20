@@ -389,15 +389,50 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .nav-toggle[aria-expanded="true"] span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
 
 /* ===== Hero s mapou (raketový styl) ===== */
-.hero-map{position:relative; overflow:hidden; padding:22px 0 52px;}
-.hero-map::before{content:""; position:absolute; inset:0; background:radial-gradient(130% 90% at 50% -20%, rgba(120,140,200,0.07), transparent 55%); pointer-events:none; z-index:0;}
+/* ÚVODNÍ PLOCHA
+   Web o pozemcích měl nahoře jen text na světlém podkladu — žádný obraz,
+   nic, co by na první pohled řeklo, o co jde. Velké realitní weby začínají
+   snímkem; tady je místo fotky kresba toho, co web prodává: letecký pohled
+   na pole rozdělená na parcely, s mezemi a polními cestami. Je to vektor
+   (img/uvod-parcely.svg), takže se nic nestahuje z cizího serveru, nasadí
+   se okamžitě a na velkém displeji nezrní.
+   Přes obraz jde tmavý přechod, který dole končí barvou stránky — panel
+   hledání pak leží na rozhraní a „plave" nad obrazem. */
+.hero-map{position:relative; overflow:hidden; padding:0 0 52px;}
+.hero-map::before{content:none;}
+/* Obraz je POZADÍM textu, ne vrstvou vedle něj. Zní to jako detail, ale není:
+   kdyby ležel v samostatném prvku, kontrolor kontrastu by ho neviděl a měřil
+   by text proti světlé stránce — tedy proti něčemu, co tam vůbec není.
+   Spodní barva #E2D8BC je nejsvětlejší pole z kresby: tmavý přechod nad ní
+   tak drží i v tom nejnepříznivějším místě obrazu. */
+.hero-band{position:relative; padding:64px 0 148px;
+  background:
+    linear-gradient(180deg, rgba(9,12,20,.74) 0%, rgba(9,12,20,.66) 55%, rgba(9,12,20,.62) 100%),
+    url("../img/uvod-parcely.svg") center / cover no-repeat,
+    #E2D8BC;}
+/* Spodní okraj pásu se rozplyne do barvy stránky, aby nevznikla ostrá hrana.
+   Je to zvlášť, ne v pozadí výš — pod ním už žádný text není a do měření
+   kontrastu tím pádem nemá co mluvit. */
+.hero-band::after{content:""; position:absolute; left:0; right:0; bottom:0; height:30%; pointer-events:none;
+  background:linear-gradient(180deg, rgba(241,239,234,0) 0%, var(--bg) 100%);}
+.hero-band > .wrap{position:relative; z-index:1;}
+/* Text leží na tmavém obraze — potřebuje vlastní barvy, jinak by zmizel. */
+/* Na obraze musí i drobné písmo držet 4,5:1 i nad nejsvětlejším polem —
+   proto je teplá barva výrazně světlejší než jinde na webu. */
+.hero-map .hero-head .eyebrow{color:#FBE3CC;}
+.hero-map .hero-head h1{color:#FFFFFF;}
+.hero-map .hero-head h1 em{color:#F3C79F;}
+.hero-map .hero-head .hero-stats{color:rgba(255,255,255,0.80);}
+.hero-map .hero-head .hero-stats .ts-n{color:#FFFFFF;}
+.hero-map .hero-head .hero-stats .ts-n b{color:#FBE3CC;}
+.hero-map .hero-head .hero-stats .ts-sep{color:rgba(255,255,255,0.42);}
 .hero-map .wrap{position:relative; z-index:1;}
 .hero-head{text-align:center; max-width:860px; margin:0 auto 22px; display:flex; flex-direction:column; align-items:center;}
 .hero-head .eyebrow{margin-bottom:18px;}
 /* Tloušťka 360 u 54px nadpisu je hodně světlé písmo — na světlém pozadí
    z toho byl bledý, nerozhodný dojem. Sebevědomí dělá typografie, ne efekty:
    plná tloušťka a sevřenější prostrkání. */
-.hero-head h1{font-size:54px; font-weight:700; line-height:1.06; letter-spacing:-0.028em; margin-bottom:18px;}
+.hero-head h1{font-size:60px; font-weight:700; line-height:1.03; letter-spacing:-0.03em; margin-bottom:20px;}
 /* Zvýrazněné slovo musí mít stejnou váhu jako zbytek nadpisu. Dřív tu
    stálo 400 proti 800 a půlka věty vypadala vybledle. */
 .hero-head h1 em{font-weight:700;}
@@ -407,19 +442,24 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 /* Mapa je hlavní produkt — dopřejeme jí víc šířky (jako velké realitní weby),
    nadpis nad ní zůstává vycentrovaný v užší míře. */
 .hero-map .map-wide{position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:0 32px;}
-.hero-map .map-app{margin-top:6px;}
+/* Panel hledání přeloží spodek obrazu — plave nad ním, jako na velkých
+   realitních webech. */
+.hero-map .map-wide{margin-top:-74px;}
+.hero-map .map-app{margin-top:0;}
 @media (max-width:1200px){ .hero-map .map-wide{max-width:100%;} }
 @media (max-width:520px){ .hero-map .map-wide{padding:0 20px;} }
 @media (max-width:880px){
-  .hero-map{padding:16px 0 40px;}
-  .hero-head{margin-bottom:18px;}
-  .hero-head .eyebrow{margin-bottom:11px;}
-  .hero-head h1{font-size:29px; margin-bottom:11px;}
+  .hero-map{padding:0 0 40px;}
+  .hero-band{padding:38px 0 96px;}
+  .hero-map .map-wide{margin-top:-62px;}
+  .hero-head{margin-bottom:20px;}
+  .hero-head .eyebrow{margin-bottom:12px;}
+  .hero-head h1{font-size:34px; margin-bottom:12px;}
   .hero-head .sub{font-size:15px; margin-bottom:16px;}
   .hero-head .hero-ctas{margin-bottom:12px;}
 }
 @media (max-width:560px){
-  .hero-head h1{font-size:26px;}
+  .hero-head h1{font-size:31px;}
   /* podnadpis necháme i na mobilu — vysvětluje smysl webu (na první dobrou) */
   .hero-head .sub{font-size:14.5px; margin-bottom:14px;}
   /* Číselný proužek (důvěra) necháme i na mobilu, jen kompaktnější. */
@@ -1856,7 +1896,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 /* Úvodní plocha a pásové sekce dostávají katastrální mřížku. Ne všechny
    sekce: kdyby byla mřížka všude, přestane být textura a začne být vzor. */
 .add-hero, .hero-map{position:relative; isolation:isolate;}
-.add-hero::after, .hero-map::after, .section.band::after{
+.add-hero::after, .section.band::after{
   content:""; position:absolute; inset:0; pointer-events:none; z-index:-1;
   background-image:linear-gradient(to right, rgba(20,26,40,.045) 1px, transparent 1px),
                    linear-gradient(to bottom, rgba(20,26,40,.045) 1px, transparent 1px);
@@ -1946,7 +1986,7 @@ body{background:var(--bg) var(--grad-plocha) fixed; background-size:cover;}
       a přes rozostření 80 px z nich zbude mlha. Vrstvené radiální přechody
       dělají totéž, ale doopravdy: teplá barva vlevo nahoře, studená vpravo,
       hluboká modř u dolního okraje. Dva tóny webu proti sobě, nic dalšího. */
-.add-hero, .hero-map{
+.add-hero{
   background-image:
     radial-gradient(58% 52% at 10% 4%,  rgba(232,164,106,.32), transparent 64%),
     radial-gradient(52% 56% at 92% 10%, rgba(147,179,236,.36), transparent 64%),
