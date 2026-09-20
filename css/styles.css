@@ -2004,3 +2004,112 @@ footer a:focus-visible{outline-color:var(--accent-warm-bright);}
      plochu, na kterou jde trefit palcem. */
   .auth-link{min-height:38px; display:inline-flex; align-items:center;}
 }
+
+
+/* =====================================================================
+   KROKY „JAK TO FUNGUJE" — napojení
+   Byly to tři samostatné bílé kartičky pod sebou, každá s prázdným
+   rámečkem a spoustou vzduchu. Na mobilu to vypadalo jako slabikář:
+   obrovské bloky, nic je nespojovalo a nebyla v nich barva.
+   Teď jsou to články řetězu — číslo v barevné dlaždici, mezi nimi
+   svislá spojnice, text vedle. Každý krok má svůj odstín, takže řada
+   jde zleva doprava od teplé k hluboké modři.
+   ===================================================================== */
+.steps{position:relative;}
+.step{border-top:0; padding-top:0; display:grid; grid-template-columns:auto 1fr;
+  column-gap:16px; row-gap:2px; align-items:start; position:relative;}
+.step .icon-badge{grid-column:1; grid-row:1 / span 3; margin:0; width:52px; height:52px;
+  border-radius:var(--r-md); border:1px solid var(--line-strong); position:relative; z-index:1;
+  background:var(--grad-warm-soft); color:var(--accent-warm);}
+.step:nth-child(2) .icon-badge{background:var(--grad-cool-soft); color:var(--copper-bright);}
+.step:nth-child(3) .icon-badge{background:linear-gradient(135deg, rgba(44,53,150,.16), rgba(44,53,150,.05)); color:#2C3596;}
+.step .icon-badge .ic{width:24px; height:24px;}
+.step .idx{grid-column:2; margin:2px 0 2px; font-size:11px; letter-spacing:.14em; color:var(--text-ondark-mute);}
+.step h3{grid-column:2; margin-bottom:6px;}
+.step p{grid-column:2;}
+
+/* Spojnice mezi dlaždicemi — tohle je to „napojení". Vede od jedné
+   dlaždice k další a u posledního kroku končí. */
+.step::before{content:""; position:absolute; left:26px; top:52px; bottom:-30px; width:2px;
+  background:linear-gradient(180deg, var(--line-strong), rgba(168,69,15,.35)); z-index:0;}
+.step:last-child::before{display:none;}
+
+@media (min-width:961px){
+  /* Na počítači jdou kroky vedle sebe, takže spojnice je vodorovná. */
+  .step::before{left:52px; right:-36px; top:25px; bottom:auto; width:auto; height:2px;
+    background:linear-gradient(90deg, var(--line-strong), rgba(168,69,15,.35));}
+  .step{grid-template-columns:1fr; row-gap:0;}
+  .step .icon-badge{grid-row:auto; grid-column:1; margin-bottom:14px;}
+  .step .idx, .step h3, .step p{grid-column:1;}
+}
+@media (max-width:960px){
+  .steps{grid-template-columns:1fr; gap:30px;}
+}
+
+
+/* =====================================================================
+   MOBILNÍ MENU — hustota a barva
+   Vypadalo jako slabikář: řádky přes 70 px, písmo 18 px, holé obrysové
+   ikony a mezi nimi vzduch. Osm položek zabralo celou obrazovku a nic
+   v nich nebylo k zapamatování.
+   Teď: nižší řádky, ikona v barevné dlaždici, aktivní položka označená
+   měděným proužkem, pozadí s teplým přechodem a mřížkou. Stejný jazyk
+   jako zbytek webu, jen zmenšený do menu.
+   ===================================================================== */
+@media (max-width:880px){
+  #nav{padding:10px 10px calc(14px + env(safe-area-inset-bottom, 0px));
+    background:linear-gradient(180deg, #FAF8F4 0%, #F2F0EB 100%);
+    border-radius:0 0 var(--r-lg) var(--r-lg); box-shadow:var(--e3);}
+  /* Katastrální mřížka i tady — menu patří k webu, ne vedle něj. */
+  #nav::before{content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+    background-image:linear-gradient(to right, rgba(20,26,40,.04) 1px, transparent 1px),
+                     linear-gradient(to bottom, rgba(20,26,40,.04) 1px, transparent 1px);
+    background-size:34px 34px; border-radius:inherit;
+    -webkit-mask-image:radial-gradient(ellipse 100% 70% at 30% 0%, #000 10%, transparent 90%);
+            mask-image:radial-gradient(ellipse 100% 70% at 30% 0%, #000 10%, transparent 90%);}
+  #nav > *{position:relative; z-index:1;}
+
+  #nav a:not(.btn-primary){
+    gap:13px; padding:9px 11px; margin-bottom:1px; border-radius:var(--r-sm);
+    font-size:16px; font-weight:600; letter-spacing:-0.005em;}
+  /* Ikona v dlaždici — nese barvu a drží řádek pohromadě. */
+  #nav a:not(.btn-primary)::before{
+    width:34px; height:34px; border-radius:9px; background-size:19px 19px;
+    background-color:rgba(49,79,190,.07); box-shadow:inset 0 0 0 1px rgba(20,26,40,.07);
+    background-position:center; opacity:1;}
+  /* Osobní část menu (od Upozornění dolů) je teplá — oko tím pozná,
+     že vstupuje do „svého". */
+  #nav a[href$="upozorneni.html"]::before, #nav a[href$="zpravy.html"]::before,
+  #nav a[href$="hlidani.html"]::before, #nav a[href$="muj-inzerat.html"]::before{
+    background-color:rgba(168,69,15,.09);}
+  #nav a:not(.btn-primary)::after{font-size:19px; opacity:.45;}
+
+  /* Aktivní položka: měděný proužek vlevo a teplý podklad. */
+  #nav a:not(.btn-primary).active, #nav a:not(.btn-primary)[aria-current="page"]{
+    background:linear-gradient(90deg, rgba(168,69,15,.12), rgba(168,69,15,.03));
+    box-shadow:inset 3px 0 0 var(--accent-warm); color:var(--text-ondark);}
+  #nav a:not(.btn-primary):active{background:rgba(49,79,190,.08);}
+
+  /* Předěl skupin: užší, a beze změny odsazení řádků. */
+  #nav a[href$="upozorneni.html"], #nav a[href$="kontakt.html"]{
+    margin-top:9px; padding-top:9px;
+    border-top:1px solid var(--line); border-top-left-radius:0; border-top-right-radius:0;}
+}
+
+
+/* =====================================================================
+   ZRNO
+   Plochy byly dokonale hladké, a to je právě to, co působí digitálně
+   a mrtvě. Papír, plátno ani mapa hladké nejsou. Tohle je velmi jemné
+   zrno přes celou stránku — tak slabé, že se na něj nedá zaostřit;
+   pozná se jen tím, že plocha přestane vypadat jako sklo.
+
+   Je to jeden generovaný obrázek v CSS (žádný soubor navíc), připnutý
+   k oknu, bez animace a bez zachytávání kliknutí.
+   ===================================================================== */
+body::after{
+  content:""; position:fixed; inset:0; z-index:9999; pointer-events:none; opacity:.30;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='z'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23z)' opacity='0.5'/%3E%3C/svg%3E");
+  mix-blend-mode:multiply;}
+/* Na tmavých plochách by zrno dělalo špínu, tam se rozjasňuje jinak. */
+@media (prefers-reduced-motion:reduce){ body::after{opacity:.22;} }

@@ -110,7 +110,23 @@ async function stranka(sirka, prihlasit) {
     return {
       nahore: el ? (el.closest('#nav') ? 'menu' : (el.className || el.tagName) + '') : 'nic',
       menuZacinaPodHlavickou: Math.round(r.top) >= Math.round(hlavicka.bottom) - 2,
-      pozadiNepruhledne: getComputedStyle(nav).backgroundColor.indexOf('rgba') < 0
+      // Neprůhlednost se nedá číst jen z backgroundColor: menu má přechod,
+      // takže barva je průhledná a kryje až obrázek. Bereme obojí a
+      // hlídáme, že ani jedna zarážka není průsvitná.
+      pozadiNepruhledne: (() => {
+        const st = getComputedStyle(nav);
+        const barvaKryje = st.backgroundColor.indexOf('rgba') < 0 &&
+                           st.backgroundColor !== 'transparent';
+        if (barvaKryje) return true;
+        const obr = st.backgroundImage;
+        if (!obr || obr === 'none') return false;
+        const zarazky = obr.match(/rgba?\([^)]+\)/g) || [];
+        if (!zarazky.length) return false;
+        return zarazky.every((z) => {
+          const c = z.replace(/rgba?\(|\)/g, '').split(',').map(parseFloat);
+          return c.length < 4 || c[3] >= 0.99;
+        });
+      })()
     };
   });
   je('otevřené menu je nahoře', stav.nahore, 'menu');

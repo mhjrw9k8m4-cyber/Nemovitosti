@@ -146,3 +146,35 @@ barvy a bez hloubky, takže stránka končila do ztracena. Je tmavá, se
 stejným jazykem jako pás u hlídání: světlo z rohů, katastrální mřížka,
 měděné nadpisy sloupců. Spolu s tím pásem drží web pohromadě — jedna
 tmavá sekce uprostřed by jinak působila jako výjimka.
+
+## Hustota, napojení, zrno
+
+Mobilní menu vypadalo **jako slabikář**: řádky přes 70 px, písmo 18 px,
+holé obrysové ikony a mezi nimi vzduch. Osm položek zabralo celou
+obrazovku a nic v nich nebylo k zapamatování. Teď: nižší řádky, ikona
+v **barevné dlaždici**, aktivní položka s měděným proužkem, pozadí
+s teplým přechodem a mřížkou. Osobní část menu (Upozornění, Zprávy,
+Hlídání, Můj profil) má teplé dlaždice — oko tím pozná, že vstupuje do
+„svého".
+
+Kroky **„jak to funguje"** byly tři samostatné bílé kartičky s prázdným
+rámečkem a spoustou vzduchu; nic je nespojovalo. Teď jsou to články
+řetězu: číslo v barevné dlaždici, mezi nimi **svislá spojnice**, text
+vedle. Odstíny jdou od teplé po hlubokou modř. Na počítači je spojnice
+vodorovná.
+
+**Zrno** přes celou stránku. Dokonale hladká plocha je to, co působí
+digitálně a mrtvě — papír, plátno ani mapa hladké nejsou. Je to jeden
+obrázek generovaný přímo v CSS (žádný soubor navíc), bez animace.
+
+> Naměřeno: **2 % ztmavení**. To je pod hranicí, kde by to mohlo ohrozit
+> kontrast — a ověřeno měřením, ne odhadem, protože `mix-blend-mode`
+> v testu kontrastu vidět není.
+
+### Test vrstvení měl chybu
+
+Neprůhlednost menu četl jen z `background-color`. Jakmile menu dostalo
+přechod, barva je průhledná a kryje až obrázek — test tedy hlásil
+„obsah prosvítá", i když neprosvítal. Teď čte obojí a hlídá, že ani jedna
+zarážka přechodu není průsvitná. **Ověřeno obráceně:** s úmyslně
+průsvitným menu test spadne.
