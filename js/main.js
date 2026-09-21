@@ -811,6 +811,14 @@
   var searchTerm = '';
   var favOnly = false;
   var ukazSkryte = false;   // „Zobrazit skryté" — dočasně, neukládá se
+  /* Dražba po termínu už není příležitost — dražit se nedá. Zdroj ji ale
+     drží jako „Uveřejněno", dokud ji nezpracuje, a mezi dvěma běhy robota
+     (6 h) termín projít může. Nedalo se poznat, jestli takový záznam
+     zmizí, nebo zůstane viset: seznam ho jen odsunul dolů a odznak
+     „proběhlo" si člověk musel najít sám. Teď se z výpisu, z mapy
+     i z počtů vyřadí — a nad seznamem je napsané, kolik jich je a že
+     se dají zobrazit. */
+  var ukazProsle = false;
   var vybiramMisto = false; // čeká se na klepnutí do mapy, kterým se určí „moje místo"
   var markers = [];
 
@@ -1085,7 +1093,10 @@
     filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
       var tp = b.getAttribute('data-type');
       var badge = b.querySelector('.chip-n');
-      if (badge) badge.textContent = pocty[tp] || 0;
+      // S mezerou po tisících, jako všude jinde: nad čipy stojí „1 940
+      // pozemků" a pod nimi svítilo „Vše 1940" — totéž číslo dvakrát
+      // jinak na jedné obrazovce.
+      if (badge) badge.textContent = fmt(pocty[tp] || 0);
     });
   }
 
@@ -2320,8 +2331,9 @@
     // Skryté zmizí ze seznamu — ale jen dokud si je člověk sám nevyžádá
     // (tlačítko „Zobrazit skryté"). Nenávratně se nic neztrácí.
     var okSkryt = ukazSkryte || !jeSkryty(d);
+    var okProsle = ukazProsle || !jeProsle(d);
     return okType && okSearch && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
-      && okPerM2 && okKraj && okLevne && okOkoli;
+      && okPerM2 && okKraj && okLevne && okOkoli && okProsle;
   }
   /** Projde pozemek všemi filtry KROMĚ okolí — aby šlo poctivě spočítat,
       kolik by jich bylo ve větším okruhu (a ne kolik jich je celkem). */
@@ -2568,9 +2580,27 @@
       (novych === 1 ? 'nový od minule' : (novych < 5 ? 'nové od minule' : 'nových od minule')) + '</span>';
     if (skryte.length) pripisky += ' <button type="button" class="mc-skryte" id="mc-skryte">' +
       (ukazSkryte ? 'Schovat skryté' : 'Zobrazit skryté (' + skryte.length + ')') + '</button>';
+    /* Kolik dražeb po termínu se právě nepočítá. Počítá se přes filtry bez
+       okolí a bez tohoto pravidla, ať to číslo odpovídá tomu, co by se
+       ukázalo po klepnutí — ne celé republice. */
+    var proslychStranou = 0;
+    if (!ukazProsle) {
+      ukazProsle = true;
+      try {
+        for (var pi = 0; pi < DATA.length; pi++) {
+          var pd = DATA[pi];
+          if (jeProsle(pd) && visible(pd) && (!selectedKraj || krajOf(pd) === selectedKraj)) proslychStranou++;
+        }
+      } finally { ukazProsle = false; }
+    }
+    if (proslychStranou || ukazProsle) pripisky += ' <button type="button" class="mc-skryte" id="mc-prosle">' +
+      (ukazProsle ? 'Schovat dražby po termínu'
+                  : 'Zobrazit dražby po termínu (' + proslychStranou + ')') + '</button>';
     countEl.innerHTML = headLabel + ' · <span class="mc-sub">' + matched + ' na mapě</span>' + pripisky;
     var sb = countEl.querySelector('#mc-skryte');
     if (sb) sb.addEventListener('click', function (e) { e.stopPropagation(); ukazSkryte = !ukazSkryte; renderList(); });
+    var pb = countEl.querySelector('#mc-prosle');
+    if (pb) pb.addEventListener('click', function (e) { e.stopPropagation(); ukazProsle = !ukazProsle; renderList(); });
     if (matched === 0) {
       var anyFilter = activeType !== 'all' || activeDruh !== 'all' || maxPrice || minPrice || searchTerm || favOnly || urgentOnly || minArea || maxArea;
       var emptyMsg;

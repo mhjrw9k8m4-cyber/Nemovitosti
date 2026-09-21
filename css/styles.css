@@ -557,6 +557,40 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    #nav a jinak přebíjelo barvu tlačítka a text byl šedý a špatně čitelný. */
 #nav a.btn-primary{color:#fff;}
 #nav a.btn-primary:hover{color:var(--ink);}
+
+/* =====================================================================
+   „MOJE" — jedna položka místo čtyř
+   V liště stály vedle sebe Upozornění, Zprávy, Hlídání a Můj profil.
+   Všechny patří jednomu účtu, ale zabíraly čtyři místa a vypadaly jako
+   čtyři různé části webu. Jsou tedy pod jednou.
+
+   Je to <details>, ne vlastní skript: rozbalení tím umí prohlížeč sám,
+   včetně klávesnice a čtečky obrazovky, a funguje i bez JavaScriptu.
+   ===================================================================== */
+.nav-moje{position:relative;}
+.nav-moje > summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:5px;
+  color:var(--text-ondark-mute); font-size:14px; font-weight:500; transition:color .15s ease;}
+.nav-moje > summary::-webkit-details-marker{display:none;}
+.nav-moje > summary::after{content:""; width:7px; height:7px; flex:none;
+  border-right:1.6px solid currentColor; border-bottom:1.6px solid currentColor;
+  transform:translateY(-2px) rotate(45deg); transition:transform .18s ease;}
+.nav-moje[open] > summary::after{transform:translateY(1px) rotate(-135deg);}
+.nav-moje > summary:hover, .nav-moje[open] > summary{color:var(--text-ondark);}
+.nav-moje > summary:focus-visible{outline:2px solid var(--copper); outline-offset:3px; border-radius:3px;}
+/* display:flex níž přebíjí to, čím prohlížeč schovává obsah zavřeného
+   <details> — panel by pak visel pod lištou pořád. Zavřený se schová
+   výslovně. */
+.nav-moje:not([open]) > .nav-moje-panel{display:none;}
+.nav-moje-panel{position:absolute; top:calc(100% + 12px); right:0; z-index:20;
+  display:flex; flex-direction:column; gap:2px; min-width:190px; padding:8px;
+  background:var(--ink-soft); border:1px solid var(--line-strong);
+  border-radius:var(--r-md); box-shadow:var(--e3);}
+.nav-moje-panel a{padding:9px 11px; border-radius:var(--r-ovladani); white-space:nowrap;}
+.nav-moje-panel a:hover{background:var(--ink-soft2); color:var(--text-ondark);}
+/* Odznak s počtem visí u odkazu vpravo, ne hned za textem — v panelu pod
+   sebou by jinak skákal podle délky slova. */
+.nav-moje-panel a{display:flex; align-items:center; gap:8px;}
+.nav-moje-panel a .nav-unread{margin-left:auto;}
 #nav a:not(.btn-primary).active{color:var(--text-ondark);}
 #nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--copper-bright); border-radius:2px;}
 @media (max-width:1040px){ #nav a:not(.btn-primary).active::after{content:"→"; position:static; display:inline; left:auto; right:auto; bottom:auto; width:auto; height:auto; background:none; border-radius:0; color:var(--copper-bright); opacity:0.55; font-family:var(--font-ui); font-size:17px;} #nav a:not(.btn-primary).active{color:var(--copper-bright);} }
@@ -1764,6 +1798,21 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
      že se dlouhé menu vejde a nepřeteče přes lištu iOS. */
   #nav{position:fixed; top:100%; left:0; right:0; max-height:calc(100dvh - 100%); flex-direction:column; align-items:stretch; gap:0; background:var(--ink); padding:12px 12px calc(18px + env(safe-area-inset-bottom, 0px)); border-radius:0 0 var(--r-lg) var(--r-lg); box-shadow:var(--e3); border-bottom:1px solid var(--line); display:none; overflow-y:auto; overscroll-behavior:contain; z-index:5;}
   #nav.open{display:flex; animation:navdrop .22s var(--ease);}
+  /* Ve vysouvacím menu je všechno pod sebou, takže zanořovat skupinu do
+     rozbalovátka by znamenalo jedno klepnutí navíc pro nic. „Moje" je tu
+     nadpis oddílu a čtyři položky pod ním jsou rovnou vidět. */
+  .nav-moje{display:block;}
+  .nav-moje > summary{cursor:default; pointer-events:none;
+    font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--text-ondark-mute); padding:14px 12px 4px;}
+  .nav-moje > summary::after{display:none;}
+  /* Ve vysouvacím menu je skupina rozbalená vždycky, i když <details>
+     zavřené je — proto i varianta se :not([open]), aby přebila pravidlo
+     pro počítač. */
+  .nav-moje-panel, .nav-moje:not([open]) > .nav-moje-panel{
+    display:flex; position:static; min-width:0; padding:0; gap:0;
+    background:none; border:0; border-radius:0; box-shadow:none;}
+  .nav-moje::details-content{content-visibility:visible; block-size:auto;}
   /* Ztmavené pozadí pod panelem (bez zásahu do HTML — pseudo na body) */
   body.nav-open::before{content:""; position:fixed; inset:0; background:rgba(6,12,16,0.55); z-index:4; animation:navdrop .22s var(--ease);}
   @keyframes navdrop{from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);}}
@@ -2897,6 +2946,31 @@ body::after{
   .hero-map{padding:0 0 26px;}
 }
 
+/* =====================================================================
+   ÚVOD NA TELEFONU: CO SI ZASLOUŽÍ MÍSTO PŘED HLEDÁNÍM
+   Na displeji 320×568 bylo pole „Hledat obec" až v 72 % výšky obrazovky.
+   Člověk, který přišel hledat pozemek, se k hledání dostal jako
+   k poslednímu. Před ním stálo: nadstavec, nadpis, počty, proužek
+   s živými údaji — a teprve pak panel.
+
+   Zůstává to, co odpovídá na „kde to jsem a stojí to za to": nadpis
+   a počty (1 940 pozemků · 77 okresů). Odchází:
+    · nadstavec „POZEMKY NA PRODEJ I V DRAŽBĚ · CELÁ ČR" — říká přesně
+      to, co nadpis a počty pod ním,
+    · proužek s nejbližší dražbou a nejvýhodnější nabídkou — to není
+      krok k hledání, ale obsah; a je o kus níž na mapě, kam ty odkazy
+      stejně vedou.
+   Na větších telefonech a tabletech obojí zůstává.
+   ===================================================================== */
+@media (max-width:560px){
+  .hero-map .hero-head .eyebrow{display:none;}
+  .hero-map .hero-head .hero-live{display:none;}
+  .hero-band{padding:14px 0 76px;}
+  .hero-map .map-wide{margin-top:-62px;}
+  .hero-map .hero-head .hero-stats{margin-top:10px;}
+  .hero-head h1{margin-bottom:8px;}
+}
+
 
 /* =====================================================================
    POSTRANNÍ SLOUPEC SEKCE (.rail)
@@ -3284,26 +3358,15 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 
 
 /* =====================================================================
-   SESKUPENÍ MENU NA POČÍTAČI
-   V liště stálo osm odkazů vedle sebe jako osm rovnocenných věcí — a čtyři
-   z nich (Upozornění, Zprávy, Hlídání, Můj profil) patří k sobě: jsou to
-   osobní stránky jednoho člověka. Mobilní menu je odděluje vlasovou linkou
-   už dlouho, lišta ne.
-   Dělá to svislá linka před skupinou a o kousek užší mezery uvnitř ní —
-   oko pak čte dva bloky místo osmi položek. Žádné nové rozbalování:
-   všechno zůstává na jedno kliknutí.
+   SESKUPENÍ MENU NA POČÍTAČI — zrušeno, viz .nav-moje výš.
+   Byl tu pokus poznat skupinu osobních stránek v liště: svislá linka
+   před „Upozorněním" a užší mezery uvnitř. Jenže osm položek zůstalo
+   osmi položkami — čtyři z nich vypadaly jako čtyři různé části webu,
+   jen s čárkou mezi nimi. Jsou proto pod jednou položkou „Moje".
+   Pravidla odsud musela pryč: svislá čárka se vázala na odkaz, který
+   se přestěhoval do rozbalovací nabídky, takže se kreslila UVNITŘ ní
+   a visela tam u prvního řádku jako škrtnutí.
    ------------------------------------------------------------------ */
-@media (min-width:981px){
-  #nav a[href$="upozorneni.html"]{
-    margin-left:12px; padding-left:22px; position:relative;}
-  #nav a[href$="upozorneni.html"]::after{content:""; position:absolute;
-    left:0; top:50%; transform:translateY(-50%);
-    width:1px; height:17px; background:var(--line-strong);}
-  /* Uvnitř skupiny se odkazy drží u sebe těsněji než mezi skupinami. */
-  #nav a[href$="zpravy.html"], #nav a[href$="hlidani.html"],
-  #nav a[href$="muj-inzerat.html"]{margin-left:-6px;}
-  #nav a[href$="kontakt.html"]{margin-left:12px;}
-}
 
 
 /* =====================================================================

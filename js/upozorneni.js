@@ -83,6 +83,10 @@
 
   function vykresli(zpravy, hlidani) {
     var celkem = zpravy + hlidani;
+    /* Čtyři „moje" položky jsou pod jednou. Odznak uvnitř zavřené nabídky
+       by nebyl vidět, takže se počet ukáže i na ní — jinak by se člověk
+       o čekající novince dozvěděl, jen kdyby ji náhodou rozbalil. */
+    vykresliOdkaz(document.getElementById('nav-moje-sum'), celkem, 'novinek');
     vykresliOdkaz(document.getElementById('nav-upozorneni'), celkem, 'novinek');
     vykresliOdkaz(document.getElementById('nav-zpravy'), zpravy, 'nepřečtených zpráv');
     vykresliOdkaz(document.getElementById('nav-hlidani'), hlidani, 'nových pozemků z hlídání');
@@ -161,7 +165,7 @@
       var A = window.PKAuth;
       if (!A || !A.loggedIn || !A.loggedIn()) return;
       if (!document.getElementById('nav-zpravy') && !document.getElementById('nav-hlidani') &&
-          !document.getElementById('nav-upozorneni')) return;
+          !document.getElementById('nav-upozorneni') && !document.getElementById('nav-moje-sum')) return;
 
       var ted = Date.now();
       var z = nactiZPameti(ted);

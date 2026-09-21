@@ -98,7 +98,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=43e58b96">
+  <link rel="stylesheet" href="css/styles.css?v=5634ad4c">
 </head>
 <body>
 
@@ -132,10 +132,19 @@
       <a href="#mapa">Mapa</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
       <a href="#faq">Dotazy</a>
-      <a href="upozorneni.html" id="nav-upozorneni">Upozornění</a>
-      <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
-      <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
-      <a href="muj-inzerat.html">Můj profil</a>
+      <!-- Čtyři položky, které všechny patří jednomu účtu, zabíraly
+           v liště čtyři místa a vypadaly jako čtyři různé části webu.
+           Jsou pod jednou. <details> proto, že rozbalení má umět
+           prohlížeč sám — klávesnicí i bez skriptu. -->
+      <details class="nav-moje">
+        <summary id="nav-moje-sum">Moje</summary>
+        <div class="nav-moje-panel">
+          <a href="upozorneni.html" id="nav-upozorneni">Upozornění</a>
+          <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
+          <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
+          <a href="muj-inzerat.html">Můj profil</a>
+        </div>
+      </details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
@@ -501,13 +510,13 @@
 <script src="js/ceny.js?v=a95a6303" defer></script>
 <script src="js/radce.js?v=7f024858" defer></script>
 <script src="js/hlidani-logika.js?v=e5f0811e" defer></script>
-<script src="js/main.js?v=20c0a8fa" defer></script>
+<script src="js/main.js?v=1a93f71d" defer></script>
 <!-- Vercel Web Analytics (navstevnost) -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel. Na GitHub Pages ani lokálně
    neexistuje, a natvrdo vložený končil chybou 404 v konzoli — proto ho přidáme
    do stránky jen tam, kde ho má kdo obsloužit. */
 (function(){var h=location.hostname;if(/(^|\.)github\.io$/.test(h)||h==="localhost"||h==="127.0.0.1"||!h)return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script src="js/upozorneni-feed.js?v=c8e91dd3" defer></script>
-<script src="js/upozorneni.js?v=952fe785" defer></script>
+<script src="js/upozorneni.js?v=b7b7c483" defer></script>
 </body>
 </html>

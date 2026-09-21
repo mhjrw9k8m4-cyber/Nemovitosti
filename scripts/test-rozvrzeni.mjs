@@ -134,15 +134,19 @@ async function otevri(soubor, sirka, vyska) {
 
 // --- 2) Proužek s údaji se vejde do rodiče ---------------------------
 {
-  const { ctx, p } = await otevri('index.html', 390, 844);
+  /* Měří se na 700 px, ne na telefonu: na displeji do 560 px je proužek
+     schovaný schválně (drží hledání pod obzorem, viz bod 7 níž), takže
+     by tu nebylo co poměřovat. Vytékal ale i na širších displejích. */
+  const { ctx, p } = await otevri('index.html', 700, 900);
   await p.waitForTimeout(2600);
   const v = await p.evaluate(() => {
     const e = document.getElementById('hero-live');
-    if (!e || e.hidden) return null;
+    if (!e || e.hidden || getComputedStyle(e).display === 'none') return null;
     const r = e.getBoundingClientRect(), rr = e.parentElement.getBoundingClientRect();
     return { sirka: Math.round(r.width), rodic: Math.round(rr.width),
       vpravo: Math.round(r.right), okno: innerWidth,
-      posouvaSe: e.scrollWidth > e.clientWidth + 1 };
+      pretekaObsah: e.scrollWidth > e.clientWidth + 1,
+      posuv: getComputedStyle(e).overflowX };
   });
   pravda('proužek s údaji v úvodu je vidět', !!v, 'element #hero-live chybí nebo zůstal schovaný');
   if (v) {
@@ -151,10 +155,28 @@ async function otevri(soubor, sirka, vyska) {
       `proužek je ${v.sirka} px v ${v.rodic}px sloupci — vytéká o ${v.sirka - v.rodic} px`);
     pravda('a nepřesahuje obrazovku', v.vpravo <= v.okno + 1,
       `pravý okraj je na ${v.vpravo} px, obrazovka končí na ${v.okno}`);
-    // Když se do šířky nevejde, musí jít posunout — jinak je zbytek nedostupný.
-    pravda('a co se nevejde, jde posunout do strany', v.posouvaSe,
-      'proužek nemá co posouvat — buď je celý vidět, nebo se k poslednímu údaji nelze dostat');
+    /* Co se do šířky nevejde, musí jít posunout. Když se vejde všechno,
+       není co posouvat — a to je taky v pořádku; chyba je jen případ
+       „obsah přetéká a posunout to nejde", kdy se poslední údaj nedá
+       přečíst ani nijak dostat na obrazovku. */
+    pravda('co se do proužku nevejde, jde posunout do strany',
+      !v.pretekaObsah || /auto|scroll/.test(v.posuv),
+      `obsah přetéká (${v.sirka} px rámeček), ale overflow-x je „${v.posuv}" — poslední údaj je nedostupný`);
   }
+  await ctx.close();
+}
+
+{
+  // A na malém telefonu je schovaný záměrně — ne náhodou.
+  const { ctx, p } = await otevri('index.html', 360, 640);
+  await p.waitForTimeout(2200);
+  const vidno = await p.evaluate(() => {
+    const e = document.getElementById('hero-live');
+    if (!e) return false;
+    return !e.hidden && getComputedStyle(e).display !== 'none' && e.getClientRects().length > 0;
+  });
+  pravda('na malém telefonu proužek s údaji ustoupí hledání', vidno === false,
+    'proužek je před hledáním, přestože na malém displeji jde o obsah, ne o krok k hledání');
   await ctx.close();
 }
 
@@ -231,6 +253,147 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
     }
     pravda(`za oknem není vidět web (${w} px)`, v.pruhledne === false,
       `pozadí je ${v.pozadi} — průsvitné, takže stránka za ním prosvítá`);
+  }
+  await ctx.close();
+}
+
+// --- 6) Menu: čtyři „moje" položky pod jednou -------------------------
+/* V liště stály vedle sebe Upozornění, Zprávy, Hlídání a Můj profil.
+   Všechny patří jednomu účtu, ale zabíraly čtyři místa a vypadaly jako
+   čtyři různé části webu. */
+{
+  const { ctx, p } = await otevri('kontakt.html', 1440, 900);
+  const v = await p.evaluate(() => {
+    const vidno = (e) => { if (!e) return false; const s = getComputedStyle(e);
+      return s.display !== 'none' && s.visibility !== 'hidden' && e.getClientRects().length > 0; };
+    const det = document.querySelector('.nav-moje');
+    return {
+      skupina: !!det,
+      otevrena: det ? det.open : null,
+      polozekVListe: [...document.querySelectorAll('#nav > a, #nav > details')].filter(vidno).length,
+      odkazyUvnitr: [...document.querySelectorAll('.nav-moje-panel a')].map((a) => a.textContent.trim()),
+      vidnoZavrene: [...document.querySelectorAll('.nav-moje-panel a')].filter(vidno).length,
+    };
+  });
+  pravda('osobní položky jsou pod jednou skupinou', v.skupina, 'skupina .nav-moje v liště chybí');
+  pravda('a jsou v ní všechny čtyři',
+    v.odkazyUvnitr.length === 4 && /Upozorn/.test(v.odkazyUvnitr.join(' ')) && /profil/i.test(v.odkazyUvnitr.join(' ')),
+    v.odkazyUvnitr.join(' | '));
+  pravda('v liště tím ubylo položek', v.polozekVListe <= 6, `v liště je ${v.polozekVListe} položek`);
+  pravda('zavřená nabídka nevisí pod lištou', v.vidnoZavrene === 0,
+    `zavřeno, ale vidět je ${v.vidnoZavrene} odkazů`);
+  // Rozbalit se musí dát. (Chybějící skupina má skončit poctivým ✕
+  // u kontroly výš, ne pádem celého testu.)
+  await p.click('#nav-moje-sum', { timeout: 4000 }).catch(() => {});
+  await p.waitForTimeout(400);
+  const po = await p.evaluate(() => [...document.querySelectorAll('.nav-moje-panel a')]
+    .filter((e) => e.getClientRects().length > 0).length);
+  pravda('po klepnutí se rozbalí', po === 4, `vidět je ${po} ze čtyř`);
+  await ctx.close();
+}
+{
+  // Na telefonu je menu samo o sobě seznam pod sebou, takže zanořovat
+  // skupinu do rozbalovátka by bylo klepnutí navíc pro nic.
+  const { ctx, p } = await otevri('kontakt.html', 390, 844);
+  await p.click('.nav-toggle').catch(() => {});
+  await p.waitForTimeout(600);
+  const n = await p.evaluate(() => [...document.querySelectorAll('.nav-moje-panel a')]
+    .filter((e) => { const s = getComputedStyle(e);
+      return s.display !== 'none' && e.getClientRects().length > 0; }).length);
+  pravda('ve vysouvacím menu jsou osobní položky rovnou vidět', n === 4,
+    `vidět je ${n} ze čtyř — ve výsuvném menu se nemá nic rozbalovat`);
+  await ctx.close();
+}
+
+// --- 7) Úvod na telefonu nedrží hledání pod obzorem -------------------
+/* Na displeji 320×568 bylo pole „Hledat obec" až v 72 % výšky obrazovky.
+   Člověk, který přišel hledat pozemek, se k hledání dostal jako
+   k poslednímu. */
+for (const [w, h] of [[320, 568], [375, 667], [390, 844]]) {
+  const { ctx, p } = await otevri('index.html', w, h);
+  await p.waitForTimeout(2200);
+  const v = await p.evaluate(() => {
+    const e = document.getElementById('map-search');
+    if (!e) return null;
+    const r = e.getBoundingClientRect();
+    return { horni: Math.round(r.top + scrollY), okno: innerHeight };
+  });
+  pravda(`hledání je na stránce (${w}×${h})`, !!v, 'pole #map-search chybí');
+  if (v) {
+    const podil = Math.round(100 * v.horni / v.okno);
+    pravda(`hledání je v horní polovině obrazovky (${w}×${h})`, podil <= 56,
+      `pole začíná v ${podil} % výšky (${v.horni} z ${v.okno} px) — před ním je moc úvodu`);
+  }
+  await ctx.close();
+}
+
+// --- 8) Dražba po termínu: zmizí, a je napsáno proč -------------------
+/* Nedalo se poznat, co se stane s dražbou, která proběhla. Seznam ji jen
+   odsunul dolů a odznak „proběhlo" si člověk musel najít sám; na stránce
+   pozemku se blok s termínem prostě vynechal, takže tam o tom nepadlo
+   slovo. Prošlá dražba už není příležitost — dražit se nedá.
+
+   V ostrých datech žádná prošlá není (robot bere jen aktivní), takže se
+   tu podstrkují vlastní: jinak by kontrola mlčela a tvářila se spokojeně. */
+{
+  const dnes = new Date();
+  const posun = (dni) => { const d = new Date(dnes); d.setDate(d.getDate() + dni);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const data = { updated: posun(0), opportunities: [
+    { place: 'Budoucí', okres: 'Kolín', type: 'drazba', parcel: '1/1', druh: 'orná půda',
+      area: 2000, price: 300000, lat: 50.02, lng: 15.20, extra: 'dražba ' + posun(20) },
+    { place: 'Prošlá', okres: 'Kolín', type: 'drazba', parcel: '2/2', druh: 'orná půda',
+      area: 2000, price: 300000, lat: 50.04, lng: 15.22, extra: 'dražba ' + posun(-9) },
+    { place: 'Prodej', okres: 'Kolín', type: 'sale', parcel: '3/3', druh: 'orná půda',
+      area: 2000, price: 300000, lat: 50.06, lng: 15.24, extra: 'inzerát' },
+  ] };
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ', permissions: [] });
+  await ctx.route('**/*', (r) => {
+    const u = new URL(r.request().url());
+    if (u.hostname === '127.0.0.1') return r.continue();
+    if (LEAFLET && /unpkg\.com\/leaflet@/.test(r.request().url())) {
+      const f = path.join(LEAFLET, path.basename(u.pathname));
+      if (existsSync(f)) return r.fulfill({ status: 200,
+        contentType: f.endsWith('.css') ? 'text/css' : 'text/javascript', body: readFileSync(f) });
+    }
+    if (r.request().resourceType() === 'image') return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA });
+    return r.abort();
+  });
+  await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: JSON.stringify(data) }));
+  await ctx.route('**/data/user-listings.json*', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: '[]' }));
+  await ctx.route(`${BASE}/index.html`, async (r) => {
+    const o = await r.fetch();
+    return r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8',
+      body: (await o.text()).replace(/\s+integrity="[^"]*"/g, '') });
+  });
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(3600);
+  const cti = () => p.evaluate(() => ({
+    obce: [...document.querySelectorAll('.opp-item')].map((e) => (e.querySelector('.opp-place') || e).textContent.trim().slice(0, 30)),
+    karet: document.querySelectorAll('.opp-item').length,
+    tlacitko: (document.querySelector('#mc-prosle') || {}).textContent || '',
+    vse: (() => { const b = document.querySelector('.filter-chip[data-type="all"] .chip-n');
+      return b ? +b.textContent.replace(/[^\d]/g, '') : null; })(),
+  }));
+  const pred = await cti();
+  pravda('dražba po termínu se do výpisu nedostane',
+    pred.karet === 2 && !pred.obce.join(' ').includes('Prošlá'),
+    `ve výpisu je ${pred.karet} karet: ${pred.obce.join(', ')}`);
+  pravda('a nepočítá se ani do čísel u kategorií', pred.vse === 2, `„Vše" hlásí ${pred.vse}`);
+  // Tohle je to jádro: nemá tiše zmizet, má být napsané, že zmizela.
+  pravda('nad seznamem je napsané, kolik jich je stranou',
+    /po termínu \(1\)/.test(pred.tlacitko), `tlačítko hlásí „${pred.tlacitko.trim()}"`);
+  if (pred.tlacitko) {
+    await p.click('#mc-prosle');
+    await p.waitForTimeout(900);
+    const po = await cti();
+    pravda('a dají se zobrazit', po.karet === 3 && po.obce.join(' ').includes('Prošlá'),
+      `po klepnutí je ve výpisu ${po.karet} karet: ${po.obce.join(', ')}`);
+    pravda('a zase schovat', /Schovat/.test(po.tlacitko), `tlačítko hlásí „${po.tlacitko.trim()}"`);
   }
   await ctx.close();
 }

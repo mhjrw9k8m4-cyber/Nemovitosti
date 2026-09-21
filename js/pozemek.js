@@ -280,7 +280,13 @@
           (perM2 ? '<span class="pm">' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
       '</div>' +
 
-      (days != null && days >= 0 ? '<div class="pz-term">' + CLOCK_SVG + 'Termín ' + countdownText(days) + '</div>' : '') +
+      /* Po termínu se blok jen vynechával, takže stránka vypadala jako
+         běžná nabídka a o tom, že dražba už proběhla, nepadlo slovo.
+         Kdo sem přijde po starším odkazu, musí se to dozvědět hned. */
+      (days == null ? ''
+        : days >= 0
+          ? '<div class="pz-term">' + CLOCK_SVG + 'Termín ' + countdownText(days) + '</div>'
+          : '<div class="pz-term prosle">' + CLOCK_SVG + 'Dražba už proběhla — tahle nabídka je jen k nahlédnutí</div>') +
 
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
 

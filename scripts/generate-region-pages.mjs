@@ -273,10 +273,7 @@ ${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\
       <a href="index.html#mapa">Mapa</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
       <a href="index.html#faq">Dotazy</a>
-      <a href="upozorneni.html" id="nav-upozorneni">Upozornění</a>
-      <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
-      <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
-      <a href="muj-inzerat.html">Můj profil</a>
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a><a href="muj-inzerat.html">Můj profil</a></div></details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>

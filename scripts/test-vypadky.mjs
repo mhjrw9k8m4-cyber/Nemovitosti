@@ -121,17 +121,37 @@ async function otevri(obsluhaDat) {
   pravda('když data dojedou, žádné hlášení se neukáže', v.pas === false,
     'planý poplach je horší než žádný');
 
-  // --- Dražba po termínu ---
-  const prosla = v.polozky.find((x) => x.text.indexOf('Prošlá') !== -1);
-  pravda('prošlá dražba je ve výpisu označená jako „proběhlo"',
-    !!(prosla && prosla.proslo),
-    prosla ? `karta: ${prosla.text.slice(0, 100)}` : 'karta se vůbec nenašla');
-  pravda('a je zařazená až za živé nabídky',
-    v.polozky.length > 1 && v.polozky[v.polozky.length - 1].proslo === true,
-    'pořadí: ' + v.polozky.map((x) => (x.proslo ? 'PROŠLÁ' : 'živá')).join(', '));
-  pravda('živé nabídky označené nejsou',
-    v.polozky.filter((x) => x.proslo).length === 1,
-    'označeno ' + v.polozky.filter((x) => x.proslo).length + ' položek');
+  /* --- Dražba po termínu ---
+     Dřív zůstávala ve výpisu, jen odsunutá dolů a s odznakem „proběhlo".
+     Jenže odznak si člověk musel najít sám a nedalo se poznat, jestli
+     takový záznam zmizí, nebo zůstane viset. Dražit se po termínu nedá,
+     takže to není příležitost: z výpisu i z počtů je venku. Nemá ale
+     zmizet TIŠE — nad seznamem je napsané, kolik jich je stranou, a dají
+     se zobrazit. */
+  pravda('prošlá dražba se do výpisu nedostane',
+    !v.polozky.some((x) => x.text.indexOf('Prošlá') !== -1),
+    've výpisu: ' + v.polozky.map((x) => x.text.slice(0, 24)).join(' | '));
+  pravda('a živé nabídky ve výpisu zůstaly', v.polozky.length > 0, 'výpis je prázdný');
+  const pozn = await p.evaluate(() => (document.querySelector('#mc-prosle') || {}).textContent || '');
+  pravda('nad seznamem je napsané, že se nějaká skrývá',
+    /po termínu \(\d+\)/.test(pozn), `poznámka: „${pozn.trim()}"`);
+  // A po vyžádání se ukáže — označená a až za živými nabídkami.
+  if (pozn) {
+    await p.click('#mc-prosle');
+    await p.waitForTimeout(800);
+    const po = await p.evaluate(() => [...document.querySelectorAll('.opp-item')].map((e) => ({
+      text: e.textContent.replace(/\s+/g, ' ').trim(),
+      proslo: !!e.querySelector('.opp-proběhlo'),
+    })));
+    const prosla = po.find((x) => x.text.indexOf('Prošlá') !== -1);
+    pravda('po vyžádání je vidět a označená jako „proběhlo"', !!(prosla && prosla.proslo),
+      prosla ? `karta: ${prosla.text.slice(0, 90)}` : 'karta se ani pak nenašla');
+    pravda('a je zařazená až za živé nabídky',
+      po.length > 1 && po[po.length - 1].proslo === true,
+      'pořadí: ' + po.map((x) => (x.proslo ? 'PROŠLÁ' : 'živá')).join(', '));
+    pravda('živé nabídky označené nejsou', po.filter((x) => x.proslo).length === 1,
+      'označeno ' + po.filter((x) => x.proslo).length + ' položek');
+  }
   await ctx.close();
 }
 

@@ -95,12 +95,22 @@ je('odznak hlídání ukazuje počet nových pozemků',
 je('titulek záložky sečte zprávy i hlídání',
   (await pM.title()).startsWith('(' + (1 + cekanoHl > 9 ? '9+' : String(1 + cekanoHl)) + ') '), true);
 
-// na širokém displeji je menu rozbalené, tam tečka překážet nemusí
+/* Na širokém displeji je lišta rozbalená, tam tečka na tlačítku menu
+   překážet nemusí. Osobní položky (Upozornění, Zprávy, Hlídání, Můj
+   profil) jsou ale nově pod jednou skupinou „Moje", takže odznak
+   u Zpráv je v zavřené nabídce — a tím pádem neviditelný. Počet proto
+   svítí i na samotné skupině; kdyby nesvítil, člověk by se o čekající
+   zprávě dozvěděl, jen kdyby nabídku náhodou rozbalil. */
 const pSirs = await cMajitel.newPage();
 await pSirs.setViewportSize({ width: 1280, height: 800 });
 await pSirs.goto(`${BASE}/pozemky-okres-tabor.html`);
-await pSirs.waitForSelector('#nav-zpravy .nav-unread', { timeout: 10000 });
-je('na počítači je odznak rovnou vidět',
+await pSirs.waitForSelector('#nav-moje-sum .nav-unread', { timeout: 10000 });
+je('na počítači je odznak rovnou vidět na skupině „Moje"',
+  await pSirs.locator('#nav-moje-sum .nav-unread').isVisible(), true);
+// A po rozbalení i u konkrétní položky.
+await pSirs.click('#nav-moje-sum');
+await pSirs.waitForTimeout(400);
+je('a po rozbalení i u Zpráv',
   await pSirs.locator('#nav-zpravy .nav-unread').isVisible(), true);
 await pSirs.close();
 

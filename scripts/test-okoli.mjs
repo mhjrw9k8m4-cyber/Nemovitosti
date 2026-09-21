@@ -256,7 +256,9 @@ const stavVybiraku = (p) => p.evaluate(() => {
   await p.waitForTimeout(2200);
 
   const v = await p.evaluate(() => {
-    const cislo = (t) => { const m = String(t || '').match(/(\d+)/); return m ? +m[1] : null; };
+    // Čísla se na webu píšou s mezerou po tisících („1 940"), takže se
+    // mezery musí nejdřív vyhodit — jinak by z „1 940" vyšla jednička.
+    const cislo = (t) => { const m = String(t || '').match(/\d[\d\s\u00a0]*/); return m ? +m[0].replace(/[\s\u00a0]/g, '') : null; };
     const misto = (() => { try { return JSON.parse(localStorage.getItem('pk_misto_v1') || 'null'); } catch (e) { return null; } })();
     // Vzdálenost každé vypsané karty od uloženého místa se spočítat nedá
     // (karta nenese souřadnice), takže se porovnává to, co web tvrdí:
@@ -278,7 +280,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
       karty: [...document.querySelectorAll('.opp-item')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
     };
   });
-  const celyPocet = (cely.match(/(\d+)/) || [])[1];
+  const celyPocet = ((cely.match(/\d[\d\s\u00a0]*/) || [''])[0] || '').replace(/[\s\u00a0]/g, '');
   pravda('bez okolí je v seznamu celá republika', +celyPocet > 500, `bylo jen ${celyPocet}`);
   pravda('potvrzení výběr zavře', v.vybirac === false);
   // TOHLE je ta chyba: dřív tu zůstalo 1940.
@@ -327,8 +329,8 @@ const stavVybiraku = (p) => p.evaluate(() => {
   await p.selectOption('#misto-km', '50');
   await p.waitForTimeout(1600);
   const siroky = await p.evaluate(() => {
-    const m = String((document.getElementById('mvt-count') || {}).textContent || '').match(/(\d+)/);
-    return { n: m ? +m[1] : null, pod: (document.querySelector('.kh-txt span') || {}).textContent || '' };
+    const m = String((document.getElementById('mvt-count') || {}).textContent || '').match(/\d[\d\s\u00a0]*/);
+    return { n: m ? +m[0].replace(/[\s\u00a0]/g, '') : null, pod: (document.querySelector('.kh-txt span') || {}).textContent || '' };
   });
   pravda('větší okruh ukáže víc pozemků', siroky.n > v.vSeznamu,
     `do 10 km ${v.vSeznamu}, do 50 km ${siroky.n}`);
@@ -367,8 +369,8 @@ const stavVybiraku = (p) => p.evaluate(() => {
   await p.locator('#misto-zapnout').click();
   await p.waitForTimeout(1500);
   const zpet = await p.evaluate(() => {
-    const m = String((document.getElementById('mvt-count') || {}).textContent || '').match(/(\d+)/);
-    return { n: m ? +m[1] : null, ulozeno: !!localStorage.getItem('pk_misto_v1') };
+    const m = String((document.getElementById('mvt-count') || {}).textContent || '').match(/\d[\d\s\u00a0]*/);
+    return { n: m ? +m[0].replace(/[\s\u00a0]/g, '') : null, ulozeno: !!localStorage.getItem('pk_misto_v1') };
   });
   pravda('přepínač vrátí celou republiku', zpet.n === +celyPocet, `${zpet.n} × ${celyPocet}`);
   pravda('a místo přitom zůstane uložené', zpet.ulozeno,
@@ -403,8 +405,8 @@ const stavVybiraku = (p) => p.evaluate(() => {
     await p.locator('#okoli-vic').click();
     await p.waitForTimeout(1600);
     const po = await p.evaluate(() => {
-      const m = String((document.getElementById('mvt-count') || {}).textContent || '').match(/(\d+)/);
-      return m ? +m[1] : 0;
+      const m = String((document.getElementById('mvt-count') || {}).textContent || '').match(/\d[\d\s\u00a0]*/);
+      return m ? +m[0].replace(/[\s\u00a0]/g, '') : 0;
     });
     pravda('po zvětšení okruhu se něco najde', po > 0, `pořád ${po}`);
   }
