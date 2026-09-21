@@ -152,36 +152,19 @@
 
   function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
   // Počet dní do termínu dražby z reálného data v poli extra (např. „dražba 2026-09-02")
-  function daysUntil(extra){
-    var m = /(\d{4})-(\d{2})-(\d{2})/.exec(extra || '');
-    if (!m) return null;
-    var target = new Date(+m[1], +m[2] - 1, +m[3]);
-    if (isNaN(target)) return null;
-    var now = new Date(); now.setHours(0, 0, 0, 0);
-    return Math.round((target - now) / 86400000);
-  }
+  /* Termíny dražeb bere celý web z js/terminy.js. Tyhle funkce tu byly
+     doslovně zkopírované i v js/pozemek.js — a dvě kopie znamenají, že se
+     dřív nebo později rozejdou a web začne o téže dražbě tvrdit dvě věci. */
+  var T = window.PK_TERMINY;
+  function daysUntil(extra){ return T.daysUntil(extra); }
   /** Dražba, jejíž termín už minul. */
   function jeProsle(d){ var n = daysUntil(d.extra); return n != null && n < 0; }
-  function countdownText(days){
-    if (days < 0) return 'proběhlo';
-    if (days === 0) return 'dnes';
-    if (days === 1) return 'zítra';
-    if (days <= 6) return 'za ' + days + (days <= 4 ? ' dny' : ' dní');
-    if (days <= 13) return 'za týden';
-    if (days <= 27) return 'za ' + Math.round(days / 7) + ' týdny';
-    return 'za ' + Math.round(days / 30) + ' měs.';
-  }
-  function countdownClass(days){
-    if (days == null || days < 0) return '';
-    if (days <= 7) return ' urg';
-    if (days <= 30) return ' soon';
-    return '';
-  }
+  function countdownText(days){ return T.countdownText(days); }
+  function countdownClass(days){ return T.countdownClass(days); }
   // Termín dražby jako YYYYMMDD (z reálného data v extra) — pro kalendář (.ics)
-  function auctionYMD(extra){
-    var m = /(\d{4})-(\d{2})-(\d{2})/.exec(extra || '');
-    return m ? m[1] + m[2] + m[3] : null;
-  }
+  function auctionYMD(extra){ return T.auctionYMD(extra); }
+  /** Zápis zdroje pro čtení — syrové „2026-10-12" patří strojům, ne lidem. */
+  function zdrojText(extra){ return T.zdrojText(extra); }
   function icsEsc(s){ return String(s).replace(/([,;\\])/g, '\\$1').replace(/\r?\n/g, '\\n'); }
   function pad2(n){ return (n < 10 ? '0' : '') + n; }
   // Sestaví .ics událost (celodenní na den dražby) s připomínkou den předem
@@ -618,7 +601,7 @@
     var html = '';
     tickItems.forEach(function (d) {
       html += '<span class="tick-item"><span class="td" style="background:' + TYPE[d.type].color + '"></span>' +
-        TYPE[d.type].label + ' · <b>' + d.place + '</b> · ' + areaTxt(d) + ' · ' + d.extra + '</span>';
+        TYPE[d.type].label + ' · <b>' + d.place + '</b> · ' + areaTxt(d) + ' · ' + zdrojText(d.extra) + '</span>';
     });
     tickTrack.innerHTML = html + html; // zdvojení pro plynulou nekonečnou smyčku
     // Rychlost nastavíme podle skutečné šířky ~ pohodlných 55 px/s (plynulé, čitelné)
@@ -1362,7 +1345,7 @@
           '<details class="md-details"><summary>Detaily o pozemku</summary><div class="md-det-body">' +
             '<div class="md-facts">' +
               (hasParcel(d) ? '<span>Parcela <b>č. ' + d.parcel + '</b></span>' : '') +
-              '<span>Stav <b>' + d.extra + '</b></span>' +
+              '<span>Stav <b>' + zdrojText(d.extra) + '</b></span>' +
             '</div>' +
             (isSPU(d) ? '<div class="md-note">Státní půda se prodává přes <b>veřejnou nabídku SPÚ (§ 12)</b> — otevřete „Nabídka SPÚ", parcelu ověříte přes „Katastr".</div>' : '') +
             (d.type === 'majitel' ? '<div class="md-note">Tenhle inzerát vložil <b>přímo majitel pozemku</b> tady na Parcelce — jednáte s ním <b>napřímo, bez realitky a provize</b>. Ostatní nabídky sbíráme z veřejných zdrojů. Vlastníka i parcelu si ověřte v katastru.' + (d._lid && typeof d.views === 'number' ? ' · <b>' + d.views + '×</b> zobrazeno' : '') + '</div>' : '') +

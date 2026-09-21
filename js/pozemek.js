@@ -42,29 +42,14 @@
     return 'Jiný pozemek';
   }
 
-  function daysUntil(extra) {
-    var m = /(\d{4})-(\d{2})-(\d{2})/.exec(extra || '');
-    if (!m) return null;
-    var target = new Date(+m[1], +m[2] - 1, +m[3]);
-    if (isNaN(target)) return null;
-    var now = new Date(); now.setHours(0, 0, 0, 0);
-    return Math.round((target - now) / 86400000);
-  }
-  function countdownText(days) {
-    if (days < 0) return 'proběhlo';
-    if (days === 0) return 'dnes';
-    if (days === 1) return 'zítra';
-    if (days <= 6) return 'za ' + days + (days <= 4 ? ' dny' : ' dní');
-    if (days <= 13) return 'za týden';
-    if (days <= 27) return 'za ' + Math.round(days / 7) + ' týdny';
-    return 'za ' + Math.round(days / 30) + ' měs.';
-  }
-  function countdownClass(days) {
-    if (days == null || days < 0) return '';
-    if (days <= 7) return ' urg';
-    if (days <= 30) return ' soon';
-    return '';
-  }
+  /* Termíny dražeb — společné s mapou, viz js/terminy.js. Dřív tu byla
+     doslovná kopie z js/main.js; dvě kopie téhož výpočtu se v tomhle
+     projektu už jednou rozešly a je to chyba, kterou nikdo nevidí. */
+  var T = window.PK_TERMINY;
+  function daysUntil(extra) { return T.daysUntil(extra); }
+  function countdownText(days) { return T.countdownText(days); }
+  function countdownClass(days) { return T.countdownClass(days); }
+  function zdrojText(extra) { return T.zdrojText(extra); }
 
   function pkey(d) { return [d.place || '', d.parcel || '', d.okres || ''].join('|'); }
   function katastrUrl(d) { return 'https://ikatastr.cz/#zoom=18&lat=' + d.lat + '&lon=' + d.lng + '&info=' + d.lat + ',' + d.lng; }
@@ -279,7 +264,7 @@
     if (perM2) facts.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²' });
     if (hasParcel(d)) facts.push({ k: 'Parcela', v: 'č. ' + esc(d.parcel) });
     facts.push({ k: 'Kategorie', v: esc(t.label) });
-    if (d.extra) facts.push({ k: 'Stav / zdroj', v: esc(d.extra) });
+    if (d.extra) facts.push({ k: 'Stav / zdroj', v: esc(zdrojText(d.extra)) });
 
     var html =
       '<div class="pz-media">' + heroLayers(d) + '</div>' +

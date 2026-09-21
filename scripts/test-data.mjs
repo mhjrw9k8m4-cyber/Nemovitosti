@@ -77,6 +77,36 @@ pravda('žádná výměra není nesmyslně velká', obri.length === 0,
 const bezData = nabidky.filter((o) => !/^\d{4}-\d{2}-\d{2}$/.test(o.first_seen || ''));
 pravda('každá nabídka ví, kdy ji robot viděl poprvé', bezData.length === 0, `${bezData.length} nabídek bez data`);
 
+// --- 5) Termíny dražeb mají jen jednu kopii ---------------------------
+/* Tenhle projekt už jednou zaplatil za to, že tentýž výpočet žil ve víc
+   souborech: cenový verdikt se ve třech kopiích rozešel a mapa tvrdila
+   něco jiného než stránka pozemku. Totéž hrozilo u termínů dražeb —
+   daysUntil a countdownText byly doslovně v js/main.js i v js/pozemek.js.
+   Teď jsou v js/terminy.js. Tahle kontrola hlídá, ať se nevrátí. */
+{
+  const ctiJs = (f) => readFileSync(new URL('../js/' + f, import.meta.url), 'utf8');
+  const modul = ctiJs('terminy.js');
+  pravda('sdílený modul termínů existuje a počítá dny',
+    /function daysUntil/.test(modul) && /PK_TERMINY/.test(modul));
+  for (const f of ['main.js', 'pozemek.js']) {
+    const t = ctiJs(f);
+    // Vlastní kopie poznáme podle těla výpočtu, ne podle jména funkce —
+    // tenké přesměrování na PK_TERMINY je v pořádku.
+    /* Tělo se nedá omezit přes [^}]: hned na prvním řádku výpočtu je
+       /(\\d{4})-/ a složená závorka uvnitř regulárního výrazu hledání
+       utne dřív, než se dojde k samotnému výpočtu. */
+    const maKopii = /function (daysUntil|countdownText)[\s\S]{0,420}?(86400000|'proběhlo')/.test(t);
+    pravda(`js/${f} nemá vlastní kopii výpočtu termínů`, !maKopii,
+      'výpočet se vrátil do souboru — dvě kopie se dřív nebo později rozejdou');
+    pravda(`js/${f} sahá na sdílený modul`, /PK_TERMINY/.test(t));
+  }
+  // Syrové ISO datum patří strojům, ne stránce.
+  const zdroj = ctiJs('pozemek.js');
+  pravda('stránka pozemku nepíše datum ve tvaru pro stroje',
+    /zdrojText\(d\.extra\)/.test(zdroj),
+    '„Stav / zdroj" ukazoval „dražba 2026-10-12" místo „dražba 12. 10. 2026"');
+}
+
 console.log('\nIntegrita datového souboru');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
