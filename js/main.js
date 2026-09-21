@@ -476,19 +476,11 @@
 
   /* ---------- Sestavení webu z dat (ticker + mapa) ---------- */
   function boot(DATA, KRAJE_GEOM, updated, updatedAt, zdrojeStav) {
-  /* Tentýž pozemek chodí ze dvou zdrojů a ve výpisu se pak objevil dvakrát
-     (zrovna „Trubín, 1 875 000 Kč" hned dvakrát za sebou). Shoda obce,
-     okresu, ceny i výměry je jistota — dvě různé nabídky se v tomhle
-     všem netrefí. Kdo vidí týž pozemek dvakrát, přestane výpisu věřit. */
+  /* Odstranění duplicit žije v js/hlidani-logika.js — počítat se musí
+     stejně na mapě i v hlídání. Dokud to byly dvě kopie, mapa hlásila
+     1 940 pozemků a hlídání 1 953. */
   (function odstranDuplicity() {
-    var videno = {}, ven = [];
-    for (var i = 0; i < DATA.length; i++) {
-      var d = DATA[i];
-      var k = [d.place, d.okres, d.price, d.area, d.druh].join('|');
-      if (videno[k]) continue;
-      videno[k] = true;
-      ven.push(d);
-    }
+    var ven = window.PKHlidani.bezDuplicit(DATA);
     if (ven.length !== DATA.length) DATA = ven;
   })();
 
@@ -1917,9 +1909,12 @@
         '<div class="vm-kriz" aria-hidden="true"><span></span></div>' +
         '<div class="vm-poloha"><button type="button" class="vm-gps" id="vm-gps">' + LOC_PIN + 'Moje poloha</button></div>' +
         '<div class="vm-pata">' +
-          '<label class="vm-okruh">Okruh <select id="vm-km" aria-label="Okruh okolí">' +
-            [2, 5, 10, 20, 50].map(function (v) { return '<option value="' + v + '"' + (v === km ? ' selected' : '') + '>' + v + ' km</option>'; }).join('') +
-          '</select></label>' +
+          '<fieldset class="vm-okruh"><legend>Okruh od středu mapy</legend>' +
+            [2, 5, 10, 20, 50].map(function (v) {
+              return '<label class="vm-km"><input type="radio" name="vm-km" value="' + v + '"' +
+                (v === km ? ' checked' : '') + '><span>' + v + ' km</span></label>';
+            }).join('') +
+          '</fieldset>' +
           '<div class="vm-pocet" id="vm-pocet" aria-live="polite"></div>' +
           '<button class="vm-ok" type="button" id="vm-ok">Sledovat toto okolí</button>' +
         '</div>' +
@@ -1957,12 +1952,46 @@
        kvůli rychlosti (je jich přes tisíc), ale čárkovaná čára v něm byla
        sotva znát. Tohle je JEDEN tvar, SVG ho utáhne a čárky jsou vidět. */
     var kruh = L.circle([start.lat, start.lng], {
-      radius: km * 1000, renderer: L.svg(), color: '#8A5512', weight: 2.5, opacity: 0.95,
-      dashArray: '8 6', fillColor: '#8A5512', fillOpacity: 0.1, interactive: false
+      radius: km * 1000, renderer: L.svg(), color: '#8A5512', weight: 3, opacity: 1,
+      dashArray: '9 6', fillColor: '#8A5512', fillOpacity: 0.12, interactive: false
     }).addTo(m);
 
+    /* MĚŘÍTKO OKRUHU. Samotný kruh říká „takhle velké to je" jen tomu, kdo
+       si dokáže představit deset kilometrů na mapě. Proto se od středu ke
+       kraji kruhu táhne čára a na ní visí číslo — stejně, jako se měří na
+       papírové mapě. Teprve tím je velikost okruhu doopravdy vidět. */
+    var meritko = L.polyline([[start.lat, start.lng], [start.lat, start.lng]], {
+      renderer: L.svg(), color: '#8A5512', weight: 2.5, opacity: 0.95, interactive: false
+    }).addTo(m);
+    var stitek = L.marker([start.lat, start.lng], {
+      interactive: false, keyboard: false,
+      icon: L.divIcon({ className: 'vm-meritko', html: '<span></span>', iconSize: [0, 0] })
+    }).addTo(m);
+    function vykresliMeritko(c, k) {
+      // Bod ve vzdálenosti k km na východ od středu — kraj kruhu.
+      var dLng = k / (111.320 * Math.cos(c.lat * Math.PI / 180));
+      meritko.setLatLngs([[c.lat, c.lng], [c.lat, c.lng + dLng]]);
+      /* Popisek patří na KRAJ kruhu, ne doprostřed čáry: uprostřed seděl
+         na značce místa a obojí se překrývalo tak, že z „10 km" zbylo
+         „0 km". Na kraji navíc odpovídá na tu otázku, kvůli které tam je
+         — kam až ten kruh sahá. */
+      stitek.setLatLng([c.lat, c.lng + dLng]);
+      var el = stitek.getElement();
+      if (el) el.firstChild.textContent = k + ' km';
+    }
+
     var pocetEl = ov.querySelector('#vm-pocet');
-    var kmSel = ov.querySelector('#vm-km');
+    /* Okruh byl rozbalovací seznam: zvolené číslo se schovalo do řádku
+       textu a o tom, jak velké to okolí vlastně je, neřekl nic. Teď je
+       z něj řada přepínačů — vidím všechny možnosti naráz — a hlavně se
+       velikost kreslí přímo na mapu (viz vykresliMeritko níž). */
+    var kmVstupy = [].slice.call(ov.querySelectorAll('input[name="vm-km"]'));
+    var kmSel = {
+      get value() {
+        for (var i = 0; i < kmVstupy.length; i++) if (kmVstupy[i].checked) return kmVstupy[i].value;
+        return '10';
+      }
+    };
     function stred() { var c = m.getCenter(); return { lat: c.lat, lng: c.lng }; }
     /* Přiblížení se řídí okruhem, ne pevným číslem. S pevným zoomem 12 byl
        kruh o poloměru 10 km několikrát širší než obrazovka — na mapě po něm
@@ -1978,6 +2007,7 @@
       var k = parseInt(kmSel.value, 10) || 10;
       var c = stred();
       kruh.setLatLng([c.lat, c.lng]); kruh.setRadius(k * 1000);
+      vykresliMeritko(c, k);
       /* Počítá se TOTÉŽ, co se pak vypíše — tedy se zapnutými filtry
          (kategorie, cena, výměra), jen bez omezení na okolí. Když se
          počítala všechna data, výběr sliboval „5 pozemků v okruhu 10 km"
@@ -1990,10 +2020,12 @@
     }
     m.on('move', prepocti);
     m.on('zoomend', prepocti);
-    kmSel.addEventListener('change', function () {
-      prepocti();
-      var c = stred();
-      jdiNa(c.lat, c.lng);   // větší okruh → oddálit, menší → přiblížit
+    kmVstupy.forEach(function (r) {
+      r.addEventListener('change', function () {
+        prepocti();
+        var c = stred();
+        jdiNa(c.lat, c.lng);   // větší okruh → oddálit, menší → přiblížit
+      });
     });
     prepocti();
     // Leaflet po vložení do skrytého prvku neví, jak je velký.

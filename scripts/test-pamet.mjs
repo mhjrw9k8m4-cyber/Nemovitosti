@@ -270,7 +270,9 @@ pravda('rovnou ukazuje, kolik pozemků v okruhu je', /\d+ pozem/.test(vyber.poce
    vymyšlená data vůbec byla. (Hledání obce a přepínání krajů prověřuje
    scripts/test-okoli.mjs na skutečných datech — tady jsou obce vymyšlené
    a hledání by nemělo co najít.) */
-await p.selectOption('#vm-km', '50');
+// Okruh je řada přepínačů, ne rozbalovací seznam — všechny možnosti
+// musí být vidět naráz, jinak se o velikosti okolí nikdo nedozví.
+await p.check('input[name="vm-km"][value="50"]');
 await p.waitForTimeout(1500);
 const slib = await p.evaluate(() => (document.getElementById('vm-pocet') || {}).textContent || '');
 pravda('výběr slibuje konkrétní počet pozemků', (parseInt(slib, 10) || 0) > 0, slib);

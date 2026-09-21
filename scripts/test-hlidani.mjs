@@ -87,6 +87,44 @@ je('nové', 'žádné hledání = nic na odznaku', H.novychCelkem([], DATA), 0);
 je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
 
 /* ---------------- výsledek ---------------- */
+/* ---------- Širší meze u hlídání ----------------------------------- */
+/* Hlídání umělo jen „nejvýš tolik korun" a „aspoň tolik metrů". Na pozemky
+   je to málo: kdo hledá stavební parcelu, potřebuje i horní hranici výměry
+   (tisíc metrů ano, deset hektarů ne) a hlavně cenu za metr — podle té se
+   pozemky srovnávají nejčastěji. */
+{
+  const pozemek = { type: 'sale', okres: 'Kolín', place: 'Velim', druh: 'orná půda',
+    price: 200000, area: 5000 };   // 40 Kč/m²
+  je('širší meze', 'bez mezí sedí všechno', H.matches({}, pozemek), true);
+  je('širší meze', 'cena za m² pod mezí projde', H.matches({ max_perm2: 50 }, pozemek), true);
+  je('širší meze', 'cena za m² nad mezí neprojde', H.matches({ max_perm2: 30 }, pozemek), false);
+  je('širší meze', 'spodní hranice ceny odfiltruje levnější', H.matches({ min_price: 300000 }, pozemek), false);
+  je('širší meze', 'a propustí dražší', H.matches({ min_price: 100000 }, pozemek), true);
+  je('širší meze', 'horní hranice výměry odfiltruje větší', H.matches({ max_area: 1000 }, pozemek), false);
+  je('širší meze', 'a propustí menší', H.matches({ max_area: 9000 }, pozemek), true);
+  je('širší meze', 'meze se skládají dohromady',
+    H.matches({ min_area: 1000, max_area: 9000, max_perm2: 45, min_price: 100000 }, pozemek), true);
+  // Cena za metr se nedá spočítat bez obojího — takový pozemek nesmí projít.
+  je('širší meze', 'bez výměry se cena za m² neurčí, takže neprojde',
+    H.matches({ max_perm2: 50 }, { type: 'sale', price: 200000 }), false);
+  // Staré hledání (bez nových polí) musí dál fungovat beze změny.
+  je('širší meze', 'staré hledání zůstává platné',
+    H.matches({ okres: 'Kolín', max_price: 300000, min_area: 1000 }, pozemek), true);
+}
+
+/* ---------- Duplicity se počítají na jednom místě ------------------- */
+/* Mapa hlásila 1 940 pozemků a hlídání 1 953 — každá stránka si odstraňovala
+   duplicity po svém. Teď to dělá jedna funkce. */
+{
+  const a = { place: 'Trubín', okres: 'Beroun', price: 1875000, area: 3000, druh: 'orná půda' };
+  const b = { place: 'Trubín', okres: 'Beroun', price: 1875000, area: 3000, druh: 'orná půda' };
+  const c = { place: 'Trubín', okres: 'Beroun', price: 1875000, area: 3100, druh: 'orná půda' };
+  je('duplicity', 'týž pozemek dvakrát se započítá jednou', H.bezDuplicit([a, b]).length, 1);
+  je('duplicity', 'jiná výměra je jiný pozemek', H.bezDuplicit([a, c]).length, 2);
+  je('duplicity', 'prázdný seznam nevadí', H.bezDuplicit([]).length, 0);
+  je('duplicity', 'nic k odstranění = beze změny', H.bezDuplicit([a, c, { place: 'X' }]).length, 3);
+}
+
 console.log(`\nHlídání lokality: ${bezi} testů`);
 if (spadlo) {
   console.log(vysledky.join('\n'));

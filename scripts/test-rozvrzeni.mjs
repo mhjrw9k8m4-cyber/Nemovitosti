@@ -187,6 +187,54 @@ async function otevri(soubor, sirka, vyska) {
   await ctx.close();
 }
 
+// --- 5) Okna se otevírají přes celou obrazovku ------------------------
+/* Okno bylo karta uprostřed ztmavené stránky: nahoře i dole prosvítal web,
+   takže bylo pořád vidět, že za tím něco je. Na telefonu je proto okno celá
+   obrazovka. Na velkém displeji karta zůstává (odstavec roztažený na metr
+   a půl se nečte), ale pozadí musí být neprůhledné — web za ním nevykukuje. */
+for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
+  const { ctx, p } = await otevri('index.html', w, h);
+  await p.waitForTimeout(1600);
+  const otevrelo = await p.evaluate(() => {
+    const t = document.querySelector('[data-info]');
+    if (!t) return false;
+    t.click();
+    return true;
+  });
+  await p.waitForTimeout(700);
+  const v = await p.evaluate(() => {
+    const m = document.getElementById('info-modal');
+    const c = m && m.querySelector('.modal-card');
+    const b = m && m.querySelector('.modal-backdrop');
+    if (!c || !b) return null;
+    const r = c.getBoundingClientRect();
+    const poz = getComputedStyle(b).backgroundColor;
+    // Průhlednost poznáme podle čtvrté složky rgba(...).
+    const m4 = poz.match(/rgba?\(([^)]+)\)/);
+    const slozky = m4 ? m4[1].split(',').map((x) => parseFloat(x)) : [];
+    return {
+      sirka: Math.round(r.width), vyska: Math.round(r.height),
+      okno: `${innerWidth}×${innerHeight}`,
+      pruhledne: slozky.length > 3 && slozky[3] < 0.999,
+      pozadi: poz,
+    };
+  });
+  pravda(`okno se otevřelo (${w} px)`, otevrelo && !!v, 'na stránce není nic s data-info');
+  if (v) {
+    if (telefon) {
+      pravda('na telefonu okno zabírá celou obrazovku',
+        v.sirka >= w - 1 && v.vyska >= h - 1,
+        `karta ${v.sirka}×${v.vyska} v okně ${v.okno} — pod ní i nad ní prosvítá web`);
+    } else {
+      pravda('na velkém displeji zůstává karta čitelně široká',
+        v.sirka > 320 && v.sirka < w * 0.8, `karta je ${v.sirka} px široká`);
+    }
+    pravda(`za oknem není vidět web (${w} px)`, v.pruhledne === false,
+      `pozadí je ${v.pozadi} — průsvitné, takže stránka za ním prosvítá`);
+  }
+  await ctx.close();
+}
+
 await prohlizec.close();
 console.log('\nRozvržení a popisky stránek');
 console.log(zpravy.join('\n'));

@@ -103,10 +103,19 @@ const stavVybiraku = (p) => p.evaluate(() => {
     dlazdice: document.querySelectorAll('#vm-mapa img.leaflet-tile').length,
     kriz: kr ? { w: Math.round(kr.width), h: Math.round(kr.height) } : null,
     kruh: !!document.querySelector('#vm-mapa path[stroke-dasharray]'),
+    panel: (() => { const e = document.querySelector('.vm-panel'); if (!e) return ''; const r = e.getBoundingClientRect();
+      return `${Math.round(r.width)}×${Math.round(r.height)}`; })(),
+    okno: `${innerWidth}×${innerHeight}`,
+    panelCela: (() => { const e = document.querySelector('.vm-panel'); if (!e) return false; const r = e.getBoundingClientRect();
+      return r.width >= innerWidth - 1 && r.height >= innerHeight - 1; })(),
     pocet: (document.getElementById('vm-pocet') || {}).textContent || '',
     kraju: document.querySelectorAll('#vm-kraj option').length,
     kraj: (document.getElementById('vm-kraj') || {}).value,
-    km: (document.getElementById('vm-km') || {}).value,
+    // Okruh je řada přepínačů, ne rozbalovací seznam: všechny možnosti
+    // musí být vidět naráz, jinak se o velikosti okolí nikdo nedozví.
+    km: (document.querySelector('input[name="vm-km"]:checked') || {}).value,
+    kmMoznosti: document.querySelectorAll('input[name="vm-km"]').length,
+    meritko: (document.querySelector('.vm-meritko span') || {}).textContent || '',
     ulozeno: !!localStorage.getItem('pk_misto_v1'),
   };
 });
@@ -120,6 +129,10 @@ const stavVybiraku = (p) => p.evaluate(() => {
     'nic se neotevřelo — tlačítko vypadá jako rozbité');
   pravda('a je v něm opravdová mapa', v.vyska > 200 && v.sirka > 200 && v.dlazdice > 0,
     `mapa ${v.sirka}×${v.vyska} px, ${v.dlazdice} dlaždic`);
+  // Výběr zabírá celou obrazovku — pod oknem uprostřed stránky prosvítal
+  // web a oko uhýbalo k němu místo k mapě.
+  pravda('výběr zabírá celou obrazovku', v.panelCela,
+    `panel ${v.panel} v okně ${v.okno}`);
   // Kříž byl jednu dobu zmáčknutý na 6 px — nešlo poznat, kam se vlastně míří.
   pravda('kříž uprostřed je vidět a není zmáčknutý',
     v.kriz && v.kriz.w >= 16 && v.kriz.h >= 16 && Math.abs(v.kriz.w - v.kriz.h) <= 4,
@@ -127,6 +140,12 @@ const stavVybiraku = (p) => p.evaluate(() => {
   pravda('kolem je vidět hlídaný okruh', v.kruh,
     'bez kruhu není poznat, jak velké okolí se vybírá');
   pravda('počet pozemků je vidět hned, ještě před potvrzením', /\d+ pozem/.test(v.pocet), v.pocet);
+  /* Kruh sám o sobě řekne „takhle velké to je" jen tomu, kdo si deset
+     kilometrů na mapě dokáže představit. Proto se od středu ke kraji
+     táhne měřítko s číslem — a okruh se vybírá z viditelné řady, ne
+     ze zabaleného seznamu, ve kterém není vidět, co všechno jde zvolit. */
+  pravda('velikost okruhu je napsaná přímo na mapě', /^\d+ km$/.test(v.meritko.trim()), `měřítko: „${v.meritko}"`);
+  pravda('okruh se vybírá z viditelné řady možností', v.kmMoznosti >= 5, `možností: ${v.kmMoznosti}`);
 
   // Tečky pozemků: kreslí se do plátna, takže se počítají barevné body.
   const tecek = await p.evaluate(() => {
@@ -202,7 +221,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
     r10 ? `kruh je jen ${r10.podil} % šířky mapy — mapa je zbytečně oddálená` : 'kruh na mapě není');
 
   // Okruh.
-  await p.selectOption('#vm-km', '50');
+  await p.check('input[name="vm-km"][value="50"]');
   await p.waitForTimeout(1400);
   const sirsi = await stavVybiraku(p);
   pravda('větší okruh ukáže víc pozemků už ve výběru',

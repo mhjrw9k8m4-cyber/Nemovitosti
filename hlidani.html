@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=0c81a0ef">
+  <link rel="stylesheet" href="css/styles.css?v=43e58b96">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .add-hero.app-hero{padding:30px 0 4px;}
@@ -36,7 +36,36 @@
     .hl-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--text-ondark-mute);}
     .hl-msg.err{color:var(--c-exekuce);}
     /* Nové hledání (formulář) */
-    .hl-new{padding:16px;}
+    .hl-new{padding:18px;}
+    /* Formulář působil nedodělaně: pár políček pod sebou, žádné členění
+       a nadpis odbytý emodži. Teď má hlavičku, oddíly s linkou mezi nimi
+       a rychlé volby — ať je na první pohled vidět, co všechno jde zadat. */
+    .hl-new-head{margin-bottom:14px;}
+    .hl-new-head b{display:block; font-family:var(--font-display); font-size:20px; color:var(--text-ondark); letter-spacing:-.01em;}
+    .hl-new-head span{display:block; margin-top:3px; font-size:13.5px; color:var(--text-ondark-mute);}
+    .hl-sekce{padding:14px 0; border-top:1px solid var(--line);}
+    .hl-sekce:first-of-type{border-top:0; padding-top:0;}
+    /* Bez text-transform:uppercase — velká písmena z „Kč" udělají „KČ"
+       a z „m²" „M²", což jsou v češtině obojí chybné zápisy jednotek. */
+    .hl-lbl.jemny{font-weight:600; color:var(--text-ondark-mute); font-size:12px; letter-spacing:.01em;}
+    .hl-pozn{font-weight:400; text-transform:none; letter-spacing:0; color:var(--text-ondark-mute); opacity:.85;}
+    /* Rychlé volby jen vyplní políčka pod sebou — je tedy pořád vidět,
+       co se nastavilo, a dá se to přepsat po svém. */
+    .hl-rychle-radek{display:flex; flex-wrap:wrap; gap:7px; margin:2px 0 10px;}
+    .hl-rychle{font:inherit; font-size:13px; font-weight:600; cursor:pointer;
+      min-height:38px; padding:8px 13px; border-radius:999px;
+      border:1.5px solid var(--line-strong); background:var(--ink-soft2); color:var(--text-ondark);
+      transition:border-color .15s ease, background .15s ease, color .15s ease;}
+    .hl-rychle:hover{border-color:var(--copper-bright);}
+    .hl-rychle.on{border-color:var(--plocha-znacka); background:var(--plocha-znacka); color:#fff;}
+    .hl-rychle:focus-visible{outline:2px solid var(--copper); outline-offset:2px;}
+    /* Kolik pozemků tomu dnes odpovídá. Dřív se to člověk dozvěděl až po
+       uložení — a když nic, neměl podle čeho poznat, co to zabilo. */
+    .hl-souhrn{margin:4px 0 12px; padding:11px 13px; border-radius:12px; font-size:13.5px;
+      line-height:1.5; background:rgba(31,81,56,.10); color:var(--text-ondark);
+      border:1px solid rgba(31,81,56,.22);}
+    .hl-souhrn b{font-weight:800;}
+    .hl-souhrn.prazdno{background:rgba(140,47,30,.09); border-color:rgba(140,47,30,.24);}
     .hl-lbl{font-size:12.5px; font-weight:700; color:var(--text-ondark-mute); margin:8px 2px 4px; display:block;}
     .hl-row2{display:flex; gap:8px;}
     .hl-row2 > *{flex:1;}
@@ -109,7 +138,7 @@
 
 <script src="js/config.js?v=7f55c4e1"></script>
 <script src="js/auth.js?v=3f61aa2e"></script>
-<script src="js/hlidani-logika.js?v=7b38e5fc"></script>
+<script src="js/hlidani-logika.js?v=e5f0811e"></script>
 <script src="js/upozorneni.js?v=952fe785"></script>
 <script>
 (function () {
@@ -155,8 +184,8 @@
         if (Array.isArray(rows)) rows.forEach(function (u) {
           if (u) arr.push({ type: 'majitel', place: u.place, okres: u.okres, druh: u.druh, parcel: u.parcel, area: u.area, price: u.price, features: u.features || [], access: u.access || '' });
         });
-        DATA = arr;
-      }, function () { DATA = arr; });
+        DATA = PKHlidani.bezDuplicit(arr);
+      }, function () { DATA = PKHlidani.bezDuplicit(arr); });
     });
   }
 
@@ -196,43 +225,160 @@
     var druhOpts = opt('', 'jakýkoli druh', true) + DRUHY.map(function (d) { return opt(d, d.charAt(0).toUpperCase() + d.slice(1)); }).join('');
     var typeOpts = opt('', 'vše (prodej i dražby)', true) + ['sale', 'drazba', 'exekuce', 'majitel'].map(function (t) { return opt(t, TYPE_LABEL[t]); }).join('');
     var feats = FEATS.concat(['Přístupová cesta']).map(function (f) { return '<span class="hl-chip" data-feat="' + esc(f) + '">' + esc(f) + '</span>'; }).join('');
+    /* Rychlé volby. Psát „800000" do políčka je práce navíc a většina lidí
+       stejně hledá v pár obvyklých pásmech — tak ať jsou po ruce. Klepnutí
+       jen vyplní políčka pod tím, takže je pořád vidět, co se vlastně
+       nastavilo, a dá se to dopsat po svém. */
+    var cenaPresety = [
+      ['do 100 tis.', 0, 100000], ['100–500 tis.', 100000, 500000],
+      ['0,5–2 mil.', 500000, 2000000], ['nad 2 mil.', 2000000, 0],
+    ].map(function (x) {
+      return '<button type="button" class="hl-rychle" data-od="' + x[1] + '" data-do="' + x[2] + '" data-pole="cena">' + esc(x[0]) + '</button>';
+    }).join('');
+    var vymeraPresety = [
+      ['do 1 000 m²', 0, 1000], ['1 000–5 000 m²', 1000, 5000],
+      ['0,5–2 ha', 5000, 20000], ['nad 2 ha', 20000, 0],
+    ].map(function (x) {
+      return '<button type="button" class="hl-rychle" data-od="' + x[1] + '" data-do="' + x[2] + '" data-pole="vymera">' + esc(x[0]) + '</button>';
+    }).join('');
     return '<div class="hl-card hl-new">' +
-        '<div style="font-weight:800;font-size:16px;margin-bottom:8px;">➕ Nové hledání</div>' +
-        '<label class="hl-lbl">Kde (okres nebo obec — nech prázdné pro celou ČR)</label>' +
-        '<input class="hl-in" id="ns-okres" placeholder="např. Kolín" aria-label="Okres nebo obec">' +
-        '<div class="hl-row2">' +
-          '<div><label class="hl-lbl">Druh</label><select class="hl-sel" id="ns-druh" aria-label="Druh pozemku">' + druhOpts + '</select></div>' +
-          '<div><label class="hl-lbl">Typ</label><select class="hl-sel" id="ns-type" aria-label="Typ nabídky">' + typeOpts + '</select></div>' +
+        '<div class="hl-new-head"><b>Nové hlídání</b>' +
+          '<span>Dáme vědět, jakmile přibude pozemek, který sedí.</span></div>' +
+
+        '<div class="hl-sekce">' +
+          '<label class="hl-lbl" for="ns-okres">Kde</label>' +
+          '<input class="hl-in" id="ns-okres" placeholder="okres nebo obec — prázdné = celá ČR" aria-label="Okres nebo obec">' +
+          '<div class="hl-row2">' +
+            '<div><label class="hl-lbl" for="ns-druh">Druh pozemku</label><select class="hl-sel" id="ns-druh">' + druhOpts + '</select></div>' +
+            '<div><label class="hl-lbl" for="ns-type">Typ nabídky</label><select class="hl-sel" id="ns-type">' + typeOpts + '</select></div>' +
+          '</div>' +
         '</div>' +
-        '<div class="hl-row2">' +
-          '<div><label class="hl-lbl">Max. cena (Kč)</label><input class="hl-in" id="ns-price" inputmode="numeric" placeholder="např. 800000" aria-label="Nejvyšší cena v korunách"></div>' +
-          '<div><label class="hl-lbl">Min. výměra (m²)</label><input class="hl-in" id="ns-area" inputmode="numeric" placeholder="např. 500" aria-label="Nejmenší výměra v m²"></div>' +
+
+        '<div class="hl-sekce">' +
+          '<label class="hl-lbl">Cena</label>' +
+          '<div class="hl-rychle-radek">' + cenaPresety + '</div>' +
+          '<div class="hl-row2">' +
+            '<div><label class="hl-lbl jemny" for="ns-price-od">od (Kč)</label><input class="hl-in" id="ns-price-od" inputmode="numeric" placeholder="bez omezení"></div>' +
+            '<div><label class="hl-lbl jemny" for="ns-price">do (Kč)</label><input class="hl-in" id="ns-price" inputmode="numeric" placeholder="bez omezení"></div>' +
+          '</div>' +
         '</div>' +
-        '<label class="hl-lbl">Detaily (u nabídek od majitelů)</label>' +
-        '<div class="hl-feats">' + feats + '</div>' +
-        '<button class="hl-btn" id="ns-save">Uložit hledání a hlídat</button>' +
+
+        '<div class="hl-sekce">' +
+          '<label class="hl-lbl">Výměra</label>' +
+          '<div class="hl-rychle-radek">' + vymeraPresety + '</div>' +
+          '<div class="hl-row2">' +
+            '<div><label class="hl-lbl jemny" for="ns-area">od (m²)</label><input class="hl-in" id="ns-area" inputmode="numeric" placeholder="bez omezení"></div>' +
+            '<div><label class="hl-lbl jemny" for="ns-area-do">do (m²)</label><input class="hl-in" id="ns-area-do" inputmode="numeric" placeholder="bez omezení"></div>' +
+          '</div>' +
+          '<label class="hl-lbl jemny" for="ns-perm2">Nejvýš za metr čtvereční (Kč/m²)</label>' +
+          '<input class="hl-in" id="ns-perm2" inputmode="numeric" placeholder="např. 50 — podle toho se pozemky srovnávají nejčastěji">' +
+        '</div>' +
+
+        '<div class="hl-sekce">' +
+          '<label class="hl-lbl">Musí mít <span class="hl-pozn">(zná se jen u nabídek od majitelů)</span></label>' +
+          '<div class="hl-feats">' + feats + '</div>' +
+        '</div>' +
+
+        '<div class="hl-souhrn" id="ns-souhrn"></div>' +
+        '<button class="hl-btn" id="ns-save">Uložit hlídání</button>' +
         '<div class="hl-msg" id="ns-msg"></div>' +
       '</div>';
   }
   function wireNewSearch(afterSave) {
     var chips = root.querySelectorAll('.hl-chip');
-    chips.forEach(function (c) { c.addEventListener('click', function () { c.classList.toggle('on'); }); });
     var msg = document.getElementById('ns-msg');
+    var souhrn = document.getElementById('ns-souhrn');
+    var cislo = function (id) {
+      var e = document.getElementById(id);
+      return e ? (parseInt((e.value || '').replace(/\D/g, ''), 10) || 0) : 0;
+    };
+    function kriteria() {
+      return {
+        okres: document.getElementById('ns-okres').value.trim(),
+        druh: document.getElementById('ns-druh').value,
+        ptype: document.getElementById('ns-type').value,
+        max_price: cislo('ns-price'),
+        min_price: cislo('ns-price-od'),
+        min_area: cislo('ns-area'),
+        max_area: cislo('ns-area-do'),
+        max_perm2: cislo('ns-perm2'),
+        features: [].slice.call(root.querySelectorAll('.hl-chip.on')).map(function (c) { return c.getAttribute('data-feat'); }),
+      };
+    }
+    /* Živý souhrn. Dřív se člověk dozvěděl až po uložení, jestli mu na to
+       hledání vůbec něco sedí — a když ne, neměl podle čeho poznat, které
+       políčko to zabilo. Číslo se přepočítá při každé změně. */
+    function prepocti() {
+      if (!souhrn) return;
+      var k = kriteria();
+      var n = DATA.filter(function (d) { return matches(k, d); }).length;
+      souhrn.className = 'hl-souhrn' + (n === 0 ? ' prazdno' : '');
+      // Číslo s mezerou po tisících — jinak by vedle „1 940 pozemků" na mapě
+      // stálo v hlídání „1940" a vypadalo to jako dva různé weby.
+      var cis = String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+      souhrn.innerHTML = n === 0
+        ? 'Tomuhle zadání dnes <b>neodpovídá žádný</b> pozemek. Hlídat ho můžete — ale možná jsou meze moc těsné.'
+        : 'Dnes tomu odpovídá <b>' + cis + '</b> ' + (n === 1 ? 'pozemek' : (n < 5 ? 'pozemky' : 'pozemků')) + '. Hlídat budeme jen to, co přibude nově.';
+    }
+    chips.forEach(function (c) {
+      c.addEventListener('click', function () { c.classList.toggle('on'); prepocti(); });
+    });
+    root.querySelectorAll('#ns-okres, #ns-druh, #ns-type, #ns-price, #ns-price-od, #ns-area, #ns-area-do, #ns-perm2')
+      .forEach(function (e) { e.addEventListener('input', prepocti); e.addEventListener('change', prepocti); });
+
+    // Rychlé volby jen vyplní políčka — ať je pořád vidět, co se nastavilo.
+    root.querySelectorAll('.hl-rychle').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var pole = b.getAttribute('data-pole');
+        var od = b.getAttribute('data-od'), doo = b.getAttribute('data-do');
+        var odEl = document.getElementById(pole === 'cena' ? 'ns-price-od' : 'ns-area');
+        var doEl = document.getElementById(pole === 'cena' ? 'ns-price' : 'ns-area-do');
+        var uzSviti = b.classList.contains('on');
+        root.querySelectorAll('.hl-rychle[data-pole="' + pole + '"]').forEach(function (x) { x.classList.remove('on'); });
+        // Druhé klepnutí na tutéž volbu ji zruší — jinak se meze nedají sundat.
+        odEl.value = uzSviti ? '' : (od === '0' ? '' : od);
+        doEl.value = uzSviti ? '' : (doo === '0' ? '' : doo);
+        if (!uzSviti) b.classList.add('on');
+        prepocti();
+      });
+    });
+    prepocti();
+
     document.getElementById('ns-save').addEventListener('click', function () {
-      var okres = document.getElementById('ns-okres').value.trim();
-      var druh = document.getElementById('ns-druh').value;
-      var type = document.getElementById('ns-type').value;
-      var price = parseInt((document.getElementById('ns-price').value || '').replace(/\D/g, ''), 10) || 0;
-      var area = parseInt((document.getElementById('ns-area').value || '').replace(/\D/g, ''), 10) || 0;
-      var features = [].slice.call(root.querySelectorAll('.hl-chip.on')).map(function (c) { return c.getAttribute('data-feat'); });
-      var label = okres || (TYPE_LABEL[type] || 'Pozemky') + (druh ? ' · ' + druh : '');
+      var k = kriteria();
+      var label = k.okres || (TYPE_LABEL[k.ptype] || 'Pozemky') + (k.druh ? ' · ' + k.druh : '');
       msg.textContent = 'Ukládám…'; msg.className = 'hl-msg';
-      A.rpc('save_search', { p_label: label, p_okres: okres, p_druh: druh, p_type: type, p_max_price: price, p_min_area: area, p_features: features }, true).then(function (res) {
+      var siroke = { p_label: label, p_okres: k.okres, p_druh: k.druh, p_type: k.ptype,
+        p_max_price: k.max_price, p_min_area: k.min_area, p_features: k.features,
+        p_min_price: k.min_price, p_max_area: k.max_area, p_max_perm2: k.max_perm2 };
+      /* Širší meze umí databáze až po spuštění supabase/saved-searches-vice.sql.
+         Kdyby se web nasadil dřív, volání s novými parametry skončí chybou —
+         a hlídání by přestalo jít uložit vůbec. Proto se pak zkusí i stará
+         podoba; uloží se aspoň to, co uložit jde, a člověk se dozví, co se
+         nepropsalo. Mlčky zahodit polovinu zadání by bylo horší než chyba. */
+      function uloz(parametry, jeSiroke) {
+        return A.rpc('save_search', parametry, true).then(function (res) {
+          if (res && res.ok) return { res: res, jeSiroke: jeSiroke };
+          if (jeSiroke) {
+            var uzke = { p_label: label, p_okres: k.okres, p_druh: k.druh, p_type: k.ptype,
+              p_max_price: k.max_price, p_min_area: k.min_area, p_features: k.features };
+            return uloz(uzke, false);
+          }
+          return { res: res, jeSiroke: false };
+        });
+      }
+      uloz(siroke, true).then(function (v) {
+        var res = v.res;
         if (!res || !res.ok) { msg.textContent = (res && res.error && res.error.message) || 'Uložení se nepovedlo.'; msg.className = 'hl-msg err'; return; }
+        if (!v.jeSiroke && (k.min_price || k.max_area || k.max_perm2)) {
+          msg.textContent = 'Hlídání uloženo, ale cena od / výměra do / cena za m² se zatím neuložily — databáze je ještě neumí.';
+          msg.className = 'hl-msg err';
+        }
         var newId = res.data;
         // hned označíme aktuální pozemky jako „viděné" → nové se počítají až od teď
-        var crit = { okres: okres, druh: druh, ptype: type, max_price: price, min_area: area, features: features };
-        var keys = DATA.filter(function (d) { return matches(crit, d); }).map(keyOf);
+        var ulozene = v.jeSiroke ? k : { okres: k.okres, druh: k.druh, ptype: k.ptype,
+          max_price: k.max_price, min_area: k.min_area, features: k.features };
+        var keys = DATA.filter(function (d) { return matches(ulozene, d); }).map(keyOf);
         A.rpc('mark_search_seen', { p_id: newId, p_keys: keys }, true).then(function () { afterSave(); }, function () { afterSave(); });
       });
     });

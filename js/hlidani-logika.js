@@ -26,12 +26,43 @@
       .join('|').slice(0, 240);
   }
 
+  /* Tentýž pozemek chodí ze dvou zdrojů a ve výpisu se pak objevil dvakrát
+     (zrovna „Trubín, 1 875 000 Kč" hned dvakrát za sebou). Shoda obce,
+     okresu, ceny, výměry i druhu je jistota — dvě různé nabídky se v tomhle
+     všem netrefí.
+
+     Je to tady, a ne v js/main.js, protože počítat musí obě strany stejně:
+     mapa hlásila 1 940 pozemků, kdežto hlídání 1 953, a to je na dvou
+     stránkách téhož webu rozdíl, který se nedá vysvětlit. */
+  function klicShody(d) {
+    return [d.place, d.okres, d.price, d.area, d.druh].join('|');
+  }
+  function bezDuplicit(list) {
+    var videno = {}, ven = [];
+    for (var i = 0; i < (list || []).length; i++) {
+      var k = klicShody(list[i]);
+      if (videno[k]) continue;
+      videno[k] = true;
+      ven.push(list[i]);
+    }
+    return ven;
+  }
+
   function matches(s, d) {
     if (!s || !d) return false;
     if (s.ptype && d.type !== s.ptype) return false;
     if (s.druh && normd(d.druh).indexOf(normd(s.druh)) < 0) return false;
     if (s.max_price && !(d.price > 0 && d.price <= s.max_price)) return false;
+    if (s.min_price && !(d.price > 0 && d.price >= s.min_price)) return false;
     if (s.min_area && !(d.area > 0 && d.area >= s.min_area)) return false;
+    if (s.max_area && !(d.area > 0 && d.area <= s.max_area)) return false;
+    /* Cena za metr je to, podle čeho se pozemky srovnávají nejčastěji —
+       sto tisíc je u zahrady moc a u pole na deseti hektarech málo.
+       Počítá se stejně jako všude jinde na webu: cena děleno výměra. */
+    if (s.max_perm2) {
+      if (!(d.price > 0 && d.area > 0)) return false;
+      if (d.price / d.area > s.max_perm2) return false;
+    }
     if (s.okres) {
       var k = normd(s.okres);
       if (normd(d.okres).indexOf(k) < 0 && normd(d.place).indexOf(k) < 0) return false;
@@ -74,5 +105,6 @@
   }
 
   return { normd: normd, keyOf: keyOf, matches: matches,
+           klicShody: klicShody, bezDuplicit: bezDuplicit,
            novychProHledani: novychProHledani, novychCelkem: novychCelkem };
 });
