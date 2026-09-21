@@ -1913,7 +1913,9 @@
     ov.innerHTML =
       '<div class="vm-panel" role="dialog" aria-modal="true" aria-label="Vyberte místo, jehož okolí chcete sledovat">' +
         '<div class="vm-hlava">' +
-          '<b>Vyberte své místo</b>' +
+          '<b>Vyberte své místo' +
+            (nast.duvod ? '<span class="vm-duvod">' + esc(nast.duvod) + '</span>' : '') +
+          '</b>' +
           '<button class="vm-x" type="button" aria-label="Zavřít">✕</button>' +
         '</div>' +
         '<div class="vm-radek">' +
@@ -2084,17 +2086,23 @@
       }, { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 });
     });
 
+    var potvrzeno = false;
     function naKlavesu(e) { if (e.key === 'Escape') zavri(); }
     function zavri() {
       try { m.remove(); } catch (e) {}
       if (ov.parentNode) ov.parentNode.removeChild(ov);
       document.body.classList.remove('vm-otevreno');
       document.removeEventListener('keydown', naKlavesu);
+      /* Kdo výběr zavře bez volby, nic nevybral — a ovládací prvek, který
+         ho sem poslal, se o tom musí dozvědět. Jinak by dál tvrdil něco,
+         co neplatí (řazení „Nejblíž ke mně" bez známé polohy). */
+      if (!potvrzeno && typeof nast.zrusenо === 'function') nast.zrusenо();
     }
     document.addEventListener('keydown', naKlavesu);
     ov.querySelector('.vm-x').addEventListener('click', zavri);
     ov.addEventListener('click', function (e) { if (e.target === ov) zavri(); });
     ov.querySelector('#vm-ok').addEventListener('click', function () {
+      potvrzeno = true;
       var c = stred();
       var k = parseInt(kmSel.value, 10) || 10;
       if (mojeMisto) mojeMisto.km = k; else mojeMisto = { km: k };
@@ -2172,9 +2180,17 @@
      — hledáme ji jen mezi obcemi, které máme v datech, takže malá vesnice
      prostě nenajde nic a je konec. Otevře se rovnou mapa, kde si místo
      ukáže. Okénko s psaním zůstává jen jako nouzová varianta bez Leafletu. */
-  function fallbackNear(err) {
-    if (typeof L !== 'undefined' && L.map) otevriVyberMista();
-    else showLocModal(err);
+  function fallbackNear(err, nast) {
+    nast = nast || {};
+    if (typeof L !== 'undefined' && L.map) {
+      otevriVyberMista({
+        duvod: nast.duvod || 'Polohu se nepodařilo zjistit — ukažte ji na mapě.',
+        zrusenо: nast.zrusenо,
+      });
+    } else {
+      showLocModal(err);
+      if (typeof nast.zrusenо === 'function') nast.zrusenо();
+    }
   }
   /* Žádost o polohu. Tohle bylo rozbité tak, jak se rozbíjí nejhůř — nic
      nespadlo, jen se DESET SEKUND nedělo vůbec nic:
@@ -2200,7 +2216,8 @@
       nearBtn.removeAttribute('aria-busy');
     }
   }
-  function askGeo() {
+  function askGeo(nast) {
+    nast = nast || {};
     if (cekamNaPolohu) return;
     stavTlacitka(true);
     var hotovo = false;
@@ -2212,7 +2229,7 @@
     function selhalo(err) {
       if (hotovo) return; hotovo = true;
       stavTlacitka(false);
-      fallbackNear(err);   // poloha nevyšla → slušně se zeptáme na obec
+      fallbackNear(err, nast);   // poloha nevyšla → slušně se zeptáme na obec
     }
     navigator.geolocation.getCurrentPosition(uspech, selhalo,
       { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 });
@@ -2222,9 +2239,14 @@
   // pak sám ukáže buď dotaz „Povolit?", nebo (když je poloha vypnutá) svůj
   // vlastní odkaz do Nastavení. Teprve když to prohlížeč zamítne, ukážeme
   // vlastní návod. (Dřívější předběžná kontrola ten systémový dotaz přeskakovala.)
-  function enterNear() {
-    if (!navigator.geolocation) { showLocModal({ code: 2 }); return; }
-    askGeo();
+  function enterNear(nast) {
+    nast = nast || {};
+    if (!navigator.geolocation) {
+      showLocModal({ code: 2 });
+      if (typeof nast.zrusenо === 'function') nast.zrusenо();
+      return;
+    }
+    askGeo(nast);
   }
   lockDots(true);      // start: nejdřív se vybírá kraj
   updateKrajHead();
@@ -2920,7 +2942,19 @@
   });
   if (druhEl) druhEl.addEventListener('change', function () { activeDruh = druhEl.value; renderList(); });
   if (sortEl) sortEl.addEventListener('change', function () {
-    if (sortEl.value === 'near') { enterNear(); return; } // vyžádá polohu, pak seřadí
+    if (sortEl.value === 'near') {
+      /* Řazení podle vzdálenosti potřebuje vědět odkud. Když člověk polohu
+         nepovolí, otevře se výběr místa — a když ho zavře bez volby, není
+         od čeho měřit. Nabídka se proto vrátí na to, podle čeho je seznam
+         doopravdy seřazený; jinak by tvrdila „Nejblíž ke mně" u výpisu,
+         který je řazený úplně jinak. */
+      var predtim = sortMode;
+      enterNear({
+        duvod: 'Bez polohy nevíme, odkud měřit. Ukažte místo na mapě.',
+        zrusenо: function () { sortMode = predtim; if (sortEl) sortEl.value = predtim; },
+      });
+      return;
+    }
     sortMode = sortEl.value; renderList();
   });
   // Cena/výměra jsou teď textová pole — reaguj i na psaní (input) a na reset.

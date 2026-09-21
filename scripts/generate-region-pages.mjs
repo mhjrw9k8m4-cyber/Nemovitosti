@@ -246,7 +246,19 @@ function crumbLd(items){
     return li;
   })};
 }
-function head(title, desc, canonicalPath, ld, crumbs){
+/* Náhled pro sdílení. Všechny stránky měly tentýž obrázek, takže krajská
+   stránka poslaná do zprávy vypadala jako kterákoli jiná — z náhledu
+   nebylo poznat, že jde o Jihočeský kraj. Obrázky vyrábí
+   scripts/build-og.mjs (jednou, do assets/og); tady se na ně jen
+   odkazuje. Když soubor není, zůstane společný og.png — chybějící
+   obrázek je horší než obecný. */
+function ogObrazek(nazevSouboru){
+  if(nazevSouboru && fs.existsSync(path.join(ROOT,'assets','og',nazevSouboru))){
+    return 'https://www.parcelaka.cz/assets/og/' + nazevSouboru;
+  }
+  return 'https://www.parcelaka.cz/assets/og.png?v=4';
+}
+function head(title, desc, canonicalPath, ld, crumbs, ogSoubor){
   // ld může být objekt nebo pole; přidáme BreadcrumbList, je-li předán.
   let ldArr = Array.isArray(ld) ? ld.slice() : (ld ? [ld] : []);
   if(crumbs && crumbs.length) ldArr.push(crumbLd(crumbs));
@@ -267,7 +279,7 @@ function head(title, desc, canonicalPath, ld, crumbs){
   <meta property="og:locale" content="cs_CZ">
   <meta property="og:site_name" content="Parcelka">
   <meta property="og:url" content="https://www.parcelaka.cz/${canonicalPath}">
-  <meta property="og:image" content="https://www.parcelaka.cz/assets/og.png?v=4">
+  <meta property="og:image" content="${attr(ogObrazek(ogSoubor))}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
@@ -401,7 +413,7 @@ for(const okres of eligibleOkres){
   if(hasKrajPage.has(kraj)) crumbs.push({name:dispK, href:krajFile(kraj), abs:SITE+krajFile(kraj)});
   crumbs.push({name:'Okres '+okres, abs:SITE+file});
 
-  const html = head(title,desc,file,jsonld,crumbs) + `
+  const html = head(title,desc,file,jsonld,crumbs,`okres-${slug(okres)}.png`) + `
 <main id="obsah">
 
   <section class="okr-hero">
@@ -496,7 +508,7 @@ for(const kraj of eligibleKraj){
     {name:meta.disp, abs:SITE+file},
   ];
 
-  const html = head(title,desc,file,jsonld,crumbs) + `
+  const html = head(title,desc,file,jsonld,crumbs,`kraj-${slug(kraj)}.png`) + `
 <main id="obsah">
 
   <section class="okr-hero">

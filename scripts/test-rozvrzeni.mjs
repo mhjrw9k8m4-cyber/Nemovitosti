@@ -114,6 +114,28 @@ const LEAFLET = process.env.PK_LEAFLET_DIR || '';
       bezRazitka.length === 0, bezRazitka.join(', '));
   }
 
+  /* NÁHLED PRO SDÍLENÍ. Všechny stránky měly tentýž obrázek, takže krajská
+     stránka poslaná do zprávy vypadala jako kterákoli jiná — z náhledu
+     nebylo poznat, o jaký kraj jde. (Favicon zůstává společný schválně:
+     ikona webu je jedna, to není chyba.) */
+  {
+    const chybi = [], sdilene = [];
+    for (const f of stranky) {
+      const m = /^pozemky-okres-(.+)\.html$/.exec(f) || /^pozemky-(.+)-kraj\.html$/.exec(f);
+      if (!m) continue;
+      const h = readFileSync(path.join(KOREN, f), 'utf8');
+      const og = (/<meta property="og:image" content="([^"]*)"/.exec(h) || [])[1] || '';
+      if (!/\/assets\/og\//.test(og)) { sdilene.push(f); continue; }
+      const soubor = og.split('/assets/og/')[1];
+      if (!existsSync(path.join(KOREN, 'assets', 'og', soubor))) chybi.push(`${f} → ${soubor}`);
+    }
+    pravda('krajské a okresní stránky mají vlastní náhled pro sdílení',
+      sdilene.length === 0,
+      `${sdilene.length} stránek má pořád společný obrázek: ${sdilene.slice(0, 4).join(', ')}`);
+    // Odkaz na obrázek, který neexistuje, je horší než obecný obrázek.
+    pravda('a každý odkazovaný náhled opravdu existuje', chybi.length === 0, chybi.slice(0, 4).join(', '));
+  }
+
   /* ODKAZ VEN. Musí se poznat, že vede mimo web — i poslechem. */
   const okres = readFileSync(path.join(KOREN, 'pozemky-okres-kolin.html'), 'utf8');
   const zdroje = [...okres.matchAll(/<a class="okr-src"[^>]*>([\s\S]*?)<\/a>/g)];

@@ -536,6 +536,66 @@ const stavVybiraku = (p) => p.evaluate(() => {
   await ctx.close();
 }
 
+// --- 5) „Nejblíž ke mně" bez povolené polohy --------------------------
+/* Řazení podle vzdálenosti potřebuje vědět ODKUD. Když člověk polohu
+   nepovolí, musí existovat náhrada — a ta existuje: otevře se výběr
+   místa na mapě. Jenže když ho zavřel bez volby, nabídka řazení dál
+   tvrdila „Nejblíž ke mně", zatímco seznam byl seřazený úplně jinak.
+   Ovládací prvek, který lže o svém stavu, je horší než chybějící. */
+{
+  const { ctx, p } = await telefon(null);
+  // Řazení je ve složené harmonice filtrů.
+  await p.evaluate(() => document.querySelectorAll('details').forEach((d) => { d.open = true; }));
+  await p.waitForTimeout(500);
+  const pred = await p.evaluate(() => (document.getElementById('map-sort') || {}).value);
+  await p.selectOption('#map-sort', 'near');
+  await p.waitForTimeout(2600);
+  const behem = await p.evaluate(() => ({
+    vybirac: !!document.querySelector('.vm-ov'),
+    duvod: (document.querySelector('.vm-duvod') || {}).textContent || '',
+    razeni: (document.getElementById('map-sort') || {}).value,
+  }));
+  pravda('bez polohy se místo nabídne na mapě', behem.vybirac,
+    'poloha nevyšla a nestalo se nic — řazení podle vzdálenosti nemá od čeho měřit');
+  pravda('a je napsané, proč se mapa otevřela', /polohy|Ukažte/i.test(behem.duvod),
+    `v hlavičce stojí „${behem.duvod}"`);
+
+  await p.keyboard.press('Escape');
+  await p.waitForTimeout(800);
+  const po = await p.evaluate(() => ({
+    vybirac: !!document.querySelector('.vm-ov'),
+    razeni: (document.getElementById('map-sort') || {}).value,
+  }));
+  pravda('po zavření bez volby se výběr zavře', po.vybirac === false);
+  pravda('a nabídka řazení se vrátí na to, podle čeho je seznam opravdu seřazený',
+    po.razeni === pred,
+    `nabídka hlásí „${po.razeni}", ale seznam je seřazený podle „${pred}"`);
+  await ctx.close();
+}
+
+// A když místo vyberu, řazení podle vzdálenosti se opravdu zapne.
+{
+  const { ctx, p } = await telefon(null);
+  await p.evaluate(() => document.querySelectorAll('details').forEach((d) => { d.open = true; }));
+  await p.waitForTimeout(500);
+  await p.selectOption('#map-sort', 'near');
+  await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
+  await p.waitForTimeout(900);
+  await p.fill('#vm-hledat', 'Kolín');
+  await p.press('#vm-hledat', 'Enter');
+  await p.waitForTimeout(1400);
+  await p.click('#vm-ok');
+  await p.waitForTimeout(2200);
+  const v = await p.evaluate(() => ({
+    razeni: (document.getElementById('map-sort') || {}).value,
+    hlavicka: (document.querySelector('.kh-txt b') || {}).textContent || '',
+  }));
+  pravda('po výběru místa se řazení podle vzdálenosti opravdu zapne',
+    v.razeni === 'near', `nabídka hlásí „${v.razeni}"`);
+  pravda('a seznam se přepne na okolí toho místa', /okolí/i.test(v.hlavicka), v.hlavicka);
+  await ctx.close();
+}
+
 await prohlizec.close();
 console.log('\nHlídané místo a pozemky v okolí');
 console.log(zpravy.join('\n'));
