@@ -1,4 +1,4 @@
-# Pozemkomat — plán plné (automatické) verze
+# Parcelka — plán plné (automatické) verze
 
 Cíl: web, který **sám** publikuje inzeráty, **sám** posílá upozornění na lokalitu
 a **sám** přijímá platby za zvýraznění (299 Kč). Bez ručního zásahu u běžného provozu.

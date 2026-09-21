@@ -319,8 +319,9 @@
     var host = document.getElementById('pz-detail');
     host.innerHTML = html;
 
-    // titulek stránky
+    // titulek stránky a vlastní adresa v kanonickém odkazu
     try { document.title = d.place + ' — ' + fmt(d.price) + ' Kč · Parcelka'; } catch (e) {}
+    try { nastavKanonickou('https://www.parcelaka.cz/pozemek.html?p=' + encodeURIComponent(pkey(d))); } catch (e) {}
 
     // uložit
     var favBtn = document.getElementById('pz-fav');
@@ -342,11 +343,30 @@
     });
   }
 
+  /* Adresa a indexování.
+     Stránka detailu je jedna šablona pro všechny pozemky, rozlišená až
+     parametrem ?p=. Kanonická adresa v HTML proto ukazuje na holou
+     šablonu — jenže ta bez parametru vypíše „Pozemek nenalezen", takže
+     vyhledávači se jako jediná nabízela prázdná stránka. Když pozemek
+     najdeme, přepíšeme kanonickou adresu na tu jeho; když nenajdeme,
+     řekneme vyhledávači, ať si tuhle stránku neukládá. */
+  function nastavKanonickou(url) {
+    var l = document.querySelector('link[rel="canonical"]');
+    if (!l) { l = document.createElement('link'); l.setAttribute('rel', 'canonical'); document.head.appendChild(l); }
+    l.setAttribute('href', url);
+  }
+  function neindexovat() {
+    var m = document.querySelector('meta[name="robots"]');
+    if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'robots'); document.head.appendChild(m); }
+    m.setAttribute('content', 'noindex,follow');
+  }
+
   // I když pozemek nenajdeme, stránka musí mít hlavní nadpis. Bez něj neví,
   // kde je, ani čtečka pro nevidomé, ani vyhledávač — a je to přesně stav,
   // do kterého spadne každý starý odkaz na stažený inzerát.
   function renderEmpty() {
     document.title = 'Pozemek nenalezen — Parcelka';
+    neindexovat();
     document.getElementById('pz-detail').innerHTML =
       '<div class="pz-empty"><h1>Pozemek nenalezen</h1>' +
       '<p>Tento pozemek se nepodařilo najít — možná už byl z nabídky stažen.</p>' +

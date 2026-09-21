@@ -127,18 +127,26 @@ const css = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
 pravda('<html> nemá overflow-x:hidden', !/\bhtml\{[^}]*overflow-x:\s*hidden/.test(css),
   'tím se z kořene stane posuvný rámec a na iOS to rozbije position:sticky');
 pravda('hlavička má i -webkit-sticky pro starší iOS', /position:-webkit-sticky/.test(css));
-/* Vysouvací menu uvnitř hlavičky je position:fixed s „top:100%" — tedy
-   „pod spodní hranou vztažného rámce". Tím rámcem MUSÍ být hlavička, jinak
-   se menu propadne na spodek okna. Rámec dělá transform; dokud ho dělalo
-   jen rozmazané sklo, stačilo sklo vypnout a menu zmizelo. */
+/* Hlavička NESMÍ mít transform. Prvek, který je zároveň position:sticky
+   a má transform, Safari přilepí vůči té posunuté vrstvě a hlavička se při
+   rolování zastaví o kus níž — nad ní pak prosvítá pruh stránky, jako by
+   pod stavovým řádkem byla mezera. Transform tu dřív byl kvůli vysouvacímu
+   menu (position:fixed s „top:100 %" potřebuje vztažný rámec); menu je
+   proto teď position:absolute a rámcem je sama hlavička, která je jako
+   sticky polohovaná. Že menu opravdu sedí pod hlavičkou, změří část 4 —
+   tady hlídáme jen to, že se transform nevrátí. */
 const hlavickaBlok = css.slice(css.indexOf('header{border-bottom'), css.indexOf('header{border-bottom') + 500);
-pravda('hlavička je vztažný rámec pro menu (má transform)',
-  /transform:\s*translateZ\(0\)/.test(hlavickaBlok),
-  'bez něj „top:100 %" u menu znamená celou výšku okna, ne spodek hlavičky');
-pravda('a nespoléhá na to, že rámec udělá rozmazané sklo',
-  /transform:\s*translateZ\(0\)/.test(hlavickaBlok) &&
-  css.indexOf('transform:translateZ(0)') < css.indexOf('@media (hover:none){\n  header{background:#F7F5F1'),
-  'rámec se nesmí ztratit s dekorací');
+pravda('hlavička nemá transform (sticky + transform Safari rozhodí)',
+  !/transform:/.test(hlavickaBlok),
+  'v pravidle pro <header> je transform: ' + (hlavickaBlok.match(/transform:[^;]*/) || [''])[0]);
+pravda('menu se věší na hlavičku přes position:absolute',
+  /#nav\{position:absolute;\s*top:100%/.test(css),
+  'jako fixed by potřebovalo vztažný rámec navíc — a ten dělal právě ten transform');
+/* Lepivý prvek uvnitř ořezávajícího rodiče je na Safari další známá past.
+   Clip kvůli bočnímu posuvu stačí na <html>; ten se propíše na celé okno. */
+pravda('<body> není ořezávající rodič lepivé hlavičky',
+  !/\bbody\{[^}]*overflow-x:\s*(clip|hidden)/.test(css),
+  'overflow-x na <body> dělá z rodiče hlavičky ořezávající rámec');
 
 // --- 4) A menu se opravdu vykreslí přes celé okno --------------------
 {

@@ -1,6 +1,6 @@
-# Pozemkomat
+# Parcelka
 
-Web pro **Pozemkomat** — mapa příležitostí u pozemků. Na jedné interaktivní mapě
+Web pro **Parcelku** — mapa příležitostí u pozemků. Na jedné interaktivní mapě
 ukazuje pozemky, kde se něco děje: **dražby, exekuce, prodeje a obecní záměry**,
 sbírané z veřejných zdrojů. Klik na bod → detail + proklik do katastru.
 
@@ -72,6 +72,10 @@ python3 -m http.server 8000   # → http://localhost:8000
 
 ## Poznámka
 
-Mapa běží na knihovně [Leaflet](https://leafletjs.com/) načítané z CDN.
-Formulář a data jsou zatím ukázkové — web je funkční prototyp vzhledu a chování,
-ne ostrý produkt s živými daty.
+Mapa běží na knihovně [Leaflet](https://leafletjs.com/), kterou servírujeme
+z vlastního serveru (`vendor/leaflet/`, viz `vendor/leaflet/PUVOD.md`) — cizí
+CDN u hlavní funkce webu znamenalo výpadek, se kterým se nedalo nic dělat.
+
+Data už ukázková nejsou: robot prochází veřejné zdroje (evidence dražeb,
+Státní pozemkový úřad, inzertní portály) každých 6 hodin a výsledek ukládá
+do `data/opportunities.json`. Účty, inzeráty a zprávy běží na Supabase.

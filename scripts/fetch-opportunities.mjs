@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * Pozemkomat — sběr příležitostí z veřejných zdrojů.
+ * Parcelka — sběr příležitostí z veřejných zdrojů.
  *
  * Robot stáhne data z jednotlivých zdrojů, sjednotí je do jednoho formátu
  * a zapíše do data/opportunities.json. Web si ten soubor pak jen načte.
  *
- * DŮLEŽITÉ: jednotlivé funkce zdrojů jsou zatím prázdné (TODO) — sem se
- * doplní reálné stahování. Dokud žádný zdroj nevrátí data, ponecháme
- * stávající soubor beze změny, aby web nezůstal prázdný.
+ * Zdroje: evidence dražeb (CEVD), OK dražby, Státní pozemkový úřad (§ 12),
+ * Bezrealitky, Farmy.cz a volitelně Sreality přes Apify (jen s tokenem).
+ * Když žádný zdroj nevrátí data, ponecháme stávající soubor beze změny,
+ * aby web nezůstal prázdný.
  *
  * Formát jedné příležitosti:
  *   { place, okres, type, parcel, druh, area, price, extra, lat, lng }
@@ -15,6 +16,7 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
+import { okresPodleGPS } from './okres-podle-gps.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -57,7 +59,7 @@ function kmMezi(lat1, lng1, lat2, lng2) {
 const OKRES_DOSAH_KM = 55;
 
 // Přesnější poloha podle názvu katastrálního území (Nominatim / OpenStreetMap).
-const GEO_UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
+const GEO_UA = { 'user-agent': 'ParcelkaBot/1.0 (+https://www.parcelaka.cz)' };
 /* Okres se dosud předával jen do klíče mezipaměti, ale do DOTAZU ne — ptali
    jsme se prostě na „Police, Česko" a brali první výsledek. Jenže Polic je
    v Česku víc: nabídka z okresu Vsetín tak skončila u Jemnice, 177 km jinde.
@@ -94,14 +96,14 @@ async function geocodeName(place, okres) {
 }
 
 // Okres podle GPS (nejbližší okresní středisko) – pro zdroje bez názvu okresu.
+/* Okres podle souřadnic. Dřív se tu hledalo NEJBLIŽŠÍ OKRESNÍ MĚSTO —
+   dvakrát špatně: nejbližší město není okres, ve kterém obec leží, a
+   vzdálenost se počítala ve stupních, jako by stupeň zeměpisné délky byl
+   stejně dlouhý jako stupeň šířky (u nás je o třetinu kratší). Holedeč
+   v okrese Louny tak vycházela jako okres Most. Teď se bod porovnává se
+   skutečnou hranicí okresu — viz scripts/okres-podle-gps.mjs. */
 function nearestOkres(lat, lng) {
-  let best = null, bestD = Infinity;
-  for (const name of Object.keys(OKRESY_MAP)) {
-    const c = OKRESY_MAP[name];
-    const d = (c[0] - lat) ** 2 + (c[1] - lng) ** 2;
-    if (d < bestD) { bestD = d; best = name; }
-  }
-  return best;
+  return okresPodleGPS(lat, lng);
 }
 
 // Okresní fallback (méně přesné) – když název KÚ nedohledáme.
@@ -117,7 +119,7 @@ function geocode(o, seedStr) {
 
 // Centrální evidence veřejných dražeb (cevd.gov.cz) — oficiální otevřená data.
 // Vybíráme jen aktivní dražby (stav "Uveřejněno"), kde je předmětem pozemek.
-const UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
+const UA = { 'user-agent': 'ParcelkaBot/1.0 (+https://www.parcelaka.cz)' };
 
 function parseArea(text) {
   const m = String(text).match(/(\d[\d\s.]*)\s*m(?:2|²)/i);

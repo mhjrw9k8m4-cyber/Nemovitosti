@@ -361,7 +361,17 @@ function itemRow(o){
      obrazovky, nepozná ani to. Proto šikmá šipka, doména v popisku
      a věta pro odečítač. */
   let src = '';
-  if (o.url && /^https?:\/\//.test(o.url)) {
+  /* Státní půda (SPÚ, § 12) nemá stránku pro jednotlivou parcelu — prodává se
+     přes veřejnou nabídku, kam se podává žádost. V aplikaci na ni vede tlačítko
+     „Nabídka SPÚ"; na krajských stránkách tu donedávna nebyl odkaz ŽÁDNÝ, takže
+     u dvou set nabídek se nedalo dohledat, odkud jsou. Tentýž odkaz jako
+     v aplikaci (js/main.js, SPU_OFFERS). */
+  if (!o.url && o.type === 'sale' && /SPÚ|státní půd/i.test(o.extra || '')) {
+    src = `<a class="okr-src" href="https://spu.gov.cz/nabidky/prehled-cela-cr" target="_blank" rel="noopener nofollow"` +
+      ` title="Otevře se v novém okně na spu.gov.cz">Nabídka SPÚ` +
+      `<span class="ext-ikona" aria-hidden="true">↗</span>` +
+      `<span class="visually-hidden"> — spu.gov.cz, otevře se v novém okně</span></a>`;
+  } else if (o.url && /^https?:\/\//.test(o.url)) {
     let domena = '';
     try { domena = new URL(o.url).hostname.replace(/^www\./, ''); } catch { /* ok */ }
     src = `<a class="okr-src" href="${attr(o.url)}" target="_blank" rel="noopener nofollow"` +

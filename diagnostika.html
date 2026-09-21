@@ -227,7 +227,7 @@
     }).then(function (d) {
       if (!d) radek(box, 'bad', 'Data příležitostí se nenačetla', 'Soubor <code>data/opportunities.json</code> nejde stáhnout.');
       else radek(box, 'ok', 'Data příležitostí v pořádku', (d.opportunities || []).length + ' záznamů, aktualizováno ' + (d.updated || '?'));
-      radek(box, 'warn', 'Rozesílání e-mailů tahle stránka změřit neumí', 'Běží na serveru (GitHub Actions + Resend). Stav je vidět v <a href="https://github.com/mhjrw9k8m4-cyber/Nemovitosti/actions/workflows/send-alerts.yml" target="_blank" rel="noopener">logu úlohy „Rozesílání upozornění“</a>.');
+      radek(box, 'ok', 'Upozornění na hlídání běží v aplikaci', 'Žádné e-maily se neposílají — nové pozemky se počítají přímo v prohlížeči (<code>js/hlidani-logika.js</code>) a ukazují u <a href="hlidani.html">hlídání</a> a v menu.');
     });
   }
 

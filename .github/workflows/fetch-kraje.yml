@@ -1,7 +1,11 @@
-name: Hranice krajů (jednorázově)
+name: Hranice krajů a okresů (jednorázově)
 
-# Stáhne hranice 14 krajů ČR a uloží data/kraje.json. Stačí spustit jednou
-# (hranice se nemění). Ruční spuštění přes „Run workflow".
+# Stáhne hranice 14 krajů (data/kraje.json) a 77 okresů
+# (data/okresy-hranice.json). Stačí spustit jednou — hranice se nemění.
+# Ruční spuštění přes „Run workflow".
+#
+# Hranice okresů nejsou ozdoba: bez nich si robot okres jen hádá podle
+# nejbližšího okresního města a u obcí blízko hranice to mine.
 
 on:
   workflow_dispatch: {}
@@ -24,13 +28,16 @@ jobs:
       - name: Stáhnout hranice krajů
         run: node scripts/fetch-kraje.mjs
 
+      - name: Stáhnout hranice okresů
+        run: node scripts/fetch-okresy.mjs
+
       - name: Commit
         run: |
-          if [[ -n "$(git status --porcelain data/kraje.json)" ]]; then
-            git config user.name "pozemkomat-bot"
+          if [[ -n "$(git status --porcelain data/kraje.json data/okresy-hranice.json)" ]]; then
+            git config user.name "parcelka-bot"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add data/kraje.json
-            git commit -m "data: hranice krajů (choropleth)"
+            git add data/kraje.json data/okresy-hranice.json
+            git commit -m "data: hranice krajů a okresů"
             git push
           else
             echo "Beze změny."

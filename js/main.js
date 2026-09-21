@@ -210,12 +210,6 @@
     return 'Jiný pozemek';
   }
 
-  /* ---------- Oznamovací lišta ---------- */
-  var tbClose = document.getElementById('tb-close');
-  var topbar = document.getElementById('topbar');
-  if (tbClose && topbar) {
-    tbClose.addEventListener('click', function () { topbar.classList.add('hide'); });
-  }
   /* ---------- Zpětná vazba (okno) ----------
      Cíl odeslání se nastavuje na JEDNOM místě: js/config.js (PK_FORM_ENDPOINT / PK_FORM_EMAIL).
      Dokud je prázdné, okno upřímně řekne, že odesílání dokončujeme. */
@@ -585,24 +579,6 @@
     });
   })();
 
-  /* ---------- Živý ticker příležitostí ---------- */
-  var tickTrack = document.getElementById('ticker-track');
-  if (tickTrack) {
-    // Jen pár položek, ať pás není přehnaně dlouhý (dřív všech 234 → letělo to jak blesk)
-    var tickItems = DATA.slice(0, 18);
-    var html = '';
-    tickItems.forEach(function (d) {
-      html += '<span class="tick-item"><span class="td" style="background:' + TYPE[d.type].color + '"></span>' +
-        TYPE[d.type].label + ' · <b>' + d.place + '</b> · ' + areaTxt(d) + ' · ' + zdrojText(d.extra) + '</span>';
-    });
-    tickTrack.innerHTML = html + html; // zdvojení pro plynulou nekonečnou smyčku
-    // Rychlost nastavíme podle skutečné šířky ~ pohodlných 55 px/s (plynulé, čitelné)
-    requestAnimationFrame(function () {
-      var w = tickTrack.scrollWidth / 2;
-      if (w > 0) tickTrack.style.animationDuration = Math.max(30, Math.round(w / 55)) + 's';
-    });
-  }
-
   // Přepínač Seznam / Mapa (mobil): zobrazí jedno místo obojího nad sebou.
   // Výchozí je SEZNAM — na úvodní stránce mají být hned vidět nabídky, ne
   // ovládání mapy. Mapa je na jedno klepnutí vedle.
@@ -653,7 +629,34 @@
 
   /* ---------- Interaktivní mapa (Leaflet) ---------- */
   var mapEl = document.getElementById('leaflet-map');
-  if (!mapEl || typeof L === 'undefined') return;
+  /* Bez mapové knihovny se odsud dál nedá pokračovat — všechno níž na ní
+     stojí. Dřív se tu prostě skončilo: mapa nebyla, seznam pozemků se
+     nevykreslil taky (je ve stejném běhu) a člověk zůstal u prázdné
+     stránky, na které nic nenapovídalo, co se stalo. Mlčení je tu to
+     nejhorší, co se dá udělat.
+
+     Knihovna se od té doby servíruje z vlastního serveru (dřív z cizího
+     unpkg.com, viz vendor/leaflet/PUVOD.md), takže tenhle případ má
+     nastat jen při rozbitém nasazení. I tak musí být slyšet — a musí
+     zbýt cesta dál: přehled podle okresů je obyčejné HTML a vypíše
+     pozemky i bez jediného skriptu. */
+  if (!mapEl || typeof L === 'undefined') {
+    if (mapEl) {
+      mapEl.innerHTML =
+        '<div class="mapa-nedojela" role="status">' +
+          '<b>Mapu se nepodařilo načíst.</b>' +
+          '<span>Zkuste stránku obnovit. Pozemky si můžete projít i bez mapy —' +
+          ' v přehledu podle krajů a okresů.</span>' +
+          '<a class="btn-primary" href="pozemky-podle-okresu.html">Pozemky podle okresů</a>' +
+        '</div>';
+    }
+    var seznamEl = document.getElementById('opp-list');
+    if (seznamEl) {
+      seznamEl.innerHTML = '<li class="map-count">Výpis se načítá z mapy, a ta nedojela.' +
+        ' Zkuste obnovit stránku, nebo použijte <a href="pozemky-podle-okresu.html">přehled podle okresů</a>.</li>';
+    }
+    return;
+  }
 
   // Start oddálený na celou ČR (přesné vyrovnání na data řeší fitAllCZ níže).
   // zoomSnap 0.25: Leaflet smí přiblížit i „mezi" celé stupně. S celými stupni

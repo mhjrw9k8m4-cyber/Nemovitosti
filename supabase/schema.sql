@@ -1,4 +1,4 @@
--- Pozemkomat — návrh databáze (Postgres / Supabase).
+-- Parcelka — návrh databáze (Postgres / Supabase).
 -- Spustí se jednou: Supabase → SQL Editor → vložit → Run.
 -- Obsahuje tři tabulky: inzeráty, hlídání lokality, platby.
 

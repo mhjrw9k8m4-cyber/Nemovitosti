@@ -6,8 +6,8 @@
  * jinak se to dozví, jen když si na stránku hlídání sám vzpomene.
  *
  * „Nové" znamená: sedí na uložené hledání a jeho otisk není mezi těmi,
- * které už uživatel viděl (seen_keys). Otisk musí být shodný s tím, co
- * počítá scripts/send-alerts.mjs, jinak by si web a robot protiřečily.
+ * které už uživatel viděl (seen_keys). Nic se nikam neposílá — počítá se
+ * to tady v prohlížeči a výsledek je vidět u hlídání a v odznaku v menu.
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -19,8 +19,8 @@
     return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
   }
 
-  // Stálý otisk pozemku. Shodný s keyOf() v scripts/send-alerts.mjs —
-  // kdyby se rozešly, robot by považoval za nové něco, co už web ukázal.
+  // Stálý otisk pozemku. Musí přežít i to, že tentýž pozemek přijde ze
+  // zdroje znovu — jinak by se „nové" hlásilo pokaždé dokola.
   function keyOf(d) {
     return [d.type || '', normd(d.okres), normd(d.place), d.parcel || '', d.price || '', d.area || '']
       .join('|').slice(0, 240);

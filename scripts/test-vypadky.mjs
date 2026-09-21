@@ -1,11 +1,12 @@
-// Test: co se stane, když data nedojedou — a co s dražbou po termínu.
+// Test: co se stane, když data nedojedou, co s dražbou po termínu
+// a co když se nestáhne mapová knihovna.
 //
 // Spuštění: node scripts/test-vypadky.mjs
 //   (potřebuje playwright-core; v sandboxu navíc PW_CHROMIUM=cesta/k/chrome
 //    a PK_LEAFLET_DIR=cesta/k/leaflet/dist)
 //
-// Dvě situace, které na běžně fungujícím webu nikdy neuvidíte, a přitom
-// v obou jde o důvěru:
+// Tři situace, které na běžně fungujícím webu nikdy neuvidíte, a přitom
+// ve všech jde o důvěru:
 //
 // 1) DATA SE NENAČTOU. Web se do téhle chvíle beze slova přepnul na čtrnáct
 //    záložních nabídek a tvářil se, že to je celá republika — v úvodu svítilo
@@ -16,6 +17,10 @@
 // 2) DRAŽBA PO TERMÍNU. Odpočet uměl říct „proběhlo", jenže se volal jen
 //    u budoucích termínů — prošlá dražba tedy nevypsala nic a vypadala jako
 //    živá nabídka. Kdo na takovou klikne, podruhé se nevrátí.
+//
+// 3) MAPOVÁ KNIHOVNA SE NESTÁHNE. Skript se bez „L" nedostal přes start,
+//    takže nebyla mapa ANI seznam pozemků — prázdná stránka beze slova
+//    vysvětlení. Stačil k tomu výpadek cizího CDN.
 import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -52,12 +57,17 @@ const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
-async function otevri(obsluhaDat) {
+async function otevri(obsluhaDat, volby) {
+  const bezLeafletu = !!(volby && volby.bezLeafletu);
   const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
   // Pořadí je důležité: Playwright bere POSLEDNÍ shodu, takže obecné pravidlo první.
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
-    if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
+    if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') {
+      // Rozbité nasazení: knihovna z vlastního serveru se nestáhne.
+      if (bezLeafletu && /vendor\/leaflet\/leaflet\.js/.test(u.pathname)) return r.abort();
+      return r.continue();
+    }
     if (r.request().resourceType() === 'image') return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA_DLAZDICE });
     return LEAFLET ? r.abort() : r.continue();
   });
@@ -152,6 +162,51 @@ async function otevri(obsluhaDat) {
     pravda('živé nabídky označené nejsou', po.filter((x) => x.proslo).length === 1,
       'označeno ' + po.filter((x) => x.proslo).length + ' položek');
   }
+  await ctx.close();
+}
+
+// --- 3) Mapová knihovna se nestáhne ----------------------------------
+/* Tohle byla tichá katastrofa. Skript se bez „L" nedostal přes start, takže
+   se nevykreslila mapa ANI seznam pozemků — člověk viděl prázdnou stránku
+   a web mu neřekl ani slovo. Dřív stačil výpadek cizího unpkg.com; od té
+   doby se knihovna servíruje z vlastního serveru, ale zmlknout nesmí ani
+   při rozbitém nasazení. */
+{
+  // Nejdřív staticky: knihovna se nesmí vrátit na cizí server.
+  const uvod = readFileSync('index.html', 'utf8');
+  const cizi = (uvod.match(/<(?:script|link)[^>]+(?:src|href)="https?:\/\/[^"]*leaflet[^"]*"/gi) || []);
+  pravda('mapová knihovna se stahuje z vlastního serveru', cizi.length === 0,
+    'v index.html je ' + cizi.join(' | '));
+  pravda('a soubory knihovny v repozitáři opravdu jsou',
+    existsSync('vendor/leaflet/leaflet.js') && existsSync('vendor/leaflet/leaflet.css'),
+    'vendor/leaflet/ chybí — stránka by se o mapu vůbec nepokusila');
+
+  const { ctx, p, chyby } = await otevri((r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: JSON.stringify(DATA_S_PROSLOU) }), { bezLeafletu: true });
+  const v = await p.evaluate(() => {
+    const m = document.querySelector('#leaflet-map .mapa-nedojela');
+    const s = document.getElementById('opp-list');
+    return {
+      L: typeof window.L !== 'undefined',
+      vMape: m ? m.textContent.replace(/\s+/g, ' ').trim() : '',
+      role: m ? m.getAttribute('role') : null,
+      odkazZMapy: !!(m && m.querySelector('a[href="pozemky-podle-okresu.html"]')),
+      vSeznamu: s ? s.textContent.replace(/\s+/g, ' ').trim() : '',
+      odkazZeSeznamu: !!(s && s.querySelector('a[href="pozemky-podle-okresu.html"]')),
+    };
+  });
+  pravda('bez knihovny je stránka opravdu bez mapy', v.L === false,
+    'zkouška si ji nezablokovala, takže nic neověřila');
+  pravda('na místě mapy je vysvětlení, ne prázdná plocha', /nepodařilo/i.test(v.vMape),
+    `v mapě stojí: „${v.vMape}"`);
+  pravda('vysvětlení uslyší i odečítač obrazovky', v.role === 'status', `role=${v.role}`);
+  pravda('a nabídne cestu dál — přehled podle okresů', v.odkazZMapy);
+  // Na mobilu je mapa schovaná za přepínačem, takže hláška u ní by zůstala
+  // neviděná. Prázdný seznam vidí každý, proto mluví i on.
+  pravda('i prázdný seznam řekne proč', /nedojela|nepodařilo/i.test(v.vSeznamu),
+    `v seznamu stojí: „${v.vSeznamu.slice(0, 80)}"`);
+  pravda('a taky nabídne přehled podle okresů', v.odkazZeSeznamu);
+  pravda('a nic se přitom nerozsypalo do konzole', chyby.length === 0, chyby[0]);
   await ctx.close();
 }
 

@@ -92,7 +92,6 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://unpkg.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link rel="dns-prefetch" href="https://a.tile.openstreetmap.org">
   <link rel="dns-prefetch" href="https://b.tile.openstreetmap.org">
@@ -101,9 +100,12 @@
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <link rel="preload" as="fetch" href="data/kraje.json" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="css/styles.css?v=9c519cf1">
+  <!-- Mapová knihovna z VLASTNÍHO serveru, ne z unpkg.com. Když cizí CDN
+       nedojelo, nestáhla se — a s ní padl celý výpis pozemků, protože
+       skript se bez „L" nedostal přes start. Člověk viděl prázdnou
+       stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
+  <link rel="stylesheet" href="css/styles.css?v=356bf82f">
 </head>
 <body>
 
@@ -332,20 +334,20 @@
         <h2>Pozemky podle kraje.</h2>
       </div>
       <div class="kraj-grid reveal">
-        <a class="kraj-item" href="pozemky-praha-kraj.html"><span class="kj-n">Praha</span><span class="kj-c mono" data-kraj="Praha">22 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-stredocesky-kraj.html"><span class="kj-n">Středočeský</span><span class="kj-c mono" data-kraj="Středočeský">408 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-jihocesky-kraj.html"><span class="kj-n">Jihočeský</span><span class="kj-c mono" data-kraj="Jihočeský">130 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-praha-kraj.html"><span class="kj-n">Praha</span><span class="kj-c mono" data-kraj="Praha">29 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-stredocesky-kraj.html"><span class="kj-n">Středočeský</span><span class="kj-c mono" data-kraj="Středočeský">388 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-jihocesky-kraj.html"><span class="kj-n">Jihočeský</span><span class="kj-c mono" data-kraj="Jihočeský">123 pozemků</span></a>
         <a class="kraj-item" href="pozemky-plzensky-kraj.html"><span class="kj-n">Plzeňský</span><span class="kj-c mono" data-kraj="Plzeňský">119 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-karlovarsky-kraj.html"><span class="kj-n">Karlovarský</span><span class="kj-c mono" data-kraj="Karlovarský">24 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-ustecky-kraj.html"><span class="kj-n">Ústecký</span><span class="kj-c mono" data-kraj="Ústecký">132 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-liberecky-kraj.html"><span class="kj-n">Liberecký</span><span class="kj-c mono" data-kraj="Liberecký">152 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-kralovehradecky-kraj.html"><span class="kj-n">Královéhradecký</span><span class="kj-c mono" data-kraj="Královéhradecký">82 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-pardubicky-kraj.html"><span class="kj-n">Pardubický</span><span class="kj-c mono" data-kraj="Pardubický">70 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-karlovarsky-kraj.html"><span class="kj-n">Karlovarský</span><span class="kj-c mono" data-kraj="Karlovarský">29 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-ustecky-kraj.html"><span class="kj-n">Ústecký</span><span class="kj-c mono" data-kraj="Ústecký">146 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-liberecky-kraj.html"><span class="kj-n">Liberecký</span><span class="kj-c mono" data-kraj="Liberecký">151 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-kralovehradecky-kraj.html"><span class="kj-n">Královéhradecký</span><span class="kj-c mono" data-kraj="Královéhradecký">74 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-pardubicky-kraj.html"><span class="kj-n">Pardubický</span><span class="kj-c mono" data-kraj="Pardubický">84 pozemků</span></a>
         <a class="kraj-item" href="pozemky-vysocina-kraj.html"><span class="kj-n">Vysočina</span><span class="kj-c mono" data-kraj="Vysočina">54 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-jihomoravsky-kraj.html"><span class="kj-n">Jihomoravský</span><span class="kj-c mono" data-kraj="Jihomoravský">357 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-olomoucky-kraj.html"><span class="kj-n">Olomoucký</span><span class="kj-c mono" data-kraj="Olomoucký">98 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-zlinsky-kraj.html"><span class="kj-n">Zlínský</span><span class="kj-c mono" data-kraj="Zlínský">200 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-moravskoslezsky-kraj.html"><span class="kj-n">Moravskoslezský</span><span class="kj-c mono" data-kraj="Moravskoslezský">93 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-jihomoravsky-kraj.html"><span class="kj-n">Jihomoravský</span><span class="kj-c mono" data-kraj="Jihomoravský">394 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-olomoucky-kraj.html"><span class="kj-n">Olomoucký</span><span class="kj-c mono" data-kraj="Olomoucký">104 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-zlinsky-kraj.html"><span class="kj-n">Zlínský</span><span class="kj-c mono" data-kraj="Zlínský">163 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-moravskoslezsky-kraj.html"><span class="kj-n">Moravskoslezský</span><span class="kj-c mono" data-kraj="Moravskoslezský">83 pozemků</span></a>
         <a class="kraj-item kraj-vse" href="pozemky-podle-okresu.html"><span class="kj-n">Všechny okresy</span><span class="kj-c mono">77 okresů</span></a>
       </div>
     </div>
@@ -446,7 +448,7 @@
   <!-- 13 · SLOVNÍČEK -->
   <section class="section pt-0 rail" id="slovnicek">
     <div class="wrap">
-      <div class="rail-mark reveal"><span class="rm-n">5</span><span class="rm-l">pojmů</span></div>
+      <div class="rail-mark reveal"><span class="rm-n">18</span><span class="rm-l">pojmů</span></div>
       <div class="section-head reveal"><h2>Nevyznáte se v pojmech? Vysvětlíme.</h2></div>
       <div class="glossary reveal">
         <div class="gl-item"><h4>Dražba</h4><p>Veřejný prodej pozemku tomu, kdo nabídne nejvíc. Startovní cena bývá pod trhem. Pevný termín a pravidla — online nebo u exekutora.</p></div>
@@ -454,6 +456,24 @@
         <div class="gl-item"><h4>Insolvence</h4><p>Řešení úpadku přes soud. Majetek se zpeněžuje, aby se splatili věřitelé. Veřejně dohledatelné v insolvenčním rejstříku.</p></div>
         <div class="gl-item"><h4>Katastr nemovitostí</h4><p>Úřední evidence pozemků (ČÚZK). Číslo parcely, výměra, druh i vlastník. Vždy zdroj pravdy pro ověření.</p></div>
         <div class="gl-item"><h4>Parcela / výměra</h4><p>Parcela je konkrétní pozemek s vlastním číslem. Výměra je jeho plocha v m². Podle výměry a lokality se odvíjí cena.</p></div>
+        <!-- Časté dotazy slibují slovníček, který „vysvětluje každý pojem".
+             Pět hesel na to nestačilo: web sám používá v textech pro lidi
+             přes deset dalších odborných výrazů — spoluvlastnický podíl,
+             věcné břemeno, vyvolávací cena… — a nevysvětloval ani jeden.
+             Slib bez pokrytí je horší než žádný slib. -->
+        <div class="gl-item"><h4>Spoluvlastnický podíl</h4><p>Prodává se jen část pozemku, ne celá parcela — třeba jedna polovina. Výměra v inzerátu přitom bývá za celou parcelu, takže cena za metr vyjde podezřele nízko. Nejčastější důvod, proč nabídka vypadá jako trhák.</p></div>
+        <div class="gl-item"><h4>Věcné břemeno</h4><p>Cizí právo na vašem pozemku: právo cesty, vedení sítí nebo doživotní užívání. Zapisuje se do katastru a kupujícího zavazuje dál. Hledejte ho na listu vlastnictví, část C.</p></div>
+        <div class="gl-item"><h4>List vlastnictví (LV)</h4><p>Výpis z katastru o konkrétním pozemku. Části A až F: vlastník, parcely, břemena a zástavy, nabývací titul. Nahlédnutí je zdarma přes web ČÚZK.</p></div>
+        <div class="gl-item"><h4>Vyvolávací cena</h4><p>Nejnižší podání, kterým dražba začíná. Není to odhadní ani konečná cena — bývá pod trhem a v dražbě se od ní licituje nahoru.</p></div>
+        <div class="gl-item"><h4>Dražební jistota</h4><p>Kauce, kterou musíte složit předem, jinak dražit nemůžete. Výši i termín určuje dražební vyhláška. Neúspěšným účastníkům se vrací.</p></div>
+        <div class="gl-item"><h4>Dražební vyhláška</h4><p>Úřední dokument, kterým se dražba oznamuje. Najdete v ní přesné označení parcely, nejnižší podání, výši jistoty, termín i podmínky. Nejdůležitější papír celé dražby.</p></div>
+        <div class="gl-item"><h4>Příklep</h4><p>Okamžik, kdy dražitel s nejvyšším podáním pozemek získá. Zbytek ceny se doplácí ve lhůtě podle vyhlášky; vlastnictví přechází až po splnění podmínek.</p></div>
+        <div class="gl-item"><h4>Územní plán</h4><p>Obecní dokument, který říká, co se kde smí stavět. Rozhoduje o tom, jestli je pozemek stavební — ne inzerát. Nahlédnout jde na úřadě obce s rozšířenou působností.</p></div>
+        <div class="gl-item"><h4>Přístupová cesta</h4><p>Právo dostat se na pozemek z veřejné komunikace. Bez něj má pozemek výrazně nižší cenu a banka na něj nemusí půjčit. Ověřuje se v katastru, ne od oka z mapy.</p></div>
+        <div class="gl-item"><h4>Orná půda</h4><p>Zemědělská půda určená k pěstování. Nejlevnější druh pozemku. Stavět na ní nelze bez vynětí ze zemědělského půdního fondu, což stojí čas i peníze a nemusí vyjít.</p></div>
+        <div class="gl-item"><h4>Trvalý travní porost</h4><p>Louky a pastviny. Podobně jako orná půda patří do zemědělského půdního fondu, takže se na ní bez vynětí nestaví.</p></div>
+        <div class="gl-item"><h4>Ostatní plocha</h4><p>Sběrný druh pro pozemky, které nejsou pole, les ani zastavěná plocha — třeba manipulační plochy či zeleň. Co na nich jde, řekne až územní plán.</p></div>
+        <div class="gl-item"><h4>BPEJ</h4><p>Bonitovaná půdně ekologická jednotka — pětimístný kód kvality zemědělské půdy. Čím lepší bonita, tím dražší je vynětí ze zemědělského půdního fondu.</p></div>
       </div>
     </div>
   </section>
@@ -505,8 +525,7 @@
   </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+<script src="vendor/leaflet/leaflet.js?v=5a640ff8" defer></script>
 <script src="js/config.js?v=7f55c4e1" defer></script>
 <script src="js/auth.js?v=3f61aa2e" defer></script>
 <script src="js/dropdown.js?v=87dd79a6" defer></script>
@@ -514,8 +533,8 @@
 <script src="js/terminy.js?v=63a1d1b6" defer></script>
 <script src="js/ceny.js?v=a95a6303" defer></script>
 <script src="js/radce.js?v=7f024858" defer></script>
-<script src="js/hlidani-logika.js?v=e5f0811e" defer></script>
-<script src="js/main.js?v=63031fc8" defer></script>
+<script src="js/hlidani-logika.js?v=ba6c6ec8" defer></script>
+<script src="js/main.js?v=404c4923" defer></script>
 <!-- Vercel Web Analytics (navstevnost) -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel. Na GitHub Pages ani lokálně
    neexistuje, a natvrdo vložený končil chybou 404 v konzoli — proto ho přidáme

@@ -27,7 +27,9 @@ function otisk(rel) {
 }
 
 // Odkaz na náš vlastní soubor s ?v=… — v href i v src.
-const VZOR = /((?:href|src)=")((?:css|js)\/[A-Za-z0-9_-]+\.(?:css|js))\?v=([A-Za-z0-9]+)(")/g;
+// Razítkuje se i vendor/ — mapová knihovna je teď na vlastním serveru
+// a její kopie v prohlížeči musí po výměně verze taky zestárnout.
+const VZOR = /((?:href|src)=")((?:css|js|vendor\/[a-z0-9-]+)\/[A-Za-z0-9_-]+\.(?:css|js))\?v=([A-Za-z0-9]+)(")/g;
 
 const stranky = readdirSync(KOREN).filter((f) => f.endsWith('.html'));
 const otisky = new Map();

@@ -204,3 +204,9 @@ jobs:
 
       - name: Hlídání v aplikaci (celá cesta)
         run: node scripts/test-hlidani-prohlizec.mjs
+
+      - name: Sliby webu platí doopravdy
+        run: node scripts/test-sliby.mjs
+
+      - name: Zařazení pozemku do okresu
+        run: node scripts/test-okres.mjs
