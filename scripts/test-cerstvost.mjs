@@ -19,6 +19,8 @@ import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
+const KOREN_TESTU = new URL('..', import.meta.url).pathname;
+
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -141,6 +143,30 @@ async function otevri(data) {
 }
 
 await prohlizec.close();
+/* --- Stará kopie v prohlížeči --------------------------------------
+   Čerstvost dat není jen otázka robota. GitHub Pages posílá soubory
+   s „nech si to deset minut", takže když se stahují napřímo, člověk může
+   po opravě koukat na stará data i hodinu — a hlásit chybu, která už
+   neexistuje. Přesně to se stalo. Každé stažení datového souboru se proto
+   musí u serveru ověřit („no-cache" = použij kopii, ale zeptej se, jestli
+   platí; při shodě přijde jen prázdná odpověď, nic se nestahuje znovu). */
+{
+  const SOUBORY = ['js/main.js', 'js/pozemek.js', 'js/centrum.js', 'hlidani.html', 'muj-inzerat.html'];
+  const spatne = [];
+  for (const f of SOUBORY) {
+    const t = readFileSync(path.join(KOREN_TESTU, f), 'utf8');
+    // najdeme každé stažení datového souboru a podíváme se, s jakým nastavením
+    const re = /fetch\(\s*(?:url|u|'data\/[a-z-]+\.json')\s*(?:,\s*\{([^}]*)\})?\s*\)/g;
+    let m;
+    while ((m = re.exec(t))) {
+      const volby = m[1] || '';
+      if (!/cache:\s*'no-(cache|store)'/.test(volby)) spatne.push(`${f}: ${m[0].slice(0, 60)}`);
+    }
+  }
+  pravda('datové soubory se vždycky ověří u serveru', spatne.length === 0,
+    'bez toho zůstane v telefonu stará kopie:\n      ' + spatne.join('\n      '));
+}
+
 console.log('\nČerstvost dat a stav zdrojů');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

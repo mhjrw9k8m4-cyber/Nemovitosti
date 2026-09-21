@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=356bf82f">
+  <link rel="stylesheet" href="css/styles.css?v=cea37eca">
 </head>
 <body>
 
@@ -175,10 +175,12 @@
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <!-- Vercel Web Analytics (navstevnost) -->
-<script>/* Vercel Web Analytics: skript dodává až Vercel. Na GitHub Pages ani lokálně
-   neexistuje, a natvrdo vložený končil chybou 404 v konzoli — proto ho přidáme
-   do stránky jen tam, kde ho má kdo obsloužit. */
-(function(){var h=location.hostname;if(/(^|\.)github\.io$/.test(h)||h==="localhost"||h==="127.0.0.1"||!h)return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
+<script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
+   chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
+   web běží na GitHub Pages pod vlastní doménou, takže si o neexistující soubor
+   říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
+   na nasazení u Vercelu. */
+(function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script>
 /* Mobilní menu (hamburger) — statická stránka bez main.js, obsloužíme ho přímo tady. */
 (function () {

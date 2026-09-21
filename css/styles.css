@@ -178,20 +178,23 @@
 /* Atribut hidden musí vždy skrýt prvek — jinak ho pravidla s display:flex/grid
    přebijí a prvek zůstane vidět (např. prázdný modrý puntík u filtrů). */
 [hidden]{display:none !important;}
-/* Pozor: „overflow-x:hidden" na <html> dělá z kořene posuvný rámec a na
-   iPhonu tím rozbíjí position:sticky — lepivá hlavička se při rolování
-   odlepí a odjede nahoru pryč. Přesně to se na webu dělo. Clipping proto
-   řeší „overflow-x:clip" na <html>: ten nic posuvného nevytváří.
-   Na <body> už clip NENÍ. Byl tam taky, jenže body je přímý rodič lepivé
-   hlavičky a ořezávající rodič dělá Safari u position:sticky potíže.
-   Kvůli bočnímu posuvu ho tam mít nemusíme: clip na <html> se podle
-   specifikace propíše na celé okno, takže do stran se stejně nic neposune.
-   Že se nic do stran nesype, hlídá scripts/test-konzole.mjs na osmnácti
-   druzích stránek, na mobilu i na monitoru. */
+/* ŽÁDNÉ ořezávání do stran na <html> ani <body>.
+   Historie: „overflow-x:hidden" na <html> udělá z kořene posuvný rámec a na
+   iPhonu tím rozbije position:sticky — hlavička se při rolování odlepila
+   a odjela pryč. Náhradou byl „overflow-x:clip", který nic posuvného
+   nevytváří; jenže i clip je pro lepivý prvek ořezávající rodič a Safari
+   s tím má potíže dál (hlavička se zastavila kousek pod horním okrajem
+   a nad ní prosvítal pruh stránky).
+   Ořezávání tu navíc není k čemu: měřeno na dvaceti stránkách v osmi
+   šířkách od 320 do 1600 px, i s otevřeným menu a výběrem okolí — nikde
+   se stránkou nejde pohnout do strany (282 zkoušek, 0 nálezů). Kdyby se to
+   někdy změnilo, nemá se to zakrývat ořezáním: to jen schová obsah, který
+   má být vidět. Hlídá scripts/test-konzole.mjs na osmnácti druzích
+   stránek, na mobilu i na monitoru. */
 html{scroll-behavior:smooth;}
 @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} *{animation:none !important; transition:none !important;} }
 
-html{overflow-x:clip;}
+
 html, body{max-width:100%; width:100%;}
 body{background:var(--bg); color:var(--text-ondark); font-family:var(--font-ui); line-height:1.58; -webkit-font-smoothing:antialiased; overscroll-behavior-x:none; position:relative;}
 h1, h2, h3, h4{overflow-wrap:break-word; word-break:break-word;}
@@ -2830,7 +2833,21 @@ h1 em::after{content:none; animation:none;}
 .add-hero.app-hero::before, .add-hero.app-hero::after{content:none;}
 
 /* Na krátkých stránkách (přihlášení, prázdné stavy) končila patička
-   uprostřed okna a pod ní zbýval pruh holého pozadí. Patička se drží dna. */
+   uprostřed okna a pod ní zbýval pruh holého pozadí. Patička se drží dna.
+
+   Dřív to řešil flex na <body>. Jenže tím se hlavička stala POLOŽKOU
+   flexu — a lepivá položka flexového kontejneru je na Safari další známá
+   past: hlavička se při rolování zastaví kousek pod horním okrajem a nad
+   ní prosvítá pruh stránky. Totéž se dělo s ořezáváním, viz komentář
+   u <html> nahoře.
+
+   Bez flexu by to šlo taky (patička sama lepivá s „top:100vh" — ověřeno
+   na dvanácti stránkách ve dvou šířkách, drží na krátkých i dlouhých).
+   Nechávám ale flex: jestli je položka flexu tím, co na Safari hlavičku
+   rozhazuje, nevím — a měnit rozvržení celého webu na základě domněnky
+   je horší než chyba, kterou to má spravit. Rozhodne měření přímo na
+   zařízení: js/mereni-hlavicky.js, spustí se adresou index.html?mereni=1.
+   Ukáže mimo jiné právě to, že hlavička je položkou flexu. */
 body{display:flex; flex-direction:column; min-height:100vh;}
 body > main{flex:1 0 auto;}
 body > footer{flex:none;}

@@ -39,9 +39,6 @@ jobs:
       - name: Statistika cen (čísla odpovídají skutečnosti)
         run: node scripts/test-statistika.mjs
 
-      - name: Přihlášení (web neodhlašuje sám od sebe)
-        run: node scripts/test-prihlaseni.mjs
-
       - name: Razítka verzí (aby lidem nechodila stará kopie)
         run: node scripts/test-verze.mjs
 
@@ -95,11 +92,11 @@ jobs:
       - name: Vizuální jazyk (hloubka a tvary z předlohy)
         run: node scripts/test-predloha.mjs
 
-  # Chat se špatně zkouší ručně: potřebuje dva účty, inzerát a trpělivost.
-  # Tenhle běh projde celou cestu v opravdovém Chromiu — zájemce napíše,
-  # majitel to uvidí i se zavřeným menu na mobilu, odpoví, a odpověď dorazí
-  # zpátky bez obnovení stránky. Běží zvlášť, ať rychlé testy zůstanou rychlé.
-  chat-v-prohlizeci:
+  # Všechno, co potřebuje opravdový prohlížeč: chat, mapa, hlavička,
+  # kontrast, dotykové terče, výpadky… Běží zvlášť od rychlých testů, aby
+  # se kvůli stahování Chromia nečekalo na každou drobnost. Kroky, které
+  # prohlížeč potřebují, musí být V TOMHLE jobu — jinde se neinstaluje.
+  v-prohlizeci:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -117,6 +114,12 @@ jobs:
 
       - name: Projít chat v prohlížeči
         run: node scripts/test-chat-prohlizec.mjs
+
+      # Potřebuje prohlížeč (playwright-core). V rychlém jobu „testy" se
+      # neinstaluje, takže tam krok padal na chybějícím balíčku — a s ním
+      # celý běh. Patří sem, mezi ostatní testy v prohlížeči.
+      - name: Přihlášení (web neodhlašuje sám od sebe)
+        run: node scripts/test-prihlaseni.mjs
 
       - name: Vrstvení (co je nad čím)
         run: node scripts/test-vrstveni.mjs

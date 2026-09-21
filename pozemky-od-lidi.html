@@ -16,9 +16,11 @@
   <p>Přesměrování na <a href="index.html#mapa">Mapa</a>…</p>
   <script>location.replace('index.html#mapa');</script>
 <!-- Vercel Web Analytics (navstevnost) -->
-<script>/* Vercel Web Analytics: skript dodává až Vercel. Na GitHub Pages ani lokálně
-   neexistuje, a natvrdo vložený končil chybou 404 v konzoli — proto ho přidáme
-   do stránky jen tam, kde ho má kdo obsloužit. */
-(function(){var h=location.hostname;if(/(^|\.)github\.io$/.test(h)||h==="localhost"||h==="127.0.0.1"||!h)return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
+<script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
+   chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
+   web běží na GitHub Pages pod vlastní doménou, takže si o neexistující soubor
+   říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
+   na nasazení u Vercelu. */
+(function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 </body>
 </html>

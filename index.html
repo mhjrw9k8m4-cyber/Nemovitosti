@@ -105,7 +105,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=356bf82f">
+  <link rel="stylesheet" href="css/styles.css?v=cea37eca">
 </head>
 <body>
 
@@ -534,12 +534,19 @@
 <script src="js/ceny.js?v=a95a6303" defer></script>
 <script src="js/radce.js?v=7f024858" defer></script>
 <script src="js/hlidani-logika.js?v=ba6c6ec8" defer></script>
-<script src="js/main.js?v=404c4923" defer></script>
+<script src="js/main.js?v=2b259813" defer></script>
+<!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
+     (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
+     Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,
+     dala změřit přímo na telefonu, kde se děje. Viz js/mereni-hlavicky.js. -->
+<script>if(location.search.indexOf('mereni')>-1||location.hash.indexOf('mereni')>-1){var _m=document.createElement('script');_m.src='js/mereni-hlavicky.js?t='+Date.now();_m.defer=true;document.head.appendChild(_m);}</script>
 <!-- Vercel Web Analytics (navstevnost) -->
-<script>/* Vercel Web Analytics: skript dodává až Vercel. Na GitHub Pages ani lokálně
-   neexistuje, a natvrdo vložený končil chybou 404 v konzoli — proto ho přidáme
-   do stránky jen tam, kde ho má kdo obsloužit. */
-(function(){var h=location.hostname;if(/(^|\.)github\.io$/.test(h)||h==="localhost"||h==="127.0.0.1"||!h)return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
+<script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
+   chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
+   web běží na GitHub Pages pod vlastní doménou, takže si o neexistující soubor
+   říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
+   na nasazení u Vercelu. */
+(function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script src="js/upozorneni-feed.js?v=c8e91dd3" defer></script>
 <script src="js/upozorneni.js?v=b7b7c483" defer></script>
 </body>

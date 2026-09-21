@@ -167,7 +167,7 @@
       hledani = (r[1] && r[1].ok && Array.isArray(r[1].data)) ? r[1].data : [];
       if (!hledani.length) { seznam = F.sestav({ vlakna: vlakna, hledani: [], data: [] }); vykresli(); return; }
       // Soubor s pozemky se stahuje, jen když je s čím porovnávat.
-      fetch('data/opportunities.json', { cache: 'default' })
+      fetch('data/opportunities.json', { cache: 'no-cache' })
         .then(function (x) { return x.ok ? x.json() : null; })
         .then(function (d) {
           seznam = F.sestav({ vlakna: vlakna, hledani: hledani, data: (d && d.opportunities) || [] });
