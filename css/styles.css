@@ -2655,28 +2655,37 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 }
 
 /* =====================================================================
-   ÚVOD NA TELEFONU: CO SI ZASLOUŽÍ MÍSTO PŘED HLEDÁNÍM
-   Na displeji 320×568 bylo pole „Hledat obec" až v 72 % výšky obrazovky.
-   Člověk, který přišel hledat pozemek, se k hledání dostal jako
-   k poslednímu. Před ním stálo: nadstavec, nadpis, počty, proužek
-   s živými údaji — a teprve pak panel.
+   ÚVOD NA TELEFONU: MÍSTO PŘED HLEDÁNÍM
+   Na displeji 320×568 bylo pole „Hledat obec" až v 72 % výšky obrazovky —
+   člověk, který přišel hledat pozemek, se k hledání dostal jako
+   k poslednímu. Řešilo se to tím, že se nadstavec a proužek s živými
+   údaji na malých telefonech SCHOVALY.
 
-   Zůstává to, co odpovídá na „kde to jsem a stojí to za to": nadpis
-   a počty (1 940 pozemků · 77 okresů). Odchází:
-    · nadstavec „POZEMKY NA PRODEJ I V DRAŽBĚ · CELÁ ČR" — říká přesně
-      to, co nadpis a počty pod ním,
-    · proužek s nejbližší dražbou a nejvýhodnější nabídkou — to není
-      krok k hledání, ale obsah; a je o kus níž na mapě, kam ty odkazy
-      stejně vedou.
-   Na větších telefonech a tabletech obojí zůstává.
-   ===================================================================== */
+   Jenže schovat text neznamená získat místo: po obou zbyla v tmavém pruhu
+   prázdná díra 51 px vysoká (změřeno na čtyřech velikostech telefonu).
+   Nad hledáním tak nezůstalo nic, jen prázdno — a to je horší než řádek
+   textu, protože nic neříká a místo bere stejně.
+
+   Text je proto zpátky a místo se ušetřilo tam, kde ho opravdu ubylo:
+   na odsazeních. Kolik to dělá, hlídá scripts/test-uvod.mjs. */
 @media (max-width:560px){
-  .hero-map .hero-head .eyebrow{display:none;}
-  .hero-map .hero-head .hero-live{display:none;}
-  .hero-band{padding:14px 0 76px;}
-  .hero-map .map-wide{margin-top:-62px;}
-  .hero-map .hero-head .hero-stats{margin-top:10px;}
+  /* Ušetřeno na odsazeních, ne na textu. Hodnoty jsou naměřené:
+     rozpad výšky úvodu na 320×568 ukázal, kde se místo ztrácelo. */
+  .hero-band{padding:10px 0 64px;}
+  .hero-map .map-wide{margin-top:-54px;}   /* překryv panelu zůstává stejný */
+  .hero-plot{padding:8px 0 6px;}
+  .hero-map .hero-head{margin-bottom:10px;}
+  .hero-map .hero-head .eyebrow{margin-bottom:6px;}
+  .hero-map .hero-head .hero-stats{margin-top:8px;}
   .hero-head h1{margin-bottom:8px;}
+  /* Vyšší specificita než obecné pravidlo pro .hero-live níž, jinak by
+     si odsazení nechalo svoje. */
+  .hero-map .hero-live{margin-top:8px; padding-top:7px;}
+  /* Nadstavec se na 320 px lámal na dva řádky. Čárka před ním je ozdoba —
+     bez ní se text vejde na jeden a ušetří to 16 px. Tečka zůstává, ta
+     nese význam (živá data). */
+  .hero-map .hero-head .eyebrow::before{display:none;}
+  .hero-map .hero-head .eyebrow{gap:6px;}
 }
 
 
@@ -2915,7 +2924,13 @@ h1, h2, h3,
      Popisek zmizel, hodnota mluví sama („zítra · Karlovice"). 44 px. */
   .hero-live{flex-direction:row; flex-wrap:nowrap; gap:0; margin-top:12px;
     overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch;
-    border-top:1px solid rgba(255,255,255,0.20); padding-top:9px;}
+    border-top:1px solid rgba(255,255,255,0.20); padding-top:9px;
+    /* Třetí údaj se u pravého okraje uřízne uprostřed slova a vypadá to
+       jako rozbité rozvržení, ne jako „posuň si to". Změkčený okraj to
+       řekne beze slov. Maska, ne barevný přechod — pod pásem je přechod
+       pozadí a plná barva by se s ním neshodla. */
+    -webkit-mask-image:linear-gradient(to right, #000 86%, transparent);
+    mask-image:linear-gradient(to right, #000 86%, transparent);}
   .hero-live::-webkit-scrollbar{display:none;}
   .hl-fact{flex:0 0 auto; flex-direction:row; align-items:baseline; gap:6px;
     padding:0 13px 0 0; margin-right:13px;

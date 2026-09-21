@@ -252,16 +252,26 @@ async function otevri(soubor, sirka, vyska) {
 }
 
 {
-  // A na malém telefonu je schovaný záměrně — ne náhodou.
+  /* Proužek s živými údaji byl na malých telefonech schovaný, aby se
+     hledání dostalo výš. Jenže schovat text neznamená získat místo: po
+     něm i po nadstavci zbyla v tmavém pruhu prázdná díra 51 px vysoká —
+     nad hledáním nezůstalo nic, jen prázdno. To je horší než řádek textu:
+     nic neříká a místo bere stejně. Text je proto zpátky a místo se
+     ušetřilo na odsazeních. */
   const { ctx, p } = await otevri('index.html', 360, 640);
   await p.waitForTimeout(2200);
-  const vidno = await p.evaluate(() => {
-    const e = document.getElementById('hero-live');
-    if (!e) return false;
-    return !e.hidden && getComputedStyle(e).display !== 'none' && e.getClientRects().length > 0;
+  const v = await p.evaluate(() => {
+    const vidno = (id) => { const e = document.getElementById(id) || document.querySelector(id);
+      return !!(e && !e.hidden && getComputedStyle(e).display !== 'none' && e.getClientRects().length); };
+    const stat = document.querySelector('.hero-stats');
+    const panel = document.querySelector('.map-controls-panel') || document.querySelector('.map-app');
+    const mezera = (stat && panel) ? Math.round(panel.getBoundingClientRect().top - stat.getBoundingClientRect().bottom) : null;
+    return { prouzek: vidno('hero-live'), nadstavec: vidno('.hero-map .hero-head .eyebrow'), mezera };
   });
-  pravda('na malém telefonu proužek s údaji ustoupí hledání', vidno === false,
-    'proužek je před hledáním, přestože na malém displeji jde o obsah, ne o krok k hledání');
+  pravda('proužek s živými údaji je na telefonu vidět', v.prouzek,
+    'po schovaném proužku zbyde v úvodu prázdné místo — a to neřekne nic');
+  pravda('nadstavec nad nadpisem taky', v.nadstavec,
+    'úvod by začínal rovnou nadpisem a nad ním by zbyl prázdný pruh');
   await ctx.close();
 }
 
@@ -406,7 +416,11 @@ for (const [w, h] of [[320, 568], [375, 667], [390, 844]]) {
   pravda(`hledání je na stránce (${w}×${h})`, !!v, 'pole #map-search chybí');
   if (v) {
     const podil = Math.round(100 * v.horni / v.okno);
-    pravda(`hledání je v horní polovině obrazovky (${w}×${h})`, podil <= 56,
+    /* Strop je 60 %, ne 56 %: v úvodu je zpátky nadstavec i proužek
+       s živými údaji (schovat je znamenalo nechat tam prázdnou díru).
+       Naměřeno s nimi: 320×568 → 58 %, 375×667 → 50 %, 390×844 → 40 %.
+       Kdyby někdo přidal do úvodu další řádek, tahle mez to zachytí. */
+    pravda(`hledání je v horních 60 % obrazovky (${w}×${h})`, podil <= 60,
       `pole začíná v ${podil} % výšky (${v.horni} z ${v.okno} px) — před ním je moc úvodu`);
   }
   await ctx.close();
