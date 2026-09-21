@@ -62,6 +62,69 @@ function pravda(popis, vyslo, proc) {
 }
 
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
+// --- Bez prohlížeče: co je vidět v samotném HTML ----------------------
+{
+  const stranky = readdirSync(KOREN).filter((f) => f.endsWith('.html'));
+
+  /* ZÁKAZ PŘIBLIŽOVÁNÍ. Kdo na drobné písmo nevidí, má jedinou možnost:
+     roztáhnout stránku prsty. „user-scalable=no" mu ji bere. Skok, kvůli
+     kterému to kdysi vzniklo (iOS přiblíží pole s písmem pod 16 px), se
+     řeší velikostí písma, ne zákazem. */
+  const zakazujiZoom = stranky.filter((f) => {
+    const h = readFileSync(path.join(KOREN, f), 'utf8');
+    const m = /<meta\s+name="viewport"[^>]*content="([^"]*)"/.exec(h);
+    return m && /user-scalable\s*=\s*no|maximum-scale\s*=\s*1(?!\d)/.test(m[1]);
+  });
+  pravda('žádná stránka nezakazuje přiblížení', zakazujiZoom.length === 0,
+    zakazujiZoom.join(', '));
+
+  /* SYROVÉ DATUM. „dražba 2026-10-21" je zápis pro stroje. Česky se píše
+     21. 10. 2026. */
+  const sIso = [];
+  for (const f of stranky) {
+    const h = readFileSync(path.join(KOREN, f), 'utf8');
+    // Jen viditelný text, ne JSON-LD, atributy ani skripty.
+    const telo = h.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ');
+    const m = telo.match(/\b20\d\d-\d\d-\d\d\b/);
+    if (m) sIso.push(`${f} („${m[0]}")`);
+  }
+  pravda('nikde v textu nestojí datum ve tvaru pro stroje', sIso.length === 0,
+    sIso.slice(0, 5).join(', '));
+
+  /* ČÍSLA V HTML. Dokud je doplňoval až skript, viděl člověk při načtení
+     „1900+" a u krajů pomlčky — a vyhledávač, který skript nespouští,
+     viděl totéž. Navíc „1900+" nesedělo s živým počtem. */
+  const idx = readFileSync(path.join(KOREN, 'index.html'), 'utf8');
+  const hrdina = /<b id="hero-n-count">([^<]*)<\/b>/.exec(idx);
+  pravda('počet pozemků je přímo v HTML, ne až ze skriptu',
+    !!(hrdina && /^\d[\d\s\u00a0]*$/.test(hrdina[1].trim())),
+    `v HTML stojí „${hrdina ? hrdina[1] : '(nic)'}"`);
+  const pomlcky = [...idx.matchAll(/<span class="kj-c mono" data-kraj="[^"]+">([^<]*)<\/span>/g)]
+    .filter((m) => !/\d/.test(m[1]) && !/žádné/.test(m[1]));
+  pravda('ani u krajů nejsou místo čísel pomlčky', pomlcky.length === 0,
+    `${pomlcky.length} krajů bez čísla`);
+
+  /* SLIB Z ČASTÝCH DOTAZŮ. „U každé lokality vidíte, kdy proběhla poslední
+     aktualizace" — musí to být čím podepřít. */
+  const slibuje = /kdy proběhla poslední aktualizace/.test(idx);
+  if (slibuje) {
+    const bezRazitka = ['pozemky-okres-kolin.html', 'pozemky-stredocesky-kraj.html', 'drazby-pozemku-nabidky.html']
+      .filter((f) => stranky.includes(f) && !/naposledy zkontrolovány/.test(readFileSync(path.join(KOREN, f), 'utf8')));
+    pravda('krajské a okresní stránky říkají, kdy se zdroje kontrolovaly',
+      bezRazitka.length === 0, bezRazitka.join(', '));
+  }
+
+  /* ODKAZ VEN. Musí se poznat, že vede mimo web — i poslechem. */
+  const okres = readFileSync(path.join(KOREN, 'pozemky-okres-kolin.html'), 'utf8');
+  const zdroje = [...okres.matchAll(/<a class="okr-src"[^>]*>([\s\S]*?)<\/a>/g)];
+  pravda('na okresní stránce jsou odkazy na zdroj', zdroje.length > 0);
+  if (zdroje.length) {
+    pravda('a je u nich poznat, že vedou pryč z webu',
+      zdroje.every((m) => /ext-ikona/.test(m[1]) && /visually-hidden/.test(m[1])),
+      'odkaz bez značky: ' + (zdroje.find((m) => !/ext-ikona/.test(m[1])) || [])[0]);
+  }
+}
+
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 const PRAZDNA = Buffer.from(

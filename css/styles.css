@@ -2854,6 +2854,21 @@ body::after{
    rámeček i pozadí jsou pryč a zbyl řádek. Značka pak visela ve vzduchu
    jako nedokreslený roh u ničeho. Na řádku se nekreslí. */
 .okr-item::after{content:none;}
+/* Kdy se zdroje naposledy procházely — slib z častých dotazů, který na
+   krajských a okresních stránkách nebylo čím podepřít. */
+.okr-cerstvost{margin-top:8px; font-size:12.5px; color:var(--text-mute); letter-spacing:.01em;}
+/* Poznámka v hlavičce seznamu — drobná, ale musí být čitelná. */
+.mc-pozn{font-size:12px; color:var(--text-ondark-mute); white-space:nowrap;}
+/* Šipka u odkazu ven. „→" vypadá jako „další stránka"; šikmá šipka je
+   zavedená značka pro „odcházíš z webu". */
+.okr-src .ext-ikona, .ext-ikona{display:inline-block; margin-left:4px; font-size:0.9em; opacity:.75;}
+/* Odkaz, který vede pryč z webu, se musel poznat až po klepnutí. Šikmá
+   šipka je na to zavedená značka. Vynechané jsou odkazy, které si ji
+   dávají samy (.okr-src na krajských stránkách) a tlačítka, kde by se
+   pletla do popisku. */
+a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::after{
+  content:"\2197"; display:inline-block; margin-left:4px; font-size:0.9em;
+  opacity:.7; text-decoration:none;}
 
 /* Výběr okresu: rejstřík, ne dlaždice. Stejný zápis jako rozcestník krajů
    na hlavní stránce — web se tím čte jako jeden dokument, ne jako sbírka
@@ -3419,3 +3434,23 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    v zalamovaném flexu, takže se od svých sousedů odtrhl a zůstal viset
    sám na konci řádku jako tečka bez věty. Teď patří k položce před ním. */
 .okr-place:not(:last-child)::after{content:"\00a0·"; color:var(--text-mute); font-weight:400;}
+
+/* =====================================================================
+   PÍSMO V POLÍCH NA DOTYKOVÝCH ZAŘÍZENÍCH
+   Safari na iPhonu sám přiblíží stránku, jakmile člověk klepne do pole
+   s písmem menším než 16 px — a pak už ji nezmenší zpátky. Právě proto
+   měl úvod v hlavičce „user-scalable=no": zákaz přibližování ten skok
+   potlačil. Jenže tím se přibližování zakázalo i lidem, kteří si chtějí
+   stránku zvětšit, protože na drobné písmo nevidí. To je horší nemoc
+   než lék.
+
+   Zákaz je tedy pryč a skok se řeší tam, kde vzniká: pole mají na dotyku
+   16 px. Na myši zůstává původní velikost — tam se nic nepřibližuje. */
+/* !important tu není lajdáctví: konkrétnější pravidla jako „.mc-field
+   select" nebo „.hl-sel" by holý selektor přebila a pole by zůstala pod
+   šestnácti pixely — tedy přesně tam, kde iOS skáče. Tohle není otázka
+   vkusu, ale omezení zařízení, takže musí vyhrát nad vším ostatním. */
+@media (pointer:coarse){
+  input:not([type="checkbox"]):not([type="radio"]),
+  select, textarea{font-size:16px !important;}
+}

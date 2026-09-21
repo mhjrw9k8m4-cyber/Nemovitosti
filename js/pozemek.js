@@ -50,6 +50,9 @@
   function countdownText(days) { return T.countdownText(days); }
   function countdownClass(days) { return T.countdownClass(days); }
   function zdrojText(extra) { return T.zdrojText(extra); }
+  /* Text jen pro odečítač obrazovky: odkaz vede pryč z webu a otevře se
+     v novém okně. Vidící to pozná podle šikmé šipky (viz CSS). */
+  var VEN = '<span class="visually-hidden"> — otevře se v novém okně mimo Parcelku</span>';
 
   function pkey(d) { return [d.place || '', d.parcel || '', d.okres || ''].join('|'); }
   function katastrUrl(d) { return 'https://ikatastr.cz/#zoom=18&lat=' + d.lat + '&lon=' + d.lng + '&info=' + d.lat + ',' + d.lng; }
@@ -298,12 +301,14 @@
       pzFeaturesHtml(d) +
 
       '<div class="pz-cta">' +
-        '<a class="pz-btn primary" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Zobrazit na mapě</a>' +
-        (d.type === 'majitel' ? '' : '<a class="pz-btn ghost" href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.label) + '</a>') +
+        /* Tlačítka vedou pryč z webu a do nového okna. Vidět to jde podle
+           šipky, slyšet ne — proto věta navíc jen pro odečítač obrazovky. */
+        '<a class="pz-btn primary" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Zobrazit na mapě' + VEN + '</a>' +
+        (d.type === 'majitel' ? '' : '<a class="pz-btn ghost" href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.label) + VEN + '</a>') +
       '</div>' +
 
       '<div class="pz-actions">' +
-        '<a class="pz-abtn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">' + PIN_SVG + 'Otevřít v katastru</a>' +
+        '<a class="pz-abtn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">' + PIN_SVG + 'Otevřít v katastru' + VEN + '</a>' +
         '<button class="pz-abtn' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">' + HEART_SVG + '<span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
         '<button class="pz-abtn" type="button" id="pz-share">' + SHARE_SVG + 'Sdílet</button>' +
       '</div>' +

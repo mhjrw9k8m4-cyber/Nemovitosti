@@ -8,6 +8,13 @@ import { fileURLToPath } from 'url';
 import { createHash } from 'node:crypto';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+/* Termíny se píšou stejně jako v prohlížeči — tentýž js/terminy.js.
+   Krajské a okresní stránky tiskly syrové „dražba 2026-10-21": zápis pro
+   stroje uprostřed české věty. Česky je to 21. 10. 2026. Kdyby se tu
+   převod napsal podruhé, dřív nebo později se ty dva rozejdou. */
+new Function(fs.readFileSync(path.join(ROOT, 'js', 'terminy.js'), 'utf8'))();
+const T = globalThis.PK_TERMINY;
 /* Razítko proti staré kopii v prohlížeči. Dřív to bylo ručně psané číslo
    (v=20260902f) — a při úpravě stylu se zapomnělo přepsat, takže lidem
    chodila pořád stará verze a z nových úprav nebylo vidět nic. Nikde přitom
@@ -82,6 +89,23 @@ function okresFile(okres){ return `pozemky-okres-${slug(okres)}.html`; }
 function write(file, html){ fs.writeFileSync(path.join(ROOT, file), html); }
 
 const data = JSON.parse(fs.readFileSync(path.join(ROOT,'data','opportunities.json'),'utf8'));
+/* Kdy robot naposledy zdroje procházel. Časté dotazy slibují „u každé
+   lokality vidíte, kdy proběhla poslední aktualizace" — a na krajských
+   ani okresních stránkách to nikde nestálo, takže ten slib nebyl čím
+   podepřít. Píše se česky, ne 2026-09-22. */
+const zkontrolovano = (() => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(data.updated || '');
+  return m ? `${+m[3]}. ${+m[2]}. ${m[1]}` : '';
+})();
+const razitkoCerstvosti = zkontrolovano
+  ? `<p class="okr-cerstvost mono">Zdroje naposledy zkontrolovány ${zkontrolovano} · robot je prochází každých 6 hodin</p>`
+  : '';
+/* Duplicity se odstraňují TOUTÉŽ funkcí jako v prohlížeči (js/hlidani-logika.js).
+   Kdyby si generátor počítal po svém, napsal by do HTML jiné číslo, než
+   pak ukáže skript — a na jedné stránce by vedle sebe stála dvě. */
+const require_ = (await import('node:module')).createRequire(import.meta.url);
+const PKH = require_(path.join(ROOT, 'js', 'hlidani-logika.js'));
+
 const all = Array.isArray(data.opportunities) ? data.opportunities : [];
 if(!all.length){ console.error('Žádná data — generování přeskočeno.'); process.exit(0); }
 
@@ -319,8 +343,20 @@ function itemRow(o){
   if(o.area) bits.push('<b>'+fmt(o.area)+' m²</b>');
   if(o.price) bits.push('<b>'+fmt(o.price)+' Kč</b>');
   if(o.okres) bits.push('okres '+esc(o.okres));
-  if(o.extra && o.extra!=='—') bits.push(esc(o.extra));
-  const src = (o.url && /^https?:\/\//.test(o.url)) ? `<a class="okr-src" href="${attr(o.url)}" target="_blank" rel="noopener nofollow">Zdroj →</a>` : '';
+  if(o.extra && o.extra!=='—') bits.push(esc(T.zdrojText(o.extra)));
+  /* Odkaz ven se musel poznat až po klepnutí. Šipka „→" vypadá jako
+     „další stránka", ne jako „odcházíš z webu" — a kdo poslouchá čtečku
+     obrazovky, nepozná ani to. Proto šikmá šipka, doména v popisku
+     a věta pro odečítač. */
+  let src = '';
+  if (o.url && /^https?:\/\//.test(o.url)) {
+    let domena = '';
+    try { domena = new URL(o.url).hostname.replace(/^www\./, ''); } catch { /* ok */ }
+    src = `<a class="okr-src" href="${attr(o.url)}" target="_blank" rel="noopener nofollow"` +
+      ` title="Otevře se v novém okně na ${attr(domena)}">Zdroj` +
+      `<span class="ext-ikona" aria-hidden="true">↗</span>` +
+      `<span class="visually-hidden"> — ${esc(domena)}, otevře se v novém okně</span></a>`;
+  }
   return `      <div class="okr-item">
         ${badge}
         <span class="okr-place">${esc(o.place)}</span>
@@ -402,6 +438,7 @@ ${priceLine(priceStats(list)) ? `      <p class="okr-more" style="margin-top:2px
         <div class="rules-sect">
           <h2>Nabídky pozemků v okrese ${esc(okres)}</h2>
           <p class="rules-note" style="margin-top:0;">Seřazeno od nejnižší ceny. Data pocházejí z veřejných zdrojů (inzertní portály, evidence dražeb, státní pozemkový úřad) a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
+${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}
           </div>
@@ -504,6 +541,7 @@ ${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more" style="margin-to
         <div class="rules-sect">
           <h2>Nejlevnější pozemky ${esc(meta.loc)}</h2>
           <p class="rules-note" style="margin-top:0;">Ukázka nejnižších cen napříč krajem. Data z veřejných zdrojů se mohou měnit — aktuální stav ověřte u zdroje a v katastru.</p>
+${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}
           </div>
@@ -566,6 +604,7 @@ const drazby = all.filter(o=>o.type==='drazba').sort((a,b)=>(a.price||1e15)-(b.p
         <div class="rules-sect">
           <h2>Pozemky v dražbě</h2>
           <p class="rules-note" style="margin-top:0;">Seřazeno od nejnižší ceny. Údaje pocházejí z veřejné evidence dražeb a mohou se v čase měnit — konání, podmínky a aktuální stav vždy ověřte přímo v dražební vyhlášce a v katastru nemovitostí.</p>
+${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}
           </div>
@@ -688,6 +727,7 @@ ${highlight}
         <div class="rules-sect">
           <h2>Zemědělská půda podle kraje</h2>
           <p class="rules-note" style="margin-top:0;">Seřazeno od nejdražšího kraje. Klepnutím otevřete nabídky v kraji. Tmavší = dražší.</p>
+${razitkoCerstvosti}
           <div class="okr-list">
 ${krajRows || '      <p class="rules-note" style="margin:0;">Zatím není dost dat po krajích.</p>'}
           </div>
@@ -698,6 +738,7 @@ ${okresRows ? `
         <div class="rules-sect">
           <h2>Zemědělská půda podle okresu</h2>
           <p class="rules-note" style="margin-top:0;">Okresy s dostatkem nabídek, seřazeno od nejdražšího. Klepnutím otevřete okres.</p>
+${razitkoCerstvosti}
           <div class="okr-list">
 ${okresRows}
           </div>
@@ -823,3 +864,35 @@ sm+='</urlset>\n';
 write('sitemap.xml', sm);
 
 console.log(`Vygenerováno: ${okresPages.length} okresních + ${krajPages.length} krajských stránek + dražby (${drazby.length}) + rozcestník. Sitemap: ${staticUrls.length+krajPages.length+okresPages.length} URL.`);
+
+/* =====================================================================
+   ČÍSLA PŘÍMO V HTML ÚVODNÍ STRÁNKY
+   V index.html stálo natvrdo „1900+" a v rozcestníku krajů samé pomlčky
+   („Praha —"). Skript je při načtení přepsal, jenže:
+     · než se skript stihne spustit, vidí člověk „1900+" a pomlčky,
+     · vyhledávač, který stránku čte bez skriptu, vidí totéž — tedy
+       u každého kraje prázdno,
+     · a „1900+" navíc nesedělo s živým počtem, takže na jedné obrazovce
+       byla dvě různá čísla o téže věci.
+   Čísla se proto zapisují do HTML při každém běhu robota. Skript je pak
+   jen potvrdí, místo aby je doplňoval.
+   ===================================================================== */
+{
+  const idx = path.join(ROOT, 'index.html');
+  let h = fs.readFileSync(idx, 'utf8');
+  const pred = h;
+  const bezDup = PKH.bezDuplicit(all);
+  const celkem = bezDup.length;
+  const okresu = new Set(bezDup.map((o) => o.okres).filter(Boolean)).size;
+  const pocetKraj = {};
+  for (const o of bezDup) { const k = OKRES_KRAJ[o.okres]; if (k) pocetKraj[k] = (pocetKraj[k] || 0) + 1; }
+
+  h = h.replace(/(<b id="hero-n-count">)[^<]*(<\/b>)/, `$1${fmt(celkem)}$2`);
+  h = h.replace(/(<b id="hero-n-okres">)[^<]*(<\/b>)/, `$1${okresu}$2`);
+  h = h.replace(/(<span class="kj-c mono" data-kraj=")([^"]+)(">)[^<]*(<\/span>)/g,
+    (_, a, kraj, b, c) => {
+      const n = pocetKraj[kraj] || 0;
+      return a + kraj + b + (n ? `${fmt(n)} ${pluralPozemek(n)}` : 'zatím žádné') + c;
+    });
+  if (h !== pred) { fs.writeFileSync(idx, h, 'utf8'); console.log('Čísla v index.html doplněna: ' + fmt(celkem) + ' pozemků, ' + okresu + ' okresů.'); }
+}

@@ -935,6 +935,11 @@
     favEl.innerHTML = BM_SVG + '<span>Uložené' + (n ? ' (' + n + ')' : '') + '</span>';
     favEl.classList.toggle('on', favOnly);
     favEl.setAttribute('aria-pressed', String(favOnly));
+    /* Uložené pozemky leží v tomhle prohlížeči, nikde jinde — kdo si je
+       uloží na telefonu, na počítači je nenajde. Účet na to zatím není
+       (uložení funguje i bez přihlášení, což je záměr), ale mlčet o tom
+       by znamenalo nechat člověka zjistit to ztrátou. */
+    favEl.title = 'Uložené pozemky zůstávají v tomhle prohlížeči — na jiném zařízení je neuvidíte.';
   }
 
   // „Naposledy prohlédnuté" — malá vychytávka: parcely, které jste otevřeli,
@@ -2578,6 +2583,8 @@
     var novych = pocetNovych();
     if (novych) pripisky += ' <span class="mc-nove">' + novych + ' ' +
       (novych === 1 ? 'nový od minule' : (novych < 5 ? 'nové od minule' : 'nových od minule')) + '</span>';
+    // Když se zrovna listují uložené, řekneme rovnou, kde bydlí.
+    if (favOnly) pripisky += ' <span class="mc-pozn">uloženo jen v tomhle prohlížeči</span>';
     if (skryte.length) pripisky += ' <button type="button" class="mc-skryte" id="mc-skryte">' +
       (ukazSkryte ? 'Schovat skryté' : 'Zobrazit skryté (' + skryte.length + ')') + '</button>';
     /* Kolik dražeb po termínu se právě nepočítá. Počítá se přes filtry bez
