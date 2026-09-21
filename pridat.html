@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=850085a5">
+  <link rel="stylesheet" href="css/styles.css?v=0c81a0ef">
 </head>
 <body>
 
@@ -72,7 +72,7 @@
     <div class="wrap add-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Přidat pozemek na prodej</div>
       <h1>Prodáváte pozemek? <em>Vytvořte hezký inzerát</em> za pár minut.</h1>
-      <p class="sub">Vyplňujte a vpravo <b>živě sledujte</b>, jak vaše nabídka vypadá. Po odeslání se <b>hned objeví na mapě</b> mezi ostatními — zdarma a bez provize.</p>
+      <p class="sub">Vyplňujte a <b>živě sledujte</b>, jak vaše nabídka vypadá. Po odeslání se <b>hned objeví na mapě</b> mezi ostatními — zdarma a bez provize.</p>
       <div class="add-chips"><span>Zdarma</span><span>Bez provize</span><span>Na mapě celé ČR</span><span>Přímý kontakt</span></div>
       <ol class="add-steps" aria-label="Jak přidání funguje">
         <li><span class="as-num">1</span><span class="as-txt"><b>Vyplníte základ</b><span>Obec, výměra, cena — a hned vidíte náhled.</span></span></li>
@@ -90,9 +90,11 @@
         <div>
           <!-- Přihlášení (ochrana proti spamu) — ukáže se, když uživatel není přihlášený -->
           <div class="auth-card" id="auth-gate" data-mode="login" hidden>
-            <div class="auth-tabs" role="tablist">
-              <button type="button" class="auth-tab active" data-mode="login" id="tab-login">Přihlásit se</button>
-              <button type="button" class="auth-tab" data-mode="signup" id="tab-signup">Vytvořit účet</button>
+            <!-- role="tablist" bez role="tab" u potomků je pro odečítač
+                 obrazovky seznam záložek, ve kterém žádná záložka není. -->
+            <div class="auth-tabs" role="tablist" aria-label="Přihlášení nebo nový účet">
+              <button type="button" role="tab" aria-selected="true" aria-controls="auth-form" class="auth-tab active" data-mode="login" id="tab-login">Přihlásit se</button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="auth-form" class="auth-tab" data-mode="signup" id="tab-signup">Vytvořit účet</button>
             </div>
             <div class="auth-head">
               <h2 class="auth-title" id="auth-title">Přihlaste se</h2>
@@ -345,7 +347,7 @@
 <script src="js/fotoskupiny.js?v=6952d85b" defer></script>
 <script src="js/fototema.js?v=7f4a9d0e" defer></script>
 <script src="js/kontrola.js?v=1b5c54e5" defer></script>
-<script src="js/pridat.js?v=d72d7cbc" defer></script>
+<script src="js/pridat.js?v=51efff3f" defer></script>
 <script>
 /* Zobrazit/skrýt heslo v přihlašovací kartě */
 document.addEventListener('click', function (e) {

@@ -876,6 +876,9 @@
       if (gateEl) gateEl.setAttribute('data-mode', mode);
       if (tabLogin) tabLogin.classList.toggle('active', mode === 'login');
       if (tabSignup) tabSignup.classList.toggle('active', mode === 'signup');
+      // Zvýrazněná záložka musí být poznat i bez dívání, ne jen barvou.
+      if (tabLogin) tabLogin.setAttribute('aria-selected', String(mode === 'login'));
+      if (tabSignup) tabSignup.setAttribute('aria-selected', String(mode === 'signup'));
       if (titleEl) titleEl.textContent = mode === 'signup' ? 'Vytvořte si účet' : 'Přihlaste se';
       if (subEl) subEl.textContent = mode === 'signup' ? 'Nový účet zdarma — stačí e-mail a heslo.' : 'Máte už účet? Zadejte e-mail a heslo.';
       if (submitBtn) submitBtn.textContent = mode === 'signup' ? 'Vytvořit účet zdarma' : 'Přihlásit se';

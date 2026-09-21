@@ -129,11 +129,31 @@ pravda('živý proužek se v úvodu objevil', proužek && proužek.skryty === fa
   'element #hero-live chybí nebo zůstal schovaný');
 
 if (proužek) {
-  for (const [klic, popis] of [['drazba', 'nejbližší dražba'], ['nove', 'kolik přibylo'], ['deal', 'nejvýhodnější dnes']]) {
+  for (const [klic, popis] of [['drazba', 'nejbližší dražba'], ['deal', 'nejvýhodnější dnes']]) {
     const f = proužek[klic];
     pravda(`fakt „${popis}" má popisek i hodnotu`,
       !!(f && f.klic && f.hodnota && f.hodnota !== '—'),
       `vyšlo ${JSON.stringify(f)}`);
+  }
+
+  /* „Kolik přibylo" je jediný fakt, který SMÍ chybět — a musí chybět
+     tehdy, když by lhal. Datum „poprvé viděno" se do dat doplnilo
+     najednou, takže po jeho zavedení vypadalo 1 947 z 1 953 nabídek jako
+     čerstvě přibylých a v úvodu stálo „Přibylo za týden: 1 940 pozemků"
+     hned vedle údaje „1 940 pozemků celkem". Dvě stejná čísla vedle sebe
+     nejsou novinka, ale datum zavedení sloupce. Buď se tedy ukáže číslo,
+     které jako novinka obstojí, nebo se mlčí. */
+  const nove = proužek.nove;
+  const surova = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const celkem = new Set(surova.map((d) => [d.place, d.okres, d.price, d.area, d.druh].join('|'))).size;
+  if (nove && nove.hodnota) {
+    const n = +String(nove.hodnota).replace(/[^\d]/g, '');
+    pravda('„kolik přibylo" nehlásí skoro celou databázi jako novinku',
+      n > 0 && n <= Math.round(celkem / 3),
+      `hlásí ${n} z ${celkem} — to není novinka, to je den, kdy se zavedlo „poprvé viděno"`);
+    pravda('a má u sebe popisek', !!nove.klic, JSON.stringify(nove));
+  } else {
+    pravda('„kolik přibylo" radši mlčí, než aby lhalo', true);
   }
 
   // Dražba nesmí být z minulosti — a „dnes/zítra/za N dní" je vždy budoucnost.

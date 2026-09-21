@@ -87,14 +87,19 @@ for (const g of ['Zahrada', 'Stavební']) {
 
 // --- 3) Výsledek na stránce je věrohodný -----------------------------
 const nejlevnejsi = [...stranka.matchAll(/Nejlevnější zemědělská půda[\s\S]{0,600}?<\/div>/g)][0];
-const cisla = nejlevnejsi ? [...nejlevnejsi[0].matchAll(/<b>(\d+) Kč\/m²<\/b>/g)].map((m) => +m[1]) : [];
+const cisla = nejlevnejsi ? [...nejlevnejsi[0].matchAll(/<b>([\d\s\u00a0]+) Kč\/m²<\/b>/g)]
+  .map((m) => +String(m[1]).replace(/\s|\u00a0/g, '')) : [];
 pravda('na stránce jsou nejlevnější okresy vypsané', cisla.length >= 2, JSON.stringify(cisla));
 /* Tohle je to jádro. Zemědělská půda se v Česku obchoduje řádově za
    desítky korun za metr; jednotky korun znamenají podíl, ne levné pole. */
 pravda('žádný okres nehlásí cenu pole pod 15 Kč/m²',
   cisla.every((x) => x >= 15),
   `nejnižší vypsaná hodnota je ${Math.min(...cisla)} Kč/m² — za tolik se pole neprodává`);
-const nar = stranka.match(/Zemědělská půda · (\d+)–(\d+) Kč\/m² · (\d+) nabídek/);
+// Čísla se vypisují s mezerou po tisících („1 273"), ne holá — jinak by
+// vedle „2 849 Kč/m²" stálo „1273" a vypadalo to jako dva různé weby.
+const cislo = (x) => +String(x).replace(/\s|\u00a0/g, '');
+const nar0 = stranka.match(/Zemědělská půda · ([\d\s\u00a0]+)–([\d\s\u00a0]+) Kč\/m² · ([\d\s\u00a0]+) nabídek/);
+const nar = nar0 ? [nar0[0], cislo(nar0[1]), cislo(nar0[2]), cislo(nar0[3])] : null;
 pravda('celostátní rozpětí je vypsané', !!nar, 'nenalezeno');
 if (nar) {
   pravda('a je v rozumných mezích', +nar[1] >= 20 && +nar[2] <= 150,

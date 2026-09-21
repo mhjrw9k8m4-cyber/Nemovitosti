@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=850085a5">
+  <link rel="stylesheet" href="css/styles.css?v=0c81a0ef">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .add-hero.app-hero{padding:30px 0 4px;}
@@ -166,8 +166,8 @@
       '<div class="hl-card hl-auth">' +
         '<h2>Přihlaste se</h2>' +
         '<p>Hlídání je vázané na váš účet, ať ho máte na všech zařízeních. Rychle se přihlaste, nebo si během chvilky založte účet.</p>' +
-        '<input class="hl-in" id="he" type="email" inputmode="email" autocomplete="email" placeholder="Váš e-mail">' +
-        '<input class="hl-in" id="hp" type="password" autocomplete="current-password" placeholder="Heslo">' +
+        '<input class="hl-in" id="he" type="email" inputmode="email" autocomplete="email" placeholder="Váš e-mail" aria-label="Váš e-mail">' +
+        '<input class="hl-in" id="hp" type="password" autocomplete="current-password" placeholder="Heslo" aria-label="Heslo">' +
         '<button class="hl-btn" id="hlogin">Přihlásit se</button>' +
         '<button class="hl-btn sec" id="hsignup">Vytvořit účet</button>' +
         '<div class="hl-msg' + (err ? ' err' : '') + '" id="hauthmsg">' + (msg || '') + '</div>' +
@@ -199,14 +199,14 @@
     return '<div class="hl-card hl-new">' +
         '<div style="font-weight:800;font-size:16px;margin-bottom:8px;">➕ Nové hledání</div>' +
         '<label class="hl-lbl">Kde (okres nebo obec — nech prázdné pro celou ČR)</label>' +
-        '<input class="hl-in" id="ns-okres" placeholder="např. Kolín">' +
+        '<input class="hl-in" id="ns-okres" placeholder="např. Kolín" aria-label="Okres nebo obec">' +
         '<div class="hl-row2">' +
-          '<div><label class="hl-lbl">Druh</label><select class="hl-sel" id="ns-druh">' + druhOpts + '</select></div>' +
-          '<div><label class="hl-lbl">Typ</label><select class="hl-sel" id="ns-type">' + typeOpts + '</select></div>' +
+          '<div><label class="hl-lbl">Druh</label><select class="hl-sel" id="ns-druh" aria-label="Druh pozemku">' + druhOpts + '</select></div>' +
+          '<div><label class="hl-lbl">Typ</label><select class="hl-sel" id="ns-type" aria-label="Typ nabídky">' + typeOpts + '</select></div>' +
         '</div>' +
         '<div class="hl-row2">' +
-          '<div><label class="hl-lbl">Max. cena (Kč)</label><input class="hl-in" id="ns-price" inputmode="numeric" placeholder="např. 800000"></div>' +
-          '<div><label class="hl-lbl">Min. výměra (m²)</label><input class="hl-in" id="ns-area" inputmode="numeric" placeholder="např. 500"></div>' +
+          '<div><label class="hl-lbl">Max. cena (Kč)</label><input class="hl-in" id="ns-price" inputmode="numeric" placeholder="např. 800000" aria-label="Nejvyšší cena v korunách"></div>' +
+          '<div><label class="hl-lbl">Min. výměra (m²)</label><input class="hl-in" id="ns-area" inputmode="numeric" placeholder="např. 500" aria-label="Nejmenší výměra v m²"></div>' +
         '</div>' +
         '<label class="hl-lbl">Detaily (u nabídek od majitelů)</label>' +
         '<div class="hl-feats">' + feats + '</div>' +

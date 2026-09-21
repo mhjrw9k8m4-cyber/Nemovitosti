@@ -2989,18 +2989,30 @@
     });
     vypln('drazba', null, nej ? (zaKolik(nejD) + ' · ' + nej.place) : '', nej);
 
-    // 2) Kolik přibylo. Přednost má dnešek; když dnes nic, vezmeme týden.
-    var dnesN = 0, tydenN = 0;
+    /* 2) Kolik přibylo. Přednost má dnešek; když dnes nic, vezmeme týden.
+
+       Pozor na jednu past: „poprvé viděno" se do dat doplnilo najednou,
+       takže po zavedení toho pole (a po každém dalším resetu historie)
+       vypadalo 1 947 z 1 953 nabídek jako čerstvě přibylých. Web pak
+       v úvodu hlásil „Přibylo za týden: 1 940 pozemků" vedle údaje
+       „1 940 pozemků celkem — dvě čísla, jedno vedle druhého, a obě
+       stejná. To není novinka, to je datum zavedení sloupce.
+
+       Proto se číslo ukáže, jen když dává smysl jako novinka: nejvýš
+       třetina databáze. Nad tím se mlčí — radši nic než nepravda. */
+    var dnesN = 0, tydenN = 0, sDatem = 0;
     DATA.forEach(function (d) {
       var t = den(d.first_seen);
       if (!t) return;
+      sDatem++;
       var r = Math.round((dnes - t) / 86400000);
       if (r === 0) dnesN++;
       if (r >= 0 && r < 7) tydenN++;
     });
+    var STROP = Math.max(1, Math.round(sDatem / 3));
     function kusy(n) { return n === 1 ? '1 pozemek' : (n < 5 ? n + ' pozemky' : fmt(n) + ' pozemků'); }
-    if (dnesN > 0) vypln('nove', 'Přibylo dnes', kusy(dnesN));
-    else if (tydenN > 0) vypln('nove', 'Přibylo za týden', kusy(tydenN));
+    if (dnesN > 0 && dnesN <= STROP) vypln('nove', 'Přibylo dnes', kusy(dnesN));
+    else if (tydenN > 0 && tydenN <= STROP) vypln('nove', 'Přibylo za týden', kusy(tydenN));
     else vypln('nove', '', '');
 
     // 3) Nejvýhodnější dnes — o kolik je pod podobnými nabídkami. Používáme

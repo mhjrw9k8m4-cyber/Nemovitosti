@@ -528,7 +528,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 #nav a.btn-primary:hover{color:var(--ink);}
 #nav a:not(.btn-primary).active{color:var(--text-ondark);}
 #nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--copper-bright); border-radius:2px;}
-@media (max-width:880px){ #nav a:not(.btn-primary).active::after{content:"→"; position:static; display:inline; left:auto; right:auto; bottom:auto; width:auto; height:auto; background:none; border-radius:0; color:var(--copper-bright); opacity:0.55; font-family:var(--font-ui); font-size:17px;} #nav a:not(.btn-primary).active{color:var(--copper-bright);} }
+@media (max-width:1040px){ #nav a:not(.btn-primary).active::after{content:"→"; position:static; display:inline; left:auto; right:auto; bottom:auto; width:auto; height:auto; background:none; border-radius:0; color:var(--copper-bright); opacity:0.55; font-family:var(--font-ui); font-size:17px;} #nav a:not(.btn-primary).active{color:var(--copper-bright);} }
 /* Přihlášení / profil v hlavičce */
 .nav-cta-note{display:none;}
 /* Toast */
@@ -998,7 +998,12 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Řádek s okresem (poloha) — víc informací, jemně pod názvem */
 .opp-loc{display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text-ondark-mute); margin:1px 0 5px;}
 .opp-loc::before{content:""; width:12px; height:12px; flex:none; background-size:contain; background-repeat:no-repeat; background-position:center; opacity:0.85; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239fb4c8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");}
-.opp-sub{font-size:12.5px; color:var(--text-ondark-mute); margin-bottom:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+/* Jeden řádek s tvrdým ořezem tu vyráběl „Stavební pozemek · parc….",
+   což je useknuté uprostřed slova a nic to neřekne. Dva řádky se vejdou
+   a číslo parcely zůstane čitelné; delší text se ořízne až pod nimi. */
+.opp-sub{font-size:12.5px; color:var(--text-ondark-mute); margin-bottom:9px;
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+  line-clamp:2; overflow:hidden; overflow-wrap:anywhere;}
 /* Hodnotový řádek — cena, výměra, Kč/m² zarovnané na účaří */
 .opp-figures{display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin-top:8px; margin-bottom:2px;}
 .opp-figures .m{font-size:13px; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
@@ -1573,7 +1578,19 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   84%{transform:translateY(-1px);}
 }
 @media (prefers-reduced-motion:reduce){ .to-top.show svg{animation:none;} }
-@media (max-width:420px){ .to-top{bottom:18px; right:16px; height:44px; padding:0 16px 0 13px; font-size:14px;} }
+/* Na mobilu byl „Nahoru" pilulka se jménem, tedy přes 110 px široká, a
+   plave nad obsahem: v seznamu pozemků seděla přímo na řádku s cenou za
+   metr. Šířka obrazovky je tu celá zabraná kartami, takže není kam uhnout
+   — zbývá zabrat co nejmíň. Kolečko se vejde vedle textu karty, kdežto
+   pilulka ho překrývala. Název zůstává pro odečítače obrazovky
+   v aria-label, takže se o nic nepřichází. */
+@media (max-width:560px){
+  .to-top{bottom:18px; right:14px; height:46px; width:46px; padding:0;
+    justify-content:center; gap:0; border-radius:50%;}
+  .to-top span{position:absolute; width:1px; height:1px; overflow:hidden;
+    clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap;}
+  .to-top svg{width:21px; height:21px;}
+}
 
 /* Obrazovka „Zapněte polohu" (modal při selhání geolokace) */
 .loc-ov{position:fixed; inset:0; z-index:1300; display:flex; align-items:center; justify-content:center; padding:22px; background:rgba(8,13,20,0.68); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);}
@@ -1613,7 +1630,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .mv-toggle .mvt-btn{display:inline-flex; align-items:center; justify-content:center; gap:7px;}
 .mv-toggle .mvt-btn svg{width:16px; height:16px; stroke-width:2.25; fill:none; stroke:currentColor;  stroke-linecap:round; stroke-linejoin:round;}
 .mvt-n{font-size:11px; opacity:0.8;}
-@media (max-width:960px){
+@media (max-width:1040px){
   .map-app{display:flex; flex-direction:column; grid-template-columns:1fr; height:auto; gap:0; border-radius:var(--r-lg);}
   /* Na mobilu se vejde jen jedno: výběr nahoře, pod ním přepínač a pod ním
      buď seznam, nebo mapa. Výchozí je SEZNAM — na úvodní stránce mají být
@@ -1661,7 +1678,14 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   .foot-grid{grid-template-columns:repeat(2, minmax(0,1fr)); gap:30px 24px;}
   .foot-brand-col{grid-column:1 / -1;}
 }
-@media (max-width:880px){
+/* Přepnutí na tlačítko s menu. Zlom je 1040, ne 880. Mezi 881 a 960 px se
+   plná navigace nevešla na jeden řádek: „Ceny pozemků" a „Můj profil" se
+   zalomily na dva řádky a logo se dotklo prvního odkazu, takže v hlavičce
+   stálo „ParcelkaMapa". Nad 960 se sice vešla, ale až kolem 1040 má mezi
+   logem a prvním odkazem znatelnou mezeru — do té doby „Mapa" splývá
+   s názvem webu. Všechny čtyři bloky navigace musí mít tentýž zlom, jinak
+   by se naráz ukázalo tlačítko i plné menu. */
+@media (max-width:1040px){
   .nav-toggle{display:flex;}
   /* „Přidat pozemek" stále v liště (ne schované v menu). Kompaktní, hned viditelné. */
   .logo{font-size:20px;}
@@ -1914,6 +1938,13 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .rule-list li::before{content:""; position:absolute; left:0; top:2px; width:19px; height:19px; border-radius:50%; border:0;
   background:var(--c-ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px 12px no-repeat;
   box-shadow:var(--e1);}
+/* Číslované kroky: značka nese pořadí, ne fajfku. Fajfka na návodu tvrdí
+   „hotovo" u něčeho, co člověk teprve bude dělat, a k tomu se u každé
+   položky číslo psalo ještě jednou rukou do textu. */
+.rule-list.kroky{counter-reset:krok;}
+.rule-list.kroky li::before{counter-increment:krok; content:counter(krok);
+  background:var(--plocha-znacka); color:#fff; display:grid; place-items:center;
+  font-family:var(--font-mono); font-size:10.5px; font-weight:700; line-height:1;}
 .rule-list.no li::before{background:var(--c-exekuce) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 7l10 10M17 7L7 17' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") center/11px 11px no-repeat;
   box-shadow:var(--e1);}
 .rules-note{font-size:13px; color:var(--text-ondark-mute); line-height:1.6; margin-top:8px;}
@@ -2390,7 +2421,7 @@ body{background:var(--bg) var(--grad-plocha); background-size:cover;}
    Vizuálně zůstávají stejně velké; zvětšuje se plocha, na kterou jde
    klepnout.
    ===================================================================== */
-@media (max-width:880px){
+@media (max-width:1040px){
   .nav-toggle{width:44px; height:44px; align-items:center; justify-content:center; padding:0;}
   .filter-chip{min-height:40px;}
 }
@@ -2484,7 +2515,7 @@ footer a:focus-visible{outline-color:var(--accent-warm-bright);}
   .step .icon-badge{grid-row:auto; grid-column:1; margin-bottom:14px;}
   .step .idx, .step h3, .step p{grid-column:1;}
 }
-@media (max-width:960px){
+@media (max-width:1040px){
   .steps{grid-template-columns:1fr; gap:30px;}
 }
 
@@ -2498,7 +2529,7 @@ footer a:focus-visible{outline-color:var(--accent-warm-bright);}
    měděným proužkem, pozadí s teplým přechodem a mřížkou. Stejný jazyk
    jako zbytek webu, jen zmenšený do menu.
    ===================================================================== */
-@media (max-width:880px){
+@media (max-width:1040px){
   #nav{padding:10px 10px calc(14px + env(safe-area-inset-bottom, 0px));
     background:linear-gradient(180deg, #FAF8F4 0%, #F2F0EB 100%);
     border-radius:0 0 var(--r-lg) var(--r-lg); box-shadow:var(--e3);}
@@ -2585,7 +2616,7 @@ body::after{
   .step .idx, .step h3, .step p{position:relative; z-index:1;}
   .step .idx{background:var(--bg); display:inline-block; padding-right:14px;}
 }
-@media (max-width:960px){
+@media (max-width:1040px){
   .steps{gap:28px;}
   .step .idx{font-size:44px; margin-bottom:6px;}
   .step h3{font-size:20px;}
@@ -2708,6 +2739,10 @@ body::after{
 .okr-item{background:none; border:0; border-top:1px solid var(--line); border-radius:0;
   padding:14px 2px;}
 .okr-item:first-child{border-top:0;}
+/* Rohová značka patří ke KARTĚ — drží se jejího rohu. Tady karta není:
+   rámeček i pozadí jsou pryč a zbyl řádek. Značka pak visela ve vzduchu
+   jako nedokreslený roh u ničeho. Na řádku se nekreslí. */
+.okr-item::after{content:none;}
 
 /* Výběr okresu: rejstřík, ne dlaždice. Stejný zápis jako rozcestník krajů
    na hlavní stránce — web se tím čte jako jeden dokument, ne jako sbírka
@@ -2994,7 +3029,13 @@ h1, h2, h3,
    Klíč je v Plex Mono a prostrkaný, hodnota v antikve — ať je na první
    pohled vidět, co je popisek a co údaj.
    ------------------------------------------------------------------ */
+/* align-self:stretch je tu nosné. Hlavička je svislý flex a zarovnává
+   potomky na začátek (respektive na střed), takže si tenhle proužek bral
+   šířku svého OBSAHU: 557 px uvnitř 350px sloupce, tedy 187 px mimo
+   obrazovku. Jeho vlastní overflow-x pak neměl co posouvat a poslední
+   údaj se nedal přečíst ani posunout. */
 .hero-live{display:flex; flex-wrap:wrap; gap:0; margin-top:30px;
+  align-self:stretch; max-width:100%;
   border-top:1px solid rgba(255,255,255,0.20);}
 .hl-fact{display:flex; flex-direction:column; gap:5px; padding:16px 26px 0 0;
   margin-right:26px; text-decoration:none; min-width:0;
@@ -3248,3 +3289,8 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   padding:9px 15px; min-height:38px; cursor:pointer;}
 .dv-znovu:hover{filter:brightness(1.1);}
 .dv-znovu:focus-visible{outline:2px solid var(--text-ondark); outline-offset:2px;}
+
+/* Oddělovač mezi okresy v přehledu cen. Dřív to byl samostatný <span>
+   v zalamovaném flexu, takže se od svých sousedů odtrhl a zůstal viset
+   sám na konci řádku jako tečka bez věty. Teď patří k položce před ním. */
+.okr-place:not(:last-child)::after{content:"\00a0·"; color:var(--text-mute); font-weight:400;}

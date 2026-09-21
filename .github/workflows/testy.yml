@@ -148,6 +148,9 @@ jobs:
       - name: Hlídané místo a pozemky v okolí
         run: node scripts/test-okoli.mjs
 
+      - name: Rozvržení na všech šířkách a popisky stránek
+        run: node scripts/test-rozvrzeni.mjs
+
       - name: Pohyb (odezva mapy a měřítka, i s vypnutými animacemi)
         run: node scripts/test-pohyb.mjs
 

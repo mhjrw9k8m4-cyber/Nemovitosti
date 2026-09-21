@@ -348,8 +348,11 @@ for(const okres of eligibleOkres){
   list.sort((a,b)=>(a.price||1e15)-(b.price||1e15));
   const dispK = (KRAJ_META[kraj]||{}).disp || (kraj+' kraj');
 
-  const title = `Pozemky v okrese ${okres} — prodej, dražby, exekuce | Parcelka`;
-  const desc = `${count} ${pluralPozemek(count)} v okrese ${okres}${kraj?', '+dispK:''} na jedné mapě — prodeje, dražby i exekuce z veřejných zdrojů. ${minP?('Ceny od '+fmt(minP)+' Kč. '):''}Ověřte si nabídku v katastru.`;
+  // Google ořízne titulek kolem 60 znaků. „Pozemky v okrese Rychnov nad
+  // Kněžnou — prodej, dražby, exekuce | Parcelka" má 73 a ve výsledcích
+  // z něj zbyl useknutý cár. Kratší tvar říká totéž a vejde se celý.
+  const title = `Pozemky okres ${okres} — prodej a dražby | Parcelka`;
+  const desc = `${count} ${pluralPozemek(count)} v okrese ${okres} na jedné mapě — prodeje, dražby i exekuce z veřejných zdrojů.${minP?(' Ceny od '+fmt(minP)+' Kč.'):''}`;
   const items = list.slice(0,20).map((o,i)=>({"@type":"ListItem","position":i+1,"name":`${o.place} — ${TYPE_LABEL[o.type]||o.type}${o.area?', '+o.area+' m²':''}`}));
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky v okrese ${okres}`,"inLanguage":"cs","description":`Nabídky pozemků v okrese ${okres} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}};
   const rows = list.map(itemRow).join('\n');
@@ -450,8 +453,8 @@ for(const kraj of eligibleKraj){
   list.sort((a,b)=>(a.price||1e15)-(b.price||1e15));
   const rows = list.slice(0,12).map(itemRow).join('\n');
 
-  const title = `Pozemky ${meta.disp} — prodej, dražby, exekuce | Parcelka`;
-  const desc = `Pozemky ${meta.loc} na jedné mapě — ${count} ${pluralPozemek(count)} z veřejných zdrojů: prodeje, dražby i exekuce. ${minP?('Ceny od '+fmt(minP)+' Kč. '):''}Vyberte okres a ověřte nabídku v katastru.`;
+  const title = `Pozemky ${meta.disp} — prodej a dražby | Parcelka`;
+  const desc = `Pozemky ${meta.loc} na jedné mapě — ${count} ${pluralPozemek(count)} z veřejných zdrojů: prodeje, dražby i exekuce.${minP?(' Ceny od '+fmt(minP)+' Kč.'):''}`;
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky ${meta.disp}`,"inLanguage":"cs","description":`Nabídky pozemků ${meta.loc} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"}};
   const crumbs = [
     {name:'Mapa', href:'index.html', abs:SITE},
@@ -530,7 +533,7 @@ const drazby = all.filter(o=>o.type==='drazba').sort((a,b)=>(a.price||1e15)-(b.p
   const file='drazby-pozemku-nabidky.html';
   const rows = drazby.map(itemRow).join('\n');
   const title = `Dražby pozemků — aktuální nabídky v ČR | Parcelka`;
-  const desc = `${count} ${pluralPozemek(count)} v dražbě z celé ČR na jedné mapě — z veřejné evidence dražeb. ${minP?('Vyvolávací ceny od '+fmt(minP)+' Kč. '):''}Jak dražba funguje i na co si dát pozor.`;
+  const desc = `${count} ${pluralPozemek(count)} v dražbě z celé ČR na jedné mapě, z veřejné evidence dražeb.${minP?(' Vyvolávací ceny od '+fmt(minP)+' Kč.'):''}`;
   const items = drazby.slice(0,20).map((o,i)=>({"@type":"ListItem","position":i+1,"name":`${o.place} — dražba${o.area?', '+o.area+' m²':''}`}));
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Dražby pozemků v ČR","inLanguage":"cs","description":`Aktuální nabídky pozemků v dražbě z veřejné evidence dražeb.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}};
   const crumbs = [
@@ -589,7 +592,7 @@ ${rows}
   const natGroups = DRUH_GROUPS.filter(g=>priceNational[g]);
   const natCards = natGroups.map(g=>{
     const s=priceNational[g];
-    return `<div class="okr-stat" style="min-width:150px;"><b>${fmt(s.med)} Kč/m²</b><span>${esc(g)} · ${s.lo}–${s.hi} Kč/m² · ${s.n} nabídek</span></div>`;
+    return `<div class="okr-stat" style="min-width:150px;"><b>${fmt(s.med)} Kč/m²</b><span>${esc(g)} · ${fmt(s.lo)}–${fmt(s.hi)} Kč/m² · ${fmt(s.n)} nabídek</span></div>`;
   }).join('\n        ');
 
   // Kraje seřazené podle mediánu zemědělské půdy (nejvíc dat) – barevná „teplota".
@@ -610,7 +613,7 @@ ${rows}
     const link = hasKrajPage.has(x.k) ? krajFile(x.k) : ('index.html?kraj='+encodeURIComponent((KRAJ_META[x.k]||{}).mapName||x.k)+'#mapa');
     return `      <div class="okr-item" style="${heat(x.s.med)}">
         <a class="okr-place" href="${link}" style="text-decoration:none;">${esc(disp)}</a>
-        <span class="okr-meta">Zemědělská půda <b>${fmt(x.s.med)} Kč/m²</b> · rozpětí ${x.s.lo}–${x.s.hi} · ${x.s.n} nab.${les?` &nbsp;·&nbsp; les <b>${fmt(les.med)} Kč/m²</b> (${les.n})`:''}</span>
+        <span class="okr-meta">Zemědělská půda <b>${fmt(x.s.med)} Kč/m²</b> · rozpětí ${fmt(x.s.lo)}–${fmt(x.s.hi)} · ${fmt(x.s.n)} nab.${les?` &nbsp;·&nbsp; les <b>${fmt(les.med)} Kč/m²</b> (${les.n})`:''}</span>
       </div>`;
   }).join('\n');
 
@@ -626,7 +629,7 @@ ${rows}
     const link = hasOkresPage.has(x.ok) ? okresFile(x.ok) : ('index.html?kraj='+encodeURIComponent((KRAJ_META[OKRES_KRAJ[x.ok]]||{}).mapName||'')+'#mapa');
     return `      <div class="okr-item" style="${heatOk(x.s.med)}">
         <a class="okr-place" href="${link}" style="text-decoration:none;">${esc(x.ok)}</a>
-        <span class="okr-meta">Zemědělská půda <b>${fmt(x.s.med)} Kč/m²</b> · rozpětí ${x.s.lo}–${x.s.hi} · ${x.s.n} nab.</span>
+        <span class="okr-meta">Zemědělská půda <b>${fmt(x.s.med)} Kč/m²</b> · rozpětí ${fmt(x.s.lo)}–${fmt(x.s.hi)} · ${fmt(x.s.n)} nab.</span>
       </div>`;
   }).join('\n');
 
@@ -634,7 +637,10 @@ ${rows}
   const cheapest = okrData.slice(-3).reverse();
   const dearest  = okrData.slice(0,3);
   const okrLink = ok => hasOkresPage.has(ok) ? okresFile(ok) : ('index.html?kraj='+encodeURIComponent((KRAJ_META[OKRES_KRAJ[ok]]||{}).mapName||'')+'#mapa');
-  const chips = list => list.map(x=>`<a class="okr-place" href="${okrLink(x.ok)}" style="text-decoration:none;">${esc(x.ok)} <b>${fmt(x.s.med)} Kč/m²</b></a>`).join('<span class="crumb-sep" aria-hidden="true">·</span> ');
+  /* Oddělovač NESMÍ být samostatný prvek: kontejner zalamuje a tečka pak
+     doputuje sama na konec řádku a visí tam bez ničeho. Přilepí se proto
+     pevnou mezerou k položce před sebou (viz .okr-place::after v CSS). */
+  const chips = list => list.map(x=>`<a class="okr-place" href="${okrLink(x.ok)}" style="text-decoration:none;">${esc(x.ok)} <b>${fmt(x.s.med)} Kč/m²</b></a>`).join('');
   const highlight = (cheapest.length && dearest.length) ? `
       <div class="okr-stats" style="gap:14px;">
         <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span style="color:var(--c-sale-ink,#3C55A2);">Nejlevnější zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(cheapest)}</div></div>
@@ -642,8 +648,8 @@ ${rows}
       </div>` : '';
 
   const natZ = priceNational[key];
-  const title = 'Ceny pozemků v ČR — kolik stojí m² pole, lesa a zahrady | Parcelka';
-  const desc = `Kolik stojí metr čtvereční pozemku v Česku? Orientační medián cen z aktuálních nabídek podle druhu (zemědělská půda, les, zahrada) a podle kraje.${natZ?' Zemědělská půda medián '+fmt(natZ.med)+' Kč/m².':''} Zdarma, z veřejných zdrojů.`;
+  const title = 'Ceny pozemků v ČR — kolik stojí m² půdy | Parcelka';
+  const desc = `Kolik stojí metr čtvereční pozemku v Česku? Orientační medián cen z aktuálních nabídek podle druhu a kraje.${natZ?' Zemědělská půda medián '+fmt(natZ.med)+' Kč/m².':''}`;
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Ceny pozemků v ČR","inLanguage":"cs","description":"Orientační medián cen pozemků (Kč/m²) podle druhu a kraje z aktuálních nabídek.","mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"}};
   const crumbs=[{name:'Mapa',href:'index.html',abs:SITE},{name:'Ceny pozemků',abs:SITE+file}];
 
@@ -740,7 +746,7 @@ for(const p of okresPages){
 }
 if(lastKraj!==null) okresBody += `          </div>\n`;
 
-const idxTitle='Pozemky podle krajů a okresů — prodej, dražby a exekuce | Parcelka';
+const idxTitle='Pozemky podle krajů a okresů — celá ČR | Parcelka';
 const idxDesc=`Přehled pozemků v ${krajPages.length} krajích a ${okresPages.length} okresech Česka — prodeje, dražby a exekuce z veřejných zdrojů na jedné mapě. Vyberte region a prohlédněte si aktuální nabídky.`;
 const idxJsonld={"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky podle krajů a okresů","inLanguage":"cs","description":idxDesc,"mainEntityOfPage":"https://www.parcelaka.cz/pozemky-podle-okresu.html","publisher":{"@type":"Organization","name":"Parcelka"}};
 const idxCrumbs=[{name:'Mapa', href:'index.html', abs:SITE},{name:'Pozemky podle krajů a okresů', abs:SITE+'pozemky-podle-okresu.html'}];

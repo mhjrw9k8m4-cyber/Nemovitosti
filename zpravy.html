@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=850085a5">
+  <link rel="stylesheet" href="css/styles.css?v=0c81a0ef">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .add-hero.app-hero{padding:30px 0 4px;}
@@ -157,8 +157,8 @@
       '<div class="zp-card zp-auth">' +
         '<h2>Přihlaste se</h2>' +
         '<p>Zprávy jsou soukromé, tak se stačí rychle přihlásit (nebo si během chvilky vytvořit účet). Váš e-mail nikdo z prodejců ani kupujících neuvidí.</p>' +
-        '<input class="zp-in" id="ze" type="email" inputmode="email" autocomplete="email" placeholder="Váš e-mail">' +
-        '<input class="zp-in" id="zp" type="password" autocomplete="current-password" placeholder="Heslo">' +
+        '<input class="zp-in" id="ze" type="email" inputmode="email" autocomplete="email" placeholder="Váš e-mail" aria-label="Váš e-mail">' +
+        '<input class="zp-in" id="zp" type="password" autocomplete="current-password" placeholder="Heslo" aria-label="Heslo">' +
         '<button class="zp-btn" id="zlogin">Přihlásit se</button>' +
         '<button class="zp-btn sec" id="zsignup">Vytvořit účet</button>' +
         '<div class="zp-msg' + (err ? ' err' : '') + '" id="zauthmsg">' + (msg || '') + '</div>' +
@@ -248,7 +248,7 @@
         '<div class="zp-err" id="zc-err" hidden></div>' +
         '<div class="zp-pocet" id="zc-pocet" hidden></div>' +
         '<div class="zp-compose">' +
-          '<textarea class="zp-ta" id="zc-ta" rows="1" placeholder="Napište zprávu…" maxlength="' + (Z.MAX_ZPRAVA + 100) + '"></textarea>' +
+          '<textarea class="zp-ta" id="zc-ta" rows="1" aria-label="Text zprávy" placeholder="Napište zprávu…" maxlength="' + (Z.MAX_ZPRAVA + 100) + '"></textarea>' +
           '<button class="zp-send" id="zc-send" aria-label="Odeslat">' + ICON_SEND + '</button>' +
         '</div>' +
         '<div class="zp-note">Soukromá zpráva v aplikaci. Nesdílejte hesla ani platby předem — vždy si pozemek i vlastníka ověřte v katastru.</div>' +
