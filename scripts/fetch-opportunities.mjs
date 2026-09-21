@@ -42,18 +42,49 @@ function jitterAround(lat, lng, seedStr, amp) {
   return { lat: +(lat + j(0)).toFixed(5), lng: +(lng + j(8)).toFixed(5) };
 }
 
+// Vzdušná vzdálenost v km (na kontrolu, jestli výsledek geokódování vůbec
+// může patřit do uvedeného okresu).
+function kmMezi(lat1, lng1, lat2, lng2) {
+  const r = Math.PI / 180, dLat = (lat2 - lat1) * r, dLng = (lng2 - lng1) * r;
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+/* Nejdál, kam to od středu okresu ještě může být. Změřeno na datech:
+   u nabídek, jejichž poloha sedí s okresem, je nejvzdálenější 47 km
+   (medián 12, devětadevadesátý percentil 30). Padesát pět km je tedy
+   pohodlně nad vším, co je v pořádku, a přitom pod zjevnými omyly —
+   ty byly 84 až 180 km daleko. */
+const OKRES_DOSAH_KM = 55;
+
 // Přesnější poloha podle názvu katastrálního území (Nominatim / OpenStreetMap).
 const GEO_UA = { 'user-agent': 'PozemkomatBot/0.1 (+https://github.com/mhjrw9k8m4-cyber/Nemovitosti)' };
+/* Okres se dosud předával jen do klíče mezipaměti, ale do DOTAZU ne — ptali
+   jsme se prostě na „Police, Česko" a brali první výsledek. Jenže Polic je
+   v Česku víc: nabídka z okresu Vsetín tak skončila u Jemnice, 177 km jinde.
+   Stejně dopadly Rataje (180 km), Lukavec (125), Karlovice (90), Křakov (84).
+   Okres teď jde do dotazu a z výsledků se bere první, který od středu toho
+   okresu není dál, než okres vůbec může sahat. Když nesedí ani jeden,
+   vrátíme null a poloha zůstane na středu okresu — nepřesná, ale ve
+   správném kraji. To je pořád lepší než špendlík na druhém konci republiky. */
 async function geocodeName(place, okres) {
   const key = (place + '|' + okres).toLowerCase();
   if (key in GEO_CACHE) return GEO_CACHE[key];
+  const stred = OKRESY_MAP[okres] || null;
   let coord = null;
   try {
-    const q = encodeURIComponent(place + ', Česko');
-    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=cz&q=${q}`, { headers: GEO_UA });
+    const q = encodeURIComponent(place + (okres ? ', okres ' + okres : '') + ', Česko');
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=cz&q=${q}`, { headers: GEO_UA });
     if (r.ok) {
       const j = await r.json();
-      if (Array.isArray(j) && j.length) coord = [+parseFloat(j[0].lat).toFixed(5), +parseFloat(j[0].lon).toFixed(5)];
+      if (Array.isArray(j)) {
+        for (const v of j) {
+          const la = +parseFloat(v.lat).toFixed(5), ln = +parseFloat(v.lon).toFixed(5);
+          if (!isFinite(la) || !isFinite(ln)) continue;
+          if (stred && kmMezi(stred[0], stred[1], la, ln) > OKRES_DOSAH_KM) continue;
+          coord = [la, ln];
+          break;
+        }
+      }
     }
   } catch { /* síť selhala – necháme null */ }
   GEO_CACHE[key] = coord;
@@ -645,10 +676,19 @@ async function main() {
   // Zpřesnění polohy: až u vybraných příležitostí dohledáme souřadnice podle
   // názvu katastrálního území (Nominatim). Body pak sedí na správné obci, ne
   // jen ve středu okresu. Přeskakujeme záznamy s reálnou GPS z evidence dražeb.
-  let refined = 0;
+  let refined = 0, zamitnuto = 0;
   for (const o of fresh) {
     if (o._gps) continue;
-    const nm = await geocodeName(o.place, o.okres);
+    let nm = await geocodeName(o.place, o.okres);
+    /* Pojistka i na cestě z mezipaměti: ta si pamatuje i výsledky uložené
+       dřív, než se okres začal ověřovat. Špatný bod se nesmí vrátit zpátky
+       jen proto, že už jednou uložený byl. */
+    const stred = OKRESY_MAP[o.okres];
+    if (nm && stred && kmMezi(stred[0], stred[1], nm[0], nm[1]) > OKRES_DOSAH_KM) {
+      const klic = (o.place + '|' + o.okres).toLowerCase();
+      delete GEO_CACHE[klic]; geoCacheDirty = true;
+      nm = null; zamitnuto++;
+    }
     if (nm) {
       const j = jitterAround(nm[0], nm[1], (o.parcel || '') + o.place, 0.012);
       o.lat = j.lat; o.lng = j.lng; refined++;
@@ -656,7 +696,8 @@ async function main() {
   }
   fresh.forEach((o) => { delete o._gps; delete o._key; });
   if (geoCacheDirty) writeFileSync(GEOCACHE, JSON.stringify(GEO_CACHE, null, 0) + '\n', 'utf8');
-  console.log(`Zpřesněno podle názvu KÚ: ${refined}/${fresh.length}.`);
+  console.log(`Zpřesněno podle názvu KÚ: ${refined}/${fresh.length}.` +
+    (zamitnuto ? ` Zamítnuto jako jiná obec téhož jména: ${zamitnuto} (zůstávají na středu okresu).` : ''));
 
   // Kdy se pozemek objevil poprvé. Data to dosud nenesla, takže se nedalo
   // říct „přibylo dnes" — šlo jen spočítat, co uživatel ještě neviděl, a to

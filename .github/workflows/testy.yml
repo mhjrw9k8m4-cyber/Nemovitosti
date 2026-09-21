@@ -151,6 +151,9 @@ jobs:
       - name: Rozvržení na všech šířkách a popisky stránek
         run: node scripts/test-rozvrzeni.mjs
 
+      - name: Integrita datového souboru
+        run: node scripts/test-data.mjs
+
       - name: Pohyb (odezva mapy a měřítka, i s vypnutými animacemi)
         run: node scripts/test-pohyb.mjs
 
