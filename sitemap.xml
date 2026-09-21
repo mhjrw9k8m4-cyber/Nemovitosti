@@ -191,12 +191,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-rakovnik.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-benesov.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-benesov.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-rakovnik.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -266,12 +266,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-plzen-jih.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-klatovy.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-klatovy.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-plzen-jih.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -536,17 +536,17 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-ostrava-mesto.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemky-okres-bruntal.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemky-okres-opava.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemky-okres-ostrava-mesto.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
