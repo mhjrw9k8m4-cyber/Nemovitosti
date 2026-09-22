@@ -508,11 +508,32 @@ body.vm-otevreno{overflow:hidden;}
    Menu ten rámec nepotřebuje: hlavička je position:sticky, což je
    polohovaný prvek, takže stačí menu položit jako position:absolute
    a „100 %" se počítá z hlavičky úplně stejně (viz #nav níž). */
-header{border-bottom:1px solid var(--line); padding:20px 0; position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(255,255,255,0.80); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:padding .2s ease, opacity .14s ease;}
-/* Zhasnutá při rolování. Jen průhlednost, žádný posun: posouvat se dá
-   plynule jen tehdy, když to prohlížeč zvládne překreslit včas — a přesně
-   na tom se to na iPhonu lámalo. Zhasnutí je okamžité a nemá co zpozdit. */
-header.hl-zhasnuta{opacity:0; pointer-events:none;}
+header{border-bottom:1px solid var(--line); padding:20px 0; position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(255,255,255,0.80); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:padding .2s ease;}
+/* PŘICHÁZÍ POMALU, ODCHÁZÍ RYCHLE — každý směr má svůj vlastní čas.
+   Objevit se z ničeho nic za desetinu vteřiny působí jako cvaknutí:
+   hlavička „připlave rychlostí světla" a člověk nestihne pochopit, odkud.
+   Návrat proto trvá skoro půl vteřiny a doprovází ho pár pixelů shora,
+   takže je vidět, že přijíždí, ne že se zjevila.
+   Zmizet naopak musí hned: kdo roluje, čte obsah, a hlavička, která
+   doplouvá půl vteřiny, mu přes něj leží.
+   Ten posun je JEN na příjezdu a jen ve chvíli, kdy stránka prokazatelně
+   stojí (js/hlavicka.js to ověřuje). Při rolování se neposouvá nic —
+   právě posun za pohybu se na iPhonu dřív lámal. */
+/* Zhasnutí má svůj vlastní (rychlý) přechod. Příjezd naopak NEMÁ žádný —
+   ten obstarává jen animace níž. Kdyby ho měl i základní stav, hlavička by
+   se objevila i bez animace a její vypnutí by nikdo nepoznal. */
+header.hl-zhasnuta{opacity:0; pointer-events:none; transition:opacity .11s ease-in;}
+/* Příjezd je krátká animace, ne přechod mezi dvěma stavy — a to schválně.
+   Kdyby se posun schoval do zhasnutého stavu, stála by hlavička po celou
+   dobu rolování o sedm pixelů výš. Neviděl by to nikdo (je průhledná), ale
+   „hlavička je vždycky přesně nahoře" je pravidlo, o které se tu opíráme
+   po čtyřech opravách té mezery — a pravidlo, které platí jen někdy, je
+   k ničemu. Takhle má hlavička v KLIDU i ve zhasnutém stavu polohu nula a
+   posouvá se jen těch pár okamžiků, kdy přijíždí a stránka prokazatelně
+   stojí (js/hlavicka.js to ověřuje dvěma snímky po sobě). */
+@keyframes hlPrijezd{from{opacity:0; transform:translateY(-7px);} to{opacity:1; transform:none;}}
+header.hl-prijezd{animation:hlPrijezd .42s cubic-bezier(.22,.61,.36,1);}
+@media (prefers-reduced-motion:reduce){ header.hl-prijezd{animation:none;} }
 /* Kdo je v hlavičce klávesnicí, o ni nesmí přijít ani při rolování. */
 header:focus-within{opacity:1 !important; pointer-events:auto !important;}
 @media (prefers-reduced-motion:reduce){ header{transition:none;} }

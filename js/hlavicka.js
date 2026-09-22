@@ -53,14 +53,30 @@
     return document.body.classList.contains('nav-open') || h.contains(document.activeElement);
   }
 
+  /* Příjezd. Rozsvítit se za desetinu vteřiny vypadá, že se hlavička
+     zjevila — „připlave rychlostí světla". Krátká animace (necelá půl
+     vteřiny, pár pixelů shora) ukáže, odkud přišla. Třída se po dojetí
+     zase sundá, aby hlavička v klidu neměla žádnou transformaci: pevně
+     umístěný prvek ji nepotřebuje a na Safari je historicky zdroj potíží. */
   function rozsvit() {
     if (!zhasnuta) return;
     zhasnuta = false;
     h.classList.remove('hl-zhasnuta');
+    h.classList.remove('hl-prijezd');
+    // Vynucené přepočítání, jinak by se animace nespustila znovu.
+    void h.offsetWidth;
+    h.classList.add('hl-prijezd');
   }
+  h.addEventListener('animationend', function (e) {
+    if (e.animationName === 'hlPrijezd') h.classList.remove('hl-prijezd');
+  });
   function zhasni() {
     if (zhasnuta || musiSvitit()) return;
     zhasnuta = true;
+    /* Běžící animace příjezdu si drží průhlednost sama a zhasnutí by
+       přebila — hlavička by ještě půl vteřiny svítila přes obsah. Proto
+       se animace nejdřív sundá. (Chyceno testem, ne odhadem.) */
+    h.classList.remove('hl-prijezd');
     h.classList.add('hl-zhasnuta');
   }
 

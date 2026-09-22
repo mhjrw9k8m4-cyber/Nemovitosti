@@ -350,6 +350,80 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
   await ctx.close();
 }
 
+/* --- 6) Příjezd se musí dát stihnout okem ----------------------------
+ *
+ * Hlavička se vracela za čtrnáct setin vteřiny, což na telefonu vypadá,
+ * že se zjevila — „připlave rychlostí světla a působí to zvláštně".
+ * Návrat má být krátká lehká animace (kolem půl vteřiny), odchod naopak
+ * okamžitý, jinak hlavička při rolování leží přes obsah. Jsou to dvě
+ * různá čísla pro dva různé směry, a test hlídá obě. */
+{
+  const { ctx, p } = await otevri(TELEFON, 'index.html');
+  const v = await p.evaluate(async () => {
+    const h = document.querySelector('header');
+    const spi = (ms) => new Promise((r) => setTimeout(r, ms));
+    const cas = (el, vlastnost) => {
+      const c = getComputedStyle(el);
+      const jm = c.transitionProperty.split(',').map((x) => x.trim());
+      const d = c.transitionDuration.split(',').map((x) => parseFloat(x) || 0);
+      const i = jm.indexOf(vlastnost);
+      return i >= 0 ? d[i] : (jm.indexOf('all') >= 0 ? d[jm.indexOf('all')] : 0);
+    };
+    window.scrollTo({ top: 1400, behavior: 'instant' });
+    await spi(900);
+    // Příjezd je animace (ne přechod mezi stavy), aby hlavička v klidu
+    // neměla žádnou transformaci — čte se tedy doba animace.
+    h.classList.add('hl-prijezd');
+    const ca = getComputedStyle(h);
+    const prichod = parseFloat(ca.animationDuration) || 0;
+    const jmenoAnimace = ca.animationName;
+    h.classList.remove('hl-prijezd');
+    const odchod = cas(h, 'opacity');
+    /* A hlavně: příjezd se musí opravdu VYKRESLIT postupně, ne jen mít
+       hezkou hodnotu v CSS. Projde se to skutečnou cestou — zarolovat,
+       zastavit — a sleduje se průhlednost po malých krocích. Když se
+       hlavička jen přepne, žádný mezistav se nenajde. */
+    window.scrollBy({ top: 300, behavior: 'instant' });
+    await spi(40);
+    let mezistavu = 0;
+    for (let i = 0; i < 45; i++) {
+      const o = parseFloat(getComputedStyle(h).opacity);
+      if (o > 0.05 && o < 0.95) mezistavu++;
+      await spi(30);
+    }
+    /* A ještě jedna past, na kterou jsem sám naletěl: běžící animace
+       příjezdu si drží průhlednost sama, takže by přebila zhasnutí a
+       hlavička by při novém rolování ještě půl vteřiny svítila přes
+       obsah. Zastavit — nechat příjezd rozběhnout — a hned zas rolovat. */
+    await spi(900);
+    window.scrollBy({ top: 200, behavior: 'instant' });
+    await spi(250);                       // příjezd se zrovna rozjel
+    window.scrollBy({ top: 200, behavior: 'instant' });
+    await spi(140);
+    const pripohybuZnovu = parseFloat(getComputedStyle(h).opacity);
+    await spi(900);
+    return { prichod, jmenoAnimace, odchod, mezistavu, pripohybuZnovu,
+      transformVKlidu: getComputedStyle(h).transform,
+      konec: parseFloat(getComputedStyle(h).opacity) };
+  });
+  pravda('příjezd hlavičky trvá aspoň třetinu vteřiny', v.prichod >= 0.3,
+    `${v.prichod} s — to je pro oko cvaknutí, ne animace`);
+  pravda('ale ne víc než vteřinu', v.prichod <= 1, `${v.prichod} s`);
+  pravda('a doprovází ho posun (ne jen prolnutí)', v.jmenoAnimace === 'hlPrijezd',
+    `animace se jmenuje „${v.jmenoAnimace}" — posun shora tam není`);
+  pravda('v klidu ale hlavička žádnou transformaci nemá',
+    v.transformVKlidu === 'none', `transform: ${v.transformVKlidu}`);
+  pravda('odchod je naopak rychlý', v.odchod <= 0.2,
+    `${v.odchod} s — hlavička by při rolování doplouvala přes obsah`);
+  pravda('a příjezd se opravdu vykresluje postupně, ne přepnutím',
+    v.mezistavu >= 6, `jen ${v.mezistavu} mezistavů z 45 vzorků — hlavička se přepne (nebo plyne moc krátce)`);
+  pravda('rozjetý příjezd nepřebije zhasnutí při novém rolování',
+    v.pripohybuZnovu < 0.5,
+    `hlavička měla ${v.pripohybuZnovu} — doplouvá přes obsah, i když už se zase roluje`);
+  pravda('a nakonec je úplně vidět', v.konec === 1, `${v.konec}`);
+  await ctx.close();
+}
+
 await prohlizec.close();
 console.log('\nLepivá hlavička — drží nahoře a nic pod ní neprosvítá');
 console.log(zpravy.join('\n'));
