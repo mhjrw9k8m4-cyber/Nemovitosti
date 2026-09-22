@@ -51,6 +51,9 @@ jobs:
       - name: Posuvník ceny a výměry (stupnice a histogram)
         run: node scripts/test-rozsah.mjs
 
+      - name: Co je u pozemku (čtení sítí a podílu z popisu)
+        run: node scripts/test-vybaveni.mjs
+
       - name: Razítka verzí (aby lidem nechodila stará kopie)
         run: node scripts/test-verze.mjs
 

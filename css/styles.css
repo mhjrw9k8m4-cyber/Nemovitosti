@@ -887,6 +887,20 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .map-num:focus{outline:2px solid var(--copper-bright); outline-offset:1px; border-color:var(--copper-bright);}
 /* Rychlé volby jsou zkratka, ne omezení — po klepnutí se čísla objeví
    v políčkách a dají se dál upravit. */
+/* Co je u pozemku zavedené. Pilulky jako u kategorií, ale s vlastním
+   významem: zapínají se nezávisle na sobě a každá nese počet. Pilulka bez
+   nabídek se vůbec nezobrazí — nabízet filtr, po kterém zůstane prázdno,
+   je horší než ho nemít. */
+.mcv-rada{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
+.mcv-btn{display:inline-flex; align-items:center; gap:6px; font:inherit; font-size:12.5px; font-weight:600;
+  cursor:pointer; min-height:38px; padding:8px 13px; border-radius:var(--r-pill);
+  border:1px solid var(--line-ui); background:none; color:var(--text-ondark-mute);
+  transition:background .15s ease, color .15s ease, border-color .15s ease;}
+.mcv-btn:hover{border-color:var(--copper); color:var(--copper);}
+.mcv-btn.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
+.mcv-n{font-size:11px; font-weight:700; opacity:.75; font-variant-numeric:tabular-nums;}
+.mcv-pozn{margin:7px 0 0; font-size:11.5px; line-height:1.45; color:var(--muted);}
+
 /* CENA A VÝMĚRA: klidný souhrn v panelu, ovládání na celé obrazovce.
  *
  * Čtvrtý pokus, a tentokrát se změnilo zadání, ne jen vzhled. Předchozí tři

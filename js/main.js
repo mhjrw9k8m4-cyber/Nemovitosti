@@ -817,6 +817,18 @@
      sestavení filtrů, a „var" dole by v tu chvíli bylo ještě undefined.
      (Chyceno až v prohlížeči — v konzoli to spadlo na „reading 'push'".) */
   var POSUVNIKY = [];
+  /* Co je u pozemku zavedené (elektřina, voda…) a jestli chceme jen celé
+     pozemky, ne podíly. Vyčteno z popisů inzerátů — viz js/vybaveni.js. */
+  var zadaneVybaveni = [];   // klíče, které musí pozemek mít
+  var jenCelek = false;      // skrýt to, co je v popisu označené jako podíl
+  /* POZOR na pořadí. Tyhle dvě proměnné se plní v postavVybaveni(), které
+     se volá hned po sestavení filtrů — tedy o dva tisíce řádků VÝŠ, než
+     kde ta funkce v souboru stojí. Deklarace „var" se sice vytáhne nahoru,
+     ale přiřazení ne, takže dole by v tu chvíli bylo undefined. Naletěl
+     jsem na to v jedné relaci třikrát (POSUVNIKY, vybaveniEl, tohle pole),
+     pokaždé to spadlo až v prohlížeči na „reading 'push'". */
+  var vybaveniEl = null;
+  var VYBAVENI_PILULKY = [];
   /* Kdyby se js/hledani.js nenačetl (síť odpadla uprostřed načítání),
      hledá se postaru jedním podřetězcem: hůř, ale hledá. Výpis se kvůli
      chybějícímu souboru nesmí přestat vykreslovat. */
@@ -1095,6 +1107,7 @@
     // Posuvníky ceny a výměry se staví jednou; zarážky se pak už nemění,
     // aby táhlo neposkakovalo pokaždé, když se zafiltruje něco jiného.
     postavPosuvniky();
+    postavVybaveni();
   }
   /* Čísla u kategorií se počítala jednou při startu a pak už se neměnila.
      V režimu okolí tak seznam ukazoval deset pozemků, zatímco nad ním
@@ -2359,6 +2372,14 @@
     // Štítek v legendě říká „do 7 dní" — filtr musí počítat stejně (dřív pouštěl 14).
     var okUrgent = !urgentOnly || isUrgent(d);
     var okFav = !favOnly || isFav(d);
+    /* Vybavení se bere z popisu nabídky. Co v popisu není, není známé —
+       takový pozemek se tedy do výběru „má elektřinu" nedostane, ale
+       nikde se netvrdí, že elektřinu nemá. */
+    var okVybaveni = true;
+    for (var vi = 0; vi < zadaneVybaveni.length; vi++) {
+      if (!d.site || d.site.indexOf(zadaneVybaveni[vi]) < 0) { okVybaveni = false; break; }
+    }
+    var okCelek = !jenCelek || !d.podil;
     var okPerM2 = !maxPerM2 || (hasArea(d) && d.price && (d.price / d.area) <= maxPerM2);
     var okKraj = krajFiltr === 'all' || (d._gkraj || krajOf(d)) === krajFiltr;
     // „Pod obvyklou cenou" bere tentýž odhad, jaký se ukazuje na kartě —
@@ -2384,7 +2405,7 @@
     var okSkryt = ukazSkryte || !jeSkryty(d);
     var okProsle = ukazProsle || !jeProsle(d);
     return okType && okSearch && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
-      && okPerM2 && okKraj && okLevne && okOkoli && okProsle;
+      && okPerM2 && okKraj && okLevne && okOkoli && okProsle && okVybaveni && okCelek;
   }
   /** Projde pozemek všemi filtry KROMĚ okolí — aby šlo poctivě spočítat,
       kolik by jich bylo ve větším okruhu (a ne kolik jich je celkem). */
@@ -2516,6 +2537,8 @@
     if (activeDruh && activeDruh !== 'all') n++;
     if (urgentOnly) n++;
     if (favOnly) n++;
+    if (zadaneVybaveni.length) n += zadaneVybaveni.length;
+    if (jenCelek) n++;
     if (sortMode && sortMode !== 'demand') n++;
     if (n > 0) { msfBadge.textContent = n; msfBadge.hidden = false; }
     else { msfBadge.hidden = true; }
@@ -2760,6 +2783,7 @@
         if (pb) pb.addEventListener('click', vypniOkoli);
         prepocitejCipy();
         prekresliPosuvniky();
+        prekresliVybaveni();
         updatePolys();
         return;
       }
@@ -2794,6 +2818,7 @@
     }
     prepocitejCipy();   // čísla u kategorií musí sedět s tím, co je vidět
     prekresliPosuvniky(); // sloupce a táhla u ceny a výměry podle ostatních filtrů
+    prekresliVybaveni(); // pilulky „co je u pozemku" a jejich počty
     updatePolys(); // tvary parcel podle aktuálního filtru
   }
 
@@ -2806,6 +2831,7 @@
     // Rozsahy ceny a výměry se vymažou i tady — políčka jsou teď v okně
     // přes celou obrazovku, ale patří k témuž filtru.
     POSUVNIKY.forEach(function (p) { p.poleOd.value = ''; p.poleDo.value = ''; p.prvni = -1; });
+    zadaneVybaveni = []; jenCelek = false;
     if (cenaEl) cenaEl.dispatchEvent(new Event('pk-reset'));
     if (urgentEl) { urgentEl.classList.remove('on'); urgentEl.setAttribute('aria-pressed', 'false'); }
     filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
@@ -3159,6 +3185,72 @@
     if (!el) return;
     ['input', 'change', 'pk-reset'].forEach(function (ev) { el.addEventListener(ev, prectiRozsahy); });
   });
+  /* ---------- Co je u pozemku zavedené ----------
+     Elektřina, voda, kanalizace, plyn, příjezd — a „jen celé pozemky".
+     Všechno se čte z POPISU nabídky (js/vybaveni.js dělá vlastní rozbor
+     při sběru dat). Proto tu platí dvě pravidla:
+       · Pilulka, pod kterou není ani jedna nabídka, se vůbec nezobrazí.
+         Nabízet filtr, po kterém zůstane prázdno, je horší než ho nemít.
+       · Nikde se netvrdí, že zbytek nabídky elektřinu NEMÁ. U nabídek bez
+         popisu se to prostě neví a poznámka pod pilulkami to říká nahlas. */
+  function postavVybaveni() {
+    vybaveniEl = document.getElementById('mc-vybaveni');
+    if (!vybaveniEl || !window.PKVybaveni) return;
+    var rada = vybaveniEl.querySelector('.mcv-rada');
+    var def = window.PKVybaveni.SITE.map(function (x) { return { klic: x.klic, nazev: x.nazev, druh: 'site' }; });
+    def.push({ klic: 'celek', nazev: 'Jen celé pozemky', druh: 'celek' });
+    def.forEach(function (d) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mcv-btn';
+      b.setAttribute('aria-pressed', 'false');
+      b.innerHTML = '<span>' + d.nazev + '</span><span class="mcv-n"></span>';
+      b.addEventListener('click', function () {
+        if (d.druh === 'celek') jenCelek = !jenCelek;
+        else {
+          var i = zadaneVybaveni.indexOf(d.klic);
+          if (i >= 0) zadaneVybaveni.splice(i, 1); else zadaneVybaveni.push(d.klic);
+        }
+        renderList();
+      });
+      rada.appendChild(b);
+      VYBAVENI_PILULKY.push({ def: d, el: b, cislo: b.querySelector('.mcv-n') });
+    });
+  }
+
+  function prekresliVybaveni() {
+    if (!VYBAVENI_PILULKY.length) return;
+    /* Počty se počítají BEZ vlastního omezení té které pilulky — jinak by
+       zapnutá pilulka hlásila počet sama za sebe a ostatní nuly. */
+    var puvodniSite = zadaneVybaveni, puvodniCelek = jenCelek;
+    var jeCo = false;
+    VYBAVENI_PILULKY.forEach(function (p) {
+      if (p.def.druh === 'celek') { jenCelek = false; }
+      else { zadaneVybaveni = puvodniSite.filter(function (k) { return k !== p.def.klic; }); }
+      var n = 0;
+      try {
+        for (var i = 0; i < DATA.length; i++) {
+          var d = DATA[i];
+          if (!visible(d)) continue;
+          if (p.def.druh === 'celek') { if (!d.podil) n++; }
+          else if (d.site && d.site.indexOf(p.def.klic) >= 0) n++;
+        }
+      } finally { zadaneVybaveni = puvodniSite; jenCelek = puvodniCelek; }
+      /* „Jen celé" má smysl jen tehdy, když nějaké podíly vůbec známe —
+         jinak by to tvrdilo výběr tam, kde se nevybírá nic. */
+      var maSmysl = p.def.druh === 'celek'
+        ? DATA.some(function (d) { return d.podil; })
+        : n > 0;
+      p.el.hidden = !maSmysl;
+      if (maSmysl) jeCo = true;
+      p.cislo.textContent = n ? fmt(n) : '';
+      var zapnuta = p.def.druh === 'celek' ? jenCelek : zadaneVybaveni.indexOf(p.def.klic) >= 0;
+      p.el.classList.toggle('on', zapnuta);
+      p.el.setAttribute('aria-pressed', zapnuta ? 'true' : 'false');
+    });
+    vybaveniEl.hidden = !jeCo;
+  }
+
   /* ---------- Cena a výměra: souhrn v panelu, ovládání na celé obrazovce
      Tři pokusy předtím (pět pilulek, osm pilulek s počty, posuvník) měly
      společné to, že se snažily vejít do úzkého sloupce mezi ostatní filtry.

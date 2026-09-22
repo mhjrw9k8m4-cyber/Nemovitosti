@@ -20,7 +20,22 @@ import { okresPodleGPS } from './okres-podle-gps.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
+import { createRequire } from 'node:module';
 const __dirname = dirname(fileURLToPath(import.meta.url));
+/* Co je u pozemku zavedené a jestli nejde jen o podíl — vytahuje se z
+   POPISU, který se u většiny zdrojů stahoval už dávno a jen se zahazoval
+   (používal se pouze k určení druhu). Pravidla jsou ve sdíleném modulu,
+   ať je web i robot čtou stejně a ať se dají testovat bez sítě. */
+const PKVybaveni = createRequire(import.meta.url)(join(dirname(fileURLToPath(import.meta.url)), '..', 'js', 'vybaveni.js'));
+/* Zapisuje se jen to, co se opravdu našlo. Prázdné pole u dvou tisíc
+   záznamů by soubor jen nafouklo a na mobilu zdržovalo. */
+function pridejVybaveni(o, text) {
+  if (!text) return o;
+  const v = PKVybaveni.najdi(text);
+  if (v.site.length) o.site = v.site;
+  if (v.podil) o.podil = true;
+  return o;
+}
 const OUT = join(__dirname, '..', 'data', 'opportunities.json');
 const OKRESY = join(__dirname, '..', 'data', 'okresy.json');
 const GEOCACHE = join(__dirname, '..', 'data', 'geocode-cache.json');
@@ -287,6 +302,7 @@ async function fetchOkdrazby() {
           _gps: typeof j.lat === 'number' && typeof j.lon === 'number',
           url: 'https://www.okdrazby.cz/drazba/' + id,
         });
+        pridejVybaveni(out[out.length - 1], txt);
       } catch { /* přeskoč rozbité ID */ }
     }
   }
@@ -404,6 +420,7 @@ async function fetchBezrealitky() {
         _gps: typeof gps.lat === 'number' && typeof gps.lng === 'number',
         url: a.uri ? 'https://www.bezrealitky.cz/nemovitosti-byty-domy/' + a.uri : undefined,
       });
+      pridejVybaveni(out[out.length - 1], (a.description || '') + ' ' + (a.title || ''));
     }
     if (list.length < PER) break;
   }
@@ -453,6 +470,7 @@ async function fetchFarmy() {
       lat, lng, _gps: typeof lat === 'number' && typeof lng === 'number',
       url: 'https://www.farmy.cz/nabidka_detail?nab=' + id,
     });
+    pridejVybaveni(out[out.length - 1], text.slice(0, 4000));
   }
   return out;
 }
