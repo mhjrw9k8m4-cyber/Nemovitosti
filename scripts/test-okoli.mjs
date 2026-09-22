@@ -327,13 +327,22 @@ const stavVybiraku = (p) => p.evaluate(() => {
   new Function(readFileSync(new URL('../js/terminy.js', import.meta.url), 'utf8'))();
   const T = globalThis.PK_TERMINY;
   const zive = surova.filter((d) => { const n = T.daysUntil(d.extra); return !(n != null && n < 0); });
-  const klice = new Set(zive.map((d) => [d.place, d.okres, d.price, d.area, d.druh].join('|')));
+  /* Pravidlo pro duplicity se tu dřív počítalo vlastní kopií (shoda obce,
+     okresu, ceny, výměry a druhu). Jenže tahle kopie se rozešla s tím, co
+     web opravdu dělá: shoda v těchhle pěti údajích ještě neznamená týž
+     pozemek — v Polici nad Metují měly čtyři sousední parcely stejnou
+     výměru i vyvolávací cenu, ale každá svůj termín dražby. Test proto
+     počítá TOUŽ funkcí jako prohlížeč (js/hlidani-logika.js) a porovnává
+     s tím, co web ukázal. Kdyby ji web přestal používat, čísla se rozejdou
+     a test to chytí — o to tu jde. */
+  const PKH = createRequire(import.meta.url)(new URL('../js/hlidani-logika.js', import.meta.url).pathname);
+  const bezDupl = PKH.bezDuplicit(zive);
   pravda('v datech vůbec nějaké duplicity jsou (jinak test nic nedokazuje)',
-    klice.size < surova.length,
+    bezDupl.length < zive.length,
     `v souboru je ${surova.length} nabídek a všechny jsou jedinečné`);
   pravda('web ukazuje data bez duplicit',
-    +celyPocet === klice.size,
-    `web hlásí ${celyPocet}, po odstranění duplicit a dražeb po termínu má být ${klice.size}` +
+    +celyPocet === bezDupl.length,
+    `web hlásí ${celyPocet}, po odstranění duplicit a dražeb po termínu má být ${bezDupl.length}` +
     ` (v souboru ${surova.length}, z toho ${surova.length - zive.length} po termínu)`);
 
   // Okruh se dá změnit a seznam na to zareaguje.

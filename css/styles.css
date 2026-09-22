@@ -327,7 +327,6 @@ button, a, [role="button"], select, summary, .btn-primary, .lp-btn, input[type="
 .linklike{background:none; border:0; padding:0; font:inherit; color:var(--copper-bright); text-decoration:underline; text-underline-offset:2px; cursor:pointer;}
 
 /* Lišta postupu scrollování */
-.progress-bar{position:fixed; top:0; left:0; height:3px; width:0; background:linear-gradient(90deg, var(--copper), var(--copper-bright)); z-index:2000; transition:width .1s linear;}
 
 /* Živá tečka (pulzující) */
 .live-dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--accent-warm); margin-right:7px; position:relative; vertical-align:middle;}

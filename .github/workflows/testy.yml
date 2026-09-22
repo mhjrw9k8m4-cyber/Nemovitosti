@@ -42,6 +42,12 @@ jobs:
       - name: Pořadí nabídek (nic nezapadne)
         run: node scripts/test-poradi.mjs
 
+      - name: Hledání (háčky, pořadí slov, druh pozemku)
+        run: node scripts/test-hledani.mjs
+
+      - name: Rozbitá data (náhodné zatěžkávání výpočtů)
+        run: node scripts/test-nahodne.mjs
+
       - name: Razítka verzí (aby lidem nechodila stará kopie)
         run: node scripts/test-verze.mjs
 

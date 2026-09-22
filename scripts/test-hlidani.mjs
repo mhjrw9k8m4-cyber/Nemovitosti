@@ -123,6 +123,27 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   je('duplicity', 'jiná výměra je jiný pozemek', H.bezDuplicit([a, c]).length, 2);
   je('duplicity', 'prázdný seznam nevadí', H.bezDuplicit([]).length, 0);
   je('duplicity', 'nic k odstranění = beze změny', H.bezDuplicit([a, c, { place: 'X' }]).length, 3);
+
+  /* Shoda ve všem ostatním ještě neznamená týž pozemek. V Polici nad Metují
+     takhle zmizely TŘI dražby: čtyři sousední parcely (769/274, /276, /277,
+     /278) měly stejnou výměru i vyvolávací cenu, ale každá svůj termín.
+     Web z nich ukazoval jednu. */
+  const zaklad = { place: 'Police nad Metují', okres: 'Náchod', price: 268000, area: 1149,
+    druh: 'orná půda', type: 'drazba' };
+  const p1 = Object.assign({}, zaklad, { parcel: '769/278', extra: 'dražba 2026-09-24' });
+  const p2 = Object.assign({}, zaklad, { parcel: '769/277', extra: 'dražba 2026-10-15' });
+  je('duplicity', 'jiná parcela i termín = jiná dražba', H.bezDuplicit([p1, p2]).length, 2);
+  je('duplicity', 'jiná parcela, stejný termín = pořád jiný pozemek',
+    H.bezDuplicit([p1, Object.assign({}, p2, { extra: p1.extra })]).length, 2);
+  je('duplicity', 'stejná parcela, jiný termín = jiná dražba téhož pozemku',
+    H.bezDuplicit([p1, Object.assign({}, p2, { parcel: p1.parcel })]).length, 2);
+  je('duplicity', 'stejná parcela i termín = jeden záznam',
+    H.bezDuplicit([p1, Object.assign({}, p1)]).length, 1);
+  /* Když parcelní číslo jeden ze záznamů nezná (u inzerátů to je pravidlo),
+     rozhoduje dál shoda v ostatním — tam je opakování ze dvou zdrojů
+     pravděpodobnější než náhodná shoda ceny i výměry na metr. */
+  je('duplicity', 'chybějící parcela nebrání spojení',
+    H.bezDuplicit([Object.assign({}, zaklad, { parcel: '—' }), Object.assign({}, zaklad, { parcel: '769/278' })]).length, 1);
 }
 
 console.log(`\nHlídání lokality: ${bezi} testů`);

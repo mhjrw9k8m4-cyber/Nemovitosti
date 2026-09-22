@@ -117,15 +117,63 @@
 
     function serad(idx) { Object.keys(idx).forEach(function (k) { idx[k].sort(function (a, b) { return a - b; }); }); }
     serad(podleTypu);
-    /* Výměra a cena za m² zůstávají spolu; řadí se až vybraný výřez. */
-    function ceny(pole, plocha) {
+    /* JAK RYCHLE KLESÁ CENA ZA METR S VELIKOSTÍ POZEMKU
+     *
+     * Dosud se srovnávalo jen s pozemky podobné výměry (třetina až
+     * trojnásobek) a uvnitř toho okna se na velikost nehledělo. U stavebních
+     * pozemků je to hrubé: dvousetmetrová parcela a šestisetmetrová jsou
+     * „podobné", ale metr je na té malé výrazně dražší.
+     *
+     * Proto se z celostátních dat pro každý druh spočítá sklon v log-log
+     * (o kolik klesne cena za m², když je pozemek dvakrát větší) — a každá
+     * srovnávací nabídka se přepočítá na výměru toho pozemku, který zrovna
+     * odhadujeme.
+     *
+     * POUŽIJE SE JEN TAM, KDE TO SEDÍ. U stavebních pozemků sklon vysvětluje
+     * čtvrtinu rozptylu (R² 0,24) a chyba odhadu klesla z 52,7 % na 44,7 %.
+     * U orné půdy nebo zahrad nevysvětluje skoro nic (R² pod 0,05) a přepočet
+     * by odhad zhoršil — tam se drží původní okno. Rozhoduje tedy měření na
+     * datech, ne dojem: hranice je R² ≥ 0,15. Ověřeno protiproti všem druhům,
+     * žádný si nepohoršil (scripts/test-ceny.mjs). */
+    var R2_MEZ = 0.15;
+    var SKLON = {};
+    (function () {
+      var podleDruhu = {};
+      DATA.forEach(function (d) {
+        if (!hasArea(d) || !d.price || d.type !== 'sale') return;
+        var g = druhGroup(d.druh);
+        (podleDruhu[g] = podleDruhu[g] || []).push({ a: d.area, m: d.price / d.area });
+      });
+      Object.keys(podleDruhu).forEach(function (g) {
+        var v = podleDruhu[g];
+        if (v.length < 40) { SKLON[g] = 0; return; }
+        var n = v.length, sx = 0, sy = 0, i;
+        var lx = new Array(n), ly = new Array(n);
+        for (i = 0; i < n; i++) { lx[i] = Math.log(v[i].a); ly[i] = Math.log(v[i].m); sx += lx[i]; sy += ly[i]; }
+        var mx = sx / n, my = sy / n, num = 0, den = 0;
+        for (i = 0; i < n; i++) { num += (lx[i] - mx) * (ly[i] - my); den += (lx[i] - mx) * (lx[i] - mx); }
+        var b = den ? num / den : 0;
+        var ss = 0, sr = 0;
+        for (i = 0; i < n; i++) { var pred = my + b * (lx[i] - mx); sr += (ly[i] - pred) * (ly[i] - pred); ss += (ly[i] - my) * (ly[i] - my); }
+        var r2 = ss ? 1 - sr / ss : 0;
+        SKLON[g] = r2 >= R2_MEZ ? b : 0;
+      });
+    }());
+
+    /* Výměra a cena za m² zůstávají spolu; řadí se až vybraný výřez.
+       Když pro druh máme spolehlivý sklon, ceny se přepočítají na výměru
+       odhadovaného pozemku a okno se rozšíří (desetina až desetinásobek) —
+       přepočet si s rozdílem poradí líp než ořezání vzorku. */
+    function ceny(pole, plocha, druhG) {
       if (!pole) return null;
+      var b = (druhG && SKLON[druhG]) || 0;
+      var uzke = b ? 10 : 3;
       var out = [];
       for (var i = 0; i < pole.length; i++) {
-        if (plocha && (pole[i].a < plocha / 3 || pole[i].a > plocha * 3)) continue;
-        out.push(pole[i].m);
+        if (plocha && (pole[i].a < plocha / uzke || pole[i].a > plocha * uzke)) continue;
+        out.push(b && plocha ? pole[i].m * Math.pow(plocha / pole[i].a, b) : pole[i].m);
       }
-      out.sort(function (a, b) { return a - b; });
+      out.sort(function (a, b2) { return a - b2; });
       return out;
     }
 
@@ -145,11 +193,11 @@
       var g = druhGroup(d.druh);
       var kroky = [nabidkyOkres[g + '|' + d.okres], nabidkyKraj[g + '|' + okresKraj[d.okres]], nabidkyCR[g]];
       for (var i = 0; i < kroky.length; i++) {
-        var a = ceny(kroky[i], d.area);
+        var a = ceny(kroky[i], d.area, g);
         if (a && a.length >= MIN_VZOREK) return median(a);
       }
       for (var j = 0; j < kroky.length; j++) {
-        var b = ceny(kroky[j], 0);
+        var b = ceny(kroky[j], 0, g);
         if (b && b.length >= MIN_VZOREK) return median(b);
       }
       return medianTypu[d.type + '|' + g] || null;
@@ -210,8 +258,8 @@
        * výměry). Když jich není dost, ustoupí se k srovnání bez ohledu na
        * velikost — a řekne se to, aby si člověk mohl číslo přebrat. */
       var kroky = [];
-      zdroje.forEach(function (z) { kroky.push({ arr: ceny(z.pole, d.area), uroven: z.uroven, kde: z.kde, podleVelikosti: true }); });
-      zdroje.forEach(function (z) { kroky.push({ arr: ceny(z.pole, 0), uroven: z.uroven, kde: z.kde, podleVelikosti: false }); });
+      zdroje.forEach(function (z) { kroky.push({ arr: ceny(z.pole, d.area, g), uroven: z.uroven, kde: z.kde, podleVelikosti: true }); });
+      zdroje.forEach(function (z) { kroky.push({ arr: ceny(z.pole, 0, g), uroven: z.uroven, kde: z.kde, podleVelikosti: false }); });
       for (var i = 0; i < kroky.length; i++) {
         var k = kroky[i];
         if (!k.arr || k.arr.length < MIN_VZOREK) continue;
@@ -267,5 +315,45 @@
     };
   }
 
-  root.PK_CENY = { postav: postav, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ, kdeText: kdeText };
+  /* Vysvětlující blok k odhadu — JEDNO místo pro mapu i stránku pozemku.
+   *
+   * Byl dvakrát: v js/main.js (okno na mapě) a v js/pozemek.js (stránka
+   * pozemku). A rozešly se přesně tak, jak se kopie rozcházejí vždycky:
+   * na stránce se u hluboké slevy psalo „takový rozdíl bývá spoluvlastnický
+   * podíl nebo jiná výměra, ověřte si to", kdežto v okně na mapě totéž
+   * číslo svítilo jako dobrá zpráva („o 96 % níž"). Tentýž pozemek, dvě
+   * různá čtení podle toho, kam člověk klepl.
+   *
+   * volby: fmt (formátování čísel), esc (ošetření textu), trida (navíc
+   * k .md-odhad), dlouhy (na stránce pozemku i věta o tom, čím odhad není).
+   */
+  function blokOdhadu(model, d, volby) {
+    volby = volby || {};
+    var fmt = volby.fmt || function (x) { return String(x); };
+    var esc = volby.esc || function (x) { return x; };
+    if (!model) return '';
+    var o = model.odhad(d);
+    /* Jen srovnání s podobně velkými pozemky. Cena za m² s výměrou klesá,
+       takže velký pozemek by proti mediánu z malých parcel vyšel jako
+       trhák vždycky — a nebyla by to pravda. Pod 15 % se o slevě nemluví:
+       jinak by to u poloviny nabídek byla další řádka s číslem. */
+    if (!o || !o.podleVelikosti || o.podOdhadem < 15) return '';
+    var kde = kdeText(o.uroven, o.kde);
+    var coJe = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'exekuce' ? 'Uváděná cena' : 'Nabídková cena');
+    return '<div class="md-odhad' + (volby.trida || '') + '">' +
+      '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
+      '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">' + fmt(o.castka) + ' Kč</span></div>' +
+      // U pochybného rozdílu se nesmí jásat: tentýž údaj, jiné čtení.
+      '<div class="mo-rozdil' + (o.pochybna ? ' mo-pochybna' : '') + '"><b>o ' + o.podOdhadem + ' % níž</b>' +
+        (o.pochybna ? ' — takový rozdíl bývá spoluvlastnický podíl nebo jiná výměra, ověřte si to'
+                    : ', tedy zhruba o ' + fmt(o.rozdil) + ' Kč') + '</div>' +
+      '<p class="mo-pozn">Spočítáno z mediánu <b>' + fmt(Math.round(o.zaM2)) + ' Kč/m²</b> — z <b>' +
+      o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) + ') a podobné výměry ' + kde + '. ' +
+      'Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly' +
+      (volby.dlouhy ? ' — to ve veřejných zdrojích není. Berte to jako vodítko, ne jako odhad znalce.' : '.') +
+      '</p></div>';
+  }
+
+  root.PK_CENY = { postav: postav, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
+    kdeText: kdeText, blokOdhadu: blokOdhadu };
 }(typeof window !== 'undefined' ? window : globalThis));

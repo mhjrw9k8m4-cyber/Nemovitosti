@@ -361,10 +361,14 @@
     if (m) setTimeout(function () { openInfo(m[1]); }, 300);
   })();
 
-  /* ---------- Sticky header shrink + back-to-top ---------- */
+  /* ---------- Zmenšení hlavičky + tlačítko „nahoru" ----------
+     Proužek postupu rolování (tenká měděná čára u horního okraje) je pryč.
+     Dokud hlavička při rolování zůstávala, čára k ní patřila. Teď hlavička
+     při pohybu zhasíná — a zbyla by nahoře sama: třípixelová linka, která
+     se plní přes celou šířku obrazovky a neříká nic, co by člověk na
+     stránce s výpisem pozemků potřeboval vědět. */
   var header = document.getElementById('header');
   var toTop = document.getElementById('to-top');
-  var progress = document.getElementById('progress-bar');
   window.addEventListener('scroll', function () {
     var y = window.pageYOffset;
     if (header) header.classList.toggle('shrink', y > 20);
@@ -375,10 +379,6 @@
       var patka = document.querySelector('footer');
       var vPatce = patka && patka.getBoundingClientRect().top < window.innerHeight - 60;
       toTop.classList.toggle('show', y > 500 && !vPatce);
-    }
-    if (progress) {
-      var h = document.documentElement.scrollHeight - window.innerHeight;
-      progress.style.width = (h > 0 ? (y / h) * 100 : 0) + '%';
     }
   }, { passive: true });
   if (toTop) toTop.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
@@ -812,6 +812,23 @@
   var minArea = 0;         // filtr minimální výměry (m²)
   var urgentOnly = false;  // filtr: jen dražby/exekuce končící brzy (do 14 dní)
   var searchTerm = '';
+  var searchToks = [];   // hledaný text po slovech (viz js/hledani.js)
+  /* Kdyby se js/hledani.js nenačetl (síť odpadla uprostřed načítání),
+     hledá se postaru jedním podřetězcem: hůř, ale hledá. Výpis se kvůli
+     chybějícímu souboru nesmí přestat vykreslovat. */
+  var HL = window.PKHledani || {
+    norm: function (s) { return String(s == null ? '' : s).toLowerCase().trim(); },
+    tokeny: function (q) { var n = this.norm(q); return n ? [n] : []; },
+    vyhovuje: function (d, t) {
+      return !t.length || (d.place + ' ' + d.okres + ' ' + (d.parcel || '')).toLowerCase().indexOf(t[0]) !== -1;
+    },
+  };
+  /* Text z políčka i z odkazu ?q= musí projít jedním místem, aby se
+     slova rozpadla vždycky stejně. */
+  function nastavHledani(v) {
+    searchTerm = String(v == null ? '' : v).trim();
+    searchToks = HL.tokeny(searchTerm);
+  }
   var favOnly = false;
   var ukazSkryte = false;   // „Zobrazit skryté" — dočasně, neukládá se
   /* Dražba po termínu už není příležitost — dražit se nedá. Zdroj ji ale
@@ -1032,20 +1049,12 @@
   /* Odhad obvyklé ceny i v detailu na mapě — aby mapa a stránka pozemku
    * říkaly totéž. Ukazuje se jen tam, kde má co říct. */
   function odhadHtmlMapa(d) {
-    if (!MODEL) return '';
-    var o = MODEL.odhad(d);
-    if (!o || !o.podleVelikosti || o.podOdhadem < 15) return '';
-    var kde = window.PK_CENY.kdeText(o.uroven, o.kde);
-    var coJe = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'exekuce' ? 'Uváděná cena' : 'Nabídková cena');
-    return '<div class="md-odhad">' +
-      '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
-      '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">' + fmt(o.castka) + ' Kč</span></div>' +
-      '<div class="mo-rozdil"><b>o ' + o.podOdhadem + ' % níž</b>, tedy zhruba o ' + fmt(o.rozdil) + ' Kč</div>' +
-      '<p class="mo-pozn">Spočítáno z mediánu <b>' + fmt(Math.round(o.zaM2)) + ' Kč/m²</b> — z <b>' +
-      o.vzorek + '</b> nabídek stejného druhu (' + o.druh.toLowerCase() + ') a podobné výměry ' + kde + '. ' +
-      'Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly.</p>' +
-      '</div>';
+    // Blok je v js/ceny.js, aby mapa a stránka pozemku nemohly o téže
+    // ceně říkat dvě různé věci (a to se přesně stalo: v okně na mapě
+    // se hluboká sleva ukazovala bez varování).
+    return window.PK_CENY.blokOdhadu(MODEL, d, { fmt: fmt });
   }
+
 
   // Naplníme filtr druhů podle toho, co je v datech (s počty)
   if (druhEl) {
@@ -1875,18 +1884,20 @@
   // Obrazovka „poloha se nepovedla" — ukáže se jen jako poslední záchrana,
   // když selže i přibližná poloha podle připojení. Vede rovnou k napsání obce.
   // Najde souřadnice napsané obce/okresu POUZE z našich dat (bez internetu):
-  // vezme skutečný pozemek v té obci → mapa se pak vystředí přesně tam, kde
-  // pozemky opravdu jsou. Když obec nenajde, zkusí okres a nakonec kraj.
-  function normTxt(s) { return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
+  // mapa se vystředí přesně tam, kde pozemky opravdu jsou. Výběr obce řeší
+  // js/hledani.js (stejný název má 30 obcí až 309 km od sebe, tak ať to není
+  // náhoda a ať je střed medián, ne jeden krajní pozemek). Kraj je poslední
+  // záchrana, když se nechytne nic.
+  // Stejné srovnání, jaké používá hledání v seznamu (js/hledani.js).
+  function normTxt(s) { return HL.norm(s); }
   function geocodeTownLocal(q) {
     var n = normTxt(q); if (n.length < 2) return null;
-    var i, d;
-    for (i = 0; i < DATA.length; i++) { d = DATA[i]; if (typeof d.lat === 'number' && normTxt(d.place) === n) return { lat: d.lat, lng: d.lng }; }
-    for (i = 0; i < DATA.length; i++) { d = DATA[i]; if (typeof d.lat === 'number' && normTxt(d.place).indexOf(n) >= 0) return { lat: d.lat, lng: d.lng }; }
-    for (i = 0; i < DATA.length; i++) { d = DATA[i]; if (typeof d.lat === 'number' && normTxt(d.okres).indexOf(n) >= 0) return { lat: d.lat, lng: d.lng }; }
+    var m = HL.misto ? HL.misto(DATA, q) : null;
+    if (m) return { lat: m.lat, lng: m.lng };
     for (var kn in KRAJE) { if (normTxt(kn).indexOf(n) >= 0) return { lat: KRAJE[kn].c[0], lng: KRAJE[kn].c[1] }; }
     return null;
   }
+
   var LOC_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
 
   /* ==================================================================
@@ -2329,8 +2340,10 @@
     // Hledá se i podle PARCELNÍHO ČÍSLA. Kdo drží v ruce výpis z katastru,
     // má po ruce číslo parcely, ne název obce — a dokud se prohledávalo jen
     // místo a okres, nenašel nic.
-    var okSearch = !searchTerm ||
-      (d.place + ' ' + d.okres + ' ' + (d.parcel || '')).toLowerCase().indexOf(searchTerm) !== -1;
+    // Srovnání řeší js/hledani.js: bez ohledu na háčky, pořadí slov a mezery
+    // navíc. Dřív se hledal jeden podřetězec, takže „rican" nenašlo Říčany
+    // ani jednou z 732 obcí s diakritikou a „Beroun Zdice" nenašlo nic.
+    var okSearch = !searchToks.length || HL.vyhovuje(d, searchToks);
     var okDruh = activeDruh === 'all' || druhGroup(d.druh) === activeDruh;
     var okPrice = (!maxPrice || (d.price && d.price <= maxPrice))
       && (!minPrice || (d.price && d.price >= minPrice));
@@ -2428,16 +2441,25 @@
       if (window.PKPoradi) window.PKPoradi.nahodne(arr, pkey);
     }
     else {
-      /* Doporučené. Kvalita rozhoduje o pásmu, uvnitř pásma se pořadí
-         každý den posune o jednu obrazovku dál — jinak by na prvních osmi
-         místech stálo den za dnem těch samých osm pozemků a zbytek by
-         nahoru nezavadil nikdy. Podrobně v js/poradi.js. */
+      /* Doporučené. Kvalita rozhoduje o pásmu a uvnitř pásma se pořadí
+         každý den posune dál. Samo o sobě to ale nestačilo: horní pásma
+         mají dohromady 64 nabídek, takže osm míst ve výpisu obsadila
+         napořád. Posledních pár míst proto patří střídačce napříč celou
+         nabídkou — podrobně v js/poradi.js. */
       if (window.PKPoradi) {
         window.PKPoradi.prostridej(arr, demand, pkey, window.PKPoradi.denIndex(),
           window.PKPoradi.KROK_ZA_DEN, window.PKPoradi.prihozeniSeance());
       }
       else arr.sort(function (a, b) { return demand(b) - demand(a); });
       declump(arr);
+      /* Posledních pár míst na obrazovce patří řadě, ne pásmům. Bez toho
+         se do osmimístného výpisu dostalo jen 64 nabídek z 1 947 — a to
+         i po roce, protože horní pásma ta místa obsadila napořád. */
+      if (window.PKPoradi && window.PKPoradi.stridacka) {
+        window.PKPoradi.stridacka(arr, LIST_LIMIT, window.PKPoradi.MIST_NA_STRIDACKU,
+          window.PKPoradi.denIndex(), pkey, window.PKPoradi.prihozeniSeance(),
+          function (d) { return !jeProsle(d); });
+      }
     }
     // Co už proběhlo, patří dolů — ať v jakémkoli řazení. Mrtvý záznam
     // nahoře je horší než žádný.
@@ -2739,7 +2761,7 @@
   }
 
   function resetFilters() {
-    activeType = 'all'; activeDruh = 'all'; maxPrice = 0; minArea = 0; urgentOnly = false; searchTerm = ''; favOnly = false;
+    activeType = 'all'; activeDruh = 'all'; maxPrice = 0; minArea = 0; urgentOnly = false; nastavHledani(''); favOnly = false;
     if (searchEl) searchEl.value = '';
     if (druhEl) druhEl.value = 'all';
     minPrice = 0; maxArea = 0;
@@ -2807,7 +2829,7 @@
     if (/[?&](q|druh|maxc|mina)=/.test(location.search)) {
       var gp = function (n) { var mm = new RegExp('[?&]' + n + '=([^&]*)').exec(location.search); try { return mm ? decodeURIComponent(mm[1]) : ''; } catch (e) { return mm ? mm[1] : ''; } };
       var qv = gp('q'), dv = gp('druh'), mc = parseInt(gp('maxc'), 10) || 0, ma = parseInt(gp('mina'), 10) || 0;
-      if (qv && searchEl) { searchEl.value = qv; searchTerm = qv.trim().toLowerCase(); }
+      if (qv && searchEl) { searchEl.value = qv; nastavHledani(qv); }
       // Cena a výměra jsou rozbalovací seznamy. Odkaz z „Hlídání" může nést
       // i částku, která mezi nabízenými není — pak ji do seznamu doplníme,
       // jinak by se filtr tiše nenastavil a člověk by viděl jiné výsledky,
@@ -2826,10 +2848,15 @@
       if (mc) maxPrice = mc;
       if (ma) minArea = ma;
       if (dv && druhEl) {
-        var want = dv.toLowerCase();
+        // Srovnání bez diakritiky: odkaz z hlídání může nést „orna puda"
+        // (přepsané ručně, bez háčků) a druh se pak tiše nenastavil.
+        var want = HL.norm(dv);
         for (var oi = 0; oi < druhEl.options.length; oi++) {
-          var ov = druhEl.options[oi];
-          if (ov.value && ov.value !== 'all' && (want.indexOf(ov.value.toLowerCase()) >= 0 || (ov.text && want.indexOf(ov.text.toLowerCase()) >= 0) || (ov.text && ov.text.toLowerCase().indexOf(want) >= 0))) { druhEl.value = ov.value; activeDruh = ov.value; break; }
+          var ov = druhEl.options[oi], hv = HL.norm(ov.value), ht = HL.norm(ov.text || '');
+          if (ov.value && ov.value !== 'all'
+            && ((hv && want.indexOf(hv) >= 0) || (ht && want.indexOf(ht) >= 0) || (ht && ht.indexOf(want) >= 0))) {
+            druhEl.value = ov.value; activeDruh = ov.value; break;
+          }
         }
       }
       if (typeof lockDots === 'function') lockDots(false);
@@ -2985,7 +3012,7 @@
     renderList();
   });
   searchEl.addEventListener('input', function () {
-    searchTerm = searchEl.value.trim().toLowerCase();
+    nastavHledani(searchEl.value);
     renderList();
   });
   if (druhEl) druhEl.addEventListener('change', function () { activeDruh = druhEl.value; renderList(); });

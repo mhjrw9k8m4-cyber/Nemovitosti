@@ -189,6 +189,7 @@ let ODFILTROVANO = 0;
 function spoctiMeze(list){
   const b={};
   for(const o of list){
+    if(!jeBeznaNabidka(o)) continue;   // stejný vzorek jako priceStats
     if(!(o.price>0 && o.area>=100 && o.area<=500000)) continue;
     const g=druhGroup(o.druh); if(g==='Ostatní') continue;
     const perm2=o.price/o.area;
@@ -209,9 +210,18 @@ function spoctiMeze(list){
     ODFILTROVANO += b[g].filter(x=>x<MEZE_DRUHU[g]).length;
   }
 }
+/* Do ceny se počítají JEN běžné nabídky k prodeji.
+   Vyvolávací cena dražby ani odhad u exekuce není nabídková cena: první je
+   z podstaty věci pod trhem, druhá bývá u zastavěných pozemků naopak vysoko.
+   Když se počítaly dohromady, tvrdil web o téže věci dvě různá čísla —
+   stránka cen hlásila u zahrady 140 Kč/m², kdežto odhad u pozemku počítal
+   se 110 Kč/m² (ten dražby vynechával odjakživa, viz js/ceny.js). U ostatní
+   plochy dělal ten rozpor 41 %. Obě strany teď počítají z téhož. */
+function jeBeznaNabidka(o){ return o.type === 'sale'; }
 function priceStats(list){
   const buckets={};
   for(const o of list){
+    if(!jeBeznaNabidka(o)) continue;
     if(!(o.price>0 && o.area>=100 && o.area<=500000)) continue;
     const g=druhGroup(o.druh); if(g==='Ostatní') continue;
     const perm2 = o.price/o.area;
@@ -744,7 +754,7 @@ ${rows}
           <div class="okr-stats" style="margin-bottom:0;">
         ${natCards || '<p class="rules-note" style="margin:0;">Zatím není dost dat pro spolehlivý výpočet.</p>'}
           </div>
-          <p class="rules-note">Jde o <b>medián nabídkových cen</b> (ne realizovaných prodejů) z pozemků, u kterých známe cenu i výměru. Rozpětí ukazuje typické ceny (25.–75. percentil, tj. bez krajních výkyvů). Skutečná cena závisí na kvalitě půdy (BPEJ), přístupu, sítích i lokalitě — berte to jako orientaci, ne odhad konkrétního pozemku.</p>
+          <p class="rules-note">Jde o <b>medián nabídkových cen</b> (ne realizovaných prodejů) z pozemků, u kterých známe cenu i výměru. Počítáme <b>jen běžné nabídky k prodeji</b> — vyvolávací cena dražby je pod trhem z podstaty věci a do ceny „kolik stojí pozemek" nepatří; stejně to počítá i odhad u konkrétního pozemku, aby web neříkal na dvou místech dvě čísla. Rozpětí ukazuje typické ceny (25.–75. percentil, tj. bez krajních výkyvů). Skutečná cena závisí na kvalitě půdy (BPEJ), přístupu, sítích i lokalitě — berte to jako orientaci, ne odhad konkrétního pozemku.</p>
           <p class="rules-note">${ODFILTROVANO ? `Do výpočtu <b>nezapočítáváme ${ODFILTROVANO} ${ODFILTROVANO===1?'nabídku':(ODFILTROVANO<5?'nabídky':'nabídek')}</b>, u kterých cena za metr vychází hluboko pod trhem — bývají to <b>spoluvlastnické podíly</b> (v inzerátu je výměra celé parcely, ale prodává se jen zlomek) nebo špatně načtené ceny. Bez toho vycházel medián pole v některých okresech na 8 Kč/m², což není cena, za kterou se u nás pole prodává. Hranici nestanovujeme od stolu: hledá se mezera v samotném rozdělení cen, a kde žádná není (zahrady, stavební pozemky), nevyřazuje se nic.` : ''}</p>
         </div>
       </div>

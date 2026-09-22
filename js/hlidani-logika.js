@@ -37,13 +37,40 @@
   function klicShody(d) {
     return [d.place, d.okres, d.price, d.area, d.druh].join('|');
   }
+  /* Shoda v obci, okrese, ceně, výměře i druhu ještě neznamená týž pozemek.
+     V Polici nad Metují takhle zmizely TŘI dražby: čtyři sousední parcely
+     (769/274, /276, /277, /278) měly stejnou výměru i vyvolávací cenu, ale
+     každá svůj termín — 24. 9., 15. 10., 22. 10. a 5. 11. Web z nich
+     ukázal jednu a tři dražby prostě nebyly vidět.
+     Proto: když obě strany parcelní číslo znají a liší se, jsou to různé
+     pozemky. Totéž u termínu dražby. Když to jeden ze záznamů neuvádí
+     (u inzerátů parcelní číslo většinou chybí), rozhoduje dál shoda
+     v ostatním — tam je opakování ze dvou zdrojů to pravděpodobnější. */
+  function znamaParcela(d) {
+    var p = (d && d.parcel != null) ? String(d.parcel).trim() : '';
+    return (p && p !== '—' && p !== '-') ? p : null;
+  }
+  function znamyTermin(d) {
+    var m = /(\d{4})-(\d{2})-(\d{2})/.exec((d && d.extra) || '');
+    return m ? m[0] : null;
+  }
+  function tyzPozemek(a, b) {
+    var pa = znamaParcela(a), pb = znamaParcela(b);
+    if (pa && pb && pa !== pb) return false;
+    var ta = znamyTermin(a), tb = znamyTermin(b);
+    if (ta && tb && ta !== tb) return false;
+    return true;
+  }
   function bezDuplicit(list) {
-    var videno = {}, ven = [];
+    var skupiny = {}, ven = [];
     for (var i = 0; i < (list || []).length; i++) {
-      var k = klicShody(list[i]);
-      if (videno[k]) continue;
-      videno[k] = true;
-      ven.push(list[i]);
+      var d = list[i], k = klicShody(d);
+      var skup = skupiny[k] || (skupiny[k] = []);
+      var uz = false;
+      for (var j = 0; j < skup.length; j++) { if (tyzPozemek(skup[j], d)) { uz = true; break; } }
+      if (uz) continue;
+      skup.push(d);
+      ven.push(d);
     }
     return ven;
   }
@@ -104,7 +131,8 @@
     return Object.keys(nove).length;
   }
 
-  return { normd: normd, keyOf: keyOf, matches: matches,
+  return {
+    tyzPozemek: tyzPozemek, normd: normd, keyOf: keyOf, matches: matches,
            klicShody: klicShody, bezDuplicit: bezDuplicit,
            novychProHledani: novychProHledani, novychCelkem: novychCelkem };
 });

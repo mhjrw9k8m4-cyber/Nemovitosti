@@ -206,6 +206,110 @@ for (const f of ['../js/main.js', '../js/pozemek.js', '../js/radce.js']) {
     'text se lepí ručně — přesně tak vzniklo „v Vysočina kraji"');
 }
 
+/* --- Velikost pozemku se promítá do ceny za metr --------------------
+   U stavebních pozemků je metr na malé parcele výrazně dražší než na velké.
+   Dokud se srovnávalo jen „podobně velkými" (třetina až trojnásobek) a
+   uvnitř okna se na velikost nehledělo, byl odhad u stavebních pozemků
+   nejhorší ze všech druhů. Model proto počítá, jak rychle cena za metr
+   s výměrou klesá — ale jen tam, kde to data potvrzují (R² ≥ 0,15).
+   Měřeno vynecháním sebe sama na 232 nabídkách: celkem 30,1 % → 27,7 %,
+   stavební pozemky 49,3 % → 42,5 %, ostatní druhy beze změny. */
+{
+  // Data, kde cena za metr s výměrou opravdu klesá (malé draze, velké levně).
+  const data = [];
+  for (let i = 0; i < 40; i++) {
+    const a2 = 300 + i * 100;
+    const zaM2 = 300000 / Math.pow(a2, 0.6);     // jasný pokles s výměrou
+    data.push({ type: 'sale', okres: 'Kolín', druh: 'stavební parcela', area: a2, price: Math.round(zaM2 * a2) });
+  }
+  const m = PK_CENY.postav(data, { 'Kolín': 'Středočeský' });
+  const male = { type: 'sale', okres: 'Kolín', druh: 'stavební parcela', area: 400, price: 1 };
+  const velke = { type: 'sale', okres: 'Kolín', druh: 'stavební parcela', area: 4000, price: 1 };
+  const oM = m.odhad(Object.assign({}, male, { price: Math.round(300000 / Math.pow(400, 0.6) * 400) }));
+  const oV = m.odhad(Object.assign({}, velke, { price: Math.round(300000 / Math.pow(4000, 0.6) * 4000) }));
+  pravda('odhad vznikne u malé i velké parcely', !!(oM && oV));
+  if (oM && oV) {
+    pravda('malá parcela má vyšší cenu za metr než velká', oM.zaM2 > oV.zaM2 * 1.5,
+      `malá ${Math.round(oM.zaM2)} Kč/m², velká ${Math.round(oV.zaM2)} Kč/m² — model velikost nezohlednil`);
+    // A hlavně: obě musí vyjít blízko skutečnosti, ne jen být různé.
+    const cilM = 300000 / Math.pow(400, 0.6), cilV = 300000 / Math.pow(4000, 0.6);
+    pravda('a obě trefí skutečnou hladinu do 15 %',
+      Math.abs(oM.zaM2 - cilM) / cilM < 0.15 && Math.abs(oV.zaM2 - cilV) / cilV < 0.15,
+      `malá ${Math.round(oM.zaM2)} vs ${Math.round(cilM)}, velká ${Math.round(oV.zaM2)} vs ${Math.round(cilV)}`);
+  }
+
+  /* A obráceně: kde na velikosti nezáleží, model nesmí nic „opravovat".
+     Orná půda má cenu za metr skoro nezávislou na výměře — kdyby se
+     přepočítávalo i tam, odhad by se zhoršil (naměřeno 22,9 % → 24,7 %). */
+  /* Data se SLABÝM, ale nenulovým sklonem: kdyby se přepočítávalo i tady,
+     model by si vymyslel rozdíl, který v datech není. Rozptyl je schválně
+     tak velký, aby sklon skoro nic nevysvětloval (R² pod mezí). */
+  const pole = [];
+  let sem = 7;
+  const nahodne = () => { sem = (sem * 1103515245 + 12345) % 2147483648; return sem / 2147483648; };
+  for (let i = 0; i < 60; i++) {
+    const a2 = 5000 + i * 2000;
+    const zaM2 = 45 * (0.45 + 1.6 * nahodne());   // velký rozptyl, žádný skutečný trend
+    pole.push({ type: 'sale', okres: 'Kolín', druh: 'orná půda', area: a2, price: Math.round(zaM2 * a2) });
+  }
+  // Ověříme, že zkouška opravdu vyrobila slabý sklon — jinak nic nedokazuje.
+  {
+    const lx = pole.map((p) => Math.log(p.area)), ly = pole.map((p) => Math.log(p.price / p.area));
+    const mx = lx.reduce((x, y) => x + y, 0) / lx.length, my = ly.reduce((x, y) => x + y, 0) / ly.length;
+    let num = 0, den = 0, ss = 0, sr = 0;
+    for (let i = 0; i < lx.length; i++) { num += (lx[i] - mx) * (ly[i] - my); den += (lx[i] - mx) ** 2; }
+    const bb = den ? num / den : 0;
+    for (let i = 0; i < lx.length; i++) { const pred = my + bb * (lx[i] - mx); sr += (ly[i] - pred) ** 2; ss += (ly[i] - my) ** 2; }
+    const r2 = ss ? 1 - sr / ss : 0;
+    pravda('zkouška vyrobila sklon, který data skoro nevysvětluje',
+      Math.abs(bb) > 0.01 && r2 < 0.15, `sklon ${bb.toFixed(3)}, R² ${r2.toFixed(3)}`);
+  }
+  const mp = PK_CENY.postav(pole, { 'Kolín': 'Středočeský' });
+  const maleP = mp.odhad({ type: 'sale', okres: 'Kolín', druh: 'orná půda', area: 6000, price: 270000 });
+  const velkeP = mp.odhad({ type: 'sale', okres: 'Kolín', druh: 'orná půda', area: 120000, price: 5400000 });
+  pravda('u slabého sklonu model velikost neřeší (jinak si vymýšlí rozdíl)',
+    !!(maleP && velkeP) && Math.abs(maleP.zaM2 - velkeP.zaM2) / maleP.zaM2 < 0.05,
+    maleP && velkeP ? `${Math.round(maleP.zaM2)} vs ${Math.round(velkeP.zaM2)} Kč/m² — přepočet se pustil tam, kde nemá`
+                    : 'odhad nevznikl');
+}
+
+/* --- Vysvětlující blok je JEDEN, ne dva -----------------------------
+   Blok „Nabídková cena / Obvyklá cena / o X % níž" byl dvakrát: v okně na
+   mapě (js/main.js) a na stránce pozemku (js/pozemek.js). Rozešly se:
+   na stránce se u hluboké slevy psalo varování „bývá to spoluvlastnický
+   podíl, ověřte si to", kdežto v okně na mapě totéž číslo svítilo jako
+   dobrá zpráva. Na ostrých datech to bylo 149 nabídek — tentýž pozemek,
+   dvě různá čtení podle toho, kam člověk klepl. */
+{
+  const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
+  const detail = readFileSync(new URL('../js/pozemek.js', import.meta.url), 'utf8');
+  pravda('okno na mapě nemá vlastní kopii bloku s odhadem', !/mo-rozdil/.test(main),
+    'js/main.js si znovu skládá blok sám — dřív mu v něm chybělo varování');
+  pravda('stránka pozemku taky ne', !/mo-rozdil/.test(detail),
+    'js/pozemek.js si znovu skládá blok sám');
+
+  // A hlavně: u pochybně hluboké slevy musí varování zaznít v obou podobách.
+  /* Hladina vyjde kolem 50 Kč/m²; tahle nabídka má 5 Kč/m², tedy 90 % pod
+     ní — hluboko, ale ne pod 1/50 hladiny, kde model odhad vůbec nevydá
+     (to je práh „tohle už nejsou data, to je překlep"). */
+  const d = { type: 'sale', okres: 'Kolín', druh: 'orná půda', area: 5000, price: 25000 };
+  const data = [];
+  for (let i = 0; i < 30; i++) {
+    data.push({ type: 'sale', okres: 'Kolín', druh: 'orná půda', area: 5000 + i * 10, price: 250000 + i * 100 });
+  }
+  data.push(d);
+  const m = PK_CENY.postav(data, { 'Kolín': 'Středočeský' });
+  const o = m.odhad(d);
+  pravda('zkouška opravdu vyrobila pochybně hlubokou slevu', !!(o && o.pochybna),
+    o ? `sleva vyšla ${o.podOdhadem} %` : 'odhad vůbec nevznikl');
+  const vMape = PK_CENY.blokOdhadu(m, d, { fmt: (x) => String(x) });
+  const vDetailu = PK_CENY.blokOdhadu(m, d, { fmt: (x) => String(x), trida: ' pz-odhad', dlouhy: true });
+  pravda('varování je v okně na mapě', /ověřte si to/.test(vMape), vMape.slice(0, 160));
+  pravda('i na stránce pozemku', /ověřte si to/.test(vDetailu), vDetailu.slice(0, 160));
+  pravda('a obě podoby uvádějí totéž číslo',
+    (vMape.match(/o (\d+) % níž/) || [])[1] === (vDetailu.match(/o (\d+) % níž/) || [])[1]);
+}
+
 console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

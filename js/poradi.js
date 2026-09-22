@@ -14,7 +14,11 @@
  *   2. UVNITŘ pásma má každá nabídka stálé místo (podle otisku svého
  *      klíče) a celé to kolo se každý den POSUNE o jednu obrazovku dál.
  *      Není to losování: je to otáčení, u kterého se dá spočítat, kdy
- *      přijde řada na kteroukoli nabídku — a přijde na každou.
+ *      přijde řada na kteroukoli nabídku uvnitř jejího pásma.
+ *   3. To samo ale nestačí a bylo to měřitelné: horní pásma mají dohromady
+ *      64 nabídek a výpis ukazuje osm, takže se zbylých 1 883 nedostalo
+ *      nahoru ani za rok. Proto posledních pár míst ve výpisu nepatří
+ *      pásmům, ale řadě napříč celou nabídkou — viz stridacka() níž.
  *   3. Během dne se nic nepřeskládá. Kdo si stránku obnoví nebo se vrátí
  *      za hodinu, vidí totéž pořadí — jinak by výpis působil rozbitě.
  *
@@ -136,7 +140,55 @@
     return list;
   }
 
+  /* --- Střídačka: pár míst ve výpisu patří i ostatním -----------------
+   *
+   * Otáčení uvnitř pásem samo o sobě nestačilo a bylo to měřitelné:
+   * výpis na hlavní stránce ukazuje OSM nabídek a horní pásma (dražby a
+   * pozemky s ověřenou slevou) jich mají dohromady 64. Těch osm míst tedy
+   * pořád obsazovaly tytéž nabídky a zbylých 1 883 se do výpisu nedostalo
+   * ani za rok — pásmo rozhoduje vždycky, takže se dostat ani nemohly.
+   * Přesně to mělo otáčení odstranit a neodstranilo.
+   *
+   * Proto posledních několik míst na obrazovce nepatří pásmům, ale řadě:
+   * berou se z ostatních nabídek a každý den (a každou návštěvu) se
+   * posunou dál. Horní místa zůstávají čistě podle kvality, takže se
+   * nestane, že by slabá nabídka stála nad dobrou hned nahoře.
+   *
+   * Měřeno na skutečných datech (1 947 nabídek, výpis 8 míst, 3 na
+   * střídačku): za 30 dní se do výpisu dostane 135 nabídek místo 64,
+   * za rok 1 046 místo 64.
+   */
+  var MIST_NA_STRIDACKU = 3;
+  function stridacka(list, kolikVidet, mist, den, fnKlic, prihozeni, fnVhodne) {
+    var videt = kolikVidet == null ? 8 : kolikVidet;
+    var m = mist == null ? MIST_NA_STRIDACKU : mist;
+    var d = den == null ? denIndex() : den;
+    var j = prihozeni == null ? 0 : prihozeni;
+    if (!list || m < 1 || list.length <= videt) return list;
+    var drzi = list.slice(0, Math.max(0, videt - m));
+    var zbytek = list.slice(Math.max(0, videt - m));
+    /* Do střídačky jen to, co má smysl ukazovat — prošlá dražba nahoře je
+       horší než žádná. Nevhodné zůstávají tam, kde byly. */
+    var fronta = [];
+    for (var i = 0; i < zbytek.length; i++) if (!fnVhodne || fnVhodne(zbytek[i])) fronta.push(zbytek[i]);
+    if (!fronta.length) return list;
+    // Stálé pořadí fronty (nezávislé na dni) a posun o „den × počet míst".
+    var poradi = new Map();
+    fronta.forEach(function (x, idx) { poradi.set(x, otisk(fnKlic(x), 0) * 4096 + (idx % 4096)); });
+    fronta.sort(function (a, b) { return poradi.get(a) - poradi.get(b); });
+    var n = fronta.length, vyber = [], vybrano = new Set();
+    for (var s = 0; s < m && s < n; s++) {
+      var kus = fronta[((d * m + j + s) % n + n) % n];
+      if (!vybrano.has(kus)) { vybrano.add(kus); vyber.push(kus); }
+    }
+    var ven = drzi.concat(vyber);
+    for (var k = 0; k < zbytek.length; k++) if (!vybrano.has(zbytek[k])) ven.push(zbytek[k]);
+    for (var z = 0; z < ven.length; z++) list[z] = ven[z];
+    return list;
+  }
+
   return { SIRKA_PASMA: SIRKA_PASMA, KROK_ZA_DEN: KROK_ZA_DEN, denIndex: denIndex,
+    MIST_NA_STRIDACKU: MIST_NA_STRIDACKU, stridacka: stridacka,
     otisk: otisk, pasmo: pasmo, prostridej: prostridej,
     prihozeniSeance: prihozeniSeance, zamichejZnovu: zamichejZnovu, nahodne: nahodne };
 });

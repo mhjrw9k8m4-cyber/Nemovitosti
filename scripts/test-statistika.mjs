@@ -64,6 +64,8 @@ function dolniMez(v) {
 }
 const podle = {};
 for (const d of DATA) {
+  // Jen běžné nabídky k prodeji — stejně jako generátor i js/ceny.js.
+  if (d.type !== 'sale') continue;
   if (!(d.price > 0 && d.area >= 100 && d.area <= 500000)) continue;
   const g = dg(d.druh); if (g === 'Ostatní') continue;
   const pm = d.price / d.area;
@@ -89,6 +91,41 @@ for (const g of ['Zahrada', 'Stavební']) {
   const pad = v.filter((x) => x < dolniMez(v)).length;
   if (pad > 0) {
     zpravy.push(`  · pozn.: u druhu „${g}" by heuristika uřízla ${pad} z ${v.length} — proto se tam nepouští`);
+  }
+}
+
+/* --- Obě strany webu počítají z téhož ------------------------------
+   Stránka cen počítala medián ze VŠECH nabídek, kdežto odhad u konkrétního
+   pozemku (js/ceny.js) dražby odjakživa vynechává — vyvolávací cena je pod
+   trhem z podstaty věci. Web tak o téže věci tvrdil dvě různá čísla: u
+   zahrady 140 Kč/m² na stránce cen a 110 Kč/m² v odhadu, u ostatní plochy
+   se to rozcházelo o 41 %. Čísla musí vycházet ze stejného vzorku, jinak
+   si web protiřečí a nikdo nepozná, které z nich platí. */
+pravda('stránka cen počítá jen z běžných nabídek k prodeji',
+  /function jeBeznaNabidka\(o\)\{ return o\.type === 'sale'; \}/.test(gen),
+  'do mediánu by se počítaly i vyvolávací ceny dražeb');
+{
+  const ceny = readFileSync(new URL('../js/ceny.js', import.meta.url), 'utf8');
+  pravda('a odhad u pozemku taky', /if \(d\.type !== 'sale'\) return;/.test(ceny),
+    'js/ceny.js by srovnával dražby samy se sebou');
+}
+// A hlavně čísla: co je vytištěné na stránce, musí sedět s přepočtem z dat.
+{
+  const dlazdice = [...stranka.matchAll(/<b>([\d\s\u00a0]+) Kč\/m²<\/b><span>([^·]+)·/g)]
+    .map((m) => ({ med: +String(m[1]).replace(/\s|\u00a0/g, ''), druh: m[2].trim() }));
+  pravda('na stránce jsou vypsané mediány podle druhu', dlazdice.length >= 3,
+    'našel jsem jen ' + dlazdice.length);
+  const nazev = { 'Zemědělská půda': 'Zemědělská půda', 'Lesní pozemek': 'Lesní pozemek',
+    Zahrada: 'Zahrada', 'Stavební': 'Stavební' };
+  for (const d of dlazdice) {
+    const klic = Object.keys(nazev).find((k) => nazev[k] === d.druh);
+    if (!klic) continue;
+    const vzorek = (podle[klic] || []).filter((x) => x >= dolniMez(podle[klic] || []));
+    if (vzorek.length < 30) continue;
+    const spocteno = Math.round(med(vzorek));
+    pravda(`„${d.druh}": vytištěný medián sedí s přepočtem z dat (${d.med} Kč/m²)`,
+      Math.abs(spocteno - d.med) <= 1,
+      `na stránce ${d.med} Kč/m², z dat vychází ${spocteno} Kč/m² — stránka a odhad počítají každý z jiného vzorku`);
   }
 }
 

@@ -95,28 +95,11 @@
   // když je cena aspoň o 15 % pod obvyklou hladinou. Kdyby se vypisoval
   // vždycky, byla by to u poloviny nabídek jen další řádka s číslem.
   function odhadHtml(d) {
-    if (!MODEL) return '';
-    var o = MODEL.odhad(d);
-    // Jen srovnání s podobně velkými pozemky. Cena za m² s výměrou klesá,
-    // takže velký pozemek by proti mediánu z malých parcel vyšel jako trhák
-    // vždycky — a nebyla by to pravda.
-    if (!o || !o.podleVelikosti || o.podOdhadem < 15) return '';
-    var kde = window.PK_CENY.kdeText(o.uroven, o.kde);
-    var coJe = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'exekuce' ? 'Uváděná cena' : 'Nabídková cena');
-    return '<div class="md-odhad pz-odhad">' +
-      '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
-      '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">' + fmt(o.castka) + ' Kč</span></div>' +
-      // U pochybného rozdílu se nesmí jásat: tentýž údaj, jiné čtení.
-      '<div class="mo-rozdil' + (o.pochybna ? ' mo-pochybna' : '') + '"><b>o ' + o.podOdhadem + ' % níž</b>' +
-        (o.pochybna ? ' — takový rozdíl bývá spoluvlastnický podíl nebo jiná výměra, ověřte si to'
-                    : ', tedy zhruba o ' + fmt(o.rozdil) + ' Kč') + '</div>' +
-      // Pozor na pád: „u orná půda" je špatně česky, proto druh v závorce.
-      '<p class="mo-pozn">Spočítáno z mediánu <b>' + fmt(Math.round(o.zaM2)) + ' Kč/m²</b> — z <b>' +
-      o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) + ') a podobné výměry ' + kde + '. ' +
-      'Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly — to ve veřejných zdrojích není. ' +
-      'Berte to jako vodítko, ne jako odhad znalce.</p>' +
-      '</div>';
+    // Tentýž blok jako v okně na mapě (js/ceny.js) — jen s delším koncem,
+    // na stránce pozemku je na vysvětlení místo.
+    return window.PK_CENY.blokOdhadu(MODEL, d, { fmt: fmt, esc: esc, trida: ' pz-odhad', dlouhy: true });
   }
+
 
   // Přibližný tvar parcely (pro záložní plán, když se nenačte satelit)
   function polyFor(d) {

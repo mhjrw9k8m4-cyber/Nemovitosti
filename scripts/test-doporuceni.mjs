@@ -126,7 +126,15 @@ pravda('rádce u pochybné ceny varuje, ne chválí',
   /o\.pochybna[\s\S]{0,300}spoluvlastnick/.test(radce),
   'rádce by u téhož pozemku říkal „může to být příležitost"');
 const pozemek = readFileSync(new URL('../js/pozemek.js', import.meta.url), 'utf8');
-pravda('stránka pozemku to čte stejně', /o\.pochybna/.test(pozemek));
+/* Stránka pozemku i okno na mapě berou blok s odhadem ze sdíleného
+   js/ceny.js — dokud to tak je, varování u pochybné slevy mají obě
+   automaticky. (Dřív si ho každá skládala sama a v okně na mapě chybělo
+   u 149 nabídek. Že to varování v obou podobách opravdu je, měří
+   scripts/test-ceny.mjs na vymyšleném pozemku, kde je odpověď známá.) */
+pravda('stránka pozemku bere blok s odhadem ze sdíleného modulu',
+  /PK_CENY\.blokOdhadu/.test(pozemek), 'js/pozemek.js si ho skládá sám');
+pravda('a okno na mapě taky', /PK_CENY\.blokOdhadu/.test(main),
+  'js/main.js si ho skládá sám — přesně tak zmizelo varování z mapy');
 
 // --- 5) A hlavně: co se opravdu vykreslí ------------------------------
 // Kontroly výš čtou kód a počítají skóre vlastní kopií vzorce — to by
