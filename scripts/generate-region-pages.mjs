@@ -195,8 +195,17 @@ function spoctiMeze(list){
     if((g==='Zemědělská půda' || g==='Lesní pozemek') && perm2>500) continue;
     (b[g]=b[g]||[]).push(perm2);
   }
+  /* Ořez se hledá JEN u zemědělské půdy a lesa. Tam je shluk za pár korun
+     za metr spolehlivě spoluvlastnický podíl, ne levné pole — a právě kvůli
+     tomu celý mechanismus vznikl.
+     U zahrad a stavebních pozemků je levná cena normální cena, a hledat
+     v nich „mezeru" je nebezpečné: v datech z 22. 9. 2026 by heuristika
+     u zahrad uřízla 37 z 86 nabídek (všechno pod ~45 Kč/m²) a vyhlášený
+     medián zahrady by tím vyskočil o polovinu. Číslo, které web vydává za
+     obvyklou cenu, se nesmí opírat o dvě třetiny trhu. */
+  const SE_ZKOUMA = ['Zemědělská půda', 'Lesní pozemek'];
   for(const g of Object.keys(b)){
-    MEZE_DRUHU[g]=dolniMez(b[g]);
+    MEZE_DRUHU[g] = SE_ZKOUMA.indexOf(g) === -1 ? 0 : dolniMez(b[g]);
     ODFILTROVANO += b[g].filter(x=>x<MEZE_DRUHU[g]).length;
   }
 }

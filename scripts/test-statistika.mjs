@@ -75,14 +75,21 @@ pravda('u zemědělské půdy se mezera opravdu najde', mezZem > 0,
   'shluk podílů na 5–10 Kč/m² by zůstal v mediánu');
 pravda('a leží tam, kde je rozdělení prázdné', mezZem >= 12 && mezZem <= 22,
   `mez vyšla na ${mezZem.toFixed(1)} Kč/m²`);
-// A hlavně: ostatní druhy se tím nesmí osekat.
+/* A hlavně: ostatní druhy se tím nesmí osekat. Nestačí doufat, že u nich
+   heuristika mezeru nenajde — najde. V datech z 22. 9. 2026 by u zahrad
+   uřízla 37 z 86 nabídek a medián zahrady by vyskočil o polovinu. Ořez se
+   proto vůbec nehledá jinde než u zemědělské půdy a lesa, kde je shluk za
+   pár korun spolehlivě spoluvlastnický podíl. */
+pravda('ořez se hledá jen u zemědělské půdy a lesa',
+  /SE_ZKOUMA\s*=\s*\['Zemědělská půda',\s*'Lesní pozemek'\]/.test(gen),
+  'u zahrad a stavebních pozemků je levná cena normální cena — tam se osekávat nesmí');
 for (const g of ['Zahrada', 'Stavební']) {
   const v = podle[g] || [];
   if (v.length < 60) continue;
-  const m = dolniMez(v);
-  const pad = v.filter((x) => x < m).length;
-  pravda(`u druhu „${g}" se nevyřazuje nic`, pad === 0,
-    `odpadlo by ${pad} z ${v.length} — tam levné nabídky nejsou podíly, ale skutečné ceny`);
+  const pad = v.filter((x) => x < dolniMez(v)).length;
+  if (pad > 0) {
+    zpravy.push(`  · pozn.: u druhu „${g}" by heuristika uřízla ${pad} z ${v.length} — proto se tam nepouští`);
+  }
 }
 
 // --- 3) Výsledek na stránce je věrohodný -----------------------------
