@@ -34,7 +34,35 @@ function pridejVybaveni(o, text) {
   const v = PKVybaveni.najdi(text);
   if (v.site.length) o.site = v.site;
   if (v.podil) o.podil = true;
+  vzorkyVybaveni(text, v);
   return o;
+}
+/* DOČASNÁ DIAGNOSTIKA. Čtení z volného textu se nedá ověřit od stolu:
+   po prvním běhu vyšlo, že „příjezd" má 62 % inzerátů a „podíl" 31 %, což
+   na skutečnost nevypadá, ale na šablonu v popisu. Robot proto do logu
+   vypíše pár ukázek okolí každého nálezu — podle nich se dá pravidlo
+   opravit. Nikam se to neukládá, jen do výpisu běhu. */
+const VZORKY = {};
+function vzorkyVybaveni(text, v) {
+  const t = String(text).replace(/\s+/g, ' ');
+  const chci = v.site.concat(v.podil ? ['podil'] : []);
+  for (const k of chci) {
+    VZORKY[k] = VZORKY[k] || [];
+    if (VZORKY[k].length >= 6) continue;
+    const re = k === 'podil'
+      ? /spoluvlastnick|podíl|podil/i
+      : new RegExp(PKVybaveni.SITE.find((x) => x.klic === k).re.source, 'i');
+    const m = re.exec(PKVybaveni.bezDiakritiky(t));
+    if (!m) continue;
+    VZORKY[k].push(t.slice(Math.max(0, m.index - 60), m.index + 90));
+  }
+}
+export function vypisVzorky() {
+  console.log('--- ukázky, co se chytilo (diagnostika) ---');
+  for (const k of Object.keys(VZORKY)) {
+    console.log('[' + k + ']');
+    for (const u of VZORKY[k]) console.log('   …' + u + '…');
+  }
 }
 const OUT = join(__dirname, '..', 'data', 'opportunities.json');
 const OKRESY = join(__dirname, '..', 'data', 'okresy.json');
@@ -757,6 +785,7 @@ async function main() {
   writeFileSync(OUT, JSON.stringify(payload) + '\n', 'utf8');
   const counts = fresh.reduce((a, o) => ((a[o.type] = (a[o.type] || 0) + 1), a), {});
   console.log(`Zapsáno ${fresh.length} příležitostí do ${OUT}. Dle typu:`, JSON.stringify(counts));
+  vypisVzorky();
 }
 
 main().catch((err) => {
