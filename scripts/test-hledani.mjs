@@ -187,7 +187,62 @@ const bezDia = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
     H.misto([{ place: 'Testov', okres: 'X' }], 'Testov') === null);
 }
 
-/* --- 7) Je to doopravdy zapojené? -------------------------------------- */
+/* --- 7) Našeptávač: nabídni obec dřív, než ji člověk dopíše ----------- */
+{
+  const obce = [...new Set(DATA.map((d) => d.place).filter(Boolean))];
+  // Celý název má být první.
+  const cela = obce.find((o) => o && H.norm(o).length >= 5 && !/\s/.test(o));
+  const n1 = H.navrhy(DATA, cela, 6);
+  pravda('našeptávač: celý název obce je první', n1.length > 0 && H.norm(n1[0].text) === H.norm(cela),
+    cela + ' → ' + n1.map((x) => x.text).join(', '));
+
+  // Začátek názvu má přednost před shodou uvnitř.
+  const zac = H.navrhy(DATA, 'kol', 6);
+  const prvniUvnitr = zac.findIndex((x) => x.typ === 'obec' && H.norm(x.text).indexOf('kol') > 0);
+  const posledniZacatek = zac.map((x, i) => (x.typ === 'obec' && H.norm(x.text).indexOf('kol') === 0 ? i : -1)).filter((i) => i >= 0).pop();
+  pravda('našeptávač: začátek názvu jde před shodou uvnitř',
+    prvniUvnitr === -1 || posledniZacatek == null || posledniZacatek < prvniUvnitr,
+    zac.map((x) => x.text).join(', '));
+
+  // Okres si drží místo, i když se najde spousta obcí.
+  pravda('našeptávač: okres se do nabídky vejde i mezi spoustou obcí',
+    zac.some((x) => x.typ === 'okres'), zac.map((x) => x.text + ':' + x.typ).join(', '));
+
+  // Počty musí sedět s tím, co je v datech.
+  const sObci = H.navrhy(DATA, cela, 6).find((x) => x.typ === 'obec');
+  const skutecne = DATA.filter((d) => H.norm(d.place) === H.norm(sObci.text) && H.norm(d.okres) === H.norm(sObci.okres)).length;
+  pravda('našeptávač: počet u obce sedí s daty', sObci.pocet === skutecne, `${sObci.pocet} × ${skutecne}`);
+
+  pravda('našeptávač: jedno písmeno nic nenabízí', H.navrhy(DATA, 'b', 6).length === 0);
+  pravda('našeptávač: prázdný dotaz nic nenabízí', H.navrhy(DATA, '', 6).length === 0);
+  pravda('našeptávač: drží se počtu míst', H.navrhy(DATA, 'a', 3).length <= 3 && H.navrhy(DATA, 'pra', 3).length <= 3);
+  pravda('našeptávač: nesmysl nic nenabízí', H.navrhy(DATA, 'xqzwkj', 6).length === 0);
+  pravda('našeptávač: bez háčků nabídne totéž',
+    H.navrhy(DATA, 'rican', 6).length === H.navrhy(DATA, 'říčan', 6).length);
+}
+
+/* --- 8) Překlep: „mysleli jste…?" ------------------------------------- */
+{
+  pravda('vzdálenost: stejná slova 0', H.vzdalenost('kolin', 'kolin', 2) === 0);
+  pravda('vzdálenost: jedno písmeno navíc 1', H.vzdalenost('kolin', 'kolina', 2) === 1);
+  pravda('vzdálenost: dvě záměny 2', H.vzdalenost('kolin', 'kabin', 2) === 2);
+  pravda('vzdálenost: co je daleko, se dál nepočítá', H.vzdalenost('kolin', 'praha', 2) > 2);
+
+  const obec = [...new Set(DATA.map((d) => d.place).filter((p2) => p2 && H.norm(p2).length >= 5 && !/\s/.test(p2)))][0];
+  const n = H.norm(obec);
+  const preklep = n.slice(0, 2) + (n.charAt(2) === 'x' ? 'y' : 'x') + n.slice(3);   // jedno písmeno jinak
+  pravda('překlep v názvu obce se opraví', H.mysleliJste(DATA, preklep) != null,
+    `${preklep} → ${H.mysleliJste(DATA, preklep)}`);
+  pravda('co se najde, se neopravuje', H.mysleliJste(DATA, obec) === null, obec);
+  pravda('nesmysl se neopravuje', H.mysleliJste(DATA, 'xqzwkj') === null);
+  pravda('víceslovný dotaz se neopravuje', H.mysleliJste(DATA, 'kolin praha') === null);
+  pravda('krátký dotaz se neopravuje', H.mysleliJste(DATA, 'ko') === null);
+  // Nabídka musí začínat stejným písmenem — jinak to není překlep, ale jiné slovo.
+  const navrh = H.mysleliJste(DATA, 'beoun');
+  pravda('oprava začíná stejným písmenem', navrh == null || H.norm(navrh).charAt(0) === 'b', String(navrh));
+}
+
+/* --- 9) Je to doopravdy zapojené? -------------------------------------- */
 {
   const main = readFileSync(path.join(ROOT, 'js', 'main.js'), 'utf8');
   pravda('js/main.js hledá přes společný modul', /HL\.vyhovuje\(d, searchToks\)/.test(main));
@@ -197,6 +252,10 @@ const bezDia = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
   const pH = idx.indexOf('js/hledani.js'), pM = idx.indexOf('js/main.js');
   pravda('index.html načítá js/hledani.js, a dřív než js/main.js', pH > 0 && pH < pM, pH + ' × ' + pM);
   pravda('js/main.js hledá obec přes společný modul', /HL\.misto \? HL\.misto\(DATA, q\)/.test(main));
+  pravda('js/main.js našeptává přes společný modul', /HL\.navrhy\(DATA, searchEl\.value/.test(main));
+  pravda('js/main.js nabízí opravu překlepu', /HL\.mysleliJste\(DATA, searchTerm\)/.test(main));
+  pravda('index.html má seznam pro našeptané obce', /id="map-search-navrhy"/.test(idx));
+  pravda('a políčko na něj ukazuje (kvůli čtečkám)', /aria-controls="map-search-navrhy"/.test(idx));
 }
 
 console.log(zpravy.join('\n'));

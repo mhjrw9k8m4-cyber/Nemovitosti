@@ -105,7 +105,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=a1a46a14">
+  <link rel="stylesheet" href="css/styles.css?v=6b951e57">
 </head>
 <body>
 
@@ -185,7 +185,7 @@
     <div class="map-wide">
       <div class="map-app reveal mv-seznam" id="view-mapa">
         <div class="map-controls-panel">
-          <div class="map-search"><input type="text" id="map-search" placeholder="Hledat obec (např. Kolín)" autocomplete="off" aria-label="Hledat obec nebo okres"></div>
+          <div class="map-search"><input type="text" id="map-search" placeholder="Hledat obec (např. Kolín)" autocomplete="off" aria-label="Hledat obec nebo okres" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="map-search-navrhy"><ul class="ms-navrhy" id="map-search-navrhy" role="listbox" aria-label="Našeptané obce" hidden></ul></div>
           <!-- Hlídání okolí vlastního pozemku. Objeví se, až si člověk místo
                uloží; skript ho vyplní podle toho, co u něj od minule přibylo. -->
           <div class="misto-pruh" id="misto-pruh" hidden>
@@ -237,11 +237,14 @@
                   <input type="number" class="map-num" id="map-cena" inputmode="numeric" min="0" step="1000" placeholder="do" aria-label="Cena do (Kč)">
                 </div>
                 <div class="mc-rychle" role="group" aria-label="Rychlá volba ceny">
-                  <button type="button" data-cena="0-50000">do 50 tis.</button>
-                  <button type="button" data-cena="0-150000">do 150 tis.</button>
-                  <button type="button" data-cena="150000-500000">150–500 tis.</button>
-                  <button type="button" data-cena="500000-2000000">0,5–2 mil.</button>
-                  <button type="button" data-cena="2000000-">nad 2 mil.</button>
+                  <button type="button" data-cena="0-50000">do 50 tis.<span class="mc-n" aria-hidden="true"></span></button>
+                  <button type="button" data-cena="50000-150000">50–150 tis.<span class="mc-n" aria-hidden="true"></span></button>
+                  <button type="button" data-cena="150000-300000">150–300 tis.<span class="mc-n" aria-hidden="true"></span></button>
+                  <button type="button" data-cena="300000-500000">300–500 tis.<span class="mc-n" aria-hidden="true"></span></button>
+                  <button type="button" data-cena="500000-1000000">0,5–1 mil.<span class="mc-n" aria-hidden="true"></span></button>
+                  <button type="button" data-cena="1000000-2000000">1–2 mil.<span class="mc-n" aria-hidden="true"></span></button>
+                  <button type="button" data-cena="2000000-5000000">2–5 mil.<span class="mc-n" aria-hidden="true"></span></button>
+                  <button type="button" data-cena="5000000-">nad 5 mil.<span class="mc-n" aria-hidden="true"></span></button>
                 </div>
               </div>
               <div class="mc-field mc-rozsah"><span class="mc-cap">Výměra (m²)</span>
@@ -251,10 +254,14 @@
                   <input type="number" class="map-num" id="map-area-do" inputmode="numeric" min="0" step="100" placeholder="do" aria-label="Výměra do (m²)">
                 </div>
                 <div class="mc-rychle" role="group" aria-label="Rychlá volba výměry">
-                  <button type="button" data-plocha="0-1000">do 1 000 m²</button>
-                  <button type="button" data-plocha="1000-5000">1 000–5 000</button>
-                  <button type="button" data-plocha="5000-20000">0,5–2 ha</button>
-                  <button type="button" data-plocha="20000-">nad 2 ha</button>
+                  <button type="button" data-plocha="0-500">do 500 m²<span class="mc-n" aria-hidden="true"></span></button>
+                  <button type="button" data-plocha="500-1000">500–1 000 m²<span class="mc-n" aria-hidden="true"></span></button>
+                  <button type="button" data-plocha="1000-2000">1 000–2 000<span class="mc-n" aria-hidden="true"></span></button>
+                  <button type="button" data-plocha="2000-5000">2 000–5 000<span class="mc-n" aria-hidden="true"></span></button>
+                  <button type="button" data-plocha="5000-10000">0,5–1 ha<span class="mc-n" aria-hidden="true"></span></button>
+                  <button type="button" data-plocha="10000-20000">1–2 ha<span class="mc-n" aria-hidden="true"></span></button>
+                  <button type="button" data-plocha="20000-50000">2–5 ha<span class="mc-n" aria-hidden="true"></span></button>
+                  <button type="button" data-plocha="50000-">nad 5 ha<span class="mc-n" aria-hidden="true"></span></button>
                 </div>
               </div>
               <label class="mc-field"><span class="mc-cap">Druh pozemku</span>
@@ -535,12 +542,12 @@
 <script src="js/dropdown.js?v=87dd79a6" defer></script>
 <script src="js/snimek.js?v=f03daf92" defer></script>
 <script src="js/terminy.js?v=63a1d1b6" defer></script>
-<script src="js/ceny.js?v=90d8c6dc" defer></script>
-<script src="js/radce.js?v=7f024858" defer></script>
+<script src="js/ceny.js?v=1de810f1" defer></script>
+<script src="js/radce.js?v=0491f655" defer></script>
 <script src="js/hlidani-logika.js?v=55d0f0e2" defer></script>
 <script src="js/poradi.js?v=670998bf" defer></script>
-<script src="js/hledani.js?v=3ec50a22" defer></script>
-<script src="js/main.js?v=4bb1f2ce" defer></script>
+<script src="js/hledani.js?v=6a407f98" defer></script>
+<script src="js/main.js?v=e8f95237" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,
@@ -555,6 +562,6 @@
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script src="js/upozorneni-feed.js?v=c8e91dd3" defer></script>
 <script src="js/upozorneni.js?v=b7b7c483" defer></script>
-<script src="js/hlavicka.js?v=f6ef1362" defer></script>
+<script src="js/hlavicka.js?v=e996b37e" defer></script>
 </body>
 </html>

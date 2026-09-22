@@ -89,6 +89,25 @@
      jednou rozešel cenový verdikt mezi mapou a stránkou. */
   var MEZ_SLEVA = 15;      // od kolika % pod obvyklou cenou se o slevě vůbec mluví
   var MEZ_POCHYBNA = 60;   // od kolika % už to není sleva, ale důvod k ověření
+  /* KDY ODHADU SAMI NEVĚŘÍME.
+   *
+   * Když se ceny srovnávaných pozemků mezi sebou liší málo, je medián
+   * pevný. Když se liší o násobky, je medián náhoda — a číslo pod ním
+   * taky. Měřítkem je mezikvartilové rozpětí dělené mediánem: 0 znamená
+   * „všechny stejné", 2 znamená „prostřední polovina se liší dvojnásobkem
+   * mediánu".
+   *
+   * Že to není dojem, ukázalo měření BEZ použití ceny měřeného pozemku
+   * (tedy bez kruhu): data se rozpůlila a z každé půlky se postavil
+   * samostatný model. Kde je rozptyl malý, obě půlky se o témž pozemku
+   * shodnou na 8–20 %. Nad 2 se rozcházejí o 41 % a nad 3 o 73 % — tedy
+   * o víc, než kolik činí celá slevá, o které bychom člověku psali.
+   * Takový odhad se nesmí podávat jako číslo, které něco znamená.
+   * Na ostrých datech se to týká 34 ze 403 štítků „pod odhadem".
+   *
+   * Velikost vzorku NIC nepředpovídá (rozchod 13 % u vzorku do deseti
+   * nabídek, 15 % u dvaceti) — proto se hlídá rozptyl, ne počet. */
+  var MEZ_ROZPTYL = 2;
 
   function postav(DATA, okresKraj) {
     okresKraj = okresKraj || OKRES_KRAJ;
@@ -180,6 +199,19 @@
     var medianTypu = {};
     Object.keys(podleTypu).forEach(function (k) { medianTypu[k] = median(podleTypu[k]); });
 
+    /* Kolik srovnatelných pozemků musí být, aby se z nich počítalo.
+     *
+     * Zkoušel jsem to snížit na 3 — vypadalo to slibně, dokud se měřila
+     * jen srovnávací hladina. Přes skutečný odhad a s vynecháním měřené
+     * nabídky z modelu to ale nepotvrdilo NIC: u 803 nabídek, kde odhad
+     * vyšel v obou případech, byl práh 3 lepší u 168 a horší u 143
+     * (znaménkový test p = 0,17, tedy klidně náhoda), medián rozdílu 0,00.
+     * Zisk byl jen zdánlivý: přibylo 66 nových odhadů, jenže ty měly
+     * medián chyby 64,7 % a nejhorší 3 996 %. Práh tedy zůstává 8 —
+     * nepřesný odhad navíc není lepší než žádný.
+     *
+     * Co opravdu předpovídá spolehlivost, není počet srovnání, ale jejich
+     * rozptyl — viz MEZ_ROZPTYL výš. */
     var MIN_VZOREK = 8;
     /* Obvyklá cena za m² pro tenhle pozemek — MÍSTNÍ, ne celostátní.
      * Nejdřív okres, pak kraj, pak celá ČR, a jako poslední záchrana
@@ -275,6 +307,10 @@
          * odhadem". Takový odhad radši nevydáme vůbec. */
         if (d.price > castka * 8) return null;
         var pod = castka > 0 ? Math.round((castka - d.price) / castka * 100) : 0;
+        /* Jak jednotné jsou ceny, ze kterých medián vznikl. Pole je už
+           seřazené (viz ceny()), takže kvartily jsou jen dva indexy. */
+        var kvart = function (p) { return k.arr[Math.min(k.arr.length - 1, Math.floor(p * k.arr.length))]; };
+        var rozptyl = med ? (kvart(0.75) - kvart(0.25)) / med : null;
         return {
           castka: castka,
           zaM2: med,
@@ -298,7 +334,14 @@
              „ověřit cenu". Hranice je úsudek, ne měření — rozdělení slev
              je plynulé a žádný zlom v datech není (změřeno na 1414
              nabídkách s odhadem podle velikosti). */
-          pochybna: pod >= MEZ_POCHYBNA
+          pochybna: pod >= MEZ_POCHYBNA,
+          // Jak moc se srovnávané ceny mezi sebou liší (mezikvartil/medián).
+          rozptyl: rozptyl,
+          /* Odhad, kterému sami nevěříme: srovnávané pozemky se cenou liší
+             tak, že by z jiné poloviny dat vyšlo výrazně jiné číslo.
+             Neskrývá se — jen se u něj nepíše částka, kterou bychom tím
+             tvrdili přesněji, než jak to umíme. */
+          nejisty: rozptyl != null && rozptyl > MEZ_ROZPTYL
         };
       }
       return null;
@@ -308,6 +351,7 @@
       druhGroup: druhGroup,
       MEZ_POCHYBNA: MEZ_POCHYBNA,
       MEZ_SLEVA: MEZ_SLEVA,
+      MEZ_ROZPTYL: MEZ_ROZPTYL,
       neduveryhodna: neduveryhodna,
       percentil: percentil,
       odhad: odhad,
@@ -344,8 +388,9 @@
       '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
       '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">' + fmt(o.castka) + ' Kč</span></div>' +
       // U pochybného rozdílu se nesmí jásat: tentýž údaj, jiné čtení.
-      '<div class="mo-rozdil' + (o.pochybna ? ' mo-pochybna' : '') + '"><b>o ' + o.podOdhadem + ' % níž</b>' +
+      '<div class="mo-rozdil' + (o.pochybna || o.nejisty ? ' mo-pochybna' : '') + '"><b>o ' + o.podOdhadem + ' % níž</b>' +
         (o.pochybna ? ' — takový rozdíl bývá spoluvlastnický podíl nebo jiná výměra, ověřte si to'
+          : o.nejisty ? ' — ale ceny podobných pozemků ' + kde + ' se mezi sebou liší násobky, takže tohle číslo je jen hrubé vodítko'
                     : ', tedy zhruba o ' + fmt(o.rozdil) + ' Kč') + '</div>' +
       '<p class="mo-pozn">Spočítáno z mediánu <b>' + fmt(Math.round(o.zaM2)) + ' Kč/m²</b> — z <b>' +
       o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) + ') a podobné výměry ' + kde + '. ' +

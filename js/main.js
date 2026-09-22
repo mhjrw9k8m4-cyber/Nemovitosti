@@ -2369,7 +2369,8 @@
     var okOkoli = !okoliAktivni() || kmOd(mojeMisto, d) <= (mojeMisto.km || 10);
     var okLevne = !levneOnly || (function () {
       var od = MODEL ? MODEL.odhad(d) : null;
-      return !!(od && od.podleVelikosti && od.podOdhadem >= 15);
+      // Nejistý odhad do filtru nepatří: filtr slibuje výběr, ne dohad.
+      return !!(od && od.podleVelikosti && !od.nejisty && od.podOdhadem >= 15);
     })();
     // Skryté zmizí ze seznamu — ale jen dokud si je člověk sám nevyžádá
     // (tlačítko „Zobrazit skryté"). Nenávratně se nic neztrácí.
@@ -2432,7 +2433,7 @@
          nedůvěryhodný), jdou dozadu: co neumíme spočítat, nemůžeme řadit. */
       var slevaVal = function (d) {
         var o = MODEL ? MODEL.odhad(d) : null;
-        return (o && o.podleVelikosti && !o.pochybna) ? (o.podOdhadem || 0) : -1;
+        return (o && o.podleVelikosti && !o.pochybna && !o.nejisty) ? (o.podOdhadem || 0) : -1;
       };
       arr.sort(function (a, b) { return slevaVal(b) - slevaVal(a); });
     }
@@ -2485,7 +2486,10 @@
        vysvětlit, to nemůžeme doporučit. */
     var body = 0;
     var o = MODEL ? MODEL.odhad(d) : null;
-    if (o && o.podleVelikosti && !o.pochybna && o.podOdhadem >= MEZ_SLEVA) {
+    /* Body jen za slevu, které věříme. „Nejistá" znamená, že se ceny
+       srovnávaných pozemků liší násobky — z jiné poloviny dat by vyšlo
+       jiné číslo, takže doporučovat podle něj nemůžeme. */
+    if (o && o.podleVelikosti && !o.pochybna && !o.nejisty && o.podOdhadem >= MEZ_SLEVA) {
       // 15 % → 0 bodů, 50 % a výš → plných 45.
       body = Math.min(45, Math.round((o.podOdhadem - MEZ_SLEVA) * 45 / 35));
     }
@@ -2537,7 +2541,7 @@
          „Doporučujeme" nesmí nikdy sednout na nabídku, kterou sami
          označujeme za pochybnou. Doporučit a zároveň varovat nejde. */
       vis.slice()
-        .filter(function (d) { var o = MODEL ? MODEL.odhad(d) : null; return !(o && o.pochybna); })
+        .filter(function (d) { var o = MODEL ? MODEL.odhad(d) : null; return !(o && (o.pochybna || o.nejisty)); })
         .sort(function (a, b) { return demand(b) - demand(a); }).slice(0, 1)
         .forEach(function (d) { hotIds[d._id] = true; });
     }
@@ -2592,7 +2596,13 @@
       // Varování o nevěrohodné ceně patří na KARTU, ne jen do detailu.
       // Kdo do detailu neklikne, dozví se to až pozdě — a zrovna tuhle
       // informaci potřebuje vidět hned.
-      var _odhadPochybny = MODEL && (function () { var x = MODEL.odhad(d); return !!(x && x.podleVelikosti && x.pochybna); })();
+      /* Odznak „cena k ověření" se přidává na dvou místech (nevěrohodná
+         cena za m² a odhad, kterému nevěříme). Na téže kartě by pak mohl
+         být dvakrát — proto sem patří obojí. */
+      var _odhadPochybny = MODEL && (function () {
+        var x = MODEL.odhad(d);
+        return !!(x && x.podleVelikosti && (x.pochybna || x.nejisty));
+      })();
       if (MODEL && MODEL.neduveryhodna(d) && !_odhadPochybny) {
         chips.push('<span class="opp-overit" title="Cena za m² je hluboko pod obvyklou — bývá to spoluvlastnický podíl, pozemek bez přístupu nebo chyba v inzerátu">cena k ověření</span>');
       }
@@ -2607,6 +2617,12 @@
         chips.push('<span class="opp-overit" title="Cena je o ' + _od.podOdhadem +
           ' % pod obvyklou cenou podobných pozemků — to už nebývá sleva, ale spoluvlastnický podíl, jiná výměra v dražbě nebo chyba v inzerátu. Ověřte si podklady.">' +
           'ověřit cenu</span>');
+      } else if (_od && _od.podleVelikosti && _od.nejisty && _od.podOdhadem >= 25) {
+        /* Odhad, kterému sami nevěříme (ceny srovnávaných pozemků se liší
+           násobky). Zelený odznak by tvrdil jistotu, kterou nemáme. */
+        chips.push('<span class="opp-overit" title="Cena vychází o ' + _od.podOdhadem +
+          ' % pod obvyklou, jenže ceny podobných pozemků v okolí se mezi sebou liší násobky — odhad je proto jen hrubý. Ověřte si podklady.">' +
+          'cena k ověření</span>');
       } else if (_od && _od.podleVelikosti && _od.podOdhadem >= 25) {
         // Na kartě musí odznak vyjít na JEDEN řádek i na úzkém displeji.
         // „o 65 % pod obvyklou" verzálkami se na mobilu lámalo na dva.
@@ -2736,18 +2752,31 @@
         var pb = listEl.querySelector('#okoli-pryc');
         if (pb) pb.addEventListener('click', vypniOkoli);
         prepocitejCipy();
+        prepocitejRychle();
         updatePolys();
         return;
       }
+      var opravaNav = (anyFilter && searchTerm && HL.mysleliJste) ? HL.mysleliJste(DATA, searchTerm) : null;
       if (favOnly && !favCount()) {
         emptyMsg = 'Zatím nemáte uložené žádné pozemky. U každé nabídky klepněte na záložku a najdete je tady pohromadě.';
       } else if (anyFilter) {
         emptyMsg = 'Nic neodpovídá vybraným filtrům. Zkuste je zmírnit — třeba zvýšit cenu, zvětšit rozsah výměry nebo vybrat „Vše".';
+        /* Nejčastější příčina prázdného výsledku je jedno přehozené
+           písmeno v názvu obce. Říct „nic nemáme" je v tu chvíli
+           zavádějící — nabídneme opravu. Hledá se jednou; stálo to
+           tři milisekundy dvakrát a hlavně by se ty dvě odpovědi mohly
+           časem rozejít. */
+        if (opravaNav) emptyMsg = 'Pro „' + esc(searchTerm) + '" nic nemáme. Mysleli jste <b>' + esc(opravaNav) + '</b>?';
       } else {
         emptyMsg = 'Tady zrovna nic není. Příležitostí přibývá každý týden — zkuste to za pár dní.';
       }
       listEl.innerHTML = '<li class="map-count" style="padding:20px 6px; text-transform:none; font-weight:400; line-height:1.6;">' + emptyMsg +
+        (opravaNav ? '<br><button type="button" id="hledat-opravu" class="reset-btn">Hledat ' + esc(opravaNav) + '</button>' : '') +
         (anyFilter ? '<br><button type="button" id="reset-filtry" class="reset-btn">Zrušit filtry</button>' : '') + '</li>';
+      var ob = listEl.querySelector('#hledat-opravu');
+      if (ob) ob.addEventListener('click', function () {
+        searchEl.value = opravaNav; nastavHledani(opravaNav); renderList();
+      });
       var eb = listEl.querySelector('#reset-filtry');
       if (eb) eb.addEventListener('click', resetFilters);
     } else if (matched > LIST_LIMIT) {
@@ -2757,6 +2786,7 @@
       listEl.appendChild(more);
     }
     prepocitejCipy();   // čísla u kategorií musí sedět s tím, co je vidět
+    prepocitejRychle(); // a totéž u rychlých voleb ceny a výměry
     updatePolys(); // tvary parcel podle aktuálního filtru
   }
 
@@ -3011,8 +3041,81 @@
     activeType = btn.getAttribute('data-type');
     renderList();
   });
+  /* ---------- Našeptávač obcí ----------
+     Kdo neví, jak se obec jmenuje v katastru, dnes tipoval. Teď dostane
+     na výběr rovnou s počtem nabídek — a klepnutím se mapa zaměří tam,
+     kde ty pozemky opravdu jsou. */
+  var navrhyEl = document.getElementById('map-search-navrhy');
+  var navrhyData = [], navrhyKurzor = -1;
+  function zavriNavrhy() {
+    if (!navrhyEl) return;
+    navrhyEl.hidden = true; navrhyEl.innerHTML = '';
+    navrhyData = []; navrhyKurzor = -1;
+    searchEl.setAttribute('aria-expanded', 'false');
+  }
+  function oznacNavrh(i) {
+    if (!navrhyEl) return;
+    var pol = navrhyEl.children;
+    for (var k = 0; k < pol.length; k++) {
+      pol[k].classList.toggle('on', k === i);
+      // Čtečka musí vědět, na čem člověk stojí — samotná barva jí nestačí.
+      pol[k].setAttribute('aria-selected', k === i ? 'true' : 'false');
+    }
+    navrhyKurzor = i;
+    if (i >= 0 && pol[i] && pol[i].scrollIntoView) pol[i].scrollIntoView({ block: 'nearest' });
+  }
+  function vyberNavrh(i) {
+    var n = navrhyData[i];
+    if (!n) return;
+    searchEl.value = n.text;
+    nastavHledani(n.text);
+    zavriNavrhy();
+    renderList();
+    // Mapa ať se rovnou podívá tam, kam člověk ukázal.
+    var pos = geocodeTownLocal(n.text);
+    if (pos && typeof map !== 'undefined' && map) {
+      try { map.setView([pos.lat, pos.lng], Math.max(map.getZoom(), 10), { animate: true }); } catch (e) {}
+    }
+  }
+  function ukazNavrhy() {
+    if (!navrhyEl || !HL.navrhy) return;
+    navrhyData = HL.navrhy(DATA, searchEl.value, 6);
+    if (!navrhyData.length || document.activeElement !== searchEl) { zavriNavrhy(); return; }
+    var html = '';
+    for (var i = 0; i < navrhyData.length; i++) {
+      var n = navrhyData[i];
+      html += '<li role="option" aria-selected="false" data-i="' + i + '">' +
+        '<span class="msn-jmeno">' + esc(n.text) + '</span>' +
+        (n.okres ? '<span class="msn-kde">okr. ' + esc(n.okres) + '</span>' : '<span class="msn-kde">celý okres</span>') +
+        '<span class="msn-pocet">' + n.pocet + '×</span></li>';
+    }
+    navrhyEl.innerHTML = html;
+    navrhyEl.hidden = false;
+    searchEl.setAttribute('aria-expanded', 'true');
+    navrhyKurzor = -1;
+  }
+  if (navrhyEl) {
+    navrhyEl.addEventListener('mousedown', function (e) {
+      var li = e.target.closest('li[data-i]');
+      if (!li) return;
+      e.preventDefault();   // ať políčko nestihne ztratit zaměření
+      vyberNavrh(+li.getAttribute('data-i'));
+    });
+    searchEl.addEventListener('keydown', function (e) {
+      if (navrhyEl.hidden) {
+        if (e.key === 'ArrowDown') { ukazNavrhy(); if (!navrhyEl.hidden) { e.preventDefault(); oznacNavrh(0); } }
+        return;
+      }
+      if (e.key === 'ArrowDown') { e.preventDefault(); oznacNavrh((navrhyKurzor + 1) % navrhyData.length); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); oznacNavrh((navrhyKurzor - 1 + navrhyData.length) % navrhyData.length); }
+      else if (e.key === 'Enter') { if (navrhyKurzor >= 0) { e.preventDefault(); vyberNavrh(navrhyKurzor); } else zavriNavrhy(); }
+      else if (e.key === 'Escape') { e.preventDefault(); zavriNavrhy(); }
+    });
+    searchEl.addEventListener('blur', function () { setTimeout(zavriNavrhy, 120); });
+  }
   searchEl.addEventListener('input', function () {
     nastavHledani(searchEl.value);
+    ukazNavrhy();
     renderList();
   });
   if (druhEl) druhEl.addEventListener('change', function () { activeDruh = druhEl.value; renderList(); });
@@ -3062,6 +3165,54 @@
     skupina.querySelectorAll('button').forEach(function (b) { b.classList.remove('on'); });
     if (!uzPlati) tlacitko.classList.add('on');
     prectiRozsahy();
+  }
+  /* Kolik nabídek je v kterém pásmu. Bez toho je rychlá volba sázka
+     naslepo: člověk klepne na „nad 5 mil." a dostane prázdno, aniž by
+     předem tušil proč. Počítá se stejně jako u čipů nahoře — vlastní
+     omezení se na chvíli vypne, jinak by každé pásmo hlásilo počet toho,
+     co je vidět právě teď (a tedy skoro vždy nulu). */
+  function pasmoSedi(hodnota, cislo) {
+    if (cislo == null) return false;
+    var d = String(hodnota).split('-');
+    var od = d[0] ? parseInt(d[0], 10) : 0;
+    var doo = d[1] ? parseInt(d[1], 10) : Infinity;
+    return cislo >= od && cislo < (isFinite(doo) ? doo : Infinity);
+  }
+  function prepocitejRychle() {
+    var skupiny = document.querySelectorAll('.mc-rychle');
+    if (!skupiny.length) return;
+    /* Vypíná se jen VLASTNÍ omezení té které skupiny. Napoprvé jsem vypnul
+       obě a čísla u ceny pak vůbec nereagovala na zvolenou výměru — byla
+       to pořád táž osmička čísel za celou nabídku. */
+    var pMin = minPrice, pMax = maxPrice, aMin = minArea, aMax = maxArea;
+    function seber(jeCena) {
+      if (jeCena) { minPrice = 0; maxPrice = 0; } else { minArea = 0; maxArea = 0; }
+      var ven = [];
+      try {
+        for (var i = 0; i < DATA.length; i++) if (visible(DATA[i])) ven.push(DATA[i]);
+      } finally {
+        if (jeCena) { minPrice = pMin; maxPrice = pMax; } else { minArea = aMin; maxArea = aMax; }
+      }
+      return ven;
+    }
+    var proCenu = null, proPlochu = null;
+    skupiny.forEach(function (g) {
+      g.querySelectorAll('button').forEach(function (b) {
+        var jeCena = b.hasAttribute('data-cena');
+        var klic = b.getAttribute(jeCena ? 'data-cena' : 'data-plocha');
+        var vzorek = jeCena ? (proCenu || (proCenu = seber(true))) : (proPlochu || (proPlochu = seber(false)));
+        var n = 0;
+        for (var k = 0; k < vzorek.length; k++) {
+          var d = vzorek[k], v = jeCena ? d.price : d.area;
+          if (typeof v === 'number' && v > 0 && pasmoSedi(klic, v)) n++;
+        }
+        var zn = b.querySelector('.mc-n');
+        if (zn) zn.textContent = n ? fmt(n) : '';
+        // Prázdné pásmo není zakázané, jen se nevnucuje — kdo na něj
+        // klepne, dostane poctivé „nic tu není" místo tiché nuly.
+        b.classList.toggle('mc-prazdne', n === 0);
+      });
+    });
   }
   document.querySelectorAll('.mc-rychle').forEach(function (g) {
     g.addEventListener('click', function (e) {
@@ -3191,7 +3342,7 @@
          tu Doubravník „o 95 % pod obvyklou": stavební pozemek za 59 Kč/m²,
          tedy skoro jistě podíl nebo špatně zařazený druh. Nejpodezřelejší
          nabídka na webu jako titulek. Pochybné sem nepatří. */
-      if (!o || !o.podleVelikosti || o.pochybna || o.podOdhadem < 25) return;
+      if (!o || !o.podleVelikosti || o.pochybna || o.nejisty || o.podOdhadem < 25) return;
       if (!bestO || o.podOdhadem > bestO.podOdhadem) { bestO = o; best = d; }
     });
     vypln('deal', null, best ? ('o ' + bestO.podOdhadem + ' % pod obvyklou · ' + best.place) : '', best);

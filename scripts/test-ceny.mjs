@@ -310,6 +310,92 @@ for (const f of ['../js/main.js', '../js/pozemek.js', '../js/radce.js']) {
     (vMape.match(/o (\d+) % níž/) || [])[1] === (vDetailu.match(/o (\d+) % níž/) || [])[1]);
 }
 
+/* --- Kdy odhadu sami nevěříme --------------------------------------
+ *
+ * Medián z cen, které se mezi sebou liší násobky, je náhoda. Model to pozná
+ * podle rozptylu srovnávacího vzorku (mezikvartil / medián) a takový odhad
+ * označí jako nejistý — neskrývá ho, jen u něj netvrdí přesnou částku.
+ *
+ * Nejdřív na vymyšlených datech, kde je odpověď známá dopředu.
+ */
+{
+  const jednotne = [];   // ceny skoro stejné → odhad má být jistý
+  for (let i = 0; i < 20; i++) jednotne.push({ place: 'Stejnov', okres: 'Kolín', type: 'sale', druh: 'orná půda', area: 5000, price: 5000 * (48 + (i % 5)) });
+  const rozhazene = [];  // ceny se liší násobky → odhad má být nejistý
+  for (let i = 0; i < 20; i++) rozhazene.push({ place: 'Rozhazov', okres: 'Tábor', type: 'sale', druh: 'orná půda', area: 5000, price: 5000 * [5, 12, 30, 80, 200][i % 5] });
+  const m = PK_CENY.postav([...jednotne, ...rozhazene], OKRES_KRAJ);
+  /* Ceny volené tak, aby sleva vyšla kolem 40 % — tedy pod hranicí
+     uvěřitelnosti (60 %). Jinak by o znění rozhodovalo „pochybná" a o
+     nejistotě by test nezjistil nic. */
+  const pozemekJ = { place: 'Stejnov', okres: 'Kolín', type: 'sale', druh: 'orná půda', area: 5000, price: 5000 * 30 };
+  const pozemekR = { place: 'Rozhazov', okres: 'Tábor', type: 'sale', druh: 'orná půda', area: 5000, price: 5000 * 18 };
+  const oJ = m.odhad(pozemekJ);
+  const oR = m.odhad(pozemekR);
+  pravda('model zná hranici rozptylu', typeof m.MEZ_ROZPTYL === 'number' && m.MEZ_ROZPTYL > 0, `MEZ_ROZPTYL = ${m.MEZ_ROZPTYL}`);
+  pravda('u jednotných cen je odhad jistý', !!(oJ && oJ.nejisty === false), oJ ? `rozptyl ${oJ.rozptyl}` : 'bez odhadu');
+  pravda('u cen rozhozených přes násobky je odhad označený jako nejistý',
+    !!(oR && oR.nejisty === true), oR ? `rozptyl ${oR.rozptyl}` : 'bez odhadu');
+  pravda('a rozptyl je číslo, ne nic', !!(oJ && oR && isFinite(oJ.rozptyl) && isFinite(oR.rozptyl)));
+
+  // Vysvětlující blok nesmí u nejistého odhadu tvrdit částku.
+  const fmt = (x) => String(Math.round(x));
+  const blokR = PK_CENY.blokOdhadu(m, pozemekR, { fmt });
+  const blokJ = PK_CENY.blokOdhadu(m, pozemekJ, { fmt });
+  pravda('ani jeden z nich není „pochybný" (jinak by test měřil něco jiného)',
+    !!(oJ && oR && !oJ.pochybna && !oR.pochybna), `${oJ && oJ.podOdhadem} % a ${oR && oR.podOdhadem} %`);
+  pravda('u nejistého odhadu se nepíše „tedy zhruba o X Kč"', !/tedy zhruba o/.test(blokR), blokR.slice(0, 200));
+  pravda('a místo toho se řekne, proč je to jen vodítko', /liší násobky/.test(blokR));
+  pravda('u jistého odhadu částka zůstává', /tedy zhruba o/.test(blokJ));
+}
+
+/* Teď totéž na OSTRÝCH datech — a hlavně důkaz, že hranice něco znamená.
+ * Měří se bez použití ceny měřeného pozemku: data se rozpůlí a z každé
+ * půlky se postaví samostatný model. Když se dvě nezávislé půlky o témž
+ * pozemku neshodnou, odhad není spolehlivý. Přesně to má „nejistý" chytat. */
+{
+  const DATA = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const M = PK_CENY.postav(DATA);
+  const MA = PK_CENY.postav(DATA.filter((_, i) => i % 2 === 0));
+  const MB = PK_CENY.postav(DATA.filter((_, i) => i % 2 === 1));
+  const med = (a) => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y), n = b.length;
+    return n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2; };
+  const jisty = [], nejisty = [];
+  let sStitkem = 0, zNichNejistych = 0;
+  for (const d of DATA) {
+    const o = M.odhad(d);
+    if (!o || !o.podleVelikosti) continue;
+    if (o.podOdhadem >= M.MEZ_SLEVA) { sStitkem++; if (o.nejisty) zNichNejistych++; }
+    const a = MA.odhad(d), b = MB.odhad(d);
+    if (!a || !b) continue;
+    const rozchod = Math.abs(a.zaM2 - b.zaM2) / ((a.zaM2 + b.zaM2) / 2) * 100;
+    (o.nejisty ? nejisty : jisty).push(rozchod);
+  }
+  pravda('na ostrých datech nějaké nejisté odhady jsou', nejisty.length > 5, `jen ${nejisty.length}`);
+  pravda('ale je to menšina štítků „pod odhadem"', zNichNejistych < sStitkem * 0.25,
+    `${zNichNejistych} z ${sStitkem} — to už by nebylo upozornění, ale šum`);
+  const rJ = med(jisty), rN = med(nejisty);
+  pravda('dvě nezávislé půlky dat se u nejistých odhadů rozcházejí výrazně víc',
+    rN > rJ * 2, `nejisté ${rN && rN.toFixed(0)} %, jisté ${rJ && rJ.toFixed(0)} % — hranice pak nic neodděluje`);
+}
+
+/* A že se podle toho web opravdu řídí — jinak by model věděl a stránka
+   tvrdila dál svoje. */
+{
+  const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
+  const radce = readFileSync(new URL('../js/radce.js', import.meta.url), 'utf8');
+  /* Čte se JEN tělo funkce demand(). Když se hledalo v celém souboru,
+     výraz se trefil do řazení podle slevy o pár řádků výš a kontrola
+     prošla i s rozbitým skóre — přistiženo sabotáží. */
+  const teloSkore = main.slice(main.indexOf('function demand(d)'), main.indexOf('var LIST_LIMIT'));
+  pravda('skóre pro doporučení nejistý odhad neodměňuje',
+    teloSkore.length > 100 && /!o\.nejisty/.test(teloSkore), 'v těle demand() se na nejistotu nekouká');
+  pravda('★ Doporučujeme nejistý odhad nevybere', /o\.pochybna \|\| o\.nejisty/.test(main));
+  pravda('filtr „pod obvyklou cenou" nejistý odhad nepustí', /!od\.nejisty/.test(main));
+  pravda('řazení podle slevy nejistý odhad nebere', /!o\.pochybna && !o\.nejisty\) \? \(o\.podOdhadem/.test(main));
+  pravda('odznak na kartě u nejistého odhadu netvrdí slevu', /_od\.nejisty && _od\.podOdhadem >= 25/.test(main));
+  pravda('rádce u nejistého odhadu nemluví o příležitosti', /o\.nejisty && o\.podOdhadem >= 25/.test(radce));
+}
+
 console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

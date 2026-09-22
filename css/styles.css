@@ -517,8 +517,13 @@ header.hl-zhasnuta{opacity:0; pointer-events:none;}
 header:focus-within{opacity:1 !important; pointer-events:auto !important;}
 @media (prefers-reduced-motion:reduce){ header{transition:none;} }
 /* Hlavička je vyňatá z toku, takže si pod ni stránka musí udělat místo
-   sama. Výška je naměřená (nezmenšená hlavička); po zmenšení při rolování
-   se odsazení nemění, a nic proto neposkakuje. */
+   sama. Těch 85 px je výška NEZMENŠENÉ hlavičky — po zmenšení při rolování
+   se odsazení nemění, a nic proto neposkakuje.
+   Je to pevné číslo, ne naměřené: měřit ho skriptem by znamenalo sáhnout
+   na rozvržení až po prvním vykreslení, a to je přesně ten druh poskočení,
+   kterému se tu vyhýbáme. Že to číslo pořád sedí, hlídá scripts/test-hlavicka.mjs
+   — kdo změní odsazení hlavičky nebo velikost písma v ní, dozví se to hned.
+   (Proměnná --vyska-hlavicky je tu kvůli čitelnosti; nikdo ji nenastavuje.) */
 body{padding-top:var(--vyska-hlavicky, 85px);}
 /* Mobil: silnější podklad + slabší blur = plynulejší scroll na iPhonu */
 @media (max-width:768px){ header{background:rgba(255,255,255,0.92); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);} }
@@ -784,6 +789,21 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .map-search input{width:100%; background:#FFFFFF; border:1px solid var(--line-ui); border-radius:var(--r-sm); padding:13px 15px; font-size:14px; color:#141E19; font-family:inherit; box-shadow:0 1px 2px rgba(24,45,34,0.06);}
 .map-search input::placeholder{color:#8A93A3;}
 .map-search input:focus-visible{border-color:var(--copper-bright); outline:none; box-shadow:0 0 0 3px rgba(110,155,255,0.22);}
+/* Našeptávač obcí. V nabídce je přes tisíc obcí a nikdo neví, jak se
+   která jmenuje v katastru („Dobšice u Znojma"). Ať si člověk vybere
+   z nabídky místo hádání — i s tím, kolik tam čeho je. */
+.map-search{position:relative;}
+.ms-navrhy{position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:40; margin:0; padding:4px; list-style:none;
+  background:var(--ink-soft); border:1px solid var(--line-ui); border-radius:var(--r-sm); box-shadow:var(--e2,0 6px 20px rgba(24,45,34,.14));
+  max-height:min(46vh,320px); overflow-y:auto; overscroll-behavior:contain;}
+.ms-navrhy li{display:flex; align-items:center; gap:8px; min-height:38px; padding:7px 10px; border-radius:var(--r-xs);
+  font-size:13.5px; color:var(--text-ondark); cursor:pointer;}
+.ms-navrhy li:hover,.ms-navrhy li.on{background:var(--ink-soft2);}
+.ms-navrhy .msn-jmeno{font-weight:700;}
+.ms-navrhy .msn-kde{color:var(--muted); font-size:12.5px;}
+.ms-navrhy .msn-pocet{margin-left:auto; color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; white-space:nowrap;}
+@media (prefers-reduced-motion:no-preference){ .ms-navrhy{animation:msnPrijed .12s ease-out;} }
+@keyframes msnPrijed{from{opacity:0; transform:translateY(-3px);} to{opacity:1; transform:none;}}
 /* Nápadné tlačítko „pozemky ve vašem okolí" (geolokace) */
 .map-near-btn{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:9px; padding:12px 14px; border-radius:var(--r-ovladani); font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; color:#fff; background:var(--plocha-znacka); border:1px solid rgba(31,81,56,0.55); box-shadow:var(--glow); transition:transform .1s ease, box-shadow .15s ease, filter .15s ease;}
 /* Čekání na polohu musí být vidět na tlačítku, ne jen v hlášce, která po
@@ -855,6 +875,13 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   transition:background .15s ease, color .15s ease, border-color .15s ease;}
 .mc-rychle button:hover{border-color:var(--copper); color:var(--copper);}
 .mc-rychle button.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
+/* Počet nabídek v pásmu. Bez něj je rychlá volba sázka naslepo: klepnu na
+   „nad 5 mil." a dostanu prázdno, aniž bych předem tušil proč. */
+.mc-rychle button{display:inline-flex; align-items:center; gap:6px;}
+.mc-n{font-size:11px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums;}
+.mc-rychle button.on .mc-n{color:rgba(255,255,255,.82);}
+.mc-rychle button.mc-prazdne{opacity:.45;}
+.mc-rychle button.mc-prazdne:hover{border-color:var(--line-ui); color:var(--text-ondark-mute);}
 @media (max-width:560px){
   .mc-rozsah{grid-column:1 / -1;}
   /* Rozbalovátka s dlouhými popisky („Všechny druhy pozemků") se ve dvou
@@ -2393,6 +2420,18 @@ body::after{
   mix-blend-mode:multiply;}
 /* Na tmavých plochách by zrno dělalo špínu, tam se rozjasňuje jinak. */
 @media (prefers-reduced-motion:reduce){ body::after{opacity:.22;} }
+/* NA DOTYKU ŽÁDNÉ ZRNO.
+   Tohle je ČTVRTÁ příčina té mezery nad hlavičkou na iPhonu — a jiná než
+   tři, které tu jsou popsané výš. Zrno je celoobrazovková vrstva, která je
+   1) position:fixed, 2) přes celé okno, 3) nad hlavičkou (z-index 9999) a
+   4) míchaná s pozadím (mix-blend-mode). Kvůli tomu míchání musí Safari
+   při každém snímku spočítat, co je pod ní — tedy celou stránku i hlavičku
+   — a tím se překreslování fixních prvků při rolování rozjede. Hlavička
+   pak na okamžik zůstane nakreslená na starém místě a nad ní prosvítá pruh
+   obsahu. Na počítači se to neprojeví, protože tam se roluje jinak.
+   Na telefonu je zrno při třicetiprocentní průhlednosti stejně sotva vidět,
+   takže se tím nic neztrácí. */
+@media (hover:none){ body::after{display:none;} }
 
 
 /* =====================================================================

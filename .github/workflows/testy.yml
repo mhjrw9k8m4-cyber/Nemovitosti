@@ -139,6 +139,9 @@ jobs:
       - name: Dotykové terče na mobilu
         run: node scripts/test-dotyk.mjs
 
+      - name: Našeptávač obcí a oprava překlepu
+        run: node scripts/test-naseptavac.mjs
+
       - name: Ovládání mapy (klepání do plátna)
         run: node scripts/test-mapa.mjs
 

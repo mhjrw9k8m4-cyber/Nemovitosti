@@ -17,6 +17,20 @@
 //    vrstva se překresluje se zpožděním za zbytkem stránky, takže pod ní
 //    na okamžik prosvítá obsah.
 //
+// 4) MÍCHANÁ CELOOBRAZOVKOVÁ VRSTVA NAD HLAVIČKOU. Zrno přes celou stránku
+//    bylo position:fixed, přes celé okno, nad hlavičkou (z-index 9999) a
+//    míchané s pozadím (mix-blend-mode). Kvůli míchání musí Safari každý
+//    snímek počítat, co je pod tou vrstvou — tedy celou stránku i hlavičku —
+//    a překreslování fixních prvků se tím rozjede. Tohle byla ta příčina,
+//    kterou tři předchozí opravy minuly, protože se hledalo na hlavičce
+//    samotné, a ne nad ní.
+//
+// A jedna příčina, která není v CSS, ale v logice (js/hlavicka.js):
+// „přestaly chodit scroll události" NEZNAMENÁ „obraz stojí". Na iPhonu
+// události při setrvačném dojezdu na chvíli ustanou a sbalování lišty
+// Safari neudělá scroll událost vůbec — posune se jenom visualViewport.
+// Hlavička se pak rozsvítila uprostřed pohybu na starém místě.
+//
 // Poslední bod má i pojistku navíc: na dotyku je hlavička NEPRŮHLEDNÁ.
 // I kdyby prohlížeč překreslil pozdě, není čím prosvítat.
 import { chromium } from 'playwright-core';
@@ -211,6 +225,128 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
   pravda(`${jm}: a to úplně nahoře`, v.poKlidu.top === 0,
     `stála na ${v.poKlidu.top} px od okraje`);
   pravda(`${jm}: u horního okraje svítí vždy`, v.nahore === 1, `průhlednost ${v.nahore}`);
+  await ctx.close();
+}
+
+/* --- 3b) Místo pod hlavičkou musí sedět s její výškou ----------------
+ *
+ * Hlavička je vyňatá z toku a stránka si pod ni dělá místo pevným číslem
+ * (85 px). Komentář v CSS dřív tvrdil, že je to naměřená hodnota — nebyla,
+ * nic ji neměřilo. Číslo naštěstí sedělo, ale sedělo by jen do první
+ * změny odsazení nebo písma v hlavičce, a pak by nad obsahem zůstal pruh
+ * pozadí (nebo by se obsah schoval pod hlavičku). Od téhle chvíle to není
+ * náhoda, ale hlídaná shoda. */
+for (const [jm, opt, stranka] of [['telefon', TELEFON, 'index.html'], ['úzký telefon', { ...TELEFON, viewport: { width: 320, height: 720 } }, 'index.html'],
+                                  ['monitor', MONITOR, 'index.html'], ['textová stránka', TELEFON, 'cena-pozemku.html']]) {
+  const { ctx, p } = await otevri(opt, stranka);
+  const v = await p.evaluate(() => ({
+    vyska: Math.round(document.querySelector('header').getBoundingClientRect().height),
+    odsazeni: Math.round(parseFloat(getComputedStyle(document.body).paddingTop)),
+  }));
+  pravda(`${jm}: místo pod hlavičkou sedí s její výškou`, Math.abs(v.vyska - v.odsazeni) <= 2,
+    `hlavička ${v.vyska} px, stránka si nechává ${v.odsazeni} px — rozdíl ${v.odsazeni - v.vyska} px je pruh navíc nad obsahem`);
+  await ctx.close();
+}
+
+/* --- 4) Nad hlavičkou nesmí ležet míchaná celoobrazovková vrstva ------
+ *
+ * Tohle je ta příčina, kterou tři opravy minuly: hledalo se na hlavičce,
+ * jenže vinu nesla vrstva NAD ní. Test proto prochází všechno, co je
+ * position:fixed přes celé okno, a hlídá dvě věci naráz: míchání s pozadím
+ * a to, že taková vrstva leží nad hlavičkou. */
+for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
+  const { ctx, p } = await otevri(opt, 'index.html');
+  const vrstvy = await p.evaluate(() => {
+    const ven = [];
+    const zkoumej = (el, popis) => {
+      const c = getComputedStyle(el, popis || null);
+      if (c.position !== 'fixed') return;
+      const okno = { w: innerWidth, h: innerHeight };
+      // „Přes celé okno" poznáme podle inset:0 nebo podle rozměru.
+      const r = popis ? null : el.getBoundingClientRect();
+      const velka = popis
+        ? (c.inset === '0px' || (c.top === '0px' && c.left === '0px' && c.right === '0px' && c.bottom === '0px'))
+        : (r && r.width >= okno.w - 2 && r.height >= okno.h - 2);
+      if (!velka) return;
+      ven.push({
+        kdo: (el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + (popis || '')),
+        michani: c.mixBlendMode,
+        z: parseInt(c.zIndex, 10) || 0,
+        vidno: c.display !== 'none' && c.visibility !== 'hidden' && parseFloat(c.opacity || '1') > 0
+      });
+    };
+    for (const el of document.querySelectorAll('html, body, body > *')) {
+      zkoumej(el, null); zkoumej(el, '::before'); zkoumej(el, '::after');
+    }
+    const zHlavicky = parseInt(getComputedStyle(document.querySelector('header')).zIndex, 10) || 0;
+    return { ven, zHlavicky };
+  });
+  const michane = vrstvy.ven.filter((v) => v.vidno && v.michani && v.michani !== 'normal');
+  pravda(`${jm}: žádná celoobrazovková vrstva se nemíchá s pozadím`,
+    jm === 'monitor' ? true : michane.length === 0,
+    michane.map((v) => `${v.kdo} (${v.michani}, z-index ${v.z})`).join(', '));
+  const nadHlavickou = vrstvy.ven.filter((v) => v.vidno && v.z > vrstvy.zHlavicky && v.michani && v.michani !== 'normal');
+  pravda(`${jm}: a žádná taková neleží nad hlavičkou`,
+    jm === 'monitor' ? true : nadHlavickou.length === 0,
+    `hlavička má z-index ${vrstvy.zHlavicky}, nad ní: ` + nadHlavickou.map((v) => `${v.kdo} z-index ${v.z}`).join(', '));
+  await ctx.close();
+}
+
+/* --- 5) Sbalování lišty Safari: pohyb BEZ scroll události -------------
+ *
+ * Tohle je jádro čtvrté opravy. Dřív se čekalo jen na ticho ve scroll
+ * událostech a věřilo se, že ticho = obraz stojí. Na iPhonu to neplatí:
+ * když se sbaluje nebo rozbaluje lišta Safari, posune se celé okno a
+ * scroll událost nevznikne vůbec — mění se jenom visualViewport. Hlavička
+ * tedy zůstala rozsvícená a Safari ji nakreslilo tam, kde okno bývalo.
+ * Odtud ten pruh obsahu nad ní.
+ *
+ * V Chromu se to nedá vyvolat doopravdy, ale dá se poslat TÁŽ UDÁLOST,
+ * jakou by poslal Safari. Stará hlavička ji neposlouchala vůbec — tenhle
+ * test na ní spolehlivě padá. */
+{
+  const { ctx, p } = await otevri(TELEFON, 'index.html');
+  const v = await p.evaluate(async () => {
+    const h = document.querySelector('header');
+    const spi = (ms) => new Promise((r) => setTimeout(r, ms));
+    const svit = () => parseFloat(getComputedStyle(h).opacity);
+
+    window.scrollTo({ top: 1400, behavior: 'instant' });
+    await spi(800);
+    const poUsazeni = svit();
+
+    // Lišta prohlížeče se pohnula — žádná scroll událost, jen visualViewport.
+    let poListe = null;
+    if (window.visualViewport) {
+      window.visualViewport.dispatchEvent(new Event('resize'));
+      await spi(60);
+      poListe = svit();
+    }
+
+    // Plynulý pohyb: dokud se hýbe, musí být zhasnutá.
+    let svitilaPriPohybu = 0, snimku = 0;
+    await new Promise((hotovo) => {
+      let n = 0;
+      (function krok() {
+        window.scrollBy({ top: 24, behavior: 'instant' });
+        snimku++;
+        if (svit() > 0.5) svitilaPriPohybu++;
+        if (++n < 30) requestAnimationFrame(krok); else hotovo();
+      }());
+    });
+
+    await spi(900);
+    return { poUsazeni, poListe, svitilaPriPohybu, snimku,
+      poKlidu: svit(), top: h.getBoundingClientRect().top };
+  });
+  pravda('po usazení hlavička svítí', v.poUsazeni === 1, `průhlednost ${v.poUsazeni}`);
+  pravda('pohyb lišty prohlížeče (bez scroll události) ji zhasne',
+    v.poListe === null || v.poListe < 0.9,
+    `po pohybu okna měla průhlednost ${v.poListe} — hlavička o posunu okna vůbec neví`);
+  pravda('při plynulém pohybu zůstává zhasnutá', v.svitilaPriPohybu <= 2,
+    `svítila v ${v.svitilaPriPohybu} z ${v.snimku} snímků`);
+  pravda('po skutečném zastavení se rozsvítí', v.poKlidu === 1, `průhlednost ${v.poKlidu}`);
+  pravda('a stojí úplně nahoře', Math.abs(v.top) < 2, `${v.top} px od okraje`);
   await ctx.close();
 }
 

@@ -90,6 +90,14 @@
           '. Takový rozdíl už nebývá sleva: nejčastěji je v inzerátu výměra <b>celé parcely</b>, ale prodává se jen <b>spoluvlastnický podíl</b>, ' +
           'nebo jde o dražbu s jinou výměrou, případně o chybu v ceně. <b>Ověřte si to na listu vlastnictví</b>, než něco podepíšete.' };
       }
+      /* Odhad stojí na cenách, které se mezi sebou liší násobky. Rádce
+         nesmí mluvit o příležitosti tam, kde by z jiné poloviny dat vyšlo
+         výrazně jiné číslo — řekne rovnou, že je to hrubé vodítko. */
+      if (o.nejisty && o.podOdhadem >= 25) {
+        return { lvl: 'mid', txt: 'Cena vychází <b>o ' + o.podOdhadem + ' % pod</b> obvyklou cenou podobných pozemků ' + kde +
+          '. Jenže ceny takových pozemků se tu mezi sebou liší <b>násobky</b>, takže je to jen hrubé vodítko, ne spolehlivý rozdíl. ' +
+          'Srovnejte si konkrétní nabídky v okolí sami.' };
+      }
       if (o.podOdhadem >= 25) {
         return { lvl: 'ok', txt: 'Cena je <b>o ' + o.podOdhadem + ' % pod</b> obvyklou cenou podobně velkých pozemků téhož druhu ' + kde + '. Může to být příležitost — ale stejně tak důvod ptát se <b>proč</b>: přístup, břemena, tvar parcely.' };
       }

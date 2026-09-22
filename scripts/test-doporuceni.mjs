@@ -118,8 +118,12 @@ const mainKarta = main.slice(main.indexOf('var _od = MODEL ? MODEL.odhad(d) : nu
 pravda('karta u pochybné ceny nenabízí slevu, ale ověření',
   /_od\.pochybna[\s\S]{0,400}ověřit cenu/.test(mainKarta),
   'zelený odznak „−91 % proti okolí" na kartě, která je skoro jistě podíl');
+/* Hlídá se PRAVIDLO, ne doslovné znění řádku. Dřív tu byl přesný opis
+   a spadlo to ve chvíli, kdy se výběr ZPŘÍSNIL (přibyly i odhady, kterým
+   sami nevěříme) — tedy když se web zlepšil. Test má chytat opak. */
+const filtrSpicky = (main.match(/filter\(function \(d\) \{ var o = MODEL \? MODEL\.odhad\(d\) : null; return ![^;]+; \}\)/) || [''])[0];
 pravda('a štítek „Doporučujeme" na pochybnou nabídku nesedne',
-  /filter\(function \(d\) \{ var o = MODEL \? MODEL\.odhad\(d\) : null; return !\(o && o\.pochybna\); \}\)/.test(main),
+  /o\.pochybna/.test(filtrSpicky),
   'doporučit a zároveň varovat u téhož pozemku nejde');
 const radce = readFileSync(new URL('../js/radce.js', import.meta.url), 'utf8');
 pravda('rádce u pochybné ceny varuje, ne chválí',
