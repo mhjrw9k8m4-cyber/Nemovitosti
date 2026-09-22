@@ -105,7 +105,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=9ba627f4">
+  <link rel="stylesheet" href="css/styles.css?v=006d5c5e">
 </head>
 <body>
 
@@ -169,7 +169,7 @@
         <div class="hero-head reveal">
         <div class="eyebrow"><span class="live-dot"></span>Pozemky na prodej i v dražbě · celá ČR</div>
         <h1>Hledáte pozemek? <em>Najdete ho tady.</em></h1>
-        <div class="trust-line hero-stats"><span class="ts-n"><b id="hero-n-count">1 941</b> pozemků</span><span class="ts-sep" aria-hidden="true">·</span><span class="ts-n"><b id="hero-n-okres">77</b> okresů</span></div>
+        <div class="trust-line hero-stats"><span class="ts-n"><b id="hero-n-count">1 940</b> pozemků</span><span class="ts-sep" aria-hidden="true">·</span><span class="ts-n"><b id="hero-n-okres">77</b> okresů</span></div>
         <div class="hero-pod">celá ČR · zdarma, bez registrace</div>
         <!-- Živý důkaz, že web není skanzen. Vyplní ho skript ze skutečných
              dat; dokud se nenačtou, není tu vůbec nic (žádné „Načítám…"). -->
@@ -278,12 +278,17 @@
               </label>
               <label class="mc-field"><span class="mc-cap">Seřadit</span>
                 <select class="map-select" id="map-sort" aria-label="Řazení příležitostí">
-                  <option value="demand">Doporučené</option>
+                  <option value="demand">Doporučené (denně se střídá)</option>
                   <option value="near">Nejblíž ke mně</option>
                   <option value="perm2_asc">Nejlepší cena/m²</option>
                   <option value="price_asc">Nejlevnější</option>
                   <option value="price_desc">Nejdražší</option>
                   <option value="area_desc">Největší výměra</option>
+                  <option value="area_asc">Nejmenší výměra</option>
+                  <option value="sleva_desc">Největší sleva proti okolí</option>
+                  <option value="drazba_asc">Nejdřív končící dražba</option>
+                  <option value="nove">Nejnovější</option>
+                  <option value="nahodne">Náhodně (zamíchat)</option>
                 </select>
               </label>
               <div class="mc-toggles">
@@ -335,19 +340,19 @@
       </div>
       <div class="kraj-grid reveal">
         <a class="kraj-item" href="pozemky-praha-kraj.html"><span class="kj-n">Praha</span><span class="kj-c mono" data-kraj="Praha">29 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-stredocesky-kraj.html"><span class="kj-n">Středočeský</span><span class="kj-c mono" data-kraj="Středočeský">388 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-jihocesky-kraj.html"><span class="kj-n">Jihočeský</span><span class="kj-c mono" data-kraj="Jihočeský">123 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-stredocesky-kraj.html"><span class="kj-n">Středočeský</span><span class="kj-c mono" data-kraj="Středočeský">385 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-jihocesky-kraj.html"><span class="kj-n">Jihočeský</span><span class="kj-c mono" data-kraj="Jihočeský">122 pozemků</span></a>
         <a class="kraj-item" href="pozemky-plzensky-kraj.html"><span class="kj-n">Plzeňský</span><span class="kj-c mono" data-kraj="Plzeňský">119 pozemků</span></a>
         <a class="kraj-item" href="pozemky-karlovarsky-kraj.html"><span class="kj-n">Karlovarský</span><span class="kj-c mono" data-kraj="Karlovarský">29 pozemků</span></a>
         <a class="kraj-item" href="pozemky-ustecky-kraj.html"><span class="kj-n">Ústecký</span><span class="kj-c mono" data-kraj="Ústecký">146 pozemků</span></a>
         <a class="kraj-item" href="pozemky-liberecky-kraj.html"><span class="kj-n">Liberecký</span><span class="kj-c mono" data-kraj="Liberecký">151 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-kralovehradecky-kraj.html"><span class="kj-n">Královéhradecký</span><span class="kj-c mono" data-kraj="Královéhradecký">74 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-kralovehradecky-kraj.html"><span class="kj-n">Královéhradecký</span><span class="kj-c mono" data-kraj="Královéhradecký">76 pozemků</span></a>
         <a class="kraj-item" href="pozemky-pardubicky-kraj.html"><span class="kj-n">Pardubický</span><span class="kj-c mono" data-kraj="Pardubický">84 pozemků</span></a>
         <a class="kraj-item" href="pozemky-vysocina-kraj.html"><span class="kj-n">Vysočina</span><span class="kj-c mono" data-kraj="Vysočina">54 pozemků</span></a>
         <a class="kraj-item" href="pozemky-jihomoravsky-kraj.html"><span class="kj-n">Jihomoravský</span><span class="kj-c mono" data-kraj="Jihomoravský">394 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-olomoucky-kraj.html"><span class="kj-n">Olomoucký</span><span class="kj-c mono" data-kraj="Olomoucký">104 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-zlinsky-kraj.html"><span class="kj-n">Zlínský</span><span class="kj-c mono" data-kraj="Zlínský">163 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-moravskoslezsky-kraj.html"><span class="kj-n">Moravskoslezský</span><span class="kj-c mono" data-kraj="Moravskoslezský">83 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-olomoucky-kraj.html"><span class="kj-n">Olomoucký</span><span class="kj-c mono" data-kraj="Olomoucký">103 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-zlinsky-kraj.html"><span class="kj-n">Zlínský</span><span class="kj-c mono" data-kraj="Zlínský">164 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-moravskoslezsky-kraj.html"><span class="kj-n">Moravskoslezský</span><span class="kj-c mono" data-kraj="Moravskoslezský">84 pozemků</span></a>
         <a class="kraj-item kraj-vse" href="pozemky-podle-okresu.html"><span class="kj-n">Všechny okresy</span><span class="kj-c mono">77 okresů</span></a>
       </div>
     </div>
@@ -534,7 +539,8 @@
 <script src="js/ceny.js?v=a95a6303" defer></script>
 <script src="js/radce.js?v=7f024858" defer></script>
 <script src="js/hlidani-logika.js?v=ba6c6ec8" defer></script>
-<script src="js/main.js?v=2b259813" defer></script>
+<script src="js/poradi.js?v=8b006a9e" defer></script>
+<script src="js/main.js?v=cbccda77" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,
@@ -549,5 +555,6 @@
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script src="js/upozorneni-feed.js?v=c8e91dd3" defer></script>
 <script src="js/upozorneni.js?v=b7b7c483" defer></script>
+<script src="js/hlavicka.js?v=f6ef1362" defer></script>
 </body>
 </html>

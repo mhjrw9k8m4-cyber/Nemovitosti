@@ -25,6 +25,7 @@
 // Obojí je typ chyby, který nikde nespadne a žádný jiný test nechytí:
 // web funguje, jen mlčí.
 import { chromium } from 'playwright-core';
+import { createRequire } from 'node:module';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -316,13 +317,24 @@ const stavVybiraku = (p) => p.evaluate(() => {
      kolik nabídek po odstranění duplicit zbýt MÁ, a porovnáme s tím, co
      web hlásí za celou republiku. */
   const surova = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
-  const klice = new Set(surova.map((d) => [d.place, d.okres, d.price, d.area, d.druh].join('|')));
+  /* Dražby po termínu se do počtu nepočítají — dražit se po termínu nedá,
+     takže to není příležitost (viz scripts/test-vypadky.mjs). Bez tohohle
+     pravidla by kontrola hlásila rozdíl pokaždé, když v datech zrovna
+     nějaká prošlá dražba je, a vypadalo by to jako rozbité odstraňování
+     duplicit. Datum se čte touž funkcí jako v prohlížeči. */
+  // js/terminy.js se věší na globalThis, není to modul pro require —
+  // načteme ho stejně, jako to dělá generátor stránek.
+  new Function(readFileSync(new URL('../js/terminy.js', import.meta.url), 'utf8'))();
+  const T = globalThis.PK_TERMINY;
+  const zive = surova.filter((d) => { const n = T.daysUntil(d.extra); return !(n != null && n < 0); });
+  const klice = new Set(zive.map((d) => [d.place, d.okres, d.price, d.area, d.druh].join('|')));
   pravda('v datech vůbec nějaké duplicity jsou (jinak test nic nedokazuje)',
     klice.size < surova.length,
     `v souboru je ${surova.length} nabídek a všechny jsou jedinečné`);
   pravda('web ukazuje data bez duplicit',
     +celyPocet === klice.size,
-    `web hlásí ${celyPocet}, po odstranění duplicit má být ${klice.size} (v souboru ${surova.length})`);
+    `web hlásí ${celyPocet}, po odstranění duplicit a dražeb po termínu má být ${klice.size}` +
+    ` (v souboru ${surova.length}, z toho ${surova.length - zive.length} po termínu)`);
 
   // Okruh se dá změnit a seznam na to zareaguje.
   await p.locator('#misto-km').scrollIntoViewIfNeeded();

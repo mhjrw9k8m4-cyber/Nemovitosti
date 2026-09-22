@@ -39,6 +39,9 @@ jobs:
       - name: Statistika cen (čísla odpovídají skutečnosti)
         run: node scripts/test-statistika.mjs
 
+      - name: Pořadí nabídek (nic nezapadne)
+        run: node scripts/test-poradi.mjs
+
       - name: Razítka verzí (aby lidem nechodila stará kopie)
         run: node scripts/test-verze.mjs
 
@@ -144,6 +147,9 @@ jobs:
 
       - name: Čerstvost dat a stav zdrojů
         run: node scripts/test-cerstvost.mjs
+
+      - name: Řazení výpisu (každá volba dělá, co slibuje)
+        run: node scripts/test-razeni.mjs
 
       - name: Co se doporučuje a co se má ověřit
         run: node scripts/test-doporuceni.mjs

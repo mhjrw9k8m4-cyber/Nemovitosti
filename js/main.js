@@ -2395,7 +2395,50 @@
     else if (sortMode === 'area_desc') arr.sort(function (a, b) { return (b.area || 0) - (a.area || 0); });
     else if (sortMode === 'perm2_asc') arr.sort(function (a, b) { return perM2Val(a) - perM2Val(b); });
     else if (sortMode === 'near' && userPos) arr.sort(function (a, b) { return kmFromUser(a) - kmFromUser(b); });
-    else { arr.sort(function (a, b) { return demand(b) - demand(a); }); declump(arr); }
+    else if (sortMode === 'nove') {
+      // Kdo chce vidět, co přibylo, ať to má — dřív se podle data řadit nedalo vůbec.
+      arr.sort(function (a, b) { return String(b.first_seen || '').localeCompare(String(a.first_seen || '')); });
+    }
+    else if (sortMode === 'area_asc') {
+      // Malé parcely: zahrádka, přístup k pozemku, rozšíření zahrady.
+      arr.sort(function (a, b) { return (a.area || Infinity) - (b.area || Infinity); });
+    }
+    else if (sortMode === 'drazba_asc') {
+      /* Nejdřív končící dražba. Kdo chce dražit, potřebuje vědět, co hoří —
+         a co je po termínu nebo termín nemá, patří za to. */
+      arr.sort(function (a, b) {
+        var da = daysUntil(a.extra), db = daysUntil(b.extra);
+        var pa = (da == null || da < 0) ? Infinity : da;
+        var pb = (db == null || db < 0) ? Infinity : db;
+        return pa - pb;
+      });
+    }
+    else if (sortMode === 'sleva_desc') {
+      /* Největší sleva proti srovnatelným pozemkům v okolí — ne proti
+         absolutní ceně. Nabídky, u kterých odhad nemáme (nebo je
+         nedůvěryhodný), jdou dozadu: co neumíme spočítat, nemůžeme řadit. */
+      var slevaVal = function (d) {
+        var o = MODEL ? MODEL.odhad(d) : null;
+        return (o && o.podleVelikosti && !o.pochybna) ? (o.podOdhadem || 0) : -1;
+      };
+      arr.sort(function (a, b) { return slevaVal(b) - slevaVal(a); });
+    }
+    else if (sortMode === 'nahodne') {
+      // Úplně zamíchané — bez našeho názoru na to, co je dobrá nabídka.
+      if (window.PKPoradi) window.PKPoradi.nahodne(arr, pkey);
+    }
+    else {
+      /* Doporučené. Kvalita rozhoduje o pásmu, uvnitř pásma se pořadí
+         každý den posune o jednu obrazovku dál — jinak by na prvních osmi
+         místech stálo den za dnem těch samých osm pozemků a zbytek by
+         nahoru nezavadil nikdy. Podrobně v js/poradi.js. */
+      if (window.PKPoradi) {
+        window.PKPoradi.prostridej(arr, demand, pkey, window.PKPoradi.denIndex(),
+          window.PKPoradi.KROK_ZA_DEN, window.PKPoradi.prihozeniSeance());
+      }
+      else arr.sort(function (a, b) { return demand(b) - demand(a); });
+      declump(arr);
+    }
     // Co už proběhlo, patří dolů — ať v jakémkoli řazení. Mrtvý záznam
     // nahoře je horší než žádný.
     arr.sort(function (a, b) { return (jeProsle(a) ? 1 : 0) - (jeProsle(b) ? 1 : 0); });
@@ -2610,8 +2653,10 @@
       (novych === 1 ? 'nový od minule' : (novych < 5 ? 'nové od minule' : 'nových od minule')) + '</span>';
     // Když se zrovna listují uložené, řekneme rovnou, kde bydlí.
     if (favOnly) pripisky += ' <span class="mc-pozn">uloženo jen v tomhle prohlížeči</span>';
-    if (skryte.length) pripisky += ' <button type="button" class="mc-skryte" id="mc-skryte">' +
-      (ukazSkryte ? 'Schovat skryté' : 'Zobrazit skryté (' + skryte.length + ')') + '</button>';
+    // Text je ve <span>, aby podtržení zůstalo u písmen — tlačítko samo je
+    // vyšší kvůli dotyku (viz .mc-skryte v css/styles.css).
+    if (skryte.length) pripisky += ' <button type="button" class="mc-skryte" id="mc-skryte"><span>' +
+      (ukazSkryte ? 'Schovat skryté' : 'Zobrazit skryté (' + skryte.length + ')') + '</span></button>';
     /* Kolik dražeb po termínu se právě nepočítá. Počítá se přes filtry bez
        okolí a bez tohoto pravidla, ať to číslo odpovídá tomu, co by se
        ukázalo po klepnutí — ne celé republice. */
@@ -2625,9 +2670,9 @@
         }
       } finally { ukazProsle = false; }
     }
-    if (proslychStranou || ukazProsle) pripisky += ' <button type="button" class="mc-skryte" id="mc-prosle">' +
+    if (proslychStranou || ukazProsle) pripisky += ' <button type="button" class="mc-skryte" id="mc-prosle"><span>' +
       (ukazProsle ? 'Schovat dražby po termínu'
-                  : 'Zobrazit dražby po termínu (' + proslychStranou + ')') + '</button>';
+                  : 'Zobrazit dražby po termínu (' + proslychStranou + ')') + '</span></button>';
     countEl.innerHTML = headLabel + ' · <span class="mc-sub">' + matched + ' na mapě</span>' + pripisky;
     var sb = countEl.querySelector('#mc-skryte');
     if (sb) sb.addEventListener('click', function (e) { e.stopPropagation(); ukazSkryte = !ukazSkryte; renderList(); });
@@ -2958,6 +3003,9 @@
       });
       return;
     }
+    /* „Náhodně" zamíchá znovu i tehdy, když už je vybrané — kdo na to
+       klepne podruhé, čeká nové pořadí, ne totéž. */
+    if (sortEl.value === 'nahodne' && window.PKPoradi) window.PKPoradi.zamichejZnovu();
     sortMode = sortEl.value; renderList();
   });
   // Cena/výměra jsou teď textová pole — reaguj i na psaní (input) a na reset.

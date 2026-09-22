@@ -32,6 +32,7 @@ const V = {
   hlidani: razitko('js/hlidani-logika.js'),
   feed: razitko('js/upozorneni-feed.js'),
   upoz: razitko('js/upozorneni.js'),
+  hlavicka: razitko('js/hlavicka.js'),
   pridat: razitko('js/pridat.js'),
 };
 /* Práh byl 10 a bez vlastní stránky kvůli tomu zůstávalo DVANÁCT okresů,
@@ -344,6 +345,7 @@ function footer(){
 <script src="js/hlidani-logika.js?${V.hlidani}" defer></script>
 <script src="js/upozorneni-feed.js?${V.feed}" defer></script>
 <script src="js/upozorneni.js?${V.upoz}" defer></script>
+<script src="js/hlavicka.js?${V.hlavicka}" defer></script>
 </body>
 </html>
 `;

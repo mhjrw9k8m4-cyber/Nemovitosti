@@ -509,7 +509,18 @@ body.vm-otevreno{overflow:hidden;}
    Menu ten rámec nepotřebuje: hlavička je position:sticky, což je
    polohovaný prvek, takže stačí menu položit jako position:absolute
    a „100 %" se počítá z hlavičky úplně stejně (viz #nav níž). */
-header{border-bottom:1px solid var(--line); padding:20px 0; position:-webkit-sticky; position:sticky; top:0; z-index:1000; background:rgba(255,255,255,0.80); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:padding .2s ease;}
+header{border-bottom:1px solid var(--line); padding:20px 0; position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(255,255,255,0.80); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:padding .2s ease, opacity .14s ease;}
+/* Zhasnutá při rolování. Jen průhlednost, žádný posun: posouvat se dá
+   plynule jen tehdy, když to prohlížeč zvládne překreslit včas — a přesně
+   na tom se to na iPhonu lámalo. Zhasnutí je okamžité a nemá co zpozdit. */
+header.hl-zhasnuta{opacity:0; pointer-events:none;}
+/* Kdo je v hlavičce klávesnicí, o ni nesmí přijít ani při rolování. */
+header:focus-within{opacity:1 !important; pointer-events:auto !important;}
+@media (prefers-reduced-motion:reduce){ header{transition:none;} }
+/* Hlavička je vyňatá z toku, takže si pod ni stránka musí udělat místo
+   sama. Výška je naměřená (nezmenšená hlavička); po zmenšení při rolování
+   se odsazení nemění, a nic proto neposkakuje. */
+body{padding-top:var(--vyska-hlavicky, 85px);}
 /* Mobil: silnější podklad + slabší blur = plynulejší scroll na iPhonu */
 @media (max-width:768px){ header{background:rgba(255,255,255,0.92); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);} }
 header.shrink{padding:12px 0;}
@@ -2857,7 +2868,7 @@ h1 em::after{content:none; animation:none;}
    je horší než chyba, kterou to má spravit. Rozhodne měření přímo na
    zařízení: js/mereni-hlavicky.js, spustí se adresou index.html?mereni=1.
    Ukáže mimo jiné právě to, že hlavička je položkou flexu. */
-body{display:flex; flex-direction:column; min-height:100vh;}
+body{display:flex; flex-direction:column; min-height:calc(100vh - var(--vyska-hlavicky, 85px));}
 body > main{flex:1 0 auto;}
 body > footer{flex:none;}
 
@@ -3012,10 +3023,19 @@ h1, h2, h3,
   border:1px solid rgba(138,85,18,0.34); border-radius:var(--r-pill);
   padding:2px 9px; font-size:11.5px; font-weight:700; letter-spacing:0.02em;}
 .mc-nove{margin-left:8px; color:var(--accent-warm); font-weight:700;}
-.mc-skryte{margin-left:10px; font:inherit; font-size:12px; font-weight:600;
-  color:var(--text-ondark-mute); background:none; border:0; border-bottom:1px solid var(--line-strong);
-  padding:0 0 1px; cursor:pointer; text-transform:none; letter-spacing:0;}
-.mc-skryte:hover{color:var(--text-ondark); border-bottom-color:var(--text-ondark);}
+/* Textové tlačítko („Zobrazit dražby po termínu"). Vypadá jako odkaz, ale
+   prstem se musí trefit jako do tlačítka: samotný text má na výšku 21 px,
+   což je pod hranicí, kde se dá spolehlivě klepnout. Terč proto zvětšíme
+   odsazením a podtržení přesuneme na vnitřní <span>, aby čára zůstala
+   těsně u písmen a neodskočila dolů. Záporný svislý okraj vrátí řádek
+   zpátky na původní výšku — vedle stojí počet nabídek a ten se hýbat nemá. */
+.mc-skryte{margin-left:10px; margin-top:-9px; margin-bottom:-8px; font:inherit; font-size:12px; font-weight:600;
+  color:var(--text-ondark-mute); background:none; border:0;
+  padding:9px 2px 8px; cursor:pointer; text-transform:none; letter-spacing:0;
+  display:inline-flex; align-items:center; min-height:36px;}
+.mc-skryte > span{border-bottom:1px solid var(--line-strong); padding-bottom:1px;}
+.mc-skryte:hover{color:var(--text-ondark);}
+.mc-skryte:hover > span{border-bottom-color:var(--text-ondark);}
 
 /* Křížek „tenhle mě nezajímá" sedí pod záložkou pro uložení. Objeví se až
    při najetí nebo zaměření klávesnicí — na dotyku je vidět vždy, protože

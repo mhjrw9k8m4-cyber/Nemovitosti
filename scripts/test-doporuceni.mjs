@@ -179,9 +179,53 @@ pravda('stránka pozemku to čte stejně', /o\.pochybna/.test(pozemek));
     })),
     hero: (document.querySelector('.hl-fact[data-fakt="deal"] .hl-v') || {}).textContent || '',
   }));
+  /* --- Střídání pořadí ------------------------------------------------
+     Výpis ukazuje osm nabídek. Dokud rozhodovalo jen skóre, stálo na těch
+     osmi místech den za dnem těch samých osm pozemků a zbytek nabídky se
+     nahoru nedostal nikdy. Uvnitř pásma se proto pořadí každý den posune
+     (js/poradi.js). Tady se ověřuje, že to opravdu funguje v aplikaci —
+     ne jen v modulu: datum se podstrčí a výpis se načte znovu. */
+  const poradiVDen = async (posun) => {
+    const c = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
+    await c.route('**/*', (r) => {
+      const u = new URL(r.request().url());
+      if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
+      if (r.request().resourceType() === 'image') return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA });
+      return LEAFLET ? r.abort() : r.continue();
+    });
+    await c.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+      body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+    if (LEAFLET) {
+      const { existsSync } = await import('node:fs');
+      const path = (await import('node:path')).default;
+      await c.route('https://unpkg.com/leaflet@**', (r) => {
+        const f = path.join(LEAFLET, path.basename(new URL(r.request().url()).pathname));
+        if (!existsSync(f)) return r.abort();
+        return r.fulfill({ status: 200, contentType: f.endsWith('.css') ? 'text/css' : 'text/javascript', body: readFileSync(f) });
+      });
+    }
+    // Podstrčené „dnes": posun o zadaný počet dní.
+    await c.addInitScript(`(function(){var P=${posun},R=Date;function F(){if(arguments.length)return new R(...arguments);return new R(R.now()+P*86400000);}F.now=function(){return R.now()+P*86400000;};F.UTC=R.UTC;F.parse=R.parse;F.prototype=R.prototype;window.Date=F;})();`);
+    const q = await c.newPage();
+    await q.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+    await q.waitForTimeout(4200);
+    const poradi = await q.evaluate(() => [...document.querySelectorAll('.opp-item')]
+      .map((e) => e.textContent.replace(/\s+/g, ' ').trim().slice(0, 40)));
+    await c.close();
+    return poradi;
+  };
+  const dnes = await poradiVDen(0);
+  const dnesZnovu = await poradiVDen(0);
+  const zaMesic = await poradiVDen(30);
+
   await prohlizec.close();
 
   pravda('karty se vykreslily', v.karty.length >= 5, `jen ${v.karty.length}`);
+  pravda('výpis se během dne nepřeskládá', JSON.stringify(dnes) === JSON.stringify(dnesZnovu),
+    'po obnovení stránky by člověk nenašel, co právě viděl');
+  pravda('za měsíc se nahoře vystřídají jiné nabídky',
+    dnes.length >= 5 && JSON.stringify(dnes) !== JSON.stringify(zaMesic),
+    'pořadí je pořád stejné — starší inzeráty se nahoru nedostanou nikdy');
   const rozpor = v.karty.filter((k) => k.overit && k.hot);
   pravda('žádná karta zároveň nevaruje a nedoporučuje', rozpor.length === 0,
     rozpor.map((k) => k.text).join(' | '));

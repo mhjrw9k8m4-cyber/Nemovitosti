@@ -126,27 +126,26 @@ for (const [jm, opt, stranka] of [['telefon', TELEFON, 'index.html'], ['monitor'
 const css = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
 pravda('<html> nemá overflow-x:hidden', !/\bhtml\{[^}]*overflow-x:\s*hidden/.test(css),
   'tím se z kořene stane posuvný rámec a na iOS to rozbije position:sticky');
-pravda('hlavička má i -webkit-sticky pro starší iOS', /position:-webkit-sticky/.test(css));
-/* Hlavička NESMÍ mít transform. Prvek, který je zároveň position:sticky
-   a má transform, Safari přilepí vůči té posunuté vrstvě a hlavička se při
-   rolování zastaví o kus níž — nad ní pak prosvítá pruh stránky, jako by
-   pod stavovým řádkem byla mezera. Transform tu dřív byl kvůli vysouvacímu
-   menu (position:fixed s „top:100 %" potřebuje vztažný rámec); menu je
-   proto teď position:absolute a rámcem je sama hlavička, která je jako
-   sticky polohovaná. Že menu opravdu sedí pod hlavičkou, změří část 4 —
-   tady hlídáme jen to, že se transform nevrátí. */
-const hlavickaBlok = css.slice(css.indexOf('header{border-bottom'), css.indexOf('header{border-bottom') + 500);
-pravda('hlavička nemá transform (sticky + transform Safari rozhodí)',
+pravda('hlavička drží pevně u okraje (position:fixed)', /header\{[^}]*position:fixed/.test(css),
+  'sticky se na iPhonu zastavovala kousek pod okrajem a nad ní prosvítal pruh stránky');
+pravda('stránka si pod hlavičkou dělá místo sama', /body\{padding-top:var\(--vyska-hlavicky/.test(css),
+  'hlavička je vyňatá z toku — bez odsazení by ležela přes první řádek obsahu');
+pravda('při rolování hlavička zhasne', /header\.hl-zhasnuta\{opacity:0/.test(css));
+/* Hlavička NESMÍ mít transform. Pevně umístěná hlavička ho nepotřebuje
+   a na Safari je transform u hlavičky historicky zdroj potíží (dokud byla
+   sticky, kvůli němu se zastavovala pod okrajem). */
+const hlavickaBlok = css.slice(css.indexOf('header{border-bottom'), css.indexOf('header{border-bottom') + 700);
+pravda('hlavička nemá transform',
   !/transform:/.test(hlavickaBlok),
   'v pravidle pro <header> je transform: ' + (hlavickaBlok.match(/transform:[^;]*/) || [''])[0]);
 pravda('menu se věší na hlavičku přes position:absolute',
   /#nav\{position:absolute;\s*top:100%/.test(css),
   'jako fixed by potřebovalo vztažný rámec navíc — a ten dělal právě ten transform');
-/* Lepivý prvek uvnitř ořezávajícího rodiče je na Safari další známá past.
-   Clip kvůli bočnímu posuvu stačí na <html>; ten se propíše na celé okno. */
-pravda('<body> není ořezávající rodič lepivé hlavičky',
-  !/\bbody\{[^}]*overflow-x:\s*(clip|hidden)/.test(css),
-  'overflow-x na <body> dělá z rodiče hlavičky ořezávající rámec');
+/* Ořezávající rodič je na Safari past u lepivých i pevných prvků a kvůli
+   bočnímu posuvu ho tu nepotřebujeme (změřeno: 282 zkoušek, 0 nálezů). */
+pravda('<body> ani <html> neořezávají do stran',
+  !/\bbody\{[^}]*overflow-x:\s*(clip|hidden)/.test(css) && !/\bhtml\{overflow-x:\s*(clip|hidden)/.test(css),
+  'overflow-x na kořeni nebo na body dělá ořezávající rámec nad hlavičkou');
 
 // --- 4) A menu se opravdu vykreslí přes celé okno --------------------
 {
@@ -167,6 +166,51 @@ pravda('<body> není ořezávající rodič lepivé hlavičky',
     `menu začíná na ${v.navTop}, hlavička končí na ${v.hlavDole}`);
   pravda('a je přes celou šířku okna', Math.abs(v.navSirka - v.okno) <= 2,
     `${v.navSirka} × ${v.okno}`);
+  await ctx.close();
+}
+
+/* --- 5) Při pohybu zhasne, po zastavení svítí úplně nahoře ----------
+   Tohle je zadání, ne technický detail: kdo roluje, čte obsah, ne
+   navigaci — a co není vidět, nemůže přes obsah ležet. Zároveň to obchází
+   chybu, kterou na iPhonu dělala lepivá hlavička: půlka nadpisu v úvodu
+   byla schovaná pod ní. */
+for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
+  const { ctx, p } = await otevri(opt, 'index.html');
+  const v = await p.evaluate(async () => {
+    const h = document.querySelector('header');
+    const pruh = () => +getComputedStyle(h).opacity;
+    const naZacatku = { pruhlednost: pruh(), top: Math.round(h.getBoundingClientRect().top) };
+    // Nic z obsahu nesmí na začátku stránky ležet pod hlavičkou.
+    const prvni = document.querySelector('main');
+    const prvniTop = prvni ? Math.round(prvni.getBoundingClientRect().top) : null;
+    // Rolujeme skokem a sledujeme, jestli hlavička zhasíná.
+    let nejnizsi = 1;
+    for (let i = 0; i < 10; i++) {
+      window.scrollTo({ top: 300 + i * 130, behavior: 'instant' });
+      await new Promise((r) => requestAnimationFrame(r));
+      await new Promise((r) => setTimeout(r, 25));
+      nejnizsi = Math.min(nejnizsi, pruh());
+    }
+    await new Promise((r) => setTimeout(r, 900));
+    const poKlidu = { pruhlednost: pruh(), top: Math.round(h.getBoundingClientRect().top),
+      vyska: Math.round(h.getBoundingClientRect().height) };
+    // A u horního okraje stránky musí svítit vždycky.
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    await new Promise((r) => setTimeout(r, 300));
+    const nahore = pruh();
+    return { naZacatku, prvniTop, nejnizsi, poKlidu, nahore };
+  });
+  pravda(`${jm}: na začátku stránky hlavička svítí`, v.naZacatku.pruhlednost === 1 && v.naZacatku.top === 0,
+    JSON.stringify(v.naZacatku));
+  pravda(`${jm}: a nic pod ní neleží`, v.prvniTop >= v.poKlidu.vyska - 2,
+    `obsah začíná na ${v.prvniTop} px, hlavička je vysoká ${v.poKlidu.vyska} px — půlka nadpisu by byla schovaná`);
+  pravda(`${jm}: při rolování zhasne`, v.nejnizsi < 0.9,
+    `nejnižší průhlednost při pohybu byla ${v.nejnizsi} — hlavička zůstala svítit a leží přes obsah`);
+  pravda(`${jm}: po zastavení se hned rozsvítí`, v.poKlidu.pruhlednost === 1,
+    `po 900 ms klidu měla průhlednost ${v.poKlidu.pruhlednost}`);
+  pravda(`${jm}: a to úplně nahoře`, v.poKlidu.top === 0,
+    `stála na ${v.poKlidu.top} px od okraje`);
+  pravda(`${jm}: u horního okraje svítí vždy`, v.nahore === 1, `průhlednost ${v.nahore}`);
   await ctx.close();
 }
 
