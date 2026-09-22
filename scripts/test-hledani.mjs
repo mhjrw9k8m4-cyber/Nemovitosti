@@ -256,7 +256,11 @@ const bezDia = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
   const pH = znacka('js/hledani.js'), pM = znacka('js/main.js');
   pravda('index.html načítá js/hledani.js, a dřív než js/main.js', pH > 0 && pH < pM, pH + ' × ' + pM);
   pravda('js/main.js hledá obec přes společný modul', /HL\.misto \? HL\.misto\(DATA, q\)/.test(main));
-  pravda('js/main.js našeptává přes společný modul', /HL\.navrhy\(DATA, searchEl\.value/.test(main));
+  /* Hlídá se, že se našeptávání bere ze sdíleného modulu — ne konkrétní
+     zápis volání. To se po přidání slovníkových návrhů změnilo (napřed se
+     nabídne druh či síť a teprve pak obce) a doslovný opis tu padal, i
+     když bylo všechno v pořádku. */
+  pravda('js/main.js našeptává obce přes společný modul', /HL\.navrhy\(DATA,/.test(main));
   pravda('js/main.js nabízí opravu překlepu', /HL\.mysleliJste\(DATA, searchTerm\)/.test(main));
   pravda('index.html má seznam pro našeptané obce', /id="map-search-navrhy"/.test(idx));
   pravda('a políčko na něj ukazuje (kvůli čtečkám)', /aria-controls="map-search-navrhy"/.test(idx));

@@ -54,6 +54,9 @@ jobs:
       - name: Co je u pozemku (čtení sítí a podílu z popisu)
         run: node scripts/test-vybaveni.mjs
 
+      - name: Hledání celou větou (druh, cena, sítě v jednom políčku)
+        run: node scripts/test-dotaz.mjs
+
       - name: Razítka verzí (aby lidem nechodila stará kopie)
         run: node scripts/test-verze.mjs
 

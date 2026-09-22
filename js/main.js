@@ -813,6 +813,12 @@
   var urgentOnly = false;  // filtr: jen dražby/exekuce končící brzy (do 14 dní)
   var searchTerm = '';
   var searchToks = [];   // hledaný text po slovech (viz js/hledani.js)
+  /* Co web z napsané věty pochopil jako filtr (js/dotaz.js). Je to VRSTVA
+     NAD ručními ovládátky, ne jejich přepis: kdo smaže text, zůstanou mu
+     filtry, které si naklikal, a naopak. Každá pochopená část má pod
+     políčkem odznak, který jde zrušit — nic se neděje potají. */
+  var dotazFiltr = { druh: null, typ: null, site: [], jenCelek: false,
+    cenaOd: null, cenaDo: null, plochaOd: null, plochaDo: null, casti: [] };
   /* Musí to stát TADY, ne až u obsluhy posuvníků dole: staví se hned po
      sestavení filtrů, a „var" dole by v tu chvíli bylo ještě undefined.
      (Chyceno až v prohlížeči — v konzoli to spadlo na „reading 'push'".) */
@@ -842,7 +848,16 @@
   /* Text z políčka i z odkazu ?q= musí projít jedním místem, aby se
      slova rozpadla vždycky stejně. */
   function nastavHledani(v) {
-    searchTerm = String(v == null ? '' : v).trim();
+    var syrovy = String(v == null ? '' : v).trim();
+    if (window.PKDotaz) {
+      var r = window.PKDotaz.rozeber(syrovy);
+      dotazFiltr = r;
+      searchTerm = r.text;            // na obec zbyde jen to, co web nepochopil
+    } else {
+      dotazFiltr = { druh: null, typ: null, site: [], jenCelek: false,
+        cenaOd: null, cenaDo: null, plochaOd: null, plochaDo: null, casti: [] };
+      searchTerm = syrovy;
+    }
     searchToks = HL.tokeny(searchTerm);
   }
   var favOnly = false;
@@ -2380,6 +2395,22 @@
       if (!d.site || d.site.indexOf(zadaneVybaveni[vi]) < 0) { okVybaveni = false; break; }
     }
     var okCelek = !jenCelek || !d.podil;
+    /* Filtry pochopené z věty. Sčítají se s ručními: „stavební" v textu a
+       „Dražba" naklikaná v čipech znamená stavební dražbu, ne jedno nebo
+       druhé. */
+    var okDotaz = true;
+    if (dotazFiltr.druh && druhGroup(d.druh) !== dotazFiltr.druh) okDotaz = false;
+    if (okDotaz && dotazFiltr.typ && d.type !== dotazFiltr.typ) okDotaz = false;
+    if (okDotaz && dotazFiltr.jenCelek && d.podil) okDotaz = false;
+    if (okDotaz && dotazFiltr.site.length) {
+      for (var si = 0; si < dotazFiltr.site.length; si++) {
+        if (!d.site || d.site.indexOf(dotazFiltr.site[si]) < 0) { okDotaz = false; break; }
+      }
+    }
+    if (okDotaz && dotazFiltr.cenaOd && !(d.price >= dotazFiltr.cenaOd)) okDotaz = false;
+    if (okDotaz && dotazFiltr.cenaDo && !(d.price > 0 && d.price <= dotazFiltr.cenaDo)) okDotaz = false;
+    if (okDotaz && dotazFiltr.plochaOd && !(hasArea(d) && d.area >= dotazFiltr.plochaOd)) okDotaz = false;
+    if (okDotaz && dotazFiltr.plochaDo && !(hasArea(d) && d.area <= dotazFiltr.plochaDo)) okDotaz = false;
     var okPerM2 = !maxPerM2 || (hasArea(d) && d.price && (d.price / d.area) <= maxPerM2);
     var okKraj = krajFiltr === 'all' || (d._gkraj || krajOf(d)) === krajFiltr;
     // „Pod obvyklou cenou" bere tentýž odhad, jaký se ukazuje na kartě —
@@ -2405,7 +2436,7 @@
     var okSkryt = ukazSkryte || !jeSkryty(d);
     var okProsle = ukazProsle || !jeProsle(d);
     return okType && okSearch && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
-      && okPerM2 && okKraj && okLevne && okOkoli && okProsle && okVybaveni && okCelek;
+      && okPerM2 && okKraj && okLevne && okOkoli && okProsle && okVybaveni && okCelek && okDotaz;
   }
   /** Projde pozemek všemi filtry KROMĚ okolí — aby šlo poctivě spočítat,
       kolik by jich bylo ve větším okruhu (a ne kolik jich je celkem). */
@@ -2538,6 +2569,7 @@
     if (urgentOnly) n++;
     if (favOnly) n++;
     if (zadaneVybaveni.length) n += zadaneVybaveni.length;
+    n += (dotazFiltr.casti || []).length;
     if (jenCelek) n++;
     if (sortMode && sortMode !== 'demand') n++;
     if (n > 0) { msfBadge.textContent = n; msfBadge.hidden = false; }
@@ -2819,6 +2851,7 @@
     prepocitejCipy();   // čísla u kategorií musí sedět s tím, co je vidět
     prekresliPosuvniky(); // sloupce a táhla u ceny a výměry podle ostatních filtrů
     prekresliVybaveni(); // pilulky „co je u pozemku" a jejich počty
+    prekresliChipy();    // odznaky toho, co web pochopil z napsané věty
     updatePolys(); // tvary parcel podle aktuálního filtru
   }
 
@@ -3102,6 +3135,18 @@
   function vyberNavrh(i) {
     var n = navrhyData[i];
     if (!n) return;
+    if (n.slovnik) {
+      /* Slovníkové slovo se k větě PŘIDÁ, nenahradí ji: kdo píše
+         „beroun stav…", chce „beroun stavební", ne jen „stavební". */
+      var slova = searchEl.value.trim().split(/\s+/);
+      slova.pop();
+      searchEl.value = (slova.join(' ') + ' ' + n.slovo).trim() + ' ';
+      nastavHledani(searchEl.value);
+      zavriNavrhy();
+      renderList();
+      searchEl.focus();
+      return;
+    }
     searchEl.value = n.text;
     nastavHledani(n.text);
     zavriNavrhy();
@@ -3112,17 +3157,51 @@
       try { map.setView([pos.lat, pos.lng], Math.max(map.getZoom(), 10), { animate: true }); } catch (e) {}
     }
   }
+  /* Kromě obcí nabízí našeptávač i to, co web z věty umí vyčíst: druh
+     pozemku, typ nabídky, sítě. Bez toho by o té schopnosti nikdo nevěděl
+     — dá se napsat „stavební do 1 mil", ale nikde to nestojí. Nabízí se
+     jen to, pod čím něco je; počet se počítá za aktuálního stavu filtrů. */
+  function navrhySlovnik(text) {
+    if (!window.PKDotaz) return [];
+    var n = window.PKDotaz.norm(text);
+    if (n.length < 2) return [];
+    var posledni = n.split(' ').pop();
+    if (posledni.length < 2) return [];
+    var ven = [];
+    function pridej(skupina, popis, slovo, test) {
+      if (ven.length >= 4) return;
+      var pocet = 0;
+      for (var i = 0; i < DATA.length; i++) if (test(DATA[i])) pocet++;
+      if (pocet) ven.push({ text: popis, skupina: skupina, pocet: pocet, slovo: slovo, slovnik: true });
+    }
+    window.PKDotaz.DRUHY.forEach(function (d) {
+      if (!d[2].some(function (f) { return f.indexOf(posledni) === 0; })) return;
+      pridej('druh', d[0], d[1], function (x) { return druhGroup(x.druh) === d[0]; });
+    });
+    window.PKDotaz.TYPY.forEach(function (t) {
+      if (!t[3].some(function (f) { return f.indexOf(posledni) === 0; })) return;
+      pridej('nabídka', t[1], t[2], function (x) { return x.type === t[0]; });
+    });
+    window.PKDotaz.SITE.forEach(function (t) {
+      if (!t[3].some(function (f) { return f.indexOf(posledni) === 0; })) return;
+      pridej('inzerát uvádí', t[1], t[2], function (x) { return x.site && x.site.indexOf(t[0]) >= 0; });
+    });
+    return ven;
+  }
   function ukazNavrhy() {
     if (!navrhyEl || !HL.navrhy) return;
-    navrhyData = HL.navrhy(DATA, searchEl.value, 6);
+    var slovnik = navrhySlovnik(searchEl.value);
+    var mista = HL.navrhy(DATA, dotazFiltr && dotazFiltr.text ? dotazFiltr.text : searchEl.value, 6 - slovnik.length);
+    navrhyData = slovnik.concat(mista);
     if (!navrhyData.length || document.activeElement !== searchEl) { zavriNavrhy(); return; }
     var html = '';
     for (var i = 0; i < navrhyData.length; i++) {
       var n = navrhyData[i];
+      var kde = n.slovnik ? n.skupina : (n.okres ? 'okr. ' + n.okres : 'celý okres');
       html += '<li role="option" aria-selected="false" data-i="' + i + '">' +
         '<span class="msn-jmeno">' + esc(n.text) + '</span>' +
-        (n.okres ? '<span class="msn-kde">okr. ' + esc(n.okres) + '</span>' : '<span class="msn-kde">celý okres</span>') +
-        '<span class="msn-pocet">' + n.pocet + '×</span></li>';
+        '<span class="msn-kde">' + esc(kde) + '</span>' +
+        '<span class="msn-pocet">' + fmt(n.pocet) + '×</span></li>';
     }
     navrhyEl.innerHTML = html;
     navrhyEl.hidden = false;
@@ -3148,6 +3227,38 @@
     });
     searchEl.addEventListener('blur', function () { setTimeout(zavriNavrhy, 120); });
   }
+  /* Odznaky toho, co se z věty vzalo. Zrušení odznaku znamená vyškrtnout
+     ta slova z políčka — jinak by se filtr vrátil při dalším úhozu. */
+  var chipyEl = document.getElementById('ms-chipy');
+  function prekresliChipy() {
+    if (!chipyEl) return;
+    var casti = (dotazFiltr && dotazFiltr.casti) || [];
+    if (!casti.length) { chipyEl.hidden = true; chipyEl.innerHTML = ''; return; }
+    var html = '';
+    for (var i = 0; i < casti.length; i++) {
+      html += '<button type="button" class="msch" data-i="' + i + '" data-druh="' + esc(casti[i].druh) +
+        '" aria-label="Zrušit: ' + esc(casti[i].popis) + '">' + esc(casti[i].popis) +
+        '<span class="msch-x" aria-hidden="true">✕</span></button>';
+    }
+    chipyEl.innerHTML = html;
+    chipyEl.hidden = false;
+  }
+  if (chipyEl) chipyEl.addEventListener('click', function (e) {
+    var b = e.target.closest('.msch');
+    if (!b) return;
+    var cast = (dotazFiltr.casti || [])[+b.getAttribute('data-i')];
+    if (!cast) return;
+    /* Vyškrtnout z textu slova, která k odznaku patří. Hledá se v témže
+       srovnání, v jakém se to poznávalo, aby „Do 1 MIL" zmizelo stejně
+       jako „do 1 mil". */
+    var slova = window.PKDotaz.norm(cast.popis).split(' ');
+    var zbytek = searchEl.value.split(/\s+/).filter(function (w) {
+      return slova.indexOf(window.PKDotaz.norm(w)) < 0;
+    });
+    searchEl.value = zbytek.join(' ').trim();
+    nastavHledani(searchEl.value);
+    renderList();
+  });
   searchEl.addEventListener('input', function () {
     nastavHledani(searchEl.value);
     ukazNavrhy();

@@ -825,6 +825,18 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .ms-navrhy .msn-pocet{margin-left:auto; color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; white-space:nowrap;}
 @media (prefers-reduced-motion:no-preference){ .ms-navrhy{animation:msnPrijed .12s ease-out;} }
 @keyframes msnPrijed{from{opacity:0; transform:translateY(-3px);} to{opacity:1; transform:none;}}
+/* Odznaky toho, co web z napsané věty pochopil. Bez nich by filtrování
+   probíhalo potají: člověk napíše „stavební beroun do 1 mil" a najednou
+   vidí devět nabídek místo dvou tisíc, aniž by tušil proč. Každý odznak
+   proto říká, co se z věty vzalo — a klepnutím se to zase zruší. */
+.ms-chipy{display:flex; flex-wrap:wrap; gap:5px; margin-top:7px;}
+.msch{display:inline-flex; align-items:center; gap:6px; font:inherit; font-size:12px; font-weight:600;
+  cursor:pointer; min-height:30px; padding:5px 9px 5px 11px; border-radius:var(--r-pill);
+  border:1px solid transparent; background:var(--plocha-znacka); color:#fff;}
+.msch:hover{filter:brightness(1.08);}
+.msch .msch-x{font-size:13px; line-height:1; opacity:.8;}
+.msch[data-druh="cena"], .msch[data-druh="plocha"]{background:var(--accent-warm); }
+.msch[data-druh="sit"]{background:var(--copper-bright);}
 /* Nápadné tlačítko „pozemky ve vašem okolí" (geolokace) */
 .map-near-btn{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:9px; padding:12px 14px; border-radius:var(--r-ovladani); font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; color:#fff; background:var(--plocha-znacka); border:1px solid rgba(31,81,56,0.55); box-shadow:var(--glow); transition:transform .1s ease, box-shadow .15s ease, filter .15s ease;}
 /* Čekání na polohu musí být vidět na tlačítku, ne jen v hlášce, která po
