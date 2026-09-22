@@ -191,12 +191,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-benesov.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-rakovnik.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-rakovnik.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-benesov.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -506,12 +506,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-zlin.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-uherske-hradiste.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-uherske-hradiste.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-zlin.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
