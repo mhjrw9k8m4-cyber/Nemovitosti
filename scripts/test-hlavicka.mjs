@@ -324,14 +324,22 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
     }
 
     // Plynulý pohyb: dokud se hýbe, musí být zhasnutá.
+    /* První snímky se nepočítají: v tu chvíli hlavička teprve DOhasíná
+       (má na to jedenáct setin vteřiny) a je poctivé jí to nechat. Měří se
+       až ustálený pohyb — tedy jestli se během rolování zase nerozsvítí.
+       Bez toho kontrola padala, když byl stroj pod zátěží a snímky se
+       protáhly. */
     let svitilaPriPohybu = 0, snimku = 0;
     await new Promise((hotovo) => {
       let n = 0;
+      const zacatek = Date.now();
       (function krok() {
         window.scrollBy({ top: 24, behavior: 'instant' });
-        snimku++;
-        if (svit() > 0.5) svitilaPriPohybu++;
-        if (++n < 30) requestAnimationFrame(krok); else hotovo();
+        if (Date.now() - zacatek > 200) {
+          snimku++;
+          if (svit() > 0.5) svitilaPriPohybu++;
+        }
+        if (++n < 40) requestAnimationFrame(krok); else hotovo();
       }());
     });
 
@@ -343,8 +351,8 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
   pravda('pohyb lišty prohlížeče (bez scroll události) ji zhasne',
     v.poListe === null || v.poListe < 0.9,
     `po pohybu okna měla průhlednost ${v.poListe} — hlavička o posunu okna vůbec neví`);
-  pravda('při plynulém pohybu zůstává zhasnutá', v.svitilaPriPohybu <= 2,
-    `svítila v ${v.svitilaPriPohybu} z ${v.snimku} snímků`);
+  pravda('při plynulém pohybu zůstává zhasnutá', v.svitilaPriPohybu === 0,
+    `svítila v ${v.svitilaPriPohybu} z ${v.snimku} snímků ustáleného pohybu`);
   pravda('po skutečném zastavení se rozsvítí', v.poKlidu === 1, `průhlednost ${v.poKlidu}`);
   pravda('a stojí úplně nahoře', Math.abs(v.top) < 2, `${v.top} px od okraje`);
   await ctx.close();

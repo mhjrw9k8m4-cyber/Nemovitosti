@@ -48,6 +48,9 @@ jobs:
       - name: Rozbitá data (náhodné zatěžkávání výpočtů)
         run: node scripts/test-nahodne.mjs
 
+      - name: Posuvník ceny a výměry (stupnice a histogram)
+        run: node scripts/test-rozsah.mjs
+
       - name: Razítka verzí (aby lidem nechodila stará kopie)
         run: node scripts/test-verze.mjs
 

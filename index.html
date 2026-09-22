@@ -105,7 +105,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=b77c3a5d">
+  <link rel="stylesheet" href="css/styles.css?v=52504437">
 </head>
 <body>
 
@@ -236,15 +236,14 @@
                   <span class="mc-pomlcka" aria-hidden="true">–</span>
                   <input type="number" class="map-num" id="map-cena" inputmode="numeric" min="0" step="1000" placeholder="do" aria-label="Cena do (Kč)">
                 </div>
-                <div class="mc-rychle" role="group" aria-label="Rychlá volba ceny">
-                  <button type="button" data-cena="0-50000">do 50 tis.<span class="mc-n" aria-hidden="true"></span></button>
-                  <button type="button" data-cena="50000-150000">50–150 tis.<span class="mc-n" aria-hidden="true"></span></button>
-                  <button type="button" data-cena="150000-300000">150–300 tis.<span class="mc-n" aria-hidden="true"></span></button>
-                  <button type="button" data-cena="300000-500000">300–500 tis.<span class="mc-n" aria-hidden="true"></span></button>
-                  <button type="button" data-cena="500000-1000000">0,5–1 mil.<span class="mc-n" aria-hidden="true"></span></button>
-                  <button type="button" data-cena="1000000-2000000">1–2 mil.<span class="mc-n" aria-hidden="true"></span></button>
-                  <button type="button" data-cena="2000000-5000000">2–5 mil.<span class="mc-n" aria-hidden="true"></span></button>
-                  <button type="button" data-cena="5000000-">nad 5 mil.<span class="mc-n" aria-hidden="true"></span></button>
+                <div class="mc-posuv" data-posuv="cena">
+                  <div class="mcp-graf" aria-hidden="true"></div>
+                  <div class="mcp-draha">
+                    <div class="mcp-vybrano" aria-hidden="true"></div>
+                    <input type="range" class="mcp-od" min="0" max="1" step="1" value="0" aria-label="Cena od">
+                    <input type="range" class="mcp-do" min="0" max="1" step="1" value="1" aria-label="Cena do">
+                  </div>
+                  <p class="mcp-popis"><span class="mcp-text">Libovolná cena</span><button type="button" class="mcp-zrus" hidden>Zrušit</button></p>
                 </div>
               </div>
               <div class="mc-field mc-rozsah"><span class="mc-cap">Výměra (m²)</span>
@@ -253,15 +252,14 @@
                   <span class="mc-pomlcka" aria-hidden="true">–</span>
                   <input type="number" class="map-num" id="map-area-do" inputmode="numeric" min="0" step="100" placeholder="do" aria-label="Výměra do (m²)">
                 </div>
-                <div class="mc-rychle" role="group" aria-label="Rychlá volba výměry">
-                  <button type="button" data-plocha="0-500">do 500 m²<span class="mc-n" aria-hidden="true"></span></button>
-                  <button type="button" data-plocha="500-1000">500–1 000 m²<span class="mc-n" aria-hidden="true"></span></button>
-                  <button type="button" data-plocha="1000-2000">1 000–2 000<span class="mc-n" aria-hidden="true"></span></button>
-                  <button type="button" data-plocha="2000-5000">2 000–5 000<span class="mc-n" aria-hidden="true"></span></button>
-                  <button type="button" data-plocha="5000-10000">0,5–1 ha<span class="mc-n" aria-hidden="true"></span></button>
-                  <button type="button" data-plocha="10000-20000">1–2 ha<span class="mc-n" aria-hidden="true"></span></button>
-                  <button type="button" data-plocha="20000-50000">2–5 ha<span class="mc-n" aria-hidden="true"></span></button>
-                  <button type="button" data-plocha="50000-">nad 5 ha<span class="mc-n" aria-hidden="true"></span></button>
+                <div class="mc-posuv" data-posuv="plocha">
+                  <div class="mcp-graf" aria-hidden="true"></div>
+                  <div class="mcp-draha">
+                    <div class="mcp-vybrano" aria-hidden="true"></div>
+                    <input type="range" class="mcp-od" min="0" max="1" step="1" value="0" aria-label="Výměra od">
+                    <input type="range" class="mcp-do" min="0" max="1" step="1" value="1" aria-label="Výměra do">
+                  </div>
+                  <p class="mcp-popis"><span class="mcp-text">Libovolná výměra</span><button type="button" class="mcp-zrus" hidden>Zrušit</button></p>
                 </div>
               </div>
               <label class="mc-field"><span class="mc-cap">Druh pozemku</span>
@@ -546,8 +544,9 @@
 <script src="js/radce.js?v=0491f655" defer></script>
 <script src="js/hlidani-logika.js?v=55d0f0e2" defer></script>
 <script src="js/poradi.js?v=670998bf" defer></script>
+<script src="js/rozsah.js?v=880952d0" defer></script>
 <script src="js/hledani.js?v=6a407f98" defer></script>
-<script src="js/main.js?v=e8f95237" defer></script>
+<script src="js/main.js?v=efb20a23" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

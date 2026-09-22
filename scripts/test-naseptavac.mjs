@@ -137,12 +137,13 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   pravda('a klepnutím se oprava rovnou vyhledá', false, 'tlačítko s opravou se vůbec neukázalo');
 }
 
-/* --- 6) Rychlá volba ceny a výměry: kolik v kterém pásmu je ----------
+/* --- 6) Posuvník s histogramem místo řady pilulek --------------------
  *
- * Pásem bylo pět na cenu a čtyři na výměru, a u žádného nebylo vidět,
- * kolik v něm co je. Klepnutí na „nad 2 mil." tak byla sázka naslepo.
- * Teď je pásem osm a osm a u každého stojí počet — který se navíc musí
- * přepočítat podle ostatních filtrů, jinak by to bylo pořád totéž číslo. */
+ * Pásem bylo nejdřív pět, pak osm i s počty — jenže osm pilulek ve čtyřech
+ * řadách je na telefonu zeď a pořád je to jen hrstka hotových možností.
+ * Posuvník nabídne libovolný rozsah a sloupečky nad ním ukazují, kde
+ * nabídky doopravdy jsou. Test hlídá tři věci: že se opravdu postavil,
+ * že tažením zafiltruje, a že sloupce reagují na ostatní filtry. */
 {
   const ctx2 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
   await ctx2.route('**/*', (r) => {
@@ -167,42 +168,77 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   await p2.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
   await p2.waitForTimeout(3600);
 
-  const cen = await p2.locator('.mc-rychle button[data-cena]').count();
-  const vym = await p2.locator('.mc-rychle button[data-plocha]').count();
-  pravda('na výběr je aspoň osm pásem ceny', cen >= 8, `jen ${cen}`);
-  pravda('a aspoň osm pásem výměry', vym >= 8, `jen ${vym}`);
+  const stav = await p2.evaluate(() => [...document.querySelectorAll('.mc-posuv')].map((b) => ({
+    klic: b.getAttribute('data-posuv'),
+    sloupcu: b.querySelectorAll('.mcp-graf i').length,
+    kroku: parseInt(b.querySelector('.mcp-od').max, 10),
+    text: b.querySelector('.mcp-text').textContent.trim(),
+    vyska: Math.round(b.getBoundingClientRect().height),
+  })));
+  pravda('posuvník je na cenu i na výměru', stav.length === 2, JSON.stringify(stav));
+  pravda('oba mají aspoň deset kroků (to je víc než osm hotových pásem)',
+    stav.every((x) => x.kroku >= 10), stav.map((x) => x.klic + ': ' + x.kroku).join(', '));
+  pravda('a nad nimi je histogram, ne prázdno',
+    stav.every((x) => x.sloupcu === x.kroku), stav.map((x) => x.klic + ': ' + x.sloupcu).join(', '));
+  pravda('dokud se nic nevybralo, říkají „libovolná"',
+    stav.every((x) => /Libovoln/.test(x.text)), stav.map((x) => x.text).join(' | '));
+  pravda('a vejdou se do míst, kde dřív byla zeď z pilulek',
+    stav.every((x) => x.vyska <= 140), stav.map((x) => x.klic + ': ' + x.vyska + ' px').join(', '));
 
-  const cisla = await p2.$$eval('.mc-rychle button .mc-n', (e) => e.map((x) => x.textContent.trim()));
-  pravda('u každého pásma je vidět počet', cisla.length === cen + vym && cisla.every((x) => x !== ''),
-    `vyplněno ${cisla.filter((x) => x !== '').length} z ${cen + vym}`);
-
-  // Součet pásem nesmí být větší než celá nabídka (jinak se pásma překrývají).
-  const soucet = await p2.evaluate(() => [...document.querySelectorAll('.mc-rychle button[data-cena] .mc-n')]
-    .reduce((a, e) => a + (parseInt(e.textContent.replace(/\s/g, ''), 10) || 0), 0));
-  const celkem = await p2.evaluate(() => {
-    const b = document.querySelector('.filter-chip[data-type="all"] .chip-n');
-    return b ? parseInt(b.textContent.replace(/\s/g, ''), 10) : 0;
-  });
-  pravda('pásma ceny se nepřekrývají', soucet <= celkem, `součet pásem ${soucet}, nabídek ${celkem}`);
-
-  // A hlavně: počty reagují na ostatní filtry.
-  const pred = await p2.$$eval('.mc-rychle button[data-cena] .mc-n', (e) => e.map((x) => x.textContent.trim()).join('|'));
+  // Tažení musí zafiltrovat a napsat, kolik toho zbylo.
+  const pred = await p2.locator('#opp-list li').count();
   await p2.evaluate(() => {
-    const d = document.querySelector('.mc-rychle') && document.querySelector('.mc-rychle').closest('details');
-    if (d) d.open = true;
-    const b = document.querySelector('.mc-rychle button[data-plocha]');
-    if (b) b.click();
+    const el = document.querySelector('.mc-posuv[data-posuv="cena"] .mcp-od');
+    el.value = String(Math.max(1, Math.floor(parseInt(el.max, 10) * 0.6)));
+    el.dispatchEvent(new Event('input', { bubbles: true }));
   });
-  await p2.waitForTimeout(600);
-  const po = await p2.$$eval('.mc-rychle button[data-cena] .mc-n', (e) => e.map((x) => x.textContent.trim()).join('|'));
-  pravda('počty u ceny se přepočítají podle zvolené výměry', pred !== po,
-    `před i po je to totéž: ${po} — počty se počítají mimo ostatní filtry`);
+  await p2.waitForTimeout(700);
+  const po = await p2.evaluate(() => ({
+    text: document.querySelector('.mc-posuv[data-posuv="cena"] .mcp-text').textContent.trim(),
+    poleOd: document.getElementById('map-cena-od').value,
+    uvnitr: document.querySelectorAll('.mc-posuv[data-posuv="cena"] .mcp-graf i.mcp-uvnitr').length,
+    vsech: document.querySelectorAll('.mc-posuv[data-posuv="cena"] .mcp-graf i').length,
+    zrus: !document.querySelector('.mc-posuv[data-posuv="cena"] .mcp-zrus').hidden,
+  }));
+  pravda('tažení nastaví i číslo v políčku „od"', /^\d+$/.test(po.poleOd) && +po.poleOd > 0, `„${po.poleOd}"`);
+  pravda('popisek řekne rozsah i kolik nabídek v něm je',
+    /od /.test(po.text) && /nabíd/.test(po.text), po.text);
+  pravda('vybraný úsek histogramu se zvýrazní, ale ne celý',
+    po.uvnitr > 0 && po.uvnitr < po.vsech, `${po.uvnitr} z ${po.vsech}`);
+  pravda('a objeví se způsob, jak výběr zrušit', po.zrus);
+
+  // Sloupce musí reagovat na ostatní filtry (jinak by graf lhal).
+  const grafPred = await p2.$$eval('.mc-posuv[data-posuv="cena"] .mcp-graf i', (e) => e.map((x) => x.style.height).join('|'));
+  await p2.evaluate(() => {
+    const el = document.querySelector('.mc-posuv[data-posuv="plocha"] .mcp-do');
+    el.value = '2';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await p2.waitForTimeout(700);
+  const grafPo = await p2.$$eval('.mc-posuv[data-posuv="cena"] .mcp-graf i', (e) => e.map((x) => x.style.height).join('|'));
+  pravda('histogram ceny se přepočítá podle zvolené výměry', grafPred !== grafPo,
+    'sloupce zůstaly stejné — graf ukazuje celou nabídku bez ohledu na filtry');
+
+  // Zrušení vrátí všechno zpátky.
+  await p2.evaluate(() => {
+    document.querySelectorAll('.mc-posuv .mcp-zrus').forEach((b) => b.click());
+  });
+  await p2.waitForTimeout(700);
+  const poZruseni = await p2.evaluate(() => ({
+    text: [...document.querySelectorAll('.mcp-text')].map((x) => x.textContent.trim()).join(' | '),
+    pole: ['map-cena-od', 'map-cena', 'map-area', 'map-area-do'].map((i) => document.getElementById(i).value).join(','),
+    vypis: document.querySelectorAll('#opp-list li').length,
+  }));
+  pravda('zrušení vrátí „libovolná" a vyprázdní políčka',
+    /Libovoln/.test(poZruseni.text) && poZruseni.pole === ',,,', `${poZruseni.text} · políčka „${poZruseni.pole}"`);
+  pravda('a výpis je zpátky tak velký jako na začátku', poZruseni.vypis === pred,
+    `${poZruseni.vypis} × ${pred}`);
   await ctx2.close();
 }
 
 await ctx.close();
 await prohlizec.close();
-console.log('\nNašeptávač obcí, oprava překlepu a rychlá volba ceny/výměry');
+console.log('\nNašeptávač obcí, oprava překlepu a posuvník ceny/výměry');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.log('::error::Našeptávač: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }

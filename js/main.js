@@ -813,6 +813,10 @@
   var urgentOnly = false;  // filtr: jen dražby/exekuce končící brzy (do 14 dní)
   var searchTerm = '';
   var searchToks = [];   // hledaný text po slovech (viz js/hledani.js)
+  /* Musí to stát TADY, ne až u obsluhy posuvníků dole: staví se hned po
+     sestavení filtrů, a „var" dole by v tu chvíli bylo ještě undefined.
+     (Chyceno až v prohlížeči — v konzoli to spadlo na „reading 'push'".) */
+  var POSUVNIKY = [];
   /* Kdyby se js/hledani.js nenačetl (síť odpadla uprostřed načítání),
      hledá se postaru jedním podřetězcem: hůř, ale hledá. Výpis se kvůli
      chybějícímu souboru nesmí přestat vykreslovat. */
@@ -1088,6 +1092,9 @@
       b.appendChild(badge);
     });
     prepocitejCipy();
+    // Posuvníky ceny a výměry se staví jednou; zarážky se pak už nemění,
+    // aby táhlo neposkakovalo pokaždé, když se zafiltruje něco jiného.
+    postavPosuvniky();
   }
   /* Čísla u kategorií se počítala jednou při startu a pak už se neměnila.
      V režimu okolí tak seznam ukazoval deset pozemků, zatímco nad ním
@@ -2752,7 +2759,7 @@
         var pb = listEl.querySelector('#okoli-pryc');
         if (pb) pb.addEventListener('click', vypniOkoli);
         prepocitejCipy();
-        prepocitejRychle();
+        prekresliPosuvniky();
         updatePolys();
         return;
       }
@@ -2786,7 +2793,7 @@
       listEl.appendChild(more);
     }
     prepocitejCipy();   // čísla u kategorií musí sedět s tím, co je vidět
-    prepocitejRychle(); // a totéž u rychlých voleb ceny a výměry
+    prekresliPosuvniky(); // sloupce a táhla u ceny a výměry podle ostatních filtrů
     updatePolys(); // tvary parcel podle aktuálního filtru
   }
 
@@ -2796,7 +2803,9 @@
     if (druhEl) druhEl.value = 'all';
     minPrice = 0; maxArea = 0;
     [cenaEl, cenaOdEl, areaEl, areaDoEl].forEach(function (el) { if (el) el.value = ''; });
-    document.querySelectorAll('.mc-rychle button.on').forEach(function (b) { b.classList.remove('on'); });
+    // Táhla posuvníků zpátky na krajní polohy, jinak by ukazovala rozsah,
+    // který už neplatí.
+    POSUVNIKY.forEach(function (p) { p.odEl.value = '0'; p.doEl.value = String(p.max); });
     if (cenaEl) cenaEl.dispatchEvent(new Event('pk-reset'));
     if (urgentEl) { urgentEl.classList.remove('on'); urgentEl.setAttribute('aria-pressed', 'false'); }
     filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
@@ -3150,77 +3159,112 @@
     if (!el) return;
     ['input', 'change', 'pk-reset'].forEach(function (ev) { el.addEventListener(ev, prectiRozsahy); });
   });
-  /* Rychlé volby. Nejsou to další omezení, jen zkratka — po klepnutí se
-     čísla objeví v políčkách a dají se dál upravit. Druhé klepnutí na tutéž
-     volbu ji zruší, ať se člověk nemusí vracet mazáním. */
-  function nastavRozsah(odEl, doEl, hodnota, tlacitko) {
-    var d = String(hodnota).split('-');
-    // „0" v zápisu volby znamená „bez dolní hranice", v políčku má být prázdno.
-    var chceOd = (d[0] && d[0] !== '0') ? d[0] : '';
-    var chceDo = d[1] || '';
-    var uzPlati = odEl.value === chceOd && doEl.value === chceDo;
-    odEl.value = uzPlati ? '' : chceOd;
-    doEl.value = uzPlati ? '' : chceDo;
-    var skupina = tlacitko.parentElement;
-    skupina.querySelectorAll('button').forEach(function (b) { b.classList.remove('on'); });
-    if (!uzPlati) tlacitko.classList.add('on');
-    prectiRozsahy();
-  }
-  /* Kolik nabídek je v kterém pásmu. Bez toho je rychlá volba sázka
-     naslepo: člověk klepne na „nad 5 mil." a dostane prázdno, aniž by
-     předem tušil proč. Počítá se stejně jako u čipů nahoře — vlastní
-     omezení se na chvíli vypne, jinak by každé pásmo hlásilo počet toho,
-     co je vidět právě teď (a tedy skoro vždy nulu). */
-  function pasmoSedi(hodnota, cislo) {
-    if (cislo == null) return false;
-    var d = String(hodnota).split('-');
-    var od = d[0] ? parseInt(d[0], 10) : 0;
-    var doo = d[1] ? parseInt(d[1], 10) : Infinity;
-    return cislo >= od && cislo < (isFinite(doo) ? doo : Infinity);
-  }
-  function prepocitejRychle() {
-    var skupiny = document.querySelectorAll('.mc-rychle');
-    if (!skupiny.length) return;
-    /* Vypíná se jen VLASTNÍ omezení té které skupiny. Napoprvé jsem vypnul
-       obě a čísla u ceny pak vůbec nereagovala na zvolenou výměru — byla
-       to pořád táž osmička čísel za celou nabídku. */
-    var pMin = minPrice, pMax = maxPrice, aMin = minArea, aMax = maxArea;
-    function seber(jeCena) {
-      if (jeCena) { minPrice = 0; maxPrice = 0; } else { minArea = 0; maxArea = 0; }
-      var ven = [];
-      try {
-        for (var i = 0; i < DATA.length; i++) if (visible(DATA[i])) ven.push(DATA[i]);
-      } finally {
-        if (jeCena) { minPrice = pMin; maxPrice = pMax; } else { minArea = aMin; maxArea = aMax; }
+  /* ---------- Posuvník s histogramem pro cenu a výměru ----------
+     Dřív tu byla řada pilulek s hotovými pásmy. Pět jich bylo málo, osm
+     udělalo ze dvou řádků osm a pořád to byla jen hrstka možností. Posuvník
+     nabídne libovolný rozsah, zabere dva řádky — a sloupečky nad ním
+     ukazují, kde nabídky doopravdy jsou, aby tažení nebylo hádání.
+     Zarážky (nerovnoměrná stupnice z kvantilů) počítá js/rozsah.js. */
+  function postavPosuvniky() {
+    if (!window.PKRozsah) return;   // bez modulu zůstanou políčka od/do
+    document.querySelectorAll('.mc-posuv').forEach(function (box) {
+      var jeCena = box.getAttribute('data-posuv') === 'cena';
+      var hodnoty = DATA.map(function (d) { return jeCena ? d.price : d.area; });
+      var zar = window.PKRozsah.zarazky(hodnoty, 18);
+      var odEl = box.querySelector('.mcp-od'), doEl = box.querySelector('.mcp-do');
+      var grafEl = box.querySelector('.mcp-graf'), vybranoEl = box.querySelector('.mcp-vybrano');
+      var textEl = box.querySelector('.mcp-text'), zrusEl = box.querySelector('.mcp-zrus');
+      var max = zar.length - 1;
+      [odEl, doEl].forEach(function (el) { el.max = String(max); });
+      odEl.value = '0'; doEl.value = String(max);
+      var sloupce = [];
+      for (var k = 0; k < zar.length - 1; k++) {
+        var b = document.createElement('i');
+        grafEl.appendChild(b);
+        sloupce.push(b);
       }
-      return ven;
-    }
-    var proCenu = null, proPlochu = null;
-    skupiny.forEach(function (g) {
-      g.querySelectorAll('button').forEach(function (b) {
-        var jeCena = b.hasAttribute('data-cena');
-        var klic = b.getAttribute(jeCena ? 'data-cena' : 'data-plocha');
-        var vzorek = jeCena ? (proCenu || (proCenu = seber(true))) : (proPlochu || (proPlochu = seber(false)));
-        var n = 0;
-        for (var k = 0; k < vzorek.length; k++) {
-          var d = vzorek[k], v = jeCena ? d.price : d.area;
-          if (typeof v === 'number' && v > 0 && pasmoSedi(klic, v)) n++;
-        }
-        var zn = b.querySelector('.mc-n');
-        if (zn) zn.textContent = n ? fmt(n) : '';
-        // Prázdné pásmo není zakázané, jen se nevnucuje — kdo na něj
-        // klepne, dostane poctivé „nic tu není" místo tiché nuly.
-        b.classList.toggle('mc-prazdne', n === 0);
+      var p = {
+        box: box, jeCena: jeCena, zar: zar, max: max, sloupce: sloupce,
+        odEl: odEl, doEl: doEl, vybranoEl: vybranoEl, textEl: textEl, zrusEl: zrusEl,
+        poleOd: jeCena ? cenaOdEl : areaEl, poleDo: jeCena ? cenaEl : areaDoEl,
+        jednotka: jeCena ? 'kc' : 'm2',
+      };
+      POSUVNIKY.push(p);
+
+      function tahni(kdo) {
+        var a = parseInt(odEl.value, 10), b2 = parseInt(doEl.value, 10);
+        // Táhla se nesmí prohodit — dolní vždycky vlevo od horního.
+        if (a > b2) { if (kdo === 'od') { b2 = a; doEl.value = String(a); } else { a = b2; odEl.value = String(b2); } }
+        var dolni = a === 0 ? '' : String(zar[a]);
+        var horni = b2 >= max ? '' : String(zar[b2]);
+        if (p.poleOd) { p.poleOd.value = dolni; }
+        if (p.poleDo) { p.poleDo.value = horni; }
+        prectiRozsahy();
+      }
+      odEl.addEventListener('input', function () { tahni('od'); });
+      doEl.addEventListener('input', function () { tahni('do'); });
+      zrusEl.addEventListener('click', function () {
+        odEl.value = '0'; doEl.value = String(max);
+        if (p.poleOd) p.poleOd.value = '';
+        if (p.poleDo) p.poleDo.value = '';
+        prectiRozsahy();
       });
     });
   }
-  document.querySelectorAll('.mc-rychle').forEach(function (g) {
-    g.addEventListener('click', function (e) {
-      var b = e.target.closest('button'); if (!b) return;
-      if (b.hasAttribute('data-cena')) nastavRozsah(cenaOdEl, cenaEl, b.getAttribute('data-cena'), b);
-      else if (b.hasAttribute('data-plocha')) nastavRozsah(areaEl, areaDoEl, b.getAttribute('data-plocha'), b);
+
+  /* Překreslení: sloupce podle toho, co projde OSTATNÍMI filtry (vlastní
+     omezení se na chvíli vypne, jinak by graf ukazoval jen vybraný úsek),
+     táhla podle čísel v políčkách, popisek lidsky. */
+  function prekresliPosuvniky() {
+    if (!POSUVNIKY.length || !window.PKRozsah) return;
+    var pMin = minPrice, pMax = maxPrice, aMin = minArea, aMax = maxArea;
+    POSUVNIKY.forEach(function (p) {
+      if (p.jeCena) { minPrice = 0; maxPrice = 0; } else { minArea = 0; maxArea = 0; }
+      var hodnoty = [];
+      try {
+        for (var i = 0; i < DATA.length; i++) {
+          if (!visible(DATA[i])) continue;
+          hodnoty.push(p.jeCena ? DATA[i].price : DATA[i].area);
+        }
+      } finally {
+        if (p.jeCena) { minPrice = pMin; maxPrice = pMax; } else { minArea = aMin; maxArea = aMax; }
+      }
+      var hist = window.PKRozsah.histogram(hodnoty, p.zar);
+      var nej = Math.max.apply(null, hist.concat([1]));
+      var a = parseInt(p.odEl.value, 10), b = parseInt(p.doEl.value, 10);
+      // Ruční zápis do políčka musí táhlo postavit tam, kam patří.
+      var zOd = p.poleOd && p.poleOd.value ? window.PKRozsah.index(p.zar, parseInt(p.poleOd.value, 10)) : 0;
+      var zDo = p.poleDo && p.poleDo.value ? window.PKRozsah.index(p.zar, parseInt(p.poleDo.value, 10)) : p.max;
+      if (zOd !== a) { a = zOd; p.odEl.value = String(a); }
+      if (zDo !== b) { b = zDo; p.doEl.value = String(b); }
+      var vybraných = 0;
+      p.sloupce.forEach(function (s, k) {
+        var v = Math.max(2, Math.round(hist[k] / nej * 100));
+        s.style.height = v + '%';
+        var uvnitr = k >= a && k < Math.max(a + 1, b);
+        s.classList.toggle('mcp-uvnitr', uvnitr);
+        if (uvnitr) vybraných += hist[k];
+      });
+      var sirka = p.max;
+      p.vybranoEl.style.left = (a / sirka * 100) + '%';
+      p.vybranoEl.style.right = (100 - b / sirka * 100) + '%';
+      var popisOd = a === 0 ? null : window.PKRozsah.popis(p.zar[a], p.jednotka);
+      var popisDo = b >= p.max ? null : window.PKRozsah.popis(p.zar[b], p.jednotka);
+      var jm = p.jeCena ? 'cena' : 'výměra';
+      var text;
+      if (!popisOd && !popisDo) text = 'Libovolná ' + jm;
+      else if (popisOd && popisDo) text = '<b>' + popisOd + ' – ' + popisDo + '</b>';
+      else if (popisOd) text = '<b>od ' + popisOd + '</b>';
+      else text = '<b>do ' + popisDo + '</b>';
+      if (popisOd || popisDo) text += ' · ' + fmt(vybraných) + ' ' + (vybraných === 1 ? 'nabídka' : (vybraných < 5 ? 'nabídky' : 'nabídek'));
+      p.textEl.innerHTML = text;
+      p.zrusEl.hidden = !popisOd && !popisDo;
+      // Čtečka musí slyšet částku, ne pořadové číslo zarážky.
+      p.odEl.setAttribute('aria-valuetext', popisOd || 'bez dolní hranice');
+      p.doEl.setAttribute('aria-valuetext', popisDo || 'bez horní hranice');
     });
-  });
+  }
+
   if (urgentEl) urgentEl.addEventListener('click', function () { urgentOnly = !urgentOnly; urgentEl.classList.toggle('on', urgentOnly); urgentEl.setAttribute('aria-pressed', String(urgentOnly)); renderList(); });
   if (favEl) favEl.addEventListener('click', function () { favOnly = !favOnly; refreshFavBtn(); renderList(); });
   if (perm2El) perm2El.addEventListener('change', function () { maxPerM2 = parseInt(perm2El.value, 10) || 0; renderList(); });
