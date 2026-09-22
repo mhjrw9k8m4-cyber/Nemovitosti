@@ -249,7 +249,11 @@ const bezDia = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
   pravda('js/main.js má záložní hledání, když se modul nenačte',
     /window\.PKHledani \|\|/.test(main));
   const idx = readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-  const pH = idx.indexOf('js/hledani.js'), pM = idx.indexOf('js/main.js');
+  /* Hledají se SKUTEČNÉ značky <script>, ne jen výskyt názvu — komentář
+     v těle stránky, který soubor zmiňuje, by jinak posunul pořadí a test
+     by hlásil chybu tam, kde je všechno správně. */
+  const znacka = (jm) => idx.indexOf('<script src="' + jm);
+  const pH = znacka('js/hledani.js'), pM = znacka('js/main.js');
   pravda('index.html načítá js/hledani.js, a dřív než js/main.js', pH > 0 && pH < pM, pH + ' × ' + pM);
   pravda('js/main.js hledá obec přes společný modul', /HL\.misto \? HL\.misto\(DATA, q\)/.test(main));
   pravda('js/main.js našeptává přes společný modul', /HL\.navrhy\(DATA, searchEl\.value/.test(main));

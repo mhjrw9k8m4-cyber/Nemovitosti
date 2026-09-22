@@ -137,108 +137,114 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   pravda('a klepnutím se oprava rovnou vyhledá', false, 'tlačítko s opravou se vůbec neukázalo');
 }
 
-/* --- 6) Posuvník s histogramem místo řady pilulek --------------------
+/* --- 6) Cena a výměra: souhrn v panelu, výběr na celé obrazovce -------
  *
- * Pásem bylo nejdřív pět, pak osm i s počty — jenže osm pilulek ve čtyřech
- * řadách je na telefonu zeď a pořád je to jen hrstka hotových možností.
- * Posuvník nabídne libovolný rozsah a sloupečky nad ním ukazují, kde
- * nabídky doopravdy jsou. Test hlídá tři věci: že se opravdu postavil,
- * že tažením zafiltruje, a že sloupce reagují na ostatní filtry. */
+ * Tři podoby před touhle (pět pilulek → osm s počty → posuvník) měly
+ * společné, že se snažily vejít do úzkého sloupce mezi ostatní filtry.
+ * Tam je na ně málo místa a všechny působily stísněně. Teď je v panelu
+ * jen souhrn a výběr dostane celou obrazovku. Test hlídá, že panel je
+ * opravdu krátký, že se výběr dá ovládat klepáním do sloupců a že se to,
+ * co se vybralo, propíše do výpisu i zpátky do souhrnu. */
 {
-  const ctx2 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
-  await ctx2.route('**/*', (r) => {
-    const u = new URL(r.request().url());
-    return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();
-  });
-  await ctx2.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
-    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
-  if (LEAFLET) {
-    await ctx2.route('https://unpkg.com/leaflet@**', (r) => {
-      const f = path.join(LEAFLET, path.basename(new URL(r.request().url()).pathname));
-      if (!existsSync(f)) return r.abort();
-      return r.fulfill({ status: 200, contentType: f.endsWith('.css') ? 'text/css' : 'text/javascript', body: readFileSync(f) });
-    });
-    await ctx2.route(`${BASE}/index.html*`, async (r) => {
-      const o = await r.fetch();
-      return r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8',
-        body: (await o.text()).replace(/\s+integrity="[^"]*"/g, '') });
-    });
-  }
-  const p2 = await ctx2.newPage();
-  await p2.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-  await p2.waitForTimeout(3600);
-
-  const stav = await p2.evaluate(() => [...document.querySelectorAll('.mc-posuv')].map((b) => ({
-    klic: b.getAttribute('data-posuv'),
-    sloupcu: b.querySelectorAll('.mcp-graf i').length,
-    kroku: parseInt(b.querySelector('.mcp-od').max, 10),
-    text: b.querySelector('.mcp-text').textContent.trim(),
-    vyska: Math.round(b.getBoundingClientRect().height),
-  })));
-  pravda('posuvník je na cenu i na výměru', stav.length === 2, JSON.stringify(stav));
-  pravda('oba mají aspoň deset kroků (to je víc než osm hotových pásem)',
-    stav.every((x) => x.kroku >= 10), stav.map((x) => x.klic + ': ' + x.kroku).join(', '));
-  pravda('a nad nimi je histogram, ne prázdno',
-    stav.every((x) => x.sloupcu === x.kroku), stav.map((x) => x.klic + ': ' + x.sloupcu).join(', '));
-  pravda('dokud se nic nevybralo, říkají „libovolná"',
-    stav.every((x) => /Libovoln/.test(x.text)), stav.map((x) => x.text).join(' | '));
-  pravda('a vejdou se do míst, kde dřív byla zeď z pilulek',
-    stav.every((x) => x.vyska <= 140), stav.map((x) => x.klic + ': ' + x.vyska + ' px').join(', '));
-
-  // Tažení musí zafiltrovat a napsat, kolik toho zbylo.
-  const pred = await p2.locator('#opp-list li').count();
+  const { ctx: ctx2, p: p2 } = await otevri(TELEFON, 'index.html');
+  // Panel s filtry je na telefonu sbalený — rozbalíme ho, jako by na něj
+  // člověk klepl. Bez toho Playwright třicet vteřin čeká na neviditelné
+  // tlačítko a test spadne výjimkou místo čitelné hlášky.
   await p2.evaluate(() => {
-    const el = document.querySelector('.mc-posuv[data-posuv="cena"] .mcp-od');
-    el.value = String(Math.max(1, Math.floor(parseInt(el.max, 10) * 0.6)));
-    el.dispatchEvent(new Event('input', { bubbles: true }));
+    const d = document.getElementById('ms-filters');
+    if (d) d.open = true;
   });
-  await p2.waitForTimeout(700);
-  const po = await p2.evaluate(() => ({
-    text: document.querySelector('.mc-posuv[data-posuv="cena"] .mcp-text').textContent.trim(),
-    poleOd: document.getElementById('map-cena-od').value,
-    uvnitr: document.querySelectorAll('.mc-posuv[data-posuv="cena"] .mcp-graf i.mcp-uvnitr').length,
-    vsech: document.querySelectorAll('.mc-posuv[data-posuv="cena"] .mcp-graf i').length,
-    zrus: !document.querySelector('.mc-posuv[data-posuv="cena"] .mcp-zrus').hidden,
+  await p2.waitForTimeout(400);
+
+  const panel = await p2.evaluate(() => {
+    const r = document.querySelector('.mc-shrnuti');
+    return r ? {
+      vyska: Math.round(r.getBoundingClientRect().height),
+      tlacitek: r.querySelectorAll('.mcs-btn').length,
+      texty: [...r.querySelectorAll('.mcs-btn')].map((b) => b.textContent.trim().replace(/\s+/g, ' ')),
+      posuvniku: document.querySelectorAll('.map-controls .mc-posuv, .map-controls .mc-rychle').length,
+    } : null;
+  });
+  pravda('v panelu je souhrnná řada pro cenu i výměru',
+    !!panel && panel.tlacitek === 2, JSON.stringify(panel));
+  pravda('a zabere míň než sto pixelů (dřív to byly stovky)',
+    !!panel && panel.vyska < 100, panel ? panel.vyska + ' px' : '—');
+  pravda('v panelu už nezůstala ani pilulka, ani posuvník',
+    !!panel && panel.posuvniku === 0, panel ? String(panel.posuvniku) : '—');
+  pravda('dokud se nic nevybralo, souhrn říká „libovolná"',
+    !!panel && panel.texty.every((t) => /libovoln/i.test(t)), panel ? panel.texty.join(' | ') : '—');
+
+  // Otevřít cenu.
+  await p2.locator('.mcs-btn').first().click();
+  await p2.waitForTimeout(400);
+  const okno = p2.locator('.rz-ov:not([hidden])');
+  pravda('klepnutí na souhrn otevře výběr přes celou obrazovku', await okno.count() === 1);
+  const sloupcu = await okno.locator('.rz-graf button').count();
+  pravda('a je v něm histogram s aspoň deseti sloupci', sloupcu >= 10, `${sloupcu}`);
+  const terce = await okno.locator('.rz-graf button').evaluateAll((b) => b.map((x) => Math.round(x.getBoundingClientRect().height)));
+  pravda('sloupce jsou na dotyk dost vysoké (celá výška grafu)',
+    terce.length > 0 && Math.min(...terce) >= 36, 'nejnižší ' + Math.min(...terce) + ' px');
+  const hotovo0 = await okno.locator('.rz-hotovo').innerText();
+  pravda('tlačítko dole rovnou říká, kolik nabídek je vidět', /\d/.test(hotovo0), hotovo0);
+
+  // Klepnutí vybere pásmo, druhé ho roztáhne.
+  await okno.locator('.rz-graf button').nth(3).click();
+  await p2.waitForTimeout(400);
+  const po1 = await p2.evaluate(() => ({
+    uvnitr: document.querySelectorAll('.rz-ov:not([hidden]) .rz-graf button.rz-uvnitr').length,
+    hotovo: document.querySelector('.rz-ov:not([hidden]) .rz-hotovo').textContent,
+    od: document.getElementById('map-cena-od').value,
   }));
-  pravda('tažení nastaví i číslo v políčku „od"', /^\d+$/.test(po.poleOd) && +po.poleOd > 0, `„${po.poleOd}"`);
-  pravda('popisek řekne rozsah i kolik nabídek v něm je',
-    /od /.test(po.text) && /nabíd/.test(po.text), po.text);
-  pravda('vybraný úsek histogramu se zvýrazní, ale ne celý',
-    po.uvnitr > 0 && po.uvnitr < po.vsech, `${po.uvnitr} z ${po.vsech}`);
-  pravda('a objeví se způsob, jak výběr zrušit', po.zrus);
+  pravda('klepnutí na sloupec vybere pásmo', po1.uvnitr === 1, `zvýrazněno ${po1.uvnitr}`);
+  pravda('a propíše se do políčka „od"', /^\d+$/.test(po1.od), `„${po1.od}"`);
+  pravda('počet na tlačítku se změní', po1.hotovo !== hotovo0, `${hotovo0} → ${po1.hotovo}`);
 
-  // Sloupce musí reagovat na ostatní filtry (jinak by graf lhal).
-  const grafPred = await p2.$$eval('.mc-posuv[data-posuv="cena"] .mcp-graf i', (e) => e.map((x) => x.style.height).join('|'));
-  await p2.evaluate(() => {
-    const el = document.querySelector('.mc-posuv[data-posuv="plocha"] .mcp-do');
-    el.value = '2';
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-  });
-  await p2.waitForTimeout(700);
-  const grafPo = await p2.$$eval('.mc-posuv[data-posuv="cena"] .mcp-graf i', (e) => e.map((x) => x.style.height).join('|'));
-  pravda('histogram ceny se přepočítá podle zvolené výměry', grafPred !== grafPo,
-    'sloupce zůstaly stejné — graf ukazuje celou nabídku bez ohledu na filtry');
+  await okno.locator('.rz-graf button').nth(8).click();
+  await p2.waitForTimeout(400);
+  const po2 = await p2.evaluate(() => ({
+    uvnitr: document.querySelectorAll('.rz-ov:not([hidden]) .rz-graf button.rz-uvnitr').length,
+    od: document.getElementById('map-cena-od').value, do: document.getElementById('map-cena').value,
+  }));
+  pravda('druhé klepnutí rozsah ROZTÁHNE, nezačne znovu', po2.uvnitr > po1.uvnitr,
+    `po prvním ${po1.uvnitr}, po druhém ${po2.uvnitr} — druhé klepnutí výběr zahodilo`);
+  pravda('a naplní obě políčka', +po2.od > 0 && +po2.do > +po2.od, `${po2.od}–${po2.do}`);
 
-  // Zrušení vrátí všechno zpátky.
-  await p2.evaluate(() => {
-    document.querySelectorAll('.mc-posuv .mcp-zrus').forEach((b) => b.click());
-  });
-  await p2.waitForTimeout(700);
-  const poZruseni = await p2.evaluate(() => ({
-    text: [...document.querySelectorAll('.mcp-text')].map((x) => x.textContent.trim()).join(' | '),
-    pole: ['map-cena-od', 'map-cena', 'map-area', 'map-area-do'].map((i) => document.getElementById(i).value).join(','),
+  // Zavřít a zkontrolovat souhrn i výpis.
+  await okno.locator('.rz-hotovo').click();
+  await p2.waitForTimeout(500);
+  const poZavreni = await p2.evaluate(() => ({
+    otevreno: !!document.querySelector('.rz-ov:not([hidden])'),
+    souhrn: document.querySelector('.mcs-btn').textContent.trim().replace(/\s+/g, ' '),
+    zvyrazneno: document.querySelector('.mcs-btn').classList.contains('mcs-aktivni'),
     vypis: document.querySelectorAll('#opp-list li').length,
   }));
-  pravda('zrušení vrátí „libovolná" a vyprázdní políčka',
-    /Libovoln/.test(poZruseni.text) && poZruseni.pole === ',,,', `${poZruseni.text} · políčka „${poZruseni.pole}"`);
-  pravda('a výpis je zpátky tak velký jako na začátku', poZruseni.vypis === pred,
-    `${poZruseni.vypis} × ${pred}`);
+  pravda('okno se zavře', !poZavreni.otevreno);
+  pravda('souhrn v panelu ukazuje vybraný rozsah',
+    !/libovoln/i.test(poZavreni.souhrn), poZavreni.souhrn);
+  pravda('a souhrn je vidět, že je aktivní', poZavreni.zvyrazneno);
+  pravda('výpis něco ukazuje', poZavreni.vypis > 0, String(poZavreni.vypis));
+
+  // Vymazat.
+  await p2.locator('.mcs-btn').first().click();
+  await p2.waitForTimeout(300);
+  await p2.locator('.rz-ov:not([hidden]) .rz-vymaz').click();
+  await p2.waitForTimeout(400);
+  const poVymazani = await p2.evaluate(() => ({
+    uvnitr: document.querySelectorAll('.rz-ov:not([hidden]) .rz-graf button.rz-uvnitr').length,
+    pole: document.getElementById('map-cena-od').value + ',' + document.getElementById('map-cena').value,
+  }));
+  pravda('„Vymazat" výběr zruší', poVymazani.uvnitr === 0 && poVymazani.pole === ',',
+    `zvýrazněno ${poVymazani.uvnitr}, políčka „${poVymazani.pole}"`);
+  // Escape zavírá.
+  await p2.keyboard.press('Escape');
+  await p2.waitForTimeout(300);
+  pravda('Escape okno zavře', await p2.locator('.rz-ov:not([hidden])').count() === 0);
   await ctx2.close();
 }
 
 await ctx.close();
 await prohlizec.close();
-console.log('\nNašeptávač obcí, oprava překlepu a posuvník ceny/výměry');
+console.log('\nNašeptávač obcí, oprava překlepu a výběr ceny/výměry');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.log('::error::Našeptávač: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }

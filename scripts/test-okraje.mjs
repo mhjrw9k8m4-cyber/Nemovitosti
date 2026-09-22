@@ -18,7 +18,6 @@
 // Měří se tedy políčka a seznamy vždycky, a cokoli dalšího, co si rámeček
 // nebo výplň samo nasadilo — protože pak se od pozadí odlišit CHCE.
 import { chromium } from 'playwright-core';
-import { decode as dekodujJpeg } from 'jpeg-js';
 
 const STRANKY = ['index.html', 'pridat.html', 'hlidani.html', 'upozorneni.html', 'zpravy.html', 'muj-inzerat.html', 'kontakt.html'];
 const PRVKY = 'select, input:not([type=hidden]), textarea, button, .map-select, .filter-chip, summary';
@@ -154,32 +153,35 @@ for (const s of STRANKY) {
   await p.close();
 }
 
-/* --- Posuvník zvlášť: dráha, vybraný úsek a táhlo ---------------------
+/* --- Výběr ceny a výměry zvlášť: sloupce histogramu -------------------
  *
- * U posuvníku není vidět sám prvek, ale jeho části: <input type=range> je
- * neviditelný překryv přes celou šířku, aby se dal chytit prstem, a dráhu
- * i táhlo kreslí pseudoprvky. Výš se proto přeskakuje — a tady se měří to,
- * co je doopravdy vidět.
+ * Výběr rozsahu není políčko s rámečkem, ale graf: sloupce jsou zároveň
+ * terče, do kterých se klepe. Obyčejná kontrola okrajů to nezachytí,
+ * protože tlačítko samo nemá ani rámeček, ani výplň — má je až proužek
+ * uvnitř.
  *
- * Měří se dvě věci, a ne tři: TÁHLO proti panelu (podle něj se pozná, že
- * tu vůbec nějaký posuvník je) a VYBRANÝ ÚSEK proti zbytku dráhy (podle
- * toho se pozná, co je nastavené). Samotná dráha se schválně neměří:
- * nejde ji udělat tmavou proti panelu A ZÁROVEŇ světlou proti zelenému
- * vybranému úseku — zelená leží někde uprostřed, takže co pomůže jednomu,
- * uškodí druhému (spočítáno pro devět odstínů, žádný nesplní obojí).
- * Dráha je jen náznak, kudy se dá táhnout; ovládací prvek i jeho stav jsou
- * čitelné z táhla a z vybraného úseku. */
-const posuvnikNalezy = [];
+ * Měří se STAV, ne sloupec sám: musí být poznat, které sloupce jsou
+ * vybrané. „Sloupec proti pozadí" se schválně neměří — nejde ho udělat
+ * dost tmavý proti bílé A ZÁROVEŇ dost světlý proti zelenému vybranému
+ * (spočítáno pro pět odstínů šedé, žádný nesplní obojí). Sloupce jsou
+ * datová kresba; ovládací prvek poznáte podle nadpisu, os a nápovědy.
+ *
+ * A protože na barvu samotnou se spolehnout nedá (WCAG 1.4.1), hlídá se
+ * navíc, že vybraný sloupec má i rozlišení, které barva není. */
+const rozsahNalezy = [];
 {
   const p = await ctx.newPage();
   await p.goto('file://' + process.cwd() + '/index.html', { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(700);
-  await p.evaluate(() => { document.querySelectorAll('details').forEach((d) => { d.open = true; }); });
-  await p.waitForTimeout(250);
+  await p.waitForTimeout(2500);
   const v = await p.evaluate(() => {
+    const ov = document.querySelector('.rz-ov');
+    if (!ov) return null;
+    ov.hidden = false;
+    const sl = ov.querySelectorAll('.rz-graf button');
+    if (sl.length < 2) return { malo: true };
+    sl[0].classList.add('rz-uvnitr');            // jeden vybraný pro srovnání
     const rgb = (t) => { const m = /rgba?\(([^)]+)\)/.exec(t || ''); if (!m) return null;
       const c = m[1].split(',').map(parseFloat); return { r: c[0], g: c[1], b: c[2], a: c.length > 3 ? c[3] : 1 }; };
-    const slozit = (v2, s2) => ({ r: v2.r * v2.a + s2.r * (1 - v2.a), g: v2.g * v2.a + s2.g * (1 - v2.a), b: v2.b * v2.a + s2.b * (1 - v2.a) });
     const podklad = (el) => {
       let n = el;
       while (n && n !== document.documentElement) {
@@ -189,39 +191,33 @@ const posuvnikNalezy = [];
       }
       return { r: 255, g: 255, b: 255, a: 1 };
     };
-    const draha = document.querySelector('.mcp-draha');
-    if (!draha) return null;
-    const pod = podklad(draha);
-    const cara = slozit(rgb(getComputedStyle(draha, '::before').backgroundColor) || { r: 0, g: 0, b: 0, a: 0 }, pod);
-    const vybr = slozit(rgb(getComputedStyle(document.querySelector('.mcp-vybrano')).backgroundColor) || { r: 0, g: 0, b: 0, a: 0 }, pod);
-    return { pod: [pod.r, pod.g, pod.b], cara: [cara.r, cara.g, cara.b], vybrano: [vybr.r, vybr.g, vybr.b] };
+    const slozit = (c, s2) => ({ r: c.r * c.a + s2.r * (1 - c.a), g: c.g * c.a + s2.g * (1 - c.a), b: c.b * c.a + s2.b * (1 - c.a) });
+    const pod = podklad(ov.querySelector('.rz-graf'));
+    const pruh = (el) => {
+      const c2 = getComputedStyle(el.firstChild);
+      const barva = rgb(c2.backgroundColor) || { r: 0, g: 0, b: 0, a: 0 };
+      barva.a *= parseFloat(c2.opacity || '1');
+      return slozit(barva, pod);
+    };
+    const vybrany = pruh(sl[0]), nevybrany = pruh(sl[1]);
+    /* Rozlišení, které není barva: jiná průhlednost nestačí (to je pořád
+       jen barva), ale rámeček, podtržení nebo obrys ano. */
+    const cv = getComputedStyle(sl[0]), cn = getComputedStyle(sl[1]);
+    const necoNezBarva = cv.borderBottomWidth !== cn.borderBottomWidth
+      || (parseFloat(cv.borderBottomWidth) > 0 && cv.borderBottomStyle !== 'none'
+          && cv.borderBottomColor !== cn.borderBottomColor)
+      || cv.outlineStyle !== cn.outlineStyle
+      || cv.textDecorationLine !== cn.textDecorationLine;
+    sl[0].classList.remove('rz-uvnitr');
+    ov.hidden = true;
+    return { pod: [pod.r, pod.g, pod.b], vybrany: [vybrany.r, vybrany.g, vybrany.b],
+      nevybrany: [nevybrany.r, nevybrany.g, nevybrany.b], necoNezBarva: necoNezBarva };
   });
-  if (!v) posuvnikNalezy.push('posuvník ceny se na stránce vůbec nenašel');
+  if (!v) rozsahNalezy.push('okno s výběrem rozsahu se vůbec nepostavilo');
+  else if (v.malo) rozsahNalezy.push('histogram nemá ani dva sloupce');
   else {
-    if (pomer(v.vybrano, v.cara) < MIN) posuvnikNalezy.push(`vybraný úsek splývá se zbytkem dráhy (${pomer(v.vybrano, v.cara).toFixed(2)}:1)`);
-    /* Táhlo kreslí ::-webkit-slider-thumb a ten se přes getComputedStyle
-       přečíst nedá — prohlížeč ho nevydá. Měří se proto ze SKUTEČNÉHO
-       snímku: v místě, kde táhlo stojí, musí být pixely dost odlišné od
-       panelu. Je to poctivější než číst deklaraci v CSS, protože to
-       dokazuje, že je táhlo opravdu vidět, ne jen napsané. */
-    const snimek = await p.locator('.mcp-draha').first().screenshot({ type: 'jpeg', quality: 100 });
-    const obr = dekodujJpeg(snimek, { useTArray: true });
-    /* Počítají se JEN pruhy nad a pod čárou dráhy. Kdyby se braly všechny
-       pixely, prošlo by to i s neviditelným táhlem — odlišná od panelu je
-       totiž i sama dráha a vybraný úsek. (Právě na tom mi sabotáž ukázala,
-       že první podoba téhle kontroly nic nehlídá.) */
-    const caraOd = Math.round(obr.height * 0.40), caraDo = Math.round(obr.height * 0.62);
-    let odlisnych = 0, zkoumanych = 0;
-    for (let y = 0; y < obr.height; y++) {
-      if (y >= caraOd && y <= caraDo) continue;
-      for (let x = 0; x < obr.width; x++) {
-        const i = (y * obr.width + x) * 4;
-        zkoumanych++;
-        if (pomer([obr.data[i], obr.data[i + 1], obr.data[i + 2]], v.pod) >= MIN) odlisnych++;
-      }
-    }
-    const podil = zkoumanych ? odlisnych / zkoumanych : 0;
-    if (podil < 0.01) posuvnikNalezy.push(`na dráze není vidět žádné táhlo (jen ${(podil * 100).toFixed(2)} % pixelů mimo čáru se liší od panelu)`);
+    if (pomer(v.vybrany, v.nevybrany) < MIN) rozsahNalezy.push(`vybrané sloupce nejsou poznat od nevybraných (${pomer(v.vybrany, v.nevybrany).toFixed(2)}:1)`);
+    if (!v.necoNezBarva) rozsahNalezy.push('vybraný sloupec se od ostatních liší jen barvou — kdo barvy nerozezná, nepozná výběr');
     zmereno += 2;
   }
   await p.close();
@@ -231,14 +227,14 @@ await prohlizec.close();
 
 console.log(`\nViditelnost okrajů (WCAG 1.4.11, práh ${MIN}:1) — změřeno ${zmereno} prvků`
   + (preskoceno ? `, ${preskoceno} přeskočeno (leží na barevném přechodu)` : ''));
-if (posuvnikNalezy.length) {
-  posuvnikNalezy.forEach((t) => console.log('  ✕ posuvník: ' + t));
+if (rozsahNalezy.length) {
+  rozsahNalezy.forEach((t) => console.log('  ✕ výběr rozsahu: ' + t));
 }
-if (!nalezy.length && !posuvnikNalezy.length) {
+if (!nalezy.length && !rozsahNalezy.length) {
   console.log('Každý ovládací prvek je od svého pozadí odlišený.');
   process.exit(0);
 }
-if (!nalezy.length) { console.log(`\n${posuvnikNalezy.length} částí posuvníku splývá.`); process.exit(1); }
+if (!nalezy.length) { console.log(`\n${rozsahNalezy.length} částí výběru rozsahu splývá.`); process.exit(1); }
 const videno = new Set();
 nalezy.forEach((n) => {
   const k = n.stranka + '|' + n.prvek;

@@ -1,6 +1,9 @@
-// Test: posuvník ceny a výměry — stupnice, histogram, popisky.
+// Test: stupnice a histogram pro cenu a výměru.
 //
 // Spuštění: node scripts/test-rozsah.mjs   (nepotřebuje prohlížeč ani síť)
+//
+// Samotné ovládání (souhrn v panelu, výběr přes celou obrazovku) hlídá
+// scripts/test-naseptavac.mjs v prohlížeči. Tady jde o čísla pod ním.
 //
 // Výběr ceny a výměry byl nejdřív pět pilulek, pak osm i s počty. Osm
 // pilulek ve čtyřech řadách je ale na telefonu zeď, kterou je potřeba
@@ -110,15 +113,18 @@ for (const [jm, pole, jedn] of [['cena', DATA.map((d) => d.price), 'kc'],
   const main = readFileSync(path.join(ROOT, 'js', 'main.js'), 'utf8');
   const idx = readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   pravda('index.html načítá js/rozsah.js', /js\/rozsah\.js/.test(idx));
-  pravda('a má posuvník na cenu i na výměru',
-    /data-posuv="cena"/.test(idx) && /data-posuv="plocha"/.test(idx));
-  pravda('js/main.js staví posuvníky ze společného modulu', /PKRozsah\.zarazky\(hodnoty, 18\)/.test(main));
+  pravda('v panelu zůstala políčka od–do (fungují i bez skriptu)',
+    /id="map-cena-od"/.test(idx) && /id="map-area-do"/.test(idx));
+  pravda('js/main.js staví stupnici ze společného modulu',
+    /PKRozsah\.zarazky\(DATA\.map/.test(main));
   pravda('a histogram počítá podle ostatních filtrů', /PKRozsah\.histogram\(hodnoty, p\.zar\)/.test(main));
-  pravda('zeď z pilulek je pryč', !/mc-rychle/.test(idx), 'v index.html pořád jsou');
+  pravda('zeď z pilulek ani posuvník v panelu nezůstaly',
+    !/mc-rychle/.test(idx) && !/mc-posuv/.test(idx), 'v index.html pořád jsou');
+  pravda('výběr se otevírá přes celou obrazovku', /rz-ov/.test(main) && /mc-shrnuti/.test(main));
 }
 
-console.log('\nPosuvník ceny a výměry — stupnice, histogram, popisky');
+console.log('\nStupnice a histogram pro cenu a výměru');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Posuvník: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Stupnice: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
 process.exit(0);

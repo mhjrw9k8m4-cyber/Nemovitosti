@@ -887,53 +887,71 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .map-num:focus{outline:2px solid var(--copper-bright); outline-offset:1px; border-color:var(--copper-bright);}
 /* Rychlé volby jsou zkratka, ne omezení — po klepnutí se čísla objeví
    v políčkách a dají se dál upravit. */
-/* POSUVNÍK S HISTOGRAMEM místo řady pilulek.
-   Pilulek bylo nejdřív pět, pak osm — a osm jich ve čtyřech řadách je na
-   telefonu zeď, kterou je potřeba přerolovat, a pořád je to jen hrstka
-   hotových možností. Posuvník zabere dva řádky a nabídne libovolný rozsah.
-   Sloupečky nad ním ukazují, KDE nabídky doopravdy jsou — bez nich je
-   táhnutí hádání: člověk netuší, jestli si odřízl půlku nabídky, nebo nic.
-   Stupnice není rovnoměrná, zarážky se berou z kvantilů dat (js/rozsah.js);
-   jinak by polovina nabídky ležela na prvním procentu dráhy. */
-.mc-posuv{margin-top:10px;}
-.mcp-graf{display:flex; align-items:flex-end; gap:2px; height:38px; margin-bottom:6px;}
-.mcp-graf i{flex:1 1 0; min-width:2px; border-radius:2px 2px 0 0; background:var(--line-strong);
-  opacity:.35; transition:opacity .15s ease, background .15s ease;}
-.mcp-graf i.mcp-uvnitr{background:var(--plocha-znacka); opacity:1;}
-/* Dvě táhla nad sebou. Dráha nesmí chytat dotyky (jinak by spodní vstup
-   přebíjel horní), chytají je jen samotná táhla. */
-.mcp-draha{position:relative; height:38px;}
-/* Dráha je světlejší než ostatní obrysy schválně: tmavší (--line-ui) sice
-   sama o sobě víc vynikne proti panelu, ale zelený vybraný úsek se v ní pak
-   ztratí (změřeno 2,19 : 1, potřeba jsou tři). A poznat, KTERÁ část je
-   vybraná, je důležitější než vidět zbytek dráhy — ten je jen náznak, kudy
-   se dá táhnout. Samotný posuvník je vidět podle táhla, které má zelený
-   obrys na světlé výplni (9,2 : 1). */
-.mcp-draha::before{content:""; position:absolute; left:0; right:0; top:17px; height:4px;
-  border-radius:var(--r-pill); background:var(--line-strong);}
-.mcp-vybrano{position:absolute; top:17px; height:4px; border-radius:var(--r-pill);
-  background:var(--plocha-znacka); left:0; right:0;}
-.mc-posuv input[type=range]{position:absolute; left:0; top:0; width:100%; height:38px; margin:0;
-  background:none; border:0; -webkit-appearance:none; appearance:none; pointer-events:none;}
-.mc-posuv input[type=range]:focus-visible{outline:none;}
-.mc-posuv input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; pointer-events:auto;
-  /* Táhlo se musí dát chytit prstem — pod 36 px se do něj lidé netrefí
-     (stejné pravidlo jako u tlačítek, hlídá scripts/test-dotyk.mjs). */
-  width:36px; height:36px; border-radius:50%; cursor:grab;
-  background:var(--ink-soft); border:2px solid var(--plocha-znacka); box-shadow:var(--e1);}
-.mc-posuv input[type=range]::-moz-range-thumb{pointer-events:auto;
-  width:32px; height:32px; border-radius:50%; cursor:grab;
-  background:var(--ink-soft); border:2px solid var(--plocha-znacka); box-shadow:var(--e1);}
-.mc-posuv input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px rgba(110,155,255,0.35);}
-.mc-posuv input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 3px rgba(110,155,255,0.35);}
-.mcp-popis{display:flex; align-items:center; gap:8px; margin:6px 0 0; font-size:12.5px;
-  color:var(--text-ondark-mute); min-height:22px;}
-.mcp-popis b{color:var(--text-ondark);}
-.mcp-zrus{margin-left:auto; font:inherit; font-size:12px; font-weight:600; cursor:pointer;
-  background:none; border:0; color:var(--copper); text-decoration:underline;
-  /* Nejméně 36 px na výšku i šířku, stejně jako ostatní tlačítka. */
-  min-height:36px; min-width:44px; padding:4px 6px;}
-@media (prefers-reduced-motion:reduce){ .mcp-graf i{transition:none;} }
+/* CENA A VÝMĚRA: klidný souhrn v panelu, ovládání na celé obrazovce.
+ *
+ * Čtvrtý pokus, a tentokrát se změnilo zadání, ne jen vzhled. Předchozí tři
+ * (pět pilulek → osm pilulek s počty → posuvník s histogramem) měly společné
+ * to, že se snažily vejít ovládání do úzkého sloupce mezi ostatní filtry.
+ * Tam je na ně málo místa: pilulky se zalomí do čtyř řad a z posuvníku
+ * zbyde čtyřpixelová čárka se dvěma drobnými táhly. Obojí působí stísněně.
+ *
+ * Teď je v panelu jen souhrn („Cena · libovolná") a po klepnutí se otevře
+ * celá obrazovka, kde je místa dost: histogram přes celou šířku, sloupce
+ * jako terče pro prst a dole tlačítko, které průběžně říká, kolik nabídek
+ * výběr znamená. Panel se tím zkrátil o víc než polovinu.
+ */
+.mc-shrnuti{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.mcs-btn{display:flex; flex-direction:column; align-items:flex-start; gap:2px;
+  font:inherit; text-align:left; cursor:pointer; min-height:56px; padding:9px 12px;
+  border:1px solid var(--line-ui); border-radius:var(--r-sm); background:var(--ink-soft);
+  transition:border-color .15s ease, box-shadow .15s ease;}
+.mcs-btn:hover{border-color:var(--copper);}
+.mcs-btn.mcs-aktivni{border-color:var(--plocha-znacka); box-shadow:inset 0 0 0 1px var(--plocha-znacka);}
+.mcs-k{font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted);}
+.mcs-v{font-size:14px; font-weight:600; color:var(--text-ondark);}
+.mcs-btn.mcs-aktivni .mcs-v{color:var(--plocha-znacka);}
+
+/* Obrazovka s rozsahem — stejný tvar jako výběr místa na mapě (.vm-ov),
+   ať se web neučí dva různé způsoby, jak otevřít něco přes celou plochu. */
+.rz-ov{position:fixed; inset:0; z-index:5000; background:var(--ink-soft); display:flex; flex-direction:column;}
+.rz-hlava{display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:14px 14px 10px; font-family:var(--font-display); font-size:18px; color:var(--text-ondark);}
+.rz-x{width:38px; height:38px; flex:none; border:0; background:none; cursor:pointer;
+  font-size:17px; color:var(--text-ondark-mute); border-radius:var(--r-ovladani);}
+.rz-x:hover{background:var(--ink-soft2); color:var(--text-ondark);}
+.rz-telo{flex:1 1 auto; overflow-y:auto; padding:6px 14px 14px; display:flex; flex-direction:column; gap:16px;}
+@media (min-width:1000px){ .rz-hlava, .rz-telo, .rz-pata{max-width:760px; width:100%; margin-inline:auto;} }
+/* Histogram. Sloupec není ozdoba, ale terč: klepnutím se vybere pásmo,
+   druhým klepnutím se rozsah roztáhne, prstem se dá přejet přes několik. */
+.rz-graf{display:flex; align-items:flex-end; gap:3px; height:150px; touch-action:none;}
+.rz-graf button{flex:1 1 0; min-width:0; padding:0; border:0; cursor:pointer; background:none;
+  display:flex; align-items:flex-end; height:100%;}
+/* Vybrané sloupce se liší barvou A ZÁROVEŇ podtržením. Jen barvou to nejde:
+   sloupec musí být vidět proti bílému pozadí (to chce tmavý odstín) a
+   zároveň se lišit od vybraného zeleného (to chce světlý) — spočítáno pro
+   pět odstínů šedé, žádný nesplní obojí. Podtržení je navíc rozlišení,
+   které funguje i pro barvoslepé a na slunci. */
+.rz-graf button{padding-bottom:4px; border-bottom:3px solid transparent;}
+.rz-graf button i{display:block; width:100%; border-radius:3px 3px 0 0; background:var(--line-strong);
+  opacity:.45; transition:opacity .12s ease, background .12s ease;}
+.rz-graf button.rz-uvnitr{border-bottom-color:var(--plocha-znacka);}
+.rz-graf button.rz-uvnitr i{background:var(--plocha-znacka); opacity:1;}
+.rz-graf button:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px; border-radius:var(--r-xs);}
+.rz-osa{display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); margin-top:-10px;}
+.rz-pole{display:flex; align-items:center; gap:10px;}
+.rz-pole label{flex:1 1 0; display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted);}
+.rz-pole input{width:100%; font:inherit; font-size:16px; padding:12px 13px; border-radius:var(--r-sm);
+  border:1px solid var(--line-ui); background:var(--ink-soft); color:var(--text-ondark);}
+.rz-napoveda{margin:0; font-size:13px; color:var(--text-ondark-mute); line-height:1.5;}
+.rz-pata{display:flex; align-items:center; gap:10px; padding:12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top:1px solid var(--line);}
+.rz-vymaz{font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; background:none; border:0;
+  color:var(--text-ondark-mute); text-decoration:underline; min-height:44px; padding:0 8px;}
+.rz-hotovo{margin-left:auto; flex:1 1 auto; max-width:60%; min-height:48px; font:inherit; font-size:15px; font-weight:700;
+  cursor:pointer; color:#fff; background:var(--plocha-znacka); border:1px solid rgba(31,81,56,0.55);
+  border-radius:var(--r-ovladani); box-shadow:var(--glow);}
+.rz-hotovo:hover{filter:brightness(1.05);}
+@media (prefers-reduced-motion:reduce){ .rz-graf button i{transition:none;} }
 @media (max-width:560px){
   .mc-rozsah{grid-column:1 / -1;}
   /* Rozbalovátka s dlouhými popisky („Všechny druhy pozemků") se ve dvou
