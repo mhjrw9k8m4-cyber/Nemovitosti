@@ -3180,12 +3180,19 @@
       var klic = def[0], nadpis = def[1], jednotka = def[2], zkratka = def[3];
       var jeCena = klic === 'cena';
       var blok = bloky[poradi];
-      var zar = window.PKRozsah.zarazky(DATA.map(function (d) { return jeCena ? d.price : d.area; }), 18);
+      /* Kolik zarážek se vejde, rozhoduje šířka displeje, ne chuť. Na
+         320px mobilu je šestnáct sloupců po patnácti pixelech — prstem se
+         do nich netrefíte. Méně kroků znamená širší terče; přesnější
+         číslo se pak dá dopsat do políček od–do. */
+      var sirka = Math.min(window.innerWidth || 390, 760);
+      var kroku = sirka < 360 ? 11 : (sirka < 480 ? 14 : 18);
+      var zar = window.PKRozsah.zarazky(DATA.map(function (d) { return jeCena ? d.price : d.area; }), kroku);
 
       var tlac = document.createElement('button');
       tlac.type = 'button';
       tlac.className = 'mcs-btn';
       tlac.setAttribute('aria-haspopup', 'dialog');
+      tlac.setAttribute('aria-expanded', 'false');
       tlac.innerHTML = '<span class="mcs-k">' + nadpis + '</span><span class="mcs-v">libovolná</span>';
       rada.appendChild(tlac);
 
@@ -3237,6 +3244,7 @@
       var p = { klic: klic, jeCena: jeCena, zar: zar, jednotka: jednotka, nadpis: nadpis,
         ov: ov, tlac: tlac, sloupce: sloupce, poleOd: poleOd, poleDo: poleDo,
         hotovoEl: ov.querySelector('.rz-hotovo'), hodnotaEl: tlac.querySelector('.mcs-v'),
+        vymazEl: ov.querySelector('.rz-vymaz'),
         prvni: -1 };
       POSUVNIKY.push(p);
 
@@ -3296,6 +3304,7 @@
 
       function otevri() {
         ov.hidden = false;
+        tlac.setAttribute('aria-expanded', 'true');
         document.body.classList.add('vm-otevreno');
         prekresliPosuvniky();
         var prvni = ov.querySelector('.rz-x');
@@ -3303,10 +3312,24 @@
       }
       function zavri() {
         ov.hidden = true;
+        tlac.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('vm-otevreno');
         p.prvni = -1;
         tlac.focus();
       }
+      /* Okno překrývá celou stránku, takže z něj tabulátor nesmí utéct —
+         jinak by se ovládání klávesnicí ztratilo v obsahu, který není
+         vidět. Kolečko se zavře sám o sobě: za posledním prvkem je první. */
+      ov.addEventListener('keydown', function (e) {
+        if (e.key !== 'Tab') return;
+        var f = ov.querySelectorAll('button, input, [tabindex]:not([tabindex="-1"])');
+        var viditelne = [];
+        for (var i = 0; i < f.length; i++) if (f[i].offsetParent !== null || f[i] === document.activeElement) viditelne.push(f[i]);
+        if (!viditelne.length) return;
+        var prvni = viditelne[0], posledni = viditelne[viditelne.length - 1];
+        if (e.shiftKey && document.activeElement === prvni) { e.preventDefault(); posledni.focus(); }
+        else if (!e.shiftKey && document.activeElement === posledni) { e.preventDefault(); prvni.focus(); }
+      });
       tlac.addEventListener('click', otevri);
       ov.querySelector('.rz-x').addEventListener('click', zavri);
       p.hotovoEl.addEventListener('click', zavri);
@@ -3314,7 +3337,12 @@
         poleOd.value = ''; poleDo.value = ''; p.prvni = -1;
         prectiRozsahy();
       });
-      ov.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.preventDefault(); zavri(); } });
+      /* Escape visí na celém dokumentu, ne na okně. Kdyby visel na okně,
+         stačilo by, aby fokus jednou vyklouzl, a okno by se klávesnicí
+         nedalo zavřít vůbec. */
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !ov.hidden) { e.preventDefault(); zavri(); }
+      });
     });
   }
 
@@ -3359,6 +3387,9 @@
       else souhrn = 'do ' + popisDo;
       p.hodnotaEl.textContent = souhrn;
       p.tlac.classList.toggle('mcs-aktivni', nejakyVyber);
+      // „Vymazat" nemá svítit, když není co mazat — tlačítko, po kterém se
+      // nic nestane, si člověk vyloží tak, že web nereaguje.
+      if (p.vymazEl) p.vymazEl.hidden = !nejakyVyber;
       if (!nejakyVyber) vybranych = hodnoty.length;
       p.hotovoEl.textContent = 'Hotovo · ' + fmt(vybranych) + ' ' +
         (vybranych === 1 ? 'nabídka' : (vybranych < 5 ? 'nabídky' : 'nabídek'));

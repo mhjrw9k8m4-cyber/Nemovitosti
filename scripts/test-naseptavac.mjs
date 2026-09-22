@@ -186,6 +186,17 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
     terce.length > 0 && Math.min(...terce) >= 36, 'nejnižší ' + Math.min(...terce) + ' px');
   const hotovo0 = await okno.locator('.rz-hotovo').innerText();
   pravda('tlačítko dole rovnou říká, kolik nabídek je vidět', /\d/.test(hotovo0), hotovo0);
+  pravda('dokud není co mazat, „Vymazat" se nenabízí',
+    !(await okno.locator('.rz-vymaz').isVisible()),
+    'tlačítko, po kterém se nic nestane, se čte jako „web nereaguje"');
+  // Okno má přijet, ne se zjevit — stejné pravidlo jako u hlavičky.
+  const prijezd = await p2.evaluate(() => {
+    const c = getComputedStyle(document.querySelector('.rz-ov:not([hidden])'));
+    return { jmeno: c.animationName, doba: parseFloat(c.animationDuration) || 0 };
+  });
+  pravda('okno přijíždí krátkou animací, ne cvaknutím',
+    prijezd.jmeno === 'rzPrijezd' && prijezd.doba >= 0.15 && prijezd.doba <= 0.6,
+    `${prijezd.jmeno}, ${prijezd.doba} s`);
 
   // Klepnutí vybere pásmo, druhé ho roztáhne.
   await okno.locator('.rz-graf button').nth(3).click();
@@ -196,6 +207,7 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
     od: document.getElementById('map-cena-od').value,
   }));
   pravda('klepnutí na sloupec vybere pásmo', po1.uvnitr === 1, `zvýrazněno ${po1.uvnitr}`);
+  pravda('a teprve teď se nabídne „Vymazat"', await okno.locator('.rz-vymaz').isVisible());
   pravda('a propíše se do políčka „od"', /^\d+$/.test(po1.od), `„${po1.od}"`);
   pravda('počet na tlačítku se změní', po1.hotovo !== hotovo0, `${hotovo0} → ${po1.hotovo}`);
 
@@ -224,10 +236,39 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   pravda('a souhrn je vidět, že je aktivní', poZavreni.zvyrazneno);
   pravda('výpis něco ukazuje', poZavreni.vypis > 0, String(poZavreni.vypis));
 
-  // Vymazat.
+  /* Ovládání klávesnicí. Okno překrývá celou stránku, takže z něj
+     tabulátor nesmí utéct — jinak by se člověk ovládající web klávesnicí
+     ztratil v obsahu, který není vidět. */
   await p2.locator('.mcs-btn').first().click();
   await p2.waitForTimeout(300);
-  await p2.locator('.rz-ov:not([hidden]) .rz-vymaz').click();
+  pravda('souhrn hlásí čtečce, že je okno otevřené',
+    (await p2.locator('.mcs-btn').first().getAttribute('aria-expanded')) === 'true');
+  let uteklo = 0;
+  for (let i = 0; i < 30; i++) {
+    await p2.keyboard.press('Tab');
+    const uvnitr = await p2.evaluate(() => {
+      const ov = document.querySelector('.rz-ov:not([hidden])');
+      return !!(ov && ov.contains(document.activeElement));
+    });
+    if (!uvnitr) uteklo++;
+  }
+  pravda('tabulátor z okna neuteče', uteklo === 0, `${uteklo}× z 30 skončil mimo okno`);
+  const sirky = await p2.locator('.rz-ov:not([hidden]) .rz-graf button').evaluateAll((b) => b.map((x) => Math.round(x.getBoundingClientRect().width)));
+  pravda('sloupce jsou dost široké i na úzkém displeji (aspoň 20 px)',
+    sirky.length > 0 && Math.min(...sirky) >= 20, 'nejužší ' + Math.min(...sirky) + ' px při ' + sirky.length + ' sloupcích');
+  await p2.keyboard.press('Escape');
+  await p2.waitForTimeout(300);
+  pravda('a po zavření to souhrn ohlásí zpátky',
+    (await p2.locator('.mcs-btn').first().getAttribute('aria-expanded')) === 'false');
+
+  // Vymazat. (Nejdřív se ujistíme, že je zavřeno — otevřené okno by
+  // klepnutí spolklo a test by místo hlášky spadl výjimkou.)
+  const zavreno = (await p2.locator('.rz-ov:not([hidden])').count()) === 0;
+  pravda('před dalším krokem je okno opravdu zavřené', zavreno,
+    'zůstalo otevřené — další kroky by klepaly do něj');
+  if (zavreno) await p2.locator('.mcs-btn').first().click();
+  await p2.waitForTimeout(300);
+  await p2.locator('.rz-ov:not([hidden]) .rz-vymaz').click({ timeout: 3000 });
   await p2.waitForTimeout(400);
   const poVymazani = await p2.evaluate(() => ({
     uvnitr: document.querySelectorAll('.rz-ov:not([hidden]) .rz-graf button.rz-uvnitr').length,

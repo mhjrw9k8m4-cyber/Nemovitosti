@@ -914,6 +914,13 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Obrazovka s rozsahem — stejný tvar jako výběr místa na mapě (.vm-ov),
    ať se web neučí dva různé způsoby, jak otevřít něco přes celou plochu. */
 .rz-ov{position:fixed; inset:0; z-index:5000; background:var(--ink-soft); display:flex; flex-direction:column;}
+/* Okno přijíždí zespodu, ne že se zjeví. Je to totéž pravidlo jako
+   u hlavičky: objevit se z ničeho nic působí jako cvaknutí a člověk
+   nestihne pochopit, odkud to přišlo. Dialog je ale svižnější než
+   hlavička (0,26 s proti 0,42 s) — čeká se na něj, ne mimochodem. */
+@keyframes rzPrijezd{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;}}
+.rz-ov:not([hidden]){animation:rzPrijezd .26s cubic-bezier(.22,.61,.36,1);}
+@media (prefers-reduced-motion:reduce){ .rz-ov:not([hidden]){animation:none;} }
 .rz-hlava{display:flex; align-items:center; justify-content:space-between; gap:10px;
   padding:14px 14px 10px; font-family:var(--font-display); font-size:18px; color:var(--text-ondark);}
 .rz-x{width:38px; height:38px; flex:none; border:0; background:none; cursor:pointer;
