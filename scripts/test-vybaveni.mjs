@@ -77,6 +77,14 @@ sedi('Pozemek nemá plyn, ale elektřina i voda jsou zavedené.', ['elektrina', 
   pravda('ani obyčejný inzerát bez zmínky', !podil('Krásný stavební pozemek v klidné části obce.'));
   pravda('a výslovné popření podílu se respektuje',
     !podil('Nejedná se o podíl, prodává se celá parcela.'));
+  /* Tohle vyšlo najevo až ze skutečných inzerátů: podíl na PŘÍSTUPOVÉ
+     cestě není podíl na pozemku. Parcela se prodává celá a k ní patří
+     osmina společné cesty — označit to za podíl by bylo zavádějící. */
+  pravda('podíl na přístupové cestě není podíl na pozemku',
+    !podil('Prodej parcely • spoluvlastnickým podílem 1/8 na společném přístupovém pozemku • jednotné oplocení.'));
+  pravda('ale podíl na pozemku se pozná i vedle podílu na cestě',
+    podil('Podíl 1/3 na pozemku i podíl 1/8 na přístupové cestě.'));
+  pravda('a velký zlomek taky', podil('LV č. 165 o výměře 3012 m², podíl 945/15288'));
 }
 
 /* --- 5) Co se nesmí stát ----------------------------------------------- */
@@ -111,6 +119,14 @@ sedi('Pozemek nemá plyn, ale elektřina i voda jsou zavedené.', ['elektrina', 
   pravda('a stojí u toho, odkud se to bere',
     /Podle toho, co stojí v popisu nabídky/.test(idx),
     'bez téhle věty by to vypadalo, že nabídky bez popisu elektřinu nemají');
+  /* Ze skutečných inzerátů vyšlo, že většina zmínek zní „možnost napojení"
+     nebo „sítě na hranici pozemku" — ne „zavedeno na pozemku". Nadpis i
+     poznámka to musí říct, jinak by web sliboval víc, než v inzerátu je. */
+  pravda('nadpis neslibuje víc, než v inzerátu stojí',
+    /Co uvádí inzerát/.test(idx) && !/Co je u pozemku<\/span>/.test(idx),
+    'nadpis „Co je u pozemku" tvrdí, že tam ta síť je — inzeráty přitom často píšou jen „v dosahu"');
+  pravda('a poznámka rozlišuje zavedeno od „v dosahu"',
+    /zavedená, nebo zatím jen v dosahu/.test(idx));
 }
 
 console.log('\nCo je u pozemku — čtení z popisu nabídky');

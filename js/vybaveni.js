@@ -85,6 +85,14 @@
   var PODIL = /spoluvlastnick\w*\s+podil\w*|\bid\.?\s*podil\w*|podil\w*\s*(?:o\s*velikosti\s*)?\d+\s*\/\s*\d+|\bpodil\w*\s+na\s+pozemku/g;
   var NENI_PODIL = /\bne\s+podil|nikoli\w*\s+podil|nejde\s+o\s+podil|nejedna\s+se\s+o\s+podil/;
 
+  /* Podíl na PŘÍSTUPOVÉ cestě není podíl na pozemku. V inzerátech se běžně
+     píše „…prodej parcely • spoluvlastnickým podílem 1/8 na společném
+     přístupovém pozemku…" — samotná parcela se přitom prodává celá.
+     Označit takovou nabídku za podíl by bylo zavádějící, tak se tahle
+     zmínka z textu před hledáním podílu vyjme. Ověřeno na skutečných
+     inzerátech (robot si o ně na den řekl do logu). */
+  var PODIL_CESTA = /podil\w*\s*(?:o\s*velikosti\s*)?(?:\d+\s*\/\s*\d+\s*)?na\s+(?:spolecn\w*\s+)?(?:pristupov\w*|prijezdov\w*)\s+(?:pozemku|ceste|cesty|komunikaci)/g;
+
   function najdi(text) {
     var syrovy = String(text == null ? '' : text);
     var t = srovnej(syrovy);
@@ -101,7 +109,10 @@
       if (ma) ven.push(def.klic);
     }
     PODIL.lastIndex = 0;
-    var podil = PODIL.test(t) && !NENI_PODIL.test(t);
+    PODIL_CESTA.lastIndex = 0;
+    var bezCesty = t.replace(PODIL_CESTA, ' ');
+    PODIL.lastIndex = 0;
+    var podil = PODIL.test(bezCesty) && !NENI_PODIL.test(t);
     return { site: ven, podil: podil, znamo: t.length >= 40 };
   }
 
