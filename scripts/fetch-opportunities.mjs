@@ -696,6 +696,26 @@ async function main() {
   // Zpřesnění polohy: až u vybraných příležitostí dohledáme souřadnice podle
   // názvu katastrálního území (Nominatim). Body pak sedí na správné obci, ne
   // jen ve středu okresu. Přeskakujeme záznamy s reálnou GPS z evidence dražeb.
+  /* NEJDŘÍV PROVĚŘIT SOUŘADNICE OD ZDROJE. Doteď se braly jako svaté —
+     „přeskakujeme záznamy s reálnou GPS z evidence dražeb". Jenže i
+     oficiální registr se mýlí: dvě různé dražby (Komorní Lhotka na
+     Frýdecko-Místecku a Rychvald na Karvinsku) dostaly TYTÉŽ souřadnice,
+     a to 350 km jinde, v severních Čechách.
+     Okres přitom známe z dražební vyhlášky, a ta je spolehlivá. Když si
+     souřadnice s okresem odporují, vyhrává vyhláška: GPS se zahodí a
+     poloha se dohledá podle názvu obce jako u ostatních. Je to táž mez
+     (55 km) a táž úvaha jako u Holedče — jen z druhé strany. */
+  let zdrojSpatne = 0;
+  for (const o of fresh) {
+    if (!o._gps) continue;
+    const stred0 = OKRESY_MAP[o.okres];
+    if (!stred0 || typeof o.lat !== 'number' || typeof o.lng !== 'number') continue;
+    if (kmMezi(stred0[0], stred0[1], o.lat, o.lng) <= OKRES_DOSAH_KM) continue;
+    o.lat = undefined; o.lng = undefined; o._gps = false;
+    zdrojSpatne++;
+  }
+  if (zdrojSpatne) console.log(`Zahozeny souřadnice od zdroje, které si odporovaly s okresem: ${zdrojSpatne}.`);
+
   let refined = 0, zamitnuto = 0;
   for (const o of fresh) {
     if (o._gps) continue;

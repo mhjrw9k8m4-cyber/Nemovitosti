@@ -107,6 +107,34 @@ pravda('každá nabídka ví, kdy ji robot viděl poprvé', bezData.length === 0
     '„Stav / zdroj" ukazoval „dražba 2026-10-12" místo „dražba 12. 10. 2026"');
 }
 
+/* --- Souřadnice od zdroje se musí prověřovat stejně jako dohledané ----
+ *
+ * Tohle chytil až tenhle test na ostrých datech: oficiální registr dražeb
+ * (cevd.gov.cz) poslal u dvou RŮZNÝCH dražeb tytéž souřadnice, a to 350 km
+ * od okresu, který stál v jejich vlastní vyhlášce. Robot je do té doby bral
+ * jako svaté („přeskakujeme záznamy s reálnou GPS z evidence dražeb").
+ * Okres z vyhlášky je přitom spolehlivější než GPS od zdroje, takže když
+ * si odporují, vyhrává vyhláška. Kdyby ta kontrola z robota zmizela, chyba
+ * by se vrátila a tenhle test by ji sice našel — ale až po dalším běhu,
+ * s rozbitými daty na webu. */
+{
+  const robot = readFileSync(new URL('../scripts/fetch-opportunities.mjs', import.meta.url), 'utf8');
+  pravda('robot prověřuje i souřadnice, které dostal od zdroje',
+    /if \(!o\._gps\) continue;[\s\S]{0,400}o\._gps = false;/.test(robot),
+    'bez toho se špatná GPS z registru dostane na web beze změny');
+  // A dvě různé nabídky nesmí sdílet přesně tentýž bod — to je otisk
+  // zkopírované nebo zástupné souřadnice, ne náhoda.
+  const kde = {};
+  for (const o of nabidky) {
+    if (typeof o.lat !== 'number' || typeof o.lng !== 'number') continue;
+    const k = o.lat.toFixed(6) + ',' + o.lng.toFixed(6);
+    (kde[k] = kde[k] || []).push(o.place + ' / ' + o.okres);
+  }
+  const shodne = Object.entries(kde).filter(([, v]) => new Set(v).size > 1);
+  pravda('dvě různé obce nesdílejí přesně tentýž bod', shodne.length === 0,
+    shodne.slice(0, 3).map(([k, v]) => k + ': ' + [...new Set(v)].join(' + ')).join(' | '));
+}
+
 console.log('\nIntegrita datového souboru');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
