@@ -75,6 +75,23 @@
     return ven;
   }
 
+  /* Tytéž věci, dva zdroje. Pole `features` a `access` vyplňuje majitel
+     ve formuláři — má je tedy jen hrstka vlastních inzerátů. U nabídek
+     sbíraných robotem stojí totéž v POPISU a robot si to z něj vytáhne
+     do pole `site` (js/vybaveni.js).
+     Dokud se hlídání dívalo jen na `features`, znamenalo zaškrtnutí
+     „Elektřina" ticho: ze sbíraných nabídek nemá pole `features` ani
+     jedna, takže hlídání nemohlo najít nic — a nikde to neřeklo.
+     Co se z popisu vyčíst nedá (oplocení, stavba k rekonstrukci), tu
+     schválně není: to musí dál pocházet z formuláře. */
+  var SITE_KLIC = {
+    'Elektřina': 'elektrina',
+    'Voda': 'voda',
+    'Kanalizace': 'kanalizace',
+    'Plyn': 'plyn',
+    'Přístupová cesta': 'cesta',
+  };
+
   function matches(s, d) {
     if (!s || !d) return false;
     if (s.ptype && d.type !== s.ptype) return false;
@@ -96,10 +113,12 @@
     }
     if (s.features && s.features.length) {
       var f = d.features || [];
+      var site = d.site || [];
       for (var i = 0; i < s.features.length; i++) {
         var need = s.features[i];
+        var klic = SITE_KLIC[need];
+        if (klic && site.indexOf(klic) >= 0) continue;   // stojí to v popisu nabídky
         if (need === 'Přístupová cesta') {
-          // vyžaduje reálnou cestu — tu mají jen vlastní inzeráty (pole access)
           if ((d.access || '').indexOf('cesta') < 0) return false;
         } else if (f.indexOf(need) < 0) return false;
       }

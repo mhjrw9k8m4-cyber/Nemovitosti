@@ -37,13 +37,28 @@
     { klic: 'elektrina', nazev: 'Elektřina',
       re: /elektrin\w*|elektrick\w+ (?:pripojk|energi)\w*|\bel\.\s*(?:energi|pripojk)\w*|\belektro\b|\belektro(?:pripojk|mer)\w*/g },
     { klic: 'voda', nazev: 'Voda',
-      re: /vodovod\w*|\bvod[aoyeu]\b|studn[ayei]\w*|\bvrt\b|pitn\w* vod\w*/g },
+      re: /vodovod\w*|\bvod[aoyeu]\b|studn[ayei]\w*|\bvrt\b|pitn\w* vod\w*/g,
+      /* Voda, která není přípojka. Odpadní, dešťová, spodní nebo rovnou
+         záplavová voda je v inzerátu STAROST, ne to, co si člověk pod
+         filtrem „voda" představí. U záplavového území se tím z varování
+         dokonce dělala výhoda. Rozpozná se to podle slova TĚSNĚ PŘED
+         nálezem — čeština ten přívlastek dává vždycky dopředu. */
+      /* Schválně tu NENÍ „užitková" ani „závlahová": to jsou skutečné
+         zdroje vody, jen ne pitné. Vyhazuje se jen voda, která je
+         problém. */
+      mimo: /(?:odpadn|destov|spodn|podzemn|povrchov|zaplav|zatopov|velk|stojat)\w*\s+$/ },
+    /* „Jímka" se skloňuje i na -ou („odpadní vody řešeny JÍMKOU") — výčet
+       koncovek na tenhle tvar nestačil a věta pak nehlásila nic. */
     { klic: 'kanalizace', nazev: 'Kanalizace',
-      re: /kanaliz\w*|septik\w*|cistirn\w* odpadn\w*|\bcov\b|jimk[ayue]\w*/g },
+      re: /kanaliz\w*|septik\w*|cistirn\w* odpadn\w*|\bcov\b|\bjimk\w*/g },
     { klic: 'plyn', nazev: 'Plyn',
       re: /plynov\w* pripojk\w*|plynofik\w*|\bplyn\b|\bplynu\b/g },
+    /* „Komunikace" je v inzerátech stejně běžná jako „cesta" — jen se za
+       ni musí dostat přívlastek, aby se nechytla „komunikace s majitelem".
+       Na skutečných textech se objevuje jako zpevněná, místní, asfaltová,
+       obecní nebo veřejná. */
     { klic: 'cesta', nazev: 'Příjezd',
-      re: /prijezdov\w*|pristupov\w* cest\w*|zpevnen\w* cest\w*|prijezd k pozemku|asfaltov\w* cest\w*/g },
+      re: /prijezdov\w*|pristupov\w* cest\w*|zpevnen\w* cest\w*|prijezd k pozemku|asfaltov\w* cest\w*|(?:zpevnen|mistn|asfaltov|obecn|verejn|ucelov)\w*\s+komunikac\w*/g },
   ];
 
   /* Zápory. „Bez" a „není" jsou nejčastější, ale je jich víc — a musí se
@@ -82,8 +97,22 @@
 
   /* Podíl. Tohle není odhad, ale to, co v inzerátu stojí černé na bílém:
      „spoluvlastnický podíl", „podíl o velikosti 1/2", „id. podíl". */
-  var PODIL = /spoluvlastnick\w*\s+podil\w*|\bid\.?\s*podil\w*|podil\w*\s*(?:o\s*velikosti\s*)?\d+\s*\/\s*\d+|\bpodil\w*\s+na\s+pozemku/g;
-  var NENI_PODIL = /\bne\s+podil|nikoli\w*\s+podil|nejde\s+o\s+podil|nejedna\s+se\s+o\s+podil/;
+  /* Slovo „podíl" v tom přitom vůbec být nemusí. Dražby a listy
+     vlastnictví píšou totéž jako „podílové spoluvlastnictví", „ideální
+     polovina" nebo jen „id. 1/2" — a těch se modul napoprvé vůbec
+     nechytil. „Ideální" se proto bere jako podíl jen se zlomkem nebo se
+     zlomkovým slovem za sebou: samotné „ideální poloha" je chvála. */
+  var ZLOMEK = '(?:\\d+\\s*\\/\\s*\\d+|polovin\\w*|tretin\\w*|ctvrtin\\w*|petin\\w*|sestin\\w*|osmin\\w*|desetin\\w*)';
+  var PODIL = new RegExp(
+    'spoluvlastnick\\w*\\s+podil\\w*' +
+    '|podilov\\w*\\s+spoluvlastnictv\\w*' +
+    '|\\bid\\.?\\s*podil\\w*' +
+    '|podil\\w*\\s*(?:o\\s*velikosti\\s*)?\\d+\\s*\\/\\s*\\d+' +
+    '|\\bpodil\\w*\\s+na\\s+pozemku' +
+    '|\\bpodil\\w*\\s+ve\\s+vysi' +
+    '|\\bidealn\\w*\\s+' + ZLOMEK +
+    '|\\bid\\.\\s*\\d+\\s*\\/\\s*\\d+', 'g');
+  var NENI_PODIL = /\bne\s+podil|nikoli\w*\s+podil|nejde\s+o\s+podil|nejedna\s+se\s+o\s+podil|\bneni\s+v\s+podilov\w*|nejde\s+o\s+podilov\w*/;
 
   /* Podíl na PŘÍSTUPOVÉ cestě není podíl na pozemku. V inzerátech se běžně
      píše „…prodej parcely • spoluvlastnickým podílem 1/8 na společném
@@ -91,7 +120,15 @@
      Označit takovou nabídku za podíl by bylo zavádějící, tak se tahle
      zmínka z textu před hledáním podílu vyjme. Ověřeno na skutečných
      inzerátech (robot si o ně na den řekl do logu). */
-  var PODIL_CESTA = /podil\w*\s*(?:o\s*velikosti\s*)?(?:\d+\s*\/\s*\d+\s*)?na\s+(?:spolecn\w*\s+)?(?:pristupov\w*|prijezdov\w*)\s+(?:pozemku|ceste|cesty|komunikaci)/g;
+  var PODIL_CESTA = /(?:podil\w*|idealn\w*)\s*(?:o\s*velikosti\s*)?(?:\d+\s*\/\s*\d+\s*)?na\s+(?:spolecn\w*\s+)?(?:pristupov\w*|prijezdov\w*)\s+(?:pozemku|ceste|cesty|komunikaci)/g;
+
+  /* Mluví ten nález vůbec o téhle síti? Kouká se na kousek textu těsně
+     PŘED ním — přívlastek, který slovo převrací („odpadní vody"), stojí
+     v češtině vždycky vlevo a hned vedle. */
+  function mimoObor(def, text, od) {
+    if (!def.mimo) return false;
+    return def.mimo.test(text.slice(Math.max(0, od - 24), od));
+  }
 
   function najdi(text) {
     var syrovy = String(text == null ? '' : text);
@@ -103,7 +140,7 @@
       def.re.lastIndex = 0;
       var m, ma = false;
       while ((m = def.re.exec(t)) !== null) {
-        if (!zaporny(t, m.index, m.index + m[0].length)) { ma = true; break; }
+        if (!zaporny(t, m.index, m.index + m[0].length) && !mimoObor(def, t, m.index)) { ma = true; break; }
         if (m.index === def.re.lastIndex) def.re.lastIndex++;   // pojistka proti zacyklení
       }
       if (ma) ven.push(def.klic);

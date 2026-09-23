@@ -50,14 +50,67 @@
     ['majitel', 'Od majitele', 'od majitele', ['od majitele', 'primo od majitele', 'majitel', 'soukromnik']],
     ['sale', 'Běžná nabídka', 'inzerát', ['inzerat', 'inzeraty', 'bezny prodej']],
   ];
+  /* Pády. Lidé nepíšou „elektřina", píšou „S ELEKTŘINOU" — a sedmý pád
+     ve slovníku nebyl. Nepoznané slovo přitom spadne do hledání místa,
+     kde žádná obec „elektřinou" není, takže věta vrátila prázdno.
+     Změřeno na ostrých datech: „s elektřinou", „pozemek s vodou"
+     i „zahrada s vodou a elektřinou" vracely nula nabídek. */
   var SITE = [
-    ['elektrina', 'Elektřina', 'elektřina', ['elektrina', 'elektriny', 'elektro', 'proud', 'el. energie']],
-    ['voda', 'Voda', 'voda', ['vodovod', 'voda', 'vody', 'studna', 'vrt']],
-    ['kanalizace', 'Kanalizace', 'kanalizace', ['kanalizace', 'kanalizaci', 'septik', 'cov']],
-    ['plyn', 'Plyn', 'plyn', ['plyn', 'plynu', 'plynofikace']],
-    ['cesta', 'Příjezd', 'příjezd', ['prijezd', 'prijezdova cesta', 'pristupova cesta', 'pristup', 'cesta']],
+    ['elektrina', 'Elektřina', 'elektřina', ['elektrina', 'elektriny', 'elektrinou', 'elektro', 'proud', 'el. energie', 'el energie']],
+    ['voda', 'Voda', 'voda', ['vodovod', 'vodovodem', 'voda', 'vody', 'vodou', 'studna', 'studnu', 'studnou', 'vrt', 'vrtem']],
+    ['kanalizace', 'Kanalizace', 'kanalizace', ['kanalizace', 'kanalizaci', 'kanalizacimi', 'septik', 'septikem', 'cov']],
+    ['plyn', 'Plyn', 'plyn', ['plyn', 'plynu', 'plynem', 'plynofikace', 'plynovod']],
+    ['cesta', 'Příjezd', 'příjezd', ['prijezd', 'prijezdem', 'prijezdova cesta', 'prijezdovou cestou', 'pristupova cesta', 'pristupovou cestou', 'pristup', 'pristupem', 'cesta', 'cestou', 'komunikace', 'komunikaci']],
   ];
   var CELEK = ['bez podilu', 'jen cele', 'cely pozemek', 'cele pozemky', 'celek', 'nepodil'];
+
+  /* Kraje. Po obci je to nejpřirozenější způsob, jak si člověk výpis
+     zúží — web pro kraj má vlastní filtr i vlastní pohled na mapě, jen
+     ho věta neuměla pojmenovat. „Jihočeský kraj" i „orná půda Vysočina"
+     proto padaly do hledání OBCE a vracely nulu.
+     Tvary jsou schválně i ty hovorové („jižní Čechy", „Moravskoslezsko"):
+     lidé je tak píšou. Pozor na to, aby se nepotkaly s OBCÍ stejného
+     jména — proto tu není holé „Plzeň" ani „Brno", jen „Plzeňský"
+     a „Jihomoravský". */
+  var KRAJE = [
+    /* PRAHA JE VÝJIMKA a musí jí zůstat. Je to zároveň kraj, obec i tři
+       okresy (Praha, Praha-východ, Praha-západ). Kdyby se holé „Praha"
+       bralo jako kraj, „Praha-východ" by se rozpadlo na kraj Praha
+       + slovo „východ" — a to nenajde nic, protože okres Praha-východ
+       do kraje Praha nepatří (je středočeský). Vyzkoušeno: vrátilo to
+       nula nabídek tam, kde jich předtím byly desítky.
+       Holé „Praha" proto zůstává hledáním MÍSTA, kde najde obec i oba
+       okolní okresy — tedy víc, než by dal filtr kraje. Jako kraj se
+       Praha zadá buď z rozbalovátka, nebo plným názvem. */
+    ['Praha', 'hlavní město Praha', ['hlavni mesto praha', 'hl. m. praha', 'kraj praha']],
+    ['Středočeský', 'Středočeský', ['stredocesky', 'stredocesky kraj', 'stredni cechy', 'stredoceskeho']],
+    ['Jihočeský', 'Jihočeský', ['jihocesky', 'jihocesky kraj', 'jizni cechy', 'jihoceskeho']],
+    ['Plzeňský', 'Plzeňský', ['plzensky', 'plzensky kraj', 'plzenska', 'plzenskeho']],
+    ['Karlovarský', 'Karlovarský', ['karlovarsky', 'karlovarsky kraj', 'karlovarskeho']],
+    ['Ústecký', 'Ústecký', ['ustecky', 'ustecky kraj', 'severni cechy', 'usteckeho']],
+    ['Liberecký', 'Liberecký', ['liberecky', 'liberecky kraj', 'libereckeho']],
+    ['Královéhradecký', 'Královéhradecký', ['kralovehradecky', 'kralovehradecky kraj', 'kralovehradeckeho']],
+    ['Pardubický', 'Pardubický', ['pardubicky', 'pardubicky kraj', 'pardubickeho']],
+    ['Vysočina', 'Vysočina', ['vysocina', 'kraj vysocina', 'vysocinu', 'vysocine', 'vysociny']],
+    ['Jihomoravský', 'Jihomoravský', ['jihomoravsky', 'jihomoravsky kraj', 'jizni morava', 'jihomoravskeho']],
+    ['Olomoucký', 'Olomoucký', ['olomoucky', 'olomoucky kraj', 'olomouckeho']],
+    ['Zlínský', 'Zlínský', ['zlinsky', 'zlinsky kraj', 'zlinskeho']],
+    ['Moravskoslezský', 'Moravskoslezský', ['moravskoslezsky', 'moravskoslezsky kraj', 'moravskoslezsko', 'moravskoslezskeho']],
+  ];
+
+  /* Slova, která nikdy neurčují MÍSTO. Zbytek věty se totiž hledá jen
+     v názvu obce, okresu, parcele a druhu — takže jedno přebytečné
+     „jen" nebo „pozemek" vynuluje celý výpis. Vyhodit slovo může výpis
+     jen rozšířit, nikdy zúžit; proto je bezpečné je zahodit.
+     Předložky tu jsou schválně i ty, které bývají v názvech míst
+     („Ústí NAD Labem"): hledá se podřetězcem, takže „usti" a „labem"
+     tu obec najdou i bez nich. */
+  var VYPLN = {};
+  ('a i s se v ve na do od ze z k ke u o po pro pri za nad pod mezi kolem okoli'
+   + ' jen pouze hledam hledame chci chceme koupim koupit sehnat shanim'
+   + ' prodej prodam prodava nabidka nabidky nabizim inzerce'
+   + ' pozemek pozemky pozemku pozemkem pozemcich parcela parcely parcelu parcelou'
+   + ' prosim dekuji').split(' ').forEach(function (w) { if (w) VYPLN[w] = true; });
 
   /* Čísla s jednotkou. „1,5 mil" i „1.5 mil" i „500tis". */
   var NASOBEK = [
@@ -67,6 +120,9 @@
     [/^(?:ha|hektar\w*)$/, 10000, 'plocha'],
     [/^(?:m2|m²|metru|metry|metr)$/, 1, 'plocha'],
   ];
+  /* Od jakého čísla se „do 100000" čte jako koruny. Pod tím se netipuje. */
+  var BEZ_JEDNOTKY_OD = 10000;
+
   function cislo(s) {
     var c = s.replace(/\s/g, '').replace(',', '.');
     if (!/^\d+(\.\d+)?$/.test(c)) return null;
@@ -80,7 +136,7 @@
   function rozeber(dotaz) {
     var slova = norm(dotaz).split(' ').filter(Boolean);
     var vzato = new Array(slova.length);
-    var ven = { druh: null, typ: null, site: [], jenCelek: false,
+    var ven = { druh: null, typ: null, kraj: null, site: [], jenCelek: false,
       cenaOd: null, cenaDo: null, plochaOd: null, plochaDo: null, text: '', casti: [] };
 
     function zkus(od, fraze) {
@@ -106,14 +162,25 @@
       var jed = slova[i + 2] || '';
       var nas = null;
       for (var n = 0; n < NASOBEK.length; n++) if (NASOBEK[n][0].test(jed)) { nas = NASOBEK[n]; break; }
-      if (!nas) continue;                        // bez jednotky nehádáme
+      /* Bez jednotky se dřív nehádalo vůbec — jenže „les do 100000" je
+         jasná věta a celé „do 100000" padalo do textu, takže výpis byl
+         prázdný. Statisícové číslo je v téhle větě vždycky cena
+         v korunách. Malá čísla zůstávají textem: „do 5" může být
+         cokoli a tipovat se nebude. */
+      var delka = 3;
+      if (!nas) {
+        if (c < BEZ_JEDNOTKY_OD) continue;
+        nas = [null, 1, 'cena'];
+        delka = 2;
+        jed = 'Kč';
+      }
       var hodnota = Math.round(c * nas[1]);
       var kde = nas[2];                          // 'cena' nebo 'plocha'
       ven[kde + (smer === 'do' ? 'Do' : 'Od')] = hodnota;
       /* V odznaku stojí to, co člověk NAPSAL („nad 2 ha"), ne co si z toho
          web přeložil („od 2 ha“). Jinak se odznak nedá spárovat s větou
          a rušení by působilo, že se maže něco jiného. */
-      zaber(i, 3, { druh: kde, smer: smer, hodnota: hodnota,
+      zaber(i, delka, { druh: kde, smer: smer, hodnota: hodnota,
         popis: slova[i] + ' ' + slova[i + 1] + ' ' + jed });
     }
 
@@ -135,6 +202,16 @@
       if (ven.druh) return false;
       ven.druh = z[0];
       zaber(i2, d, { druh: 'druh', hodnota: z[0], popis: z[0] });
+      return true;
+    });
+    /* Kraje se čtou stejně jako druh, typ a sítě. Na pořadí tu nezáleží:
+       slova se porovnávají celá (viz zkus()), takže se „Jihomoravský"
+       nemůže potkat s žádným druhem ani typem. Zkoušeno přeházením —
+       výsledek se nezměnil. */
+    projdi(KRAJE, function (z, i2, d) {
+      if (ven.kraj) return false;
+      ven.kraj = z[0];
+      zaber(i2, d, { druh: 'kraj', hodnota: z[0], popis: z[1] === 'Praha' ? 'Praha' : z[1] + ' kraj' });
       return true;
     });
     projdi(TYPY, function (z, i2, d) {
@@ -161,10 +238,13 @@
 
     /* --- 3) Co zbylo, je text na hledání místa --- */
     var zbytek = [];
-    for (var z2 = 0; z2 < slova.length; z2++) if (!vzato[z2]) zbytek.push(slova[z2]);
+    for (var z2 = 0; z2 < slova.length; z2++) {
+      if (vzato[z2] || VYPLN[slova[z2]]) continue;
+      zbytek.push(slova[z2]);
+    }
     ven.text = zbytek.join(' ');
     return ven;
   }
 
-  return { norm: norm, rozeber: rozeber, DRUHY: DRUHY, TYPY: TYPY, SITE: SITE };
+  return { norm: norm, rozeber: rozeber, DRUHY: DRUHY, TYPY: TYPY, SITE: SITE, KRAJE: KRAJE };
 });

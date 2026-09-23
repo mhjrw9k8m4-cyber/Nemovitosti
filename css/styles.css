@@ -618,7 +618,11 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    upozornění se shodují, že častý toast si lidé odnaučí vnímat. */
 .upo-toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px); z-index:4100;
   max-width:calc(100% - 28px); width:380px; display:flex; gap:11px; align-items:flex-start;
-  background:var(--card); border:1px solid var(--line-strong); border-left:4px solid var(--copper);
+  /* --card v téhle šabloně nikdy neexistovala (jmenuje se --panel). Prohlížeč
+     takovou deklaraci tiše zahodí a vrátí se k výchozí hodnotě — toast tedy
+     neměl ŽÁDNÉ pozadí a text plaval přes obsah stránky. Nešlo to poznat
+     jinak než okem, protože chyba v konzoli žádná není. */
+  background:var(--panel); border:1px solid var(--line-strong); border-left:4px solid var(--copper);
   color:var(--text-ondark); padding:13px 14px; border-radius:var(--r-md);
   box-shadow:var(--e3); opacity:0; transition:opacity .28s var(--ease), transform .28s var(--ease);}
 .upo-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
@@ -1188,7 +1192,10 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .md-top .lp-dot{width:10px; height:10px; border-radius:50%; flex:none;}
 .md-facts{display:grid; grid-template-columns:1fr 1fr; gap:8px 18px;}
 .md-facts span{font-size:12.5px; color:var(--text-ondark-mute); display:flex; justify-content:space-between; gap:8px; padding-bottom:7px; border-bottom:1px solid rgba(228,240,231,0.07);}
-.md-facts b{color:var(--text-ondark); font-weight:600; text-align:right;}/* Mini graf: cena/m² vs. obvyklá cena u daného druhu */
+.md-facts b{color:var(--text-ondark); font-weight:600; text-align:right;}
+/* Výčet („elektřina, voda, kanalizace, příjezd") se do půlky mřížky
+   nevejde a lámal by se po jednom slově. Tyhle řádky dostanou celou šířku. */
+.md-facts .mdf-siroky{grid-column:1 / -1;}/* Mini graf: cena/m² vs. obvyklá cena u daného druhu */
 
 .md-bar.good .md-bar-head b{color:var(--c-ok-ink);}
 .md-bar.bad .md-bar-head b{color:var(--c-exekuce-ink);}
@@ -2694,7 +2701,7 @@ body::after{
 .okr-item::after{content:none;}
 /* Kdy se zdroje naposledy procházely — slib z častých dotazů, který na
    krajských a okresních stránkách nebylo čím podepřít. */
-.okr-cerstvost{margin-top:8px; font-size:12.5px; color:var(--text-mute); letter-spacing:.01em;}
+.okr-cerstvost{margin-top:8px; font-size:12.5px; color:var(--text-ondark-mute); letter-spacing:.01em;}
 /* Poznámka v hlavičce seznamu — drobná, ale musí být čitelná. */
 .mc-pozn{font-size:12px; color:var(--text-ondark-mute); white-space:nowrap;}
 /* Když mapová knihovna nedojede. Dřív tu zůstala prázdná plocha a žádné
@@ -3285,6 +3292,33 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   background:rgba(232,179,65,0.16); border:1px solid rgba(124,81,5,0.34);
   border-radius:var(--r-xs); padding:2px 8px; white-space:nowrap;}
 
+/* Nápověda pod vyhledávacím políčkem. Drobná — je to pobídka, ne
+   pokyn — ale příklad musí být poznat, že se do něj dá klepnout. */
+/* Příklad je TLAČÍTKO, ne podtržené slovo ve větě. Inline text měl na
+   mobilu 22 px na výšku — pod hranicí dotykového terče (test-dotyk).
+   Jako samostatný štítek se do něj trefí palec a zároveň je na první
+   pohled poznat, že se do něj dá klepnout. */
+.ms-napoveda{margin:7px 0 0; display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px;
+  font-size:12px; color:var(--text-ondark-mute); line-height:1.5;}
+.ms-priklad{display:inline-flex; align-items:center; min-height:38px; font:inherit;
+  /* Okraj je měděný, ne jen šedý: proti světlé výplni má šedá 2,07 : 1
+     a na štítku, který se tváří jako tlačítko, to je pod hranicí
+     WCAG 1.4.11 (test-okraje). Měď dává 9 : 1 a při tloušťce 1 px
+     nepůsobí křiklavě. */
+  color:var(--copper); background:var(--surface-2); border:1px solid var(--copper);
+  padding:0 12px; border-radius:var(--r-pill); cursor:pointer; white-space:nowrap;
+  transition:background .15s ease;}
+.ms-priklad:hover{background:var(--panel);}
+
+/* „Podíl" na kartě. Není to varování ani výhoda, je to FAKT o tom, co
+   se prodává — proto neutrální šedomodrá, ne jantar jako u „ceny
+   k ověření". Musí být čitelný, ale nesmí přetahovat pozornost odznakům,
+   které opravdu volají po pozornosti. */
+.opp-podil{display:inline-block; font-size:11px; font-weight:700;
+  color:var(--text-ondark-mute); background:rgba(30,38,66,0.07);
+  border:1px solid rgba(30,38,66,0.20);
+  border-radius:var(--r-xs); padding:2px 8px; white-space:nowrap;}
+
 /* Stav zdroje vedle jeho jména. Když jeden zdroj tiše umře, je to vidět
    tady — ne až za měsíc, kdy si někdo všimne, že dražeb ubylo. */
 .src-stav{margin-left:8px; padding:1px 7px; border-radius:var(--r-pill);
@@ -3315,7 +3349,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 /* Oddělovač mezi okresy v přehledu cen. Dřív to byl samostatný <span>
    v zalamovaném flexu, takže se od svých sousedů odtrhl a zůstal viset
    sám na konci řádku jako tečka bez věty. Teď patří k položce před ním. */
-.okr-place:not(:last-child)::after{content:"\00a0·"; color:var(--text-mute); font-weight:400;}
+.okr-place:not(:last-child)::after{content:"\00a0·"; color:var(--text-ondark-mute); font-weight:400;}
 
 /* =====================================================================
    PÍSMO V POLÍCH NA DOTYKOVÝCH ZAŘÍZENÍCH

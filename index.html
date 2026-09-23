@@ -105,7 +105,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=f4cda343">
+  <link rel="stylesheet" href="css/styles.css?v=098a8ac1">
 </head>
 <body>
 
@@ -168,7 +168,7 @@
         <div class="hero-head reveal">
         <div class="eyebrow"><span class="live-dot"></span>Pozemky na prodej i v dražbě · celá ČR</div>
         <h1>Hledáte pozemek? <em>Najdete ho tady.</em></h1>
-        <div class="trust-line hero-stats"><span class="ts-n"><b id="hero-n-count">1 944</b> pozemků</span><span class="ts-sep" aria-hidden="true">·</span><span class="ts-n"><b id="hero-n-okres">77</b> okresů</span></div>
+        <div class="trust-line hero-stats"><span class="ts-n"><b id="hero-n-count">1 954</b> pozemků</span><span class="ts-sep" aria-hidden="true">·</span><span class="ts-n"><b id="hero-n-okres">77</b> okresů</span></div>
         <div class="hero-pod">celá ČR · zdarma, bez registrace</div>
         <!-- Živý důkaz, že web není skanzen. Vyplní ho skript ze skutečných
              dat; dokud se nenačtou, není tu vůbec nic (žádné „Načítám…"). -->
@@ -185,7 +185,11 @@
     <div class="map-wide">
       <div class="map-app reveal mv-seznam" id="view-mapa">
         <div class="map-controls-panel">
-          <div class="map-search"><input type="text" id="map-search" placeholder="Hledat obec (např. Kolín)" autocomplete="off" aria-label="Hledat obec nebo okres" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="map-search-navrhy"><ul class="ms-navrhy" id="map-search-navrhy" role="listbox" aria-label="Našeptané obce" hidden></ul></div>
+          <div class="map-search"><input type="text" id="map-search" placeholder="Obec, kraj, druh, cena…" autocomplete="off" aria-label="Hledat — dá se napsat celá věta, třeba orná Vysočina do 500 tis" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="map-search-navrhy"><ul class="ms-navrhy" id="map-search-navrhy" role="listbox" aria-label="Našeptané obce" hidden></ul></div>
+          <!-- Políčko rozumí celé větě, jenže to na něm nebylo vidět: placeholder
+               říkal „Hledat obec" a o druhu, kraji, ceně ani sítích nepadlo slovo.
+               Příklad je tu proto, aby to člověk nemusel uhodnout. -->
+          <p class="ms-napoveda"><span>Napište klidně celou větu:</span> <button type="button" class="ms-priklad" data-priklad="orná Vysočina do 500 tis">orná Vysočina do 500 tis</button></p>
           <!-- Co web z napsané věty pochopil jako filtr; každý odznak jde zrušit. -->
           <div class="ms-chipy" id="ms-chipy" hidden aria-label="Rozpoznáno z hledání"></div>
           <!-- Hlídání okolí vlastního pozemku. Objeví se, až si člověk místo
@@ -340,19 +344,19 @@
       </div>
       <div class="kraj-grid reveal">
         <a class="kraj-item" href="pozemky-praha-kraj.html"><span class="kj-n">Praha</span><span class="kj-c mono" data-kraj="Praha">29 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-stredocesky-kraj.html"><span class="kj-n">Středočeský</span><span class="kj-c mono" data-kraj="Středočeský">386 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-jihocesky-kraj.html"><span class="kj-n">Jihočeský</span><span class="kj-c mono" data-kraj="Jihočeský">122 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-stredocesky-kraj.html"><span class="kj-n">Středočeský</span><span class="kj-c mono" data-kraj="Středočeský">389 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-jihocesky-kraj.html"><span class="kj-n">Jihočeský</span><span class="kj-c mono" data-kraj="Jihočeský">121 pozemků</span></a>
         <a class="kraj-item" href="pozemky-plzensky-kraj.html"><span class="kj-n">Plzeňský</span><span class="kj-c mono" data-kraj="Plzeňský">118 pozemků</span></a>
         <a class="kraj-item" href="pozemky-karlovarsky-kraj.html"><span class="kj-n">Karlovarský</span><span class="kj-c mono" data-kraj="Karlovarský">29 pozemků</span></a>
         <a class="kraj-item" href="pozemky-ustecky-kraj.html"><span class="kj-n">Ústecký</span><span class="kj-c mono" data-kraj="Ústecký">149 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-liberecky-kraj.html"><span class="kj-n">Liberecký</span><span class="kj-c mono" data-kraj="Liberecký">151 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-kralovehradecky-kraj.html"><span class="kj-n">Královéhradecký</span><span class="kj-c mono" data-kraj="Královéhradecký">76 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-pardubicky-kraj.html"><span class="kj-n">Pardubický</span><span class="kj-c mono" data-kraj="Pardubický">84 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-vysocina-kraj.html"><span class="kj-n">Vysočina</span><span class="kj-c mono" data-kraj="Vysočina">54 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-jihomoravsky-kraj.html"><span class="kj-n">Jihomoravský</span><span class="kj-c mono" data-kraj="Jihomoravský">395 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-olomoucky-kraj.html"><span class="kj-n">Olomoucký</span><span class="kj-c mono" data-kraj="Olomoucký">104 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-zlinsky-kraj.html"><span class="kj-n">Zlínský</span><span class="kj-c mono" data-kraj="Zlínský">164 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-moravskoslezsky-kraj.html"><span class="kj-n">Moravskoslezský</span><span class="kj-c mono" data-kraj="Moravskoslezský">83 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-liberecky-kraj.html"><span class="kj-n">Liberecký</span><span class="kj-c mono" data-kraj="Liberecký">150 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-kralovehradecky-kraj.html"><span class="kj-n">Královéhradecký</span><span class="kj-c mono" data-kraj="Královéhradecký">82 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-pardubicky-kraj.html"><span class="kj-n">Pardubický</span><span class="kj-c mono" data-kraj="Pardubický">85 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-vysocina-kraj.html"><span class="kj-n">Vysočina</span><span class="kj-c mono" data-kraj="Vysočina">53 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-jihomoravsky-kraj.html"><span class="kj-n">Jihomoravský</span><span class="kj-c mono" data-kraj="Jihomoravský">398 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-olomoucky-kraj.html"><span class="kj-n">Olomoucký</span><span class="kj-c mono" data-kraj="Olomoucký">105 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-zlinsky-kraj.html"><span class="kj-n">Zlínský</span><span class="kj-c mono" data-kraj="Zlínský">161 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-moravskoslezsky-kraj.html"><span class="kj-n">Moravskoslezský</span><span class="kj-c mono" data-kraj="Moravskoslezský">85 pozemků</span></a>
         <a class="kraj-item kraj-vse" href="pozemky-podle-okresu.html"><span class="kj-n">Všechny okresy</span><span class="kj-c mono">77 okresů</span></a>
       </div>
     </div>
@@ -538,13 +542,13 @@
 <script src="js/terminy.js?v=63a1d1b6" defer></script>
 <script src="js/ceny.js?v=1de810f1" defer></script>
 <script src="js/radce.js?v=0491f655" defer></script>
-<script src="js/hlidani-logika.js?v=55d0f0e2" defer></script>
+<script src="js/hlidani-logika.js?v=ff3c93c5" defer></script>
 <script src="js/poradi.js?v=670998bf" defer></script>
 <script src="js/rozsah.js?v=880952d0" defer></script>
-<script src="js/vybaveni.js?v=3a290f3a" defer></script>
-<script src="js/dotaz.js?v=4bde3542" defer></script>
+<script src="js/vybaveni.js?v=468a51b7" defer></script>
+<script src="js/dotaz.js?v=5eacde5d" defer></script>
 <script src="js/hledani.js?v=6a407f98" defer></script>
-<script src="js/main.js?v=a359cc19" defer></script>
+<script src="js/main.js?v=6093338e" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

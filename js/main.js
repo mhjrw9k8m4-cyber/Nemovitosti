@@ -854,7 +854,7 @@
       dotazFiltr = r;
       searchTerm = r.text;            // na obec zbyde jen to, co web nepochopil
     } else {
-      dotazFiltr = { druh: null, typ: null, site: [], jenCelek: false,
+      dotazFiltr = { druh: null, typ: null, kraj: null, site: [], jenCelek: false,
         cenaOd: null, cenaDo: null, plochaOd: null, plochaDo: null, casti: [] };
       searchTerm = syrovy;
     }
@@ -1334,6 +1334,19 @@
       '" fill="rgba(166,184,202,0.12)" stroke="#93AC9C" stroke-width="2.2"/></svg>';
   }
 
+  /* Řádek „Inzerát uvádí: elektřina, voda" do detailu. Podíl má vlastní
+     řádek — je to jediný údaj, který mění, CO se vlastně kupuje. */
+  function uvadiHtml(d) {
+    var h = '';
+    if (d.site && d.site.length && window.PKVybaveni) {
+      h += '<span class="mdf-siroky">Inzerát uvádí <b>' + d.site.map(function (k) {
+        return esc(window.PKVybaveni.nazev(k).toLowerCase());
+      }).join(', ') + '</b></span>';
+    }
+    if (d.podil) h += '<span class="mdf-siroky">Vlastnictví <b>spoluvlastnický podíl</b></span>';
+    return h;
+  }
+
   /* Rádce „Co byste měli vědět" je společný s druhou půlkou webu —
    * js/radce.js. Mapa i stránka pozemku ho tu měly každá po svém, takže
    * stačilo změnit jednu z nich a u téhož pozemku by si protiřečily.
@@ -1401,6 +1414,12 @@
             '<div class="md-facts">' +
               (hasParcel(d) ? '<span>Parcela <b>č. ' + d.parcel + '</b></span>' : '') +
               '<span>Stav <b>' + zdrojText(d.extra) + '</b></span>' +
+              /* Co o pozemku píše sám inzerát. Filtrovalo se podle toho
+                 už dřív, ale VIDĚT to nebylo nikde — kdo si zaškrtl
+                 „elektřina", nemohl si to na nabídce ověřit.
+                 Slovo „uvádí" tu musí zůstat: popisy píšou „na hranici"
+                 stejně často jako „zavedeno". */
+              uvadiHtml(d) +
             '</div>' +
             (isSPU(d) ? '<div class="md-note">Státní půda se prodává přes <b>veřejnou nabídku SPÚ (§ 12)</b> — otevřete „Nabídka SPÚ", parcelu ověříte přes „Katastr".</div>' : '') +
             (d.type === 'majitel' ? '<div class="md-note">Tenhle inzerát vložil <b>přímo majitel pozemku</b> tady na Parcelce — jednáte s ním <b>napřímo, bez realitky a provize</b>. Ostatní nabídky sbíráme z veřejných zdrojů. Vlastníka i parcelu si ověřte v katastru.' + (d._lid && typeof d.views === 'number' ? ' · <b>' + d.views + '×</b> zobrazeno' : '') + '</div>' : '') +
@@ -2411,6 +2430,11 @@
     if (okDotaz && dotazFiltr.cenaDo && !(d.price > 0 && d.price <= dotazFiltr.cenaDo)) okDotaz = false;
     if (okDotaz && dotazFiltr.plochaOd && !(hasArea(d) && d.area >= dotazFiltr.plochaOd)) okDotaz = false;
     if (okDotaz && dotazFiltr.plochaDo && !(hasArea(d) && d.area <= dotazFiltr.plochaDo)) okDotaz = false;
+    /* Kraj z věty („orná půda Vysočina") se použije jako filtr rovnou tady,
+       vedle rozbalovátka — ne místo něj. Kdo si vybere kraj v rozbalovátku
+       a k tomu napíše jiný do věty, dostane průnik; to je jediné čtení,
+       které nikomu nic nepřepíše za zády. */
+    if (okDotaz && dotazFiltr.kraj && (d._gkraj || krajOf(d)) !== dotazFiltr.kraj) okDotaz = false;
     var okPerM2 = !maxPerM2 || (hasArea(d) && d.price && (d.price / d.area) <= maxPerM2);
     var okKraj = krajFiltr === 'all' || (d._gkraj || krajOf(d)) === krajFiltr;
     // „Pod obvyklou cenou" bere tentýž odhad, jaký se ukazuje na kartě —
@@ -2693,6 +2717,12 @@
       } else if (perM2 && dealMax && perM2 <= dealMax) {
         var _di = dealInfo(d);
         chips.push('<span class="opp-deal">' + (_di && _di.cheaper >= 70 ? 'levnější než ' + _di.cheaper + ' %' : 'výhodná cena') + '</span>');
+      }
+      /* Podíl patří na kartu, ne až do detailu. Bez něj vypadá cena za
+         metr jako trhák — přitom se kupuje zlomek pozemku, ne pozemek.
+         Tvrdí se jen to, co v popisu stojí, proto „podle inzerátu". */
+      if (d.podil) {
+        chips.push('<span class="opp-podil" title="Podle popisu inzerátu se prodává spoluvlastnický podíl, ne celý pozemek — velikost podílu si ověřte v katastru">podíl</span>');
       }
       if (hot) chips.push('<span class="opp-hot">Doporučujeme</span>');
       // „Nové od minulé návštěvy" — první odznak v řadě, ať je hned vidět,
@@ -3186,8 +3216,30 @@
       if (!t[3].some(function (f) { return f.indexOf(posledni) === 0; })) return;
       pridej('inzerát uvádí', t[1], t[2], function (x) { return x.site && x.site.indexOf(t[0]) >= 0; });
     });
+    /* Kraje se nabízejí taky — jinak by o tom, že se dá napsat „Vysočina",
+       nikdo nevěděl. Praha se v nabídce jmenuje plným názvem, protože
+       holé „Praha" je hledání místa, ne kraj (viz js/dotaz.js). */
+    window.PKDotaz.KRAJE.forEach(function (k) {
+      if (!k[2].some(function (f) { return f.indexOf(posledni) === 0; })) return;
+      pridej('kraj', k[0] === 'Praha' ? 'Praha' : k[0] + ' kraj', k[1],
+        function (x) { return (x._gkraj || krajOf(x)) === k[0]; });
+    });
     return ven;
   }
+  /* Příklad pod políčkem není jen text — klepnutím se vyplní. Ukázat
+     člověku, co se dá napsat, a nechat ho to opsat ručně, je půlka
+     služby. */
+  (function () {
+    var nap = document.querySelector('.ms-priklad');
+    if (!nap || !searchEl) return;
+    nap.addEventListener('click', function () {
+      searchEl.value = nap.getAttribute('data-priklad') || '';
+      nastavHledani(searchEl.value);
+      renderList();
+      searchEl.focus();
+    });
+  }());
+
   function ukazNavrhy() {
     if (!navrhyEl || !HL.navrhy) return;
     var slovnik = navrhySlovnik(searchEl.value);
@@ -3233,6 +3285,10 @@
   function prekresliChipy() {
     if (!chipyEl) return;
     var casti = (dotazFiltr && dotazFiltr.casti) || [];
+    /* Nápověda má jediný úkol: ukázat, co se dá napsat. Jakmile to člověk
+       napsal a web mu to potvrdil odznaky, překáží — tak zmizí. */
+    var napoveda = document.querySelector('.ms-napoveda');
+    if (napoveda) napoveda.hidden = casti.length > 0;
     if (!casti.length) { chipyEl.hidden = true; chipyEl.innerHTML = ''; return; }
     var html = '';
     for (var i = 0; i < casti.length; i++) {

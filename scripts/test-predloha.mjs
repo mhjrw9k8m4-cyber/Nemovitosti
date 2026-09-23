@@ -6,7 +6,7 @@
 // kartu „o kousek výš", napíše si vlastní hodnotu, a za půl roku je jich
 // zase sedmdesát a web je „suchý". Tenhle test to nedovolí: hloubka i tvar
 // se musí brát z paletky.
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -79,6 +79,35 @@ const chybi = ['--e0','--e1','--e2','--e3','--e3-up','--glow','--glow-lg',
                '--r-xs','--r-sm','--r-md','--r-lg','--r-pill','--accent-warm']
   .filter((t) => !css.includes(t + ':'));
 hlas('Chybí proměnná z paletky', chybi, 'Doplňte ji v :root v css/styles.css.');
+
+/* ---------- 3b. každá použitá proměnná je i nadeklarovaná ----------
+   Překlep v názvu proměnné se na webu NEPOZNÁ. `color: var(--text-mute)`
+   u nedefinované proměnné není chyba, kterou by prohlížeč nahlásil —
+   deklarace se jen zahodí a prvek zdědí barvu rodiče. Vypadá to skoro
+   správně a nikdo si toho nevšimne. Takhle tu tiše žily tři řádky
+   (čerstvost dat a oddělovač obcí na okresních stránkách), které měly
+   být tlumené a nebyly.
+   Proto: co se v šabloně použije, musí být v šabloně i nadeklarované.
+   Proměnné bez výchozí hodnoty (druhý argument var()) se počítají —
+   `var(--x, 0)` má záchranu a chybou není. */
+{
+  /* Proměnná se dá nastavit i zvenčí — `style="--w:42%"` ze skriptu. Taková
+     v šabloně nadeklarovaná být nemůže a chybou není, tak se dohledá tam,
+     odkud se vážně nastavuje. */
+  const zvenku = ['js/main.js', 'js/pozemek.js', 'js/upozorneni.js', 'js/centrum.js']
+    .filter((f) => existsSync(path.join(ROOT, f)))
+    .map((f) => readFileSync(path.join(ROOT, f), 'utf8')).join('\n');
+  const deklarovane = new Set([
+    ...[...css.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]),
+    ...[...zvenku.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]),
+  ]);
+  const nedeklarovane = [...css.matchAll(/var\(\s*(--[a-z0-9-]+)\s*\)/g)]
+    .map((m) => m[1])
+    .filter((t, i, a) => a.indexOf(t) === i)
+    .filter((t) => !deklarovane.has(t));
+  hlas('Použitá proměnná, která nikde není nadeklarovaná', nedeklarovane,
+    'Prohlížeč takovou deklaraci tiše zahodí a prvek zdědí barvu rodiče — chyba se nikde neprojeví.');
+}
 
 /* ---------- 4. předloha odpovídá skutečnosti ---------- */
 // Vzorník, který ukazuje něco jiného než web, je horší než žádný.

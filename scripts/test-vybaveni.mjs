@@ -21,7 +21,7 @@
 //
 // Testuje se na větách, jaké lidé do inzerátů opravdu píšou.
 import { createRequire } from 'node:module';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 const ROOT = new URL('..', import.meta.url).pathname;
 const V = createRequire(import.meta.url)(path.join(ROOT, 'js', 'vybaveni.js'));
@@ -67,6 +67,28 @@ sedi('V obci je vodovod, elektřina zavedena, plyn chybí.', ['elektrina', 'voda
 sedi('Bez kanalizace. Elektřina i voda na hranici.', ['elektrina', 'voda']);
 sedi('Pozemek nemá plyn, ale elektřina i voda jsou zavedené.', ['elektrina', 'voda']);
 
+/* --- 3b) Voda, která není voda k pozemku ------------------------------
+   Slovo „voda" v inzerátu často mluví o vodě, která je STAROST, ne
+   přípojka: odpadní, dešťová, spodní, nebo rovnou záplavové území.
+   Modul u nich hlásil vodu — a u záplavového území tím dokonce dělal
+   z varování výhodu. Přípojka se z takové věty vyčíst nedá. */
+sedi('Odpadní vody jsou řešeny jímkou.', ['kanalizace']);
+sedi('Dešťová voda je svedena do vsakovací jímky.', ['kanalizace']);
+sedi('V území se vyskytuje spodní voda.', []);
+sedi('Záplavové území — velká voda tudy šla v roce 2002.', []);
+sedi('Retenční nádrž na dešťovou vodu.', []);
+sedi('Pozemek s výhledem na vodní plochu, elektřina na hranici.', ['elektrina']);
+/* Opačný směr: skutečná přípojka se tím nesmí ztratit. */
+sedi('Vodovodní řad vede podél pozemku.', ['voda']);
+sedi('Na pozemku je vlastní studna a odpadní vody jdou do septiku.', ['kanalizace', 'voda']);
+
+/* --- 3c) Příjezd po komunikaci ----------------------------------------
+   „Zpevněná komunikace" a „místní komunikace" jsou v inzerátech stejně
+   běžné jako „cesta" — modul je přitom nečetl vůbec. */
+sedi('Přístup po zpevněné komunikaci.', ['cesta']);
+sedi('Příjezd po místní komunikaci.', ['cesta']);
+sedi('K pozemku nevede zpevněná komunikace.', []);
+
 /* --- 4) Podíl --------------------------------------------------------- */
 {
   const podil = (t) => V.najdi(t).podil;
@@ -85,6 +107,26 @@ sedi('Pozemek nemá plyn, ale elektřina i voda jsou zavedené.', ['elektrina', 
   pravda('ale podíl na pozemku se pozná i vedle podílu na cestě',
     podil('Podíl 1/3 na pozemku i podíl 1/8 na přístupové cestě.'));
   pravda('a velký zlomek taky', podil('LV č. 165 o výměře 3012 m², podíl 945/15288'));
+
+  /* Právnické tvary, kterými se podíl píše v dražbách a na listech
+     vlastnictví. Slovo „podíl" v nich vůbec nemusí být — a modul je
+     proto přehlížel, přestože jde o tutéž věc. */
+  pravda('„podílové spoluvlastnictví" je podíl',
+    podil('Pozemek je v podílovém spoluvlastnictví.'));
+  pravda('„ideální polovina" je podíl', podil('Prodej ideální poloviny pozemku.'));
+  pravda('„ideální 1/2" je podíl', podil('Dražba ideální 1/2 pozemku p. č. 84.'));
+  pravda('„id. 1/2" bez slova podíl je podíl', podil('Prodej id. 1/2 orné půdy.'));
+  pravda('„podíl ve výši" je podíl', podil('Podíl ve výši jedné poloviny.'));
+  /* A co se přitom nesmí chytit. „Ideální" je v inzerátech nejčastěji
+     chvála, ne zlomek. */
+  pravda('„ideální poloha" podíl není', !podil('Ideální poloha pro stavbu rodinného domu.'));
+  pravda('„ideální pozemek" podíl není', !podil('Ideální pozemek pro zahrádkáře.'));
+  pravda('a popření i u nových tvarů platí',
+    !podil('Pozemek není v podílovém spoluvlastnictví, prodává se celý.'));
+  /* Stejná výjimka jako u slova podíl: ideální zlomek CESTY není podíl
+     na pozemku. */
+  pravda('ideální zlomek přístupové cesty není podíl na pozemku',
+    !podil('Prodej parcely, k ní ideální 1/8 na společné přístupové cestě.'));
 }
 
 /* --- 5) Co se nesmí stát ----------------------------------------------- */
@@ -127,6 +169,53 @@ sedi('Pozemek nemá plyn, ale elektřina i voda jsou zavedené.', ['elektrina', 
     'nadpis „Co je u pozemku" tvrdí, že tam ta síť je — inzeráty přitom často píšou jen „v dosahu"');
   pravda('a poznámka rozlišuje zavedeno od „v dosahu"',
     /zavedená, nebo zatím jen v dosahu/.test(idx));
+}
+
+/* --- 7) A je to taky VIDĚT? --------------------------------------------
+   Dlouho platilo, že se podle sítí a podílu dalo filtrovat, ale nikde
+   se nedaly přečíst. Kdo si zaškrtl „elektřina", neměl si to na čem
+   ověřit — a u podílu to bylo ještě horší: cena za metr pak vypadá jako
+   trhák, přestože se kupuje zlomek pozemku.
+   Hlídají se všechna čtyři místa, kam se člověk podívá. */
+{
+  const main = readFileSync(path.join(ROOT, 'js', 'main.js'), 'utf8');
+  const poz = readFileSync(path.join(ROOT, 'js', 'pozemek.js'), 'utf8');
+  const pozHtml = readFileSync(path.join(ROOT, 'pozemek.html'), 'utf8');
+  const gen = readFileSync(path.join(ROOT, 'scripts', 'generate-region-pages.mjs'), 'utf8');
+  pravda('karta v seznamu podíl přizná', /opp-podil/.test(main));
+  pravda('detail na mapě vypíše, co inzerát uvádí', /Inzerát uvádí/.test(main) && /uvadiHtml\(d\)/.test(main));
+  pravda('stránka pozemku taky', /Inzerát uvádí/.test(poz));
+  pravda('a stránka pozemku si modul vůbec načítá', /<script src="js\/vybaveni\.js/.test(pozHtml),
+    'bez načtení by se řádek tiše nevypsal a nikde by to nezakřičelo');
+  /* Schválně se hledá ten VÝPIS, ne jen slovo: „inzerát uvádí" stojí
+     i v komentáři nad ním, takže volnější vzorek by přežil i vypnutí
+     celé té věci. (Přišlo se na to sabotáží — kontrola neprošla, když
+     měla.) */
+  pravda('okresní a krajské stránky taky',
+    /bits\.push\('inzerát uvádí <b>'/.test(gen) && /bits\.push\('<b>spoluvlastnický podíl<\/b>'\)/.test(gen));
+
+  /* A hlavně: opravdu to v hotových stránkách STOJÍ. Generátor se dá
+     změnit a zapomenout spustit — tohle projde jen tehdy, když jsou
+     vygenerované stránky skutečně aktuální. */
+  const data = JSON.parse(readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
+  const okresSeSitemi = {};
+  for (const d of data) if (d.okres && d.site && d.site.length) okresSeSitemi[d.okres] = (okresSeSitemi[d.okres] || 0) + 1;
+  const nej = Object.keys(okresSeSitemi).sort((a, b) => okresSeSitemi[b] - okresSeSitemi[a])[0];
+  if (!nej) {
+    pravda('v datech je aspoň jeden okres se sítěmi', false, 'nenašel se žádný — nebo robot sítě přestal číst');
+  } else {
+    const soubor = 'pozemky-okres-' + nej.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '.html';
+    const cesta = path.join(ROOT, soubor);
+    if (!existsSync(cesta)) {
+      pravda('okresní stránka existuje', false, soubor + ' chybí');
+    } else {
+      const html = readFileSync(cesta, 'utf8');
+      pravda(`hotová stránka okresu ${nej} to opravdu vypisuje`,
+        /inzerát uvádí <b>/.test(html),
+        `v ${soubor} není ani jedno „inzerát uvádí" — spusťte node scripts/generate-region-pages.mjs`);
+    }
+  }
 }
 
 console.log('\nCo je u pozemku — čtení z popisu nabídky');

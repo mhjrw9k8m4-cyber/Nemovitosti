@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -15,6 +16,11 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
    převod napsal podruhé, dřív nebo později se ty dva rozejdou. */
 new Function(fs.readFileSync(path.join(ROOT, 'js', 'terminy.js'), 'utf8'))();
 const T = globalThis.PK_TERMINY;
+/* Co inzerát uvádí (sítě, podíl) se čte stejným modulem jako v aplikaci —
+   robot to do dat ukládá, ale na okresních a krajských stránkách to dosud
+   nebylo VIDĚT, přestože právě sem chodí lidé z vyhledávačů. */
+const require_ = createRequire(import.meta.url);
+const VYB = require_(path.join(ROOT, 'js', 'vybaveni.js'));
 /* Razítko proti staré kopii v prohlížeči. Dřív to bylo ručně psané číslo
    (v=20260902f) — a při úpravě stylu se zapomnělo přepsat, takže lidem
    chodila pořád stará verze a z nových úprav nebylo vidět nic. Nikde přitom
@@ -104,7 +110,6 @@ const razitkoCerstvosti = zkontrolovano
 /* Duplicity se odstraňují TOUTÉŽ funkcí jako v prohlížeči (js/hlidani-logika.js).
    Kdyby si generátor počítal po svém, napsal by do HTML jiné číslo, než
    pak ukáže skript — a na jedné stránce by vedle sebe stála dvě. */
-const require_ = (await import('node:module')).createRequire(import.meta.url);
 const PKH = require_(path.join(ROOT, 'js', 'hlidani-logika.js'));
 
 const all = Array.isArray(data.opportunities) ? data.opportunities : [];
@@ -377,6 +382,11 @@ function itemRow(o){
   if(o.price) bits.push('<b>'+fmt(o.price)+' Kč</b>');
   if(o.okres) bits.push('okres '+esc(o.okres));
   if(o.extra && o.extra!=='—') bits.push(esc(T.zdrojText(o.extra)));
+  /* Formulace musí zůstat opatrná: v popisech stojí „na hranici" stejně
+     často jako „zavedeno", takže se tvrdí jen to, co inzerát uvádí. */
+  if(o.site && o.site.length) bits.push('inzerát uvádí <b>'+esc(o.site.map(k=>VYB.nazev(k).toLowerCase()).join(', '))+'</b>');
+  /* Podíl mění, CO se kupuje — bez něj vypadá cena za metr jako trhák. */
+  if(o.podil) bits.push('<b>spoluvlastnický podíl</b>');
   /* Odkaz ven se musel poznat až po klepnutí. Šipka „→" vypadá jako
      „další stránka", ne jako „odcházíš z webu" — a kdo poslouchá čtečku
      obrazovky, nepozná ani to. Proto šikmá šipka, doména v popisku

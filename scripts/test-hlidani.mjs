@@ -60,6 +60,29 @@ je('vybavení', 'přístupová cesta se bere z pole access',
 je('vybavení', 'bez cesty neprojde',
   H.matches({ features: ['Přístupová cesta'] }, P({ access: 'přes cizí pozemek' })), false);
 
+/* Tohle je oprava mrtvého filtru. Pole `features` a `access` mají POUZE
+   inzeráty vložené majitelem přes web — ze sbíraných nabídek ho nemá
+   ani jedna z 1966. Zaškrtnutím „Elektřina" si tak člověk hlídání
+   zúžil na hrstku vlastních inzerátů a nepřišlo mu NIKDY nic, aniž by
+   se to kdekoli dozvěděl. Robot přitom tytéž údaje čte z popisu
+   nabídky do pole `site` (elektřina u 169 nabídek, voda u 196, cesta
+   u 1024). Hlídání je teď bere jako rovnocenný zdroj. */
+je('vybavení', 'elektřina se uzná i z popisu nabídky (pole site)',
+  H.matches({ features: ['Elektřina'] }, P({ site: ['elektrina'] })), true);
+je('vybavení', 'voda taky', H.matches({ features: ['Voda'] }, P({ site: ['voda', 'cesta'] })), true);
+je('vybavení', 'kanalizace taky', H.matches({ features: ['Kanalizace'] }, P({ site: ['kanalizace'] })), true);
+je('vybavení', 'plyn taky', H.matches({ features: ['Plyn'] }, P({ site: ['plyn'] })), true);
+je('vybavení', 'cesta z popisu se uzná i bez pole access',
+  H.matches({ features: ['Přístupová cesta'] }, P({ site: ['cesta'] })), true);
+je('vybavení', 'co v popisu není, neprojde',
+  H.matches({ features: ['Elektřina'] }, P({ site: ['voda'] })), false);
+je('vybavení', 'dvojí požadavek se dá složit z obou zdrojů',
+  H.matches({ features: ['Elektřina', 'Voda'] }, P({ features: ['Elektřina'], site: ['voda'] })), true);
+/* Vybavení, které se z popisu vyčíst nedá, musí zůstat přísné —
+   jinak by „Oplocení" najednou procházelo komukoli. */
+je('vybavení', 'oplocení se z popisu nevyrábí',
+  H.matches({ features: ['Oplocení'] }, P({ site: ['elektrina', 'voda', 'cesta'] })), false);
+
 /* ---------------- otisk ---------------- */
 je('otisk', 'stejný pozemek má stejný otisk', H.keyOf(P()) === H.keyOf(P()), true);
 je('otisk', 'změna ceny je jiný pozemek', H.keyOf(P()) === H.keyOf(P({ price: 600000 })), false);

@@ -251,6 +251,22 @@
     if (hasParcel(d)) facts.push({ k: 'Parcela', v: 'č. ' + esc(d.parcel) });
     facts.push({ k: 'Kategorie', v: esc(t.label) });
     if (d.extra) facts.push({ k: 'Stav / zdroj', v: esc(zdrojText(d.extra)) });
+    /* Co o pozemku říká samotný inzerát. Robot to z popisu čte už dávno
+       (js/vybaveni.js) a web podle toho i filtruje — jenže nikde to
+       nebylo VIDĚT. Člověk si tak zaškrtl „elektřina" a na stránce
+       pozemku si to nemohl ověřit.
+       Formulace musí zůstat opatrná: v popisu stojí „na hranici" stejně
+       často jako „zavedeno", takže se tvrdí jen to, že to inzerát
+       uvádí — ne že to na pozemku je. */
+    if (d.site && d.site.length && window.PKVybaveni) {
+      facts.push({ k: 'Inzerát uvádí', v: d.site.map(function (k) {
+        return esc(window.PKVybaveni.nazev(k).toLowerCase());
+      }).join(', ') });
+    }
+    /* Podíl je to nejdůležitější, co se o nabídce dá říct: kupuje se
+       zlomek pozemku, ne pozemek. Bez toho vypadá cena za metr jako
+       trhák. */
+    if (d.podil) facts.push({ k: 'Vlastnictví', v: 'inzerát mluví o spoluvlastnickém podílu — ověřte si velikost podílu v katastru' });
 
     var html =
       '<div class="pz-media">' + heroLayers(d) + '</div>' +

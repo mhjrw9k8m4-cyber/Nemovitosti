@@ -283,6 +283,60 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   await ctx2.close();
 }
 
+/* --- Celá věta doopravdy: napsat, uvidět odznaky, zúžit výpis --------
+   Rozbor věty má vlastní test bez prohlížeče (test-dotaz.mjs). Tady jde
+   o to, co z něj člověk uvidí: že se počet nabídek opravdu změní, že se
+   pochopené části ukážou jako odznaky a že příklad pod políčkem není jen
+   text, ale vyplní se klepnutím.
+   Kraj se přidával naposledy a je na něm vidět celá pointa: „Jihočeský
+   kraj" dřív spadlo do hledání OBCE a vracelo nulu. */
+{
+  const { ctx: c3, p: p3 } = await otevri({ viewport: { width: 1280, height: 900 } });
+  async function pocet() {
+    return p3.$eval('#map-count', (e) => {
+      const m = e.textContent.match(/([\d\s\u00a0]+)\s*na mapě/);
+      return m ? parseInt(m[1].replace(/[\s\u00a0]/g, ''), 10) : -1;
+    }).catch(() => -1);
+  }
+  async function napis(v) {
+    await p3.fill('#map-search', v);
+    await p3.waitForTimeout(700);
+    return pocet();
+  }
+  const vse = await pocet();
+  pravda('výchozí počet se dá přečíst', vse > 100, 'vyšlo ' + vse);
+
+  const kraj = await napis('Jihočeský kraj');
+  pravda('„Jihočeský kraj" něco najde', kraj > 0 && kraj < vse, `${vse} → ${kraj}`);
+  const odznaky = await p3.$$eval('.msch', (n) => n.map((x) => x.textContent.replace(/[✕\s]+/g, ' ').trim()));
+  pravda('a ukáže se jako odznak', odznaky.some((t) => /Jihočeský/.test(t)), JSON.stringify(odznaky));
+
+  const hovorove = await napis('jižní Čechy');
+  pravda('hovorový název dává totéž', hovorove === kraj, `„jižní Čechy" ${hovorove} vs. ${kraj}`);
+
+  const site = await napis('s elektřinou');
+  pravda('„s elektřinou" je filtr, ne prázdný výpis', site > 0 && site < vse, `${vse} → ${site}`);
+
+  /* Tohle je ta chyba, kvůli které se výplňová slova zavedla: jedno
+     přebytečné slovo („jen", „pozemek") vynulovalo celý výpis. */
+  const celek = await napis('jen celé pozemky');
+  pravda('„jen celé pozemky" nevrátí prázdno', celek > 0, `vyšlo ${celek}`);
+
+  await napis('');
+  const priklad = await p3.$('.ms-priklad');
+  pravda('pod políčkem je příklad', !!priklad);
+  if (priklad) {
+    const text = (await priklad.textContent()).trim();
+    await priklad.click();
+    await p3.waitForTimeout(700);
+    const vPolicku = await p3.inputValue('#map-search');
+    const poPrikladu = await pocet();
+    pravda('klepnutí na příklad ho vyplní', vPolicku.trim() === text, `v políčku „${vPolicku}", v příkladu „${text}"`);
+    pravda('a výpis se podle něj zúží', poPrikladu > 0 && poPrikladu < vse, `${vse} → ${poPrikladu}`);
+  }
+  await c3.close();
+}
+
 await ctx.close();
 await prohlizec.close();
 console.log('\nNašeptávač obcí, oprava překlepu a výběr ceny/výměry');
