@@ -69,8 +69,13 @@ const karty = (p) => p.evaluate(() => [...document.querySelectorAll('.opp-item')
   };
 }));
 const serad = async (p, mode) => { await p.selectOption('#map-sort', mode); await p.waitForTimeout(900); return karty(p); };
-const roste = (x) => x.every((v, i) => i === 0 || x[i - 1] <= v);
-const klesa = (x) => x.every((v, i) => i === 0 || x[i - 1] >= v);
+/* Prázdný seznam projde každou podmínkou na řazení, protože .every()
+   nad ničím vrací true. Kdyby se tedy některé řazení rozbilo tak, že
+   nevykreslí ani jednu kartu, test by to pochválil. Proto se nejdřív
+   ptáme, jestli vůbec je co řadit — stejně, jako to o kus níž dělá
+   kontrola „Největší sleva proti okolí" (sleva.length >= 5). */
+const roste = (x) => x.length > 0 && x.every((v, i) => i === 0 || x[i - 1] <= v);
+const klesa = (x) => x.length > 0 && x.every((v, i) => i === 0 || x[i - 1] >= v);
 
 {
   const { ctx, p } = await otevri();

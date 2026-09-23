@@ -98,9 +98,14 @@ for (const s of STRANKY) {
   const mob = await zmer(s, 390);
   pravda(`${s} — na telefonu je každý odkaz na svém řádku`, mob.naStejnemRadku.length === 0,
     'slité: ' + mob.naStejnemRadku.map((a) => a.text).join(' | '));
+  /* „Žádný odkaz" projde touhle podmínkou stejně dobře jako „všechny
+     dost vysoké" — .every() nad prázdným polem je true. Patička, která
+     by se přestala vykreslovat, by tedy prošla. Ptáme se proto nejdřív,
+     jestli tam nějaké odkazy vůbec jsou. */
   pravda(`${s} — odkazy se na telefonu dají trefit prstem`,
-    mob.odkazy.every((a) => a.vyska >= 28),
-    'nejnižší ' + Math.min(...mob.odkazy.map((a) => a.vyska)) + ' px');
+    mob.odkazy.length > 0 && mob.odkazy.every((a) => a.vyska >= 28),
+    mob.odkazy.length === 0 ? 'v patičce není ani jeden odkaz'
+      : 'nejnižší ' + Math.min(...mob.odkazy.map((a) => a.vyska)) + ' px');
   pravda(`${s} — pod sloupci je dělicí čára`, parseFloat(mob.cara) >= 1, `čára ${mob.cara}`);
   pravda(`${s} — a kolem ní je na telefonu prostor`, mob.odstupPodMrizkou >= 36,
     `odstup jen ${mob.odstupPodMrizkou} px — zkratka „padding" v .wrap sráží svislé odsazení`);
