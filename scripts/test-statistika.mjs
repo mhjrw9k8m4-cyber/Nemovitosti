@@ -18,6 +18,7 @@
 // Proto se hledá mezera v samotném rozdělení. Tenhle test hlídá, že se to
 // děje, že to dopadá věrohodně, a že se to na stránce přizná.
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -27,7 +28,15 @@ function pravda(popis, vyslo, proc) {
 }
 
 const gen = readFileSync(new URL('../scripts/generate-region-pages.mjs', import.meta.url), 'utf8');
-const DATA = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+/* Duplicity pryč, stejně jako je odstraňuje aplikace i generátor. Tenhle
+   test je totiž přepočet toho, co je na stránce — a když každá strana
+   počítá z jiného vzorku, rozejdou se o pár korun a vypadá to jako chyba
+   ve výpočtu, i když jde jen o dva různé seznamy. Přesně tím se lišil
+   medián stavebních: 2 771 ze syrových dat proti 2 824 bez duplicit. */
+const PKH = createRequire(import.meta.url)('../js/hlidani-logika.js');
+const DATA = PKH.bezDuplicit(
+  JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities
+);
 const stranka = readFileSync(new URL('../cena-pozemku.html', import.meta.url), 'utf8');
 
 // --- 1) Generátor mezeru hledá, nenastavuje ji od stolu ---------------

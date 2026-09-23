@@ -33,6 +33,9 @@ jobs:
             echo "ok  $f"
           done
 
+      - name: Odvozené soubory sedí se zdrojem (spraví je node scripts/oprav.mjs)
+        run: node scripts/test-oprav.mjs
+
       - name: Dotazy do databáze proti schématu
         run: node scripts/test-sloupce.mjs
 
@@ -233,6 +236,9 @@ jobs:
 
       - name: Viditelnost okrajů (WCAG 1.4.11)
         run: node scripts/test-okraje.mjs
+
+      - name: Čeština ve viditelném textu
+        run: node scripts/test-cestina.mjs
 
       - name: Odolnost proti vloženému kódu (XSS)
         run: node scripts/test-xss.mjs

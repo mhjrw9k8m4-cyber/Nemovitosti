@@ -30,6 +30,7 @@ function pravda(popis, vyslo, proc) {
 const checkout = readFileSync(path.join(ROOT, 'api', 'create-checkout.js'), 'utf8');
 const webhook = readFileSync(path.join(ROOT, 'api', 'stripe-webhook.js'), 'utf8');
 const formular = readFileSync(path.join(ROOT, 'pridat.html'), 'utf8');
+const podminky = readFileSync(path.join(ROOT, 'podminky.html'), 'utf8');
 
 /* Umí webhook doručit? Poznává se to podle toho, že podle listingRef
    opravdu sáhne do databáze — ne podle komentáře o tom, že jednou bude.
@@ -65,9 +66,18 @@ if (!webhookDorucuje) {
     'nabízet ke koupi něco, co se nedá koupit, je horší než to nenabízet');
   pravda('vzor nastavení říká, kdy se smí otevřít',
     /ZVYRAZNENI_ZAPNUTO/.test(readFileSync(path.join(ROOT, '.env.example'), 'utf8')));
+  /* Podmínky použití to slibují i slovy. Slib a kód musí padnout naráz:
+     kdyby se checkout otevřel a tenhle odstavec zůstal, měl by web v
+     podmínkách napsané „zaplatit ho nejde" o službě, která se prodává. */
+  pravda('a podmínky použití to říkají i návštěvníkovi',
+    /Zatím se neprodává/.test(podminky) && /zaplatit ho nejde/.test(podminky),
+    'podminky.html musí říkat totéž co kód — jinak si každý přečte něco jiného');
 } else {
   /* Až doručení bude: otevřít se smí, ale platba musí být dohledatelná. */
   pravda('když webhook doručuje, checkout smí být otevřený', true);
+  pravda('ale podmínky použití už nesmí tvrdit, že se neprodává',
+    !/Zatím se neprodává/.test(podminky),
+    'zvýraznění se prodává, a podminky.html pořád slibují, že ne');
 }
 
 console.log('\nPlacené zvýraznění — za peníze se musí něco stát');

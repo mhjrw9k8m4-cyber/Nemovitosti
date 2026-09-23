@@ -19,7 +19,7 @@
   var TYPE = {
     sale:    { label: 'Na prodej',    color: tokenBarva('--c-sale', '#4361B8'), link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
     drazba:  { label: 'Dražba',       color: tokenBarva('--c-drazba', '#CC6B33'), link: { label: 'Detail dražby',       url: 'https://www.portaldrazeb.cz/' } },
-    exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), link: { label: 'Insolvenční rejstřík', url: 'https://isir.justice.cz/isir/common/index.do' } },
+    exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), link: { label: 'Ověřit v katastru', url: 'https://www.ikatastr.cz/' } },
     obec:    { label: 'Obecní záměr', color: tokenBarva('--c-obec', '#12AEBE'), link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
     majitel: { label: 'Přímo od majitele',  color: tokenBarva('--c-majitel', '#8B4FE0'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
   };
@@ -69,6 +69,15 @@
       return { url: d.url, label: d.type === 'sale' ? 'Web prodejce' : 'Dražební portál' };
     }
     if (isSPU(d)) return { url: SPU_OFFERS, label: 'Nabídka SPÚ' };
+    /* Exekuce bez odkazu na zdroj mířila do insolvenčního rejstříku. To je
+       ale jiné řízení: insolvence je úpadek dlužníka, exekuce vymáhání
+       jednotlivého dluhu — v ISIR se exekuce na pozemku nedohledá. Vlastní
+       rádce (exekuce-pozemku.html) přitom říká správně, že exekuční poznámku
+       a zástavní právo ukáže list vlastnictví a katastr je „vždy zdroj
+       pravdy". Posíláme tedy na katastr, přímo na tu parcelu. */
+    if (d.type === 'exekuce' && typeof d.lat === 'number' && typeof d.lng === 'number') {
+      return { url: katastrUrl(d), label: 'Ověřit v katastru' };
+    }
     return { url: TYPE[d.type].link.url, label: TYPE[d.type].link.label };
   }
 
@@ -242,7 +251,7 @@
     });
     if (d.access) chips.push('<span class="pz-feat pz-feat-acc">' + ACCESS_SVG + esc(d.access) + '</span>');
     if (!chips.length) return '';
-    return '<div class="pz-sect-h">Sítě a vybavení</div>' +
+    return '<h2 class="pz-sect-h">Sítě a vybavení</h2>' +
       '<div class="pz-feats">' + chips.join('') + '</div>';
   }
 
@@ -309,7 +318,7 @@
 
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
 
-      '<div class="pz-sect-h">Parametry pozemku</div>' +
+      '<h2 class="pz-sect-h">Parametry pozemku</h2>' +
       '<div class="pz-specs">' +
         facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v + '</span></div>'; }).join('') +
       '</div>' +
@@ -329,7 +338,7 @@
         '<button class="pz-abtn" type="button" id="pz-share">' + SHARE_SVG + 'Sdílet</button>' +
       '</div>' +
 
-      '<div class="pz-sect-h">Co byste měli vědět</div>' +
+      '<h2 class="pz-sect-h">Co byste měli vědět</h2>' +
       pzGtkHtml(d);
 
     var host = document.getElementById('pz-detail');

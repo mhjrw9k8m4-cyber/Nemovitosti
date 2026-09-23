@@ -42,11 +42,26 @@ zpravy.push(`  · prošlo se ${odkazu} odkazů ve ${soubory.length} souborech`);
 
 /* ---------- 2. stránky v prohlížeči ---------- */
 // Vzorek: od každého druhu stránky jedna (všech 108 by běželo zbytečně dlouho).
-const VZOREK = ['index.html', 'pozemek.html', 'pridat.html', 'hlidani.html', 'zpravy.html',
+/* Stránka pozemku se zkouší DVAKRÁT: prázdná (ukáže „nenalezeno") i s
+   opravdovou nabídkou. Bez toho druhého se kontroluje jen chybový stav —
+   a třeba pravidlo o mezinadpisech se na krátké hlášce nikdy neuplatní.
+   Přišlo se na to sabotáží: nadpisy se z detailu odebraly a test mlčel. */
+function sPozemkem() {
+  try {
+    const d = (JSON.parse(readFileSync('data/opportunities.json', 'utf8')).opportunities || [])
+      .find((x) => typeof x.lat === 'number' && typeof x.lng === 'number' && x.price > 0);
+    if (!d) return null;
+    const klic = [d.place || '', d.parcel || '', d.okres || '', d.lat.toFixed(3), d.lng.toFixed(3)].join('|');
+    return `pozemek.html?p=${encodeURIComponent(klic)}&ll=${d.lat},${d.lng}`;
+  } catch (e) { return null; }
+}
+
+const VZOREK = ['index.html', 'pozemek.html', sPozemkem(), 'pridat.html', 'hlidani.html', 'zpravy.html',
   'upozorneni.html', 'muj-inzerat.html', 'kontakt.html', 'cena-pozemku.html',
   'podminky.html', 'ochrana-udaju.html', 'pozemky-podle-okresu.html',
   'pozemky-stredocesky-kraj.html', 'pozemky-okres-kolin.html', '404.html']
-  .filter((f) => existsSync(f));
+  .filter(Boolean)
+  .filter((f) => existsSync(f.split('?')[0]));
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -64,7 +79,7 @@ for (const s of VZOREK) {
       if (!existsSync(f)) return r.abort();
       return r.fulfill({ status: 200, contentType: f.endsWith('.css') ? 'text/css' : 'text/javascript', body: readFileSync(f) });
     });
-    await ctx.route(`${BASE}/${s}`, async (r) => {
+    await ctx.route(`${BASE}/${s.split('?')[0]}*`, async (r) => {
       const o = await r.fetch();
       return r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8',
         body: (await o.text()).replace(/\s+integrity="[^"]*"/g, '') });
@@ -92,6 +107,8 @@ for (const s of VZOREK) {
     titul: (document.title || '').trim(),
     popis: (document.querySelector('meta[name="description"]') || {}).content || '',
     h1: document.querySelectorAll('h1').length,
+    h2: document.querySelectorAll('h2, h3').length,
+    delka: (document.body.innerText || '').replace(/\s+/g, ' ').trim().length,
     lang: document.documentElement.getAttribute('lang') || '',
   }));
 
@@ -100,6 +117,15 @@ for (const s of VZOREK) {
   if (!hlava.titul) chyba(`${s}: chybí titulek stránky`);
   if (!hlava.popis) chyba(`${s}: chybí popis (meta description) — bez něj si Google vymyslí vlastní`);
   if (hlava.h1 !== 1) chyba(`${s}: hlavních nadpisů (h1) je ${hlava.h1}, má být právě jeden`);
+  /* Dlouhá stránka bez mezinadpisů je pro odečítač obrazovky jeden blok
+     textu, kterým se nedá skákat. Stránka pozemku takhle dlouho vypadala:
+     jediný nadpis byl ten hlavní, „Parametry pozemku" i „Co byste měli
+     vědět" byly obyčejné divy, které jen vypadaly jako nadpisy.
+     Hranice je úsudek: pod patnácti sty znaky je stránka krátká na to,
+     aby se v ní někdo ztratil (404, přesměrování). */
+  if (hlava.delka > 1500 && hlava.h2 === 0) {
+    chyba(`${s}: ${hlava.delka} znaků textu a ani jeden mezinadpis (h2/h3) — odečítačem se v tom nedá pohybovat`);
+  }
   if (hlava.lang !== 'cs') chyba(`${s}: chybí nebo nesedí jazyk stránky (lang="${hlava.lang}")`);
   if (!padlo.length && !nenacetlo.length) zpravy.push(`  ✓ ${s}`);
   await ctx.close();

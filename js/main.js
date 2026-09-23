@@ -45,7 +45,7 @@
   var TYPE = {
     sale:    { label: 'Na prodej',    color: tokenBarva('--c-sale', '#4361B8'), link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
     drazba:  { label: 'Dražba',       color: tokenBarva('--c-drazba', '#CC6B33'), link: { label: 'Detail dražby',       url: 'https://www.portaldrazeb.cz/' } },
-    exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), link: { label: 'Insolvenční rejstřík', url: 'https://isir.justice.cz/isir/common/index.do' } },
+    exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), link: { label: 'Ověřit v katastru', url: 'https://www.ikatastr.cz/' } },
     obec:    { label: 'Obecní záměr', color: tokenBarva('--c-obec', '#12AEBE'), link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
     majitel: { label: 'Přímo od majitele',  color: tokenBarva('--c-majitel', '#8B4FE0'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
   };
@@ -116,6 +116,15 @@
       return { url: d.url, label: d.type === 'sale' ? 'Web prodejce' : 'Dražební portál' };
     }
     if (isSPU(d)) return { url: SPU_OFFERS, label: 'Nabídka SPÚ' };
+    /* Exekuce bez odkazu na zdroj mířila do insolvenčního rejstříku. To je
+       ale jiné řízení: insolvence je úpadek dlužníka, exekuce vymáhání
+       jednotlivého dluhu — v ISIR se exekuce na pozemku nedohledá. Vlastní
+       rádce (exekuce-pozemku.html) přitom říká správně, že exekuční poznámku
+       a zástavní právo ukáže list vlastnictví a katastr je „vždy zdroj
+       pravdy". Posíláme tedy na katastr, přímo na tu parcelu. */
+    if (d.type === 'exekuce' && typeof d.lat === 'number' && typeof d.lng === 'number') {
+      return { url: katastrUrl(d), label: 'Ověřit v katastru' };
+    }
     return { url: TYPE[d.type].link.url, label: TYPE[d.type].link.label };
   }
   // Ikona záložky (uložení pozemku) — výplň řídí CSS podle stavu .on

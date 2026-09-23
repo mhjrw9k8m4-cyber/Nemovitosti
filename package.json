@@ -6,6 +6,7 @@
   "scripts": {
     "fetch-data": "node scripts/fetch-opportunities.mjs",
     "kontrola-inzeratu": "node scripts/kontrola-inzeratu.mjs",
+    "oprav": "node scripts/oprav.mjs",
     "testy": "node scripts/test-kontrola.mjs && node scripts/test-exif.mjs && node scripts/test-fototema.mjs && node scripts/test-opakovana.mjs && node scripts/test-staticka.mjs"
   },
   "dependencies": {

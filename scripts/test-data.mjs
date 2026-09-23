@@ -13,7 +13,10 @@
 // jinde. Stejně dopadly Rataje (180 km), Lukavec (125), Karlovice (90)
 // a Křakov (84). Sedm nabídek mělo špendlík na druhém konci republiky, a to
 // se propisovalo i do „pozemků v okolí" a do cen podle kraje.
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { createRequire } from 'node:module';
+
+const pozadavek = createRequire(import.meta.url);
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -135,11 +138,148 @@ pravda('každá nabídka ví, kdy ji robot viděl poprvé', bezData.length === 0
     shodne.slice(0, 3).map(([k, v]) => k + ': ' + [...new Set(v)].join(' + ')).join(' | '));
 }
 
+/* --- Jedno číslo, ne tři ---------------------------------------------
+   Úvodní stránka, rozcestník okresů a mapa mluví o tomtéž: kolik je na
+   webu pozemků. Každé z nich to ale počítalo po svém — úvod po
+   odstranění duplicit, rozcestník ze syrových dat, mapa zase po
+   odstranění. Výsledkem byla tři různá čísla pro tutéž věc:
+   1 954 / 1 971 / 1 958. Rozcestník navíc sliboval „na jedné mapě" víc,
+   než na té mapě doopravdy bylo.
+   Duplicity se teď odstraňují jednou při načtení dat v generátoru —
+   stejně jako je odstraňuje aplikace. Tenhle test hlídá, že se to
+   nerozejde znovu. */
+{
+  const PKH = pozadavek('../js/hlidani-logika.js');
+  const skutecne = PKH.bezDuplicit(nabidky).length;
+  const cislo = (t) => parseInt(String(t || '').replace(/[^\d]/g, ''), 10);
+
+  const idx = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const hero = cislo((idx.match(/<b id="hero-n-count">([^<]*)<\/b>/) || [])[1]);
+  pravda('úvodní stránka hlásí tolik pozemků, kolik jich opravdu je',
+    hero === skutecne, `na stránce ${hero}, v datech po odstranění duplicit ${skutecne}`);
+
+  const roz = readFileSync(new URL('../pozemky-podle-okresu.html', import.meta.url), 'utf8');
+  const rozcestnik = cislo((roz.match(/přes <b>([^<]*)<\/b>/) || [])[1]);
+  pravda('a rozcestník okresů hlásí totéž',
+    rozcestnik === skutecne, `rozcestník ${rozcestnik}, úvod ${hero}, v datech ${skutecne}`);
+
+  /* A po krajích taky — součet přes kraje nesmí být jiný než celek. */
+  const CEN = pozadavek('../js/ceny.js');
+  const KR = (CEN && CEN.OKRES_KRAJ) || (globalThis.PK_CENY && globalThis.PK_CENY.OKRES_KRAJ) || {};
+  const poKraji = {};
+  for (const d of PKH.bezDuplicit(nabidky)) { const k = KR[d.okres]; if (k) poKraji[k] = (poKraji[k] || 0) + 1; }
+  const naStrance = [...idx.matchAll(/data-kraj="([^"]+)">([^<]*)</g)]
+    .map((m) => [m[1], cislo(m[2])]).filter(([, n]) => n > 0);
+  pravda('na úvodu jsou vypsané kraje', naStrance.length >= 10, `jen ${naStrance.length}`);
+  const neshody = naStrance.filter(([k, n]) => (poKraji[k] || 0) !== n)
+    .map(([k, n]) => `${k}: na stránce ${n}, v datech ${poKraji[k] || 0}`);
+  pravda('a u každého sedí počet', neshody.length === 0, neshody.slice(0, 5).join('; '));
+
+  /* A robot ta čísla musí taky opravdu zveřejnit.
+     Tohle je ta tichá půlka téže chyby. Generátor do index.html čísla
+     dopisuje (poslední krok, řádek s writeFileSync), jenže úloha
+     update-data.yml zařazovala do commitu ručně psaný seznam souborů —
+     a index.html v něm nebyl. Robot tedy čtyřikrát denně čísla přepočítal
+     a tu změnu zahodil: v repozitáři leželo 1 954, z dat vycházelo 1 958.
+     Úvodní stránka se takhle sama vracela k zastaralému číslu, i když
+     kontrola výš byla zelená v okamžiku, kdy ji spustil člověk. */
+  const gen = readFileSync(new URL('../scripts/generate-region-pages.mjs', import.meta.url), 'utf8');
+  const uloha = readFileSync(new URL('../.github/workflows/update-data.yml', import.meta.url), 'utf8');
+  const pisemeUvod = /writeFileSync\(\s*idx\b/.test(gen);
+  pravda('generátor dopisuje čísla do index.html', pisemeUvod,
+    'kdyby přestal, je kontrola výš bezpředmětná');
+  if (pisemeUvod) {
+    const pridani = [...uloha.matchAll(/^\s*git add (.+)$/gm)].map((m) => m[1].trim());
+    const berevse = pridani.some((r) => /^-A\s*$/.test(r));
+    const jmenujeUvod = pridani.some((r) => /\bindex\.html\b/.test(r));
+    pravda('a robot index.html opravdu commitne', berevse || jmenujeUvod,
+      `v update-data.yml se zařazuje: ${pridani.join(' | ') || '(nic)'} — index.html mezi tím není, takže se přepočet zahodí`);
+  }
+}
+
+/* --- Co stránky slibují, to musí platit -------------------------------
+   Skoro sto stránek webu slibuje „prodeje, dražby i exekuce z celé ČR na
+   jedné mapě". Ten slib nedrží kód, ale data: až robotovi vyschne jeden
+   ze zdrojů, začne tentýž den lhát celý web najednou a nikdo si toho
+   nevšimne, protože se nic nerozbije — jen jeden druh nabídek zmizí.
+
+   Druhá půlka: nabídka v exekuci posílala „kde si to ověřím" do
+   insolvenčního rejstříku. Jenže insolvence je úpadek dlužníka, kdežto
+   exekuce je vymáhání jednoho dluhu — v rejstříku úpadků se exekuce na
+   pozemku nenajde. Vlastní rádce to má správně: ukáže ji list vlastnictví.
+   Teď se tedy míří do katastru a tenhle test hlídá, ať se to nevrátí. */
+{
+  const druhy = {};
+  for (const o of nabidky) druhy[o.type] = (druhy[o.type] || 0) + 1;
+
+  const stranky = readdirSync(new URL('..', import.meta.url))
+    .filter((f) => f.endsWith('.html'))
+    .filter((f) => /dražby (i|a) exekuce/.test(readFileSync(new URL('../' + f, import.meta.url), 'utf8')));
+  pravda('slib „prodeje, dražby i exekuce" na stránkách opravdu je',
+    stranky.length >= 10, `našel jsem ho jen na ${stranky.length} stránkách`);
+
+  for (const [typ, popis] of [['sale', 'prodeje'], ['drazba', 'dražby'], ['exekuce', 'exekuce']]) {
+    pravda(`a data ${popis} opravdu obsahují`, (druhy[typ] || 0) > 0,
+      `${stranky.length} stránek slibuje ${popis}, ale v datech není ani jedna nabídka typu „${typ}"`);
+  }
+
+  /* A obecně: co věta slibuje „na mapě", to na mapě musí být.
+     Chytlo to rádce o obecních pozemcích. Sliboval „prodeje, dražby,
+     exekuce i obecní pozemky z celé ČR na jednom místě" — jenže obecní
+     záměr v datech nebyl nikdy ani jeden. Kdo si ten rádce přečetl,
+     klikl na mapu a zapnul filtr „Obecní záměr", dostal prázdno.
+     Připravená kategorie není totéž co kategorie, kterou máme. */
+  const KATEGORIE = [
+    ['sale', /\bprodeje?\b/i, 'prodeje'],
+    ['drazba', /\bdražby\b/i, 'dražby'],
+    ['exekuce', /\bexekuce(mi)?\b/i, 'exekuce'],
+    ['obec', /\bobecní(mi)?\s+(záměry|pozemky)\b/i, 'obecní záměry'],
+  ];
+  const lzi = [];
+  for (const f of readdirSync(new URL('..', import.meta.url)).filter((x) => x.endsWith('.html'))) {
+    const text = readFileSync(new URL('../' + f, import.meta.url), 'utf8')
+      .replace(/<!--[\s\S]*?-->/g, ' ')
+      .replace(/<(script|style)\b[\s\S]*?<\/\1>/g, ' ')
+      .replace(/<[^>]+>/g, ' ');
+    /* Jen věty, které o mapě opravdu mluví — ne každá zmínka o dražbě. */
+    for (const veta of text.split(/[.!?]/)) {
+      if (!/na (naší |jedné )?map|na jednom míst/i.test(veta)) continue;
+      for (const [typ, re, popis] of KATEGORIE) {
+        if (re.test(veta) && !(druhy[typ] > 0)) lzi.push(`${f}: slibuje ${popis}, v datech 0`);
+      }
+    }
+  }
+  pravda('a žádná stránka neslibuje na mapě druh, který v datech není',
+    lzi.length === 0, [...new Set(lzi)].slice(0, 5).join('; '));
+
+  /* „Robot je prochází každých 6 hodin (4× za den)" — to číslo je v úvodu
+     napsané dvakrát a nikde nevzniká z plánu robota, takže po změně plánu
+     by tiše lhalo. Bere se tedy z cronu a porovná se s textem. */
+  const uvod = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const plan = readFileSync(new URL('../.github/workflows/update-data.yml', import.meta.url), 'utf8');
+  const kazdych = (plan.match(/cron:\s*'0 \*\/(\d+) \* \* \*'/) || [])[1];
+  pravda('plán robota se dá přečíst', !!kazdych, 'v update-data.yml není cron tvaru 0 */N * * *');
+  if (kazdych) {
+    const zaDen = 24 / Number(kazdych);
+    pravda(`úvod říká pravdu o tom, jak často robot běží (každých ${kazdych} h, ${zaDen}× denně)`,
+      uvod.includes(`každých ${kazdych} hodin`) && uvod.includes(`${zaDen}× za den`) && uvod.includes(`${zaDen}× denně`),
+      `podle cronu běží každých ${kazdych} h, tedy ${zaDen}× denně — a to musí sedět i v textu úvodní stránky`);
+  }
+
+  /* Komentáře pryč, ať test nechytá vlastní vysvětlení místo kódu. */
+  const bezKomentaru = (k) => k.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  for (const soubor of ['js/main.js', 'js/pozemek.js']) {
+    const kod = bezKomentaru(readFileSync(new URL('../' + soubor, import.meta.url), 'utf8'));
+    pravda(`${soubor} neposílá exekuci do insolvenčního rejstříku`,
+      !/isir\.justice\.cz/.test(kod), 'exekuce a insolvence jsou dvě různá řízení');
+  }
+}
+
 console.log('\nIntegrita datového souboru');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-  console.log('::error::Data: ' + chyb + ' kontrol neprošlo.');
+console.log('::error::Data: ' + chyb + ' kontrol neprošlo.');
   process.exit(1);
 }
 process.exit(0);

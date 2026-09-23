@@ -80,6 +80,11 @@
     .pv-dot{position:absolute; top:50%; left:var(--w); width:13px; height:13px; border-radius:50%; background:#fff; border:2.5px solid var(--ink-soft); transform:translate(-50%,-50%); animation:puntikNajed .62s var(--ease) both;}
     .pv-scale{display:flex; justify-content:space-between; font-size:11px; color:var(--text-ondark-mute); margin-top:6px;}
 
+    /* Popisek sekce je NADPIS (h2), i když vypadá jako drobný štítek.
+       Stránka pozemku měla jediný nadpis — ten hlavní — a zbytek byly
+       obyčejné divy, takže se v ní odečítačem obrazovky nedalo skákat po
+       sekcích; byl to jeden dlouhý blok. Vzhled se nemění, mění se
+       význam. */
     .pz-sect-h{font-size:11.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--popisek); margin:40px 0 10px;}
     .pz-specs{border:1px solid var(--line-strong); border-radius:var(--r-plocha); overflow:hidden; background:var(--ink-soft); box-shadow:var(--e1);}
     .pz-spec{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 17px; border-bottom:1px solid var(--line);}
@@ -198,7 +203,7 @@
 <script src="js/ceny.js?v=fec72b06"></script>
 <script src="js/vybaveni.js?v=54b36f73"></script>
 <script src="js/radce.js?v=0491f655"></script>
-<script src="js/pozemek.js?v=2dce9c28"></script>
+<script src="js/pozemek.js?v=98288c4e"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

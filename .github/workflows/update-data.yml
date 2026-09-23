@@ -37,14 +37,29 @@ jobs:
           APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
           APIFY_SREALITY_ACTOR: ${{ secrets.APIFY_SREALITY_ACTOR }}
 
-      - name: Přegenerovat regionální stránky (kraje, okresy, dražby, rozcestník + sitemap)
-        run: node scripts/generate-region-pages.mjs
+      # Nejen přegenerovat stránky, ale spravit všechno odvozené: stránky
+      # krajů a okresů, čísla v úvodu, dražby, rozcestník, sitemap, razítka
+      # ?v= u skriptů i sloučené SQL. Robot tím strom čtyřikrát denně srovná
+      # se zdrojem — když někdo zapomene po zásahu do js/ přerazítkovat,
+      # spraví se to samo do šesti hodin místo aby zůstala červená kontrola.
+      # Každý krok je přepočet ze zdroje, nic se neodhaduje.
+      - name: Spravit vše odvozené (stránky, čísla v úvodu, sitemap, razítka, SQL)
+        run: node scripts/oprav.mjs
 
       - name: Commit změn (jen pokud se něco změnilo)
         run: |
-          git add data/opportunities.json data/geocode-cache.json sitemap.xml pozemky-podle-okresu.html drazby-pozemku-nabidky.html cena-pozemku.html pozemky-okres-*.html pozemky-*-kraj.html
-          # Odstraněné (sirotčí) stránky, které generátor smazal, ať zmizí i z repozitáře:
-          git add -A -- 'pozemky-okres-*.html' 'pozemky-*-kraj.html'
+          # Zařadí se VŠECHNO, co po sobě oba kroky nechaly — ne ručně psaný
+          # seznam souborů. Ten seznam tu totiž byl a zastaral: generátor
+          # dopisuje čísla i do index.html (počet pozemků v úvodu a počty po
+          # krajích), jenže index.html v seznamu nebyl. Robot tedy čtyřikrát
+          # denně čísla přepočítal a tu změnu zahodil, takže úvodní stránka
+          # zůstala viset na posledním ručním commitu, zatímco data šla dál.
+          #
+          # „git add -A" je tu bezpečné: jediné kroky téhle úlohy jsou
+          # stažení dat a generátor, takže co je ve stromu změněné, udělaly
+          # ony. Klíče a závislosti hlídá .gitignore. Zároveň to zahrne
+          # i stránky, které generátor smazal (zaniklé okresy).
+          git add -A
           if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "parcelka-bot"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

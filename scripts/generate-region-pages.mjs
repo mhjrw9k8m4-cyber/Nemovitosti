@@ -112,7 +112,20 @@ const razitkoCerstvosti = zkontrolovano
    pak ukáže skript — a na jedné stránce by vedle sebe stála dvě. */
 const PKH = require_(path.join(ROOT, 'js', 'hlidani-logika.js'));
 
-const all = Array.isArray(data.opportunities) ? data.opportunities : [];
+/* DUPLICITY SE ODSTRAŇUJÍ HNED, JEDNOU PRO VŠECHNO.
+   Mapa v aplikaci je odstraňuje taky (js/main.js volá PKHlidani.bezDuplicit),
+   takže cokoli, co se spočítá ze syrových dat, slibuje víc, než je vidět.
+   Přesně to se dělo: rozcestník tvrdil „přes 1 971 pozemků na jedné mapě",
+   zatímco mapa jich ukazovala 1 958, a úvodní stránka uváděla ještě třetí
+   číslo — počítala se totiž jediná ze všech správně.
+   Tři různá čísla pro tutéž věc na třech stránkách téhož webu.
+   Když se odstraní hned tady, nemůže se to rozejít: všechny stránky
+   i všechny součty vycházejí z téže hromádky jako aplikace. */
+const vseSyrove = Array.isArray(data.opportunities) ? data.opportunities : [];
+const all = PKH.bezDuplicit(vseSyrove);
+if(vseSyrove.length !== all.length){
+  console.log(`Duplicit odstraněno: ${vseSyrove.length - all.length} (zůstalo ${all.length}) — stejně jako v aplikaci.`);
+}
 if(!all.length){ console.error('Žádná data — generování přeskočeno.'); process.exit(0); }
 
 // Úklid: smaž jen VLASTNÍ vygenerované stránky (ne rádce jako pozemky-od-obce.html
@@ -934,7 +947,9 @@ console.log(`Vygenerováno: ${okresPages.length} okresních + ${krajPages.length
   const idx = path.join(ROOT, 'index.html');
   let h = fs.readFileSync(idx, 'utf8');
   const pred = h;
-  const bezDup = PKH.bezDuplicit(all);
+  /* `all` je už bez duplicit (odstraňují se při načtení, stejně jako
+     v aplikaci) — druhé odstraňování by bylo jen zbytečné opakování. */
+  const bezDup = all;
   const celkem = bezDup.length;
   const okresu = new Set(bezDup.map((o) => o.okres).filter(Boolean)).size;
   const pocetKraj = {};
