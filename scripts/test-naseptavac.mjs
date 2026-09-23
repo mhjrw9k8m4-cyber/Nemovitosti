@@ -337,6 +337,80 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   await c3.close();
 }
 
+/* --- Prázdný výpis musí říct, CO ho vyprázdnilo ----------------------
+   „Zkuste filtry zmírnit" je rada, která neřekne který. Když jich má
+   člověk navrstvených pět (věta, rozbalovátko, pásmo ceny, pilulka),
+   hádá je pak jeden po druhém. Spočítat se to dá: každé omezení se
+   zvlášť vypne a řekne se to, po jehož vypnutí zbude nejvíc nabídek.
+
+   Druhá věc, která se tu hlídá, je horší: kontrola „je vůbec zapnutý
+   nějaký filtr" měla vlastní výčet, který neznal kraj, cenu za metr,
+   vybavení ANI NIC z toho, co se pochopí z věty. Čím líp web větě
+   rozuměl, tím spíš na „stavební Vysočina do 50 tis" odpověděl
+   „Tady zrovna nic není, zkuste to za pár dní" — přestože filtrů bylo
+   pět a stačilo povolit cenu. */
+{
+  const { ctx: c4, p: p4 } = await otevri({ viewport: { width: 1280, height: 900 } });
+  async function prazdno(q) {
+    await p4.fill('#map-search', q);
+    await p4.waitForTimeout(900);
+    return {
+      zprava: await p4.$eval('#opp-list .map-count', (e) => e.textContent.replace(/\s+/g, ' ').trim()).catch(() => ''),
+      tlacitka: await p4.$$eval('#opp-list .reset-btn', (n) => n.map((x) => x.textContent.trim())),
+    };
+  }
+  const a = await prazdno('stavební Vysočina do 50 tis');
+  pravda('u prázdného výpisu se netvrdí, že prostě nic nemáme',
+    !/Tady zrovna nic není/.test(a.zprava), `zpráva: „${a.zprava}"`);
+  pravda('a řekne se, které omezení to způsobilo',
+    /Nejvíc omezuje/.test(a.zprava) && /cena/.test(a.zprava), `zpráva: „${a.zprava}"`);
+  pravda('i s číslem, kolik by jich bez něj bylo',
+    /bez tohoto filtru by/.test(a.zprava) && /\d/.test(a.zprava), `zpráva: „${a.zprava}"`);
+  /* Čeština: „Nejvíc omezuje CENA" a „Zrušit CENU" jsou dva pády.
+     S jedním tvarem stálo na tlačítku „Zrušit cena". */
+  pravda('tlačítko má správný pád', a.tlacitka.indexOf('Zrušit cenu') >= 0, JSON.stringify(a.tlacitka));
+
+  const b = await prazdno('zahrada nad 50 ha');
+  pravda('u výměry se pozná výměra', /Nejvíc omezuje/.test(b.zprava) && /výměra/.test(b.zprava), `zpráva: „${b.zprava}"`);
+  pravda('a tlačítko taky', b.tlacitka.indexOf('Zrušit výměru') >= 0, JSON.stringify(b.tlacitka));
+
+  /* Zrušení „hledaného textu" se musí týkat JEN hledání místa, ne celé
+     věty. Když se vyčistilo celé políčko, spadly s ním i druh a cena —
+     slíbené číslo pak bylo vždycky celá databáze a „hledaný text"
+     vyhrál pokaždé, ať za to mohl, nebo ne. */
+  const c = await prazdno('les Praha do 10 tis');
+  pravda('u volného textu se hlásí text', /Nejvíc omezuje/.test(c.zprava) && /hledaný text/.test(c.zprava),
+    `zpráva: „${c.zprava}"`);
+  {
+    const slib = parseInt(((c.zprava.match(/bez tohoto filtru by (?:jich bylo|zbyla)\s*([\d\s\u00a0]+)/) || [])[1] || '0').replace(/\D/g, ''), 10);
+    await p4.fill('#map-search', '');
+    await p4.waitForTimeout(700);
+    const vse = await p4.$eval('#map-count', (e) => {
+      const m = e.textContent.match(/([\d\s\u00a0]+)\s*na mapě/);
+      return m ? parseInt(m[1].replace(/[\s\u00a0]/g, ''), 10) : 0;
+    }).catch(() => 0);
+    pravda('a slíbené číslo není celá databáze (ruší se místo, ne celá věta)',
+      slib > 0 && vse > 0 && slib < vse / 2, `slíbeno ${slib}, celkem ${vse}`);
+  }
+
+  /* A hlavně: to tlačítko musí opravdu fungovat. */
+  await prazdno('stavební Vysočina do 50 tis');
+  const cisloVeZprave = parseInt(((await p4.$eval('#opp-list .map-count', (e) => e.textContent)).match(/bez tohoto filtru by jich bylo\s*([\d\s\u00a0]+)/) || [])[1]?.replace(/\D/g, '') || '0', 10);
+  const btn = await p4.$('#pusti-vinika');
+  pravda('tlačítko „Zrušit …" je na stránce', !!btn);
+  if (btn) {
+    await btn.click();
+    await p4.waitForTimeout(900);
+    const po = await p4.$eval('#map-count', (e) => {
+      const m = e.textContent.match(/([\d\s\u00a0]+)\s*na mapě/);
+      return m ? parseInt(m[1].replace(/[\s\u00a0]/g, ''), 10) : -1;
+    }).catch(() => -1);
+    pravda('a po klepnutí je nabídek přesně tolik, kolik slibovalo',
+      po === cisloVeZprave && po > 0, `slíbeno ${cisloVeZprave}, vyšlo ${po}`);
+  }
+  await c4.close();
+}
+
 await ctx.close();
 await prohlizec.close();
 console.log('\nNašeptávač obcí, oprava překlepu a výběr ceny/výměry');

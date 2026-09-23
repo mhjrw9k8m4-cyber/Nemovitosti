@@ -2493,6 +2493,122 @@
     return okType && okSearch && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
       && okPerM2 && okKraj && okLevne && okOkoli && okProsle && okVybaveni && okCelek && okDotaz;
   }
+  /* KTERÉ OMEZENÍ VYPRÁZDNILO VÝPIS
+   *
+   * „Zkuste filtry zmírnit" je rada, která neřekne který. Když jich má
+   * člověk navrstvených pět (věta, dvě rozbalovátka, pásmo ceny a dvě
+   * pilulky), hádá je pak jeden po druhém.
+   * Spočítat se to přitom dá stejně jako počty u pilulek: každé omezení
+   * se na chvíli vypne, spočítá se, kolik by nabídek bylo, a vypíše se
+   * to, po jehož vypnutí jich zbude nejvíc. Když nepomůže ani jedno
+   * samo o sobě, neřekne se nic — vymýšlet viníka by bylo horší než
+   * mlčet.
+   *
+   * Jede se přes DATA jednou za omezení. Při dvou tisících nabídkách
+   * a patnácti omezeních je to třicet tisíc průchodů, a jen ve chvíli,
+   * kdy je výpis prázdný — tedy když člověk stejně čeká na odpověď. */
+  /* Ze zadaného textu nechá jen slova, která web POCHOPIL (a ukazuje
+     u nich odznaky). Zbytek je volný text, podle kterého se hledá obec.
+     Používá se při rušení „hledaného textu": zrušit se má jen to
+     hledání místa, ne celá věta. */
+  function bezVolnehoTextu() {
+    var pochopena = {};
+    ((dotazFiltr && dotazFiltr.casti) || []).forEach(function (c) {
+      (c.slova || []).forEach(function (w) { pochopena[w] = true; });
+    });
+    return searchEl.value.split(/\s+/).filter(function (w) {
+      return w && pochopena[window.PKDotaz ? window.PKDotaz.norm(w) : w.toLowerCase()];
+    }).join(' ');
+  }
+
+  /* VŠECHNA OMEZENÍ NA JEDNOM MÍSTĚ
+   *
+   * Jeden seznam slouží dvěma věcem naráz: podle něj se pozná, jestli je
+   * vůbec něco zapnuté, a podle něj se hledá, které omezení výpis
+   * vyprázdnilo. Kdyby to byly dva seznamy, rozejdou se — a přesně to se
+   * stalo: kontrola „je zapnutý nějaký filtr" neznala kraj, cenu za metr,
+   * vybavení ani NIC z toho, co se pochopí z věty. Čím líp pak web větě
+   * rozuměl, tím spíš na „stavební Vysočina do 50 tis" odpověděl
+   * „Tady zrovna nic není, zkuste to za pár dní" — přestože filtrů bylo
+   * navrstveno pět. */
+  function omezeni() {
+    var d = dotazFiltr;
+    var ven = [];
+    /* Dva tvary jména, protože čeština skloňuje: „Nejvíc omezuje CENA"
+       a „Zrušit CENU". S jedním tvarem stálo na tlačítku „Zrušit cena".
+       Víceslovné podmínky jsou v uvozovkách — v obou větách pak sedí
+       beze změny. */
+    function pol(nazev, ctvrty, zapnute, vypni, vrat) {
+      if (zapnute) ven.push({ nazev: nazev, ctvrty: ctvrty, vypni: vypni, vrat: vrat });
+    }
+    /* Volný text (hledání obce) se ruší SÁM ZA SEBE — ne celá věta.
+       Vyhodit i pochopené části by ukázalo číslo, které s tím omezením
+       nemá nic společného: po vyčištění políčka zbude vždycky všechno. */
+    pol('hledaný text', 'hledaný text', !!searchToks.length,
+      function () { var t = bezVolnehoTextu(); searchEl.value = t; nastavHledani(t); },
+      (function () { var t = searchEl.value; return function () { searchEl.value = t; nastavHledani(t); }; }()));
+    pol('druh pozemku', 'druh pozemku', activeDruh !== 'all' || !!d.druh,
+      function () { activeDruh = 'all'; d.druh = null; if (druhEl) druhEl.value = 'all'; },
+      (function () { var a = activeDruh, b = d.druh; return function () { activeDruh = a; d.druh = b; if (druhEl) druhEl.value = a; }; }()));
+    pol('druh nabídky', 'druh nabídky', activeType !== 'all' || !!d.typ,
+      function () { activeType = 'all'; d.typ = null; },
+      (function () { var a = activeType, b = d.typ; return function () { activeType = a; d.typ = b; }; }()));
+    pol('kraj', 'kraj', krajFiltr !== 'all' || !!d.kraj,
+      function () { krajFiltr = 'all'; d.kraj = null; if (krajFiltrEl) krajFiltrEl.value = 'all'; },
+      (function () { var a = krajFiltr, b = d.kraj; return function () { krajFiltr = a; d.kraj = b; if (krajFiltrEl) krajFiltrEl.value = a; }; }()));
+    pol('cena', 'cenu', !!(maxPrice || minPrice || d.cenaOd || d.cenaDo),
+      function () { maxPrice = 0; minPrice = 0; d.cenaOd = null; d.cenaDo = null; },
+      (function () { var a = maxPrice, b = minPrice, c = d.cenaOd, e = d.cenaDo;
+        return function () { maxPrice = a; minPrice = b; d.cenaOd = c; d.cenaDo = e; }; }()));
+    pol('výměra', 'výměru', !!(minArea || maxArea || d.plochaOd || d.plochaDo),
+      function () { minArea = 0; maxArea = 0; d.plochaOd = null; d.plochaDo = null; },
+      (function () { var a = minArea, b = maxArea, c = d.plochaOd, e = d.plochaDo;
+        return function () { minArea = a; maxArea = b; d.plochaOd = c; d.plochaDo = e; }; }()));
+    pol('cena za metr', 'cenu za metr', !!(maxPerM2 || d.zaMetrDo || d.zaMetrOd),
+      function () { maxPerM2 = 0; d.zaMetrDo = null; d.zaMetrOd = null; if (perm2El) perm2El.value = ''; },
+      (function () { var a = maxPerM2, b = d.zaMetrDo, c = d.zaMetrOd;
+        return function () { maxPerM2 = a; d.zaMetrDo = b; d.zaMetrOd = c; if (perm2El) perm2El.value = a ? String(a) : ''; }; }()));
+    pol('vybavení z inzerátu', 'vybavení z inzerátu', !!(zadaneVybaveni.length || d.site.length || d.nejakeSite),
+      function () { zadaneVybaveni = []; d.site = []; d.nejakeSite = false; },
+      (function () { var a = zadaneVybaveni, b = d.site, c = d.nejakeSite;
+        return function () { zadaneVybaveni = a; d.site = b; d.nejakeSite = c; }; }()));
+    pol('„jen celé pozemky"', '„jen celé pozemky"', jenCelek || d.jenCelek,
+      function () { jenCelek = false; d.jenCelek = false; },
+      (function () { var a = jenCelek, b = d.jenCelek; return function () { jenCelek = a; d.jenCelek = b; }; }()));
+    pol('„pod obvyklou cenou"', '„pod obvyklou cenou"', levneOnly || d.levne,
+      function () { levneOnly = false; d.levne = false; },
+      (function () { var a = levneOnly, b = d.levne; return function () { levneOnly = a; d.levne = b; }; }()));
+    pol('blížící se termín', 'blížící se termín', urgentOnly,
+      function () { urgentOnly = false; }, (function () { return function () { urgentOnly = true; }; }()));
+    pol('„jen uložené"', '„jen uložené"', favOnly,
+      function () { favOnly = false; }, (function () { return function () { favOnly = true; }; }()));
+    pol('okolí vašeho místa', 'okolí vašeho místa', okoliZap,
+      function () { okoliZap = false; }, (function () { return function () { okoliZap = true; }; }()));
+    return ven;
+  }
+
+  /* Je vůbec něco zapnuté? Odpověď rozhoduje o tom, jestli se u prázdného
+     výpisu řekne „zmírněte filtry", nebo „tady prostě nic není". */
+  function jeNecoZapnute() { return omezeni().length > 0; }
+
+  /* Které omezení výpis vyprázdnilo. Zkusí se každé zvlášť vypnout
+     a spočítá se, kolik by nabídek zbylo; vypíše se to, po jehož vypnutí
+     jich je nejvíc. Když nepomůže ani jedno samo o sobě, neřekne se nic —
+     vymýšlet viníka by bylo horší než mlčet. */
+  function nejvicOmezuje() {
+    var kandidati = [];
+    omezeni().forEach(function (o) {
+      o.vypni();
+      var n = 0;
+      try { for (var i = 0; i < DATA.length; i++) if (visible(DATA[i])) n++; }
+      finally { o.vrat(); }
+      if (n > 0) kandidati.push({ nazev: o.nazev, ctvrty: o.ctvrty, n: n, vypni: o.vypni });
+    });
+    if (!kandidati.length) return null;
+    kandidati.sort(function (a, b) { return b.n - a.n; });
+    return kandidati[0];
+  }
+
   /** Projde pozemek všemi filtry KROMĚ okolí — aby šlo poctivě spočítat,
       kolik by jich bylo ve větším okruhu (a ne kolik jich je celkem). */
   function visibleBezOkoli(d) {
@@ -2840,7 +2956,12 @@
     var pb = countEl.querySelector('#mc-prosle');
     if (pb) pb.addEventListener('click', function (e) { e.stopPropagation(); ukazProsle = !ukazProsle; renderList(); });
     if (matched === 0) {
-      var anyFilter = activeType !== 'all' || activeDruh !== 'all' || maxPrice || minPrice || searchTerm || favOnly || urgentOnly || minArea || maxArea;
+      /* Dřív to byl vlastní výčet, který neznal kraj, cenu za metr,
+         vybavení ani nic z toho, co se pochopí z věty — takže na
+         „stavební Vysočina do 50 tis" web odpověděl „Tady zrovna nic
+         není", přestože filtrů bylo pět. Teď se ptá téhož seznamu,
+         podle kterého se hledá viník. */
+      var anyFilter = jeNecoZapnute();
       var emptyMsg;
       if (okoliAktivni()) {
         /* Prázdný okruh je nejčastější důvod, proč hlídání „nefunguje":
@@ -2881,10 +3002,22 @@
         return;
       }
       var opravaNav = (anyFilter && searchTerm && HL.mysleliJste) ? HL.mysleliJste(DATA, searchTerm) : null;
+      var vinik = anyFilter ? nejvicOmezuje() : null;
       if (favOnly && !favCount()) {
         emptyMsg = 'Zatím nemáte uložené žádné pozemky. U každé nabídky klepněte na záložku a najdete je tady pohromadě.';
       } else if (anyFilter) {
         emptyMsg = 'Nic neodpovídá vybraným filtrům. Zkuste je zmírnit — třeba zvýšit cenu, zvětšit rozsah výměry nebo vybrat „Vše".';
+        /* „Zmírněte filtry" je rada, která neřekne KTERÝ. Když jich je
+           navrstvených pět, hádá se pak jeden po druhém. Spočítat se to
+           přitom dá: viník je to omezení, po jehož vypnutí zbude nejvíc
+           nabídek. */
+        if (vinik) {
+          /* „Bez tohoto filtru" schválně: rod se s názvem mění („bez NÍ"
+             u ceny, „bez NĚJ" u kraje) a jedna věta pro všechny by byla
+             u poloviny z nich špatně. */
+          emptyMsg = 'Nic nesedí všem podmínkám naráz. Nejvíc omezuje <b>' + esc(vinik.nazev) + '</b>'
+            + ' — bez tohoto filtru by ' + (vinik.n === 1 ? 'zbyla <b>1</b> nabídka' : 'jich bylo <b>' + fmt(vinik.n) + '</b>') + '.';
+        }
         /* Nejčastější příčina prázdného výsledku je jedno přehozené
            písmeno v názvu obce. Říct „nic nemáme" je v tu chvíli
            zavádějící — nabídneme opravu. Hledá se jednou; stálo to
@@ -2896,7 +3029,10 @@
       }
       listEl.innerHTML = '<li class="map-count" style="padding:20px 6px; text-transform:none; font-weight:400; line-height:1.6;">' + emptyMsg +
         (opravaNav ? '<br><button type="button" id="hledat-opravu" class="reset-btn">Hledat ' + esc(opravaNav) + '</button>' : '') +
+        (vinik && !opravaNav ? '<br><button type="button" id="pusti-vinika" class="reset-btn">Zrušit ' + esc(vinik.ctvrty) + '</button>' : '') +
         (anyFilter ? '<br><button type="button" id="reset-filtry" class="reset-btn">Zrušit filtry</button>' : '') + '</li>';
+      var pv = listEl.querySelector('#pusti-vinika');
+      if (pv) pv.addEventListener('click', function () { vinik.vypni(); renderList(); });
       var ob = listEl.querySelector('#hledat-opravu');
       if (ob) ob.addEventListener('click', function () {
         searchEl.value = opravaNav; nastavHledani(opravaNav); renderList();
