@@ -9,7 +9,13 @@
 --   3) unsubscribe_watch— odhlášení jedním klikem (zákon vyžaduje).
 --   4) alert_seen       — evidence už viděných příležitostí, aby robot
 --      posílal jen NOVÉ a neopakoval se.
--- Odesílání e-mailů dělá GitHub Action (scripts/send-alerts.mjs) přes Resend.
+-- POZOR: e-mailový rozesílač (scripts/send-alerts.mjs) v repozitáři NENÍ
+-- a žádná GitHub Action ho nespouští. Hlídání dnes funguje V APLIKACI —
+-- přihlášený člověk si ho uloží přes save_search a nové pozemky vidí
+-- v centru upozornění. Tabulky níž (watch_subscriptions, alert_seen)
+-- jsou pozůstatek dřívějšího e-mailového hlídání; nic do nich nezapisuje.
+-- Kdo by e-maily chtěl vzkřísit, musí ten skript napsat — tenhle soubor
+-- k němu jen připraví databázi.
 -- =====================================================================
 
 -- ---------- Jistota: tabulka hlídání a všechny potřebné sloupce ----------

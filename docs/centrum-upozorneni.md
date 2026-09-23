@@ -79,7 +79,7 @@ přenese ho ze starého souboru podle otisku, a co tam nebylo, dostane
 dnešek. Díky tomu jde říct „přibylo včera" a řadit od nejnovějšího.
 
 Otisk musí být **shodný** napříč třemi místy — `js/hlidani-logika.js`,
-`scripts/send-alerts.mjs` a `scripts/fetch-opportunities.mjs` — jinak by
+`scripts/fetch-opportunities.mjs` (e-mailový rozesílač v repozitáři není) — jinak by
 se pozemky „obnovovaly" při každém běhu robota. Hlídá to test.
 
 > `first_seen` slouží k **zobrazení a řazení**, ne k určení, co je nové.

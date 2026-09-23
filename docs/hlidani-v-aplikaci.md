@@ -13,7 +13,7 @@ zpráv, a na mobilu i jako tečka na tlačítku menu.
 
 Pozemek je nový, když **sedí na uložené hledání** a jeho **otisk není mezi
 viděnými** (`seen_keys`). Otisk je `typ|okres|obec|parcela|cena|výměra`,
-bez diakritiky — a musí být **shodný s `keyOf()` v `scripts/send-alerts.mjs`**,
+bez diakritiky — a musí být **shodný všude, kde se počítá, co je nové**,
 jinak by si web a robot protiřečily: robot by poslal e-mailem něco, co web
 už ukázal jako viděné.
 
@@ -25,7 +25,7 @@ jinak by číslo rostlo s počtem hledání, ne s počtem pozemků.
 | porovnávání a počítání | `js/hlidani-logika.js` |
 | odznaky v menu a tečka na mobilu | `js/upozorneni.js` |
 | stránka s hledáními | `hlidani.html` |
-| e-mailový robot | `scripts/send-alerts.mjs` |
+| e-mailový robot | **není** — rozesílač v repozitáři chybí, hlídání běží jen v aplikaci |
 
 `hlidani.html` i odznak berou logiku ze **stejného modulu**. Dřív byla
 zapsaná uvnitř stránky, takže ji nešlo ani otestovat, ani použít jinde.

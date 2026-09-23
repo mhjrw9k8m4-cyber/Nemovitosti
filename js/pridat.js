@@ -51,8 +51,11 @@
   /* ---------- Odeslání (do databáze Supabase) ----------
      Poptávky (přidání pozemku, nahlášení inzerátu) se ukládají do Supabase
      (tabulka messages). Majitel je vidí v Supabase → Table Editor.
-     Fotky se zatím neukládají (jen se spočítají) — úložiště fotek přidáme
-     později. Nastavuje se v js/config.js. */
+     Fotky se nahrávají do úložiště `listing-photos` (viz uploadPhotos
+     níž) a k inzerátu se ukládají jejich adresy. Dřív tu stálo, že se
+     fotky neukládají — to platilo, než úložiště přibylo, a od té doby to
+     byla lež, podle které by se dalo hledat neexistující chyba.
+     Nastavuje se v js/config.js. */
   var SB_URL = (typeof window !== 'undefined' && window.PK_SUPABASE_URL) || '';
   var SB_KEY = (typeof window !== 'undefined' && window.PK_SUPABASE_KEY) || '';
   var SB_READY = !!(SB_URL && SB_KEY);

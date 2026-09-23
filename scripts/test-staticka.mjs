@@ -82,6 +82,56 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
   }
 }
 
+/* ---------- Odkaz na soubor, který neexistuje ----------
+   Komentáře a dokumentace v tomhle repozitáři nesou hodně informací —
+   proto je tak podrobná. Tím spíš ale škodí, když lže.
+   Skutečný případ: supabase/watch-alerts.sql, 00-vse.sql a tři soubory
+   v docs/ tvrdily, že e-maily rozesílá `scripts/send-alerts.mjs` přes
+   GitHub Action. Ten skript v repozitáři nikdy nebyl a žádná akce ho
+   nespouštěla. Podle takového popisu se dá půl hodiny hledat chyba
+   v něčem, co neexistuje — a hlavně se podle něj nedá poznat, že
+   e-mailové hlídání prostě neběží.
+   Tohle je tvrdá chyba, ne podezření: buď ten soubor je, nebo není. */
+{
+  const zdroje = [];
+  const projdi = (dir, hloubka) => {
+    for (const j of fs.readdirSync(dir)) {
+      if (j === 'node_modules' || j === '.git' || j.startsWith('.')) continue;
+      const cesta = path.join(dir, j);
+      const st = fs.statSync(cesta);
+      if (st.isDirectory()) { if (hloubka > 0) projdi(cesta, hloubka - 1); continue; }
+      if (/\.(mjs|js|sql|md|ya?ml|html)$/.test(j)) zdroje.push(cesta);
+    }
+  };
+  projdi(ROOT, 2);
+  const chybejici = new Map();
+  /* Zmínit chybějící soubor SE SMÍ — pokud se na témž řádku říká, že
+     chybí. Právě to je totiž ta užitečná informace („e-maily neposílá
+     nikdo, protože rozesílač tu není"). Zakázané je tvrdit opak. */
+  const priznanaAbsence = /nen[ií]|chyb[ií]|neexistuj|nebyl|nemá|není v repozitáři/i;
+  for (const f of zdroje) {
+    const rel_f = path.relative(ROOT, f);
+    if (rel_f === 'scripts/test-staticka.mjs') continue;   // vlastní vzorek
+    const text = fs.readFileSync(f, 'utf8');
+    for (const radek of text.split('\n')) {
+      for (const m of radek.matchAll(/\b(scripts|js|api|supabase)\/([\w-]+\.(?:mjs|js|sql))\b/g)) {
+        const rel = m[1] + '/' + m[2];
+        if (fs.existsSync(path.join(ROOT, rel))) continue;
+        if (priznanaAbsence.test(radek)) continue;
+        if (!chybejici.has(rel)) chybejici.set(rel, new Set());
+        chybejici.get(rel).add(rel_f);
+      }
+    }
+  }
+  if (chybejici.size) {
+    console.error('\nOdkaz na soubor, který v repozitáři není:');
+    for (const [rel, kde] of chybejici) console.error(`  ✕ ${rel}  ← zmiňuje: ${[...kde].join(', ')}`);
+    console.error('::error::Dokumentace nebo komentář odkazuje na neexistující soubor.');
+    process.exit(1);
+  }
+  console.log(`Odkazy na soubory: ${zdroje.length} souborů prohledáno, všechny zmíněné skripty existují.`);
+}
+
 console.log(`\nStatická kontrola: ${souboru} souborů, ${podezreni ? podezreni + ' podezřelých volání' : 'žádné osiřelé volání'}.`);
 // Nepadáme — jsou to podezření, ne jistoty. Padá se jen tehdy, když by
 // bylo podezření nápadně moc (to už znamená, že se rozbil rozbor sám).

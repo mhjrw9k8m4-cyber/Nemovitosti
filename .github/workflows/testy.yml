@@ -232,6 +232,9 @@ jobs:
       - name: Hlídání v aplikaci (celá cesta)
         run: node scripts/test-hlidani-prohlizec.mjs
 
+      - name: Přidání vlastního pozemku (celá cesta)
+        run: node scripts/test-pridat.mjs
+
       - name: Sliby webu platí doopravdy
         run: node scripts/test-sliby.mjs
 

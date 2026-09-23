@@ -21,6 +21,9 @@ const videno = new Map();            // id hledání → klíče pozemků označ
 // Uložená hledání podle uživatele. Majitel má jedno předem (kvůli odznaku
 // „Hlídání" v menu), další si testy ukládají samy přes save_search.
 const hledani = new Map();
+// Inzeráty vložené přes „Přidat pozemek" a kolik jich kdo smí mít.
+const inzeraty = [];
+const kvota = new Map();
 hledani.set(UID_MAJITEL, [{ id: 's1', label: 'Tábor', okres: 'Tábor', druh: null, ptype: null,
   max_price: 0, min_area: 0, features: [], created_at: new Date().toISOString() }]);
 let poradi = 0;
@@ -99,6 +102,54 @@ const server = http.createServer((req, res) => {
             unread: vl.filter((m) => m.sender_id !== uid && !m.read_at).length };
         });
         return send(200, JSON.stringify(out));
+      }
+
+      /* ---------- Vkládání inzerátu ----------
+         Stejné meze jako doopravdy v databázi (create_listing
+         v supabase/00-vse.sql). Kdyby tu byly volnější, test by
+         prošel i pro zadání, které by živý web odmítl — a to je horší
+         než test žádný. */
+      if (fn === 'create_listing') {
+        const t = (x) => String(x == null ? '' : x).trim();
+        const misto = t(args.p_place);
+        if (!misto) return send(400, JSON.stringify({ message: 'obec je povinná' }));
+        if (misto.length < 2 || misto.length > 60) return send(400, JSON.stringify({ message: 'název obce musí mít 2 až 60 znaků' }));
+        if (args.p_lat == null || args.p_lng == null) return send(400, JSON.stringify({ message: 'poloha je povinná' }));
+        const blob = [misto, t(args.p_description), t(args.p_parcel)].join(' ').toLowerCase();
+        if (/(kokot|kurv|píča|debil|zmrd|hovn|hajzl|prdel|porno)/.test(blob)) {
+          return send(400, JSON.stringify({ message: 'obsah obsahuje nevhodná slova' }));
+        }
+        if (/(viagra|casino|kasino|bitcoin|klikni zde)/.test(blob)) {
+          return send(400, JSON.stringify({ message: 'obsah vypadá jako spam' }));
+        }
+        const plocha = Number(args.p_area), cena = Number(args.p_price);
+        if (!(plocha >= 10 && plocha <= 5000000)) return send(400, JSON.stringify({ message: 'výměra musí být mezi 10 m² a 500 ha' }));
+        if (!(cena >= 1000 && cena <= 500000000)) return send(400, JSON.stringify({ message: 'cena musí být mezi 1 000 Kč a 500 mil. Kč' }));
+        const zaMetr = cena / plocha;
+        if (zaMetr < 1 || zaMetr > 100000) return send(400, JSON.stringify({ message: 'cena za m² je mimo reálné rozpětí — zkontrolujte cenu a výměru' }));
+        if (t(args.p_description).length > 2000) return send(400, JSON.stringify({ message: 'popis je delší než 2000 znaků' }));
+        if (/[<>]/.test(t(args.p_description))) return send(400, JSON.stringify({ message: 'popis nesmí obsahovat značky < a >' }));
+        const kontakt = t(args.p_contact);
+        if (!(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kontakt) || /^[+0-9 ()-]{9,}$/.test(kontakt))) {
+          return send(400, JSON.stringify({ message: 'kontakt musí být platný telefon nebo e-mail' }));
+        }
+        const moje = inzeraty.filter((x) => x.user_id === uid);
+        if (moje.length >= (kvota.get(uid) || 10)) return send(400, JSON.stringify({ message: 'dosáhli jste limitu inzerátů' }));
+        const id = 'l' + (++poradi);
+        inzeraty.push({ id, user_id: uid, place: misto, okres: t(args.p_okres), druh: t(args.p_druh),
+          parcel: t(args.p_parcel), area: plocha, price: cena, lat: args.p_lat, lng: args.p_lng,
+          description: t(args.p_description), contact: kontakt, photos: args.p_photos || [],
+          features: args.p_features || [], access: t(args.p_access), created_at: new Date().toISOString() });
+        return send(200, JSON.stringify([{ id }]));
+      }
+
+      if (fn === 'my_listing_quota') {
+        return send(200, JSON.stringify([{ used: inzeraty.filter((x) => x.user_id === uid).length,
+          max: kvota.get(uid) || 10 }]));
+      }
+
+      if (fn === 'my_listings') {
+        return send(200, JSON.stringify(inzeraty.filter((x) => x.user_id === uid)));
       }
 
       // Uložená hledání. Výchozí je jedno na okres Tábor (kvůli odznaku

@@ -89,7 +89,7 @@ Dvě možnosti:
 | Změna | Proč |
 |---|---|
 | `supabase/00-vse.sql` + `scripts/build-sql.mjs` | jeden spustitelný soubor místo dohadování, které z dvanácti skriptů už v databázi běží |
-| `scripts/send-alerts.mjs` | neodeslaný e-mail teď úlohu shodí a do logu napíše přesný návod místo holého 403 |
+| `scripts/send-alerts.mjs` | **soubor v repozitáři není** — tahle řádka popisuje stav, který nenastal; e-maily se dnes neposílají |
 | `js/pridat.js` | když databáze nezná aktuální funkci, uživatel se to dozví — dřív viděl jen „nepovedlo se" |
 | `diagnostika.html` | ověří podpisy funkcí, které web volá, a nastavení přihlašování |
 
