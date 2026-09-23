@@ -10,12 +10,18 @@
 --   Providers → Email → Confirm email = OFF). Pak se lidé přihlásí hned.
 -- =====================================================================
 
-alter table listings add column if not exists user_id uuid;
+alter table listings add column if not exists user_id uuid;   -- pro starší databáze; v schema.sql už je
 alter table listings add column if not exists token uuid;   -- ponecháno kvůli starým datům
 alter table listings add column if not exists views integer not null default 0;
 alter table listings enable row level security;
 
 -- Vytvoření inzerátu — POUZE pro přihlášeného (auth.uid()); přiřadí se mu.
+-- DROP je nutný ze stejného důvodu jako u public_listings níž: verze
+-- z listings-autopublish.sql má TÝŽ seznam argumentů, ale vrací navíc
+-- token, a „create or replace" se změnou návratového typu PostgreSQL
+-- odmítne. Drop na začátku 00-vse.sql nestačí — ten proběhne dřív, než
+-- autopublish funkci vytvoří. Ověřeno na PostgreSQL 16.
+drop function if exists create_listing(text,text,text,text,integer,integer,double precision,double precision,text,text);
 create or replace function create_listing(
   p_place text, p_okres text, p_druh text, p_parcel text,
   p_area integer, p_price integer, p_lat double precision, p_lng double precision,
@@ -48,7 +54,13 @@ begin
   return query select new_id;
 end; $$;
 
--- Veřejný seznam pro mapu (beze změny — bez osobních klíčů)
+-- Veřejný seznam pro mapu (beze změny — bez osobních klíčů).
+-- DROP je nutný: dřívější verze (listings-autopublish.sql) vracela jiné
+-- sloupce a PostgreSQL „create or replace" se změnou návratového typu
+-- odmítne — „cannot change return type of existing function". Bez tohohle
+-- řádku končilo spuštění 00-vse.sql na čisté databázi chybou uprostřed
+-- skriptu; ověřeno na PostgreSQL 16.
+drop function if exists public_listings();
 create or replace function public_listings()
 returns table(id uuid,place text,okres text,druh text,parcel text,area integer,price integer,
               lat double precision,lng double precision,description text,contact text,views integer,created_at timestamptz)

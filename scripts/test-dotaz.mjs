@@ -426,21 +426,12 @@ function pravda(popis, vyslo, proc) {
      než se čte. */
   pravda('záloha filtru zná kraj taky', /dotazFiltr = \{ druh: null, typ: null, kraj: null,/.test(main));
 
-  /* Políčko rozumí celé větě, ale dlouho to na něm nebylo vidět:
-     placeholder říkal „Hledat obec" a o druhu, kraji, ceně ani sítích
-     nepadlo slovo. Nejlepší funkce je k ničemu, když se o ní neví. */
-  pravda('nad políčkem stojí, že snese celou větu', /Napište klidně celou větu/.test(idx));
-  pravda('a je u toho příklad, který jde klepnutím vyplnit',
-    /class="ms-priklad" data-priklad="([^"]+)"/.test(idx) && /ms-priklad/.test(main));
-  {
-    /* A ten příklad musí OPRAVDU něco znamenat — příklad, kterému web
-       sám nerozumí, je horší než žádný. */
-    const m = idx.match(/data-priklad="([^"]+)"/);
-    const r = m ? P.rozeber(m[1].replace(/&quot;/g, '"')) : null;
-    pravda('nabízený příklad web sám přečte',
-      !!r && (r.druh || r.kraj || r.typ || r.site.length || r.cenaDo != null),
-      'příklad „' + (m ? m[1] : '—') + '" se rozebral na ' + JSON.stringify(r));
-  }
+  /* Že políčko snese celou větu, se dřív hlásilo řádkem s příkladem pod
+     ním. Na přání pryč — bylo to v cestě. Zůstává to poznat z popisku
+     v políčku a z odznaků, které se objeví, jakmile člověk začne psát. */
+  pravda('popisek políčka nemluví jen o obci',
+    /placeholder="Obec, kraj, druh, cena/.test(idx),
+    'kdyby tam zase stálo jen „Hledat obec", nikdo by netušil, že jde napsat víc');
 }
 
 console.log('\nJedno políčko, které rozumí celé větě');

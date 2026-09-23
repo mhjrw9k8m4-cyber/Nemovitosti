@@ -71,6 +71,9 @@ jobs:
       - name: Kontroly zadaných údajů
         run: node scripts/test-kontrola.mjs
 
+      - name: Placené zvýraznění (za peníze se musí něco stát)
+        run: node scripts/test-platba.mjs
+
       - name: Čtení EXIFu a původ fotek
         run: node scripts/test-exif.mjs
 
@@ -93,6 +96,14 @@ jobs:
         run: |
           npm install --no-audit --no-fund --omit=dev jpeg-js
           node scripts/test-kontrola-e2e.mjs
+
+      # Nestačí, že se soubory sečtou — musí z nich jít databázi opravdu
+      # založit. Když se to poprvé zkusilo, vysypalo to šest chyb a na
+      # novém projektu vůbec nevznikly funkce pro zprávy.
+      - name: Databáze jde založit na čistém PostgreSQL
+        run: |
+          sudo apt-get install -y --no-install-recommends postgresql >/dev/null 2>&1 || true
+          node scripts/test-sql-cista.mjs
 
       - name: Souhrnné SQL odpovídá dílčím souborům
         run: |

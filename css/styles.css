@@ -3294,22 +3294,6 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 
 /* Nápověda pod vyhledávacím políčkem. Drobná — je to pobídka, ne
    pokyn — ale příklad musí být poznat, že se do něj dá klepnout. */
-/* Příklad je TLAČÍTKO, ne podtržené slovo ve větě. Inline text měl na
-   mobilu 22 px na výšku — pod hranicí dotykového terče (test-dotyk).
-   Jako samostatný štítek se do něj trefí palec a zároveň je na první
-   pohled poznat, že se do něj dá klepnout. */
-.ms-napoveda{margin:7px 0 0; display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px;
-  font-size:12px; color:var(--text-ondark-mute); line-height:1.5;}
-.ms-priklad{display:inline-flex; align-items:center; min-height:38px; font:inherit;
-  /* Okraj je měděný, ne jen šedý: proti světlé výplni má šedá 2,07 : 1
-     a na štítku, který se tváří jako tlačítko, to je pod hranicí
-     WCAG 1.4.11 (test-okraje). Měď dává 9 : 1 a při tloušťce 1 px
-     nepůsobí křiklavě. */
-  color:var(--copper); background:var(--surface-2); border:1px solid var(--copper);
-  padding:0 12px; border-radius:var(--r-pill); cursor:pointer; white-space:nowrap;
-  transition:background .15s ease;}
-.ms-priklad:hover{background:var(--panel);}
-
 /* „Podíl" na kartě. Není to varování ani výhoda, je to FAKT o tom, co
    se prodává — proto neutrální šedomodrá, ne jantar jako u „ceny
    k ověření". Musí být čitelný, ale nesmí přetahovat pozornost odznakům,

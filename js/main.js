@@ -3413,20 +3413,6 @@
     });
     return ven;
   }
-  /* Příklad pod políčkem není jen text — klepnutím se vyplní. Ukázat
-     člověku, co se dá napsat, a nechat ho to opsat ručně, je půlka
-     služby. */
-  (function () {
-    var nap = document.querySelector('.ms-priklad');
-    if (!nap || !searchEl) return;
-    nap.addEventListener('click', function () {
-      searchEl.value = nap.getAttribute('data-priklad') || '';
-      nastavHledani(searchEl.value);
-      renderList();
-      searchEl.focus();
-    });
-  }());
-
   function ukazNavrhy() {
     if (!navrhyEl || !HL.navrhy) return;
     var slovnik = navrhySlovnik(searchEl.value);
@@ -3472,10 +3458,6 @@
   function prekresliChipy() {
     if (!chipyEl) return;
     var casti = (dotazFiltr && dotazFiltr.casti) || [];
-    /* Nápověda má jediný úkol: ukázat, co se dá napsat. Jakmile to člověk
-       napsal a web mu to potvrdil odznaky, překáží — tak zmizí. */
-    var napoveda = document.querySelector('.ms-napoveda');
-    if (napoveda) napoveda.hidden = casti.length > 0;
     if (!casti.length) { chipyEl.hidden = true; chipyEl.innerHTML = ''; return; }
     var html = '';
     for (var i = 0; i < casti.length; i++) {

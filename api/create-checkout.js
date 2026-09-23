@@ -18,6 +18,29 @@ module.exports = async (req, res) => {
 
   // .trim() zahodí případný přebytečný konec řádku / mezeru z proměnných
   // (na mobilu se do hodnoty snadno vloudí „enter") — ať to nerozbije URL ani klíč.
+  /* ZAVŘENO, DOKUD SE ZA TY PENÍZE NĚCO NESTANE.
+   *
+   * Tahle funkce umí založit skutečnou platbu na 299 Kč. Doručit ji má
+   * webhook (api/stripe-webhook.js) — jenže ten zaplacení zatím jen
+   * zapíše do logu a inzerát nezvýrazní. Kdo by sem poslal POST (adresa
+   * je veřejná, i když na ni web nikde neodkazuje), zaplatil by za
+   * službu, kterou nikdo nedodá. To je ze všech způsobů, jak se web může
+   * pokazit, ten nejhorší.
+   *
+   * Ve formuláři je placené zvýraznění schválně schované s poznámkou, že
+   * „rozdělaná placená funkce snižuje důvěru k webu víc, než kolik
+   * přinese" (pridat.html). Platební koncový bod se tomu rozhodnutí musí
+   * držet taky — zavřený je zavřený.
+   *
+   * Až bude doručení hotové: dopsat zapnutí zvýraznění do webhooku
+   * a nastavit ZVYRAZNENI_ZAPNUTO=1. Kontrola v scripts/test-platba.mjs
+   * hlídá, že se to nedá zapnout dřív. */
+  const doruceniHotovo = (process.env.ZVYRAZNENI_ZAPNUTO || '').trim() === '1';
+  if (!doruceniHotovo) {
+    res.status(503).json({ error: 'Placené zvýraznění zatím nespouštíme. Inzerát přidáte zdarma.' });
+    return;
+  }
+
   const key = (process.env.STRIPE_SECRET_KEY || '').trim();
   if (!key) { res.status(500).json({ error: 'Chybí STRIPE_SECRET_KEY' }); return; }
 

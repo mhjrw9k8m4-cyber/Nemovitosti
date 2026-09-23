@@ -55,6 +55,14 @@ create table if not exists listings (
   contact_email   text,
   contact_phone   text,
   photos          jsonb default '[]'::jsonb,  -- pole URL fotek
+  /* Vlastník inzerátu. Sloupec sem patří od začátku, i když se pracuje
+     s účty až v listings-auth.sql: politiky chatu (messaging.sql) na něj
+     sahají DŘÍV. Dokud ho tabulka neměla, končilo spuštění 00-vse.sql na
+     čisté databázi třemi chybami „column l.user_id does not exist" —
+     a funkce my_threads() ani unread_count() se vůbec nevytvořily.
+     Zprávy tedy na novém projektu nefungovaly a nebylo z čeho poznat
+     proč: chyba proběhla uprostřed dlouhého skriptu. */
+  user_id         uuid,
   -- zvýraznění (placené)
   featured        boolean not null default false,
   featured_until  timestamptz,            -- do kdy zvýraznění platí
@@ -710,12 +718,18 @@ grant execute on function bump_view(uuid) to anon;
 --   Providers → Email → Confirm email = OFF). Pak se lidé přihlásí hned.
 -- =====================================================================
 
-alter table listings add column if not exists user_id uuid;
+alter table listings add column if not exists user_id uuid;   -- pro starší databáze; v schema.sql už je
 alter table listings add column if not exists token uuid;   -- ponecháno kvůli starým datům
 alter table listings add column if not exists views integer not null default 0;
 alter table listings enable row level security;
 
 -- Vytvoření inzerátu — POUZE pro přihlášeného (auth.uid()); přiřadí se mu.
+-- DROP je nutný ze stejného důvodu jako u public_listings níž: verze
+-- z listings-autopublish.sql má TÝŽ seznam argumentů, ale vrací navíc
+-- token, a „create or replace" se změnou návratového typu PostgreSQL
+-- odmítne. Drop na začátku 00-vse.sql nestačí — ten proběhne dřív, než
+-- autopublish funkci vytvoří. Ověřeno na PostgreSQL 16.
+drop function if exists create_listing(text,text,text,text,integer,integer,double precision,double precision,text,text);
 create or replace function create_listing(
   p_place text, p_okres text, p_druh text, p_parcel text,
   p_area integer, p_price integer, p_lat double precision, p_lng double precision,
@@ -748,7 +762,13 @@ begin
   return query select new_id;
 end; $$;
 
--- Veřejný seznam pro mapu (beze změny — bez osobních klíčů)
+-- Veřejný seznam pro mapu (beze změny — bez osobních klíčů).
+-- DROP je nutný: dřívější verze (listings-autopublish.sql) vracela jiné
+-- sloupce a PostgreSQL „create or replace" se změnou návratového typu
+-- odmítne — „cannot change return type of existing function". Bez tohohle
+-- řádku končilo spuštění 00-vse.sql na čisté databázi chybou uprostřed
+-- skriptu; ověřeno na PostgreSQL 16.
+drop function if exists public_listings();
 create or replace function public_listings()
 returns table(id uuid,place text,okres text,druh text,parcel text,area integer,price integer,
               lat double precision,lng double precision,description text,contact text,views integer,created_at timestamptz)
@@ -1386,3 +1406,56 @@ drop policy if exists "verejne cteni kontrol" on listing_checks;
 
 comment on table listing_checks is
   'Výsledky pravidelné kontroly odkazů a fotek u zveřejněných inzerátů (scripts/kontrola-inzeratu.mjs).';
+
+
+-- ---------------------------------------------------------------------
+-- listings-kontrola-vlastnikovi.sql — výsledek noční kontroly vidí majitel inzerátu
+-- ---------------------------------------------------------------------
+
+-- =====================================================================
+-- Parcelka — VÝSLEDEK NOČNÍ KONTROLY SE UKÁŽE MAJITELI INZERÁTU
+-- Spustit jednou: Supabase → SQL Editor → vložit → Run.
+-- (Je součástí supabase/00-vse.sql, takže kdo pustil ten, má i tohle.)
+--
+-- Proč to vzniklo: každou noc projde scripts/kontrola-inzeratu.mjs
+-- zveřejněné inzeráty, zkusí u každého odkaz a fotky (třikrát za sebou,
+-- aby jeden výpadek sítě nic neodsoudil) a výsledek zapíše do tabulky
+-- listing_checks. Ta kontrola schválně nic nemaže ani neskrývá —
+-- „rozhodnutí zůstává na člověku".
+--
+-- Jenže ten člověk se to neměl jak dozvědět. Výsledky nečetla ŽÁDNÁ
+-- stránka: ani web, ani „moje inzeráty", nic. Kontrola tedy každou noc
+-- běžela, spotřebovala čas a zapsala řádky, na které se nikdo nikdy
+-- nepodíval. To je fakticky vypnutá funkce, jen dráž.
+--
+-- Tenhle soubor to spojuje: my_listings() vrací navíc, jestli u inzerátu
+-- něco vázne a co přesně. Dostane se to tím k majiteli — k jedinému
+-- člověku, který s tím může něco udělat (vyměnit fotku, opravit odkaz).
+-- Veřejný seznam public_listings() se NEMĚNÍ: do výsledků kontroly
+-- cizího inzerátu nikomu nic není.
+-- =====================================================================
+
+-- PostgreSQL nedovolí „create or replace", když se mění NÁVRATOVÝ TYP
+-- („cannot change return type of existing function") — a tady přibývají
+-- tři sloupce. Bez tohohle drop by celý skript v SQL Editoru spadl
+-- a nikdo by se nedozvěděl, že se změna nenasadila. Stejně to dělají
+-- i listings-photos.sql a listings-features.sql.
+drop function if exists my_listings();
+
+create or replace function my_listings()
+returns table(id uuid, place text, okres text, area integer, price integer,
+              photos jsonb, features text[], access text, views integer, status text,
+              created_at timestamptz,
+              -- null = inzerát ještě nikdy neprošel kontrolou (třeba je nový)
+              kontrola_ok boolean, kontrola_kdy timestamptz, kontrola_nalezy jsonb)
+language sql security definer set search_path = public as $$
+  select l.id, l.place, l.okres, l.area, l.price,
+         coalesce(l.photos, '[]'::jsonb), coalesce(l.features, '{}'), l.access,
+         l.views, l.status, l.created_at,
+         k.ok, k.checked_at, coalesce(k.nalezy, '[]'::jsonb)
+    from listings l
+    left join listing_checks k on k.listing_id = l.id
+   where l.user_id = auth.uid()
+   order by l.created_at desc;
+$$;
+grant execute on function my_listings() to authenticated;

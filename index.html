@@ -105,7 +105,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=098a8ac1">
+  <link rel="stylesheet" href="css/styles.css?v=b9f20809">
 </head>
 <body>
 
@@ -186,10 +186,6 @@
       <div class="map-app reveal mv-seznam" id="view-mapa">
         <div class="map-controls-panel">
           <div class="map-search"><input type="text" id="map-search" placeholder="Obec, kraj, druh, cena…" autocomplete="off" aria-label="Hledat — dá se napsat celá věta, třeba orná Vysočina do 500 tis" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="map-search-navrhy"><ul class="ms-navrhy" id="map-search-navrhy" role="listbox" aria-label="Našeptané obce" hidden></ul></div>
-          <!-- Políčko rozumí celé větě, jenže to na něm nebylo vidět: placeholder
-               říkal „Hledat obec" a o druhu, kraji, ceně ani sítích nepadlo slovo.
-               Příklad je tu proto, aby to člověk nemusel uhodnout. -->
-          <p class="ms-napoveda"><span>Napište klidně celou větu:</span> <button type="button" class="ms-priklad" data-priklad="orná Vysočina do 500 tis">orná Vysočina do 500 tis</button></p>
           <!-- Co web z napsané věty pochopil jako filtr; každý odznak jde zrušit. -->
           <div class="ms-chipy" id="ms-chipy" hidden aria-label="Rozpoznáno z hledání"></div>
           <!-- Hlídání okolí vlastního pozemku. Objeví se, až si člověk místo
@@ -548,7 +544,7 @@
 <script src="js/vybaveni.js?v=54b36f73" defer></script>
 <script src="js/dotaz.js?v=ee6fb993" defer></script>
 <script src="js/hledani.js?v=6a407f98" defer></script>
-<script src="js/main.js?v=e08297c4" defer></script>
+<script src="js/main.js?v=757ea591" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

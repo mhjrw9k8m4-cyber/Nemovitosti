@@ -39,9 +39,16 @@ module.exports = async (req, res) => {
   if (event.type === 'checkout.session.completed') {
     const s = event.data.object;
     const listingRef = (s.metadata && s.metadata.listingRef) || '';
-    // Fáze 3 (až bude databáze): podle listingRef nastavit v tabulce listings
-    // featured=true a odeslat potvrzovací e-mail přes Resend.
-    console.log('Zaplaceno zvýraznění:', { listingRef: listingRef, email: s.customer_email, amount: s.amount_total });
+    /* NEDORUČENO. Tady se má podle listingRef nastavit v tabulce listings
+       featured = true (sloupec i index už existují, viz supabase/00-vse.sql)
+       a odeslat potvrzení. Nic z toho se neděje — platba se jen zapíše.
+       Komentář tu dřív říkal „až bude databáze"; databáze mezitím je,
+       takže ta výmluva neplatí a stav je prostě nedodělaný.
+       Aby mezitím nikdo nezaplatil nadarmo, je api/create-checkout.js
+       zavřený (viz ZVYRAZNENI_ZAPNUTO tam). Kdyby se sem přesto platba
+       dostala, musí to být vidět jako CHYBA, ne jako běžný záznam. */
+    console.error('POZOR: zaplaceno zvýraznění, ale doručení není hotové — peníze bez protihodnoty.',
+      { listingRef: listingRef, email: s.customer_email, amount: s.amount_total });
   }
 
   res.status(200).json({ received: true });

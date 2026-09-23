@@ -32,6 +32,9 @@ const PORADI = [
   ['listings-tiers.sql', 'limity počtu inzerátů podle účtu (account_tier)'],
   ['listings-rekonstrukce.sql', 'poslední verze create_listing — tu volá web'],
   ['listing-checks.sql', 'výsledky pravidelné kontroly odkazů a fotek'],
+  // Musí být AŽ ZA listing-checks.sql (čte z jeho tabulky) a za
+  // listings-rekonstrukce.sql, protože přepisuje my_listings().
+  ['listings-kontrola-vlastnikovi.sql', 'výsledek noční kontroly vidí majitel inzerátu'],
 ];
 
 const HLAVA = `-- =====================================================================

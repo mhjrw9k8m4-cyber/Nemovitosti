@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=098a8ac1">
+  <link rel="stylesheet" href="css/styles.css?v=b9f20809">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:20px; padding:24px 22px 22px;
@@ -93,6 +93,13 @@
     .mi-lplace{font-size:17px; font-weight:700; color:var(--text-ondark); line-height:1.25; letter-spacing:-.01em;}
     .mi-lstatus{flex:none; font-size:11.5px; font-weight:700; padding:5px 11px; border-radius:999px; white-space:nowrap; background:var(--ink); color:var(--text-ondark-mute); border:1px solid var(--line-strong);}
     .mi-lstatus.ok{background:rgba(31,163,99,.12); color:#178a53; border-color:rgba(31,163,99,.4);}
+    /* Nález noční kontroly. Jantar, ne červená: inzerát dál běží, jen je
+       na něm co spravit — je to upozornění, ne rozsudek. */
+    .mi-potiz{margin:0 0 12px; padding:11px 13px; border-radius:var(--r-sm);
+      background:rgba(232,179,65,.13); border:1px solid rgba(124,81,5,.32); color:#6b4604; font-size:13px;}
+    .mi-potiz ul{margin:6px 0 0; padding-left:18px;}
+    .mi-potiz li{margin:2px 0;}
+    .mi-potiz-pozn{display:block; margin-top:7px; font-size:12px; opacity:.85;}
     .mi-lstats{display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:14px;}
     .mi-lstat{background:var(--ink); border:1px solid var(--line); border-radius:12px; padding:11px 8px; text-align:center;}
     .mi-lstat b{display:block; font-size:19px; font-weight:800; color:var(--copper-bright); font-variant-numeric:tabular-nums; line-height:1.1;}
@@ -306,6 +313,14 @@
     function favCount(){ try { return (JSON.parse(localStorage.getItem('pk_fav_v1'))||[]).length; } catch(e){ return 0; } }
     function initials(mail){ var s=(mail||'').trim(); if(!s) return '?'; var name=s.split('@')[0].replace(/[^A-Za-z0-9]/g,''); return (name.slice(0,2)||s.slice(0,1)).toUpperCase(); }
     var authBox = q('mi-auth'), panel = q('mi-panel'), statusEl = q('mi-status'), listEl = q('mi-list'), emptyEl = q('mi-empty');
+    /* „13. 9." místo ISO řetězce — datum má člověk přečíst, ne luštit. */
+    function datumCesky(iso) {
+      try {
+        var d = new Date(iso);
+        if (isNaN(d)) return '';
+        return d.getDate() + '. ' + (d.getMonth() + 1) + '.';
+      } catch (e) { return ''; }
+    }
     var newpwBox = q('mi-newpw');
 
     if (!A || !A.ready) { authBox.hidden = false; q('mi-auth-msg').textContent = 'Připojení k databázi zatím není nastavené.'; return; }
@@ -382,7 +397,30 @@
               (ph.length > 1 ? '<span class="n">' + ph.length + ' fotky</span>' : '') +
             '</div>' : '';
           var isLive = r.status === 'approved';
-          return '<div class="mi-lcard" data-id="' + esc(r.id) + '">' +
+          /* Co našla noční kontrola (scripts/kontrola-inzeratu.mjs).
+             Běží každou noc a výsledky dosud nečetla ŽÁDNÁ stránka —
+             kontrola tedy zjistila, že někomu nejde fotka, a nikomu to
+             neřekla. Majitel je přitom jediný, kdo s tím může něco
+             udělat.
+             `kontrola_ok` je undefined, dokud se v databázi nespustí
+             supabase/listings-kontrola-vlastnikovi.sql; pak se tady
+             prostě nic neukáže — starší databáze web nerozbije. */
+          var potiz = '';
+          if (r.kontrola_ok === false && Array.isArray(r.kontrola_nalezy) && r.kontrola_nalezy.length) {
+            var radky = r.kontrola_nalezy.slice(0, 3).map(function (n) {
+              var co = n && n.typ === 'fotka' ? 'Fotka' : 'Odkaz';
+              return '<li>' + esc(co + ': ' + ((n && n.msg) || 'něco nesedí')) + '</li>';
+            }).join('');
+            var vic = r.kontrola_nalezy.length > 3 ? '<li>… a další ' + (r.kontrola_nalezy.length - 3) + '</li>' : '';
+            potiz = '<div class="mi-potiz" role="status">' +
+              '<b>Něco u inzerátu nesedí</b>' +
+              '<ul>' + radky + vic + '</ul>' +
+              '<span class="mi-potiz-pozn">Zjistila to noční kontrola' +
+              (r.kontrola_kdy ? ' ' + esc(datumCesky(r.kontrola_kdy)) : '') +
+              '. Inzerát kvůli tomu neskrýváme — opravit ho můžete jen vy.</span>' +
+              '</div>';
+          }
+          return '<div class="mi-lcard" data-id="' + esc(r.id) + '">' + potiz +
             thumb +
             '<div class="mi-lhead">' +
               '<div class="mi-lplace">' + esc(r.place) + (r.okres ? ', okres ' + esc(r.okres) : '') + '</div>' +

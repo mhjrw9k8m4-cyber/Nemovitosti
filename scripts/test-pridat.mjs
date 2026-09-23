@@ -177,6 +177,65 @@ async function odesli(p) {
   await ctx.close();
 }
 
+/* --- 2c) Co najde noční kontrola, musí se dozvědět majitel -----------
+   scripts/kontrola-inzeratu.mjs projde každou noc zveřejněné inzeráty,
+   zkusí odkaz i fotky a výsledek zapíše do listing_checks. Nic neskrývá
+   ani nemaže — „rozhodnutí zůstává na člověku".
+   Jenže ten člověk se to neměl jak dozvědět: výsledky nečetla ŽÁDNÁ
+   stránka. Kontrola tedy zjistila, že někomu nejde fotka, a mlčela.
+   Majitel je přitom jediný, kdo to může spravit. */
+{
+  const { ctx, p, padlo } = await otevri(true);
+  // založit inzerát a podstrčit k němu nález, jako by ho našla noční kontrola
+  const vlozeny = await fetch(`${BASE}/rest/v1/rpc/create_listing`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer tok-majitel' },
+    body: JSON.stringify({ p_place: 'Kolín', p_okres: 'Kolín', p_druh: 'orná půda', p_parcel: '9/9',
+      p_area: 2000, p_price: 600000, p_lat: 50.02, p_lng: 15.2, p_description: 'Pozemek.',
+      p_contact: 'jan@example.com', p_photos: [], p_features: [], p_access: '' }),
+  }).then((r) => r.json()).catch(() => null);
+  const lid = vlozeny && vlozeny[0] && vlozeny[0].id;
+  pravda('zkušební inzerát se založil', !!lid);
+  await fetch(`${BASE}/zkouska/kontrola`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: lid, ok: false, nalezy: [
+      { typ: 'fotka', stav: 'chybi', msg: 'fotka už v úložišti není' },
+      { typ: 'odkaz', stav: 'mrtvy', msg: 'odkaz už neexistuje (404)' },
+    ] }),
+  }).catch(() => {});
+
+  await p.goto(`${BASE}/muj-inzerat.html`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(2800);
+  const v = await p.evaluate(() => {
+    const el = document.querySelector('.mi-potiz');
+    return { je: !!el, text: el ? el.textContent.replace(/\s+/g, ' ').trim() : '' };
+  });
+  pravda('nález noční kontroly je na inzerátu vidět', v.je,
+    'kontrola běží každou noc a výsledek se k majiteli nedostane');
+  pravda('a je z něj poznat, co je špatně',
+    /fotka už v úložišti není/i.test(v.text) && /odkaz už neexistuje/i.test(v.text),
+    `text: „${v.text}"`);
+  pravda('a že inzerát kvůli tomu neskrýváme', /neskrýváme|opravit/i.test(v.text),
+    'jinak by to vypadalo jako trest, ne jako upozornění');
+
+  // A naopak: u inzerátu bez nálezu se nic strašit nemá
+  await fetch(`${BASE}/zkouska/kontrola`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: lid, ok: true, nalezy: [] }),
+  }).catch(() => {});
+  await p.reload({ waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(2600);
+  pravda('u inzerátu, kde je všechno v pořádku, se nic nestraší',
+    await p.evaluate(() => !document.querySelector('.mi-potiz')));
+  pravda('a nic při tom nespadlo', padlo.length === 0, padlo.join(' | '));
+
+  // úklid, ať další oddíl začíná s prázdným seznamem
+  await fetch(`${BASE}/rest/v1/rpc/delete_listing`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer tok-majitel' },
+    body: JSON.stringify({ p_id: lid }),
+  }).catch(() => {});
+  await ctx.close();
+}
+
 /* --- 3) Co server odmítne, se nesmí tvářit jako uložené ---------------
    Meze jsou na serveru schválně — prohlížeči se věřit nedá. Test je ale
    o tom, co uvidí ČLOVĚK: odmítnutí musí dojít až k němu a musí z něj

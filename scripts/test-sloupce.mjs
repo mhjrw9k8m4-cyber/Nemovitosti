@@ -103,6 +103,60 @@ const chybejici = [...volane].filter(([n]) => !funkce.has(n));
 pravda('každá volaná uložená funkce v databázi existuje', chybejici.length === 0,
   chybejici.map(([n, f]) => `${f}: ${n}()`).join('\n      '));
 
+/* --- Změna návratového typu potřebuje DROP ---------------------------
+   PostgreSQL nedovolí „create or replace function", když se mění
+   návratový typ — skončí to chybou „cannot change return type of
+   existing function". V 00-vse.sql se přitom některé funkce definují
+   několikrát za sebou, jak se postupně rozšiřovaly. Bez „drop function
+   if exists" před tou další spadne CELÝ skript v SQL Editoru a člověk
+   se nedozví, že se změna nenasadila — web pak volá starou verzi
+   a chybí mu sloupce, o kterých si myslí, že je má.
+   Stalo se to při psaní listings-kontrola-vlastnikovi.sql: první verze
+   drop neměla.
+
+   Pozor na dvě věci, na kterých se první podoba téhle kontroly spletla:
+     · Funkce se v PostgreSQL rozlišují jménem I ARGUMENTY. create_listing
+       s deseti a s třinácti parametry jsou dvě různé funkce a navzájem
+       si nevadí. Porovnávat se proto musí až v rámci téhož seznamu
+       argumentů.
+     · Drop nemusí stát těsně nad definicí. Stačí, když je kdekoli mezi
+       předchozí definicí téže funkce a touhle. */
+{
+  const vse = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
+  const radky = vse.split('\n');
+  const hlavicky = [];
+  for (let i = 0; i < radky.length; i++) {
+    const m = radky[i].match(/^create or replace function ([a-z_][a-z0-9_]*)\s*\(/);
+    if (!m) continue;
+    let text = '';
+    for (let j = i; j < Math.min(radky.length, i + 14); j++) {
+      text += ' ' + radky[j];
+      if (/as \$\$/.test(radky[j])) break;
+    }
+    const args = (text.match(/\(([\s\S]*?)\)\s*returns/i) || [])[1] || '';
+    const vraci = (text.match(/returns\s+([\s\S]*?)\s+language/i) || [])[1] || '';
+    /* Podpis se pozná podle TYPŮ argumentů, ne podle jejich jmen. */
+    const typy = args.split(',').map((a) => a.trim().split(/\s+/).slice(1).join(' ').toLowerCase()).join(',');
+    hlavicky.push({ radek: i, jmeno: m[1], podpis: m[1] + '(' + typy + ')',
+      vraci: vraci.replace(/\s+/g, ' ').trim() });
+  }
+  const spatne = [];
+  const posledni = new Map();   // podpis → {radek, vraci}
+  for (const h of hlavicky) {
+    const drive = posledni.get(h.podpis);
+    if (drive && drive.vraci !== h.vraci) {
+      const mezi = radky.slice(drive.radek, h.radek).join('\n');
+      const maDrop = new RegExp('drop function if exists ' + h.jmeno + '\\s*\\(').test(mezi);
+      if (!maDrop) {
+        spatne.push(`${h.jmeno}() na řádku ${h.radek + 1} mění návratový typ oproti řádku ${drive.radek + 1}, a mezi nimi není „drop function if exists"`);
+      }
+    }
+    posledni.set(h.podpis, { radek: h.radek, vraci: h.vraci });
+  }
+  pravda('každá změna návratového typu má před sebou drop', spatne.length === 0,
+    spatne.join('\n      ') + '\n      (bez něj skript v SQL Editoru spadne a změna se nenasadí)');
+}
+
 console.log('\nDotazy do databáze proti schématu');
 console.log(zpravy.join('\n'));
 console.log(`\nzkontrolováno ${dotazu} dotazů a ${volane.size} volaných funkcí proti ${tabulky.size} tabulkám`);

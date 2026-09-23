@@ -23,6 +23,14 @@ create table if not exists listings (
   contact_email   text,
   contact_phone   text,
   photos          jsonb default '[]'::jsonb,  -- pole URL fotek
+  /* Vlastník inzerátu. Sloupec sem patří od začátku, i když se pracuje
+     s účty až v listings-auth.sql: politiky chatu (messaging.sql) na něj
+     sahají DŘÍV. Dokud ho tabulka neměla, končilo spuštění 00-vse.sql na
+     čisté databázi třemi chybami „column l.user_id does not exist" —
+     a funkce my_threads() ani unread_count() se vůbec nevytvořily.
+     Zprávy tedy na novém projektu nefungovaly a nebylo z čeho poznat
+     proč: chyba proběhla uprostřed dlouhého skriptu. */
+  user_id         uuid,
   -- zvýraznění (placené)
   featured        boolean not null default false,
   featured_until  timestamptz,            -- do kdy zvýraznění platí

@@ -24,6 +24,8 @@ const hledani = new Map();
 // Inzeráty vložené přes „Přidat pozemek" a kolik jich kdo smí mít.
 const inzeraty = [];
 const kvota = new Map();
+// Výsledky noční kontroly (id inzerátu → {ok, kdy, nalezy}); plní si je test.
+const kontroly = new Map();
 hledani.set(UID_MAJITEL, [{ id: 's1', label: 'Tábor', okres: 'Tábor', druh: null, ptype: null,
   max_price: 0, min_area: 0, features: [], created_at: new Date().toISOString() }]);
 let poradi = 0;
@@ -60,6 +62,15 @@ const server = http.createServer((req, res) => {
   }
 
   // ---- RPC ----
+  /* Jen pro testy: podstrčí výsledek noční kontroly k inzerátu. Doopravdy
+     ho tam zapisuje scripts/kontrola-inzeratu.mjs servisním klíčem. */
+  if (u.pathname === '/zkouska/kontrola' && req.method === 'POST') {
+    return telo().then((a) => {
+      kontroly.set(a.id, { ok: !!a.ok, kdy: a.kdy || new Date().toISOString(), nalezy: a.nalezy || [] });
+      return send(200, JSON.stringify({ ok: true }));
+    });
+  }
+
   if (u.pathname.startsWith('/rest/v1/rpc/')) {
     const fn = u.pathname.slice('/rest/v1/rpc/'.length);
     return telo().then((args) => {
@@ -155,7 +166,15 @@ const server = http.createServer((req, res) => {
       }
 
       if (fn === 'my_listings') {
-        return send(200, JSON.stringify(inzeraty.filter((x) => x.user_id === uid)));
+        /* Výsledek noční kontroly se vrací stejně jako doopravdy
+           (my_listings() ho po listings-kontrola-vlastnikovi.sql
+           přiváže z tabulky listing_checks). Test si ho může podstrčit
+           přes /zkouska/kontrola. */
+        return send(200, JSON.stringify(inzeraty.filter((x) => x.user_id === uid).map((x) => {
+          const k = kontroly.get(x.id);
+          return Object.assign({}, x, k ? { kontrola_ok: k.ok, kontrola_kdy: k.kdy, kontrola_nalezy: k.nalezy }
+            : { kontrola_ok: null, kontrola_kdy: null, kontrola_nalezy: [] });
+        })));
       }
 
       /* Smazání smí jen vlastník — stejně jako doopravdy (delete_listing

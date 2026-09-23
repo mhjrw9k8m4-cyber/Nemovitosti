@@ -322,18 +322,10 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   const celek = await napis('jen celé pozemky');
   pravda('„jen celé pozemky" nevrátí prázdno', celek > 0, `vyšlo ${celek}`);
 
-  await napis('');
-  const priklad = await p3.$('.ms-priklad');
-  pravda('pod políčkem je příklad', !!priklad);
-  if (priklad) {
-    const text = (await priklad.textContent()).trim();
-    await priklad.click();
-    await p3.waitForTimeout(700);
-    const vPolicku = await p3.inputValue('#map-search');
-    const poPrikladu = await pocet();
-    pravda('klepnutí na příklad ho vyplní', vPolicku.trim() === text, `v políčku „${vPolicku}", v příkladu „${text}"`);
-    pravda('a výpis se podle něj zúží', poPrikladu > 0 && poPrikladu < vse, `${vse} → ${poPrikladu}`);
-  }
+  /* Řádek s příkladem pod políčkem byl na přání odstraněn — místo toho
+     se hlídá, že se vyčištěním políčka výpis zase rozšíří na všechno. */
+  const poVycisteni = await napis('');
+  pravda('vyčištění políčka vrátí celý výpis', poVycisteni === vse, `${vse} → ${poVycisteni}`);
   await c3.close();
 }
 
