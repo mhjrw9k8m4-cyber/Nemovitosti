@@ -110,18 +110,50 @@
    + ' jen pouze hledam hledame chci chceme koupim koupit sehnat shanim'
    + ' prodej prodam prodava nabidka nabidky nabizim inzerce'
    + ' pozemek pozemky pozemku pozemkem pozemcich parcela parcely parcelu parcelou'
+   + ' okres okrese okresu obec obce obci'
    + ' prosim dekuji').split(' ').forEach(function (w) { if (w) VYPLN[w] = true; });
 
-  /* Čísla s jednotkou. „1,5 mil" i „1.5 mil" i „500tis". */
+  /* Čísla s jednotkou. „1,5 mil" i „1.5 mil" i „500tis".
+     Cena ZA METR je vlastní jednotka, ne cena: „do 20 Kč/m²" a
+     „do 20 tisíc" jsou dvě úplně jiné věty. Rozbalovátko na cenu za metr
+     má web odjakživa, jen se do políčka nedalo napsat. */
   var NASOBEK = [
+    [/^(?:kc\/m2|kc\/m²|\/m2|\/m²|kc\/metr)$/, 1, 'zaMetr'],
     [/^(?:mil|mili[oó]n\w*|m)$/, 1000000, 'cena'],
     [/^(?:tis|tis\.|tisic\w*|k)$/, 1000, 'cena'],
     [/^(?:kc|korun\w*|czk)$/, 1, 'cena'],
     [/^(?:ha|hektar\w*)$/, 10000, 'plocha'],
     [/^(?:m2|m²|metru|metry|metr)$/, 1, 'plocha'],
   ];
+  /* „Kč za metr" jsou tři slova, ne jedno — než se sáhne po jednotce,
+     slepí se zpátky na jednu. */
+  var ZA_METR_FRAZE = [['kc', 'za', 'metr'], ['kc', 'za', 'm2'], ['korun', 'za', 'metr'],
+    ['kc', 'na', 'metr'], ['kc', 'za', 'm²']];
+
+  /* Věci, které web umí filtrovat, ale věta je neuměla pojmenovat. */
+  var LEVNE = ['levny', 'levna', 'levne', 'levnejsi', 'levny pozemek', 'levne pozemky',
+    'vyhodny', 'vyhodna', 'vyhodne', 'vyhodna koupe', 'vyhodna cena',
+    'pod cenou', 'pod obvyklou cenou', 'pod obvyklou', 'pod odhadem', 've slevě', 've sleve'];
+  /* „Sítě" bez upřesnění = aspoň jedna z elektřiny, vody, kanalizace
+     a plynu. Víc se z toho vyčíst nedá a víc se tvrdit nebude.
+     Příjezdová cesta mezi ně nepatří — to není síť. */
+  var SITE_OBECNE = ['site', 'sitemi', 'siti', 'sitich', 'inzenyrske site', 'inzenyrskymi sitemi',
+    'inzenyrskych siti', 'vsechny site', 'veskere site', 'is'];
+
+  /* Co se dá ještě nabídnout v našeptávači. Tvar je stejný jako u SITE:
+     [klíč, název pro člověka, SLOVO K NAPSÁNÍ, tvary]. To třetí je
+     důležité — našeptávač ho vkládá do věty a parser ho musí zase
+     přečíst, jinak by si nabídka rozbila vlastní dotaz. */
+  var OSTATNI = [
+    ['levne', 'Pod obvyklou cenou', 'levné', LEVNE],
+    ['site', 'Uvedené sítě', 'sítě', SITE_OBECNE],
+  ];
   /* Od jakého čísla se „do 100000" čte jako koruny. Pod tím se netipuje. */
   var BEZ_JEDNOTKY_OD = 10000;
+  /* Jak široké je „kolem 1000 m²". Čtvrtina na každou stranu: užší pásmo
+     by vyhazovalo parcely, které člověk chce vidět, širší by přestalo
+     být odpovědí na to, co napsal. */
+  var PRIBLIZNE = 0.25;
 
   function cislo(s) {
     var c = s.replace(/\s/g, '').replace(',', '.');
@@ -136,7 +168,8 @@
   function rozeber(dotaz) {
     var slova = norm(dotaz).split(' ').filter(Boolean);
     var vzato = new Array(slova.length);
-    var ven = { druh: null, typ: null, kraj: null, site: [], jenCelek: false,
+    var ven = { druh: null, typ: null, kraj: null, site: [], nejakeSite: false,
+      jenCelek: false, levne: false, zaMetrOd: null, zaMetrDo: null,
       cenaOd: null, cenaDo: null, plochaOd: null, plochaDo: null, text: '', casti: [] };
 
     function zkus(od, fraze) {
@@ -148,6 +181,14 @@
     }
     function zaber(od, delka, cast) {
       for (var i = 0; i < delka; i++) vzato[od + i] = true;
+      /* Odznak se ruší tak, že se z věty vyškrtnou slova, ze kterých
+         vznikl. Dřív se škrtala slova POPISKU — jenže popisek bývá jiný
+         než to, co člověk napsal: napíšu „bez podílu" a odznak říká
+         „jen celé pozemky", napíšu „s elektřinou" a odznak říká
+         „Elektřina". Slova se nepotkala a křížek nedělal nic; mrtvá
+         byla polovina odznaků. Proto si každá část pamatuje SVOJE
+         slova, ne svůj popisek. */
+      cast.slova = slova.slice(od, od + delka);
       ven.casti.push(cast);
     }
 
@@ -160,6 +201,14 @@
       var c = cislo(slova[i + 1] || '');
       if (c == null) continue;
       var jed = slova[i + 2] || '';
+      var delkaJed = 1;
+      /* „Kč za metr" — tři slova, jedna jednotka. */
+      for (var zf = 0; zf < ZA_METR_FRAZE.length; zf++) {
+        var f3 = ZA_METR_FRAZE[zf];
+        if (slova[i + 2] === f3[0] && slova[i + 3] === f3[1] && slova[i + 4] === f3[2]) {
+          jed = 'kc/m2'; delkaJed = 3; break;
+        }
+      }
       var nas = null;
       for (var n = 0; n < NASOBEK.length; n++) if (NASOBEK[n][0].test(jed)) { nas = NASOBEK[n]; break; }
       /* Bez jednotky se dřív nehádalo vůbec — jenže „les do 100000" je
@@ -167,7 +216,7 @@
          prázdný. Statisícové číslo je v téhle větě vždycky cena
          v korunách. Malá čísla zůstávají textem: „do 5" může být
          cokoli a tipovat se nebude. */
-      var delka = 3;
+      var delka = 2 + delkaJed;
       if (!nas) {
         if (c < BEZ_JEDNOTKY_OD) continue;
         nas = [null, 1, 'cena'];
@@ -175,13 +224,48 @@
         jed = 'Kč';
       }
       var hodnota = Math.round(c * nas[1]);
-      var kde = nas[2];                          // 'cena' nebo 'plocha'
-      ven[kde + (smer === 'do' ? 'Do' : 'Od')] = hodnota;
+      var kde = nas[2];                          // 'cena', 'plocha' nebo 'zaMetr'
+      if (kde === 'zaMetr') {
+        ven[smer === 'do' ? 'zaMetrDo' : 'zaMetrOd'] = hodnota;
+      } else {
+        ven[kde + (smer === 'do' ? 'Do' : 'Od')] = hodnota;
+      }
       /* V odznaku stojí to, co člověk NAPSAL („nad 2 ha"), ne co si z toho
          web přeložil („od 2 ha“). Jinak se odznak nedá spárovat s větou
          a rušení by působilo, že se maže něco jiného. */
       zaber(i, delka, { druh: kde, smer: smer, hodnota: hodnota,
         popis: slova[i] + ' ' + slova[i + 1] + ' ' + jed });
+    }
+
+    /* --- 1b) Číslo s jednotkou BEZ „do" a „nad" ------------------------
+       „Les 5 ha" je jasná věta, jenže celé „5 ha" dosud propadlo do
+       hledání obce a výpis byl prázdný. Čte se to takhle:
+         · výměra PŘIBLIŽNĚ — kdo píše 1000 m², nechce přijít o parcelu
+           s 1050 m². Pásmo je ±25 % a v odznaku stojí „kolem", aby bylo
+           poznat, že se nehledá přesné číslo.
+         · cena jako STROP — „pozemek za 500 tisíc" je rozpočet, ne
+           požadavek na cenu přesně pět set tisíc. */
+    for (var bi = 0; bi < slova.length; bi++) {
+      if (vzato[bi]) continue;
+      var bc = cislo(slova[bi]);
+      if (bc == null || bc <= 0) continue;
+      var bjed = slova[bi + 1] || '';
+      var bnas = null;
+      for (var bn = 0; bn < NASOBEK.length; bn++) if (NASOBEK[bn][0].test(bjed)) { bnas = NASOBEK[bn]; break; }
+      if (!bnas || vzato[bi + 1]) continue;
+      var bhod = Math.round(bc * bnas[1]);
+      if (bnas[2] === 'plocha') {
+        if (ven.plochaOd != null || ven.plochaDo != null) continue;
+        ven.plochaOd = Math.round(bhod * (1 - PRIBLIZNE));
+        ven.plochaDo = Math.round(bhod * (1 + PRIBLIZNE));
+        zaber(bi, 2, { druh: 'plocha', smer: 'kolem', hodnota: bhod,
+          popis: 'kolem ' + slova[bi] + ' ' + bjed });
+      } else if (bnas[2] === 'cena') {
+        if (ven.cenaOd != null || ven.cenaDo != null) continue;
+        ven.cenaDo = bhod;
+        zaber(bi, 2, { druh: 'cena', smer: 'do', hodnota: bhod,
+          popis: 'do ' + slova[bi] + ' ' + bjed });
+      }
     }
 
     /* --- 2) Slovník: druh, typ nabídky, sítě, celek --- */
@@ -226,6 +310,38 @@
       zaber(i2, d, { druh: 'sit', hodnota: z[0], popis: z[1] });
       return false;
     });
+    /* Obecné „sítě" se čtou AŽ PO konkrétních: „s elektřinou a sítěmi"
+       má hlásit elektřinu, ne mlhavé „něco tam je". */
+    var obecne = vetsiPrvni(SITE_OBECNE);
+    var obecneHotovo = false;
+    for (var oi = 0; oi < obecne.length && !obecneHotovo; oi++) {
+      for (var oj = 0; oj < slova.length; oj++) {
+        if (vzato[oj] || !zkus(oj, obecne[oi])) continue;
+        var dl = obecne[oi].split(' ').length;
+        if (ven.site.length) {
+          /* Konkrétní síť má přednost — ale to slovo se musí POHLTIT
+             i tak. Kdyby zbylo v textu, hledala by se obec „sítěmi"
+             a věta „s elektřinou a sítěmi" by vrátila prázdno, tedy
+             pravý opak toho, oč v ní jde. Filtr nepřidává: elektřina
+             už je konkrétnější. */
+          for (var ok2 = 0; ok2 < dl; ok2++) vzato[oj + ok2] = true;
+        } else {
+          ven.nejakeSite = true;
+          zaber(oj, dl, { druh: 'site', hodnota: 'nejake', popis: 'uvedené sítě' });
+        }
+        obecneHotovo = true;
+        break;
+      }
+    }
+    var lv = vetsiPrvni(LEVNE);
+    for (var li = 0; li < lv.length && !ven.levne; li++) {
+      for (var lj = 0; lj < slova.length; lj++) {
+        if (vzato[lj] || !zkus(lj, lv[li])) continue;
+        ven.levne = true;
+        zaber(lj, lv[li].split(' ').length, { druh: 'levne', hodnota: true, popis: 'pod obvyklou cenou' });
+        break;
+      }
+    }
     var celek = vetsiPrvni(CELEK);
     for (var ci = 0; ci < celek.length && !ven.jenCelek; ci++) {
       for (var cj = 0; cj < slova.length; cj++) {
@@ -246,5 +362,6 @@
     return ven;
   }
 
-  return { norm: norm, rozeber: rozeber, DRUHY: DRUHY, TYPY: TYPY, SITE: SITE, KRAJE: KRAJE };
+  return { norm: norm, rozeber: rozeber,
+    DRUHY: DRUHY, TYPY: TYPY, SITE: SITE, KRAJE: KRAJE, OSTATNI: OSTATNI };
 });

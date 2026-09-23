@@ -854,7 +854,8 @@
       dotazFiltr = r;
       searchTerm = r.text;            // na obec zbyde jen to, co web nepochopil
     } else {
-      dotazFiltr = { druh: null, typ: null, kraj: null, site: [], jenCelek: false,
+      dotazFiltr = { druh: null, typ: null, kraj: null, site: [], nejakeSite: false,
+        jenCelek: false, levne: false, zaMetrOd: null, zaMetrDo: null,
         cenaOd: null, cenaDo: null, plochaOd: null, plochaDo: null, casti: [] };
       searchTerm = syrovy;
     }
@@ -2389,6 +2390,19 @@
   map.on('zoomend', resizeDots);
   resizeDots();
 
+  /* Sítě, které se počítají jako „sítě". Příjezdová cesta mezi ně
+     schválně nepatří. */
+  var SITE_KLICE = ['elektrina', 'voda', 'kanalizace', 'plyn'];
+
+  /* „Pod obvyklou cenou" — tentýž výpočet pro přepínač i pro slovo
+     „levné" napsané do věty. Kdyby to byly dva kusy kódu, dřív nebo
+     později si u téhož pozemku protiřečí.
+     Nejistý odhad do filtru nepatří: filtr slibuje výběr, ne dohad. */
+  function podObvyklou(d) {
+    var od = MODEL ? MODEL.odhad(d) : null;
+    return !!(od && od.podleVelikosti && !od.nejisty && od.podOdhadem >= 15);
+  }
+
   function visible(d) {
     var okType = activeType === 'all' || d.type === activeType;
     // Hledá se i podle PARCELNÍHO ČÍSLA. Kdo drží v ruce výpis z katastru,
@@ -2435,6 +2449,27 @@
        a k tomu napíše jiný do věty, dostane průnik; to je jediné čtení,
        které nikomu nic nepřepíše za zády. */
     if (okDotaz && dotazFiltr.kraj && (d._gkraj || krajOf(d)) !== dotazFiltr.kraj) okDotaz = false;
+    /* Cena za metr z věty („orná do 20 Kč/m2"). Tentýž výpočet jako
+       u rozbalovátka — pozemek bez výměry do takového filtru nepatří,
+       protože se u něj cena za metr spočítat nedá. */
+    if (okDotaz && (dotazFiltr.zaMetrDo || dotazFiltr.zaMetrOd)) {
+      var _zm = hasArea(d) && d.price > 0 ? d.price / d.area : null;
+      if (_zm == null) okDotaz = false;
+      else if (dotazFiltr.zaMetrDo && _zm > dotazFiltr.zaMetrDo) okDotaz = false;
+      else if (dotazFiltr.zaMetrOd && _zm < dotazFiltr.zaMetrOd) okDotaz = false;
+    }
+    /* „Se sítěmi" bez upřesnění: stačí, že inzerát uvádí aspoň jednu.
+       Příjezdová cesta mezi ně nepatří — to není síť. */
+    if (okDotaz && dotazFiltr.nejakeSite) {
+      var _ms = false;
+      for (var mi = 0; mi < SITE_KLICE.length; mi++) {
+        if (d.site && d.site.indexOf(SITE_KLICE[mi]) >= 0) { _ms = true; break; }
+      }
+      if (!_ms) okDotaz = false;
+    }
+    /* „Levné" znamená totéž co přepínač „Pod obvyklou cenou" — jeden
+       výpočet, ať si věta a tlačítko neprotiřečí. */
+    if (okDotaz && dotazFiltr.levne && !podObvyklou(d)) okDotaz = false;
     var okPerM2 = !maxPerM2 || (hasArea(d) && d.price && (d.price / d.area) <= maxPerM2);
     var okKraj = krajFiltr === 'all' || (d._gkraj || krajOf(d)) === krajFiltr;
     // „Pod obvyklou cenou" bere tentýž odhad, jaký se ukazuje na kartě —
@@ -2450,11 +2485,7 @@
        Teď je z toho jedna věc: když je okolí nastavené, seznam i mapa
        ukazují JEN to, co je v okruhu. */
     var okOkoli = !okoliAktivni() || kmOd(mojeMisto, d) <= (mojeMisto.km || 10);
-    var okLevne = !levneOnly || (function () {
-      var od = MODEL ? MODEL.odhad(d) : null;
-      // Nejistý odhad do filtru nepatří: filtr slibuje výběr, ne dohad.
-      return !!(od && od.podleVelikosti && !od.nejisty && od.podOdhadem >= 15);
-    })();
+    var okLevne = !levneOnly || podObvyklou(d);
     // Skryté zmizí ze seznamu — ale jen dokud si je člověk sám nevyžádá
     // (tlačítko „Zobrazit skryté"). Nenávratně se nic neztrácí.
     var okSkryt = ukazSkryte || !jeSkryty(d);
@@ -3219,6 +3250,16 @@
     /* Kraje se nabízejí taky — jinak by o tom, že se dá napsat „Vysočina",
        nikdo nevěděl. Praha se v nabídce jmenuje plným názvem, protože
        holé „Praha" je hledání místa, ne kraj (viz js/dotaz.js). */
+    /* A věci, které web umí, ale nikoho by nenapadlo je do políčka psát:
+       „levné" (= pod obvyklou cenou) a „sítě" (= aspoň jedna uvedená). */
+    (window.PKDotaz.OSTATNI || []).forEach(function (o) {
+      if (!o[3].some(function (f) { return f.indexOf(posledni) === 0; })) return;
+      if (o[0] === 'levne') pridej('výběr', o[1], o[2], podObvyklou);
+      else pridej('výběr', o[1], o[2], function (x) {
+        for (var i = 0; i < SITE_KLICE.length; i++) if (x.site && x.site.indexOf(SITE_KLICE[i]) >= 0) return true;
+        return false;
+      });
+    });
     window.PKDotaz.KRAJE.forEach(function (k) {
       if (!k[2].some(function (f) { return f.indexOf(posledni) === 0; })) return;
       pridej('kraj', k[0] === 'Praha' ? 'Praha' : k[0] + ' kraj', k[1],
@@ -3306,8 +3347,14 @@
     if (!cast) return;
     /* Vyškrtnout z textu slova, která k odznaku patří. Hledá se v témže
        srovnání, v jakém se to poznávalo, aby „Do 1 MIL" zmizelo stejně
-       jako „do 1 mil". */
-    var slova = window.PKDotaz.norm(cast.popis).split(' ');
+       jako „do 1 mil".
+       Škrtají se slova, ze kterých odznak VZNIKL, ne jeho popisek: ten
+       bývá jiný („bez podílu" → „jen celé pozemky", „s elektřinou" →
+       „Elektřina"), slova se pak nepotkala a křížek nedělal vůbec nic.
+       Popisek zůstává jako záloha pro starší tvar dat. */
+    var slova = (cast.slova && cast.slova.length)
+      ? cast.slova
+      : window.PKDotaz.norm(cast.popis).split(' ');
     var zbytek = searchEl.value.split(/\s+/).filter(function (w) {
       return slova.indexOf(window.PKDotaz.norm(w)) < 0;
     });

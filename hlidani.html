@@ -84,6 +84,12 @@
     .hl-row2{display:flex; gap:8px;}
     .hl-row2 > *{flex:1;}
     .hl-feats{display:flex; flex-wrap:wrap; gap:7px; margin:2px 0 6px;}
+    /* Počet u volby. Tlumený, ale čitelný — je to podklad k rozhodnutí,
+       ne ozdoba. */
+    .hl-chip-n{font-variant-numeric:tabular-nums; font-size:12px; opacity:.72;}
+    /* Volba, pod kterou dnes není nic. Neschovává se: zmizelá volba mate
+       víc než volba s nulou. */
+    .hl-chip.hl-nula{opacity:.55;}
     .hl-chip{display:inline-flex; align-items:center; gap:5px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:999px; font-size:13px; color:var(--text-ondark); cursor:pointer; user-select:none; background:var(--ink-soft2);}
     .hl-chip.on{border-color:var(--copper-bright); background:rgba(31,81,56,.12); color:var(--copper-bright); font-weight:700;}
     /* Seznam hledání */
@@ -248,7 +254,17 @@
     var opt = function (v, l, sel) { return '<option value="' + esc(v) + '"' + (sel ? ' selected' : '') + '>' + esc(l) + '</option>'; };
     var druhOpts = opt('', 'jakýkoli druh', true) + DRUHY.map(function (d) { return opt(d, d.charAt(0).toUpperCase() + d.slice(1)); }).join('');
     var typeOpts = opt('', 'vše (prodej i dražby)', true) + ['sale', 'drazba', 'exekuce', 'majitel'].map(function (t) { return opt(t, TYPE_LABEL[t]); }).join('');
-    var feats = FEATS.concat(['Přístupová cesta']).map(function (f) { return '<span class="hl-chip" data-feat="' + esc(f) + '">' + esc(f) + '</span>'; }).join('');
+    /* U každé volby stojí, kolik dnešních nabídek by jí vyhovělo. Bez
+       toho se dalo zaškrtnout něco, pod čím není NIC, a hlídání pak
+       mlčelo navždy, aniž by se dalo poznat proč. Nula se neschovává —
+       jen se řekne nahlas. */
+    var feats = FEATS.concat(['Přístupová cesta']).map(function (f) {
+      var n = 0;
+      for (var i = 0; i < DATA.length; i++) if (matches({ features: [f] }, DATA[i])) n++;
+      return '<span class="hl-chip' + (n ? '' : ' hl-nula') + '" data-feat="' + esc(f) + '"' +
+        (n ? '' : ' title="Tohle dnes neuvádí ani jedna nabídka — hlídání by podle toho nic nenašlo"') +
+        '>' + esc(f) + '<span class="hl-chip-n">' + (n ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') : '0') + '</span></span>';
+    }).join('');
     /* Rychlé volby. Psát „800000" do políčka je práce navíc a většina lidí
        stejně hledá v pár obvyklých pásmech — tak ať jsou po ruce. Klepnutí
        jen vyplní políčka pod tím, takže je pořád vidět, co se vlastně
@@ -299,7 +315,12 @@
         '</div>' +
 
         '<div class="hl-sekce">' +
-          '<label class="hl-lbl">Musí mít <span class="hl-pozn">(zná se jen u nabídek od majitelů)</span></label>' +
+          /* Poznámka musí říkat pravdu: elektřinu, vodu, kanalizaci, plyn
+             a příjezd čte robot z POPISU všech sbíraných nabídek, ne jen
+             z formuláře majitele. Oplocení a stav stavby se z popisu
+             vyčíst nedají a zůstávají jen u vlastních inzerátů — a je
+             to na nich vidět podle nuly. */
+          '<label class="hl-lbl">Musí mít <span class="hl-pozn">(podle toho, co stojí v popisu nabídky)</span></label>' +
           '<div class="hl-feats">' + feats + '</div>' +
         '</div>' +
 

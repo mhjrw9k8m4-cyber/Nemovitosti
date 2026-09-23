@@ -235,12 +235,161 @@ function pravda(popis, vyslo, proc) {
   pravda('jednotka má přednost', t('do 2 ha').plochaDo === 20000 && t('do 2 ha').cenaDo === null);
 }
 
+/* --- 4f) Co web umí, ale věta to neuměla pojmenovat -------------------
+   Změřeno na padesáti běžných dotazech: dvacet šest z nich vracelo
+   prázdno. U části to bylo poctivé (takové nabídky prostě nemáme),
+   u části ne — web ten filtr MÁ, jen se do políčka nedal napsat. */
+{
+  const t = (q) => P.rozeber(q);
+
+  /* a) Cena za metr. Rozbalovátko „do 50 Kč/m²" existuje odjakživa. */
+  pravda('„do 20 Kč/m2" je cena za metr', t('do 20 Kč/m2').zaMetrDo === 20, JSON.stringify(t('do 20 Kč/m2')));
+  pravda('„do 50 kč za metr" taky', t('do 50 kč za metr').zaMetrDo === 50);
+  pravda('„orná do 20 Kč/m2" umí obojí',
+    t('orná do 20 Kč/m2').druh === 'Orná půda' && t('orná do 20 Kč/m2').zaMetrDo === 20
+    && t('orná do 20 Kč/m2').text === '');
+  pravda('a nepleteme to s celkovou cenou', t('do 20 Kč/m2').cenaDo === null);
+
+  /* b) Holé číslo s jednotkou. „Les 5 ha" je jasná věta — dosud celé
+     „5 ha" propadlo do hledání obce a výpis byl prázdný.
+     Výměra se čte jako PŘIBLIŽNĚ (kdo píše 1000 m², nechce přijít
+     o parcelu s 1050 m²), cena jako STROP (to je rozpočet). */
+  pravda('„les 5 ha" je výměra kolem 5 ha',
+    t('les 5 ha').plochaOd === 37500 && t('les 5 ha').plochaDo === 62500 && t('les 5 ha').text === '',
+    JSON.stringify(t('les 5 ha')));
+  pravda('„pozemek 1000 m2" taky',
+    t('pozemek 1000 m2').plochaOd === 750 && t('pozemek 1000 m2').plochaDo === 1250);
+  pravda('a v odznaku stojí, že je to přibližně',
+    (t('1000 m2').casti[0] || {}).popis === 'kolem 1000 m2',
+    JSON.stringify((t('1000 m2').casti[0] || {}).popis));
+  pravda('holá cena je strop, ne rozmezí',
+    t('500 tis').cenaDo === 500000 && t('500 tis').cenaOd === null);
+  pravda('„do 2 ha" má pořád přednost před přibližností',
+    t('do 2 ha').plochaDo === 20000 && t('do 2 ha').plochaOd === null);
+
+  /* c) „Levné". Web to umí jako „pod obvyklou cenou" — a je to jeden
+     z mála filtrů, o kterých se ve větě nedalo říct vůbec nic. */
+  pravda('„levné pozemky" je filtr', t('levné pozemky').levne === true && t('levné pozemky').text === '');
+  pravda('„levný" i „levná"', t('levný').levne === true && t('levná orná půda').levne === true);
+  pravda('„pod cenou" taky', t('pod cenou').levne === true);
+  pravda('„výhodná koupě" taky', t('výhodná koupě').levne === true);
+  pravda('a odznak říká, co to znamená',
+    (t('levné').casti[0] || {}).popis === 'pod obvyklou cenou');
+
+  /* d) „Sítě" bez upřesnění. Znamená to aspoň jednu z elektřiny, vody,
+     kanalizace a plynu — nic víc se z toho vyčíst nedá. */
+  pravda('„se sítěmi" znamená aspoň jednu síť',
+    t('se sítěmi').nejakeSite === true && t('se sítěmi').text === '');
+  pravda('„inženýrské sítě" taky', t('inženýrské sítě').nejakeSite === true);
+  pravda('konkrétní síť má přednost před obecnou',
+    t('s elektřinou a sítěmi').nejakeSite === false
+    && t('s elektřinou a sítěmi').site.join() === 'elektrina',
+    JSON.stringify(t('s elektřinou a sítěmi')));
+  /* …a to obecné slovo se musí POHLTIT, i když prohrálo. Kdyby zbylo
+     v textu, hledala by se obec „sítěmi" a výpis by byl prázdný —
+     tedy přesně opačný výsledek, než jaký ta věta chce. */
+  pravda('a přebité obecné slovo nezůstane v textu',
+    t('s elektřinou a sítěmi').text === '', JSON.stringify(t('s elektřinou a sítěmi').text));
+  pravda('„od 20 Kč/m2" je spodní mez ceny za metr',
+    t('od 20 Kč/m2').zaMetrOd === 20 && t('od 20 Kč/m2').text === '',
+    JSON.stringify(t('od 20 Kč/m2')));
+  pravda('„nad 20 Kč/m2" taky', t('nad 20 Kč/m2').zaMetrOd === 20);
+  pravda('a obě meze se dají zadat naráz',
+    t('od 20 Kč/m2 do 50 Kč/m2').zaMetrOd === 20 && t('od 20 Kč/m2 do 50 Kč/m2').zaMetrDo === 50);
+
+  /* e) Slova, která jen uvozují místo. */
+  pravda('„okres Kolín" hledá Kolín', t('okres Kolín').text === 'kolin');
+  pravda('„obec Kolín" taky', t('obec Kolín').text === 'kolin');
+  pravda('ale „od obce" zůstává druhem nabídky', t('od obce').typ === 'obec');
+}
+
+/* --- 4e) Odznak musí jít ZRUŠIT -----------------------------------------
+   Křížek na odznaku vyškrtne z věty slova, která k němu patří. Jenže se
+   škrtala slova POPISKU, ne ta, která člověk napsal — a popisek bývá
+   jiný: napíšu „bez podílu" a odznak říká „jen celé pozemky", napíšu
+   „s elektřinou" a odznak říká „Elektřina". Slova se nepotkala, takže
+   křížek nedělal NIC. Pět z deseti vyzkoušených odznaků bylo mrtvých.
+   Proto si každá pochopená část pamatuje slova, ze kterých vznikla. */
+{
+  /* Totéž, co dělá js/main.js při klepnutí na křížek. */
+  function poZruseni(dotaz, i) {
+    const f = P.rozeber(dotaz);
+    const c = f.casti[i];
+    if (!c) return null;
+    const slova = c.slova && c.slova.length ? c.slova : P.norm(c.popis).split(' ');
+    return dotaz.split(/\s+/).filter((w) => slova.indexOf(P.norm(w)) < 0).join(' ').trim();
+  }
+  const zk = [
+    ['bez podílu', 0, ''],
+    ['celek', 0, ''],
+    ['nepodíl', 0, ''],
+    ['s elektřinou', 0, 's'],
+    ['jižní Čechy', 0, ''],
+    ['orná do 500 tis', 0, 'orná'],
+    ['orná do 500 tis', 1, 'do 500 tis'],
+    ['dražba', 0, ''],
+    /* „Stavební pozemek" je dvouslovný název druhu, takže k odznaku
+       patří obě slova — zůstat má jen místo. */
+    ['stavební pozemek u Kolína', 0, 'u Kolína'],
+    ['Jihočeský kraj', 0, ''],
+  ];
+  for (const [q, i, ceka] of zk) {
+    const po = poZruseni(q, i);
+    pravda(`křížek u „${q}" (odznak ${i}) opravdu škrtá`, po === ceka,
+      `zbylo ${JSON.stringify(po)}, čekáno ${JSON.stringify(ceka)}`);
+  }
+  /* A obecně: po zrušení odznaku už ta část nesmí být rozpoznaná znovu —
+     jinak by se odznak hned vrátil a křížek by vypadal jako pokažený. */
+  const dotazy = ['bez podílu', 's elektřinou', 'jižní Čechy', 'orná do 500 tis',
+    'stavební Vysočina s vodou do 1 mil', 'nepodíl', 'dražba Brno'];
+  let vracejici = [];
+  for (const q of dotazy) {
+    const f = P.rozeber(q);
+    for (let i = 0; i < f.casti.length; i++) {
+      const po = poZruseni(q, i);
+      const znovu = P.rozeber(po).casti.map((c) => c.popis);
+      if (znovu.indexOf(f.casti[i].popis) >= 0) vracejici.push(q + ' → ' + f.casti[i].popis);
+    }
+  }
+  pravda('zrušený odznak se sám nevrátí', vracejici.length === 0, vracejici.join('; '));
+}
+
+/* --- 4g) Slovník nesmí spolknout NÁZEV MÍSTA --------------------------
+   Slovník roste: druhy, typy, sítě, kraje, „levné", výplňová slova.
+   Každé přidané slovo je risk, že se potká s názvem obce nebo okresu
+   a ten se z věty ztratí — a člověk pak marně hledá místo, které
+   v datech je. Tohle se proti SKUTEČNÝM názvům dá ověřit rovnou.
+
+   Pravidlo: z každého názvu musí po rozboru něco zbýt — buď text
+   k hledání, nebo filtr, který ten název zastoupí (Praha se pozná jako
+   místo, „Vysočina" klidně jako kraj). Prázdno znamená, že se název
+   rozpustil ve slovníku a nezbylo podle čeho hledat. */
+{
+  const data = JSON.parse(readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
+  const jmena = new Set();
+  for (const d of data) { if (d.place) jmena.add(d.place); if (d.okres) jmena.add(d.okres); }
+  const ztracene = [];
+  for (const j of jmena) {
+    const r = P.rozeber(j);
+    if (!r.text && !r.druh && !r.typ && !r.kraj && !r.site.length) ztracene.push(j);
+  }
+  pravda(`žádný z ${jmena.size} názvů obcí a okresů se ve slovníku neztratí`,
+    ztracene.length === 0,
+    'ztratily se: ' + ztracene.slice(0, 12).join(', ') + (ztracene.length > 12 ? ` (a dalších ${ztracene.length - 12})` : ''));
+}
+
 /* --- 5) Slovo, které se vkládá z našeptávače, musí jít zase přečíst ---- */
 {
   let spatne = [];
   for (const d of P.DRUHY) if (P.rozeber(d[1]).druh !== d[0]) spatne.push(d[1]);
   for (const t of P.TYPY) if (P.rozeber(t[2]).typ !== t[0]) spatne.push(t[2]);
   for (const s of P.SITE) if (P.rozeber(s[2]).site.join() !== s[0]) spatne.push(s[2]);
+  /* Totéž pro „levné" a „sítě": co našeptávač vloží, musí jít přečíst. */
+  for (const o of P.OSTATNI || []) {
+    const r = P.rozeber(o[2]);
+    if (o[0] === 'levne' ? !r.levne : !r.nejakeSite) spatne.push(o[2]);
+    if (r.text !== '') spatne.push(o[2] + ' (zbyl text ' + JSON.stringify(r.text) + ')');
+  }
   pravda('každé nabízené slovo parser zase přečte', spatne.length === 0,
     'nepřečte: ' + spatne.join(', ') + ' — našeptávač by vložil do věty něco, co ji rozbije');
 }
@@ -254,11 +403,24 @@ function pravda(popis, vyslo, proc) {
   pravda('a filtruje podle toho, co pochopil', /okDotaz;/.test(main));
   pravda('pochopené části se ukazují jako odznaky', /ms-chipy/.test(idx) && /prekresliChipy/.test(main));
   pravda('a jdou zrušit', /class="msch"/.test(main));
+  pravda('křížek škrtá slova, ze kterých odznak vznikl (ne popisek)',
+    /cast\.slova && cast\.slova\.length/.test(main),
+    'při škrtání podle popisku byla polovina křížků mrtvá');
   pravda('našeptávač nabízí i slovník, ne jen obce', /navrhySlovnik/.test(main));
   pravda('kraj z věty se opravdu použije jako filtr',
     /dotazFiltr\.kraj && \(d\._gkraj \|\| krajOf\(d\)\) !== dotazFiltr\.kraj/.test(main),
     'parser by kraj poznal, ale výpis by se podle něj nezúžil');
   pravda('a našeptávač kraje nabízí', /PKDotaz\.KRAJE\.forEach/.test(main));
+  pravda('i „levné" a „sítě"', /PKDotaz\.OSTATNI \|\| \[\]/.test(main));
+  pravda('cena za metr z věty filtruje', /dotazFiltr\.zaMetrDo \|\| dotazFiltr\.zaMetrOd/.test(main));
+  pravda('obecné „sítě" z věty filtrují', /dotazFiltr\.nejakeSite/.test(main));
+  pravda('„levné" z věty filtruje', /dotazFiltr\.levne && !podObvyklou\(d\)/.test(main));
+  /* „Levné" napsané do věty a přepínač „Pod obvyklou cenou" musí být
+     TÝŽ výpočet. Dva kusy kódu by si dřív nebo později u téhož pozemku
+     protiřečily — jednou by svítil jako výhodný, jednou ne. */
+  pravda('a je to tentýž výpočet jako u přepínače',
+    /var okLevne = !levneOnly \|\| podObvyklou\(d\);/.test(main),
+    'přepínač a věta počítají „pod obvyklou cenou" každý po svém');
   /* Záloha pro případ, že se js/dotaz.js nenačte, musí mít stejný tvar —
      jinak by `dotazFiltr.kraj` bylo undefined a filtr by se choval jinak
      než se čte. */
