@@ -136,7 +136,13 @@ const server = http.createServer((req, res) => {
         const moje = inzeraty.filter((x) => x.user_id === uid);
         if (moje.length >= (kvota.get(uid) || 10)) return send(400, JSON.stringify({ message: 'dosáhli jste limitu inzerátů' }));
         const id = 'l' + (++poradi);
-        inzeraty.push({ id, user_id: uid, place: misto, okres: t(args.p_okres), druh: t(args.p_druh),
+        /* Stav jako doopravdy: create_listing vkládá rovnou 'approved'
+           (model „jako Bazoš" — inzerát je na mapě hned, viz
+           supabase/listings-autopublish.sql). Kdyby tu stav chyběl,
+           stránka „moje inzeráty" by u každého ukázala „čeká" a test by
+           si toho nevšiml. */
+        inzeraty.push({ id, user_id: uid, status: 'approved', views: 0,
+          place: misto, okres: t(args.p_okres), druh: t(args.p_druh),
           parcel: t(args.p_parcel), area: plocha, price: cena, lat: args.p_lat, lng: args.p_lng,
           description: t(args.p_description), contact: kontakt, photos: args.p_photos || [],
           features: args.p_features || [], access: t(args.p_access), created_at: new Date().toISOString() });
@@ -150,6 +156,16 @@ const server = http.createServer((req, res) => {
 
       if (fn === 'my_listings') {
         return send(200, JSON.stringify(inzeraty.filter((x) => x.user_id === uid)));
+      }
+
+      /* Smazání smí jen vlastník — stejně jako doopravdy (delete_listing
+         maže „where id = … and user_id = auth.uid()"). Kdyby to tu bylo
+         volnější, test by neuhlídal, že cizí inzerát smazat nejde. */
+      if (fn === 'delete_listing') {
+        const i = inzeraty.findIndex((x) => x.id === args.p_id && x.user_id === uid);
+        if (i < 0) return send(200, JSON.stringify(false));
+        inzeraty.splice(i, 1);
+        return send(200, JSON.stringify(true));
       }
 
       // Uložená hledání. Výchozí je jedno na okres Tábor (kvůli odznaku

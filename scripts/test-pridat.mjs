@@ -137,6 +137,46 @@ async function odesli(p) {
   await ctx.close();
 }
 
+/* --- 2b) A dál: vidím ho ve svých inzerátech a jde smazat -------------
+   Formulář po uložení přejde na „moje inzeráty" — tam cesta pokračuje
+   a dosud ji taky nikdo neprocházel. Vložit pozemek, který pak nejde
+   najít ani smazat, je totéž jako ho nevložit. */
+{
+  const { ctx, p, padlo } = await otevri(true);
+  await p.goto(`${BASE}/muj-inzerat.html`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(2800);
+  const v = await p.evaluate(() => ({
+    karet: document.querySelectorAll('.mi-lcard').length,
+    odznak: (document.querySelector('.mi-lstatus') || {}).textContent || '',
+    tlacitka: [...document.querySelectorAll('.mi-lbtn')].map((b) => b.textContent.trim()),
+    text: (document.getElementById('mi-list') || document.body).textContent.replace(/\s+/g, ' '),
+  }));
+  pravda('vložený pozemek je vidět v „moje inzeráty"', v.karet === 1, `karet ${v.karet}`);
+  /* Inzerát je na mapě HNED (create_listing vkládá status 'approved').
+     Kdyby se stav ztratil, stránka by u něj tvrdila „čeká" a člověk by
+     marně vyhlížel schválení, které nikdo nedělá. */
+  pravda('a je označený jako zveřejněný, ne „čeká"', /na mapě/i.test(v.odznak),
+    `odznak: „${v.odznak.trim()}"`);
+  pravda('s údaji, které člověk zadal', /Kolín/.test(v.text) && /1 200|1200/.test(v.text));
+  pravda('a jde smazat', v.tlacitka.some((t) => /smazat/i.test(t)), JSON.stringify(v.tlacitka));
+
+  p.on('dialog', (d) => d.accept());
+  const del = await p.$('[data-del]');
+  if (del) {
+    await del.click().catch(() => {});
+    await p.waitForTimeout(1800);
+    const po = await p.evaluate(() => ({
+      karet: document.querySelectorAll('.mi-lcard').length,
+      prazdno: !(document.getElementById('mi-empty') || {}).hidden,
+    }));
+    pravda('smazání opravdu smaže', po.karet === 0, `zůstalo karet ${po.karet}`);
+    pravda('a řekne, že už nic nemáte', po.prazdno === true,
+      'prázdný seznam bez vysvětlení vypadá jako chyba načítání');
+  }
+  pravda('a ani tady nic nespadlo', padlo.length === 0, padlo.join(' | '));
+  await ctx.close();
+}
+
 /* --- 3) Co server odmítne, se nesmí tvářit jako uložené ---------------
    Meze jsou na serveru schválně — prohlížeči se věřit nedá. Test je ale
    o tom, co uvidí ČLOVĚK: odmítnutí musí dojít až k němu a musí z něj
