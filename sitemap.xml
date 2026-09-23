@@ -236,17 +236,17 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://www.parcelaka.cz/pozemky-okres-pisek.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://www.parcelaka.cz/pozemky-okres-ceske-budejovice.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemky-okres-tabor.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-pisek.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -361,12 +361,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-jablonec-nad-nisou.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-semily.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-semily.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-jablonec-nad-nisou.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
