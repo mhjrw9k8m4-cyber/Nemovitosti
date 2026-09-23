@@ -179,6 +179,58 @@ const pc = model3.percentil(levny);
 pravda('nejlevnější nabídka je v dolní části žebříčku', !!pc && pc.cheaper >= 90,
   `levnější než ${pc && pc.cheaper} % podobných`);
 
+// --- 7b) Podíl, o kterém VÍME, se nesmí chválit jako výhodná koupě ----
+/* Spoluvlastnický podíl má cenu za m² nízkou z podstaty věci: v inzerátu
+   stojí výměra CELÉ parcely, ale cena jen za zlomek. Dokud se to nedalo
+   poznat, model to nemohl vědět a v komentářích u MEZ_POCHYBNA se
+   poctivě píše, že rozlišit trhák od podílu z dat nejde.
+   Jenže teď to u části nabídek jde — inzerát to sám říká a robot to čte
+   do pole `podil`. Změřeno na ostrých datech: ze 629 nabídek označených
+   jako výhodné jich 194 (31 %) mělo v popisu napsáno, že jde o podíl.
+   Web je tím pádem chválil za cenu, která se s ostatními nedá srovnat —
+   a na hlavní stránce je rovnou nabízel jako nejlepší příležitosti. */
+{
+  const PORAD = pole(14, (i) => ({
+    place: 'Srov' + i, okres: 'Cheb', type: 'sale', druh: 'orná půda',
+    area: 1000, price: 40000 + i * 3000,
+  }));
+  /* Cena schválně nízká, ale ne extrémní: kdyby byla pod hranicí
+     MEZ_POCHYBNA, byla by pochybná i bez podílu a test by neměřil to,
+     co má. Tady vychází zhruba 27 % pod odhadem — to je pořád sleva,
+     kterou by web běžně pochválil. */
+  const LEVNY = { place: 'Levný', okres: 'Cheb', type: 'sale', druh: 'orná půda',
+    area: 1000, price: 41000 };
+  const LEVNY_PODIL = Object.assign({}, LEVNY, { place: 'Podílový', podil: true });
+  const m = PK_CENY.postav([...PORAD, LEVNY, LEVNY_PODIL], OKRES_KRAJ);
+
+  const bezPodilu = m.percentil(LEVNY);
+  pravda('levná nabídka bez podílu percentil dostane', !!bezPodilu && bezPodilu.cheaper >= 80,
+    JSON.stringify(bezPodilu));
+  je('ale nabídka, u které inzerát mluví o podílu, percentil nedostane',
+    m.percentil(LEVNY_PODIL), null);
+
+  const odB = m.odhad(LEVNY), odP = m.odhad(LEVNY_PODIL);
+  pravda('odhad u podílu se nezahazuje — jen se za něj neručí',
+    !!odP, 'odhad zmizel úplně; číslo samo o sobě je pořád užitečné');
+  pravda('a je u něj vidět, že jde o podíl', !!odP && odP.podil === true, JSON.stringify(odP));
+  /* `podil` je VLASTNÍ důvod, ne podtyp pochybnosti. Přimíchat ho do
+     `pochybna` se zkoušelo a kontrola v test-doporuceni to právem
+     shodila: pochybných by bylo 38 % nabídek, a to už není varování,
+     ale šum. „Pochybná" má dál znamenat jedinou věc — tahle sleva je
+     moc velká na to, aby byla pravda. */
+  pravda('ale „pochybná" tím nezhoustne', !!odP && odP.pochybna === false, JSON.stringify(odP));
+  pravda('tatáž nabídka bez podílu podíl nehlásí',
+    !!odB && odB.podil === false && odB.pochybna === false, JSON.stringify(odB));
+
+  /* A opačný směr: podíl se nesmí stát univerzální výmluvou. Když je
+     cena běžná, žádné varování se nevymýšlí — jen se netvrdí sleva. */
+  const BEZNY_PODIL = { place: 'Běžný podíl', okres: 'Cheb', type: 'sale', druh: 'orná půda',
+    area: 1000, price: 55000, podil: true };
+  const odBP = m.odhad(BEZNY_PODIL);
+  pravda('u podílu s běžnou cenou se nehlásí žádná sleva',
+    !!odBP && odBP.podOdhadem < 25, JSON.stringify(odBP));
+}
+
 // --- 8) Skloňování krajů ---------------------------------------------
 // Vlastní chyba, která se objevila hned na třech místech: web psal
 // „v Středočeský kraji", „v Vysočina kraji". Českému čtenáři to okamžitě

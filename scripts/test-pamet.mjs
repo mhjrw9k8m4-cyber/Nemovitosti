@@ -115,12 +115,27 @@ pravda('datum návštěvy se posunulo na dnešek', !!potom && potom > MINULE,
   `v úložišti je ${potom}`);
 
 // --- 3) Skrytí pozemku ------------------------------------------------
-await p.evaluate(() => {
-  // Poslední, ne první — první je nejlevnější a potřebujeme ho dál
-  // pro kontrolu cenového filtru.
-  const li = [...document.querySelectorAll('.opp-item')].pop();
-  li.querySelector('.opp-skryt').click();
+/* Skrývá se KONKRÉTNÍ pozemek, ne „ten poslední v seznamu".
+   Pořadí výpisu je totiž schválně zamíchané pro každou relaci zvlášť
+   (js/poradi.js, prihozeniSeance() losuje a ukládá do sessionStorage),
+   takže „poslední" je pokaždé někdo jiný. Když na konci skončil ten
+   nejlevnější — a to je při pěti pozemcích čirá náhoda — skryl se
+   jediný pozemek, který projde cenovým filtrem, a kontrola o kus níž
+   pak hlásila nulu. Test selhával přibližně každý druhý běh a vypadalo
+   to jako chyba webu; přitom web dělal přesně to, co má.
+   „Obec 5" je nejdražší (650 000), takže cenovému filtru „do 250 000"
+   nepřekáží ani omylem. */
+const skryto = await p.evaluate(() => {
+  const vse = [...document.querySelectorAll('.opp-item')];
+  const li = vse.find((x) => /Obec 5(\D|$)/.test(x.textContent));
+  if (!li) return { chyba: 'karta „Obec 5" v seznamu není', v: vse.map((x) => x.textContent.replace(/\s+/g, ' ').trim().slice(0, 40)) };
+  const b = li.querySelector('.opp-skryt');
+  if (!b) return { chyba: 'karta nemá tlačítko .opp-skryt', v: li.textContent.replace(/\s+/g, ' ').trim().slice(0, 80) };
+  b.click();
+  return { ok: true };
 });
+pravda('našel se pozemek, který se má skrýt', skryto && skryto.ok === true,
+  JSON.stringify(skryto));
 await p.waitForTimeout(500);
 const poSkryti = await p.evaluate(() => ({
   celkem: document.querySelectorAll('.opp-item').length,
@@ -151,15 +166,29 @@ await p.evaluate(() => {
 await p.waitForTimeout(600);
 const predObnovou = await p.evaluate(() => document.querySelectorAll('.opp-item').length);
 await p.reload({ waitUntil: 'domcontentloaded' });
-await p.waitForTimeout(4200);
+/* Čeká se na VÝSLEDEK, ne na hodiny — pevné čekání je vždycky jen sázka
+   na to, že se stroj nezadrhne.
+   Poznámka pro pořádek: NEBYLA to příčina toho, proč tenhle test padal.
+   Zpočátku to tak vypadalo (padal v sadě, sám procházel) a čekání se
+   kvůli tomu předělalo. Skutečná příčina byla jinde a je popsaná
+   u skrývání pozemku výš: losované pořadí výpisu. Čekání na podmínku
+   je i tak lepší než na hodiny, tak zůstává. */
+await p.waitForFunction(
+  () => document.querySelectorAll('.opp-item').length > 0
+    || document.querySelector('#opp-list .map-count'),
+  { timeout: 20000 },
+).catch(() => {});
+await p.waitForTimeout(400);
 const poObnove = await p.evaluate(() => ({
   polozek: document.querySelectorAll('.opp-item').length,
   cena: (document.getElementById('map-cena') || {}).value,
 }));
 pravda('nastavená cena se po obnovení sama vrátila', poObnove.cena === '250000',
   `v poli je „${poObnove.cena}"`);
+/* Pod 250 000 je z fixtury jediný pozemek („Obec 1"), a ten skrytý
+   není — takže po obnovení musí zůstat přesně tak, jak byl. */
 pravda('a seznam je podle ní opravdu filtrovaný',
-  poObnove.polozek === predObnovou && poObnove.polozek < 5,
+  poObnove.polozek === predObnovou && poObnove.polozek > 0 && poObnove.polozek < 5,
   `před obnovou ${predObnovou}, po obnově ${poObnove.polozek}`);
 pravda('skrytý pozemek zůstal skrytý i po obnovení',
   (await p.evaluate(() => (JSON.parse(localStorage.getItem('pk_skryte_v1')) || []).length)) === 1);

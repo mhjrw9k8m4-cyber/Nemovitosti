@@ -256,6 +256,84 @@ pravda('a okno na mapě taky', /PK_CENY\.blokOdhadu/.test(main),
     !heroProc || +heroProc < M.MEZ_POCHYBNA, `úvod hlásí: „${v.hero}"`);
 }
 
+/* --- Podíl se nesmí vydávat za výhodnou koupi -------------------------
+   Komentář nahoře říká, že rozlišit trhák od podílu z dat NEJDE. To
+   platilo, dokud se podíl nedal přečíst. Teď to u části nabídek jde:
+   inzerát to sám napíše a robot to čte do pole `podil`.
+
+   Změřeno na ostrých datech, než se to opravilo: ze 629 nabídek
+   označených za výhodné jich 194 (31 %) mělo v popisu napsáno, že jde
+   o podíl. Cena za metr je u nich nízká z podstaty věci — v ceně je
+   zlomek pozemku, ale výměra je celá. Chválit je za to je přesně ta
+   chyba, kvůli které tenhle test vznikl, jen z druhé strany. */
+{
+  const sPodilem = DATA.filter((d) => d.podil && d.area > 0 && d.price > 0);
+  pravda('v datech vůbec nějaké podíly jsou', sPodilem.length > 20,
+    `jen ${sPodilem.length} — buď je robot přestal číst, nebo se změnila data`);
+
+  /* Podmínka je schválně TÁŽ, jakou má web na kartě (js/main.js) —
+     jinak by test měřil něco jiného, než co člověk vidí. Že tam ta
+     podmínka doopravdy je, se hlídá o kus níž přímo ve zdrojáku. */
+  const chvalene = sPodilem.filter((d) => {
+    const pc = M.percentil(d), od = M.odhad(d);
+    return (pc && pc.cheaper >= 70)
+      || (od && od.podleVelikosti && !od.pochybna && !od.nejisty && !od.podil && od.podOdhadem >= 25);
+  });
+  pravda('ani jeden podíl se nevydává za výhodnou koupi', chvalene.length === 0,
+    `chválených podílů: ${chvalene.length}, např. ${chvalene.slice(0, 3).map((d) => `${d.place} (${Math.round(d.price / d.area)} Kč/m²)`).join(', ')}`);
+
+  pravda('a percentil se u podílu vůbec nepočítá',
+    sPodilem.every((d) => M.percentil(d) === null),
+    'percentil srovnává cenu za metr s celými pozemky — u podílu to nedává smysl');
+
+  /* Odhad se ale zahazovat nemá: číslo samo o sobě je pořád užitečné,
+     jen se za něj neručí jako za slevu. */
+  const sOdhadem = sPodilem.filter((d) => M.odhad(d));
+  pravda('odhad obvyklé ceny u podílu zůstává', sOdhadem.length > sPodilem.length * 0.5,
+    `odhad vznikl jen u ${sOdhadem.length} z ${sPodilem.length}`);
+  /* `podil` je vlastní důvod, ne podtyp pochybnosti. Přimíchat ho do
+     `pochybna` se zkoušelo a kontrola „ale není to většina" to právem
+     shodila: pochybných by bylo 38 % nabídek, a to už není varování,
+     ale šum. */
+  pravda('a je u něj vidět, že jde o podíl',
+    sOdhadem.every((d) => M.odhad(d).podil === true));
+  pravda('ale „pochybná" tím nezhoustne',
+    sOdhadem.filter((d) => M.odhad(d).pochybna).length < sOdhadem.length * 0.5,
+    'podíl se nesmí stát univerzálním důvodem k varování');
+
+  /* A že se na ten příznak opravdu kouká tam, kde se o slevě mluví. */
+  const mainJs = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
+  /* Větve, kde se o slevě mluví, jsou DVĚ (jistý a nejistý odhad) —
+     a obě se musí ptát. Vzorek se tu proto počítá, ne jen hledá:
+     s jedním nálezem by sabotáž jedné větve prošla bez povšimnutí. */
+  const slevoveVetve = (mainJs.match(/_od\.podOdhadem >= 25/g) || []).length;
+  const sPodminkou = (mainJs.match(/_od\.podOdhadem >= 25 && !_od\.podil/g) || []).length;
+  pravda('každá větev, kde se mluví o slevě, se ptá na podíl',
+    slevoveVetve > 0 && sPodminkou === slevoveVetve,
+    `větví ${slevoveVetve}, s podmínkou ${sPodminkou} — bez ní se u podílu zase objeví „−X % proti okolí"`);
+
+  /* Slovo se musí dostat i k člověku, ne zůstat v datech. Blok se
+     vykresluje až od 15 % pod odhadem (pod tím by to byla jen další
+     řádka s číslem u poloviny webu), takže se vybere podíl, u kterého
+     se opravdu ukáže. */
+  const proBlok = sOdhadem.find((d) => {
+    const o = M.odhad(d);
+    return o && o.podleVelikosti && o.podOdhadem >= 15;
+  });
+  pravda('nějaký podíl se slevou v datech je', !!proBlok);
+  if (proBlok) {
+    const blok = C.blokOdhadu(M, proBlok, {});
+    pravda('a blok s odhadem to řekne rovnou', /spoluvlastnick/i.test(blok) && /zlomek/i.test(blok),
+      `blok: ${String(blok).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 200)}`);
+    /* Varovný text nesmí být vysázený jako radostná zpráva. */
+    pravda('a je podaný tlumeně, ne jako sleva', /mo-rozdil mo-pochybna/.test(blok),
+      'text varuje, ale styl by jásal');
+  }
+  const pozemekJs = readFileSync(new URL('../js/pozemek.js', import.meta.url), 'utf8');
+  pravda('stránka pozemku má pro podíl vlastní verdikt', /Prodává se podíl/.test(pozemekJs),
+    'bez něj by stránka o ceně mlčela a nízkou cenu za metr by si člověk přebral jako výhodnou');
+}
+
 console.log('\nCo se doporučuje a co se má ověřit');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

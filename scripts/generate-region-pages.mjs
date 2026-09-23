@@ -386,7 +386,7 @@ function itemRow(o){
      často jako „zavedeno", takže se tvrdí jen to, co inzerát uvádí. */
   if(o.site && o.site.length) bits.push('inzerát uvádí <b>'+esc(o.site.map(k=>VYB.nazev(k).toLowerCase()).join(', '))+'</b>');
   /* Podíl mění, CO se kupuje — bez něj vypadá cena za metr jako trhák. */
-  if(o.podil) bits.push('<b>spoluvlastnický podíl</b>');
+  if(o.podil) bits.push('<b>spoluvlastnický podíl'+(o.zlomek?' '+esc(o.zlomek):'')+'</b>');
   /* Odkaz ven se musel poznat až po klepnutí. Šipka „→" vypadá jako
      „další stránka", ne jako „odcházíš z webu" — a kdo poslouchá čtečku
      obrazovky, nepozná ani to. Proto šikmá šipka, doména v popisku

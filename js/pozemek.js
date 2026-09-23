@@ -182,6 +182,19 @@
   // tenhle soubor měl dřív vlastní kopii výpočtu a ta se s mapou rozešla.
   function pzVerdictHtml(d) {
     if (!MODEL || !hasArea(d) || !d.price) return '';
+    /* Známý podíl dostane VLASTNÍ verdikt, ne mlčení. Bez něj by se
+       stránka o ceně nezmínila vůbec a člověk by si nízkou cenu za metr
+       přebral po svém — nejspíš jako výhodnou koupi. Přesně to web dřív
+       říkal nahlas: „Levnější než 96 % podobných pozemků." */
+    if (d.podil) {
+      return '<div class="pz-verdict warn">' +
+        '<div class="pv-top"><span class="pv-badge">Prodává se podíl</span><span class="pv-cmp">Cena za m²</span></div>' +
+        '<div class="pv-text">Inzerát mluví o <b>spoluvlastnickém podílu' + (d.zlomek ? ' ' + esc(d.zlomek) : '') + '</b>. V ceně je pak jen ' +
+        '<b>zlomek pozemku</b>, kdežto výměra je uvedená celá — cena za metr proto vychází nízká ' +
+        'sama od sebe a s celými pozemky se srovnat nedá. <b>Velikost podílu</b> si ověřte ' +
+        'v katastru a u zdroje.</div>' +
+        '</div>' + odhadHtml(d);
+    }
     if (MODEL.neduveryhodna(d)) {
       return '<div class="pz-verdict warn">' +
         '<div class="pv-top"><span class="pv-badge">Cena k ověření</span><span class="pv-cmp">Cena za m²</span></div>' +
@@ -266,7 +279,11 @@
     /* Podíl je to nejdůležitější, co se o nabídce dá říct: kupuje se
        zlomek pozemku, ne pozemek. Bez toho vypadá cena za metr jako
        trhák. */
-    if (d.podil) facts.push({ k: 'Vlastnictví', v: 'inzerát mluví o spoluvlastnickém podílu — ověřte si velikost podílu v katastru' });
+    if (d.podil) {
+      facts.push({ k: 'Vlastnictví', v: d.zlomek
+        ? 'inzerát mluví o spoluvlastnickém podílu <b>' + esc(d.zlomek) + '</b> — ověřte si ho v katastru'
+        : 'inzerát mluví o spoluvlastnickém podílu — ověřte si velikost podílu v katastru' });
+    }
 
     var html =
       '<div class="pz-media">' + heroLayers(d) + '</div>' +

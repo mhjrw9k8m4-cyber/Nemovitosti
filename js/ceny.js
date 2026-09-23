@@ -255,10 +255,27 @@
       return med ? (d.price / d.area) < med / 50 : false;
     }
 
+    /* PODÍL SE S CELÝMI POZEMKY SROVNÁVAT NEDÁ.
+     *
+     * U spoluvlastnického podílu stojí v inzerátu výměra CELÉ parcely,
+     * ale cena jen za zlomek — cena za metr proto vyjde nízká z podstaty
+     * věci, ne proto, že je nabídka výhodná. Dokud se podíl nedal
+     * poznat, model to vědět nemohl (viz komentář u MEZ_POCHYBNA:
+     * „rozlišit skutečný trhák od podílu z dat NEJDE"). Teď to u části
+     * nabídek jde: inzerát to sám říká a robot to čte do pole `podil`.
+     *
+     * Změřeno na ostrých datech: ze 629 nabídek, které web označoval za
+     * výhodné, jich 194 (31 %) mělo v popisu napsáno, že jde o podíl —
+     * a na úvodní stránce se rovnou nabízely jako nejlepší příležitosti.
+     * Chválit je za cenu, která se s ostatními nedá srovnat, je horší
+     * než o ní mlčet. */
+    function nesrovnatelna(d) { return !!(d && d.podil); }
+
     /* Percentil ceny za m² proti stejnému typu a druhu. null, když není dost
-     * srovnání nebo když je cena nevěrohodná. */
+     * srovnání, když je cena nevěrohodná — nebo když se ta cena s ostatními
+     * srovnávat nedá (podíl, viz výš). */
     function percentil(d) {
-      if (!hasArea(d) || !d.price || neduveryhodna(d)) return null;
+      if (!hasArea(d) || !d.price || neduveryhodna(d) || nesrovnatelna(d)) return null;
       var arr = podleTypu[d.type + '|' + druhGroup(d.druh)];
       if (!arr || arr.length < 10) return null;
       if (arr[arr.length - 1] <= arr[0] * 1.2) return null;
@@ -334,6 +351,15 @@
              „ověřit cenu". Hranice je úsudek, ne měření — rozdělení slev
              je plynulé a žádný zlom v datech není (změřeno na 1414
              nabídkách s odhadem podle velikosti). */
+          /* `podil` je VLASTNÍ důvod, ne podtyp pochybnosti. Zkoušel jsem
+             ho do `pochybna` přimíchat — a existující kontrola to právem
+             shodila: pochybných by bylo 560 z 1471 (38 %), a to už není
+             varování, ale šum. „Pochybná" má dál znamenat jedinou věc:
+             tahle sleva je moc velká na to, aby byla pravda.
+             Že se podíl nesmí chválit jako výhodná koupě, zařídí
+             percentil (ten u něj nevznikne vůbec) a `podil` u odhadu —
+             tam, kde se o slevě mluví, se na něj musí koukat. */
+          podil: nesrovnatelna(d),
           pochybna: pod >= MEZ_POCHYBNA,
           // Jak moc se srovnávané ceny mezi sebou liší (mezikvartil/medián).
           rozptyl: rozptyl,
@@ -388,8 +414,12 @@
       '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
       '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">' + fmt(o.castka) + ' Kč</span></div>' +
       // U pochybného rozdílu se nesmí jásat: tentýž údaj, jiné čtení.
-      '<div class="mo-rozdil' + (o.pochybna || o.nejisty ? ' mo-pochybna' : '') + '"><b>o ' + o.podOdhadem + ' % níž</b>' +
-        (o.pochybna ? ' — takový rozdíl bývá spoluvlastnický podíl nebo jiná výměra, ověřte si to'
+      /* Podíl patří mezi důvody k tlumenému podání stejně jako pochybná
+         sleva: text pod tím varuje, tak nesmí být vysázený jako radostná
+         zpráva. */
+      '<div class="mo-rozdil' + (o.pochybna || o.nejisty || o.podil ? ' mo-pochybna' : '') + '"><b>o ' + o.podOdhadem + ' % níž</b>' +
+        (o.podil ? ' — jenže inzerát mluví o <b>spoluvlastnickém podílu</b>: v ceně je jen zlomek pozemku, kdežto výměra je celá. S celými pozemky se to srovnat nedá.'
+          : o.pochybna ? ' — takový rozdíl bývá spoluvlastnický podíl nebo jiná výměra, ověřte si to'
           : o.nejisty ? ' — ale ceny podobných pozemků ' + kde + ' se mezi sebou liší násobky, takže tohle číslo je jen hrubé vodítko'
                     : ', tedy zhruba o ' + fmt(o.rozdil) + ' Kč') + '</div>' +
       '<p class="mo-pozn">Spočítáno z mediánu <b>' + fmt(Math.round(o.zaM2)) + ' Kč/m²</b> — z <b>' +

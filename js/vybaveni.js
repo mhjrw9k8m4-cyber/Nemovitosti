@@ -130,6 +130,30 @@
     return def.mimo.test(text.slice(Math.max(0, od - 24), od));
   }
 
+  /* JAK VELKÝ TEN PODÍL JE
+   *
+   * Samotné „podíl" řekne málo — polovina pozemku a jedna šestnáctina
+   * jsou úplně jiné nabídky. Zlomek se proto vytáhne, ale jen jako údaj
+   * K PŘEČTENÍ: nic se jím nepřepočítává. Přepočítat výměru podílem by
+   * znamenalo vědět, jestli zdroj uvádí výměru celé parcely, nebo už jen
+   * podílu — a to se z dat poznat nedá. Kdo si to chce spočítat, má
+   * aspoň z čeho.
+   *
+   * Hledá se jen TĚSNĚ u slova, které o podílu mluví. Čísla se zlomkem
+   * jsou v inzerátech běžná i jinde — především parcelní čísla („p. č.
+   * 254/1"), a ta podíl nejsou. */
+  var ZLOMEK_U_PODILU = /(?:podil\w*|spoluvlastnick\w*|idealn\w*)[^.;!?]{0,28}?(\d{1,6})\s*\/\s*(\d{1,6})/;
+
+  function zlomekPodilu(t) {
+    var m = ZLOMEK_U_PODILU.exec(t);
+    if (!m) return null;
+    var a = parseInt(m[1], 10), b = parseInt(m[2], 10);
+    /* Co zlomek podílu není: celý pozemek (1/1), nesmysl (5/2) a dělení
+       nulou. Radši se neřekne nic než něco, co nedává smysl. */
+    if (!(a > 0) || !(b > 0) || a >= b) return null;
+    return a + '/' + b;
+  }
+
   function najdi(text) {
     var syrovy = String(text == null ? '' : text);
     var t = srovnej(syrovy);
@@ -150,7 +174,11 @@
     var bezCesty = t.replace(PODIL_CESTA, ' ');
     PODIL.lastIndex = 0;
     var podil = PODIL.test(bezCesty) && !NENI_PODIL.test(t);
-    return { site: ven, podil: podil, znamo: t.length >= 40 };
+    /* Zlomek se hledá v témže textu, ze kterého je podíl vyjmutá cesta —
+       jinak by „podíl 1/8 na přístupovém pozemku" vydávalo osminu cesty
+       za osminu pozemku. */
+    return { site: ven, podil: podil, zlomek: podil ? zlomekPodilu(bezCesty) : null,
+      znamo: t.length >= 40 };
   }
 
   function nazev(klic) {

@@ -34,6 +34,10 @@ function pridejVybaveni(o, text) {
   const v = PKVybaveni.najdi(text);
   if (v.site.length) o.site = v.site;
   if (v.podil) o.podil = true;
+  /* Velikost podílu je jen údaj k přečtení — nic se jí nepřepočítává
+     (viz js/vybaveni.js). Půlka pozemku a jedna šestnáctina jsou ale
+     úplně jiná nabídka, takže se vyplatí ji ukázat. */
+  if (v.zlomek) o.zlomek = v.zlomek;
   return o;
 }
 const OUT = join(__dirname, '..', 'data', 'opportunities.json');

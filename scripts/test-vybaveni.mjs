@@ -129,6 +129,52 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
     !podil('Prodej parcely, k ní ideální 1/8 na společné přístupové cestě.'));
 }
 
+/* --- 4b) Jak VELKÝ ten podíl je ---------------------------------------
+   Samotné „podíl" řekne málo. Polovina pozemku a jedna šestnáctina jsou
+   úplně jiné nabídky — a inzeráty ten zlomek většinou uvádějí. Čte se
+   proto i on, ale jen jako ÚDAJ K PŘEČTENÍ: nic se jím nepřepočítává.
+   Přepočítat výměru podílem by znamenalo vědět, jestli zdroj uvádí
+   výměru celé parcely, nebo už jen podílu — a to se z dat poznat nedá.
+   Kdo si to chce spočítat, má aspoň z čeho. */
+{
+  const zl = (t) => V.najdi(t).zlomek;
+  pravda('„podílu o velikosti 1/2" → 1/2', zl('Prodej spoluvlastnického podílu o velikosti 1/2 na pozemku.') === '1/2');
+  pravda('„id. podíl 1/4" → 1/4', zl('Nabízíme id. podíl 1/4 orné půdy.') === '1/4');
+  pravda('velký zlomek z listu vlastnictví', zl('LV č. 165 o výměře 3012 m², podíl 945/15288') === '945/15288');
+  pravda('„ideální 1/8" → 1/8', zl('Dražba ideální 1/8 pozemku.') === '1/8');
+  pravda('mezery kolem lomítka nevadí', zl('podíl 1 / 2 na pozemku') === '1/2');
+  /* Co se nesmí stát: */
+  pravda('bez zlomku se nic nevymýšlí', zl('Pozemek je v podílovém spoluvlastnictví.') === null);
+  pravda('u celého pozemku žádný zlomek není', zl('Krásný stavební pozemek v klidné části obce.') === null);
+  pravda('parcelní číslo se za zlomek nevydává',
+    zl('Podíl na pozemku p. č. 254/1.') === null,
+    'čísla parcel se píšou stejným způsobem jako zlomky — 254/1 podíl není');
+  /* A to i když parcelní číslo jako zlomek vypadá úplně věrohodně.
+     Chrání to tečka v „p. č." — hledání zlomku se zastaví na konci věty
+     a tečka za ni platí. Je to tím pádem pravidlo, ne náhoda, a musí
+     zůstat: bez něj by se z parcely 1/254 stal podíl jedna k dvěma stům
+     padesáti čtyřem. */
+  pravda('ani když parcelní číslo vypadá jako věrohodný zlomek',
+    zl('Podíl na pozemku p. č. 1/254.') === null);
+  pravda('a zlomek se nebere z čísla parcely za čárkou',
+    zl('Podíl 1/3 na pozemku, parc. č. 1/254.') === '1/3');
+  pravda('ani 1/1 (to je celý pozemek)', zl('Prodej pozemku, podíl 1/1.') === null);
+  /* Zlomek na CESTĚ není zlomek pozemku — stejná výjimka jako u podílu. */
+  pravda('zlomek přístupové cesty se nebere',
+    zl('Prodej parcely • spoluvlastnickým podílem 1/8 na společném přístupovém pozemku.') === null);
+  pravda('ale vedle podílu na pozemku se vezme ten správný',
+    zl('Podíl 1/3 na pozemku i podíl 1/8 na přístupové cestě.') === '1/3');
+  /* A na pořadí ve větě nesmí záležet. Tohle je ten případ, který
+     rozhoduje: kdyby se zlomek hledal v původním textu místo v textu
+     BEZ zmínky o cestě, vzala by se osmina cesty — protože stojí dřív. */
+  pravda('ani když je cesta ve větě dřív',
+    zl('Podíl 1/8 na přístupové cestě i podíl 1/3 na pozemku.') === '1/3');
+  /* A nesmí se to rozbít, když zlomek nedává smysl. */
+  pravda('nesmyslný zlomek se zahodí', zl('podíl 5/2 na pozemku') === null,
+    'čitatel větší než jmenovatel není podíl');
+  pravda('dělení nulou se zahodí', zl('podíl 1/0 na pozemku') === null);
+}
+
 /* --- 5) Co se nesmí stát ----------------------------------------------- */
 {
   pravda('prázdný text nic netvrdí',
@@ -183,6 +229,15 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
   const pozHtml = readFileSync(path.join(ROOT, 'pozemek.html'), 'utf8');
   const gen = readFileSync(path.join(ROOT, 'scripts', 'generate-region-pages.mjs'), 'utf8');
   pravda('karta v seznamu podíl přizná', /opp-podil/.test(main));
+  /* Velikost podílu se musí dostat všude tam, kde se o podílu mluví —
+     jinak by na kartě stálo „podíl" a na stránce pozemku „podíl 1/16",
+     což vypadá jako dvě různé nabídky. */
+  pravda('a je u něj velikost, když ji inzerát uvádí', /d\.zlomek \? 'podíl ' \+ esc\(d\.zlomek\)/.test(main));
+  pravda('detail na mapě taky', /spoluvlastnický podíl' \+ \(d\.zlomek/.test(main) || /d\.zlomek \? ' ' \+ esc\(d\.zlomek\)/.test(main));
+  pravda('stránka pozemku taky', /spoluvlastnickém podílu <b>' \+ esc\(d\.zlomek\)/.test(poz));
+  pravda('okresní stránky taky', /o\.zlomek\?' '\+esc\(o\.zlomek\)/.test(gen));
+  pravda('a robot si ji do dat ukládá',
+    /if \(v\.zlomek\) o\.zlomek = v\.zlomek;/.test(readFileSync(path.join(ROOT, 'scripts', 'fetch-opportunities.mjs'), 'utf8')));
   pravda('detail na mapě vypíše, co inzerát uvádí', /Inzerát uvádí/.test(main) && /uvadiHtml\(d\)/.test(main));
   pravda('stránka pozemku taky', /Inzerát uvádí/.test(poz));
   pravda('a stránka pozemku si modul vůbec načítá', /<script src="js\/vybaveni\.js/.test(pozHtml),
@@ -192,7 +247,7 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
      celé té věci. (Přišlo se na to sabotáží — kontrola neprošla, když
      měla.) */
   pravda('okresní a krajské stránky taky',
-    /bits\.push\('inzerát uvádí <b>'/.test(gen) && /bits\.push\('<b>spoluvlastnický podíl<\/b>'\)/.test(gen));
+    /bits\.push\('inzerát uvádí <b>'/.test(gen) && /bits\.push\('<b>spoluvlastnický podíl'/.test(gen));
 
   /* A hlavně: opravdu to v hotových stránkách STOJÍ. Generátor se dá
      změnit a zapomenout spustit — tohle projde jen tehdy, když jsou

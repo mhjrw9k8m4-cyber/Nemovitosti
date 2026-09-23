@@ -1344,7 +1344,10 @@
         return esc(window.PKVybaveni.nazev(k).toLowerCase());
       }).join(', ') + '</b></span>';
     }
-    if (d.podil) h += '<span class="mdf-siroky">Vlastnictví <b>spoluvlastnický podíl</b></span>';
+    if (d.podil) {
+      h += '<span class="mdf-siroky">Vlastnictví <b>spoluvlastnický podíl'
+        + (d.zlomek ? ' ' + esc(d.zlomek) : '') + '</b></span>';
+    }
     return h;
   }
 
@@ -2836,7 +2839,10 @@
         var x = MODEL.odhad(d);
         return !!(x && x.podleVelikosti && (x.pochybna || x.nejisty));
       })();
-      if (MODEL && MODEL.neduveryhodna(d) && !_odhadPochybny) {
+      /* U známého podílu se obecné „cena k ověření" nepřidává: odznak
+         „podíl" níž říká totéž, jen přesně a jedním slovem. Dva odznaky
+         o téže věci jen zabírají řádek. */
+      if (MODEL && MODEL.neduveryhodna(d) && !_odhadPochybny && !d.podil) {
         chips.push('<span class="opp-overit" title="Cena za m² je hluboko pod obvyklou — bývá to spoluvlastnický podíl, pozemek bez přístupu nebo chyba v inzerátu">cena k ověření</span>');
       }
       var _od = MODEL ? MODEL.odhad(d) : null;
@@ -2850,13 +2856,16 @@
         chips.push('<span class="opp-overit" title="Cena je o ' + _od.podOdhadem +
           ' % pod obvyklou cenou podobných pozemků — to už nebývá sleva, ale spoluvlastnický podíl, jiná výměra v dražbě nebo chyba v inzerátu. Ověřte si podklady.">' +
           'ověřit cenu</span>');
-      } else if (_od && _od.podleVelikosti && _od.nejisty && _od.podOdhadem >= 25) {
+      } else if (_od && _od.podleVelikosti && _od.nejisty && _od.podOdhadem >= 25 && !_od.podil) {
         /* Odhad, kterému sami nevěříme (ceny srovnávaných pozemků se liší
            násobky). Zelený odznak by tvrdil jistotu, kterou nemáme. */
         chips.push('<span class="opp-overit" title="Cena vychází o ' + _od.podOdhadem +
           ' % pod obvyklou, jenže ceny podobných pozemků v okolí se mezi sebou liší násobky — odhad je proto jen hrubý. Ověřte si podklady.">' +
           'cena k ověření</span>');
-      } else if (_od && _od.podleVelikosti && _od.podOdhadem >= 25) {
+      } else if (_od && _od.podleVelikosti && _od.podOdhadem >= 25 && !_od.podil) {
+        /* U známého podílu se o slevě nemluví: cena za metr je nízká
+           z podstaty věci, protože v ceně je zlomek pozemku a výměra je
+           celá. Odznak „podíl" níž to řekne rovnou. */
         // Na kartě musí odznak vyjít na JEDEN řádek i na úzkém displeji.
         // „o 65 % pod obvyklou" verzálkami se na mobilu lámalo na dva.
         chips.push('<span class="opp-deal" title="Cena je o ' + _od.podOdhadem +
@@ -2869,7 +2878,8 @@
          metr jako trhák — přitom se kupuje zlomek pozemku, ne pozemek.
          Tvrdí se jen to, co v popisu stojí, proto „podle inzerátu". */
       if (d.podil) {
-        chips.push('<span class="opp-podil" title="Podle popisu inzerátu se prodává spoluvlastnický podíl, ne celý pozemek — velikost podílu si ověřte v katastru">podíl</span>');
+        chips.push('<span class="opp-podil" title="Podle popisu inzerátu se prodává spoluvlastnický podíl, ne celý pozemek — velikost podílu si ověřte v katastru">'
+          + (d.zlomek ? 'podíl ' + esc(d.zlomek) : 'podíl') + '</span>');
       }
       if (hot) chips.push('<span class="opp-hot">Doporučujeme</span>');
       // „Nové od minulé návštěvy" — první odznak v řadě, ať je hned vidět,
