@@ -4070,6 +4070,12 @@
        hlavičky (test hlavičky to odhalil). Proto tři brzdy: kreslí se
        v jedné obrazové hustotě (je to rozmazaná zář, ostrost tu nikdo
        nepozná), nejvýš třicetkrát za vteřinu a JEN dokud je úvod vidět. */
+    /* Jedna obrazová hustota, ne dvě: na telefonu s dvojnásobnou hustotou
+       by se kreslila čtyřnásobná plocha pro rozmazanou zář, kterou stejně
+       nikdo neostří. Zmenšovat pod jedničku nemá smysl — vyzkoušeno na
+       0,6 a nepřineslo to ani snímek navíc (34–40 v obou případech), jen
+       z teček byly mazané koule. Snímky vrátilo až zpomalení na patnáct
+       za vteřinu. */
     var dpr = 1;
     var klid = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
     var vidno = true, posledni = 0;
@@ -4093,7 +4099,10 @@
       var uzky = (cv.width / dpr) < 760;
       var s2 = Math.min(W / (x1 - x0), H / (y1 - y0)) * (uzky ? 0.96 : 0.78);
       var ox = uzky ? (W - (x1 - x0) * s2) / 2 : W - (x1 - x0) * s2 - W * 0.02;
-      var oy = uzky ? H - (y1 - y0) * s2 - H * 0.06 : (H - (y1 - y0) * s2) / 2;
+      /* Na telefonu sedí obrazec NAHOŘE, za nadpisem — dole pod ním stojí
+         karty a tam by jen dělal skvrnu pod textem. Maska ho směrem dolů
+         vytrácí, takže karty leží na čistém pozadí. */
+      var oy = uzky ? H * 0.02 : (H - (y1 - y0) * s2) / 2;
       P = body.map(function (d, i) {
         return { x: ox + ((d.lng + 180) / 360 - x0) * s2, y: oy + (yOf(d.lat) - y0) * s2,
           c: (TYPE[d.type] && TYPE[d.type].color) || '#4361B8',
@@ -4162,7 +4171,11 @@
     }
     function tik(cas) {
       if (klid || !vidno) { bezi = false; return; }
-      if (cas - posledni < 33) { requestAnimationFrame(tik); return; }  // ~30 snímků/s stačí
+      /* ~15 snímků za vteřinu. Pulz má periodu skoro šest vteřin, takže
+         rychleji není co ukazovat — a každý snímek navíc stojí skládání
+         velké průsvitné vrstvy přes celý úvod. Změřeno na 1280×900:
+         bez souhvězdí 61 snímků, s ním při 30 snímcích 38. */
+      if (cas - posledni < 66) { requestAnimationFrame(tik); return; }
       posledni = cas;
       kresli(cas);
     }

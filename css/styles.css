@@ -2894,11 +2894,19 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .hh-l[data-druh="exekuce"]{--b:var(--c-exekuce,#8C2F1E);}
 .hh-l b{font-weight:800;}
 @media (max-width:760px){
-  /* Na telefonu stojí pod nadpisem karty, takže souhvězdí se drží při zemi
-     a ztlumí se — jinak by se s nimi pralo o tutéž plochu. */
-  .hero-souhvezdi{opacity:.5;
-    -webkit-mask-image:linear-gradient(180deg, transparent 0%, rgba(0,0,0,.18) 38%, #000 78%);
-            mask-image:linear-gradient(180deg, transparent 0%, rgba(0,0,0,.18) 38%, #000 78%);}
+  /* Na telefonu je souhvězdí NAHOŘE, za nadpisem — tam má být vidět.
+     Směrem dolů se vytrácí, aby karty se živými údaji ležely na čistém
+     pozadí a text na nich nemusel soupeřit s tečkami. */
+  .hero-souhvezdi{opacity:.62;
+    -webkit-mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.55) 52%, transparent 86%);
+            mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.55) 52%, transparent 86%);}
+  /* Závoj pod nadpisem. Tečky mají být nahoře vidět, jenže tam leží i text
+     a přes rozsvícenou dražbu se číslo čte mizerně. Měkký přechod tečky
+     neschová — jen je pod písmem ztlumí, takže obojí obstojí. */
+  .hero-map .hero-plot::before{content:""; position:absolute; z-index:-1;
+    left:-24px; right:-24px; top:-18px; height:190px; pointer-events:none;
+    background:radial-gradient(130% 100% at 18% 34%, rgba(9,20,14,.88) 0%,
+      rgba(9,20,14,.6) 45%, rgba(9,20,14,0) 100%);}
 }
 @media (prefers-reduced-motion: reduce){
   .hh-zive{animation:none;}
