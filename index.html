@@ -105,7 +105,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=91fb9c09">
+  <link rel="stylesheet" href="css/styles.css?v=05266497">
 </head>
 <body>
 
@@ -213,9 +213,15 @@
                ukázáním na mapě. Výběr na mapě byl dřív schovaný ve zvací
                skříňce nad tímhle tlačítkem — tedy ve slabší kopii toho,
                co je primární. Skříňka zmizela a zbylo tohle. -->
+          <!-- JEDNA hlavní akce, ne dvě. Chvíli tu vedle sebe stála dvě stejně
+               velká tlačítka („Pozemky v okolí" a „Vybrat na mapě") a nebylo
+               z nich poznat, proč si vybrat zrovna jedno — panel tím ztěžkl
+               a volba byla zbytečná: tlačítko samo otevře výběr na mapě,
+               když se polohu nepodaří zjistit. Ruční výběr tedy zůstává,
+               ale jako tichý odkaz pod tlačítkem, ne jako soupeř. -->
           <div class="map-okoli">
             <button type="button" class="map-near-btn" id="map-near"><svg class="mnb-pin" aria-hidden="true"><use href="#i-map"/></svg>Pozemky v okolí</button>
-            <button type="button" class="map-near-btn map-pick-btn" id="map-pick">Vybrat na mapě</button>
+            <button type="button" class="map-pick-odkaz" id="map-pick">nebo si místo ukažte na mapě</button>
           </div>
           <div class="ms-group">
             <div class="map-filters" id="map-filters" role="group" aria-label="Co hledáte — druh příležitosti">

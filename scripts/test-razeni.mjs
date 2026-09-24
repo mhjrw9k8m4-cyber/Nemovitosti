@@ -32,8 +32,17 @@ function pravda(popis, vyslo, proc) {
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
-async function otevri() {
+async function otevri(seance) {
   const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
+  /* Pořadí se mezi návštěvami liší podle čísla, které si seance vylosuje
+     (js/poradi.js → prihozeniSeance, klíč pk_poradi_seance). Když se dá
+     zadat, dá se ta vlastnost ověřit BEZ náhody — viz níž, proč na tom
+     záleží. Bez parametru se chová jako dřív a losuje si sama. */
+  if (seance != null) {
+    await ctx.addInitScript((v) => {
+      try { sessionStorage.setItem('pk_poradi_seance', String(v)); } catch (e) {}
+    }, seance);
+  }
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
     if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
@@ -130,11 +139,23 @@ const klesa = (x) => x.length > 0 && x.every((v, i) => i === 0 || x[i - 1] >= v)
    nevystoupí nahoru. (Pásmo kvality přitom drží: špatná nabídka se nahoru
    nedostane — to hlídá scripts/test-poradi.mjs.) */
 {
-  const a = await otevri(); const prvni = await karty(a.p); await a.ctx.close();
-  const b = await otevri(); const druha = await karty(b.p); await b.ctx.close();
-  pravda('mezi návštěvami se výpis promíchá',
-    prvni.length >= 5 && JSON.stringify(prvni) !== JSON.stringify(druha),
-    'obě návštěvy ukázaly totéž pořadí — starší inzeráty zapadnou');
+  /* Dřív se prostě otevřely dvě návštěvy a čekalo se, že vyjdou jinak.
+     Jenže seance losuje jedno z OSMI čísel, takže obě vylosovaly totéž
+     zhruba v jednom běhu z osmi — a test červenal, aniž by se v kódu
+     cokoli změnilo. Blikavý test je stejně na obtíž jako test, který
+     nemůže spadnout: přestane se mu věřit.
+     Číslo seance se proto zadá a ověří se to, o co doopravdy jde: různá
+     seance = různé pořadí, stejná seance = stejné pořadí. Bez náhody. */
+  const a = await otevri(0); const prvni = await karty(a.p); await a.ctx.close();
+  const b = await otevri(5); const druha = await karty(b.p); await b.ctx.close();
+  const c = await otevri(0); const znovu0 = await karty(c.p); await c.ctx.close();
+  pravda('výpis se vykreslil', prvni.length >= 5, `jen ${prvni.length} karet`);
+  pravda('jiná návštěva = jiné pořadí (starší inzeráty se dostanou nahoru)',
+    JSON.stringify(prvni) !== JSON.stringify(druha),
+    'obě návštěvy ukázaly totéž pořadí');
+  pravda('a táž návštěva = totéž pořadí (co člověk viděl, zase najde)',
+    JSON.stringify(prvni) === JSON.stringify(znovu0),
+    'se stejným číslem seance vyšlo jiné pořadí — pak je to náhoda, ne pamatovatelný výpis');
 }
 
 await prohlizec.close();

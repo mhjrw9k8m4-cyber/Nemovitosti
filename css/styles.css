@@ -905,16 +905,20 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .vm-napred{color:var(--text-ondark-mute); font-size:13px; line-height:1.4;}
 /* Potvrdit nejde, dokud není okruh vidět — ať je to poznat i pohledem. */
 .vm-ok[disabled]{opacity:.45; cursor:not-allowed; box-shadow:none;}
-.map-okoli{display:flex; gap:8px; flex-wrap:wrap;}
-.map-okoli .map-near-btn{flex:1 1 190px; margin-top:9px;}
-/* Ukázat na mapě je rovnocenná volba, ne hlavní — proto obrysové, ne plné.
-   Nejdřív tu bylo jen jemně odlišené pozadí: výplň proti stránce vyšla
-   1,13:1 a okraj proti výplni 2,06:1, takže tlačítko nemělo viditelnou
-   hranu a splývalo s panelem (WCAG 1.4.11 žádá u ovládacích prvků 3:1).
-   Plný okraj v barvě značky dává na téhle výplni zhruba 7:1. */
-.map-pick-btn{background:#fff; color:var(--plocha-znacka);
-  border:1.5px solid var(--plocha-znacka); box-shadow:none;}
-.map-pick-btn:hover{background:var(--ink-soft2); filter:none; box-shadow:none;}
+/* Hlavní akce a pod ní tichý odkaz na ruční výběr. Dvě stejně velká
+   tlačítka vedle sebe tu chvíli byla a panel tím jen ztěžkl — mezi
+   „Pozemky v okolí" a „Vybrat na mapě" nebylo poznat, proč volit jedno,
+   a volba byla zbytečná: tlačítko samo otevře výběr na mapě, když se
+   polohu nepodaří zjistit. */
+.map-okoli{display:flex; flex-direction:column; align-items:center; gap:2px;}
+.map-okoli .map-near-btn{width:100%;}
+/* Vyšší, než by odpovídalo velikosti písma: na telefonu se do 31px řádku
+   prstem trefuje mizerně. Sada drží mez 36 px (doporučení je 44). */
+.map-pick-odkaz{appearance:none; background:none; border:0;
+  min-height:40px; padding:10px 14px;
+  font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer;
+  color:var(--plocha-znacka); text-decoration:underline; text-underline-offset:3px;}
+.map-pick-odkaz:hover{color:var(--ink);}
 .map-near-btn[disabled]{opacity:.78; cursor:progress;}
 .mnb-ceka{width:15px; height:15px; flex:none; border-radius:50%;
   border:2px solid rgba(255,255,255,.35); border-top-color:#fff;
