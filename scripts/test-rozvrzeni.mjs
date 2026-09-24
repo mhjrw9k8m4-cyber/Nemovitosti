@@ -368,12 +368,19 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
       polozekVListe: [...document.querySelectorAll('#nav > a, #nav > details')].filter(vidno).length,
       odkazyUvnitr: [...document.querySelectorAll('.nav-moje-panel a')].map((a) => a.textContent.trim()),
       vidnoZavrene: [...document.querySelectorAll('.nav-moje-panel a')].filter(vidno).length,
+      ucetNahore: !!document.querySelector('#nav > a#nav-ucet'),
     };
   });
   pravda('osobní položky jsou pod jednou skupinou', v.skupina, 'skupina .nav-moje v liště chybí');
-  pravda('a jsou v ní všechny čtyři',
-    v.odkazyUvnitr.length === 4 && /Upozorn/.test(v.odkazyUvnitr.join(' ')) && /profil/i.test(v.odkazyUvnitr.join(' ')),
+  /* Ve skupině jsou tři: upozornění, zprávy, hlídání — samá činnost.
+     Účet z ní odešel nahoru jako samostatný první řádek, protože byl
+     schovaný až čtvrtý a nešlo z nabídky poznat, jestli je člověk
+     přihlášený. Že je nahoře a nese stav, hlídá test-data.mjs. */
+  pravda('a jsou v ní všechny tři',
+    v.odkazyUvnitr.length === 3 && /Upozorn/.test(v.odkazyUvnitr.join(' ')) && /Hlídání/.test(v.odkazyUvnitr.join(' ')),
     v.odkazyUvnitr.join(' | '));
+  pravda('účet je mimo ni, nahoře a se stavem', v.ucetNahore,
+    'v liště chybí #nav-ucet jako samostatná položka');
   pravda('v liště tím ubylo položek', v.polozekVListe <= 6, `v liště je ${v.polozekVListe} položek`);
   pravda('zavřená nabídka nevisí pod lištou', v.vidnoZavrene === 0,
     `zavřeno, ale vidět je ${v.vidnoZavrene} odkazů`);
@@ -383,7 +390,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   await p.waitForTimeout(400);
   const po = await p.evaluate(() => [...document.querySelectorAll('.nav-moje-panel a')]
     .filter((e) => e.getClientRects().length > 0).length);
-  pravda('po klepnutí se rozbalí', po === 4, `vidět je ${po} ze čtyř`);
+  pravda('po klepnutí se rozbalí', po === 3, `vidět je ${po} ze tří`);
   await ctx.close();
 }
 {
@@ -395,8 +402,8 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   const n = await p.evaluate(() => [...document.querySelectorAll('.nav-moje-panel a')]
     .filter((e) => { const s = getComputedStyle(e);
       return s.display !== 'none' && e.getClientRects().length > 0; }).length);
-  pravda('ve vysouvacím menu jsou osobní položky rovnou vidět', n === 4,
-    `vidět je ${n} ze čtyř — ve výsuvném menu se nemá nic rozbalovat`);
+  pravda('ve vysouvacím menu jsou osobní položky rovnou vidět', n === 3,
+    `vidět je ${n} ze tří — ve výsuvném menu se nemá nic rozbalovat`);
   await ctx.close();
 }
 

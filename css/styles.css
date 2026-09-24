@@ -621,12 +621,23 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 #nav #nav-ucet .nav-ucet-t{grid-column:2; grid-row:1;}
 #nav #nav-ucet .nav-stav{grid-column:2; grid-row:2;}
 #nav #nav-ucet::after{grid-column:3; grid-row:1 / span 2; align-self:center;}
+/* V liště na počítači je účet jedna položka mezi ostatními — e-mail by ji
+   roztáhl přes půl lišty. Stav tam ukazuje tečka u „Moje"; celý e-mail je
+   ve výsuvné nabídce na telefonu a na profilu. */
+@media (min-width:1041px){
+  #nav #nav-ucet{display:inline; }
+  #nav #nav-ucet .nav-stav{display:none;}
+}
 #nav-ucet.je-prihlasen .nav-stav{color:var(--copper-bright);}
-/* Tečka u „Moje" v liště na počítači — tam se panel neotvírá sám,
-   takže by stav nebyl vidět vůbec. */
-.nav-moje > summary{position:relative;}
-#nav .nav-moje.prihlasen > summary::before{content:""; position:absolute; left:-11px; top:50%;
-  width:6px; height:6px; margin-top:-3px; border-radius:50%; background:var(--copper-bright);}
+/* Tečka patří k účtu, ne ke skupině „Moje": účet je v liště samostatná
+   položka a e-mail je tam skrytý, takže jinak by na počítači nebylo stav
+   poznat vůbec. Jen v liště — ve výsuvné nabídce mluví sám e-mail. */
+@media (min-width:1041px){
+  #nav #nav-ucet.je-prihlasen{position:relative;}
+  #nav #nav-ucet.je-prihlasen::before{content:""; position:absolute; left:-11px; top:50%;
+    width:6px; height:6px; margin-top:-3px; border-radius:50%;
+    background:var(--copper-bright); background-image:none;}
+}
 .nav-moje-panel a .nav-unread{margin-left:auto;}
 #nav a:not(.btn-primary).active{color:var(--text-ondark);}
 #nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--copper-bright); border-radius:2px;}

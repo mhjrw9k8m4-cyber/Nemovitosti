@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=ec3ae688">
+  <link rel="stylesheet" href="css/styles.css?v=b5fed860">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky v okrese Frýdek-Místek","inLanguage":"cs","description":"Nabídky pozemků v okrese Frýdek-Místek — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-okres-frydek-mistek.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":18,"itemListElement":[{"@type":"ListItem","position":1,"name":"Mosty u Jablunkova — Na prodej, 368 m²"},{"@type":"ListItem","position":2,"name":"Malenovice — Na prodej, 856 m²"},{"@type":"ListItem","position":3,"name":"Dolní Lomná — Na prodej, 3983 m²"},{"@type":"ListItem","position":4,"name":"Horní Lomná — Na prodej, 9672 m²"},{"@type":"ListItem","position":5,"name":"Malenovice — Na prodej, 4648 m²"},{"@type":"ListItem","position":6,"name":"Třinec — Na prodej, 16673 m²"},{"@type":"ListItem","position":7,"name":"Malenovice — Na prodej, 10217 m²"},{"@type":"ListItem","position":8,"name":"Morávka — Na prodej, 14677 m²"},{"@type":"ListItem","position":9,"name":"Staré Hamry — Na prodej, 5136 m²"},{"@type":"ListItem","position":10,"name":"Bahno — Na prodej, 397 m²"},{"@type":"ListItem","position":11,"name":"Staříč — Na prodej, 29217 m²"},{"@type":"ListItem","position":12,"name":"Nýdek — Na prodej, 1816 m²"},{"@type":"ListItem","position":13,"name":"Hukvaldy — Na prodej, 1007 m²"},{"@type":"ListItem","position":14,"name":"Raškovice — Na prodej, 2225 m²"},{"@type":"ListItem","position":15,"name":"Palkovice — Na prodej, 1181 m²"},{"@type":"ListItem","position":16,"name":"Vendryně — Na prodej, 1247 m²"},{"@type":"ListItem","position":17,"name":"Horní Domaslavice — Na prodej, 3434 m²"},{"@type":"ListItem","position":18,"name":"Komorní Lhotka — Dražba, 4394 m²"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Moravskoslezský kraj","item":"https://www.parcelaka.cz/pozemky-moravskoslezsky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Frýdek-Místek","item":"https://www.parcelaka.cz/pozemky-okres-frydek-mistek.html"}]}]
   </script>
@@ -44,14 +44,16 @@
     <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
     <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
     <nav id="nav" aria-label="Hlavní navigace">
-      <!-- Účet je první: podle něj se pozná, jestli je člověk přihlášený.
-           Dřív to menu neřeklo nikde a „Můj profil" stál až čtvrtý mezi
-           osobními položkami. Stav doplňuje js/hlavicka.js. -->
-      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
-      <!-- „Pozemky", ne „Mapa": hlavní pohled je seznam, mapa je jen jedna
-           ze dvou záložek. Odkaz míří pořád na tentýž kotevní bod. -->
-      <a href="index.html#mapa">Pozemky</a>
+      <!-- Pořadí: nejdřív KDO jsem, pak KAM jdu. Účet je samostatný první
+           řádek a nese stav přihlášení (doplní ho js/hlavicka.js); hned pod
+           ním je hlavní věc celého webu. Dřív byl účet schovaný až čtvrtý ve
+           skupině „Moje", a když jsem nahoru posunul celou skupinu, spadlo
+           hledání pozemků na páté místo. Obojí bylo špatně. -->
+      <a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a>
+      <!-- „Hledat pozemek", ne „Pozemky": podstatné jméno tu neřekne nic. -->
+      <a href="index.html#mapa">Hledat pozemek</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>

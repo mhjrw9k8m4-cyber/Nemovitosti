@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=ec3ae688">
+  <link rel="stylesheet" href="css/styles.css?v=b5fed860">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky Jihočeský kraj","inLanguage":"cs","description":"Nabídky pozemků v Jihočeském kraji — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-jihocesky-kraj.html","publisher":{"@type":"Organization","name":"Parcelka"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Jihočeský kraj","item":"https://www.parcelaka.cz/pozemky-jihocesky-kraj.html"}]}]
   </script>
@@ -44,14 +44,16 @@
     <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
     <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
     <nav id="nav" aria-label="Hlavní navigace">
-      <!-- Účet je první: podle něj se pozná, jestli je člověk přihlášený.
-           Dřív to menu neřeklo nikde a „Můj profil" stál až čtvrtý mezi
-           osobními položkami. Stav doplňuje js/hlavicka.js. -->
-      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
-      <!-- „Pozemky", ne „Mapa": hlavní pohled je seznam, mapa je jen jedna
-           ze dvou záložek. Odkaz míří pořád na tentýž kotevní bod. -->
-      <a href="index.html#mapa">Pozemky</a>
+      <!-- Pořadí: nejdřív KDO jsem, pak KAM jdu. Účet je samostatný první
+           řádek a nese stav přihlášení (doplní ho js/hlavicka.js); hned pod
+           ním je hlavní věc celého webu. Dřív byl účet schovaný až čtvrtý ve
+           skupině „Moje", a když jsem nahoru posunul celou skupinu, spadlo
+           hledání pozemků na páté místo. Obojí bylo špatně. -->
+      <a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a>
+      <!-- „Hledat pozemek", ne „Pozemky": podstatné jméno tu neřekne nic. -->
+      <a href="index.html#mapa">Hledat pozemek</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>

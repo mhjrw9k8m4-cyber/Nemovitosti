@@ -290,7 +290,7 @@ pravda('každá nabídka ví, kdy ji robot viděl poprvé', bezData.length === 0
    poznat, jestli je člověk přihlášený. */
 {
   const vsechny = readdirSync(new URL('..', import.meta.url)).filter((f) => f.endsWith('.html'));
-  const bezUctu = [], starePojmenovani = [], rozchod = [];
+  const bezUctu = [], starePojmenovani = [], rozchod = [], prvniJine = [];
   for (const f of vsechny) {
     const h = readFileSync(new URL('../' + f, import.meta.url), 'utf8');
     const nav = (h.match(/<nav id="nav"[\s\S]*?<\/nav>/) || [])[0];
@@ -298,6 +298,20 @@ pravda('každá nabídka ví, kdy ji robot viděl poprvé', bezData.length === 0
     if (!/id="nav-ucet"/.test(nav) || !/id="nav-stav"/.test(nav)) bezUctu.push(f);
     /* Odkaz (ne tlačítko přepínače) nesmí být pojmenovaný „Mapa". */
     if (/<a[^>]*>Mapa<\/a>/.test(nav)) starePojmenovani.push(f);
+    /* Pořadí: první odkaz v nabídce musí vést na hledání pozemků.
+       Jednou už se to pokazilo — účet se posunul nahoru a hlavní věc
+       spadla na páté místo, takže navigace vedla vším možným, jen ne tím,
+       proč na web lidé chodí. */
+    /* Pořadí: nejdřív KDO jsem, pak KAM jdu. První odkaz musí být účet,
+       druhý hledání pozemků. Obojí se už jednou pokazilo — účet byl
+       schovaný čtvrtý ve skupině „Moje", a když se nahoru posunula celá
+       ta skupina, spadlo hledání na páté místo. */
+    const odkazy = [...nav.matchAll(/<a\s[^>]*href="([^"]*)"[^>]*>/g)].map((x) => x[1]);
+    if (odkazy.length >= 2) {
+      if (!/muj-inzerat\.html$/.test(odkazy[0]) || !/#mapa$/.test(odkazy[1])) {
+        prvniJine.push(`${f}: 1. ${odkazy[0]}, 2. ${odkazy[1]}`);
+      }
+    }
     const ld = h.match(/"name":"([^"]+)","item":"https:\/\/www\.parcelaka\.cz\/"/);
     const drobecek = h.match(/aria-label="[Dd]robečková navigace"[\s\S]{0,200}?<a href="index\.html"[^>]*>([^<]+)<\/a>/);
     if (ld && drobecek && ld[1] !== drobecek[1].trim()) {
@@ -309,6 +323,9 @@ pravda('každá nabídka ví, kdy ji robot viděl poprvé', bezData.length === 0
   pravda('a odkaz na úvod se nejmenuje „Mapa" (hlavní pohled je seznam)',
     starePojmenovani.length === 0,
     `${starePojmenovani.length} stránek: ${starePojmenovani.slice(0, 4).join(', ')}`);
+  pravda('nahoře je účet a hned pod ním hledání pozemků',
+    prvniJine.length === 0,
+    `na ${prvniJine.length} stránkách je pořadí jiné: ${prvniJine.slice(0, 3).join('; ')}`);
   pravda('drobeček a strukturovaná data se shodují', rozchod.length === 0,
     rozchod.slice(0, 3).join('; '));
 }

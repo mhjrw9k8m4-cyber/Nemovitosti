@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=ec3ae688">
+  <link rel="stylesheet" href="css/styles.css?v=b5fed860">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky v okrese Karviná","inLanguage":"cs","description":"Nabídky pozemků v okrese Karviná — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-okres-karvina.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":16,"itemListElement":[{"@type":"ListItem","position":1,"name":"Chotěbuz — Na prodej, 575 m²"},{"@type":"ListItem","position":2,"name":"Orlová — Na prodej, 442 m²"},{"@type":"ListItem","position":3,"name":"Karviná — Exekuce, 331 m²"},{"@type":"ListItem","position":4,"name":"Dětmarovice — Na prodej, 327 m²"},{"@type":"ListItem","position":5,"name":"Orlová — Na prodej, 3922 m²"},{"@type":"ListItem","position":6,"name":"Petřvald — Na prodej, 2430 m²"},{"@type":"ListItem","position":7,"name":"Doubrava — Na prodej, 2069 m²"},{"@type":"ListItem","position":8,"name":"Karviná — Na prodej, 10371 m²"},{"@type":"ListItem","position":9,"name":"Havířov — Na prodej, 2298 m²"},{"@type":"ListItem","position":10,"name":"Těrlicko — Na prodej, 1200 m²"},{"@type":"ListItem","position":11,"name":"Bohumín — Na prodej, 1370 m²"},{"@type":"ListItem","position":12,"name":"Bohumín — Na prodej, 1370 m²"},{"@type":"ListItem","position":13,"name":"Petřvald — Na prodej, 924 m²"},{"@type":"ListItem","position":14,"name":"Těrlicko — Na prodej, 1985 m²"},{"@type":"ListItem","position":15,"name":"Šumbarská — Na prodej, 1963 m²"},{"@type":"ListItem","position":16,"name":"Rychvald — Dražba, 837 m²"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Moravskoslezský kraj","item":"https://www.parcelaka.cz/pozemky-moravskoslezsky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Karviná","item":"https://www.parcelaka.cz/pozemky-okres-karvina.html"}]}]
   </script>
@@ -44,14 +44,16 @@
     <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
     <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
     <nav id="nav" aria-label="Hlavní navigace">
-      <!-- Účet je první: podle něj se pozná, jestli je člověk přihlášený.
-           Dřív to menu neřeklo nikde a „Můj profil" stál až čtvrtý mezi
-           osobními položkami. Stav doplňuje js/hlavicka.js. -->
-      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
-      <!-- „Pozemky", ne „Mapa": hlavní pohled je seznam, mapa je jen jedna
-           ze dvou záložek. Odkaz míří pořád na tentýž kotevní bod. -->
-      <a href="index.html#mapa">Pozemky</a>
+      <!-- Pořadí: nejdřív KDO jsem, pak KAM jdu. Účet je samostatný první
+           řádek a nese stav přihlášení (doplní ho js/hlavicka.js); hned pod
+           ním je hlavní věc celého webu. Dřív byl účet schovaný až čtvrtý ve
+           skupině „Moje", a když jsem nahoru posunul celou skupinu, spadlo
+           hledání pozemků na páté místo. Obojí bylo špatně. -->
+      <a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a>
+      <!-- „Hledat pozemek", ne „Pozemky": podstatné jméno tu neřekne nic. -->
+      <a href="index.html#mapa">Hledat pozemek</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>

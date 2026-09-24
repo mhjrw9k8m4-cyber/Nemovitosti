@@ -352,14 +352,16 @@ ${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\
     <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
     <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
     <nav id="nav" aria-label="Hlavní navigace">
-      <!-- Účet je první: podle něj se pozná, jestli je člověk přihlášený.
-           Dřív to menu neřeklo nikde a „Můj profil" stál až čtvrtý mezi
-           osobními položkami. Stav doplňuje js/hlavicka.js. -->
-      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
-      <!-- „Pozemky", ne „Mapa": hlavní pohled je seznam, mapa je jen jedna
-           ze dvou záložek. Odkaz míří pořád na tentýž kotevní bod. -->
-      <a href="index.html#mapa">Pozemky</a>
+      <!-- Pořadí: nejdřív KDO jsem, pak KAM jdu. Účet je samostatný první
+           řádek a nese stav přihlášení (doplní ho js/hlavicka.js); hned pod
+           ním je hlavní věc celého webu. Dřív byl účet schovaný až čtvrtý ve
+           skupině „Moje", a když jsem nahoru posunul celou skupinu, spadlo
+           hledání pozemků na páté místo. Obojí bylo špatně. -->
+      <a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a>
+      <!-- „Hledat pozemek", ne „Pozemky": podstatné jméno tu neřekne nic. -->
+      <a href="index.html#mapa">Hledat pozemek</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
