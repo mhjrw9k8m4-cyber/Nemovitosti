@@ -243,6 +243,24 @@
     'Plyn': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 3 5 6 5 9a5 5 0 0 1-10 0c0-1 .5-2 1-3 .5 2 2 2 2 2 0-2 1-6 2-8z"/></svg>',
     'Oplocení': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l2-3 2 3v9H4zM10 10l2-3 2 3v9h-4zM16 10l2-3 2 3v9h-4zM2 13h20"/></svg>'
   };
+  var PLAN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/></svg>';
+  /* SMÍM TU STAVĚT? To je u pozemku ta nejdražší otázka — a Parcelka na ni
+     odpovědět neumí: rozhoduje o tom územní plán obce a ten jako jedna
+     vrstva pro celou republiku NEEXISTUJE. Každá obec s rozšířenou
+     působností ho vydává zvlášť a ve vlastním formátu, takže se nedá ani
+     stáhnout, ani přes mapu překrýt. Dělat, že to web umí, by byl další
+     slib bez krytí.
+     Co udělat jde: zkrátit odchod na jedno klepnutí. Tlačítko proto říká
+     „NAJÍT územní plán" — hledá, neukazuje ho. Do dotazu jde obec i okres,
+     protože stejných názvů obcí je v republice spousta. */
+  function planHledatUrl(d) {
+    // U některých záznamů je obec totožná s okresem — pak by se dotaz
+    // zdvojil („Brno-venkov okres Brno-venkov").
+    var obec = d.place || '';
+    var okres = (d.okres && d.okres !== obec) ? ' okres ' + d.okres : '';
+    var q = 'územní plán ' + obec + okres;
+    return 'https://search.seznam.cz/?q=' + encodeURIComponent(q.trim());
+  }
   var ACCESS_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l6-16M20 20l-6-16M9 12h6"/></svg>';
   function pzFeaturesHtml(d) {
     var feats = Array.isArray(d.features) ? d.features : [];
@@ -334,6 +352,7 @@
 
       '<div class="pz-actions">' +
         '<a class="pz-abtn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">' + PIN_SVG + 'Otevřít v katastru' + VEN + '</a>' +
+        '<a class="pz-abtn" href="' + esc(planHledatUrl(d)) + '" target="_blank" rel="noopener">' + PLAN_SVG + 'Najít územní plán' + VEN + '</a>' +
         '<button class="pz-abtn' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">' + HEART_SVG + '<span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
         '<button class="pz-abtn" type="button" id="pz-share">' + SHARE_SVG + 'Sdílet</button>' +
       '</div>' +

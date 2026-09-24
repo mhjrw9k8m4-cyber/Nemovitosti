@@ -127,6 +127,25 @@ for (const s of VZOREK) {
     chyba(`${s}: ${hlava.delka} znaků textu a ani jeden mezinadpis (h2/h3) — odečítačem se v tom nedá pohybovat`);
   }
   if (hlava.lang !== 'cs') chyba(`${s}: chybí nebo nesedí jazyk stránky (lang="${hlava.lang}")`);
+
+  /* SMÍM TU STAVĚT? U pozemku není dražší otázka — a web na ni dlouho
+     neodpovídal vůbec: v detailu nebyla o územním plánu ani zmínka, natož
+     odkaz, takže se muselo odcházet a hledat od nuly. Odpovědět za obec
+     Parcelka nemůže (celostátní vrstva územních plánů neexistuje, vydává
+     je každá ORP zvlášť), ale odchod musí zkrátit na jedno klepnutí —
+     a s obcí v dotazu, ne naprázdno. */
+  if (s.startsWith('pozemek.html?p=')) {
+    const plan = await p.evaluate(() => {
+      const a2 = [...document.querySelectorAll('.pz-actions a, .pz-cta a')]
+        .find((e) => /územní plán/i.test(e.textContent || ''));
+      const obec = (document.querySelector('.pz-place') || {}).textContent || '';
+      return a2 ? { href: a2.getAttribute('href') || '', obec: obec.trim() } : null;
+    });
+    if (!plan) chyba(`${s}: z detailu pozemku nevede žádná cesta k územnímu plánu`);
+    else if (!plan.obec || !decodeURIComponent(plan.href).includes(plan.obec)) {
+      chyba(`${s}: odkaz na územní plán nenese obec „${plan.obec}" (${plan.href.slice(0, 80)})`);
+    }
+  }
   if (!padlo.length && !nenacetlo.length) zpravy.push(`  ✓ ${s}`);
   await ctx.close();
 }
