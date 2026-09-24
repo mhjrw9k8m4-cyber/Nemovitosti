@@ -3600,3 +3600,40 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   .hh-fakta .hl-fact .hl-v b{font-size:15px;}
   .hero-live.hh-fakta{gap:5px;}
 }
+
+/* =====================================================================
+   VÝBĚR OKOLÍ: TVARY, TEXT, PŘECHODY
+   Panel uměl, co má, ale vypadal jako holé prvky poskládané na sebe:
+   nadpis volně na ploše, ostrý řez mezi mapou a patičkou, pět rozsypaných
+   pilulek okruhu. Tvary, hierarchie a přechody z toho dělají jeden kus.
+   ===================================================================== */
+.vm-ov{animation:vmStmiv .2s ease both;}
+.vm-panel{animation:vmPrijezd .26s var(--ease) both;}
+@keyframes vmStmiv{from{opacity:0;} to{opacity:1;}}
+@keyframes vmPrijezd{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
+@media (prefers-reduced-motion: reduce){
+  .vm-ov, .vm-panel{animation:none;}
+}
+/* Hlavička je pruh s vlasovou linkou, ne text ležící na mapě. */
+.vm-hlava{padding:15px 16px 13px; border-bottom:1px solid var(--line);}
+.vm-hlava b{font-size:19px; letter-spacing:-.01em;}
+.vm-x{border:1px solid var(--line); border-radius:var(--r-pill);}
+/* Mapa se zasouvá POD patičku — mezi nimi je stín, ne řez. */
+.vm-mapa-obal::after{content:""; position:absolute; left:0; right:0; bottom:0; height:26px;
+  pointer-events:none; z-index:600;
+  background:linear-gradient(180deg, rgba(20,32,25,0), rgba(20,32,25,.16));}
+.vm-pata{position:relative; border-top:0; box-shadow:var(--e3-up);
+  padding:14px 15px calc(14px + env(safe-area-inset-bottom, 0px));}
+/* Okruh je JEDEN ovladač s jezdcem, ne pět samostatných pilulek. */
+.vm-okruh{position:relative; gap:0; margin-top:20px; padding:3px;
+  background:var(--ink-soft2); border:1px solid var(--line-ui); border-radius:var(--r-pill);}
+/* Popisek patří NAD dráhu — uvnitř vypadal jako šestá volba. */
+.vm-okruh-p{position:absolute; top:-19px; left:6px; margin:0;}
+.vm-km{flex:1 1 auto; min-width:0;}
+.vm-km span{border:0; background:none; width:100%; min-width:0; min-height:36px;
+  padding:8px 9px; font-size:13px; white-space:nowrap; border-radius:var(--r-pill);}
+.vm-km input:checked + span{background:var(--plocha-znacka); color:#fff; box-shadow:var(--e1);}
+.vm-km:hover input:not(:checked) + span{background:rgba(31,81,56,.08); border-color:transparent;}
+.vm-ok{border-radius:var(--r-pill); min-height:50px; font-size:16px;
+  transition:transform .12s var(--ease), filter .15s var(--ease);}
+.vm-ok:active{transform:translateY(1px);}

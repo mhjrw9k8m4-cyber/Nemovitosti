@@ -2252,6 +2252,19 @@
        tom, kde člověk začal.
        Tažením se místo vybírá taky — kdo mapou pohne, ukazuje tím, kam
        chce, stejně jako klepnutím. */
+    /* Patička mění výšku: jakmile se ukáže počet a pod ním rozpad podle
+       druhu, povyroste — a mapa se o tolik zmenší. Leaflet o tom neví,
+       takže dál počítá střed podle staré výšky: kolečko se kreslí níž,
+       než kam ukazuje špendlík, a měřítko z něj vychází zalomené. Stačí
+       mu po každé změně rozměru říct, ať se přeměří. */
+    if (typeof ResizeObserver === 'function') {
+      try {
+        var pata = ov.querySelector('.vm-pata');
+        if (pata) new ResizeObserver(function () {
+          try { m.invalidateSize({ pan: false }); prepocti(); } catch (e) {}
+        }).observe(pata);
+      } catch (e) {}
+    }
     m.on('click', function (e) {
       vybranoMisto = true;
       /* Přepočítat MUSÍME rovnou, ne se spolehnout na to, že mapou pohne
@@ -2269,7 +2282,11 @@
       r.addEventListener('change', function () {
         prepocti();
         var c = stred();
-        jdiNa(c.lat, c.lng);   // větší okruh → oddálit, menší → přiblížit
+        /* BEZ ANIMACE. Při plynulém přejezdu se kolečko (kreslené do mapy)
+           přesouvá, zatímco špendlík stojí na středu okna — a po tu chvíli
+           ukazují každý jinam. Na snímku to vypadá jako zalomená čára
+           měřítka a rozbité kolečko. Skok je tu poctivější než přejezd. */
+        jdiNa(c.lat, c.lng, false);   // větší okruh → oddálit, menší → přiblížit
       });
     });
     prepocti();
