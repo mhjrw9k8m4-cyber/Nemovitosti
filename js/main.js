@@ -1779,7 +1779,19 @@
   /* ---------- Výběr kraje: nejdřív kraj, teprve pak klikací tečky ----------
      Dokud si člověk nevybere kraj, jsou tečky (pozemky) zamčené a klepnutí
      vždy trefí kraj — i tam, kde přes něj leží kulička. Po výběru kraje se
-     přiblížíme a tečky se stanou interaktivní. Nadpis kraje nahoře napoví, kde je. */
+     přiblížíme a tečky se stanou interaktivní. Nadpis kraje nahoře napoví, kde je.
+
+     Ten zámek NERUŠIT. Změřeno na ostrých datech (webmercator, stejná projekce
+     jako Leaflet): při pohledu na celou ČR (zoom 7) je jednoznačně trefitelných
+     jen 13,7 % teček — medián tečky má pod prstem 3 další, nejhorší 30. Kdyby
+     první klepnutí rovnou otevíralo pozemek, v drtivé většině by otevřelo ten,
+     na který člověk nemířil.
+
+     A proto podtitul kraje ukazuje na SEZNAM, ne na tečky: po výběru kraje je
+     55–57 % teček zakrytých jinou z víc než poloviny, takže mezi nimi prstem
+     vybrat nejde. Zvednutí stropu přiblížení to nespraví — kraj se na telefon
+     prostě nevejde blíž (překryv klesne ze 76,8 % jen na 75,5 %). Mapa je tu
+     na orientaci, vybírá se ze seznamu. */
   var selectedKraj = null;
   var nearMode = false, userPos = null, userMarker = null, nearCircle = null;
   var krajHintEl = document.getElementById('kraj-hint');
@@ -1789,8 +1801,8 @@
   // Sroluj rovnou k mapě, ať je hned vidět, že se něco děje (jinak se zdá, že tlačítko „nic nedělá").
   // Odrolovat k mapě tak, aby začínala POD lepivou hlavičkou. Prosté
   // scrollIntoView ji zarovná na úplný vrch okna, kde jí hlavička ukousne
-  // horních ~70 px — přesně pruh, ve kterém je nápověda „Krok 1: klepněte
-  // na kraj" a tlačítko „Celá ČR".
+  // horních ~70 px — přesně pruh, ve kterém je nápověda „Klepněte na kraj"
+  // a tlačítko „Celá ČR".
   function scrollToMap() {
     if (!holderEl) return;
     try {
@@ -1858,7 +1870,7 @@
       } else {
         var o = krajCounts[selectedKraj];
         var n = o ? o.total : 0;
-        krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>' + krajTitul(selectedKraj) + '</b><span>' + (n ? ('Krok 2: klepněte na pozemek (' + n + ' ' + plPozemek(n) + ')') : 'zatím žádné nabídky') + '</span></div>';
+        krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>' + krajTitul(selectedKraj) + '</b><span>' + (n ? (n + ' ' + plPozemek(n) + ' · vyberte ze seznamu') : 'zatím žádné nabídky') + '</span></div>';
         krajHeadEl.hidden = false;
         var b1 = krajHeadEl.querySelector('.kh-back'); if (b1) b1.addEventListener('click', clearKraj);
       }
@@ -2863,7 +2875,11 @@
     // Seznam drží vybraný kraj. Bez toho si člověk klikl na „Jihomoravský kraj"
     // (nebo přišel odkazem ?kraj=…), mapa se přiblížila k Brnu — a pod ní se
     // nabízely pozemky z Kroměříže a Písku.
-    if (selectedKraj) vis = vis.filter(function (d) { return krajOf(d) === selectedKraj; });
+    // Kraj se bere PODLE GEOMETRIE (_gkraj), stejně jako u teček na mapě a
+    // u počtu v hlavičce. Dřív se tu filtrovalo podle okresu (krajOf) — a
+    // protože se u 7 záznamů okres a poloha neshodnou, hlavička slibovala
+    // jiné číslo, než kolik seznam ukázal (u 9 ze 14 krajů, o 1–3 nabídky).
+    if (selectedKraj) vis = vis.filter(function (d) { return (d._gkraj || krajOf(d)) === selectedKraj; });
     var matched = vis.length;
     sortVis(vis);
     // „Výhodná cena" jen pro skutečně nejlevnější špičku (podle Kč/m²),
@@ -3054,7 +3070,7 @@
       try {
         for (var pi = 0; pi < DATA.length; pi++) {
           var pd = DATA[pi];
-          if (jeProsle(pd) && visible(pd) && (!selectedKraj || krajOf(pd) === selectedKraj)) proslychStranou++;
+          if (jeProsle(pd) && visible(pd) && (!selectedKraj || (pd._gkraj || krajOf(pd)) === selectedKraj)) proslychStranou++;
         }
       } finally { ukazProsle = false; }
     }

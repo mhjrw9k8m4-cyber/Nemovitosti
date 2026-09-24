@@ -190,6 +190,30 @@ je('první klepnutí neotevřelo inzerát, jen vybralo kraj', new URL(p.url()).p
 pravda('po prvním klepnutí je vybraný kraj', s.kraj.indexOf(vyber.kraj) === 0, `hlavička: „${s.kraj}"`);
 pravda('mapa se ke kraji přiblížila', s.zoom > zoom0, `${zoom0} → ${s.zoom}`);
 
+/* ---------- 1b. hlavička kraje ukazuje na seznam — a to číslo musí sedět ----------
+   Na úrovni kraje se z mapy vybírat nedá: po výběru kraje je 55–57 % teček
+   zakrytých jinou tečkou z víc než poloviny (měřeno na ostrých datech přes
+   stejnou projekci, jakou kreslí Leaflet), takže mezi nimi prstem vybrat
+   nejde. Hlavička proto posílá do seznamu — a když tam posílá, nesmí slíbit
+   jiné číslo, než kolik seznam ukáže. Dřív lhala: hlavička počítala kraj
+   podle POLOHY bodu, seznam podle OKRESU, a u 9 ze 14 krajů se rozcházely
+   o 1–3 nabídky („393 pozemků" vedle přepínače „Seznam (390)"). */
+{
+  const h = await p.evaluate(() => {
+    const el = document.getElementById('kraj-head');
+    const n = document.getElementById('mvt-count');
+    return { text: ((el && !el.hidden && el.textContent) || '').trim(),
+             prepinac: ((n && n.textContent) || '').trim() };
+  });
+  const cislo = (x) => (x ? Number(String(x).replace(/[\s\u00a0]/g, '')) : null);
+  pravda('hlavička kraje posílá do seznamu', /seznam/i.test(h.text), `hlavička: „${h.text}"`);
+  pravda('hlavička kraje neslibuje klepnutí na pozemek (mapa to neumí splnit)',
+    !/klepn\u011bte na pozemek/i.test(h.text), `hlavička: „${h.text}"`);
+  je('kolik hlavička slíbí, tolik seznam ukáže',
+    cislo((h.text.match(/(\d[\d\s\u00a0]*)\s*pozem/) || [])[1]),
+    cislo((h.prepinac.match(/(\d[\d\s\u00a0]*)/) || [])[1]));
+}
+
 /* ---------- 2. klepnutí vedle tečky přiblíží; do prázdna nehne ---------- */
 // Bod musí ležet UVNITŘ vybraného kraje — jinak by klepnutí jen přepnulo kraj
 // a přiblížení by přišlo odtamtud, ne ze zálohy, kterou zkoušíme.
@@ -266,6 +290,25 @@ if (daleko) {
     await p.waitForTimeout(1500);
     je('trefa do tečky otevře stránku pozemku', new URL(p.url()).pathname, '/pozemek.html');
   }
+}
+
+/* ---------- 4. kraj se všude počítá STEJNÝM pravidlem ----------
+   Tečka na mapě leží tam, kam ji posadí lat/lng, takže „ve kterém kraji to
+   je" se musí všude rozhodovat podle POLOHY (_gkraj), ne podle okresu
+   (krajOf). Když se to na jednom místě rozejde, web si začne odporovat sám
+   se sebou: hlavička napsala „393 pozemků" a přepínač vedle ní „Seznam
+   (390)". Prohlížečová část testu to spolehlivě nechytí — rozcházely se
+   jen některé kraje a jen o 1–3 nabídky, takže záleží na tom, do kterého
+   kraje test zrovna klepne. Tohle je proto kontrola zdrojáku: žádné
+   porovnání se selectedKraj nesmí jet přes holé krajOf(). */
+{
+  const src = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
+  const spatne = src.split('\n')
+    .map((r, i) => [i + 1, r])
+    .filter(([, r]) => /krajOf\((\w+)\)\s*===\s*selectedKraj/.test(r)
+                    || /selectedKraj\s*===\s*krajOf\(/.test(r));
+  je('kraj se nikde neporovnává přes okres místo polohy',
+    spatne.map(([i, r]) => `${i}: ${r.trim().slice(0, 80)}`), []);
 }
 
 je('stránka neshodila žádnou chybu', chybyStranky, []);
