@@ -302,7 +302,7 @@ function ogObrazek(nazevSouboru){
   if(nazevSouboru && fs.existsSync(path.join(ROOT,'assets','og',nazevSouboru))){
     return 'https://www.parcelaka.cz/assets/og/' + nazevSouboru;
   }
-  return 'https://www.parcelaka.cz/assets/og.png?v=4';
+  return 'https://www.parcelaka.cz/assets/og.png?v=5';
 }
 function head(title, desc, canonicalPath, ld, crumbs, ogSoubor){
   // ld může být objekt nebo pole; přidáme BreadcrumbList, je-li předán.
@@ -331,7 +331,7 @@ function head(title, desc, canonicalPath, ld, crumbs, ogSoubor){
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${attr(title)}">
   <meta name="twitter:description" content="${attr(desc)}">
-  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og.png?v=4">
+  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og.png?v=5">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">

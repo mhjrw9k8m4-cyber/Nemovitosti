@@ -266,12 +266,20 @@ async function otevri(soubor, sirka, vyska) {
     const stat = document.querySelector('.hero-stats');
     const panel = document.querySelector('.map-controls-panel') || document.querySelector('.map-app');
     const mezera = (stat && panel) ? Math.round(panel.getBoundingClientRect().top - stat.getBoundingClientRect().bottom) : null;
-    return { prouzek: vidno('hero-live'), nadstavec: vidno('.hero-map .hero-head .eyebrow'), mezera };
+    /* Dřív se tu hlídalo, že nad nadpisem stojí nadstavec. Ten je pryč —
+       říkal potřetí totéž co nadpis a řádek pod ním. Smysl kontroly ale
+       trvá: nad nadpisem nesmí zůstat prázdný pruh. Měří se proto rovnou
+       ta mezera, ne přítomnost jednoho konkrétního řádku. */
+    const h1 = document.querySelector('.hero-map .hero-head h1');
+    const pas = document.querySelector('.hero-map .hero-band') || document.querySelector('.hero-map');
+    const nadNadpisem = (h1 && pas)
+      ? Math.round(h1.getBoundingClientRect().top - pas.getBoundingClientRect().top) : null;
+    return { prouzek: vidno('hero-live'), nadNadpisem, mezera };
   });
   pravda('proužek s živými údaji je na telefonu vidět', v.prouzek,
     'po schovaném proužku zbyde v úvodu prázdné místo — a to neřekne nic');
-  pravda('nadstavec nad nadpisem taky', v.nadstavec,
-    'úvod by začínal rovnou nadpisem a nad ním by zbyl prázdný pruh');
+  pravda('nad nadpisem nezůstal prázdný pruh', v.nadNadpisem !== null && v.nadNadpisem <= 60,
+    `nad nadpisem je ${v.nadNadpisem} px prázdna — na telefonu je to ukradený kus obrazovky`);
   await ctx.close();
 }
 

@@ -386,9 +386,9 @@ body.vm-otevreno{overflow:hidden;}
 /* Ovládací řádky se ale netáhnou přes celou šířku velkého displeje —
    pole široké metr a půl se špatně čte i vyplňuje. Mapa ano, ta má být
    co největší. */
-.vm-radek, .vm-pata > *{max-width:100%;}
+.vm-pata > *{max-width:100%;}
 @media (min-width:1000px){
-  .vm-hlava, .vm-radek{max-width:1100px; width:100%; margin-inline:auto;}
+  .vm-hlava{max-width:1100px; width:100%; margin-inline:auto;}
 }
 .vm-hlava{display:flex; align-items:center; justify-content:space-between; gap:10px;
   padding:14px 14px 10px; font-family:var(--font-display); font-size:18px; color:var(--text-ondark);}
@@ -399,14 +399,6 @@ body.vm-otevreno{overflow:hidden;}
 .vm-x{width:38px; height:38px; flex:none; border:0; background:none; cursor:pointer;
   font-size:17px; color:var(--text-ondark-mute); border-radius:var(--r-ovladani);}
 .vm-x:hover{background:var(--ink-soft2); color:var(--text-ondark);}
-.vm-radek{display:flex; gap:8px; padding:0 14px 10px;}
-.vm-hledat{flex:1 1 auto; min-width:0; font:inherit; font-size:14px; min-height:42px;
-  padding:9px 12px; border-radius:var(--r-ovladani); border:1px solid var(--line-ui);
-  background:#fff; color:var(--text-ondark);}
-.vm-hledat.vm-chyba{border-color:var(--c-exekuce); background:rgba(140,47,30,0.06);}
-.vm-kraj{flex:0 1 150px; min-width:0; font:inherit; font-size:14px; min-height:42px;
-  padding:9px 10px; border-radius:var(--r-ovladani); border:1px solid var(--line-ui);
-  background:#fff; color:var(--text-ondark);}
 .vm-mapa{flex:1 1 auto; min-height:180px; background:var(--ink-soft2);}
 /* Značka uprostřed mapy — klikat se přes ni nesmí.
    Pozor: obal měl width:0 a display:flex, což značku stlačilo z dvaceti
@@ -461,8 +453,6 @@ body.vm-otevreno{overflow:hidden;}
   background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
 .vm-ok:hover{filter:brightness(1.06);}
 @media (max-width:560px){
-  .vm-radek{flex-wrap:wrap;}
-  .vm-kraj{flex:1 1 100%;}
   .vm-pata{gap:8px;}
   .vm-ok{flex:1 1 100%; order:3;}
   .vm-pocet{flex:1 1 100%; order:1;}
@@ -905,20 +895,12 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .vm-napred{color:var(--text-ondark-mute); font-size:13px; line-height:1.4;}
 /* Potvrdit nejde, dokud není okruh vidět — ať je to poznat i pohledem. */
 .vm-ok[disabled]{opacity:.45; cursor:not-allowed; box-shadow:none;}
-/* Hlavní akce a pod ní tichý odkaz na ruční výběr. Dvě stejně velká
-   tlačítka vedle sebe tu chvíli byla a panel tím jen ztěžkl — mezi
-   „Pozemky v okolí" a „Vybrat na mapě" nebylo poznat, proč volit jedno,
-   a volba byla zbytečná: tlačítko samo otevře výběr na mapě, když se
-   polohu nepodaří zjistit. */
-.map-okoli{display:flex; flex-direction:column; align-items:center; gap:2px;}
+/* Jediná akce. Nejdřív tu byly dvě stejně velká tlačítka („Pozemky v okolí"
+   a „Vybrat na mapě"), pak tlačítko a pod ním odkaz — obojí byly dvě cesty
+   k témuž. Teď tlačítko rovnou otevře mapu, na které se místo ukáže, takže
+   druhá cesta nemá co nabídnout. */
+.map-okoli{display:flex; flex-direction:column; align-items:center;}
 .map-okoli .map-near-btn{width:100%;}
-/* Vyšší, než by odpovídalo velikosti písma: na telefonu se do 31px řádku
-   prstem trefuje mizerně. Sada drží mez 36 px (doporučení je 44). */
-.map-pick-odkaz{appearance:none; background:none; border:0;
-  min-height:40px; padding:10px 14px;
-  font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer;
-  color:var(--plocha-znacka); text-decoration:underline; text-underline-offset:3px;}
-.map-pick-odkaz:hover{color:var(--ink);}
 .map-near-btn[disabled]{opacity:.78; cursor:progress;}
 .mnb-ceka{width:15px; height:15px; flex:none; border-radius:50%;
   border:2px solid rgba(255,255,255,.35); border-top-color:#fff;
@@ -2850,23 +2832,23 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
    jako číslo: velká patková číslice, pod ní popisek verzálkami v mono,
    mezi nimi svislé linky jako v tabulce listu vlastnictví.
    ===================================================================== */
-.hero-map .hero-head .hero-stats{display:flex; justify-content:center; align-items:stretch;
-  gap:0; margin-top:26px; flex-wrap:nowrap;}
-.hero-map .hero-stats .ts-n{display:flex; flex-direction:column; align-items:center; gap:4px;
-  padding:0 26px; font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
-  color:rgba(255,255,255,0.68); font-family:var(--font-mono); white-space:nowrap;}
-.hero-map .hero-stats .ts-n b{font-family:var(--font-display); font-weight:700;
-  font-size:clamp(28px,3.4vw,42px); line-height:0.9;
-  letter-spacing:-0.03em; color:#FFFFFF; text-transform:none;}
-.hero-map .hero-stats .ts-sep{width:1px; background:rgba(255,255,255,0.22); align-self:stretch;
-  color:transparent; overflow:hidden; text-indent:-99px;}
-/* Poslední dva údaje jsou věty, ne čísla — patří pod čísla, ne mezi ně. */
-.hero-map .hero-stats > span:not(.ts-n):not(.ts-sep){display:none;}
-.hero-map .hero-head .hero-pod{margin-top:14px; font-size:13px; color:rgba(255,255,255,0.66);
-  font-family:var(--font-mono); letter-spacing:0.04em;}
+/* Velká patková číslice s popiskem pod sebou tu byla, dokud se tímhle
+   řádkem web představoval („1 962 POZEMKŮ | 77 OKRESŮ"). Hlavní číslo se
+   přestěhovalo do nadpisu, kde je mu líp — a co zbylo, je doplněk. Kdyby
+   si doplněk nechal sloupcovou sazbu, zůstala by z něj osamělá
+   sedmdesátsedmička nad slovem „okresů" vedle vět na jiném účaří. */
+.hero-map .hero-head .hero-stats{display:flex; justify-content:flex-start; align-items:center;
+  gap:0; margin-top:22px; flex-wrap:wrap;
+  font-family:var(--font-mono); font-size:12.5px; letter-spacing:0.04em;}
+.hero-map .hero-stats .ts-n{display:inline; padding:0; font-size:inherit;
+  letter-spacing:inherit; text-transform:none; color:rgba(255,255,255,0.74);
+  font-family:inherit; white-space:nowrap;}
+.hero-map .hero-stats .ts-n b{font-family:inherit; font-weight:700;
+  font-size:inherit; line-height:inherit; letter-spacing:inherit; color:#FFFFFF;}
+.hero-map .hero-stats .ts-sep{width:auto; background:none; align-self:auto;
+  color:rgba(255,255,255,0.36); overflow:visible; text-indent:0; margin:0 10px;}
 @media (max-width:880px){
-  .hero-map .hero-head .hero-stats{margin-top:20px;}
-  .hero-map .hero-stats .ts-n{padding:0 16px; font-size:10px; letter-spacing:0.08em;}
+  .hero-map .hero-head .hero-stats{margin-top:16px; font-size:11.5px;}
 }
 
 
@@ -2894,7 +2876,6 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 /* Čísla jako datový pás u levé hrany, ne vycentrovaná trojice. */
 .hero-map .hero-head .hero-stats{justify-content:flex-start; margin-top:30px;}
 .hero-map .hero-stats .ts-n:first-child{padding-left:0;}
-.hero-map .hero-head .hero-pod{text-align:left;}
 
 @media (max-width:880px){
   /* Úvod se na telefonu roztahoval přes celou obrazovku a hledání zůstalo
@@ -2904,10 +2885,6 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   .hero-map .hero-head h1{font-size:clamp(29px,8.2vw,42px); max-width:none; margin-bottom:12px;}
   .hero-map .hero-head .eyebrow{margin-bottom:10px;}
   .hero-map .hero-head .hero-stats{margin-top:14px;}
-  /* „celá ČR · zdarma, bez registrace" říká přesně totéž co nadstavec nad
-     nadpisem („POZEMKY NA PRODEJ I V DRAŽBĚ · CELÁ ČR"). Na monitoru to
-     nevadí, na telefonu je to řádek navíc mezi člověkem a hledáním. */
-  .hero-map .hero-head .hero-pod{display:none;}
   .hero-map{padding:0 0 26px;}
 }
 
@@ -3234,7 +3211,12 @@ h1, h2, h3,
   border:1px solid rgba(255,255,255,0.14); background:rgba(255,255,255,0.045);}
 .mo-radek{display:flex; align-items:baseline; justify-content:space-between; gap:14px;
   padding:4px 0; font-size:13.5px; color:var(--text-ondeep-mute);}
-.mo-radek .mo-v{font-family:var(--font-mono); font-variant-numeric:tabular-nums; white-space:nowrap;}
+/* Obě čísla v kartě patří k sobě — jsou to dvě ceny, které se mají
+   porovnat. Horní bylo v mono, dolní v patkovém, takže vedle sebe
+   vypadala, jako by každé pocházelo z jiné tabulky. Rodina je jedna
+   a rozdíl dělá velikost a tloušťka, ne typ písma. */
+.mo-radek .mo-v{font-family:var(--font-display); font-variant-numeric:tabular-nums;
+  white-space:nowrap; letter-spacing:-0.012em;}
 .mo-radek.mo-hlavni{border-top:1px solid rgba(255,255,255,0.12); margin-top:4px; padding-top:9px;}
 .mo-radek.mo-hlavni .mo-k{color:var(--text-ondeep);}
 .mo-radek.mo-hlavni .mo-v{font-family:var(--font-display); font-size:20px; font-weight:700;
@@ -3252,9 +3234,13 @@ h1, h2, h3,
 .pz-odhad .mo-radek.mo-hlavni{border-top-color:var(--line-strong);}
 .pz-odhad .mo-radek.mo-hlavni .mo-k, .pz-odhad .mo-radek.mo-hlavni .mo-v{color:var(--text-ondark);}
 .pz-odhad .mo-rozdil, .pz-odhad .mo-rozdil b{color:var(--accent-warm);}
-/* Pochybný rozdíl je varování, ne radostná zpráva — má barvu exekuce, ne mosaz. */
-.mo-rozdil.mo-pochybna, .pz-odhad .mo-rozdil.mo-pochybna,
+/* Pochybný rozdíl je varování, ne radostná zpráva — má barvu exekuce, ne mosaz.
+   Obarvený ale zůstává jen ten ÚDAJ, ne celé vysvětlení pod ním: tři řádky
+   syté červené pod sebou už nejsou důraz, ale křik, a oko pak nemá kam
+   uhnout. Zvýrazněná slova drží barvu, věta kolem nich má barvu textu. */
 .mo-rozdil.mo-pochybna b, .pz-odhad .mo-rozdil.mo-pochybna b{color:var(--c-exekuce-ink);}
+.mo-rozdil.mo-pochybna{color:var(--text-ondeep-mute);}
+.pz-odhad .mo-rozdil.mo-pochybna{color:var(--text-ondark-mute);}
 .pz-odhad .mo-pozn{color:var(--text-ondark-mute);}
 .pz-odhad .mo-pozn b{color:var(--text-ondark);}
 .pz-verdict.warn{--vc:#8A5512; border-color:rgba(138,85,18,0.34); background:rgba(138,85,18,0.08);}

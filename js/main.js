@@ -1644,7 +1644,7 @@
       vybiramMisto = false;
       document.body.classList.remove('vybiram-misto');
       // Stejná cesta jako u GPS: seznam se přepne na okolí, ne jen mapa.
-      enterNearAt({ lat: e.latlng.lat, lng: e.latlng.lng }, false);
+      enterNearAt({ lat: e.latlng.lat, lng: e.latlng.lng }, false, null, 'seznam');
       return;
     }
     if (krajJustSelected) { krajJustSelected = false; return; }
@@ -1797,7 +1797,6 @@
   var krajHintEl = document.getElementById('kraj-hint');
   var krajHeadEl = document.getElementById('kraj-head');
   var nearBtn = document.getElementById('map-near');
-  var pickBtn = document.getElementById('map-pick');
   // Sroluj rovnou k mapě, ať je hned vidět, že se něco děje (jinak se zdá, že tlačítko „nic nedělá").
   // Odrolovat k mapě tak, aby začínala POD lepivou hlavičkou. Prosté
   // scrollIntoView ji zarovná na úplný vrch okna, kde jí hlavička ukousne
@@ -1814,7 +1813,12 @@
       try { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e2) {}
     }
   }
-  if (nearBtn) nearBtn.addEventListener('click', function () { scrollToMap(); enterNear(); });
+  /* „Pozemky v okolí" otevře rovnou mapu, na které si člověk místo ukáže.
+     Dřív se nejdřív ptalo na polohu — a když ji prohlížeč nedal (na iPhonu
+     se zakázanou polohou vždycky), skončilo to okénkem „napište obec",
+     tedy prací navíc místo slíbeného usnadnění. Poloha se tím neztrácí:
+     uvnitř výběru je pořád tlačítko „Moje poloha", jen už na ní nic nestojí. */
+  if (nearBtn) nearBtn.addEventListener('click', function () { otevriVyberMista(); });
   // Vzdálenost pozemku od uživatele (km) — pro řazení „nejblíž ke mně".
   function kmFromUser(d) {
     if (!userPos || typeof d.lat !== 'number') return Infinity;
@@ -1920,7 +1924,24 @@
      klepnutím do mapy, nebo napsáním obce. Dřív to byly tři různé cesty
      s různým výsledkem: GPS seznam jen seřadila, klepnutí do mapy na něj
      nesáhlo vůbec. Teď dělají všechny totéž. */
-  function enterNearAt(pos, approx, nazev) {
+  /* Po vybrání okolí má člověk vidět NABÍDKY, ne zase mapu — proto se dá
+     říct, kam se po výběru sjede. Na mobilu je vidět jen jedno z dvojice
+     mapa/seznam, takže se napřed přepne na seznam; na širší obrazovce je
+     seznam vedle mapy a jen se k němu odroluje. */
+  function ukazSeznam() {
+    var prep = document.querySelector('.mv-toggle .mvt-btn[data-mv="seznam"]');
+    if (prep && prep.offsetParent !== null) prep.click();   // offsetParent = přepínač je vidět (mobil)
+    var cil = document.querySelector('.map-side') || document.getElementById('opp-list');
+    if (!cil) return;
+    setTimeout(function () {
+      try {
+        var hd = document.querySelector('header');
+        var vys = hd ? hd.getBoundingClientRect().height : 0;
+        window.scrollTo({ top: Math.max(0, cil.getBoundingClientRect().top + window.pageYOffset - vys - 10), behavior: 'smooth' });
+      } catch (e) {}
+    }, 90);
+  }
+  function enterNearAt(pos, approx, nazev, cil) {
     userPos = { lat: pos.lat, lng: pos.lng };
     var km = (mojeMisto && mojeMisto.km) || 10;
     // Místo si pamatujeme vždycky — i to přibližné. Jinak by se člověk po
@@ -1944,13 +1965,14 @@
     sortMode = 'near';
     if (sortEl) sortEl.value = 'near';
     ramujMisto();
-    if (typeof scrollToMap === 'function') scrollToMap();   // ať je mapa s výsledkem opravdu vidět
+    if (cil === 'seznam') ukazSeznam();
+    else if (typeof scrollToMap === 'function') scrollToMap();   // ať je mapa s výsledkem opravdu vidět
     updateKrajHead();
     renderList();
     /* Proužek s potvrzením („Hlídáme Loučeň a okolí do 10 km") ležel mimo
        obraz, takže po klepnutí nebylo co číst. Posuneme ho k sobě — až po
        vykreslení, ať se počítá se skutečnou výškou. */
-    if (mistoPruh) setTimeout(function () {
+    if (mistoPruh && cil !== 'seznam') setTimeout(function () {
       try { mistoPruh.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
     }, 420);
     var kolik = DATA.filter(function (d) { return kmOd(mojeMisto, d) <= km; }).length;
@@ -2032,24 +2054,35 @@
      ================================================================== */
   function otevriVyberMista(nast) {
     nast = nast || {};
-    var start = nast.start || (mojeMisto && isFinite(mojeMisto.lat) ? mojeMisto : null) || { lat: 49.82, lng: 15.47 };
+    var start = nast.start || (mojeMisto && isFinite(mojeMisto.lat) ? mojeMisto : null);
     var km = (mojeMisto && mojeMisto.km) || 10;
-    var zoomStart = nast.start || (mojeMisto && isFinite(mojeMisto.lat)) ? 11 : 7;
+    var zoomStart = 11;
+    /* Bez uloženého místa navážeme na kraj, který si člověk vybral na hlavní
+       mapě — výběr pak začne tam, kde se díval. Rozhoduje VYBRANÝ KRAJ, ne
+       úroveň přiblížení: hlavní mapa se po dorovnání na republiku sama
+       dostane na zoom 9, takže podle čísla by se výběr otevíral uprostřed
+       polí u Čáslavi a člověk by odtamtud musel odjíždět přes celou zemi.
+       Bez vybraného kraje se tedy začíná pohledem na celou ČR a místo se
+       ukáže klepnutím (to zároveň přibližuje). Zoom 9 je nejnižší, při
+       kterém je desetikilometrový okruh větší než 40 px — tedy vidět. */
+    if (!start && selectedKraj) {
+      try {
+        var mc = map.getCenter();
+        start = { lat: mc.lat, lng: mc.lng };
+        zoomStart = Math.max(map.getZoom(), 9);
+      } catch (e) { start = null; }
+    }
+    if (!start) { start = { lat: 49.82, lng: 15.47 }; zoomStart = 7; }
 
     var ov = document.createElement('div');
     ov.className = 'vm-ov';
     ov.innerHTML =
       '<div class="vm-panel" role="dialog" aria-modal="true" aria-label="Vyberte místo, jehož okolí chcete sledovat">' +
         '<div class="vm-hlava">' +
-          '<b>Vyberte své místo' +
+          '<b>Vyberte své okolí' +
             (nast.duvod ? '<span class="vm-duvod">' + esc(nast.duvod) + '</span>' : '') +
           '</b>' +
           '<button class="vm-x" type="button" aria-label="Zavřít">✕</button>' +
-        '</div>' +
-        '<div class="vm-radek">' +
-          '<input type="text" class="vm-hledat" id="vm-hledat" autocomplete="off" autocapitalize="words" ' +
-            'placeholder="Obec nebo okres (např. Kolín)" aria-label="Najít obec nebo okres">' +
-          '<select class="vm-kraj" id="vm-kraj" aria-label="Přejít na kraj"><option value="">Celá ČR</option></select>' +
         '</div>' +
         '<div class="vm-mapa" id="vm-mapa"></div>' +
         '<div class="vm-kriz" aria-hidden="true"><span></span></div>' +
@@ -2062,27 +2095,34 @@
             }).join('') +
           '</fieldset>' +
           '<div class="vm-pocet" id="vm-pocet" aria-live="polite"></div>' +
-          '<button class="vm-ok" type="button" id="vm-ok">Sledovat toto okolí</button>' +
+          '<button class="vm-ok" type="button" id="vm-ok">Zobrazit pozemky</button>' +
         '</div>' +
       '</div>';
     document.body.appendChild(ov);
     document.body.classList.add('vm-otevreno');
 
-    var krajSel = ov.querySelector('#vm-kraj');
-    Object.keys(KRAJE).forEach(function (k) {
-      var o = document.createElement('option');
-      o.value = k; o.textContent = krajTitul(k);
-      krajSel.appendChild(o);
-    });
-
     var m = L.map(ov.querySelector('#vm-mapa'), {
       zoomControl: true, attributionControl: false, preferCanvas: true,
     }).setView([start.lat, start.lng], zoomStart);
+    // Stejné okno ven jako u hlavní mapy (PK_MAPA) — testy se odsud musí umět
+    // přesunout jinam, když v panelu není žádné hledání.
+    try { window.PK_VM_MAPA = m; } catch (e) {}
     // (výchozí přiblížení dorovná jdiNa() níž, jakmile je znám okruh)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       subdomains: 'abc', maxZoom: 18, className: 'pk-basemap'
     }).addTo(m);
 
+    /* Obrysy krajů. Bez hledání se místo ukazuje klepnutím do mapy, a to jde
+       jen tehdy, když člověk pozná, kam klepe. Při pohledu na celou republiku
+       je podkladová mapa v tom měřítku skoro prázdná a ze samotných teček se
+       tvar země přečíst nedá — hranice krajů jsou to jediné, podle čeho se dá
+       zamířit „sem, to je u nás". */
+    if (KRAJE_GEOM) {
+      L.geoJSON({ type: 'FeatureCollection', features: Object.keys(KRAJE_GEOM).map(function (k) {
+        return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] };
+      }) }, { interactive: false, renderer: L.svg(),
+        style: function () { return { color: '#1F5138', weight: 1, opacity: 0.38, fill: false }; } }).addTo(m);
+    }
     // Tečky pozemků, ať je vidět, kde vůbec něco je — jinak člověk vybírá naslepo.
     var vrstvaTecek = L.layerGroup().addTo(m);
     DATA.forEach(function (d) {
@@ -2168,7 +2208,7 @@
            a POTVRDIT NEJDE. Potvrdit výběr, který není vidět, je horší než
            ukázat matoucí puntík: člověk by si uložil okolí náhodného bodu
            uprostřed republiky a nevěděl proč. */
-        pocetEl.innerHTML = '<span class="vm-napred">Nejdřív vyberte kraj nebo najděte obec — pak uvidíte okruh.</span>';
+        pocetEl.innerHTML = '<span class="vm-napred">Klepnutím na mapu ukažte, kde to má být.</span>';
         if (okEl) { okEl.disabled = true; okEl.setAttribute('aria-disabled', 'true'); }
         return;
       }
@@ -2179,9 +2219,8 @@
     /* Dokud je mapa oddálená na celou republiku, je desetikilometrový okruh
        puntík o 26 px — nedá se z něj poznat, co se vybírá, a působí to
        jako porucha. V tom měřítku se tedy okruh ani měřítko nekreslí
-       a místo počtu stojí, co udělat nejdřív: vybrat kraj nebo najít obec.
-       Jakmile se mapa přiblíží (nebo se kraj vybere, což rovnou dorovná
-       rámec podle okruhu), okruh se objeví. */
+       a místo počtu stojí, co udělat nejdřív: klepnout do mapy. Tím se
+       zároveň přiblíží, takže se okruh vzápětí objeví. */
     function polomerVPixelech() {
       var k = parseInt(kmSel.value, 10) || 10;
       var c = m.getCenter();
@@ -2198,6 +2237,15 @@
       else if (!videt && mel) { m.removeLayer(kruh); m.removeLayer(meritko); m.removeLayer(stitek); }
       return videt;
     }
+    /* Klepnutí do mapy je to, čím se místo ukazuje — a nahrazuje hledání,
+       které tu dřív bylo. Dokud je okruh menší než 40 px, klepnutí zároveň
+       přiblíží: z pohledu na celou republiku jsou to dvě klepnutí k vlastní
+       vesnici. Jakmile je okruh vidět, klepnutí už jen posune střed, aby se
+       dal výběr doladit bez přeskakování měřítka. */
+    m.on('click', function (e) {
+      if (okruhVidet()) { m.panTo(e.latlng, { animate: true }); return; }
+      m.setView(e.latlng, Math.min(13, m.getZoom() + 3), { animate: true });
+    });
     m.on('move', prepocti);
     m.on('zoomend', prepocti);
     kmVstupy.forEach(function (r) {
@@ -2215,27 +2263,6 @@
       prepocti();
     }, 60);
 
-    krajSel.addEventListener('change', function () {
-      var k = krajSel.value;
-      if (!k) { m.setView([49.82, 15.47], 7); return; }
-      var c = KRAJE[k] && KRAJE[k].c;
-      // U kraje se drží odstup, ať je vidět celý — ale nikdy tak blízko,
-      // aby se zvolený okruh nevešel na obrazovku.
-      if (c) m.setView(c, Math.min(9, m.getBoundsZoom(ramecOkruhu(c[0], c[1]))), { animate: true });
-    });
-    var hledatEl = ov.querySelector('#vm-hledat');
-    function hledej() {
-      var pos = geocodeTownLocal(hledatEl.value);
-      if (pos) {
-        jdiNa(pos.lat, pos.lng);
-        krajSel.value = '';   // jinak by nahoře svítil kraj, ve kterém mapa není
-        hledatEl.blur();
-      }
-      else { hledatEl.classList.add('vm-chyba'); setTimeout(function () { hledatEl.classList.remove('vm-chyba'); }, 1200); }
-    }
-    hledatEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); hledej(); } });
-    hledatEl.addEventListener('change', hledej);
-
     var gpsBtn = ov.querySelector('#vm-gps');
     gpsBtn.addEventListener('click', function () {
       if (!navigator.geolocation) { gpsBtn.textContent = 'Poloha tu nejde'; return; }
@@ -2252,6 +2279,7 @@
     function naKlavesu(e) { if (e.key === 'Escape') zavri(); }
     function zavri() {
       try { m.remove(); } catch (e) {}
+      try { window.PK_VM_MAPA = null; } catch (e) {}
       if (ov.parentNode) ov.parentNode.removeChild(ov);
       document.body.classList.remove('vm-otevreno');
       document.removeEventListener('keydown', naKlavesu);
@@ -2269,7 +2297,7 @@
       var k = parseInt(kmSel.value, 10) || 10;
       if (mojeMisto) mojeMisto.km = k; else mojeMisto = { km: k };
       zavri();
-      enterNearAt({ lat: c.lat, lng: c.lng }, false);
+      enterNearAt({ lat: c.lat, lng: c.lng }, false, null, 'seznam');
     });
   }
 
@@ -4188,21 +4216,17 @@
          Dřív tu byla zvací skříňka „Hlídejte si okolí svého pozemku"
          s vlastním tlačítkem „Vybrat na mapě". Zabírala nejcennější místo
          nad výpisem a nabízela slabší kopii toho, co je hned pod ní:
-         výběr místa. Obě cesty k okolí — podle polohy i ukázáním na mapě —
-         jsou teď vedle sebe jako rovnocenná tlačítka (.map-okoli), takže
-         se o té možnosti ví a proužek nemusí nic vysvětlovat.
+         výběr místa. Dneska je cesta k okolí jediná — tlačítko „Pozemky
+         v okolí" (.map-okoli) rovnou otevře mapu — takže proužek nemusí
+         nic vysvětlovat.
          Jakmile místo uložené je, proužek se objeví a nese, co od minule
          přibylo — tedy něco, co jinde není. */
       mistoPruh.hidden = true;
       mistoPruh.classList.remove('ma-novinky', 'bez-mista');
       if (akceZadne) akceZadne.hidden = true;
       if (akceMam) akceMam.hidden = true;
-      if (pickBtn) pickBtn.hidden = false;
       return;
     }
-    /* Místo je vybrané — měnit se dá v proužku („Změnit místo"), takže
-       druhé tlačítko nahoře by bylo totéž dvakrát. */
-    if (pickBtn) pickBtn.hidden = true;
     mistoPruh.hidden = false;
     mistoPruh.classList.remove('bez-mista');
     if (akceZadne) akceZadne.hidden = true;
@@ -4265,7 +4289,6 @@
      Teď se otevře vlastní mapa, ve které se dá libovolně hýbat. */
   if (vybratBtn) vybratBtn.addEventListener('click', function () { otevriVyberMista(); });
   /* Totéž tlačítko, jen na primárním místě vedle „Pozemky v okolí". */
-  if (pickBtn) pickBtn.addEventListener('click', function () { otevriVyberMista(); });
   var zmenitBtn = document.getElementById('misto-zmenit');
   if (zmenitBtn) zmenitBtn.addEventListener('click', function () { otevriVyberMista(); });
   vykresliMisto();

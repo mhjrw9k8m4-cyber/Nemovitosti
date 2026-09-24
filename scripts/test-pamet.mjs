@@ -258,7 +258,7 @@ pravda('karty ukazují vzdálenost od uloženého místa', kmNaKartach > 0,
 await p.evaluate(() => document.getElementById('misto-zrus').click());
 await p.waitForTimeout(400);
 const poZruseni = await p.evaluate(() => {
-  const b = document.getElementById('map-pick');
+  const b = document.getElementById('map-near');
   return {
     jdeVybratZnovu: !!b && !b.hidden && b.getClientRects().length > 0,
     ulozeno: localStorage.getItem('pk_misto_v1'),
@@ -268,13 +268,12 @@ const poZruseni = await p.evaluate(() => {
 /* Po zrušení musí zůstat cesta, jak vybrat místo znovu. Kdyby nezůstala,
    šlo by hlídání zapnout jen přes GPS — a kdo polohu nepovolí, o funkci
    se nikdy nedozví. To je pořád totéž pravidlo jako dřív.
-   Změnilo se JEN kde ta cesta je: dřív se proužek po zrušení překlopil
-   v pozvánku s vlastním tlačítkem, jenže ta pozvánka zabírala nejcennější
-   místo nad výpisem a byla slabší kopií toho, co je hned pod ní. Teď je
-   výběr na mapě rovnocenné tlačítko v hlavním ovládání (#map-pick)
-   a proužek se ukazuje, jen když je místo opravdu uložené. */
+   Změnilo se JEN kde ta cesta je: nejdřív pozvánka s vlastním tlačítkem,
+   pak dvě tlačítka vedle sebe, pak tlačítko a odkaz — a dneska jediné
+   tlačítko „Pozemky v okolí" (#map-near), které rovnou otevře mapu.
+   Proužek se ukazuje, jen když je místo opravdu uložené. */
 pravda('po zrušení jde místo vybrat znovu', poZruseni.jdeVybratZnovu === true,
-  'tlačítko „Vybrat na mapě" v hlavním ovládání chybí — bez něj zbývá jen GPS');
+  'tlačítko „Pozemky v okolí" v hlavním ovládání chybí — bez něj zbývá jen GPS');
 pravda('místo se smazalo i z prohlížeče', poZruseni.ulozeno === null, `v úložišti zůstalo ${poZruseni.ulozeno}`);
 pravda('vzdálenosti z karet zmizí taky', poZruseni.km === 0, `zůstalo ${poZruseni.km}`);
 
@@ -282,7 +281,7 @@ pravda('vzdálenosti z karet zmizí taky', poZruseni.km === 0, `zůstalo ${poZru
 // Tohle je jediná cesta pro člověka, který polohu nepovolí. Dřív to bylo
 // jedno jediné klepnutí do hlavní mapy: kdo klepl vedle, měl hotovo a
 // nedalo se couvnout. Teď se otevře vlastní mapa přes celou obrazovku.
-await p.evaluate(() => document.getElementById('map-pick').click());
+await p.evaluate(() => document.getElementById('map-near').click());
 await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
 await p.waitForTimeout(900);
 const vyber = await p.evaluate(() => {
@@ -291,18 +290,24 @@ const vyber = await p.evaluate(() => {
   return {
     otevreno: !!document.querySelector('.vm-ov'),
     mapa: !!r && r.height > 200,
-    kraju: document.querySelectorAll('#vm-kraj option').length,
+    hledani: !!document.getElementById('vm-hledat') || !!document.getElementById('vm-kraj'),
     pocet: (document.getElementById('vm-pocet') || {}).textContent || '',
   };
 });
-pravda('tlačítko „Vybrat na mapě" otevře mapu výběru', vyber.otevreno && vyber.mapa,
+pravda('tlačítko „Pozemky v okolí" otevře mapu výběru', vyber.otevreno && vyber.mapa,
   `otevřeno=${vyber.otevreno}, mapa=${vyber.mapa}`);
-pravda('a dá se v ní vybrat kraj', vyber.kraju >= 15, `v nabídce je ${vyber.kraju} položek`);
+/* Výběr místa je JEN mapa — místo se ukazuje klepnutím. Psaní obce ani
+   seznam krajů v něm nesmí být: psát obec byla ta slepá ulička, kvůli
+   které se celý výběr předělával. */
+pravda('a není v ní žádné psaní obce ani seznam krajů', vyber.hledani === false,
+  'hledání je zpátky v panelu');
 /* Hned po otevření musí být pod mapou něco, co dává smysl: buď počet
    pozemků v okruhu, nebo — když je mapa oddálená na celou republiku a
-   okruh by byl puntík o pár pixelech — co udělat nejdřív. Prázdno ne. */
+   okruh by byl puntík o pár pixelech — co udělat nejdřív. Prázdno ne.
+   Tím „nejdřív" už není vybrat kraj ani najít obec (to z panelu zmizelo),
+   ale klepnout do mapy. */
 pravda('rovnou říká, co je v okruhu, nebo co udělat nejdřív',
-  /\d+ pozem/.test(vyber.pocet) || /vyberte kraj|najděte obec/i.test(vyber.pocet),
+  /\d+ pozem/.test(vyber.pocet) || /klepnut/i.test(vyber.pocet),
   vyber.pocet || '(prázdno)');
 
 /* Výběr se potvrdí tam, kde mapa stojí; okruh se roztáhne tak, aby v něm

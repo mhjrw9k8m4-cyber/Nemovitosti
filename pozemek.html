@@ -15,13 +15,13 @@
   <meta property="og:description" content="Detail pozemku — cena, výměra, poloha na mapě a na co si dát pozor.">
   <meta property="og:locale" content="cs_CZ">
   <meta property="og:site_name" content="Parcelka">
-  <meta property="og:image" content="https://www.parcelaka.cz/assets/og.png?v=4">
+  <meta property="og:image" content="https://www.parcelaka.cz/assets/og.png?v=5">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Pozemek — Parcelka">
   <meta name="twitter:description" content="Detail pozemku — cena, výměra, poloha na mapě a na co si dát pozor.">
-  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og.png?v=4">
+  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og.png?v=5">
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=05266497">
+  <link rel="stylesheet" href="css/styles.css?v=110d6a60">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -87,10 +87,19 @@
        význam. */
     .pz-sect-h{font-size:11.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--popisek); margin:40px 0 10px;}
     .pz-specs{border:1px solid var(--line-strong); border-radius:var(--r-plocha); overflow:hidden; background:var(--ink-soft); box-shadow:var(--e1);}
-    .pz-spec{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 17px; border-bottom:1px solid var(--line);}
+    .pz-spec{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 14px; border-bottom:1px solid var(--line);}
     .pz-spec:last-child{border-bottom:none;}
     .pz-spec .k{color:var(--text-ondark-mute); font-size:14.5px; flex:none;}
-    .pz-spec .v{color:var(--text-ondark); font-weight:600; font-size:15px; text-align:right; font-variant-numeric:tabular-nums; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    /* Hodnota se smí zalomit. S nowrap + ellipsis se delší údaj uřízl
+       třemi tečkami („inzerát mluví o spoluvlastnickém podíl…") — a byla
+       to zrovna ta věta, kvůli které se na cenu nedá spoléhat. */
+    .pz-spec .v{color:var(--text-ondark); font-weight:600; font-size:15px; text-align:right; font-variant-numeric:tabular-nums; min-width:0; overflow-wrap:anywhere;
+      /* Vyvažování řádků (text-wrap:balance) se sem nehodí: rozlomilo
+         datum na „8. / 10. 2026". Radši nechat viset poslední slovo než
+         přetrhnout číslo. */
+      line-height:1.4;}
+    .pz-spec{align-items:flex-start;}
+    .pz-spec .k{padding-top:1px;}
     .pz-feats{display:flex; flex-wrap:wrap; gap:9px;}
     .pz-feat{display:inline-flex; align-items:center; gap:7px; font-size:14px; font-weight:600; color:var(--text-ondark); background:var(--ink-soft); border:1px solid var(--line-strong); padding:8px 13px; border-radius:var(--r-plocha);}
     .pz-feat svg{width:17px; height:17px; stroke-width:2.12; color:var(--copper-bright);}

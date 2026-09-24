@@ -37,7 +37,7 @@ const KRAJ_DISP = { 'Praha': 'Praha', 'Vysočina': 'Kraj Vysočina' };
 const OKRESY = Object.keys(JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'okresy.json'), 'utf8')).okresy || {});
 
 /** Stránka, ze které se obrázek fotí. Vše je v ní, žádné cizí zdroje. */
-function sablona(nadpis, nadtitul) {
+function sablona(nadpis, nadtitul, pod) {
   const dlouhy = nadpis.length > 17;
   return `<!doctype html><html lang="cs"><head><meta charset="utf-8">
 <style>
@@ -75,7 +75,7 @@ function sablona(nadpis, nadtitul) {
   <div>
     <div class="nadtitul">${nadtitul}</div>
     <h1>${nadpis}</h1>
-    <div class="pod">Pozemky na prodej i v dražbě — na jedné mapě.</div>
+    <div class="pod">${pod || 'Pozemky na prodej i v dražbě — na jedné mapě.'}</div>
   </div>
   <div class="pata"><span class="tecka"></span>parcelaka.cz · data z veřejných zdrojů</div>
 </body></html>`;
@@ -84,6 +84,32 @@ function sablona(nadpis, nadtitul) {
 const ukoly = [
   ...KRAJE.map((k) => ({ soubor: `kraj-${slug(k)}.png`, nadpis: KRAJ_DISP[k] || `${k} kraj`, nadtitul: 'Pozemky v kraji' })),
   ...OKRESY.map((o) => ({ soubor: `okres-${slug(o)}.png`, nadpis: o, nadtitul: 'Pozemky v okrese' })),
+];
+
+/* IKONY APLIKACE. Web je tmavě zelený, ale ikony v repozitáři zůstaly
+   z dřívějška modrofialové — a protože Google i telefony sahají po PNG,
+   ne po zeleném favicon.svg, svítila ve výsledcích vyhledávání modrá
+   kapka od úplně jiné značky. Kreslí se proto ze stejného favicon.svg,
+   aby existovala JEDNA předloha a tahle situace se nemohla vrátit.
+   U apple-touch-icon je pod ikonou plná zelená: iOS si kulaté rohy
+   ořezává sám a průhledné rohy by na něm zčernaly. */
+const ZNACKOVA_ZELEN = '#1B4A34';
+const favicon = fs.readFileSync(path.join(ROOT, 'assets', 'favicon.svg'), 'utf8')
+  /* Jen na KOŘENOVÉM <svg>. Plošné hledání width/height vzalo rozměry
+     i vnitřním <rect>ům — ikona pak byla prázdná bílá plocha. */
+  .replace(/<svg\b[^>]*>/, (t) => t.replace(/\s(width|height)="[^"]*"/g, ''));
+function sablonaIkony(podklad) {
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{width:100%;height:100%;}
+    body{background:${podklad || 'transparent'};display:flex;}
+    svg{width:100%;height:100%;display:block;}
+  </style></head><body>${favicon}</body></html>`;
+}
+const ikony = [
+  { soubor: 'icon-512.png', px: 512, podklad: null },
+  { soubor: 'icon-192.png', px: 192, podklad: null },
+  { soubor: 'apple-touch-icon.png', px: 180, podklad: ZNACKOVA_ZELEN },
 ];
 
 fs.mkdirSync(VEN, { recursive: true });
@@ -95,6 +121,23 @@ let hotovo = 0;
 for (const u of ukoly) {
   await p.setContent(sablona(u.nadpis, u.nadtitul), { waitUntil: 'load' });
   await p.screenshot({ path: path.join(VEN, u.soubor), type: 'png' });
+  hotovo++;
+}
+
+/* Hlavní náhled pro sdílení. Byl taky ještě modrofialový, takže odkaz na
+   web vypadal na Facebooku jako od někoho jiného než web sám. */
+await p.setContent(sablona('Pozemky na prodej i v dražbě', 'Celá ČR',
+  'Dražby, exekuce i běžný prodej — na jedné mapě. Zdarma, bez registrace.'), { waitUntil: 'load' });
+await p.screenshot({ path: path.join(ROOT, 'assets', 'og.png'), type: 'png' });
+hotovo++;
+
+for (const i of ikony) {
+  const ip = await ctx.newPage();
+  await ip.setViewportSize({ width: i.px, height: i.px });
+  await ip.setContent(sablonaIkony(i.podklad), { waitUntil: 'load' });
+  await ip.screenshot({ path: path.join(ROOT, 'assets', i.soubor), type: 'png',
+    omitBackground: !i.podklad });
+  await ip.close();
   hotovo++;
 }
 await prohlizec.close();

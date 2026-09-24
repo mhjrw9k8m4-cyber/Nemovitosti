@@ -67,13 +67,13 @@
   <meta property="og:locale" content="cs_CZ">
   <meta property="og:site_name" content="Parcelka">
   <meta property="og:url" content="https://www.parcelaka.cz/">
-  <meta property="og:image" content="https://www.parcelaka.cz/assets/og.png?v=4">
+  <meta property="og:image" content="https://www.parcelaka.cz/assets/og.png?v=5">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Parcelka — příležitosti u pozemků na jedné mapě">
   <meta name="twitter:description" content="Dražby, exekuce a prodeje z veřejných zdrojů na jedné interaktivní mapě celé ČR.">
-  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og.png?v=4">
+  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og.png?v=5">
   <link rel="canonical" href="https://www.parcelaka.cz/">
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -105,7 +105,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=05266497">
+  <link rel="stylesheet" href="css/styles.css?v=110d6a60">
 </head>
 <body>
 
@@ -163,10 +163,13 @@
       <div class="wrap">
         <div class="hero-plot">
         <div class="hero-head reveal">
-        <div class="eyebrow"><span class="live-dot"></span>Pozemky na prodej i v dražbě · celá ČR</div>
-        <h1>Hledáte pozemek? <em>Najdete ho tady.</em></h1>
-        <div class="trust-line hero-stats"><span class="ts-n"><b id="hero-n-count">1 962</b> pozemků</span><span class="ts-sep" aria-hidden="true">·</span><span class="ts-n"><b id="hero-n-okres">77</b> okresů</span></div>
-        <div class="hero-pod">celá ČR · zdarma, bez registrace</div>
+        <!-- Nadpis nese ČÍSLO, ne slogan. „Hledáte pozemek? Najdete ho tady."
+             byla řečnická otázka a odpověď — tvar, který nic neříká a dá se
+             nalepit na kterýkoli web; nadstavec nad ním pak říkal potřetí
+             totéž co nadpis a řádek pod ním. Úvod teď začíná tím jediným,
+             co má tenhle web navíc: kolika pozemky a jakého druhu. -->
+        <h1><b id="hero-n-count">1 962</b> pozemků na prodej i v dražbě</h1>
+        <div class="trust-line hero-stats"><span class="ts-n"><b id="hero-n-okres">77</b> okresů</span><span class="ts-sep" aria-hidden="true">·</span><span class="ts-n">celá ČR</span><span class="ts-sep" aria-hidden="true">·</span><span class="ts-n">zdarma, bez registrace</span></div>
         <!-- Živý důkaz, že web není skanzen. Vyplní ho skript ze skutečných
              dat; dokud se nenačtou, není tu vůbec nic (žádné „Načítám…"). -->
         <div class="hero-live" id="hero-live" hidden>
@@ -221,7 +224,6 @@
                ale jako tichý odkaz pod tlačítkem, ne jako soupeř. -->
           <div class="map-okoli">
             <button type="button" class="map-near-btn" id="map-near"><svg class="mnb-pin" aria-hidden="true"><use href="#i-map"/></svg>Pozemky v okolí</button>
-            <button type="button" class="map-pick-odkaz" id="map-pick">nebo si místo ukažte na mapě</button>
           </div>
           <div class="ms-group">
             <div class="map-filters" id="map-filters" role="group" aria-label="Co hledáte — druh příležitosti">
@@ -554,7 +556,7 @@
 <script src="js/vybaveni.js?v=54b36f73" defer></script>
 <script src="js/dotaz.js?v=341edd4b" defer></script>
 <script src="js/hledani.js?v=6a407f98" defer></script>
-<script src="js/main.js?v=5754d100" defer></script>
+<script src="js/main.js?v=2d6b9fc3" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,
