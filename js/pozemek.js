@@ -229,6 +229,23 @@
   }
   // „Co byste měli vědět" (světlá verze). Obsah počítá společný rádce
   // js/radce.js — tenhle soubor tu měl TŘETÍ kopii těch rad.
+  /* Kdy robot naposledy obešel zdroje. Po čtyřech dnech se to řekne
+     důrazněji — stejná mez jako na úvodní stránce, ať si web neodporuje. */
+  function ukazCasDat(updated) {
+    var el = document.getElementById('pz-cas');
+    if (!el) return;
+    var m = /(\d{4})-(\d{2})-(\d{2})/.exec(updated || '');
+    if (!m) return;
+    var dnesStr = new Date().toISOString().slice(0, 10);
+    var kdy = m[0] === dnesStr ? 'dnes' : (+m[3]) + '. ' + (+m[2]) + '. ' + m[1];
+    var dni = Math.floor((Date.now() - new Date(+m[1], +m[2] - 1, +m[3]).getTime()) / 86400000);
+    el.innerHTML = 'Údaje jsou kopie ze zdroje, zkontrolováno <b>' + kdy + '</b>'
+      + (isFinite(dni) && dni >= 4 ? ' — tedy před ' + dni + ' dny' : '')
+      + '. Než se rozjedete, ověřte si u zdroje, že nabídka pořád platí.';
+    if (isFinite(dni) && dni >= 4) el.classList.add('je-stara');
+    el.hidden = false;
+  }
+
   function pzGtkHtml(d) {
     if (!window.PK_RADCE) return '';
     return window.PK_RADCE.htmlSvetla(d, MODEL);
@@ -349,6 +366,15 @@
         '<a class="pz-btn primary" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Zobrazit na mapě' + VEN + '</a>' +
         (d.type === 'majitel' ? '' : '<a class="pz-btn ghost" href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.label) + VEN + '</a>') +
       '</div>' +
+      /* ZPOŽDĚNÍ DAT. Tohle na stránce chybělo úplně: člověk viděl cenu
+         a termín, ale ne to, že se dívá na KOPII pořízenou někdy dřív.
+         U dražby nebo exekuce je to rozdíl mezi „stihnu to" a marnou
+         cestou. Datum je jediné, co se dá tvrdit poctivě — kdy robot
+         naposledy obešel zdroje. Datum u JEDNOTLIVÉ nabídky se tvrdit
+         nedá: pole „poprvé viděno" má sice každý záznam, jenže všech
+         1 965 má tutéž hodnotu, protože se sloupec nastavil najednou.
+         „V nabídce od" by tedy u všech lhalo stejně. */
+      '<p class="pz-cas" id="pz-cas" hidden></p>' +
 
       '<div class="pz-actions">' +
         '<a class="pz-abtn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">' + PIN_SVG + 'Otevřít v katastru' + VEN + '</a>' +
@@ -479,6 +505,8 @@
     if (target) {
       if (!rendered) render(target);
       fillVerdict(target);   // cenový verdikt teď máme z čeho spočítat
+      // Až PO vykreslení — dřív ten odstavec na stránce ještě není.
+      try { ukazCasDat(j && j.updated); } catch (e) {}
     } else if (!rendered) {
       renderEmpty();
     }
