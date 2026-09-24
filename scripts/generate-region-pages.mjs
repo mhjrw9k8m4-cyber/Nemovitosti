@@ -257,6 +257,14 @@ function priceStats(list){
   return out;
 }
 spoctiMeze(all);                 // meze napřed, ať platí všude stejné
+/* Mez „ceny se liší násobky" se bere z js/ceny.js, ne z vlastního čísla.
+   Web už tenhle pojem má: u odhadu konkrétního pozemku hlásí „nejistý",
+   když (p75 − p25) / medián přeleze MEZ_ROZPTYL. Kdyby si stránka s cenami
+   držela vlastní hranici, mohla by u téhož druhu tvrdit něco jiného než
+   odhad o dva kliky dál. */
+new Function(fs.readFileSync(path.join(ROOT, 'js', 'ceny.js'), 'utf8'))();
+const MEZ_ROZPTYL = (globalThis.PK_CENY && globalThis.PK_CENY.MEZ_ROZPTYL) || 2;
+
 const priceNational = priceStats(all);
 const priceByKraj = {}; for(const k of KRAJ_ORDER){ if(byKraj[k]) priceByKraj[k]=priceStats(byKraj[k]); }
 const priceByOkres = {}; for(const ok of Object.keys(byOkres)){ priceByOkres[ok]=priceStats(byOkres[ok]); }
@@ -344,10 +352,14 @@ ${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\
     <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
     <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
     <nav id="nav" aria-label="Hlavní navigace">
-      <a href="index.html#mapa">Mapa</a>
+      <!-- Účet je první: podle něj se pozná, jestli je člověk přihlášený.
+           Dřív to menu neřeklo nikde a „Můj profil" stál až čtvrtý mezi
+           osobními položkami. Stav doplňuje js/hlavicka.js. -->
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
+      <!-- „Pozemky", ne „Mapa": hlavní pohled je seznam, mapa je jen jedna
+           ze dvou záložek. Odkaz míří pořád na tentýž kotevní bod. -->
+      <a href="index.html#mapa">Pozemky</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <a href="index.html#faq">Dotazy</a>
-      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a><a href="muj-inzerat.html">Můj profil</a></div></details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
@@ -364,7 +376,7 @@ function footer(){
       <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
       <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého.</p>
     </div>
-    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Mapa</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="cena-pozemku.html">Ceny pozemků</a><a href="pridat.html">Přidat pozemek</a></nav>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="cena-pozemku.html">Ceny pozemků</a><a href="pridat.html">Přidat pozemek</a></nav>
     <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
@@ -461,7 +473,7 @@ for(const okres of eligibleOkres){
   const sibLinks = siblings.map(x=>`<a href="${okresFile(x)}">Pozemky ${esc(x)} <span>${byOkres[x].length}</span></a>`).join('');
   const krajBack = hasKrajPage.has(kraj) ? `<a href="${krajFile(kraj)}">Celý ${esc(dispK)} →</a>` : `<a href="pozemky-podle-okresu.html">Všechny okresy →</a>`;
   const crumbs = [
-    {name:'Mapa', href:'index.html', abs:SITE},
+    {name:'Pozemky', href:'index.html', abs:SITE},
     {name:'Pozemky podle okresů', href:'pozemky-podle-okresu.html', abs:SITE+'pozemky-podle-okresu.html'},
   ];
   if(hasKrajPage.has(kraj)) crumbs.push({name:dispK, href:krajFile(kraj), abs:SITE+krajFile(kraj)});
@@ -557,7 +569,7 @@ for(const kraj of eligibleKraj){
   const desc = `Pozemky ${meta.loc} na jedné mapě — ${count} ${pluralPozemek(count)} z veřejných zdrojů: prodeje, dražby i exekuce.${minP?(' Ceny od '+fmt(minP)+' Kč.'):''}`;
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky ${meta.disp}`,"inLanguage":"cs","description":`Nabídky pozemků ${meta.loc} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"}};
   const crumbs = [
-    {name:'Mapa', href:'index.html', abs:SITE},
+    {name:'Pozemky', href:'index.html', abs:SITE},
     {name:'Pozemky podle okresů', href:'pozemky-podle-okresu.html', abs:SITE+'pozemky-podle-okresu.html'},
     {name:meta.disp, abs:SITE+file},
   ];
@@ -638,7 +650,7 @@ const drazby = all.filter(o=>o.type==='drazba').sort((a,b)=>(a.price||1e15)-(b.p
   const items = drazby.slice(0,20).map((o,i)=>({"@type":"ListItem","position":i+1,"name":`${o.place} — dražba${o.area?', '+o.area+' m²':''}`}));
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Dražby pozemků v ČR","inLanguage":"cs","description":`Aktuální nabídky pozemků v dražbě z veřejné evidence dražeb.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}};
   const crumbs = [
-    {name:'Mapa', href:'index.html', abs:SITE},
+    {name:'Pozemky', href:'index.html', abs:SITE},
     {name:'Koupě v dražbě', href:'drazby-pozemku.html', abs:SITE+'drazby-pozemku.html'},
     {name:'Aktuální dražby', abs:SITE+file},
   ];
@@ -691,10 +703,33 @@ ${rows}
 {
   const file='cena-pozemku.html';
   // Národní karty podle druhu (jen skupiny s dost vzorky).
-  const natGroups = DRUH_GROUPS.filter(g=>priceNational[g]);
+  /* Seřazeno od nejlevnějšího druhu k nejdražšímu. Dřív to šlo v pořadí,
+     v jakém jsou druhy vyjmenované v kódu (45, 35, 119, 2 771), takže se
+     čísla nedala porovnat pohledem — oko musí jít po stupnici.
+
+     A vlastní značkování místo .okr-stat: ty dlaždice jsou dělané na dvě
+     krátká čísla vedle sebe (22 pozemků | 22 na prodej) a oddělují se
+     svislou čárkou vlevo. Tady jsou popisky dlouhé, na telefonu se
+     dlaždice zalomí pod sebe — a z té čárky se stane odsazení, takže to
+     vypadalo, jako by lesy, zahrady a stavební parcely byly podpoložky
+     zemědělské půdy. Tohle je seznam sourozenců, ať se tak i čte. */
+  const NAZEV_DRUHU = { 'Stavební': 'Stavební pozemek' };
+  const natGroups = DRUH_GROUPS.filter(g=>priceNational[g])
+    .sort((a,b)=>priceNational[a].med - priceNational[b].med);
   const natCards = natGroups.map(g=>{
     const s=priceNational[g];
-    return `<div class="okr-stat" style="min-width:150px;"><b>${fmt(s.med)} Kč/m²</b><span>${esc(g)} · ${fmt(s.lo)}–${fmt(s.hi)} Kč/m² · ${fmt(s.n)} nabídek</span></div>`;
+    /* Když se čtvrtiny rozestoupí o víc než násobek meze, není to „typická
+       cena", ale průměr dvou různých trhů. U zahrad to dělá 45–825 Kč/m²,
+       tedy osmnáctinásobek: zahrada na vsi a zahrada na kraji města nemají
+       společného skoro nic. Číslo se nezahazuje — jen se u něj řekne, že
+       je to hrubé vodítko, přesně jako u odhadu konkrétního pozemku. */
+    const rozptyl = s.med ? (s.hi - s.lo) / s.med : 0;
+    const siroke = rozptyl > MEZ_ROZPTYL;
+    return `<li class="cen-druh${siroke ? ' cen-siroke' : ''}"><b>${fmt(s.med)} Kč/m²</b>`
+      + `<span class="cen-nazev">${esc(NAZEV_DRUHU[g] || g)}</span>`
+      + `<span class="cen-detail">obvykle ${fmt(s.lo)}–${fmt(s.hi)} Kč/m² · z ${fmt(s.n)} nabídek</span>`
+      + (siroke ? `<span class="cen-varovani">Ceny se tu liší násobky — medián berte jen jako hrubé vodítko, ne jako obvyklou cenu.</span>` : '')
+      + `</li>`;
   }).join('\n        ');
 
   // Kraje seřazené podle mediánu zemědělské půdy (nejvíc dat) – barevná „teplota".
@@ -753,7 +788,7 @@ ${rows}
   const title = 'Ceny pozemků v ČR — kolik stojí m² půdy | Parcelka';
   const desc = `Kolik stojí metr čtvereční pozemku v Česku? Orientační medián cen z aktuálních nabídek podle druhu a kraje.${natZ?' Zemědělská půda medián '+fmt(natZ.med)+' Kč/m².':''}`;
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Ceny pozemků v ČR","inLanguage":"cs","description":"Orientační medián cen pozemků (Kč/m²) podle druhu a kraje z aktuálních nabídek.","mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"}};
-  const crumbs=[{name:'Mapa',href:'index.html',abs:SITE},{name:'Ceny pozemků',abs:SITE+file}];
+  const crumbs=[{name:'Pozemky',href:'index.html',abs:SITE},{name:'Ceny pozemků',abs:SITE+file}];
 
   const html = head(title,desc,file,jsonld,crumbs) + `
 <main id="obsah">
@@ -774,9 +809,9 @@ ${rows}
       <div class="add-card">
         <div class="rules-sect">
           <h2>Medián ceny podle druhu (celá ČR)</h2>
-          <div class="okr-stats" style="margin-bottom:0;">
-        ${natCards || '<p class="rules-note" style="margin:0;">Zatím není dost dat pro spolehlivý výpočet.</p>'}
-          </div>
+          ${natCards ? `<ul class="cen-druhy">
+        ${natCards}
+          </ul>` : '<p class="rules-note" style="margin:0;">Zatím není dost dat pro spolehlivý výpočet.</p>'}
           <p class="rules-note">Jde o <b>medián nabídkových cen</b> (ne realizovaných prodejů) z pozemků, u kterých známe cenu i výměru. Počítáme <b>jen běžné nabídky k prodeji</b> — vyvolávací cena dražby je pod trhem z podstaty věci a do ceny „kolik stojí pozemek" nepatří; stejně to počítá i odhad u konkrétního pozemku, aby web neříkal na dvou místech dvě čísla. Rozpětí ukazuje typické ceny (25.–75. percentil, tj. bez krajních výkyvů). Skutečná cena závisí na kvalitě půdy (BPEJ), přístupu, sítích i lokalitě — berte to jako orientaci, ne odhad konkrétního pozemku.</p>
           <p class="rules-note">${ODFILTROVANO ? `Do výpočtu <b>nezapočítáváme ${ODFILTROVANO} ${ODFILTROVANO===1?'nabídku':(ODFILTROVANO<5?'nabídky':'nabídek')}</b>, u kterých cena za metr vychází hluboko pod trhem — bývají to <b>spoluvlastnické podíly</b> (v inzerátu je výměra celé parcely, ale prodává se jen zlomek) nebo špatně načtené ceny. Bez toho vycházel medián pole v některých okresech na 8 Kč/m², což není cena, za kterou se u nás pole prodává. Hranici nestanovujeme od stolu: hledá se mezera v samotném rozdělení cen, a kde žádná není (zahrady, stavební pozemky), nevyřazuje se nic.` : ''}</p>
         </div>
@@ -853,7 +888,7 @@ if(lastKraj!==null) okresBody += `          </div>\n`;
 const idxTitle='Pozemky podle krajů a okresů — celá ČR | Parcelka';
 const idxDesc=`Přehled pozemků v ${krajPages.length} krajích a ${okresPages.length} okresech Česka — prodeje, dražby a exekuce z veřejných zdrojů na jedné mapě. Vyberte region a prohlédněte si aktuální nabídky.`;
 const idxJsonld={"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky podle krajů a okresů","inLanguage":"cs","description":idxDesc,"mainEntityOfPage":"https://www.parcelaka.cz/pozemky-podle-okresu.html","publisher":{"@type":"Organization","name":"Parcelka"}};
-const idxCrumbs=[{name:'Mapa', href:'index.html', abs:SITE},{name:'Pozemky podle krajů a okresů', abs:SITE+'pozemky-podle-okresu.html'}];
+const idxCrumbs=[{name:'Pozemky', href:'index.html', abs:SITE},{name:'Pozemky podle krajů a okresů', abs:SITE+'pozemky-podle-okresu.html'}];
 const idxHtml = head(idxTitle,idxDesc,'pozemky-podle-okresu.html',idxJsonld,idxCrumbs) + `
 <main id="obsah">
 

@@ -32,7 +32,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=b9f20809">
+  <link rel="stylesheet" href="css/styles.css?v=ec3ae688">
 
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"Article","headline":"Exekuce a pozemek: co to znamená a jak to funguje","inLanguage":"cs","description":"Co znamená, když je pozemek v exekuci, jak se liší od dražby, kdy se dostane do prodeje a kde si vše ověříte.","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntityOfPage":"https://www.parcelaka.cz/exekuce-pozemku.html"}
@@ -49,22 +49,14 @@
     <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
     <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
         <nav id="nav" aria-label="Hlavní navigace">
-      <a href="index.html#mapa">Mapa</a>
+      <!-- Účet je první: podle něj se pozná, jestli je člověk přihlášený.
+           Dřív to menu neřeklo nikde a „Můj profil" stál až čtvrtý mezi
+           osobními položkami. Stav doplňuje js/hlavicka.js. -->
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
+      <!-- „Pozemky", ne „Mapa": hlavní pohled je seznam, mapa je jen jedna
+           ze dvou záložek. Odkaz míří pořád na tentýž kotevní bod. -->
+      <a href="index.html#mapa">Pozemky</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <a href="index.html#faq">Dotazy</a>
-      <!-- Čtyři položky, které všechny patří jednomu účtu, zabíraly
-           v liště čtyři místa a vypadaly jako čtyři různé části webu.
-           Jsou pod jednou. <details> proto, že rozbalení má umět
-           prohlížeč sám — klávesnicí i bez skriptu. -->
-      <details class="nav-moje">
-        <summary id="nav-moje-sum">Moje</summary>
-        <div class="nav-moje-panel">
-          <a href="upozorneni.html" id="nav-upozorneni">Upozornění</a>
-          <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
-          <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
-          <a href="muj-inzerat.html">Můj profil</a>
-        </div>
-      </details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
@@ -156,7 +148,7 @@
       <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
       <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého.</p>
     </div>
-    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Mapa</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a></nav>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a></nav>
     <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
@@ -178,6 +170,6 @@
 <script src="js/hlidani-logika.js?v=ff3c93c5" defer></script>
 <script src="js/upozorneni-feed.js?v=c8e91dd3" defer></script>
 <script src="js/upozorneni.js?v=b7b7c483" defer></script>
-<script src="js/hlavicka.js?v=36f4dc26" defer></script>
+<script src="js/hlavicka.js?v=f3a269c8" defer></script>
 </body>
 </html>

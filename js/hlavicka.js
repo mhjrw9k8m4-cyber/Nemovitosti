@@ -128,3 +128,44 @@
     if (e.key === 'Escape' || e.key === 'Tab') rozsvit();
   });
 })();
+
+/* Stav přihlášení v menu.
+ *
+ * Menu nikde neříkalo, jestli je člověk přihlášený. „Můj profil" vypadal
+ * stejně přihlášenému i nepřihlášenému a stál až čtvrtý mezi osobními
+ * položkami — kdo si chtěl ověřit účet, musel na profil přejít a počkat,
+ * co se načte. Teď je účet v menu první a pod ním stojí, na koho je
+ * přihlášeno, nebo že přihlášený nikdo není.
+ *
+ * Píše se to skriptem, ne do HTML: stránek je přes sto a stav se mění.
+ * V HTML je proto „Nepřihlášeno" jako výchozí, aby i bez skriptu stálo
+ * něco pravdivého — nepřihlášený je totiž výchozí stav.
+ */
+(function () {
+  'use strict';
+  function vypln() {
+    var stav = document.getElementById('nav-stav');
+    var odkaz = document.getElementById('nav-ucet');
+    if (!stav || !odkaz) return;
+    var A = window.PKAuth;
+    var prihlasen = !!(A && A.loggedIn && A.loggedIn());
+    odkaz.classList.toggle('je-prihlasen', prihlasen);
+    var skupina = odkaz.closest ? odkaz.closest('.nav-moje') : null;
+    if (skupina) skupina.classList.toggle('prihlasen', prihlasen);
+    if (!prihlasen) { stav.textContent = 'Nepřihlášeno'; return; }
+    var mail = (A.email && A.email()) || '';
+    /* Dlouhý e-mail by řádek rozbil; zkrátí se jméno, ne doména —
+       podle domény člověk pozná účet spolehlivěji. */
+    if (mail.length > 26) {
+      var zav = mail.indexOf('@');
+      if (zav > 3) mail = mail.slice(0, Math.max(3, 24 - (mail.length - zav))) + '…' + mail.slice(zav);
+    }
+    stav.textContent = mail || 'Přihlášeno';
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', vypln);
+  } else { vypln(); }
+  /* Po přihlášení nebo odhlášení se stránka nemusí načítat znovu. */
+  window.addEventListener('storage', vypln);
+  window.addEventListener('pk-auth', vypln);
+})();

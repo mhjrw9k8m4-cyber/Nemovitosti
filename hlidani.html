@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=b9f20809">
+  <link rel="stylesheet" href="css/styles.css?v=ec3ae688">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .add-hero.app-hero{padding:30px 0 4px;}
@@ -63,6 +63,10 @@
        a z „m²" „M²", což jsou v češtině obojí chybné zápisy jednotek. */
     .hl-lbl.jemny{font-weight:600; color:var(--text-ondark-mute); font-size:12px; letter-spacing:.01em;}
     .hl-pozn{font-weight:400; text-transform:none; letter-spacing:0; color:var(--text-ondark-mute); opacity:.85;}
+    .hl-napoveda{margin:6px 0 0; font-size:12px; line-height:1.45; color:var(--text-ondark-mute);}
+    /* Hlavička je lepivá; bez tohohle odsazení se nadpis karty schová pod ni,
+       jakmile se na kartu odkáže nebo se k ní doroluje. */
+    .hl-card{scroll-margin-top:84px;}
     /* Rychlé volby jen vyplní políčka pod sebou — je tedy pořád vidět,
        co se nastavilo, a dá se to přepsat po svém. */
     .hl-rychle-radek{display:flex; flex-wrap:wrap; gap:7px; margin:2px 0 10px;}
@@ -119,22 +123,14 @@
     <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
     <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
         <nav id="nav" aria-label="Hlavní navigace">
-      <a href="index.html#mapa">Mapa</a>
+      <!-- Účet je první: podle něj se pozná, jestli je člověk přihlášený.
+           Dřív to menu neřeklo nikde a „Můj profil" stál až čtvrtý mezi
+           osobními položkami. Stav doplňuje js/hlavicka.js. -->
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
+      <!-- „Pozemky", ne „Mapa": hlavní pohled je seznam, mapa je jen jedna
+           ze dvou záložek. Odkaz míří pořád na tentýž kotevní bod. -->
+      <a href="index.html#mapa">Pozemky</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <a href="index.html#faq">Dotazy</a>
-      <!-- Čtyři položky, které všechny patří jednomu účtu, zabíraly
-           v liště čtyři místa a vypadaly jako čtyři různé části webu.
-           Jsou pod jednou. <details> proto, že rozbalení má umět
-           prohlížeč sám — klávesnicí i bez skriptu. -->
-      <details class="nav-moje">
-        <summary id="nav-moje-sum">Moje</summary>
-        <div class="nav-moje-panel">
-          <a href="upozorneni.html" id="nav-upozorneni">Upozornění</a>
-          <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
-          <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
-          <a href="muj-inzerat.html">Můj profil</a>
-        </div>
-      </details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
@@ -169,7 +165,7 @@
 <script src="js/auth.js?v=3f61aa2e"></script>
 <script src="js/hlidani-logika.js?v=ff3c93c5"></script>
 <script src="js/upozorneni.js?v=b7b7c483"></script>
-<script src="js/hlavicka.js?v=36f4dc26"></script>
+<script src="js/hlavicka.js?v=f3a269c8"></script>
 <script>
 (function () {
   var A = window.PKAuth;
@@ -253,7 +249,7 @@
   function newSearchCard() {
     var opt = function (v, l, sel) { return '<option value="' + esc(v) + '"' + (sel ? ' selected' : '') + '>' + esc(l) + '</option>'; };
     var druhOpts = opt('', 'jakýkoli druh', true) + DRUHY.map(function (d) { return opt(d, d.charAt(0).toUpperCase() + d.slice(1)); }).join('');
-    var typeOpts = opt('', 'vše (prodej i dražby)', true) + ['sale', 'drazba', 'exekuce', 'majitel'].map(function (t) { return opt(t, TYPE_LABEL[t]); }).join('');
+    var typeOpts = opt('', 'vše', true) + ['sale', 'drazba', 'exekuce', 'majitel'].map(function (t) { return opt(t, TYPE_LABEL[t]); }).join('');
     /* U každé volby stojí, kolik dnešních nabídek by jí vyhovělo. Bez
        toho se dalo zaškrtnout něco, pod čím není NIC, a hlídání pak
        mlčelo navždy, aniž by se dalo poznat proč. Nula se neschovává —
@@ -287,7 +283,11 @@
 
         '<div class="hl-sekce">' +
           '<label class="hl-lbl" for="ns-okres">Kde</label>' +
-          '<input class="hl-in" id="ns-okres" placeholder="okres nebo obec — prázdné = celá ČR" aria-label="Okres nebo obec">' +
+          /* Vysvětlivka patří POD políčko, ne do placeholderu. Placeholder
+             se na telefonu ořízne uprostřed slova a zmizí, jakmile člověk
+             začne psát — tedy přesně ve chvíli, kdy by radu potřeboval. */
+          '<input class="hl-in" id="ns-okres" placeholder="okres nebo obec" aria-label="Okres nebo obec" aria-describedby="ns-okres-pozn">' +
+          '<p class="hl-napoveda" id="ns-okres-pozn">Když necháte prázdné, hlídáme celou ČR.</p>' +
           '<div class="hl-row2">' +
             '<div><label class="hl-lbl" for="ns-druh">Druh pozemku</label><select class="hl-sel" id="ns-druh">' + druhOpts + '</select></div>' +
             '<div><label class="hl-lbl" for="ns-type">Typ nabídky</label><select class="hl-sel" id="ns-type">' + typeOpts + '</select></div>' +
@@ -301,6 +301,12 @@
             '<div><label class="hl-lbl jemny" for="ns-price-od">od (Kč)</label><input class="hl-in" id="ns-price-od" inputmode="numeric" placeholder="bez omezení"></div>' +
             '<div><label class="hl-lbl jemny" for="ns-price">do (Kč)</label><input class="hl-in" id="ns-price" inputmode="numeric" placeholder="bez omezení"></div>' +
           '</div>' +
+          /* Cena za metr je kritérium CENY, ne výměry. Stála pod výměrou,
+             takže se hledala tam, kde nedává smysl — a kdo ji našel, musel
+             přepínat mezi dvěma sekcemi, aby nastavil jednu věc. */
+          '<label class="hl-lbl jemny" for="ns-perm2">Nejvýš za metr čtvereční</label>' +
+          '<input class="hl-in" id="ns-perm2" inputmode="numeric" placeholder="např. 50" aria-describedby="ns-perm2-pozn">' +
+          '<p class="hl-napoveda" id="ns-perm2-pozn">V Kč/m². Podle ceny za metr se pozemky srovnávají nejčastěji — velký levný pozemek tak neutopí malý drahý.</p>' +
         '</div>' +
 
         '<div class="hl-sekce">' +
@@ -310,8 +316,6 @@
             '<div><label class="hl-lbl jemny" for="ns-area">od (m²)</label><input class="hl-in" id="ns-area" inputmode="numeric" placeholder="bez omezení"></div>' +
             '<div><label class="hl-lbl jemny" for="ns-area-do">do (m²)</label><input class="hl-in" id="ns-area-do" inputmode="numeric" placeholder="bez omezení"></div>' +
           '</div>' +
-          '<label class="hl-lbl jemny" for="ns-perm2">Nejvýš za metr čtvereční (Kč/m²)</label>' +
-          '<input class="hl-in" id="ns-perm2" inputmode="numeric" placeholder="např. 50 — podle toho se pozemky srovnávají nejčastěji">' +
         '</div>' +
 
         '<div class="hl-sekce">' +

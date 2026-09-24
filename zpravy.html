@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=b9f20809">
+  <link rel="stylesheet" href="css/styles.css?v=ec3ae688">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .add-hero.app-hero{padding:30px 0 4px;}
@@ -105,22 +105,14 @@
     <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
     <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
         <nav id="nav" aria-label="Hlavní navigace">
-      <a href="index.html#mapa">Mapa</a>
+      <!-- Účet je první: podle něj se pozná, jestli je člověk přihlášený.
+           Dřív to menu neřeklo nikde a „Můj profil" stál až čtvrtý mezi
+           osobními položkami. Stav doplňuje js/hlavicka.js. -->
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
+      <!-- „Pozemky", ne „Mapa": hlavní pohled je seznam, mapa je jen jedna
+           ze dvou záložek. Odkaz míří pořád na tentýž kotevní bod. -->
+      <a href="index.html#mapa">Pozemky</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <a href="index.html#faq">Dotazy</a>
-      <!-- Čtyři položky, které všechny patří jednomu účtu, zabíraly
-           v liště čtyři místa a vypadaly jako čtyři různé části webu.
-           Jsou pod jednou. <details> proto, že rozbalení má umět
-           prohlížeč sám — klávesnicí i bez skriptu. -->
-      <details class="nav-moje">
-        <summary id="nav-moje-sum">Moje</summary>
-        <div class="nav-moje-panel">
-          <a href="upozorneni.html" id="nav-upozorneni">Upozornění</a>
-          <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
-          <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
-          <a href="muj-inzerat.html">Můj profil</a>
-        </div>
-      </details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
@@ -155,7 +147,7 @@
 <script src="js/auth.js?v=3f61aa2e"></script>
 <script src="js/zpravy-logika.js?v=4351d0e3"></script>
 <script src="js/upozorneni.js?v=b7b7c483"></script>
-<script src="js/hlavicka.js?v=36f4dc26"></script>
+<script src="js/hlavicka.js?v=f3a269c8"></script>
 <script>
 (function () {
   var A = window.PKAuth;
@@ -211,9 +203,26 @@
 
   function renderThreads(rows) {
     if (!rows.length) {
+      /* Původní text posílal člověka „najít pozemek na mapě a klepnout na
+         Napsat majiteli". Jenže to tlačítko je JEN u inzerátů, které sem
+         vložil sám majitel (js/main.js: d.type === 'majitel'), ne u těch
+         skoro dvou tisíc sbíraných z veřejných zdrojů. Kdo šel podle
+         návodu, klikal po mapě a nenašel nic — návod se nedal splnit.
+         Teď se rovnou řekne, čeho se to týká, a odkaz vede na mapu už
+         zúženou na inzeráty od majitelů (?q=od majitele, stejná cesta,
+         jakou používá hledání větou). Druhá cesta je opačná: vložit
+         vlastní inzerát a nechat zájemce napsat vám. */
       root.innerHTML = '<div class="zp-card"><div class="zp-empty">' + ICON_CHAT +
-        '<div>Zatím tu nemáte žádnou konverzaci.</div>' +
-        '<div style="margin-top:6px;">Najděte pozemek na mapě a klepněte u něj na <b>„Napsat majiteli"</b> — a napište mu rovnou tady.</div></div></div>';
+        '<div><b>Zatím tu nemáte žádnou konverzaci.</b></div>' +
+        '<div style="margin-top:6px;">Psát se dá u inzerátů označených <b>„Přímo od majitele"</b> — ' +
+        'u nich najdete tlačítko <b>„Napsat majiteli"</b>. U nabídek sbíraných z veřejných zdrojů ' +
+        '(dražby, SPÚ, inzertní portály) vede odkaz k původnímu zdroji.</div>' +
+        '<div style="margin-top:14px; display:flex; flex-direction:column; gap:8px;">' +
+          '<a class="zp-btn" style="display:flex; align-items:center; justify-content:center; text-decoration:none;" ' +
+            'href="index.html?q=' + encodeURIComponent('od majitele') + '">Ukázat pozemky od majitelů</a>' +
+          '<a class="zp-btn sec" style="display:flex; align-items:center; justify-content:center; text-decoration:none;" ' +
+            'href="pridat.html">Přidat vlastní pozemek</a>' +
+        '</div></div></div>';
       return;
     }
     var html = '<div class="zp-card">';

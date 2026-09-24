@@ -86,7 +86,10 @@
         tlacitkoFiltru('zpravy', 'Zprávy', c.zpravy) +
         tlacitkoFiltru('pozemky', 'Pozemky', c.pozemky) +
       '</div>' +
-      '<button class="up-clear" type="button" id="up-all"' + (c.pozemky ? '' : ' disabled') + '>Označit vše jako viděné</button>' +
+      /* Když není co označit, tlačítko se nekreslí vůbec. Zakázané ztrácí
+         podtržení i barvu, takže vypadalo jako zbloudilý tučný popisek —
+         člověk na něj mířil prstem a nic se nedělo. */
+      (c.pozemky ? '<button class="up-clear" type="button" id="up-all">Označit vše jako viděné</button>' : '') +
     '</div>';
 
     if (!videt.length) {

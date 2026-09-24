@@ -219,6 +219,23 @@
     return 'Jiný pozemek';
   }
 
+  /* Nadřazená skupina druhů. „Zemědělská půda" = orná půda + louky —
+     přesně tak to sčítá stránka s cenami i slovníček. Mapa ale uměla
+     filtrovat jen sedm konkrétních druhů, takže kdo do hledání napsal
+     „zemědělská půda", tedy název vlastní největší kategorie webu
+     (přes tisíc nabídek), dostal NULU: ta slova se spotřebovala, žádný
+     druh se nenastavil a zbylé hledání podle textu nic nenašlo, protože
+     v datech stojí „orná půda" nebo „trvalý travní porost".
+     Web tím mluvil na dvou místech dvěma jazyky. */
+  var NADRAZENE = { 'Zemědělská půda': ['Orná půda', 'Louka / travní porost'] };
+  function druhSedi(druhPozemku, vybrano) {
+    if (!vybrano || vybrano === 'all') return true;
+    var g = druhGroup(druhPozemku);
+    if (g === vybrano) return true;
+    var pod = NADRAZENE[vybrano];
+    return !!pod && pod.indexOf(g) >= 0;
+  }
+
   /* ---------- Zpětná vazba (okno) ----------
      Cíl odeslání se nastavuje na JEDNOM místě: js/config.js (PK_FORM_ENDPOINT / PK_FORM_EMAIL).
      Dokud je prázdné, okno upřímně řekne, že odesílání dokončujeme. */
@@ -1101,6 +1118,13 @@
   if (druhEl) {
     var gc = {};
     DATA.forEach(function (d) { var g = druhGroup(d.druh); gc[g] = (gc[g] || 0) + 1; });
+    /* Nadřazené skupiny se do seznamu přidají jen tehdy, když pod nimi
+       něco je — a s vlastním počtem, ať je vidět, že jde o souhrn. */
+    Object.keys(NADRAZENE).forEach(function (nad) {
+      var n = 0;
+      NADRAZENE[nad].forEach(function (g) { n += gc[g] || 0; });
+      if (n > 0) gc[nad] = n;
+    });
     Object.keys(gc).sort(function (a, b) { return gc[b] - gc[a]; }).forEach(function (g) {
       var o = document.createElement('option');
       o.value = g; o.textContent = g + ' (' + gc[g] + ')';
@@ -2424,7 +2448,7 @@
     // navíc. Dřív se hledal jeden podřetězec, takže „rican" nenašlo Říčany
     // ani jednou z 732 obcí s diakritikou a „Beroun Zdice" nenašlo nic.
     var okSearch = !searchToks.length || HL.vyhovuje(d, searchToks);
-    var okDruh = activeDruh === 'all' || druhGroup(d.druh) === activeDruh;
+    var okDruh = druhSedi(d.druh, activeDruh);
     var okPrice = (!maxPrice || (d.price && d.price <= maxPrice))
       && (!minPrice || (d.price && d.price >= minPrice));
     var okArea = (!minArea || (hasArea(d) && d.area >= minArea))
@@ -2444,7 +2468,7 @@
        „Dražba" naklikaná v čipech znamená stavební dražbu, ne jedno nebo
        druhé. */
     var okDotaz = true;
-    if (dotazFiltr.druh && druhGroup(d.druh) !== dotazFiltr.druh) okDotaz = false;
+    if (dotazFiltr.druh && !druhSedi(d.druh, dotazFiltr.druh)) okDotaz = false;
     if (okDotaz && dotazFiltr.typ && d.type !== dotazFiltr.typ) okDotaz = false;
     if (okDotaz && dotazFiltr.jenCelek && d.podil) okDotaz = false;
     if (okDotaz && dotazFiltr.site.length) {

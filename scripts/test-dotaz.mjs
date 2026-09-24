@@ -91,8 +91,18 @@ function pravda(popis, vyslo, proc) {
 
 /* --- 4) Na skutečných datech musí každé slovo něco najít --------------- */
 {
+  /* Zrcadlí druhSedi() z js/main.js: „Zemědělská půda" je souhrn nad ornou
+     půdou a loukami, ne konkrétní druh v katastru. Že ten souhrn v main.js
+     opravdu je a že se používá v obou filtrech, hlídá kontrola v oddílu 6 —
+     tady jde jen o to, aby se slovník dal ověřit na ostrých datech. */
+  const NADRAZENE = { 'Zemědělská půda': ['Orná půda', 'Louka / travní porost'] };
+  const druhSedi = (druhPozemku, vybrano) => {
+    if (!vybrano) return true;
+    const g = druhGroup(druhPozemku);
+    return g === vybrano || (NADRAZENE[vybrano] || []).indexOf(g) >= 0;
+  };
   const sedi = (r, d) => {
-    if (r.druh && druhGroup(d.druh) !== r.druh) return false;
+    if (r.druh && !druhSedi(d.druh, r.druh)) return false;
     if (r.typ && d.type !== r.typ) return false;
     if (r.jenCelek && d.podil) return false;
     for (const s of r.site) if (!d.site || d.site.indexOf(s) < 0) return false;
@@ -407,6 +417,30 @@ function pravda(popis, vyslo, proc) {
     /cast\.slova && cast\.slova\.length/.test(main),
     'při škrtání podle popisku byla polovina křížků mrtvá');
   pravda('našeptávač nabízí i slovník, ne jen obce', /navrhySlovnik/.test(main));
+
+  /* Souhrn „Zemědělská půda" (orná + louky). Tak ho sčítá stránka s cenami
+     i slovníček, ale mapa uměla filtrovat jen konkrétní druhy — kdo napsal
+     do hledání název vlastní největší kategorie webu, dostal nulu.
+     Hlídají se obě strany: že ho parser pozná, a že ho mapa umí vyfiltrovat
+     v OBOU místech (seznam druhů i věta). Kdyby se použil jen na jednom,
+     rozešly by se počty podle toho, kudy k filtru člověk přišel. */
+  const bezKomentaru = main.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+  pravda('mapa zná nadřazenou skupinu „Zemědělská půda"',
+    /NADRAZENE\s*=\s*\{[^}]*Zemědělská půda/.test(bezKomentaru),
+    'bez ní vrací hledání „zemědělská půda" nulu');
+  pravda('a filtruje přes ni na obou místech (seznam i věta)',
+    (bezKomentaru.match(/druhSedi\(/g) || []).length >= 3,
+    'porovnání druhu musí jít přes druhSedi, jinak se seznam a věta rozejdou');
+  for (const v of ['zemědělská půda', 'zemědělská', 'zemědělský pozemek']) {
+    pravda(`„${v}" hledání pozná jako zemědělskou půdu`,
+      P.rozeber(v).druh === 'Zemědělská půda',
+      `vyšlo ${JSON.stringify(P.rozeber(v).druh)}`);
+  }
+  for (const [v, ceka] of [['orná půda', 'Orná půda'], ['louka', 'Louka / travní porost'],
+                           ['lesní pozemek', 'Lesní pozemek'], ['zahrada', 'Zahrada']]) {
+    pravda(`a „${v}" zůstává konkrétním druhem`, P.rozeber(v).druh === ceka,
+      `vyšlo ${JSON.stringify(P.rozeber(v).druh)}`);
+  }
   pravda('kraj z věty se opravdu použije jako filtr',
     /dotazFiltr\.kraj && \(d\._gkraj \|\| krajOf\(d\)\) !== dotazFiltr\.kraj/.test(main),
     'parser by kraj poznal, ale výpis by se podle něj nezúžil');

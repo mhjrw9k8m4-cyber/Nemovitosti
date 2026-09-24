@@ -425,9 +425,25 @@ for (const f of ['../js/main.js', '../js/pozemek.js', '../js/radce.js']) {
   pravda('na ostrých datech nějaké nejisté odhady jsou', nejisty.length > 5, `jen ${nejisty.length}`);
   pravda('ale je to menšina štítků „pod odhadem"', zNichNejistych < sStitkem * 0.25,
     `${zNichNejistych} z ${sStitkem} — to už by nebylo upozornění, ale šum`);
+  /* Porovnává se POŘADÍM, ne poměrem mediánů.
+     Původně tu stálo rN > rJ * 2. Jenže „nejistých" je jen kolem osmdesáti
+     a jejich rozchod má těžký chvost, takže medián té hrstky skákal podle
+     toho, co zrovna robot přinesl. Přes dvanáct snímků dat vyšel poměr
+     1,44 až 7,99 — test by tedy náhodně červenal asi každý šestý běh,
+     aniž by se v modelu cokoli změnilo. A test, kterému se nedá věřit,
+     škodí stejně jako test, který nemůže spadnout.
+
+     Tahle míra je odolná: kolik procent nejistých překoná medián jistých.
+     Když příznak nic neodděluje, vyjde kolem 50 %. Na týchž dvanácti
+     snímcích vyšla 71 až 83 %, tedy i tehdy, kdy poměr mediánů spadl na
+     1,44. Práh 62 % má odstup od náhody i od naměřeného dna. */
   const rJ = med(jisty), rN = med(nejisty);
-  pravda('dvě nezávislé půlky dat se u nejistých odhadů rozcházejí výrazně víc',
-    rN > rJ * 2, `nejisté ${rN && rN.toFixed(0)} %, jisté ${rJ && rJ.toFixed(0)} % — hranice pak nic neodděluje`);
+  const nadMedianem = jisty.length && nejisty.length
+    ? nejisty.filter((x) => x > rJ).length / nejisty.length * 100 : 0;
+  pravda('nejisté odhady se mezi dvěma půlkami dat rozcházejí víc než jisté',
+    nadMedianem >= 62,
+    `nad mediánem jistých je jen ${nadMedianem.toFixed(0)} % nejistých (náhoda dává 50 %) — `
+    + `příznak „nejistý" pak nic neodděluje; mediány: nejisté ${rN && rN.toFixed(0)} %, jisté ${rJ && rJ.toFixed(0)} %`);
 }
 
 /* A že se podle toho web opravdu řídí — jinak by model věděl a stránka

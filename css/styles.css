@@ -603,6 +603,30 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 /* Odznak s počtem visí u odkazu vpravo, ne hned za textem — v panelu pod
    sebou by jinak skákal podle délky slova. */
 .nav-moje-panel a{display:flex; align-items:center; gap:8px;}
+/* Stav účtu pod položkou „Můj profil". Doplňuje ho js/hlavicka.js;
+   v HTML je „Nepřihlášeno", aby i bez skriptu stálo něco pravdivého. */
+.nav-stav{display:block; width:100%; font-size:11.5px; font-weight:500; line-height:1.3;
+  color:var(--text-ondark-mute); opacity:.85; letter-spacing:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+/* Řádek účtu je dvouřádkový (název + stav), ale ikona a šipka mají zůstat
+   svisle uprostřed na jednom řádku. S flex-wrap šipka spadla pod e-mail
+   a řádek se protáhl přes půl obrazovky. Mřížka to drží spolehlivě. */
+/* Zapsáno přes #nav #nav-ucet schválně: samotné #nav-ucet (1 id) prohrává
+   se sousedním pravidlem #nav a:not(.btn-primary) (1 id + třída + prvek),
+   které nastavuje display:flex. Mřížka by se vůbec neuplatnila a e-mail
+   by se slepil na jeden řádek s názvem. */
+#nav #nav-ucet{display:grid; grid-template-columns:auto 1fr auto; align-items:center;
+  column-gap:15px; row-gap:1px;}
+#nav #nav-ucet::before{grid-column:1; grid-row:1 / span 2; align-self:center;}
+#nav #nav-ucet .nav-ucet-t{grid-column:2; grid-row:1;}
+#nav #nav-ucet .nav-stav{grid-column:2; grid-row:2;}
+#nav #nav-ucet::after{grid-column:3; grid-row:1 / span 2; align-self:center;}
+#nav-ucet.je-prihlasen .nav-stav{color:var(--copper-bright);}
+/* Tečka u „Moje" v liště na počítači — tam se panel neotvírá sám,
+   takže by stav nebyl vidět vůbec. */
+.nav-moje > summary{position:relative;}
+#nav .nav-moje.prihlasen > summary::before{content:""; position:absolute; left:-11px; top:50%;
+  width:6px; height:6px; margin-top:-3px; border-radius:50%; background:var(--copper-bright);}
 .nav-moje-panel a .nav-unread{margin-left:auto;}
 #nav a:not(.btn-primary).active{color:var(--text-ondark);}
 #nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--copper-bright); border-radius:2px;}
@@ -2685,6 +2709,30 @@ body::after{
 /* Dvě čísla stejné velikosti vedle sebe oko slepí v jedno („20 20"). Mezi
    ně patří svislice — stejně jako u čísel na hlavní stránce. */
 .okr-stat + .okr-stat{padding-left:34px; border-left:1px solid var(--line-strong);}
+
+/* Ceny podle druhu — seznam sourozenců, ne stromeček.
+   Nepoužívá .okr-stat schválně: ta dlaždice je dělaná na dvě krátká čísla
+   vedle sebe a odděluje se svislou čárkou vlevo. S dlouhými popisky se na
+   telefonu zalomí pod sebe a z čárky se stane odsazení, takže to vypadá,
+   jako by lesy a zahrady patřily pod zemědělskou půdu. Tady se odděluje
+   vodorovně, což při zalomení pod sebe znamená pořád totéž. */
+.cen-druhy{list-style:none; margin:14px 0 0; padding:0;}
+.cen-druh{display:grid; grid-template-columns:auto 1fr; align-items:baseline;
+  column-gap:14px; row-gap:2px; padding:14px 0; border-top:1px solid var(--line);}
+.cen-druh:first-child{border-top:0; padding-top:0;}
+.cen-druh b{font-family:var(--font-display); font-weight:700;
+  font-size:clamp(26px,5.2vw,34px); line-height:1; letter-spacing:-0.03em;
+  color:var(--text-ondark); white-space:nowrap;}
+.cen-nazev{font-size:15px; font-weight:600; color:var(--text-ondark);}
+.cen-detail{grid-column:2; font-size:13px; color:var(--text-ondark-mute);}
+.cen-varovani{grid-column:2; margin-top:4px; font-size:12.5px; line-height:1.45;
+  color:var(--text-ondark-mute); border-left:3px solid var(--c-drazba,#CC6B33);
+  padding-left:9px;}
+/* Na úzkém displeji se „2 771 Kč/m²" a název vedle sebe nevejdou. */
+@media (max-width:430px){
+  .cen-druh{grid-template-columns:1fr;}
+  .cen-detail, .cen-varovani{grid-column:1;}
+}
 
 /* Oddíly bez vnější karty — nadpis, linka, obsah. */
 .okr-blok{margin-top:34px; padding-top:26px; border-top:1px solid var(--line-strong);}

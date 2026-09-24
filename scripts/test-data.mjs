@@ -275,6 +275,64 @@ pravda('každá nabídka ví, kdy ji robot viděl poprvé', bezData.length === 0
   }
 }
 
+/* --- Navigace říká všude totéž ----------------------------------------
+   Dvě věci, které se rozešly a nikdo si toho nevšiml:
+
+   1) Odkaz na úvodní stránku se jmenoval „Mapa", jenže hlavní pohled je
+      seznam a mapa je jen jedna ze dvou záložek. Přejmenovalo se to na
+      „Pozemky" — ale přepínač pohledu uvnitř aplikace se pořád jmenuje
+      „Mapa" správně, protože tam mapu opravdu znamená.
+   2) Po přejmenování zůstalo ve strukturovaných datech pro vyhledávače
+      staré jméno. Viditelný drobeček tedy říkal „Pozemky" a JSON-LD
+      „Mapa" — dvě jména pro touž věc na téže stránce.
+
+   Účet je v nabídce první a nese stav přihlášení; bez něj se nedalo
+   poznat, jestli je člověk přihlášený. */
+{
+  const vsechny = readdirSync(new URL('..', import.meta.url)).filter((f) => f.endsWith('.html'));
+  const bezUctu = [], starePojmenovani = [], rozchod = [];
+  for (const f of vsechny) {
+    const h = readFileSync(new URL('../' + f, import.meta.url), 'utf8');
+    const nav = (h.match(/<nav id="nav"[\s\S]*?<\/nav>/) || [])[0];
+    if (!nav) continue;
+    if (!/id="nav-ucet"/.test(nav) || !/id="nav-stav"/.test(nav)) bezUctu.push(f);
+    /* Odkaz (ne tlačítko přepínače) nesmí být pojmenovaný „Mapa". */
+    if (/<a[^>]*>Mapa<\/a>/.test(nav)) starePojmenovani.push(f);
+    const ld = h.match(/"name":"([^"]+)","item":"https:\/\/www\.parcelaka\.cz\/"/);
+    const drobecek = h.match(/aria-label="[Dd]robečková navigace"[\s\S]{0,200}?<a href="index\.html"[^>]*>([^<]+)<\/a>/);
+    if (ld && drobecek && ld[1] !== drobecek[1].trim()) {
+      rozchod.push(`${f}: vidět „${drobecek[1].trim()}", ve strukturovaných datech „${ld[1]}"`);
+    }
+  }
+  pravda('nabídka je na všech stránkách a nese stav účtu', bezUctu.length === 0,
+    `chybí na ${bezUctu.length}: ${bezUctu.slice(0, 4).join(', ')}`);
+  pravda('a odkaz na úvod se nejmenuje „Mapa" (hlavní pohled je seznam)',
+    starePojmenovani.length === 0,
+    `${starePojmenovani.length} stránek: ${starePojmenovani.slice(0, 4).join(', ')}`);
+  pravda('drobeček a strukturovaná data se shodují', rozchod.length === 0,
+    rozchod.slice(0, 3).join('; '));
+}
+
+/* Legenda druhů na úvodu nesmí naší kategorii přisuzovat, co nemáme.
+   Stálo tam „Pozemky v exekuci či insolvenci", jenže insolvence je jiné
+   řízení — úpadek dlužníka, ne vymáhání jednoho dluhu — a v datech není
+   ani jedna taková nabídka. Táž záměna vedla k tomu, že odkaz „kde si to
+   ověřím" mířil u exekucí do insolvenčního rejstříku, kde se exekuce na
+   pozemku nedohledá.
+
+   Hlídá se JEN legenda druhů, ne slovníček: tam je heslo „Insolvence"
+   jako vysvětlení pojmu správně a má zůstat. */
+{
+  const uvodni = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const maInsolvenci = nabidky.some((o) => /insolven/i.test(JSON.stringify(o)));
+  const legenda = (uvodni.match(/<ul class="status-list">[\s\S]*?<\/ul>/g) || []).join(' ');
+  pravda('legenda druhů na úvodu vůbec je', legenda.length > 0,
+    'bez ní tahle kontrola nic nehlídá');
+  pravda('a nepřisuzuje exekucím insolvenci, kterou v datech nemáme',
+    maInsolvenci || !/insolven/i.test(legenda),
+    'insolvence je úpadek dlužníka, exekuce vymáhání jednoho dluhu — a v datech není ani jedna insolvence');
+}
+
 console.log('\nIntegrita datového souboru');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

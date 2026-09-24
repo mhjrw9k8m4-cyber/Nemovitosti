@@ -35,6 +35,10 @@
      z našeptávače: musí to být slovo, které parser zase přečte. Název
      „Stavební / zastavěná" by přečíst nešel a věta by se rozpadla. */
   var DRUHY = [
+    /* Souhrn, ne konkrétní druh v katastru: pokrývá ornou půdu i louky,
+       stejně jako ho sčítá stránka s cenami. Stojí první, aby se
+       „zemědělská půda" nerozpadla na jednotlivá slova. */
+    ['Zemědělská půda', 'zemědělská', ['zemedelska puda', 'zemedelskou pudu', 'zemedelske pozemky', 'zemedelsky pozemek', 'zemedelska', 'zemedelsky']],
     ['Louka / travní porost', 'travní porost', ['trvaly travni porost', 'travni porost', 'louka', 'louky', 'travni', 'pastvina', 'pastviny']],
     ['Stavební / zastavěná', 'stavební', ['stavebni pozemek', 'stavebni parcela', 'stavebni', 'stavebak', 'zastavena']],
     ['Lesní pozemek', 'lesní', ['lesni pozemek', 'lesni', 'les', 'lesy', 'lesa']],

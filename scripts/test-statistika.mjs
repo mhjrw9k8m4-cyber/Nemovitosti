@@ -38,6 +38,10 @@ const DATA = PKH.bezDuplicit(
   JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities
 );
 const stranka = readFileSync(new URL('../cena-pozemku.html', import.meta.url), 'utf8');
+/* js/ceny.js je prostý skript, ne modul — načteme ho do globálního prostoru
+   kvůli MEZ_ROZPTYL, ať tahle kontrola měří touž mezí jako web. */
+new Function(readFileSync(new URL('../js/ceny.js', import.meta.url), 'utf8'))();
+const PK_CENY = globalThis.PK_CENY;
 
 // --- 1) Generátor mezeru hledá, nenastavuje ji od stolu ---------------
 pravda('generátor hledá spodní mez v rozdělení', /function dolniMez\(/.test(gen));
@@ -120,12 +124,21 @@ pravda('stránka cen počítá jen z běžných nabídek k prodeji',
 }
 // A hlavně čísla: co je vytištěné na stránce, musí sedět s přepočtem z dat.
 {
-  const dlazdice = [...stranka.matchAll(/<b>([\d\s\u00a0]+) Kč\/m²<\/b><span>([^·]+)·/g)]
+  /* Řádek seznamu „ceny podle druhu": číslo a název čteme z jedné položky,
+     ne dvěma nezávislými hledáními — jinak by se při změně pořadí spárovalo
+     číslo jednoho druhu s názvem jiného a test by to odkýval. */
+  const dlazdice = [...stranka.matchAll(
+    /* „cen-druh" může nést i modifikátor (cen-siroke). Bez toho by řádek
+       s varováním z kontroly vypadl a jeho medián by se proti datům
+       neověřoval — kontrola by tiše přestala hlídat jeden druh. */
+    /<li class="cen-druh[^"]*"><b>([\d\s\u00a0]+) Kč\/m²<\/b><span class="cen-nazev">([^<]+)<\/span>/g)]
     .map((m) => ({ med: +String(m[1]).replace(/\s|\u00a0/g, ''), druh: m[2].trim() }));
   pravda('na stránce jsou vypsané mediány podle druhu', dlazdice.length >= 3,
     'našel jsem jen ' + dlazdice.length);
+  /* Klíč v datech → název na stránce. „Stavební" se lidem píše jako
+     „Stavební pozemek", ať to není jediný přídavný jméno mezi podstatnými. */
   const nazev = { 'Zemědělská půda': 'Zemědělská půda', 'Lesní pozemek': 'Lesní pozemek',
-    Zahrada: 'Zahrada', 'Stavební': 'Stavební' };
+    Zahrada: 'Zahrada', 'Stavební': 'Stavební pozemek' };
   for (const d of dlazdice) {
     const klic = Object.keys(nazev).find((k) => nazev[k] === d.druh);
     if (!klic) continue;
@@ -151,7 +164,28 @@ pravda('žádný okres nehlásí cenu pole pod 15 Kč/m²',
 // Čísla se vypisují s mezerou po tisících („1 273"), ne holá — jinak by
 // vedle „2 849 Kč/m²" stálo „1273" a vypadalo to jako dva různé weby.
 const cislo = (x) => +String(x).replace(/\s|\u00a0/g, '');
-const nar0 = stranka.match(/Zemědělská půda · ([\d\s\u00a0]+)–([\d\s\u00a0]+) Kč\/m² · ([\d\s\u00a0]+) nabídek/);
+/* Varování „ceny se liší násobky" musí sedět na těch druzích, kde se
+   čtvrtiny opravdu rozestoupí — a jen na nich. Mez se bere z js/ceny.js,
+   takže tahle kontrola zároveň hlídá, že si stránka nezavádí vlastní. */
+{
+  const mez = (PK_CENY && PK_CENY.MEZ_ROZPTYL) || 2;
+  const RADEK = /<li class="cen-druh( cen-siroke)?"><b>([\d\s]+) Kč\/m²<\/b><span class="cen-nazev">([^<]+)<\/span><span class="cen-detail">obvykle ([\d\s]+)–([\d\s]+)/g;
+  const radky = [...stranka.matchAll(RADEK)];
+  pravda('řádky s cenami se daly přečíst', radky.length >= 3, `přečteno ${radky.length}`);
+  const c = (x) => +String(x).replace(/\s/g, '');
+  const spatne = [];
+  for (const m of radky) {
+    const oznaceno = !!m[1], med = c(m[2]), druh = m[3], lo = c(m[4]), hi = c(m[5]);
+    const rozptyl = med ? (hi - lo) / med : 0;
+    if (rozptyl > mez && !oznaceno) spatne.push(`${druh}: rozptyl ${rozptyl.toFixed(1)}× a bez varování`);
+    if (rozptyl <= mez && oznaceno) spatne.push(`${druh}: rozptyl jen ${rozptyl.toFixed(1)}×, varování tam nepatří`);
+  }
+  pravda('a varování „liší se násobky" sedí na správných druzích', spatne.length === 0,
+    spatne.join('; '));
+}
+
+const nar0 = stranka.match(
+  /Zemědělská půda<\/span><span class="cen-detail">obvykle ([\d\s\u00a0]+)–([\d\s\u00a0]+) Kč\/m² · z ([\d\s\u00a0]+) nabídek/);
 const nar = nar0 ? [nar0[0], cislo(nar0[1]), cislo(nar0[2]), cislo(nar0[3])] : null;
 pravda('celostátní rozpětí je vypsané', !!nar, 'nenalezeno');
 if (nar) {

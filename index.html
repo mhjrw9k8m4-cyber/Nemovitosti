@@ -105,7 +105,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=b9f20809">
+  <link rel="stylesheet" href="css/styles.css?v=ec3ae688">
 </head>
 <body>
 
@@ -135,22 +135,14 @@
     <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
     <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
         <nav id="nav" aria-label="Hlavní navigace">
-      <a href="#mapa">Mapa</a>
+      <!-- Účet je první: podle něj se pozná, jestli je člověk přihlášený.
+           Dřív to menu neřeklo nikde a „Můj profil" stál až čtvrtý mezi
+           osobními položkami. Stav doplňuje js/hlavicka.js. -->
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
+      <!-- „Pozemky", ne „Mapa": hlavní pohled je seznam, mapa je jen jedna
+           ze dvou záložek. Odkaz míří pořád na tentýž kotevní bod. -->
+      <a href="#mapa">Pozemky</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <a href="#faq">Dotazy</a>
-      <!-- Čtyři položky, které všechny patří jednomu účtu, zabíraly
-           v liště čtyři místa a vypadaly jako čtyři různé části webu.
-           Jsou pod jednou. <details> proto, že rozbalení má umět
-           prohlížeč sám — klávesnicí i bez skriptu. -->
-      <details class="nav-moje">
-        <summary id="nav-moje-sum">Moje</summary>
-        <div class="nav-moje-panel">
-          <a href="upozorneni.html" id="nav-upozorneni">Upozornění</a>
-          <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
-          <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
-          <a href="muj-inzerat.html">Můj profil</a>
-        </div>
-      </details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
@@ -410,7 +402,7 @@
       <div class="status-grid">
         <div class="status-card reveal"><div class="status-top"><svg class="ic" style="color:var(--c-sale)"><use href="#i-tag"/></svg>Na prodej<span class="status-n" data-type="sale"></span></div><ul class="status-list"><li>Aktivně nabízené k prodeji</li><li>Proklik přímo na inzerát</li></ul></div>
         <div class="status-card reveal"><div class="status-top"><svg class="ic" style="color:var(--c-drazba)"><use href="#i-gavel"/></svg>Dražba<span class="status-n" data-type="drazba"></span></div><ul class="status-list"><li>Nadcházející veřejné dražby</li><li>Často <b>pod tržní cenou</b></li></ul></div>
-        <div class="status-card reveal"><div class="status-top"><svg class="ic" style="color:var(--c-exekuce)"><use href="#i-alert"/></svg>Exekuce<span class="status-n" data-type="exekuce"></span></div><ul class="status-list"><li>Pozemky v exekuci či insolvenci</li><li><b>Signál budoucího prodeje</b></li></ul></div>
+        <div class="status-card reveal"><div class="status-top"><svg class="ic" style="color:var(--c-exekuce)"><use href="#i-alert"/></svg>Exekuce<span class="status-n" data-type="exekuce"></span></div><ul class="status-list"><li>Pozemky v exekuci</li><li><b>Signál budoucího prodeje</b></li></ul></div>
         <div class="status-card reveal"><div class="status-top"><svg class="ic" style="color:var(--c-majitel)"><use href="#i-user"/></svg>Přímo od majitele<span class="status-n" data-type="majitel"></span></div><ul class="status-list"><li>Majitel vložil inzerát <b>přímo na Parcelce</b></li><li>Jednáte napřímo — <b>bez realitky a provize</b></li></ul></div>
       </div>
     </div>
@@ -509,7 +501,7 @@
       <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
       <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého. Děláme to s péčí, protože jsme se v tom sami hrabali.</p>
     </div>
-    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="#mapa">Mapa</a><a href="cena-pozemku.html">Ceny pozemků</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a><a href="muj-inzerat.html">Můj profil</a></nav>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="#mapa">Pozemky</a><a href="cena-pozemku.html">Ceny pozemků</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a><a href="muj-inzerat.html">Můj profil</a></nav>
     <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="#jak-funguje">Jak to funguje</a><a href="#slovnicek">Slovníček</a><a href="#faq">Časté dotazy</a></nav>
     <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html" data-info="soukromi">Zásady soukromí</a><a href="podminky.html" data-info="podminky">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
@@ -542,9 +534,9 @@
 <script src="js/poradi.js?v=670998bf" defer></script>
 <script src="js/rozsah.js?v=880952d0" defer></script>
 <script src="js/vybaveni.js?v=54b36f73" defer></script>
-<script src="js/dotaz.js?v=ee6fb993" defer></script>
+<script src="js/dotaz.js?v=341edd4b" defer></script>
 <script src="js/hledani.js?v=6a407f98" defer></script>
-<script src="js/main.js?v=d77acf8a" defer></script>
+<script src="js/main.js?v=043e8e3e" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,
@@ -559,6 +551,6 @@
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script src="js/upozorneni-feed.js?v=c8e91dd3" defer></script>
 <script src="js/upozorneni.js?v=b7b7c483" defer></script>
-<script src="js/hlavicka.js?v=36f4dc26" defer></script>
+<script src="js/hlavicka.js?v=f3a269c8" defer></script>
 </body>
 </html>
