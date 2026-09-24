@@ -2073,6 +2073,10 @@
       } catch (e) { start = null; }
     }
     if (!start) { start = { lat: 49.82, lng: 15.47 }; zoomStart = 7; }
+    /* Ukázal už člověk, kde to má být? Když ano, dá se potvrdit. Uložené
+       místo i místo předané zvenčí se počítají za ukázané — u nich se
+       výběr otevírá rovnou na nich. */
+    var vybranoMisto = !!(nast.start || (mojeMisto && isFinite(mojeMisto.lat)));
 
     var ov = document.createElement('div');
     ov.className = 'vm-ov';
@@ -2084,11 +2088,19 @@
           '</b>' +
           '<button class="vm-x" type="button" aria-label="Zavřít">✕</button>' +
         '</div>' +
-        '<div class="vm-mapa" id="vm-mapa"></div>' +
-        '<div class="vm-kriz" aria-hidden="true"><span></span></div>' +
+        /* Špendlík MUSÍ ležet ve stejném rámci jako mapa. Dřív byl
+           potomkem celého panelu, takže jeho „50 % výšky" počítalo i
+           hlavičku a patičku — a protože patička je vyšší, kreslil se
+           o 73 px pod skutečným středem mapy. Ukazoval tedy jinam, než
+           kam se doopravdy vybíralo. */
+        '<div class="vm-mapa-obal">' +
+          '<div class="vm-mapa" id="vm-mapa"></div>' +
+          '<div class="vm-kriz" aria-hidden="true"><span></span></div>' +
+        '</div>' +
         '<div class="vm-poloha"><button type="button" class="vm-gps" id="vm-gps">' + LOC_PIN + 'Moje poloha</button></div>' +
         '<div class="vm-pata">' +
           '<fieldset class="vm-okruh"><legend>Okruh od středu mapy</legend>' +
+            '<span class="vm-okruh-p" aria-hidden="true">Okruh</span>' +
             [2, 5, 10, 20, 50].map(function (v) {
               return '<label class="vm-km"><input type="radio" name="vm-km" value="' + v + '"' +
                 (v === km ? ' checked' : '') + '><span>' + v + ' km</span></label>';
@@ -2198,54 +2210,59 @@
          (kategorie, cena, výměra), jen bez omezení na okolí. Když se
          počítala všechna data, výběr sliboval „5 pozemků v okruhu 10 km"
          a seznam pod ním hlásil, že tam není nic. */
-      var n = 0;
-      for (var i = 0; i < DATA.length; i++) if (visibleBezOkoli(DATA[i]) && kmOd(c, DATA[i]) <= k) n++;
+      var n = 0, podle = {};
+      for (var i = 0; i < DATA.length; i++) {
+        var dd = DATA[i];
+        if (!visibleBezOkoli(dd) || kmOd(c, dd) > k) continue;
+        n++; podle[dd.type] = (podle[dd.type] || 0) + 1;
+      }
       var obec = najdiNazevMista(c.lat, c.lng);
       var okEl = ov.querySelector('#vm-ok');
-      if (!prepniOkruh()) {
-        /* Oddálené na celou republiku: okruh by byl tečka. Místo počtu,
-           který se vztahuje k něčemu neviditelnému, se řekne další krok —
-           a POTVRDIT NEJDE. Potvrdit výběr, který není vidět, je horší než
-           ukázat matoucí puntík: člověk by si uložil okolí náhodného bodu
-           uprostřed republiky a nevěděl proč. */
+      /* Potvrdit nejde, dokud člověk místo NEUKÁŽE — jinak by si uložil
+         okolí náhodného bodu uprostřed republiky a nevěděl proč.
+         Rozhoduje o tom ÚMYSL (klepnutí, tažení, poloha, uložené místo),
+         ne velikost kolečka v pixelech. Dřív se ptalo „je okruh aspoň
+         40 px?" a kolečko se podle toho schovávalo a zase objevovalo —
+         při každém oddálení zmizelo a vypadalo to jako porucha. */
+      if (!vybranoMisto) {
         pocetEl.innerHTML = '<span class="vm-napred">Klepnutím na mapu ukažte, kde to má být.</span>';
         if (okEl) { okEl.disabled = true; okEl.setAttribute('aria-disabled', 'true'); }
         return;
       }
       if (okEl) { okEl.disabled = false; okEl.removeAttribute('aria-disabled'); }
-      pocetEl.innerHTML = '<b>' + n + ' ' + plPozemek(n) + '</b> v okruhu ' + k + ' km' +
-        (obec ? ' <span class="vm-obec">u obce ' + esc(obec) + '</span>' : '');
-    }
-    /* Dokud je mapa oddálená na celou republiku, je desetikilometrový okruh
-       puntík o 26 px — nedá se z něj poznat, co se vybírá, a působí to
-       jako porucha. V tom měřítku se tedy okruh ani měřítko nekreslí
-       a místo počtu stojí, co udělat nejdřív: klepnout do mapy. Tím se
-       zároveň přiblíží, takže se okruh vzápětí objeví. */
-    function polomerVPixelech() {
-      var k = parseInt(kmSel.value, 10) || 10;
-      var c = m.getCenter();
-      var vychod = L.latLng(c.lat, c.lng).toBounds(k * 2000).getEast();
-      var a = m.latLngToContainerPoint(c);
-      var b = m.latLngToContainerPoint(L.latLng(c.lat, vychod));
-      return Math.abs(b.x - a.x);
-    }
-    function okruhVidet() { return polomerVPixelech() >= 40; }
-    function prepniOkruh() {
-      var videt = okruhVidet();
-      var mel = m.hasLayer(kruh);
-      if (videt && !mel) { kruh.addTo(m); meritko.addTo(m); stitek.addTo(m); }
-      else if (!videt && mel) { m.removeLayer(kruh); m.removeLayer(meritko); m.removeLayer(stitek); }
-      return videt;
+      /* Samotné číslo neřekne, jestli jde o běžný prodej nebo o dražby —
+         a to je přitom ta informace, kvůli které se okolí sleduje. Rozpad
+         se skládá jen z druhů, které v okruhu opravdu jsou. */
+      var rozpad = ['drazba', 'exekuce', 'obec', 'majitel', 'sale']
+        .filter(function (t) { return podle[t]; })
+        .map(function (t) {
+          return '<span class="vm-dr"><i class="vm-tecka" style="background:' +
+            (TYPE[t] ? TYPE[t].color : '#4361B8') + '"></i>' + podle[t] + ' ' +
+            esc((TYPE[t] ? TYPE[t].label : t).toLowerCase()) + '</span>';
+        }).join('');
+      pocetEl.innerHTML = '<span class="vm-hlavni"><b>' + n + ' ' + plPozemek(n) + '</b>' +
+        ' v okruhu ' + k + ' km' +
+        (obec ? ' <span class="vm-obec">u obce ' + esc(obec) + '</span>' : '') + '</span>' +
+        (rozpad ? '<span class="vm-rozpad">' + rozpad + '</span>' : '');
     }
     /* Klepnutí do mapy je to, čím se místo ukazuje — a nahrazuje hledání,
-       které tu dřív bylo. Dokud je okruh menší než 40 px, klepnutí zároveň
-       přiblíží: z pohledu na celou republiku jsou to dvě klepnutí k vlastní
-       vesnici. Jakmile je okruh vidět, klepnutí už jen posune střed, aby se
-       dal výběr doladit bez přeskakování měřítka. */
+       které tu dřív bylo. Pohled se vždycky dorovná podle OKRUHU, takže po
+       klepnutí je kolečko celé vidět a ve stejné velikosti, ať se klepne
+       odkudkoli. Dřív se přibližovalo o tři stupně a výsledek záležel na
+       tom, kde člověk začal.
+       Tažením se místo vybírá taky — kdo mapou pohne, ukazuje tím, kam
+       chce, stejně jako klepnutím. */
     m.on('click', function (e) {
-      if (okruhVidet()) { m.panTo(e.latlng, { animate: true }); return; }
-      m.setView(e.latlng, Math.min(13, m.getZoom() + 3), { animate: true });
+      vybranoMisto = true;
+      /* Přepočítat MUSÍME rovnou, ne se spolehnout na to, že mapou pohne
+         jdiNa(). Když se klepne tam, kde mapa už stojí, fitBounds nemá co
+         měnit, neproběhne žádná událost „move" — a panel by zůstal viset
+         na výzvě „Klepnutím na mapu ukažte…", i když místo ukázané je.
+         Zvenčí to vypadá přesně jako rozbité tlačítko: klepnu a nic. */
+      prepocti();
+      jdiNa(e.latlng.lat, e.latlng.lng);
     });
+    m.on('dragend', function () { vybranoMisto = true; prepocti(); });
     m.on('move', prepocti);
     m.on('zoomend', prepocti);
     kmVstupy.forEach(function (r) {
@@ -2269,6 +2286,7 @@
       gpsBtn.disabled = true; gpsBtn.innerHTML = '<span class="mnb-ceka" aria-hidden="true"></span>Hledám…';
       navigator.geolocation.getCurrentPosition(function (p) {
         gpsBtn.disabled = false; gpsBtn.innerHTML = LOC_PIN + 'Moje poloha';
+        vybranoMisto = true;      // poloha je ukázané místo jako každé jiné
         jdiNa(p.coords.latitude, p.coords.longitude);
       }, function () {
         gpsBtn.disabled = false; gpsBtn.innerHTML = LOC_PIN + 'Poloha nejde — vyberte ručně';

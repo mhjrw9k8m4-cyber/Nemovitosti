@@ -399,14 +399,19 @@ body.vm-otevreno{overflow:hidden;}
 .vm-x{width:38px; height:38px; flex:none; border:0; background:none; cursor:pointer;
   font-size:17px; color:var(--text-ondark-mute); border-radius:var(--r-ovladani);}
 .vm-x:hover{background:var(--ink-soft2); color:var(--text-ondark);}
-.vm-mapa{flex:1 1 auto; min-height:180px; background:var(--ink-soft2);}
+.vm-mapa-obal{position:relative; flex:1 1 auto; min-height:180px; display:flex;}
+.vm-mapa{flex:1 1 auto; min-width:0; min-height:0; background:var(--ink-soft2);}
 /* Značka uprostřed mapy — klikat se přes ni nesmí.
    Pozor: obal měl width:0 a display:flex, což značku stlačilo z dvaceti
    pixelů na šest. Proto je teď umístěná posunem, ne flexem. */
 .vm-kriz{position:absolute; left:0; right:0; top:0; bottom:0; pointer-events:none; z-index:610;}
+/* HROT špendlíku musí ležet přesně na středu mapy — tam se totiž kreslí
+   střed okruhu. Posun o vlastní výšku plus délku nožičky to zajistí bez
+   ohledu na to, jak je značka velká; dřívější „-50 % - 7px" nechávalo hrot
+   viset asi 18 px pod skutečným středem. */
 .vm-kriz span{position:absolute; left:50%; top:50%; width:22px; height:22px; border-radius:50%;
-  background:#8A5512; border:3px solid #fff; box-shadow:var(--e2);
-  transform:translate(-50%, calc(-50% - 7px));}
+  background:#8A5512; border:3px solid #fff; box-shadow:var(--e2); box-sizing:border-box;
+  transform:translate(-50%, calc(-100% - 14px));}
 .vm-kriz span::after{content:""; position:absolute; left:50%; top:100%; width:2px; height:14px;
   background:#8A5512; transform:translateX(-50%); border-radius:0 0 2px 2px;}
 .vm-poloha{position:absolute; right:14px; z-index:600; bottom:104px;}
@@ -445,14 +450,35 @@ body.vm-otevreno{overflow:hidden;}
   padding:3px 9px; border-radius:var(--r-pill); background:#8A5512; color:#fff;
   font-family:var(--font-mono); font-size:11.5px; font-weight:700; letter-spacing:.02em;
   box-shadow:var(--e2);}
-.vm-pocet{flex:1 1 140px; min-width:0; font-size:13px; color:var(--text-ondark);}
-.vm-pocet b{font-size:15px;}
+/* Počet je to, kvůli čemu se na tenhle panel člověk dívá — má tedy vypadat
+   jako údaj, ne jako poznámka pod čarou. Pod ním stojí ROZPAD podle druhu:
+   samotné „12 pozemků" neřekne, jestli jde o běžný prodej nebo o dražby,
+   a to je přitom důvod, proč si okolí někdo hlídá. */
+.vm-pocet{flex:1 1 180px; min-width:0; font-size:13px; color:var(--text-ondark);
+  display:flex; flex-direction:column; gap:5px;}
+.vm-hlavni{line-height:1.3;}
+.vm-pocet b{font-family:var(--font-display); font-size:20px; font-weight:700;
+  letter-spacing:-.02em; margin-right:2px;}
 .vm-obec{color:var(--text-ondark-mute);}
+.vm-rozpad{display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12px;
+  color:var(--text-ondark-mute);}
+.vm-dr{display:inline-flex; align-items:center; gap:5px; white-space:nowrap;}
+.vm-tecka{width:7px; height:7px; border-radius:50%; flex:none;}
+/* Popisek okruhu byl jen pro odečítač obrazovky, takže z řady „2 5 10 20 50"
+   byla na obrazovce hádanka. */
+.vm-okruh-p{font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--text-ondark-mute); font-family:var(--font-mono); margin-right:2px;}
 .vm-ok{flex:0 0 auto; font:inherit; font-size:15px; font-weight:700; cursor:pointer;
   min-height:46px; padding:11px 18px; border:0; border-radius:var(--r-ovladani);
   background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
 .vm-ok:hover{filter:brightness(1.06);}
 @media (max-width:560px){
+  /* Pět voleb okruhu se na telefon vejde na JEDEN řádek, jen když se jim
+     ubere vycpávka — jinak zbyde „50 km" viset samotné na druhém řádku
+     a řada přestane vypadat jako řada. */
+  .vm-km span{min-width:44px; padding:8px 7px; font-size:13px;}
+  .vm-okruh{gap:5px;}
+  .vm-okruh-p{flex:0 0 100%; margin:0 0 2px;}
   .vm-pata{gap:8px;}
   .vm-ok{flex:1 1 100%; order:3;}
   .vm-pocet{flex:1 1 100%; order:1;}

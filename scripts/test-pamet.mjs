@@ -314,6 +314,18 @@ pravda('rovnou říká, co je v okruhu, nebo co udělat nejdřív',
    vymyšlená data vůbec byla. (Hledání obce a přepínání krajů prověřuje
    scripts/test-okoli.mjs na skutečných datech — tady jsou obce vymyšlené
    a hledání by nemělo co najít.) */
+/* Nejdřív se MÍSTO UKÁŽE — klepnutím do mapy, přesně jak to dělá člověk.
+   Bez toho potvrdit nejde a je to tak správně: kdo jen otevře výběr a
+   zmáčkne tlačítko, uložil by si okolí náhodného bodu uprostřed
+   republiky a nevěděl proč. */
+{
+  const bbMapa = await p.locator('#vm-mapa').boundingBox();
+  await p.mouse.click(Math.round(bbMapa.x + bbMapa.width / 2), Math.round(bbMapa.y + bbMapa.height / 2));
+  await p.waitForTimeout(1300);
+  const lzePotvrdit = await p.evaluate(() => !document.getElementById('vm-ok').disabled);
+  pravda('po klepnutí do mapy už jde výběr potvrdit', lzePotvrdit,
+    'tlačítko zůstalo zakázané, i když místo je ukázané');
+}
 // Okruh je řada přepínačů, ne rozbalovací seznam — všechny možnosti
 // musí být vidět naráz, jinak se o velikosti okolí nikdo nedozví.
 await p.check('input[name="vm-km"][value="50"]');

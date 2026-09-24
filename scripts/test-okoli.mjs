@@ -90,12 +90,20 @@ async function otevriVybirac(p, spoustec) {
   await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
   await p.waitForTimeout(900);
 }
-/** Posune mapu výběru na dané místo — bez hledání, jak to má web dělat taky. */
-const jdiNaMisto = (p, lat, lng, z = 10) =>
+/** Posune mapu výběru na dané místo a MÍSTO UKÁŽE — bez hledání, jak to
+    musí umět i člověk. Samotné posunutí mapy zvenčí je jen nastavení
+    pohledu; dokud se do mapy neklepne (nebo se netáhne), výběr se
+    nepotvrzuje — jinak by šlo uložit okolí náhodného bodu. */
+async function jdiNaMisto(p, lat, lng, z = 10) {
   // Pozor na `return` mapy: Leaflet vrací sám sebe a Playwright takový
   // objekt neumí poslat zpátky („object reference chain is too long").
-  p.evaluate(([la, ln, zz]) => { if (window.PK_VM_MAPA) window.PK_VM_MAPA.setView([la, ln], zz); },
-    [lat, lng, z]).then(() => p.waitForTimeout(1200));
+  await p.evaluate(([la, ln, zz]) => { if (window.PK_VM_MAPA) window.PK_VM_MAPA.setView([la, ln], zz); },
+    [lat, lng, z]);
+  await p.waitForTimeout(900);
+  const b = await p.locator('#vm-mapa').boundingBox();
+  await p.mouse.click(Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2));
+  await p.waitForTimeout(1200);
+}
 /** Klepnutí do mapy výběru — tím se místo ukazuje. */
 async function klepniDoMapy(p, fx = 0.5, fy = 0.5) {
   const b = await p.locator('#vm-mapa').boundingBox();
