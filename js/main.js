@@ -4036,6 +4036,164 @@
   // dnešní nabídka. Když se některé spočítat nedá, ten kousek se
   // nezobrazí — radši nic než výplň.
   // ---------------------------------------------------------------
+  /* Kolik je čeho. Čísla se počítají z týchž dat, která se kreslí — kdyby
+     se braly odjinud, dřív nebo později by si legenda a mapa odporovaly. */
+  function renderHeroLegenda() {
+    var box = document.getElementById('hh-legenda');
+    if (!box) return;
+    var podle = {};
+    DATA.forEach(function (d) { podle[d.type] = (podle[d.type] || 0) + 1; });
+    [].slice.call(box.querySelectorAll('.hh-l')).forEach(function (el) {
+      var t = el.getAttribute('data-druh');
+      var n = podle[t] || 0;
+      // Druh, který v datech není, se netváří, že je: řádek zmizí.
+      if (!n) { el.hidden = true; return; }
+      el.hidden = false;
+      var b = el.querySelector('b');
+      if (b) b.textContent = fmt(n);
+    });
+  }
+
+  /* SOUHVĚZDÍ. Každý bod je jedna skutečná nabídka na svých souřadnicích;
+     dražby a exekuce pomalu pulzují, protože mají termín. Kreslí se do
+     plátna, ne do DOMu — dva tisíce prvků by stránku zadusily.
+     Kdo má v systému vypnuté animace, dostane totéž bez pulzování. */
+  function renderHeroSouhvezdi() {
+    var cv = document.getElementById('hero-souhvezdi');
+    if (!cv || !cv.getContext) return;
+    var pas = cv.parentElement && cv.parentElement.closest ? cv.closest('.hero-band') : null;
+    if (!pas) pas = cv.parentElement;
+    var ctx = cv.getContext('2d');
+    /* Ozdoba nesmí brát snímky zbytku stránky. Měřeno: bez souhvězdí
+       61 snímků za vteřinu, s ním 38 — a hlavně malovalo dál i po sjetí
+       dolů, takže se kvůli němu přestal plynule vykreslovat i přejezd
+       hlavičky (test hlavičky to odhalil). Proto tři brzdy: kreslí se
+       v jedné obrazové hustotě (je to rozmazaná zář, ostrost tu nikdo
+       nepozná), nejvýš třicetkrát za vteřinu a JEN dokud je úvod vidět. */
+    var dpr = 1;
+    var klid = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var vidno = true, posledni = 0;
+    var P = [], bezi = false;
+    function yOf(la) { var r = la * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2; }
+    function prepocti2() {
+      var r = pas.getBoundingClientRect();
+      if (!r.width || !r.height) return false;
+      cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+      cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px';
+      var body = DATA.filter(function (d) { return isFinite(d.lat) && isFinite(d.lng); });
+      if (!body.length) return false;
+      var xs = body.map(function (d) { return (d.lng + 180) / 360; });
+      var ys = body.map(function (d) { return yOf(d.lat); });
+      var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
+      var y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+      var W = cv.width, H = cv.height;
+      /* Poměr stran se nesmí natáhnout — jinak z republiky bude klobása.
+         Obrazec sedí u pravého okraje (na telefonu dole), aby nesoupeřil
+         s nadpisem; zbytek dořeší maska v CSS. */
+      var uzky = (cv.width / dpr) < 760;
+      var s2 = Math.min(W / (x1 - x0), H / (y1 - y0)) * (uzky ? 0.96 : 0.78);
+      var ox = uzky ? (W - (x1 - x0) * s2) / 2 : W - (x1 - x0) * s2 - W * 0.02;
+      var oy = uzky ? H - (y1 - y0) * s2 - H * 0.06 : (H - (y1 - y0) * s2) / 2;
+      P = body.map(function (d, i) {
+        return { x: ox + ((d.lng + 180) / 360 - x0) * s2, y: oy + (yOf(d.lat) - y0) * s2,
+          c: (TYPE[d.type] && TYPE[d.type].color) || '#4361B8',
+          h: d.type === 'drazba' || d.type === 'exekuce', f: ((i * 37) % 100) / 100 };
+      });
+      return true;
+    }
+    /* VÝKON. Napřed se každý snímek kreslilo všech 1 937 teček i se
+       shadowBlur — a to je jedna z nejdražších operací plátna. Stránka
+       kvůli tomu zadrhávala tak, že se i přejezd hlavičky přestal
+       vykreslovat plynule (test hlavičky to odhalil: ze 45 vzorků jen
+       4 mezistavy). Teď se klidné tečky nakreslí JEDNOU do záložního
+       plátna a každý snímek se jen obtisknou; pulzuje jen tých ~100
+       dražeb a exekucí, a i ty přes předkreslenou zář, ne přes
+       shadowBlur. */
+    var statik = document.createElement('canvas');
+    /* Zář se předkreslí JEDNOU pro každou barvu v pevné velikosti a za
+       běhu se jen zvětšuje. Dřív jsem ji překresloval podle okamžitého
+       poloměru do jednoho sdíleného plátna — všechny barvy se tím
+       přepisovaly navzájem a předkreslení ztratilo smysl. */
+    var ZAR_R = 32;
+    var zare = {};
+    function zarPro(barva) {
+      if (zare[barva]) return zare[barva];
+      var z = document.createElement('canvas');
+      z.width = z.height = ZAR_R * 2;
+      var zc = z.getContext('2d');
+      var g = zc.createRadialGradient(ZAR_R, ZAR_R, 0, ZAR_R, ZAR_R, ZAR_R);
+      g.addColorStop(0, barva); g.addColorStop(0.3, barva);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      zc.fillStyle = g; zc.fillRect(0, 0, ZAR_R * 2, ZAR_R * 2);
+      zare[barva] = z;
+      return z;
+    }
+    function statickaVrstva() {
+      statik.width = cv.width; statik.height = cv.height;
+      var sc = statik.getContext('2d');
+      sc.clearRect(0, 0, statik.width, statik.height);
+      for (var i = 0; i < P.length; i++) {
+        var p = P[i];
+        if (p.h) continue;                 // pulzující se kreslí až za běhu
+        sc.beginPath();
+        sc.arc(p.x, p.y, 1.5 * dpr, 0, 6.283);
+        sc.fillStyle = p.c; sc.globalAlpha = 0.42;
+        sc.fill();
+      }
+      sc.globalAlpha = 1;
+    }
+    function kresli(cas) {
+      var el = cas / 1000;
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.drawImage(statik, 0, 0);
+      for (var i = 0; i < P.length; i++) {
+        var p = P[i];
+        if (!p.h) continue;
+        var puls = klid ? 0.5 : 0.5 + 0.5 * Math.sin(el * 1.1 + p.f * 6.283);
+        var r = (7 + puls * 7) * dpr;
+        ctx.globalAlpha = 0.3 + puls * 0.28;
+        ctx.drawImage(zarPro(p.c), p.x - r, p.y - r, r * 2, r * 2);
+        ctx.globalAlpha = 0.85 + puls * 0.15;
+        ctx.beginPath(); ctx.arc(p.x, p.y, (1.7 + puls * 1.2) * dpr, 0, 6.283);
+        ctx.fillStyle = p.c; ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      if (!klid && vidno) requestAnimationFrame(tik);
+    }
+    function tik(cas) {
+      if (klid || !vidno) { bezi = false; return; }
+      if (cas - posledni < 33) { requestAnimationFrame(tik); return; }  // ~30 snímků/s stačí
+      posledni = cas;
+      kresli(cas);
+    }
+    function start() {
+      if (!prepocti2()) return;
+      statickaVrstva();
+      if (bezi || klid) { if (klid) kresli(0); return; }
+      bezi = true;
+      requestAnimationFrame(tik);
+    }
+    start();
+    // Mimo obraz se nekreslí vůbec — tím se snímky vrátí zbytku stránky.
+    if (typeof IntersectionObserver === 'function') {
+      try {
+        new IntersectionObserver(function (zaznamy) {
+          vidno = zaznamy.some(function (z) { return z.isIntersecting; });
+          if (vidno && !bezi && !klid) { bezi = true; requestAnimationFrame(tik); }
+        }, { rootMargin: '80px' }).observe(pas);
+      } catch (e) {}
+    }
+    var cas2 = null;
+    window.addEventListener('resize', function () {
+      clearTimeout(cas2);
+      cas2 = setTimeout(function () {
+        if (!prepocti2()) return;
+        statickaVrstva();
+        if (klid) requestAnimationFrame(kresli);
+      }, 180);
+    });
+  }
+
   function renderHeroLive() {
     var box = document.getElementById('hero-live');
     if (!box) return;
@@ -4059,7 +4217,29 @@
       if (!a) return;
       if (!hodnota) { a.hidden = true; return; }
       if (klic) a.querySelector('.hl-k').textContent = klic;
-      a.querySelector('.hl-v').textContent = hodnota;
+      /* „dnes · Police nad Metují" → hlavní údaj a upřesnění. Karta stojí
+         na tom prvním; kdyby byl celý řetězec stejně velký, nebylo by na
+         co se podívat. Dělí se jen na PRVNÍM oddělovači, aby se z „−59 %
+         pod obvyklou · Bílina" nestaly tři kusy. */
+      var kus = String(hodnota).split(' · ');
+      var hlavni = kus.shift();
+      var vEl = a.querySelector('.hl-v');
+      vEl.textContent = '';
+      var bEl = document.createElement('b');
+      bEl.textContent = hlavni;
+      vEl.appendChild(bEl);
+      if (kus.length) {
+        /* Oddělovač musí v TEXTU zůstat, i když ho na široké kartě není
+           vidět (hlavní údaj tam stojí na vlastním řádku). Když jsem ho
+           zahodil, slilo se „dnes · Police nad Metují" na „dnesPolice nad
+           Metují" — a to není jen ošklivé: čte to odečítač obrazovky
+           a kontrola termínu dražby na tom stojí. */
+        var sep = document.createElement('span');
+        sep.className = 'hl-sep';
+        sep.textContent = ' · ';
+        vEl.appendChild(sep);
+        vEl.appendChild(document.createTextNode(kus.join(' · ')));
+      }
       if (cil) a.addEventListener('click', function (e) { e.preventDefault(); gotoInzerat(cil); });
       hotovo++;
     }
@@ -4312,6 +4492,8 @@
   vykresliMisto();
 
   renderHeroLive();
+  renderHeroLegenda();
+  renderHeroSouhvezdi();
   renderDeals();
   renderUserListings();
   // Návrat z detailu pozemku (tlačítko „zpět"): vrať mapu přesně tam, kde uživatel skončil.

@@ -2858,6 +2858,52 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
    jako číslo: velká patková číslice, pod ní popisek verzálkami v mono,
    mezi nimi svislé linky jako v tabulce listu vlastnictví.
    ===================================================================== */
+/* =====================================================================
+   ÚVOD: SOUHVĚZDÍ SKUTEČNÝCH POZEMKŮ
+   Za nadpisem svítí každá nabídka na svých souřadnicích. Dražby a exekuce
+   pomalu pulzují — to jsou ty, které mají termín a čekat na ně nejde.
+   Obrazec se drží u pravého okraje (na telefonu dole) a k textu se
+   vytrácí maskou, aby nadpis nemusel soupeřit s tečkami.
+   ===================================================================== */
+.hero-souhvezdi{position:absolute; inset:0; width:100%; height:100%; z-index:0;
+  pointer-events:none; opacity:.95;
+  -webkit-mask-image:linear-gradient(100deg, transparent 0%, rgba(0,0,0,.35) 26%, #000 52%);
+          mask-image:linear-gradient(100deg, transparent 0%, rgba(0,0,0,.35) 26%, #000 52%);}
+.hero-map .hero-plot{position:relative; z-index:1;}
+/* Štítek se živou tečkou: web se hlásí, že je při smyslech. */
+.hh-stit{display:inline-flex; align-items:center; gap:8px; font-family:var(--font-mono);
+  font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:#8FE0B4;
+  background:rgba(24,58,42,.72); border:1px solid rgba(143,224,180,.34);
+  padding:6px 12px; border-radius:999px; margin-bottom:16px;}
+.hh-zive{width:8px; height:8px; border-radius:50%; background:#5BD98A; flex:none;
+  animation:hhTep 1.9s ease-out infinite;}
+@keyframes hhTep{
+  0%{box-shadow:0 0 0 0 rgba(91,217,138,.65);}
+  70%{box-shadow:0 0 0 9px rgba(91,217,138,0);}
+  100%{box-shadow:0 0 0 0 rgba(91,217,138,0);}}
+.hero-map .hero-head h1 em{font-style:normal; color:#F0C889;}
+.hero-map .hero-head h1 b{font-weight:800; color:#8FE0B4;}
+/* Kolik čeho — barvou, ne slovem. Táž barva jako tečky na mapě i v legendě. */
+.hh-legenda{display:flex; flex-wrap:wrap; gap:7px; margin:0 0 22px;}
+.hh-l{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600;
+  color:#EAE6DD; background:rgba(12,26,18,.58); border:1px solid rgba(234,230,221,.18);
+  padding:6px 11px; border-radius:999px;}
+.hh-l i{width:9px; height:9px; border-radius:50%; flex:none; background:var(--b,#4361B8);}
+.hh-l[data-druh="sale"]{--b:var(--c-sale,#4361B8);}
+.hh-l[data-druh="drazba"]{--b:var(--c-drazba,#CC6B33);}
+.hh-l[data-druh="exekuce"]{--b:var(--c-exekuce,#8C2F1E);}
+.hh-l b{font-weight:800;}
+@media (max-width:760px){
+  /* Na telefonu stojí pod nadpisem karty, takže souhvězdí se drží při zemi
+     a ztlumí se — jinak by se s nimi pralo o tutéž plochu. */
+  .hero-souhvezdi{opacity:.5;
+    -webkit-mask-image:linear-gradient(180deg, transparent 0%, rgba(0,0,0,.18) 38%, #000 78%);
+            mask-image:linear-gradient(180deg, transparent 0%, rgba(0,0,0,.18) 38%, #000 78%);}
+}
+@media (prefers-reduced-motion: reduce){
+  .hh-zive{animation:none;}
+}
+
 /* Velká patková číslice s popiskem pod sebou tu byla, dokud se tímhle
    řádkem web představoval („1 962 POZEMKŮ | 77 OKRESŮ"). Hlavní číslo se
    přestěhovalo do nadpisu, kde je mu líp — a co zbylo, je doplněk. Kdyby
@@ -3463,4 +3509,86 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 @media (pointer:coarse){
   input:not([type="checkbox"]):not([type="radio"]),
   select, textarea{font-size:16px !important;}
+}
+
+/* =====================================================================
+   ŽIVÁ FAKTA JAKO KARTY, NE JAKO POSUVNÝ PÁS
+   Tři údaje bývaly vodorovný pás, po kterém se posouvalo prstem, a
+   u pravého okraje se poslední z nich vytrácel do masky. Mělo to říct
+   „posuň si to", jenže na snímku od člověka to vypadá prostě uříznuté —
+   a co vypadá uříznuté, to se nečte. Teď je z nich mřížka karet: na
+   monitoru tři vedle sebe, na telefonu tři pod sebou. Nic nemizí.
+   ===================================================================== */
+.hero-live.hh-fakta{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
+  align-self:stretch; width:100%; max-width:860px; margin-top:4px;
+  border-top:0; overflow:visible;
+  -webkit-mask-image:none; mask-image:none;}
+.hh-fakta .hl-fact{flex-direction:column; align-items:flex-start; gap:3px;
+  padding:14px 15px; margin:0; border:1px solid rgba(234,230,221,.16); border-radius:var(--r-md);
+  /* Karta musí být KARTA, ne průsvitka: pod ní svítí souhvězdí a přes
+     poloprůhledné pozadí jím tekly tečky rovnou přes text. */
+  background:rgba(11,24,17,.9); backdrop-filter:blur(6px); min-width:0;
+  transition:transform .15s var(--ease), border-color .15s var(--ease);}
+.hh-fakta .hl-fact:hover{transform:translateY(-2px); border-color:rgba(143,224,180,.5);}
+.hh-fakta .hl-fact .hl-k{font-size:10.5px; letter-spacing:.11em; color:rgba(234,230,221,.62);}
+.hh-fakta .hl-fact .hl-v{font-size:15px; color:rgba(234,230,221,.82); line-height:1.35;}
+/* Hlavní hodnota („dnes", „6", „−59 %") nese kartu — zbytek je upřesnění. */
+.hh-fakta .hl-fact .hl-v b{display:block; font-family:var(--font-display); font-weight:800;
+  font-size:clamp(23px,3.6vw,36px); line-height:1.02; letter-spacing:-.03em; color:#fff;}
+/* Oddělovač zůstává v textu (kvůli odečítači i kontrolám), ale na kartě,
+   kde hlavní údaj stojí na vlastním řádku, by visel na začátku druhého. */
+.hh-fakta .hl-sep{position:absolute; width:1px; height:1px; overflow:hidden;
+  clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap;}
+.hh-fakta .hl-fact.hl-hit .hl-v b{color:#8FE0B4;}
+.hh-fakta .hl-fact:hover .hl-v{color:rgba(234,230,221,.82);}
+@media (max-width:760px){
+  .hero-live.hh-fakta{grid-template-columns:1fr; gap:8px; margin-top:2px; padding-top:0;
+    border-top:0; overflow:visible;
+    -webkit-mask-image:none; mask-image:none;}
+  .hh-fakta .hl-fact{flex-direction:row; align-items:baseline; gap:10px; padding:11px 13px;}
+  .hh-fakta .hl-fact .hl-k{flex:0 0 104px;}
+  .hh-fakta .hl-fact .hl-v b{display:inline; font-size:21px;}
+  /* Na úzké kartě stojí údaj i upřesnění na jednom řádku — tam oddělovač
+     dává smysl i očím. */
+  .hh-fakta .hl-sep{position:static; width:auto; height:auto; overflow:visible;
+    clip:auto; clip-path:none; color:rgba(234,230,221,.45);}
+}
+
+/* =====================================================================
+   ÚVOD NA TELEFONU: ŽIVĚ, ALE KRÁTCE
+   Souhvězdí, štítek, legenda i tři karty se na monitoru vejdou. Na
+   telefonu ne: po jejich přidání začínalo pole „Hledat obec" na 97 %
+   výšky obrazovky (320×568), tedy pod ohybem — a první, co má člověk na
+   webu o pozemcích vidět, je hledání pozemků. Mez v testu rozvržení
+   (60 % výšky) na to existuje přesně proto a chytila to.
+   Úvod se tu proto smrskne: štítek pryč (je ozdobný), legenda i fakta
+   v drobnějším řádkování. Nic nemizí, jen se to přestane roztahovat.
+   ===================================================================== */
+@media (max-width:560px){
+  .hh-stit{display:none;}
+  .hero-map .hero-head h1{font-size:clamp(27px,7.6vw,34px); margin-bottom:10px;}
+  .hh-legenda{gap:5px; margin-bottom:12px;}
+  .hh-l{font-size:11px; padding:4px 9px; gap:5px;}
+  .hh-l i{width:7px; height:7px;}
+  .hh-fakta .hl-fact{padding:7px 11px;}
+  .hh-fakta .hl-fact .hl-k{flex:0 0 92px; font-size:9.5px;}
+  .hh-fakta .hl-fact .hl-v{font-size:13px;}
+  .hh-fakta .hl-fact .hl-v b{font-size:17px;}
+  .hero-live.hh-fakta{gap:6px;}
+}
+
+/* Nejmenší displeje (iPhone SE a spol.). Ani po zeštíhlení se úvod na
+   568 px vysokou obrazovku nevejde tak, aby hledání zůstalo nad ohybem:
+   měřeno 76 % při mezi 60 %. Legenda proto na téhle šířce odchází —
+   barvy druhů vysvětluje legenda u samotné mapy hned pod hledáním, takže
+   ze stránky nemizí — a z faktů je jednořádkový výpis bez sloupce
+   popisků. Souhvězdí i nadpis zůstávají: to je ta živá část. */
+@media (max-width:380px){
+  .hh-legenda{display:none;}
+  .hero-map .hero-head h1{font-size:25px; line-height:1.06; margin-bottom:10px;}
+  .hh-fakta .hl-fact{padding:5px 10px; gap:6px;}
+  .hh-fakta .hl-fact .hl-k{display:none;}
+  .hh-fakta .hl-fact .hl-v{font-size:12.5px;}
+  .hh-fakta .hl-fact .hl-v b{font-size:15px;}
+  .hero-live.hh-fakta{gap:5px;}
 }

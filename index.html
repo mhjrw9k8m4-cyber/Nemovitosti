@@ -105,7 +105,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=cf1cbb84">
+  <link rel="stylesheet" href="css/styles.css?v=63b7f534">
 </head>
 <body>
 
@@ -163,19 +163,28 @@
       <div class="wrap">
         <div class="hero-plot">
         <div class="hero-head reveal">
-        <!-- Nadpis nese ČÍSLO, ne slogan. „Hledáte pozemek? Najdete ho tady."
-             byla řečnická otázka a odpověď — tvar, který nic neříká a dá se
-             nalepit na kterýkoli web; nadstavec nad ním pak říkal potřetí
-             totéž co nadpis a řádek pod ním. Úvod teď začíná tím jediným,
-             co má tenhle web navíc: kolika pozemky a jakého druhu. -->
-        <h1><b id="hero-n-count">1 962</b> pozemků na prodej i v dražbě</h1>
-        <div class="trust-line hero-stats"><span class="ts-n"><b id="hero-n-okres">77</b> okresů</span><span class="ts-sep" aria-hidden="true">·</span><span class="ts-n">celá ČR</span><span class="ts-sep" aria-hidden="true">·</span><span class="ts-n">zdarma, bez registrace</span></div>
+        <!-- ÚVOD JE ŽIVÝ, NE CEDULE.
+             Napřed tu stála řečnická otázka („Hledáte pozemek?"), pak suché
+             oznámení počtu. Obojí byl text, na který se dá jen koukat.
+             Teď za nadpisem svítí SKUTEČNÉ POZEMKY: každý bod je jedna
+             nabídka na svých souřadnicích, barva nese druh a dražby
+             s exekucemi pomalu pulzují. Není to ozdoba — je to ten obsah,
+             kvůli kterému sem člověk jde, jen viděný naráz. -->
+        <canvas class="hero-souhvezdi" id="hero-souhvezdi" aria-hidden="true"></canvas>
+        <div class="hh-stit"><span class="hh-zive" aria-hidden="true"></span>Dnes na Parcelce</div>
+        <h1>Tady se <em>něco děje</em><br>na <b id="hero-n-count">1 962</b> pozemcích.</h1>
+        <!-- Počty druhů plní generátor z dat; skript je po načtení přepočítá. -->
+        <div class="hh-legenda" id="hh-legenda">
+          <span class="hh-l" data-druh="sale"><i aria-hidden="true"></i><b>—</b> na prodej</span>
+          <span class="hh-l" data-druh="drazba"><i aria-hidden="true"></i><b>—</b> v dražbě</span>
+          <span class="hh-l" data-druh="exekuce"><i aria-hidden="true"></i><b>—</b> v exekuci</span>
+        </div>
         <!-- Živý důkaz, že web není skanzen. Vyplní ho skript ze skutečných
              dat; dokud se nenačtou, není tu vůbec nic (žádné „Načítám…"). -->
-        <div class="hero-live" id="hero-live" hidden>
+        <div class="hero-live hh-fakta" id="hero-live" hidden>
           <a class="hl-fact" href="#mapa" data-fakt="drazba"><span class="hl-k">Nejbližší dražba</span><span class="hl-v"></span></a>
           <a class="hl-fact" href="#mapa" data-fakt="nove"><span class="hl-k"></span><span class="hl-v"></span></a>
-          <a class="hl-fact" href="#mapa" data-fakt="deal"><span class="hl-k">Nejvýhodnější dnes</span><span class="hl-v"></span></a>
+          <a class="hl-fact hl-hit" href="#mapa" data-fakt="deal"><span class="hl-k">Nejvýhodnější dnes</span><span class="hl-v"></span></a>
         </div>
         </div>
         </div>
@@ -556,7 +565,7 @@
 <script src="js/vybaveni.js?v=54b36f73" defer></script>
 <script src="js/dotaz.js?v=341edd4b" defer></script>
 <script src="js/hledani.js?v=6a407f98" defer></script>
-<script src="js/main.js?v=5a061d6a" defer></script>
+<script src="js/main.js?v=a75fc380" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,
