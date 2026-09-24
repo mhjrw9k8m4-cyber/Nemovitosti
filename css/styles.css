@@ -880,6 +880,41 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .map-near-btn{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:9px; padding:12px 14px; border-radius:var(--r-ovladani); font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; color:#fff; background:var(--plocha-znacka); border:1px solid rgba(31,81,56,0.55); box-shadow:var(--glow); transition:transform .1s ease, box-shadow .15s ease, filter .15s ease;}
 /* Čekání na polohu musí být vidět na tlačítku, ne jen v hlášce, která po
    dvou vteřinách zmizí. Deset sekund ticha po klepnutí se čte jako „nejde to". */
+/* Dvě cesty k okolí vedle sebe. Na úzkém displeji pod sebou — dvě
+   tlačítka po 160 px se lámou uprostřed slova. */
+/* RADAR u dražeb, které končí do sedmi dní. Dvě kružnice se rozbíhají
+   ven a mizí — jako stopa na radaru. Druhá jede s odstupem, aby vznikl
+   dojem opakovaného přejezdu, ne pulzujícího puntíku.
+   Nic nechytá kliky: pod ním leží tečka v plátně, která to řeší. */
+.pk-radar{pointer-events:none;}
+.pk-radar span{position:absolute; left:50%; top:50%; width:10px; height:10px;
+  margin:-5px 0 0 -5px; border-radius:50%;
+  border:2px solid var(--c-drazba,#CC6B33);
+  opacity:0; animation:pkRadar 2.6s cubic-bezier(.22,.61,.36,1) infinite;}
+.pk-radar span:nth-child(2){animation-delay:1.3s;}
+@keyframes pkRadar{
+  0%   {transform:scale(.55); opacity:.85;}
+  70%  {opacity:.14;}
+  100% {transform:scale(3.1); opacity:0;}
+}
+/* Kdo si vypnul animace, nemá se na co dívat — ať aspoň vidí kroužek. */
+@media (prefers-reduced-motion:reduce){
+  .pk-radar span{animation:none; opacity:.5; transform:scale(1.9);}
+  .pk-radar span:nth-child(2){display:none;}
+}
+.vm-napred{color:var(--text-ondark-mute); font-size:13px; line-height:1.4;}
+/* Potvrdit nejde, dokud není okruh vidět — ať je to poznat i pohledem. */
+.vm-ok[disabled]{opacity:.45; cursor:not-allowed; box-shadow:none;}
+.map-okoli{display:flex; gap:8px; flex-wrap:wrap;}
+.map-okoli .map-near-btn{flex:1 1 190px; margin-top:9px;}
+/* Ukázat na mapě je rovnocenná volba, ne hlavní — proto obrysové, ne plné.
+   Nejdřív tu bylo jen jemně odlišené pozadí: výplň proti stránce vyšla
+   1,13:1 a okraj proti výplni 2,06:1, takže tlačítko nemělo viditelnou
+   hranu a splývalo s panelem (WCAG 1.4.11 žádá u ovládacích prvků 3:1).
+   Plný okraj v barvě značky dává na téhle výplni zhruba 7:1. */
+.map-pick-btn{background:#fff; color:var(--plocha-znacka);
+  border:1.5px solid var(--plocha-znacka); box-shadow:none;}
+.map-pick-btn:hover{background:var(--ink-soft2); filter:none; box-shadow:none;}
 .map-near-btn[disabled]{opacity:.78; cursor:progress;}
 .mnb-ceka{width:15px; height:15px; flex:none; border-radius:50%;
   border:2px solid rgba(255,255,255,.35); border-top-color:#fff;

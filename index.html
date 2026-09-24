@@ -105,7 +105,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=b5fed860">
+  <link rel="stylesheet" href="css/styles.css?v=91fb9c09">
 </head>
 <body>
 
@@ -209,7 +209,14 @@
               <button type="button" class="mp-zrus" id="misto-zrus">Zrušit místo</button>
             </div>
           </div>
-          <button type="button" class="map-near-btn" id="map-near"><svg class="mnb-pin" aria-hidden="true"><use href="#i-map"/></svg>Pozemky v okolí</button>
+          <!-- Dvě rovnocenné cesty k témuž: podle polohy telefonu, nebo
+               ukázáním na mapě. Výběr na mapě byl dřív schovaný ve zvací
+               skříňce nad tímhle tlačítkem — tedy ve slabší kopii toho,
+               co je primární. Skříňka zmizela a zbylo tohle. -->
+          <div class="map-okoli">
+            <button type="button" class="map-near-btn" id="map-near"><svg class="mnb-pin" aria-hidden="true"><use href="#i-map"/></svg>Pozemky v okolí</button>
+            <button type="button" class="map-near-btn map-pick-btn" id="map-pick">Vybrat na mapě</button>
+          </div>
           <div class="ms-group">
             <div class="map-filters" id="map-filters" role="group" aria-label="Co hledáte — druh příležitosti">
               <button class="filter-chip active" data-type="all">Vše</button>
@@ -541,7 +548,7 @@
 <script src="js/vybaveni.js?v=54b36f73" defer></script>
 <script src="js/dotaz.js?v=341edd4b" defer></script>
 <script src="js/hledani.js?v=6a407f98" defer></script>
-<script src="js/main.js?v=043e8e3e" defer></script>
+<script src="js/main.js?v=b5707bc2" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

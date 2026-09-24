@@ -257,19 +257,24 @@ pravda('karty ukazují vzdálenost od uloženého místa', kmNaKartach > 0,
 
 await p.evaluate(() => document.getElementById('misto-zrus').click());
 await p.waitForTimeout(400);
-const poZruseni = await p.evaluate(() => ({
-  schovany: (document.getElementById('misto-pruh') || {}).hidden,
-  pozvanka: document.getElementById('misto-pruh').classList.contains('bez-mista'),
-  jeTlacitkoVybrat: !document.getElementById('mp-akce-zadne').hidden,
-  ulozeno: localStorage.getItem('pk_misto_v1'),
-  km: document.querySelectorAll('.opp-item .opp-km').length,
-}));
-// Proužek se po zrušení NESCHOVÁ, ale změní se v pozvánku. Kdyby zmizel,
-// nešlo by hlídání zapnout jinak než přes GPS — a kdo polohu nepovolí,
-// o funkci se nikdy nedozví.
-pravda('po zrušení zůstane pozvánka, ne prázdno', poZruseni.schovany === false && poZruseni.pozvanka === true,
-  `schovaný=${poZruseni.schovany}, pozvánka=${poZruseni.pozvanka}`);
-pravda('a je v ní tlačítko „Vybrat na mapě"', poZruseni.jeTlacitkoVybrat === true);
+const poZruseni = await p.evaluate(() => {
+  const b = document.getElementById('map-pick');
+  return {
+    jdeVybratZnovu: !!b && !b.hidden && b.getClientRects().length > 0,
+    ulozeno: localStorage.getItem('pk_misto_v1'),
+    km: document.querySelectorAll('.opp-item .opp-km').length,
+  };
+});
+/* Po zrušení musí zůstat cesta, jak vybrat místo znovu. Kdyby nezůstala,
+   šlo by hlídání zapnout jen přes GPS — a kdo polohu nepovolí, o funkci
+   se nikdy nedozví. To je pořád totéž pravidlo jako dřív.
+   Změnilo se JEN kde ta cesta je: dřív se proužek po zrušení překlopil
+   v pozvánku s vlastním tlačítkem, jenže ta pozvánka zabírala nejcennější
+   místo nad výpisem a byla slabší kopií toho, co je hned pod ní. Teď je
+   výběr na mapě rovnocenné tlačítko v hlavním ovládání (#map-pick)
+   a proužek se ukazuje, jen když je místo opravdu uložené. */
+pravda('po zrušení jde místo vybrat znovu', poZruseni.jdeVybratZnovu === true,
+  'tlačítko „Vybrat na mapě" v hlavním ovládání chybí — bez něj zbývá jen GPS');
 pravda('místo se smazalo i z prohlížeče', poZruseni.ulozeno === null, `v úložišti zůstalo ${poZruseni.ulozeno}`);
 pravda('vzdálenosti z karet zmizí taky', poZruseni.km === 0, `zůstalo ${poZruseni.km}`);
 
@@ -277,7 +282,7 @@ pravda('vzdálenosti z karet zmizí taky', poZruseni.km === 0, `zůstalo ${poZru
 // Tohle je jediná cesta pro člověka, který polohu nepovolí. Dřív to bylo
 // jedno jediné klepnutí do hlavní mapy: kdo klepl vedle, měl hotovo a
 // nedalo se couvnout. Teď se otevře vlastní mapa přes celou obrazovku.
-await p.evaluate(() => document.getElementById('misto-vybrat').click());
+await p.evaluate(() => document.getElementById('map-pick').click());
 await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
 await p.waitForTimeout(900);
 const vyber = await p.evaluate(() => {
@@ -293,7 +298,12 @@ const vyber = await p.evaluate(() => {
 pravda('tlačítko „Vybrat na mapě" otevře mapu výběru', vyber.otevreno && vyber.mapa,
   `otevřeno=${vyber.otevreno}, mapa=${vyber.mapa}`);
 pravda('a dá se v ní vybrat kraj', vyber.kraju >= 15, `v nabídce je ${vyber.kraju} položek`);
-pravda('rovnou ukazuje, kolik pozemků v okruhu je', /\d+ pozem/.test(vyber.pocet), vyber.pocet);
+/* Hned po otevření musí být pod mapou něco, co dává smysl: buď počet
+   pozemků v okruhu, nebo — když je mapa oddálená na celou republiku a
+   okruh by byl puntík o pár pixelech — co udělat nejdřív. Prázdno ne. */
+pravda('rovnou říká, co je v okruhu, nebo co udělat nejdřív',
+  /\d+ pozem/.test(vyber.pocet) || /vyberte kraj|najděte obec/i.test(vyber.pocet),
+  vyber.pocet || '(prázdno)');
 
 /* Výběr se potvrdí tam, kde mapa stojí; okruh se roztáhne tak, aby v něm
    vymyšlená data vůbec byla. (Hledání obce a přepínání krajů prověřuje
@@ -310,14 +320,16 @@ await p.waitForTimeout(2500);
 const poVyberu = await p.evaluate(() => ({
   otevreno: !!document.querySelector('.vm-ov'),
   ulozeno: (() => { try { return JSON.parse(localStorage.getItem('pk_misto_v1')); } catch (e) { return null; } })(),
-  pozvanka: document.getElementById('misto-pruh').classList.contains('bez-mista'),
+  pruhVidet: !document.getElementById('misto-pruh').hidden,
   km: document.querySelectorAll('.opp-item .opp-km').length,
   jdeZmenit: !!document.getElementById('misto-zmenit'),
 }));
 pravda('potvrzení výběru místo uloží', !!(poVyberu.ulozeno && isFinite(poVyberu.ulozeno.lat)),
   JSON.stringify(poVyberu.ulozeno));
 pravda('výběr se přitom zavře', poVyberu.otevreno === false);
-pravda('proužek přestane být pozvánkou', poVyberu.pozvanka === false);
+/* Teprve s uloženým místem má proužek co říct („od minule přibylo…"),
+   takže se tehdy — a jen tehdy — ukazuje. */
+pravda('proužek se objeví, až když je místo uložené', poVyberu.pruhVidet === true);
 pravda('a na kartách se zase objeví vzdálenost', poVyberu.km > 0, `karet se vzdáleností: ${poVyberu.km}`);
 /* Výběr počítal jen z toho, co projde i zapnutými filtry — jinak sliboval
    „5 pozemků v okruhu" a seznam pod ním hlásil, že tam není nic. */

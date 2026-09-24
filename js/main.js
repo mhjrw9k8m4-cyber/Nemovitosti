@@ -1276,6 +1276,16 @@
     // kde se právě hledá, a zbytek republiky zůstane jen jako obrys kolem.
     if (selectedKraj && d._gkraj && d._gkraj !== selectedKraj) {
       kryti *= 0.26; okraj = 0; sila = 0; polomer = Math.max(2.2, polomer * 0.78);
+    } else if (selectedKraj && d._gkraj === selectedKraj) {
+      /* Ve vybraném kraji tečky ZTMAVNOU. Dřív se jen ztlumilo okolí,
+         takže po otevření kraje vypadaly nabídky uvnitř pořád stejně
+         bledě jako při pohledu na celou republiku — a rozdíl mezi „dívám
+         se na ČR" a „dívám se na Vysočinu" nebyl na tečkách vidět.
+         Krytí se řídí přiblížením (viz výš); tady se k němu přičte, ať
+         je jasné, že tyhle tečky jsou ty, o které jde. */
+      kryti = Math.min(1, kryti + 0.3);
+      okraj = Math.max(okraj, 0.45);
+      sila = Math.max(sila, 1);
     }
     return {
       renderer: dotsRenderer,
@@ -1775,6 +1785,7 @@
   var krajHintEl = document.getElementById('kraj-hint');
   var krajHeadEl = document.getElementById('kraj-head');
   var nearBtn = document.getElementById('map-near');
+  var pickBtn = document.getElementById('map-pick');
   // Sroluj rovnou k mapě, ať je hned vidět, že se něco děje (jinak se zdá, že tlačítko „nic nedělá").
   // Odrolovat k mapě tak, aby začínala POD lepivou hlavičkou. Prosté
   // scrollIntoView ji zarovná na úplný vrch okna, kde jí hlavička ukousne
@@ -2138,8 +2149,42 @@
       var n = 0;
       for (var i = 0; i < DATA.length; i++) if (visibleBezOkoli(DATA[i]) && kmOd(c, DATA[i]) <= k) n++;
       var obec = najdiNazevMista(c.lat, c.lng);
+      var okEl = ov.querySelector('#vm-ok');
+      if (!prepniOkruh()) {
+        /* Oddálené na celou republiku: okruh by byl tečka. Místo počtu,
+           který se vztahuje k něčemu neviditelnému, se řekne další krok —
+           a POTVRDIT NEJDE. Potvrdit výběr, který není vidět, je horší než
+           ukázat matoucí puntík: člověk by si uložil okolí náhodného bodu
+           uprostřed republiky a nevěděl proč. */
+        pocetEl.innerHTML = '<span class="vm-napred">Nejdřív vyberte kraj nebo najděte obec — pak uvidíte okruh.</span>';
+        if (okEl) { okEl.disabled = true; okEl.setAttribute('aria-disabled', 'true'); }
+        return;
+      }
+      if (okEl) { okEl.disabled = false; okEl.removeAttribute('aria-disabled'); }
       pocetEl.innerHTML = '<b>' + n + ' ' + plPozemek(n) + '</b> v okruhu ' + k + ' km' +
         (obec ? ' <span class="vm-obec">u obce ' + esc(obec) + '</span>' : '');
+    }
+    /* Dokud je mapa oddálená na celou republiku, je desetikilometrový okruh
+       puntík o 26 px — nedá se z něj poznat, co se vybírá, a působí to
+       jako porucha. V tom měřítku se tedy okruh ani měřítko nekreslí
+       a místo počtu stojí, co udělat nejdřív: vybrat kraj nebo najít obec.
+       Jakmile se mapa přiblíží (nebo se kraj vybere, což rovnou dorovná
+       rámec podle okruhu), okruh se objeví. */
+    function polomerVPixelech() {
+      var k = parseInt(kmSel.value, 10) || 10;
+      var c = m.getCenter();
+      var vychod = L.latLng(c.lat, c.lng).toBounds(k * 2000).getEast();
+      var a = m.latLngToContainerPoint(c);
+      var b = m.latLngToContainerPoint(L.latLng(c.lat, vychod));
+      return Math.abs(b.x - a.x);
+    }
+    function okruhVidet() { return polomerVPixelech() >= 40; }
+    function prepniOkruh() {
+      var videt = okruhVidet();
+      var mel = m.hasLayer(kruh);
+      if (videt && !mel) { kruh.addTo(m); meritko.addTo(m); stitek.addTo(m); }
+      else if (!videt && mel) { m.removeLayer(kruh); m.removeLayer(meritko); m.removeLayer(stitek); }
+      return videt;
     }
     m.on('move', prepocti);
     m.on('zoomend', prepocti);
@@ -2201,7 +2246,7 @@
       /* Kdo výběr zavře bez volby, nic nevybral — a ovládací prvek, který
          ho sem poslal, se o tom musí dozvědět. Jinak by dál tvrdil něco,
          co neplatí (řazení „Nejblíž ke mně" bez známé polohy). */
-      if (!potvrzeno && typeof nast.zrusenо === 'function') nast.zrusenо();
+      if (!potvrzeno && typeof nast.zruseno === 'function') nast.zruseno();
     }
     document.addEventListener('keydown', naKlavesu);
     ov.querySelector('.vm-x').addEventListener('click', zavri);
@@ -2290,11 +2335,11 @@
     if (typeof L !== 'undefined' && L.map) {
       otevriVyberMista({
         duvod: nast.duvod || 'Polohu se nepodařilo zjistit — ukažte ji na mapě.',
-        zrusenо: nast.zrusenо,
+        zruseno: nast.zruseno,
       });
     } else {
       showLocModal(err);
-      if (typeof nast.zrusenо === 'function') nast.zrusenо();
+      if (typeof nast.zruseno === 'function') nast.zruseno();
     }
   }
   /* Žádost o polohu. Tohle bylo rozbité tak, jak se rozbíjí nejhůř — nic
@@ -2348,7 +2393,7 @@
     nast = nast || {};
     if (!navigator.geolocation) {
       showLocModal({ code: 2 });
-      if (typeof nast.zrusenо === 'function') nast.zrusenо();
+      if (typeof nast.zruseno === 'function') nast.zruseno();
       return;
     }
     askGeo(nast);
@@ -2423,8 +2468,30 @@
       }
     }
   }
-  map.on('zoomend', resizeDots);
+  map.on('zoomend', function () { resizeDots(); prekresliRadar(); });
   resizeDots();
+
+  /* RADAR u dražeb, které končí do sedmi dní.
+     Tečky se kreslí do plátna, kde se animovat nedají — musel by se
+     překreslovat každý snímek kvůli hrstce bodů. Puls je proto zvlášť:
+     prázdné značky s CSS animací, a jen pro urgentní nabídky (dnes jich
+     je 14 z necelých dvou tisíc), takže to nic nestojí.
+     Ukazuje se jen to, co je zrovna ve výpisu — jinak by radar upozorňoval
+     na dražby, které si člověk odfiltroval. */
+  var radarVrstva = L.layerGroup().addTo(map);
+  var radarIkona = L.divIcon({ className: 'pk-radar', html: '<span></span><span></span>',
+    iconSize: [26, 26], iconAnchor: [13, 13] });
+  function prekresliRadar() {
+    radarVrstva.clearLayers();
+    for (var i = 0; i < DATA.length; i++) {
+      var d = DATA[i];
+      if (!isUrgent(d) || !visible(d)) continue;
+      if (!isFinite(d.lat) || !isFinite(d.lng)) continue;
+      if (selectedKraj && d._gkraj && d._gkraj !== selectedKraj) continue;
+      radarVrstva.addLayer(L.marker([d.lat, d.lng], { icon: radarIkona,
+        interactive: false, keyboard: false }));
+    }
+  }
 
   /* Sítě, které se počítají jako „sítě". Příjezdová cesta mezi ně
      schválně nepatří. */
@@ -2792,6 +2859,7 @@
       if (visible(d)) { vis.push(d); visIds.push(d._id); }
     });
     syncMarkers(visIds);
+    prekresliRadar();   // radar u urgentních dražeb sleduje týž filtr jako výpis
     // Seznam drží vybraný kraj. Bez toho si člověk klikl na „Jihomoravský kraj"
     // (nebo přišel odkazem ?kraj=…), mapa se přiblížila k Brnu — a pod ní se
     // nabízely pozemky z Kroměříže a Písku.
@@ -3539,7 +3607,7 @@
       var predtim = sortMode;
       enterNear({
         duvod: 'Bez polohy nevíme, odkud měřit. Ukažte místo na mapě.',
-        zrusenо: function () { sortMode = predtim; if (sortEl) sortEl.value = predtim; },
+        zruseno: function () { sortMode = predtim; if (sortEl) sortEl.value = predtim; },
       });
       return;
     }
@@ -4100,20 +4168,25 @@
     var pod = mistoPruh.querySelector('.mp-pod');
     var n = novinkyUMista();
     if (!n) {
-      /* Bez uloženého místa se proužek neschovává, ale zve. Dokud tu byla
-       * jen podmínka „když není místo, schovej", nešlo hlídání vůbec zapnout
-       * jinak než přes GPS — a kdo polohu nepovolí, o funkci nikdy nezjistil. */
-      mistoPruh.hidden = false;
-      mistoPruh.classList.remove('ma-novinky');
-      mistoPruh.classList.add('bez-mista');
-      hl.textContent = 'Hlídejte si okolí svého pozemku';
-      // Tlačítko „Pozemky v okolí" hned pod proužkem dělá totéž, jen podle
-      // polohy telefonu — ať se o něm ví a nevznikají dvě tlačítka na totéž.
-      pod.textContent = 'Vyberte si místo na mapě, nebo použijte „Pozemky v okolí" níž. Při každé návštěvě pak uvidíte, co u vás přibylo.';
-      if (akceZadne) akceZadne.hidden = false;
+      /* Dokud není místo uložené, proužek se NEUKAZUJE.
+         Dřív tu byla zvací skříňka „Hlídejte si okolí svého pozemku"
+         s vlastním tlačítkem „Vybrat na mapě". Zabírala nejcennější místo
+         nad výpisem a nabízela slabší kopii toho, co je hned pod ní:
+         výběr místa. Obě cesty k okolí — podle polohy i ukázáním na mapě —
+         jsou teď vedle sebe jako rovnocenná tlačítka (.map-okoli), takže
+         se o té možnosti ví a proužek nemusí nic vysvětlovat.
+         Jakmile místo uložené je, proužek se objeví a nese, co od minule
+         přibylo — tedy něco, co jinde není. */
+      mistoPruh.hidden = true;
+      mistoPruh.classList.remove('ma-novinky', 'bez-mista');
+      if (akceZadne) akceZadne.hidden = true;
       if (akceMam) akceMam.hidden = true;
+      if (pickBtn) pickBtn.hidden = false;
       return;
     }
+    /* Místo je vybrané — měnit se dá v proužku („Změnit místo"), takže
+       druhé tlačítko nahoře by bylo totéž dvakrát. */
+    if (pickBtn) pickBtn.hidden = true;
     mistoPruh.hidden = false;
     mistoPruh.classList.remove('bez-mista');
     if (akceZadne) akceZadne.hidden = true;
@@ -4175,6 +4248,8 @@
      jedno klepnutí a hotovo, bez možnosti couvnout a bez výběru kraje.
      Teď se otevře vlastní mapa, ve které se dá libovolně hýbat. */
   if (vybratBtn) vybratBtn.addEventListener('click', function () { otevriVyberMista(); });
+  /* Totéž tlačítko, jen na primárním místě vedle „Pozemky v okolí". */
+  if (pickBtn) pickBtn.addEventListener('click', function () { otevriVyberMista(); });
   var zmenitBtn = document.getElementById('misto-zmenit');
   if (zmenitBtn) zmenitBtn.addEventListener('click', function () { otevriVyberMista(); });
   vykresliMisto();

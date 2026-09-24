@@ -117,6 +117,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
     km: (document.querySelector('input[name="vm-km"]:checked') || {}).value,
     kmMoznosti: document.querySelectorAll('input[name="vm-km"]').length,
     meritko: (document.querySelector('.vm-meritko span') || {}).textContent || '',
+    potvrditJde: (() => { const b = document.getElementById('vm-ok'); return !!b && !b.disabled; })(),
     ulozeno: !!localStorage.getItem('pk_misto_v1'),
   };
 });
@@ -124,7 +125,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
 // --- 1) Výběr místa je CELÁ MAPA, ne jedno klepnutí ------------------
 {
   const { ctx, p, chyby } = await telefon(null);
-  await otevriVybirac(p, '#misto-vybrat');
+  await otevriVybirac(p, '#map-pick');
   const v = await stavVybiraku(p);
   pravda('„Vybrat na mapě" otevře výběr místa', v.otevreno,
     'nic se neotevřelo — tlačítko vypadá jako rozbité');
@@ -138,14 +139,34 @@ const stavVybiraku = (p) => p.evaluate(() => {
   pravda('kříž uprostřed je vidět a není zmáčknutý',
     v.kriz && v.kriz.w >= 16 && v.kriz.h >= 16 && Math.abs(v.kriz.w - v.kriz.h) <= 4,
     v.kriz ? `${v.kriz.w}×${v.kriz.h} px` : 'kříž tam není');
-  pravda('kolem je vidět hlídaný okruh', v.kruh,
+  /* Pravidlo se nezměnilo: NEJDE POTVRDIT, CO NENÍ VIDĚT.
+     Změnilo se, jak se drží. Dřív se při pohledu na celou republiku
+     kreslil okruh 10 km jako puntík o 26 px a pod ním stál počet pozemků
+     u náhodného bodu uprostřed ČR — vypadalo to jako porucha a potvrdit
+     to šlo. Teď se v tom měřítku okruh nekreslí, místo počtu stojí další
+     krok a POTVRDIT NEJDE; jakmile se vybere kraj nebo najde obec, objeví
+     se okruh, měřítko i počet a potvrzení se odemkne.
+     Kontroluje se tedy obojí: že se naslepo potvrdit nedá, a že po volbě
+     místa je vidět všechno, co bylo vidět dřív. */
+  pravda('naslepo potvrdit nejde', v.potvrditJde === false,
+    'při pohledu na celou ČR není okruh vidět, a přesto jde potvrdit');
+  pravda('a místo počtu stojí, co udělat nejdřív',
+    /vyberte kraj|najděte obec/i.test(v.pocet), v.pocet || '(prázdno)');
+
+  // Po volbě kraje musí být vidět všechno, na čem se výběr dělá.
+  await p.evaluate(() => { const s2 = document.getElementById('vm-kraj');
+    s2.value = 'Jihomoravský'; s2.dispatchEvent(new Event('change', { bubbles: true })); });
+  await p.waitForTimeout(1500);
+  const vk = await stavVybiraku(p);
+  pravda('po volbě kraje je vidět hlídaný okruh', vk.kruh,
     'bez kruhu není poznat, jak velké okolí se vybírá');
-  pravda('počet pozemků je vidět hned, ještě před potvrzením', /\d+ pozem/.test(v.pocet), v.pocet);
+  pravda('a počet pozemků ještě před potvrzením', /\d+ pozem/.test(vk.pocet), vk.pocet);
+  pravda('a potvrdit už jde', vk.potvrditJde === true, 'okruh je vidět, ale potvrdit nejde');
   /* Kruh sám o sobě řekne „takhle velké to je" jen tomu, kdo si deset
      kilometrů na mapě dokáže představit. Proto se od středu ke kraji
      táhne měřítko s číslem — a okruh se vybírá z viditelné řady, ne
      ze zabaleného seznamu, ve kterém není vidět, co všechno jde zvolit. */
-  pravda('velikost okruhu je napsaná přímo na mapě', /^\d+ km$/.test(v.meritko.trim()), `měřítko: „${v.meritko}"`);
+  pravda('velikost okruhu je napsaná přímo na mapě', /^\d+ km$/.test(vk.meritko.trim()), `měřítko: „${vk.meritko}"`);
   pravda('okruh se vybírá z viditelné řady možností', v.kmMoznosti >= 5, `možností: ${v.kmMoznosti}`);
 
   // Tečky pozemků: kreslí se do plátna, takže se počítají barevné body.
@@ -248,7 +269,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
   const { ctx, p, chyby } = await telefon(null);
   const cely = await p.evaluate(() => (document.getElementById('mvt-count') || {}).textContent || '');
   // Místo nastavíme přes výběr místa: najdeme obec a potvrdíme.
-  await otevriVybirac(p, '#misto-vybrat');
+  await otevriVybirac(p, '#map-pick');
   await p.fill('#vm-hledat', 'Kolín');
   await p.press('#vm-hledat', 'Enter');
   await p.waitForTimeout(1400);
