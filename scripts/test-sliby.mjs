@@ -156,6 +156,75 @@ function chibiPrazdne(a) { return a.length === 0; }
   }
 }
 
+/* ---- 6c) „Bez registrace" nesmí platit na to, co účet vyžaduje ---- */
+/* Web zve „zdarma a bez registrace" a hned vedle má tlačítko „Přidat
+   pozemek". Jenže formulář se neukáže, dokud není účet — kdo tedy slib
+   vztáhl na celý web (a proč by ne, nikde nestála hranice), narazil na
+   přihlašovací dveře, o kterých mu nikdo neřekl. Tohle nespadne a
+   v logu se to neobjeví: prostě se otočí a odejde.
+   Kontrola se váže na SKUTEČNOST, ne na text: platí, jen dokud
+   pridat.html opravdu má přihlašovací bránu. Až se přidávání otevře
+   i bez účtu, vypne se sama. */
+{
+  const pridat = cti('pridat.html');
+  const brana = /id="auth-gate"/.test(pridat);
+  if (brana) {
+    /* a) Na stránce přidání se o účtu musí dozvědět dřív, než na bránu
+          narazí — tedy ještě v úvodu, ne až v ní samotné. */
+    /* Jen úvod stránky, ne hlavička: v navigaci stojí „Nepřihlášeno"
+       a to by kontrolu splnilo, ať v úvodu stojí cokoli. A jen to, co je
+       VIDĚT: komentář „Přihlášení (ochrana proti spamu)" v kódu splnil
+       kontrolu taky, přestože ho člověk nikdy nespatří. Obojí se ukázalo
+       sabotáží — věty o účtu se odebraly a test dál mlčel. */
+    const odKud = pridat.indexOf('class="add-hero"');
+    const uvod = pridat.slice(odKud, pridat.indexOf('id="auth-gate"'))
+      .replace(/<!--[\s\S]*?-->/g, ' ')
+      .replace(/<[^>]+>/g, ' ');
+    pravda('stránka přidání řekne o účtu dřív, než na něj narazíte',
+      /účet|účtu|přihlá|e-mail a heslo/i.test(uvod),
+      'úvod slibuje pár minut a formulář, ale o nutném účtu mlčí až do chvíle, kdy se místo formuláře ukážou přihlašovací dveře');
+
+    /* b) A hlavní stránka, ze které se na přidání chodí, to musí říct
+          taky — právě tam vzniká dojem „bez registrace". */
+    pravda('a hlavní stránka přiznává, kde účet potřeba je',
+      /účet[^<]{0,120}(přidat|inzerát|nabídk)|(?:přidat|inzerát|nabídk)[^<]{0,120}účet/i.test(idx),
+      'index.html třikrát opakuje „bez registrace" a nikde neřekne, že na vlastní inzerát účet potřeba je');
+  }
+
+  /* c) Nikde nesmí stát slib „bez registrace" ve větě, která zároveň
+        mluví o přidání vlastní nabídky. */
+  const stranky = readdirSync(KOREN).filter((f) => f.endsWith('.html') && !f.startsWith('pozemek-') && !f.startsWith('pozemky-'));
+  const spatne = [];
+  for (const soubor of stranky) {
+    const text = cti(soubor).replace(/<[^>]+>/g, ' ');
+    for (const veta of text.split(/[.!?]\s/)) {
+      if (/bez registrace|bez přihlášení|žádná registrace/i.test(veta)
+        && /(přid(at|ejte|ání)|vlož|inzerát)/i.test(veta)) spatne.push(`${soubor}: „${veta.trim().slice(0, 90)}"`);
+    }
+  }
+  pravda('nikde se „bez registrace" neslibuje u přidávání nabídek',
+    spatne.length === 0, spatne.slice(0, 3).join(' | '));
+}
+
+/* ---- 6d) Otázky v datech pro Google sedí s otázkami na stránce ---- */
+/* Strukturovaná data se do vyhledávače dostanou dřív než člověk na
+   stránku. Když se rozejdou, Google ukazuje odpověď, která na webu není
+   — a nikdo to nevidí, protože se na stránce nic nezmění. */
+{
+  const videt = [...idx.matchAll(/<summary>([^<]+)<\/summary>/g)].map((m) => m[1].trim());
+  const proStroj = [...idx.matchAll(/"@type":"Question","name":"((?:[^"\\]|\\.)*)"/g)]
+    .map((m) => m[1].replace(/\\"/g, '"').trim());
+  const chybi = proStroj.filter((q) => !videt.includes(q));
+  const navic = videt.filter((q) => !proStroj.includes(q));
+  pravda('otázky pro vyhledávač jsou i na stránce', chybi.length === 0,
+    `jen ve strukturovaných datech: ${chybi.join(' | ')}`);
+  pravda('a žádná na stránce nechybí ve strukturovaných datech', navic.length === 0,
+    `jen na stránce: ${navic.join(' | ')}`);
+  const napsano = /<span class="rm-n">(\d+)<\/span><span class="rm-l">otázek/.exec(idx);
+  pravda('a počet u nadpisu sedí', !!napsano && Number(napsano[1]) === videt.length,
+    `napsáno ${napsano ? napsano[1] : '?'}, otázek ${videt.length}`);
+}
+
 /* ---- 7) Placené se nenabízí, dokud se nedá zaplatit ---- */
 {
   const pridat = cti('pridat.html');
