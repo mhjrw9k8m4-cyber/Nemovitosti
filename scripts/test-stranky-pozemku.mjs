@@ -31,7 +31,12 @@ const D = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json
 const pozemky = D.filter((d) => isFinite(d.lat) && isFinite(d.lng) && d.place && d.okres);
 
 // --- 1) prohlížečový výpočet názvu musí sednout s generátorem -----------
-const src = fs.readFileSync(path.join(ROOT, 'js', 'pozemek.js'), 'utf8');
+/* Tentýž název skládají TŘI nezávislé kusy kódu: generátor v Node, detail
+   pozemku (kvůli kanonickému odkazu a sdílení) a hlavní skript (kvůli
+   odkazům ve výpisu). Porovnávají se všechny — dvojice by nechala třetí
+   bez dozoru a rozejití by se poznalo až ze 404. */
+const ZDROJE = [['js/pozemek.js'], ['js/main.js']];
+let src = fs.readFileSync(path.join(ROOT, 'js', 'pozemek.js'), 'utf8');
 /* Funkce se z js/pozemek.js vytáhne počítáním závorek, ne regulárem:
    hledat tělo funkce vzorkem je křehké a u vnořených závorek se to rozjede. */
 function kus(jmeno) {
@@ -44,24 +49,28 @@ function kus(jmeno) {
   }
   return '';
 }
-const mapaM = /var PK_MAPA = \{[^}]*\};/.exec(src);
-const zdrojProhlizec = [mapaM ? mapaM[0] : '', kus('pkSlug'), kus('pkOtisk'),
-  kus('pkeyPlny'), kus('souborPozemku')].join('\n');
-pravda('prohlížečový výpočet názvu stránky se dá z js/pozemek.js vytáhnout',
-  zdrojProhlizec.indexOf('souborPozemku') > 0, 'nenašly se funkce pkSlug/pkOtisk/souborPozemku');
+function vytahni(soubor) {
+  src = fs.readFileSync(path.join(ROOT, soubor), 'utf8');
+  const mapaM = /var PK_(?:MAPA|DIAKR) = \{[^}]*\};/.exec(src);
+  // main.js si klíč skládá sám (pkey), detail má vlastní pkeyPlny.
+  const klic = kus('pkeyPlny') || kus('pkey');
+  return [mapaM ? mapaM[0] : '', kus('pkSlug'), kus('pkOtisk'), klic, kus('souborPozemku')].join('\n');
+}
 
-let souborProhlizec = null;
-try {
-  souborProhlizec = new Function(zdrojProhlizec + '\n return souborPozemku;')();
-} catch (e) { pravda('a dá se spustit', false, String(e)); }
-
-if (souborProhlizec) {
+for (const [soubor] of ZDROJE) {
+  const zdroj = vytahni(soubor);
+  pravda(`výpočet názvu stránky se dá z ${soubor} vytáhnout`,
+    zdroj.indexOf('souborPozemku') > 0, 'nenašly se funkce pkSlug/pkOtisk/souborPozemku');
+  let fn = null;
+  try { fn = new Function(zdroj + '\n return souborPozemku;')(); }
+  catch (e) { pravda(`a ${soubor} se dá spustit`, false, String(e)); }
+  if (!fn) continue;
   const rozdil = [];
   for (const d of pozemky) {
-    const a = souborPro(d), b = souborProhlizec(d);
+    const a = souborPro(d), b = fn(d);
     if (a !== b) { rozdil.push(`${a} ≠ ${b}`); if (rozdil.length > 3) break; }
   }
-  pravda(`název stránky vychází stejně v Node i v prohlížeči (${pozemky.length} pozemků)`,
+  pravda(`název stránky vychází stejně v Node i v ${soubor} (${pozemky.length} pozemků)`,
     rozdil.length === 0, rozdil.join(' · '));
 }
 

@@ -577,12 +577,15 @@ const stavVybiraku = (p) => p.evaluate(() => {
 }
 
 // --- 4) Když poloha „visí" --------------------------------------------
-// Na telefonu s vypnutou polohou prohlížeč neodmítne hned: mlčí až do
-// vypršení limitu. Právě tenhle případ byl rozbitý a Playwright ho sám od
-// sebe nenapodobí (bez povolení odmítne okamžitě), takže se tu rozhraní pro
-// polohu podstrčí — chová se jako prohlížeč, jen nikdy nic nenajde.
+/* Na telefonu, který polohu povolenou má, ale nemá ji odkud vzít (venku pod
+   mrakem, vypnuté GPS), prohlížeč neodmítne hned: mlčí až do vypršení
+   limitu. Právě tenhle případ byl rozbitý a Playwright ho sám od sebe
+   nenapodobí (bez povolení odmítne okamžitě), takže se tu rozhraní pro
+   polohu podstrčí — chová se jako prohlížeč, jen nikdy nic nenajde.
+   Povolení je tu potřeba skutečné: se zakázanou polohou se tlačítko „Moje
+   poloha" vůbec nenabízí (to hlídá oddíl 4b), takže by nebylo co zmáčknout. */
 {
-  const { ctx, p } = await telefon(null);
+  const { ctx, p } = await telefon({ latitude: 49.95, longitude: 14.30 });
   await p.evaluate(() => {
     navigator.geolocation.getCurrentPosition = function (uspech, chyba, nast) {
       const limit = (nast && nast.timeout) || 30000;
@@ -633,6 +636,36 @@ const stavVybiraku = (p) => p.evaluate(() => {
   pravda('tlačítko se vrátí do původního stavu',
     konec.zakazano === false && /Pozemky v okolí/.test(konec.tlacitko),
     `zůstalo „${konec.tlacitko.trim()}"`);
+  await ctx.close();
+}
+
+// --- 4b) Se zakázanou polohou se „Moje poloha" vůbec nenabízí ---------
+/* Tlačítko sedí uprostřed mapy, přes to nejzajímavější místo. Když má
+   člověk polohu pro tenhle web zakázanou, prohlížeč to řekne dopředu
+   (Permissions API) — a nabízet mu prvek, který mu vrátí jen chybu, je
+   horší než ho nemít: zabírá výhled a radí přesně to, co člověk zrovna
+   dělá (mapa JE ruční výběr). Dřív se po selhání změnil v nápis
+   „Poloha nejde — vyberte ručně" a ten tam zůstal viset navždy. */
+{
+  const { ctx, p, chyby } = await telefon(null);
+  await otevriVybirac(p, '#map-near');
+  await p.waitForTimeout(600);
+  const stav = await p.evaluate(() => ({
+    tlacitko: !!document.getElementById('vm-gps'),
+    obal: !!document.querySelector('.vm-poloha'),
+    mapa: !!document.querySelector('.vm-ov #vm-mapa .leaflet-map-pane'),
+    potvrdit: !!document.getElementById('vm-ok'),
+  }));
+  pravda('se zakázanou polohou tam „Moje poloha" není', !stav.tlacitko && !stav.obal,
+    'tlačítko zůstalo, i když prohlížeč dopředu řekl, že polohu nedá');
+  pravda('ale mapa i potvrzení zůstávají', stav.mapa && stav.potvrdit,
+    `mapa ${stav.mapa}, potvrzení ${stav.potvrdit}`);
+  /* A ruční cesta tím nesmí být dotčená: klepnutí do mapy dál vybírá. */
+  await klepniDoMapy(p, 0.5, 0.4);
+  const po = await stavVybiraku(p);
+  pravda('klepnutím do mapy jde místo vybrat i bez polohy', po.potvrditJde,
+    'po klepnutí se potvrzení nerozsvítilo — bez tlačítka polohy nezbyla žádná cesta');
+  pravda('a nic při tom nespadlo', chyby.length === 0, chyby[0]);
   await ctx.close();
 }
 

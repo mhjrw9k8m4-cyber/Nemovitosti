@@ -429,7 +429,10 @@
     // sdílet
     var shareBtn = document.getElementById('pz-share');
     if (shareBtn) shareBtn.addEventListener('click', function () {
-      var url = location.origin + location.pathname + '?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng;
+      /* Sdílí se VLASTNÍ stránka pozemku, ne adresa, na které zrovna stojíme.
+         Přes „?p=…" ukazoval náhled u všech nabídek totéž — a sdílení je
+         přesně ta chvíle, kdy na náhledu záleží nejvíc. */
+      var url = location.origin + '/' + souborPozemku(d);
       var title = 'Pozemek ' + d.place + ' — Parcelka';
       var text = t.label + ' · ' + d.place + ', okres ' + d.okres + ' · ' + areaTxt(d) + ' · ' + fmt(d.price) + ' Kč';
       if (navigator.share) { navigator.share({ title: title, text: text, url: url }).catch(function () {}); }

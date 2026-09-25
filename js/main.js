@@ -145,6 +145,23 @@
   }
   // Starý tvar klíče — jen pro odkazy rozeslané dřív, ať neskončí naprázdno.
   function pkeyLegacy(d){ return [d.place || '', d.parcel || '', d.okres || ''].join('|'); }
+  /* Název vlastní stránky pozemku. Týž výpočet dělá generátor v Node
+     (scripts/generate-parcel-pages.mjs) i js/pozemek.js — kdyby se
+     rozešly, vedly by odkazy na neexistující soubor. Hlídá to
+     scripts/test-stranky-pozemku.mjs. */
+  var PK_DIAKR = { 'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z' };
+  function pkSlug(s){
+    return String(s || '').toLowerCase().replace(/[áčďéěíňóřšťúůýž]/g, function(c){ return PK_DIAKR[c] || c; })
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+  function pkOtisk(s){
+    var h = 5381;
+    for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return h.toString(36);
+  }
+  function souborPozemku(d){
+    return 'pozemek-' + pkSlug(d.okres) + '-' + pkSlug(d.place) + '-' + pkOtisk(pkey(d)) + '.html';
+  }
   // Zkopírování textu do schránky s bezpečnou zálohou pro starší prohlížeče
   function copyText(text, onDone){
     function fallback(){
@@ -2297,16 +2314,40 @@
       prepocti();
     }, 60);
 
+    /* MOJE POLOHA. Tlačítko sedí na nejlepším místě mapy, takže si tam to
+       místo musí zasloužit — a když poloha nejde, nezaslouží.
+       Dřív se po selhání změnilo v nápis „Poloha nejde — vyberte ručně"
+       a ten tam zůstal viset navždy. Radil přitom přesně to, co člověk
+       v tu chvíli už dělá (mapa JE ruční výběr), takže zabíral výhled
+       a neříkal nic. Teď zmizí a důvod se řekne jednou, krátce. */
     var gpsBtn = ov.querySelector('#vm-gps');
-    gpsBtn.addEventListener('click', function () {
-      if (!navigator.geolocation) { gpsBtn.textContent = 'Poloha tu nejde'; return; }
+    function zrusPolohu(hlaska) {
+      var obal = gpsBtn && gpsBtn.closest ? gpsBtn.closest('.vm-poloha') : null;
+      if (obal && obal.parentNode) obal.parentNode.removeChild(obal);
+      else if (gpsBtn && gpsBtn.parentNode) gpsBtn.parentNode.removeChild(gpsBtn);
+      gpsBtn = null;
+      if (hlaska) showToast(hlaska);
+    }
+    // Co nemůže fungovat, se ani nenabízí: bez podpory v prohlížeči pryč hned.
+    if (!navigator.geolocation) zrusPolohu('');
+    /* A když má člověk polohu pro tenhle web zakázanou, víme to předem —
+       tak ať vůbec nevidí tlačítko, které mu jen vrátí chybu. */
+    else if (navigator.permissions && navigator.permissions.query) {
+      try {
+        navigator.permissions.query({ name: 'geolocation' }).then(function (st) {
+          if (st && st.state === 'denied') zrusPolohu('');
+        }).catch(function () {});
+      } catch (e) {}
+    }
+    if (gpsBtn) gpsBtn.addEventListener('click', function () {
       gpsBtn.disabled = true; gpsBtn.innerHTML = '<span class="mnb-ceka" aria-hidden="true"></span>Hledám…';
       navigator.geolocation.getCurrentPosition(function (p) {
+        if (!gpsBtn) return;
         gpsBtn.disabled = false; gpsBtn.innerHTML = LOC_PIN + 'Moje poloha';
         vybranoMisto = true;      // poloha je ukázané místo jako každé jiné
         jdiNa(p.coords.latitude, p.coords.longitude);
       }, function () {
-        gpsBtn.disabled = false; gpsBtn.innerHTML = LOC_PIN + 'Poloha nejde — vyberte ručně';
+        zrusPolohu('Polohu se nepodařilo zjistit — ukažte místo klepnutím do mapy.');
       }, { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 });
     });
 
@@ -3087,6 +3128,16 @@
         '</div>';
       // Ťuknutí kamkoli na kartu (i na snímek) → samostatná stránka inzerátu.
       // Na mapu se dostaneš z inzerátu (snímek nebo tlačítko „Zobrazit na mapě").
+      /* Procházení webu vede na OBECNOU pozemek.html?p=…, ne na vlastní
+         stránku nabídky. Vlastní stránky jsou soubory, které vyrábí
+         generátor — a kdyby se data aktualizovala a generátor selhal,
+         odkazovalo by se na soubory, které neexistují, a KAŽDÉ klepnutí ve
+         výpisu by skončilo na 404. Obecná adresa si data načte sama, takže
+         funguje vždycky.
+         Vlastní stránka se přitom neztrácí tam, kde na ní záleží: detail
+         pozemku ji nastavuje jako kanonickou a posílá ji tlačítko Sdílet.
+         Tím dostanou vyhledávače i sdílený odkaz správnou stránku, aniž by
+         na ní stálo procházení webu. */
       var pozHref = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng;
       function openInzerat() { location.href = pozHref; }
       li.addEventListener('click', openInzerat);

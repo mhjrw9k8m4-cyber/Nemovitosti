@@ -1781,12 +1781,12 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-hodonin-javornik-ksw5kg.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-benesov-chocerady-1sg8ux3.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-benesov-chocerady-1sg8ux3.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-hodonin-javornik-ksw5kg.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2846,17 +2846,17 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://www.parcelaka.cz/pozemek-hodonin-javornik-h9jkmp.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.parcelaka.cz/pozemek-ceske-budejovice-nova-ves-j3qzfl.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-nymburk-velenice-1goato6.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-hodonin-javornik-h9jkmp.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9911,11 +9911,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-nachod-police-nad-metuji-1alkof3.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-nachod-police-nad-metuji-10tgltk.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -10016,17 +10011,12 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-brno-venkov-pozorice-10p6dzi.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-brno-mesto-brno-xz2874.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-brno-venkov-tisnov-12ykrg6.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-sumperk-ruda-nad-moravou-12d15wo.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
