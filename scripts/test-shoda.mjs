@@ -244,8 +244,10 @@ if (podezrely) {
         .find((e) => (e.textContent || '').indexOf('parc. ' + parcel) !== -1);
       if (!li) return null;
       const per = li.querySelector('.opp-perm2');
+      const vym = li.querySelector('.opp-figures .m');
       return { perm2: per ? +(per.textContent || '').replace(/[^\d]/g, '') : null,
         titul: per ? (per.getAttribute('title') || '') : '',
+        vymera: vym ? vym.textContent : '',
         podilChip: !!li.querySelector('.opp-podil') };
     }, podil.parcel);
     pravda('karta podílu se na mapě našla', !!karta,
@@ -259,6 +261,11 @@ if (podezrely) {
         /podíl/i.test(karta.titul),
         `u čísla nestojí nic — vypadá jako běžná cena za metr, přitom je přepočtená (${karta.titul})`);
       pravda('a karta pořád přiznává, že jde o podíl', karta.podilChip);
+      /* Výměra v inzerátu je CELÉ parcely, cena jen za zlomek. Když
+         vedle sebe stojí holé „25 000 Kč" a „445 m²", každý si je
+         vydělí a vyjde mu cena, kterou nikdo neplatí. */
+      pravda('a u výměry stojí, že je to celá parcela', /celá parcela/i.test(karta.vymera),
+        `u výměry stojí „${karta.vymera.trim()}" — dvě čísla vedle sebe svádějí k dělení`);
     }
     await p4.close();
   }

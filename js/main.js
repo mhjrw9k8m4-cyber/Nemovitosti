@@ -2877,8 +2877,14 @@
      pozemku, a s ním v uložených oblíbených i ve sdílených adresách. */
   function mistoRadek(d) {
     var okr = d.okres ? 'okres ' + esc(d.okres) : '';
-    if (!d.cast) return okr;
-    return esc(d.cast) + (okr ? ' · ' + okr : '');
+    if (d.cast) return esc(d.cast) + (okr ? ' · ' + okr : '');
+    /* Když je „místo" totéž co okres (zdroj nic bližšího neuvedl),
+       stálo na kartě „Brno-venkov" a hned pod tím „okres Brno-venkov".
+       Dvakrát totéž, a to druhé navíc tvrdí, že jde o obec. Radši nic:
+       název je vidět v nadpisu o řádek výš. Když ale čtvrť známe,
+       řádek smysl má — proto se tahle výjimka řeší až za ní. */
+    if (d.place && d.okres && String(d.place).trim() === String(d.okres).trim()) return '';
+    return okr;
   }
   // „Rozprostření": u řazení Doporučené nechceme 5 dražeb (nebo 2× stejná obec)
   // za sebou. Zachová pořadí podle skóre, jen bere vždy nejlepší kousek, který
@@ -3075,7 +3081,15 @@
       var sub = subParts.join(' · ');
       // Řádek s výměrou a Kč/m² (cena je zvlášť, velká, nahoře v těle karty)
       var figs =
-        (hasArea(d) ? '<span class="m">' + fmt(d.area) + ' m²</span>' : '<span class="m">výměra neuvedena</span>') +
+        /* U PODÍLU JE VÝMĚRA CELÉ PARCELY, ALE CENA JEN ZA ZLOMEK.
+           Když vedle sebe stojí holé „25 000 Kč" a „445 m²", každý si je
+           vydělí — a vyjde mu cena, kterou nikdo neplatí. Cenu za metr
+           u podílu neznámé velikosti proto neukazujeme vůbec (viz
+           js/ceny.js), jenže ta dvě čísla svádějí k dělení i tak.
+           Stačí u výměry říct, čeho se týká. */
+        (hasArea(d)
+          ? '<span class="m">' + fmt(d.area) + ' m²' + (d.podil ? '<i class="m-celek">celá parcela</i>' : '') + '</span>'
+          : '<span class="m">výměra neuvedena</span>') +
         (perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') +
         // Vzdálenost se ukazuje vždycky, když je od čeho měřit — dřív jen při
         // řazení „podle okolí", takže si jí nikdo nevšiml.

@@ -84,8 +84,14 @@
      hlídá scripts/test-ctvrt.mjs. */
   function mistoRadek(d) {
     var okr = d.okres ? 'okres ' + esc(d.okres) : '';
-    if (!d.cast) return okr;
-    return esc(d.cast) + (okr ? ' · ' + okr : '');
+    if (d.cast) return esc(d.cast) + (okr ? ' · ' + okr : '');
+    /* Když je „místo" totéž co okres (zdroj nic bližšího neuvedl),
+       stálo na kartě „Brno-venkov" a hned pod tím „okres Brno-venkov".
+       Dvakrát totéž, a to druhé navíc tvrdí, že jde o obec. Radši nic:
+       název je vidět v nadpisu o řádek výš. Když ale čtvrť známe,
+       řádek smysl má — proto se tahle výjimka řeší až za ní. */
+    if (d.place && d.okres && String(d.place).trim() === String(d.okres).trim()) return '';
+    return okr;
   }
   function katastrUrl(d) { return 'https://ikatastr.cz/#zoom=18&lat=' + d.lat + '&lon=' + d.lng + '&info=' + d.lat + ',' + d.lng; }
   function mapyUrl(d) { return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat; }
@@ -504,7 +510,8 @@
       b.setAttribute('data-id', def.id);
       b.setAttribute('aria-pressed', 'false');
       b.textContent = def.nazev;
-      b.addEventListener('click', function () {
+      b.addEventListener('click', prepni);
+      function prepni() {
         if (zive[def.id]) {
           m.removeLayer(zive[def.id]);
           delete zive[def.id];
@@ -527,8 +534,17 @@
           pridejLegendu(zapis);
         }
         prepocitejKryti();
-      });
+      }
       vrstvy.appendChild(b);
+      /* HRANICE PARCEL SE ZAPNOU ROVNOU.
+         Vlastní obrys pozemku v datech nemáme, takže po dojezdu na mapu
+         stál uprostřed jen špendlík — a na otázku „kde přesně ten
+         pozemek začíná a končí" neodpověděl. Hranice z katastru to
+         řeknou, jenže dokud byly schované za přepínačem, většina lidí
+         se k nim nedostala: nevědí, že je co zapnout.
+         Zapíná se JEN tahle jediná vrstva. Územní plán ani záplavy
+         přes snímek samy od sebe nepatří — ty si člověk vyžádá. */
+      if (def.id === 'katastr' && !zive[def.id]) prepni();
     }
 
     if (global.PK_VRSTVY) {
@@ -658,7 +674,9 @@
 
     var facts = [];
     facts.push({ k: 'Druh pozemku', v: esc(d.druh || '—') });
-    facts.push({ k: 'Výměra', v: areaTxt(d) });
+    /* U podílu je v inzerátu výměra CELÉ parcely — v řádku „Výměra" to
+       musí být napsané, jinak si ji každý vydělí cenou za podíl. */
+    facts.push({ k: 'Výměra', v: areaTxt(d) + (d.podil && hasArea(d) ? ' <i class="pz-pozn">celá parcela — kupuje se jen podíl</i>' : '') });
     if (perM2) facts.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²' + (perM2Pozn ? ' <i class="pz-pozn">' + esc(perM2Pozn) + '</i>' : '') });
     if (hasParcel(d)) facts.push({ k: 'Parcela', v: 'č. ' + esc(d.parcel) });
     facts.push({ k: 'Kategorie', v: esc(t.label) });

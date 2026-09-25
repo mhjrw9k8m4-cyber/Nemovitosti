@@ -262,6 +262,35 @@ const HOST = {
   pravda('nabídnou se všechny vrstvy, jejichž služba odpověděla', v.length >= 3, v.join(', '));
 
   const def = (NAST.vrstvy || []).find((x) => x.id === 'katastr');
+  /* HRANICE PARCEL JSOU ZAPNUTÉ ROVNOU. Vlastní obrys pozemku v datech
+     nemáme, takže po dojezdu na mapu stál uprostřed jen špendlík —
+     a na otázku „kde přesně ten pozemek začíná a končí" neodpověděl.
+     Dokud byly hranice schované za přepínačem, většina lidí se k nim
+     nedostala: nevědí, že je co zapnout. */
+  const hned = await p.evaluate(() => {
+    const b = document.querySelector('.pzm-v[data-id="katastr"]');
+    return { on: !!(b && b.classList.contains('on')), rika: b && b.getAttribute('aria-pressed'),
+      vrstev: document.querySelectorAll('#pzm-mapa .leaflet-layer').length };
+  });
+  pravda('hranice parcel se zapnou samy', hned.on && hned.rika === 'true',
+    'po dojezdu na mapu stojí uprostřed jen špendlík a hranice si nikdo nezapne');
+  pravda('a jsou opravdu v mapě, ne jen na přepínači', hned.vrstev >= 2,
+    `vrstev v mapě ${hned.vrstev} (podklad + katastr)`);
+  /* Ostatní vrstvy se samy nezapínají: územní plán přes letecký snímek
+     si člověk vyžádá, nemá ho dostat rovnou přes celý pozemek. */
+  const jineZapnute = await p.evaluate(() => [...document.querySelectorAll('.pzm-v.on')].map((b) => b.getAttribute('data-id')));
+  pravda('a žádná další vrstva se sama nezapne',
+    jineZapnute.length === 1 && jineZapnute[0] === 'katastr', jineZapnute.join(', '));
+
+  /* Dál se zkouší ruční přepínání, takže se hranice nejdřív vypnou.
+     Ne slepým klepnutím: kdyby se výchozí zapnutí někdy ztratilo,
+     klepnutí by vrstvu naopak ZAPNULO a test by pak spadl výjimkou
+     místo toho, aby řekl, co je špatně. Přišlo se na to sabotáží. */
+  await p.evaluate(() => {
+    const b = document.querySelector('.pzm-v[data-id="katastr"]');
+    if (b && b.classList.contains('on')) b.click();
+  });
+  await p.waitForTimeout(700);
   /* Mapa se nad pozemkem otevírá dost blízko, takže by se přiblížení
      k vrstvě nemuselo vůbec uplatnit a kontrola by projila naprázdno.
      Přišlo se na to sabotáží: přiblížení se z kódu odebralo a test mlčel.
@@ -352,7 +381,8 @@ const HOST = {
   const { ctx, p } = await detail({ zivi: [HOST.katastr], bezLegend: true });
   await domapy(p);
   await p.waitForTimeout(2600);
-  await p.locator('.pzm-v[data-id="katastr"]').click();
+  /* Hranice parcel se zapínají samy, takže se na nic neklepe — kdyby
+     se sem klepnulo, vrstva by se naopak vypnula. */
   await p.waitForTimeout(1800);
   const stav = await p.evaluate(() => ({
     vrstva: document.querySelector('.pzm-v[data-id="katastr"]').classList.contains('on'),

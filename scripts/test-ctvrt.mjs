@@ -114,11 +114,17 @@ pravda('čtvrť jde do vlastního pole, ne do místa', /o\.cast = c;/.test(ROBOT
       'funkce mistoRadek chybí — čtvrť se pak buď neukáže, nebo se to napíše dvakrát a rozejde se to'); continue; }
     const esc = (x) => String(x == null ? '' : x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const f = new Function('esc', telo + '; return mistoRadek;')(esc);
-    vysledky[kde] = [f({ okres: 'Praha' }), f({ okres: 'Praha', cast: 'Řepy' }), f({ cast: 'Řepy' }), f({})];
+    vysledky[kde] = [f({ okres: 'Praha' }), f({ okres: 'Praha', cast: 'Řepy' }), f({ cast: 'Řepy' }), f({}),
+      f({ place: 'Brno-venkov', okres: 'Brno-venkov' }), f({ place: 'Brno-venkov', okres: 'Brno-venkov', cast: 'Šlapanice' })];
     je(`${kde}: bez čtvrti zůstane jen okres`, vysledky[kde][0], 'okres Praha');
     je(`${kde}: se čtvrtí je vidět obojí`, vysledky[kde][1], 'Řepy · okres Praha');
     je(`${kde}: a samotná čtvrť se taky ukáže`, vysledky[kde][2], 'Řepy');
     je(`${kde}: bez obojího se řádek nekreslí`, vysledky[kde][3], '');
+    /* „Brno-venkov" a pod tím „okres Brno-venkov" je dvakrát totéž —
+       a to druhé navíc tvrdí, že jde o obec. Název je přitom vidět
+       v nadpisu o řádek výš. */
+    je(`${kde}: místo totožné s okresem se neopakuje`, vysledky[kde][4], '');
+    je(`${kde}: ale čtvrť se ukáže i tam`, vysledky[kde][5], 'Šlapanice · okres Brno-venkov');
   }
   const pary = Object.values(vysledky);
   pravda('a mapa i stránka pozemku to skládají stejně',
