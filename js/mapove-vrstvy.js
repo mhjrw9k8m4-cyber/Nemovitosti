@@ -162,7 +162,15 @@
         });
       })).then(function (vse) {
         doPameti(novaPamet);
-        return vse.filter(Boolean);
+        var ziva = vse.filter(Boolean);
+        /* Které vrstvy neodpověděly. Bez toho vypadala nabídka náhodně:
+           z pěti přepínačů se ukázal jeden a nikde nestálo, že ty
+           ostatní jsme zkoušeli. Člověk pak neví, jestli územní plán
+           neumíme, nebo jestli se právě něco pokazilo. */
+        ziva.mrtve = defs.filter(function (def) {
+          return !ziva.some(function (z) { return z.def.id === def.id; });
+        }).map(function (def) { return def.nazev; });
+        return ziva;
       });
     });
   }

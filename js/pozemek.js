@@ -309,6 +309,17 @@
     var q = 'územní plán ' + obec + okres;
     return 'https://search.seznam.cz/?q=' + encodeURIComponent(q.trim());
   }
+  /* U části záznamů je „místo" ve skutečnosti okres (zdroj nic bližšího
+     neuvedl). Pak stálo u odkazu „najít územní plán obce Brno-venkov" —
+     jenže Brno-venkov je okres a žádná taková obec není. Věta, která
+     plete okres s obcí, podkopává důvěru ve všechno ostatní, co web
+     o katastru tvrdí. */
+  function planHledatText(d) {
+    var obec = d.place || '';
+    if (!obec) return 'najít územní plán';
+    if (d.okres && obec === d.okres) return 'najít územní plán v okrese ' + obec;
+    return 'najít územní plán obce ' + obec;
+  }
   var ACCESS_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l6-16M20 20l-6-16M9 12h6"/></svg>';
   /* ======================================================== MAPA S VRSTVAMI
      Detail pozemku měl nahoře nehybný letecký snímek a tím to končilo.
@@ -331,7 +342,16 @@
     if (!isFinite(d.lat) || !isFinite(d.lng)) return '';
     return '<h2 class="pz-sect-h">Pozemek na mapě</h2>' +
       '<div class="pzm" id="pzm">' +
-        '<div class="pzm-mapa" id="pzm-mapa" role="application" aria-label="Mapa pozemku, kterou lze posouvat a přibližovat"></div>' +
+        '<div class="pzm-mapa" id="pzm-mapa" role="application" aria-label="Mapa pozemku, kterou lze posouvat a přibližovat">' +
+          /* NA CELOU OBRAZOVKU. Na telefonu je mapa vysoká 300 bodů —
+             s vrstvou územního plánu přes letecký snímek se v takovém
+             okénku nedá nic poznat. Zvětšení je rozdíl mezi hračkou
+             a nástrojem, a stojí to jeden přepínač. */
+          '<button type="button" class="pzm-cela-btn" id="pzm-cela" aria-label="Zvětšit mapu na celou obrazovku" title="Na celou obrazovku">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>' +
+          '</button>' +
+        '</div>' +
         '<div class="pzm-panel">' +
           '<div class="pzm-zaklad" role="group" aria-label="Podklad mapy">' +
             ZAKLADY.map(function (z, i) {
@@ -357,7 +377,7 @@
          to, co platí na úřadě. Tohle je jediná věta na stránce, která se
          nesmí ztratit — proto stojí mimo mapu, ne v ní. */
       '<p class="pzm-pod">Vrstvy jsou náhled z veřejných služeb úřadů, ne potvrzení. Rozhoduje platný výkres na úřadě — ' +
-        '<a href="' + esc(planHledatUrl(d)) + '" target="_blank" rel="noopener">najít územní plán obce ' + esc(d.place || '') + VEN + '</a>.</p>';
+        '<a href="' + esc(planHledatUrl(d)) + '" target="_blank" rel="noopener">' + esc(planHledatText(d)) + VEN + '</a>.</p>';
   }
 
   /** Zapne mapu v detailu. Bez Leafletu ukáže aspoň nehybný snímek. */
@@ -513,11 +533,27 @@
 
     if (global.PK_VRSTVY) {
       global.PK_VRSTVY.pripravene({ lat: d.lat, lng: d.lng }, pridejPrepinac).then(function (vse) {
-        if (vse.length) return;
-        /* Nula vrstev. Mlčet by bylo horší než to říct: člověk by čekal
-           přepínače, které nikdy nepřijdou. Věta říká, co se stalo, a ne
-           že je něco s jeho pozemkem. */
-        vrstvy.innerHTML = '<span class="pzm-nic">Vrstvy úřadů teď neodpovídají. Mapa i tak funguje; územní plán obce najdete odkazem pod mapou.</span>';
+        var mrtve = (vse && vse.mrtve) || [];
+        if (!vse.length) {
+          /* Nula vrstev. Mlčet by bylo horší než to říct: člověk by čekal
+             přepínače, které nikdy nepřijdou. Věta říká, co se stalo, a ne
+             že je něco s jeho pozemkem. */
+          vrstvy.innerHTML = '<span class="pzm-nic">Vrstvy úřadů teď neodpovídají. Mapa i tak funguje; územní plán obce najdete odkazem pod mapou.</span>';
+          return;
+        }
+        /* Něco jede, něco ne. Když se z pěti přepínačů ukáže jeden a nikde
+           nestojí proč, vypadá nabídka náhodně — a člověk neví, jestli
+           územní plán neumíme, nebo jestli se právě něco pokazilo. */
+        if (mrtve.length) {
+          var pozn = document.createElement('span');
+          pozn.className = 'pzm-nic';
+          /* Celá slova, ne lepení koncovky: „neodpovídá" + „jí" dalo
+             „neodpovídájí". Čeština se koncovkami nedolepuje. */
+          pozn.textContent = mrtve.length === 1
+            ? 'Vrstva ' + mrtve[0] + ' teď neodpovídá — zkusíme to znovu, až sem přijdete příště.'
+            : 'Vrstvy ' + mrtve.join(', ') + ' teď neodpovídají — zkusíme to znovu, až sem přijdete příště.';
+          vrstvy.appendChild(pozn);
+        }
       }).catch(function () {
         vrstvy.innerHTML = '';
       });
@@ -525,7 +561,43 @@
       vrstvy.innerHTML = '';
     }
 
-    setTimeout(function () { try { m.invalidateSize({ pan: false }); } catch (e) {} }, 60);
+    /* VELIKOST MAPY. Jedno „invalidateSize" po 60 ms nestačí: na telefonu
+       se výška mění ještě dlouho potom (načtou se písma, doskáče lišta
+       prohlížeče, rozbalí se panel s přepínači). Leaflet si přitom
+       velikost pamatuje z okamžiku, kdy vznikl — a pak kreslí dlaždice
+       jen na část plochy a nahoře i dole zůstane pruh pozadí.
+       Tentýž kámen úrazu jako u výběru místa na hlavní stránce, kde
+       panel po otevření povyrostl a mapa o tom nevěděla. */
+    function premer() { try { m.invalidateSize({ pan: false }); } catch (e) {} }
+
+    /* Zvětšení na celou obrazovku. Velikost dotáhne premer() přes
+       ResizeObserver, takže se tu o ni nikdo starat nemusí. */
+    var celaBtn = document.getElementById('pzm-cela');
+    function nastavCelou(zap) {
+      obal.classList.toggle('pzm-cela-zap', zap);
+      document.body.classList.toggle('pzm-cela-telo', zap);
+      if (celaBtn) {
+        celaBtn.setAttribute('aria-label', zap ? 'Zmenšit mapu zpět do stránky' : 'Zvětšit mapu na celou obrazovku');
+        celaBtn.title = zap ? 'Zpět do stránky' : 'Na celou obrazovku';
+      }
+      setTimeout(premer, 60);
+      setTimeout(premer, 320);
+    }
+    if (celaBtn) celaBtn.addEventListener('click', function () {
+      nastavCelou(!obal.classList.contains('pzm-cela-zap'));
+    });
+    /* Escape zavírá. Bez toho je na počítači mapa přes celou obrazovku
+       past: jediná cesta ven je trefit malé tlačítko v rohu. */
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && obal.classList.contains('pzm-cela-zap')) nastavCelou(false);
+    });
+    setTimeout(premer, 60);
+    setTimeout(premer, 600);
+    if (global.ResizeObserver) {
+      try { new ResizeObserver(premer).observe(document.getElementById('pzm-mapa')); } catch (e) {}
+    }
+    global.addEventListener('resize', premer);
+    global.addEventListener('orientationchange', function () { setTimeout(premer, 250); });
   }
 
   /* Mapová knihovna se na stránce pozemku načítá ODLOŽENĚ (defer): mapa je

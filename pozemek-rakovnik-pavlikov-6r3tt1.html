@@ -166,6 +166,30 @@
        přes ni — přes mapu by zakrývalo právě to místo, o které jde. */
     .pzm{position:relative; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:var(--ink-soft); box-shadow:0 10px 28px -20px rgba(24,45,34,.5);}
     .pzm-mapa{height:390px; width:100%; background:#14231C;}
+    /* Na celou obrazovku. Mapa se roztáhne přes okno, panel s přepínači
+       zůstane pod ní — ovládání musí být po ruce i tam, jinak je
+       zvětšení k ničemu. */
+    .pzm-mapa{position:relative;}
+    .pzm-cela-btn{position:absolute; z-index:500; right:10px; top:10px; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center;
+      border-radius:10px; border:1px solid rgba(24,45,34,.25); background:rgba(255,255,255,.93); color:var(--copper-bright); cursor:pointer; padding:0;
+      box-shadow:0 2px 8px -3px rgba(24,45,34,.5); -webkit-tap-highlight-color:transparent;}
+    /* Tloušťka tahu se dopočítává k velikosti, ne opisuje z předlohy:
+       stejné „stroke-width 2" má při 19 px na obrazovce silnější stopu
+       než při 16 px a ikona pak vypadá tučnější než ostatní.
+       (2 ÷ 24 × 19 = 1,58 px proti 1,33 px u šestnáctibodových —
+       přesně ten rozdíl hlídá scripts/test-ikony.mjs.) */
+    .pzm-cela-btn svg{width:19px; height:19px; stroke-width:1.8;}
+    .pzm-cela-btn:hover{background:#fff;}
+    .pzm-cela-zap{position:fixed; inset:0; z-index:1200; border-radius:0; border:0; display:flex; flex-direction:column; background:var(--ink);}
+    .pzm-cela-zap .pzm-mapa{flex:1 1 auto; height:auto; min-height:0;}
+    .pzm-cela-zap .pzm-panel{flex:none;}
+    /* Ve zvětšení má být vidět hlavně MAPA. Vysvětlující věta k vrstvě
+       je i v malém zobrazení, takže tady jen ubírá místo; vysvětlivky
+       barev zůstávají (bez nich je plán jen skvrna), ale jen na pruh. */
+    .pzm-cela-zap .pzm-popis{display:none;}
+    .pzm-cela-zap .pzm-leg{max-height:17vh; overflow:auto; padding:9px 13px;}
+    .pzm-cela-zap .pzm-leg-k img{max-height:11vh; width:auto;}
+    body.pzm-cela-telo{overflow:hidden;}
     .pzm-panel{display:flex; flex-wrap:wrap; gap:9px; align-items:center; padding:11px 12px; border-top:1px solid var(--line); background:#fff;}
     .pzm-zaklad{display:inline-flex; background:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:3px; flex:none;}
     .pzm-z{height:31px; padding:0 13px; border:0; background:transparent; border-radius:999px; font:inherit; font-size:13px; font-weight:600; color:var(--text-ondark-mute); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:color .15s ease, background .15s ease;}
@@ -265,7 +289,7 @@
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="vendor/leaflet/leaflet.js?v=5a640ff8" defer></script>
-<script src="js/mapove-vrstvy.js?v=8db184f6" defer></script>
+<script src="js/mapove-vrstvy.js?v=d402afdc" defer></script>
 <script src="js/snimek.js?v=19045f9d"></script>
 <script src="js/terminy.js?v=63a1d1b6"></script>
 <script src="js/ceny.js?v=f40ef32c"></script>
@@ -273,7 +297,7 @@
 <script src="js/radce.js?v=0491f655"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Place","name":"Trvalý travní porost 3 639 m² — Pavlíkov","description":"Na prodej · 1 999 000 Kč (549 Kč/m²) · 3 639 m² · Pavlíkov, okres Rakovník. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-rakovnik-pavlikov-6r3tt1.html","address":{"@type":"PostalAddress","addressLocality":"Pavlíkov","addressRegion":"Rakovník","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.07067,"longitude":13.786806}}</script>
 <script>window.PK_POZEMEK={"k":"Pavlíkov|—|Rakovník|50.071|13.787","ll":[50.07067,13.786806]};</script>
-<script src="js/pozemek.js?v=1c724011"></script>
+<script src="js/pozemek.js?v=9a546f16"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

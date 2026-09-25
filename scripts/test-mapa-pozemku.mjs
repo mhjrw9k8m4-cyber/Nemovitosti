@@ -56,6 +56,41 @@ const NAST = JSON.parse(readFileSync('data/mapove-vrstvy.json', 'utf8'));
   if (!chyb) zpravy.push(`  ✓ všech ${v.length} vrstev má název, popis, zdroj i adresu`);
 }
 
+/* ---------- 1b. Odkaz pod mapou nesmí plést okres s obcí ---------- */
+/* Na produkci stálo „najít územní plán obce Brno-venkov". Brno-venkov je
+   OKRES a žádná taková obec není — u části záznamů je totiž „místo" ve
+   skutečnosti okres, protože zdroj nic bližšího neuvedl. Věta, která
+   plete okres s obcí, podkopává důvěru ve všechno ostatní, co web
+   o katastru tvrdí. */
+{
+  const kod = readFileSync(new URL('../js/pozemek.js', import.meta.url), 'utf8');
+  const zac = kod.indexOf('function planHledatText(');
+  let telo = null;
+  if (zac >= 0) {
+    let hloubka = 0;
+    for (let k = kod.indexOf('{', zac); k < kod.length; k++) {
+      if (kod[k] === '{') hloubka++;
+      else if (kod[k] === '}') { hloubka--; if (!hloubka) { telo = kod.slice(zac, k + 1); break; } }
+    }
+  }
+  if (!pravda('text odkazu na plán se skládá na jednom místě', !!telo,
+    'funkce planHledatText v js/pozemek.js chybí')) {
+    // bez ní nemá smysl zkoušet nic dalšího
+  } else {
+    const f = new Function(telo + '; return planHledatText;')();
+    pravda('u obce se říká „obce"', f({ place: 'Ostopovice', okres: 'Brno-venkov' }) === 'najít územní plán obce Ostopovice',
+      f({ place: 'Ostopovice', okres: 'Brno-venkov' }));
+    pravda('u okresu se neříká „obce"',
+      f({ place: 'Brno-venkov', okres: 'Brno-venkov' }).indexOf('obce') === -1,
+      `stojí tam „${f({ place: 'Brno-venkov', okres: 'Brno-venkov' })}" — Brno-venkov je okres, ne obec`);
+    pravda('a je z toho poznat, že jde o okres',
+      /okrese/.test(f({ place: 'Brno-venkov', okres: 'Brno-venkov' })),
+      f({ place: 'Brno-venkov', okres: 'Brno-venkov' }));
+    pravda('bez místa se nic nevymýšlí', f({ okres: 'Brno-venkov' }) === 'najít územní plán',
+      f({ okres: 'Brno-venkov' }));
+  }
+}
+
 /* ---------- 2. v prohlížeči ---------- */
 // Prázdná průhledná dlaždice: obrázek, který se opravdu dekóduje.
 const PRAZDNA = Buffer.from(
@@ -327,6 +362,111 @@ const HOST = {
   pravda('vrstva jede i bez vysvětlivek', stav.vrstva);
   pravda('a nezbyde po nich prázdný rámeček', !stav.leg && stav.kusu === 0,
     `rámeček vidno ${stav.leg}, kusů ${stav.kusu}`);
+  await ctx.close();
+}
+
+// --- Ea) Když jede jen část vrstev, řekne se to ----------------------
+/* Ze čtyř přepínačů se na produkci ukázal jeden a nikde nestálo proč.
+   Nabídka pak vypadá náhodně: člověk neví, jestli územní plán neumíme,
+   nebo jestli se právě něco pokazilo — a druhé se dá počkat, první ne. */
+{
+  const { ctx, p } = await detail({ zivi: [HOST.katastr] });
+  await domapy(p);
+  await p.waitForTimeout(2800);
+  const stav = await p.evaluate(() => ({
+    nabidnute: [...document.querySelectorAll('.pzm-v')].map((b) => b.textContent.trim()),
+    pozn: (document.querySelector('.pzm-nic') || {}).textContent || '',
+  }));
+  /* Co se má vyjmenovat, se odvodí z toho, co se NENABÍDLO — ne z ručního
+     seznamu. Jedna adresa v nastavení totiž může obsloužit víc vrstev
+     (ČÚZK vydává i katastr, i územní plán) a ruční seznam by pak čekal
+     něco jiného, než se vůbec může stát. */
+  const chybejici = (NAST.vrstvy || []).map((v) => v.nazev).filter((n) => !stav.nabidnute.includes(n));
+  pravda('nějaká vrstva se nabídne a nějaká ne',
+    stav.nabidnute.length > 0 && chybejici.length > 0,
+    `nabídnuto ${stav.nabidnute.join(', ') || '(nic)'}; nedostupné ${chybejici.join(', ') || '(žádné)'}`);
+  pravda('a je napsané, které vrstvy neodpověděly', /neodpovíd/i.test(stav.pozn),
+    `u přepínačů nestojí nic — nabídka vypadá náhodně (${stav.pozn})`);
+  pravda('a jsou vyjmenované jménem',
+    chybejici.every((n) => stav.pozn.indexOf(n) !== -1),
+    `stojí tam „${stav.pozn.trim()}", chybí zmínka o: ${chybejici.filter((n) => stav.pozn.indexOf(n) === -1).join(', ')}`);
+  /* A ta věta musí být česky. „neodpovídá" + „jí" dalo „neodpovídájí". */
+  pravda('a je to česky', !/neodpovídájí/.test(stav.pozn), stav.pozn.trim());
+  await ctx.close();
+}
+
+// --- Eb) Mapa se přizpůsobí, když rám změní výšku --------------------
+/* Leaflet si velikost pamatuje z okamžiku, kdy vznikl. Na telefonu se
+   ale výška mění ještě dlouho potom: načtou se písma, doskáče lišta
+   prohlížeče, zalomí se řádek s přepínači. Mapa pak kreslí dlaždice jen
+   na část plochy a nahoře i dole zůstane pruh pozadí — přesně to bylo
+   vidět na produkčním snímku z telefonu. */
+{
+  const { ctx, p } = await detail({ zivi: [] });
+  await domapy(p);
+  const pred = await p.evaluate(() => ({
+    ram: Math.round(document.getElementById('pzm-mapa').getBoundingClientRect().height),
+    mapa: window.PK_PZ_MAPA.getSize().y,
+  }));
+  pravda('mapa na začátku vyplňuje celý rám', Math.abs(pred.ram - pred.mapa) <= 2,
+    `rám ${pred.ram} px, mapa ${pred.mapa} px`);
+  // rám povyroste, jako by se pod mapou zalomil řádek s přepínači
+  await p.evaluate(() => { document.getElementById('pzm-mapa').style.height = '460px'; });
+  await p.waitForTimeout(900);
+  const po = await p.evaluate(() => ({
+    ram: Math.round(document.getElementById('pzm-mapa').getBoundingClientRect().height),
+    mapa: window.PK_PZ_MAPA.getSize().y,
+  }));
+  pravda('a když rám povyroste, mapa se dotáhne', Math.abs(po.ram - po.mapa) <= 2,
+    `rám ${po.ram} px, ale mapa pořád ${po.mapa} px — nahoře a dole zůstane pruh pozadí`);
+  await ctx.close();
+}
+
+// --- Ec) Na celou obrazovku ------------------------------------------
+/* Na telefonu je mapa vysoká 300 bodů. Vrstva územního plánu přes
+   letecký snímek se v takovém okénku nedá přečíst — a přesně tak
+   vypadal produkční snímek. Zvětšení je rozdíl mezi hračkou a nástrojem.
+   Ovládání musí zůstat po ruce i ve zvětšení, jinak se v něm nedá
+   přepnout vrstva, a hlavně musí jít zavřít klávesou Escape: mapa přes
+   celou obrazovku bez cesty ven je past. */
+{
+  const { ctx, p } = await detail({ zivi: [HOST.katastr] });
+  await domapy(p);
+  await p.waitForTimeout(2200);
+  pravda('v mapě je tlačítko na zvětšení', await p.locator('#pzm-cela').count() === 1);
+  const pred = await p.evaluate(() => window.PK_PZ_MAPA.getSize().y);
+  await p.locator('#pzm-cela').click();
+  await p.waitForTimeout(900);
+  const po = await p.evaluate(() => ({
+    mapa: window.PK_PZ_MAPA.getSize().y,
+    okno: innerHeight,
+    /* Pozor na „je v dokumentu" × „je vidět": display:none prvek
+       nesmaže, jen ho schová — a kontrola na existenci by prošla
+       i nad neviditelným ovládáním. Přišlo se na to sabotáží. */
+    panel: (function () { var e = document.querySelector('.pzm-cela-zap .pzm-panel');
+      return e ? Math.round(e.getBoundingClientRect().height) : 0; })(),
+    prepinace: [...document.querySelectorAll('.pzm-cela-zap .pzm-v')]
+      .filter(function (b) { return b.getBoundingClientRect().height > 0; }).length,
+  }));
+  /* Nestačí „vyšší než dřív": ve zvětšení musí mapa zabrat většinu
+     okna. Jinak se pod ní nakupí panel, popis a vysvětlivky a zbude
+     zase okénko — jen jinak zarámované. */
+  pravda('po zvětšení mapa zabere většinu okna',
+    po.mapa > pred * 1.5 && po.mapa > po.okno * 0.55,
+    `${pred} px → ${po.mapa} px z okna ${po.okno} px`);
+  pravda('a ovládání zůstane po ruce', po.panel > 20 && po.prepinace > 0,
+    `panel je vysoký ${po.panel} px, viditelných přepínačů ${po.prepinace}`);
+  await p.keyboard.press('Escape');
+  await p.waitForTimeout(700);
+  const zavreno = await p.evaluate(() => ({
+    cela: !!document.querySelector('.pzm-cela-zap'),
+    mapa: window.PK_PZ_MAPA.getSize().y,
+    telo: document.body.classList.contains('pzm-cela-telo'),
+  }));
+  pravda('Escape zvětšení zavře', !zavreno.cela && !zavreno.telo,
+    'mapa přes celou obrazovku bez cesty ven je past');
+  pravda('a mapa se vrátí do původní velikosti', Math.abs(zavreno.mapa - pred) <= 2,
+    `${pred} px → ${zavreno.mapa} px`);
   await ctx.close();
 }
 
