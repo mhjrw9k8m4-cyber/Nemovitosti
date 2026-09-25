@@ -381,12 +381,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-rychnov-nad-kneznou.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-trutnov.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-trutnov.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-rychnov-nad-kneznou.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -2951,11 +2951,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-rychnov-nad-kneznou-ceske-mezirici-wzsh1o.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-kolin-nemcice-1e2esvj.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -3167,11 +3162,6 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-prerov-lipova-1qh2l16.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-nachod-krinice-k76fgs.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -5601,11 +5591,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-kromeriz-hulin-unqsea.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-most-horni-jiretin-1gq3aaz.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -5927,11 +5912,6 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-louny-nove-sedlo-19wsmil.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-praha-vychod-prezletice-1hrxfaz.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -8136,11 +8116,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-cesky-krumlov-kremze-1cqscpx.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-brno-mesto-brno-1rxkn1l.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -8556,17 +8531,7 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-brno-venkov-popovice-173plvb.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-cesky-krumlov-horni-plana-qia5if.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-praha-vychod-celakovice-1qmszb4.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
