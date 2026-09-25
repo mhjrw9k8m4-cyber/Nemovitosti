@@ -39,13 +39,63 @@
   function ulozPrefs(p) { try { localStorage.setItem(PREF, JSON.stringify(p)); } catch (e) {} }
 
   /* ---------- přihlášení ---------- */
-  function vykresliPrihlaseni() {
+  /* Dřív tu bylo tlačítko „Přihlásit se", které vedlo na zpravy.html. Člověk
+     klikl na přihlášení a skončil na jiné stránce, u cizího seznamu, a nic
+     ho odtud nevedlo zpátky — po přihlášení koukal na zprávy, ne na to, kvůli
+     čemu přišel. Hlídání i zprávy se přitom přihlašují přímo u sebe;
+     upozornění byla jediná výjimka. Teď se přihlašuje tady a seznam se
+     rovnou načte.
+
+     Je to <form>, aby Enter v heslu odeslal. Na telefonu je to největší
+     klávesa na klávesnici a dřív nedělala vůbec nic. */
+  function vykresliPrihlaseni(msg, err) {
     root.innerHTML =
-      '<div class="up-card"><div class="up-empty">' + ICO.prazdno +
-      '<b>Upozornění jsou soukromá</b>' +
-      '<div>Přihlaste se a uvidíte zprávy i nové pozemky ze svého hlídání.</div>' +
-      '<a class="up-a pri" href="zpravy.html">Přihlásit se</a>' +
-      '</div></div>';
+      '<div class="up-card up-auth">' +
+        '<h2>Přihlaste se</h2>' +
+        '<p>Upozornění jsou soukromá — patří k účtu, abyste je měli na všech zařízeních. ' +
+          'Přihlášení je na pár vteřin, nový účet taky.</p>' +
+        '<form id="up-authf">' +
+          '<input class="up-in" id="up-e" type="email" inputmode="email" autocomplete="email" placeholder="Váš e-mail" aria-label="Váš e-mail">' +
+          '<input class="up-in" id="up-p" type="password" autocomplete="current-password" placeholder="Heslo" aria-label="Heslo">' +
+          '<button class="up-btn" type="submit" id="up-login">Přihlásit se</button>' +
+          '<button class="up-btn sec" type="button" id="up-signup">Vytvořit účet</button>' +
+        '</form>' +
+        '<div class="up-msg' + (err ? ' err' : '') + '" id="up-authmsg" role="status" aria-live="polite">' + esc(msg || '') + '</div>' +
+      '</div>';
+
+    var em = document.getElementById('up-e'), pw = document.getElementById('up-p');
+    var mEl = document.getElementById('up-authmsg');
+    function udaje() { return { e: (em.value || '').trim(), p: pw.value || '' }; }
+    function vyplneno(c) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e) && c.p.length >= 6; }
+    function rekniTady(text, chyba) { mEl.textContent = text; mEl.className = 'up-msg' + (chyba ? ' err' : ''); }
+
+    document.getElementById('up-authf').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var c = udaje();
+      if (!vyplneno(c)) { rekniTady('Zadejte e-mail a heslo (aspoň 6 znaků).', true); return; }
+      rekniTady('Přihlašuji…');
+      A.login(c.e, c.p).then(function (r) {
+        if (r && r.ok) start();
+        else rekniTady('Přihlášení se nepovedlo. Zkontrolujte e-mail a heslo.', true);
+      });
+    });
+
+    document.getElementById('up-signup').addEventListener('click', function () {
+      var c = udaje();
+      if (!vyplneno(c)) { rekniTady('Zadejte e-mail a heslo (aspoň 6 znaků).', true); return; }
+      rekniTady('Zakládám účet…');
+      A.signup(c.e, c.p).then(function (r) {
+        if (r && r.ok) {
+          if (r.session) { start(); return; }
+          A.login(c.e, c.p).then(function (r2) {
+            if (r2 && r2.ok) start(); else rekniTady('Účet vytvořen. Přihlaste se prosím.');
+          });
+        } else {
+          rekniTady((r && r.data && (r.data.msg || r.data.error_description)) ||
+            'Účet se nepovedlo vytvořit (možná už existuje).', true);
+        }
+      });
+    });
   }
 
   /* ---------- jedno upozornění ---------- */

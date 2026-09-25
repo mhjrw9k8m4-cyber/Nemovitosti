@@ -50,6 +50,7 @@
     .zp-btn.sec{background:var(--ink-soft2); color:var(--text-ondark); border:1px solid var(--line-ui); margin-top:8px;}
     .zp-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--text-ondark-mute);}
     .zp-msg.err{color:var(--c-exekuce);}
+    .zp-auth form{margin:0;}
     /* Seznam vláken */
     .zp-thread{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); cursor:pointer; text-decoration:none; color:inherit;}
     .zp-thread:last-child{border-bottom:0;}
@@ -187,16 +188,21 @@
       '<div class="zp-card zp-auth">' +
         '<h2>Přihlaste se</h2>' +
         '<p>Zprávy jsou soukromé, tak se stačí rychle přihlásit (nebo si během chvilky vytvořit účet). Váš e-mail nikdo z prodejců ani kupujících neuvidí.</p>' +
-        '<input class="zp-in" id="ze" type="email" inputmode="email" autocomplete="email" placeholder="Váš e-mail" aria-label="Váš e-mail">' +
-        '<input class="zp-in" id="zp" type="password" autocomplete="current-password" placeholder="Heslo" aria-label="Heslo">' +
-        '<button class="zp-btn" id="zlogin">Přihlásit se</button>' +
-        '<button class="zp-btn sec" id="zsignup">Vytvořit účet</button>' +
+        '<form id="zauthf">' +
+          '<input class="zp-in" id="ze" type="email" inputmode="email" autocomplete="email" placeholder="Váš e-mail" aria-label="Váš e-mail">' +
+          '<input class="zp-in" id="zp" type="password" autocomplete="current-password" placeholder="Heslo" aria-label="Heslo">' +
+          '<button class="zp-btn" type="submit" id="zlogin">Přihlásit se</button>' +
+          '<button class="zp-btn sec" type="button" id="zsignup">Vytvořit účet</button>' +
+        '</form>' +
         '<div class="zp-msg' + (err ? ' err' : '') + '" id="zauthmsg">' + (msg || '') + '</div>' +
       '</div>';
     var em = document.getElementById('ze'), pw = document.getElementById('zp'), mEl = document.getElementById('zauthmsg');
     function creds() { return { e: (em.value || '').trim(), p: pw.value || '' }; }
     function ok(c) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e) && c.p.length >= 6; }
-    document.getElementById('zlogin').addEventListener('click', function () {
+    // Enter v heslu odesílá — na telefonu je to největší klávesa a dřív
+    // po ní nenásledovalo nic.
+    document.getElementById('zauthf').addEventListener('submit', function (udalost) {
+      udalost.preventDefault();
       var c = creds(); if (!ok(c)) { mEl.textContent = 'Zadejte e-mail a heslo (aspoň 6 znaků).'; mEl.className = 'zp-msg err'; return; }
       mEl.textContent = 'Přihlašuji…'; mEl.className = 'zp-msg';
       A.login(c.e, c.p).then(function (r) { if (r && r.ok) start(); else { mEl.textContent = 'Přihlášení se nepovedlo. Zkontrolujte e-mail a heslo.'; mEl.className = 'zp-msg err'; } });

@@ -49,6 +49,7 @@
     .hl-btn.sec{background:var(--ink-soft2); color:var(--text-ondark); border:1px solid var(--line-ui); margin-top:8px;}
     .hl-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--text-ondark-mute);}
     .hl-msg.err{color:var(--c-exekuce);}
+    .hl-auth form{margin:0;}
     /* Nové hledání (formulář) */
     .hl-new{padding:18px;}
     /* Formulář působil nedodělaně: pár políček pod sebou, žádné členění
@@ -235,16 +236,21 @@
       '<div class="hl-card hl-auth">' +
         '<h2>Přihlaste se</h2>' +
         '<p>Hlídání je vázané na váš účet, ať ho máte na všech zařízeních. Rychle se přihlaste, nebo si během chvilky založte účet.</p>' +
-        '<input class="hl-in" id="he" type="email" inputmode="email" autocomplete="email" placeholder="Váš e-mail" aria-label="Váš e-mail">' +
-        '<input class="hl-in" id="hp" type="password" autocomplete="current-password" placeholder="Heslo" aria-label="Heslo">' +
-        '<button class="hl-btn" id="hlogin">Přihlásit se</button>' +
-        '<button class="hl-btn sec" id="hsignup">Vytvořit účet</button>' +
+        '<form id="hauthf">' +
+          '<input class="hl-in" id="he" type="email" inputmode="email" autocomplete="email" placeholder="Váš e-mail" aria-label="Váš e-mail">' +
+          '<input class="hl-in" id="hp" type="password" autocomplete="current-password" placeholder="Heslo" aria-label="Heslo">' +
+          '<button class="hl-btn" type="submit" id="hlogin">Přihlásit se</button>' +
+          '<button class="hl-btn sec" type="button" id="hsignup">Vytvořit účet</button>' +
+        '</form>' +
         '<div class="hl-msg' + (err ? ' err' : '') + '" id="hauthmsg">' + (msg || '') + '</div>' +
       '</div>';
     var em = document.getElementById('he'), pw = document.getElementById('hp'), mEl = document.getElementById('hauthmsg');
     function creds() { return { e: (em.value || '').trim(), p: pw.value || '' }; }
     function okc(c) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e) && c.p.length >= 6; }
-    document.getElementById('hlogin').addEventListener('click', function () {
+    // Enter v heslu odesílá — na telefonu je to největší klávesa a dřív
+    // po ní nenásledovalo nic.
+    document.getElementById('hauthf').addEventListener('submit', function (udalost) {
+      udalost.preventDefault();
       var c = creds(); if (!okc(c)) { mEl.textContent = 'Zadejte e-mail a heslo (aspoň 6 znaků).'; mEl.className = 'hl-msg err'; return; }
       mEl.textContent = 'Přihlašuji…'; mEl.className = 'hl-msg';
       A.login(c.e, c.p).then(function (r) { if (r && r.ok) start(); else { mEl.textContent = 'Přihlášení se nepovedlo.'; mEl.className = 'hl-msg err'; } });

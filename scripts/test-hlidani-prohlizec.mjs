@@ -195,6 +195,73 @@ if (smazat) {
   zpravy.push('  – tlačítko pro smazání hlídání se nenašlo (přeskočeno)');
 }
 
+/* ---------- 6. přihlášení na osobních stránkách ---------- */
+/* Nepřihlášený člověk se musí přihlásit PŘÍMO tam, kam přišel. Upozornění
+   byla výjimka: nabízela tlačítko „Přihlásit se", které vedlo na zpravy.html
+   — po přihlášení koukal na cizí seznam a nic ho nevedlo zpátky.
+   A Enter v heslu musí odeslat: bez <form> to byla na telefonu největší
+   klávesa, po které se nedělo nic. */
+{
+  const ctxOdhlaseny = await prohlizec.newContext({ viewport: { width: 420, height: 900 } });
+  await ctxOdhlaseny.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  await ctxOdhlaseny.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: JSON.stringify(data) }));
+  await ctxOdhlaseny.route('**/data/user-listings.json*', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: '[]' }));
+  const o = await ctxOdhlaseny.newPage();
+  o.on('pageerror', (e) => padlo.push(String((e && e.message) || e).slice(0, 140)));
+
+  for (const [stranka, poleMail, poleHeslo] of [
+    ['hlidani.html', '#he', '#hp'],
+    ['zpravy.html', '#ze', '#zp'],
+    ['upozorneni.html', '#up-e', '#up-p'],
+  ]) {
+    await o.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' });
+    await o.waitForTimeout(2000);
+    const m = await o.evaluate((s) => {
+      const vidno = (x) => !!x && x.getClientRects().length > 0;
+      /* Past je odkaz PRYČ ze stránky, který se tváří jako přihlášení.
+         „Nepřihlášeno" v hlavičce se nepočítá — to je stav, ne pokyn. */
+      const utek = Array.from(document.querySelectorAll('a')).filter((a) =>
+        /přihlásit/i.test(a.textContent || '') &&
+        !/^#/.test(a.getAttribute('href') || '#'));
+      return {
+        mail: vidno(document.querySelector(s[0])),
+        heslo: vidno(document.querySelector(s[1])),
+        utek: utek.map((a) => a.getAttribute('href')),
+      };
+    }, [poleMail, poleHeslo]);
+    pravda(`na ${stranka} se nepřihlášený přihlásí rovnou tady`, m.mail && m.heslo,
+      `pole e-mail: ${m.mail}, pole heslo: ${m.heslo}`);
+    pravda(`a ${stranka} ho kvůli přihlášení nikam neodesílá`, m.utek.length === 0,
+      'odkazy: ' + JSON.stringify(m.utek));
+  }
+
+  /* Když pole s heslem chybí, musí to test ŘÍCT, ne spadnout. Padlý test
+     po sobě nenechá souhrn — a chyba, kterou nikdo nepřečte, je horší než
+     chyba nahlášená. (Ověřeno: při návratu ke staré podobě přihlášení tudy
+     test padal výjimkou místo hlášení.) */
+  await o.goto(`${BASE}/upozorneni.html`, { waitUntil: 'domcontentloaded' });
+  await o.waitForTimeout(2200);
+  if (!(await o.$('#up-p'))) {
+    chyb++; zpravy.push('  ✕ Enter v heslu přihlásí — pole pro heslo na upozorneni.html vůbec není');
+  } else {
+    await o.fill('#up-e', 'zajemce@example.com');
+    await o.fill('#up-p', 'tajneheslo');
+    await o.press('#up-p', 'Enter');
+    await o.waitForTimeout(2200);
+    const poEnteru = await o.evaluate(() => ({
+      formular: !!document.getElementById('up-authf'),
+      text: (document.getElementById('up-root') || {}).textContent || '',
+    }));
+    pravda('Enter v heslu přihlásí (formulář zmizí a seznam se načte)', !poEnteru.formular,
+      'na stránce zbylo: ' + poEnteru.text.replace(/\s+/g, ' ').slice(0, 160));
+  }
+
+  await ctxOdhlaseny.close();
+}
+
 je('na žádné stránce nespadl skript', padlo, []);
 
 await prohlizec.close();

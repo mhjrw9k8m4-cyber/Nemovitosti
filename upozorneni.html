@@ -91,6 +91,20 @@
     .up-empty .up-a{margin-top:16px;}
     .up-load{padding:40px; text-align:center; color:var(--text-ondark-mute); font-size:14px;}
 
+    /* Přihlášení rovnou tady. Stejná podoba jako na hlídání a ve zprávách —
+       tři stránky pro jeden účet mají vypadat jako jedna věc. */
+    .up-auth{padding:22px; max-width:400px; margin:8px auto;}
+    .up-auth h2{font-size:18px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
+    .up-auth p{font-size:13.5px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
+    .up-in{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:12px; font-size:16px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:9px; outline:none;}
+    .up-in:focus{border-color:var(--copper-bright); box-shadow:0 0 0 4px rgba(31,81,56,.14);}
+    .up-btn{width:100%; height:48px; border:0; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:0 8px 20px -10px rgba(31,81,56,.55); transition:filter .15s ease, transform .1s ease;}
+    .up-btn:hover{filter:brightness(1.05);} .up-btn:active{transform:scale(.99);}
+    .up-btn.sec{background:var(--ink-soft2); color:var(--text-ondark); border:1px solid var(--line-ui); margin-top:8px;}
+    .up-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--text-ondark-mute);}
+    .up-msg.err{color:var(--c-exekuce);}
+    .up-auth form{margin:0;}
+
     /* Nastavení — návody na upozornění se shodují v jednom: bez možnosti
        si to vypnout se z upozornění stane otrava a lidé je přestanou číst. */
     .up-prefs{margin-top:22px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px;}
@@ -175,7 +189,7 @@
 <script src="js/upozorneni-feed.js?v=c8e91dd3"></script>
 <script src="js/upozorneni.js?v=b7b7c483"></script>
 <script src="js/hlavicka.js?v=f3a269c8"></script>
-<script src="js/centrum.js?v=5d205652"></script>
+<script src="js/centrum.js?v=d131378f"></script>
 <script>
 /* Mobilní menu (hamburger) — tato stránka nenačítá main.js. */
 (function () {
