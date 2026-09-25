@@ -1899,6 +1899,38 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .add-hero h1{font-family:var(--font-display); font-weight:700; font-size:38px; line-height:1.12; letter-spacing:-0.022em; max-width:720px;}
 .add-hero .sub{font-size:16px; color:var(--text-ondark-mute); margin-top:16px; max-width:640px;}
 .add-wrap{max-width:720px;}
+
+/* ---------- Osobní stránky: upozornění, zprávy, hlídání, profil ----------
+   Nadpis je proti ostatním úvodům sražený: sem člověk nechodí číst, ale
+   něco udělat. Dřív to bylo třikrát opsané ve <style> jednotlivých
+   stránek — a opsané nestejně: na upozorněních chyběla polovina pravidel,
+   takže tam byl nadpis o třetinu větší než na sousední stránce, a profil
+   neměl ani to a začínal o devadesát pixelů níž. Čtyři stránky jednoho
+   účtu mají vypadat jako jedna věc, tak je pravidlo jedno a na jednom
+   místě. */
+.add-hero.app-hero{padding:30px 0 4px;}
+.add-hero.app-hero .eyebrow{margin-bottom:12px;}
+.add-hero.app-hero h1{font-size:27px; font-weight:600; max-width:560px;}
+.add-hero.app-hero .sub{font-size:15px; margin-top:10px; max-width:560px;}
+.section.app-section{padding:18px 0 52px;}
+@media (max-width:600px){ .add-hero.app-hero{padding:22px 0 2px;} .add-hero.app-hero h1{font-size:24px;} }
+
+/* Pruh se záložkami účtu. Mezi těmi čtyřmi stránkami se dalo přecházet jen
+   rozbalovací nabídkou „Moje" v hlavičce — dva klepnutí a člověk musel
+   vědět, že tam něco je. Navíc nic neukazovalo, na které z nich zrovna
+   stojí. Na úzkém displeji se pruh posouvá do strany, ne že by se zalomil
+   na dva řádky: záložky mají zůstat v jedné linii, aby se daly přejet
+   prstem a aby jich šlo poznat pořadí. */
+.uc-taby{border-bottom:1px solid var(--line);}
+.uc-taby .wrap{display:flex; gap:4px; overflow-x:auto; scrollbar-width:none;}
+.uc-taby .wrap::-webkit-scrollbar{display:none;}
+.uc-taby a{flex:none; padding:12px 14px 11px; font-size:14px; font-weight:600;
+  color:var(--text-ondark-mute); text-decoration:none; white-space:nowrap; margin-bottom:-1px;
+  border-bottom:2.5px solid transparent; transition:color .15s ease, border-color .15s ease;}
+.uc-taby a:hover{color:var(--text-ondark);}
+.uc-taby a[aria-current="page"]{color:var(--text-ondark); border-bottom-color:var(--plocha-znacka);}
+.uc-taby a:focus-visible{outline:2px solid var(--copper); outline-offset:-2px; border-radius:var(--r-xs);}
+@media (max-width:600px){ .uc-taby a{padding:11px 12px 10px; font-size:13.5px;} }
 /* MÁM INZERÁT JINDE. Stojí NAD formulářem, ne v rozbalovátku dole:
    je to zkratka k vyplnění, takže musí být vidět dřív, než se člověk
    pustí do psaní. Jinak ji najde, až když je hotový. */

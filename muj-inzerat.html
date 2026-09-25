@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=8a00c01c">
+  <link rel="stylesheet" href="css/styles.css?v=d586925f">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:20px; padding:24px 22px 22px;
@@ -154,7 +154,7 @@
 </header>
 
 <main id="obsah">
-  <section class="add-hero">
+  <section class="add-hero app-hero">
     <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
     <div class="wrap add-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Můj profil</div>
@@ -163,7 +163,18 @@
     </div>
   </section>
 
-  <section class="section" style="padding-top:20px;">
+  <!-- Kde jsem a kam odsud. Bez tohohle pruhu vedla cesta mezi čtyřmi
+       stránkami jednoho účtu jen přes rozbalovací nabídku v hlavičce. -->
+  <nav class="uc-taby" aria-label="Můj účet">
+    <div class="wrap">
+      <a href="upozorneni.html">Upozornění</a>
+      <a href="zpravy.html">Zprávy</a>
+      <a href="hlidani.html">Hlídání</a>
+      <a href="muj-inzerat.html" aria-current="page">Můj profil</a>
+    </div>
+  </nav>
+
+  <section class="section app-section">
     <div class="wrap add-wrap">
 
       <!-- Přihlášení -->

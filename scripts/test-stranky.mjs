@@ -64,6 +64,51 @@ zpravy.push(`  · prošlo se ${odkazu} odkazů ve ${soubory.length} souborech`);
   else zpravy.push(`  ✓ ze všech ${prohlednuto} stránek s patičkou vede cesta na podmínky, ochranu údajů i kontakt`);
 }
 
+/* ---------- 1c. pruh se záložkami účtu ----------
+   Upozornění, zprávy, hlídání a profil jsou čtyři stránky jednoho účtu.
+   Přejít mezi nimi šlo jen rozbalovací nabídkou „Moje" v hlavičce a nic
+   neukazovalo, na které z nich člověk stojí. Pruh se záložkami musí být
+   na všech čtyřech, vést na všechny čtyři a právě jedna záložka — ta
+   vlastní — musí být označená jako otevřená. Kdyby se označení rozešlo
+   se stránkou, ukazoval by pruh na špatné místo, což je horší než žádný. */
+{
+  const UCET = ['upozorneni.html', 'zpravy.html', 'hlidani.html', 'muj-inzerat.html'];
+  const potize = [];
+  for (const f of UCET) {
+    const h = readFileSync(f, 'utf8');
+    const i = h.indexOf('<nav class="uc-taby"');
+    if (i === -1) { potize.push(`${f} nemá pruh se záložkami účtu`); continue; }
+    const pruh = h.slice(i, h.indexOf('</nav>', i));
+    const chybne = UCET.filter((c) => !new RegExp(`href="${c}"`).test(pruh));
+    if (chybne.length) potize.push(`v záložkách na ${f} chybí odkaz na: ${chybne.join(', ')}`);
+    const tady = [...pruh.matchAll(/<a href="([^"]+)"[^>]*aria-current="page"/g)].map((m) => m[1]);
+    if (tady.length !== 1) potize.push(`na ${f} je označeno ${tady.length} otevřených záložek, má být právě jedna`);
+    else if (tady[0] !== f) potize.push(`na ${f} je jako otevřená označena záložka „${tady[0]}"`);
+  }
+  for (const t of potize) chyba(t);
+  if (!potize.length) zpravy.push('  ✓ čtyři stránky účtu mají pruh se záložkami a vědí, na které z nich člověk stojí');
+}
+
+/* ---------- 1d. seznam okresů v 404.html ----------
+   Dopisuje ho robot. Kdyby se rozešel se skutečnými stránkami okresů,
+   posílala by stránka 404 lidi na další 404 — což je horší než nic. */
+{
+  const h = readFileSync('404.html', 'utf8');
+  const m = /\/\*ZACATEK-OKRESY\*\/([\s\S]*?)\/\*KONEC-OKRESY\*\//.exec(h);
+  if (!m) chyba('404.html nemá značky pro seznam okresů — robot ho nemá kam zapsat');
+  else {
+    let mapa = null;
+    try { mapa = JSON.parse(m[1]); } catch (e) { chyba('seznam okresů v 404.html není platný JSON'); }
+    if (mapa) {
+      const znacky = Object.keys(mapa);
+      if (znacky.length < 70) chyba(`404.html zná jen ${znacky.length} okresů — má jich být 77`);
+      const mrtve = znacky.filter((z) => !existsSync(`pozemky-okres-${z}.html`));
+      if (mrtve.length) chyba(`404.html odkazuje na okresy bez stránky: ${mrtve.slice(0, 4).join(', ')}`);
+      else if (znacky.length >= 70) zpravy.push(`  ✓ všech ${znacky.length} okresů v 404.html má svou stránku`);
+    }
+  }
+}
+
 /* ---------- 2. stránky v prohlížeči ---------- */
 // Vzorek: od každého druhu stránky jedna (všech 108 by běželo zbytečně dlouho).
 /* Stránka pozemku se zkouší DVAKRÁT: prázdná (ukáže „nenalezeno") i s
@@ -174,6 +219,58 @@ for (const s of VZOREK) {
     }
   }
   if (!padlo.length && !nenacetlo.length) zpravy.push(`  ✓ ${s}`);
+  await ctx.close();
+}
+
+/* ---------- 3. odkaz na pozemek, který už není v nabídce ----------
+   Tohle je nejčastější 404 na webu: nabídky mizí (pozemek se prodá,
+   inzerát vyprší) a jeho stránka se smaže, jenže odkaz na ni si lidé
+   uložili nebo poslali dál. Stránka jim musí říct, co se stalo, a
+   nabídnout jejich okres — ne skočit sama na mapu, dřív než to stihnou
+   přečíst. Zkouší se přes opravdovou adresu smazaného pozemku, protože
+   celé chování stojí na tom, co je v adrese. */
+{
+  const ctx = await prohlizec.newContext({ viewport: { width: 400, height: 860 } });
+  const p = await ctx.newPage();
+  const padlo = [];
+  p.on('pageerror', (e) => padlo.push(String((e && e.message) || e).slice(0, 140)));
+
+  /* Obec schválně vymyšlená, ať adresu nikdy nezabere skutečný pozemek.
+     Okres je pravý, a to dvojznačný: „praha" i „praha-vychod" na začátek
+     sedí, takže se tím zároveň zkouší, že vyhraje delší shoda. */
+  const ADRESA = 'pozemek-praha-vychod-tato-obec-neexistuje-zzzzz1.html';
+  if (existsSync(ADRESA)) chyba(`test počítá s tím, že ${ADRESA} neexistuje`);
+  const odpoved = await p.goto(`${BASE}/${ADRESA}`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(400);
+  if (!odpoved || odpoved.status() !== 404) chyba(`neznámá adresa nevrátila stav 404 (${odpoved && odpoved.status()})`);
+
+  const predtim = chyb;
+  const v = await p.evaluate(() => ({
+    nadpis: (document.getElementById('nadpis') || {}).textContent || '',
+    popis: (document.getElementById('popis') || {}).textContent || '',
+    okres: (() => { const a = document.getElementById('okres-link');
+      return a && !a.hidden ? { href: a.getAttribute('href'), text: a.textContent } : null; })(),
+  }));
+  /* Bez \b kolem slov: „ž" ani „í" nejsou v JS pro \b písmena, takže
+     /\buž\b/ by nesedlo ani na větu, která tam je. */
+  if (!/už[^.!?]*není/i.test(v.nadpis)) chyba(`404 u smazaného pozemku hlásí „${v.nadpis}" — má říct, že pozemek už není v nabídce`);
+  if (!v.okres) chyba('404 u smazaného pozemku nenabídla odkaz na okres');
+  else {
+    const cil = v.okres.href.replace(/^\//, '');
+    if (!existsSync(cil)) chyba(`404 posílá na „${cil}", ale ta stránka neexistuje`);
+    if (!/Praha-východ/i.test(v.okres.text)) chyba(`404 nabízí okres „${v.okres.text}", čekalo se Praha-východ`);
+  }
+
+  /* Samovolné přesměrování: dřív stránka po 2,5 s skočila na mapu. Kdo
+     nečte rychle, nedozvěděl se nic. Adresa tedy musí po chvíli zůstat
+     tam, kde byla. */
+  await p.waitForTimeout(3200);
+  if (!p.url().endsWith(ADRESA)) chyba(`404 se sama přesměrovala na ${p.url()} — člověk si to má rozmyslet sám`);
+
+  if (padlo.length) chyba(`na stránce 404 spadl skript: ${padlo[0]}`);
+  // ✓ jen když v CELÉM tomhle oddílu nic neselhalo — jinak by vedle
+  // vypsané chyby stálo „v pořádku" a člověk by četl obojí.
+  if (chyb === predtim) zpravy.push('  ✓ odkaz na prodaný pozemek řekne, co se stalo, a nabídne jeho okres');
   await ctx.close();
 }
 

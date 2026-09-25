@@ -22,6 +22,8 @@
     a{display:inline-block;background:linear-gradient(135deg,#4FA57A 0%,#2C7150 55%,#1B4A34 100%);color:#fff;
       text-decoration:none;font-weight:700;padding:13px 24px;border-radius:12px;font-size:15px;
       box-shadow:0 8px 20px -10px rgba(31,81,56,.55);}
+    .akce{display:flex;flex-direction:column;gap:10px;}
+    a.sec{background:none;color:#1B4A34;border:1.5px solid rgba(20,35,28,0.2);box-shadow:none;}
   </style>
 </head>
 <body>
@@ -31,16 +33,61 @@
       <path d="M16 8c-3.3 0-6 2.7-6 6 0 4.2 6 10 6 10s6-5.8 6-10c0-3.3-2.7-6-6-6z" fill="none" stroke="#fff" stroke-width="1.9" stroke-linejoin="round"/>
       <path d="M13.4 15.2v-2.1l2.6-2 2.6 2v2.1" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
-    <h1>Tuhle stránku jsme nenašli</h1>
-    <p>Za chvíli vás přesměrujeme na mapu příležitostí. Pokud se tak nestane, klepněte níž.</p>
-    <a id="home-link" href="/">Otevřít mapu</a>
+    <h1 id="nadpis">Tuhle stránku jsme nenašli</h1>
+    <p id="popis">Nejspíš je v adrese překlep, nebo jsme stránku přejmenovali.</p>
+    <div class="akce">
+      <a id="okres-link" href="/" hidden></a>
+      <a id="home-link" href="/">Otevřít mapu pozemků</a>
+    </div>
   </div>
   <script>
-    // Základ webu je jiný na github.io (/Nemovitosti/) a na parcelaka.cz (/).
-    (function(){
+    /* Dřív tahle stránka po dvou a půl vteřinách sama skočila na mapu.
+       Kdo sem přišel, nestihl si přečíst, co se stalo, a ocitl se jinde,
+       než mířil — bez vysvětlení a bez toho, aby si to mohl rozmyslet.
+       Teď se neděje nic sama od sebe; člověk si vybere.
+
+       A hlavně: většina lidí se sem nedostane překlepem. Nabídky mizí —
+       pozemek se prodá, inzerát vyprší — a jeho stránka se smaže. Kdo si
+       odkaz uložil nebo ho od někoho dostal, skončí tady. „Tuhle stránku
+       jsme nenašli" mu neřekne nic; „už není v nabídce" a odkaz na jeho
+       okres ano.
+
+       Seznam okresů sem dopisuje robot (scripts/generate-region-pages.mjs),
+       ať se neopisuje ručně a nerozejde se se skutečnými stránkami. */
+    (function () {
+      // Základ webu je jiný na github.io (/Nemovitosti/) a na parcelaka.cz (/).
       var base = location.hostname.indexOf('github.io') !== -1 ? '/Nemovitosti/' : '/';
-      var a = document.getElementById('home-link'); if (a) a.setAttribute('href', base);
-      setTimeout(function(){ location.replace(base); }, 2500);
+      var domu = document.getElementById('home-link');
+      domu.setAttribute('href', base);
+
+      var OKRESY = /*ZACATEK-OKRESY*/{"benesov":"Benešov","beroun":"Beroun","blansko":"Blansko","brno-mesto":"Brno-město","brno-venkov":"Brno-venkov","bruntal":"Bruntál","breclav":"Břeclav","cheb":"Cheb","chomutov":"Chomutov","chrudim":"Chrudim","domazlice":"Domažlice","decin":"Děčín","frydek-mistek":"Frýdek-Místek","havlickuv-brod":"Havlíčkův Brod","hodonin":"Hodonín","hradec-kralove":"Hradec Králové","jablonec-nad-nisou":"Jablonec nad Nisou","jesenik":"Jeseník","jihlava":"Jihlava","jindrichuv-hradec":"Jindřichův Hradec","jicin":"Jičín","karlovy-vary":"Karlovy Vary","karvina":"Karviná","kladno":"Kladno","klatovy":"Klatovy","kolin":"Kolín","kromeriz":"Kroměříž","kutna-hora":"Kutná Hora","liberec":"Liberec","litomerice":"Litoměřice","louny":"Louny","mlada-boleslav":"Mladá Boleslav","most":"Most","melnik":"Mělník","novy-jicin":"Nový Jičín","nymburk":"Nymburk","nachod":"Náchod","olomouc":"Olomouc","opava":"Opava","ostrava-mesto":"Ostrava-město","pardubice":"Pardubice","pelhrimov":"Pelhřimov","plzen-jih":"Plzeň-jih","plzen-mesto":"Plzeň-město","plzen-sever":"Plzeň-sever","prachatice":"Prachatice","praha":"Praha","praha-vychod":"Praha-východ","praha-zapad":"Praha-západ","prostejov":"Prostějov","pisek":"Písek","prerov":"Přerov","pribram":"Příbram","rakovnik":"Rakovník","rokycany":"Rokycany","rychnov-nad-kneznou":"Rychnov nad Kněžnou","semily":"Semily","sokolov":"Sokolov","strakonice":"Strakonice","svitavy":"Svitavy","tachov":"Tachov","teplice":"Teplice","trutnov":"Trutnov","tabor":"Tábor","trebic":"Třebíč","uherske-hradiste":"Uherské Hradiště","vsetin":"Vsetín","vyskov":"Vyškov","zlin":"Zlín","znojmo":"Znojmo","usti-nad-labem":"Ústí nad Labem","usti-nad-orlici":"Ústí nad Orlicí","ceska-lipa":"Česká Lípa","ceske-budejovice":"České Budějovice","cesky-krumlov":"Český Krumlov","sumperk":"Šumperk","zdar-nad-sazavou":"Žďár nad Sázavou"}/*KONEC-OKRESY*/;
+      var soubor = decodeURIComponent(location.pathname.split('/').pop() || '');
+      var m = /^pozemek-(.+)-[0-9a-z]{5,8}\.html$/.exec(soubor);
+      if (!m) return;
+
+      /* Název souboru je pozemek-OKRES-OBEC-otisk.html a obě části můžou
+         mít pomlčky (praha-vychod, ceske-budejovice). Který kus je okres,
+         se nepozná z tvaru — jen porovnáním se skutečným seznamem. Bere se
+         nejdelší shoda, aby „praha-vychod" nevyhrálo nad „praha". */
+      var zbytek = m[1], znacka = '', jmeno = '';
+      for (var s in OKRESY) {
+        if ((zbytek === s || zbytek.indexOf(s + '-') === 0) && s.length > znacka.length) {
+          znacka = s; jmeno = OKRESY[s];
+        }
+      }
+
+      document.getElementById('nadpis').textContent = 'Tenhle pozemek už v nabídce není';
+      document.getElementById('popis').textContent = jmeno
+        ? 'Buď se prodal, nebo jeho inzerát skončil. Co je teď na prodej v okrese ' + jmeno + ', najdete tady.'
+        : 'Buď se prodal, nebo jeho inzerát skončil. Podívejte se, co je v nabídce teď.';
+
+      if (znacka) {
+        var o = document.getElementById('okres-link');
+        o.setAttribute('href', base + 'pozemky-okres-' + znacka + '.html');
+        o.textContent = 'Pozemky v okrese ' + jmeno;
+        o.hidden = false;
+        domu.className = 'sec';   // hlavní je teď okres, mapa je záložní
+      }
     })();
   </script>
 <!-- Vercel Web Analytics (navstevnost) -->

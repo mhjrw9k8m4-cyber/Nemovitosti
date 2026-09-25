@@ -236,7 +236,15 @@ const server = http.createServer((req, res) => {
   // ---- statický web ----
   let p = u.pathname === '/' ? '/index.html' : u.pathname;
   const f = path.join(ROOT, decodeURIComponent(p));
-  if (!f.startsWith(ROOT) || !existsSync(f)) return send(404, 'nenalezeno', 'text/plain');
+  /* GitHub Pages posílá na neznámou adresu 404.html (se stavem 404).
+     Test to má vidět stejně, jinak by se stránka 404 dala zkoušet jen
+     tak, že se otevře přímo — a to je zrovna ten jediný případ, který
+     doopravdy nenastává. */
+  if (!f.startsWith(ROOT) || !existsSync(f)) {
+    const nahradni = path.join(ROOT, '404.html');
+    if (existsSync(nahradni)) return send(404, readFileSync(nahradni), 'text/html; charset=utf-8');
+    return send(404, 'nenalezeno', 'text/plain');
+  }
   return send(200, readFileSync(f), TYPY[path.extname(f)] || 'application/octet-stream');
 });
 

@@ -28,14 +28,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=8a00c01c">
+  <link rel="stylesheet" href="css/styles.css?v=d586925f">
   <style>
-    .add-hero.app-hero{padding:30px 0 4px;}
-    /* Stejné odsazení jako hlidani.html a zpravy.html. Třída app-section tu
-       v HTML byla, ale pravidlo k ní chybělo, takže se použilo globální
-       .section{padding:76px 0} — a mezi úvodem a filtry zela na telefonu
-       prázdná plocha přes 150 px, kterou musel člověk přerolovat. */
-    .section.app-section{padding:18px 0 52px;}
     .up-wrap{max-width:760px; margin:0 auto;}
 
     /* Lišta nad seznamem: filtry vlevo, „označit vše" vpravo. Obojí musí
@@ -155,6 +149,17 @@
       <p class="sub">Zprávy od lidí a nové pozemky z vašeho hlídání — na jednom místě, bez hledání po webu.</p>
     </div>
   </section>
+
+  <!-- Kde jsem a kam odsud. Bez tohohle pruhu vedla cesta mezi čtyřmi
+       stránkami jednoho účtu jen přes rozbalovací nabídku v hlavičce. -->
+  <nav class="uc-taby" aria-label="Můj účet">
+    <div class="wrap">
+      <a href="upozorneni.html" aria-current="page">Upozornění</a>
+      <a href="zpravy.html">Zprávy</a>
+      <a href="hlidani.html">Hlídání</a>
+      <a href="muj-inzerat.html">Můj profil</a>
+    </div>
+  </nav>
 
   <section class="section app-section">
     <div class="wrap">

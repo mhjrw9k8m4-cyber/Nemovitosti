@@ -1031,3 +1031,31 @@ console.log(`Vygenerováno: ${okresPages.length} okresních + ${krajPages.length
     });
   if (h !== pred) { fs.writeFileSync(idx, h, 'utf8'); console.log('Čísla v index.html doplněna: ' + fmt(celkem) + ' pozemků, ' + okresu + ' okresů.'); }
 }
+
+/* =====================================================================
+   SEZNAM OKRESŮ DO 404.html
+   Kdo přijde na odkaz pozemku, který už není v nabídce (prodal se, inzerát
+   skončil a stránka se smazala), dostane místo holého „nenašli jsme"
+   odkaz na svůj okres. Z názvu souboru se ale okres pozná jen porovnáním
+   se skutečným seznamem — obojí má pomlčky. Zapisuje se sem proto, aby
+   se seznam nerozešel se stránkami okresů, které vznikají o pár řádků výš.
+   ===================================================================== */
+{
+  const cesta = path.join(ROOT, '404.html');
+  let h = fs.readFileSync(cesta, 'utf8');
+  const pred = h;
+  const mapa = {};
+  /* Jen okresy, které stránku OPRAVDU mají. Seznam v OKRES_KRAJ je širší
+     (je v něm i „Hlavní město Praha", kde se pozemky vedou pod okresem
+     „Praha") a odkaz na neexistující stránku by z jedné 404 udělal dvě. */
+  for (const okres of [...hasOkresPage].sort()) mapa[slug(okres)] = okres;
+  const zapis = JSON.stringify(mapa);
+  h = h.replace(/\/\*ZACATEK-OKRESY\*\/[\s\S]*?\/\*KONEC-OKRESY\*\//,
+    '/*ZACATEK-OKRESY*/' + zapis + '/*KONEC-OKRESY*/');
+  if (h === pred && h.indexOf('/*ZACATEK-OKRESY*/') === -1) {
+    console.warn('POZOR: v 404.html chybí značky ZACATEK-OKRESY — seznam okresů se nedoplnil.');
+  } else if (h !== pred) {
+    fs.writeFileSync(cesta, h, 'utf8');
+    console.log('Seznam okresů v 404.html doplněn: ' + Object.keys(mapa).length + ' okresů.');
+  }
+}
