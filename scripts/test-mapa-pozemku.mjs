@@ -64,31 +64,18 @@ const NAST = JSON.parse(readFileSync('data/mapove-vrstvy.json', 'utf8'));
    o katastru tvrdí. */
 {
   const kod = readFileSync(new URL('../js/pozemek.js', import.meta.url), 'utf8');
-  const zac = kod.indexOf('function planHledatText(');
-  let telo = null;
-  if (zac >= 0) {
-    let hloubka = 0;
-    for (let k = kod.indexOf('{', zac); k < kod.length; k++) {
-      if (kod[k] === '{') hloubka++;
-      else if (kod[k] === '}') { hloubka--; if (!hloubka) { telo = kod.slice(zac, k + 1); break; } }
-    }
-  }
-  if (!pravda('text odkazu na plán se skládá na jednom místě', !!telo,
-    'funkce planHledatText v js/pozemek.js chybí')) {
-    // bez ní nemá smysl zkoušet nic dalšího
-  } else {
-    const f = new Function(telo + '; return planHledatText;')();
-    pravda('u obce se říká „obce"', f({ place: 'Ostopovice', okres: 'Brno-venkov' }) === 'najít územní plán obce Ostopovice',
-      f({ place: 'Ostopovice', okres: 'Brno-venkov' }));
-    pravda('u okresu se neříká „obce"',
-      f({ place: 'Brno-venkov', okres: 'Brno-venkov' }).indexOf('obce') === -1,
-      `stojí tam „${f({ place: 'Brno-venkov', okres: 'Brno-venkov' })}" — Brno-venkov je okres, ne obec`);
-    pravda('a je z toho poznat, že jde o okres',
-      /okrese/.test(f({ place: 'Brno-venkov', okres: 'Brno-venkov' })),
-      f({ place: 'Brno-venkov', okres: 'Brno-venkov' }));
-    pravda('bez místa se nic nevymýšlí', f({ okres: 'Brno-venkov' }) === 'najít územní plán',
-      f({ okres: 'Brno-venkov' }));
-  }
+  const zac = kod.indexOf("'<div class=\"pz-cta\">'");
+  /* Komentáře ven: vysvětlení téhle opravy samo cituje starý text
+     („Zobrazit na mapě") a kontrola by padala na vlastní poznámku.
+     Hlídá se, co se vykreslí, ne co je u toho napsané. */
+  const usek = (zac >= 0 ? kod.slice(zac, kod.indexOf("'</div>'", zac) + 8) : '')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+  pravda('řada hlavních tlačítek v detailu se našla', /pz-btn/.test(usek),
+    'blok .pz-cta v js/pozemek.js chybí — kontrola níž by neměla co hlídat');
+  pravda('žádné z nich neříká jen „na mapě"', !/na mapě/i.test(usek),
+    'pod vlastní mapou se z takového tlačítka nepozná, že vede pryč z webu — ostatní cíl pojmenovávají („Otevřít v katastru")');
+  pravda('a odkaz ven je pojmenovaný cílem', /Mapy\.cz|katastr/i.test(usek),
+    usek.slice(0, 120));
 }
 
 /* ---------- 2. v prohlížeči ---------- */

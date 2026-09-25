@@ -738,7 +738,11 @@
       '<div class="pz-cta">' +
         /* Tlačítka vedou pryč z webu a do nového okna. Vidět to jde podle
            šipky, slyšet ne — proto věta navíc jen pro odečítač obrazovky. */
-        '<a class="pz-btn primary" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Zobrazit na mapě' + VEN + '</a>' +
+        /* „Zobrazit na mapě" stálo hned pod NAŠÍ mapou — dvě věci se stejným
+           slovem vedle sebe a u jedné se neví, kam vede. Tahle vede pryč
+           z webu, tak ať je to na ní vidět, stejně jako u „Otevřít
+           v katastru" o kus níž. */
+        '<a class="pz-btn primary" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>' +
         (d.type === 'majitel' ? '' : '<a class="pz-btn ghost" href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.label) + VEN + '</a>') +
       '</div>' +
       /* ZPOŽDĚNÍ DAT. Tohle na stránce chybělo úplně: člověk viděl cenu

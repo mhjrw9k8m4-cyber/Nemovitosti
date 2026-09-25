@@ -180,6 +180,42 @@ if (proužek) {
 
 pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby[0]);
 
+/* ---- Když nic nesedí, nadpis nesmí nic slibovat --------------------
+   „Doporučené příležitosti · 0 na mapě" a pod tím prázdno je protimluv:
+   tváří se, že web něco doporučil, a přitom neukazuje nic. A hlavně —
+   z prázdného seznamu musí vést cesta ven na jedno klepnutí, jinak je
+   to slepá ulička a člověk odejde. */
+{
+  await p.evaluate(() => {
+    const e = document.getElementById('map-search');
+    e.value = 'qwertzuiop nic takoveho'; e.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await p.waitForTimeout(1600);
+  const stav = await p.evaluate(() => {
+    const h = document.querySelector('#map-count, .map-count');
+    const telo = (document.querySelector('.opp-list') || document.body).textContent || '';
+    return { nadpis: h ? h.textContent.trim() : '',
+      karet: document.querySelectorAll('.opp-item').length,
+      vychod: [...document.querySelectorAll('.opp-list button, .opp-list a')]
+        .map((b) => b.textContent.trim()).filter(Boolean).slice(0, 4),
+      rikaProc: /Nejvíc omezuje|nesedí/i.test(telo) };
+  });
+  pravda('na nesmyslné hledání se neukáže nic', stav.karet === 0, `karet ${stav.karet}`);
+  pravda('a nadpis nic neslibuje', !/Doporučené|Vybrané/.test(stav.nadpis),
+    `nad prázdným seznamem stojí „${stav.nadpis}"`);
+  pravda('a neuvádí se ani „0 na mapě"', !/\b0\b/.test(stav.nadpis), stav.nadpis);
+  pravda('řekne se, co výsledek nejvíc omezuje', stav.rikaProc,
+    'prázdný seznam bez vysvětlení je slepá ulička');
+  pravda('a je odtud cesta ven na jedno klepnutí', stav.vychod.some((t) => /Zrušit/i.test(t)),
+    `v prázdném seznamu jsou jen: ${stav.vychod.join(' | ') || '(nic)'}`);
+  // uklidit po sobě, ať další kontroly vidí normální stav
+  await p.evaluate(() => {
+    const e = document.getElementById('map-search');
+    e.value = ''; e.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await p.waitForTimeout(1200);
+}
+
 await prohlizec.close();
 
 console.log('\nÚvodní obrazovka — živá čísla a věrohodnost cen');

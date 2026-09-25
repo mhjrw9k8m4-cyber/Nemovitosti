@@ -3223,7 +3223,11 @@
     });
 
     var mvCount = document.getElementById('mvt-count'); if (mvCount) mvCount.textContent = matched ? '(' + matched + ')' : '';
-    var headLabel = sortMode === 'demand' ? 'Doporučené příležitosti' : 'Vybrané příležitosti';
+    /* Nadpis nad prázdným seznamem nesmí nic slibovat. „Doporučené
+       příležitosti · 0 na mapě" a pod tím prázdno je protimluv —
+       a ještě se to tváří, že web něco doporučil. */
+    var headLabel = matched === 0 ? 'Nic nenalezeno'
+      : (sortMode === 'demand' ? 'Doporučené příležitosti' : 'Vybrané příležitosti');
     var pripisky = '';
     var novych = pocetNovych();
     if (novych) pripisky += ' <span class="mc-nove">' + novych + ' ' +
@@ -3250,7 +3254,7 @@
     if (proslychStranou || ukazProsle) pripisky += ' <button type="button" class="mc-skryte" id="mc-prosle"><span>' +
       (ukazProsle ? 'Schovat dražby po termínu'
                   : 'Zobrazit dražby po termínu (' + proslychStranou + ')') + '</span></button>';
-    countEl.innerHTML = headLabel + ' · <span class="mc-sub">' + matched + ' na mapě</span>' + pripisky;
+    countEl.innerHTML = headLabel + (matched ? ' · <span class="mc-sub">' + matched + ' na mapě</span>' : '') + pripisky;
     var sb = countEl.querySelector('#mc-skryte');
     if (sb) sb.addEventListener('click', function (e) { e.stopPropagation(); ukazSkryte = !ukazSkryte; renderList(); });
     var pb = countEl.querySelector('#mc-prosle');
