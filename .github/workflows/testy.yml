@@ -57,6 +57,9 @@ jobs:
       - name: Co je u pozemku (čtení sítí a podílu z popisu)
         run: node scripts/test-vybaveni.mjs
 
+      - name: Druh pozemku z textu inzerátu (kus slova, zápor, název obce)
+        run: node scripts/test-druh.mjs
+
       - name: Hledání celou větou (druh, cena, sítě v jednom políčku)
         run: node scripts/test-dotaz.mjs
 

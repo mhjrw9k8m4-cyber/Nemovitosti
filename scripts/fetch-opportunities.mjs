@@ -201,25 +201,23 @@ function parseArea(text) {
   const n = parseInt(m[1].replace(/[\s.]/g, ''), 10);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
-function parseDruh(text) {
-  const t = String(text).toLowerCase();
-  // Pořadí = priorita. Nejžádanější druhy (stavební, les) mají přednost.
-  const kinds = [
-    ['stavební', 'stavební pozemek'], ['k výstavb', 'stavební pozemek'],
-    ['pro výstavb', 'stavební pozemek'], ['zasíťovan', 'stavební pozemek'],
-    ['určený k stavb', 'stavební pozemek'], ['stavebn', 'stavební pozemek'],
-    ['lesní', 'lesní pozemek'], ['les ', 'lesní pozemek'], ['lesa', 'lesní pozemek'],
-    ['lesy', 'lesní pozemek'], ['lesem', 'lesní pozemek'], ['porost lesní', 'lesní pozemek'],
-    ['vinice', 'vinice'], ['ovocný sad', 'ovocný sad'],
-    ['zahrad', 'zahrada'],
-    ['orná', 'orná půda'], ['ornou', 'orná půda'], ['orné', 'orná půda'],
-    ['trvalý travní', 'trvalý travní porost'], ['travní porost', 'trvalý travní porost'],
-    ['louk', 'louka'], ['pastvin', 'pastvina'],
-    ['ostatní plocha', 'ostatní plocha'],
-    ['zemědělsk', 'zemědělský pozemek'],
-  ];
-  for (const [k, v] of kinds) if (t.includes(k)) return v;
-  return 'pozemek';
+/* Druh pozemku z volného textu. Pravidla jsou ve sdíleném modulu
+   js/druh.js — stejně jako u sítí a příjezdu (js/vybaveni.js), ať je web
+   i robot čtou stejně a ať se dají zkoušet bez sítě.
+
+   Dřív to byl seznam kousků slov a první výskyt kdekoli v textu vyhrál.
+   Na volném textu inzerátu to dělalo tři různé chyby naráz: „nestavební
+   pozemek" se zapsal jako stavební (kus slova), „louka u lesa" jako
+   lesní pozemek (okolí místo pozemku) a pozemek v Kostelci nad Černými
+   lesy taky jako lesní (název obce). Modul hlídá hranice slov, zápor
+   i předložku okolí — a jména míst se mu předávají, aby je vyškrtl.
+
+   Co se bezpečně nepozná, vrací null; volající doplní obecné „pozemek".
+   Špatný druh je horší než žádný: filtruje se podle něj, počítá se z něj
+   obvyklá cena a staví se na něm statistiky okresů. */
+const PKDruh = createRequire(import.meta.url)(join(dirname(fileURLToPath(import.meta.url)), '..', 'js', 'druh.js'));
+function parseDruh(text, jmenaMist) {
+  return PKDruh.zTextu(text, jmenaMist) || 'pozemek';
 }
 
 async function fetchDrazby() {
@@ -276,7 +274,7 @@ async function fetchDrazby() {
           || (p.obvyklaCena && p.obvyklaCena.vyse) || 0;
         if (!price) continue;
         if (!area && !nucena) continue; // dobrovolná bez výměry vynecháme; u exekucí výměra často chybí
-        const druhBase = vn.pozemek.druhPozemku || parseDruh(v.nazev);
+        const druhBase = vn.pozemek.druhPozemku || parseDruh(v.nazev, [place, okres]);
         out.push({
           place, okres, type,
           parcel: String(vn.pozemek.parcelniCislo || '—').slice(0, 40),
@@ -349,7 +347,7 @@ async function fetchOkdrazby() {
         // prodej (exekuce/insolvence). Ostatní (veřejná / dobrovolná) = běžná dražba.
         const nucena = j.typeId === 2 || /nonvoluntary/i.test(j.typeLocalized || '') || /exekuc|nedobrovoln|nucen|insolven/i.test(txt);
         const druhCat = cats[cats.length - 1];
-        const druh = OKD_DRUH[druhCat] || parseDruh(txt) || 'pozemek';
+        const druh = OKD_DRUH[druhCat] || parseDruh(txt, [place, okres]);
         const datum = j.start ? String(j.start).slice(0, 10) : (j.finish ? String(j.finish).slice(0, 10) : null);
         out.push({
           place, okres, type: nucena ? 'exekuce' : 'drazba',
@@ -415,7 +413,7 @@ async function fetchProdejSPU() {
     const pod = (c[c.length - 5] || '').match(/(\d+)\s*\/\s*(\d+)/);
     if (pod && pod[1] !== pod[2]) continue;
     const area = parseInt(String(c[3] || '').replace(/[^\d]/g, ''), 10) || null;
-    const druh = (c[4] || '').trim() || parseDruh(c[5] || '');
+    const druh = (c[4] || '').trim() || parseDruh(c[5] || '', [place, okres]);
     // Cena za m² pod 5 Kč = spíš roční nájem/pacht než prodej → vynecháme.
     if (area && price / area < 5) continue;
     out.push({
@@ -468,7 +466,7 @@ async function fetchBezrealitky() {
       if (!okres) okres = (parts[parts.length - 1] || place).replace(/\s*kraj$/i, '').slice(0, 40);
       // Druh vytáhneme z popisu + názvu (API druh pozemku neuvádí) —
       // takhle se zviditelní stavební pozemky i lesy.
-      const druh = parseDruh((a.description || '') + ' ' + (a.title || ''));
+      const druh = parseDruh((a.description || '') + ' ' + (a.title || ''), [place, okres]);
       out.push({
         place, okres, type: 'sale',
         parcel: '—', _key: 'br-' + a.id, // dedup podle inzerátu, ne parcely
@@ -520,7 +518,7 @@ async function fetchFarmy() {
     const obec = (text.match(/Obec\s+(.+?)\s+Okres/i) || [])[1];
     const ku = (text.match(/Katastrální území\s+([^\d]+?)\s+(?:Výměra|Poloha|Cena|Číslo)/i) || [])[1];
     const place = (obec || ku || 'Pozemek').trim().slice(0, 60);
-    const druh = parseDruh(text.slice(0, 900));
+    const druh = parseDruh(text.slice(0, 900), [place, okres]);
     out.push({
       place, okres: okres.trim().slice(0, 40), type: 'sale',
       parcel: '—', _key: 'fa-' + id,
@@ -580,7 +578,9 @@ async function fetchSreality() {
     const parts = loc.split(',').map((s) => s.trim()).filter(Boolean);
     const place = (parts[0] || name || 'Pozemek').split(/\s*-\s*/)[0].trim().slice(0, 60) || 'Pozemek';
     const url = e.url || e.link || e.detailUrl || undefined;
-    const druh = parseDruh(name + ' ' + loc);
+    /* Adresa (loc) se sem schválně neposílá: je to popis MÍSTA, ne
+       pozemku, a je v ní obec i okres. */
+    const druh = parseDruh(name, [place, okres]);
     out.push({
       place, okres, type: 'sale', parcel: '—',
       _key: 'sr-' + (e.hash_id || e.id || url || (place + '-' + price)),
