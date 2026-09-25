@@ -464,6 +464,66 @@ for (const f of ['../js/main.js', '../js/pozemek.js', '../js/radce.js']) {
   pravda('rádce u nejistého odhadu nemluví o příležitosti', /o\.nejisty && o\.podOdhadem >= 25/.test(radce));
 }
 
+/* ---- Cena za metr u spoluvlastnického podílu ----------------------
+ *
+ * Nejnebezpečnější číslo na webu: u podílu stojí v inzerátu výměra CELÉ
+ * parcely, ale cena jen za zlomek. Kdo dělí cenu celou výměrou, dostane
+ * číslo, které neplatí pro nikoho — a přesně podle něj se řadilo
+ * „Nejlepší cena/m²" a filtrovalo „do X Kč/m²".
+ *
+ * Skutečný případ z Prahy: lesní pozemek za 579 000 Kč se 7 770 m²
+ * svítil jako 75 Kč/m², tedy nejlevnější z prvních pěti nabídek. Je to
+ * ale podíl 1/13 — kupujícímu připadne 598 m² a platí 969 Kč/m². Ve
+ * skutečnosti NEJDRAŽŠÍ z té pětice. Pořadí bylo přesně obrácené, a to
+ * u čísla, kvůli kterému lidé na web chodí.
+ */
+{
+  const les = { price: 579000, area: 7770, podil: true, zlomek: '1/13', druh: 'lesní pozemek', type: 'sale' };
+  const cely = { price: 809000, area: 5394, druh: 'trvalý travní porost', type: 'sale' };
+  const pul = { price: 149000, area: 1305, podil: true, zlomek: '1/2', druh: 'orná půda', type: 'sale' };
+  const neznamy = { price: 100000, area: 2000, podil: true, druh: 'orná půda', type: 'sale' };
+
+  je('podíl 1/13 se počítá z výměry, která kupci připadne',
+    Math.round(PK_CENY.zaMetr(les)), 969);
+  je('celý pozemek se počítá beze změny', Math.round(PK_CENY.zaMetr(cely)), 150);
+  je('podíl 1/2 taky', Math.round(PK_CENY.zaMetr(pul)), 228);
+  /* Raději žádné číslo než číslo, o kterém víme, že neplatí. */
+  je('u podílu neznámé velikosti se cena za metr neurčuje',
+    PK_CENY.zaMetr(neznamy), null);
+  je('a výměra, která kupci připadne, taky ne',
+    PK_CENY.vymeraVCene(neznamy), null);
+
+  /* A hlavně: pořadí. Tohle je to, co člověk na webu uvidí. */
+  pravda('podíl už se neřadí před celý pozemek, který je levnější',
+    PK_CENY.zaMetr(les) > PK_CENY.zaMetr(cely),
+    `podíl ${Math.round(PK_CENY.zaMetr(les))} Kč/m², celý pozemek ${Math.round(PK_CENY.zaMetr(cely))} Kč/m² — podíl je dražší, nesmí být první`);
+
+  /* Nesmysly nesmí projít: zlomek větší než celek, nula ve jmenovateli. */
+  je('zlomek větší než celek se nebere', PK_CENY.zlomekPodilu({ podil: true, zlomek: '3/2' }), null);
+  je('ani nula ve jmenovateli', PK_CENY.zlomekPodilu({ podil: true, zlomek: '1/0' }), null);
+  je('a u nepodílu je zlomek celý', PK_CENY.zlomekPodilu({ price: 1, area: 1 }), 1);
+
+  /* Číslo přepočtené z podílu se nesmí tvářit jako obyčejná cena za metr —
+     u něj musí být řečeno, odkud se vzalo. */
+  pravda('u přepočteného čísla je vysvětlení', /podíl/i.test(PK_CENY.zaMetrPopis(les)),
+    'přepočtená cena za metr se ukazuje bez vysvětlení, odkud se vzala');
+  je('u celého pozemku žádné vysvětlení netřeba', PK_CENY.zaMetrPopis(cely), '');
+}
+
+/* ---- A používá to i mapa a stránka pozemku ------------------------- */
+{
+  const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
+  const poz = readFileSync(new URL('../js/pozemek.js', import.meta.url), 'utf8');
+  /* Dokud se cena za metr počítala na pěti místech ručně, stačilo opravit
+     čtyři. Tohle hlídá, že se dělí celou výměrou UŽ NIKDE. */
+  pravda('mapa si cenu za metr nepočítá sama', !/d\.price \/ d\.area/.test(main),
+    'v js/main.js se zase někde dělí cena celou výměrou — u podílu to dá číslo, které neplatí');
+  pravda('ani stránka pozemku', !/d\.price \/ d\.area/.test(poz),
+    'v js/pozemek.js se zase někde dělí cena celou výměrou');
+  pravda('obě berou výpočet z cenového modelu',
+    /PK_CENY[\s\S]{0,40}zaMetr/.test(main) && /PK_CENY[\s\S]{0,40}zaMetr/.test(poz));
+}
+
 console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

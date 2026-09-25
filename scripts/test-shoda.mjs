@@ -210,6 +210,60 @@ if (podezrely) {
   await p3.close();
 }
 
+// --- Cena za metr u spoluvlastnického podílu: co je OPRAVDU na kartě ---
+/* Výpočet hlídá scripts/test-ceny.mjs, tohle hlídá to zapojení. Mezi
+   správným vzorcem v js/ceny.js a číslem, které člověk uvidí, je ještě
+   pět míst, kde se cena za metr počítala ručně — a stačí přepojit čtyři
+   z pěti, aby to pořád vypadalo hotově. Proto se tady vezme skutečná
+   nabídka z ostrých dat, najde se její karta na mapě a přečte se z ní
+   to číslo. */
+{
+  const podil = await p.evaluate((D) => {
+    const z = (x) => { const m = /^(\d+)\/(\d+)$/.exec(String(x.zlomek || '')); return m ? +m[1] / +m[2] : null; };
+    /* Zlomek musí být dost malý, aby se špatné a správné číslo lišily
+       o víc než zaokrouhlení — jinak by kontrola prošla i s chybou. */
+    const d = D.find((x) => x.podil && z(x) && z(x) <= 0.5 && x.area > 0 && x.price > 0
+      && x.parcel && x.parcel !== '—');
+    if (!d) return null;
+    return { place: d.place, parcel: d.parcel, zlomek: d.zlomek,
+      spravne: Math.round(d.price / (d.area * z(d))), spatne: Math.round(d.price / d.area) };
+  }, DATA);
+  pravda('v datech je podíl se známou velikostí', !!podil,
+    'není na čem ověřit, že se cena za metr počítá z podílové výměry');
+  if (podil) {
+    const p4 = await ctx.newPage();
+    await p4.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+    await p4.waitForTimeout(4500);
+    await p4.evaluate((q) => {
+      const e = document.getElementById('map-search');
+      e.value = q; e.dispatchEvent(new Event('input', { bubbles: true }));
+    }, podil.place);
+    await p4.waitForTimeout(900);
+    const karta = await p4.evaluate((parcel) => {
+      const li = [...document.querySelectorAll('.opp-item')]
+        .find((e) => (e.textContent || '').indexOf('parc. ' + parcel) !== -1);
+      if (!li) return null;
+      const per = li.querySelector('.opp-perm2');
+      return { perm2: per ? +(per.textContent || '').replace(/[^\d]/g, '') : null,
+        titul: per ? (per.getAttribute('title') || '') : '',
+        podilChip: !!li.querySelector('.opp-podil') };
+    }, podil.parcel);
+    pravda('karta podílu se na mapě našla', !!karta,
+      `hledáno „${podil.place}", parcela ${podil.parcel}`);
+    if (karta) {
+      pravda('cena za metr je počítaná z výměry, která kupci připadne',
+        karta.perm2 === podil.spravne,
+        `na kartě ${karta.perm2} Kč/m², správně ${podil.spravne} Kč/m² (podíl ${podil.zlomek}); ` +
+        `z celé výměry by vyšlo ${podil.spatne} Kč/m²`);
+      pravda('a je u ní řečeno, že je přepočtená z podílu',
+        /podíl/i.test(karta.titul),
+        `u čísla nestojí nic — vypadá jako běžná cena za metr, přitom je přepočtená (${karta.titul})`);
+      pravda('a karta pořád přiznává, že jde o podíl', karta.podilChip);
+    }
+    await p4.close();
+  }
+}
+
 await prohlizec.close();
 console.log('\nShoda cen mezi mapou a stránkou pozemku');
 console.log(`  · porovnáno ${vysledek.pocet || 0} pozemků, kus po kuse`);

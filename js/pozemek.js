@@ -556,7 +556,14 @@
 
   function render(d) {
     var t = TYPE[d.type];
-    var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
+    /* Cena za metr, který kupující opravdu dostane. U spoluvlastnického
+       podílu je v inzerátu výměra celé parcely, ale cena jen za zlomek —
+       dělit celou výměrou znamená ukázat jako fakt číslo, které neplatí
+       pro nikoho. Výpočet drží js/ceny.js, ať ho mapa i tahle stránka
+       mají stejný; když velikost podílu neznáme, neukáže se nic. */
+    var _zm = global.PK_CENY && global.PK_CENY.zaMetr ? global.PK_CENY.zaMetr(d) : null;
+    var perM2 = _zm == null ? null : Math.round(_zm);
+    var perM2Pozn = global.PK_CENY && global.PK_CENY.zaMetrPopis ? global.PK_CENY.zaMetrPopis(d) : '';
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'sale' || d.type === 'majitel' ? 'Cena' : 'Odhadní cena');
     var days = daysUntil(d.extra);
     // „Zobrazit na mapě" vede na SKUTEČNOU mapu (Mapy.cz letecká) na daném místě,
@@ -568,7 +575,7 @@
     var facts = [];
     facts.push({ k: 'Druh pozemku', v: esc(d.druh || '—') });
     facts.push({ k: 'Výměra', v: areaTxt(d) });
-    if (perM2) facts.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²' });
+    if (perM2) facts.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²' + (perM2Pozn ? ' <i class="pz-pozn">' + esc(perM2Pozn) + '</i>' : '') });
     if (hasParcel(d)) facts.push({ k: 'Parcela', v: 'č. ' + esc(d.parcel) });
     facts.push({ k: 'Kategorie', v: esc(t.label) });
     if (d.extra) facts.push({ k: 'Stav / zdroj', v: esc(zdrojText(d.extra)) });
@@ -604,7 +611,7 @@
       '<div class="pz-priceblock">' +
         '<div class="pz-pl">' + priceLabel + '</div>' +
         '<div class="pz-price"><span class="pv">' + fmt(d.price) + ' Kč</span>' +
-          (perM2 ? '<span class="pm">' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
+          (perM2 ? '<span class="pm"' + (perM2Pozn ? ' title="' + esc(perM2Pozn) + '"' : '') + '>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
       '</div>' +
 
       /* Po termínu se blok jen vynechával, takže stránka vypadala jako

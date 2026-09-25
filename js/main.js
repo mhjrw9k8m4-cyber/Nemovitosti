@@ -1242,7 +1242,7 @@
       var shareBtn = e.target.closest('[data-share]');
       if (shareBtn) {
         var url = location.origin + location.pathname + '?p=' + encodeURIComponent(pkey(curDetail));
-        var perM2s = (hasArea(curDetail) && curDetail.price) ? Math.round(curDetail.price / curDetail.area) : null;
+        var perM2s = zaMetr(curDetail);
         var title = 'Pozemek ' + curDetail.place + ' — Parcelka';
         var text = TYPE[curDetail.type].label + ' · ' + curDetail.place + ', okres ' + curDetail.okres + ' · ' + areaTxt(curDetail) + ' · ' + fmt(curDetail.price) + ' Kč' + (perM2s ? ' (' + fmt(perM2s) + ' Kč/m²)' : '') + '\nDetail na Parcelce:';
         if (navigator.share) {
@@ -1461,7 +1461,7 @@
     // Mapy.cz jsou aplikace, která si do historie ukládá každý pohyb; kdyby se
     // otevřely ve stejné záložce, tlačítko Zpět by se pak vracelo „krok po kroku".
     var extAttr = ' target="_blank" rel="noopener"';
-    var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
+    var perM2 = zaMetr(d);
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací' : (d.type === 'sale' || d.type === 'majitel' ? 'Cena' : 'Odhad');
     var days = daysUntil(d.extra);
     var cdBig = days == null ? ''
@@ -1474,7 +1474,7 @@
           '<div class="md-top"><span class="md-chip"><span class="lp-dot" style="background:' + t.color + '"></span>' + t.label + '</span>' + (isFeatured(d) ? '<span class="md-feat">Zvýrazněno</span>' : '') + cdBig + '</div>' +
           '<h3 class="md-place">' + d.place + '<span class="md-okr">okres ' + d.okres + '</span></h3>' +
           '<div class="md-sub">' + d.druh + (hasArea(d) ? ' <span class="md-price-sep">·</span> ' + areaTxt(d) : '') + '</div>' +
-          '<div class="md-price"><span class="md-price-lbl">' + priceLabel + '</span><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? '<span class="md-price-per">' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
+          '<div class="md-price"><span class="md-price-lbl">' + priceLabel + '</span><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? '<span class="md-price-per"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
           priceBarHtml(d) +
           '<details class="md-details"><summary>Detaily o pozemku</summary><div class="md-det-body">' +
             '<div class="md-facts">' +
@@ -2674,7 +2674,7 @@
        u rozbalovátka — pozemek bez výměry do takového filtru nepatří,
        protože se u něj cena za metr spočítat nedá. */
     if (okDotaz && (dotazFiltr.zaMetrDo || dotazFiltr.zaMetrOd)) {
-      var _zm = hasArea(d) && d.price > 0 ? d.price / d.area : null;
+      var _zm = zaMetr(d);      // u podílu z výměry, která kupci připadne
       if (_zm == null) okDotaz = false;
       else if (dotazFiltr.zaMetrDo && _zm > dotazFiltr.zaMetrDo) okDotaz = false;
       else if (dotazFiltr.zaMetrOd && _zm < dotazFiltr.zaMetrOd) okDotaz = false;
@@ -2691,7 +2691,11 @@
     /* „Levné" znamená totéž co přepínač „Pod obvyklou cenou" — jeden
        výpočet, ať si věta a tlačítko neprotiřečí. */
     if (okDotaz && dotazFiltr.levne && !podObvyklou(d)) okDotaz = false;
-    var okPerM2 = !maxPerM2 || (hasArea(d) && d.price && (d.price / d.area) <= maxPerM2);
+    /* I filtr musí počítat z výměry, kterou kupující dostane. Jinak by
+       do „do 20 Kč/m²" propadaly podíly, které stojí desetinásobek —
+       a byly by to zrovna ty nejvíc klamavé nabídky ze všech. */
+    var _fzm = zaMetr(d);
+    var okPerM2 = !maxPerM2 || (_fzm != null && _fzm <= maxPerM2);
     var okKraj = krajFiltr === 'all' || (d._gkraj || krajOf(d)) === krajFiltr;
     // „Pod obvyklou cenou" bere tentýž odhad, jaký se ukazuje na kartě —
     // a jen tam, kde se srovnává s podobně velkými pozemky. Jinak by sem
@@ -2836,7 +2840,27 @@
     var byl = okoliZap; okoliZap = false;
     try { return visible(d); } finally { okoliZap = byl; }
   }
-  function perM2Val(d){ return hasArea(d) ? d.price / d.area : Infinity; }
+  /* CENA ZA METR SE POČÍTÁ Z VÝMĚRY, KTERÁ KUPUJÍCÍMU PŘIPADNE.
+     U spoluvlastnického podílu je v inzerátu výměra celé parcely, ale cena
+     jen za zlomek — dělit celou výměrou znamená vyrobit číslo, které
+     neplatí pro nikoho. V Praze tím vycházel podíl 1/13 lesa jako
+     nejlevnější pozemek ze všech (75 Kč/m²), přestože je ve skutečnosti
+     nejdražší z té pětice (969 Kč/m²). Pořadí bylo obrácené.
+     Výpočet je v js/ceny.js, ať ho mapa i stránka pozemku mají stejný.
+     Když velikost podílu neznáme, nevrací se nic — a takový pozemek se
+     v řazení podle ceny za metr neplete dopředu, protože o něm nevíme. */
+  function zaMetr(d) {
+    var C = window.PK_CENY;
+    if (!C || !C.zaMetr) return null;
+    var v = C.zaMetr(d);
+    return v == null ? null : Math.round(v);
+  }
+  function zaMetrTitul(d) {
+    var C = window.PK_CENY;
+    var t = C && C.zaMetrPopis ? C.zaMetrPopis(d) : '';
+    return t ? ' title="' + t.replace(/"/g, '&quot;') + '"' : '';
+  }
+  function perM2Val(d){ var v = zaMetr(d); return v == null ? Infinity : v; }
   // „Rozprostření": u řazení Doporučené nechceme 5 dražeb (nebo 2× stejná obec)
   // za sebou. Zachová pořadí podle skóre, jen bere vždy nejlepší kousek, který
   // není stejného typu ani ze stejné obce jako ten předchozí. Výsledek = pestrá,
@@ -3008,7 +3032,7 @@
 
     top.forEach(function (d, rank) {
       var t = TYPE[d.type];
-      var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
+      var perM2 = zaMetr(d);
       var hot = !!hotIds[d._id];
       var li = document.createElement('li');
       li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '') + (isFeatured(d) ? ' is-featured' : '');
@@ -3033,7 +3057,7 @@
       // Řádek s výměrou a Kč/m² (cena je zvlášť, velká, nahoře v těle karty)
       var figs =
         (hasArea(d) ? '<span class="m">' + fmt(d.area) + ' m²</span>' : '<span class="m">výměra neuvedena</span>') +
-        (perM2 ? '<span class="opp-perm2">' + fmt(perM2) + ' Kč/m²</span>' : '') +
+        (perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') +
         // Vzdálenost se ukazuje vždycky, když je od čeho měřit — dřív jen při
         // řazení „podle okolí", takže si jí nikdo nevšiml.
         (function () {
@@ -3472,7 +3496,7 @@
     }
     grid.innerHTML = top.map(function (o) {
       var d = o.d, t = TYPE[d.type];
-      var perM2 = Math.round(d.price / d.area);
+      var perM2 = zaMetr(d);
       return '<button type="button" class="deal-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
         '<div class="deal-badge">levnější než ' + o.di.cheaper + ' % podobných</div>' +
         '<div class="deal-place"><span class="deal-dot" style="background:' + t.color + '"></span>' + d.place + '</div>' +
@@ -3514,7 +3538,7 @@
     if (cta) cta.style.display = '';
     wrap.className = 'odl-wrap odl-grid reveal is-visible';
     wrap.innerHTML = items.slice(0, 9).map(function (d) {
-      var perM2 = hasArea(d) ? Math.round(d.price / d.area) : null;
+      var perM2 = zaMetr(d);
       return '<button type="button" class="odl-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
         '<span class="odl-badge">Přímo od majitele</span>' +
         '<span class="odl-place">' + d.place + '</span>' +

@@ -18,6 +18,52 @@
 
   function hasArea(d) { return typeof d.area === 'number' && d.area > 0; }
 
+  /* KOLIK METRŮ ZA TY PENÍZE OPRAVDU DOSTANU.
+   *
+   * U spoluvlastnického podílu stojí v inzerátu výměra CELÉ parcely, ale
+   * cena jen za zlomek. Kdo dělí cenu celou výměrou, dostane číslo, které
+   * neplatí pro nikoho: ani pro kupce podílu, ani pro srovnání s celými
+   * pozemky. A právě tohle číslo se na webu ukazovalo jako „Kč/m²"
+   * a řadilo se podle něj.
+   *
+   * Změřeno v Praze: prvních pět nabídek podle ceny, z toho čtyři podíly.
+   * Lesní pozemek za 579 000 Kč se 7 770 m² svítil jako 75 Kč/m² —
+   * nejlevnější ze všech. Jenže je to podíl 1/13, takže kupujícímu
+   * připadne 598 m² a platí 969 Kč/m². Ve skutečnosti nejdražší z té
+   * pětice. Pořadí bylo přesně obrácené.
+   *
+   * Proto se počítá z výměry, která kupujícímu připadne. Když velikost
+   * podílu neznáme (inzerát ji neuvádí), nevrací se NIC — raději žádné
+   * číslo než číslo, o kterém víme, že neplatí. */
+  function zlomekPodilu(d) {
+    if (!d) return null;
+    if (!d.podil) return 1;
+    var m = /^\s*(\d+)\s*\/\s*(\d+)\s*$/.exec(String(d.zlomek || ''));
+    if (!m) return null;
+    var citatel = +m[1], jmenovatel = +m[2];
+    if (!(citatel > 0) || !(jmenovatel > 0) || citatel > jmenovatel) return null;
+    return citatel / jmenovatel;
+  }
+  /** Výměra, která kupujícímu opravdu připadne. null = nevíme. */
+  function vymeraVCene(d) {
+    if (!hasArea(d)) return null;
+    var z = zlomekPodilu(d);
+    return z == null ? null : d.area * z;
+  }
+  /** Cena za metr, který kupující opravdu dostane. null = nevíme. */
+  function zaMetr(d) {
+    var v = vymeraVCene(d);
+    return (v > 0 && d && d.price > 0) ? d.price / v : null;
+  }
+  /** Vysvětlení k číslu, když je přepočtené z podílu (jinak prázdné). */
+  function zaMetrPopis(d) {
+    if (!d || !d.podil) return '';
+    var z = zlomekPodilu(d);
+    if (z == null) return '';
+    return 'Přepočteno na spoluvlastnický podíl' + (d.zlomek ? ' ' + d.zlomek : '') +
+      ' — tolik platíte za metr, který vám připadne. Výměra v inzerátu je celá parcela.';
+  }
+
   function druhGroup(s) {
     s = (s || '').toLowerCase();
     if (s.indexOf('les') !== -1) return 'Lesní pozemek';
@@ -430,5 +476,6 @@
   }
 
   root.PK_CENY = { postav: postav, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
-    kdeText: kdeText, blokOdhadu: blokOdhadu };
+    kdeText: kdeText, blokOdhadu: blokOdhadu,
+    zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis };
 }(typeof window !== 'undefined' ? window : globalThis));
