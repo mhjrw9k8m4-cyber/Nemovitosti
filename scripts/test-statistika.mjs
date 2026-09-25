@@ -200,6 +200,45 @@ pravda('stránka říká, že se něco nezapočítává', /nezapočítáváme/.t
 pravda('a vysvětluje proč', /spoluvlastnick/.test(stranka));
 pravda('i to, že hranice není odhadem od stolu', /mezer[au] v samotném rozdělení/.test(stranka));
 
+// --- 5) Medián z hrstky nabídek se nesmí tvářit jako změřená cena ----
+/* Na okresní stránce stálo „Medián ceny (stavební): 17 467 Kč/m²
+   (orientačně, z 12 nabídek)". Slovo „orientačně" nese celou výhradu
+   a přečte ho málokdo — číslo je tučné, velké a vypadá jako změřená
+   cena okresu. Přitom u dvanácti nabídek posune výsledek jedna drahá
+   parcela o desítky procent.
+   Kontrola projde všechny okresní a krajské stránky a u každé, která
+   medián vypisuje z malého vzorku, vyžaduje, aby to bylo napsané
+   rovnou — a aby u čísla stálo rozpětí, ne jen prostředek. */
+{
+  const { readdirSync } = createRequire(import.meta.url)('node:fs');
+  const KOREN = new URL('..', import.meta.url);
+  const DOST = Number((/const DOST_NABIDEK = (\d+)/.exec(gen) || [])[1] || 0);
+  pravda('generátor má napsané, od kolika nabídek je medián k něčemu', DOST >= 15,
+    `DOST_NABIDEK = ${DOST || 'chybí'}`);
+
+  const soubory = readdirSync(KOREN).filter((f) => /^pozemky-(okres-|[a-z]+-kraj)/.test(f));
+  const bezVyhrady = [], bezRozpeti = [];
+  for (const f of soubory) {
+    const h = readFileSync(new URL(f, KOREN), 'utf8');
+    const m = /Medián ceny \(([^)]*)\):([\s\S]{0,420}?)<\/p>/.exec(h);
+    if (!m) continue;
+    const blok = m[2];
+    const n = Number(((/z (\d[\d\s\u00a0]*) nab/.exec(blok) || [])[1] || '').replace(/[\s\u00a0]/g, ''));
+    if (!isFinite(n) || !n) continue;
+    if (!/obvykle/.test(blok)) bezRozpeti.push(`${f} (${n})`);
+    if (n < DOST && !/hrubé vodítko|je to málo/.test(blok)) bezVyhrady.push(`${f} (z ${n} nabídek)`);
+  }
+  pravda('u mediánu stojí i rozpětí, ne jen prostředek', bezRozpeti.length === 0,
+    bezRozpeti.slice(0, 4).join(', '));
+  pravda('a u malého vzorku je rovnou napsané, že je to jen vodítko',
+    bezVyhrady.length === 0,
+    bezVyhrady.slice(0, 4).join(', ') + (bezVyhrady.length > 4 ? ` … a dalších ${bezVyhrady.length - 4}` : ''));
+  /* Kontrola samotné kontroly: kdyby se na stránkách žádný medián
+     nenašel, obě kontroly výš by prošly a nehlídaly by nic. */
+  const kolik = soubory.filter((f) => /Medián ceny/.test(readFileSync(new URL(f, KOREN), 'utf8'))).length;
+  pravda('a medián se opravdu na stránkách vyskytuje', kolik >= 20, `našel jsem ho na ${kolik} stránkách`);
+}
+
 console.log('\nStatistika cen — čísla musí odpovídat skutečnosti');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

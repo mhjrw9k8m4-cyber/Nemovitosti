@@ -75,6 +75,18 @@
   function souborPozemku(d) {
     return 'pozemek-' + pkSlug(d.okres) + '-' + pkSlug(d.place) + '-' + pkOtisk(pkeyPlny(d)) + '.html';
   }
+  /* ČTVRŤ U VELKÝCH MĚST. U velkých měst uvádí zdroj jen celou obec
+     („Praha" = 496 km²), takže je ten řádek k ničemu. Robot k ní
+     dopočítá čtvrť ze souřadnic (pole `cast`, viz
+     scripts/fetch-opportunities.mjs). Do `place` se nesahá: je v klíči
+     pozemku, a s ním v uložených oblíbených i ve sdílených adresách.
+     Stejný výpočet má i mapa (js/main.js) — že se ty dva nerozejdou,
+     hlídá scripts/test-ctvrt.mjs. */
+  function mistoRadek(d) {
+    var okr = d.okres ? 'okres ' + esc(d.okres) : '';
+    if (!d.cast) return okr;
+    return esc(d.cast) + (okr ? ' · ' + okr : '');
+  }
   function katastrUrl(d) { return 'https://ikatastr.cz/#zoom=18&lat=' + d.lat + '&lon=' + d.lng + '&info=' + d.lat + ',' + d.lng; }
   function mapyUrl(d) { return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat; }
   var SPU_OFFERS = 'https://spu.gov.cz/nabidky/prehled-cela-cr';
@@ -605,7 +617,7 @@
 
       '<div class="pz-head">' +
         '<h1 class="pz-place">' + esc(d.place) + '</h1>' +
-        (d.okres ? '<div class="pz-okres">' + PIN_SVG + 'okres ' + esc(d.okres) + '</div>' : '') +
+        (mistoRadek(d) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d) + '</div>' : '') +
       '</div>' +
 
       '<div class="pz-priceblock">' +

@@ -90,7 +90,17 @@ function slug(s){
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 const attr = esc;
 function fmt(n){ return (typeof n==='number'&&isFinite(n)) ? n.toLocaleString('cs-CZ') : ''; }
-function pluralPozemek(n){ if(n===1)return 'pozemek'; if(n>=2&&n<=4)return 'pozemky'; return 'pozemků'; }
+/* Čeština má u čísel tři tvary, ne dva: 1 okres, 2 okresy, 5 okresů.
+   Štítky u čísel se psaly natvrdo v množném čísle, takže kraj Praha
+   (má jediný okres) hlásil „1 okresů" a okres s jednou dražbou
+   „1 dražby". Vypadá to jako strojový překlad — a je to jediné místo,
+   kde si člověk všimne, že ta čísla nikdo nečetl. */
+function sklon(n, jedna, dveAzCtyri, petAVic){
+  if(n === 1) return jedna;
+  if(n >= 2 && n <= 4) return dveAzCtyri;
+  return petAVic;
+}
+function pluralPozemek(n){ return sklon(n, 'pozemek', 'pozemky', 'pozemků'); }
 function krajFile(kraj){ return `pozemky-${slug(kraj)}-kraj.html`; }
 function okresFile(okres){ return `pozemky-okres-${slug(okres)}.html`; }
 function write(file, html){ fs.writeFileSync(path.join(ROOT, file), html); }
@@ -269,11 +279,26 @@ const priceNational = priceStats(all);
 const priceByKraj = {}; for(const k of KRAJ_ORDER){ if(byKraj[k]) priceByKraj[k]=priceStats(byKraj[k]); }
 const priceByOkres = {}; for(const ok of Object.keys(byOkres)){ priceByOkres[ok]=priceStats(byOkres[ok]); }
 // Kompaktní věta o ceně pro region (nejsilnější skupina = nejvíc vzorků).
+/* Od kolika nabídek se medián dá brát jako číslo o okrese, a ne jako
+   průměr pár náhodných inzerátů. Není to statistická hranice, je to
+   úsudek: pod pětadvaceti nabídkami posune výsledek jedna drahá parcela
+   o desítky procent. Číslo se ukazuje i pod ní — okresů s menším vzorkem
+   je většina a mlčet by znamenalo nemít cenu skoro nikde — ale řekne se
+   u něj rovnou, na čem stojí. */
+const DOST_NABIDEK = 25;
 function priceLine(stats){
   const groups=Object.keys(stats).sort((a,b)=>stats[b].n-stats[a].n);
   if(!groups.length) return '';
   const g=groups[0], s=stats[g];
-  return `Medián ceny (${g.toLowerCase()}): <b>${fmt(s.med)} Kč/m²</b> <span class="okr-more" style="display:inline">(orientačně, z ${s.n} nabídek)</span>`;
+  /* Rozpětí je u malého vzorku poctivější než medián samotný: ukazuje,
+     jak daleko od sebe ty ceny jsou. Dřív se vypisoval jen prostředek
+     a vypadal jako změřená cena okresu. */
+  const rozpeti = (s.lo && s.hi && s.hi > s.lo)
+    ? ` · obvykle <b>${fmt(s.lo)}–${fmt(s.hi)} Kč/m²</b>` : '';
+  const pozn = s.n >= DOST_NABIDEK
+    ? `(z ${s.n} nabídek)`
+    : `(jen z ${s.n} ${sklon(s.n,'nabídky','nabídek','nabídek')} — na cenu okresu je to málo, berte to jako hrubé vodítko)`;
+  return `Medián ceny (${g.toLowerCase()}): <b>${fmt(s.med)} Kč/m²</b>${rozpeti} <span class="okr-more" style="display:inline">${pozn}</span>`;
 }
 
 const SITE = 'https://www.parcelaka.cz/';
@@ -500,9 +525,9 @@ for(const okres of eligibleOkres){
       <div class="okr-stats">
         <div class="okr-stat"><b>${count}</b><span>${pluralPozemek(count)}</span></div>
         ${byType.sale?`<div class="okr-stat"><b>${byType.sale}</b><span>na prodej</span></div>`:''}
-        ${byType.drazba?`<div class="okr-stat"><b>${byType.drazba}</b><span>dražby</span></div>`:''}
-        ${byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b><span>exekuce</span></div>`:''}
-        ${byType.obec?`<div class="okr-stat"><b>${byType.obec}</b><span>záměry obcí</span></div>`:''}
+        ${byType.drazba?`<div class="okr-stat"><b>${byType.drazba}</b><span>${sklon(byType.drazba,'dražba','dražby','dražeb')}</span></div>`:''}
+        ${byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b><span>${sklon(byType.exekuce,'exekuce','exekuce','exekucí')}</span></div>`:''}
+        ${byType.obec?`<div class="okr-stat"><b>${byType.obec}</b><span>${sklon(byType.obec,'záměr obce','záměry obcí','záměrů obcí')}</span></div>`:''}
       </div>
 ${priceLine(priceStats(list)) ? `      <p class="okr-more" style="margin-top:2px;">${priceLine(priceStats(list))} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
 
@@ -594,9 +619,9 @@ for(const kraj of eligibleKraj){
 
       <div class="okr-stats">
         <div class="okr-stat"><b>${count}</b><span>${pluralPozemek(count)}</span></div>
-        <div class="okr-stat"><b>${okresList.length}</b><span>okresů</span></div>
-        ${byType.drazba?`<div class="okr-stat"><b>${byType.drazba}</b><span>dražby</span></div>`:''}
-        ${byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b><span>exekuce</span></div>`:''}
+        <div class="okr-stat"><b>${okresList.length}</b><span>${sklon(okresList.length,'okres','okresy','okresů')}</span></div>
+        ${byType.drazba?`<div class="okr-stat"><b>${byType.drazba}</b><span>${sklon(byType.drazba,'dražba','dražby','dražeb')}</span></div>`:''}
+        ${byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b><span>${sklon(byType.exekuce,'exekuce','exekuce','exekucí')}</span></div>`:''}
       </div>
 ${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more" style="margin-top:2px;">${priceLine(priceByKraj[kraj]||{})} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
 

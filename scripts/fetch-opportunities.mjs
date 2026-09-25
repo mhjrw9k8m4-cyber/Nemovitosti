@@ -114,6 +114,61 @@ async function geocodeName(place, okres) {
   return coord;
 }
 
+/* ---------- ČTVRŤ U VELKÝCH MĚST ------------------------------------
+ *
+ * U 142 nabídek je místo jen „Praha", „Brno" nebo „Ostrava" — tedy celá
+ * obec. V Praze to znamená 496 km²: podle takového údaje se nedá
+ * rozhodnout vůbec nic, a přitom je to první věc, na kterou se člověk
+ * u pozemku dívá. Zdroj nic bližšího neuvádí, jenže SOUŘADNICE MÁME —
+ * u těchhle nabídek pravé, od zdroje. Stačí je přeložit zpátky na jméno.
+ *
+ * Bere se z Nominatimu (tentýž, který už používáme na dohledání obcí),
+ * jen opačným směrem. Zoom 14 je úroveň čtvrti: níž vrací ulici (ta
+ * u pozemku často neexistuje), výš zase zpátky celé město.
+ *
+ * Nová hodnota jde do vlastního pole `cast`, ne do `place`. Kdyby se
+ * přepsalo `place`, změní se klíč pozemku (place|parcel|okres) — a s ním
+ * uložené oblíbené i adresy sdílených stránek. Za lepší popisek to
+ * nestojí.
+ */
+function jenObec(place, okres) {
+  const p = String(place || '').trim().toLowerCase();
+  const k = String(okres || '').trim().toLowerCase();
+  if (!p || !k) return false;
+  // „Praha" v okrese „Praha", ale i „Brno" v okrese „Brno-město".
+  return p === k || k.startsWith(p + '-');
+}
+/* Z odpovědi vybírá od nejužšího k nejširšímu. `suburb` je v Česku
+   katastrální území nebo čtvrť (Řepy, Žabovřesky), `city_district`
+   správní obvod (Praha 17). Ulici (`road`) ne: u pozemku bez adresy
+   ukazuje na nejbližší cestu, což je něco jiného než místo. */
+function castZOdpovedi(j) {
+  const a = (j && j.address) || {};
+  const jmeno = a.suburb || a.quarter || a.neighbourhood || a.city_district || a.borough || null;
+  if (!jmeno) return null;
+  const t = String(jmeno).trim();
+  if (!t || t.length > 60) return null;
+  return t;
+}
+const OBEC_UA = GEO_UA;
+async function castPodleGPS(lat, lng) {
+  if (!isFinite(lat) || !isFinite(lng)) return null;
+  /* Klíč zaokrouhlený na tři desetiny vteřiny (~100 m): sousední parcely
+     v téže čtvrti sdílejí odpověď a Nominatim se neptá zbytečně. */
+  const key = 'cast|' + (+lat).toFixed(3) + ',' + (+lng).toFixed(3);
+  if (key in GEO_CACHE) return GEO_CACHE[key];
+  let cast = null;
+  try {
+    const u = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&addressdetails=1&accept-language=cs&lat=${lat}&lon=${lng}`;
+    const r = await fetch(u, { headers: OBEC_UA });
+    if (r.ok) cast = castZOdpovedi(await r.json());
+  } catch { /* síť selhala – zůstane bez čtvrti, nic se nerozbije */ }
+  GEO_CACHE[key] = cast;
+  geoCacheDirty = true;
+  await sleep(1100); // Nominatim: max ~1 dotaz/s
+  return cast;
+}
+
 // Okres podle GPS (nejbližší okresní středisko) – pro zdroje bez názvu okresu.
 /* Okres podle souřadnic. Dřív se tu hledalo NEJBLIŽŠÍ OKRESNÍ MĚSTO —
    dvakrát špatně: nejbližší město není okres, ve kterém obec leží, a
@@ -738,6 +793,18 @@ async function main() {
       o.lat = j.lat; o.lng = j.lng; refined++;
     }
   }
+  /* Čtvrť u nabídek, kde je místo jen celá obec. Jen tam, kde jsou
+     souřadnice OD ZDROJE (o._gps): u dopočítaných by se jméno čtvrti
+     vzalo z bodu, který jsme si sami vymysleli. */
+  let sCasti = 0;
+  for (const o of fresh) {
+    if (!o._gps || !jenObec(o.place, o.okres)) continue;
+    const c = await castPodleGPS(o.lat, o.lng);
+    if (c && c.toLowerCase() !== String(o.place || '').toLowerCase()) { o.cast = c; sCasti++; }
+  }
+  const hrubych = fresh.filter((o) => jenObec(o.place, o.okres)).length;
+  console.log(`Čtvrť doplněna u ${sCasti} z ${hrubych} nabídek, kde bylo místo jen celá obec.`);
+
   fresh.forEach((o) => { delete o._gps; delete o._key; });
   if (geoCacheDirty) writeFileSync(GEOCACHE, JSON.stringify(GEO_CACHE, null, 0) + '\n', 'utf8');
   console.log(`Zpřesněno podle názvu KÚ: ${refined}/${fresh.length}.` +

@@ -171,6 +171,9 @@ jobs:
       - name: Mapa s vrstvami v detailu pozemku
         run: node scripts/test-mapa-pozemku.mjs
 
+      - name: Čtvrť u nabídek, kde je místo jen celá obec
+        run: node scripts/test-ctvrt.mjs
+
       - name: Cenový model (odhad obvyklé ceny)
         run: node scripts/test-ceny.mjs
 

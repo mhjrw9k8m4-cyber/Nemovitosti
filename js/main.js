@@ -1472,7 +1472,7 @@
         '<div class="md-shape" style="border-color:' + t.color + '55">' + shapeSvg(d) + '</div>' +
         '<div class="md-info">' +
           '<div class="md-top"><span class="md-chip"><span class="lp-dot" style="background:' + t.color + '"></span>' + t.label + '</span>' + (isFeatured(d) ? '<span class="md-feat">Zvýrazněno</span>' : '') + cdBig + '</div>' +
-          '<h3 class="md-place">' + d.place + '<span class="md-okr">okres ' + d.okres + '</span></h3>' +
+          '<h3 class="md-place">' + d.place + '<span class="md-okr">' + mistoRadek(d) + '</span></h3>' +
           '<div class="md-sub">' + d.druh + (hasArea(d) ? ' <span class="md-price-sep">·</span> ' + areaTxt(d) : '') + '</div>' +
           '<div class="md-price"><span class="md-price-lbl">' + priceLabel + '</span><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? '<span class="md-price-per"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
           priceBarHtml(d) +
@@ -2870,6 +2870,16 @@
     return t ? ' title="' + t.replace(/"/g, '&quot;') + '"' : '';
   }
   function perM2Val(d){ var v = zaMetr(d); return v == null ? Infinity : v; }
+  /* ČTVRŤ U VELKÝCH MĚST. U 142 nabídek zdroj uvádí jen celou obec —
+     v Praze to je 496 km², podle kterých se nedá rozhodnout nic. Robot
+     proto u těch nabídek dopočítá čtvrť ze souřadnic (pole `cast`,
+     scripts/fetch-opportunities.mjs). Do `place` se nesahá: je v klíči
+     pozemku, a s ním v uložených oblíbených i ve sdílených adresách. */
+  function mistoRadek(d) {
+    var okr = d.okres ? 'okres ' + esc(d.okres) : '';
+    if (!d.cast) return okr;
+    return esc(d.cast) + (okr ? ' · ' + okr : '');
+  }
   // „Rozprostření": u řazení Doporučené nechceme 5 dražeb (nebo 2× stejná obec)
   // za sebou. Zachová pořadí podle skóre, jen bere vždy nejlepší kousek, který
   // není stejného typu ani ze stejné obce jako ten předchozí. Výsledek = pestrá,
@@ -3156,7 +3166,7 @@
         '<div class="opp-body">' +
           '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
           '<span class="opp-place">' + d.place + '</span>' +
-          (d.okres ? '<div class="opp-loc">okres ' + d.okres + '</div>' : '') +
+          (mistoRadek(d) ? '<div class="opp-loc">' + mistoRadek(d) + '</div>' : '') +
           (sub ? '<div class="opp-sub">' + sub + '</div>' : '') +
           '<div class="opp-figures">' + figs + '</div>' +
           (chips.length ? '<div class="opp-chips">' + chips.join('') + '</div>' : '') +
