@@ -3523,8 +3523,13 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 
 /* Oddělovač mezi okresy v přehledu cen. Dřív to byl samostatný <span>
    v zalamovaném flexu, takže se od svých sousedů odtrhl a zůstal viset
-   sám na konci řádku jako tečka bez věty. Teď patří k položce před ním. */
-.okr-place:not(:last-child)::after{content:"\00a0·"; color:var(--text-ondark-mute); font-weight:400;}
+   sám na konci řádku jako tečka bez věty. Teď patří k položce před ním.
+   POZOR NA DOSAH: pravidlo platilo pro všechny .okr-place na webu —
+   tedy i pro název obce ve VÝPISU nabídek, kde po něm následuje řádek
+   s údaji. Tam oddělovač visel na konci řádku úplně stejně („Vitice ·"
+   a pod tím nový řádek), a to na všech 77 okresních stránkách u každé
+   nabídky. Proto je teď omezený na ty odznaky, pro které vznikl. */
+.okr-stat .okr-place:not(:last-child)::after{content:"\00a0·"; color:var(--text-ondark-mute); font-weight:400;}
 
 /* =====================================================================
    PÍSMO V POLÍCH NA DOTYKOVÝCH ZAŘÍZENÍCH

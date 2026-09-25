@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=a971862e">
+  <link rel="stylesheet" href="css/styles.css?v=8a00c01c">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky v okrese Kutná Hora","inLanguage":"cs","description":"Nabídky pozemků v okrese Kutná Hora — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-okres-kutna-hora.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":18,"itemListElement":[{"@type":"ListItem","position":1,"name":"Hostovlice u Čáslavi — Na prodej, 1616 m²"},{"@type":"ListItem","position":2,"name":"Vrdy — Na prodej, 879 m²"},{"@type":"ListItem","position":3,"name":"Hostovlice u Čáslavi — Na prodej, 4118 m²"},{"@type":"ListItem","position":4,"name":"Chabeřice — Na prodej, 1169 m²"},{"@type":"ListItem","position":5,"name":"Vrdy — Na prodej, 1632 m²"},{"@type":"ListItem","position":6,"name":"Hostovlice u Čáslavi — Na prodej, 5658 m²"},{"@type":"ListItem","position":7,"name":"Bílé Podolí — Na prodej, 1874 m²"},{"@type":"ListItem","position":8,"name":"Hostovlice u Čáslavi — Na prodej, 10075 m²"},{"@type":"ListItem","position":9,"name":"Hostovlice u Čáslavi — Na prodej, 14520 m²"},{"@type":"ListItem","position":10,"name":"Souňov — Na prodej, 2048 m²"},{"@type":"ListItem","position":11,"name":"Zruč nad Sázavou — Na prodej, 2259 m²"},{"@type":"ListItem","position":12,"name":"Horka II — Na prodej, 7508 m²"},{"@type":"ListItem","position":13,"name":"Slavošov — Na prodej, 6916 m²"},{"@type":"ListItem","position":14,"name":"Paběnice — Na prodej, 7925 m²"},{"@type":"ListItem","position":15,"name":"Zbizuby — Na prodej, 1527 m²"},{"@type":"ListItem","position":16,"name":"Malešov — Na prodej, 909 m²"},{"@type":"ListItem","position":17,"name":"Ledečko — Na prodej, 1885 m²"},{"@type":"ListItem","position":18,"name":"Čestín — Na prodej, 16900 m²"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Středočeský kraj","item":"https://www.parcelaka.cz/pozemky-stredocesky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Kutná Hora","item":"https://www.parcelaka.cz/pozemky-okres-kutna-hora.html"}]}]
   </script>
@@ -78,9 +78,14 @@
   <section class="section" style="padding-top:20px;">
     <div class="wrap okr-wrap">
 
+      <!-- Rozpad podle druhu se vypisuje, JEN když je co rozpadat. V okrese
+           Kolín je všech 28 nabídek na prodej, takže vedle sebe stály dvě
+           dlaždice s týmž číslem: „28 pozemků" a „28 na prodej". Druhá
+           neříkala nic, co by v té první nebylo — a v podnadpisu nad tím
+           stojí „28× na prodej" ještě jednou. -->
       <div class="okr-stats">
         <div class="okr-stat"><b>18</b><span>pozemků</span></div>
-        <div class="okr-stat"><b>18</b><span>na prodej</span></div>
+        
         
         
         

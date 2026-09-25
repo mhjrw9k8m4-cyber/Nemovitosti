@@ -522,12 +522,17 @@ for(const okres of eligibleOkres){
   <section class="section" style="padding-top:20px;">
     <div class="wrap okr-wrap">
 
+      <!-- Rozpad podle druhu se vypisuje, JEN když je co rozpadat. V okrese
+           Kolín je všech 28 nabídek na prodej, takže vedle sebe stály dvě
+           dlaždice s týmž číslem: „28 pozemků" a „28 na prodej". Druhá
+           neříkala nic, co by v té první nebylo — a v podnadpisu nad tím
+           stojí „28× na prodej" ještě jednou. -->
       <div class="okr-stats">
         <div class="okr-stat"><b>${count}</b><span>${pluralPozemek(count)}</span></div>
-        ${byType.sale?`<div class="okr-stat"><b>${byType.sale}</b><span>na prodej</span></div>`:''}
-        ${byType.drazba?`<div class="okr-stat"><b>${byType.drazba}</b><span>${sklon(byType.drazba,'dražba','dražby','dražeb')}</span></div>`:''}
-        ${byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b><span>${sklon(byType.exekuce,'exekuce','exekuce','exekucí')}</span></div>`:''}
-        ${byType.obec?`<div class="okr-stat"><b>${byType.obec}</b><span>${sklon(byType.obec,'záměr obce','záměry obcí','záměrů obcí')}</span></div>`:''}
+        ${Object.keys(byType).length > 1 && byType.sale?`<div class="okr-stat"><b>${byType.sale}</b><span>na prodej</span></div>`:''}
+        ${Object.keys(byType).length > 1 && byType.drazba?`<div class="okr-stat"><b>${byType.drazba}</b><span>${sklon(byType.drazba,'dražba','dražby','dražeb')}</span></div>`:''}
+        ${Object.keys(byType).length > 1 && byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b><span>${sklon(byType.exekuce,'exekuce','exekuce','exekucí')}</span></div>`:''}
+        ${Object.keys(byType).length > 1 && byType.obec?`<div class="okr-stat"><b>${byType.obec}</b><span>${sklon(byType.obec,'záměr obce','záměry obcí','záměrů obcí')}</span></div>`:''}
       </div>
 ${priceLine(priceStats(list)) ? `      <p class="okr-more" style="margin-top:2px;">${priceLine(priceStats(list))} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
 

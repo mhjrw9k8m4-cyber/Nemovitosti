@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=a971862e">
+  <link rel="stylesheet" href="css/styles.css?v=8a00c01c">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky v okrese Plzeň-jih","inLanguage":"cs","description":"Nabídky pozemků v okrese Plzeň-jih — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-okres-plzen-jih.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":28,"itemListElement":[{"@type":"ListItem","position":1,"name":"Kvíčovice — Na prodej, 270 m²"},{"@type":"ListItem","position":2,"name":"Dobřany — Na prodej, 812 m²"},{"@type":"ListItem","position":3,"name":"Kasejovice — Na prodej, 2026 m²"},{"@type":"ListItem","position":4,"name":"Chanovice — Na prodej, 2121 m²"},{"@type":"ListItem","position":5,"name":"Kvíčovice — Na prodej, 1956 m²"},{"@type":"ListItem","position":6,"name":"Dobřany — Na prodej, 1627 m²"},{"@type":"ListItem","position":7,"name":"Neurazy — Na prodej, 3001 m²"},{"@type":"ListItem","position":8,"name":"Kvíčovice — Na prodej, 3277 m²"},{"@type":"ListItem","position":9,"name":"Životice — Na prodej, 4118 m²"},{"@type":"ListItem","position":10,"name":"Oselce — Na prodej, 2952 m²"},{"@type":"ListItem","position":11,"name":"Čížkov — Na prodej, 4209 m²"},{"@type":"ListItem","position":12,"name":"Oselce — Na prodej, 5050 m²"},{"@type":"ListItem","position":13,"name":"Oselce — Na prodej, 4955 m²"},{"@type":"ListItem","position":14,"name":"Kasejovice — Na prodej, 9203 m²"},{"@type":"ListItem","position":15,"name":"Ves Touškov — Na prodej, 370 m²"},{"@type":"ListItem","position":16,"name":"Oselce — Na prodej, 9194 m²"},{"@type":"ListItem","position":17,"name":"Kbel — Na prodej, 8744 m²"},{"@type":"ListItem","position":18,"name":"Čmelíny — Na prodej, 10333 m²"},{"@type":"ListItem","position":19,"name":"Čížkov — Na prodej, 10742 m²"},{"@type":"ListItem","position":20,"name":"Životice — Na prodej, 14063 m²"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Plzeňský kraj","item":"https://www.parcelaka.cz/pozemky-plzensky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Plzeň-jih","item":"https://www.parcelaka.cz/pozemky-okres-plzen-jih.html"}]}]
   </script>
@@ -78,9 +78,14 @@
   <section class="section" style="padding-top:20px;">
     <div class="wrap okr-wrap">
 
+      <!-- Rozpad podle druhu se vypisuje, JEN když je co rozpadat. V okrese
+           Kolín je všech 28 nabídek na prodej, takže vedle sebe stály dvě
+           dlaždice s týmž číslem: „28 pozemků" a „28 na prodej". Druhá
+           neříkala nic, co by v té první nebylo — a v podnadpisu nad tím
+           stojí „28× na prodej" ještě jednou. -->
       <div class="okr-stats">
         <div class="okr-stat"><b>28</b><span>pozemků</span></div>
-        <div class="okr-stat"><b>28</b><span>na prodej</span></div>
+        
         
         
         
