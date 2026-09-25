@@ -936,8 +936,13 @@
   var HL = window.PKHledani || {
     norm: function (s) { return String(s == null ? '' : s).toLowerCase().trim(); },
     tokeny: function (q) { var n = this.norm(q); return n ? [n] : []; },
+    /* I nouzová varianta hledá od ZAČÁTKU slova, ne kdekoli uvnitř —
+       jinak by „most" našlo Kněžmost. Chyba, kvůli které se sem
+       propadne, nemá vracet špatné výsledky; má vracet horší. */
     vyhovuje: function (d, t) {
-      return !t.length || (d.place + ' ' + d.okres + ' ' + (d.parcel || '')).toLowerCase().indexOf(t[0]) !== -1;
+      if (!t.length) return true;
+      var s = ' ' + (d.place + ' ' + d.okres + ' ' + (d.parcel || '')).toLowerCase();
+      return s.indexOf(' ' + t[0]) !== -1;
     },
   };
   /* Text z políčka i z odkazu ?q= musí projít jedním místem, aby se

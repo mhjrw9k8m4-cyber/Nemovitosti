@@ -108,10 +108,54 @@
     'Přístupová cesta': 'cesta',
   };
 
+  /* MÍSTO: hotový název, ne kus slova.
+   *
+   * Hlídané místo se porovnávalo podřetězcem kdekoli v okrese i v názvu
+   * obce. Na skutečných datech to dělalo 141 falešných shod u sedmi
+   * okresů — a u hlídání to nejsou jen „výsledky navíc", podle toho
+   * chodí upozornění:
+   *   „Jičín"   chytal celý okres NOVÝ Jičín (17 nabídek, 250 km jinam),
+   *   „Most"    Mosty u Jablunkova, Dlouhý Most i Kněžmost,
+   *   „Písek"   Moravský Písek, „Teplice" Teplice nad Metují,
+   *   „Benešov" Horní Benešov a Benešovice u Všelibic.
+   *
+   * OKRES se bere i s tím, co za jménem následuje: kdo hlídá „Praha",
+   * má dostat i Prahu-východ a Prahu-západ — jsou to okresy kolem
+   * Prahy a přesně ty ten člověk hledá (113 nabídek). Proto se u okresu
+   * uznává i „jméno + další slovo".
+   * OBEC naopak jen přesně: „Most" není „Dlouhý Most" ani „Mosty
+   * u Jablunkova" a Teplice nejsou Teplice nad Metují.
+   *
+   * Že by se překlepem trefil prázdný výběr, hlídat nemusíme: formulář
+   * u sebe průběžně píše, kolika nabídkám zadání dnes odpovídá, a při
+   * nule to řekne nahlas. */
+  function normMisto(s) {
+    return normd(s).replace(/[-\u2010-\u2015]/g, ' ').replace(/\s+/g, ' ').trim()
+      .replace(/^(?:okres|obec)\s+/, '');
+  }
+  function mistoSedi(zadane, d) {
+    var k = normMisto(zadane);
+    if (!k) return true;
+    var okres = normMisto(d.okres);
+    if (okres === k || okres.indexOf(k + ' ') === 0) return true;
+    return normMisto(d.place) === k;
+  }
+
+  /* DRUH: celé slovo, ne kus. Volba „sad" má najít „ovocný sad" — to je
+     celé slovo uvnitř názvu. Nesmí ale stačit kus slova: jinak by se
+     jednou objevil druh, ve kterém je volba schovaná uprostřed, a filtr
+     by tiše vracel něco jiného, než na co si člověk klikl. */
+  function druhSedi(zadany, druhPozemku) {
+    var k = normd(zadany).replace(/\s+/g, ' ').trim();
+    if (!k) return true;
+    var t = normd(druhPozemku).replace(/\s+/g, ' ').trim();
+    return t === k || (' ' + t + ' ').indexOf(' ' + k + ' ') >= 0;
+  }
+
   function matches(s, d) {
     if (!s || !d) return false;
     if (s.ptype && d.type !== s.ptype) return false;
-    if (s.druh && normd(d.druh).indexOf(normd(s.druh)) < 0) return false;
+    if (s.druh && !druhSedi(s.druh, d.druh)) return false;
     if (s.max_price && !(d.price > 0 && d.price <= s.max_price)) return false;
     if (s.min_price && !(d.price > 0 && d.price >= s.min_price)) return false;
     if (s.min_area && !(d.area > 0 && d.area >= s.min_area)) return false;
@@ -123,10 +167,7 @@
       if (!(d.price > 0 && d.area > 0)) return false;
       if (d.price / d.area > s.max_perm2) return false;
     }
-    if (s.okres) {
-      var k = normd(s.okres);
-      if (normd(d.okres).indexOf(k) < 0 && normd(d.place).indexOf(k) < 0) return false;
-    }
+    if (s.okres && !mistoSedi(s.okres, d)) return false;
     if (s.features && s.features.length) {
       var f = d.features || [];
       var site = d.site || [];
@@ -168,6 +209,7 @@
 
   return {
     tyzPozemek: tyzPozemek, normd: normd, keyOf: keyOf, matches: matches,
+           mistoSedi: mistoSedi, druhSedi: druhSedi,
            klicShody: klicShody, bezDuplicit: bezDuplicit,
            novychProHledani: novychProHledani, novychCelkem: novychCelkem };
 });

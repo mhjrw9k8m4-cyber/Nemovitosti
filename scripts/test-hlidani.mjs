@@ -35,6 +35,43 @@ je('shoda', 'jiný druh nesedí', H.matches({ druh: 'louka' }, P()), false);
 je('shoda', 'typ sedí', H.matches({ ptype: 'sale' }, P()), true);
 je('shoda', 'jiný typ nesedí', H.matches({ ptype: 'drazba' }, P()), false);
 
+/* ---------------- místo: hotový název, ne kus slova ----------------
+   Hlídané místo se porovnávalo podřetězcem kdekoli. Na skutečných datech
+   to dělalo 141 falešných shod u sedmi okresů — a u hlídání to nejsou
+   jen „výsledky navíc", podle toho chodí upozornění. */
+je('místo', 'okres Jičín není Nový Jičín',
+  H.matches({ okres: 'Jičín' }, P({ okres: 'Nový Jičín', place: 'Nový Jičín' })), false);
+je('místo', 'okres Most není Mosty u Jablunkova',
+  H.matches({ okres: 'Most' }, P({ okres: 'Frýdek-Místek', place: 'Mosty u Jablunkova' })), false);
+je('místo', 'ani Dlouhý Most',
+  H.matches({ okres: 'Most' }, P({ okres: 'Liberec', place: 'Dlouhý Most' })), false);
+je('místo', 'ani Kněžmost (uprostřed slova)',
+  H.matches({ okres: 'Most' }, P({ okres: 'Mladá Boleslav', place: 'Kněžmost' })), false);
+je('místo', 'Teplice nejsou Teplice nad Metují',
+  H.matches({ okres: 'Teplice' }, P({ okres: 'Náchod', place: 'Teplice nad Metují' })), false);
+je('místo', 'Písek není Moravský Písek',
+  H.matches({ okres: 'Písek' }, P({ okres: 'Hodonín', place: 'Moravský Písek' })), false);
+// Ale co se trefit MÁ, se trefit musí.
+je('místo', 'vlastní okres sedí dál',
+  H.matches({ okres: 'Most' }, P({ okres: 'Most', place: 'Horní Jiřetín' })), true);
+je('místo', 'vlastní obec sedí dál',
+  H.matches({ okres: 'Most' }, P({ okres: 'Most', place: 'Most' })), true);
+/* Praha je výjimka a musí jí zůstat: kdo hlídá Prahu, chce i okresy
+   kolem ní. Proto se u OKRESU uznává i „jméno + další slovo" — u obce ne. */
+je('místo', 'Praha bere i okres Praha-východ',
+  H.matches({ okres: 'Praha' }, P({ okres: 'Praha-východ', place: 'Máslovice' })), true);
+je('místo', 'a Praha-západ', H.matches({ okres: 'Praha' }, P({ okres: 'Praha-západ', place: 'Bojanovice' })), true);
+je('místo', 'pomlčka jde napsat i mezerou',
+  H.matches({ okres: 'praha vychod' }, P({ okres: 'Praha-východ', place: 'Máslovice' })), true);
+je('místo', 'napsané „okres Kolín" se taky trefí',
+  H.matches({ okres: 'okres Kolín' }, P()), true);
+
+/* Druh: volba „sad" má najít „ovocný sad" — celé slovo uvnitř názvu.
+   Kus slova stačit nesmí. */
+je('místo', 'druh „sad" najde ovocný sad', H.matches({ druh: 'sad' }, P({ druh: 'ovocný sad' })), true);
+je('místo', 'ale „sad" není „sady u lesa" jako kus slova',
+  H.matches({ druh: 'ada' }, P({ druh: 'ovocný sad' })), false);
+
 /* ---------------- cena a výměra ---------------- */
 je('meze', 'pod maximem projde', H.matches({ max_price: 600000 }, P()), true);
 je('meze', 'nad maximem neprojde', H.matches({ max_price: 400000 }, P()), false);
