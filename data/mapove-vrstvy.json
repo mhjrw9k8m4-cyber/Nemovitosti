@@ -1,0 +1,56 @@
+{
+  "verze": 1,
+  "kdyzNic": "Tenhle soubor je jediné místo, kde se mění adresy mapových služeb. Kód z něj jen čte. Vrstva, jejíž služba neodpoví na zkušební dlaždici, se v mapě vůbec nenabídne — radši ji nemít, než nabízet přepínač, který nic neudělá. Když se vrstva nezobrazuje, opravte tady adresu nebo názvy vrstev; nic jiného není potřeba.",
+  "vrstvy": [
+    {
+      "id": "katastr",
+      "nazev": "Hranice parcel",
+      "popis": "Katastrální mapa. Náš špendlík je jen bod — skutečnou hranici drží katastr.",
+      "uvedeni": "© ČÚZK",
+      "kryti": 1,
+      "odPriblizeni": 16,
+      "sluzby": [
+        { "typ": "wms", "url": "https://services.cuzk.gov.cz/wms/wms.asp", "vrstvy": "hranice_parcel,parcelni_cisla" },
+        { "typ": "wms", "url": "https://services.cuzk.cz/wms/wms.asp", "vrstvy": "hranice_parcel,parcelni_cisla" },
+        { "typ": "wms", "url": "https://services.cuzk.cz/wms/local-KM-wms.asp", "vrstvy": "KN" }
+      ]
+    },
+    {
+      "id": "uzemni-plan",
+      "nazev": "Územní plán",
+      "popis": "Co obec na pozemku plánuje. Rozhoduje vždy platný výkres na úřadě — tohle je náhled, ne potvrzení.",
+      "uvedeni": "© MMR / ČÚZK",
+      "kryti": 0.62,
+      "odPriblizeni": 13,
+      "sluzby": [
+        { "typ": "wms", "url": "https://services.cuzk.gov.cz/wms/wms.asp", "vrstvy": "UPD" },
+        { "typ": "wms", "url": "https://geoportal.gov.cz/arcgis/services/UP/UP_hlavni_vykres/MapServer/WMSServer", "vrstvy": "0" },
+        { "typ": "wms", "url": "https://geoportal.uur.cz/arcgis/services/UAP/MapServer/WMSServer", "vrstvy": "0" }
+      ]
+    },
+    {
+      "id": "zaplavy",
+      "nazev": "Záplavové území",
+      "popis": "Kam se voda dostane při stoleté povodni (Q100). Hranice je úřední, ne odhad.",
+      "uvedeni": "© VÚV TGM — HEIS",
+      "kryti": 0.55,
+      "odPriblizeni": 11,
+      "sluzby": [
+        { "typ": "wms", "url": "https://heis.vuv.cz/data/webmap/mapserv/wms_data", "vrstvy": "ZU_Q100" },
+        { "typ": "wms", "url": "https://heis.vuv.cz/data/webmap/mapserv/wms_data", "vrstvy": "zaplav_uzemi_q100" }
+      ]
+    },
+    {
+      "id": "ochrana",
+      "nazev": "Ochrana přírody",
+      "popis": "Národní parky, CHKO, přírodní rezervace a Natura 2000. V takovém území se staví jinak a někdy vůbec.",
+      "uvedeni": "© AOPK ČR",
+      "kryti": 0.5,
+      "odPriblizeni": 10,
+      "sluzby": [
+        { "typ": "wms", "url": "https://gis.nature.cz/arcgis/services/UzemniOchrana/MapServer/WMSServer", "vrstvy": "0" },
+        { "typ": "wms", "url": "https://gis.nature.cz/arcgis/services/ChranenaUzemi/MapServer/WMSServer", "vrstvy": "0" }
+      ]
+    }
+  ]
+}

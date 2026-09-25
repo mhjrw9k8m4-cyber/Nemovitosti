@@ -32,6 +32,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Mapová knihovna z VLASTNÍHO serveru, ne z cizího CDN — viz
+       vendor/leaflet/PUVOD.md. Na stránce pozemku je mapa až dole,
+       takže se její skript načítá odloženě; styly musí být dřív, jinak
+       se mapa na chvíli rozsype. -->
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
   <link rel="stylesheet" href="css/styles.css?v=2cdf74ed">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
@@ -152,6 +157,50 @@
     .pz-gtk .g-ol li::marker{font-family:var(--font-mono); font-size:12px; color:var(--accent-warm);}
     .pz-gtk .g-foot{font-size:12px; color:var(--text-ondark-mute); line-height:1.5; margin-top:12px; font-style:italic;}
 
+    /* MAPA S VRSTVAMI. Rám drží mapu a ovládání pohromadě jako jednu věc:
+       přepínače patří k té mapě, ne ke stránce. Ovládání je POD mapou, ne
+       přes ni — přes mapu by zakrývalo právě to místo, o které jde. */
+    .pzm{position:relative; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:var(--ink-soft); box-shadow:0 10px 28px -20px rgba(24,45,34,.5);}
+    .pzm-mapa{height:390px; width:100%; background:#14231C;}
+    .pzm-panel{display:flex; flex-wrap:wrap; gap:9px; align-items:center; padding:11px 12px; border-top:1px solid var(--line); background:#fff;}
+    .pzm-zaklad{display:inline-flex; background:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:3px; flex:none;}
+    .pzm-z{height:31px; padding:0 13px; border:0; background:transparent; border-radius:999px; font:inherit; font-size:13px; font-weight:600; color:var(--text-ondark-mute); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:color .15s ease, background .15s ease;}
+    .pzm-z.on{background:#fff; color:var(--copper-bright); box-shadow:0 2px 8px -5px rgba(24,45,34,.5);}
+    .pzm-vr{display:flex; flex-wrap:wrap; gap:7px; align-items:center; min-height:34px;}
+    .pzm-v{height:34px; padding:0 14px; border-radius:999px; border:1.5px solid rgba(31,81,56,.26); background:#fff; font:inherit; font-size:13px; font-weight:600; color:var(--text-ondark); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:border-color .15s ease, background .15s ease, color .15s ease, transform .1s ease;}
+    .pzm-v:hover{border-color:var(--copper-bright); background:#F2F6F3;}
+    .pzm-v:active{transform:scale(.98);}
+    .pzm-v.on{background:var(--plocha-znacka); border-color:transparent; color:#fff; box-shadow:0 7px 18px -11px rgba(31,81,56,.7);}
+    .pzm-hleda, .pzm-nic{display:inline-flex; align-items:center; gap:8px; font-size:13px; line-height:1.45; color:var(--text-ondark-mute);}
+    /* Posuvník se NEODTLAČUJE doprava (margin-left:auto). Když se přepínače
+       zalomí do druhého řádku, zůstal by viset sám v pravém rohu pod nimi
+       a vypadal by, že k nim nepatří. Takhle jde prostě za nimi. */
+    .pzm-kryti{display:flex; align-items:center; gap:9px; font-size:12px; font-weight:600; letter-spacing:.02em; text-transform:uppercase; color:var(--text-ondark-mute);}
+    .pzm-kryti input{width:104px; accent-color:var(--plocha-znacka);}
+    .pzm-popis{margin:0; padding:11px 13px; border-top:1px solid var(--line); background:#FBFCFB; font-size:13px; line-height:1.55; color:var(--text-ondark-mute);}
+    /* Vysvětlivky. Obrázek dodává sama služba, takže o jeho vzhledu
+       nerozhodujeme — jen mu dáme bílý podklad, ať je čitelný i tmavý. */
+    .pzm-leg{display:flex; flex-wrap:wrap; gap:15px; padding:12px 13px; border-top:1px solid var(--line); background:#FBFCFB;}
+    .pzm-leg-k{margin:0; display:flex; flex-direction:column; gap:6px; max-width:100%;}
+    .pzm-leg-k figcaption{font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--text-ondark-mute);}
+    .pzm-leg-k img{max-width:100%; background:#fff; border:1px solid var(--line); border-radius:9px; padding:7px;}
+    .pzm-pod{margin:9px 0 0; font-size:12.5px; line-height:1.6; color:var(--text-ondark-mute);}
+    .pzm-pod a{color:var(--copper-bright); font-weight:600;}
+    .pzm-pin{filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));}
+    /* Bez mapové knihovny zbyde nehybný snímek — ať to není prázdný rám.
+       Snímek se kreslí jako podklad karty, takže je položený absolutně
+       (.opp-map má inset:0) a sám rámu žádnou výšku nedá. Výšku proto
+       drží rám, stejnou jako by měla mapa. */
+    .pzm-nahrada{height:390px;}
+    .pzm .leaflet-control-attribution{font-size:10px; max-width:70%;}
+    @media (max-width:560px){
+      .pzm-mapa{height:300px;}
+      /* Na úzkém displeji se posuvník nevejde do řádku s přepínači, a když
+         se zalomí doprava, visí v prázdnu. Ať zabere celý řádek. */
+      .pzm-kryti{width:100%;}
+      .pzm-kryti input{flex:1;}
+    }
+
     .pz-loading, .pz-empty{padding:70px 16px; text-align:center; color:var(--text-ondark-mute);}
     .pz-empty a{color:var(--copper-bright); font-weight:600;}
   </style>
@@ -208,14 +257,16 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/snimek.js?v=f03daf92"></script>
+<script src="vendor/leaflet/leaflet.js?v=5a640ff8" defer></script>
+<script src="js/mapove-vrstvy.js?v=8db184f6" defer></script>
+<script src="js/snimek.js?v=19045f9d"></script>
 <script src="js/terminy.js?v=63a1d1b6"></script>
 <script src="js/ceny.js?v=fec72b06"></script>
 <script src="js/vybaveni.js?v=54b36f73"></script>
 <script src="js/radce.js?v=0491f655"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Place","name":"Orná půda 23 526 m² — Lednice, okres Břeclav","description":"Na prodej · 1 229 000 Kč (52 Kč/m²) · 23 526 m² · Lednice, okres Břeclav. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-breclav-lednice-16djd77.html","address":{"@type":"PostalAddress","addressLocality":"Lednice","addressRegion":"Břeclav","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":48.793896,"longitude":16.778848}}</script>
 <script>window.PK_POZEMEK={"k":"Lednice|—|Břeclav|48.794|16.779","ll":[48.793896,16.778848]};</script>
-<script src="js/pozemek.js?v=d916fe59"></script>
+<script src="js/pozemek.js?v=df275909"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

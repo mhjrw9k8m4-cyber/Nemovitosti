@@ -280,7 +280,6 @@
     'Plyn': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 3 5 6 5 9a5 5 0 0 1-10 0c0-1 .5-2 1-3 .5 2 2 2 2 2 0-2 1-6 2-8z"/></svg>',
     'Oplocení': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l2-3 2 3v9H4zM10 10l2-3 2 3v9h-4zM16 10l2-3 2 3v9h-4zM2 13h20"/></svg>'
   };
-  var PLAN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/></svg>';
   /* SMÍM TU STAVĚT? To je u pozemku ta nejdražší otázka — a Parcelka na ni
      odpovědět neumí: rozhoduje o tom územní plán obce a ten jako jedna
      vrstva pro celou republiku NEEXISTUJE. Každá obec s rozšířenou
@@ -299,6 +298,251 @@
     return 'https://search.seznam.cz/?q=' + encodeURIComponent(q.trim());
   }
   var ACCESS_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l6-16M20 20l-6-16M9 12h6"/></svg>';
+  /* ======================================================== MAPA S VRSTVAMI
+     Detail pozemku měl nahoře nehybný letecký snímek a tím to končilo.
+     Na otázku „smím tu stavět?" se ale obrázkem odpovědět nedá: člověk si
+     musí umět položit územní plán PŘES ten pozemek, přepnout na hranice
+     parcel a odjet o pár set metrů, jestli ta louka není v záplavě.
+     Proto je tu skutečná mapa — a proto se zapíná až když se k ní člověk
+     doroluje: nahoře na stránce je podstatná cena a termín, ne dlaždice.
+
+     Obrys pozemku se tu nekreslí. Vlastní hranici neznáme (je v katastru)
+     a vymyšlený pětiúhelník by se na letecké mapě od hranice parcely
+     nedal odlišit — tutéž věc už jednou zvážil js/snimek.js a dopadlo to
+     stejně. Kdo hranici chce, zapne si vrstvu „Hranice parcel", která ji
+     má z katastru. */
+  /* Adresy dlaždic drží js/snimek.js — tam, kde je i adresa nehybného
+     snímku nad stránkou. Tady by to byla druhá kopie téhož. */
+  var ZAKLADY = (global.PK_SNIMEK && global.PK_SNIMEK.podklady) || [];
+
+  function pzMapaHtml(d) {
+    if (!isFinite(d.lat) || !isFinite(d.lng)) return '';
+    return '<h2 class="pz-sect-h">Pozemek na mapě</h2>' +
+      '<div class="pzm" id="pzm">' +
+        '<div class="pzm-mapa" id="pzm-mapa" role="application" aria-label="Mapa pozemku, kterou lze posouvat a přibližovat"></div>' +
+        '<div class="pzm-panel">' +
+          '<div class="pzm-zaklad" role="group" aria-label="Podklad mapy">' +
+            ZAKLADY.map(function (z, i) {
+              return '<button class="pzm-z' + (i === 0 ? ' on' : '') + '" type="button" data-zaklad="' + z.id +
+                '" aria-pressed="' + (i === 0) + '">' + esc(z.nazev) + '</button>';
+            }).join('') +
+          '</div>' +
+          /* Přepínače vrstev se dopisují, jak které služby odpovídají —
+             proto aria-live: kdo nevidí, dozví se, že něco přibylo. */
+          '<div class="pzm-vr" id="pzm-vr" aria-live="polite">' +
+            '<span class="pzm-hleda"><span class="mnb-ceka" aria-hidden="true"></span>Zkouším mapové vrstvy úřadů…</span>' +
+          '</div>' +
+          '<label class="pzm-kryti" id="pzm-kryti" hidden>' +
+            '<span>Průhlednost vrstvy</span>' +
+            '<input type="range" id="pzm-kryti-r" min="20" max="100" step="5" value="65" aria-label="Průhlednost zapnuté vrstvy">' +
+          '</label>' +
+        '</div>' +
+        '<p class="pzm-popis" id="pzm-popis" hidden></p>' +
+        '<div class="pzm-leg" id="pzm-leg" hidden></div>' +
+      '</div>' +
+      /* Odkaz na plán obce zůstává i kdyby žádná vrstva nejela: územní plán
+         vydává každá obec zvlášť a to, co je v celostátní vrstvě, nemusí být
+         to, co platí na úřadě. Tohle je jediná věta na stránce, která se
+         nesmí ztratit — proto stojí mimo mapu, ne v ní. */
+      '<p class="pzm-pod">Vrstvy jsou náhled z veřejných služeb úřadů, ne potvrzení. Rozhoduje platný výkres na úřadě — ' +
+        '<a href="' + esc(planHledatUrl(d)) + '" target="_blank" rel="noopener">najít územní plán obce ' + esc(d.place || '') + VEN + '</a>.</p>';
+  }
+
+  /** Zapne mapu v detailu. Bez Leafletu ukáže aspoň nehybný snímek. */
+  function zapniMapu(d) {
+    var obal = document.getElementById('pzm');
+    if (!obal) return;
+    var L = global.L;
+    if (!L || !L.map) {
+      /* Leaflet se nenačetl (blokovaný skript, offline). Prázdný rám by
+         vypadal jako rozbitá stránka, tak tam dáme tentýž snímek jako
+         nahoře — statický, ale poctivý. */
+      obal.innerHTML = global.PK_SNIMEK
+        ? global.PK_SNIMEK.html(d, { sirka: 640, vyska: 400, barva: TYPE[d.type].color, id: 'pzmfb' })
+        : '';
+      obal.classList.add('pzm-nahrada');
+      return;
+    }
+
+    if (!ZAKLADY.length) { obal.hidden = true; return; }
+    var z = global.PK_SNIMEK && global.PK_SNIMEK.priblizeni ? global.PK_SNIMEK.priblizeni(d, 640, 420) : 16;
+    var m = L.map('pzm-mapa', {
+      center: [d.lat, d.lng], zoom: Math.max(13, Math.min(18, z)),
+      /* Kolečko myši se nezabírá hned: stránka je dlouhá a mapa uprostřed,
+         která při rolování začne zoomovat, je past. Povolí se, až člověk
+         do mapy klepne — tím dal najevo, že s ní pracuje. */
+      scrollWheelZoom: false, zoomControl: true
+    });
+    m.on('click', function () { m.scrollWheelZoom.enable(); });
+    global.PK_PZ_MAPA = m;
+
+    // podklad
+    var zaklad = null;
+    function nastavZaklad(id) {
+      var def = ZAKLADY.filter(function (x) { return x.id === id; })[0] || ZAKLADY[0];
+      if (zaklad) m.removeLayer(zaklad);
+      zaklad = L.tileLayer(def.url, { attribution: def.uvedeni, maxZoom: def.max }).addTo(m);
+      zaklad.bringToBack();
+      obal.querySelectorAll('.pzm-z').forEach(function (b) {
+        var on = b.getAttribute('data-zaklad') === def.id;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
+    }
+    nastavZaklad(ZAKLADY[0].id);
+    obal.querySelectorAll('.pzm-z').forEach(function (b) {
+      b.addEventListener('click', function () { nastavZaklad(b.getAttribute('data-zaklad')); });
+    });
+
+    /* Měřítko není ozdoba: u pozemku je to jediné, z čeho se dá na mapě
+       poznat, jestli je ta parcela jako zahrádka, nebo jako pole. */
+    L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(m);
+
+    // špendlík na bodu z dat
+    L.marker([d.lat, d.lng], {
+      keyboard: false,
+      icon: L.divIcon({ className: 'pzm-pin', iconSize: [26, 34], iconAnchor: [13, 34],
+        html: '<svg viewBox="-14 -36 28 38" width="26" height="34" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">' +
+          '<path d="M0 0C-7 -12 -12 -18 -12 -25 A12 12 0 1 1 12 -25 C12 -18 7 -12 0 0Z" fill="' + TYPE[d.type].color +
+          '" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/><circle cx="0" cy="-25" r="4.6" fill="#fff"/></svg>' })
+    }).addTo(m);
+
+    // ——— vrstvy úřadů ———
+    var vrstvy = document.getElementById('pzm-vr');
+    var popis = document.getElementById('pzm-popis');
+    var kryti = document.getElementById('pzm-kryti');
+    var posuvnik = document.getElementById('pzm-kryti-r');
+    var zive = {};          // id → Leaflet vrstva, jen ty zapnuté
+    var pridano = 0;
+
+    function prepocitejKryti() {
+      var kolik = Object.keys(zive).length;
+      if (kryti) kryti.hidden = kolik === 0;
+      if (popis) {
+        var texty = Object.keys(zive).map(function (k) { return zive[k]._pkPopis; }).filter(Boolean);
+        popis.hidden = texty.length === 0;
+        popis.textContent = texty.join(' ');
+      }
+      if (posuvnik) {
+        var v = (+posuvnik.value || 65) / 100;
+        Object.keys(zive).forEach(function (k) { zive[k].setOpacity(v); });
+      }
+    }
+    if (posuvnik) posuvnik.addEventListener('input', prepocitejKryti);
+
+    /* VYSVĚTLIVKY. Zapnutý územní plán je bez klíče jen barevná skvrna.
+       Obrázek vydává sama služba; když ho nevydá, nesmí zbýt prázdný
+       rámeček s popiskem — zmizí celý, stejně jako mizí přepínač vrstvy,
+       kterou se nepovedlo načíst. */
+    var legendy = document.getElementById('pzm-leg');
+    function prepocitejLegendy() {
+      if (legendy) legendy.hidden = legendy.querySelectorAll('.pzm-leg-k:not([hidden])').length === 0;
+    }
+    function pridejLegendu(zapis) {
+      if (!legendy || !global.PK_VRSTVY || !global.PK_VRSTVY.legendaAdresa) return;
+      var url = global.PK_VRSTVY.legendaAdresa(zapis.sluzba);
+      if (!url) return;
+      var f = document.createElement('figure');
+      f.className = 'pzm-leg-k';
+      f.setAttribute('data-id', zapis.def.id);
+      f.hidden = true;
+      var pop = document.createElement('figcaption');
+      pop.textContent = zapis.def.nazev;
+      var img = document.createElement('img');
+      img.alt = 'Vysvětlivky k vrstvě ' + zapis.def.nazev;
+      img.onload = function () { f.hidden = false; prepocitejLegendy(); };
+      img.onerror = function () { if (f.parentNode) f.parentNode.removeChild(f); prepocitejLegendy(); };
+      f.appendChild(pop); f.appendChild(img);
+      legendy.appendChild(f);
+      img.src = url;
+    }
+    function odeberLegendu(id) {
+      if (!legendy) return;
+      var f = legendy.querySelector('.pzm-leg-k[data-id="' + id + '"]');
+      if (f && f.parentNode) f.parentNode.removeChild(f);
+      prepocitejLegendy();
+    }
+
+    function pridejPrepinac(zapis) {
+      var def = zapis.def;
+      if (!pridano++) vrstvy.innerHTML = '';
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pzm-v';
+      b.setAttribute('data-id', def.id);
+      b.setAttribute('aria-pressed', 'false');
+      b.textContent = def.nazev;
+      b.addEventListener('click', function () {
+        if (zive[def.id]) {
+          m.removeLayer(zive[def.id]);
+          delete zive[def.id];
+          b.classList.remove('on');
+          b.setAttribute('aria-pressed', 'false');
+          odeberLegendu(def.id);
+        } else {
+          var v = global.PK_VRSTVY.leafletVrstva(zapis, L);
+          if (!v) return;
+          v._pkPopis = def.popis || '';
+          if (posuvnik) v.setOpacity((+posuvnik.value || 65) / 100);
+          v.addTo(m);
+          zive[def.id] = v;
+          b.classList.add('on');
+          b.setAttribute('aria-pressed', 'true');
+          /* Katastrální mapa se kreslí až od určitého přiblížení. Když se
+             zapne z výšky, nestane se nic a vypadá to jako rozbité —
+             tak se mapa přiblíží sama, aby bylo co vidět. */
+          if (def.odPriblizeni && m.getZoom() < def.odPriblizeni) m.setZoom(def.odPriblizeni);
+          pridejLegendu(zapis);
+        }
+        prepocitejKryti();
+      });
+      vrstvy.appendChild(b);
+    }
+
+    if (global.PK_VRSTVY) {
+      global.PK_VRSTVY.pripravene({ lat: d.lat, lng: d.lng }, pridejPrepinac).then(function (vse) {
+        if (vse.length) return;
+        /* Nula vrstev. Mlčet by bylo horší než to říct: člověk by čekal
+           přepínače, které nikdy nepřijdou. Věta říká, co se stalo, a ne
+           že je něco s jeho pozemkem. */
+        vrstvy.innerHTML = '<span class="pzm-nic">Vrstvy úřadů teď neodpovídají. Mapa i tak funguje; územní plán obce najdete odkazem pod mapou.</span>';
+      }).catch(function () {
+        vrstvy.innerHTML = '';
+      });
+    } else {
+      vrstvy.innerHTML = '';
+    }
+
+    setTimeout(function () { try { m.invalidateSize({ pan: false }); } catch (e) {} }, 60);
+  }
+
+  /* Mapová knihovna se na stránce pozemku načítá ODLOŽENĚ (defer): mapa je
+     až dole a kvůli ní se nemá zdržovat cena nahoře. Jenže tenhle skript
+     běží dřív, takže „L" ještě nemusí existovat — a na širokém monitoru se
+     mapa dostane na dohled hned. Proto se na knihovnu krátce počká; když
+     nedojede ani do šesti vteřin, ukáže se nehybný snímek. */
+  function sLeafletem(hotovo) {
+    if (global.L && global.L.map) return hotovo();
+    var pokusy = 0;
+    var t = setInterval(function () {
+      if ((global.L && global.L.map) || ++pokusy > 60) { clearInterval(t); hotovo(); }
+    }, 100);
+  }
+
+  /** Mapa se staví, až když je na dohled — nahoře na stránce je cena, ne dlaždice. */
+  function pripravMapu(d) {
+    var obal = document.getElementById('pzm');
+    if (!obal) return;
+    function ted() { sLeafletem(function () { zapniMapu(d); }); }
+    if (!global.IntersectionObserver) { ted(); return; }
+    var io = new IntersectionObserver(function (zaznamy) {
+      if (!zaznamy.some(function (z) { return z.isIntersecting; })) return;
+      io.disconnect();
+      ted();
+    }, { rootMargin: '300px 0px' });
+    io.observe(obal);
+  }
+
   function pzFeaturesHtml(d) {
     var feats = Array.isArray(d.features) ? d.features : [];
     var chips = feats.map(function (f) {
@@ -380,6 +624,8 @@
 
       pzFeaturesHtml(d) +
 
+      pzMapaHtml(d) +
+
       '<div class="pz-cta">' +
         /* Tlačítka vedou pryč z webu a do nového okna. Vidět to jde podle
            šipky, slyšet ne — proto věta navíc jen pro odečítač obrazovky. */
@@ -398,7 +644,6 @@
 
       '<div class="pz-actions">' +
         '<a class="pz-abtn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">' + PIN_SVG + 'Otevřít v katastru' + VEN + '</a>' +
-        '<a class="pz-abtn" href="' + esc(planHledatUrl(d)) + '" target="_blank" rel="noopener">' + PLAN_SVG + 'Najít územní plán' + VEN + '</a>' +
         '<button class="pz-abtn' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">' + HEART_SVG + '<span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
         '<button class="pz-abtn" type="button" id="pz-share">' + SHARE_SVG + 'Sdílet</button>' +
       '</div>' +
@@ -408,6 +653,10 @@
 
     var host = document.getElementById('pz-detail');
     host.innerHTML = html;
+
+    /* Mapa se staví až po vykreslení: potřebuje prvek v dokumentu a vlastní
+       rozměr. Sama si pak počká, než se k ní člověk doroluje. */
+    try { pripravMapu(d); } catch (e) {}
 
     // titulek stránky a vlastní adresa v kanonickém odkazu
     try { document.title = d.place + ' — ' + fmt(d.price) + ' Kč · Parcelka'; } catch (e) {}

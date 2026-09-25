@@ -23,6 +23,18 @@
 
   var ZDROJ = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/';
 
+  /* Podklady pro ŽIVOU mapu (Leaflet) v detailu pozemku. Adresa leteckých
+     dlaždic je tatáž jako u nehybného snímku nad tím — proto sedí tady
+     a ne v js/pozemek.js. Dvě kopie téže adresy se rozejdou úplně stejně,
+     jako se kdysi rozešly dva výpočty snímku; to je celý důvod, proč
+     tenhle soubor vznikl. */
+  var PODKLADY = [
+    { id: 'letecka', nazev: 'Letecká', url: ZDROJ + '{z}/{y}/{x}',
+      uvedeni: '&copy; Esri, Maxar, Earthstar Geographics', max: 19 },
+    { id: 'zakladni', nazev: 'Základní', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      uvedeni: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', max: 19 }
+  ];
+
   function worldX(lng, n) { return (lng + 180) / 360 * 256 * n; }
   function worldY(lat, n) {
     var r = lat * Math.PI / 180;
@@ -106,5 +118,5 @@
       '</span>';
   }
 
-  global.PK_SNIMEK = { html: html, popis: popis, priblizeni: priblizeni, metryNaBod: metryNaBod };
+  global.PK_SNIMEK = { html: html, popis: popis, priblizeni: priblizeni, metryNaBod: metryNaBod, podklady: PODKLADY };
 })(window);

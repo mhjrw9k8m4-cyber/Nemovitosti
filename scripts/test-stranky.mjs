@@ -133,10 +133,13 @@ for (const s of VZOREK) {
      odkaz, takže se muselo odcházet a hledat od nuly. Odpovědět za obec
      Parcelka nemůže (celostátní vrstva územních plánů neexistuje, vydává
      je každá ORP zvlášť), ale odchod musí zkrátit na jedno klepnutí —
-     a s obcí v dotazu, ne naprázdno. */
+     a s obcí v dotazu, ne naprázdno.
+     Odkaz se přestěhoval z řady tlačítek pod mapu s vrstvami, kam patří
+     obsahem: mapa umí plán ukázat jako vrstvu, a když ho úřední služba
+     nedá, tahle věta je náhradní cesta. Proto se hledá i v „.pzm-pod". */
   if (s.startsWith('pozemek.html?p=')) {
     const plan = await p.evaluate(() => {
-      const a2 = [...document.querySelectorAll('.pz-actions a, .pz-cta a')]
+      const a2 = [...document.querySelectorAll('.pz-actions a, .pz-cta a, .pzm-pod a')]
         .find((e) => /územní plán/i.test(e.textContent || ''));
       const obec = (document.querySelector('.pz-place') || {}).textContent || '';
       return a2 ? { href: a2.getAttribute('href') || '', obec: obec.trim() } : null;
