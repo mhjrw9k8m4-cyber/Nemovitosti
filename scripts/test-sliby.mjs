@@ -48,6 +48,31 @@ const nabidky = data.opportunities || [];
   pravda('počet zdrojů v úvodu sedí se seznamem pod ním',
     !!napsano && Number(napsano[1]) === cipu,
     `napsáno ${napsano ? napsano[1] : '?'}, vypsaných zdrojů ${cipu}`);
+
+  /* Počet sám o sobě nestačí: dal se nafouknout tím, co zdroj NENÍ. Mezi
+     šesti zdroji stál katastr nemovitostí — jenže z něj nepřichází ani
+     jedna nabídka, je to ÚŘEDNÍ OVĚŘENÍ toho, co jsme našli jinde.
+     Zdroj je to, odkud data tečou; nástroj na ověření patří vedle, ne
+     do počtu. */
+  const rada = idx.slice(idx.indexOf('<div class="source-row">'));
+  const seznamZdroju = rada.slice(0, rada.indexOf('</div>\n      </div>') + 6);
+  pravda('mezi zdroji nestojí nástroj na ověřování',
+    !/katast/i.test(seznamZdroju),
+    'katastr je vypsaný jako zdroj nabídek — z katastru ale žádná nabídka nepřichází');
+
+  /* U každého zdroje svítí odznak „kolik naposledy přinesl". Ten odznak
+     se k čipu páruje přes data-zdroj — a když klíč nesedí se jménem
+     v datech, odznak buď zmizí, nebo (hůř) ukáže počet CIZÍHO zdroje.
+     Přesně to se stalo, když se párovalo hádáním z názvu: „Centrální
+     evidence veřejných dražeb" zůstala bez čísla a „Nucené dražby"
+     ukazovaly její počet. Nic nespadlo, jen web lhal číslem. */
+  const klice = [...idx.matchAll(/class="source-chip" data-zdroj="([^"]+)"/g)].map((m) => m[1]);
+  const vData = (data.sources || []).map((z) => z.nazev);
+  pravda('každý vypsaný zdroj má klíč ke svému stavu', klice.length === cipu,
+    `čipů ${cipu}, z toho s klíčem ${klice.length}`);
+  const neznam = klice.filter((k) => vData.indexOf(k) === -1);
+  pravda('a ten klíč v datech opravdu existuje', neznam.length === 0,
+    `web se ptá na zdroje ${neznam.join(', ')}, data znají ${vData.join(', ')}`);
 }
 
 /* ---- 2) „Pokrýváme celou Českou republiku" ---- */
@@ -111,6 +136,24 @@ function chibiPrazdne(a) { return a.length === 0; }
   pravda('slovníček vysvětluje odborné výrazy, které web sám používá',
     nevysvetlene.length === 0,
     `nevysvětlené: ${nevysvetlene.join(', ')} — a přitom web slibuje „vysvětlíme každý pojem"`);
+}
+
+/* ---- 6b) Slovníček neslibuje data, která nemáme ---- */
+/* „Insolvence" je ve slovníčku vysvětlená, ale mezi zdroji žádný
+   insolvenční rejstřík není — a v datech není ani jedna nabídka
+   z insolvence. Vysvětlený pojem se přitom čte jako nabídka („tohle tu
+   najdete"), takže se u něj musí rovnou říct, proč ho tu nenajdete.
+   Až se insolvenční rejstřík mezi zdroje přidá, tahle kontrola se sama
+   vypne — hlídá totiž jen ten rozpor, ne konkrétní větu. */
+{
+  const zInsolvence = nabidky.filter((o) => /insolven/i.test(JSON.stringify(o))).length;
+  const usek = idx.slice(idx.indexOf('id="slovnicek"'));
+  const heslo = /<h4>Insolvence<\/h4>\s*<p>([^<]*)<\/p>/.exec(usek.slice(0, usek.indexOf('</section>')));
+  if (heslo && zInsolvence === 0) {
+    pravda('slovníček přiznává, že insolvenční rejstřík neprocházíme',
+      /neprochází|nesledujeme|mezi zdroji není/i.test(heslo[1]),
+      'insolvence je vysvětlená jako by to byl jeden z druhů nabídek, ale ani jedna taková v datech není a rejstřík mezi zdroji nestojí');
+  }
 }
 
 /* ---- 7) Placené se nenabízí, dokud se nedá zaplatit ---- */

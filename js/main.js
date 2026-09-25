@@ -573,17 +573,19 @@
     if (!Array.isArray(zdrojeStav) || !zdrojeStav.length) return;
     var pasy = document.querySelectorAll('.source-chip');
     if (!pasy.length) return;
+    /* Zdroj se k odznaku páruje podle data-zdroj, ne podle textu.
+       Dřív se hádalo z názvu („najdi první slovo delší než tři znaky")
+       a dopadlo to takhle: „Centrální evidence veřejných dražeb" se
+       neshodla s klíčem „Dražby" (dražeb × dražby) a zůstala bez čísla,
+       „SPÚ" mělo tři znaky a propadlo taky — a u „Nucených dražeb
+       (exekuce)" se naopak ukázal počet z Centrální evidence. Tři zdroje
+       z pěti tedy hlásily cizí číslo nebo žádné, a nikdo to nepoznal,
+       protože se odznak tvářil stejně dobře. Klíč se teď píše do HTML
+       a test hlídá, že ke každému existuje zdroj v datech. */
     var podleJmena = {};
-    zdrojeStav.forEach(function (z) { if (z && z.nazev) podleJmena[z.nazev.toLowerCase()] = z; });
+    zdrojeStav.forEach(function (z) { if (z && z.nazev) podleJmena[z.nazev] = z; });
     pasy.forEach(function (chip) {
-      var text = (chip.textContent || '').toLowerCase();
-      var nalez = null;
-      Object.keys(podleJmena).forEach(function (k) {
-        // Název v datech je zkratka („OK dražby"), na webu stojí celý název
-        // zdroje — hledá se tedy podřetězec oběma směry.
-        var prvni = k.split(/[\s(]/)[0];
-        if (prvni && prvni.length > 3 && text.indexOf(prvni) !== -1) nalez = podleJmena[k];
-      });
+      var nalez = podleJmena[chip.getAttribute('data-zdroj') || ''];
       if (!nalez) return;
       var znacka = document.createElement('span');
       znacka.className = 'src-stav' + (nalez.stav === 'ok' && nalez.pocet ? '' : ' src-zle');

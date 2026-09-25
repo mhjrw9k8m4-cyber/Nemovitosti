@@ -825,6 +825,12 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .source-row{display:flex; flex-wrap:wrap; gap:12px; margin-top:16px;}
 .source-chip{display:inline-flex; align-items:center; gap:8px; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-lg); padding:9px 16px; font-size:13.5px; font-weight:500; color:var(--text-ondark);}
 .s-dot{width:8px; height:8px; border-radius:50%;}
+/* Katastr stojí pod řadou zdrojů, ne v ní — je to ověření, ne zdroj nabídek.
+   Tečka zůstává, aby bylo poznat, že patří k téže rodině; text je ale věta,
+   ne odznak, protože se tu něco vysvětluje. */
+.sources-over{display:flex; align-items:baseline; gap:9px; margin:14px 0 0; max-width:62ch;
+  font-size:13.5px; line-height:1.6; color:var(--text-ondark-mute);}
+.sources-over .s-dot{flex:none; transform:translateY(-1px);}
 
 /* Sections */
 .section{padding:76px 0;}
@@ -2424,6 +2430,7 @@ body{background:var(--bg) var(--grad-plocha); background-size:cover;}
 .src-stat b{font-family:var(--font-display); font-weight:700; font-size:clamp(40px,5.4vw,68px); line-height:0.92; letter-spacing:-0.035em; color:var(--text-ondeep);}
 .src-stat span{font-size:13px; color:var(--text-ondeep-mute); max-width:18ch;}
 .sources-lead{color:var(--text-ondeep-mute);}
+.sources .sources-over{color:var(--text-ondeep-mute);}
 .sources .data-updated{color:var(--text-ondeep-mute);}
 .sources .source-chip{background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.28);
   color:var(--text-ondeep);}
