@@ -122,16 +122,20 @@ if (await seznam.isVisible()) {
   pravda('výpis po výběru něco ukazuje', false, 'nabídka se vůbec neukázala');
 }
 
-// --- 4b) „celý okres" opravdu znamená okres --------------------------
-/* Stížnost od člověka: „když dám okres Most, vyjede mi tam i Most
-   u Jablunkova". Měl pravdu a bylo to horší: návrh z našeptávače se jen
-   přepsal do políčka a dál se hledal jako TEXT, takže „celý okres Most"
-   znamenalo „kdekoli se vyskytne slovo most". Ze šesti nabídek byly
-   v okrese Most tři — zbytek byly Mosty u Jablunkova (Frýdek-Místek,
-   přes 400 km daleko), Dlouhý Most (Liberec) a Kněžmost (Mladá Boleslav).
+// --- 4b) Hotový název je volba, ne začátek ---------------------------
+/* Dvě stížnosti od lidí, obě o tomtéž:
+     „když dám okres MOST, tak mi tam vyjede i Most u Jablunkova"
+     „nevyhledává to konkrétní Most, ale vše, co obsahuje začátek most"
+   Na dnešních datech vracel dotaz „most" pět nabídek a v okrese Most
+   byly tři; zbytek Mosty u Jablunkova (Frýdek-Místek) a Dlouhý Most
+   (Liberec). Hledání podle začátku má smysl, dokud člověk píše — jakmile
+   napíše celý název, který v nabídce je, je to volba.
 
-   Okres se hledá v datech, ne napevno: aby test platil i tehdy, až se
-   nabídka celá vymění. */
+   Nesmí se ale nic tiše ztratit: podobné názvy se odloží stranou, je nad
+   výpisem napsané kolik jich je, a jedním klepnutím se přidají zpět.
+
+   Okres i obec se hledají v datech, ne napevno, ať test platí i po
+   výměně nabídky. */
 {
   const norm2 = (x) => norm(x).replace(/[-‐-―]/g, ' ').replace(/\s+/g, ' ').trim();
   let past = null;
@@ -139,7 +143,7 @@ if (await seznam.isVisible()) {
     const no = norm2(okres);
     if (!no || no.indexOf(' ') >= 0) continue;         // jednoslovný, ať jde napsat
     const cizi = DATA.filter((d) => d.okres !== okres &&
-      norm2(d.place).split(' ').some((w) => w.indexOf(no) === 0));
+      norm2(d.place) !== no && norm2(d.place).split(' ').some((w) => w.indexOf(no) === 0));
     if (cizi.length && DATA.some((d) => d.okres === okres)) {
       past = { okres: okres, text: no, cizi: [...new Set(cizi.map((d) => d.place))] };
       break;
@@ -153,50 +157,76 @@ if (await seznam.isVisible()) {
       const m = /(\d+)\s*na mapě/.exec(t.replace(/ /g, ' '));
       return m ? +m[1] : -1;
     };
+    const vypis = () => p.locator('#opp-list').innerText().catch(() => '');
+
     await pole.fill('');
     await pole.type(past.text, { delay: 40 });
     await p.waitForTimeout(500);
-    const pred = await pocet();
-    const seznamPred = await p.locator('#opp-list').innerText().catch(() => '');
+    await p.keyboard.press('Escape');      // ať nabídka nepřekrývá výpis
+    await p.waitForTimeout(400);
 
-    // Řádek „celý okres X" — ne první, co padne pod ruku.
-    const radky = await p.locator('#map-search-navrhy li').all();
+    const uzky = await pocet();
+
+    /* Pozor na falešnou útěchu: výpis je stránkovaný, takže „obec odjinud
+       tam není" projde i tehdy, když se jen nevešla. Kontroluje se proto
+       jen to, co je vidět po ROZŠÍŘENÍ — a teprve pak, že to po zúžení
+       zmizelo. (Ověřeno sabotáží: bez tohohle kroku prošla tahle kontrola
+       i s úplně vypnutým zúžením.) */
+    const nabidka = p.locator('#mc-podobne');
+    const jeNabidka = (await nabidka.count()) === 1;
+    pravda('a nad výpisem stojí, kolik podobných názvů se nepočítá', jeNabidka,
+      'zúžit výpis a mlčet o tom je horší než vrátit moc');
+    if (jeNabidka) {
+      const popis = (await nabidka.innerText()).replace(/\s+/g, ' ');
+      pravda('u té nabídky je i počet', /\(\d+\)/.test(popis), `stojí tam „${popis}"`);
+      await nabidka.click();
+      await p.waitForTimeout(500);
+      const siroky = await pocet();
+      pravda('a po klepnutí se podobné názvy vrátí', siroky > uzky,
+        `přesný název ${uzky}, s podobnými ${siroky}`);
+      const seznamSiroky = await vypis();
+      const vidiny = past.cizi.filter((o) => seznamSiroky.indexOf(o) >= 0);
+      pravda('teprve tehdy je ve výpisu obec odjinud', vidiny.length > 0,
+        'nevrátila se ani jedna z: ' + past.cizi.slice(0, 3).join(', '));
+      await nabidka.click();               // zpátky na přesný název
+      await p.waitForTimeout(400);
+      if (vidiny.length) {
+        const zpet = await vypis();
+        const zbyle = vidiny.filter((o) => zpet.indexOf(o) >= 0);
+        pravda(`a napsané „${past.text}" je zase nevrací`, zbyle.length === 0,
+          've výpisu visí: ' + zbyle.join(', ') + ' — hotový název se pořád bere jako začátek');
+      }
+    }
+
+    // --- a volba „celý okres" z našeptávače ---------------------------
+    await pole.fill('');
+    await pole.type(past.text, { delay: 40 });
+    await p.waitForTimeout(500);
     let kliknuto = false;
-    for (const r of radky) {
+    for (const r of await p.locator('#map-search-navrhy li').all()) {
       const t = (await r.innerText().catch(() => '')).replace(/\s+/g, ' ');
       if (/celý okres/.test(t) && norm2(t).indexOf(norm2(past.okres)) >= 0) {
         await r.click({ timeout: 3000 }); kliknuto = true; break;
       }
     }
-    if (!pravda(`našeptávač nabídne „celý okres ${past.okres}"`, kliknuto,
+    if (pravda(`našeptávač nabídne „celý okres ${past.okres}"`, kliknuto,
         'v nabídce žádný řádek „celý okres" nebyl')) {
-      // nic dalšího se zkoušet nedá
-    } else {
       await p.waitForTimeout(500);
-      const po = await pocet();
-      pravda(`„celý okres ${past.okres}" výpis zúží`, po > 0 && pred > 0 && po < pred,
-        `před výběrem ${pred}, po výběru ${po} — obec z jiného okresu (${past.cizi.slice(0, 3).join(', ')}) se do okresu nepočítá`);
+      const poVolbe = await pocet();
+      pravda(`„celý okres ${past.okres}" nepřidá obce odjinud`,
+        poVolbe > 0 && poVolbe <= uzky,
+        `přesný název ${uzky}, po volbě okresu ${poVolbe}`);
+      const seznamOkres = await vypis();
+      const zbyle2 = past.cizi.filter((o) => seznamOkres.indexOf(o) >= 0);
+      pravda('a ve výpisu po volbě okresu žádná není', zbyle2.length === 0,
+        've výpisu visí: ' + zbyle2.join(', '));
 
-      /* A doopravdy: žádná z těch cizích obcí nesmí ve výpisu zůstat.
-         Kontroluje se jen to, co tam předtím vidět BYLO — co se do
-         výpisu nevešlo, o ničem nevypovídá. */
-      const seznamPo = await p.locator('#opp-list').innerText().catch(() => '');
-      const bylo = past.cizi.filter((o) => seznamPred.indexOf(o) >= 0);
-      if (bylo.length) {
-        const zbylo = bylo.filter((o) => seznamPo.indexOf(o) >= 0);
-        pravda('a obce z jiných okresů z výpisu zmizí', zbylo.length === 0,
-          've výpisu pořád visí: ' + zbylo.join(', '));
-      }
-
-      // Musí to jít zrušit — a musí být vidět, že je to zapnuté.
       const odznak = await p.locator('#ms-chipy .msch[data-misto]').count();
       pravda('vybrané místo je vidět jako odznak', odznak === 1, `odznaků: ${odznak}`);
       if (odznak === 1) {
         await p.locator('#ms-chipy .msch[data-misto]').click();
         await p.waitForTimeout(400);
-        const poZruseni = await pocet();
-        pravda('a po zrušení odznaku se výpis zase rozšíří', poZruseni > po,
-          `po výběru ${po}, po zrušení ${poZruseni}`);
+        pravda('a po zrušení odznaku zmizí i on', (await p.locator('#ms-chipy .msch[data-misto]').count()) === 0);
       }
     }
   }

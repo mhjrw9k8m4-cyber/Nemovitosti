@@ -867,6 +867,36 @@
      Napsaný text zůstává napsaný text a hledá se volně dál — zúží se jen
      to, na co člověk ukázal prstem. */
   var mistoFiltr = null;   // {typ:'okres', okres} | {typ:'obec', place, okres}
+  /* HOTOVÝ NÁZEV NENÍ ZAČÁTEK.
+     Kdo napíše „Most", myslí Most — ne všechno, co tím slovem začíná.
+     Dokud se každé slovo bralo jen jako začátek, vracel dotaz „Most"
+     pět nabídek: tři z okresu Most, k tomu Mosty u Jablunkova (okres
+     Frýdek-Místek) a Dlouhý Most (Liberec). Hledání podle začátku má
+     smysl, dokud člověk píše („zdic" → Zdice); jakmile ale napíše celý
+     název, který v nabídce opravdu je, je to volba, ne rozepsané slovo.
+     Podobné názvy se proto odloží stranou — ne zahodí: je nad výpisem
+     napsané, kolik jich je, a jedním klepnutím se přidají zpět. */
+  var ukazPodobne = false;
+  var _jmenaKlic = null, _jmena = null;
+  function znamaJmena() {
+    if (_jmena && _jmenaKlic === DATA.length) return _jmena;
+    var m = Object.create(null);
+    for (var i = 0; i < DATA.length; i++) {
+      var d = DATA[i];
+      if (d.place) m[HL.norm(d.place)] = true;
+      if (d.okres) m[HL.norm(d.okres)] = true;
+    }
+    _jmena = m; _jmenaKlic = DATA.length;
+    return m;
+  }
+  /* Vrátí dotaz, pokud je CELÝ přesným názvem obce nebo okresu. */
+  function presnyNazev() {
+    var q = HL.norm(searchTerm);
+    return (q && znamaJmena()[q]) ? q : null;
+  }
+  function jePresna(d, q) {
+    return HL.norm(d.place) === q || HL.norm(d.okres) === q;
+  }
   function sediMisto(d) {
     if (!mistoFiltr) return true;
     if (mistoFiltr.typ === 'okres') return HL.norm(d.okres) === HL.norm(mistoFiltr.okres);
@@ -926,8 +956,11 @@
     }
     searchToks = HL.tokeny(searchTerm);
     /* Jakmile člověk text změní, přestává platit i to, na co předtím
-       ukázal — jinak by mu zůstal viset filtr, který v políčku nevidí. */
+       ukázal — jinak by mu zůstal viset filtr, který v políčku nevidí.
+       Totéž platí pro rozšíření na podobné názvy: patří k jednomu
+       dotazu, ne k celé návštěvě. */
     mistoFiltr = null;
+    ukazPodobne = false;
   }
   var favOnly = false;
   var ukazSkryte = false;   // „Zobrazit skryté" — dočasně, neukládá se
@@ -2666,6 +2699,13 @@
     // ani jednou z 732 obcí s diakritikou a „Beroun Zdice" nenašlo nic.
     var okSearch = !searchToks.length || HL.vyhovuje(d, searchToks);
     var okMisto = sediMisto(d);
+    /* Vybrané místo z našeptávače je přísnější, takže se tohle při něm
+       neuplatňuje — jinak by nad výpisem visely dvě hlášky o témže. */
+    var okPresne = true;
+    if (!ukazPodobne && !mistoFiltr) {
+      var _pn = presnyNazev();
+      if (_pn) okPresne = jePresna(d, _pn);
+    }
     var okDruh = druhSedi(d.druh, activeDruh);
     var okPrice = (!maxPrice || (d.price && d.price <= maxPrice))
       && (!minPrice || (d.price && d.price >= minPrice));
@@ -2748,7 +2788,7 @@
     // (tlačítko „Zobrazit skryté"). Nenávratně se nic neztrácí.
     var okSkryt = ukazSkryte || !jeSkryty(d);
     var okProsle = ukazProsle || !jeProsle(d);
-    return okType && okSearch && okMisto && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
+    return okType && okSearch && okMisto && okPresne && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
       && okPerM2 && okKraj && okLevne && okOkoli && okProsle && okVybaveni && okCelek && okDotaz;
   }
   /* KTERÉ OMEZENÍ VYPRÁZDNILO VÝPIS
@@ -2817,6 +2857,12 @@
     pol('vybrané místo', 'vybrané místo', !!mistoFiltr,
       function () { mistoFiltr = null; },
       (function () { var a = mistoFiltr; return function () { mistoFiltr = a; }; }()));
+    /* Zúžení na přesný název je taky omezení — a zrovna tohle by byl
+       jinak nejhůř dohledatelný viník prázdného výpisu: v políčku je
+       napsaný název, který v nabídce je, a přesto nic. */
+    pol('přesný název', 'přesný název', !ukazPodobne && !mistoFiltr && !!presnyNazev(),
+      function () { ukazPodobne = true; },
+      (function () { var a = ukazPodobne; return function () { ukazPodobne = a; }; }()));
     pol('druh pozemku', 'druh pozemku', activeDruh !== 'all' || !!d.druh,
       function () { activeDruh = 'all'; d.druh = null; if (druhEl) druhEl.value = 'all'; },
       (function () { var a = activeDruh, b = d.druh; return function () { activeDruh = a; d.druh = b; if (druhEl) druhEl.value = a; }; }()));
@@ -3290,11 +3336,32 @@
     if (proslychStranou || ukazProsle) pripisky += ' <button type="button" class="mc-skryte" id="mc-prosle"><span>' +
       (ukazProsle ? 'Schovat dražby po termínu'
                   : 'Zobrazit dražby po termínu (' + proslychStranou + ')') + '</span></button>';
+    /* Kolik podobných názvů se právě nepočítá. Musí to být vidět:
+       zúžit výpis a mlčet o tom je horší než vrátit moc — člověk pak
+       neví, jestli nabídka není, nebo se jen skrývá. Počítá se přes
+       tytéž filtry, aby to číslo sedělo s tím, co se po klepnutí ukáže. */
+    var podobnychStranou = 0;
+    var _pnNazev = (!mistoFiltr && !ukazPodobne) ? presnyNazev() : null;
+    if (_pnNazev) {
+      ukazPodobne = true;
+      try {
+        for (var qi = 0; qi < DATA.length; qi++) {
+          var qd = DATA[qi];
+          if (!jePresna(qd, _pnNazev) && visible(qd)
+            && (!selectedKraj || (qd._gkraj || krajOf(qd)) === selectedKraj)) podobnychStranou++;
+        }
+      } finally { ukazPodobne = false; }
+    }
+    if (podobnychStranou || ukazPodobne) pripisky += ' <button type="button" class="mc-skryte" id="mc-podobne"><span>' +
+      (ukazPodobne ? 'Jen přesný název'
+                   : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '</span></button>';
     countEl.innerHTML = headLabel + (matched ? ' · <span class="mc-sub">' + matched + ' na mapě</span>' : '') + pripisky;
     var sb = countEl.querySelector('#mc-skryte');
     if (sb) sb.addEventListener('click', function (e) { e.stopPropagation(); ukazSkryte = !ukazSkryte; renderList(); });
     var pb = countEl.querySelector('#mc-prosle');
     if (pb) pb.addEventListener('click', function (e) { e.stopPropagation(); ukazProsle = !ukazProsle; renderList(); });
+    var qb = countEl.querySelector('#mc-podobne');
+    if (qb) qb.addEventListener('click', function (e) { e.stopPropagation(); ukazPodobne = !ukazPodobne; renderList(); });
     if (matched === 0) {
       /* Dřív to byl vlastní výčet, který neznal kraj, cenu za metr,
          vybavení ani nic z toho, co se pochopí z věty — takže na
