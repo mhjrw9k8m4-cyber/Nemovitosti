@@ -55,6 +55,26 @@
   var VEN = '<span class="visually-hidden"> — otevře se v novém okně mimo Parcelku</span>';
 
   function pkey(d) { return [d.place || '', d.parcel || '', d.okres || ''].join('|'); }
+  /* Název vlastní stránky pozemku. Tentýž výpočet dělá generátor v Node —
+     kdyby se rozešly, odkazovalo by se na neexistující soubor. */
+  var PK_MAPA = { 'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z' };
+  function pkSlug(s) {
+    return String(s || '').toLowerCase().replace(/[áčďéěíňóřšťúůýž]/g, function (c) { return PK_MAPA[c] || c; })
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+  function pkOtisk(s) {
+    var h = 5381;
+    for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return h.toString(36);
+  }
+  function pkeyPlny(d) {
+    var la = (typeof d.lat === 'number') ? d.lat.toFixed(3) : '';
+    var ln = (typeof d.lng === 'number') ? d.lng.toFixed(3) : '';
+    return [d.place || '', d.parcel || '', d.okres || '', la, ln].join('|');
+  }
+  function souborPozemku(d) {
+    return 'pozemek-' + pkSlug(d.okres) + '-' + pkSlug(d.place) + '-' + pkOtisk(pkeyPlny(d)) + '.html';
+  }
   function katastrUrl(d) { return 'https://ikatastr.cz/#zoom=18&lat=' + d.lat + '&lon=' + d.lng + '&info=' + d.lat + ',' + d.lng; }
   function mapyUrl(d) { return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat; }
   var SPU_OFFERS = 'https://spu.gov.cz/nabidky/prehled-cela-cr';
@@ -391,7 +411,12 @@
 
     // titulek stránky a vlastní adresa v kanonickém odkazu
     try { document.title = d.place + ' — ' + fmt(d.price) + ' Kč · Parcelka'; } catch (e) {}
-    try { nastavKanonickou('https://www.parcelaka.cz/pozemek.html?p=' + encodeURIComponent(pkey(d))); } catch (e) {}
+    /* Kanonická adresa je VLASTNÍ stránka pozemku, ne obecná pozemek.html
+       s dotazem. Sdílený odkaz tím vede tam, kde má každá nabídka svůj
+       titulek, popis i náhled — přes „?p=…" viděl Facebook u všech 1 927
+       nabídek totéž. Výpočet musí sedět s generátorem
+       (scripts/generate-parcel-pages.mjs), proto je to týž obyčejný djb2. */
+    try { nastavKanonickou('https://www.parcelaka.cz/' + souborPozemku(d)); } catch (e) {}
 
     // uložit
     var favBtn = document.getElementById('pz-fav');
@@ -456,6 +481,15 @@
     var ml = /[?&]ll=([^&]+)/.exec(qs);
     var key = null, ll = null;
     if (mp) { try { key = decodeURIComponent(mp[1]); } catch (e) {} }
+    /* Vlastní stránka pozemku (pozemek-<okres>-<obec>-<otisk>.html) si klíč
+       nenese v adrese — předá ho rovnou. Adresa má přednost, aby starší
+       rozeslané odkazy „?p=…" fungovaly i tehdy, kdyby se na takové
+       stránce otevřely. */
+    if (key == null && window.PK_POZEMEK && window.PK_POZEMEK.k) {
+      key = window.PK_POZEMEK.k;
+      var lp = window.PK_POZEMEK.ll;
+      if (!ml && lp && isFinite(lp[0])) ll = [lp[0], lp[1]];
+    }
     if (ml) { try { var parts = decodeURIComponent(ml[1]).split(','); ll = [parseFloat(parts[0]), parseFloat(parts[1])]; } catch (e) {} }
 
     var cand = key != null ? DATA.filter(function (d) { return pkey(d) === key; }) : [];

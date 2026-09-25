@@ -246,6 +246,9 @@ jobs:
       - name: Funkční kontrola stránek a odkazů
         run: node scripts/test-stranky.mjs
 
+      - name: Vlastní stránka pro každý pozemek
+        run: node scripts/test-stranky-pozemku.mjs
+
       - name: Hlídání v aplikaci (celá cesta)
         run: node scripts/test-hlidani-prohlizec.mjs
 
