@@ -40,6 +40,30 @@ for (const f of soubory) {
 for (const [cil, kde] of chybi) chyba(`odkaz na „${cil}" nikam nevede — je na: ${[...kde].slice(0, 4).join(', ')}`);
 zpravy.push(`  · prošlo se ${odkazu} odkazů ve ${soubory.length} souborech`);
 
+/* ---------- 1b. patička: z každé stránky vede cesta dál ----------
+   Čtyři stránky (hlídání, upozornění, zprávy, můj profil) měly patičku
+   oříznutou na jediný řádek „© 2026 Parcelka" — bez odkazů na podmínky,
+   ochranu údajů i kontakt. Zrovna tam přitom člověk zakládá účet
+   a odesílá údaje, takže ty odkazy potřebuje nejvíc. Ven se odtud dalo
+   jen přes menu v hlavičce. */
+{
+  const bezPaticky = new Set(['404.html', 'diagnostika.html', 'inzerce.html', 'predloha.html']);
+  const chybi = [];
+  let prohlednuto = 0;
+  for (const f of soubory) {
+    if (bezPaticky.has(f) || f.startsWith('pozemek-') || f.startsWith('pozemky-')) continue;
+    const h = readFileSync(f, 'utf8');
+    if (h.indexOf('<footer') === -1) continue;
+    prohlednuto++;
+    const pata = h.slice(h.indexOf('<footer'), h.indexOf('</footer>') + 9);
+    const pravni = /ochrana-udaju\.html/.test(pata) && /podminky\.html/.test(pata) && /kontakt\.html/.test(pata);
+    if (!pravni) chybi.push(f);
+  }
+  if (prohlednuto < 10) chyba(`patičku má jen ${prohlednuto} stránek — kontrola níž nic nehlídá`);
+  if (chybi.length) chyba(`v patičce chybí odkazy na podmínky, ochranu údajů nebo kontakt: ${chybi.slice(0, 5).join(', ')}`);
+  else zpravy.push(`  ✓ ze všech ${prohlednuto} stránek s patičkou vede cesta na podmínky, ochranu údajů i kontakt`);
+}
+
 /* ---------- 2. stránky v prohlížeči ---------- */
 // Vzorek: od každého druhu stránky jedna (všech 108 by běželo zbytečně dlouho).
 /* Stránka pozemku se zkouší DVAKRÁT: prázdná (ukáže „nenalezeno") i s
