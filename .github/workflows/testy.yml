@@ -174,6 +174,9 @@ jobs:
       - name: Čtvrť u nabídek, kde je místo jen celá obec
         run: node scripts/test-ctvrt.mjs
 
+      - name: Předvyplnění inzerátu z odkazu
+        run: node scripts/test-predvyplneni.mjs
+
       - name: Cenový model (odhad obvyklé ceny)
         run: node scripts/test-ceny.mjs
 

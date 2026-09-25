@@ -923,4 +923,92 @@
     if (lo) lo.addEventListener('click', function () { if (window.PKAuth) { PKAuth.logout(); refresh(); } });
   })();
 
+  /* ---------- MÁM INZERÁT JINDE → předvyplnit ----------
+     Nic se nestahuje. Nabídky z portálů, které procházíme, máme u sebe
+     i s jejich adresou (data/opportunities.json), takže se odkaz jen
+     najde v našich datech. Soubor se stahuje AŽ po klepnutí: má přes
+     půl megabajtu a drtivá většina lidí tuhle zkratku nepoužije. */
+  (function () {
+    var vstup = document.getElementById('p-odjinud');
+    var tlac = document.getElementById('p-odjinud-btn');
+    var stav = document.getElementById('p-odjinud-stav');
+    if (!vstup || !tlac || !stav) return;
+    var DATA = null;
+
+    function rekni(trida, text) {
+      stav.hidden = !text;
+      stav.className = 'odj-stav' + (trida ? ' ' + trida : '');
+      stav.textContent = text || '';
+    }
+    function nastav(id, hodnota) {
+      var el = document.getElementById(id);
+      if (!el || hodnota == null || hodnota === '') return;
+      el.value = hodnota;
+      /* Náhled i ukazatel síly inzerátu poslouchají na „input" —
+         bez toho by se doplněná pole na obrazovce neprojevila. */
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    function nactiData() {
+      if (DATA) return Promise.resolve(DATA);
+      return fetch('data/opportunities.json', { cache: 'force-cache' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { DATA = (j && j.opportunities) || []; return DATA; })
+        .catch(function () { return []; });
+    }
+
+    tlac.addEventListener('click', function () {
+      var url = (vstup.value || '').trim();
+      var P = window.PKPredvyplneni;
+      if (!P) return;
+      if (!url) { rekni('nic', 'Vložte odkaz na svůj inzerát.'); return; }
+      if (!P.normalizujOdkaz(url)) { rekni('nic', 'Tohle nevypadá jako odkaz. Zkuste ho zkopírovat z adresního řádku.'); return; }
+      tlac.disabled = true;
+      rekni('', 'Hledám…');
+      nactiData().then(function (data) {
+        tlac.disabled = false;
+        var n = P.najdiPodleOdkazu(url, data);
+        if (!n) {
+          /* Poctivě: portál, který neprocházíme, prostě neumíme. Slibovat
+             „zkusíme to stáhnout" by znamenalo slíbit server, který nemáme. */
+          rekni('nic', 'Tenhle inzerát u sebe nemáme — vyplňte ho prosím ručně. ' +
+            'Umíme předvyplnit z portálů, které sami procházíme (Bezrealitky, Farmy.cz, státní půda, dražební portály).');
+          return;
+        }
+        var co = P.coDoplnit(n);
+        Object.keys(co.hodnoty).forEach(function (id) { nastav(id, co.hodnoty[id]); });
+        /* Druh přichází už převedený na jednu z voleb formuláře
+           (js/predvyplneni.js); tady se jen najde a vybere. */
+        if (co.druh) {
+          var sel = document.getElementById('p-druh');
+          if (sel) {
+            for (var i = 0; i < sel.options.length; i++) {
+              if (sel.options[i].text.trim().toLowerCase() === co.druh.toLowerCase()) { sel.selectedIndex = i; break; }
+            }
+            sel.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+        /* Robot si sítě pamatuje jako klíče („elektrina"), formulář je má
+           česky („Elektřina"). Převod drží js/vybaveni.js — jediné místo,
+           kde ta jména jsou. „Cesta" se přeskakuje schválně: víme jen, že
+           inzerát o přístupu mluví, ne jestli je zpevněná. Zaškrtne se to
+           jako NÁVRH, prodávající to vidí a může to odškrtnout. */
+        if (co.site.length && window.PKVybaveni) {
+          var jmena = {};
+          co.site.forEach(function (k) {
+            if (k === 'cesta') return;
+            var n = window.PKVybaveni.nazev(k);
+            if (n) jmena[String(n).toLowerCase()] = true;
+          });
+          [].slice.call(document.querySelectorAll('input[name="site"]')).forEach(function (el) {
+            if (jmena[String(el.value).toLowerCase()]) { el.checked = true; el.dispatchEvent(new Event('change', { bubbles: true })); }
+          });
+        }
+        /* Odkaz si necháme i v původním políčku — patří k inzerátu. */
+        nastav('p-odkaz', url);
+        rekni('ok', P.hlaska(co));
+      });
+    });
+  })();
+
 })();

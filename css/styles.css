@@ -1896,6 +1896,18 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .add-hero h1{font-family:var(--font-display); font-weight:700; font-size:38px; line-height:1.12; letter-spacing:-0.022em; max-width:720px;}
 .add-hero .sub{font-size:16px; color:var(--text-ondark-mute); margin-top:16px; max-width:640px;}
 .add-wrap{max-width:720px;}
+/* MÁM INZERÁT JINDE. Stojí NAD formulářem, ne v rozbalovátku dole:
+   je to zkratka k vyplnění, takže musí být vidět dřív, než se člověk
+   pustí do psaní. Jinak ji najde, až když je hotový. */
+.add-odjinud{margin:0 0 20px; padding:14px 16px; border:1px solid rgba(31,81,56,.3); border-radius:var(--r-sm); background:rgba(31,81,56,.06);}
+.add-odjinud label{display:block; font-size:14px; line-height:1.55; color:var(--text-ondark); margin-bottom:9px;}
+.odj-radek{display:flex; gap:9px; flex-wrap:wrap;}
+.odj-radek input{flex:1 1 220px; min-width:0;}
+.odj-radek .btn-ghost{flex:none; height:48px; padding:0 18px; white-space:nowrap;}
+.odj-stav{margin:9px 0 0; font-size:13px; line-height:1.55; color:var(--text-ondark-mute);}
+.odj-stav.ok{color:var(--c-ok-ink,#178a53); font-weight:600;}
+.odj-stav.nic{color:var(--text-ondark-mute);}
+@media (max-width:520px){ .odj-radek .btn-ghost{width:100%;} }
 .add-lead{font-size:14.5px; color:var(--text-ondark-mute); margin:0 0 22px; padding:14px 16px; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); line-height:1.55;}
 .add-lead b{color:var(--text-ondark);}
 .add-form{display:flex; flex-direction:column; gap:18px;}

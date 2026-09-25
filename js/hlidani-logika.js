@@ -61,14 +61,30 @@
     if (ta && tb && ta !== tb) return false;
     return true;
   }
+  /* Když je týž pozemek ze dvou stran, VYHRÁVÁ MAJITEL.
+     Prodávající, který má pozemek na Bezrealitkách, si ho sem přidá
+     odkazem — formulář z něj obec, výměru i cenu předvyplní
+     (js/predvyplneni.js), takže jeho záznam vyjde s těmi čísly shodně
+     se sbíranou nabídkou. Sbíraná se přitom do seznamu dostane dřív,
+     takže by ta jeho tiše zmizela: přidá inzerát, nic se nestane
+     a nikde se nedozví proč.
+     A i kdyby ne: záznam od majitele nese přímý kontakt, bez provize
+     a bez portálu mezi tím. To je ta lepší z těch dvou. */
   function bezDuplicit(list) {
     var skupiny = {}, ven = [];
     for (var i = 0; i < (list || []).length; i++) {
       var d = list[i], k = klicShody(d);
       var skup = skupiny[k] || (skupiny[k] = []);
-      var uz = false;
-      for (var j = 0; j < skup.length; j++) { if (tyzPozemek(skup[j], d)) { uz = true; break; } }
-      if (uz) continue;
+      var kolize = null;
+      for (var j = 0; j < skup.length; j++) { if (tyzPozemek(skup[j], d)) { kolize = skup[j]; break; } }
+      if (kolize) {
+        if (d.type === 'majitel' && kolize.type !== 'majitel') {
+          var pozice = ven.indexOf(kolize);
+          if (pozice !== -1) ven[pozice] = d;
+          skup[skup.indexOf(kolize)] = d;
+        }
+        continue;
+      }
       skup.push(d);
       ven.push(d);
     }

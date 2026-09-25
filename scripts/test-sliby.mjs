@@ -263,7 +263,7 @@ function chibiPrazdne(a) { return a.length === 0; }
     const pridat = cti('pridat.html').replace(/<!--[\s\S]*?-->/g, ' ');
     const sliby = [];
     for (const veta of pridat.replace(/<[^>]+>/g, ' ').split(/[.!?]\s/)) {
-      if (/hned (po odeslání|na mapě)/i.test(veta) && !/(první|prvn\u00ed|kromě|kontrol)/i.test(veta)) {
+      if (/hned\s+(\S+\s+){0,2}(po odeslání|na map)/i.test(veta) && !/(první|kromě|kontrol|projdeme)/i.test(veta)) {
         sliby.push(veta.trim().slice(0, 90));
       }
     }

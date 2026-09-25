@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=04517c86">
+  <link rel="stylesheet" href="css/styles.css?v=789aed89">
 </head>
 <body>
 
@@ -78,7 +78,7 @@
     <div class="wrap add-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Přidat pozemek na prodej</div>
       <h1>Prodáváte pozemek? <em>Vytvořte hezký inzerát</em> za pár minut.</h1>
-      <p class="sub">Vyplňujte a <b>živě sledujte</b>, jak vaše nabídka vypadá. Po odeslání se <b>hned objeví na mapě</b> mezi ostatními — zdarma a bez provize. Potřebujete k tomu <b>účet</b>, stačí e-mail a heslo.</p>
+      <p class="sub">Vyplňujte a <b>živě sledujte</b>, jak vaše nabídka vypadá. Po odeslání se objeví na mapě mezi ostatními — zdarma a bez provize; první nabídku z nového účtu si napřed projdeme. Potřebujete k tomu <b>účet</b>, stačí e-mail a heslo.</p>
       <div class="add-chips"><span>Zdarma</span><span>Bez provize</span><span>Na mapě celé ČR</span><span>Přímý kontakt</span></div>
       <!-- Kroky přeskakovaly to první, co na člověka vyskočí: přihlášení.
            Stálo tu „Potvrdíte souhlas a odešlete — nic víc", a přitom se
@@ -142,7 +142,22 @@
           <div class="auth-bar" id="auth-bar" hidden>Přihlášen: <b id="auth-email"></b> · <span id="quota-info"></span><a href="muj-inzerat.html">Můj profil</a> · <button type="button" id="au-logout" class="linklike">Odhlásit</button></div>
 
           <div class="add-card" id="prodej-card" hidden>
-            <p class="add-lead" style="margin-top:0;">Stačí vyplnit <b>obec, výměru a cenu</b> — zbytek je nepovinný. Po odeslání se nabídka <b>hned objeví na mapě</b> mezi ostatními. Spravovat ji pak můžete v <b>Mém profilu</b>. Zdarma a bez provize.</p>
+            <p class="add-lead" style="margin-top:0;">Stačí vyplnit <b>obec, výměru a cenu</b> — zbytek je nepovinný. Nabídka se objeví na mapě mezi ostatními; první z nového účtu si napřed projdeme. Spravovat ji pak můžete v <b>Mém profilu</b>. Zdarma a bez provize.</p>
+            <!-- MÁM INZERÁT JINDE. Kdo prodává pozemek, má ho skoro vždycky
+                 vypsaný ještě někde jinde — a přepisovat totéž podruhé ručně
+                 je otrava, ve které se dělají chyby. Políčko na odkaz tu
+                 bylo odjakživa, jen se do něj odkaz zapsal a nic se s ním
+                 nedělo. Nic se nestahuje: nabídky z portálů, které
+                 procházíme, už u sebe máme i s jejich adresou, takže se
+                 odkaz jen najde v našich datech. -->
+            <div class="add-odjinud">
+              <label for="p-odjinud"><b>Máte pozemek vypsaný jinde?</b> Vložte odkaz a vyplníme, co půjde.</label>
+              <div class="odj-radek">
+                <input id="p-odjinud" type="url" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="https://www.bezrealitky.cz/…">
+                <button type="button" class="btn-ghost" id="p-odjinud-btn">Načíst údaje</button>
+              </div>
+              <p class="odj-stav" id="p-odjinud-stav" role="status" aria-live="polite" hidden></p>
+            </div>
             <form class="add-form" id="form-prodej" novalidate>
               <div class="add-field">
                 <label for="p-obec">Obec / lokalita <span class="req">*</span></label>
@@ -358,8 +373,10 @@
 <script src="js/tridy-imagenet.js?v=17f028f4" defer></script>
 <script src="js/fotoskupiny.js?v=6952d85b" defer></script>
 <script src="js/fototema.js?v=7f4a9d0e" defer></script>
+<script src="js/vybaveni.js?v=54b36f73" defer></script>
+<script src="js/predvyplneni.js?v=86eea16c" defer></script>
 <script src="js/kontrola.js?v=1b5c54e5" defer></script>
-<script src="js/pridat.js?v=811f7af3" defer></script>
+<script src="js/pridat.js?v=e5dacd74" defer></script>
 <script>
 /* Zobrazit/skrýt heslo v přihlašovací kartě */
 document.addEventListener('click', function (e) {
@@ -380,7 +397,7 @@ document.addEventListener('click', function (e) {
    říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
    na nasazení u Vercelu. */
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
-<script src="js/hlidani-logika.js?v=ff3c93c5" defer></script>
+<script src="js/hlidani-logika.js?v=d2ef0a60" defer></script>
 <script src="js/upozorneni-feed.js?v=c8e91dd3" defer></script>
 <script src="js/upozorneni.js?v=b7b7c483" defer></script>
 <script src="js/hlavicka.js?v=f3a269c8" defer></script>

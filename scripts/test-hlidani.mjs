@@ -167,6 +167,25 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
      pravděpodobnější než náhodná shoda ceny i výměry na metr. */
   je('duplicity', 'chybějící parcela nebrání spojení',
     H.bezDuplicit([Object.assign({}, zaklad, { parcel: '—' }), Object.assign({}, zaklad, { parcel: '769/278' })]).length, 1);
+
+  /* TÝŽ POZEMEK ZE DVOU STRAN: vyhrává majitel.
+     Prodávající, který má pozemek na Bezrealitkách, si ho sem přidá
+     odkazem a formulář z něj čísla předvyplní — jeho záznam tedy vyjde
+     shodně se sbíranou nabídkou. Sbíraná se do seznamu dostane dřív
+     (majitelé se přidávají až za ni), takže by ta jeho tiše zmizela:
+     člověk přidá inzerát, nic se nestane a nikde se nedozví proč.
+     A i kdyby se nestalo tohle: záznam od majitele nese přímý kontakt
+     bez provize a bez portálu mezi tím. */
+  const sbirany = { place: 'Trubín', okres: 'Beroun', price: 1875000, area: 3000, druh: 'orná půda', type: 'sale' };
+  const odMajitele = Object.assign({}, sbirany, { type: 'majitel', contact: '777111222' });
+  const spojeno = H.bezDuplicit([sbirany, odMajitele]);
+  je('duplicity', 'ze dvou stran zůstane jeden záznam', spojeno.length, 1);
+  je('duplicity', 'a je to ten od majitele', spojeno[0].type, 'majitel');
+  /* Pořadí nesmí rozhodovat: majitel vyhraje, ať přijde první nebo druhý. */
+  je('duplicity', 'i když přijde první', H.bezDuplicit([odMajitele, sbirany])[0].type, 'majitel');
+  /* A dva sbírané mezi sebou ať se chovají jako dřív. */
+  je('duplicity', 'dvě sbírané nabídky se pořád slijí do jedné',
+    H.bezDuplicit([sbirany, Object.assign({}, sbirany)]).length, 1);
 }
 
 console.log(`\nHlídání lokality: ${bezi} testů`);
