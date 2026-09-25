@@ -208,9 +208,27 @@
       else {
         if (j.disable_signup) radek(box, 'bad', 'Registrace je vypnutá', 'V Supabase → Authentication → Sign In / Providers je zakázané zakládání účtů. Nikdo se nezaregistruje, takže nepřidá inzerát.');
         else radek(box, 'ok', 'Registrace je povolená', '');
-        if (j.mailer_autoconfirm) radek(box, 'ok', 'Účet se potvrzuje sám', 'Potvrzovací e-mail se nevyžaduje — registrace nezávisí na doručení pošty.');
-        else radek(box, 'warn', 'Účet čeká na potvrzovací e-mail', 'Supabase posílá potvrzení sám a na volném plánu má přísný limit (jednotky e-mailů za hodinu), navíc často padá do spamu. Když pošta nedojde, člověk se nepřihlásí a inzerát nepřidá. Řešení: buď zapnout <b>Confirm email = OFF</b>, nebo nastavit vlastní SMTP.');
+        /* Tady se to obrátilo. Dokud se e-mail nikde nevyžadoval, byl
+           autoconfirm výhoda: nikdo neuvízl na nedoručené poště. Jenže
+           create_listing teď žádá POTVRZENÝ e-mail (ochrana proti
+           podvodům „pošlete zálohu") — a se zapnutým autoconfirmem
+           Supabase potvrdí každou adresu sama, takže ta podmínka
+           nehlídá vůbec nic. To musí být vidět, ne schované pod „ok". */
+        if (j.mailer_autoconfirm) radek(box, 'warn', 'E-mail se neověřuje', 'Supabase potvrzuje každou adresu sama (<b>Confirm email = OFF</b>). Podmínka „potvrzený e-mail" u přidání inzerátu proto nic nehlídá — stačí zadat cizí nebo neexistující adresu. Zapnout jde v <b>Authentication → Providers → Email → Confirm email</b>; počítejte s tím, že volný plán posílá jen jednotky e-mailů za hodinu a pošta padá do spamu, takže k tomu patří vlastní SMTP.');
+        else radek(box, 'ok', 'E-mail se ověřuje', 'Účet musí potvrdit adresu, než smí přidat inzerát. Hlídejte doručitelnost: na volném plánu má Supabase přísný limit a pošta často padá do spamu — s vlastním SMTP je to spolehlivé.');
       }
+
+      return dotaz('/rest/v1/rpc/pending_count', { method: 'POST', body: '{}', headers: { 'content-type': 'application/json' } });
+    }).then(function (r) {
+      /* Kolik inzerátů čeká na kontrolu. Bez tohohle řádku by fronta
+         byla neviditelná: prodávající čeká a provozovatel o tom neví.
+         Zveřejní se sice samy do 24 hodin, ale to je nouzová pojistka,
+         ne způsob práce. */
+      var n = parseInt(String(r.telo).replace(/[^0-9-]/g, ''), 10);
+      if (r.stav === 404) radek(box, 'warn', 'Fronta ke kontrole není zavedená', 'Funkce <code>pending_count</code> chybí — spusťte <code>supabase/00-vse.sql</code>. Inzeráty pak jdou na mapu bez kontroly.');
+      else if (!isFinite(n)) radek(box, 'warn', 'Fronta ke kontrole neodpověděla', 'HTTP ' + r.stav + ' — <code>' + zkratka(r.telo, 80) + '</code>');
+      else if (n === 0) radek(box, 'ok', 'Nic nečeká na kontrolu', 'Žádný inzerát není ve frontě.');
+      else radek(box, 'warn', n + ' inzerát(ů) čeká na kontrolu', 'Supabase → Table Editor → <code>listings</code> → řádky se <code>status = pending</code>: pustit = <code>approved</code>, zamítnout = <code>rejected</code>. Bez zásahu se zveřejní samy do 24 hodin od vložení.');
 
       return dotaz('/storage/v1/object/public/listing-photos/__diagnostika__.png', {});
     }).then(function (r) {

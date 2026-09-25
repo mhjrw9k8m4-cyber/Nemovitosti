@@ -1488,6 +1488,15 @@
               uvadiHtml(d) +
             '</div>' +
             (isSPU(d) ? '<div class="md-note">Státní půda se prodává přes <b>veřejnou nabídku SPÚ (§ 12)</b> — otevřete „Nabídka SPÚ", parcelu ověříte přes „Katastr".</div>' : '') +
+            /* VAROVÁNÍ U INZERÁTU OD MAJITELE.
+               Zbytek webu odkazuje na úřední zdroje, takže se i tahle
+               nabídka veze na té důvěře — a přesně to podvodník kupuje:
+               opsat cizí parcelu z katastru a připsat vlastní telefon
+               umí každý. Věta musí stát u KONTAKTU, ne v podmínkách:
+               tam, kde si člověk opisuje číslo, ne kde čte právní text.
+               Stejná věta je i na stránce pozemku; že se ty dvě
+               nerozejdou, hlídá scripts/test-sliby.mjs. */
+            (d.type === 'majitel' ? '<div class="md-pozor" role="note">Nikdy neposílejte zálohu ani rezervační poplatek předem. Nabídky od majitelů neověřujeme — vlastníka i parcelu si potvrďte v katastru a peníze posílejte až přes advokátní nebo notářskou úschovu.</div>' : '') +
             (d.type === 'majitel' ? '<div class="md-note">Tenhle inzerát vložil <b>přímo majitel pozemku</b> tady na Parcelce — jednáte s ním <b>napřímo, bez realitky a provize</b>. Ostatní nabídky sbíráme z veřejných zdrojů. Vlastníka i parcelu si ověřte v katastru.' + (d._lid && typeof d.views === 'number' ? ' · <b>' + d.views + '×</b> zobrazeno' : '') + '</div>' : '') +
             goodToKnowHtml(d) +
           '</div></details>' +

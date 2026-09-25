@@ -649,6 +649,11 @@
          „V nabídce od" by tedy u všech lhalo stejně. */
       '<p class="pz-cas" id="pz-cas" hidden></p>' +
 
+      /* VAROVÁNÍ U INZERÁTU OD MAJITELE — stejná věta jako na mapě
+         (js/main.js). Stojí těsně před tlačítky, tedy u okamžiku, kdy
+         se člověk chystá majiteli volat. */
+      (d.type === 'majitel' ? '<p class="pz-pozor" role="note">Nikdy neposílejte zálohu ani rezervační poplatek předem. Nabídky od majitelů neověřujeme — vlastníka i parcelu si potvrďte v katastru a peníze posílejte až přes advokátní nebo notářskou úschovu.</p>' : '') +
+
       '<div class="pz-actions">' +
         '<a class="pz-abtn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">' + PIN_SVG + 'Otevřít v katastru' + VEN + '</a>' +
         '<button class="pz-abtn' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">' + HEART_SVG + '<span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +

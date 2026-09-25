@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=aceef2fa">
+  <link rel="stylesheet" href="css/styles.css?v=04517c86">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:20px; padding:24px 22px 22px;
@@ -100,6 +100,14 @@
     .mi-potiz ul{margin:6px 0 0; padding-left:18px;}
     .mi-potiz li{margin:2px 0;}
     .mi-potiz-pozn{display:block; margin-top:7px; font-size:12px; opacity:.85;}
+    /* Čeká na kontrolu. Modrošedá, ne jantar: není to nález ani chyba,
+       je to prostě stav, ve kterém se zatím nic nepokazilo. */
+    .mi-ceka{margin:0 0 12px; padding:11px 13px; border-radius:var(--r-sm);
+      background:rgba(31,81,56,.09); border:1px solid rgba(31,81,56,.3); color:var(--text-ondark); font-size:13px; line-height:1.55;}
+    .mi-ceka b{display:block; margin-bottom:3px;}
+    .mi-ceka span{display:block; color:var(--text-ondark-mute); font-size:12.5px;}
+    .mi-ceka-ne{background:rgba(176,58,46,.1); border-color:rgba(176,58,46,.35);}
+    .mi-lstatus.ne{background:rgba(176,58,46,.12); color:#9c3025; border-color:rgba(176,58,46,.4);}
     .mi-lstats{display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:14px;}
     .mi-lstat{background:var(--ink); border:1px solid var(--line); border-radius:12px; padding:11px 8px; text-align:center;}
     .mi-lstat b{display:block; font-size:19px; font-weight:800; color:var(--copper-bright); font-variant-numeric:tabular-nums; line-height:1.1;}
@@ -318,6 +326,17 @@
         return d.getDate() + '. ' + (d.getMonth() + 1) + '.';
       } catch (e) { return ''; }
     }
+    /* U čekání na kontrolu je hodina podstatná: „nejpozději 25. 9." je
+       o den nepřesné, a kdo čeká, potřebuje vědět, jestli jde o ráno
+       nebo o večer. */
+    function casCesky(iso) {
+      try {
+        var d = new Date(iso);
+        if (isNaN(d)) return '';
+        return d.getDate() + '. ' + (d.getMonth() + 1) + '. v ' +
+          d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+      } catch (e) { return ''; }
+    }
     var newpwBox = q('mi-newpw');
 
     if (!A || !A.ready) { authBox.hidden = false; q('mi-auth-msg').textContent = 'Připojení k databázi zatím není nastavené.'; return; }
@@ -393,7 +412,31 @@
               '<img src="' + ph[0] + '" alt="" loading="lazy">' +
               (ph.length > 1 ? '<span class="n">' + ph.length + ' fotky</span>' : '') +
             '</div>' : '';
-          var isLive = r.status === 'approved';
+          /* Stav inzerátu. První nabídka z nového účtu čeká na kontrolu
+             (supabase/listings-prvni-kontrola.sql) — a majitel musí
+             vědět, že se neztratila a DO KDY se čeká. „pending" samo
+             o sobě se tu dřív vypsalo tak, jak přišlo z databáze:
+             anglicky a bez vysvětlení.
+             Čas, kdy se inzerát pustí sám, posílá server (public_at);
+             web si ho nepočítá, aby se ta dvě pravidla nerozešla. */
+          var pustiSe = r.public_at ? new Date(r.public_at) : null;
+          var jeVenku = !!(pustiSe && !isNaN(pustiSe) && pustiSe.getTime() <= Date.now());
+          var isLive = r.status === 'approved' || (r.status === 'pending' && jeVenku);
+          var zamitnuty = r.status === 'rejected';
+          var stavText = isLive ? '● Na mapě' : (zamitnuty ? 'Zamítnuto' : 'Čeká na kontrolu');
+          var ceka = '';
+          if (!isLive && !zamitnuty) {
+            ceka = '<div class="mi-ceka" role="status"><b>Čeká na kontrolu</b>' +
+              '<span>První nabídku z nového účtu si projdeme — kvůli podvodům typu „pošlete zálohu". ' +
+              (pustiSe && !isNaN(pustiSe)
+                ? 'Nejpozději ' + esc(casCesky(r.public_at)) + ' se zveřejní i bez nás.'
+                : 'Ozveme se.') +
+              ' Další nabídky už půjdou na mapu rovnou.</span></div>';
+          }
+          if (zamitnuty) {
+            ceka = '<div class="mi-ceka mi-ceka-ne" role="status"><b>Zamítnuto</b>' +
+              '<span>Tuhle nabídku jsme nezveřejnili. Napište nám na info@parcelaka.cz, jestli si myslíte, že je to omyl.</span></div>';
+          }
           /* Co našla noční kontrola (scripts/kontrola-inzeratu.mjs).
              Běží každou noc a výsledky dosud nečetla ŽÁDNÁ stránka —
              kontrola tedy zjistila, že někomu nejde fotka, a nikomu to
@@ -417,11 +460,11 @@
               '. Inzerát kvůli tomu neskrýváme — opravit ho můžete jen vy.</span>' +
               '</div>';
           }
-          return '<div class="mi-lcard" data-id="' + esc(r.id) + '">' + potiz +
+          return '<div class="mi-lcard" data-id="' + esc(r.id) + '">' + ceka + potiz +
             thumb +
             '<div class="mi-lhead">' +
               '<div class="mi-lplace">' + esc(r.place) + (r.okres ? ', okres ' + esc(r.okres) : '') + '</div>' +
-              '<span class="mi-lstatus' + (isLive ? ' ok' : '') + '">' + (isLive ? '● Na mapě' : esc(r.status || 'čeká')) + '</span>' +
+              '<span class="mi-lstatus' + (isLive ? ' ok' : '') + (zamitnuty ? ' ne' : '') + '">' + stavText + '</span>' +
             '</div>' +
             '<div class="mi-lstats">' +
               '<div class="mi-lstat"><b>' + fmt(r.views || 0) + '</b><span>Zhlédnutí</span></div>' +

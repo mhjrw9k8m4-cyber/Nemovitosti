@@ -225,6 +225,54 @@ function chibiPrazdne(a) { return a.length === 0; }
     `napsáno ${napsano ? napsano[1] : '?'}, otázek ${videt.length}`);
 }
 
+/* ---- 6e) U nabídky od majitele stojí varování před zálohou ---- */
+/* Inzerát od majitele se veze na důvěře, kterou web staví jinde: všude
+   odkazuje na katastr, dražební vyhlášky a úřední zdroje. Podvod
+   „pošlete zálohu, pozemek je váš" přesně tuhle důvěru kupuje — opsat
+   cizí parcelu z katastru a připsat vlastní telefon umí každý.
+   Věta proto musí stát u KONTAKTU, ne v podmínkách. A na obou místech
+   stejně: kdyby se rozešla, platila by ta mírnější. */
+{
+  const main = cti('js/main.js');
+  const poz = cti('js/pozemek.js');
+  const vyber = (t, tr) => {
+    const m = new RegExp('class="' + tr + '" role="note">([^<]+)<').exec(t);
+    return m ? m[1] : '';
+  };
+  const naMape = vyber(main, 'md-pozor');
+  const naStrance = vyber(poz, 'pz-pozor');
+  pravda('u nabídky od majitele je varování na mapě', /zálohu/i.test(naMape), naMape.slice(0, 80));
+  pravda('… i na stránce pozemku', /zálohu/i.test(naStrance), naStrance.slice(0, 80));
+  pravda('a je to na obou místech táž věta', naMape === naStrance,
+    `mapa: „${naMape.slice(0, 60)}" / stránka: „${naStrance.slice(0, 60)}"`);
+  /* Slibovat ověřování, které neděláme, by bylo horší než mlčet. */
+  pravda('a neslibuje se v něm ověřování, které neděláme',
+    /neověřujeme|neověřuje/i.test(naMape), naMape.slice(0, 120));
+}
+
+/* ---- 6f) Web netvrdí, že inzerát jde na mapu bez kontroly ---- */
+/* Dokud první nabídka z nového účtu čeká na kontrolu, nesmí stránka
+   přidání slibovat „hned na mapě" bez výhrady. Kontrola se váže na
+   SKUTEČNOST: platí, jen dokud to tak databáze opravdu dělá. */
+{
+  const sql = cti('supabase/00-vse.sql');
+  const kontrolaBezi = /prvni := not exists/.test(sql) && /novy_stav := 'pending'/.test(sql);
+  pravda('první inzerát nového účtu čeká na kontrolu (v databázi)', kontrolaBezi,
+    'create_listing zakládá rovnou jako approved — inzerát jde na mapu bez jakékoli kontroly');
+  if (kontrolaBezi) {
+    const pridat = cti('pridat.html').replace(/<!--[\s\S]*?-->/g, ' ');
+    const sliby = [];
+    for (const veta of pridat.replace(/<[^>]+>/g, ' ').split(/[.!?]\s/)) {
+      if (/hned (po odeslání|na mapě)/i.test(veta) && !/(první|prvn\u00ed|kromě|kontrol)/i.test(veta)) {
+        sliby.push(veta.trim().slice(0, 90));
+      }
+    }
+    pravda('a stránka přidání to nikde nezamlčuje', sliby.length === 0, sliby.slice(0, 2).join(' | '));
+    pravda('a rovnou to i vysvětlí', /projdeme|kontrol/i.test(pridat),
+      'nikde se neříká, že si první nabídku projdeme — prodávající bude čekat a nebude vědět proč');
+  }
+}
+
 /* ---- 7) Placené se nenabízí, dokud se nedá zaplatit ---- */
 {
   const pridat = cti('pridat.html');

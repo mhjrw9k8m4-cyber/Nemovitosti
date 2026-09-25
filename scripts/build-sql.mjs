@@ -35,6 +35,9 @@ const PORADI = [
   // Musí být AŽ ZA listing-checks.sql (čte z jeho tabulky) a za
   // listings-rekonstrukce.sql, protože přepisuje my_listings().
   ['listings-kontrola-vlastnikovi.sql', 'výsledek noční kontroly vidí majitel inzerátu'],
+  // Úplně poslední: přepisuje create_listing, public_listings i my_listings
+  // (tomu přidává public_at), takže musí běžet až za vším, co je definuje.
+  ['listings-prvni-kontrola.sql', 'první inzerát nového účtu čeká na kontrolu'],
 ];
 
 const HLAVA = `-- =====================================================================

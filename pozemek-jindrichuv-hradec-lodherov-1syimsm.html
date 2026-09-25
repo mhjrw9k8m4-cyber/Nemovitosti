@@ -37,7 +37,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=aceef2fa">
+  <link rel="stylesheet" href="css/styles.css?v=04517c86">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -140,6 +140,10 @@
     .pz-abtn svg{width:17px; height:17px; stroke-width:2.12; color:var(--copper-bright);}
     .pz-abtn.on svg{color:#fff;}
 
+    /* Varování u nabídky od majitele — táž věta jako na mapě. Rámeček,
+       ne kurzíva: musí být na první pohled jiné než údaje o pozemku. */
+    .pz-pozor{margin:10px 0 0; padding:12px 14px; border-radius:var(--r-sm); font-size:13px; line-height:1.6;
+      background:rgba(232,179,65,.14); border:1px solid rgba(124,81,5,.34); color:#6b4604;}
     .pz-gtk{background:var(--ink-soft); border:1px solid var(--line); border-radius:16px; padding:16px 17px;}
     .pz-gtk .g-row{display:flex; flex-direction:column; gap:3px; padding:11px 0; border-bottom:1px solid var(--line);}
     .pz-gtk .g-row:first-child{padding-top:0;} .pz-gtk .g-row:last-of-type{border-bottom:none;}
@@ -269,7 +273,7 @@
 <script src="js/radce.js?v=0491f655"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Place","name":"Trvalý travní porost 18 923 m² — Lodhéřov","description":"Na prodej · 949 000 Kč (50 Kč/m²) · 18 923 m² · Lodhéřov, okres Jindřichův Hradec. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-jindrichuv-hradec-lodherov-1syimsm.html","address":{"@type":"PostalAddress","addressLocality":"Lodhéřov","addressRegion":"Jindřichův Hradec","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.236813,"longitude":14.961824}}</script>
 <script>window.PK_POZEMEK={"k":"Lodhéřov|—|Jindřichův Hradec|49.237|14.962","ll":[49.236813,14.961824]};</script>
-<script src="js/pozemek.js?v=6799573d"></script>
+<script src="js/pozemek.js?v=b4d84ca5"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
