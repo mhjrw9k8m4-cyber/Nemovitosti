@@ -180,6 +180,43 @@ if (proužek) {
 
 pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby[0]);
 
+/* ---- „Přibylo dnes" musí ty novinky opravdu ukázat -----------------
+   Kartička v úvodu slíbí „Přibylo dnes: 19 pozemků". Dokud se po
+   klepnutí jen sjelo k mapě, ukázal se celý výpis 1 960 pozemků —
+   slíbí se novinky, ukáže se všechno a kdo má najít těch devatenáct,
+   neví kudy. Klepnutí proto přepne řazení na nejnovější. */
+{
+  const je = await p.evaluate(() => {
+    const a = document.querySelector('[data-fakt="nove"]');
+    return !!(a && !a.hidden);
+  });
+  if (je) {
+    const pred = await p.evaluate(() => (document.getElementById('map-sort') || {}).value);
+    await p.locator('[data-fakt="nove"]').click();
+    await p.waitForTimeout(1600);
+    /* Rolování je plynulé (smooth), takže chvíli trvá — a na širokém
+       monitoru nemusí být vůbec potřeba. Nekouká se proto na scrollY,
+       ale na to, co je ve výsledku vidět. */
+    await p.waitForTimeout(1400);
+    const po = await p.evaluate(() => {
+      const l = document.querySelector('.opp-list') || document.querySelector('.map-app');
+      const r = l ? l.getBoundingClientRect() : null;
+      return { razeni: (document.getElementById('map-sort') || {}).value,
+        vidnoVypis: !!r && r.top < innerHeight && r.bottom > 0, top: r ? Math.round(r.top) : null };
+    });
+    pravda('klepnutí na „Přibylo dnes" seřadí od nejnovějších', po.razeni === 'nove',
+      `řazení zůstalo „${po.razeni}" (před klepnutím „${pred}") — ukáže se celý výpis a novinky se v něm ztratí`);
+    pravda('a výpis je pak vidět', po.vidnoVypis, `výpis začíná na ${po.top} px, okno je vysoké ${900}`);
+    // vrátit řazení, ať další kontroly vidí výchozí stav
+    await p.evaluate(() => {
+      const s = document.getElementById('map-sort');
+      if (s) { s.value = 'demand'; s.dispatchEvent(new Event('change', { bubbles: true })); }
+      scrollTo(0, 0);
+    });
+    await p.waitForTimeout(1200);
+  }
+}
+
 /* ---- Když nic nesedí, nadpis nesmí nic slibovat --------------------
    „Doporučené příležitosti · 0 na mapě" a pod tím prázdno je protimluv:
    tváří se, že web něco doporučil, a přitom neukazuje nic. A hlavně —

@@ -4385,6 +4385,19 @@
         vEl.appendChild(document.createTextNode(kus.join(' · ')));
       }
       if (cil) a.addEventListener('click', function (e) { e.preventDefault(); gotoInzerat(cil); });
+      /* „Přibylo dnes: 19 pozemků" na žádnou jednu nabídku neukazuje —
+         a dokud se to klepnutím jen sjelo k mapě, byl výsledek celý
+         výpis 1 960 pozemků. Slíbí se novinky, ukáže se všechno: kdo
+         má najít těch devatenáct, neví kudy. Klepnutí proto přepne
+         řazení na nejnovější, takže jsou nahoře. */
+      else if (fakt === 'nove') a.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (sortEl) { sortEl.value = 'nove'; sortEl.dispatchEvent(new Event('change', { bubbles: true })); }
+        /* Rolování dělá scrollToMap — tentýž kód jako u ostatních cest
+           k mapě. Počítá s výškou přilepené hlavičky, která by jinak
+           schovala první řádek výpisu. */
+        if (typeof scrollToMap === 'function') scrollToMap();
+      });
       hotovo++;
     }
 
