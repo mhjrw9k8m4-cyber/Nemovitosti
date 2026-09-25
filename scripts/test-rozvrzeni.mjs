@@ -317,6 +317,34 @@ async function otevri(soubor, sirka, vyska) {
    takže bylo pořád vidět, že za tím něco je. Na telefonu je proto okno celá
    obrazovka. Na velkém displeji karta zůstává (odstavec roztažený na metr
    a půl se nečte), ale pozadí musí být neprůhledné — web za ním nevykukuje. */
+/* ---- Popisky u živých údajů se nesmí lámat ------------------------
+   Tři kartičky pod nadpisem mají popisek ve sloupci pevné šířky, aby
+   hodnoty stály v jedné ose. Když se do něj nejdelší popisek nevejde,
+   zalomí se na dva řádky — ta karta je pak o patnáct bodů vyšší než
+   zbylé dvě a řada vypadá roztřepeně. Širší sloupec tedy místo
+   neubírá, naopak. */
+for (const [w, h] of [[390, 844], [360, 780], [430, 932]]) {
+  const { ctx, p } = await otevri('index.html', w, h);
+  await p.waitForTimeout(1800);
+  const karty = await p.evaluate(() => [...document.querySelectorAll('.hh-fakta .hl-fact')].map((f) => {
+    const k = f.querySelector('.hl-k');
+    if (!k || getComputedStyle(k).display === 'none') return null;
+    const r = k.getBoundingClientRect();
+    const radek = parseFloat(getComputedStyle(k).lineHeight) || 14;
+    return { text: k.textContent.trim(), radku: Math.round(r.height / radek),
+      vyska: Math.round(f.getBoundingClientRect().height) };
+  }).filter(Boolean));
+  if (karty.length) {
+    const lamane = karty.filter((k) => k.radku > 1).map((k) => `„${k.text}"`);
+    pravda(`${w} px: popisek u živých údajů se vejde na řádek`, lamane.length === 0,
+      `láme se: ${lamane.join(', ')}`);
+    const vysky = [...new Set(karty.map((k) => k.vyska))];
+    pravda(`${w} px: a všechny tři kartičky jsou stejně vysoké`, vysky.length === 1,
+      `výšky ${vysky.join(', ')} px`);
+  }
+  await ctx.close();
+}
+
 for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   const { ctx, p } = await otevri('index.html', w, h);
   await p.waitForTimeout(1600);

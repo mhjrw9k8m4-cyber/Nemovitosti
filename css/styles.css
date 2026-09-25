@@ -3581,7 +3581,11 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
     border-top:0; overflow:visible;
     -webkit-mask-image:none; mask-image:none;}
   .hh-fakta .hl-fact{flex-direction:row; align-items:baseline; gap:10px; padding:11px 13px;}
-  .hh-fakta .hl-fact .hl-k{flex:0 0 104px;}
+  /* Sloupec s popiskem musí pobrat nejdelší z nich („NEJBLIŽŠÍ DRAŽBA")
+     na JEDEN řádek. Ve 104 bodech se lámal na dva a karty pak byly každá
+     jinak vysoká a roztřepené. Šířka je pevná schválně: hodnoty vedle
+     sebe pak stojí v jedné ose. */
+  .hh-fakta .hl-fact .hl-k{flex:0 0 126px;}
   .hh-fakta .hl-fact .hl-v b{display:inline; font-size:21px;}
   /* Na úzké kartě stojí údaj i upřesnění na jednom řádku — tam oddělovač
      dává smysl i očím. */
@@ -3606,7 +3610,12 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   .hh-l{font-size:11px; padding:4px 9px; gap:5px;}
   .hh-l i{width:7px; height:7px;}
   .hh-fakta .hl-fact{padding:7px 11px;}
-  .hh-fakta .hl-fact .hl-k{flex:0 0 92px; font-size:9.5px;}
+  /* 92 bodů na „NEJBLIŽŠÍ DRAŽBA" nestačilo: popisek se lámal na dva
+     řádky a ta karta pak byla o 15 bodů vyšší než ostatní. Širší sloupec
+     tedy místo NEUBÍRÁ, naopak — a karty jsou stejně vysoké.
+     Změřeno: nejdelší popisek potřebuje 109 bodů, zbylé dva 82 a 88.
+     Rezerva je na jiná písma na jiných zařízeních. */
+  .hh-fakta .hl-fact .hl-k{flex:0 0 116px; font-size:9.5px;}
   .hh-fakta .hl-fact .hl-v{font-size:13px;}
   .hh-fakta .hl-fact .hl-v b{font-size:17px;}
   .hero-live.hh-fakta{gap:6px;}
