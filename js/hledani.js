@@ -58,11 +58,35 @@
     return s;
   }
 
+  /* Sedí slovo na ZAČÁTKU některého slova v textu?
+   *
+   * Dřív se hledal podřetězec kdekoli, a to je u názvů obcí past:
+   * „most" tak našlo Kněžmost (okres Mladá Boleslav) — „most" je v tom
+   * názvu uprostřed a s městem Most nemá nic společného. Záměr byl
+   * přitom vždycky jiný, jak stojí v hlavičce souboru: lidé píší
+   * ZAČÁTKY slov a v půlce přestanou („zdic" → Zdice, „lesn" → Lesní
+   * pozemek). To zůstává; končí jen shoda uprostřed.
+   *
+   * Za začátek slova se bere i to, co následuje po lomítku: parcelní
+   * číslo „1234/5" jsou dvě čísla a lidé hledají i to druhé.
+   */
+  function zacatekSlova(s, t) {
+    if (!t) return true;
+    var i = s.indexOf(t);
+    while (i >= 0) {
+      if (i === 0) return true;
+      var pred = s.charAt(i - 1);
+      if (pred === ' ' || pred === '/') return true;
+      i = s.indexOf(t, i + 1);
+    }
+    return false;
+  }
+
   /* Vyhovuje záznam? Musí sedět všechna slova dotazu. */
   function vyhovuje(d, toks) {
     if (!toks || !toks.length) return true;
     var s = seno(d);
-    for (var i = 0; i < toks.length; i++) if (s.indexOf(toks[i]) === -1) return false;
+    for (var i = 0; i < toks.length; i++) if (!zacatekSlova(s, toks[i])) return false;
     return true;
   }
 
@@ -228,6 +252,6 @@
     return nej ? nej.text : null;
   }
 
-  return { norm: norm, tokeny: tokeny, seno: seno, vyhovuje: vyhovuje, median: median, bod: bod,
+  return { norm: norm, tokeny: tokeny, seno: seno, vyhovuje: vyhovuje, zacatekSlova: zacatekSlova, median: median, bod: bod,
     misto: misto, navrhy: navrhy, vzdalenost: vzdalenost, mysleliJste: mysleliJste };
 });

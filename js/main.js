@@ -858,6 +858,26 @@
   var urgentOnly = false;  // filtr: jen dražby/exekuce končící brzy (do 14 dní)
   var searchTerm = '';
   var searchToks = [];   // hledaný text po slovech (viz js/hledani.js)
+  /* Místo VYBRANÉ z našeptávače. Není to text, je to přesná podmínka.
+     Dokud se z návrhu dělal jen text do políčka, „celý okres Most"
+     znamenalo „kdekoli se vyskytne slovo most" — a výpis pak obsahoval
+     Mosty u Jablunkova (okres Frýdek-Místek, přes 400 km daleko),
+     Dlouhý Most (Liberec) i Kněžmost (Mladá Boleslav). Ze šesti nabídek
+     byly v okrese Most tři.
+     Napsaný text zůstává napsaný text a hledá se volně dál — zúží se jen
+     to, na co člověk ukázal prstem. */
+  var mistoFiltr = null;   // {typ:'okres', okres} | {typ:'obec', place, okres}
+  function sediMisto(d) {
+    if (!mistoFiltr) return true;
+    if (mistoFiltr.typ === 'okres') return HL.norm(d.okres) === HL.norm(mistoFiltr.okres);
+    return HL.norm(d.place) === HL.norm(mistoFiltr.place)
+      && (!mistoFiltr.okres || HL.norm(d.okres) === HL.norm(mistoFiltr.okres));
+  }
+  function popisMista() {
+    if (!mistoFiltr) return '';
+    if (mistoFiltr.typ === 'okres') return 'celý okres ' + mistoFiltr.okres;
+    return mistoFiltr.place + (mistoFiltr.okres ? ' (okr. ' + mistoFiltr.okres + ')' : '');
+  }
   /* Co web z napsané věty pochopil jako filtr (js/dotaz.js). Je to VRSTVA
      NAD ručními ovládátky, ne jejich přepis: kdo smaže text, zůstanou mu
      filtry, které si naklikal, a naopak. Každá pochopená část má pod
@@ -905,6 +925,9 @@
       searchTerm = syrovy;
     }
     searchToks = HL.tokeny(searchTerm);
+    /* Jakmile člověk text změní, přestává platit i to, na co předtím
+       ukázal — jinak by mu zůstal viset filtr, který v políčku nevidí. */
+    mistoFiltr = null;
   }
   var favOnly = false;
   var ukazSkryte = false;   // „Zobrazit skryté" — dočasně, neukládá se
@@ -2642,6 +2665,7 @@
     // navíc. Dřív se hledal jeden podřetězec, takže „rican" nenašlo Říčany
     // ani jednou z 732 obcí s diakritikou a „Beroun Zdice" nenašlo nic.
     var okSearch = !searchToks.length || HL.vyhovuje(d, searchToks);
+    var okMisto = sediMisto(d);
     var okDruh = druhSedi(d.druh, activeDruh);
     var okPrice = (!maxPrice || (d.price && d.price <= maxPrice))
       && (!minPrice || (d.price && d.price >= minPrice));
@@ -2724,7 +2748,7 @@
     // (tlačítko „Zobrazit skryté"). Nenávratně se nic neztrácí.
     var okSkryt = ukazSkryte || !jeSkryty(d);
     var okProsle = ukazProsle || !jeProsle(d);
-    return okType && okSearch && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
+    return okType && okSearch && okMisto && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
       && okPerM2 && okKraj && okLevne && okOkoli && okProsle && okVybaveni && okCelek && okDotaz;
   }
   /* KTERÉ OMEZENÍ VYPRÁZDNILO VÝPIS
@@ -2778,9 +2802,21 @@
     /* Volný text (hledání obce) se ruší SÁM ZA SEBE — ne celá věta.
        Vyhodit i pochopené části by ukázalo číslo, které s tím omezením
        nemá nic společného: po vyčištění políčka zbude vždycky všechno. */
+    /* POZOR na past: nastavHledani() schválně ruší vybrané místo (psaní
+       ho má rušit). Při zkoušení „co kdyby tohle omezení nebylo" se ale
+       nesmí zrušit nic jiného, než co se právě zkouší — jinak by se
+       úleva přičetla textu, i když ji způsobilo místo. A hlavně: bez
+       obnovení by vybrané místo po každé takové zkoušce tiše zmizelo. */
     pol('hledaný text', 'hledaný text', !!searchToks.length,
-      function () { var t = bezVolnehoTextu(); searchEl.value = t; nastavHledani(t); },
-      (function () { var t = searchEl.value; return function () { searchEl.value = t; nastavHledani(t); }; }()));
+      (function () { var mf = mistoFiltr;
+        return function () { var t = bezVolnehoTextu(); searchEl.value = t; nastavHledani(t); mistoFiltr = mf; }; }()),
+      (function () { var t = searchEl.value, mf = mistoFiltr;
+        return function () { searchEl.value = t; nastavHledani(t); mistoFiltr = mf; }; }()));
+    /* Vybrané místo je vlastní omezení, ne součást textu: „celý okres
+       Most" zůstane zapnuté i tehdy, když se text z políčka smaže. */
+    pol('vybrané místo', 'vybrané místo', !!mistoFiltr,
+      function () { mistoFiltr = null; },
+      (function () { var a = mistoFiltr; return function () { mistoFiltr = a; }; }()));
     pol('druh pozemku', 'druh pozemku', activeDruh !== 'all' || !!d.druh,
       function () { activeDruh = 'all'; d.druh = null; if (druhEl) druhEl.value = 'all'; },
       (function () { var a = activeDruh, b = d.druh; return function () { activeDruh = a; d.druh = b; if (druhEl) druhEl.value = a; }; }()));
@@ -3650,6 +3686,11 @@
     }
     searchEl.value = n.text;
     nastavHledani(n.text);
+    /* AŽ ZA nastavHledani: to volbu schválně ruší (psaní ji má rušit),
+       takže se musí nastavit po něm. */
+    mistoFiltr = n.typ === 'okres'
+      ? { typ: 'okres', okres: n.text }
+      : { typ: 'obec', place: n.text, okres: n.okres || '' };
     zavriNavrhy();
     renderList();
     // Mapa ať se rovnou podívá tam, kam člověk ukázal.
@@ -3752,8 +3793,15 @@
   function prekresliChipy() {
     if (!chipyEl) return;
     var casti = (dotazFiltr && dotazFiltr.casti) || [];
-    if (!casti.length) { chipyEl.hidden = true; chipyEl.innerHTML = ''; return; }
+    if (!casti.length && !mistoFiltr) { chipyEl.hidden = true; chipyEl.innerHTML = ''; return; }
     var html = '';
+    /* Vybrané místo stojí první: je to ze všech filtrů ten nejsilnější
+       a musí jít zrušit jedním klepnutím, jako každý jiný odznak. */
+    if (mistoFiltr) {
+      html += '<button type="button" class="msch" data-misto="1" aria-label="Zrušit: ' +
+        esc(popisMista()) + '">' + esc(popisMista()) +
+        '<span class="msch-x" aria-hidden="true">✕</span></button>';
+    }
     for (var i = 0; i < casti.length; i++) {
       html += '<button type="button" class="msch" data-i="' + i + '" data-druh="' + esc(casti[i].druh) +
         '" aria-label="Zrušit: ' + esc(casti[i].popis) + '">' + esc(casti[i].popis) +
@@ -3765,6 +3813,12 @@
   if (chipyEl) chipyEl.addEventListener('click', function (e) {
     var b = e.target.closest('.msch');
     if (!b) return;
+    if (b.hasAttribute('data-misto')) {
+      searchEl.value = '';
+      nastavHledani('');          // ruší i mistoFiltr
+      renderList();
+      return;
+    }
     var cast = (dotazFiltr.casti || [])[+b.getAttribute('data-i')];
     if (!cast) return;
     /* Vyškrtnout z textu slova, která k odznaku patří. Hledá se v témže

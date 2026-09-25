@@ -105,6 +105,49 @@ const bezDia = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
   pravda('nesmyslný dotaz nevrátí nic', najdi('xqzwkj').length === 0);
 }
 
+/* --- 4b) Shoda jen na ZAČÁTKU slova ------------------------------------
+   Stížnost: „když dám okres Most, vyjede mi tam i Most u Jablunkova".
+   Vedle toho se ale „most" trefilo i do Kněžmostu (okres Mladá Boleslav)
+   — tam je uprostřed slova a s městem Most nemá nic společného.
+   Záměr byl přitom odjakživa jiný, jak stojí v hlavičce js/hledani.js:
+   lidé píší ZAČÁTKY slov („zdic" → Zdice). To musí platit dál; končí
+   jen shoda uprostřed. */
+{
+  const slovaZ = (s) => H.norm(s).split(' ').filter(Boolean);
+  // Dvojice se hledá v datech, ne napevno: ať test platí i po výměně nabídky.
+  let past = null;
+  const nazvy = [...new Set(DATA.map((d) => d.place).filter(Boolean))];
+  for (const a of nazvy) {
+    const kratke = slovaZ(a).filter((w) => w.length >= 4);
+    for (const w of kratke) {
+      const uvnitr = nazvy.find((b) => b !== a && slovaZ(b).some((v) => v !== w && v.indexOf(w) > 0));
+      if (uvnitr) { past = { slovo: w, cele: a, uvnitr: uvnitr }; break; }
+    }
+    if (past) break;
+  }
+  if (!past) {
+    zpravy.push('  – v dnešních datech není název, který by byl uvnitř jiného (přeskočeno)');
+  } else {
+    const nalez = najdi(past.slovo);
+    pravda(`„${past.slovo}" najde ${past.cele}`, nalez.some((d) => d.place === past.cele),
+      'nenašlo vlastní obec — shoda na začátku slova přestala fungovat');
+    pravda(`ale ne ${past.uvnitr} (tam je „${past.slovo}" uprostřed slova)`,
+      !nalez.some((d) => d.place === past.uvnitr),
+      `ve výsledcích je i ${past.uvnitr}`);
+  }
+
+  /* A co se hledat MÁ, hledat musí dál: začátky slov ze všech názvů.
+     Kdyby se shoda utáhla na celá slova, tohle spadne. */
+  const zacatky = [];
+  for (const o of nazvy.slice(0, 250)) {
+    const w = slovaZ(o)[0];
+    if (w && w.length >= 5) zacatky.push({ obec: o, kus: w.slice(0, 4) });
+  }
+  const nenasel = zacatky.filter((z) => !najdi(z.kus).some((d) => d.place === z.obec));
+  pravda(`začátek názvu pořád stačí (${zacatky.length} obcí)`, nenasel.length === 0,
+    'nenašlo se: ' + nenasel.slice(0, 5).map((z) => `„${z.kus}" → ${z.obec}`).join(', '));
+}
+
 /* --- 5) Zapamatovaný text musí sedět s čerstvě spočítaným -------------- */
 {
   const d = { place: 'Říčany', okres: 'Praha-východ', parcel: '769/2', druh: 'orná půda' };

@@ -28,6 +28,10 @@ const zpravy = [];
 function pravda(popis, vyslo, proc) {
   if (vyslo) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
+  // Vrací výsledek, aby se na něm dalo větvit: když neprojde krok, na
+  // kterém stojí ty další, nemá cenu je zkoušet — spadly by výjimkou
+  // místo toho, aby řekly, co je špatně.
+  return !!vyslo;
 }
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const kde = process.env.PW_CHROMIUM || '';
@@ -116,6 +120,86 @@ if (await seznam.isVisible()) {
   pravda('klepnutí na nabídku vyplní políčko celým názvem', false, 'nabídka se vůbec neukázala');
   pravda('a nabídka se zavře', false, 'nabídka se vůbec neukázala');
   pravda('výpis po výběru něco ukazuje', false, 'nabídka se vůbec neukázala');
+}
+
+// --- 4b) „celý okres" opravdu znamená okres --------------------------
+/* Stížnost od člověka: „když dám okres Most, vyjede mi tam i Most
+   u Jablunkova". Měl pravdu a bylo to horší: návrh z našeptávače se jen
+   přepsal do políčka a dál se hledal jako TEXT, takže „celý okres Most"
+   znamenalo „kdekoli se vyskytne slovo most". Ze šesti nabídek byly
+   v okrese Most tři — zbytek byly Mosty u Jablunkova (Frýdek-Místek,
+   přes 400 km daleko), Dlouhý Most (Liberec) a Kněžmost (Mladá Boleslav).
+
+   Okres se hledá v datech, ne napevno: aby test platil i tehdy, až se
+   nabídka celá vymění. */
+{
+  const norm2 = (x) => norm(x).replace(/[-‐-―]/g, ' ').replace(/\s+/g, ' ').trim();
+  let past = null;
+  for (const okres of [...new Set(DATA.map((d) => d.okres).filter(Boolean))]) {
+    const no = norm2(okres);
+    if (!no || no.indexOf(' ') >= 0) continue;         // jednoslovný, ať jde napsat
+    const cizi = DATA.filter((d) => d.okres !== okres &&
+      norm2(d.place).split(' ').some((w) => w.indexOf(no) === 0));
+    if (cizi.length && DATA.some((d) => d.okres === okres)) {
+      past = { okres: okres, text: no, cizi: [...new Set(cizi.map((d) => d.place))] };
+      break;
+    }
+  }
+  if (!past) {
+    zpravy.push('  – v dnešních datech není okres, jehož název nese i obec odjinud (přeskočeno)');
+  } else {
+    const pocet = async () => {
+      const t = await p.locator('#map-count').innerText().catch(() => '');
+      const m = /(\d+)\s*na mapě/.exec(t.replace(/ /g, ' '));
+      return m ? +m[1] : -1;
+    };
+    await pole.fill('');
+    await pole.type(past.text, { delay: 40 });
+    await p.waitForTimeout(500);
+    const pred = await pocet();
+    const seznamPred = await p.locator('#opp-list').innerText().catch(() => '');
+
+    // Řádek „celý okres X" — ne první, co padne pod ruku.
+    const radky = await p.locator('#map-search-navrhy li').all();
+    let kliknuto = false;
+    for (const r of radky) {
+      const t = (await r.innerText().catch(() => '')).replace(/\s+/g, ' ');
+      if (/celý okres/.test(t) && norm2(t).indexOf(norm2(past.okres)) >= 0) {
+        await r.click({ timeout: 3000 }); kliknuto = true; break;
+      }
+    }
+    if (!pravda(`našeptávač nabídne „celý okres ${past.okres}"`, kliknuto,
+        'v nabídce žádný řádek „celý okres" nebyl')) {
+      // nic dalšího se zkoušet nedá
+    } else {
+      await p.waitForTimeout(500);
+      const po = await pocet();
+      pravda(`„celý okres ${past.okres}" výpis zúží`, po > 0 && pred > 0 && po < pred,
+        `před výběrem ${pred}, po výběru ${po} — obec z jiného okresu (${past.cizi.slice(0, 3).join(', ')}) se do okresu nepočítá`);
+
+      /* A doopravdy: žádná z těch cizích obcí nesmí ve výpisu zůstat.
+         Kontroluje se jen to, co tam předtím vidět BYLO — co se do
+         výpisu nevešlo, o ničem nevypovídá. */
+      const seznamPo = await p.locator('#opp-list').innerText().catch(() => '');
+      const bylo = past.cizi.filter((o) => seznamPred.indexOf(o) >= 0);
+      if (bylo.length) {
+        const zbylo = bylo.filter((o) => seznamPo.indexOf(o) >= 0);
+        pravda('a obce z jiných okresů z výpisu zmizí', zbylo.length === 0,
+          've výpisu pořád visí: ' + zbylo.join(', '));
+      }
+
+      // Musí to jít zrušit — a musí být vidět, že je to zapnuté.
+      const odznak = await p.locator('#ms-chipy .msch[data-misto]').count();
+      pravda('vybrané místo je vidět jako odznak', odznak === 1, `odznaků: ${odznak}`);
+      if (odznak === 1) {
+        await p.locator('#ms-chipy .msch[data-misto]').click();
+        await p.waitForTimeout(400);
+        const poZruseni = await pocet();
+        pravda('a po zrušení odznaku se výpis zase rozšíří', poZruseni > po,
+          `po výběru ${po}, po zrušení ${poZruseni}`);
+      }
+    }
+  }
 }
 
 // --- 5) Překlep: web nabídne opravu ---------------------------------
