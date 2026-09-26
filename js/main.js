@@ -2865,8 +2865,23 @@
        a „Zrušit CENU". S jedním tvarem stálo na tlačítku „Zrušit cena".
        Víceslovné podmínky jsou v uvozovkách — v obou větách pak sedí
        beze změny. */
-    function pol(nazev, ctvrty, zapnute, vypni, vrat) {
-      if (zapnute) ven.push({ nazev: nazev, ctvrty: ctvrty, vypni: vypni, vrat: vrat });
+    /* `popis` je text S HODNOTOU pro odznak nad výpisem („Cena do
+       300 000 Kč"). `nazev`/`ctvrty` zůstávají obecné — používá je hláška
+       u prázdného výpisu („Nejvíc omezuje CENA", „Zrušit CENU"), kde je
+       hodnota navíc. Kdo popis nedostane, odznak nemá: text věty a
+       vybrané místo mají odznaky vlastní. */
+    /* POZOR: popis se plní jen z OVLÁDÁNÍ, ne z toho, co web pochopil
+       z napsané věty. Ta má odznaky vlastní (dotazFiltr.casti) a bez
+       tohohle rozlišení se zdvojily: „orná do 1 mil" v políčku dělalo
+       odznaky „do 1 mil", „Orná půda" a k tomu druhou „Orná půda". */
+    function pol(nazev, ctvrty, zapnute, vypni, vrat, popis) {
+      if (zapnute) ven.push({ nazev: nazev, ctvrty: ctvrty, vypni: vypni, vrat: vrat, popis: popis || '' });
+    }
+    function rozsahText(od, doo, jed) {
+      if (od && doo) return fmt(od) + '–' + fmt(doo) + ' ' + jed;
+      if (doo) return 'do ' + fmt(doo) + ' ' + jed;
+      if (od) return 'od ' + fmt(od) + ' ' + jed;
+      return '';
     }
     /* Volný text (hledání obce) se ruší SÁM ZA SEBE — ne celá věta.
        Vyhodit i pochopené části by ukázalo číslo, které s tím omezením
@@ -2894,41 +2909,55 @@
       (function () { var a = ukazPodobne; return function () { ukazPodobne = a; }; }()));
     pol('druh pozemku', 'druh pozemku', activeDruh !== 'all' || !!d.druh,
       function () { activeDruh = 'all'; d.druh = null; if (druhEl) druhEl.value = 'all'; },
-      (function () { var a = activeDruh, b = d.druh; return function () { activeDruh = a; d.druh = b; if (druhEl) druhEl.value = a; }; }()));
+      (function () { var a = activeDruh, b = d.druh; return function () { activeDruh = a; d.druh = b; if (druhEl) druhEl.value = a; }; }()),
+      activeDruh !== 'all' ? activeDruh : '');
     pol('druh nabídky', 'druh nabídky', activeType !== 'all' || !!d.typ,
       function () { activeType = 'all'; d.typ = null; },
-      (function () { var a = activeType, b = d.typ; return function () { activeType = a; d.typ = b; }; }()));
+      (function () { var a = activeType, b = d.typ; return function () { activeType = a; d.typ = b; }; }()),
+      activeType !== 'all' ? ((TYPE[activeType] || {}).label || '') : '');
     pol('kraj', 'kraj', krajFiltr !== 'all' || !!d.kraj,
       function () { krajFiltr = 'all'; d.kraj = null; if (krajFiltrEl) krajFiltrEl.value = 'all'; },
-      (function () { var a = krajFiltr, b = d.kraj; return function () { krajFiltr = a; d.kraj = b; if (krajFiltrEl) krajFiltrEl.value = a; }; }()));
+      (function () { var a = krajFiltr, b = d.kraj; return function () { krajFiltr = a; d.kraj = b; if (krajFiltrEl) krajFiltrEl.value = a; }; }()),
+      krajFiltr !== 'all' ? (krajFiltr + (krajFiltr === 'Praha' ? '' : ' kraj')) : '');
     pol('cena', 'cenu', !!(maxPrice || minPrice || d.cenaOd || d.cenaDo),
       function () { maxPrice = 0; minPrice = 0; d.cenaOd = null; d.cenaDo = null; },
       (function () { var a = maxPrice, b = minPrice, c = d.cenaOd, e = d.cenaDo;
-        return function () { maxPrice = a; minPrice = b; d.cenaOd = c; d.cenaDo = e; }; }()));
+        return function () { maxPrice = a; minPrice = b; d.cenaOd = c; d.cenaDo = e; }; }()),
+      (minPrice || maxPrice) ? 'Cena ' + rozsahText(minPrice, maxPrice, 'Kč') : '');
     pol('výměra', 'výměru', !!(minArea || maxArea || d.plochaOd || d.plochaDo),
       function () { minArea = 0; maxArea = 0; d.plochaOd = null; d.plochaDo = null; },
       (function () { var a = minArea, b = maxArea, c = d.plochaOd, e = d.plochaDo;
-        return function () { minArea = a; maxArea = b; d.plochaOd = c; d.plochaDo = e; }; }()));
+        return function () { minArea = a; maxArea = b; d.plochaOd = c; d.plochaDo = e; }; }()),
+      (minArea || maxArea) ? 'Výměra ' + rozsahText(minArea, maxArea, 'm²') : '');
     pol('cena za metr', 'cenu za metr', !!(maxPerM2 || d.zaMetrDo || d.zaMetrOd),
       function () { maxPerM2 = 0; d.zaMetrDo = null; d.zaMetrOd = null; if (perm2El) perm2El.value = ''; },
       (function () { var a = maxPerM2, b = d.zaMetrDo, c = d.zaMetrOd;
-        return function () { maxPerM2 = a; d.zaMetrDo = b; d.zaMetrOd = c; if (perm2El) perm2El.value = a ? String(a) : ''; }; }()));
+        return function () { maxPerM2 = a; d.zaMetrDo = b; d.zaMetrOd = c; if (perm2El) perm2El.value = a ? String(a) : ''; }; }()),
+      maxPerM2 ? 'do ' + fmt(maxPerM2) + ' Kč/m²' : '');
     pol('vybavení z inzerátu', 'vybavení z inzerátu', !!(zadaneVybaveni.length || d.site.length || d.nejakeSite),
       function () { zadaneVybaveni = []; d.site = []; d.nejakeSite = false; },
       (function () { var a = zadaneVybaveni, b = d.site, c = d.nejakeSite;
-        return function () { zadaneVybaveni = a; d.site = b; d.nejakeSite = c; }; }()));
+        return function () { zadaneVybaveni = a; d.site = b; d.nejakeSite = c; }; }()),
+      zadaneVybaveni.map(function (k) {
+        return (window.PKVybaveni && window.PKVybaveni.nazev) ? window.PKVybaveni.nazev(k) : k;
+      }).join(', '));
     pol('„jen celé pozemky"', '„jen celé pozemky"', jenCelek || d.jenCelek,
       function () { jenCelek = false; d.jenCelek = false; },
-      (function () { var a = jenCelek, b = d.jenCelek; return function () { jenCelek = a; d.jenCelek = b; }; }()));
+      (function () { var a = jenCelek, b = d.jenCelek; return function () { jenCelek = a; d.jenCelek = b; }; }()),
+      jenCelek ? 'Jen celé pozemky' : '');
     pol('„pod obvyklou cenou"', '„pod obvyklou cenou"', levneOnly || d.levne,
       function () { levneOnly = false; d.levne = false; },
-      (function () { var a = levneOnly, b = d.levne; return function () { levneOnly = a; d.levne = b; }; }()));
+      (function () { var a = levneOnly, b = d.levne; return function () { levneOnly = a; d.levne = b; }; }()),
+      levneOnly ? 'Pod obvyklou cenou' : '');
     pol('blížící se termín', 'blížící se termín', urgentOnly,
-      function () { urgentOnly = false; }, (function () { return function () { urgentOnly = true; }; }()));
+      function () { urgentOnly = false; }, (function () { return function () { urgentOnly = true; }; }()),
+      'Končí do 14 dní');
     pol('„jen uložené"', '„jen uložené"', favOnly,
-      function () { favOnly = false; }, (function () { return function () { favOnly = true; }; }()));
+      function () { favOnly = false; }, (function () { return function () { favOnly = true; }; }()),
+      'Jen uložené');
     pol('okolí vašeho místa', 'okolí vašeho místa', okoliZap,
-      function () { okoliZap = false; }, (function () { return function () { okoliZap = true; }; }()));
+      function () { okoliZap = false; }, (function () { return function () { okoliZap = true; }; }()),
+      'Do ' + ((mojeMisto && mojeMisto.km) || 10) + ' km od ' + ((mojeMisto && mojeMisto.nazev) || 'vašeho místa'));
     return ven;
   }
 
@@ -3169,18 +3198,21 @@
   // Ukazatel u „Cena, výměra a řazení" — kolik doplňkových filtrů je aktivních,
   // ať uživatel pozná, že něco filtruje, i když je panel sbalený.
   var msfBadge = document.getElementById('msf-badge');
+  /* Číslo v odznaku u zavřeného panelu.
+     Dřív mělo VLASTNÍ ruční výčet a rozcházelo se se skutečností:
+     neznalo kraj, cenu za metr, „pod obvyklou cenou", okolí ani vybrané
+     místo, zato počítalo řazení (které nic nefiltruje) a každou síť
+     zvlášť. Číslo tedy klidně ukazovalo „2" u pěti zapnutých filtrů.
+     Teď se počítá z TÉHOŽ seznamu, ze kterého se kreslí odznaky —
+     kolik odznaků je vidět, tolik jich číslo hlásí. */
+  function pocetFiltru() {
+    var casti = (dotazFiltr && dotazFiltr.casti) || [];
+    return casti.length + (mistoFiltr ? 1 : 0) +
+      omezeni().filter(function (o) { return o.popis; }).length;
+  }
   function updateFilterBadge() {
     if (!msfBadge) return;
-    var n = 0;
-    if (maxPrice || minPrice) n++;
-    if (minArea || maxArea) n++;
-    if (activeDruh && activeDruh !== 'all') n++;
-    if (urgentOnly) n++;
-    if (favOnly) n++;
-    if (zadaneVybaveni.length) n += zadaneVybaveni.length;
-    n += (dotazFiltr.casti || []).length;
-    if (jenCelek) n++;
-    if (sortMode && sortMode !== 'demand') n++;
+    var n = pocetFiltru();
     if (n > 0) { msfBadge.textContent = n; msfBadge.hidden = false; }
     else { msfBadge.hidden = true; }
   }
@@ -3944,10 +3976,22 @@
   /* Odznaky toho, co se z věty vzalo. Zrušení odznaku znamená vyškrtnout
      ta slova z políčka — jinak by se filtr vrátil při dalším úhozu. */
   var chipyEl = document.getElementById('ms-chipy');
+  /* Odznaky nastavených filtrů. Držené zvlášť, protože klepnutí na křížek
+     potřebuje TU SAMOU funkci `vypni`, se kterou se odznak vykreslil. */
+  var chipyNaklikane = [];
   function prekresliChipy() {
     if (!chipyEl) return;
     var casti = (dotazFiltr && dotazFiltr.casti) || [];
-    if (!casti.length && !mistoFiltr) { chipyEl.hidden = true; chipyEl.innerHTML = ''; return; }
+    /* Co je NAKLIKANÉ v panelu, bylo při zavřeném panelu vidět jen jako
+       číslo v odznaku („2"). Že člověk „špatně vidí, jaké filtry má
+       nastavené", byla pravda: číslo neřekne co. Teď má každý zapnutý
+       filtr vlastní odznak s hodnotou („Cena do 300 000 Kč") a křížkem.
+       Text věty a vybrané místo mají odznaky vlastní, proto se sem
+       neberou — poznají se podle toho, že nemají `popis`. */
+    chipyNaklikane = omezeni().filter(function (o) { return o.popis; });
+    if (!casti.length && !mistoFiltr && !chipyNaklikane.length) {
+      chipyEl.hidden = true; chipyEl.innerHTML = ''; return;
+    }
     var html = '';
     /* Vybrané místo stojí první: je to ze všech filtrů ten nejsilnější
        a musí jít zrušit jedním klepnutím, jako každý jiný odznak. */
@@ -3961,6 +4005,11 @@
         '" aria-label="Zrušit: ' + esc(casti[i].popis) + '">' + esc(casti[i].popis) +
         '<span class="msch-x" aria-hidden="true">✕</span></button>';
     }
+    for (var j = 0; j < chipyNaklikane.length; j++) {
+      html += '<button type="button" class="msch" data-omez="' + j + '" aria-label="Zrušit: ' +
+        esc(chipyNaklikane[j].popis) + '">' + esc(chipyNaklikane[j].popis) +
+        '<span class="msch-x" aria-hidden="true">✕</span></button>';
+    }
     chipyEl.innerHTML = html;
     chipyEl.hidden = false;
   }
@@ -3971,6 +4020,13 @@
       searchEl.value = '';
       nastavHledani('');          // ruší i mistoFiltr
       renderList();
+      return;
+    }
+    if (b.hasAttribute('data-omez')) {
+      var o = chipyNaklikane[+b.getAttribute('data-omez')];
+      /* Vypíná se TOU SAMOU funkcí, se kterou se odznak vykreslil —
+         nikoli vlastní kopií logiky, která by se s ní časem rozešla. */
+      if (o && typeof o.vypni === 'function') { o.vypni(); renderList(); }
       return;
     }
     var cast = (dotazFiltr.casti || [])[+b.getAttribute('data-i')];

@@ -527,6 +527,94 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   await c4.close();
 }
 
+// --- Je vidět, JAKÉ filtry mám nastavené? ---------------------------
+/* Stížnost: „štve mě, že špatně vidím, jaké filtry mám nastavené."
+   U zavřeného panelu se ukazovalo jen číslo v odznaku — a to číslo
+   navíc lhalo: mělo vlastní ruční výčet, neznalo kraj, cenu za metr,
+   „pod obvyklou cenou" ani okolí, zato počítalo řazení (které nic
+   nefiltruje). Klidně hlásilo „2" u pěti zapnutých filtrů.
+   Teď má každý zapnutý filtr vlastní odznak s hodnotou a číslo se
+   počítá z týchž odznaků. */
+{
+  const { ctx, p } = await otevri(TELEFON);
+  const st = () => p.evaluate(() => ({
+    odznaky: [...document.querySelectorAll('#ms-chipy .msch')].map((x) => x.textContent.replace('✕', '').trim()),
+    cislo: (document.getElementById('msf-badge') || {}).hidden ? 0
+      : +((document.getElementById('msf-badge') || {}).textContent || 0),
+  }));
+
+  const prazdno = await st();
+  pravda('bez filtrů nejsou žádné odznaky', prazdno.odznaky.length === 0 && prazdno.cislo === 0,
+    JSON.stringify(prazdno));
+
+  /* Každé ovládání v panelu musí být po zapnutí vidět jako odznak.
+     Prochází se VŠECHNA, ne vyjmenovaná hrstka — tenhle hlídač má
+     chytit i filtr, který teprve přibude. Řazení se vynechává: nic
+     nefiltruje, jen mění pořadí. */
+  const ovladani = await p.evaluate(() => {
+    const ven = [];
+    document.querySelectorAll('#ms-filters select').forEach((el) => {
+      if (el.id === 'map-sort') return;
+      const jina = [...el.options].find((o) => o.value && o.value !== 'all' && o.value !== '');
+      if (jina) ven.push({ sel: '#' + el.id, druh: 'select', hodnota: jina.value, popis: el.id });
+    });
+    document.querySelectorAll('#ms-filters .mc-toggles button').forEach((el) => {
+      ven.push({ sel: '#' + el.id, druh: 'tlacitko', popis: el.id });
+    });
+    ['map-cena', 'map-cena-od', 'map-area', 'map-area-do'].forEach((id) => {
+      if (document.getElementById(id)) ven.push({ sel: '#' + id, druh: 'cislo', hodnota: '500000', popis: id });
+    });
+    return ven;
+  });
+  pravda(`panel má ovládání, která jde projít (${ovladani.length})`, ovladani.length >= 6);
+
+  const bezOdznaku = [];
+  for (const o of ovladani) {
+    const pred = (await st()).odznaky.length;
+    await p.evaluate((x) => {
+      const el = document.querySelector(x.sel);
+      if (!el) return;
+      if (x.druh === 'tlacitko') { el.click(); return; }
+      el.value = x.hodnota;
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }, o);
+    await p.waitForTimeout(650);
+    const po = await st();
+    if (po.odznaky.length <= pred) bezOdznaku.push(o.popis);
+    // zpátky do výchozího stavu, ať se filtry nesčítají
+    await p.evaluate((x) => {
+      const el = document.querySelector(x.sel);
+      if (!el) return;
+      if (x.druh === 'tlacitko') { el.click(); return; }
+      el.value = x.druh === 'select' ? (el.querySelector('option[value="all"]') ? 'all' : '') : '';
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }, o);
+    await p.waitForTimeout(450);
+  }
+  pravda('každý zapnutý filtr je vidět jako odznak', bezOdznaku.length === 0,
+    'bez odznaku zůstalo: ' + bezOdznaku.join(', '));
+
+  /* Číslo v odznaku musí sedět s tím, kolik odznaků je vidět. Dřív to
+     byly dva nezávislé výčty a rozešly se. */
+  await p.evaluate(() => {
+    const q = document.getElementById('map-search'); q.value = 'orná do 1 mil'; q.dispatchEvent(new Event('input', { bubbles: true }));
+    const m = document.getElementById('map-perm2'); m.value = '50'; m.dispatchEvent(new Event('change', { bubbles: true }));
+    document.getElementById('map-urgent').click();
+  });
+  await p.waitForTimeout(1100);
+  const spolu = await st();
+  pravda('věta i ovládání dají dohromady odznaky', spolu.odznaky.length >= 4, JSON.stringify(spolu.odznaky));
+  pravda('a číslo u panelu sedí s počtem odznaků', spolu.cislo === spolu.odznaky.length,
+    `číslo ${spolu.cislo}, odznaků ${spolu.odznaky.length}: ${JSON.stringify(spolu.odznaky)}`);
+  /* Co nastavila věta, nesmí přibýt podruhé jako naklikané. */
+  const dvakrat = spolu.odznaky.filter((x, i, a) => a.indexOf(x) !== i);
+  pravda('a žádný filtr tam není dvakrát', dvakrat.length === 0, 'dvakrát: ' + dvakrat.join(', '));
+  /* Odznak musí nést HODNOTU, ne jen jméno filtru — o to celé jde. */
+  pravda('u ceny za metr je vidět i hodnota', spolu.odznaky.some((x) => /50/.test(x)),
+    JSON.stringify(spolu.odznaky));
+  await ctx.close();
+}
+
 // --- Konec panelu filtrů: „kolik jich zbylo" a „zrušit" -------------
 /* Stížnost: „naklikám tam, co chci, a ani nevím, že změny byly
    aplikované, ani mě to neposune na inzeráty a nechá nahoře ve
