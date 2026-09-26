@@ -296,7 +296,10 @@
   }
   function okres(v) {
     var s = text(v);
-    if (!s) return ok();                       // nepovinné — obec stačí
+    /* Povinný. Dřív nebyl a bez něj se nedalo zkontrolovat vůbec nic:
+       obec „Lhota" se našla kdekoliv a pozemek skončil o sto kilometrů
+       vedle. Se seznamem 77 okresů v našeptávači je to jedno slovo. */
+    if (!s) return chyba('Vyberte prosím okres — podle něj pozemek zařadíme na mapu i do srovnání cen.');
     var zn = znameOkresy();
     /* Bez seznamu se nehádá. Kdyby se js/hlidani-logika.js nenačetl,
        je lepší pustit dál, než odmítnout platný okres. */
@@ -313,6 +316,88 @@
       return chyba('Okres „' + s + '" neznáme. Nemysleli jste ' + nej + '?');
     }
     return chyba('Okres „' + s + '" neznáme — vyberte prosím jeden ze 77 okresů (napovídá se při psaní).');
+  }
+
+  /* --- padl špendlík do vybraného okresu? -----------------------------
+
+     Nejhorší chyba v inzerátu není překlep v ceně, ale špatné místo:
+     pozemek se pak ukazuje o sto kilometrů jinde a nikdo ho nenajde.
+     Stává se to snadno — obcí jménem Lhota je v Česku přes dvacet a
+     našeptávač adres vrátí tu první.
+
+     Ptáme se proto souřadnic, ne jména: leží bod, který vyšel z obce,
+     ve vybraném okrese? Hranice jsou proředěné (data/okresy-hrube.json,
+     35 kB místo megabajtu), takže se s nimi nedá rozhodovat na metry.
+     Nerozhodujeme: ptáme se „je ten bod od okresu dál než 5 km?".
+     Na všech skutečných pozemcích v datech leží nejvzdálenější správný
+     bod 1,76 km vně svého okresu — práh 5 km má skoro trojnásobnou
+     rezervu, a přesto odhalí 98,9 % špatných dvojic obec–okres.
+     Obojí měří scripts/test-okres.mjs. */
+  var PRAH_KM = 5;
+  /* Stupeň zeměpisné délky je u nás asi 0,64násobek stupně šířky. Bez
+     téhle opravy by se měřilo nakřivo a práh by na západ–východ platil
+     jiný než na sever–jih. */
+  var KM_LNG = Math.cos(50 * Math.PI / 180) * 111.32, KM_LAT = 111.32;
+
+  // Paprskový test: kolikrát polopřímka z bodu protne obvod.
+  function vPrstenci(x, y, r) {
+    var uvnitr = false;
+    for (var i = 0, j = r.length - 1; i < r.length; j = i++) {
+      var xi = r[i][0], yi = r[i][1], xj = r[j][0], yj = r[j][1];
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) uvnitr = !uvnitr;
+    }
+    return uvnitr;
+  }
+  function kmOdUsecky(lng, lat, a, b) {
+    var dx = (b[0] - a[0]) * KM_LNG, dy = (b[1] - a[1]) * KM_LAT;
+    var l2 = dx * dx + dy * dy;
+    var t = l2 ? (((lng - a[0]) * KM_LNG * dx + ((lat - a[1]) * KM_LAT) * dy) / l2) : 0;
+    if (t < 0) t = 0; else if (t > 1) t = 1;
+    var px = (lng - a[0]) * KM_LNG - t * dx, py = (lat - a[1]) * KM_LAT - t * dy;
+    return Math.sqrt(px * px + py * py);
+  }
+  function kmVenZOkresu(lat, lng, prstence) {
+    var i, j, k, r, nej = Infinity;
+    for (i = 0; i < prstence.length; i++) if (vPrstenci(lng, lat, prstence[i])) return 0;
+    for (i = 0; i < prstence.length; i++) {
+      r = prstence[i];
+      for (j = 0, k = r.length - 1; j < r.length; k = j++) {
+        var d = kmOdUsecky(lng, lat, r[k], r[j]);
+        if (d < nej) nej = d;
+      }
+    }
+    return nej;
+  }
+  // Do kterého okresu bod spadl (podle hrubých hranic). null = do žádného.
+  function okresBodu(lat, lng, hrube) {
+    for (var jm in hrube) {
+      if (!Object.prototype.hasOwnProperty.call(hrube, jm)) continue;
+      var p = hrube[jm];
+      for (var i = 0; i < p.length; i++) if (vPrstenci(lng, lat, p[i])) return jm;
+    }
+    return null;
+  }
+
+  /* Vybraný okres přeložený na přesný název ze seznamu ('kolin' → 'Kolín').
+     null = takový okres neznáme. */
+  function kanonOkres(v) {
+    var n = normOkres(v), zn = znameOkresy(), i;
+    if (!n) return null;
+    for (i = 0; i < zn.length; i++) if (normOkres(zn[i]) === n) return zn[i];
+    return null;
+  }
+
+  function poloha(lat, lng, okresNazev, hrube) {
+    if (typeof lat !== 'number' || typeof lng !== 'number' || !isFinite(lat) || !isFinite(lng)) return ok();
+    if (!hrube) return ok();                       // hranice se nenačetly — nehádáme
+    var jm = kanonOkres(okresNazev);
+    if (!jm || !hrube[jm]) return ok();            // okres neznáme, řeší okres()
+    var km = kmVenZOkresu(lat, lng, hrube[jm]);
+    if (km <= PRAH_KM) return ok();
+    var kde = okresBodu(lat, lng, hrube);
+    return chyba('Podle obce vychází místo ' + Math.round(km) + ' km mimo okres ' + jm +
+      (kde ? ' — spíš to vypadá na okres ' + kde + '.' : '.') +
+      ' Zkontrolujte prosím obec a okres, jinak by se pozemek ukázal jinde.');
   }
 
   function jmeno(v) {
@@ -384,9 +469,11 @@
     MEZE: MEZE,
     obec: obec, vymera: vymera, cena: cena, cenaZaMetr: cenaZaMetr,
     popis: popis, odkaz: odkaz, kontakt: kontakt, jmeno: jmeno, parcela: parcela, okres: okres,
+    poloha: poloha, kanonOkres: kanonOkres, PRAH_KM: PRAH_KM,
     fotkaRozmery: fotkaRozmery, fotkaObsah: fotkaObsah,
     fotkaPuvod: fotkaPuvod, fotkaMisto: fotkaMisto, ocistiOdkaz: ocistiOdkaz,
     formular: formular,
-    _jeSprosty: jeSprosty, _jeSpam: jeSpam, _podilVelkych: podilVelkych
+    _jeSprosty: jeSprosty, _jeSpam: jeSpam, _podilVelkych: podilVelkych,
+    _kmVenZOkresu: kmVenZOkresu, _okresBodu: okresBodu
   };
 });

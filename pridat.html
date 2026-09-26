@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=126ed6f0">
+  <link rel="stylesheet" href="css/styles.css?v=8e8033f8">
 </head>
 <body>
 
@@ -228,14 +228,14 @@
                   </div>
                   <div class="add-row">
                     <div class="add-field">
-                      <label for="p-okres">Okres</label>
+                      <label for="p-okres">Okres <span class="req">*</span></label>
                       <!-- Nabídka všech 77 okresů. Psát ho z hlavy znamená
                            překlep, a překlep v okrese je drahý: podle okresu
                            se inzerát zařadí na krajskou i okresní stránku,
                            najdou ho uložená hlídání a poměří se jeho cena
                            s okolím. Seznam sem doplní generátor z dat, aby
                            se nemohl rozejít (viz scripts/generate-region-pages.mjs). -->
-                      <input id="p-okres" type="text" list="p-okresy" autocomplete="off" placeholder="začněte psát, např. Kolín">
+                      <input id="p-okres" type="text" list="p-okresy" autocomplete="off" required placeholder="začněte psát, např. Kolín">
                       <datalist id="p-okresy">/*ZACATEK-OKRESY-VOLBY*/<option value="Benešov"></option><option value="Beroun"></option><option value="Blansko"></option><option value="Brno-město"></option><option value="Brno-venkov"></option><option value="Bruntál"></option><option value="Břeclav"></option><option value="Česká Lípa"></option><option value="České Budějovice"></option><option value="Český Krumlov"></option><option value="Děčín"></option><option value="Domažlice"></option><option value="Frýdek-Místek"></option><option value="Havlíčkův Brod"></option><option value="Hodonín"></option><option value="Hradec Králové"></option><option value="Cheb"></option><option value="Chomutov"></option><option value="Chrudim"></option><option value="Jablonec nad Nisou"></option><option value="Jeseník"></option><option value="Jičín"></option><option value="Jihlava"></option><option value="Jindřichův Hradec"></option><option value="Karlovy Vary"></option><option value="Karviná"></option><option value="Kladno"></option><option value="Klatovy"></option><option value="Kolín"></option><option value="Kroměříž"></option><option value="Kutná Hora"></option><option value="Liberec"></option><option value="Litoměřice"></option><option value="Louny"></option><option value="Mělník"></option><option value="Mladá Boleslav"></option><option value="Most"></option><option value="Náchod"></option><option value="Nový Jičín"></option><option value="Nymburk"></option><option value="Olomouc"></option><option value="Opava"></option><option value="Ostrava-město"></option><option value="Pardubice"></option><option value="Pelhřimov"></option><option value="Písek"></option><option value="Plzeň-jih"></option><option value="Plzeň-město"></option><option value="Plzeň-sever"></option><option value="Praha"></option><option value="Praha-východ"></option><option value="Praha-západ"></option><option value="Prachatice"></option><option value="Prostějov"></option><option value="Přerov"></option><option value="Příbram"></option><option value="Rakovník"></option><option value="Rokycany"></option><option value="Rychnov nad Kněžnou"></option><option value="Semily"></option><option value="Sokolov"></option><option value="Strakonice"></option><option value="Svitavy"></option><option value="Šumperk"></option><option value="Tábor"></option><option value="Tachov"></option><option value="Teplice"></option><option value="Trutnov"></option><option value="Třebíč"></option><option value="Uherské Hradiště"></option><option value="Ústí nad Labem"></option><option value="Ústí nad Orlicí"></option><option value="Vsetín"></option><option value="Vyškov"></option><option value="Zlín"></option><option value="Znojmo"></option><option value="Žďár nad Sázavou"></option>/*KONEC-OKRESY-VOLBY*/</datalist>
                     </div>
                     <div class="add-field">
@@ -328,6 +328,18 @@
             </div>
           </div>
 
+          <!-- KDE SE POZEMEK UKÁŽE.
+               Dřív se poloha ověřovala až po klepnutí na „Zveřejnit" —
+               člověk do té doby netušil, kam špendlík padne, a hlášku
+               o špatném okrese dostal jako překvapení na konci. Tady ji
+               vidí rovnou, a hlavně vidí i ten snímek: „ano, tohle je
+               naše louka" pozná majitel na první pohled. -->
+          <div class="aside-card mapa-card" id="mp-card" hidden>
+            <div class="pc-eyebrow"><span class="live-dot"></span>Kde se pozemek ukáže</div>
+            <div class="mp-ram" id="mp-ram"></div>
+            <p class="mp-stav" id="mp-stav" role="status" aria-live="polite"></p>
+          </div>
+
           <div class="aside-card tips-card">
             <h3>Tipy na inzerát, který zabere</h3>
             <ul class="tips-list">
@@ -383,13 +395,14 @@
 <script src="js/config.js?v=7f55c4e1" defer></script>
 <script src="js/auth.js?v=3891c865" defer></script>
 <script src="js/exif.js?v=1396593e" defer></script>
+<script src="js/snimek.js?v=19045f9d" defer></script>
 <script src="js/tridy-imagenet.js?v=17f028f4" defer></script>
 <script src="js/fotoskupiny.js?v=6952d85b" defer></script>
 <script src="js/fototema.js?v=7f4a9d0e" defer></script>
 <script src="js/vybaveni.js?v=54b36f73" defer></script>
 <script src="js/predvyplneni.js?v=86eea16c" defer></script>
-<script src="js/kontrola.js?v=5f65819b" defer></script>
-<script src="js/pridat.js?v=9fbf42f5" defer></script>
+<script src="js/kontrola.js?v=7c044314" defer></script>
+<script src="js/pridat.js?v=93eac864" defer></script>
 <script>
 /* Zobrazit/skrýt heslo v přihlašovací kartě */
 document.addEventListener('click', function (e) {

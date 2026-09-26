@@ -76,16 +76,23 @@ export function nejblizsiOkresniMesto(lat, lng) {
 
 export function maHranice() { return !!HRANICE; }
 
+/* Totéž, ale bez záchranné sítě: když bod neleží v žádném okrese
+   (typicky je za hranicí státu), vrátí null místo nejbližšího města.
+   Potřebují to kontroly — s náhradním okresem by měřily nesmysl. */
+export function okresPodleHranice(lat, lng) {
+  if (!HRANICE) return null;
+  if (typeof lat !== 'number' || typeof lng !== 'number' || !isFinite(lat) || !isFinite(lng)) return null;
+  for (const [jmeno, g] of Object.entries(HRANICE)) {
+    const o = OBALKY[jmeno];
+    if (lng < o[0] || lng > o[2] || lat < o[1] || lat > o[3]) continue;
+    if (vGeometrii(lat, lng, g)) return jmeno;
+  }
+  return null;
+}
+
 export function okresPodleGPS(lat, lng) {
   if (typeof lat !== 'number' || typeof lng !== 'number' || !isFinite(lat) || !isFinite(lng)) return null;
-  if (HRANICE) {
-    for (const [jmeno, g] of Object.entries(HRANICE)) {
-      const o = OBALKY[jmeno];
-      if (lng < o[0] || lng > o[2] || lat < o[1] || lat > o[3]) continue;
-      if (vGeometrii(lat, lng, g)) return jmeno;
-    }
-    // Bod mimo všechny hranice (zjednodušená čára, bod těsně u řeky nebo
-    // za hranicí státu) — vrátíme nejbližší okresní město, ať nezůstane prázdno.
-  }
-  return nejblizsiOkresniMesto(lat, lng);
+  // Bod mimo všechny hranice (zjednodušená čára, bod těsně u řeky nebo
+  // za hranicí státu) — vrátíme nejbližší okresní město, ať nezůstane prázdno.
+  return okresPodleHranice(lat, lng) || nejblizsiOkresniMesto(lat, lng);
 }

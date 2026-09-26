@@ -23,6 +23,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const WEB = 'https://www.parcelaka.cz';
@@ -156,9 +157,24 @@ export function stranka(sablona, d) {
   return h;
 }
 
+/* Pravidlo pro duplicity je jedno pro celý web (js/hlidani-logika.js).
+   Ten soubor je obyčejný skript pro prohlížeč, ne modul — načte se
+   stejně jako v scripts/generate-region-pages.mjs. */
+const PKH = createRequire(import.meta.url)(path.join(ROOT, 'js', 'hlidani-logika.js'));
+
 export function generuj() {
   const sablona = fs.readFileSync(path.join(ROOT, 'pozemek.html'), 'utf8');
-  const D = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
+  const syrova = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
+  /* Duplicity odstraňuje TATÁŽ funkce jako mapa (js/main.js) i generátor
+     regionálních stránek — js/hlidani-logika.js. Dřív si tenhle generátor
+     vystačil s vlastním klíčem (pkey: obec, parcela, okres, souřadnice)
+     a to nestačilo: tentýž pozemek ze dvou zdrojů mívá parcelní číslo
+     jen u jednoho z nich a souřadnice o pár set metrů jinde. Dražba
+     v Trubíně (okdrazby.cz/drazba/27823) tak dostala dvě vlastní
+     stránky — dvě adresy pro jednu dražbu, obě v sitemap, obě si ve
+     vyhledávači konkurovaly. Vlastní pravidlo je tu pořád, ale až jako
+     druhé síto: rozlišuje stránky, nerozhoduje o duplicitách. */
+  const D = PKH.bezDuplicit(syrova);
   const videno = new Set();
   const hotove = [];
   for (const d of D) {

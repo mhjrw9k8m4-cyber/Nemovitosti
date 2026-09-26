@@ -15,6 +15,7 @@
 // se propisovalo i do „pozemků v okolí" a do cen podle kraje.
 import { readFileSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { okresPodleHranice } from './okres-podle-gps.mjs';
 
 const pozadavek = createRequire(import.meta.url);
 
@@ -65,6 +66,15 @@ const mimoCR = nabidky.filter((o) => typeof o.lat === 'number' &&
   (o.lat < 48.5 || o.lat > 51.1 || o.lng < 12.0 || o.lng > 18.9));
 pravda('všechny souřadnice leží v Česku', mimoCR.length === 0,
   mimoCR.slice(0, 4).map((o) => `${o.place} ${o.lat},${o.lng}`).join(' | '));
+
+/* Obdélník kolem republiky pustí i kus Německa a Rakouska. Skutečné
+   hranice okresů máme, tak se ptáme přesně: leží bod v některém z nich?
+   Bez toho visely na webu dva zahraniční pozemky („Sasko" u Děčína a
+   „Reiserdorf 173" u Tachova) s okresem dopočítaným podle nejbližšího
+   českého města — na webu o českých pozemcích. */
+const zaHranici = nabidky.filter((o) => typeof o.lat === 'number' && !okresPodleHranice(o.lat, o.lng));
+pravda('žádný pozemek neleží za hranicemi státu', zaHranici.length === 0,
+  `${zaHranici.length}: ` + zaHranici.slice(0, 4).map((o) => `${o.place} (${o.okres}) ${o.lat},${o.lng}`).join(' | '));
 
 // --- 3) Čísla dávají smysl -------------------------------------------
 const zapornaCena = nabidky.filter((o) => o.price != null && !(o.price > 0));

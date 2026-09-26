@@ -306,6 +306,76 @@ async function odesli(p) {
   await ctx.close();
 }
 
+/* --- KDE SE POZEMEK UKÁŽE ------------------------------------------
+ * Poloha se dřív ověřovala až po klepnutí na „Zveřejnit" — po vyplnění
+ * všeho a po nahrání fotek. Náhled ji ukáže hned při psaní: snímek
+ * místa a pod ním verdikt. Tohle je ta zkouška, že se to opravdu děje
+ * BEZ odeslání formuláře.
+ *
+ * Podstrčený geokodér vrací pořád souřadnice u Kolína, takže okres
+ * Kolín má dopadnout dobře a okres Cheb špatně.
+ */
+{
+  const { ctx, p } = await otevri(true);
+  const stav = async () => p.evaluate(() => {
+    const c = document.getElementById('mp-card'), s = document.getElementById('mp-stav');
+    const r = document.getElementById('mp-ram');
+    return { skryta: !c || c.hidden, trida: s ? s.className : '',
+      text: (s ? s.textContent : '').replace(/\s+/g, ' ').trim(),
+      dlazdic: r ? r.querySelectorAll('image').length : 0 };
+  });
+
+  const naStart = await stav();
+  pravda('náhled místa je schovaný, dokud není co ukázat', naStart.skryta, JSON.stringify(naStart));
+
+  await vypln(p, {});                       // obec Kolín, okres Kolín
+  await p.waitForTimeout(2600);             // 1,2 s čekání + geokodér
+  const dobre = await stav();
+  pravda('po vyplnění obce a okresu se náhled ukáže', !dobre.skryta, JSON.stringify(dobre));
+  pravda('a je v něm opravdu snímek místa, ne prázdný rám', dobre.dlazdic > 0,
+    `dlaždic ve snímku: ${dobre.dlazdic}`);
+  pravda('u sedící dvojice náhled potvrdí, že je to v pořádku',
+    dobre.trida === 'mp-stav ok', `třída „${dobre.trida}", text „${dobre.text}"`);
+
+  await p.fill('#p-okres', 'Cheb');
+  await p.waitForTimeout(2600);
+  const spatne = await stav();
+  pravda('špatný okres se pozná hned při psaní, bez odeslání',
+    spatne.trida === 'mp-stav err', `třída „${spatne.trida}", text „${spatne.text}"`);
+  pravda('a hláška řekne kolik km a který okres to nejspíš je',
+    /\d+ km mimo okres Cheb/.test(spatne.text) && /Kolín/.test(spatne.text),
+    `text „${spatne.text.slice(0, 160)}"`);
+  const url = await p.evaluate(() => location.pathname);
+  pravda('a nic se přitom neodeslalo', !/muj-inzerat/.test(url), `jsme na ${url}`);
+  await ctx.close();
+}
+
+/* --- OBEC A OKRES K SOBĚ MUSÍ SEDĚT --------------------------------
+ * Obcí jménem Lhota je v Česku přes dvacet a našeptávač adres vrátí tu
+ * první. Když člověk vybere okres, ve kterém jeho obec neleží, pozemek
+ * by se ukázal o sto kilometrů vedle — a poznat by to nešlo.
+ *
+ * Podstrčený geokodér vrací pořád souřadnice u Kolína. Okres Kolín tedy
+ * projde (to hlídá hlavní zkouška výš, jinak by tahle nic neznamenala)
+ * a okres Cheb projít nesmí.
+ */
+{
+  const { ctx, p } = await otevri(true);
+  await vypln(p, { 'p-okres': 'Cheb' });
+  await odesli(p);
+  await p.waitForTimeout(1500);
+  const stav = await p.evaluate(() => {
+    const m = document.getElementById('msg-prodej');
+    return { hlaska: (m ? m.textContent : '').replace(/\s+/g, ' ').trim(), url: location.pathname };
+  });
+  pravda('pozemek u Kolína zadaný jako okres Cheb se nezveřejní',
+    !/muj-inzerat/.test(stav.url), `web přešel na ${stav.url}`);
+  pravda('a hláška řekne, jak daleko to je a který okres to nejspíš má být',
+    /\d+ km mimo okres Cheb/.test(stav.hlaska) && /Kolín/.test(stav.hlaska),
+    `hláška: „${stav.hlaska.slice(0, 160)}"`);
+  await ctx.close();
+}
+
 /* --- ŠPENDLÍK NESMÍ TIŠE SKONČIT U OKRESNÍHO MĚSTA -----------------
  * Když se obec nenajde, geokódování spadlo na „okres X, Česko"
  * a inzerát dostal souřadnice okresního města. Na mapě to vypadá jako

@@ -16,7 +16,7 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { okresPodleGPS } from './okres-podle-gps.mjs';
+import { okresPodleGPS, okresPodleHranice, maHranice } from './okres-podle-gps.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -633,6 +633,12 @@ function valid(o) {
     if (sq < nearestSq) nearestSq = sq;
   }
   if (nearestSq > 40 * 40) return false;
+  /* Vzdálenost od okresního města je jen hrubé síto — u hranic pustí
+     i kus Německa. Máme ale skutečné hranice okresů, tak se rovnou
+     zeptáme, jestli bod leží v některém z nich. Bez tohoto testu visely
+     na webu dva zahraniční pozemky („Sasko" a „Reiserdorf 173") s okresem
+     dopočítaným podle nejbližšího českého města. */
+  if (maHranice() && !okresPodleHranice(lat, lng)) return false;
   // Druhá pojistka pro příhraničí: zjevně NĚMECKÝ název místa (ß, Straße, -weg,
   // Mühle, Pfarr…) — takové znaky se v českých názvech obcí prakticky nevyskytují,
   // takže jde o zahraniční inzerát se souřadnicemi za hranicí. Nezobrazujeme.

@@ -92,6 +92,21 @@
       body: JSON.stringify(args || {})
     }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
   }
+  /* Hrubé hranice okresů (35 kB) — jen pro kontrolu, jestli špendlík
+     nepadl do úplně jiného kouta republiky, než jaký okres člověk vybral.
+     Stahují se nejvýš jednou a už ve chvíli, kdy je okres vyplněný, ať
+     odesílání nečeká. Když se nestáhnou, kontrola se prostě přeskočí —
+     kvůli nedostupnému souboru se inzerát zadržet nesmí. */
+  var hraniceSlib = null;
+  function nactiHrubeHranice() {
+    if (!hraniceSlib) {
+      hraniceSlib = fetch('data/okresy-hrube.json')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; });
+    }
+    return hraniceSlib;
+  }
+
   // Najde přibližnou polohu obce (aby se pozemek dal ukázat na mapě).
   function geocodeQuery(q) {
     var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=cz&q=' + encodeURIComponent(q);
@@ -152,6 +167,7 @@
   var photoRejects = [];   // poslední zamítnuté fotky (pro hlášku uživateli)
   var posledniVarovani = [];   // co je podezřelé, ale odeslání to nebrání
   var mistoHlaska = '';        // fotka vyfocená daleko od zadané obce
+  var polohaHlaska = '';       // špendlík padl daleko od vybraného okresu
   function isImage(t) { return /^image\/(jpe?g|png|webp)$/i.test(t || ''); }
 
   // --- AI kontrola obsahu fotek (NSFWJS) — líně načtená, s vlastním modelem ---
@@ -359,6 +375,13 @@
          Nezveřejňuje se — kupující by jel jinam. Opravit to umí jen
          ten, kdo pozemek zná, tak se to řekne jemu. */
       if (pos.pribl) return 'geoObec';
+      return nactiHrubeHranice().then(function (hrube) {
+      /* Obec se našla, ale leží jinde, než člověk vybral okres. Obcí
+         jménem Lhota je přes dvacet a našeptávač vrátí tu první — pozemek
+         by se pak ukazoval o sto kilometrů vedle a nikdo by ho nenašel. */
+      var pol = (window.PKKontrola && PKKontrola.poloha)
+        ? PKKontrola.poloha(pos.lat, pos.lng, okres, hrube) : { ok: true };
+      if (!pol.ok) { polohaHlaska = pol.msg; return 'poloha'; }
       var features = [].slice.call(document.querySelectorAll('input[name="site"]:checked')).map(function (x) { return x.value; });
       return uploadPhotos().then(function (pr) {
       if (pr.rejected && pr.rejected.length) return 'photos';   // zamítnuté fotky → hláška, nic se nezveřejní
@@ -402,6 +425,7 @@
         if (!row || !row.id) return 'error';
         window.location.href = 'muj-inzerat.html';
         return 'ok';
+      });
       });
       });
     });
@@ -499,6 +523,84 @@
     previewCard.classList.add('flash');
     clearTimeout(flashT); flashT = setTimeout(function () { previewCard.classList.remove('flash'); }, 220);
   }
+
+  /* ---------- KDE SE POZEMEK UKÁŽE ------------------------------------
+
+     Poloha se dřív ověřovala až po klepnutí na „Zveřejnit". Člověk do té
+     chvíle netušil, kam špendlík padne, a hlášku o špatném okrese dostal
+     jako překvapení na konci — po nahrání fotek, po vyplnění všeho.
+     Tady ji dostane hned, a hlavně vidí i letecký snímek: „ano, tohle je
+     naše louka" pozná majitel na první pohled, jméno obce ho neprozradí.
+
+     Na geokodér (nominatim) se chodí střídmě: až 1,2 s po dopsání, jen
+     když se dvojice obec+okres opravdu změnila, a jednou nalezené se
+     pamatuje. Obojí musí být vyplněné — okres sám o sobě ukáže okresní
+     město, a to je přesně ta lež, kterou hlídáme jinde. */
+  var mpCard = document.getElementById('mp-card');
+  var mpT = null, mpPosledni = '', mpPamet = {};
+
+  function mpRekni(trida, text) {
+    var s = document.getElementById('mp-stav');
+    if (!s) return;
+    s.className = 'mp-stav' + (trida ? ' ' + trida : '');
+    s.textContent = text || '';
+  }
+  function mpSnimek(pos) {
+    var ram = document.getElementById('mp-ram');
+    if (!ram) return;
+    var area = parseInt(val('p-vymera'), 10) || 0;
+    if (window.PK_SNIMEK && PK_SNIMEK.html) {
+      /* Barva špendlíku je fialová „od majitele", stejná jako na mapě.
+         Do SVG jde jako atribut fill, kde var(--…) neplatí — proto se
+         hodnota přečte z proměnné, ne aby se tu psal druhý hex. */
+      var barva = '';
+      try { barva = getComputedStyle(document.documentElement).getPropertyValue('--c-majitel').trim(); } catch (e) {}
+      ram.innerHTML = PK_SNIMEK.html(
+        { lat: pos.lat, lng: pos.lng, area: area, place: val('p-obec'), okres: val('p-okres'), type: 'sale' },
+        { sirka: 384, vyska: 240, barva: barva || '#8B4FE0', id: 'mp' });
+    } else {
+      /* Snímek se nenačetl. Prázdný rám vypadá jako rozbitá stránka,
+         tak se aspoň napíšou souřadnice — zkontrolovat se dají i tak. */
+      ram.textContent = pos.lat.toFixed(4) + ', ' + pos.lng.toFixed(4);
+    }
+  }
+  function mpUkaz() {
+    var obec = val('p-obec'), okres = val('p-okres');
+    if (!mpCard) return;
+    if (!obec || !okres) { mpCard.hidden = true; return; }
+    /* Dva klíče schválně. Ven se chodí jen kvůli obci a okresu; výměra
+       mění jen přiblížení snímku, a kvůli tomu se cizí služba obtěžovat
+       nemá — překreslí se z toho, co už víme. */
+    var klic = obec + '|' + okres;
+    var klicVykresleni = klic + '|' + (parseInt(val('p-vymera'), 10) || 0);
+    if (klicVykresleni === mpPosledni) return;
+    mpPosledni = klicVykresleni;
+    mpCard.hidden = false;
+    mpRekni('', 'Hledám na mapě…');
+    var hotovo = function (pos) {
+      if (val('p-obec') + '|' + val('p-okres') !== klic) return;   // mezitím se to změnilo
+      if (!pos) { mpRekni('err', 'Obec „' + obec + '" jsme na mapě nenašli. Zkuste prosím nejbližší větší obec.'); return; }
+      if (pos.pribl) {
+        mpRekni('err', 'Obec „' + obec + '" jsme nenašli — pozemek by skončil u okresního města, '
+          + 'ne na svém místě. Zkontrolujte prosím název obce.');
+        return;
+      }
+      mpSnimek(pos);
+      nactiHrubeHranice().then(function (hrube) {
+        var pol = (window.PKKontrola && PKKontrola.poloha)
+          ? PKKontrola.poloha(pos.lat, pos.lng, okres, hrube) : { ok: true };
+        if (!pol.ok) mpRekni('err', pol.msg);
+        else mpRekni('ok', 'Takhle se pozemek ukáže na mapě. Sedí to?');
+      });
+    };
+    if (mpPamet[klic] !== undefined) { hotovo(mpPamet[klic]); return; }
+    geocodeCz(obec, okres).then(function (pos) { mpPamet[klic] = pos; hotovo(pos); });
+  }
+  function mpNaplanuj() {
+    clearTimeout(mpT);
+    mpT = setTimeout(mpUkaz, 1200);
+  }
+
   // „Síla inzerátu" — motivační ukazatel, kolik toho je vyplněné
   function updateStrength() {
     var fEl = document.getElementById('p-fotky');
@@ -617,6 +719,11 @@
     // „0 %" a rada „Přidejte fotky" — vypadalo to, že web nefunguje.
     prodejForm.addEventListener('input', function () { updPerm2(); updatePreview(); updateStrength(); });
     prodejForm.addEventListener('change', function () { updatePreview(); updateStrength(); ukazVarovani(); });
+    // Hranice okresů se stahují už při vyplňování, ne až při odeslání.
+    prodejForm.addEventListener('change', function () { if (val('p-okres')) nactiHrubeHranice(); });
+    // Náhled místa — až po dopsání, ne při každém písmenu (geokodér je cizí služba).
+    prodejForm.addEventListener('input', mpNaplanuj);
+    prodejForm.addEventListener('change', mpNaplanuj);
     prodejForm.addEventListener('focusout', ukazVarovani);   // po opuštění pole, ne při každém písmenu
     if (previewCard) updateStrength();   // počáteční stav ukazatele
   }
@@ -737,6 +844,9 @@
           ms.classList.add('err');
         } else if (r === 'wait') {
           ms.textContent = 'Chvíli prosím počkejte (asi minutu) a zkuste přidat další inzerát znovu.';
+          ms.classList.add('err');
+        } else if (r === 'poloha') {
+          ms.textContent = polohaHlaska || 'Obec a okres k sobě nesedí — zkontrolujte je prosím.';
           ms.classList.add('err');
         } else if (r === 'misto') {
           ms.textContent = 'Fotka ' + (mistoHlaska || 'nesedí k zadané obci') + ' Zkontrolujte prosím obec, nebo nahrajte fotky pozemku.';

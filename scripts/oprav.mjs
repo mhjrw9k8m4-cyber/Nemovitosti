@@ -22,6 +22,9 @@ import { fileURLToPath } from 'node:url';
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const KROKY = [
+  // Před regionálními: hrubé hranice okresů čte kontrola ve formuláři,
+  // ne stránky — ale ať je hotová, než se razítkují verze.
+  ['generate-okresy-hrube.mjs', 'proředěné hranice okresů pro kontrolu ve formuláři'],
   ['generate-region-pages.mjs', 'stránky krajů a okresů, čísla v úvodu, dražby, rozcestník, sitemap'],
   // Až PO regionálních: ty přepisují sitemap celou, tenhle krok se do ní dopisuje.
   ['generate-parcel-pages.mjs', 'vlastní stránka pro každý pozemek (sdílení a vyhledávače)'],

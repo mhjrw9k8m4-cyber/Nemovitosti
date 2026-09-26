@@ -49,7 +49,10 @@ const neprojde = (s, p, v) => zkus(s, p, v, false);
   const zn = (globalThis.PKHlidani && globalThis.PKHlidani.OKRESY) || [];
   zkus('okres', `seznam okresů je k dispozici (${zn.length})`, { ok: zn.length === 77 }, true);
 }
-projde('okres', 'prázdný projde — je nepovinný', K.okres(''));
+/* Okres je povinný. Bez něj se poloha pozemku nedá s ničím porovnat —
+   obec „Lhota" je v Česku přes dvacetkrát a našeptávač adres vrátí tu
+   první, takže by pozemek klidně visel na druhém konci republiky. */
+neprojde('okres', 'prázdný neprojde — je povinný', K.okres(''));
 projde('okres', 'přesný název', K.okres('Kolín'));
 projde('okres', 'bez diakritiky', K.okres('kolin'));
 projde('okres', 'i s předponou „okres"', K.okres('okres Kolín'));
@@ -223,12 +226,13 @@ neprojde('fotka', 'přesvícená', K.fotkaObsah(250, 20));
 
 /* ---------------- celý formulář ---------------- */
 const dobry = {
-  obec: 'Kolín', vymera: '1200', cena: '450000', parcela: '123/4',
+  obec: 'Kolín', okres: 'Kolín', vymera: '1200', cena: '450000', parcela: '123/4',
   popis: 'Rovinatý pozemek na okraji obce, přístup z asfaltové cesty, elektřina na hranici.',
   odkaz: 'https://www.bezrealitky.cz/nemovitosti/123', jmeno: 'Jan Novák', kontakt: '777123654'
 };
 projde('formulář', 'správně vyplněný', K.formular(dobry));
 neprojde('formulář', 'chybí obec', K.formular({ ...dobry, obec: '' }));
+neprojde('formulář', 'chybí okres', K.formular({ ...dobry, okres: '' }));
 neprojde('formulář', 'překlep v ceně', K.formular({ ...dobry, cena: '450000', vymera: '2' }));
 neprojde('formulář', 'odkaz v popisu', K.formular({ ...dobry, popis: 'Pozemek u lesa, vše na www.spam.cz najdete' }));
 

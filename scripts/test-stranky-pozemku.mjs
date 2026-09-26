@@ -18,6 +18,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { souborPro, pkey, textyPro, slug } from './generate-parcel-pages.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -29,6 +30,12 @@ function pravda(popis, vyslo, proc) {
 
 const D = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
 const pozemky = D.filter((d) => isFinite(d.lat) && isFinite(d.lng) && d.place && d.okres);
+/* Co web opravdu ukazuje. Duplicity odstraňuje jedna funkce pro celý web
+   (js/hlidani-logika.js) — volá ji mapa, generátor regionálních stránek
+   i generátor stránek pozemků. Stránka má vzniknout pro to, co je vidět,
+   ne pro každý řádek v datech: tentýž pozemek chodí ze dvou zdrojů. */
+const PKH = createRequire(import.meta.url)(path.join(ROOT, 'js', 'hlidani-logika.js'));
+const ukazane = PKH.bezDuplicit(pozemky);
 
 // --- 1) prohlížečový výpočet názvu musí sednout s generátorem -----------
 /* Tentýž název skládají TŘI nezávislé kusy kódu: generátor v Node, detail
@@ -77,7 +84,7 @@ for (const [soubor] of ZDROJE) {
 // --- 2) soubory opravdu existují ---------------------------------------
 const videno = new Set();
 const chybi = [];
-for (const d of pozemky) {
+for (const d of ukazane) {
   const k = pkey(d);
   if (videno.has(k)) continue;
   videno.add(k);
@@ -99,7 +106,36 @@ pravda('titulky sdílených odkazů nejsou u všech stejné', tituly.size > ukaz
 pravda('popisy sdílených odkazů nejsou u všech stejné', popisy.size > ukazky * 0.5,
   `${popisy.size} různých popisů na ${ukazky} pozemků`);
 
-// --- 4) náhled musí existovat pro každý okres ---------------------------
+/* --- 4) jedna dražba = jedna stránka ------------------------------------
+
+   Duplicity se na webu odstraňují jednou funkcí (js/hlidani-logika.js).
+   Mapa i generátor regionálních stránek ji volají; tenhle generátor si
+   dlouho vystačil s vlastním klíčem (obec, parcela, okres, souřadnice)
+   a ten na tentýž pozemek ze dvou zdrojů nestačí: parcelní číslo mívá
+   jen jeden z nich a souřadnice bývají o pár set metrů jinde. Dražba
+   v Trubíně tak měla dvě vlastní stránky — dvě adresy pro jednu dražbu,
+   obě v sitemap, obě si ve vyhledávači konkurovaly.
+
+   Kontroluje se to porovnáním s TOUŽ funkcí, ne vlastním pravidlem:
+   kdyby si generátor zase začal počítat po svém, čísla se rozejdou. */
+const majiByt = new Set(ukazane.map(souborPro));
+/* Ne každý soubor „pozemek-*.html" je generovaný — pozemek-od-obce.html
+   je ručně psaná stránka. Poznají se podle značky, kterou do nich píše
+   generátor, ne podle jména: jméno by se dalo splést a ruční stránka by
+   pak zkoušku shodila. Čtou se jen soubory navíc, ne všech 1 900. */
+const navic = fs.readdirSync(ROOT)
+  .filter((f) => /^pozemek-.+\.html$/.test(f) && !majiByt.has(f))
+  .filter((f) => fs.readFileSync(path.join(ROOT, f), 'utf8').includes('window.PK_POZEMEK='));
+pravda(`pro tentýž pozemek nevzniknou dvě stránky (${majiByt.size} stránek)`,
+  navic.length === 0,
+  `${navic.length} stránek navíc proti tomu, co ukazuje mapa: ` + navic.slice(0, 4).join(', '));
+/* A ať kontrola není prázdná: pravidlo aplikace musí být přísnější než
+   vlastní klíč generátoru, jinak by výše uvedené mlčelo vždycky. */
+pravda('pravidlo aplikace je přísnější než klíč generátoru (jinak zkouška nic neměří)',
+  PKH.bezDuplicit(pozemky).length < pozemky.length,
+  'bezDuplicit nic neodstranilo — kontrola výš by prošla i s rozbitým generátorem');
+
+// --- 5) náhled musí existovat pro každý okres ---------------------------
 const bezNahledu = [...new Set(pozemky.map((d) => d.okres))]
   .filter((o) => !fs.existsSync(path.join(ROOT, 'assets', 'og', `okres-${slug(o)}.png`)));
 pravda('každý okres má náhledový obrázek pro sdílení', bezNahledu.length === 0,
