@@ -1183,9 +1183,15 @@
     var pct = pc.pct;
     var typeWord = d.type === 'sale' ? 'v prodeji' : (d.type === 'drazba' ? 'v dražbě' : 'v nabídce');
     var cls, badge, text;
-    if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + pc.cheaper + ' %</b> podobných pozemků ' + typeWord + '.'; }
-    else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> podobných pozemků ' + typeWord + '.'; }
-    else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> podobných pozemků ' + typeWord + '.'; }
+    /* KDE se to srovnávalo, musí být vidět. „Dražší než 78 % podobných
+       pozemků" si každý přečte jako „než pozemky v okolí" — a dokud se
+       počítalo celostátně, nebyla to pravda. Teď to místo stojí ve
+       větě, takže se to dá ověřit i zpochybnit. */
+    var kdeTxt = (window.PK_CENY && window.PK_CENY.kdeText && pc.uroven)
+      ? ' ' + window.PK_CENY.kdeText(pc.uroven, pc.kde) : '';
+    if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + pc.cheaper + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + '.'; }
+    else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + '.'; }
+    else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> pozemků téhož druhu ' + typeWord + kdeTxt + '.'; }
     return '<div class="md-verdict ' + cls + '">' +
       '<div class="mv-top"><span class="mv-badge">' + badge + '</span><span class="mv-cmp">Cena za m²</span></div>' +
       '<div class="mv-text">' + text + '</div>' +
@@ -1240,6 +1246,19 @@
     }
     druhyEl.innerHTML = html;
   }
+  /* Vysvětlení u sítí je pod „i" — zabíralo v panelu víc místa než
+     štítky samotné, a přitom je potřeba jen jednou: mlčení inzerátu
+     neznamená, že síť chybí. */
+  (function () {
+    var info = document.getElementById('mcv-info');
+    var pozn = document.getElementById('mcv-pozn');
+    if (!info || !pozn) return;
+    info.addEventListener('click', function () {
+      var otevreno = info.getAttribute('aria-expanded') === 'true';
+      info.setAttribute('aria-expanded', otevreno ? 'false' : 'true');
+      pozn.hidden = otevreno;
+    });
+  }());
   if (druhyEl) {
     druhyEl.addEventListener('click', function (e) {
       var b = e.target.closest ? e.target.closest('.mcv-btn') : null;

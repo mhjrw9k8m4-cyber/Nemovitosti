@@ -321,6 +321,51 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
     `před „${pocPred}", po „${pocPo}" — číslo, které se nemění, je jen ozdoba`);
   await p.click('#map-urgent');
   await p.waitForTimeout(300);
+
+  /* MÍSTO NA TELEFONU. Změřeno na 390 px: k ovládacím prvkům se
+     dostalo 284 px a zbylých 106 px (27 %) spolykaly dva soustředné
+     rámečky a tři odsazení nad sebou. */
+  const sirka = await p.evaluate(() => {
+    const mc = document.querySelector('.map-controls');
+    const c = getComputedStyle(mc);
+    return Math.round(mc.getBoundingClientRect().width - (parseFloat(c.paddingLeft) || 0) - (parseFloat(c.paddingRight) || 0));
+  });
+  pravda('na úzké obrazovce zbude na ovládání dost místa', sirka >= 300,
+    `k prvkům se dostalo ${sirka} px z 390 — rámečky a odsazení berou ${390 - sirka} px`);
+
+  /* CENA ZA METR PATŘÍ K CENĚ, ne až za sítě. */
+  const poradi = await p.evaluate(() => [...document.querySelector('.map-controls').children]
+    .map((x) => (x.className || '').toString()));
+  const iCena = poradi.findIndex((c) => /mc-shrnuti|mc-rozsah/.test(c));
+  const iPerM22 = await p.evaluate(() => [...document.querySelector('.map-controls').children]
+    .findIndex((x) => x.querySelector && x.querySelector('#map-perm2')));
+  const iVybaveni = poradi.findIndex((c) => /mc-vybaveni/.test(c));
+  pravda('cena za metr stojí hned u ceny, ne až za sítěmi',
+    iCena >= 0 && iPerM22 === iCena + 1, `pořadí: ${poradi.map((c) => c.split(' ')[1] || c).join(' → ')}`);
+  pravda('a sítě jsou až za ní', iVybaveni > iPerM22, `sítě na ${iVybaveni}, cena/m² na ${iPerM22}`);
+
+  /* TLAČÍTKO S POČTEM SE PŘILEPÍ DOLE. Panel je delší než obrazovka;
+     bez toho se člověk o počtu dozvěděl, až když dorolal na konec. */
+  const lepive = await p.evaluate(() => getComputedStyle(document.querySelector('.mcf-akce')).position);
+  pravda('tlačítko s počtem jede s panelem dolů', lepive === 'sticky', `position: ${lepive}`);
+
+  /* DLOUHÉ VYSVĚTLENÍ U SÍTÍ JE POD „i". Je důležité (mlčení inzerátu
+     neznamená, že síť chybí), ale zabíralo víc místa než štítky. */
+  const info = await p.evaluate(() => {
+    const b2 = document.getElementById('mcv-info'), t = document.getElementById('mcv-pozn');
+    return { je: !!b2, skryto: t ? !!t.hidden : null,
+      vidno: b2 ? b2.getBoundingClientRect().width > 0 : false };
+  });
+  if (info.je && info.vidno) {
+    pravda('vysvětlení u sítí je zabalené pod „i"', info.skryto === true, 'odstavec visí rozbalený');
+    await p.click('#mcv-info');
+    await p.waitForTimeout(250);
+    const po = await p.evaluate(() => ({ skryto: document.getElementById('mcv-pozn').hidden,
+      stav: document.getElementById('mcv-info').getAttribute('aria-expanded') }));
+    pravda('a klepnutí ho odkryje', po.skryto === false && po.stav === 'true', JSON.stringify(po));
+    await p.click('#mcv-info');
+    await p.waitForTimeout(150);
+  }
 }
 
 /* --- ODKAZ Z KRAJSKÉ STRÁNKY --------------------------------------

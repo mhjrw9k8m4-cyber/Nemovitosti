@@ -650,7 +650,99 @@ for (const f of ['../js/main.js', '../js/pozemek.js', '../js/radce.js']) {
 }
 
 console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
+/* --- ODZNAK A RÁDCE SI NESMÍ ODPOROVAT ------------------------------
+ * Percentil bral pozemky téhož druhu z CELÉ republiky, odhad jen
+ * z okresu a kraje. Na jedné obrazovce pak stálo „Vyšší cena — dražší
+ * než 78 % podobných" a hned pod tím „o 26 % pod obvyklou cenou
+ * v okrese Praha-západ". Změřeno: ze 1 403 odznaků by 410 (33 %) při
+ * místním srovnání vyšlo jinak, a devět si odporovalo viditelně.
+ */
+{
+  const DATA = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const M = PK_CENY.postav(DATA);
+
+  const sOdznakem = DATA.filter((d) => M.percentil(d));
+  je(`odznak dostane dost nabídek (${sOdznakem.length})`, sOdznakem.length > 300, true);
+
+  /* 1) Musí být vidět, s čím se srovnávalo. Bez toho se „dražší než
+        78 % podobných pozemků" čte jako „než pozemky v okolí". */
+  const bezMista = sOdznakem.filter((d) => {
+    const p2 = M.percentil(d);
+    return !p2.uroven || !p2.kde || (p2.uroven !== 'okres' && p2.uroven !== 'kraj');
+  });
+  je('u každého odznaku se ví, s čím se srovnával', bezMista.length, 0);
+
+  /* 2) Srovnávací skupina je MÍSTNÍ. Kontroluje se to tím, že se
+        z ní vezme jméno a ověří, že sedí na okres nebo kraj pozemku. */
+  const cizi = sOdznakem.filter((d) => {
+    const p2 = M.percentil(d);
+    if (p2.uroven === 'okres') return p2.kde !== d.okres;
+    return p2.kde !== PK_CENY.OKRES_KRAJ[d.okres];
+  });
+  je('a je to okres nebo kraj TOHO pozemku, ne cizí', cizi.length, 0);
+
+  /* A TEĎ DŮKAZ CHOVÁNÍM, ne jen podle nálepky. Předchozí kontrola se
+     ptá, co model o srovnání TVRDÍ — to se dá napsat i tehdy, když se
+     ve skutečnosti srovnává celostátně. (Přišlo se na to sabotáží:
+     stačilo podstrčit celostátní pole a nechat nálepku „okres", a
+     testy mlčely.)
+     Tohle je nepodvratné: dva pozemky se STEJNOU cenou za metr, ale
+     v okresech s různou cenovou hladinou, musí dostat RŮZNÝ percentil.
+     Při celostátním srovnání by dostaly tentýž. */
+  {
+    const g = 'Orná půda';
+    const pom = {};
+    DATA.forEach((d) => {
+      if (d.type !== 'sale' || !(d.area > 0) || !(d.price > 0)) return;
+      if (PK_CENY.druhGroup(d.druh) !== g || !d.okres) return;
+      (pom[d.okres] = pom[d.okres] || []).push(d.price / d.area);
+    });
+    const hladiny = Object.keys(pom).filter((o) => pom[o].length >= 12)
+      .map((o) => { const a2 = pom[o].slice().sort((x, y) => x - y); return { okres: o, med: a2[a2.length >> 1] }; })
+      .sort((x, y) => x.med - y.med);
+    if (hladiny.length >= 2) {
+      const levny = hladiny[0], drahy = hladiny[hladiny.length - 1];
+      je(`jsou okresy s jinou cenovou hladinou (${levny.okres} ${Math.round(levny.med)} vs ${drahy.okres} ${Math.round(drahy.med)} Kč/m²)`,
+        drahy.med > levny.med * 1.5, true);
+      /* Tentýž pozemek, jen jinde. Cena za metr uprostřed mezi oběma
+         hladinami, ať v jednom okrese vyjde draze a v druhém levně. */
+      const m2 = (levny.med + drahy.med) / 2;
+      const vzor = { type: 'sale', druh: 'orná půda', area: 5000, price: Math.round(m2 * 5000) };
+      const vLevnem = M.percentil(Object.assign({}, vzor, { okres: levny.okres }));
+      const vDrahem = M.percentil(Object.assign({}, vzor, { okres: drahy.okres }));
+      je('tentýž pozemek v levném a v drahém okrese dostane jiný percentil',
+        !!(vLevnem && vDrahem) && vLevnem.pct !== vDrahem.pct, true);
+      if (vLevnem && vDrahem) {
+        je(`a v levnějším okrese vyjde dráž (${levny.okres} ${vLevnem.pct} % vs ${drahy.okres} ${vDrahem.pct} %)`,
+          vLevnem.pct > vDrahem.pct, true);
+      }
+    }
+  }
+
+  /* 3) A hlavně: odznak a odhad nesmí říkat opak. Tohle je ta chyba,
+        kterou by člověk viděl na jedné obrazovce. */
+  const odporuje = sOdznakem.filter((d) => {
+    const p2 = M.percentil(d), o = M.odhad(d);
+    if (!o || !o.podleVelikosti || o.podil) return false;
+    const drazsi = p2.pct >= 65;
+    const podObvyklou = o.podOdhadem >= 15;
+    return drazsi && podObvyklou;
+  });
+  je('odznak „Vyšší cena" nestojí nad radou „pod obvyklou"' +
+    (odporuje.length ? ' — ' + odporuje.slice(0, 3).map((d) => `${d.place} (${d.okres}): percentil ${M.percentil(d).pct} %, pod odhadem ${M.odhad(d).podOdhadem} %`).join(' | ') : ''),
+    odporuje.length, 0);
+
+  /* 4) Opačný směr taky: „Výhodná cena" nad radou „nad obvyklou". */
+  const naopak = sOdznakem.filter((d) => {
+    const p2 = M.percentil(d), o = M.odhad(d);
+    if (!o || !o.podleVelikosti || o.podil) return false;
+    return p2.pct <= 35 && o.podOdhadem <= -15;
+  });
+  je('ani „Výhodná cena" nad radou, že je to nad obvyklou', naopak.length, 0);
+}
+
 console.log(zpravy.join('\n'));
+
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
   console.log('::error::Cenový model: ' + chyb + ' kontrol neprošlo.');

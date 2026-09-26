@@ -157,7 +157,19 @@
 
   function postav(DATA, okresKraj) {
     okresKraj = okresKraj || OKRES_KRAJ;
-    var podleTypu = {};     // type|druh  → ceny za m² (na percentil a na věrohodnost)
+    var podleTypu = {};     // type|druh  → ceny za m² (na věrohodnost)
+    /* TÉŽ, ALE MÍSTNĚ. Percentil bral pozemky téhož druhu z CELÉ
+       republiky. Odhad o kus níž to schválně nesmí — stojí u něj, že
+       „medián orné půdy za celou republiku nevypovídá o konkrétním
+       okrese nic". Odznak se tím neřídil, a tak si web na jedné
+       obrazovce odporoval: „Vyšší cena — dražší než 78 % podobných"
+       a hned pod tím „o 26 % pod obvyklou cenou v okrese Praha-západ".
+       Změřeno na 1 973 nabídkách: ze 1 403 odznaků by 410 (33 %) při
+       místním srovnání vyšlo JINAK. Nejde o pár výjimek, ale o třetinu
+       verdiktů. Srovnává se proto stejně jako u odhadu — okres, pak
+       kraj, dál ne. */
+    var typOkres = {};      // type|druh|okres → ceny za m²
+    var typKraj = {};       // type|druh|kraj  → ceny za m²
     var nabidkyOkres = {};  // druh|okres → ceny za m² POUZE z běžných nabídek
     var nabidkyKraj = {};
     var nabidkyCR = {};
@@ -166,6 +178,12 @@
       if (!hasArea(d) || !d.price) return;
       var g = druhGroup(d.druh), m2 = d.price / d.area;
       (podleTypu[d.type + '|' + g] = podleTypu[d.type + '|' + g] || []).push(m2);
+      if (d.okres) {
+        var ko = d.type + '|' + g + '|' + d.okres;
+        (typOkres[ko] = typOkres[ko] || []).push(m2);
+        var kk = okresKraj[d.okres];
+        if (kk) { var k2 = d.type + '|' + g + '|' + kk; (typKraj[k2] = typKraj[k2] || []).push(m2); }
+      }
       // Do srovnávací hladiny patří jen běžné nabídky. Vyvolávací cena dražby
       // je pod trhem z podstaty věci — kdyby se počítala do průměru, srovnávali
       // bychom dražby samy se sebou a žádný rozdíl by nevyšel.
@@ -182,6 +200,8 @@
 
     function serad(idx) { Object.keys(idx).forEach(function (k) { idx[k].sort(function (a, b) { return a - b; }); }); }
     serad(podleTypu);
+    serad(typOkres);
+    serad(typKraj);
     /* JAK RYCHLE KLESÁ CENA ZA METR S VELIKOSTÍ POZEMKU
      *
      * Dosud se srovnávalo jen s pozemky podobné výměry (třetina až
@@ -320,15 +340,46 @@
     /* Percentil ceny za m² proti stejnému typu a druhu. null, když není dost
      * srovnání, když je cena nevěrohodná — nebo když se ta cena s ostatními
      * srovnávat nedá (podíl, viz výš). */
+    /* Vrací se i to, s čím se srovnávalo (uroven, kde) — bez toho se pod
+       číslo nedá napsat, odkud je, a „dražší než 78 % podobných pozemků"
+       si každý přečte jako „v okolí". Když místní vzorek nestačí, vrací
+       se null: radši žádný verdikt než verdikt o cizím kraji. Tímhle
+       o odznak přijde 160 z 1 403 nabídek — stejná daň, jakou už platí
+       odhad, a ze stejného důvodu. */
     function percentil(d) {
       if (!hasArea(d) || !d.price || neduveryhodna(d) || nesrovnatelna(d)) return null;
-      var arr = podleTypu[d.type + '|' + druhGroup(d.druh)];
-      if (!arr || arr.length < 10) return null;
-      if (arr[arr.length - 1] <= arr[0] * 1.2) return null;
-      var val = d.price / d.area, below = 0;
-      for (var i = 0; i < arr.length; i++) { if (arr[i] <= val) below++; }
-      var pct = Math.max(2, Math.min(98, Math.round(below / arr.length * 100)));
-      return { pct: pct, cheaper: 100 - pct, sample: arr.length };
+      var g = druhGroup(d.druh);
+      var zdroje = [
+        { pole: typOkres[d.type + '|' + g + '|' + d.okres], uroven: 'okres', kde: d.okres },
+        { pole: typKraj[d.type + '|' + g + '|' + okresKraj[d.okres]], uroven: 'kraj', kde: okresKraj[d.okres] }
+      ];
+      for (var z = 0; z < zdroje.length; z++) {
+        var arr = zdroje[z].pole;
+        if (!arr || arr.length < 10) continue;
+        if (arr[arr.length - 1] <= arr[0] * 1.2) continue;
+        var val = d.price / d.area, below = 0;
+        for (var i = 0; i < arr.length; i++) { if (arr[i] <= val) below++; }
+        var pct = Math.max(2, Math.min(98, Math.round(below / arr.length * 100)));
+        /* A CO KDYŽ SI TA DVĚ ČÍSLA ODPORUJÍ? Percentil srovnává cenu za
+           metr s místními nabídkami; odhad navíc PŘEPOČÍTÁVÁ NA VELIKOST,
+           protože cena za metr s rostoucí výměrou klesá. Malý pozemek
+           v levném okrese proto může být nad místním mediánem a zároveň
+           pod odhadem pro svou velikost — obojí pravda, jenže na stránce
+           by vedle sebe stálo „Vyšší cena" a „o 22 % pod obvyklou".
+           Zúžení srovnávací skupiny na okres a kraj snížilo takové
+           případy ze 16 na 11 z 1 400. Zbytek se neukáže vůbec: verdikt,
+           který si stránka o dva odstavce níž sama vyvrátí, je horší než
+           žádný. Číslo se tím nezahazuje — rada pod ním ho řekne dál,
+           a s konkrétními korunami. */
+        var od = odhad(d);
+        if (od && od.podleVelikosti && !od.podil) {
+          if (pct >= 65 && od.podOdhadem >= 15) return null;
+          if (pct <= 35 && od.podOdhadem <= -15) return null;
+        }
+        return { pct: pct, cheaper: 100 - pct, sample: arr.length,
+          uroven: zdroje[z].uroven, kde: zdroje[z].kde };
+      }
+      return null;
     }
 
     /* Odhad obvyklé nabídkové ceny. Bere medián Kč/m² u stejného druhu —
