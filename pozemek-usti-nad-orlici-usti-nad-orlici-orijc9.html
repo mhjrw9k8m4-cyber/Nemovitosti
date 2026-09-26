@@ -5,24 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
-  <title>Stavební pozemek 767 m² — Dyjákovice, okres Znojmo | Parcelka</title>
-  <meta name="description" content="Na prodej · 1 490 000 Kč (1 943 Kč/m²) · 767 m² · Dyjákovice, okres Znojmo. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
+  <title>Orná půda 1 148 m² — Ústí nad Orlicí | Parcelka</title>
+  <meta name="description" content="Dražba · 3 903 200 Kč (3 400 Kč/m²) · 1 148 m² · Ústí nad Orlicí, okres Ústí nad Orlicí. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
   <meta name="theme-color" content="#FBFAF8">
   <meta name="robots" content="index,follow">
-  <link rel="canonical" href="https://www.parcelaka.cz/pozemek-znojmo-dyjakovice-n5xon6.html">
+  <link rel="canonical" href="https://www.parcelaka.cz/pozemek-usti-nad-orlici-usti-nad-orlici-orijc9.html">
   <meta property="og:type" content="article">
-  <meta property="og:url" content="https://www.parcelaka.cz/pozemek-znojmo-dyjakovice-n5xon6.html">
-  <meta property="og:title" content="Stavební pozemek 767 m² — Dyjákovice, okres Znojmo">
-  <meta property="og:description" content="Na prodej · 1 490 000 Kč (1 943 Kč/m²) · 767 m² · Dyjákovice, okres Znojmo. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
+  <meta property="og:url" content="https://www.parcelaka.cz/pozemek-usti-nad-orlici-usti-nad-orlici-orijc9.html">
+  <meta property="og:title" content="Orná půda 1 148 m² — Ústí nad Orlicí">
+  <meta property="og:description" content="Dražba · 3 903 200 Kč (3 400 Kč/m²) · 1 148 m² · Ústí nad Orlicí, okres Ústí nad Orlicí. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
   <meta property="og:locale" content="cs_CZ">
   <meta property="og:site_name" content="Parcelka">
-  <meta property="og:image" content="https://www.parcelaka.cz/assets/og/okres-znojmo.png">
+  <meta property="og:image" content="https://www.parcelaka.cz/assets/og/okres-usti-nad-orlici.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Stavební pozemek 767 m² — Dyjákovice, okres Znojmo">
-  <meta name="twitter:description" content="Na prodej · 1 490 000 Kč (1 943 Kč/m²) · 767 m² · Dyjákovice, okres Znojmo. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
-  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og/okres-znojmo.png">
+  <meta name="twitter:title" content="Orná půda 1 148 m² — Ústí nad Orlicí">
+  <meta name="twitter:description" content="Dražba · 3 903 200 Kč (3 400 Kč/m²) · 1 148 m² · Ústí nad Orlicí, okres Ústí nad Orlicí. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
+  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og/okres-usti-nad-orlici.png">
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
@@ -37,7 +37,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=f1d0f829">
+  <link rel="stylesheet" href="css/styles.css?v=59aa7b8a">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -206,15 +206,6 @@
     .pzm-kryti{display:flex; align-items:center; gap:9px; font-size:12px; font-weight:600; letter-spacing:.02em; text-transform:uppercase; color:var(--text-ondark-mute);}
     .pzm-kryti input{width:104px; accent-color:var(--plocha-znacka);}
     .pzm-popis{margin:0; padding:11px 13px; border-top:1px solid var(--line); background:#FBFCFB; font-size:13px; line-height:1.55; color:var(--text-ondark-mute);}
-    /* Vrstva je zapnutá, ale mapa je moc daleko na to, aby ji úřad
-       nakreslil. Není to chyba, je to stav — proto ne červená, ale
-       značková barva a rovnou tlačítko, které to spraví. */
-    .pzm-daleko{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px; color:var(--text-ondark);}
-    .pzm-priblizit{flex:none; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer;
-      padding:6px 13px; min-height:34px; border-radius:var(--r-ovladani);
-      border:1.5px solid var(--copper); background:var(--ink-soft); color:var(--copper);
-      transition:background .15s ease, color .15s ease;}
-    .pzm-priblizit:hover{background:var(--copper); color:#fff;}
     /* Vysvětlivky. Obrázek dodává sama služba, takže o jeho vzhledu
        nerozhodujeme — jen mu dáme bílý podklad, ať je čitelný i tmavý. */
     .pzm-leg{display:flex; flex-wrap:wrap; gap:15px; padding:12px 13px; border-top:1px solid var(--line); background:#FBFCFB;}
@@ -278,7 +269,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 767 m² — Dyjákovice, okres Znojmo</h1><p><b>1 490 000 Kč</b> (1 943 Kč/m²) · 767 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>767 m²</dd><dt>Obec</dt><dd>Dyjákovice</dd><dt>Okres</dt><dd><a href="pozemky-okres-znojmo.html">Znojmo</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd></dl><p><a href="pozemek.html?p=Dyj%C3%A1kovice%7C%E2%80%94%7CZnojmo%7C48.772%7C16.301&amp;ll=48.7720718,16.3012013">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 1 148 m² — Ústí nad Orlicí</h1><p><b>3 903 200 Kč</b> (3 400 Kč/m²) · 1 148 m² · Dražba</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>1 148 m²</dd><dt>Obec</dt><dd>Ústí nad Orlicí</dd><dt>Okres</dt><dd><a href="pozemky-okres-usti-nad-orlici.html">Ústí nad Orlicí</a></dd><dt>Parcela</dt><dd>č. 976/241</dd><dt>Stav / zdroj</dt><dd>dražba 21. 10. 2026</dd></dl><p><a href="pozemek.html?p=%C3%9Ast%C3%AD%20nad%20Orlic%C3%AD%7C976%2F241%7C%C3%9Ast%C3%AD%20nad%20Orlic%C3%AD%7C49.973%7C16.391&amp;ll=49.97298,16.39095">Otevřít na mapě</a></p></article></div></div>
   </div>
 </main>
 
@@ -298,15 +289,15 @@
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="vendor/leaflet/leaflet.js?v=5a640ff8" defer></script>
-<script src="js/mapove-vrstvy.js?v=ef8c5c75" defer></script>
+<script src="js/mapove-vrstvy.js?v=d402afdc" defer></script>
 <script src="js/snimek.js?v=19045f9d"></script>
 <script src="js/terminy.js?v=63a1d1b6"></script>
 <script src="js/ceny.js?v=f40ef32c"></script>
 <script src="js/vybaveni.js?v=54b36f73"></script>
-<script src="js/radce.js?v=4fdba86a"></script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 767 m² — Dyjákovice, okres Znojmo","description":"Na prodej · 1 490 000 Kč (1 943 Kč/m²) · 767 m² · Dyjákovice, okres Znojmo. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-znojmo-dyjakovice-n5xon6.html","address":{"@type":"PostalAddress","addressLocality":"Dyjákovice","addressRegion":"Znojmo","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":48.7720718,"longitude":16.3012013}}</script>
-<script>window.PK_POZEMEK={"k":"Dyjákovice|—|Znojmo|48.772|16.301","ll":[48.7720718,16.3012013]};</script>
-<script src="js/pozemek.js?v=81aa6cc4"></script>
+<script src="js/radce.js?v=c06cb3de"></script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Place","name":"Orná půda 1 148 m² — Ústí nad Orlicí","description":"Dražba · 3 903 200 Kč (3 400 Kč/m²) · 1 148 m² · Ústí nad Orlicí, okres Ústí nad Orlicí. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-usti-nad-orlici-usti-nad-orlici-orijc9.html","address":{"@type":"PostalAddress","addressLocality":"Ústí nad Orlicí","addressRegion":"Ústí nad Orlicí","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.97298,"longitude":16.39095}}</script>
+<script>window.PK_POZEMEK={"k":"Ústí nad Orlicí|976/241|Ústí nad Orlicí|49.973|16.391","ll":[49.97298,16.39095]};</script>
+<script src="js/pozemek.js?v=246328c3"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -316,7 +307,7 @@
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script src="js/config.js?v=7f55c4e1" defer></script>
 <script src="js/auth.js?v=3f61aa2e" defer></script>
-<script src="js/hlidani-logika.js?v=db45fcf2" defer></script>
+<script src="js/hlidani-logika.js?v=d1f88e1d" defer></script>
 <script src="js/upozorneni-feed.js?v=c8e91dd3" defer></script>
 <script src="js/upozorneni.js?v=b7b7c483" defer></script>
 <script src="js/hlavicka.js?v=f3a269c8" defer></script>

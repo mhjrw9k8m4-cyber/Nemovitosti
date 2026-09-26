@@ -396,17 +396,17 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://www.parcelaka.cz/pozemky-okres-usti-nad-orlici.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://www.parcelaka.cz/pozemky-okres-chrudim.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemky-okres-svitavy.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-usti-nad-orlici.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -451,12 +451,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-znojmo.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-brno-mesto.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-brno-mesto.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-znojmo.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -7421,6 +7421,11 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://www.parcelaka.cz/pozemek-louny-velteze-f0nwwj.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.parcelaka.cz/pozemek-pelhrimov-syrov-11oki27.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -7697,11 +7702,6 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-mlada-boleslav-domousnice-11k3pqz.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-znojmo-dyjakovice-n5xon6.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9921,11 +9921,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-nymburk-chleby-14phjdq.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-nachod-police-nad-metuji-10tgltk.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -9992,6 +9987,46 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-znojmo-dobsice-u-znojma-mze6co.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-usti-nad-orlici-usti-nad-orlici-2f5y1a.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-usti-nad-orlici-usti-nad-orlici-orijc9.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-usti-nad-orlici-usti-nad-orlici-7zhpf2.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-usti-nad-orlici-usti-nad-orlici-7upkud.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-usti-nad-orlici-usti-nad-orlici-1q3tig2.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-usti-nad-orlici-usti-nad-orlici-132vlpl.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-usti-nad-orlici-usti-nad-orlici-114ooyx.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-usti-nad-orlici-usti-nad-orlici-luqjvp.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -10146,12 +10181,12 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-rakovnik-skrivan-w1puei.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-pisek-pisek-nbkocx.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-pisek-pisek-nbkocx.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-rakovnik-skrivan-w1puei.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
