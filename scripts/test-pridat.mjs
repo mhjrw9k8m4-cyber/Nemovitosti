@@ -31,6 +31,8 @@ function pravda(popis, vyslo, proc) {
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
+/* Přepínač pro sondu níž: „obec se nenajde, okres ano". */
+let bezObce = false;
 async function otevri(prihlasit) {
   const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
   /* POZOR NA POŘADÍ: platí poslední zaregistrovaná cesta, ne první.
@@ -45,8 +47,21 @@ async function otevri(prihlasit) {
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   /* Geokódování jde na nominatim.openstreetmap.org — ven se v testu
      nechodí, tak se odpověď podstrčí. */
-  await ctx.route('**nominatim.openstreetmap.org**', (r) => r.fulfill({ status: 200,
-    contentType: 'application/json', body: JSON.stringify([{ lat: '50.0281', lon: '15.2000' }]) }));
+  await ctx.route('**nominatim.openstreetmap.org**', (r) => {
+    /* Když test chce, ať se OBEC nenajde: prázdná odpověď na všechno,
+       co není dotaz na samotný okres. Tím se vyvolá poslední záchrana,
+       která vrátí souřadnice okresního města — a přesně to se nesmí
+       zveřejnit jako poloha pozemku. */
+    /* Propustí se JEN dotaz na samotný okres („okres Kolín, Česko").
+       První pokus zní „obec, okres Kolín, Česko" a slovo „okres"
+       obsahuje taky — hledat ho kdekoli v dotazu tedy nestačí. */
+    const dotaz = (/[?&]q=([^&]*)/.exec(r.request().url()) || [])[1] || '';
+    if (bezObce && !/^okres[+%20 ]/i.test(decodeURIComponent(dotaz))) {
+      return r.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
+    }
+    return r.fulfill({ status: 200, contentType: 'application/json',
+      body: JSON.stringify([{ lat: '50.0281', lon: '15.2000' }]) });
+  });
   if (prihlasit) {
     await ctx.addInitScript(() => {
       try {
@@ -257,6 +272,62 @@ async function odesli(p) {
       `hláška byla „${v.hlaska}"`);
     await ctx.close();
   }
+}
+
+/* --- OKRES SE VYBÍRÁ, NEPÍŠE SE Z HLAVY ----------------------------
+ * Bylo to prázdné políčko s nápovědou „např. Kolín" a prošlo cokoli.
+ * Přitom podle okresu se inzerát zařadí na krajskou i okresní stránku,
+ * najdou ho uložená hlídání a poměří se jeho cena s okolím. Překlep
+ * znamená, že pozemek nikdo nenajde a cena se srovnává s cizím krajem.
+ */
+{
+  const { ctx, p } = await otevri(true);
+  const v = await p.evaluate(() => {
+    const i2 = document.getElementById('p-okres');
+    const dl = document.getElementById('p-okresy');
+    return { napojeno: i2 ? i2.getAttribute('list') : null,
+      voleb: dl ? dl.querySelectorAll('option').length : 0,
+      prvni: dl && dl.querySelector('option') ? dl.querySelector('option').value : '' };
+  });
+  pravda('okres se dá vybrat z nabídky, ne jen napsat',
+    v.napojeno === 'p-okresy' && v.voleb === 77, JSON.stringify(v));
+  pravda('a je to opravdu seznam okresů', /^[A-ZÁ-Ž]/.test(v.prvni), `první volba: „${v.prvni}"`);
+
+  /* Překlep se musí zastavit dřív, než se inzerát uloží. */
+  await vypln(p, { 'p-okres': 'Kolim' });
+  await odesli(p);
+  await p.waitForTimeout(900);
+  const chyba = await p.evaluate(() => {
+    const m = document.getElementById('msg-prodej');
+    return (m ? m.textContent : '').replace(/\s+/g, ' ').trim();
+  });
+  pravda('překlep v okrese inzerát nepustí dál a poradí správný',
+    /Kolín/.test(chyba), `hláška: „${chyba.slice(0, 120)}"`);
+  await ctx.close();
+}
+
+/* --- ŠPENDLÍK NESMÍ TIŠE SKONČIT U OKRESNÍHO MĚSTA -----------------
+ * Když se obec nenajde, geokódování spadlo na „okres X, Česko"
+ * a inzerát dostal souřadnice okresního města. Na mapě to vypadá jako
+ * přesný špendlík; kupující by jel třeba dvacet kilometrů vedle a nikdo
+ * — ani ten, kdo inzerát podal — by o tom nevěděl.
+ */
+{
+  bezObce = true;
+  const { ctx, p } = await otevri(true);
+  await vypln(p, { 'p-obec': 'Nenajitelna Lhota' });
+  await odesli(p);
+  await p.waitForTimeout(1200);
+  const stav = await p.evaluate(() => {
+    const m = document.getElementById('msg-prodej');
+    return { hlaska: (m ? m.textContent : '').replace(/\s+/g, ' ').trim(), url: location.pathname };
+  });
+  pravda('nenalezená obec inzerát nezveřejní',
+    !/muj-inzerat/.test(stav.url), `web přešel na ${stav.url}`);
+  pravda('a řekne, že by špendlík skončil u okresního města',
+    /okresního města/.test(stav.hlaska), `hláška: „${stav.hlaska.slice(0, 140)}"`);
+  bezObce = false;
+  await ctx.close();
 }
 
 await prohlizec.close();

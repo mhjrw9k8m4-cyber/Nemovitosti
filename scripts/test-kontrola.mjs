@@ -10,6 +10,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+/* js/kontrola.js si seznam 77 okresů bere z js/hlidani-logika.js — tam
+   už je a test ho drží shodný s data/okresy.json, takže se nekopíruje
+   potřetí. V prohlížeči jsou oba soubory na stránce; tady se to musí
+   podstrčit ručně. Čte se až při kontrole, takže na pořadí nezáleží. */
+globalThis.window = globalThis;
+globalThis.PKHlidani = createRequire(import.meta.url)(path.join(ROOT, 'js', 'hlidani-logika.js'));
 const K = createRequire(import.meta.url)(path.join(ROOT, 'js', 'kontrola.js'));
 
 let bezi = 0, spadlo = 0;
@@ -27,6 +33,46 @@ function zkus(skupina, popis, hodnota, maProjit) {
 }
 const projde = (s, p, v) => zkus(s, p, v, true);
 const neprojde = (s, p, v) => zkus(s, p, v, false);
+
+/* ---------------- okres ----------------
+ * Okres se nekontroloval vůbec — bylo to prázdné políčko s nápovědou
+ * „např. Kolín" a prošlo cokoli. Přitom rozhoduje o víc věcech než
+ * kterýkoli jiný údaj: podle něj se inzerát zařadí na krajskou
+ * a okresní stránku, najdou ho uložená hlídání a poměří se jeho cena
+ * s okolím. Překlep znamená, že pozemek nikdo nenajde a jeho cena se
+ * srovnává s cizím okresem.
+ */
+{
+  /* Nejdřív: máme vůbec proti čemu kontrolovat? Validátor bez seznamu
+     schválně pouští všechno dál (lepší než odmítat platné okresy) —
+     takže bez téhle kontroly by celý oddíl prošel naprázdno. */
+  const zn = (globalThis.PKHlidani && globalThis.PKHlidani.OKRESY) || [];
+  zkus('okres', `seznam okresů je k dispozici (${zn.length})`, { ok: zn.length === 77 }, true);
+}
+projde('okres', 'prázdný projde — je nepovinný', K.okres(''));
+projde('okres', 'přesný název', K.okres('Kolín'));
+projde('okres', 'bez diakritiky', K.okres('kolin'));
+projde('okres', 'i s předponou „okres"', K.okres('okres Kolín'));
+projde('okres', 's pomlčkou', K.okres('Praha-východ'));
+projde('okres', 'pomlčka napsaná mezerou', K.okres('praha vychod'));
+projde('okres', 'víceslovný', K.okres('Ústí nad Orlicí'));
+neprojde('okres', 'překlep', K.okres('Kolim'));
+neprojde('okres', 'vymyšlený okres', K.okres('Xyzabc'));
+neprojde('okres', 'kraj místo okresu', K.okres('Jihomoravský'));
+{
+  /* Hláška má poradit, ne jen odmítnout. */
+  const r = K.okres('Kolim');
+  zkus('okres', 'u překlepu se nabídne správný okres',
+    { ok: /Kolín/.test(r.msg || ''), msg: r.msg }, true);
+  const r2 = K.okres('Xyzabc');
+  zkus('okres', 'a u nesmyslu se řekne, kde ho vzít',
+    { ok: /77 okres/.test(r2.msg || ''), msg: r2.msg }, true);
+}
+/* A do kontroly celého formuláře se to musí opravdu dostat. */
+zkus('okres', 'špatný okres shodí i kontrolu celého formuláře',
+  K.formular({ obec: 'Kolín', okres: 'Xyzabc', vymera: '1000', cena: '500000',
+    popis: 'Rovinatý pozemek na okraji obce, přístup z asfaltové cesty, elektřina na hranici.',
+    odkaz: '', jmeno: 'Jan Novák', kontakt: '777123654' }), false);
 
 /* ---------------- obec ---------------- */
 projde('obec', 'běžný název', K.obec('Kolín'));

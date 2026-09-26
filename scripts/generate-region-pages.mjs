@@ -1058,4 +1058,27 @@ console.log(`Vygenerováno: ${okresPages.length} okresních + ${krajPages.length
     fs.writeFileSync(cesta, h, 'utf8');
     console.log('Seznam okresů v 404.html doplněn: ' + Object.keys(mapa).length + ' okresů.');
   }
+
+  /* TÝŽ SEZNAM DO FORMULÁŘE. Okres se v „Přidat pozemek" psal z hlavy
+     do prázdného políčka — a překlep v okrese je drahý: podle něj se
+     inzerát zařadí na krajskou i okresní stránku, najdou ho uložená
+     hlídání a poměří se jeho cena s okolím. Nabídka se doplní odsud,
+     ze stejného zdroje jako stránky okresů, aby se nemohla rozejít. */
+  {
+    const cestaP = path.join(ROOT, 'pridat.html');
+    if (fs.existsSync(cestaP)) {
+      let hp = fs.readFileSync(cestaP, 'utf8');
+      const predP = hp;
+      const volby = [...hasOkresPage].sort((a2, b2) => a2.localeCompare(b2, 'cs'))
+        .map((o) => `<option value="${esc(o)}"></option>`).join('');
+      hp = hp.replace(/\/\*ZACATEK-OKRESY-VOLBY\*\/[\s\S]*?\/\*KONEC-OKRESY-VOLBY\*\//,
+        '/*ZACATEK-OKRESY-VOLBY*/' + volby + '/*KONEC-OKRESY-VOLBY*/');
+      if (hp === predP && hp.indexOf('/*ZACATEK-OKRESY-VOLBY*/') === -1) {
+        console.warn('POZOR: v pridat.html chybí značky ZACATEK-OKRESY-VOLBY — nabídka okresů se nedoplnila.');
+      } else if (hp !== predP) {
+        fs.writeFileSync(cestaP, hp, 'utf8');
+        console.log('Nabídka okresů v pridat.html doplněna: ' + [...hasOkresPage].length + ' okresů.');
+      }
+    }
+  }
 }

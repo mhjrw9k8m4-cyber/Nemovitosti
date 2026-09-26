@@ -102,13 +102,25 @@
         return null;
       }).catch(function () { return null; });
   }
+  /* POSLEDNÍ ZÁCHRANA UKAZUJE NA OKRESNÍ MĚSTO, NE NA POZEMEK.
+     Když se obec nenajde, spadlo se tiše na „okres X, Česko" a inzerát
+     dostal souřadnice okresního města. Na mapě to vypadá jako přesný
+     špendlík a nikdo — ani ten, kdo inzerát podává — se nedozví, že
+     ukazuje třeba dvacet kilometrů vedle. Vrací se proto i to, ODKUD
+     souřadnice jsou, a pokud jsou jen okresní, řekne se to nahlas. */
   function geocodeCz(obec, okres) {
-    var tries = [obec + (okres ? ', okres ' + okres : '') + ', Česko', obec + ', Česko'];
-    if (okres) tries.push('okres ' + okres + ', Česko');   // poslední záchrana — aspoň okres
+    var tries = [
+      { q: obec + (okres ? ', okres ' + okres : '') + ', Česko', pribl: false },
+      { q: obec + ', Česko', pribl: false }
+    ];
+    if (okres) tries.push({ q: 'okres ' + okres + ', Česko', pribl: true });
     var i = 0;
     function next() {
       if (i >= tries.length) return Promise.resolve(null);
-      return geocodeQuery(tries[i++]).then(function (p) { return p || next(); });
+      var t = tries[i++];
+      return geocodeQuery(t.q).then(function (p) {
+        return p ? { lat: p.lat, lng: p.lng, pribl: t.pribl } : next();
+      });
     }
     return next();
   }
@@ -343,6 +355,10 @@
     var price = parseInt(val('p-cena'), 10) || 0;
     return geocodeCz(obec, okres).then(function (pos) {
       if (!pos) return 'geo';
+      /* Obec se nenašla a špendlík by skončil na okresním městě.
+         Nezveřejňuje se — kupující by jel jinam. Opravit to umí jen
+         ten, kdo pozemek zná, tak se to řekne jemu. */
+      if (pos.pribl) return 'geoObec';
       var features = [].slice.call(document.querySelectorAll('input[name="site"]:checked')).map(function (x) { return x.value; });
       return uploadPhotos().then(function (pr) {
       if (pr.rejected && pr.rejected.length) return 'photos';   // zamítnuté fotky → hláška, nic se nezveřejní
@@ -576,7 +592,7 @@
     var box = document.getElementById('p-varovani');
     if (!box || !window.PKKontrola) return;
     var v = PKKontrola.formular({
-      obec: val('p-obec'), vymera: val('p-vymera'), cena: val('p-cena'),
+      obec: val('p-obec'), okres: val('p-okres'), vymera: val('p-vymera'), cena: val('p-cena'),
       parcela: val('p-parcela'), popis: val('p-popis'), odkaz: val('p-odkaz'),
       jmeno: val('p-jmeno'), kontakt: val('p-kontakt')
     });
@@ -702,6 +718,10 @@
         } else if (r === 'geo') {
           ms.textContent = 'Nepodařilo se najít obec na mapě. Zkontrolujte prosím název obce (např. „Kolín").';
           ms.classList.add('err');
+        } else if (r === 'geoObec') {
+          ms.textContent = 'Obec „' + val('p-obec') + '" jsme na mapě nenašli — pozemek by se ukázal u okresního města, '
+            + 'ne na svém místě. Zkontrolujte prosím název obce; stačí i nejbližší větší obec.';
+          ms.classList.add('err');
         } else if (r === 'bad') {
           ms.textContent = 'Text obsahuje nevhodná slova nebo vypadá jako spam. Upravte prosím inzerát a zkuste to znovu.';
           ms.classList.add('err');
@@ -764,7 +784,7 @@
       // nenačte, spadneme zpátky na to nejnutnější, ať formulář neumrzne.
       if (window.PKKontrola) {
         var v = PKKontrola.formular({
-          obec: val('p-obec'), vymera: val('p-vymera'), cena: val('p-cena'),
+          obec: val('p-obec'), okres: val('p-okres'), vymera: val('p-vymera'), cena: val('p-cena'),
           parcela: val('p-parcela'), popis: val('p-popis'), odkaz: val('p-odkaz'),
           jmeno: val('p-jmeno'), kontakt: val('p-kontakt')
         });

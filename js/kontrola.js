@@ -257,6 +257,64 @@
     return ok();
   }
 
+  /* OKRES SE NEKONTROLOVAL VŮBEC. Bylo to volné políčko s nápovědou
+     „např. Kolín" — prošlo cokoli. Přitom okres rozhoduje o víc věcech
+     než kterýkoli jiný údaj: podle něj se inzerát zařadí na krajskou
+     a okresní stránku, podle něj ho najdou uložená hlídání a podle
+     něj se cena srovnává s okolím. Překlep znamená, že pozemek nikdo
+     nenajde a jeho cena se poměřuje s cizím okresem.
+     Okresů je 77 a jsou to jediné platné hodnoty. Seznam se tu
+     nekopíruje — je v js/hlidani-logika.js, kde ho test drží shodný
+     s data/okresy.json. Čte se až při kontrole, ne při načtení
+     souboru: skripty se na stránce načítají v jiném pořadí. */
+  function normOkres(s) {
+    return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+      .replace(/[-\u2010-\u2015]/g, ' ').replace(/\s+/g, ' ').trim()
+      .replace(/^okres\s+/, '');
+  }
+  /* Vzdálenost dvou slov v úpravách (Levenshtein). Na „Kolim" → „Kolín"
+     stačí; delší jména snesou dvě úpravy, kratší jednu, ať se nenabízí
+     nesmysl. */
+  function vzdalenost(a, b) {
+    var m = a.length, n = b.length, i, j, radek = [], predchozi;
+    if (Math.abs(m - n) > 2) return 99;
+    for (j = 0; j <= n; j++) radek[j] = j;
+    for (i = 1; i <= m; i++) {
+      predchozi = radek[0]; radek[0] = i;
+      for (j = 1; j <= n; j++) {
+        var tmp = radek[j];
+        radek[j] = Math.min(radek[j] + 1, radek[j - 1] + 1,
+          predchozi + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1));
+        predchozi = tmp;
+      }
+    }
+    return radek[n];
+  }
+  function znameOkresy() {
+    var g = (typeof window === 'object' && window) || (typeof globalThis === 'object' && globalThis) || {};
+    return (g.PKHlidani && g.PKHlidani.OKRESY) || [];
+  }
+  function okres(v) {
+    var s = text(v);
+    if (!s) return ok();                       // nepovinné — obec stačí
+    var zn = znameOkresy();
+    /* Bez seznamu se nehádá. Kdyby se js/hlidani-logika.js nenačetl,
+       je lepší pustit dál, než odmítnout platný okres. */
+    if (!zn.length) return ok();
+    var n = normOkres(s);
+    var i, nej = null, nejd = 3;
+    for (i = 0; i < zn.length; i++) {
+      var zi = normOkres(zn[i]);
+      if (zi === n) return ok();
+      var d = vzdalenost(n, zi);
+      if (d < nejd) { nejd = d; nej = zn[i]; }
+    }
+    if (nej && nejd <= (n.length <= 5 ? 1 : 2)) {
+      return chyba('Okres „' + s + '" neznáme. Nemysleli jste ' + nej + '?');
+    }
+    return chyba('Okres „' + s + '" neznáme — vyberte prosím jeden ze 77 okresů (napovídá se při psaní).');
+  }
+
   function jmeno(v) {
     var s = text(v);
     if (!s) return chyba('Uveďte prosím své jméno.');
@@ -303,6 +361,7 @@
   function formular(d) {
     var poradi = [
       ['p-obec', obec(d.obec)],
+      ['p-okres', okres(d.okres)],
       ['p-vymera', vymera(d.vymera)],
       ['p-cena', cena(d.cena)],
       ['p-cena', cenaZaMetr(d.cena, d.vymera)],
@@ -324,7 +383,7 @@
   return {
     MEZE: MEZE,
     obec: obec, vymera: vymera, cena: cena, cenaZaMetr: cenaZaMetr,
-    popis: popis, odkaz: odkaz, kontakt: kontakt, jmeno: jmeno, parcela: parcela,
+    popis: popis, odkaz: odkaz, kontakt: kontakt, jmeno: jmeno, parcela: parcela, okres: okres,
     fotkaRozmery: fotkaRozmery, fotkaObsah: fotkaObsah,
     fotkaPuvod: fotkaPuvod, fotkaMisto: fotkaMisto, ocistiOdkaz: ocistiOdkaz,
     formular: formular,
