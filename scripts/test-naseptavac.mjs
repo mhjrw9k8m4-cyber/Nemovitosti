@@ -178,23 +178,33 @@ if (await seznam.isVisible()) {
       'zúžit výpis a mlčet o tom je horší než vrátit moc');
     if (jeNabidka) {
       const popis = (await nabidka.innerText()).replace(/\s+/g, ' ');
-      pravda('u té nabídky je i počet', /\(\d+\)/.test(popis), `stojí tam „${popis}"`);
+      const mSlib = /\((\d+)\)/.exec(popis);
+      pravda('u té nabídky je i počet', !!mSlib, `stojí tam „${popis}"`);
+      const slibeno = mSlib ? +mSlib[1] : -1;
       await nabidka.click();
       await p.waitForTimeout(500);
       const siroky = await pocet();
       pravda('a po klepnutí se podobné názvy vrátí', siroky > uzky,
         `přesný název ${uzky}, s podobnými ${siroky}`);
+      /* Slíbené číslo musí sedět s tím, co se po klepnutí opravdu
+         přidalo. Je to přesnější než hledat konkrétní obce ve výpisu:
+         ten je natvrdo omezený na osm položek a řadí se podle
+         doporučení, takže obec odjinud se do něj vejít nemusí. (Dřív se
+         to hledalo ve výpisu a prošlo to jen náhodou — spadlo to, jakmile
+         se změnilo bodování doporučení a pořadí se přeskládalo.) */
+      pravda('a slíbený počet sedí s tím, co přibylo', uzky + slibeno === siroky,
+        `přesný název ${uzky} + slibovaných ${slibeno} ≠ ${siroky}`);
       const seznamSiroky = await vypis();
       const vidiny = past.cizi.filter((o) => seznamSiroky.indexOf(o) >= 0);
-      pravda('teprve tehdy je ve výpisu obec odjinud', vidiny.length > 0,
-        'nevrátila se ani jedna z: ' + past.cizi.slice(0, 3).join(', '));
       await nabidka.click();               // zpátky na přesný název
       await p.waitForTimeout(400);
+      const zpet = await vypis();
       if (vidiny.length) {
-        const zpet = await vypis();
         const zbyle = vidiny.filter((o) => zpet.indexOf(o) >= 0);
         pravda(`a napsané „${past.text}" je zase nevrací`, zbyle.length === 0,
           've výpisu visí: ' + zbyle.join(', ') + ' — hotový název se pořád bere jako začátek');
+      } else {
+        zpravy.push('  – obce odjinud se do osmi vypsaných položek nevešly (kontroluje se počtem)');
       }
     }
 

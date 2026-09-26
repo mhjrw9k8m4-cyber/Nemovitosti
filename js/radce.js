@@ -90,6 +90,30 @@
           '. Takový rozdíl už nebývá sleva: nejčastěji je v inzerátu výměra <b>celé parcely</b>, ale prodává se jen <b>spoluvlastnický podíl</b>, ' +
           'nebo jde o dražbu s jinou výměrou, případně o chybu v ceně. <b>Ověřte si to na listu vlastnictví</b>, než něco podepíšete.' };
       }
+      /* U ZNÁMÉHO PODÍLU SE O PŘÍLEŽITOSTI NEMLUVÍ.
+         Odhad se počítá z výměry CELÉ parcely, ale kupující dostane jen
+         zlomek — sleva proti odhadu tedy vzniká z podstaty věci, ne tím,
+         že by byla nabídka výhodná. Změřeno: ze 186 nabídek, kterým rádce
+         říkal „může to být příležitost", jich 66 (35 %) byly podíly,
+         mezi nimi podíl 9/792 z parcely o 3 224 m².
+         Místo pochvaly se řekne, co se doopravdy kupuje — to je údaj,
+         který na téhle stránce nikde jinde v jedné větě není.
+
+         Stojí to PŘED větví o nejistém odhadu schválně: jinak by podíl
+         s nejistým odhadem spadl tam a o podílu by se nedozvěděl nikdo.
+         (Na tu díru upozornil hlídač v scripts/test-ceny.mjs.) */
+      if (o.podil) {
+        var zl = (root.PK_CENY && root.PK_CENY.vymeraVCene) ? root.PK_CENY.vymeraVCene(d) : null;
+        var zm = (root.PK_CENY && root.PK_CENY.zaMetr) ? root.PK_CENY.zaMetr(d) : null;
+        var cis = function (n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0'); };
+        return { lvl: 'mid', txt: 'Cena vychází <b>o ' + o.podOdhadem + ' % pod</b> obvyklou, ale ' +
+          '<b>není to sleva</b>: prodává se <b>spoluvlastnický podíl</b>, zatímco výměra v inzerátu je ' +
+          'celé parcely. ' +
+          (zl && zm
+            ? 'V ceně je zhruba <b>' + cis(zl) + ' m²</b>, tedy <b>' + cis(zm) + ' Kč/m²</b> z toho, co vám připadne. '
+            : 'Kolik metrů vám připadne, se z inzerátu nedá spočítat. ') +
+          'S podílem navíc nemůžete nakládat sám — potřebujete ostatní spoluvlastníky.' };
+      }
       /* Odhad stojí na cenách, které se mezi sebou liší násobky. Rádce
          nesmí mluvit o příležitosti tam, kde by z jiné poloviny dat vyšlo
          výrazně jiné číslo — řekne rovnou, že je to hrubé vodítko. */

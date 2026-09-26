@@ -2703,9 +2703,19 @@
      „levné" napsané do věty. Kdyby to byly dva kusy kódu, dřív nebo
      později si u téhož pozemku protiřečí.
      Nejistý odhad do filtru nepatří: filtr slibuje výběr, ne dohad. */
+  /* PODÍL SE NESMÍ CHVÁLIT ZA CENU.
+     Odhad se počítá z CELÉ výměry parcely, ale u spoluvlastnického podílu
+     kupující dostane jen zlomek — sleva proti odhadu tedy vyjde z podstaty
+     věci, ne proto, že je nabídka výhodná. Cenový model to ví a značí to
+     příznakem `podil` u odhadu; u sebe napsal, že „tam, kde se o slevě
+     mluví, se na něj musí koukat". Na kartách (štítek „−X % proti okolí")
+     se na něj koukalo, na čtyřech dalších místech ne.
+     Změřeno na ostrých datech: ve filtru „pod obvyklou cenou" bylo 127
+     podílů ze 437 (29 %) a mezi doporučenými dostávalo body za slevu 110
+     podílů z 280 (39 %). */
   function podObvyklou(d) {
     var od = MODEL ? MODEL.odhad(d) : null;
-    return !!(od && od.podleVelikosti && !od.nejisty && od.podOdhadem >= 15);
+    return !!(od && od.podleVelikosti && !od.nejisty && !od.podil && od.podOdhadem >= 15);
   }
 
   function visible(d) {
@@ -3034,7 +3044,8 @@
          nedůvěryhodný), jdou dozadu: co neumíme spočítat, nemůžeme řadit. */
       var slevaVal = function (d) {
         var o = MODEL ? MODEL.odhad(d) : null;
-        return (o && o.podleVelikosti && !o.pochybna && !o.nejisty) ? (o.podOdhadem || 0) : -1;
+        // Podíl dozadu: jeho sleva proti odhadu není sleva (viz podObvyklou).
+        return (o && o.podleVelikosti && !o.pochybna && !o.nejisty && !o.podil) ? (o.podOdhadem || 0) : -1;
       };
       arr.sort(function (a, b) { return slevaVal(b) - slevaVal(a); });
     }
@@ -3090,7 +3101,9 @@
     /* Body jen za slevu, které věříme. „Nejistá" znamená, že se ceny
        srovnávaných pozemků liší násobky — z jiné poloviny dat by vyšlo
        jiné číslo, takže doporučovat podle něj nemůžeme. */
-    if (o && o.podleVelikosti && !o.pochybna && !o.nejisty && o.podOdhadem >= MEZ_SLEVA) {
+    // Podíl body za slevu nedostane — viz podObvyklou. Bez toho bylo mezi
+    // bodovanými 110 podílů z 280 a web je sám doporučoval nahoru.
+    if (o && o.podleVelikosti && !o.pochybna && !o.nejisty && !o.podil && o.podOdhadem >= MEZ_SLEVA) {
       // 15 % → 0 bodů, 50 % a výš → plných 45.
       body = Math.min(45, Math.round((o.podOdhadem - MEZ_SLEVA) * 45 / 35));
     }
@@ -4591,7 +4604,11 @@
          tu Doubravník „o 95 % pod obvyklou": stavební pozemek za 59 Kč/m²,
          tedy skoro jistě podíl nebo špatně zařazený druh. Nejpodezřelejší
          nabídka na webu jako titulek. Pochybné sem nepatří. */
-      if (!o || !o.podleVelikosti || o.pochybna || o.nejisty || o.podOdhadem < 25) return;
+      /* A podíl sem nepatří ze stejného důvodu jako do filtru: jeho sleva
+         proti odhadu vzniká tím, že se cena za zlomek dělí výměrou celé
+         parcely. Obava z podílu je v poznámce nahoře — tohle je ta
+         kontrola, která jí odpovídá. */
+      if (!o || !o.podleVelikosti || o.pochybna || o.nejisty || o.podil || o.podOdhadem < 25) return;
       if (!bestO || o.podOdhadem > bestO.podOdhadem) { bestO = o; best = d; }
     });
     vypln('deal', null, best ? ('o ' + bestO.podOdhadem + ' % pod obvyklou · ' + best.place) : '', best);

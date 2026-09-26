@@ -459,7 +459,18 @@ for (const f of ['../js/main.js', '../js/pozemek.js', '../js/radce.js']) {
     teloSkore.length > 100 && /!o\.nejisty/.test(teloSkore), 'v těle demand() se na nejistotu nekouká');
   pravda('★ Doporučujeme nejistý odhad nevybere', /o\.pochybna \|\| o\.nejisty/.test(main));
   pravda('filtr „pod obvyklou cenou" nejistý odhad nepustí', /!od\.nejisty/.test(main));
-  pravda('řazení podle slevy nejistý odhad nebere', /!o\.pochybna && !o\.nejisty\) \? \(o\.podOdhadem/.test(main));
+  /* Čte se TĚLO funkce, ne doslovný tvar podmínky. Dřív tu stál přesný
+     opis zdrojového řádku — a rozbilo ho přidání další podmínky do téže
+     závorky, přestože záměr („nejistý odhad se neřadí nahoru") platil
+     dál. Test, který spadne po správné změně, učí člověka testy obcházet. */
+  {
+    const zac = main.indexOf('var slevaVal = function');
+    const teloRazeni = zac >= 0 ? main.slice(zac, zac + 400) : '';
+    pravda('řazení podle slevy nejistý odhad nebere',
+      teloRazeni.length > 50 && /!o\.nejisty/.test(teloRazeni) && /!o\.pochybna/.test(teloRazeni)
+        && /podOdhadem/.test(teloRazeni),
+      'v těle slevaVal() se na nejistotu nebo pochybnost nekouká');
+  }
   pravda('odznak na kartě u nejistého odhadu netvrdí slevu', /_od\.nejisty && _od\.podOdhadem >= 25/.test(main));
   pravda('rádce u nejistého odhadu nemluví o příležitosti', /o\.nejisty && o\.podOdhadem >= 25/.test(radce));
 }
@@ -522,6 +533,120 @@ for (const f of ['../js/main.js', '../js/pozemek.js', '../js/radce.js']) {
     'v js/pozemek.js se zase někde dělí cena celou výměrou');
   pravda('obě berou výpočet z cenového modelu',
     /PK_CENY[\s\S]{0,40}zaMetr/.test(main) && /PK_CENY[\s\S]{0,40}zaMetr/.test(poz));
+}
+
+/* ---- Kde se mluví o SLEVĚ, musí se koukat na podíl ---------------
+ *
+ * Cenový model podíl nezahazuje: odhad vydá a označí ho příznakem
+ * `podil` — a u sebe má napsáno, že „tam, kde se o slevě mluví, se na
+ * něj musí koukat". Jenže koukalo se jen na kartách u štítku
+ * „−X % proti okolí". Čtyři další místa ne:
+ *   • filtr „Pod obvyklou cenou" (a totéž slovo ve větě),
+ *   • řazení podle slevy,
+ *   • body za slevu ve skóre doporučení,
+ *   • titulek „NEJVÝHODNĚJŠÍ DNES" na úvodní stránce.
+ *
+ * Změřeno na ostrých datech: ve filtru „pod obvyklou cenou" bylo 127
+ * podílů ze 437 (29 %) a body za slevu dostávalo 110 podílů z 280
+ * (39 %) — web je tedy sám doporučoval nahoru. Sleva u podílu přitom
+ * vzniká tím, že se cena za zlomek poměřuje výměrou CELÉ parcely.
+ */
+{
+  /* 1) Model dál dělá, co má: odhad u podílu vydá a označí ho. Kdyby ho
+     zahodil, tenhle oddíl by „prošel" úplně bez zásluhy — proto se to
+     kontroluje dřív než cokoli dalšího. */
+  const BEZNE = pole(12, (i) => ({
+    place: 'B' + i, okres: 'Kolín', type: 'sale', druh: 'orná půda',
+    area: 10000, price: 500000,           // 50 Kč/m²
+  }));
+  const POLOVINA = { place: 'Podíl', okres: 'Kolín', type: 'sale', druh: 'orná půda',
+    area: 10000, podil: true, zlomek: '1/2', price: 300000 };   // 30 Kč/m² z celé výměry
+  const m = PK_CENY.postav([...BEZNE, POLOVINA], OKRES_KRAJ);
+  const oP = m.odhad(POLOVINA);
+  pravda('model u podílu odhad pořád vydá', !!oP, 'odhad zmizel — pak tenhle oddíl nic neměří');
+  pravda('a označí ho příznakem podil', !!oP && oP.podil === true, JSON.stringify(oP));
+  pravda('a je to sleva, které by si web jinak všiml', !!oP && oP.podOdhadem >= 15,
+    `podOdhadem ${oP && oP.podOdhadem} % — zkušební podíl je moc drahý, test by nic neměřil`);
+
+  /* 2) A teď na SKUTEČNÝCH datech, přes týž výpočet, jaký má web. */
+  const DATA = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const M = PK_CENY.postav(DATA);
+  const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
+  const radce = readFileSync(new URL('../js/radce.js', import.meta.url), 'utf8');
+
+  const podily = DATA.filter((x) => x.podil);
+  pravda(`v datech je dost podílů, aby to něco znamenalo (${podily.length})`, podily.length >= 50);
+
+  const podObvyklou = (d) => {
+    const o = M.odhad(d);
+    return !!(o && o.podleVelikosti && !o.nejisty && !o.podil && o.podOdhadem >= 15);
+  };
+  je('žádný podíl není „pod obvyklou cenou"', podily.filter(podObvyklou).length, 0);
+
+  /* 3) Ale hlavně: chová se tak OPRAVDU web? Výpočet výš je jen opis.
+     Kdyby se v js/main.js na příznak nekoukalo, tenhle oddíl by prošel
+     a nezměnilo by se nic. Proto se čte zdroj: každé místo, které mluví
+     o `podOdhadem`, musí v téže podmínce řešit i podíl. Tohle je ta
+     kontrola, která chytí i PÁTÉ takové místo, až vznikne. */
+  /* POZNÁMKY SE MUSÍ ODSTRANIT. Jinak hlídač uklidní vlastní komentář:
+     nad podObvyklou() je odstavec vysvětlující, proč se na podíl kouká —
+     a slovo „podil" v něm stačilo na to, aby kontrola prošla i s úplně
+     odstraněnou podmínkou. Přistiženo sabotáží; bez tohohle kroku by
+     hlídač chytil tři místa ze čtyř a to čtvrté zamlčel. */
+  /* Skenují se OBA soubory, které o slevě mluví. Páté takové místo se
+     našlo právě v rádci (js/radce.js): u podílu říkal zeleně „může to
+     být příležitost" — 66 nabídek ze 186 (35 %). */
+  const zdrojeSlevy = { 'js/main.js': main, 'js/radce.js': radce };
+  const bezPoznamek = main
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
+    .replace(/(^|[^:])\/\/[^\n]*/g, (m, p1) => p1 + ' ');
+  const ocisti = (t) => t
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
+    .replace(/(^|[^:])\/\/[^\n]*/g, (m, p1) => p1 + ' ');
+  const hrisnici = [];
+  let rozhodnuti = 0;
+  Object.keys(zdrojeSlevy).forEach((jmeno) => {
+    /* Okno se počítá jen přes ŘÁDKY KÓDU. Poznámky se sice vymažou, ale
+       pořád zabírají řádky — a dlouhý komentář nad větví pro podíl tak
+       okno „snědl" a hlídač hlásil místo, které je podílem odbavené
+       o kousek výš. Čísla řádků zůstávají původní, ať se dá nález najít. */
+    const kod = ocisti(zdrojeSlevy[jmeno]).split('\n')
+      .map((r, i) => ({ t: r.trim(), c: i + 1 }))
+      .filter((x) => x.t !== '');
+    const radky = kod.map((x) => x.t);
+    kod.forEach((zaznam, i) => {
+      const r = zaznam.t;
+      const t = r;
+    /* Hlídá se jen místo, kde se podle slevy ROZHODUJE — tedy porovnání
+       (`podOdhadem >= 25`) nebo dosazení jako hodnoty k řazení
+       (`podOdhadem || 0`). Vypsání čísla do textu odznaku uvnitř už
+       ohlídané podmínky sem nepatří; ověřeno, že jinak hlásí tři místa,
+       která podíl řeší o pár řádků výš. */
+      if (!/podOdhadem\s*(?:[<>]=?|===?|\|\|)/.test(t)) return;
+      rozhodnuti++;
+      /* Okno čtrnácti řádků zpět. Podmínky i celé větve, které podíl
+         odbaví dřív (a tím ho z dalších větví vyloučí), bývají delší než
+         pár řádků; při osmi hlásil hlídač i místo, které je za osmnáct
+         řádků dlouhou větví pro podíl. */
+      /* Hledá se od začátku OBKLOPUJÍCÍ FUNKCE, ne v okně pevné délky.
+         Větev pro podíl často končí `return`, takže všechno za ní je už
+         podílu prosté — a to se počtem řádků vyjádřit nedá. Okno se
+         zkoušelo (osm i čtrnáct řádků) a pokaždé hlásilo místo, které je
+         odbavené o kousek výš. Je to volnější síto: stačí, že se funkce
+         o podíl někde stará. Že se stará SPRÁVNĚ, hlídají kontroly na
+         skutečných datech výš. */
+      let zacFn = 0;
+      /* Jen POJMENOVANÁ deklarace na začátku řádku. Na `var cis = function`
+         uvnitř větve se scan zastavoval a ukazoval pak na kus vlastního
+         těla — hlásil tedy místo, které je o osm řádků výš odbavené. */
+      for (let j = i; j >= 0; j--) if (/^function\s+\w+\s*\(/.test(radky[j])) { zacFn = j; break; }
+      const telo = radky.slice(zacFn, i + 2).join(' ');
+      if (!/\bpodil\b/.test(telo)) hrisnici.push(`${jmeno}:${zaznam.c}: ${t.slice(0, 90)}`);
+    });
+  });
+  pravda('hlídá se aspoň pár míst (jinak by vzorek nic nenašel)', rozhodnuti >= 5,
+    `nalezeno jen ${rozhodnuti} rozhodnutí podle slevy`);
+  je('každé místo, které rozhoduje podle slevy, řeší i podíl', hrisnici, []);
 }
 
 console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
