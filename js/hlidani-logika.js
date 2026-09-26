@@ -213,13 +213,23 @@
     return true;
   }
 
-  // Kolik nových pozemků sedí na jedno uložené hledání.
+  /* Kolik nových pozemků sedí na jedno uložené hledání.
+     Počítá se přes KLÍČE, ne přes záznamy: tatáž nabídka bývá v datech
+     dvakrát, jednou z každého zdroje (dnes 13 dvojic z 1 972), a jako
+     „dvě nové" by to byla lež o jednom pozemku. novychCelkem() o kus
+     níž to tak dělalo odjakživa — tahle funkce ne, a rozcházely se.
+     Živé to nebylo, protože ji zatím nikdo nevolá; jenže dvě funkce
+     na totéž, každá s jiným výsledkem, jsou past pro toho, kdo
+     zapojí tu druhou. */
   function novychProHledani(s, data) {
     var videno = {};
     (s && s.seen_keys ? s.seen_keys : []).forEach(function (k) { videno[k] = 1; });
-    var n = 0;
-    (data || []).forEach(function (d) { if (matches(s, d) && !videno[keyOf(d)]) n++; });
-    return n;
+    var nove = {};
+    (data || []).forEach(function (d) {
+      var k = keyOf(d);
+      if (matches(s, d) && !videno[k]) nove[k] = 1;
+    });
+    return Object.keys(nove).length;
   }
 
   // Součet přes všechna hledání — to je číslo na odznaku. Jeden pozemek

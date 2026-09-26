@@ -278,6 +278,24 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   }
 }
 
+/* --- TATÁŽ NABÍDKA DVAKRÁT ------------------------------------------
+ * Robot sbírá z víc zdrojů a tatáž nabídka bývá v datech dvakrát,
+ * jednou z každého (dnes 13 dvojic z 1 972; liší se jen adresou).
+ * Jako „2 nové" by to byla lež o jednom pozemku. novychCelkem() to
+ * počítalo přes klíče odjakživa, novychProHledani() ne — dvě funkce
+ * na totéž s jiným výsledkem.
+ */
+{
+  const A = P({ parcel: '1' });
+  const dvakrat = [A, Object.assign({}, A, { url: 'https://jiny-zdroj.cz/1' })];
+  je('duplicity', 'tatáž nabídka ze dvou zdrojů je jedna nová',
+    H.novychProHledani({ okres: 'Kolín', seen_keys: [] }, dvakrat), 1);
+  je('duplicity', 'a odznak v menu ji počítá stejně',
+    H.novychCelkem([{ okres: 'Kolín', seen_keys: [] }], dvakrat), 1);
+  je('duplicity', 'dvě různé nabídky zůstanou dvě',
+    H.novychProHledani({ okres: 'Kolín', seen_keys: [] }, [A, P({ parcel: '2' })]), 2);
+}
+
 console.log(`\nHlídání lokality: ${bezi} testů`);
 if (spadlo) {
   console.log(vysledky.join('\n'));
