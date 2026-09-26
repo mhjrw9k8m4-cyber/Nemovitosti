@@ -639,8 +639,12 @@
   function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
   function checked(id) { var el = document.getElementById(id); return !!(el && el.checked); }
   // Kontakt: buď platný e-mail, nebo aspoň 9 číslic (české telefonní číslo)
+  /* Telefon je nepovinný (viz js/kontrola.js) — prázdné pole projde.
+     Vyplněné musí být číslo; e-mail sem nepatří, ten máme z účtu. */
   function validContact(v) {
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return true;
+    v = String(v || '').trim();
+    if (!v) return true;
+    if (/@/.test(v)) return false;
     return (v.replace(/\D/g, '').length >= 9);
   }
 
@@ -771,7 +775,7 @@
         if (!(parseInt(val('p-vymera'), 10) > 0)) return E('Zadejte prosím výměru v m².', 'p-vymera');
         if (!(parseInt(val('p-cena'), 10) > 0)) return E('Zadejte prosím cenu v Kč.', 'p-cena');
         if (!val('p-jmeno')) return E('Uveďte prosím své jméno.', 'p-jmeno');
-        if (!validContact(val('p-kontakt'))) return E('Zadejte platný telefon (9 číslic) nebo e-mail.', 'p-kontakt');
+        if (!validContact(val('p-kontakt'))) return E('Zadejte platné telefonní číslo (9 číslic), nebo pole nechte prázdné.', 'p-kontakt');
       }
       if (!checked('p-souhlas')) return E('Potvrďte prosím souhlas s pravidly a zveřejněním.', 'p-souhlas');
       return '';
@@ -796,7 +800,7 @@
       if (!val('i-lokalita')) return E('Vyplňte prosím lokalitu.', 'i-lokalita');
       if (!val('i-popis')) return E('Napište prosím krátký popis.', 'i-popis');
       if (!val('i-jmeno')) return E('Uveďte prosím své jméno.', 'i-jmeno');
-      if (!validContact(val('i-kontakt'))) return E('Zadejte platný telefon (9 číslic) nebo e-mail.', 'i-kontakt');
+      if (!validContact(val('i-kontakt'))) return E('Zadejte platné telefonní číslo (9 číslic).', 'i-kontakt');
       if (!checked('i-souhlas')) return E('Potvrďte prosím souhlas s pravidly a zveřejněním.', 'i-souhlas');
       return '';
     }

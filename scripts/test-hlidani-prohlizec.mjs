@@ -69,7 +69,11 @@ p.on('pageerror', (e) => padlo.push(String((e && e.message) || e).slice(0, 140))
 
 /* ---------- 1. uložení hlídání ---------- */
 await p.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
-await p.waitForSelector('#ns-okres', { timeout: 15000 });
+/* Čeká se na políčko v DOM, ne na jeho VIDITELNOST: formulář nového
+   hlídání je nově pod záložkou a ten, kdo už nějaké hlídání uložené má,
+   ho po otevření stránky nevidí — vidí svá hlídání. Přepne se na něj
+   níž, až se ověří, že výchozí pohled je ten správný. */
+await p.waitForSelector('#ns-okres', { state: 'attached', timeout: 15000 });
 pravda('stránka hlídání se otevřela přihlášenému člověku', true);
 
 // Pozor na past: formulář nového hledání je taky .hl-card a políčko v něm
@@ -115,10 +119,57 @@ pravda('stránka hlídání se otevřela přihlášenému člověku', true);
     /popisu nabídky/.test(pozn) && !/jen u nabídek od majitelů/.test(pozn), `poznámka: „${pozn.trim()}"`);
 }
 
+/* ZÁLOŽKY. Stížnost se snímkem: uložená hlídání ležela pod celým
+   formulářem nového, tedy na telefonu přes obrazovku a půl rolování.
+   Kdo si přišel zkontrolovat, co hlídá, viděl formulář a odešel.
+   Výchozí pohled proto patří tomu, co už uložené je. */
+{
+  const t = await p.evaluate(() => {
+    const taby = [...document.querySelectorAll('.hl-tab')].map((b) => ({
+      text: (b.textContent || '').trim(), vybrany: b.getAttribute('aria-selected') === 'true',
+    }));
+    const vidno = (sel) => { const e = document.querySelector(sel); if (!e) return null;
+      const r = e.getBoundingClientRect(); return !e.hidden && r.width > 0 && r.height > 0; };
+    return { taby, seznam: vidno('#hl-p-moje'), formular: vidno('#hl-p-nove'),
+      pruh: !!document.querySelector('.hl-prepin[role="tablist"]') };
+  });
+  pravda('nad hlídáními je pruh se dvěma záložkami', t.pruh && t.taby.length === 2,
+    JSON.stringify(t.taby));
+  pravda('jedna je „Moje hlídání", druhá „Nové hlídání"',
+    /Moje hlídání/.test(t.taby[0].text) && /Nové hlídání/.test(t.taby[1].text),
+    JSON.stringify(t.taby.map((x) => x.text)));
+  pravda('u „Moje hlídání" stojí, kolik jich je', /\d/.test(t.taby[0].text), t.taby[0].text);
+  pravda('kdo má uložená hlídání, vidí rovnou je, ne formulář',
+    t.taby[0].vybrany && t.seznam === true && t.formular === false,
+    JSON.stringify(t));
+
+  /* A přepnutí musí opravdu přepnout — obojí najednou viditelné být nemá. */
+  await p.click('.hl-tab[data-zalozka="nove"]');
+  await p.waitForTimeout(250);
+  const po2 = await p.evaluate(() => {
+    const vidno = (sel) => { const e = document.querySelector(sel); if (!e) return null;
+      const r = e.getBoundingClientRect(); return !e.hidden && r.width > 0 && r.height > 0; };
+    return { seznam: vidno('#hl-p-moje'), formular: vidno('#hl-p-nove'),
+      vybrany: (document.querySelector('.hl-tab[data-zalozka="nove"]') || {}).getAttribute('aria-selected') };
+  });
+  pravda('klepnutí na „Nové hlídání" ukáže formulář a schová seznam',
+    po2.formular === true && po2.seznam === false && po2.vybrany === 'true', JSON.stringify(po2));
+}
+
 const pred = await p.$$eval('.hl-iname', (e) => e.map((x) => x.textContent));
 await p.fill('#ns-okres', 'Kolín');
 await p.click('#ns-save');
 await p.waitForTimeout(1400);
+/* Po uložení se musí ukázat SEZNAM. Kdyby zůstal formulář, člověk nemá
+   jak poznat, že se něco stalo — přesně to na webu vadilo i u filtrů. */
+{
+  const kam = await p.evaluate(() => {
+    const e = document.querySelector('#hl-p-moje');
+    return { seznam: !!(e && !e.hidden), vybrany: (document.querySelector('.hl-tab[data-zalozka="moje"]') || {}).getAttribute('aria-selected') };
+  });
+  pravda('po uložení se ukáže seznam hlídání, ne prázdný formulář',
+    kam.seznam === true && kam.vybrany === 'true', JSON.stringify(kam));
+}
 const po = await p.$$eval('.hl-iname', (e) => e.map((x) => x.textContent));
 pravda('hlídání se uložilo a přibylo v seznamu', po.length === pred.length + 1,
   `před: ${JSON.stringify(pred)}, po: ${JSON.stringify(po)}`);
@@ -182,7 +233,9 @@ if (tlacitko) {
 
 /* ---------- 5. smazání hlídání ---------- */
 await p.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
-await p.waitForSelector('#ns-okres', { timeout: 15000 });
+/* Zase jen „je v DOM": po otevření je vidět seznam hlídání, ne
+   formulář — a mazat se bude právě v tom seznamu. */
+await p.waitForSelector('#ns-okres', { state: 'attached', timeout: 15000 });
 const smazat = await p.$('.hl-del, [data-del], button:has-text("Smazat")');
 if (smazat) {
   p.once('dialog', (d) => d.accept());

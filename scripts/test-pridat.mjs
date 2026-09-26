@@ -84,7 +84,7 @@ async function otevri(prihlasit) {
 async function vypln(p, zmeny) {
   const zaklad = { 'p-obec': 'Kolín', 'p-vymera': '1200', 'p-cena': '480000',
     'p-okres': 'Kolín', 'p-parcela': '254/1', 'p-popis': 'Rovinatý pozemek na okraji obce.',
-    'p-jmeno': 'Jan Novák', 'p-kontakt': 'jan@example.com' };
+    'p-jmeno': 'Jan Novák', 'p-kontakt': '777 123 654' };
   const pole = Object.assign({}, zaklad, zmeny || {});
   for (const [id, hod] of Object.entries(pole)) {
     if (hod === null) continue;
@@ -127,7 +127,7 @@ async function odesli(p) {
   if (ulozeno[0]) {
     pravda('se vším, co člověk vyplnil',
       ulozeno[0].place === 'Kolín' && ulozeno[0].area === 1200 && ulozeno[0].price === 480000
-      && ulozeno[0].contact === 'jan@example.com',
+      && ulozeno[0].contact === '777 123 654',
       JSON.stringify(ulozeno[0]).slice(0, 200));
     pravda('a se souřadnicemi, ne bez nich',
       typeof ulozeno[0].lat === 'number' && typeof ulozeno[0].lng === 'number',

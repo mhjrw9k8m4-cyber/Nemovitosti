@@ -456,10 +456,39 @@
     function prepocitejKryti() {
       var kolik = Object.keys(zive).length;
       if (kryti) kryti.hidden = kolik === 0;
+      /* ZAPNUTÁ VRSTVA, KTEROU NENÍ VIDĚT. Katastr kreslí hranice parcel
+         až od zoomu 16; nad tím je snímek prázdný. Přepínač přitom
+         svítí, takže to vypadá, že vrstva nefunguje — a přesně tak to
+         přišlo jako stížnost („a tady chybí rozdělení parcel"). Mapa se
+         sama přiblíží ve chvíli zapnutí, ale kdo si pak oddálí, aby
+         viděl okolí, spadne pod hranici znovu a nic mu to neřekne.
+         Tak to řekneme — a dáme to na jedno klepnutí zpátky. */
       if (popis) {
-        var texty = Object.keys(zive).map(function (k) { return zive[k]._pkPopis; }).filter(Boolean);
-        popis.hidden = texty.length === 0;
+        var texty = [], daleko = [];
+        Object.keys(zive).forEach(function (k) {
+          if (zive[k]._pkPopis) texty.push(zive[k]._pkPopis);
+          var def = zive[k]._pkDef;
+          if (def && def.odPriblizeni && m.getZoom() < def.odPriblizeni) daleko.push(def);
+        });
         popis.textContent = texty.join(' ');
+        popis.hidden = !texty.length && !daleko.length;
+        if (daleko.length) {
+          var jmena = daleko.map(function (x) { return x.nazev; });
+          var potreba = Math.max.apply(null, daleko.map(function (x) { return x.odPriblizeni; }));
+          var rada = document.createElement('span');
+          rada.className = 'pzm-daleko';
+          var veta = document.createElement('span');
+          veta.textContent = (jmena.length === 1 ? jmena[0] + ' se' : jmena.join(' a ') + ' se')
+            + ' v tomhle přiblížení nekreslí — úřady je vydávají až zblízka.';
+          var tl = document.createElement('button');
+          tl.type = 'button';
+          tl.className = 'pzm-priblizit';
+          tl.textContent = 'Přiblížit';
+          tl.addEventListener('click', function () { m.setZoom(potreba); });
+          rada.appendChild(veta);
+          rada.appendChild(tl);
+          popis.appendChild(rada);
+        }
       }
       if (posuvnik) {
         var v = (+posuvnik.value || 65) / 100;
@@ -467,6 +496,9 @@
       }
     }
     if (posuvnik) posuvnik.addEventListener('input', prepocitejKryti);
+    /* Bez tohohle by se hláška objevila jen ve chvíli zapnutí vrstvy.
+       Oddálení je ale právě ten okamžik, kdy hranice zmizí. */
+    m.on('zoomend', prepocitejKryti);
 
     /* VYSVĚTLIVKY. Zapnutý územní plán je bez klíče jen barevná skvrna.
        Obrázek vydává sama služba; když ho nevydá, nesmí zbýt prázdný
@@ -522,6 +554,7 @@
           var v = global.PK_VRSTVY.leafletVrstva(zapis, L);
           if (!v) return;
           v._pkPopis = def.popis || '';
+          v._pkDef = def;
           if (posuvnik) v.setOpacity((+posuvnik.value || 65) / 100);
           v.addTo(m);
           zive[def.id] = v;

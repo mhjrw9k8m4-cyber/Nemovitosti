@@ -213,6 +213,30 @@ for (const f of ['../js/main.js', '../js/pozemek.js']) {
   pravda('a u podílu stojí, kolik metrů a za kolik kupující dostane', podilBezCisel.length === 0,
     'bez čísel: ' + podilBezCisel.slice(0, 2).map((d) => d.place).join(', '))
 
+  /* 3b) PROCENTO A KORUNY MUSÍ MLUVIT O TÉMŽE. U podílu se procento
+     počítá z ceny CELÉ parcely, ale cena za metr z výměry PODÍLU. Když
+     obojí stálo v jedné větě, věta si odporovala: „o 61 % pod obvyklou"
+     a hned „50 Kč/m² proti obvyklým 42 Kč/m²", tedy nad. Ať se větve
+     rádce přeuspořádají jakkoli, tohle se stát nesmí. */
+  {
+    const PROC = /<b>o (\d+) % (pod|nad)<\/b>/;
+    const KORUNY = /<b>([\d\u00a0]+) Kč\/m²<\/b> proti obvyklým <b>([\d\u00a0]+) Kč\/m²<\/b>/;
+    const cislo = (x) => +x.replace(/\u00a0/g, '');
+    let obojí = 0;
+    const spor = [];
+    for (const d of DATA) {
+      const t = blok(d, 'Co říká cena');
+      const p2 = PROC.exec(t), k2 = KORUNY.exec(t);
+      if (!p2 || !k2) continue;
+      obojí++;
+      if ((p2[2] === 'pod') !== (cislo(k2[1]) < cislo(k2[2]))) spor.push(d);
+    }
+    pravda(`věty, kde stojí procento i koruny, existují (${obojí})`, obojí >= 50,
+      'kontrola níž by neměla co ověřovat');
+    pravda('a procento míří stejným směrem jako ty koruny', spor.length === 0,
+      spor.slice(0, 2).map((d) => d.place + ': ' + blok(d, 'Co říká cena').replace(/<[^>]+>/g, '').slice(0, 130)).join(' | '));
+  }
+
   /* 4) RADA O SPÚ PATŘÍ JEN SPÚ. Dostávalo ji všech 1 658 běžných
      inzerátů typu „na prodej"; nabídek státního pozemkového úřadu je 204. */
   const bezny = DATA.find((d) => d.type === 'sale' && !/SPÚ|státní půd/i.test(d.extra || ''));
@@ -221,6 +245,56 @@ for (const f of ['../js/main.js', '../js/pozemek.js']) {
     !/pachtýř/i.test(blok(bezny, 'Na co si dát pozor')), blok(bezny, 'Na co si dát pozor').replace(/<[^>]+>/g, ''));
   if (spu) pravda('a nabídce SPÚ ano', /pachtýř/i.test(blok(spu, 'Na co si dát pozor')),
     blok(spu, 'Na co si dát pozor').replace(/<[^>]+>/g, ''));
+
+  /* 4b) VÝMĚRA TÉHLE PARCELY. Blok „Dá se tu stavět?" měl osm různých
+     textů na 1 966 pozemků a v žádném jediné číslo. U zemědělské půdy
+     se přitom z výměry počítá odvod za vynětí — to je údaj, který o
+     rozhodnutí něco mění, a rádce ho zná. */
+  const zpf = DATA.filter((d) => /orná|travní|louka|vinice|ovocný sad/i.test(d.druh || '')
+    && typeof d.area === 'number' && d.area > 0);
+  pravda(`zemědělských pozemků s výměrou je z čeho měřit (${zpf.length})`, zpf.length >= 100);
+  {
+    const bezVymery = zpf.filter((d) => {
+      const t = blok(d, 'Dá se tu stavět?');
+      // výměra se píše s pevnou mezerou po tisících, proto \u00a0
+      return t.indexOf(String(Math.round(d.area)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + ' m²') < 0;
+    });
+    pravda('u zemědělské půdy stojí v radě o stavbě výměra té parcely', bezVymery.length === 0,
+      'bez výměry: ' + bezVymery.slice(0, 3).map((d) => d.place + ' ' + d.area).join(', '));
+  }
+  /* U lesa rozhoduje hranice jednoho hektaru — a rádce má říct, na které
+     straně té hranice TENHLE les leží, ne jen že hranice existuje. */
+  {
+    const maly = DATA.find((d) => /lesní/i.test(d.druh || '') && d.area > 0 && d.area < 10000);
+    const velky = DATA.find((d) => /lesní/i.test(d.druh || '') && d.area >= 10000);
+    if (maly) pravda('u lesa pod hektar se řekne, že je pod hranicí',
+      /pod hektar/.test(blok(maly, 'Dá se tu stavět?')),
+      blok(maly, 'Dá se tu stavět?').replace(/<[^>]+>/g, ''));
+    if (velky) pravda('a u lesa nad hektar, že je nad ní',
+      /nad hranic/.test(blok(velky, 'Dá se tu stavět?')),
+      blok(velky, 'Dá se tu stavět?').replace(/<[^>]+>/g, ''));
+  }
+
+  /* 4c) RÁDCE SI NESMÍ ODPOROVAT SÁM SE SEBOU. „Přístup z veřejné cesty
+     — ten se z inzerátu pozná nejhůř a chybí nejčastěji" chodilo všem
+     1 658 běžným inzerátům, i těm 1 080 (65 %), kde o pár řádků výš
+     stálo „Inzerát zmiňuje příjezdovou cestu". */
+  {
+    const bezne = DATA.filter((d) => d.type === 'sale' && !/SPÚ|státní půd/i.test(d.extra || ''));
+    const sCestou = bezne.filter((d) => (d.site || []).indexOf('cesta') >= 0);
+    const bezCesty = bezne.filter((d) => (d.site || []).indexOf('cesta') < 0);
+    pravda(`inzerátů, které příjezd samy uvádějí, je dost (${sCestou.length} z ${bezne.length})`,
+      sCestou.length >= 100 && bezCesty.length >= 10);
+    const protirecici = sCestou.filter((d) => /chybí nejčastěji/.test(blok(d, 'Na co si dát pozor')));
+    pravda('kde inzerát příjezd uvádí, se netvrdí, že přístup nejčastěji chybí',
+      protirecici.length === 0, 'protiřečí si u: ' + protirecici.slice(0, 3).map((d) => d.place).join(', '));
+    const mlcici = sCestou.filter((d) => !/veřejné komunikac/.test(blok(d, 'Na co si dát pozor')));
+    pravda('a místo toho se ptá, jestli je ta cesta veřejná', mlcici.length === 0,
+      'mlčí u: ' + mlcici.slice(0, 3).map((d) => d.place).join(', '));
+    const zapomenuti = bezCesty.filter((d) => !/přístup z veřejné cesty/.test(blok(d, 'Na co si dát pozor')));
+    pravda('kde inzerát o příjezdu mlčí, se na přístup upozorní dál', zapomenuti.length === 0,
+      'zapomenuto u: ' + zapomenuti.slice(0, 3).map((d) => d.place).join(', '));
+  }
 
   /* 5) Nic z toho nesmí rádce položit. */
   let padlo = 0;

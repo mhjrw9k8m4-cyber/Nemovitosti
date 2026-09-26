@@ -180,12 +180,20 @@
     L = L || global.L;
     if (!L) return null;
     var s = z.sluzba, d = z.def;
+    /* `odPriblizeni` se dosud používalo jen ve chvíli zapnutí vrstvy —
+       mapa se k němu přiblížila a tím to skončilo. Kdo pak mapu oddálil,
+       posílal ČÚZK dotazy na dlaždice, které služba v tom měřítku
+       stejně nekreslí, a dostával zpátky prázdno. Leaflet to umí sám:
+       pod minZoom se vrstva nezobrazuje a o dlaždice si neřekne.
+       Že je vrstva zapnutá, ale zrovna mimo dosah, řekne stránka pod
+       mapou (js/pozemek.js) — tichý prázdný snímek vypadal rozbitě. */
     var nast = {
       opacity: typeof d.kryti === 'number' ? d.kryti : 1,
       attribution: d.uvedeni || '',
       maxZoom: 19,
       crossOrigin: false
     };
+    if (d.odPriblizeni) nast.minZoom = d.odPriblizeni;
     if (s.typ === 'dlazdice') return L.tileLayer(s.url, nast);
     return L.tileLayer.wms(s.url, Object.assign({
       layers: s.vrstvy || '', format: s.format || 'image/png',

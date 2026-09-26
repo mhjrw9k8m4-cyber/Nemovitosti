@@ -2197,6 +2197,13 @@
            kam se doopravdy vybíralo. */
         '<div class="vm-mapa-obal">' +
           '<div class="vm-mapa" id="vm-mapa"></div>' +
+          /* Ukáže se jen tehdy, když vybraný okruh není na mapě k
+             rozeznání. Jinak tam nic není — přes výhled nic viset
+             nemá, to byla výtka k dřívějšímu tlačítku „Moje poloha". */
+          '<button class="vm-zpet" id="vm-zpet" type="button" hidden>' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/>' +
+            '<path d="M20 20l-3.6-3.6M11 8.2v5.6M8.2 11h5.6"/></svg>' +
+            'Ukázat okruh</button>' +
         '</div>' +
         '<div class="vm-pata">' +
           '<fieldset class="vm-okruh"><legend>Okruh od vybraného místa</legend>' +
@@ -2294,6 +2301,28 @@
       if (el) el.firstChild.textContent = k + ' km';
     }
 
+    /* KRUH JE ZEMĚPISNÁ VĚC a s oddálením se scvrkne — deset kilometrů
+       je deset kilometrů, na tom se měnit nedá nic. Špatné je, co se
+       kolem toho dělo: při pohledu na celou republiku měl desetikilo-
+       metrový okruh pár pixelů, popisek „10 km" se schoval za značku
+       místa a zbylo z něj „km", a člověk neměl jak se vrátit — mapa mu
+       totiž pod rukama skákat nesmí, kvůli tomu si stěžoval dřív.
+       Tak se v tom stavu popisek radši nekreslí vůbec (útržek „km" je
+       horší než nic) a nabídne se tlačítko. Rozhodne člověk, ne mapa. */
+    function hlidejVidet() {
+      var btn = ov.querySelector('#vm-zpet');
+      var el = stitek.getElement();
+      if (!vybranoMisto) {
+        if (btn) btn.hidden = true;
+        if (el) el.style.visibility = 'hidden';
+        return;
+      }
+      var c = stred();
+      var videt = okruhSeVejde(c.lat, c.lng);
+      if (btn) btn.hidden = videt;
+      if (el) el.style.visibility = videt ? '' : 'hidden';
+    }
+
     var pocetEl = ov.querySelector('#vm-pocet');
     /* Okruh byl rozbalovací seznam: zvolené číslo se schovalo do řádku
        textu a o tom, jak velké to okolí vlastně je, neřekl nic. Teď je
@@ -2357,6 +2386,7 @@
         if (!visibleBezOkoli(dd) || kmOd(c, dd) > k) continue;
         n++; podle[dd.type] = (podle[dd.type] || 0) + 1;
       }
+      hlidejVidet();
       var obec = najdiNazevMista(c.lat, c.lng);
       var okEl = ov.querySelector('#vm-ok');
       /* Potvrdit nejde, dokud člověk místo NEUKÁŽE — jinak by si uložil
@@ -2406,6 +2436,16 @@
         }).observe(pata);
       } catch (e) {}
     }
+    /* Jen dvě promítnutí bodu, žádné procházení nabídek — tohle se
+       smí věšet i na zoom. (Kvůli tomu se odsud kdysi vyhazovalo
+       prepocti(): to prochází všech 1 966 nabídek a mapa se sekala.) */
+    m.on('zoomend', hlidejVidet);
+    ov.querySelector('#vm-zpet').addEventListener('click', function () {
+      if (!vybranoMisto) return;
+      var c = stred();
+      jdiNa(c.lat, c.lng, true);
+      hlidejVidet();
+    });
     m.on('click', function (e) {
       vybranoMisto = true;
       nastavMisto(e.latlng.lat, e.latlng.lng);
@@ -4202,7 +4242,13 @@
       tlac.className = 'mcs-btn';
       tlac.setAttribute('aria-haspopup', 'dialog');
       tlac.setAttribute('aria-expanded', 'false');
-      tlac.innerHTML = '<span class="mcs-k">' + nadpis + '</span><span class="mcs-v">libovolná</span>';
+      /* Šipka vpravo. Bez ní to byla bílá krabička s tenkou linkou —
+         k nerozeznání od vypsaného údaje, takže na ni nikdo neklepl.
+         Text vlevo, šipka vpravo: stejná stavba jako u řádků, které se
+         někam rozbalují, takže se to nemusí učit. */
+      tlac.innerHTML = '<span class="mcs-txt"><span class="mcs-k">' + nadpis +
+        '</span><span class="mcs-v">libovolná</span></span>' +
+        '<svg class="mcs-sip" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
       rada.appendChild(tlac);
 
       var ov = document.createElement('div');

@@ -249,6 +249,9 @@ jobs:
       - name: Viditelnost okrajů (WCAG 1.4.11)
         run: node scripts/test-okraje.mjs
 
+      - name: Barvy po najetí myší
+        run: node scripts/test-najeti.mjs
+
       - name: Čeština ve viditelném textu
         run: node scripts/test-cestina.mjs
 

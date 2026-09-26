@@ -409,6 +409,19 @@ body.vm-otevreno{overflow:hidden;}
    posunutí i přiblížení ho změnilo. Teď je to značka na mapě: drží se
    místa, ne obrazovky. Hrot leží přesně na vybraném bodu (o to se stará
    iconAnchor v js/main.js). */
+/* „Ukázat okruh". Visí nad mapou dole uprostřed — tam, kam dosáhne
+   palec a kde nepřekrývá to, na co se člověk dívá. Je vidět jen ve
+   chvíli, kdy vybraný okruh není na mapě k rozeznání. */
+.vm-zpet{position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:500;
+  display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 17px;
+  font:inherit; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap;
+  border:0; border-radius:var(--r-pill); background:var(--plocha-znacka); color:#fff;
+  box-shadow:var(--e2); transition:filter .15s ease, transform .1s ease;}
+.vm-zpet[hidden]{display:none;}
+.vm-zpet:hover{filter:brightness(1.06);}
+.vm-zpet:active{transform:translateX(-50%) scale(.99);}
+.vm-zpet svg{width:17px; height:17px; flex:none; fill:none; stroke:currentColor;
+  stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round;}
 .vm-znacka span{display:block; width:22px; height:22px; border-radius:50%;
   background:#8A5512; border:3px solid #fff; box-shadow:var(--e2); box-sizing:border-box; position:relative;}
 .vm-znacka span::after{content:""; position:absolute; left:50%; top:100%; width:2px; height:14px;
@@ -957,9 +970,23 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    v ní další bílé krabičky — každé políčko vypadalo jako samostatná věc.
    Teď je to jedna plocha se stejnou linkou jako ostatní ovládání. */
 .ms-filters{margin-top:12px; border:1px solid var(--line-strong); border-radius:var(--r-sm); background:var(--ink-soft); overflow:hidden;}
-.msf-summary{display:flex; align-items:center; gap:9px; padding:12px 13px; font-size:13.5px; font-weight:600; color:var(--text-ondark); cursor:pointer; list-style:none; -webkit-tap-highlight-color:transparent; user-select:none;}
+/* Barva se ZÁLOŽNÍ hodnotou. Kdyby proměnná u tohohle prvku z jakéhokoli
+   důvodu nebyla k dispozici, `color` by se nestalo výchozím tmavým, ale
+   ZDĚDILO by se po rodiči — a na bílém panelu uvnitř světlé sekce to
+   znamená bílý text na bílém pozadí. Přesně tak vypadal snímek, na kterém
+   z lišty zbyla jen ikona a odznak; text ani šipka (ta dědí currentColor)
+   vidět nebyly. Reprodukovat se to tady nepovedlo, ale tahle jedna
+   záložní hodnota ten způsob selhání vylučuje a nic nestojí. */
+.msf-summary{display:flex; align-items:center; gap:9px; padding:12px 13px; font-size:13.5px; font-weight:600; color:var(--text-ondark, #15231B); cursor:pointer; list-style:none; -webkit-tap-highlight-color:transparent; user-select:none;}
 .msf-summary::-webkit-details-marker{display:none;}
-.msf-summary:hover{color:#fff;}
+/* Bílý text po najetí byl zbytek po tmavém motivu — nikdo ho při
+   přebarvení webu na světlo nepřepsal. Panel pod řádkem je bílý, takže
+   po najetí zmizel POPISEK i ŠIPKA (kreslí se currentColor) a zůstala
+   jen ikona s odznakem: řádek vypadal prázdný, jen s číslem. Na
+   telefonu je to horší než bliknutí — :hover tam po klepnutí visí,
+   dokud člověk neklepne jinam. Přesně tohle přišlo jako stížnost.
+   Hlídá to scripts/test-najeti.mjs. */
+.msf-summary:hover{background:var(--ink-soft2); color:var(--copper);}
 .msf-ic{width:16px; height:16px; flex:none; fill:none; stroke:var(--copper-bright); stroke-width:2.25; stroke-linecap:round; stroke-linejoin:round;}
 .msf-text{flex:1;}
 .msf-badge{min-width:18px; height:18px; padding:0 5px; border-radius:var(--r-sm); background:var(--copper); color:var(--ink); font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center;}
@@ -1033,11 +1060,20 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
  * výběr znamená. Panel se tím zkrátil o víc než polovinu.
  */
 .mc-shrnuti{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
-.mcs-btn{display:flex; flex-direction:column; align-items:flex-start; gap:2px;
-  font:inherit; text-align:left; cursor:pointer; min-height:56px; padding:9px 12px;
-  border:1px solid var(--line-ui); border-radius:var(--r-sm); background:var(--ink-soft);
-  transition:border-color .15s ease, box-shadow .15s ease;}
+/* Vypadat jako tlačítko, ne jako vypsaný údaj. Byla to bílá krabička
+   s tenkou linkou a textem „CENA / libovolná" — od popisku k nerozeznání,
+   takže lidem nedošlo, že se dá otevřít. Teď má šipku, silnější okraj,
+   lehké zvednutí a reaguje na stisk. */
+.mcs-btn{display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap:10px;
+  font:inherit; text-align:left; cursor:pointer; min-height:58px; padding:9px 11px 9px 13px;
+  border:1.5px solid var(--line-ui); border-radius:var(--r-sm); background:var(--ink-soft);
+  box-shadow:var(--e1);
+  transition:border-color .15s ease, box-shadow .15s ease, background .12s ease, transform .1s ease;}
+.mcs-txt{display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0;}
+.mcs-sip{width:17px; height:17px; flex:none; fill:none; stroke:var(--copper);
+  stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round;}
 .mcs-btn:hover{border-color:var(--copper);}
+.mcs-btn:active{transform:scale(.99); background:var(--ink-soft2);}
 .mcs-btn.mcs-aktivni{border-color:var(--plocha-znacka); box-shadow:inset 0 0 0 1px var(--plocha-znacka);}
 .mcs-k{font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted);}
 .mcs-v{font-size:14px; font-weight:600; color:var(--text-ondark);}

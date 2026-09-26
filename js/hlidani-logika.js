@@ -133,11 +133,41 @@
     return normd(s).replace(/[-\u2010-\u2015]/g, ' ').replace(/\s+/g, ' ').trim()
       .replace(/^(?:okres|obec)\s+/, '');
   }
+  /* Všech 77 okresů. Modul potřebuje vědět, které zadané jméno je samo
+     o sobě okresem — bez toho se nedá rozhodnout, jestli „Praha"
+     znamená okres Praha, nebo taky Prahu-východ a Prahu-západ, což jsou
+     jiné okresy, a ještě ve Středočeském kraji. Že se seznam neroz-
+     chází s daty, hlídá scripts/test-hlidani.mjs proti data/okresy.json. */
+  var OKRESY = [
+    'Praha', 'Praha-východ', 'Praha-západ', 'Benešov', 'Beroun', 'Kladno', 'Kolín',
+    'Kutná Hora', 'Mělník', 'Mladá Boleslav', 'Nymburk', 'Příbram', 'Rakovník',
+    'České Budějovice', 'Český Krumlov', 'Jindřichův Hradec', 'Písek', 'Prachatice',
+    'Strakonice', 'Tábor', 'Domažlice', 'Cheb', 'Karlovy Vary', 'Klatovy', 'Plzeň-město',
+    'Plzeň-jih', 'Plzeň-sever', 'Rokycany', 'Sokolov', 'Tachov', 'Česká Lípa', 'Děčín',
+    'Chomutov', 'Jablonec nad Nisou', 'Liberec', 'Litoměřice', 'Louny', 'Most', 'Semily',
+    'Teplice', 'Ústí nad Labem', 'Havlíčkův Brod', 'Hradec Králové', 'Chrudim', 'Jičín',
+    'Náchod', 'Pardubice', 'Rychnov nad Kněžnou', 'Svitavy', 'Trutnov', 'Ústí nad Orlicí',
+    'Jihlava', 'Pelhřimov', 'Třebíč', 'Žďár nad Sázavou', 'Blansko', 'Brno-město',
+    'Brno-venkov', 'Břeclav', 'Hodonín', 'Vyškov', 'Znojmo', 'Kroměříž', 'Uherské Hradiště',
+    'Vsetín', 'Zlín', 'Jeseník', 'Olomouc', 'Prostějov', 'Přerov', 'Šumperk', 'Bruntál',
+    'Frýdek-Místek', 'Karviná', 'Nový Jičín', 'Opava', 'Ostrava-město'
+  ];
+  var JE_OKRES = {};
+  for (var io_ = 0; io_ < OKRESY.length; io_++) JE_OKRES[normMisto(OKRESY[io_])] = 1;
+
   function mistoSedi(zadane, d) {
     var k = normMisto(zadane);
     if (!k) return true;
     var okres = normMisto(d.okres);
-    if (okres === k || okres.indexOf(k + ' ') === 0) return true;
+    if (okres === k) return true;
+    /* „Jméno + další slovo" jen tehdy, když zadané jméno samo okresem
+       NENÍ. Hlídání „Praha" hlásilo 141 pozemků, ale na mapě jich bylo
+       28 — zbylých 113 byly Praha-východ a Praha-západ. Kdo napíše
+       Praha, myslí Prahu.
+       U „Plzeň", „Ústí" nebo „Brno" žádný okres toho jména neexistuje,
+       takže tam se předpona bere dál a zahrne všechny (Plzeň-město,
+       -jih, -sever). To je jediné, co si pod tím jménem lze představit. */
+    if (!JE_OKRES[k] && okres.indexOf(k + ' ') === 0) return true;
     return normMisto(d.place) === k;
   }
 
@@ -211,5 +241,10 @@
     tyzPozemek: tyzPozemek, normd: normd, keyOf: keyOf, matches: matches,
            mistoSedi: mistoSedi, druhSedi: druhSedi,
            klicShody: klicShody, bezDuplicit: bezDuplicit,
-           novychProHledani: novychProHledani, novychCelkem: novychCelkem };
+           novychProHledani: novychProHledani, novychCelkem: novychCelkem,
+           /* Ven jen kvůli hlídači: scripts/test-hlidani.mjs porovná
+              vypsaný seznam s data/okresy.json. Bez toho by se rozešel
+              potichu — chování se totiž změní jen u jména, které je
+              předponou jiného okresu, tedy dnes jedině u Prahy. */
+           OKRESY: OKRESY };
 });

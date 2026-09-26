@@ -37,7 +37,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=59aa7b8a">
+  <link rel="stylesheet" href="css/styles.css?v=f1d0f829">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -206,6 +206,15 @@
     .pzm-kryti{display:flex; align-items:center; gap:9px; font-size:12px; font-weight:600; letter-spacing:.02em; text-transform:uppercase; color:var(--text-ondark-mute);}
     .pzm-kryti input{width:104px; accent-color:var(--plocha-znacka);}
     .pzm-popis{margin:0; padding:11px 13px; border-top:1px solid var(--line); background:#FBFCFB; font-size:13px; line-height:1.55; color:var(--text-ondark-mute);}
+    /* Vrstva je zapnutá, ale mapa je moc daleko na to, aby ji úřad
+       nakreslil. Není to chyba, je to stav — proto ne červená, ale
+       značková barva a rovnou tlačítko, které to spraví. */
+    .pzm-daleko{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px; color:var(--text-ondark);}
+    .pzm-priblizit{flex:none; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer;
+      padding:6px 13px; min-height:34px; border-radius:var(--r-ovladani);
+      border:1.5px solid var(--copper); background:var(--ink-soft); color:var(--copper);
+      transition:background .15s ease, color .15s ease;}
+    .pzm-priblizit:hover{background:var(--copper); color:#fff;}
     /* Vysvětlivky. Obrázek dodává sama služba, takže o jeho vzhledu
        nerozhodujeme — jen mu dáme bílý podklad, ať je čitelný i tmavý. */
     .pzm-leg{display:flex; flex-wrap:wrap; gap:15px; padding:12px 13px; border-top:1px solid var(--line); background:#FBFCFB;}
@@ -289,15 +298,15 @@
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="vendor/leaflet/leaflet.js?v=5a640ff8" defer></script>
-<script src="js/mapove-vrstvy.js?v=d402afdc" defer></script>
+<script src="js/mapove-vrstvy.js?v=ef8c5c75" defer></script>
 <script src="js/snimek.js?v=19045f9d"></script>
 <script src="js/terminy.js?v=63a1d1b6"></script>
 <script src="js/ceny.js?v=f40ef32c"></script>
 <script src="js/vybaveni.js?v=54b36f73"></script>
-<script src="js/radce.js?v=c06cb3de"></script>
+<script src="js/radce.js?v=4fdba86a"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Place","name":"Lesní pozemek 12 302 m² — Milevsko, okres Písek","description":"Na prodej · 240 000 Kč (20 Kč/m²) · 12 302 m² · Milevsko, okres Písek. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-pisek-milevsko-z8zswk.html","address":{"@type":"PostalAddress","addressLocality":"Milevsko","addressRegion":"Písek","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.510924,"longitude":14.351566}}</script>
 <script>window.PK_POZEMEK={"k":"Milevsko|—|Písek|49.511|14.352","ll":[49.510924,14.351566]};</script>
-<script src="js/pozemek.js?v=246328c3"></script>
+<script src="js/pozemek.js?v=81aa6cc4"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -307,7 +316,7 @@
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script src="js/config.js?v=7f55c4e1" defer></script>
 <script src="js/auth.js?v=3f61aa2e" defer></script>
-<script src="js/hlidani-logika.js?v=d1f88e1d" defer></script>
+<script src="js/hlidani-logika.js?v=db45fcf2" defer></script>
 <script src="js/upozorneni-feed.js?v=c8e91dd3" defer></script>
 <script src="js/upozorneni.js?v=b7b7c483" defer></script>
 <script src="js/hlavicka.js?v=f3a269c8" defer></script>

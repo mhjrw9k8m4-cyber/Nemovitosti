@@ -114,8 +114,8 @@
     if (jeSpam(s)) return chyba('Popis vypadá jako spam.');
     if (podilVelkych(s) > 0.6) return chyba('Popis je psaný velkými písmeny — přepište ho prosím normálně.');
     if (URL_V_TEXTU.test(s)) return chyba('Odkaz nepatří do popisu — vložte ho do pole „Odkaz na inzerát nebo katastr".');
-    if (EMAIL.test(s)) return chyba('E-mail nepatří do popisu — vložte ho do pole „Telefon nebo e-mail".');
-    if (TELEFON.test(s)) return chyba('Telefon nepatří do popisu — vložte ho do pole „Telefon nebo e-mail".');
+    if (EMAIL.test(s)) return chyba('E-mail do popisu nepatří — zájemci vám napíšou přes Zprávy, adresu máme z vašeho účtu.');
+    if (TELEFON.test(s)) return chyba('Telefon nepatří do popisu — vložte ho do pole „Telefon".');
     return ok();
   }
 
@@ -233,17 +233,22 @@
     return isNaN(d.getTime()) ? null : d;
   }
 
+  /* JEN TELEFON. Pole se ptalo na „telefon nebo e-mail" z doby, kdy se
+     inzerát dal podat bez účtu. Dnes se bez přihlášení podat nedá, takže
+     e-mail už máme — ptát se na něj podruhé je práce navíc a vypadá to,
+     že si web nepamatuje, kdo je přihlášený.
+     Číslo je NEPOVINNÉ: zájemci mají u inzerátu tlačítko „Napsat
+     majiteli", které vede do Zpráv. Telefon je zkratka pro toho, kdo
+     chce rovnou volat — ne jediná cesta. Kdyby byl povinný, vyloučili
+     bychom tím ty, kdo číslo zveřejnit nechtějí, a to dřív nebylo. */
   function kontakt(v) {
     var s = text(v);
-    if (!s) return chyba('Zadejte prosím telefon nebo e-mail — zájemci se jinak neozvou.');
+    if (!s) return ok();
     if (EMAIL.test(s) && s.indexOf('@') > 0) {
-      var domena = s.split('@')[1] || '';
-      if (domena.split('.').pop().length < 2) return chyba('E-mail nevypadá platně.');
-      if (/^(test|aaa|xxx|asdf|nic|neuvedeno)@/i.test(s)) return chyba('Zadejte prosím skutečný e-mail.');
-      return ok();
+      return chyba('Sem patří telefonní číslo. E-mail už máme z vašeho účtu a do inzerátu se nedává.');
     }
     var cislice = s.replace(/\D/g, '');
-    if (cislice.length < 9) return chyba('Zadejte platný telefon (9 číslic) nebo e-mail.');
+    if (cislice.length < 9) return chyba('Telefonní číslo má devět číslic — zkontrolujte ho prosím.');
     if (cislice.length > 13) return chyba('Telefonní číslo je moc dlouhé.');
     var devet = cislice.slice(-9);
     if (/^(\d)\1{8}$/.test(devet)) return chyba('Zadejte prosím skutečné telefonní číslo.');

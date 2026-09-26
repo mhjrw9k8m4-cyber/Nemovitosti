@@ -323,6 +323,53 @@ const HOST = {
     zadano.some((u) => decodeURIComponent(u).indexOf(def.sluzby[0].vrstvy) !== -1),
     zadano[0] ? decodeURIComponent(zadano[0]).slice(0, 140) : '');
 
+  /* --- ODDÁLENÍ PO ZAPNUTÍ -------------------------------------------
+     Stížnost se snímkem: „a tady chybí rozdělení parcel." Přepínač
+     Hranice parcel svítil, mapa byla na 500 m a v ní ani čára. Nebyla
+     to chyba služby — katastr hranice v takovém měřítku prostě
+     nevydává. Mapa se sama přiblíží ve chvíli ZAPNUTÍ, jenže kdo si pak
+     oddálí, aby viděl okolí, spadne pod hranici znovu a nedozví se nic.
+     Kontroluje se obojí: že se to řekne, a že se to dá jedním klepnutím
+     spravit. */
+  /* Baseline se bere, až se stahování z předchozího kroku uklidní —
+     jinak by se dlaždice, které dorazí se zpožděním, připsaly oddálení
+     a kontrola níž by hlásila chybu, která žádná není. */
+  await p.waitForTimeout(1200);
+  const predOddalenim = dotazy.filter((u) => u.indexOf(HOST.katastr) !== -1 && /LAYERS=/i.test(u)).length;
+  await p.evaluate((z) => window.PK_PZ_MAPA.setZoom(z), Math.max(8, def.odPriblizeni - 3));
+  await p.waitForTimeout(1200);
+  const daleko = await p.evaluate(() => ({
+    zoom: window.PK_PZ_MAPA.getZoom(),
+    sviti: document.querySelector('.pzm-v[data-id="katastr"]').classList.contains('on'),
+    popis: (document.getElementById('pzm-popis') || {}).textContent || '',
+    skryto: !!(document.getElementById('pzm-popis') || {}).hidden,
+    tlacitko: !!document.querySelector('.pzm-priblizit'),
+  }));
+  pravda('pro zkoušku se mapa zase oddálí pod hranici vrstvy', daleko.zoom < def.odPriblizeni,
+    `zoom ${daleko.zoom}, vrstva potřebuje ${def.odPriblizeni}`);
+  pravda('přepínač zůstane zapnutý', daleko.sviti);
+  pravda('ale pod mapou stojí, že se vrstva v tomhle přiblížení nekreslí',
+    !daleko.skryto && daleko.popis.indexOf(def.nazev) !== -1 && /nekreslí/.test(daleko.popis),
+    `pod mapou stojí „${daleko.popis.slice(0, 120)}"`);
+  pravda('a je tam tlačítko, které mapu přiblíží', daleko.tlacitko,
+    'člověk se dozví, co je špatně, ale ne jak to spravit');
+  /* A hlavně: pod svou hranicí si vrstva nemá o dlaždice vůbec říkat.
+     Dřív je žádala dál a ČÚZK posílal prázdné obrázky. */
+  await p.waitForTimeout(400);
+  const poOddaleni = dotazy.filter((u) => u.indexOf(HOST.katastr) !== -1 && /LAYERS=/i.test(u)).length;
+  pravda('a pod svou hranicí se na dlaždice ani neptá', poOddaleni === predOddalenim,
+    `přibylo ${poOddaleni - predOddalenim} dotazů na službu, která v tom měřítku stejně nic nenakreslí`);
+  await p.locator('.pzm-priblizit').click();
+  await p.waitForTimeout(1200);
+  const zpatky = await p.evaluate(() => ({
+    zoom: window.PK_PZ_MAPA.getZoom(),
+    popis: (document.getElementById('pzm-popis') || {}).textContent || '',
+  }));
+  pravda('klepnutí na Přiblížit mapu opravdu přiblíží', zpatky.zoom >= def.odPriblizeni,
+    `zoom ${daleko.zoom} → ${zpatky.zoom}, potřeba ${def.odPriblizeni}`);
+  pravda('a hláška zmizí, protože už je vrstvu vidět', !/nekreslí/.test(zpatky.popis),
+    `pod mapou zůstalo „${zpatky.popis.slice(0, 120)}"`);
+
   /* Bez klíče je zapnutý územní plán jen barevná skvrna: žlutá je
      bydlení, šedá výroba, zelená zeleň. Obrázek s klíčem vydává sama
      služba, tak se o něj musí říct. */

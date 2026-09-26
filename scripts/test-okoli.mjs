@@ -206,6 +206,61 @@ const stavVybiraku = (p) => p.evaluate(() => {
      ze zabaleného seznamu, ve kterém není vidět, co všechno jde zvolit. */
   pravda('velikost okruhu je napsaná přímo na mapě', /^\d+ km$/.test(vk.meritko.trim()), `měřítko: „${vk.meritko}"`);
   pravda('okruh se vybírá z viditelné řady možností', v.kmMoznosti >= 5, `možností: ${v.kmMoznosti}`);
+  /* ODDÁLENÍ. Stížnost se snímkem: „to přibližování pořád nefunguje,
+     kruh se zvětšuje a zmenšuje přiblížením." Zvětšovat a zmenšovat se
+     musí — deset kilometrů je deset kilometrů. Špatné bylo, co se kolem
+     toho dělo: z okruhu se stala tečka, popisek „10 km" se schoval za
+     značku místa a zbylo z něj „km", a vrátit se nešlo, protože mapa
+     pod rukama skákat nesmí (na to si člověk stěžoval předtím).
+     Kontroluje se tedy: v tom stavu se nabídne tlačítko, útržek
+     popisku se nekreslí, a jedno klepnutí to vrátí zpátky. */
+  {
+    const dolu = await p.evaluate(() => { const m = window.PK_VM_MAPA;
+      m.setZoom(Math.max(4, m.getZoom() - 5)); return m.getZoom(); });
+    await p.waitForTimeout(500);
+    const stav = await p.evaluate(() => {
+      const b2 = document.querySelector('#vm-zpet');
+      const st = document.querySelector('.vm-meritko span');
+      const vidno = (e) => { if (!e) return null; const r = e.getBoundingClientRect();
+        return !e.hidden && r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden'; };
+      return { tlacitko: vidno(b2), popisek: vidno(st),
+        text: (b2 && b2.textContent || '').trim(), zoom: window.PK_VM_MAPA.getZoom() };
+    });
+    pravda('po oddálení, kde je z okruhu tečka, se nabídne cesta zpátky',
+      stav.tlacitko === true, `zoom ${dolu}, tlačítko ${stav.tlacitko}`);
+    pravda('a říká, co udělá', /okruh/i.test(stav.text), `na tlačítku stojí „${stav.text}"`);
+    pravda('útržek popisku „km" se v tom stavu nekreslí', stav.popisek === false,
+      'zbyl viset popisek, ze kterého je vidět jen jednotka');
+    /* A hlavně: mapa se sama nepřesunula. To byla ta starší stížnost. */
+    pravda('mapa se přitom sama nepřiblížila', stav.zoom === dolu,
+      `zoom ${dolu} → ${stav.zoom}; pohled si řídí člověk, ne mapa`);
+
+    /* Klepnout jde jen na to, co je vidět. Kdyby se tlačítko neukázalo,
+       Playwright by tu po třiceti vteřinách spadl výjimkou — a spadlý
+       test řekne mnohem míň než test, který nahlásí, co je špatně.
+       (Tahle past už tenhle soubor jednou shodila.) */
+    if (!stav.tlacitko) {
+      pravda('klepnutí na ně okruh ukáže', false, 'tlačítko se vůbec neukázalo, nebylo na co klepnout');
+      pravda('tlačítko pak zmizí, protože už není k čemu', false, 'nebylo na co klepnout');
+      pravda('a popisek s kilometry je zase celý', false, 'nebylo na co klepnout');
+    } else {
+    await p.locator('#vm-zpet').click();
+    await p.waitForTimeout(700);
+    const zpet = await p.evaluate(() => {
+      const b2 = document.querySelector('#vm-zpet');
+      const st = document.querySelector('.vm-meritko span');
+      const vidno = (e) => { if (!e) return null; const r = e.getBoundingClientRect();
+        return !e.hidden && r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden'; };
+      return { tlacitko: vidno(b2), popisek: vidno(st), zoom: window.PK_VM_MAPA.getZoom(),
+        meritko: ((st || {}).textContent || '').trim() };
+    });
+    pravda('klepnutí na ně okruh ukáže', zpet.zoom > dolu, `${dolu} → ${zpet.zoom}`);
+    pravda('tlačítko pak zmizí, protože už není k čemu', zpet.tlacitko === false);
+    pravda('a popisek s kilometry je zase celý', /^\d+ km$/.test(zpet.meritko),
+      `měřítko: „${zpet.meritko}"`);
+    }
+  }
+
   /* Když je okruh vidět, další klepnutí už nemá skákat měřítkem — jen
      posune střed, aby se dal výběr doladit. */
   const zoomPred = await p.evaluate(() => window.PK_VM_MAPA.getZoom());

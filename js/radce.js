@@ -29,8 +29,25 @@
      jenže územní plán neznáme, známe zápis v katastru. Tentýž odstavec
      to o dvě věty dál sám popíral („samotný zápis v katastru o tom nic
      neříká"). Tvrdit něco, co nevíme, je horší než mlčet. */
-  function stavba(g, druh) {
+  /* Výměra se v textech psala slovem („přes hektar"), takže blok o
+     výměře neobsahoval výměru. Tyhle dva pomocníky ji vypíšou tak, jak
+     se čísla píšou všude jinde na webu: s pevnou mezerou po tisících
+     a s desetinnou čárkou. */
+  function m2(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0'); }
+  function ha(n) {
+    var h = n / 10000;
+    return (h < 10 ? h.toFixed(2) : h.toFixed(1)).replace(/0+$/, '').replace(/\.$/, '').replace('.', ',');
+  }
+
+  function stavba(g, druh, d) {
     var dr = String(druh || '').toLowerCase();
+    /* Konkrétní čísla TÉHLE parcely. Osm textů na 1 966 pozemků a v
+       žádném jediné číslo — kdo se dívá na jednu parcelu, čte obecné
+       poučení, ne radu k ní. Přidávají se jen tam, kde to o rozhodnutí
+       něco mění: u zemědělské půdy se z výměry počítá odvod za vynětí,
+       u lesa se od hektaru mění pravidlo pro dělení. */
+    var a = (d && maVymeru(d)) ? d.area : 0;
+    var zVymery = a ? ' Odvod za vynětí se počítá z <b>výměry</b> — tady z ' + m2(a) + ' m².' : '';
     if (g === 'Stavební / zastavěná' && /zastav/.test(dr)) {
       return { lvl: 'mid', txt: 'V katastru vedeno jako <b>zastavěná plocha a nádvoří</b> — podle zápisu na pozemku <b>něco stojí</b> nebo stálo. Zjistěte, co to je, jestli je to v ceně a v jakém je stavu; u stavby se kupuje i to, co je pod ní.' };
     }
@@ -38,15 +55,19 @@
       case 'Stavební / zastavěná':
         return { lvl: 'ok', txt: 'V katastru vedeno jako <b>stavební pozemek</b>. Není to totéž co územní plán: ten teprve rozhoduje, <b>co a jak velké</b> se tu smí postavit. Ověřte si ho na stavebním úřadě obce — a k tomu, jestli jsou v dosahu <b>sítě a příjezd</b>. Ze zápisu v katastru se ani jedno nepozná.' };
       case 'Orná půda':
-        return { lvl: 'warn', txt: '<b>Zemědělská půda.</b> Pro stavbu je nutná změna územního plánu a <b>vynětí ze zemědělského půdního fondu</b>, za které se platí odvod. Bývá to zdlouhavé a není na to nárok.' };
+        return { lvl: 'warn', txt: '<b>Zemědělská půda.</b> Pro stavbu je nutná změna územního plánu a <b>vynětí ze zemědělského půdního fondu</b>, za které se platí odvod. Bývá to zdlouhavé a není na to nárok.' + zVymery };
       case 'Louka / travní porost':
-        return { lvl: 'warn', txt: '<b>Zemědělská půda</b> (travní porost). Ke stavbě je potřeba změna územního plánu a vynětí ze ZPF. Bývá na ni <b>pacht</b> — zjistěte si, jestli je pozemek pronajatý a na jak dlouho.' };
+        return { lvl: 'warn', txt: '<b>Zemědělská půda</b> (travní porost). Ke stavbě je potřeba změna územního plánu a vynětí ze ZPF. Bývá na ni <b>pacht</b> — zjistěte si, jestli je pozemek pronajatý a na jak dlouho.' + zVymery };
       case 'Zahrada':
         return { lvl: 'mid', txt: 'Zahrada bývá v zastavěném území, ale <b>ne vždy je stavební</b>. Ověřte si územní plán obce. U zahrad se taky častěji stává, že <b>nemají vlastní přístup z veřejné cesty</b>.' };
       case 'Lesní pozemek':
-        return { lvl: 'warn', txt: '<b>Lesní pozemek</b> pod ochranou lesního zákona — výstavba je prakticky vyloučená a s lesem je spojená <b>povinnost hospodařit</b>. Rozdělení lesního pozemku pod jeden hektar navíc vyžaduje souhlas úřadu.' };
+        return { lvl: 'warn', txt: '<b>Lesní pozemek</b> pod ochranou lesního zákona — výstavba je prakticky vyloučená a s lesem je spojená <b>povinnost hospodařit</b>. Rozdělení lesního pozemku pod jeden hektar navíc vyžaduje souhlas úřadu.'
+          + (a ? (a < 10000
+              ? ' Tenhle má <b>' + m2(a) + ' m²</b>, tedy pod hektar — na dělení by souhlas potřeba byl.'
+              : ' Tenhle má <b>' + ha(a) + ' ha</b>, takže nad hranici jednoho hektaru.')
+            : '') };
       case 'Vinice / sad':
-        return { lvl: 'warn', txt: 'Zemědělská kultura (vinice nebo sad). Ke stavbě je potřeba změna využití a vynětí ze ZPF.' };
+        return { lvl: 'warn', txt: 'Zemědělská kultura (vinice nebo sad). Ke stavbě je potřeba změna využití a vynětí ze ZPF.' + zVymery };
       default:
         return { lvl: 'mid', txt: 'Ověřte v <b>územním plánu</b> obce, jak se pozemek smí využívat a zda se na něm dá stavět.' };
     }
@@ -114,7 +135,17 @@
         if (/SPÚ|státní půd/i.test(d.extra || '')) {
           return 'Nabídka <b>státního pozemkového úřadu</b>. Přednost mívají <b>dosavadní pachtýři</b> a nabídka běží ve <b>lhůtě</b> — konkrétní podmínky i termín uvádí vyhlášení na úřední desce SPÚ.';
         }
-        return 'Cena v inzerátu je <b>nabídková</b>, ne odhad ani cena obvyklá. Před koupí ověřte na <b>listu vlastnictví</b>, kdo je vlastník a jestli na pozemku nevázne <b>zástava nebo věcné břemeno</b>, a zjistěte si <b>přístup z veřejné cesty</b> — ten se z inzerátu pozná nejhůř a chybí nejčastěji.';
+        /* Věta „přístup z veřejné cesty se z inzerátu pozná nejhůř a
+           chybí nejčastěji" chodila všem 1 658 běžným inzerátům — i těm
+           1 080 (65 %), kde inzerát příjezd sám uvádí a kde to o kus výš
+           stojí v „Co uvádí inzerát". Web si tím na dvou třetinách
+           nabídek odporoval. Ověřovat je pořád co: z popisu se nepozná,
+           jestli cesta patří obci, nebo sousedovi. Stejně to rozlišují
+           i otázky na prodávajícího o pár řádků níž. */
+        var pristup = ((d.site || []).indexOf('cesta') >= 0)
+          ? 'a u <b>příjezdu</b>, který inzerát zmiňuje, si v katastrální mapě ověřte, jestli vede po <b>veřejné komunikaci</b>, nebo přes cizí pozemek — z popisu se to nepozná.'
+          : 'a zjistěte si <b>přístup z veřejné cesty</b> — ten se z inzerátu pozná nejhůř a chybí nejčastěji.';
+        return 'Cena v inzerátu je <b>nabídková</b>, ne odhad ani cena obvyklá. Před koupí ověřte na <b>listu vlastnictví</b>, kdo je vlastník a jestli na pozemku nevázne <b>zástava nebo věcné břemeno</b>, ' + pristup;
     }
   }
 
@@ -123,13 +154,13 @@
     if (!maVymeru(d)) return null;
     var a = d.area;
     if (a < 300) {
-      return { lvl: 'mid', txt: 'Necelých <b>' + a + ' m²</b> je na samostatné využití málo. Takhle malé parcely se nejčastěji hodí k <b>rozšíření sousedního pozemku</b> — nebo jde o podíl či zbytkový díl po dělení.' };
+      return { lvl: 'mid', txt: '<b>' + m2(a) + ' m²</b> je na samostatné využití málo. Takhle malé parcely se nejčastěji hodí k <b>rozšíření sousedního pozemku</b> — nebo jde o podíl či zbytkový díl po dělení.' };
     }
     if (a > 50000) {
-      return { lvl: 'mid', txt: 'Přes <b>pět hektarů</b>. Počítejte s <b>daní z nemovitých věcí</b> každý rok a s tím, že taková plocha sama neleží ladem — obvykle se <b>propachtuje</b> zemědělci. Zjistěte si, jestli na ní pacht už neběží a do kdy.' };
+      return { lvl: 'mid', txt: '<b>' + ha(a) + ' ha</b> (' + m2(a) + ' m²). Počítejte s <b>daní z nemovitých věcí</b> každý rok a s tím, že taková plocha sama neleží ladem — obvykle se <b>propachtuje</b> zemědělci. Zjistěte si, jestli na ní pacht už neběží a do kdy.' };
     }
     if (a > 10000) {
-      return { lvl: 'mid', txt: 'Přes <b>hektar</b> půdy. U takové výměry se vyplatí zjistit, jestli na pozemku <b>neběží pacht</b> — nájem zemědělské půdy se ukončuje s výpovědní dobou, ne ze dne na den.' };
+      return { lvl: 'mid', txt: '<b>' + ha(a) + ' ha</b> (' + m2(a) + ' m²) půdy. U takové výměry se vyplatí zjistit, jestli na pozemku <b>neběží pacht</b> — nájem zemědělské půdy se ukončuje s výpovědní dobou, ne ze dne na den.' };
     }
     return null;
   }
@@ -157,14 +188,14 @@
           ' Kč/m²</b> (srovnáno s ' + o.vzorek + ' ' +
           (o.vzorek === 1 ? 'nabídkou' : (o.vzorek < 5 ? 'nabídkami' : 'nabídkami')) + ').'
         : '';
-      /* Sleva přes hranici uvěřitelnosti není příležitost. Rádce to musí
-         říct dřív, než si to člověk přečte jako trhák — a hlavně musí říct
-         totéž, co odznak na kartě. */
-      if (o.pochybna) {
-        return { lvl: 'warn', txt: 'Cena je <b>o ' + o.podOdhadem + ' % pod</b> obvyklou cenou podobně velkých pozemků téhož druhu ' + kde +
-          '.' + cisla + ' Takový rozdíl už nebývá sleva: nejčastěji je v inzerátu výměra <b>celé parcely</b>, ale prodává se jen <b>spoluvlastnický podíl</b>, ' +
-          'nebo jde o dražbu s jinou výměrou, případně o chybu v ceně. <b>Ověřte si to na listu vlastnictví</b>, než něco podepíšete.' };
-      }
+      /* PODÍL SE ŘEŠÍ DŘÍV NEŽ „POCHYBNÁ CENA". U podílu se procento
+         počítá z ceny CELÉ parcely, ale cena za metr z výměry PODÍLU —
+         dvě různé základny. Ve větvi o pochybné ceně stály obě čísla
+         vedle sebe a věta si odporovala: „o 61 % pod obvyklou" a hned
+         „50 Kč/m² proti obvyklým 42 Kč/m²", tedy nad. Ta větev navíc
+         HÁDALA („nejčastěji je v inzerátu výměra celé parcely, ale
+         prodává se jen podíl") něco, co u těchhle nabídek víme jistě.
+         Když to víme, řekneme to — a s čísly, která se k sobě hodí. */
       /* U ZNÁMÉHO PODÍLU SE O PŘÍLEŽITOSTI NEMLUVÍ.
          Odhad se počítá z výměry CELÉ parcely, ale kupující dostane jen
          zlomek — sleva proti odhadu tedy vzniká z podstaty věci, ne tím,
@@ -188,6 +219,14 @@
             ? 'V ceně je zhruba <b>' + cis(zl) + ' m²</b>, tedy <b>' + cis(zm) + ' Kč/m²</b> z toho, co vám připadne. '
             : 'Kolik metrů vám připadne, se z inzerátu nedá spočítat. ') +
           'S podílem navíc nemůžete nakládat sám — potřebujete ostatní spoluvlastníky.' };
+      }
+      /* Sleva přes hranici uvěřitelnosti není příležitost. Rádce to musí
+         říct dřív, než si to člověk přečte jako trhák — a hlavně musí říct
+         totéž, co odznak na kartě. */
+      if (o.pochybna) {
+        return { lvl: 'warn', txt: 'Cena je <b>o ' + o.podOdhadem + ' % pod</b> obvyklou cenou podobně velkých pozemků téhož druhu ' + kde +
+          '.' + cisla + ' Takový rozdíl už nebývá sleva: nejčastěji je v inzerátu výměra <b>celé parcely</b>, ale prodává se jen <b>spoluvlastnický podíl</b>, ' +
+          'nebo jde o dražbu s jinou výměrou, případně o chybu v ceně. <b>Ověřte si to na listu vlastnictví</b>, než něco podepíšete.' };
       }
       /* Odhad stojí na cenách, které se mezi sebou liší násobky. Rádce
          nesmí mluvit o příležitosti tam, kde by z jiné poloviny dat vyšlo
@@ -287,7 +326,7 @@
   function rady(d, model) {
     var g = (root.PK_CENY && root.PK_CENY.druhGroup) ? root.PK_CENY.druhGroup(d.druh) : '';
     var radky = [];
-    radky.push(Object.assign({ klic: 'Dá se tu stavět?' }, stavba(g, d.druh)));
+    radky.push(Object.assign({ klic: 'Dá se tu stavět?' }, stavba(g, d.druh, d)));
     var t = termin(d); if (t) radky.push(Object.assign({ klic: 'Kolik zbývá času' }, t));
     var c = cena(d, model); if (c) radky.push(Object.assign({ klic: 'Co říká cena' }, c));
     var v = vymera(d); if (v) radky.push(Object.assign({ klic: 'Co znamená výměra' }, v));

@@ -5,6 +5,7 @@
 // Tahle logika rozhoduje, co je pro člověka „nový pozemek". Když se splete
 // směrem dolů, hlídání mlčí a člověk o příležitost přijde. Když nahoru,
 // odznak svítí naprázdno a za pár dní si ho nikdo nevšimne.
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -56,13 +57,29 @@ je('místo', 'vlastní okres sedí dál',
   H.matches({ okres: 'Most' }, P({ okres: 'Most', place: 'Horní Jiřetín' })), true);
 je('místo', 'vlastní obec sedí dál',
   H.matches({ okres: 'Most' }, P({ okres: 'Most', place: 'Most' })), true);
-/* Praha je výjimka a musí jí zůstat: kdo hlídá Prahu, chce i okresy
-   kolem ní. Proto se u OKRESU uznává i „jméno + další slovo" — u obce ne. */
-je('místo', 'Praha bere i okres Praha-východ',
-  H.matches({ okres: 'Praha' }, P({ okres: 'Praha-východ', place: 'Máslovice' })), true);
-je('místo', 'a Praha-západ', H.matches({ okres: 'Praha' }, P({ okres: 'Praha-západ', place: 'Bojanovice' })), true);
+/* PRAHA NENÍ PRAHA-VÝCHOD. Dřív tu stálo, že „kdo hlídá Prahu, chce
+   i okresy kolem ní", a okres se proto bral i jako předpona. Byl to
+   odhad a v praxi neobstál: karta hlídání hlásila „Celkem sedí: 139
+   pozemků", ale odkaz „Zobrazit na mapě" z téže karty jich ukázal 28.
+   Zbylých 113 byly Praha-východ a Praha-západ — samostatné okresy, a
+   ještě ve Středočeském kraji. Dvě různá čísla pro totéž hlídání se
+   obhájit nedají.
+   Pravidlo je teď stejné jako jinde na webu: hotový název okresu
+   znamená právě ten okres. Kdo chce okolí, založí si na ně hlídání. */
+je('místo', 'Praha není okres Praha-východ',
+  H.matches({ okres: 'Praha' }, P({ okres: 'Praha-východ', place: 'Máslovice' })), false);
+je('místo', 'ani Praha-západ', H.matches({ okres: 'Praha' }, P({ okres: 'Praha-západ', place: 'Bojanovice' })), false);
+je('místo', 'ale Praha-východ napsaná celá sedí',
+  H.matches({ okres: 'Praha-východ' }, P({ okres: 'Praha-východ', place: 'Máslovice' })), true);
 je('místo', 'pomlčka jde napsat i mezerou',
   H.matches({ okres: 'praha vychod' }, P({ okres: 'Praha-východ', place: 'Máslovice' })), true);
+/* Předpona se ale neruší úplně. „Plzeň", „Brno" ani „Ústí" žádný okres
+   toho jména nejsou — pod tím jménem si nic jiného než všechny jejich
+   okresy představit nelze, tak se berou všechny. Rozdíl proti Praze je
+   přesně tenhle: Praha okresem JE. */
+je('místo', 'Plzeň bere Plzeň-jih, protože okres Plzeň neexistuje',
+  H.matches({ okres: 'Plzeň' }, P({ okres: 'Plzeň-jih', place: 'Blovice' })), true);
+je('místo', 'Brno bere Brno-venkov', H.matches({ okres: 'Brno' }, P({ okres: 'Brno-venkov', place: 'Rosice' })), true);
 je('místo', 'napsané „okres Kolín" se taky trefí',
   H.matches({ okres: 'okres Kolín' }, P()), true);
 
@@ -223,6 +240,42 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   /* A dva sbírané mezi sebou ať se chovají jako dřív. */
   je('duplicity', 'dvě sbírané nabídky se pořád slijí do jedné',
     H.bezDuplicit([sbirany, Object.assign({}, sbirany)]).length, 1);
+}
+
+/* Seznam okresů je v js/hlidani-logika.js vypsaný, protože modul nemá
+   odkud ho vzít — a vypsaný seznam se umí rozejít s daty. Tohle je to
+   jediné místo, kde se to pozná. */
+{
+  const zOkresu = Object.keys(
+    JSON.parse(readFileSync(new URL('../data/okresy.json', import.meta.url), 'utf8')).okresy);
+  const opp = JSON.parse(
+    readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  /* Nejdřív přímo: vypsaný seznam se musí rovnat tomu v datech. Pouhé
+     zkoušení chování na to nestačí — vypadne-li ze seznamu okres, který
+     není předponou žádného jiného (třeba Praha-východ), nezmění se
+     navenek vůbec nic a rozdíl by se projevil až tím, že by se do
+     seznamu jednou přidal okres, který tam patřit nemá. */
+  je('okresy', 'vypsaný seznam okresů se rovná tomu v datech',
+    (H.OKRESY || []).slice().sort().join('|'), zOkresu.slice().sort().join('|'));
+
+  /* A pak chováním: název, který je okresem, nesmí přitáhnout jiný. */
+  const pritahuje = [];
+  for (const a of zOkresu) {
+    for (const b of zOkresu) {
+      if (a === b) continue;
+      if (H.matches({ okres: a }, P({ okres: b, place: b }))) pritahuje.push(a + ' → ' + b);
+    }
+  }
+  je('okresy', 'hotový název okresu nepřitáhne jiný okres', pritahuje.length, 0,
+    pritahuje.slice(0, 5).join(', '));
+
+  /* A totéž na skutečných datech: kolik hlídání „Praha" napočítá musí
+     souhlasit s tím, kolik je v datech pozemků v okrese Praha. */
+  for (const jm of ['Praha', 'Brno-venkov', 'Most', 'Ústí nad Labem']) {
+    const sedi = opp.filter((o) => H.matches({ okres: jm }, o)).length;
+    const vdatech = opp.filter((o) => o.okres === jm).length;
+    je('okresy', `hlídání „${jm}" napočítá tolik, kolik jich v okrese je`, sedi, vdatech);
+  }
 }
 
 console.log(`\nHlídání lokality: ${bezi} testů`);

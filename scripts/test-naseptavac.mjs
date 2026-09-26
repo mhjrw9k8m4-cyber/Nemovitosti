@@ -615,6 +615,70 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   await ctx.close();
 }
 
+// --- Souhrnná tlačítka vypadají jako tlačítka -----------------------
+/* Stížnost: „cena nepůsobí jako klikatelné tlačítko". Byla to bílá
+   krabička s tenkou linkou a textem „CENA / libovolná" — od vypsaného
+   údaje k nerozeznání, takže lidem nedošlo, že se dá otevřít.
+   A k tomu: „pořád tam blbě ten text a je to bílé" — na snímku z lišty
+   filtrů zbyla jen ikona a odznak, popisek ani šipka vidět nebyly.
+   Reprodukovat se to nepovedlo (naměřeno 16,3 : 1), ale způsob selhání,
+   který by k tomu vedl — barva propadlá na dědění po rodiči — je tady
+   pojmenovaný a hlídaný. */
+{
+  const { ctx, p } = await otevri(TELEFON);
+  await p.evaluate(() => { document.getElementById('ms-filters').open = true; });
+  await p.waitForTimeout(700);
+
+  const v = await p.evaluate(() => {
+    const tl = [...document.querySelectorAll('.mcs-btn')];
+    const vidno = (e) => !!e && e.getClientRects().length > 0;
+    const t = document.querySelector('.msf-text');
+    const ch = document.querySelector('.msf-chev');
+    const barva = (e) => e ? getComputedStyle(e).color : null;
+    let pozadi = 'rgb(255, 255, 255)';
+    let n = t;
+    while (n && n !== document.documentElement) {
+      const c = getComputedStyle(n).backgroundColor;
+      if (c && c !== 'rgba(0, 0, 0, 0)') { pozadi = c; break; }
+      n = n.parentElement;
+    }
+    return {
+      tlacitek: tl.length,
+      sBezSipky: tl.filter((b) => !vidno(b.querySelector('.mcs-sip'))).length,
+      sBezHodnoty: tl.filter((b) => !vidno(b.querySelector('.mcs-v'))).length,
+      nizka: tl.filter((b) => b.getBoundingClientRect().height < 44).length,
+      popisek: t ? t.textContent.trim() : '(chybí)',
+      popisekVidno: vidno(t),
+      sipkaVidno: vidno(ch),
+      barvaPopisku: barva(t), pozadi,
+    };
+  });
+
+  pravda('cena i výměra jsou tlačítka', v.tlacitek === 2, `nalezeno ${v.tlacitek}`);
+  pravda('a je na nich vidět, že se dají otevřít (šipka)', v.sBezSipky === 0,
+    `${v.sBezSipky} tlačítek bez šipky — pak se čtou jako vypsaný údaj`);
+  pravda('a pořád je na nich vidět nastavená hodnota', v.sBezHodnoty === 0);
+  pravda('a dají se trefit prstem (≥ 44 px)', v.nizka === 0, `${v.nizka} tlačítek je nižších`);
+
+  /* Popisek lišty filtrů: musí být vidět a musí být čitelný proti pozadí.
+     Bílý text na bílém panelu je přesně to, co uživatel nafotil. */
+  pravda('lišta filtrů má popisek', v.popisekVidno && v.popisek.length > 3, v.popisek);
+  pravda('a šipku u ní taky', v.sipkaVidno);
+  {
+    const svet = (x) => {
+      const [r, g, b] = x.match(/\d+/g).map(Number).map((u) => {
+        u /= 255; return u <= 0.03928 ? u / 12.92 : Math.pow((u + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const l1 = svet(v.barvaPopisku), l2 = svet(v.pozadi);
+    const pomer = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    pravda('a popisek je proti pozadí čitelný', pomer >= 4.5,
+      `kontrast ${pomer.toFixed(2)} : 1 — ${v.barvaPopisku} na ${v.pozadi}`);
+  }
+  await ctx.close();
+}
+
 // --- Konec panelu filtrů: „kolik jich zbylo" a „zrušit" -------------
 /* Stížnost: „naklikám tam, co chci, a ani nevím, že změny byly
    aplikované, ani mě to neposune na inzeráty a nechá nahoře ve

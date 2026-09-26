@@ -123,8 +123,21 @@ neprojde('odkaz', 'doména bez koncovky', K.odkaz('https://example./pozemek'));
 /* ---------------- kontakt ---------------- */
 projde('kontakt', 'telefon s mezerami', K.kontakt('777 123 654'));
 projde('kontakt', 'telefon s předvolbou', K.kontakt('+420 606 123 987'));
-projde('kontakt', 'e-mail', K.kontakt('jan.novak@seznam.cz'));
-neprojde('kontakt', 'prázdný', K.kontakt(''));
+/* JEN TELEFON. Pole se ptalo na „telefon nebo e-mail" z doby, kdy se
+   inzerát dal podat bez účtu. Dnes bez přihlášení podat nejde, takže
+   e-mail máme z účtu — ptát se na něj podruhé vypadá, jako by si web
+   nepamatoval, kdo je přihlášený. A číslo je NEPOVINNÉ: u inzerátu je
+   tlačítko „Napsat majiteli", které vede do Zpráv. Kdyby bylo povinné,
+   vyloučili bychom tím ty, kdo číslo zveřejnit nechtějí — a to dřív
+   nebylo, protože si mohli vybrat e-mail. */
+neprojde('kontakt', 'e-mail sem už nepatří', K.kontakt('jan.novak@seznam.cz'));
+{
+  const r = K.kontakt('jan.novak@seznam.cz');
+  projde('kontakt', 'a řekne se proč — e-mail máme z účtu',
+    /e-mail/i.test(r.msg || '') && /účtu/i.test(r.msg || '')
+      ? { ok: true } : { ok: false, msg: `hláška zní „${r.msg}"` });
+}
+projde('kontakt', 'prázdné pole projde, telefon je nepovinný', K.kontakt(''));
 neprojde('kontakt', 'krátké číslo', K.kontakt('12345'));
 neprojde('kontakt', 'samé jedničky', K.kontakt('111111111'));
 neprojde('kontakt', 'řada 123456789', K.kontakt('123456789'));
