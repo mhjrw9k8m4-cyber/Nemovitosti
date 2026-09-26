@@ -2290,6 +2290,13 @@
     function jdiNa(lat, lng, animovat) {
       m.fitBounds(ramecOkruhu(lat, lng), { animate: animovat !== false });
     }
+    /* Vejde se celý okruh do toho, co je právě vidět? Bez rezervy —
+       ta je jen pro případ, kdy se mapa opravdu musí přerovnat. */
+    function okruhSeVejde(lat, lng) {
+      var k = parseInt(kmSel.value, 10) || 10;
+      try { return m.getBounds().contains(L.latLng(lat, lng).toBounds(k * 2000)); }
+      catch (e) { return false; }
+    }
     function prepocti() {
       var k = parseInt(kmSel.value, 10) || 10;
       var c = stred();
@@ -2371,11 +2378,18 @@
       r.addEventListener('change', function () {
         prepocti();
         var c = stred();
-        /* BEZ ANIMACE. Při plynulém přejezdu se kolečko (kreslené do mapy)
+        /* PŘIBLÍŽENÍ ZŮSTÁVÁ TAM, KAM SI HO ČLOVĚK DAL.
+           Dřív se při každé změně okruhu mapa přerovnala na kruh: kdo si
+           to nastavil tak, jak chtěl, a pak jen přepnul 5 km na 2 km,
+           přišel o svůj pohled — mapa mu poskočila, i když menší kruh se
+           do něj zjevně vešel. Přerovná se proto jen tehdy, když se nový
+           kruh do okna nevejde; tedy jen aby bylo vidět, co vybírám.
+           Zvětšovat přiblížení se nemusí nikdy: menší kruh se do většího
+           pohledu vejde vždycky.
+           BEZ ANIMACE. Při plynulém přejezdu se kolečko (kreslené do mapy)
            přesouvá, zatímco špendlík stojí na středu okna — a po tu chvíli
-           ukazují každý jinam. Na snímku to vypadá jako zalomená čára
-           měřítka a rozbité kolečko. Skok je tu poctivější než přejezd. */
-        jdiNa(c.lat, c.lng, false);   // větší okruh → oddálit, menší → přiblížit
+           ukazují každý jinam. Skok je tu poctivější než přejezd. */
+        if (!okruhSeVejde(c.lat, c.lng)) jdiNa(c.lat, c.lng, false);
       });
     });
     prepocti();

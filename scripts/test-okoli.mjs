@@ -38,6 +38,11 @@ const zpravy = [];
 function pravda(popis, vyslo, proc) {
   if (vyslo) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
+  /* Vrací výsledek, aby se na něm dalo větvit. Bez toho je `!pravda(…)`
+     vždycky pravda a celý navazující oddíl se tiše přeskočí — a přitom
+     se vypíše ✓ té jedné kontroly, která proběhla. Přesně tak se to
+     tady jednou stalo. */
+  return !!vyslo;
 }
 
 const PRAZDNA = Buffer.from(
@@ -725,6 +730,74 @@ const stavVybiraku = (p) => p.evaluate(() => {
     v.razeni === 'near', `nabídka hlásí „${v.razeni}"`);
   pravda('a seznam se přepne na okolí toho místa', /okolí/i.test(v.hlavicka), v.hlavicka);
   await ctx.close();
+}
+
+/* ---------- Změna okruhu nesmí sebrat přiblížení ----------
+   Stížnost: „když si vybírám a koukám, chci, aby mi to zůstalo
+   přiblížené tam, kam jsem to dal — ne že mě to oddálí, když přidám
+   rozpětí okruhu."
+   Při každé změně okruhu se mapa přerovnávala na kruh (fitBounds), tedy
+   i při ZMENŠENÍ okruhu, kdy se nový kruh do pohledu zjevně vejde.
+   Kdo si mapu nastavil, jak chtěl, o svůj pohled přišel při každém
+   klepnutí na jiné kilometry.
+   Přerovnat se smí jen tehdy, když by nový kruh z okna vypadl — jinak
+   by člověk nevěděl, co vlastně vybírá. */
+{
+  const { ctx, p } = await telefon(null);
+  await otevriVybirac(p, '#map-near');
+  await jdiNaMisto(p, 50.53, 13.95, 11);          // Vlastislav u Třebenic
+
+  const pohled = () => p.evaluate(() => {
+    const m = window.PK_VM_MAPA;
+    if (!m) return null;
+    const c = m.getCenter();
+    return { z: m.getZoom(), lat: +c.lat.toFixed(5), lng: +c.lng.toFixed(5) };
+  });
+  const nastavKm = async (km) => {
+    await p.evaluate((k) => {
+      const r = document.querySelector('input[name="vm-km"][value="' + k + '"]');
+      if (r) { r.click(); }
+    }, String(km));
+    await p.waitForTimeout(700);
+  };
+
+  await nastavKm(10);
+  await p.waitForTimeout(400);
+  // Člověk si přiblížení dorovná sám — a od téhle chvíle mu má zůstat.
+  await p.evaluate(() => { const m = window.PK_VM_MAPA; m.setZoom(m.getZoom() + 1); });
+  await p.waitForTimeout(700);
+  const moje = await pohled();
+
+  if (!pravda('výběr okolí má mapu a jde v ní přiblížit', !!moje && isFinite(moje.z), JSON.stringify(moje))) {
+    await ctx.close();
+  } else {
+    await nastavKm(5);
+    const po5 = await pohled();
+    pravda('po zmenšení okruhu na 5 km zůstane přiblížení', po5.z === moje.z,
+      `měl jsem ${moje.z}, po změně ${po5.z}`);
+    pravda('a mapa se ani neposune', po5.lat === moje.lat && po5.lng === moje.lng,
+      `${moje.lat},${moje.lng} → ${po5.lat},${po5.lng}`);
+
+    await nastavKm(2);
+    const po2 = await pohled();
+    pravda('a po 2 km taky', po2.z === moje.z && po2.lat === moje.lat,
+      `měl jsem ${moje.z}, po změně ${po2.z}`);
+
+    /* Ale když se okruh do okna nevejde, přerovnat se MUSÍ — jinak by
+       člověk nastavoval něco, co nevidí. Tohle je ta polovina, kterou by
+       „nesahat na mapu nikdy" pokazila; bez téhle kontroly by test prošel
+       i s úplně vypnutým přerovnáním. */
+    await nastavKm(50);
+    const po50 = await pohled();
+    pravda('ale na okruh, který se do okna nevejde, se mapa oddálí', po50.z < moje.z,
+      `měl jsem ${moje.z}, po 50 km ${po50.z}`);
+    const vidno = await p.evaluate(() => {
+      const m = window.PK_VM_MAPA, c = m.getCenter();
+      return m.getBounds().contains(L.latLng(c.lat, c.lng).toBounds(50 * 2000));
+    }).catch(() => null);
+    pravda('a celý padesátikilometrový okruh je pak vidět', vidno === true, `vejde se: ${vidno}`);
+    await ctx.close();
+  }
 }
 
 await prohlizec.close();
