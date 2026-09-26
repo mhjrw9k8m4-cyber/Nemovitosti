@@ -855,7 +855,7 @@
   var sortMode = 'demand';
   var maxPrice = 0;
   var minArea = 0;         // filtr minimální výměry (m²)
-  var urgentOnly = false;  // filtr: jen dražby/exekuce končící brzy (do 14 dní)
+  var urgentOnly = false;  // filtr: jen dražby/exekuce končící brzy (viz DNI_KONCI)
   var searchTerm = '';
   var searchToks = [];   // hledaný text po slovech (viz js/hledani.js)
   /* Místo VYBRANÉ z našeptávače. Není to text, je to přesná podmínka.
@@ -1320,10 +1320,23 @@
     });
   }
 
+  /* KOLIK DNÍ JE „KONČÍ BRZY" — jedno číslo na celý web.
+     Byla to dvě čísla a rozešla se: tlačítko ve filtrech slibovalo
+     „Končí do 14 dní", ale tahle funkce pouštěla jen 7, takže se
+     zamlčelo, co končí za osm až čtrnáct dní. Změřeno na dnešních
+     datech: tlačítko slibovalo 28 nabídek a ukázalo 15 — třináct
+     dražeb se skrylo, mezi nimi Ondřejov za 10 dní a Králíky za 11.
+     Táž funkce přitom kreslí i kroužek na mapě a popisek v legendě,
+     takže se z jednoho čísla stala tři tvrzení. Teď je to konstanta
+     a všechny popisky si ho berou z ní (hlídá scripts/test-okoli.mjs).
+     Čtrnáct dní, ne sedm: tolik říká tlačítko, na které lidé klikají,
+     a u dražby je dva týdny ta doba, za kterou se dá ještě něco
+     stihnout zařídit. */
+  var DNI_KONCI = 14;
   function isUrgent(d) {
     if (d.type !== 'drazba' && d.type !== 'exekuce') return false;
     var dd = daysUntil(d.extra);
-    return dd != null && dd >= 0 && dd <= 7;
+    return dd != null && dd >= 0 && dd <= DNI_KONCI;
   }
   // Zvýrazněný (placený) inzerát — drží se výš v seznamu, má výraznější bod
   // a odznak „Zvýrazněno". Nastavuje se příznakem featured:true v datech.
@@ -2618,7 +2631,7 @@
       // Legenda musí nést i TVAR, jinak se ho není kde naučit.
       if (present2[tp]) lh += '<span class="lg-item"><span class="lg-dot tv-' + (TVAR[tp] || 'kruh') + '" style="background:' + TYPE[tp].color + '"></span>' + TYPE[tp].label + '</span>';
     });
-    if (urgentN) lh += '<span class="lg-item lg-urgent"><span class="lg-dot lg-ring"></span>končí do 7 dní</span>';
+    if (urgentN) lh += '<span class="lg-item lg-urgent"><span class="lg-dot lg-ring"></span>končí do ' + DNI_KONCI + ' dní</span>';
     legendEl.innerHTML = lh;
   }
 
@@ -2743,7 +2756,8 @@
       && (!minPrice || (d.price && d.price >= minPrice));
     var okArea = (!minArea || (hasArea(d) && d.area >= minArea))
       && (!maxArea || (hasArea(d) && d.area <= maxArea));
-    // Štítek v legendě říká „do 7 dní" — filtr musí počítat stejně (dřív pouštěl 14).
+    // Kroužek na mapě, popisek v legendě, tlačítko i odznak počítají
+    // z jedné konstanty DNI_KONCI — viz isUrgent().
     var okUrgent = !urgentOnly || isUrgent(d);
     var okFav = !favOnly || isFav(d);
     /* Vybavení se bere z popisu nabídky. Co v popisu není, není známé —
@@ -2952,9 +2966,9 @@
       function () { levneOnly = false; d.levne = false; },
       (function () { var a = levneOnly, b = d.levne; return function () { levneOnly = a; d.levne = b; }; }()),
       levneOnly ? 'Pod obvyklou cenou' : '');
-    pol('blížící se termín', 'blížící se termín', urgentOnly,
+    pol('blížící se termín', 'blížící se termín', urgentOnly,   // popisek níž bere DNI_KONCI
       function () { urgentOnly = false; }, (function () { return function () { urgentOnly = true; }; }()),
-      'Končí do 14 dní');
+      'Končí do ' + DNI_KONCI + ' dní');
     pol('„jen uložené"', '„jen uložené"', favOnly,
       function () { favOnly = false; }, (function () { return function () { favOnly = true; }; }()),
       'Jen uložené');
@@ -4391,6 +4405,10 @@
     });
   }
 
+  /* Popisek tlačítka se píše z téže konstanty jako filtr. V HTML zůstává
+     výchozí text kvůli tomu, kdo si stránku otevře bez skriptu — že se obě
+     čísla shodují, hlídá scripts/test-okoli.mjs. */
+  if (urgentEl) urgentEl.textContent = 'Končí do ' + DNI_KONCI + ' dní';
   if (urgentEl) urgentEl.addEventListener('click', function () { urgentOnly = !urgentOnly; urgentEl.classList.toggle('on', urgentOnly); urgentEl.setAttribute('aria-pressed', String(urgentOnly)); renderList(); });
   if (favEl) favEl.addEventListener('click', function () { favOnly = !favOnly; refreshFavBtn(); renderList(); });
   if (perm2El) perm2El.addEventListener('change', function () { maxPerM2 = parseInt(perm2El.value, 10) || 0; renderList(); });

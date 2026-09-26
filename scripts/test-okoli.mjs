@@ -641,6 +641,41 @@ const stavVybiraku = (p) => p.evaluate(() => {
   await ctx.close();
 }
 
+// --- Kolik dní je „končí brzy" — jedno číslo, ne tři -----------------
+/* Tlačítko ve filtrech slibovalo „Končí do 14 dní", ale funkce isUrgent()
+   pouštěla jen 7. Táž funkce přitom kreslí kroužek na mapě a plní popisek
+   v legendě, takže z jednoho čísla byla tři tvrzení — a rozešla se.
+   Změřeno na datech z 26. 9.: tlačítko slibovalo 28 nabídek a ukázalo 15;
+   třináct dražeb v pásmu 8–14 dní se zamlčelo (Ondřejov za 10 dní,
+   Králíky za 11, Nový Jičín za 12…).
+   Teď je to konstanta DNI_KONCI a všechna tvrzení si ji berou z ní. */
+{
+  const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const m = /var DNI_KONCI = (\d+);/.exec(main);
+  pravda('web má jedno číslo pro „končí brzy"', !!m, 'konstanta DNI_KONCI v js/main.js chybí');
+  if (m) {
+    const dni = +m[1];
+    /* Filtr, kroužek i legenda MUSÍ počítat z ní — ne z vlastního čísla. */
+    const isUrg = /function isUrgent\(d\)[\s\S]{0,260}?\n  \}/.exec(main);
+    pravda('a filtr „končí brzy" z ní počítá',
+      !!isUrg && /DNI_KONCI/.test(isUrg[0]) && !/<=\s*\d+\s*;/.test(isUrg[0]),
+      'isUrgent() má vlastní číslo: ' + (isUrg ? isUrg[0].replace(/\s+/g, ' ').slice(0, 130) : '(nenalezeno)'));
+    /* A popisky taky. Hledá se jakékoli jiné číslo ve větě o dnech —
+       přesně tak ta tři tvrzení kdysi vznikla. */
+    const jinde = [];
+    main.split('\n').forEach((r, i) => {
+      const t = r.trim();
+      if (/^(\/\/|\*|\/\*)/.test(t)) return;                    // poznámka, ne kód
+      const v = /(?:do|Do) (\d+) dní/.exec(t);
+      if (v && +v[1] !== dni) jinde.push(`js/main.js:${i + 1}: ${t.slice(0, 80)}`);
+    });
+    const vHtml = /(?:do|Do) (\d+) dní/.exec(html);
+    if (vHtml && +vHtml[1] !== dni) jinde.push(`index.html: „${vHtml[0]}" vs konstanta ${dni}`);
+    pravda(`všechny popisky mluví o ${dni} dnech`, jinde.length === 0, jinde.join(' | '));
+  }
+}
+
 // --- 5) „Nejblíž ke mně" bez povolené polohy --------------------------
 /* Řazení podle vzdálenosti potřebuje vědět ODKUD. Když člověk polohu
    nepovolí, musí existovat náhrada — a ta existuje: otevře se výběr
