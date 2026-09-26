@@ -2936,6 +2936,60 @@
      výpisu řekne „zmírněte filtry", nebo „tady prostě nic není". */
   function jeNecoZapnute() { return omezeni().length > 0; }
 
+  /* KONEC PANELU FILTRŮ.
+     Filtry se používají hned, jenže kdo je naklikal, zůstal stát nahoře
+     nad zavřeným panelem — nic mu neřeklo, že se něco stalo, a k výpisu
+     se musel dorolovat sám. Tlačítko s živým počtem je ta odpověď:
+     průběžně říká, kolik nabídek zbylo, a po klepnutí panel zavře,
+     přepne na seznam a sjede k němu.
+     Vedle něj jedno zřetelné „Zrušit filtry". Dosud se dalo všechno
+     zrušit jen tlačítkem, které se ukazovalo jen tehdy, když výpis
+     zůstal PRÁZDNÝ — tedy právě tehdy, když už bylo pozdě. */
+  /* Sjet na SAMOTNÉ NABÍDKY, ne na celý blok s mapou. scrollToMap()
+     míří na začátek bloku, jenže ten začíná hledáním a filtry — po něm
+     zůstal výpis až u spodního okraje okna (naměřeno 762 px z 844).
+     Kdo klepne na „Zobrazit 983 pozemků", chce vidět pozemky. */
+  function scrollNaVypis() {
+    var cil = document.getElementById('map-count') || document.getElementById('opp-list');
+    if (!cil) { if (typeof scrollToMap === 'function') scrollToMap(); return; }
+    try {
+      var hd = document.querySelector('header');
+      var vys = hd ? hd.getBoundingClientRect().height : 0;
+      var y = cil.getBoundingClientRect().top + window.pageYOffset - vys - 8;
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    } catch (e) {
+      try { cil.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e2) {}
+    }
+  }
+
+  var akceHotovo = document.getElementById('mcf-hotovo');
+  var akceHotovoT = document.getElementById('mcf-hotovo-t');
+  var akceZrusit = document.getElementById('mcf-zrusit');
+  function prekresliAkceFiltru(kolik) {
+    if (akceHotovoT) {
+      akceHotovoT.textContent = kolik > 0
+        ? 'Zobrazit ' + fmt(kolik) + ' ' + plPozemek(kolik)
+        : 'Nic nenalezeno';
+    }
+    if (akceHotovo) akceHotovo.disabled = !(kolik > 0);
+    if (akceZrusit) akceZrusit.hidden = !jeNecoZapnute();
+  }
+  if (akceHotovo) akceHotovo.addEventListener('click', function () {
+    var panel = document.getElementById('ms-filters');
+    if (panel) panel.open = false;
+    /* Přepnout na seznam, ne jen sjet: kdo filtruje, chce vidět nabídky.
+       Když už je seznam zapnutý, klepnutí nic nezkazí. */
+    var tab = document.querySelector('.mvt-btn[data-mv="seznam"]');
+    if (tab && !tab.classList.contains('active')) tab.click();
+    scrollNaVypis();
+  });
+  if (akceZrusit) akceZrusit.addEventListener('click', function () {
+    resetFilters();
+    var panel = document.getElementById('ms-filters');
+    if (panel) panel.open = false;
+    scrollNaVypis();
+  });
+
   /* Které omezení výpis vyprázdnilo. Zkusí se každé zvlášť vypnout
      a spočítá se, kolik by nabídek zbylo; vypíše se to, po jehož vypnutí
      jich je nejvíc. Když nepomůže ani jedno samo o sobě, neřekne se nic —
@@ -3488,6 +3542,7 @@
     prekresliPosuvniky(); // sloupce a táhla u ceny a výměry podle ostatních filtrů
     prekresliVybaveni(); // pilulky „co je u pozemku" a jejich počty
     prekresliChipy();    // odznaky toho, co web pochopil z napsané věty
+    prekresliAkceFiltru(matched);   // „Zobrazit N pozemků" a „Zrušit filtry" na konci panelu
     updatePolys(); // tvary parcel podle aktuálního filtru
   }
 

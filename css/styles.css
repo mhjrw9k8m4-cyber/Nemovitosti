@@ -975,6 +975,26 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .msf-chev{width:16px; height:16px; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; transition:transform .2s ease;}
 .ms-filters[open] .msf-chev{transform:rotate(180deg);}
 .ms-filters[open] .msf-summary{border-bottom:1px solid var(--line-strong);}
+/* Konec panelu filtrů: „kolik jich zbylo" a „zrušit". Drží se dole
+   panelu, aby na ně člověk narazil právě ve chvíli, kdy dofiltroval. */
+.mcf-akce{display:flex; gap:8px; align-items:stretch; margin-top:14px; padding-top:12px; border-top:1px solid var(--line);}
+.mcf-hotovo{flex:1; min-height:46px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  border:0; border-radius:var(--r-ovladani); background:var(--plocha-znacka); color:#fff; font:inherit;
+  font-size:15px; font-weight:700; cursor:pointer; box-shadow:var(--glow);
+  transition:filter .15s ease, transform .1s ease;}
+.mcf-hotovo:hover{filter:brightness(1.06);} .mcf-hotovo:active{transform:scale(.99);}
+.mcf-hotovo svg{width:17px; height:17px; flex:none; fill:none; stroke:currentColor; stroke-width:2.1; stroke-linecap:round;}
+.mcf-zrusit{flex:none; min-height:46px; padding:0 15px; border:1.5px solid var(--line-strong); border-radius:var(--r-ovladani);
+  background:none; color:var(--text-ondark); font:inherit; font-size:14px; font-weight:600; cursor:pointer;}
+.mcf-zrusit:hover{border-color:var(--copper-bright); color:var(--copper);}
+.mcf-hotovo, .mcf-zrusit{white-space:nowrap;}
+/* Na úzkém displeji se vedle sebe nevejdou: „Zobrazit 983 pozemků"
+   se v 200 px lámalo na tři řádky. Pod sebou, a to hlavní nahoře —
+   proto column-reverse, v HTML je „Zrušit filtry" první. */
+@media (max-width:460px){
+  .mcf-akce{flex-direction:column-reverse;}
+  .mcf-hotovo, .mcf-zrusit{width:100%;}
+}
 .map-controls{display:grid; grid-template-columns:1fr 1fr; gap:13px 11px; padding:14px 13px 15px;}
 .mc-field{display:flex; flex-direction:column; gap:5px; min-width:0;}
 /* Popisek pole. Musí být čitelný sám o sobě — ne jen tušený odstín pozadí. */

@@ -527,6 +527,128 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   await c4.close();
 }
 
+// --- Konec panelu filtrů: „kolik jich zbylo" a „zrušit" -------------
+/* Stížnost: „naklikám tam, co chci, a ani nevím, že změny byly
+   aplikované, ani mě to neposune na inzeráty a nechá nahoře ve
+   vyhledávání. Navíc tam není jedno větší tlačítko na zrušení filtru."
+   Filtry se používaly hned, ale nic to neřeklo a k výpisu se člověk
+   musel dorolovat sám. Zrušit všechno šlo jen tlačítkem, které se
+   ukazovalo jen u PRÁZDNÉHO výpisu — tedy až když bylo pozdě. */
+{
+  const { ctx, p } = await otevri(TELEFON);
+  await p.evaluate(() => { document.getElementById('ms-filters').open = true; });
+  await p.waitForTimeout(400);
+
+  /* Klepnutí, které raději NAHLÁSÍ, než aby spadlo. Když prvek není
+     vidět (třeba proto, že se rozbilo jeho překreslení), Playwright by
+     třicet vteřin čekal a pak shodil celý test výjimkou — a po padlém
+     testu nezbude souhrn, jen stopa zásobníku. Přistiženo sabotáží:
+     vypnutí přepočtu počtu shodilo test místo toho, aby ho obarvilo. */
+  const klikni = async (sel, popis) => {
+    const el = p.locator(sel);
+    try {
+      await el.waitFor({ state: 'visible', timeout: 4000 });
+      await el.scrollIntoViewIfNeeded({ timeout: 4000 });
+      await el.click({ timeout: 4000 });
+      return true;
+    } catch (e) {
+      chyb++; zpravy.push(`  ✕ ${popis} — na ${sel} nejde klepnout (není vidět)`);
+      return false;
+    }
+  };
+
+  const stav = () => p.evaluate(() => {
+    const t = document.getElementById('mcf-hotovo-t');
+    const z = document.getElementById('mcf-zrusit');
+    const h = document.getElementById('mcf-hotovo');
+    const mc = (document.getElementById('map-count') || {}).textContent || '';
+    const m = /(\d[\d\s ]*)\s*na mapě/.exec(mc.replace(/ /g, ' '));
+    return {
+      popis: t ? t.textContent.trim() : '(chybí)',
+      cislo: t ? +(t.textContent.replace(/[^\d]/g, '') || 0) : -1,
+      zrusitVidet: !!(z && !z.hidden),
+      vyskaHotovo: h ? Math.round(h.getBoundingClientRect().height) : 0,
+      /* Vejde se popisek do tlačítka? Samotná výška nestačí: text má
+         nowrap, takže se při nedostatku místa nezalomí — jen se oreže,
+         a tlačítko zůstane nízké. Přistiženo sabotáží. */
+      prete: h ? h.scrollWidth - h.clientWidth : 0,
+      panelOtevren: !!(document.getElementById('ms-filters') || {}).open,
+      naMape: m ? +m[1].replace(/\s/g, '') : -1,
+      scroll: Math.round(window.scrollY),
+      /* Kde je výpis vůči oknu. Měřit „odrolovalo se dolů" nejde: než se
+         na tlačítko klepne, musí se k němu sjet, takže správné chování
+         je posun NAHORU, k výsledkům. Podstatné je, že výpis je po
+         klepnutí vidět. */
+      vypisTop: (() => { const l = document.getElementById('opp-list');
+        return l ? Math.round(l.getBoundingClientRect().top) : null; })(),
+      okno: window.innerHeight,
+    };
+  });
+
+  const bez = await stav();
+  pravda('na konci panelu je tlačítko s počtem', /^Zobrazit \d/.test(bez.popis.replace(/ /g, ' ')),
+    `stojí tam „${bez.popis}"`);
+  pravda('a bez filtrů se „Zrušit filtry" nenabízí', !bez.zrusitVidet);
+  /* Tlačítko se musí vejít na JEDEN řádek. Na 390px se „Zobrazit 983
+     pozemků" vedle „Zrušit filtry" lámalo na tři řádky — přistiženo
+     na snímku, ne testem, tak ať to příště chytí test. */
+  pravda('a vejde se na jeden řádek', bez.vyskaHotovo > 0 && bez.vyskaHotovo <= 58,
+    `tlačítko je vysoké ${bez.vyskaHotovo} px — text se láme`);
+  pravda('a celý popisek se do něj vejde', bez.prete <= 1,
+    `popisek přetéká o ${bez.prete} px — na úzkém displeji se oreže`);
+  /* Měřením se tohle uhlídat nedá: v sandboxu se nenačte Archivo a
+     v náhradním písmu se „Zobrazit 1 952 pozemků" vedle „Zrušit filtry"
+     ještě vejde. Ve skutečném písmu se lámalo na tři řádky — viděno na
+     snímku. Hlídá se proto samo pravidlo: na úzkém displeji jdou obě
+     tlačítka pod sebe. */
+  {
+    const css = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
+    const m = /@media\s*\(max-width:\s*4\d\dpx\)\s*\{[^}]*\.mcf-akce\{[^}]*flex-direction:\s*column/.test(css);
+    pravda('a na úzkém displeji jdou tlačítka pod sebe', m,
+      'pravidlo .mcf-akce{flex-direction:column-reverse} v úzkém @media chybí');
+  }
+
+  await p.evaluate(() => { const e = document.getElementById('map-cena'); e.value = '300000'; e.dispatchEvent(new Event('change', { bubbles: true })); });
+  await p.waitForTimeout(900);
+  const sFiltrem = await stav();
+  pravda('po nastavení filtru se počet na tlačítku změní', sFiltrem.cislo !== bez.cislo && sFiltrem.cislo > 0,
+    `bez filtru ${bez.cislo}, s filtrem ${sFiltrem.cislo}`);
+  pravda('a sedí s tím, co web hlásí nad výpisem', sFiltrem.cislo === sFiltrem.naMape,
+    `na tlačítku ${sFiltrem.cislo}, nad výpisem ${sFiltrem.naMape}`);
+  pravda('teprve teď se nabídne „Zrušit filtry"', sFiltrem.zrusitVidet);
+
+  /* Zpátky úplně nahoru a klepnout PROGRAMOVĚ, bez dorolování. Jinak
+     by kontrola neměřila posun: Playwright si k tlačítku sám sjede a
+     samotné zavření panelu pak výpis vytáhne nahoru i bez posouvání.
+     Přistiženo sabotáží — po odstranění posunu test procházel dál. */
+  await p.evaluate(() => window.scrollTo(0, 0));
+  await p.waitForTimeout(500);
+  const predKlepnutim = await stav();
+  pravda('před klepnutím je výpis pod okrajem okna', predKlepnutim.vypisTop > predKlepnutim.okno,
+    `výpis je na ${predKlepnutim.vypisTop} px z ${predKlepnutim.okno} — kontrola posunu by nic neměřila`);
+  const kliklo = await p.evaluate(() => {
+    const b = document.getElementById('mcf-hotovo');
+    if (!b || b.disabled) return false;
+    b.click(); return true;
+  });
+  if (!kliklo) { chyb++; zpravy.push('  ✕ na „Zobrazit pozemky" nejde klepnout'); }
+  await p.waitForTimeout(1600);
+  const poKlepnuti = await stav();
+  pravda('klepnutí panel zavře', !poKlepnuti.panelOtevren);
+  pravda('a vytáhne výpis nahoru', poKlepnuti.vypisTop !== null && poKlepnuti.vypisTop <= 220,
+    `před klepnutím ${predKlepnutim.vypisTop} px, po klepnutí ${poKlepnuti.vypisTop} px (okno ${poKlepnuti.okno})`);
+
+  await p.evaluate(() => { document.getElementById('ms-filters').open = true; });
+  await p.waitForTimeout(300);
+  await klikni('#mcf-zrusit', 'klepnutí na „Zrušit filtry"');
+  await p.waitForTimeout(1200);
+  const poZruseni = await stav();
+  pravda('„Zrušit filtry" vrátí celou nabídku', poZruseni.cislo === bez.cislo,
+    `před filtrem ${bez.cislo}, po zrušení ${poZruseni.cislo}`);
+  pravda('a samo se schová', !poZruseni.zrusitVidet);
+  await ctx.close();
+}
+
 await ctx.close();
 await prohlizec.close();
 console.log('\nNašeptávač obcí, oprava překlepu a výběr ceny/výměry');
