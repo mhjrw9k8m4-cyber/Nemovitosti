@@ -330,7 +330,12 @@ async function fetchOkdrazby() {
         if (!cats.includes('Land')) continue;                 // jen pozemky
         if (!/Prepared|Ongoing|Running|Published/i.test(j.statusLocalized || '')) continue; // jen aktivní/nadcházející
         const bma = j.biddingMethodAttributes || {};
-        const price = Math.round(+(bma.lowestSubmission || bma.estimatedPrice || j.auctionSecurity || 0)) || 0;
+        /* `auctionSecurity` je DRAŽEBNÍ JISTOTA, ne vyvolávací cena —
+           bývá to zlomek ceny. Web ji přitom zobrazoval jako
+           „Vyvolávací cena", takže taková dražba vypadala mnohonásobně
+           levněji, než je, a ještě to křivilo cenový model. Radši
+           záznam bez ceny vynechat (řádek níž) než uvést cizí číslo. */
+        const price = Math.round(+(bma.lowestSubmission || bma.estimatedPrice || 0)) || 0;
         if (!price) continue;
         const txt = (j.name || '') + ' ' + (j.description || '');
         const area = parseArea(j.name) || parseArea(j.description);

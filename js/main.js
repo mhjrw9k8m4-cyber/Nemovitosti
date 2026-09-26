@@ -823,7 +823,7 @@
   var countEl = document.getElementById('map-count');
   var searchEl = document.getElementById('map-search');
   var filtersEl = document.getElementById('map-filters');
-  var druhEl = document.getElementById('map-druh');
+  var druhyEl = document.getElementById('mc-druhy');
   var sortEl = document.getElementById('map-sort');
   var cenaEl = document.getElementById('map-cena');
   var areaEl = document.getElementById('map-area');
@@ -851,7 +851,16 @@
   var krajFiltr = 'all';
   var levneOnly = false;
   var activeType = 'all';
-  var activeDruh = 'all';
+  /* VÍC DRUHŮ NARÁZ. Dřív to byl jeden řetězec ('all' nebo jedna
+     skupina) — kdo hledal stavební i zahradu, musel dvakrát. Prázdné
+     pole znamená „všechny". */
+  var druhVybrane = [];
+  function druhVyhovuje(d) {
+    if (!druhVybrane.length) return true;
+    for (var i = 0; i < druhVybrane.length; i++) if (druhSedi(d.druh, druhVybrane[i])) return true;
+    return false;
+  }
+  function druhPopis() { return druhVybrane.join(', '); }
   var sortMode = 'demand';
   var maxPrice = 0;
   var minArea = 0;         // filtr minimální výměry (m²)
@@ -1180,7 +1189,11 @@
     return '<div class="md-verdict ' + cls + '">' +
       '<div class="mv-top"><span class="mv-badge">' + badge + '</span><span class="mv-cmp">Cena za m²</span></div>' +
       '<div class="mv-text">' + text + '</div>' +
-      '<div class="mv-track"><span class="mv-fill" style="--w:' + pct + '%"></span><span class="mv-dot" style="--w:' + pct + '%"></span></div>' +
+      /* Stupnice, ne vypínač — totéž, co na stránce pozemku. Podklad
+         lišty tu měl rgba(255,255,255,0.10), zbytek po tmavém motivu;
+         na světlém panelu z něj nebylo nic vidět, takže se zobrazoval
+         jen vybarvený pahýl od kraje k puntíku. */
+      '<div class="mv-track"><span class="mv-stred"></span><span class="mv-dot" style="--w:' + pct + '%"></span></div>' +
       '<div class="mv-scale"><span>levné</span><span>drahé</span></div>' +
       '</div>' + odhadHtmlMapa(d);
   }
@@ -1195,20 +1208,46 @@
 
 
   // Naplníme filtr druhů podle toho, co je v datech (s počty)
-  if (druhEl) {
+  /* Které druhy v datech vůbec jsou — pořadí podle četnosti, ať je
+     nejčastější první. Počítá se jednou; mění se jen počty u nich. */
+  var DRUHY_VSE = (function () {
     var gc = {};
     DATA.forEach(function (d) { var g = druhGroup(d.druh); gc[g] = (gc[g] || 0) + 1; });
-    /* Nadřazené skupiny se do seznamu přidají jen tehdy, když pod nimi
-       něco je — a s vlastním počtem, ať je vidět, že jde o souhrn. */
-    Object.keys(NADRAZENE).forEach(function (nad) {
-      var n = 0;
-      NADRAZENE[nad].forEach(function (g) { n += gc[g] || 0; });
-      if (n > 0) gc[nad] = n;
-    });
-    Object.keys(gc).sort(function (a, b) { return gc[b] - gc[a]; }).forEach(function (g) {
-      var o = document.createElement('option');
-      o.value = g; o.textContent = g + ' (' + gc[g] + ')';
-      druhEl.appendChild(o);
+    return Object.keys(gc).sort(function (a, b) { return gc[b] - gc[a]; });
+  }());
+  /* Počty u štítků se počítají PROTI OSTATNÍM FILTRŮM, ne proti všem
+     datům. Číslo u štítku tedy říká „tolik jich přibude, když na tohle
+     kliknu" — a když je nula, je vidět dopředu, že tudy cesta nevede.
+     Přesně tohle chybělo u „Musí mít" na hlídání a řešilo se to tam
+     stejně. */
+  function prekresliDruhy() {
+    if (!druhyEl) return;
+    var pocty = {};
+    for (var i = 0; i < DATA.length; i++) {
+      var d = DATA[i];
+      if (!visibleBezDruhu(d)) continue;
+      var g = druhGroup(d.druh);
+      pocty[g] = (pocty[g] || 0) + 1;
+    }
+    var html = '';
+    for (var j = 0; j < DRUHY_VSE.length; j++) {
+      var g2 = DRUHY_VSE[j];
+      var on = druhVybrane.indexOf(g2) >= 0;
+      var n = pocty[g2] || 0;
+      html += '<button type="button" class="mcv-btn' + (on ? ' on' : '') + (n ? '' : ' mcv-nula') + '"'
+        + ' data-druh="' + esc(g2) + '" aria-pressed="' + (on ? 'true' : 'false') + '">'
+        + esc(g2) + '<span class="mcv-n">' + fmt(n) + '</span></button>';
+    }
+    druhyEl.innerHTML = html;
+  }
+  if (druhyEl) {
+    druhyEl.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('.mcv-btn') : null;
+      if (!b || !druhyEl.contains(b)) return;
+      var g = b.getAttribute('data-druh');
+      var i2 = druhVybrane.indexOf(g);
+      if (i2 >= 0) druhVybrane.splice(i2, 1); else druhVybrane.push(g);
+      renderList();
     });
   }
 
@@ -2272,8 +2311,13 @@
        Teď se místo drží mapy, ne obrazovky. Posouvat a přibližovat jde
        volně, výběr to nezmění — mění ho jedině klepnutí. */
     var vybraneMisto = { lat: start.lat, lng: start.lng };
+    /* ZNAČKA SE DÁ CHYTIT A POSUNOUT. Klepnutím do mapy se místo vybere,
+       ale doladit se tím nedá: kdo se trefí o dvě stě metrů vedle, musí
+       klepnout znovu a doufat, že se trefí líp. Přetažení je oprava
+       výběru, ne nový výběr. */
     var znacka = L.marker([start.lat, start.lng], {
-      interactive: false, keyboard: false, zIndexOffset: 800,
+      draggable: true, autoPan: true, autoPanPadding: [44, 44],
+      keyboard: false, zIndexOffset: 800,
       icon: L.divIcon({ className: 'vm-znacka', html: '<span></span>', iconSize: [22, 36], iconAnchor: [11, 36] })
     }).addTo(m);
 
@@ -2318,9 +2362,10 @@
         return;
       }
       var c = stred();
-      var videt = okruhSeVejde(c.lat, c.lng);
-      if (btn) btn.hidden = videt;
-      if (el) el.style.visibility = videt ? '' : 'hidden';
+      if (btn) btn.hidden = okruhSeVejde(c.lat, c.lng);
+      /* Přetékající padesátikilometrový okruh má popisek čitelný —
+         schovává se jen ten, který by skončil na značce. */
+      if (el) el.style.visibility = okruhJeTecka(c.lat, c.lng) ? 'hidden' : '';
     }
 
     var pocetEl = ov.querySelector('#vm-pocet');
@@ -2361,15 +2406,28 @@
        čitelný, a tam se přiblížením hýbat nesmí; kvůli tomu si člověk
        stěžoval. */
     var NEJMENSI_OKRUH_PX = 28;
-    function okruhSeVejde(lat, lng) {
-      var k = parseInt(kmSel.value, 10) || 10;
+    /* Dva různé důvody, proč okruh není vidět, a každý si žádá něco
+       jiného. NEVEJDE SE do okna → popisek s číslem je pořád čitelný,
+       jen kruh přetéká. JE Z NĚJ TEČKA → popisek sedí na značce a zbyde
+       z „10 km" jen „km", takže se radši nekreslí. */
+    function okruhPx(lat, lng) {
       try {
-        if (!m.getBounds().contains(L.latLng(lat, lng).toBounds(k * 2000))) return false;
+        var k = parseInt(kmSel.value, 10) || 10;
+        var hranice = L.latLng(lat, lng).toBounds(k * 2000);
         var stredPx = m.latLngToContainerPoint(L.latLng(lat, lng));
-        var krajPx = m.latLngToContainerPoint(L.latLng(lat, lng).toBounds(k * 2000).getEast
-          ? L.latLng(lat, L.latLng(lat, lng).toBounds(k * 2000).getEast()) : L.latLng(lat, lng));
-        return Math.abs(krajPx.x - stredPx.x) * 2 >= NEJMENSI_OKRUH_PX;
-      } catch (e) { return false; }
+        var krajPx = m.latLngToContainerPoint(L.latLng(lat, hranice.getEast()));
+        return Math.abs(krajPx.x - stredPx.x) * 2;
+      } catch (e) { return 0; }
+    }
+    function okruhPresahuje(lat, lng) {
+      try {
+        var k = parseInt(kmSel.value, 10) || 10;
+        return !m.getBounds().contains(L.latLng(lat, lng).toBounds(k * 2000));
+      } catch (e) { return true; }
+    }
+    function okruhJeTecka(lat, lng) { return okruhPx(lat, lng) < NEJMENSI_OKRUH_PX; }
+    function okruhSeVejde(lat, lng) {
+      return !okruhPresahuje(lat, lng) && !okruhJeTecka(lat, lng);
     }
     function prepocti() {
       var k = parseInt(kmSel.value, 10) || 10;
@@ -2396,7 +2454,7 @@
          40 px?" a kolečko se podle toho schovávalo a zase objevovalo —
          při každém oddálení zmizelo a vypadalo to jako porucha. */
       if (!vybranoMisto) {
-        pocetEl.innerHTML = '<span class="vm-napred">Klepnutím na mapu ukažte, kde to má být.</span>';
+        pocetEl.innerHTML = '<span class="vm-napred">Klepnutím na mapu — nebo přetažením značky — ukažte, kde to má být.</span>';
         if (okEl) { okEl.disabled = true; okEl.setAttribute('aria-disabled', 'true'); }
         return;
       }
@@ -2446,6 +2504,34 @@
       jdiNa(c.lat, c.lng, true);
       hlidejVidet();
     });
+    /* Při tažení se přepočítává nejvýš jednou za 120 ms. Jeden průchod
+       nabídkami stojí kolem 3 ms, takže je to plynulé — ale nespustí to
+       zase to sekání, kvůli kterému se přepočet z posunu mapy vyhodil
+       (tam chodilo šedesát událostí za vteřinu a s nimi i hledání názvu
+       nejbližší obce). Mezi přepočty se aspoň překreslí kruh a měřítko,
+       ať značka neutíká tomu, co kolem ní je. */
+    var poslednihoPrepoctu = 0;
+    znacka.on('dragstart', function () { vybranoMisto = true; });
+    znacka.on('drag', function (e) {
+      var pos = e.target.getLatLng();
+      vybraneMisto = { lat: pos.lat, lng: pos.lng };
+      var ted = Date.now();
+      if (ted - poslednihoPrepoctu < 120) {
+        kruh.setLatLng(pos);
+        vykresliMeritko(vybraneMisto, parseInt(kmSel.value, 10) || 10);
+        return;
+      }
+      poslednihoPrepoctu = ted;
+      prepocti();
+    });
+    /* Po puštění se dopočítá vždycky — poslední poloha se nesmí ztratit
+       jen proto, že spadla do okna mezi dvěma přepočty. */
+    znacka.on('dragend', function () {
+      poslednihoPrepoctu = 0;
+      vybraneMisto = znacka.getLatLng();
+      prepocti();
+      hlidejVidet();
+    });
     m.on('click', function (e) {
       vybranoMisto = true;
       nastavMisto(e.latlng.lat, e.latlng.lng);
@@ -2464,17 +2550,16 @@
     kmVstupy.forEach(function (r) {
       r.addEventListener('change', function () {
         prepocti();
-        var c = stred();
-        /* PŘIBLÍŽENÍ ZŮSTÁVÁ TAM, KAM SI HO ČLOVĚK DAL.
-           Dřív se při každé změně okruhu mapa přerovnala na kruh: kdo si
-           to nastavil tak, jak chtěl, a pak jen přepnul 5 km na 2 km,
-           přišel o svůj pohled — mapa mu poskočila, i když menší kruh se
-           do něj zjevně vešel. Přerovná se proto jen tehdy, když se nový
-           kruh do okna nevejde; tedy jen aby bylo vidět, co vybírám.
-           Zvětšovat přiblížení se nemusí nikdy: menší kruh se do většího
-           pohledu vejde vždycky.
-           BEZ ANIMACE: skok je tu poctivější než přejezd. */
-        if (!okruhSeVejde(c.lat, c.lng)) jdiNa(c.lat, c.lng, false);
+        /* PŘEPNUTÍ OKRUHU MAPOU NEHNE. NIKDY.
+           Nejdřív se mapa přerovnávala při každé změně okruhu. To se
+           zúžilo na „jen když se nový kruh do okna nevejde" — a i to
+           bylo pořád špatně: člověk si přiblíží, kam chce, přepne
+           z 10 km na 50 km a pohled mu uteče. Stížnost zněla doslova
+           „ať mě to nechá tam, kde mám přiblíženo, bez ohledu na to,
+           jak přepínám velikost kruhu".
+           Když okruh není vidět, řekne to tlačítko „Ukázat okruh"
+           (hlidejVidet() volá prepocti() o řádek výš) a přerovná se
+           teprve tehdy, když o to člověk sám požádá. */
       });
     });
     prepocti();
@@ -2791,7 +2876,7 @@
       var _pn = presnyNazev();
       if (_pn) okPresne = jePresna(d, _pn);
     }
-    var okDruh = druhSedi(d.druh, activeDruh);
+    var okDruh = druhVyhovuje(d);
     var okPrice = (!maxPrice || (d.price && d.price <= maxPrice))
       && (!minPrice || (d.price && d.price >= minPrice));
     var okArea = (!minArea || (hasArea(d) && d.area >= minArea))
@@ -2964,18 +3049,27 @@
     pol('přesný název', 'přesný název', !ukazPodobne && !mistoFiltr && !!presnyNazev(),
       function () { ukazPodobne = true; },
       (function () { var a = ukazPodobne; return function () { ukazPodobne = a; }; }()));
-    pol('druh pozemku', 'druh pozemku', activeDruh !== 'all' || !!d.druh,
-      function () { activeDruh = 'all'; d.druh = null; if (druhEl) druhEl.value = 'all'; },
-      (function () { var a = activeDruh, b = d.druh; return function () { activeDruh = a; d.druh = b; if (druhEl) druhEl.value = a; }; }()),
-      activeDruh !== 'all' ? activeDruh : '');
+    pol('druh pozemku', 'druh pozemku', druhVybrane.length > 0 || !!d.druh,
+      function () { druhVybrane = []; d.druh = null; },
+      (function () { var a = druhVybrane.slice(), b = d.druh; return function () { druhVybrane = a; d.druh = b; }; }()),
+      druhVybrane.length ? druhPopis() : '');
     pol('druh nabídky', 'druh nabídky', activeType !== 'all' || !!d.typ,
       function () { activeType = 'all'; d.typ = null; },
       (function () { var a = activeType, b = d.typ; return function () { activeType = a; d.typ = b; }; }()),
       activeType !== 'all' ? ((TYPE[activeType] || {}).label || '') : '');
-    pol('kraj', 'kraj', krajFiltr !== 'all' || !!d.kraj,
-      function () { krajFiltr = 'all'; d.kraj = null; if (krajFiltrEl) krajFiltrEl.value = 'all'; },
-      (function () { var a = krajFiltr, b = d.kraj; return function () { krajFiltr = a; d.kraj = b; if (krajFiltrEl) krajFiltrEl.value = a; }; }()),
-      krajFiltr !== 'all' ? (krajFiltr + (krajFiltr === 'Praha' ? '' : ' kraj')) : '');
+    /* KRAJ MÁ TŘI ZDROJE a odznak musí ukázat kterýkoli z nich:
+       výběr na mapě (selectKraj), parametr v odkazu a věta v hledání.
+       Kdo přijde z krajské stránky odkazem index.html?kraj=…, vidí
+       v seznamu 395 pozemků místo 1 960. Vysvětlení k tomu bylo —
+       jenže v hlavičce UVNITŘ MAPY, a na telefonu je výchozí pohled
+       seznam, takže mělo nulovou velikost a nikdo ho neviděl.
+       Odznak stojí nad oběma pohledy, takže platí pro obojí. */
+    var krajAktivni = (krajFiltr !== 'all' && krajFiltr) || selectedKraj || d.kraj || '';
+    pol('kraj', 'kraj', !!krajAktivni,
+      function () { krajFiltr = 'all'; d.kraj = null; if (selectedKraj) clearKraj(); },
+      (function () { var a = krajFiltr, b = d.kraj, c = selectedKraj;
+        return function () { krajFiltr = a; d.kraj = b; if (c && !selectedKraj) selectKraj(c, true); }; }()),
+      krajAktivni ? (krajAktivni + (krajAktivni === 'Praha' ? '' : ' kraj')) : '');
     pol('cena', 'cenu', !!(maxPrice || minPrice || d.cenaOd || d.cenaDo),
       function () { maxPrice = 0; minPrice = 0; d.cenaOd = null; d.cenaDo = null; },
       (function () { var a = maxPrice, b = minPrice, c = d.cenaOd, e = d.cenaDo;
@@ -3099,6 +3193,13 @@
   function visibleBezOkoli(d) {
     var byl = okoliZap; okoliZap = false;
     try { return visible(d); } finally { okoliZap = byl; }
+  }
+  /* Pro počty u štítků druhu: všechno ostatní platí, jen druh se
+     nebere v potaz — jinak by štítek, na který se neklikne, hlásil nulu
+     jen proto, že je vypnutý. */
+  function visibleBezDruhu(d) {
+    var byl = druhVybrane; druhVybrane = [];
+    try { return visible(d); } finally { druhVybrane = byl; }
   }
   /* CENA ZA METR SE POČÍTÁ Z VÝMĚRY, KTERÁ KUPUJÍCÍMU PŘIPADNE.
      U spoluvlastnického podílu je v inzerátu výměra celé parcely, ale cena
@@ -3275,6 +3376,10 @@
   }
 
   function renderList() {
+    /* Počty u štítků druhu se přepočítávají při každém překreslení —
+       závisí na ostatních filtrech, takže statické číslo by lhalo,
+       jakmile se zapne cokoli dalšího. */
+    prekresliDruhy();
     updateFilterBadge();
     ulozFiltr();
     listEl.innerHTML = '';
@@ -3636,9 +3741,9 @@
   }
 
   function resetFilters() {
-    activeType = 'all'; activeDruh = 'all'; maxPrice = 0; minArea = 0; urgentOnly = false; nastavHledani(''); favOnly = false;
+    activeType = 'all'; druhVybrane = []; maxPrice = 0; minArea = 0; urgentOnly = false; nastavHledani(''); favOnly = false;
     if (searchEl) searchEl.value = '';
-    if (druhEl) druhEl.value = 'all';
+
     minPrice = 0; maxArea = 0;
     [cenaEl, cenaOdEl, areaEl, areaDoEl].forEach(function (el) { if (el) el.value = ''; });
     // Rozsahy ceny a výměry se vymažou i tady — políčka jsou teď v okně
@@ -3725,17 +3830,23 @@
       dosad(areaEl, ma, 'od ' + ma.toLocaleString('cs-CZ') + ' m²');
       if (mc) maxPrice = mc;
       if (ma) minArea = ma;
-      if (dv && druhEl) {
-        // Srovnání bez diakritiky: odkaz z hlídání může nést „orna puda"
-        // (přepsané ručně, bez háčků) a druh se pak tiše nenastavil.
-        var want = HL.norm(dv);
-        for (var oi = 0; oi < druhEl.options.length; oi++) {
-          var ov = druhEl.options[oi], hv = HL.norm(ov.value), ht = HL.norm(ov.text || '');
-          if (ov.value && ov.value !== 'all'
-            && ((hv && want.indexOf(hv) >= 0) || (ht && want.indexOf(ht) >= 0) || (ht && ht.indexOf(want) >= 0))) {
-            druhEl.value = ov.value; activeDruh = ov.value; break;
+      if (dv) {
+        /* V odkazu smí být víc druhů oddělených čárkou. Srovnává se bez
+           diakritiky: odkaz z hlídání může nést „orna puda" přepsané
+           ručně, bez háčků, a druh se pak tiše nenastavil.
+           Nadřazené skupiny se uznávají dál — staré odkazy na ně vedou. */
+        var zname = DRUHY_VSE.concat(Object.keys(NADRAZENE));
+        String(dv).split(',').forEach(function (kus) {
+          var want = HL.norm(kus.trim());
+          if (!want) return;
+          for (var zi = 0; zi < zname.length; zi++) {
+            var hv = HL.norm(zname[zi]);
+            if (hv && (want.indexOf(hv) >= 0 || hv.indexOf(want) >= 0)) {
+              if (druhVybrane.indexOf(zname[zi]) < 0) druhVybrane.push(zname[zi]);
+              break;
+            }
           }
-        }
+        });
       }
       if (typeof lockDots === 'function') lockDots(false);
       renderList();
@@ -4110,7 +4221,7 @@
     ukazNavrhy();
     renderList();
   });
-  if (druhEl) druhEl.addEventListener('change', function () { activeDruh = druhEl.value; renderList(); });
+
   if (sortEl) sortEl.addEventListener('change', function () {
     if (sortEl.value === 'near') {
       /* Řazení podle vzdálenosti potřebuje vědět odkud. Když člověk polohu
@@ -4810,7 +4921,7 @@
    * člověk sám nastavil — vyhledávací text ne, ten je jednorázový. */
   var FILTR_KLIC = 'pk_filtr_v1';
   function ulozFiltr() {
-    zapisUloz(FILTR_KLIC, { typ: activeType, druh: activeDruh, cena: maxPrice,
+    zapisUloz(FILTR_KLIC, { typ: activeType, druh: druhVybrane.slice(), cena: maxPrice,
       plocha: minArea, cenaOd: minPrice, plochaDo: maxArea, urgent: urgentOnly, razeni: sortMode,
       zaMetr: maxPerM2, kraj: krajFiltr, levne: levneOnly });
   }
@@ -4818,7 +4929,9 @@
     var f = ctiUloz(FILTR_KLIC, null);
     if (!f) return false;
     if (f.typ) activeType = f.typ;
-    if (f.druh) activeDruh = f.druh;
+    /* Dřív se ukládal jeden řetězec. Uložené nastavení z té doby se
+       nesmí zahodit — jeden druh se prostě vezme jako jednoprvkový výběr. */
+    if (f.druh) druhVybrane = Array.isArray(f.druh) ? f.druh.slice() : [f.druh];
     if (f.cena) maxPrice = f.cena;
     if (f.plocha) minArea = f.plocha;
     urgentOnly = !!f.urgent;
@@ -4830,7 +4943,7 @@
     if (filtersEl) filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-type') === activeType);
     });
-    if (druhEl) druhEl.value = activeDruh;
+
     if (f.cenaOd) minPrice = f.cenaOd;
     if (f.plochaDo) maxArea = f.plochaDo;
     if (cenaEl && maxPrice) cenaEl.value = String(maxPrice);

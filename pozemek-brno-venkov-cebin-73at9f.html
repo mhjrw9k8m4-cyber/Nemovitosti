@@ -37,7 +37,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=f1d0f829">
+  <link rel="stylesheet" href="css/styles.css?v=f13f13ad">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -78,12 +78,28 @@
     .pv-cmp{font-size:12px; color:var(--text-ondark-mute); font-weight:600;}
     .pv-text{font-size:13.5px; color:var(--text-ondark-mute); line-height:1.5;}
     .pv-text b{color:var(--text-ondark);}
-    .pv-track{position:relative; height:7px; border-radius:99px; background:rgba(228,240,231,0.12); margin-top:11px;}
+    /* Podklad byl rgba(228,240,231,0.12) — zbytek po tmavém motivu.
+       Na světlé kartě z něj nebylo nic vidět, takže lišta vypadala, že
+       končí u puntíku. Odtud ten dojem vypínače. */
+    .pv-track{position:relative; height:8px; border-radius:99px; margin-top:11px;
+      background:rgba(20,35,28,0.13); box-shadow:inset 0 1px 2px rgba(24,45,34,0.07);}
+    /* Ryska uprostřed: bez ní puntík neříká, jestli je „spíš vlevo"
+       hodně, nebo skoro uprostřed. */
+    .pv-stred{position:absolute; left:50%; top:-3px; bottom:-3px; width:1.5px;
+      background:rgba(20,35,28,0.3); transform:translateX(-50%); border-radius:2px;}
     /* Pruh dojede na svou hodnotu — viz .mv-fill ve styles.css. */
     .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:99px;
       width:var(--w); animation:pruhNajed .62s var(--ease) both;}
     .pz-verdict.good .pv-fill{background:var(--c-sale);} .pz-verdict.mid .pv-fill{background:var(--c-drazba);} .pz-verdict.bad .pv-fill{background:var(--c-exekuce);}
-    .pv-dot{position:absolute; top:50%; left:var(--w); width:13px; height:13px; border-radius:50%; background:#fff; border:2.5px solid var(--ink-soft); transform:translate(-50%,-50%); animation:puntikNajed .62s var(--ease) both;}
+    /* Puntík je barevný podle verdiktu a má bílý prstenec, aby byl
+       poznat i tam, kde leží na tmavší části lišty. Bílý puntík na
+       světlé liště splýval. */
+    .pv-dot{position:absolute; top:50%; left:var(--w); width:15px; height:15px; border-radius:50%;
+      background:var(--text-ondark); border:3px solid #fff; box-shadow:var(--e1);
+      transform:translate(-50%,-50%); animation:puntikNajed .62s var(--ease) both;}
+    .pz-verdict.good .pv-dot{background:var(--c-sale);}
+    .pz-verdict.mid .pv-dot{background:var(--c-drazba);}
+    .pz-verdict.bad .pv-dot{background:var(--c-exekuce);}
     .pv-scale{display:flex; justify-content:space-between; font-size:11px; color:var(--text-ondark-mute); margin-top:6px;}
 
     /* Popisek sekce je NADPIS (h2), i když vypadá jako drobný štítek.
@@ -111,6 +127,24 @@
     .pz-feat svg{width:17px; height:17px; stroke-width:2.12; color:var(--copper-bright);}
     .pz-feat-acc svg{color:var(--text-ondark-mute);}
 
+    /* Blok o dražbě. Oranžová je barva dražeb všude na webu; do sedmi
+       dnů se zesílí, po termínu zšedne. */
+    .pz-drazba{margin:14px 0 2px; padding:13px 15px; border-radius:var(--r-plocha);
+      background:rgba(204,107,51,0.11); border:1.5px solid rgba(204,107,51,0.44);}
+    .pz-drazba.blizko{background:rgba(204,107,51,0.17); border-color:var(--c-drazba);}
+    .pz-drazba.prosle{background:var(--ink-soft2); border-color:var(--line-ui);}
+    .pzd-hlava{display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; color:var(--c-drazba-ink);}
+    .pz-drazba.prosle .pzd-hlava{color:var(--text-ondark-mute);}
+    .pzd-hlava svg{width:17px; height:17px; stroke-width:2.1; flex:none;}
+    .pzd-hlava b{font-size:15.5px; font-weight:700;}
+    .pzd-kdy{font-size:13px; font-weight:600; color:var(--text-ondark-mute);}
+    .pzd-pozn{margin:7px 0 0; font-size:13px; line-height:1.55; color:var(--text-ondark-mute);}
+    .pzd-pozn b{color:var(--text-ondark);}
+    .pzd-odkaz{display:inline-flex; align-items:center; min-height:40px; margin-top:10px;
+      padding:0 15px; border-radius:var(--r-ovladani); background:var(--ink-soft);
+      border:1.5px solid var(--c-drazba); color:var(--c-drazba-ink);
+      font-size:13.5px; font-weight:700; text-decoration:none;}
+    .pzd-odkaz:hover{background:var(--c-drazba); color:#fff;}
     .pz-term{display:inline-flex; align-items:center; gap:7px; font-size:13.5px; font-weight:600; color:var(--c-drazba-ink); background:rgba(204,107,51,0.13); border:1px solid rgba(204,107,51,0.44); padding:7px 13px; border-radius:var(--r-plocha); margin:14px 0 2px; white-space:nowrap;}
     .pz-term svg{width:16px; height:16px; stroke-width:2.25; flex:none;}
     /* Dražba po termínu: šedě a bez naléhavosti — už to není příležitost,
@@ -131,7 +165,12 @@
     .pz-btn.ghost:active{transform:scale(.985);}
     .pz-actions{display:flex; gap:9px; flex-wrap:wrap; margin:9px 0 4px;}
     .pz-actions .pz-abtn{flex:1 1 0; min-width:0;}
-    .pz-actions .pz-abtn:first-child{flex-basis:100%; background:rgba(31,81,56,0.07); border-color:rgba(31,81,56,0.4); color:var(--copper-bright);}
+    /* „Otevřít v katastru" působilo jako vypnuté: bledá výplň, tenká
+       linka a stejná váha písma jako u popisků. Je to přitom odkaz,
+       kterým se ověřuje vlastník — na téhle stránce jedna z mála věcí,
+       co má člověk opravdu udělat. */
+    .pz-actions .pz-abtn:first-child{flex-basis:100%; background:rgba(31,81,56,0.10);
+      border-color:var(--copper); border-width:1.5px; color:var(--copper); font-weight:700;}
     .pz-actions .pz-abtn:first-child svg{color:var(--copper-bright);}
     .pz-abtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:48px; padding:0 17px; border-radius:var(--r-ovladani); background:#fff; border:1.5px solid rgba(31,81,56,0.28); color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; box-shadow:0 4px 14px -9px rgba(24,45,34,0.28); transition:border-color .15s ease, background .15s ease, transform .1s ease, box-shadow .15s ease;}
     .pz-abtn:hover{border-color:var(--copper-bright); background:#F2F6F3; box-shadow:0 7px 18px -9px rgba(24,45,34,0.34);}
@@ -306,7 +345,7 @@
 <script src="js/radce.js?v=4fdba86a"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Place","name":"Orná půda 3 943 m² — Čebín, okres Brno-venkov","description":"Na prodej · 195 700 Kč (50 Kč/m²) · 3 943 m² · Čebín, okres Brno-venkov. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-brno-venkov-cebin-73at9f.html","address":{"@type":"PostalAddress","addressLocality":"Čebín","addressRegion":"Brno-venkov","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.295825,"longitude":16.481531}}</script>
 <script>window.PK_POZEMEK={"k":"Čebín|—|Brno-venkov|49.296|16.482","ll":[49.295825,16.481531]};</script>
-<script src="js/pozemek.js?v=81aa6cc4"></script>
+<script src="js/pozemek.js?v=29e2dd87"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

@@ -84,13 +84,17 @@ const PRAZDNA = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
 
 /** Odkaz na první pozemek, který má polohu i cenu. */
-function pozemekUrl() {
-  const d = (JSON.parse(readFileSync('data/opportunities.json', 'utf8')).opportunities || [])
-    .find((x) => typeof x.lat === 'number' && typeof x.lng === 'number' && x.price > 0);
-  if (!d) return null;
+function adresaPozemku(d) {
   const klic = [d.place || '', d.parcel || '', d.okres || '', d.lat.toFixed(3), d.lng.toFixed(3)].join('|');
   return { url: `pozemek.html?p=${encodeURIComponent(klic)}&ll=${d.lat},${d.lng}`, d };
 }
+function najdi(filtr) {
+  const d = (JSON.parse(readFileSync('data/opportunities.json', 'utf8')).opportunities || [])
+    .find((x) => typeof x.lat === 'number' && typeof x.lng === 'number' && x.price > 0 && filtr(x));
+  return d ? adresaPozemku(d) : null;
+}
+function pozemekUrl() { return najdi(() => true); }
+const DRAZBA = najdi((x) => x.type === 'drazba' && /\d{4}-\d{2}-\d{2}/.test(x.extra || ''));
 const CIL = pozemekUrl();
 if (!CIL) {
   console.log('Mapa v detailu pozemku\n  ✕ v datech není ani jeden pozemek s polohou a cenou');
@@ -107,6 +111,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
  * Otevře detail pozemku s podstrčenou sítí.
  * @param nast.zivi   pole názvů hostitelů, které mají ODPOVÍDAT (ostatní mlčí)
  * @param nast.bezLeafletu  zahodí mapovou knihovnu
+ * @param nast.cil    adresa pozemku, který se má otevřít (výchozí CIL)
  */
 async function detail(nast) {
   nast = nast || {};
@@ -146,7 +151,7 @@ async function detail(nast) {
   const p = await ctx.newPage();
   const padlo = [];
   p.on('pageerror', (e) => padlo.push(String((e && e.message) || e).slice(0, 160)));
-  await p.goto(`${BASE}/${CIL.url}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
+  await p.goto(`${BASE}/${nast.cil || CIL.url}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
   await p.waitForTimeout(1500);
   return { ctx, p, padlo, dotazy };
 }
@@ -548,6 +553,45 @@ const HOST = {
   pravda('bez mapové knihovny se ukáže nehybný snímek', stav.nahrada && stav.obrazek,
     `náhrada ${stav.nahrada}, snímek ${stav.obrazek}`);
   pravda('a není to prázdný rám', stav.vyska > 120, `vysoké ${stav.vyska} px`);
+  await ctx.close();
+}
+
+/* --- DETAIL DRAŽBY -------------------------------------------------
+ * Byl chudší než detail prodeje: jednořádkový odpočet „Termín za
+ * 16 dní" a nic víc. Kdo zvažuje dražbu, potřebuje vědět, kdy to je,
+ * za kolik se začíná, kolik se skládá dopředu a kde jsou závazné
+ * podmínky. Datum a vyvolávací cenu máme u všech 104 dražeb
+ * i exekucí; DRAŽEBNÍ JISTOTU nemáme u ani jedné — a právě proto se
+ * o ní musí říct, kde je, místo aby se odhadla. Odhadnutá jistota by
+ * byla horší než žádná: podle ní se posílají peníze.
+ */
+if (DRAZBA) {
+  const { ctx, p } = await detail({ zivi: [HOST.katastr], cil: DRAZBA.url });
+  const v = await p.evaluate(() => {
+    const b = document.querySelector('.pz-drazba');
+    return b ? { je: true, text: (b.textContent || '').replace(/\s+/g, ' ').trim(),
+      odkaz: !!b.querySelector('.pzd-odkaz') } : { je: false };
+  });
+  pravda('detail dražby má vlastní blok, ne jen řádek s termínem', v.je === true,
+    'blok .pz-drazba se nevykreslil');
+  if (v.je) {
+    const m = /(\d{4})-(\d{2})-(\d{2})/.exec(DRAZBA.d.extra || '');
+    const MES = ['ledna', 'února', 'března', 'dubna', 'května', 'června',
+      'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];
+    const kdy = m ? `${+m[3]}. ${MES[+m[2] - 1]} ${m[1]}` : '';
+    pravda('a stojí v něm datum dražby, ne jen „za N dní"',
+      kdy && v.text.indexOf(kdy) >= 0, `čekáno „${kdy}", blok říká: „${v.text.slice(0, 120)}"`);
+    pravda('a vyvolávací cena', /Vyvolávací cena/.test(v.text), v.text.slice(0, 120));
+    /* Tohle je ta poctivá část: jistotu v datech nemáme, tak se řekne,
+       kde ji hledat. Kdyby se tu jednou objevilo číslo, znamenalo by to,
+       že si ho někdo vymyslel. */
+    pravda('a u jistoty se pošle pro vyhlášku, místo aby se hádala',
+      /Dražební jistotu/.test(v.text) && /vyhláška/i.test(v.text)
+        && !/jistota\s*[:\s]\s*\d/i.test(v.text),
+      v.text.slice(0, 200));
+    pravda('a vede odsud odkaz na podmínky u dražebníka', v.odkaz === true,
+      'blok o dražbě neodkazuje nikam');
+  }
   await ctx.close();
 }
 

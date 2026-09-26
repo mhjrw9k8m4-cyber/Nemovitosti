@@ -422,6 +422,18 @@ body.vm-otevreno{overflow:hidden;}
 .vm-zpet:active{transform:translateX(-50%) scale(.99);}
 .vm-zpet svg{width:17px; height:17px; flex:none; fill:none; stroke:currentColor;
   stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round;}
+/* Značka se dá chytit a posunout, takže potřebuje plochu na prst.
+   Samotný puntík má 22 px, na dotyk je to málo — okolní průhledná
+   plocha ji zvětší na 48×52, aniž by se pohnula špička, na kterou je
+   značka ukotvená. touch-action vypíná posun mapy prstem NAD značkou,
+   jinak by se místo značky táhla mapa. */
+.vm-znacka{cursor:grab; touch-action:none;}
+.vm-znacka:active{cursor:grabbing;}
+/* Plocha se rozšiřuje NAHORU a do stran, ne dolů. Značka je kreslená
+   nad svou kotvou a kotva sedí po výběru uprostřed mapy — kdo chce
+   mapu posunout, chytá ji nejčastěji právě uprostřed. S přesahem dolů
+   se místo mapy táhla značka; test to odhalil hned. */
+.vm-znacka::before{content:""; position:absolute; left:-12px; right:-12px; top:-10px; bottom:0;}
 .vm-znacka span{display:block; width:22px; height:22px; border-radius:50%;
   background:#8A5512; border:3px solid #fff; box-shadow:var(--e2); box-sizing:border-box; position:relative;}
 .vm-znacka span::after{content:""; position:absolute; left:50%; top:100%; width:2px; height:14px;
@@ -1044,6 +1056,47 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .mcv-btn:hover{border-color:var(--copper); color:var(--copper);}
 .mcv-btn.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
 .mcv-n{font-size:11px; font-weight:700; opacity:.75; font-variant-numeric:tabular-nums;}
+/* Štítek, pod kterým při dnešním nastavení nic není. Neschovává se —
+   schovaná možnost vypadá, jako by neexistovala; takhle je vidět, že
+   existuje a je prázdná. Kliknout na něj jde dál: sám o sobě filtr
+   rozšiřuje, takže se po něm může něco objevit. */
+.mcv-btn.mcv-nula{opacity:.5;}
+.mcv-btn.mcv-nula.on{opacity:1;}
+/* Řada štítků druhu. Je to první filtr v panelu, tak ať má vzduch. */
+.mc-druhy{grid-column:1 / -1;}
+/* PŘEPÍNAČ, KTERÝ VYPADÁ JAKO PŘEPÍNAČ. „Končí do 14 dní", „Pod
+   obvyklou cenou" a „Uložené" měly doslova třídu rozbalovacího
+   seznamu (class="map-select urgent-toggle") — široká krabička
+   s rámečkem, k nerozeznání od Druhu a Kraje vedle. Zapnutý stav byl
+   navíc jen jiná barva, takže kdo barvy nerozezná, nepoznal nic.
+   Teď je to tentýž štítek jako Elektřina/Voda a po zapnutí se
+   zaškrtne. */
+.mc-prep{display:inline-flex; align-items:center; gap:7px; font:inherit; font-size:12.5px; font-weight:600;
+  cursor:pointer; min-height:38px; padding:8px 13px; border-radius:var(--r-pill);
+  border:1px solid var(--line-ui); background:none; color:var(--text-ondark-mute);
+  transition:background .15s ease, color .15s ease, border-color .15s ease;}
+.mc-prep:hover{border-color:var(--copper); color:var(--copper);}
+.mc-prep.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
+/* Zaškrtnutí se nekreslí obrázkem, ale rámečkem s fajfkou: v zapnutém
+   stavu je bílé na zelené, ve vypnutém je z něj prázdný čtvereček. */
+.mcp-v{flex:none; width:15px; height:15px; border-radius:var(--r-xs); position:relative;
+  border:1.5px solid currentColor; opacity:.55;}
+.mc-prep.on .mcp-v{opacity:1; background:#fff; border-color:#fff;}
+.mc-prep.on .mcp-v::after{content:""; position:absolute; left:4px; top:1px; width:4px; height:8px;
+  border:solid var(--plocha-znacka); border-width:0 2px 2px 0; transform:rotate(43deg);}
+
+/* Řada nad výsledky: počet, „Uložené" a řazení. */
+.ms-vysledky{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 12px; margin-bottom:10px;}
+.msv-ovladani{display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;}
+.msv-ulozene{min-height:36px; padding:6px 12px; font-size:12px;}
+.msv-razeni{display:flex; min-width:0;}
+.msv-razeni .map-select{width:auto; min-width:0; max-width:210px; min-height:36px; padding:6px 30px 6px 11px; font-size:12.5px;}
+@media (max-width:560px){
+  .ms-vysledky{flex-direction:column; align-items:stretch;}
+  .msv-ovladani{justify-content:space-between;}
+  .msv-razeni{flex:1 1 auto;}
+  .msv-razeni .map-select{width:100%; max-width:none;}
+}
 .mcv-pozn{margin:7px 0 0; font-size:11.5px; line-height:1.45; color:var(--muted);}
 
 /* CENA A VÝMĚRA: klidný souhrn v panelu, ovládání na celé obrazovce.
@@ -1352,7 +1405,10 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .mv-cmp{font-size:10.5px; font-weight:700; letter-spacing:0.09em; text-transform:uppercase; color:var(--popisek);}
 .mv-text{font-size:13px; line-height:1.5; color:var(--text-ondark); margin-bottom:10px;}
 .mv-text b{color:var(--vc); font-weight:700;}
-.mv-track{position:relative; height:7px; border-radius:var(--r-xs); background:rgba(255,255,255,0.10);}
+.mv-track{position:relative; height:8px; border-radius:var(--r-pill); background:rgba(20,35,28,0.13);
+  box-shadow:inset 0 1px 2px rgba(24,45,34,0.07);}
+.mv-stred{position:absolute; left:50%; top:-3px; bottom:-3px; width:1.5px;
+  background:rgba(20,35,28,0.3); transform:translateX(-50%); border-radius:var(--r-xs);}
 /* Pruh dojede na svou hodnotu, místo aby tam rovnou stál. Je to jediný
    údaj na kartě, který je MĚŘÍTKO — krátký pohyb řekne „tohle je škála a
    tady na ní jsi" líp než jakýkoli popisek. Cílovou šířku nese proměnná
@@ -1363,9 +1419,11 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 @keyframes pruhNajed{from{width:0;} to{width:var(--w);}}
 @keyframes puntikNajed{from{left:0;} to{left:var(--w);}}
 @media (prefers-reduced-motion:reduce){
-  .mv-fill, .mv-dot, .pv-fill, .pv-dot{animation:none;}
+  .mv-dot, .pv-dot{animation:none;}
 }
-.mv-dot{position:absolute; top:50%; width:13px; height:13px; border-radius:50%; background:#fff; border:2px solid var(--vc); transform:translate(-50%,-50%); box-shadow:0 1px 5px rgba(0,0,0,0.5);}
+.mv-dot{position:absolute; top:50%; left:var(--w); width:15px; height:15px; border-radius:50%;
+  background:var(--vc); border:3px solid #fff; transform:translate(-50%,-50%); box-shadow:var(--e1);
+  animation:puntikNajed .62s var(--ease) both;}
 .mv-scale{display:flex; justify-content:space-between; margin-top:6px; font-size:10px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--popisek);}
 .md-note{margin-top:11px; font-size:12px; line-height:1.55; color:var(--text-ondark-mute); border-left:2px solid var(--copper-bright); background:rgba(126,196,157,0.06); border-radius:0 var(--r-sm) var(--r-sm) 0; padding:9px 11px;}
 /* Varování u nabídky od majitele. Musí být poznat na první pohled, že
@@ -1486,7 +1544,11 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   background:linear-gradient(180deg, rgba(12,26,18,0) 0%, rgba(12,26,18,0.58) 55%, rgba(12,26,18,0.82) 100%);}
 .sn-popis b{font-family:var(--font-display); font-size:20px; font-weight:700; line-height:1.15; letter-spacing:-.01em;}
 .sn-popis i{font-style:normal; font-size:12.5px; color:rgba(255,255,255,0.86);}
-.sn-popis u{text-decoration:none; font-family:var(--font-mono); font-size:10px; letter-spacing:.04em;
+/* Bez strojového písma. Na kartě je nadpis v patkovém a údaje
+   v bezpatkovém — třetí řez, a ještě strojový, z toho dělá
+   přehlídku písem. Monospace patří k číslům, která se mají
+   srovnávat pod sebou, ne k větě. */
+.sn-popis u{text-decoration:none; font-size:11px; letter-spacing:.03em;
   color:rgba(255,255,255,0.72); margin-top:3px;}
 @media (max-width:560px){ .sn-popis{padding:26px 13px 11px;} .sn-popis b{font-size:17px;} }
 /* Legenda mapy (vpravo nahoře) */

@@ -169,34 +169,40 @@ const ADRESA = `${BASE}/pozemek.html?p=Vala%C5%A1sk%C3%A1%20Senice%7C%E2%80%94%7
   const ctx = await kontext(false);
   const p = await ctx.newPage();
   await p.goto(ADRESA, { waitUntil: 'domcontentloaded' });
-  // Hned po vykreslení: pruh má být teprve na cestě.
-  await p.waitForSelector('.pv-fill', { timeout: 6000 }).catch(() => {});
-  const hned = await p.evaluate(() => {
-    const f = document.querySelector('.pv-fill');
-    if (!f) return null;
-    return { sirka: f.getBoundingClientRect().width, cil: getComputedStyle(f).getPropertyValue('--w').trim() };
-  });
-  await p.waitForTimeout(1200);
-  const potom = await p.evaluate(() => {
-    const f = document.querySelector('.pv-fill');
+  /* MĚŘÍ SE PUNTÍK, NE VYBARVENÁ ČÁST. Lišta se dřív vybarvovala od
+     kraje k puntíku a měřila se ta šířka — jenže tím vypadala jako
+     přepínač v poloze „zapnuto", ne jako místo na škále, a vybarvování
+     zmizelo. Pohyb dělá puntík: jede zleva na svou hodnotu (--w). */
+  await p.waitForSelector('.pv-dot', { timeout: 6000 }).catch(() => {});
+  const kdeJePuntik = () => p.evaluate(() => {
     const d = document.querySelector('.pv-dot');
-    if (!f) return null;
-    return {
-      sirka: f.getBoundingClientRect().width,
-      stopa: f.parentElement.getBoundingClientRect().width,
-      cil: getComputedStyle(f).getPropertyValue('--w').trim(),
-      puntikVlevo: d ? getComputedStyle(d).left : null,
-    };
+    if (!d) return null;
+    const t = d.parentElement.getBoundingClientRect(), r = d.getBoundingClientRect();
+    return { posun: (r.left + r.width / 2) - t.left, stopa: t.width,
+      cil: getComputedStyle(d).getPropertyValue('--w').trim() };
   });
-  pravda('pruh s cenou se na stránce vykreslí', !!potom, 'element .pv-fill se nenašel');
+  const hned = await kdeJePuntik();
+  await p.waitForTimeout(1200);
+  const potom = await kdeJePuntik();
+  pravda('pruh s cenou se na stránce vykreslí', !!potom, 'element .pv-dot se nenašel');
   if (potom) {
-    pravda('pruh se hýbe, ne že tam rovnou stojí', hned && hned.sirka < potom.sirka - 1,
-      `hned ${hned && hned.sirka.toFixed(1)} px, potom ${potom.sirka.toFixed(1)} px`);
+    pravda('puntík se hýbe, ne že tam rovnou stojí', hned && hned.posun < potom.posun - 1,
+      `hned ${hned && hned.posun.toFixed(1)} px, potom ${potom.posun.toFixed(1)} px`);
     const chtena = parseFloat(potom.cil) / 100 * potom.stopa;
-    pravda('a dojede přesně tam, kam má', Math.abs(potom.sirka - chtena) < 2,
-      `skončil na ${potom.sirka.toFixed(1)} px, mělo být ${chtena.toFixed(1)} px (${potom.cil})`);
-    pravda('puntík na měřítku dojede taky', potom.puntikVlevo && parseFloat(potom.puntikVlevo) > 0,
-      `puntík zůstal na ${potom.puntikVlevo}`);
+    pravda('a dojede přesně tam, kam má', Math.abs(potom.posun - chtena) < 2,
+      `skončil na ${potom.posun.toFixed(1)} px, mělo být ${chtena.toFixed(1)} px (${potom.cil})`);
+    /* A lišta pod ním musí být vidět celá — bez toho je z ní zase
+       vypínač. Měří se proti pozadí karty. */
+    const vidnoLista = await p.evaluate(() => {
+      const t = document.querySelector('.pv-track');
+      if (!t) return null;
+      const rgb = (x) => { const m = /rgba?\(([^)]+)\)/.exec(x); if (!m) return null;
+        const c = m[1].split(',').map(parseFloat); return { r: c[0], g: c[1], b: c[2], a: c.length > 3 ? c[3] : 1 }; };
+      const b2 = rgb(getComputedStyle(t).backgroundColor);
+      return b2 ? b2.a : 0;
+    });
+    pravda('a lišta pod puntíkem je vidět celá, ne jen po puntík',
+      vidnoLista !== null && vidnoLista > 0.05, `průhlednost podkladu lišty ${vidnoLista}`);
   }
   await ctx.close();
 }
@@ -207,23 +213,23 @@ const ADRESA = `${BASE}/pozemek.html?p=Vala%C5%A1sk%C3%A1%20Senice%7C%E2%80%94%7
   const ctx = await kontext(true);
   const p = await ctx.newPage();
   await p.goto(ADRESA, { waitUntil: 'domcontentloaded' });
-  await p.waitForSelector('.pv-fill', { timeout: 6000 }).catch(() => {});
-  const hned = await p.evaluate(() => {
-    const f = document.querySelector('.pv-fill');
-    return f ? { sirka: f.getBoundingClientRect().width, anim: getComputedStyle(f).animationName } : null;
+  await p.waitForSelector('.pv-dot', { timeout: 6000 }).catch(() => {});
+  const kde = () => p.evaluate(() => {
+    const d = document.querySelector('.pv-dot');
+    if (!d) return null;
+    const t = d.parentElement.getBoundingClientRect(), r = d.getBoundingClientRect();
+    return { posun: (r.left + r.width / 2) - t.left, stopa: t.width,
+      cil: getComputedStyle(d).getPropertyValue('--w').trim(), anim: getComputedStyle(d).animationName };
   });
+  const hned = await kde();
   await p.waitForTimeout(900);
-  const potom = await p.evaluate(() => {
-    const f = document.querySelector('.pv-fill');
-    return f ? { sirka: f.getBoundingClientRect().width, stopa: f.parentElement.getBoundingClientRect().width,
-      cil: getComputedStyle(f).getPropertyValue('--w').trim() } : null;
-  });
+  const potom = await kde();
   pravda('s vypnutými animacemi se nic nehýbe',
-    hned && potom && Math.abs(hned.sirka - potom.sirka) < 1 && hned.anim === 'none',
-    `hned ${hned && hned.sirka.toFixed(1)} px (animace ${hned && hned.anim}), potom ${potom && potom.sirka.toFixed(1)} px`);
+    hned && potom && Math.abs(hned.posun - potom.posun) < 1 && hned.anim === 'none',
+    `hned ${hned && hned.posun.toFixed(1)} px (animace ${hned && hned.anim}), potom ${potom && potom.posun.toFixed(1)} px`);
   pravda('ale hodnota na měřítku je správná i tak',
-    potom && Math.abs(potom.sirka - parseFloat(potom.cil) / 100 * potom.stopa) < 2,
-    potom ? `${potom.sirka.toFixed(1)} px místo ${potom.cil}` : '');
+    potom && Math.abs(potom.posun - parseFloat(potom.cil) / 100 * potom.stopa) < 2,
+    potom ? `${potom.posun.toFixed(1)} px místo ${potom.cil}` : '');
   await ctx.close();
 }
 

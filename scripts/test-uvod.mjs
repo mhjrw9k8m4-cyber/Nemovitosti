@@ -253,6 +253,111 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   await p.waitForTimeout(1200);
 }
 
+/* --- PANEL FILTRŮ: CO JE FILTR A CO NENÍ ---------------------------
+ * Z recenze panelu: druh je nejdůležitější filtr, a byl schovaný
+ * v rozbalovátku s jednou volbou; kraj je moc hrubé síto a zabíral
+ * místo, které patří našeptávači na obec a okres; řazení a „Uložené"
+ * mezi filtry vůbec nepatří, protože nic neubírají.
+ */
+{
+  await p.evaluate(() => { document.querySelectorAll('details').forEach((d) => { d.open = true; }); });
+  await p.waitForTimeout(400);
+
+  const v = await p.evaluate(() => {
+    const vidno = (e) => { if (!e) return false; const r = e.getBoundingClientRect();
+      return r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden'; };
+    const stitky = [...document.querySelectorAll('#mc-druhy .mcv-btn')];
+    return {
+      druhStitku: stitky.length,
+      druhSPoctem: stitky.filter((b) => b.querySelector('.mcv-n') && /\d/.test(b.querySelector('.mcv-n').textContent)).length,
+      druhRozbalovatko: !!document.getElementById('map-druh'),
+      krajRozbalovatko: !!document.getElementById('map-kraj'),
+      razeniVPanelu: !!document.querySelector('.map-controls #map-sort'),
+      razeniNadVysledky: vidno(document.querySelector('.ms-vysledky #map-sort')),
+      ulozeneVPanelu: !!document.querySelector('.map-controls #map-fav'),
+      ulozeneNadVysledky: vidno(document.querySelector('.ms-vysledky #map-fav')),
+      prepinaceJakoStitky: [...document.querySelectorAll('.mc-toggles button')]
+        .every((b) => b.classList.contains('mc-prep') && !b.classList.contains('map-select')),
+    };
+  });
+
+  pravda('druh pozemku je řada štítků, ne rozbalovací seznam',
+    v.druhStitku >= 4 && v.druhRozbalovatko === false, `štítků ${v.druhStitku}, select ${v.druhRozbalovatko}`);
+  pravda('a u každého štítku stojí počet', v.druhSPoctem === v.druhStitku,
+    `s počtem ${v.druhSPoctem} z ${v.druhStitku}`);
+  pravda('kraj už panel nezabírá — od toho je nahoře našeptávač',
+    v.krajRozbalovatko === false);
+  pravda('řazení je nad výsledky, ne mezi filtry',
+    v.razeniNadVysledky === true && v.razeniVPanelu === false, JSON.stringify(v));
+  pravda('„Uložené" taky — není to vlastnost pozemku, ale můj výběr',
+    v.ulozeneNadVysledky === true && v.ulozeneVPanelu === false, JSON.stringify(v));
+  pravda('přepínače v panelu vypadají jako štítky, ne jako rozbalovátka',
+    v.prepinaceJakoStitky === true, 'zbyla třída map-select — přepínač se tváří jako seznam');
+
+  /* VÍC DRUHŮ NARÁZ. Kdo hledá stavební NEBO zahradu, musel dřív hledat
+     dvakrát. Zaškrtnutí druhého druhu musí výběr ROZŠÍŘIT. */
+  const pocet = () => p.evaluate(() => (document.getElementById('map-count') || {}).textContent || '');
+  const cislo = (t) => { const m = /(\d[\d\s ]*)/.exec(t.replace(/ /g, ' ')); return m ? +m[1].replace(/\s/g, '') : -1; };
+  await p.click('#mc-druhy .mcv-btn:nth-child(1)');
+  await p.waitForTimeout(500);
+  const jeden = cislo(await pocet());
+  await p.click('#mc-druhy .mcv-btn:nth-child(2)');
+  await p.waitForTimeout(500);
+  const dva = cislo(await pocet());
+  pravda('zaškrtnutí druhého druhu výběr rozšíří, nezúží', dva > jeden,
+    `jeden druh ${jeden}, dva druhy ${dva}`);
+  const obaOn = await p.evaluate(() =>
+    [...document.querySelectorAll('#mc-druhy .mcv-btn')].filter((b) => b.classList.contains('on')).length);
+  pravda('a oba štítky zůstanou zapnuté', obaOn === 2, `zapnutých ${obaOn}`);
+  /* Počty u štítků se musí řídit ostatními filtry — jinak by číslo
+     lhalo, jakmile se zapne cokoli dalšího. */
+  const pocPred = await p.evaluate(() =>
+    [...document.querySelectorAll('#mc-druhy .mcv-btn .mcv-n')].map((n) => n.textContent.trim()).join('|'));
+  await p.click('#map-urgent');
+  await p.waitForTimeout(600);
+  const pocPo = await p.evaluate(() =>
+    [...document.querySelectorAll('#mc-druhy .mcv-btn .mcv-n')].map((n) => n.textContent.trim()).join('|'));
+  pravda('počty u štítků se mění podle ostatních filtrů', pocPred !== pocPo,
+    `před „${pocPred}", po „${pocPo}" — číslo, které se nemění, je jen ozdoba`);
+  await p.click('#map-urgent');
+  await p.waitForTimeout(300);
+}
+
+/* --- ODKAZ Z KRAJSKÉ STRÁNKY --------------------------------------
+ * 91 stránek vede na index.html?kraj=… Rozbalovátko Kraj je z panelu
+ * pryč, takže tenhle odkaz je jediný způsob, jak se kraj zapne — a
+ * musí být vidět, že je zapnutý. Vysvětlení k tomu bylo v hlavičce
+ * UVNITŘ MAPY, jenže na telefonu je výchozí pohled seznam a hlavička
+ * měla nulovou velikost. Odznak stojí nad oběma pohledy.
+ */
+{
+  await p.goto(`${BASE}/index.html?kraj=${encodeURIComponent('Jihomoravský')}#mapa`,
+    { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(2200);
+  const v = await p.evaluate(() => {
+    const c = document.querySelector('.ms-chipy');
+    const cislo = (t) => { const m = /(\d[\d\s\u00a0]*)/.exec(String(t).replace(/\u00a0/g, ' ')); return m ? +m[1].replace(/\s/g, '') : -1; };
+    return { vidno: !!(c && !c.hidden), text: (c ? c.textContent : '').replace(/\s+/g, ' ').trim(),
+      pocet: cislo((document.getElementById('map-count') || {}).textContent) };
+  });
+  pravda('odkaz z krajské stránky kraj opravdu zafiltruje', v.pocet > 0 && v.pocet < 1500,
+    `v seznamu ${v.pocet} pozemků`);
+  pravda('a je vidět, který kraj to je — i v seznamu, ne jen na mapě',
+    v.vidno && /Jihomoravsk/.test(v.text), `odznaky: „${v.text.slice(0, 80)}"`);
+  const x = await p.$('.ms-chipy [data-omez]');
+  if (x) {
+    await x.click();
+    await p.waitForTimeout(900);
+    const po = await p.evaluate(() => {
+      const m = /(\d[\d\s\u00a0]*)/.exec(String((document.getElementById('map-count') || {}).textContent).replace(/\u00a0/g, ' '));
+      return m ? +m[1].replace(/\s/g, '') : -1;
+    });
+    pravda('a dá se zrušit jedním klepnutím', po > v.pocet, `${v.pocet} → ${po}`);
+  } else {
+    pravda('a dá se zrušit jedním klepnutím', false, 'odznak kraje se vůbec nevykreslil');
+  }
+}
+
 await prohlizec.close();
 
 console.log('\nÚvodní obrazovka — živá čísla a věrohodnost cen');

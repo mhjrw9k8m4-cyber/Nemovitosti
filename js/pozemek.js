@@ -221,6 +221,50 @@
   var GALLERY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
   var PIN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
   var MAP_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3z"/><path d="M9 3v15M15 6v15"/></svg>';
+  /* DETAIL DRAŽBY BYL CHUDŠÍ NEŽ DETAIL PRODEJE. Zbyl z něj jednořádkový
+     odpočet „Termín za 16 dní" a nic víc. Kdo zvažuje dražbu, potřebuje
+     vědět čtyři věci: kdy to je, za kolik se začíná, kolik se skládá
+     dopředu a kde jsou závazné podmínky.
+     Tři z nich umíme říct přesně — datum máme u všech 104 dražeb
+     i exekucí a vyvolávací cenu taky. Dražební jistotu v datech NEMÁME
+     ani u jedné, tak se to řekne rovnou a pošle se pro ni tam, kde
+     opravdu je. Odhadovat ji by bylo horší než ji neuvést: podle ní se
+     posílají peníze. */
+  var MESICE = ['ledna', 'února', 'března', 'dubna', 'května', 'června',
+    'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];
+  function datumText(extra) {
+    var m = /(\d{4})-(\d{2})-(\d{2})/.exec(extra || '');
+    if (!m) return '';
+    return (+m[3]) + '. ' + MESICE[(+m[2]) - 1] + ' ' + m[1];
+  }
+  function pzDrazbaHtml(d, days) {
+    if (d.type !== 'drazba' && d.type !== 'exekuce') return '';
+    var kdy = datumText(d.extra);
+    if (days == null && !kdy) return '';
+    var prosle = days != null && days < 0;
+    var blizko = days != null && days >= 0 && days <= 7;
+    var slovo = d.type === 'exekuce' ? 'Nucená dražba' : 'Dražba';
+    /* Čeština: „za 2 dny", ale „za 5 dní". Strojové „za 2 dní" si web
+       hlídá testem čestiny jinde, tak ať se to nerozjede zrovna tady. */
+    var hlava = prosle ? slovo + ' už proběhla'
+      : (days === 0 ? slovo + ' je dnes'
+        : (days === 1 ? slovo + ' je zítra'
+          : slovo + ' za ' + days + ' ' + (days < 5 ? 'dny' : 'dní')));
+    var cenaSlovo = d.type === 'drazba' ? 'Vyvolávací cena' : 'Odhadní cena';
+    var deep = d.url && isDeepLink(d.url);
+    return '<div class="pz-drazba' + (prosle ? ' prosle' : (blizko ? ' blizko' : '')) + '">' +
+      '<div class="pzd-hlava">' + CLOCK_SVG + '<b>' + hlava + '</b>' +
+        (kdy ? '<span class="pzd-kdy">' + kdy + '</span>' : '') + '</div>' +
+      (prosle
+        ? '<p class="pzd-pozn">Záznam tu zůstává kvůli historii. U dražebníka si ověřte, jestli se vydražilo, nebo bude další kolo.</p>'
+        : '<p class="pzd-pozn">' +
+            (d.price > 0 ? '<b>' + cenaSlovo + ' ' + fmt(d.price) + ' Kč.</b> ' : '') +
+            '<b>Dražební jistotu</b> a závazné podmínky uvádí <b>dražební vyhláška</b> — tu v datech nemáme, ' +
+            'přečtěte si ji u dražebníka. Jistota musí být připsaná <b>před zahájením</b>, ne v den dražby.</p>') +
+      (deep ? '<a class="pzd-odkaz" href="' + esc(d.url) + '" target="_blank" rel="noopener">Podmínky u dražebníka' + VEN + '</a>' : '') +
+      '</div>';
+  }
+
   var CLOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
   var HEART_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
   var SHARE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>';
@@ -261,7 +305,13 @@
     return '<div class="pz-verdict ' + cls + '">' +
       '<div class="pv-top"><span class="pv-badge">' + badge + '</span><span class="pv-cmp">Cena za m²</span></div>' +
       '<div class="pv-text">' + text + '</div>' +
-      '<div class="pv-track"><span class="pv-fill" style="--w:' + pct + '%"></span><span class="pv-dot" style="--w:' + pct + '%"></span></div>' +
+      /* STUPNICE, NE VYPÍNAČ. Dřív se lišta od kraje po puntík
+         vybarvovala, zbytek byl průhledný — a protože neobarvená část
+         nebyla na světlém podkladu vidět, zůstal na obrazovce jen
+         barevný pahýl. Četlo se to jako přepínač v poloze „zapnuto",
+         ne jako místo na škále. Teď je vidět celá lišta, uprostřed má
+         rysku (tam je průměr) a na ní sedí jeden puntík. */
+      '<div class="pv-track"><span class="pv-stred"></span><span class="pv-dot" style="--w:' + pct + '%"></span></div>' +
       '<div class="pv-scale"><span>levné</span><span>drahé</span></div>' +
       '</div>' + odhadHtml(d);
   }
@@ -752,10 +802,7 @@
       /* Po termínu se blok jen vynechával, takže stránka vypadala jako
          běžná nabídka a o tom, že dražba už proběhla, nepadlo slovo.
          Kdo sem přijde po starším odkazu, musí se to dozvědět hned. */
-      (days == null ? ''
-        : days >= 0
-          ? '<div class="pz-term">' + CLOCK_SVG + 'Termín ' + countdownText(days) + '</div>'
-          : '<div class="pz-term prosle">' + CLOCK_SVG + 'Dražba už proběhla — tahle nabídka je jen k nahlédnutí</div>') +
+      pzDrazbaHtml(d, days) +
 
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
 
@@ -775,8 +822,16 @@
            slovem vedle sebe a u jedné se neví, kam vede. Tahle vede pryč
            z webu, tak ať je to na ní vidět, stejně jako u „Otevřít
            v katastru" o kus níž. */
-        '<a class="pz-btn primary" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>' +
-        (d.type === 'majitel' ? '' : '<a class="pz-btn ghost" href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.label) + VEN + '</a>') +
+        /* HLAVNÍ TLAČÍTKO VEDE NA NABÍDKU. Zelené, tedy hlavní, bývalo
+           „Otevřít v Mapy.cz" — jenže kdo se dívá na pozemek, chce se
+           dostat k inzerátu nebo k dražbě, ne se kochat mapou. Ta je
+           doplněk, tak ať tak i vypadá.
+           U nabídky od majitele žádný cizí odkaz není a Mapy.cz jsou
+           jediné tlačítko — tam hlavní zůstávají. */
+        (d.type === 'majitel'
+          ? '<a class="pz-btn primary" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>'
+          : '<a class="pz-btn primary" href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.label) + VEN + '</a>' +
+            '<a class="pz-btn ghost" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>') +
       '</div>' +
       /* ZPOŽDĚNÍ DAT. Tohle na stránce chybělo úplně: člověk viděl cenu
          a termín, ale ne to, že se dívá na KOPII pořízenou někdy dřív.

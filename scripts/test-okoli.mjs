@@ -206,6 +206,60 @@ const stavVybiraku = (p) => p.evaluate(() => {
      ze zabaleného seznamu, ve kterém není vidět, co všechno jde zvolit. */
   pravda('velikost okruhu je napsaná přímo na mapě', /^\d+ km$/.test(vk.meritko.trim()), `měřítko: „${vk.meritko}"`);
   pravda('okruh se vybírá z viditelné řady možností', v.kmMoznosti >= 5, `možností: ${v.kmMoznosti}`);
+  /* TAŽENÍ ZNAČKY. Klepnutím se místo vybere, ale doladit se tím nedá:
+     kdo se trefí o dvě stě metrů vedle, klepe znovu a doufá. Značka se
+     proto dá chytit a posunout — a to je oprava výběru, ne nový výběr,
+     takže se musí přepočítat počet pozemků i název obce. */
+  {
+    const kam = await p.evaluate(() => {
+      const m = window.PK_VM_MAPA;
+      const c = m.getContainer().getBoundingClientRect();
+      let zn = null;
+      m.eachLayer((l) => { if (l.getLatLng && l.options && l.options.draggable) zn = l; });
+      if (!zn) return null;
+      const t = m.latLngToContainerPoint(zn.getLatLng());
+      return { tahnutelna: true, x: c.left + t.x, y: c.top + t.y,
+        lat: zn.getLatLng().lat, lng: zn.getLatLng().lng };
+    });
+    pravda('značka na mapě jde chytit', !!(kam && kam.tahnutelna),
+      'značka není označená jako tahatelná, dá se jen klepat');
+    if (kam) {
+      const predText = await p.evaluate(() => (document.getElementById('vm-pocet') || {}).textContent || '');
+      /* Značka je ukotvená špičkou dole, takže se chytá kousek NAD
+         ukotvením — tam, kde je vidět puntík. */
+      await p.mouse.move(kam.x, kam.y - 16);
+      await p.mouse.down();
+      await p.mouse.move(kam.x + 70, kam.y - 66, { steps: 10 });
+      await p.mouse.up();
+      await p.waitForTimeout(700);
+      const po = await p.evaluate(() => {
+        const m = window.PK_VM_MAPA;
+        let zn = null, kr = null;
+        m.eachLayer((l) => {
+          if (l.getLatLng && l.options && l.options.draggable) zn = l;
+          if (l.getRadius && l.getLatLng) kr = l;
+        });
+        return { lat: zn.getLatLng().lat, lng: zn.getLatLng().lng,
+          kruhLat: kr ? kr.getLatLng().lat : null, kruhLng: kr ? kr.getLatLng().lng : null,
+          text: (document.getElementById('vm-pocet') || {}).textContent || '',
+          potvrditJde: !document.getElementById('vm-ok').disabled };
+      });
+      pravda('tažením se značka opravdu přesune',
+        Math.abs(po.lat - kam.lat) > 1e-4 || Math.abs(po.lng - kam.lng) > 1e-4,
+        `z ${kam.lat.toFixed(4)},${kam.lng.toFixed(4)} na ${po.lat.toFixed(4)},${po.lng.toFixed(4)}`);
+      /* Kruh musí jít se značkou. Kdyby zůstal, ukazoval by okolí
+         jiného místa, než na které značka ukazuje. */
+      pravda('a kruh jde s ní',
+        po.kruhLat !== null && Math.abs(po.kruhLat - po.lat) < 1e-6 && Math.abs(po.kruhLng - po.lng) < 1e-6,
+        `značka ${po.lat.toFixed(4)},${po.lng.toFixed(4)}, kruh ${po.kruhLat},${po.kruhLng}`);
+      pravda('a pod mapou se přepočítá, co v okolí je',
+        /\d+\s*pozem|nic není/.test(po.text) && po.text !== predText,
+        `před: „${predText.slice(0, 50)}", po: „${po.text.slice(0, 50)}"`);
+      pravda('a potvrdit jde i bez klepnutí, stačí přetáhnout', po.potvrditJde === true,
+        'značka se posunula, ale výběr se nedá potvrdit');
+    }
+  }
+
   /* ODDÁLENÍ. Stížnost se snímkem: „to přibližování pořád nefunguje,
      kruh se zvětšuje a zmenšuje přiblížením." Zvětšovat a zmenšovat se
      musí — deset kilometrů je deset kilometrů. Špatné bylo, co se kolem
@@ -345,14 +399,33 @@ const stavVybiraku = (p) => p.evaluate(() => {
     r10 ? `kruh je jen ${r10.podil} % šířky mapy — mapa je zbytečně oddálená` : 'kruh na mapě není');
 
   // Okruh.
+  const pohledPred50 = await p.evaluate(() => {
+    const m = window.PK_VM_MAPA, c = m.getCenter();
+    return { z: m.getZoom(), lat: +c.lat.toFixed(5), lng: +c.lng.toFixed(5) };
+  });
   await p.check('input[name="vm-km"][value="50"]');
   await p.waitForTimeout(1400);
   const sirsi = await stavVybiraku(p);
   pravda('větší okruh ukáže víc pozemků už ve výběru',
     (parseInt(sirsi.pocet, 10) || 0) > (parseInt(uKolina.pocet, 10) || 0),
     `10 km: „${uKolina.pocet.trim()}", 50 km: „${sirsi.pocet.trim()}"`);
+  /* MAPA SE PŘI ZVĚTŠENÍ OKRUHU NEHNE — ani tady. Dřív se čekalo, že
+     padesátikilometrový kruh bude „pořád celý vidět", tedy že se mapa
+     kvůli němu oddálí. Stížnost to přebila: „ať mě to nechá tam, kde
+     mám přiblíženo, bez ohledu na to, jak přepínám velikost kruhu."
+     Nevidět kruh je menší zlo než přijít o svůj pohled; že o tom člověk
+     ví, hlídá kontrola tlačítka „Ukázat okruh" o kus výš. */
+  const pohledPo50 = await p.evaluate(() => {
+    const m = window.PK_VM_MAPA, c = m.getCenter();
+    return { z: m.getZoom(), lat: +c.lat.toFixed(5), lng: +c.lng.toFixed(5) };
+  });
+  pravda('po zvětšení okruhu zůstane přiblížení i střed mapy beze změny',
+    pohledPo50.z === pohledPred50.z && pohledPo50.lat === pohledPred50.lat
+      && pohledPo50.lng === pohledPred50.lng,
+    `před: zoom ${pohledPred50.z} na ${pohledPred50.lat},${pohledPred50.lng}; ` +
+    `po: zoom ${pohledPo50.z} na ${pohledPo50.lat},${pohledPo50.lng}`);
   const r50 = await ramec();
-  pravda('a po jeho zvětšení je pořád celý vidět', r50 && r50.vejdeSe && r50.podil >= 30,
+  pravda('a kruh se pořád kreslí, jen přetéká', r50 && r50.podil > 0,
     r50 ? `kruh zabírá ${r50.podil} % šířky mapy` : 'kruh na mapě není');
 
   // Zavřít se dá, aniž se cokoli uloží — to je ta možnost couvnout.
@@ -840,19 +913,36 @@ const stavVybiraku = (p) => p.evaluate(() => {
     pravda('a po 2 km taky', po2.z === moje.z && po2.lat === moje.lat,
       `měl jsem ${moje.z}, po změně ${po2.z}`);
 
-    /* Ale když se okruh do okna nevejde, přerovnat se MUSÍ — jinak by
-       člověk nastavoval něco, co nevidí. Tohle je ta polovina, kterou by
-       „nesahat na mapu nikdy" pokazila; bez téhle kontroly by test prošel
-       i s úplně vypnutým přerovnáním. */
+    /* ANI NA OKRUH, KTERÝ SE DO OKNA NEVEJDE. Dřív tu stálo, že
+       přerovnat se v tom případě MUSÍ — jinak prý člověk nastavuje
+       něco, co nevidí. Neobstálo to: „ať mě to nechá tam, kde mám
+       přiblíženo, bez ohledu na to, jak přepínám velikost kruhu."
+       Nevidět okruh je menší zlo než přijít o svůj pohled — a neví se
+       o tom jen chvíli, protože se hned nabídne tlačítko. */
     await nastavKm(50);
     const po50 = await pohled();
-    pravda('ale na okruh, který se do okna nevejde, se mapa oddálí', po50.z < moje.z,
+    pravda('ani na okruh, který se do okna nevejde, mapa neuteče', po50.z === moje.z,
       `měl jsem ${moje.z}, po 50 km ${po50.z}`);
-    const vidno = await p.evaluate(() => {
+    const velky = await p.evaluate(() => {
       const m = window.PK_VM_MAPA, c = m.getCenter();
-      return m.getBounds().contains(L.latLng(c.lat, c.lng).toBounds(50 * 2000));
+      const b2 = document.querySelector('#vm-zpet');
+      const st = document.querySelector('.vm-meritko span');
+      const vidno = (e) => { if (!e) return null; const r = e.getBoundingClientRect();
+        return !e.hidden && r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden'; };
+      return { vejdeSe: m.getBounds().contains(L.latLng(c.lat, c.lng).toBounds(50 * 2000)),
+        tlacitko: vidno(b2), popisek: vidno(st),
+        meritko: ((st || {}).textContent || '').trim() };
     }).catch(() => null);
-    pravda('a celý padesátikilometrový okruh je pak vidět', vidno === true, `vejde se: ${vidno}`);
+    pravda('padesátikilometrový okruh se opravdu nevejde — je co ověřovat',
+      velky && velky.vejdeSe === false, `vejde se: ${velky && velky.vejdeSe}`);
+    pravda('a místo skoku se nabídne tlačítko', velky && velky.tlacitko === true,
+      'okruh není vidět a nic to nenabízí');
+    /* Přetékající kruh má popisek pořád čitelný — schovává se jen ten,
+       který by skončil na značce. To jsou dva různé důvody a nesmí se
+       slít do jednoho. */
+    pravda('ale popisek s číslem zůstane, přetékající kruh ho nezakrývá',
+      velky && velky.popisek === true && /^\d+ km$/.test(velky.meritko),
+      `popisek vidno: ${velky && velky.popisek}, text „${velky && velky.meritko}"`);
     await ctx.close();
   }
 }

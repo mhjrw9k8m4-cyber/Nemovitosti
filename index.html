@@ -105,7 +105,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=f1d0f829">
+  <link rel="stylesheet" href="css/styles.css?v=f13f13ad">
 </head>
 <body>
 
@@ -265,6 +265,20 @@
                    otevře přes celou obrazovku (js/main.js si sem doplní
                    tlačítka a bloky níž si přestěhuje k sobě). Bez skriptu
                    zůstanou v panelu políčka od–do tak, jak jsou. -->
+              <!-- DRUH JE NEJDŮLEŽITĚJŠÍ FILTR, tak stojí první a je vidět
+                   celý. Býval to rozbalovací seznam s JEDNOU volbou: kdo
+                   chtěl stavební NEBO zahradu, musel hledat dvakrát a
+                   výsledky si srovnat v hlavě. Štítky ukážou všechny
+                   možnosti naráz, dají se kombinovat a u každého stojí,
+                   kolik pod ním při dnešním nastavení zbývá — stejně jako
+                   u sítí, kde se to osvědčilo.
+                   Nadřazené skupiny („Zemědělská půda") ze štítků zmizely:
+                   s vícenásobným výběrem jsou zbytečné, zaškrtne se orná
+                   i louka. Jako hodnota v odkazu fungují dál. -->
+              <div class="mc-field mc-druhy">
+                <span class="mc-cap">Druh pozemku</span>
+                <div class="mcv-rada" id="mc-druhy" role="group" aria-label="Druh pozemku"></div>
+              </div>
               <div class="mc-field mc-rozsah"><span class="mc-cap">Cena (Kč)</span>
                 <div class="mc-dvoj">
                   <input type="number" class="map-num" id="map-cena-od" inputmode="numeric" min="0" step="1000" placeholder="od" aria-label="Cena od (Kč)">
@@ -287,9 +301,6 @@
                 <div class="mcv-rada"></div>
                 <p class="mcv-pozn">Podle toho, co stojí v popisu nabídky — ať už je síť zavedená, nebo zatím jen v dosahu. U nabídek bez popisu se to neví; nejsou tedy „bez elektřiny", jen se to z inzerátu nedozvíme.</p>
               </div>
-              <label class="mc-field"><span class="mc-cap">Druh pozemku</span>
-                <select class="map-select" id="map-druh" aria-label="Druh pozemku"><option value="all">Všechny druhy</option></select>
-              </label>
               <label class="mc-field"><span class="mc-cap">Cena za m² do</span>
                 <select class="map-select" id="map-perm2" aria-label="Maximální cena za metr čtvereční">
                   <option value="">Libovolná</option>
@@ -302,28 +313,22 @@
                   <option value="2500">do 2 500 Kč/m²</option>
                 </select>
               </label>
-              <label class="mc-field"><span class="mc-cap">Kraj</span>
-                <select class="map-select" id="map-kraj" aria-label="Kraj"><option value="all">Celá ČR</option></select>
-              </label>
-              <label class="mc-field"><span class="mc-cap">Seřadit</span>
-                <select class="map-select" id="map-sort" aria-label="Řazení příležitostí">
-                  <option value="demand">Doporučené (denně se střídá)</option>
-                  <option value="near">Nejblíž ke mně</option>
-                  <option value="perm2_asc">Nejlepší cena/m²</option>
-                  <option value="price_asc">Nejlevnější</option>
-                  <option value="price_desc">Nejdražší</option>
-                  <option value="area_desc">Největší výměra</option>
-                  <option value="area_asc">Nejmenší výměra</option>
-                  <option value="sleva_desc">Největší sleva proti okolí</option>
-                  <option value="drazba_asc">Nejdřív končící dražba</option>
-                  <option value="nove">Nejnovější</option>
-                  <option value="nahodne">Náhodně (zamíchat)</option>
-                </select>
-              </label>
+              <!-- KRAJ UŽ NENÍ V PANELU. Kraj je moc hrubé síto: lidi
+                   hledají obec nebo okres, a na to je nahoře našeptávač,
+                   který umí obojí. Samotný FILTR zůstává — 91 stránek
+                   odkazuje na index.html?kraj=…, takže odkaz z krajské
+                   stránky musí dál fungovat. Když je takhle nastavený,
+                   ukáže se mezi naklikanými filtry jako odstranitelný
+                   štítek, stejně jako všechno ostatní. -->
+              <!-- ŘAZENÍ A ULOŽENÉ TU UŽ NEJSOU. Řazení není filtr —
+                   nic neubírá, jen mění pořadí, a patří proto nad výsledky
+                   vedle jejich počtu. „Uložené" taky ne: to není vlastnost
+                   pozemku, ale můj vlastní výběr. Obojí je teď nad
+                   seznamem; v panelu zbyly jen věci, které opravdu
+                   ubírají nabídky. -->
               <div class="mc-toggles">
-                <button type="button" class="map-select urgent-toggle" id="map-urgent" aria-pressed="false">Končí do 14 dní</button>
-                <button type="button" class="map-select levne-toggle" id="map-levne" aria-pressed="false">Pod obvyklou cenou</button>
-                <button type="button" class="map-select fav-toggle" id="map-fav" aria-pressed="false">Uložené</button>
+                <button type="button" class="mc-prep" id="map-urgent" aria-pressed="false"><span class="mcp-v" aria-hidden="true"></span>Končí do 14 dní</button>
+                <button type="button" class="mc-prep" id="map-levne" aria-pressed="false"><span class="mcp-v" aria-hidden="true"></span>Pod obvyklou cenou</button>
               </div>
               <!-- KONEC PANELU. Filtry se sice použijí hned, jenže kdo je
                    naklikal, zůstal stát nahoře nad zavřeným panelem a nic
@@ -350,7 +355,32 @@
         </div>
 
         <aside class="map-side">
-          <div class="map-count mono" id="map-count">Načítám…</div>
+          <!-- Nad výsledky: kolik jich je, jak jsou seřazené a přepínač
+               na vlastní uložené. Řazení sem patří proto, že se týká
+               TOHOHLE seznamu — v panelu filtrů si ho lidi pletli
+               s filtrem. -->
+          <div class="ms-vysledky">
+            <div class="map-count mono" id="map-count">Načítám…</div>
+            <div class="msv-ovladani">
+              <button type="button" class="mc-prep msv-ulozene" id="map-fav" aria-pressed="false"><span class="mcp-v" aria-hidden="true"></span>Uložené</button>
+              <label class="msv-razeni">
+                <span class="visually-hidden">Seřadit výsledky</span>
+                <select class="map-select" id="map-sort" aria-label="Řazení příležitostí">
+                  <option value="demand">Doporučené (denně se střídá)</option>
+                  <option value="near">Nejblíž ke mně</option>
+                  <option value="perm2_asc">Nejlepší cena/m²</option>
+                  <option value="price_asc">Nejlevnější</option>
+                  <option value="price_desc">Nejdražší</option>
+                  <option value="area_desc">Největší výměra</option>
+                  <option value="area_asc">Nejmenší výměra</option>
+                  <option value="sleva_desc">Největší sleva proti okolí</option>
+                  <option value="drazba_asc">Nejdřív končící dražba</option>
+                  <option value="nove">Nejnovější</option>
+                  <option value="nahodne">Náhodně (zamíchat)</option>
+                </select>
+              </label>
+            </div>
+          </div>
           <div class="recent-strip" id="recent-strip" hidden></div>
           <ul class="opp-list" id="opp-list" aria-label="Seznam příležitostí"><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li></ul>
         </aside>
@@ -597,7 +627,7 @@
 <script src="js/vybaveni.js?v=54b36f73" defer></script>
 <script src="js/dotaz.js?v=341edd4b" defer></script>
 <script src="js/hledani.js?v=9b51ed6d" defer></script>
-<script src="js/main.js?v=e60346ce" defer></script>
+<script src="js/main.js?v=a1733832" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,
