@@ -135,6 +135,99 @@ for (const f of ['../js/main.js', '../js/pozemek.js']) {
     'rady se zase kopírují — stačí změnit jednu a web si u téhož pozemku protiřečí');
 }
 
+
+/* --- Rady mají mluvit o TOMHLE pozemku, ne obecně -------------------
+ * Stížnost: „tyhle texty by měly být víc konkrétní na daný pozemek a víc
+ * přesné." Rádce měl přitom k dispozici víc, než používal.
+ */
+{
+  const DATA = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const M = PK_CENY.postav(DATA);
+  const text = (d) => PK_RADCE.rady(d, M).radky.map((x) => x.klic + ': ' + (x.txt || '')).join('\n');
+  const blok = (d, klic) => (PK_RADCE.rady(d, M).radky.find((x) => x.klic === klic) || {}).txt || '';
+
+  /* 1) SÍTĚ Z INZERÁTU. Robot je čte z popisu do pole `site` a má je
+     1 211 z 1 966 nabídek (62 %) — rádce je ignoroval a i tam, kde
+     inzerát elektřinu a vodu vypisuje, radil obecné „ověřte sítě". */
+  const seSitemi = DATA.filter((d) => d.site && d.site.length);
+  pravda(`v datech jsou sítě z inzerátů (${seSitemi.length})`, seSitemi.length >= 200);
+  const bezZminky = seSitemi.filter((d) => !blok(d, 'Co uvádí inzerát'));
+  pravda('u každé nabídky se sítěmi se o nich rádce zmíní', bezZminky.length === 0, 'zbylo: ' + bezZminky.length);
+  const bezSiti = DATA.filter((d) => !d.site || !d.site.length);
+  {
+    const vymyslene = bezSiti.filter((d) => blok(d, 'Co uvádí inzerát'));
+    pravda('a u ostatních si nic nevymýšlí', vymyslene.length === 0,
+      'vymyšleno u: ' + vymyslene.slice(0, 3).map((d) => d.place).join(', '));
+  }
+
+  const sVodou = DATA.find((d) => (d.site || []).indexOf('voda') >= 0 && (d.site || []).indexOf('kanalizace') < 0);
+  if (sVodou) {
+    const t = blok(sVodou, 'Co uvádí inzerát');
+    pravda('co inzerát uvádí, se jmenuje ve 4. pádě', /uvádí[^.]*vodu/.test(t), t.replace(/<[^>]+>/g, ''));
+    pravda('a o čem nepíše, v 6. pádě', /O [^.]*kanalizaci[^.]*se nepíše/.test(t), t.replace(/<[^>]+>/g, ''));
+    /* A hlavně: nikdy se netvrdí, že síť CHYBÍ — z mlčení inzerátu to
+       nevyplývá a byla by to lež o cizím pozemku. */
+    pravda('ale netvrdí se, že tam chybí', /neznamená to/.test(t), t.replace(/<[^>]+>/g, ''));
+  }
+
+  /* 2) DRUH PŘESNĚ. Skupina „Stavební / zastavěná" míchá 268 stavebních
+     pozemků s devíti zastavěnými plochami, kde už něco stojí. */
+  const stavebni = DATA.find((d) => /^stavební pozemek$/i.test(d.druh || ''));
+  const zastavena = DATA.find((d) => /^zastavěná plocha/i.test(d.druh || ''));
+  if (stavebni && zastavena) {
+    const a = blok(stavebni, 'Dá se tu stavět?');
+    const b = blok(zastavena, 'Dá se tu stavět?');
+    pravda('stavební pozemek a zastavěná plocha nedostanou tutéž větu', a !== b);
+    pravda('u zastavěné plochy se řekne, že tam něco stojí', /stojí/.test(b), b.replace(/<[^>]+>/g, ''));
+  }
+  /* PŘESNOST: územní plán neznáme, známe zápis v katastru. Dřív tu stálo
+     „Územním plánem určeno k zástavbě" a tentýž odstavec to o dvě věty
+     dál sám popíral. */
+  if (stavebni) {
+    const a = blok(stavebni, 'Dá se tu stavět?');
+    pravda('a netvrdí se, co říká územní plán', !/Územním plánem\s+<b>určeno/.test(a),
+      a.replace(/<[^>]+>/g, ''));
+    pravda('u stavebního pozemku se pořád připomínají sítě a příjezd', /sítě a příjezd/.test(a));
+  }
+
+  /* 3) CENA S ČÍSLY. „O 40 % pod obvyklou" se nedá ověřit ani přepočítat;
+     chybí v tom cena za metr, s čím se srovnává a z kolika nabídek. */
+  const sOdhadem = DATA.filter((d) => { const o = M.odhad(d); return o && o.podleVelikosti && o.podOdhadem >= 25; });
+  pravda(`nabídky s vyčísleným rozdílem existují (${sOdhadem.length})`, sOdhadem.length >= 10);
+  /* U PODÍLU je věta jiná — říká, kolik metrů kupující dostane a za
+     kolik, a o srovnání s okolím schválně nemluví (srovnat se nedá).
+     Konkrétní čísla v ní ale být musí taky. Podíl s neznámým zlomkem
+     je výjimka: cenu za metr z něj spočítat nejde a rádce to říká
+     rovnou, místo aby si číslo vymyslel. */
+  const cele = sOdhadem.filter((d) => !d.podil);
+  const podily = sOdhadem.filter((d) => d.podil && PK_CENY.zaMetr(d) != null);
+  pravda(`a je z čeho měřit (${cele.length} celých, ${podily.length} podílů)`,
+    cele.length >= 10 && podily.length >= 5);
+  const bezCisel = cele.filter((d) => {
+    const t = blok(d, 'Co říká cena');
+    return !(/Kč\/m²/.test(t) && /srovnáno s \d+/.test(t));
+  });
+  pravda('u vyčísleného rozdílu stojí i cena za metr a z kolika nabídek', bezCisel.length === 0,
+    'bez čísel: ' + bezCisel.slice(0, 2).map((d) => d.place).join(', '));
+  const podilBezCisel = podily.filter((d) => !/Kč\/m²/.test(blok(d, 'Co říká cena')));
+  pravda('a u podílu stojí, kolik metrů a za kolik kupující dostane', podilBezCisel.length === 0,
+    'bez čísel: ' + podilBezCisel.slice(0, 2).map((d) => d.place).join(', '))
+
+  /* 4) RADA O SPÚ PATŘÍ JEN SPÚ. Dostávalo ji všech 1 658 běžných
+     inzerátů typu „na prodej"; nabídek státního pozemkového úřadu je 204. */
+  const bezny = DATA.find((d) => d.type === 'sale' && !/SPÚ|státní půd/i.test(d.extra || ''));
+  const spu = DATA.find((d) => /SPÚ|státní půd/i.test(d.extra || ''));
+  if (bezny) pravda('běžnému inzerátu se neradí o pachtýřích SPÚ',
+    !/pachtýř/i.test(blok(bezny, 'Na co si dát pozor')), blok(bezny, 'Na co si dát pozor').replace(/<[^>]+>/g, ''));
+  if (spu) pravda('a nabídce SPÚ ano', /pachtýř/i.test(blok(spu, 'Na co si dát pozor')),
+    blok(spu, 'Na co si dát pozor').replace(/<[^>]+>/g, ''));
+
+  /* 5) Nic z toho nesmí rádce položit. */
+  let padlo = 0;
+  for (const d of DATA) { try { text(d); } catch (e) { padlo++; } }
+  pravda('rady se spočítají pro každou nabídku v datech', padlo === 0, 'zbylo: ' + padlo);
+}
+
 console.log('\nRádce u pozemku — rady podle skutečných údajů');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

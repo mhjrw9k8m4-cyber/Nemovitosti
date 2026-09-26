@@ -20,11 +20,23 @@
 
   function maVymeru(d) { return typeof d.area === 'number' && d.area > 0; }
 
-  /* --- Dá se tu stavět? Podle druhu pozemku ------------------------- */
-  function stavba(g) {
+  /* --- Dá se tu stavět? -------------------------------------------
+     Bere se SKUTEČNÝ druh z katastru, ne jen skupina: ve skupině
+     „Stavební / zastavěná" je 268 stavebních pozemků, ale taky devět
+     zastavěných ploch a nádvoří, kde už něco stojí. Dostávaly tutéž
+     větu.
+     A hlavně: dřív tu stálo „Územním plánem určeno k zástavbě" —
+     jenže územní plán neznáme, známe zápis v katastru. Tentýž odstavec
+     to o dvě věty dál sám popíral („samotný zápis v katastru o tom nic
+     neříká"). Tvrdit něco, co nevíme, je horší než mlčet. */
+  function stavba(g, druh) {
+    var dr = String(druh || '').toLowerCase();
+    if (g === 'Stavební / zastavěná' && /zastav/.test(dr)) {
+      return { lvl: 'mid', txt: 'V katastru vedeno jako <b>zastavěná plocha a nádvoří</b> — podle zápisu na pozemku <b>něco stojí</b> nebo stálo. Zjistěte, co to je, jestli je to v ceně a v jakém je stavu; u stavby se kupuje i to, co je pod ní.' };
+    }
     switch (g) {
       case 'Stavební / zastavěná':
-        return { lvl: 'ok', txt: 'Územním plánem <b>určeno k zástavbě</b>. Ověřte si na stavebním úřadě, co a jak velké se tu smí postavit — a jestli jsou v dosahu <b>sítě a příjezd</b>. Samotný zápis v katastru o tom nic neříká.' };
+        return { lvl: 'ok', txt: 'V katastru vedeno jako <b>stavební pozemek</b>. Není to totéž co územní plán: ten teprve rozhoduje, <b>co a jak velké</b> se tu smí postavit. Ověřte si ho na stavebním úřadě obce — a k tomu, jestli jsou v dosahu <b>sítě a příjezd</b>. Ze zápisu v katastru se ani jedno nepozná.' };
       case 'Orná půda':
         return { lvl: 'warn', txt: '<b>Zemědělská půda.</b> Pro stavbu je nutná změna územního plánu a <b>vynětí ze zemědělského půdního fondu</b>, za které se platí odvod. Bývá to zdlouhavé a není na to nárok.' };
       case 'Louka / travní porost':
@@ -40,6 +52,47 @@
     }
   }
 
+  /* --- Co o TOMHLE pozemku říká inzerát ----------------------------
+     Robot čte z popisu nabídky sítě a příjezd (js/vybaveni.js) a ukládá
+     je do pole `site`. Má to 1 211 z 1 966 nabídek, tedy 62 % — a rádce
+     to celou dobu nepoužíval: i tam, kde inzerát elektřinu a vodu
+     uvádí, radil obecné „ověřte, jestli jsou v dosahu sítě".
+     Říká se obojí: co v popisu JE, a co v něm NENÍ. To druhé je stejně
+     důležité a snadno se z toho udělá lež — proto se nikdy netvrdí, že
+     síť chybí, jen že se o ní nepíše. */
+  /* Pády se z názvu odvodit nedají, tak jsou vypsané. Bez toho z toho
+     vyleze „Inzerát uvádí elektřina, voda" a „O kanalizace se nepíše" —
+     tedy přesně ta strojová čeština, kterou si tenhle web hlídá jinde
+     testem. Čtvrtý pád pro „uvádí ⟨co⟩", šestý pro „o ⟨čem⟩". */
+  var SITE_TVARY = [
+    { klic: 'elektrina', co: 'elektřinu', cem: 'elektřině' },
+    { klic: 'voda', co: 'vodu', cem: 'vodě' },
+    { klic: 'kanalizace', co: 'kanalizaci', cem: 'kanalizaci' },
+    { klic: 'plyn', co: 'plyn', cem: 'plynu' },
+  ];
+  function vyjmenuj(pole) {
+    if (!pole.length) return '';
+    if (pole.length === 1) return '<b>' + pole[0] + '</b>';
+    return pole.slice(0, -1).map(function (x) { return '<b>' + x + '</b>'; }).join(', ') +
+      ' a <b>' + pole[pole.length - 1] + '</b>';
+  }
+  function zInzeratu(d) {
+    var ma = d.site || [];
+    if (!ma.length) return null;
+    var je = SITE_TVARY.filter(function (s) { return ma.indexOf(s.klic) >= 0; });
+    var neni = SITE_TVARY.filter(function (s) { return ma.indexOf(s.klic) < 0; });
+    var cesta = ma.indexOf('cesta') >= 0;
+    var t = '';
+    if (je.length) t += 'Inzerát uvádí ' + vyjmenuj(je.map(function (s) { return s.co; })) + '. ';
+    if (cesta) t += (je.length ? 'Zmiňuje i <b>příjezdovou cestu</b>. ' : 'Inzerát zmiňuje <b>příjezdovou cestu</b>. ');
+    if (neni.length) {
+      t += 'O ' + vyjmenuj(neni.map(function (s) { return s.cem; })) + ' se nepíše — ' +
+        '<b>neznamená to, že ' + (neni.length === 1 ? 'tam není' : 'tam nejsou') + '</b>, jen se to z nabídky nedozvíme. ';
+    }
+    t += 'I u toho, co inzerát uvádí, se ptejte, jestli je přípojka <b>na pozemku</b>, nebo jen v ulici.';
+    return { lvl: je.length ? 'ok' : 'mid', txt: t };
+  }
+
   /* --- Na co pozor podle kategorie --------------------------------- */
   function pozor(d) {
     switch (d.type) {
@@ -52,7 +105,16 @@
       case 'majitel':
         return 'Jednáte <b>přímo s vlastníkem</b>. Ověřte si vlastnictví a případná omezení (zástavy, věcná břemena) na listu vlastnictví.';
       default:
-        return 'Před koupí ověřte <b>přístup k pozemku</b>, dostupnost sítí a zápis v katastru. U nabídek státního pozemkového úřadu mívají přednost dosavadní pachtýři — podmínky vždy uvádí konkrétní nabídka.';
+        /* Rada o pachtýřích patří JEN nabídkám státního pozemkového
+           úřadu. Dostávaly ji všechny běžné prodeje: 1 658 z 1 862
+           nabídek typu „na prodej" je obyčejný inzerát a o SPÚ se jich
+           týká 204. Radit člověku u inzerátu z Bezrealitek, že „mívají
+           přednost dosavadní pachtýři", je matoucí — a působí to, jako
+           by si web nepřečetl, co vlastně ukazuje. */
+        if (/SPÚ|státní půd/i.test(d.extra || '')) {
+          return 'Nabídka <b>státního pozemkového úřadu</b>. Přednost mívají <b>dosavadní pachtýři</b> a nabídka běží ve <b>lhůtě</b> — konkrétní podmínky i termín uvádí vyhlášení na úřední desce SPÚ.';
+        }
+        return 'Cena v inzerátu je <b>nabídková</b>, ne odhad ani cena obvyklá. Před koupí ověřte na <b>listu vlastnictví</b>, kdo je vlastník a jestli na pozemku nevázne <b>zástava nebo věcné břemeno</b>, a zjistěte si <b>přístup z veřejné cesty</b> — ten se z inzerátu pozná nejhůř a chybí nejčastěji.';
     }
   }
 
@@ -82,12 +144,25 @@
     var o = model.odhad(d);
     if (o && o.podleVelikosti) {
       var kde = (root.PK_CENY && root.PK_CENY.kdeText) ? root.PK_CENY.kdeText(o.uroven, o.kde) : '';
+      /* KONKRÉTNÍ ČÍSLA, NE JEN PROCENTO. „O 40 % pod obvyklou" je
+         tvrzení, které se nedá přepočítat ani ověřit — chybí v něm, kolik
+         ten pozemek stojí za metr, s čím se srovnává a z kolika nabídek
+         to číslo vzniklo. Model to všechno vrací (zaM2, vzorek), jen se
+         to zahazovalo. U podílu se bere cena za metr PODÍLOVÉ výměry,
+         stejně jako všude jinde na webu. */
+      var cis = function (n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0'); };
+      var muj = (root.PK_CENY && root.PK_CENY.zaMetr) ? root.PK_CENY.zaMetr(d) : null;
+      var cisla = (muj && o.zaM2)
+        ? ' Vychází to na <b>' + cis(muj) + ' Kč/m²</b> proti obvyklým <b>' + cis(o.zaM2) +
+          ' Kč/m²</b> (srovnáno s ' + o.vzorek + ' ' +
+          (o.vzorek === 1 ? 'nabídkou' : (o.vzorek < 5 ? 'nabídkami' : 'nabídkami')) + ').'
+        : '';
       /* Sleva přes hranici uvěřitelnosti není příležitost. Rádce to musí
          říct dřív, než si to člověk přečte jako trhák — a hlavně musí říct
          totéž, co odznak na kartě. */
       if (o.pochybna) {
         return { lvl: 'warn', txt: 'Cena je <b>o ' + o.podOdhadem + ' % pod</b> obvyklou cenou podobně velkých pozemků téhož druhu ' + kde +
-          '. Takový rozdíl už nebývá sleva: nejčastěji je v inzerátu výměra <b>celé parcely</b>, ale prodává se jen <b>spoluvlastnický podíl</b>, ' +
+          '.' + cisla + ' Takový rozdíl už nebývá sleva: nejčastěji je v inzerátu výměra <b>celé parcely</b>, ale prodává se jen <b>spoluvlastnický podíl</b>, ' +
           'nebo jde o dražbu s jinou výměrou, případně o chybu v ceně. <b>Ověřte si to na listu vlastnictví</b>, než něco podepíšete.' };
       }
       /* U ZNÁMÉHO PODÍLU SE O PŘÍLEŽITOSTI NEMLUVÍ.
@@ -119,11 +194,11 @@
          výrazně jiné číslo — řekne rovnou, že je to hrubé vodítko. */
       if (o.nejisty && o.podOdhadem >= 25) {
         return { lvl: 'mid', txt: 'Cena vychází <b>o ' + o.podOdhadem + ' % pod</b> obvyklou cenou podobných pozemků ' + kde +
-          '. Jenže ceny takových pozemků se tu mezi sebou liší <b>násobky</b>, takže je to jen hrubé vodítko, ne spolehlivý rozdíl. ' +
+          '.' + cisla + ' Jenže ceny takových pozemků se tu mezi sebou liší <b>násobky</b>, takže je to jen hrubé vodítko, ne spolehlivý rozdíl. ' +
           'Srovnejte si konkrétní nabídky v okolí sami.' };
       }
       if (o.podOdhadem >= 25) {
-        return { lvl: 'ok', txt: 'Cena je <b>o ' + o.podOdhadem + ' % pod</b> obvyklou cenou podobně velkých pozemků téhož druhu ' + kde + '. Může to být příležitost — ale stejně tak důvod ptát se <b>proč</b>: přístup, břemena, tvar parcely.' };
+        return { lvl: 'ok', txt: 'Cena je <b>o ' + o.podOdhadem + ' % pod</b> obvyklou cenou podobně velkých pozemků téhož druhu ' + kde + '.' + cisla + ' Může to být příležitost — ale stejně tak důvod ptát se <b>proč</b>: přístup, břemena, tvar parcely.' };
       }
     }
     return null;
@@ -167,11 +242,27 @@
     if (model && maVymeru(d) && d.price && model.neduveryhodna(d)) {
       out.push('Prodáváte celou parcelu, nebo jen spoluvlastnický podíl? Jak velký?');
     }
-    out.push('Má pozemek přístup z veřejné komunikace, nebo jen přes cizí pozemek?');
+    /* Neptat se na to, co inzerát už říká. Otázka „jak daleko jsou
+       přípojky" u nabídky, která elektřinu i vodu vypisuje, vypadá, jako
+       by si web vlastní stránku nepřečetl — a hlavně zabere místo
+       otázce, která by posunula dál. */
+    var ma = d.site || [];
+    if (ma.indexOf('cesta') >= 0) {
+      out.push('Inzerát zmiňuje příjezdovou cestu — je to <b>veřejná komunikace</b>, nebo se jezdí přes cizí pozemek?');
+    } else {
+      out.push('Má pozemek přístup z veřejné komunikace, nebo jen přes cizí pozemek?');
+    }
     if (g === 'Orná půda' || g === 'Louka / travní porost' || g === 'Vinice / sad') {
       out.push('Je půda propachtovaná? Komu a do kdy nájem běží?');
     } else if (g === 'Stavební / zastavěná') {
-      out.push('Jak daleko jsou přípojky — elektřina, voda, kanalizace — a je na ně kapacita?');
+      var uvedene = SITE_TVARY.filter(function (x) {
+        return x.klic !== 'plyn' && ma.indexOf(x.klic) >= 0;
+      }).map(function (x) { return x.co; });
+      if (uvedene.length) {
+        out.push('Inzerát uvádí ' + uvedene.join(', ') + ' — je přípojka <b>na pozemku</b>, nebo jen v ulici, a kolik by stálo ji dotáhnout?');
+      } else {
+        out.push('Jak daleko jsou přípojky — elektřina, voda, kanalizace — a je na ně kapacita?');
+      }
     } else if (g === 'Lesní pozemek') {
       out.push('Je na les zpracovaný lesní hospodářský plán a jaké povinnosti z něj plynou?');
     } else {
@@ -184,7 +275,10 @@
     } else if (d.type === 'obec') {
       out.push('Dokdy se podávají nabídky a podle čeho bude zastupitelstvo vybírat?');
     } else {
-      out.push('Váznou na pozemku věcná břemena, zástavy nebo jiná omezení?');
+      /* S číslem parcely je z otázky věta, se kterou se dá rovnou zvednout
+         telefon nebo nahlédnout do katastru. Zná ho 285 nabídek. */
+      var pc = (d.parcel && d.parcel !== '—') ? ' u parcely č. ' + d.parcel : '';
+      out.push('Váznou na pozemku' + pc + ' věcná břemena, zástavy nebo jiná omezení?');
     }
     return out.slice(0, 3);
   }
@@ -193,10 +287,11 @@
   function rady(d, model) {
     var g = (root.PK_CENY && root.PK_CENY.druhGroup) ? root.PK_CENY.druhGroup(d.druh) : '';
     var radky = [];
-    radky.push(Object.assign({ klic: 'Dá se tu stavět?' }, stavba(g)));
+    radky.push(Object.assign({ klic: 'Dá se tu stavět?' }, stavba(g, d.druh)));
     var t = termin(d); if (t) radky.push(Object.assign({ klic: 'Kolik zbývá času' }, t));
     var c = cena(d, model); if (c) radky.push(Object.assign({ klic: 'Co říká cena' }, c));
     var v = vymera(d); if (v) radky.push(Object.assign({ klic: 'Co znamená výměra' }, v));
+    var s = zInzeratu(d); if (s) radky.push(Object.assign({ klic: 'Co uvádí inzerát' }, s));
     radky.push({ klic: 'Na co si dát pozor', lvl: 'warn', txt: pozor(d) });
     return { radky: radky, otazky: otazky(d, model) };
   }
