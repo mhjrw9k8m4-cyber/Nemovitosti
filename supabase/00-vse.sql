@@ -1542,7 +1542,27 @@ declare
 begin
   if uid is null then raise exception 'musíte být přihlášeni'; end if;
   if p_place is null or length(trim(p_place))=0 then raise exception 'obec je povinná'; end if;
+  if p_okres is null or length(trim(p_okres))=0 then raise exception 'okres je povinný'; end if;
   if p_lat is null or p_lng is null then raise exception 'poloha je povinná'; end if;
+
+  /* ČÍSLA. Tyhle meze byly dosud jen v prohlížeči (js/kontrola.js), přestože
+     tamní komentář sliboval, že tvrdá hranice je tady. Nebyla: kdo poslal
+     rovnou sem, uložil pozemek o nulové výměře za korunu i louku o rozloze
+     okresu. Prohlížeč je rychlá zpětná vazba pro poctivého člověka, server
+     je hranice — a ta musí opravdu existovat.
+     Když se některé číslo mění, musí se změnit na OBOU místech; hlídá to
+     scripts/test-meze.mjs, který je porovnává. */
+  if p_area is null or p_area < 10 or p_area > 5000000 then
+    raise exception 'výměra musí být mezi 10 m² a 500 ha';
+  end if;
+  if p_price is null or p_price < 1000 or p_price > 500000000 then
+    raise exception 'cena musí být mezi 1 000 Kč a 500 mil. Kč';
+  end if;
+  /* Nejčastější chyba není nesmyslná cena ani výměra, ale jejich poměr:
+     přidaná nula v ceně nebo m² zapsané v arech. */
+  if p_price::numeric / p_area < 1 or p_price::numeric / p_area > 100000 then
+    raise exception 'cena za m² vychází nereálně — zkontrolujte cenu a výměru';
+  end if;
 
   -- Potvrzený e-mail. Bez něj za inzerátem nestojí ani schránka.
   /* Tabulka se musí pojmenovat: funkce vrací sloupec „id", takže holé

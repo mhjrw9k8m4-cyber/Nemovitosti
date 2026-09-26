@@ -168,6 +168,8 @@
   var posledniVarovani = [];   // co je podezřelé, ale odeslání to nebrání
   var mistoHlaska = '';        // fotka vyfocená daleko od zadané obce
   var polohaHlaska = '';       // špendlík padl daleko od vybraného okresu
+  var duplHlaska = '';         // tentýž pozemek už mezi vlastními inzeráty
+  var duplPotvrzeno = false;   // člověk řekl „je to jiný pozemek" (druhé klepnutí)
   function isImage(t) { return /^image\/(jpe?g|png|webp)$/i.test(t || ''); }
 
   // --- AI kontrola obsahu fotek (NSFWJS) — líně načtená, s vlastním modelem ---
@@ -360,6 +362,30 @@
     });
   }
 
+  /* Nemá ten pozemek člověk u nás už jednou? Ptáme se až při odesílání,
+     ne průběžně: seznam vlastních inzerátů je za přihlášením a volat ho
+     při každém písmenu by bylo zbytečné. Vrací text hlášky, nebo prázdno.
+
+     Podruhé už pustíme. Kdo klepne na Zveřejnit znovu, tím říká „vím to,
+     je to jiný pozemek" — a ten to ví líp než my (dvě sousední parcely
+     stejné velikosti v jedné vsi jsou obě poctivá nabídka). */
+  function zkontrolujDuplicitu() {
+    if (duplPotvrzeno) return Promise.resolve('');
+    if (!(window.PKKontrola && PKKontrola.jakoMoje)) return Promise.resolve('');
+    return PKAuth.rpc('my_listings').then(function (res) {
+      var moje = (res && res.ok && Array.isArray(res.data)) ? res.data : [];
+      if (!moje.length) return '';
+      var shoda = PKKontrola.jakoMoje(
+        { obec: val('p-obec'), okres: val('p-okres'), vymera: val('p-vymera') }, moje);
+      if (!shoda) return '';
+      duplPotvrzeno = true;     // podruhé to projde
+      var kolik = shoda.area ? (' ' + String(shoda.area).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' m²') : '';
+      return 'V „Moje inzeráty" už máte pozemek ' + shoda.place + kolik
+        + '. Je to tentýž? Pak raději upravte ten stávající — dva stejné inzeráty '
+        + 'zájemce jen zmatou. Jestli jde opravdu o jiný pozemek, klepněte na Zveřejnit ještě jednou.';
+    }).catch(function () { return ''; });
+  }
+
   // Odeslání prodeje = automatické zveřejnění na mapě (jako přihlášený) + přesměrování na „Moje inzeráty".
   function publishListing() {
     if (looksBad(val('p-obec')) || looksBad(val('p-popis')) || looksBad(val('p-parcela'))) {
@@ -382,6 +408,8 @@
       var pol = (window.PKKontrola && PKKontrola.poloha)
         ? PKKontrola.poloha(pos.lat, pos.lng, okres, hrube) : { ok: true };
       if (!pol.ok) { polohaHlaska = pol.msg; return 'poloha'; }
+      return zkontrolujDuplicitu().then(function (dupl) {
+      if (dupl) { duplHlaska = dupl; return 'duplicita'; }
       var features = [].slice.call(document.querySelectorAll('input[name="site"]:checked')).map(function (x) { return x.value; });
       return uploadPhotos().then(function (pr) {
       if (pr.rejected && pr.rejected.length) return 'photos';   // zamítnuté fotky → hláška, nic se nezveřejní
@@ -425,6 +453,7 @@
         if (!row || !row.id) return 'error';
         window.location.href = 'muj-inzerat.html';
         return 'ok';
+      });
       });
       });
       });
@@ -844,6 +873,9 @@
           ms.classList.add('err');
         } else if (r === 'wait') {
           ms.textContent = 'Chvíli prosím počkejte (asi minutu) a zkuste přidat další inzerát znovu.';
+          ms.classList.add('err');
+        } else if (r === 'duplicita') {
+          ms.textContent = duplHlaska;
           ms.classList.add('err');
         } else if (r === 'poloha') {
           ms.textContent = polohaHlaska || 'Obec a okres k sobě nesedí — zkontrolujte je prosím.';

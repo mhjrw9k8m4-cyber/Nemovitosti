@@ -224,6 +224,31 @@ neprojde('fotka', 'jednobarevná plocha', K.fotkaObsah(130, 4));
 neprojde('fotka', 'fotka potmě', K.fotkaObsah(12, 30));
 neprojde('fotka', 'přesvícená', K.fotkaObsah(250, 20));
 
+/* ---------------- tentýž pozemek podruhé ----------------
+ *
+ * Formulář je dlouhý a odeslání chvíli trvá; kdo si není jistý, že to
+ * prošlo, klepne znovu a má v „Moje inzeráty" dvě stejné nabídky.
+ * Shoda se posuzuje přísně (obec, okres, výměra do dvou procent), aby
+ * dvě sousední parcely stejné velikosti neplatily za jednu.
+ */
+{
+  const moje = [
+    { place: 'Kolín', okres: 'Kolín', area: 1200, price: 450000 },
+    { place: 'Poděbrady', okres: 'Nymburk', area: 3000, price: 900000 },
+  ];
+  const jeTo = (d) => ({ ok: !K.jakoMoje(d, moje) });
+  neprojde('duplicita', 'tentýž pozemek podruhé', jeTo({ obec: 'Kolín', okres: 'Kolín', vymera: '1200' }));
+  neprojde('duplicita', 'psaný bez diakritiky a jinak velkými', jeTo({ obec: 'KOLIN', okres: 'kolin', vymera: '1200' }));
+  neprojde('duplicita', 'výměra o procento jinde', jeTo({ obec: 'Kolín', okres: 'Kolín', vymera: '1210' }));
+  projde('duplicita', 'jiná obec v témže okrese', jeTo({ obec: 'Křečhoř', okres: 'Kolín', vymera: '1200' }));
+  projde('duplicita', 'stejná obec v jiném okrese', jeTo({ obec: 'Kolín', okres: 'Nymburk', vymera: '1200' }));
+  projde('duplicita', 'znatelně jiná výměra', jeTo({ obec: 'Kolín', okres: 'Kolín', vymera: '1400' }));
+  projde('duplicita', 'bez výměry se nehádá', jeTo({ obec: 'Kolín', okres: 'Kolín', vymera: '' }));
+  projde('duplicita', 'kdo zatím nic nemá', { ok: !K.jakoMoje({ obec: 'Kolín', okres: 'Kolín', vymera: '1200' }, []) });
+  zkus('duplicita', 'hláška umí pojmenovat, který inzerát to je',
+    { ok: (K.jakoMoje({ obec: 'Kolín', okres: 'Kolín', vymera: '1200' }, moje) || {}).place === 'Kolín' }, true);
+}
+
 /* ---------------- celý formulář ---------------- */
 const dobry = {
   obec: 'Kolín', okres: 'Kolín', vymera: '1200', cena: '450000', parcela: '123/4',

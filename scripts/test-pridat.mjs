@@ -400,6 +400,57 @@ async function odesli(p) {
   await ctx.close();
 }
 
+/* --- TENTÝŽ POZEMEK PODRUHÉ ----------------------------------------
+ * Formulář je dlouhý a odeslání chvíli trvá; kdo si není jistý, že to
+ * prošlo, klepne znovu a má v „Moje inzeráty" dvě stejné nabídky —
+ * zájemce pak neví, která platí.
+ *
+ * Blok si pozemek založí SÁM a nespoléhá na to, co v databázi nechaly
+ * zkoušky před ním: napoprvé jsem se spolehl, že tam po hlavní zkoušce
+ * zůstane jeden, jenže mezitím ho jiná zkouška smazala — a celý blok
+ * pak měřil prázdno. Chytla to kontrola prázdnosti pár řádků níž,
+ * proto tu je.
+ *
+ * A nezakazuje se, jen upozorní: druhé klepnutí projde, protože dvě
+ * sousední parcely stejné velikosti v jedné vsi jsou obě poctivé.
+ */
+{
+  const mojeInzeraty = () => fetch(`${BASE}/rest/v1/rpc/my_listings`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer tok-majitel' },
+    body: '{}',
+  }).then((r) => r.json()).catch(() => []);
+
+  const { ctx, p } = await otevri(true);
+  await vypln(p);
+  const prvni = await odesli(p);
+  pravda('první pozemek se zveřejní', /muj-inzerat/.test(prvni.url),
+    `zůstali jsme na ${prvni.url}, hláška: „${prvni.hlaska}"`);
+  await ctx.close();
+
+  const pred = await mojeInzeraty();
+  pravda('a je opravdu v databázi (jinak zkouška níž nic neměří)',
+    Array.isArray(pred) && pred.length > 0, `záznamů: ${Array.isArray(pred) ? pred.length : '?'}`);
+
+  // Totéž znovu, z čisté karty — jako by člověk nevěděl, že to už poslal.
+  const { ctx: ctx2, p: p2 } = await otevri(true);
+  await vypln(p2);
+  const druhy = await odesli(p2);
+  pravda('tentýž pozemek podruhé se hned nezveřejní',
+    !/muj-inzerat/.test(druhy.url), `web přešel na ${druhy.url}`);
+  pravda('a řekne, který inzerát už člověk má',
+    /Moje inzeráty/.test(druhy.hlaska) && /Kolín/.test(druhy.hlaska),
+    `hláška: „${druhy.hlaska.slice(0, 160)}"`);
+  const mezitim = await mojeInzeraty();
+  pravda('a nic mezitím nepřibylo', mezitim.length === pred.length,
+    `bylo ${pred.length}, je ${mezitim.length}`);
+
+  // Druhé klepnutí = „vím to, je to jiný pozemek". Musí projít.
+  const treti = await odesli(p2);
+  pravda('kdo klepne podruhé, tomu se to zveřejní',
+    /muj-inzerat/.test(treti.url), `zůstali jsme na ${treti.url}, hláška: „${treti.hlaska}"`);
+  await ctx2.close();
+}
+
 await prohlizec.close();
 console.log('\nPřidání vlastního pozemku — celá cesta');
 console.log(zpravy.join('\n'));

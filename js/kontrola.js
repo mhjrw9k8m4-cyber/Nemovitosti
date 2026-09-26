@@ -318,6 +318,40 @@
     return chyba('Okres „' + s + '" neznáme — vyberte prosím jeden ze 77 okresů (napovídá se při psaní).');
   }
 
+  /* --- nemá to člověk u nás už jednou? --------------------------------
+
+     Podat tentýž pozemek dvakrát je snadné: formulář je dlouhý, odeslání
+     chvíli trvá a kdo si není jistý, že to prošlo, klepne znovu. Pak má
+     v „Moje inzeráty" dvě stejné nabídky, zájemci je vidí obě a neví,
+     která platí.
+
+     Shoda se posuzuje přísně — obec, okres a výměra do dvou procent.
+     Volněji to nejde: developer může ve vsi prodávat dvě sousední parcely
+     stejné velikosti a ty dvě nabídky jsou obě poctivé. Proto se taky
+     nezakazuje, jen upozorní: kdo ví, že jde o jiný pozemek, klepne na
+     Zveřejnit podruhé a projde to. Blokovat by znamenalo tvrdit si své
+     proti člověku, který svůj pozemek zná líp než my. */
+  function normMisto(s) {
+    return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+  function jakoMoje(d, mojeInzeraty) {
+    var vymera = cislo(d.vymera);
+    if (!vymera || vymera <= 0) return null;
+    var obec = normMisto(d.obec), okres = normOkres(d.okres);
+    if (!obec) return null;
+    var list = mojeInzeraty || [];
+    for (var i = 0; i < list.length; i++) {
+      var m = list[i];
+      if (normMisto(m.place) !== obec) continue;
+      if (normOkres(m.okres) !== okres) continue;
+      var mv = cislo(m.area);
+      if (!mv || Math.abs(mv - vymera) > Math.max(1, 0.02 * vymera)) continue;
+      return m;
+    }
+    return null;
+  }
+
   /* --- padl špendlík do vybraného okresu? -----------------------------
 
      Nejhorší chyba v inzerátu není překlep v ceně, ale špatné místo:
@@ -470,6 +504,7 @@
     obec: obec, vymera: vymera, cena: cena, cenaZaMetr: cenaZaMetr,
     popis: popis, odkaz: odkaz, kontakt: kontakt, jmeno: jmeno, parcela: parcela, okres: okres,
     poloha: poloha, kanonOkres: kanonOkres, PRAH_KM: PRAH_KM,
+    jakoMoje: jakoMoje,
     fotkaRozmery: fotkaRozmery, fotkaObsah: fotkaObsah,
     fotkaPuvod: fotkaPuvod, fotkaMisto: fotkaMisto, ocistiOdkaz: ocistiOdkaz,
     formular: formular,
