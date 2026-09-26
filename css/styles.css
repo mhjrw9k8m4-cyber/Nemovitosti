@@ -404,23 +404,15 @@ body.vm-otevreno{overflow:hidden;}
 /* Značka uprostřed mapy — klikat se přes ni nesmí.
    Pozor: obal měl width:0 a display:flex, což značku stlačilo z dvaceti
    pixelů na šest. Proto je teď umístěná posunem, ne flexem. */
-.vm-kriz{position:absolute; left:0; right:0; top:0; bottom:0; pointer-events:none; z-index:610;}
-/* HROT špendlíku musí ležet přesně na středu mapy — tam se totiž kreslí
-   střed okruhu. Posun o vlastní výšku plus délku nožičky to zajistí bez
-   ohledu na to, jak je značka velká; dřívější „-50 % - 7px" nechávalo hrot
-   viset asi 18 px pod skutečným středem. */
-.vm-kriz span{position:absolute; left:50%; top:50%; width:22px; height:22px; border-radius:50%;
-  background:#8A5512; border:3px solid #fff; box-shadow:var(--e2); box-sizing:border-box;
-  transform:translate(-50%, calc(-100% - 14px));}
-.vm-kriz span::after{content:""; position:absolute; left:50%; top:100%; width:2px; height:14px;
+/* ZNAČKA VYBRANÉHO MÍSTA. Dřív to byl kříž napevno uprostřed okna —
+   vybrané místo tedy BYLO to, co je právě uprostřed mapy, a každé
+   posunutí i přiblížení ho změnilo. Teď je to značka na mapě: drží se
+   místa, ne obrazovky. Hrot leží přesně na vybraném bodu (o to se stará
+   iconAnchor v js/main.js). */
+.vm-znacka span{display:block; width:22px; height:22px; border-radius:50%;
+  background:#8A5512; border:3px solid #fff; box-shadow:var(--e2); box-sizing:border-box; position:relative;}
+.vm-znacka span::after{content:""; position:absolute; left:50%; top:100%; width:2px; height:14px;
   background:#8A5512; transform:translateX(-50%); border-radius:0 0 2px 2px;}
-.vm-poloha{position:absolute; right:14px; z-index:600; bottom:104px;}
-.vm-gps{display:inline-flex; align-items:center; gap:7px; font:inherit; font-size:13px;
-  font-weight:600; min-height:38px; padding:8px 13px; cursor:pointer;
-  border-radius:var(--r-pill); border:1px solid var(--line-ui); background:rgba(255,255,255,0.95);
-  color:var(--copper); box-shadow:var(--e1);}
-.vm-gps svg{width:16px; height:16px; stroke-width:2.25;}
-.vm-gps[disabled]{opacity:.75; cursor:progress;}
 .vm-pata{display:flex; align-items:center; gap:10px; flex-wrap:wrap;
   padding:12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
   border-top:1px solid var(--line); background:var(--ink-soft);}
@@ -483,7 +475,6 @@ body.vm-otevreno{overflow:hidden;}
   .vm-ok{flex:1 1 100%; order:3;}
   .vm-pocet{flex:1 1 100%; order:1;}
   .vm-okruh{order:2;}
-  .vm-poloha{bottom:auto; top:calc(100% - 100dvh + 178px);}
 }
 
 /* Hlídané místo na mapě — mosazná značka, ať se neplete s „jste tady" (zelená)

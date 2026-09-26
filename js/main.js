@@ -2184,11 +2184,9 @@
            kam se doopravdy vybíralo. */
         '<div class="vm-mapa-obal">' +
           '<div class="vm-mapa" id="vm-mapa"></div>' +
-          '<div class="vm-kriz" aria-hidden="true"><span></span></div>' +
         '</div>' +
-        '<div class="vm-poloha"><button type="button" class="vm-gps" id="vm-gps">' + LOC_PIN + 'Moje poloha</button></div>' +
         '<div class="vm-pata">' +
-          '<fieldset class="vm-okruh"><legend>Okruh od středu mapy</legend>' +
+          '<fieldset class="vm-okruh"><legend>Okruh od vybraného místa</legend>' +
             '<span class="vm-okruh-p" aria-hidden="true">Okruh</span>' +
             [2, 5, 10, 20, 50].map(function (v) {
               return '<label class="vm-km"><input type="radio" name="vm-km" value="' + v + '"' +
@@ -2243,6 +2241,22 @@
       dashArray: '9 6', fillColor: '#8A5512', fillOpacity: 0.12, interactive: false
     }).addTo(m);
 
+    /* VYBRANÉ MÍSTO JE ZNAČKA NA MAPĚ, NE STŘED OKNA.
+       Dřív tu byl kříž napevno uprostřed mapy a vybrané místo BYLO to,
+       co je právě uprostřed. Každé posunutí i přiblížení tedy měnilo
+       výběr: kdo si chtěl jen oddálit a podívat se, kam až deset
+       kilometrů sahá, tím zároveň vybral jiné místo — a kruh se mu
+       přesunul jinam. Odtud „kolo pokrývá jinou vzdálenost, když
+       oddaluju". Poloměr kruhu přitom vždycky seděl (změřeno: 10 000 m
+       na všech přiblíženích); stěhoval se jeho STŘED.
+       Teď se místo drží mapy, ne obrazovky. Posouvat a přibližovat jde
+       volně, výběr to nezmění — mění ho jedině klepnutí. */
+    var vybraneMisto = { lat: start.lat, lng: start.lng };
+    var znacka = L.marker([start.lat, start.lng], {
+      interactive: false, keyboard: false, zIndexOffset: 800,
+      icon: L.divIcon({ className: 'vm-znacka', html: '<span></span>', iconSize: [22, 36], iconAnchor: [11, 36] })
+    }).addTo(m);
+
     /* MĚŘÍTKO OKRUHU. Samotný kruh říká „takhle velké to je" jen tomu, kdo
        si dokáže představit deset kilometrů na mapě. Proto se od středu ke
        kraji kruhu táhne čára a na ní visí číslo — stejně, jako se měří na
@@ -2279,7 +2293,11 @@
         return '10';
       }
     };
-    function stred() { var c = m.getCenter(); return { lat: c.lat, lng: c.lng }; }
+    function stred() { return { lat: vybraneMisto.lat, lng: vybraneMisto.lng }; }
+    function nastavMisto(lat, lng) {
+      vybraneMisto = { lat: lat, lng: lng };
+      znacka.setLatLng([lat, lng]);
+    }
     /* Přiblížení se řídí okruhem, ne pevným číslem. S pevným zoomem 12 byl
        kruh o poloměru 10 km několikrát širší než obrazovka — na mapě po něm
        nebylo ani vidu a člověk netušil, co vlastně vybírá. */
@@ -2290,12 +2308,26 @@
     function jdiNa(lat, lng, animovat) {
       m.fitBounds(ramecOkruhu(lat, lng), { animate: animovat !== false });
     }
-    /* Vejde se celý okruh do toho, co je právě vidět? Bez rezervy —
-       ta je jen pro případ, kdy se mapa opravdu musí přerovnat. */
+    /* Je okruh doopravdy VIDĚT? Nestačí, že se vejde do okna: při pohledu
+       na celou republiku se desetikilometrový kruh „vejde" taky, jenže je
+       z něj tečka o pár pixelech a člověk netuší, co vybírá. Proto se
+       ptáme na obojí — vejde se, a je aspoň tak velký, aby šel přečíst. */
+    /* Hranice je 28 px, ne víc: má oddělit TEČKU od malého kruhu, ne
+       vynucovat pohodlné přiblížení. Naměřeno: při pohledu na celou
+       republiku (zoom 7) má desetikilometrový okruh asi 3 px — to je
+       tečka. Dvoukilometrový okruh na zoomu 11 má 53 px — malý, ale
+       čitelný, a tam se přiblížením hýbat nesmí; kvůli tomu si člověk
+       stěžoval. */
+    var NEJMENSI_OKRUH_PX = 28;
     function okruhSeVejde(lat, lng) {
       var k = parseInt(kmSel.value, 10) || 10;
-      try { return m.getBounds().contains(L.latLng(lat, lng).toBounds(k * 2000)); }
-      catch (e) { return false; }
+      try {
+        if (!m.getBounds().contains(L.latLng(lat, lng).toBounds(k * 2000))) return false;
+        var stredPx = m.latLngToContainerPoint(L.latLng(lat, lng));
+        var krajPx = m.latLngToContainerPoint(L.latLng(lat, lng).toBounds(k * 2000).getEast
+          ? L.latLng(lat, L.latLng(lat, lng).toBounds(k * 2000).getEast()) : L.latLng(lat, lng));
+        return Math.abs(krajPx.x - stredPx.x) * 2 >= NEJMENSI_OKRUH_PX;
+      } catch (e) { return false; }
     }
     function prepocti() {
       var k = parseInt(kmSel.value, 10) || 10;
@@ -2363,17 +2395,19 @@
     }
     m.on('click', function (e) {
       vybranoMisto = true;
-      /* Přepočítat MUSÍME rovnou, ne se spolehnout na to, že mapou pohne
-         jdiNa(). Když se klepne tam, kde mapa už stojí, fitBounds nemá co
-         měnit, neproběhne žádná událost „move" — a panel by zůstal viset
-         na výzvě „Klepnutím na mapu ukažte…", i když místo ukázané je.
-         Zvenčí to vypadá přesně jako rozbité tlačítko: klepnu a nic. */
+      nastavMisto(e.latlng.lat, e.latlng.lng);
       prepocti();
-      jdiNa(e.latlng.lat, e.latlng.lng);
+      /* Mapa se přerovná jen tehdy, když by se kruh do okna nevešel.
+         Klepnutí je volba místa, ne žádost o přeskládání pohledu. */
+      if (!okruhSeVejde(e.latlng.lat, e.latlng.lng)) jdiNa(e.latlng.lat, e.latlng.lng, false);
     });
-    m.on('dragend', function () { vybranoMisto = true; prepocti(); });
-    m.on('move', prepocti);
-    m.on('zoomend', prepocti);
+    /* NA POSUN A PŘIBLÍŽENÍ SE UŽ NEPŘEPOČÍTÁVÁ.
+       Dřív viselo prepocti() na události „move", která při každém tažení
+       přijde desítkykrát za vteřinu — a pokaždé se prošly všechny nabídky
+       (dnes 1 966) a hledal se název nejbližší obce. Odtud to sekání.
+       Teď se počítá jen tehdy, když se opravdu něco změní: nové místo
+       nebo jiný okruh. Kruh i měřítko jsou kreslené v zeměpisných
+       souřadnicích, takže si při posunu poradí samy. */
     kmVstupy.forEach(function (r) {
       r.addEventListener('change', function () {
         prepocti();
@@ -2386,9 +2420,7 @@
            kruh do okna nevejde; tedy jen aby bylo vidět, co vybírám.
            Zvětšovat přiblížení se nemusí nikdy: menší kruh se do většího
            pohledu vejde vždycky.
-           BEZ ANIMACE. Při plynulém přejezdu se kolečko (kreslené do mapy)
-           přesouvá, zatímco špendlík stojí na středu okna — a po tu chvíli
-           ukazují každý jinam. Skok je tu poctivější než přejezd. */
+           BEZ ANIMACE: skok je tu poctivější než přejezd. */
         if (!okruhSeVejde(c.lat, c.lng)) jdiNa(c.lat, c.lng, false);
       });
     });
@@ -2396,46 +2428,17 @@
     // Leaflet po vložení do skrytého prvku neví, jak je velký.
     setTimeout(function () {
       m.invalidateSize();
-      if (nast.start || (mojeMisto && isFinite(mojeMisto.lat))) jdiNa(start.lat, start.lng, false);
+      if (nast.start || (mojeMisto && isFinite(mojeMisto.lat))) {
+        nastavMisto(start.lat, start.lng);
+        jdiNa(start.lat, start.lng, false);
+      }
       prepocti();
     }, 60);
 
-    /* MOJE POLOHA. Tlačítko sedí na nejlepším místě mapy, takže si tam to
-       místo musí zasloužit — a když poloha nejde, nezaslouží.
-       Dřív se po selhání změnilo v nápis „Poloha nejde — vyberte ručně"
-       a ten tam zůstal viset navždy. Radil přitom přesně to, co člověk
-       v tu chvíli už dělá (mapa JE ruční výběr), takže zabíral výhled
-       a neříkal nic. Teď zmizí a důvod se řekne jednou, krátce. */
-    var gpsBtn = ov.querySelector('#vm-gps');
-    function zrusPolohu(hlaska) {
-      var obal = gpsBtn && gpsBtn.closest ? gpsBtn.closest('.vm-poloha') : null;
-      if (obal && obal.parentNode) obal.parentNode.removeChild(obal);
-      else if (gpsBtn && gpsBtn.parentNode) gpsBtn.parentNode.removeChild(gpsBtn);
-      gpsBtn = null;
-      if (hlaska) showToast(hlaska);
-    }
-    // Co nemůže fungovat, se ani nenabízí: bez podpory v prohlížeči pryč hned.
-    if (!navigator.geolocation) zrusPolohu('');
-    /* A když má člověk polohu pro tenhle web zakázanou, víme to předem —
-       tak ať vůbec nevidí tlačítko, které mu jen vrátí chybu. */
-    else if (navigator.permissions && navigator.permissions.query) {
-      try {
-        navigator.permissions.query({ name: 'geolocation' }).then(function (st) {
-          if (st && st.state === 'denied') zrusPolohu('');
-        }).catch(function () {});
-      } catch (e) {}
-    }
-    if (gpsBtn) gpsBtn.addEventListener('click', function () {
-      gpsBtn.disabled = true; gpsBtn.innerHTML = '<span class="mnb-ceka" aria-hidden="true"></span>Hledám…';
-      navigator.geolocation.getCurrentPosition(function (p) {
-        if (!gpsBtn) return;
-        gpsBtn.disabled = false; gpsBtn.innerHTML = LOC_PIN + 'Moje poloha';
-        vybranoMisto = true;      // poloha je ukázané místo jako každé jiné
-        jdiNa(p.coords.latitude, p.coords.longitude);
-      }, function () {
-        zrusPolohu('Polohu se nepodařilo zjistit — ukažte místo klepnutím do mapy.');
-      }, { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 });
-    });
+    /* Tlačítko „Moje poloha" tu bývalo — bílá pilulka přes mapu vpravo
+       nahoře. Zabíralo výhled zrovna tam, kam se člověk dívá, a když
+       poloha nešla, muselo se řešit, co s ním. Místo se ukazuje
+       klepnutím do mapy; tak to panel pod mapou rovnou říká. */
 
     var potvrzeno = false;
     function naKlavesu(e) { if (e.key === 'Escape') zavri(); }

@@ -119,7 +119,7 @@ async function klepniDoMapy(p, fx = 0.5, fy = 0.5) {
 const stavVybiraku = (p) => p.evaluate(() => {
   const ov = document.querySelector('.vm-ov');
   const mapa = document.getElementById('vm-mapa');
-  const kriz = document.querySelector('.vm-kriz span');
+  const kriz = document.querySelector('.vm-znacka span');
   const r = mapa ? mapa.getBoundingClientRect() : null;
   const kr = kriz ? kriz.getBoundingClientRect() : null;
   return {
@@ -238,22 +238,27 @@ const stavVybiraku = (p) => p.evaluate(() => {
   pravda('a dá se přesunout znovu (a znovu, a znovu)', us.pocet !== jm.pocet,
     `Brno: „${jm.pocet.trim()}", Ústí: „${us.pocet.trim()}" — tohle dřív nešlo vůbec`);
 
-  // Mapa se dá táhnout a počet se mění při každém pohnutí.
+  /* TAŽENÍ UŽ VÝBĚR NEMĚNÍ — a je to záměr, ne regrese.
+     Dřív bylo vybrané místo to, co je právě uprostřed mapy, takže každé
+     posunutí i přiblížení ho přepsalo. Kdo se chtěl jen oddálit a
+     podívat, kam až deset kilometrů sahá, tím zároveň vybral jinde.
+     Teď se mapa posouvá volně a místo se mění jedině klepnutím —
+     to musí jít pořád, libovolněkrát (ověřeno o pár řádků výš). */
   const box = await p.locator('#vm-mapa').boundingBox();
-  async function tahni(dx, dy) {
-    await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await p.mouse.down();
-    await p.mouse.move(box.x + box.width / 2 + dx, box.y + box.height / 2 + dy, { steps: 12 });
-    await p.mouse.up();
-    await p.waitForTimeout(900);
-    return (await stavVybiraku(p)).pocet;
-  }
-  const t1 = await tahni(-120, -90);
-  pravda('mapa se dá táhnout a počet se hned přepočítá', t1 !== us.pocet,
-    `po tažení pořád „${t1.trim()}"`);
-  const t2 = await tahni(150, 110);
-  pravda('a dá se táhnout znovu, libovolněkrát', t2 !== t1,
-    `druhé tažení už počet nezměnilo: „${t1.trim()}" → „${t2.trim()}"`);
+  const pred = (await stavVybiraku(p)).pocet;
+  await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await p.mouse.down();
+  await p.mouse.move(box.x + box.width / 2 - 120, box.y + box.height / 2 - 90, { steps: 12 });
+  await p.mouse.up();
+  await p.waitForTimeout(900);
+  const poTazeni = (await stavVybiraku(p)).pocet;
+  pravda('tažením mapy se vybrané místo nezmění', poTazeni === pred,
+    `před tažením „${pred.trim()}", po tažení „${poTazeni.trim()}"`);
+  // Ale klepnutí ho pořád přesune — jinak by výběr nešel opravit.
+  await klepniDoMapy(p, 0.35, 0.35);
+  const poKlepnuti = (await stavVybiraku(p)).pocet;
+  pravda('ale klepnutí ho přesune dál', poKlepnuti !== poTazeni,
+    `po klepnutí pořád „${poKlepnuti.trim()}"`);
 
   // Panel pořád ví, u které obce se právě je — jen se k ní dojde mapou.
   await jdiNaMisto(p, 50.028, 15.200);   // Kolín
@@ -502,38 +507,93 @@ const stavVybiraku = (p) => p.evaluate(() => {
   await ctx.close();
 }
 
-// --- 2) „Pozemky v okolí" s povolenou polohou ------------------------
-/* Poloha se z hlavní stránky nebere sama a tlačítko se na ni neptá — vždycky
-   otevře mapu. Kdo polohu povolenou má, dostane ji ve výběru na jedno
-   klepnutí („Moje poloha") a dál je cesta stejná jako u ručního ukázání.
-   Tím se ztratí jedno klepnutí navíc, ale odpadá stav, kdy hlavní akce webu
-   skončí hláškou místo výsledku — a to byl ten důvod, proč se to měnilo. */
+// --- 2) Vybrané místo se drží MAPY, ne středu okna ------------------
+/* Stížnost: „proč kolo pokrývá větší vzdálenost, když oddaluju? To
+   nedává smysl. Navíc se seká."
+   Vybrané místo BYLO to, co je právě uprostřed mapy (kříž napevno
+   uprostřed okna). Každé posunutí i přiblížení ho tedy změnilo: kdo se
+   chtěl jen oddálit a podívat, kam až deset kilometrů sahá, tím zároveň
+   vybral jiné místo a kruh se přesunul. Poloměr přitom vždycky seděl
+   (změřeno 10 000 m na všech přiblíženích) — stěhoval se STŘED.
+   A protože se přepočítávalo při každé události „move", procházelo se
+   při každém tažení všech 1 966 nabídek: 20 událostí stálo 59 ms, teď 0.
+   Bílé tlačítko „Moje poloha" přes mapu je pryč — místo se ukazuje
+   klepnutím, jak panel pod mapou rovnou říká. */
 {
-  const { ctx, p, chyby } = await telefon({ latitude: 49.95, longitude: 14.30 });
+  const { ctx, p } = await telefon(null);
   await otevriVybirac(p, '#map-near');
-  await p.click('#vm-gps');
-  await p.waitForTimeout(2600);
-  const poGps = await stavVybiraku(p);
-  pravda('„Moje poloha" ve výběru zaměří mapu na vás',
-    poGps.kruh && poGps.potvrditJde, `kruh ${poGps.kruh}, potvrdit ${poGps.potvrditJde}`);
-  await p.click('#vm-ok');
-  await p.waitForTimeout(2400);
-  const v = await p.evaluate(() => ({
-    hlavicka: (document.querySelector('.kh-txt b') || {}).textContent || '',
-    pod: (document.querySelector('.kh-txt span') || {}).textContent || '',
-    jaJsemTu: !!document.querySelector('.pk-me'),
-    tlacitkoOn: !!document.getElementById('map-near')?.classList.contains('on'),
-    tlacitkoText: (document.getElementById('map-near') || {}).textContent || '',
+  await p.evaluate(() => { window.PK_VM_MAPA.setView([50.10, 15.85], 11); });
+  await p.waitForTimeout(700);
+  await klepniDoMapy(p);
+
+  const kde = () => p.evaluate(() => {
+    const m = window.PK_VM_MAPA;
+    let kruh = null;
+    m.eachLayer((l) => { if (l instanceof L.Circle && l.getRadius) kruh = l; });
+    const c = kruh ? kruh.getLatLng() : null;
+    return {
+      r: kruh ? Math.round(kruh.getRadius()) : null,
+      lat: c ? +c.lat.toFixed(4) : null, lng: c ? +c.lng.toFixed(4) : null,
+      zoom: m.getZoom(),
+      text: ((document.getElementById('vm-pocet') || {}).textContent || '').replace(/\s+/g, ' ').trim(),
+    };
+  });
+  const po = await kde();
+  pravda('po klepnutí je kruh na mapě', po.r === 10000 && po.lat !== null, JSON.stringify(po));
+
+  await p.evaluate(() => { window.PK_VM_MAPA.setZoom(8); });
+  await p.waitForTimeout(900);
+  const poOddaleni = await kde();
+  pravda('oddálení nezmění vybrané místo',
+    poOddaleni.lat === po.lat && poOddaleni.lng === po.lng,
+    `bylo ${po.lat},${po.lng}, po oddálení ${poOddaleni.lat},${poOddaleni.lng}`);
+  pravda('ani velikost okruhu', poOddaleni.r === po.r, `${po.r} → ${poOddaleni.r}`);
+  pravda('a počet nabídek zůstane stejný', poOddaleni.text === po.text,
+    `„${po.text}" → „${poOddaleni.text}"`);
+
+  await p.evaluate(() => { window.PK_VM_MAPA.panBy([170, 130]); });
+  await p.waitForTimeout(900);
+  const poPosunu = await kde();
+  pravda('posunutí mapy taky ne', poPosunu.lat === po.lat && poPosunu.lng === po.lng,
+    `bylo ${po.lat},${po.lng}, po posunutí ${poPosunu.lat},${poPosunu.lng}`);
+
+  /* A po posunu ještě jednou, až se přepočet OPRAVDU spustí: změna
+     okruhu. Bez tohohle kroku by sabotáž prošla — vazba na střed mapy
+     se totiž projeví až ve chvíli, kdy se něco přepočítává, a posun
+     sám už nepřepočítává nic. Přistiženo. */
+  await p.evaluate(() => {
+    const r = document.querySelector('input[name="vm-km"][value="5"]');
+    if (r) r.click();
+  });
+  await p.waitForTimeout(900);
+  const poZmeneOkruhu = await kde();
+  pravda('ani změna okruhu po posunu místo nepřesune',
+    poZmeneOkruhu.lat === po.lat && poZmeneOkruhu.lng === po.lng,
+    `bylo ${po.lat},${po.lng}, po změně okruhu ${poZmeneOkruhu.lat},${poZmeneOkruhu.lng}`);
+  pravda('a okruh se opravdu zmenšil na 5 km', poZmeneOkruhu.r === 5000, `poloměr ${poZmeneOkruhu.r} m`);
+
+  /* SEKÁNÍ. Posun mapy nesmí nic přepočítávat — jinak se při každém
+     tažení projdou všechny nabídky. Měří se dvacet událostí „move"
+     naráz; před opravou to trvalo 59 ms, tedy asi 3 ms na jeden snímek. */
+  const cas = await p.evaluate(() => {
+    const m = window.PK_VM_MAPA; const t0 = performance.now();
+    for (let i = 0; i < 20; i++) m.fire('move');
+    return Math.round(performance.now() - t0);
+  });
+  pravda('posun mapy nic nepřepočítává (nesmí se sekat)', cas <= 12,
+    `20 událostí „move" trvalo ${cas} ms — při tažení jich přijde desítky za vteřinu`);
+
+  const zmizelo = await p.evaluate(() => ({
+    gps: !!document.getElementById('vm-gps'),
+    kriz: !!document.querySelector('.vm-kriz'),
+    znacka: !!document.querySelector('.vm-znacka'),
   }));
-  pravda('s povolenou polohou se přepne do režimu okolí', /okolí/i.test(v.hlavicka), v.hlavicka);
-  pravda('a je vidět, kde jste', v.jaJsemTu);
-  pravda('podnadpis řekne okruh i počet',
-    /\d+ km/.test(v.pod) && /pozem/.test(v.pod), v.pod);
-  pravda('tlačítko zůstane v normálním stavu', /Pozemky v okolí/.test(v.tlacitkoText),
-    `zůstalo na „${v.tlacitkoText.trim()}"`);
-  pravda('při hledání okolí nespadl žádný skript', chyby.length === 0, chyby[0]);
+  pravda('bílé tlačítko „Moje poloha" přes mapu je pryč', !zmizelo.gps);
+  pravda('a místo kříže uprostřed okna je značka na mapě', !zmizelo.kriz && zmizelo.znacka,
+    JSON.stringify(zmizelo));
   await ctx.close();
 }
+
 
 // --- 3) Bez polohy se web neodmlčí -----------------------------------
 {
@@ -578,99 +638,6 @@ const stavVybiraku = (p) => p.evaluate(() => {
     `okno přišlo až po ${cekani.toFixed(1)} s — tak dlouhé ticho se čte jako „nefunguje to"`);
   pravda('tlačítko se potom dá zase zmáčknout', v.zakazano === false && /Pozemky v okolí/.test(v.tlacitko),
     `zůstalo „${v.tlacitko.trim()}", zakázané: ${v.zakazano}`);
-  await ctx.close();
-}
-
-// --- 4) Když poloha „visí" --------------------------------------------
-/* Na telefonu, který polohu povolenou má, ale nemá ji odkud vzít (venku pod
-   mrakem, vypnuté GPS), prohlížeč neodmítne hned: mlčí až do vypršení
-   limitu. Právě tenhle případ byl rozbitý a Playwright ho sám od sebe
-   nenapodobí (bez povolení odmítne okamžitě), takže se tu rozhraní pro
-   polohu podstrčí — chová se jako prohlížeč, jen nikdy nic nenajde.
-   Povolení je tu potřeba skutečné: se zakázanou polohou se tlačítko „Moje
-   poloha" vůbec nenabízí (to hlídá oddíl 4b), takže by nebylo co zmáčknout. */
-{
-  const { ctx, p } = await telefon({ latitude: 49.95, longitude: 14.30 });
-  await p.evaluate(() => {
-    navigator.geolocation.getCurrentPosition = function (uspech, chyba, nast) {
-      const limit = (nast && nast.timeout) || 30000;
-      window.__pozadanyLimit = limit;
-      setTimeout(function () { if (chyba) chyba({ code: 3, message: 'timeout' }); }, limit);
-    };
-  });
-  await p.locator('#map-near').scrollIntoViewIfNeeded();
-  const t0 = Date.now();
-  await p.locator('#map-near').click();
-  await p.waitForSelector('.vm-ov', { timeout: 15000 }).catch(() => {});
-  const cekani = (Date.now() - t0) / 1000;
-  /* Tohle je jádro celé změny: visící poloha už hlavní akci nezdrží ANI
-     VTEŘINU, protože se na ni nikdo neptá. Dřív se tu čekalo na vypršení
-     limitu a teprve pak se něco ukázalo. */
-  pravda('visící poloha hlavní tlačítko vůbec nezdrží', cekani < 2.5,
-    `mapa přišla až po ${cekani.toFixed(1)} s — tlačítko zjevně čeká na polohu`);
-  pravda('a o polohu se přitom vůbec nežádá',
-    (await p.evaluate(() => window.__pozadanyLimit)) === undefined,
-    'tlačítko si polohu vyžádalo, i když se na ni nemá ptát');
-
-  /* Kdo polohu chce, má ve výběru „Moje poloha" — a tam platí všechno, co
-     dřív platilo pro hlavní tlačítko: musí být hned poznat, že se čeká,
-     nesmí jít zmáčknout podruhé, a nečeká se déle než šest vteřin. */
-  await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
-  await p.click('#vm-gps');
-  await p.waitForTimeout(400);
-  const behem = await p.evaluate(() => {
-    const b = document.getElementById('vm-gps');
-    return { text: (b || {}).textContent || '', zakazano: !!(b && b.disabled),
-      tocise: !!document.querySelector('.mnb-ceka'), limit: window.__pozadanyLimit };
-  });
-  pravda('zatímco se čeká na polohu, „Moje poloha" to říká', /Hledám/.test(behem.text),
-    `tlačítko hlásí „${behem.text.trim()}" — po klepnutí se nesmí tvářit, že se nic neděje`);
-  pravda('a nejde ho zmáčknout podruhé', behem.zakazano,
-    'druhé klepnutí spustí druhý dotaz a čeká se znovu od začátku');
-  pravda('má u sebe i točící se kolečko', behem.tocise);
-  pravda('na polohu se čeká nejvýš šest vteřin', behem.limit <= 6000,
-    `žádá se o limit ${behem.limit} ms — tak dlouhé ticho se čte jako „nefunguje to"`);
-  const konec = await p.evaluate(() => ({
-    okno: !!document.querySelector('.vm-ov'),
-    tlacitko: (document.getElementById('map-near') || {}).textContent || '',
-    zakazano: !!document.getElementById('map-near')?.disabled,
-  }));
-  pravda('po marném čekání se otevře mapa výběru místa', konec.okno,
-    `po ${cekani.toFixed(1)} s se neukázalo nic`);
-  pravda('a čekání netrvá déle než sedm vteřin', cekani < 7, `trvalo ${cekani.toFixed(1)} s`);
-  pravda('tlačítko se vrátí do původního stavu',
-    konec.zakazano === false && /Pozemky v okolí/.test(konec.tlacitko),
-    `zůstalo „${konec.tlacitko.trim()}"`);
-  await ctx.close();
-}
-
-// --- 4b) Se zakázanou polohou se „Moje poloha" vůbec nenabízí ---------
-/* Tlačítko sedí uprostřed mapy, přes to nejzajímavější místo. Když má
-   člověk polohu pro tenhle web zakázanou, prohlížeč to řekne dopředu
-   (Permissions API) — a nabízet mu prvek, který mu vrátí jen chybu, je
-   horší než ho nemít: zabírá výhled a radí přesně to, co člověk zrovna
-   dělá (mapa JE ruční výběr). Dřív se po selhání změnil v nápis
-   „Poloha nejde — vyberte ručně" a ten tam zůstal viset navždy. */
-{
-  const { ctx, p, chyby } = await telefon(null);
-  await otevriVybirac(p, '#map-near');
-  await p.waitForTimeout(600);
-  const stav = await p.evaluate(() => ({
-    tlacitko: !!document.getElementById('vm-gps'),
-    obal: !!document.querySelector('.vm-poloha'),
-    mapa: !!document.querySelector('.vm-ov #vm-mapa .leaflet-map-pane'),
-    potvrdit: !!document.getElementById('vm-ok'),
-  }));
-  pravda('se zakázanou polohou tam „Moje poloha" není', !stav.tlacitko && !stav.obal,
-    'tlačítko zůstalo, i když prohlížeč dopředu řekl, že polohu nedá');
-  pravda('ale mapa i potvrzení zůstávají', stav.mapa && stav.potvrdit,
-    `mapa ${stav.mapa}, potvrzení ${stav.potvrdit}`);
-  /* A ruční cesta tím nesmí být dotčená: klepnutí do mapy dál vybírá. */
-  await klepniDoMapy(p, 0.5, 0.4);
-  const po = await stavVybiraku(p);
-  pravda('klepnutím do mapy jde místo vybrat i bez polohy', po.potvrditJde,
-    'po klepnutí se potvrzení nerozsvítilo — bez tlačítka polohy nezbyla žádná cesta');
-  pravda('a nic při tom nespadlo', chyby.length === 0, chyby[0]);
   await ctx.close();
 }
 
