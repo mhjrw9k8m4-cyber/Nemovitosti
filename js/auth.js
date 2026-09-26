@@ -129,14 +129,25 @@
         přihlášení neplatí — znamenají „zkus to za chvíli". Session se teď
         maže jedině tehdy, když server výslovně řekne, že token neplatí. */
   var probihaObnova = null;
+  /* 3) DVĚ STRÁNKY NARÁZ. `probihaObnova` hlídá jen jednu stránku, jenže
+        web je vícestránkový: každé klepnutí na odkaz je nové načtení
+        a nová proměnná. Kdo klepne ve chvíli, kdy první stránka zrovna
+        obnovuje, pošle druhou obnovu se STARÝM tokenem — a Supabase
+        token při obnově otáčí, takže starý tím okamžitě neplatí.
+        Odpověď „invalid" se pak brala jako „tenhle účet neplatí"
+        a session se smazala. Odtud „web mě pořád odhlašuje".
+        Před smazáním se proto znovu přečte localStorage: když je tam
+        JINÝ refresh_token, než jaký jsme poslali, obnovil ho mezitím
+        někdo jiný a naše chyba je opozdilec, ne neplatné přihlášení. */
   function refresh(vynutit) {
     var s = getSession();
     if (!s || !s.refresh_token) return Promise.resolve(false);
     if (!vynutit && platiJeste(300)) return Promise.resolve(true);   // ještě 5 minut platí
     if (probihaObnova) return probihaObnova;                          // ať neběží dvě naráz
+    var poslanyToken = s.refresh_token;
     probihaObnova = fetch(URL + '/auth/v1/token?grant_type=refresh_token', {
       method: 'POST', headers: { 'apikey': KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: s.refresh_token })
+      body: JSON.stringify({ refresh_token: poslanyToken })
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {
         if (r.ok && j.access_token) { setSession(j); return true; }
@@ -144,7 +155,14 @@
         var duvod = String((j && (j.error_code || j.error || j.msg || j.message)) || '').toLowerCase();
         var opravduNeplati = (r.status === 400 || r.status === 401) &&
           /invalid|expired|revoked|not\s*found|already\s*used/.test(duvod);
-        if (opravduNeplati) setSession(null);
+        if (opravduNeplati) {
+          var ted = getSession();
+          /* Mezitím se přihlášení obnovilo jinde — držíme se toho
+             nového. Smazat ho kvůli odpovědi na starý token by
+             odhlásilo člověka, který je přihlášený. */
+          if (ted && ted.refresh_token && ted.refresh_token !== poslanyToken) return true;
+          setSession(null);
+        }
         return false;
       });
     }).catch(function () { return false; })      // výpadek sítě session nemaže

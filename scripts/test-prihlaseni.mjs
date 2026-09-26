@@ -163,6 +163,118 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
   await ctx.close();
 }
 
+/* --- 6) DVĚ STRÁNKY NARÁZ ------------------------------------------
+ * To, co člověk hlásil jako „web mě pořád odhlašuje". Kontrola č. 2
+ * hlídá dvě obnovy v JEDNÉ stránce — na to je proměnná probihaObnova.
+ * Jenže web je vícestránkový: každé klepnutí na odkaz je nové načtení
+ * a nová proměnná. Kdo klepne ve chvíli, kdy první stránka zrovna
+ * obnovuje, pošle druhou obnovu se STARÝM tokenem. Supabase token při
+ * obnově otáčí, takže starý tím okamžitě neplatí — a odpověď „invalid"
+ * se brala jako „účet neplatí" a session se smazala.
+ * Tady se ty dvě stránky spustí opravdu vedle sebe, ve stejném
+ * prohlížeči, nad týmž localStorage.
+ */
+{
+  resetStav();
+  const ctx = await prohlizec.newContext();
+  const zaloz = async () => {
+    const p = await ctx.newPage();
+    await p.goto('http://127.0.0.1:8399/prazdno');
+    await p.evaluate(() => {
+      if (!localStorage.getItem('pk_auth')) {
+        localStorage.setItem('pk_auth', JSON.stringify({
+          access_token: 'a0', refresh_token: 'r1',
+          expires_at: Math.floor(Date.now() / 1000) + 60,
+          user: { id: 'u1', email: 'test@example.invalid' },
+        }));
+      }
+      window.PK_SUPABASE_URL = 'http://127.0.0.1:8399';
+      window.PK_SUPABASE_KEY = 'anon';
+    });
+    await p.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
+    return p;
+  };
+  const p1 = await zaloz();
+  const p2 = await zaloz();
+  /* Obě naráz. Jedna vyhraje, druhá dostane „tenhle token už byl
+     použit" — a to NESMÍ nikoho odhlásit. */
+  await Promise.all([
+    p1.evaluate(() => PKAuth.keepAlive()).catch(() => {}),
+    p2.evaluate(() => PKAuth.keepAlive()).catch(() => {}),
+  ]);
+  await p1.waitForTimeout(600);
+  pravda(`dvě stránky obnovily naráz (server dostal ${stav.pocetObnov} žádostí)`,
+    stav.pocetObnov >= 2, 'druhá stránka se vůbec nepokusila — kontrola by neměla co ověřovat');
+  pravda('a člověk zůstal přihlášený na obou',
+    (await jePrihlasen(p1)) && (await jePrihlasen(p2)),
+    'opozdilec se spotřebovaným tokenem smazal přihlášení, které platí');
+  /* A pořád se dá pracovat: v úložišti musí zůstat POUŽITELNÝ token,
+     ne prázdno. */
+  const zbylo = await p1.evaluate(() => {
+    try { return JSON.parse(localStorage.getItem('pk_auth') || 'null'); } catch (e) { return null; }
+  });
+  pravda('a v úložišti zůstal platný token, ne prázdno',
+    !!(zbylo && zbylo.access_token && zbylo.refresh_token), JSON.stringify(zbylo));
+  await ctx.close();
+}
+
+/* --- 7) OBNOVUJE SE NA KAŽDÉ STRÁNCE, NE JEN NA PĚTI --------------
+ * keepAlive() volaly jen hlidani, zpravy, muj-inzerat, upozorneni
+ * a pridat. Na úvodní stránce a na stránkách pozemků — tedy tam, kde
+ * člověk tráví většinu času — se přihlášení neobnovovalo vůbec.
+ * Volání je teď v hlavičce, která je na 2 050 z 2 055 stránek.
+ */
+{
+  resetStav();
+  const ctx = await prohlizec.newContext();
+  const p = await ctx.newPage();
+  await p.goto('http://127.0.0.1:8399/prazdno');
+  await p.evaluate(() => {
+    localStorage.setItem('pk_auth', JSON.stringify({
+      access_token: 'a0', refresh_token: 'r1',
+      expires_at: Math.floor(Date.now() / 1000) + 60,   // dochází
+      user: { id: 'u1', email: 'test@example.invalid' },
+    }));
+    window.PK_SUPABASE_URL = 'http://127.0.0.1:8399';
+    window.PK_SUPABASE_KEY = 'anon';
+    // hlavička hledá tyhle prvky; bez nich by se překreslení vzdalo
+    document.body.innerHTML = '<a id="nav-ucet"><span id="nav-stav">Nepřihlášeno</span></a>';
+  });
+  await p.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
+  /* Nic mezi tím: jediné, co se načte navíc, je hlavička. Kdyby se
+     obnova spustila odjinud, tahle kontrola by lhala. */
+  const predHlavickou = stav.pocetObnov;
+  await p.addScriptTag({ path: new URL('../js/hlavicka.js', import.meta.url).pathname });
+  await p.waitForTimeout(800);
+  pravda('před načtením hlavičky se nic neobnovovalo', predHlavickou === 0,
+    `server dostal ${predHlavickou} žádostí ještě před hlavičkou`);
+  pravda('samotná hlavička dochází platnost obnoví', stav.pocetObnov >= 1,
+    'na stránce bez vlastního volání keepAlive() se přihlášení neobnoví — a tiše doběhne');
+  pravda('a člověk zůstává přihlášený', await jePrihlasen(p));
+  /* A na stránce, kde platnost NEdochází, se nic posílat nemá —
+     jinak by se jednorázové tokeny pálily při každém načtení. */
+  resetStav();
+  const ctx2 = await prohlizec.newContext();
+  const p2 = await ctx2.newPage();
+  await p2.goto('http://127.0.0.1:8399/prazdno');
+  await p2.evaluate(() => {
+    localStorage.setItem('pk_auth', JSON.stringify({
+      access_token: 'a0', refresh_token: 'r1',
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      user: { id: 'u1', email: 'test@example.invalid' },
+    }));
+    window.PK_SUPABASE_URL = 'http://127.0.0.1:8399';
+    window.PK_SUPABASE_KEY = 'anon';
+    document.body.innerHTML = '<a id="nav-ucet"><span id="nav-stav">Nepřihlášeno</span></a>';
+  });
+  await p2.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
+  await p2.addScriptTag({ path: new URL('../js/hlavicka.js', import.meta.url).pathname });
+  await p2.waitForTimeout(700);
+  pravda('ale platné přihlášení hlavička zbytečně neobnovuje', stav.pocetObnov === 0,
+    `server dostal ${stav.pocetObnov} žádostí — každá spálí jednorázový token`);
+  await ctx.close(); await ctx2.close();
+}
+
 await prohlizec.close();
 server.close();
 console.log('\nPřihlášení — web nesmí odhlašovat sám od sebe');

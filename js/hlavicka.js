@@ -168,4 +168,19 @@
   /* Po přihlášení nebo odhlášení se stránka nemusí načítat znovu. */
   window.addEventListener('storage', vypln);
   window.addEventListener('pk-auth', vypln);
+
+  /* PŘIHLÁŠENÍ SE OBNOVOVALO JEN NA PĚTI STRÁNKÁCH. keepAlive() volaly
+     hlidani, zpravy, muj-inzerat, upozorneni a pridat — tedy ne úvodní
+     stránka a ne stránky pozemků, kde člověk tráví většinu času. Tam
+     platnost tokenu tiše doběhla a přihlášení se probralo, až když
+     někam došel.
+     Hlavička je na 2 050 z 2 055 stránek, takže sem to patří. Levné to
+     je: keepAlive() nic nepošle, dokud platnost nedochází (zbývá-li
+     přes pět minut, vrátí se rovnou). Po obnově se hlavička překreslí
+     — e-mail se do ní jinak dostane až po dalším načtení stránky. */
+  try {
+    if (window.PKAuth && PKAuth.keepAlive && PKAuth.loggedIn && PKAuth.loggedIn()) {
+      PKAuth.keepAlive().then(vypln, vypln);
+    }
+  } catch (e) {}
 })();
