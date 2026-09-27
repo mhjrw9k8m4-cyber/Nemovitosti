@@ -79,6 +79,46 @@ function hlas(nadpis, seznam, rada) {
     'prohlížeč spolkne i pravidlo za tím místem, a v souboru to vypadá v pořádku');
 }
 
+/* ---------- 0b. stavové varianty nesmí zapomenout na proměnnou ----------
+   Vzor, na kterém se rozbil verdikt o ceně: základní třída si zavede
+   vlastní proměnnou (.md-verdict{--vc:…}), potomek z ní bere barvu
+   (.mv-badge{background:var(--vc)}) a stavové varianty ji přepisují —
+   ale jen NĚKTERÉ. „Vyšší cena" tak nosila zelený odznak, protože
+   .md-verdict.bad proměnnou nenastavovala a zůstala výchozí zeleň.
+
+   Spadne to do očí jedině na obrazovce, a ani tam ne hned: barva je
+   správná u tří stavů ze čtyř. Proto se to hlídá tady.
+
+   Kdyby někdy byla varianta bez vlastní hodnoty správně (dva stavy mají
+   záměrně tutéž barvu), patří k ní výjimka i s důvodem — ne zrušení
+   téhle kontroly. */
+{
+  const surove = readFileSync(path.join(ROOT, 'css', 'styles.css'), 'utf8');
+  const bezKom = surove.replace(/\/\*[\s\S]*?\*\//g, '');
+  const pravidla = [...bezKom.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .map((m) => ({ sel: m[1].replace(/\s+/g, ' ').trim(), telo: m[2] }));
+  const zaklady = {};
+  for (const p of pravidla) {
+    if (!/^\.[\w-]+$/.test(p.sel)) continue;                 // jen jediná třída
+    const vars = [...p.telo.matchAll(/(--[\w-]+)\s*:/g)].map((x) => x[1]);
+    if (vars.length) zaklady[p.sel] = vars;
+  }
+  const zapomenute = [];
+  for (const [zak, vars] of Object.entries(zaklady)) {
+    const varianty = pravidla.filter((p) => new RegExp('^' + zak.replace('.', '\\.') + '\\.[\\w-]+$').test(p.sel));
+    if (varianty.length < 2) continue;      // jeden stav není „některé"
+    for (const v of vars) {
+      const maji = varianty.filter((p) => p.telo.includes(v + ':'));
+      if (maji.length && maji.length < varianty.length) {
+        zapomenute.push(`${zak} má ${v}; z ${varianty.length} stavů ji nastavuje ${maji.length} — bez ní: ` +
+          varianty.filter((p) => !p.telo.includes(v + ':')).map((p) => p.sel).join(', '));
+      }
+    }
+  }
+  hlas('stavová varianta zapomíná na proměnnou základu', zapomenute,
+    'zůstane jí výchozí hodnota — u verdiktu o ceně to znamenalo zelený odznak u „Vyšší cena"');
+}
+
 /* ---------- 1. hloubka ---------- */
 // Vlastní stín se pozná podle rozptylu. Obrysy (0 0 0 Npx), vnitřní stíny
 // a záře podle barvy prvku mají jiný účel a do škály nepatří.

@@ -107,6 +107,23 @@ async function vypln(p, zmeny) {
   }
   await p.check('#p-souhlas').catch(() => {});
 }
+/* Sekce označená za nepovinnou nesmí skrývat povinné pole — nadpis by
+   lhal. Je to funkce, protože platí na každé stránce s formulářem,
+   ne jen na té, kde se to stalo (viz blok „SEKCE OZNAČENÁ…" níž). */
+async function rozporyVRozbalovatkach(p) {
+  return p.evaluate(() => {
+    const out = [];
+    document.querySelectorAll('details').forEach((d) => {
+      const sum = (d.querySelector('summary') || {}).textContent || '';
+      if (!/nepovinn|doporučen|volitel/i.test(sum)) return;
+      const povinna = [...d.querySelectorAll('input[required], select[required], textarea[required]')]
+        .map((e) => e.id || e.name || '(bez id)');
+      if (povinna.length) out.push(sum.replace(/\s+/g, ' ').trim() + ' → ' + povinna.join(', '));
+    });
+    return out;
+  });
+}
+
 async function odesli(p) {
   /* Schválně tlačítko UVNITŘ formuláře s pozemkem. Na stránce je i druhý
      odesílací knoflík — přihlašovací — a ten je v DOM první; klepnutí na
@@ -167,6 +184,11 @@ async function odesli(p) {
     text: (document.getElementById('mi-list') || document.body).textContent.replace(/\s+/g, ' '),
   }));
   pravda('vložený pozemek je vidět v „moje inzeráty"', v.karet === 1, `karet ${v.karet}`);
+  // Totéž pravidlo o rozbalovátkách platí i tady — je to druhá a poslední
+  // stránka webu s formulářem.
+  const rozporyMi = await rozporyVRozbalovatkach(p);
+  pravda('ani v „moje inzeráty" se rozbalovátko netváří jako nepovinné, když v něm je povinné pole',
+    rozporyMi.length === 0, rozporyMi.join(' | '));
   /* Inzerát je na mapě HNED (create_listing vkládá status 'approved').
      Kdyby se stav ztratil, stránka by u něj tvrdila „čeká" a člověk by
      marně vyhlížel schválení, které nikdo nedělá. */
@@ -449,6 +471,32 @@ async function odesli(p) {
   pravda('kdo klepne podruhé, tomu se to zveřejní',
     /muj-inzerat/.test(treti.url), `zůstali jsme na ${treti.url}, hláška: „${treti.hlaska}"`);
   await ctx2.close();
+}
+
+/* --- SEKCE OZNAČENÁ ZA NEPOVINNOU NESMÍ SKRÝVAT POVINNÉ POLE -------
+ * Okres se stal povinným, ale leží v rozbalovátku, jehož nadpis hlásil
+ * „(doporučené)". Člověk tedy mohl číst, že celá ta část je volitelná,
+ * a pak dostat „Vyberte prosím okres" — vlastní nadpis by mu lhal.
+ * (Rozbalovátko je otevřené a chyba na pole odroluje, takže to nebyla
+ * past, jen protimluv. Protimluv ale stačí, aby web působil nedbale.)
+ *
+ * Kontrolují se VŠECHNA rozbalovátka na téhle stránce, ne jen to jedno:
+ * až někdo udělá povinným další pole, spadne to tady. Na stránce
+ * přidání je to potřeba nejvíc — je to jediný dlouhý formulář webu
+ * a jediná stránka, která části skládá do rozbalovátek.
+ */
+{
+  const { ctx, p } = await otevri(false);
+  const rozpory = await rozporyVRozbalovatkach(p);
+  pravda('na stránce přidání se žádné rozbalovátko netváří jako nepovinné, když v něm je povinné pole',
+    rozpory.length === 0, rozpory.join(' | '));
+
+  // A ať zkouška něco měří: povinná pole na stránce vůbec být musí.
+  const povinnych = await p.evaluate(() =>
+    document.querySelectorAll('#form-prodej [required]').length);
+  pravda(`formulář má povinná pole (${povinnych}) — jinak zkouška výš nic neměří`, povinnych >= 4,
+    `povinných polí ${povinnych}`);
+  await ctx.close();
 }
 
 await prohlizec.close();
