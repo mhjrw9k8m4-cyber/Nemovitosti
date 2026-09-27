@@ -324,6 +324,58 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
     (zFeedu[0] ? zFeedu[0].pocet : 0) > 500, true);
 }
 
+/* --- CO SE OZNAČÍ JAKO VIDĚNÉ, MUSÍ VIDĚNÉ ZŮSTAT ------------------
+ *
+ * mark_search_seen dostane pole klíčů a celé seen_keys jím PŘEPÍŠE.
+ * Posílaly se klíče jen NOVÝCH pozemků, takže se o zbytek přišlo —
+ * a odznak se pak nikdy neusadil:
+ *   1. návštěva  20 nových → označí → seen_keys 20
+ *   2. znovu      0 nových                                  ✓
+ *   3. robot přidá 3 → 3 nové → označí → seen_keys už jen 3
+ *   4. znovu     20 „nových" — těch, co člověk dávno viděl   ✕
+ *   5. znovu      3 „nové"  … a pak pořád dokola 20 / 3
+ *
+ * Proto se tu nezkouší jedno kolo, ale celý ten cyklus: kdyby se
+ * posílaly zase jen nové, kolo 4 spadne.
+ */
+{
+  const A = P({ parcel: 'a' }), B = P({ parcel: 'b' }), C = P({ parcel: 'c' });
+  const hled = { id: 'h1', okres: 'Kolín', seen_keys: [] };
+  // Přesně to, co dělá server: přepis polem, které pošle appka.
+  const oznac = (data) => {
+    const u = F.zeHlidani([hled], data)[0];
+    const nove = u ? u.pocet : 0;
+    if (u) hled.seen_keys = u.vsechnyKlice;
+    return nove;
+  };
+  je('viděné', '1. návštěva: všechno je nové', oznac([A, B]), 2);
+  je('viděné', '2. hned znovu: nic nového', oznac([A, B]), 0);
+  je('viděné', '3. přibyl jeden: jeden nový', oznac([A, B, C]), 1);
+  je('viděné', '4. a teď už nic — dřív se tu vrátily dva', oznac([A, B, C]), 0);
+  je('viděné', '5. ani po dalším načtení', oznac([A, B, C]), 0);
+
+  /* A ať je vidět, že se opravdu ukládají VŠECHNY klíče, ne jen nové:
+     po označení musí seen_keys obsahovat i ty, které nové nebyly. */
+  const hled2 = { id: 'h2', okres: 'Kolín', seen_keys: [H.keyOf(A)] };
+  const u2 = F.zeHlidani([hled2], [A, B])[0];
+  je('viděné', 'nové je jen to nepřečtené', u2.pocet, 1);
+  je('viděné', 'ale k označení se posílají klíče všech, co sedí', u2.vsechnyKlice.length, 2);
+  je('viděné', 'a je mezi nimi i ten dávno viděný',
+    u2.vsechnyKlice.indexOf(H.keyOf(A)) >= 0, true);
+
+  // Klíče se neduplikují, i když tentýž pozemek přijde ze dvou zdrojů.
+  je('viděné', 'tatáž nabídka ze dvou zdrojů dá jeden klíč',
+    H.kliceProHledani({ okres: 'Kolín', seen_keys: [] },
+      [A, Object.assign({}, A, { url: 'https://jiny.cz/1' })]).length, 1);
+  /* A co na hledání nesedí, se do seen_keys neplete. Pozor na obec:
+     hledání „Kolín" sedí i na obec Kolín v jiném okrese (lidé píšou do
+     políčka „kde" obec i okres), takže cizí záznam musí mít jiné obojí
+     — na tomhle mi zkouška napoprvé spadla. */
+  je('viděné', 'co na hledání nesedí, se do klíčů nedostane',
+    H.kliceProHledani({ okres: 'Kolín', seen_keys: [] },
+      [A, P({ parcel: 'z', okres: 'Nymburk', place: 'Poděbrady' })]).length, 1);
+}
+
 console.log(`\nHlídání lokality: ${bezi} testů`);
 if (spadlo) {
   console.log(vysledky.join('\n'));

@@ -164,7 +164,11 @@
           };
         }),
         dalsich: Math.max(0, nove.length - UKAZKA),
-        vsechnyKlice: nove.map(HL.keyOf),
+        /* VŠECHNY, které na hledání sedí — ne jen nové. Tímhle polem
+           server celé seen_keys přepíše, takže poslat jen nové znamená
+           o zbytek přijít: pak se dávno viděné pozemky vrátí jako nové.
+           Podrobně v js/hlidani-logika.js u kliceProHledani(). */
+        vsechnyKlice: HL.kliceProHledani(s, data),
         odkaz: 'index.html?' + (s.okres ? 'q=' + encodeURIComponent(s.okres) + '&' : '') +
                (s.druh ? 'druh=' + encodeURIComponent(s.druh) + '&' : '') +
                (s.max_price ? 'maxc=' + s.max_price + '&' : '') +

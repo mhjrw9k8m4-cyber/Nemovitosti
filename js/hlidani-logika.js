@@ -247,6 +247,36 @@
   // Kolik jich je. Nikdy se nepočítá jinak než délkou toho seznamu výš.
   function novychProHledani(s, data) { return noveProHledani(s, data).length; }
 
+  /* Klíče VŠECH pozemků, které na hledání sedí — ne jen nových.
+     Tohle se ukládá do seen_keys, když člověk klepne na „označit jako
+     viděné": mark_search_seen tím polem celé seen_keys PŘEPÍŠE.
+
+     Dřív se posílaly klíče jen NOVÝCH pozemků a tím se o zbytek přišlo.
+     Chovalo se to pak takhle (změřeno na okrese Kolín, 20 pozemků):
+       1. návštěva  20 nových → označí → seen_keys 20
+       2. znovu      0 nových                                  ✓
+       3. robot přidá 3 → 3 nové → označí → seen_keys už jen 3
+       4. znovu     20 „nových" — těch, co člověk dávno viděl   ✕
+       5. znovu      3 „nové"  … a pak pořád dokola 20 / 3
+     Odznak se tedy nikdy neusadil a „nové pozemky" lhaly. Stačilo
+     k tomu, aby robot jednou něco přidal — proto to tak dlouho vydrželo.
+
+     Kolik se toho posílá: u hlídání celé ČR je to dnes 1 956 klíčů,
+     tedy 84 kB, nejdelší klíč 71 znaků. Na občasné klepnutí „označit
+     jako viděné" to je v pořádku a víc než tolik pozemků v datech není.
+     Zkracovat ten seznam nemá smysl — právě tím zkrácením ta chyba
+     vznikla. */
+  function kliceProHledani(s, data) {
+    var mam = {}, out = [];
+    (data || []).forEach(function (d) {
+      var k = keyOf(d);
+      if (mam[k] || !matches(s, d)) return;
+      mam[k] = 1;
+      out.push(k);
+    });
+    return out;
+  }
+
   // Součet přes všechna hledání — to je číslo na odznaku. Jeden pozemek
   // může sedět na dvě hledání; počítá se jednou, ať odznak nenafukuje.
   function novychCelkem(hledani, data) {
@@ -266,7 +296,7 @@
     tyzPozemek: tyzPozemek, normd: normd, keyOf: keyOf, matches: matches,
            mistoSedi: mistoSedi, druhSedi: druhSedi,
            klicShody: klicShody, bezDuplicit: bezDuplicit,
-           noveProHledani: noveProHledani, novychProHledani: novychProHledani, novychCelkem: novychCelkem,
+           noveProHledani: noveProHledani, novychProHledani: novychProHledani, kliceProHledani: kliceProHledani, novychCelkem: novychCelkem,
            /* Ven jen kvůli hlídači: scripts/test-hlidani.mjs porovná
               vypsaný seznam s data/okresy.json. Bez toho by se rozešel
               potichu — chování se totiž změní jen u jména, které je
