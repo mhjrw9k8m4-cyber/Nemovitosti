@@ -432,8 +432,14 @@ body.vm-otevreno{overflow:hidden;}
 /* Plocha se rozšiřuje NAHORU a do stran, ne dolů. Značka je kreslená
    nad svou kotvou a kotva sedí po výběru uprostřed mapy — kdo chce
    mapu posunout, chytá ji nejčastěji právě uprostřed. S přesahem dolů
-   se místo mapy táhla značka; test to odhalil hned. */
-.vm-znacka::before{content:""; position:absolute; left:-12px; right:-12px; top:-10px; bottom:0;}
+   se místo mapy táhla značka; test to odhalil hned.
+   DO STRAN TO BYLO MÁLO. Změřeno na telefonu (hit-test mřížkou bodů, ne
+   čtením CSS): plocha byla 46 px široká, tedy ±23 px od špendlíku. Na
+   ťuknutí to hranici 44 px splní, ale tohle není ťuknutí — je to TAŽENÍ
+   po mapě, která se zároveň může posouvat, a kdo se netrefí, posune
+   místo značky celou mapu. Odtud „strašně malá zóna, kdy se toho
+   dotýkám". Nově 64 px; svisle zůstává 46 px nad kotvou, což stačí. */
+.vm-znacka::before{content:""; position:absolute; left:-21px; right:-21px; top:-10px; bottom:0;}
 .vm-znacka span{display:block; width:22px; height:22px; border-radius:50%;
   background:#8A5512; border:3px solid #fff; box-shadow:var(--e2); box-sizing:border-box; position:relative;}
 .vm-znacka span::after{content:""; position:absolute; left:50%; top:100%; width:2px; height:14px;
@@ -3832,7 +3838,10 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   background:rgba(11,24,17,.9); backdrop-filter:blur(6px); min-width:0;
   transition:transform .15s var(--ease), border-color .15s var(--ease);}
 .hh-fakta .hl-fact:hover{transform:translateY(-2px); border-color:rgba(143,224,180,.5);}
-.hh-fakta .hl-fact .hl-k{font-size:10.5px; letter-spacing:.11em; color:rgba(234,230,221,.62);}
+/* Popisek je to jediné, co říká, CO to číslo vedle je. V 10,5 px
+   s krytím 62 % ho oko přeskočí a zbydou tři velké údaje pod sebou,
+   které spolu nesouvisí — „není jasné, co je co". */
+.hh-fakta .hl-fact .hl-k{font-size:11.5px; letter-spacing:.09em; color:rgba(234,230,221,.82);}
 .hh-fakta .hl-fact .hl-v{font-size:15px; color:rgba(234,230,221,.82); line-height:1.35;}
 /* Hlavní hodnota („dnes", „6", „−59 %") nese kartu — zbytek je upřesnění. */
 .hh-fakta .hl-fact .hl-v b{display:block; font-family:var(--font-display); font-weight:800;

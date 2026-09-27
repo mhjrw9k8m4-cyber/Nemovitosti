@@ -260,6 +260,58 @@ const stavVybiraku = (p) => p.evaluate(() => {
     }
   }
 
+  /* JAK VELKÁ JE PLOCHA, KTEROU SE ZNAČKA DÁ CHYTIT.
+     Zkouška výš chytá značku 16 px nad kotvou, tedy přesně doprostřed
+     puntíku — o VELIKOSTI té plochy tedy neříká nic. A právě ta byla
+     malá: změřeno 46 px na šířku, tedy ±23 px od špendlíku. Na ťuknutí
+     hranici 44 px splní, jenže tady se TAHÁ po mapě, která se zároveň
+     posouvá: kdo se netrefí, posune místo značky celou mapu. Přišla na
+     to stížnost se snímkem — „strašně malá zóna, kdy se toho dotýkám".
+     Neměří se CSS (pseudoprvek ::before a jeho přesahy by se daly
+     spočítat, ale nic to neříká o tom, co na těch bodech doopravdy
+     leží), ale hit-test mřížky bodů kolem špendlíku. A pak se z kraje
+     té plochy opravdu táhne — protože rozhoduje chování, ne čísla. */
+  {
+    const z = await p.evaluate(() => {
+      const m = window.PK_VM_MAPA;
+      let zn = null;
+      m.eachLayer((l) => { if (l.getLatLng && l.options && l.options.draggable) zn = l; });
+      if (!zn) return null;
+      const c = m.getContainer().getBoundingClientRect();
+      const t = m.latLngToContainerPoint(zn.getLatLng());
+      const x = Math.round(c.left + t.x), y = Math.round(c.top + t.y);
+      const el = zn.getElement();
+      const patri = (px, py) => { const e = document.elementFromPoint(px, py); return !!(e && (e === el || el.contains(e))); };
+      let vlevo = 0, vpravo = 0, nahoru = 0;
+      for (let d = 1; d <= 70; d++) { if (patri(x - d, y - 16)) vlevo = d; else break; }
+      for (let d = 1; d <= 70; d++) { if (patri(x + d, y - 16)) vpravo = d; else break; }
+      for (let d = 1; d <= 80; d++) { if (patri(x, y - d)) nahoru = d; else break; }
+      return { x, y, vlevo, vpravo, sirka: vlevo + vpravo + 1, vyska: nahoru + 1,
+        lat: zn.getLatLng().lat, lng: zn.getLatLng().lng };
+    });
+    if (pravda('plocha značky se dá změřit', !!z, 'značka na mapě není')) {
+      pravda(`značka se dá chytit aspoň v 60 px na šířku (${z.sirka} px)`, z.sirka >= 60,
+        `plocha je široká jen ${z.sirka} px — při tažení po mapě se to netrefí`);
+      pravda(`a aspoň ve 44 px na výšku (${z.vyska} px)`, z.vyska >= 44,
+        `plocha je vysoká jen ${z.vyska} px`);
+      /* A doopravdy: chytit značku u KRAJE té plochy, ne v jejím středu. */
+      await p.mouse.move(z.x + z.vpravo - 3, z.y - 16);
+      await p.mouse.down();
+      await p.mouse.move(z.x + z.vpravo + 57, z.y - 76, { steps: 10 });
+      await p.mouse.up();
+      await p.waitForTimeout(700);
+      const kam = await p.evaluate(() => {
+        const m = window.PK_VM_MAPA;
+        let zn = null;
+        m.eachLayer((l) => { if (l.getLatLng && l.options && l.options.draggable) zn = l; });
+        return { lat: zn.getLatLng().lat, lng: zn.getLatLng().lng };
+      });
+      pravda('a z kraje té plochy se opravdu chytí, ne že se posune mapa',
+        Math.abs(kam.lat - z.lat) > 1e-4 || Math.abs(kam.lng - z.lng) > 1e-4,
+        `značka zůstala na ${kam.lat.toFixed(4)},${kam.lng.toFixed(4)} — tažení chytlo mapu, ne ji`);
+    }
+  }
+
   /* ODDÁLENÍ. Stížnost se snímkem: „to přibližování pořád nefunguje,
      kruh se zvětšuje a zmenšuje přiblížením." Zvětšovat a zmenšovat se
      musí — deset kilometrů je deset kilometrů. Špatné bylo, co se kolem

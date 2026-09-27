@@ -162,11 +162,17 @@ if (proužek) {
     !!(d && /^(dnes|zítra|za \d+ dn[yí])\b/.test(d.hodnota)),
     `vyšlo ${JSON.stringify(d && d.hodnota)} — čekal se tvar „zítra · Obec"`);
 
-  // Nejvýhodnější nabídka se hlásí ČÁSTKOU, ne pořadím v žebříčku.
-  // „Levnější než 92 % podobných" je pořadí a člověk si pod tím nic
-  // nepředstaví; „o 92 % pod obvyklou" je údaj.
+  /* Nejvýhodnější nabídka se hlásí ČÁSTKOU, ne pořadím v žebříčku.
+     „Levnější než 92 % podobných" je pořadí a člověk si pod tím nic
+     nepředstaví; rozdíl proti obvyklé ceně je údaj.
+     Tvar se změnil z „o 92 % pod obvyklou · Obec" na „−92 % · Obec":
+     hodnota se dělí na PRVNÍM oddělovači, takže dřív byl tím velkým
+     údajem celý útržek „o 92 % pod obvyklou" — rozlomená věta bez
+     podstatného jména — a na obec zbylo drobné písmo. Co to procento
+     znamená, říká teď popisek vlevo („Nejvíc pod cenou"). Číslo ale
+     zůstává číslem, a přesně to tahle kontrola hlídá. */
   pravda('nejvýhodnější se hlásí jako rozdíl proti obvyklé ceně',
-    !!(proužek.deal && /^o \d+ % pod obvyklou · .+/.test(proužek.deal.hodnota)),
+    !!(proužek.deal && /^\u2212\d+ % · .+/.test(proužek.deal.hodnota)),
     `vyšlo „${proužek.deal && proužek.deal.hodnota}"`);
 
   // Jádro testu: nabídka s nevěrohodnou cenou se nesmí vydávat za koupi roku.

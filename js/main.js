@@ -4852,7 +4852,12 @@
       if (!o || !o.podleVelikosti || o.pochybna || o.nejisty || o.podil || o.podOdhadem < 25) return;
       if (!bestO || o.podOdhadem > bestO.podOdhadem) { bestO = o; best = d; }
     });
-    vypln('deal', null, best ? ('o ' + bestO.podOdhadem + ' % pod obvyklou · ' + best.place) : '', best);
+    /* Velké písmo patří ČÍSLU. Dřív se do něj dostalo „o 59 % pod obvyklou"
+       — hodnota se dělí na prvním oddělovači, takže tenhle celý útržek byl
+       ten velký údaj a na obec zbylo drobné písmo za tečkou. Co ta sleva
+       znamená, říká popisek vlevo („Nejvíc pod cenou"); sem patří kolik
+       a kde. */
+    vypln('deal', null, best ? ('\u2212' + bestO.podOdhadem + ' % · ' + best.place) : '', best);
 
     if (hotovo) box.hidden = false;
   }
