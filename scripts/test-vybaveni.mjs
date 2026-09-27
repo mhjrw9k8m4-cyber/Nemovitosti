@@ -239,7 +239,12 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
   pravda('a robot si ji do dat ukládá',
     /if \(v\.zlomek\) o\.zlomek = v\.zlomek;/.test(readFileSync(path.join(ROOT, 'scripts', 'fetch-opportunities.mjs'), 'utf8')));
   pravda('detail na mapě vypíše, co inzerát uvádí', /Inzerát uvádí/.test(main) && /uvadiHtml\(d\)/.test(main));
-  pravda('stránka pozemku taky', /Inzerát uvádí/.test(poz));
+  /* Stránka pozemku to neukazuje jako řádek tabulky, ale jako štítky
+     v sekci „Sítě a vybavení" — a ty se plní z OBOU zdrojů (d.site od
+     robota, d.features od majitele) a mají u sebe napsané, odkud jsou.
+     Hledá se proto obojí: spojení obou zdrojů i ta věta o původu. */
+  pravda('stránka pozemku to ukazuje jako štítky z obou zdrojů',
+    /PKVybaveni\.nazvy\(d\)/.test(poz) && /pz-feat-zdroj/.test(poz));
   pravda('a stránka pozemku si modul vůbec načítá', /<script src="js\/vybaveni\.js/.test(pozHtml),
     'bez načtení by se řádek tiše nevypsal a nikde by to nezakřičelo');
   /* Schválně se hledá ten VÝPIS, ne jen slovo: „inzerát uvádí" stojí
