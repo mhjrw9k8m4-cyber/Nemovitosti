@@ -54,7 +54,12 @@
      v novém okně. Vidící to pozná podle šikmé šipky (viz CSS). */
   var VEN = '<span class="visually-hidden"> — otevře se v novém okně mimo Parcelku</span>';
 
-  function pkey(d) { return [d.place || '', d.parcel || '', d.okres || ''].join('|'); }
+  /* Krátký klíč (obec, parcela, okres) tady BÝVAL a nezůstal schválně.
+     Nerozlišoval pozemky (ve 310 případech padlo víc pozemků na jeden)
+     a přitom se jmenoval pkey stejně jako ten úplný v js/main.js, takže
+     se jím omylem hledal pozemek podle adresy i ukládaly oblíbené.
+     Identita pozemku je pkeyPlny() o pár řádků níž — jedna, a tatáž
+     jako na mapě. */
   /* Název vlastní stránky pozemku. Tentýž výpočet dělá generátor v Node —
      kdyby se rozešly, odkazovalo by se na neexistující soubor. */
   var PK_MAPA = { 'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z' };
@@ -968,7 +973,26 @@
     }
     if (ml) { try { var parts = decodeURIComponent(ml[1]).split(','); ll = [parseFloat(parts[0]), parseFloat(parts[1])]; } catch (e) {} }
 
-    var cand = key != null ? DATA.filter(function (d) { return pkey(d) === key; }) : [];
+    /* Klíč z adresy (?p=) i ten, který do stránky vepsal generátor
+       (PK_POZEMEK.k), jsou POLNÍ klíče SE SOUŘADNICEMI — obojí je skládá
+       pkeyPlny() / stejný výpočet v js/main.js. Porovnávalo se to tu
+       s krátkým pkey(), takže shoda nikdy nenastala a pozemek se hledal
+       až náhradní cestou „nejbližší bod do 500 m". Fungovalo to, ale
+       zbytečně: se správným klíčem sedne 1 910 z 1 931 pozemků přesně
+       a jen u 21 (shodná obec, parcela, okres i souřadnice) rozhoduje
+       vzdálenost — a těm generátor stejně dělá jednu společnou stránku. */
+    /* Nejdřív PŘESNĚ podle úplného klíče, a jen když nic, tak podle
+       zkráceného (bez souřadnic). Starší nebo ručně upravené odkazy
+       mohou nést kratší podobu a nemá smysl je odmítnout: u zkrácené
+       podoby padne víc pozemků na jeden klíč, ale právě pro ten případ
+       je pod tím rozhodování podle souřadnic. Odkazy, které web vyrábí
+       sám, obsahují úplný klíč a sednou hned první cestou. */
+    var cand = key != null ? DATA.filter(function (d) { return pkeyPlny(d) === key; }) : [];
+    if (key != null && !cand.length) {
+      cand = DATA.filter(function (d) {
+        return [d.place || '', d.parcel || '', d.okres || ''].join('|') === key;
+      });
+    }
     if (cand.length === 1) return cand[0];
     if (cand.length > 1 && ll && isFinite(ll[0])) {
       cand.sort(function (a, b) { return kmBetween(ll[0], ll[1], a.lat, a.lng) - kmBetween(ll[0], ll[1], b.lat, b.lng); });
@@ -1000,7 +1024,16 @@
   var mp = /[?&]p=([^&]+)/.exec(location.search);
   var wantKey = null; if (mp) { try { wantKey = decodeURIComponent(mp[1]); } catch (e) {} }
   var rendered = false;
-  if (quick && quick.place && (wantKey == null || pkey(quick) === wantKey)) {
+  /* Tady totéž: ?p= nese klíč se souřadnicemi, takže se s krátkým pkey()
+     nikdy nesrovnal a okamžité vykreslení z sessionStorage se PŘESKAKOVALO
+     vždy, když se na stránku přišlo přes ?p=. Stránka pak čekala na data,
+     přestože je měla po ruce. */
+  function sediNaAdresu(d, chtenyKlic) {
+    if (chtenyKlic == null) return true;
+    return pkeyPlny(d) === chtenyKlic
+      || [d.place || '', d.parcel || '', d.okres || ''].join('|') === chtenyKlic;
+  }
+  if (quick && quick.place && sediNaAdresu(quick, wantKey)) {
     quick._id = 0;
     render(quick);
     rendered = true;

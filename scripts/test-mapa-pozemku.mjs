@@ -640,6 +640,88 @@ if (DRAZBA) {
   pravda(`krátký klíč pozemky nerozlišuje (${koliziK} kolizí), klíč se souřadnicemi ano (${koliziD})`,
     koliziK > 50 && koliziD < koliziK / 5,
     `krátký ${koliziK}, dlouhý ${koliziD} — pokud se to srovnalo, přepiš tuhle zkoušku`);
+
+  /* A TOTÉŽ CHOVÁNÍM, ne čtením zdroje: stránka se otevře jen s klíčem
+     v adrese a BEZ souřadnic (&ll=). Pak je porovnání klíče jediná cesta,
+     jak pozemek najít — náhradní „nejbližší bod do 500 m" se bez
+     souřadnic spustit nedá. Dokud se klíč porovnával krátkým pkey,
+     ukázalo se tu „Pozemek nenalezen". */
+  const jednoznacny = Object.entries(dlouhe).find(([, n]) => n === 1);
+  if (jednoznacny) {
+    const klic = jednoznacny[0];
+    const cekanaObec = klic.split('|')[0];
+    const ctxK = await prohlizec.newContext({ viewport: { width: 1280, height: 860 } });
+    // Cizí služby (mapové vrstvy, fonty) sem netahat — jde jen o to, jaký
+    // pozemek stránka podle klíče najde.
+    await ctxK.route('**/*', (r) => {
+      const u = new URL(r.request().url());
+      if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
+      if (r.request().resourceType() === 'image') return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA });
+      return r.abort();
+    });
+    const q = await ctxK.newPage();
+    await q.goto(`${BASE}/pozemek.html?p=` + encodeURIComponent(klic), { waitUntil: 'domcontentloaded' });
+    await q.waitForTimeout(2800);
+    const nadpis = await q.evaluate(() => ((document.querySelector('h1') || {}).textContent || '').trim());
+    pravda('pozemek se najde podle klíče z adresy i bez souřadnic',
+      nadpis.indexOf(cekanaObec) >= 0,
+      `čekáno „${cekanaObec}", na stránce „${nadpis.slice(0, 60)}"`);
+    await ctxK.close();
+  } else {
+    pravda('je z čeho vybrat jednoznačný klíč (jinak zkouška výš nic neměří)', false,
+      'všechny klíče se souřadnicemi kolidují — to by bylo samo o sobě divné');
+  }
+
+  /* A NAKONEC to, co zkouška výš nezachytí: ta se dívá jen na obec
+     v nadpisu, takže projde i tehdy, když stránka vybere ze stejné obce
+     jiný pozemek. Přesně to dělal krátký klíč. Vybere se proto skupina
+     pozemků se shodným krátkým klíčem (obec, parcela, okres) a z ní
+     schválně ten, který v datech NENÍ první; odkaz nese úplný klíč.
+     Kdyby se rozhodovalo krátkým klíčem, ukázala by se cena prvního
+     pozemku skupiny — obec by sedla, pozemek ne. Vyzkoušeno: při
+     porovnávání krátkým klíčem tahle zkouška padne, ta nad ní projde. */
+  {
+    const skupiny = {};
+    vsechny.forEach((d, i) => {
+      const k3 = [d.place || '', d.parcel || '', d.okres || ''].join('|');
+      (skupiny[k3] = skupiny[k3] || []).push({ d, i });
+    });
+    // Skupina, kde se členové poznají podle ceny, a bereme jiného než prvního.
+    let vybrany = null, prvni = null;
+    Object.values(skupiny).forEach((g) => {
+      if (vybrany || g.length < 2) return;
+      const ceny = g.map((x) => x.d.price);
+      if (ceny.some((c) => !c) || new Set(ceny).size !== g.length) return;
+      prvni = g[0].d;
+      vybrany = g[g.length - 1].d;
+    });
+    if (vybrany) {
+      const klic = [vybrany.place || '', vybrany.parcel || '', vybrany.okres || '',
+        vybrany.lat.toFixed(3), vybrany.lng.toFixed(3)].join('|');
+      const ctxP = await prohlizec.newContext({ viewport: { width: 1280, height: 860 } });
+      await ctxP.route('**/*', (r) => {
+        const u = new URL(r.request().url());
+        if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
+        if (r.request().resourceType() === 'image') return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA });
+        return r.abort();
+      });
+      const q = await ctxP.newPage();
+      await q.goto(`${BASE}/pozemek.html?p=` + encodeURIComponent(klic), { waitUntil: 'domcontentloaded' });
+      await q.waitForTimeout(2800);
+      const cena = await q.evaluate(() => {
+        const el = document.querySelector('.pz-price .pv');
+        return el ? (el.textContent || '').replace(/\D+/g, '') : '';
+      });
+      pravda(`u společného krátkého klíče „${vybrany.place}" rozhodne úplný klíč, ne pořadí v datech`,
+        cena === String(vybrany.price),
+        `čekána cena ${vybrany.price} Kč, na stránce ${cena || '(nic)'} Kč`
+        + ` — první pozemek téže skupiny má ${prvni.price} Kč`);
+      await ctxP.close();
+    } else {
+      pravda('je skupina pozemků se stejným krátkým klíčem a různými cenami (jinak zkouška nic neměří)', false,
+        'žádná se nenašla — krátký klíč už možná pozemky rozlišuje a tahle zkouška je na přepsání');
+    }
+  }
 }
 
 await prohlizec.close();
