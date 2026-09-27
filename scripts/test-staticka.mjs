@@ -235,6 +235,57 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
   console.log(`SQL v nápovědě: ${strankyHtml.length} stránek, všechny odkazují jen na 00-vse.sql.`);
 }
 
+/* ------------------------------------------------------------------
+   NA CO SE FORMULÁŘ PTÁ, TO MUSÍ NĚKAM DOJÍT
+   ------------------------------------------------------------------
+   Přidání pozemku je jediná cesta, kudy se na web dostane vlastní
+   obsah — a zrovna tam se ptalo na věci, které se zahazovaly:
+     • „Vaše jméno" bylo POVINNÉ a create_listing ho nebere,
+     • „Odkaz na inzerát nebo katastr" taky nikam nešel (a kontrola
+       popisu do něj lidi sama posílala),
+     • popis se sice posílal, ale cestou k zobrazení se stříhal.
+   Nikde přitom nebyla chyba: formulář vesele odeslal, server uložil, co
+   znal, a zbytek se ztratil. Tahle kontrola to hlídá mechanicky —
+   každé viditelné pole formuláře se musí objevit v těle publishListing
+   (tedy v tom, co se posílá do create_listing), nebo mít napsaný důvod,
+   proč ne. Přidat pole a zapomenout ho odeslat už tiše nejde. */
+{
+  const html = fs.readFileSync(path.join(ROOT, 'pridat.html'), 'utf8');
+  const js = fs.readFileSync(path.join(ROOT, 'js', 'pridat.js'), 'utf8');
+  const zacF = html.indexOf('<form class="add-form" id="form-prodej"');
+  const telo = html.slice(zacF, html.indexOf('</form>', zacF));
+  const zacP = js.indexOf('function publishListing()');
+  const odesila = js.slice(zacP, js.indexOf('\n  }', zacP));
+  /* Co se do create_listing neposílá, a proč to nevadí. Kdo sem něco
+     přidá, musí napsat důvod — o to tu jde. */
+  const VYJIMKY = {
+    'p-souhlas': 'souhlas s pravidly — potvrzení, ne údaj o pozemku',
+    'p-fotky': 'fotky se nahrávají zvlášť do úložiště a posílají jako p_photos',
+    'p-zvyraznit': 'placené zvýraznění, na formuláři schválně skryté (platba není hotová)',
+    'p-fotky-preview': 'jen náhled vybraných fotek',
+  };
+  const pole = [...telo.matchAll(/<(?:input|select|textarea)([^>]*)>/g)]
+    .map((m) => ({
+      id: (m[1].match(/id="([^"]+)"/) || [])[1] || '',
+      skryte: /\bhidden\b/.test(m[1]) || /type="hidden"/.test(m[1]),
+      site: /name="site"/.test(m[1]),
+    }))
+    .filter((x) => x.id && !x.skryte && !x.site);
+  const ztracena = pole.filter((x) => !VYJIMKY[x.id] && odesila.indexOf("'" + x.id + "'") < 0);
+  if (!pole.length || zacP < 0 || odesila.length < 400) {
+    console.error('::error::Kontrola polí formuláře nic nenašla — zkontrolujte pridat.html a publishListing.');
+    process.exit(1);
+  }
+  if (ztracena.length) {
+    console.error('::error::Formulář se ptá na pole, které se neodesílá: '
+      + ztracena.map((x) => x.id).join(', ')
+      + ' (buď ho poslat do create_listing, nebo dopsat důvod do VYJIMKY v této zkoušce)');
+    process.exit(1);
+  }
+  console.log(`Pole formuláře: ${pole.length} viditelných, všechna se odesílají `
+    + `(+${Object.keys(VYJIMKY).length} s napsaným důvodem).`);
+}
+
 console.log(`\nStatická kontrola: ${souboru} souborů, ${podezreni ? podezreni + ' podezřelých volání' : 'žádné osiřelé volání'}.`);
 // Nepadáme — jsou to podezření, ne jistoty. Padá se jen tehdy, když by
 // bylo podezření nápadně moc (to už znamená, že se rozbil rozbor sám).

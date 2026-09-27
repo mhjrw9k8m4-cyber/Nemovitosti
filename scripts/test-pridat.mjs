@@ -99,7 +99,7 @@ async function otevri(prihlasit) {
 async function vypln(p, zmeny) {
   const zaklad = { 'p-obec': 'Kolín', 'p-vymera': '1200', 'p-cena': '480000',
     'p-okres': 'Kolín', 'p-parcela': '254/1', 'p-popis': 'Rovinatý pozemek na okraji obce.',
-    'p-jmeno': 'Jan Novák', 'p-kontakt': '777 123 654' };
+    'p-kontakt': '777 123 654' };   // „Vaše jméno" formulář nemá: nikam nevedlo
   const pole = Object.assign({}, zaklad, zmeny || {});
   for (const [id, hod] of Object.entries(pole)) {
     if (hod === null) continue;

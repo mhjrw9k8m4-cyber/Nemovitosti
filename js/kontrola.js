@@ -113,7 +113,10 @@
     if (jeSprosty(s)) return chyba('Popis obsahuje nevhodná slova.');
     if (jeSpam(s)) return chyba('Popis vypadá jako spam.');
     if (podilVelkych(s) > 0.6) return chyba('Popis je psaný velkými písmeny — přepište ho prosím normálně.');
-    if (URL_V_TEXTU.test(s)) return chyba('Odkaz nepatří do popisu — vložte ho do pole „Odkaz na inzerát nebo katastr".');
+    /* Odkaz v popisu je spam a mate: dřív tahle hláška posílala člověka
+       do pole „Odkaz na inzerát nebo katastr", jenže to pole se zahazovalo
+       (a proto už na formuláři není). Tak ať aspoň neradí nesmysl. */
+    if (URL_V_TEXTU.test(s)) return chyba('Odkazy do popisu nepatří — zájemci se ozvou přes Zprávy nebo na telefon.');
     if (EMAIL.test(s)) return chyba('E-mail do popisu nepatří — zájemci vám napíšou přes Zprávy, adresu máme z vašeho účtu.');
     if (TELEFON.test(s)) return chyba('Telefon nepatří do popisu — vložte ho do pole „Telefon".');
     return ok();
@@ -486,8 +489,10 @@
       ['p-cena', cenaZaMetr(d.cena, d.vymera)],
       ['p-parcela', parcela(d.parcela)],
       ['p-popis', popis(d.popis)],
-      ['p-odkaz', odkaz(d.odkaz)],
-      ['p-jmeno', jmeno(d.jmeno)],
+      /* Odkaz ani jméno tu už nejsou: formulář se na ně neptá, protože
+         create_listing ani jedno nebere a v inzerátu se neukazují.
+         Funkce odkaz() a jmeno() zůstávají — používá je jiné místo
+         a budou potřeba, až se jméno začne opravdu ukládat. */
       ['p-kontakt', kontakt(d.kontakt)]
     ];
     var varovani = [];

@@ -255,10 +255,15 @@
                       <input id="p-parcela" type="text" placeholder="např. 512/3, k. ú. Kolín">
                     </div>
                   </div>
-                  <div class="add-field">
-                    <label for="p-odkaz">Odkaz na inzerát nebo katastr</label>
-                    <input id="p-odkaz" type="url" placeholder="https://…">
-                  </div>
+                  <!-- POLE „ODKAZ NA INZERÁT NEBO KATASTR" TU BÝVALO — a nikam
+                       nevedlo. Inzerát se ukládá přes create_listing a ta žádný
+                       odkaz nebere; v tabulce listings pro něj ani není sloupec.
+                       Člověk tedy odkaz vyplnil a ten zmizel. Horší: kontrola
+                       popisu ho do toho pole sama posílala („Odkaz nepatří do
+                       popisu — vložte ho do pole Odkaz na inzerát nebo
+                       katastr"), takže web radil, kam ten odkaz dát, aby se
+                       zahodil. Katastr je u inzerátu stejně vždycky — stránka
+                       pozemku ho skládá ze souřadnic. -->
                 </div>
               </details>
 
@@ -281,21 +286,24 @@
                 <p class="boost-note">Volitelné. Placené zvýraznění právě spouštíme — zatím přidejte nabídku <b>zdarma</b> a jakmile bude online platba připravená, dáme vám vědět.</p>
               </div>
 
-              <div class="add-row">
-                <div class="add-field">
-                  <label for="p-jmeno">Vaše jméno <span class="req">*</span></label>
-                  <input id="p-jmeno" type="text" autocomplete="name" placeholder="Jméno a příjmení" required>
-                </div>
-                <div class="add-field">
-                  <!-- Inzerát se dá podat jen po přihlášení, takže e-mail už
-                       máme z účtu a ptát se na něj podruhé nedává smysl.
-                       Zbývá telefon — a ten je nepovinný: zájemci mají
-                       tlačítko „Napsat majiteli", které vede do Zpráv.
-                       Číslo je zkratka pro toho, kdo chce rovnou volat. -->
-                  <label for="p-kontakt">Telefon <span class="hint">(nepovinné — uvidí ho zájemci v inzerátu)</span></label>
-                  <input id="p-kontakt" type="tel" inputmode="tel" autocomplete="tel" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="777 123 456">
-                  <p class="hint" style="margin:6px 2px 0;">E-mail už máme z vašeho účtu a v inzerátu se neukazuje. Bez čísla se zájemci ozvou přes Zprávy.</p>
-                </div>
+              <!-- POLE „VAŠE JMÉNO" TU BÝVALO, a bylo POVINNÉ — přitom se
+                   zahazovalo úplně stejně jako odkaz. create_listing jméno
+                   nebere (sloupec contact_name v tabulce zbyl z původního
+                   návrhu, ale nikdo do něj nepíše) a v inzerátu se jméno
+                   nikde neukazuje. Kontrola u něj dokonce radila „uveďte
+                   i příjmení — zájemci víc věří inzerátu s celým jménem",
+                   což je slib, který nikdo nevidí. Povinné pole, které
+                   nikam nevede, je ta nejhorší kombinace: zdržuje a lže.
+                   Kdyby se jméno mělo ukazovat, je to práce na serveru
+                   (nový parametr create_listing → contact_name a výpis na
+                   kartě); do té doby se na ně neptáme.
+                   Inzerát se dá podat jen po přihlášení, takže e-mail už
+                   máme z účtu. Zbývá telefon — a ten je nepovinný: zájemci
+                   mají tlačítko „Napsat majiteli", které vede do Zpráv. -->
+              <div class="add-field">
+                <label for="p-kontakt">Telefon <span class="hint">(nepovinné — uvidí ho zájemci v inzerátu)</span></label>
+                <input id="p-kontakt" type="tel" inputmode="tel" autocomplete="tel" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="777 123 456">
+                <p class="hint" style="margin:6px 2px 0;">E-mail už máme z vašeho účtu a v inzerátu se neukazuje. Bez čísla se zájemci ozvou přes Zprávy.</p>
               </div>
               <label class="add-check">
                 <input type="checkbox" id="p-souhlas" required>
@@ -413,8 +421,8 @@
 <script src="js/fototema.js?v=7f4a9d0e" defer></script>
 <script src="js/vybaveni.js?v=cae1f79b" defer></script>
 <script src="js/predvyplneni.js?v=d500f86e" defer></script>
-<script src="js/kontrola.js?v=6d281c8e" defer></script>
-<script src="js/pridat.js?v=5052ef13" defer></script>
+<script src="js/kontrola.js?v=0d9d384f" defer></script>
+<script src="js/pridat.js?v=e4a58dec" defer></script>
 <script>
 /* Zobrazit/skrýt heslo v přihlašovací kartě */
 document.addEventListener('click', function (e) {

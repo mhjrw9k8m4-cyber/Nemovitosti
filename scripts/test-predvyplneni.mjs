@@ -231,7 +231,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
     vymera: (document.getElementById('p-vymera') || {}).value || '',
     cena: (document.getElementById('p-cena') || {}).value || '',
     druh: (document.getElementById('p-druh') || {}).value || '',
-    odkaz: (document.getElementById('p-odkaz') || {}).value || '',
+    odkazovePole: !!document.getElementById('p-odkaz'),
     hlaska: (document.getElementById('p-odjinud-stav') || {}).textContent || '',
   }));
   je('obec se doplnila', po.obec, vzor.place);
@@ -244,7 +244,14 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
   je('výměra taky', po.vymera, String(vzor.area));
   je('a cena taky', po.cena, String(vzor.price));
   pravda('a okres, když ho známe', !vzor.okres || po.okres === vzor.okres, `${po.okres} vs ${vzor.okres}`);
-  pravda('odkaz zůstane u inzerátu', po.odkaz === vzor.url, po.odkaz);
+  /* Dřív se tu čekalo, že vložený odkaz zůstane v poli „Odkaz na inzerát
+     nebo katastr". Jenže to pole nikam nevedlo — create_listing odkaz
+     nebere a v tabulce pro něj není sloupec — takže to nebyla vlastnost,
+     ale tiché zahození. Pole je pryč a zkouška hlídá, že se nevrátí:
+     co formulář nabídne, to musí dojít na server (hlídá i
+     scripts/test-staticka.mjs). Co web z odkazu vyčetl, říká hláška. */
+  pravda('formulář už nenabízí pole, do kterého by se odkaz zahodil',
+    po.odkazovePole === false, 'pole p-odkaz je zpátky, a pořád nikam nevede');
   pravda('a je napsané, co se doplnilo', /Doplnili jsme/.test(po.hlaska), po.hlaska.trim().slice(0, 90));
   /* Popis se nevymýšlí — a nesmí se stát, že ho zkratka vyplní za člověka. */
   const popis = await p.evaluate(() => (document.getElementById('p-popis') || {}).value || '');

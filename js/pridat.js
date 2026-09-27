@@ -938,31 +938,13 @@
   }
 
   // --- Prodej (pridat.html) ---
+  /* POZOR: tenhle formulář se NEODESÍLÁ e-mailem, zveřejňuje se rovnou
+     (publishListing níž). Na tomhle místě proto bývalo skládání FormData
+     s poli jako „jmeno", „odkaz" nebo „zvyraznit" — jenže handle() ho
+     s vlastním odesílatelem vůbec nezavolá, takže to byl mrtvý kód, který
+     navíc budil dojem, že ta pole někam jdou. */
   handle('form-prodej', 'msg-prodej',
-    function () {
-      var fd = new FormData();
-      var v = parseInt(val('p-vymera'), 10), c = parseInt(val('p-cena'), 10);
-      var site = [].slice.call(document.querySelectorAll('input[name="site"]:checked')).map(function (x) { return x.value; });
-      fd.append('_subject', 'Nový pozemek na prodej — Parcelka');
-      fd.append('typ', 'Prodej pozemku');
-      fd.append('obec', val('p-obec'));
-      fd.append('okres', val('p-okres') || '(neuvedeno)');
-      fd.append('vymera_m2', val('p-vymera'));
-      fd.append('cena_kc', val('p-cena'));
-      fd.append('cena_za_m2', (v > 0 && c > 0) ? (Math.round(c / v) + ' Kč/m²') : '(neuvedeno)');
-      fd.append('druh', val('p-druh') || '(neuvedeno)');
-      fd.append('pristup', val('p-pristup') || '(neuvedeno)');
-      fd.append('site', site.length ? site.join(', ') : '(neuvedeno)');
-      fd.append('parcela', val('p-parcela') || '(neuvedeno)');
-      fd.append('popis', val('p-popis') || '(bez popisu)');
-      fd.append('odkaz', val('p-odkaz') || '(neuvedeno)');
-      fd.append('jmeno', val('p-jmeno'));
-      fd.append('kontakt', val('p-kontakt'));
-      fd.append('zvyraznit', checked('p-zvyraznit') ? 'ANO — zájem o zvýraznění (299 Kč)' : 'ne');
-      var fEl = document.getElementById('p-fotky');
-      if (fEl && fEl.files) { [].slice.call(fEl.files).slice(0, 8).forEach(function (f, i) { fd.append('fotka' + (i + 1), f); }); }
-      return fd;
-    },
+    null,
     function () {
       // Vlastní kontroly jsou v js/kontrola.js — čisté funkce, které projíždí
       // `node scripts/test-kontrola.mjs` při každém pushi. Když se soubor
@@ -970,8 +952,8 @@
       if (window.PKKontrola) {
         var v = PKKontrola.formular({
           obec: val('p-obec'), okres: val('p-okres'), vymera: val('p-vymera'), cena: val('p-cena'),
-          parcela: val('p-parcela'), popis: val('p-popis'), odkaz: val('p-odkaz'),
-          jmeno: val('p-jmeno'), kontakt: val('p-kontakt')
+          parcela: val('p-parcela'), popis: val('p-popis'),
+          kontakt: val('p-kontakt')
         });
         if (!v.ok) return E(v.msg, v.id);
         posledniVarovani = (v.varovani || []);
@@ -979,7 +961,6 @@
         if (!val('p-obec')) return E('Vyplňte prosím obec / lokalitu.', 'p-obec');
         if (!(parseInt(val('p-vymera'), 10) > 0)) return E('Zadejte prosím výměru v m².', 'p-vymera');
         if (!(parseInt(val('p-cena'), 10) > 0)) return E('Zadejte prosím cenu v Kč.', 'p-cena');
-        if (!val('p-jmeno')) return E('Uveďte prosím své jméno.', 'p-jmeno');
         if (!validContact(val('p-kontakt'))) return E('Zadejte platné telefonní číslo (9 číslic), nebo pole nechte prázdné.', 'p-kontakt');
       }
       if (!checked('p-souhlas')) return E('Potvrďte prosím souhlas s pravidly a zveřejněním.', 'p-souhlas');
@@ -1215,8 +1196,9 @@
             if (jmena[String(el.value).toLowerCase()]) { el.checked = true; el.dispatchEvent(new Event('change', { bubbles: true })); }
           });
         }
-        /* Odkaz si necháme i v původním políčku — patří k inzerátu. */
-        nastav('p-odkaz', url);
+        /* Odkaz se nikam neukládá (create_listing ho nebere) a pole pro
+           něj proto na formuláři není. Co z něj web vyčetl, je vidět
+           v hlášce pod polem — a to je jediné, co může slíbit. */
         rekni('ok', P.hlaska(co));
       });
     });
