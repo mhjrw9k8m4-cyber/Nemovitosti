@@ -376,6 +376,43 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
       [A, P({ parcel: 'z', okres: 'Nymburk', place: 'Poděbrady' })]).length, 1);
 }
 
+/* --- ODZNAK A HLAVIČKA CENTRA MUSÍ ŘÍKAT TOTÉŽ -------------------
+ *
+ * Jeden pozemek může sedět na dvě uložená hledání a být tedy ve dvou
+ * upozorněních. Odznak v menu ho počítá jednou (novychCelkem to má
+ * i v komentáři), ale hlavička centra sečetla počty jednotlivých
+ * upozornění — na dvou hledáních přes týž okres tak vycházelo 56 proti
+ * 28 na odznaku. Dvě čísla pro tutéž věc, a to jedno z nich bylo
+ * u druhého na dosah jednoho klepnutí.
+ */
+{
+  const A = P({ parcel: 'a' }), B = P({ parcel: 'b' });
+  const data = [A, B];
+  const dveStejne = [{ id: 'a', okres: 'Kolín', seen_keys: [] }, { id: 'b', okres: 'Kolín', seen_keys: [] }];
+  const odznak = H.novychCelkem(dveStejne, data);
+  const centrum = F.pocty(F.sestav({ vlakna: [], hledani: dveStejne, data: data })).pozemky;
+  je('součty', 'dvě hledání přes týž okres: odznak počítá pozemky jednou', odznak, 2);
+  je('součty', 'a hlavička centra hlásí totéž', centrum, odznak);
+  je('součty', 'obě upozornění přitom v seznamu zůstanou',
+    F.sestav({ vlakna: [], hledani: dveStejne, data: data }).length, 2);
+
+  // Nepřekrývající se hledání se naopak sečíst MUSÍ.
+  const dveJine = [{ id: 'a', okres: 'Kolín', seen_keys: [] },
+    { id: 'b', okres: 'Nymburk', seen_keys: [] }];
+  const dataJine = [A, P({ parcel: 'n', okres: 'Nymburk', place: 'Poděbrady' })];
+  je('součty', 'dvě různá hledání se sečtou',
+    F.pocty(F.sestav({ vlakna: [], hledani: dveJine, data: dataJine })).pozemky, 2);
+  je('součty', 'a odznak taky', H.novychCelkem(dveJine, dataJine), 2);
+
+  /* Zprávy se naopak SČÍTAJÍ — dvě nepřečtené zprávy jsou dvě zprávy,
+     ne jeden pozemek. Kdyby se i ty začaly počítat přes klíče, zmizely by. */
+  const vlakna = [
+    { listing_id: 'L1', buyer_id: 'B1', unread: 2, is_owner: true, place: 'Kolín', last_at: '2026-09-20T10:00:00Z' },
+    { listing_id: 'L2', buyer_id: 'B2', unread: 3, is_owner: false, place: 'Nymburk', last_at: '2026-09-20T11:00:00Z' }
+  ];
+  je('součty', 'zprávy se sčítají dál', F.pocty(F.sestav({ vlakna: vlakna, hledani: [], data: [] })).zpravy, 5);
+}
+
 console.log(`\nHlídání lokality: ${bezi} testů`);
 if (spadlo) {
   console.log(vysledky.join('\n'));

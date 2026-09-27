@@ -164,6 +164,11 @@
           };
         }),
         dalsich: Math.max(0, nove.length - UKAZKA),
+        /* Klíče NOVÝCH pozemků — kvůli součtu v hlavičce. Jeden pozemek
+           může sedět na dvě hledání a pak je ve dvou upozorněních; jako
+           dva pozemky by to byla lež. Nesmí se to plést s vsechnyKlice,
+           které jdou na server a obsahují všechno, co na hledání sedí. */
+        noveKlice: nove.map(HL.keyOf),
         /* VŠECHNY, které na hledání sedí — ne jen nové. Tímhle polem
            server celé seen_keys přepíše, takže poslat jen nové znamená
            o zbytek přijít: pak se dávno viděné pozemky vrátí jako nové.
@@ -194,10 +199,24 @@
     return vse;
   }
 
+  /* Součty do hlavičky.
+     Zprávy se sčítají — dvě nepřečtené zprávy jsou dvě zprávy.
+     Pozemky NE: jeden pozemek může sedět na dvě uložená hledání a být
+     tedy ve dvou upozorněních. Sečtením by z něj byly dva a hlavička by
+     hlásila jiné číslo než odznak v menu, který pozemky počítá jednou
+     (novychCelkem v js/hlidani-logika.js). Na dvou hledáních přes týž
+     okres to dělalo 56 proti 28. Proto se tady pozemky spočítají přes
+     klíče, tedy stejně jako na odznaku. */
   function pocty(seznam) {
-    var z = 0, p = 0;
+    var z = 0, videne = {}, p = 0;
     (seznam || []).forEach(function (u) {
-      if (u.druh === 'zprava') z += u.pocet | 0; else p += u.pocet | 0;
+      if (u.druh === 'zprava') { z += u.pocet | 0; return; }
+      var klice = u.noveKlice;
+      if (klice && klice.length) {
+        klice.forEach(function (k) { if (!videne[k]) { videne[k] = 1; p++; } });
+      } else {
+        p += u.pocet | 0;      // upozornění bez klíčů (jiný druh) — aspoň nezmizí
+      }
     });
     return { zpravy: z, pozemky: p, celkem: z + p };
   }

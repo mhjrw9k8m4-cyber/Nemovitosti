@@ -277,17 +277,16 @@
     return out;
   }
 
-  // Součet přes všechna hledání — to je číslo na odznaku. Jeden pozemek
-  // může sedět na dvě hledání; počítá se jednou, ať odznak nenafukuje.
+  /* Součet přes všechna hledání — to je číslo na odznaku. Jeden pozemek
+     může sedět na dvě hledání; počítá se jednou, ať odznak nenafukuje.
+
+     Co je nové, se tu nerozhoduje podruhé — bere se z noveProHledani().
+     Vlastní kopie toho pravidla tu dřív byla a právě tím se rozešla
+     s centrem upozornění; nemá smysl si o to říkat znovu. */
   function novychCelkem(hledani, data) {
     var nove = {};
     (hledani || []).forEach(function (s) {
-      var videno = {};
-      (s.seen_keys || []).forEach(function (k) { videno[k] = 1; });
-      (data || []).forEach(function (d) {
-        var k = keyOf(d);
-        if (matches(s, d) && !videno[k]) nove[k] = 1;
-      });
+      noveProHledani(s, data).forEach(function (d) { nove[keyOf(d)] = 1; });
     });
     return Object.keys(nove).length;
   }
