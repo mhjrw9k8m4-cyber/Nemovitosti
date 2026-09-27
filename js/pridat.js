@@ -1155,8 +1155,10 @@
       rekni('', 'Hledám…');
       nactiData().then(function (data) {
         tlac.disabled = false;
-        var n = P.najdiPodleOdkazu(url, data);
-        if (!n) {
+        // Pole, ne jedna nabídka: jedna dražba může mít víc pozemků se stejnou
+        // adresou a vybrat z nich jeden za prodávajícího by znamenalo hádat.
+        var n = P.najdiVsePodleOdkazu(url, data);
+        if (!n.length) {
           /* Poctivě: portál, který neprocházíme, prostě neumíme. Slibovat
              „zkusíme to stáhnout" by znamenalo slíbit server, který nemáme. */
           rekni('nic', 'Tenhle inzerát u sebe nemáme — vyplňte ho prosím ručně. ' +

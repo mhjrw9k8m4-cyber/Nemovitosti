@@ -176,7 +176,9 @@
     } else { fallback(); }
   }
 
-  function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  // Bez pojistky na null tu padne celé vykreslení, kdyby do čísla přišlo
+  // prázdno. Táž podoba jako v js/pozemek.js, ať se ty dvě nerozcházejí.
+  function fmt(n){ return (n == null ? '' : n.toString()).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
   // Počet dní do termínu dražby z reálného data v poli extra (např. „dražba 2026-09-02")
   /* Termíny dražeb bere celý web z js/terminy.js. Tyhle funkce tu byly
      doslovně zkopírované i v js/pozemek.js — a dvě kopie znamenají, že se
@@ -1613,10 +1615,6 @@
       '</div>';
   }
   var selPoly = null;
-  function resizeMapSoon() {
-    setTimeout(function () { map.invalidateSize(); }, 60);
-    setTimeout(function () { map.invalidateSize(); }, 340);
-  }
   var holderEl = document.querySelector('.map-holder');
   var curDetail = null;
   var detailHideTimer = null, detailOpening = false;
@@ -2119,27 +2117,6 @@
   }
   // Nakreslí kruh „okolí" kolem vás a přizpůsobí pohled tak, aby byly vidět
   // nejbližší pozemky (ne jen prázdná mapa kolem vaší polohy).
-  function frameNear(approx) {
-    if (!userPos) return;
-    var cand = (lastVis || []).map(function (d) { return kmFromUser(d); })
-      .filter(function (km) { return isFinite(km); })
-      .sort(function (a, b) { return a - b; });
-    var radiusKm;
-    if (cand.length) {
-      var idx = Math.min(cand.length - 1, 7);   // ~8. nejbližší pozemek
-      radiusKm = Math.max(10, Math.min(70, cand[idx] * 1.2));
-    } else {
-      radiusKm = 30;
-    }
-    if (nearCircle) { map.removeLayer(nearCircle); nearCircle = null; }
-    nearCircle = L.circle([userPos.lat, userPos.lng], {
-      radius: radiusKm * 1000, pane: 'overlayPane',
-      color: '#1F5138', weight: 1.5, opacity: 0.55,
-      fillColor: '#1F5138', fillOpacity: 0.06, interactive: false
-    }).addTo(map);
-    try { map.fitBounds(nearCircle.getBounds(), { padding: [36, 36], maxZoom: approx ? 11 : 13, animate: true }); }
-    catch (e) { map.setView([userPos.lat, userPos.lng], approx ? 10 : 11, { animate: true }); }
-  }
   // Přibližná poloha podle IP — když GPS není povolená. Zkusí dva zdroje (HTTPS, bez klíče).
   // Zaostři ruční hledání obce (když se poloha nepovede).
   // Obrazovka „poloha se nepovedla" — ukáže se jen jako poslední záchrana,

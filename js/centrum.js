@@ -232,7 +232,14 @@
       fetch('data/opportunities.json', { cache: 'no-cache' })
         .then(function (x) { return x.ok ? x.json() : null; })
         .then(function (d) {
-          seznam = F.sestav({ vlakna: vlakna, hledani: hledani, data: (d && d.opportunities) || [] });
+          /* Přes branku jako všude jinde (js/cisteni.js). Tady se nic
+             nerozbíjelo — centrum vypisuje všechno přes esc() a odkazy si
+             skládá samo z našich adres, takže „javascript:" se sem nedostane.
+             Je to ale poslední místo, které tatáž data čte, a spoléhat se
+             u něj na to, že si každý budoucí výpis zavolá esc(), je přesně
+             ta úvaha, kvůli které chyběla oprava na stránce pozemku. */
+          seznam = F.sestav({ vlakna: vlakna, hledani: hledani,
+            data: PKCisteni.pozemky((d && d.opportunities) || []) });
           vykresli();
         })
         .catch(function () { seznam = F.sestav({ vlakna: vlakna, hledani: [], data: [] }); vykresli(); });

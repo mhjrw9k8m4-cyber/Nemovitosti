@@ -35,6 +35,75 @@ new Function('window', readFileSync(new URL('../js/predvyplneni.js', import.meta
 const P = okno.PKPredvyplneni;
 pravda('modul se načetl', !!(P && P.najdiPodleOdkazu));
 
+/* ---- Odkaz, který vede na VÍC pozemků ----
+   Jedna dražba může mít víc pozemkových celků a každý je u nás vlastní
+   záznam se stejnou adresou. Dokud se brala první nalezená, předvyplnil
+   se prodávajícímu cizí údaj — a hláška mu přitom tvrdila, že je to
+   doplněné správně. U okdrazby.cz/drazba/27824 jde o dvě různé obce
+   (Velké Opatovice a Bezděčí u Velkých Opatovic) se stejnou cenou
+   i výměrou. Doplnit se proto má jen to, na čem se shodnou. */
+{
+  const U = 'https://www.okdrazby.cz/drazba/99999';
+  const A = { url: U, place: 'Aves', okres: 'Blansko', area: 9340, price: 280200, druh: 'orná půda', site: ['elektrina', 'voda'] };
+  const B = { url: U, place: 'Bučina', okres: 'Blansko', area: 9340, price: 280200, druh: 'lesní pozemek', site: ['voda'] };
+  const data = [A, B, { url: 'https://www.okdrazby.cz/drazba/1', place: 'Jiná', okres: 'Kolín', area: 1, price: 1 }];
+
+  je('odkaz na dva pozemky najde oba', P.najdiVsePodleOdkazu(U, data).length, 2);
+  const co = P.coDoplnit(P.najdiVsePodleOdkazu(U, data));
+  je('shodný okres se doplní', co.hodnoty['p-okres'], 'Blansko');
+  je('shodná výměra taky', co.hodnoty['p-vymera'], '9340');
+  je('i shodná cena', co.hodnoty['p-cena'], '280200');
+  pravda('rozdílná obec se NEdoplní', !('p-obec' in co.hodnoty),
+    `doplnila se obec „${co.hodnoty['p-obec']}" — přitom se u těch dvou pozemků liší`);
+  pravda('ani rozdílný druh', co.druh == null, `doplnil se druh „${co.druh}"`);
+  je('a je pojmenované, co se rozchází', co.rozdilne.sort(), ['druh pozemku', 'obec']);
+  je('ze sítí zůstane jen to, co mají oba', co.site, ['voda']);
+  pravda('hláška řekne, že odkaz vede na víc pozemků', /vede na 2 pozemky/.test(P.hlaska(co)),
+    P.hlaska(co).slice(0, 120));
+  pravda('a poradí, co si má člověk doplnit sám', /doplňte prosím podle svého pozemku/.test(P.hlaska(co)),
+    P.hlaska(co).slice(0, 160));
+
+  // Jeden pozemek se chová jako dřív — o víc pozemcích se nic neplácá.
+  const jeden = P.coDoplnit(P.najdiVsePodleOdkazu('https://www.okdrazby.cz/drazba/1', data));
+  je('u jednoho pozemku se doplní i obec', jeden.hodnoty['p-obec'], 'Jiná');
+  pravda('a hláška o víc pozemcích nemluví', !/vede na/.test(P.hlaska(jeden)), P.hlaska(jeden));
+
+  // Když se rozchází všechno, nemá se tvrdit, že se něco doplnilo.
+  const C = { url: 'https://x.cz/a', place: 'C', okres: 'Praha', area: 1, price: 2, druh: 'les' };
+  const D = { url: 'https://x.cz/a', place: 'D', okres: 'Brno-město', area: 3, price: 4, druh: 'zahrada' };
+  const nic = P.coDoplnit([C, D]);
+  je('když se rozchází všechno, nedoplní se nic', Object.keys(nic.hodnoty), []);
+  pravda('a řekne se to', /rozcházejí/.test(P.hlaska(nic)), P.hlaska(nic));
+
+  /* A totéž na SKUTEČNÝCH datech. Vícepozemkové dražby tam být nemusí
+     (záleží, co robot ten den našel), takže se z jejich nepřítomnosti
+     nedělá chyba — jen se pozná, jestli tahle zkouška dnes měřila i na
+     skutečných datech, nebo jen na vymyšlených. */
+  const nabidky = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities || [];
+  const podleAdresy = {};
+  for (const d of nabidky) {
+    if (!d || !d.url) continue;
+    const k = P.normalizujOdkaz(d.url);
+    if (!k) continue;
+    (podleAdresy[k] = podleAdresy[k] || []).push(d);
+  }
+  const vice = Object.values(podleAdresy).filter((v) => v.length > 1);
+  if (vice.length) {
+    const skupina = vice.find((v) => new Set(v.map((d) => d.place)).size > 1) || vice[0];
+    const coSkut = P.coDoplnit(skupina);
+    pravda(`na datech: ${vice.length} odkazů vede na víc pozemků a počítá se s tím`,
+      coSkut.pocet === skupina.length && /vede na/.test(P.hlaska(coSkut)),
+      P.hlaska(coSkut).slice(0, 120));
+    const obce = new Set(skupina.map((d) => d.place));
+    if (obce.size > 1) {
+      pravda('a u různých obcí se obec nedoplní', !('p-obec' in coSkut.hodnoty),
+        `doplnila se „${coSkut.hodnoty['p-obec']}" z ${[...obce].join(' / ')}`);
+    }
+  } else {
+    pravda('na dnešních datech žádný odkaz nevede na víc pozemků (zkouška výš jela na vymyšlených)', true);
+  }
+}
+
 const Z = 'https://www.bezrealitky.cz/nemovitosti-byty-domy/948371-x';
 /* Lidé kopírují odkazy s „www", s lomítkem i s ocasem od reklamy —
    a je to pořád tentýž inzerát. */

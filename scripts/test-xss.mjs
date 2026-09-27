@@ -83,7 +83,7 @@ if (LEAFLET) {
   const bezBranky = [];
   for (const f of readdirSync('.').filter((x) => x.endsWith('.html'))) {
     const t = readFileSync(f, 'utf8');
-    if (!/src="js\/(main|pozemek)\.js/.test(t)) continue;
+    if (!/src="js\/(main|pozemek|centrum)\.js/.test(t)) continue;
     if (!/src="js\/cisteni\.js/.test(t)) bezBranky.push(f);
   }
   je('každá stránka, která čte data o pozemcích, načítá i branku', bezBranky.slice(0, 5), []);

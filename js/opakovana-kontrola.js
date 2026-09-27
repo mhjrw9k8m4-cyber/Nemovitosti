@@ -32,10 +32,10 @@
      Rozhodnutí se dělá až nad celou trojicí. */
 
   function jeTrvalaChyba(stav) { return stav === 404 || stav === 410; }
-  function jeDocasna(stav, chyba) {
-    if (chyba) return true;                          // spojení nedošlo → může být chvilkové
-    return stav === 0 || stav === 408 || stav === 429 || (stav >= 500 && stav < 600);
-  }
+  /* „Dočasná chyba" tu bývala jako vlastní funkce, ale nic ji nevolalo:
+     rozhoduje se podle toho, co je trvalé (404, 410), a všechno ostatní je
+     dočasné samo tím, že to trvalé není. Dvě strany téže mince, z nichž
+     jedna se nepoužívá, jen svádí k tomu se jí jednou začít řídit. */
 
   // Doména bez „www." a malými písmeny — kvůli porovnání, kam odkaz vede.
   function domena(url) {
