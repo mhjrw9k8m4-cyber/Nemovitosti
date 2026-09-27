@@ -38,6 +38,47 @@ function hlas(nadpis, seznam, rada) {
   if (seznam.length > 6) rest.push(`      · …a dalších ${seznam.length - 6}`);
 }
 
+/* ---------- 0. komentáře se musí párovat ----------
+   Tohle je první kontrola schválně: když je rozbitý komentář, mlčí
+   i všechny ostatní, protože pravidlo, o které jde, do stylů vůbec
+   nedoteče — a v souboru přitom vypadá naprosto normálně.
+
+   Stalo se to u .md-verdict.good: vysvětlení nad ním bylo rozdělené na
+   dva komentáře a mezi nimi zůstala volná věta s koncovou značkou.
+   Prohlížeč takovou větu bere jako rozbité pravidlo a při zotavení
+   spolkne i řádek za ní — „Výhodná cena" tak neměla zelený podklad
+   karty. Přečtením CSS se to nepozná; jedině spočítáním značek.
+
+   (Při opravě jsem tutéž chybu udělal znovu: koncovou značku jsem
+   napsal do vysvětlení jako příklad. Proto se tady o ní mluví opisem
+   a proto tahle kontrola existuje.)
+
+   CO TOHLE NECHYTÁ, ať se na to nikdo nespoléhá: navíc otevřený
+   komentář. Komentáře v CSS se nevnořují, takže přebývající otevírací
+   značku zavře nejbližší koncová — a ta patřila jinému komentáři.
+   Párování se tím samo srovná a značky zůstanou v rovnováze, jen se
+   mezitím zakomentuje kus pravidel. Počítáním značek to poznat nejde
+   a porovnání s tím, co načte prohlížeč, taky ne: ubude to na obou
+   stranách stejně. Na tom, aby konkrétní pravidla opravdu došla až
+   do stylů, stojí scripts/test-verdikt.mjs — ten se ptá prohlížeče. */
+{
+  const surove = readFileSync(path.join(ROOT, 'css', 'styles.css'), 'utf8');
+  const OTEVRI = '/' + '*', ZAVRI = '*' + '/';
+  const spatne = [];
+  let i = 0, uvnitr = false, radek = 1, zacatek = 0;
+  while (i < surove.length) {
+    if (surove[i] === '\n') radek++;
+    const jeO = surove.startsWith(OTEVRI, i), jeZ = surove.startsWith(ZAVRI, i);
+    if (!uvnitr && jeO) { uvnitr = true; zacatek = radek; i += 2; continue; }
+    if (!uvnitr && jeZ) { spatne.push(`řádek ${radek}: koncová značka komentáře, ale žádný otevřený`); i += 2; continue; }
+    if (uvnitr && jeZ) { uvnitr = false; i += 2; continue; }
+    i++;
+  }
+  if (uvnitr) spatne.push(`komentář otevřený na řádku ${zacatek} se nikde nezavírá`);
+  hlas('komentář v css/styles.css se nepáruje', spatne,
+    'prohlížeč spolkne i pravidlo za tím místem, a v souboru to vypadá v pořádku');
+}
+
 /* ---------- 1. hloubka ---------- */
 // Vlastní stín se pozná podle rozptylu. Obrysy (0 0 0 Npx), vnitřní stíny
 // a záře podle barvy prvku mají jiný účel a do škály nepatří.
