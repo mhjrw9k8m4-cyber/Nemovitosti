@@ -191,7 +191,21 @@ pravda('prohlížeč drží u telefonu 9–13 číslic',
 
 /* =====================================================================
    DÉLKY TEXTŮ A BÍLÉ SEZNAMY
-   ===================================================================== */
+   =====================================================================
+   Popis smí mít 2 000 znaků podle formuláře i podle serveru — ale cestou
+   k zobrazení ho krátila ještě dvě místa: branka js/cisteni.js (600) a
+   načtení inzerátů v js/main.js (600). Nebyla to ochrana, byl to tichý
+   střih: kdo napsal delší text, o posledních 1 400 znaků přišel a nikde
+   se to nedozvěděl. Kdo mez v jednom místě zvedne, musí ji zvednout
+   všude — proto se porovnávají všechny tři. */
+const cisteni = readFileSync(path.join(KOREN, 'js', 'cisteni.js'), 'utf8');
+const mezCisteni = Number((cisteni.match(/description:\s*(\d+)/) || [])[1]);
+const mezMain = Number((readFileSync(path.join(KOREN, 'js', 'main.js'), 'utf8')
+  .match(/description:\s*clean\(u\.description,\s*(\d+)\)/) || [])[1]);
+pravda(`popis se po cestě k zobrazení nestříhá (kontrola ${MEZE.popisMax}, branka ${mezCisteni}, načtení ${mezMain})`,
+  mezCisteni === MEZE.popisMax && mezMain === MEZE.popisMax,
+  'jedno z těch míst má menší mez — delší popis od majitele nikdo neuvidí celý');
+
 for (const [popis, vzor] of [
   [`délka obce ${MEZE.obecMin}–${MEZE.obecMax} platí i na serveru`,
     new RegExp(`length\\(trim\\(p_place\\)\\) < ${MEZE.obecMin}[\\s\\S]{0,40}> ${MEZE.obecMax}`)],

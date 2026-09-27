@@ -15,6 +15,7 @@
 import { chromium } from 'playwright-core';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -27,6 +28,43 @@ function je(popis, vyslo, cekano) {
   const a = JSON.stringify(vyslo), b = JSON.stringify(cekano);
   if (a === b) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}\n      čekáno ${b}, vyšlo ${a}`); }
+}
+
+/* ---------------------------------------------------------------------
+   NEJDŘÍV SAMOTNÁ BRANKA, BEZ PROHLÍŽEČE
+   ---------------------------------------------------------------------
+   Branka dlouho čistila jen TEXTY a všechno ostatní propouštěla beze
+   změny. Nevadilo to, dokud pole jako fotky nebo sítě chodila jen ze
+   statických dat — jenže mapa teď předává pozemek na jeho stránku přes
+   sessionStorage a nese je s sebou. Do úložiště prohlížeče přitom může
+   sáhnout kdokoli, kdo na tomhle webu umí spustit skript, a adresa
+   fotky se vypisuje rovnou do atributu src: uvozovka v ní by z atributu
+   utekla. Tady se to zkouší přímo na brance, ať je vidět, co propustí.
+--------------------------------------------------------------------- */
+{
+  const require2 = createRequire(import.meta.url);
+  const C = require2(path.resolve('js/cisteni.js'));
+  const NASE = 'https://abcdef.supabase.co/storage/v1/object/public/listing-photos/a.jpg';
+  const v = C.pozemek({
+    place: 'Kolín', type: 'majitel',
+    photos: [NASE, 'https://zly.example.com/x.jpg',
+      'https://abcdef.supabase.co/storage/v1/object/public/listing-photos/a" onerror=alert(1) x="',
+      'javascript:alert(1)'],
+    site: ['elektrina', '<img src=x onerror=alert(1)>', 'ELEKTRINA', 'voda'],
+    features: ['Elektřina', '<b>Voda</b>', '"><svg onload=alert(1)>'],
+    description: 'První odstavec.\r\n\r\n\r\nDruhý   odstavec s <b>značkou</b>.',
+  });
+  je('branka pustí jen fotku z našeho úložiště', v.photos, [NASE]);
+  je('a ze sítí jen holé klíče', v.site, ['elektrina', 'voda']);
+  /* Ze značek zbude neškodný text: „<" a „>" i uvozovka letí pryč, takže
+     z <b>Voda</b> je „bVoda/b" a z '"><svg onload=…>' zbyde „svg
+     onload=alert(1)". Vypadá to ošklivě, ale je to text — a na stránce
+     přes něj projde ještě esc(). Zkouška tu čeká PŘESNĚ ten zbytek, ne
+     jen „neobsahuje <": jinak by prošla i podoba, která by značku
+     zahodila celou a s ní i kus textu, který tam člověk mínil. */
+  je('u vybavení zahodí značky', v.features, ['Elektřina', 'bVoda/b', 'svg onload=alert(1)']);
+  je('popis si nechá odstavec, ale ne značky',
+    v.description, 'První odstavec.\n\nDruhý odstavec s bznačkou/b.');
 }
 
 // Jed. Každé pole zkouší jinou cestu, kterou se kód do stránky dostává.

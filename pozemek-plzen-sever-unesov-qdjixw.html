@@ -131,6 +131,11 @@
        přesně v tom místě, kde se člověk rozhoduje, jestli se pro pozemek
        rozjede. */
     .pz-feat-zdroj{margin:9px 0 0; font-size:12.5px; line-height:1.5; color:var(--text-ondark-mute);}
+    /* Popis od majitele: jeho vlastní slova, takže dostanou karta a klid
+       na čtení. Odstavce zůstávají odstavci — člověk je tak psal. */
+    .pz-popis{padding:15px 16px; background:var(--ink-soft); border:1px solid var(--line); border-radius:14px;}
+    .pz-popis p{margin:0 0 10px; font-size:15px; line-height:1.62; color:var(--text-ondark);}
+    .pz-popis p:last-child{margin-bottom:0;}
 
     /* Blok o dražbě. Oranžová je barva dražeb všude na webu; do sedmi
        dnů se zesílí, po termínu zšedne. */
@@ -375,7 +380,7 @@
 
 <script src="vendor/leaflet/leaflet.js?v=5a640ff8" defer></script>
 <script src="js/mapove-vrstvy.js?v=ef8c5c75" defer></script>
-<script src="js/cisteni.js?v=e42a2048"></script>
+<script src="js/cisteni.js?v=c282cb47"></script>
 <script src="js/snimek.js?v=19045f9d"></script>
 <script src="js/terminy.js?v=63a1d1b6"></script>
 <script src="js/ceny.js?v=bb49e0ac"></script>
@@ -383,7 +388,7 @@
 <script src="js/radce.js?v=9e548cb6"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Place","name":"Ostatní plocha 370 m² — Úněšov, okres Plzeň-sever","description":"Na prodej · 7 560 Kč (20 Kč/m²) · 370 m² · Úněšov, okres Plzeň-sever. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-plzen-sever-unesov-qdjixw.html","address":{"@type":"PostalAddress","addressLocality":"Úněšov","addressRegion":"Plzeň-sever","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.88359,"longitude":13.15157}}</script>
 <script>window.PK_POZEMEK={"k":"Úněšov|KN 270/5|Plzeň-sever|49.884|13.152","ll":[49.88359,13.15157]};</script>
-<script src="js/pozemek.js?v=95d58ba8"></script>
+<script src="js/pozemek.js?v=06c49fea"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

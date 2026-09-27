@@ -164,7 +164,13 @@
     // Majitel nahrál skutečné fotky pozemku → listovací galerie (swipe na mobilu).
     if (d.photos && d.photos.length) {
       var shots = d.photos.map(function (p, i) {
-        return '<img class="pz-shot" src="' + p + '" alt="Fotka pozemku ' + (i + 1) + '" loading="' + (i === 0 ? 'eager' : 'lazy') + '" decoding="async">';
+        /* esc() i na adresu: do atributu se dosud vypisovala tak, jak
+           přišla. Dokud fotky chodily jen ze statických dat, kde žádné
+           nejsou, nebylo to kde vyzkoušet — jenže handoff z mapy je teď
+           nese, a uvozovka v adrese by z atributu utekla. Tvar adresy
+           navíc hlídá PKCisteni (jen https adresa našeho úložiště);
+           tohle je druhá pojistka, ne první. */
+        return '<img class="pz-shot" src="' + esc(p) + '" alt="Fotka pozemku ' + (i + 1) + '" loading="' + (i === 0 ? 'eager' : 'lazy') + '" decoding="async">';
       }).join('');
       var cnt = d.photos.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + d.photos.length + '</span>' : '';
       return '<div class="pz-gallery">' + shots + '</div>' +
@@ -736,6 +742,28 @@
     io.observe(obal);
   }
 
+  /* POPIS OD MAJITELE SE NIKDE NEUKAZOVAL.
+     Formulář u toho pole píše „nepovinné — ale hodně pomůže zájemcům",
+     kontrola v prohlížeči po něm chce aspoň větu, server ho uloží (až
+     2 000 znaků) a js/main.js ho i načte do d.description. A tím to
+     skončilo: v celém webu nebylo ani jedno místo, které by ho vypsalo.
+     Majitel tedy psal text, který nikdo nikdy neuvidí.
+     U stažených nabídek popis v datech není (robot z něj vytáhne sítě,
+     druh a podíl a text zahodí), takže tahle sekce patří nabídkám od
+     majitelů — a proto se ptá na obsah, ne na typ.
+     Odstavce se zachovají: člověk je psal, ať je má i na stránce. */
+  function pzPopisHtml(d) {
+    var t = String(d.description == null ? '' : d.description).trim();
+    if (!t) return '';
+    var odstavce = t.split(/\n\s*\n|\n/).map(function (x) { return x.trim(); })
+      .filter(function (x) { return x; });
+    if (!odstavce.length) return '';
+    return '<h2 class="pz-sect-h">Co o pozemku píše majitel</h2>' +
+      '<div class="pz-popis">' + odstavce.map(function (x) {
+        return '<p>' + esc(x) + '</p>';
+      }).join('') + '</div>';
+  }
+
   /* SÍTĚ SE ČTOU ZE DVOU MÍST A STRÁNKA ZNALA JEN JEDNO.
      Brala jen d.features, což jsou sítě zaškrtnuté majitelem ve
      formuláři. U stažených nabídek je ale robot vytáhl z textu inzerátu
@@ -856,6 +884,8 @@
         '</summary>' +
         pzGtkHtml(d) +
       '</details>' +
+
+      pzPopisHtml(d) +
 
       pzMapaHtml(d) +
 
@@ -1011,17 +1041,22 @@
         return [d.place || '', d.parcel || '', d.okres || ''].join('|') === key;
       });
     }
-    if (cand.length === 1) return cand[0];
+    /* Vrací se i TO, JAK se pozemek našel. Nález podle klíče je jistota,
+       nález „nejbližší bod do 500 m" je jen odhad pro odkaz, jehož klíč
+       se mírně změnil — a u inzerátu od majitele (ten ve statických
+       datech není vůbec) je to skoro vždy CIZÍ pozemek: jiná cena, jiná
+       výměra, jiné místo. Volající to musí umět rozlišit. */
+    if (cand.length === 1) return { d: cand[0], presne: true };
     if (cand.length > 1 && ll && isFinite(ll[0])) {
       cand.sort(function (a, b) { return kmBetween(ll[0], ll[1], a.lat, a.lng) - kmBetween(ll[0], ll[1], b.lat, b.lng); });
-      return cand[0];
+      return { d: cand[0], presne: true };
     }
-    if (cand.length > 1) return cand[0];
+    if (cand.length > 1) return { d: cand[0], presne: true };
     // žádná shoda podle klíče — zkus nejbližší podle souřadnic (klíč se mohl mírně změnit)
     if (ll && isFinite(ll[0])) {
       var best = null, bestD = Infinity;
       DATA.forEach(function (d) { var dd = kmBetween(ll[0], ll[1], d.lat, d.lng); if (dd < bestD) { bestD = dd; best = d; } });
-      if (best && bestD < 0.5) return best;
+      if (best && bestD < 0.5) return { d: best, presne: false };
     }
     return null;
   }
@@ -1071,9 +1106,23 @@
     var DATA = PKCisteni.pozemky((j && (j.opportunities || j.items || (Array.isArray(j) ? j : []))) || []);
     DATA.forEach(function (d, i) { d._id = i; });
     buildIndex(DATA);
-    var target = findTarget(DATA) || quick;
+    /* PŘEKRESLIT, i když už se něco vykreslilo — ale jen podle PŘESNÉHO
+       nálezu. Vykreslení z handoffu je zkratka, aby stránka nebyla chvíli
+       prázdná; plná data ze souboru jsou to pravé, a dřív se druhé
+       vykreslení přeskakovalo vždy. Kdo na pozemek klepl na mapě, tím
+       neviděl sekci „Sítě a vybavení" ani řádek „Vlastnictví:
+       spoluvlastnický podíl" — a stačilo stránku znovu načíst, aby se
+       objevily.
+       Nález „nejbližší do 500 m" ale handoff přepsat NESMÍ: inzerát od
+       majitele ve statických datech není, takže by se stránka převlékla
+       do cizího pozemku. Tenhle cizí nález se dosud aspoň nevykresloval,
+       jenže počítal se z něj cenový verdikt — na inzerátu od majitele
+       tedy mohla stát věta o ceně sousedního pozemku. */
+    var nalez = findTarget(DATA);
+    var target = quick;
+    if (nalez && (nalez.presne || !rendered)) target = nalez.d;
     if (target) {
-      if (!rendered) render(target);
+      if (!rendered || target !== quick) render(target);
       fillVerdict(target);   // cenový verdikt teď máme z čeho spočítat
       // Až PO vykreslení — dřív ten odstavec na stránce ještě není.
       try { ukazCasDat(j && j.updated); } catch (e) {}

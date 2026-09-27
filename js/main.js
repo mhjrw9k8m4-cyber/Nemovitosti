@@ -3711,10 +3711,21 @@
     // Předáme pozemek přes sessionStorage, ať se stránka inzerátu zobrazí OKAMŽITĚ
     // (nemusí čekat na stažení celého seznamu). Plynulé, bez „zaseknutí".
     try {
+      /* VŠECHNO, CO STRÁNKA POZEMKU UMÍ UKÁZAT. Dřív tu bylo jen dvanáct
+         polí a chyběly zrovna ty, které se na stránce vypisují: site
+         (sítě z inzerátu, 1 208 nabídek), podil a zlomek (kupuje se jen
+         zlomek pozemku — nejdůležitější věc, jakou lze o nabídce říct,
+         528 nabídek), features a access od majitele, fotky, popis i cast
+         (čtvrť). Stránka se z handoffu vykreslí okamžitě a s tím, co
+         přišlo — takže kdo na pozemek klepl na mapě, viděl HORŠÍ stránku
+         než ten, kdo si tentýž odkaz otevřel přímo. */
       sessionStorage.setItem('pk_open', JSON.stringify({
-        place: d.place, okres: d.okres, parcel: d.parcel, druh: d.druh,
+        place: d.place, okres: d.okres, cast: d.cast, parcel: d.parcel, druh: d.druh,
         price: d.price, area: d.area, type: d.type, lat: d.lat, lng: d.lng,
-        extra: d.extra, url: d.url, featured: d.featured
+        extra: d.extra, url: d.url, featured: d.featured,
+        site: d.site, features: d.features, access: d.access,
+        podil: d.podil, zlomek: d.zlomek, photos: d.photos,
+        description: d.description, _lid: d._lid
       }));
       // Zapamatuj si přesné místo/přiblížení mapy, ať „zpět" vrátí uživatele
       // TAM, kde skončil (ne na výchozí pohled na celou ČR).
@@ -5148,7 +5159,10 @@
             lat: u.lat, lng: u.lng,
             extra: 'od majitele',
             contact: clean(u.contact, 80),
-            description: clean(u.description, 600),
+            /* 2 000 znaků, ne 600: tolik povoluje formulář i server.
+               Střih na 600 znamenal, že delší popis od majitele nikdo
+               nikdy neviděl celý. */
+            description: clean(u.description, 2000),
             photos: cleanPhotos(u.photos),
             /* d.site jsou klíče, podle kterých filtruje „Inzerát uvádí" a
                podle kterých se sítě ukazují na kartě. U stažených nabídek

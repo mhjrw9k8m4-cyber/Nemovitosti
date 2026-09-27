@@ -113,6 +113,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
  * @param nast.bezLeafletu  zahodí mapovou knihovnu
  * @param nast.cil    adresa pozemku, který se má otevřít (výchozí CIL)
  * @param nast.viewport  rozměr okna (výchozí monitor; telefon se měří zvlášť)
+ * @param nast.handoff   co má ležet v sessionStorage['pk_open'] (předání z mapy)
  */
 async function detail(nast) {
   nast = nast || {};
@@ -149,6 +150,11 @@ async function detail(nast) {
     }
     return r.abort();
   });
+  if (nast.handoff !== undefined) {
+    await ctx.addInitScript((h) => {
+      try { sessionStorage.setItem('pk_open', JSON.stringify(h)); } catch (e) {}
+    }, nast.handoff);
+  }
   const p = await ctx.newPage();
   const padlo = [];
   p.on('pageerror', (e) => padlo.push(String((e && e.message) || e).slice(0, 160)));
@@ -649,6 +655,90 @@ if (DRAZBA) {
   pravda(`zavřený rádce ušetří pořádný kus stránky (${uspora} px)`, uspora >= 400,
     'rozdíl je jen ' + uspora + ' px — pak to zabalení nestojí za klepnutí navíc');
   pravda('po otevření jsou rady vidět', po.radyVidet >= 3, 'vidět jich je ' + po.radyVidet);
+  await ctx.close();
+}
+
+/* --- KDO NA POZEMEK KLEPNE NA MAPĚ, MÁ VIDĚT TOTÉŽ -----------------
+ *
+ * Mapa předá pozemek přes sessionStorage('pk_open'), aby stránka nebyla
+ * chvíli prázdná. Ten handoff nesl jen dvanáct polí — a chyběly zrovna
+ * ty, které se na stránce vypisují: site (sítě z inzerátu, 1 208
+ * nabídek) a podil se zlomkem (kupuje se jen zlomek pozemku, 528
+ * nabídek). Druhé vykreslení se navíc přeskakovalo, takže co v handoffu
+ * nebylo, na stránce nikdy nebylo: kdo na pozemek klepl na mapě, viděl
+ * HORŠÍ stránku než ten, kdo si tentýž odkaz otevřel přímo — a stačilo
+ * zmáčknout F5, aby se chybějící sekce objevily.
+ * Zkouší se to tou horší cestou: podstrčí se ochuzený handoff (jak ho
+ * mapa psala dřív) a stránka stejně musí být celá.
+ */
+{
+  const cil = najdi((x) => Array.isArray(x.site) && x.site.length >= 2 && x.podil);
+  pravda('v datech je pozemek se sítěmi i podílem (jinak zkouška nic neměří)', !!cil,
+    'žádná nabídka nemá obojí — zkouška by neporovnala nic');
+  if (cil) {
+    const ochuzeny = {
+      place: cil.d.place, okres: cil.d.okres, parcel: cil.d.parcel, druh: cil.d.druh,
+      price: cil.d.price, area: cil.d.area, type: cil.d.type, lat: cil.d.lat, lng: cil.d.lng,
+      extra: cil.d.extra, url: cil.d.url,
+    };
+    const { ctx, p } = await detail({ cil: cil.url, handoff: ochuzeny });
+    await p.waitForTimeout(1600);
+    const v = await p.evaluate(() => ({
+      chips: [...document.querySelectorAll('.pz-feat')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
+      radky: [...document.querySelectorAll('.pz-spec')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
+    }));
+    pravda('po klepnutí z mapy jsou na stránce sítě z inzerátu', v.chips.length > 0,
+      'sekce „Sítě a vybavení" je prázdná — stránka zůstala na tom, co přišlo z mapy');
+    pravda('a je na ní i řádek o spoluvlastnickém podílu',
+      v.radky.some((r) => /podíl/i.test(r)),
+      `řádky parametrů: ${v.radky.join(' | ').slice(0, 200)}`);
+    await ctx.close();
+  }
+}
+
+/* --- POPIS OD MAJITELE MUSÍ BÝT VIDĚT -------------------------------
+ *
+ * Formulář u toho pole píše „nepovinné — ale hodně pomůže zájemcům",
+ * kontrola po něm chce aspoň větu a server ho uloží. A v celém webu
+ * nebylo ani jedno místo, které by ho vypsalo: majitel psal text, který
+ * nikdo nikdy neuvidí. K tomu se cestou střihl na 600 znaků, ačkoli
+ * formulář i server jich povolují 2 000.
+ */
+{
+  const dlouhy = 'První odstavec o pozemku. ' + 'Rovinatý terén na okraji obce. '.repeat(24)
+    + '\n\nDruhý odstavec: územní plán a okolí.';
+  /* Inzerát od majitele ve statických datech NENÍ — stránka ho zná jen
+     z handoffu. Zkouška to tak i staví: vymyšlené místo a souřadnice
+     o desetinu stupně vedle (≈ 11 km), aby si stránka nespletla pozemek
+     s nějakým stahovaným v okolí. */
+  const sousedni = najdi(() => true);
+  const majitel = {
+    place: 'Zkušební pozemek od majitele', okres: sousedni.d.okres, parcel: '1/1',
+    druh: 'stavební pozemek', price: 900000, area: 1200, type: 'majitel',
+    lat: Number((sousedni.d.lat + 0.1).toFixed(5)), lng: Number((sousedni.d.lng + 0.1).toFixed(5)),
+    extra: 'od majitele', description: dlouhy,
+  };
+  const klicMajitele = [majitel.place, majitel.parcel, majitel.okres].join('|');
+  const { ctx, p } = await detail({
+    cil: `pozemek.html?p=${encodeURIComponent(klicMajitele)}&ll=${majitel.lat},${majitel.lng}`,
+    handoff: majitel,
+  });
+  await p.waitForTimeout(1600);
+  const v = await p.evaluate(() => {
+    const box = document.querySelector('.pz-popis');
+    return {
+      je: !!box,
+      odstavcu: box ? box.querySelectorAll('p').length : 0,
+      delka: box ? box.textContent.trim().length : 0,
+      nadpisy: [...document.querySelectorAll('.pz-sect-h')].map((h) => h.textContent.trim()),
+    };
+  });
+  pravda('popis od majitele je na stránce vidět', v.je,
+    `nadpisy na stránce: ${v.nadpisy.join(' | ')}`);
+  pravda(`a celý, ne střižený na 600 znaků (${v.delka} znaků)`, v.delka > 700,
+    'text je kratší než odeslaný — někde se po cestě střihl');
+  pravda(`a odstavce zůstaly odstavci (${v.odstavcu})`, v.odstavcu >= 2,
+    'celý text splynul do jednoho bloku, i když ho člověk psal po odstavcích');
   await ctx.close();
 }
 
