@@ -144,9 +144,11 @@
          zatímco stránka hlídání i mapa jich ukazovaly 1 957 — a odznak
          přitom vedl právě na ně. Řazení od nejnovějšího je tam taky. */
       var nove = HL.noveProHledani(s, data);
-      if (!nove.length) return;
-
-      out.push({
+      /* Dřív se tu při prázdném seznamu končilo. Teď se pod tímhle
+         blokem řeší ještě změny cen, takže se jen přeskočí upozornění
+         o nových — ne celé hlídání. */
+      if (nove.length) {
+        out.push({
         druh: 'pozemky',
         id: 'h:' + (s.id || s.label || ''),
         hledaniId: s.id,
@@ -180,6 +182,46 @@
                (s.min_area ? 'mina=' + s.min_area + '&' : '') + '#mapa',
         odkazPopis: 'Zobrazit na mapě'
       });
+      }
+
+      /* ZMĚNA CENY je vlastní zpráva, ne „nový pozemek". Dřív se tak
+         hlásila, protože klíč pozemku cenu obsahuje — a tím se zahodilo
+         to nejzajímavější, co hlídání umí říct: že pozemek zlevnil.
+         Druh zůstává „pozemky", aby ikona, filtr, součty i tlačítko
+         „označit jako viděné" fungovaly stejně jako u nových. */
+      var zmen = HL.zmeneneProHledani(s, data);
+      if (zmen.length) {
+        var dolu = zmen.filter(function (x) { return x.pozemek.price < x.staraCena; }).length;
+        var nahoru = zmen.length - dolu;
+        var titulek;
+        if (!nahoru) titulek = cislovka(dolu, ['pozemek zlevnil', 'pozemky zlevnily', 'pozemků zlevnilo']);
+        else if (!dolu) titulek = cislovka(nahoru, ['pozemek zdražil', 'pozemky zdražily', 'pozemků zdražilo']);
+        else titulek = cislovka(zmen.length, ['pozemek změnil cenu', 'pozemky změnily cenu', 'pozemků změnilo cenu']);
+        out.push({
+          druh: 'pozemky',
+          zmena: true,
+          id: 'c:' + (s.id || s.label || ''),
+          hledaniId: s.id,
+          cas: zmen[0].pozemek.first_seen ? zmen[0].pozemek.first_seen + 'T12:00:00Z' : null,
+          nove: true,
+          pocet: zmen.length,
+          titulek: titulek,
+          misto: 'Hlídání „' + (s.label || (s.okres || 'celá ČR')) + '"',
+          polozky: zmen.slice(0, UKAZKA).map(function (x) {
+            return {
+              popis: [x.pozemek.place, cena(x.staraCena) + ' → ' + cena(x.pozemek.price)].filter(Boolean).join(' · '),
+              druh: x.pozemek.druh || '',
+              typ: x.pozemek.type || '',
+              klic: HL.keyOf(x.pozemek)
+            };
+          }),
+          dalsich: Math.max(0, zmen.length - UKAZKA),
+          noveKlice: zmen.map(function (x) { return HL.keyOf(x.pozemek); }),
+          vsechnyKlice: HL.kliceProHledani(s, data),
+          odkaz: 'index.html?' + (s.okres ? 'q=' + encodeURIComponent(s.okres) + '&' : '') + '#mapa',
+          odkazPopis: 'Zobrazit na mapě'
+        });
+      }
     });
     return out;
   }

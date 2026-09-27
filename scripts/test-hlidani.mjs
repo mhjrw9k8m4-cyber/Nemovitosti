@@ -413,6 +413,85 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   je('součty', 'zprávy se sčítají dál', F.pocty(F.sestav({ vlakna: vlakna, hledani: [], data: [] })).zpravy, 5);
 }
 
+/* --- ZMĚNA CENY NENÍ NOVÝ POZEMEK ---------------------------------
+ *
+ * Klíč pozemku obsahuje cenu, takže když prodávající cenu upraví,
+ * vznikne klíč, který uživatel nikdy neviděl — a pozemek se ohlásil
+ * jako NOVÝ. Nebyla to pravda a zahazovalo to lepší zprávu: napříč
+ * dvaceti verzemi dat se cena změnila 12× ze 37 085 pozorování a byly
+ * to věci, které stojí za vědění (Loučovice 8 999 000 → 7 900 000 Kč).
+ *
+ * Cena se z klíče NEVYHAZUJE — tím bychom o ten signál přišli. Jen se
+ * pozná, že jde o týž pozemek s jinou cenou.
+ */
+{
+  const A = P({ parcel: 'a' });
+  const hled = { okres: 'Kolín', seen_keys: [H.keyOf(A)] };
+  const levnejsi = P({ parcel: 'a', price: 400000 });
+  const drazsi = P({ parcel: 'a', price: 600000 });
+
+  je('cena', 'zlevněný pozemek už není „nový"', H.novychProHledani(hled, [levnejsi]), 0);
+  je('cena', 'ale je mezi změněnými', H.zmeneneProHledani(hled, [levnejsi]).length, 1);
+  je('cena', 'a ví se, jaká byla stará cena',
+    H.zmeneneProHledani(hled, [levnejsi])[0].staraCena, 500000);
+  je('cena', 'zdražení se pozná stejně', H.zmeneneProHledani(hled, [drazsi]).length, 1);
+  je('cena', 'beze změny ceny není co hlásit', H.zmeneneProHledani(hled, [A]).length, 0);
+  je('cena', 'a opravdu nový pozemek změna není',
+    H.zmeneneProHledani(hled, [P({ parcel: 'jiny' })]).length, 0);
+  je('cena', 'ten je pořád nový', H.novychProHledani(hled, [P({ parcel: 'jiny' })]), 1);
+
+  /* Rozebrání klíče na části stojí a padá s tím, že se v polích
+     nevyskytuje svislítko a že klíč nedosáhne na 240 znaků, kde se
+     zkracuje. Obojí se hlídá na SKUTEČNÝCH datech níž. */
+  je('cena', 'klíč se dá rozebrat a cena je pátá část',
+    JSON.stringify(H.bezCeny(H.keyOf(A))),
+    JSON.stringify({ identita: 'sale|kolin|kolin|a|800', cena: '500000' }));
+  je('cena', 'klíč jiného tvaru se nehádá', H.bezCeny('a|b|c'), null);
+  je('cena', 'ani prázdný', H.bezCeny(''), null);
+
+  // Hláška musí říct, co se stalo, a kolik to bylo.
+  const u = F.zeHlidani([{ id: 'h', okres: 'Kolín', seen_keys: [H.keyOf(A)] }], [levnejsi]);
+  je('cena', 'centrum ukáže jedno upozornění', u.length, 1);
+  je('cena', 'a je o zlevnění, ne o novém pozemku', u[0].titulek, '1 pozemek zlevnil');
+  /* Očekávání se skládá touž funkcí, která to píše — tisíce se oddělují
+     nezlomitelnou mezerou (U+00A0), což je u českých čísel správně, ale
+     v testu napsané obyčejnou mezerou to vypadá stejně a nesedí. */
+  je('cena', 'se starou i novou cenou', u[0].polozky[0].popis,
+    'Kolín · ' + F.cena(500000) + ' → ' + F.cena(400000));
+  je('cena', 'u zdražení se to jmenuje jinak',
+    F.zeHlidani([{ id: 'h', okres: 'Kolín', seen_keys: [H.keyOf(A)] }], [drazsi])[0].titulek,
+    '1 pozemek zdražil');
+  je('cena', 'a při obojím naráz se to nepřikrášluje',
+    F.zeHlidani([{ id: 'h', okres: 'Kolín', seen_keys: [H.keyOf(A), H.keyOf(P({ parcel: 'b' }))] }],
+      [levnejsi, P({ parcel: 'b', price: 900000 })])[0].titulek,
+    '2 pozemky změnily cenu');
+
+  /* A odznak s hlavičkou si musí odpovídat i tady — odznak, který změnu
+     ceny vynechá, hlásí menší číslo než stránka pod ním. */
+  const smes = [P({ parcel: 'a', price: 400000 }), P({ parcel: 'c' })];
+  const hled2 = { id: 'h', okres: 'Kolín', seen_keys: [H.keyOf(A)] };
+  je('cena', 'odznak počítá i změnu ceny', H.novychCelkem([hled2], smes), 2);
+  je('cena', 'a hlavička centra hlásí totéž',
+    F.pocty(F.zeHlidani([hled2], smes)).pozemky, H.novychCelkem([hled2], smes));
+}
+
+/* Rozebrání klíče na SKUTEČNÝCH datech: kdyby se v nějakém poli objevilo
+   svislítko nebo klíč přerostl 240 znaků (tam se zkracuje), přestala by
+   se dát cena z klíče vyčíst a změny cen by se tiše hlásily jako nové. */
+{
+  const skutecna = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  let spatnych = 0, nejdelsi = 0;
+  for (const d of skutecna) {
+    const k = H.keyOf(d);
+    if (k.length > nejdelsi) nejdelsi = k.length;
+    const b = H.bezCeny(k);
+    if (!b || b.cena !== String(d.price || '')) spatnych++;
+  }
+  je('cena', `klíč se dá rozebrat u všech ${skutecna.length} pozemků v datech`, spatnych, 0);
+  je('cena', `a nejdelší klíč (${nejdelsi} znaků) nedosahuje na 240, kde se zkracuje`,
+    nejdelsi < 240, true);
+}
+
 console.log(`\nHlídání lokality: ${bezi} testů`);
 if (spadlo) {
   console.log(vysledky.join('\n'));

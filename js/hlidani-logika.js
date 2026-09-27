@@ -230,12 +230,21 @@
      Řadí se od nejnovějšího. Pozemky bez data (robot je ještě
      nepodepsal) jdou dospodu, ať se netváří jako to nejčerstvější. */
   function noveProHledani(s, data) {
-    var videno = {};
-    (s && s.seen_keys ? s.seen_keys : []).forEach(function (k) { videno[k] = 1; });
+    var videno = {}, identityVidene = {};
+    (s && s.seen_keys ? s.seen_keys : []).forEach(function (k) {
+      videno[k] = 1;
+      var b = bezCeny(k);
+      if (b) identityVidene[b.identita] = 1;
+    });
     var mam = {}, out = [];
     (data || []).forEach(function (d) {
       var k = keyOf(d);
       if (mam[k] || videno[k] || !matches(s, d)) return;
+      /* Týž pozemek s jinou cenou není nový — patří do
+         zmeneneProHledani(). Bez tohohle se ohlásil jako nový, což
+         nebyla pravda a zahodilo to lepší zprávu („zlevnilo z X na Y"). */
+      var b = bezCeny(k);
+      if (b && identityVidene[b.identita]) return;
       mam[k] = 1;
       out.push(d);
     });
@@ -246,6 +255,58 @@
   }
   // Kolik jich je. Nikdy se nepočítá jinak než délkou toho seznamu výš.
   function novychProHledani(s, data) { return noveProHledani(s, data).length; }
+
+  /* --- ZMĚNA CENY NENÍ NOVÝ POZEMEK --------------------------------
+
+     Klíč obsahuje cenu, takže když prodávající cenu upraví, vznikne
+     klíč, který uživatel nikdy neviděl — a pozemek se ohlásil jako
+     NOVÝ. To není pravda a zahazuje to lepší zprávu: napříč dvaceti
+     verzemi dat se cena změnila 12× ze 37 085 pozorování (0,03 %) a
+     byly to věci, které stojí za vědění — Loučovice 8 999 000 →
+     7 900 000 Kč, Heřmanice 1 690 000 → 1 590 000.
+
+     Cenu proto z klíče NEVYHAZUJEME (tím bychom o ten signál přišli);
+     jen se pozná, že jde o týž pozemek s jinou cenou. Slouží k tomu
+     identita bez ceny, spočítaná z klíče: klíč má šest částí oddělených
+     svislítkem, cena je pátá. Že se to dá takhle rozebrat, drží
+     scripts/test-hlidani.mjs — žádné pole v datech svislítko neobsahuje
+     a nejdelší klíč má 71 znaků, tedy ani zdaleka nedosáhne na 240,
+     kde se klíč zkracuje. */
+  var CENA_V_KLICI = 4;
+  function bezCeny(klic) {
+    var c = String(klic == null ? '' : klic).split('|');
+    if (c.length !== 6) return null;      // jiný tvar klíče — nehádáme
+    var stara = c[CENA_V_KLICI];
+    c.splice(CENA_V_KLICI, 1);
+    return { identita: c.join('|'), cena: stara };
+  }
+
+  /* Pozemky, které uživatel zná, ale mezitím u nich změnili cenu.
+     Vrací i tu starou cenu — bez ní se nedá napsat „zlevnilo z X na Y",
+     a právě to je na tom to užitečné. */
+  function zmeneneProHledani(s, data) {
+    var videno = {}, podleIdentity = {};
+    (s && s.seen_keys ? s.seen_keys : []).forEach(function (k) {
+      videno[k] = 1;
+      var b = bezCeny(k);
+      if (b) podleIdentity[b.identita] = b.cena;
+    });
+    var mam = {}, out = [];
+    (data || []).forEach(function (d) {
+      var k = keyOf(d);
+      if (mam[k] || videno[k] || !matches(s, d)) return;
+      var b = bezCeny(k);
+      if (!b || !(b.identita in podleIdentity)) return;      // opravdu nový
+      var stara = parseInt(podleIdentity[b.identita], 10);
+      if (!isFinite(stara) || stara === (d.price | 0)) return;
+      mam[k] = 1;
+      out.push({ pozemek: d, staraCena: stara });
+    });
+    out.sort(function (a, b) {
+      return String(b.pozemek.first_seen || '').localeCompare(String(a.pozemek.first_seen || ''));
+    });
+    return out;
+  }
 
   /* Klíče VŠECH pozemků, které na hledání sedí — ne jen nových.
      Tohle se ukládá do seen_keys, když člověk klepne na „označit jako
@@ -287,6 +348,11 @@
     var nove = {};
     (hledani || []).forEach(function (s) {
       noveProHledani(s, data).forEach(function (d) { nove[keyOf(d)] = 1; });
+      /* Změna ceny se na odznaku počítá taky — centrum ji ukazuje jako
+         vlastní upozornění („1 pozemek zlevnil"), takže odznak, který by
+         ji vynechal, by hlásil menší číslo než stránka pod ním. Přesně
+         to se tu už jednou stalo u překrývajících se hledání. */
+      zmeneneProHledani(s, data).forEach(function (x) { nove[keyOf(x.pozemek)] = 1; });
     });
     return Object.keys(nove).length;
   }
@@ -295,7 +361,8 @@
     tyzPozemek: tyzPozemek, normd: normd, keyOf: keyOf, matches: matches,
            mistoSedi: mistoSedi, druhSedi: druhSedi,
            klicShody: klicShody, bezDuplicit: bezDuplicit,
-           noveProHledani: noveProHledani, novychProHledani: novychProHledani, kliceProHledani: kliceProHledani, novychCelkem: novychCelkem,
+           noveProHledani: noveProHledani, novychProHledani: novychProHledani, kliceProHledani: kliceProHledani,
+           zmeneneProHledani: zmeneneProHledani, bezCeny: bezCeny, novychCelkem: novychCelkem,
            /* Ven jen kvůli hlídači: scripts/test-hlidani.mjs porovná
               vypsaný seznam s data/okresy.json. Bez toho by se rozešel
               potichu — chování se totiž změní jen u jména, které je
