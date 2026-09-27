@@ -2235,6 +2235,20 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .kt-mail .kt-txt b{font-size:18px; color:var(--text-ondark); word-break:break-word;}
 .kt-mail:hover{border-color:var(--copper-bright); background:rgba(126,196,157,0.13);}
 .add-check.err input{outline:2px solid var(--c-exekuce); outline-offset:1px;}
+/* „Jak to funguje" je zabalené. Kroky jsou k něčemu napoprvé; kdo přidává
+   podruhé, chce rovnou formulář. Úvod stránky je tmavý, takže souhrn má
+   světlý obrys a text, ne zelený jako jinde na webu. */
+.add-jak{margin-top:18px;}
+.add-jak-sum{display:inline-flex; align-items:center; gap:10px; cursor:pointer; list-style:none;
+  padding:10px 16px; border-radius:var(--r-pill); border:1.5px solid rgba(255,255,255,0.42);
+  color:#fff; font-size:14px; font-weight:600; transition:border-color .15s ease, background .15s ease;}
+.add-jak-sum::-webkit-details-marker{display:none;}
+.add-jak-sum:hover{border-color:var(--copper-bright); background:rgba(255,255,255,0.06);}
+.add-jak-sum .aj-kolik{color:rgba(255,255,255,0.72); font-weight:500;}
+.add-jak-sum::after{content:""; width:9px; height:9px; flex:none;
+  border-right:2px solid currentColor; border-bottom:2px solid currentColor;
+  transform:rotate(45deg) translate(-2px,-2px); transition:transform .18s ease;}
+.add-jak[open] .add-jak-sum::after{transform:rotate(-135deg) translate(-3px,-3px);}
 .add-steps{display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:12px;}
 .add-step{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:22px;}
 .add-step .n{font-family:var(--font-mono); font-size:13px; color:var(--copper-bright); margin-bottom:10px;}

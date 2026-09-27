@@ -499,6 +499,59 @@ async function odesli(p) {
   await ctx.close();
 }
 
+/* --- ÚVOD STRÁNKY NESMÍ ODTLAČIT TO, PROČ SEM ČLOVĚK PŘIŠEL ---------
+ *
+ * Kdo klepne na „Přidat pozemek", rozhodnutý už je — přesvědčovat ho je
+ * zbytečné a jen ho to vzdaluje od prvního políčka. Změřeno na telefonu:
+ * úvod měl 814 px a první ovládací prvek začínal na 1 221 px, tedy
+ * půldruhé obrazovky dolů. Tahle zkouška hlídá, že se to nevrátí.
+ */
+{
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 } });
+  await ctx.route('**/*', (r) => {
+    const u = new URL(r.request().url());
+    return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();
+  });
+  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/pridat.html`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(2400);
+  const v = await p.evaluate(() => {
+    const y = (e) => (e ? Math.round(e.getBoundingClientRect().top + window.scrollY) : null);
+    const prvni = document.querySelector('.auth-tabs')
+      || document.querySelector('#form-prodej input, #form-prodej select');
+    const jak = document.querySelector('.add-jak');
+    const sum = jak && jak.querySelector('summary');
+    const hero = document.querySelector('.add-hero');
+    return {
+      prvniAkceY: y(prvni),
+      heroH: hero ? Math.round(hero.getBoundingClientRect().height) : null,
+      jeJak: !!jak,
+      krokuUvnitr: jak ? jak.querySelectorAll('.add-steps li').length : 0,
+      zavreno: jak ? !jak.hasAttribute('open') : null,
+      vyskaSouhrnu: sum ? Math.round(sum.getBoundingClientRect().height) : 0,
+      oUctuVUvodu: /účet|e-mail a heslo/i.test((hero && hero.textContent) || ''),
+    };
+  });
+  pravda('na telefonu je první ovládací prvek vidět bez rolování (do 844 px)',
+    v.prvniAkceY != null && v.prvniAkceY <= 844,
+    'začíná až na ' + v.prvniAkceY + ' px — člověk musí rolovat, než vůbec něco udělá');
+  pravda(`úvod stránky je krátký (${v.heroH} px)`, v.heroH != null && v.heroH <= 560,
+    'úvod má ' + v.heroH + ' px; rozhodnutého člověka už není proč přesvědčovat');
+  pravda('„Jak to funguje" je zabalené a zavřené', v.jeJak && v.zavreno === true,
+    v.jeJak ? 'je otevřené rovnou' : 'blok .add-jak na stránce není');
+  pravda('a má co ukázat (jinak zkouška nic neměří)', v.krokuUvnitr >= 3,
+    'kroků je ' + v.krokuUvnitr);
+  pravda('souhrn se dá trefit prstem (aspoň 44 px)', v.vyskaSouhrnu >= 44,
+    'je vysoký ' + v.vyskaSouhrnu + ' px');
+  /* O účtu se musí dozvědět v úvodu, ne až z přihlašovacích dveří. Totéž
+     hlídá scripts/test-sliby.mjs ze zdroje; tady na vykreslené stránce. */
+  pravda('a v úvodu pořád stojí, že je potřeba účet', v.oUctuVUvodu,
+    'úvod o účtu mlčí — zkracováním se ta věta nesmí ztratit');
+  await ctx.close();
+}
+
 await prohlizec.close();
 console.log('\nPřidání vlastního pozemku — celá cesta');
 console.log(zpravy.join('\n'));

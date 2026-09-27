@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=ddb9e477">
+  <link rel="stylesheet" href="css/styles.css?v=3f85ea41">
 </head>
 <body>
 
@@ -76,20 +76,32 @@
   <section class="add-hero">
     <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
     <div class="wrap add-wrap">
-      <div class="eyebrow"><span class="live-dot"></span>Přidat pozemek na prodej</div>
-      <h1>Prodáváte pozemek? <em>Vytvořte hezký inzerát</em> za pár minut.</h1>
-      <p class="sub">Vyplňujte a <b>živě sledujte</b>, jak vaše nabídka vypadá. Po odeslání se objeví na mapě mezi ostatními — zdarma a bez provize; první nabídku z nového účtu si napřed projdeme. Potřebujete k tomu <b>účet</b>, stačí e-mail a heslo.</p>
+      <!-- ÚVOD JE KRÁTKÝ SCHVÁLNĚ.
+           Kdo sem přijde, klepl na „Přidat pozemek" — rozhodnutý už je
+           a přesvědčovat ho je zbytečné. Změřeno na telefonu: úvod měl
+           814 px a první políčko, do kterého jde psát, začínalo až na
+           1 221 px, tedy půldruhé obrazovky dolů.
+           Navíc se totéž říkalo třikrát: odstavec („zdarma a bez provize,
+           potřebujete účet"), pak čtyři pilulky („Zdarma", „Bez provize")
+           a pak ještě kroky („Stačí e-mail a heslo"). Zůstala jedna věta
+           s tím, co člověk opravdu potřebuje vědět dřív, než narazí na
+           přihlášení, a pilulky nesou zbytek. -->
+      <h1>Přidat pozemek na prodej</h1>
+      <p class="sub">Nejdřív je potřeba <b>účet</b> — stačí e-mail a heslo. První nabídku z nového účtu si napřed projdeme, nejpozději do 24 hodin je venku.</p>
       <div class="add-chips"><span>Zdarma</span><span>Bez provize</span><span>Na mapě celé ČR</span><span>Přímý kontakt</span></div>
       <!-- Kroky přeskakovaly to první, co na člověka vyskočí: přihlášení.
            Stálo tu „Potvrdíte souhlas a odešlete — nic víc", a přitom se
            formulář vůbec neukáže, dokud není účet. Kdo přišel na „zdarma
            a bez registrace" z mapy, narazil na dveře, o kterých mu nikdo
            neřekl. Účet je proto krok číslo jedna, i s důvodem. -->
+      <details class="add-jak">
+        <summary class="add-jak-sum"><span>Jak to funguje</span><span class="aj-kolik">3 kroky</span></summary>
       <ol class="add-steps" aria-label="Jak přidání funguje">
         <li><span class="as-num">1</span><span class="as-txt"><b>Založíte účet</b><span>Stačí e-mail a heslo. Drží to venku spam a vám dává inzerát pod kontrolu.</span></span></li>
         <li><span class="as-num">2</span><span class="as-txt"><b>Vyplníte a odešlete</b><span>Obec, výměra, cena — a hned vidíte náhled.</span></span></li>
         <li><span class="as-num">3</span><span class="as-txt"><b>Objeví se na mapě</b><span>Mezi ostatními jako „Přímo od majitele". První nabídku z nového účtu si napřed projdeme — nejpozději do 24 hodin je venku.</span></span></li>
       </ol>
+      </details>
     </div>
   </section>
 
