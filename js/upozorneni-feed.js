@@ -43,17 +43,33 @@
 
   // „před 5 min" se čte rychleji než „19. 9. 2026 4:42". U starších věcí
   // je to naopak — tam chce člověk datum.
+  /* Kolik KALENDÁŘNÍCH dnů zpátky. Ne uplynulých čtyřiadvacetihodin —
+     „včera" je den, ne časový úsek. Dokud se to počítalo z uplynulého
+     času, dostalo označení „včera" všechno mezi 24 a 48 hodinami: ve
+     dvě ráno v pondělí tedy i to, co přišlo v sobotu v poledne. */
+  function dnuZpet(t, ted) {
+    var a = new Date(t), b = new Date(ted);
+    var da = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+    var db = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.round((db - da) / DEN);
+  }
   function relativniCas(iso, ted) {
     if (!iso) return '';
     var t = new Date(iso).getTime();
     if (!isFinite(t)) return '';
-    var r = (ted || Date.now()) - t;
+    ted = ted || Date.now();
+    var r = ted - t;
     if (r < 0) return 'právě teď';
     if (r < 60000) return 'právě teď';
     if (r < 3600000) return 'před ' + cislovka(Math.floor(r / 60000), ['minutou', 'minutami', 'minutami']);
+    /* Do čtyřiadvaceti hodin se počítají HODINY, i když už je po
+       půlnoci: „před 3 hodinami" je pro čerstvou věc užitečnější než
+       „včera", které znělo, jako by to leželo celý den. Který den to
+       bylo, říká nadpis skupiny — ten se řídí kalendářem. */
     if (r < DEN) return 'před ' + cislovka(Math.floor(r / 3600000), ['hodinou', 'hodinami', 'hodinami']);
-    if (r < 2 * DEN) return 'včera';
-    if (r < 7 * DEN) return 'před ' + cislovka(Math.floor(r / DEN), ['dnem', 'dny', 'dny']);
+    var dnu = dnuZpet(t, ted);
+    if (dnu <= 1) return 'včera';
+    if (dnu < 7) return 'před ' + cislovka(dnu, ['dnem', 'dny', 'dny']);
     var d = new Date(t);
     return d.getDate() + '. ' + (d.getMonth() + 1) + '. ' + d.getFullYear();
   }
@@ -69,16 +85,21 @@
     var kose = [
       { nadpis: 'Čeká na vás', polozky: [] },
       { nadpis: 'Dnes', polozky: [] },
+      { nadpis: 'Včera', polozky: [] },
       { nadpis: 'Tento týden', polozky: [] },
       { nadpis: 'Starší', polozky: [] }
     ];
     (polozky || []).forEach(function (p) {
       var t = p.cas ? new Date(p.cas).getTime() : NaN;
       if (!isFinite(t) || !t) { kose[0].polozky.push(p); return; }
-      var r = ted - t;
-      if (r < DEN) kose[1].polozky.push(p);
-      else if (r < 7 * DEN) kose[2].polozky.push(p);
-      else kose[3].polozky.push(p);
+      /* Taky podle kalendáře, ne podle uplynulých hodin — pod nadpisem
+         „Dnes" nemá stát něco z včerejšího večera jen proto, že od té
+         doby neuplynulo čtyřiadvacet hodin. Nadpis tvrdí den. */
+      var dnu = dnuZpet(t, ted);
+      if (dnu <= 0) kose[1].polozky.push(p);
+      else if (dnu === 1) kose[2].polozky.push(p);
+      else if (dnu < 7) kose[3].polozky.push(p);
+      else kose[4].polozky.push(p);
     });
     return kose.filter(function (k) { return k.polozky.length; });
   }
@@ -116,14 +137,14 @@
   function zeHlidani(hledani, data) {
     var out = [];
     (hledani || []).forEach(function (s) {
-      var videno = {};
-      (s.seen_keys || []).forEach(function (k) { videno[k] = 1; });
-      var nove = (data || []).filter(function (d) { return HL.matches(s, d) && !videno[HL.keyOf(d)]; });
+      /* Které pozemky jsou nové, počítá js/hlidani-logika.js — jedno
+         místo pro celý web. Dřív si to tenhle soubor filtroval po svém
+         a přehlédl, že tatáž nabídka bývá v datech dvakrát (jednou
+         z každého zdroje): centrum hlásilo 1 970 nových pozemků,
+         zatímco stránka hlídání i mapa jich ukazovaly 1 957 — a odznak
+         přitom vedl právě na ně. Řazení od nejnovějšího je tam taky. */
+      var nove = HL.noveProHledani(s, data);
       if (!nove.length) return;
-
-      // Nejnovější napřed. Pozemky bez data (robot je ještě nepodepsal)
-      // spadnou na konec, ať nepředbíhají to, o čem víme, že je čerstvé.
-      nove.sort(function (a, b) { return String(b.first_seen || '').localeCompare(String(a.first_seen || '')); });
 
       out.push({
         druh: 'pozemky',
@@ -184,7 +205,7 @@
 
   return {
     mnozne: mnozne, cislovka: cislovka, cena: cena, vymera: vymera,
-    relativniCas: relativniCas, seskupPodleCasu: seskupPodleCasu,
+    relativniCas: relativniCas, seskupPodleCasu: seskupPodleCasu, dnuZpet: dnuZpet,
     zeZprav: zeZprav, zeHlidani: zeHlidani, sestav: sestav,
     pocty: pocty, filtruj: filtruj, UKAZKA: UKAZKA
   };

@@ -213,24 +213,39 @@
     return true;
   }
 
-  /* Kolik nových pozemků sedí na jedno uložené hledání.
-     Počítá se přes KLÍČE, ne přes záznamy: tatáž nabídka bývá v datech
-     dvakrát, jednou z každého zdroje (dnes 13 dvojic z 1 972), a jako
-     „dvě nové" by to byla lež o jednom pozemku. novychCelkem() o kus
-     níž to tak dělalo odjakživa — tahle funkce ne, a rozcházely se.
-     Živé to nebylo, protože ji zatím nikdo nevolá; jenže dvě funkce
-     na totéž, každá s jiným výsledkem, jsou past pro toho, kdo
-     zapojí tu druhou. */
-  function novychProHledani(s, data) {
+  /* KTERÉ pozemky jsou pro jedno uložené hledání nové. Jedno jediné
+     místo, kde se to počítá — počet i výpis z něj vycházejí ze stejné
+     hromádky, takže se nemohou rozejít.
+
+     Rozhodují KLÍČE, ne záznamy: tatáž nabídka bývá v datech dvakrát,
+     jednou z každého zdroje (dnes 13 dvojic z 1 970), a jako „dvě nové"
+     by to byla lež o jednom pozemku.
+
+     Přesně tahle past už jednou sklapla. Tady se počítalo přes klíče,
+     ale centrum upozornění (js/upozorneni-feed.js) si filtrovalo záznamy
+     po svém — a hlásilo 1 970 nových pozemků, zatímco stránka hlídání
+     i mapa jich ukazovaly 1 957. Dvě čísla pro tutéž věc, a to jedno
+     z nich byl odznak, na který se klikalo právě na tu druhou stránku.
+
+     Řadí se od nejnovějšího. Pozemky bez data (robot je ještě
+     nepodepsal) jdou dospodu, ať se netváří jako to nejčerstvější. */
+  function noveProHledani(s, data) {
     var videno = {};
     (s && s.seen_keys ? s.seen_keys : []).forEach(function (k) { videno[k] = 1; });
-    var nove = {};
+    var mam = {}, out = [];
     (data || []).forEach(function (d) {
       var k = keyOf(d);
-      if (matches(s, d) && !videno[k]) nove[k] = 1;
+      if (mam[k] || videno[k] || !matches(s, d)) return;
+      mam[k] = 1;
+      out.push(d);
     });
-    return Object.keys(nove).length;
+    out.sort(function (a, b) {
+      return String(b.first_seen || '').localeCompare(String(a.first_seen || ''));
+    });
+    return out;
   }
+  // Kolik jich je. Nikdy se nepočítá jinak než délkou toho seznamu výš.
+  function novychProHledani(s, data) { return noveProHledani(s, data).length; }
 
   // Součet přes všechna hledání — to je číslo na odznaku. Jeden pozemek
   // může sedět na dvě hledání; počítá se jednou, ať odznak nenafukuje.
@@ -251,7 +266,7 @@
     tyzPozemek: tyzPozemek, normd: normd, keyOf: keyOf, matches: matches,
            mistoSedi: mistoSedi, druhSedi: druhSedi,
            klicShody: klicShody, bezDuplicit: bezDuplicit,
-           novychProHledani: novychProHledani, novychCelkem: novychCelkem,
+           noveProHledani: noveProHledani, novychProHledani: novychProHledani, novychCelkem: novychCelkem,
            /* Ven jen kvůli hlídači: scripts/test-hlidani.mjs porovná
               vypsaný seznam s data/okresy.json. Bez toho by se rozešel
               potichu — chování se totiž změní jen u jména, které je

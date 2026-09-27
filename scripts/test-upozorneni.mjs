@@ -127,6 +127,46 @@ je('skupiny', 'nedatované jde první',
   F.seskupPodleCasu([{ cas: '2026-09-19T10:00:00Z' }, { cas: null }], TED).map((k) => k.nadpis), ['Čeká na vás', 'Dnes']);
 je('skupiny', 'prázdný vstup nespadne', F.seskupPodleCasu([], TED), []);
 
+/* --- „VČERA" JE DEN, NE ČTYŘIADVACET HODIN --------------------------
+ *
+ * Dokud se to počítalo z uplynulého času, dostalo označení „včera"
+ * všechno mezi 24 a 48 hodinami — ve dvě ráno v pondělí tedy i to, co
+ * přišlo v sobotu v poledne. A pod nadpisem „Dnes" stál včerejší večer,
+ * protože od něj neuplynulo 24 hodin. Nadpis tvrdí den, tak ho musí
+ * říkat pravdivě.
+ *
+ * Měří se proti pevné chvíli (pondělí 2026-09-28, 01:00 UTC), schválně
+ * krátce po půlnoci — právě tam se to lámalo.
+ */
+{
+  const noc = new Date('2026-09-28T01:00:00Z').getTime();
+  const pred = (h) => new Date(noc - h * 3600000).toISOString();
+  const nadpis = (h) => F.seskupPodleCasu([{ cas: pred(h) }], noc)[0].nadpis;
+
+  // TOHLE je ta chyba: 30 i 47 hodin zpátky bylo „včera", a nebylo.
+  je('včera', '30 hodin zpátky není včera', F.relativniCas(pred(30), noc), 'před 2 dny');
+  je('včera', 'ani 47 hodin', F.relativniCas(pred(47), noc), 'před 2 dny');
+  je('včera', '25 hodin zpátky včera je', F.relativniCas(pred(25), noc), 'včera');
+
+  // Nadpis skupiny se řídí kalendářem, ať nelže.
+  je('včera', 'včerejší večer nepatří pod „Dnes"', nadpis(3), 'Včera');
+  je('včera', 'dnešní půlnoc patří pod „Dnes"', nadpis(0.5), 'Dnes');
+  je('včera', 'předevčírem už je „Tento týden"', nadpis(30), 'Tento týden');
+  je('včera', 'a starší věci zůstávají „Starší"', nadpis(240), 'Starší');
+
+  /* Popisek přitom zůstává v hodinách, dokud je co v hodinách říct:
+     „před 3 hodinami" je pro čerstvou věc užitečnější než „včera",
+     i když kalendářně už včerejší je. Nadpis a popisek si tím
+     neodporují — nadpis říká DEN, popisek JAK DÁVNO. */
+  je('včera', 'tři hodiny zpátky se počítají v hodinách', F.relativniCas(pred(3), noc), 'před 3 hodinami');
+  je('včera', 'a pořád to sedí s nadpisem nad tím', nadpis(3), 'Včera');
+
+  // Kalendářní počítání samo — ať se dá sabotovat cíleně.
+  je('včera', 'dnuZpet: dnes je nula', F.dnuZpet(noc - 1800000, noc), 0);
+  je('včera', 'dnuZpet: přes půlnoc je jeden', F.dnuZpet(noc - 3 * 3600000, noc), 1);
+  je('včera', 'dnuZpet: o den dál jsou dva', F.dnuZpet(noc - 30 * 3600000, noc), 2);
+}
+
 /* ---------------- prázdno ---------------- */
 je('prázdno', 'nic k zobrazení', F.sestav({}), []);
 je('prázdno', 'nulové počty', F.pocty([]), { zpravy: 0, pozemky: 0, celkem: 0 });

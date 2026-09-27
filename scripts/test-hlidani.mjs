@@ -12,6 +12,9 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const H = createRequire(import.meta.url)(path.join(ROOT, 'js', 'hlidani-logika.js'));
+/* Centrum upozornění staví seznam z týchž hlídání — a musí z nich
+   vyjít stejná čísla jako tady. Proto se zkouší spolu. */
+const F = createRequire(import.meta.url)(path.join(ROOT, 'js', 'upozorneni-feed.js'));
 
 let bezi = 0, spadlo = 0;
 const vysledky = [];
@@ -294,6 +297,31 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
     H.novychCelkem([{ okres: 'Kolín', seen_keys: [] }], dvakrat), 1);
   je('duplicity', 'dvě různé nabídky zůstanou dvě',
     H.novychProHledani({ okres: 'Kolín', seen_keys: [] }, [A, P({ parcel: '2' })]), 2);
+
+  /* A totéž musí platit i pro CENTRUM UPOZORNĚNÍ. To si nové pozemky
+     dlouho filtrovalo po svém a duplicitu neznalo: hlásilo 1 970 nových
+     pozemků, zatímco stránka hlídání i mapa jich ukazovaly 1 957 — a to
+     na tu stránku právě odkazoval odznak, na který se klikalo.
+     Teď obojí čte z noveProHledani(), tak ať to tak zůstane. */
+  const feedDvakrat = F.zeHlidani([{ id: 1, okres: 'Kolín', seen_keys: [] }], dvakrat);
+  je('duplicity', 'centrum upozornění ji taky počítá jednou',
+    feedDvakrat[0] ? feedDvakrat[0].pocet : -1, 1);
+  je('duplicity', 'a nevypíše ji v seznamu dvakrát',
+    feedDvakrat[0] ? feedDvakrat[0].polozky.length : -1, 1);
+  je('duplicity', 'ani mezi klíči k označení za přečtené',
+    feedDvakrat[0] ? new Set(feedDvakrat[0].vsechnyKlice).size : -1,
+    feedDvakrat[0] ? feedDvakrat[0].vsechnyKlice.length : -2);
+
+  /* Že se to opravdu čte z jednoho místa, ne že se pravidlo napsalo
+     podruhé: na SKUTEČNÝCH datech musí obě čísla souhlasit. Kdyby se
+     rozešla, je to zpátky ta chyba výš. */
+  const skutecna = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const hlidaniCR = { id: 9, label: 'celá ČR', seen_keys: [] };
+  const zFeedu = F.zeHlidani([hlidaniCR], skutecna);
+  je('duplicity', `centrum a stránka hlídání hlásí na skutečných datech totéž`,
+    zFeedu[0] ? zFeedu[0].pocet : -1, H.novychProHledani(hlidaniCR, skutecna));
+  je('duplicity', 'a je to opravdu hodně pozemků (jinak zkouška nic neměří)',
+    (zFeedu[0] ? zFeedu[0].pocet : 0) > 500, true);
 }
 
 console.log(`\nHlídání lokality: ${bezi} testů`);
