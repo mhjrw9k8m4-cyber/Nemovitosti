@@ -345,7 +345,11 @@
       return '<div class="gtk-row gtk-' + x.lvl + '"><span class="gtk-k">' + x.klic + '</span><span class="gtk-v">' + x.txt + '</span></div>';
     }).join('');
     var otaz = r.otazky.map(function (o) { return '<li>' + o + '</li>'; }).join('');
-    return '<details class="md-gtk" open>' +
+    /* Zavřený i tady. „Rozkliknout pozemek" znamená kartu na mapě stejně
+       jako celou stránku pozemku, a na obou má platit totéž: nejdřív cena,
+       výměra a místo, rady až na klepnutí. Dřív se tenhle blok otevíral
+       rovnou a na stránce pozemku byl dokonce bez obalu. */
+    return '<details class="md-gtk">' +
       '<summary>' + IKONA + '<span>Co byste měli vědět</span><span class="gtk-hint">' + r.radky.length + ' věcí k tomuhle pozemku</span></summary>' +
       '<div class="gtk-body">' +
         radky +

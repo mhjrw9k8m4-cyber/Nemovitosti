@@ -595,6 +595,62 @@ if (DRAZBA) {
   await ctx.close();
 }
 
+/* --- KOLIK TOHO STRÁNKA UKÁŽE NAJEDNOU ----------------------------
+ *
+ * Kdo si pozemek rozklikne, chce nejdřív cenu, výměru, místo a kam se pro
+ * něj jít podívat. Rádce „Co byste měli vědět" je užitečný, ale je to zeď
+ * obecného textu: změřeno na telefonu měl detail 3 218 px a samotný rádce
+ * z toho 1 050, tedy třetinu stránky. Proto je zabalený a otevře se na
+ * klepnutí. Tmavá verze téhož bloku (karta na mapě) v <details> byla
+ * odjakživa; tahle světlá jediná ne.
+ */
+{
+  const { ctx, p } = await detail({});
+  await p.waitForTimeout(1200);
+  const v = await p.evaluate(() => {
+    const obal = document.querySelector('.pz-gtk-obal');
+    const sum = obal && obal.querySelector('summary');
+    const rady = obal ? obal.querySelectorAll('.g-row').length : 0;
+    const r = sum ? sum.getBoundingClientRect() : null;
+    return {
+      jeObal: !!obal,
+      jeDetails: !!obal && obal.tagName.toLowerCase() === 'details',
+      zavreno: obal ? !obal.hasAttribute('open') : null,
+      radu: rady,
+      nadpisVSouhrnu: !!(sum && sum.querySelector('h2')),
+      souhrnText: sum ? (sum.textContent || '').trim().replace(/\s+/g, ' ') : '',
+      vyskaSouhrnu: r ? Math.round(r.height) : 0,
+      vyskaZavreno: document.body.scrollHeight,
+    };
+  });
+  pravda('rádce na stránce pozemku je zabalený do rozbalovacího bloku', v.jeObal && v.jeDetails,
+    v.jeObal ? 'je to ' + v.jeDetails : 'blok .pz-gtk-obal na stránce není');
+  pravda('a je zavřený, dokud na něj člověk neklepne', v.zavreno === true,
+    'otevírá se rovnou, takže se stránkou zase prodlouží');
+  pravda('rádce má co ukázat (jinak zkouška nic neměří)', v.radu >= 3,
+    'rad je jen ' + v.radu + ' — pak je jedno, jestli je blok zabalený');
+  pravda('v souhrnu zůstal nadpis (ať se nerozpadne osnova stránky)', v.nadpisVSouhrnu);
+  pravda('a souhrn říká, kolik se toho pod ním skrývá', /\d+\s*(věc|věci|věcí)/.test(v.souhrnText),
+    'v souhrnu stojí „' + v.souhrnText + '"');
+  pravda('souhrn se dá pohodlně trefit prstem (aspoň 44 px)', v.vyskaSouhrnu >= 44,
+    'je vysoký ' + v.vyskaSouhrnu + ' px');
+
+  // A že to opravdu zkracuje: otevřít a porovnat.
+  const po = await p.evaluate(() => {
+    const o = document.querySelector('.pz-gtk-obal');
+    if (o) o.open = true;
+    return new Promise((r) => setTimeout(() => r({
+      vyskaOtevreno: document.body.scrollHeight,
+      radyVidet: [...document.querySelectorAll('.pz-gtk .g-row')].filter((e) => e.getBoundingClientRect().height > 0).length,
+    }), 300));
+  });
+  const uspora = po.vyskaOtevreno - v.vyskaZavreno;
+  pravda(`zavřený rádce ušetří pořádný kus stránky (${uspora} px)`, uspora >= 400,
+    'rozdíl je jen ' + uspora + ' px — pak to zabalení nestojí za klepnutí navíc');
+  pravda('po otevření jsou rady vidět', po.radyVidet >= 3, 'vidět jich je ' + po.radyVidet);
+  await ctx.close();
+}
+
 /* --- ULOŽENÉ POZEMKY: OBĚ POLOVINY WEBU MUSÍ MÍT TENTÝŽ KLÍČ ------
  *
  * Mapa (js/main.js) i stránka pozemku (js/pozemek.js) zapisují uložené

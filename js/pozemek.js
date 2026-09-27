@@ -311,6 +311,17 @@
       '<div class="pv-scale"><span>levné</span><span>drahé</span></div>' +
       '</div>' + odhadHtml(d);
   }
+  /* Kolik rad k tomuhle pozemku je — ať je ze souhrnu poznat, že se pod ním
+     něco skrývá, a kolik toho je. */
+  function pzGtkKolik(d) {
+    if (!window.PK_RADCE || !window.PK_RADCE.rady) return '';
+    var n = 0;
+    try { n = (window.PK_RADCE.rady(d, MODEL).radky || []).length; } catch (e) { n = 0; }
+    if (!n) return '';
+    // Krátce, ať se to vejde vedle nadpisu i na úzký telefon.
+    return n + ' ' + (n === 1 ? 'věc' : (n < 5 ? 'věci' : 'věcí'));
+  }
+
   // „Co byste měli vědět" (světlá verze). Obsah počítá společný rádce
   // js/radce.js — tenhle soubor tu měl TŘETÍ kopii těch rad.
   /* Kdy robot naposledy obešel zdroje. Po čtyřech dnech se to řekne
@@ -850,8 +861,21 @@
         '<button class="pz-abtn" type="button" id="pz-share">' + SHARE_SVG + 'Sdílet</button>' +
       '</div>' +
 
-      '<h2 class="pz-sect-h">Co byste měli vědět</h2>' +
-      pzGtkHtml(d);
+      /* RÁDCE AŽ NA ROZKLIKNUTÍ.
+         Změřeno na telefonu: detail pozemku měl 3 218 px a samotný rádce
+         z toho 1 050, tedy třetinu stránky. Kdo si pozemek rozklikne, chce
+         nejdřív cenu, výměru, místo a kam se pro něj jít podívat — ne zeď
+         obecných rad. Rady tu zůstávají celé, jen za jedním klepnutím.
+         Tmavá verze téhož bloku (karta na mapě) je v <details> odjakživa;
+         tahle světlá jediná ne. Nadpis zůstává nadpisem i uvnitř souhrnu,
+         ať se nerozpadne osnova stránky pro odečítače a vyhledávače. */
+      '<details class="pz-gtk-obal">' +
+        '<summary class="pz-gtk-sum">' +
+          '<h2 class="pz-sect-h">Co byste měli vědět</h2>' +
+          '<span class="pz-gtk-kolik">' + pzGtkKolik(d) + '</span>' +
+        '</summary>' +
+        pzGtkHtml(d) +
+      '</details>';
 
     var host = document.getElementById('pz-detail');
     host.innerHTML = html;
