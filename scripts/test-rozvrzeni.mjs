@@ -595,6 +595,73 @@ for (const [w, h] of [[320, 568], [375, 667], [390, 844]]) {
   await ctx.close();
 }
 
+/* --- NÁHLED, KTERÝ JE AŽ POD TLAČÍTKEM, JE K NIČEMU -----------------
+ *
+ * Karty s náhledem („Takhle bude nabídka vypadat" a „Kde se pozemek
+ * ukáže") jsou ve zdroji v bočním panelu. Ten se na mobilu skládá POD
+ * formulář, takže tam obě skončí až za tlačítkem „Zveřejnit" — a náhled,
+ * který člověk uvidí teprve po odeslání, nemá smysl. js/pridat.js je
+ * proto na úzké obrazovce přesouvá do toku formuláře.
+ *
+ * Naměřeno na 390 px, než se to spravilo: stránka 6 470 px vysoká,
+ * „Kde se pozemek ukáže" na 4 033 px, tlačítko na 3 892 px. Tuhle chybu
+ * jsem si přivezl sám, když jsem tu kartu přidal — v panelu vypadala
+ * správně, na telefonu byla pod odesláním.
+ */
+for (const [w, h] of [[390, 844], [360, 780]]) {
+  const { ctx, p } = await otevri('pridat.html', w, h);
+  /* Formulář je za přihlášením — bez sezení by se neukázal a kontrola
+     by měřila prázdnou stránku. */
+  await ctx.addInitScript(() => {
+    try {
+      localStorage.setItem('pk_auth', JSON.stringify({ access_token: 't', refresh_token: 'r',
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        user: { id: '11111111-1111-4111-8111-111111111111', email: 'majitel@parcelka.test' } }));
+    } catch (e) {}
+  });
+  await p.reload({ waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(1500);
+  await p.fill('#p-obec', 'Kolín').catch(() => {});
+  await p.fill('#p-okres', 'Kolín').catch(() => {});
+  await p.waitForTimeout(2400);
+  const v = await p.evaluate(() => {
+    const y = (s) => { const e = document.querySelector(s); if (!e) return null;
+      const r = e.getBoundingClientRect(); return r.height ? Math.round(r.top + window.scrollY) : null; };
+    return { odeslat: y('#form-prodej button[type="submit"]'),
+      nahled: y('#live-preview-card'), mapa: y('#mp-card'), obec: y('#p-obec') };
+  });
+  pravda(`${w} px: formulář je vidět (jinak zkouška nic neměří)`, v.obec !== null && v.odeslat !== null,
+    JSON.stringify(v));
+  if (v.odeslat !== null) {
+    pravda(`${w} px: živý náhled je nad tlačítkem „Zveřejnit"`,
+      v.nahled !== null && v.nahled < v.odeslat, `náhled ${v.nahled}, tlačítko ${v.odeslat}`);
+    pravda(`${w} px: „kde se pozemek ukáže" je taky nad ním`,
+      v.mapa !== null && v.mapa < v.odeslat, `karta ${v.mapa}, tlačítko ${v.odeslat}`);
+  }
+  await ctx.close();
+}
+
+/* A na velké obrazovce se obě karty vrátí do bočního panelu — jinak by
+   se přesouvání jen posunulo do formuláře a panel zůstal prázdný. */
+{
+  const { ctx, p } = await otevri('pridat.html', 1280, 900);
+  await ctx.addInitScript(() => {
+    try {
+      localStorage.setItem('pk_auth', JSON.stringify({ access_token: 't', refresh_token: 'r',
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        user: { id: '11111111-1111-4111-8111-111111111111', email: 'majitel@parcelka.test' } }));
+    } catch (e) {}
+  });
+  await p.reload({ waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(1500);
+  const v = await p.evaluate(() => ({
+    nahled: !!document.querySelector('.add-aside #live-preview-card'),
+    mapa: !!document.querySelector('.add-aside #mp-card'),
+  }));
+  pravda('1280 px: obě karty jsou v bočním panelu', v.nahled && v.mapa, JSON.stringify(v));
+  await ctx.close();
+}
+
 await prohlizec.close();
 console.log('\nRozvržení a popisky stránek');
 console.log(zpravy.join('\n'));

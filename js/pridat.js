@@ -756,19 +756,41 @@
     prodejForm.addEventListener('focusout', ukazVarovani);   // po opuštění pole, ne při každém písmenu
     if (previewCard) updateStrength();   // počáteční stav ukazatele
   }
-  // Na mobilu přesuň „živý náhled" HNED pod základní pole (obec/výměra/cena/fotky),
-  // ať uživatel vidí, jak inzerát roste, přímo při psaní — ne až na konci stránky.
+  /* Na mobilu přesuň karty s náhledem do TOKU formuláře, ať je člověk
+     vidí při psaní — ne až na konci stránky. V bočním panelu (ten se na
+     mobilu skládá pod formulář) by skončily AŽ ZA tlačítkem „Zveřejnit":
+     naměřeno na 390 px, kde je stránka 6 470 px vysoká a panel začíná
+     na 4 033 px, zatímco tlačítko je na 3 892 px. Náhled, který člověk
+     uvidí teprve po odeslání, je k ničemu.
+
+     Každá karta má svou kotvu — místo, za které na mobilu patří:
+       živý náhled inzerátu … pod základní pole (obec, výměra, cena, fotky)
+       kde se pozemek ukáže … pod okres, protože právě ten posuzuje
+     Na velké obrazovce jdou obě zpátky do panelu, ve stejném pořadí jako
+     ve zdroji. Jedna funkce pro obě — dvě kopie téhož přesouvání by se
+     rozešly stejně jako všechno ostatní, co tu bylo dvakrát. */
   (function () {
-    var pvCard = document.getElementById('live-preview-card');
     var asideEl = document.querySelector('.add-aside');
-    var anchor = document.querySelector('#form-prodej .desc-field') || document.querySelector('#form-prodej .photo-field');
-    if (!pvCard || !asideEl || !anchor || !window.matchMedia) return;
+    if (!asideEl || !window.matchMedia) return;
+    var okresEl = document.getElementById('p-okres');
+    var karty = [
+      { card: document.getElementById('live-preview-card'),
+        kotva: document.querySelector('#form-prodej .desc-field') || document.querySelector('#form-prodej .photo-field') },
+      { card: document.getElementById('mp-card'),
+        kotva: okresEl ? (okresEl.closest('.add-row') || okresEl.closest('.add-field')) : null }
+    ].filter(function (x) { return x.card && x.kotva; });
+    if (!karty.length) return;
     var mq = window.matchMedia('(max-width: 900px)');
     function place() {
       if (mq.matches) {
-        if (anchor.nextElementSibling !== pvCard) anchor.insertAdjacentElement('afterend', pvCard);
+        karty.forEach(function (x) {
+          if (x.kotva.nextElementSibling !== x.card) x.kotva.insertAdjacentElement('afterend', x.card);
+        });
       } else {
-        if (pvCard.parentNode !== asideEl) asideEl.insertBefore(pvCard, asideEl.firstChild);
+        // Odzadu, ať v panelu skončí ve stejném pořadí jako ve zdroji.
+        karty.slice().reverse().forEach(function (x) {
+          if (x.card.parentNode !== asideEl || x.card !== asideEl.firstChild) asideEl.insertBefore(x.card, asideEl.firstChild);
+        });
       }
     }
     place();
