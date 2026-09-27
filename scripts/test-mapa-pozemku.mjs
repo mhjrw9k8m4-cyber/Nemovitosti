@@ -652,6 +652,45 @@ if (DRAZBA) {
   await ctx.close();
 }
 
+/* --- SÍTĚ Z TEXTU INZERÁTU SE MUSÍ DOSTAT I NA STRÁNKU POZEMKU ------
+ *
+ * Sítě se k pozemku dostanou dvěma cestami: u stažených nabídek je
+ * z textu inzerátu vytáhne js/vybaveni.js a uloží KLÍČE do d.site,
+ * u nabídek od majitele je zaškrtne člověk a uloží se POPISKY do
+ * d.features. Stránka pozemku znala jen d.features — takže u 1 208
+ * nabídek z 1 971 (61 %) o elektřině, vodě, plynu ani příjezdu
+ * nenapsala ani slovo, ačkoli karta na mapě je ukazovala. Karta je
+ * přehled, stránka je místo, kde se člověk rozhoduje; chybět to má
+ * spíš na kartě než tam.
+ */
+{
+  const seSitemi = najdi((x) => Array.isArray(x.site) && x.site.length >= 2);
+  pravda('v datech je pozemek, u kterého robot našel sítě (jinak zkouška nic neměří)', !!seSitemi,
+    'žádná nabídka nemá d.site — pak se nedá poznat, jestli se zobrazují');
+  if (seSitemi) {
+    const { ctx, p } = await detail({ cil: seSitemi.url });
+    await p.waitForTimeout(1200);
+    const v = await p.evaluate(() => ({
+      nadpisy: [...document.querySelectorAll('.pz-sect-h')].map((h) => h.textContent.trim()),
+      chips: [...document.querySelectorAll('.pz-feat')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
+      zdroj: ((document.querySelector('.pz-feat-zdroj') || {}).textContent || '').trim(),
+    }));
+    const ocekavane = seSitemi.d.site.map((k) => ({ elektrina: 'Elektřina', voda: 'Voda',
+      kanalizace: 'Kanalizace', plyn: 'Plyn', cesta: 'Příjezd' }[k] || k));
+    pravda('stránka pozemku má sekci „Sítě a vybavení"', v.nadpisy.includes('Sítě a vybavení'),
+      `nadpisy na stránce: ${v.nadpisy.join(' | ') || '(žádné)'}`);
+    pravda(`a jsou v ní všechny sítě z inzerátu (${ocekavane.join(', ')})`,
+      ocekavane.every((n) => v.chips.some((c) => c === n)),
+      `na stránce je: ${v.chips.join(', ') || '(nic)'}`);
+    /* A POCTIVĚ. Robot čte inzerát, nekontroluje pozemek — kdyby to
+       stránka vydávala za zjištěný stav, byla by to lež v místě, kde se
+       člověk rozhoduje, jestli se pro pozemek rozjede. */
+    pravda('a je u nich napsané, odkud jsou', /z textu inzerátu/i.test(v.zdroj),
+      `stojí tam „${v.zdroj}"`);
+    await ctx.close();
+  }
+}
+
 /* --- RÁDCE MUSÍ BÝT V INZERÁTU, NE AŽ ZA TLAČÍTKY -------------------
  *
  * Zabalit ho nestačilo. Na telefonu skončil úplně dole, až za „Otevřít

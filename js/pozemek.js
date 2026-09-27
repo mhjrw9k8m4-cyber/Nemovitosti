@@ -353,7 +353,10 @@
     'Voda': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6 6 11a6 6 0 0 1-12 0c0-5 6-11 6-11z"/></svg>',
     'Kanalizace': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3C9.5 5.5 9.5 18.5 12 21"/></svg>',
     'Plyn': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 3 5 6 5 9a5 5 0 0 1-10 0c0-1 .5-2 1-3 .5 2 2 2 2 2 0-2 1-6 2-8z"/></svg>',
-    'Oplocení': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l2-3 2 3v9H4zM10 10l2-3 2 3v9h-4zM16 10l2-3 2 3v9h-4zM2 13h20"/></svg>'
+    'Oplocení': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l2-3 2 3v9H4zM10 10l2-3 2 3v9h-4zM16 10l2-3 2 3v9h-4zM2 13h20"/></svg>',
+    // „Příjezd" nese klíč 'cesta' z PKVybaveni — je to nejčastější nález
+    // z textu inzerátu (1 092 nabídek), takže bez ikony by vyčníval.
+    'Příjezd': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21 9 3M20 21 15 3M12 6v2M12 11v2M12 16v2"/></svg>'
   };
   /* SMÍM TU STAVĚT? To je u pozemku ta nejdražší otázka — a Parcelka na ni
      odpovědět neumí: rozhoduje o tom územní plán obce a ten jako jedna
@@ -733,15 +736,31 @@
     io.observe(obal);
   }
 
+  /* SÍTĚ SE ČTOU ZE DVOU MÍST A STRÁNKA ZNALA JEN JEDNO.
+     Brala jen d.features, což jsou sítě zaškrtnuté majitelem ve
+     formuláři. U stažených nabídek je ale robot vytáhl z textu inzerátu
+     a uložil jako klíče do d.site — a těch je 1 208 z 1 971. U šedesáti
+     procent pozemků tedy stránka o elektřině, vodě, plynu ani příjezdu
+     nenapsala ani slovo, ačkoli karta na mapě je ukazovala. A to je
+     přesně naopak, než má být: karta je přehled, stránka je místo, kde
+     se člověk rozhoduje.
+     Spojuje to PKVybaveni.nazvy(), aby obě poloviny webu říkaly totéž.
+     U vytaženého textu se ale musí připsat, ODKUD to je: robot čte
+     inzerát, nekontroluje pozemek. */
   function pzFeaturesHtml(d) {
-    var feats = Array.isArray(d.features) ? d.features : [];
-    var chips = feats.map(function (f) {
+    var jmena = (global.PKVybaveni && global.PKVybaveni.nazvy) ? global.PKVybaveni.nazvy(d)
+      : (Array.isArray(d.features) ? d.features : []);
+    var chips = jmena.map(function (f) {
       return '<span class="pz-feat">' + (FEAT_ICON[f] || '') + esc(f) + '</span>';
     });
     if (d.access) chips.push('<span class="pz-feat pz-feat-acc">' + ACCESS_SVG + esc(d.access) + '</span>');
     if (!chips.length) return '';
+    var zTextu = Array.isArray(d.site) && d.site.length;
     return '<h2 class="pz-sect-h">Sítě a vybavení</h2>' +
-      '<div class="pz-feats">' + chips.join('') + '</div>';
+      '<div class="pz-feats">' + chips.join('') + '</div>' +
+      '<p class="pz-feat-zdroj">' + (zTextu
+        ? 'Vyčteno z textu inzerátu, ne z úřední evidence — u zdroje si to ověřte.'
+        : 'Uvádí majitel pozemku.') + '</p>';
   }
 
   function render(d) {

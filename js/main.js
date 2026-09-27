@@ -1501,10 +1501,10 @@
      řádek — je to jediný údaj, který mění, CO se vlastně kupuje. */
   function uvadiHtml(d) {
     var h = '';
-    if (d.site && d.site.length && window.PKVybaveni) {
-      h += '<span class="mdf-siroky">Inzerát uvádí <b>' + d.site.map(function (k) {
-        return esc(window.PKVybaveni.nazev(k).toLowerCase());
-      }).join(', ') + '</b></span>';
+    var uvadi = window.PKVybaveni ? window.PKVybaveni.nazvy(d) : [];
+    if (uvadi.length) {
+      h += '<span class="mdf-siroky">' + (d.type === 'majitel' ? 'Majitel uvádí ' : 'Inzerát uvádí ')
+        + '<b>' + uvadi.map(function (n) { return esc(n.toLowerCase()); }).join(', ') + '</b></span>';
     }
     if (d.podil) {
       h += '<span class="mdf-siroky">Vlastnictví <b>spoluvlastnický podíl'
@@ -5125,8 +5125,12 @@
             /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/listing-photos\//.test(p);
         }).slice(0, 8);
       }
-      // Vybavení — jen povolené hodnoty (stejná pojistka jako na serveru)
-      var OK_FEAT = { 'Elektřina': 1, 'Voda': 1, 'Kanalizace': 1, 'Plyn': 1, 'Oplocení': 1 };
+      /* Vybavení — jen povolené hodnoty (stejná pojistka jako na serveru).
+         Musí tu být VŠECHNO, co nabízí formulář v pridat.html: chyběla
+         „Stavba k rekonstrukci", takže co majitel zaškrtl a server uložil,
+         to tady prohlížeč zase zahodil. Shodu hlídá scripts/test-meze.mjs. */
+      var OK_FEAT = { 'Elektřina': 1, 'Voda': 1, 'Kanalizace': 1, 'Plyn': 1, 'Oplocení': 1,
+        'Stavba k rekonstrukci': 1 };
       function cleanFeatures(a) {
         if (!Array.isArray(a)) return [];
         return a.filter(function (f) { return OK_FEAT[f]; }).slice(0, 6);
@@ -5146,7 +5150,14 @@
             contact: clean(u.contact, 80),
             description: clean(u.description, 600),
             photos: cleanPhotos(u.photos),
-            features: cleanFeatures(u.features), access: (u.access ? clean(u.access, 40) : ''),
+            /* d.site jsou klíče, podle kterých filtruje „Inzerát uvádí" a
+               podle kterých se sítě ukazují na kartě. U stažených nabídek
+               je plní robot z textu; u nabídek od majitele je nikdo
+               neplnil, takže zaškrtnuté sítě nikam nedošly — člověk je
+               vyplnil a na mapě po nich nebylo ani stopy. */
+            features: cleanFeatures(u.features),
+            site: (window.PKVybaveni ? window.PKVybaveni.klice(cleanFeatures(u.features)) : []),
+            access: (u.access ? clean(u.access, 40) : ''),
             _lid: u.id, views: (typeof u.views === 'number' ? u.views : 0)
           });
         });

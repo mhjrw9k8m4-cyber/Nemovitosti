@@ -112,6 +112,60 @@ for (const [k, { h, n }] of drive) {
 }
 
 /* =====================================================================
+   TÁŽ PAST U OSTATNÍCH FUNKCÍ
+   =====================================================================
+   create_listing není v 00-vse.sql jediná přepisovaná funkce:
+   public_listings a my_listings jsou tam pětkrát, delete_listing
+   třikrát, thread_messages, save_search, my_listing_quota a bump_view
+   dvakrát. U nich rozhodují hlavně VRACENÉ SLOUPCE — kdyby poslední
+   podoba některý vynechala, web by si ho vyžádal a dostal chybu, nebo
+   by prostě zmizel z karty pozemku. Dnes jsou všechny narůstající
+   (ověřeno), ale nic to nedrželo; kontrola je odteď obecná, ne jen pro
+   create_listing. */
+const bezKomentaru = (t) => t.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/--[^\n]*/g, ' ');
+const sloupce = (t) => {
+  const m = bezKomentaru(t).match(/returns table\(([\s\S]*?)\)\s*language/);
+  if (!m) return [];
+  return m[1].split(',').map((x) => x.trim().split(/\s+/)[0]).filter(Boolean);
+};
+const definice = new Map();
+for (const m of sql.matchAll(/create or replace function ([a-z_]+)/g)) {
+  const kus = sql.slice(m.index);
+  const telo2 = kus.slice(0, kus.indexOf('$$;'));
+  if (!definice.has(m[1])) definice.set(m[1], []);
+  definice.get(m[1]).push(telo2);
+}
+/* Co ZMIZELO ÚMYSLNĚ. Jediná položka: create_listing kdysi vracela
+   „token" — klíč, kterým majitel svůj inzerát spravoval v době, kdy se
+   inzerát dal podat bez účtu (listings-autopublish.sql). Od
+   listings-auth.sql patří inzerát přihlášenému účtu, majitele tedy
+   poznáme z přihlášení a token by byl zbytečná tajná hodnota navíc.
+   Kdyby někdy zmizelo něco dalšího, musí to přistát sem i s důvodem —
+   a to je smysl téhle zkoušky: ztráta musí být rozhodnutí, ne přehlédnutí. */
+const SMI_ZMIZET_SLOUPCE = new Set(['create_listing.token']);
+let prepsanych = 0;
+for (const [jmeno, verze] of definice) {
+  if (verze.length < 2) continue;
+  prepsanych++;
+  const posl = verze[verze.length - 1];
+  const poslSl = new Set(sloupce(posl));
+  const poslHl = new Set([...hlasky(posl).keys()]);
+  const chybiSl = [];
+  const chybiHl = [];
+  for (let n = 0; n < verze.length - 1; n++) {
+    for (const c of sloupce(verze[n])) {
+      if (!poslSl.has(c) && !SMI_ZMIZET_SLOUPCE.has(jmeno + '.' + c)) chybiSl.push(`${c} (z ${n + 1}. podoby)`);
+    }
+    for (const k of hlasky(verze[n]).keys()) if (!poslHl.has(k)) chybiHl.push(`${k}… (z ${n + 1}. podoby)`);
+  }
+  pravda(`${jmeno} (${verze.length}× přepsaná): poslední podoba nevynechala žádný sloupec`,
+    chybiSl.length === 0, 'chybí: ' + chybiSl.join(', '));
+  pravda(`${jmeno}: ani žádné pravidlo`, chybiHl.length === 0, 'chybí: ' + chybiHl.join(', '));
+}
+pravda(`v 00-vse.sql se přepisuje ${prepsanych} funkcí a všechny se porovnaly`, prepsanych >= 5,
+  'našlo se jen ' + prepsanych + ' — kontrola by nic neměřila');
+
+/* =====================================================================
    KONTAKT: PRÁZDNO MUSÍ PUSTIT OBĚ STRANY
    =====================================================================
    Tady se prohlížeč a server rozešli nejošklivěji: pridat.html má pole
@@ -160,6 +214,20 @@ for (const v of site) {
   pravda(`server přijme vybavení „${v}"`, bilyFt.includes(`'${v}'`),
     `v bílém seznamu create_listing „${v}" není — formulář to pošle a server to zahodí bez chyby`);
 }
+/* TÝŽ BÍLÝ SEZNAM JE I V PROHLÍŽEČI. js/main.js si data z Supabase
+   přebírá přes OK_FEAT — „stejná pojistka jako na serveru", říká komentář
+   u něj. Jenže zapomněla na „Stavbu k rekonstrukci": formulář ji nabídl,
+   server uložil a prohlížeč ji při čtení zahodil. Nikde chyba, jen
+   zmizelý údaj. */
+const mainJs = readFileSync(path.join(KOREN, 'js', 'main.js'), 'utf8');
+const okFeat = (mainJs.match(/var OK_FEAT = \{([^}]*)\}/) || [, ''])[1];
+pravda('js/main.js má vlastní bílý seznam vybavení (jinak zkouška nic neměří)', okFeat.length > 20,
+  'OK_FEAT se v js/main.js nenašel');
+for (const v of site) {
+  pravda(`prohlížeč nezahodí vybavení „${v}"`, okFeat.includes(`'${v}'`),
+    `v OK_FEAT v js/main.js „${v}" není — server to uloží a prohlížeč to při čtení zahodí`);
+}
+
 const selBlok = pridat.slice(pridat.indexOf('<select id="p-pristup"'));
 const pristupy = [...selBlok.slice(0, selBlok.indexOf('</select>')).matchAll(/<option([^>]*)>([^<]+)<\/option>/g)]
   .filter((m) => !/value=""/.test(m[1])).map((m) => m[2].trim());

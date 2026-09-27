@@ -186,5 +186,35 @@
     return klic;
   }
 
-  return { SITE: SITE, najdi: najdi, nazev: nazev, bezDiakritiky: bezDiakritiky };
+  /* DVĚ POLOVINY TÉHOŽ ÚDAJE. Sítě se k pozemku dostanou dvěma cestami:
+     u stažených nabídek je z textu inzerátu vytáhne tenhle modul a uloží
+     KLÍČE do d.site ('elektrina'), u nabídek od majitele je zaškrtne
+     člověk ve formuláři a uloží se rovnou POPISKY do d.features
+     ('Elektřina'). Půlka webu četla jedno, půlka druhé — a co nečetla,
+     to tiše zmizelo: karta na mapě neukázala nic, co zaškrtl majitel,
+     a stránka pozemku nic, co robot vytáhl z inzerátu (a to je 1 208
+     z 1 971 nabídek). Odteď je na to jedno místo pro obě strany. */
+  function nazvy(d) {
+    var ven = [], i, n;
+    var klice = (d && d.site) || [], popisky = (d && d.features) || [];
+    for (i = 0; i < klice.length; i++) { n = nazev(klice[i]); if (ven.indexOf(n) < 0) ven.push(n); }
+    for (i = 0; i < popisky.length; i++) if (ven.indexOf(popisky[i]) < 0) ven.push(popisky[i]);
+    return ven;
+  }
+  /* Opačný směr: popisky od majitele na klíče, aby filtr „Inzerát uvádí"
+     našel i jeho pozemek. „Oplocení" ani „Stavba k rekonstrukci" tu
+     klíč nemají — robot je z textu nehledá, tak si je nemá kde vzít;
+     na kartě i na stránce pozemku se ukážou přes nazvy() z d.features. */
+  function klice(popisky) {
+    var ven = [], i, j;
+    for (i = 0; i < (popisky || []).length; i++) {
+      for (j = 0; j < SITE.length; j++) {
+        if (SITE[j].nazev === popisky[i] && ven.indexOf(SITE[j].klic) < 0) ven.push(SITE[j].klic);
+      }
+    }
+    return ven;
+  }
+
+  return { SITE: SITE, najdi: najdi, nazev: nazev, nazvy: nazvy, klice: klice,
+    bezDiakritiky: bezDiakritiky };
 });
