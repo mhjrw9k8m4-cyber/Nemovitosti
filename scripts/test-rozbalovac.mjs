@@ -104,6 +104,10 @@ function stav() {
       fokusNaTlacitku: a === btn,
       fokusIndex: v.indexOf(a),
       poslednividet: posl ? (posl.top >= pr.top - 1 && posl.bottom <= pr.bottom + 1) : false,
+      odsazeniOdTlacitka: (() => {
+        const pr = panel.getBoundingClientRect(), br = btn.getBoundingClientRect();
+        return Math.round(pr.top - br.bottom);
+      })(),
       maAriaControls: !!btn.getAttribute('aria-controls'),
       hodnota: document.querySelector('#map-sort').value,
       posledniHodnota: v[v.length - 1] ? v[v.length - 1].getAttribute('data-value') : '',
@@ -172,6 +176,30 @@ await p.waitForTimeout(250);
 s2 = await stav();
 pravda('Escape seznam zavře a fokus vrátí na tlačítko', !s2.otevren && s2.fokusNaTlacitku,
   'zavřeno ' + !s2.otevren + ', fokus na tlačítku ' + s2.fokusNaTlacitku);
+
+/* --- dojíždějící rolování ho zavřít NESMÍ ---
+   Stránka má scroll-behavior:smooth a na telefonu dojíždí setrvačnost.
+   Kdo klepl na rozbalovač chvíli po klepnutí na odkaz nebo po švihnutí
+   prstem, viděl, jak se seznam otevře a v tomtéž okamžiku zase zmizí —
+   zvenčí to vypadá, že tlačítko nefunguje. */
+await p.evaluate(async () => {
+  /* Nejdřív skočit jinam, jinak nemá plynulé rolování kam jet a zkouška
+     nic neměří — přesně na to jsem naletěl: sabotáž ji neshodila, protože
+     stránka už u toho tlačítka stála. */
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  await new Promise((r) => setTimeout(r, 350));
+  const root = document.querySelector('#map-sort').closest('.cdd');
+  root.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  await new Promise((r) => setTimeout(r, 120));   // rolování ještě běží
+  root.querySelector('.cdd-btn').click();
+});
+await p.waitForTimeout(800);
+s2 = await stav();
+pravda('rolování, které běželo už před otevřením, seznam nezavře', s2.otevren,
+  'seznam se zavřel dřív, než si ho stačil kdokoli přečíst');
+pravda('a panel zůstane u svého tlačítka', s2.otevren && Math.abs(s2.odsazeniOdTlacitka) <= 24,
+  'panel je od tlačítka ' + s2.odsazeniOdTlacitka + ' px — odjel pryč');
+await p.waitForTimeout(500);
 
 // --- rolování STRÁNKY ho naopak zavřít MÁ ---
 await otevri();

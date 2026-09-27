@@ -3377,6 +3377,12 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .add-hero:not(.app-hero) .as-txt > span{color:rgba(255,255,255,0.78);}
 
 @media (max-width:880px){ .add-hero:not(.app-hero){padding:84px 0 40px;} }
+/* Na telefonu ještě míň. Změřeno: nad nadpisem bylo 84 px prázdna, kdežto
+   na úvodní stránce 18 a na hlídání 61 — a zrovna tady jde o to dostat
+   formulář co nejdřív pod prst. Musí to stát ZA pravidlem výš: má stejnou
+   váhu, takže rozhoduje pořadí (napoprvé jsem to dal před něj a nic to
+   neudělalo). */
+@media (max-width:640px){ .add-hero:not(.app-hero){padding-top:52px;} }
 
 
 /* =====================================================================

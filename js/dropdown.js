@@ -32,6 +32,14 @@
       if (!opened) return;
       var t = e.target;
       if (t === opened.panel || (t && t.nodeType === 1 && opened.panel.contains(t))) return;
+      /* Rolování, které už BĚŽELO, když se seznam otevřel, ho nesmí hned
+         zavřít. Stránka má scroll-behavior:smooth a na telefonu dojíždí
+         setrvačnost, takže kdo klepne na rozbalovač chvíli po klepnutí na
+         odkaz nebo po švihnutí prstem, viděl, jak se seznam otevře a v tomtéž
+         okamžiku zase zmizí — zvenčí to vypadá, že tlačítko nefunguje.
+         Po tu chvíli se tedy panel jen posune za svým tlačítkem; zavírá se
+         až při rolování, které člověk začal potom. */
+      if (Date.now() - opened.kdy < 400) { opened.presun(); return; }
       close();
     }, true);
     window.addEventListener('resize', function () { if (opened) close(); });
@@ -140,7 +148,8 @@
         close(); buildOptions(); syncLabel();
         panel.style.display = 'block'; place(btn, panel);
         root.classList.add('open'); btn.setAttribute('aria-expanded', 'true');
-        opened = { root: root, btn: btn, panel: panel };
+        opened = { root: root, btn: btn, panel: panel, kdy: Date.now(),
+          presun: function () { place(btn, panel); } };
         /* Fokus na vybranou volbu: odtud jdou šipky nahoru i dolů a odečítač
            obrazovky přečte, co je právě zvolené. Zároveň se tím panel
            odroluje tak, aby ta volba byla vidět. */
