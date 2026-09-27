@@ -217,7 +217,24 @@ function parseArea(text) {
    obvyklá cena a staví se na něm statistiky okresů. */
 const PKDruh = createRequire(import.meta.url)(join(dirname(fileURLToPath(import.meta.url)), '..', 'js', 'druh.js'));
 function parseDruh(text, jmenaMist) {
-  return PKDruh.zTextu(text, jmenaMist) || 'pozemek';
+  return normDruh(PKDruh.zTextu(text, jmenaMist) || 'pozemek');
+}
+
+/* Druh pozemku píšeme jednotně malým počátečním písmenem.
+   Evidence dražeb ho ve svém poli druhPozemku posílá s velkým, kdežto
+   z popisů i z ostatních zdrojů vychází malé — a v datech pak leží dvě
+   hodnoty pro tutéž věc: „Zastavěná plocha a nádvoří" (1×) a
+   „zastavěná plocha a nádvoří" (8×). Filtr to naštěstí nerozhodí
+   (druhGroup si text nejdřív převede na malá), ale na stránce pozemku
+   se to opíše tak, jak to přišlo, takže jeden pozemek z devíti měl
+   druh napsaný jinak než ostatní.
+
+   Mění se JEN první písmeno. České názvy druhů pozemku velká písmena
+   uvnitř nemají, ale celé to snižovat by znamenalo sahat i na něco, co
+   sem teprve přijde. Hlídá to scripts/test-data.mjs. */
+function normDruh(d) {
+  const s = String(d == null ? '' : d).trim();
+  return s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
 }
 
 async function fetchDrazby() {
@@ -278,7 +295,7 @@ async function fetchDrazby() {
         out.push({
           place, okres, type,
           parcel: String(vn.pozemek.parcelniCislo || '—').slice(0, 40),
-          druh: candBudova ? (druhBase + ' se stavbou') : druhBase,
+          druh: normDruh(candBudova ? (druhBase + ' se stavbou') : druhBase),
           area: area ? Math.round(area) : null, price: Math.round(price),
           extra: (nucena ? 'nucená dražba' : 'dražba') + (datum ? ' ' + datum : ''),
           lat: typeof vn.gpsLat === 'number' ? vn.gpsLat : undefined,
@@ -424,7 +441,7 @@ async function fetchProdejSPU() {
     out.push({
       place, okres: normOkres(okres), type: 'sale',
       parcel: String(c[2] || '—').trim().slice(0, 40) || '—',
-      druh: druh || 'pozemek',
+      druh: normDruh(druh || 'pozemek'),
       area, price,
       extra: 'prodej státní půdy (SPÚ, § 12)',
     });
@@ -527,7 +544,7 @@ async function fetchFarmy() {
     out.push({
       place, okres: okres.trim().slice(0, 40), type: 'sale',
       parcel: '—', _key: 'fa-' + id,
-      druh: druh || 'pozemek', area, price,
+      druh: normDruh(druh || 'pozemek'), area, price,
       extra: 'inzerát – Farmy.cz',
       lat, lng, _gps: typeof lat === 'number' && typeof lng === 'number',
       url: 'https://www.farmy.cz/nabidka_detail?nab=' + id,
@@ -589,7 +606,7 @@ async function fetchSreality() {
     out.push({
       place, okres, type: 'sale', parcel: '—',
       _key: 'sr-' + (e.hash_id || e.id || url || (place + '-' + price)),
-      druh: druh || 'pozemek', area, price, extra: 'inzerát – Sreality',
+      druh: normDruh(druh || 'pozemek'), area, price, extra: 'inzerát – Sreality',
       lat: isFinite(lat) ? lat : undefined, lng: isFinite(lng) ? lng : undefined,
       _gps: isFinite(lat) && isFinite(lng),
       url,

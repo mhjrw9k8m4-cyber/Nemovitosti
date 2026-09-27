@@ -76,6 +76,24 @@ const zaHranici = nabidky.filter((o) => typeof o.lat === 'number' && !okresPodle
 pravda('žádný pozemek neleží za hranicemi státu', zaHranici.length === 0,
   `${zaHranici.length}: ` + zaHranici.slice(0, 4).map((o) => `${o.place} (${o.okres}) ${o.lat},${o.lng}`).join(' | '));
 
+/* Druh pozemku se píše jednotně. Evidence dražeb ho posílá s velkým
+   počátečním písmenem, ostatní zdroje s malým — v datech pak ležely dvě
+   hodnoty pro tutéž věc: „Zastavěná plocha a nádvoří" (1×) a
+   „zastavěná plocha a nádvoří" (8×). Filtr to nerozhodí (druhGroup si
+   text nejdřív sníží), ale stránka pozemku druh opisuje tak, jak přišel,
+   takže jeden pozemek z devíti měl druh napsaný jinak. */
+const druhy = {};
+for (const o of nabidky) druhy[o.druh || ''] = (druhy[o.druh || ''] || 0) + 1;
+const rozdvojene = Object.keys(druhy).filter((k) => {
+  const jinak = k.charAt(0).toLowerCase() + k.slice(1);
+  return jinak !== k && druhy[jinak] !== undefined;
+});
+pravda('žádný druh pozemku není v datech dvakrát jinak napsaný', rozdvojene.length === 0,
+  rozdvojene.map((k) => `„${k}" (${druhy[k]}×) vs „${k.charAt(0).toLowerCase() + k.slice(1)}"`).join(' | '));
+pravda(`a žádný nezačíná velkým písmenem (${Object.keys(druhy).length} druhů)`,
+  Object.keys(druhy).every((k) => !/^[A-ZÁ-Ž]/.test(k)),
+  Object.keys(druhy).filter((k) => /^[A-ZÁ-Ž]/.test(k)).join(', '));
+
 // --- 3) Čísla dávají smysl -------------------------------------------
 const zapornaCena = nabidky.filter((o) => o.price != null && !(o.price > 0));
 const zapornaVymera = nabidky.filter((o) => o.area != null && !(o.area > 0));
