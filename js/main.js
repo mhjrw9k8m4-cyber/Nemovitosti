@@ -1449,46 +1449,27 @@
       opacity: 1
     };
   }
-  // Přibližný tvar parcely (deterministický, cache) — ukázková geometrie
-  function polyFor(d) {
-    if (d._poly) return d._poly;
-    var side = Math.sqrt(hasArea(d) ? d.area : 1500);
-    var hLat = (side / 2) / 111320;
-    var hLng = (side / 2) / (111320 * Math.cos(d.lat * Math.PI / 180));
-    var seed = (d._id != null ? d._id : 0) + 1;
-    function rnd(i) { var x = Math.sin(seed * 99.9 + i * 7.13) * 10000; return x - Math.floor(x); }
-    var pts = [], n = 5;
-    for (var i = 0; i < n; i++) {
-      var ang = (i / n) * Math.PI * 2 + rnd(i + 20) * 0.4;
-      var r = 0.7 + rnd(i) * 0.6;
-      pts.push([ d.lat + Math.sin(ang) * hLat * r, d.lng + Math.cos(ang) * hLng * r ]);
-    }
-    d._poly = pts; return pts;
-  }
-  // Záložní „plán parcely" (SVG, bez internetu) — tvar pozemku na jemné mřížce.
-  // Ukáže se jen tehdy, když se nenačte satelitní snímek. Tvar je umístěn na
-  // stejné zlomkové pozici jako špendlík, aby seděl.
-  function planSvg(d, col, fx, fy) {
-    var p = polyFor(d);
-    var lats = p.map(function (x) { return x[0]; }), lngs = p.map(function (x) { return x[1]; });
-    var minLat = Math.min.apply(null, lats), maxLat = Math.max.apply(null, lats);
-    var minLng = Math.min.apply(null, lngs), maxLng = Math.max.apply(null, lngs);
-    var midLat = (minLat + maxLat) / 2, midLng = (minLng + maxLng) / 2;
-    var spanLat = (maxLat - minLat) || 1e-6, spanLng = (maxLng - minLng) || 1e-6;
-    var sc = Math.min(78 / spanLng, 50 / spanLat);
-    var cxT = Math.max(55, Math.min(265, fx * 320));
-    var cyT = Math.max(45, Math.min(155, fy * 200));
-    var pts = p.map(function (x) {
-      return (cxT + (x[1] - midLng) * sc).toFixed(1) + ',' + (cyT - (x[0] - midLat) * sc).toFixed(1);
-    }).join(' ');
-    var gid = 'm' + d._id;
-    return '<svg class="opp-plan" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-      '<defs><linearGradient id="bg' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1C2F26"/><stop offset="1" stop-color="#14231C"/></linearGradient></defs>' +
-      '<rect width="320" height="200" fill="url(#bg' + gid + ')"/>' +
-      '<g stroke="rgba(206,228,212,0.05)" stroke-width="1"><path d="M40 0V200M80 0V200M120 0V200M160 0V200M200 0V200M240 0V200M280 0V200"/><path d="M0 40H320M0 80H320M0 120H320M0 160H320"/></g>' +
-      '<polygon points="' + pts + '" fill="' + col + '" fill-opacity="0.22" stroke="' + col + '" stroke-width="2.4" stroke-linejoin="round"/>' +
-      '</svg>';
-  }
+  /* VYMYŠLENÝ OBRYS PARCELY JE PRYČ — a je to totéž rozhodnutí, které už
+     stojí napsané v js/snimek.js: „Radši nic než čára, kterou si někdo
+     splete s hranicí pozemku." Tam kvůli tomu zmizel i čtverec o SKUTEČNÉ
+     výměře. Na mapě se přitom dál kreslil pětiúhelník v barvě typu, vyplněný,
+     na skutečném místě pozemku a od přiblížení 12 výš — tedy přesně to, co
+     si s hranicí parcely splést jde, a ještě nápadněji než ten čtverec.
+
+     Vlastní obrys pozemku v datech nemáme; je v katastru a vede na něj odkaz
+     „Otevřít v katastru". Tvar i orientace toho pětiúhelníku se počítaly ze
+     Math.sin(poradiVPoli * 99.9 + i * 7.13), takže nesdělovaly nic — a po
+     každém sběru dat, který pořadí změní, vyšly jinak. Týž pozemek tak měl
+     na mapě jiný „obrys" než na své stránce.
+
+     A nesouhlasila ani velikost, jediné, co na tom vypadalo poctivě: body
+     ležely na kružnici o poloměru sqrt(výměra)/2, takže plocha pětiúhelníku
+     byla proti skutečné výměře v mediánu 58 % (rozsah 34 až 89 %, ani jeden
+     z 1 956 pozemků nevyšel správně). Pozemek tedy působil o dvě pětiny
+     menší, než je. Měřítko dál nese letecký snímek, který se přibližuje
+     podle výměry — to samé sdělení bez čáry.
+
+     Špendlíky na mapě zůstávají; ty nic o tvaru netvrdí. */
   // Ikonka „víc fotek" (počet fotek v rohu náhledu)
   var GALLERY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
   // Náhled pozemku = SKUTEČNÝ letecký/satelitní snímek toho místa (Esri World
@@ -1513,21 +1494,6 @@
       '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>';
   }
 
-  function shapeSvg(d) {
-    var p = polyFor(d);
-    var lats = p.map(function (x) { return x[0]; }), lngs = p.map(function (x) { return x[1]; });
-    var minLat = Math.min.apply(null, lats), maxLat = Math.max.apply(null, lats);
-    var minLng = Math.min.apply(null, lngs), maxLng = Math.max.apply(null, lngs);
-    var scale = Math.max(maxLat - minLat, maxLng - minLng) || 1;
-    var pts = p.map(function (x) {
-      var px = ((x[1] - minLng) / scale) * 80 + 10;
-      var py = (1 - (x[0] - minLat) / scale) * 80 + 10;
-      return px.toFixed(1) + ',' + py.toFixed(1);
-    }).join(' ');
-    // Neutrální jemný obrys — tvar dává kartě „mapový" charakter, ale nepřidává barvu
-    return '<svg viewBox="0 0 100 100"><polygon points="' + pts +
-      '" fill="rgba(166,184,202,0.12)" stroke="#93AC9C" stroke-width="2.2"/></svg>';
-  }
 
   /* Řádek „Inzerát uvádí: elektřina, voda" do detailu. Podíl má vlastní
      řádek — je to jediný údaj, který mění, CO se vlastně kupuje. */
@@ -1601,7 +1567,6 @@
                   : '<span class="md-cd' + countdownClass(days) + '">Termín ' + countdownText(days) + '</span>');
     return '<button class="md-topbar" type="button" data-detail-back><span>Zavřít detail</span><span class="mx">✕</span></button>' +
       '<div class="md-body">' +
-        '<div class="md-shape" style="border-color:' + t.color + '55">' + shapeSvg(d) + '</div>' +
         '<div class="md-info">' +
           '<div class="md-top"><span class="md-chip"><span class="lp-dot" style="background:' + t.color + '"></span>' + t.label + '</span>' + (isFeatured(d) ? '<span class="md-feat">Zvýrazněno</span>' : '') + cdBig + '</div>' +
           '<h3 class="md-place">' + d.place + '<span class="md-okr">' + mistoRadek(d) + '</span></h3>' +
@@ -2779,24 +2744,6 @@
     legendEl.innerHTML = lh;
   }
 
-  // Tvary parcel — vytvoří se líně až při přiblížení a respektují filtr
-  // (dřív se tvořilo všech 234 hned = zbytečná zátěž, a filtr je neschovával).
-  function polyObj(d) {
-    if (d._polyObj) return d._polyObj;
-    var p = L.polygon(polyFor(d), { color: TYPE[d.type].color, weight: 1.4, fillColor: TYPE[d.type].color, fillOpacity: 0.22, opacity: 0.85 });
-    p.on('click', function () { showDetail(d); highlightList(d._id); });
-    d._polyObj = p;
-    return p;
-  }
-  function updatePolys() {
-    var show = map.getZoom() >= 12;
-    DATA.forEach(function (d) {
-      var want = show && visible(d);
-      if (want && !d._polyOn) { polyObj(d).addTo(map); d._polyOn = true; }
-      else if (!want && d._polyOn) { map.removeLayer(d._polyObj); d._polyOn = false; }
-    });
-  }
-  map.on('zoomend', updatePolys);
 
   // Po přiblížení mapy zpřístupníme tečky přímo (netřeba nejdřív vybírat kraj).
   // Na přehledu (oddálené) zůstává výběr kraje — tam se tečky překrývají.
@@ -3704,7 +3651,6 @@
         prepocitejCipy();
         prekresliPosuvniky();
         prekresliVybaveni();
-        updatePolys();
         return;
       }
       var opravaNav = (anyFilter && searchTerm && HL.mysleliJste) ? HL.mysleliJste(DATA, searchTerm) : null;
@@ -3756,7 +3702,6 @@
     prekresliVybaveni(); // pilulky „co je u pozemku" a jejich počty
     prekresliChipy();    // odznaky toho, co web pochopil z napsané věty
     prekresliAkceFiltru(matched);   // „Zobrazit N pozemků" a „Zrušit filtry" na konci panelu
-    updatePolys(); // tvary parcel podle aktuálního filtru
   }
 
   function resetFilters() {

@@ -154,36 +154,9 @@
 
 
   // Přibližný tvar parcely (pro záložní plán, když se nenačte satelit)
-  function polyFor(d) {
-    var side = Math.sqrt(hasArea(d) ? d.area : 1500);
-    var hLat = (side / 2) / 111320;
-    var hLng = (side / 2) / (111320 * Math.cos(d.lat * Math.PI / 180));
-    var seed = (d._id != null ? d._id : 0) + 1;
-    function rnd(i) { var x = Math.sin(seed * 99.9 + i * 7.13) * 10000; return x - Math.floor(x); }
-    var pts = [], n = 5;
-    for (var i = 0; i < n; i++) {
-      var ang = (i / n) * Math.PI * 2 + rnd(i + 20) * 0.4;
-      var r = 0.7 + rnd(i) * 0.6;
-      pts.push([d.lat + Math.sin(ang) * hLat * r, d.lng + Math.cos(ang) * hLng * r]);
-    }
-    return pts;
-  }
-  function planSvg(d, col, fx, fy) {
-    var p = polyFor(d);
-    var lats = p.map(function (x) { return x[0]; }), lngs = p.map(function (x) { return x[1]; });
-    var minLat = Math.min.apply(null, lats), maxLat = Math.max.apply(null, lats);
-    var minLng = Math.min.apply(null, lngs), maxLng = Math.max.apply(null, lngs);
-    var midLat = (minLat + maxLat) / 2, midLng = (minLng + maxLng) / 2;
-    var spanLat = (maxLat - minLat) || 1e-6, spanLng = (maxLng - minLng) || 1e-6;
-    var sc = Math.min(78 / spanLng, 50 / spanLat);
-    var cxT = Math.max(55, Math.min(265, fx * 320)), cyT = Math.max(45, Math.min(155, fy * 200));
-    var pts = p.map(function (x) { return (cxT + (x[1] - midLng) * sc).toFixed(1) + ',' + (cyT - (x[0] - midLat) * sc).toFixed(1); }).join(' ');
-    return '<svg class="opp-plan" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-      '<defs><linearGradient id="pzbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1C2F26"/><stop offset="1" stop-color="#14231C"/></linearGradient></defs>' +
-      '<rect width="320" height="200" fill="url(#pzbg)"/>' +
-      '<g stroke="rgba(206,228,212,0.05)" stroke-width="1"><path d="M40 0V200M80 0V200M120 0V200M160 0V200M200 0V200M240 0V200M280 0V200"/><path d="M0 40H320M0 80H320M0 120H320M0 160H320"/></g>' +
-      '</svg>';
-  }
+  /* polyFor a planSvg (vymyšlený obrys parcely a záložní „plán") jsou
+     pryč — nic je nevolalo a kreslit čáru, kterou si lze splést s hranicí
+     pozemku, tenhle web nechce; viz js/snimek.js a js/main.js. */
   /* Velký snímek nahoře. Skládání dlaždic a obrys rozsahu dělá js/snimek.js —
      tentýž kód používá i náhled na kartě, aby se ty dva obrázky nerozešly. */
   function heroLayers(d) {

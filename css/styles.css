@@ -1406,8 +1406,6 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .md-topbar .mx{font-size:18px; color:var(--text-ondark-mute); line-height:1;}
 .md-topbar:hover .mx{color:var(--c-exekuce-ink);}
 .md-body{display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start;}
-.md-shape{flex:none; width:74px; height:74px; background:var(--ink); border:1px solid var(--line); border-radius:var(--r-sm); padding:6px;}
-.md-shape svg{display:block; width:100%; height:100%;}
 .md-info{flex:1; min-width:0;}
 .md-top{font-size:14px; margin-bottom:0; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
 .md-top .lp-dot{width:10px; height:10px; border-radius:50%; flex:none;}
@@ -1563,7 +1561,6 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   .map-detail{max-height:92%; padding:22px 15px 18px;}
   .md-body{flex-direction:column; flex-wrap:nowrap; align-items:stretch; gap:14px;}
   .md-near{flex-basis:auto;}
-  .md-shape{width:56px; height:56px; align-self:flex-start;}
   .md-facts{gap:7px 16px;}
   .md-actions{width:auto; flex-direction:row; flex-wrap:wrap; gap:7px;}
   .md-actions .lp-btn{flex:1 1 calc(33.33% - 5px); min-width:72px;}
@@ -2489,7 +2486,6 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .md-det-body{padding:4px 14px 14px;}
 .md-det-body .md-facts{margin-top:0;}
 @media (max-width:760px){
-  .md-shape{display:none;}      /* dekorativní ikona tvaru — na mobilu pryč, ať detail plyne čistě */
   .md-place{font-size:21px;}
   .md-price b{font-size:22px;}
 }

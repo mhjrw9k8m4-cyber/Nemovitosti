@@ -270,6 +270,9 @@ jobs:
       - name: Poloha vs okres (patří k sobě?)
         run: node scripts/test-okres-poloha.mjs
 
+      - name: Obrys pozemku (nekreslíme, co nevíme)
+        run: node scripts/test-obrys.mjs
+
       - name: Funkční kontrola stránek a odkazů
         run: node scripts/test-stranky.mjs
 
