@@ -7,6 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
+import { jsonVeStrance } from './json-do-stranky.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -333,7 +334,10 @@ function head(title, desc, canonicalPath, ld, crumbs, ogSoubor){
   // ld může být objekt nebo pole; přidáme BreadcrumbList, je-li předán.
   let ldArr = Array.isArray(ld) ? ld.slice() : (ld ? [ld] : []);
   if(crumbs && crumbs.length) ldArr.push(crumbLd(crumbs));
-  const jsonld = ldArr.length ? JSON.stringify(ldArr.length===1 ? ldArr[0] : ldArr) : '';
+  /* jsonVeStrance, ne JSON.stringify: do výpisu nabídek jdou názvy obcí
+     z cizích webů a obsah <script> končí prvním koncem skriptu, i kdyby
+     stál uvnitř řetězce v JSONu. Viz scripts/json-do-stranky.mjs. */
+  const jsonld = ldArr.length ? jsonVeStrance(ldArr.length===1 ? ldArr[0] : ldArr) : '';
   return `<!DOCTYPE html>
 <html lang="cs">
 <head>

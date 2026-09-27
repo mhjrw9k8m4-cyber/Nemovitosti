@@ -24,6 +24,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { jsonVeStrance } from './json-do-stranky.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const WEB = 'https://www.parcelaka.cz';
@@ -123,7 +124,10 @@ export function stranka(sablona, d) {
   }
 
   // Strojově čitelný popis místa — kvůli vyhledávačům.
-  const ld = JSON.stringify({
+  /* jsonVeStrance, ne JSON.stringify: obsah <script> je surový text a končí
+     prvním koncem skriptu, i kdyby stál uvnitř řetězce v JSONu. Názvy obcí
+     sem přitom přicházejí z cizích webů. Viz scripts/json-do-stranky.mjs. */
+  const ld = jsonVeStrance({
     '@context': 'https://schema.org', '@type': 'Place', name: titul, description: popis, url,
     address: { '@type': 'PostalAddress', addressLocality: d.place, addressRegion: d.okres, addressCountry: 'CZ' },
     geo: { '@type': 'GeoCoordinates', latitude: d.lat, longitude: d.lng },
@@ -153,7 +157,7 @@ export function stranka(sablona, d) {
   // Předání skriptu: která nabídka to je, bez tahání z adresy.
   h = h.replace(/(<script src="js\/pozemek\.js)/,
     `<script type="application/ld+json">${ld}</scr` + `ipt>\n`
-    + `<script>window.PK_POZEMEK=${JSON.stringify({ k: pkey(d), ll: [d.lat, d.lng] })};</scr` + `ipt>\n$1`);
+    + `<script>window.PK_POZEMEK=${jsonVeStrance({ k: pkey(d), ll: [d.lat, d.lng] })};</scr` + `ipt>\n$1`);
   return h;
 }
 
