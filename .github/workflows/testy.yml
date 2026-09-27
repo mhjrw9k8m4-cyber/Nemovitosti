@@ -273,6 +273,9 @@ jobs:
       - name: Obrys pozemku (nekreslíme, co nevíme)
         run: node scripts/test-obrys.mjs
 
+      - name: Hierarchie tlačítek (co je tu hlavní?)
+        run: node scripts/test-hierarchie.mjs
+
       - name: Rozbalovací seznam (myší i klávesou)
         run: node scripts/test-rozbalovac.mjs
 
