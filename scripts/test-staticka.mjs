@@ -132,6 +132,74 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
   console.log(`Odkazy na soubory: ${zdroje.length} souborů prohledáno, všechny zmíněné skripty existují.`);
 }
 
+/* ---- ZKOUŠKY MUSÍ BÝT VE SPRÁVNÉ ÚLOZE -----------------------------
+ *
+ * Tohle je pojistka na chybu, která se opravdu stala: scripts/test-verdikt.mjs
+ * potřebuje prohlížeč, ale byla zapsaná do úlohy „testy", kde se Playwright
+ * neinstaluje. V CI proto padala na „Cannot find package 'playwright-core'"
+ * a protože se tím zastavil celý běh, NIC dalšího už se nespustilo — od
+ * 24. září byl každý běh červený, zatímco lokálně všechno procházelo.
+ * Červené CI, kterého si nikdo nevšímá, nehlídá vůbec nic.
+ *
+ * Kontroluje se trojí: že zkouška s prohlížečem je v úloze s prohlížečem,
+ * že žádná není zapsaná dvakrát (běžela by zbytečně dvakrát) a že na
+ * žádnou se nezapomnělo. Soubory, které si spouští jiný workflow
+ * (test-chat.yml sahá na živý Supabase), i pomocný server se nepočítají.
+ */
+{
+  const wf = fs.readFileSync('.github/workflows/testy.yml', 'utf8');
+  const jinde = fs.readdirSync('.github/workflows')
+    .filter((f) => f !== 'testy.yml')
+    .map((f) => fs.readFileSync('.github/workflows/' + f, 'utf8')).join('\n');
+  const iT = wf.indexOf('\n  testy:'), iP = wf.indexOf('\n  v-prohlizeci:');
+  const ulohaBez = iT < iP ? wf.slice(iT, iP) : wf.slice(iT);
+  const ulohaProh = iT < iP ? wf.slice(iP) : wf.slice(iP, iT);
+  /* Počítají se jen SPOUŠTĚNÉ zkoušky, tedy řádky s „run:". Kdyby se bralo
+     celé znění souboru, počítala by se i zmínka v komentáři v hlavičce
+     workflow — a hlásilo by se, že zkouška běží dvakrát, i když běží jednou.
+     (Přesně na tohle jsem naletěl při psaní téhle kontroly.) */
+  const jmena = (blok) => blok.split('\n')
+    .filter((r) => !/^\s*#/.test(r))
+    .join('\n')
+    .split('\n')
+    .filter((r) => /\bnode\s+scripts\/test-/.test(r))
+    .flatMap((r) => r.match(/scripts\/test-[a-z0-9-]+\.mjs/g) || []);
+  const vBez = new Set(jmena(ulohaBez));
+  const vProh = new Set(jmena(ulohaProh));
+  const vsechny = jmena(wf);
+
+  const spatnaUloha = [];
+  for (const cesta of vBez) {
+    /* Hledá se IMPORT, ne slovo kdekoli v souboru — tenhle soubor sám
+       o playwrightu mluví v komentáři a hlásil by chybu na sebe. */
+    if (/from\s+['"]playwright-core['"]/.test(fs.readFileSync(cesta, 'utf8'))) spatnaUloha.push(cesta);
+  }
+  const dvakrat = [...new Set(vsechny.filter((x, i) => vsechny.indexOf(x) !== i))];
+  // Pomocný server není zkouška, jen kulisa pro scripts/test-kontrola-e2e.mjs.
+  const POMOCNE = new Set(['scripts/test-server.mjs']);
+  const zapomenute = fs.readdirSync('scripts')
+    .filter((f) => /^test-[a-z0-9-]+\.mjs$/.test(f))
+    .map((f) => 'scripts/' + f)
+    .filter((c) => !POMOCNE.has(c) && !vBez.has(c) && !vProh.has(c) && !jinde.includes(c));
+
+  let zle = 0;
+  if (spatnaUloha.length) {
+    zle++;
+    console.error('::error::Zkouška potřebuje prohlížeč, ale je v úloze bez něj: ' + spatnaUloha.join(', '));
+  }
+  if (dvakrat.length) {
+    zle++;
+    console.error('::error::Zkouška je ve workflow zapsaná dvakrát: ' + dvakrat.join(', '));
+  }
+  if (zapomenute.length) {
+    zle++;
+    console.error('::error::Zkouška existuje, ale nikdo ji nespouští: ' + zapomenute.join(', '));
+  }
+  console.log(`Zařazení zkoušek: ${vBez.size} bez prohlížeče, ${vProh.size} s prohlížečem`
+    + (zle ? '' : ' — všechny na svém místě, žádná dvakrát, na žádnou se nezapomnělo.'));
+  if (zle) process.exit(1);
+}
+
 console.log(`\nStatická kontrola: ${souboru} souborů, ${podezreni ? podezreni + ' podezřelých volání' : 'žádné osiřelé volání'}.`);
 // Nepadáme — jsou to podezření, ne jistoty. Padá se jen tehdy, když by
 // bylo podezření nápadně moc (to už znamená, že se rozbil rozbor sám).

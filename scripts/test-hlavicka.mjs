@@ -89,6 +89,21 @@ for (const [jm, opt, stranka] of [['telefon', TELEFON, 'index.html'], ['monitor'
   for (const y of [0, 150, 400, 900, 1800, 3200]) {
     await p.evaluate((v) => window.scrollTo(0, v), y);
     await p.waitForTimeout(220);
+    /* A pak počkat, až hlavička DOJEDE. Přijíždí animací hlPrijezd, která
+       ji na 0,42 s posune o 7 px nahoru — to je záměr popsaný v css u těch
+       klíčových snímků. Měřit 220 ms po odrolování tedy znamená občas
+       trefit rozjetý posun a vyčíst −7 až −4 px místo nuly. Na tomhle
+       stroji animace do 220 ms doběhla a zkouška mlčela; na běžci GitHubu
+       ne, a padala tam od 24. září na každém pushi. Čeká se proto na
+       dojetí, ne na pevný čas — tvrzení „hlavička stojí na nule" zůstává
+       stejně přísné, jen se měří v klidu. */
+    await p.waitForFunction(() => {
+      const h = document.getElementById('header');
+      if (!h) return true;
+      if (h.classList.contains('hl-prijezd')) return false;
+      if (!h.getAnimations) return true;
+      return h.getAnimations().every((a) => a.playState !== 'running');
+    }, null, { timeout: 4000 }).catch(() => {});
     mista.push(await p.evaluate(() => {
       const h = document.getElementById('header');
       if (!h) return { chybi: true };

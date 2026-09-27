@@ -80,8 +80,6 @@ jobs:
       - name: Meze platí v prohlížeči i na serveru
         run: node scripts/test-meze.mjs
 
-      - name: Barva u verdiktu o ceně
-        run: node scripts/test-verdikt.mjs
 
       - name: Placené zvýraznění (za peníze se musí něco stát)
         run: node scripts/test-platba.mjs
@@ -221,6 +219,9 @@ jobs:
 
       - name: Mapový podklad (tlumený, ale ne vybělený)
         run: node scripts/test-podklad.mjs
+
+      - name: Barva u verdiktu o ceně
+        run: node scripts/test-verdikt.mjs
 
       - name: Ikony (jedna sada, jedna tloušťka)
         run: node scripts/test-ikony.mjs
