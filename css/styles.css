@@ -1432,14 +1432,36 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    „Průměrná cena" tedy na mapě vypadala zeleně, tedy příznivě, a na
    vlastní stránce téhož pozemku oranžově. Barva tu není ozdoba — je
    to hodnocení, a to se mezi obrazovkami měnit nesmí. Srovnáno podle
-   stránky pozemku, která drží značkové barvy webu. */
-   Mění se JEN odstín karty. Proměnná --vc, která barví odznak
-   a puntík, zůstává — odznak na ní má tmavý text a značkové
-   --c-exekuce (#8C2F1E) by s ním dalo 2,20 : 1. Opravovat rozpor
-   novou chybou nemá cenu. */
-.md-verdict.good{border-color:rgba(75,169,125,0.42); background:rgba(75,169,125,0.12);}
+   stránky pozemku, která drží značkové barvy webu.
+
+   ODZNAK MÁ SVOU BARVU U KAŽDÉHO VERDIKTU (--vc). Dřív ji nastavovala
+   jen „mid" a „warn"; „good" i „bad" zůstávaly na výchozím
+   --copper-bright, což je v tomhle motivu ZELENÁ #276646. „Vyšší cena"
+   tedy nosila zelený odznak na červené kartě — zelená přitom všude
+   jinde na webu znamená, že je něco v pořádku.
+
+   A ta zelená sama normu neplnila: s tmavým textem odznaku (#0C1811)
+   dává 2,66 : 1, tedy jen o málo víc než značková --c-exekuce
+   (#8C2F1E, 2,20 : 1), kterou tu kdysi někdo právě kvůli kontrastu
+   zamítl. Odznaky proto mají světlejší odstíny téhož rodu, změřené
+   proti svému textu:
+     good  #4BA97D  6,30 : 1   (stejná zeleň jako okraj karty)
+     mid   #D4874A  6,38 : 1
+     bad   #E59283  7,60 : 1
+     warn  #E3924F  7,36 : 1
+   Hlídá to scripts/test-verdikt.mjs.
+
+   POZOR: tohle vysvětlení bylo dřív ROZDĚLENÉ na dva komentáře — první
+   se uzavřel a druhá půlka pokračovala jako obyčejný text v CSS.
+   Prohlížeč takovou volnou větu s koncovou značkou komentáře bere jako
+   rozbité pravidlo a při zotavení spolkne i to, co za ní následuje:
+   řádek
+   .md-verdict.good se do stylů vůbec nedostal a „Výhodná cena" tak
+   neměla ani zelený podklad karty. Že se to nestane znovu, hlídá
+   tentýž test — ptá se prohlížeče, jestli pravidlo opravdu zná. */
+.md-verdict.good{--vc:#4BA97D; border-color:rgba(75,169,125,0.42); background:rgba(75,169,125,0.12);}
 .md-verdict.mid{--vc:#D4874A; border-color:rgba(204,107,51,0.46); background:rgba(204,107,51,0.12);}
-.md-verdict.bad{border-color:rgba(140,47,30,0.42); background:rgba(140,47,30,0.11);}
+.md-verdict.bad{--vc:#E59283; border-color:rgba(140,47,30,0.42); background:rgba(140,47,30,0.11);}
 /* Cena, která vypadá nepravděpodobně (zpravidla spoluvlastnický podíl).
    Varování, ne verdikt — proto jantar, ne červená. */
 .md-verdict.warn{--vc:#E3924F; border-color:rgba(204,107,51,0.46); background:rgba(204,107,51,0.14);}
