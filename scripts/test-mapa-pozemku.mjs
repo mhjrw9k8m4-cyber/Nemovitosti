@@ -595,6 +595,53 @@ if (DRAZBA) {
   await ctx.close();
 }
 
+/* --- ULOŽENÉ POZEMKY: OBĚ POLOVINY WEBU MUSÍ MÍT TENTÝŽ KLÍČ ------
+ *
+ * Mapa (js/main.js) i stránka pozemku (js/pozemek.js) zapisují uložené
+ * pozemky do TÉHOŽ úložiště pk_fav_v1. Stránka k tomu dlouho brala
+ * krátký klíč (obec, parcela, okres) místo toho se souřadnicemi, takže:
+ *   • pozemek uložený na mapě se na jeho stránce netvářil jako uložený
+ *     a šel do seznamu podruhé, pod druhým klíčem;
+ *   • a ten krátký klíč navíc nerozliší ani samotné pozemky — v datech
+ *     má 1 957 pozemků jen 1 265 různých krátkých klíčů a ve 310
+ *     případech padne víc pozemků na jeden. „Úštěk|—|Litoměřice" jsou
+ *     čtyři různé pozemky za 13 500, 140 000, 385 000 a 269 000 Kč,
+ *     takže uložením jednoho se označily všechny čtyři.
+ */
+{
+  const zdrojStranky = readFileSync('js/pozemek.js', 'utf8');
+  const zdrojMapy = readFileSync('js/main.js', 'utf8');
+  pravda('stránka pozemku ukládá pod klíč se souřadnicemi, ne pod krátký',
+    /isFav\(d\)\s*\{\s*return favs\(\)\.indexOf\(pkeyPlny\(d\)\)/.test(zdrojStranky)
+    && /toggleFav\(d\)\s*\{\s*var arr = favs\(\), k = pkeyPlny\(d\)/.test(zdrojStranky),
+    'isFav/toggleFav v js/pozemek.js nepoužívají pkeyPlny — uložené pozemky se rozejdou s mapou');
+  pravda('a obě poloviny sahají do téhož úložiště (proto na tom záleží)',
+    /pk_fav_v1/.test(zdrojStranky) && /pk_fav_v1/.test(zdrojMapy),
+    'kdyby si každá polovina vedla vlastní seznam, tohle by nebyl problém — a tahle zkouška by neměla smysl');
+
+  /* Že klíč se souřadnicemi opravdu rozlišuje lépe, se neodhaduje —
+     spočítá se na skutečných datech. Kdyby kolize u krátkého klíče
+     zmizely, tahle zkouška přestane měřit to, o co jde, a je potřeba
+     ji přepsat, ne smazat. */
+  const kratke = {}, dlouhe = {};
+  const vsechny = JSON.parse(readFileSync('data/opportunities.json', 'utf8')).opportunities || [];
+  vsechny.forEach((d) => {
+    const k3 = [d.place || '', d.parcel || '', d.okres || ''].join('|');
+    const la = (typeof d.lat === 'number') ? d.lat.toFixed(3) : '';
+    const ln = (typeof d.lng === 'number') ? d.lng.toFixed(3) : '';
+    const k5 = [d.place || '', d.parcel || '', d.okres || '', la, ln].join('|');
+    kratke[k3] = (kratke[k3] || 0) + 1;
+    dlouhe[k5] = (dlouhe[k5] || 0) + 1;
+  });
+  const koliziK = Object.values(kratke).filter((n) => n > 1).length;
+  const koliziD = Object.values(dlouhe).filter((n) => n > 1).length;
+  pravda(`vzorek dat na to srovnání je (${vsechny.length} pozemků)`, vsechny.length > 500,
+    `pozemků ${vsechny.length}`);
+  pravda(`krátký klíč pozemky nerozlišuje (${koliziK} kolizí), klíč se souřadnicemi ano (${koliziD})`,
+    koliziK > 50 && koliziD < koliziK / 5,
+    `krátký ${koliziK}, dlouhý ${koliziD} — pokud se to srovnalo, přepiš tuhle zkoušku`);
+}
+
 await prohlizec.close();
 console.log('\nMapa v detailu pozemku');
 console.log(zpravy.join('\n'));

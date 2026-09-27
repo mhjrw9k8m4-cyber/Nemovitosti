@@ -203,9 +203,21 @@
   // Oblíbené (sdílené s hlavní aplikací přes stejný localStorage klíč)
   var FAV_KEY = 'pk_fav_v1';
   function favs() { try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch (e) { return []; } }
-  function isFav(d) { return favs().indexOf(pkey(d)) !== -1; }
+  /* ULOŽENÉ POZEMKY: klíč musí být tentýž jako na mapě (js/main.js),
+     protože obojí zapisuje do TÉHOŽ úložiště (pk_fav_v1). Tady se dlouho
+     bral krátký pkey (obec, parcela, okres) — ten ale nestačí ani na
+     rozlišení pozemků: v datech má 1 957 pozemků jen 1 265 různých
+     krátkých klíčů a ve 310 případech padne víc pozemků na jeden.
+     „Úštěk|—|Litoměřice" jsou čtyři různé pozemky za 13 500, 140 000,
+     385 000 a 269 000 Kč — uložením jednoho se označily všechny čtyři.
+     A protože mapa ukládá klíč se souřadnicemi, pozemek uložený na mapě
+     se tady netvářil jako uložený a šel do seznamu podruhé.
+     pkeyPlny() přidává souřadnice a je to týž výpočet jako v main.js;
+     kolizí je 21 místo 310. Že se ty dvě poloviny nerozejdou, hlídá
+     scripts/test-mapa-pozemku.mjs. */
+  function isFav(d) { return favs().indexOf(pkeyPlny(d)) !== -1; }
   function toggleFav(d) {
-    var arr = favs(), k = pkey(d), i = arr.indexOf(k);
+    var arr = favs(), k = pkeyPlny(d), i = arr.indexOf(k);
     if (i === -1) arr.push(k); else arr.splice(i, 1);
     try { localStorage.setItem(FAV_KEY, JSON.stringify(arr)); } catch (e) {}
     return i === -1;
