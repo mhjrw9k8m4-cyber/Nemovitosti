@@ -200,6 +200,41 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
   if (zle) process.exit(1);
 }
 
+/* ------------------------------------------------------------------
+   WEB SMÍ RADIT JEDINÝ SQL SOUBOR
+   ------------------------------------------------------------------
+   supabase/ je hromada migrací a create_listing je v nich v osmi
+   podobách. Pustit kteroukoli z nich samostatně znamená přepsat si
+   funkci starší verzí: listings-auth.sql zná deset parametrů, web
+   posílá třináct — a přidání inzerátu skončí chybou 404, kterou člověk
+   vidí jen jako „nepovedlo se". Právě takovou radu dávala
+   /diagnostika.html na třech místech (schema.sql, listings-auth.sql,
+   aktualizace.sql), tedy stránka, na kterou se chodí, když něco nejde.
+   Jediné, co se má pouštět, je 00-vse.sql: skládá se ze všech migrací
+   ve správném pořadí a jde pustit opakovaně.
+   Hledá se jen text UKÁZANÝ ČLOVĚKU, tedy <code>supabase/…</code> —
+   tak se na webu píšou názvy souborů v hláškách. Napoprvé tahle
+   kontrola sahala na celý soubor a našla tři komentáře ve zdrojáku
+   (hlidani.html, muj-inzerat.html), které jen poctivě říkají, odkud
+   která funkce pochází. To je poznámka pro programátora, ne rada pro
+   návštěvníka — a mazat ji by bylo horší než nechat být. */
+{
+  const strankyHtml = fs.readdirSync(ROOT).filter((f) => f.endsWith('.html'));
+  const spatne = [];
+  for (const f of strankyHtml) {
+    const obsah = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    for (const m of obsah.matchAll(/<code>supabase\/([A-Za-z0-9._-]+\.sql)<\/code>/g)) {
+      if (m[1] !== '00-vse.sql') spatne.push(`${f} → supabase/${m[1]}`);
+    }
+  }
+  if (spatne.length) {
+    console.error('::error::Stránka radí pustit jednotlivou migraci místo supabase/00-vse.sql: '
+      + spatne.join(', '));
+    process.exit(1);
+  }
+  console.log(`SQL v nápovědě: ${strankyHtml.length} stránek, všechny odkazují jen na 00-vse.sql.`);
+}
+
 console.log(`\nStatická kontrola: ${souboru} souborů, ${podezreni ? podezreni + ' podezřelých volání' : 'žádné osiřelé volání'}.`);
 // Nepadáme — jsou to podezření, ne jistoty. Padá se jen tehdy, když by
 // bylo podezření nápadně moc (to už znamená, že se rozbil rozbor sám).

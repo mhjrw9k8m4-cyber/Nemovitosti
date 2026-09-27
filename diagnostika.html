@@ -140,7 +140,7 @@
       } else if (r.stav === 401 || r.stav === 403) {
         radek(box, 'bad', 'Klíč databáze neplatí', 'Odpověď ' + r.stav + ' na čtení dat. Klíč v <code>js/config.js</code> je nejspíš starý — v Supabase → Settings → API Keys vezměte aktuální „publishable“.');
       } else if (r.stav === 404) {
-        radek(box, 'bad', 'Tabulka inzerátů chybí', 'HTTP 404 — v Supabase nejspíš neproběhl skript <code>supabase/schema.sql</code>.');
+        radek(box, 'bad', 'Tabulka inzerátů chybí', 'HTTP 404 — v Supabase chybí tabulka <code>listings</code>. Spusťte <code>supabase/00-vse.sql</code> v Supabase → SQL Editor; zakládá celou databázi a jde pustit i opakovaně.');
       } else if (r.stav === 200) {
         var pocet = null;
         try { pocet = JSON.parse(r.telo || '[]').length; } catch (e) {}
@@ -154,7 +154,7 @@
       return dotaz('/rest/v1/rpc/public_listings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     }).then(function (r) {
       if (r.stav === 200) radek(box, 'ok', 'Funkce pro veřejné inzeráty běží', 'Vrátila <code>' + zkratka(r.telo, 60) + '</code>');
-      else if (r.stav === 404) radek(box, 'bad', 'Funkce public_listings chybí', 'HTTP 404 — chybí SQL z <code>supabase/listings-auth.sql</code>. Bez ní se na mapě neukážou inzeráty od lidí.');
+      else if (r.stav === 404) radek(box, 'bad', 'Funkce public_listings chybí', 'HTTP 404 — v databázi chybí funkce <code>public_listings</code>, takže se na mapě neukážou inzeráty od lidí. Spusťte <code>supabase/00-vse.sql</code> v Supabase → SQL Editor.');
       else radek(box, 'warn', 'Funkce public_listings hlásí ' + r.stav, '<code>' + zkratka(r.telo, 110) + '</code>');
 
       // Ověření podpisu: funkci zavoláme se VŠEMI parametry, které web posílá,
@@ -186,7 +186,7 @@
       return dotaz('/rest/v1/listing_checks?select=listing_id&limit=1', {});
     }).then(function (r) {
       if (r.stav === 404 || /does not exist|could not find the table/i.test(r.telo || '')) {
-        radek(box, 'warn', 'Tabulka pro denní kontrolu chybí', 'Bez <code>listing_checks</code> nemá denní kontrola odkazů a fotek kam zapsat. Spusťte <code>supabase/aktualizace.sql</code>.');
+        radek(box, 'warn', 'Tabulka pro denní kontrolu chybí', 'Bez <code>listing_checks</code> nemá denní kontrola odkazů a fotek kam zapsat. Spusťte <code>supabase/00-vse.sql</code> v Supabase → SQL Editor.');
       } else {
         radek(box, 'ok', 'Tabulka pro denní kontrolu existuje', 'HTTP ' + r.stav);
       }
@@ -324,7 +324,7 @@
       try { var j = JSON.parse(telo); id = (Array.isArray(j) ? j[0] : j) && (Array.isArray(j) ? j[0] : j).id; } catch (e) {}
       if (v.stav >= 200 && v.stav < 300 && id) {
         radek(zapisyBox, 'bad', 'Serverové meze chybí — databáze přijala pozemek o 1 m² za 1 Kč',
-          'Běží starší podoba funkce. Spusťte <code>supabase/aktualizace.sql</code> v Supabase → SQL Editor. Uklízím zkušební inzerát…');
+          'Běží starší podoba funkce. Spusťte <code>supabase/00-vse.sql</code> v Supabase → SQL Editor. Uklízím zkušební inzerát…');
         dotaz('/rest/v1/rpc/delete_listing', {
           method: 'POST', headers: x.auth, body: JSON.stringify({ p_id: id })
         }).then(function (d) {
