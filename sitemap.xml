@@ -531,17 +531,17 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-bruntal.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemky-okres-opava.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemky-okres-ostrava-mesto.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemky-okres-bruntal.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -7601,11 +7601,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-bruntal-horni-benesov-s3deav.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-strakonice-strakonice-x121m9.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -8886,7 +8881,7 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-slatina-164pqh2.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-slatina-srkuw8.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -8981,7 +8976,7 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-slatina-1q4w55j.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-slatina-14p473o.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9021,7 +9016,7 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-slatina-f9v1ds.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-slatina-1oustvy.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9121,7 +9116,7 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-slatina-17qa9cz.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-slatina-etcvvp.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9151,7 +9146,7 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-slatina-1xsj883.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-slatina-14vluqs.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9201,7 +9196,7 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-slatina-1rsintn.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-slatina-w8s66w.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9231,7 +9226,7 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-slatina-2hkupu.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-slatina-afnvfy.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -10146,12 +10141,12 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-prerov-prerov-1x7dopr.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-vsetin-vsetin-mauxml.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-vsetin-vsetin-mauxml.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-prerov-prerov-1x7dopr.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
