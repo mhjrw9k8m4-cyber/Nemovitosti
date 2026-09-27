@@ -26,8 +26,10 @@ function pravda(popis, vyslo, proc) {
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
 }
 
-const MEZE = createRequire(import.meta.url)(path.join(KOREN, 'js', 'kontrola.js')).MEZE;
+const KONTROLA = createRequire(import.meta.url)(path.join(KOREN, 'js', 'kontrola.js'));
+const MEZE = KONTROLA.MEZE;
 const sql = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
+const pridat = readFileSync(path.join(KOREN, 'pridat.html'), 'utf8');
 /* Čte se ze sloučeného 00-vse.sql — to je soubor, který se opravdu pouští
    v Supabase. Kdyby se změnil jen zdrojový kousek a zapomnělo se sloučit,
    tohle by to ukázalo. */
@@ -65,6 +67,119 @@ for (const [pole, hlaska] of [['obec', 'obec je povinná'], ['okres', 'okres je 
 pravda('server hlídá i cenu za m², ne jen obě čísla zvlášť',
   /p_price[^;]*\/\s*p_area/.test(telo),
   'v create_listing se cena za m² nepočítá');
+
+/* =====================================================================
+   ŽÁDNÉ PRAVIDLO NESMÍ PŘI SLOUČENÍ ZMIZET
+   =====================================================================
+   Tohle je ta zrada, kvůli které blok vznikl. 00-vse.sql se skládá
+   z jednotlivých migrací (scripts/build-sql.mjs) a create_listing se v něm
+   předefinovává osmkrát. Platí POSLEDNÍ — takže když nějaká starší migrace
+   přidala kontrolu a ta nejnovější o ní neví, spuštění souboru tu kontrolu
+   ze serveru TIŠE SMAZALO. Přesně to se stalo: poslední podoba neznala
+   pět pravidel z listings-rekonstrukce.sql (délka obce, délka popisu,
+   značky < > v popisu, délka parcelního čísla a kontakt) a nikde to
+   nebylo vidět — soubor se pustí bez chyby a web taky nic nehlásí.
+   Test proto porovnává VŠECHNY podoby s tou poslední. Klíčem jsou první
+   tři slova hlášky, aby přeformulování textu („cena za m² vychází
+   nereálně" místo „je mimo reálné rozpětí") test nerozbilo. */
+const podoby = [];
+{
+  let i = 0;
+  while ((i = sql.indexOf(ZNACKA, i)) >= 0) {
+    const kus = sql.slice(i);
+    podoby.push(kus.slice(0, kus.indexOf('$$;')));
+    i += ZNACKA.length;
+  }
+}
+pravda(`v 00-vse.sql je ${podoby.length} podob create_listing a měří se ta poslední`,
+  podoby.length > 1 && podoby[podoby.length - 1] === telo,
+  'test by jinak porovnával něco jiného, než co na serveru nakonec platí');
+
+const klic = (h) => h.split(/\s+/).slice(0, 3).join(' ');
+const hlasky = (t) => new Map([...t.matchAll(/raise exception '([^']+)'/g)].map((m) => [klic(m[1]), m[1]]));
+const vPosledni = hlasky(telo);
+/* Kdyby se někdy nějaké pravidlo rušilo ÚMYSLNĚ, patří jeho klíč sem —
+   i s důvodem. Prázdná množina znamená „nic se zrušit nesmí". */
+const SMI_ZMIZET = new Set();
+const drive = new Map();
+for (let n = 0; n < podoby.length - 1; n++) {
+  for (const [k, h] of hlasky(podoby[n])) if (!drive.has(k)) drive.set(k, { h, n: n + 1 });
+}
+for (const [k, { h, n }] of drive) {
+  if (SMI_ZMIZET.has(k)) continue;
+  pravda(`pravidlo „${h}" (poprvé v ${n}. podobě) platí i v té poslední`, vPosledni.has(k),
+    'poslední podoba create_listing ho nemá — spuštění 00-vse.sql ho ze serveru smaže');
+}
+
+/* =====================================================================
+   KONTAKT: PRÁZDNO MUSÍ PUSTIT OBĚ STRANY
+   =====================================================================
+   Tady se prohlížeč a server rozešli nejošklivěji: pridat.html má pole
+   „Telefon (nepovinné)", js/kontrola.js prázdnou hodnotu pouští — a server
+   ji odmítal hláškou z databáze. Kdo číslo zveřejnit nechtěl, vyplnil celý
+   formulář a pak se dozvěděl „kontakt musí být platný telefon nebo e-mail".
+   Ukázala to až živá zkouška chatu (scripts/test-chat.mjs), která zakládá
+   inzerát bez telefonu; do té doby o tom nevěděl nikdo. */
+const kontaktPravidlo = /if p_contact is not null and length\(trim\(p_contact\)\) > 0 and not \(/.test(telo);
+pravda('server pustí inzerát bez telefonu (pole je v pridat.html nepovinné)', kontaktPravidlo,
+  'create_listing kontakt vyžaduje, ale formulář ho označuje jako nepovinný — člověk dostane chybu z databáze');
+pravda('prohlížeč pustí inzerát bez telefonu', KONTROLA.kontakt('').ok === true,
+  'js/kontrola.js prázdný kontakt odmítá — pak by měl být v pridat.html povinný');
+pravda('pole „Telefon" v pridat.html není required', !/id="p-kontakt"[^>]*\srequired/.test(pridat),
+  'formulář kontakt vyžaduje, ale obě kontroly ho pouštějí');
+/* Když už někdo něco napíše, musí to být číslo — a hranice „devět až
+   třináct číslic" musí být stejná na obou stranách. */
+pravda('server drží u telefonu 9–13 číslic', /between 9 and 13/.test(telo),
+  'v create_listing ta hranice není');
+pravda('prohlížeč drží u telefonu 9–13 číslic',
+  !KONTROLA.kontakt('7712345').ok && KONTROLA.kontakt('777123456').ok && !KONTROLA.kontakt('77712345678901').ok,
+  'js/kontrola.js má jinou hranici než server');
+
+/* =====================================================================
+   DÉLKY TEXTŮ A BÍLÉ SEZNAMY
+   ===================================================================== */
+for (const [popis, vzor] of [
+  [`délka obce ${MEZE.obecMin}–${MEZE.obecMax} platí i na serveru`,
+    new RegExp(`length\\(trim\\(p_place\\)\\) < ${MEZE.obecMin}[\\s\\S]{0,40}> ${MEZE.obecMax}`)],
+  [`délka popisu (max ${MEZE.popisMax}) platí i na serveru`,
+    new RegExp(`length\\(p_description\\) > ${MEZE.popisMax}`)],
+]) {
+  pravda(popis, vzor.test(telo), 'v create_listing ta mez chybí nebo má jiné číslo');
+}
+
+/* Bílý seznam vybavení musí obsahovat přesně to, co formulář posílá.
+   Poslední podoba měla strojové tvary bez diakritiky ('elektrina'),
+   zatímco pridat.html posílá popisky („Elektřina"). Nic by se neshodlo:
+   sítě i přístup by u každého nového inzerátu tiše zmizely — formulář je
+   odešle, server je zahodí a chybu nenahlásí ani jeden. */
+const site = [...pridat.matchAll(/name="site"\s+value="([^"]+)"/g)].map((m) => m[1]);
+pravda(`v pridat.html se nabízí ${site.length} možností „Sítě a stav pozemku"`, site.length >= 4,
+  'nic se nenašlo — test by dál nic neměřil');
+const bilyFt = (telo.match(/if ft in \(([^)]*)\)/) || [, ''])[1];
+for (const v of site) {
+  pravda(`server přijme vybavení „${v}"`, bilyFt.includes(`'${v}'`),
+    `v bílém seznamu create_listing „${v}" není — formulář to pošle a server to zahodí bez chyby`);
+}
+const selBlok = pridat.slice(pridat.indexOf('<select id="p-pristup"'));
+const pristupy = [...selBlok.slice(0, selBlok.indexOf('</select>')).matchAll(/<option([^>]*)>([^<]+)<\/option>/g)]
+  .filter((m) => !/value=""/.test(m[1])).map((m) => m[2].trim());
+pravda(`v pridat.html se nabízí ${pristupy.length} možností přístupu`, pristupy.length >= 3,
+  'nic se nenašlo — test by dál nic neměřil');
+const bilyAcc = (telo.match(/if p_access in \(([^)]*)\)/) || [, ''])[1];
+for (const v of pristupy) {
+  pravda(`server přijme přístup „${v}"`, bilyAcc.includes(`'${v}'`),
+    `v bílém seznamu create_listing „${v}" není — formulář to pošle a server to zahodí bez chyby`);
+}
+
+/* Limit volného účtu je napsaný dvakrát: create_listing podle něj odmítá
+   a my_listing_quota() podle něj web píše „využito 1 z 1". Stálo tam 1
+   a 10 — profil sliboval jeden inzerát, server pustil deset. */
+const limitVytvor = (telo.match(/max_listings from account_tier where user_id = uid\), (\d+)\)/) || [])[1];
+const kvota = sql.slice(sql.lastIndexOf('create or replace function my_listing_quota'));
+const limitKvota = (kvota.slice(0, kvota.indexOf('$$;')).match(/max_listings from account_tier where user_id = auth\.uid\(\)\), (\d+)\)/) || [])[1];
+pravda(`limit volného účtu je stejný v create_listing i my_listing_quota (${limitVytvor})`,
+  limitVytvor !== undefined && limitVytvor === limitKvota,
+  `create_listing pouští ${limitVytvor}, web ukazuje ${limitKvota} — jedno z těch čísel člověk vidí a druhé platí`);
 
 console.log('\nMeze v prohlížeči a na serveru');
 console.log(zpravy.join('\n'));

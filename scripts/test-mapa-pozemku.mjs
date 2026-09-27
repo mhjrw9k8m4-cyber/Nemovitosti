@@ -112,11 +112,12 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
  * @param nast.zivi   pole názvů hostitelů, které mají ODPOVÍDAT (ostatní mlčí)
  * @param nast.bezLeafletu  zahodí mapovou knihovnu
  * @param nast.cil    adresa pozemku, který se má otevřít (výchozí CIL)
+ * @param nast.viewport  rozměr okna (výchozí monitor; telefon se měří zvlášť)
  */
 async function detail(nast) {
   nast = nast || {};
   const zivi = nast.zivi || [];
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 860 } });
+  const ctx = await prohlizec.newContext({ viewport: nast.viewport || { width: 1280, height: 860 } });
   const dotazy = [];
   /* Všechno v JEDNÉ obsluze. Playwright zkouší obsluhy v obráceném pořadí,
      než se přidaly, takže dvě obsluhy s překrývajícím se vzorem (jedna na
@@ -648,6 +649,63 @@ if (DRAZBA) {
   pravda(`zavřený rádce ušetří pořádný kus stránky (${uspora} px)`, uspora >= 400,
     'rozdíl je jen ' + uspora + ' px — pak to zabalení nestojí za klepnutí navíc');
   pravda('po otevření jsou rady vidět', po.radyVidet >= 3, 'vidět jich je ' + po.radyVidet);
+  await ctx.close();
+}
+
+/* --- RÁDCE MUSÍ BÝT V INZERÁTU, NE AŽ ZA TLAČÍTKY -------------------
+ *
+ * Zabalit ho nestačilo. Na telefonu skončil úplně dole, až za „Otevřít
+ * v katastru", „Uložit" a „Sdílet" — tedy za místem, kde člověk stránku
+ * opouští. A vypadal jako popisek sekce: šedý nadpis verzálkami o 11,5 px.
+ * Kdo se tam doroloval, nepoznal, že se na to dá klepnout, a šel pryč.
+ * Měří se proto obojí: KDE to na telefonu je a jestli to vypadá jako
+ * ovládací prvek. Pořadí v HTML by nestačilo — rozhoduje, kde to skončí
+ * na obrazovce.
+ */
+{
+  const { ctx, p } = await detail({ viewport: { width: 390, height: 844 } });
+  await p.waitForTimeout(1200);
+  const v = await p.evaluate(() => {
+    const y = (el) => { if (!el) return null; const r = el.getBoundingClientRect(); return Math.round(r.top + window.scrollY); };
+    const sum = document.querySelector('.pz-gtk-sum');
+    const h2 = sum && sum.querySelector('.pz-sect-h');
+    const st = h2 ? getComputedStyle(h2) : null;
+    const r = sum ? sum.getBoundingClientRect() : null;
+    return {
+      yRadce: y(sum),
+      yAkce: y(document.querySelector('.pz-actions')),
+      yCta: y(document.querySelector('.pz-cta')),
+      vyska: r ? Math.round(r.height) : 0,
+      text: sum ? (sum.textContent || '').replace(/\s+/g, ' ').trim() : '',
+      velikostNadpisu: st ? parseFloat(st.fontSize) : 0,
+      verzalky: st ? st.textTransform : '',
+      celaStranka: document.body.scrollHeight,
+    };
+  });
+  pravda('rádce stojí nad tlačítky „Uložit / Sdílet", ne až za nimi',
+    v.yRadce !== null && v.yAkce !== null && v.yRadce < v.yAkce,
+    `rádce je na ${v.yRadce} px, tlačítka na ${v.yAkce} px`);
+  pravda('a nad hlavním tlačítkem, tedy uvnitř toho, co si člověk o pozemku čte',
+    v.yCta !== null && v.yRadce !== null && v.yRadce < v.yCta,
+    `rádce je na ${v.yRadce} px, hlavní tlačítko na ${v.yCta} px`);
+  pravda(`na telefonu je v první polovině stránky (${v.yRadce} z ${v.celaStranka} px)`,
+    v.yRadce !== null && v.yRadce < v.celaStranka / 2,
+    'pořád je až dole — tam na něj nikdo neklepne');
+  pravda('souhrn se vejde na jeden řádek i na úzký telefon',
+    v.vyska > 0 && v.vyska <= 64, `je vysoký ${v.vyska} px, tedy se zalamuje`);
+  pravda('a je na něm napsané, že se dá rozbalit', /Rozbalit/.test(v.text),
+    `v souhrnu stojí „${v.text}"`);
+  pravda('nadpis v souhrnu není šedý popisek verzálkami',
+    v.velikostNadpisu >= 14 && v.verzalky === 'none',
+    `${v.velikostNadpisu} px, text-transform: ${v.verzalky} — takhle to vypadá jako nadpis sekce, ne jako tlačítko`);
+  const po = await p.evaluate(() => {
+    const o = document.querySelector('.pz-gtk-obal');
+    if (o) o.open = true;
+    return new Promise((r) => setTimeout(() => r(
+      ((document.querySelector('.pz-gtk-sum') || {}).textContent || '').replace(/\s+/g, ' ').trim()
+    ), 250));
+  });
+  pravda('a po otevření nabízí „Skrýt"', /Skrýt/.test(po), `v souhrnu stojí „${po}"`);
   await ctx.close();
 }
 

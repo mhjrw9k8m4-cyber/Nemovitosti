@@ -44,9 +44,14 @@ begin
     raise exception 'popis nesmí obsahovat značky < a >'; end if;
   if p_parcel is not null and length(trim(p_parcel)) > 20 then
     raise exception 'parcelní číslo je moc dlouhé'; end if;
-  -- Kontakt: buď e-mail, nebo aspoň devět číslic. Bez něj je inzerát k ničemu.
-  if p_contact is null or not (
-       p_contact ~ '^[^[:space:]@]+@[^[:space:]@]+\.[A-Za-z]{2,}$'
+  /* Kontakt je NEPOVINNÝ: u inzerátu od majitele je tlačítko „Napsat
+     majiteli", které vede do Zpráv, takže inzerát bez telefonu smysl má.
+     Dřív tu stálo „bez něj je inzerát k ničemu" a prázdná hodnota se
+     odmítala — jenže pridat.html to pole označuje jako nepovinné, takže
+     kdo číslo zveřejnit nechtěl, dostal po odeslání hlášku z databáze.
+     Když ale někdo něco napíše, musí to být telefon nebo e-mail. */
+  if p_contact is not null and length(trim(p_contact)) > 0 and not (
+       trim(p_contact) ~ '^[^[:space:]@]+@[^[:space:]@]+\.[A-Za-z]{2,}$'
        or length(regexp_replace(p_contact, '[^0-9]', '', 'g')) between 9 and 13
      ) then
     raise exception 'kontakt musí být platný telefon nebo e-mail'; end if;

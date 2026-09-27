@@ -296,6 +296,44 @@ async function odesli(p) {
   }
 }
 
+/* --- 3b) PRAVIDLO ZE SERVERU MUSÍ DOJÍT AŽ K ČLOVĚKU -----------------
+   Případy výš zachytí ještě prohlížeč, takže o cestě „server odmítl →
+   člověk to čte" neříkají nic. A právě ta cesta byla rozbitá: js/pridat.js
+   znal jen čtyři hlášky (vulgarity, počkejte, limit, přihlášení) a všechno
+   ostatní spadlo do obecného „Odeslání se teď nepovedlo, zkuste to prosím
+   za chvíli znovu" — což je rada, po které člověk zkusí totéž a zase to
+   nejde. Přišlo se na to u kontaktu: server ho vyžadoval, formulář ho
+   nabízel jako nepovinný, a kdo ho nevyplnil, nedozvěděl se vůbec nic.
+   Odpověď serveru se tu podstrčí, protože jinou cestou ji vyvolat nejde. */
+{
+  const pripady = [
+    ['nepotvrzený e-mail', 'nejdřív potvrďte e-mail — poslali jsme vám odkaz', /potvrďte e-mail/i, true],
+    ['mez, kterou prohlížeč neuhlídal', 'popis je delší než 2000 znaků', /popis je delší/i, true],
+    /* Naopak cizí chyba (spadlé spojení, rozbitý token) se ukazovat NEMÁ:
+       člověku neřekne nic a je to vnitřek databáze. Tady musí zůstat
+       obecná hláška — jinak by whitelist v pridat.js pouštěl cokoli. */
+    ['cizí chybu databáze web nevystavuje', 'JWSError JWSInvalidSignature', /za chvíli znovu/i, false],
+  ];
+  for (const [popis, zprava, ocekavana, nasePravidlo] of pripady) {
+    const { ctx, p } = await otevri(true);
+    await ctx.route('**/rest/v1/rpc/create_listing*', (r) => r.fulfill({
+      status: 400, contentType: 'application/json',
+      body: JSON.stringify({ code: 'P0001', message: zprava, details: null, hint: null }),
+    }));
+    await vypln(p);
+    const v = await odesli(p);
+    pravda(`neuloží, co server odmítl: ${popis}`, !/muj-inzerat/.test(v.url),
+      `web přešel na ${v.url}, jako by to uložil`);
+    pravda(`a řekne proč: ${popis}`, ocekavana.test(v.hlaska),
+      `hláška byla „${v.hlaska}"`);
+    if (nasePravidlo) {
+      pravda(`a nezůstane u obecného „zkuste to za chvíli": ${popis}`, !/za chvíli znovu/i.test(v.hlaska),
+        `hláška byla „${v.hlaska}" — člověk nemá co opravit`);
+    }
+    await ctx.close();
+  }
+}
+
 /* --- OKRES SE VYBÍRÁ, NEPÍŠE SE Z HLAVY ----------------------------
  * Bylo to prázdné políčko s nápovědou „např. Kolín" a prošlo cokoli.
  * Přitom podle okresu se inzerát zařadí na krajskou i okresní stránku,

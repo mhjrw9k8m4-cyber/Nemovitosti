@@ -169,6 +169,7 @@
   var mistoHlaska = '';        // fotka vyfocená daleko od zadané obce
   var polohaHlaska = '';       // špendlík padl daleko od vybraného okresu
   var duplHlaska = '';         // tentýž pozemek už mezi vlastními inzeráty
+  var serverHlaska = '';       // pravidlo, které odmítl server (create_listing)
   var duplPotvrzeno = false;   // člověk řekl „je to jiný pozemek" (druhé klepnutí)
   function isImage(t) { return /^image\/(jpe?g|png|webp)$/i.test(t || ''); }
 
@@ -447,6 +448,23 @@
           if (/počkejte|pockejte|chvíli|chvili/i.test(m)) return 'wait';
           if (/limit/i.test(m)) return 'limit';
           if (/přihlášen|prihlasen/i.test(m)) return 'auth';
+          /* NAŠE VLASTNÍ PRAVIDLA ZE SERVERU. create_listing je vyvolává
+             česky a jsou to věci, které člověk umí spravit (nepotvrzený
+             e-mail, moc dlouhý popis, kontakt, který není číslo). Všechna
+             dosud spadla sem dolů do obecného „Odeslání se teď nepovedlo,
+             zkuste to prosím za chvíli znovu" — což je rada, po které
+             člověk zkouší znovu totéž a zase to nejde. Pozná se to podle
+             konkrétních formulací z create_listing, ne podle „cokoli
+             z databáze": cizí chybu (spadlé spojení, chyba PostgRESTu)
+             uživateli ukazovat nechceme. */
+          if (/potvrďte e-mail|potvrdte e-mail/i.test(m)) {
+            serverHlaska = 'Nejdřív prosím potvrďte e-mail — poslali jsme vám do schránky odkaz. Pak už inzerát půjde přidat.';
+            return 'pravidlo';
+          }
+          if (/(musí být|musí mít|je delší|nesmí obsahovat|je moc dlouhé|je povinná|je povinný|vychází nereálně|mimo reálné rozpětí)/i.test(m)) {
+            serverHlaska = m.charAt(0).toUpperCase() + m.slice(1) + '.';
+            return 'pravidlo';
+          }
           return 'error';
         }
         var row = Array.isArray(res.data) ? res.data[0] : res.data;
@@ -895,6 +913,9 @@
           ms.classList.add('err');
         } else if (r === 'wait') {
           ms.textContent = 'Chvíli prosím počkejte (asi minutu) a zkuste přidat další inzerát znovu.';
+          ms.classList.add('err');
+        } else if (r === 'pravidlo') {
+          ms.textContent = serverHlaska;
           ms.classList.add('err');
         } else if (r === 'duplicita') {
           ms.textContent = duplHlaska;

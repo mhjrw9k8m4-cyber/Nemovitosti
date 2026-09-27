@@ -186,18 +186,33 @@
     /* Rádce je zabalený v <details>. Souhrn je celý řádek k poklepání:
        nadpis vlevo, kolik rad se pod ním skrývá vpravo, šipka na kraji.
        Bez toho by se z nadpisu nedalo poznat, že se dá rozbalit. */
-    .pz-gtk-obal{margin-top:26px;}
-    .pz-gtk-sum{display:flex; align-items:center; gap:10px; cursor:pointer; list-style:none;
-      padding:13px 15px; border:1px solid var(--line); border-radius:14px; background:var(--ink-soft);
-      transition:border-color .15s ease, background .15s ease;}
+    .pz-gtk-obal{margin:22px 0 26px;}
+    .pz-gtk-sum{display:flex; align-items:center; gap:9px; cursor:pointer; list-style:none;
+      padding:14px 15px; border:1px solid var(--line); border-radius:14px;
+      background:var(--grad-cool-soft); box-shadow:var(--e1);
+      transition:border-color .15s ease, box-shadow .15s ease;}
     .pz-gtk-sum::-webkit-details-marker{display:none;}
-    .pz-gtk-sum:hover{border-color:var(--copper-bright); background:#F2F6F3;}
-    .pz-gtk-sum .pz-sect-h{margin:0; border:0; padding:0;}
-    .pz-gtk-kolik{margin-left:auto; font-size:13px; color:var(--text-ondark-mute); white-space:nowrap;}
-    .pz-gtk-sum::after{content:""; flex:none; width:10px; height:10px; margin-left:4px;
+    .pz-gtk-sum:hover{border-color:var(--copper-bright); box-shadow:var(--e2);}
+    /* NADPIS UVNITŘ SOUHRNU SE NESMÍ TVÁŘIT JAKO POPISEK SEKCE. Zděděná
+       podoba .pz-sect-h je 11,5px verzálky v šedé — to se čte jako
+       nadpis odstavce, ne jako něco, na co se klepe. H2 zůstává kvůli
+       osnově stránky, ale vypadá jako titulek ovládacího prvku. */
+    .pz-gtk-sum .pz-sect-h{margin:0; border:0; padding:0; font-size:15.5px;
+      letter-spacing:0; text-transform:none; color:var(--copper-bright);}
+    .pz-gtk-kolik{margin-left:auto; font-size:12.5px; font-weight:700; white-space:nowrap;
+      color:var(--copper-bright); background:var(--ink-soft); border:1px solid var(--line);
+      padding:2px 8px; border-radius:var(--r-pill);}
+    .pz-gtk-kolik:empty{display:none;}
+    /* Slovo „Rozbalit" je jediné, co bez pochyb říká, že se s blokem dá
+       něco dělat; samotná šipka u nadpisu vypadá jako ozdoba. */
+    .pz-gtk-akce{font-size:13px; font-weight:700; color:var(--copper-bright); white-space:nowrap;}
+    .pz-gtk-akce .otv{display:none;}
+    .pz-gtk-obal[open] .pz-gtk-akce .zav{display:none;}
+    .pz-gtk-obal[open] .pz-gtk-akce .otv{display:inline;}
+    .pz-gtk-sum::after{content:""; flex:none; width:9px; height:9px; margin-left:1px;
       border-right:2px solid var(--copper-bright); border-bottom:2px solid var(--copper-bright);
       transform:rotate(45deg) translate(-2px,-2px); transition:transform .18s ease;}
-    .pz-gtk-obal[open] .pz-gtk-sum{border-bottom-left-radius:0; border-bottom-right-radius:0;}
+    .pz-gtk-obal[open] .pz-gtk-sum{border-bottom-left-radius:0; border-bottom-right-radius:0; box-shadow:none;}
     .pz-gtk-obal[open] .pz-gtk-sum::after{transform:rotate(-135deg) translate(-3px,-3px);}
     .pz-gtk-obal[open] .pz-gtk{border-top-left-radius:0; border-top-right-radius:0; border-top:0;}
     .pz-gtk{background:var(--ink-soft); border:1px solid var(--line); border-radius:16px; padding:16px 17px;}
@@ -363,7 +378,7 @@
 <script src="js/radce.js?v=9e548cb6"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Place","name":"Ostatní plocha 67 843 m² — Velké Chvojno","description":"Na prodej · 1 020 000 Kč (15 Kč/m²) · 67 843 m² · Velké Chvojno, okres Ústí nad Labem. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-usti-nad-labem-velke-chvojno-1smm2kv.html","address":{"@type":"PostalAddress","addressLocality":"Velké Chvojno","addressRegion":"Ústí nad Labem","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.703847,"longitude":14.049883}}</script>
 <script>window.PK_POZEMEK={"k":"Velké Chvojno|—|Ústí nad Labem|50.704|14.050","ll":[50.703847,14.049883]};</script>
-<script src="js/pozemek.js?v=b863e938"></script>
+<script src="js/pozemek.js?v=024d7a60"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

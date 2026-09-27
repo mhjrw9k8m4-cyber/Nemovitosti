@@ -43,10 +43,19 @@ async function rpc(token, fn, args) {
   }
   ok('vytvořeny 3 zkušební účty (A, B, C)', true);
 
-  // A založí zkušební inzerát
+  /* A založí zkušební inzerát.
+     Telefon tu musí být vyplněný, i když je v inzerátu nepovinný: tenhle
+     test zkouší CHAT, a bez inzerátu se nedostane ani k první zprávě.
+     Dřív tu stálo p_contact: '' a test kvůli tomu padal na prvním kroku —
+     server tehdy kontakt vyžadoval, ačkoli formulář ho nabízí jako
+     nepovinný. To už je opravené a hlídá to scripts/test-meze.mjs při
+     každém pushi; tady by ale prázdná hodnota zbytečně spojovala dvě
+     věci: kdyby test znovu spadl, nepoznali bychom, jestli je rozbitý
+     chat, nebo zakládání inzerátu. */
   const cl = await rpc(A.token, 'create_listing', {
     p_place: 'ZKUŠEBNÍ ' + rnd, p_okres: 'Kolín', p_druh: 'stavební pozemek', p_parcel: '0/0',
-    p_area: 1000, p_price: 500000, p_lat: 50.03, p_lng: 15.20, p_description: 'test chatu', p_contact: '',
+    p_area: 1000, p_price: 500000, p_lat: 50.03, p_lng: 15.20, p_description: 'test chatu',
+    p_contact: '777123456',
   });
   const listingId = Array.isArray(cl.j) ? (cl.j[0] && cl.j[0].id) : (cl.j && cl.j.id);
   ok('A založil zkušební inzerát', !!listingId, cl.txt && cl.txt.slice(0, 120));

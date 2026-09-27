@@ -302,7 +302,13 @@
       var auth = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token };
       return dotaz('/rest/v1/rpc/create_listing', {
         method: 'POST', headers: auth,
-        body: JSON.stringify({ p_place: 'Zkouška diagnostiky', p_okres: '', p_druh: '', p_parcel: '',
+        /* Okres tu musí být PLATNÝ, i když všechno ostatní je schválně
+           nesmysl. Funkce se na okres ptá dřív než na čísla, takže
+           s prázdným okresem by se odmítla hláškou „okres je povinný" —
+           a tahle zkouška by o mezích nezjistila nic a nahlásila
+           „nejasná odpověď". Nesmyslné musí zůstat to, co se měří:
+           1 m² za 1 Kč. */
+        body: JSON.stringify({ p_place: 'Zkouška diagnostiky', p_okres: 'Kolín', p_druh: '', p_parcel: '',
           p_area: 1, p_price: 1, p_lat: 50, p_lng: 15, p_description: '', p_contact: 'x',
           p_photos: [], p_features: [], p_access: null })
       }).then(function (v) { return { v: v, auth: auth }; });

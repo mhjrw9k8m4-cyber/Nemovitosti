@@ -97,6 +97,41 @@ begin
     raise exception 'cena za m² vychází nereálně — zkontrolujte cenu a výměru';
   end if;
 
+  /* DÉLKY TEXTŮ. Tenhle soubor běží jako POSLEDNÍ, takže jeho create_listing
+     přepíše všechny předchozí — a co v něm není, na serveru přestane platit.
+     Pět kontrol z listings-rekonstrukce.sql tu chybělo, takže spuštění
+     00-vse.sql je tiše mazalo: obec bez horní hranice, popis bez hranice
+     i se značkami < >, parcelní číslo libovolně dlouhé a kontakt bez
+     kontroly. Hlídá to scripts/test-meze.mjs — žádná mez, která tu jednou
+     byla, nesmí zmizet. */
+  if length(trim(p_place)) < 2 or length(trim(p_place)) > 60 then
+    raise exception 'název obce musí mít 2 až 60 znaků';
+  end if;
+  if p_description is not null and length(p_description) > 2000 then
+    raise exception 'popis je delší než 2000 znaků';
+  end if;
+  if p_description ~ '[<>]' then
+    raise exception 'popis nesmí obsahovat značky < a >';
+  end if;
+  if p_parcel is not null and length(trim(p_parcel)) > 20 then
+    raise exception 'parcelní číslo je moc dlouhé';
+  end if;
+
+  /* KONTAKT JE NEPOVINNÝ — a dosud nebyl. Server vyžadoval telefon nebo
+     e-mail vždycky („bez něj je inzerát k ničemu"), jenže to už dávno
+     neplatí: u každého inzerátu od majitele je tlačítko „Napsat majiteli",
+     které vede do Zpráv. Pole v pridat.html je proto označené jako
+     nepovinné a js/kontrola.js prázdnou hodnotu pouští. Server ji odmítal,
+     takže kdo číslo zveřejnit nechtěl, vyplnil celý formulář a pak dostal
+     hlášku z databáze. Prázdno se tedy pustí; když ale někdo něco napíše,
+     musí to být telefon nebo e-mail, ne slovo „zavolejte". */
+  if p_contact is not null and length(trim(p_contact)) > 0 and not (
+       trim(p_contact) ~ '^[^[:space:]@]+@[^[:space:]@]+\.[A-Za-z]{2,}$'
+       or length(regexp_replace(p_contact, '[^0-9]', '', 'g')) between 9 and 13
+     ) then
+    raise exception 'kontakt musí být platný telefon nebo e-mail';
+  end if;
+
   -- Potvrzený e-mail. Bez něj za inzerátem nestojí ani schránka.
   /* Tabulka se musí pojmenovat: funkce vrací sloupec „id", takže holé
      „where id = uid" je pro PL/pgSQL dvojznačné a celé zakládání
@@ -117,8 +152,11 @@ begin
     raise exception 'obsah vypadá jako spam';
   end if;
 
-  -- Limit počtu inzerátů podle účtu (account_tier), jinak 10.
-  select coalesce((select max_listings from account_tier where user_id = uid), 10) into limit_uctu;
+  /* Limit počtu inzerátů podle účtu (account_tier), jinak 1. Musí to být
+     TOTÉŽ číslo jako v my_listing_quota() (listings-tiers.sql), protože
+     tou funkcí web ukazuje „využito 1 z 1". Stálo tu 10: profil sliboval
+     jeden inzerát a server pustil deset. */
+  select coalesce((select max_listings from account_tier where user_id = uid), 1) into limit_uctu;
   if (select count(*) from listings where user_id = uid) >= limit_uctu then
     raise exception 'dosažen limit inzerátů na účet (%)', limit_uctu;
   end if;
@@ -138,15 +176,23 @@ begin
     end loop;
   end if;
 
-  -- Vybavení a přístup: jen z povoleného seznamu
+  /* Vybavení a přístup: jen z povoleného seznamu. POZOR na tvar hodnot —
+     formulář v pridat.html posílá rovnou ty popisky, které člověk vidí
+     („Elektřina", „Zpevněná cesta"). Tady stály strojové tvary bez
+     diakritiky ('elektrina', 'zpevnena'), které se s ničím neshodly:
+     kdo spustil 00-vse.sql, začal u nových inzerátů tiše ztrácet
+     VŠECHNY sítě i přístup — formulář je odeslal, server je zahodil
+     a nikde nebyla chyba. Shodu s formulářem hlídá scripts/test-meze.mjs. */
   if p_features is not null then
     foreach ft in array p_features loop
-      if ft in ('elektrina','voda','plyn','kanalizace','cesta') then
+      if ft in ('Elektřina','Voda','Kanalizace','Plyn','Oplocení','Stavba k rekonstrukci')
+         and not (clean_features @> array[ft]) then
         clean_features := array_append(clean_features, ft);
       end if;
     end loop;
   end if;
-  if p_access in ('zpevnena','nezpevnena','pres_cizi','bez') then clean_access := p_access; end if;
+  if p_access in ('Zpevněná cesta','Polní / nezpevněná cesta','Přes cizí pozemek','Bez přístupu') then
+    clean_access := p_access; end if;
 
   -- PRVNÍ INZERÁT ÚČTU ČEKÁ NA KONTROLU. Kdo už jeden schválený má,
   -- publikuje rovnou — kontrola je na nový účet, ne na každý inzerát.

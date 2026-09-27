@@ -153,8 +153,8 @@ try {
        nese jen „CONTEXT: …". Podle něj by se nedalo poznat, PROČ to
        spadlo — a kontrola „odmítl to ze správného důvodu" by prošla
        i při úplně jiné chybě. */
-    const vloz = (uid, misto) => psqlVse(['-d', 'zkouska', '-tAc',
-      `set pk.uid = '${uid}'; select create_listing('${misto}','Kolín','orná půda','1/1',1000,100000,50.0,15.0,'popis','777111222')`]);
+    const vloz = (uid, misto, kontakt) => psqlVse(['-d', 'zkouska', '-tAc',
+      `set pk.uid = '${uid}'; select create_listing('${misto}','Kolín','orná půda','1/1',1000,100000,50.0,15.0,'popis',${kontakt || "'777111222'"})`]);
 
     psql(['-d', 'zkouska', '-q', '-c',
       `insert into auth.users(id, email_confirmed_at) values ('${U1}', null), ('${U2}', now())`]);
@@ -193,9 +193,58 @@ try {
           zůstal po samozveřejnění navždy nový a čekal pokaždé znovu. */
     psql(['-d', 'zkouska', '-q', '-c',
       `update listings set created_at = now() - interval '5 minutes' where place='Prvni obec'`]);
+    /* Volný účet má nárok na JEDEN inzerát. Píše to i my_listing_quota()
+       („využito 1 z 1" v profilu) a scripts/test-meze.mjs hlídá, že se ta
+       dvě čísla nerozejdou. Dokud tu v create_listing stálo 10, prošel
+       druhý inzerát sám od sebe a tenhle krok tím měřil moderaci jen
+       náhodou. Teď se kvóta nejdřív ověří a pak se účet schválně
+       rozšíří — jinak by se tu místo moderace měřil limit. */
+    const nadLimit = vloz(U2, 'Nad limit');
+    pravda('volný účet má nárok na jeden inzerát', /dosažen limit/.test(nadLimit),
+      'druhý inzerát prošel i bez rozšíření účtu: ' + nadLimit.trim().slice(0, 140));
+    psql(['-d', 'zkouska', '-q', '-c',
+      `insert into account_tier(user_id, max_listings, note) values ('${U2}', 5, 'zkouška')`]);
     vloz(U2, 'Druha obec');
     const stav2 = jako(U2, `select status from listings where place='Druha obec'`).trim();
     pravda('druhý inzerát téhož účtu jde na mapu rovnou', stav2 === 'approved', `stav: ${stav2}`);
+
+    /* 5b) PRAVIDLA, KTERÁ SE DO POSLEDNÍ PODOBY create_listing NEDOSTALA.
+           Tohle je jediné místo, kde se dají zahrát doopravdy: ostatní
+           zkoušky čtou SQL jako text, tady běží Postgres. Všechny tyhle
+           kontroly v poslední podobě funkce chyběly (vznikla z jiné
+           větve než ta před ní) — kdo spustil 00-vse.sql, tiše o ně
+           přišel a nikde to nebylo vidět. */
+    /* Mezi inzeráty je 90s pauza; v testu se obejde posunutím času.
+       Bez toho by se místo kontaktu měřil cooldown a zkouška by
+       „prošla" z úplně jiného důvodu. */
+    psql(['-d', 'zkouska', '-q', '-c',
+      `update listings set created_at = now() - interval '5 minutes'`]);
+    const bezTelefonu = vloz(U2, 'Bez telefonu', "''");
+    pravda('inzerát bez telefonu projde (pole je v pridat.html nepovinné)',
+      !/ERROR/.test(bezTelefonu), bezTelefonu.trim().slice(0, 160));
+    const spatnyKontakt = vloz(U2, 'Spatny kontakt', "'zavolejte mi'");
+    pravda('ale „zavolejte mi" místo čísla neprojde', /kontakt musí být/.test(spatnyKontakt),
+      'server to vzal jako kontakt: ' + spatnyKontakt.trim().slice(0, 160));
+    const dlouhyPopis = psqlVse(['-d', 'zkouska', '-tAc',
+      `set pk.uid = '${U2}'; select create_listing('Dlouhy popis','Kolín','orná půda','1/1',1000,100000,50.0,15.0,repeat('a',2100),'777111222')`]);
+    pravda('popis delší než 2000 znaků neprojde', /popis je delší/.test(dlouhyPopis),
+      'uložil se popis o 2100 znacích: ' + dlouhyPopis.trim().slice(0, 160));
+    const znacky = psqlVse(['-d', 'zkouska', '-tAc',
+      `set pk.uid = '${U2}'; select create_listing('Znacky','Kolín','orná půda','1/1',1000,100000,50.0,15.0,'<b>tučně</b>','777111222')`]);
+    pravda('popis se značkami < > neprojde', /popis nesmí obsahovat/.test(znacky),
+      'značky prošly: ' + znacky.trim().slice(0, 160));
+
+    /* Bílý seznam sítí a přístupu musí znát to, co formulář POSÍLÁ:
+       popisky, které člověk vidí („Elektřina", „Zpevněná cesta"), ne
+       strojové tvary bez diakritiky. Když se rozejdou, server sítě
+       zahodí a nikdo se nic nedozví — ani formulář, ani člověk. */
+    psql(['-d', 'zkouska', '-q', '-c',
+      `update listings set created_at = now() - interval '5 minutes'`]);
+    psqlVse(['-d', 'zkouska', '-tAc',
+      `set pk.uid = '${U2}'; select create_listing('S vybavenim','Kolín','orná půda','1/1',1000,100000,50.0,15.0,'popis','777111222','[]'::jsonb, array['Elektřina','Voda'], 'Zpevněná cesta')`]);
+    const ulozeno = jako(U2, `select coalesce(array_to_string(features, ','), '') || '|' || coalesce(access, '') from listings where place='S vybavenim'`).trim();
+    pravda('sítě a přístup z formuláře se opravdu uloží', ulozeno === 'Elektřina,Voda|Zpevněná cesta',
+      `v databázi je „${ulozeno}" — server zahodil, co formulář poslal`);
 
     /* 6) Zamítnutý inzerát se nesmí zveřejnit ani po čase. */
     psql(['-d', 'zkouska', '-q', '-c',

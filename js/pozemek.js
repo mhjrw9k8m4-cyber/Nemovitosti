@@ -820,6 +820,27 @@
 
       pzFeaturesHtml(d) +
 
+      /* RÁDCE: ZABALENÝ, ALE V INZERÁTU — NE AŽ POD PATIČKOU.
+         Zabalený je proto, že je to zeď textu: změřeno na telefonu měl
+         detail 3 218 px a samotný rádce z toho 1 050, tedy třetinu
+         stránky. Jenže zabalit ho nestačilo — skončil úplně dole, až za
+         tlačítky „Otevřít v katastru", „Uložit" a „Sdílet", tedy za
+         místem, kde člověk stránku opouští. Kdo se doroloval tak daleko,
+         viděl nad patičkou šedý nadpis a šel pryč; nikdo ho neotevíral.
+         Teď stojí mezi parametry a mapou, tedy uvnitř toho, co si člověk
+         o pozemku čte. Souhrn taky vypadá jako ovládací prvek (viz
+         .pz-gtk-sum v pozemek.html): slovo „Rozbalit", počet rad a šipka.
+         Nadpis zůstává nadpisem i uvnitř souhrnu, ať se nerozpadne
+         osnova stránky pro odečítače a vyhledávače. */
+      '<details class="pz-gtk-obal">' +
+        '<summary class="pz-gtk-sum">' +
+          '<h2 class="pz-sect-h">Co byste měli vědět</h2>' +
+          '<span class="pz-gtk-kolik">' + pzGtkKolik(d) + '</span>' +
+          '<span class="pz-gtk-akce"><span class="zav">Rozbalit</span><span class="otv">Skrýt</span></span>' +
+        '</summary>' +
+        pzGtkHtml(d) +
+      '</details>' +
+
       pzMapaHtml(d) +
 
       '<div class="pz-cta">' +
@@ -859,23 +880,7 @@
         '<a class="pz-abtn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">' + PIN_SVG + 'Otevřít v katastru' + VEN + '</a>' +
         '<button class="pz-abtn' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">' + HEART_SVG + '<span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
         '<button class="pz-abtn" type="button" id="pz-share">' + SHARE_SVG + 'Sdílet</button>' +
-      '</div>' +
-
-      /* RÁDCE AŽ NA ROZKLIKNUTÍ.
-         Změřeno na telefonu: detail pozemku měl 3 218 px a samotný rádce
-         z toho 1 050, tedy třetinu stránky. Kdo si pozemek rozklikne, chce
-         nejdřív cenu, výměru, místo a kam se pro něj jít podívat — ne zeď
-         obecných rad. Rady tu zůstávají celé, jen za jedním klepnutím.
-         Tmavá verze téhož bloku (karta na mapě) je v <details> odjakživa;
-         tahle světlá jediná ne. Nadpis zůstává nadpisem i uvnitř souhrnu,
-         ať se nerozpadne osnova stránky pro odečítače a vyhledávače. */
-      '<details class="pz-gtk-obal">' +
-        '<summary class="pz-gtk-sum">' +
-          '<h2 class="pz-sect-h">Co byste měli vědět</h2>' +
-          '<span class="pz-gtk-kolik">' + pzGtkKolik(d) + '</span>' +
-        '</summary>' +
-        pzGtkHtml(d) +
-      '</details>';
+      '</div>';
 
     var host = document.getElementById('pz-detail');
     host.innerHTML = html;
