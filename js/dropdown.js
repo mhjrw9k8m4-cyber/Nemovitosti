@@ -4,19 +4,36 @@
 (function () {
   function ready(fn) { if (document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
   ready(function () {
-    var opened = null;
-    function close() {
+    var opened = null, poradiPanelu = 0;
+    function close(vratFokus) {
       if (!opened) return;
+      var btn = opened.btn;
       opened.panel.style.display = 'none';
       opened.root.classList.remove('open');
-      opened.btn.setAttribute('aria-expanded', 'false');
+      btn.setAttribute('aria-expanded', 'false');
       opened = null;
+      // Po zavření klávesou musí fokus skončit na tlačítku, jinak spadne na
+      // začátek stránky a člověk neví, kde je.
+      if (vratFokus) { try { btn.focus(); } catch (e) {} }
     }
     document.addEventListener('click', function (e) {
       if (opened && !opened.root.contains(e.target) && !opened.panel.contains(e.target)) close();
     });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
-    window.addEventListener('scroll', function () { if (opened) close(); }, true);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(true); });
+    /* Zavřít při rolování STRÁNKY ano — panel je připíchnutý na pevné
+       souřadnice a s obsahem by se rozešel. Ale panel sám se roluje
+       (má max-height a víc voleb, než se do ní vejde), a tenhle posluchač
+       bral i jeho rolování: kdo chtěl dolistovat ke spodním volbám, tomu se
+       seznam zavřel pod rukama. Změřeno u řazení — 419 px obsahu do 278 px
+       okna, takže poslední čtyři volby nešly vybrat vůbec: ani rolováním,
+       ani klávesou (tu rozbalovač neměl). Rolování uvnitř panelu se proto
+       přeskakuje. */
+    window.addEventListener('scroll', function (e) {
+      if (!opened) return;
+      var t = e.target;
+      if (t === opened.panel || (t && t.nodeType === 1 && opened.panel.contains(t))) return;
+      close();
+    }, true);
     window.addEventListener('resize', function () { if (opened) close(); });
 
     Array.prototype.forEach.call(document.querySelectorAll('select.map-select'), enhance);
@@ -49,14 +66,22 @@
       root.appendChild(btn);
 
       var panel = document.createElement('div'); panel.className = 'cdd-panel'; panel.setAttribute('role', 'listbox');
+      panel.id = 'cdd-panel-' + (++poradiPanelu);
+      btn.setAttribute('aria-controls', panel.id);
       panel.style.display = 'none';
       document.body.appendChild(panel); // do body → karta ho neořízne
 
       function buildOptions() {
         panel.innerHTML = '';
         Array.prototype.forEach.call(sel.options, function (o) {
-          var it = document.createElement('button');
-          it.type = 'button'; it.className = 'cdd-opt'; it.setAttribute('role', 'option');
+          /* Dřív to byly <button>. role="option" na tlačítku přebije jeho
+             vlastní roli, takže odečítač obrazovky ohlásil volbu, ale přišel
+             o to, že se dá stisknout — a stisk stejně nikdo neobsluhoval.
+             Teď je to div s role="option", fokus se po něm posouvá
+             klávesami a Enter i mezerník volbu vyberou. */
+          var it = document.createElement('div');
+          it.className = 'cdd-opt'; it.setAttribute('role', 'option');
+          it.tabIndex = -1;
           it.setAttribute('data-value', o.value); it.textContent = o.textContent;
           if (o.value === sel.value) { it.classList.add('sel'); it.setAttribute('aria-selected', 'true'); }
           it.addEventListener('click', function (e) { e.stopPropagation(); pick(o.value); });
@@ -75,13 +100,59 @@
         if (sel.value !== v) { sel.value = v; sel.dispatchEvent(new Event('change', { bubbles: true })); }
         syncLabel(); close(); try { btn.focus(); } catch (e) {}
       }
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        if (opened && opened.root === root) { close(); return; }
+      function volby() { return Array.prototype.slice.call(panel.children); }
+      function zamer(i) {
+        var v = volby(); if (!v.length) return;
+        if (i < 0) i = v.length - 1; else if (i >= v.length) i = 0;
+        var it = v[i];
+        /* preventScroll a dorolování ručně: kdyby fokus odroloval STRÁNKU,
+           zavřel by si panel sám (rolování stránky ho zavírá, a správně —
+           panel je připíchnutý na pevné souřadnice). Uvnitř panelu se tedy
+           posouváme sami. */
+        try { it.focus({ preventScroll: true }); } catch (e) { try { it.focus(); } catch (e2) {} }
+        var horni = it.offsetTop - panel.clientTop;
+        var dolni = horni + it.offsetHeight;
+        if (horni < panel.scrollTop) panel.scrollTop = horni - 6;
+        else if (dolni > panel.scrollTop + panel.clientHeight) panel.scrollTop = dolni - panel.clientHeight + 6;
+      }
+      /* Klávesy v rozbaleném seznamu. Bez nich se sem fokus nedostal vůbec:
+         panel visí na konci <body>, takže tabulátorem byl až za celou
+         stránkou, a šipky nic nedělaly. Kdo nepoužívá myš, neměl jak volbu
+         vybrat. */
+      panel.addEventListener('keydown', function (e) {
+        var v = volby(), i = v.indexOf(document.activeElement);
+        if (e.key === 'ArrowDown') { e.preventDefault(); zamer(i + 1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); zamer(i - 1); }
+        else if (e.key === 'Home') { e.preventDefault(); zamer(0); }
+        else if (e.key === 'End') { e.preventDefault(); zamer(v.length - 1); }
+        else if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+          e.preventDefault();
+          if (i >= 0) pick(v[i].getAttribute('data-value'));
+        } else if (e.key === 'Tab') { close(true); }
+      });
+      // Šipka na zavřeném tlačítku seznam rozbalí — tak se to u rozbalovačů čeká.
+      btn.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+        if (opened && opened.root === root) return;
+        e.preventDefault(); otevri();
+      });
+      function otevri() {
         close(); buildOptions(); syncLabel();
         panel.style.display = 'block'; place(btn, panel);
         root.classList.add('open'); btn.setAttribute('aria-expanded', 'true');
         opened = { root: root, btn: btn, panel: panel };
+        /* Fokus na vybranou volbu: odtud jdou šipky nahoru i dolů a odečítač
+           obrazovky přečte, co je právě zvolené. Zároveň se tím panel
+           odroluje tak, aby ta volba byla vidět. */
+        var v = volby();
+        var kde = 0;
+        for (var i = 0; i < v.length; i++) if (v[i].getAttribute('data-value') === sel.value) { kde = i; break; }
+        zamer(kde);
+      }
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (opened && opened.root === root) { close(); return; }
+        otevri();
       });
 
       try {

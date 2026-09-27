@@ -162,8 +162,17 @@
       '<p>Platí jen pro tenhle prohlížeč. Nic se tím neruší — jen se to tu neukáže.</p>' +
       '<label class="up-sw"><input type="checkbox" id="pf-z"' + (p.zpravy ? ' checked' : '') + '> Zprávy od lidí</label>' +
       '<label class="up-sw"><input type="checkbox" id="pf-p"' + (p.pozemky ? ' checked' : '') + '> Nové pozemky z hlídání</label>' +
-      '<div class="up-note">Upozornění tady uvidíte jen tehdy, když na web přijdete. ' +
-        'Aby vás zastihla i jindy, je potřeba e-mail — ten se zapíná na stránce <a href="hlidani.html">Hlídání</a>.</div>' +
+      /* Dřív tu stálo „Aby vás zastihla i jindy, je potřeba e-mail — ten se
+         zapíná na stránce Hlídání." Jenže žádné takové zapínání na stránce
+         Hlídání není (jediné pole na e-mail je přihlášení k účtu) a e-maily
+         nikdo neposílá: rozesílač v repozitáři není a žádná GitHub Action ho
+         nespouští — přesně to, s čím začíná supabase/watch-alerts.sql.
+         Věta tedy posílala člověka hledat přepínač, který neexistuje, a
+         slibovala upozornění, která nikdy nepřijdou. Stránka Hlídání sama
+         přitom píše pravdu: „Vše přehledně v aplikaci." */
+      '<div class="up-note">Upozornění tady uvidíte jen tehdy, když na web přijdete — ' +
+        'e-mailem je zatím neposíláme. Co hlídat, si nastavíte na stránce ' +
+        '<a href="hlidani.html">Hlídání</a>.</div>' +
     '</div>';
 
     root.innerHTML = h;

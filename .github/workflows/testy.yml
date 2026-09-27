@@ -273,6 +273,9 @@ jobs:
       - name: Obrys pozemku (nekreslíme, co nevíme)
         run: node scripts/test-obrys.mjs
 
+      - name: Rozbalovací seznam (myší i klávesou)
+        run: node scripts/test-rozbalovac.mjs
+
       - name: Funkční kontrola stránek a odkazů
         run: node scripts/test-stranky.mjs
 
