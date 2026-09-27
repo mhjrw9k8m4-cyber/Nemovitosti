@@ -325,6 +325,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
+<script src="js/cisteni.js?v=e42a2048"></script>
 <script src="js/config.js?v=7f55c4e1" defer></script>
 <script src="js/auth.js?v=3891c865" defer></script>
 <script>
@@ -593,7 +594,8 @@
       if (dataIndex){ render(); return; }
       fetch('data/opportunities.json', {cache:'no-cache'}).then(function(r){ return r.ok?r.json():null; }).then(function(j){
         dataIndex = {};
-        var arr = (j && j.opportunities) || [];
+        // Branka na data z cizích webů — táž jako na mapě, viz js/cisteni.js.
+        var arr = PKCisteni.pozemky((j && j.opportunities) || []);
         arr.forEach(function(o){ dataIndex[pkeyOf(o)] = o; });
         render();
       }).catch(function(){ dataIndex = {}; render(); });

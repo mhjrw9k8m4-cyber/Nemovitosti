@@ -221,6 +221,7 @@
   <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
 </footer>
 
+<script src="js/cisteni.js?v=e42a2048"></script>
 <script src="js/config.js?v=7f55c4e1"></script>
 <script src="js/auth.js?v=3891c865"></script>
 <script src="js/hlidani-logika.js?v=8c971165"></script>
@@ -262,6 +263,7 @@
       var arr = [], j = res[0], ul = res[1];
       var base = j && (Array.isArray(j) ? j : j.opportunities) || [];
       base.forEach(function (d) { if (d) arr.push(d); });
+      // (vyčištění všech tří zdrojů je až pod nimi — viz js/cisteni.js)
       var users = ul && (Array.isArray(ul) ? ul : ul.listings) || [];
       users.forEach(function (u) { if (u) { u.type = u.type || 'majitel'; arr.push(u); } });
       // Živé inzeráty od majitelů (mají features/přístup)
@@ -270,8 +272,8 @@
         if (Array.isArray(rows)) rows.forEach(function (u) {
           if (u) arr.push({ type: 'majitel', place: u.place, okres: u.okres, druh: u.druh, parcel: u.parcel, area: u.area, price: u.price, features: u.features || [], access: u.access || '' });
         });
-        DATA = PKHlidani.bezDuplicit(arr);
-      }, function () { DATA = PKHlidani.bezDuplicit(arr); });
+        DATA = PKHlidani.bezDuplicit(PKCisteni.pozemky(arr));
+      }, function () { DATA = PKHlidani.bezDuplicit(PKCisteni.pozemky(arr)); });
     });
   }
 

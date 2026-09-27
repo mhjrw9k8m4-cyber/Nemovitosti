@@ -992,7 +992,10 @@
 
   // 1) OKAMŽITĚ vykresli z předaného pozemku (sessionStorage) — bez čekání na data.
   var quick = null;
-  try { quick = JSON.parse(sessionStorage.getItem('pk_open') || 'null'); } catch (e) {}
+  /* I předaný pozemek projde brankou. Zapsala ho sice mapa, která čistí taky,
+     ale v úložišti prohlížeče leží mezitím kdokoli mohl sáhnout — a hlavně
+     tady nemá být místo, kde se na cizí čištění spoléhá. */
+  try { quick = PKCisteni.pozemek(JSON.parse(sessionStorage.getItem('pk_open') || 'null')); } catch (e) {}
   // předaný pozemek použij jen když sedí na adresu (?p=), ať se neukáže špatný
   var mp = /[?&]p=([^&]+)/.exec(location.search);
   var wantKey = null; if (mp) { try { wantKey = decodeURIComponent(mp[1]); } catch (e) {} }
@@ -1014,7 +1017,13 @@
 
   // 2) Dotáhni celá data pro cenové srovnání (a jako záloha, když handoff chybí).
   loadJSON('data/opportunities.json').then(function (j) {
-    var DATA = (j && (j.opportunities || j.items || (Array.isArray(j) ? j : []))) || [];
+    /* Táž branka jako na mapě (js/cisteni.js). Tady chyběla, a nebylo to
+       jen pro pořádek: adresa inzerátu se sice escapovala, takže atribut
+       nešlo rozbít, ale „javascript:" v ní zůstalo — na podstrčených datech
+       tu vznikl odkaz, který po klepnutí spustí cizí kód. Texty vycházely
+       dobře díky esc() na každém místě výpisu; u href esc() nepomůže,
+       protože schéma odkazu je platný obsah atributu. */
+    var DATA = PKCisteni.pozemky((j && (j.opportunities || j.items || (Array.isArray(j) ? j : []))) || []);
     DATA.forEach(function (d, i) { d._id = i; });
     buildIndex(DATA);
     var target = findTarget(DATA) || quick;
