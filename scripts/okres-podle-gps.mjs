@@ -90,6 +90,37 @@ export function okresPodleHranice(lat, lng) {
   return null;
 }
 
+/* Jak daleko je bod OD okresu, který se u něj tvrdí. Uvnitř nula, jinak
+   kilometry k nejbližšímu kousku hranice.
+   K čemu to je: „padl do jiného okresu" samo o sobě nestačí na rozhodnutí,
+   že je údaj špatně. Obce na hranici okresu padají podle zjednodušené čáry
+   na obě strany — Koberovy leží 80 metrů za hranicí okresu Jablonec nad
+   Nisou, a je to naprosto v pořádku. Špatně dohledaná poloha je přitom
+   desítky kilometrů daleko (Slatina „v okrese Brno-město" vyšla 37 km
+   uvnitř Znojma). Teprve vzdálenost ty dva případy rozliší. */
+export function kmVenZOkresu(lat, lng, okres) {
+  if (!HRANICE || !HRANICE[okres]) return null;
+  if (typeof lat !== 'number' || typeof lng !== 'number' || !isFinite(lat) || !isFinite(lng)) return null;
+  if (vGeometrii(lat, lng, HRANICE[okres])) return 0;
+  const kx = 111.32 * Math.cos(lat * Math.PI / 180), ky = 110.57;
+  let nej = Infinity;
+  projdiPolygony(HRANICE[okres], (poly) => {
+    for (const prstenec of poly) {
+      for (let i = 0; i + 1 < prstenec.length; i++) {
+        const x1 = (prstenec[i][0] - lng) * kx, y1 = (prstenec[i][1] - lat) * ky;
+        const x2 = (prstenec[i + 1][0] - lng) * kx, y2 = (prstenec[i + 1][1] - lat) * ky;
+        const vx = x2 - x1, vy = y2 - y1, d2 = vx * vx + vy * vy;
+        let t = d2 ? -(x1 * vx + y1 * vy) / d2 : 0;
+        if (t < 0) t = 0; else if (t > 1) t = 1;
+        const dx = x1 + t * vx, dy = y1 + t * vy;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < nej) nej = d;
+      }
+    }
+  });
+  return nej === Infinity ? null : nej;
+}
+
 export function okresPodleGPS(lat, lng) {
   if (typeof lat !== 'number' || typeof lng !== 'number' || !isFinite(lat) || !isFinite(lng)) return null;
   // Bod mimo všechny hranice (zjednodušená čára, bod těsně u řeky nebo

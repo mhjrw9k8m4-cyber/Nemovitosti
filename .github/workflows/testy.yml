@@ -267,6 +267,9 @@ jobs:
       - name: JSON ve stránce (nejde rozbít cizím textem)
         run: node scripts/test-json-ve-strance.mjs
 
+      - name: Poloha vs okres (patří k sobě?)
+        run: node scripts/test-okres-poloha.mjs
+
       - name: Funkční kontrola stránek a odkazů
         run: node scripts/test-stranky.mjs
 

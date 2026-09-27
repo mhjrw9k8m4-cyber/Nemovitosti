@@ -16,7 +16,7 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { okresPodleGPS, okresPodleHranice, maHranice } from './okres-podle-gps.mjs';
+import { okresPodleGPS, okresPodleHranice, maHranice, kmVenZOkresu } from './okres-podle-gps.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -52,16 +52,6 @@ try { OKRESY_MAP = JSON.parse(readFileSync(OKRESY, 'utf8')).okresy || {}; } catc
 let GEO_CACHE = {};
 try { GEO_CACHE = JSON.parse(readFileSync(GEOCACHE, 'utf8')); } catch { /* ok */ }
 let geoCacheDirty = false;
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-// deterministický malý rozptyl (ať se parcely ve stejné obci nekryjí)
-function jitterAround(lat, lng, seedStr, amp) {
-  let h = 0;
-  const s = String(seedStr || '');
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  const j = (n) => (((h >> n) & 255) / 255 - 0.5) * amp;
-  return { lat: +(lat + j(0)).toFixed(5), lng: +(lng + j(8)).toFixed(5) };
-}
 
 // Vzdušná vzdálenost v km (na kontrolu, jestli výsledek geokódování vůbec
 // může patřit do uvedeného okresu).
@@ -76,6 +66,90 @@ function kmMezi(lat1, lng1, lat2, lng2) {
    pohodlně nad vším, co je v pořádku, a přitom pod zjevnými omyly —
    ty byly 84 až 180 km daleko. */
 const OKRES_DOSAH_KM = 55;
+
+/* Kolik smí být poloha VEN z okresu, který se u ní tvrdí, než ji budeme
+   mít za omyl. Změřeno na uložených odpovědích geokódování — vzdálenosti
+   od hranice uvedeného okresu, vzestupně:
+
+     0,08 km   Koberovy | Jablonec nad Nisou
+     3,08 km   Přibice | Břeclav
+    36,93 km   Slatina | Brno-město
+   138,74 km   Dubenec | Trutnov
+   165,78 km   Přibyslavice | Liberec
+   176,81 km   Pěnčín | Liberec
+   208,12 km   Cvrčovice | Kladno
+   216,11 km   Bohdalovice | Jablonec nad Nisou
+   261,43 km   Březová | Opava
+
+   Ty dvě první jsou v pořádku: obec leží u hranice okresu (Koberovy) nebo
+   v okrese vedlejším (Přibice v Brně-venkově, dražební vyhláška uvádí
+   Břeclav) — poloha je správná, jen ji od okresu dělí kousek. Od 37 km
+   výš už jde o jinou obec téhož jména na druhém konci republiky. Deset
+   kilometrů je tedy s přehledem nad oběma správnými případy a čtyřikrát
+   pod tím nejmenším omylem; kdyby se to rozpětí jednou zúžilo, je potřeba
+   tohle číslo přeměřit, ne posunout od oka. */
+const OKRES_VEN_KM = 10;
+
+/* Jedna odpověď na otázku „sedí ta poloha k tomu okresu?" pro všechna
+   místa, která se ji ptají — dohledání podle jména, souřadnice od zdroje
+   i odpověď vytažená z mezipaměti. Dřív si ji každé z těch tří míst
+   odpovídalo samo kruhem kolem středu okresu; tři opisy téhož pravidla se
+   rozcházely a ten kruh navíc sahá i do vedlejších okresů. Hranice je
+   přesná odpověď, kruh zůstává jen tam, kde hranici nemáme. */
+export function polohaSediSOkresem(lat, lng, okres) {
+  if (typeof lat !== 'number' || typeof lng !== 'number') return false;
+  const ven = kmVenZOkresu(lat, lng, okres);
+  if (ven != null) return ven <= OKRES_VEN_KM;
+  const stred = OKRESY_MAP[okres];
+  if (!stred) return true;   // o takovém okrese nic nevíme — není co porovnat
+  return kmMezi(stred[0], stred[1], lat, lng) <= OKRES_DOSAH_KM;
+}
+
+/* PROŘEZÁNÍ MEZIPAMĚTI
+ *
+ * Strop na vzdálenost od středu okresu (OKRES_DOSAH_KM) přišel až potom,
+ * co se do mezipaměti uložily špatné odpovědi — a ta se nikdy
+ * nepřepočítala, takže osm obcí dostávalo dál polohu z jiného okresu:
+ * Bohdalovice „u Jablonce nad Nisou" v Českém Krumlově, Dubenec
+ * „u Trutnova" v Příbrami, Slatina „v Brně" u Znojma. Oprava, která se
+ * na uloženou odpověď nepodívá, je tedy k ničemu.
+ *
+ * Kontroluje se to hranicí okresu, ne vzdáleností od jeho středu: středem
+ * se dá projít i do vedlejšího okresu (Slatina u Znojma je od středu Brna
+ * 47 km, tedy pod tehdejším stropem 55 km), hranicí ne. Klíče začínající
+ * „cast|" jsou názvy čtvrtí, ne souřadnice — těch se to netýká. */
+export function prorezMezipamet(cache = GEO_CACHE, hlasit = true) {
+  if (!maHranice()) return 0;
+  const NAZVY = Object.keys(OKRESY_MAP);
+  let vyhozeno = 0;
+  for (const klic of Object.keys(cache)) {
+    if (klic.startsWith('cast|')) continue;
+    const v = cache[klic];
+    if (!Array.isArray(v) || v.length !== 2) continue;
+    const psanyOkres = klic.split('|')[1] || '';
+    const okres = NAZVY.find((n) => n.toLowerCase() === psanyOkres);
+    if (!okres) continue;
+    const ven = kmVenZOkresu(v[0], v[1], okres);
+    if (ven != null && !polohaSediSOkresem(v[0], v[1], okres)) {
+      delete cache[klic];
+      if (cache === GEO_CACHE) geoCacheDirty = true;
+      vyhozeno++;
+      if (hlasit) console.warn(`Mezipaměť: „${klic}" mířila ${ven.toFixed(0)} km ven z okresu — zahozeno, dohledá se znovu.`);
+    }
+  }
+  if (vyhozeno && hlasit) console.log(`Z mezipaměti poloh zahozeno ${vyhozeno} odpovědí mimo uvedený okres.`);
+  return vyhozeno;
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// deterministický malý rozptyl (ať se parcely ve stejné obci nekryjí)
+function jitterAround(lat, lng, seedStr, amp) {
+  let h = 0;
+  const s = String(seedStr || '');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  const j = (n) => (((h >> n) & 255) / 255 - 0.5) * amp;
+  return { lat: +(lat + j(0)).toFixed(5), lng: +(lng + j(8)).toFixed(5) };
+}
 
 // Přesnější poloha podle názvu katastrálního území (Nominatim / OpenStreetMap).
 const GEO_UA = { 'user-agent': 'ParcelkaBot/1.0 (+https://www.parcelaka.cz)' };
@@ -101,7 +175,7 @@ async function geocodeName(place, okres) {
         for (const v of j) {
           const la = +parseFloat(v.lat).toFixed(5), ln = +parseFloat(v.lon).toFixed(5);
           if (!isFinite(la) || !isFinite(ln)) continue;
-          if (stred && kmMezi(stred[0], stred[1], la, ln) > OKRES_DOSAH_KM) continue;
+          if (!polohaSediSOkresem(la, ln, okres)) continue;
           coord = [la, ln];
           break;
         }
@@ -357,9 +431,17 @@ async function fetchOkdrazby() {
         const txt = (j.name || '') + ' ' + (j.description || '');
         const area = parseArea(j.name) || parseArea(j.description);
         // okres: z GPS (spolehlivé), jinak z textu „okres X"
-        let okres = (typeof j.lat === 'number' && typeof j.lon === 'number') ? nearestOkres(j.lat, j.lon) : null;
+        const maBod = typeof j.lat === 'number' && typeof j.lon === 'number';
+        let okres = maBod ? nearestOkres(j.lat, j.lon) : null;
+        /* Komentář výš říká „z GPS (spolehlivé), jinak z textu" — ale kód
+           dělal opak: text okres z GPS PŘEBÍJEL vždycky. A ten text je
+           volná řeč z popisu dražby, kde se vedlejší okres klidně zmíní.
+           Souřadnice uvnitř hranice okresu jsou tvrdší údaj, takže vyhrají;
+           text rozhoduje jen tam, kde bod v žádném okrese neleží (u hranice
+           státu) nebo kde souřadnice vůbec nejsou. */
+        const zHranice = maBod ? okresPodleHranice(j.lat, j.lon) : null;
         const om = txt.match(/okres\s+([A-Za-zÁ-Žá-ž.\-]+(?:\s[A-Za-zÁ-Žá-ž.\-]+){0,2})/);
-        if (om) { const cand = normOkres(om[1].trim().replace(/[.,;].*$/, '')); if (OKRESY_MAP[cand]) okres = cand; }
+        if (om && !zHranice) { const cand = normOkres(om[1].trim().replace(/[.,;].*$/, '')); if (OKRESY_MAP[cand]) okres = cand; }
         if (!okres) continue;
         const km = j.name && j.name.match(/k\.?\s*ú\.?\s*([A-Za-zÁ-Žá-ž0-9 .\-]+?)(?:\s*,|\s+okres|\s*$)/i);
         // místo = katastrální území (obec); když v názvu není, použijeme okresní město
@@ -664,6 +746,7 @@ function valid(o) {
 }
 
 async function main() {
+  prorezMezipamet();
   // Pojmenované zdroje → v logu Actions je hned vidět, který přestal vracet data.
   const SOURCES = [
     ['Dražby', fetchDrazby],
@@ -795,9 +878,8 @@ async function main() {
   let zdrojSpatne = 0;
   for (const o of fresh) {
     if (!o._gps) continue;
-    const stred0 = OKRESY_MAP[o.okres];
-    if (!stred0 || typeof o.lat !== 'number' || typeof o.lng !== 'number') continue;
-    if (kmMezi(stred0[0], stred0[1], o.lat, o.lng) <= OKRES_DOSAH_KM) continue;
+    if (typeof o.lat !== 'number' || typeof o.lng !== 'number') continue;
+    if (polohaSediSOkresem(o.lat, o.lng, o.okres)) continue;
     o.lat = undefined; o.lng = undefined; o._gps = false;
     zdrojSpatne++;
   }
@@ -810,8 +892,7 @@ async function main() {
     /* Pojistka i na cestě z mezipaměti: ta si pamatuje i výsledky uložené
        dřív, než se okres začal ověřovat. Špatný bod se nesmí vrátit zpátky
        jen proto, že už jednou uložený byl. */
-    const stred = OKRESY_MAP[o.okres];
-    if (nm && stred && kmMezi(stred[0], stred[1], nm[0], nm[1]) > OKRES_DOSAH_KM) {
+    if (nm && !polohaSediSOkresem(nm[0], nm[1], o.okres)) {
       const klic = (o.place + '|' + o.okres).toLowerCase();
       delete GEO_CACHE[klic]; geoCacheDirty = true;
       nm = null; zamitnuto++;
@@ -878,7 +959,14 @@ async function main() {
   console.log(`Zapsáno ${fresh.length} příležitostí do ${OUT}. Dle typu:`, JSON.stringify(counts));
 }
 
-main().catch((err) => {
-  console.error('Chyba při sběru dat:', err);
-  process.exitCode = 1;
-});
+/* Sbírat se začne jen při přímém spuštění (`node scripts/fetch-opportunities.mjs`,
+   což dělá i .github/workflows/update-data.yml). Dřív se main() volalo i při
+   pouhém importu, takže si tenhle soubor nešlo načíst a zkontrolovat jedinou
+   funkci, aniž by se rozjelo stahování ze všech zdrojů — pravidla se proto
+   daly hlídat jen čtením zdroje. Stejná pojistka je v generate-parcel-pages.mjs. */
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((err) => {
+    console.error('Chyba při sběru dat:', err);
+    process.exitCode = 1;
+  });
+}
