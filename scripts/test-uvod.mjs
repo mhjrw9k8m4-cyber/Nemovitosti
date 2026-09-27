@@ -184,6 +184,37 @@ if (proužek) {
     `(cena za m² pod padesátinou mediánu skupiny)`);
 }
 
+/* ---- Ty tři údaje musí VYPADAT jako odkazy ------------------------
+   Odkazy to jsou odjakživa: vedou na mapu a rovnou ji přefiltrují.
+   Jenže vypadaly jako vypsané informace — tmavý obdélník se sotva
+   znatelným rámečkem a nic víc. Stížnost se snímkem zněla „nepůsobí
+   klikatelně", a měla pravdu: co vypadá jako popiska, na to nikdo
+   neklepne, takže ta práce pod tím je k ničemu.
+   Značka „tenhle řádek někam vede" je na tomhle webu šipka „›" —
+   má ji každá položka v menu. Zkouška se proto ptá na VYKRESLENÝ stav
+   (obsah ::after), ne na řádek v CSS. */
+{
+  const v = await p.evaluate(() => [...document.querySelectorAll('.hh-fakta .hl-fact')]
+    .filter((a) => !a.hidden)
+    .map((a) => ({
+      odkaz: a.tagName.toLowerCase() === 'a' && !!a.getAttribute('href'),
+      sipka: (getComputedStyle(a, '::after').content || '').replace(/["']/g, ''),
+      popisek: Math.round(parseFloat(getComputedStyle(a.querySelector('.hl-k')).fontSize)),
+    })));
+  pravda(`v úvodu jsou ${v.length} živé údaje (jinak zkouška nic neměří)`, v.length >= 2,
+    'proužek je prázdný');
+  pravda('všechny tři jsou odkazy', v.every((x) => x.odkaz),
+    'některý údaj není odkaz — klepnutí by nikam nevedlo');
+  pravda('a je na nich vidět, že někam vedou (šipka jako v menu)',
+    v.every((x) => x.sipka.indexOf('\u203a') >= 0),
+    `vykreslené šipky: ${JSON.stringify(v.map((x) => x.sipka))}`);
+  /* Popisek je to jediné, co říká, CO to číslo vedle je. V 10,5 px
+     s krytím 62 % ho oko přeskočí a zbydou tři velké údaje, které spolu
+     nesouvisí — odtud druhá půlka téže stížnosti, „není jasné co je co". */
+  pravda('a popisek je čitelný, ne ozdoba', v.every((x) => x.popisek >= 11),
+    `velikosti popisků: ${JSON.stringify(v.map((x) => x.popisek))} px`);
+}
+
 pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby[0]);
 
 /* ---- „Přibylo dnes" musí ty novinky opravdu ukázat -----------------

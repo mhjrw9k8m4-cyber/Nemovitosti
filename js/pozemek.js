@@ -456,6 +456,9 @@
   function zapniMapu(d) {
     var obal = document.getElementById('pzm');
     if (!obal) return;
+    /* Druhá pojistka k počítadlu výš: na rám, který už mapu má, se
+       podruhé sahat nesmí. Leaflet si značku nechává v _leaflet_id. */
+    if (obal._leaflet_id) return;
     var L = global.L;
     if (!L || !L.map) {
       /* Leaflet se nenačetl (blokovaný skript, offline). Prázdný rám by
@@ -729,12 +732,34 @@
   }
 
   /** Mapa se staví, až když je na dohled — nahoře na stránce je cena, ne dlaždice. */
+  /* KAŽDÉ VYKRESLENÍ ZAČÍNÁ NOVOU PŘÍPRAVU MAPY — a ta stará se musí
+     zahodit. Stránka se vykresluje dvakrát: nejdřív z handoffu (aby
+     nebyla chvíli prázdná) a pak znovu z plných dat. Příprava mapy je
+     přitom ve dvou krocích, mezi kterými uplyne čas: počká se, až se
+     rám dostane do zorného pole, a pak se dotáhne Leaflet. Když druhé
+     vykreslení stihne začít dřív, než doběhne stahování Leafletu,
+     počkají si na něj DVĚ přípravy — a obě pak zavolají L.map() na
+     tomtéž rámu. Ten druhý dostane „Map container is already
+     initialized" a stránka skončí chybou v konzoli.
+     Počítadlo je proto jediná pravda o tom, které vykreslení je
+     aktuální; co je starší, se tiše zahodí. Chytá to test-mapa.mjs
+     („stránka neshodila žádnou chybu") — jenže až po klepnutí do mapy,
+     tedy v běhu, kde na pořadí závisí. Proto navíc druhá pojistka
+     v zapniMapu(). */
+  var mapaVerze = 0;
   function pripravMapu(d) {
+    var moje = ++mapaVerze;
     var obal = document.getElementById('pzm');
     if (!obal) return;
-    function ted() { sLeafletem(function () { zapniMapu(d); }); }
+    function ted() {
+      sLeafletem(function () {
+        if (moje !== mapaVerze) return;   // mezitím se vykreslilo znovu
+        zapniMapu(d);
+      });
+    }
     if (!global.IntersectionObserver) { ted(); return; }
     var io = new IntersectionObserver(function (zaznamy) {
+      if (moje !== mapaVerze) { io.disconnect(); return; }
       if (!zaznamy.some(function (z) { return z.isIntersecting; })) return;
       io.disconnect();
       ted();

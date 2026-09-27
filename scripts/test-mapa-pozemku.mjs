@@ -111,6 +111,9 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
  * Otevře detail pozemku s podstrčenou sítí.
  * @param nast.zivi   pole názvů hostitelů, které mají ODPOVÍDAT (ostatní mlčí)
  * @param nast.bezLeafletu  zahodí mapovou knihovnu
+ * @param nast.pomalyLeaflet  knihovnu vydá se zpožděním (na souběh dvou vykreslení)
+ * @param nast.pomalaData  data pozemků vydá se zpožděním (kvůli témuž souběhu)
+ * @param nast.rovnouKMape  jakmile se objeví rám mapy, odroluje k němu
  * @param nast.cil    adresa pozemku, který se má otevřít (výchozí CIL)
  * @param nast.viewport  rozměr okna (výchozí monitor; telefon se měří zvlášť)
  * @param nast.handoff   co má ležet v sessionStorage['pk_open'] (předání z mapy)
@@ -134,6 +137,22 @@ async function detail(nast) {
           body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` });
       }
       if (nast.bezLeafletu && /vendor\/leaflet\/leaflet\.js/.test(u.pathname)) return r.abort();
+      /* Leaflet schválně pomalu. Stránka se vykresluje dvakrát (nejdřív
+         z handoffu, pak z plných dat) a mapa se připravuje ve dvou
+         krocích s čekáním mezi nimi — souběh se dá vyrobit jen tak, že
+         se to čekání natáhne. Bez toho by zkouška „nespadlo to" prošla
+         i s rozbitým kódem, protože by se obě přípravy nestihly potkat. */
+      /* POŘADÍ JE CELÝ VTIP: data musí dorazit DŘÍV než knihovna.
+         Jen tak se stihnou obě vykreslení a obě přípravy mapy si počkají
+         na tutéž knihovnu — a teprve pak se obě vrhnou na tentýž rám.
+         Kdyby knihovna přišla dřív, první příprava by mapu postavila do
+         starého (ještě připojeného) rámu a ke srážce by nedošlo. */
+      if (nast.pomalaData && /data\/opportunities\.json/.test(u.pathname)) {
+        return new Promise((hotovo) => setTimeout(() => hotovo(r.continue()), 500));
+      }
+      if (nast.pomalyLeaflet && /vendor\/leaflet\/leaflet\.js/.test(u.pathname)) {
+        return new Promise((hotovo) => setTimeout(() => hotovo(r.continue()), 2500));
+      }
       return r.continue();
     }
     dotazy.push(adresa);
@@ -150,6 +169,18 @@ async function detail(nast) {
     }
     return r.abort();
   });
+  /* Mapa se připravuje, teprve až je rám na dohled. Aby se první
+     příprava vůbec rozběhla (a měla s čím se srazit), roluje se k němu
+     hned, jak se objeví — tedy po prvním vykreslení z handoffu. */
+  if (nast.rovnouKMape) {
+    await ctx.addInitScript(() => {
+      const t = setInterval(() => {
+        const e = document.getElementById('pzm');
+        if (e) { clearInterval(t); e.scrollIntoView({ block: 'center' }); }
+      }, 50);
+      setTimeout(() => clearInterval(t), 8000);
+    });
+  }
   if (nast.handoff !== undefined) {
     await ctx.addInitScript((h) => {
       try { sessionStorage.setItem('pk_open', JSON.stringify(h)); } catch (e) {}
@@ -681,8 +712,9 @@ if (DRAZBA) {
       price: cil.d.price, area: cil.d.area, type: cil.d.type, lat: cil.d.lat, lng: cil.d.lng,
       extra: cil.d.extra, url: cil.d.url,
     };
-    const { ctx, p } = await detail({ cil: cil.url, handoff: ochuzeny });
-    await p.waitForTimeout(1600);
+    const { ctx, p, padlo } = await detail({ cil: cil.url, handoff: ochuzeny,
+      pomalaData: true, pomalyLeaflet: true, rovnouKMape: true });
+    await p.waitForTimeout(2600);
     const v = await p.evaluate(() => ({
       chips: [...document.querySelectorAll('.pz-feat')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
       radky: [...document.querySelectorAll('.pz-spec')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
@@ -692,6 +724,22 @@ if (DRAZBA) {
     pravda('a je na ní i řádek o spoluvlastnickém podílu',
       v.radky.some((r) => /podíl/i.test(r)),
       `řádky parametrů: ${v.radky.join(' | ').slice(0, 200)}`);
+    /* DVĚ VYKRESLENÍ = DVĚ PŘÍPRAVY MAPY. Příprava čeká, až se rám
+       dostane do zorného pole, a pak dotahuje Leaflet; když druhé
+       vykreslení začne dřív, než knihovna dorazí, počkají si na ni obě
+       a obě pak zavolají L.map() na tomtéž rámu. Leaflet na to odpoví
+       „Map container is already initialized" a stránka skončí chybou —
+       přesně to jsem si tímhle překreslováním sám způsobil. */
+    /* K rámu se odrolovalo samo (rovnouKMape) — tady se jen dočká
+       pomalé knihovny. */
+    await p.waitForTimeout(2600);
+    const mapa = await p.evaluate(() => ({
+      kontejneru: document.querySelectorAll('#pzm .leaflet-container').length,
+      dlazdic: document.querySelectorAll('#pzm img.leaflet-tile').length,
+    }));
+    pravda('dvojí vykreslení nezaloží mapu dvakrát', mapa.kontejneru === 1,
+      `rámů s mapou: ${mapa.kontejneru}`);
+    pravda('a stránka přitom nespadne', padlo.length === 0, padlo.join(' | '));
     await ctx.close();
   }
 }
