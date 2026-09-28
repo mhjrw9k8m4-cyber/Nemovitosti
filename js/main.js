@@ -2276,10 +2276,20 @@
        ale doladit se tím nedá: kdo se trefí o dvě stě metrů vedle, musí
        klepnout znovu a doufat, že se trefí líp. Přetažení je oprava
        výběru, ne nový výběr. */
+    /* TÝŽ ŠPENDLÍK JAKO VŠUDE JINDE NA WEBU. Tady byl puntík na tyčce —
+       vlastní tvar, který se nikde jinde nevyskytuje. Na mapě pozemku
+       (js/pozemek.js) i v náhledech je přitom kapka, tedy to, co každý
+       zná z map. Vedle kruhu okruhu z toho puntíku na tyčce vznikal
+       obrazec, který nepřipomínal ani špendlík, ani okruh: „pořád je
+       ten špendlík nějaký divný". Kapka je táž, jen v měděné barvě
+       okruhu, aby bylo vidět, že patří k sobě. */
+    var VM_PIN = '<svg viewBox="-14 -36 28 38" width="28" height="38" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M0 0C-7 -12 -12 -18 -12 -25 A12 12 0 1 1 12 -25 C12 -18 7 -12 0 0Z" fill="#8A5512"' +
+      ' stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/><circle cx="0" cy="-25" r="4.6" fill="#fff"/></svg>';
     var znacka = L.marker([start.lat, start.lng], {
       draggable: true, autoPan: true, autoPanPadding: [44, 44],
       keyboard: false, zIndexOffset: 800,
-      icon: L.divIcon({ className: 'vm-znacka', html: '<span></span>', iconSize: [22, 36], iconAnchor: [11, 36] })
+      icon: L.divIcon({ className: 'vm-znacka', html: '<span>' + VM_PIN + '</span>', iconSize: [28, 38], iconAnchor: [14, 38] })
     }).addTo(m);
 
     /* MĚŘÍTKO OKRUHU. Samotný kruh říká „takhle velké to je" jen tomu, kdo
@@ -2326,7 +2336,18 @@
       if (btn) btn.hidden = okruhSeVejde(c.lat, c.lng);
       /* Přetékající padesátikilometrový okruh má popisek čitelný —
          schovává se jen ten, který by skončil na značce. */
-      if (el) el.style.visibility = okruhJeTecka(c.lat, c.lng) ? 'hidden' : '';
+      var tecka = okruhJeTecka(c.lat, c.lng);
+      if (el) el.style.visibility = tecka ? 'hidden' : '';
+      /* A SÁM KRUH TAKY NE. Při pohledu na celou republiku má
+         desetikilometrový okruh 13 px, tedy míň než špendlík — a ten
+         pak stojí uprostřed malého kroužku s čárkovaným okrajem.
+         Změřeno na telefonu: zoom 7, poloměr 13 px, špendlík 38 px.
+         Dohromady to nepřipomíná ani místo, ani okruh; vypadá to jako
+         rozbitá ikona. Kruh se v tom stavu nekreslí a místo něj se
+         nabízí tlačítko „Ukázat okruh" — to tu bylo už dřív, jen se
+         pod tím kroužkem ztrácelo, proč ho člověk má mačkat. */
+      kruh.setStyle(tecka ? { opacity: 0, fillOpacity: 0 } : { opacity: 1, fillOpacity: 0.12 });
+      meritko.setStyle({ opacity: tecka ? 0 : 0.95 });
     }
 
     var pocetEl = ov.querySelector('#vm-pocet');

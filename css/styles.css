@@ -439,11 +439,13 @@ body.vm-otevreno{overflow:hidden;}
    po mapě, která se zároveň může posouvat, a kdo se netrefí, posune
    místo značky celou mapu. Odtud „strašně malá zóna, kdy se toho
    dotýkám". Nově 64 px; svisle zůstává 46 px nad kotvou, což stačí. */
-.vm-znacka::before{content:""; position:absolute; left:-21px; right:-21px; top:-10px; bottom:0;}
-.vm-znacka span{display:block; width:22px; height:22px; border-radius:50%;
-  background:#8A5512; border:3px solid #fff; box-shadow:var(--e2); box-sizing:border-box; position:relative;}
-.vm-znacka span::after{content:""; position:absolute; left:50%; top:100%; width:2px; height:14px;
-  background:#8A5512; transform:translateX(-50%); border-radius:0 0 2px 2px;}
+.vm-znacka::before{content:""; position:absolute; left:-18px; right:-18px; top:-6px; bottom:0;}
+/* Kapka (týž tvar jako špendlík na mapě pozemku). Stín se kreslí na
+   tvar, ne na rámeček — u nepravoúhlé značky by čtvercový stín
+   prozradil, že je to jen obdélník s obrázkem. */
+.vm-znacka span{display:block; width:28px; height:38px; line-height:0;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));}
+.vm-znacka span svg{display:block;}
 .vm-pata{display:flex; align-items:center; gap:10px; flex-wrap:wrap;
   padding:12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
   border-top:1px solid var(--line); background:var(--ink-soft);}

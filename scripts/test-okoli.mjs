@@ -170,10 +170,14 @@ const stavVybiraku = (p) => p.evaluate(() => {
   // web a oko uhýbalo k němu místo k mapě.
   pravda('výběr zabírá celou obrazovku', v.panelCela,
     `panel ${v.panel} v okně ${v.okno}`);
-  // Kříž byl jednu dobu zmáčknutý na 6 px — nešlo poznat, kam se vlastně míří.
-  pravda('kříž uprostřed je vidět a není zmáčknutý',
-    v.kriz && v.kriz.w >= 16 && v.kriz.h >= 16 && Math.abs(v.kriz.w - v.kriz.h) <= 4,
-    v.kriz ? `${v.kriz.w}×${v.kriz.h} px` : 'kříž tam není');
+  /* Značka byla jednu dobu zmáčknutá na 6 px — nešlo poznat, kam se
+     vlastně míří. Pravidlo zůstává („je vidět a není zmáčknutá"), jen
+     se změnil tvar: dřív to byl puntík (proto se čekal čtverec), teď je
+     to kapka, tedy týž špendlík jako na mapě pozemku. Kapka je z podstaty
+     vyšší než širší, takže se hlídá poměr, ne shoda stran. */
+  pravda('značka místa je vidět a není zmáčknutá',
+    v.kriz && v.kriz.w >= 20 && v.kriz.h >= 28 && v.kriz.h > v.kriz.w && v.kriz.h / v.kriz.w < 1.8,
+    v.kriz ? `${v.kriz.w}×${v.kriz.h} px` : 'značka tam není');
   /* Pravidlo se nezměnilo: NEJDE POTVRDIT, CO NENÍ VIDĚT.
      Změnilo se, jak se drží. Dřív se při pohledu na celou republiku
      kreslil okruh 10 km jako puntík o 26 px a pod ním stál počet pozemků
@@ -329,7 +333,14 @@ const stavVybiraku = (p) => p.evaluate(() => {
       const st = document.querySelector('.vm-meritko span');
       const vidno = (e) => { if (!e) return null; const r = e.getBoundingClientRect();
         return !e.hidden && r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden'; };
-      return { tlacitko: vidno(b2), popisek: vidno(st),
+      /* Kruh je SVG cesta s čárkovaným okrajem. Nekouká se, jestli
+         v dokumentu je (je tam pořád), ale jestli je VIDĚT. */
+      const kr = document.querySelector('#vm-mapa path[stroke-dasharray]');
+      const kruhVidet = kr ? parseFloat(getComputedStyle(kr).strokeOpacity || '1') > 0.05 : null;
+      const znacka = document.querySelector('.vm-znacka span');
+      const zr = znacka ? znacka.getBoundingClientRect() : null;
+      return { tlacitko: vidno(b2), popisek: vidno(st), kruhVidet,
+        znackaVyska: zr ? Math.round(zr.height) : 0,
         text: (b2 && b2.textContent || '').trim(), zoom: window.PK_VM_MAPA.getZoom() };
     });
     pravda('po oddálení, kde je z okruhu tečka, se nabídne cesta zpátky',
@@ -337,6 +348,15 @@ const stavVybiraku = (p) => p.evaluate(() => {
     pravda('a říká, co udělá', /okruh/i.test(stav.text), `na tlačítku stojí „${stav.text}"`);
     pravda('útržek popisku „km" se v tom stavu nekreslí', stav.popisek === false,
       'zbyl viset popisek, ze kterého je vidět jen jednotka');
+    /* A SÁM KRUH TAKY NE. Při pohledu na celou republiku má
+       desetikilometrový okruh 13 px, tedy míň než špendlík (38 px) —
+       špendlík pak stojí uprostřed malého čárkovaného kroužku a celé to
+       vypadá jako rozbitá ikona, ne jako místo s okolím. Stížnost se
+       snímkem to pojmenovala takhle: „pořád je ten špendlík nějaký divný
+       a působí to zvláštně". */
+    pravda('a nekreslí se ani sám kroužek, ve kterém by špendlík stál',
+      stav.kruhVidet === false,
+      `kruh je vidět i ve chvíli, kdy je menší než značka (${stav.znackaVyska} px)`);
     /* A hlavně: mapa se sama nepřesunula. To byla ta starší stížnost. */
     pravda('mapa se přitom sama nepřiblížila', stav.zoom === dolu,
       `zoom ${dolu} → ${stav.zoom}; pohled si řídí člověk, ne mapa`);
@@ -349,6 +369,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
       pravda('klepnutí na ně okruh ukáže', false, 'tlačítko se vůbec neukázalo, nebylo na co klepnout');
       pravda('tlačítko pak zmizí, protože už není k čemu', false, 'nebylo na co klepnout');
       pravda('a popisek s kilometry je zase celý', false, 'nebylo na co klepnout');
+      pravda('a kruh je zase vidět', false, 'nebylo na co klepnout');
     } else {
     await p.locator('#vm-zpet').click();
     await p.waitForTimeout(700);
@@ -357,13 +378,20 @@ const stavVybiraku = (p) => p.evaluate(() => {
       const st = document.querySelector('.vm-meritko span');
       const vidno = (e) => { if (!e) return null; const r = e.getBoundingClientRect();
         return !e.hidden && r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden'; };
+      const kr = document.querySelector('#vm-mapa path[stroke-dasharray]');
       return { tlacitko: vidno(b2), popisek: vidno(st), zoom: window.PK_VM_MAPA.getZoom(),
+        kruhVidet: kr ? parseFloat(getComputedStyle(kr).strokeOpacity || '1') > 0.05 : null,
         meritko: ((st || {}).textContent || '').trim() };
     });
     pravda('klepnutí na ně okruh ukáže', zpet.zoom > dolu, `${dolu} → ${zpet.zoom}`);
     pravda('tlačítko pak zmizí, protože už není k čemu', zpet.tlacitko === false);
     pravda('a popisek s kilometry je zase celý', /^\d+ km$/.test(zpet.meritko),
       `měřítko: „${zpet.meritko}"`);
+    /* Schování kruhu je dočasné, ne vypnutí funkce: jakmile je okruh
+       zase větší než značka, musí se kreslit. Bez téhle druhé půlky by
+       kontrolu splnilo i to, kdyby se kruh nekreslil nikdy. */
+    pravda('a kruh je zase vidět', zpet.kruhVidet === true,
+      'okruh se po klepnutí na tlačítko pořád nekreslí');
     }
   }
 
