@@ -2656,11 +2656,18 @@ body{background:var(--bg) var(--grad-plocha); background-size:cover;}
   background-repeat:no-repeat;
   /* Text na barevné ploše potřebuje vlastní tón. Tam, kde se všechny tři
      vrstvy potkají, je podklad znatelně tmavší než zbytek stránky — běžný
-     akcent by tam klesl na 3,9 : 1. Tyhle dvě hodnoty platí jen uvnitř
-     úvodní plochy a drží 5,9 : 1 i v tom nejsytějším místě.
-     Odhalil to test kontrastu; okem se to nepozná. */
-  --copper-bright:#22368F;
-  --text-ondark-mute:#394053;}
+     akcent (#276646) by tam klesl na 4,2 : 1. Odhalil to test kontrastu;
+     okem se to nepozná.
+     BYLA TU ALE MODRÁ (#22368F a #394053), a to je cena, kterou platit
+     nemusíme: kontrast se dá zvednout i ZTMAVENÍM téže barvy, ne změnou
+     odstínu. Modrý nadpis na zeleném webu vypadá jako jiná značka —
+     a plocha .add-hero není žádný detail, nese úvod „Přidat pozemek"
+     i „Hlídání pozemků".
+     Teď je to tmavší brandová zelená (#1F5138, tedy --copper) a k ní
+     tlumená zeleno-šedá. Změřeno na nejsytějším místě plochy: 5,6 : 1
+     u akcentu, mez je 4,5 : 1 — a test kontrastu prochází celý web. */
+  --copper-bright:#1F5138;
+  --text-ondark-mute:#3E4A43;}
 .add-hero .aurora, .hero-map .aurora{display:none;}/* 3. Karty dostanou jemný lesk odshora — světlo dopadající na papír. */
 
 

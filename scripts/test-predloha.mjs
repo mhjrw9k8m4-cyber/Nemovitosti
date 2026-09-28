@@ -199,6 +199,55 @@ const neznama = [...predloha.matchAll(/'(--[a-z0-9-]+)'/g)].map((m) => m[1])
 hlas('Předloha ukazuje proměnnou, která v šabloně není', neznama,
   'Buď ji doplňte do :root, nebo ji z předlohy odeberte.');
 
+/* ---------- přebarvení značkových tokenů ----------
+   Barva se na stránce dá „opravit" dvěma způsoby: ztmavit ji, nebo jí
+   změnit odstín. To druhé je ale změna značky, ne úprava kontrastu —
+   a přesně tak se na plochu .add-hero (úvod „Přidat pozemek" i „Hlídání
+   pozemků") dostala tmavě MODRÁ #22368F. Důvod byl poctivý: na tom
+   nejsytějším místě plochy klesne běžný akcent #276646 na 4,2 : 1.
+   Jenže totéž umí i tmavší odstín téže zelené — #1F5138 dává 5,6 : 1
+   a značka zůstane značkou.
+   Hlídá se proto ODSTÍN: kdo token --copper-bright někde přepíše, smí
+   ho ztmavit nebo zesvětlit, ale ne přebarvit. Mez 30° je velkorysá;
+   modrá byla 79° od zelené.
+   Značka má odstíny DVA, ne jeden: zelenou a k ní teplou měď, která na
+   tmavém pásu zelenou střídá (--accent-warm-bright). Kontrola proto
+   měří vzdálenost k tomu bližšímu z nich — jinak by hlásila #E4C089,
+   tedy přesně tu měď, kvůli které ta druhá rodina existuje. */
+{
+  const hue = (hex) => {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+    if (!m) return null;
+    const n = parseInt(m[1], 16);
+    const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+    if (d < 0.001) return null;                        // šedá nemá odstín
+    let h;
+    if (max === r) h = 60 * (((g - b) / d) % 6);
+    else if (max === g) h = 60 * ((b - r) / d + 2);
+    else h = 60 * ((r - g) / d + 4);
+    return (h + 360) % 360;
+  };
+  const odchylka = (a, b) => { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; };
+  const vsechny = [...css.matchAll(/--copper-bright:\s*(#[0-9a-fA-F]{6})/g)].map((m) => m[1]);
+  const med = (css.match(/--accent-warm-bright:\s*(#[0-9a-fA-F]{6})/) || [])[1];
+  const rodiny = [vsechny[0], med].filter(Boolean).map(hue).filter((h) => h != null);
+  const zaklad = rodiny.length ? rodiny[0] : null;
+  const jine = [];
+  for (const barva of vsechny.slice(1)) {
+    const h = hue(barva);
+    if (h == null || !rodiny.length) continue;
+    const d = Math.round(Math.min.apply(null, rodiny.map((z) => odchylka(h, z))));
+    if (d > 30) jine.push(`--copper-bright:${barva} je o ${d}° mimo obě značkové rodiny (${vsechny[0]}, ${med || '?'})`);
+  }
+  hlas('Značkový token je někde přebarvený na jiný odstín', jine,
+    'Kontrast se zvedá ztmavením téže barvy, ne změnou odstínu.');
+  if (zaklad == null) {
+    chyb++;
+    rest.push('\n  ✕ Token --copper-bright se v šabloně nenašel — kontrola odstínu nic neměří.');
+  }
+}
+
 /* ---------- výsledek ---------- */
 const stinu = (css.match(/box-shadow:/g) || []).length;
 const zTokenu = (css.match(/box-shadow:\s*var\(/g) || []).length;
