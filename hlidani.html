@@ -140,6 +140,8 @@
     .hl-new-badge.zero{background:var(--ink-soft2); color:var(--text-ondark-mute);}
     .hl-crit{font-size:13px; color:var(--text-ondark-mute); margin-top:5px; line-height:1.5;}
     .hl-count{font-size:12.5px; color:var(--text-ondark-mute); margin-top:3px;}
+    .hl-kam{font-size:12.5px; color:var(--text-ondark-mute); margin:9px 0 0; line-height:1.5;}
+    .hl-kam a{color:var(--copper-bright); text-decoration:underline; text-underline-offset:2px;}
     .hl-acts{display:flex; gap:8px; margin-top:11px;}
     .hl-a{flex:1; height:40px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--line-strong); background:var(--ink-soft2); color:var(--text-ondark); display:flex; align-items:center; justify-content:center; text-decoration:none;}
     .hl-a.pri{background:var(--plocha-znacka); color:#fff; border-color:transparent; box-shadow:0 8px 20px -12px rgba(31,81,56,.5);}
@@ -583,10 +585,24 @@
             '<span class="hl-new-badge' + (newN ? '' : ' zero') + '">' + (newN ? newN + ' nových' : 'žádné nové') + '</span></div>' +
           '<div class="hl-crit">' + critText(s) + '</div>' +
           '<div class="hl-count">Celkem sedí: <b>' + cur.length + '</b> pozemků</div>' +
-          '<div class="hl-acts">' +
-            '<a class="hl-a pri" href="' + params + '" data-seen="' + s.id + '">Zobrazit na mapě</a>' +
-            '<button class="hl-a del" type="button" data-del="' + s.id + '" aria-label="Smazat">🗑</button>' +
-          '</div>' +
+          /* KDE TY NOVÉ POZEMKY JSOU. Odznak „3 nových" byl slepá ulička:
+             řekl počet a nic víc. Jediné tlačítko vedlo na mapu, kde je
+             vidět všech 27 nálezů a nové se od ostatních nijak neliší —
+             takže na otázku „kde je uvidím" karta neodpovídala vůbec.
+             Vypsané jsou v Upozorněních, i s obcí, výměrou a cenou
+             (js/upozorneni-feed.js), tak tam karta vede. A když žádné
+             nové nejsou, řekne se aspoň, kde se objeví, až přibudou. */
+          (newN
+            ? '<div class="hl-acts">' +
+                '<a class="hl-a pri" href="upozorneni.html">Ukázat nové (' + newN + ')</a>' +
+                '<a class="hl-a" href="' + params + '">Zobrazit na mapě</a>' +
+                '<button class="hl-a del" type="button" data-del="' + s.id + '" aria-label="Smazat">🗑</button>' +
+              '</div>'
+            : '<p class="hl-kam">Až nějaký přibude, vypíšeme ho v <a href="upozorneni.html">Upozorněních</a>.</p>' +
+              '<div class="hl-acts">' +
+                '<a class="hl-a pri" href="' + params + '">Zobrazit na mapě</a>' +
+                '<button class="hl-a del" type="button" data-del="' + s.id + '" aria-label="Smazat">🗑</button>' +
+              '</div>') +
         '</div>';
       });
       html += '</div></div>';
@@ -607,15 +623,14 @@
       });
     });
     wireNewSearch(function () { zalozka = 'moje'; loadSearches(); });
-    // označit jako viděné při kliknutí na „Zobrazit" (aby nová klesla na 0)
-    root.querySelectorAll('[data-seen]').forEach(function (a) {
-      a.addEventListener('click', function () {
-        var id = a.getAttribute('data-seen');
-        var s = rows.filter(function (x) { return x.id === id; })[0]; if (!s) return;
-        var keys = DATA.filter(function (d) { return matches(s, d); }).map(keyOf);
-        try { A.rpc('mark_search_seen', { p_id: id, p_keys: keys }, true); } catch (e) {}
-      });
-    });
+    /* ODSUD SE UŽ NIC ZA VIDĚNÉ NEOZNAČUJE. Klepnutí na „Zobrazit na
+       mapě" označilo VŠECHNY nálezy hledání — tedy i ty nové, které
+       člověk nikdy neviděl: mapa jich ukáže všech 27 a nové v nich
+       nijak nevyznačí. Seznam nových tím zmizel dřív, než ho někdo
+       stačil přečíst, a v Upozorněních po něm nezbylo nic.
+       Označuje se tam, kde jsou nové pozemky opravdu vypsané —
+       v Upozorněních, po jednom nebo tlačítkem „označit vše"
+       (js/centrum.js). */
     root.querySelectorAll('[data-del]').forEach(function (b) {
       b.addEventListener('click', function () {
         var id = b.getAttribute('data-del');

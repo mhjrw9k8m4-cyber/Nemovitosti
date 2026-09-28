@@ -85,6 +85,12 @@ const server = http.createServer((req, res) => {
     });
   }
 
+  /* Jen pro testy: co které hledání už má za viděné. Zkouška tím ověří,
+     že se nové pozemky neoznačí dřív, než je někdo uvidí. */
+  if (u.pathname === '/zkouska/videno') {
+    return send(200, JSON.stringify(Object.fromEntries(videno)));
+  }
+
   /* Jen pro testy: kolikrát se u kterého inzerátu započítalo zhlédnutí.
      Zkouška se tak nemusí dívat do databáze ani do konzole prohlížeče. */
   if (u.pathname === '/zkouska/zhlednuti') {

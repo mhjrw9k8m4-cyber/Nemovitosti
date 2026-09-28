@@ -179,6 +179,57 @@ pravda('dřívější hlídání zůstalo', po.some((t) => /Tábor/.test(t)), JS
 
 /* ---------- 2. nový pozemek → upozornění ---------- */
 data = NOVE;   // robot mezitím našel další pozemek
+
+/* ---------- 2a. karta hlídání musí říct, KDE ty nové jsou ----------
+   Odznak „1 nových" byl slepá ulička: řekl počet a nic víc. Jediné
+   tlačítko vedlo na mapu, kde je vidět všech N nálezů a nový se od
+   ostatních nijak neliší. Vypsané jsou v Upozorněních — tam karta vede.
+
+   A klepnutí na mapu je nesmí spotřebovat: dřív označilo VŠECHNY nálezy
+   hledání za viděné, takže seznam nových zmizel dřív, než ho někdo
+   stačil přečíst, a v Upozorněních po něm nezbylo nic. */
+await p.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(2400);
+{
+  const karta = await p.evaluate(() => {
+    const it = [...document.querySelectorAll('.hl-item')]
+      .find((e) => e.querySelector('.hl-new-badge') && !/zero/.test(e.querySelector('.hl-new-badge').className));
+    if (!it) return null;
+    return {
+      odznak: (it.querySelector('.hl-new-badge') || {}).textContent || '',
+      odkazy: [...it.querySelectorAll('a')].map((a) => ({
+        href: a.getAttribute('href') || '', text: (a.textContent || '').trim() })),
+    };
+  });
+  pravda('je hlídání, u kterého něco nového je (jinak zkouška nic neměří)',
+    !!karta, 'žádná karta s nenulovým odznakem — kontroly níž by neměly co hlídat');
+  if (karta) {
+    const doUpozorneni = karta.odkazy.find((a) => /^upozorneni\.html/.test(a.href));
+    pravda('karta vede tam, kde jsou ty nové pozemky vypsané',
+      !!doUpozorneni && /ukázat nové/i.test(doUpozorneni.text),
+      `odkazy na kartě: ${JSON.stringify(karta.odkazy)}`);
+
+    const naMapu = karta.odkazy.find((a) => /^index\.html/.test(a.href));
+    pravda('a druhá cesta vede na mapu', !!naMapu, JSON.stringify(karta.odkazy));
+    if (naMapu) {
+      /* POČÍTAJÍ SE ODESLANÉ POŽADAVKY, ne stav serveru po nich. Napoprvé
+         jsem tu četl, co má server za viděné — a sabotáž (označuj zase při
+         klepnutí na mapu) zkouškou PROŠLA: požadavek sice odejde, ale
+         odchod na jinou stránku ho zruší dřív, než ho server zapíše.
+         Měřilo se tedy, co stihne síť, ne co dělá web. Posluchač
+         požadavků se ozve v okamžiku odeslání, takže na tom nezáleží. */
+      const oznaceni = [];
+      const posluchac = (req) => { if (/mark_search_seen/.test(req.url())) oznaceni.push(req.url()); };
+      p.on('request', posluchac);
+      await p.click(`.hl-item a[href="${naMapu.href.replace(/"/g, '\\"')}"]`);
+      await p.waitForTimeout(2000);
+      p.off('request', posluchac);
+      pravda('otevření mapy z hlídání nové pozemky neodklikne', oznaceni.length === 0,
+        `web při tom poslal ${oznaceni.length}× „označit za viděné"`);
+    }
+  }
+}
+
 await p.goto(`${BASE}/upozorneni.html`, { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(2200);
 const centrum = await p.evaluate(() => ({
@@ -236,6 +287,25 @@ await p.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
 /* Zase jen „je v DOM": po otevření je vidět seznam hlídání, ne
    formulář — a mazat se bude právě v tom seznamu. */
 await p.waitForSelector('#ns-okres', { state: 'attached', timeout: 15000 });
+/* Po označení za viděné je odznak nulový — a tehdy se člověk nejvíc
+   ptá „kde to teda uvidím, až něco přibude". Karta mu to musí říct. */
+{
+  await p.waitForTimeout(1200);
+  const nulova = await p.evaluate(() => {
+    const it = [...document.querySelectorAll('.hl-item')]
+      .find((e) => /zero/.test(((e.querySelector('.hl-new-badge') || {}).className || '')));
+    return it ? { text: (it.textContent || '').replace(/\s+/g, ' '),
+      naUpozorneni: [...it.querySelectorAll('a')].some((a) => /^upozorneni\.html/.test(a.getAttribute('href') || '')) } : null;
+  });
+  pravda('je hlídání bez nových pozemků (jinak zkouška nic neměří)', !!nulova,
+    'žádná karta s nulovým odznakem');
+  if (nulova) {
+    pravda('i u prázdného odznaku je napsané, kde se nové objeví',
+      /Upozorn/i.test(nulova.text) && nulova.naUpozorneni,
+      `na kartě stojí: „${nulova.text.slice(0, 160)}"`);
+  }
+}
+
 const smazat = await p.$('.hl-del, [data-del], button:has-text("Smazat")');
 if (smazat) {
   p.once('dialog', (d) => d.accept());
