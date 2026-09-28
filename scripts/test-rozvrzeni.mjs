@@ -534,6 +534,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
       'logo': 'odkaz domů v hlavičce je 118 px široký; vyšší hlavička by ubrala místo nad hledáním',
       'opp-fav': 'kolečko na náhledu karty — dvě 44px kolečka nad sebou by náhled zakryla',
       'opp-skryt': 'totéž, sedí hned pod ním',
+      'linklike': 'podtržené slovo uvnitř věty („Už jste inzerát přidal?"), ne tlačítko — 44 px by z věty udělalo schod',
     };
     const ven = [];
     document.querySelectorAll('a[href], button, summary, select, label.chip-check').forEach((e) => {
@@ -557,6 +558,71 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   });
   pravda(`ovládání na úvodní stránce se dá trefit prstem (44 px)`, male.length === 0,
     male.map((m) => `${m.co} „${m.text}" ${m.v} px`).join(' | '));
+  await ctx.close();
+}
+
+/* --- 6b) A TÝŽ METR NA ZBYTEK WEBU -----------------------------------
+ *
+ * Mez 44 px se měřila JEN na úvodní stránce, takže na ostatních o ní
+ * nikdo nevěděl. Změřeno na 390×844: hlídání mělo tlačítka 40 px,
+ * upozornění 39, odhlášení v profilu 34, drobečková cesta 27, jméno
+ * kraje v rozcestníku 24, odkaz zpět na stránce pozemku 22 a ovládání
+ * mapy 31–36 px — a to jsou prvky, kterými se mapa na telefonu jedině
+ * ovládá. Stránky za přihlášením se musí otevřít přihlášené, jinak by
+ * se měřila jen přihlašovací karta.
+ */
+{
+  const DATA_H = { updated: '2026-01-01', opportunities: [
+    { place: 'Kolín', okres: 'Kolín', type: 'sale', parcel: '1/1', druh: 'orná půda',
+      area: 1200, price: 400000, lat: 50.02, lng: 15.20, extra: 'inzerát', site: ['elektrina'] },
+  ] };
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ', permissions: [] });
+  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: JSON.stringify(DATA_H) }));
+  await ctx.route('**/data/user-listings.json*', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: '[]' }));
+  await ctx.addInitScript(() => {
+    localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok-majitel',
+      refresh_token: 'ref-majitel', user: { id: '11111111-1111-4111-8111-111111111111' } }));
+  });
+  const p2 = await ctx.newPage();
+  const STRANKY = ['hlidani.html', 'upozorneni.html', 'zpravy.html', 'muj-inzerat.html',
+    'pridat.html', 'pozemek.html?ll=50.02,15.20', 'pozemky-podle-okresu.html',
+    'kontakt.html', 'cena-pozemku.html'];
+  const nalezy = [];
+  for (const stranka of STRANKY) {
+    await p2.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
+    await p2.waitForTimeout(2500);
+    const male = await p2.evaluate(() => {
+      const VYJIMKY = ['skip-link', 'logo', 'opp-fav', 'opp-skryt', 'linklike'];
+      const ven = [];
+      document.querySelectorAll('a[href], button, summary, select, label.chip-check').forEach((e) => {
+        const r = e.getBoundingClientRect();
+        if (r.width < 4 || r.height < 4) return;
+        if (e.closest('details:not([open])')) return;
+        if (!e.offsetParent && getComputedStyle(e).position !== 'fixed') return;
+        if (e.tagName === 'A' && getComputedStyle(e).display === 'inline') return;
+        if (VYJIMKY.some((k) => e.classList.contains(k))) return;
+        if (r.height >= 44) return;
+        ven.push(e.tagName.toLowerCase() + '.' + String(e.className || '').split(' ')[0]
+          + ' „' + (e.textContent || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim().slice(0, 20)
+          + '" ' + Math.round(r.height) + ' px');
+      });
+      return [...new Set(ven)];
+    });
+    male.forEach((m) => nalezy.push(`${stranka}: ${m}`));
+  }
+  /* Ať kontrola není prázdná: na těch stránkách musí něco měřitelného
+     vůbec být. Kdyby se neotevřely (třeba kvůli přihlášení), našlo by se
+     nula prvků a kontrola níž by mlčela. */
+  const merenych = await p2.evaluate(() => document.querySelectorAll('a[href], button').length);
+  pravda('poslední z procházených stránek má co měřit', merenych > 3,
+    `měřitelných prvků: ${merenych}`);
+  pravda(`ovládání se dá trefit prstem i mimo úvodní stránku (${STRANKY.length} stránek)`,
+    nalezy.length === 0, nalezy.slice(0, 8).join(' | '));
   await ctx.close();
 }
 

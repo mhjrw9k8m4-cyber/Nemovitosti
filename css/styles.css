@@ -3676,6 +3676,14 @@ h1, h2, h3,
      větě, takže mez platí i na ně. Odsazení se zmenší, ať z toho není
      o 150 px delší patička — rozestup vyjde na 46 px místo 40. */
   .foot-col a { min-height:44px; display:flex; align-items:center; margin-bottom:2px; }
+  /* Drobečková cesta (Pozemky > Ceny pozemků) je plnohodnotná
+     navigace, ne text ve větě — 27 px na ni bylo málo. */
+  .crumbs a{min-height:44px; display:inline-flex; align-items:center;}
+  /* Jméno kraje v rozcestníku mělo 24 px, i když je to jediný odkaz
+     v celém řádku. */
+  .okr-item .okr-place{min-height:44px; display:inline-flex; align-items:center;}
+  /* Zaškrtávací pilulky ve formuláři („Elektřina") měly 41 px. */
+  .chip-check{min-height:44px;}
   /* Odznaky „Naposledy prohlédnuté" měly 31 px. Dosud to nikomu nevadilo,
      protože se ten pruh NIKDY neukázal: zapisovala do něj jen funkce, ke
      které se nedalo dostat. Teď se ukazuje, tak platí táž mez jako pro

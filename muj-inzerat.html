@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=eb313a16">
+  <link rel="stylesheet" href="css/styles.css?v=5c2c5575">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:20px; padding:24px 22px 22px;
@@ -125,6 +125,15 @@
     .mi-lbtn.danger:hover{border-color:var(--c-exekuce); background:rgba(228,72,61,.06);}
     .mi-lbtn.danger:disabled{opacity:.5; cursor:default;}
     @media (min-width:480px){ .pf-logout span{display:inline;} }
+  
+    /* PRST POTŘEBUJE 44 PX. Web si tu mez klade sám, jenže měřila se jen
+       na úvodní stránce — sem o ní nikdo nevěděl. Změřeno na 390×844:
+       tlačítko na odhlášení v hlavičce profilu mělo 34 px.
+       Platí jen na dotykových displejích, aby se na počítači nic
+       nezvětšovalo zbytečně. */
+    @media (pointer: coarse) {
+      .pf-logout{min-height:44px;}
+    }
   </style>
 </head>
 <body>

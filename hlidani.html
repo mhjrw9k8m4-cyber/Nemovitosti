@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=eb313a16">
+  <link rel="stylesheet" href="css/styles.css?v=5c2c5575">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .hl-wrap{max-width:640px; margin:0 auto;}
@@ -148,6 +148,15 @@
     .hl-a.del{flex:0 0 44px; color:var(--c-exekuce);}
     .hl-empty{padding:30px 22px; text-align:center; color:var(--text-ondark-mute); font-size:14px; line-height:1.6;}
     .hl-load{padding:26px; text-align:center; color:var(--text-ondark-mute);}
+  
+    /* PRST POTŘEBUJE 44 PX. Web si tu mez klade sám, jenže měřila se jen
+       na úvodní stránce — sem o ní nikdo nevěděl. Změřeno na 390×844:
+       tlačítko na mapu i koš u hlídání měly 40 px.
+       Platí jen na dotykových displejích, aby se na počítači nic
+       nezvětšovalo zbytečně. */
+    @media (pointer: coarse) {
+      .hl-a{min-height:44px;}
+    }
   </style>
 </head>
 <body>

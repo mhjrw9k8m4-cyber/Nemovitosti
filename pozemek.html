@@ -36,7 +36,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=eb313a16">
+  <link rel="stylesheet" href="css/styles.css?v=5c2c5575">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -323,6 +323,19 @@
     .pz-spec .pz-pozn{display:block; margin-top:3px; font-size:12px; line-height:1.5; font-style:italic; color:var(--text-ondark-mute);}
     .pz-loading, .pz-empty{padding:70px 16px; text-align:center; color:var(--text-ondark-mute);}
     .pz-empty a{color:var(--copper-bright); font-weight:600;}
+  
+    /* PRST POTŘEBUJE 44 PX. Web si tu mez klade sám, jenže měřila se jen
+       na úvodní stránce — sem o ní nikdo nevěděl. Změřeno na 390×844:
+       odkaz zpět na seznam 22 px, zvětšení mapy 36 px, přepínače
+       podkladu 31 px a vrstev 34 px — a to jsou prvky, kterými se mapa
+       na telefonu jedině ovládá.
+       Platí jen na dotykových displejích, aby se na počítači nic
+       nezvětšovalo zbytečně. */
+    @media (pointer: coarse) {
+      .pz-back{min-height:44px;}
+      .pzm-cela-btn{width:44px; height:44px;}
+      .pzm-z, .pzm-v{height:44px;}
+    }
   </style>
 </head>
 <body>
