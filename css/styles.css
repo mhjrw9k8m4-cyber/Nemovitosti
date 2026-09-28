@@ -3644,6 +3644,44 @@ h1, h2, h3,
 .mc-skryte:hover{color:var(--text-ondark);}
 .mc-skryte:hover > span{border-bottom-color:var(--text-ondark);}
 
+/* =====================================================================
+   PRSTEM SE TREFÍTE JEN DO TOHO, CO MÁ ASPOŇ 44 px
+   =====================================================================
+   Web si tuhle mez sám klade — hlídá ji zkouška u rozbalovátka na
+   stránce pozemku i na „Přidat pozemek". Změřeno ale na telefonu
+   (390 px) a na úvodní stránce, tedy tam, kde se klepe nejvíc:
+     přepínač Seznam/Mapa 36 px, „Uložené" 36 px, výběr řazení 36 px,
+     tři živé údaje v úvodu 35 px.
+   Všechno pod mezí, kterou si web jinde sám vymáhá. Je to zrovna ta
+   řada, kterou člověk na telefonu obsluhuje palcem jednou rukou.
+   Platí to jen pro DOTYK (pointer: coarse) — myš tolik místa
+   nepotřebuje a na monitoru by z toho byla jen řídká plocha. */
+@media (pointer: coarse) {
+  .mvt-btn, .mc-prep, .map-select, .msv-razeni .map-select,
+  .filter-chip, .map-near-btn { min-height:44px; }
+  /* Hlavní tlačítko v hlavičce mělo 41 px — o tři chybějící pixely
+     u toho nejdůležitějšího knoflíku na webu nemá cenu se hádat. */
+  .header-cta { min-height:44px; }
+  /* Odkazy v patičce měly 31 px a rozestup 40 px. Je to plnohodnotná
+     navigace (Pozemky, Ceny, Přidat pozemek, Můj profil…), ne text ve
+     větě, takže mez platí i na ně. Odsazení se zmenší, ať z toho není
+     o 150 px delší patička — rozestup vyjde na 46 px místo 40. */
+  .foot-col a { min-height:44px; display:flex; align-items:center; margin-bottom:2px; }
+}
+/* Tři živé údaje v úvodu mají 44 px taky — ale až od 361 px šířky.
+   NA NEJMENŠÍCH DISPLEJÍCH (do 360 px) TO NEJDE a zkouška rozvržení to chytila:
+   úvod je na 320×568 vyždímaný do poslední kapky (štítek pryč, legenda
+   pryč, fakta na jeden řádek), aby pole „Hledat obec" zůstalo nad
+   ohybem. Devět pixelů navíc u každého ze tří řádků je 27 px a hledání
+   spadne pod 60 % výšky — a to je mez, kterou si web klade proto, že
+   první, co má člověk na webu o pozemcích vidět, je hledání pozemků.
+   Ty řádky jsou navíc přes celou šířku (350 px), takže se trefí
+   i palcem; chybí jim výška, ne plocha. Tohle je vědomý ústupek, ne
+   přehlédnutí. */
+@media (pointer: coarse) and (min-width:361px) {
+  .hh-fakta .hl-fact { min-height:44px; }
+}
+
 /* Křížek „tenhle mě nezajímá" sedí pod záložkou pro uložení. Objeví se až
    při najetí nebo zaměření klávesnicí — na dotyku je vidět vždy, protože
    tam se najet nedá. */

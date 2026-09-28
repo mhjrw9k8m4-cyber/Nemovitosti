@@ -498,6 +498,52 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   await ctx.close();
 }
 
+/* --- OVLÁDÁNÍ SE MUSÍ DÁT TREFIT PRSTEM ------------------------------
+ *
+ * Web si mez 44 px klade sám: hlídá ji zkouška u rozbalovátka na stránce
+ * pozemku i na „Přidat pozemek". Na úvodní stránce — tedy tam, kde se
+ * klepe nejvíc — ji ale půlka ovládání nesplňovala: přepínač Seznam/Mapa
+ * 36 px, „Uložené" 36 px, výběr řazení 36 px, tři živé údaje 35 px,
+ * hlavní tlačítko v hlavičce 41 px. Nikdo si toho nevšiml, protože se to
+ * nikde neměřilo.
+ * Prochází se VŠECHNO, co jde klepnout, ne jen ten seznam — jinak by
+ * kontrola platila na dnešek a na nic dalšího. Co mez mít nemůže, je
+ * vyjmenované i s důvodem; kdo přidá další výjimku, musí důvod napsat. */
+{
+  const { ctx, p } = await otevri('index.html', 390, 844);
+  await p.waitForTimeout(2600);
+  const male = await p.evaluate(() => {
+    const VYJIMKY = {
+      'skip-link': 'ukáže se jen při ovládání klávesnicí, prstem se na něj nedá narazit',
+      'logo': 'odkaz domů v hlavičce je 118 px široký; vyšší hlavička by ubrala místo nad hledáním',
+      'opp-fav': 'kolečko na náhledu karty — dvě 44px kolečka nad sebou by náhled zakryla',
+      'opp-skryt': 'totéž, sedí hned pod ním',
+    };
+    const ven = [];
+    document.querySelectorAll('a[href], button, summary, select, label.chip-check').forEach((e) => {
+      const r = e.getBoundingClientRect();
+      if (r.width < 4 || r.height < 4) return;
+      if (e.closest('details:not([open])')) return;
+      if (!e.offsetParent && getComputedStyle(e).position !== 'fixed') return;
+      const st = getComputedStyle(e);
+      // Odkaz v běžném textu mez mít nemusí (a mít ani nemůže — je to slovo ve větě).
+      if (e.tagName === 'A' && st.display === 'inline') return;
+      const duvod = Object.keys(VYJIMKY).find((k) => e.classList.contains(k));
+      if (duvod) return;
+      if (r.height >= 44) return;
+      ven.push({ co: e.tagName.toLowerCase() + '.' + String(e.className || '').split(' ')[0],
+        text: (e.textContent || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim().slice(0, 24),
+        v: Math.round(r.height) });
+    });
+    const uniq = [];
+    for (const m of ven) if (!uniq.some((u) => u.co === m.co)) uniq.push(m);
+    return uniq;
+  });
+  pravda(`ovládání na úvodní stránce se dá trefit prstem (44 px)`, male.length === 0,
+    male.map((m) => `${m.co} „${m.text}" ${m.v} px`).join(' | '));
+  await ctx.close();
+}
+
 // --- 7) Úvod na telefonu nedrží hledání pod obzorem -------------------
 /* Na displeji 320×568 bylo pole „Hledat obec" až v 72 % výšky obrazovky.
    Člověk, který přišel hledat pozemek, se k hledání dostal jako
