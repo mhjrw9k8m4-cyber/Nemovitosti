@@ -670,6 +670,52 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   await ctx.close();
 }
 
+/* --- 6d) MAPA NA STRÁNCE POZEMKU SE STAVÍ AŽ NA DOHLED ---------------
+ *
+ * Proto ji měření stránky nevidělo: v okamžiku, kdy se měřilo, tam
+ * mapa ještě nebyla. Změřeno po doscrollování: přepínač podkladu 31 px,
+ * vrstev 34, zvětšení 36, zoom 30×30 a posuvník průhlednosti vrstvy
+ * 16 px — do šestnácti pixelů se prstem netrefí nikdo, a je to jediný
+ * způsob, jak si prohlédnout, co je pod úřední vrstvou.
+ */
+{
+  /* Skutečný pozemek z dat, ne vymyšlené souřadnice: bez nálezu se
+     stránka vůbec nevykreslí a mapa nevznikne — kontrola by pak měřila
+     prázdno (což se mi taky povedlo, než to pojistka ukázala). */
+  const vzorek = (JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8')).opportunities || [])
+    .find((x) => typeof x.lat === 'number' && typeof x.lng === 'number' && x.price > 0);
+  const klicVzorku = [vzorek.place || '', vzorek.parcel || '', vzorek.okres || '',
+    vzorek.lat.toFixed(3), vzorek.lng.toFixed(3)].join('|');
+  const { ctx, p: p4 } = await otevri(
+    `pozemek.html?p=${encodeURIComponent(klicVzorku)}&ll=${vzorek.lat},${vzorek.lng}`, 390, 844);
+  await p4.waitForTimeout(2000);
+  await p4.locator('#pzm').scrollIntoViewIfNeeded().catch(() => {});
+  await p4.waitForTimeout(4000);
+  const v = await p4.evaluate(() => {
+    const ven = [];
+    document.querySelectorAll('.pzm a[href], .pzm button, .pzm label, .pzm input, .leaflet-control a').forEach((e) => {
+      const r = e.getBoundingClientRect();
+      if (r.width < 4 || r.height < 4) return;
+      if (!e.offsetParent && getComputedStyle(e).position !== 'fixed') return;
+      /* Uvedení autorů mapové knihovny je povinná drobnost v rohu, ne
+         ovládání — na tu se neklepe a zvětšovat ji nemá smysl. */
+      if (e.closest('.leaflet-control-attribution')) return;
+      /* Štítek u posuvníku je jen slovo; chytá se samotný posuvník. */
+      if (e.tagName === 'LABEL' && e.querySelector('input')) return;
+      if (r.height >= 44) return;
+      ven.push(e.tagName.toLowerCase() + '.' + String(e.className || '').split(' ')[0]
+        + ' „' + (e.textContent || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim().slice(0, 16)
+        + '" ' + Math.round(r.height) + ' px');
+    });
+    return { vsech: document.querySelectorAll('.pzm a[href], .pzm button, .pzm input').length, male: [...new Set(ven)] };
+  });
+  pravda('mapa na stránce pozemku se postavila a má co měřit', v.vsech > 3,
+    `ovládacích prvků v mapě: ${v.vsech}`);
+  pravda('a její ovládání se dá trefit prstem (44 px)', v.male.length === 0,
+    v.male.join(' | '));
+  await ctx.close();
+}
+
 // --- 7) Úvod na telefonu nedrží hledání pod obzorem -------------------
 /* Na displeji 320×568 bylo pole „Hledat obec" až v 72 % výšky obrazovky.
    Člověk, který přišel hledat pozemek, se k hledání dostal jako

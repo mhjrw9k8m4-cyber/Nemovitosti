@@ -333,6 +333,11 @@
        nezvětšovalo zbytečně. */
     @media (pointer: coarse) {
       .pz-back{min-height:44px;}
+      /* Posuvník průhlednosti vrstvy měl 16 px. Prstem se do šestnácti
+         pixelů netrefí nikdo — a je to jediný způsob, jak si na telefonu
+         prohlédnout, co je pod úřední vrstvou. Vyšší plocha na chytání;
+         samotná dráha posuvníku zůstává tenká, prohlížeč ji vystředí. */
+      .pzm-kryti input{height:44px;}
       .pzm-cela-btn{width:44px; height:44px;}
       .pzm-z, .pzm-v{height:44px;}
     }
