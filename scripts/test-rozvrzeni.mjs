@@ -528,6 +528,17 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   pravda('pruh „Naposledy prohlédnuté" se v měření objevil (jinak se jeho odznaky nezměří)',
     await p.evaluate(() => !document.getElementById('recent-strip').hidden),
     'pruh se neukázal — kontrola níž by o jeho odznacích nic neřekla');
+  /* ROZBALIT, CO JE SBALENÉ. Filtry druhu a sítí („Orná půda",
+     „Elektřina") sedí ve sbalené sekci a měření je přeskakovalo, protože
+     zavřený blok nemá rozměr. Lidé si ho ale otevřou — a měly tam 38 px. */
+  const rozbaleno = await p.evaluate(() => {
+    const d = [...document.querySelectorAll('details')];
+    d.forEach((x) => { x.open = true; });
+    return d.length;
+  });
+  pravda('sbalené sekce se daly rozbalit (jinak by se jejich ovládání neměřilo)',
+    rozbaleno > 0, 'na stránce není ani jeden sbalovací blok');
+  await p.waitForTimeout(700);
   const male = await p.evaluate(() => {
     const VYJIMKY = {
       'skip-link': 'ukáže se jen při ovládání klávesnicí, prstem se na něj nedá narazit',
@@ -596,6 +607,9 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   for (const stranka of STRANKY) {
     await p2.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
     await p2.waitForTimeout(2500);
+    // Sbalené sekce se rozbalí — zavřený blok nemá rozměr a měření by ho minulo.
+    await p2.evaluate(() => { document.querySelectorAll('details').forEach((x) => { x.open = true; }); });
+    await p2.waitForTimeout(500);
     const male = await p2.evaluate(() => {
       const VYJIMKY = ['skip-link', 'logo', 'opp-fav', 'opp-skryt', 'linklike'];
       const ven = [];
@@ -623,6 +637,34 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
     `měřitelných prvků: ${merenych}`);
   pravda(`ovládání se dá trefit prstem i mimo úvodní stránku (${STRANKY.length} stránek)`,
     nalezy.length === 0, nalezy.slice(0, 8).join(' | '));
+  await ctx.close();
+}
+
+/* --- 6b2) NAŠEPTÁVAČ U HLEDÁNÍ --------------------------------------
+ *
+ * Objeví se až při psaní, takže ho měření stránky minulo — a je to
+ * hlavní způsob, jak si na telefonu vybrat obec. Řádky měly 38 px;
+ * netrefený řádek tu znamená jinou vesnici, ne jen nepřesnost.
+ */
+{
+  const { ctx, p: p5 } = await otevri('index.html', 390, 844);
+  await p5.waitForTimeout(3000);
+  await p5.fill('#map-search', 'Kol');
+  await p5.waitForTimeout(1200);
+  const v = await p5.evaluate(() => {
+    const n = document.getElementById('map-search-navrhy');
+    if (!n || n.hidden) return null;
+    const polozky = [...n.querySelectorAll('li')];
+    return { pocet: polozky.length,
+      male: polozky.map((e) => ({ t: (e.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 20),
+        v: Math.round(e.getBoundingClientRect().height) })).filter((x) => x.v < 44) };
+  });
+  pravda('našeptávač se po napsání obce otevřel (jinak zkouška nic neměří)',
+    !!v && v.pocet > 0, v ? `návrhů: ${v.pocet}` : 'seznam návrhů se neukázal');
+  if (v) {
+    pravda('a jeho řádky se dají trefit prstem (44 px)', v.male.length === 0,
+      v.male.map((x) => `„${x.t}" ${x.v} px`).join(' | '));
+  }
   await ctx.close();
 }
 

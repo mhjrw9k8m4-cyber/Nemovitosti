@@ -3696,6 +3696,20 @@ h1, h2, h3,
   /* Měřit a zvětšovat se musí ŠTÍTEK, ne jen nápis uvnitř: klikací je
      průhledné políčko natažené přes štítek (inset:0), takže výška nápisu
      s ním nehne — štítek je řádkový a jeho rámeček zůstal na 37 px. */
+  /* Našeptávač u hledání měl řádky 38 px. Objeví se až při psaní, takže
+     ho měření stránky taky minulo — a přitom je to hlavní způsob, jak si
+     na telefonu vybrat obec. Netrefený řádek tu znamená jinou vesnici. */
+  /* Filtry druhu a sítí („Orná půda", „Elektřina") měly 38 px a tlačítko
+     s vysvětlivkou 36. Sedí ve sbalené sekci, takže je měření stránky
+     přeskakovalo — přitom jimi se v nabídce vybírá nejčastěji. */
+  .mcv-btn { min-height:44px; }
+  .mc-info { min-width:44px; min-height:44px; }
+  /* Přihlašovací karta: oko u hesla 40 px, „Zapomněli jste heslo"
+     a „Vytvořit zdarma" 38. Je to první obrazovka, kterou člověk
+     na telefonu vidí, když chce vložit inzerát. */
+  .auth-eye { min-width:44px; min-height:44px; }
+  .auth-link { min-height:44px; display:inline-flex; align-items:center; }
+  .ms-navrhy li { min-height:44px; }
   .vm-km { display:inline-flex; min-height:44px; }
   .vm-km span { min-height:44px; }
   .vm-x { width:44px; height:44px; }
