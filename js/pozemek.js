@@ -955,6 +955,8 @@
 
     var host = document.getElementById('pz-detail');
     host.innerHTML = html;
+    try { zapisNaposledy(d); } catch (e) {}
+    try { zapocitejZhlednuti(d); } catch (e) {}
 
     /* Mapa se staví až po vykreslení: potřebuje prvek v dokumentu a vlastní
        rozměr. Sama si pak počká, než se k ní člověk doroluje. */
@@ -967,7 +969,7 @@
        titulek, popis i náhled — přes „?p=…" viděl Facebook u všech 1 927
        nabídek totéž. Výpočet musí sedět s generátorem
        (scripts/generate-parcel-pages.mjs), proto je to týž obyčejný djb2. */
-    try { nastavKanonickou('https://www.parcelaka.cz/' + souborPozemku(d)); } catch (e) {}
+    try { nastavKanonickou('https://www.parcelaka.cz/' + vlastniAdresa(d)); } catch (e) {}
 
     // uložit
     var favBtn = document.getElementById('pz-fav');
@@ -983,7 +985,7 @@
       /* Sdílí se VLASTNÍ stránka pozemku, ne adresa, na které zrovna stojíme.
          Přes „?p=…" ukazoval náhled u všech nabídek totéž — a sdílení je
          přesně ta chvíle, kdy na náhledu záleží nejvíc. */
-      var url = location.origin + '/' + souborPozemku(d);
+      var url = location.origin + '/' + vlastniAdresa(d);
       var title = 'Pozemek ' + d.place + ' — Parcelka';
       var text = t.label + ' · ' + d.place + ', okres ' + d.okres + ' · ' + areaTxt(d) + ' · ' + fmt(d.price) + ' Kč';
       if (navigator.share) { navigator.share({ title: title, text: text, url: url }).catch(function () {}); }
@@ -1029,8 +1031,36 @@
     return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
   }
 
+  /* ADRESA, NA KTEROU SE DÁ ODKÁZAT. Stažené nabídky mají vlastní
+     vygenerovanou stránku (pozemek-<okres>-<obec>-<otisk>.html). Inzerát
+     od majitele ŽÁDNOU NEMÁ: generátor staví stránky ze statických dat
+     a živý inzerát v nich není. Sdílelo se přesto jméno takového souboru
+     — tlačítkem „Sdílet" i kanonickou adresou v hlavičce — takže odkaz,
+     který majitel pošle zájemci, vedl na nenalezenou stránku. */
+  function vlastniAdresa(d) {
+    if (d && d.type === 'majitel') {
+      return d._lid
+        ? 'pozemek.html?l=' + encodeURIComponent(d._lid)
+        : 'pozemek.html?p=' + encodeURIComponent(pkeyPlny(d)) + '&ll=' + d.lat + ',' + d.lng;
+    }
+    return souborPozemku(d);
+  }
+
   function findTarget(DATA) {
     var qs = location.search;
+    /* Inzerát od majitele se hledá podle SVÉHO ID, ne podle klíče
+       složeného z místa a parcely: to je jediný údaj, který se nezmění,
+       když majitel opraví cenu nebo název obce. Klíč „?p=" zůstává —
+       odkazy rozeslané dřív ho nesou — ale ID má přednost. */
+    var mid = /[?&]l=([^&]+)/.exec(qs);
+    if (mid) {
+      var lid = null;
+      try { lid = decodeURIComponent(mid[1]); } catch (e) {}
+      if (lid) {
+        var podle = DATA.filter(function (d) { return d._lid === lid; });
+        if (podle.length) return { d: podle[0], presne: true };
+      }
+    }
     var mp = /[?&]p=([^&]+)/.exec(qs);
     var ml = /[?&]ll=([^&]+)/.exec(qs);
     var key = null, ll = null;
@@ -1090,6 +1120,64 @@
     return fetch(url, { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
   }
 
+  /* DVĚ VĚCI, KTERÉ SE MĚLY DÍT PŘI PROHLÍŽENÍ POZEMKU — a neděly se
+     ani jedna, protože obě visely na jednom místě, kam se nedalo dojít.
+     Mapa měla kdysi vlastní panel s detailem (showDetail v js/main.js).
+     Ten panel si zapisoval „Naposledy prohlédnuté" a u inzerátů od
+     majitelů počítal zhlédnutí. Jenže klepnutí na pozemek dnes vede na
+     tuhle stránku a showDetail zůstal jediný volaný odkud? Z pruhu
+     „Naposledy prohlédnuté". Do toho pruhu se ale dostane jen to, co
+     showDetail zapsal — kruh, do kterého se nedá vstoupit. Výsledek:
+     pruh se nikdy neukázal a počítadlo zhlédnutí stálo na nule, zatímco
+     profil slibuje „Zhlédnutí celkem".
+     Zapisuje se to proto tam, kde se pozemek OPRAVDU prohlíží. */
+  var KLIC_NAPOSLEDY = 'pk_recent_v1';
+  function zapisNaposledy(d) {
+    if (!d || !d.place) return;
+    /* Týž klíč jako pkey() v js/main.js — pruh na úvodní stránce podle
+       něj hledá pozemek v datech. Kdyby se ty dva výpočty rozešly, pruh
+       by zůstal prázdný a nikde by to nekřiklo. */
+    var k = pkeyPlny(d);
+    var arr = [];
+    try { arr = JSON.parse(localStorage.getItem(KLIC_NAPOSLEDY) || '[]') || []; } catch (e) {}
+    if (!Array.isArray(arr)) arr = [];
+    arr = arr.filter(function (x) { return x !== k; });
+    arr.unshift(k);
+    try { localStorage.setItem(KLIC_NAPOSLEDY, JSON.stringify(arr.slice(0, 8))); } catch (e) {}
+  }
+  /* Zhlédnutí jen u inzerátů od majitelů (u stažených nabídek nemáme co
+     počítat) a jen jednou za návštěvu webu, ať se číslo nenafukuje
+     obnovením stránky. Volá se anonymně — bump_view je v databázi
+     povolená i nepřihlášeným, protože zhlédnutí dělají hlavně oni. */
+  var KLIC_ZHLEDNUTI = 'pk_videno_v1';
+  function zapocitejZhlednuti(d) {
+    if (!d || d.type !== 'majitel' || !d._lid) return;
+    /* POČKAT NA PKAuth. Tenhle skript je v pozemek.html obyčejný, kdežto
+       js/config.js a js/auth.js mají defer — v okamžiku okamžitého
+       vykreslení z handoffu tedy global.PKAuth JEŠTĚ NEEXISTUJE. První
+       verze se v tu chvíli jen tiše vrátila, a protože inzerát od majitele
+       ve statických datech není, druhé vykreslení už nepřišlo: zhlédnutí
+       se nezapočítalo NIKDY. Skripty s defer se spustí před
+       DOMContentLoaded, takže jedna ta událost stačí — žádné vyčkávání
+       v cyklu. */
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { posliZhlednuti(d); }, { once: true });
+    } else {
+      posliZhlednuti(d);
+    }
+  }
+  function posliZhlednuti(d) {
+    if (!(global.PKAuth && global.PKAuth.ready && global.PKAuth.rpc)) return;
+    var videne = {};
+    try { videne = JSON.parse(sessionStorage.getItem(KLIC_ZHLEDNUTI) || '{}') || {}; } catch (e) {}
+    if (videne[d._lid]) return;
+    /* Zapsat AŽ TĚSNĚ PŘED odesláním. Kdyby se to značilo dřív a odeslání
+       pak neproběhlo, zhlédnutí by po celou návštěvu propadalo. */
+    videne[d._lid] = 1;
+    try { sessionStorage.setItem(KLIC_ZHLEDNUTI, JSON.stringify(videne)); } catch (e) {}
+    try { global.PKAuth.rpc('bump_view', { p_id: d._lid }, false); } catch (e) {}
+  }
+
   function fillVerdict(d) {
     var el = document.getElementById('pz-verdict');
     if (el) el.innerHTML = pzVerdictHtml(d);
@@ -1120,8 +1208,50 @@
     rendered = true;
   }
 
+  /* ŽIVÉ INZERÁTY OD MAJITELŮ. Statická data (data/opportunities.json)
+     je NEOBSAHUJÍ — leží v databázi a mapa si je tahá zvlášť
+     (public_listings v js/main.js). Tahle stránka je nečetla, takže
+     inzerát od majitele se otevřel JEN klepnutím na mapě, kde se pozemek
+     předá přes sessionStorage. Po obnovení stránky, ze záložky nebo
+     z odkazu, který majitel poslal zájemci, se místo něj ukázal nejbližší
+     STAŽENÝ pozemek do 500 m (cizí cena, cizí výměra), nebo „Pozemek
+     nenalezen" — a na sdílení toho odkazu je celý inzerát postavený.
+
+     Čeká se na PKAuth: js/config.js i js/auth.js mají v pozemek.html
+     defer, tenhle skript ne. */
+  var pozdeji = null, cekajici = null;
+  function ziveInzeraty() {
+    return new Promise(function (hotovo) {
+      var poslano = false;
+      function dej(v) {
+        if (poslano) {
+          // Pozdní odpověď. Když se ještě nestihlo nastavit, co s ní, počká si.
+          if (v && v.length) { if (pozdeji) pozdeji(v); else cekajici = v; }
+          return;
+        }
+        poslano = true;
+        hotovo(v);
+      }
+      /* LHŮTA. Bez ní by na pomalé nebo spadlé databázi čekala i stránka
+         obyčejné stažené nabídky — a těch je většina, přes devatenáct set.
+         Odpověď, která přijde pozdě, se ale nezahazuje: stránka se z ní
+         překreslí. */
+      var cas = setTimeout(function () { dej([]); }, 2500);
+      function zkus() {
+        var A = global.PKAuth;
+        if (!(A && A.ready && A.rpc)) { clearTimeout(cas); return dej([]); }
+        A.rpc('public_listings', {}, false).then(function (res) {
+          clearTimeout(cas);
+          dej(res && res.ok && Array.isArray(res.data) ? PKCisteni.majitele(res.data) : []);
+        }, function () { clearTimeout(cas); dej([]); });
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', zkus, { once: true });
+      else zkus();
+    });
+  }
+
   // 2) Dotáhni celá data pro cenové srovnání (a jako záloha, když handoff chybí).
-  loadJSON('data/opportunities.json').then(function (j) {
+  function zpracuj(j, zive) {
     /* Táž branka jako na mapě (js/cisteni.js). Tady chyběla, a nebylo to
        jen pro pořádek: adresa inzerátu se sice escapovala, takže atribut
        nešlo rozbít, ale „javascript:" v ní zůstalo — na podstrčených datech
@@ -1129,6 +1259,11 @@
        dobře díky esc() na každém místě výpisu; u href esc() nepomůže,
        protože schéma odkazu je platný obsah atributu. */
     var DATA = PKCisteni.pozemky((j && (j.opportunities || j.items || (Array.isArray(j) ? j : []))) || []);
+    /* Do TÝCHŽ dat, ze kterých se počítá cenové srovnání i „podobné
+       pozemky" — přesně jako na mapě (js/main.js je přidává do base před
+       PKCisteni.pozemky). Kdyby je stránka pozemku držela stranou, obě
+       strany by u téhož pozemku tvrdily jinou cenovou hladinu. */
+    if (zive && zive.length) DATA = DATA.concat(zive);
     DATA.forEach(function (d, i) { d._id = i; });
     buildIndex(DATA);
     /* PŘEKRESLIT, i když už se něco vykreslilo — ale jen podle PŘESNÉHO
@@ -1154,6 +1289,12 @@
     } else if (!rendered) {
       renderEmpty();
     }
+  }
+  Promise.all([loadJSON('data/opportunities.json'), ziveInzeraty()]).then(function (vysledky) {
+    zpracuj(vysledky[0], vysledky[1]);
+    // Živá data po lhůtě: zpracuje se totéž ještě jednou, už s nimi.
+    pozdeji = function (zive) { zpracuj(vysledky[0], zive); };
+    if (cekajici) { var z = cekajici; cekajici = null; pozdeji(z); }
   });
 
   // mobilní menu

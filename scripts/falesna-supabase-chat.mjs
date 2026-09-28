@@ -24,6 +24,8 @@ const hledani = new Map();
 // Inzeráty vložené přes „Přidat pozemek" a kolik jich kdo smí mít.
 const inzeraty = [];
 const kvota = new Map();
+// Kolikrát se u kterého inzerátu započítalo zhlédnutí (čte to zkouška).
+const zhlednuti = new Map();
 // Výsledky noční kontroly (id inzerátu → {ok, kdy, nalezy}); plní si je test.
 const kontroly = new Map();
 hledani.set(UID_MAJITEL, [{ id: 's1', label: 'Tábor', okres: 'Tábor', druh: null, ptype: null,
@@ -71,9 +73,43 @@ const server = http.createServer((req, res) => {
     });
   }
 
+  /* Jen pro testy: vloží schválený inzerát rovnou do seznamu, bez
+     proklikávání formuláře. Stránka pozemku si živé inzeráty tahá přes
+     public_listings a musí si s nimi poradit i tehdy, když na ni člověk
+     přijde odjinud než z mapy. */
+  if (u.pathname === '/zkouska/inzerat' && req.method === 'POST') {
+    return telo().then((a) => {
+      inzeraty.push(Object.assign({ user_id: UID_MAJITEL, status: 'approved', views: 0,
+        created_at: new Date().toISOString() }, a));
+      return send(200, JSON.stringify({ ok: true }));
+    });
+  }
+
+  /* Jen pro testy: kolikrát se u kterého inzerátu započítalo zhlédnutí.
+     Zkouška se tak nemusí dívat do databáze ani do konzole prohlížeče. */
+  if (u.pathname === '/zkouska/zhlednuti') {
+    return send(200, JSON.stringify(Object.fromEntries(zhlednuti)));
+  }
+
   if (u.pathname.startsWith('/rest/v1/rpc/')) {
     const fn = u.pathname.slice('/rest/v1/rpc/'.length);
     return telo().then((args) => {
+      /* Zhlédnutí počítají hlavně NEPŘIHLÁŠENÍ návštěvníci — bump_view je
+         proto v databázi povolená i jim a tady se musí vyřídit dřív, než
+         se sáhne po tokenu. Jinak by zkouška měřila jen to, že falešný
+         server vrací 401. */
+      /* Veřejný seznam inzerátů od majitelů — NEPŘIHLÁŠENÝM taky, přesně
+         jako doopravdy (grant execute … to anon). Mapa i stránka pozemku
+         si ho tahají bez přihlášení; kdyby se tu vracelo 401, zkoušely
+         by obě jen to, že falešný server mlčí. */
+      if (fn === 'public_listings') {
+        return send(200, JSON.stringify(inzeraty.filter((x) => x.status === 'approved')));
+      }
+      if (fn === 'bump_view') {
+        const id = String(args.p_id || '');
+        if (id) zhlednuti.set(id, (zhlednuti.get(id) || 0) + 1);
+        return send(200, JSON.stringify(null));
+      }
       const uid = kdo(req);
       if (!uid) return send(401, JSON.stringify({ message: 'musíte být přihlášeni' }));
 

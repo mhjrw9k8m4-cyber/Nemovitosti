@@ -1152,7 +1152,12 @@
       if (!chip) return;
       var k; try { k = decodeURIComponent(chip.getAttribute('data-rkey')); } catch (x) { return; }
       var d = keyIndex()[k];
-      if (d) { showDetail(d); highlightList(d._id); }
+      /* NA VLASTNÍ STRÁNKU POZEMKU, jako všude jinde. Tenhle jediný
+         chip otevíral starý panel nad mapou — a komentář u gotoInzerat
+         přitom „Naposledy prohlédnuté" sám vyjmenovává mezi tím, co vede
+         na vlastní stránku. Panel je opsaná, chudší kopie té stránky:
+         nemá mapu pozemku, rádce, fotky ani popis od majitele. */
+      if (d) gotoInzerat(d);
     });
   })();
 
@@ -3755,7 +3760,12 @@
         lat: c.lat, lng: c.lng, z: map.getZoom(), kraj: selectedKraj || null, t: Date.now()
       }));
     } catch (e) {}
-    location.href = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng;
+    /* U inzerátu od majitele se přidává i jeho ID. Klíč „?p=" je složený
+       z místa, parcely a souřadnic — jakmile majitel cokoli z toho opraví,
+       starý odkaz přestane sedět. ID se nemění, a stránka pozemku podle
+       něj inzerát najde v živých datech (findTarget v js/pozemek.js). */
+    location.href = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng
+      + (d._lid ? '&l=' + encodeURIComponent(d._lid) : '');
   }
   // „Zobrazit na mapě" / sdílený odkaz: přiblíž mapu tak, aby byl pozemek
   // VYZNAČENÝ OHRANIČENÍM (ne jen tečkou) a pěkně zarámovaný na celou obrazovku.
@@ -5147,61 +5157,13 @@
           base.push(u);
         });
       }
-      // Živé inzeráty od majitelů ze Supabase (automatické zveřejnění) — přidáme na mapu.
-      // BEZPEČNOST: text od cizích lidí očistíme — odstraníme nebezpečné znaky (< > "),
-      // ať nikdo nemůže vložit škodlivý kód (ochrana proti XSS). Ořežeme i délku.
-      function clean(s, max) {
-        return String(s == null ? '' : s).replace(/[<>"]/g, '').replace(/\s+/g, ' ').trim().slice(0, max || 120);
-      }
-      // Fotky přijmeme jen jako odkazy do NAŠEHO úložiště (stejná pojistka jako
-      // na serveru) — nikdy ne cizí adresu. Bez uvozovek, ať se nedá rozbít HTML.
-      function cleanPhotos(a) {
-        if (!Array.isArray(a)) return [];
-        return a.filter(function (p) {
-          return typeof p === 'string' && p.indexOf('"') === -1 &&
-            /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/listing-photos\//.test(p);
-        }).slice(0, 8);
-      }
-      /* Vybavení — jen povolené hodnoty (stejná pojistka jako na serveru).
-         Musí tu být VŠECHNO, co nabízí formulář v pridat.html: chyběla
-         „Stavba k rekonstrukci", takže co majitel zaškrtl a server uložil,
-         to tady prohlížeč zase zahodil. Shodu hlídá scripts/test-meze.mjs. */
-      var OK_FEAT = { 'Elektřina': 1, 'Voda': 1, 'Kanalizace': 1, 'Plyn': 1, 'Oplocení': 1,
-        'Stavba k rekonstrukci': 1 };
-      function cleanFeatures(a) {
-        if (!Array.isArray(a)) return [];
-        return a.filter(function (f) { return OK_FEAT[f]; }).slice(0, 6);
-      }
-      if (Array.isArray(live)) {
-        live.forEach(function (u) {
-          if (!u || typeof u.lat !== 'number' || typeof u.lng !== 'number') return;
-          base.push({
-            type: 'majitel',
-            place: clean(u.place, 80) || 'Neuvedeno', okres: clean(u.okres, 60),
-            druh: clean(u.druh, 40) || 'pozemek',
-            parcel: clean(u.parcel, 40) || '—',
-            area: (typeof u.area === 'number' ? u.area : 0),
-            price: (typeof u.price === 'number' ? u.price : 0),
-            lat: u.lat, lng: u.lng,
-            extra: 'od majitele',
-            contact: clean(u.contact, 80),
-            /* 2 000 znaků, ne 600: tolik povoluje formulář i server.
-               Střih na 600 znamenal, že delší popis od majitele nikdo
-               nikdy neviděl celý. */
-            description: clean(u.description, 2000),
-            photos: cleanPhotos(u.photos),
-            /* d.site jsou klíče, podle kterých filtruje „Inzerát uvádí" a
-               podle kterých se sítě ukazují na kartě. U stažených nabídek
-               je plní robot z textu; u nabídek od majitele je nikdo
-               neplnil, takže zaškrtnuté sítě nikam nedošly — člověk je
-               vyplnil a na mapě po nich nebylo ani stopy. */
-            features: cleanFeatures(u.features),
-            site: (window.PKVybaveni ? window.PKVybaveni.klice(cleanFeatures(u.features)) : []),
-            access: (u.access ? clean(u.access, 40) : ''),
-            _lid: u.id, views: (typeof u.views === 'number' ? u.views : 0)
-          });
-        });
-      }
+      /* Živé inzeráty od majitelů ze Supabase (automatické zveřejnění).
+         Skládání řádku na pozemek bydlelo tady, tedy jen pro tuhle mapu;
+         stránka pozemku živé inzeráty nečetla vůbec a inzerát od majitele
+         se z rozeslaného odkazu neotevřel. Teď je to js/cisteni.js
+         a čtou to obě strany z jednoho místa. */
+      PKCisteni.majitele(live).forEach(function (d) { base.push(d); });
+
       /* BEZPEČNOST — jedna branka pro VŠECHNA data. Bydlela tady, a tím jen
          pro tuhle mapu; stránka pozemku, hlídání ani Můj inzerát ji neměly.
          Teď je to js/cisteni.js a používají ji všichni. Chybí-li ten soubor,

@@ -357,6 +357,56 @@ pravda('a slíbený počet se opravdu vypsal', poVyberu.km === (parseInt(slib, 1
 pravda('a místo jde kdykoli změnit', poVyberu.jdeZmenit,
   'u uloženého místa chybí tlačítko „Změnit místo"');
 
+/* --- 5) „NAPOSLEDY PROHLÉDNUTÉ" MUSÍ JÍT NAPLNIT ---------------------
+ *
+ * Pruh nad seznamem se neukázal NIKDY. Zapisovala do něj jediná funkce
+ * (pushRecent) a tu volal jediný kdo: showDetail, panel nad mapou. A do
+ * showDetail se dalo dostat jediným způsobem — klepnutím v tom pruhu.
+ * Kruh bez vstupu. Klepnutí na tečku na mapě přitom dávno vede na vlastní
+ * stránku pozemku, takže pruh zapisuje teprve ona (js/pozemek.js).
+ *
+ * Zkouší se to PŘES DVĚ STRÁNKY schválně: klíč si každá z nich počítá
+ * sama (pkey v js/main.js, pkeyPlny v js/pozemek.js). Kdyby se ty dva
+ * výpočty rozešly, pruh zůstane prázdný a nikde jinde to nekřikne.
+ */
+{
+  const klic = (d) => [d.place, d.parcel, d.okres, d.lat.toFixed(3), d.lng.toFixed(3)].join('|');
+  const dva = [STARE[0], STARE[1]];
+  for (const d of dva) {
+    await p.goto(`${BASE}/pozemek.html?p=${encodeURIComponent(klic(d))}&ll=${d.lat},${d.lng}`,
+      { waitUntil: 'domcontentloaded' });
+    await p.waitForTimeout(1200);
+  }
+  const zapsano = await p.evaluate(() => {
+    try { return JSON.parse(localStorage.getItem('pk_recent_v1') || '[]'); } catch (e) { return null; }
+  });
+  pravda('prohlédnuté pozemky se zapsaly do paměti prohlížeče',
+    Array.isArray(zapsano) && zapsano.length === 2, JSON.stringify(zapsano));
+
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(4200);
+  const pruh = await p.evaluate(() => {
+    const el = document.getElementById('recent-strip');
+    if (!el) return null;
+    return { skryty: el.hidden, chipy: [...el.querySelectorAll('.rs-chip')].map((b) => b.textContent.trim()) };
+  });
+  pravda('pruh „Naposledy prohlédnuté" se na úvodní stránce objeví',
+    !!pruh && pruh.skryty === false, JSON.stringify(pruh));
+  pravda('a jsou v něm oba prohlédnuté pozemky (klíč obou stránek sedí)',
+    !!pruh && pruh.chipy.length === 2 && pruh.chipy.every((t) => /Obec [12]/.test(t)),
+    JSON.stringify(pruh && pruh.chipy));
+
+  /* Klepnutí vede na vlastní stránku pozemku — jako tečka na mapě,
+     „Nejvýhodnější" i „Podobné pozemky". Dřív jediné tohle místo
+     otevíralo starý panel nad mapou, tedy chudší kopii té stránky. */
+  if (pruh && pruh.chipy.length) {
+    await p.evaluate(() => document.querySelector('#recent-strip .rs-chip').click());
+    await p.waitForTimeout(1500);
+    pravda('a klepnutí na něj vede na vlastní stránku pozemku',
+      /pozemek\.html\?p=/.test(p.url()), p.url());
+  }
+}
+
 pravda('na stránce nespadl žádný skript', chyby.length === 0, chyby[0]);
 
 await prohlizec.close();

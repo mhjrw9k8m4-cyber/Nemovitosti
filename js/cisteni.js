@@ -87,10 +87,10 @@
      na tomhle webu umí spustit skript. U fotek je to nejvíc vidět: jejich
      adresa se vypisuje rovnou do atributu src, takže cizí hodnota není
      jen nesmysl na stránce, ale rovnou cesta, jak z atributu utéct.
-     Schválně se tu NEOPISUJE seznam povoleného vybavení. Ten je jeden
-     (formulář v pridat.html, OK_FEAT v js/main.js a create_listing na
-     serveru, shodu hlídá scripts/test-meze.mjs) a čtvrtá kopie by se
-     s ním jen rozešla. Branka hlídá TVAR, ne sortiment. */
+     Branka jinak hlídá TVAR, ne sortiment — jediná výjimka je seznam
+     povoleného vybavení u živých inzerátů (OK_FEAT níž). Ten se sem
+     přestěhoval z js/main.js, aby ho mapa i stránka pozemku četly ze
+     stejného místa; kopie navíc z toho nevznikla. */
   var FOTKA = /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/listing-photos\/[^"'<>\s]{1,400}$/;
   function klicSite(a) {
     if (!Array.isArray(a)) return [];
@@ -147,5 +147,63 @@
     return out;
   }
 
-  return { text: text, odkaz: odkaz, pozemek: pozemek, pozemky: pozemky, DRUHY: DRUHY };
+  /* ŽIVÉ INZERÁTY OD MAJITELŮ. Ze serveru chodí jako řádky public_listings
+     a teprve tady se z nich stane pozemek, jaký zbytek webu zná. Skládalo
+     se to uvnitř js/main.js, tedy jen pro mapu na úvodní stránce — stránka
+     pozemku (js/pozemek.js) živé inzeráty nečetla VŮBEC. Inzerát od
+     majitele proto fungoval jedině tehdy, když se na stránku přišlo
+     klepnutím na mapě (pozemek se předá přes sessionStorage). Po obnovení
+     stránky, ze záložky nebo z rozeslaného odkazu se místo něj ukázal
+     nejbližší STAŽENÝ pozemek do 500 m — cizí cena, cizí výměra — nebo
+     „Pozemek nenalezen".
+
+     SORTIMENT VYBAVENÍ JE TU SCHVÁLNĚ, i když branka jinak hlídá tvar a ne
+     obsah: seznam musí být JEDEN pro mapu i pro stránku pozemku, jinak si
+     u téhož inzerátu každá ukáže něco jiného. Není to nová kopie, je to ta
+     z js/main.js přestěhovaná sem. Shodu s formulářem v pridat.html
+     a se serverem hlídá scripts/test-meze.mjs. */
+  var OK_FEAT = { 'Elektřina': 1, 'Voda': 1, 'Kanalizace': 1, 'Plyn': 1,
+    'Oplocení': 1, 'Stavba k rekonstrukci': 1 };
+  var G = (typeof self !== 'undefined' ? self : (typeof globalThis !== 'undefined' ? globalThis : {}));
+  function majitel(u) {
+    // Bez polohy není co zakreslit ani kam odkázat.
+    if (!u || typeof u.lat !== 'number' || typeof u.lng !== 'number') return null;
+    var feat = (Array.isArray(u.features) ? u.features : [])
+      .filter(function (f) { return OK_FEAT[f]; }).slice(0, 6);
+    /* d.site jsou klíče, podle kterých filtruje „Inzerát uvádí" a podle
+       kterých se sítě ukazují na kartě. U stažených nabídek je plní robot
+       z textu; u inzerátu od majitele je nikdo neplnil, takže zaškrtnuté
+       sítě nikam nedošly. */
+    var V = G.PKVybaveni;
+    return pozemek({
+      type: 'majitel',
+      place: u.place, okres: u.okres,
+      druh: u.druh || 'pozemek',
+      parcel: u.parcel || '—',
+      area: (typeof u.area === 'number' ? u.area : 0),
+      price: (typeof u.price === 'number' ? u.price : 0),
+      lat: u.lat, lng: u.lng,
+      extra: 'od majitele',
+      contact: u.contact,
+      description: u.description,
+      photos: u.photos,
+      features: feat,
+      site: (V && V.klice ? V.klice(feat) : []),
+      access: u.access,
+      _lid: u.id,
+      views: (typeof u.views === 'number' ? u.views : 0)
+    });
+  }
+  function majitele(rows) {
+    if (!Array.isArray(rows)) return [];
+    var out = [];
+    for (var i = 0; i < rows.length; i++) {
+      var d = majitel(rows[i]);
+      if (d) out.push(d);
+    }
+    return out;
+  }
+
+  return { text: text, odkaz: odkaz, pozemek: pozemek, pozemky: pozemky,
+    majitel: majitel, majitele: majitele, OK_FEAT: OK_FEAT, DRUHY: DRUHY };
 });

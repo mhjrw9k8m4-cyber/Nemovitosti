@@ -744,6 +744,61 @@ if (DRAZBA) {
   }
 }
 
+/* --- PROHLÍDNUTÍ POZEMKU SE MUSÍ NĚKDE PROJEVIT ---------------------
+ *
+ * Dvě věci visely na jednom místě, kam se nedalo dojít. Mapa měla kdysi
+ * vlastní panel s detailem (showDetail v js/main.js); ten si zapisoval
+ * „Naposledy prohlédnuté" a u inzerátů od majitelů počítal zhlédnutí.
+ * Jenže klepnutí na pozemek dnes vede na jeho vlastní stránku a jediné,
+ * co showDetail ještě volá, je pruh „Naposledy prohlédnuté" — do kterého
+ * se dostane jen to, co showDetail zapsal. Kruh bez vstupu: pruh se
+ * nikdy neukázal a zhlédnutí zůstala na nule, zatímco profil slibuje
+ * „Zhlédnutí celkem". Ani jedna z těch věcí neměla zkoušku.
+ */
+{
+  const cil = najdi(() => true);
+  const { ctx, p } = await detail({ cil: cil.url });
+  await p.waitForTimeout(1500);
+  const zapsano = await p.evaluate(() => {
+    try { return JSON.parse(localStorage.getItem('pk_recent_v1') || '[]'); } catch (e) { return null; }
+  });
+  const klic = [cil.d.place || '', cil.d.parcel || '', cil.d.okres || '',
+    cil.d.lat.toFixed(3), cil.d.lng.toFixed(3)].join('|');
+  pravda('prohlédnutý pozemek se zapíše mezi „Naposledy prohlédnuté"',
+    Array.isArray(zapsano) && zapsano[0] === klic,
+    `v paměti je ${JSON.stringify(zapsano)}, čekal se klíč „${klic}"`);
+  await ctx.close();
+}
+
+/* --- ZHLÉDNUTÍ U INZERÁTU OD MAJITELE -------------------------------
+ * Profil slibuje „Zhlédnutí celkem". Počítalo se to v panelu, kam se
+ * nedalo dojít (viz výš), takže tam stála nula. Počítá se jednou za
+ * návštěvu — obnovení stránky číslo nenafoukne — a jen u inzerátů od
+ * majitelů; u stažené nabídky není co počítat ani komu to ukázat.
+ */
+{
+  const LID = 'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa';
+  const majitel = {
+    place: 'Zkušební zhlédnutí', okres: 'Kolín', parcel: '2/2', druh: 'stavební pozemek',
+    price: 750000, area: 1000, type: 'majitel', lat: 50.111, lng: 15.111,
+    extra: 'od majitele', _lid: LID,
+  };
+  const klic = [majitel.place, majitel.parcel, majitel.okres].join('|');
+  const adresa = `pozemek.html?p=${encodeURIComponent(klic)}&ll=${majitel.lat},${majitel.lng}`;
+  const { ctx, p } = await detail({ cil: adresa, handoff: majitel });
+  await p.waitForTimeout(1500);
+  const prvni = await (await fetch(`${BASE}/zkouska/zhlednuti`)).json().catch(() => ({}));
+  pravda('otevření inzerátu od majitele započítá zhlédnutí', prvni[LID] === 1,
+    `server napočítal ${JSON.stringify(prvni)}`);
+  // Obnovení stránky ve stejné návštěvě už počítat nesmí.
+  await p.reload({ waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(1800);
+  const druhy = await (await fetch(`${BASE}/zkouska/zhlednuti`)).json().catch(() => ({}));
+  pravda('a obnovení stránky číslo nenafoukne', druhy[LID] === 1,
+    `po obnovení ${JSON.stringify(druhy)}`);
+  await ctx.close();
+}
+
 /* --- POPIS OD MAJITELE MUSÍ BÝT VIDĚT -------------------------------
  *
  * Formulář u toho pole píše „nepovinné — ale hodně pomůže zájemcům",
@@ -1013,6 +1068,65 @@ if (DRAZBA) {
         'žádná se nenašla — krátký klíč už možná pozemky rozlišuje a tahle zkouška je na přepsání');
     }
   }
+}
+
+/* --- INZERÁT OD MAJITELE Z ROZESLANÉHO ODKAZU -----------------------
+ *
+ * Inzerát od majitele NENÍ ve statických datech (data/opportunities.json)
+ * — leží v databázi. Stránka pozemku ji nečetla, takže inzerát se otevřel
+ * jedině klepnutím na mapě, kde se pozemek předá přes sessionStorage. Po
+ * obnovení stránky, ze záložky nebo z odkazu, který majitel poslal
+ * zájemci, spadla stránka do náhradní cesty „nejbližší pozemek do 500 m"
+ * a ukázala CIZÍ nabídku — jinou cenu, jinou výměru, jiné místo — nebo
+ * „Pozemek nenalezen". Na sdílení toho odkazu je přitom celý inzerát
+ * postavený: tlačítko „Sdílet" je hned pod cenou.
+ *
+ * Inzerát se proto schválně posadí 200 m od skutečné stažené nabídky —
+ * do vzdálenosti, kde ta náhradní cesta zabírá.
+ */
+{
+  const soused = najdi(() => true).d;
+  const LID = 'bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb';
+  const MAJITEL = {
+    id: LID, place: 'Majitelova Lhota', okres: soused.okres, druh: 'stavební pozemek',
+    parcel: '77/7', area: 1234, price: 999000,
+    lat: soused.lat + 0.002, lng: soused.lng,
+    description: 'Rovinatý pozemek hned u lesa.', contact: '777111222',
+    photos: [], features: ['Elektřina', 'Voda'], access: 'Zpevněná cesta',
+  };
+  await fetch(`${BASE}/zkouska/inzerat`, { method: 'POST', body: JSON.stringify(MAJITEL) });
+
+  // Bez handoffu — přesně jako když odkaz přijde e-mailem.
+  const { ctx, p } = await detail({ cil: `pozemek.html?l=${LID}` });
+  await p.waitForTimeout(1200);
+  const videt = await p.evaluate(() => ({
+    nadpis: (document.querySelector('.pz-place') || {}).textContent || '',
+    telo: document.body.innerText,
+    kanonicka: (document.querySelector('link[rel="canonical"]') || {}).href || '',
+  }));
+  pravda('inzerát od majitele se otevře i z holého odkazu (bez předání z mapy)',
+    videt.nadpis.trim() === MAJITEL.place, `nadpis: „${videt.nadpis.trim()}"`);
+  pravda('a není to nejbližší stažený pozemek 200 m vedle',
+    videt.nadpis.indexOf(soused.place) < 0, `nadpis: „${videt.nadpis.trim()}", soused: „${soused.place}"`);
+  pravda('je na ní cena z inzerátu', /999\s* ?\s*000|999 000/.test(videt.telo.replace(/ /g, ' ')),
+    videt.telo.slice(0, 200));
+  /* Kanonická adresa mířila na pozemek-<okres>-<obec>-<otisk>.html, tedy
+     na stránku, kterou generátor u inzerátu od majitele NEVYROBÍ. Týž
+     odkaz rozdávalo tlačítko „Sdílet". */
+  pravda('kanonická adresa vede na existující stránku, ne na vygenerovaný soubor',
+    /\?l=/.test(videt.kanonicka) && !/pozemek-[a-z0-9-]+\.html/.test(videt.kanonicka),
+    videt.kanonicka);
+  await ctx.close();
+
+  // A totéž přes starší podobu odkazu (klíč z místa a parcely).
+  const klic = [MAJITEL.place, MAJITEL.parcel, MAJITEL.okres,
+    MAJITEL.lat.toFixed(3), MAJITEL.lng.toFixed(3)].join('|');
+  const b = await detail({ cil: `pozemek.html?p=${encodeURIComponent(klic)}&ll=${MAJITEL.lat},${MAJITEL.lng}` });
+  await b.p.waitForTimeout(1200);
+  const nadpis2 = await b.p.evaluate(() => (document.querySelector('.pz-place') || {}).textContent || '');
+  pravda('a stejně tak přes starší odkaz „?p=" s klíčem místa',
+    nadpis2.trim() === MAJITEL.place, `nadpis: „${nadpis2.trim()}"`);
+  await b.ctx.close();
 }
 
 await prohlizec.close();

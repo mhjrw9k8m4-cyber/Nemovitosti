@@ -196,15 +196,17 @@ pravda('prohlížeč drží u telefonu 9–13 číslic',
    k zobrazení ho krátila ještě dvě místa: branka js/cisteni.js (600) a
    načtení inzerátů v js/main.js (600). Nebyla to ochrana, byl to tichý
    střih: kdo napsal delší text, o posledních 1 400 znaků přišel a nikde
-   se to nedozvěděl. Kdo mez v jednom místě zvedne, musí ji zvednout
-   všude — proto se porovnávají všechny tři. */
+   se to nedozvěděl. Skládání živého inzerátu se mezitím z js/main.js
+   přestěhovalo do js/cisteni.js, takže míst je o jedno míň — a právě
+   proto se hlídá i to, že se tam žádné nové nevrátí. */
 const cisteni = readFileSync(path.join(KOREN, 'js', 'cisteni.js'), 'utf8');
 const mezCisteni = Number((cisteni.match(/description:\s*(\d+)/) || [])[1]);
-const mezMain = Number((readFileSync(path.join(KOREN, 'js', 'main.js'), 'utf8')
-  .match(/description:\s*clean\(u\.description,\s*(\d+)\)/) || [])[1]);
-pravda(`popis se po cestě k zobrazení nestříhá (kontrola ${MEZE.popisMax}, branka ${mezCisteni}, načtení ${mezMain})`,
-  mezCisteni === MEZE.popisMax && mezMain === MEZE.popisMax,
-  'jedno z těch míst má menší mez — delší popis od majitele nikdo neuvidí celý');
+pravda(`popis se po cestě k zobrazení nestříhá (kontrola ${MEZE.popisMax}, branka ${mezCisteni})`,
+  mezCisteni === MEZE.popisMax,
+  'branka má menší mez než formulář — delší popis od majitele nikdo neuvidí celý');
+pravda('a js/main.js si popis nekrátí po svém',
+  !/description:\s*clean\(/.test(readFileSync(path.join(KOREN, 'js', 'main.js'), 'utf8')),
+  'v js/main.js zase přibyla vlastní mez popisu — ta se s brankou dřív nebo později rozejde');
 
 for (const [popis, vzor] of [
   [`délka obce ${MEZE.obecMin}–${MEZE.obecMax} platí i na serveru`,
@@ -228,19 +230,26 @@ for (const v of site) {
   pravda(`server přijme vybavení „${v}"`, bilyFt.includes(`'${v}'`),
     `v bílém seznamu create_listing „${v}" není — formulář to pošle a server to zahodí bez chyby`);
 }
-/* TÝŽ BÍLÝ SEZNAM JE I V PROHLÍŽEČI. js/main.js si data z Supabase
-   přebírá přes OK_FEAT — „stejná pojistka jako na serveru", říká komentář
-   u něj. Jenže zapomněla na „Stavbu k rekonstrukci": formulář ji nabídl,
-   server uložil a prohlížeč ji při čtení zahodil. Nikde chyba, jen
-   zmizelý údaj. */
-const mainJs = readFileSync(path.join(KOREN, 'js', 'main.js'), 'utf8');
-const okFeat = (mainJs.match(/var OK_FEAT = \{([^}]*)\}/) || [, ''])[1];
-pravda('js/main.js má vlastní bílý seznam vybavení (jinak zkouška nic neměří)', okFeat.length > 20,
-  'OK_FEAT se v js/main.js nenašel');
+/* TÝŽ BÍLÝ SEZNAM JE I V PROHLÍŽEČI. Živé inzeráty se čtou přes
+   OK_FEAT — „stejná pojistka jako na serveru", říká komentář u něj.
+   Jenže zapomněla na „Stavbu k rekonstrukci": formulář ji nabídl, server
+   uložil a prohlížeč ji při čtení zahodil. Nikde chyba, jen zmizelý údaj.
+   Seznam býval v js/main.js; přestěhoval se do js/cisteni.js, aby ho
+   mapa i stránka pozemku četly z jednoho místa. */
+const cisteniJs = readFileSync(path.join(KOREN, 'js', 'cisteni.js'), 'utf8');
+const okFeat = (cisteniJs.match(/var OK_FEAT = \{([^}]*)\}/) || [, ''])[1];
+pravda('js/cisteni.js má bílý seznam vybavení (jinak zkouška nic neměří)', okFeat.length > 20,
+  'OK_FEAT se v js/cisteni.js nenašel');
 for (const v of site) {
   pravda(`prohlížeč nezahodí vybavení „${v}"`, okFeat.includes(`'${v}'`),
-    `v OK_FEAT v js/main.js „${v}" není — server to uloží a prohlížeč to při čtení zahodí`);
+    `v OK_FEAT v js/cisteni.js „${v}" není — server to uloží a prohlížeč to při čtení zahodí`);
 }
+/* A NIKDE JINDE UŽ BÝT NESMÍ. Dokud kopie zůstane i v js/main.js, obě se
+   časem rozejdou a nikdo si toho nevšimne — právě tak ta chybějící
+   „Stavba k rekonstrukci" vznikla. */
+const mainJs = readFileSync(path.join(KOREN, 'js', 'main.js'), 'utf8');
+pravda('a v js/main.js už druhá kopie není', !/var OK_FEAT = \{/.test(mainJs),
+  'js/main.js má vlastní OK_FEAT — dvě kopie téhož seznamu se rozejdou');
 
 const selBlok = pridat.slice(pridat.indexOf('<select id="p-pristup"'));
 const pristupy = [...selBlok.slice(0, selBlok.indexOf('</select>')).matchAll(/<option([^>]*)>([^<]+)<\/option>/g)]
