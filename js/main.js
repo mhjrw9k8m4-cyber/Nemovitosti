@@ -3749,6 +3749,8 @@
         place: d.place, okres: d.okres, cast: d.cast, parcel: d.parcel, druh: d.druh,
         price: d.price, area: d.area, type: d.type, lat: d.lat, lng: d.lng,
         extra: d.extra, url: d.url, featured: d.featured,
+        // Bez kontaktu se z okamžitě vykreslené stránky nedá majiteli ozvat.
+        contact: d.contact,
         site: d.site, features: d.features, access: d.access,
         podil: d.podil, zlomek: d.zlomek, photos: d.photos,
         description: d.description, _lid: d._lid

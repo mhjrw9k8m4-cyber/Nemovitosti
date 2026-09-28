@@ -181,6 +181,7 @@ async function odesli(p) {
     karet: document.querySelectorAll('.mi-lcard').length,
     odznak: (document.querySelector('.mi-lstatus') || {}).textContent || '',
     tlacitka: [...document.querySelectorAll('.mi-lbtn')].map((b) => b.textContent.trim()),
+    odkazy: [...document.querySelectorAll('.mi-lbtn')].map((b) => b.getAttribute('href') || ''),
     text: (document.getElementById('mi-list') || document.body).textContent.replace(/\s+/g, ' '),
   }));
   pravda('vložený pozemek je vidět v „moje inzeráty"', v.karet === 1, `karet ${v.karet}`);
@@ -196,6 +197,12 @@ async function odesli(p) {
     `odznak: „${v.odznak.trim()}"`);
   pravda('s údaji, které člověk zadal', /Kolín/.test(v.text) && /1 200|1200/.test(v.text));
   pravda('a jde smazat', v.tlacitka.some((t) => /smazat/i.test(t)), JSON.stringify(v.tlacitka));
+  /* ODKAZ, KTERÝ MÁ MAJITEL KOMU POSLAT. Ke svému inzerátu se dosud dostal
+     jedině „na mapě", tedy k tečce mezi ostatními — adresu vlastní stránky
+     inzerátu si neměl kde vzít. Stránka pozemku ho najde podle jeho id. */
+  pravda('a vede z něj odkaz na vlastní stránku inzerátu',
+    v.odkazy.some((h) => /^pozemek\.html\?l=/.test(h)),
+    JSON.stringify(v.odkazy));
 
   p.on('dialog', (d) => d.accept());
   const del = await p.$('[data-del]');

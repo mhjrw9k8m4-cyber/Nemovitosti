@@ -217,7 +217,14 @@ export function doMapyWebu(soubory) {
   const cesta = path.join(ROOT, 'sitemap.xml');
   if (!fs.existsSync(cesta)) return 0;
   let sm = fs.readFileSync(cesta, 'utf8');
-  sm = sm.replace(/  <url>\s*<loc>https:\/\/www\.parcelaka\.cz\/pozemek-[^<]*<\/loc>[\s\S]*?<\/url>\n/g, '');
+  /* JEN STRÁNKY POZEMKŮ, ne všechno, co začíná na „pozemek-".
+     Vzor „pozemek-cokoli" bral i rádce pozemek-od-obce.html („Jak koupit
+     pozemek od obce"), který do mapy webu zapsal generátor krajů o krok
+     dřív — a tenhle krok ho zase vyhodil. Stránka je přitom odkazovaná
+     z pěti dalších a ve vyhledávači o ní nikdo neví. Vzor je teď týž,
+     podle kterého se výš poznávají soubory ke smazání: jméno stránky
+     pozemku končí otiskem klíče. */
+  sm = sm.replace(/  <url>\s*<loc>https:\/\/www\.parcelaka\.cz\/pozemek-[^<]*-[0-9a-z]{5,8}\.html<\/loc>[\s\S]*?<\/url>\n/g, '');
   const bloky = soubory.map((f) =>
     `  <url>\n    <loc>${WEB}/${f}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.5</priority>\n  </url>\n`).join('');
   sm = sm.replace('</urlset>', bloky + '</urlset>');

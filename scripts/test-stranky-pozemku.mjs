@@ -141,6 +141,30 @@ const bezNahledu = [...new Set(pozemky.map((d) => d.okres))]
 pravda('každý okres má náhledový obrázek pro sdílení', bezNahledu.length === 0,
   `bez náhledu: ${bezNahledu.join(', ')}`);
 
+/* --- 6) mapa webu nesmí o žádnou ruční stránku přijít ----------------
+ *
+ * Mapu webu skládají DVA generátory za sebou: krajský do ní zapíše ruční
+ * stránky (rozcestníky, rádce, podmínky), ten pro pozemky pak své vlastní
+ * odkazy přepíše — a k tomu si napřed ty staré vymazal vzorem
+ * „pozemek-cokoli". Jenže „Jak koupit pozemek od obce" se jmenuje
+ * pozemek-od-obce.html, takže ho ten úklid vyhazoval taky. Stránka je
+ * odkazovaná z pěti dalších a ve vyhledávači o ní nikdo nevěděl.
+ *
+ * Hlídá se to proti seznamu ve zdroji generátoru, ne proti ručně opsanému
+ * výčtu: kdo přidá další ruční stránku, dostane tuhle kontrolu zadarmo.
+ */
+{
+  const gen = fs.readFileSync(path.join(ROOT, 'scripts', 'generate-region-pages.mjs'), 'utf8');
+  const usek = gen.slice(gen.indexOf('const staticUrls=['), gen.indexOf('];', gen.indexOf('const staticUrls=[')));
+  const rucni = [...usek.matchAll(/loc:\s*'([^']*)'/g)].map((m) => m[1]).filter(Boolean);
+  pravda(`seznam ručních stránek se ve zdroji generátoru našel (${rucni.length})`,
+    rucni.length >= 10, 'staticUrls se nenašlo — kontrola níž by nic neměřila');
+  const mapa = fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8');
+  const chybi = rucni.filter((u) => mapa.indexOf(`/${u}</loc>`) < 0);
+  pravda('a všechny jsou v mapě webu', chybi.length === 0,
+    `v sitemap.xml chybí: ${chybi.join(', ')}`);
+}
+
 console.log('\nStránky jednotlivých pozemků');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb`);

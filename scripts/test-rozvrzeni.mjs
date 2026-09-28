@@ -512,6 +512,22 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
 {
   const { ctx, p } = await otevri('index.html', 390, 844);
   await p.waitForTimeout(2600);
+  /* PRUH „NAPOSLEDY PROHLÉDNUTÉ" DO TOHO PATŘÍ TAKY. Jeho odznaky měly
+     31 px a nikdo si toho nevšiml, protože se pruh nikdy neukázal:
+     zapisovala do něj jediná funkce a k té se nedalo dostat. Ukáže se od
+     dvou uložených pozemků, tak se dva uloží a stránka načte znovu. */
+  const dvaKlice = (() => {
+    const d = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
+    return d.filter((x) => typeof x.lat === 'number' && typeof x.lng === 'number' && x.price > 0)
+      .slice(0, 2)
+      .map((x) => [x.place || '', x.parcel || '', x.okres || '', x.lat.toFixed(3), x.lng.toFixed(3)].join('|'));
+  })();
+  await p.evaluate((k) => { try { localStorage.setItem('pk_recent_v1', JSON.stringify(k)); } catch (e) {} }, dvaKlice);
+  await p.reload({ waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(2600);
+  pravda('pruh „Naposledy prohlédnuté" se v měření objevil (jinak se jeho odznaky nezměří)',
+    await p.evaluate(() => !document.getElementById('recent-strip').hidden),
+    'pruh se neukázal — kontrola níž by o jeho odznacích nic neřekla');
   const male = await p.evaluate(() => {
     const VYJIMKY = {
       'skip-link': 'ukáže se jen při ovládání klávesnicí, prstem se na něj nedá narazit',

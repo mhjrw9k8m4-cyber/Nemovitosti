@@ -194,6 +194,19 @@
       views: (typeof u.views === 'number' ? u.views : 0)
     });
   }
+  /* ODKAZ NA KONTAKT. Telefon i e-mail jde do href, takže rozhoduje
+     SCHÉMA, ne text — a schéma je platný obsah atributu, na který esc()
+     nestačí (proto je tahle branka jeden soubor, viz hlavička). Rozpozná
+     se to, co lidé opravdu píšou: „777 123 456", „+420 777 123 456",
+     „jan@example.cz". Co není ani jedno, nedostane odkaz vůbec. */
+  function kontaktOdkaz(c) {
+    c = String(c == null ? '' : c).trim();
+    if (/^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(c)) return 'mailto:' + c;
+    var tel = c.replace(/[^\d+]/g, '');
+    return /^\+?\d{9,15}$/.test(tel) ? 'tel:' + tel : '';
+  }
+  function jeEmail(c) { return /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(String(c == null ? '' : c).trim()); }
+
   function majitele(rows) {
     if (!Array.isArray(rows)) return [];
     var out = [];
@@ -205,5 +218,6 @@
   }
 
   return { text: text, odkaz: odkaz, pozemek: pozemek, pozemky: pozemky,
-    majitel: majitel, majitele: majitele, OK_FEAT: OK_FEAT, DRUHY: DRUHY };
+    majitel: majitel, majitele: majitele, OK_FEAT: OK_FEAT,
+    kontaktOdkaz: kontaktOdkaz, jeEmail: jeEmail, DRUHY: DRUHY };
 });

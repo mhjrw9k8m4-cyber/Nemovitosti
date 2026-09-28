@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=1c9b9227">
+  <link rel="stylesheet" href="css/styles.css?v=eb313a16">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:20px; padding:24px 22px 22px;
@@ -112,8 +112,12 @@
     .mi-lstat{background:var(--ink); border:1px solid var(--line); border-radius:12px; padding:11px 8px; text-align:center;}
     .mi-lstat b{display:block; font-size:19px; font-weight:800; color:var(--copper-bright); font-variant-numeric:tabular-nums; line-height:1.1;}
     .mi-lstat span{display:block; font-size:10.5px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:.03em; margin-top:5px;}
-    .mi-lactions{display:flex; gap:10px;}
-    .mi-lbtn{flex:1 1 0; display:inline-flex; align-items:center; justify-content:center; gap:7px; height:44px; border-radius:11px; font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; border:1.5px solid transparent; transition:filter .15s ease, background .15s ease, border-color .15s ease, transform .1s ease;}
+    /* Tlačítka jsou tři („Otevřít inzerát", „Zobrazit na mapě", „Smazat"),
+       tak se musí umět zalomit: natěsnané do jedné řady by se na úzkém
+       telefonu lámal text uvnitř nich. Základ 130 px je tak akorát na
+       nejdelší z těch popisků. */
+    .mi-lactions{display:flex; gap:10px; flex-wrap:wrap;}
+    .mi-lbtn{flex:1 1 130px; display:inline-flex; align-items:center; justify-content:center; gap:7px; height:44px; border-radius:11px; font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; border:1.5px solid transparent; transition:filter .15s ease, background .15s ease, border-color .15s ease, transform .1s ease;}
     .mi-lbtn:active{transform:scale(.98);}
     .mi-lbtn.primary{background:var(--plocha-znacka); color:#fff; box-shadow:0 8px 20px -10px rgba(31,81,56,.55);}
     .mi-lbtn.primary:hover{filter:brightness(1.05);}
@@ -325,7 +329,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/cisteni.js?v=23f2bbb7"></script>
+<script src="js/cisteni.js?v=c43084f5"></script>
 <script src="js/config.js?v=7f55c4e1" defer></script>
 <script src="js/auth.js?v=3891c865" defer></script>
 <script>
@@ -492,8 +496,16 @@
               '<div class="mi-lstat"><b>' + (r.area ? fmt(r.area) : '—') + '</b><span>m² výměra</span></div>' +
               '<div class="mi-lstat"><b>' + (r.price ? fmt(r.price) : '—') + '</b><span>Kč cena</span></div>' +
             '</div>' +
+            /* ODKAZ NA VLASTNÍ STRÁNKU INZERÁTU. Majitel se dosud ke svému
+               inzerátu dostal jedině „na mapě" — tedy k tečce mezi ostatními.
+               Odkaz, který má poslat zájemci, si tím neměl kde vzít. Stránka
+               inzerátu ho teď umí najít podle jeho id (findTarget
+               v js/pozemek.js), takže to je adresa, která se dá rovnou
+               poslat. Ukazuje se jen u zveřejněného inzerátu: první inzerát
+               účtu den čeká na kontrolu a do té doby na té adrese nic není. */
             '<div class="mi-lactions">' +
-              '<a class="mi-lbtn primary" href="index.html?lid=' + encodeURIComponent(r.id) + '#mapa">Zobrazit na mapě</a>' +
+              (isLive ? '<a class="mi-lbtn primary" href="pozemek.html?l=' + encodeURIComponent(r.id) + '">Otevřít inzerát</a>' : '') +
+              '<a class="mi-lbtn' + (isLive ? '' : ' primary') + '" href="index.html?lid=' + encodeURIComponent(r.id) + '#mapa">Zobrazit na mapě</a>' +
               '<button class="mi-lbtn danger" type="button" data-del="' + esc(r.id) + '">Smazat</button>' +
             '</div>' +
           '</div>';

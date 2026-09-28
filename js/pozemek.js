@@ -927,8 +927,29 @@
            doplněk, tak ať tak i vypadá.
            U nabídky od majitele žádný cizí odkaz není a Mapy.cz jsou
            jediné tlačítko — tam hlavní zůstávají. */
+        /* KONTAKT NA MAJITELE. Na celé téhle stránce nebyl ŽÁDNÝ —
+           ani zpráva, ani telefon, ani e-mail. Bydlel v panelu nad mapou
+           (detailHtml v js/main.js), do kterého se dnes nedá dostat;
+           klepnutí na pozemek vede sem. Formulář kontakt vyžaduje, server
+           ho ukládá, public_listings ho vrací — a nikdo ho neviděl.
+           Věta o zálohách pod tlačítky tím stála úplně bez souvislosti:
+           varuje před okamžikem, kdy člověk volá majiteli, a ten okamžik
+           na stránce nebyl. Handoff z mapy kontakt taky nenesl, proto ho
+           js/main.js posílá s sebou. */
         (d.type === 'majitel'
-          ? '<a class="pz-btn primary" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>'
+          ? (d._lid
+              ? '<a class="pz-btn primary" href="zpravy.html?l=' + encodeURIComponent(d._lid)
+                + '&new=1&p=' + encodeURIComponent(d.place || '')
+                + '&ok=' + encodeURIComponent(d.okres || '') + '">Napsat majiteli</a>'
+              : '') +
+            (function () {
+              var odkaz = PKCisteni.kontaktOdkaz(d.contact);
+              if (!odkaz) return '';
+              var tr = PKCisteni.jeEmail(d.contact) ? 'E-mail: ' : 'Telefon: ';
+              return '<a class="pz-btn' + (d._lid ? ' ghost' : ' primary') + '" href="' + odkaz + '">'
+                + tr + esc(d.contact) + '</a>';
+            })() +
+            '<a class="pz-btn ghost" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>'
           : '<a class="pz-btn primary" href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.label) + VEN + '</a>' +
             '<a class="pz-btn ghost" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>') +
       '</div>' +
@@ -1251,7 +1272,7 @@
   }
 
   // 2) Dotáhni celá data pro cenové srovnání (a jako záloha, když handoff chybí).
-  function zpracuj(j, zive) {
+  function zpracuj(j, zive, jenPresne) {
     /* Táž branka jako na mapě (js/cisteni.js). Tady chyběla, a nebylo to
        jen pro pořádek: adresa inzerátu se sice escapovala, takže atribut
        nešlo rozbít, ale „javascript:" v ní zůstalo — na podstrčených datech
@@ -1279,6 +1300,13 @@
        jenže počítal se z něj cenový verdikt — na inzerátu od majitele
        tedy mohla stát věta o ceně sousedního pozemku. */
     var nalez = findTarget(DATA);
+    /* PRVNÍ KOLO JEN NA PŘESNÝ NÁLEZ. Živé inzeráty od majitelů leží
+       v databázi a čekat na její odpověď u všech stažených nabídek by
+       znamenalo držet stránku na statické kostře kvůli něčemu, co se jich
+       vůbec netýká. Sedí-li pozemek ve statických datech přesně, je hotovo
+       hned; nesedí-li, teprve pak má smysl na databázi počkat — a to je
+       právě případ inzerátu od majitele. */
+    if (jenPresne && !(nalez && nalez.presne)) return false;
     var target = quick;
     if (nalez && (nalez.presne || !rendered)) target = nalez.d;
     if (target) {
@@ -1289,12 +1317,18 @@
     } else if (!rendered) {
       renderEmpty();
     }
+    return !!(nalez && nalez.presne);
   }
-  Promise.all([loadJSON('data/opportunities.json'), ziveInzeraty()]).then(function (vysledky) {
-    zpracuj(vysledky[0], vysledky[1]);
-    // Živá data po lhůtě: zpracuje se totéž ještě jednou, už s nimi.
-    pozdeji = function (zive) { zpracuj(vysledky[0], zive); };
-    if (cekajici) { var z = cekajici; cekajici = null; pozdeji(z); }
+  // Obojí se pouští naráz, ať se nečeká jedno na druhé.
+  var zivePrislib = ziveInzeraty();
+  loadJSON('data/opportunities.json').then(function (j) {
+    var sedlo = zpracuj(j, [], true);
+    zivePrislib.then(function (zive) {
+      if (!sedlo || zive.length) zpracuj(j, zive, false);
+      // Živá data po lhůtě: zpracuje se totéž ještě jednou, už s nimi.
+      pozdeji = function (z) { zpracuj(j, z, false); };
+      if (cekajici) { var z = cekajici; cekajici = null; pozdeji(z); }
+    });
   });
 
   // mobilní menu

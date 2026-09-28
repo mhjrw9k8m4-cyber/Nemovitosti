@@ -113,6 +113,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
  * @param nast.bezLeafletu  zahodí mapovou knihovnu
  * @param nast.pomalyLeaflet  knihovnu vydá se zpožděním (na souběh dvou vykreslení)
  * @param nast.pomalaData  data pozemků vydá se zpožděním (kvůli témuž souběhu)
+ * @param nast.pomaleInzeraty  živé inzeráty od majitelů vydá se zpožděním
  * @param nast.rovnouKMape  jakmile se objeví rám mapy, odroluje k němu
  * @param nast.cil    adresa pozemku, který se má otevřít (výchozí CIL)
  * @param nast.viewport  rozměr okna (výchozí monitor; telefon se měří zvlášť)
@@ -149,6 +150,12 @@ async function detail(nast) {
          starého (ještě připojeného) rámu a ke srážce by nedošlo. */
       if (nast.pomalaData && /data\/opportunities\.json/.test(u.pathname)) {
         return new Promise((hotovo) => setTimeout(() => hotovo(r.continue()), 500));
+      }
+      /* Databáze schválně pomalá. Živé inzeráty od majitelů si stránka
+         tahá zvlášť a stažená nabídka s nimi nemá co dělat — nesmí na ně
+         tedy čekat. Vyrobit se to dá jen tak, že odpověď přijde pozdě. */
+      if (nast.pomaleInzeraty && /\/rest\/v1\/rpc\/public_listings/.test(u.pathname)) {
+        return new Promise((hotovo) => setTimeout(() => hotovo(r.continue()), 3000));
       }
       if (nast.pomalyLeaflet && /vendor\/leaflet\/leaflet\.js/.test(u.pathname)) {
         return new Promise((hotovo) => setTimeout(() => hotovo(r.continue()), 2500));
@@ -1116,6 +1123,29 @@ if (DRAZBA) {
   pravda('kanonická adresa vede na existující stránku, ne na vygenerovaný soubor',
     /\?l=/.test(videt.kanonicka) && !/pozemek-[a-z0-9-]+\.html/.test(videt.kanonicka),
     videt.kanonicka);
+
+  /* KONTAKT NA MAJITELE. Na stránce nebyl žádný — ani zpráva, ani telefon.
+     Bydlel v panelu nad mapou, kam se nedá dostat. Formulář kontakt
+     vyžaduje, server ho ukládá, public_listings vrací. Věta o zálohách
+     pod tlačítky přitom varuje právě před okamžikem, kdy člověk majiteli
+     volá: bez kontaktu stála na stránce bez souvislosti. */
+  const kontakt = await p.evaluate(() => ({
+    zprava: [...document.querySelectorAll('a')].map((a) => a.getAttribute('href') || '')
+      .find((h) => h.indexOf('zpravy.html?l=') === 0) || '',
+    telefon: [...document.querySelectorAll('a')].map((a) => a.getAttribute('href') || '')
+      .find((h) => h.indexOf('tel:') === 0 || h.indexOf('mailto:') === 0) || '',
+    cislo: document.body.innerText.indexOf('777 111 222') >= 0
+      || document.body.innerText.indexOf('777111222') >= 0,
+    varovani: document.body.innerText.indexOf('zálohu ani rezervační poplatek') >= 0,
+  }));
+  pravda('na inzerátu od majitele je odkaz „Napsat majiteli"',
+    kontakt.zprava.indexOf(LID) > 0, `nalezeno: „${kontakt.zprava}"`);
+  pravda('a jeho telefon jde vytočit', kontakt.telefon === 'tel:777111222',
+    `nalezeno: „${kontakt.telefon}"`);
+  pravda('a je i vypsaný, aby se dal opsat', kontakt.cislo,
+    'číslo na stránce vidět není — z odkazu „tel:" se na počítači nedá nic opsat');
+  pravda('varování o zálohách u toho kontaktu stojí', kontakt.varovani,
+    'věta o zálohách na stránce chybí');
   await ctx.close();
 
   // A totéž přes starší podobu odkazu (klíč z místa a parcely).
@@ -1127,6 +1157,25 @@ if (DRAZBA) {
   pravda('a stejně tak přes starší odkaz „?p=" s klíčem místa',
     nadpis2.trim() === MAJITEL.place, `nadpis: „${nadpis2.trim()}"`);
   await b.ctx.close();
+}
+
+/* --- STAŽENÁ NABÍDKA NEČEKÁ NA DATABÁZI ------------------------------
+ * Živé inzeráty od majitelů leží v databázi a stránka pozemku si je tahá
+ * zvlášť. Stažených nabídek je ale přes devatenáct set a s živými inzeráty
+ * nemají co dělat — kdyby na ně čekaly, držela by se stránka na statické
+ * kostře kvůli něčemu, co se jí netýká. Proto se čeká jen tehdy, když
+ * pozemek ve statických datech PŘESNĚ nesedí; a to je právě případ
+ * inzerátu od majitele.
+ */
+{
+  const cil = najdi(() => true);
+  const { ctx, p } = await detail({ cil: cil.url, pomaleInzeraty: true });
+  // detail() sám čeká 1,5 s — tedy míň, než trvá odpověď databáze.
+  const nadpis = await p.evaluate(() => (document.querySelector('.pz-place') || {}).textContent || '');
+  pravda('stažená nabídka se vykreslí, i když databáze mlčí',
+    nadpis.trim() === (cil.d.place || '').trim(),
+    `nadpis: „${nadpis.trim()}", čekáno „${cil.d.place}"`);
+  await ctx.close();
 }
 
 await prohlizec.close();

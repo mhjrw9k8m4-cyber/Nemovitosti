@@ -3676,6 +3676,11 @@ h1, h2, h3,
      větě, takže mez platí i na ně. Odsazení se zmenší, ať z toho není
      o 150 px delší patička — rozestup vyjde na 46 px místo 40. */
   .foot-col a { min-height:44px; display:flex; align-items:center; margin-bottom:2px; }
+  /* Odznaky „Naposledy prohlédnuté" měly 31 px. Dosud to nikomu nevadilo,
+     protože se ten pruh NIKDY neukázal: zapisovala do něj jen funkce, ke
+     které se nedalo dostat. Teď se ukazuje, tak platí táž mez jako pro
+     ostatní ovládání. */
+  .rs-chip { min-height:44px; }
 }
 /* Tři živé údaje v úvodu mají 44 px taky — ale až od 361 px šířky.
    NA NEJMENŠÍCH DISPLEJÍCH (do 360 px) TO NEJDE a zkouška rozvržení to chytila:
