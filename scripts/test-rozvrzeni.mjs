@@ -626,6 +626,50 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   await ctx.close();
 }
 
+/* --- 6c) VÝBĚR OKOLÍ SE OVLÁDÁ JEDINĚ PRSTEM -------------------------
+ *
+ * Dialog „Pozemky v okolí" se otevře až po klepnutí, takže ho měření
+ * stránky minulo — a přitom v něm bylo pod mírou úplně všechno:
+ * přepínače okruhu 37 px, křížek 38, zoom mapy 30×30. Zrovna na jeho
+ * ovládání přišly stížnosti.
+ *
+ * Zvětšit se přitom musí ŠTÍTEK, ne jen nápis v něm: klikací je
+ * průhledné políčko natažené přes štítek, takže výška nápisu s ním nehne.
+ */
+{
+  const { ctx, p: p3 } = await otevri('index.html', 390, 844);
+  await p3.waitForTimeout(3200);
+  const jeTlacitko = await p3.evaluate(() => !!document.querySelector('.map-near-btn'));
+  pravda('tlačítko „Pozemky v okolí" na úvodní stránce je', jeTlacitko,
+    'bez něj se výběr okolí neotevře a kontrola níž nic nezměří');
+  if (jeTlacitko) {
+    await p3.click('.map-near-btn');
+    await p3.waitForTimeout(1800);
+    const male = await p3.evaluate(() => {
+      const ov = document.querySelector('.vm-ov');
+      if (!ov) return null;
+      const ven = [];
+      ov.querySelectorAll('a[href], button, label, input, summary').forEach((e) => {
+        const r = e.getBoundingClientRect();
+        if (r.width < 4 || r.height < 4) return;
+        if (!e.offsetParent && getComputedStyle(e).position !== 'fixed') return;
+        if (r.height >= 44) return;
+        ven.push(e.tagName.toLowerCase() + '.' + String(e.className || '').split(' ')[0]
+          + ' „' + (e.textContent || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim().slice(0, 16)
+          + '" ' + Math.round(r.width) + 'x' + Math.round(r.height));
+      });
+      return { pocet: ov.querySelectorAll('a[href], button, label, input').length, male: [...new Set(ven)] };
+    });
+    pravda('výběr okolí se otevřel a má co měřit', !!male && male.pocet > 3,
+      male ? `ovládacích prvků: ${male.pocet}` : 'dialog .vm-ov se neotevřel');
+    if (male) {
+      pravda('a všechno se v něm dá trefit prstem (44 px)', male.male.length === 0,
+        male.male.join(' | '));
+    }
+  }
+  await ctx.close();
+}
+
 // --- 7) Úvod na telefonu nedrží hledání pod obzorem -------------------
 /* Na displeji 320×568 bylo pole „Hledat obec" až v 72 % výšky obrazovky.
    Člověk, který přišel hledat pozemek, se k hledání dostal jako

@@ -435,9 +435,32 @@ const stavVybiraku = (p) => p.evaluate(() => {
      to musí jít pořád, libovolněkrát (ověřeno o pár řádků výš). */
   const box = await p.locator('#vm-mapa').boundingBox();
   const pred = (await stavVybiraku(p)).pocet;
-  await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  /* TÁHNE SE ZE PRÁZDNÉ MAPY, NE ZE ŠPENDLÍKU. Vybrané místo je po
+     předchozím kroku přesně uprostřed mapy, takže tam stojí i špendlík —
+     a tažení za špendlík výběr měnit MÁ (kontrola „tažením se značka
+     opravdu přesune" o kus výš). Tažení odsud tedy neměřilo mapu, ale
+     značku; procházelo to jen o pár pixelů, protože se střed mapy trefil
+     těsně pod její špičku. Jakmile se panel nad mapou o kousek zvětšil,
+     střed se posunul dovnitř značky a zkouška spadla — na chování webu
+     se přitom nezměnilo nic.
+     Bere se proto bod pod značkou, ověřeně mimo ni i mimo její úchopovou
+     zónu (ta sahá 18 px do stran a 6 px nad špičku). */
+  const znacka = await p.evaluate(() => {
+    const m = document.querySelector('.vm-znacka');
+    const mp = document.getElementById('vm-mapa');
+    if (!m || !mp) return null;
+    const r = m.getBoundingClientRect(), b2 = mp.getBoundingClientRect();
+    return { x: r.x - b2.x, y: r.y - b2.y, w: r.width, h: r.height };
+  });
+  const odsazeni = Math.min(150, box.height * 0.25);
+  const zacX = box.x + box.width / 2;
+  const zacY = box.y + box.height / 2 + odsazeni;
+  pravda('tažení začíná mimo špendlík (jinak by se měřila značka, ne mapa)',
+    !znacka || (zacY - box.y) > znacka.y + znacka.h + 40,
+    `značka končí na ${znacka ? Math.round(znacka.y + znacka.h) : '?'} px, tažení začíná na ${Math.round(zacY - box.y)} px`);
+  await p.mouse.move(zacX, zacY);
   await p.mouse.down();
-  await p.mouse.move(box.x + box.width / 2 - 120, box.y + box.height / 2 - 90, { steps: 12 });
+  await p.mouse.move(zacX - 120, zacY - 90, { steps: 12 });
   await p.mouse.up();
   await p.waitForTimeout(900);
   const poTazeni = (await stavVybiraku(p)).pocet;

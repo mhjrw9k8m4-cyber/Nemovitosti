@@ -3689,6 +3689,20 @@ h1, h2, h3,
      které se nedalo dostat. Teď se ukazuje, tak platí táž mez jako pro
      ostatní ovládání. */
   .rs-chip { min-height:44px; }
+  /* VÝBĚR OKOLÍ SE OVLÁDÁ JEDINĚ PRSTEM a měl v něm všechno pod mírou:
+     přepínače okruhu 37 px, křížek 38, zoom mapy 30×30. Je to dialog,
+     který se otevře až po klepnutí, takže ho měření stránky minulo —
+     a zrovna na jeho ovládání si lidé stěžovali. */
+  /* Měřit a zvětšovat se musí ŠTÍTEK, ne jen nápis uvnitř: klikací je
+     průhledné políčko natažené přes štítek (inset:0), takže výška nápisu
+     s ním nehne — štítek je řádkový a jeho rámeček zůstal na 37 px. */
+  .vm-km { display:inline-flex; min-height:44px; }
+  .vm-km span { min-height:44px; }
+  .vm-x { width:44px; height:44px; }
+  /* Zoom v mapě je Leafletův; jeho vlastní pravidlo pro dotyk dává 30 px.
+     Táž váha, ale náš soubor se načítá po něm, takže platí tohle.
+     Týká se výběru okolí i mapy na stránce pozemku (obojí zoom má). */
+  .leaflet-touch .leaflet-bar a { width:44px; height:44px; line-height:44px; }
 }
 /* Tři živé údaje v úvodu mají 44 px taky — ale až od 361 px šířky.
    NA NEJMENŠÍCH DISPLEJÍCH (do 360 px) TO NEJDE a zkouška rozvržení to chytila:
