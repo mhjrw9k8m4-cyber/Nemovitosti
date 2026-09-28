@@ -2346,6 +2346,12 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 /* Fotky */
 .photo-drop{display:block; border:1.5px dashed var(--line-strong); border-radius:var(--r-sm); padding:18px; text-align:center; cursor:pointer; transition:border-color .15s ease, background .15s ease;}
 .photo-drop:hover{border-color:var(--copper); background:rgba(44,113,80,0.05);}
+/* SAMOTNÉ POLE PRO VÝBĚR FOTEK JE OPTICKY SKRYTÉ (1×1 px, průhledné) —
+   klávesnicí se na něj dostat dá, ale nebylo vidět kam. Zaměření se
+   proto kreslí na plochu „Přidat fotky", tedy tam, kam se člověk dívá. */
+.photo-field:has(input[type=file]:focus-visible) .photo-drop{
+  border-color:var(--copper-bright); background:rgba(44,113,80,0.07);
+  outline:2px solid var(--copper-bright); outline-offset:2px;}
 .photo-drop b{color:var(--copper-bright); font-size:14px;}
 .photo-drop span{display:block; font-size:12px; color:var(--text-ondark-mute); margin-top:4px;}
 .photo-field input[type=file]{position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;}

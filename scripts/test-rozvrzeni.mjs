@@ -604,6 +604,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
     'pridat.html', 'pozemek.html?ll=50.02,15.20', 'pozemky-podle-okresu.html',
     'kontakt.html', 'cena-pozemku.html'];
   const nalezy = [];
+  const nalezyKlavesnice = [];
   for (const stranka of STRANKY) {
     await p2.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
     await p2.waitForTimeout(2500);
@@ -628,6 +629,35 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
       return [...new Set(ven)];
     });
     male.forEach((m) => nalezy.push(`${stranka}: ${m}`));
+
+    /* A CO JDE KLEPNOUT, MUSÍ JÍT I KLÁVESNICÍ. Volby „Musí mít"
+       u hlídání (Elektřina, Voda, …) byly obyčejné <span> s obsluhou
+       klepnutí: myší ano, klávesnicí nijak, a čtečka je četla jako holý
+       text bez stavu — přitom je to půlka toho, co hlídání umí. Hledá se
+       to podle kurzoru: co má tvar ruky, na to člověk klepne. */
+    const bezKlavesnice = await p2.evaluate(() => {
+      const FOKUS = 'a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])';
+      const ven = [];
+      document.querySelectorAll('*').forEach((e) => {
+        const r = e.getBoundingClientRect();
+        if (r.width < 8 || r.height < 8) return;
+        if (!e.offsetParent) return;
+        if (getComputedStyle(e).cursor !== 'pointer') return;
+        if (e.matches(FOKUS) || e.closest(FOKUS)) return;
+        if (e.querySelector(FOKUS)) return;
+        /* Popisek s „for" ovládá pole, které zaměřit jde — na ten se
+           klávesnicí dostat netřeba, stačí na jeho pole. */
+        const l = e.tagName === 'LABEL' ? e : e.closest('label[for]');
+        if (l && l.getAttribute('for')) {
+          const cil = document.getElementById(l.getAttribute('for'));
+          if (cil && cil.matches(FOKUS)) return;
+        }
+        ven.push(e.tagName.toLowerCase() + '.' + String(e.className || '').split(' ')[0]
+          + ' „' + (e.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 18) + '"');
+      });
+      return [...new Set(ven)];
+    });
+    bezKlavesnice.forEach((m) => nalezyKlavesnice.push(`${stranka}: ${m}`));
   }
   /* Ať kontrola není prázdná: na těch stránkách musí něco měřitelného
      vůbec být. Kdyby se neotevřely (třeba kvůli přihlášení), našlo by se
@@ -637,6 +667,8 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
     `měřitelných prvků: ${merenych}`);
   pravda(`ovládání se dá trefit prstem i mimo úvodní stránku (${STRANKY.length} stránek)`,
     nalezy.length === 0, nalezy.slice(0, 8).join(' | '));
+  pravda(`a co jde klepnout, jde i klávesnicí (${STRANKY.length} stránek)`,
+    nalezyKlavesnice.length === 0, nalezyKlavesnice.slice(0, 8).join(' | '));
   await ctx.close();
 }
 
@@ -665,6 +697,55 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
     pravda('a jeho řádky se dají trefit prstem (44 px)', v.male.length === 0,
       v.male.map((x) => `„${x.t}" ${x.v} px`).join(' | '));
   }
+  await ctx.close();
+}
+
+/* --- 6b3) FORMULÁŘ „NOVÉ HLÍDÁNÍ" ------------------------------------
+ *
+ * Volby „Musí mít" (Elektřina, Voda, …) byly obyčejné <span> s obsluhou
+ * klepnutí: myší ano, klávesnicí nijak, a čtečka je četla jako holý text
+ * bez stavu — přitom je to půlka toho, co hlídání umí.
+ *
+ * Formulář je ve druhé záložce, takže ho procházení stránek nevidí: kdo
+ * má uložené hlídání, tomu se otevře seznam. Zkouška proto na tu záložku
+ * napřed klepne — jinak měří skrytý panel, což se mi taky stalo a prošlo
+ * to i se sabotáží.
+ */
+{
+  /* Vlastní okno: hlidani.html ukáže bez přihlášení přihlašovací kartu,
+     ne formulář — a kontrola by měřila ji. */
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ', permissions: [] });
+  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  await ctx.addInitScript(() => {
+    localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok-majitel',
+      refresh_token: 'ref-majitel', user: { id: '11111111-1111-4111-8111-111111111111' } }));
+  });
+  const p6 = await ctx.newPage();
+  await p6.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
+  await p6.waitForTimeout(2600);
+  await p6.evaluate(() => {
+    const t = document.querySelector('.hl-tab[data-zalozka="nove"]');
+    if (t) t.click();
+  });
+  await p6.waitForTimeout(900);
+  const v = await p6.evaluate(() => {
+    const FOKUS = 'a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])';
+    const chipy = [...document.querySelectorAll('.hl-chip')].filter((e) => e.offsetParent);
+    const bezKlaves = chipy.filter((e) => !e.matches(FOKUS) && !e.closest(FOKUS));
+    const male = chipy.filter((e) => e.getBoundingClientRect().height < 44)
+      .map((e) => (e.textContent || '').trim().slice(0, 14) + ' ' + Math.round(e.getBoundingClientRect().height) + ' px');
+    const bezStavu = chipy.filter((e) => !e.hasAttribute('aria-pressed'));
+    return { pocet: chipy.length, bezKlaves: bezKlaves.length, male, bezStavu: bezStavu.length };
+  });
+  pravda('formulář „Nové hlídání" se otevřel a volby „Musí mít" jsou vidět',
+    v.pocet >= 5, `voleb: ${v.pocet} — bez nich kontroly níž nic neměří`);
+  pravda('a dají se zapnout klávesnicí, ne jen myší', v.bezKlaves === 0,
+    `${v.bezKlaves} z ${v.pocet} voleb se nedá zaměřit`);
+  pravda('a čtečka u nich pozná, jestli jsou zapnuté', v.bezStavu === 0,
+    `${v.bezStavu} z ${v.pocet} voleb nemá aria-pressed`);
+  pravda('a dají se trefit prstem (44 px)', v.male.length === 0, v.male.join(' | '));
   await ctx.close();
 }
 

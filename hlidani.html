@@ -30,7 +30,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=6849d3f0">
+  <link rel="stylesheet" href="css/styles.css?v=6786ee99">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .hl-wrap{max-width:640px; margin:0 auto;}
@@ -131,7 +131,7 @@
     /* Volba, pod kterou dnes není nic. Neschovává se: zmizelá volba mate
        víc než volba s nulou. */
     .hl-chip.hl-nula{opacity:.55;}
-    .hl-chip{display:inline-flex; align-items:center; gap:5px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:999px; font-size:13px; color:var(--text-ondark); cursor:pointer; user-select:none; background:var(--ink-soft2);}
+    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:5px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:999px; font-size:13px; color:var(--text-ondark); cursor:pointer; user-select:none; background:var(--ink-soft2);}
     .hl-chip.on{border-color:var(--copper-bright); background:rgba(31,81,56,.12); color:var(--copper-bright); font-weight:700;}
     /* Seznam hledání */
     .hl-item{padding:15px 16px; border-bottom:1px solid var(--line);}
@@ -161,6 +161,10 @@
        nezvětšovalo zbytečně. */
     @media (pointer: coarse) {
       .hl-a{min-height:44px;}
+      /* Volby „Musí mít" měly 39 px. Jsou ve druhé záložce, takže je
+         měření stránky nevidělo — ukázaly se, teprve když na tu záložku
+         zkouška klepla. */
+      .hl-chip{min-height:44px;}
     }
   </style>
 </head>
@@ -383,9 +387,15 @@
     var feats = FEATS.concat(['Přístupová cesta']).map(function (f) {
       var n = 0;
       for (var i = 0; i < DATA.length; i++) if (matches({ features: [f] }, DATA[i])) n++;
-      return '<span class="hl-chip' + (n ? '' : ' hl-nula') + '" data-feat="' + esc(f) + '"' +
+      /* TLAČÍTKO, NE <span>. Volby „Musí mít" se zapínaly klepnutím na
+         obyčejný span — klávesnicí se na ně tedy nedalo dostat vůbec
+         a čtečka je četla jako holý text bez stavu. Přitom je to půlka
+         toho, co hlídání umí. aria-pressed říká, jestli je volba
+         zapnutá; type="button" zabrání odeslání formuláře Enterem. */
+      return '<button type="button" class="hl-chip' + (n ? '' : ' hl-nula') + '" data-feat="' + esc(f) + '"' +
+        ' aria-pressed="false"' +
         (n ? '' : ' title="Tohle dnes neuvádí ani jedna nabídka — hlídání by podle toho nic nenašlo"') +
-        '>' + esc(f) + '<span class="hl-chip-n">' + (n ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') : '0') + '</span></span>';
+        '>' + esc(f) + '<span class="hl-chip-n">' + (n ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') : '0') + '</span></button>';
     }).join('');
     /* Rychlé volby. Psát „800000" do políčka je práce navíc a většina lidí
        stejně hledá v pár obvyklých pásmech — tak ať jsou po ruce. Klepnutí
@@ -501,7 +511,11 @@
         : 'Dnes tomu odpovídá <b>' + cis + '</b> ' + (n === 1 ? 'pozemek' : (n < 5 ? 'pozemky' : 'pozemků')) + '. Hlídat budeme jen to, co přibude nově.';
     }
     chips.forEach(function (c) {
-      c.addEventListener('click', function () { c.classList.toggle('on'); prepocti(); });
+      c.addEventListener('click', function () {
+        var zap = c.classList.toggle('on');
+        c.setAttribute('aria-pressed', String(zap));
+        prepocti();
+      });
     });
     root.querySelectorAll('#ns-okres, #ns-druh, #ns-type, #ns-price, #ns-price-od, #ns-area, #ns-area-do, #ns-perm2')
       .forEach(function (e) { e.addEventListener('input', prepocti); e.addEventListener('change', prepocti); });

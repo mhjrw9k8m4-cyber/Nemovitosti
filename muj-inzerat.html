@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=6849d3f0">
+  <link rel="stylesheet" href="css/styles.css?v=6786ee99">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:20px; padding:24px 22px 22px;
@@ -622,7 +622,20 @@
       }).catch(function(){ dataIndex = {}; render(); });
     }
     // Dlaždice „Uložené pozemky" v hlavičce sroluje k seznamu
-    var favTileEl = q('pf-fav'); if (favTileEl && favTileEl.closest){ var st = favTileEl.closest('.pf-stat'); if(st){ st.style.cursor='pointer'; st.addEventListener('click', function(){ var w=q('mi-saved-wrap'); if(w) w.scrollIntoView({behavior:'smooth', block:'start'}); }); } }
+    /* Dlaždice „Uložené pozemky" odroluje k seznamu. Byl to obyčejný
+       div s obsluhou klepnutí: myší ano, klávesnicí nijak, a čtečka o ní
+       nevěděla. Role a tabindex z ní udělají tlačítko i pro ně; mezerník
+       a Enter musí dělat totéž co klepnutí, jinak je to tlačítko jen
+       naoko. */
+    var favTileEl = q('pf-fav'); if (favTileEl && favTileEl.closest){ var st = favTileEl.closest('.pf-stat'); if(st){
+      var skoc = function(){ var w=q('mi-saved-wrap'); if(w) w.scrollIntoView({behavior:'smooth', block:'start'}); };
+      st.style.cursor='pointer';
+      st.setAttribute('role','button');
+      st.setAttribute('tabindex','0');
+      st.setAttribute('aria-label','Přejít na uložené pozemky');
+      st.addEventListener('click', skoc);
+      st.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); skoc(); } });
+    } }
     // „Načíst znovu" v prázdném stavu (kdyby se inzeráty nenačetly napoprvé)
     var reloadBtn = q('mi-reload'); if (reloadBtn) reloadBtn.addEventListener('click', function(){ emptyEl.hidden = true; load(); });
 
