@@ -28,6 +28,15 @@
        okna, takže poslední čtyři volby nešly vybrat vůbec: ani rolováním,
        ani klávesou (tu rozbalovač neměl). Rolování uvnitř panelu se proto
        přeskakuje. */
+    /* KDY ČLOVĚK NAPOSLEDY SÁHL NA ROLOVÁNÍ. Kolečko, prst, klávesa —
+       nic jiného rolování z vlastní vůle nezačne. Programové rolování
+       (scrollIntoView po klepnutí na odkaz) ani dojíždějící setrvačnost
+       žádný takový vstup nemají, a právě v tom je rozdíl, na kterém tady
+       všechno stojí. */
+    var poslVstup = 0;
+    ['wheel', 'touchmove', 'keydown'].forEach(function (u) {
+      window.addEventListener(u, function () { poslVstup = Date.now(); }, { passive: true, capture: true });
+    });
     window.addEventListener('scroll', function (e) {
       if (!opened) return;
       var t = e.target;
@@ -37,9 +46,20 @@
          setrvačnost, takže kdo klepne na rozbalovač chvíli po klepnutí na
          odkaz nebo po švihnutí prstem, viděl, jak se seznam otevře a v tomtéž
          okamžiku zase zmizí — zvenčí to vypadá, že tlačítko nefunguje.
-         Po tu chvíli se tedy panel jen posune za svým tlačítkem; zavírá se
-         až při rolování, které člověk začal potom. */
-      if (Date.now() - opened.kdy < 400) { opened.presun(); return; }
+         Po tu dobu se panel jen posouvá za svým tlačítkem.
+
+         ROZHODUJE VSTUP, NE HODINY. Stálo tu „400 ms od otevření" a byl to
+         dohad — délku plynulého rolování si prohlížeč řídí podle vzdálenosti.
+         Změřeno na úvodní stránce: události chodily ještě 355 až 426 ms po
+         klepnutí, tedy přesně na hranici, takže se seznam zavíral asi
+         v každém druhém případě. Ani „počkat, než události přestanou
+         chodit" nestačilo: stačí jedno vynechané překreslení a mezera mezi
+         dvěma událostmi tu lhůtu přeskočí.
+         Vstup je na to jistý znak: rolování, které začalo DŘÍV než se
+         seznam otevřel, člověk potvrdit nemohl — tak ho panel jen
+         doprovází. Jakmile sáhne na kolečko nebo na obrazovku POTOM,
+         zavírá se, a je jedno, jak dlouho už to jede. */
+      if (poslVstup <= opened.kdy) { opened.presun(); return; }
       close();
     }, true);
     window.addEventListener('resize', function () { if (opened) close(); });

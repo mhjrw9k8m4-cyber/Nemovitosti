@@ -201,9 +201,35 @@ pravda('a panel zůstane u svého tlačítka', s2.otevren && Math.abs(s2.odsazen
   'panel je od tlačítka ' + s2.odsazeniOdTlacitka + ' px — odjel pryč');
 await p.waitForTimeout(500);
 
-// --- rolování STRÁNKY ho naopak zavřít MÁ ---
+/* --- rolování STRÁNKY ho naopak zavřít MÁ ---
+   Kolečkem, ne window.scrollBy: rozbalovač pozná rolování, které člověk
+   OPRAVDU začal, právě podle vstupu (kolečko, prst, klávesa). Skriptem
+   posunutá stránka je z jeho pohledu totéž jako dojíždějící setrvačnost
+   po klepnutí na odkaz — a tu zavírat nesmí. Zkouška proto musí rolovat
+   tak, jak roluje člověk, jinak měří něco jiného, než na čem záleží. */
+/* Po předchozím bloku seznam ZŮSTÁVÁ otevřený — o to tam šlo. Klepnutí
+   na tlačítko by ho tedy zavřelo, ne otevřelo, a kontrola níž by měřila
+   opak toho, co má. Zavře se proto Escapem a otevře znovu. */
+await p.keyboard.press('Escape');
+await p.waitForTimeout(250);
 await otevri();
-await p.evaluate(() => { window.scrollBy(0, 120); document.dispatchEvent(new Event('scroll', { bubbles: true })); });
+/* NEJDŘÍV OVĚŘIT, ŽE JE VŮBEC OTEVŘENO. Bez toho tahle kontrola projde
+   i tehdy, když se seznam neotevřel — „zavřený" je pak pravda z jiného
+   důvodu a sabotáž (nezavírat nikdy) se propašuje. Vyzkoušeno: přesně
+   tak se tudy protáhla. */
+s2 = await stav();
+pravda('seznam se před rolováním otevřel (jinak zkouška nic neměří)', s2.otevren,
+  'neotevřel se — kontrola níž by byla pravdivá z jiného důvodu');
+// Kolečko myši musí mířit na STRÁNKU, ne do panelu: rolování uvnitř panelu
+// se schválně přeskakuje (jinak by se seznam zavíral při listování volbami).
+const mimoPanel = await p.evaluate(() => {
+  const r = document.querySelector('.cdd-panel:not([hidden])');
+  const pr = r ? r.getBoundingClientRect() : null;
+  // bod v levé části okna, mimo panel
+  return { x: 60, y: pr && pr.left < 200 ? Math.round(pr.bottom + 60) : 400 };
+});
+await p.mouse.move(mimoPanel.x, mimoPanel.y);
+await p.mouse.wheel(0, 120);
 await p.waitForTimeout(400);
 s2 = await stav();
 pravda('rolování stránky seznam zavře (je připíchnutý, s obsahem by se rozešel)', !s2.otevren,
