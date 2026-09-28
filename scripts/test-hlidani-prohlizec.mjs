@@ -203,6 +203,24 @@ await p.waitForTimeout(2400);
   });
   pravda('je hlídání, u kterého něco nového je (jinak zkouška nic neměří)',
     !!karta, 'žádná karta s nenulovým odznakem — kontroly níž by neměly co hlídat');
+
+  /* JMÉNO SE POD SEBOU NEOPAKUJE. Hlídání okresu se tak i jmenuje, takže
+     na kartě stálo dvakrát pod sebou totéž („Praha" a pod tím „Praha") —
+     vypadá to jako chyba výpisu a neříká to nic navíc. */
+  const karty = await p.evaluate(() => [...document.querySelectorAll('.hl-item')].map((e) => ({
+    jmeno: ((e.querySelector('.hl-iname') || {}).textContent || '').trim(),
+    krit: ((e.querySelector('.hl-crit') || {}).textContent || '').trim(),
+    pocet: ((e.querySelector('.hl-count') || {}).textContent || '').trim(),
+  })));
+  pravda('karty hlídání se vypsaly (jinak zkouška nic neměří)', karty.length > 0, 'žádná karta');
+  const opakuje = karty.filter((k) => k.jmeno && k.krit.toLowerCase() === k.jmeno.toLowerCase());
+  pravda('jméno hlídání se pod ním neopakuje', opakuje.length === 0,
+    JSON.stringify(opakuje));
+
+  /* Skloňování. „1 pozemků" nebo „3 pozemků" vypadá jako strojový překlad. */
+  const spatne = karty.filter((k) => /\b1\b\s*pozemků|\b[234]\b\s*pozemků|\b(?:[05-9]|\d\d+)\b\s*pozemek\b/.test(k.pocet));
+  pravda('počty pozemků jsou skloňované', spatne.length === 0,
+    JSON.stringify(karty.map((k) => k.pocet)));
   if (karta) {
     const doUpozorneni = karta.odkazy.find((a) => /^upozorneni\.html/.test(a.href));
     pravda('karta vede tam, kde jsou ty nové pozemky vypsané',
@@ -239,6 +257,27 @@ const centrum = await p.evaluate(() => ({
 pravda('v centru upozornění je nový pozemek', /Sendražice/.test(centrum.text),
   'text centra: ' + centrum.text.replace(/\s+/g, ' ').slice(0, 160));
 pravda('staré pozemky se jako nové nehlásí', !/„?Kolín"?\s*·\s*1\/1/.test(centrum.text));
+
+/* VYPSANÝ POZEMEK MUSÍ JÍT OTEVŘÍT. Byly to jen řádky textu: člověk se
+   dozvěděl, že mu přibyly tři a které to jsou, a otevřít si mohl leda
+   celou mapu a hledat je mezi tečkami. */
+{
+  const odkazy = await p.evaluate(() => [...document.querySelectorAll('.up-list li a')]
+    .map((a) => ({ href: a.getAttribute('href') || '', text: (a.textContent || '').trim() })));
+  pravda('nové pozemky jsou v upozornění odkazy, ne jen text', odkazy.length > 0,
+    'v seznamu upozornění není ani jeden odkaz na pozemek');
+  const sendrazice = odkazy.find((a) => /Sendražice/.test(a.text));
+  pravda('a vede z nich odkaz na vlastní stránku toho pozemku',
+    !!sendrazice && /^pozemek\.html\?p=/.test(sendrazice.href),
+    JSON.stringify(odkazy.slice(0, 3)));
+  if (sendrazice) {
+    await p.click(`.up-list li a[href="${sendrazice.href.replace(/"/g, '\\"')}"]`);
+    await p.waitForTimeout(2200);
+    const nadpis = await p.evaluate(() => (document.querySelector('.pz-place') || {}).textContent || '');
+    pravda('a otevře se opravdu ten pozemek, ne jiný',
+      /Sendražice/.test(nadpis), `na stránce stojí „${nadpis.trim()}"`);
+  }
+}
 
 /* ---------- 3. odznak v menu ---------- */
 // Na stránce hlídání a upozornění se odznak schválně neukazuje (po přečtení

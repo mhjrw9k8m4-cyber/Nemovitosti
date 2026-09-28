@@ -23,7 +23,9 @@
   <meta name="theme-color" content="#FBFAF8">
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
@@ -72,6 +74,17 @@
     .up-list{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:4px;}
     .up-list li{font-size:13.5px; line-height:1.4; display:flex; gap:7px;}
     .up-list li::before{content:"·"; color:var(--text-ondark-mute); flex:none;}
+    /* VYPSANÝ POZEMEK VEDE NA SVOU STRÁNKU. Dřív to byl jen text, takže
+       z „3 nové pozemky" se nedalo dojít k žádnému z nich. Podtržení tu
+       není ozdoba: bez něj se z řádku nepozná, že je klikatelný — a to
+       je přesně výtka, kterou web schytal u údajů v úvodu. */
+    .up-list li a{color:inherit; text-decoration:underline; text-decoration-color:rgba(255,255,255,.28); text-underline-offset:3px;}
+    .up-list li a:hover{text-decoration-color:var(--copper-bright); color:var(--copper-bright);}
+    .up-list li a:focus-visible{outline:2px solid var(--copper-bright); outline-offset:3px; border-radius:4px;}
+    @media (pointer: coarse) {
+      /* Tři odkazy pod sebou jsou tři cíle pro prst, ne odstavec. */
+      .up-list li a{min-height:44px; display:flex; align-items:center;}
+    }
     .up-more{font-size:12.5px; color:var(--text-ondark-mute); margin-top:5px;}
     .up-acts{display:flex; gap:8px; flex-wrap:wrap; margin-top:11px;}
     .up-a{display:inline-flex; align-items:center; padding:8px 14px; border-radius:10px; font-size:13.5px;
@@ -201,10 +214,10 @@
 <script src="js/config.js?v=7f55c4e1"></script>
 <script src="js/auth.js?v=3891c865"></script>
 <script src="js/hlidani-logika.js?v=8c971165"></script>
-<script src="js/upozorneni-feed.js?v=31fe5957"></script>
+<script src="js/upozorneni-feed.js?v=d6d2bf4a"></script>
 <script src="js/upozorneni.js?v=b7b7c483"></script>
 <script src="js/hlavicka.js?v=cd7f79fb"></script>
-<script src="js/centrum.js?v=da840dea"></script>
+<script src="js/centrum.js?v=9ff2d850"></script>
 <script>
 /* Mobilní menu (hamburger) — tato stránka nenačítá main.js. */
 (function () {

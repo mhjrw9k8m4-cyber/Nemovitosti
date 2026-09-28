@@ -23,7 +23,9 @@
   <meta name="theme-color" content="#FBFAF8">
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
@@ -142,8 +144,11 @@
     .hl-count{font-size:12.5px; color:var(--text-ondark-mute); margin-top:3px;}
     .hl-kam{font-size:12.5px; color:var(--text-ondark-mute); margin:9px 0 0; line-height:1.5;}
     .hl-kam a{color:var(--copper-bright); text-decoration:underline; text-underline-offset:2px;}
-    .hl-acts{display:flex; gap:8px; margin-top:11px;}
-    .hl-a{flex:1; height:40px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--line-strong); background:var(--ink-soft2); color:var(--text-ondark); display:flex; align-items:center; justify-content:center; text-decoration:none;}
+    /* Tlačítka jsou u hlídání s novými pozemky tři („Ukázat nové",
+       „Zobrazit na mapě", koš). Natěsnaná do jedné řady by se na úzkém
+       telefonu lámal text uvnitř nich, tak se radši zalomí. */
+    .hl-acts{display:flex; gap:8px; margin-top:11px; flex-wrap:wrap;}
+    .hl-a{flex:1 1 120px; height:40px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--line-strong); background:var(--ink-soft2); color:var(--text-ondark); display:flex; align-items:center; justify-content:center; text-decoration:none;}
     .hl-a.pri{background:var(--plocha-znacka); color:#fff; border-color:transparent; box-shadow:0 8px 20px -12px rgba(31,81,56,.5);}
     .hl-a.del{flex:0 0 44px; color:var(--c-exekuce);}
     .hl-empty{padding:30px 22px; text-align:center; color:var(--text-ondark-mute); font-size:14px; line-height:1.6;}
@@ -235,6 +240,7 @@
 <script src="js/cisteni.js?v=c43084f5"></script>
 <script src="js/config.js?v=7f55c4e1"></script>
 <script src="js/auth.js?v=3891c865"></script>
+<script src="js/upozorneni-feed.js?v=d6d2bf4a"></script>
 <script src="js/hlidani-logika.js?v=8c971165"></script>
 <script src="js/upozorneni.js?v=b7b7c483"></script>
 <script src="js/hlavicka.js?v=cd7f79fb"></script>
@@ -256,14 +262,31 @@
   var keyOf = HL.keyOf;
   var matches = HL.matches;
 
+  /* „1 pozemků" a „3 pozemků" vypadá jako strojový překlad. Skloňování
+     umí js/upozorneni-feed.js (jedno místo pro celý web), tak se bere
+     odtud — čtvrtá kopie tří řádků by se s ním jen rozešla. */
+  function tvarPozemku(n) {
+    var F = window.PKFeed;
+    return F && F.mnozne ? F.mnozne(n, ['pozemek', 'pozemky', 'pozemků']) : 'pozemků';
+  }
+
   function critText(s) {
     var p = [];
-    p.push(s.okres ? esc(s.okres) : 'celá ČR');
+    /* JMÉNO HLÍDÁNÍ SE POD NÍM NEOPAKUJE. Hlídání okresu se tak i jmenuje,
+       takže na kartě stálo dvakrát pod sebou totéž — „Praha" a pod tím
+       „Praha". Vypadá to jako chyba výpisu a neříká to nic navíc. */
+    var kde = s.okres || 'celá ČR';
+    var jmeno = String(s.label || '').trim();
+    if (jmeno.toLowerCase() !== kde.toLowerCase()) p.push(esc(kde));
     if (s.ptype && TYPE_LABEL[s.ptype]) p.push(TYPE_LABEL[s.ptype]);
     if (s.druh) p.push(esc(s.druh));
     if (s.max_price) p.push('do ' + fmt(s.max_price) + ' Kč');
     if (s.min_area) p.push('od ' + fmt(s.min_area) + ' m²');
     if (s.features && s.features.length) p.push(s.features.map(esc).join(', '));
+    /* Když po odečtení jména nezbylo nic, je to hlídání celého okresu bez
+       dalších podmínek — a to je informace, ne prázdno: člověk podle ní
+       pozná, proč mu sedí tolik pozemků. */
+    if (!p.length) return 'bez dalšího omezení — všechny druhy i ceny';
     return p.join(' · ');
   }
 
@@ -593,7 +616,7 @@
           '<div class="hl-itop"><div class="hl-iname">' + esc(s.label || 'Hledání') + '</div>' +
             '<span class="hl-new-badge' + (newN ? '' : ' zero') + '">' + (newN ? newN + ' nových' : 'žádné nové') + '</span></div>' +
           '<div class="hl-crit">' + critText(s) + '</div>' +
-          '<div class="hl-count">Celkem sedí: <b>' + cur.length + '</b> pozemků</div>' +
+          '<div class="hl-count">Celkem sedí: <b>' + cur.length + '</b> ' + tvarPozemku(cur.length) + '</div>' +
           /* KDE TY NOVÉ POZEMKY JSOU. Odznak „3 nových" byl slepá ulička:
              řekl počet a nic víc. Jediné tlačítko vedlo na mapu, kde je
              vidět všech 27 nálezů a nové se od ostatních nijak neliší —

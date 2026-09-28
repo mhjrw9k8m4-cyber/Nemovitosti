@@ -162,7 +162,18 @@
             popis: [d.place, vymera(d.area), cena(d.price)].filter(Boolean).join(' · '),
             druh: d.druh || '',
             typ: d.type || '',
-            klic: HL.keyOf(d)
+            klic: HL.keyOf(d),
+            /* ADRESA VLASTNÍ STRÁNKY POZEMKU. Vypsané pozemky byly jen
+               řádky textu: člověk se dozvěděl, že mu přibyly tři, i které
+               to jsou — a otevřít si mohl leda celou mapu a hledat je mezi
+               tečkami. Klíč HL.keyOf() na to nestačí, ten je jiný (slouží
+               k poznání, co už bylo viděno), takže se adresa skládá tady,
+               kde je celý pozemek po ruce. Týž tvar jako všude jinde na
+               webu: pkey() v js/main.js, pkeyPlny() v js/pozemek.js. */
+            odkaz: (typeof d.lat === 'number' && typeof d.lng === 'number')
+              ? 'pozemek.html?p=' + encodeURIComponent([d.place || '', d.parcel || '', d.okres || '',
+                  d.lat.toFixed(3), d.lng.toFixed(3)].join('|')) + '&ll=' + d.lat + ',' + d.lng
+              : ''
           };
         }),
         dalsich: Math.max(0, nove.length - UKAZKA),

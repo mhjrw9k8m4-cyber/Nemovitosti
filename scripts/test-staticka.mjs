@@ -286,6 +286,39 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
     + `(+${Object.keys(VYJIMKY).length} s napsaným důvodem).`);
 }
 
+/* --- KDO SE TVÁŘÍ JAKO APLIKACE, MUSÍ JÍ BÝT --------------------------
+ *
+ * Web má manifest.webmanifest, takže se dá nainstalovat jako aplikace —
+ * a Hlídání, Upozornění i Zprávy o sobě samy píšou „přímo v aplikaci".
+ * Zrovna ty tři ho ale v hlavičce neměly: kdo na nich stál, neměl si co
+ * nainstalovat. Bylo to opomenutí při kopírování hlavičky, ne záměr, a
+ * poznalo se to jedině tím, že se stránky porovnaly mezi sebou.
+ *
+ * Pravidlo je proto vnitřní: kdo má ikonu pro domovskou obrazovku
+ * (apple-touch-icon), má i manifest. Přesměrování ze starých adres,
+ * chybová stránka ani předloha ikonu nemají, takže se jich to netýká —
+ * a kdyby někdo takovou stránku přidal, nespadne to na ní zbytečně.
+ */
+{
+  const KOREN2 = ROOT;
+  const stranky = fs.readdirSync(KOREN2)
+    .filter((f) => f.endsWith('.html') && !/^pozemek-|^pozemky-okres|^pozemky-kraj/.test(f));
+  const chybi = stranky.filter((f) => {
+    const h = fs.readFileSync(path.join(KOREN2, f), 'utf8');
+    return /apple-touch-icon/.test(h) && !/rel="manifest"/.test(h);
+  });
+  if (!stranky.length) {
+    console.error('::error::Nenašly se žádné stránky — kontrola manifestu by nic neměřila.');
+    process.exit(1);
+  }
+  if (chybi.length) {
+    console.error('::error::Stránka se tváří jako aplikace (apple-touch-icon), ale nemá manifest: '
+      + chybi.join(', '));
+    process.exit(1);
+  }
+  console.log(`Manifest aplikace: ${stranky.filter((f) => /rel="manifest"/.test(fs.readFileSync(path.join(KOREN2, f), 'utf8'))).length} z ${stranky.length} hlavních stránek (zbytek ho mít nemá).`);
+}
+
 console.log(`\nStatická kontrola: ${souboru} souborů, ${podezreni ? podezreni + ' podezřelých volání' : 'žádné osiřelé volání'}.`);
 // Nepadáme — jsou to podezření, ne jistoty. Padá se jen tehdy, když by
 // bylo podezření nápadně moc (to už znamená, že se rozbil rozbor sám).

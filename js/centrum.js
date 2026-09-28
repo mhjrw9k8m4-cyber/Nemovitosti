@@ -109,7 +109,13 @@
     if (u.ukazka) h += '<div class="up-quote">' + esc(u.ukazka) + '</div>';
     if (u.polozky && u.polozky.length) {
       h += '<ul class="up-list">';
-      u.polozky.forEach(function (p) { h += '<li><span>' + esc(p.popis) + (p.druh ? ' — ' + esc(p.druh) : '') + '</span></li>'; });
+      /* Každý vypsaný pozemek vede na svou stránku. Dřív to byl jen
+         text, takže z „3 nové pozemky" se nedalo dojít k žádnému z nich —
+         jediná cesta vedla na mapu se všemi nálezy naráz. */
+      u.polozky.forEach(function (p) {
+        var text = esc(p.popis) + (p.druh ? ' — ' + esc(p.druh) : '');
+        h += '<li>' + (p.odkaz ? '<a href="' + esc(p.odkaz) + '">' + text + '</a>' : '<span>' + text + '</span>') + '</li>';
+      });
       h += '</ul>';
       if (u.dalsich) h += '<div class="up-more">a ' + F.cislovka(u.dalsich, ['další', 'další', 'dalších']) + '…</div>';
     }
