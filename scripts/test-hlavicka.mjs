@@ -408,10 +408,14 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
        hlavička jen přepne, žádný mezistav se nenajde. */
     window.scrollBy({ top: 300, behavior: 'instant' });
     await spi(40);
-    let mezistavu = 0;
+    let mezistavu = 0, posunuta = 0;
     for (let i = 0; i < 45; i++) {
-      const o = parseFloat(getComputedStyle(h).opacity);
+      const c2 = getComputedStyle(h);
+      const o = parseFloat(c2.opacity);
       if (o > 0.05 && o < 0.95) mezistavu++;
+      /* A ani v půlce příjezdu se hlavička nesmí nikam posouvat: to je
+         přesně to „naskočení", na které přišla stížnost. */
+      if (c2.transform && c2.transform !== 'none') posunuta++;
       await spi(30);
     }
     /* A ještě jedna past, na kterou jsem sám naletěl: běžící animace
@@ -425,16 +429,22 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
     await spi(140);
     const pripohybuZnovu = parseFloat(getComputedStyle(h).opacity);
     await spi(900);
-    return { prichod, jmenoAnimace, odchod, mezistavu, pripohybuZnovu,
+    return { prichod, jmenoAnimace, odchod, mezistavu, posunuta, pripohybuZnovu,
       transformVKlidu: getComputedStyle(h).transform,
       konec: parseFloat(getComputedStyle(h).opacity) };
   });
   pravda('příjezd hlavičky trvá aspoň třetinu vteřiny', v.prichod >= 0.3,
     `${v.prichod} s — to je pro oko cvaknutí, ne animace`);
   pravda('ale ne víc než vteřinu', v.prichod <= 1, `${v.prichod} s`);
-  pravda('a doprovází ho posun (ne jen prolnutí)', v.jmenoAnimace === 'hlPrijezd',
-    `animace se jmenuje „${v.jmenoAnimace}" — posun shora tam není`);
-  pravda('v klidu ale hlavička žádnou transformaci nemá',
+  pravda('příjezd je vlastní animace, ne holé přepnutí stavu',
+    v.jmenoAnimace === 'hlPrijezd', `animace se jmenuje „${v.jmenoAnimace}"`);
+  /* Dřív tu stálo „a doprovází ho posun": hlavička přijížděla o sedm
+     pixelů shora. Ukázalo se to jako chyba — hlavička nikam neodjela,
+     jen zhasla, takže posun na návratu vypadal, že „naskočí jak hokejista
+     na led". Prolnutí na místě je teď POŽADAVEK, ne shoda náhod. */
+  pravda('a je to prolnutí na místě — hlavička se při něm nikam neposouvá',
+    v.posunuta === 0, `v ${v.posunuta} ze 45 vzorků měla transform`);
+  pravda('v klidu taky žádnou transformaci nemá',
     v.transformVKlidu === 'none', `transform: ${v.transformVKlidu}`);
   pravda('odchod je naopak rychlý', v.odchod <= 0.2,
     `${v.odchod} s — hlavička by při rolování doplouvala přes obsah`);
@@ -444,6 +454,66 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
     v.pripohybuZnovu < 0.5,
     `hlavička měla ${v.pripohybuZnovu} — doplouvá přes obsah, i když už se zase roluje`);
   pravda('a nakonec je úplně vidět', v.konec === 1, `${v.konec}`);
+  await ctx.close();
+}
+
+/* --- 7) „Omezit pohyb" neznamená „cvakat" -----------------------------
+ *
+ * Kdo má na telefonu zapnuté omezení pohybu, dostával hlavičku
+ * z rámce na rámec: pravidlo znělo animation:none. Jenže omezení pohybu
+ * má nahradit POSUNY a zvětšování prolínáním — samo prolnutí pohyb není
+ * a systém ho používá právě jako náhradu. Návrat proto zůstává prolnutím,
+ * jen kratším. Bez téhle kontroly by se to dalo kdykoli vrátit zpět na
+ * animation:none a nikdo by to nepoznal. */
+{
+  const { ctx, p } = await otevri({ ...TELEFON, reducedMotion: 'reduce' }, 'index.html');
+  const v = await p.evaluate(async () => {
+    const h = document.querySelector('header');
+    const spi = (ms) => new Promise((r) => setTimeout(r, ms));
+    window.scrollTo({ top: 1400, behavior: 'instant' });
+    await spi(900);
+    /* Pojistka: kdyby hlavička po zastavení vůbec nezhasínala, měřilo by
+       se prázdno a kontrola by prošla, ať je v CSS cokoli. */
+    window.scrollBy({ top: 300, behavior: 'instant' });
+    await spi(30);
+    const priPohybu = parseFloat(getComputedStyle(h).opacity);
+    let mezistavu = 0;
+    for (let i = 0; i < 40; i++) {
+      const o = parseFloat(getComputedStyle(h).opacity);
+      if (o > 0.05 && o < 0.95) mezistavu++;
+      await spi(20);
+    }
+    await spi(700);
+    return { priPohybu, mezistavu, konec: parseFloat(getComputedStyle(h).opacity) };
+  });
+  pravda('s omezeným pohybem hlavička při rolování pořád zhasíná (jinak zkouška nic neměří)',
+    v.priPohybu < 0.95, `průhlednost při pohybu ${v.priPohybu}`);
+  pravda('a vrací se prolnutím, ne cvaknutím', v.mezistavu >= 3,
+    `jen ${v.mezistavu} mezistavů ze 40 vzorků — hlavička se přepne naráz`);
+  pravda('a nakonec je úplně vidět', v.konec === 1, `${v.konec}`);
+  await ctx.close();
+}
+
+/* --- 8) Jméno značky má na stránce jedno písmo -----------------------
+ *
+ * V hlavičce bylo bezpatkové, v patičce patkové — dvakrát „Parcelka" na
+ * téže stránce, pokaždé jiným písmem. Není to chyba, která by něco
+ * rozbila, a proto by tu vydržela: všimne si jí jen oko. */
+{
+  const { ctx, p } = await otevri(MONITOR, 'index.html');
+  const v = await p.evaluate(() => {
+    const a = document.querySelector('header .logo');
+    const b = document.querySelector('footer .foot-brand');
+    if (!a || !b) return null;
+    const rod = (e) => getComputedStyle(e).fontFamily.split(',')[0].replace(/['"]/g, '').trim();
+    return { h: rod(a), pa: rod(b) };
+  });
+  pravda('logo je v hlavičce i v patičce (jinak zkouška nic neměří)', !!v,
+    'na úvodní stránce chybí .logo nebo .foot-brand');
+  if (v) {
+    pravda('a jméno značky má na obou místech totéž písmo', v.h === v.pa,
+      `hlavička „${v.h}", patička „${v.pa}"`);
+  }
   await ctx.close();
 }
 

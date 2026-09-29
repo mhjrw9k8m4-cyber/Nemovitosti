@@ -565,28 +565,47 @@ header{border-bottom:1px solid var(--line); padding:20px 0; position:fixed; top:
 /* PŘICHÁZÍ POMALU, ODCHÁZÍ RYCHLE — každý směr má svůj vlastní čas.
    Objevit se z ničeho nic za desetinu vteřiny působí jako cvaknutí:
    hlavička „připlave rychlostí světla" a člověk nestihne pochopit, odkud.
-   Návrat proto trvá skoro půl vteřiny a doprovází ho pár pixelů shora,
-   takže je vidět, že přijíždí, ne že se zjevila.
+   Návrat proto trvá skoro půl vteřiny — ale je to prolnutí na místě,
+   ne příjezd shora (viz poznámka u animace níž).
    Zmizet naopak musí hned: kdo roluje, čte obsah, a hlavička, která
    doplouvá půl vteřiny, mu přes něj leží.
-   Ten posun je JEN na příjezdu a jen ve chvíli, kdy stránka prokazatelně
-   stojí (js/hlavicka.js to ověřuje). Při rolování se neposouvá nic —
-   právě posun za pohybu se na iPhonu dřív lámal. */
+   Rozsvítí se jen ve chvíli, kdy stránka prokazatelně stojí (js/hlavicka.js
+   to ověřuje dvěma snímky po sobě). Posun tu není žádný — ani na příjezdu:
+   právě pohyb hlavičky za pohybu stránky se na iPhonu dřív lámal. */
 /* Zhasnutí má svůj vlastní (rychlý) přechod. Příjezd naopak NEMÁ žádný —
    ten obstarává jen animace níž. Kdyby ho měl i základní stav, hlavička by
    se objevila i bez animace a její vypnutí by nikdo nepoznal. */
 header.hl-zhasnuta{opacity:0; pointer-events:none; transition:opacity .11s ease-in;}
 /* Příjezd je krátká animace, ne přechod mezi dvěma stavy — a to schválně.
-   Kdyby se posun schoval do zhasnutého stavu, stála by hlavička po celou
-   dobu rolování o sedm pixelů výš. Neviděl by to nikdo (je průhledná), ale
-   „hlavička je vždycky přesně nahoře" je pravidlo, o které se tu opíráme
-   po čtyřech opravách té mezery — a pravidlo, které platí jen někdy, je
-   k ničemu. Takhle má hlavička v KLIDU i ve zhasnutém stavu polohu nula a
-   posouvá se jen těch pár okamžiků, kdy přijíždí a stránka prokazatelně
-   stojí (js/hlavicka.js to ověřuje dvěma snímky po sobě). */
-@keyframes hlPrijezd{from{opacity:0; transform:translateY(-7px);} to{opacity:1; transform:none;}}
-header.hl-prijezd{animation:hlPrijezd .42s cubic-bezier(.22,.61,.36,1);}
-@media (prefers-reduced-motion:reduce){ header.hl-prijezd{animation:none;} }
+   Kdyby se sundal, objevila by se hlavička i bez animace a jejího vypnutí
+   by si nikdo nevšiml. Hlavička přitom nemá ŽÁDNOU transformaci, ani při
+   příjezdu: „hlavička je vždycky přesně nahoře" je pravidlo, o které se
+   tu opíráme po čtyřech opravách té mezery pod stavovým řádkem, a
+   pravidlo, které platí jen někdy, je k ničemu. */
+/* PROLNUTÍ NA MÍSTĚ, NE PŘÍJEZD SHORA. Sedm pixelů shora tu bylo proto,
+   aby bylo vidět, ODKUD hlavička přišla. Jenže ona odnikud nepřišla —
+   celou dobu stála přesně tam, jen nebyla vidět; ten posun tedy nic
+   nevysvětloval, zato z návratu udělal pohyb. Zpětná vazba: „vždycky
+   když zastavím, naskočí tam jak hokejista na led." Prolnutí na místě
+   říká to, co je pravda: nic se nepřesunulo, jen se to vrátilo do
+   viditelna. */
+@keyframes hlPrijezd{from{opacity:0;} to{opacity:1;}}
+header.hl-prijezd{animation:hlPrijezd .42s ease-out;}
+/* Komu vadí pohyb, tomu se nabídne KRATŠÍ prolnutí — ne přepnutí.
+
+   Tohle je JEDINÁ výjimka z plošného pravidla nahoře (řádek s
+   `*{animation:none !important}`), a proto tu je !important: bez něj
+   plošné pravidlo vyhraje a hlavička se u horního okraje zjeví z rámce
+   na rámec. Přesně to přišlo jako stížnost — „naskočí tam jak hokejista
+   na led".
+
+   Proč je výjimka na místě: „omezit pohyb" má omezit POHYB. Prolnutí
+   pohyb není, nic se po obrazovce neposouvá — a systém sám (iOS) při
+   zapnutém omezení nahrazuje posuny a zvětšování právě prolínáním.
+   Náhradou za prolnutí tady navíc není klid, ale prvek, který se
+   koutkem oka zjeví z ničeho nic; to je rušivější, ne klidnější.
+   Zkrácené na dvě desetiny vteřiny, ať je to opravdu jen náznak. */
+@media (prefers-reduced-motion:reduce){ header.hl-prijezd{animation:hlPrijezd .2s ease-out !important;} }
 /* Kdo je v hlavičce klávesnicí, o ni nesmí přijít ani při rolování. */
 header:focus-within{opacity:1 !important; pointer-events:auto !important;}
 @media (prefers-reduced-motion:reduce){ header{transition:none;} }
@@ -2798,7 +2817,11 @@ footer::after{content:""; position:absolute; inset:0; z-index:-1; pointer-events
 
 footer .wrap{color:var(--text-ondeep-mute);}
 .foot-grid{border-bottom-color:rgba(255,255,255,.14);}
-.foot-brand{color:var(--text-ondeep); font-family:var(--font-display); font-weight:700; font-size:18px;}
+/* JMÉNO ZNAČKY MÁ JEDNO PÍSMO. V hlavičce bylo bezpatkové (.logo →
+   --font-ui), v patičce patkové — tedy dvakrát na téže stránce, pokaždé
+   jinak. Rozhoduje hlavička: to je ten výskyt, který člověk vidí na
+   každé stránce a pořád. */
+.foot-brand{color:var(--text-ondeep); font-family:var(--font-ui); font-weight:700; font-size:18px; letter-spacing:-0.02em;}
 .foot-tag{color:var(--text-ondeep-mute);}
 .foot-col h5{color:var(--accent-warm-bright); letter-spacing:.07em;}
 .foot-col a{color:var(--text-ondeep-mute);}
