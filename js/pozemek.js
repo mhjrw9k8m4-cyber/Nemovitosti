@@ -478,8 +478,14 @@
       /* Kolečko myši se nezabírá hned: stránka je dlouhá a mapa uprostřed,
          která při rolování začne zoomovat, je past. Povolí se, až člověk
          do mapy klepne — tím dal najevo, že s ní pracuje. */
-      scrollWheelZoom: false, zoomControl: true
+      /* Zoom si Leaflet sám dává vlevo nahoru — tedy do pruhu u levého
+         okraje displeje, kde telefon poslouchá gesto „zpět", a pod
+         připíchnutou hlavičku. Vpravo dole je volno (zvětšení na celou
+         obrazovku sedí vpravo nahoře) a obě ostatní mapy na webu už to
+         tak mají. */
+      scrollWheelZoom: false, zoomControl: false
     });
+    L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(m);
     m.on('click', function () { m.scrollWheelZoom.enable(); });
     global.PK_PZ_MAPA = m;
 

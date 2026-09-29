@@ -836,6 +836,65 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
     `ovládacích prvků v mapě: ${v.vsech}`);
   pravda('a její ovládání se dá trefit prstem (44 px)', v.male.length === 0,
     v.male.join(' | '));
+
+  /* HLAVIČKA JE NAHOŘE, TAK AŤ JE NAHOŘE I NA PLÁTNĚ. Měla z-index 1000 —
+     jenže přesně tolik si dává Leaflet na ovládání mapy (.leaflet-top
+     i .leaflet-bottom), a při shodě rozhoduje pořadí v dokumentu: mapa
+     je níž, takže vyhrála a zoom se kreslil přes logo. Měří se to
+     jediným pravdivým způsobem: co je na daném bodě opravdu navrchu.
+
+     Projíždí se DVĚ polohy — mapa horním i dolním okrajem pod hlavičkou.
+     Ovládání mapy sedí v rozích a při jedné poloze se hlavičky dotýkají
+     jen ty horní, při druhé jen ty dolní; s jedinou polohou by zkouška
+     po přesunu zoomu do jiného rohu tiše přestala měřit cokoli. */
+  let potkalo = 0;
+  const cizi = [];
+  for (const kam of ['horni', 'dolni']) {
+    await p4.evaluate((k) => {
+      /* Mapa, ne celý panel: #pzm nese pod mapou ještě přepínače vrstev
+         a posuvník průhlednosti, takže podle jeho spodního okraje by
+         mapa skončila nad oknem a s hlavičkou by se nepotkala. */
+      const m = document.querySelector('#pzm .leaflet-container') || document.getElementById('pzm');
+      if (!m) return;
+      const r = m.getBoundingClientRect();
+      window.scrollBy(0, k === 'horni' ? r.top - 20 : r.bottom - 60);
+    }, kam);
+    /* Při rolování hlavička zhasíná (a s ní ztrácí i pointer-events),
+       takže dokud se nevrátí, ukazoval by elementFromPoint mapu i na
+       zdravém webu. Měří se až rozsvícená hlavička. */
+    await p4.waitForFunction(
+      () => !document.querySelector('header').classList.contains('hl-zhasnuta'),
+      null, { timeout: 5000 }).catch(() => {});
+    await p4.waitForTimeout(500);
+    const v2 = await p4.evaluate((k) => {
+      const hl = document.querySelector('header');
+      if (!hl) return { ovl: 0, cizi: [] };
+      const h = hl.getBoundingClientRect();
+      /* Kolik ovládacích prvků mapy do pruhu hlavičky vůbec zasahuje —
+         bez nich není co překrývat a kontrola by prošla i rozbitá. */
+      let ovl = 0;
+      document.querySelectorAll('.leaflet-control').forEach((e) => {
+        const r = e.getBoundingClientRect();
+        if (r.width > 0 && r.top < h.bottom && r.bottom > h.top) ovl++;
+      });
+      const ven = [];
+      for (let x = 6; x < h.width; x += 18) {
+        for (let y = Math.round(h.top) + 4; y < h.bottom - 2; y += 8) {
+          const e = document.elementFromPoint(x, y);
+          if (!e || hl.contains(e)) continue;
+          ven.push(k + ': ' + e.tagName.toLowerCase() + '.'
+            + String(e.className || '').split(' ')[0] + ' na [' + x + ',' + Math.round(y) + ']');
+        }
+      }
+      return { ovl, cizi: [...new Set(ven)] };
+    }, kam);
+    potkalo += v2.ovl;
+    cizi.push(...v2.cizi);
+  }
+  pravda('ovládání mapy se s hlavičkou opravdu potkalo (jinak zkouška nic neměří)',
+    potkalo > 0, 'v žádné z obou poloh nezasahoval do pruhu hlavičky ani jeden prvek mapy');
+  pravda('a nic se přes hlavičku nekreslí', cizi.length === 0,
+    `navrchu je místo hlavičky: ${cizi.slice(0, 5).join(', ')}`);
   await ctx.close();
 }
 

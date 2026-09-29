@@ -555,7 +555,13 @@ body.vm-otevreno{overflow:hidden;}
    Menu ten rámec nepotřebuje: hlavička je position:sticky, což je
    polohovaný prvek, takže stačí menu položit jako position:absolute
    a „100 %" se počítá z hlavičky úplně stejně (viz #nav níž). */
-header{border-bottom:1px solid var(--line); padding:20px 0; position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(255,255,255,0.80); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:padding .2s ease;}
+/* HLAVIČKA MUSÍ BÝT NAD MAPOU. Měla z-index 1000 — jenže přesně tolik
+   má i ovládání Leafletu (.leaflet-top/.leaflet-bottom), a při shodě
+   rozhoduje pořadí v dokumentu: mapa je níž, takže vyhrála. Při rolování
+   pak přes logo a přes „Přidat pozemek" prosvítalo měřítko, uvedení
+   zdrojů i tlačítka zoomu. Vyšší vrstvy zůstávají nad hlavičkou tam, kde
+   to dává smysl: mapa na celou obrazovku 1200, výběr okolí 5000. */
+header{border-bottom:1px solid var(--line); padding:20px 0; position:fixed; top:0; left:0; right:0; z-index:1100; background:rgba(255,255,255,0.80); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:padding .2s ease;}
 /* PŘICHÁZÍ POMALU, ODCHÁZÍ RYCHLE — každý směr má svůj vlastní čas.
    Objevit se z ničeho nic za desetinu vteřiny působí jako cvaknutí:
    hlavička „připlave rychlostí světla" a člověk nestihne pochopit, odkud.
