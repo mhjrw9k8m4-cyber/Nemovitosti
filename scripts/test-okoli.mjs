@@ -325,9 +325,17 @@ const stavVybiraku = (p) => p.evaluate(() => {
      Kontroluje se tedy: v tom stavu se nabídne tlačítko, útržek
      popisku se nekreslí, a jedno klepnutí to vrátí zpátky. */
   {
+    /* Oddálit se smí jen tam, kam mapa dovolí. Stálo tu natvrdo „nejníž
+       čtyři", jenže nejmenší přiblížení si určuje mapa sama — a jakmile
+       se klepnutím přestalo skákat na nejtěsnější možný rám, vyšlo
+       „o pět stupňů níž" pod tu hranici. Leaflet ji uřízne, takže hodnota
+       přečtená hned po setZoom() a ta o půl vteřiny později se rozešly a
+       kontrola níž hlásila, že se mapa přiblížila sama. Nepřiblížila —
+       zkouška chtěla něco, co mapa neumí. Čte se proto až ustálený stav. */
     const dolu = await p.evaluate(() => { const m = window.PK_VM_MAPA;
-      m.setZoom(Math.max(4, m.getZoom() - 5)); return m.getZoom(); });
-    await p.waitForTimeout(500);
+      m.setZoom(Math.max(m.getMinZoom(), m.getZoom() - 5)); return null; });
+    await p.waitForTimeout(700);
+    const dolu2 = await p.evaluate(() => window.PK_VM_MAPA.getZoom());
     const stav = await p.evaluate(() => {
       const b2 = document.querySelector('#vm-zpet');
       const st = document.querySelector('.vm-meritko span');
@@ -344,7 +352,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
         text: (b2 && b2.textContent || '').trim(), zoom: window.PK_VM_MAPA.getZoom() };
     });
     pravda('po oddálení, kde je z okruhu tečka, se nabídne cesta zpátky',
-      stav.tlacitko === true, `zoom ${dolu}, tlačítko ${stav.tlacitko}`);
+      stav.tlacitko === true, `zoom ${dolu2}, tlačítko ${stav.tlacitko}`);
     pravda('a říká, co udělá', /okruh/i.test(stav.text), `na tlačítku stojí „${stav.text}"`);
     pravda('útržek popisku „km" se v tom stavu nekreslí', stav.popisek === false,
       'zbyl viset popisek, ze kterého je vidět jen jednotka');
@@ -358,8 +366,8 @@ const stavVybiraku = (p) => p.evaluate(() => {
       stav.kruhVidet === false,
       `kruh je vidět i ve chvíli, kdy je menší než značka (${stav.znackaVyska} px)`);
     /* A hlavně: mapa se sama nepřesunula. To byla ta starší stížnost. */
-    pravda('mapa se přitom sama nepřiblížila', stav.zoom === dolu,
-      `zoom ${dolu} → ${stav.zoom}; pohled si řídí člověk, ne mapa`);
+    pravda('mapa se přitom sama nepřiblížila', stav.zoom === dolu2,
+      `zoom ${dolu2} → ${stav.zoom}; pohled si řídí člověk, ne mapa`);
 
     /* Klepnout jde jen na to, co je vidět. Kdyby se tlačítko neukázalo,
        Playwright by tu po třiceti vteřinách spadl výjimkou — a spadlý
@@ -466,6 +474,41 @@ const stavVybiraku = (p) => p.evaluate(() => {
   const poTazeni = (await stavVybiraku(p)).pocet;
   pravda('tažením mapy se vybrané místo nezmění', poTazeni === pred,
     `před tažením „${pred.trim()}", po tažení „${poTazeni.trim()}"`);
+  /* TAŽENÍ ZNAČKY NESMÍ ROZJET MAPU. Značka měla zapnutý automatický
+     posun: na telefonu leží pod prstem a ten je od kraje mapy blízko
+     pořád, takže se mapa při každém doladění rozjela sama a značka se
+     proti ní skoro nehnula. Přesně na to přišla stížnost — že se značka
+     skoro nehýbe a mapa zato extrémně. */
+  {
+    const stredPred = await p.evaluate(() => window.PK_VM_MAPA.getCenter().lng.toFixed(4));
+    const zn = await p.locator('.vm-znacka').boundingBox();
+    if (zn) {
+      /* AŽ KE KRAJI MAPY. Automatický posun se spouští, teprve když je
+         značka blízko okraje (44 px) — tažení doprostřed by ho nevyvolalo
+         a kontrola by prošla i se zapnutým posunem. Vyzkoušeno. */
+      const mapaBox = await p.locator('#vm-mapa').boundingBox();
+      await p.mouse.move(zn.x + zn.width / 2, zn.y + zn.height - 4);
+      await p.mouse.down();
+      await p.mouse.move(mapaBox.x + 12, zn.y + zn.height - 4, { steps: 14 });
+      await p.waitForTimeout(900);            // ať má automatický posun čas se rozjet
+      await p.mouse.up();
+      await p.waitForTimeout(800);
+      const stredPo = await p.evaluate(() => window.PK_VM_MAPA.getCenter().lng.toFixed(4));
+      /* Měří se JEN zeměpisná délka. Výška mapy se mění, když se text pod
+         ní přelomí na druhý řádek (z „1 pozemek" na „0 pozemků"), a s ní
+         se posune i střed na šířku — to není posun mapy, ale přeskládání
+         stránky. Automatický posun by se navíc projevil právě do stran,
+         protože se táhne ke kraji. */
+      pravda('tažení značky nerozjede mapu pod ní', stredPred === stredPo,
+        'střed mapy ' + stredPred + ' → ' + stredPo);
+      // Značku vrátit doprostřed, ať kontroly za tímhle blokem měří totéž co dřív.
+      await klepniDoMapy(p, 0.5, 0.45);
+      await p.waitForTimeout(600);
+    } else {
+      pravda('značka je na mapě (jinak se tažení nedá zkusit)', false, 'značka se nenašla');
+    }
+  }
+
   // Ale klepnutí ho pořád přesune — jinak by výběr nešel opravit.
   await klepniDoMapy(p, 0.35, 0.35);
   const poKlepnuti = (await stavVybiraku(p)).pocet;
@@ -532,6 +575,47 @@ const stavVybiraku = (p) => p.evaluate(() => {
     r50 ? `kruh zabírá ${r50.podil} % šířky mapy` : 'kruh na mapě není');
 
   // Zavřít se dá, aniž se cokoli uloží — to je ta možnost couvnout.
+  /* ALE JEN TOLIK, KOLIK JE POTŘEBA. Měří se u NEJMENŠÍHO okruhu a
+     z pohledu na celou republiku — jinde je skok malý sám od sebe a
+     kontrola by neměřila nic (vyzkoušeno: se starým chováním prošla).
+     Rámovalo se nejtěsnějším možným rámem, takže jedno klepnutí skočilo
+     ze zoomu 7 na 12, tedy dvaatřicetkrát blíž a naráz — stížnost to
+     pojmenovala tak, že náhodné klepnutí extrémně přiblíží. Čtyři stupně
+     (šestnáctkrát) jsou u dvoukilometrového okruhu nutné, aby bylo co
+     potvrdit; pátý už jen zahodí okolí, podle kterého se člověk
+     zorientuje. */
+  {
+    /* Okruh i výběr se na konci vrátí, jak byly — kontroly za tímhle
+       blokem počítají se stavem, který si nastavily samy. */
+    const puvodniKm = await p.evaluate(() => {
+      const r = document.querySelector('input[name="vm-km"]:checked');
+      return r ? r.value : null;
+    });
+    await p.evaluate(() => {
+      const r = document.querySelector('input[name="vm-km"][value="2"]');
+      if (r) r.click();
+      window.PK_VM_MAPA.setZoom(7);
+    });
+    await p.waitForTimeout(700);
+    const zMalo0 = await p.evaluate(() => window.PK_VM_MAPA.getZoom());
+    await klepniDoMapy(p, 0.45, 0.4);
+    await p.waitForTimeout(700);
+    const zMalo1 = await p.evaluate(() => window.PK_VM_MAPA.getZoom());
+    pravda('u nejmenšího okruhu se měří ten největší skok (jinak zkouška nic neměří)',
+      zMalo1 > zMalo0, `${zMalo0} → ${zMalo1} — nepřiblížilo se vůbec`);
+    pravda('ale nespadne rovnou na nejtěsnější možný rám', zMalo1 - zMalo0 <= 4,
+      `${zMalo0} → ${zMalo1}, tedy o ${zMalo1 - zMalo0} stupňů naráz`);
+    if (puvodniKm) {
+      await p.evaluate((v) => {
+        const r = document.querySelector(`input[name="vm-km"][value="${v}"]`);
+        if (r) r.click();
+      }, puvodniKm);
+      await p.waitForTimeout(400);
+    }
+    await klepniDoMapy(p, 0.5, 0.45);
+    await p.waitForTimeout(600);
+  }
+
   await p.keyboard.press('Escape');
   await p.waitForTimeout(500);
   const zavreno = await stavVybiraku(p);

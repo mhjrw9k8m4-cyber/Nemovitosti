@@ -2225,9 +2225,15 @@
     document.body.appendChild(ov);
     document.body.classList.add('vm-otevreno');
 
+    /* ZOOM VPRAVO DOLE, jako na hlavní mapě. Leaflet ho dává vlevo
+       nahoru — tedy přesně do pruhu u levého okraje displeje, kde telefon
+       poslouchá gesto „zpět". Kdo tam chtěl přiblížit nebo jen posunout
+       mapu, pral se s prohlížečem. Zároveň tam překážel nadpisu okna.
+       Popisky česky: Leaflet je jinak pojmenuje anglicky. */
     var m = L.map(ov.querySelector('#vm-mapa'), {
-      zoomControl: true, attributionControl: false, preferCanvas: true,
+      zoomControl: false, attributionControl: false, preferCanvas: true,
     }).setView([start.lat, start.lng], zoomStart);
+    L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(m);
     // Stejné okno ven jako u hlavní mapy (PK_MAPA) — testy se odsud musí umět
     // přesunout jinam, když v panelu není žádné hledání.
     try { window.PK_VM_MAPA = m; } catch (e) {}
@@ -2292,7 +2298,12 @@
       '<path d="M0 0C-7 -12 -12 -18 -12 -25 A12 12 0 1 1 12 -25 C12 -18 7 -12 0 0Z" fill="#8A5512"' +
       ' stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/><circle cx="0" cy="-25" r="4.6" fill="#fff"/></svg>';
     var znacka = L.marker([start.lat, start.lng], {
-      draggable: true, autoPan: true, autoPanPadding: [44, 44],
+      /* BEZ AUTOMATICKÉHO POSUNU MAPY. Na telefonu leží značka pod
+         prstem a ten je od kraje mapy blízko pořád — mapa se pak při
+         každém doladění rozjede sama a značka se proti ní skoro nehne.
+         Kdo potřebuje jinam, posune si napřed mapu (posun výběr nemění)
+         a teprve pak značku přetáhne. */
+      draggable: true, autoPan: false,
       keyboard: false, zIndexOffset: 800,
       icon: L.divIcon({ className: 'vm-znacka', html: '<span>' + VM_PIN + '</span>', iconSize: [28, 38], iconAnchor: [14, 38] })
     }).addTo(m);
@@ -2375,12 +2386,13 @@
     /* Přiblížení se řídí okruhem, ne pevným číslem. S pevným zoomem 12 byl
        kruh o poloměru 10 km několikrát širší než obrazovka — na mapě po něm
        nebylo ani vidu a člověk netušil, co vlastně vybírá. */
-    function ramecOkruhu(lat, lng) {
+    function ramecOkruhu(lat, lng, volnost) {
       var k = parseInt(kmSel.value, 10) || 10;
-      return L.latLng(lat, lng).toBounds(k * 2000 * 1.35);   // průměr + rezerva
+      // průměr + rezerva; „volnost" navíc odsazuje, aby okolí zůstalo vidět
+      return L.latLng(lat, lng).toBounds(k * 2000 * 1.35 * (volnost || 1));
     }
-    function jdiNa(lat, lng, animovat) {
-      m.fitBounds(ramecOkruhu(lat, lng), { animate: animovat !== false });
+    function jdiNa(lat, lng, animovat, volnost) {
+      m.fitBounds(ramecOkruhu(lat, lng, volnost), { animate: animovat !== false });
     }
     /* Je okruh doopravdy VIDĚT? Nestačí, že se vejde do okna: při pohledu
        na celou republiku se desetikilometrový kruh „vejde" taky, jenže je
@@ -2523,9 +2535,22 @@
       vybranoMisto = true;
       nastavMisto(e.latlng.lat, e.latlng.lng);
       prepocti();
-      /* Mapa se přerovná jen tehdy, když by se kruh do okna nevešel.
-         Klepnutí je volba místa, ne žádost o přeskládání pohledu. */
-      if (!okruhSeVejde(e.latlng.lat, e.latlng.lng)) jdiNa(e.latlng.lat, e.latlng.lng, false);
+      /* PŘIBLÍŽIT ANO, ALE MÍRNĚ A PLYNULE. Přerovnání tu musí zůstat:
+         z pohledu na celou republiku je dvoukilometrový okruh tři pixely,
+         takže bez něj není co potvrdit (hlídá to zkouška „klepnutí do mapy
+         přiblíží"). Dělalo se ale nejtěsnějším možným rámem a bez animace
+         — změřeno: jedno klepnutí skočilo ze zoomu 7 na 12, tedy
+         dvaatřicetkrát blíž, a naráz. Člověk ukázal místo a mapa se mu
+         přesypala jinam.
+         Teď se rámuje s rezervou: okruh zabere zhruba třetinu okna, ne
+         celé. Ze zoomu 7 to vyjde na 11 místo 12 — okruh je pořád
+         čitelný, ale zůstane kolem něj okolí, podle kterého se člověk
+         zorientuje.
+         Animovaný přejezd se ZKOUŠEL a zase zrušil: přidal další pohyb
+         mapy (a stížnost zněla právě na to, že se mapa hýbe moc) a
+         rozjížděl se do dalších kroků, takže po něm mapa doháněla polohu
+         ještě ve chvíli, kdy s ní člověk sám hýbal. */
+      if (!okruhSeVejde(e.latlng.lat, e.latlng.lng)) jdiNa(e.latlng.lat, e.latlng.lng, false, 3);
     });
     /* NA POSUN A PŘIBLÍŽENÍ SE UŽ NEPŘEPOČÍTÁVÁ.
        Dřív viselo prepocti() na události „move", která při každém tažení
