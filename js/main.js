@@ -2437,11 +2437,20 @@
          (kategorie, cena, výměra), jen bez omezení na okolí. Když se
          počítala všechna data, výběr sliboval „5 pozemků v okruhu 10 km"
          a seznam pod ním hlásil, že tam není nic. */
-      var n = 0, podle = {};
+      /* Počítají se rovnou VŠECHNY nabízené okruhy, v tomtéž průchodu.
+         Vzdálenost se stejně musí spočítat u každé nabídky, takže to nic
+         nestojí navíc — a je z toho vidět, kam se vyplatí sáhnout, když
+         v tom zvoleném nic není. */
+      var meze = kmVstupy.map(function (r) { return parseInt(r.value, 10) || 0; })
+        .filter(function (m) { return m > 0; }).sort(function (a2, b2) { return a2 - b2; });
+      var n = 0, podle = {}, poOkruzich = {};
+      for (var mi = 0; mi < meze.length; mi++) poOkruzich[meze[mi]] = 0;
       for (var i = 0; i < DATA.length; i++) {
         var dd = DATA[i];
-        if (!visibleBezOkoli(dd) || kmOd(c, dd) > k) continue;
-        n++; podle[dd.type] = (podle[dd.type] || 0) + 1;
+        if (!visibleBezOkoli(dd)) continue;
+        var vzd = kmOd(c, dd);
+        if (vzd <= k) { n++; podle[dd.type] = (podle[dd.type] || 0) + 1; }
+        for (var j = 0; j < meze.length; j++) if (vzd <= meze[j]) poOkruzich[meze[j]]++;
       }
       hlidejVidet();
       var obec = najdiNazevMista(c.lat, c.lng);
@@ -2468,9 +2477,28 @@
             (TYPE[t] ? TYPE[t].color : '#4361B8') + '"></i>' + podle[t] + ' ' +
             esc((TYPE[t] ? TYPE[t].label : t).toLowerCase()) + '</span>';
         }).join('');
+      /* NULA NESMÍ BÝT SLEPÁ ULIČKA. Pod „0 pozemků v okruhu 2 km" svítilo
+         plné tlačítko „Zobrazit pozemky", které vede na prázdný seznam.
+         Přitom se z téhož průchodu ví, v jakém okruhu už něco je — tak se
+         to rovnou nabídne a jedním klepnutím se tam dá přepnout. */
+      var rada = '';
+      if (!n) {
+        var vetsi = null;
+        for (var q = 0; q < meze.length; q++) {
+          if (meze[q] > k && poOkruzich[meze[q]] > 0) { vetsi = meze[q]; break; }
+        }
+        if (vetsi) {
+          var pn = poOkruzich[vetsi];
+          rada = '<span class="vm-rada">V okruhu ' + k + ' km tu nic není. ' +
+            'V ' + vetsi + ' km ' + (pn >= 2 && pn <= 4 ? 'jsou ' : 'je ') + pn + ' ' + plPozemek(pn) + '.' +
+            '<button type="button" class="vm-vetsi" data-km="' + vetsi + '">Zkusit ' + vetsi + ' km</button></span>';
+        } else {
+          rada = '<span class="vm-rada">Tady není nic ani v nejširším okruhu — zkuste jiné místo.</span>';
+        }
+      }
       pocetEl.innerHTML = '<span class="vm-hlavni"><b>' + n + ' ' + plPozemek(n) + '</b>' +
         ' v okruhu ' + k + ' km' +
-        (obec ? ' <span class="vm-obec">u obce ' + esc(obec) + '</span>' : '') + '</span>' +
+        (obec ? ' <span class="vm-obec">u obce ' + esc(obec) + '</span>' : '') + '</span>' + rada +
         (rozpad ? '<span class="vm-rozpad">' + rozpad + '</span>' : '');
     }
     /* Klepnutí do mapy je to, čím se místo ukazuje — a nahrazuje hledání,
@@ -2559,6 +2587,15 @@
        Teď se počítá jen tehdy, když se opravdu něco změní: nové místo
        nebo jiný okruh. Kruh i měřítko jsou kreslené v zeměpisných
        souřadnicích, takže si při posunu poradí samy. */
+    /* Nabídnutý širší okruh se přepne klepnutím. Obsluha visí na okolí,
+       protože obsah se překresluje při každém přepočtu. */
+    pocetEl.addEventListener('click', function (e) {
+      var b4 = e.target && e.target.closest ? e.target.closest('.vm-vetsi') : null;
+      if (!b4) return;
+      var v = b4.getAttribute('data-km');
+      kmVstupy.forEach(function (r) { r.checked = (r.value === v); });
+      prepocti();
+    });
     kmVstupy.forEach(function (r) {
       r.addEventListener('change', function () {
         prepocti();

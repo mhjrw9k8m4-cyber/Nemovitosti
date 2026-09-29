@@ -30,7 +30,22 @@ function pravda(popis, vyslo, proc) {
 }
 
 const DATA = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
-const vzorek = (t) => DATA.find((d) => d.type === t && d.lat && d.lng);
+/* VZOREK MUSÍ STÁT SÁM. Bral se prostě první pozemek daného druhu —
+   jenže tvar se měří z pixelů ve čtverci 22×22 kolem jeho tečky, a když
+   má soused tečku pár pixelů vedle, připočítá se do měření jeho.
+   Stalo se to po jedné dávce dat od robota: poměr „dole ku nahoře" spadl
+   z dvojnásobku na 1,93 a zkouška hlásila, že se trojúhelníky přestaly
+   kreslit. Nepřestaly — do měření se přimíchal soused. Bere se proto
+   pozemek, kolem kterého do pěti kilometrů žádný jiný není. */
+const kmMezi = (a1, b1, a2, b2) => {
+  const R = 6371, rad = Math.PI / 180;
+  const dLat = (a2 - a1) * rad, dLng = (b2 - b1) * rad;
+  const q = Math.sin(dLat / 2) ** 2 + Math.cos(a1 * rad) * Math.cos(a2 * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(q)));
+};
+const vzorek = (t) => DATA.find((d) => d.type === t && d.lat && d.lng
+    && !DATA.some((y) => y !== d && y.lat && y.lng && kmMezi(d.lat, d.lng, y.lat, y.lng) < 5))
+  || DATA.find((d) => d.type === t && d.lat && d.lng);
 
 const PRAZDNA_DLAZDICE = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',

@@ -616,6 +616,78 @@ const stavVybiraku = (p) => p.evaluate(() => {
     await p.waitForTimeout(600);
   }
 
+  /* --- NULA NESMÍ BÝT SLEPÁ ULIČKA -------------------------------
+     Pod „0 pozemků v okruhu 2 km" svítilo plné tlačítko „Zobrazit
+     pozemky", které vede na prázdný seznam. Ze stejného průchodu se
+     přitom ví, v jakém okruhu už něco je — tak se to nabídne a jedním
+     klepnutím se tam dá přepnout.
+     Místo se hledá v datech: bod, kde do dvou kilometrů není nic a do
+     deseti ano. Kdyby se vzalo natvrdo, stačí jedna nová nabídka
+     v okolí a zkouška měří něco jiného, než si myslí. */
+  {
+    const misto = (() => {
+      const R = 6371, rad = Math.PI / 180;
+      const km = (a, b, c2, e) => { const dLat = (c2 - a) * rad, dLng = (e - b) * rad;
+        const q = Math.sin(dLat / 2) ** 2 + Math.cos(a * rad) * Math.cos(c2 * rad) * Math.sin(dLng / 2) ** 2;
+        return 2 * R * Math.asin(Math.min(1, Math.sqrt(q))); };
+      const POZEMKY = (JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8'))
+        .opportunities || []).filter((x) => typeof x.lat === 'number' && typeof x.lng === 'number' && x.price > 0);
+      for (const x of POZEMKY) {
+        const la = x.lat + 0.05, ln = x.lng;
+        let blizko = 0, dal = 0;
+        for (const y of POZEMKY) { const v = km(la, ln, y.lat, y.lng); if (v <= 2) blizko++; if (v <= 10) dal++; }
+        if (!blizko && dal) return { lat: la, lng: ln, dal };
+      }
+      return null;
+    })();
+    pravda('v datech je místo, kde do 2 km nic není a do 10 km ano (jinak zkouška nic neměří)',
+      !!misto, 'takové místo se nenašlo — kontroly níž by neměly co hlídat');
+    if (misto) {
+      const puvodni = await p.evaluate(() => {
+        const r = document.querySelector('input[name="vm-km"]:checked');
+        return r ? r.value : null;
+      });
+      await p.evaluate((m) => {
+        const r = document.querySelector('input[name="vm-km"][value="2"]');
+        if (r) r.click();
+        window.PK_VM_MAPA.setView([m.lat, m.lng], 12);
+      }, misto);
+      await p.waitForTimeout(700);
+      await klepniDoMapy(p, 0.5, 0.5);
+      await p.waitForTimeout(900);
+      const stav = await p.evaluate(() => {
+        const el = document.getElementById('vm-pocet');
+        const btn = el ? el.querySelector('.vm-vetsi') : null;
+        return { text: el ? el.innerText.replace(/\s+/g, ' ').trim() : '',
+          tlacitko: btn ? { t: btn.textContent.trim(), km: btn.getAttribute('data-km'),
+            v: Math.round(btn.getBoundingClientRect().height) } : null };
+      });
+      pravda('na prázdném okolí to opravdu hlásí nulu (jinak se neměří ten případ)',
+        /^0 /.test(stav.text), `stojí tam „${stav.text.slice(0, 70)}"`);
+      pravda('a nabídne širší okruh, ve kterém něco je', !!stav.tlacitko && /\d+ km/.test(stav.tlacitko.t),
+        `pod nulou nestojí žádná cesta ven: „${stav.text.slice(0, 90)}"`);
+      pravda('a to tlačítko se dá trefit prstem', !!stav.tlacitko && stav.tlacitko.v >= 44,
+        stav.tlacitko ? `${stav.tlacitko.v} px` : '(není)');
+      if (stav.tlacitko) {
+        await p.click('.vm-vetsi');
+        await p.waitForTimeout(1100);
+        const po = await p.evaluate(() => ({
+          text: document.getElementById('vm-pocet').innerText.replace(/\s+/g, ' ').trim(),
+          zvoleno: (document.querySelector('input[name="vm-km"]:checked') || {}).value }));
+        pravda('klepnutí na ni okruh přepne a pozemky se objeví',
+          po.zvoleno === stav.tlacitko.km && !/^0 /.test(po.text),
+          `okruh ${po.zvoleno}, text „${po.text.slice(0, 70)}"`);
+      }
+      if (puvodni) {
+        await p.evaluate((v) => {
+          const r = document.querySelector(`input[name="vm-km"][value="${v}"]`);
+          if (r) r.click();
+        }, puvodni);
+        await p.waitForTimeout(400);
+      }
+    }
+  }
+
   await p.keyboard.press('Escape');
   await p.waitForTimeout(500);
   const zavreno = await stavVybiraku(p);
