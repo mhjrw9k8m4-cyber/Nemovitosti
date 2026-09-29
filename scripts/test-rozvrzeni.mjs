@@ -898,6 +898,74 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   await ctx.close();
 }
 
+/* --- 6e) OZDOBA NESMÍ LÉZT POD PÍSMO ---------------------------------
+ *
+ * Za nadpisem úvodu svítí souhvězdí skutečných nabídek. Je stavěné na
+ * rozvržení „text vlevo, tečky vpravo" — jenže na telefonu je text přes
+ * celou šířku a tečky mu spadnou rovnou pod písmo. Změřeno na
+ * vykreslených pixelech: v obdélníku nadpisu bylo 17,3 % teplých
+ * (oranžových) pixelů na 390 px a 20,9 % na 320 px, zatímco na monitoru
+ * 0,2 %. Nadpis je bílý a mátový, takže teplý pixel se do něj nemá jak
+ * dostat jinak než z ozdoby.
+ *
+ * Závoj, který to měl řešit, visel na .hero-plot se z-index:-1, kdežto
+ * plátno je jeho vnuk se z-index:0 — ležel tedy POD tečkami a netlumil
+ * nic. Kontrola měří následek, ne zápis v CSS: tentýž nepořádek se dá
+ * vyrobit i jinak. */
+{
+  /* Rozbor obrázku potřebuje stránku, která umí kreslit — screenshot je
+     PNG a Node ho sám rozbalit neumí. */
+  const rozbor = await prohlizec.newContext();
+  const rp = await rozbor.newPage();
+  await rp.goto('about:blank');
+  async function teple(el) {
+    const buf = await el.screenshot();
+    return rp.evaluate(async (dataUrl) => {
+      const img = new Image();
+      await new Promise((r) => { img.onload = r; img.onerror = r; img.src = dataUrl; });
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      c.getContext('2d').drawImage(img, 0, 0);
+      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      let t = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i] > d[i + 1] + 12 && d[i] > d[i + 2] + 12) t++;
+      }
+      return { podil: +(100 * t / (c.width * c.height)).toFixed(1), px: c.width * c.height };
+    }, 'data:image/png;base64,' + buf.toString('base64'));
+  }
+  for (const [w, h] of [[390, 844], [320, 568]]) {
+    const { ctx, p } = await otevri('index.html', w, h);
+    await p.waitForTimeout(2600);
+    const nadpis = await p.$('.hero-plot h1');
+    const platno = await p.$('#hero-souhvezdi');
+    if (!nadpis || !platno) {
+      pravda(`${w} px: úvod má nadpis i souhvězdí (jinak zkouška nic neměří)`, false,
+        'chybí .hero-plot h1 nebo #hero-souhvezdi');
+      await ctx.close();
+      continue;
+    }
+    /* POJISTKA: ozdoba se musí opravdu kreslit. Kdyby se souhvězdí
+       nepostavilo (nenačtená data, chyba skriptu), byl by nadpis čistý
+       sám od sebe a kontrola by prošla, ať je v CSS cokoli. */
+    const kresli = await p.evaluate(() => {
+      const c = document.getElementById('hero-souhvezdi');
+      if (!c || !c.width) return 0;
+      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      let n = 0;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 12) n++;
+      return +(100 * n / (c.width * c.height)).toFixed(1);
+    });
+    pravda(`${w} px: souhvězdí se opravdu kreslí (jinak zkouška nic neměří)`, kresli > 3,
+      `pokresleno jen ${kresli} % plátna`);
+    const v = await teple(nadpis);
+    pravda(`${w} px: a nelezou z něj tečky pod nadpis`, v.podil <= 2,
+      `${v.podil} % teplých pixelů v obdélníku nadpisu (${v.px} px) — přes písmo svítí ozdoba`);
+    await ctx.close();
+  }
+  await rozbor.close();
+}
+
 // --- 7) Úvod na telefonu nedrží hledání pod obzorem -------------------
 /* Na displeji 320×568 bylo pole „Hledat obec" až v 72 % výšky obrazovky.
    Člověk, který přišel hledat pozemek, se k hledání dostal jako
