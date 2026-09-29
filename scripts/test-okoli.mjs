@@ -678,6 +678,84 @@ const stavVybiraku = (p) => p.evaluate(() => {
           po.zvoleno === stav.tlacitko.km && !/^0 /.test(po.text),
           `okruh ${po.zvoleno}, text „${po.text.slice(0, 70)}"`);
       }
+      /* --- PŘEPÍNÁNÍ OKRUHU NESMÍ HÝBAT MAPOU ---------------------
+         Patička roste s obsahem, mapa nad ní bere zbytek — takže když
+         se pod nulou objevilo tlačítko „Zkusit 20 km", patička
+         povyrostla a mapa se o tolik zmenšila. Naměřeno na telefonu
+         390×844: 555 → 503 px, a to při každém přepnutí okruhu.
+         Odtud stížnost „je to jak domeček z karet". */
+      {
+        const stavy = [];
+        for (const v of ['2', '10', '50', '2']) {
+          await p.evaluate((x) => {
+            const r = document.querySelector(`input[name="vm-km"][value="${x}"]`);
+            if (r) r.click();
+          }, v);
+          await p.waitForTimeout(650);
+          stavy.push(await p.evaluate((x) => ({
+            km: x,
+            mapa: Math.round(document.getElementById('vm-mapa').getBoundingClientRect().height),
+            pata: Math.round(document.querySelector('.vm-pata').getBoundingClientRect().height),
+            tlacitko: !!document.querySelector('#vm-pocet .vm-vetsi'),
+          }), v));
+        }
+        /* Bez těchhle dvou pojistek by kontrola prošla, i kdyby se
+           vůbec nic nepřepínalo: měřila by pořád tentýž stav. */
+        pravda('mezi okruhy se opravdu střídá stav s nabídkou a bez ní (jinak zkouška nic neměří)',
+          stavy.some((x) => x.tlacitko) && stavy.some((x) => !x.tlacitko),
+          'nabídka širšího okruhu se neukázala ani v jednom z okruhů 2/10/50');
+        const vysky = [...new Set(stavy.map((x) => x.mapa))];
+        pravda('a mapa přitom nezmění výšku ani o pixel', vysky.length === 1,
+          stavy.map((x) => `${x.km} km → mapa ${x.mapa}, patička ${x.pata}`).join('; '));
+      }
+
+      /* --- ŠTÍTEK S KILOMETRY NESMÍ LEŽET NA ZNAČCE ----------------
+         Visel na kraji kruhu vystředěný, tedy půlkou dovnitř. U malého
+         kruhu tím skončil na špendlíku a z „10 km" bylo vidět „0 km"
+         (naměřeno: štítek 193+54 px, špendlík 181+28 px). */
+      {
+        /* ODDÁLIT. Blok výš pracuje na přiblížení 12, kde má i pětikilo-
+           metrový kruh přes 400 px — tam se štítek na značku nedostane,
+           ať visí jakkoli, a kontrola by prošla i s původním zavěšením
+           (přistihla mě tím pojistka „je mezi nimi i malý kruh"). Měří
+           se proto z výšky, ve které přišla stížnost. */
+        await p.evaluate(() => { window.PK_VM_MAPA.setZoom(8); });
+        await p.waitForTimeout(700);
+        const nalezy = [];
+        for (const v of ['5', '10', '20', '50']) {
+          await p.evaluate((x) => {
+            const r = document.querySelector(`input[name="vm-km"][value="${x}"]`);
+            if (r) r.click();
+          }, v);
+          await p.waitForTimeout(500);
+          nalezy.push(await p.evaluate((x) => {
+            const st = document.querySelector('.vm-meritko span');
+            const pin = document.querySelector('.vm-znacka');
+            if (!st || !pin) return { km: x, merim: false };
+            if (getComputedStyle(st.parentElement).visibility === 'hidden') return { km: x, merim: false };
+            const a2 = st.getBoundingClientRect(), b2 = pin.getBoundingClientRect();
+            const prekryv = !(a2.left > b2.right || a2.right < b2.left || a2.top > b2.bottom || a2.bottom < b2.top);
+            /* Jak je kruh na obrazovce velký — na velkém kruhu se štítek
+               na značku nedostane, ať je zavěšený jakkoli. */
+            const kruh = document.querySelector('#vm-mapa path[stroke-dasharray]');
+            const sirka = kruh ? Math.round(kruh.getBoundingClientRect().width) : 0;
+            return { km: x, merim: true, prekryv, sirka, text: st.textContent };
+          }, v));
+        }
+        const merene = nalezy.filter((x) => x.merim);
+        pravda('štítek s kilometry je aspoň u jednoho okruhu vidět (jinak zkouška nic neměří)',
+          merene.length > 0, 'ani u jednoho z okruhů 5/10/20/50 se štítek nekreslil');
+        /* A hlavně: musí mezi nimi být ten TĚSNÝ případ. Na velkém kruhu
+           by kontrola prošla i s původním zavěšením štítku. */
+        pravda('a je mezi nimi i kruh tak malý, že o to místo se štítkem soupeří',
+          merene.some((x) => x.sirka > 0 && x.sirka < 140),
+          'všechny měřené kruhy byly široké — na nich štítek na značku nedosáhne tak jako tak: '
+            + merene.map((x) => `${x.km} km → ${x.sirka} px`).join(', '));
+        pravda('štítek s kilometry neleží na značce místa',
+          merene.every((x) => !x.prekryv),
+          merene.filter((x) => x.prekryv).map((x) => `${x.km} km (kruh ${x.sirka} px)`).join(', '));
+      }
+
       if (puvodni) {
         await p.evaluate((v) => {
           const r = document.querySelector(`input[name="vm-km"][value="${v}"]`);

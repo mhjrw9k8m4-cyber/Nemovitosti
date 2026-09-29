@@ -2489,9 +2489,16 @@
         }
         if (vetsi) {
           var pn = poOkruzich[vetsi];
-          rada = '<span class="vm-rada">V okruhu ' + k + ' km tu nic není. ' +
-            'V ' + vetsi + ' km ' + (pn >= 2 && pn <= 4 ? 'jsou ' : 'je ') + pn + ' ' + plPozemek(pn) + '.' +
-            '<button type="button" class="vm-vetsi" data-km="' + vetsi + '">Zkusit ' + vetsi + ' km</button></span>';
+          /* CELÁ RADA JE TO TLAČÍTKO. Dřív nad ním stála ještě věta
+             „V okruhu 2 km tu nic není. V 20 km je 5 pozemků." — jenže
+             první půlka jen zopakovala řádek nad sebou („0 pozemků
+             v okruhu 2 km") a druhá se vejde do popisku tlačítka. Ta věta
+             stála dva řádky navíc, o které povyrostla patička a o které
+             se zmenšila mapa — tedy mapa poskočila pokaždé, když v okruhu
+             nic nebylo. */
+          rada = '<span class="vm-rada"><button type="button" class="vm-vetsi" data-km="' + vetsi + '">' +
+            'Zkusit ' + vetsi + ' km — ' + (pn >= 2 && pn <= 4 ? 'jsou tam ' : 'je tam ') +
+            pn + ' ' + plPozemek(pn) + '</button></span>';
         } else {
           rada = '<span class="vm-rada">Tady není nic ani v nejširším okruhu — zkuste jiné místo.</span>';
         }

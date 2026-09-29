@@ -454,9 +454,13 @@ body.vm-otevreno{overflow:hidden;}
 .vm-okruh{display:flex; align-items:center; gap:6px; flex-wrap:wrap; border:0; padding:0; margin:0; min-width:0;}
 .vm-okruh legend{position:absolute; width:1px; height:1px; overflow:hidden;
   clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap;}
-/* Věta, která z „0 pozemků" udělá rozcestí místo slepé uličky. */
-.vm-rada{display:block; margin-top:4px; font-size:13px; color:var(--text-ondark-mute); line-height:1.5;}
-.vm-vetsi{display:inline-flex; align-items:center; justify-content:center; margin-top:7px; min-height:44px;
+/* Věta, která z „0 pozemků" udělá rozcestí místo slepé uličky.
+   Tlačítko stojí VEDLE věty, ne pod ní: pod ní přidávalo patičce
+   dalších 56 px a o tolik se zmenšila mapa — tedy mapa poskočila
+   pokaždé, když v okruhu nic nebylo. */
+.vm-rada{display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; margin-top:4px;
+  font-size:13px; color:var(--text-ondark-mute); line-height:1.5;}
+.vm-vetsi{display:inline-flex; align-items:center; justify-content:center; margin-top:0; min-height:44px;
   padding:0 16px; font:inherit; font-size:14px; font-weight:700; color:#fff; background:var(--plocha-znacka);
   border:0; border-radius:var(--r-ovladani); cursor:pointer;}
 .vm-vetsi:hover{filter:brightness(1.06);}
@@ -475,9 +479,16 @@ body.vm-otevreno{overflow:hidden;}
    Kruh sám o sobě řekne „takhle velké to je" jen tomu, kdo si deset
    kilometrů na mapě dokáže představit. */
 .vm-meritko{pointer-events:none; z-index:590;}
-/* Sedí na kraji kruhu a vyčnívá nad čáru, aby nepřekrýval ani kružnici,
-   ani značku uprostřed. */
-.vm-meritko span{position:absolute; left:0; top:0; transform:translate(-50%,-165%);
+/* ROSTE VEN Z KRUHU, NE NA OBĚ STRANY. Štítek visel na kraji kruhu
+   vystředěný — tedy půlkou dovnitř. Dokud je kruh velký, nevadí to; jak
+   se zmenší, leze ta vnitřní půlka na značku. Naměřeno na telefonu
+   (390 px, deset kilometrů při pohledu z výšky): štítek začínal na
+   193 px, značka stála na 181–209 px, takže z „10 km" bylo vidět „0 km" —
+   přesně jako na snímku od člověka.
+   Teď začíná AŽ ZA krajem kruhu a roste od něj pryč: při žádné velikosti
+   kruhu na značku nedosáhne. Sedí přitom na konci měřicí čáry, jako se
+   píše číslo na měřítku papírové mapy. */
+.vm-meritko span{position:absolute; left:0; top:0; transform:translate(9px,-50%);
   display:inline-block; white-space:nowrap;
   padding:3px 9px; border-radius:var(--r-pill); background:#8A5512; color:#fff;
   font-family:var(--font-mono); font-size:11.5px; font-weight:700; letter-spacing:.02em;
@@ -486,8 +497,17 @@ body.vm-otevreno{overflow:hidden;}
    jako údaj, ne jako poznámka pod čarou. Pod ním stojí ROZPAD podle druhu:
    samotné „12 pozemků" neřekne, jestli jde o běžný prodej nebo o dražby,
    a to je přitom důvod, proč si okolí někdo hlídá. */
+/* MÍSTO SE VYHRAZUJE DOPŘEDU. Obsah tu mění výšku: běžně je to počet
+   a pod ním rozpad podle druhu (50 px), ale když v okruhu nic není,
+   přibude tlačítko „Zkusit 20 km" (79 px). O ten rozdíl povyroste
+   patička — a protože mapa je nad ní a bere zbytek, o tentýž kus se
+   zmenší. Naměřeno na telefonu 390×844: mapa skákala 555 → 503 px
+   pokaždé, když se přepnul okruh, ve kterém nic není. Odtud „je to jak
+   domeček z karet".
+   Výška se proto drží na té vyšší z obou variant. Stojí to 29 px mapy —
+   a mapa za to nikdy neposkočí. */
 .vm-pocet{flex:1 1 180px; min-width:0; font-size:13px; color:var(--text-ondark);
-  display:flex; flex-direction:column; gap:5px;}
+  display:flex; flex-direction:column; justify-content:center; gap:5px; min-height:79px;}
 .vm-hlavni{line-height:1.3;}
 .vm-pocet b{font-family:var(--font-display); font-size:20px; font-weight:700;
   letter-spacing:-.02em; margin-right:2px;}
