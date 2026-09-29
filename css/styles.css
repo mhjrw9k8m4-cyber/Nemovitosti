@@ -540,6 +540,29 @@ body.vm-otevreno{overflow:hidden;}
 /* Hlídané místo na mapě — mosazná značka, ať se neplete s „jste tady" (zelená)
    ani s tečkami pozemků. Kolem ní je čárkovaný kruh s hlídaným okruhem. */
 .pk-misto-wrap{background:none; border:0;}
+/* =====================================================================
+   SHLUK TEČEK NA MAPĚ
+   Při pohledu na celou republiku leželo 58 % teček pod jinou (1 149
+   z 1 971 při zoomu 7, v nejhustším místě 24 přes sebe). Shluk to řekne
+   číslem místo tmavší skvrny a dá se do něj vejít.
+   Barva je táž jako u teček a v legendě, ať se nemusí luštit, co která
+   znamená. Průsvitnost je mírná: pod shlukem má být vidět, kde na mapě
+   leží, ale číslo v něm musí zůstat čitelné i nad tmavým podkladem.
+   ===================================================================== */
+.pk-shluk-obal{background:none; border:0; display:flex; align-items:center; justify-content:center;}
+.pk-shluk{display:flex; align-items:center; justify-content:center;
+  border-radius:50%; background:color-mix(in srgb, var(--sh) 82%, #fff);
+  border:2px solid rgba(255,255,255,.92); box-shadow:var(--e2);
+  color:#fff; font-family:var(--font-ui); font-weight:800; letter-spacing:-.01em;
+  cursor:pointer; transition:transform .12s ease;}
+.pk-shluk b{font-size:inherit; line-height:1;}
+.leaflet-marker-icon:hover .pk-shluk{transform:scale(1.08);}
+.leaflet-marker-icon:focus-visible .pk-shluk{outline:3px solid var(--copper-bright); outline-offset:2px;}
+/* Prohlížeč bez color-mix dostane rovnou barvu druhu — shluk pak není
+   o odstín světlejší, ale pořád je to shluk správné barvy. */
+@supports not (background:color-mix(in srgb, red 50%, #fff)){
+  .pk-shluk{background:var(--sh);}
+}
 .pk-misto{display:block; width:18px; height:18px; border-radius:50%;
   background:#8A5512; border:3px solid #fff; box-shadow:var(--e2);}
 

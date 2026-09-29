@@ -1744,10 +1744,13 @@
   }
   if (!(typeof matchMedia === 'function' && matchMedia('(hover: none)').matches)) {
     map.on('mousemove', function (e) {
-      if (dotsLocked || !lastVis.length) { zvyrazniTecku(null); return; }
+      /* Jen SAMOTNÉ tečky. Co je ve shluku, na mapě jako tečka není —
+         zvýrazňovat něco, co není vidět, znamená slíbit pozemek, který
+         se po klepnutí neotevře. */
+      if (dotsLocked || !lastSingles.length) { zvyrazniTecku(null); return; }
       var cp = e.containerPoint, best = null, bestDist = Infinity;
-      for (var i = 0; i < lastVis.length; i++) {
-        var d = lastVis[i];
+      for (var i = 0; i < lastSingles.length; i++) {
+        var d = lastSingles[i];
         if (selectedKraj && d._gkraj !== selectedKraj) continue;
         var p = map.latLngToContainerPoint([d.lat, d.lng]);
         var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
@@ -1777,10 +1780,14 @@
     }
     if (krajJustSelected) { krajJustSelected = false; return; }
     // Tečky jsou klikací, když nejsou zamčené (po výběru kraje NEBO po přiblížení mapy).
-    if (dotsLocked || !lastVis.length) return;
+    /* Hledá se jen mezi SAMOTNÝMI tečkami. Kdyby se hledalo mezi všemi,
+       klepnutí vedle shluku by otevřelo pozemek, který je v něm schovaný —
+       tedy jeden z dvaceti, vybraný náhodou podle vzdálenosti od prstu.
+       Do shluku se vchází klepnutím na něj. */
+    if (dotsLocked || !lastSingles.length) return;
     var cp = e.containerPoint, best = null, bestDist = Infinity;
-    for (var i = 0; i < lastVis.length; i++) {
-      var d = lastVis[i];
+    for (var i = 0; i < lastSingles.length; i++) {
+      var d = lastSingles[i];
       // Když je vybraný kraj, bereme jen jeho tečky; bez kraje (přiblíženo) bereme kteroukoli viditelnou.
       if (selectedKraj && d._gkraj !== selectedKraj) continue;
       var p = map.latLngToContainerPoint([d.lat, d.lng]);
@@ -1880,9 +1887,193 @@
       krajByName[k].setTooltipContent(txt);
     });
   }
+  /* =====================================================================
+     SHLUKOVÁNÍ TEČEK
+     Při pohledu na celou republiku leží 58 % teček pod jinou tečkou
+     (změřeno na 1 971 nabídkách při zoomu 7: 1 149 překrytých, v
+     nejhustším místě 24 přes sebe). Tečka, která vypadá jako jedna
+     nabídka, jich je i dvacet — a rozklikne se z nich ta, která je
+     náhodou nejblíž prstu. Se zvětšováním to klesá: zoom 9 → 24 %,
+     zoom 12 → 4 %.
+     Průsvitnost, kterou se to řešilo dosud (viz dotStyle), říká „tady je
+     jich víc" jen barvou. Shluk to řekne číslem a dá se do něj vejít.
+
+     POČÍTÁ SE VE SVĚTOVÝCH PIXELECH, ne v okně. Tím je výsledek nezávislý
+     na posunu mapy: shluky se přepočítávají jen při změně přiblížení, ne
+     při každém tažení — jinak by se při posunu překreslovaly tisíce
+     značek a mapa by se sekala. */
+  /* ODZNAK K TEČKÁM, NE MÍSTO NICH — a stálo mě to jeden celý pokus.
+     Napoprvé jsem tečky shluky NAHRADIL. Při pohledu na celou republiku
+     pak na mapě nezbyla ani jedna tečka (naměřeno: 0) a zkoušky to
+     zachytily dvakrát — „mapa se načetla i s tečkami" a „tečky pozemků
+     jsou na plátně opravdu vidět". Nebyl to špatně zvolený práh: 1 971
+     nabídek na mapě široké 340 px se prostě překrývá při každé mřížce,
+     takže z republiky zbyly balóny a zmizela hustota i zeměpis.
+     Odznak se proto k tečkám PŘIDÁVÁ. Tečky zůstávají všechny; odznak
+     s počtem se objeví jen tam, kde na sobě leží aspoň tři nabídky do
+     18 px — tedy přesně tam, kde se prstem nedá trefit ta jedna, kterou
+     člověk chce. Naměřeno, kolik jich vzniká: zoom 9 → 177 pro celou ČR,
+     zoom 11 → 55, zoom 13 → 8; s přiblížením mizí samy. */
+  var SHLUK_MRIZKA = 18;     // hrana buňky v pixelech na daném přiblížení
+  var SHLUK_MIN = 3;         // od kolika nabídek na jedné hromádce má odznak smysl
+  var shlukLayer = L.layerGroup();
+  var lastSingles = [];      // tečky, které NEJSOU ve shluku — jen ty se dají trefit
+
+  function shlukni(vis) {
+    var z = map.getZoom();
+    var bunky = {}, poradi = [];
+    for (var i = 0; i < vis.length; i++) {
+      var d = vis[i];
+      var p = map.project([d.lat, d.lng], z);
+      var kx = Math.floor(p.x / SHLUK_MRIZKA), ky = Math.floor(p.y / SHLUK_MRIZKA);
+      var k = kx + '/' + ky;
+      if (!bunky[k]) { bunky[k] = { kx: kx, ky: ky, cleny: [], sx: 0, sy: 0 }; poradi.push(bunky[k]); }
+      var c = bunky[k];
+      c.cleny.push(d); c.sx += p.x; c.sy += p.y;
+    }
+    /* SLUČOVACÍ PRŮCHOD, A ZÁMĚRNĚ OPATRNÝ. Samotná mřížka nestačí: dvě
+       tečky dva pixely od sebe můžou padnout každá do jiné buňky a
+       zůstaly by rozdělené, přestože se na obrazovce překrývají.
+
+       Napoprvé jsem slučoval podle PRŮBĚŽNÉHO těžiště a bez pojistky
+       proti řetězení — a ono se to zřetězilo: A pohltí B, těžiště se
+       posune k C, pohltí C… Změřeno na 1 971 nabídkách při pohledu na
+       celou republiku: z celé mapy zbyla ČTYŘI kolečka, největší
+       s 1 012 nabídkami. To už není mapa, to je balón.
+       Teď se porovnávají PŮVODNÍ těžiště (ta se slučováním nehýbou) a
+       buňka, která už jednou slučovala nebo byla pohlcena, do dalšího
+       slučování nejde. Řetěz tak nemůže být delší než dva články. */
+    var puvodni = {};
+    for (var pi = 0; pi < poradi.length; pi++) {
+      var pc = poradi[pi];
+      puvodni[pc.kx + '/' + pc.ky] = [pc.sx / pc.cleny.length, pc.sy / pc.cleny.length];
+    }
+    var MEZ = SHLUK_MRIZKA * 0.55;
+    for (var j = 0; j < poradi.length; j++) {
+      var c2 = poradi[j];
+      if (!c2.cleny.length || c2.hotovo) continue;
+      var smery = [[1, 0], [0, 1], [1, 1], [1, -1]];
+      for (var si = 0; si < smery.length; si++) {
+        var s2 = bunky[(c2.kx + smery[si][0]) + '/' + (c2.ky + smery[si][1])];
+        if (!s2 || !s2.cleny.length || s2.hotovo) continue;
+        var a2 = puvodni[c2.kx + '/' + c2.ky], b2 = puvodni[s2.kx + '/' + s2.ky];
+        if ((a2[0] - b2[0]) * (a2[0] - b2[0]) + (a2[1] - b2[1]) * (a2[1] - b2[1]) > MEZ * MEZ) continue;
+        c2.cleny = c2.cleny.concat(s2.cleny);
+        c2.sx += s2.sx; c2.sy += s2.sy;
+        s2.cleny = []; s2.hotovo = true;
+        c2.hotovo = true;
+        break;
+      }
+    }
+    var samotne = [], shluky = [];
+    for (var q = 0; q < poradi.length; q++) {
+      var c3 = poradi[q];
+      if (!c3.cleny.length) continue;
+      /* Dvě tečky vedle sebe odznak nepotřebují — na dvě se dá zamířit.
+         Teprve od tří je to hromádka, ze které se jedna vybrat nedá. */
+      if (c3.cleny.length < SHLUK_MIN) {
+        for (var w = 0; w < c3.cleny.length; w++) samotne.push(c3.cleny[w]);
+        continue;
+      }
+      var stred = map.unproject(L.point(c3.sx / c3.cleny.length, c3.sy / c3.cleny.length), z);
+      shluky.push({ lat: stred.lat, lng: stred.lng, cleny: c3.cleny });
+    }
+    return { samotne: samotne, shluky: shluky };
+  }
+
+  /* Barva shluku podle toho, co v něm převažuje — táž paleta jako tečky
+     i legenda. Dražba a exekuce mají přednost i v menšině: to jsou ty
+     nabídky, které mají termín, a schovat je pod modrou většinu by
+     znamenalo zamlčet právě to, kvůli čemu se na mapu někdo dívá. */
+  function shlukBarva(cleny) {
+    var m = {};
+    for (var i = 0; i < cleny.length; i++) m[cleny[i].type] = (m[cleny[i].type] || 0) + 1;
+    if (m.exekuce) return TYPE.exekuce.color;
+    if (m.drazba) return TYPE.drazba.color;
+    var nej = null, nejN = 0;
+    for (var t in m) if (m[t] > nejN) { nejN = m[t]; nej = t; }
+    return (TYPE[nej] && TYPE[nej].color) || TYPE.sale.color;
+  }
+
+  function vyrobShluk(s) {
+    var n = s.cleny.length;
+    /* Velikost roste s počtem, ale jen po stupních — plynulý průměr by
+       znamenal, že dvě skoro stejná čísla mají viditelně jiné kolečko,
+       a to mate víc, než pomáhá.
+       Kolečko pro DVĚ nabídky bylo stejně velké jako pro čtyřicet a mapa
+       z toho byla samý balón (viz snímek: 34 koleček v okně, z podkladu
+       nebylo vidět nic). Malé shluky jsou proto malé.
+       Trefit se do nich přesto musí jít prstem: plocha na chytání je
+       vždycky aspoň 48 px, jen je kolem menšího kolečka průhledná —
+       hlídá to zkouška na velikost ovládání a tohle je způsob, jak jí
+       vyhovět, aniž by dvě nabídky vypadaly jako čtyřicet. */
+    /* Odznak leží NA tečkách, které zastupuje, takže nemusí být velký —
+       má je označit, ne přebít. Naměřené počty: do 46 při pohledu na
+       celou republiku, do 15 na okresu, do 6 na obci. */
+    var velikost = n >= 20 ? 38 : (n >= 8 ? 33 : 28);
+    var plocha = Math.max(44, velikost);
+    var pismo = n >= 100 ? 12 : 13;
+    var popis = n + ' ' + plPozemek(n) + ' — přiblížit';
+    var ikona = L.divIcon({
+      className: 'pk-shluk-obal',
+      html: '<span class="pk-shluk" style="--sh:' + shlukBarva(s.cleny) + '; width:' + velikost
+        + 'px; height:' + velikost + 'px; font-size:' + pismo + 'px"><b>' + n + '</b></span>',
+      iconSize: [plocha, plocha], iconAnchor: [plocha / 2, plocha / 2]
+    });
+    var mk = L.marker([s.lat, s.lng], { icon: ikona, keyboard: true, title: popis, alt: popis,
+      riseOnHover: true, zIndexOffset: 400 });
+    mk.on('click', function (e) {
+      if (e && e.originalEvent) L.DomEvent.stop(e.originalEvent);
+      otevriShluk(s);
+    });
+    mk.on('keypress', function (e) {
+      if (e.originalEvent && (e.originalEvent.key === 'Enter' || e.originalEvent.key === ' ')) otevriShluk(s);
+    });
+    return mk;
+  }
+
+  /* Klepnutí na shluk mapu PŘIBLÍŽÍ NA JEHO ČLENY, ne o pevný počet
+     stupňů: shluk může být dvě tečky vedle sebe i dvacet roztažených přes
+     půl okresu a jedno pevné přiblížení by sedělo jen jednomu z toho.
+     Když jsou všechny členy na jednom místě (tentýž bod v datech), rámec
+     by měl nulovou velikost — tam se jen přiblíží o kus. */
+  function otevriShluk(s) {
+    var z = map.getZoom();
+    var b = L.latLngBounds(s.cleny.map(function (d) { return [d.lat, d.lng]; }));
+    var cil = z + 2;
+    if (b.isValid() && !b.getNorthEast().equals(b.getSouthWest())) {
+      try { cil = map.getBoundsZoom(b, false, L.point(40, 40)); } catch (e) { cil = z + 2; }
+    }
+    /* NIKDY VEN. Napoprvé tu bylo fitBounds a hned za ním kontrola
+       „nezůstal zoom stejný?" — jenže fitBounds animuje, takže se zoom
+       četl ještě před změnou a obě volání si šla po krku. Naměřeno:
+       klepnutí na shluk mapu ODDÁLILO z 8 na 7,5. Klepnutí na shluk má
+       jediný smysl: ukázat, co je uvnitř. Cíl se proto spočítá dopředu
+       (getBoundsZoom nic neanimuje) a nikdy není menší než o stupeň blíž.
+       Horní mez 16 je tam, kde se pozemky stejně přestanou překrývat. */
+    /* A nikdy o víc než tři stupně naráz. Rámec kolem tří nabídek, které
+       leží osmnáct pixelů od sebe, vychází na obrovské přiblížení —
+       naměřeno: jedno klepnutí přeneslo mapu ze zoomu 8 na 13, tedy
+       dvaatřicetkrát blíž. Na to už jednou přišla stížnost („když
+       kliknu, extrémně mě to přiblíží"). Kdo chce dál, klepne znovu. */
+    cil = Math.max(z + 1, Math.min(16, Math.min(cil, z + 3)));
+    map.setView(b.isValid() ? b.getCenter() : L.latLng(s.lat, s.lng), cil, { animate: true });
+  }
+
   function renderDots(vis) {
     dotLayer.clearLayers();
+    shlukLayer.clearLayers();
+    // Tečky VŽDYCKY všechny: hustota, zeměpis i najetí myší zůstávají.
     vis.forEach(function (d) { dotLayer.addLayer(markers[d._id]); });
+    /* Odznaky jen tam, kde jsou tečky vůbec klikací. Dokud není vybraný
+       kraj, klepnutí do mapy vybírá KRAJ (třída .kraj-lock vypíná
+       značkám pointer-events) — odznak by tam na nic neukazoval a ještě
+       by jich přes republiku bylo přes dvě stě. */
+    if (dotsLocked) { lastSingles = vis; return; }
+    var v = shlukni(vis);
+    lastSingles = v.samotne;
+    v.shluky.forEach(function (s) { shlukLayer.addLayer(vyrobShluk(s)); });
+    if (!map.hasLayer(shlukLayer)) shlukLayer.addTo(map);
   }
   // Vždy: tečky pozemků + obrysy krajů přes ně
   function updateMapView() {
@@ -1973,8 +2164,13 @@
   // Zámek teček: dokud není vybraný kraj, klik na tečku ignorujeme (klik pod tečkami vybere kraj).
   var dotsLocked = true;
   function lockDots(lock) {
+    var zmena = dotsLocked !== lock;
     dotsLocked = lock;
     mapEl.classList.toggle('kraj-lock', lock);
+    // Odznaky se kreslí jen u klikacích teček, takže přepnutí zámku je
+    // musí nechat přepočítat — jinak by po výběru kraje chyběly až do
+    // prvního přiblížení.
+    if (zmena && typeof renderDots === 'function' && lastVis) renderDots(lastVis);
   }
   var BACK_BTN = '<button class="kh-back" type="button" aria-label="Zpět"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>';
   function updateKrajHead() {
@@ -2849,7 +3045,11 @@
       }
     }
   }
-  map.on('zoomend', function () { resizeDots(); prekresliRadar(); });
+  /* Shluky se počítají v pixelech při daném přiblížení, takže se po
+     každém zoomu musí přepočítat. Při POSUNU ne: počítá se ve světových
+     pixelech, takže tažení mapy na výsledku nic nemění — a překreslovat
+     tisíce značek při každém tažení by mapu zaseklo. */
+  map.on('zoomend', function () { resizeDots(); prekresliRadar(); renderDots(lastVis); });
   resizeDots();
 
   /* RADAR u dražeb, které končí do sedmi dní.
