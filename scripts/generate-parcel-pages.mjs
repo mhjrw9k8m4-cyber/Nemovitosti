@@ -58,6 +58,21 @@ export function otisk(s) {
 export function souborPro(d) {
   return `pozemek-${slug(d.okres)}-${slug(d.place)}-${otisk(pkey(d))}.html`;
 }
+/* DRUHÝ A DALŠÍ POZEMEK NA TÉMŽE KLÍČI.
+   Klíč nese obec, parcelní číslo, okres a souřadnice na tři desetinná
+   místa. Když parcelní číslo chybí (v datech je ho spousta jako „—“)
+   a dvě nabídky v téže obci padnou po zaokrouhlení na stejných zhruba
+   sto metrů, mají klíč shodný — a přitom to jsou různé pozemky.
+   Naměřeno na 1 966 nabídkách: 32 takových skupin, v 21 z nich se
+   nabídky liší cenou nebo výměrou. Nejkřiklavěji Lhota pod Libčany,
+   7 527 800 Kč / 1 981 m² proti 5 723 300 Kč / 1 331 m².
+   Do klíče se proto přidá výměra a cena — ale jen těm DALŠÍM v pořadí.
+   První si drží dosavadní název souboru, takže žádná dnes existující
+   adresa se nemění a nic z vyhledávačů nespadne na 404. */
+export function souborProDalsi(d) {
+  const rozliseni = pkey(d) + '|' + (d.area || 0) + '|' + (d.price || 0);
+  return `pozemek-${slug(d.okres)}-${slug(d.place)}-${otisk(rozliseni)}.html`;
+}
 
 const TYP = { sale: 'Na prodej', drazba: 'Dražba', exekuce: 'Exekuce', obec: 'Od obce', majitel: 'Od majitele' };
 
@@ -149,7 +164,7 @@ export function stranka(sablona, d) {
     + (d.parcel && d.parcel !== '—' ? `<dt>Parcela</dt><dd>č. ${esc(d.parcel)}</dd>` : '')
     + (d.extra ? `<dt>Stav / zdroj</dt><dd>${esc(lidskeDatum(d.extra))}</dd>` : '')
     + `</dl>`
-    + `<p><a href="pozemek.html?p=${encodeURIComponent(pkey(d))}&amp;ll=${d.lat},${d.lng}">Otevřít na mapě</a></p>`
+    + `<p><a href="pozemek.html?p=${encodeURIComponent(pkey(d))}&amp;ll=${d.lat},${d.lng}&amp;v=${d.area || 0}">Otevřít na mapě</a></p>`
     + `</article>`;
   h = h.replace(/<div id="pz-detail">[\s\S]*?<\/div>/,
     `<div id="pz-detail">${staticky}</div>`);
@@ -157,7 +172,10 @@ export function stranka(sablona, d) {
   // Předání skriptu: která nabídka to je, bez tahání z adresy.
   h = h.replace(/(<script src="js\/pozemek\.js)/,
     `<script type="application/ld+json">${ld}</scr` + `ipt>\n`
-    + `<script>window.PK_POZEMEK=${jsonVeStrance({ k: pkey(d), ll: [d.lat, d.lng] })};</scr` + `ipt>\n$1`);
+    /* „v" a „c" (výměra a cena) jsou tu kvůli pozemkům, které sdílejí
+       klíč: bez nich by stránka toho druhého z dvojice nedokázala ve
+       stažených datech najít sám sebe a vzala by prostě první nález. */
+    + `<script>window.PK_POZEMEK=${jsonVeStrance({ k: pkey(d), ll: [d.lat, d.lng], v: d.area || 0, c: d.price || 0 })};</scr` + `ipt>\n$1`);
   return h;
 }
 
@@ -179,16 +197,44 @@ export function generuj() {
      vyhledávači konkurovaly. Vlastní pravidlo je tu pořád, ale až jako
      druhé síto: rozlišuje stránky, nerozhoduje o duplicitách. */
   const D = PKH.bezDuplicit(syrova);
-  const videno = new Set();
-  const hotove = [];
+  /* NEJDŘÍV SESKUPIT, POTOM ROZHODNOUT. Dřív se tu na druhý pozemek se
+     stejným klíčem prostě zapomnělo („tentýž pozemek ze dvou zdrojů =
+     jedna stránka“). Jenže skutečné duplicity zahodil už PKH.bezDuplicit
+     o řádek výš — co projde až sem se shodným klíčem, jsou nabídky, které
+     pravidlo pro duplicity za tentýž pozemek NEPOVAŽUJE. Naměřeno: 37
+     nabídek tím přišlo o vlastní stránku a u 26 z nich se cena nebo
+     výměra lišila od té, která stránku dostala. Odkaz na ně ukázal cizí
+     pozemek: cizí cenu, cizí výměru. */
+  const skupiny = new Map();
   for (const d of D) {
     if (!isFinite(d.lat) || !isFinite(d.lng) || !d.place || !d.okres) continue;
     const k = pkey(d);
-    if (videno.has(k)) continue;      // tentýž pozemek ze dvou zdrojů = jedna stránka
-    videno.add(k);
-    const soubor = souborPro(d);
-    fs.writeFileSync(path.join(ROOT, soubor), stranka(sablona, d));
-    hotove.push(soubor);
+    if (!skupiny.has(k)) skupiny.set(k, []);
+    skupiny.get(k).push(d);
+  }
+  const hotove = [];
+  for (const cleny of skupiny.values()) {
+    /* Shodná cena I výměra na jednom místě = pořád tentýž pozemek, jen
+       podruhé. Takovým se dělá jedna stránka dál: dvě adresy pro jednu
+       nabídku si ve vyhledávači konkurují (kvůli tomu tu to slučování
+       vzniklo). Rozhoduje se tedy podle TOHO, ČÍM SE LIŠÍ, ne podle
+       toho, že klíč je shodný. */
+    const podleObsahu = new Map();
+    for (const d of cleny) {
+      const podpis = (d.price || 0) + '|' + (d.area || 0);
+      if (!podleObsahu.has(podpis)) podleObsahu.set(podpis, d);
+    }
+    /* Pořadí musí být dané daty, ne pořadím v souboru — jinak by se
+       dnešní adresa přestěhovala na jinou nabídku, jakmile robot data
+       přeskládá. */
+    const ruzne = [...podleObsahu.values()].sort((a, b) =>
+      (a.area || 0) - (b.area || 0) || (a.price || 0) - (b.price || 0)
+      || String(a.url || '').localeCompare(String(b.url || '')));
+    ruzne.forEach((d, i) => {
+      const soubor = i === 0 ? souborPro(d) : souborProDalsi(d);
+      fs.writeFileSync(path.join(ROOT, soubor), stranka(sablona, d));
+      hotove.push(soubor);
+    });
   }
   // Stránky zrušených nabídek musí zmizet, jinak by web sliboval pozemky,
   // které už nikde nejsou.

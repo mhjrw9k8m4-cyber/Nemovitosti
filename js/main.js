@@ -4035,7 +4035,11 @@
        z místa, parcely a souřadnic — jakmile majitel cokoli z toho opraví,
        starý odkaz přestane sedět. ID se nemění, a stránka pozemku podle
        něj inzerát najde v živých datech (findTarget v js/pozemek.js). */
+    /* „v" (výměra) rozliší dva pozemky, které sdílejí klíč — v datech
+       je 21 takových dvojic a bez toho by odkaz otevřel tu první z nich,
+       tedy cizí cenu i výměru. */
     location.href = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng
+      + (isFinite(d.area) ? '&v=' + Math.round(d.area) : '')
       + (d._lid ? '&l=' + encodeURIComponent(d._lid) : '');
   }
   // „Zobrazit na mapě" / sdílený odkaz: přiblíž mapu tak, aby byl pozemek

@@ -19,7 +19,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { souborPro, pkey, textyPro, slug } from './generate-parcel-pages.mjs';
+import { souborPro, souborProDalsi, pkey, textyPro, slug } from './generate-parcel-pages.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0; const zpravy = [];
@@ -117,8 +117,32 @@ pravda('popisy sdílených odkazů nejsou u všech stejné', popisy.size > ukazk
    obě v sitemap, obě si ve vyhledávači konkurovaly.
 
    Kontroluje se to porovnáním s TOUŽ funkcí, ne vlastním pravidlem:
-   kdyby si generátor zase začal počítat po svém, čísla se rozejdou. */
-const majiByt = new Set(ukazane.map(souborPro));
+   kdyby si generátor zase začal počítat po svém, čísla se rozejdou.
+
+   POZOR NA DRUHOU STRANU TÉHOŽ. „Jedna stránka na jeden klíč" tu dřív
+   stálo jako prosté `ukazane.map(souborPro)` — a tím se z kontroly proti
+   duplicitám stala kontrola, která naopak VYŽADOVALA slučování různých
+   pozemků. Klíč totiž na rozlišení nestačí: bez parcelního čísla a se
+   souřadnicemi na tři desetinná místa padnou dvě různé nabídky v téže
+   obci na tentýž klíč (naměřeno 21 takových dvojic). Očekávaný seznam
+   se proto skládá stejně jako v generátoru: co se liší cenou nebo
+   výměrou, je jiný pozemek a má vlastní stránku; co se neliší, je táž
+   nabídka podruhé a stránku sdílí. */
+const majiByt = new Set();
+{
+  const podleKlice = new Map();
+  for (const d of ukazane) {
+    const k = pkey(d);
+    if (!podleKlice.has(k)) podleKlice.set(k, []);
+    podleKlice.get(k).push(d);
+  }
+  for (const cleny of podleKlice.values()) {
+    const ruzne = [...new Map(cleny.map((d) => [(d.price || 0) + '|' + (d.area || 0), d])).values()]
+      .sort((a2, b2) => (a2.area || 0) - (b2.area || 0) || (a2.price || 0) - (b2.price || 0)
+        || String(a2.url || '').localeCompare(String(b2.url || '')));
+    ruzne.forEach((d, i) => majiByt.add(i === 0 ? souborPro(d) : souborProDalsi(d)));
+  }
+}
 /* Ne každý soubor „pozemek-*.html" je generovaný — pozemek-od-obce.html
    je ručně psaná stránka. Poznají se podle značky, kterou do nich píše
    generátor, ne podle jména: jméno by se dalo splést a ruční stránka by
@@ -163,6 +187,57 @@ pravda('každý okres má náhledový obrázek pro sdílení', bezNahledu.length
   const chybi = rucni.filter((u) => mapa.indexOf(`/${u}</loc>`) < 0);
   pravda('a všechny jsou v mapě webu', chybi.length === 0,
     `v sitemap.xml chybí: ${chybi.join(', ')}`);
+}
+
+/* --- POZEMKY, KTERÉ SDÍLEJÍ KLÍČ, MAJÍ KAŽDÝ SVOU STRÁNKU ------------
+ *
+ * Klíč nese obec, parcelní číslo, okres a souřadnice na tři desetinná
+ * místa. Když parcelní číslo v datech chybí (bývá „—") a dvě nabídky
+ * v téže obci padnou po zaokrouhlení na stejných zhruba sto metrů, je
+ * klíč shodný — a přitom jde o různé pozemky. Generátor tehdy druhou
+ * nabídku zahodil a odkaz na ni ukázal cenu i výměru té první.
+ * Naměřeno na 1 966 nabídkách: 37 nabídek bez vlastní stránky, u 26 se
+ * cena nebo výměra lišila. Nejkřiklavěji Lhota pod Libčany:
+ * 7 527 800 Kč / 1 981 m² proti 5 723 300 Kč / 1 331 m².
+ */
+{
+  const podleKlice = new Map();
+  for (const d of ukazane) {
+    const k = pkey(d);
+    if (!podleKlice.has(k)) podleKlice.set(k, []);
+    podleKlice.get(k).push(d);
+  }
+  /* Skupiny, kde se nabídky OPRAVDU liší. Shodná cena i výměra na jednom
+     místě je pořád tentýž pozemek podruhé a jedna stránka je správně. */
+  const kolizni = [...podleKlice.values()].filter((v) => v.length > 1
+    && new Set(v.map((x) => (x.price || 0) + '|' + (x.area || 0))).size > 1);
+  /* Pojistka: kdyby v datech taková dvojice nebyla, kontroly níž by
+     neměly co měřit a prošly by, i kdyby generátor zase slučoval. */
+  pravda('v datech je aspoň jedna dvojice různých pozemků na jednom klíči (jinak zkouška nic neměří)',
+    kolizni.length > 0, 'nenašla se — kontrola vlastních stránek by nic nehlídala');
+  const mezera = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+  const chybi = [], cizi = [];
+  for (const cleny of kolizni) {
+    const ruzne = [...new Map(cleny.map((d) => [(d.price || 0) + '|' + (d.area || 0), d])).values()]
+      .sort((a3, b3) => (a3.area || 0) - (b3.area || 0) || (a3.price || 0) - (b3.price || 0)
+        || String(a3.url || '').localeCompare(String(b3.url || '')));
+    ruzne.forEach((d, i) => {
+      const soubor = i === 0 ? souborPro(d) : souborProDalsi(d);
+      const cesta = path.join(ROOT, soubor);
+      if (!fs.existsSync(cesta)) { chybi.push(`${soubor} (${d.price} Kč / ${d.area} m²)`); return; }
+      /* A hlavně: stránka musí nést SVOJI výměru, ne sousedovu. Kdyby se
+         jen vyrobil soubor navíc s obsahem toho druhého, kontrola „soubor
+         existuje" by prošla a člověk by dál četl cizí údaje. */
+      const h = fs.readFileSync(cesta, 'utf8');
+      if (h.indexOf(mezera(d.area) + '\u00a0m²') < 0 && h.indexOf(mezera(d.area) + ' m²') < 0) {
+        cizi.push(`${soubor} neuvádí ${mezera(d.area)} m²`);
+      }
+    });
+  }
+  pravda('každý z nich má vlastní stránku', chybi.length === 0,
+    `chybí ${chybi.length}: ${chybi.slice(0, 4).join(', ')}`);
+  pravda('a ta stránka nese jeho vlastní výměru, ne sousedovu', cizi.length === 0,
+    cizi.slice(0, 4).join(', '));
 }
 
 console.log('\nStránky jednotlivých pozemků');

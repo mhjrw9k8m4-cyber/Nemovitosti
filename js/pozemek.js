@@ -1096,10 +1096,23 @@
        nenese v adrese — předá ho rovnou. Adresa má přednost, aby starší
        rozeslané odkazy „?p=…" fungovaly i tehdy, kdyby se na takové
        stránce otevřely. */
+    /* Výměra (a cena) jako ROZLIŠOVAČ. Klíč sám nestačí: když parcelní
+       číslo v datech chybí a dvě nabídky v téže obci padnou po
+       zaokrouhlení na stejné souřadnice, mají klíč shodný, ačkoli jde
+       o různé pozemky. Naměřeno na 1 966 nabídkách: 32 takových skupin,
+       v 21 se liší cenou nebo výměrou. Bez rozlišovače se brala prostě
+       první, takže odkaz na tu druhou ukázal cizí cenu i výměru. */
+    var vym = null, cen = null;
+    var mv = /[?&]v=(\d+)/.exec(qs);
+    if (mv) vym = parseInt(mv[1], 10);
+    var mc = /[?&]c=(\d+)/.exec(qs);
+    if (mc) cen = parseInt(mc[1], 10);
     if (key == null && window.PK_POZEMEK && window.PK_POZEMEK.k) {
       key = window.PK_POZEMEK.k;
       var lp = window.PK_POZEMEK.ll;
       if (!ml && lp && isFinite(lp[0])) ll = [lp[0], lp[1]];
+      if (vym == null && isFinite(window.PK_POZEMEK.v)) vym = window.PK_POZEMEK.v;
+      if (cen == null && isFinite(window.PK_POZEMEK.c)) cen = window.PK_POZEMEK.c;
     }
     if (ml) { try { var parts = decodeURIComponent(ml[1]).split(','); ll = [parseFloat(parts[0]), parseFloat(parts[1])]; } catch (e) {} }
 
@@ -1129,6 +1142,17 @@
        datech není vůbec) je to skoro vždy CIZÍ pozemek: jiná cena, jiná
        výměra, jiné místo. Volající to musí umět rozlišit. */
     if (cand.length === 1) return { d: cand[0], presne: true };
+    /* Víc nálezů na jeden klíč → rozhodne výměra, a při shodě i cena.
+       Vzdálenost od souřadnic (o řádek níž) tu nepomůže: souřadnice mají
+       ty pozemky po zaokrouhlení stejné, právě proto se klíč shoduje. */
+    if (cand.length > 1 && vym != null) {
+      var podleVymery = cand.filter(function (d) { return Math.round(d.area || 0) === Math.round(vym); });
+      if (podleVymery.length > 1 && cen != null) {
+        var presneji = podleVymery.filter(function (d) { return Math.round(d.price || 0) === Math.round(cen); });
+        if (presneji.length) podleVymery = presneji;
+      }
+      if (podleVymery.length) return { d: podleVymery[0], presne: true };
+    }
     if (cand.length > 1 && ll && isFinite(ll[0])) {
       cand.sort(function (a, b) { return kmBetween(ll[0], ll[1], a.lat, a.lng) - kmBetween(ll[0], ll[1], b.lat, b.lng); });
       return { d: cand[0], presne: true };
