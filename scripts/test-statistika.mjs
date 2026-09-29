@@ -142,7 +142,17 @@ pravda('stránka cen počítá jen z běžných nabídek k prodeji',
   for (const d of dlazdice) {
     const klic = Object.keys(nazev).find((k) => nazev[k] === d.druh);
     if (!klic) continue;
-    const vzorek = (podle[klic] || []).filter((x) => x >= dolniMez(podle[klic] || []));
+    /* Ořez SE POČÍTÁ JEN TAM, KDE HO POČÍTÁ I GENERÁTOR. Ten ho hledá
+       výhradně u zemědělské půdy a lesa (SE_ZKOUMA), protože jinde je
+       levná cena normální cena — hlídá to kontrola o kus výš. Kontrola
+       čísel ho ale aplikovala na VŠECHNY druhy, takže u zahrad porovnávala
+       stránku s jinak spočítaným číslem než tím, co stránka tiskne.
+       Dlouho to procházelo, protože ořez u zahrad nic neuřízl; jakmile se
+       data rozevřela (čtvrtiny 45 a 991 Kč/m²), uřízl levnou polovinu a
+       medián vyskočil ze 134 na 783 Kč/m². Padala zkouška, ne web. */
+    const SE_OREZAVA = ['Zemědělská půda', 'Lesní pozemek'];
+    const cely = podle[klic] || [];
+    const vzorek = SE_OREZAVA.indexOf(klic) === -1 ? cely : cely.filter((x) => x >= dolniMez(cely));
     if (vzorek.length < 30) continue;
     const spocteno = Math.round(med(vzorek));
     pravda(`„${d.druh}": vytištěný medián sedí s přepočtem z dat (${d.med} Kč/m²)`,
