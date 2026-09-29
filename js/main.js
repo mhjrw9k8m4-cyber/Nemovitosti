@@ -2070,8 +2070,22 @@
        značkám pointer-events) — odznak by tam na nic neukazoval a ještě
        by jich přes republiku bylo přes dvě stě. */
     if (dotsLocked) { lastSingles = vis; return; }
-    var v = shlukni(vis);
-    lastSingles = v.samotne;
+    /* A JEN Z VYBRANÉHO KRAJE. Tečky mimo něj jsou ztlumené schválně —
+       „nejdou rozkliknout, takže by jen přetahovaly pozornost" (viz
+       dotStyle). Odznaky se ale počítaly ze všech viditelných, takže
+       vybraný kraj zůstal z drobných teček, kdežto kolem něj svítila
+       čtyřicítka výrazných koleček s počty. Reflektor přesně naopak, než
+       má být — vidět na snímku průchodu Vysočinou. Shlukuje se proto jen
+       to, na co se dá klepnout; zbytek zůstává tečkami. */
+    var klikatelne = selectedKraj
+      ? vis.filter(function (d) { return d._gkraj === selectedKraj; })
+      : vis;
+    var v = shlukni(klikatelne);
+    /* Co je mimo kraj, zůstává mezi samotnými tečkami: hledání nejbližší
+       tečky si je stejně odfiltruje samo (stejná podmínka na _gkraj). */
+    lastSingles = selectedKraj
+      ? v.samotne.concat(vis.filter(function (d) { return d._gkraj !== selectedKraj; }))
+      : v.samotne;
     v.shluky.forEach(function (s) { shlukLayer.addLayer(vyrobShluk(s)); });
     if (!map.hasLayer(shlukLayer)) shlukLayer.addTo(map);
   }

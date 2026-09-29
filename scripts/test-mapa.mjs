@@ -190,6 +190,60 @@ je('první klepnutí neotevřelo inzerát, jen vybralo kraj', new URL(p.url()).p
 pravda('po prvním klepnutí je vybraný kraj', s.kraj.indexOf(vyber.kraj) === 0, `hlavička: „${s.kraj}"`);
 pravda('mapa se ke kraji přiblížila', s.zoom > zoom0, `${zoom0} → ${s.zoom}`);
 
+/* ---------- 1a. odznaky s počtem patří DO vybraného kraje ----------
+   Tečky mimo vybraný kraj se ztlumí schválně: nejdou rozkliknout, takže
+   by jen přetahovaly pozornost (viz dotStyle v js/main.js). Když přibylo
+   shlukování, počítalo se ze všech viditelných nabídek — a vybraný kraj
+   pak zůstal z drobných teček, kdežto kolem něj svítilo přes čtyřicet
+   výrazných koleček s počty. Reflektor přesně naopak, než má být. */
+{
+  const odznaky = await p.evaluate(() => {
+    const m = window.PK_MAPA;
+    const r = m.getContainer().getBoundingClientRect();
+    return [...document.querySelectorAll('.pk-shluk')].map((e) => {
+      const b2 = e.getBoundingClientRect();
+      if (!b2.width) return null;
+      const ll = m.containerPointToLatLng([b2.left + b2.width / 2 - r.left, b2.top + b2.height / 2 - r.top]);
+      return { lat: ll.lat, lng: ll.lng, n: +e.textContent || 0 };
+    }).filter(Boolean);
+  });
+  /* Pojistka: bez jediného odznaku by kontrola prošla, ať se shlukuje
+     jak chce. Ve vybraném kraji jich pár být musí — jinak se měří nic. */
+  pravda('ve vybraném kraji jsou nějaké odznaky s počtem (jinak zkouška nic neměří)',
+    odznaky.length > 0, 'žádný .pk-shluk — shlukování se nespustilo');
+  if (odznaky.length) {
+    /* Hranice krajů čte test z týchž dat jako web; „uvnitř" se posuzuje
+       stejným způsobem (bod v polygonu), ne podle názvu okresu. */
+    /* data/kraje.json není FeatureCollection, ale prostá mapa
+       „jméno kraje → geometrie". */
+    const geo = JSON.parse(readFileSync(new URL('../data/kraje.json', import.meta.url), 'utf8'));
+    const vRingu = (lng, lat, ring) => {
+      let uvnitr = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+        if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) uvnitr = !uvnitr;
+      }
+      return uvnitr;
+    };
+    const vGeom = (lng, lat, g) => {
+      const polys = g.type === 'MultiPolygon' ? g.coordinates : (g.type === 'Polygon' ? [g.coordinates] : []);
+      return polys.some((rings) => vRingu(lng, lat, rings[0]) && !rings.slice(1).some((h2) => vRingu(lng, lat, h2)));
+    };
+    /* Hlavička píše „Kraj Vysočina" i „Jihočeský kraj"; v datech je klíč
+       holý („Vysočina", „Jihočeský"). Porovnává se proto na obsažení. */
+    const holy = String(vyber.kraj || '').replace(/\bkraj\b/gi, '').replace(/\s+/g, ' ').trim();
+    const jmeno = Object.keys(geo).find((k) => holy && (k === holy || holy.indexOf(k) >= 0 || k.indexOf(holy) >= 0));
+    pravda('hranice vybraného kraje se v datech našla (jinak zkouška nic neměří)',
+      !!jmeno, `kraj „${vyber.kraj}" není v data/kraje.json (klíče: ${Object.keys(geo).slice(0, 4).join(', ')}…)`);
+    if (jmeno) {
+      const venku = odznaky.filter((o) => !vGeom(o.lng, o.lat, geo[jmeno]));
+      pravda('a žádný z nich neleží mimo vybraný kraj', venku.length === 0,
+        `${venku.length} z ${odznaky.length} odznaků je mimo kraj (např. ${venku.slice(0, 3)
+          .map((o) => o.n + '× na ' + o.lat.toFixed(2) + ',' + o.lng.toFixed(2)).join('; ')})`);
+    }
+  }
+}
+
 /* ---------- 1b. hlavička kraje ukazuje na seznam — a to číslo musí sedět ----------
    Na úrovni kraje se z mapy vybírat nedá: po výběru kraje je 55–57 % teček
    zakrytých jinou tečkou z víc než poloviny (měřeno na ostrých datech přes
