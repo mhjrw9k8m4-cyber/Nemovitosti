@@ -188,6 +188,32 @@
       // je pod trhem z podstaty věci — kdyby se počítala do průměru, srovnávali
       // bychom dražby samy se sebou a žádný rozdíl by nevyšel.
       if (d.type !== 'sale') return;
+      /* SPOLUVLASTNICKÉ PODÍLY V HLADINĚ ZŮSTÁVAJÍ — a stálo to za změření.
+       *
+       * Vypadá to jako chyba: u podílu je cena za zlomek, ale výměra celá,
+       * takže jeho Kč/m² není cena za metr země. Web to sám jinde říká —
+       * podílu se odhad ani percentil nedělá, protože „s celými pozemky se
+       * to srovnat nedá". Jako srovnávací vzorek se ale používá dál, a to
+       * zavání dvojím metrem. Je jich přitom dost: 516 z 1 861 nabídek na
+       * prodej (27,7 %) a jejich medián leží na 72 % hladiny celých
+       * pozemků (38 proti 53 Kč/m²).
+       *
+       * Změřeno metodou „vynech jeden" — hladina se postaví bez té nabídky,
+       * kterou zrovna odhadujeme, a odhad se porovná s její skutečnou
+       * nabídkovou cenou. Na téže množině 1 095 celých pozemků:
+       *
+       *     s podíly v hladině    medián chyby 30,1 %
+       *     bez podílů            medián chyby 31,3 %
+       *     bez podílů je odhad blíž u 350, DÁL u 415, stejně u 330
+       *     a 53 nabídek by o odhad přišlo úplně (vzorek klesne pod mez)
+       *
+       * Vynechat je tedy odhad ZHORŠÍ. Medián je proti jednotlivým
+       * pokřiveným číslům odolný, kdežto ztráta 28 % vzorku v okrese už
+       * odolná není. Hezká úvaha proti měření prohrála; nechávat se tu
+       * řídit úvahou by znamenalo zhoršit číslo, podle kterého se lidé
+       * rozhodují. (scripts/ tohle neměří, je to na 25 s výpočtu —
+       * kdo to bude chtít zopakovat, ať postaví model dvakrát a porovná
+       * chybu, ne dojem.) */
       // Ukládá se i výměra: cena za m² s velikostí pozemku klesá, takže
       // dvanáctihektarový pozemek nejde poměřovat mediánem postaveným
       // z tisícimetrových parcel — vyšel by vždycky jako trhák.
