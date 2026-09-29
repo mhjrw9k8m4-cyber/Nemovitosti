@@ -4070,6 +4070,14 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
      dává smysl i očím. */
   .hh-fakta .hl-sep{position:static; width:auto; height:auto; overflow:visible;
     clip:auto; clip-path:none; color:rgba(234,230,221,.45);}
+  /* ŠIPKA PATŘÍ K TEXTU, NE K OKRAJI KARTY. Byla přilepená vpravo
+     napevno, takže na řádkovém rozvržení stála 114 až 127 px za koncem
+     textu — třetina karty prázdná a šipka, která nevypadá, že k něčemu
+     patří. Na sloupcové kartě (monitor) to nevadí, tam je nad ní nadpis;
+     tady se z ní stane poslední článek řádku. */
+  .hh-fakta .hl-fact{padding-right:13px;}
+  .hh-fakta .hl-fact::after{position:static; transform:none; margin-left:2px;}
+  .hh-fakta .hl-fact .hl-v{flex:0 1 auto; min-width:0;}
 }
 
 /* =====================================================================
@@ -4110,7 +4118,15 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   .hh-legenda{display:none;}
   .hero-map .hero-head h1{font-size:25px; line-height:1.06; margin-bottom:10px;}
   .hh-fakta .hl-fact{padding:5px 10px; gap:6px;}
-  .hh-fakta .hl-fact .hl-k{display:none;}
+  /* POPISEK ZŮSTÁVÁ, JEN SE ZÚŽÍ. Dřív tu bylo display:none a z karty
+     zbylo „dnes · Teplice", „8 pozemků", „−59 % · Bílina" — údaje, které
+     bez popisku neříkají nic: osm pozemků čeho, minus padesát devět
+     procent proti čemu. Šetřilo se tím přitom místo, které chybí NAHOŘE
+     (hledání nesmí spadnout pod obzor), kdežto popisek stojí vedle
+     hodnoty, tedy na šířku — a té bylo na kartě naměřeno 179 až 193 px
+     volných. */
+  .hh-fakta .hl-fact .hl-k{display:block; flex:0 0 auto; max-width:104px;
+    font-size:9px; letter-spacing:.04em; line-height:1.15;}
   .hh-fakta .hl-fact .hl-v{font-size:12.5px;}
   .hh-fakta .hl-fact .hl-v b{font-size:15px;}
   .hero-live.hh-fakta{gap:5px;}
