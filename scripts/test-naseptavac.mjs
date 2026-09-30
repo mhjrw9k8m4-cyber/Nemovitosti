@@ -894,6 +894,115 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   await ctx.close();
 }
 
+/* --- PANEL FILTRŮ MUSÍ MÍT KOMPOZICI, NE BÝT ZEĎ -------------------
+ *
+ * Zpětná vazba: „vypadá to strašně slitě jako starý text na zdi." Dalo
+ * se to změřit a všechno sedělo:
+ *  · mezera mezi skupinami 11 px, mezera mezi pilulkami uvnitř řady
+ *    6 px — poměr 1,8, tedy skoro žádný rozdíl. Oko pak nepozná, kde
+ *    jedna skupina končí a druhá začíná.
+ *  · popisek skupiny měl TUTÉŽ barvu jako běžný text (rgb(21,35,27)),
+ *    takže „Druh pozemku" splývalo s pilulkami pod ním.
+ *  · dva souhrny (cena, výměra) měly 114 px a vedle nich leželo 81 px
+ *    prázdna; řádek akcí 194 px z 328 a vedle něj 134 px prázdna.
+ *  · skupina přepínačů neměla vůbec žádný popisek.
+ *  · „Končí do 14 dní" přišlo o zaškrtávací čtvereček: skript nastavoval
+ *    textContent celého tlačítka a smazal tím i <span class="mcp-v">.
+ *    Dva stejné přepínače, jeden s kolečkem a druhý bez.
+ *
+ * Hlídá se to na následku — na rozměrech a barvách, ne na zápisu v CSS.
+ */
+{
+  const { ctx, p } = await otevri(TELEFON);
+  await p.evaluate(() => { document.getElementById('ms-filters').open = true; });
+  await p.waitForTimeout(600);
+  const v = await p.evaluate(() => {
+    const ov = document.querySelector('.map-controls');
+    if (!ov) return null;
+    const deti = [...ov.children].filter((e) => e.getBoundingClientRect().height > 2);
+    /* VIZUÁLNÍ mezera, ne mezera mezi rámečky: oddělovač si vzduch
+       přidává odsazením UVNITŘ bloku, takže rozdíl bottom→top by zůstal
+       stejný, i kdyby vzduchu přibylo. */
+    const obsah = (e) => {
+      let t = Infinity, d = -Infinity;
+      e.querySelectorAll('*').forEach((x) => {
+        const r = x.getBoundingClientRect();
+        if (r.height < 2 || r.width < 2) return;
+        t = Math.min(t, r.top); d = Math.max(d, r.bottom);
+      });
+      const r = e.getBoundingClientRect();
+      return { t: isFinite(t) ? t : r.top, d: isFinite(d) ? d : r.bottom };
+    };
+    const mezery = [];
+    for (let i = 1; i < deti.length; i++) mezery.push(Math.round(obsah(deti[i]).t - obsah(deti[i - 1]).d));
+    const rada = document.querySelector('#mc-druhy');
+    const uvnitr = rada ? Math.round(parseFloat(getComputedStyle(rada).gap) || 0) : 0;
+    const sirka = Math.round(ov.getBoundingClientRect().width);
+    const lev = ov.getBoundingClientRect().left;
+    const prazdnoVpravo = (sel) => {
+      const e = ov.querySelector(sel);
+      if (!e) return null;
+      return Math.round(sirka - (e.getBoundingClientRect().right - lev));
+    };
+    const cap = ov.querySelector('.mc-cap');
+    /* Skupina je pojmenovaná i tehdy, když název nesou její prvky samy:
+       souhrny mají „CENA" a „VÝMĚRA" přímo v tlačítku (.mcs-k), a to
+       týmž stylem jako .mc-cap. Dát nad ně ještě společné návěští by
+       znamenalo napsat totéž dvakrát. Řádek akcí název nepotřebuje —
+       „Zobrazit N pozemků" je sám o sobě věta. */
+    const bezPopisku = deti.filter((e) => !e.querySelector('.mc-cap')
+      && !e.querySelector('.mcs-k')
+      && !e.classList.contains('mcf-akce')).map((e) => String(e.className).split(' ')[0]);
+    const prepinace = [...ov.querySelectorAll('.mc-prep')].map((e) => ({
+      text: (e.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 20),
+      ctverecek: (() => { const q = e.querySelector('.mcp-v'); if (!q) return false;
+        const r = q.getBoundingClientRect(); return r.width > 4 && r.height > 4; })(),
+    }));
+    return { mezery, uvnitr, sirka, bezPopisku, prepinace,
+      capBarva: cap ? getComputedStyle(cap).color : null,
+      capVerzalky: cap ? getComputedStyle(cap).textTransform : null,
+      textBarva: getComputedStyle(ov).color,
+      prazdnoUSouhrnu: prazdnoVpravo('.mc-shrnuti'),
+      prazdnoUAkci: prazdnoVpravo('.mcf-akce') };
+  });
+  pravda('panel filtrů se dá změřit', !!v, '.map-controls se nenašlo');
+  if (v) {
+    /* Pojistky, aby kontroly níž nemohly projít naprázdno. */
+    pravda(`panel má víc skupin pod sebou (${v.mezery.length + 1})`, v.mezery.length >= 3,
+      'skupin je málo — rytmus se nedá měřit');
+    pravda(`pilulky uvnitř řady mají mezeru (${v.uvnitr} px)`, v.uvnitr > 0,
+      'gap řady je 0 — poměr níž by se nedal spočítat');
+    /* RYTMUS. Mezera mezi skupinami musí být zřetelně větší než mezera
+       uvnitř skupiny, jinak splynou v jednu zeď. Dvojnásobek je mez, pod
+       kterou to vypadalo „slitě" (naměřeno 11:6 = 1,8). */
+    const nejmensi = Math.min.apply(null, v.mezery);
+    pravda(`skupiny jsou od sebe dál než pilulky uvnitř nich (nejmenší ${nejmensi} px proti ${v.uvnitr} px)`,
+      nejmensi >= v.uvnitr * 2, `poměr ${(nejmensi / v.uvnitr).toFixed(1)} — skupiny splývají`);
+    /* NÁVĚŠTÍ SKUPINY se musí lišit od běžného textu, jinak je to jen
+       další řádek. */
+    pravda('popisek skupiny není stejný jako běžný text', v.capBarva !== v.textBarva,
+      `popisek i text mají ${v.capBarva}`);
+    pravda('a je psaný verzálkami', v.capVerzalky === 'uppercase', `text-transform: ${v.capVerzalky}`);
+    pravda('každá skupina v panelu má svůj název', v.bezPopisku.length === 0,
+      `bez popisku: ${v.bezPopisku.join(', ')}`);
+    /* MRTVÉ MÍSTO. Souhrny i hlavní tlačítko se držely v jednom sloupci
+       mřížky a vedle nich zůstávalo prázdno. */
+    pravda(`souhrny ceny a výměry jdou přes celou šířku (vpravo zbývá ${v.prazdnoUSouhrnu} px)`,
+      v.prazdnoUSouhrnu !== null && v.prazdnoUSouhrnu < 24,
+      `vpravo od nich leží ${v.prazdnoUSouhrnu} px prázdna z ${v.sirka} px`);
+    pravda(`a hlavní tlačítko taky (vpravo zbývá ${v.prazdnoUAkci} px)`,
+      v.prazdnoUAkci !== null && v.prazdnoUAkci < 24,
+      `vpravo od něj leží ${v.prazdnoUAkci} px prázdna z ${v.sirka} px`);
+    /* ZAŠKRTÁVÁTKO U OBOU PŘEPÍNAČŮ. */
+    pravda(`přepínače se v panelu našly (${v.prepinace.length})`, v.prepinace.length >= 2,
+      'kontrola níž by nic neměřila');
+    const bezCtverecku = v.prepinace.filter((x) => !x.ctverecek).map((x) => x.text);
+    pravda('a každý má svůj zaškrtávací čtvereček', bezCtverecku.length === 0,
+      `bez čtverečku: ${bezCtverecku.join(', ')}`);
+  }
+  await ctx.close();
+}
+
 await ctx.close();
 await prohlizec.close();
 console.log('\nNašeptávač obcí, oprava překlepu a výběr ceny/výměry');

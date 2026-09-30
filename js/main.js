@@ -5059,7 +5059,15 @@
   /* Popisek tlačítka se píše z téže konstanty jako filtr. V HTML zůstává
      výchozí text kvůli tomu, kdo si stránku otevře bez skriptu — že se obě
      čísla shodují, hlídá scripts/test-okoli.mjs. */
-  if (urgentEl) urgentEl.textContent = 'Končí do ' + DNI_KONCI + ' dní';
+  /* JEN TEXT, NE CELÝ OBSAH. textContent na tlačítku smazal i zaškrtávací
+     čtvereček <span class="mcp-v"> — „Končí do 14 dní" pak jako jediný
+     přepínač žádný neměl, kdežto „Pod obvyklou cenou" ano. Naměřeno
+     v prohlížeči: maPuntik false proti true. Text má proto vlastní obal. */
+  if (urgentEl) {
+    var urgT = urgentEl.querySelector('.mcp-t');
+    if (urgT) urgT.textContent = 'Končí do ' + DNI_KONCI + ' dní';
+    else urgentEl.textContent = 'Končí do ' + DNI_KONCI + ' dní';
+  }
   if (urgentEl) urgentEl.addEventListener('click', function () { urgentOnly = !urgentOnly; urgentEl.classList.toggle('on', urgentOnly); urgentEl.setAttribute('aria-pressed', String(urgentOnly)); renderList(); });
   if (favEl) favEl.addEventListener('click', function () { favOnly = !favOnly; refreshFavBtn(); renderList(); });
   if (perm2El) perm2El.addEventListener('change', function () { maxPerM2 = parseInt(perm2El.value, 10) || 0; renderList(); });

@@ -105,7 +105,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=5d81d3b6">
+  <link rel="stylesheet" href="css/styles.css?v=be9a983d">
 </head>
 <body>
 
@@ -348,9 +348,17 @@
                    pozemku, ale můj vlastní výběr. Obojí je teď nad
                    seznamem; v panelu zbyly jen věci, které opravdu
                    ubírají nabídky. -->
-              <div class="mc-toggles">
-                <button type="button" class="mc-prep" id="map-urgent" aria-pressed="false"><span class="mcp-v" aria-hidden="true"></span>Končí do 14 dní</button>
-                <button type="button" class="mc-prep" id="map-levne" aria-pressed="false"><span class="mcp-v" aria-hidden="true"></span>Pod obvyklou cenou</button>
+              <!-- SKUPINA MÁ MÍT JMÉNO. Tyhle dva přepínače stály na konci
+                   panelu bez popisku, jako dva další štítky v řadě za
+                   Elektřinou a Vodou — a přitom neříkají, co u pozemku je,
+                   ale proč je zajímavý teď. Bez názvu skupiny se panel četl
+                   jako jeden dlouhý seznam. -->
+              <div class="mc-field mc-prilezitosti">
+                <span class="mc-cap">Příležitosti</span>
+                <div class="mc-toggles">
+                  <button type="button" class="mc-prep" id="map-urgent" aria-pressed="false"><span class="mcp-v" aria-hidden="true"></span><span class="mcp-t">Končí do 14 dní</span></button>
+                  <button type="button" class="mc-prep" id="map-levne" aria-pressed="false"><span class="mcp-v" aria-hidden="true"></span><span class="mcp-t">Pod obvyklou cenou</span></button>
+                </div>
               </div>
               <!-- KONEC PANELU. Filtry se sice použijí hned, jenže kdo je
                    naklikal, zůstal stát nahoře nad zavřeným panelem a nic
@@ -650,7 +658,7 @@
 <script src="js/vybaveni.js?v=cae1f79b" defer></script>
 <script src="js/dotaz.js?v=341edd4b" defer></script>
 <script src="js/hledani.js?v=9b51ed6d" defer></script>
-<script src="js/main.js?v=1a0ca5ae" defer></script>
+<script src="js/main.js?v=d118d922" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

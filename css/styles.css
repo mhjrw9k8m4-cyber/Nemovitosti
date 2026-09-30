@@ -1144,11 +1144,19 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 @media (max-width:560px){
   .map-app{border-left:0; border-right:0; border-radius:0;}
   .map-controls-panel{padding:10px;}
-  .map-controls{padding:12px 10px 13px; gap:11px 9px;}
+  /* Menší základní mezera: vzduch mezi skupinami si přidává oddělovač
+     (padding-top u .map-controls > * + *), takže by se jinak sčítaly. */
+  .map-controls{padding:12px 10px 13px; gap:5px 9px;}
 }
-.mc-field{display:flex; flex-direction:column; gap:5px; min-width:0;}
+.mc-field{display:flex; flex-direction:column; gap:7px; min-width:0;}
 /* Popisek pole. Musí být čitelný sám o sobě — ne jen tušený odstín pozadí. */
-.mc-cap{font-size:11.5px; font-weight:700; color:var(--text-ondark); letter-spacing:0.02em;}
+/* NÁVĚŠTÍ SKUPINY, ne další řádek textu. Popisek měl 11,5px/700 a
+   TUTÉŽ barvu jako běžný text (rgb(21,35,27)), takže „Druh pozemku"
+   splývalo s pilulkami pod ním — panel působil jako jedna slitá zeď.
+   Recept je opsaný z .mcs-k o kus níž (verzálky, prostrkání, tlumená
+   barva): týž panel, týž jazyk, jen se konečně použije i tady. */
+.mc-cap{font-size:11px; font-weight:700; color:var(--muted);
+  letter-spacing:.05em; text-transform:uppercase;}
 /* Cena a výměra jako rozsah od–do. Dřív to byly rozbalovátka s pevnými
    stupni a jen jedním směrem („cena DO", „výměra OD"), takže se nedalo
    zadat „od 200 do 500 tisíc" ani „do jednoho hektaru" — a nejnižší stupeň
@@ -1320,6 +1328,27 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   /* Rozbalovátka s dlouhými popisky („Všechny druhy pozemků") se ve dvou
      sloupcích ořezávala na „Všechny dru…". Přes celou šířku se vejdou. */
   .map-controls .mc-field{grid-column:1 / -1;}
+  /* Souhrny ceny a výměry taky. Držely se v jednom sloupci mřížky, takže
+     dvě tlačítka po 114 px stála vlevo a vpravo po nich zbývalo 81 px
+     prázdna (z 328 px panelu). */
+  .map-controls .mc-shrnuti{grid-column:1 / -1;}
+  /* ROZDĚLIT SKUPINY. Mezera mezi skupinami byla 11 px, mezera mezi
+     pilulkami uvnitř řady 6 px — poměr 1,8, tedy skoro žádný rozdíl.
+     Oko pak nepozná, kde jedna skupina končí a druhá začíná, a ze
+     čtyř skupin je jedna zeď. Vlásková linka a víc vzduchu udělají
+     kompozici, aniž by přibyl další rámeček: panel je na to už tak
+     dost hustý. */
+  .map-controls > * + *{position:relative; padding-top:17px;}
+  .map-controls > * + *::before{content:""; position:absolute; left:0; right:0; top:0;
+    height:1px; background:var(--line);}
+  /* Poslední řádek jsou akce („Zobrazit N pozemků"), ty mají vlastní
+     odsazení a druhá linka by tam byla navíc. */
+  /* Řádek akcí taky přes celou šířku. Držel se v jednom sloupci mřížky,
+     takže hlavní tlačítko „Zobrazit N pozemků" mělo 194 px z 328 a vedle
+     něj leželo 134 px prázdna — a jeho vlastní horní linka byla kvůli
+     tomu kratší než ostatní oddělovače. */
+  .map-controls > .mcf-akce{grid-column:1 / -1; padding-top:6px;}
+  .map-controls > .mcf-akce::before{display:none;}
 }
 
 .mc-toggles{grid-column:1 / -1; display:flex; gap:8px; flex-wrap:wrap;}
