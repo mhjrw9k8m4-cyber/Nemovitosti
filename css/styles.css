@@ -1787,6 +1787,10 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    Značky mají v Leafletu vlastní pointer-events, proto je nutné je přebít napřímo. */
 .kraj-lock .leaflet-marker-pane{pointer-events:none;}
 .kraj-lock .leaflet-marker-icon, .kraj-lock .leaflet-marker-icon *{pointer-events:none !important;}
+/* Značky krajů jsou z toho zámku vyňaté — ony JSOU tím, na co se na
+   přehledu klepe. Zámek vypíná tečky, aby klepnutí do mapy vybralo kraj;
+   tahle značka kraj vybírá taky, jen na ni jde zamířit prstem. */
+.kraj-lock .pk-shluk-kraj, .kraj-lock .pk-shluk-kraj *{pointer-events:auto !important;}
 /* Nápověda „vyberte kraj" (fáze 1) */
 .kraj-hint{position:absolute; top:12px; left:12px; z-index:600; display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.94); border:1px solid rgba(31,81,56,0.2); color:#1B2B22; font-size:12.5px; font-weight:600; padding:8px 13px; border-radius:var(--r-lg); box-shadow:var(--shadow); backdrop-filter:blur(4px); pointer-events:none; max-width:calc(100% - 118px);}
 .kraj-hint[hidden]{display:none;}

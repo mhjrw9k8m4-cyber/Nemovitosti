@@ -2197,6 +2197,89 @@
     return mk;
   }
 
+  /* Značka kraje na přehledu republiky. Vypadá jako shluk (je to táž věc:
+     „tolik nabídek je tady"), ale klepnutí nezoomuje o kus — vybere kraj,
+     protože přesně to dělá klepnutí do mapy na přehledu. Kdyby jen
+     přiblížila, musel by člověk kraj vybírat ještě jednou. */
+  /* Na úzké mapě (telefon) je republika široká sotva 300 px a čtrnáct
+     koleček po 42 px je přes sebe. Kolečko se proto zmenší — ale plocha
+     na chytání zůstává 48 px, ta se zmenšit nesmí. */
+  function krajUzka() { try { return map.getSize().x < 520; } catch (e) { return false; } }
+  function krajVelikost(n) {
+    var z = n >= 200 ? 42 : (n >= 60 ? 38 : 33);
+    return krajUzka() ? Math.round(z * 0.82) : z;
+  }
+
+  /* ROZESTRČENÍ ZNAČEK. Čtrnáct koleček na mapě široké 350 px leželo přes
+     sebe: naměřeno 7 dvojic, u kterých se kolečka překrývala, a jedno bylo
+     zakryté celé (1 089 px² = celá jeho plocha). Prst pak mířil na jiný
+     kraj, než na který ukazoval.
+     Značky se proto v pixelech rozestrčí, ale jen o kus: posun je shora
+     omezený, aby kolečko zůstalo u svého kraje. Dvě kolečka o tři pixely
+     vedle sebe jsou lepší než jedno přes druhé — ale kolečko Ústeckého
+     kraje nad Prahou by byla lež. */
+  var KRAJ_POSUN_MAX = 26;
+  function rozestrcKraje(zn) {
+    if (zn.length < 2) return;
+    var b = zn.map(function (k) {
+      var p = map.latLngToContainerPoint([k.lat, k.lng]);
+      return { x: p.x, y: p.y, x0: p.x, y0: p.y, r: krajVelikost(k.cleny.length) / 2 + 2 };
+    });
+    for (var it = 0; it < 24; it++) {
+      var hnulo = false;
+      for (var i = 0; i < b.length; i++) {
+        for (var j = i + 1; j < b.length; j++) {
+          var dx = b[j].x - b[i].x, dy = b[j].y - b[i].y;
+          var d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+          var min = b[i].r + b[j].r;
+          if (d >= min) continue;
+          var posun = (min - d) / 2, ux = dx / d, uy = dy / d;
+          b[i].x -= ux * posun; b[i].y -= uy * posun;
+          b[j].x += ux * posun; b[j].y += uy * posun;
+          hnulo = true;
+        }
+      }
+      for (var m2 = 0; m2 < b.length; m2++) {
+        var ex = b[m2].x - b[m2].x0, ey = b[m2].y - b[m2].y0;
+        var ed = Math.sqrt(ex * ex + ey * ey);
+        if (ed > KRAJ_POSUN_MAX) {
+          b[m2].x = b[m2].x0 + ex / ed * KRAJ_POSUN_MAX;
+          b[m2].y = b[m2].y0 + ey / ed * KRAJ_POSUN_MAX;
+        }
+      }
+      if (!hnulo) break;
+    }
+    for (var q = 0; q < zn.length; q++) {
+      var ll = map.containerPointToLatLng(L.point(b[q].x, b[q].y));
+      zn[q].lat = ll.lat; zn[q].lng = ll.lng;
+    }
+  }
+
+  function vyrobKrajovyShluk(nazev, cleny, lat, lng) {
+    var n = cleny.length;
+    var velikost = krajVelikost(n);
+    var plocha = Math.max(48, velikost);
+    var pismo = krajUzka() ? 12 : 13;
+    var popis = nazev + ' — ' + n + ' ' + plPozemek(n) + ', vybrat kraj';
+    var ikona = L.divIcon({
+      className: 'pk-shluk-obal pk-shluk-kraj',
+      html: '<span class="pk-shluk" style="--sh:' + shlukBarva(cleny) + '; width:' + velikost
+        + 'px; height:' + velikost + 'px; font-size:' + pismo + 'px"><b>' + n + '</b></span>',
+      iconSize: [plocha, plocha], iconAnchor: [plocha / 2, plocha / 2]
+    });
+    var mk = L.marker([lat, lng], { icon: ikona, keyboard: true, title: popis, alt: popis,
+      riseOnHover: true, zIndexOffset: 400 });
+    function vyber(e) {
+      if (e && e.originalEvent) L.DomEvent.stop(e.originalEvent);
+      selectKraj(nazev);
+    }
+    mk.on('click', vyber);
+    mk.on('keypress', function (e) {
+      if (e.originalEvent && (e.originalEvent.key === 'Enter' || e.originalEvent.key === ' ')) vyber(e);
+    });
+    return mk;
+  }
+
   /* Klepnutí na shluk mapu PŘIBLÍŽÍ NA JEHO ČLENY, ne o pevný počet
      stupňů: shluk může být dvě tečky vedle sebe i dvacet roztažených přes
      půl okresu a jedno pevné přiblížení by sedělo jen jednomu z toho.
@@ -2230,11 +2313,49 @@
     shlukLayer.clearLayers();
     // Tečky VŽDYCKY všechny: hustota, zeměpis i najetí myší zůstávají.
     vis.forEach(function (d) { dotLayer.addLayer(markers[d._id]); });
-    /* Odznaky jen tam, kde jsou tečky vůbec klikací. Dokud není vybraný
-       kraj, klepnutí do mapy vybírá KRAJ (třída .kraj-lock vypíná
-       značkám pointer-events) — odznak by tam na nic neukazoval a ještě
-       by jich přes republiku bylo přes dvě stě. */
-    if (dotsLocked) { lastSingles = vis; lastShluky = []; lastCleny = []; return; }
+    /* PŘEHLED CELÉ REPUBLIKY: JEDNA ZNAČKA NA KRAJ.
+       Dřív se tu prostě skončilo — při pohledu na celou ČR se
+       neshlukovalo vůbec nic, protože „odznak by na nic neukazoval,
+       klepnutí stejně vybírá kraj". Výsledek je vidět na snímku od
+       člověka: 1 996 teček přes sebe, z republiky jedna modrá kaše
+       a nic, na co se dá zamířit. Naměřeno na telefonu (mapa 350×625,
+       zoom 6): všech 1 996 teček na obrazovce a 1 145 z nich má souseda
+       blíž než 8 px.
+       Shlukovat je zeměpisně by tu smysl nedávalo: při tomhle zoomu
+       vyjde odznak se 586 členy někde mezi obcemi a neříká nic. Otázka
+       u přehledu republiky totiž není „co je tahle tečka", ale „kde mám
+       hledat" — a odpověď na ni je kraj. Klepnutí do mapy tady vybírá
+       kraj, takže značka nedělá nic navíc: dělá TOTÉŽ, jen je vidět,
+       nese počet a trefí se do ní prst.
+       Tečky zůstávají všechny: hustota a zeměpis jsou to, proč mapa je. */
+    if (dotsLocked) {
+      lastSingles = vis; lastShluky = []; lastCleny = [];
+      var podleKraje = {};
+      for (var ki = 0; ki < vis.length; ki++) {
+        var kd = vis[ki], kk = kd._gkraj || krajOf(kd);
+        if (!kk) continue;
+        if (!podleKraje[kk]) podleKraje[kk] = [];
+        podleKraje[kk].push(kd);
+      }
+      /* Těžiště NABÍDEK, ne kraje. Střed kraje umí padnout tam, kde žádné
+         nejsou (Středočeský má uprostřed Prahu), a značka by pak
+         ukazovala na prázdno. */
+      var znacky = Object.keys(podleKraje).map(function (kn) {
+        var cl = podleKraje[kn], sl = 0, sn = 0;
+        for (var i = 0; i < cl.length; i++) { sl += cl[i].lat; sn += cl[i].lng; }
+        return { kraj: kn, cleny: cl, lat: sl / cl.length, lng: sn / cl.length };
+      });
+      rozestrcKraje(znacky);
+      znacky.forEach(function (z) {
+        shlukLayer.addLayer(vyrobKrajovyShluk(z.kraj, z.cleny, z.lat, z.lng));
+      });
+      if (!map.hasLayer(shlukLayer)) shlukLayer.addTo(map);
+      try {
+        window.PK_SHLUKY = { krajove: true, shluky: Object.keys(podleKraje).map(function (kn) {
+          return { kraj: kn, n: podleKraje[kn].length }; }), samotne: [] };
+      } catch (e) {}
+      return;
+    }
     /* Průhled pro zkoušky. Kolik odznaků vzniklo a co do nich patří, se
        z DOM poznat nedá: členové shluku leží až na okraji okruhu, tedy
        daleko za kolečkem odznaku. Sonda, která si to počítala z poloh,

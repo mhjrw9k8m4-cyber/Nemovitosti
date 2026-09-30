@@ -153,6 +153,89 @@ let s = await stav();
 pravda('mapa se načetla i s tečkami', s.tecky.length > 5, `teček: ${s.tecky.length}`);
 je('na přehledu není vybraný žádný kraj', s.kraj, '');
 
+/* ---------- 1z. přehled republiky: jedna značka na kraj ----------
+ *
+ * Při pohledu na celou ČR se dřív neshlukovalo vůbec nic — kód se na
+ * zamčených tečkách rovnou vrátil. Na telefonu z toho bylo 1 996 teček
+ * přes sebe (1 145 z nich mělo souseda blíž než 8 px) a jediné, na co se
+ * dalo zamířit, byl obrys kraje kdesi pod nimi. Snímek od člověka:
+ * „zhlukování a ovladatelnost mapy".
+ * Hlídají se tři věci, a na následku, ne na zápisu v kódu:
+ *   · každá nabídka je v nějaké značce (součet sedí s počtem teček),
+ *   · kolečka si neleží přes sebe,
+ *   · klepnutí doprostřed kolečka trefí SVOU značku — chytací plochy
+ *     (48 px) se překrývat smějí, ale kdyby nahoře ležela cizí, vybral
+ *     by se jiný kraj, než na který člověk mířil.
+ */
+{
+  const z = await p.evaluate(() => {
+    const zn = [...document.querySelectorAll('.pk-shluk-kraj')];
+    const kolecka = zn.map((e) => (e.querySelector('.pk-shluk') || e).getBoundingClientRect());
+    let prekryv = 0;
+    for (let i = 0; i < kolecka.length; i++) {
+      for (let j = i + 1; j < kolecka.length; j++) {
+        const ox = Math.max(0, Math.min(kolecka[i].right, kolecka[j].right) - Math.max(kolecka[i].left, kolecka[j].left));
+        const oy = Math.max(0, Math.min(kolecka[i].bottom, kolecka[j].bottom) - Math.max(kolecka[i].top, kolecka[j].top));
+        if (ox * oy > 0) prekryv++;
+      }
+    }
+    let cizi = 0;
+    zn.forEach((e, i) => {
+      const r = kolecka[i];
+      const pod = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      const cil = pod && pod.closest ? pod.closest('.pk-shluk-kraj') : null;
+      if (cil !== e) cizi++;
+    });
+    const tecek = (() => { let n = 0; window.PK_MAPA.eachLayer((l) => { if (l._d) n++; }); return n; })();
+    return { znacek: zn.length, soucet: zn.reduce((a, e) => a + (parseInt(e.textContent, 10) || 0), 0),
+      tecek: tecek, prekryv: prekryv, cizi: cizi,
+      nejmensiPlocha: Math.min(...zn.map((e) => Math.min(e.getBoundingClientRect().width, e.getBoundingClientRect().height))),
+      popis: (zn[0] && zn[0].getAttribute('title')) || '' };
+  });
+  /* Pojistka: bez jediné značky by kontroly níž prošly, ať se děje cokoli. */
+  pravda(`na přehledu je značka s počtem u každého kraje (${z.znacek})`,
+    z.znacek >= 10, `značek ${z.znacek}`);
+  pravda('a nese jméno kraje i počet (jinak je to jen kolečko s číslem)',
+    /—.*pozemk/.test(z.popis), `popis: „${z.popis}"`);
+  pravda(`žádná nabídka nezůstala mimo značky (${z.soucet} z ${z.tecek})`,
+    z.soucet === z.tecek, `ve značkách ${z.soucet}, teček na mapě ${z.tecek}`);
+  pravda('kolečka značek si neleží přes sebe', z.prekryv === 0, `${z.prekryv} dvojic přes sebe`);
+  pravda('klepnutí doprostřed kolečka trefí svou značku', z.cizi === 0,
+    `${z.cizi} značek má uprostřed cizí`);
+  pravda('a plocha na chytání je aspoň 44 px', z.nejmensiPlocha >= 44, `nejmenší ${z.nejmensiPlocha} px`);
+
+  /* A klepnutí na značku musí kraj VYBRAT, ne jen přiblížit.
+     Přes podmínku: když značky nejsou (a to je vada, kterou hlásí
+     kontroly výš), tohle by spadlo na výjimku a zkouška by neřekla nic
+     — ani to, co už změřila. */
+  const klepnuto = await p.evaluate(() => {
+    const e = document.querySelector('.pk-shluk-kraj');
+    if (!e) return false;
+    e.click(); return true;
+  });
+  pravda('je na co klepnout (jinak zkouška nic neměří)', klepnuto, 'žádná .pk-shluk-kraj');
+  await p.waitForTimeout(1400);
+  const po = await p.evaluate(() => {
+    const h = document.getElementById('kraj-head');
+    return { kraj: (h && !h.hidden) ? (h.textContent || '').trim() : '',
+      znacekKraju: document.querySelectorAll('.pk-shluk-kraj').length,
+      zamek: document.getElementById('leaflet-map').classList.contains('kraj-lock') };
+  });
+  pravda('klepnutí na značku vybere kraj', po.kraj.length > 0 && po.kraj.indexOf('kraj') > 0,
+    `hlavička: „${po.kraj}"`);
+  pravda('a tečky se tím odemknou (dají se rozklikávat)', po.zamek === false, 'mapa zůstala zamčená');
+  pravda('značky krajů ustoupí shlukům uvnitř kraje', po.znacekKraju === 0,
+    `zůstalo ${po.znacekKraju} značek kraje`);
+
+  // „Celá ČR" musí přehled vrátit i se značkami.
+  await p.evaluate(() => { const b = document.getElementById('map-reset'); if (b) b.click(); });
+  await p.waitForTimeout(1800);
+  const zpet = await p.evaluate(() => document.querySelectorAll('.pk-shluk-kraj').length);
+  pravda('„Celá ČR" přehled i se značkami vrátí', zpet === z.znacek, `${zpet} místo ${z.znacek}`);
+  await priprav();
+  s = await stav();
+}
+
 // Zkoušíme to v NEJŘIDŠÍM kraji (mimo Prahu, ta je na celostátním pohledu
 // jen tečka). V hustém kraji leží tečky tak blízko sebe, že je klepnutí vždy
 // v toleranci a na zálohu by nedošlo — test by pak nic neověřil.
@@ -174,11 +257,28 @@ const vyber = await p.evaluate(() => {
     if (y < Math.max(r.top, hl) + 24 || y > r.bottom - 24 || x < r.left + 14 || x > r.right - 14) continue;
     if (document.elementFromPoint(x, y) === nej.l._path) return { x, y, kraj: nej.k, n: nej.n };
   }
+  /* Volná plocha kraje nemusí existovat: na přehledu leží na každém kraji
+     značka s počtem a na malém kraji zakryje skoro celé jeho okno —
+     Karlovarský má na telefonu rámeček 55×40 px a kolečko 33 px.
+     Není to vada webu, značka vybírá TÝŽ kraj (hlídá oddíl 1z). Jiný kraj
+     si tu ale vzít nemůžeme: následující kontroly potřebují ten NEJŘIDŠÍ,
+     jinak leží každý bod v toleranci trefy a neměří nic. Klepne se tedy
+     na značku toho kraje. */
+  const zn = [...document.querySelectorAll('.pk-shluk-kraj')]
+    .find((e) => (e.getAttribute('title') || '').indexOf(nej.k) === 0);
+  if (zn) {
+    const zb = zn.getBoundingClientRect();
+    return { x: Math.round(zb.left + zb.width / 2), y: Math.round(zb.top + zb.height / 2),
+      kraj: nej.k, n: nej.n, pres: 'značku kraje' };
+  }
   const q = document.elementFromPoint(Math.round(bb.left + bb.width / 2), Math.round(bb.top + bb.height / 2));
-  return { chyba: 'na kraji ' + nej.k + ' nešlo trefit jeho plochu', bb: { l: bb.left, t: bb.top, w: bb.width, h: bb.height },
+  return { chyba: 'na kraji ' + nej.k + ' nešlo trefit jeho plochu ani značku',
+    bb: { l: bb.left, t: bb.top, w: bb.width, h: bb.height },
     hl, ramec: { l: r.left, t: r.top, p: r.right, d: r.bottom }, vrch: q ? q.tagName + '.' + (q.getAttribute('class') || '') : 'nic' };
 });
-pravda('našel se kraj, ve kterém se dá zkoušet klepání', !!(vyber && vyber.x != null), JSON.stringify(vyber));
+pravda('našel se kraj, ve kterém se dá zkoušet klepání'
+  + (vyber && vyber.pres ? ' (přes ' + vyber.pres + ')' : ''),
+  !!(vyber && vyber.x != null), JSON.stringify(vyber));
 if (!vyber || vyber.x == null) { console.log(zpravy.join('\n')); await prohlizec.close(); process.exit(1); }
 
 const zoom0 = s.zoom;
