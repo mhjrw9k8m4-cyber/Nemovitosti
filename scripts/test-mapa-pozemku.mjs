@@ -1178,6 +1178,81 @@ if (DRAZBA) {
   await ctx.close();
 }
 
+/* --- N) DVOJČATA: stránka musí i PO NAČTENÍ DAT nést svoje ------------
+ *
+ * Pozemky, které sdílejí klíč (obec, parcela, okres, souřadnice na tři
+ * desetinná místa), mají každý vlastní stránku. Statická kostra v ní je
+ * správná vždycky — vypisuje ji generátor z týchž dat. Jenže skript ji
+ * po načtení PŘEPÍŠE: hledá si v datech sám sebe a bez rozlišení podle
+ * výměry a ceny by vzal prostě první nález, tedy soused. Na stránce by
+ * pak stála cizí cena i cizí výměra a poznalo by se to jen tady —
+ * v prohlížeči, po přepsání. Statická kontrola (test-stranky-pozemku)
+ * čte kostru, tedy právě to, co je v pořádku i s rozbitým skriptem.
+ *
+ * Měří se na dvojicích s největším rozdílem, ne na všech: jde o třídu
+ * chyby, ne o výčet. Ověřeno sabotáží (vyřadit rozlišení podle výměry
+ * v js/pozemek.js): 12 ze 47 stránek začne ukazovat cizí údaje.
+ */
+{
+  const gen = await import('./generate-parcel-pages.mjs');
+  const PKHd = (await import('node:module')).createRequire(import.meta.url)('../js/hlidani-logika.js');
+  const vse = JSON.parse(readFileSync('data/opportunities.json', 'utf8')).opportunities || [];
+  const ukazane = PKHd.bezDuplicit(vse.filter((x) => isFinite(x.lat) && isFinite(x.lng) && x.place && x.okres));
+  const kl = (x) => [x.place || '', x.parcel || '', x.okres || '', x.lat.toFixed(3), x.lng.toFixed(3)].join('|');
+  const podle = new Map();
+  for (const x of ukazane) { const k = kl(x); if (!podle.has(k)) podle.set(k, []); podle.get(k).push(x); }
+  /* Berou se jen dvojice, kde se liší OBOJÍ — cena i výměra. U dvou
+     stejně velkých parcel od jednoho prodejce (Stínava, 7 994 m² za 260
+     a 270 tisíc) je shodná výměra na obou stránkách správně a hlásit ji
+     jako cizí údaj by byla chyba zkoušky. */
+  const dvojice = [...podle.values()]
+    .map((cleny) => [...new Map(cleny.map((x) => [(x.price || 0) + '|' + (x.area || 0), x])).values()]
+      .sort((a, b) => (a.area || 0) - (b.area || 0) || (a.price || 0) - (b.price || 0)
+        || String(a.url || '').localeCompare(String(b.url || ''))))
+    .filter((v) => v.length > 1
+      && new Set(v.map((x) => x.area)).size === v.length
+      && new Set(v.map((x) => x.price)).size === v.length)
+    .sort((a, b) => Math.abs(b[0].area - b[1].area) - Math.abs(a[0].area - a[1].area))
+    .slice(0, 3);
+  /* Bez tohohle by kontroly níž prošly i s rozbitým skriptem: kdyby
+     v datech taková dvojice nebyla, neměly by co měřit. */
+  pravda(`v datech je dvojice pozemků na jednom klíči s jinou cenou i výměrou (${dvojice.length})`,
+    dvojice.length > 0, 'nenašla se — kontrola níž by nic nehlídala');
+  const mez = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  const nesvoje = [];
+  let precteno = 0;
+  for (const cleny of dvojice) {
+    for (let i = 0; i < cleny.length; i++) {
+      const d = cleny[i];
+      const soubor = i === 0 ? gen.souborPro(d) : gen.souborProDalsi(d);
+      const { ctx, p } = await detail({ cil: soubor });
+      /* Čeká se, až skript kostru OPRAVDU přepíše. Bez toho se přečte
+         statický text, který je správný i s rozbitým skriptem. */
+      const prepsano = await p.waitForFunction(() => {
+        const e = document.getElementById('pz-detail');
+        return !!e && !e.querySelector('.pz-staticky');
+      }, null, { timeout: 12000 }).then(() => true).catch(() => false);
+      if (!prepsano) { nesvoje.push(`${soubor}: kostru nic nepřepsalo`); await ctx.close(); continue; }
+      precteno++;
+      const t = (await p.innerText('body')).replace(/ /g, ' ').replace(/\s+/g, ' ');
+      const mam = (x) => t.indexOf(mez(x).replace(/ /g, ' ')) !== -1;
+      if (!mam(d.area)) nesvoje.push(`${soubor}: neuvádí svou výměru ${mez(d.area)} m²`);
+      if (!mam(d.price)) nesvoje.push(`${soubor}: neuvádí svou cenu ${mez(d.price)} Kč`);
+      for (const x of cleny) {
+        if (x === d) continue;
+        if (mam(x.area)) nesvoje.push(`${soubor}: uvádí sousedovu výměru ${mez(x.area)} m²`);
+        if (mam(x.price)) nesvoje.push(`${soubor}: uvádí sousedovu cenu ${mez(x.price)} Kč`);
+      }
+      await ctx.close();
+    }
+  }
+  pravda(`kostru na stránkách dvojčat skript přepsal (${precteno})`,
+    precteno === dvojice.reduce((s2, v) => s2 + v.length, 0),
+    'některou stránku nic nepřepsalo — zkouška by četla statický text');
+  pravda('a po přepsání každá nese svou cenu i výměru, ne sousedovu',
+    nesvoje.length === 0, `${nesvoje.length}: ` + nesvoje.slice(0, 4).join('; '));
+}
+
 await prohlizec.close();
 console.log('\nMapa v detailu pozemku');
 console.log(zpravy.join('\n'));
