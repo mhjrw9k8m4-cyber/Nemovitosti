@@ -1730,6 +1730,15 @@
      a zvětšovat tečku pod prstem, který zrovna klepl, je na obtíž. */
   var podKurzorem = null;
   function zvyrazniTecku(d) {
+    /* UKAZOVÁTKO SE NASTAVUJE PŘED ZKRATKOU, ne za ní. Zkratka „nic se
+       nezměnilo, není co překreslovat" má smysl pro styl tečky, ale
+       ukazovátko drží i někdo jiný: nad nahloučenou tečkou ho nastavuje
+       obsluha pohybu sama (žádná tečka se přitom nezvýrazňuje, takže
+       podKurzorem zůstane null). Po odjezdu na prázdno se pak zvýraznění
+       volalo s null, podKurzorem už null byl — a funkce se vrátila, aniž
+       by ukazovátko zhasla. Zůstávalo tedy viset nad prázdnou mapou.
+       Naměřeno: nejbližší tečka 62 px, a přesto „pointer". */
+    mapEl.style.cursor = d ? 'pointer' : '';
     if (podKurzorem === d) return;
     [podKurzorem, d].forEach(function (x) {
       if (!x) return;
@@ -1740,14 +1749,10 @@
       m.setStyle({ radius: st.radius * (zvyraz ? 1.55 : 1), weight: st.weight + (zvyraz ? 0.8 : 0) });
     });
     podKurzorem = d;
-    mapEl.style.cursor = d ? 'pointer' : '';
   }
   if (!(typeof matchMedia === 'function' && matchMedia('(hover: none)').matches)) {
     map.on('mousemove', function (e) {
-      /* Jen SAMOTNÉ tečky. Co je ve shluku, na mapě jako tečka není —
-         zvýrazňovat něco, co není vidět, znamená slíbit pozemek, který
-         se po klepnutí neotevře. */
-      if (dotsLocked || !lastSingles.length) { zvyrazniTecku(null); return; }
+      if (dotsLocked || (!lastSingles.length && !lastShluky.length)) { zvyrazniTecku(null); return; }
       var cp = e.containerPoint, best = null, bestDist = Infinity;
       for (var i = 0; i < lastSingles.length; i++) {
         var d = lastSingles[i];
@@ -1759,9 +1764,34 @@
       // Užší tolerance než u kliknutí: myš míří přesně, a kdyby se zvýrazňovalo
       // i zdaleka, poskakovalo by to po mapě samo od sebe.
       var tol = Math.max(14, DOT_R + 8);
-      zvyrazniTecku(best && bestDist <= tol * tol ? best : null);
+      if (best && bestDist <= tol * tol) { zvyrazniTecku(best); return; }
+      zvyrazniTecku(null);
+      /* NAD HROMÁDKOU SE NEZVÝRAZŇUJE JEDNA TEČKA. Slíbit konkrétní
+         pozemek by byla lež: klepnutí pustí do hromádky, neotevře ho.
+         Ukazovátko se ale změnit MUSÍ — něco se stane, a mlčení je na
+         dotyku i u myši to nejhorší. Dřív se tu nedělalo vůbec nic
+         a zkouška to chytila: „najel jsem na 40 teček a žádná
+         nereagovala" (teček ve shlucích je v kraji skoro každá).
+         Tolerance je TÁŽ jako u samotné tečky — pod kurzorem je tečka,
+         ne hromádka. */
+      if (nejblizsiClen(cp, tol)) mapEl.style.cursor = 'pointer';
     });
     map.on('mouseout', function () { zvyrazniTecku(null); });
+  }
+
+  /* Nejbližší tečka, která patří do hromádky — do dané tolerance.
+     Hledá se TEČKA, ne střed hromádky: měřit ke středu znamená sáhnout
+     až o okruh shlukování jinam. */
+  function nejblizsiClen(cp, tol) {
+    var nej = null, nejDist = tol * tol;
+    for (var i = 0; i < lastCleny.length; i++) {
+      var c = lastCleny[i];
+      if (selectedKraj && c.d._gkraj !== selectedKraj) continue;
+      var p = map.latLngToContainerPoint([c.d.lat, c.d.lng]);
+      var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
+      if (dist <= nejDist) { nejDist = dist; nej = c; }
+    }
+    return nej;
   }
 
   // Klik na tečku: canvas kliky nechytá, tak najdeme nejbližší viditelný bod ke kliknutí.
@@ -1784,7 +1814,7 @@
        klepnutí vedle shluku by otevřelo pozemek, který je v něm schovaný —
        tedy jeden z dvaceti, vybraný náhodou podle vzdálenosti od prstu.
        Do shluku se vchází klepnutím na něj. */
-    if (dotsLocked || !lastSingles.length) return;
+    if (dotsLocked || (!lastSingles.length && !lastShluky.length)) return;
     var cp = e.containerPoint, best = null, bestDist = Infinity;
     for (var i = 0; i < lastSingles.length; i++) {
       var d = lastSingles[i];
@@ -1805,12 +1835,36 @@
     // proto mapu přiblíží k němu; tečky se tím zvětší a další pokus už
     // sedne. Když poblíž není nic, mapa se nehne (přiblížit se do prázdna
     // by bylo horší než nic).
-    if (!best) return;
+    /* A KDYŽ JE POD PRSTEM NAHLOUČENÁ TEČKA, PLATÍ TO SAMÉ. Hledalo se
+       jen mezi samotnými tečkami, takže tam, kde shlukování zabralo,
+       klepnutí neudělalo VŮBEC NIC: tečka je vidět, prst na ni klepne,
+       a nic. Naměřeno po přechodu na okruh: v Jihočeském kraji je ve
+       shlucích 114 teček ze 118, tedy skoro každá — a dvě zkoušky to
+       zachytily („trefa do tečky otevře stránku pozemku", „netrefené
+       klepnutí mapu přiblížilo").
+       Klepnutí na nahloučenou tečku proto dělá totéž, co klepnutí na její
+       odznak: pustí dovnitř. Tím se jen uznává, co člověk viděl. */
+    var clen = nejblizsiClen(cp, tol);
+    if (clen) { otevriShluk(clen.s); return; }
+
+    /* PŘIBLÍŽIT SE MÁ K NEJBLIŽŠÍ TEČCE, ať je samotná, nebo ve shluku.
+       Hledalo se jen mezi samotnými — a v kraji, kde se shluklo všechno,
+       tedy nebylo k čemu: klepnutí vedle tečky neudělalo nic. Naměřeno
+       v malém kraji: 29 nabídek, 5 odznaků, 0 samotných teček. */
+    var cil = best, cilDist = bestDist;
+    for (var ci2 = 0; ci2 < lastCleny.length; ci2++) {
+      var c2 = lastCleny[ci2];
+      if (selectedKraj && c2.d._gkraj !== selectedKraj) continue;
+      var pc = map.latLngToContainerPoint([c2.d.lat, c2.d.lng]);
+      var cdx = pc.x - cp.x, cdy = pc.y - cp.y, cd = cdx * cdx + cdy * cdy;
+      if (cd < cilDist) { cilDist = cd; cil = c2.d; }
+    }
+    if (!cil) return;
     var okoli = Math.max(90, tol * 2.4);
-    if (bestDist > okoli * okoli) return;
+    if (cilDist > okoli * okoli) return;
     var z = map.getZoom();
     if (z >= 15) return;                       // dál už nemá smysl přibližovat
-    map.setView([best.lat, best.lng], Math.min(15, z + 2), { animate: true });
+    map.setView([cil.lat, cil.lng], Math.min(15, z + 2), { animate: true });
   });
 
   // Tečkovaná mapa: každý pozemek = tečka. Navíc obrysy krajů pro orientaci.
@@ -1914,70 +1968,140 @@
      18 px — tedy přesně tam, kde se prstem nedá trefit ta jedna, kterou
      člověk chce. Naměřeno, kolik jich vzniká: zoom 9 → 177 pro celou ČR,
      zoom 11 → 55, zoom 13 → 8; s přiblížením mizí samy. */
-  var SHLUK_MRIZKA = 18;     // hrana buňky v pixelech na daném přiblížení
+  /* OKRUH, NE MŘÍŽKA — a druhý pokus, protože ten první to jen posunul.
+     Napoprvé tu byla mřížka 18 px a k ní opatrné slučování dvou buněk.
+     Mřížka má ale švy: dvě tečky dvacet pixelů od sebe padnou každá do
+     jiné buňky, a slučovací průchod směl spojit jen dva články, aby se
+     nezřetězil. Jeden skutečný shluk se tím rozpadl na několik odznaků,
+     které si pak ležely PŘES SEBE. Naměřeno na telefonu (350×625, zoom 8):
+     ve Středočeském kraji 49 odznaků a z toho 44 párů přes sebe, dva
+     nejbližší 10 px od sebe. Přesně ten „domeček z karet".
+
+     Teď se neptá mřížka, ale okruh o velikosti prstu: kdo je do 38 px od
+     semínka, patří k němu. Semínka se berou od nejhustšího místa a každá
+     tečka se vezme JEN JEDNOU, takže se řetězit nemůže — shluk nikdy
+     nepřeroste 76 px, a to je ta pojistka, kterou mřížka řešila zákazem
+     slučování. Dvě semínka jsou od sebe vždycky dál než okruh, takže se
+     jejich odznaky nemají čím překrývat.
+
+     Tečky zůstávají všechny, odznak se k nim jen přidává — to platí dál
+     a je to důvod, proč se tu nesmí nic „nahradit": při pohledu na celou
+     republiku jich je 1 953 na mapě široké 350 px a bez teček by z ní
+     zbyly balóny bez hustoty i zeměpisu. */
+  var SHLUK_OKRUH = 38;      // v pixelech: co je blíž k sobě, na to se prstem nezamíří
   var SHLUK_MIN = 3;         // od kolika nabídek na jedné hromádce má odznak smysl
+  /* DRUHÝ PRŮCHOD NA TĚSNÉ DVOJICE. Po prvním průchodu zbývaly tečky,
+     které se dotýkají, ale na tři nedosáhly: velký okruh vezme kus
+     hromádky a to, co zbylo vedle, už není trojice. Naměřeno ve
+     Středočeském kraji: 151 teček blíž než 16 px od jiné a bez odznaku
+     (s mřížkou jich bylo 43 — v tomhle jediném byla mřížka lepší).
+     Dvojice třicet pixelů od sebe odznak nepotřebuje, na tu se dá
+     zamířit. Dvojice ČTYŘI pixely od sebe ano. Práh je proto vlastní:
+     těsně u sebe stačí dvě. */
+  var SHLUK_TESNY = 16;      // co je blíž než tohle, to se prstem nerozliší
+  var SHLUK_TESNY_MIN = 2;
   var shlukLayer = L.layerGroup();
   var lastSingles = [];      // tečky, které NEJSOU ve shluku — jen ty se dají trefit
+  var lastShluky = [];       // a hromádky, do kterých se vchází klepnutím
+  /* Tečka → hromádka, do které patří. Hledá se pak nejbližší TEČKA (ne
+     střed hromádky) a teprve u ní se zeptá, jestli je samotná: členové
+     leží až na okraji okruhu, takže měřit k středu znamená sáhnout o 38 px
+     jinam. Z toho vycházela tolerance 52 px u myši, a ta je na myš, která
+     míří přesně, absurdně velká — kurzor pak ukazoval na hromádku i tam,
+     kde nebylo nic. */
+  var lastCleny = [];
+
+  /* Hromádky v pixelech: okruh o velikosti prstu, semínka od nejhustšího
+     místa, každá tečka se vezme JEN JEDNOU. Tím se nemůže zřetězit —
+     hromádka nikdy nepřeroste dvojnásobek okruhu. Volá se dvakrát,
+     s různým okruhem i prahem, a co zbylo z prvního průchodu, jde do
+     druhého. */
+  function hromadky(body, R, MIN) {
+    var R2 = R * R, i, j;
+    /* Mřížka tu je jen jako rejstřík na hledání sousedů, ne jako pravidlo,
+       co s čím patří — buňka je velká jako okruh, takže stačí projít devět
+       buněk kolem.
+       KLÍČ JE ČÍSLO a rejstřík je Map, ne obyčejný objekt se řetězcovým
+       klíčem. Napoprvé tu bylo `cx + '/' + cy` a shlukování celé republiky
+       trvalo 44 ms při zoomu 12 (stará mřížka 4,8 ms). Skládání
+       třiceti tisíc řetězců za jedno překreslení je při každém posunu
+       a přiblížení znát — a plynulost mapy je zrovna to, co se tu
+       spravuje. */
+    var bunky = new Map();
+    var SIR = 1 << 16;      // víc buněk, než se na mapu vejde
+    function kl(x, y) { return Math.floor(x / R) * SIR + Math.floor(y / R); }
+    for (i = 0; i < body.length; i++) {
+      if (body[i].vzato) continue;
+      var k = kl(body[i].x, body[i].y);
+      var c = bunky.get(k);
+      if (c) c.push(i); else bunky.set(k, [i]);
+    }
+    var volne = [];
+    for (i = 0; i < body.length; i++) if (!body[i].vzato) volne.push(i);
+    /* SOUSEDÉ SE POČÍTAJÍ JEN JEDNOU. Množina teček do okruhu se
+       slučováním nemění — mění se jen to, které z nich jsou už vzaté.
+       Napoprvé se okolí počítalo dvakrát: raz na hustotu, raz na semínko.
+       Druhý průchod si proto ze seznamu jen odfiltruje vzaté. */
+    var okoli = new Map();
+    for (var q0 = 0; q0 < volne.length; q0++) {
+      var ix0 = volne[q0], b = body[ix0], ven = [];
+      var cx = Math.floor(b.x / R), cy = Math.floor(b.y / R);
+      for (var dx = -1; dx <= 1; dx++) {
+        for (var dy = -1; dy <= 1; dy++) {
+          var cc = bunky.get((cx + dx) * SIR + (cy + dy));
+          if (!cc) continue;
+          for (var w = 0; w < cc.length; w++) {
+            var o = body[cc[w]];
+            var ax = o.x - b.x, ay = o.y - b.y;
+            if (ax * ax + ay * ay <= R2) ven.push(cc[w]);
+          }
+        }
+      }
+      okoli.set(ix0, ven);
+      b.sousedu = ven.length;
+    }
+    /* Semínka od nejhustšího místa: odznak pak stojí tam, kde se nabídky
+       opravdu kupí, a ne na okraji hromádky.
+       Pořadí musí být DANÉ, ne dané pořadím v datech — jinak by se odznaky
+       při témže pohledu pokaždé rozložily jinak, jakmile robot data
+       přeskládá. Při shodné hustotě rozhoduje poloha. */
+    volne.sort(function (a, b2) {
+      return body[b2].sousedu - body[a].sousedu || body[a].y - body[b2].y
+        || body[a].x - body[b2].x;
+    });
+    var vysledek = [];
+    for (var s = 0; s < volne.length; s++) {
+      var ix = volne[s];
+      if (body[ix].vzato) continue;
+      var vse = okoli.get(ix), cl = [];
+      for (j = 0; j < vse.length; j++) if (!body[vse[j]].vzato) cl.push(vse[j]);
+      if (cl.length < MIN) continue;
+      var sx = 0, sy = 0, cleny = [];
+      for (j = 0; j < cl.length; j++) {
+        body[cl[j]].vzato = true;
+        sx += body[cl[j]].x; sy += body[cl[j]].y;
+        cleny.push(body[cl[j]].d);
+      }
+      vysledek.push({ x: sx / cl.length, y: sy / cl.length, cleny: cleny });
+    }
+    return vysledek;
+  }
 
   function shlukni(vis) {
     var z = map.getZoom();
-    var bunky = {}, poradi = [];
-    for (var i = 0; i < vis.length; i++) {
-      var d = vis[i];
-      var p = map.project([d.lat, d.lng], z);
-      var kx = Math.floor(p.x / SHLUK_MRIZKA), ky = Math.floor(p.y / SHLUK_MRIZKA);
-      var k = kx + '/' + ky;
-      if (!bunky[k]) { bunky[k] = { kx: kx, ky: ky, cleny: [], sx: 0, sy: 0 }; poradi.push(bunky[k]); }
-      var c = bunky[k];
-      c.cleny.push(d); c.sx += p.x; c.sy += p.y;
+    var body = [], i;
+    for (i = 0; i < vis.length; i++) {
+      var pp = map.project([vis[i].lat, vis[i].lng], z);
+      body.push({ d: vis[i], x: pp.x, y: pp.y, vzato: false, sousedu: 0 });
     }
-    /* SLUČOVACÍ PRŮCHOD, A ZÁMĚRNĚ OPATRNÝ. Samotná mřížka nestačí: dvě
-       tečky dva pixely od sebe můžou padnout každá do jiné buňky a
-       zůstaly by rozdělené, přestože se na obrazovce překrývají.
-
-       Napoprvé jsem slučoval podle PRŮBĚŽNÉHO těžiště a bez pojistky
-       proti řetězení — a ono se to zřetězilo: A pohltí B, těžiště se
-       posune k C, pohltí C… Změřeno na 1 971 nabídkách při pohledu na
-       celou republiku: z celé mapy zbyla ČTYŘI kolečka, největší
-       s 1 012 nabídkami. To už není mapa, to je balón.
-       Teď se porovnávají PŮVODNÍ těžiště (ta se slučováním nehýbou) a
-       buňka, která už jednou slučovala nebo byla pohlcena, do dalšího
-       slučování nejde. Řetěz tak nemůže být delší než dva články. */
-    var puvodni = {};
-    for (var pi = 0; pi < poradi.length; pi++) {
-      var pc = poradi[pi];
-      puvodni[pc.kx + '/' + pc.ky] = [pc.sx / pc.cleny.length, pc.sy / pc.cleny.length];
-    }
-    var MEZ = SHLUK_MRIZKA * 0.55;
-    for (var j = 0; j < poradi.length; j++) {
-      var c2 = poradi[j];
-      if (!c2.cleny.length || c2.hotovo) continue;
-      var smery = [[1, 0], [0, 1], [1, 1], [1, -1]];
-      for (var si = 0; si < smery.length; si++) {
-        var s2 = bunky[(c2.kx + smery[si][0]) + '/' + (c2.ky + smery[si][1])];
-        if (!s2 || !s2.cleny.length || s2.hotovo) continue;
-        var a2 = puvodni[c2.kx + '/' + c2.ky], b2 = puvodni[s2.kx + '/' + s2.ky];
-        if ((a2[0] - b2[0]) * (a2[0] - b2[0]) + (a2[1] - b2[1]) * (a2[1] - b2[1]) > MEZ * MEZ) continue;
-        c2.cleny = c2.cleny.concat(s2.cleny);
-        c2.sx += s2.sx; c2.sy += s2.sy;
-        s2.cleny = []; s2.hotovo = true;
-        c2.hotovo = true;
-        break;
-      }
-    }
-    var samotne = [], shluky = [];
-    for (var q = 0; q < poradi.length; q++) {
-      var c3 = poradi[q];
-      if (!c3.cleny.length) continue;
-      /* Dvě tečky vedle sebe odznak nepotřebují — na dvě se dá zamířit.
-         Teprve od tří je to hromádka, ze které se jedna vybrat nedá. */
-      if (c3.cleny.length < SHLUK_MIN) {
-        for (var w = 0; w < c3.cleny.length; w++) samotne.push(c3.cleny[w]);
-        continue;
-      }
-      var stred = map.unproject(L.point(c3.sx / c3.cleny.length, c3.sy / c3.cleny.length), z);
-      shluky.push({ lat: stred.lat, lng: stred.lng, cleny: c3.cleny });
-    }
+    var hrom = hromadky(body, SHLUK_OKRUH, SHLUK_MIN)
+      .concat(hromadky(body, SHLUK_TESNY, SHLUK_TESNY_MIN));
+    var shluky = hrom.map(function (h) {
+      var stred = map.unproject(L.point(h.x, h.y), z);
+      return { lat: stred.lat, lng: stred.lng, cleny: h.cleny };
+    });
+    var samotne = [];
+    for (i = 0; i < body.length; i++) if (!body[i].vzato) samotne.push(body[i].d);
     return { samotne: samotne, shluky: shluky };
   }
 
@@ -2069,7 +2193,13 @@
        kraj, klepnutí do mapy vybírá KRAJ (třída .kraj-lock vypíná
        značkám pointer-events) — odznak by tam na nic neukazoval a ještě
        by jich přes republiku bylo přes dvě stě. */
-    if (dotsLocked) { lastSingles = vis; return; }
+    if (dotsLocked) { lastSingles = vis; lastShluky = []; lastCleny = []; return; }
+    /* Průhled pro zkoušky. Kolik odznaků vzniklo a co do nich patří, se
+       z DOM poznat nedá: členové shluku leží až na okraji okruhu, tedy
+       daleko za kolečkem odznaku. Sonda, která si to počítala z poloh,
+       hlásila jako „nedosažitelné" i tečky, které shluk v pořádku
+       zastupuje. Web proto říká přímo, co spočítal — stejně jako už
+       vystavuje PK_MAPA. */
     /* A JEN Z VYBRANÉHO KRAJE. Tečky mimo něj jsou ztlumené schválně —
        „nejdou rozkliknout, takže by jen přetahovaly pozornost" (viz
        dotStyle). Odznaky se ale počítaly ze všech viditelných, takže
@@ -2080,14 +2210,37 @@
     var klikatelne = selectedKraj
       ? vis.filter(function (d) { return d._gkraj === selectedKraj; })
       : vis;
+    var tPred = (window.performance && performance.now) ? performance.now() : 0;
     var v = shlukni(klikatelne);
+    var tShluk = tPred ? performance.now() - tPred : -1;
     /* Co je mimo kraj, zůstává mezi samotnými tečkami: hledání nejbližší
        tečky si je stejně odfiltruje samo (stejná podmínka na _gkraj). */
     lastSingles = selectedKraj
       ? v.samotne.concat(vis.filter(function (d) { return d._gkraj !== selectedKraj; }))
       : v.samotne;
+    lastShluky = v.shluky;
+    lastCleny = [];
+    for (var ci = 0; ci < v.shluky.length; ci++) {
+      var cs = v.shluky[ci];
+      for (var cj = 0; cj < cs.cleny.length; cj++) lastCleny.push({ d: cs.cleny[cj], s: cs });
+    }
     v.shluky.forEach(function (s) { shlukLayer.addLayer(vyrobShluk(s)); });
     if (!map.hasLayer(shlukLayer)) shlukLayer.addTo(map);
+    try {
+      window.PK_SHLUKY = {
+        shluky: v.shluky.map(function (x) { return { lat: x.lat, lng: x.lng, n: x.cleny.length }; }),
+        /* v.samotne, NE lastSingles: v lastSingles jsou i tečky mimo
+           vybraný kraj, které se při klepnutí odfiltrují stejně jako
+           u shlukování. Sonda je počítala jako „nedosažitelné" a hlásila
+           u Jihočeského kraje 423 z 454, přestože se na ně vůbec nemíří. */
+        samotne: v.samotne.map(function (x) { return { lat: x.lat, lng: x.lng }; }),
+        /* Kolik to trvalo. Shlukování se počítá při každém posunu i
+           přiblížení, takže je to rozdíl mezi plynulou mapou a mapou,
+           která „skáče" — a jediný způsob, jak to uhlídat, je měřit to. */
+        ms: Math.round(tShluk * 10) / 10,
+        vstupu: klikatelne.length
+      };
+    } catch (e) {}
   }
   // Vždy: tečky pozemků + obrysy krajů přes ně
   function updateMapView() {

@@ -244,6 +244,86 @@ pravda('mapa se ke kraji přiblížila', s.zoom > zoom0, `${zoom0} → ${s.zoom}
   }
 }
 
+/* ---------- 1c. shlukování: odznaky si nesmí ležet přes sebe ----------
+ *
+ * Shlukování stálo na mřížce 18 px a na opatrném slučování dvou buněk.
+ * Mřížka má švy: dvě tečky dvacet pixelů od sebe padnou každá do jiné
+ * buňky, a slučovat se smělo jen dvakrát, aby se to nezřetězilo. Jeden
+ * skutečný shluk se tím rozpadl na několik odznaků, které si pak ležely
+ * PŘES SEBE. Naměřeno na telefonu (350×625, zoom 8): ve Středočeském
+ * kraji 49 odznaků a z toho 44 párů přes sebe, dva nejbližší 10 px od
+ * sebe. „Domeček z karet", jak to nazval člověk zvenčí.
+ *
+ * Druhá polovina té chyby: tečky, které odznak nezastupoval, přesto
+ * ležely blíž než prst — 34 ve Jihočeském, 84 ve Středočeském, 26 na
+ * Vysočině. Na ty se nedalo zamířit ani rozkliknout.
+ *
+ * Hlídají se proto obě věci naráz a na následku, ne na zápisu v kódu:
+ * kolik odznaků se překrývá, a kolik samotných teček leží blíž než prst
+ * k jiné samotné. Obojí musí být nula.
+ */
+{
+  const v = await p.evaluate(() => {
+    const m = window.PK_MAPA;
+    const r = m.getContainer().getBoundingClientRect();
+    const odz = [...document.querySelectorAll('.pk-shluk')].map((e) => {
+      const b2 = e.getBoundingClientRect();
+      return { x: b2.left + b2.width / 2 - r.left, y: b2.top + b2.height / 2 - r.top, d: b2.width, n: +e.textContent || 0 };
+    }).filter((o) => o.d > 0);
+    /* Co je samotná tečka a co je ve shluku, se z poloh odhadnout NEDÁ:
+       člen shluku leží až na okraji okruhu, tedy daleko za kolečkem
+       odznaku. Web to proto říká sám (PK_SHLUKY) — jako už říká PK_MAPA. */
+    const d = window.PK_SHLUKY || null;
+    const doOkna = (o) => { const q = m.latLngToContainerPoint([o.lat, o.lng]); return { x: q.x, y: q.y }; };
+    const vOkne = (q) => q.x > -20 && q.y > -20 && q.x < r.width + 20 && q.y < r.height + 20;
+    const samotne = d ? d.samotne.map(doOkna).filter(vOkne) : [];
+    let kolize = 0, nejblizsi = Infinity;
+    for (let i = 0; i < odz.length; i++) {
+      for (let j = i + 1; j < odz.length; j++) {
+        const dist = Math.hypot(odz[i].x - odz[j].x, odz[i].y - odz[j].y);
+        if (dist < nejblizsi) nejblizsi = dist;
+        if (dist < (odz[i].d + odz[j].d) / 2) kolize++;
+      }
+    }
+    const PRST = 16;
+    let nedosazitelnych = 0;
+    for (let i = 0; i < samotne.length; i++) {
+      for (let j = 0; j < samotne.length; j++) {
+        if (i === j) continue;
+        if (Math.hypot(samotne[i].x - samotne[j].x, samotne[i].y - samotne[j].y) < PRST) { nedosazitelnych++; break; }
+      }
+    }
+    return { prohled: !!d, odznaku: odz.length, vShlucich: d ? d.shluky.reduce((a, x) => a + x.n, 0) : -1,
+      samotnych: samotne.length, kolize: kolize,
+      nejblizsi: odz.length > 1 ? Math.round(nejblizsi) : null,
+      nedosazitelnych: nedosazitelnych, ms: d ? d.ms : -1, vstupu: d ? d.vstupu : -1 };
+  });
+  /* Tři pojistky, aby zkouška neprošla naprázdno. */
+  pravda('web říká, co spočítalo shlukování (window.PK_SHLUKY)', v.prohled,
+    'PK_SHLUKY chybí — kontroly níž by neměly co měřit');
+  pravda(`shlukování něco pobralo (${v.vShlucich} nabídek v ${v.odznaku} odznacích)`,
+    v.odznaku > 1 && v.vShlucich > 2, 'málo odznaků — překryv se nedá změřit');
+  pravda('žádné dva odznaky si neleží přes sebe', v.kolize === 0,
+    `${v.kolize} párů se překrývá, nejbližší dva jsou ${v.nejblizsi} px od sebe`);
+  /* V malém hustém kraji je správně, že samotná nezbyla ani jedna
+     (naměřeno: 29 nabídek, 5 odznaků, 0 samotných). Není to tedy chyba,
+     ale taky se pak nedá nic měřit — a to se musí říct, ne zamlčet. */
+  if (v.samotnych > 0) {
+    pravda(`a na každou z ${v.samotnych} samotných teček se dá zamířit (žádná blíž než 16 px k jiné)`,
+      v.nedosazitelnych === 0,
+      `${v.nedosazitelnych} z ${v.samotnych} samotných teček leží blíž než prst k jiné`);
+  } else {
+    zpravy.push('  – v tomhle kraji skončily ve shlucích všechny tečky, dosažitelnost se neměří');
+  }
+  /* Shlukování se počítá při každém posunu i přiblížení, takže je to
+     rozdíl mezi plynulou mapou a mapou, která „skáče". Naměřeno v tomhle
+     prostředí: 5,9–11,2 ms na 1 998 nabídkách. Mez je velkorysá, aby na
+     pomalejším stroji nepadala na desetinách — chytá řádový propad
+     (první pokus s řetězcovými klíči mřížky dělal 44 ms). */
+  pravda(`shlukování je dost rychlé (${v.ms} ms na ${v.vstupu} nabídkách)`,
+    v.ms >= 0 && v.ms < 150, `trvalo ${v.ms} ms — mapa při posunu poskočí`);
+}
+
 /* ---------- 1b. hlavička kraje ukazuje na seznam — a to číslo musí sedět ----------
    Na úrovni kraje se z mapy vybírat nedá: po výběru kraje je 55–57 % teček
    zakrytých jinou tečkou z víc než poloviny (měřeno na ostrých datech přes
@@ -331,18 +411,44 @@ if (daleko) {
   zpravy.push('  – bod daleko od všech pozemků se ve vybraném kraji nenašel (přeskočeno)');
 }
 
-/* ---------- 3. trefa do tečky otevře stránku pozemku ---------- */
+/* ---------- 3. co udělá trefa do tečky ----------
+ *
+ * Záleží na tom, JAKÁ tečka to je, a dřív se to nerozlišovalo: klepalo se
+ * na první tečku v kraji a čekala se stránka pozemku. Když ale tečka patří
+ * do hromádky, otevřít jeden z jejích pozemků NELZE — byl by vybraný
+ * náhodou podle vzdálenosti od prstu, tedy jeden z pěti. Správně se pustí
+ * dovnitř, tedy přiblíží. Zkouška si proto od webu vyžádá, která tečka je
+ * samotná a která ve shluku (PK_SHLUKY), a hlídá obojí zvlášť.
+ * Bez toho padala podle toho, jaký kraj zkouška vybrala — v malém hustém
+ * kraji skončí ve shlucích všechny tečky (naměřeno 29 z 29).
+ */
 {
   const st = await stav();
   const sel = st.tecky.map((q) => q.kraj).find((k) => k && st.kraj.indexOf(k) === 0);
-  const vlastni = st.tecky.filter((t) => t.kraj === sel
-    && t.y > Math.max(st.ramec.t, st.hlavicka) + 24 && t.y < st.ramec.d - 24
-    && t.x > st.ramec.l + 14 && t.x < st.ramec.p - 14);
+  const vOkne = (t) => t.y > Math.max(st.ramec.t, st.hlavicka) + 24 && t.y < st.ramec.d - 24
+    && t.x > st.ramec.l + 14 && t.x < st.ramec.p - 14;
+  const vlastni = st.tecky.filter((t) => t.kraj === sel && vOkne(t));
   pravda('je na co klepnout uvnitř vybraného kraje', vlastni.length > 0);
-  if (vlastni.length) {
-    await p.mouse.click(Math.round(vlastni[0].x), Math.round(vlastni[0].y));
-    await p.waitForTimeout(1500);
-    je('trefa do tečky otevře stránku pozemku', new URL(p.url()).pathname, '/pozemek.html');
+  /* Které tečky jsou samotné, řekne web sám — z poloh se to odhadnout
+     nedá, člen hromádky leží až na okraji jejího okruhu. */
+  const rozdeleni = await p.evaluate(() => {
+    const d = window.PK_SHLUKY; if (!d) return null;
+    const m = window.PK_MAPA;
+    const r = m.getContainer().getBoundingClientRect();
+    const bod = (o) => { const q = m.latLngToContainerPoint([o.lat, o.lng]); return { x: q.x + r.left, y: q.y + r.top }; };
+    return { samotne: d.samotne.map(bod), shluku: d.shluky.length };
+  });
+  pravda('web řekl, které tečky jsou samotné (jinak zkouška nic neměří)', !!rozdeleni,
+    'PK_SHLUKY chybí');
+  if (rozdeleni) {
+    const samotnaVOkne = rozdeleni.samotne.filter((t) => vOkne({ x: t.x, y: t.y }));
+    if (samotnaVOkne.length) {
+      await p.mouse.click(Math.round(samotnaVOkne[0].x), Math.round(samotnaVOkne[0].y));
+      await p.waitForTimeout(1500);
+      je('trefa do SAMOTNÉ tečky otevře stránku pozemku', new URL(p.url()).pathname, '/pozemek.html');
+    } else {
+      zpravy.push(`  – v tomhle kraji není samotná tečka v okně (${rozdeleni.shluku} hromádek), trefa do tečky se neměří`);
+    }
   }
 }
 

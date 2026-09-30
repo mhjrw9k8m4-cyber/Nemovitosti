@@ -148,13 +148,78 @@ async function kontext(pohybVypnut) {
   }
   pravda('po výběru kraje tečka pod kurzorem odpoví', !!nasel,
     `najel jsem na ${(body.nalez || []).length} teček a žádná nereagovala`);
-  // A když kurzor z tečky sjede, zvýraznění zmizí.
+  /* A když kurzor z tečky sjede, zvýraznění zmizí.
+     PRÁZDNÉ MÍSTO SE MUSÍ NAJÍT, NE ODHADNOUT. Dřív se tu odjelo slepě
+     o 120 px nahoru — a na zaplněné mapě to prázdno není: naměřeno, že
+     na tom místě stála tečka 7 px od kurzoru a do 20 px jich byly čtyři.
+     Ukazovátko tam tedy JE správně (od té doby, co odpovídá i nad
+     nahloučenými tečkami) a kontrola padala na vlastním předpokladu.
+     Hledá se proto bod, od kterého je nejbližší tečka dál než 60 px. */
+  const prazdno = nasel ? await p.evaluate(() => {
+    const m = window.PK_MAPA;
+    const ram = document.querySelector('#map .leaflet-container') || document.querySelector('.leaflet-container');
+    const r = ram.getBoundingClientRect();
+    const body = [];
+    m.eachLayer((l) => { if (l._d && isFinite(l._d.lat)) {
+      const q = m.latLngToContainerPoint([l._d.lat, l._d.lng]);
+      body.push({ x: q.x, y: q.y });
+    } });
+    if (!body.length) return null;
+    for (let y = 30; y < r.height - 20; y += 12) {
+      for (let x = 20; x < r.width - 20; x += 12) {
+        let nej = Infinity;
+        for (const q of body) { const dd = Math.hypot(q.x - x, q.y - y); if (dd < nej) nej = dd; }
+        if (nej <= 60) continue;
+        /* A NA TOM BODĚ MUSÍ BÝT MAPA. Jinak se myš postaví na hlavičku
+           nebo na ovládání přiblížení, mapa žádnou událost nedostane —
+           a ukazovátko zůstane z předchozího místa. Kontrola by pak
+           hlásila chybu webu, ačkoli jde o chybu zkoušky. */
+        const px = Math.round(r.left + x), py = Math.round(r.top + y);
+        const pod = document.elementFromPoint(px, py);
+        if (!pod || !ram.contains(pod)) continue;
+        if (pod.closest('.leaflet-control-container')) continue;
+        /* A NESMÍ TO BÝT ODZNAK SHLUKU. Ten má záchytnou plochu 44 px a
+           jeho členové leží až na okraji okruhu, takže odznak může stát
+           dál než 60 px od každé tečky — a ukazovátko nad ním být MÁ.
+           Bez tohohle kontrola padala na místě, kde web odpovídal
+           správně. */
+        if (pod.closest('.pk-shluk-obal') || pod.closest('.leaflet-marker-icon')) continue;
+        return { x: px, y: py, nej: Math.round(nej), tecek: body.length };
+      }
+    }
+    return { nenalezeno: true, tecek: body.length };
+  }) : null;
   if (nasel) {
-    await p.mouse.move(nasel.x, Math.max(12, nasel.y - 120));
-    await p.waitForTimeout(120);
-    pravda('a když kurzor odjede, zvýraznění zmizí',
-      (await p.evaluate(() => document.getElementById('leaflet-map').style.cursor)) !== 'pointer',
-      'tečka zůstala zvýrazněná, i když už na ní kurzor není');
+    /* Bez tohohle by se kontrola níž dala „splnit" tím, že se kurzor
+       postaví někam, kde stejně nic není měřitelné. */
+    pravda('našlo se na mapě místo dál než 60 px od každé tečky',
+      !!(prazdno && !prazdno.nenalezeno),
+      prazdno ? `mezi ${prazdno.tecek} tečkami takové místo není — kontrola níž by nic neměřila` : 'tečky se nepodařilo z mapy vyčíst');
+  }
+  if (nasel && prazdno && !prazdno.nenalezeno) {
+    await p.evaluate(() => { window.__mm = 0; window.PK_MAPA.on('mousemove', () => { window.__mm++; }); });
+    await p.mouse.move(prazdno.x, prazdno.y);
+    await p.waitForTimeout(200);
+    /* Když to padne, musí být z hlášky poznat PROČ: hádat se tady dá
+       dlouho (leží tam odznak? nedostala mapa událost? je tam přece jen
+       tečka?). */
+    const kdyz = await p.evaluate((bod) => {
+      const m = window.PK_MAPA;
+      const ram = document.querySelector('#map .leaflet-container') || document.querySelector('.leaflet-container');
+      const r = ram.getBoundingClientRect();
+      const cp = { x: bod.x - r.left, y: bod.y - r.top };
+      let nej = Infinity;
+      m.eachLayer((l) => { if (l._d && isFinite(l._d.lat)) {
+        const q = m.latLngToContainerPoint([l._d.lat, l._d.lng]);
+        const dd = Math.hypot(q.x - cp.x, q.y - cp.y); if (dd < nej) nej = dd; } });
+      const pod = document.elementFromPoint(bod.x, bod.y);
+      return { cursor: document.getElementById('leaflet-map').style.cursor,
+        udalosti: window.__mm || 0, nejTecka: Math.round(nej),
+        pod: pod ? (pod.tagName.toLowerCase() + '.' + String(pod.className || '').split(' ').slice(0, 2).join('.')) : '(nic)' };
+    }, { x: prazdno.x, y: prazdno.y });
+    pravda('a když kurzor odjede na prázdné místo, zvýraznění zmizí',
+      kdyz.cursor !== 'pointer',
+      `nejbližší tečka ${kdyz.nejTecka} px, pod bodem „${kdyz.pod}", pohybů ${kdyz.udalosti}, cursor „${kdyz.cursor}"`);
   }
   pravda('při najíždění po mapě nespadl žádný skript', chyby.length === 0, chyby[0]);
   }
