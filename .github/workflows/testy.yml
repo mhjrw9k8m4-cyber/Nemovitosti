@@ -256,6 +256,9 @@ jobs:
       - name: Stabilita rozvržení při načítání (CLS)
         run: node scripts/test-stabilita.mjs
 
+      - name: Jeden vizuální jazyk (velikosti písma, přechody)
+        run: node scripts/test-jazyk.mjs
+
       - name: Viditelnost okrajů (WCAG 1.4.11)
         run: node scripts/test-okraje.mjs
 

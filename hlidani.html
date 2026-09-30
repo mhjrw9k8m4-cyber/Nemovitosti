@@ -30,7 +30,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=e40fd2ad">
+  <link rel="stylesheet" href="css/styles.css?v=985ee859">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .hl-wrap{max-width:640px; margin:0 auto;}
@@ -46,21 +46,21 @@
     .hl-tab{flex:1; min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:7px;
       font:inherit; font-size:14px; font-weight:700; cursor:pointer; padding:0 10px;
       border:0; border-radius:var(--r-sm); background:none; color:var(--text-ondark-mute);
-      transition:background .15s ease, color .15s ease;}
+      transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
     .hl-tab:hover{color:var(--text-ondark);}
     /* Vybraná záložka je plná značková plocha, ne jen jiný odstín textu:
        přebarvený text sám o sobě nestačí tomu, kdo barvy nerozezná. */
     .hl-tab.je{background:var(--plocha-znacka); color:#fff;}
     .hl-tab-n{min-width:21px; height:21px; padding:0 6px; border-radius:var(--r-sm);
-      background:var(--copper); color:#fff; font-size:11.5px; font-weight:700;
+      background:var(--copper); color:#fff; font-size:12px; font-weight:700;
       display:inline-flex; align-items:center; justify-content:center;}
     .hl-tab.je .hl-tab-n{background:rgba(255,255,255,.24); color:#fff;}
     .hl-auth{padding:22px; max-width:400px; margin:8px auto;}
-    .hl-auth h2{font-size:18px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
-    .hl-auth p{font-size:13.5px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
-    .hl-in,.hl-sel{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:12px; font-size:16px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:9px; outline:none; font-family:inherit;}
+    .hl-auth h2{font-size:17px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
+    .hl-auth p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
+    .hl-in,.hl-sel{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:12px; font-size:17px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:9px; outline:none; font-family:inherit;}
     .hl-in:focus,.hl-sel:focus{border-color:var(--copper-bright); box-shadow:0 0 0 4px rgba(31,81,56,.14);}
-    .hl-btn{width:100%; height:48px; border:0; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:0 8px 20px -10px rgba(31,81,56,.55); transition:filter .15s ease, transform .1s ease;}
+    .hl-btn{width:100%; height:48px; border:0; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:0 8px 20px -10px rgba(31,81,56,.55); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
     .hl-btn:hover{filter:brightness(1.05);} .hl-btn:active{transform:scale(.99);}
     .hl-btn.sec{background:var(--ink-soft2); color:var(--text-ondark); border:1px solid var(--line-ui); margin-top:8px;}
     .hl-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--text-ondark-mute);}
@@ -73,7 +73,7 @@
        a rychlé volby — ať je na první pohled vidět, co všechno jde zadat. */
     .hl-new-head{margin-bottom:14px;}
     .hl-new-head b{display:block; font-family:var(--font-display); font-size:20px; color:var(--text-ondark); letter-spacing:-.01em;}
-    .hl-new-head span{display:block; margin-top:3px; font-size:13.5px; color:var(--text-ondark-mute);}
+    .hl-new-head span{display:block; margin-top:3px; font-size:14px; color:var(--text-ondark-mute);}
     .hl-sekce{padding:16px 0; border-top:1px solid var(--line);}
     .hl-sekce:first-of-type{border-top:0; padding-top:0;}
     /* NADPIS ODDÍLU. Formulář byl sloupec stejně šedých rámečků a
@@ -83,8 +83,8 @@
     .hl-sekce-h{display:flex; align-items:center; gap:8px; margin-bottom:11px;}
     .hl-sekce-h svg{width:17px; height:17px; flex:none; fill:none; stroke:var(--copper);
       stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round;}
-    .hl-sekce-h b{font-size:14.5px; font-weight:700; color:var(--text-ondark); letter-spacing:.01em;}
-    .hl-sekce-h .hl-pozn{font-size:12.5px;}
+    .hl-sekce-h b{font-size:15px; font-weight:700; color:var(--text-ondark); letter-spacing:.01em;}
+    .hl-sekce-h .hl-pozn{font-size:13px;}
     /* ROZSAH JAKO JEDNA VĚC. „od (Kč)" a „do (Kč)" byly dvě osamocené
        krabičky pod sebou a jednotka se opakovala v obou popiscích.
        Teď je mezi nimi pomlčka, jednotka stojí jednou v samotném
@@ -110,18 +110,18 @@
     .hl-rychle{font:inherit; font-size:13px; font-weight:600; cursor:pointer;
       min-height:38px; padding:8px 13px; border-radius:999px;
       border:1.5px solid var(--line-strong); background:var(--ink-soft2); color:var(--text-ondark);
-      transition:border-color .15s ease, background .15s ease, color .15s ease;}
+      transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
     .hl-rychle:hover{border-color:var(--copper-bright);}
     .hl-rychle.on{border-color:var(--plocha-znacka); background:var(--plocha-znacka); color:#fff;}
     .hl-rychle:focus-visible{outline:2px solid var(--copper); outline-offset:2px;}
     /* Kolik pozemků tomu dnes odpovídá. Dřív se to člověk dozvěděl až po
        uložení — a když nic, neměl podle čeho poznat, co to zabilo. */
-    .hl-souhrn{margin:4px 0 12px; padding:11px 13px; border-radius:12px; font-size:13.5px;
+    .hl-souhrn{margin:4px 0 12px; padding:11px 13px; border-radius:12px; font-size:14px;
       line-height:1.5; background:rgba(31,81,56,.10); color:var(--text-ondark);
       border:1px solid rgba(31,81,56,.22);}
     .hl-souhrn b{font-weight:800;}
     .hl-souhrn.prazdno{background:rgba(140,47,30,.09); border-color:rgba(140,47,30,.24);}
-    .hl-lbl{font-size:12.5px; font-weight:700; color:var(--text-ondark-mute); margin:8px 2px 4px; display:block;}
+    .hl-lbl{font-size:13px; font-weight:700; color:var(--text-ondark-mute); margin:8px 2px 4px; display:block;}
     .hl-row2{display:flex; gap:8px;}
     .hl-row2 > *{flex:1;}
     .hl-feats{display:flex; flex-wrap:wrap; gap:7px; margin:2px 0 6px;}
@@ -137,12 +137,12 @@
     .hl-item{padding:15px 16px; border-bottom:1px solid var(--line);}
     .hl-item:last-child{border-bottom:0;}
     .hl-itop{display:flex; align-items:center; gap:10px;}
-    .hl-iname{font-weight:700; font-size:15.5px; color:var(--text-ondark); flex:1; min-width:0;}
+    .hl-iname{font-weight:700; font-size:15px; color:var(--text-ondark); flex:1; min-width:0;}
     .hl-new-badge{background:var(--copper); color:#fff; font-size:12px; font-weight:800; padding:3px 9px; border-radius:999px; white-space:nowrap;}
     .hl-new-badge.zero{background:var(--ink-soft2); color:var(--text-ondark-mute);}
     .hl-crit{font-size:13px; color:var(--text-ondark-mute); margin-top:5px; line-height:1.5;}
-    .hl-count{font-size:12.5px; color:var(--text-ondark-mute); margin-top:3px;}
-    .hl-kam{font-size:12.5px; color:var(--text-ondark-mute); margin:9px 0 0; line-height:1.5;}
+    .hl-count{font-size:13px; color:var(--text-ondark-mute); margin-top:3px;}
+    .hl-kam{font-size:13px; color:var(--text-ondark-mute); margin:9px 0 0; line-height:1.5;}
     .hl-kam a{color:var(--copper-bright); text-decoration:underline; text-underline-offset:2px;}
     /* Tlačítka jsou u hlídání s novými pozemky tři („Ukázat nové",
        „Zobrazit na mapě", koš). Natěsnaná do jedné řady by se na úzkém
