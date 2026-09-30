@@ -2252,7 +2252,23 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 @media (max-width:520px){ .odj-radek .btn-ghost{width:100%;} }
 .add-lead{font-size:14.5px; color:var(--text-ondark-mute); margin:0 0 22px; padding:14px 16px; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); line-height:1.55;}
 .add-lead b{color:var(--text-ondark);}
+/* ODDÍLY FORMULÁŘE. Byl to jeden sloupec devíti bloků po osmnácti
+   pixelech a bez jediného nadpisu — naměřeno 1 707 px, ve kterých se
+   nedalo poznat, kde jedna věc končí a druhá začíná. Mezi oddíly je teď
+   výrazně víc vzduchu než mezi poli uvnitř nich a nahoře vlásková linka;
+   název oddílu je týmž receptem jako .mc-cap v panelu filtrů, aby web
+   mluvil jednou řečí. */
 .add-form{display:flex; flex-direction:column; gap:18px;}
+.add-sekce{display:flex; flex-direction:column; gap:14px; min-width:0;}
+.add-sekce + .add-sekce, .add-sekce + .add-more, .add-more + .add-sekce{
+  padding-top:22px; border-top:1px solid var(--line);}
+.add-sekce-cap{margin:0; font-size:11px; font-weight:700; color:var(--muted);
+  letter-spacing:.05em; text-transform:uppercase;}
+/* Upřesnění u názvu oddílu („nepovinné · max 8"). Není to nadpis, tak
+   není ani verzálkami — jinak by se z názvu stala dlouhá kapitálková
+   věta, kterou nikdo nečte. */
+.add-sekce-hint{font-weight:500; text-transform:none; letter-spacing:0;
+  color:var(--text-ondark-mute); font-size:11.5px;}
 /* Rozbalovací „další údaje" — formulář je na první pohled kratší a lehčí */
 .add-more{border:1px solid var(--line); border-radius:var(--r-sm); background:rgba(228,240,231,0.02);}
 .add-more > summary{list-style:none; cursor:pointer; padding:13px 16px; font-size:13.5px; font-weight:600;
@@ -2459,8 +2475,31 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .photo-drop b{color:var(--copper-bright); font-size:14px;}
 .photo-drop span{display:block; font-size:12px; color:var(--text-ondark-mute); margin-top:4px;}
 .photo-field input[type=file]{position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;}
-.photo-preview{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
-.photo-preview .pp{width:104px; border-radius:var(--r-sm); overflow:hidden; border:1px solid var(--line); background:var(--ink-soft);}
+/* NÁHLEDY FOTEK. Dlaždice se dá chytit a přesunout — první je titulní
+   a je vidět v seznamu, na mapě i ve sdíleném odkazu, takže o pořadí má
+   rozhodovat člověk, ne pořadí, ve kterém mu je vybral telefon.
+   Mezera je větší než původních 8 px: mezi dlaždicemi, které se dají
+   chytit, musí být vidět, kde jedna končí — a prst mezi ně musí trefit. */
+.photo-preview{display:flex; flex-wrap:wrap; gap:12px; margin-top:12px;}
+.photo-preview .pp{position:relative; width:104px; border-radius:var(--r-sm); overflow:hidden;
+  border:1px solid var(--line); background:var(--ink-soft); cursor:grab;
+  transition:transform .12s ease, box-shadow .12s ease;}
+/* Během tažení se nesmí rolovat stránka pod prstem ani vybírat text. */
+.photo-preview.pp-tahani{touch-action:none; user-select:none;}
+.photo-preview .pp.pp-taham{cursor:grabbing; transform:scale(1.04); box-shadow:var(--e2); z-index:2;}
+.photo-preview .pp:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px;}
+/* Odznak titulní fotky. Bez něj se z mřížky nedá poznat, která se ukáže
+   v seznamu — a to je to jediné, proč na pořadí vůbec záleží. */
+/* Odznak dole, křížek nahoře: nahoře vedle sebe se nevešly. */
+.pp-obr{position:relative; line-height:0;}
+.pp-titulka{position:absolute; left:6px; bottom:6px; z-index:1; padding:3px 8px;
+  border-radius:var(--r-pill); background:var(--plocha-znacka); color:#fff;
+  font-size:10.5px; font-weight:700; letter-spacing:.02em; box-shadow:var(--e1);}
+.pp-smaz{position:absolute; right:5px; top:5px; z-index:1; width:26px; height:26px; padding:0;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  border:0; border-radius:var(--r-pill); background:rgba(12,22,17,.72); color:#fff;
+  font-size:13px; line-height:1;}
+.pp-smaz:hover{background:rgba(12,22,17,.92);}
 /* Posudek pod každou fotkou — co si o ní web myslí, hned při výběru */
 .pp-stav{display:block; font-size:10.5px; line-height:1.35; padding:4px 5px 5px; text-align:center;
   word-break:break-word; hyphens:auto;}

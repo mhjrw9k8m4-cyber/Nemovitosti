@@ -330,9 +330,9 @@
   // (žádné sirotčí soubory) a vrátí se seznam zamítnutých s důvodem. Až když
   // projdou všechny, nahraje je. Vrací { urls, rejected }.
   function uploadPhotos() {
-    var fEl = document.getElementById('p-fotky');
-    var files = (fEl && fEl.files) ? [].slice.call(fEl.files) : [];
-    files = files.filter(function (f) { return isImage(f.type); }).slice(0, PH_MAX);
+    /* Ze seznamu, který si člověk sám přeskládal — ne z input.files.
+       Pořadí je tu podstatné: první fotka je titulní. */
+    var files = fotkyProOdeslani().filter(function (f) { return isImage(f.type); }).slice(0, PH_MAX);
     // Stejná fotka dvakrát (snadno se stane při výběru z galerie) — poznáme ji
     // podle názvu, velikosti a času úpravy; druhou tiše vynecháme.
     var videne = {};
@@ -478,36 +478,193 @@
     });
   }
 
-  // Fotky pozemku: okamžitý náhled v prohlížeči + titulka do živého náhledu
+  /* FOTKY MAJÍ POŘADÍ, A TO POŘADÍ SI MUSÍ ČLOVĚK URČIT SÁM.
+     Náhledy se kreslily přímo z input.files — a ten seznam se nedá
+     přeskládat ani z něj nic vyhodit (FileList je jen ke čtení). První
+     fotka je přitom titulní: je vidět v seznamu, na mapě i ve sdíleném
+     odkazu, takže rozhoduje o tom, jestli si nabídku někdo otevře. Kdo
+     vybral z galerie deset fotek, dostal jako titulní tu, kterou mu
+     vybral telefon.
+     Zdrojem pravdy je proto vlastní pole. Přidává se k němu (výběr
+     podruhé už předchozí fotky nezahodí), dá se z něj mazat a dá se
+     v něm přesouvat — prstem, myší i klávesnicí. */
+  var vybraneFotky = [];   // { f: File, url: string, trida: '', text: '' }
   var fotkyInput = document.getElementById('p-fotky');
-  if (fotkyInput) fotkyInput.addEventListener('change', function () {
-    updateStrength();   // ať se ukazatel hne hned po výběru fotek
-    var imgs = [].slice.call(fotkyInput.files).filter(function (f) { return /^image\//.test(f.type); });
+
+  function klicFotky(f) { return f.name + '|' + f.size + '|' + (f.lastModified || 0); }
+  function fotkyProOdeslani() { return vybraneFotky.map(function (x) { return x.f; }); }
+
+  function pridejFotky(soubory) {
+    var videne = {};
+    vybraneFotky.forEach(function (x) { videne[klicFotky(x.f)] = 1; });
+    var kolik = 0;
+    [].slice.call(soubory).forEach(function (f) {
+      if (!/^image\//.test(f.type)) return;
+      if (vybraneFotky.length >= PH_MAX) return;
+      var k = klicFotky(f);
+      if (videne[k]) return;              // tatáž fotka podruhé
+      videne[k] = 1;
+      vybraneFotky.push({ f: f, url: URL.createObjectURL(f), trida: 'ceka', text: 'kontroluji…' });
+      kolik++;
+    });
+    return kolik;
+  }
+
+  function smazFotku(i) {
+    var x = vybraneFotky[i];
+    if (!x) return;
+    try { URL.revokeObjectURL(x.url); } catch (e) {}
+    vybraneFotky.splice(i, 1);
+    vykresliFotky(); updateStrength(); updatePreview();
+  }
+
+  function presunFotku(z, na) {
+    if (z === na || z < 0 || na < 0 || z >= vybraneFotky.length || na >= vybraneFotky.length) return false;
+    vybraneFotky.splice(na, 0, vybraneFotky.splice(z, 1)[0]);
+    return true;
+  }
+
+  function vykresliFotky(zaostrit) {
     var prev = document.getElementById('p-fotky-preview');
-    if (prev) {
-      prev.innerHTML = '';
-      imgs.slice(0, 8).forEach(function (f) {
-        var url = URL.createObjectURL(f);
-        var wrap = document.createElement('div'); wrap.className = 'pp';
-        var img = document.createElement('img'); img.src = url; img.alt = '';
-        var stav = document.createElement('span'); stav.className = 'pp-stav ceka'; stav.textContent = 'kontroluji…';
-        img.onload = function () { posudNahled(f, img, stav); };
-        wrap.appendChild(img); wrap.appendChild(stav); prev.appendChild(wrap);
-      });
+    if (!prev) return;
+    prev.innerHTML = '';
+    vybraneFotky.forEach(function (x, i) {
+      var wrap = document.createElement('div');
+      wrap.className = 'pp' + (i === 0 ? ' pp-titulni' : '');
+      wrap.setAttribute('data-i', String(i));
+      wrap.tabIndex = 0;
+      wrap.setAttribute('role', 'listitem');
+      /* Co je to za prvek a co s ním jde dělat, se musí dát PŘEČÍST, ne
+         jen vidět: bez toho je přesouvání funkce jen pro toho, kdo vidí
+         na obrazovku a drží myš. */
+      wrap.setAttribute('aria-label', (i === 0 ? 'Titulní fotka' : 'Fotka ' + (i + 1))
+        + ' z ' + vybraneFotky.length + ' — šipkami vlevo a vpravo ji přesunete');
+      /* Obrázek má vlastní obal: odznak i křížek na něm pak mají čím se
+         vyhnout. Když ležely oba nahoře, „Titulní foto" (73 px) lezlo na
+         dlaždici široké 104 px pod křížek — naměřený překryv 8 px. */
+      var obr = document.createElement('div'); obr.className = 'pp-obr';
+      var img = document.createElement('img');
+      img.src = x.url; img.alt = ''; img.draggable = false;
+      var stav = document.createElement('span');
+      stav.className = 'pp-stav ' + x.trida; stav.textContent = x.text;
+      obr.appendChild(img);
+      if (i === 0) {
+        var od = document.createElement('span');
+        od.className = 'pp-titulka'; od.textContent = 'Titulní foto';
+        obr.appendChild(od);
+      }
+      var kriz = document.createElement('button');
+      kriz.type = 'button'; kriz.className = 'pp-smaz';
+      kriz.setAttribute('aria-label', 'Odebrat fotku ' + (i + 1));
+      kriz.innerHTML = '<span aria-hidden="true">✕</span>';
+      kriz.addEventListener('click', function (e) { e.stopPropagation(); smazFotku(i); });
+      obr.appendChild(kriz);
+      wrap.appendChild(obr); wrap.appendChild(stav);
+      /* Posudek se počítá jen jednou za fotku. Překreslení kvůli přesunu
+         by ho jinak pouštělo znovu — a je to ta nejdražší věc na stránce
+         (rozbor obrázku a EXIF u každé fotky). */
+      if (x.trida === 'ceka') {
+        img.onload = function () {
+          posudNahled(x.f, img, {
+            set className(v) { stav.className = v; x.trida = String(v).replace('pp-stav ', ''); },
+            get className() { return stav.className; },
+            set textContent(v) { stav.textContent = v; x.text = v; },
+            get textContent() { return stav.textContent; }
+          });
+        };
+      }
+      prev.appendChild(wrap);
+    });
+    if (typeof zaostrit === 'number') {
+      var cil = prev.children[zaostrit];
+      if (cil) cil.focus();
     }
     var lpThumb = document.getElementById('lp-thumb');
     if (lpThumb) {
-      if (imgs[0]) {
-        var u = URL.createObjectURL(imgs[0]);
+      if (vybraneFotky[0]) {
         lpThumb.innerHTML = '';
-        var im = document.createElement('img'); im.src = u; im.alt = '';
-        im.onload = function () { URL.revokeObjectURL(u); };
+        var im = document.createElement('img'); im.src = vybraneFotky[0].url; im.alt = '';
         lpThumb.appendChild(im);
       } else {
         lpThumb.innerHTML = '<span class="ph"><svg viewBox="0 0 24 24"><use href="#i-map"/></svg></span>';
       }
     }
+  }
+
+  /* PŘESOUVÁNÍ PRSTEM I MYŠÍ. Jedna obsluha na obojí (Pointer Events),
+     ať se to nechová jinak na telefonu a jinak na počítači.
+     Práh pár pixelů je tam schválně: bez něj by klepnutí na křížek
+     občas skončilo jako přesun a fotka by se nesmazala. */
+  (function presouvani() {
+    if (!window.PointerEvent) return;
+    /* OBSLUHA VISÍ NA DOKUMENTU, ne na mřížce náhledů. Na mřížce to
+       vypadalo správně a při ruční zkoušce to fungovalo — ale v celé
+       cestě (přihlášení, vykreslení karty) se ten prvek vymění a
+       obsluha zůstane na odpojeném uzlu. Přesouvání pak mlčky přestane
+       fungovat a nepozná se to ničím jiným než tím, že se fotka nehne.
+       Na dokumentu se vyměnit nemá co. */
+    var prevEl = function () { return document.getElementById('p-fotky-preview'); };
+    var p0 = prevEl(); if (p0) p0.setAttribute('role', 'list');
+    var drzim = null, zacX = 0, zacY = 0, taham = false;
+    document.addEventListener('pointerdown', function (e) {
+      var t = e.target.closest ? e.target.closest('.pp') : null;
+      if (!t || !t.closest('#p-fotky-preview') || e.target.closest('.pp-smaz')) return;
+      drzim = t; zacX = e.clientX; zacY = e.clientY; taham = false;
+      try { t.setPointerCapture(e.pointerId); } catch (x) {}
+    });
+    document.addEventListener('pointermove', function (e) {
+      if (!drzim) return;
+      var prev = prevEl(); if (!prev) return;
+      if (!taham) {
+        if (Math.abs(e.clientX - zacX) + Math.abs(e.clientY - zacY) < 6) return;
+        taham = true;
+        drzim.classList.add('pp-taham');
+        prev.classList.add('pp-tahani');
+      }
+      e.preventDefault();
+      /* Dlaždice pod prstem se najde z plátna, ne z počítání souřadnic:
+         mřížka se láme podle šířky a počtu fotek, takže dopočítávat
+         sloupce by byla další věc, která se může rozejít. */
+      var pod = document.elementFromPoint(e.clientX, e.clientY);
+      var cil = pod && pod.closest ? pod.closest('.pp') : null;
+      if (!cil || cil === drzim || cil.parentElement !== prev) return;
+      var z = +drzim.getAttribute('data-i'), na = +cil.getAttribute('data-i');
+      if (presunFotku(z, na)) { vykresliFotky(); drzim = prev.children[na] || null;
+        if (drzim) { drzim.classList.add('pp-taham'); try { drzim.setPointerCapture(e.pointerId); } catch (x) {} } }
+    });
+    function konec() {
+      if (drzim) drzim.classList.remove('pp-taham');
+      var prev = prevEl(); if (prev) prev.classList.remove('pp-tahani');
+      if (taham) { updateStrength(); updatePreview(); }
+      drzim = null; taham = false;
+    }
+    document.addEventListener('pointerup', konec);
+    document.addEventListener('pointercancel', konec);
+    /* A klávesnicí. Přesouvání, které jde jen myší, je funkce jen pro
+       část lidí — a zkouška na ovládání klávesnicí by na to přišla. */
+    document.addEventListener('keydown', function (e) {
+      var t = e.target.closest ? e.target.closest('.pp') : null;
+      if (!t || !t.closest('#p-fotky-preview')) return;
+      var i = +t.getAttribute('data-i'), na = null;
+      if (e.key === 'ArrowLeft') na = i - 1;
+      else if (e.key === 'ArrowRight') na = i + 1;
+      else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); smazFotku(i); return; }
+      else return;
+      e.preventDefault();
+      if (presunFotku(i, na)) { vykresliFotky(na); updateStrength(); updatePreview(); }
+    });
+  }());
+
+  if (fotkyInput) fotkyInput.addEventListener('change', function () {
+    pridejFotky(fotkyInput.files);
+    /* Políčko se vyprázdní, aby šlo vybrat TUTÉŽ fotku znovu (po smazání)
+       — prohlížeč jinak druhý stejný výběr za změnu nepovažuje. */
+    try { fotkyInput.value = ''; } catch (e) {}
+    vykresliFotky();
+    updateStrength();   // ať se ukazatel hne hned po výběru fotek
+    updatePreview();
   });
+
   /* Posudek u náhledu fotky. Dřív se fotky kontrolovaly až při odeslání,
      takže člověk vybral osm obrázků, vyplnil formulář a teprve pak se
      dozvěděl, že polovina neprojde. Teď to ví hned u každé fotky. */
@@ -650,8 +807,7 @@
 
   // „Síla inzerátu" — motivační ukazatel, kolik toho je vyplněné
   function updateStrength() {
-    var fEl = document.getElementById('p-fotky');
-    var hasFotky = !!(fEl && fEl.files && fEl.files.length);
+    var hasFotky = vybraneFotky.length > 0;
     var hasObec = !!val('p-obec'), hasV = parseInt(val('p-vymera'), 10) > 0, hasC = parseInt(val('p-cena'), 10) > 0;
     var hasSite = document.querySelectorAll('input[name="site"]:checked').length > 0;
     var hasPristup = !!val('p-pristup'), hasPopis = val('p-popis').length > 15;
@@ -822,6 +978,8 @@
     if (card) { card.hidden = false; try { card.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (x) {} }
     if (prodejForm) prodejForm.reset();
     var lpThumb = document.getElementById('lp-thumb'); if (lpThumb) lpThumb.innerHTML = '<span class="ph"><svg viewBox="0 0 24 24"><use href="#i-map"/></svg></span>';
+    vybraneFotky.forEach(function (x) { try { URL.revokeObjectURL(x.url); } catch (e) {} });
+    vybraneFotky = [];
     var prev = document.getElementById('p-fotky-preview'); if (prev) prev.innerHTML = '';
     var msg = document.getElementById('msg-prodej'); if (msg) { msg.textContent = ''; msg.className = 'add-msg'; }
     smazKoncept();

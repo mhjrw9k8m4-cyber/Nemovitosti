@@ -597,6 +597,142 @@ async function odesli(p) {
   await ctx.close();
 }
 
+/* --- POŘADÍ FOTEK SI URČUJE ČLOVĚK ----------------------------------
+ *
+ * První fotka je titulní: je vidět v seznamu, na mapě i ve sdíleném
+ * odkazu, takže rozhoduje o tom, jestli si nabídku někdo otevře.
+ * Náhledy se přitom kreslily rovnou z input.files — a ten seznam se nedá
+ * přeskládat ani z něj nic vyhodit (FileList je jen ke čtení). Kdo vybral
+ * z galerie deset fotek, dostal jako titulní tu, kterou mu vybral telefon.
+ *
+ * Měří se to na následku, na PIXELECH náhledů: tři jednobarevné fotky,
+ * a po každém kroku se čte, jaká barva je kde. Popisky ani pořadí
+ * v poli by mohly lhát; barva ne.
+ */
+{
+  const zlib = await import('node:zlib');
+  /* Jednobarevné PNG, aby šlo pořadí poznat z obrázku samého. */
+  function png(r, g, b) {
+    const w = 520, h = 520;   // nad hranicí „moc malá fotka", ať posudek nepřekáží
+    const raw = Buffer.alloc((w * 3 + 1) * h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) { const o = y * (w * 3 + 1) + 1 + x * 3; raw[o] = r; raw[o + 1] = g; raw[o + 2] = b; }
+    }
+    const t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+    const crc = (buf) => { let c = 0xFFFFFFFF; for (const x of buf) c = t[(c ^ x) & 0xff] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+    const chunk = (typ, d) => { const len = Buffer.alloc(4); len.writeUInt32BE(d.length);
+      const td = Buffer.concat([Buffer.from(typ), d]); const cc = Buffer.alloc(4); cc.writeUInt32BE(crc(td));
+      return Buffer.concat([len, td, cc]); };
+    const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 2;
+    return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr),
+      chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
+  }
+  const os = await import('node:os');
+  const fsp = await import('node:fs');
+  const pathm = await import('node:path');
+  const dir = fsp.mkdtempSync(pathm.join(os.tmpdir(), 'pk-fotky-'));
+  const barvy = [['cervena', 220, 40, 40], ['zelena', 40, 180, 60], ['modra', 40, 70, 220]];
+  const cesty = barvy.map(([jm, r, g, b]) => { const c = pathm.join(dir, jm + '.png'); fsp.writeFileSync(c, png(r, g, b)); return c; });
+
+  const { ctx, p } = await otevri(true);
+  await p.waitForTimeout(600);
+  await p.evaluate(() => { const c = document.getElementById('prodej-card'); if (c) c.hidden = false; });
+  await p.waitForTimeout(300);
+  await p.setInputFiles('#p-fotky', cesty);
+  await p.waitForTimeout(1500);
+  /* Barvy se čtou z plátna, ne z názvu souboru: mezi výběrem a náhledem
+     je celá cesta (URL.createObjectURL, vykreslení), a právě ta se může
+     rozejít. */
+  const poradi = () => p.evaluate(() => {
+    const dl = [...document.querySelectorAll('#p-fotky-preview .pp')];
+    const ven = [];
+    for (const d of dl) {
+      const img = d.querySelector('img');
+      const c = document.createElement('canvas'); c.width = 4; c.height = 4;
+      const cx = c.getContext('2d');
+      try { cx.drawImage(img, 0, 0, 4, 4); } catch (e) { ven.push('?'); continue; }
+      const px = cx.getImageData(1, 1, 1, 1).data;
+      ven.push(px[0] > 150 ? 'červená' : px[1] > 120 ? 'zelená' : px[2] > 150 ? 'modrá' : '?');
+    }
+    return ven;
+  });
+  const po1 = await poradi();
+  /* Pojistka: bez tří rozeznatelných náhledů nemá co měřit ani jedna
+     kontrola níž. */
+  pravda(`tři vybrané fotky se ukázaly jako náhledy (${po1.join(', ')})`,
+    po1.length === 3 && po1.indexOf('?') < 0, `náhledy: ${po1.join(', ') || '(žádné)'}`);
+  pravda('a první z nich je označená jako titulní',
+    (await p.locator('#p-fotky-preview .pp').first().locator('.pp-titulka').count()) === 1,
+    'odznak „Titulní foto" u první fotky chybí');
+
+  if (po1.length === 3 && po1.indexOf('?') < 0) {
+    /* PŘETAŽENÍ SE NEŘÍDÍ RUČNĚ SPOČÍTANÝMI SOUŘADNICEMI. Zkoušel jsem
+       to: odečíst střed dlaždice, posunout myš, stisknout. Jenže mezi
+       odečtením a stiskem se stránka roluje (web roluje plynule) a
+       souřadnice zestárnou — zkouška pak hlásila, že přesouvání
+       nefunguje, ačkoli se jen měřilo prázdno. Přistiženo tím, že si
+       nechala vypsat, co měla pod kurzorem: nejdřív „H3.add-sekce-cap,
+       TEXTAREA, FORM.add-form", po další úpravě rovnou „nic" (mimo okno).
+       locator.dragTo() si obě dlaždice doroluje samo. */
+    const dl = p.locator('#p-fotky-preview .pp');
+    /* Když to padne, ať je z hlášky poznat PROČ: dorazil stisk na
+       dlaždici a kolik pohybů obsluha viděla? */
+    await p.evaluate(() => {
+      window.__lad = { down: 0, move: 0 };
+      document.addEventListener('pointerdown', (e) => {
+        if (e.target.closest && e.target.closest('#p-fotky-preview .pp')) window.__lad.down++;
+      }, true);
+      document.addEventListener('pointermove', () => { window.__lad.move++; }, true);
+    });
+    /* 1) MYŠÍ: třetí fotku na první místo. */
+    await dl.nth(2).dragTo(dl.nth(0));
+    await p.waitForTimeout(500);
+    const po2 = await poradi();
+    const lad = await p.evaluate(() => window.__lad);
+    pravda(`přetažením myší se fotka přesune na začátek (${po2.join(', ')})`,
+      po2[0] === po1[2], `čekáno „${po1[2]}" první, je tam „${po2[0]}"`
+        + ` | stisk na dlaždici: ${lad.down}×, pohybů: ${lad.move}`);
+    pravda('a odznak „Titulní foto" jde s ní',
+      (await p.locator('#p-fotky-preview .pp').first().locator('.pp-titulka').count()) === 1,
+      'odznak zůstal u staré fotky');
+
+    /* 2) KLÁVESNICÍ: přesouvání, které jde jen myší, je funkce jen pro
+       část lidí. */
+    await p.evaluate(() => { document.querySelectorAll('#p-fotky-preview .pp')[0].focus(); });
+    await p.keyboard.press('ArrowRight');
+    await p.waitForTimeout(400);
+    const po3 = await poradi();
+    pravda(`šipkou doprava se fotka posune o jedno (${po3.join(', ')})`,
+      po3[1] === po2[0] && po3[0] === po2[1],
+      `z „${po2.join(', ')}" vyšlo „${po3.join(', ')}"`);
+
+    /* 3) KŘÍŽKEM: co se vybralo omylem, musí jít odebrat bez toho, aby se
+       výběr dělal celý znovu. */
+    const smazana = po3[1];
+    await p.evaluate(() => { document.querySelectorAll('#p-fotky-preview .pp-smaz')[1].click(); });
+    await p.waitForTimeout(400);
+    const po4 = await poradi();
+    pravda(`křížkem se fotka odebere (zbyly ${po4.join(', ')})`,
+      po4.length === 2 && po4.indexOf(smazana) < 0, `„${smazana}" tam pořád je`);
+
+    /* 4) A DALŠÍ VÝBĚR NESMÍ PŘEDCHOZÍ ZAHODIT. Input.files se při každém
+       výběru přepíše celý — kdo si vybral podruhé, přišel o to první. */
+    const pridavana = barvy.find(([jm]) => po4.indexOf(jm === 'cervena' ? 'červená' : jm === 'zelena' ? 'zelená' : 'modrá') < 0);
+    if (pridavana) {
+      await p.setInputFiles('#p-fotky', [cesty[barvy.indexOf(pridavana)]]);
+      await p.waitForTimeout(900);
+      const po5 = await poradi();
+      pravda(`další výběr se přidá k dosavadním (${po5.join(', ')})`,
+        po5.length === 3 && po4.every((x) => po5.indexOf(x) >= 0),
+        `z „${po4.join(', ')}" se po přidání stalo „${po5.join(', ')}"`);
+    } else {
+      zpravy.push('  – všechny tři barvy zbyly, přidání čtvrté se neměří');
+    }
+  }
+  await ctx.close();
+  try { fsp.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
+}
+
 await prohlizec.close();
 console.log('\nPřidání vlastního pozemku — celá cesta');
 console.log(zpravy.join('\n'));

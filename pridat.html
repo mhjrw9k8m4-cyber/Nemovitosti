@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=be9a983d">
+  <link rel="stylesheet" href="css/styles.css?v=95465499">
 </head>
 <body>
 
@@ -171,6 +171,14 @@
               <p class="odj-stav" id="p-odjinud-stav" role="status" aria-live="polite" hidden></p>
             </div>
             <form class="add-form" id="form-prodej" novalidate>
+              <!-- ODDÍLY S NÁZVEM. Formulář byl jeden sloupec devíti bloků
+                   po osmnácti pixelech, bez jediného nadpisu — 1 707 px
+                   textu a políček, ve kterém se nedalo poznat, co k čemu
+                   patří. Názvy oddílů jsou týmž jazykem jako návěští
+                   v panelu filtrů (verzálky, prostrkání, tlumená barva),
+                   ať to na webu mluví jednou řečí. -->
+              <section class="add-sekce">
+                <h3 class="add-sekce-cap">Co prodáváte</h3>
               <div class="add-field">
                 <label for="p-obec">Obec / lokalita <span class="req">*</span></label>
                 <input id="p-obec" type="text" placeholder="např. Kolín" required>
@@ -186,21 +194,31 @@
                 </div>
               </div>
               <p class="calc-hint" id="perm2-hint" aria-live="polite"></p>
+              </section>
 
+              <section class="add-sekce">
+                <!-- NÁZEV ODDÍLU A POPISEK POLE ŘÍKALY TOTÉŽ: „FOTKY POZEMKU"
+                     a hned pod tím „Fotky pozemku". Upřesnění zůstává, jméno
+                     se neopakuje. Vstup má popisek z odkládací plochy níž
+                     (label for="p-fotky"), takže o něj nepřišel. -->
+                <h3 class="add-sekce-cap">Fotky pozemku <span class="add-sekce-hint">nepovinné · zobrazí se v inzerátu · max 8</span></h3>
               <div class="add-field photo-field">
-                <label for="p-fotky">Fotky pozemku <span class="hint">(nepovinné — zobrazí se přímo v inzerátu, max 8)</span></label>
-                <label class="photo-drop" for="p-fotky"><b>Přidat fotky</b><span>Klepněte a vyberte fotky pozemku — klidně několik naráz</span></label>
+                <label class="photo-drop" for="p-fotky"><b>Přidat fotky</b><span>Klepněte a vyberte fotky pozemku — klidně několik naráz. Pořadí změníte přetažením, první je titulní.</span></label>
                 <p class="hint" style="margin:6px 2px 0;">Fotky se automaticky zkontrolují (kvalita i obsah) — nahrávejte jen skutečné fotky pozemku.</p>
                 <input id="p-fotky" type="file" accept="image/*" multiple>
                 <div class="photo-preview" id="p-fotky-preview"></div>
               </div>
+              </section>
 
+              <section class="add-sekce">
+                <h3 class="add-sekce-cap">Popis <span class="add-sekce-hint">nepovinné · hodně pomůže zájemcům</span></h3>
               <div class="add-field desc-field">
-                <label for="p-popis">Popis pozemku <span class="hint">(nepovinné — ale hodně pomůže zájemcům)</span></label>
+                <label class="visually-hidden" for="p-popis">Popis pozemku</label>
                 <textarea id="p-popis" placeholder="Tvar a terén, orientace, okolí, územní plán, proč je zajímavý… cokoliv, co pomůže kupujícímu se rozhodnout."></textarea>
               </div>
+              </section>
 
-              <details class="add-more" open>
+              <details class="add-more add-sekce" open>
                 <summary>Detaily pozemku — okres, druh, sítě, přístup</summary>
                 <div class="add-more-body">
                   <div class="add-row">
@@ -300,6 +318,8 @@
                    Inzerát se dá podat jen po přihlášení, takže e-mail už
                    máme z účtu. Zbývá telefon — a ten je nepovinný: zájemci
                    mají tlačítko „Napsat majiteli", které vede do Zpráv. -->
+              <section class="add-sekce">
+                <h3 class="add-sekce-cap">Kontakt a odeslání</h3>
               <div class="add-field">
                 <label for="p-kontakt">Telefon <span class="hint">(nepovinné — uvidí ho zájemci v inzerátu)</span></label>
                 <input id="p-kontakt" type="tel" inputmode="tel" autocomplete="tel" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="777 123 456">
@@ -312,6 +332,7 @@
               <p class="add-warn" id="p-varovani" role="status" aria-live="polite" hidden></p>
               <button type="submit" class="btn-primary btn-glow">Odeslat pozemek ke zveřejnění</button>
               <p class="add-msg" id="msg-prodej" role="status" aria-live="polite"></p>
+              </section>
             </form>
           </div>
           <div class="add-success" id="add-success" data-success-for="form-prodej" hidden>
@@ -422,7 +443,7 @@
 <script src="js/vybaveni.js?v=cae1f79b" defer></script>
 <script src="js/predvyplneni.js?v=d500f86e" defer></script>
 <script src="js/kontrola.js?v=0d9d384f" defer></script>
-<script src="js/pridat.js?v=e4a58dec" defer></script>
+<script src="js/pridat.js?v=8ff0940d" defer></script>
 <script>
 /* Zobrazit/skrýt heslo v přihlašovací kartě */
 document.addEventListener('click', function (e) {
