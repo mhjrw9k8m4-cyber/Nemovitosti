@@ -246,7 +246,7 @@
 <script src="js/auth.js?v=3891c865"></script>
 <script src="js/upozorneni-feed.js?v=d6d2bf4a"></script>
 <script src="js/hlidani-logika.js?v=8c971165"></script>
-<script src="js/upozorneni.js?v=b7b7c483"></script>
+<script src="js/upozorneni.js?v=990dc051"></script>
 <script src="js/hlavicka.js?v=cd7f79fb"></script>
 <script>
 (function () {
@@ -304,12 +304,18 @@
       // (vyčištění všech tří zdrojů je až pod nimi — viz js/cisteni.js)
       var users = ul && (Array.isArray(ul) ? ul : ul.listings) || [];
       users.forEach(function (u) { if (u) { u.type = u.type || 'majitel'; arr.push(u); } });
-      // Živé inzeráty od majitelů (mají features/přístup)
+      /* Živé inzeráty od majitelů. Řádek se NESKLÁDÁ TADY — skládá ho
+         PKCisteni.majitele(), stejně jako pro mapu (js/main.js) i pro
+         stránku pozemku (js/pozemek.js). Byla to tu poslední ruční kopie
+         ze tří a chyběly jí `site` (klíče, podle kterých se porovnává
+         „Musí mít"), souřadnice, _lid i popis. Hlídání na tom zatím
+         neztroskotalo, protože klíč nováčka ani porovnání „Musí mít"
+         souřadnice nepoužívají a u features je náhradní větev — ale tři
+         místa skládající tentýž řádek se dřív nebo později rozejdou.
+         Právě kvůli tomu ta funkce vznikla; viz komentář v js/main.js. */
       return (A && A.rpc ? A.rpc('public_listings', {}, false) : Promise.resolve(null)).then(function (live) {
         var rows = live && live.ok ? live.data : (Array.isArray(live) ? live : null);
-        if (Array.isArray(rows)) rows.forEach(function (u) {
-          if (u) arr.push({ type: 'majitel', place: u.place, okres: u.okres, druh: u.druh, parcel: u.parcel, area: u.area, price: u.price, features: u.features || [], access: u.access || '' });
-        });
+        PKCisteni.majitele(rows).forEach(function (d) { arr.push(d); });
         DATA = PKHlidani.bezDuplicit(PKCisteni.pozemky(arr));
       }, function () { DATA = PKHlidani.bezDuplicit(PKCisteni.pozemky(arr)); });
     });

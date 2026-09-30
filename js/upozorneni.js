@@ -146,12 +146,32 @@
     return A.rpc('my_searches', {}, true).then(function (res) {
       var hledani = (res && res.ok && Array.isArray(res.data)) ? res.data : [];
       if (!hledani.length) return 0;
-      return fetch(DATA_URL, { cache: 'default' })
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (d) {
-          if (!d) return 0;
-          return window.PKHlidani.novychCelkem(hledani, d.opportunities || []);
-        });
+      /* DVA ZDROJE, NE JEDEN. Počítalo se jen ze staženého souboru,
+         kdežto stránka hlídání bere i inzeráty od majitelů. Odznak tedy
+         mohl říkat „žádné nové" a stránka hned vedle „1 nový" — a odznak
+         je zrovna to, co člověka na stránku posílá. Soubor s inzeráty od
+         majitelů je malý a prohlížeč ho obvykle už má z mapy.
+
+         ŽIVÉ INZERÁTY (public_listings) TU ZÁMĚRNĚ NEJSOU. Řádek z nich
+         skládá PKCisteni.majitele() a ten modul je jen na čtyřech
+         stránkách ze 114 — odznak běží skoro na všech. Načítat ho všude
+         kvůli počtu, nebo si řádek skládat tady ručně (což je přesně ta
+         chyba, kvůli které ta funkce vznikla), je obojí horší než ten
+         zbytek nezapočítat. Rozdíl je jen v inzerátech zveřejněných od
+         posledního běhu robota; do souboru spadnou do šesti hodin.
+         Kdyby se odznak měl srovnat i o ně, patří PKCisteni do společné
+         hlavičky všech stránek — a to je změna na 110 souborů. */
+      return Promise.all([
+        fetch(DATA_URL, { cache: 'default' }).then(function (r) { return r.ok ? r.json() : null; }, function () { return null; }),
+        fetch('data/user-listings.json', { cache: 'default' }).then(function (r) { return r.ok ? r.json() : null; }, function () { return null; })
+      ]).then(function (v) {
+        var d = v[0], ul = v[1];
+        if (!d) return 0;
+        var vse = (d.opportunities || []).slice();
+        var users = ul && (Array.isArray(ul) ? ul : ul.listings) || [];
+        users.forEach(function (u) { if (u) { u.type = u.type || 'majitel'; vse.push(u); } });
+        return window.PKHlidani.novychCelkem(hledani, vse);
+      });
     }).catch(function () { return 0; });
   }
 

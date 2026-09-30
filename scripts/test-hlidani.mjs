@@ -492,6 +492,51 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
     nejdelsi < 240, true);
 }
 
+/* --- VŠICHNI SE MUSÍ DÍVAT DO TÝCHŽ ZDROJŮ -------------------------
+ *
+ * „Kolik nových pozemků mi sedí" odpovídají DVĚ místa: odznak v nabídce
+ * (js/upozorneni.js) a stránka hlídání (hlidani.html). Dívaly se každé
+ * jinam: odznak jen do data/opportunities.json, stránka i na inzeráty od
+ * majitelů. Odznak tedy mohl říkat „žádné nové", a stránka hned vedle
+ * „1 nový" — přitom odznak je zrovna to, co člověka na stránku pošle.
+ *
+ * A druhá věc: řádek z živého inzerátu skládá PKCisteni.majitele() —
+ * mapa i stránka pozemku ho tak berou, hlidani.html si ho skládal ručně
+ * a chyběly mu `site`, souřadnice i _lid. Tři místa skládající tentýž
+ * řádek se dřív nebo později rozejdou; kvůli tomu ta funkce vznikla.
+ *
+ * Hlídá se to na ZDROJI, protože jde o to, odkud se data berou — a to
+ * z chování jedné funkce vyčíst nejde.
+ */
+{
+  /* KOMENTÁŘE PRYČ. Napsal jsem k té opravě komentář, ve kterém stojí
+     „PKCisteni.majitele()" — a kontrola níž na něm zeleně prošla i po
+     sabotáži, která to volání z kódu odstranila. Zelená z vlastního
+     komentáře je horší než žádná kontrola. (Totéž dělá
+     scripts/test-staticka.mjs, ze stejného důvodu.) */
+  const bezKomentaru = (t) => String(t)
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ');
+  const upoz = bezKomentaru(readFileSync(new URL('../js/upozorneni.js', import.meta.url), 'utf8'));
+  const hlid = bezKomentaru(readFileSync(new URL('../hlidani.html', import.meta.url), 'utf8'));
+  /* Pojistka: kdyby se ta místa přejmenovala, kontroly níž by hlídaly
+     prázdno a tvářily se spokojeně. */
+  je('zdroje', 'odznak opravdu počítá nové pozemky (jinak se nic neměří)',
+    /novychCelkem/.test(upoz), true);
+  je('zdroje', 'a stránka hlídání taky (jinak se nic neměří)',
+    /matches\(/.test(hlid), true);
+
+  je('zdroje', 'odznak čte i inzeráty od majitelů, ne jen stažená data',
+    /user-listings\.json/.test(upoz), true);
+  je('zdroje', 'stránka hlídání skládá živý inzerát sdílenou funkcí',
+    /PKCisteni\.majitele\(/.test(hlid), true);
+  /* A hlavně: NESKLÁDÁ si ho ručně. Tohle je ta chyba, která se vrací —
+     ruční kopie vypadá nevinně a rozejde se tiše. */
+  je('zdroje', 'a nesklada si ho ručně',
+    /type:\s*'majitel',\s*place:/.test(hlid), false);
+}
+
 console.log(`\nHlídání lokality: ${bezi} testů`);
 if (spadlo) {
   console.log(vysledky.join('\n'));
