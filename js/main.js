@@ -1015,9 +1015,50 @@
    * návštěva se nezapíše a člověk o přehled nepřijde. */
   var NAVSTEVA_KLIC = 'pk_navsteva_v1';
   var minulaNavsteva = ctiUloz(NAVSTEVA_KLIC, null);
+
+  /* DÁVKY TÉHOŽ DNE. Návštěva se pamatuje jako DEN a first_seen je taky
+   * jen den — jenže robot přiváží nabídky čtyřikrát denně (plán běhu je
+   * v .github/workflows/update-data.yml, každých šest hodin). Porovnání
+   * dnů proto tiše zahazovalo všechno, co přišlo v den poslední návštěvy
+   * až po ní: „first_seen > minulaNavsteva" je u téhož dne nepravda dnes
+   * i navždy potom.
+   * Naměřeno v prohlížeči: ráno přijde pozemek a odznak „Nové" dostane;
+   * odpolední dávka téhož dne ho nedostane ani odpoledne, ani zítra, ani
+   * nikdy. Při čtyřech dávkách denně a návštěvě v náhodnou hodinu je to
+   * průměrně 1,5 dávky ze 4, tedy 37 % přírůstku, o kterém se člověk
+   * nedozví. Zrovna odznak „Nové" je přitom to, co ho vrací zpátky.
+   *
+   * Doplní se to pamětí, ne přesnějším časem v datech: ke každé nabídce
+   * přidat čas by stálo 77 kB surově (+3,2 kB gzip, +4 %) v souboru, který
+   * se stahuje na úvodní stránce — kdežto tady stačí si u dne návštěvy
+   * zapamatovat, CO z toho dne už v prohlížeči bylo. Co z téhož dne
+   * v seznamu ještě nebylo, je nové.
+   *
+   * Strop je tam kvůli prvnímu naplnění databáze: 19. 9. přišlo 1 755
+   * nabídek najednou (běžný den 4–73), a to je 67 kB do localStorage.
+   * Nad strop se uloží jen „ten den byl vidět celý" — tedy přesně to, co
+   * web dělal dřív. Takový den je stejně celý nový a rozlišovat v něm
+   * dávky nemá co zachránit. */
+  var VIDENO_KLIC = 'pk_videno_den_v1';
+  var VIDENO_STROP = 500;
+  var videnoMap = {};
+  /* Když záznam pro den poslední návštěvy chybí (první návštěva po téhle
+     změně, jiný prohlížeč, vyčištěné úložiště), platí „bylo vidět všechno".
+     O tom dni nic nevíme, a tvrdit „nové" o něčem, co člověk možná viděl,
+     by odznak znehodnotilo. Stojí to jednu dávku jednoho dne, jednou —
+     tedy přesně to, co web dělal doteď pořád. */
+  var videnoVse = true;
+  (function () {
+    var z = ctiUloz(VIDENO_KLIC, null);
+    if (!z || z.den !== minulaNavsteva) return;
+    videnoVse = !!z.vse;
+    (z.klice || []).forEach(function (k) { videnoMap[k] = 1; });
+  }());
   function jeNovy(d) {
     if (!minulaNavsteva || !d.first_seen) return false;
-    return d.first_seen > minulaNavsteva;
+    if (d.first_seen > minulaNavsteva) return true;
+    // Dávka z dne poslední návštěvy, která tu tehdy ještě nebyla.
+    return d.first_seen === minulaNavsteva && !videnoVse && !videnoMap[pkey(d)];
   }
   function pocetNovych() {
     var n = 0;
@@ -5420,7 +5461,21 @@
     var iso = dnes.getFullYear() + '-' +
       String(dnes.getMonth() + 1).padStart(2, '0') + '-' +
       String(dnes.getDate()).padStart(2, '0');
-    setTimeout(function () { zapisUloz(NAVSTEVA_KLIC, iso); }, 1200);
+    setTimeout(function () {
+      zapisUloz(NAVSTEVA_KLIC, iso);
+      /* A vedle data i to, co z dnešního přírůstku už v prohlížeči bylo.
+         Bere se to z DATA, ne z vykresleného seznamu: seznam ukazuje osm
+         položek a filtry ho zužují, ale stažené je celé. Kdyby se počítal
+         jen výpis, zítra by se za nové vydávalo všechno, co dnes neprošlo
+         filtrem. */
+      var klice = [];
+      for (var i = 0; i < DATA.length && klice.length <= VIDENO_STROP; i++) {
+        if (DATA[i].first_seen === iso) klice.push(pkey(DATA[i]));
+      }
+      zapisUloz(VIDENO_KLIC, klice.length > VIDENO_STROP
+        ? { den: iso, vse: true }
+        : { den: iso, klice: klice });
+    }, 1200);
   }());
 
   /* Poslední nastavení filtrů. Kdo si vybral „Ústecký kraj, stavební,

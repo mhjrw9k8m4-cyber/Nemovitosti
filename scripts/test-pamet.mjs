@@ -42,7 +42,11 @@ function pozemek(i, kdy) {
 }
 const STARE = [1, 2, 3].map((i) => pozemek(i, '2026-09-01'));
 const NOVE = [4, 5].map((i) => pozemek(i, '2026-09-18'));
-const PODSTRCENA = { updated: '2026-09-20', source: 'test', opportunities: [...STARE, ...NOVE] };
+/* Sada se za běhu MĚNÍ — oddíl 6 simuluje další dávku robota, která
+   přijde, když už člověk dnes na webu byl. Proto let a funkce, ne hotový
+   řetězec: route níž si ji vyžádá při každém načtení. */
+let SADA = [...STARE, ...NOVE];
+const podstrcena = () => JSON.stringify({ updated: '2026-09-20', source: 'test', opportunities: SADA });
 
 const PRAZDNA_DLAZDICE = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
@@ -61,7 +65,7 @@ await ctx.route('**/*', (r) => {
 await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
   body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
 await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
-  contentType: 'application/json', body: JSON.stringify(PODSTRCENA) }));
+  contentType: 'application/json', body: podstrcena() }));
 if (LEAFLET) {
   await ctx.route('https://unpkg.com/leaflet@**', (r) => {
     const f = path.join(LEAFLET, path.basename(new URL(r.request().url()).pathname));
@@ -406,6 +410,71 @@ pravda('a místo jde kdykoli změnit', poVyberu.jdeZmenit,
       /pozemek\.html\?p=/.test(p.url()), p.url());
   }
 }
+
+// --- 6) Dávky téhož dne ------------------------------------------------
+/* Datum návštěvy je DEN a first_seen je taky jen den — jenže robot přiváží
+   nabídky čtyřikrát denně. Porovnání dnů proto zahazovalo všechno, co přišlo
+   v den poslední návštěvy až po ní: pro takovou nabídku není „first_seen >
+   minulaNavsteva" pravda dnes ani nikdy potom. Naměřeno v prohlížeči před
+   opravou: ranní nabídka odznak „Nové" dostala, odpolední dávka téhož dne
+   nedostala ani odpoledne, ani „zítra".
+   Proto se tady pracuje se SKUTEČNÝM dneškem, ne s pevným datem z fixtury:
+   web si návštěvu zapisuje na dnešní den a měřená situace je právě ta, kdy
+   se den nabídky s dnem návštěvy ROVNÁ. */
+const dn = new Date();
+const DNES = dn.getFullYear() + '-' + String(dn.getMonth() + 1).padStart(2, '0') + '-' + String(dn.getDate()).padStart(2, '0');
+async function novePodleWebu() {
+  return p.evaluate(() => ({
+    celkem: document.querySelectorAll('.opp-item').length,
+    nove: [...document.querySelectorAll('.opp-item')].filter((e) => e.querySelector('.opp-nove'))
+      .map((e) => (e.querySelector('.opp-place') || {}).textContent).sort(),
+    hlavicka: (document.querySelector('.mc-nove') || {}).textContent || '',
+  }));
+}
+/* Předchozí oddíl skončil klepnutím na kartu, tedy na stránce pozemku —
+   p.reload() by obnovoval JI. Napoprvé to shodilo právě ten předpoklad
+   níž a hlásilo „označené: []", jako by odznak nefungoval. Proto se sem
+   vrací výslovně. */
+await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1500);
+// Čistý stav: poslední návštěva dávno, žádné skryté, žádný filtr, žádné místo.
+await p.evaluate((m) => {
+  try {
+    ['pk_skryte_v1', 'pk_filtr_v1', 'pk_misto_v1', 'pk_videno_den_v1'].forEach((k) => localStorage.removeItem(k));
+    localStorage.setItem('pk_navsteva_v1', JSON.stringify(m));
+  } catch (e) {}
+}, MINULE);
+SADA = [...STARE, ...NOVE, pozemek(7, DNES)];   // ranní dávka dneška
+await p.reload({ waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(4200);
+const rano = await novePodleWebu();
+/* Předpoklad, bez kterého by zkouška nic neměřila: ranní dávku musí web
+   poznat i beze všeho nového. Kdyby ne (spadlý skript, nevykreslený
+   seznam), nulové nálezy níž by nic nedokazovaly. */
+pravda('seznam se vykreslil se všemi šesti pozemky (jinak zkouška nic neměří)',
+  rano.celkem === STARE.length + NOVE.length + 1, `položek ${rano.celkem}`);
+pravda('ranní dávka dneška se pozná jako nová (jinak zkouška nic neměří)',
+  rano.nove.indexOf('Obec 7') !== -1, `označené: ${JSON.stringify(rano.nove)}`);
+
+await p.waitForTimeout(1800);   // ať se zápis návštěvy (1,2 s) stihne
+SADA = [...STARE, ...NOVE, pozemek(7, DNES), pozemek(8, DNES)];   // odpolední dávka
+await p.reload({ waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(4200);
+const odpoledne = await novePodleWebu();
+pravda('odpolední dávka téhož dne je nová taky',
+  odpoledne.nove.indexOf('Obec 8') !== -1,
+  `označené: ${JSON.stringify(odpoledne.nove)} — pozemek přibylý po dnešní návštěvě odznak nedostal`);
+pravda('a ranní dávka se už za novou nevydává',
+  odpoledne.nove.indexOf('Obec 7') === -1, `označené: ${JSON.stringify(odpoledne.nove)}`);
+pravda('v hlavičce je jeden nový, ne dva', /(^|\D)1\s+nov/.test(odpoledne.hlavicka),
+  `hlavička: „${odpoledne.hlavicka}"`);
+
+await p.waitForTimeout(1800);
+await p.reload({ waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(4200);
+const potret = await novePodleWebu();
+pravda('a po návštěvě, na které byly vidět obě, není nové nic',
+  potret.nove.length === 0, `pořád označeno ${JSON.stringify(potret.nove)}`);
 
 pravda('na stránce nespadl žádný skript', chyby.length === 0, chyby[0]);
 
