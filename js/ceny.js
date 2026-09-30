@@ -419,7 +419,27 @@
      *
      * Vrací se i to, z čeho se počítalo, aby se pod číslo dalo napsat,
      * jak jsme k němu došli. */
+    /* ODHAD SE PRO TUTÉŽ NABÍDKU POČÍTÁ JEDNOU.
+       Je to čistý výpočet nad modelem a nad tou nabídkou — podruhé vyjde
+       totéž. Jenže se volá pořád dokola: naměřeno při načtení úvodní
+       stránky 6 004 volání na 1 996 nabídek (tedy třikrát na každou:
+       z výpisu, z odznaků a z pruhu nahoře) a každá změna filtru přidá
+       dalších zhruba 1 500, protože seznam se překresluje celý. Uvnitř
+       přitom každé volání čtyřikrát profiltruje a setřídí ceny okolí.
+       Naměřeno profilerem: nejdražší jméno při načítání stránky.
+       Pamatuje se to ve WeakMapě klíčované NABÍDKOU, takže se paměť
+       uvolní s daty a nová data (postav se volá znovu) mají pokaždé
+       vlastní. Výsledek se nikde nepřepisuje — ověřeno hledáním; kdyby
+       ano, sdílel by se ten přepis dál. */
+    var pametOdhadu = (typeof WeakMap === 'function') ? new WeakMap() : null;
     function odhad(d) {
+      if (!pametOdhadu || !d || typeof d !== 'object') return odhadSpocti(d);
+      if (pametOdhadu.has(d)) return pametOdhadu.get(d);
+      var v = odhadSpocti(d);
+      pametOdhadu.set(d, v);
+      return v;
+    }
+    function odhadSpocti(d) {
       if (!hasArea(d) || !d.price || neduveryhodna(d)) return null;
       var g = druhGroup(d.druh);
       var zdroje = [
@@ -429,11 +449,18 @@
       /* Nejdřív srovnání s podobně velkými pozemky (třetina až trojnásobek
        * výměry). Když jich není dost, ustoupí se k srovnání bez ohledu na
        * velikost — a řekne se to, aby si člověk mohl číslo přebrat. */
+      /* Kroky se POČÍTAJÍ AŽ VE CHVÍLI, KDY NA NĚ DOJDE. Dřív se všechny
+         čtyři spočítaly dopředu a smyčka pod tím se skoro vždycky vrátila
+         hned u prvního — tři čtvrtiny práce se tedy zahodily. Uvnitř
+         ceny() je přitom filtrace a setřídění celého okolí. Pořadí
+         zůstává: napřed podle velikosti (okres, kraj), potom bez ohledu
+         na ni. */
       var kroky = [];
-      zdroje.forEach(function (z) { kroky.push({ arr: ceny(z.pole, d.area, g), uroven: z.uroven, kde: z.kde, podleVelikosti: true }); });
-      zdroje.forEach(function (z) { kroky.push({ arr: ceny(z.pole, 0, g), uroven: z.uroven, kde: z.kde, podleVelikosti: false }); });
+      zdroje.forEach(function (z) { kroky.push({ pole: z.pole, plocha: d.area, uroven: z.uroven, kde: z.kde, podleVelikosti: true }); });
+      zdroje.forEach(function (z) { kroky.push({ pole: z.pole, plocha: 0, uroven: z.uroven, kde: z.kde, podleVelikosti: false }); });
       for (var i = 0; i < kroky.length; i++) {
         var k = kroky[i];
+        k.arr = ceny(k.pole, k.plocha, g);
         if (!k.arr || k.arr.length < MIN_VZOREK) continue;
         var med = median(k.arr);
         if (!med) continue;

@@ -741,6 +741,49 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
   je('ani „Výhodná cena" nad radou, že je to nad obvyklou', naopak.length, 0);
 }
 
+/* ---------- Odhad se pro tutéž nabídku počítá jednou ----------
+ *
+ * odhad() je čistý výpočet: podruhé nad toutéž nabídkou vyjde totéž.
+ * Volá se ale pořád dokola — naměřeno v prohlížeči 6 004 volání na 1 996
+ * nabídek při načtení úvodní stránky a dalších ~1 500 při každé změně
+ * filtru. Uvnitř se přitom filtrovalo a třídilo okolí, a to čtyřikrát,
+ * i když se skoro vždycky použil hned první krok.
+ *
+ * Neměří se ČAS proti pevné mezi — ten na zatíženém stroji nic neřekne
+ * (naučil jsem se to v témže sezení: táž stránka vyšla jednou na 51,
+ * podruhé na 20 snímků). Měří se POMĚR dvou průchodů po sobě na tomtéž
+ * stroji: druhý musí být řádově rychlejší, jinak se nepamatuje nic.
+ * A hlavně: musí vyjít TOTÉŽ. Zapamatovaná odpověď, která se liší, by
+ * byla horší než pomalý výpočet. */
+{
+  const vzorek = [...KOLIN, ...KUTNA, DRAZBA, ...DALSI_DRAZBY];
+  const m = PK_CENY.postav(vzorek, OKRES_KRAJ);
+  const prvni = [], druhy = [];
+  const t0 = process.hrtime.bigint();
+  for (let i = 0; i < 40; i++) for (const d of vzorek) prvni.push(JSON.stringify(m.odhad(d)));
+  const t1 = process.hrtime.bigint();
+  for (let i = 0; i < 40; i++) for (const d of vzorek) druhy.push(JSON.stringify(m.odhad(d)));
+  const t2 = process.hrtime.bigint();
+  const a = Number(t1 - t0) / 1e6, b = Number(t2 - t1) / 1e6;
+  pravda(`je co měřit (${prvni.length} odhadů v průchodu, první trval ${a.toFixed(1)} ms)`,
+    prvni.length >= 200 && a > 0, `odhadů ${prvni.length}, čas ${a} ms`);
+  pravda('druhý průchod dá do posledního znaku totéž',
+    prvni.join('|') === druhy.join('|'), 'zapamatovaná odpověď se liší od spočítané');
+  /* První průchod počítá jen NA PRVNÍ OBRÁTKU (dál už se pamatuje), takže
+     poměr celých průchodů by byl skoro 1. Porovnává se proto první
+     obrátka proti zbytku — to je přesně to, co paměť mění. */
+  const m2 = PK_CENY.postav(vzorek, OKRES_KRAJ);
+  const s0 = process.hrtime.bigint();
+  for (const d of vzorek) m2.odhad(d);
+  const s1 = process.hrtime.bigint();
+  for (let i = 0; i < 20; i++) for (const d of vzorek) m2.odhad(d);
+  const s2 = process.hrtime.bigint();
+  const naJedno1 = Number(s1 - s0) / vzorek.length;
+  const naJedno2 = Number(s2 - s1) / (vzorek.length * 20);
+  pravda(`opakovaný odhad je aspoň pětkrát levnější (${(naJedno1 / naJedno2).toFixed(1)}×)`,
+    naJedno1 / naJedno2 >= 5, `poprvé ${Math.round(naJedno1)} ns, podruhé ${Math.round(naJedno2)} ns na nabídku`);
+}
+
 console.log(zpravy.join('\n'));
 
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
