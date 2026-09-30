@@ -161,6 +161,45 @@ pravda('každá nabídka ví, kdy ji robot viděl poprvé', bezData.length === 0
     const k = o.lat.toFixed(6) + ',' + o.lng.toFixed(6);
     (kde[k] = kde[k] || []).push(o.place + ' / ' + o.okres);
   }
+  /* A TOTÉŽ PRAVIDLO PŘÍMO V ROBOTOVI. Kontrola níž najde následek, ale
+     až po dalším běhu a s rozbitými daty na webu — stejná úvaha jako
+     u „robot prověřuje i souřadnice, které dostal od zdroje" výš.
+     Zkouší se CHOVÁNÍM, ne regulárem nad zdrojem: funkce dostane tři
+     nabídky na jednom bodu a musí jim souřadnice vzít. */
+  {
+    const R = await import('../scripts/fetch-opportunities.mjs');
+    const vzorek = [
+      { place: 'Mrsklesy', okres: 'Litoměřice', lat: 50.476488, lng: 13.989744, _gps: true },
+      { place: 'Kololeč', okres: 'Litoměřice', lat: 50.476488, lng: 13.989744, _gps: true },
+      { place: 'Medvědice', okres: 'Litoměřice', lat: 50.476488, lng: 13.989744, _gps: true },
+      { place: 'Úštěk', okres: 'Litoměřice', lat: 50.588000, lng: 14.348000, _gps: true },
+      /* Tentýž pozemek podruhé (táž obec) NENÍ zástupný bod — dvakrát
+         stažená jedna nabídka se stát může a souřadnice je u ní pravá. */
+      { place: 'Polepy', okres: 'Litoměřice', lat: 50.502000, lng: 14.191000, _gps: true },
+      { place: 'Polepy', okres: 'Litoměřice', lat: 50.502000, lng: 14.191000, _gps: true },
+    ];
+    const zahozeno = R.zahodZastupneGps(vzorek);
+    pravda('robot zahodí souřadnici, kterou sdílí víc různých obcí', zahozeno === 3,
+      `zahozeno ${zahozeno} nabídek místo tří`);
+    pravda('a nechá na pokoji tu, která je na bodu sama',
+      vzorek[3].lat === 50.588000 && vzorek[3]._gps === true, 'vzala se i osamocená nabídka');
+    pravda('a nechá na pokoji tutéž obec dvakrát na jednom bodu',
+      vzorek[4].lat === 50.502000 && vzorek[5].lat === 50.502000,
+      'dvě nabídky z téže obce se braly jako zástupný bod');
+
+    /* NÁHRADNÍ POLOHA MUSÍ BÝT U KAŽDÉ NABÍDKY JINÁ. Semínko rozptylu
+       bralo parcelní číslo — a to je u 1 723 z 2 020 nabídek „—", takže
+       vycházelo „—" + okres, tedy totéž pro celý okres. Většinou se to
+       nepozná (polohu vzápětí přepíše geokódování podle jména obce),
+       projeví se to až tam, kde geokodér mlčí. */
+    const a = R.geocode({ place: 'Mrsklesy', okres: 'Litoměřice', parcel: '—', url: 'https://x/28331' });
+    const b = R.geocode({ place: 'Kololeč', okres: 'Litoměřice', parcel: '—', url: 'https://x/28329' });
+    pravda('náhradní poloha se vůbec spočítá (jinak zkouška nic neměří)',
+      typeof a.lat === 'number' && typeof b.lat === 'number', 'geocode nevrátil souřadnice');
+    pravda('a dvě nabídky bez parcelního čísla nedostanou tentýž bod',
+      a.lat !== b.lat || a.lng !== b.lng,
+      `obě leží na ${a.lat},${a.lng} — celý okres by skončil na jednom špendlíku`);
+  }
   const shodne = Object.entries(kde).filter(([, v]) => new Set(v).size > 1);
   pravda('dvě různé obce nesdílejí přesně tentýž bod', shodne.length === 0,
     shodne.slice(0, 3).map(([k, v]) => k + ': ' + [...new Set(v)].join(' + ')).join(' | '));

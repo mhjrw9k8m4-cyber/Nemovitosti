@@ -143,7 +143,7 @@ export function prorezMezipamet(cache = GEO_CACHE, hlasit = true) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // deterministický malý rozptyl (ať se parcely ve stejné obci nekryjí)
-function jitterAround(lat, lng, seedStr, amp) {
+export function jitterAround(lat, lng, seedStr, amp) {
   let h = 0;
   const s = String(seedStr || '');
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
@@ -255,11 +255,56 @@ function nearestOkres(lat, lng) {
 }
 
 // Okresní fallback (méně přesné) – když název KÚ nedohledáme.
-function geocode(o, seedStr) {
+/* JEDEN BOD PRO VÍC RŮZNÝCH OBCÍ = ZÁSTUPNÁ SOUŘADNICE.
+   Sousední pravidlo o kus výš (polohaSediSOkresem) chytá GPS, která si
+   odporuje s okresem z vyhlášky. Tohle je táž chyba z druhé strany:
+   okres sedí a souřadnice je přesto zástupná. Naměřeno: tři dražby od
+   jednoho dražebníka (okdrazby 28329, 28330, 28331) dostaly tentýž bod
+   pro Mrsklesy, Kololeč i Medvědice — tři různé vesnice na jednom
+   špendlíku. Totéž u Srdova s Horními Nezly a u Dolního Týnce s Horním.
+   Jsou to části jedné větší obce, takže zdroj uvedl souřadnice té obce,
+   ne pozemku.
+   Špendlík na mapě slibuje, že pozemek je TAM. Tři vesnice na jednom
+   bodu ten slib porušují u všech tří naráz a nedá se z nich vybrat,
+   která by ho měla dostat — proto se zahodí všem a poloha se dohledá
+   podle názvu obce jako u ostatních.
+   Tentýž pozemek podruhé (táž obec) je něco jiného a bodu se nedotkne:
+   rozhoduje počet RŮZNÝCH jmen obcí. */
+export function zahodZastupneGps(nabidky) {
+  const podleBodu = new Map();
+  for (const o of nabidky) {
+    if (!o._gps) continue;
+    if (typeof o.lat !== 'number' || typeof o.lng !== 'number') continue;
+    const k = o.lat.toFixed(6) + ',' + o.lng.toFixed(6);
+    if (!podleBodu.has(k)) podleBodu.set(k, []);
+    podleBodu.get(k).push(o);
+  }
+  let kolik = 0;
+  for (const skupina of podleBodu.values()) {
+    if (skupina.length < 2) continue;
+    const obce = new Set(skupina.map((o) => String(o.place || '').trim().toLowerCase()));
+    if (obce.size < 2) continue;
+    for (const o of skupina) { o.lat = undefined; o.lng = undefined; o._gps = false; kolik++; }
+  }
+  return kolik;
+}
+
+/* SEMÍNKO MUSÍ BÝT U KAŽDÉ NABÍDKY JINÉ, jinak z rozptylu kolem středu
+   okresu nezbude rozptyl, ale jeden bod. Bralo se `o.parcel` — jenže
+   parcelní číslo je u 1 723 z 2 020 nabídek „—", takže semínko vycházelo
+   „—" + okres, tedy TOTÉŽ pro všechny bez parcely v jednom okrese.
+   Většinou se to nepozná: náhradní poloha se vzápětí přepíše
+   geokódováním podle jména obce. Projeví se to až tam, kde geokodér
+   mlčí — a pak leží celý okres na jednom špendlíku.
+   Odkaz na zdroj je u každé nabídky vlastní, tak se bere jako první.
+   Zástupné „—" se nepočítá jako hodnota. */
+export function geocode(o, seedStr) {
   if (typeof o.lat === 'number' && typeof o.lng === 'number') return o;
   const base = OKRESY_MAP[o.okres];
   if (!base) return o;
-  const j = jitterAround(base[0], base[1], (seedStr || o.parcel || o.place || '') + o.okres, 0.06);
+  const hodnota = (x) => { const v = String(x || '').trim(); return (!v || v === '—' || v === '-') ? '' : v; };
+  const semeno = hodnota(seedStr) || hodnota(o.url) || hodnota(o.parcel) || hodnota(o.place);
+  const j = jitterAround(base[0], base[1], semeno + o.okres, 0.06);
   return { ...o, lat: j.lat, lng: j.lng };
 }
 
@@ -884,6 +929,9 @@ async function main() {
     zdrojSpatne++;
   }
   if (zdrojSpatne) console.log(`Zahozeny souřadnice od zdroje, které si odporovaly s okresem: ${zdrojSpatne}.`);
+
+  const zdrojZastupne = zahodZastupneGps(fresh);
+  if (zdrojZastupne) console.log(`Zahozeny zástupné souřadnice od zdroje (jeden bod pro víc obcí): ${zdrojZastupne}.`);
 
   let refined = 0, zamitnuto = 0;
   for (const o of fresh) {
