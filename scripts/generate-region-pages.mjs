@@ -8,6 +8,11 @@ import { fileURLToPath } from 'url';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { jsonVeStrance } from './json-do-stranky.mjs';
+/* Odkaz na vlastní stránku pozemku. Které nabídce patří která stránka
+   rozhoduje generátor těch stránek — proto se to mapování odsud jen
+   PŮJČUJE. Spočítat si ho tu podruhé by znamenalo dvě pravdy o jednom
+   názvu souboru a odkazy na 404, jakmile se rozejdou. */
+import { mapaSouboru, klicNabidky } from './generate-parcel-pages.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -134,6 +139,9 @@ const PKH = require_(path.join(ROOT, 'js', 'hlidani-logika.js'));
    i všechny součty vycházejí z téže hromádky jako aplikace. */
 const vseSyrove = Array.isArray(data.opportunities) ? data.opportunities : [];
 const all = PKH.bezDuplicit(vseSyrove);
+/* Vstup je týž (tentýž soubor, tatáž funkce na duplicity), takže mapování
+   sedí na to, co generátor stránek pozemků opravdu vyrobí. */
+const STRANKY = mapaSouboru(all);
 if(vseSyrove.length !== all.length){
   console.log(`Duplicit odstraněno: ${vseSyrove.length - all.length} (zůstalo ${all.length}) — stejně jako v aplikaci.`);
 }
@@ -466,9 +474,26 @@ function itemRow(o){
       `<span class="ext-ikona" aria-hidden="true">↗</span>` +
       `<span class="visually-hidden"> — ${esc(domena)}, otevře se v novém okně</span></a>`;
   }
+  /* NÁZEV OBCE VEDE NA VLASTNÍ STRÁNKU POZEMKU.
+     Dřív byl jediný odkaz v řádku ten na zdroj — tedy pryč z webu. Na
+     okresní a krajské stránky přitom lidé chodí z vyhledávačů a je to
+     první, co z webu uvidí: jediné, co se dalo udělat, bylo odejít na
+     bezrealitky.cz. Naměřeno: 2 164 řádků na 91 stránkách a ani jeden
+     odkaz dovnitř; z 1 995 vygenerovaných stránek pozemků na žádnou
+     neodkazovalo nic než sitemap.
+     Odkazuje se na vygenerovaný soubor, ne na pozemek.html?p=… — právě
+     ten soubor je u pozemku kanonický, takže odkaz míří tam, kam
+     posíláme i vyhledávače. Když soubor není (nabídka bez souřadnic
+     nebo bez obce stránku nedostane), zbude prostý text jako dřív;
+     mrtvý odkaz je horší než žádný. */
+  const strankaPozemku = STRANKY.get(klicNabidky(o));
+  const misto = strankaPozemku
+    ? `<a class="okr-place" href="${attr(strankaPozemku.soubor)}">${esc(o.place)}` +
+      `<span class="visually-hidden"> — detail pozemku</span></a>`
+    : `<span class="okr-place">${esc(o.place)}</span>`;
   return `      <div class="okr-item">
         ${badge}
-        <span class="okr-place">${esc(o.place)}</span>
+        ${misto}
         <span class="okr-meta">${bits.join(' · ')}</span>
         ${src}
       </div>`;

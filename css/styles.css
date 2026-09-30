@@ -2623,6 +2623,30 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .okr-list{display:flex; flex-direction:column; gap:10px; margin:14px 0 0;}
 .okr-item{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 12px; padding:13px 15px; background:var(--surface-2,#1B2E25); border:1px solid var(--line,#2C3F35); border-radius:var(--r-md);}
 .okr-item .okr-place{font-weight:600; color:var(--text-ondark,#EAE6DD); font-size:15px;}
+/* Název obce vede na vlastní stránku pozemku. Musí to být poznat i BEZ
+   kurzoru — na dotyku žádný není — ale nesmí to překřičet cenu a výměru
+   vedle: tlumené podtržení, plné až pod kurzorem. */
+.okr-item a.okr-place{text-decoration:underline; text-decoration-thickness:1px;
+  text-underline-offset:3px; text-decoration-color:var(--line-ui);}
+.okr-item a.okr-place:hover{text-decoration-color:currentColor;}
+/* A TERČEM JE CELÝ ŘÁDEK, ne jen to jméno.
+   Samotný název obce měl na telefonu terč 22×24 px v řádku vysokém 131 px
+   — palcem se na to nemíří. Na kartu v aplikaci se přitom klepne kamkoli
+   a je to tentýž druh objektu. Jenže tyhle stránky musí fungovat i bez
+   jediného skriptu (proto vznikly), takže „klepnutí na řádek" nemůže
+   dělat JavaScript: odkaz si rozprostře vlastní neviditelnou plochu přes
+   celý řádek. Odkaz na zdroj je nad ní, aby se dal pořád stisknout.
+   Cenou je označování textu v řádku myší — na výpisu, ze kterého se jde
+   dál, to za plný terč stojí. */
+.okr-item{position:relative;}
+.okr-item a.okr-place::after{content:""; position:absolute; inset:0; z-index:0;}
+.okr-item .okr-src{position:relative; z-index:1;}
+/* Klikací řádek musí být poznat, jinak je z toho past: pod kurzorem se
+   podloží a jméno se podtrhne naplno. */
+.okr-item:hover{background:var(--ink-soft2); cursor:pointer;}
+.okr-item:hover a.okr-place{text-decoration-color:currentColor;}
+/* Aby podložení nekopírovalo tvar řádku na pixel k okrajům textu. */
+.okr-list .okr-item{border-radius:var(--r-sm);}
 .okr-item .okr-badge{font-size:11px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; padding:3px 8px; border-radius:var(--r-pill); border:1px solid currentColor;}
 /* Štítek nese text i rámeček v jedné barvě (currentColor), takže se na něj
    vztahuje mez pro text. Sytá varianta měla 4,15 : 1 — pod normou. */

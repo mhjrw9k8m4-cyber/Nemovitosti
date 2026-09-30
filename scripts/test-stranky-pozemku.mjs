@@ -294,6 +294,64 @@ pravda('každý okres má náhledový obrázek pro sdílení', bezNahledu.length
     spatne.length === 0, `${spatne.length} chyb: ` + spatne.slice(0, 4).join('; '));
 }
 
+// --- 4) regionální stránky na ně musí odkazovat, a na tu SPRÁVNOU -------
+/* Vlastní stránky pozemků se vyráběly do prázdna: z 1 995 stránek na žádnou
+   neodkazovalo nic než sitemap.xml. Na okresních a krajských stránkách byl
+   v řádku nabídky jediný odkaz — ten na zdroj, tedy pryč z webu. Právě na
+   tyhle stránky přitom chodí lidé z vyhledávačů.
+   Hlídá se to na OBSAHU cílové stránky, ne na tom, že odkaz existuje: odkaz
+   na cizí pozemek je horší než žádný (cizí cena, cizí výměra) a pouhá
+   existence souboru by to nepoznala. Porovnává se obec, výměra i cena. */
+{
+  const regiony = fs.readdirSync(ROOT).filter((f) =>
+    /^pozemky-okres-.+\.html$/.test(f) || /^pozemky-.+-kraj\.html$/.test(f));
+  const cislo = (t) => String(t).replace(/[\s\u00a0]/g, '');
+  const cache = new Map();
+  function dataStranky(soubor) {
+    if (!cache.has(soubor)) {
+      let d = null;
+      try {
+        const m = fs.readFileSync(path.join(ROOT, soubor), 'utf8').match(/window\.PK_POZEMEK=(\{.*?\});/s);
+        if (m) d = JSON.parse(m[1]);
+      } catch (e) { /* soubor není — pozná se níž */ }
+      cache.set(soubor, d);
+    }
+    return cache.get(soubor);
+  }
+  let radku = 0, sOdkazem = 0;
+  const spatne = [];
+  for (const f of regiony) {
+    const html = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    for (const m of html.matchAll(/<div class="okr-item"[^>]*>([\s\S]*?)<\/div>/g)) {
+      const radek = m[1];
+      /* Týž tvar řádku nosí i dlaždice okresů v „Pozemky v okolí" — ty
+         odznak druhu nemají a na stránku pozemku vést nemají. */
+      if (radek.indexOf('okr-badge') < 0) continue;
+      radku++;
+      const odkaz = radek.match(/<a class="okr-place" href="([^"]+)"/);
+      if (!odkaz) continue;
+      sOdkazem++;
+      const d = dataStranky(odkaz[1]);
+      if (!d) { spatne.push(`${f} → ${odkaz[1]}: stránka neexistuje nebo nenese data`); continue; }
+      const obec = (radek.match(/<a class="okr-place" href="[^"]+">([^<]*)/) || [])[1] || '';
+      const vym = radek.match(/<b>([\d\s\u00a0]+) m²<\/b>/);
+      const cen = radek.match(/<b>([\d\s\u00a0]+) Kč<\/b>/);
+      const cilObec = String(d.k || '').split('|')[0];
+      if (cilObec !== obec) spatne.push(`${f} → ${odkaz[1]}: obec „${obec}" vs „${cilObec}"`);
+      else if (vym && String(d.v) !== cislo(vym[1])) spatne.push(`${f} → ${odkaz[1]}: výměra ${cislo(vym[1])} vs ${d.v}`);
+      else if (cen && String(d.c) !== cislo(cen[1])) spatne.push(`${f} → ${odkaz[1]}: cena ${cislo(cen[1])} vs ${d.c}`);
+    }
+  }
+  /* Dvě pojistky, aby kontrola neměřila prázdno: musí se najít regionální
+     stránky a v nich řádky s nabídkou. */
+  pravda('regionální stránky s výpisem nabídek existují (jinak zkouška nic neměří)',
+    regiony.length >= 50 && radku >= 500, `stránek ${regiony.length}, řádků ${radku}`);
+  pravda('každý řádek nabídky vede na vlastní stránku pozemku',
+    radku > 0 && sOdkazem === radku, `z ${radku} řádků odkazuje ${sOdkazem}`);
+  pravda(`a odkaz vede na TEN pozemek — obec, výměra i cena sedí (ověřeno na ${sOdkazem} řádcích)`,
+    spatne.length === 0, `${spatne.length} chyb: ` + spatne.slice(0, 4).join('; '));
+}
+
 console.log('\nStránky jednotlivých pozemků');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb`);

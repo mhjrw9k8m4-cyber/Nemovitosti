@@ -190,19 +190,18 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
    stejně jako v scripts/generate-region-pages.mjs. */
 const PKH = createRequire(import.meta.url)(path.join(ROOT, 'js', 'hlidani-logika.js'));
 
-export function generuj() {
-  const sablona = fs.readFileSync(path.join(ROOT, 'pozemek.html'), 'utf8');
-  const syrova = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
-  /* Duplicity odstraňuje TATÁŽ funkce jako mapa (js/main.js) i generátor
-     regionálních stránek — js/hlidani-logika.js. Dřív si tenhle generátor
-     vystačil s vlastním klíčem (pkey: obec, parcela, okres, souřadnice)
-     a to nestačilo: tentýž pozemek ze dvou zdrojů mívá parcelní číslo
-     jen u jednoho z nich a souřadnice o pár set metrů jinde. Dražba
-     v Trubíně (okdrazby.cz/drazba/27823) tak dostala dvě vlastní
-     stránky — dvě adresy pro jednu dražbu, obě v sitemap, obě si ve
-     vyhledávači konkurovaly. Vlastní pravidlo je tu pořád, ale až jako
-     druhé síto: rozlišuje stránky, nerozhoduje o duplicitách. */
-  const D = PKH.bezDuplicit(syrova);
+/* KTERÉ NABÍDCE PATŘÍ KTERÁ STRÁNKA — a proč to bydlí tady.
+   Regionální stránky na tyhle stránky odkazují, takže potřebují tentýž
+   výpočet. Kdyby si ho spočítaly podruhé, rozešel by se s tím, co se
+   opravdu vygenerovalo, a odkazy by mířily na neexistující soubory —
+   tedy na 404. Je to tentýž důvod, pro který skládání řádku od majitele
+   skončilo v jedné funkci (js/cisteni.js). Rozhoduje o tom seskupení
+   níž, ne jen název souboru, a proto to nejde vyjádřit čistou funkcí
+   nad jednou nabídkou. */
+export function klicNabidky(d) {
+  return pkey(d) + '#' + (d.price || 0) + '|' + (d.area || 0);
+}
+export function mapaSouboru(D) {
   /* NEJDŘÍV SESKUPIT, POTOM ROZHODNOUT. Dřív se tu na druhý pozemek se
      stejným klíčem prostě zapomnělo („tentýž pozemek ze dvou zdrojů =
      jedna stránka“). Jenže skutečné duplicity zahodil už PKH.bezDuplicit
@@ -218,7 +217,7 @@ export function generuj() {
     if (!skupiny.has(k)) skupiny.set(k, []);
     skupiny.get(k).push(d);
   }
-  const hotove = [];
+  const ven = new Map();
   for (const cleny of skupiny.values()) {
     /* Shodná cena I výměra na jednom místě = pořád tentýž pozemek, jen
        podruhé. Takovým se dělá jedna stránka dál: dvě adresy pro jednu
@@ -237,10 +236,35 @@ export function generuj() {
       (a.area || 0) - (b.area || 0) || (a.price || 0) - (b.price || 0)
       || String(a.url || '').localeCompare(String(b.url || '')));
     ruzne.forEach((d, i) => {
-      const soubor = i === 0 ? souborPro(d) : souborProDalsi(d);
-      fs.writeFileSync(path.join(ROOT, soubor), stranka(sablona, d, soubor));
-      hotove.push(soubor);
+      ven.set(klicNabidky(d), { d: d, soubor: i === 0 ? souborPro(d) : souborProDalsi(d) });
     });
+  }
+  return ven;
+}
+
+/* Nabídky, ze kterých se stránky dělají — tentýž vstup jako má generátor
+   regionálních stránek, ať se mapování odkazů a skutečně vyrobené soubory
+   nemůžou rozejít. */
+export function nabidky() {
+  const syrova = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
+  /* Duplicity odstraňuje TATÁŽ funkce jako mapa (js/main.js) i generátor
+     regionálních stránek — js/hlidani-logika.js. Dřív si tenhle generátor
+     vystačil s vlastním klíčem (pkey: obec, parcela, okres, souřadnice)
+     a to nestačilo: tentýž pozemek ze dvou zdrojů mívá parcelní číslo
+     jen u jednoho z nich a souřadnice o pár set metrů jinde. Dražba
+     v Trubíně (okdrazby.cz/drazba/27823) tak dostala dvě vlastní
+     stránky — dvě adresy pro jednu dražbu, obě v sitemap, obě si ve
+     vyhledávači konkurovaly. Vlastní pravidlo je tu pořád, ale až jako
+     druhé síto: rozlišuje stránky, nerozhoduje o duplicitách. */
+  return PKH.bezDuplicit(syrova);
+}
+
+export function generuj() {
+  const sablona = fs.readFileSync(path.join(ROOT, 'pozemek.html'), 'utf8');
+  const hotove = [];
+  for (const { d, soubor } of mapaSouboru(nabidky()).values()) {
+    fs.writeFileSync(path.join(ROOT, soubor), stranka(sablona, d, soubor));
+    hotove.push(soubor);
   }
   // Stránky zrušených nabídek musí zmizet, jinak by web sliboval pozemky,
   // které už nikde nejsou.
