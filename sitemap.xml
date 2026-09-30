@@ -336,12 +336,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-teplice.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-chomutov.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-chomutov.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-teplice.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -3291,12 +3291,12 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-pribram-petrovice-1idmihv.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-pardubice-recany-nad-labem-xlu08b.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-pardubice-recany-nad-labem-xlu08b.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-pribram-petrovice-1idmihv.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -8546,11 +8546,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-praha-vychod-velenska-1yu5xbr.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-vyskov-rousinov-n0yqfd.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -10056,7 +10051,7 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-teplice-teplice-ksnh1d.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-pisek-cerhonice-1wmygrk.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -10152,11 +10147,6 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-novy-jicin-novy-jicin-1mu0pu8.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-karlovy-vary-jachymov-njezca.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
