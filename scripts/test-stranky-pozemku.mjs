@@ -240,6 +240,60 @@ pravda('každý okres má náhledový obrázek pro sdílení', bezNahledu.length
     cizi.slice(0, 4).join(', '));
 }
 
+/* --- KANONICKÁ ADRESA MUSÍ UKAZOVAT NA SEBE ---------------------------
+ *
+ * Návazná chyba na to výš, a zrádnější: stránky navíc vznikly, nesly
+ * správnou cenu i výměru — ale kanonickou adresu si generátor počítal
+ * zvlášť, z klíče, tedy vždycky ze PRVNÍ z dvojice. Všech 26 stránek tak
+ * o sobě vyhledávači tvrdilo „mě neindexuj, správná adresa je tamta",
+ * ačkoli tam stojí jiný pozemek s jinou cenou. Google je podle toho
+ * z výsledků vyřadí a na obojí ukáže dvojče. Práce na vlastních
+ * stránkách by tím byla zahozená a nepoznalo by se to na webu nijak —
+ * jen tím, že ty nabídky nikdo nenajde.
+ *
+ * Kontroluje se i og:url a strojový popis (JSON-LD): tytéž adresy se
+ * skládají na třech místech a rozejít se můžou každá zvlášť.
+ */
+{
+  const podleKlice = new Map();
+  for (const d of ukazane) {
+    const k = pkey(d);
+    if (!podleKlice.has(k)) podleKlice.set(k, []);
+    podleKlice.get(k).push(d);
+  }
+  /* Rizikové jsou stránky „druhé v pořadí" — právě u nich se jméno
+     souboru rozchází s klíčem. Pro souměrnost se přidá i vzorek
+     obyčejných stránek, aby kontrola platila pro obojí. */
+  const dalsi = [], prvni = [];
+  for (const cleny of podleKlice.values()) {
+    const ruzne = [...new Map(cleny.map((d) => [(d.price || 0) + '|' + (d.area || 0), d])).values()]
+      .sort((a4, b4) => (a4.area || 0) - (b4.area || 0) || (a4.price || 0) - (b4.price || 0)
+        || String(a4.url || '').localeCompare(String(b4.url || '')));
+    ruzne.forEach((d, i) => (i === 0 ? prvni : dalsi).push(i === 0 ? souborPro(d) : souborProDalsi(d)));
+  }
+  /* Bez tohohle by kontrola níž prošla i s rozbitým generátorem: kdyby
+     žádná stránka „navíc" nebyla, neměla by co měřit. */
+  pravda(`stránky navíc se v datech vyskytují (${dalsi.length}) — jinak zkouška nic neměří`,
+    dalsi.length > 0, 'žádná stránka navíc; kontrola kanonické adresy by nic nehlídala');
+  const vzorek = dalsi.concat(prvni.filter((_, i) => i % Math.ceil(prvni.length / 25) === 0));
+  const spatne = [];
+  for (const soubor of vzorek) {
+    const cesta = path.join(ROOT, soubor);
+    if (!fs.existsSync(cesta)) continue;      // chybějící soubory hlásí kontrola výš
+    const h = fs.readFileSync(cesta, 'utf8');
+    const mistni = (x) => String(x || '').replace(/^https?:\/\/[^/]+\//, '');
+    const kan = /<link rel="canonical" href="([^"]*)"/.exec(h);
+    const og = /<meta property="og:url" content="([^"]*)"/.exec(h);
+    const ld = /"url":"([^"]*)"/.exec(h);
+    if (!kan) { spatne.push(`${soubor}: chybí canonical`); continue; }
+    if (mistni(kan[1]) !== soubor) spatne.push(`${soubor}: canonical → ${mistni(kan[1])}`);
+    if (og && mistni(og[1]) !== soubor) spatne.push(`${soubor}: og:url → ${mistni(og[1])}`);
+    if (ld && mistni(ld[1]) !== soubor) spatne.push(`${soubor}: JSON-LD → ${mistni(ld[1])}`);
+  }
+  pravda(`každá stránka je kanonická sama sobě (ověřeno na ${vzorek.length})`,
+    spatne.length === 0, `${spatne.length} chyb: ` + spatne.slice(0, 4).join('; '));
+}
+
 console.log('\nStránky jednotlivých pozemků');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb`);

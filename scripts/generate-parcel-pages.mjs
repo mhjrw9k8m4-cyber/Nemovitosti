@@ -114,9 +114,15 @@ export function textyPro(d) {
   return { titul, popis, cena, zaM2, vym, druh };
 }
 
-export function stranka(sablona, d) {
+/* SOUBOR se předává, nepočítá. Pozemky se shodným klíčem dostávají
+   vlastní stránky (souborProDalsi), ale kanonická adresa se tu počítala
+   vždycky ze souborPro — tedy z té první z dvojice. Těch 26 stránek pak
+   o sobě tvrdilo „správná adresa je ta druhá", ačkoli je to jiný pozemek
+   s jinou cenou a výměrou. Vyhledávač je podle toho zahodí a ukáže
+   místo nich dvojče: pozemky, kterým jsem včera vlastní stránku
+   udělal, by v hledání nebyly vidět. */
+export function stranka(sablona, d, soubor = souborPro(d)) {
   const { titul, popis, cena, zaM2, vym, druh } = textyPro(d);
-  const soubor = souborPro(d);
   const url = `${WEB}/${soubor}`;
   const og = `${WEB}/assets/og/okres-${slug(d.okres)}.png`;
   let h = sablona;
@@ -232,7 +238,7 @@ export function generuj() {
       || String(a.url || '').localeCompare(String(b.url || '')));
     ruzne.forEach((d, i) => {
       const soubor = i === 0 ? souborPro(d) : souborProDalsi(d);
-      fs.writeFileSync(path.join(ROOT, soubor), stranka(sablona, d));
+      fs.writeFileSync(path.join(ROOT, soubor), stranka(sablona, d, soubor));
       hotove.push(soubor);
     });
   }
