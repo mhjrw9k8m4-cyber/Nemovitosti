@@ -520,6 +520,12 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
     .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ');
   const upoz = bezKomentaru(readFileSync(new URL('../js/upozorneni.js', import.meta.url), 'utf8'));
   const hlid = bezKomentaru(readFileSync(new URL('../hlidani.html', import.meta.url), 'utf8'));
+  /* A TŘETÍ MÍSTO: stránka upozornění (js/centrum.js). Tu jsem při první
+     opravě přehlédl — spravil jsem odznak, aby počítal i inzeráty od
+     majitelů, ale stránka, NA KTEROU TEN ODZNAK POSÍLÁ, je dál nečetla.
+     Odznak by tím mohl slíbit „1 nový" a na stránce by nebylo nic, což je
+     horší než původní stav, kdy se obojí mýlilo stejně. */
+  const centrum = bezKomentaru(readFileSync(new URL('../js/centrum.js', import.meta.url), 'utf8'));
   /* Pojistka: kdyby se ta místa přejmenovala, kontroly níž by hlídaly
      prázdno a tvářily se spokojeně. */
   je('zdroje', 'odznak opravdu počítá nové pozemky (jinak se nic neměří)',
@@ -527,8 +533,13 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   je('zdroje', 'a stránka hlídání taky (jinak se nic neměří)',
     /matches\(/.test(hlid), true);
 
+  je('zdroje', 'stránka upozornění opravdu skládá seznam (jinak se nic neměří)',
+    /F\.sestav\(/.test(centrum), true);
+
   je('zdroje', 'odznak čte i inzeráty od majitelů, ne jen stažená data',
     /user-listings\.json/.test(upoz), true);
+  je('zdroje', 'a stránka upozornění taky (co odznak slíbí, musí být vidět)',
+    /user-listings\.json/.test(centrum), true);
   je('zdroje', 'stránka hlídání skládá živý inzerát sdílenou funkcí',
     /PKCisteni\.majitele\(/.test(hlid), true);
   /* A hlavně: NESKLÁDÁ si ho ručně. Tohle je ta chyba, která se vrací —
