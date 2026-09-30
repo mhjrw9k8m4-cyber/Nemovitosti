@@ -801,6 +801,99 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   await ctx.close();
 }
 
+/* --- OVLÁDÁNÍ MUSÍ ŘÍKAT TO, CO PLATÍ ---------------------------------
+ *
+ * Filtr se dá vypnout třemi cestami: tlačítkem v panelu, křížkem na
+ * štítku nad výpisem a „Zrušit filtry". Jenom ta první o tom ovládání
+ * řekla, takže model a panel se rozešly. Naměřeno na pěti filtrech, u
+ * čtyř z nich: po křížku se počet vrátil na 1 953 (filtr tedy přestal
+ * platit), ale „Pod obvyklou cenou" i „Končí do 14 dní" dál vypadaly
+ * zapnuté a v políčkách zůstalo 500 000 a 5 000.
+ *
+ * A právě z toho to působí rozbitě: tlačítko se přepíná podle modelu,
+ * takže další klepnutí filtr ZAPNE a vzhled se nezmění — už zapnuté
+ * vypadalo. Člověk klepne na „zapnuté" tlačítko, ono zůstane „zapnuté",
+ * a výpis se přitom rázem zmenší.
+ *
+ * Druhá polovina: „Zrušit filtry" mělo ruční výčet, ve kterém „cena za
+ * metr" a „pod obvyklou cenou" chyběly. Z 1 953 nabídek po jeho stisku
+ * zůstalo 1 087, respektive 299, a odznak u panelu dál hlásil „1".
+ *
+ * Hlídá se to na následku: zapnout, zrušit, přečíst počet A ovládání.
+ */
+{
+  const { ctx, p } = await otevri(TELEFON);
+  await p.evaluate(() => { document.getElementById('ms-filters').open = true; });
+  await p.waitForTimeout(500);
+  const kolik = () => p.evaluate(() => {
+    const t = document.getElementById('mcf-hotovo-t');
+    return t ? +(t.textContent.replace(/[^\d]/g, '') || 0) : -1;
+  });
+  /* Zapnuté se čte z OVLÁDÁNÍ, ne z modelu: právě rozchod těch dvou je
+     to, co se tu měří. */
+  const PRIPADY = [
+    ['Pod obvyklou cenou', () => { const e = document.getElementById('map-levne'); e.click(); },
+      () => document.getElementById('map-levne').classList.contains('on')],
+    ['Končí do', () => { const e = document.getElementById('map-urgent'); e.click(); },
+      () => document.getElementById('map-urgent').classList.contains('on')],
+    ['Kč/m²', () => { const e = document.getElementById('map-perm2'); e.value = '100'; e.dispatchEvent(new Event('change', { bubbles: true })); },
+      () => !!document.getElementById('map-perm2').value],
+    ['Cena', () => { const e = document.getElementById('map-cena'); e.value = '500000'; e.dispatchEvent(new Event('change', { bubbles: true })); },
+      () => !!document.getElementById('map-cena').value],
+    ['Výměra', () => { const e = document.getElementById('map-area'); e.value = '5000'; e.dispatchEvent(new Event('change', { bubbles: true })); },
+      () => !!document.getElementById('map-area').value],
+    ['Dražba', () => { document.querySelector('.filter-chip[data-type="drazba"]').click(); },
+      () => document.querySelector('.filter-chip[data-type="drazba"]').classList.contains('active')],
+  ];
+  const cele = await kolik();
+  pravda(`bez filtrů je v nabídce celý výpis (${cele})`, cele > 100,
+    'počet se nepřečetl — kontroly níž by nic neměřily');
+  const nesedi = [], nezrusilo = [], neslo = [];
+  for (const [jm, zapni, jeZap] of PRIPADY) {
+    await p.evaluate(zapni);
+    await p.waitForTimeout(700);
+    const sFiltrem = await kolik();
+    const zapnuto = await p.evaluate(jeZap);
+    /* Pojistka na každý případ zvlášť: filtr, který nic neubere (nebo se
+       ani nezapne), by kontrolu níž nechal projít naprázdno. */
+    if (sFiltrem === cele || !zapnuto) { neslo.push(`${jm} (počet ${cele}→${sFiltrem}, ovládání ${zapnuto ? 'zap' : 'vyp'})`); continue; }
+    /* Křížek na TOM štítku — ne na prvním, ten by rušil něco jiného. */
+    const kliklo = await p.evaluate((h) => {
+      const b = [...document.querySelectorAll('#ms-chipy .msch')]
+        .find((e) => (e.textContent || '').replace(/\s+/g, ' ').toLowerCase().indexOf(h.toLowerCase()) >= 0);
+      if (!b) return false; b.click(); return true;
+    }, jm);
+    if (!kliklo) { neslo.push(`${jm} (štítek se nenašel)`); await p.evaluate(() => { const e = document.getElementById('mcf-zrusit'); if (e) e.click(); }); await p.waitForTimeout(600); continue; }
+    await p.waitForTimeout(800);
+    const poKrizku = await kolik();
+    if (poKrizku !== cele) nezrusilo.push(`${jm}: po křížku ${poKrizku} místo ${cele}`);
+    if (await p.evaluate(jeZap)) nesedi.push(`${jm}: filtr zrušen, ale ovládání dál vypadá zapnuté`);
+  }
+  pravda(`každý zkoušený filtr se dal zapnout a našel svůj štítek (${PRIPADY.length - neslo.length}/${PRIPADY.length})`,
+    neslo.length === 0, `nešlo změřit: ${neslo.join('; ')}`);
+  pravda('křížek na štítku filtr opravdu zruší', nezrusilo.length === 0, nezrusilo.join('; '));
+  pravda('a ovládání v panelu o tom ví', nesedi.length === 0, nesedi.join('; '));
+
+  /* A teď všechno naráz na „Zrušit filtry" — to je ta druhá polovina. */
+  for (const [, zapni] of PRIPADY) { await p.evaluate(zapni); await p.waitForTimeout(220); }
+  await p.waitForTimeout(700);
+  const vse = await kolik();
+  pravda(`se všemi filtry naráz je výpis menší (${vse})`, vse < cele,
+    'nic se nezúžilo — kontrola „Zrušit filtry" by nic neměřila');
+  await p.evaluate(() => { document.getElementById('ms-filters').open = true; const e = document.getElementById('mcf-zrusit'); if (e) e.click(); });
+  await p.waitForTimeout(1400);
+  const poVsem = await kolik();
+  pravda('„Zrušit filtry" vrátí celou nabídku i po naklikání všeho', poVsem === cele,
+    `po zrušení ${poVsem}, čekáno ${cele}`);
+  const zbyla = [];
+  for (const [jm3, , jeZap3] of PRIPADY) {
+    if (await p.evaluate(jeZap3)) zbyla.push(jm3);
+  }
+  pravda('a žádné ovládání nezůstalo vypadat zapnuté', zbyla.length === 0,
+    `dál vypadá zapnutě: ${zbyla.join(', ')}`);
+  await ctx.close();
+}
+
 await ctx.close();
 await prohlizec.close();
 console.log('\nNašeptávač obcí, oprava překlepu a výběr ceny/výměry');

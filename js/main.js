@@ -3986,6 +3986,7 @@
     prepocitejCipy();   // čísla u kategorií musí sedět s tím, co je vidět
     prekresliPosuvniky(); // sloupce a táhla u ceny a výměry podle ostatních filtrů
     prekresliVybaveni(); // pilulky „co je u pozemku" a jejich počty
+    prekresliOvladani(); // políčka a přepínače podle toho, co opravdu platí
     prekresliChipy();    // odznaky toho, co web pochopil z napsané věty
     prekresliAkceFiltru(matched);   // „Zobrazit N pozemků" a „Zrušit filtry" na konci panelu
   }
@@ -3995,6 +3996,17 @@
     if (searchEl) searchEl.value = '';
 
     minPrice = 0; maxArea = 0;
+    /* A ZAMETACÍ PRŮCHOD PŘES omezeni(). Ten výčet výš byl ruční, a proto
+       neúplný: „cena za metr" a „pod obvyklou cenou" v něm chyběly úplně.
+       Naměřeno: po klepnutí na „Zrušit filtry" zůstalo z 1 953 nabídek
+       1 087, respektive 299, a odznak u panelu dál hlásil „1". Tlačítko
+       tedy neudělalo to, co má napsané.
+       omezeni() je jediný úplný seznam toho, co web SÁM považuje za
+       zapnuté — visibilita „Zrušit filtry" se odvozuje z něj. Teď z něj
+       vychází i zrušení, takže se ty dvě věci nemůžou rozejít.
+       Průchod je sám o sobě opatrný: každá položka vypíná jen sebe, a co
+       je už vypnuté, v seznamu vůbec není. */
+    omezeni().forEach(function (o) { if (typeof o.vypni === 'function') o.vypni(); });
     [cenaEl, cenaOdEl, areaEl, areaDoEl].forEach(function (el) { if (el) el.value = ''; });
     // Rozsahy ceny a výměry se vymažou i tady — políčka jsou teď v okně
     // přes celou obrazovku, ale patří k témuž filtru.
@@ -4782,6 +4794,63 @@
         if (e.key === 'Escape' && !ov.hidden) { e.preventDefault(); zavri(); }
       });
     });
+  }
+
+  /* OVLÁDÁNÍ PODLE MODELU — opačný směr než prectiRozsahy().
+     Filtr se dá vypnout TŘEMI cestami: tlačítkem v panelu, křížkem na
+     štítku nad výpisem a „Zrušit filtry". Jenom ta první o tom ovládání
+     řekla, takže model a panel se rozešly. Naměřeno na pěti filtrech, u
+     čtyř z nich: po křížku se počet vrátil na 1 953 (filtr tedy opravdu
+     přestal platit), ale „Pod obvyklou cenou" i „Končí do 14 dní" dál
+     vypadaly zapnuté a v políčkách ceny a výměry zůstala čísla 500 000
+     a 5 000. Jen „do 100 Kč/m²" bylo v pořádku — jeho vypni() si políčko
+     mazalo samo.
+
+     A tady je ta „zvláštnost", kvůli které to vypadá rozbitě: tlačítko se
+     přepíná podle modelu (levneOnly = !levneOnly), takže další klepnutí na
+     ně filtr ZAPNE — a vzhled se nezmění, protože už zapnuté vypadalo.
+     Člověk klepne na tlačítko, které je „zapnuté", ono zůstane „zapnuté",
+     a výpis se přitom rázem zmenší.
+
+     Řeší se to jako u druhů, vybavení a posuvníků: jedno překreslení
+     z modelu, volané z renderList(). Kdo příště přidá filtr, dostane
+     srovnané ovládání zadarmo. */
+  /* Do rozepsaného čísla se nesahá: renderList() se volá i při psaní
+     (prectiRozsahy), a přepsat políčko pod rukou by uťalo kurzor. Proto
+     se mění jen to, co se od modelu OPRAVDU liší — „0500" se rozumí jako
+     500 a nechá se na pokoji. */
+  function polePodleModelu(el, hodnota) {
+    if (!el || document.activeElement === el) return;
+    if ((parseInt(el.value, 10) || 0) === (hodnota || 0)) return;
+    el.value = hodnota ? String(hodnota) : '';
+  }
+  function prepinacPodleModelu(el, zapnuty) {
+    if (!el) return;
+    el.classList.toggle('on', !!zapnuty);
+    el.setAttribute('aria-pressed', zapnuty ? 'true' : 'false');
+  }
+  function prekresliOvladani() {
+    polePodleModelu(cenaEl, maxPrice);
+    polePodleModelu(cenaOdEl, minPrice);
+    polePodleModelu(areaEl, minArea);
+    polePodleModelu(areaDoEl, maxArea);
+    if (perm2El && document.activeElement !== perm2El) {
+      var chce = maxPerM2 ? String(maxPerM2) : '';
+      if (perm2El.value !== chce) perm2El.value = chce;
+    }
+    prepinacPodleModelu(urgentEl, urgentOnly);
+    prepinacPodleModelu(levneEl, levneOnly);
+    /* Okolí má vlastní vypínač (vypniOkoli), který uklidí i značku v mapě.
+       Sem patří jen vzhled tlačítka — kdyby okolí zhaslo křížkem na
+       štítku, zůstalo by svítit. */
+    if (nearBtn) nearBtn.classList.toggle('on', !!okoliZap);
+    /* Štítky druhu nabídky: křížek na „Dražba" nastaví activeType zpátky
+       na „all", ale sám štítek nepřebarví. */
+    if (filtersEl) {
+      filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
+        b.classList.toggle('active', b.getAttribute('data-type') === activeType);
+      });
+    }
   }
 
   /* Překreslení: sloupce podle toho, co projde OSTATNÍMI filtry (vlastní
