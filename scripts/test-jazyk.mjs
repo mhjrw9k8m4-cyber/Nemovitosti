@@ -43,6 +43,11 @@ function pravda(popis, vyslo, proc) {
 const MEZ_PISMO = 12;     // různých velikostí pod 30 px na stránku
 const MEZ_TRVANI = 3;     // různých trvání přechodu
 const MEZ_NABEH = 2;      // náběhů: zdejší křivka + ease-in u mizející hlavičky
+/* Odstupy: kladné hodnoty margin/padding/gap do 128 px. Záporné se
+   nepočítají — ty si nastavuje Leaflet u svých značek sám a do našeho
+   jazyka nepatří. Naměřeno před úklidem: 61 různých hodnot ve zdroji,
+   každé celé číslo od 1 do 20. */
+const MEZ_MEZERA = 22;
 
 const STRANKY = ['index.html', 'pozemek-tabor-nemysl-16a8tol.html', 'pridat.html', 'pozemky-okres-tabor.html'];
 
@@ -76,7 +81,7 @@ for (const stranka of STRANKY) {
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(5200);
   const v = await p.evaluate(() => {
-    const pismo = new Map(), trvani = new Set(), nabeh = new Set();
+    const pismo = new Map(), trvani = new Set(), nabeh = new Set(), mezery = new Set();
     let merenych = 0;
     document.querySelectorAll('body *').forEach((e) => {
       const r = e.getBoundingClientRect();
@@ -89,12 +94,22 @@ for (const stranka of STRANKY) {
         const px = parseFloat(c.fontSize);
         if (isFinite(px) && px < 30) pismo.set(px, (pismo.get(px) || 0) + 1);
       }
+      ['marginTop','marginRight','marginBottom','marginLeft',
+       'paddingTop','paddingRight','paddingBottom','paddingLeft',
+       'rowGap','columnGap'].forEach((k) => {
+        const px = parseFloat(c[k]);
+        /* Jen celé pixely. Necelé číslo tu není návrhová hodnota, ale
+           dopočet: „margin:0 auto" u vystředěné karty vyjde třeba
+           111,203 px a s jazykem webu nemá co dělat. */
+        if (isFinite(px) && px > 0 && px <= 128 && Number.isInteger(px)) mezery.add(px);
+      });
       if (c.transitionDuration && c.transitionDuration !== '0s') {
         c.transitionDuration.split(',').forEach((x) => { const t = x.trim(); if (t !== '0s') trvani.add(t); });
         c.transitionTimingFunction.split(/,(?![^(]*\))/).forEach((x) => nabeh.add(x.trim()));
       }
     });
-    return { pismo: [...pismo.entries()].sort((a, b) => b[1] - a[1]), trvani: [...trvani], nabeh: [...nabeh], merenych };
+    return { pismo: [...pismo.entries()].sort((a, b) => b[1] - a[1]), trvani: [...trvani], nabeh: [...nabeh],
+      mezery: [...mezery].sort((a, b) => a - b), merenych };
   });
   /* Pojistka: bez textu a bez přechodů by všechno vyšlo jako nula a
      kontroly níž by nic neznamenaly. */
@@ -106,6 +121,8 @@ for (const stranka of STRANKY) {
     v.trvani.length <= MEZ_TRVANI, 'použitá: ' + v.trvani.sort().join(' '));
   pravda(`${stranka}: náběhů nejvýš ${MEZ_NABEH} (je ${v.nabeh.length})`,
     v.nabeh.length <= MEZ_NABEH, 'použité: ' + v.nabeh.join(' | '));
+  pravda(`${stranka}: odstupů nejvýš ${MEZ_MEZERA} (je ${v.mezery.length})`,
+    v.mezery.length <= MEZ_MEZERA, 'použité: ' + v.mezery.join(' ') + ' px');
   await ctx.close();
 }
 
