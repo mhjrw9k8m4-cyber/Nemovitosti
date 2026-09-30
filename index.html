@@ -35,13 +35,35 @@
     addEventListener('touchmove', rel, {passive:true});
     addEventListener('wheel', rel, {passive:true});
     addEventListener('keydown', function(e){ if(['ArrowDown','PageDown','End',' ','ArrowUp','Home','PageUp'].indexOf(e.key)!==-1) released=true; });
-    function guard(ts){ if(released) return; if(!start) start=ts; toTop(); if(ts-start < 1800) requestAnimationFrame(guard); }
+    /* HLÍDKA POSLOUCHÁ ROLOVÁNÍ, NEBĚŽÍ NA KAŽDÝ SNÍMEK.
+       Dřív tu byla smyčka přes requestAnimationFrame, která 1,8 vteřiny
+       volala toTop() na KAŽDÉM snímku. A toTop() čte pageYOffset —
+       čtení polohy rolování donutí prohlížeč přepočítat celé rozvržení,
+       takže to bylo přes sto vynucených přepočtů zrovna ve chvíli, kdy se
+       staví mapa s dvěma tisíci tečkami. Naměřeno profilerem: 2 017 ms
+       procesoru v toTop, z toho dvě úlohy přes 300 ms, během kterých web
+       nereaguje. („Je takový sekaný.")
+       Dělá to teď totéž, jen se ptá jen tehdy, když se opravdu roluje:
+       prohlížeč obnoví polohu → událost scroll → srovnáme. Když se nic
+       neděje, nestojí to nic. Okno je stejné (1,8 s) a ustupuje stejně
+       (jakmile člověk sám roluje). */
+    var doKdy = 0;
+    function priScrollu(){
+      if(released || Date.now() > doKdy){ removeEventListener('scroll', priScrollu); return; }
+      toTop();
+    }
+    function hlidej(){
+      doKdy = Date.now() + 1800;
+      removeEventListener('scroll', priScrollu);
+      addEventListener('scroll', priScrollu, {passive:true});
+      setTimeout(function(){ removeEventListener('scroll', priScrollu); }, 1900);
+    }
     toTop();
-    requestAnimationFrame(guard);
+    hlidej();
     addEventListener('DOMContentLoaded', softTop);
     addEventListener('load', function(){ softTop(); setTimeout(softTop,60); setTimeout(softTop,200); setTimeout(softTop,500); });
     // Obnova z bfcache: znovu vynutit vršek (i kdyby byl guard dřív uvolněný)
-    addEventListener('pageshow', function(){ released=false; start=0; toTop(); setTimeout(softTop,0); setTimeout(softTop,120); requestAnimationFrame(guard); });
+    addEventListener('pageshow', function(){ released=false; start=0; toTop(); setTimeout(softTop,0); setTimeout(softTop,120); hlidej(); });
     // Před opuštěním stránky srolovat nahoru → co si prohlížeč uloží k obnovení, bude vršek
     addEventListener('pagehide', toTop);
     addEventListener('beforeunload', toTop);

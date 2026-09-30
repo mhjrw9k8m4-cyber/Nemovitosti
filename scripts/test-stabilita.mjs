@@ -120,6 +120,79 @@ for (const [sirka, vyska, jmeno] of [[390, 844, 'telefon'], [1280, 900, 'monitor
   }
 }
 
+/* ---------- Hlídka vršku: stránka začíná nahoře ----------
+ *
+ * iOS Safari si pamatuje předchozí polohu rolování a rád web otevře
+ * „uprostřed". Úvodní stránka se proti tomu brání a chvíli po načtení
+ * polohu srovnává. Dřív to dělala smyčka přes requestAnimationFrame, která
+ * 1,8 s volala na každém snímku funkci čtoucí pageYOffset — a čtení polohy
+ * nutí prohlížeč přepočítat rozvržení. Naměřeno profilerem (střídavě,
+ * starý proti novému, aby se vyloučilo zatížení stroje): 184–205 ms
+ * procesoru navíc. Teď se to ptá jen tehdy, když se opravdu roluje.
+ * Hlídá se CHOVÁNÍ, ne zápis: obnovenou polohu srovnat, člověku ustoupit,
+ * po vypršení okna nedržet.
+ *
+ * CO TAHLE KONTROLA NEUMÍ, a je lepší to mít napsané: chrání VÝSLEDEK
+ * („stránka začíná nahoře"), ne konkrétní hlídku. Ověřeno sabotáží —
+ * vypnout celou hlídku vršku a kontrola padá; vypnout jen naslouchání
+ * rolování a projde, protože polohu v tu chvíli srovnají ještě záložní
+ * časovače a srovnání mapy do zorného pole. Oddělit to od sebe chováním
+ * nejde, těch mechanismů je tam víc a všechny táhnou nahoru. */
+{
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 } });
+  await ctx.route('**/*', (r) => {
+    const u = new URL(r.request().url());
+    if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
+    if (r.request().resourceType() === 'image') {
+      return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA_DLAZDICE });
+    }
+    return LEAFLET ? r.abort() : r.continue();
+  });
+  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  if (LEAFLET) {
+    await ctx.route('https://unpkg.com/leaflet@**', (r) => {
+      const f = path.join(LEAFLET, path.basename(new URL(r.request().url()).pathname));
+      if (!existsSync(f)) return r.abort();
+      return r.fulfill({ status: 200, contentType: f.endsWith('.css') ? 'text/css' : 'text/javascript',
+        body: readFileSync(f) });
+    });
+  }
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  /* AŽ PO 900 ms, a to schválně. Vedle hlídky stojí ještě záložní
+     časovače (60, 200 a 500 ms po načtení). Napoprvé jsem měřil ve
+     400. ms — a kontrola prošla i po sabotáži, která hlídku vypnula,
+     protože polohu srovnal ten časovač na 500 ms. Měřila tedy něco
+     jiného, než co tvrdila. Po 900 ms už žádný časovač nezbývá a okno
+     hlídky (1,8 s) ještě běží. */
+  await p.waitForTimeout(900);
+  /* Pojistka: musí být kam rolovat, jinak níž nic neměříme. */
+  const kam = await p.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+  pravda('stránka je delší než okno (jinak zkouška nic neměří)', kam > 900, `zbývá ${kam} px`);
+  await p.evaluate(() => window.scrollTo(0, 900));   // jako by polohu obnovil prohlížeč
+  await p.waitForTimeout(500);
+  pravda('obnovenou polohu rolování stránka srovná na vršek',
+    (await p.evaluate(() => Math.round(scrollY))) === 0, 'zůstalo jinde než nahoře');
+
+  const p2 = await ctx.newPage();
+  await p2.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  await p2.waitForTimeout(300);
+  await p2.mouse.wheel(0, 700);
+  await p2.waitForTimeout(700);
+  pravda('ale když roluje člověk, hlídka ustoupí',
+    (await p2.evaluate(() => Math.round(scrollY))) > 300, 'člověka to vrátilo nahoru');
+
+  const p3 = await ctx.newPage();
+  await p3.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  await p3.waitForTimeout(2600);
+  await p3.evaluate(() => window.scrollTo(0, 900));
+  await p3.waitForTimeout(400);
+  pravda('a po vypršení okna už nedrží vůbec',
+    (await p3.evaluate(() => Math.round(scrollY))) > 300, 'drží vršek i po 2,6 s');
+  await ctx.close();
+}
+
 await prohlizec.close();
 console.log('\nStabilita rozvržení při načítání (CLS)');
 console.log(zpravy.join('\n'));
