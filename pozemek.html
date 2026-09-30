@@ -36,7 +36,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=2003d9f1">
+  <link rel="stylesheet" href="css/styles.css?v=e40fd2ad">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -322,6 +322,16 @@
        je to poznámka k údaji, ne další údaj. */
     .pz-spec .pz-pozn{display:block; margin-top:3px; font-size:12px; line-height:1.5; font-style:italic; color:var(--text-ondark-mute);}
     .pz-loading, .pz-empty{padding:70px 16px; text-align:center; color:var(--text-ondark-mute);}
+    /* NEŽ SKRIPT DOPLNÍ CELÝ DETAIL, DRŽÍ SE TU VÝŠKA OBRAZOVKY.
+       Vygenerovaná stránka nese statický náhled vysoký 343 px (mobil),
+       kdežto vykreslený detail má 2 015 px. Patička tím stála na prvním
+       okně a ve 120. ms odskočila o půl druhého tisíce pixelů dolů —
+       naměřeno CLS 0,29 na vlastní stránce pozemku a 0,56 na
+       pozemek.html?p=…, tedy nejvíc na celém webu (mez je 0,1).
+       Sto procent výšky okna je míň, než co přijde, takže se nic
+       nezmenší; a když skript nedoběhne, zbude dole prázdno místo
+       patičky nalepené pod odstavec. */
+    #pz-detail{min-height:100vh;}
     .pz-empty a{color:var(--copper-bright); font-weight:600;}
   
     /* PRST POTŘEBUJE 44 PX. Web si tu mez klade sám, jenže měřila se jen

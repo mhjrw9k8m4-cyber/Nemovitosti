@@ -253,6 +253,9 @@ jobs:
       - name: Paměť prohlížeče (nové od minule, skryté, filtr)
         run: node scripts/test-pamet.mjs
 
+      - name: Stabilita rozvržení při načítání (CLS)
+        run: node scripts/test-stabilita.mjs
+
       - name: Viditelnost okrajů (WCAG 1.4.11)
         run: node scripts/test-okraje.mjs
 

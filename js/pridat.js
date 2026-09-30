@@ -1183,6 +1183,13 @@
     if (!gate || !card) return;
     function refresh() {
       var on = !!(window.PKAuth && PKAuth.loggedIn());
+      /* Třídu na <html> nasadil řádek v hlavičce, aby se správná polovina
+         stránky kreslila hned. Tady se srovná s tím, co opravdu platí —
+         kdyby to zůstalo rozejité, svítilo by dál něco, co tenhle kód
+         právě zavřel. */
+      var de = document.documentElement;
+      de.classList.toggle('pk-prihlasen', on);
+      de.classList.toggle('pk-odhlasen', !on);
       gate.hidden = on; card.hidden = !on; if (bar) bar.hidden = !on;
       // Živý náhled + síla inzerátu dávají smysl až u vyplňování — ukážeme je jen přihlášeným.
       var pv = document.getElementById('live-preview-card'); if (pv) pv.hidden = !on;

@@ -105,7 +105,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=2003d9f1">
+  <link rel="stylesheet" href="css/styles.css?v=e40fd2ad">
 </head>
 <body>
 
@@ -162,6 +162,17 @@
     <div class="hero-band">
       <div class="wrap">
         <div class="hero-plot">
+        <!-- SOUHVĚZDÍ STOJÍ VEDLE NADPISU, NE V NĚM.
+             Bylo uvnitř .hero-head, a ten má nábíhací přechod
+             (.reveal → translateY). Prvek s transformem se ale stává
+             vztažným rámcem pro všechno absolutně umístěné uvnitř —
+             takže dokud přechod běžel, plátno se měřilo podle nadpisu,
+             a jakmile doběhl (transform:none), přeskočilo o 70 px na
+             .hero-plot. Naměřeno CLS 0,066 na monitoru, tedy většina
+             toho, co na úvodní stránce ještě poskakovalo.
+             Tady je vztažný rámec pořád týž a pozadí navíc nenabíhá
+             s textem, což je stejně správnější. -->
+        <canvas class="hero-souhvezdi" id="hero-souhvezdi" aria-hidden="true"></canvas>
         <div class="hero-head reveal">
         <!-- ÚVOD JE ŽIVÝ, NE CEDULE.
              Napřed tu stála řečnická otázka („Hledáte pozemek?"), pak suché
@@ -170,7 +181,6 @@
              nabídka na svých souřadnicích, barva nese druh a dražby
              s exekucemi pomalu pulzují. Není to ozdoba — je to ten obsah,
              kvůli kterému sem člověk jde, jen viděný naráz. -->
-        <canvas class="hero-souhvezdi" id="hero-souhvezdi" aria-hidden="true"></canvas>
         <div class="hh-stit"><span class="hh-zive" aria-hidden="true"></span>Dnes na Parcelce</div>
         <!-- „Tady se něco děje na 1 955 pozemcích" mířilo do prázdna: „tady"
              neukazovalo na nic a věta začínala u webu, ne u pozemků. Obrat je
@@ -199,7 +209,11 @@
         </div>
         <!-- Živý důkaz, že web není skanzen. Vyplní ho skript ze skutečných
              dat; dokud se nenačtou, není tu vůbec nic (žádné „Načítám…"). -->
-        <div class="hero-live hh-fakta" id="hero-live" hidden>
+        <!-- Pruh si drží MÍSTO od začátku (je-ceka = visibility:hidden), místo aby
+           se po načtení dat vysunul. Naměřeno: naskočil ve 180.–240. ms, přidal
+           128 px a odsunul celou stránku i mapu o 129 px dolů — CLS 0,11 na
+           telefonu. Zmizí jen tehdy, když se nepodaří spočítat vůbec nic. -->
+        <div class="hero-live hh-fakta je-ceka" id="hero-live">
           <a class="hl-fact" href="#mapa" data-fakt="drazba"><span class="hl-k">Nejbližší dražba</span><span class="hl-v"></span></a>
           <a class="hl-fact" href="#mapa" data-fakt="nove"><span class="hl-k"></span><span class="hl-v"></span></a>
           <!-- Popisek nese VÝZNAM, hodnota nese ČÍSLO. Dřív stálo vlevo
@@ -658,7 +672,7 @@
 <script src="js/vybaveni.js?v=cae1f79b" defer></script>
 <script src="js/dotaz.js?v=341edd4b" defer></script>
 <script src="js/hledani.js?v=9b51ed6d" defer></script>
-<script src="js/main.js?v=a80fb9a9" defer></script>
+<script src="js/main.js?v=d3a8bb91" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

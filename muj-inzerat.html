@@ -2,6 +2,11 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
+  <!-- Stav přihlášení se musí vědět PŘED prvním vykreslením — viz tentýž
+       řádek v pridat.html a důvod u něj. Tady bez toho uskočilo 0,55. -->
+  <script>try{var t=JSON.parse(localStorage.getItem('pk_auth')||'null');
+    document.documentElement.className+=(t&&t.access_token)?' pk-prihlasen':' pk-odhlasen';}
+    catch(e){document.documentElement.className+=' pk-odhlasen';}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -31,7 +36,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=2003d9f1">
+  <link rel="stylesheet" href="css/styles.css?v=e40fd2ad">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:20px; padding:24px 22px 22px;
@@ -166,7 +171,7 @@
   </div>
 </header>
 
-<main id="obsah">
+<main id="obsah" class="ceka-na-skript">
   <section class="add-hero app-hero">
     <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
     <div class="wrap add-wrap">
@@ -191,7 +196,7 @@
     <div class="wrap add-wrap">
 
       <!-- Přihlášení -->
-      <div class="auth-card" id="mi-auth" hidden>
+      <div class="auth-card" id="mi-auth">
         <div class="auth-head">
           <div class="auth-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
           <h2 class="auth-title">Přihlaste se ke svému profilu</h2>
@@ -255,7 +260,7 @@
       </div>
 
       <!-- Profil (přihlášený) -->
-      <div id="mi-panel" hidden>
+      <div id="mi-panel">
         <div class="pf-card">
           <div class="pf-head">
             <div class="pf-avatar" id="pf-avatar" aria-hidden="true">?</div>
@@ -408,6 +413,11 @@
     function show(skipLoad) {
       newpwBox.hidden = true;
       var on = A.loggedIn();
+      /* Třídu na <html> nasadil řádek v hlavičce, ať se správná polovina
+         kreslí hned; tady se srovná s tím, co opravdu platí. */
+      var de = document.documentElement;
+      de.classList.toggle('pk-prihlasen', on);
+      de.classList.toggle('pk-odhlasen', !on);
       authBox.hidden = on; panel.hidden = !on;
       if (on) {
         var mail = A.email() || '';

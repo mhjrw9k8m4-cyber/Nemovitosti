@@ -5571,7 +5571,12 @@
        a kde. */
     vypln('deal', null, best ? ('\u2212' + bestO.podOdhadem + ' % · ' + best.place) : '', best);
 
-    if (hotovo) box.hidden = false;
+    /* Pruh je v HTML od začátku a drží si místo (třída je-ceka). Při
+       úspěchu se jen odkryje — nic se tím neposune. Když se nepodaří
+       spočítat nic, teprve tehdy se sbalí; posun v tu chvíli je menší zlo
+       než napořád prázdný pruh. */
+    if (hotovo) box.classList.remove('je-ceka');
+    else box.hidden = true;
   }
 
   /* Zápis data návštěvy. Rozhodující bylo, že se výš už přečetlo do

@@ -2,6 +2,18 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
+  <!-- KDO JSEM, SE MUSÍ VĚDĚT PŘED PRVNÍM VYKRESLENÍM.
+       Formulář i přihlašovací karta začínaly schované a teprve skript po
+       načtení jednu z nich odkryl. Naměřeno na telefonu: karta naskočila
+       ve 80.–130. ms a přidala 588 px — celá stránka pod ní uskočila,
+       CLS 0,22 (mez pro „v pořádku" je 0,1).
+       Tenhle řádek proto přečte zapamatované přihlášení ještě v hlavičce
+       a označí jím <html>; CSS pak hned kreslí to správné. Je to jediné
+       místo, kde se to čte natvrdo — stejnou odpověď musí dát
+       PKAuth.loggedIn() a hlídá to scripts/test-prihlaseni.mjs. -->
+  <script>try{var t=JSON.parse(localStorage.getItem('pk_auth')||'null');
+    document.documentElement.className+=(t&&t.access_token)?' pk-prihlasen':' pk-odhlasen';}
+    catch(e){document.documentElement.className+=' pk-odhlasen';}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -33,7 +45,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=2003d9f1">
+  <link rel="stylesheet" href="css/styles.css?v=e40fd2ad">
 </head>
 <body>
 
@@ -112,7 +124,7 @@
         <!-- Formulář v elevované kartě -->
         <div>
           <!-- Přihlášení (ochrana proti spamu) — ukáže se, když uživatel není přihlášený -->
-          <div class="auth-card" id="auth-gate" data-mode="login" hidden>
+          <div class="auth-card" id="auth-gate" data-mode="login">
             <!-- role="tablist" bez role="tab" u potomků je pro odečítač
                  obrazovky seznam záložek, ve kterém žádná záložka není. -->
             <div class="auth-tabs" role="tablist" aria-label="Přihlášení nebo nový účet">
@@ -153,7 +165,7 @@
           <!-- Lišta „přihlášen jako…" nad formulářem -->
           <div class="auth-bar" id="auth-bar" hidden>Přihlášen: <b id="auth-email"></b> · <span id="quota-info"></span><a href="muj-inzerat.html">Můj profil</a> · <button type="button" id="au-logout" class="linklike">Odhlásit</button></div>
 
-          <div class="add-card" id="prodej-card" hidden>
+          <div class="add-card" id="prodej-card">
             <p class="add-lead" style="margin-top:0;">Stačí vyplnit <b>obec, výměru a cenu</b> — zbytek je nepovinný. Nabídka se objeví na mapě mezi ostatními; první z nového účtu si napřed projdeme. Spravovat ji pak můžete v <b>Mém profilu</b>. Zdarma a bez provize.</p>
             <!-- MÁM INZERÁT JINDE. Kdo prodává pozemek, má ho skoro vždycky
                  vypsaný ještě někde jinde — a přepisovat totéž podruhé ručně
@@ -443,7 +455,7 @@
 <script src="js/vybaveni.js?v=cae1f79b" defer></script>
 <script src="js/predvyplneni.js?v=d500f86e" defer></script>
 <script src="js/kontrola.js?v=0d9d384f" defer></script>
-<script src="js/pridat.js?v=8ff0940d" defer></script>
+<script src="js/pridat.js?v=18e798ac" defer></script>
 <script>
 /* Zobrazit/skrýt heslo v přihlašovací kartě */
 document.addEventListener('click', function (e) {

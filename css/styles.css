@@ -321,6 +321,26 @@ button, a, [role="button"], select, summary, .btn-primary, .lp-btn, input[type="
 
 
 /* Lišta „přihlášen jako…" nad formulářem přidání */
+/* Co se má kreslit hned, ještě než doběhne skript. Třídu nasazuje řádek
+   v hlavičce pridat.html a udržuje ji initAuth() — musí zůstat v souladu
+   s tím, co nakonec rozhodne PKAuth.loggedIn(), jinak by tu zůstalo
+   svítit něco, co skript zavřel. */
+/* Řídí se to TŘÍDOU, ne atributem hidden: o pár set řádků výš stojí
+   [hidden]{display:none !important} a to by se přebít nedalo jinak než
+   dalším !important. Bez skriptu (a tedy bez třídy) se ukáže přihlašovací
+   karta a formulář zůstane schovaný — což je přesně stav „nepřihlášen".
+   Skript pak nastavuje hidden jako dřív a třídu drží v souladu. */
+/* STRÁNKY, KTERÉ OBSAH DOPLŇUJÍ AŽ SKRIPTEM, si drží výšku okna.
+   Než data dojdou, je na nich sotva 104 px obsahu — patička tím stojí
+   uprostřed prvního okna a jakmile se obsah doplní, spadne o stovky
+   pixelů dolů. Naměřeno: muj-inzerat 0,55, hlidani 0,20, upozorneni 0,20
+   na telefonu (mez pro „v pořádku" je 0,1).
+   Sto procent výšky okna bez hlavičky znamená, že patička začíná až pod
+   okrajem obrazovky — a co není vidět, to nemá kam odskočit. Zároveň to
+   spraví starší nešvar: na krátké stránce patička nevisí uprostřed. */
+main.ceka-na-skript{min-height:calc(100vh - 90px);}
+html.pk-prihlasen #auth-gate, html.pk-prihlasen #mi-auth{display:none;}
+html:not(.pk-prihlasen) #prodej-card, html:not(.pk-prihlasen) #mi-panel{display:none;}
 .auth-bar{margin:0 0 14px; padding:11px 15px; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); font-size:13.5px; color:var(--text-ondark-mute);}
 .auth-bar b{color:var(--text-ondark);}
 .auth-bar a{color:var(--copper-bright); text-decoration:underline; text-underline-offset:2px;}
@@ -3718,6 +3738,12 @@ h1, h2, h3,
   margin-right:26px; text-decoration:none; min-width:0;
   border-right:1px solid rgba(255,255,255,0.14);}
 .hl-fact:last-child{border-right:0; margin-right:0; padding-right:0;}
+/* Dokud se hodnoty nespočítají, pruh je NEVIDITELNÝ, ale místo si drží —
+   jinak se po načtení dat vysune a odsune celou stránku pod sebou.
+   Prázdná hodnota by přitom byla nulově vysoká, takže by se rezervovalo
+   míň, než co pak přijde; proto min-height na řádek hodnoty. */
+.hero-live.je-ceka{visibility:hidden;}
+.hl-fact .hl-v{min-height:21px;}
 .hl-fact .hl-k{font-family:var(--font-mono); font-size:11px; letter-spacing:0.11em;
   text-transform:uppercase; color:rgba(255,255,255,0.72);}
 .hl-fact .hl-v{font-family:var(--font-display); font-size:17px; line-height:1.25;
