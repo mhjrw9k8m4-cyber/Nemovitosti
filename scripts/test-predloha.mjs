@@ -232,6 +232,59 @@ hlas('Vlastní stín mimo paletku', vlastni,
     'Stránka bez css/styles.css paletku nevidí — napište hodnotu, nebo doplňte var(--x, záchrana).');
 }
 
+/* ---------- 1d. táž vlastnost dvakrát v jednom pravidle ----------
+   Ten pozdější zápis tiše vyhraje a ten dřívější jako by tam nebyl.
+   Takhle se u .opp-hot neprojevil token pro proklad: pravidlo mělo
+   letter-spacing dvakrát, token stál první a 0.02em za ním. V souboru
+   to vypadá normálně a prohlížeč nic nehlásí.
+   VÝJIMKA: dvojice je někdy záměr — `height:76vh; height:76dvh` je
+   záchrana pro prohlížeč, který novější jednotku neumí. Taková dvojice
+   se nepočítá, ale jen když se liší právě tou novější jednotkou. */
+{
+  const ZACHRANA = /(dvh|svh|lvh|dvw|svw|lvw|color-mix|oklch|oklab|clamp)\(|\d(dvh|svh|lvh|dvw|svw|lvw)\b/;
+  const dvojite = [];
+  for (const z of zdroje) {
+    for (const m of z.css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const sel = m[1].trim().replace(/\s+/g, ' ');
+      if (sel.startsWith('@')) continue;
+      const vlast = {};
+      for (const d of m[2].split(';')) {
+        const i = d.indexOf(':');
+        if (i < 1) continue;
+        const v = d.slice(0, i).trim().toLowerCase();
+        if (!/^[a-z-]+$/.test(v)) continue;
+        (vlast[v] = vlast[v] || []).push(d.slice(i + 1).trim());
+      }
+      for (const [v, hodnoty] of Object.entries(vlast)) {
+        if (hodnoty.length < 2) continue;
+        /* Záchrana pro starší prohlížeč: pozdější zápis nese novější
+           jednotku nebo funkci, dřívější ne. */
+        if (hodnoty.slice(1).every((h) => ZACHRANA.test(h)) && !ZACHRANA.test(hodnoty[0])) continue;
+        dvojite.push(`${z.jmeno}: ${sel.slice(0, 46)} — ${v} ×${hodnoty.length}`);
+      }
+    }
+  }
+  hlas('Táž vlastnost dvakrát v jednom pravidle', dvojite,
+    'Ten pozdější zápis tiše vyhraje. Nechte jeden, nebo oddělte pravidla.');
+}
+
+/* ---------- 1e. transition:all ----------
+   Web má zvyk vypisovat, co se animuje. Jediná výjimka (.filter-chip)
+   měla následek: `all` animuje i OBRYS, takže prstenec po stisku
+   tabulátoru nenaskočil, ale dojížděl — a kdo prochází web klávesnicí
+   rychle, nevidí, kde stojí. `all` navíc animuje i to, co teprve někdo
+   v budoucnu do pravidla dopíše. */
+{
+  const vsechno = [];
+  for (const z of zdroje) {
+    for (const m of z.css.matchAll(/transition:\s*all\b[^;}]*/g)) {
+      vsechno.push(z.jmeno + ': ' + m[0].slice(0, 54));
+    }
+  }
+  hlas('transition:all', vsechno,
+    'Vypište vlastnosti. `all` animuje i obrys zaostření a cokoli, co se do pravidla přidá později.');
+}
+
 /* ---------- 2. tvary ---------- */
 // 2 a 3 px jsou vlasové proužky, 50 % a 999 px jsou kruhy — ty nejsou „tvar karty".
 // „inherit" není nový tvar — prvek jen přebírá zaoblení rodiče, takže
@@ -280,10 +333,21 @@ hlas('Chybí proměnná z paletky', chybi, 'Doplňte ji v :root v css/styles.css
     ...[...css.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]),
     ...[...zvenku.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]),
   ]);
-  const nedeklarovane = [...css.matchAll(/var\(\s*(--[a-z0-9-]+)\s*\)/g)]
-    .map((m) => m[1])
-    .filter((t, i, a) => a.indexOf(t) === i)
-    .filter((t) => !deklarovane.has(t));
+  /* Totéž platí pro styly psané v hlavičce stránky, a tam to bolí stejně:
+     na upozorněních se PĚT ploch odkazovalo na var(--card) — proměnnou,
+     která v paletce vůbec není (žije jen ve vlastním :root diagnostiky).
+     Karty, vstupní pole i prstenec u tečky tím zůstaly bez podkladu
+     a nikdo si toho roky nevšiml. Stránka smí použít i to, co si sama
+     nadeklaruje. */
+  const nedeklarovane = [];
+  for (const z of zdroje) {
+    const vlastni = new Set([...z.css.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]));
+    for (const m of z.css.matchAll(/var\(\s*(--[a-z0-9-]+)\s*\)/g)) {
+      if (deklarovane.has(m[1]) || vlastni.has(m[1])) continue;
+      const zaznam = (z.jmeno === 'css/styles.css' ? '' : z.jmeno + ': ') + m[1];
+      if (!nedeklarovane.includes(zaznam)) nedeklarovane.push(zaznam);
+    }
+  }
   hlas('Použitá proměnná, která nikde není nadeklarovaná', nedeklarovane,
     'Prohlížeč takovou deklaraci tiše zahodí a prvek zdědí barvu rodiče — chyba se nikde neprojeví.');
 }

@@ -1193,7 +1193,13 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Skupiny ovládání v postranním panelu — čitelná hierarchie místo hromady prvků */
 .ms-group{margin-top:14px;}
 .map-filters{display:flex; flex-wrap:wrap; gap:6px;}
-.filter-chip{display:inline-flex; align-items:center; gap:6px; background:var(--ink); border:1px solid var(--line-ui); color:var(--text-ondark-mute); border-radius:var(--r-lg); padding:6px 12px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:all var(--cas-zakladni) var(--ease);}
+.filter-chip{display:inline-flex; align-items:center; gap:6px; background:var(--ink); border:1px solid var(--line-ui); color:var(--text-ondark-mute); border-radius:var(--r-lg); padding:6px 12px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer;
+  /* Jediné `transition:all` na webu bylo tady — a mělo následek: animoval
+     se i OBRYS, takže prstenec po stisku tabulátoru nenaskočil, ale
+     dojížděl. Kdo prochází web klávesnicí rychle, nevidí, kde stojí.
+     Vlastnosti se proto jmenují, jako všude jinde; obrys mezi nimi není. */
+  transition:background var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease),
+    color var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
 .filter-chip .c{width:8px; height:8px; border-radius:50%;}
 .filter-chip:hover{color:var(--text-ondark); border-color:rgba(228,240,231,0.3);}
 /* Aktivní filtr „svítí" vlastní barvou kategorie — ať „Vše" a „Dražba" nesplývají */

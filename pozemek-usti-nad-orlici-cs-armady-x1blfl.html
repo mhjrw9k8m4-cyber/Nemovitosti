@@ -37,7 +37,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=c7b88186">
+  <link rel="stylesheet" href="css/styles.css?v=26ae81ac">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -78,7 +78,13 @@
        4,88 · exekuce #8C2F1E s bílou 8,27 · warn #8A5512 s bílou 6,20. */
     .pz-verdict{--vc:var(--copper-bright); --vt:#fff;
       margin:16px 0 6px; padding:14px 16px; border-radius:var(--r-plocha); border:1px solid;}
-    .pz-verdict.good{--vc:var(--c-sale); background:rgba(75,169,125,0.12); border-color:rgba(75,169,125,0.42);}
+    /* VERDIKT O CENĚ NENÍ KATEGORIE. „Výhodná cena" tu nosila --c-sale,
+       tedy MODROU, kterou má na mapě i v odznaku význam „na prodej" —
+       a v paletce u ní stojí výslovně: zelená = „v pořádku", NE kategorie
+       „na prodej". Panel kolem byl přitom celou dobu zelený (tón
+       75,169,125), takže si odznak a jeho vlastní deska protiřečily.
+       Bílá na #13663E dává 7,01 : 1 (dřív 5,77 na modré). */
+    .pz-verdict.good{--vc:var(--c-ok-ink); background:rgba(75,169,125,0.12); border-color:rgba(75,169,125,0.42);}
     .pz-verdict.mid{--vc:var(--c-drazba); --vt:#0c1a12; background:rgba(204,107,51,0.12); border-color:rgba(204,107,51,0.46);}
     .pz-verdict.bad{--vc:var(--c-exekuce); background:rgba(140,47,30,0.11); border-color:rgba(140,47,30,0.42);}
     .pv-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;}

@@ -135,14 +135,22 @@ pravda('žádné dva verdikty nemají shodný odznak', shodne.length === 0,
 const b = rgb(barvy.bad.odznak);
 pravda('odznak „Vyšší cena" není zelený', !(b[1] > b[0] + 20),
   `barva ${barvy.bad.odznak} — zelená složka ${b[1]} proti červené ${b[0]}`);
-/* Zelenou — tedy „tohle je v pořádku" — nese u „Výhodné ceny" KARTA,
-   ne odznak. Odznak si bere značkovou --c-sale, tedy modrou, protože
-   verdikt používá tutéž paletku jako druhy příležitostí. Modrá tak na
-   mapě znamená „na prodej" a tady „výhodná cena"; neměním to, ale ať
-   se to ví. Měří se proto zeleň KARTY. */
+/* VERDIKT NENÍ KATEGORIE — a tahle kontrola je tu proto, že to tak
+   dlouho nebylo. Odznak „Výhodná cena" nosil --c-sale, tedy MODROU,
+   kterou má na mapě i v odznaku význam „na prodej". V paletce u zelené
+   přitom stojí výslovně: „zelená = v pořádku, NE kategorie na prodej".
+   Karta kolem odznaku byla celou dobu zelená, takže si odznak a jeho
+   vlastní deska protiřečily — a čtenář viděl u ceny barvu, která o kus
+   výš znamená něco jiného.
+   Měří se obojí: karta i odznak. Kdyby se odznak vrátil ke kategorii,
+   zelená složka přestane převažovat a kontrola spadne. */
 const g = rgb(barvy.good.panel);
 pravda('karta „Výhodná cena" je zelená', g[1] > g[0] + 20,
   `podklad ${barvy.good.panel}`);
+const go = rgb(barvy.good.odznak);
+pravda('a odznak „Výhodná cena" je zelený taky, ne modrý jako kategorie',
+  go[1] > go[0] + 20 && go[1] > go[2] + 20,
+  `odznak ${barvy.good.odznak} — R ${go[0]}, G ${go[1]}, B ${go[2]}`);
 
 /* Odznak bez pozadí není odznak. Přesně tohle měla „Cena k ověření":
    tři varianty ze čtyř byly v CSS vypsané a na čtvrtou se zapomnělo,
