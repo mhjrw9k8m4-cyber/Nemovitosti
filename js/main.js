@@ -4247,8 +4247,12 @@
         '<div class="deal-badge">levnější než ' + o.di.cheaper + ' % podobných' +
           (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +
         '<div class="deal-place"><span class="deal-dot" style="background:' + t.color + '"></span>' + d.place + '</div>' +
-        '<div class="deal-sub">' + t.label + ' · ' + (d.druh || 'pozemek') + ' · okres ' + d.okres + '</div>' +
-        '<div class="deal-figs"><b>' + fmt(d.price) + ' Kč</b><span>' + fmt(d.area) + ' m²</span><span>' + fmt(perM2) + ' Kč/m²</span></div>' +
+        /* Výměra patří k druhu pozemku, ne k ceně: „orná půda · 15 752 m²"
+           je popis toho, co se prodává. V ceně zůstává jen cena a cena za
+           metr — jediné dvě čísla, kterými se dvě nabídky srovnávají.
+           Stejné rozdělení má řádek ve výpisu okresu, ať to je jedna věc. */
+        '<div class="deal-sub">' + t.label + ' · ' + (d.druh || 'pozemek') + ' · ' + fmt(d.area) + ' m² · okres ' + d.okres + '</div>' +
+        '<div class="deal-figs"><b>' + fmt(d.price) + ' Kč</b><span>' + fmt(perM2) + ' Kč/m²</span></div>' +
       '</button>';
     }).join('');
     sec.hidden = false;
