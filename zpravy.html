@@ -30,20 +30,25 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=53072005">
+  <link rel="stylesheet" href="css/styles.css?v=a01105b9">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .zp-wrap{max-width:640px; margin:0 auto;}
-    .zp-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:18px; box-shadow:0 4px 16px -12px rgba(20,35,28,.3);}
+    .zp-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:0 4px 16px -12px rgba(20,35,28,.3);}
     /* Přihlášení */
     .zp-auth{padding:20px; max-width:400px; margin:8px auto;}
     .zp-auth h2{font-size:17px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
     .zp-auth p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
-    .zp-in{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:12px; font-size:17px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:8px; outline:none;}
+    .zp-in{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:17px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:8px; outline:none;}
     .zp-in:focus{border-color:var(--copper-bright); box-shadow:0 0 0 4px rgba(31,81,56,.14);}
-    .zp-btn{width:100%; height:48px; border:0; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:0 8px 20px -10px rgba(31,81,56,.55); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
+    .zp-btn{width:100%; height:48px; border:0; border-radius:var(--r-md); font-weight:700; font-size:15px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:0 8px 20px -10px rgba(31,81,56,.55); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
     .zp-btn:hover{filter:brightness(1.05);} .zp-btn:active{transform:scale(.99);}
-    .zp-btn.sec{background:var(--ink-soft2); color:var(--text-ondark); border:1px solid var(--line-ui); margin-top:8px;}
+    /* Vedlejší tlačítko vypadalo jako další vstupní pole: mělo stejný
+   podklad i obrys jako políčka nad ním, bajt po bajtu
+   (rgb(243,241,236), rgba(20,35,28,0.55) 1px). Bere si teď podobu,
+   kterou web pro vedlejší akci má — bílo, zelený obrys, měděný text. */
+    .zp-btn.sec{background:#fff; color:var(--copper-bright);
+      border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1); margin-top:8px;}
     .zp-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--text-ondark-mute);}
     .zp-msg.err{color:var(--c-exekuce);}
     .zp-auth form{margin:0;}
@@ -51,13 +56,13 @@
     .zp-thread{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); cursor:pointer; text-decoration:none; color:inherit;}
     .zp-thread:last-child{border-bottom:0;}
     .zp-thread:hover{background:var(--ink-soft2);}
-    .zp-ava{width:44px; height:44px; border-radius:12px; flex:none; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,rgba(166,106,22,.18),rgba(31,81,56,.14)); color:var(--copper-bright);}
+    .zp-ava{width:44px; height:44px; border-radius:var(--r-md); flex:none; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,rgba(166,106,22,.18),rgba(31,81,56,.14)); color:var(--copper-bright);}
     .zp-ava svg{width:22px; height:22px; stroke-width:1.64;}
     .zp-tmain{min-width:0; flex:1;}
     .zp-tplace{font-weight:700; font-size:15px; color:var(--text-ondark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
     .zp-tlast{font-size:13px; color:var(--text-ondark-mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;}
     .zp-trole{font-size:11px; color:var(--copper-bright); font-weight:600;}
-    .zp-badge{min-width:20px; height:20px; padding:0 6px; border-radius:10px; background:var(--copper); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none;}
+    .zp-badge{min-width:20px; height:20px; padding:0 6px; border-radius:var(--r-sm); background:var(--copper); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none;}
     .zp-empty{padding:32px 20px; text-align:center; color:var(--text-ondark-mute); font-size:14px; line-height:1.6;}
     .zp-empty svg{width:40px; height:40px; color:var(--line-strong); margin-bottom:8px;}
     /* Konverzace */
@@ -66,7 +71,7 @@
     .zp-conv-head .zp-cti{font-weight:700; font-size:15px; color:var(--text-ondark); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
     .zp-conv-head a.zp-view{margin-left:auto; font-size:13px; color:var(--copper-bright); text-decoration:none; font-weight:600; white-space:nowrap;}
     .zp-msgs{padding:16px 14px; min-height:280px; max-height:56vh; overflow-y:auto; display:flex; flex-direction:column; gap:8px;}
-    .zp-b{max-width:76%; padding:8px 12px; border-radius:16px; font-size:15px; line-height:1.4; word-wrap:break-word; white-space:pre-wrap;}
+    .zp-b{max-width:76%; padding:8px 12px; border-radius:var(--r-md); font-size:15px; line-height:1.4; word-wrap:break-word; white-space:pre-wrap;}
     .zp-b.them{align-self:flex-start; background:var(--ink-soft2); color:var(--text-ondark); border-bottom-left-radius:5px;}
     .zp-b.me{align-self:flex-end; background:var(--plocha-znacka); color:#fff; border-bottom-right-radius:5px;}
     .zp-time{font-size:11px; opacity:.65; margin-top:2px; display:block;}
@@ -75,7 +80,7 @@
     .zp-cti span{font-size:12px; opacity:.7; font-weight:500;}
     .zp-b.ceka{opacity:.55;}
     .zp-b.chyba{outline:1.5px solid var(--c-exekuce); outline-offset:1px;}
-    .zp-err{margin:0 12px 8px; padding:8px 12px; border-radius:11px; font-size:13px;
+    .zp-err{margin:0 12px 8px; padding:8px 12px; border-radius:var(--r-sm); font-size:13px;
       background:rgba(200,60,40,.12); color:var(--c-exekuce); border:1px solid rgba(200,60,40,.3);}
     .zp-err[hidden]{display:none;}
     .zp-pocet{font-size:12px; opacity:.7; padding:0 12px 8px; text-align:right;}
@@ -83,9 +88,9 @@
     .zp-pocet[hidden]{display:none;}
     .zp-tvremeno{font-size:11px; opacity:.6; flex:none; margin-left:6px;}
     .zp-compose{display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--line); align-items:flex-end;}
-    .zp-ta{flex:1; resize:none; min-height:44px; max-height:120px; padding:10px 12px; border:1.5px solid var(--line-strong); border-radius:14px; font-size:17px; font-family:inherit; background:var(--ink-soft2); color:var(--text-ondark); outline:none;}
+    .zp-ta{flex:1; resize:none; min-height:44px; max-height:120px; padding:10px 12px; border:1.5px solid var(--line-strong); border-radius:var(--r-md); font-size:17px; font-family:inherit; background:var(--ink-soft2); color:var(--text-ondark); outline:none;}
     .zp-ta:focus{border-color:var(--copper-bright);}
-    .zp-send{flex:none; width:48px; height:44px; border:0; border-radius:12px; background:var(--plocha-znacka); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+    .zp-send{flex:none; width:48px; height:44px; border:0; border-radius:var(--r-md); background:var(--plocha-znacka); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;}
     .zp-send:disabled{opacity:.5;}
     .zp-send svg{width:20px; height:20px; stroke-width:1.8;}
     .zp-note{font-size:12px; color:var(--text-ondark-mute); text-align:center; padding:8px 14px 0; line-height:1.5;}

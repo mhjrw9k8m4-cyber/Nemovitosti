@@ -37,7 +37,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=53072005">
+  <link rel="stylesheet" href="css/styles.css?v=a01105b9">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -48,7 +48,7 @@
     .pz-back svg{width:16px; height:16px; stroke-width:2.25;}
 
     .pz-media{position:relative; width:100%; aspect-ratio:16/10; max-height:400px; border-radius:var(--r-obraz); overflow:hidden; background:var(--ink-soft2); border:1px solid var(--line); box-shadow:0 1px 2px rgba(0,0,0,.35), 0 16px 36px -20px rgba(0,0,0,.7);}
-    .pz-media .opp-badge{position:absolute; top:13px; left:13px; z-index:3; display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; letter-spacing:.02em; padding:6px 12px 6px 10px; border-radius:10px; color:#fff; background:rgba(12,26,18,.6); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);}
+    .pz-media .opp-badge{position:absolute; top:13px; left:13px; z-index:3; display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; letter-spacing:.02em; padding:6px 12px 6px 10px; border-radius:var(--r-sm); color:#fff; background:rgba(12,26,18,.6); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);}
     .pz-media .opp-badge::before{content:""; width:8px; height:8px; border-radius:50%; flex:none;}
     .opp-badge.sale::before{background:var(--c-sale);} .opp-badge.drazba::before{background:var(--c-drazba);} .opp-badge.exekuce::before{background:var(--c-exekuce);} .opp-badge.obec::before{background:var(--c-obec);} .opp-badge.majitel::before{background:var(--c-majitel);}
     /* Galerie nahraných fotek — vodorovný swipe (scroll-snap), bez JS */
@@ -90,14 +90,14 @@
     /* Podklad byl rgba(228,240,231,0.12) — zbytek po tmavém motivu.
        Na světlé kartě z něj nebylo nic vidět, takže lišta vypadala, že
        končí u puntíku. Odtud ten dojem vypínače. */
-    .pv-track{position:relative; height:8px; border-radius:99px; margin-top:10px;
+    .pv-track{position:relative; height:8px; border-radius:var(--r-pill); margin-top:10px;
       background:rgba(20,35,28,0.13); box-shadow:inset 0 1px 2px rgba(24,45,34,0.07);}
     /* Ryska uprostřed: bez ní puntík neříká, jestli je „spíš vlevo"
        hodně, nebo skoro uprostřed. */
     .pv-stred{position:absolute; left:50%; top:-3px; bottom:-3px; width:1.5px;
       background:rgba(20,35,28,0.3); transform:translateX(-50%); border-radius:2px;}
     /* Pruh dojede na svou hodnotu. Barvu bere z --vc jako odznak. */
-    .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:99px; background:var(--vc);
+    .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill); background:var(--vc);
       width:var(--w); animation:pruhNajed .62s var(--ease) both;}
     /* Puntík je barevný podle verdiktu a má bílý prstenec, aby byl
        poznat i tam, kde leží na tmavší části lišty. Bílý puntík na
@@ -138,7 +138,7 @@
     .pz-feat-zdroj{margin:8px 0 0; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
     /* Popis od majitele: jeho vlastní slova, takže dostanou karta a klid
        na čtení. Odstavce zůstávají odstavci — člověk je tak psal. */
-    .pz-popis{padding:14px 16px; background:var(--ink-soft); border:1px solid var(--line); border-radius:14px;}
+    .pz-popis{padding:14px 16px; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md);}
     .pz-popis p{margin:0 0 10px; font-size:15px; line-height:1.62; color:var(--text-ondark);}
     .pz-popis p:last-child{margin-bottom:0;}
 
@@ -203,7 +203,7 @@
        Bez toho by se z nadpisu nedalo poznat, že se dá rozbalit. */
     .pz-gtk-obal{margin:20px 0 24px;}
     .pz-gtk-sum{display:flex; align-items:center; gap:8px; cursor:pointer; list-style:none;
-      padding:14px 14px; border:1px solid var(--line); border-radius:14px;
+      padding:14px 14px; border:1px solid var(--line); border-radius:var(--r-md);
       background:var(--grad-cool-soft); box-shadow:var(--e1);
       transition:border-color var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
     .pz-gtk-sum::-webkit-details-marker{display:none;}
@@ -230,7 +230,7 @@
     .pz-gtk-obal[open] .pz-gtk-sum{border-bottom-left-radius:0; border-bottom-right-radius:0; box-shadow:none;}
     .pz-gtk-obal[open] .pz-gtk-sum::after{transform:rotate(-135deg) translate(-3px,-3px);}
     .pz-gtk-obal[open] .pz-gtk{border-top-left-radius:0; border-top-right-radius:0; border-top:0;}
-    .pz-gtk{background:var(--ink-soft); border:1px solid var(--line); border-radius:16px; padding:16px 16px;}
+    .pz-gtk{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:16px 16px;}
     .pz-gtk .g-row{display:flex; flex-direction:column; gap:2px; padding:10px 0; border-bottom:1px solid var(--line);}
     .pz-gtk .g-row:first-child{padding-top:0;} .pz-gtk .g-row:last-of-type{border-bottom:none;}
     .pz-gtk .g-k{font-size:12px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:var(--text-ondark-mute);}
@@ -250,14 +250,14 @@
     /* MAPA S VRSTVAMI. Rám drží mapu a ovládání pohromadě jako jednu věc:
        přepínače patří k té mapě, ne ke stránce. Ovládání je POD mapou, ne
        přes ni — přes mapu by zakrývalo právě to místo, o které jde. */
-    .pzm{position:relative; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:var(--ink-soft); box-shadow:0 10px 28px -20px rgba(24,45,34,.5);}
+    .pzm{position:relative; border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; background:var(--ink-soft); box-shadow:0 10px 28px -20px rgba(24,45,34,.5);}
     .pzm-mapa{height:390px; width:100%; background:#14231C;}
     /* Na celou obrazovku. Mapa se roztáhne přes okno, panel s přepínači
        zůstane pod ní — ovládání musí být po ruce i tam, jinak je
        zvětšení k ničemu. */
     .pzm-mapa{position:relative;}
     .pzm-cela-btn{position:absolute; z-index:500; right:10px; top:10px; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center;
-      border-radius:10px; border:1px solid rgba(24,45,34,.25); background:rgba(255,255,255,.93); color:var(--copper-bright); cursor:pointer; padding:0;
+      border-radius:var(--r-sm); border:1px solid rgba(24,45,34,.25); background:rgba(255,255,255,.93); color:var(--copper-bright); cursor:pointer; padding:0;
       box-shadow:0 2px 8px -3px rgba(24,45,34,.5); -webkit-tap-highlight-color:transparent;}
     /* Tloušťka tahu se dopočítává k velikosti, ne opisuje z předlohy:
        stejné „stroke-width 2" má při 19 px na obrazovce silnější stopu
@@ -306,7 +306,7 @@
     .pzm-leg{display:flex; flex-wrap:wrap; gap:14px; padding:12px 12px; border-top:1px solid var(--line); background:#FBFCFB;}
     .pzm-leg-k{margin:0; display:flex; flex-direction:column; gap:6px; max-width:100%;}
     .pzm-leg-k figcaption{font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--text-ondark-mute);}
-    .pzm-leg-k img{max-width:100%; background:#fff; border:1px solid var(--line); border-radius:9px; padding:6px;}
+    .pzm-leg-k img{max-width:100%; background:#fff; border:1px solid var(--line); border-radius:var(--r-sm); padding:6px;}
     .pzm-pod{margin:8px 0 0; font-size:13px; line-height:1.6; color:var(--text-ondark-mute);}
     .pzm-pod a{color:var(--copper-bright); font-weight:600;}
     .pzm-pin{filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));}

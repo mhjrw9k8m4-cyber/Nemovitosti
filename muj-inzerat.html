@@ -36,10 +36,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=53072005">
+  <link rel="stylesheet" href="css/styles.css?v=a01105b9">
   <style>
     /* Karta profilu */
-    .pf-card{position:relative; overflow:hidden; border-radius:20px; padding:24px 20px 20px;
+    .pf-card{position:relative; overflow:hidden; border-radius:var(--r-lg); padding:24px 20px 20px;
       background:linear-gradient(155deg, var(--ink-soft2), var(--ink-soft));
       border:1px solid var(--line-strong); box-shadow:0 22px 50px -28px rgba(0,0,0,.7);
       animation:authFade .35s var(--ease) both;}
@@ -54,12 +54,12 @@
     .pf-dot{width:7px; height:7px; border-radius:50%; background:var(--c-sale); box-shadow:0 0 0 3px rgba(64,196,120,.18);}
     .pf-id .pf-mail{font-size:17px; font-weight:700; color:var(--text-ondark); overflow-wrap:anywhere; margin-top:2px; line-height:1.3;}
     .pf-logout{flex:none; align-self:flex-start; display:inline-flex; align-items:center; gap:6px; background:var(--ink); border:1px solid var(--line-strong);
-      color:var(--text-ondark-mute); border-radius:11px; padding:8px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:color var(--cas-zakladni), border-color var(--cas-zakladni);}
+      color:var(--text-ondark-mute); border-radius:var(--r-sm); padding:8px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:color var(--cas-zakladni), border-color var(--cas-zakladni);}
     .pf-logout svg{width:16px; height:16px; stroke-width:2.25;}
     .pf-logout:hover{color:var(--text-ondark); border-color:var(--copper-bright);}
     .pf-logout span{display:none;}
     .pf-stats{position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:20px;}
-    .pf-stat{background:var(--ink); border:1px solid var(--line); border-radius:14px; padding:14px 12px 12px; min-width:0; text-align:center; transition:border-color var(--cas-zakladni), transform var(--cas-zakladni);}
+    .pf-stat{background:var(--ink); border:1px solid var(--line); border-radius:var(--r-md); padding:14px 12px 12px; min-width:0; text-align:center; transition:border-color var(--cas-zakladni), transform var(--cas-zakladni);}
     .pf-stat:hover{border-color:var(--line-strong); transform:translateY(-2px);}
     .pf-stat-ico{width:20px; height:20px; color:var(--text-ondark-mute); margin-bottom:6px;}
     .pf-stat b{display:block; font-size:28px; line-height:1; color:var(--copper-bright); font-variant-numeric:tabular-nums;}
@@ -68,8 +68,8 @@
     .pf-add{display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;}
     .pf-add svg{width:18px; height:18px; stroke-width:2.0;}
     /* Prázdný stav */
-    .pf-empty{text-align:center; padding:32px 20px; border-radius:20px; border:1px dashed var(--line-strong); background:var(--ink-soft);}
-    .pf-empty-ico{width:66px; height:66px; margin:0 auto 16px; border-radius:18px; display:flex; align-items:center; justify-content:center;
+    .pf-empty{text-align:center; padding:32px 20px; border-radius:var(--r-lg); border:1px dashed var(--line-strong); background:var(--ink-soft);}
+    .pf-empty-ico{width:66px; height:66px; margin:0 auto 16px; border-radius:var(--r-lg); display:flex; align-items:center; justify-content:center;
       background:rgba(126,196,157,.09); border:1px solid var(--line-strong);}
     .pf-empty-ico svg{width:32px; height:32px; color:var(--text-ondark);}
     .pf-empty h3{font-family:var(--font-ui); font-size:20px; font-weight:600; color:var(--text-ondark); margin:0 0 8px;}
@@ -77,7 +77,7 @@
     .pf-empty .pf-add{width:auto; padding-left:20px; padding-right:20px;}
     /* Uložené pozemky — čisté karty */
     #mi-saved{display:flex; flex-direction:column; gap:10px;}
-    .sv-item{background:var(--ink-soft); border:1px solid var(--line); border-radius:14px; padding:14px 14px; transition:border-color var(--cas-zakladni) var(--ease);}
+    .sv-item{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:14px 14px; transition:border-color var(--cas-zakladni) var(--ease);}
     .sv-item:hover{border-color:var(--line-strong);}
     .sv-top{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
     .sv-place{font-weight:700; font-size:15px; color:var(--text-ondark); line-height:1.25;}
@@ -86,14 +86,14 @@
     .sv-actions{display:flex; align-items:center; gap:10px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line);}
     .sv-map{flex:1 1 auto; font-size:14px; font-weight:700; color:var(--copper-bright); text-decoration:none;}
     .sv-map:active{opacity:.7;}
-    .sv-del{flex:none; background:none; border:1px solid var(--line-strong); color:var(--text-ondark-mute); border-radius:9px; padding:6px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:color var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
+    .sv-del{flex:none; background:none; border:1px solid var(--line-strong); color:var(--text-ondark-mute); border-radius:var(--r-sm); padding:6px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:color var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
     .sv-del:hover{color:var(--c-exekuce); border-color:var(--c-exekuce);}
     /* Moje inzeráty — čisté karty se statistikami */
     #mi-list{display:flex; flex-direction:column; gap:14px;}
-    .mi-lcard{background:var(--ink-soft); border:1px solid var(--line); border-radius:18px; padding:14px; box-shadow:0 4px 16px -12px rgba(20,35,28,.3);}
+    .mi-lcard{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-lg); padding:14px; box-shadow:0 4px 16px -12px rgba(20,35,28,.3);}
     .mi-lthumb{position:relative; margin-bottom:12px;}
-    .mi-lthumb img{width:100%; height:160px; object-fit:cover; border-radius:13px; display:block;}
-    .mi-lthumb .n{position:absolute; left:10px; bottom:10px; background:rgba(12,26,18,.66); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px;}
+    .mi-lthumb img{width:100%; height:160px; object-fit:cover; border-radius:var(--r-md); display:block;}
+    .mi-lthumb .n{position:absolute; left:10px; bottom:10px; background:rgba(12,26,18,.66); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:var(--r-sm);}
     .mi-lhead{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:12px;}
     .mi-lplace{font-size:17px; font-weight:700; color:var(--text-ondark); line-height:1.25; letter-spacing:-.01em;}
     .mi-lstatus{flex:none; font-size:12px; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap; background:var(--ink); color:var(--text-ondark-mute); border:1px solid var(--line-strong);}
@@ -114,7 +114,7 @@
     .mi-ceka-ne{background:rgba(176,58,46,.1); border-color:rgba(176,58,46,.35);}
     .mi-lstatus.ne{background:rgba(176,58,46,.12); color:#9c3025; border-color:rgba(176,58,46,.4);}
     .mi-lstats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px;}
-    .mi-lstat{background:var(--ink); border:1px solid var(--line); border-radius:12px; padding:10px 8px; text-align:center;}
+    .mi-lstat{background:var(--ink); border:1px solid var(--line); border-radius:var(--r-md); padding:10px 8px; text-align:center;}
     .mi-lstat b{display:block; font-size:20px; font-weight:800; color:var(--copper-bright); font-variant-numeric:tabular-nums; line-height:1.1;}
     .mi-lstat span{display:block; font-size:11px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:.03em; margin-top:4px;}
     /* Tlačítka jsou tři („Otevřít inzerát", „Zobrazit na mapě", „Smazat"),
@@ -122,7 +122,7 @@
        telefonu lámal text uvnitř nich. Základ 130 px je tak akorát na
        nejdelší z těch popisků. */
     .mi-lactions{display:flex; gap:10px; flex-wrap:wrap;}
-    .mi-lbtn{flex:1 1 130px; display:inline-flex; align-items:center; justify-content:center; gap:6px; height:44px; border-radius:11px; font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; border:1.5px solid transparent; transition:filter var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
+    .mi-lbtn{flex:1 1 130px; display:inline-flex; align-items:center; justify-content:center; gap:6px; height:44px; border-radius:var(--r-sm); font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; border:1.5px solid transparent; transition:filter var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
     .mi-lbtn:active{transform:scale(.98);}
     .mi-lbtn.primary{background:var(--plocha-znacka); color:#fff; box-shadow:0 8px 20px -10px rgba(31,81,56,.55);}
     .mi-lbtn.primary:hover{filter:brightness(1.05);}

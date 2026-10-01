@@ -30,7 +30,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=53072005">
+  <link rel="stylesheet" href="css/styles.css?v=a01105b9">
   <style>
     .up-wrap{max-width:760px; margin:0 auto;}
 
@@ -52,13 +52,13 @@
 
     .up-group{margin:20px 0 10px; font-size:12px; font-weight:800; letter-spacing:.06em;
       text-transform:uppercase; color:var(--text-ondark-mute);}
-    .up-card{background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden;}
+    .up-card{background:var(--card); border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden;}
 
     /* Jedno upozornění. Vlevo ikona s barvou podle druhu, uprostřed text,
        vpravo čas. Tečka „nepřečteno" je vedle ikony, ne přes ni. */
     .up-item{display:flex; gap:12px; padding:14px 16px; border-top:1px solid var(--line); align-items:flex-start;}
     .up-item:first-child{border-top:0;}
-    .up-ico{flex:none; width:38px; height:38px; border-radius:11px; display:grid; place-items:center; position:relative;}
+    .up-ico{flex:none; width:38px; height:38px; border-radius:var(--r-sm); display:grid; place-items:center; position:relative;}
     .up-ico svg{width:19px; height:19px; stroke-width:1.89;}
     .up-ico.zprava{background:rgba(31,81,56,.12); color:#276646;}
     .up-ico.pozemky{background:rgba(31,122,77,.12); color:#1F7A4D;}
@@ -87,7 +87,7 @@
     }
     .up-more{font-size:13px; color:var(--text-ondark-mute); margin-top:4px;}
     .up-acts{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
-    .up-a{display:inline-flex; align-items:center; padding:8px 14px; border-radius:10px; font-size:14px;
+    .up-a{display:inline-flex; align-items:center; padding:8px 14px; border-radius:var(--r-sm); font-size:14px;
       font-weight:700; text-decoration:none; border:1.5px solid var(--line-strong); color:var(--text-ondark); background:var(--card);}
     .up-a.pri{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
     .up-a:hover{border-color:var(--copper-bright);}
@@ -103,18 +103,23 @@
     .up-auth{padding:20px; max-width:400px; margin:8px auto;}
     .up-auth h2{font-size:17px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
     .up-auth p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
-    .up-in{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:12px; font-size:17px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:8px; outline:none;}
+    .up-in{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:17px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:8px; outline:none;}
     .up-in:focus{border-color:var(--copper-bright); box-shadow:0 0 0 4px rgba(31,81,56,.14);}
-    .up-btn{width:100%; height:48px; border:0; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:0 8px 20px -10px rgba(31,81,56,.55); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
+    .up-btn{width:100%; height:48px; border:0; border-radius:var(--r-md); font-weight:700; font-size:15px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:0 8px 20px -10px rgba(31,81,56,.55); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
     .up-btn:hover{filter:brightness(1.05);} .up-btn:active{transform:scale(.99);}
-    .up-btn.sec{background:var(--ink-soft2); color:var(--text-ondark); border:1px solid var(--line-ui); margin-top:8px;}
+    /* Vedlejší tlačítko vypadalo jako další vstupní pole: mělo stejný
+   podklad i obrys jako políčka nad ním, bajt po bajtu
+   (rgb(243,241,236), rgba(20,35,28,0.55) 1px). Bere si teď podobu,
+   kterou web pro vedlejší akci má — bílo, zelený obrys, měděný text. */
+    .up-btn.sec{background:#fff; color:var(--copper-bright);
+      border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1); margin-top:8px;}
     .up-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--text-ondark-mute);}
     .up-msg.err{color:var(--c-exekuce);}
     .up-auth form{margin:0;}
 
     /* Nastavení — návody na upozornění se shodují v jednom: bez možnosti
        si to vypnout se z upozornění stane otrava a lidé je přestanou číst. */
-    .up-prefs{margin-top:20px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px;}
+    .up-prefs{margin-top:20px; background:var(--card); border:1px solid var(--line); border-radius:var(--r-md); padding:16px;}
     .up-prefs h2{font-size:14px; margin:0 0 4px;}
     .up-prefs p{font-size:13px; color:var(--text-ondark-mute); margin:0 0 12px;}
     .up-sw{display:flex; align-items:center; gap:10px; padding:8px 0; font-size:14px; cursor:pointer;}

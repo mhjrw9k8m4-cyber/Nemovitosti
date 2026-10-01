@@ -548,7 +548,7 @@ for(const okres of eligibleOkres){
     </div>
   </section>
 
-  <section class="section" style="padding-top:20px;">
+  <section class="section">
     <div class="wrap okr-wrap">
 
       <!-- Rozpad podle druhu se vypisuje, JEN když je co rozpadat. V okrese
@@ -648,7 +648,7 @@ for(const kraj of eligibleKraj){
     </div>
   </section>
 
-  <section class="section" style="padding-top:20px;">
+  <section class="section">
     <div class="wrap okr-wrap">
 
       <div class="okr-stats">
@@ -728,7 +728,7 @@ const drazby = all.filter(o=>o.type==='drazba').sort((a,b)=>(a.price||1e15)-(b.p
     </div>
   </section>
 
-  <section class="section" style="padding-top:20px;">
+  <section class="section">
     <div class="wrap okr-wrap">
 
       <div class="add-cross" style="margin-top:0;">
@@ -864,7 +864,7 @@ ${rows}
     </div>
   </section>
 
-  <section class="section" style="padding-top:20px;">
+  <section class="section">
     <div class="wrap okr-wrap">
 
       <div class="add-card">
@@ -963,7 +963,7 @@ const idxHtml = head(idxTitle,idxDesc,'pozemky-podle-okresu.html',idxJsonld,idxC
     </div>
   </section>
 
-  <section class="section" style="padding-top:20px;">
+  <section class="section">
     <div class="wrap okr-wrap">
 
       <div class="add-cross" style="margin-top:0;">
