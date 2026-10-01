@@ -10,16 +10,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=09f8a092">
+  <link rel="stylesheet" href="css/styles.css?v=8d451141">
   <style>
     /* Předloha je vzorník, ne stránka webu — má vlastní jednoduchou sazbu. */
     body{background:var(--bg);}
-    .pz{max-width:1080px; margin:0 auto; padding:48px 24px 96px;}
+    .pz{max-width:var(--m-siroky); margin:0 auto; padding:48px 24px 96px;}
     .pz h1{font-size:40px; margin-bottom:8px;}
     .pz > p.lede{color:var(--text-ondark-mute); font-size:17px; max-width:var(--m-text); margin-bottom:12px;}
     .pz h2{font-size:24px; font-weight:800; letter-spacing:-0.02em; margin:56px 0 6px; padding-top:22px; border-top:1px solid var(--line);}
     .pz h2:first-of-type{border-top:0;}
-    .pz h2 + p{color:var(--text-ondark-mute); font-size:15px; max-width:64ch; margin-bottom:22px;}
+    .pz h2 + p{color:var(--text-ondark-mute); font-size:15px; max-width:var(--m-text); margin-bottom:22px;}
     .pz h3{font-size:15px; font-weight:700; margin:26px 0 12px;}
     .mrizka{display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));}
     .vzorek{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:18px;}
@@ -108,7 +108,7 @@
     <div style="font-size:44px; font-weight:800; letter-spacing:-0.028em; line-height:1.06;">Nadpis stránky<span class="skala">44 px · 800 · −0,028 em</span></div>
     <div style="font-size:30px; font-weight:800; letter-spacing:-0.026em;">Nadpis sekce<span class="skala">30 px · 800 · −0,026 em</span></div>
     <div style="font-size:20px; font-weight:700; letter-spacing:-0.012em;">Nadpis bloku<span class="skala">20 px · 700 · −0,012 em</span></div>
-    <p style="font-size:16px; max-width:64ch;">Běžný text. Řádkování 1,58 a maximálně 64 znaků na řádek — delší řádek se špatně sleduje a oko ztrácí návaznost.<span class="skala">16 px · 400 · řádkování 1,58</span></p>
+    <p style="font-size:16px; max-width:var(--m-text);">Běžný text. Řádkování 1,58 a maximálně 64 znaků na řádek — delší řádek se špatně sleduje a oko ztrácí návaznost.<span class="skala">16 px · 400 · řádkování 1,58</span></p>
     <p style="font-size:13.5px; color:var(--text-ondark-mute);">Doplňkový text a popisky.<span class="skala">13,5 px · 400 · tlumená</span></p>
     <p class="mono" style="font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--copper-bright);">Nadřádek · strojové písmo<span class="skala">12 px · mono · verzálky</span></p>
   </div>

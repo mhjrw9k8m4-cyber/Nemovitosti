@@ -30,10 +30,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=09f8a092">
+  <link rel="stylesheet" href="css/styles.css?v=8d451141">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
-    .hl-wrap{max-width:640px; margin:0 auto;}
+    .hl-wrap{max-width:var(--m-uzky); margin:0 auto;}
     .hl-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--e1); margin-bottom:14px;}
     /* PŘEPÍNAČ MEZI NOVÝM A ULOŽENÝM.
        Uložená hlídání ležela pod celým formulářem nového: na telefonu
@@ -55,7 +55,7 @@
       background:var(--copper); color:#fff; font-size:12px; font-weight:700;
       display:inline-flex; align-items:center; justify-content:center;}
     .hl-tab.je .hl-tab-n{background:rgba(255,255,255,.24); color:#fff;}
-    .hl-auth{padding:20px; max-width:400px; margin:8px auto;}
+    .hl-auth{padding:20px; max-width:var(--m-karta); margin:8px auto;}
     .hl-auth h2{font-size:17px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
     .hl-auth p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
     .hl-in,.hl-sel{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:17px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:8px; outline:none; font-family:inherit;}
