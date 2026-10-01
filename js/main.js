@@ -3996,6 +3996,7 @@
         .forEach(function (d) { hotIds[d._id] = true; });
     }
     var top = vis.slice(0, LIST_LIMIT);
+    var karticky = [];
 
     top.forEach(function (d, rank) {
       var t = TYPE[d.type];
@@ -4044,6 +4045,13 @@
         }());
       // Stavové odznaky pohromadě na jednom řádku
       var chips = [];
+      var kdeKarty = '';
+      /* Pro zkoušku se odkládá SUROVÝ výsledek modelu (úroveň a místo),
+         ne hotová věta. Kdyby se odkládala věta, porovnávala by zkouška
+         značku s týmž výrazem, který ji vyrobil — a prošla by, i kdyby
+         se do odznaku psal okres nabídky. Vyzkoušeno: přesně tahle
+         sabotáž mi jednou prošla. */
+      var srovnaniModel = null;
       if (isFeatured(d)) chips.push('<span class="opp-feat">Zvýrazněno</span>');
       if (cd) chips.push(cd);
       /* Odznak výhodné ceny. Když umíme spočítat obvyklou cenu v okolí,
@@ -4090,11 +4098,25 @@
            celá. Odznak „podíl" níž to řekne rovnou. */
         // Na kartě musí odznak vyjít na JEDEN řádek i na úzkém displeji.
         // „o 65 % pod obvyklou" verzálkami se na mobilu lámalo na dva.
-        chips.push('<span class="opp-deal" title="Cena je o ' + _od.podOdhadem +
-          ' % pod obvyklou cenou podobných pozemků v okolí">−' + _od.podOdhadem + ' % proti okolí</span>');
+        /* Na odznaku je „okolí", protože delší text se na mobilu láme —
+           ale KDE to okolí je, musí jít zjistit. Odhad se počítá nejdřív
+           v okrese, a když tam není dost nabídek, v kraji; na ostrých
+           datech je krajských skoro polovina. Místo je proto v popisku
+           (title), odkud ho vezme i odečítač obrazovky, a v data-kde,
+           kde si ho sáhne ověřit zkouška. */
+        srovnaniModel = { uroven: _od.uroven, kde: _od.kde };
+        kdeKarty = kdeSrovnani(_od);
+        chips.push('<span class="opp-deal" data-kde="' + esc(kdeKarty) + '" title="Cena je o ' + _od.podOdhadem +
+          ' % pod obvyklou cenou podobných pozemků ' + esc(kdeKarty || 'v okolí') + '">−' + _od.podOdhadem + ' % proti okolí</span>');
       } else if (perM2 && dealMax && perM2 <= dealMax) {
         var _di = dealInfo(d);
-        chips.push('<span class="opp-deal">' + (_di && _di.cheaper >= 70 ? 'levnější než ' + _di.cheaper + ' %' : 'výhodná cena') + '</span>');
+        srovnaniModel = _di ? { uroven: _di.uroven, kde: _di.kde } : null;
+        kdeKarty = kdeSrovnani(_di);
+        chips.push('<span class="opp-deal" data-kde="' + esc(kdeKarty) + '" title="' +
+          (_di && _di.cheaper >= 70
+            ? 'Levnější než ' + _di.cheaper + ' % pozemků téhož druhu ' + esc(kdeKarty || 'v okolí')
+            : 'Cena za m² patří k nejnižším u pozemků téhož druhu ' + esc(kdeKarty || 'v okolí')) + '">' +
+          (_di && _di.cheaper >= 70 ? 'levnější než ' + _di.cheaper + ' %' : 'výhodná cena') + '</span>');
       }
       /* Podíl patří na kartu, ne až do detailu. Bez něj vypadá cena za
          metr jako trhák — přitom se kupuje zlomek pozemku, ne pozemek.
@@ -4161,8 +4183,11 @@
         prepniSkryty(d);
         renderList();
       });
+      /* Pro zkoušku: co o TÉHLE kartě řekl model, ne co se vypsalo. */
+      karticky.push({ srovnani: srovnaniModel, okres: d.okres });
       listEl.appendChild(li);
     });
+    try { window.PK_KARTY = karticky; } catch (e) {}
 
     var mvCount = document.getElementById('mvt-count'); if (mvCount) mvCount.textContent = matched ? '(' + matched + ')' : '';
     /* Nadpis nad prázdným seznamem nesmí nic slibovat. „Doporučené

@@ -489,6 +489,53 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   }
 }
 
+/* --- A TOTÉŽ NA KARTÁCH VE VÝPISU ----------------------------------
+ * Odznak „−51 % proti okolí" (a „levnější než 80 %") stojí na témže
+ * srovnání jako tipy, jen se na mobil musí vejít na řádek — proto na
+ * něm zůstalo „okolí". KDE to okolí je, musí jít zjistit: je to
+ * v popisku (title) a v data-kde. Naměřeno: ze čtyř karet s odznakem
+ * měly tři srovnání z KRAJE, a karta přitom psala „okres Znojmo".
+ */
+{
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(3600);
+  const v = await p.evaluate(() => {
+    const karty = [...document.querySelectorAll('.opp-item')].map((li) => {
+      const ch = li.querySelector('.opp-deal');
+      return ch ? { kde: ch.getAttribute('data-kde') || '', title: ch.getAttribute('title') || '',
+        text: ch.textContent.trim() } : null;
+    });
+    /* Větu si zkouška složí SAMA z toho, co vrátil model. Kdyby brala
+       hotovou větu ze stránky, porovnávala by ji se sebou. */
+    const kdeText = (window.PK_CENY && window.PK_CENY.kdeText) || null;
+    const model = (window.PK_KARTY || []).map((m) => (m && m.srovnani && kdeText)
+      ? kdeText(m.srovnani.uroven, m.srovnani.kde) : '');
+    return { karty, model: window.PK_KARTY ? model : null };
+  });
+  const sOdznakem = v.karty.filter(Boolean);
+  /* Dvě pojistky: výpis se vykreslil a aspoň jedna karta odznak má —
+     jinak by kontrola pod tím prošla naprázdno. */
+  pravda('výpis se vykreslil a model o kartách mluví',
+    !!(v.model && v.model.length === v.karty.length && v.karty.length > 0),
+    `karet ${v.karty.length}, model ${v.model && v.model.length}`);
+  pravda('a aspoň jedna karta má odznak o ceně', sOdznakem.length > 0,
+    'žádný .opp-deal — nebylo by co měřit');
+  if (v.model && v.model.length === v.karty.length && sOdznakem.length) {
+    const spatne = [];
+    v.karty.forEach((k, i) => {
+      if (!k) return;
+      const ocekavane = v.model[i] || '';
+      if (!ocekavane) { spatne.push(`„${k.text}" — model neřekl místo`); return; }
+      if (k.kde !== ocekavane) spatne.push(`data-kde „${k.kde}" ≠ model „${ocekavane}"`);
+      else if (k.title.indexOf(ocekavane) === -1) spatne.push(`popisek „${k.title}" neříká „${ocekavane}"`);
+    });
+    pravda('každý odznak o ceně říká, kde se srovnávalo — a sedí to s modelem',
+      spatne.length === 0, spatne.join('; '));
+    const kraj = v.model.filter((m) => /kraji|Vysočině/.test(m)).length;
+    zpravy.push(`      (z ${sOdznakem.length} odznaků se ${kraj} počítalo z kraje, ne z okresu)`);
+  }
+}
+
 await prohlizec.close();
 
 console.log('\nÚvodní obrazovka — živá čísla a věrohodnost cen');
