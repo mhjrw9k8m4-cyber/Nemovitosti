@@ -1524,7 +1524,12 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Odznak kategorie na fotce (vlevo nahoře) */
 .opp-badge{position:absolute; top:10px; left:10px; z-index:3; pointer-events:none; display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:0.02em; padding:4px 10px 4px 8px; border-radius:var(--r-sm); color:#fff; background:rgba(8,14,20,0.6); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);}
 .opp-badge::before{content:""; width:8px; height:8px; border-radius:50%; flex:none;}
-.opp-badge.sale::before{background:var(--c-sale);} .opp-badge.drazba::before{background:var(--c-drazba);} .opp-badge.exekuce::before{background:var(--c-exekuce);} .opp-badge.obec::before{background:var(--c-obec);}
+/* Puntík u odznaku nese barvu kategorie — a BERE SI JI OD KARTY, ne ze
+   seznamu pravidel. Vypsané byly čtyři kategorie z pěti a na „Přímo od
+   majitele" se zapomnělo: změřeno, puntík měl rgba(0,0,0,0), tedy nic.
+   Barvu teď podstrkuje js/main.js v --c-druh — ze stejné proměnné, ze
+   které ji má tečka na mapě. Šestá kategorie si tím v CSS nevyžádá nic. */
+.opp-badge::before{background:var(--c-druh, var(--text-ondark-mute));}
 /* Počet fotek (vlevo dole na náhledu, jen když majitel nahrál víc fotek) */
 .opp-count{position:absolute; left:10px; bottom:10px; z-index:3; pointer-events:none; display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; padding:2px 8px 2px 8px; border-radius:var(--r-sm); color:#fff; background:rgba(8,14,20,0.6); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);}
 .opp-count svg{width:13px; height:13px; stroke-width:2.77;}
@@ -1543,7 +1548,6 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .reset-btn:hover{background:var(--copper);}
 .opp-place{display:block; font-family:var(--font-ui); font-size:15px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:-0.01em; color:var(--text-ondark); margin-bottom:2px;}/* Barevná odrážka podle kategorie (prodej/dražba/exekuce…) — rychlá orientace v seznamu */
 
-.opp-tag.sale{color:#2E8F5F;} .opp-tag.drazba{color:#9A7413;} .opp-tag.exekuce{color:#C0472F;} .opp-tag.obec{color:#3C68A8;}
 /* Podřádek „co to je" — jeden řádek, konzistentní, ořízne se tečkami */
 /* Řádek s okresem (poloha) — víc informací, jemně pod názvem */
 /* Špendlík má tutéž barvu jako text, ke kterému patří. */

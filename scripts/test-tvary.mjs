@@ -108,10 +108,22 @@ pravda('tvary v legendě se navzájem liší',
   JSON.stringify(legenda.map((l) => l.tvar)));
 
 // --- 3) Jádro: opravdu se ty tvary na plátno kreslí? ------------------
-// Přečteme pixely kolem bodu a spočítáme, kolik jich je v horní a v dolní
-// třetině. Trojúhelník má nahoře špičku a dole základnu, takže poměr je
-// výrazný; kolečko je zhruba symetrické. Kdyby se naše kreslení přestalo
-// volat, Leaflet by nakreslil kolečko a tenhle poměr by spadl na 1.
+// Přečteme pixely kolem bodu a porovnáme, kolik barvy je v horní a v dolní
+// desetině výšky tvaru. Trojúhelník má nahoře špičku a dole základnu, takže
+// je poměr výrazný; kolečko i kosočtverec jsou nahoru dolů symetrické. Kdyby
+// se naše kreslení přestalo volat, Leaflet by nakreslil kolečko.
+//
+// OKNO SE TVARU PŘIZPŮSOBÍ, A TO JE TU PODSTATNÉ
+// Dřív se čtlo pevné okno 22×22 px na středu bodu. Jenže značka je mnohem
+// větší: naměřená výška tvaru je 26 až 44 px podle přiblížení. Okno tedy
+// leželo CELÉ UVNITŘ tvaru — u kolečka vyšlo 484 barevných pixelů ze 484,
+// tedy úplně plné — a „poměr horní a dolní třetiny" nebyl o špičce
+// a základně, ale o tom, kudy náhodou procházely šikmé strany. Vycházelo
+// z toho 1,93 proti mezi 2,0, takže zkouška padala a vstávala podle toho,
+// jak se značka zvětšila. Okno se teď zvětšuje, dokud nemá kolem tvaru
+// volno, a teprve pak se měří. Naměřeno s ním:
+//   trojúhelník 4,67–5,01 · kolečko 1,00–1,01 · kosočtverec 1,00–1,08
+// Mez 2,5 tedy leží mezi dvěma skupinami, ne na jedné z nich.
 async function profil(d) {
   return await p.evaluate(({ lat, lng }) => {
     const map = window.PK_MAPA;
@@ -121,52 +133,92 @@ async function profil(d) {
     const cv = pane && pane.querySelector('canvas');
     if (!cv) return null;
     const pt = map.latLngToContainerPoint([lat, lng]);
-    const r = cv.getBoundingClientRect();
+    const rc = cv.getBoundingClientRect();
     const mapR = map.getContainer().getBoundingClientRect();
     // plátno může být posunuté proti kontejneru mapy
-    const x = Math.round(pt.x + mapR.left - r.left);
-    const y = Math.round(pt.y + mapR.top - r.top);
-    const R = 11;
+    const x = Math.round(pt.x + mapR.left - rc.left);
+    const y = Math.round(pt.y + mapR.top - rc.top);
     const g = cv.getContext('2d');
-    let img;
-    try { img = g.getImageData(x - R, y - R, R * 2, R * 2); } catch (e) { return null; }
-    const radky = [];
-    for (let j = 0; j < R * 2; j++) {
-      let n = 0;
-      for (let i = 0; i < R * 2; i++) if (img.data[(j * R * 2 + i) * 4 + 3] > 40) n++;
-      radky.push(n);
+    function radkyPro(R) {
+      let img;
+      try { img = g.getImageData(x - R, y - R, R * 2, R * 2); } catch (e) { return null; }
+      const out = [];
+      for (let j = 0; j < R * 2; j++) {
+        let n = 0;
+        for (let i = 0; i < R * 2; i++) if (img.data[(j * R * 2 + i) * 4 + 3] > 40) n++;
+        out.push(n);
+      }
+      return out;
     }
-    return radky;
+    let R = 12, radky = null, volno = false;
+    for (; R <= 96; R *= 2) {
+      radky = radkyPro(R);
+      if (!radky) return null;
+      if (radky[0] === 0 && radky[radky.length - 1] === 0) { volno = true; break; }
+    }
+    return { radky, R, volno };
   }, { lat: d.lat, lng: d.lng });
 }
-function tretiny(radky) {
-  const n = radky.length, t = Math.floor(n / 3);
-  const soucet = (a, b) => radky.slice(a, b).reduce((x, y) => x + y, 0);
-  return { horni: soucet(0, t), dolni: soucet(n - t, n), celkem: soucet(0, n) };
+/** Horní a dolní desetina VÝŠKY TVARU (ne okna). */
+function kraje(r) {
+  const radky = r.radky;
+  const prvni = radky.findIndex((v) => v > 0);
+  if (prvni < 0) return { celkem: 0, rozsah: 0, horni: 0, dolni: 0, pomer: 0 };
+  const posledni = radky.length - 1 - [...radky].reverse().findIndex((v) => v > 0);
+  const rozsah = posledni - prvni + 1;
+  const k = Math.max(1, Math.round(rozsah * 0.3));
+  const sou = (a, b) => radky.slice(a, b).reduce((x, y) => x + y, 0);
+  const horni = sou(prvni, prvni + k), dolni = sou(posledni - k + 1, posledni + 1);
+  return { celkem: sou(0, radky.length), rozsah, horni, dolni,
+    pomer: dolni / Math.max(1, horni), prvniRadek: radky[prvni] };
 }
 
 const exek = vzorek('exekuce');
 const prodej = vzorek('sale');
+const drazba = vzorek('drazba');
 
 if (exek) {
   const r = await profil(exek);
-  const t = r && tretiny(r);
+  const t = r && kraje(r);
   pravda('na plátně je u exekuce vůbec něco nakresleno', !!(t && t.celkem > 8),
     `napočítáno ${t && t.celkem} barevných pixelů`);
-  if (t && t.celkem > 8) {
+  /* Pojistka, bez které měřila předchozí verze patu uvnitř tvaru: okolo
+     tvaru musí být v okně volno, jinak se špička ani základna nevidí. */
+  pravda('a vešel se do okna i s volným okrajem', !!(r && r.volno),
+    `okno došlo na R=${r && r.R} a pořád je u kraje barva — v okně je asi i soused`);
+  if (t && t.celkem > 8 && r.volno) {
     pravda('exekuce se kreslí jako trojúhelník (dole širší než nahoře)',
-      t.dolni >= t.horni * 2,
-      `horní třetina ${t.horni} px, dolní ${t.dolni} px — u kolečka by byly skoro stejné, ` +
-      'takže se nejspíš přestalo volat naše kreslení a Leaflet vrátil kolečka');
+      t.pomer >= 2.5,
+      `horní desetina výšky ${t.horni} px, dolní ${t.dolni} px, poměr ${t.pomer.toFixed(2)} ` +
+      `(výška tvaru ${t.rozsah} px) — u kolečka i kosočtverce vychází 1,0, takže se nejspíš ` +
+      'přestalo volat naše kreslení a Leaflet vrátil kolečka');
   }
 }
+let prodejR = null;
 if (prodej) {
   const r = await profil(prodej);
-  const t = r && tretiny(r);
-  if (t && t.celkem > 8) {
-    const pomer = t.dolni / Math.max(1, t.horni);
+  const t = r && kraje(r);
+  if (t && t.celkem > 8 && r.volno) {
+    prodejR = t;
     pravda('na prodej se kreslí jako kolečko (nahoře i dole stejně)',
-      pomer > 0.6 && pomer < 1.7, `poměr dolní/horní třetiny je ${pomer.toFixed(2)}`);
+      t.pomer > 0.7 && t.pomer < 1.4, `poměr dolní/horní desetiny je ${t.pomer.toFixed(2)}`);
+  }
+}
+/* Kosočtverec má nahoře špičku taky — a přesto to není trojúhelník. Tohle
+   hlídá, že se tvary nerozlišují podle „je nahoře úzký", ale podle
+   souměrnosti; jinak by zkouška prošla, i kdyby se z trojúhelníku stal
+   kosočtverec. */
+if (drazba) {
+  const r = await profil(drazba);
+  const t = r && kraje(r);
+  if (t && t.celkem > 8 && r.volno) {
+    pravda('dražba je souměrná (kosočtverec, ne trojúhelník)',
+      t.pomer > 0.7 && t.pomer < 1.4, `poměr dolní/horní desetiny je ${t.pomer.toFixed(2)}`);
+    if (prodejR) {
+      pravda('a přitom má nahoře špičku, kdežto kolečko ne',
+        t.prvniRadek < prodejR.prvniRadek,
+        `kosočtverec má první řádek ${t.prvniRadek} px, kolečko ${prodejR.prvniRadek} px`);
+    }
   }
 }
 

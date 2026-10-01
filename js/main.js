@@ -1535,11 +1535,19 @@
         '<image href="' + p0 + '" xlink:href="' + p0 + '" x="0" y="0" width="384" height="240" preserveAspectRatio="xMidYMid slice"/>' +
         '</svg>' +
         '<span class="opp-mgrad"></span>' +
-        '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>' + cnt;
+        odznakDruhu(d) + cnt;
     }
     return window.PK_SNIMEK.html(d, { sirka: 384, vyska: 240, barva: col, id: 'ts' + d._id }) +
       '<span class="opp-mgrad"></span>' +
-      '<span class="opp-badge ' + d.type + '">' + TYPE[d.type].label + '</span>';
+      odznakDruhu(d);
+  }
+  /* Odznak kategorie na náhledu. Barvu puntíku si nese s sebou, ze TÉŽE
+     proměnné jako tečka na mapě (TYPE[].color čte --c-*). Dřív ji vypisovalo
+     CSS kategorii po kategorii — a na pátou se zapomnělo. */
+  function odznakDruhu(d) {
+    var t = TYPE[d.type] || {};
+    return '<span class="opp-badge ' + d.type + '" style="--c-druh:' + (t.color || '') + '">' +
+      esc(t.label || '') + '</span>';
   }
 
 

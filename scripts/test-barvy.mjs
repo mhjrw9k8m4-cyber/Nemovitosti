@@ -70,6 +70,23 @@ if (LEAFLET) {
   }
 }
 
+/* V datech dnes není ani jeden obecní záměr a ani jeden inzerát od majitele
+   (2 019 nabídek: sale 1 850, drazba 134, exekuce 35). Kdyby zkouška brala
+   jen to, co v datech je, dvě kategorie z pěti by nehlídala — a přesně u té
+   páté se stala chyba: puntík u „Přímo od majitele" byl průhledný.
+   Dvě nabídky se proto podstrčí. */
+await ctx.route('**/data/opportunities.json*', async (r) => {
+  const o = await r.fetch();
+  const j = JSON.parse(await o.text());
+  const vzor = (j.opportunities || []).find((x) => x.type === 'sale');
+  if (!vzor) return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(j) });
+  for (const [t, m] of [['obec', 'Zkouska Obec'], ['majitel', 'Zkouska Majitel']]) {
+    j.opportunities.unshift(Object.assign({}, vzor, {
+      type: t, place: m, title: m, id: 'zk-' + t, url: 'https://example.invalid/' + t }));
+  }
+  return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(j) });
+});
+
 /** Načte stránku a vrátí, co si o barvách myslí ona sama. */
 async function zjisti(url) {
   const p = await ctx.newPage();
@@ -132,6 +149,60 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
   const sv = (x) => { const h = x.replace('#', ''); return [0, 2, 4].reduce((a, i) => a + parseInt(h.slice(i, i + 2), 16), 0) / 3; };
   return Math.abs(sv(uvod.tok.drazba) - sv(uvod.tok.exekuce)) > 40;
 })(), `dražba ${uvod.tok.drazba}, exekuce ${uvod.tok.exekuce}`);
+
+/* --- 5) ODZNAK NA KARTĚ ---------------------------------------------
+ * Tady byla vada, kterou tenhle test MĚL najít a nenašel: jmenuje se
+ * „jeden zdroj pro mapu i karty", ale koukal se jen na puntíky mapy
+ * a legendy (.lp-dot, .lg-dot). Puntík u odznaku na kartě si barvu bral
+ * z vypsaných pravidel v CSS — a vypsané byly čtyři kategorie z pěti.
+ * Změřeno: „Přímo od majitele" měl puntík rgba(0, 0, 0, 0), tedy nic.
+ * Čte se SKUTEČNÁ karta ve výpisu, kategorie po kategorii (přepne se
+ * filtr druhu příležitosti), ne vložený pokusný prvek — ten by měřil
+ * pravidlo, ne stránku.
+ */
+{
+  const p = await ctx.newPage();
+  const chyby = [];
+  p.on('pageerror', (e) => chyby.push(String(e)));
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(3800);
+  for (const k of KATEGORIE) {
+    const btn = await p.$(`[data-type="${k}"]`);
+    pravda(`filtr „${k}" na úvodu je`, !!btn, 'bez něj se ke kartě té kategorie nedostanu');
+    if (!btn) continue;
+    await btn.click();
+    await p.waitForTimeout(700);
+    const o = await p.evaluate((kk) => {
+      const e = document.querySelector('.opp-badge.' + kk);
+      return { karet: document.querySelectorAll('.opp-item').length,
+        punt: e ? getComputedStyle(e, '::before').backgroundColor : null };
+    }, k);
+    /* Pojistka: bez karty by se nemělo co měřit a kontrola pod tím by
+       prošla naprázdno. */
+    pravda(`a vykreslí aspoň jednu kartu „${k}"`, o.karet > 0, 'výpis je prázdný');
+    if (!o.karet) continue;
+    pravda(`puntík u odznaku „${k}" má barvu z palety`, o.punt === naRgb(uvod.tok[k]),
+      `je ${o.punt}, má být ${naRgb(uvod.tok[k])} (--c-${k} = ${uvod.tok[k]})`);
+  }
+  pravda('a při přepínání filtrů nespadl skript', chyby.length === 0, chyby[0]);
+  await p.close();
+}
+
+/* --- 6) A V CSS UŽ SE KATEGORIE NEVYPISUJÍ -------------------------
+ * Jádro té vady nebyla chybějící barva, ale SEZNAM, ze kterého se dá
+ * vypadnout. Barvu podstrkuje js/main.js v --c-druh, ze stejné
+ * proměnné jako tečku na mapě; šestá kategorie si tím v CSS nevyžádá
+ * nic. Tahle kontrola hlídá, ať se ten seznam nevrátí.
+ */
+{
+  const css = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');     // komentáře mluví o kategoriích, a mají
+  const vypsane = KATEGORIE.filter((k) => css.indexOf('.opp-badge.' + k) !== -1);
+  pravda('CSS nevypisuje barvu puntíku kategorii po kategorii', vypsane.length === 0,
+    'vypsané: ' + vypsane.join(', ') + ' — na šestou se zapomene zase');
+  pravda('a pravidlo pro puntík v CSS vůbec je', css.indexOf('.opp-badge::before') !== -1,
+    'bez něj by puntík nebyl vidět vůbec a kontrola nad tím by měřila prázdno');
+}
 
 await prohlizec.close();
 console.log('\nBarvy kategorií — jeden zdroj pro mapu i karty');
