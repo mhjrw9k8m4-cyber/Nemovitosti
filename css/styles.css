@@ -2661,7 +2661,33 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .okr-stat b{display:block; font-size:24px; line-height:1.1; color:var(--copper-bright,#8CC3A4);}
 .okr-stat span{font-size:12px; color:var(--muted,#A3B3A6); text-transform:uppercase; letter-spacing:.04em;}
 .okr-list{display:flex; flex-direction:column; gap:10px; margin:14px 0 0;}
-.okr-item{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 12px; padding:12px 14px; background:var(--surface-2,#1B2E25); border:1px solid var(--line,#2C3F35); border-radius:var(--r-md);}
+/* PEVNÁ MŘÍŽKA MÍSTO ZALAMOVÁNÍ.
+   Dokud byl řádek flexbox, měnil tvar podle délky textu: v okrese
+   Benešov měl 19 řádků výšku 54 px a 11 řádků 83 px, protože popis se
+   někde za název obce vešel a jinde ne. Seznam se tím nedal projet
+   očima. Mřížka má čtyři pevná pole, takže všechny řádky vypadají
+   stejně a ceny stojí pod sebou v jednom sloupci.
+       [odznak]  místo .............  CENA
+                 podrobnosti ......  zdroj ↗                            */
+.okr-item{display:grid; grid-template-columns:auto minmax(0,1fr) auto;
+  grid-template-areas:"znak misto cena" "znak meta zdroj";
+  column-gap:12px; row-gap:3px; align-items:baseline;
+  padding:12px 14px; background:var(--surface-2,#1B2E25);
+  border:1px solid var(--line,#2C3F35); border-radius:var(--r-md);}
+.okr-item .okr-badge{grid-area:znak; align-self:start; justify-self:start;}
+.okr-item .okr-place{grid-area:misto;}
+.okr-item .okr-cena{grid-area:cena; justify-self:end; text-align:right;}
+.okr-item .okr-meta{grid-area:meta;}
+.okr-item .okr-src{grid-area:zdroj; justify-self:end;}
+/* Cena je to, kvůli čemu se seznam otevírá — má vlastní sloupec, ne
+   místo uprostřed věty. Nezalomí se: „249 000" na dvou řádcích je
+   dvě čísla. */
+.okr-item .okr-cena{display:block; white-space:nowrap; line-height:1.25;}
+.okr-item .okr-cena b{font-size:16px; font-weight:700; color:var(--text-ondark,#EAE6DD);}
+.okr-item .okr-zametr{display:block; font-size:12px; font-weight:600; color:var(--text-ondark-mute);}
+/* Nabídka bez ceny se nesmí tvářit jako levná ani se schovat — sloupec
+   zůstane, jen v něm stojí, že cena není. */
+.okr-item .okr-bezceny{font-size:13px; color:var(--text-ondark-mute); font-style:italic;}
 .okr-item .okr-place{font-weight:600; color:var(--text-ondark,#EAE6DD); font-size:15px;}
 /* Název obce vede na vlastní stránku pozemku. Musí to být poznat i BEZ
    kurzoru — na dotyku žádný není — ale nesmí to překřičet cenu a výměru
@@ -2691,7 +2717,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 /* Štítek nese text i rámeček v jedné barvě (currentColor), takže se na něj
    vztahuje mez pro text. Sytá varianta měla 4,15 : 1 — pod normou. */
 .okr-badge.t-sale{color:var(--c-sale-ink);} .okr-badge.t-drazba{color:var(--c-drazba-ink);} .okr-badge.t-exekuce{color:var(--c-exekuce-ink);} .okr-badge.t-obec{color:var(--c-obec-ink);} .okr-badge.t-majitel{color:var(--c-majitel-ink);}
-.okr-item .okr-meta{color:var(--muted,#A3B3A6); font-size:14px; flex:1 1 auto;}
+.okr-item .okr-meta{color:var(--muted,#A3B3A6); font-size:14px;}
 .okr-item .okr-meta b{color:var(--text-ondark,#EAE6DD); font-weight:600;}
 .okr-item .okr-src{font-size:13px; font-weight:600; color:var(--copper-bright,#8CC3A4); text-decoration:none; white-space:nowrap;}
 .okr-item .okr-src:hover{text-decoration:underline;}
@@ -2727,6 +2753,13 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 /* Místo jako nadpis detailu — dává panelu tvář */
 /* Hero cena — hlavní číslo detailu */
 @media (max-width:760px){
+  /* Na úzkém displeji se tři sloupce nevejdou — cena ale zůstává vpravo
+     nahoře, v jednom sloupci pod sebou, jako na širokém. Kdyby se zařadila
+     do textu, byli bychom zpátky u věty, ze které se cena vylovit nedá. */
+  .okr-item{grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:"znak zdroj" "misto cena" "meta meta";
+    column-gap:10px; row-gap:4px;}
+  .okr-item .okr-cena{align-self:baseline;}
 }
 
 

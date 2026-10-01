@@ -438,14 +438,32 @@ function footer(){
 </html>
 `;
 }
-function itemRow(o){
+/* ŘÁDEK NABÍDKY MÁ PEVNÝ TVAR, AŤ JE TEXT JAKKOLI DLOUHÝ.
+   Naměřeno na okrese Benešov: 30 řádků ve DVOU různých výškách (54 px
+   devatenáctkrát, 83 px jedenáctkrát) a na mobilu 131 vs. 153 — podle
+   toho, jestli se popis vešel za název obce, nebo se zalomil. Oko při
+   čtení seznamu hledá rytmus; tenhle žádný neměl.
+   A cena, kvůli které sem člověk jde, byla ZAPLETENÁ do věty: ve všech
+   30 řádcích byla až druhá tučná hodnota, mezi výměrou a názvem okresu.
+   Teď má řádek mřížku s pevnými poli — odznak, místo, cena vpravo,
+   podrobnosti pod tím — takže všechny řádky vypadají stejně a ceny
+   stojí v jednom sloupci pod sebou.
+   `skryjOkres` je pro stránku okresu: „okres Benešov" se tam opakoval
+   ve všech 30 řádcích stránky, která se jmenuje Benešov. */
+function itemRow(o, skryjOkres){
   const badge = `<span class="okr-badge t-${esc(o.type)}">${esc(TYPE_LABEL[o.type]||o.type)}</span>`;
   const bits = [];
   if(o.druh && o.druh!=='—') bits.push(esc(o.druh));
   if(o.area) bits.push('<b>'+fmt(o.area)+' m²</b>');
-  if(o.price) bits.push('<b>'+fmt(o.price)+' Kč</b>');
-  if(o.okres) bits.push('okres '+esc(o.okres));
-  if(o.extra && o.extra!=='—') bits.push(esc(T.zdrojText(o.extra)));
+  if(!skryjOkres && o.okres) bits.push('okres '+esc(o.okres));
+  /* „inzerát – Bezrealitky" stálo v 29 řádcích z 30 na stránce, kde má
+     každý řádek i odkaz „Zdroj ↗" vedoucí na tentýž portál. Jméno
+     portálu tedy patří do popisku odkazu, ne doprostřed věty — ušetří
+     to jedenadvacet znaků na řádek a odkaz konečně říká, KAM vede.
+     U dražeb zůstává `extra` v podrobnostech: nese datum konání, a to
+     je termín, ne zdroj. */
+  const portal = (o.extra && /^inzerát\s*[–—-]\s*(.+)$/.exec(o.extra.trim()) || [])[1] || '';
+  if(o.extra && o.extra!=='—' && !portal) bits.push(esc(T.zdrojText(o.extra)));
   /* Formulace musí zůstat opatrná: v popisech stojí „na hranici" stejně
      často jako „zavedeno", takže se tvrdí jen to, co inzerát uvádí. */
   if(o.site && o.site.length) bits.push('inzerát uvádí <b>'+esc(o.site.map(k=>VYB.nazev(k).toLowerCase()).join(', '))+'</b>');
@@ -470,7 +488,7 @@ function itemRow(o){
     let domena = '';
     try { domena = new URL(o.url).hostname.replace(/^www\./, ''); } catch { /* ok */ }
     src = `<a class="okr-src" href="${attr(o.url)}" target="_blank" rel="noopener nofollow"` +
-      ` title="Otevře se v novém okně na ${attr(domena)}">Zdroj` +
+      ` title="Otevře se v novém okně na ${attr(domena)}">${esc(portal || 'Zdroj')}` +
       `<span class="ext-ikona" aria-hidden="true">↗</span>` +
       `<span class="visually-hidden"> — ${esc(domena)}, otevře se v novém okně</span></a>`;
   }
@@ -486,6 +504,14 @@ function itemRow(o){
      posíláme i vyhledávače. Když soubor není (nabídka bez souřadnic
      nebo bez obce stránku nedostane), zbude prostý text jako dřív;
      mrtvý odkaz je horší než žádný. */
+  /* Cena za metr se dopočítá jen tam, kde dává smysl: bez výměry nebo
+     bez ceny by to byla vymyšlená čísla. Zaokrouhluje se na celé koruny
+     — desetiny u ceny za metr nikdo nečte. */
+  const zaMetr = (o.price && o.area) ? Math.round(o.price / o.area) : 0;
+  const cena = o.price
+    ? `<span class="okr-cena"><b>${fmt(o.price)} Kč</b>` +
+      (zaMetr ? `<span class="okr-zametr">${fmt(zaMetr)} Kč/m²</span>` : '') + `</span>`
+    : `<span class="okr-cena okr-bezceny">cena neuvedena</span>`;
   const strankaPozemku = STRANKY.get(klicNabidky(o));
   const misto = strankaPozemku
     ? `<a class="okr-place" href="${attr(strankaPozemku.soubor)}">${esc(o.place)}` +
@@ -494,6 +520,7 @@ function itemRow(o){
   return `      <div class="okr-item">
         ${badge}
         ${misto}
+        ${cena}
         <span class="okr-meta">${bits.join(' · ')}</span>
         ${src}
       </div>`;
@@ -522,7 +549,7 @@ for(const okres of eligibleOkres){
   const desc = `${count} ${pluralPozemek(count)} v okrese ${okres} na jedné mapě — prodeje, dražby i exekuce z veřejných zdrojů.${minP?(' Ceny od '+fmt(minP)+' Kč.'):''}`;
   const items = list.slice(0,20).map((o,i)=>({"@type":"ListItem","position":i+1,"name":`${o.place} — ${TYPE_LABEL[o.type]||o.type}${o.area?', '+o.area+' m²':''}`}));
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky v okrese ${okres}`,"inLanguage":"cs","description":`Nabídky pozemků v okrese ${okres} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}};
-  const rows = list.map(itemRow).join('\n');
+  const rows = list.map((o)=>itemRow(o, true)).join('\n');
   const mapName = (KRAJ_META[kraj]||{}).mapName || kraj;
   const krajLink = mapName ? `index.html?kraj=${encodeURIComponent(mapName)}#mapa` : 'index.html#mapa';
   const siblings = eligibleOkres.filter(x=>x!==okres && OKRES_KRAJ[x]===kraj).sort((a,b)=>byOkres[b].length-byOkres[a].length).slice(0,6);

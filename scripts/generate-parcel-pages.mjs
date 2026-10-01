@@ -103,14 +103,37 @@ function slozTitulek(druh, vym, place, okres) {
   return varianty[varianty.length - 1].slice(0, MEZ_TITULKU - konec.length - 1) + '…';
 }
 
+/* Popisek má stejný problém jako titulek, jen o sto znaků dál: Google
+   ho nad 165 znaků usekne. Dokud se skládal natvrdo, stačila dlouhá obec
+   a dlouhý okres — „Rychnov u Jablonce nad Nisou, okres Jablonec nad
+   Nisou" — a popisek měl 166 znaků. Jedna stránka z 1 995; napsat to
+   odstupňovaně stojí pět řádků a platí to i pro obce, které v datech
+   ještě nejsou.
+   Zkracuje se ZÁVĚREČNÁ VĚTA, ne údaje: číslo a místo jsou to, kvůli
+   čemu člověk z výsledků klikne. */
+const MEZ_POPISU = 165;
+function slozPopis(d, cena, zaM2, vym) {
+  const zaklad = `${TYP[d.type] || 'Nabídka'} · ${cena}${zaM2}${vym ? ' · ' + vym : ''}`
+    + ` · ${d.place}, okres ${d.okres}.`;
+  const varianty = [
+    ' Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.',
+    ' Poloha na mapě a srovnání s obvyklou cenou.',
+    ' Poloha na mapě a odkaz do katastru.',
+    ' Poloha na mapě.',
+    '',
+  ];
+  for (const v of varianty) if ((zaklad + v).length <= MEZ_POPISU) return zaklad + v;
+  /* I samotné údaje přes mez: utne se na celém slově, ne uprostřed. */
+  return zaklad.slice(0, MEZ_POPISU - 1).replace(/\s+\S*$/, '') + '…';
+}
+
 export function textyPro(d) {
   const druh = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : 'Pozemek';
   const vym = d.area ? `${fmt(d.area)} m²` : '';
   const titul = slozTitulek(druh, vym, d.place, d.okres);
   const cena = d.price ? `${fmt(d.price)} Kč` : 'cena neuvedena';
   const zaM2 = d.price && d.area ? ` (${fmt(d.price / d.area)} Kč/m²)` : '';
-  const popis = `${TYP[d.type] || 'Nabídka'} · ${cena}${zaM2}${vym ? ' · ' + vym : ''}`
-    + ` · ${d.place}, okres ${d.okres}. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.`;
+  const popis = slozPopis(d, cena, zaM2, vym);
   return { titul, popis, cena, zaM2, vym, druh };
 }
 
