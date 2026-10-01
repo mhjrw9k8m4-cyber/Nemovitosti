@@ -173,6 +173,31 @@
      0,7 dává 4,10. Naměřeno, ne odhadnuto. */
   --obrys-tlacitka:rgba(31,81,56,0.7);
   --r-xs:6px; --r-sm:10px; --r-md:14px; --r-lg:20px; --r-pill:999px;
+
+  /* ŽEBŘÍK ŠÍŘEK. Po písmu, odstupech, zaoblení a krytí poslední
+     rozsypaná stupnice — a ta nejvíc vidět, protože rozhoduje o tom,
+     kde bloky KONČÍ. Naměřeno: 44 různých hodnot max-width ve 125
+     zápisech (560 sedmnáctkrát, 880 třináctkrát, pak 760, 720, 640,
+     620, 600, 520, 460, 440, 430, 420, 400, 390, 384, 380 a k tomu
+     62ch, 44ch, 42ch, 40ch, 36ch, 24ch, 18ch, 17ch, 13ch, 76 %, 70 %,
+     60 %). Oko při čtení hledá sloupec; když každý blok končí jinde,
+     je stránka roztřepená i tam, kde má místa dost.
+     Šest příček pro bloky a tři míry pro text — šířka ODSTAVCE se měří
+     ve znacích, ne v pixelech: to je jediná míra, která drží i při jiné
+     velikosti písma. */
+  --m-wrap:1200px;     /* stránka */
+  --m-siroky:1040px;   /* mřížky, mapy, výpisy */
+  --m-stredni:880px;   /* oddíl s nadpisem a úvodem */
+  --m-sloupec:720px;   /* sloupec článku i s kraji */
+  --m-uzky:560px;      /* formuláře, boční panely */
+  --m-karta:440px;     /* karty a okna */
+  --m-text:62ch;       /* čtecí sloupec — odstavce */
+  --m-popisek:42ch;    /* krátký popisek pod nadpisem */
+  --m-nadpis:18ch;     /* velký nadpis, ať se láme, kde chceme */
+  /* Boční sloupec s obsahem rádce a mezera k sazbě. Mezera musí být
+     větší než odsazení čísla oddílu (72 px), jinak číslo zajede do
+     obsahu. */
+  --obsah-s:180px; --obsah-mezera:72px;
   /* Svislý rytmus oddílů — jedno číslo pro celý web. */
   --oddil-y:96px;
 
@@ -3686,11 +3711,62 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .clanek .rules-sect > p + .rule-list, .clanek .rules-sect > p + .rules-note{margin-top:16px;}
 .clanek .rules-sect > p:last-child, .clanek .rules-sect > ul:last-child{margin-bottom:0;}
 
-/* Na široké obrazovce číslo odejde na okraj sazby. Vedle čtecího sloupce
-   je přes 500 px prázdna — tohle je jediná věc, která tam patří. */
+/* Na široké obrazovce číslo odejde na okraj sazby. */
 @media (min-width:1100px){
-  .clanek .rules-sect::before{position:absolute; left:-64px; top:24px;
+  .clanek .rules-sect::before{position:absolute; left:-72px; top:24px;
     margin:0; text-align:right; width:44px; font-size:14px;}
+}
+
+/* -------- OBSAH RÁDCE (vedle sazby) --------------------------------
+   Tady dřív stála poznámka, že na okraj sazby patří jediná věc: číslo
+   oddílu. To byl omyl. Čtecí sloupec má 656 px, obrazovka 1280 — po
+   stranách zbývá přes 500 px prázdna na čtrnácti rádcovských stránkách.
+   Prázdno samo o sobě není vada; vada je, že článek o šesti až devíti
+   oddílech se nedal přeskakovat a čtenář nevěděl, kolik ho ještě čeká.
+   Obsah tedy to místo nezaplňuje ozdobou, ale tím, co textu chybělo.
+
+   Staví ho js/obsah.js, protože je to navigace, ne obsah: bez skriptu
+   stránka vypadá přesně jako dosud. Pod 1100 px se nezobrazuje vůbec —
+   tam by to byl jen další blok, kterým se musí prolistovat k textu. */
+.obsah{display:none;}
+@media (min-width:1100px){
+  /* Šířka obalu se POČÍTÁ ze sloupců, ne píše ručně: jinak se po první
+     změně obsahu rozejde s mřížkou a nikdo si toho nevšimne. */
+  .section:has(.clanek) > .add-wrap,
+  body:has(.clanek) .add-hero > .add-wrap{
+    display:grid; grid-template-columns:var(--obsah-s) minmax(0, var(--m-sloupec));
+    column-gap:var(--obsah-mezera);
+    max-width:calc(var(--obsah-s) + var(--obsah-mezera) + var(--m-sloupec));
+    align-items:start;}
+  /* Úvodní pás musí stát na TÉŽE svislici jako text pod ním. Bez tohohle
+     začínal nadpis na 312 px a článek na 438 — skok o 126 px uprostřed
+     stránky, který vypadá jako chyba sazby, protože to chyba sazby je. */
+  body:has(.clanek) .add-hero > .add-wrap > *{grid-column:2; min-width:0;}
+  /* Pozor na váhu pravidel: `> *` váží tři třídy (`:has(.clanek)` se
+     počítá podle svého argumentu), takže samotné `.obsah{grid-column:1}`
+     by prohrálo a obsah by se vykreslil PŘES text. Stalo se. */
+  .section:has(.clanek) > .add-wrap > *:not(.obsah){grid-column:2; min-width:0;}
+  .section:has(.clanek) > .add-wrap > .obsah{display:block; grid-column:1;
+    grid-row:1 / span 99; position:sticky; top:109px; align-self:start;}
+  .obsah-nadpis{font-family:var(--font-mono); font-size:11px; font-weight:600;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--accent-warm);
+    margin:24px 0 12px;}
+  .obsah ol{list-style:none; margin:0; padding:0; counter-reset:pk-obsah;
+    border-left:1px solid var(--line);}
+  .obsah li{counter-increment:pk-obsah;}
+  .obsah a{display:block; padding:7px 0 7px 14px; margin-left:-1px;
+    border-left:2px solid transparent;
+    font-size:13px; line-height:1.35; color:var(--text-ondark-mute);
+    text-decoration:none; transition:color var(--cas-zakladni) var(--ease),
+      border-color var(--cas-zakladni) var(--ease);}
+  .obsah a::before{content:counter(pk-obsah, decimal-leading-zero) "  ";
+    font-family:var(--font-display); font-variant-numeric:tabular-nums;
+    color:var(--accent-warm); font-size:12px;}
+  .obsah a:hover{color:var(--text-ondark); border-left-color:var(--line-ui);}
+  /* Kde zrovna jsem. Měděná linka vlevo je totéž znamení, jaké nese
+     číslo oddílu v sazbě vedle — ať je poznat, že jde o tutéž věc. */
+  .obsah a[aria-current="true"]{color:var(--text-ondark); font-weight:600;
+    border-left-color:var(--accent-warm);}
 }
 
 

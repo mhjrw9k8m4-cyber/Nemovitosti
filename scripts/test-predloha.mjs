@@ -34,12 +34,17 @@ const css = ocisti(readFileSync(path.join(ROOT, 'css', 'styles.css'), 'utf8'));
 // vlastních stínů, které nikdo neviděl, protože test čte styles.css.
 // Vygenerované stránky (pozemek-*, okresy, kraje) se vynechávají: jejich
 // hlavička je kopie šablony, takže by se každá odchylka počítala dvatisíckrát.
-const RUCNI = (f) => f.endsWith('.html') && !f.startsWith('pozemek-') &&
+/* Vygenerovaná stránka se NEPOZNÁ PODLE JMÉNA. Filtr `pozemek-*` vypadá
+   spolehlivě, jenže `pozemek-od-obce.html` je ručně psaný rádce — a takhle
+   mi z hlídače vypadl. Pozná se podle obsahu: kopie šablony pozemku nesou
+   třídu pz-media, sama šablona (pozemek.html) se hlídat MÁ. */
+const RUCNI = (f) => f.endsWith('.html') &&
   !f.startsWith('pozemky-okres-') && !f.endsWith('-kraj.html');
 const zdroje = [{ jmeno: 'css/styles.css', css }];
 for (const f of readdirSync(ROOT).filter(RUCNI).sort()) {
-  const bloky = [...readFileSync(path.join(ROOT, f), 'utf8')
-    .matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]);
+  const syrove = readFileSync(path.join(ROOT, f), 'utf8');
+  if (f !== 'pozemek.html' && syrove.includes('pz-media')) continue;   // kopie šablony
+  const bloky = [...syrove.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]);
   if (bloky.length) zdroje.push({ jmeno: f, css: ocisti(bloky.join('\n')) });
 }
 

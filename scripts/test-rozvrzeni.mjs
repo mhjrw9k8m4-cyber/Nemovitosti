@@ -1184,6 +1184,58 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
   await ctx.close();
 }
 
+/* ---- Obsah rádce vedle sazby --------------------------------------
+   Čtecí sloupec má 656 px a obrazovka 1280; po stranách zbývalo přes
+   500 px prázdna na dvanácti rádcovských stránkách. Obsah to místo
+   využívá a zároveň dává dlouhému článku, co mu chybělo: přeskakování
+   mezi oddíly.
+   Hlídá se tu trojí, protože každé se už jednou pokazilo:
+   · že se obsah vůbec postaví (staví ho skript, ne značky),
+   · že NELEŽÍ PŘES TEXT — pravidlo `> *{grid-column:2}` váží víc než
+     samotné `.obsah{grid-column:1}` a obsah se vykreslil přes článek,
+   · že úvodní pás stojí na TÉŽE svislici jako text pod ním; než se
+     srovnal, začínal nadpis na 312 px a článek na 438. */
+{
+  const CLANKY = readdirSync(KOREN).filter((f) => f.endsWith('.html') &&
+    /class="add-card clanek"/.test(readFileSync(path.join(KOREN, f), 'utf8'))).sort();
+  pravda('rádcovské stránky se našly (jinak zkouška nic neměří)',
+    CLANKY.length >= 8, `nalezeno ${CLANKY.length}`);
+
+  for (const sirka of [1280, 1024]) {
+    const ceka = sirka >= 1100;
+    let bezObsahu = [], prekryv = [], jinaSvislice = [], malo = [], mrtvyOdkaz = [];
+    for (const s of CLANKY) {
+      const { ctx, p } = await otevri(s, sirka, 900);
+      await p.waitForTimeout(500);
+      const v = await p.evaluate(() => {
+        const o = document.querySelector('.obsah');
+        const videt = !!o && getComputedStyle(o).display !== 'none';
+        const sec = document.querySelector('.clanek .rules-sect');
+        const h1 = document.querySelector('.add-hero h1');
+        const le = (e) => e ? Math.round(e.getBoundingClientRect().left) : null;
+        const odkazy = o ? [...o.querySelectorAll('a')].map((a) => a.getAttribute('href')) : [];
+        return { videt, polozek: odkazy.length,
+          slepe: odkazy.filter((h) => !h || !document.querySelector(h)).length,
+          lezi: videt && sec ? o.getBoundingClientRect().right > sec.getBoundingClientRect().left + 1 : false,
+          levyNadpis: le(h1), levyText: le(sec) };
+      });
+      if (v.videt !== ceka) bezObsahu.push(s + ' (vidět: ' + v.videt + ')');
+      if (v.lezi) prekryv.push(s);
+      if (v.levyNadpis !== v.levyText) jinaSvislice.push(`${s}: nadpis ${v.levyNadpis}, text ${v.levyText}`);
+      if (ceka && v.polozek < 5) malo.push(s + ' (' + v.polozek + ')');
+      if (v.slepe) mrtvyOdkaz.push(s + ' (' + v.slepe + ')');
+      await ctx.close();
+    }
+    pravda(`${sirka} px: obsah rádce je ${ceka ? 'vidět' : 'schovaný'} na všech stránkách`,
+      !bezObsahu.length, bezObsahu.join(', '));
+    pravda(`${sirka} px: obsah neleží přes text článku`, !prekryv.length, prekryv.join(', '));
+    pravda(`${sirka} px: nadpis i text začínají na téže svislici`,
+      !jinaSvislice.length, jinaSvislice.slice(0, 3).join(' · '));
+    if (ceka) pravda(`${sirka} px: obsah má aspoň pět položek`, !malo.length, malo.join(', '));
+    pravda(`${sirka} px: žádná položka obsahu nevede do prázdna`, !mrtvyOdkaz.length, mrtvyOdkaz.join(', '));
+  }
+}
+
 await prohlizec.close();
 console.log('\nRozvržení a popisky stránek');
 console.log(zpravy.join('\n'));
