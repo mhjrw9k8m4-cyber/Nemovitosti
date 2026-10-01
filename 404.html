@@ -9,19 +9,24 @@
   <meta name="theme-color" content="#FBFAF8">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <!-- Tahle stránka SI NENAČÍTÁ css/styles.css: má se zobrazit i tehdy,
+       když web nejede nebo se styl nestáhne. Proto tu nesmí být var(--…)
+       z paletky — proměnná by byla nedefinovaná, deklarace by se zahodila
+       a karta by se roztáhla přes celou šířku. Jednou se to stalo. -->
   <style>
     :root{color-scheme:light;}
     html,body{height:100%;margin:0;}
     body{display:flex;align-items:center;justify-content:center;background:#EAEEE9;color:#15231B;
       font-family:'Archivo','Helvetica Neue',Arial,sans-serif;text-align:center;padding:24px;}
     .card{max-width:440px;width:100%;background:#fff;border:1px solid rgba(20,35,28,0.13);
-      border-radius:var(--r-lg);padding:34px 28px;box-shadow:var(--e2);}
+      border-radius:20px;padding:34px 28px;
+      box-shadow:0 2px 4px rgba(24,45,34,0.08), 0 14px 32px -14px rgba(24,45,34,0.3);}
     .mark{width:54px;height:54px;margin:0 auto 20px;display:block;}
     h1{font-size:22px;margin:0 0 10px;font-weight:700;letter-spacing:-0.01em;}
     p{color:#565F72;line-height:1.6;margin:0 0 22px;font-size:15px;}
     a{display:inline-block;background:linear-gradient(135deg,#4FA57A 0%,#2C7150 55%,#1B4A34 100%);color:#fff;
-      text-decoration:none;font-weight:700;padding:13px 24px;border-radius:var(--r-md);font-size:15px;
-      box-shadow:var(--glow);}
+      text-decoration:none;font-weight:700;padding:13px 24px;border-radius:14px;font-size:15px;
+      box-shadow:0 6px 16px -8px rgba(31,81,56,0.55);}
     .akce{display:flex;flex-direction:column;gap:10px;}
     a.sec{background:none;color:#1B4A34;border:1.5px solid rgba(20,35,28,0.2);box-shadow:none;}
   </style>

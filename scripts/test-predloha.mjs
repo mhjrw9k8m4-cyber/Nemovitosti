@@ -40,12 +40,19 @@ const css = ocisti(readFileSync(path.join(ROOT, 'css', 'styles.css'), 'utf8'));
    třídu pz-media, sama šablona (pozemek.html) se hlídat MÁ. */
 const RUCNI = (f) => f.endsWith('.html') &&
   !f.startsWith('pozemky-okres-') && !f.endsWith('-kraj.html');
-const zdroje = [{ jmeno: 'css/styles.css', css }];
+/* Pozor na to, JAK se pozná, že stránka paletku vidí. Nejdřív tu stálo
+   prosté `includes('css/styles.css')` — jenže ta slova se na stránce
+   objevila i v mé vlastní vysvětlivce („tahle stránka si NENAČÍTÁ
+   css/styles.css"), takže kontrola prohlásila opak toho, co bylo pravda,
+   a mlčela. Hledá se tedy skutečný odkaz, ne slovo v textu. */
+const MA_PALETKU = (html) => /<link[^>]+href="[^"]*css\/styles\.css/.test(html);
+const zdroje = [{ jmeno: 'css/styles.css', css, maPaletku: true }];
 for (const f of readdirSync(ROOT).filter(RUCNI).sort()) {
   const syrove = readFileSync(path.join(ROOT, f), 'utf8');
   if (f !== 'pozemek.html' && syrove.includes('pz-media')) continue;   // kopie šablony
   const bloky = [...syrove.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]);
-  if (bloky.length) zdroje.push({ jmeno: f, css: ocisti(bloky.join('\n')) });
+  if (bloky.length) zdroje.push({ jmeno: f, css: ocisti(bloky.join('\n')),
+    maPaletku: MA_PALETKU(syrove) });
 }
 
 // Kdyby se hledání <style> bloků rozbilo, test by od té chvíle hlídal jen
@@ -146,6 +153,23 @@ function hlas(nadpis, seznam, rada) {
     'zůstane jí výchozí hodnota — u verdiktu o ceně to znamenalo zelený odznak u „Vyšší cena"');
 }
 
+/* Stránka bez css/styles.css paletku NEVIDÍ (404 a diagnostika se musí
+   zobrazit i při rozbitém stylu). Stupnice pro ni platí dál — jen se píše
+   číslem, ne tokenem. Čísla se proto berou ze stejné paletky, aby se obě
+   podoby nemohly rozejít. */
+const hodnotaTokenu = (jm) => (css.match(new RegExp('\\' + jm + '\\s*:\\s*([^;]+);')) || [])[1]?.trim();
+const ZEBRIK_TVARU = new Set(['--r-xs', '--r-sm', '--r-md', '--r-lg', '--r-pill']
+  .map(hodnotaTokenu).filter(Boolean));
+const srovnej = (s) => String(s).replace(/\s+/g, ' ').trim();
+const ZEBRIK_HLOUBKY = new Set(['--e0', '--e1', '--e2', '--e3', '--e3-up', '--glow', '--glow-lg']
+  .map(hodnotaTokenu).filter(Boolean).map(srovnej));
+/* Pojistka: kdyby se paletka přejmenovala, obě množiny by zůstaly prázdné
+   a kontrola by od té chvíle povolovala všechno na samostatných stránkách. */
+if (ZEBRIK_TVARU.size < 4 || ZEBRIK_HLOUBKY.size < 4) {
+  console.error('::error::Z paletky se nepodařilo přečíst stupnici tvarů a hloubky — kontrola by mlčela.');
+  process.exit(1);
+}
+
 /* ---------- 1. hloubka ---------- */
 // Vlastní stín se pozná podle rozptylu. Obrysy (0 0 0 Npx), vnitřní stíny
 // a záře podle barvy prvku mají jiný účel a do škály nepatří.
@@ -159,12 +183,54 @@ for (const z of zdroje) {
   for (const m of z.css.matchAll(/box-shadow:\s*([^;}]+)/g)) {
     const v = m[1].trim();
     if (v.startsWith('var(') || v === 'none' || v.includes('inset') || v.includes('currentColor')) continue;
+    if (!z.maPaletku && ZEBRIK_HLOUBKY.has(srovnej(v))) continue;   // číslem, ale ze stupnice
     const rozptyl = Math.max(0, ...vrstvy(v).map((c) => { const n = cisla(c); return n.length >= 3 ? Math.abs(n[2]) : 0; }));
     if (rozptyl >= 6) vlastni.push(z.jmeno + ': ' + v.slice(0, 64));
   }
 }
 hlas('Vlastní stín mimo paletku', vlastni,
   'Použijte var(--e1) až var(--e3), --e3-up pro panel zdola, --glow pro značkovou záři.');
+
+/* ---------- 1b. v předpisu @media nesmí být proměnná ----------
+   Zápis `max-width:` stojí i v PODMÍNCE responzivního dotazu. Když jsem
+   srovnával šířky na žebřík, přepsal se mi i tam: z
+   `@media (max-width:1040px)` se stalo `@media (max-width:var(--m-siroky))`.
+   To je neplatný dotaz, takže CELÝ blok pravidel přestal platit — a padlo
+   s ním 35 bodů zlomu najednou. Na stránce to nikde nesvítí červeně:
+   zápatí jen místo dvou sloupců ukázalo pět a mapa na mobilu se rozsypala.
+   Proměnná v podmínce @media nefunguje ANI ZÁMĚRNĚ (hodnota by musela být
+   známá před výpočtem stylů), takže tu není co povolovat. */
+{
+  const vmedia = [];
+  for (const z of zdroje) {
+    for (const m of z.css.matchAll(/@media([^{]*)\{/g)) {
+      if (/var\(/.test(m[1])) vmedia.push(z.jmeno + ': @media' + m[1].trim().slice(0, 50));
+    }
+  }
+  hlas('Proměnná v podmínce @media', vmedia,
+    'Dotaz je neplatný a celý blok se zahodí. Napište hodnotu číslem.');
+}
+
+/* ---------- 1c. samostatná stránka nesmí sahat do paletky ----------
+   404 si schválně NENAČÍTÁ css/styles.css: má se zobrazit i tehdy, když
+   web nejede. Dosadil jsem do ní var(--m-karta) a proměnná byla
+   nedefinovaná — deklarace se zahodila a karta se roztáhla z 498 px na
+   976. Prohlížeč na to neupozorní ničím. */
+{
+  const osirele = [];
+  for (const z of zdroje) {
+    if (z.jmeno === 'css/styles.css') continue;
+    const cely = readFileSync(path.join(ROOT, z.jmeno), 'utf8');
+    if (MA_PALETKU(cely)) continue;                       // paletku má
+    const vlastni = new Set([...z.css.matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]));
+    for (const m of z.css.matchAll(/var\(\s*(--[\w-]+)\s*(,|\))/g)) {
+      if (m[2] === ',') continue;                            // má záchranu
+      if (!vlastni.has(m[1])) osirele.push(z.jmeno + ': var(' + m[1] + ')');
+    }
+  }
+  hlas('Samostatná stránka použila proměnnou z paletky', osirele,
+    'Stránka bez css/styles.css paletku nevidí — napište hodnotu, nebo doplňte var(--x, záchrana).');
+}
 
 /* ---------- 2. tvary ---------- */
 // 2 a 3 px jsou vlasové proužky, 50 % a 999 px jsou kruhy — ty nejsou „tvar karty".
@@ -177,6 +243,7 @@ for (const z of zdroje) {
     const v = m[1].trim();
     if (v.includes('var(')) continue;               // z paletky (i rohový zápis)
     if (POVOLENA.has(v)) continue;
+    if (!z.maPaletku && ZEBRIK_TVARU.has(v)) continue;   // číslem, ale ze stupnice
     // Rohový zápis smí mít jen nuly a vlasové hodnoty; cokoli většího patří
     // do paletky, jinak by se škála obešla zadními vrátky.
     if (v.split(/\s+/).every((x) => x === '0' || POVOLENA.has(x))) continue;
