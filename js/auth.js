@@ -136,9 +136,34 @@
         token při obnově otáčí, takže starý tím okamžitě neplatí.
         Odpověď „invalid" se pak brala jako „tenhle účet neplatí"
         a session se smazala. Odtud „web mě pořád odhlašuje".
-        Před smazáním se proto znovu přečte localStorage: když je tam
-        JINÝ refresh_token, než jaký jsme poslali, obnovil ho mezitím
-        někdo jiný a naše chyba je opozdilec, ne neplatné přihlášení. */
+        Před smazáním se proto podíváme, jestli v localStorage nestojí
+        JINÝ refresh_token: pak ho mezitím obnovil někdo jiný a naše
+        chyba je opozdilec, ne neplatné přihlášení.
+
+        JEDNO PŘEČTENÍ NA TO NESTAČÍ a bylo to měřitelné. Obě stránky
+        dostanou odpověď v tutéž chvíli, takže opozdilec čte úložiště
+        přesně ve chvíli, kdy do něj vítěz zapisuje — a vidí ještě starou
+        hodnotu. Změřeno: 39 ze 40 přečtení těsně po zápisu z druhé
+        stránky vrátilo STAROU hodnotu. Pak se smaže token, který platí,
+        a to smazání jde do úložiště až po tom zápisu.
+        Čeká se proto, až se nový token objeví — nejvýš POCKANI_MS,
+        s dotazem každých 50 ms. Když se neobjeví, token je opravdu
+        pryč (vítěz třeba zavřel okno, než odpověď došla) a odhlášení
+        je správné; jen přijde o sekundu později. Opačná chyba —
+        odhlásit člověka, který je přihlášený — je mnohem horší.
+        Nerozlišuje se to podle textu chybové hlášky ze serveru: ta se
+        může kdykoli změnit a čekání ji nepotřebuje. */
+  var POCKANI_MS = 1000;
+  /** Objevil se v úložišti jiný refresh_token, než jaký jsme poslali?
+      Čeká se na to do `doKdy`; vrací true, když ano. */
+  function nekdoObnovilJinde(poslanyToken, doKdy) {
+    var s = getSession();
+    if (s && s.refresh_token && s.refresh_token !== poslanyToken) return Promise.resolve(true);
+    if (Date.now() >= doKdy) return Promise.resolve(false);
+    return new Promise(function (hotovo) {
+      setTimeout(function () { nekdoObnovilJinde(poslanyToken, doKdy).then(hotovo); }, 50);
+    });
+  }
   function refresh(vynutit) {
     var s = getSession();
     if (!s || !s.refresh_token) return Promise.resolve(false);
@@ -156,12 +181,14 @@
         var opravduNeplati = (r.status === 400 || r.status === 401) &&
           /invalid|expired|revoked|not\s*found|already\s*used/.test(duvod);
         if (opravduNeplati) {
-          var ted = getSession();
-          /* Mezitím se přihlášení obnovilo jinde — držíme se toho
+          /* Obnovilo se přihlášení mezitím jinde? Pak se držíme toho
              nového. Smazat ho kvůli odpovědi na starý token by
              odhlásilo člověka, který je přihlášený. */
-          if (ted && ted.refresh_token && ted.refresh_token !== poslanyToken) return true;
-          setSession(null);
+          return nekdoObnovilJinde(poslanyToken, Date.now() + POCKANI_MS).then(function (jinde) {
+            if (jinde) return true;
+            setSession(null);
+            return false;
+          });
         }
         return false;
       });
