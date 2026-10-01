@@ -86,9 +86,14 @@
      všechny druhy — barvu si do --c-druh dodá ten, kdo ho použije, ze
      stejné proměnné, jakou má tečka na mapě. Dřív tu byly čtyři přechody
      s ručně opsanými složkami barev, tedy čtvrtá kopie palety. */
+  /* Závan dobíhá na PEVNOU vzdálenost, ne na procento šířky. V procentech
+     končil u každé kartičky jinde — u úzké po 280 px, u široké po 586 px —
+     a řada kartiček tím vypadala roztřepeně, jako by každá mizela jinak.
+     240 px je zhruba na délku nadpisu, takže barva drží u čáry, odkud
+     vychází, a nerozlévá se přes text. */
   --grad-druh-zavan:linear-gradient(90deg,
     color-mix(in srgb, var(--c-druh, var(--accent-warm)) 14%, transparent),
-    transparent 64%);
+    transparent 240px);
   /* Značkový přechod (modrá → fialová) — stejný jako logo/ikona */
   /* Značkový přechod. Dřív končil ve fialové (#1B4A34) — a právě ta dělala
      ten „technologický" dojem, navíc se netrefovala do modroindigového loga.
@@ -162,6 +167,8 @@
   --popisek:#37443D;
 
   --r-xs:6px; --r-sm:10px; --r-md:14px; --r-lg:20px; --r-pill:999px;
+  /* Svislý rytmus oddílů — jedno číslo pro celý web. */
+  --oddil-y:96px;
 
   /* ---------------------------------------------------------------
      TVAR PODLE ROLE, ne podle chuti. Web měl všechno zaoblené zhruba
@@ -174,7 +181,14 @@
      Karta hranatější než tlačítko je schválně: tak je poznat, co je
      nábytek a co se dá zmáčknout.
      --------------------------------------------------------------- */
-  --r-obraz:22px; --r-ovladani:12px; --r-plocha:9px;
+  /* Role sedí na TÉŽE stupnici jako zbytek (--r-xs/sm/md/lg), jinak se
+     vykreslí obě sady naráz. Změřeno před srovnáním: na úvodní stránce
+     jedenáct různých zaoblení, mezi nimi 9 a 10 px (nepoznatelné),
+     12 a 14 px, 20 a 22 px. Pořadí rolí zůstává — karta je pořád
+     hranatější než tlačítko. */
+  --r-plocha:var(--r-sm);      /* bylo 9px  — karty, panely */
+  --r-ovladani:var(--r-md);    /* bylo 12px — tlačítka, pole */
+  --r-obraz:var(--r-lg);       /* bylo 22px — mapa, fotky */
 
   /* Staré názvy zůstávají, ať se nemusí přepisovat celý soubor naráz. */
   --radius:var(--r-sm); --radius-lg:var(--r-lg);
@@ -612,7 +626,7 @@ body.vm-otevreno{overflow:hidden;}
 .pk-shluk{display:flex; align-items:center; justify-content:center;
   border-radius:50%; background:color-mix(in srgb, var(--sh) 82%, #fff);
   border:2px solid rgba(255,255,255,.92); box-shadow:var(--e2);
-  color:#fff; font-family:var(--font-ui); font-weight:800; letter-spacing:-.01em;
+  color:#fff; font-family:var(--font-ui); font-weight:700; letter-spacing:-.01em;
   cursor:pointer; transition:transform var(--cas-rychly) var(--ease);}
 .pk-shluk b{font-size:inherit; line-height:1;}
 .leaflet-marker-icon:hover .pk-shluk{transform:scale(1.08);}
@@ -1014,10 +1028,14 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .sources-over .s-dot{flex:none; transform:translateY(-1px);}
 
 /* Sections */
-.section{padding:80px 0;}
+/* JEDEN RYTMUS PRO VŠECHNY ODDÍLY, a o stupeň větší.
+   Naměřeno: většina oddílů měla 80 px nahoře i dole, ale tmavé pásy
+   jen 64/56 a 56/48 — takže zrovna ty, co mají být předěl, dýchaly
+   nejmíň. Rytmus je teď jedno číslo a mění se na jednom místě. */
+.section{padding:var(--oddil-y) 0;}
 /* Pruhy: střídavé jemně světlejší pozadí přes celou šířku dávají webu rytmus
    (jako u velkých webů) — sekce pak nejsou ostrůvky textu v prázdnu. */
-.section.band{background:var(--ink-soft); border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding-top:80px; padding-bottom:80px;}
+.section.band{background:var(--ink-soft); border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding-top:var(--oddil-y); padding-bottom:var(--oddil-y);}
 /* Úvody sekcí zarovnané doleva na stejnou osu jako celý web — čitelné, urovnané. */
 /* Rytmus. Mezi sekcemi je 152 px, ale nadpis sekce od svého obsahu dělilo
    40 px — poměr necelé 4 : 1, a to oko ještě čte jako „všechno stejně daleko":
@@ -1841,7 +1859,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    obsah má pevný, nezávisí na datech, a pozvání „ozvěte se" snese důraz.
    Karta uvnitř ztrácí rámeček: na pásu ohraničuje obsah pás sám.
    ===================================================================== */
-#realitky{background:var(--ink-dark); color:var(--text-ondeep); padding:56px 0 48px; margin-top:24px;}
+#realitky{background:var(--ink-dark); color:var(--text-ondeep); padding:var(--oddil-y) 0; margin-top:24px;}
 #realitky .realtor-contact{margin-top:0; background:none; border:0; padding:0;}
 #realitky .rct-copy h2{color:var(--text-ondeep);}
 #realitky .rct-copy p{color:var(--text-ondeep-mute);}
@@ -2191,7 +2209,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
      dole jako plná akce. „Přidat pozemek" je stále v liště (.header-cta). */
   #nav a.btn-primary{text-align:center; margin-top:16px; border-bottom:0; padding:14px 20px; font-size:17px; font-weight:700; color:var(--ink); border-radius:var(--r-md);}
   .steps{grid-template-columns:1fr;}
-  .section{padding:64px 0;}
+  :root{ --oddil-y:80px; }     /* o stupeň míň, ale pořád víc než dřívějších 64 */
   h1{font-size:38px;} .section-head h2{font-size:28px;}
   footer .wrap:not(.foot-grid):not(.foot-bottom){flex-direction:column; align-items:flex-start;}
 }
@@ -2874,7 +2892,7 @@ body{background:var(--bg) var(--grad-plocha); background-size:cover;}
    Byl to řádek drobných čísel s měděnou svislou čárkou — přesně ten druh
    prvku, který se v záplavě rámečků ztratí. Čísla jsou přitom to nejlepší,
    co web o sobě může říct, tak ať jsou vidět. */
-.sources{background:var(--ink-dark); color:var(--text-ondeep); padding:64px 0 56px;}
+.sources{background:var(--ink-dark); color:var(--text-ondeep); padding:var(--oddil-y) 0;}
 .sources::before, .sources::after{display:none;}
 .src-stats{grid-template-columns:repeat(4,1fr); gap:28px; margin-bottom:40px;}
 .src-stat{border-left:0; padding:0; gap:8px;}
@@ -2886,7 +2904,8 @@ body{background:var(--bg) var(--grad-plocha); background-size:cover;}
 .sources .source-chip{background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.28);
   color:var(--text-ondeep);}
 @media (max-width:880px){
-  .sources{padding:40px 0 40px;}
+  /* rytmus drží --oddil-y, ne vlastní číslo (bylo 40/40, tedy
+     polovina proti ostatním oddílům na téže šířce) */
   .src-stats{grid-template-columns:repeat(2,1fr); gap:24px 16px;}
 }
 
@@ -3370,7 +3389,10 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .hh-l[data-druh="sale"]{--b:var(--c-sale,#4361B8);}
 .hh-l[data-druh="drazba"]{--b:var(--c-drazba,#CC6B33);}
 .hh-l[data-druh="exekuce"]{--b:var(--c-exekuce,#8C2F1E);}
-.hh-l b{font-weight:800;}
+/* 700, ne 800: osmistovka patří velkým nadpisům v hero, ne třináctce
+   v proužku živých faktů — byla to jediná drobnost na webu, která ji
+   měla, a pátá tloušťka písma kvůli osmi prvkům. */
+.hh-l b{font-weight:700;}
 @media (max-width:760px){
   /* Na telefonu je souhvězdí NAHOŘE, za nadpisem — tam má být vidět.
      Směrem dolů se vytrácí, aby karty se živými údaji ležely na čistém
