@@ -130,15 +130,19 @@ pravda('rádce u pochybné ceny varuje, ne chválí',
   /o\.pochybna[\s\S]{0,300}spoluvlastnick/.test(radce),
   'rádce by u téhož pozemku říkal „může to být příležitost"');
 const pozemek = readFileSync(new URL('../js/pozemek.js', import.meta.url), 'utf8');
-/* Stránka pozemku i okno na mapě berou blok s odhadem ze sdíleného
-   js/ceny.js — dokud to tak je, varování u pochybné slevy mají obě
-   automaticky. (Dřív si ho každá skládala sama a v okně na mapě chybělo
-   u 149 nabídek. Že to varování v obou podobách opravdu je, měří
-   scripts/test-ceny.mjs na vymyšleném pozemku, kde je odpověď známá.) */
+/* Stránka pozemku bere blok s odhadem ze sdíleného js/ceny.js — dokud
+   to tak je, má varování u pochybné slevy automaticky. (Dřív si ho každá
+   stránka skládala sama. Že to varování opravdu je, měří
+   scripts/test-ceny.mjs na vymyšleném pozemku, kde je odpověď známá.)
+
+   DRUHÁ KONTROLA TU BÝVALA NA „OKNO NA MAPĚ" a je pryč i s tím oknem.
+   Panel s detailem nad mapou se totiž nikdy neotevřel: funkce, která ho
+   plnila (showDetail), měla v celém js/main.js jedinou zmínku — vlastní
+   deklaraci. Hlídat, že mrtvý kód bere blok ze sdíleného modulu, nic
+   neznamená. Kdyby okno nad mapou někdy vzniklo znovu, patří ta kontrola
+   zpátky. */
 pravda('stránka pozemku bere blok s odhadem ze sdíleného modulu',
   /PK_CENY\.blokOdhadu/.test(pozemek), 'js/pozemek.js si ho skládá sám');
-pravda('a okno na mapě taky', /PK_CENY\.blokOdhadu/.test(main),
-  'js/main.js si ho skládá sám — přesně tak zmizelo varování z mapy');
 
 // --- 5) A hlavně: co se opravdu vykreslí ------------------------------
 // Kontroly výš čtou kód a počítají skóre vlastní kopií vzorce — to by

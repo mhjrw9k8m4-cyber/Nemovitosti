@@ -20,6 +20,14 @@
  *
  * Proto se tu neptáme souboru, ale PROHLÍŽEČE: zná to pravidlo, a jakou
  * barvu z něj doopravdy spočítá?
+ *
+ * MĚŘÍ SE ŽIVÝ VERDIKT NA STRÁNCE POZEMKU (.pz-verdict / .pv-badge).
+ * Dřív se měřil ten v panelu nad mapou (.md-verdict) — jenže ten panel
+ * se nikdy neotevřel, takže patnáct kontrol dokazovalo něco o kódu,
+ * který se nevykreslil. Přesunutím na živé místo se hned ukázaly dvě
+ * vady, které tam byly celou dobu: odznak „Cena k ověření" neměl žádné
+ * pozadí (rgba(0, 0, 0, 0)) a odznak „Výhodná cena" měl tmavý text na
+ * modré, tedy 3,11 : 1 proti normě 4,5.
  */
 import { chromium } from 'playwright-core';
 import { readFileSync } from 'node:fs';
@@ -60,7 +68,8 @@ await ctx.route('**/*', (r) => {
   return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();
 });
 const p = await ctx.newPage();
-await p.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'load' });
+// Stránka pozemku si nese pravidla verdiktu ve vlastní hlavičce.
+await p.goto(`http://127.0.0.1:${PORT}/pozemek.html`, { waitUntil: 'load' });
 await p.waitForTimeout(1500);
 
 /* --- 1) Zná prohlížeč všechna pravidla verdiktu? -------------------- */
@@ -80,7 +89,7 @@ const znama = await p.evaluate(() => {
 });
 pravda(`prohlížeč načetl styly (${znama.length} pravidel — jinak zkouška nic neměří)`,
   znama.length > 500, `pravidel ${znama.length}`);
-for (const sel of ['.md-verdict', '.md-verdict.good', '.md-verdict.mid', '.md-verdict.bad', '.md-verdict.warn']) {
+for (const sel of ['.pz-verdict', '.pz-verdict.good', '.pz-verdict.mid', '.pz-verdict.bad', '.pz-verdict.warn']) {
   pravda(`pravidlo ${sel} se opravdu načetlo`, znama.indexOf(sel) !== -1,
     'v CSS je napsané, ale prohlížeč ho nezná — nejspíš ho spolkl rozbitý komentář nad ním');
 }
@@ -90,10 +99,10 @@ const barvy = await p.evaluate(() => {
   const out = {};
   for (const cls of ['good', 'mid', 'bad', 'warn']) {
     const d = document.createElement('div');
-    d.className = 'md-verdict ' + cls;
-    d.innerHTML = '<div class="mv-top"><span class="mv-badge">X</span></div>';
+    d.className = 'pz-verdict ' + cls;
+    d.innerHTML = '<div class="pv-top"><span class="pv-badge">X</span></div>';
     document.body.appendChild(d);
-    const bs = getComputedStyle(d.querySelector('.mv-badge'));
+    const bs = getComputedStyle(d.querySelector('.pv-badge'));
     const ds = getComputedStyle(d);
     out[cls] = { odznak: bs.backgroundColor, text: bs.color, panel: ds.backgroundColor };
     d.remove();
@@ -126,15 +135,28 @@ pravda('žádné dva verdikty nemají shodný odznak', shodne.length === 0,
 const b = rgb(barvy.bad.odznak);
 pravda('odznak „Vyšší cena" není zelený', !(b[1] > b[0] + 20),
   `barva ${barvy.bad.odznak} — zelená složka ${b[1]} proti červené ${b[0]}`);
-const g = rgb(barvy.good.odznak);
-pravda('a odznak „Výhodná cena" zelený je', g[1] > g[0] + 20,
-  `barva ${barvy.good.odznak}`);
+/* Zelenou — tedy „tohle je v pořádku" — nese u „Výhodné ceny" KARTA,
+   ne odznak. Odznak si bere značkovou --c-sale, tedy modrou, protože
+   verdikt používá tutéž paletku jako druhy příležitostí. Modrá tak na
+   mapě znamená „na prodej" a tady „výhodná cena"; neměním to, ale ať
+   se to ví. Měří se proto zeleň KARTY. */
+const g = rgb(barvy.good.panel);
+pravda('karta „Výhodná cena" je zelená', g[1] > g[0] + 20,
+  `podklad ${barvy.good.panel}`);
+
+/* Odznak bez pozadí není odznak. Přesně tohle měla „Cena k ověření":
+   tři varianty ze čtyř byly v CSS vypsané a na čtvrtou se zapomnělo,
+   takže jí zbyl průhledný ovál s textem. */
+for (const [cls, v] of Object.entries(barvy)) {
+  pravda(`odznak „${cls}" má vůbec nějaké pozadí`,
+    !/rgba\(0, 0, 0, 0\)|transparent/.test(v.odznak), `pozadí je ${v.odznak}`);
+}
 
 /* Podklad karty se u „good" musí lišit od výchozího — právě ten se
    ztrácel, když pravidlo spolkl rozbitý komentář. */
 const zaklad = await p.evaluate(() => {
   const d = document.createElement('div');
-  d.className = 'md-verdict';
+  d.className = 'pz-verdict';
   document.body.appendChild(d);
   const v = getComputedStyle(d).backgroundColor;
   d.remove();

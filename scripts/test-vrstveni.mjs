@@ -67,35 +67,14 @@ async function stranka(sirka, prihlasit) {
   je('měřené prvky mapy nejsou schované za lepivou hlavičkou',
     [body.hint.podHlavickou, body.tool.podHlavickou], [true, true]);
 
-  const jas = async (b) => p.evaluate(({ x, y }) => {
-    // Jas se čte z prvku, který je v daném bodě nahoře — nepřímé, ale stačí:
-    // porovnáváme TENTÝŽ bod před a po, takže rozdíl dělá jen zatmavení.
-    const el = document.elementFromPoint(x, y);
-    return el ? el.tagName + '|' + (el.className || '') : 'nic';
-  }, b);
-
-  const predHint = await jas(body.hint);
-  await p.evaluate(() => {
-    const d = document.querySelector('.map-detail'), h = document.querySelector('.map-holder');
-    d.hidden = false; d.classList.add('show');
-    d.innerHTML = '<div style="padding:16px">detail</div>';
-    h.classList.add('detail-open');
-  });
-  await p.waitForTimeout(700);
-
-  // Zatmavení musí ležet NAD ovládáním mapy, jinak by tlačítka plavala nad
-  // otevřeným detailem a vypadalo by to jako chyba vrstvení.
-  const nahore = await p.evaluate(() => {
-    const dno = document.querySelector('header').getBoundingClientRect().bottom;
-    const r = document.querySelector('#kraj-hint').getBoundingClientRect();
-    if (r.top <= dno) return 'ZA HLAVIČKOU';
-    const el = document.elementFromPoint(Math.round(r.x + r.width / 2), Math.round(r.y + r.height / 2));
-    // ::after se z elementFromPoint nevrací, vrátí se jeho nositel
-    return el ? (el.className || el.tagName) + '' : 'nic';
-  });
-  je('nad ovládáním mapy leží zatmavení detailu, ne ovládání samo',
-    /map-holder|detail-open/.test(nahore), true);
-  je('kontrolní bod se nezměnil v nesmysl', predHint !== 'nic', true);
+  /* TADY SE MĚŘILO ZATMAVENÍ POD VYSOUVACÍM DETAILEM — tedy jestli leží
+     nad ovládáním mapy, aby tlačítka neplavala nad otevřeným panelem.
+     Panel je pryč: nikdy se neotevřel (funkce, která ho plnila, měla
+     v js/main.js jedinou zmínku — vlastní deklaraci), takže zkouška si
+     ho musela do stránky vyrobit sama a měřila vrstvení něčeho, co na
+     webu nebylo. Zbyla kontrola nad ní: že měřené prvky mapy nejsou
+     schované za lepivou hlavičkou. Kdyby panel nad mapou někdy vznikl
+     znovu, patří to měření zpátky. */
   await ctx.close();
 }
 

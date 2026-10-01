@@ -38,11 +38,17 @@ const PKH = createRequire(import.meta.url)(path.join(ROOT, 'js', 'hlidani-logika
 const ukazane = PKH.bezDuplicit(pozemky);
 
 // --- 1) prohlížečový výpočet názvu musí sednout s generátorem -----------
-/* Tentýž název skládají TŘI nezávislé kusy kódu: generátor v Node, detail
-   pozemku (kvůli kanonickému odkazu a sdílení) a hlavní skript (kvůli
-   odkazům ve výpisu). Porovnávají se všechny — dvojice by nechala třetí
-   bez dozoru a rozejití by se poznalo až ze 404. */
-const ZDROJE = [['js/pozemek.js'], ['js/main.js']];
+/* Tentýž název skládají DVA nezávislé kusy kódu: generátor v Node
+   a stránka pozemku (kvůli kanonickému odkazu a sdílení). Porovnávají se
+   oba — jeden sám by rozejití neukázal a poznalo by se až ze 404.
+
+   TŘETÍ KOPIE BYLA V js/main.js a je pryč. Hlavní skript ji totiž
+   nevolal: klepnutí na kartu ve výpisu vede přes gotoInzerat() na
+   pozemek.html, ne na vygenerovaný soubor (ověřeno klikáním: tři karty,
+   třikrát /pozemek.html). Mrtvá kopie se přitom od živých lišila —
+   počítala otisk z pkey(), kdežto js/pozemek.js z pkeyPlny(). Oživit ji
+   by znamenalo odkazy na neexistující soubory. */
+const ZDROJE = [['js/pozemek.js']];
 let src = fs.readFileSync(path.join(ROOT, 'js', 'pozemek.js'), 'utf8');
 /* Funkce se z js/pozemek.js vytáhne počítáním závorek, ne regulárem:
    hledat tělo funkce vzorkem je křehké a u vnořených závorek se to rozjede. */
@@ -59,7 +65,6 @@ function kus(jmeno) {
 function vytahni(soubor) {
   src = fs.readFileSync(path.join(ROOT, soubor), 'utf8');
   const mapaM = /var PK_(?:MAPA|DIAKR) = \{[^}]*\};/.exec(src);
-  // main.js si klíč skládá sám (pkey), detail má vlastní pkeyPlny.
   const klic = kus('pkeyPlny') || kus('pkey');
   return [mapaM ? mapaM[0] : '', kus('pkSlug'), kus('pkOtisk'), klic, kus('souborPozemku')].join('\n');
 }

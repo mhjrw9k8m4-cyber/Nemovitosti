@@ -36,7 +36,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=21307918">
+  <link rel="stylesheet" href="css/styles.css?v=76af8aa5">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -67,13 +67,22 @@
     .pz-price .pv{font-family:var(--font-display); font-size:38px; font-weight:700; letter-spacing:-.015em; color:var(--text-ondark); font-variant-numeric:tabular-nums; line-height:1;}
     .pz-price .pm{font-size:15px; font-weight:600; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
 
-    .pz-verdict{margin:16px 0 6px; padding:14px 16px; border-radius:var(--r-plocha); border:1px solid;}
-    .pz-verdict.good{background:rgba(75,169,125,0.12); border-color:rgba(75,169,125,0.42);}
-    .pz-verdict.mid{background:rgba(204,107,51,0.12); border-color:rgba(204,107,51,0.46);}
-    .pz-verdict.bad{background:rgba(140,47,30,0.11); border-color:rgba(140,47,30,0.42);}
+    /* BARVU VERDIKTU NESE KARTA, ne seznam u každého prvku zvlášť.
+       Odznak i pruh stupnice ji měly vypsanou každý po svém — a obojí
+       vyjmenovávalo good/mid/bad a na „warn" (cena k ověření) zapomnělo.
+       Změřeno: odznak i pruh u warn měly pozadí rgba(0, 0, 0, 0).
+       Text jde s barvou, protože tmavý text na modré „Výhodné ceně"
+       dával 3,11 : 1 proti normě 4,5 pro drobné tučné písmo. Naměřené
+       kontrasty: sale #4361B8 s bílou 5,77 · drazba #CC6B33 s tmavou
+       4,88 · exekuce #8C2F1E s bílou 8,27 · warn #8A5512 s bílou 6,20. */
+    .pz-verdict{--vc:var(--copper-bright); --vt:#fff;
+      margin:16px 0 6px; padding:14px 16px; border-radius:var(--r-plocha); border:1px solid;}
+    .pz-verdict.good{--vc:var(--c-sale); background:rgba(75,169,125,0.12); border-color:rgba(75,169,125,0.42);}
+    .pz-verdict.mid{--vc:var(--c-drazba); --vt:#0c1a12; background:rgba(204,107,51,0.12); border-color:rgba(204,107,51,0.46);}
+    .pz-verdict.bad{--vc:var(--c-exekuce); background:rgba(140,47,30,0.11); border-color:rgba(140,47,30,0.42);}
     .pv-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;}
-    .pv-badge{font-size:13px; font-weight:700; padding:2px 10px; border-radius:999px; color:#0c1a12;}
-    .pz-verdict.good .pv-badge{background:var(--c-sale);} .pz-verdict.mid .pv-badge{background:var(--c-drazba);} .pz-verdict.bad .pv-badge{background:var(--c-exekuce); color:#fff;}
+    .pv-badge{font-size:13px; font-weight:700; padding:2px 10px; border-radius:999px;
+      background:var(--vc); color:var(--vt);}
     .pv-cmp{font-size:12px; color:var(--text-ondark-mute); font-weight:600;}
     .pv-text{font-size:14px; color:var(--text-ondark-mute); line-height:1.5;}
     .pv-text b{color:var(--text-ondark);}
@@ -86,19 +95,15 @@
        hodně, nebo skoro uprostřed. */
     .pv-stred{position:absolute; left:50%; top:-3px; bottom:-3px; width:1.5px;
       background:rgba(20,35,28,0.3); transform:translateX(-50%); border-radius:2px;}
-    /* Pruh dojede na svou hodnotu — viz .mv-fill ve styles.css. */
-    .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:99px;
+    /* Pruh dojede na svou hodnotu. Barvu bere z --vc jako odznak. */
+    .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:99px; background:var(--vc);
       width:var(--w); animation:pruhNajed .62s var(--ease) both;}
-    .pz-verdict.good .pv-fill{background:var(--c-sale);} .pz-verdict.mid .pv-fill{background:var(--c-drazba);} .pz-verdict.bad .pv-fill{background:var(--c-exekuce);}
     /* Puntík je barevný podle verdiktu a má bílý prstenec, aby byl
        poznat i tam, kde leží na tmavší části lišty. Bílý puntík na
        světlé liště splýval. */
     .pv-dot{position:absolute; top:50%; left:var(--w); width:15px; height:15px; border-radius:50%;
-      background:var(--text-ondark); border:3px solid #fff; box-shadow:var(--e1);
+      background:var(--vc); border:3px solid #fff; box-shadow:var(--e1);
       transform:translate(-50%,-50%); animation:puntikNajed .62s var(--ease) both;}
-    .pz-verdict.good .pv-dot{background:var(--c-sale);}
-    .pz-verdict.mid .pv-dot{background:var(--c-drazba);}
-    .pz-verdict.bad .pv-dot{background:var(--c-exekuce);}
     .pv-scale{display:flex; justify-content:space-between; font-size:11px; color:var(--text-ondark-mute); margin-top:6px;}
 
     /* Popisek sekce je NADPIS (h2), i když vypadá jako drobný štítek.

@@ -1465,10 +1465,6 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .opp-fav.on{color:var(--copper-bright);}
 .opp-fav.on svg{fill:currentColor;}
 .opp-fav:active{transform:scale(1.2);}
-.lp-fav{display:inline-flex; align-items:center; justify-content:center; gap:6px;}
-.lp-fav svg{width:13px; height:13px; stroke-width:2.77; fill:none; stroke:currentColor;  stroke-linejoin:round;}
-.lp-fav.on{background:rgba(44,113,80,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
-.lp-fav.on svg{fill:currentColor;}
 /* Zelená #2E8F5F dávala na vlastním světle zeleném podkladu jen 3,54 : 1,
    tedy pod normou pro drobné písmo. Ztmaveno na 5,6 : 1; odstín zůstává. */
 .opp-deal{display:inline-block; font-size:11px; font-weight:700; color:#13663E; background:rgba(31,163,99,0.10); border:1px solid rgba(19,102,62,0.34); border-radius:var(--r-xs); padding:2px 8px; letter-spacing:0; white-space:nowrap; font-variant-numeric:tabular-nums;}
@@ -1579,7 +1575,6 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Zvýrazněný (placený) inzerát — prémiový plný odznak + jemné orámování karty */
 .opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:#fff; background:var(--plocha-znacka); border:0; border-radius:var(--r-sm); padding:2px 8px; letter-spacing:0.03em; text-transform:uppercase; box-shadow:0 1px 5px rgba(44,113,80,0.35);}
 .opp-item.is-featured{border-color:rgba(31,81,56,0.5); box-shadow:inset 0 0 0 1px rgba(31,81,56,0.3);}
-.md-feat{display:inline-flex; align-items:center; margin-left:8px; font-size:11px; font-weight:700; padding:2px 10px; border-radius:var(--r-sm); color:#fff; background:var(--plocha-znacka); letter-spacing:0.03em; text-transform:uppercase; white-space:nowrap; box-shadow:0 1px 5px rgba(44,113,80,0.35);}
 /* Odpočet do termínu dražby (reálné datum) */
 .opp-cd{display:inline-block; font-size:11px; font-weight:700; padding:1px 8px; border-radius:var(--r-xs); background:rgba(228,240,231,0.06); border:1px solid rgba(228,240,231,0.14); color:var(--text-ondark-mute); letter-spacing:0.01em; white-space:nowrap;}
 /* Odpočet do termínu. Světlé odstíny tu zbyly z doby, kdy byly karty tmavé —
@@ -1587,118 +1582,43 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    jsou na to v paletě přesně pro tenhle případ. */
 .opp-cd.soon{color:var(--c-drazba-ink); border-color:rgba(204,107,51,0.5);}
 .opp-cd.urg{color:var(--c-exekuce-ink); border-color:rgba(228,72,61,0.42);}
-.md-cd{display:inline-flex; align-items:center; margin-left:8px; font-size:12px; font-weight:700; padding:2px 10px; border-radius:var(--r-sm); background:rgba(143,160,175,0.16); color:var(--text-ondark); white-space:nowrap;}
-.md-cd.soon{background:rgba(204,107,51,0.22); color:var(--copper-bright);}
-.md-cd.urg{background:rgba(228,72,61,0.16); color:var(--c-exekuce-ink);}
 /* Počet nabídek na filtračních tlačítkách */
 .chip-n{display:inline-block; margin-left:6px; font-size:11px; font-weight:700; padding:0 6px; border-radius:var(--r-sm); background:rgba(228,240,231,0.12); color:var(--text-ondark-mute); min-width:16px; line-height:16px; text-align:center; vertical-align:middle;}
 .filter-chip.active .chip-n{background:rgba(22,35,47,0.28); color:inherit;}
 
-/* Detail pozemku — vysouvací panel PŘES mapu (jako v mapových aplikacích),
-   místo aby odsouval mapu dolů. Přijede zespodu, mapa se ztmaví za ním. */
-.map-detail{position:absolute; left:0; right:0; bottom:0; top:auto; max-height:90%; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border:1px solid var(--line-strong); border-bottom:none; border-radius:var(--r-lg) var(--r-lg) 0 0; box-shadow:var(--e3-up); padding:20px 16px 20px; z-index:40; overflow-y:auto; touch-action:pan-y; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; transform:translateY(101%); transition:transform var(--cas-pomaly) var(--ease);}
-.map-detail::before{content:""; position:absolute; top:9px; left:50%; transform:translateX(-50%); width:42px; height:4px; border-radius:3px; background:var(--line-strong);}
-.map-detail.show{transform:translateY(0);}
-.map-detail[hidden]{display:none;}
-/* Ztmavení mapy pod panelem + zavření klepnutím vedle */
-.map-holder.detail-open::after{content:""; position:absolute; inset:0; background:rgba(6,12,18,0.5); z-index:38; animation:mdfade .2s ease;}
-@keyframes mdfade{from{opacity:0;} to{opacity:1;}}
 /* Zavírací lišta přes celou šířku nahoře */
-.md-topbar{display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; margin-bottom:14px; padding:12px 14px; background:var(--ink); border:1px solid var(--line-strong); border-radius:var(--r-sm); color:var(--text-ondark); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
-.md-topbar:hover{border-color:var(--c-exekuce); background:var(--ink-soft2);}
-.md-topbar .mx{font-size:17px; color:var(--text-ondark-mute); line-height:1;}
-.md-topbar:hover .mx{color:var(--c-exekuce-ink);}
-.md-body{display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start;}
-.md-info{flex:1; min-width:0;}
-.md-top{font-size:14px; margin-bottom:0; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
-.md-top .lp-dot{width:10px; height:10px; border-radius:50%; flex:none;}
-.md-facts{display:grid; grid-template-columns:1fr 1fr; gap:8px 16px;}
-.md-facts span{font-size:13px; color:var(--text-ondark-mute); display:flex; justify-content:space-between; gap:8px; padding-bottom:6px; border-bottom:1px solid rgba(228,240,231,0.07);}
-.md-facts b{color:var(--text-ondark); font-weight:600; text-align:right;}
 /* Výčet („elektřina, voda, kanalizace, příjezd") se do půlky mřížky
-   nevejde a lámal by se po jednom slově. Tyhle řádky dostanou celou šířku. */
-.md-facts .mdf-siroky{grid-column:1 / -1;}/* Mini graf: cena/m² vs. obvyklá cena u daného druhu */
-
-.md-bar.good .md-bar-head b{color:var(--c-ok-ink);}
-.md-bar.bad .md-bar-head b{color:var(--c-exekuce-ink);}
-.md-bar.mid .md-bar-head b{color:var(--copper-bright);}
+   nevejde a lámal by se po jednom slově. Tyhle řádky dostanou celou šířku. *//* Mini graf: cena/m² vs. obvyklá cena u daného druhu */
 /* Hodnocení ceny — barevná karta s odznakem (výhodná / průměrná / vyšší cena) */
-.md-verdict{--vc:var(--copper-bright); margin:0 0 14px; padding:12px 14px 12px; border-radius:var(--r-md); border:1px solid rgba(255,255,255,0.10); background:rgba(255,255,255,0.03);}
-/* TENTÝŽ VERDIKT MUSÍ MÍT TUTÉŽ BARVU NA OBOU OBRAZOVKÁCH.
-   Karta na mapě a stránka pozemku ukazují totéž číslo, ale barvily ho
-   každá jinak. Změřeno po složení na bílé:
-     Výhodná   rgb(233,245,239) zelená   | rgb(239,247,243) zelená   ✓
-     Průměrná  rgb(249,237,231) oranžová | rgb(245,250,247) ZELENÁ   ✕
-     Vyšší     rgb(242,232,230) oranžová | rgb(250,240,238) oranžová ✓
-   „Průměrná cena" tedy na mapě vypadala zeleně, tedy příznivě, a na
-   vlastní stránce téhož pozemku oranžově. Barva tu není ozdoba — je
-   to hodnocení, a to se mezi obrazovkami měnit nesmí. Srovnáno podle
-   stránky pozemku, která drží značkové barvy webu.
+/* VERDIKT O CENĚ — poznámky, které platí dál, i když obrazovka ubyla.
+   Verdikt býval na dvou místech: na vlastní stránce pozemku a v panelu
+   nad mapou. Panel je pryč (nikdy se neotevřel), zůstala stránka.
 
-   ODZNAK MÁ SVOU BARVU U KAŽDÉHO VERDIKTU (--vc). Dřív ji nastavovala
-   jen „mid" a „warn"; „good" i „bad" zůstávaly na výchozím
-   --copper-bright, což je v tomhle motivu ZELENÁ #276646. „Vyšší cena"
-   tedy nosila zelený odznak na červené kartě — zelená přitom všude
-   jinde na webu znamená, že je něco v pořádku.
-
-   A ta zelená sama normu neplnila: s tmavým textem odznaku (#0C1811)
-   dává 2,66 : 1, tedy jen o málo víc než značková --c-exekuce
-   (#8C2F1E, 2,20 : 1), kterou tu kdysi někdo právě kvůli kontrastu
-   zamítl. Odznaky proto mají světlejší odstíny téhož rodu, změřené
-   proti svému textu:
-     good  #4BA97D  6,30 : 1   (stejná zeleň jako okraj karty)
-     mid   #D4874A  6,38 : 1
-     bad   #E59283  7,60 : 1
-     warn  #E3924F  7,36 : 1
-   Hlídá to scripts/test-verdikt.mjs.
-
-   POZOR: tohle vysvětlení bylo dřív ROZDĚLENÉ na dva komentáře — první
-   se uzavřel a druhá půlka pokračovala jako obyčejný text v CSS.
-   Prohlížeč takovou volnou větu s koncovou značkou komentáře bere jako
-   rozbité pravidlo a při zotavení spolkne i to, co za ní následuje:
-   řádek
-   .md-verdict.good se do stylů vůbec nedostal a „Výhodná cena" tak
-   neměla ani zelený podklad karty. Že se to nestane znovu, hlídá
-   tentýž test — ptá se prohlížeče, jestli pravidlo opravdu zná. */
-.md-verdict.good{--vc:#4BA97D; border-color:rgba(75,169,125,0.42); background:rgba(75,169,125,0.12);}
-.md-verdict.mid{--vc:#D4874A; border-color:rgba(204,107,51,0.46); background:rgba(204,107,51,0.12);}
-.md-verdict.bad{--vc:#E59283; border-color:rgba(140,47,30,0.42); background:rgba(140,47,30,0.11);}
+   Co se tu kdysi naměřilo a stojí za zapamatování:
+   · Tentýž verdikt musel mít na obou obrazovkách tutéž barvu. „Průměrná
+     cena" vycházela na mapě zeleně (rgb 245,250,247) a na stránce
+     oranžově — barva tu není ozdoba, je to hodnocení.
+   · Odznak měl svou barvu jen u části verdiktů; zbylé zůstávaly na
+     výchozím --copper-bright, což je v tomhle motivu ZELENÁ #276646.
+     „Vyšší cena" tedy nosila zelený odznak na červené kartě, a ta
+     zelená s tmavým textem dávala jen 2,66 : 1.
+   Obojí je proto dnes v pozemek.html svázané do jedné proměnné na
+   variantu (--vc pro barvu, --vt pro text), ať se nedá vypsat jen část.
+   Hlídá to scripts/test-verdikt.mjs — ptá se prohlížeče, ne souboru. */
 /* Cena, která vypadá nepravděpodobně (zpravidla spoluvlastnický podíl).
    Varování, ne verdikt — proto jantar, ne červená. */
-.md-verdict.warn{--vc:#E3924F; border-color:rgba(204,107,51,0.46); background:rgba(204,107,51,0.14);}
-.mv-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;}
-.mv-badge{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; letter-spacing:0.01em; color:#0C1811; background:var(--vc); border-radius:var(--r-pill); padding:4px 10px 4px 10px;}
-.mv-badge::before{content:""; width:6px; height:6px; border-radius:50%; background:#0C1811; opacity:0.55;}
-.mv-cmp{font-size:11px; font-weight:700; letter-spacing:0.09em; text-transform:uppercase; color:var(--popisek);}
-.mv-text{font-size:13px; line-height:1.5; color:var(--text-ondark); margin-bottom:10px;}
-.mv-text b{color:var(--vc); font-weight:700;}
-.mv-track{position:relative; height:8px; border-radius:var(--r-pill); background:rgba(20,35,28,0.13);
-  box-shadow:inset 0 1px 2px rgba(24,45,34,0.07);}
-.mv-stred{position:absolute; left:50%; top:-3px; bottom:-3px; width:1.5px;
-  background:rgba(20,35,28,0.3); transform:translateX(-50%); border-radius:var(--r-xs);}
 /* Pruh dojede na svou hodnotu, místo aby tam rovnou stál. Je to jediný
    údaj na kartě, který je MĚŘÍTKO — krátký pohyb řekne „tohle je škála a
    tady na ní jsi" líp než jakýkoli popisek. Cílovou šířku nese proměnná
    --w; kdo má vypnuté animace, dostane ji rovnou. */
-.mv-fill{position:absolute; left:0; top:0; bottom:0; background:var(--vc); border-radius:var(--r-xs); opacity:0.85;
-  width:var(--w); animation:pruhNajed .62s var(--ease) both;}
-.mv-dot{left:var(--w); animation:puntikNajed .62s var(--ease) both;}
 @keyframes pruhNajed{from{width:0;} to{width:var(--w);}}
 @keyframes puntikNajed{from{left:0;} to{left:var(--w);}}
 @media (prefers-reduced-motion:reduce){
-  .mv-dot, .pv-dot{animation:none;}
+.pv-dot{animation:none;}
 }
-.mv-dot{position:absolute; top:50%; left:var(--w); width:15px; height:15px; border-radius:50%;
-  background:var(--vc); border:3px solid #fff; transform:translate(-50%,-50%); box-shadow:var(--e1);
-  animation:puntikNajed .62s var(--ease) both;}
-.mv-scale{display:flex; justify-content:space-between; margin-top:6px; font-size:10px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--popisek);}
-.md-note{margin-top:10px; font-size:12px; line-height:1.55; color:var(--text-ondark-mute); border-left:2px solid var(--copper-bright); background:rgba(126,196,157,0.06); border-radius:0 var(--r-sm) var(--r-sm) 0; padding:8px 10px;}
 /* Varování u nabídky od majitele. Musí být poznat na první pohled, že
    tohle není další údaj o pozemku — proto rámeček a barva, ne kurzíva.
    Červená ne: nabídka není podezřelá, jen neověřená. */
-.md-pozor{margin:10px 0 0; padding:10px 12px; border-radius:var(--r-sm); font-size:13px; line-height:1.55;
-  background:rgba(232,179,65,.14); border:1px solid rgba(124,81,5,.34); color:#6b4604;}
-.md-note b{color:var(--text-ondark); font-weight:600;}
 /* „Co byste měli vědět" — rozbalovací poradna v detailu (stavba + na co pozor) */
 .md-gtk{margin-top:12px; border:1px solid rgba(126,196,157,0.22); border-radius:var(--r-sm); background:rgba(126,196,157,0.06); overflow:hidden; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
 .md-gtk:hover{border-color:rgba(126,196,157,0.42); background:rgba(126,196,157,0.10);}
@@ -1719,17 +1639,6 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .gtk-v b{font-weight:700;}
 .gtk-foot{margin:2px 0 0; font-size:11px; line-height:1.45; color:var(--text-ondark-mute); font-style:italic;}
 /* Podobné pozemky poblíž — v detailu, pro další objevování */
-.md-near{flex-basis:100%; margin-top:14px; padding-top:14px; border-top:1px solid var(--line);}
-.md-near-head{font-size:11px; letter-spacing:0.09em; text-transform:uppercase; color:var(--popisek); font-weight:700; margin-bottom:8px;}
-.md-near-item{display:flex; align-items:center; gap:10px; width:100%; text-align:left; font:inherit; cursor:pointer; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); padding:8px 12px; margin-bottom:6px; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
-.md-near-item:last-child{margin-bottom:0;}
-.md-near-item:hover{border-color:var(--copper); background:var(--ink-soft2);}
-.md-near-item:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px;}
-.md-near-item .mn-dot{width:8px; height:8px; border-radius:50%; flex:none;}
-.md-near-item .mn-txt{display:flex; flex-direction:column; gap:1px; min-width:0; flex:1;}
-.md-near-item .mn-txt b{font-size:14px; color:var(--text-ondark); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.md-near-item .mn-txt span{font-size:12px; color:var(--text-ondark-mute);}
-.md-near-item .mn-price{font-size:13px; font-weight:700; color:var(--copper-bright); white-space:nowrap; font-variant-numeric:tabular-nums;}
 /* Sekce „Pozemky od lidí" (od majitelů) */
 .odl-wrap{margin-top:24px;}
 .odl-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:14px;}
@@ -1756,23 +1665,8 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .odl-cta-txt b{font-size:17px; color:var(--text-ondark); font-weight:700;}
 .odl-cta-txt span{font-size:14px; color:var(--text-ondark-mute);}
 @media (max-width:560px){ .odl-cta{flex-direction:column; align-items:stretch; text-align:center;} .odl-cta .btn-primary{text-align:center;} }
-.lp-src{border-color:var(--copper); background:rgba(44,113,80,0.14); color:var(--copper-bright);}
-.lp-src:hover{border-color:var(--copper-bright); background:rgba(44,113,80,0.22);}
 .nav-unread{display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 4px; margin-left:4px; border-radius:var(--r-sm); background:var(--copper); color:#fff; font-size:11px; font-weight:700; vertical-align:middle;}
-.lp-msg{background:var(--plocha-znacka); color:#fff; border-color:transparent; font-weight:700;}
-.lp-msg:hover{filter:brightness(1.06); color:#fff;}
-.md-actions .lp-msg{flex-basis:100%;}
-.md-actions{flex:none; display:flex; flex-wrap:wrap; gap:6px; width:186px; align-content:flex-start;}
-.md-actions .lp-btn{flex:1 1 calc(50% - 3px); min-width:0;}
-.md-actions .lp-watch{flex-basis:100%;}
 @media (max-width:760px){
-  .map-detail{max-height:92%; padding:20px 14px 16px;}
-  .md-body{flex-direction:column; flex-wrap:nowrap; align-items:stretch; gap:14px;}
-  .md-near{flex-basis:auto;}
-  .md-facts{gap:6px 16px;}
-  .md-actions{width:auto; flex-direction:row; flex-wrap:wrap; gap:6px;}
-  .md-actions .lp-btn{flex:1 1 calc(33.33% - 5px); min-width:72px;}
-  .md-actions .lp-watch{flex-basis:100%;}
 }
 .map-holder{position:relative; display:flex; flex-direction:column; overflow:hidden; min-height:0;}
 /* isolation:isolate uzavře vnitřní z-indexy Leafletu (tečky, popisky), ať panel detailu
@@ -1883,14 +1777,11 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .leaflet-popup-content-wrapper{background:#fff; color:var(--text-ondark); border-radius:var(--r-sm); box-shadow:var(--e3);}
 .leaflet-popup-tip{background:#fff;}
 .leaflet-popup-content{margin:14px 16px; font-family:var(--font-ui); min-width:236px;}
-.lp-dot{width:10px; height:10px; border-radius:50%;}
 .lp-place{font-size:13px; color:var(--text-ondark-mute); margin-bottom:12px;}
 .lp-btn{flex:1; min-width:62px; text-align:center; background:#fff; border:1.5px solid rgba(31,81,56,0.6); border-radius:var(--r-sm); padding:8px 8px; font-size:12px; font-weight:600; color:var(--text-ondark); text-decoration:none; box-shadow:var(--e1); transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
 .lp-btn:hover{border-color:var(--copper-bright); background:#F4F8F5;}
 /* Sekundární akce — decentní odkaz, ne největší tlačítko v detailu
    (dřív přebíjelo hlavní akce jako Katastr / Inzerát). */
-.lp-watch{display:block; text-align:center; background:transparent; color:var(--copper-bright); border:1px solid var(--line); border-radius:var(--r-sm); padding:8px; font-size:13px; font-weight:600; text-decoration:none; transition:border-color var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
-.lp-watch:hover{border-color:var(--copper); color:var(--text-ondark);}
 
 /* Počítadla */
 .counters{padding:56px 0; background:linear-gradient(180deg, var(--ink-soft2) 0%, var(--ink-soft) 55%, var(--ink) 100%); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
@@ -2780,28 +2671,9 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 
 /* ---------- Detail pozemku: přehledná hlavička + hero cena + skládací „Detaily" ---------- */
 /* Typový štítek nahoře (barevná tečka + název druhu nabídky) */
-.md-chip{display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700; letter-spacing:0.01em; color:var(--text-ondark); background:rgba(255,255,255,0.05); border:1px solid var(--line-strong); border-radius:var(--r-pill); padding:4px 12px 4px 10px;}
 /* Místo jako nadpis detailu — dává panelu tvář */
-.md-place{font-family:var(--font-ui); font-size:24px; line-height:1.18; font-weight:600; color:var(--text-ondark); margin:12px 0 4px; letter-spacing:-0.01em;}
-.md-okr{display:block; font-size:13px; font-weight:500; color:var(--text-ondark-mute); margin-top:2px; letter-spacing:0;}
-.md-sub{font-size:14px; color:var(--text-ondark-mute); margin:0 0 14px;}
-.md-sub::first-letter{text-transform:uppercase;}
-.md-price-sep{color:var(--line-strong);}
 /* Hero cena — hlavní číslo detailu */
-.md-price{display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 12px; margin:0 0 14px; padding:12px 14px; background:linear-gradient(135deg, rgba(126,196,157,0.10), rgba(126,196,157,0.03)); border:1px solid rgba(126,196,157,0.22); border-radius:var(--r-md);}
-.md-price-lbl{font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--popisek); flex-basis:100%;}
-.md-price b{font-size:24px; font-weight:700; color:var(--text-ondark); letter-spacing:-0.01em; font-variant-numeric:tabular-nums;}
-.md-price-per{font-size:14px; font-weight:600; color:var(--copper-bright); font-variant-numeric:tabular-nums;}
-.md-details{margin:2px 0 4px; border:1px solid var(--line-strong); border-radius:var(--r-sm); overflow:hidden; background:rgba(255,255,255,0.02);}
-.md-details > summary{list-style:none; cursor:pointer; padding:10px 14px; font-weight:600; font-size:14px; color:var(--copper-bright); display:flex; align-items:center; justify-content:space-between; gap:8px;}
-.md-details > summary::-webkit-details-marker{display:none;}
-.md-details > summary::after{content:"\25BE"; color:var(--text-ondark-mute); transition:transform var(--cas-zakladni) var(--ease);}
-.md-details[open] > summary::after{transform:rotate(180deg);}
-.md-det-body{padding:4px 14px 14px;}
-.md-det-body .md-facts{margin-top:0;}
 @media (max-width:760px){
-  .md-place{font-size:20px;}
-  .md-price b{font-size:24px;}
 }
 
 
@@ -4159,7 +4031,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 
 /* Dražba po termínu. Tlumeně a šedě — je to fakt, ne varování; nemá
    přetahovat pozornost od živých nabídek, ale musí být vidět. */
-.opp-cd.opp-proběhlo, .md-cd.md-proběhlo{
+.opp-cd.opp-proběhlo{
   background:var(--ink-soft2); color:var(--text-ondark-mute);
   border:1px solid var(--line-strong); font-weight:600;}
 .opp-item:has(.opp-proběhlo) .opp-price{color:var(--text-ondark-mute);}

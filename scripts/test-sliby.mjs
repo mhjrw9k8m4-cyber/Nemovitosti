@@ -230,24 +230,25 @@ function chibiPrazdne(a) { return a.length === 0; }
    odkazuje na katastr, dražební vyhlášky a úřední zdroje. Podvod
    „pošlete zálohu, pozemek je váš" přesně tuhle důvěru kupuje — opsat
    cizí parcelu z katastru a připsat vlastní telefon umí každý.
-   Věta proto musí stát u KONTAKTU, ne v podmínkách. A na obou místech
-   stejně: kdyby se rozešla, platila by ta mírnější. */
+   Věta proto musí stát u KONTAKTU, ne v podmínkách.
+
+   BÝVALY TU TŘI KONTROLY, teď je jedna. Varování se dřív skládalo na
+   dvou místech — na stránce pozemku a v panelu nad mapou — a hlídalo se
+   i to, že je na obou doslova stejné. Panel je pryč (nikdy se neotevřel),
+   takže zbylo jedno místo a není co porovnávat. Kdyby varování někdy
+   přibylo na druhou obrazovku, patří sem kontrola shody zpátky. */
 {
-  const main = cti('js/main.js');
   const poz = cti('js/pozemek.js');
   const vyber = (t, tr) => {
     const m = new RegExp('class="' + tr + '" role="note">([^<]+)<').exec(t);
     return m ? m[1] : '';
   };
-  const naMape = vyber(main, 'md-pozor');
   const naStrance = vyber(poz, 'pz-pozor');
-  pravda('u nabídky od majitele je varování na mapě', /zálohu/i.test(naMape), naMape.slice(0, 80));
-  pravda('… i na stránce pozemku', /zálohu/i.test(naStrance), naStrance.slice(0, 80));
-  pravda('a je to na obou místech táž věta', naMape === naStrance,
-    `mapa: „${naMape.slice(0, 60)}" / stránka: „${naStrance.slice(0, 60)}"`);
+  pravda('u nabídky od majitele stojí varování před zálohou', /zálohu/i.test(naStrance),
+    naStrance.slice(0, 80));
   /* Slibovat ověřování, které neděláme, by bylo horší než mlčet. */
   pravda('a neslibuje se v něm ověřování, které neděláme',
-    /neověřujeme|neověřuje/i.test(naMape), naMape.slice(0, 120));
+    /neověřujeme|neověřuje/i.test(naStrance), naStrance.slice(0, 120));
 }
 
 /* ---- 6f) Web netvrdí, že inzerát jde na mapu bez kontroly ---- */

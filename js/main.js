@@ -86,47 +86,14 @@
 
   // Katastrální mapa (ikatastr.cz) — parametr "info" na souřadnicích parcelu
   // rovnou IDENTIFIKUJE a vyznačí (ukáže bublinu s parcelou), ne jen vycentruje.
-  function katastrUrl(d){ return 'https://ikatastr.cz/#zoom=18&lat=' + d.lat + '&lon=' + d.lng + '&info=' + d.lat + ',' + d.lng; }
-  function mapyUrl(d){ return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat; }
   // Kontakt na majitele z inzerátu — e-mail → mailto:, jinak telefon → tel:
-  function contactHref(c){
-    c = String(c || '').trim();
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)) return 'mailto:' + c;
-    var tel = c.replace(/[^\d+]/g, '');
-    return tel ? 'tel:' + tel : '#';
-  }
   // Státní půda SPÚ (§ 12) nemá stránku pro konkrétní parcelu — prodává se přes
   // veřejnou nabídku, kam se podává žádost. Odkážeme tedy na skutečný seznam nabídek.
   var SPU_OFFERS = 'https://spu.gov.cz/nabidky/prehled-cela-cr';
-  function isSPU(d){ return d.type === 'sale' && !d.url && /SPÚ|státní půd/i.test(d.extra || ''); }
   // Vede odkaz na KONKRÉTNÍ inzerát/dražbu (má cestu nebo parametr),
   // nebo jen na úvodní stránku portálu? Podle toho volíme poctivý štítek,
   // ať tlačítko neslibuje konkrétní stránku, když otevře jen rozcestník.
-  function isDeepLink(url){
-    try {
-      var u = new URL(url);
-      return (u.pathname && u.pathname.replace(/\/+$/, '').length > 1) || !!u.search;
-    } catch (e) { return false; }
-  }
   // Konkrétní akční odkaz „kde se to kupuje / kde s tím něco udělám"
-  function sourceLink(d){
-    if (d.url) {
-      if (isDeepLink(d.url)) return { url: d.url, label: d.type === 'sale' ? 'Inzerát' : 'K dražbě' };
-      // jen homepage portálu → řekneme to na rovinu, ať proklik nemate
-      return { url: d.url, label: d.type === 'sale' ? 'Web prodejce' : 'Dražební portál' };
-    }
-    if (isSPU(d)) return { url: SPU_OFFERS, label: 'Nabídka SPÚ' };
-    /* Exekuce bez odkazu na zdroj mířila do insolvenčního rejstříku. To je
-       ale jiné řízení: insolvence je úpadek dlužníka, exekuce vymáhání
-       jednotlivého dluhu — v ISIR se exekuce na pozemku nedohledá. Vlastní
-       rádce (exekuce-pozemku.html) přitom říká správně, že exekuční poznámku
-       a zástavní právo ukáže list vlastnictví a katastr je „vždy zdroj
-       pravdy". Posíláme tedy na katastr, přímo na tu parcelu. */
-    if (d.type === 'exekuce' && typeof d.lat === 'number' && typeof d.lng === 'number') {
-      return { url: katastrUrl(d), label: 'Ověřit v katastru' };
-    }
-    return { url: TYPE[d.type].link.url, label: TYPE[d.type].link.label };
-  }
   // Ikona záložky (uložení pozemku) — výplň řídí CSS podle stavu .on
   var BM_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
   // Stabilní klíč pozemku — pro oblíbené i sdílení odkazu.
@@ -150,31 +117,7 @@
      rozešly, vedly by odkazy na neexistující soubor. Hlídá to
      scripts/test-stranky-pozemku.mjs. */
   var PK_DIAKR = { 'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z' };
-  function pkSlug(s){
-    return String(s || '').toLowerCase().replace(/[áčďéěíňóřšťúůýž]/g, function(c){ return PK_DIAKR[c] || c; })
-      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  }
-  function pkOtisk(s){
-    var h = 5381;
-    for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
-    return h.toString(36);
-  }
-  function souborPozemku(d){
-    return 'pozemek-' + pkSlug(d.okres) + '-' + pkSlug(d.place) + '-' + pkOtisk(pkey(d)) + '.html';
-  }
   // Zkopírování textu do schránky s bezpečnou zálohou pro starší prohlížeče
-  function copyText(text, onDone){
-    function fallback(){
-      var ta = document.createElement('textarea');
-      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); onDone && onDone(); } catch (e) {}
-      document.body.removeChild(ta);
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function(){ onDone && onDone(); }).catch(fallback);
-    } else { fallback(); }
-  }
 
   // Bez pojistky na null tu padne celé vykreslení, kdyby do čísla přišlo
   // prázdno. Táž podoba jako v js/pozemek.js, ať se ty dvě nerozcházejí.
@@ -193,34 +136,7 @@
   function auctionYMD(extra){ return T.auctionYMD(extra); }
   /** Zápis zdroje pro čtení — syrové „2026-10-12" patří strojům, ne lidem. */
   function zdrojText(extra){ return T.zdrojText(extra); }
-  function icsEsc(s){ return String(s).replace(/([,;\\])/g, '\\$1').replace(/\r?\n/g, '\\n'); }
-  function pad2(n){ return (n < 10 ? '0' : '') + n; }
   // Sestaví .ics událost (celodenní na den dražby) s připomínkou den předem
-  function icsFor(d){
-    var ymd = auctionYMD(d.extra);
-    if (!ymd) return null;
-    var y = +ymd.slice(0, 4), mo = +ymd.slice(4, 6), da = +ymd.slice(6, 8);
-    var end = new Date(y, mo - 1, da + 1);
-    var endYMD = end.getFullYear() + pad2(end.getMonth() + 1) + pad2(end.getDate());
-    var stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
-    var url = location.origin + location.pathname + '?p=' + encodeURIComponent(pkey(d));
-    var kind = d.type === 'exekuce' ? 'Exekuční dražba' : 'Dražba';
-    var summary = kind + ': ' + d.place + ' (parc. ' + d.parcel + ')';
-    var desc = [d.druh, hasArea(d) ? fmt(d.area) + ' m²' : '', 'vyvolávací ' + fmt(d.price) + ' Kč', url].filter(Boolean).join(', ');
-    return [
-      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Parcelka//CS', 'CALSCALE:GREGORIAN',
-      'BEGIN:VEVENT',
-      'UID:' + encodeURIComponent(pkey(d)) + '@parcelka',
-      'DTSTAMP:' + stamp,
-      'DTSTART;VALUE=DATE:' + ymd,
-      'DTEND;VALUE=DATE:' + endYMD,
-      'SUMMARY:' + icsEsc(summary),
-      'DESCRIPTION:' + icsEsc(desc),
-      'LOCATION:' + icsEsc(d.place + ', okres ' + d.okres),
-      'BEGIN:VALARM', 'TRIGGER:-P1D', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(summary), 'END:VALARM',
-      'END:VEVENT', 'END:VCALENDAR'
-    ].join('\r\n');
-  }
   function hasArea(d){ return typeof d.area === 'number' && d.area > 0; }
   function areaTxt(d){ return hasArea(d) ? fmt(d.area) + ' m²' : 'neuvedena'; }
   // Číslo parcely nemají všechny zdroje (typicky inzeráty) — pak ho nezobrazujeme jako „—".
@@ -304,19 +220,6 @@
   var SB_URL = (typeof window !== 'undefined' && window.PK_SUPABASE_URL) || '';
   var SB_KEY = (typeof window !== 'undefined' && window.PK_SUPABASE_KEY) || '';
   var SB_READY = !!(SB_URL && SB_KEY);
-  function sbInsert(table, row) {
-    if (!SB_READY) return Promise.resolve('unset');
-    return fetch(SB_URL + '/rest/v1/' + table, {
-      method: 'POST',
-      headers: {
-        'apikey': SB_KEY,
-        'Authorization': 'Bearer ' + SB_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify(row)
-    }).then(function (r) { return r.ok ? 'ok' : 'error'; }).catch(function () { return 'error'; });
-  }
   // Které živé inzeráty už jsme v této návštěvě započítali (ať se zhlédnutí nenafukuje).
   var viewedLids = {};
   // Volání Supabase funkce (RPC) — pro živé inzeráty od majitelů.
@@ -830,7 +733,6 @@
   var cenaEl = document.getElementById('map-cena');
   var areaEl = document.getElementById('map-area');
   var urgentEl = document.getElementById('map-urgent');
-  var detailEl = document.getElementById('opp-detail');
   var favEl = document.getElementById('map-fav');
   /* Výběr pozemku byl na kupujícího moc hrubý: cena celkem, výměra, druh.
      Jenže pozemky se srovnávají CENOU ZA METR (deset hektarů za milion je
@@ -1159,14 +1061,6 @@
   var _keyIdx = null;
   function keyIndex(){ if (_keyIdx) return _keyIdx; _keyIdx = {}; DATA.forEach(function (d) { _keyIdx[pkey(d)] = d; }); return _keyIdx; }
   function recentKeys(){ try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; } catch (e) { return []; } }
-  function pushRecent(d){
-    var k = pkey(d);
-    var arr = recentKeys().filter(function (x) { return x !== k; });
-    arr.unshift(k);
-    arr = arr.slice(0, 8);
-    try { localStorage.setItem(RECENT_KEY, JSON.stringify(arr)); } catch (e) {}
-    renderRecent();
-  }
   function renderRecent(){
     var el = document.getElementById('recent-strip');
     if (!el) return;
@@ -1214,56 +1108,14 @@
   // mapa, karta a stránka pozemku u téhož pozemku zase odporovaly.
   var MEZ_SLEVA = (MODEL && MODEL.MEZ_SLEVA) || 15;
   var MEZ_POCHYBNA = (MODEL && MODEL.MEZ_POCHYBNA) || 60;
-  function cenaNeduveryhodna(d) { return MODEL ? MODEL.neduveryhodna(d) : false; }
   function dealInfo(d) { return MODEL ? MODEL.percentil(d) : null; }
   /** „v okrese Znojmo" / „na Vysočině" — kde se percentil doopravdy počítal. */
   function kdeSrovnani(pc) {
     if (!pc || !pc.uroven || !(window.PK_CENY && window.PK_CENY.kdeText)) return '';
     return window.PK_CENY.kdeText(pc.uroven, pc.kde) || '';
   }
-  function priceBarHtml(d) {
-    if (!MODEL || !hasArea(d) || !d.price) return '';
-    if (cenaNeduveryhodna(d)) {
-      return '<div class="md-verdict warn">' +
-        '<div class="mv-top"><span class="mv-badge">Cena k ověření</span><span class="mv-cmp">Cena za m²</span></div>' +
-        '<div class="mv-text">Cena za m² je <b>hluboko pod</b> obvyklou u tohoto druhu pozemku v okolí. ' +
-        'Často jde o <b>spoluvlastnický podíl</b> nebo chybu v inzerátu — ověřte u zdroje ' +
-        'a v katastru, co se přesně prodává.</div>' +
-        '</div>' + odhadHtmlMapa(d);
-    }
-    var pc = MODEL.percentil(d);
-    if (!pc) return odhadHtmlMapa(d);
-    var pct = pc.pct;
-    var typeWord = d.type === 'sale' ? 'v prodeji' : (d.type === 'drazba' ? 'v dražbě' : 'v nabídce');
-    var cls, badge, text;
-    /* KDE se to srovnávalo, musí být vidět. „Dražší než 78 % podobných
-       pozemků" si každý přečte jako „než pozemky v okolí" — a dokud se
-       počítalo celostátně, nebyla to pravda. Teď to místo stojí ve
-       větě, takže se to dá ověřit i zpochybnit. */
-    var kdeTxt = (window.PK_CENY && window.PK_CENY.kdeText && pc.uroven)
-      ? ' ' + window.PK_CENY.kdeText(pc.uroven, pc.kde) : '';
-    if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + pc.cheaper + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + '.'; }
-    else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + '.'; }
-    else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> pozemků téhož druhu ' + typeWord + kdeTxt + '.'; }
-    return '<div class="md-verdict ' + cls + '">' +
-      '<div class="mv-top"><span class="mv-badge">' + badge + '</span><span class="mv-cmp">Cena za m²</span></div>' +
-      '<div class="mv-text">' + text + '</div>' +
-      /* Stupnice, ne vypínač — totéž, co na stránce pozemku. Podklad
-         lišty tu měl rgba(255,255,255,0.10), zbytek po tmavém motivu;
-         na světlém panelu z něj nebylo nic vidět, takže se zobrazoval
-         jen vybarvený pahýl od kraje k puntíku. */
-      '<div class="mv-track"><span class="mv-stred"></span><span class="mv-dot" style="--w:' + pct + '%"></span></div>' +
-      '<div class="mv-scale"><span>levné</span><span>drahé</span></div>' +
-      '</div>' + odhadHtmlMapa(d);
-  }
   /* Odhad obvyklé ceny i v detailu na mapě — aby mapa a stránka pozemku
    * říkaly totéž. Ukazuje se jen tam, kde má co říct. */
-  function odhadHtmlMapa(d) {
-    // Blok je v js/ceny.js, aby mapa a stránka pozemku nemohly o téže
-    // ceně říkat dvě různé věci (a to se přesně stalo: v okně na mapě
-    // se hluboká sleva ukazovala bez varování).
-    return window.PK_CENY.blokOdhadu(MODEL, d, { fmt: fmt });
-  }
 
 
   // Naplníme filtr druhů podle toho, co je v datech (s počty)
@@ -1377,59 +1229,6 @@
     });
   }
 
-  if (detailEl) {
-    detailEl.addEventListener('click', function (e) {
-      if (e.target.closest('[data-detail-back]')) { hideDetail(); return; }
-      var nearBtn = e.target.closest('[data-near]');
-      if (nearBtn) {
-        var nk; try { nk = decodeURIComponent(nearBtn.getAttribute('data-near')); } catch (x) { return; }
-        var nd = keyIndex()[nk];
-        if (nd) gotoInzerat(nd);
-        return;
-      }
-      if (!curDetail) return;
-      var favBtn = e.target.closest('[data-fav-detail]');
-      if (favBtn) {
-        toggleFav(curDetail);
-        var on = isFav(curDetail);
-        favBtn.classList.toggle('on', on);
-        var sp = favBtn.querySelector('span'); if (sp) sp.textContent = on ? 'Uloženo' : 'Uložit';
-        renderList();
-        return;
-      }
-      var calBtn = e.target.closest('[data-cal]');
-      if (calBtn) {
-        var ics = icsFor(curDetail);
-        if (ics) {
-          var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
-          var u = URL.createObjectURL(blob);
-          var a = document.createElement('a');
-          a.href = u;
-          a.download = 'drazba-' + String(curDetail.place || 'pozemek').replace(/[^\w]+/g, '-') + '.ics';
-          document.body.appendChild(a); a.click(); document.body.removeChild(a);
-          setTimeout(function () { URL.revokeObjectURL(u); }, 1000);
-        }
-        return;
-      }
-      var shareBtn = e.target.closest('[data-share]');
-      if (shareBtn) {
-        var url = location.origin + location.pathname + '?p=' + encodeURIComponent(pkey(curDetail));
-        var perM2s = zaMetr(curDetail);
-        var title = 'Pozemek ' + curDetail.place + ' — Parcelka';
-        var text = TYPE[curDetail.type].label + ' · ' + curDetail.place + ', okres ' + curDetail.okres + ' · ' + areaTxt(curDetail) + ' · ' + fmt(curDetail.price) + ' Kč' + (perM2s ? ' (' + fmt(perM2s) + ' Kč/m²)' : '') + '\nDetail na Parcelce:';
-        if (navigator.share) {
-          navigator.share({ title: title, text: text, url: url }).catch(function () {});
-        } else {
-          copyText(url, function () {
-            var orig = shareBtn.textContent;
-            shareBtn.textContent = 'Odkaz zkopírován ✓';
-            shareBtn.classList.add('on');
-            setTimeout(function () { shareBtn.textContent = orig; shareBtn.classList.remove('on'); }, 1800);
-          });
-        }
-      }
-    });
-  }
 
   /* KOLIK DNÍ JE „KONČÍ BRZY" — jedno číslo na celý web.
      Byla to dvě čísla a rozešla se: tlačítko ve filtrech slibovalo
@@ -1558,160 +1357,26 @@
 
   /* Řádek „Inzerát uvádí: elektřina, voda" do detailu. Podíl má vlastní
      řádek — je to jediný údaj, který mění, CO se vlastně kupuje. */
-  function uvadiHtml(d) {
-    var h = '';
-    var uvadi = window.PKVybaveni ? window.PKVybaveni.nazvy(d) : [];
-    if (uvadi.length) {
-      h += '<span class="mdf-siroky">' + (d.type === 'majitel' ? 'Majitel uvádí ' : 'Inzerát uvádí ')
-        + '<b>' + uvadi.map(function (n) { return esc(n.toLowerCase()); }).join(', ') + '</b></span>';
-    }
-    if (d.podil) {
-      h += '<span class="mdf-siroky">Vlastnictví <b>spoluvlastnický podíl'
-        + (d.zlomek ? ' ' + esc(d.zlomek) : '') + '</b></span>';
-    }
-    return h;
-  }
 
   /* Rádce „Co byste měli vědět" je společný s druhou půlkou webu —
    * js/radce.js. Mapa i stránka pozemku ho tu měly každá po svém, takže
    * stačilo změnit jednu z nich a u téhož pozemku by si protiřečily.
    * Přesně to se stalo u cenového srovnání; podruhé to dělat nebudu. */
-  function goodToKnowHtml(d) {
-    if (!window.PK_RADCE) return '';
-    return window.PK_RADCE.html(d, MODEL);
-  }
 
   // Vzdálenost mezi dvěma body (km) — pro „Podobné pozemky poblíž".
-  function kmBetween(la1, ln1, la2, ln2) {
-    var R = 6371, r = Math.PI / 180;
-    var dLat = (la2 - la1) * r, dLng = (ln2 - ln1) * r;
-    var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
-  }
   // Nejbližší pozemky stejného druhu (nebo aspoň typu) — bez sebe sama.
-  function nearbySimilar(d, n) {
-    if (typeof d.lat !== 'number') return [];
-    var g = druhGroup(d.druh);
-    var pool = DATA.filter(function (x) { return x !== d && typeof x.lat === 'number' && druhGroup(x.druh) === g; });
-    if (pool.length < n) pool = DATA.filter(function (x) { return x !== d && typeof x.lat === 'number' && x.type === d.type; });
-    pool.forEach(function (x) { x._nd = kmBetween(d.lat, d.lng, x.lat, x.lng); });
-    pool.sort(function (a, b) { return a._nd - b._nd; });
-    return pool.slice(0, n);
-  }
-  function nearbyHtml(d) {
-    var near = nearbySimilar(d, 3);
-    if (near.length < 2) return '';
-    var items = near.map(function (x) {
-      var t2 = TYPE[x.type];
-      var per = hasArea(x) ? Math.round(x.price / x.area) : null;
-      var dist = x._nd < 1 ? '< 1 km' : Math.round(x._nd) + ' km';
-      return '<button type="button" class="md-near-item" data-near="' + encodeURIComponent(pkey(x)) + '">' +
-        '<span class="mn-dot" style="background:' + t2.color + '"></span>' +
-        '<span class="mn-txt"><b>' + x.place + '</b><span>' + (x.druh || 'pozemek') + ' · ' + dist + '</span></span>' +
-        '<span class="mn-price">' + fmt(x.price) + ' Kč</span>' +
-      '</button>';
-    }).join('');
-    return '<div class="md-near"><div class="md-near-head">Podobné pozemky poblíž</div>' + items + '</div>';
-  }
 
-  function detailHtml(d) {
-    var t = TYPE[d.type];
-    // Externí odkazy (Mapy.cz, katastr) otevíráme vždy v NOVÉ záložce — i na mobilu.
-    // Mapy.cz jsou aplikace, která si do historie ukládá každý pohyb; kdyby se
-    // otevřely ve stejné záložce, tlačítko Zpět by se pak vracelo „krok po kroku".
-    var extAttr = ' target="_blank" rel="noopener"';
-    var perM2 = zaMetr(d);
-    var priceLabel = d.type === 'drazba' ? 'Vyvolávací' : (d.type === 'sale' || d.type === 'majitel' ? 'Cena' : 'Odhad');
-    var days = daysUntil(d.extra);
-    var cdBig = days == null ? ''
-      : (days < 0 ? '<span class="md-cd md-proběhlo">Dražba už proběhla</span>'
-                  : '<span class="md-cd' + countdownClass(days) + '">Termín ' + countdownText(days) + '</span>');
-    return '<button class="md-topbar" type="button" data-detail-back><span>Zavřít detail</span><span class="mx">✕</span></button>' +
-      '<div class="md-body">' +
-        '<div class="md-info">' +
-          '<div class="md-top"><span class="md-chip"><span class="lp-dot" style="background:' + t.color + '"></span>' + t.label + '</span>' + (isFeatured(d) ? '<span class="md-feat">Zvýrazněno</span>' : '') + cdBig + '</div>' +
-          '<h3 class="md-place">' + d.place + '<span class="md-okr">' + mistoRadek(d) + '</span></h3>' +
-          '<div class="md-sub">' + d.druh + (hasArea(d) ? ' <span class="md-price-sep">·</span> ' + areaTxt(d) : '') + '</div>' +
-          '<div class="md-price"><span class="md-price-lbl">' + priceLabel + '</span><b>' + fmt(d.price) + ' Kč</b>' + (perM2 ? '<span class="md-price-per"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
-          priceBarHtml(d) +
-          '<details class="md-details"><summary>Detaily o pozemku</summary><div class="md-det-body">' +
-            '<div class="md-facts">' +
-              (hasParcel(d) ? '<span>Parcela <b>č. ' + d.parcel + '</b></span>' : '') +
-              '<span>Stav <b>' + zdrojText(d.extra) + '</b></span>' +
-              /* Co o pozemku píše sám inzerát. Filtrovalo se podle toho
-                 už dřív, ale VIDĚT to nebylo nikde — kdo si zaškrtl
-                 „elektřina", nemohl si to na nabídce ověřit.
-                 Slovo „uvádí" tu musí zůstat: popisy píšou „na hranici"
-                 stejně často jako „zavedeno". */
-              uvadiHtml(d) +
-            '</div>' +
-            (isSPU(d) ? '<div class="md-note">Státní půda se prodává přes <b>veřejnou nabídku SPÚ (§ 12)</b> — otevřete „Nabídka SPÚ", parcelu ověříte přes „Katastr".</div>' : '') +
-            /* VAROVÁNÍ U INZERÁTU OD MAJITELE.
-               Zbytek webu odkazuje na úřední zdroje, takže se i tahle
-               nabídka veze na té důvěře — a přesně to podvodník kupuje:
-               opsat cizí parcelu z katastru a připsat vlastní telefon
-               umí každý. Věta musí stát u KONTAKTU, ne v podmínkách:
-               tam, kde si člověk opisuje číslo, ne kde čte právní text.
-               Stejná věta je i na stránce pozemku; že se ty dvě
-               nerozejdou, hlídá scripts/test-sliby.mjs. */
-            (d.type === 'majitel' ? '<div class="md-pozor" role="note">Nikdy neposílejte zálohu ani rezervační poplatek předem. Nabídky od majitelů neověřujeme — vlastníka i parcelu si potvrďte v katastru a peníze posílejte až přes advokátní nebo notářskou úschovu.</div>' : '') +
-            (d.type === 'majitel' ? '<div class="md-note">Tenhle inzerát vložil <b>přímo majitel pozemku</b> tady na Parcelce — jednáte s ním <b>napřímo, bez realitky a provize</b>. Ostatní nabídky sbíráme z veřejných zdrojů. Vlastníka i parcelu si ověřte v katastru.' + (d._lid && typeof d.views === 'number' ? ' · <b>' + d.views + '×</b> zobrazeno' : '') + '</div>' : '') +
-            goodToKnowHtml(d) +
-          '</div></details>' +
-        '</div>' +
-        '<div class="md-actions">' +
-          (d.type === 'majitel' && d._lid ? '<a class="lp-btn lp-msg" href="zpravy.html?l=' + encodeURIComponent(d._lid) + '&new=1&p=' + encodeURIComponent(d.place || '') + '&ok=' + encodeURIComponent(d.okres || '') + '">Napsat majiteli</a>' : '') +
-          (d.type === 'majitel' && d.contact ? '<a class="lp-btn lp-src" href="' + contactHref(d.contact) + '">Kontakt na majitele</a>' : '') +
-          '<a class="lp-btn" href="' + katastrUrl(d) + '"' + extAttr + '>Katastr</a>' +
-          '<a class="lp-btn" href="' + mapyUrl(d) + '"' + extAttr + '>Mapa</a>' +
-          (d.type === 'majitel' ? '' : (function () { var s = sourceLink(d); return '<a class="lp-btn lp-src" href="' + s.url + '"' + extAttr + '>' + s.label + '</a>'; })()) +
-          (auctionYMD(d.extra) ? '<button class="lp-btn" type="button" data-cal>Do kalendáře</button>' : '') +
-          '<button class="lp-btn lp-fav' + (isFav(d) ? ' on' : '') + '" type="button" data-fav-detail>' + BM_SVG + '<span>' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
-          '<button class="lp-btn" type="button" data-share>Sdílet</button>' +
-          '<a class="lp-watch" href="hlidani.html">Hlídat okres ' + d.okres + '</a>' +
-        '</div>' +
-        nearbyHtml(d) +
-      '</div>';
-  }
   var selPoly = null;
-  var holderEl = document.querySelector('.map-holder');
-  var curDetail = null;
-  var detailHideTimer = null, detailOpening = false;
-  function showDetail(d) {
-    if (!detailEl) return;
-    clearTimeout(detailHideTimer);
-    // ochrana: klik na tečku na mapě probublá až sem — ať hned zase nezavře detail
-    detailOpening = true; setTimeout(function () { detailOpening = false; }, 0);
-    curDetail = d;
-    pushRecent(d);   // zapamatuj pro „Naposledy prohlédnuté"
-    // Počítání zhlédnutí u živých inzerátů od majitelů (jednou za návštěvu webu).
-    if (d._lid && !viewedLids[d._lid]) { viewedLids[d._lid] = 1; d.views = (d.views || 0) + 1; sbRpc('bump_view', { p_id: d._lid }); }
-    detailEl.innerHTML = detailHtml(d);
-    detailEl.scrollTop = 0;
-    detailEl.removeAttribute('hidden');
-    if (holderEl) holderEl.classList.add('detail-open');
-    // na mobilu přijede mapa s panelem do zorného pole (panel je nad mapou)
-    if (window.innerWidth <= 960 && holderEl) holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    requestAnimationFrame(function () { detailEl.classList.add('show'); });
-    highlightMarker(d._id);
-    highlightShape(d);
-  }
-  function hideDetail() {
-    if (!detailEl) return;
-    detailEl.classList.remove('show');
-    if (holderEl) holderEl.classList.remove('detail-open');
-    curDetail = null;
-    clearTimeout(detailHideTimer);
-    detailHideTimer = setTimeout(function () { detailEl.setAttribute('hidden', ''); }, 300);
+  /* Zrušení výběru na mapě. Jmenovalo se to hideDetail, protože zavíralo
+     i panel s detailem nad mapou — ten je pryč (nikdy se neotevřel, viz
+     commit o mrtvém panelu), ale zrušit zvýrazněnou tečku a obrys je
+     pořád potřeba: volá se při návratu na přehled celé ČR. */
+  function zrusVyberNaMape() {
     highlightMarker(-1);
     if (selPoly) { map.removeLayer(selPoly); selPoly = null; }
   }
+  var holderEl = document.querySelector('.map-holder');
   // Klepnutí na ztmavenou mapu vedle panelu detail zavře
-  if (holderEl) holderEl.addEventListener('click', function (e) {
-    if (detailOpening) return;
-    if (!holderEl.classList.contains('detail-open')) return;
-    if (detailEl && !detailEl.contains(e.target)) hideDetail();
-  });
 
   var selMarkerId = -1;
   function highlightMarker(id) {
@@ -2577,7 +2242,7 @@
     if (wasNear) { sortMode = 'demand'; if (sortEl) sortEl.value = 'demand'; }
     prekresliKraje();
     resizeDots();
-    hideDetail();
+    zrusVyberNaMape();
     lockDots(true);    // zpět: klikají se zase kraje
     setPan(false);     // na přehledu mapu zase zamkneme (stránka přes ni roluje)
     fitAllCZ();
@@ -4574,8 +4239,11 @@
            naměřeno na ostrých datech: ze 1 213 verdiktů jich 566 (47 %)
            vzniklo v KRAJI. Karta přitom pod tím psala „okres Jablonec
            nad Nisou", takže „levnější než 98 % podobných" vypadalo jako
-           srovnání v okrese. Totéž se už jednou spravilo u odznaku na
-           mapě (viz priceBarHtml) — tipy u toho zůstaly. */
+           srovnání v okrese.
+           (V commitu jsem k tomu napsal, že „totéž se už jednou spravilo
+           u odznaku na mapě" — nespravilo. Ten odznak byl v panelu, který
+           se nikdy neotevřel, takže oprava platila v mrtvém kódu. Živé
+           místo, kde se to tvrdilo bez místa, byly právě tyhle tipy.) */
         '<div class="deal-badge">levnější než ' + o.di.cheaper + ' % podobných' +
           (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +
         '<div class="deal-place"><span class="deal-dot" style="background:' + t.color + '"></span>' + d.place + '</div>' +

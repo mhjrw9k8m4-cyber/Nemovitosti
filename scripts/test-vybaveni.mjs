@@ -233,12 +233,13 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
      jinak by na kartě stálo „podíl" a na stránce pozemku „podíl 1/16",
      což vypadá jako dvě různé nabídky. */
   pravda('a je u něj velikost, když ji inzerát uvádí', /d\.zlomek \? 'podíl ' \+ esc\(d\.zlomek\)/.test(main));
-  pravda('detail na mapě taky', /spoluvlastnický podíl' \+ \(d\.zlomek/.test(main) || /d\.zlomek \? ' ' \+ esc\(d\.zlomek\)/.test(main));
+  /* „Detail na mapě" tu býval čtvrtým místem. Panel nad mapou se ale
+     nikdy neotevřel a je pryč — zbyla karta, stránka pozemku, okresní
+     stránky a robot, tedy čtyři místa, kde se o podílu mluví doopravdy. */
   pravda('stránka pozemku taky', /spoluvlastnickém podílu <b>' \+ esc\(d\.zlomek\)/.test(poz));
   pravda('okresní stránky taky', /o\.zlomek\?' '\+esc\(o\.zlomek\)/.test(gen));
   pravda('a robot si ji do dat ukládá',
     /if \(v\.zlomek\) o\.zlomek = v\.zlomek;/.test(readFileSync(path.join(ROOT, 'scripts', 'fetch-opportunities.mjs'), 'utf8')));
-  pravda('detail na mapě vypíše, co inzerát uvádí', /Inzerát uvádí/.test(main) && /uvadiHtml\(d\)/.test(main));
   /* Stránka pozemku to neukazuje jako řádek tabulky, ale jako štítky
      v sekci „Sítě a vybavení" — a ty se plní z OBOU zdrojů (d.site od
      robota, d.features od majitele) a mají u sebe napsané, odkud jsou.
