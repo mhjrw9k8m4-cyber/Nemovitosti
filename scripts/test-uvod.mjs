@@ -440,6 +440,55 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   }
 }
 
+/* --- TIPY MUSÍ ŘÍCT, KDE SE SROVNÁVALY ------------------------------
+ * „Levnější než 98 % podobných" je tvrzení a dává smysl jen s místem.
+ * Percentil se počítá nejdřív v okrese, a když tam není dost nabídek,
+ * v kraji — naměřeno na ostrých datech: ze 1 213 verdiktů jich 566
+ * (47 %) vzniklo v KRAJI. Karta přitom pod odznakem psala „okres
+ * Jablonec nad Nisou", takže to vypadalo jako srovnání v okrese.
+ * Totéž se už jednou spravilo u odznaku na mapě; tipy u toho zůstaly.
+ *
+ * Kontrola si očekávaný text POSTAVÍ SAMA z toho, co vrátil model
+ * (window.PK_TIPY: úroveň a místo), a porovná ho s tím, co je v kartě.
+ * Kdyby se do odznaku psal okres nabídky, u těch 47 % se rozejdou.
+ */
+{
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(3600);
+  const v = await p.evaluate(() => {
+    const tipy = window.PK_TIPY || null;
+    const karty = [...document.querySelectorAll('.deal-card')].map((c) => ({
+      odznak: (c.querySelector('.deal-badge') || {}).textContent.trim(),
+      podradek: (c.querySelector('.deal-sub') || {}).textContent.trim(),
+    }));
+    const kdeText = (window.PK_CENY && window.PK_CENY.kdeText) || null;
+    const ocekavane = (tipy && kdeText) ? tipy.map((t) => kdeText(t.uroven, t.kde)) : null;
+    return { tipy, karty, ocekavane };
+  });
+  /* Dvě pojistky, aby kontrola neměřila prázdno. */
+  pravda('tipy na dobrou koupi se vykreslily', v.karty.length >= 3,
+    `karet ${v.karty.length}`);
+  pravda('a model o nich řekl, kde se srovnávaly', !!(v.ocekavane && v.ocekavane.length === v.karty.length),
+    `window.PK_TIPY: ${JSON.stringify(v.tipy)}`);
+  if (v.karty.length >= 3 && v.ocekavane && v.ocekavane.length === v.karty.length) {
+    const spatne = [];
+    v.karty.forEach((k, i) => {
+      if (k.odznak.indexOf(v.ocekavane[i]) === -1) {
+        spatne.push(`„${k.odznak}" místo „… ${v.ocekavane[i]}" (${v.tipy[i].uroven} ${v.tipy[i].kde})`);
+      }
+    });
+    pravda('každý tip říká, KDE se srovnával — a sedí to s modelem', spatne.length === 0,
+      spatne.join('; '));
+    /* A ať to není jen slovo navíc: když se počítalo z kraje, nesmí
+       v odznaku stát okres. Přesně tahle záměna tam byla. */
+    const lzou = v.karty.filter((k, i) => v.tipy[i].uroven === 'kraj' && /\bv okrese\b/.test(k.odznak));
+    pravda('a u krajského srovnání se netváří jako okresní', lzou.length === 0,
+      lzou.map((k) => `„${k.odznak}"`).join('; '));
+    const kolikKraj = v.tipy.filter((t) => t.uroven === 'kraj').length;
+    zpravy.push(`      (z ${v.tipy.length} dnešních tipů se ${kolikKraj} počítalo z kraje)`);
+  }
+}
+
 await prohlizec.close();
 
 console.log('\nÚvodní obrazovka — živá čísla a věrohodnost cen');

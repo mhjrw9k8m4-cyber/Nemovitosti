@@ -5,9 +5,10 @@ import path from 'node:path';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 const BASE = 'http://127.0.0.1:8310';
+const STRANKA = process.env.STRANKA || 'index.html';
 const OUT = process.env.OUT || '/tmp/snimky';
 mkdirSync(OUT, { recursive: true });
-const PRAZDNA = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+const PRAZDNA = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGNgAAIAAAUAAXpeqz8AAAAASUVORK5CYII=', 'base64');
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const b = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {}));
 const W = Number(process.env.W || 1280), H = Number(process.env.H || 900);
@@ -24,14 +25,14 @@ if (LEAFLET) {
     if (!existsSync(f)) return r.abort();
     return r.fulfill({ status: 200, contentType: f.endsWith('.css') ? 'text/css' : 'text/javascript', body: readFileSync(f) });
   });
-  await ctx.route(`${BASE}/index.html*`, async (r) => {
+  await ctx.route(`${BASE}/${STRANKA.split('?')[0]}*`, async (r) => {
     const o = await r.fetch();
     return r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8',
       body: (await o.text()).replace(/\s+integrity="[^"]*"/g, '') });
   });
 }
 const p = await ctx.newPage();
-await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+await p.goto(`${BASE}/${STRANKA}`, { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(4500);
 const vyska = await p.evaluate(() => document.documentElement.scrollHeight);
 const obrazovek = Math.min(10, Math.ceil(vyska / H));

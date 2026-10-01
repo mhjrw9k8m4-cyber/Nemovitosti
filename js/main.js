@@ -1216,6 +1216,11 @@
   var MEZ_POCHYBNA = (MODEL && MODEL.MEZ_POCHYBNA) || 60;
   function cenaNeduveryhodna(d) { return MODEL ? MODEL.neduveryhodna(d) : false; }
   function dealInfo(d) { return MODEL ? MODEL.percentil(d) : null; }
+  /** „v okrese Znojmo" / „na Vysočině" — kde se percentil doopravdy počítal. */
+  function kdeSrovnani(pc) {
+    if (!pc || !pc.uroven || !(window.PK_CENY && window.PK_CENY.kdeText)) return '';
+    return window.PK_CENY.kdeText(pc.uroven, pc.kde) || '';
+  }
   function priceBarHtml(d) {
     if (!MODEL || !hasArea(d) || !d.price) return '';
     if (cenaNeduveryhodna(d)) {
@@ -4528,11 +4533,26 @@
       var rl = rn.nextElementSibling;
       if (rl) rl.textContent = top.length === 1 ? 'tip dnes' : (top.length < 5 ? 'tipy dnes' : 'tipů dnes');
     }
+    /* Pro zkoušku: co o tipech říká MODEL, ne co se vypsalo do stránky.
+       Bez toho by kontrola porovnávala text sama se sebou. */
+    try {
+      window.PK_TIPY = top.map(function (o) {
+        return { uroven: o.di.uroven, kde: o.di.kde, okres: o.d.okres, cheaper: o.di.cheaper };
+      });
+    } catch (e) {}
     grid.innerHTML = top.map(function (o) {
       var d = o.d, t = TYPE[d.type];
       var perM2 = zaMetr(d);
       return '<button type="button" class="deal-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
-        '<div class="deal-badge">levnější než ' + o.di.cheaper + ' % podobných</div>' +
+        /* KDE se to srovnávalo, patří do té věty. Percentil se počítá
+           nejdřív v okrese, a když tam není dost nabídek, v kraji —
+           naměřeno na ostrých datech: ze 1 213 verdiktů jich 566 (47 %)
+           vzniklo v KRAJI. Karta přitom pod tím psala „okres Jablonec
+           nad Nisou", takže „levnější než 98 % podobných" vypadalo jako
+           srovnání v okrese. Totéž se už jednou spravilo u odznaku na
+           mapě (viz priceBarHtml) — tipy u toho zůstaly. */
+        '<div class="deal-badge">levnější než ' + o.di.cheaper + ' % podobných' +
+          (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +
         '<div class="deal-place"><span class="deal-dot" style="background:' + t.color + '"></span>' + d.place + '</div>' +
         '<div class="deal-sub">' + t.label + ' · ' + (d.druh || 'pozemek') + ' · okres ' + d.okres + '</div>' +
         '<div class="deal-figs"><b>' + fmt(d.price) + ' Kč</b><span>' + fmt(d.area) + ' m²</span><span>' + fmt(perM2) + ' Kč/m²</span></div>' +
