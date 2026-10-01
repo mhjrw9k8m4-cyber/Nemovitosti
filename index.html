@@ -127,7 +127,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=cc857094">
+  <link rel="stylesheet" href="css/styles.css?v=e8f92914">
 </head>
 <body>
 
@@ -599,29 +599,24 @@
       <div class="rail-mark reveal"><span class="rm-n">18</span><span class="rm-l">pojmů</span></div>
       <div class="section-head reveal"><h2>Nevyznáte se v pojmech? Vysvětlíme.</h2></div>
       <div class="glossary reveal">
-        <div class="gl-item"><h4>Dražba</h4><p>Veřejný prodej pozemku tomu, kdo nabídne nejvíc. Startovní cena bývá pod trhem. Pevný termín a pravidla — online nebo u exekutora.</p></div>
-        <div class="gl-item"><h4>Exekuce</h4><p>Vymáhání dluhu z majetku dlužníka. Pozemek v exekuci se často brzy dostane do dražby — signál příležitosti s předstihem.</p></div>
-        <div class="gl-item"><h4>Insolvence</h4><p>Řešení úpadku přes soud. Majetek se zpeněžuje, aby se splatili věřitelé. Veřejně dohledatelné v insolvenčním rejstříku — ten sami neprocházíme, takže pozemek z insolvence se sem dostane až ve chvíli, kdy ho správce vypíše do dražby.</p></div>
-        <div class="gl-item"><h4>Katastr nemovitostí</h4><p>Úřední evidence pozemků (ČÚZK). Číslo parcely, výměra, druh i vlastník. Vždy zdroj pravdy pro ověření.</p></div>
-        <div class="gl-item"><h4>Parcela / výměra</h4><p>Parcela je konkrétní pozemek s vlastním číslem. Výměra je jeho plocha v m². Podle výměry a lokality se odvíjí cena.</p></div>
-        <!-- Časté dotazy slibují slovníček, který „vysvětluje každý pojem".
-             Pět hesel na to nestačilo: web sám používá v textech pro lidi
-             přes deset dalších odborných výrazů — spoluvlastnický podíl,
-             věcné břemeno, vyvolávací cena… — a nevysvětloval ani jeden.
-             Slib bez pokrytí je horší než žádný slib. -->
-        <div class="gl-item"><h4>Spoluvlastnický podíl</h4><p>Prodává se jen část pozemku, ne celá parcela — třeba jedna polovina. Výměra v inzerátu přitom bývá za celou parcelu, takže cena za metr vyjde podezřele nízko. Nejčastější důvod, proč nabídka vypadá jako trhák.</p></div>
-        <div class="gl-item"><h4>Věcné břemeno</h4><p>Cizí právo na vašem pozemku: právo cesty, vedení sítí nebo doživotní užívání. Zapisuje se do katastru a kupujícího zavazuje dál. Hledejte ho na listu vlastnictví, část C.</p></div>
-        <div class="gl-item"><h4>List vlastnictví (LV)</h4><p>Výpis z katastru o konkrétním pozemku. Části A až F: vlastník, parcely, břemena a zástavy, nabývací titul. Nahlédnutí je zdarma přes web ČÚZK.</p></div>
-        <div class="gl-item"><h4>Vyvolávací cena</h4><p>Nejnižší podání, kterým dražba začíná. Není to odhadní ani konečná cena — bývá pod trhem a v dražbě se od ní licituje nahoru.</p></div>
-        <div class="gl-item"><h4>Dražební jistota</h4><p>Kauce, kterou musíte složit předem, jinak dražit nemůžete. Výši i termín určuje dražební vyhláška. Neúspěšným účastníkům se vrací.</p></div>
-        <div class="gl-item"><h4>Dražební vyhláška</h4><p>Úřední dokument, kterým se dražba oznamuje. Najdete v ní přesné označení parcely, nejnižší podání, výši jistoty, termín i podmínky. Nejdůležitější papír celé dražby.</p></div>
-        <div class="gl-item"><h4>Příklep</h4><p>Okamžik, kdy dražitel s nejvyšším podáním pozemek získá. Zbytek ceny se doplácí ve lhůtě podle vyhlášky; vlastnictví přechází až po splnění podmínek.</p></div>
-        <div class="gl-item"><h4>Územní plán</h4><p>Obecní dokument, který říká, co se kde smí stavět. Rozhoduje o tom, jestli je pozemek stavební — ne inzerát. Nahlédnout jde na úřadě obce s rozšířenou působností.</p></div>
-        <div class="gl-item"><h4>Přístupová cesta</h4><p>Právo dostat se na pozemek z veřejné komunikace. Bez něj má pozemek výrazně nižší cenu a banka na něj nemusí půjčit. Ověřuje se v katastru, ne od oka z mapy.</p></div>
-        <div class="gl-item"><h4>Orná půda</h4><p>Zemědělská půda určená k pěstování. Nejlevnější druh pozemku. Stavět na ní nelze bez vynětí ze zemědělského půdního fondu, což stojí čas i peníze a nemusí vyjít.</p></div>
-        <div class="gl-item"><h4>Trvalý travní porost</h4><p>Louky a pastviny. Podobně jako orná půda patří do zemědělského půdního fondu, takže se na ní bez vynětí nestaví.</p></div>
-        <div class="gl-item"><h4>Ostatní plocha</h4><p>Sběrný druh pro pozemky, které nejsou pole, les ani zastavěná plocha — třeba manipulační plochy či zeleň. Co na nich jde, řekne až územní plán.</p></div>
-        <div class="gl-item"><h4>BPEJ</h4><p>Bonitovaná půdně ekologická jednotka — pětimístný kód kvality zemědělské půdy. Čím lepší bonita, tím dražší je vynětí ze zemědělského půdního fondu.</p></div>
+        <details class="gl-item"><summary><h4>Dražba</h4></summary><p>Veřejný prodej pozemku tomu, kdo nabídne nejvíc. Startovní cena bývá pod trhem. Pevný termín a pravidla — online nebo u exekutora.</p></details>
+        <details class="gl-item"><summary><h4>Exekuce</h4></summary><p>Vymáhání dluhu z majetku dlužníka. Pozemek v exekuci se často brzy dostane do dražby — signál příležitosti s předstihem.</p></details>
+        <details class="gl-item"><summary><h4>Insolvence</h4></summary><p>Řešení úpadku přes soud. Majetek se zpeněžuje, aby se splatili věřitelé. Veřejně dohledatelné v insolvenčním rejstříku — ten sami neprocházíme, takže pozemek z insolvence se sem dostane až ve chvíli, kdy ho správce vypíše do dražby.</p></details>
+        <details class="gl-item"><summary><h4>Katastr nemovitostí</h4></summary><p>Úřední evidence pozemků (ČÚZK). Číslo parcely, výměra, druh i vlastník. Vždy zdroj pravdy pro ověření.</p></details>
+        <details class="gl-item"><summary><h4>Parcela / výměra</h4></summary><p>Parcela je konkrétní pozemek s vlastním číslem. Výměra je jeho plocha v m². Podle výměry a lokality se odvíjí cena.</p></details>
+        <details class="gl-item"><summary><h4>Spoluvlastnický podíl</h4></summary><p>Prodává se jen část pozemku, ne celá parcela — třeba jedna polovina. Výměra v inzerátu přitom bývá za celou parcelu, takže cena za metr vyjde podezřele nízko. Nejčastější důvod, proč nabídka vypadá jako trhák.</p></details>
+        <details class="gl-item"><summary><h4>Věcné břemeno</h4></summary><p>Cizí právo na vašem pozemku: právo cesty, vedení sítí nebo doživotní užívání. Zapisuje se do katastru a kupujícího zavazuje dál. Hledejte ho na listu vlastnictví, část C.</p></details>
+        <details class="gl-item"><summary><h4>List vlastnictví (LV)</h4></summary><p>Výpis z katastru o konkrétním pozemku. Části A až F: vlastník, parcely, břemena a zástavy, nabývací titul. Nahlédnutí je zdarma přes web ČÚZK.</p></details>
+        <details class="gl-item"><summary><h4>Vyvolávací cena</h4></summary><p>Nejnižší podání, kterým dražba začíná. Není to odhadní ani konečná cena — bývá pod trhem a v dražbě se od ní licituje nahoru.</p></details>
+        <details class="gl-item"><summary><h4>Dražební jistota</h4></summary><p>Kauce, kterou musíte složit předem, jinak dražit nemůžete. Výši i termín určuje dražební vyhláška. Neúspěšným účastníkům se vrací.</p></details>
+        <details class="gl-item"><summary><h4>Dražební vyhláška</h4></summary><p>Úřední dokument, kterým se dražba oznamuje. Najdete v ní přesné označení parcely, nejnižší podání, výši jistoty, termín i podmínky. Nejdůležitější papír celé dražby.</p></details>
+        <details class="gl-item"><summary><h4>Příklep</h4></summary><p>Okamžik, kdy dražitel s nejvyšším podáním pozemek získá. Zbytek ceny se doplácí ve lhůtě podle vyhlášky; vlastnictví přechází až po splnění podmínek.</p></details>
+        <details class="gl-item"><summary><h4>Územní plán</h4></summary><p>Obecní dokument, který říká, co se kde smí stavět. Rozhoduje o tom, jestli je pozemek stavební — ne inzerát. Nahlédnout jde na úřadě obce s rozšířenou působností.</p></details>
+        <details class="gl-item"><summary><h4>Přístupová cesta</h4></summary><p>Právo dostat se na pozemek z veřejné komunikace. Bez něj má pozemek výrazně nižší cenu a banka na něj nemusí půjčit. Ověřuje se v katastru, ne od oka z mapy.</p></details>
+        <details class="gl-item"><summary><h4>Orná půda</h4></summary><p>Zemědělská půda určená k pěstování. Nejlevnější druh pozemku. Stavět na ní nelze bez vynětí ze zemědělského půdního fondu, což stojí čas i peníze a nemusí vyjít.</p></details>
+        <details class="gl-item"><summary><h4>Trvalý travní porost</h4></summary><p>Louky a pastviny. Podobně jako orná půda patří do zemědělského půdního fondu, takže se na ní bez vynětí nestaví.</p></details>
+        <details class="gl-item"><summary><h4>Ostatní plocha</h4></summary><p>Sběrný druh pro pozemky, které nejsou pole, les ani zastavěná plocha — třeba manipulační plochy či zeleň. Co na nich jde, řekne až územní plán.</p></details>
+        <details class="gl-item"><summary><h4>BPEJ</h4></summary><p>Bonitovaná půdně ekologická jednotka — pětimístný kód kvality zemědělské půdy. Čím lepší bonita, tím dražší je vynětí ze zemědělského půdního fondu.</p></details>
       </div>
     </div>
   </section>

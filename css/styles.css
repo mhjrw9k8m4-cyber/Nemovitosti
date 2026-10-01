@@ -1949,9 +1949,28 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 
 /* Slovníček */
 .glossary{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
-.gl-item{background:var(--ink-soft2); border:1px solid var(--line); border-radius:var(--r-md); padding:20px;}
-.gl-item h4{font-family:var(--font-ui); font-size:17px; font-weight:600; margin-bottom:8px; color:var(--copper-bright);}
-.gl-item p{font-size:14px; color:var(--text-ondark-mute);}/* Srovnání */
+/* POJMY SE ROZBALUJÍ, STEJNĚ JAKO ČASTÉ DOTAZY.
+   Osmnáct hesel i s výklady zabíralo 1 319 px na monitoru a 2 588 px na
+   telefonu — tedy 22 % celé úvodní stránky na slovníček, víc než na
+   cokoli kromě mapy. Přitom se do něj kouká ten, kdo hledá JEDEN pojem.
+   Je to týž vzor jako u častých dotazů o kus níž, takže se web neučí
+   druhou řeč. Čistě CSS to nejde udělat tak, aby se na monitoru
+   rozbalovalo samo — Chrome obsah zavřeného <details> skrývá přes
+   content-visibility a display:block to nepřebije (zkoušeno a změřeno). */
+.gl-item{background:var(--ink-soft2); border:1px solid var(--line); border-radius:var(--r-md);
+  padding:0; overflow:hidden;}
+.gl-item summary{cursor:pointer; list-style:none; display:flex; justify-content:space-between;
+  align-items:center; gap:12px; padding:14px 16px;
+  font-family:var(--font-ui); font-size:15px; font-weight:600; color:var(--copper-bright);}
+/* Název pojmu zůstává NADPISEM i uvnitř rozbalovače — čtečka obrazovky
+   podle nadpisů prochází stránku a vyhledávač podle nich pozná, o čem
+   heslo je. Vizuálně ho nese summary, tak h4 jen nedělá vlastní odstup. */
+.gl-item summary h4{margin:0; font:inherit; color:inherit;}
+.gl-item summary::-webkit-details-marker{display:none;}
+.gl-item summary::after{content:"+"; font-family:var(--font-mono); color:var(--copper-bright);
+  font-size:17px; line-height:1; transition:transform var(--cas-zakladni) var(--ease);}
+.gl-item[open] summary::after{transform:rotate(45deg);}
+.gl-item p{font-size:14px; color:var(--text-ondark-mute); padding:0 16px 16px;}/* Srovnání */
 /* Recenze *//* Upřímná beta sekce (místo vymyšlených recenzí) */
 
 .beta-note .eyebrow{display:inline-flex; justify-content:center; margin-bottom:12px;}/* Ceník */
