@@ -1130,6 +1130,60 @@ for (const [w, h] of [[390, 844], [360, 780]]) {
   await ctx.close();
 }
 
+/* ---- Žádná karta nesmí zůstat v řádku sama ------------------------
+   Tipů na dobrou koupi se vybírají tři nebo čtyři (víc se jich nebere,
+   míň než tři se oddíl radši neukáže). Mřížka je ale „kolik se vejde",
+   takže při třech sloupcích zůstal čtvrtý tip sám a vedle něj dvě
+   třetiny prázdna — naměřeno: řádky 3 a 1, karta 296 px.
+   Hlídá se NÁSLEDEK, ne počet sloupců: poslední řádek nesmí mít jednu
+   kartu, když jich je nad mřížkou víc. */
+for (const [w, h] of [[1440, 900], [1280, 900], [1100, 900], [1024, 900], [820, 900]]) {
+  const { ctx, p } = await otevri('index.html', w, h);
+  await p.waitForTimeout(2600);
+  const v = await p.evaluate(() => {
+    const g = document.getElementById('deals-grid');
+    if (!g || !g.children.length) return null;
+    const radky = {};
+    [...g.children].forEach((e) => { const t = Math.round(e.getBoundingClientRect().top); radky[t] = (radky[t] || 0) + 1; });
+    const poradi = Object.keys(radky).map(Number).sort((a, b) => a - b).map((k) => radky[k]);
+    return { karet: g.children.length, poradi,
+      sirka: Math.round(g.children[0].getBoundingClientRect().width) };
+  });
+  /* Pojistka: bez vykreslených tipů by kontrola pod tím prošla naprázdno. */
+  pravda(`${w} px: tipy na dobrou koupi se vůbec vykreslily`, !!(v && v.karet >= 3),
+    v ? `karet ${v.karet}` : 'mřížka #deals-grid v DOMu není');
+  if (v && v.karet >= 3) {
+    const posledni = v.poradi[v.poradi.length - 1];
+    pravda(`${w} px: a žádný tip nezůstal v řádku sám`,
+      v.poradi.length === 1 || posledni > 1,
+      `${v.karet} karet po řádcích ${v.poradi.join(' + ')}, karta ${v.sirka} px`);
+  }
+  await ctx.close();
+}
+
+/* ---- Výzva v prázdném oddílu patří POD text, ne vedle něj ----------
+   Text i tlačítko byly inline-block, takže se na širokém okně srovnaly
+   vedle sebe a dotýkaly se: odstavec končil na 814 px a tlačítko
+   začínalo na 813. Na telefonu to vypadalo správně jen proto, že se to
+   tam nevešlo. */
+for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
+  const { ctx, p } = await otevri('index.html', w, h);
+  await p.waitForTimeout(2600);
+  const v = await p.evaluate(() => {
+    const sp = document.querySelector('.odl-empty span'), bt = document.querySelector('.odl-empty-btn');
+    if (!sp || !bt) return null;
+    const a = sp.getBoundingClientRect(), c = bt.getBoundingClientRect();
+    return { mezera: Math.round(c.top - a.bottom), stejnyRadek: Math.abs(c.top - a.top) < 30,
+      sirkaKarty: Math.round((document.querySelector('.odl-empty') || sp).getBoundingClientRect().width) };
+  });
+  if (v) {    // oddíl se ukazuje jen dokud nejsou inzeráty od majitelů
+    pravda(`${w} px: tlačítko v prázdném oddílu stojí pod textem`,
+      !v.stejnyRadek && v.mezera >= 8,
+      `mezera ${v.mezera} px, na stejném řádku ${v.stejnyRadek} (karta ${v.sirkaKarty} px)`);
+  }
+  await ctx.close();
+}
+
 await prohlizec.close();
 console.log('\nRozvržení a popisky stránek');
 console.log(zpravy.join('\n'));

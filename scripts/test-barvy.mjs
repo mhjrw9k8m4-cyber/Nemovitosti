@@ -204,6 +204,58 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
     'bez něj by puntík nebyl vidět vůbec a kontrola nad tím by měřila prázdno');
 }
 
+/* --- 7) KAŽDÝ DRUH MÁ NA ÚVODU SVOU KARTIČKU -----------------------
+ * Oddíl „druhy příležitostí" vysvětluje, co která barva na mapě
+ * znamená. Měl ale čtyři kartičky z pěti — obecní záměr chyběl, takže
+ * kdo na mapě viděl tyrkysový čtvereček, neměl se kde dozvědět, co to
+ * je. Sednout si to musí s tabulkou druhů v js/main.js, ne s číslem
+ * v nadpisu.
+ * Barva čáry u kartičky se čte taky: dřív se barvilo podle pořadí
+ * (nth-child 2 až 4), takže vložení druhu doprostřed by tiše přebarvilo
+ * všechny za ním.
+ */
+{
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(3800);
+  const v = await p.evaluate(() => {
+    const karty = [...document.querySelectorAll('.status-card')].map((e) => {
+      const zn = e.querySelector('.status-n');
+      return { druh: zn && zn.getAttribute('data-type'),
+        cara: getComputedStyle(e).borderLeftColor,
+        zavan: getComputedStyle(e).backgroundImage };
+    });
+    const vTabulce = window.PK_TVARY ? Object.keys(window.PK_TVARY) : [];
+    const nadpis = (document.querySelector('#stavy h2') || {}).textContent || '';
+    const cislo = (document.querySelector('#stavy .rm-n') || {}).textContent || '';
+    return { karty, vTabulce, nadpis: nadpis.trim(), cislo: cislo.trim() };
+  });
+  pravda('úvod zná tabulku druhů i kartičky', v.vTabulce.length > 0 && v.karty.length > 0,
+    `tabulka ${v.vTabulce.length}, kartiček ${v.karty.length}`);
+  const maKarticku = v.karty.map((k) => k.druh);
+  const chybi = v.vTabulce.filter((t) => maKarticku.indexOf(t) === -1);
+  pravda('každý druh příležitosti má na úvodu svou kartičku', chybi.length === 0,
+    `chybí: ${chybi.join(', ')} — kdo tu barvu uvidí na mapě, nemá se kde dozvědět, co je`);
+  const navic = maKarticku.filter((t) => !t || v.vTabulce.indexOf(t) === -1);
+  pravda('a žádná kartička nevysvětluje druh, který web nemá', navic.length === 0,
+    `navíc: ${navic.join(', ')}`);
+  for (const k of v.karty) {
+    if (!k.druh || !uvod.tok[k.druh]) continue;
+    pravda(`čára u kartičky „${k.druh}" má barvu z palety`, k.cara === naRgb(uvod.tok[k.druh]),
+      `je ${k.cara}, má být ${naRgb(uvod.tok[k.druh])}`);
+    /* Závan barvy se míchá z téže proměnné. Kdyby se color-mix nepovedl,
+       nebyl by přechod vůbec — a kartička by ztratila polovinu výrazu. */
+    pravda(`a závan barvy u „${k.druh}" se vykreslil`, /gradient/.test(k.zavan),
+      `background-image je „${k.zavan}"`);
+  }
+  pravda('číslo v nadpisu sedí s počtem druhů',
+    new RegExp('^' + ['', 'Jeden', 'Dva', 'Tři', 'Čtyři', 'Pět', 'Šest'][v.vTabulce.length] + ' ', 'i').test(v.nadpis),
+    `nadpis „${v.nadpis}" proti ${v.vTabulce.length} druhům`);
+  pravda('a číslo v postranním sloupci taky', v.cislo === String(v.vTabulce.length),
+    `v sloupci stojí „${v.cislo}", druhů je ${v.vTabulce.length}`);
+  await p.close();
+}
+
 await prohlizec.close();
 console.log('\nBarvy kategorií — jeden zdroj pro mapu i karty');
 console.log(zpravy.join('\n'));
