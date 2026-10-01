@@ -355,11 +355,16 @@ button, a, [role="button"], select, summary, .btn-primary, .lp-btn, input[type="
    v hlavičce pridat.html a udržuje ji initAuth() — musí zůstat v souladu
    s tím, co nakonec rozhodne PKAuth.loggedIn(), jinak by tu zůstalo
    svítit něco, co skript zavřel. */
-/* Řídí se to TŘÍDOU, ne atributem hidden: o pár set řádků výš stojí
-   [hidden]{display:none !important} a to by se přebít nedalo jinak než
-   dalším !important. Bez skriptu (a tedy bez třídy) se ukáže přihlašovací
-   karta a formulář zůstane schovaný — což je přesně stav „nepřihlášen".
-   Skript pak nastavuje hidden jako dřív a třídu drží v souladu. */
+/* JEDINÝ PŘEPÍNAČ ZŮSTÁVÁ ATRIBUT hidden; třída na <html> jen PŘEDKRESLÍ
+   správnou polovinu, než doběhne skript.
+   Napoprvé jsem to otočil — viditelnost řídila třída — a bylo to křehké:
+   dva přepínače, které se můžou rozejít. Ukázalo se to hned, zkouška
+   předvyplnění si formulář odkrývá přes „hidden = false" (tak, jak to
+   dělá i skript) a stránka ho dál schovávala; spadlo na tom CI.
+   Pravidlo teď jen ODKRÝVÁ to, co je ještě zavřené — jakmile skript
+   hidden sundá, nemá co dělat. !important je kvůli
+   [hidden]{display:none !important} o pár set řádků výš. Bez skriptu
+   (a tedy bez třídy) se neukáže ani jedno, přesně jako dřív. */
 /* STRÁNKY, KTERÉ OBSAH DOPLŇUJÍ AŽ SKRIPTEM, si drží výšku okna.
    Než data dojdou, je na nich sotva 104 px obsahu — patička tím stojí
    uprostřed prvního okna a jakmile se obsah doplní, spadne o stovky
@@ -369,8 +374,8 @@ button, a, [role="button"], select, summary, .btn-primary, .lp-btn, input[type="
    okrajem obrazovky — a co není vidět, to nemá kam odskočit. Zároveň to
    spraví starší nešvar: na krátké stránce patička nevisí uprostřed. */
 main.ceka-na-skript{min-height:calc(100vh - 90px);}
-html.pk-prihlasen #auth-gate, html.pk-prihlasen #mi-auth{display:none;}
-html:not(.pk-prihlasen) #prodej-card, html:not(.pk-prihlasen) #mi-panel{display:none;}
+html.pk-odhlasen #auth-gate[hidden], html.pk-odhlasen #mi-auth[hidden]{display:block !important;}
+html.pk-prihlasen #prodej-card[hidden], html.pk-prihlasen #mi-panel[hidden]{display:block !important;}
 .auth-bar{margin:0 0 14px; padding:10px 14px; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); font-size:14px; color:var(--text-ondark-mute);}
 .auth-bar b{color:var(--text-ondark);}
 .auth-bar a{color:var(--copper-bright); text-decoration:underline; text-underline-offset:2px;}

@@ -45,7 +45,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=e8f92914">
+  <link rel="stylesheet" href="css/styles.css?v=679525fb">
 </head>
 <body>
 
@@ -124,7 +124,7 @@
         <!-- Formulář v elevované kartě -->
         <div>
           <!-- Přihlášení (ochrana proti spamu) — ukáže se, když uživatel není přihlášený -->
-          <div class="auth-card" id="auth-gate" data-mode="login">
+          <div class="auth-card" id="auth-gate" data-mode="login" hidden>
             <!-- role="tablist" bez role="tab" u potomků je pro odečítač
                  obrazovky seznam záložek, ve kterém žádná záložka není. -->
             <div class="auth-tabs" role="tablist" aria-label="Přihlášení nebo nový účet">
@@ -165,7 +165,7 @@
           <!-- Lišta „přihlášen jako…" nad formulářem -->
           <div class="auth-bar" id="auth-bar" hidden>Přihlášen: <b id="auth-email"></b> · <span id="quota-info"></span><a href="muj-inzerat.html">Můj profil</a> · <button type="button" id="au-logout" class="linklike">Odhlásit</button></div>
 
-          <div class="add-card" id="prodej-card">
+          <div class="add-card" id="prodej-card" hidden>
             <p class="add-lead" style="margin-top:0;">Stačí vyplnit <b>obec, výměru a cenu</b> — zbytek je nepovinný. Nabídka se objeví na mapě mezi ostatními; první z nového účtu si napřed projdeme. Spravovat ji pak můžete v <b>Mém profilu</b>. Zdarma a bez provize.</p>
             <!-- MÁM INZERÁT JINDE. Kdo prodává pozemek, má ho skoro vždycky
                  vypsaný ještě někde jinde — a přepisovat totéž podruhé ručně
