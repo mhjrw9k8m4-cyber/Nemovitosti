@@ -1827,6 +1827,31 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .rct-form input:focus-visible, .rct-form textarea:focus-visible{border-color:var(--copper-bright); outline:none;}
 .rct-form .btn-primary{padding:12px; font-size:15px; text-align:center;}
 @media (max-width:820px){ .realtor-contact{grid-template-columns:1fr; padding:24px;} }
+
+/* =====================================================================
+   KONTAKT JAKO TMAVÝ PÁS — předěl v souvislé světlé ploše.
+   Změřeno po obrazovkách (1280 px, skutečné pixely snímku): spodní
+   třetina stránky je 2 500 px bez jediného přerušení —
+     druhy + majitelé   barevných 1,8 %  jas 91 %
+     kontakt + pojmy    barevných 0,7 %  jas 92 %
+     pojmy + dotazy     barevných 1,0 %  jas 91 %
+   Kdežto hero má 65,5 % při jasu 43 % a patička 37,4 % při 64 %.
+   Není to nový nápad: týž tmavý pás má oddíl se zdroji a patička, tedy
+   web na předěly vlastní jazyk má. Kontakt se na to hodí nejlíp —
+   obsah má pevný, nezávisí na datech, a pozvání „ozvěte se" snese důraz.
+   Karta uvnitř ztrácí rámeček: na pásu ohraničuje obsah pás sám.
+   ===================================================================== */
+#realitky{background:var(--ink-dark); color:var(--text-ondeep); padding:56px 0 48px; margin-top:24px;}
+#realitky .realtor-contact{margin-top:0; background:none; border:0; padding:0;}
+#realitky .rct-copy h2{color:var(--text-ondeep);}
+#realitky .rct-copy p{color:var(--text-ondeep-mute);}
+#realitky .eyebrow{color:var(--accent-warm-bright);}
+#realitky .kt-mail{background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.16);}
+#realitky .kt-mail:hover{background:rgba(255,255,255,0.1); border-color:var(--accent-warm-bright);}
+#realitky .kt-txt small{color:var(--text-ondeep-mute);}
+#realitky .kt-txt b{color:var(--text-ondeep);}
+#realitky .rules-note{color:var(--text-ondeep-mute);}
+#realitky .rules-note a{color:var(--accent-warm-bright);}
 .copy-btn{position:absolute; top:10px; right:10px; background:var(--copper); color:var(--ink); border:0; border-radius:3px; font-family:var(--font-mono); font-size:11px; font-weight:500; padding:4px 10px; cursor:pointer; transition:background var(--cas-zakladni) var(--ease);}
 .copy-btn:hover{background:var(--copper-bright);}
 .copy-btn.copied{background:var(--c-ok); color:#fff;}
