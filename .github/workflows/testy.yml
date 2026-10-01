@@ -12,6 +12,16 @@ on:
   pull_request:
   workflow_dispatch: {}
 
+# JEDEN BĚH NA VĚTEV. Běh v prohlížeči trvá přes půl hodiny, takže když
+# během něj přijde další push, běžely dosud oba — a oba poslaly e-mail.
+# Naměřeno: běhy 222 a 223 odstartovaly 29 sekund po sobě, 225 a 226 taky
+# v jednom sledu. Starší běh se teď zruší; zrušený běh e-mail neposílá
+# a verdikt stejně platí jen pro špičku větve, kterou měří ten novější.
+# Pull requesty mají vlastní skupinu, ať si push a PR navzájem neruší běh.
+concurrency:
+  group: testy-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   testy:
     runs-on: ubuntu-latest
