@@ -30,11 +30,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://tcinuzftgmkvjjgvadky.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=a01105b9">
+  <link rel="stylesheet" href="css/styles.css?v=a528677c">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .hl-wrap{max-width:640px; margin:0 auto;}
-    .hl-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:0 4px 16px -12px rgba(20,35,28,.3); margin-bottom:14px;}
+    .hl-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--e1); margin-bottom:14px;}
     /* PŘEPÍNAČ MEZI NOVÝM A ULOŽENÝM.
        Uložená hlídání ležela pod celým formulářem nového: na telefonu
        přes obrazovku a půl rolování, o kterém nikdo neví. Kdo si přišel
@@ -60,7 +60,7 @@
     .hl-auth p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
     .hl-in,.hl-sel{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:17px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:8px; outline:none; font-family:inherit;}
     .hl-in:focus,.hl-sel:focus{border-color:var(--copper-bright); box-shadow:0 0 0 4px rgba(31,81,56,.14);}
-    .hl-btn{width:100%; height:48px; border:0; border-radius:var(--r-md); font-weight:700; font-size:15px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:0 8px 20px -10px rgba(31,81,56,.55); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
+    .hl-btn{width:100%; height:48px; border:0; border-radius:var(--r-md); font-weight:700; font-size:15px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
     .hl-btn:hover{filter:brightness(1.05);} .hl-btn:active{transform:scale(.99);}
     /* Vedlejší tlačítko vypadalo jako další vstupní pole: mělo stejný
    podklad i obrys jako políčka nad ním, bajt po bajtu
@@ -154,7 +154,7 @@
        telefonu lámal text uvnitř nich, tak se radši zalomí. */
     .hl-acts{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
     .hl-a{flex:1 1 120px; height:40px; border-radius:var(--r-sm); font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--line-strong); background:var(--ink-soft2); color:var(--text-ondark); display:flex; align-items:center; justify-content:center; text-decoration:none;}
-    .hl-a.pri{background:var(--plocha-znacka); color:#fff; border-color:transparent; box-shadow:0 8px 20px -12px rgba(31,81,56,.5);}
+    .hl-a.pri{background:var(--plocha-znacka); color:#fff; border-color:transparent; box-shadow:var(--glow);}
     .hl-a.del{flex:0 0 44px; color:var(--c-exekuce);}
     .hl-empty{padding:28px 20px; text-align:center; color:var(--text-ondark-mute); font-size:14px; line-height:1.6;}
     .hl-load{padding:24px; text-align:center; color:var(--text-ondark-mute);}

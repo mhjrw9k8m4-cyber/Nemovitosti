@@ -1073,7 +1073,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .map-side{grid-column:1; grid-row:2; display:flex; flex-direction:column; background:transparent; border:0; border-right:1px solid var(--line); border-radius:0; padding:16px 16px; min-height:0;}
 .map-holder{grid-column:2; grid-row:1 / span 2;}
 .map-controls-panel .map-search{margin-top:0;}
-.map-search input{width:100%; background:#FFFFFF; border:1px solid var(--line-ui); border-radius:var(--r-sm); padding:12px 14px; font-size:14px; color:#14231C; font-family:inherit; box-shadow:0 1px 2px rgba(24,45,34,0.06);}
+.map-search input{width:100%; background:#FFFFFF; border:1px solid var(--line-ui); border-radius:var(--r-sm); padding:12px 14px; font-size:14px; color:#14231C; font-family:inherit; box-shadow:var(--e1);}
 .map-search input::placeholder{color:#8A93A3;}
 .map-search input:focus-visible{border-color:var(--copper-bright); outline:none; box-shadow:0 0 0 3px rgba(110,155,255,0.22);}
 /* Našeptávač obcí. V nabídce je přes tisíc obcí a nikdo neví, jak se
@@ -1081,7 +1081,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    z nabídky místo hádání — i s tím, kolik tam čeho je. */
 .map-search{position:relative;}
 .ms-navrhy{position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:40; margin:0; padding:4px; list-style:none;
-  background:var(--ink-soft); border:1px solid var(--line-ui); border-radius:var(--r-sm); box-shadow:var(--e2,0 6px 20px rgba(24,45,34,0.16));
+  background:var(--ink-soft); border:1px solid var(--line-ui); border-radius:var(--r-sm); box-shadow:var(--e2);
   max-height:min(46vh,320px); overflow-y:auto; overscroll-behavior:contain;}
 .ms-navrhy li{display:flex; align-items:center; gap:8px; min-height:38px; padding:6px 10px; border-radius:var(--r-xs);
   font-size:14px; color:var(--text-ondark); cursor:pointer;}
@@ -1601,7 +1601,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .opp-chips{display:flex; flex-wrap:wrap; gap:6px;}
 .opp-hot{display:inline-block; font-size:11px; font-weight:700; color:var(--popisek); background:rgba(228,240,231,0.06); border:1px solid rgba(228,240,231,0.16); border-radius:var(--r-xs); padding:1px 8px; letter-spacing:0.02em; text-transform:uppercase;}
 /* Zvýrazněný (placený) inzerát — prémiový plný odznak + jemné orámování karty */
-.opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:#fff; background:var(--plocha-znacka); border:0; border-radius:var(--r-sm); padding:2px 8px; letter-spacing:0.03em; text-transform:uppercase; box-shadow:0 1px 5px rgba(44,113,80,0.4);}
+.opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:#fff; background:var(--plocha-znacka); border:0; border-radius:var(--r-sm); padding:2px 8px; letter-spacing:0.03em; text-transform:uppercase; box-shadow:var(--e1);}
 .opp-item.is-featured{border-color:rgba(31,81,56,0.55); box-shadow:inset 0 0 0 1px rgba(31,81,56,0.3);}
 /* Odpočet do termínu dražby (reálné datum) */
 .opp-cd{display:inline-block; font-size:11px; font-weight:700; padding:1px 8px; border-radius:var(--r-xs); background:rgba(228,240,231,0.06); border:1px solid rgba(228,240,231,0.16); color:var(--text-ondark-mute); letter-spacing:0.01em; white-space:nowrap;}
@@ -1995,12 +1995,12 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .info-body a{color:var(--copper-bright);}
 
 /* Back to top */
-.to-top{position:fixed; bottom:24px; right:24px; display:inline-flex; align-items:center; gap:6px; height:46px; padding:0 16px 0 14px; border-radius:var(--r-pill); background:#fff; color:var(--copper-bright); border:1.5px solid var(--obrys-tlacitka); font-size:15px; font-weight:700; letter-spacing:.01em; cursor:pointer; box-shadow:var(--e3); opacity:0; pointer-events:none; transform:translateY(12px) scale(.96); transition:opacity var(--cas-zakladni) var(--ease), transform var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease); z-index:900;}
+.to-top{position:fixed; bottom:24px; right:24px; display:inline-flex; align-items:center; gap:6px; height:46px; padding:0 16px 0 14px; border-radius:var(--r-pill); background:#fff; color:var(--copper-bright); border:1.5px solid var(--obrys-tlacitka); font-size:15px; font-weight:700; letter-spacing:.01em; cursor:pointer; box-shadow:var(--e2); opacity:0; pointer-events:none; transform:translateY(12px) scale(.96); transition:opacity var(--cas-zakladni) var(--ease), transform var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease); z-index:900;}
 .to-top svg{width:19px; height:19px; stroke-width:1.89; fill:none; stroke:currentColor;  stroke-linecap:round; stroke-linejoin:round;}
 .to-top span{line-height:1;}
 .to-top.show{opacity:1; pointer-events:auto; transform:none;}
 .to-top.show svg{animation:toTopNudge 2.6s ease-in-out infinite;}
-.to-top:hover{box-shadow:0 12px 30px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.16) inset; transform:translateY(-1px);}
+.to-top:hover{box-shadow:var(--e3); transform:translateY(-1px);}
 .to-top:hover svg{animation-play-state:paused;}
 .to-top:active{transform:translateY(0) scale(.97);}
 @keyframes toTopNudge{

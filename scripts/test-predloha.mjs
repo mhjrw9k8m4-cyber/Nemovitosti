@@ -6,7 +6,7 @@
 // kartu „o kousek výš", napíše si vlastní hodnotu, a za půl roku je jich
 // zase sedmdesát a web je „suchý". Tenhle test to nedovolí: hloubka i tvar
 // se musí brát z paletky.
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -27,6 +27,28 @@ const ocisti = (t) => t.replace(/\/\*[\s\S]*?\*\//g, '');
 }
 
 const css = ocisti(readFileSync(path.join(ROOT, 'css', 'styles.css'), 'utf8'));
+
+// Stupnice neplatí jen v šabloně. Stránky aplikace si vlastní podobu píšou
+// v hlavičce, do <style>, a hlídač tam dosud nekoukal — právě proto se
+// rytmus rozjel nejvíc tam: jedenáct různých zaoblení a jednadvacet
+// vlastních stínů, které nikdo neviděl, protože test čte styles.css.
+// Vygenerované stránky (pozemek-*, okresy, kraje) se vynechávají: jejich
+// hlavička je kopie šablony, takže by se každá odchylka počítala dvatisíckrát.
+const RUCNI = (f) => f.endsWith('.html') && !f.startsWith('pozemek-') &&
+  !f.startsWith('pozemky-okres-') && !f.endsWith('-kraj.html');
+const zdroje = [{ jmeno: 'css/styles.css', css }];
+for (const f of readdirSync(ROOT).filter(RUCNI).sort()) {
+  const bloky = [...readFileSync(path.join(ROOT, f), 'utf8')
+    .matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]);
+  if (bloky.length) zdroje.push({ jmeno: f, css: ocisti(bloky.join('\n')) });
+}
+
+// Kdyby se hledání <style> bloků rozbilo, test by od té chvíle hlídal jen
+// šablonu — a mlčel by přesně o tom, kvůli čemu ho sem píšu.
+if (zdroje.length < 6) {
+  console.error(`::error::Ze stránek se nenačetly styly (${zdroje.length} zdrojů) — hlídač by hlídal jen šablonu.`);
+  process.exit(1);
+}
 
 let chyb = 0;
 const rest = [];
@@ -128,11 +150,13 @@ const cisla = (c) => {
   return (s.match(/-?\d+(?:\.\d+)?px/g) || []).map(parseFloat);
 };
 const vlastni = [];
-for (const m of css.matchAll(/box-shadow:\s*([^;}]+)/g)) {
-  const v = m[1].trim();
-  if (v.startsWith('var(') || v === 'none' || v.includes('inset') || v.includes('currentColor')) continue;
-  const rozptyl = Math.max(0, ...vrstvy(v).map((c) => { const n = cisla(c); return n.length >= 3 ? Math.abs(n[2]) : 0; }));
-  if (rozptyl >= 6) vlastni.push(v.slice(0, 64));
+for (const z of zdroje) {
+  for (const m of z.css.matchAll(/box-shadow:\s*([^;}]+)/g)) {
+    const v = m[1].trim();
+    if (v.startsWith('var(') || v === 'none' || v.includes('inset') || v.includes('currentColor')) continue;
+    const rozptyl = Math.max(0, ...vrstvy(v).map((c) => { const n = cisla(c); return n.length >= 3 ? Math.abs(n[2]) : 0; }));
+    if (rozptyl >= 6) vlastni.push(z.jmeno + ': ' + v.slice(0, 64));
+  }
 }
 hlas('Vlastní stín mimo paletku', vlastni,
   'Použijte var(--e1) až var(--e3), --e3-up pro panel zdola, --glow pro značkovou záři.');
@@ -143,14 +167,16 @@ hlas('Vlastní stín mimo paletku', vlastni,
 // se škále nevymyká. Ostatní hodnoty musí být z paletky.
 const POVOLENA = new Set(['2px', '3px', '50%', '999px', 'inherit']);
 const tvary = [];
-for (const m of css.matchAll(/border-radius:\s*([^;}]+)/g)) {
-  const v = m[1].trim();
-  if (v.includes('var(')) continue;               // z paletky (i rohový zápis)
-  if (POVOLENA.has(v)) continue;
-  // Rohový zápis smí mít jen nuly a vlasové hodnoty; cokoli většího patří
-  // do paletky, jinak by se škála obešla zadními vrátky.
-  if (v.split(/\s+/).every((x) => x === '0' || POVOLENA.has(x))) continue;
-  tvary.push(v.slice(0, 40));
+for (const z of zdroje) {
+  for (const m of z.css.matchAll(/border-radius:\s*([^;}]+)/g)) {
+    const v = m[1].trim();
+    if (v.includes('var(')) continue;               // z paletky (i rohový zápis)
+    if (POVOLENA.has(v)) continue;
+    // Rohový zápis smí mít jen nuly a vlasové hodnoty; cokoli většího patří
+    // do paletky, jinak by se škála obešla zadními vrátky.
+    if (v.split(/\s+/).every((x) => x === '0' || POVOLENA.has(x))) continue;
+    tvary.push(z.jmeno + ': ' + v.slice(0, 40));
+  }
 }
 hlas('Zaoblení mimo paletku', tvary,
   'Použijte var(--r-xs) … var(--r-lg), nebo var(--r-pill) pro štítky.');
@@ -249,9 +275,12 @@ hlas('Předloha ukazuje proměnnou, která v šabloně není', neznama,
 }
 
 /* ---------- výsledek ---------- */
-const stinu = (css.match(/box-shadow:/g) || []).length;
-const zTokenu = (css.match(/box-shadow:\s*var\(/g) || []).length;
-console.log(`\nVizuální jazyk: ${stinu} stínů v šabloně, z toho ${zTokenu} z paletky`);
+let stinu = 0, zTokenu = 0;
+for (const z of zdroje) {
+  stinu += (z.css.match(/box-shadow:/g) || []).length;
+  zTokenu += (z.css.match(/box-shadow:\s*var\(/g) || []).length;
+}
+console.log(`\nVizuální jazyk: ${stinu} stínů ve ${zdroje.length} zdrojích, z toho ${zTokenu} z paletky`);
 if (chyb) {
   console.log(rest.join('\n'));
   console.error(`\n::error::${chyb} odchylek od předlohy (predloha.html).`);
