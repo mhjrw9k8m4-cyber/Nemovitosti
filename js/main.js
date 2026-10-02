@@ -503,7 +503,11 @@
     DATA.forEach(function (d) { byType[d.type] = (byType[d.type] || 0) + 1; });
     document.querySelectorAll('.status-n').forEach(function (el) {
       var n = byType[el.getAttribute('data-type')] || 0;
-      el.textContent = n ? (n + ' teď na mapě') : 'zatím žádné';
+      /* Přes tisíc kusů se píše s mezerou: „1 841", ne „1841". Číslo
+         tu chodilo rovnou z délky pole, zatímco úvodní nadpis o kus výš
+         používá fmt() — na jedné obrazovce tak stálo „1 991 pozemků"
+         a pod tím „1841 teď na mapě". */
+      el.textContent = n ? (fmt(n) + ' teď na mapě') : 'zatím žádné';
       if (!n) el.classList.add('is-zero');
     });
   })();

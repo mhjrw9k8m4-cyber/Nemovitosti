@@ -1,3 +1,33 @@
+/* PÍSMA SE STAHUJÍ Z NAŠEHO SERVERU, NE Z GOOGLU.
+ *
+ * Dřív visela tři rodiny (Archivo, Source Serif 4, IBM Plex Mono) na
+ * fonts.googleapis.com. To mělo tři vady a jedna z nich byla vidět:
+ *   • dvě cizí spojení navíc (DNS + TLS na googleapis i gstatic), než
+ *     se vůbec začalo stahovat písmo,
+ *   • `display=swap` znamená, že se text nejdřív vykreslí náhradním
+ *     písmem a pak PŘESKOČÍ do pravého — stránka se při načtení hýbe,
+ *   • návštěvníkova IP adresa chodila Googlu při každém otevření, což
+ *     je u českého webu věc, kterou nikdo nechce vysvětlovat.
+ * Teď jsou dvě rodiny, leží vedle stylopisu a jsou v HTML předepsané
+ * (<link rel=preload>), takže dojedou souběžně se stylem, ne až po něm.
+ *
+ * Fraunces má osu optické velikosti: v nadpisu se sama zúží a zostří,
+ * v drobném textu povolí. `font-optical-sizing:auto` (výchozí) to řeší
+ * bez jediného čísla navíc.
+ *
+ * Rozsahy znaků jsou doslova ty, které dává Google — latin a latin-ext.
+ * České háčky a kroužky jsou v latin-ext; bez něj by se ř, ě, ů a ž
+ * vykreslily náhradním písmem a nadpis by byl zpola z jiné rodiny.
+ */
+@font-face{font-family:'Fraunces'; src:url('../fonts/fraunces-latin-ext.woff2') format('woff2');
+  font-weight:400 700; font-style:normal; font-display:swap; unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;}
+@font-face{font-family:'Fraunces'; src:url('../fonts/fraunces-latin.woff2') format('woff2');
+  font-weight:400 700; font-style:normal; font-display:swap; unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Inter'; src:url('../fonts/inter-latin-ext.woff2') format('woff2');
+  font-weight:400 700; font-style:normal; font-display:swap; unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;}
+@font-face{font-family:'Inter'; src:url('../fonts/inter-latin.woff2') format('woff2');
+  font-weight:400 700; font-style:normal; font-display:swap; unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+
 :root{
   /* Neutrály — vrstvená hloubka ploch (architektura + stínování).
      Modrošedá navy: důvěra a profesionalita, sladěný kontrast. */
@@ -14,18 +44,24 @@
      rozšířit a přitáhnout k sobě, a z toho vzniká ta autorita, kterou
      mají zpravodajské a datové weby. Jedna rodina místo dvou, rozdíl
      dělá váha a šířka — ne výměna písma. */
-  --font-display:'Source Serif 4','Iowan Old Style','Georgia',serif;
-  --font-ui:'Archivo','Helvetica Neue',Arial,sans-serif;
-  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  /* Dvě rodiny místo tří. Třetí (IBM Plex Mono) držela popisky verzálkami
+     s velkým prostrkáním — a právě ty dělaly z webu plakátovací plochu:
+     nad každým oddílem jeden, v každé kartě další. Data, která se mají
+     svisle srovnat (ceny, počty), teď drží `font-variant-numeric:tabular-nums`
+     v Interu; to je přesně to, kvůli čemu se mono používalo, a nestojí to
+     ani jeden stažený soubor. */
+  --font-display:'Fraunces','Source Serif 4','Iowan Old Style','Georgia',serif;
+  --font-ui:'Inter','Helvetica Neue',Arial,sans-serif;
+  --font-mono:'Inter','Helvetica Neue',Arial,sans-serif;
 
   /* Neutrály jsou TEPLÉ, ne studeně šedé. Studená šeď působí sterilně —
      teplá bílá dělá totéž, co v bytě denní světlo místo zářivky. Rozdíl
      je nepatrný v číslech a velký v dojmu. Kontrast tím netrpí:
      text 15,3 : 1, tlumený 6,7 : 1, akcent 6,1 : 1. */
-  --bg:#F1EFEA;                 /* pozadí stránky — teplá bílá */
-  --ink:#F7F5F1;                /* základní plocha: vstupy, zapuštěné prvky */
+  --bg:#DFEBE2;                 /* plocha stránky — jedna barva, ta, kterou přechod ukazoval nejvíc */
+  --ink:#F6F9F7;                /* zapuštěná plocha: vstupy, pole — stejná rodina jako plocha, ne teplá */
   --ink-soft:#FFFFFF;           /* zvýšená plocha: karty a panely — čistě bílá */
-  --ink-soft2:#F3F1EC;          /* nejvyšší plocha: hover, aktivní */
+  --ink-soft2:#EDF3EF;          /* nejvyšší plocha: hover, aktivní */
   /* Tmavý pás. Web byl celý světlý, takže neměl rytmus — jedna dlouhá
      plocha bez nádechu. Tmavá sekce je to, čím velké weby dělají předěl. */
   --ink-dark:#14231C;
@@ -70,9 +106,6 @@
   --grad-cool-soft:linear-gradient(135deg, rgba(44,113,80,0.16), rgba(27,74,52,0.06));
   /* Plocha stránky: dlouhý svislý přechod. Barva se mění tak pomalu, že
      si toho nikdo nevšimne přímo — všimne si, že stránka „dýchá". */
-  --grad-plocha:linear-gradient(180deg, #F3F1EC 0%, #E4F0E7 26%, #E4F0E7 52%, #E4F0E7 78%, #F3F1EC 100%);
-  /* Karta: jemný lesk odshora, jako světlo dopadající na papír. */
-  --grad-karta:linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 100%);
   /* Předěl sekcí: linka, která se do stran vytrácí, místo tvrdé hrany. */
   --grad-predel:linear-gradient(90deg, transparent, var(--line-strong) 18%, var(--line-strong) 82%, transparent);
   /* ZÁVAN BARVY OD ČÁRY. Bloky druhů příležitostí nesou barvu jen svislou
@@ -91,9 +124,16 @@
      a řada kartiček tím vypadala roztřepeně, jako by každá mizela jinak.
      240 px je zhruba na délku nadpisu, takže barva drží u čáry, odkud
      vychází, a nerozlévá se přes text. */
-  --grad-druh-zavan:linear-gradient(90deg,
-    color-mix(in srgb, var(--c-druh, var(--accent-warm)) 14%, transparent),
-    transparent 240px);
+  /* POZOR: závan druhu tu NESMÍ BÝT. Vlastní vlastnost se dosazuje tam,
+     kde je DEKLAROVANÁ, ne tam, kde se použije — takže `var(--c-druh)`
+     uvnitř deklarace na :root se ptá :root, ne kartičky. Kartička má
+     --c-druh v atributu style, ale sem nedosáhne. Naměřeno: všech pět
+     kartiček druhů mělo tentýž závan rgb(138,85,18)/0.14, tedy záložní
+     --accent-warm, ačkoli každá nese svou barvu (#4361B8, #CC6B33,
+     #8C2F1E, #12AEBE, #8B4FE0). Komentář u toho přitom tvrdil „čtyři
+     odstíny, každý svůj, tytéž jako tečky na mapě". Nebyly. Byla to
+     jedna béžová šmouha pod každou. Přechod proto stojí rovnou
+     v .status-card, kde se --c-druh ptá kartičky. */
   /* Značkový přechod (modrá → fialová) — stejný jako logo/ikona */
   /* Značkový přechod. Dřív končil ve fialové (#1B4A34) — a právě ta dělala
      ten „technologický" dojem, navíc se netrefovala do modroindigového loga.
@@ -207,7 +247,13 @@
      0,22 do 1,92 px. Popisek mluví strojopisem, odznak groteskem —
      dvě role, dva hlasy, ne patnáct.
      Odznak je něco jiného: barevná pilulka s kategorií, ne popisek. */
-  --popisek-proklad:.12em;
+  /* Prostrkání verzálkových popisků. Bylo .12em, když je sázel IBM Plex
+     Mono — mono má úzké verzálky a prostrkání je rozestavilo. Inter má
+     verzálky širší a při .12em se popisky přestaly vejít: „NEJVÍC POD
+     CENOU" se v úvodní kartě zalomil na dva řádky a tři kartičky vedle
+     sebe přestaly být stejně vysoké (naměřeno 44 a 55 px). Zároveň to
+     byla jedna z věcí, kvůli kterým web působil jako plakátovací plocha. */
+  --popisek-proklad:.07em;
   --odznak-proklad:.03em;
   /* Svislý rytmus oddílů — jedno číslo pro celý web. */
   --oddil-y:96px;
@@ -289,7 +335,12 @@ a:focus-visible, button:focus-visible, select:focus-visible, [role="button"]:foc
 .hero-head > *, .map-app > *, .foot-grid > *, .steps > *, .status-grid > *, .glossary > *{min-width:0;}
 .opp-list{min-width:0; max-width:100%;}
 .wrap{max-width:var(--m-wrap); margin:0 auto; padding:0 32px;}
-.mono{font-family:var(--font-mono); letter-spacing:0.02em;}
+/* Třída se jmenuje .mono po písmu, které tu bývalo. Jeho jediná práce,
+   kvůli které se používalo, byla SVISLÁ ZÁVORA U ČÍSEL: v tabulce cen
+   musí mít osmička stejnou šířku jako jednička, jinak sloupec jede
+   cikcak. To umí Inter taky — stačí si o to říct. Zbytek práce (dojem
+   „tohle je údaj") obstará velikost a barva, ne třetí stažená rodina. */
+.mono{font-family:var(--font-mono); letter-spacing:0.02em; font-variant-numeric:tabular-nums;}
 .pt-0{padding-top:0;}
 a{color:inherit;}
 .visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;}
@@ -327,7 +378,13 @@ path.leaflet-interactive:focus, path.leaflet-interactive:focus-visible{ outline:
   max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .kj-c{font-size:12px; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
 .kj-c.is-zero{opacity:0.6;}
-.kraj-vse{background:var(--ink); border-style:dashed;}
+/* „Všechny okresy" býval kachlík s čárkovaným rámečkem a vlastní plochou.
+   Když se seznam krajů překreslil na prostý seznam (viz blok níž
+   u .kraj-grid), dostal .kraj-item `background:none; border:0;` — a tím
+   obě zdejší deklarace tiše vyhasly: stojí v souboru dřív a mají stejně
+   silný výběr. Kachlík se tedy od ostatních řádků nelišil ničím než
+   barvou textu, zatímco stylopis tvrdil, že má čárkovaný rámeček.
+   Mrtvé deklarace jsou pryč; co má zůstat, je barva názvu pod tímhle. */
 .kraj-vse .kj-n{color:var(--copper-bright);}
 @media (max-width:880px){
   .kraj-grid{grid-template-columns:repeat(2,1fr); gap:8px;}
@@ -1078,6 +1135,16 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    jen 64/56 a 56/48 — takže zrovna ty, co mají být předěl, dýchaly
    nejmíň. Rytmus je teď jedno číslo a mění se na jednom místě. */
 .section{padding:var(--oddil-y) 0;}
+/* POMOCNÁ TŘÍDA .pt-0 BYLA OSM MĚSÍCŮ MRTVÁ. Je deklarovaná výš
+   (`.pt-0{padding-top:0}`, stejná síla výběru 0-1-0), ale `.section` ji
+   přebíjí, protože stojí v souboru níž a zkrácený zápis `padding` přepíše
+   i horní stranu. Osm oddílů úvodní stránky si tedy v HTML říkalo „tady
+   nahoře nic nepřidávej" a stylopis to mlčky ignoroval.
+   Naměřeno na telefonu (390×844): mezi sousedními oddíly zelo 160–180 px
+   prázdna místo zamýšlených 80 — pětina obrazovky, a na úvodní stránce
+   osmkrát za sebou. Nic nespadlo, jen se stránka o 640 px natáhla.
+   Síla výběru 0-2-0 to drží bez ohledu na pořadí v souboru. */
+.section.pt-0{padding-top:0;}
 /* Pruhy: střídavé jemně světlejší pozadí přes celou šířku dávají webu rytmus
    (jako u velkých webů) — sekce pak nejsou ostrůvky textu v prázdnu. */
 .section.band{background:var(--ink-soft); border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding-top:var(--oddil-y); padding-bottom:var(--oddil-y);}
@@ -2450,6 +2517,12 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .auth-alt{text-align:center; font-size:14px; color:var(--text-ondark-mute); margin-top:1px;}
 .auth-link{background:none; border:none; font:inherit; font-weight:700; color:var(--copper-bright); cursor:pointer; padding:0; text-decoration:underline; text-underline-offset:2px;}
 .auth-msg{min-height:16px; text-align:center; margin:0;}
+/* Na „Můj inzerát" nese hláška obě třídy (class="add-msg auth-msg").
+   .add-msg si o dva řádky výš říká o `margin-top:2px`, ale zdejší
+   zkrácený `margin:0` ho přebíjí — stojí níž a je stejně silný.
+   Dva pixely nikoho netrápí, ale stylopis tvrdil dvě různé věci.
+   Tohle pravidlo říká nahlas, co se opravdu děje. */
+.add-msg.auth-msg{margin:0;}
 .auth-sent{text-align:center; animation:authFade .3s ease both;}
 .auth-sent-ico{width:60px; height:60px; margin:2px auto 14px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(126,196,157,0.12); border:1px solid var(--line-strong);}
 .auth-sent-ico svg{width:30px; height:30px; color:var(--text-ondark);}
@@ -2938,7 +3011,23 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
    místo klidného přejíždění z toho jsou přeskoky při každém rolování a
    táhne to s sebou i lepivou hlavičku. Na dotykových zařízeních proto
    přechod jen leží na ploše — rozdíl je na telefonu stejně sotva vidět. */
-body{background:var(--bg) var(--grad-plocha); background-size:cover;}
+/* PLOCHA STRÁNKY JE JEDNA BARVA, NE PŘECHOD.
+   Tady býval přechod „grad-plocha" — svislý, z teplé bílé do mentolové
+   → teplá bílá, k tomu `background-attachment:fixed`. Ten přechod se
+   nerolova­l s obsahem, takže barva PODKLADU ZÁLEŽELA NA TOM, KDE PRÁVĚ
+   JE OBSAH NA OBRAZOVCE. Naměřeno na cena-pozemku.html (1280×900):
+     obrazovka y=60   #F7F7F5   (skoro bílá, teplá)
+     obrazovka y=300  #DFEBE2   (mentolová)
+     obrazovka y=860  #EBECE6
+   Jedna a tatáž karta tedy ležela nahoře na teplé a uprostřed na studené
+   ploše — při rolování se jí měnil podklad pod rukama. Odtud ten dojem,
+   že web „nestojí pevně".
+   Druhá, přímo viditelná škoda: `--bg` je teplá #F1EFEA, ale plocha se
+   malovala přechodem, takže se nikde neukazovala. A číslice kroků
+   (.step .idx) si tou proměnnou prorážejí díru do vlásové linky — pod
+   „01 02 03" byly proto světlé teplé obdélníky s ostrou hranou na studené
+   ploše. Jedna barva navíc tohle spraví sama. */
+body{background:var(--bg);}
 @media (hover:hover) and (pointer:fine){
   body{background-attachment:fixed;}
 }
@@ -2968,13 +3057,18 @@ body{background:var(--bg) var(--grad-plocha); background-size:cover;}
      u akcentu, mez je 4,5 : 1 — a test kontrastu prochází celý web. */
   --copper-bright:#1F5138;
   --text-ondark-mute:#3E4A43;}
-.add-hero .aurora, .hero-map .aurora{display:none;}/* 3. Karty dostanou jemný lesk odshora — světlo dopadající na papír. */
+.add-hero .aurora, .hero-map .aurora{display:none;}
+/* 3. ZDE BÝVAL „JEMNÝ LESK ODSHORA" NA KARTÁCH. Nebyl.
+   `--grad-karta` byl `linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 100%)`,
+   tedy bílá do bílé — plochá výplň, která se jen tvářila jako přechod.
+   A i tak se třem ze čtyř míst nedostala: .faq-item a .okr-item si o kus
+   níž nastavují `background:none`, .opp-item už bílé je. Jedinému, komu
+   se dostala, to škodilo: .filter-chip má mít plochu --ink, a tahle bílá
+   ji přebíjela, takže štítky svítily bíle na bílé kartě.
+   Vrstva navíc při každém překreslení, popis, který lhal, a jeden
+   nechtěný následek. Je pryč i s proměnnou.
 
-
-.opp-item, .okr-item, .faq-item{background-image:var(--grad-karta);}
-
-/* 4. Štítky kategorií: barva se v nich přelévá místo placaté výplně. */
-.filter-chip{background-image:var(--grad-karta);}
+   4. Štítky kategorií: barva se v nich přelévá místo placaté výplně. */
 .okr-badge.t-sale{background-image:var(--grad-cool-soft);}
 .okr-badge.t-drazba, .okr-badge.t-exekuce, .okr-badge.t-majitel, .okr-badge.t-obec{background-image:var(--grad-warm-soft);}
 .okr-badge{border-color:currentColor;}
@@ -3279,7 +3373,10 @@ body::after{
 /* Barvu nese karta sama (--c-druh v atributu style), ne pořadí v mřížce.
    Dřív se barvila podle nth-child(2..4) — takže vložení pátého druhu
    doprostřed by tiše přebarvilo všechny za ním. */
-.status-card{background:none; background-image:var(--grad-druh-zavan); border:0;
+.status-card{background:none; border:0;
+  background-image:linear-gradient(90deg,
+    color-mix(in srgb, var(--c-druh, var(--accent-warm)) 14%, transparent),
+    transparent 240px);
   border-radius:0 var(--r-md) var(--r-md) 0;
   border-left:3px solid var(--c-druh, var(--accent-warm)); padding:12px 16px 16px; margin-bottom:20px;}
 .status-card:hover{transform:none; border-left-color:var(--c-druh, var(--accent-warm));}
@@ -3649,11 +3746,24 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 @media (min-width:1000px){
   .rail > .wrap{display:grid; grid-template-columns:172px minmax(0,1fr);
     column-gap:48px; align-items:start;}
-  .rail > .wrap > *{grid-column:2; min-width:0;}
-  /* Značka sahá přes hlavu i obsah. Kdyby seděla jen v prvním řádku, určovala
-     by jeho výšku a pod nadpisem by zela díra. */
-  .rail > .wrap > .rail-mark{grid-column:1; grid-row:1 / span 2; align-self:start;
+  /* SLOUPEC SE ZNAČKOU PLATÍ JEN PRVNÍ ŘÁDEK.
+     Dřív značka sahala `grid-row:1 / span 2`, tedy přes hlavu i obsah —
+     a protože je vysoká devadesát tři pixelů a sekce pět set, zbytek
+     sloupce byl prázdný po celou její výšku. Naměřeno na 1280 px, sedm
+     sekcí úvodní stránky:
+       kraje 219 · výhodné 260 · jak funguje 193 · stavy 386
+       od lidí 264 · slovníček 547 · časté dotazy 378
+     dohromady 2 247 px svisle × 220 px široký mrtvý pruh, tedy dvě a půl
+     obrazovky prázdného sloupce na jedné stránce. Obsah se přitom mačkal
+     do 916 px uvnitř 1 200px plochy.
+     Útvar zůstává: značka vedle nadpisu, nadpis sám, oko má kam zakotvit.
+     Jen obsah pod nimi jde přes obě sloupce a dostane celých 1 200 px.
+     Výška prvního řádku je max(značka, hlava); hlava je skoro vždycky
+     vyšší, a kde není, je díra ohraničená výškou značky, ne sekce. */
+  .rail > .wrap > *{grid-column:1 / -1; min-width:0;}
+  .rail > .wrap > .rail-mark{grid-column:1; grid-row:1; align-self:start;
     display:block; margin:0; padding-top:6px;}
+  .rail > .wrap > .section-head{grid-column:2; grid-row:1;}
   .rail > .wrap > .rail-mark .rm-n{display:block; font-weight:600;
     font-size:44px; line-height:1; letter-spacing:-0.035em;
     color:var(--text-ondark); margin-bottom:12px;}
@@ -4420,7 +4530,12 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
      (hledání nesmí spadnout pod obzor), kdežto popisek stojí vedle
      hodnoty, tedy na šířku — a té bylo na kartě naměřeno 179 až 193 px
      volných. */
-  .hh-fakta .hl-fact .hl-k{display:block; flex:0 0 auto; max-width:104px;
+  /* 104 px stačilo na IBM Plex Mono. Inter má verzálky širší: „NEJVÍC POD
+     CENOU" potřebuje při zdejším prostrkání 105 px a lámal se na dva
+     řádky — ta kartička pak byla o šest bodů vyšší než zbylé dvě
+     (naměřeno 38 a 44 px). Na kartě je volných 179 až 193 px, takže
+     širší sloupec tu nikomu nebere místo. */
+  .hh-fakta .hl-fact .hl-k{display:block; flex:0 0 auto; max-width:118px;
     font-size:10px; letter-spacing:.04em; line-height:1.15;}
   .hh-fakta .hl-fact .hl-v{font-size:13px;}
   .hh-fakta .hl-fact .hl-v b{font-size:15px;}

@@ -395,9 +395,11 @@ function head(title, desc, canonicalPath, ld, crumbs, ogSoubor){
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Písma leží u nás (fonts/), ne na Googlu. Přednačítají se, aby dojela
+       souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
+       kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
+  <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
   <link rel="stylesheet" href="css/styles.css?${V.css}">
 ${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\n' : ''}</head>
 <body>

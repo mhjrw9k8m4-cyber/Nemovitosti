@@ -182,6 +182,9 @@ jobs:
       - name: Tlačítko „nahoru" na dlouhých stránkách
         run: node scripts/test-nahoru.mjs
 
+      - name: Mlčky přebité třídy ve stylopisu
+        run: node scripts/test-prebiti.mjs
+
       - name: Dotykové terče na mobilu
         run: node scripts/test-dotyk.mjs
 
