@@ -34,7 +34,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=5938799e">
+  <link rel="stylesheet" href="css/styles.css?v=131d6106">
 
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"Article","headline":"Kolik stojí koupě pozemku: daně, poplatky a vklad","inLanguage":"cs","description":"Přehled všech nákladů při koupi pozemku v Česku — kupní cena, poplatek za vklad do katastru, advokát a úschova, provize a roční daň z nemovitosti.","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntityOfPage":"https://www.parcelaka.cz/kolik-stoji-koupe-pozemku.html"}
@@ -84,6 +84,49 @@
 
   <section class="section" style="padding-top:20px;">
     <div class="wrap add-wrap">
+
+      <!-- KALKULAČKA JE PRVNÍ, TEXT AŽ ZA NÍ.
+           Kdo sem přijde, chce vědět jedno číslo: kolik to celkem stojí.
+           Dřív tu bylo devět nadpisů textu a ani jedno vstupní pole,
+           takže si to musel sečíst sám. Vysvětlení jednotlivých položek
+           zůstává pod kalkulačkou — až pro toho, kdo se ptá proč. -->
+      <div class="add-card nak-karta">
+        <form id="naklady" class="nak-form" autocomplete="off" novalidate>
+          <h2 class="nak-h">Spočítejte si, kolik koupě stojí dohromady</h2>
+          <p class="nak-lead">Nic se nikam neodesílá — počítá se to tady v prohlížeči.</p>
+
+          <label class="nak-pole nak-hlavni" for="nak-cena">
+            <span class="nak-k">Kupní cena pozemku</span>
+            <span class="nak-vstup"><input id="nak-cena" type="number" inputmode="numeric" min="0" step="1000" placeholder="např. 450 000"><i>Kč</i></span>
+          </label>
+
+          <fieldset class="nak-volby">
+            <legend>Co se vás týká</legend>
+
+            <label class="nak-volba"><input type="checkbox" id="nak-advokat" checked>
+              <span class="nak-t">Smlouvu připraví advokát nebo notář</span>
+              <span class="nak-vstup"><input id="nak-advokat-kc" type="number" inputmode="numeric" min="0" step="500" value="6000"><i>Kč</i></span></label>
+
+            <label class="nak-volba"><input type="checkbox" id="nak-uschova" checked>
+              <span class="nak-t">Úschova peněz u advokáta nebo notáře</span>
+              <span class="nak-vstup"><input id="nak-uschova-kc" type="number" inputmode="numeric" min="0" step="500" value="5000"><i>Kč</i></span></label>
+
+            <label class="nak-volba"><input type="checkbox" id="nak-realitka">
+              <span class="nak-t">Kupuji přes realitní kancelář</span>
+              <span class="nak-vstup"><input id="nak-provize-pct" type="number" inputmode="decimal" min="0" max="20" step="0.5" value="4"><i>%</i></span></label>
+
+            <label class="nak-volba"><input type="checkbox" id="nak-geoplan">
+              <span class="nak-t">Bude potřeba geometrický plán</span>
+              <span class="nak-vstup"><input id="nak-geoplan-kc" type="number" inputmode="numeric" min="0" step="500" value="9000"><i>Kč</i></span></label>
+
+            <label class="nak-volba"><input type="checkbox" id="nak-posudek">
+              <span class="nak-t">Banka bude chtít znalecký posudek</span>
+              <span class="nak-vstup"><input id="nak-posudek-kc" type="number" inputmode="numeric" min="0" step="500" value="5000"><i>Kč</i></span></label>
+          </fieldset>
+
+          <div id="nak-vysledek" class="nak-vysledek" aria-live="polite"></div>
+        </form>
+      </div>
 
       <div class="add-card clanek">
         <div class="rules-sect">
@@ -183,6 +226,7 @@
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
 <script src="js/obsah.js?v=564d8537" defer></script>
+<script src="js/naklady.js?v=79b01717" defer></script>
 <script src="js/hlavicka.js?v=d154bfeb" defer></script>
 </body>
 </html>

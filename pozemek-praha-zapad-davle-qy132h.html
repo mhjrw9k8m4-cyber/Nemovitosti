@@ -39,7 +39,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=5938799e">
+  <link rel="stylesheet" href="css/styles.css?v=131d6106">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -125,6 +125,8 @@
        jak bude psaný — drží se proto na čtecí míře a odsazuje se jako
        odstavec, ne jako karta. Žádný rámeček: na stránce už tři jsou
        a čtvrtý by z ní udělal šuplíkový systém. */
+    .pz-naklady{margin:0 0 28px; font-size:14px; color:var(--text-ondark-mute);}
+    .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
     .pz-specs{border:1px solid var(--line-strong); border-radius:var(--r-plocha); overflow:hidden; background:var(--ink-soft); box-shadow:var(--e1);}
@@ -435,7 +437,7 @@
 <script src="js/radce.js?v=05a68e63"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Lesní pozemek 1 732 m² — Davle, okres Praha-západ","description":"Na prodej · 299 000 Kč (173 Kč/m²) · 1 732 m² · Davle, okres Praha-západ. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-praha-zapad-davle-qy132h.html","address":{"@type":"PostalAddress","addressLocality":"Davle","addressRegion":"Praha-západ","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.886698,"longitude":14.400328}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Praha-západ","item":"https://www.parcelaka.cz/pozemky-okres-praha-zapad.html"},{"@type":"ListItem","position":4,"name":"Lesní pozemek 1 732 m² — Davle, okres Praha-západ","item":"https://www.parcelaka.cz/pozemek-praha-zapad-davle-qy132h.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Davle|—|Praha-západ|49.887|14.400","ll":[49.886698,14.400328],"v":1732,"c":299000};</script>
-<script src="js/pozemek.js?v=59f5e1dd"></script>
+<script src="js/pozemek.js?v=65e7da70"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

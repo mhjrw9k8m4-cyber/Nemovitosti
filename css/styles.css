@@ -4615,3 +4615,53 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 .vm-ok{border-radius:var(--r-pill); min-height:50px; font-size:16px;
   transition:transform var(--cas-rychly) var(--ease), filter var(--cas-zakladni) var(--ease);}
 .vm-ok:active{transform:translateY(1px);}
+
+/* =====================================================================
+   KALKULAČKA NÁKLADŮ PŘI KOUPI
+   Formulář, ne karta na každé položce: pět řádků pod sebou, u každého
+   zaškrtávátko vlevo a částka vpravo. Kdyby měl každý řádek rámeček,
+   byla by z toho zase stěna krabiček — a to je přesně ta vada, kterou
+   tenhle web má na víc místech.
+   Výsledek je tabulka, protože to tabulka je: položka a částka. Čte ji
+   tak i odečítač obrazovky, což u součtu peněz není maličkost.
+   ------------------------------------------------------------------ */
+.nak-karta{margin-bottom:22px;}
+.nak-h{font-family:var(--font-display); font-size:24px; line-height:1.18; margin:0 0 6px;}
+.nak-lead{font-size:14px; color:var(--text-ondark-mute); margin:0 0 20px;}
+.nak-pole{display:block; margin:0 0 18px;}
+.nak-k{display:block; font-size:14px; font-weight:600; margin-bottom:6px;}
+.nak-vstup{position:relative; display:inline-flex; align-items:center;}
+.nak-vstup input{font:inherit; font-variant-numeric:tabular-nums; text-align:right;
+  width:140px; padding:10px 42px 10px 12px; border:1px solid var(--line-strong);
+  border-radius:var(--r-sm); background:var(--ink-soft); color:var(--text-ondark);
+  min-height:44px;}
+.nak-vstup input:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px;}
+.nak-vstup i{position:absolute; right:12px; font-style:normal; font-size:13px;
+  font-weight:600; color:var(--text-ondark-mute); pointer-events:none;}
+.nak-hlavni .nak-vstup input{width:180px; font-size:20px; font-weight:700;}
+.nak-volby{border:0; padding:0; margin:0 0 20px;}
+.nak-volby legend{font-size:12px; font-weight:700; letter-spacing:var(--popisek-proklad);
+  text-transform:uppercase; color:var(--popisek); padding:0; margin-bottom:10px;}
+.nak-volba{display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center;
+  gap:12px; padding:10px 0; border-top:1px solid var(--line); min-height:44px; cursor:pointer;}
+.nak-volba:last-child{border-bottom:1px solid var(--line);}
+.nak-volba > input[type=checkbox]{width:20px; height:20px; accent-color:var(--copper-bright); cursor:pointer;}
+.nak-volba .nak-t{font-size:14px;}
+.nak-volba .nak-vstup input{width:110px; padding:8px 38px 8px 10px; font-size:14px;}
+.nak-tab{width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums;}
+.nak-tab th{text-align:left; font-weight:600; font-size:14px; padding:9px 0; vertical-align:top;}
+.nak-tab th span{display:block; font-weight:400; font-size:12px; color:var(--text-ondark-mute);}
+.nak-tab td{text-align:right; font-size:16px; padding:9px 0; white-space:nowrap;}
+.nak-tab tr + tr th, .nak-tab tr + tr td{border-top:1px solid var(--line);}
+.nak-tab .nak-mezi th, .nak-tab .nak-mezi td{font-weight:700; border-top:1px solid var(--line-strong);}
+.nak-tab .nak-celkem th{font-size:16px; font-weight:700;}
+.nak-tab .nak-celkem td{font-family:var(--font-display); font-size:26px; font-weight:700;
+  color:var(--copper-bright); letter-spacing:-0.02em;}
+.nak-pozn{font-size:13px; line-height:1.55; color:var(--text-ondark-mute); margin:14px 0 0;
+  max-width:var(--m-text);}
+@media (max-width:560px){
+  .nak-volba{grid-template-columns:auto minmax(0,1fr); row-gap:6px;}
+  .nak-volba .nak-vstup{grid-column:2; justify-self:start;}
+  .nak-tab .nak-celkem td{font-size:22px;}
+}
+

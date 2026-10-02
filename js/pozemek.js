@@ -948,6 +948,15 @@
 
       pzPopisHtml(d) +
 
+      /* KOLIK TO BUDE STÁT DOHROMADY. Stránka říká cenu pozemku, ale ta
+         není celá pravda: k ní se přičte vklad do katastru, smlouva,
+         úschova a případně provize. Dosud se to člověk dozvěděl jen
+         z článku, kde si to musel sečíst sám. Odkaz nese cenu s sebou,
+         takže se kalkulačka otevře už vyplněná. */
+      (d.price ? '<p class="pz-naklady"><a href="kolik-stoji-koupe-pozemku.html?cena='
+        + encodeURIComponent(String(Math.round(d.price)))
+        + '">Spočítat, kolik koupě stojí dohromady</a> — vklad do katastru, smlouva, úschova.</p>' : '') +
+
       pzMapaHtml(d) +
 
       '<div class="pz-cta">' +

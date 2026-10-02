@@ -29,7 +29,12 @@ function otisk(rel) {
 // Odkaz na náš vlastní soubor s ?v=… — v href i v src.
 // Razítkuje se i vendor/ — mapová knihovna je teď na vlastním serveru
 // a její kopie v prohlížeči musí po výměně verze taky zestárnout.
-const VZOR = /((?:href|src)=")((?:css|js|vendor\/[a-z0-9-]+)\/[A-Za-z0-9_-]+\.(?:css|js))\?v=([A-Za-z0-9]+)(")/g;
+/* RAZÍTKO SMÍ CHYBĚT — ale jen do prvního průchodu tudy.
+   Vzor dřív vyžadoval `?v=…`, takže nově přidaný skript se neorazítkoval
+   NIKDY: nebylo co nahradit. Komentář nahoře přitom tvrdí, že zapomenout
+   se to nedá. Dalo: přidal jsem js/naklady.js bez razítka a chytla to až
+   zkouška v CI. Otazník s verzí je proto nepovinný a dopíše se sám. */
+const VZOR = /((?:href|src)=")((?:css|js|vendor\/[a-z0-9-]+)\/[A-Za-z0-9_-]+\.(?:css|js))(?:\?v=([A-Za-z0-9]+))?(")/g;
 
 const stranky = readdirSync(KOREN).filter((f) => f.endsWith('.html'));
 const otisky = new Map();
@@ -43,7 +48,11 @@ for (const f of stranky) {
     if (!otisky.has(soubor)) otisky.set(soubor, otisk(soubor));
     const o = otisky.get(soubor);
     if (!o) return cela;                       // soubor neexistuje — nesaháme
-    if (o !== stara) nesedi.push(`${f}: ${soubor} má ?v=${stara}, obsah odpovídá ${o}`);
+    if (o !== stara) {
+      nesedi.push(stara
+        ? `${f}: ${soubor} má ?v=${stara}, obsah odpovídá ${o}`
+        : `${f}: ${soubor} nemá razítko vůbec, obsah odpovídá ${o}`);
+    }
     return pre + soubor + '?v=' + o + post;
   });
   if (novy !== puvodni) {
