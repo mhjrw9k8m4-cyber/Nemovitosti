@@ -179,6 +179,9 @@ jobs:
       - name: Zaostření klávesnicí (vidí člověk, kde stojí)
         run: node scripts/test-zaostreni.mjs
 
+      - name: Tlačítko „nahoru" na dlouhých stránkách
+        run: node scripts/test-nahoru.mjs
+
       - name: Dotykové terče na mobilu
         run: node scripts/test-dotyk.mjs
 

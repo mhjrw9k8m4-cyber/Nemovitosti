@@ -661,7 +661,10 @@
   <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
 </footer>
 
-<button class="to-top" id="to-top" aria-label="Zpět nahoru"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 12l6-6 6 6"/></svg><span>Nahoru</span></button>
+<!-- Tlačítko „nahoru“ tu bývalo napsané v HTML — a jen tady, na jedné
+     stránce z 2 105. Teď ho dopisuje js/hlavicka.js, která je na všech, a
+     ukazuje ho na stránkách delších než tři obrazovky. Jedno místo, kde je
+     tlačítko popsané, aby se dvě kopie nerozchodily. -->
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <!-- Zásady soukromí / Podmínky (info) -->
@@ -689,7 +692,7 @@
 <script src="js/vybaveni.js?v=cae1f79b" defer></script>
 <script src="js/dotaz.js?v=341edd4b" defer></script>
 <script src="js/hledani.js?v=9b51ed6d" defer></script>
-<script src="js/main.js?v=cf7c518f" defer></script>
+<script src="js/main.js?v=847d6a60" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,
@@ -704,6 +707,6 @@
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
-<script src="js/hlavicka.js?v=cd7f79fb" defer></script>
+<script src="js/hlavicka.js?v=091fb0e3" defer></script>
 </body>
 </html>

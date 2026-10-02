@@ -315,21 +315,15 @@
      při pohybu zhasíná — a zbyla by nahoře sama: třípixelová linka, která
      se plní přes celou šířku obrazovky a neříká nic, co by člověk na
      stránce s výpisem pozemků potřeboval vědět. */
+  /* Tlačítko „nahoru" se odsud odstěhovalo do js/hlavicka.js. Tady bývalo
+     jen pro index.html — main.js je na třech stránkách z 2 105, hlavička
+     na všech. Dva ovladače jednoho tlačítka by si navzájem přehazovaly
+     třídu, a ten v hlavičce navíc hlídá délku stránky. Zůstalo tu jen
+     zmenšení hlavičky, které nikam jinam nepatří. */
   var header = document.getElementById('header');
-  var toTop = document.getElementById('to-top');
   window.addEventListener('scroll', function () {
-    var y = window.pageYOffset;
-    if (header) header.classList.toggle('shrink', y > 20);
-    /* „Nahoru" plave u pravého dolního rohu a v patičce sedělo přímo na
-       copyrightu. Kdo je u patičky, je na konci a chce její odkazy, ne skok
-       zpátky — tak mu uhneme. */
-    if (toTop) {
-      var patka = document.querySelector('footer');
-      var vPatce = patka && patka.getBoundingClientRect().top < window.innerHeight - 60;
-      toTop.classList.toggle('show', y > 500 && !vPatce);
-    }
+    if (header) header.classList.toggle('shrink', window.pageYOffset > 20);
   }, { passive: true });
-  if (toTop) toTop.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
   /* ---------- Scroll reveal ---------- */
   var reveals = document.querySelectorAll('.reveal');

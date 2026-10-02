@@ -184,3 +184,87 @@
     }
   } catch (e) {}
 })();
+
+/* Tlačítko „nahoru" na dlouhých stránkách.
+ *
+ * MĚŘENÍ, KTERÉ TO VYVOLALO (šířka 390 px, výška okna 844 px):
+ *   drazby-pozemku-nabidky   18 700 px = 22 obrazovek
+ *   pozemky-okres-praha-vychod  11 086 px = 13 obrazovek
+ *   cena-pozemku             10 287 px = 12 obrazovek
+ *   pozemky-podle-okresu      6 985 px =  8 obrazovek
+ *   okresní výpisy            5 693 px =  7 obrazovek
+ *   rádce                  3 300–4 500 px = 4–5 obrazovek
+ * Tlačítko přitom bylo jen v index.html — na jedné stránce z 2 105.
+ * Kdo dojel na konec dvaadvacetiobrazovkového výpisu dražeb, neměl
+ * čím se vrátit: hlavička je sice pevná, ale při pohybu zhasíná, a
+ * obsahový rozcestník rádců se na telefonu neukazuje vůbec.
+ *
+ * Proč skriptem a ne do HTML: stránek je 2 105 a většina se generuje.
+ * V index.html tlačítko v HTML zůstává (najde se a použije), jinde se
+ * dopíše — stránka bez skriptu tím nic neztratí, rolovat se dá pořád.
+ *
+ * Na krátkých stránkách se neukáže. Práh jsou tři obrazovky a počítá se
+ * při každém pohybu, ne jednou po načtení: výpisy dorůstají daty až po
+ * něm. Hlídání, zprávy, kontakt (1,8–2,4 obrazovky) tak zůstanou čisté —
+ * plovoucí knoflík na stránce, kde je konec na dosah, je jen smetí.
+ */
+(function () {
+  'use strict';
+  var PRAH_POSUNU = 500;      // dřív nemá smysl: nahoru je vidět
+  var PRAH_OBRAZOVEK = 3;     // kratší stránka tlačítko nedostane
+
+  var b = document.getElementById('to-top');
+  if (!b) {
+    b = document.createElement('button');
+    b.id = 'to-top';
+    b.className = 'to-top';
+    b.type = 'button';
+    b.setAttribute('aria-label', 'Zpět nahoru');
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">'
+      + '<path d="M12 19V6M6 12l6-6 6 6"/></svg><span>Nahoru</span>';
+    (document.body || document.documentElement).appendChild(b);
+  }
+
+  function dlouha() {
+    return document.documentElement.scrollHeight > window.innerHeight * PRAH_OBRAZOVEK;
+  }
+  /* U patičky tlačítko uhne. Kdo je na konci, chce její odkazy, ne aby
+     mu přes ně ležel knoflík — a zpátky nahoru se odtud dostane i tak. */
+  function vPatce() {
+    var p = document.querySelector('footer');
+    return !!p && p.getBoundingClientRect().top < window.innerHeight - 60;
+  }
+  function prekresli() {
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    b.classList.toggle('show', dlouha() && y > PRAH_POSUNU && !vPatce());
+  }
+
+  window.addEventListener('scroll', prekresli, { passive: true });
+  window.addEventListener('resize', prekresli, { passive: true });
+  /* Výpisy a mapa dorůstají po načtení — bez tohohle by se tlačítko na
+     dlouhé stránce objevilo až po prvním posunu po doplnění dat. */
+  if ('ResizeObserver' in window && document.body) {
+    try { new ResizeObserver(prekresli).observe(document.body); } catch (e) {}
+  }
+  prekresli();
+
+  b.addEventListener('click', function (e) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    /* Skok pohledem nestačí: kdo chodí klávesou, zůstal by v pořadí
+       tabulátoru dole u patičky a další Tab by ho vrátil tam, odkud
+       odjel. Kurzor proto putuje s obrazem.
+       NE NA <main>. Ten má v šabloně id="obsah" a je to cíl přeskakovacího
+       odkazu; dát mu tabindex="-1" a zaostřit ho znamená, že globální
+       pravidlo `:focus-visible{outline:2px}` obtáhne rámečkem celý obsah
+       stránky — dvoupixelová linka kolem všeho, co je vidět. Kurzor jde
+       proto na přeskakovací odkaz: ten se zaostřením sám ukáže („Přeskočit
+       na obsah"), takže je vidět, kde člověk stojí, a jedno Enter ho pustí
+       do textu. Další Tab pokračuje v menu, jako po načtení stránky.
+       Myší se kurzor nehýbe vůbec — jinak by klepnutí vytáhlo přeskakovací
+       odkaz na světlo někomu, kdo klávesnici nepoužívá. Klávesou vyvolané
+       kliknutí pozná `detail === 0`. */
+    if (e.detail !== 0) return;
+    var cil = document.querySelector('.skip-link') || document.querySelector('header a');
+    if (cil) { try { cil.focus({ preventScroll: true }); } catch (x) { cil.focus(); } }
+  });
+})();
