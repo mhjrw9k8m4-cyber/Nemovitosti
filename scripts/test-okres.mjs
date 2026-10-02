@@ -9,7 +9,7 @@
 // jako stupeň šířky (u nás je o třetinu kratší). Holedeč v okrese Louny
 // tak na webu visela jako okres Most. Takovou chybu člověk z kraje pozná
 // okamžitě — a přestane věřit i všemu ostatnímu.
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { okresPodleGPS, okresPodleHranice, maHranice, nejblizsiOkresniMesto } from './okres-podle-gps.mjs';
@@ -155,13 +155,45 @@ if (existsSync(HRUBE_SOUBOR)) {
   const daleko = K.poloha(50.0274, 15.2006, 'Cheb', HRUBE);
   pravda('Kolín zadaný jako Cheb neprojde', !daleko.ok, JSON.stringify(daleko));
   pravda('hláška řekne kolik km a který okres to je',
-    !!daleko.msg && /\d+ km/.test(daleko.msg) && daleko.msg.indexOf('Kolín') > -1,
+    !!daleko.msg && /\d+[\s\u00a0]km/.test(daleko.msg) && daleko.msg.indexOf('Kolín') > -1,
     daleko.msg);
   // Bez hranic (nenačetly se) se nehádá — inzerát nesmí uvíznout.
   pravda('bez načtených hranic kontrola pustí dál', K.poloha(50.0274, 15.2006, 'Cheb', null).ok);
   // Neznámý okres i chybějící souřadnice řeší jiné kontroly, ne poloha().
   pravda('neznámý okres poloha() neřeší', K.poloha(50.0274, 15.2006, 'Xyzabc', HRUBE).ok);
   pravda('bez souřadnic poloha() neřeší', K.poloha(null, null, 'Cheb', HRUBE).ok);
+}
+
+/* ---------- Dražba po termínu nepatří do výpisu ----------
+   Aplikace ji z výpisu, z mapy i z počtů vyřazuje — „dražit se nedá".
+   Generované stránky krajů a okresů to dlouho nedělaly, a přitom jsou to
+   právě ony, na které lidé chodí z vyhledávačů: tři dražby s termínem
+   včerejška na nich stály jako nabídka, zatímco mapa je už nepočítala.
+   Dvě odpovědi na tutéž otázku na témž webu.
+   Zdroj je drží jako „Uveřejněno", dokud je nezpracuje, a mezi dvěma běhy
+   robota (6 h) termín projít může — okno tedy musí zavřít obě strany. */
+{
+  const DNES = new Date(); DNES.setHours(0, 0, 0, 0);
+  const stranky = readdirSync(KOREN)
+    .filter((f) => /^pozemky-okres-.+\.html$/.test(f) || /^pozemky-.+-kraj\.html$/.test(f));
+  let sTerminem = 0;
+  const prosle = [];
+  for (const f of stranky) {
+    const html = readFileSync(path.join(KOREN, f), 'utf8');
+    for (const m of html.matchAll(/<div class="okr-item"[\s\S]*?<\/div>/g)) {
+      const den = /(\d{1,2})\.[\s\u00a0](\d{1,2})\.[\s\u00a0](\d{4})/.exec(m[0]);
+      if (!den) continue;
+      sTerminem++;
+      const t = new Date(+den[3], +den[2] - 1, +den[1]);
+      if (!isNaN(t) && t < DNES) prosle.push(`${f}: ${den[0]}`);
+    }
+  }
+  /* Pojistka: kdyby se tvar řádku změnil a datum se přestalo nacházet,
+     kontrola níž by prošla na prázdnu a mlčela by napořád. */
+  pravda('na regionálních stránkách se našly dražby s termínem', sTerminem >= 20,
+    `řádků s datem: ${sTerminem} na ${stranky.length} stránkách`);
+  pravda('a žádná z nich nemá termín v minulosti', prosle.length === 0,
+    prosle.slice(0, 5).join(', ') + (prosle.length > 5 ? ` …a dalších ${prosle.length - 5}` : ''));
 }
 
 console.log('\nZařazení pozemku do okresu');

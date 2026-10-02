@@ -78,15 +78,15 @@
   function vymera(v) {
     var n = cislo(v);
     if (n == null || n <= 0) return chyba('Zadejte prosím výměru v m².');
-    if (n < MEZE.vymeraMin) return chyba('Výměra pod ' + MEZE.vymeraMin + ' m² nevypadá jako pozemek — zkontrolujte ji.');
-    if (n > MEZE.vymeraMax) return chyba('Výměra nad ' + (MEZE.vymeraMax / 10000) + ' ha je nejspíš překlep.');
+    if (n < MEZE.vymeraMin) return chyba('Výměra pod ' + MEZE.vymeraMin + '\u00a0m² nevypadá jako pozemek — zkontrolujte ji.');
+    if (n > MEZE.vymeraMax) return chyba('Výměra nad ' + (MEZE.vymeraMax / 10000) + '\u00a0ha je nejspíš překlep.');
     return ok();
   }
 
   function cena(v) {
     var n = cislo(v);
     if (n == null || n <= 0) return chyba('Zadejte prosím cenu v Kč.');
-    if (n < MEZE.cenaMin) return chyba('Cena pod ' + MEZE.cenaMin + ' Kč vypadá jako překlep.');
+    if (n < MEZE.cenaMin) return chyba('Cena pod ' + MEZE.cenaMin + '\u00a0Kč vypadá jako překlep.');
     if (n > MEZE.cenaMax) return chyba('Cena nad 500 mil. Kč vypadá jako překlep.');
     return ok();
   }
@@ -98,9 +98,9 @@
     var c = cislo(cenaV), v = cislo(vymeraV);
     if (!c || !v || c <= 0 || v <= 0) return ok();
     var perM2 = c / v;
-    if (perM2 < MEZE.perM2Min) return chyba('Vychází ' + perM2.toFixed(2) + ' Kč/m² — zkontrolujte cenu a výměru.');
-    if (perM2 > MEZE.perM2Max) return chyba('Vychází ' + Math.round(perM2) + ' Kč/m², což je pro pozemek nereálné — zkontrolujte cenu a výměru.');
-    if (perM2 > 20000) return ok('Vychází ' + Math.round(perM2) + ' Kč/m² — u pozemku hodně vysoká cena. Sedí to?');
+    if (perM2 < MEZE.perM2Min) return chyba('Vychází ' + perM2.toFixed(2) + '\u00a0Kč/m² — zkontrolujte cenu a výměru.');
+    if (perM2 > MEZE.perM2Max) return chyba('Vychází ' + Math.round(perM2) + '\u00a0Kč/m², což je pro pozemek nereálné — zkontrolujte cenu a výměru.');
+    if (perM2 > 20000) return ok('Vychází ' + Math.round(perM2) + '\u00a0Kč/m² — u pozemku hodně vysoká cena. Sedí to?');
     return ok();
   }
 
@@ -223,8 +223,8 @@
   // Sedí místo pořízení fotky k obci z inzerátu?
   function fotkaMisto(vzdalenostKm) {
     if (vzdalenostKm == null) return ok();               // fotka souřadnice nemá
-    if (vzdalenostKm > 100) return chyba('byla vyfocena ' + Math.round(vzdalenostKm) + ' km od zadané obce — patří k tomuhle pozemku?');
-    if (vzdalenostKm > 25) return ok('jedna fotka vznikla ' + Math.round(vzdalenostKm) + ' km od zadané obce — zkontrolujte, že patří k pozemku.');
+    if (vzdalenostKm > 100) return chyba('byla vyfocena ' + Math.round(vzdalenostKm) + '\u00a0km od zadané obce — patří k tomuhle pozemku?');
+    if (vzdalenostKm > 25) return ok('jedna fotka vznikla ' + Math.round(vzdalenostKm) + '\u00a0km od zadané obce — zkontrolujte, že patří k pozemku.');
     return ok();
   }
 
@@ -432,7 +432,7 @@
     var km = kmVenZOkresu(lat, lng, hrube[jm]);
     if (km <= PRAH_KM) return ok();
     var kde = okresBodu(lat, lng, hrube);
-    return chyba('Podle obce vychází místo ' + Math.round(km) + ' km mimo okres ' + jm +
+    return chyba('Podle obce vychází místo ' + Math.round(km) + '\u00a0km mimo okres ' + jm +
       (kde ? ' — spíš to vypadá na okres ' + kde + '.' : '.') +
       ' Zkontrolujte prosím obec a okres, jinak by se pozemek ukázal jinde.');
   }

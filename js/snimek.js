@@ -108,8 +108,8 @@
   function popis(d) {
     if (!d.place) return '';
     var v = d.area > 0
-      ? (d.area >= 10000 ? (d.area / 10000).toFixed(d.area >= 100000 ? 0 : 1).replace('.', ',') + ' ha'
-                         : String(Math.round(d.area)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' m²')
+      ? (d.area >= 10000 ? (d.area / 10000).toFixed(d.area >= 100000 ? 0 : 1).replace('.', ',') + '\u00a0ha'
+                         : String(Math.round(d.area)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + '\u00a0m²')
       : '';
     return '<span class="sn-popis" aria-hidden="true">' +
       '<b>' + esc(d.place) + '</b>' +

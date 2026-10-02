@@ -1236,6 +1236,43 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
   }
 }
 
+/* ---- Předloha musí říkat, co šablona opravdu dělá ----------------
+   Vzorník měl u ukázek čísla napsaná ručně a rozešel se s webem:
+   sliboval nadpis stránky 44 px a váhu 800, zatímco css/styles.css ho
+   dělá 50 px a 700; u nadpisu sekce 30 px proti skutečným 33. Podle
+   takového vzorníku člověk něco navrhne a pak mu to nesedí — a nikdo
+   neví, které z těch dvou čísel platí.
+   Popisky teď dopisuje js/predloha-mery.js z vypočtených stylů, takže
+   se rozejít NEMŮŽOU. Hlídá se dvojí: že se vůbec dopsaly (rozbitý
+   skript by nechal prázdná místa a nikdo by si nevšiml) a že velikost
+   nadpisu stránky sedí na to, co stojí v šabloně. */
+{
+  const { ctx, p } = await otevri('predloha.html', 1280, 900);
+  await p.waitForTimeout(700);
+  const v = await p.evaluate(() => {
+    const mista = [...document.querySelectorAll('[data-mera]')];
+    const h1 = document.querySelector('.typ h1');
+    return {
+      mist: mista.length,
+      prazdnych: mista.filter((e) => !e.textContent.trim()).length,
+      bezCisla: mista.filter((e) => !/\d/.test(e.textContent)).length,
+      h1px: h1 ? Math.round(parseFloat(getComputedStyle(h1).fontSize)) : null,
+    };
+  });
+  pravda('předloha má ukázky s doplňovanou mírou', v.mist >= 5, `míst: ${v.mist}`);
+  pravda('a všechny se opravdu doplnily', v.prazdnych === 0 && v.bezCisla === 0,
+    `prázdných ${v.prazdnych}, bez čísla ${v.bezCisla}`);
+  const css = readFileSync(path.join(KOREN, 'css', 'styles.css'), 'utf8');
+  const vSablone = /(?:^|\n)h1\{[^}]*font-size:\s*(\d+)px/.exec(css);
+  pravda('v šabloně se našla velikost nadpisu stránky (jinak se nemá s čím porovnat)',
+    !!vSablone, 'pravidlo h1{…font-size} v css/styles.css nenalezeno');
+  if (vSablone) {
+    pravda('a předloha ukazuje touž velikost jako šablona',
+      v.h1px === +vSablone[1], `předloha ${v.h1px} px, šablona ${vSablone[1]} px`);
+  }
+  await ctx.close();
+}
+
 await prohlizec.close();
 console.log('\nRozvržení a popisky stránek');
 console.log(zpravy.join('\n'));

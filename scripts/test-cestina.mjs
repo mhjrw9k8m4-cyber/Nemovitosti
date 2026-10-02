@@ -117,6 +117,39 @@ for (const f of stranky) {
 pravda('tvar slova za číslem sedí (1 okres, 2 okresy, 5 okresů)', tvary.length === 0,
   [...new Set(tvary)].slice(0, 6).join('; ') + (tvary.length > 6 ? ` … a dalších ${tvary.length - 6}` : ''));
 
+/* ---------- SAZBA: nezlomitelné mezery ----------
+   Jednopísmenná předložka na konci řádku („…pak najdete v" a podstatné
+   jméno o řádek níž) je chyba, kterou čtenář nepojmenuje, ale vidí ji.
+   Naměřeno před opravou na vysázených řádcích: na telefonu 42 ze 664,
+   tedy každý šestnáctý; na rádcovských stránkách skoro každý dvanáctý.
+   Totéž platí pro číslo a jeho jednotku — „76 220" na konci řádku a „Kč"
+   na dalším je ta nejviditelnější podoba, protože cena je to nejčtenější,
+   co na webu je.
+
+   Sází to krok sestavení (scripts/sazba.mjs). Kontrola se neptá na vzor
+   znovu — to by byly dvě pravidla, která se dřív nebo později rozejdou —
+   ale pustí TÝŽ nástroj a ptá se, jestli mu ještě něco zbývá. */
+{
+  const { osaz } = await import('./sazba.mjs');
+
+  /* Nejdřív si ověř, že nástroj vůbec něco umí. Kdyby se osaz() rozbil
+     a vracel vstup beze změny, projde níž všechno a kontrola mlčí. */
+  const vzorek = '<p>Pozemky v okrese a cena 76 220 Kč.</p>';
+  const osazeny = osaz(vzorek);
+  pravda('sazeč umí osadit ukázku (jinak by kontrola mlčela)',
+    (osazeny.match(/\u00a0/g) || []).length >= 3, JSON.stringify(osazeny));
+
+  const neosazene = [];
+  for (const f of stranky) {
+    const html = readFileSync(f, 'utf8');
+    if (osaz(html) !== html) neosazene.push(f.split('/').pop());
+  }
+  pravda('každá stránka je vysázená — žádná jednopísmenná předložka ani jednotka s obyčejnou mezerou',
+    neosazene.length === 0,
+    neosazene.slice(0, 6).join(', ') + (neosazene.length > 6 ? ` … a dalších ${neosazene.length - 6}` : '') +
+    '  (spusťte node scripts/oprav.mjs)');
+}
+
 /* Kontrola samotné kontroly: bez ní by test mlčel i nad prázdnou složkou. */
 pravda('a prošly se opravdu všechny stránky', stranky.length >= 50,
   `našel jsem jen ${stranky.length} stránek`);

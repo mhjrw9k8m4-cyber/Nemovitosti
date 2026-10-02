@@ -28,6 +28,9 @@ const KROKY = [
   ['generate-region-pages.mjs', 'stránky krajů a okresů, čísla v úvodu, dražby, rozcestník, sitemap'],
   // Až PO regionálních: ty přepisují sitemap celou, tenhle krok se do ní dopisuje.
   ['generate-parcel-pages.mjs', 'vlastní stránka pro každý pozemek (sdílení a vyhledávače)'],
+  // Až po generátorech: česká sazba se dělá na HOTOVÉM textu, ať platí
+  // stejně pro ručně psané stránky i pro 1 995 generovaných.
+  ['sazba.mjs', 'nezlomitelné mezery (předložky, čísla s jednotkou)'],
   ['orazitkuj-verze.mjs', 'razítka ?v= u skriptů a stylů'],
   ['build-sql.mjs', 'sloučené supabase/00-vse.sql'],
 ];

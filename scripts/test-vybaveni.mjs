@@ -205,7 +205,7 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
   pravda('a pilulku bez nabídek vůbec neukáže', /p\.el\.hidden = !maSmysl/.test(main));
   pravda('index.html načítá js/vybaveni.js', /<script src="js\/vybaveni\.js/.test(idx));
   pravda('a stojí u toho, odkud se to bere',
-    /Podle toho, co stojí v popisu nabídky/.test(idx),
+    /Podle toho, co stojí[\s\u00a0]v[\s\u00a0]popisu nabídky/.test(idx),
     'bez téhle věty by to vypadalo, že nabídky bez popisu elektřinu nemají');
   /* Ze skutečných inzerátů vyšlo, že většina zmínek zní „možnost napojení"
      nebo „sítě na hranici pozemku" — ne „zavedeno na pozemku". Nadpis i
@@ -214,7 +214,7 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
     /Co uvádí inzerát/.test(idx) && !/Co je u pozemku<\/span>/.test(idx),
     'nadpis „Co je u pozemku" tvrdí, že tam ta síť je — inzeráty přitom často píšou jen „v dosahu"');
   pravda('a poznámka rozlišuje zavedeno od „v dosahu"',
-    /zavedená, nebo zatím jen v dosahu/.test(idx));
+    /zavedená, nebo zatím jen[\s\u00a0]v[\s\u00a0]dosahu/.test(idx));
 }
 
 /* --- 7) A je to taky VIDĚT? --------------------------------------------

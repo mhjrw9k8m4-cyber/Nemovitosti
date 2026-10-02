@@ -1024,7 +1024,10 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
   .hero-head .hero-ctas{margin-bottom:12px;}
 }
 @media (max-width:560px){
-  .hero-head h1{font-size:31px;}
+  /* Nadpis stránky na telefonu měl TŘI různé velikosti podle toho, jaká
+     stránka to je: úvod 31 px, běžná stránka 32, rádce 30. Rozdíl jednoho
+     pixelu nikdo nepozná jednotlivě — pozná se ale to, že web nemá míru. */
+  .hero-head h1{font-size:32px;}
   /* podnadpis necháme i na mobilu — vysvětluje smysl webu (na první dobrou) */
   .hero-head .sub{font-size:15px; margin-bottom:14px;}
   /* Číselný proužek (důvěra) necháme i na mobilu, jen kompaktnější. */
@@ -1569,7 +1572,9 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .deal-sub{font-size:13px; color:var(--text-ondark-mute); line-height:1.4;}
 /* Cena se nesmí zalomit: „86 356" na dvou řádcích jsou dvě čísla. */
 .deal-figs{display:block; white-space:nowrap; line-height:1.25; font-variant-numeric:tabular-nums;}
-.deal-figs b{display:block; font-size:18px; font-weight:700; color:var(--copper-bright);}
+/* Cena v kartičce tipu a cena v řádku výpisu jsou TÁŽ věc — dal jsem jim
+   omylem 18 a 16 px. Obě teď sedí na příčku 17 px. */
+.deal-figs b{display:block; font-size:17px; font-weight:700; color:var(--copper-bright);}
 .deal-figs span{display:block; font-size:12px; font-weight:600; color:var(--text-ondark-mute);}
 /* Na úzké kartě se dva sloupce nevejdou — cena jde pod popis, ale pořád
    zarovnaná vpravo, aby se dala projet očima stejně jako na široké. */
@@ -2495,7 +2500,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .add-cross .btn-primary{white-space:nowrap;}
 @media (max-width:640px){
   .add-hero{padding:96px 0 12px;}
-  .add-hero h1{font-size:30px;}
+  .add-hero h1{font-size:32px;}
   .add-row{grid-template-columns:1fr;}
   .faq{grid-template-columns:1fr;}
   .add-steps{grid-template-columns:1fr;}
@@ -2748,7 +2753,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
    místo uprostřed věty. Nezalomí se: „249 000" na dvou řádcích je
    dvě čísla. */
 .okr-item .okr-cena{display:block; white-space:nowrap; line-height:1.25;}
-.okr-item .okr-cena b{font-size:16px; font-weight:700; color:var(--text-ondark,#EAE6DD);}
+.okr-item .okr-cena b{font-size:17px; font-weight:700; color:var(--text-ondark,#EAE6DD);}
 .okr-item .okr-zametr{display:block; font-size:12px; font-weight:600; color:var(--text-ondark-mute);}
 /* Nabídka bez ceny se nesmí tvářit jako levná ani se schovat — sloupec
    zůstane, jen v něm stojí, že cena není. */
@@ -4049,7 +4054,11 @@ h1, h2, h3,
    nepotřebuje a na monitoru by z toho byla jen řídká plocha. */
 @media (pointer: coarse) {
   .mvt-btn, .mc-prep, .map-select, .msv-razeni .map-select,
-  .filter-chip, .map-near-btn { min-height:44px; }
+  /* „Zobrazit dražby po termínu" mělo 44 px jen náhodou: popisek se
+     zalomil na dva řádky. Jakmile se mezi slova dostala nezlomitelná
+     mezera (česká sazba), vešel se na jeden a tlačítko spadlo na 37 px.
+     Terč pro prst se nesmí opírat o to, kde zrovna text zalomí. */
+  .filter-chip, .map-near-btn, .mc-skryte { min-height:44px; }
   /* Hlavní tlačítko v hlavičce mělo 41 px — o tři chybějící pixely
      u toho nejdůležitějšího knoflíku na webu nemá cenu se hádat. */
   .header-cta { min-height:44px; }

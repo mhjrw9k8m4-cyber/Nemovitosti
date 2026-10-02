@@ -10,21 +10,23 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=26ae81ac">
+  <link rel="stylesheet" href="css/styles.css?v=185dbb0c">
   <style>
     /* Předloha je vzorník, ne stránka webu — má vlastní jednoduchou sazbu. */
     body{background:var(--bg);}
     .pz{max-width:var(--m-siroky); margin:0 auto; padding:48px 24px 96px;}
-    .pz h1{font-size:40px; margin-bottom:8px;}
+    /* Vlastní podoba nadpisů patří NAVIGACI předlohy, ne ukázkám — jinak
+       by vzorník měřil sám sebe místo webu. Ukázky stojí v .typ. */
+    .pz > h1{font-size:40px; margin-bottom:8px;}
     .pz > p.lede{color:var(--text-ondark-mute); font-size:17px; max-width:var(--m-text); margin-bottom:12px;}
-    .pz h2{font-size:24px; font-weight:800; letter-spacing:-0.02em; margin:56px 0 6px; padding-top:22px; border-top:1px solid var(--line);}
-    .pz h2:first-of-type{border-top:0;}
-    .pz h2 + p{color:var(--text-ondark-mute); font-size:15px; max-width:var(--m-text); margin-bottom:22px;}
-    .pz h3{font-size:15px; font-weight:700; margin:26px 0 12px;}
+    .pz > h2{font-size:24px; font-weight:800; letter-spacing:-0.02em; margin:56px 0 6px; padding-top:22px; border-top:1px solid var(--line);}
+    .pz > h2:first-of-type{border-top:0;}
+    .pz > h2 + p{color:var(--text-ondark-mute); font-size:15px; max-width:var(--m-text); margin-bottom:22px;}
+    .pz > h3{font-size:15px; font-weight:700; margin:26px 0 12px;}
     .mrizka{display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));}
     .vzorek{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:18px;}
     .vzorek .nazev{font-weight:700; font-size:14px; margin-bottom:3px;}
-    .vzorek .kod{font-family:var(--font-mono); font-size:11.5px; color:var(--text-ondark-mute); word-break:break-all;}
+    .vzorek .kod{font-family:var(--font-mono); font-size:12px; color:var(--text-ondark-mute); word-break:break-all;}
     .pole{height:66px; border-radius:var(--r-sm); margin-bottom:11px; display:grid; place-items:center;
       font-family:var(--font-mono); font-size:12px; font-weight:600;}
     .pomer{display:inline-block; margin-top:7px; font-family:var(--font-mono); font-size:11px; font-weight:600;
@@ -33,7 +35,7 @@
     .radaTvaru{display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;}
     .tvar{width:96px; height:70px; background:var(--ink-soft); border:1px solid var(--line-strong);
       display:grid; place-items:center; font-family:var(--font-mono); font-size:11px; color:var(--text-ondark-mute);}
-    .pozn{font-size:13.5px; color:var(--text-ondark-mute); line-height:1.6; margin-top:14px; padding-left:14px; border-left:3px solid var(--accent-warm);}
+    .pozn{font-size:14px; color:var(--text-ondark-mute); line-height:1.6; margin-top:14px; padding-left:14px; border-left:3px solid var(--accent-warm);}
     .typ p, .typ div{margin-bottom:10px;}
     .skala{font-family:var(--font-mono); font-size:11px; color:var(--text-ondark-mute); display:block; margin-top:2px;}
   </style>
@@ -42,10 +44,10 @@
 <div class="pz">
   <div class="eyebrow"><span class="live-dot"></span>Předloha</div>
   <h1>Vizuální jazyk Parcelky</h1>
-  <p class="lede">Vzorník, podle kterého se web staví. Vznikl proto, že v šabloně bylo
-     <b>71 různých stínů a 19 různých zaoblení</b> — nic z toho nebylo špatně samo o sobě,
+  <p class="lede">Vzorník, podle kterého se web staví. Vznikl proto, že v šabloně bylo
+     <b>71 různých stínů a 19 různých zaoblení</b> — nic z toho nebylo špatně samo o sobě,
      ale dohromady to nedávalo systém, takže se všechno opticky slilo dohromady. Tomu se říká
-     „suchý" web: technicky v pořádku, ale bez tvaru.</p>
+     „suchý" web: technicky v pořádku, ale bez tvaru.</p>
   <p class="lede">Tahle stránka není součástí webu (<code>noindex</code>). Je to nástroj:
      když se přidává nový prvek, vybere se odsud — ne vymyslí znovu.</p>
 
@@ -54,92 +56,104 @@
      nepotřebuje. Stíny jsou chladně modré, ne černé — černý stín na světlém pozadí dělá špínu.</p>
   <div class="mrizka" id="hloubka"></div>
   <div class="pozn">Pravidlo: <b>stupeň hloubky musí odpovídat tomu, jak moc prvek „leží nahoře"</b>.
-     Karta v seznamu je 1. Vyskakovací panel je 3. Když je všechno 2, nic nevystupuje.</div>
+     Karta v seznamu je 1. Vyskakovací panel je 3. Když je všechno 2, nic nevystupuje.</div>
 
   <h2>2. Tvary</h2>
   <p>Pět zaoblení místo devatenácti. Malé prvky mají malý rádius, velké velký — jinak vypadá
-     drobný štítek jako nafouklá bublina a velká karta jako ostrý papír.</p>
+     drobný štítek jako nafouklá bublina a velká karta jako ostrý papír.</p>
   <div class="radaTvaru" id="tvary"></div>
 
   <h3>Rohová značka</h3>
-  <p>Vlastní tvarový motiv. Pozemek se v katastru zaměřuje do rohů — a přesně tohle si web bere:
-     dvě vlasové linky v rohu karty. Je to nenápadné, ale je to <b>naše</b>, ne kulatý obdélník
-     jako u všech ostatních.</p>
+  <p>Vlastní tvarový motiv. Pozemek se v katastru zaměřuje do rohů — a přesně tohle si web bere:
+     dvě vlasové linky v rohu karty. Je to nenápadné, ale je to <b>naše</b>, ne kulatý obdélník
+     jako u všech ostatních.</p>
   <div class="mrizka">
-    <div class="vzorek s-rohy"><div class="nazev">Karta s rohovou značkou</div>
+    <div class="vzorek s-rohy"><div class="nazev">Karta s rohovou značkou</div>
       <div class="kod">.s-rohy</div></div>
     <div class="vzorek s-rohy s-rohy-med"><div class="nazev">Zvýrazněná (měděná)</div>
       <div class="kod">.s-rohy.s-rohy-med</div></div>
   </div>
 
   <h3>Zrno</h3>
-  <p>Plochy byly dokonale hladké — a to je právě to, co působí digitálně a mrtvě. Papír, plátno
+  <p>Plochy byly dokonale hladké — a to je právě to, co působí digitálně a mrtvě. Papír, plátno
      ani mapa hladké nejsou. Zrno je přes celou stránku, tak slabé, že se na něj nedá zaostřit:
-     naměřeno <b>2 % ztmavení</b>, takže na kontrast nemá vliv. Je to jeden obrázek generovaný
-     přímo v CSS, bez souboru navíc a bez animace.</p>
+     naměřeno <b>2 % ztmavení</b>, takže na kontrast nemá vliv. Je to jeden obrázek generovaný
+     přímo v CSS, bez souboru navíc a bez animace.</p>
 
   <h3>Katastrální mřížka</h3>
-  <p>Jemná síť v pozadí sekce. Dělá to, co chybělo: dává ploše texturu, aniž by křičela.
+  <p>Jemná síť v pozadí sekce. Dělá to, co chybělo: dává ploše texturu, aniž by křičela.
      Je tak slabá, že si jí nikdo přímo nevšimne — všimne si jen toho, že plocha není mrtvá.</p>
   <div class="vzorek s-mrizka" style="height:130px; display:grid; place-items:center;">
     <span class="kod">.s-mrizka</span></div>
 
   <h2>3. Barvy</h2>
-  <p>U každé je změřený poměr jasu proti pozadí, na kterém se používá. Zelený štítek = projde
+  <p>U každé je změřený poměr jasu proti pozadí, na kterém se používá. Zelený štítek = projde
      normou WCAG AA pro běžný text (4,5 : 1). Hlídá to <code>scripts/test-kontrast.mjs</code>.</p>
   <div class="mrizka" id="barvy"></div>
-  <div class="pozn">Barvy s příponou <b>-ink</b> jsou pro <b>text</b>. Syté odstíny bez přípony
-     patří na puntík v mapě a na výplň štítku — jako písmo by neprošly normou.</div>
+  <div class="pozn">Barvy s příponou <b>-ink</b> jsou pro <b>text</b>. Syté odstíny bez přípony
+     patří na puntík v mapě a na výplň štítku — jako písmo by neprošly normou.</div>
 
   <h2>4. Písmo</h2>
   <p><b>Tři písma, jak to mají velké realitní weby.</b> Patkové na nadpisy dává webu tvář
-     a vážnost, bezpatkové drží čitelnost textu a ovládání, strojové odlišuje čísla a štítky.
+     a vážnost, bezpatkové drží čitelnost textu a ovládání, strojové odlišuje čísla a štítky.
      Dvě písma dělají web korektní; teprve třetí mu dá charakter.</p>
   <div class="mrizka" style="margin-bottom:24px">
     <div class="vzorek"><div style="font-family:var(--font-display);font-size:30px;font-weight:700">Příliš žluťoučký</div>
       <div class="nazev" style="margin-top:8px">Nadpisy — Source Serif 4</div><div class="kod">var(--font-display)</div></div>
     <div class="vzorek"><div style="font-family:var(--font-ui);font-size:20px;font-weight:600">Příliš žluťoučký kůň</div>
-      <div class="nazev" style="margin-top:8px">Text a ovládání — Archivo</div><div class="kod">var(--font-ui)</div></div>
-    <div class="vzorek"><div style="font-family:var(--font-mono);font-size:17px;font-weight:500">1 951 · 800 m² · Kč</div>
-      <div class="nazev" style="margin-top:8px">Čísla a štítky — IBM Plex Mono</div><div class="kod">var(--font-mono)</div></div>
+      <div class="nazev" style="margin-top:8px">Text a ovládání — Archivo</div><div class="kod">var(--font-ui)</div></div>
+    <div class="vzorek"><div style="font-family:var(--font-mono);font-size:17px;font-weight:500">1 951 · 800 m² · Kč</div>
+      <div class="nazev" style="margin-top:8px">Čísla a štítky — IBM Plex Mono</div><div class="kod">var(--font-mono)</div></div>
   </div>
-  <p>Hierarchii dělá velikost a váha, ne bledost. Nic pod 600 u nadpisů.</p>
+  <p>Hierarchii dělá velikost a váha, ne bledost. Nic pod 600 u nadpisů.</p>
+  <!-- UKÁZKY SE KRESLÍ SKUTEČNÝMI TŘÍDAMI, ne vepsanými čísly. Dokud tu
+       čísla stála ručně, předloha LHALA: slibovala nadpis stránky 44 px
+       a váhu 800, zatímco šablona ho dělá 50 px a 700; u nadpisu sekce
+       30 px proti skutečným 33. Vzorník, který se rozejde s webem, je
+       horší než žádný — člověk podle něj něco navrhne a pak to nesedí.
+       Popisky dopisuje js/predloha-mery.js z vypočtených stylů té ukázky,
+       která je vedle, takže se rozejít nemůžou. -->
   <div class="typ">
-    <div style="font-size:44px; font-weight:800; letter-spacing:-0.028em; line-height:1.06;">Nadpis stránky<span class="skala">44 px · 800 · −0,028 em</span></div>
-    <div style="font-size:30px; font-weight:800; letter-spacing:-0.026em;">Nadpis sekce<span class="skala">30 px · 800 · −0,026 em</span></div>
-    <div style="font-size:20px; font-weight:700; letter-spacing:-0.012em;">Nadpis bloku<span class="skala">20 px · 700 · −0,012 em</span></div>
-    <p style="font-size:16px; max-width:var(--m-text);">Běžný text. Řádkování 1,58 a maximálně 64 znaků na řádek — delší řádek se špatně sleduje a oko ztrácí návaznost.<span class="skala">16 px · 400 · řádkování 1,58</span></p>
-    <p style="font-size:13.5px; color:var(--text-ondark-mute);">Doplňkový text a popisky.<span class="skala">13,5 px · 400 · tlumená</span></p>
-    <p class="mono" style="font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--copper-bright);">Nadřádek · strojové písmo<span class="skala">12 px · mono · verzálky</span></p>
+    <h1>Nadpis stránky<span class="skala" data-mera></span></h1>
+    <div class="section-head"><h2>Nadpis sekce<span class="skala" data-mera></span></h2></div>
+    <!-- Třetí příčka je nadpis oddílu v rádci. Holý <h3> web nikde
+         nedefinuje — měřením vyšlo, že h3 na stránkách sedí na 17, 24,
+         14 i 11 px podle toho, v čem zrovna stojí, a výchozích 18,72 px
+         z prohlížeče se nedrží nikde. Ukazovat tu tedy holý <h3> by byla
+         ukázka něčeho, co na webu neexistuje. -->
+    <div class="clanek"><div class="rules-sect"><h2>Nadpis oddílu v rádci<span class="skala" data-mera></span></h2></div></div>
+    <p style="max-width:var(--m-text);">Běžný text. Nejvýš čtyřiašedesát znaků na řádek — delší řádek se špatně sleduje a oko ztrácí návaznost.<span class="skala" data-mera></span></p>
+    <p class="okr-more">Doplňkový text a popisky.<span class="skala" data-mera></span></p>
+    <p class="eyebrow">Nadřádek · strojové písmo<span class="skala" data-mera></span></p>
   </div>
 
   <h2>5. Barevné přechody</h2>
   <p>Web měl barvu jen na tlačítkách, jinak samé plochy. Přechody jsou to, čím velké weby drží
      plochu živou: barva se plynule přelévá místo toho, aby se lámala hranou. Všechny vycházejí
-     ze <b>dvou</b> tónů, které web má — hluboké modři a mědi. Duha z osmi barev není přechod,
+     ze <b>dvou</b> tónů, které web má — hluboké modři a mědi. Duha z osmi barev není přechod,
      je to zmatek.</p>
   <div class="mrizka" id="prechody"></div>
   <div class="pozn">Text na barevné ploše potřebuje <b>vlastní tón</b>. Tam, kde se vrstvy meshe
      potkají, je podklad znatelně tmavší než zbytek stránky — běžný akcent tam klesl na 3,9 : 1.
      Úvodní plocha si proto uvnitř předefinuje <code>--copper-bright</code> a
      <code>--text-ondark-mute</code>. Okem se to nepozná; odhalil to až
-     <code>scripts/test-kontrast.mjs</code>, když se naučil měřit i přechody.</div>
+     <code>scripts/test-kontrast.mjs</code>, když se naučil měřit i přechody.</div>
 
   <h2>6. Tmavý pás</h2>
   <p>Web byl celý světlý — jedna dlouhá plocha bez nádechu. Tmavá sekce je to, čím velké weby
-     dělají rytmus: oko si odpočine a pak se znovu chytne. Na webu je <b>jedna</b>. Kdyby byly tři,
-     je z toho zase jednolitá plocha, jen tmavá.</p>
+     dělají rytmus: oko si odpočine a pak se znovu chytne. Na webu je <b>jedna</b>. Kdyby byly tři,
+     je z toho zase jednolitá plocha, jen tmavá.</p>
   <div style="background:linear-gradient(150deg,var(--ink-dark-2),var(--ink-dark) 58%,#0E1712);
               border-radius:var(--r-md); padding:26px; color:var(--text-ondeep); box-shadow:var(--e2);">
     <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-warm-bright);margin-bottom:8px">Nadřádek</div>
     <div style="font-family:var(--font-display);font-size:26px;font-weight:700;margin-bottom:6px">Nadpis na tmavém</div>
     <p style="color:var(--text-ondeep-mute);font-size:14.5px;margin:0">Tlumený text má na tmavém pásu vlastní odstín
        (<code style="font-family:var(--font-mono)">--text-ondeep-mute</code>, 10,8 : 1). Šeď ze světlého motivu by tu zmizela
-       a měď by zhnědla — proto i <code style="font-family:var(--font-mono)">--accent-warm-bright</code> (8,0 : 1).</p>
+       a měď by zhnědla — proto i <code style="font-family:var(--font-mono)">--accent-warm-bright</code> (8,0 : 1).</p>
   </div>
 
   <h2>7. Odstupy</h2>
-  <p>Násobky čtyřky. Když se míchají odstupy 13, 17 a 22 px, oko to nepozná jako rytmus,
+  <p>Násobky čtyřky. Když se míchají odstupy 13, 17 a 22 px, oko to nepozná jako rytmus,
      jen jako nepořádek.</p>
   <div id="odstupy" style="display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;"></div>
 </div>
@@ -223,5 +237,6 @@
   }).join('');
 })();
 </script>
+<script src="js/predloha-mery.js?v=632094db" defer></script>
 </body>
 </html>

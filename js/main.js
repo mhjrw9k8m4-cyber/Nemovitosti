@@ -121,7 +121,7 @@
 
   // Bez pojistky na null tu padne celé vykreslení, kdyby do čísla přišlo
   // prázdno. Táž podoba jako v js/pozemek.js, ať se ty dvě nerozcházejí.
-  function fmt(n){ return (n == null ? '' : n.toString()).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  function fmt(n){ return (n == null ? '' : n.toString()).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0'); }
   // Počet dní do termínu dražby z reálného data v poli extra (např. „dražba 2026-09-02")
   /* Termíny dražeb bere celý web z js/terminy.js. Tyhle funkce tu byly
      doslovně zkopírované i v js/pozemek.js — a dvě kopie znamenají, že se
@@ -138,7 +138,7 @@
   function zdrojText(extra){ return T.zdrojText(extra); }
   // Sestaví .ics událost (celodenní na den dražby) s připomínkou den předem
   function hasArea(d){ return typeof d.area === 'number' && d.area > 0; }
-  function areaTxt(d){ return hasArea(d) ? fmt(d.area) + ' m²' : 'neuvedena'; }
+  function areaTxt(d){ return hasArea(d) ? fmt(d.area) + '\u00a0m²' : 'neuvedena'; }
   // Číslo parcely nemají všechny zdroje (typicky inzeráty) — pak ho nezobrazujeme jako „—".
   function hasParcel(d){ return d.parcel && d.parcel !== '—' && d.parcel !== ''; }
   // Sloučení mnoha variant druhu do pár skupin pro filtr
@@ -1072,7 +1072,7 @@
       h += '<button type="button" class="rs-chip" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
         '<span class="rs-dot" style="background:' + TYPE[d.type].color + '"></span>' +
         '<span class="rs-place">' + d.place + '</span>' +
-        '<span class="rs-price">' + fmt(d.price) + ' Kč</span>' +
+        '<span class="rs-price">' + fmt(d.price) + ' Kč</span>' +
       '</button>';
     });
     h += '</div>';
@@ -2193,8 +2193,8 @@
         // Taky bez pádů: „Vaše okolí · Loučeň" sedne na každý název.
         var kde = mojeMisto.nazev ? ('Vaše okolí · ' + mojeMisto.nazev) : 'Vaše okolí';
         var sub = vOkruhu
-          ? ('do ' + km + ' km · ' + vOkruhu + ' ' + plPozemek(vOkruhu))
-          : ('do ' + km + ' km tu nic není — zkuste větší okruh');
+          ? ('do ' + km + ' km · ' + vOkruhu + ' ' + plPozemek(vOkruhu))
+          : ('do ' + km + ' km tu nic není — zkuste větší okruh');
         if (mojeMisto.pribl) sub += ' · poloha přibližná';
         krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>' + esc(kde) + '</b><span>' + sub + '</span></div>';
         krajHeadEl.hidden = false;
@@ -2308,8 +2308,8 @@
     }, 420);
     var kolik = DATA.filter(function (d) { return kmOd(mojeMisto, d) <= km; }).length;
     showToast(kolik
-      ? ('V okolí do ' + km + ' km ' + (kolik === 1 ? 'je 1 pozemek' : (kolik < 5 ? 'jsou ' + kolik + ' pozemky' : 'je ' + kolik + ' pozemků')) + '.')
-      : ('Do ' + km + ' km tu zatím nic není — zkuste větší okruh.'));
+      ? ('V okolí do ' + km + ' km ' + (kolik === 1 ? 'je 1 pozemek' : (kolik < 5 ? 'jsou ' + kolik + ' pozemky' : 'je ' + kolik + ' pozemků')) + '.')
+      : ('Do ' + km + ' km tu zatím nic není — zkuste větší okruh.'));
   }
   /** Vypne režim okolí a vrátí celou republiku. Místo zůstane uložené. */
   function vypniOkoli() {
@@ -2418,7 +2418,7 @@
             '<span class="vm-okruh-p" aria-hidden="true">Okruh</span>' +
             [2, 5, 10, 20, 50].map(function (v) {
               return '<label class="vm-km"><input type="radio" name="vm-km" value="' + v + '"' +
-                (v === km ? ' checked' : '') + '><span>' + v + ' km</span></label>';
+                (v === km ? ' checked' : '') + '><span>' + v + ' km</span></label>';
             }).join('') +
           '</fieldset>' +
           '<div class="vm-pocet" id="vm-pocet" aria-live="polite"></div>' +
@@ -2532,7 +2532,7 @@
          — kam až ten kruh sahá. */
       stitek.setLatLng([c.lat, c.lng + dLng]);
       var el = stitek.getElement();
-      if (el) el.firstChild.textContent = k + ' km';
+      if (el) el.firstChild.textContent = k + '\u00a0km';
     }
 
     /* KRUH JE ZEMĚPISNÁ VĚC a s oddálením se scvrkne — deset kilometrů
@@ -2700,14 +2700,14 @@
              se zmenšila mapa — tedy mapa poskočila pokaždé, když v okruhu
              nic nebylo. */
           rada = '<span class="vm-rada"><button type="button" class="vm-vetsi" data-km="' + vetsi + '">' +
-            'Zkusit ' + vetsi + ' km — ' + (pn >= 2 && pn <= 4 ? 'jsou tam ' : 'je tam ') +
+            'Zkusit ' + vetsi + ' km — ' + (pn >= 2 && pn <= 4 ? 'jsou tam ' : 'je tam ') +
             pn + ' ' + plPozemek(pn) + '</button></span>';
         } else {
           rada = '<span class="vm-rada">Tady není nic ani v nejširším okruhu — zkuste jiné místo.</span>';
         }
       }
       pocetEl.innerHTML = '<span class="vm-hlavni"><b>' + n + ' ' + plPozemek(n) + '</b>' +
-        ' v okruhu ' + k + ' km' +
+        ' v okruhu ' + k + '\u00a0km' +
         (obec ? ' <span class="vm-obec">u obce ' + esc(obec) + '</span>' : '') + '</span>' + rada +
         (rozpad ? '<span class="vm-rozpad">' + rozpad + '</span>' : '');
     }
@@ -3329,7 +3329,7 @@
       function () { maxPerM2 = 0; d.zaMetrDo = null; d.zaMetrOd = null; if (perm2El) perm2El.value = ''; },
       (function () { var a = maxPerM2, b = d.zaMetrDo, c = d.zaMetrOd;
         return function () { maxPerM2 = a; d.zaMetrDo = b; d.zaMetrOd = c; if (perm2El) perm2El.value = a ? String(a) : ''; }; }()),
-      maxPerM2 ? 'do ' + fmt(maxPerM2) + ' Kč/m²' : '');
+      maxPerM2 ? 'do ' + fmt(maxPerM2) + ' Kč/m²' : '');
     pol('vybavení z inzerátu', 'vybavení z inzerátu', !!(zadaneVybaveni.length || d.site.length || d.nejakeSite),
       function () { zadaneVybaveni = []; d.site = []; d.nejakeSite = false; },
       (function () { var a = zadaneVybaveni, b = d.site, c = d.nejakeSite;
@@ -3353,7 +3353,7 @@
       'Jen uložené');
     pol('okolí vašeho místa', 'okolí vašeho místa', okoliZap,
       function () { okoliZap = false; }, (function () { return function () { okoliZap = true; }; }()),
-      'Do ' + ((mojeMisto && mojeMisto.km) || 10) + ' km od ' + ((mojeMisto && mojeMisto.nazev) || 'vašeho místa'));
+      'Do ' + ((mojeMisto && mojeMisto.km) || 10) + ' km od ' + ((mojeMisto && mojeMisto.nazev) || 'vašeho místa'));
     return ven;
   }
 
@@ -3696,9 +3696,9 @@
            js/ceny.js), jenže ta dvě čísla svádějí k dělení i tak.
            Stačí u výměry říct, čeho se týká. */
         (hasArea(d)
-          ? '<span class="m">' + fmt(d.area) + ' m²' + (d.podil ? '<i class="m-celek">celá parcela</i>' : '') + '</span>'
+          ? '<span class="m">' + fmt(d.area) + '\u00a0m²' + (d.podil ? '<i class="m-celek">celá parcela</i>' : '') + '</span>'
           : '<span class="m">výměra neuvedena</span>') +
-        (perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') +
+        (perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') +
         // Vzdálenost se ukazuje vždycky, když je od čeho měřit — dřív jen při
         // řazení „podle okolí", takže si jí nikdo nevšiml.
         (function () {
@@ -3706,7 +3706,7 @@
           if (!od) return '';
           var km = kmOd(od, d);
           if (!isFinite(km)) return '';
-          return '<span class="opp-km">' + (km < 1 ? '<1' : Math.round(km)) + ' km</span>';
+          return '<span class="opp-km">' + (km < 1 ? '<1' : Math.round(km)) + ' km</span>';
         }());
       // Stavové odznaky pohromadě na jednom řádku
       var chips = [];
@@ -3807,7 +3807,7 @@
           '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '">' + (jeSkryty(d) ? '↩' : '✕') + '</button>' +
         '</div>' +
         '<div class="opp-body">' +
-          '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
+          '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
           '<span class="opp-place">' + d.place + '</span>' +
           (mistoRadek(d) ? '<div class="opp-loc">' + mistoRadek(d) + '</div>' : '') +
           (sub ? '<div class="opp-sub">' + sub + '</div>' : '') +
@@ -3936,13 +3936,13 @@
            „v Vysočina kraji" — a skloňovat názvy obcí spolehlivě neumíme
            (Praha → Prahy, Loučeň → Loučně, Brno → Brna…). Věta je proto
            postavená tak, aby název zůstal v prvním pádě. */
-        emptyMsg = 'Do ' + km0 + ' km od vašeho místa' +
+        emptyMsg = 'Do ' + km0 + ' km od vašeho místa' +
           (mojeMisto.nazev ? ' (' + esc(mojeMisto.nazev) + ')' : '') + ' teď nic není.' +
-          (navrh ? ' Do ' + navrh.km + ' km ' + (navrh.kolik === 1 ? 'je 1 pozemek' :
+          (navrh ? ' Do ' + navrh.km + ' km ' + (navrh.kolik === 1 ? 'je 1 pozemek' :
             (navrh.kolik < 5 ? 'jsou ' + navrh.kolik + ' pozemky' : 'je ' + navrh.kolik + ' pozemků')) + '.'
             : ' Ani ve větším okruhu zatím nic.');
         listEl.innerHTML = '<li class="map-count" style="padding:20px 6px; text-transform:none; font-weight:400; line-height:1.6;">' + emptyMsg +
-          (navrh ? '<br><button type="button" id="okoli-vic" class="reset-btn">Zvětšit okruh na ' + navrh.km + ' km</button>' : '') +
+          (navrh ? '<br><button type="button" id="okoli-vic" class="reset-btn">Zvětšit okruh na ' + navrh.km + ' km</button>' : '') +
           '<br><button type="button" id="okoli-pryc" class="reset-btn">Zobrazit celou ČR</button></li>';
         var vb = listEl.querySelector('#okoli-vic');
         if (vb) vb.addEventListener('click', function () {
@@ -4128,8 +4128,8 @@
         }
         el.value = String(v);
       };
-      dosad(cenaEl, mc, 'do ' + mc.toLocaleString('cs-CZ') + ' Kč');
-      dosad(areaEl, ma, 'od ' + ma.toLocaleString('cs-CZ') + ' m²');
+      dosad(cenaEl, mc, 'do ' + mc.toLocaleString('cs-CZ') + '\u00a0Kč');
+      dosad(areaEl, ma, 'od ' + ma.toLocaleString('cs-CZ') + '\u00a0m²');
       if (mc) maxPrice = mc;
       if (ma) minArea = ma;
       if (dv) {
@@ -4251,8 +4251,8 @@
            je popis toho, co se prodává. V ceně zůstává jen cena a cena za
            metr — jediné dvě čísla, kterými se dvě nabídky srovnávají.
            Stejné rozdělení má řádek ve výpisu okresu, ať to je jedna věc. */
-        '<div class="deal-sub">' + t.label + ' · ' + (d.druh || 'pozemek') + ' · ' + fmt(d.area) + ' m² · okres ' + d.okres + '</div>' +
-        '<div class="deal-figs"><b>' + fmt(d.price) + ' Kč</b><span>' + fmt(perM2) + ' Kč/m²</span></div>' +
+        '<div class="deal-sub">' + t.label + ' · ' + (d.druh || 'pozemek') + ' · ' + fmt(d.area) + ' m² · okres ' + d.okres + '</div>' +
+        '<div class="deal-figs"><b>' + fmt(d.price) + ' Kč</b><span>' + fmt(perM2) + ' Kč/m²</span></div>' +
       '</button>';
     }).join('');
     sec.hidden = false;
@@ -4294,7 +4294,7 @@
         '<span class="odl-badge">Přímo od majitele</span>' +
         '<span class="odl-place">' + d.place + '</span>' +
         '<span class="odl-sub">' + (d.druh || 'pozemek') + (d.okres ? ' · okres ' + d.okres : '') + '</span>' +
-        '<span class="odl-figs"><b>' + fmt(d.price) + ' Kč</b>' + (hasArea(d) ? '<span>' + fmt(d.area) + ' m²</span>' : '') + (perM2 ? '<span>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</span>' +
+        '<span class="odl-figs"><b>' + fmt(d.price) + ' Kč</b>' + (hasArea(d) ? '<span>' + fmt(d.area) + ' m²</span>' : '') + (perM2 ? '<span>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</span>' +
       '</button>';
     }).join('');
   }
@@ -5408,7 +5408,7 @@
       icon: L.divIcon({ className: 'pk-misto-wrap', html: '<span class="pk-misto"></span>',
         iconSize: [20, 20], iconAnchor: [10, 10] }),
       zIndexOffset: 900, interactive: false,
-      title: (mojeMisto.nazev || 'Vaše hlídané místo') + ' — okolí do ' + km + ' km'
+      title: (mojeMisto.nazev || 'Vaše hlídané místo') + ' — okolí do ' + km + '\u00a0km'
     }).addTo(map);
   }
 
@@ -5457,7 +5457,7 @@
     // Název obce zůstává v prvním pádě (viz pády výš) — „Hlídáme Praha
     // a okolí" by bylo špatně, „Hlídané místo: Praha" je vždycky správně.
     pod.textContent = (n.nazev !== 'vašeho místa' ? 'Hlídané místo: ' + n.nazev + ' · ' : 'Hlídané místo · ') +
-      'okolí do ' + n.okruh + ' km · je tu ' + n.celkem + ' ' +
+      'okolí do ' + n.okruh + ' km · je tu ' + n.celkem + ' ' +
       (n.celkem === 1 ? 'pozemek' : (n.celkem < 5 ? 'pozemky' : 'pozemků'));
     if (mistoKmEl) mistoKmEl.value = String(n.okruh);
   }

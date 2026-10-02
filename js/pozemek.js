@@ -24,9 +24,9 @@
     majitel: { label: 'Přímo od majitele',  color: tokenBarva('--c-majitel', '#8B4FE0'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
   };
 
-  function fmt(n) { return (n == null ? '' : n.toString()).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  function fmt(n) { return (n == null ? '' : n.toString()).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0'); }
   function hasArea(d) { return typeof d.area === 'number' && d.area > 0; }
-  function areaTxt(d) { return hasArea(d) ? fmt(d.area) + ' m²' : 'neuvedena'; }
+  function areaTxt(d) { return hasArea(d) ? fmt(d.area) + '\u00a0m²' : 'neuvedena'; }
   function hasParcel(d) { return d.parcel && d.parcel !== '—' && d.parcel !== ''; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
@@ -254,7 +254,7 @@
       (prosle
         ? '<p class="pzd-pozn">Záznam tu zůstává kvůli historii. U dražebníka si ověřte, jestli se vydražilo, nebo bude další kolo.</p>'
         : '<p class="pzd-pozn">' +
-            (d.price > 0 ? '<b>' + cenaSlovo + ' ' + fmt(d.price) + ' Kč.</b> ' : '') +
+            (d.price > 0 ? '<b>' + cenaSlovo + ' ' + fmt(d.price) + ' Kč.</b> ' : '') +
             '<b>Dražební jistotu</b> a závazné podmínky uvádí <b>dražební vyhláška</b> — tu v datech nemáme, ' +
             'přečtěte si ji u dražebníka. Jistota musí být připsaná <b>před zahájením</b>, ne v den dražby.</p>') +
       (deep ? '<a class="pzd-odkaz" href="' + esc(d.url) + '" target="_blank" rel="noopener">Podmínky u dražebníka' + VEN + '</a>' : '') +
@@ -845,7 +845,7 @@
     /* U podílu je v inzerátu výměra CELÉ parcely — v řádku „Výměra" to
        musí být napsané, jinak si ji každý vydělí cenou za podíl. */
     facts.push({ k: 'Výměra', v: areaTxt(d) + (d.podil && hasArea(d) ? ' <i class="pz-pozn">celá parcela — kupuje se jen podíl</i>' : '') });
-    if (perM2) facts.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²' + (perM2Pozn ? ' <i class="pz-pozn">' + esc(perM2Pozn) + '</i>' : '') });
+    if (perM2) facts.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²' + (perM2Pozn ? ' <i class="pz-pozn">' + esc(perM2Pozn) + '</i>' : '') });
     if (hasParcel(d)) facts.push({ k: 'Parcela', v: 'č. ' + esc(d.parcel) });
     facts.push({ k: 'Kategorie', v: esc(t.label) });
     if (d.extra) facts.push({ k: 'Stav / zdroj', v: esc(zdrojText(d.extra)) });
@@ -877,8 +877,8 @@
 
       '<div class="pz-priceblock">' +
         '<div class="pz-pl">' + priceLabel + '</div>' +
-        '<div class="pz-price"><span class="pv">' + fmt(d.price) + ' Kč</span>' +
-          (perM2 ? '<span class="pm"' + (perM2Pozn ? ' title="' + esc(perM2Pozn) + '"' : '') + '>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
+        '<div class="pz-price"><span class="pv">' + fmt(d.price) + ' Kč</span>' +
+          (perM2 ? '<span class="pm"' + (perM2Pozn ? ' title="' + esc(perM2Pozn) + '"' : '') + '>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
       '</div>' +
 
       /* Po termínu se blok jen vynechával, takže stránka vypadala jako
@@ -990,7 +990,7 @@
     try { pripravMapu(d); } catch (e) {}
 
     // titulek stránky a vlastní adresa v kanonickém odkazu
-    try { document.title = d.place + ' — ' + fmt(d.price) + ' Kč · Parcelka'; } catch (e) {}
+    try { document.title = d.place + ' — ' + fmt(d.price) + ' Kč · Parcelka'; } catch (e) {}
     /* Kanonická adresa je VLASTNÍ stránka pozemku, ne obecná pozemek.html
        s dotazem. Sdílený odkaz tím vede tam, kde má každá nabídka svůj
        titulek, popis i náhled — přes „?p=…" viděl Facebook u všech 1 927
@@ -1014,7 +1014,7 @@
          přesně ta chvíle, kdy na náhledu záleží nejvíc. */
       var url = location.origin + '/' + vlastniAdresa(d);
       var title = 'Pozemek ' + d.place + ' — Parcelka';
-      var text = t.label + ' · ' + d.place + ', okres ' + d.okres + ' · ' + areaTxt(d) + ' · ' + fmt(d.price) + ' Kč';
+      var text = t.label + ' · ' + d.place + ', okres ' + d.okres + ' · ' + areaTxt(d) + ' · ' + fmt(d.price) + '\u00a0Kč';
       if (navigator.share) { navigator.share({ title: title, text: text, url: url }).catch(function () {}); }
       else if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).then(function () { toast('Odkaz zkopírován'); }); }
       else { toast(url); }

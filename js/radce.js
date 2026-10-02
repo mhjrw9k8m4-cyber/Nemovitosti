@@ -47,7 +47,7 @@
        něco mění: u zemědělské půdy se z výměry počítá odvod za vynětí,
        u lesa se od hektaru mění pravidlo pro dělení. */
     var a = (d && maVymeru(d)) ? d.area : 0;
-    var zVymery = a ? ' Odvod za vynětí se počítá z <b>výměry</b> — tady z ' + m2(a) + ' m².' : '';
+    var zVymery = a ? ' Odvod za vynětí se počítá z <b>výměry</b> — tady z ' + m2(a) + ' m².' : '';
     if (g === 'Stavební / zastavěná' && /zastav/.test(dr)) {
       return { lvl: 'mid', txt: 'V katastru vedeno jako <b>zastavěná plocha a nádvoří</b> — podle zápisu na pozemku <b>něco stojí</b> nebo stálo. Zjistěte, co to je, jestli je to v ceně a v jakém je stavu; u stavby se kupuje i to, co je pod ní.' };
     }
@@ -63,8 +63,8 @@
       case 'Lesní pozemek':
         return { lvl: 'warn', txt: '<b>Lesní pozemek</b> pod ochranou lesního zákona — výstavba je prakticky vyloučená a s lesem je spojená <b>povinnost hospodařit</b>. Rozdělení lesního pozemku pod jeden hektar navíc vyžaduje souhlas úřadu.'
           + (a ? (a < 10000
-              ? ' Tenhle má <b>' + m2(a) + ' m²</b>, tedy pod hektar — na dělení by souhlas potřeba byl.'
-              : ' Tenhle má <b>' + ha(a) + ' ha</b>, takže nad hranici jednoho hektaru.')
+              ? ' Tenhle má <b>' + m2(a) + ' m²</b>, tedy pod hektar — na dělení by souhlas potřeba byl.'
+              : ' Tenhle má <b>' + ha(a) + ' ha</b>, takže nad hranici jednoho hektaru.')
             : '') };
       case 'Vinice / sad':
         return { lvl: 'warn', txt: 'Zemědělská kultura (vinice nebo sad). Ke stavbě je potřeba změna využití a vynětí ze ZPF.' + zVymery };
@@ -154,13 +154,13 @@
     if (!maVymeru(d)) return null;
     var a = d.area;
     if (a < 300) {
-      return { lvl: 'mid', txt: '<b>' + m2(a) + ' m²</b> je na samostatné využití málo. Takhle malé parcely se nejčastěji hodí k <b>rozšíření sousedního pozemku</b> — nebo jde o podíl či zbytkový díl po dělení.' };
+      return { lvl: 'mid', txt: '<b>' + m2(a) + ' m²</b> je na samostatné využití málo. Takhle malé parcely se nejčastěji hodí k <b>rozšíření sousedního pozemku</b> — nebo jde o podíl či zbytkový díl po dělení.' };
     }
     if (a > 50000) {
-      return { lvl: 'mid', txt: '<b>' + ha(a) + ' ha</b> (' + m2(a) + ' m²). Počítejte s <b>daní z nemovitých věcí</b> každý rok a s tím, že taková plocha sama neleží ladem — obvykle se <b>propachtuje</b> zemědělci. Zjistěte si, jestli na ní pacht už neběží a do kdy.' };
+      return { lvl: 'mid', txt: '<b>' + ha(a) + ' ha</b> (' + m2(a) + ' m²). Počítejte s <b>daní z nemovitých věcí</b> každý rok a s tím, že taková plocha sama neleží ladem — obvykle se <b>propachtuje</b> zemědělci. Zjistěte si, jestli na ní pacht už neběží a do kdy.' };
     }
     if (a > 10000) {
-      return { lvl: 'mid', txt: '<b>' + ha(a) + ' ha</b> (' + m2(a) + ' m²) půdy. U takové výměry se vyplatí zjistit, jestli na pozemku <b>neběží pacht</b> — nájem zemědělské půdy se ukončuje s výpovědní dobou, ne ze dne na den.' };
+      return { lvl: 'mid', txt: '<b>' + ha(a) + ' ha</b> (' + m2(a) + ' m²) půdy. U takové výměry se vyplatí zjistit, jestli na pozemku <b>neběží pacht</b> — nájem zemědělské půdy se ukončuje s výpovědní dobou, ne ze dne na den.' };
     }
     return null;
   }
@@ -184,8 +184,8 @@
       var cis = function (n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0'); };
       var muj = (root.PK_CENY && root.PK_CENY.zaMetr) ? root.PK_CENY.zaMetr(d) : null;
       var cisla = (muj && o.zaM2)
-        ? ' Vychází to na <b>' + cis(muj) + ' Kč/m²</b> proti obvyklým <b>' + cis(o.zaM2) +
-          ' Kč/m²</b> (srovnáno s ' + o.vzorek + ' ' +
+        ? ' Vychází to na <b>' + cis(muj) + ' Kč/m²</b> proti obvyklým <b>' + cis(o.zaM2) +
+          ' Kč/m²</b> (srovnáno s ' + o.vzorek + ' ' +
           (o.vzorek === 1 ? 'nabídkou' : (o.vzorek < 5 ? 'nabídkami' : 'nabídkami')) + ').'
         : '';
       /* PODÍL SE ŘEŠÍ DŘÍV NEŽ „POCHYBNÁ CENA". U podílu se procento
@@ -216,7 +216,7 @@
           '<b>není to sleva</b>: prodává se <b>spoluvlastnický podíl</b>, zatímco výměra v inzerátu je ' +
           'celé parcely. ' +
           (zl && zm
-            ? 'V ceně je zhruba <b>' + cis(zl) + ' m²</b>, tedy <b>' + cis(zm) + ' Kč/m²</b> z toho, co vám připadne. '
+            ? 'V ceně je zhruba <b>' + cis(zl) + ' m²</b>, tedy <b>' + cis(zm) + ' Kč/m²</b> z toho, co vám připadne. '
             : 'Kolik metrů vám připadne, se z inzerátu nedá spočítat. ') +
           'S podílem navíc nemůžete nakládat sám — potřebujete ostatní spoluvlastníky.' };
       }

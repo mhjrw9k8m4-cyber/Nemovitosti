@@ -380,7 +380,7 @@
         { obec: val('p-obec'), okres: val('p-okres'), vymera: val('p-vymera') }, moje);
       if (!shoda) return '';
       duplPotvrzeno = true;     // podruhé to projde
-      var kolik = shoda.area ? (' ' + String(shoda.area).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' m²') : '';
+      var kolik = shoda.area ? (' ' + String(shoda.area).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + '\u00a0m²') : '';
       return 'V „Moje inzeráty" už máte pozemek ' + shoda.place + kolik
         + '. Je to tentýž? Pak raději upravte ten stávající — dva stejné inzeráty '
         + 'zájemce jen zmatou. Jestli jde opravdu o jiný pozemek, klepněte na Zveřejnit ještě jednou.';
@@ -699,7 +699,7 @@
   function updPerm2() {
     var h = document.getElementById('perm2-hint'); if (!h) return;
     var v = parseInt(val('p-vymera'), 10), c = parseInt(val('p-cena'), 10);
-    h.textContent = (v > 0 && c > 0) ? ('≈ ' + Math.round(c / v).toLocaleString('cs-CZ') + ' Kč/m²') : '';
+    h.textContent = (v > 0 && c > 0) ? ('≈ ' + Math.round(c / v).toLocaleString('cs-CZ') + ' Kč/m²') : '';
   }
   // Živý náhled inzerátu — skládá se, jak uživatel vyplňuje
   var previewCard = document.getElementById('live-preview');
@@ -710,11 +710,11 @@
     setTxt('lp-place', val('p-obec') || 'Vaše obec');
     var meta = [];
     if (val('p-okres')) meta.push('okres ' + val('p-okres'));
-    if (val('p-vymera')) meta.push(val('p-vymera') + ' m²');
+    if (val('p-vymera')) meta.push(val('p-vymera') + '\u00a0m²');
     setTxt('lp-meta', meta.join(' · ') || 'výměra · okres');
     var c = parseInt(val('p-cena'), 10), v = parseInt(val('p-vymera'), 10);
-    setTxt('lp-price', c > 0 ? (c.toLocaleString('cs-CZ') + ' Kč') : 'Cena');
-    setTxt('lp-perm2', (c > 0 && v > 0) ? (Math.round(c / v).toLocaleString('cs-CZ') + ' Kč/m²') : '');
+    setTxt('lp-price', c > 0 ? (c.toLocaleString('cs-CZ') + '\u00a0Kč') : 'Cena');
+    setTxt('lp-perm2', (c > 0 && v > 0) ? (Math.round(c / v).toLocaleString('cs-CZ') + ' Kč/m²') : '');
     var desc = val('p-popis');
     var dEl = document.getElementById('lp-desc');
     if (dEl) { dEl.textContent = desc; dEl.hidden = !desc; }

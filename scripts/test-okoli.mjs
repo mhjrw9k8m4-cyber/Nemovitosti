@@ -208,7 +208,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
      kilometrů na mapě dokáže představit. Proto se od středu ke kraji
      táhne měřítko s číslem — a okruh se vybírá z viditelné řady, ne
      ze zabaleného seznamu, ve kterém není vidět, co všechno jde zvolit. */
-  pravda('velikost okruhu je napsaná přímo na mapě', /^\d+ km$/.test(vk.meritko.trim()), `měřítko: „${vk.meritko}"`);
+  pravda('velikost okruhu je napsaná přímo na mapě', /^\d+[\s\u00a0]km$/.test(vk.meritko.trim()), `měřítko: „${vk.meritko}"`);
   pravda('okruh se vybírá z viditelné řady možností', v.kmMoznosti >= 5, `možností: ${v.kmMoznosti}`);
   /* TAŽENÍ ZNAČKY. Klepnutím se místo vybere, ale doladit se tím nedá:
      kdo se trefí o dvě stě metrů vedle, klepe znovu a doufá. Značka se
@@ -393,7 +393,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
     });
     pravda('klepnutí na ně okruh ukáže', zpet.zoom > dolu, `${dolu} → ${zpet.zoom}`);
     pravda('tlačítko pak zmizí, protože už není k čemu', zpet.tlacitko === false);
-    pravda('a popisek s kilometry je zase celý', /^\d+ km$/.test(zpet.meritko),
+    pravda('a popisek s kilometry je zase celý', /^\d+[\s\u00a0]km$/.test(zpet.meritko),
       `měřítko: „${zpet.meritko}"`);
     /* Schování kruhu je dočasné, ne vypnutí funkce: jakmile je okruh
        zase větší než značka, musí se kreslit. Bez téhle druhé půlky by
@@ -664,7 +664,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
       });
       pravda('na prázdném okolí to opravdu hlásí nulu (jinak se neměří ten případ)',
         /^0 /.test(stav.text), `stojí tam „${stav.text.slice(0, 70)}"`);
-      pravda('a nabídne širší okruh, ve kterém něco je', !!stav.tlacitko && /\d+ km/.test(stav.tlacitko.t),
+      pravda('a nabídne širší okruh, ve kterém něco je', !!stav.tlacitko && /\d+[\s\u00a0]km/.test(stav.tlacitko.t),
         `pod nulou nestojí žádná cesta ven: „${stav.text.slice(0, 90)}"`);
       pravda('a to tlačítko se dá trefit prstem', !!stav.tlacitko && stav.tlacitko.v >= 44,
         stav.tlacitko ? `${stav.tlacitko.v} px` : '(není)');
@@ -824,7 +824,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
     v.vSeznamu === (parseInt(nabidka, 10) || -1),
     `výběr sliboval „${nabidka.trim()}", v seznamu je ${v.vSeznamu}`);
   pravda('hlavička nad mapou říká, že jde o okolí', /okolí/i.test(v.hlavicka), v.hlavicka);
-  pravda('a uvádí okruh v kilometrech', /\d+ km/.test(v.pod), v.pod);
+  pravda('a uvádí okruh v kilometrech', /\d+[\s\u00a0]km/.test(v.pod), v.pod);
   // Hlídané místo musí být vidět i na hlavní mapě, ne jen v textu nad ní.
   pravda('hlídané místo je vidět na hlavní mapě', v.znacka,
     'na mapě se neobjevilo nic — text se změnil, ale mapa zůstala stejná');
@@ -886,7 +886,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
   });
   pravda('větší okruh ukáže víc pozemků', siroky.n > v.vSeznamu,
     `do 10 km ${v.vSeznamu}, do 50 km ${siroky.n}`);
-  pravda('a hlavička se změní taky', /50 km/.test(siroky.pod), siroky.pod);
+  pravda('a hlavička se změní taky', /50[\s\u00a0]km/.test(siroky.pod), siroky.pod);
 
   // Místo se dá vybrat ZNOVU — ne že jednou klepnu a je konec.
   const jdeZmenit = await p.locator('#misto-zmenit').isVisible().catch(() => false);
@@ -1101,7 +1101,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
     'hledání je zpátky v panelu');
   pravda('a nečeká se na to deset vteřin', cekani < 8,
     `okno přišlo až po ${cekani.toFixed(1)} s — tak dlouhé ticho se čte jako „nefunguje to"`);
-  pravda('tlačítko se potom dá zase zmáčknout', v.zakazano === false && /Pozemky v okolí/.test(v.tlacitko),
+  pravda('tlačítko se potom dá zase zmáčknout', v.zakazano === false && /Pozemky[\s\u00a0]v[\s\u00a0]okolí/.test(v.tlacitko),
     `zůstalo „${v.tlacitko.trim()}", zakázané: ${v.zakazano}`);
   await ctx.close();
 }
@@ -1278,7 +1278,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
        který by skončil na značce. To jsou dva různé důvody a nesmí se
        slít do jednoho. */
     pravda('ale popisek s číslem zůstane, přetékající kruh ho nezakrývá',
-      velky && velky.popisek === true && /^\d+ km$/.test(velky.meritko),
+      velky && velky.popisek === true && /^\d+[\s\u00a0]km$/.test(velky.meritko),
       `popisek vidno: ${velky && velky.popisek}, text „${velky && velky.meritko}"`);
     await ctx.close();
   }

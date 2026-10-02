@@ -153,8 +153,30 @@ for(const f of fs.readdirSync(ROOT)){
   if(/^pozemky-okres-.+\.html$/.test(f) || /^pozemky-.+-kraj\.html$/.test(f)) fs.rmSync(path.join(ROOT,f));
 }
 
+/* DRAŽBA PO TERMÍNU UŽ NENÍ PŘÍLEŽITOST — dražit se nedá. Aplikace ji
+   z výpisu, z mapy i z počtů vyřazuje (js/main.js: „Dražba po termínu už
+   není příležitost"), ale tyhle stránky ne — a jsou to právě ony, na které
+   lidé chodí z vyhledávačů. Naměřeno: tři dražby s termínem včerejška
+   stály na okresních stránkách jako nabídka, zatímco mapa je už
+   nepočítala. Dvě odpovědi na tutéž otázku na témž webu.
+   Zdroj je drží jako „Uveřejněno", dokud je nezpracuje, a mezi dvěma běhy
+   robota (6 h) termín projít může — tohle tedy není chyba dat, ale okno,
+   které musí zavřít obě strany stejně.
+   Stránka pozemku zůstává (odkaz z e-mailu nebo ze záložek nesmí spadnout
+   na 404); vypíná se jen její řádek ve výpisu a započítání do součtů. */
+const DNES = new Date(); DNES.setHours(0, 0, 0, 0);
+function proslyTermin(o){
+  const m = /(\d{4})-(\d{2})-(\d{2})/.exec(o.extra || '');
+  if(!m) return false;
+  const t = new Date(+m[1], +m[2] - 1, +m[3]);
+  return !isNaN(t) && t < DNES;
+}
+const prosle = all.filter(proslyTermin);
+const aktualni = all.filter((o) => !proslyTermin(o));
+if(prosle.length) console.log(`Po termínu vynecháno: ${prosle.length} (zůstalo ${aktualni.length}) — stejně jako v aplikaci.`);
+
 const byOkres = {}, byKraj = {};
-for(const o of all){
+for(const o of aktualni){
   if(o.okres){ (byOkres[o.okres]=byOkres[o.okres]||[]).push(o); }
   const k = OKRES_KRAJ[o.okres]; if(k){ (byKraj[k]=byKraj[k]||[]).push(o); }
 }
@@ -726,7 +748,9 @@ ${rows}
 }
 
 // ---------- DRAŽBY (národní přehled) ----------
-const drazby = all.filter(o=>o.type==='drazba').sort((a,b)=>(a.price||1e15)-(b.price||1e15));
+/* Celostátní přehled dražeb počítá z téže hromádky jako okresy — tedy
+   bez těch, kterým termín už prošel. */
+const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>(a.price||1e15)-(b.price||1e15));
 {
   const count = drazby.length;
   const priced = drazby.filter(o=>o.price>0).map(o=>o.price).sort((a,b)=>a-b);
@@ -1070,9 +1094,12 @@ console.log(`Vygenerováno: ${okresPages.length} okresních + ${krajPages.length
   const idx = path.join(ROOT, 'index.html');
   let h = fs.readFileSync(idx, 'utf8');
   const pred = h;
-  /* `all` je už bez duplicit (odstraňují se při načtení, stejně jako
-     v aplikaci) — druhé odstraňování by bylo jen zbytečné opakování. */
-  const bezDup = all;
+  /* `aktualni` je už bez duplicit (odstraňují se při načtení, stejně jako
+     v aplikaci) a bez dražeb po termínu — a to druhé je tu podstatné:
+     tohle číslo stojí v úvodu jako „1 996 pozemků na jedné mapě", kdežto
+     mapa pod ním si prošlé dražby odečítá. Dvě různá čísla o téže věci
+     na téže obrazovce. */
+  const bezDup = aktualni;
   const celkem = bezDup.length;
   const okresu = new Set(bezDup.map((o) => o.okres).filter(Boolean)).size;
   const pocetKraj = {};

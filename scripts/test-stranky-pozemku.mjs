@@ -338,10 +338,19 @@ pravda('každý okres má náhledový obrázek pro sdílení', bezNahledu.length
       sOdkazem++;
       const d = dataStranky(odkaz[1]);
       if (!d) { spatne.push(`${f} → ${odkaz[1]}: stránka neexistuje nebo nenese data`); continue; }
-      const obec = (radek.match(/<a class="okr-place" href="[^"]+">([^<]*)/) || [])[1] || '';
-      const vym = radek.match(/<b>([\d\s\u00a0]+) m²<\/b>/);
-      const cen = radek.match(/<b>([\d\s\u00a0]+) Kč<\/b>/);
-      const cilObec = String(d.k || '').split('|')[0];
+      /* Viditelný text je VYSÁZENÝ (nezlomitelné mezery po jednopísmenných
+         předložkách a před jednotkou), kdežto data v atributu ne — a je to
+         tak správně, do strojových dat sazba nepatří. Porovnávat se tedy
+         musí přes jednotnou mezeru, jinak „Hůrky u Lišova" neodpovídá
+         „Hůrky u Lišova" a kontrola hlásí rozdíl, který na obrazovce není.
+         Mezera před jednotkou je ze stejného důvodu v obou podobách —
+         bez toho by vzor přestal sedět a kontrola by výměru a cenu tiše
+         přeskakovala. */
+      const bezNbsp = (s) => String(s).replace(/\u00a0/g, ' ');
+      const obec = bezNbsp((radek.match(/<a class="okr-place" href="[^"]+">([^<]*)/) || [])[1] || '');
+      const vym = radek.match(/<b>([\d\s\u00a0]+)[\s\u00a0]m²<\/b>/);
+      const cen = radek.match(/<b>([\d\s\u00a0]+)[\s\u00a0]Kč<\/b>/);
+      const cilObec = bezNbsp(String(d.k || '').split('|')[0]);
       if (cilObec !== obec) spatne.push(`${f} → ${odkaz[1]}: obec „${obec}" vs „${cilObec}"`);
       else if (vym && String(d.v) !== cislo(vym[1])) spatne.push(`${f} → ${odkaz[1]}: výměra ${cislo(vym[1])} vs ${d.v}`);
       else if (cen && String(d.c) !== cislo(cen[1])) spatne.push(`${f} → ${odkaz[1]}: cena ${cislo(cen[1])} vs ${d.c}`);
@@ -355,6 +364,40 @@ pravda('každý okres má náhledový obrázek pro sdílení', bezNahledu.length
     radku > 0 && sOdkazem === radku, `z ${radku} řádků odkazuje ${sOdkazem}`);
   pravda(`a odkaz vede na TEN pozemek — obec, výměra i cena sedí (ověřeno na ${sOdkazem} řádcích)`,
     spatne.length === 0, `${spatne.length} chyb: ` + spatne.slice(0, 4).join('; '));
+}
+
+/* ---------- Drobečky na stránce pozemku ----------
+   Stránky krajů a okresů cestu k sobě měly, stránky pozemků ne — a to je
+   1 993 z 2 113 stránek webu, navíc ty nejhlubší. Ve výsledku hledání se
+   pak místo „Pozemky › Okres Benešov › …" ukáže holá adresa a není z ní
+   poznat, kam vede.
+   Hlídá se i to, že cesta je SKUTEČNÁ: okresní stránka vzniká jen tam, kde
+   je dost nabídek, takže odkaz, který by vedl na neexistující soubor, je
+   horší než žádný drobeček. */
+{
+  const stranky = fs.readdirSync(ROOT).filter((f) => /^pozemek-.+\.html$/.test(f));
+  let sDrobecky = 0, mrtve = 0;
+  const bez = [];
+  for (const f of stranky) {
+    const html = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    const m = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(html);
+    if (!m) { bez.push(f); continue; }
+    let j;
+    try { j = JSON.parse(m[1]); } catch { bez.push(f + ' (neplatný JSON)'); continue; }
+    const bc = (Array.isArray(j) ? j : [j]).find((x) => x['@type'] === 'BreadcrumbList');
+    if (!bc) { bez.push(f); continue; }
+    sDrobecky++;
+    for (const p of bc.itemListElement || []) {
+      const u = String(p.item || '').replace(/^https?:\/\/[^/]+\//, '') || 'index.html';
+      if (!fs.existsSync(path.join(ROOT, u))) { mrtve++; if (bez.length < 6) bez.push(`${f} → ${u}`); }
+    }
+  }
+  /* Pojistka: bez stránek by obě kontroly níž prošly na prázdnu. */
+  pravda('stránky pozemků se našly', stranky.length >= 500, `nalezeno ${stranky.length}`);
+  pravda('každá má v strukturovaných datech cestu k sobě',
+    sDrobecky >= stranky.length - 1, `s drobečky ${sDrobecky} z ${stranky.length}: ` + bez.slice(0, 4).join(', '));
+  pravda('a žádný drobeček nevede na neexistující stránku', mrtve === 0,
+    bez.slice(0, 4).join(', '));
 }
 
 console.log('\nStránky jednotlivých pozemků');

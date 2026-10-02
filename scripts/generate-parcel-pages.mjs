@@ -90,6 +90,13 @@ export function lidskeDatum(t) {
    podoba, která se vejde i se jménem webu. Ořezávat natvrdo by rozbilo
    slova; tohle vždycky utne na celém údaji. */
 const MEZ_TITULKU = 65;
+/* Datum dražby jsem sem zkusil přidat taky — a ZHORŠILO to věc, kterou
+   mělo spravit. Shodných titulků bylo pět, po přidání deset: varianta
+   s datem je delší, takže se pod mezí 65 znaků vybrala kratší podoba
+   BEZ výměry, a tři dražby, které se lišily jen výměrou, dostaly tentýž
+   titulek („Ostatní plocha — Libochovice, dražba 20. 10. 2026" ×3).
+   Datum tedy zůstává jen v popisku, kde je místa 165 znaků a kde
+   shodné popisky spadly ze dvou na jeden. */
 function slozTitulek(druh, vym, place, okres) {
   const konec = ' | Parcelka';
   const varianty = [
@@ -113,8 +120,21 @@ function slozTitulek(druh, vym, place, okres) {
    čemu člověk z výsledků klikne. */
 const MEZ_POPISU = 165;
 function slozPopis(d, cena, zaM2, vym) {
+  /* TERMÍN DRAŽBY PATŘÍ DO POPISKU. Dva důvody, oba naměřené:
+     · Je to jediná věc na téhle stránce s lhůtou — kdo ji přehlédne,
+       přijde o pozemek. Ve výpisu vyhledávače dosud nebyla vůbec.
+     · Tři stránky měly titulek i popisek SLOVO OD SLOVA stejný
+       („Dražba · 1 078 500 Kč (1 500 Kč/m²) · 719 m² · Police nad
+       Metují, okres Náchod."). Nebyla to chyba v datech: jsou to tři
+       různé dražby na tomtéž místě, se stejnou výměrou i cenou, jen
+       v jiný den (8. 10., 22. 10., 5. 11.). Pro vyhledávač to byly tři
+       shodné stránky a dvě z nich mohl zahodit. Datum je rozliší
+       a zároveň je to ta nejužitečnější věc, co tam může stát. */
+  const termin = (/(\d{4})-(\d{2})-(\d{2})/.test(d.extra || '') && (d.type === 'drazba' || d.type === 'exekuce'))
+    ? ' Termín ' + lidskeDatum((/(\d{4}-\d{2}-\d{2})/.exec(d.extra) || [])[1]) + '.'
+    : '';
   const zaklad = `${TYP[d.type] || 'Nabídka'} · ${cena}${zaM2}${vym ? ' · ' + vym : ''}`
-    + ` · ${d.place}, okres ${d.okres}.`;
+    + ` · ${d.place}, okres ${d.okres}.${termin}`;
   const varianty = [
     ' Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.',
     ' Poloha na mapě a srovnání s obvyklou cenou.',
@@ -171,11 +191,33 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
   /* jsonVeStrance, ne JSON.stringify: obsah <script> je surový text a končí
      prvním koncem skriptu, i kdyby stál uvnitř řetězce v JSONu. Názvy obcí
      sem přitom přicházejí z cizích webů. Viz scripts/json-do-stranky.mjs. */
-  const ld = jsonVeStrance({
-    '@context': 'https://schema.org', '@type': 'Place', name: titul, description: popis, url,
-    address: { '@type': 'PostalAddress', addressLocality: d.place, addressRegion: d.okres, addressCountry: 'CZ' },
-    geo: { '@type': 'GeoCoordinates', latitude: d.lat, longitude: d.lng },
-  });
+  /* DROBEČKY. Stránky krajů a okresů je mají, stránky pozemků ne — a to je
+     1 993 z 2 113 stránek webu, navíc ty nejhlubší. Vyhledávač pak
+     ve výsledku ukáže holou adresu místo cesty „Pozemky › Okres Benešov ›
+     …", takže z výsledku není poznat, kam vlastně vede.
+     Cesta musí být SKUTEČNÁ, ne vymyšlená: okresní stránka vzniká jen tam,
+     kde je dost nabídek, takže se ověřuje, že soubor opravdu existuje —
+     generátor regionů běží před tímhle krokem (viz scripts/oprav.mjs).
+     Když okresní stránka není, drobečky končí u rozcestníku. */
+  const okresSoubor = `pozemky-okres-${slug(d.okres)}.html`;
+  const maOkres = !!d.okres && fs.existsSync(path.join(ROOT, okresSoubor));
+  const drobecky = [
+    { '@type': 'ListItem', position: 1, name: 'Pozemky', item: `${WEB}/` },
+    { '@type': 'ListItem', position: 2, name: 'Pozemky podle okresů', item: `${WEB}/pozemky-podle-okresu.html` },
+  ];
+  if (maOkres) {
+    drobecky.push({ '@type': 'ListItem', position: 3, name: `Okres ${d.okres}`, item: `${WEB}/${okresSoubor}` });
+  }
+  drobecky.push({ '@type': 'ListItem', position: drobecky.length + 1, name: titul, item: url });
+
+  const ld = jsonVeStrance([
+    {
+      '@context': 'https://schema.org', '@type': 'Place', name: titul, description: popis, url,
+      address: { '@type': 'PostalAddress', addressLocality: d.place, addressRegion: d.okres, addressCountry: 'CZ' },
+      geo: { '@type': 'GeoCoordinates', latitude: d.lat, longitude: d.lng },
+    },
+    { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: drobecky },
+  ]);
 
   /* Obsah pro toho, kdo JavaScript nespustí (roboti vyhledávačů, náhledy
      v chatech). Skript ho po načtení nahradí plným detailem — proto to

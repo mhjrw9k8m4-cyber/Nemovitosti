@@ -102,9 +102,10 @@ for (const [jm, pole, jedn] of [['cena', DATA.map((d) => d.price), 'kc'],
 {
   pravda('ceny se píší lidsky', R.popis(500000, 'kc') === '500 tis.' && R.popis(1500000, 'kc') === '1,5 mil.'
     && R.popis(2000000, 'kc') === '2 mil.', [R.popis(500000, 'kc'), R.popis(1500000, 'kc'), R.popis(2000000, 'kc')].join(' | '));
-  // Tisíce dělí pevná mezera (aby se číslo nezlomilo), před jednotkou je běžná.
-  pravda('výměry taky', R.popis(5000, 'm2') === '5\u00a0000 m\u00b2' && R.popis(10000, 'm2') === '1 ha'
-    && R.popis(15000, 'm2') === '1,5 ha', [R.popis(5000, 'm2'), R.popis(10000, 'm2'), R.popis(15000, 'm2')].join(' | '));
+  /* Mezera před jednotkou je nezlomitelná — „5 000" na konci řádku
+     a „m²" na dalším jsou dvě různá čísla (viz scripts/sazba.mjs). */
+  pravda('výměry taky', R.popis(5000, 'm2') === '5\u00a0000\u00a0m\u00b2' && R.popis(10000, 'm2') === '1\u00a0ha'
+    && R.popis(15000, 'm2') === '1,5\u00a0ha', [R.popis(5000, 'm2'), R.popis(10000, 'm2'), R.popis(15000, 'm2')].join(' | '));
   pravda('„bez meze" se nepíše jako nekonečno', R.popis(Infinity, 'kc') === null);
 }
 

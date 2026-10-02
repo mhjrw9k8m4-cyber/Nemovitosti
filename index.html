@@ -79,7 +79,7 @@
     });
   })();
   </script>
-  <title>Parcelka — příležitosti u pozemků na jedné mapě</title>
+  <title>Parcelka — příležitosti u pozemků na jedné mapě</title>
   <meta name="description" content="Dražby, exekuce a pozemky na prodej z veřejných zdrojů na jedné mapě celé ČR. Filtrujte podle okresu, druhu i ceny. Prohlížení zdarma a bez registrace.">
   <meta name="theme-color" content="#FBFAF8">
   <meta name="robots" content="index,follow">
@@ -127,7 +127,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=26ae81ac">
+  <link rel="stylesheet" href="css/styles.css?v=185dbb0c">
 </head>
 <body>
 
@@ -172,7 +172,7 @@
       <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
-      <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
+      <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
     </nav>
   </div>
 </header>
@@ -222,12 +222,12 @@
              vysoký před i po a pole „Hledat obec" začíná ve 44 % výšky. Je to
              tedy změna textu, ne místa — což je dobře, protože na 320×568
              leží hledání v 58 % a strop zkoušky je 60 %. -->
-        <h1><b id="hero-n-count">1 994</b> pozemků<br>na jedné mapě.</h1>
+        <h1><b id="hero-n-count">1 991</b> pozemků<br>na jedné mapě.</h1>
         <!-- Počty druhů plní generátor z dat; skript je po načtení přepočítá. -->
         <div class="hh-legenda" id="hh-legenda">
           <span class="hh-l" data-druh="sale"><i aria-hidden="true"></i><b>—</b> na prodej</span>
-          <span class="hh-l" data-druh="drazba"><i aria-hidden="true"></i><b>—</b> v dražbě</span>
-          <span class="hh-l" data-druh="exekuce"><i aria-hidden="true"></i><b>—</b> v exekuci</span>
+          <span class="hh-l" data-druh="drazba"><i aria-hidden="true"></i><b>—</b> v dražbě</span>
+          <span class="hh-l" data-druh="exekuce"><i aria-hidden="true"></i><b>—</b> v exekuci</span>
         </div>
         <!-- Živý důkaz, že web není skanzen. Vyplní ho skript ze skutečných
              dat; dokud se nenačtou, není tu vůbec nic (žádné „Načítám…"). -->
@@ -265,11 +265,11 @@
             <div class="mp-akce" id="mp-akce-mam">
               <label class="mp-okruh"><span>Okruh</span>
                 <select id="misto-km" aria-label="Okruh hlídání okolí">
-                  <option value="2">2 km</option>
-                  <option value="5">5 km</option>
-                  <option value="10">10 km</option>
-                  <option value="20">20 km</option>
-                  <option value="50">50 km</option>
+                  <option value="2">2 km</option>
+                  <option value="5">5 km</option>
+                  <option value="10">10 km</option>
+                  <option value="20">20 km</option>
+                  <option value="50">50 km</option>
                 </select>
               </label>
               <button type="button" class="mp-zapnout" id="misto-zapnout" aria-pressed="false">Ukázat jen okolí</button>
@@ -290,7 +290,7 @@
                když se polohu nepodaří zjistit. Ruční výběr tedy zůstává,
                ale jako tichý odkaz pod tlačítkem, ne jako soupeř. -->
           <div class="map-okoli">
-            <button type="button" class="map-near-btn" id="map-near"><svg class="mnb-pin" aria-hidden="true"><use href="#i-map"/></svg>Pozemky v okolí</button>
+            <button type="button" class="map-near-btn" id="map-near"><svg class="mnb-pin" aria-hidden="true"><use href="#i-map"/></svg>Pozemky v okolí</button>
           </div>
           <div class="ms-group">
             <div class="map-filters" id="map-filters" role="group" aria-label="Co hledáte — druh příležitosti">
@@ -306,7 +306,7 @@
           <details class="ms-filters" id="ms-filters">
             <summary class="msf-summary">
               <svg class="msf-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-              <span class="msf-text">Druh, cena, výměra a řazení</span>
+              <span class="msf-text">Druh, cena, výměra a řazení</span>
               <span class="msf-badge" id="msf-badge" hidden></span>
               <svg class="msf-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             </summary>
@@ -342,13 +342,13 @@
               <label class="mc-field"><span class="mc-cap">Cena za m² do</span>
                 <select class="map-select" id="map-perm2" aria-label="Maximální cena za metr čtvereční">
                   <option value="">Libovolná</option>
-                  <option value="20">do 20 Kč/m²</option>
-                  <option value="50">do 50 Kč/m²</option>
-                  <option value="100">do 100 Kč/m²</option>
-                  <option value="250">do 250 Kč/m²</option>
-                  <option value="500">do 500 Kč/m²</option>
-                  <option value="1000">do 1 000 Kč/m²</option>
-                  <option value="2500">do 2 500 Kč/m²</option>
+                  <option value="20">do 20 Kč/m²</option>
+                  <option value="50">do 50 Kč/m²</option>
+                  <option value="100">do 100 Kč/m²</option>
+                  <option value="250">do 250 Kč/m²</option>
+                  <option value="500">do 500 Kč/m²</option>
+                  <option value="1000">do 1 000 Kč/m²</option>
+                  <option value="2500">do 2 500 Kč/m²</option>
                 </select>
               </label>
               <div class="mc-field mc-rozsah"><span class="mc-cap">Výměra (m²)</span>
@@ -369,7 +369,7 @@
                   <button type="button" class="mc-info" id="mcv-info" aria-expanded="false" aria-controls="mcv-pozn" aria-label="Co to znamená"><span aria-hidden="true">i</span></button>
                 </span>
                 <div class="mcv-rada"></div>
-                <p class="mcv-pozn" id="mcv-pozn" hidden>Podle toho, co stojí v popisu nabídky — ať už je síť zavedená, nebo zatím jen v dosahu. U nabídek bez popisu se to neví; nejsou tedy „bez elektřiny", jen se to z inzerátu nedozvíme.</p>
+                <p class="mcv-pozn" id="mcv-pozn" hidden>Podle toho, co stojí v popisu nabídky — ať už je síť zavedená, nebo zatím jen v dosahu. U nabídek bez popisu se to neví; nejsou tedy „bez elektřiny", jen se to z inzerátu nedozvíme.</p>
               </div>
               <!-- KRAJ UŽ NENÍ V PANELU. Kraj je moc hrubé síto: lidi
                    hledají obec nebo okres, a na to je nahoře našeptávač,
@@ -487,7 +487,7 @@
         <a class="kraj-item" href="pozemky-kralovehradecky-kraj.html"><span class="kj-n">Královéhradecký</span><span class="kj-c mono" data-kraj="Královéhradecký">79 pozemků</span></a>
         <a class="kraj-item" href="pozemky-pardubicky-kraj.html"><span class="kj-n">Pardubický</span><span class="kj-c mono" data-kraj="Pardubický">98 pozemků</span></a>
         <a class="kraj-item" href="pozemky-vysocina-kraj.html"><span class="kj-n">Vysočina</span><span class="kj-c mono" data-kraj="Vysočina">55 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-jihomoravsky-kraj.html"><span class="kj-n">Jihomoravský</span><span class="kj-c mono" data-kraj="Jihomoravský">399 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-jihomoravsky-kraj.html"><span class="kj-n">Jihomoravský</span><span class="kj-c mono" data-kraj="Jihomoravský">396 pozemků</span></a>
         <a class="kraj-item" href="pozemky-olomoucky-kraj.html"><span class="kj-n">Olomoucký</span><span class="kj-c mono" data-kraj="Olomoucký">100 pozemků</span></a>
         <a class="kraj-item" href="pozemky-zlinsky-kraj.html"><span class="kj-n">Zlínský</span><span class="kj-c mono" data-kraj="Zlínský">162 pozemků</span></a>
         <a class="kraj-item" href="pozemky-moravskoslezsky-kraj.html"><span class="kj-n">Moravskoslezský</span><span class="kj-c mono" data-kraj="Moravskoslezský">86 pozemků</span></a>
@@ -514,7 +514,7 @@
         <div class="src-stat"><b>5</b><span>veřejných zdrojů</span></div>
         <div class="src-stat"><b>4× denně</b><span>obnovuje robot</span></div>
       </div>
-      <p class="sources-lead">Tyhle zdroje jsou roztroušené po internetu i úředních deskách obcí — my je každý den projdeme a dáme na jednu mapu. Nic tajného, vše dohledatelné:</p>
+      <p class="sources-lead">Tyhle zdroje jsou roztroušené po internetu i úředních deskách obcí — my je každý den projdeme a dáme na jednu mapu. Nic tajného, vše dohledatelné:</p>
       <p class="data-updated mono" id="data-updated" aria-live="polite"></p>
       <div class="source-row">
         <div class="source-chip" data-zdroj="Dražby"><span class="s-dot tv-kosoctverec" style="background:var(--c-drazba);"></span>Centrální evidence veřejných dražeb</div>
@@ -527,7 +527,7 @@
            nepřichází ani jedna nabídka — je to úřední ověření toho, co jsme
            našli jinde. Počítat ho mezi zdroje znamenalo mít o jeden zdroj
            víc, než jich opravdu je. -->
-      <p class="sources-over"><span class="s-dot" style="background:var(--copper);" aria-hidden="true"></span>Katastr nemovitostí mezi zdroji není — nabídky z něj nebereme. Je to úřední ověření: u každého pozemku z něj vede proklik, abyste si vlastníka i hranice potvrdili u zdroje.</p>
+      <p class="sources-over"><span class="s-dot" style="background:var(--copper);" aria-hidden="true"></span>Katastr nemovitostí mezi zdroji není — nabídky z něj nebereme. Je to úřední ověření: u každého pozemku z něj vede proklik, abyste si vlastníka i hranice potvrdili u zdroje.</p>
     </div>
   </section>
 
@@ -537,9 +537,9 @@
       <div class="rail-mark reveal"><span class="rm-n">3</span><span class="rm-l">kroky</span></div>
       <div class="section-head reveal"><h2>Jak najdete pozemek — ve třech krocích.</h2></div>
       <div class="steps">
-        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-map"/></svg></div><div class="idx mono">01</div><h3>Otevřete mapu</h3><p>Sbíráme data z veřejných zdrojů a spojíme je na jednu mapu. Jsou tam jen pozemky, kde se něco děje — barva napoví druh příležitosti.</p></div>
-        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-click"/></svg></div><div class="idx mono">02</div><h3>Klikněte na příležitost</h3><p>Detail ukáže výměru, druh a termín. Proklik rovnou do katastru pro ověření, nebo na inzerát.</p></div>
-        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-bell"/></svg></div><div class="idx mono">03</div><h3>Nechte si hlídat lokalitu</h3><p>Uložíte si hledání — okres, druh, cenu. Nové pozemky, které mu sedí, pak najdete v <a href="upozorneni.html">Upozorněních</a>, aniž byste hledali znovu.</p></div>
+        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-map"/></svg></div><div class="idx mono">01</div><h3>Otevřete mapu</h3><p>Sbíráme data z veřejných zdrojů a spojíme je na jednu mapu. Jsou tam jen pozemky, kde se něco děje — barva napoví druh příležitosti.</p></div>
+        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-click"/></svg></div><div class="idx mono">02</div><h3>Klikněte na příležitost</h3><p>Detail ukáže výměru, druh a termín. Proklik rovnou do katastru pro ověření, nebo na inzerát.</p></div>
+        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-bell"/></svg></div><div class="idx mono">03</div><h3>Nechte si hlídat lokalitu</h3><p>Uložíte si hledání — okres, druh, cenu. Nové pozemky, které mu sedí, pak najdete v <a href="upozorneni.html">Upozorněních</a>, aniž byste hledali znovu.</p></div>
       </div>
     </div>
   </section>
@@ -550,11 +550,11 @@
       <div class="rail-mark reveal"><span class="rm-n">5</span><span class="rm-l">druhů příležitostí</span></div>
       <div class="section-head reveal"><h2>Pět druhů příležitostí — každý svou barvou.</h2></div>
       <div class="status-grid">
-        <div class="status-card reveal" style="--c-druh:var(--c-sale)"><div class="status-top"><svg class="ic" style="color:var(--c-sale)"><use href="#i-tag"/></svg>Na prodej<span class="status-n" data-type="sale"></span></div><ul class="status-list"><li>Aktivně nabízené k prodeji</li><li>Proklik přímo na inzerát</li></ul></div>
+        <div class="status-card reveal" style="--c-druh:var(--c-sale)"><div class="status-top"><svg class="ic" style="color:var(--c-sale)"><use href="#i-tag"/></svg>Na prodej<span class="status-n" data-type="sale"></span></div><ul class="status-list"><li>Aktivně nabízené k prodeji</li><li>Proklik přímo na inzerát</li></ul></div>
         <div class="status-card reveal" style="--c-druh:var(--c-drazba)"><div class="status-top"><svg class="ic" style="color:var(--c-drazba)"><use href="#i-gavel"/></svg>Dražba<span class="status-n" data-type="drazba"></span></div><ul class="status-list"><li>Nadcházející veřejné dražby</li><li>Často <b>pod tržní cenou</b></li></ul></div>
-        <div class="status-card reveal" style="--c-druh:var(--c-exekuce)"><div class="status-top"><svg class="ic" style="color:var(--c-exekuce)"><use href="#i-alert"/></svg>Exekuce<span class="status-n" data-type="exekuce"></span></div><ul class="status-list"><li>Pozemky v exekuci</li><li><b>Signál budoucího prodeje</b></li></ul></div>
-        <div class="status-card reveal" style="--c-druh:var(--c-obec)"><div class="status-top"><svg class="ic" style="color:var(--c-obec)"><use href="#i-building"/></svg>Obecní záměr<span class="status-n" data-type="obec"></span></div><ul class="status-list"><li>Obec oznámila <b>záměr prodat</b> pozemek</li><li>Z úřední desky — <b>přihlásit se jde ve lhůtě</b></li></ul></div>
-        <div class="status-card reveal" style="--c-druh:var(--c-majitel)"><div class="status-top"><svg class="ic" style="color:var(--c-majitel)"><use href="#i-user"/></svg>Přímo od majitele<span class="status-n" data-type="majitel"></span></div><ul class="status-list"><li>Majitel vložil inzerát <b>přímo na Parcelce</b></li><li>Jednáte napřímo — <b>bez realitky a provize</b></li></ul></div>
+        <div class="status-card reveal" style="--c-druh:var(--c-exekuce)"><div class="status-top"><svg class="ic" style="color:var(--c-exekuce)"><use href="#i-alert"/></svg>Exekuce<span class="status-n" data-type="exekuce"></span></div><ul class="status-list"><li>Pozemky v exekuci</li><li><b>Signál budoucího prodeje</b></li></ul></div>
+        <div class="status-card reveal" style="--c-druh:var(--c-obec)"><div class="status-top"><svg class="ic" style="color:var(--c-obec)"><use href="#i-building"/></svg>Obecní záměr<span class="status-n" data-type="obec"></span></div><ul class="status-list"><li>Obec oznámila <b>záměr prodat</b> pozemek</li><li>Z úřední desky — <b>přihlásit se jde ve lhůtě</b></li></ul></div>
+        <div class="status-card reveal" style="--c-druh:var(--c-majitel)"><div class="status-top"><svg class="ic" style="color:var(--c-majitel)"><use href="#i-user"/></svg>Přímo od majitele<span class="status-n" data-type="majitel"></span></div><ul class="status-list"><li>Majitel vložil inzerát <b>přímo na Parcelce</b></li><li>Jednáte napřímo — <b>bez realitky a provize</b></li></ul></div>
       </div>
     </div>
   </section>
@@ -562,11 +562,11 @@
   <!-- 8 · POZEMKY OD LIDÍ (přímo od majitelů) -->
   <section class="section pt-0 rail" id="od-lidi">
     <div class="wrap">
-      <div class="rail-mark reveal"><span class="rm-n">0 %</span><span class="rm-l">provize</span></div>
+      <div class="rail-mark reveal"><span class="rm-n">0 %</span><span class="rm-l">provize</span></div>
       <div class="section-head reveal"><h2>Pozemky přímo od majitelů.</h2></div>
       <div id="user-listings" class="odl-wrap reveal" aria-live="polite"></div>
       <div class="odl-cta reveal">
-        <div class="odl-cta-txt"><b>Máte pozemek na prodej?</b><span>Přidejte ho zdarma — bez provize, s přímým kontaktem na vás. Stačí si založit účet.</span></div>
+        <div class="odl-cta-txt"><b>Máte pozemek na prodej?</b><span>Přidejte ho zdarma — bez provize, s přímým kontaktem na vás. Stačí si založit účet.</span></div>
         <a href="pridat.html" class="btn-primary">Přidat pozemek →</a>
       </div>
     </div>
@@ -580,7 +580,7 @@
         <div class="rct-copy">
           <div class="eyebrow"><span class="live-dot"></span>Kontakt</div>
           <h2>Ozvěte se nám.</h2>
-          <p>Máte dotaz, nápad na zlepšení, nebo zájem o spolupráci — třeba mapu pro obec, realitní kancelář či firmu? Napište nám přímo na e-mail a ozveme se. Bez závazku.</p>
+          <p>Máte dotaz, nápad na zlepšení, nebo zájem o spolupráci — třeba mapu pro obec, realitní kancelář či firmu? Napište nám přímo na e-mail a ozveme se. Bez závazku.</p>
         </div>
         <div class="rct-form">
           <a class="kt-mail" href="mailto:info@parcelaka.cz">
@@ -597,24 +597,24 @@
   <section class="section pt-0 rail" id="slovnicek">
     <div class="wrap">
       <div class="rail-mark reveal"><span class="rm-n">18</span><span class="rm-l">pojmů</span></div>
-      <div class="section-head reveal"><h2>Nevyznáte se v pojmech? Vysvětlíme.</h2></div>
+      <div class="section-head reveal"><h2>Nevyznáte se v pojmech? Vysvětlíme.</h2></div>
       <div class="glossary reveal">
-        <details class="gl-item"><summary><h4>Dražba</h4></summary><p>Veřejný prodej pozemku tomu, kdo nabídne nejvíc. Startovní cena bývá pod trhem. Pevný termín a pravidla — online nebo u exekutora.</p></details>
-        <details class="gl-item"><summary><h4>Exekuce</h4></summary><p>Vymáhání dluhu z majetku dlužníka. Pozemek v exekuci se často brzy dostane do dražby — signál příležitosti s předstihem.</p></details>
-        <details class="gl-item"><summary><h4>Insolvence</h4></summary><p>Řešení úpadku přes soud. Majetek se zpeněžuje, aby se splatili věřitelé. Veřejně dohledatelné v insolvenčním rejstříku — ten sami neprocházíme, takže pozemek z insolvence se sem dostane až ve chvíli, kdy ho správce vypíše do dražby.</p></details>
-        <details class="gl-item"><summary><h4>Katastr nemovitostí</h4></summary><p>Úřední evidence pozemků (ČÚZK). Číslo parcely, výměra, druh i vlastník. Vždy zdroj pravdy pro ověření.</p></details>
-        <details class="gl-item"><summary><h4>Parcela / výměra</h4></summary><p>Parcela je konkrétní pozemek s vlastním číslem. Výměra je jeho plocha v m². Podle výměry a lokality se odvíjí cena.</p></details>
-        <details class="gl-item"><summary><h4>Spoluvlastnický podíl</h4></summary><p>Prodává se jen část pozemku, ne celá parcela — třeba jedna polovina. Výměra v inzerátu přitom bývá za celou parcelu, takže cena za metr vyjde podezřele nízko. Nejčastější důvod, proč nabídka vypadá jako trhák.</p></details>
-        <details class="gl-item"><summary><h4>Věcné břemeno</h4></summary><p>Cizí právo na vašem pozemku: právo cesty, vedení sítí nebo doživotní užívání. Zapisuje se do katastru a kupujícího zavazuje dál. Hledejte ho na listu vlastnictví, část C.</p></details>
-        <details class="gl-item"><summary><h4>List vlastnictví (LV)</h4></summary><p>Výpis z katastru o konkrétním pozemku. Části A až F: vlastník, parcely, břemena a zástavy, nabývací titul. Nahlédnutí je zdarma přes web ČÚZK.</p></details>
-        <details class="gl-item"><summary><h4>Vyvolávací cena</h4></summary><p>Nejnižší podání, kterým dražba začíná. Není to odhadní ani konečná cena — bývá pod trhem a v dražbě se od ní licituje nahoru.</p></details>
-        <details class="gl-item"><summary><h4>Dražební jistota</h4></summary><p>Kauce, kterou musíte složit předem, jinak dražit nemůžete. Výši i termín určuje dražební vyhláška. Neúspěšným účastníkům se vrací.</p></details>
-        <details class="gl-item"><summary><h4>Dražební vyhláška</h4></summary><p>Úřední dokument, kterým se dražba oznamuje. Najdete v ní přesné označení parcely, nejnižší podání, výši jistoty, termín i podmínky. Nejdůležitější papír celé dražby.</p></details>
-        <details class="gl-item"><summary><h4>Příklep</h4></summary><p>Okamžik, kdy dražitel s nejvyšším podáním pozemek získá. Zbytek ceny se doplácí ve lhůtě podle vyhlášky; vlastnictví přechází až po splnění podmínek.</p></details>
-        <details class="gl-item"><summary><h4>Územní plán</h4></summary><p>Obecní dokument, který říká, co se kde smí stavět. Rozhoduje o tom, jestli je pozemek stavební — ne inzerát. Nahlédnout jde na úřadě obce s rozšířenou působností.</p></details>
-        <details class="gl-item"><summary><h4>Přístupová cesta</h4></summary><p>Právo dostat se na pozemek z veřejné komunikace. Bez něj má pozemek výrazně nižší cenu a banka na něj nemusí půjčit. Ověřuje se v katastru, ne od oka z mapy.</p></details>
-        <details class="gl-item"><summary><h4>Orná půda</h4></summary><p>Zemědělská půda určená k pěstování. Nejlevnější druh pozemku. Stavět na ní nelze bez vynětí ze zemědělského půdního fondu, což stojí čas i peníze a nemusí vyjít.</p></details>
-        <details class="gl-item"><summary><h4>Trvalý travní porost</h4></summary><p>Louky a pastviny. Podobně jako orná půda patří do zemědělského půdního fondu, takže se na ní bez vynětí nestaví.</p></details>
+        <details class="gl-item"><summary><h4>Dražba</h4></summary><p>Veřejný prodej pozemku tomu, kdo nabídne nejvíc. Startovní cena bývá pod trhem. Pevný termín a pravidla — online nebo u exekutora.</p></details>
+        <details class="gl-item"><summary><h4>Exekuce</h4></summary><p>Vymáhání dluhu z majetku dlužníka. Pozemek v exekuci se často brzy dostane do dražby — signál příležitosti s předstihem.</p></details>
+        <details class="gl-item"><summary><h4>Insolvence</h4></summary><p>Řešení úpadku přes soud. Majetek se zpeněžuje, aby se splatili věřitelé. Veřejně dohledatelné v insolvenčním rejstříku — ten sami neprocházíme, takže pozemek z insolvence se sem dostane až ve chvíli, kdy ho správce vypíše do dražby.</p></details>
+        <details class="gl-item"><summary><h4>Katastr nemovitostí</h4></summary><p>Úřední evidence pozemků (ČÚZK). Číslo parcely, výměra, druh i vlastník. Vždy zdroj pravdy pro ověření.</p></details>
+        <details class="gl-item"><summary><h4>Parcela / výměra</h4></summary><p>Parcela je konkrétní pozemek s vlastním číslem. Výměra je jeho plocha v m². Podle výměry a lokality se odvíjí cena.</p></details>
+        <details class="gl-item"><summary><h4>Spoluvlastnický podíl</h4></summary><p>Prodává se jen část pozemku, ne celá parcela — třeba jedna polovina. Výměra v inzerátu přitom bývá za celou parcelu, takže cena za metr vyjde podezřele nízko. Nejčastější důvod, proč nabídka vypadá jako trhák.</p></details>
+        <details class="gl-item"><summary><h4>Věcné břemeno</h4></summary><p>Cizí právo na vašem pozemku: právo cesty, vedení sítí nebo doživotní užívání. Zapisuje se do katastru a kupujícího zavazuje dál. Hledejte ho na listu vlastnictví, část C.</p></details>
+        <details class="gl-item"><summary><h4>List vlastnictví (LV)</h4></summary><p>Výpis z katastru o konkrétním pozemku. Části A až F: vlastník, parcely, břemena a zástavy, nabývací titul. Nahlédnutí je zdarma přes web ČÚZK.</p></details>
+        <details class="gl-item"><summary><h4>Vyvolávací cena</h4></summary><p>Nejnižší podání, kterým dražba začíná. Není to odhadní ani konečná cena — bývá pod trhem a v dražbě se od ní licituje nahoru.</p></details>
+        <details class="gl-item"><summary><h4>Dražební jistota</h4></summary><p>Kauce, kterou musíte složit předem, jinak dražit nemůžete. Výši i termín určuje dražební vyhláška. Neúspěšným účastníkům se vrací.</p></details>
+        <details class="gl-item"><summary><h4>Dražební vyhláška</h4></summary><p>Úřední dokument, kterým se dražba oznamuje. Najdete v ní přesné označení parcely, nejnižší podání, výši jistoty, termín i podmínky. Nejdůležitější papír celé dražby.</p></details>
+        <details class="gl-item"><summary><h4>Příklep</h4></summary><p>Okamžik, kdy dražitel s nejvyšším podáním pozemek získá. Zbytek ceny se doplácí ve lhůtě podle vyhlášky; vlastnictví přechází až po splnění podmínek.</p></details>
+        <details class="gl-item"><summary><h4>Územní plán</h4></summary><p>Obecní dokument, který říká, co se kde smí stavět. Rozhoduje o tom, jestli je pozemek stavební — ne inzerát. Nahlédnout jde na úřadě obce s rozšířenou působností.</p></details>
+        <details class="gl-item"><summary><h4>Přístupová cesta</h4></summary><p>Právo dostat se na pozemek z veřejné komunikace. Bez něj má pozemek výrazně nižší cenu a banka na něj nemusí půjčit. Ověřuje se v katastru, ne od oka z mapy.</p></details>
+        <details class="gl-item"><summary><h4>Orná půda</h4></summary><p>Zemědělská půda určená k pěstování. Nejlevnější druh pozemku. Stavět na ní nelze bez vynětí ze zemědělského půdního fondu, což stojí čas i peníze a nemusí vyjít.</p></details>
+        <details class="gl-item"><summary><h4>Trvalý travní porost</h4></summary><p>Louky a pastviny. Podobně jako orná půda patří do zemědělského půdního fondu, takže se na ní bez vynětí nestaví.</p></details>
         <details class="gl-item"><summary><h4>Ostatní plocha</h4></summary><p>Sběrný druh pro pozemky, které nejsou pole, les ani zastavěná plocha — třeba manipulační plochy či zeleň. Co na nich jde, řekne až územní plán.</p></details>
         <details class="gl-item"><summary><h4>BPEJ</h4></summary><p>Bonitovaná půdně ekologická jednotka — pětimístný kód kvality zemědělské půdy. Čím lepší bonita, tím dražší je vynětí ze zemědělského půdního fondu.</p></details>
       </div>
@@ -627,20 +627,20 @@
       <div class="rail-mark reveal"><span class="rm-n">9</span><span class="rm-l">otázek</span></div>
       <div class="section-head reveal"><h2>Na co se lidé ptají nejčastěji.</h2></div>
       <div class="faq reveal">
-        <details class="faq-item"><summary>Odkud berete data?</summary><p>Z veřejných a legálních zdrojů: Centrální evidence veřejných dražeb (dobrovolné i nucené dražby), Státní pozemkový úřad (nabídky pozemků k prodeji podle § 12) a inzeráty pozemků z portálů, které to dovolují (Bezrealitky, Farmy.cz). Ověření vždy přes katastr nemovitostí. Nic tajného, vše dohledatelné.</p></details>
-        <details class="faq-item"><summary>Je to opravdu zdarma?</summary><p>Ano. Prohlížení mapy, filtry, vyhledávání i uložené pozemky jsou zdarma a bez registrace — žádná platební karta, žádné skryté poplatky.</p></details>
-        <details class="faq-item"><summary>Jak často se mapa aktualizuje?</summary><p>Zdroje kontrolujeme automaticky několikrát denně — robot je prochází každých 6 hodin (4× za den). U každé lokality vidíte, kdy proběhla poslední aktualizace.</p></details>
-        <details class="faq-item"><summary>Ukazujete osobní údaje vlastníků?</summary><p>Ne. Zobrazujeme jen příležitosti z veřejných zdrojů — neprodáváme osobní údaje ani kontakty. Ověření vlastníka je vždy přes oficiální katastr.</p></details>
+        <details class="faq-item"><summary>Odkud berete data?</summary><p>Z veřejných a legálních zdrojů: Centrální evidence veřejných dražeb (dobrovolné i nucené dražby), Státní pozemkový úřad (nabídky pozemků k prodeji podle § 12) a inzeráty pozemků z portálů, které to dovolují (Bezrealitky, Farmy.cz). Ověření vždy přes katastr nemovitostí. Nic tajného, vše dohledatelné.</p></details>
+        <details class="faq-item"><summary>Je to opravdu zdarma?</summary><p>Ano. Prohlížení mapy, filtry, vyhledávání i uložené pozemky jsou zdarma a bez registrace — žádná platební karta, žádné skryté poplatky.</p></details>
+        <details class="faq-item"><summary>Jak často se mapa aktualizuje?</summary><p>Zdroje kontrolujeme automaticky několikrát denně — robot je prochází každých 6 hodin (4× za den). U každé lokality vidíte, kdy proběhla poslední aktualizace.</p></details>
+        <details class="faq-item"><summary>Ukazujete osobní údaje vlastníků?</summary><p>Ne. Zobrazujeme jen příležitosti z veřejných zdrojů — neprodáváme osobní údaje ani kontakty. Ověření vlastníka je vždy přes oficiální katastr.</p></details>
         <details class="faq-item"><summary>Musím být odborník?</summary><p>Vůbec ne. Máme slovníček, který vysvětluje každý pojem česky. Mapa je navržená tak, aby jí rozuměl každý.</p></details>
-        <details class="faq-item"><summary>Musím se registrovat, abych si uložil pozemek?</summary><p>Ne. Žádná registrace ani přihlášení — u každé nabídky klepnete na záložku a pozemek se <b>uloží přímo ve vašem prohlížeči</b>. Zůstane vám, dokud si historii sami nesmažete. Nic se neodesílá na server a nepotřebujete k tomu e-mail ani heslo.</p></details>
+        <details class="faq-item"><summary>Musím se registrovat, abych si uložil pozemek?</summary><p>Ne. Žádná registrace ani přihlášení — u každé nabídky klepnete na záložku a pozemek se <b>uloží přímo ve vašem prohlížeči</b>. Zůstane vám, dokud si historii sami nesmažete. Nic se neodesílá na server a nepotřebujete k tomu e-mail ani heslo.</p></details>
         <!-- Tuhle otázku si web dlouho nepoložil, a přitom ji odpovídal
              špatně: hned nad ní stojí hlasité „žádná registrace ani
              přihlášení" a člověk to snadno vztáhne na celý web. Pak
              klepne na „Přidat pozemek" a narazí na přihlašovací dveře.
              Hranici je potřeba říct tam, kde ten dojem vzniká. -->
-        <details class="faq-item"><summary>Musím mít účet, abych mohl přidat vlastní pozemek?</summary><p>Ano — a je to jediné místo na Parcelce, kde účet potřebujete. Stačí e-mail a heslo: drží to venku spam a vám dává možnost inzerát kdykoli upravit nebo smazat. Přidání i zobrazení nabídky je i tak zdarma a bez provize. Mapa, filtry, hledání i uložené pozemky žádný účet nevyžadují.</p></details>
-        <details class="faq-item"><summary>Pokrýváte celou Českou republiku?</summary><p>Ano. Data sbíráme ze všech krajů ČR. Na mapě vidíte příležitosti napříč republikou a můžete si je filtrovat podle okresu, druhu i ceny.</p></details>
-        <details class="faq-item"><summary>Můžu hledat jen pozemky do určité ceny?</summary><p>Ano. Přímo na mapě je filtr „Cena do" — nastavíte si rozpočet a uvidíte jen pozemky, které se do něj vejdou. K tomu filtr druhu a vyhledávání podle místa.</p></details>
+        <details class="faq-item"><summary>Musím mít účet, abych mohl přidat vlastní pozemek?</summary><p>Ano — a je to jediné místo na Parcelce, kde účet potřebujete. Stačí e-mail a heslo: drží to venku spam a vám dává možnost inzerát kdykoli upravit nebo smazat. Přidání i zobrazení nabídky je i tak zdarma a bez provize. Mapa, filtry, hledání i uložené pozemky žádný účet nevyžadují.</p></details>
+        <details class="faq-item"><summary>Pokrýváte celou Českou republiku?</summary><p>Ano. Data sbíráme ze všech krajů ČR. Na mapě vidíte příležitosti napříč republikou a můžete si je filtrovat podle okresu, druhu i ceny.</p></details>
+        <details class="faq-item"><summary>Můžu hledat jen pozemky do určité ceny?</summary><p>Ano. Přímo na mapě je filtr „Cena do" — nastavíte si rozpočet a uvidíte jen pozemky, které se do něj vejdou. K tomu filtr druhu a vyhledávání podle místa.</p></details>
       </div>
     </div>
   </section>
@@ -651,14 +651,14 @@
   <div class="wrap foot-grid">
     <div class="foot-brand-col">
       <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
-      <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého. Děláme to s péčí, protože jsme se v tom sami hrabali.</p>
+      <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého. Děláme to s péčí, protože jsme se v tom sami hrabali.</p>
     </div>
     <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="#mapa">Pozemky</a><a href="cena-pozemku.html">Ceny pozemků</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a><a href="muj-inzerat.html">Můj profil</a></nav>
     <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="#jak-funguje">Jak to funguje</a><a href="#slovnicek">Slovníček</a><a href="#faq">Časté dotazy</a></nav>
-    <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
+    <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html" data-info="soukromi">Zásady soukromí</a><a href="podminky.html" data-info="podminky">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
-  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
 </footer>
 
 <button class="to-top" id="to-top" aria-label="Zpět nahoru"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 12l6-6 6 6"/></svg><span>Nahoru</span></button>
@@ -679,17 +679,17 @@
 <script src="js/config.js?v=7f55c4e1" defer></script>
 <script src="js/auth.js?v=9f10c463" defer></script>
 <script src="js/dropdown.js?v=a32b9e01" defer></script>
-<script src="js/snimek.js?v=19045f9d" defer></script>
+<script src="js/snimek.js?v=be1bb5cb" defer></script>
 <script src="js/terminy.js?v=63a1d1b6" defer></script>
-<script src="js/ceny.js?v=1f2b6a64" defer></script>
-<script src="js/radce.js?v=9e548cb6" defer></script>
+<script src="js/ceny.js?v=332e8c0d" defer></script>
+<script src="js/radce.js?v=05a68e63" defer></script>
 <script src="js/hlidani-logika.js?v=8c971165" defer></script>
 <script src="js/poradi.js?v=670998bf" defer></script>
-<script src="js/rozsah.js?v=880952d0" defer></script>
+<script src="js/rozsah.js?v=d3b39f67" defer></script>
 <script src="js/vybaveni.js?v=cae1f79b" defer></script>
 <script src="js/dotaz.js?v=341edd4b" defer></script>
 <script src="js/hledani.js?v=9b51ed6d" defer></script>
-<script src="js/main.js?v=339a3717" defer></script>
+<script src="js/main.js?v=cf7c518f" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

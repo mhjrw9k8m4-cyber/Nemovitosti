@@ -232,7 +232,7 @@ if (misto) {
   pravda('říká, kolik pozemků u místa od minule přibylo', /přibyly 2 pozemky/.test(misto.hlavni),
     `text: „${misto.hlavni}"`);
   pravda('a je zvýrazněný, protože novinky jsou', misto.zvyrazneno === true);
-  pravda('pod tím je okruh i celkový počet', /do 20 km/.test(misto.pod) && /5 pozemků/.test(misto.pod),
+  pravda('pod tím je okruh i celkový počet', /do 20[\s\u00a0]km/.test(misto.pod) && /5 pozemků/.test(misto.pod),
     `text: „${misto.pod}"`);
   pravda('rozbalovací seznam ukazuje uložený okruh', misto.okruh === '20', `vybráno ${misto.okruh}`);
 }

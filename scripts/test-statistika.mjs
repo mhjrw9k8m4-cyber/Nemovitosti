@@ -131,7 +131,7 @@ pravda('stránka cen počítá jen z běžných nabídek k prodeji',
     /* „cen-druh" může nést i modifikátor (cen-siroke). Bez toho by řádek
        s varováním z kontroly vypadl a jeho medián by se proti datům
        neověřoval — kontrola by tiše přestala hlídat jeden druh. */
-    /<li class="cen-druh[^"]*"><b>([\d\s\u00a0]+) Kč\/m²<\/b><span class="cen-nazev">([^<]+)<\/span>/g)]
+    /<li class="cen-druh[^"]*"><b>([\d\s\u00a0]+)[\s\u00a0]Kč\/m²<\/b><span class="cen-nazev">([^<]+)<\/span>/g)]
     .map((m) => ({ med: +String(m[1]).replace(/\s|\u00a0/g, ''), druh: m[2].trim() }));
   pravda('na stránce jsou vypsané mediány podle druhu', dlazdice.length >= 3,
     'našel jsem jen ' + dlazdice.length);
@@ -163,7 +163,7 @@ pravda('stránka cen počítá jen z běžných nabídek k prodeji',
 
 // --- 3) Výsledek na stránce je věrohodný -----------------------------
 const nejlevnejsi = [...stranka.matchAll(/Nejlevnější zemědělská půda[\s\S]{0,600}?<\/div>/g)][0];
-const cisla = nejlevnejsi ? [...nejlevnejsi[0].matchAll(/<b>([\d\s\u00a0]+) Kč\/m²<\/b>/g)]
+const cisla = nejlevnejsi ? [...nejlevnejsi[0].matchAll(/<b>([\d\s\u00a0]+)[\s\u00a0]Kč\/m²<\/b>/g)]
   .map((m) => +String(m[1]).replace(/\s|\u00a0/g, '')) : [];
 pravda('na stránce jsou nejlevnější okresy vypsané', cisla.length >= 2, JSON.stringify(cisla));
 /* Tohle je to jádro. Zemědělská půda se v Česku obchoduje řádově za
@@ -179,7 +179,7 @@ const cislo = (x) => +String(x).replace(/\s|\u00a0/g, '');
    takže tahle kontrola zároveň hlídá, že si stránka nezavádí vlastní. */
 {
   const mez = (PK_CENY && PK_CENY.MEZ_ROZPTYL) || 2;
-  const RADEK = /<li class="cen-druh( cen-siroke)?"><b>([\d\s]+) Kč\/m²<\/b><span class="cen-nazev">([^<]+)<\/span><span class="cen-detail">obvykle ([\d\s]+)–([\d\s]+)/g;
+  const RADEK = /<li class="cen-druh( cen-siroke)?"><b>([\d\s]+)[\s\u00a0]Kč\/m²<\/b><span class="cen-nazev">([^<]+)<\/span><span class="cen-detail">obvykle ([\d\s]+)–([\d\s]+)/g;
   const radky = [...stranka.matchAll(RADEK)];
   pravda('řádky s cenami se daly přečíst', radky.length >= 3, `přečteno ${radky.length}`);
   const c = (x) => +String(x).replace(/\s/g, '');
@@ -195,7 +195,9 @@ const cislo = (x) => +String(x).replace(/\s|\u00a0/g, '');
 }
 
 const nar0 = stranka.match(
-  /Zemědělská půda<\/span><span class="cen-detail">obvykle ([\d\s\u00a0]+)–([\d\s\u00a0]+) Kč\/m² · z ([\d\s\u00a0]+) nabídek/);
+  /* Mezery ve vysázeném textu můžou být nezlomitelné (scripts/sazba.mjs),
+   tak ať je vzor snese obě — jinak kontrola tiše přestane cokoli najít. */
+  /Zemědělská půda<\/span><span class="cen-detail">obvykle ([\d\s\u00a0]+)–([\d\s\u00a0]+)[\s\u00a0]Kč\/m²[\s\u00a0]·[\s\u00a0]z[\s\u00a0]([\d\s\u00a0]+)[\s\u00a0]nabídek/);
 const nar = nar0 ? [nar0[0], cislo(nar0[1]), cislo(nar0[2]), cislo(nar0[3])] : null;
 pravda('celostátní rozpětí je vypsané', !!nar, 'nenalezeno');
 if (nar) {
@@ -208,7 +210,7 @@ if (nar) {
 pravda('stránka říká, že se něco nezapočítává', /nezapočítáváme/.test(stranka),
   'vyřazovat nabídky a neříct to je horší než je nevyřazovat');
 pravda('a vysvětluje proč', /spoluvlastnick/.test(stranka));
-pravda('i to, že hranice není odhadem od stolu', /mezer[au] v samotném rozdělení/.test(stranka));
+pravda('i to, že hranice není odhadem od stolu', /mezer[au][\s\u00a0]v[\s\u00a0]samotném rozdělení/.test(stranka));
 
 // --- 5) Medián z hrstky nabídek se nesmí tvářit jako změřená cena ----
 /* Na okresní stránce stálo „Medián ceny (stavební): 17 467 Kč/m²

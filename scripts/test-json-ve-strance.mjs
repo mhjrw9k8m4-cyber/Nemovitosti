@@ -77,9 +77,14 @@ const h = stranka(sablona, jedovaty);
     let o = null, chybaJson = '';
     try { o = JSON.parse(ld[1]); } catch (e) { chybaJson = e.message; }
     pravda('a je to platný JSON', !!o, chybaJson);
+    /* Od doplnění drobečků je ve stránce POLE dvou záznamů (Place
+       a BreadcrumbList), ne jeden objekt — místo se čte z toho prvního.
+       Kontrola si ho proto najde podle typu, ne podle pořadí: jinak by
+       se rozbila při každém dalším záznamu, který někdo přidá. */
+    const misto = (Array.isArray(o) ? o : [o]).find((x) => x && x['@type'] === 'Place');
     pravda('a vyhledávač z něj přečte původní název obce',
-      !!o && o.address && o.address.addressLocality === JED,
-      o ? JSON.stringify(o.address) : '');
+      !!misto && misto.address && misto.address.addressLocality === JED,
+      misto ? JSON.stringify(misto.address) : JSON.stringify(o));
   }
   const pk = /window\.PK_POZEMEK=([^\n]*?);<\/script>/.exec(h);
   pravda('předání pozemku skriptu (window.PK_POZEMEK) ve stránce je', !!pk);
@@ -142,7 +147,11 @@ const v = await p.evaluate(() => {
   const ldEl = document.querySelector('script[type="application/ld+json"]');
   let ldOk = 'chybí', misto = '';
   if (ldEl) {
-    try { const o = JSON.parse(ldEl.textContent); ldOk = 'ano'; misto = (o.address || {}).addressLocality || ''; }
+    try {
+      const o = JSON.parse(ldEl.textContent); ldOk = 'ano';
+      const m = (Array.isArray(o) ? o : [o]).find((x) => x && x['@type'] === 'Place');
+      misto = ((m || {}).address || {}).addressLocality || '';
+    }
     catch (e) { ldOk = 'nešel přečíst: ' + e.message; }
   }
   return {

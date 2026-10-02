@@ -220,7 +220,10 @@ for (const f of ['../js/main.js', '../js/pozemek.js']) {
      rádce přeuspořádají jakkoli, tohle se stát nesmí. */
   {
     const PROC = /<b>o (\d+) % (pod|nad)<\/b>/;
-    const KORUNY = /<b>([\d\u00a0]+) Kč\/m²<\/b> proti obvyklým <b>([\d\u00a0]+) Kč\/m²<\/b>/;
+    /* Mezera před jednotkou je od zavedení české sazby nezlomitelná
+       (scripts/sazba.mjs), ale vzor musí snést obojí — jinak by kontrola
+       po změně formátu tiše přestala cokoli nacházet. */
+    const KORUNY = /<b>([\d\u00a0]+)[\s\u00a0]Kč\/m²<\/b> proti obvyklým <b>([\d\u00a0]+)[\s\u00a0]Kč\/m²<\/b>/;
     const cislo = (x) => +x.replace(/\u00a0/g, '');
     let obojí = 0;
     const spor = [];
@@ -257,7 +260,7 @@ for (const f of ['../js/main.js', '../js/pozemek.js']) {
     const bezVymery = zpf.filter((d) => {
       const t = blok(d, 'Dá se tu stavět?');
       // výměra se píše s pevnou mezerou po tisících, proto \u00a0
-      return t.indexOf(String(Math.round(d.area)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + ' m²') < 0;
+      return t.indexOf(String(Math.round(d.area)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + '\u00a0m²') < 0;
     });
     pravda('u zemědělské půdy stojí v radě o stavbě výměra té parcely', bezVymery.length === 0,
       'bez výměry: ' + bezVymery.slice(0, 3).map((d) => d.place + ' ' + d.area).join(', '));

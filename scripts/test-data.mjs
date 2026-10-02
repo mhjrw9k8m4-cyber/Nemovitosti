@@ -217,29 +217,65 @@ pravda('každá nabídka ví, kdy ji robot viděl poprvé', bezData.length === 0
    nerozejde znovu. */
 {
   const PKH = pozadavek('../js/hlidani-logika.js');
-  const skutecne = PKH.bezDuplicit(nabidky).length;
+  /* Od chvíle, kdy se vyřazují dražby po termínu, nestačí odstranit
+     duplicity: aplikace si prošlou dražbu odečítá z výpisu, z mapy
+     I Z POČTŮ („dražit se nedá"), a generované stránky to teď dělají
+     taky. Kdyby tahle kontrola porovnávala jen proti syrovému počtu,
+     vynutila by si zpátky to, kvůli čemu vznikla — dvě různá čísla
+     o téže věci: v úvodu 1 994, na mapě pod ním 1 991. */
+  const dnes = new Date(); dnes.setHours(0, 0, 0, 0);
+  const poTerminu = (o) => {
+    const m = /(\d{4})-(\d{2})-(\d{2})/.exec(o.extra || '');
+    if (!m) return false;
+    const d = new Date(+m[1], +m[2] - 1, +m[3]);
+    return !isNaN(d) && d < dnes;
+  };
+  const bezDuplicit = PKH.bezDuplicit(nabidky);
+  const skutecne = bezDuplicit.filter((o) => !poTerminu(o)).length;
   const cislo = (t) => parseInt(String(t || '').replace(/[^\d]/g, ''), 10);
 
   const idx = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const hero = cislo((idx.match(/<b id="hero-n-count">([^<]*)<\/b>/) || [])[1]);
-  pravda('úvodní stránka hlásí tolik pozemků, kolik jich opravdu je',
-    hero === skutecne, `na stránce ${hero}, v datech po odstranění duplicit ${skutecne}`);
-
   const roz = readFileSync(new URL('../pozemky-podle-okresu.html', import.meta.url), 'utf8');
   const rozcestnik = cislo((roz.match(/přes <b>([^<]*)<\/b>/) || [])[1]);
-  pravda('a rozcestník okresů hlásí totéž',
-    rozcestnik === skutecne, `rozcestník ${rozcestnik}, úvod ${hero}, v datech ${skutecne}`);
+
+  /* Dvě VYGENEROVANÉ stránky vznikly v tomtéž okamžiku z týchž dat —
+     ty se musí shodovat na kus přesně. Tohle je jádro kontroly: právě
+     tady se kdysi rozešla tři čísla (1 954 / 1 971 / 1 958). */
+  pravda('úvod a rozcestník hlásí stejné číslo',
+    hero === rozcestnik, `úvod ${hero}, rozcestník ${rozcestnik}`);
+
+  /* Proti DATŮM se ale nedá porovnávat na kus. Stránky jsou snímek
+     z chvíle, kdy je robot sestavil; „po termínu" se posouvá každou
+     půlnocí, takže den po sestavení jich může být po termínu o pár víc
+     než při stavbě. Kontrola na rovnost by se v takový den rozsvítila
+     červeně, aniž by se cokoli pokazilo — a červený běh, který nic
+     neznamená, je horší než žádný.
+     Platí tedy pásmo: nikdy víc než po odstranění duplicit (to by
+     znamenalo, že se počítá něco, co v datech není) a nikdy míň než
+     po odečtení dražeb, kterým termín prošel UŽ TEĎ. */
+  pravda('a nehlásí víc pozemků, než kolik jich v datech je',
+    hero <= bezDuplicit.length, `na stránce ${hero}, v datech ${bezDuplicit.length}`);
+  pravda('ani míň, než kolik jich po odečtení prošlých dražeb zbývá',
+    hero >= skutecne, `na stránce ${hero}, po odečtení ${skutecne}`);
 
   /* A po krajích taky — součet přes kraje nesmí být jiný než celek. */
   const CEN = pozadavek('../js/ceny.js');
   const KR = (CEN && CEN.OKRES_KRAJ) || (globalThis.PK_CENY && globalThis.PK_CENY.OKRES_KRAJ) || {};
   const poKraji = {};
-  for (const d of PKH.bezDuplicit(nabidky)) { const k = KR[d.okres]; if (k) poKraji[k] = (poKraji[k] || 0) + 1; }
+  /* Totéž pravidlo jako u celkového čísla: dražba po termínu se nepočítá. */
+  for (const d of bezDuplicit) { if (poTerminu(d)) continue; const k = KR[d.okres]; if (k) poKraji[k] = (poKraji[k] || 0) + 1; }
   const naStrance = [...idx.matchAll(/data-kraj="([^"]+)">([^<]*)</g)]
     .map((m) => [m[1], cislo(m[2])]).filter(([, n]) => n > 0);
   pravda('na úvodu jsou vypsané kraje', naStrance.length >= 10, `jen ${naStrance.length}`);
-  const neshody = naStrance.filter(([k, n]) => (poKraji[k] || 0) !== n)
-    .map(([k, n]) => `${k}: na stránce ${n}, v datech ${poKraji[k] || 0}`);
+  /* Totéž pásmo jako u celkového čísla: stránka je snímek z chvíle
+     sestavení, kdežto „po termínu" se posouvá každou půlnocí. Nikdy
+     víc než kolik je v datech, nikdy míň než po odečtení prošlých. */
+  const poKrajiVse = {};
+  for (const d of bezDuplicit) { const k = KR[d.okres]; if (k) poKrajiVse[k] = (poKrajiVse[k] || 0) + 1; }
+  const neshody = naStrance
+    .filter(([k, n]) => n > (poKrajiVse[k] || 0) || n < (poKraji[k] || 0))
+    .map(([k, n]) => `${k}: na stránce ${n}, v datech ${poKrajiVse[k] || 0}, po odečtení prošlých ${poKraji[k] || 0}`);
   pravda('a u každého sedí počet', neshody.length === 0, neshody.slice(0, 5).join('; '));
 
   /* A robot ta čísla musí taky opravdu zveřejnit.
