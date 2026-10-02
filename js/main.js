@@ -105,10 +105,27 @@
   // Souřadnice to rozdělí: robot je pro jeden pozemek počítá deterministicky
   // (jitter z názvu a parcely), takže se mezi běhy nemění, a tři desetinná
   // místa (~100 m) snesou i drobné zpřesnění geokódování.
+  /* KLÍČ SE POČÍTÁ JEN JEDNOU ZA ZÁZNAM.
+     Naměřeno na úvodní stránce (2 000 nabídek, brzda 4×): pkey se při
+     jediném načtení volá 63 258×, z toho 24 008× přes jeSkryty(). To je
+     jedenatřicet volání na jednu nabídku — a každé dělá dva toFixed(3)
+     a spojení pěti řetězců. V profilu z toho vyšlo 257 ms procesoru,
+     nejdražší funkce celé stránky.
+     Záznam je ale neměnný: souřadnice přicházejí z dat a nikdo je
+     nepřepisuje (jediné `.lat =` v souboru patří značkám krajů, ne
+     nabídkám). Klíč se proto schová k záznamu a podruhé se jen přečte.
+     Vlastnost je neviditelná pro Object.keys i JSON.stringify, aby se
+     nikomu nepřimíchala do dat. */
   function pkey(d){
+    if (d && d.__pk) return d.__pk;
     var la = (typeof d.lat === 'number') ? d.lat.toFixed(3) : '';
     var ln = (typeof d.lng === 'number') ? d.lng.toFixed(3) : '';
-    return [d.place || '', d.parcel || '', d.okres || '', la, ln].join('|');
+    var k = [d.place || '', d.parcel || '', d.okres || '', la, ln].join('|');
+    if (d && typeof d === 'object') {
+      try { Object.defineProperty(d, '__pk', { value: k, enumerable: false, configurable: true }); }
+      catch (e) {}
+    }
+    return k;
   }
   // Starý tvar klíče — jen pro odkazy rozeslané dřív, ať neskončí naprázdno.
   function pkeyLegacy(d){ return [d.place || '', d.parcel || '', d.okres || ''].join('|'); }

@@ -267,6 +267,27 @@
 
   // Cenový verdikt (světlá verze). Počítá ho společný model js/ceny.js —
   // tenhle soubor měl dřív vlastní kopii výpočtu a ta se s mapou rozešla.
+  /* Popis od inzerenta z ostrůvku v HTML stránky.
+     JMÉNO MUSÍ BÝT JINÉ NEŽ pzPopisHtml. Napoprvé jsem tuhle funkci
+     pojmenoval stejně — a protože deklarace funkcí se v JavaScriptu
+     přepisují tiše, zůstala jen jedna a stránka spadla na
+     „Cannot read properties of undefined (reading 'description')".
+     Jsou to dvě různé věci: majitel píše o svém pozemku ve formuláři,
+     inzerent v cizím inzerátu, ze kterého si text bere robot. Text se do stránky
+     vepsal při generování (scripts/generate-parcel-pages.mjs); čte se
+     přes JSON.parse z <script type="application/json">, takže uvozovky
+     ani lomená závorka v textu nemohou rozbít stránku. */
+  function pzPopisInzerentaHtml() {
+    var el = document.getElementById('pz-popis-data');
+    if (!el) return '';
+    var t = '';
+    try { t = String(JSON.parse(el.textContent) || ''); } catch (e) { return ''; }
+    t = t.trim();
+    if (t.length < 60) return '';
+    return '<h2 class="pz-sect-h">Co o pozemku píše inzerent</h2>'
+      + '<p class="pz-popis-inzerent">' + esc(t) + '</p>';
+  }
+
   function pzVerdictHtml(d) {
     if (!MODEL || !hasArea(d) || !d.price) return '';
     /* Známý podíl dostane VLASTNÍ verdikt, ne mlčení. Bez něj by se
@@ -779,9 +800,9 @@
      2 000 znaků) a js/main.js ho i načte do d.description. A tím to
      skončilo: v celém webu nebylo ani jedno místo, které by ho vypsalo.
      Majitel tedy psal text, který nikdo nikdy neuvidí.
-     U stažených nabídek popis v datech není (robot z něj vytáhne sítě,
-     druh a podíl a text zahodí), takže tahle sekce patří nabídkám od
-     majitelů — a proto se ptá na obsah, ne na typ.
+     U stažených nabídek je text od inzerenta, ne od majitele, a vypisuje
+     ho pzPopisInzerentaHtml() z ostrůvku v HTML stránky. Tahle sekce tedy
+     patří nabídkám od majitelů — a proto se ptá na obsah, ne na typ.
      Odstavce se zachovají: člověk je psal, ať je má i na stránce. */
   function pzPopisHtml(d) {
     var t = String(d.description == null ? '' : d.description).trim();
@@ -887,6 +908,15 @@
       pzDrazbaHtml(d, days) +
 
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
+
+      /* POPIS OD INZERENTA. Dosud na stránce pozemku nestálo ani slovo od
+         toho, kdo ho zná — jen čísla a věty, které si web poskládal sám.
+         Text přichází z inzerátu, je zbavený kontaktů (celé věty s telefonem
+         nebo e-mailem se zahazují, viz scripts/fetch-opportunities.mjs)
+         a leží v ostrůvku JSONu rovnou v téhle stránce, aby si kvůli němu
+         nemusela nic stahovat. Když chybí, nezobrazí se nic — ne prázdný
+         nadpis. */
+      pzPopisInzerentaHtml() +
 
       '<h2 class="pz-sect-h">Parametry pozemku</h2>' +
       '<div class="pz-specs">' +

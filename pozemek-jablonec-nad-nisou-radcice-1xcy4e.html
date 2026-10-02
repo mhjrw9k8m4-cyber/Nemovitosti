@@ -121,6 +121,12 @@
        sekcích; byl to jeden dlouhý blok. Vzhled se nemění, mění se
        význam. */
     .pz-sect-h{font-size:12px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--popisek); margin:40px 0 10px;}
+    /* Popis od inzerenta. Cizí text, u kterého nevíme, jak bude dlouhý ani
+       jak bude psaný — drží se proto na čtecí míře a odsazuje se jako
+       odstavec, ne jako karta. Žádný rámeček: na stránce už tři jsou
+       a čtvrtý by z ní udělal šuplíkový systém. */
+    .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
+      line-height:1.62; color:var(--text-ondark);}
     .pz-specs{border:1px solid var(--line-strong); border-radius:var(--r-plocha); overflow:hidden; background:var(--ink-soft); box-shadow:var(--e1);}
     .pz-spec{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line);}
     .pz-spec:last-child{border-bottom:none;}
@@ -429,7 +435,7 @@
 <script src="js/radce.js?v=05a68e63"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Ostatní plocha 2 416 m² — Radčice","description":"Na prodej · 13 737 Kč (6 Kč/m²) · 2 416 m² · Radčice, okres Jablonec nad Nisou. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-jablonec-nad-nisou-radcice-1xcy4e.html","address":{"@type":"PostalAddress","addressLocality":"Radčice","addressRegion":"Jablonec nad Nisou","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.679,"longitude":15.27595}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Jablonec nad Nisou","item":"https://www.parcelaka.cz/pozemky-okres-jablonec-nad-nisou.html"},{"@type":"ListItem","position":4,"name":"Ostatní plocha 2 416 m² — Radčice","item":"https://www.parcelaka.cz/pozemek-jablonec-nad-nisou-radcice-1xcy4e.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Radčice|KN 2567|Jablonec nad Nisou|50.679|15.276","ll":[50.679,15.27595],"v":2416,"c":13737};</script>
-<script src="js/pozemek.js?v=15617d2c"></script>
+<script src="js/pozemek.js?v=59f5e1dd"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -442,6 +448,6 @@
 <script src="js/hlidani-logika.js?v=8c971165" defer></script>
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
-<script src="js/hlavicka.js?v=091fb0e3" defer></script>
+<script src="js/hlavicka.js?v=d154bfeb" defer></script>
 </body>
 </html>

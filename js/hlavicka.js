@@ -225,28 +225,56 @@
     (document.body || document.documentElement).appendChild(b);
   }
 
-  function dlouha() {
-    return document.documentElement.scrollHeight > window.innerHeight * PRAH_OBRAZOVEK;
+  /* PŘI ROLOVÁNÍ SE NESMÍ NIC MĚŘIT.
+     Napoprvé se tu při každém pohybu četl `scrollHeight` a `getBoundingClientRect()`
+     patičky. Obojí je dotaz na rozvržení, a dotaz na rozvržení donutí
+     prohlížeč všechno přepočítat. Navíc to viselo i na ResizeObserveru
+     nad <body>, který se během stavby mapy a výpisu hýbe pořád dokola.
+     Naměřeno profilerem s brzdou 4× (tedy zhruba běžný telefon) na úvodní
+     stránce: 259 ms procesoru jen v téhle funkci, druhá nejdražší věc na
+     celé stránce hned za kreslením mapy.
+     Je to přesně ta vada, před kterou varuje poznámka v hlavičce
+     index.html — tam kdysi stálo 2 017 ms v toTop ze stejného důvodu.
+     Opsal jsem ji znovu, protože „zeptat se na výšku stránky" vypadá
+     nevinně.
+     Teď se míry berou JEN při změně velikosti (a ty se stejně dějí
+     v dávkách, takže je sbírá requestAnimationFrame). Při rolování už
+     zbývá jen porovnání dvou čísel. */
+  var vyskaStranky = 0, vysKna = 0, patkaOd = 1e9, cekaRam = false;
+
+  function premer() {
+    cekaRam = false;
+    vyskaStranky = document.documentElement.scrollHeight;
+    vysKna = window.innerHeight;
+    var pat = document.querySelector('footer');
+    /* offsetTop sčítá odsazení předků, ne polohu v okně — nezávisí tedy
+       na rolování a nepotřebuje se číst znovu při každém pohybu. */
+    patkaOd = pat ? (pat.getBoundingClientRect().top + (window.pageYOffset || 0)) : 1e9;
+    prekresli();
   }
-  /* U patičky tlačítko uhne. Kdo je na konci, chce její odkazy, ne aby
-     mu přes ně ležel knoflík — a zpátky nahoru se odtud dostane i tak. */
-  function vPatce() {
-    var p = document.querySelector('footer');
-    return !!p && p.getBoundingClientRect().top < window.innerHeight - 60;
+  function premerPozdeji() {
+    if (cekaRam) return;
+    cekaRam = true;
+    (window.requestAnimationFrame || setTimeout)(premer);
   }
+
   function prekresli() {
     var y = window.pageYOffset || document.documentElement.scrollTop || 0;
-    b.classList.toggle('show', dlouha() && y > PRAH_POSUNU && !vPatce());
+    var dlouha = vyskaStranky > vysKna * PRAH_OBRAZOVEK;
+    /* U patičky tlačítko uhne. Kdo je na konci, chce její odkazy, ne aby
+       mu přes ně ležel knoflík — a zpátky nahoru se odtud dostane i tak. */
+    var vPatce = (patkaOd - y) < (vysKna - 60);
+    b.classList.toggle('show', dlouha && y > PRAH_POSUNU && !vPatce);
   }
 
   window.addEventListener('scroll', prekresli, { passive: true });
-  window.addEventListener('resize', prekresli, { passive: true });
+  window.addEventListener('resize', premerPozdeji, { passive: true });
   /* Výpisy a mapa dorůstají po načtení — bez tohohle by se tlačítko na
      dlouhé stránce objevilo až po prvním posunu po doplnění dat. */
   if ('ResizeObserver' in window && document.body) {
-    try { new ResizeObserver(prekresli).observe(document.body); } catch (e) {}
+    try { new ResizeObserver(premerPozdeji).observe(document.body); } catch (e) {}
   }
-  prekresli();
+  premer();
 
   b.addEventListener('click', function (e) {
     window.scrollTo({ top: 0, behavior: 'smooth' });

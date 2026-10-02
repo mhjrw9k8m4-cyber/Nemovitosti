@@ -17,6 +17,9 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { okresPodleGPS, okresPodleHranice, maHranice, kmVenZOkresu } from './okres-podle-gps.mjs';
+/* Klíč nabídky počítá generátor stránek pozemků — a počítá ho jen on,
+   aby se popis a stránka nemohly rozejít. */
+import { klicNabidky } from './generate-parcel-pages.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -43,6 +46,8 @@ function pridejVybaveni(o, text) {
 const OUT = join(__dirname, '..', 'data', 'opportunities.json');
 const OKRESY = join(__dirname, '..', 'data', 'okresy.json');
 const GEOCACHE = join(__dirname, '..', 'data', 'geocode-cache.json');
+/* Popisy od inzerentů. Zvlášť, aby je nemusela stahovat úvodní stránka. */
+const POPISY = join(__dirname, '..', 'data', 'popisy.json');
 
 // Geokódování: okres → přibližné souřadnice (s malým rozptylem, ať se body nekryjí)
 let OKRESY_MAP = {};
@@ -578,6 +583,32 @@ async function fetchProdejSPU() {
 
 // Bezrealitky.cz — inzeráty pozemků na prodej od majitelů.
 // Veřejné GraphQL API (robots.txt dovoluje). Vrací i GPS a odkaz na inzerát.
+/* Popis z inzerátu se musí uklidit, než se někam uloží.
+   CELÉ VĚTY, NE JEN SLOVA. Napoprvé jsem z textu vyškrtal telefony,
+   e-maily a odkazy — a zůstalo „Volejte   nebo pište na   Více na", tedy
+   věta bez toho, kvůli čemu stála. Vyhazuje se proto celá věta, ve které
+   kontakt byl. Co zbude, je popis pozemku; shánět se dá přes odkaz na
+   inzerát, který je na stránce vedle. */
+const KONTAKT = /(\+?\d[\d\s]{7,}\d)|([\w.+-]+@[\w-]+\.[\w.]+)|(https?:\/\/)|(\bwww\.)/i;
+export function cistyPopis(t) {
+  if (!t) return '';
+  const holy = String(t)
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/[.·•_]{3,}/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const vety = holy.split(/(?<=[.!?])\s+/).filter((v) => v && !KONTAKT.test(v));
+  let x = vety.join(' ').replace(/\s+/g, ' ').trim();
+  if (x.length > 460) {
+    const rez = x.lastIndexOf('. ', 460);
+    x = (rez > 200 ? x.slice(0, rez + 1) : x.slice(0, 460).replace(/\s+\S*$/, '') + '…');
+  }
+  /* Dvě slova nejsou popis a prázdná slupka („Pozemek na prodej.") taky ne. */
+  return x.length >= 60 ? x : '';
+}
+
 async function fetchBezrealitky() {
   const query = `query($limit:Int,$offset:Int,$order:ResultOrder,$offerType:[OfferType],$estateType:[EstateType]){
     listAdverts(limit:$limit,offset:$offset,order:$order,offerType:$offerType,estateType:$estateType){
@@ -625,6 +656,14 @@ async function fetchBezrealitky() {
         lng: typeof gps.lng === 'number' ? gps.lng : undefined,
         _gps: typeof gps.lat === 'number' && typeof gps.lng === 'number',
         url: a.uri ? 'https://www.bezrealitky.cz/nemovitosti-byty-domy/' + a.uri : undefined,
+        /* POPIS OD INZERENTA. Dotaz ho stahoval odjakživa, ale používal se
+           jen k uhodnutí druhu a vybavení a pak se zahodil — na webu tedy
+           o pozemku nestálo ani slovo, které o něm napsal ten, kdo ho zná.
+           Podtržítko znamená „do opportunities.json nepatří": ten soubor
+           čte úvodní stránka a každý kilobajt v něm stojí čas na telefonu.
+           Popisy jdou do zvláštního souboru, který potřebují jen stránky
+           jednotlivých pozemků. */
+        _popis: cistyPopis(a.description),
       });
       pridejVybaveni(out[out.length - 1], (a.description || '') + ' ' + (a.title || ''));
     }
@@ -962,7 +1001,17 @@ async function main() {
   const hrubych = fresh.filter((o) => jenObec(o.place, o.okres)).length;
   console.log(`Čtvrť doplněna u ${sCasti} z ${hrubych} nabídek, kde bylo místo jen celá obec.`);
 
-  fresh.forEach((o) => { delete o._gps; delete o._key; });
+  /* POPISY DO ZVLÁŠTNÍHO SOUBORU. Kdyby se vepsaly do opportunities.json,
+     narostl by o zhruba megabajt — a ten soubor čte úvodní stránka, kde se
+     každý kilobajt platí časem na telefonu. Stránky jednotlivých pozemků
+     si popis vezmou odtud; klíč počítá táž funkce, která pojmenovává jejich
+     soubory, takže se nemohou rozejít. */
+  const popisy = {};
+  for (const o of fresh) if (o._popis) popisy[klicNabidky(o)] = o._popis;
+  writeFileSync(POPISY, JSON.stringify(popisy) + '\n', 'utf8');
+  console.log(`Popisů od inzerentů: ${Object.keys(popisy).length} z ${fresh.length}.`);
+
+  fresh.forEach((o) => { delete o._gps; delete o._key; delete o._popis; });
   if (geoCacheDirty) writeFileSync(GEOCACHE, JSON.stringify(GEO_CACHE, null, 0) + '\n', 'utf8');
   console.log(`Zpřesněno podle názvu KÚ: ${refined}/${fresh.length}.` +
     (zamitnuto ? ` Zamítnuto jako jiná obec téhož jména: ${zamitnuto} (zůstávají na středu okresu).` : ''));

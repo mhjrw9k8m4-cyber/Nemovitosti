@@ -26,7 +26,15 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { jsonVeStrance } from './json-do-stranky.mjs';
 
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+/* Popisy od inzerentů. Soubor vzniká při sběru dat; než robot poprvé
+   doběhne, prostě není — a generátor tím nesmí spadnout, jinak by se
+   kvůli chybějícímu popisu nevygenerovaly stránky vůbec. */
+const POPISY = (() => {
+  try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'popisy.json'), 'utf8')) || {}; }
+  catch { return {}; }
+})();
 const WEB = 'https://www.parcelaka.cz';
 
 const MAPA = { 'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z' };
@@ -247,6 +255,18 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
        klíč: bez nich by stránka toho druhého z dvojice nedokázala ve
        stažených datech najít sám sebe a vzala by prostě první nález. */
     + `<script>window.PK_POZEMEK=${jsonVeStrance({ k: pkey(d), ll: [d.lat, d.lng], v: d.area || 0, c: d.price || 0 })};</scr` + `ipt>\n$1`);
+  /* POPIS OD INZERENTA, vepsaný rovnou do stránky. Leží v samostatném
+     souboru (data/popisy.json), protože do opportunities.json, který čte
+     úvodní stránka, nepatří — přidal by k němu zhruba megabajt. Sem se
+     dostane jen ten jediný, který k téhle stránce patří: pár set bajtů.
+     Text přichází z cizího inzerátu, takže jde do stránky přes
+     jsonVeStrance a vykresluje ho js/pozemek.js přes textContent — do
+     HTML se nikdy nevkládá jako značky. */
+  const popisInzerenta = POPISY[klicNabidky(d)];
+  if (popisInzerenta) {
+    h = h.replace(/(<\/body>)/,
+      `<script type="application/json" id="pz-popis-data">${jsonVeStrance(popisInzerenta)}</scr` + `ipt>\n$1`);
+  }
   return h;
 }
 
