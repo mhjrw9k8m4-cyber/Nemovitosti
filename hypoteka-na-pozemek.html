@@ -34,7 +34,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=131d6106">
+  <link rel="stylesheet" href="css/styles.css?v=606b7bd9">
 
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"Article","headline":"Hypotéka na pozemek: jak financovat koupi","inLanguage":"cs","description":"Jak banky financují koupi pozemku — LTV, přístup, sítě, územní plán a rozdíl mezi stavebním a zemědělským pozemkem.","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntityOfPage":"https://www.parcelaka.cz/hypoteka-na-pozemek.html"}
@@ -84,6 +84,41 @@
 
   <section class="section" style="padding-top:20px;">
     <div class="wrap add-wrap">
+
+      <!-- KALKULAČKA JE PRVNÍ, TEXT AŽ ZA NÍ.
+           Otázka, se kterou sem člověk chodí, je jedna: „mám tolik stranou,
+           pozemek stojí tolik — vyjde to a kolik budu platit měsíčně?"
+           Stránka na ni dosud odpovídala šesti nadpisy textu.
+           Čísla si zadává člověk; web žádný úrok ani LTV nevymýšlí,
+           protože tahle stránka je schválně neuvádí. -->
+      <div class="add-card nak-karta">
+        <form id="hypo" class="nak-form" autocomplete="off" novalidate>
+          <h2 class="nak-h">Spočítejte si splátku</h2>
+          <p class="nak-lead">Čísla jsou vaše — úrok i dobu si zadáte sami. Nic se nikam neodesílá.</p>
+
+          <label class="nak-pole nak-hlavni" for="hypo-cena">
+            <span class="nak-k">Cena pozemku</span>
+            <span class="nak-vstup"><input id="hypo-cena" type="number" inputmode="numeric" min="0" step="1000" placeholder="např. 600 000"><i>Kč</i></span>
+          </label>
+
+          <div class="hypo-radek">
+            <label class="nak-pole" for="hypo-vlastni">
+              <span class="nak-k">Vlastní peníze</span>
+              <span class="nak-vstup"><input id="hypo-vlastni" type="number" inputmode="numeric" min="0" step="1000" value="200000"><i>Kč</i></span>
+            </label>
+            <label class="nak-pole" for="hypo-urok">
+              <span class="nak-k">Úrok</span>
+              <span class="nak-vstup"><input id="hypo-urok" type="number" inputmode="decimal" min="0" max="25" step="0.1" value="5"><i>% p.&nbsp;a.</i></span>
+            </label>
+            <label class="nak-pole" for="hypo-roky">
+              <span class="nak-k">Doba splácení</span>
+              <span class="nak-vstup"><input id="hypo-roky" type="number" inputmode="numeric" min="1" max="40" step="1" value="20"><i>let</i></span>
+            </label>
+          </div>
+
+          <div id="hypo-vysledek" class="nak-vysledek" aria-live="polite"></div>
+        </form>
+      </div>
 
       <div class="add-card clanek">
         <div class="rules-sect">
@@ -174,6 +209,7 @@
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
 <script src="js/obsah.js?v=564d8537" defer></script>
+<script src="js/hypoteka.js?v=bcbb3273" defer></script>
 <script src="js/hlavicka.js?v=d154bfeb" defer></script>
 </body>
 </html>

@@ -4648,6 +4648,13 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 .nak-volba > input[type=checkbox]{width:20px; height:20px; accent-color:var(--copper-bright); cursor:pointer;}
 .nak-volba .nak-t{font-size:14px;}
 .nak-volba .nak-vstup input{width:110px; padding:8px 38px 8px 10px; font-size:14px;}
+.hypo-radek{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px;}
+.hypo-radek .nak-pole{margin-bottom:18px;}
+.hypo-radek .nak-vstup input{width:100%;}
+@media (max-width:560px){ .hypo-radek{grid-template-columns:minmax(0,1fr);} }
+.hypo-prazdno{font-size:14px; color:var(--text-ondark-mute); margin:0;}
+.nak-tab .hypo-mes td{font-family:var(--font-display); font-size:24px; font-weight:700;
+  color:var(--copper-bright); letter-spacing:-0.02em;}
 .nak-tab{width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums;}
 .nak-tab th{text-align:left; font-weight:600; font-size:14px; padding:9px 0; vertical-align:top;}
 .nak-tab th span{display:block; font-weight:400; font-size:12px; color:var(--text-ondark-mute);}

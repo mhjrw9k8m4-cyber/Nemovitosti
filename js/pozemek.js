@@ -953,9 +953,16 @@
          úschova a případně provize. Dosud se to člověk dozvěděl jen
          z článku, kde si to musel sečíst sám. Odkaz nese cenu s sebou,
          takže se kalkulačka otevře už vyplněná. */
-      (d.price ? '<p class="pz-naklady"><a href="kolik-stoji-koupe-pozemku.html?cena='
-        + encodeURIComponent(String(Math.round(d.price)))
-        + '">Spočítat, kolik koupě stojí dohromady</a> — vklad do katastru, smlouva, úschova.</p>' : '') +
+      (d.price ? (function () {
+        var c = encodeURIComponent(String(Math.round(d.price)));
+        /* Dva odkazy na jednom řádku, ne dva odstavce: jsou to dvě strany
+           téže otázky („kolik to stojí" a „na kolik si půjčím") a každá
+           vlastní krabička by z detailu udělala rozcestník. */
+        return '<p class="pz-naklady">'
+          + '<a href="kolik-stoji-koupe-pozemku.html?cena=' + c + '">Kolik koupě stojí dohromady</a>'
+          + ' · <a href="hypoteka-na-pozemek.html?cena=' + c + '">Spočítat splátku hypotéky</a>'
+          + '</p>';
+      }()) : '') +
 
       pzMapaHtml(d) +
 

@@ -551,25 +551,31 @@ async function fetchProdejSPU() {
   const lines = txt.split(/\r?\n/).filter((l) => l.trim());
   if (lines.length < 2) return [];
   const out = [];
+  /* Stejný důvod jako u Farmy: v logu stálo jen kolik zůstalo. CSV Státního
+     pozemkového úřadu má přes tisíc řádků a zůstává z nich zhruba dvě stě —
+     to může být v pořádku (většina je nájem, ne prodej), ale poznat to
+     z jednoho čísla nejde. Když zdroj změní pořadí sloupců, projeví se to
+     tady jako „málo řádků" a jinak nijak. */
+  const ztraty = { radku: lines.length - 1, kratky: 0, stazeno: 0, bezCeny: 0, podil: 0, najem: 0 };
   for (let i = 1; i < lines.length; i++) {
     const c = splitCsvLine(lines[i]);
-    if (c.length < 8) continue;
+    if (c.length < 8) { ztraty.kratky++; continue; }
     // Zadní sloupce (…;Cena;Nájem/pacht;Číslo OP;Staženo) čteme zprava — poznámka
     // uprostřed může mít středník; konec řádku je vždy stejný. Cena = 4. odzadu.
-    if (/^ano$/i.test((c[c.length - 1] || '').trim())) continue; // Staženo = ano
+    if (/^ano$/i.test((c[c.length - 1] || '').trim())) { ztraty.stazeno++; continue; } // Staženo = ano
     const okres = (c[0] || '').trim();
     const place = (c[1] || '').trim();
     const money = (c[c.length - 4] || '').match(/(\d[\d\s\u00a0]*),\d{2}/); // sloupec Cena
     const price = money ? parseInt(money[1].replace(/[^\d]/g, ''), 10) : null;
-    if (!okres || !place || !price || price < 100) continue; // jen prodejní cena, ne nájem
+    if (!okres || !place || !price || price < 100) { ztraty.bezCeny++; continue; } // jen prodejní cena, ne nájem
     // Jen celé parcely (podíl SPÚ 1/1). Zlomkové spoluvlastnické podíly mají
     // cenu za malý podíl, což by zkreslovalo cenu za m². Podíl = 5. sloupec odzadu.
     const pod = (c[c.length - 5] || '').match(/(\d+)\s*\/\s*(\d+)/);
-    if (pod && pod[1] !== pod[2]) continue;
+    if (pod && pod[1] !== pod[2]) { ztraty.podil++; continue; }
     const area = parseInt(String(c[3] || '').replace(/[^\d]/g, ''), 10) || null;
     const druh = (c[4] || '').trim() || parseDruh(c[5] || '', [place, okres]);
     // Cena za m² pod 5 Kč = spíš roční nájem/pacht než prodej → vynecháme.
-    if (area && price / area < 5) continue;
+    if (area && price / area < 5) { ztraty.najem++; continue; }
     out.push({
       place, okres: normOkres(okres), type: 'sale',
       parcel: String(c[2] || '—').trim().slice(0, 40) || '—',
@@ -578,6 +584,9 @@ async function fetchProdejSPU() {
       extra: 'prodej státní půdy (SPÚ, § 12)',
     });
   }
+  console.log(`SPÚ: z ${ztraty.radku} řádků zůstalo ${out.length}`
+    + ` (krátký řádek ${ztraty.kratky}, staženo ${ztraty.stazeno}, bez prodejní ceny ${ztraty.bezCeny},`
+    + ` spoluvlastnický podíl ${ztraty.podil}, vypadá na nájem ${ztraty.najem}).`);
   return out;
 }
 
@@ -684,10 +693,17 @@ async function fetchFarmy() {
     ...[...listHtml.matchAll(/nabidka_detail\/(\d+)/g)].map((m) => m[1]),
   ])].slice(0, 450);
   const out = [];
+  /* ROBOT MUSÍ ŘÍCT, CO ZAHODIL. V logu stálo jen „Zdroj Farmy: 7 záznamů"
+     — a sedm je na portál se zemědělskou půdou podezřele málo. Jestli je
+     to tím, že stránka s výpisem má jen první stranu, nebo tím, že se
+     detaily nedaří přečíst, z toho čísla poznat nejde. Teď se počítá,
+     kolik nabídek se našlo a na čem ostatní vypadly; v logu Actions je
+     to pak vidět bez hádání. */
+  const ztraty = { nalezeno: ids.length, detailNedojel: 0, bezCeny: 0, bezOkresu: 0 };
   for (const id of ids) {
     let html;
-    try { const r = await fetch(BASE + '/nabidka_detail?nab=' + id, { headers: UA }); if (!r.ok) { await sleep(200); continue; } html = await r.text(); }
-    catch { continue; }
+    try { const r = await fetch(BASE + '/nabidka_detail?nab=' + id, { headers: UA }); if (!r.ok) { ztraty.detailNedojel++; await sleep(200); continue; } html = await r.text(); }
+    catch { ztraty.detailNedojel++; continue; }
     await sleep(200); // slušnost k serveru
     const text = html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
     const g = text.match(/Poloha GPS\s+([\d.]+)N,?\s*([\d.]+)E/i);
@@ -702,7 +718,8 @@ async function fetchFarmy() {
     else if (tm) price = parseInt(tm[1].replace(/[\s.]/g, ''), 10) || null;
     let okres = (text.match(/v okrese\s+(.+?)\s+v\s+\S+\s+kraji/i) || [])[1];
     if (!okres && typeof lat === 'number') okres = nearestOkres(lat, lng);
-    if (!okres || !price) continue;
+    if (!price) { ztraty.bezCeny++; continue; }
+    if (!okres) { ztraty.bezOkresu++; continue; }
     const obec = (text.match(/Obec\s+(.+?)\s+Okres/i) || [])[1];
     const ku = (text.match(/Katastrální území\s+([^\d]+?)\s+(?:Výměra|Poloha|Cena|Číslo)/i) || [])[1];
     const place = (obec || ku || 'Pozemek').trim().slice(0, 60);
@@ -717,6 +734,8 @@ async function fetchFarmy() {
     });
     pridejVybaveni(out[out.length - 1], text.slice(0, 4000));
   }
+  console.log(`Farmy: z ${ztraty.nalezeno} nabídek na výpisu zůstalo ${out.length}`
+    + ` (nedojel detail ${ztraty.detailNedojel}, bez ceny ${ztraty.bezCeny}, bez okresu ${ztraty.bezOkresu}).`);
   return out;
 }
 
@@ -733,7 +752,17 @@ async function fetchFarmy() {
 // polí doladí podle skutečného výstupu (viz log „Sreality/Apify vzorek").
 async function fetchSreality() {
   const token = process.env.APIFY_TOKEN;
-  if (!token) return []; // klíč nenastaven → zdroj se nepoužije
+  if (!token) {
+    /* ZDROJ VYPNUTÝ NENÍ ZDROJ V POŘÁDKU. Bez klíče se vracelo prázdno
+       a běh to zapsal jako „Sreality (Apify): 0 záznamů" — tedy stejně,
+       jako kdyby zdroj odpověděl a žádné pozemky neměl. V logu i v datech
+       to pak vypadá na dočasný výpadek, ačkoli je to trvalý stav, který
+       spraví jediná věc: nastavit APIFY_TOKEN. */
+    console.log('Sreality (Apify): vypnuto — není nastavený APIFY_TOKEN.');
+    const e = new Error('není nastavený APIFY_TOKEN');
+    e.vypnuto = true;
+    throw e;
+  }
   const actor = process.env.APIFY_SREALITY_ACTOR || 'logiover~sreality-cz-scraper-czech-real-estate-data';
   let items;
   try {
@@ -848,13 +877,17 @@ async function main() {
   // a kolik toho přinesl.
   const zdroje = results.map((r, i) => ({
     nazev: SOURCES[i][0],
-    stav: r.status === 'fulfilled' ? 'ok' : 'chyba',
+    /* Tři stavy, ne dva: „ok", „chyba" (zdroj neodpověděl) a „vypnuto"
+       (chybí klíč, takže se ani nezkoušel). Dřív bylo vypnuto totéž co
+       prázdná odpověď a web i log tvrdily, že je zdroj v pořádku. */
+    stav: r.status === 'fulfilled' ? 'ok' : (r.reason && r.reason.vypnuto ? 'vypnuto' : 'chyba'),
     pocet: r.status === 'fulfilled' ? (r.value || []).length : 0,
     cas: new Date().toISOString(),
     chyba: r.status === 'rejected' ? String((r.reason && r.reason.message) || r.reason).slice(0, 140) : null,
   }));
   zdroje.forEach((z) => {
     if (z.stav === 'ok') console.log(`Zdroj ${z.nazev}: ${z.pocet} záznamů.`);
+    else if (z.stav === 'vypnuto') console.log(`Zdroj ${z.nazev}: vypnutý (${z.chyba}).`);
     else console.error(`Zdroj ${z.nazev} SELHAL: ${z.chyba}`);
   });
 

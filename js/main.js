@@ -504,12 +504,20 @@
       var nalez = podleJmena[chip.getAttribute('data-zdroj') || ''];
       if (!nalez) return;
       var znacka = document.createElement('span');
+      /* TŘI STAVY, NE DVA. „Vypnutý" (chybí klíč, zdroj se ani nezkoušel)
+         vypadal dřív stejně jako „neodpověděl" — a to je rozdíl mezi
+         dočasným výpadkem a trvalým stavem, který nikdo neřeší, protože
+         o něm neví. */
+      var vypnuty = nalez.stav === 'vypnuto';
       znacka.className = 'src-stav' + (nalez.stav === 'ok' && nalez.pocet ? '' : ' src-zle');
-      znacka.textContent = nalez.stav !== 'ok' ? 'nedostupný'
-        : (nalez.pocet ? nalez.pocet + '×' : 'bez záznamů');
-      znacka.title = nalez.stav !== 'ok'
-        ? 'Zdroj při poslední kontrole neodpověděl' + (nalez.chyba ? ': ' + nalez.chyba : '')
-        : 'Při poslední kontrole vrátil ' + nalez.pocet + ' záznamů';
+      znacka.textContent = vypnuty ? 'nezapojený'
+        : (nalez.stav !== 'ok' ? 'nedostupný'
+          : (nalez.pocet ? nalez.pocet + '×' : 'bez záznamů'));
+      znacka.title = vypnuty
+        ? 'Zdroj zatím není zapojený' + (nalez.chyba ? ' (' + nalez.chyba + ')' : '')
+        : (nalez.stav !== 'ok'
+          ? 'Zdroj při poslední kontrole neodpověděl' + (nalez.chyba ? ': ' + nalez.chyba : '')
+          : 'Při poslední kontrole vrátil ' + nalez.pocet + ' záznamů');
       chip.appendChild(znacka);
     });
   })();
