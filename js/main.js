@@ -1822,15 +1822,28 @@
     return { samotne: samotne, shluky: shluky };
   }
 
-  /* Barva shluku podle toho, co v něm převažuje — táž paleta jako tečky
-     i legenda. Dražba a exekuce mají přednost i v menšině: to jsou ty
-     nabídky, které mají termín, a schovat je pod modrou většinu by
-     znamenalo zamlčet právě to, kvůli čemu se na mapu někdo dívá. */
+  /* Barva odznaku podle toho, co v něm PŘEVAŽUJE — táž paleta jako tečky
+     i legenda.
+     DŘÍV TU STÁLO „dražba a exekuce mají přednost i v menšině" a bez
+     jakékoli podmínky: stačila jedna jediná exekuce a celý odznak zčervenal.
+     U hrstky nabídek to dává smysl — jedna dražba ze tří je třetina a má
+     termín, který nikdo nechce přehlédnout. U kraje to byla lež.
+     Naměřeno na datech: z 2 014 nabídek je 1 852 na prodej (92 %),
+     127 dražeb (6 %) a 35 exekucí (1,7 %). Těch pětatřicet exekucí je
+     rozsypaných po republice tak, že skoro každý kraj aspoň jednu má —
+     a dvanáct ze čtrnácti krajových odznaků proto svítilo vínově nebo
+     oranžově nad kobercem modrých teček. Mapa tvrdila „tady jsou dražby",
+     zatímco pod ní bylo z devíti desetin zboží na prodej.
+     Přednost tedy zůstává, ale jen dokud je ta menšina znát: od čtvrtiny
+     hromádky výš. V pěti nabídkách je jedna dražba vidět, ve čtyřech
+     stech je to šum — a ten šum stejně vidět je, protože tečky pod
+     odznakem zůstávají všechny a mají svou barvu. */
+  var SHLUK_MENSINA = 0.25;
   function shlukBarva(cleny) {
-    var m = {};
+    var m = {}, n = cleny.length;
     for (var i = 0; i < cleny.length; i++) m[cleny[i].type] = (m[cleny[i].type] || 0) + 1;
-    if (m.exekuce) return TYPE.exekuce.color;
-    if (m.drazba) return TYPE.drazba.color;
+    if ((m.exekuce || 0) / n >= SHLUK_MENSINA) return TYPE.exekuce.color;
+    if ((m.drazba || 0) / n >= SHLUK_MENSINA) return TYPE.drazba.color;
     var nej = null, nejN = 0;
     for (var t in m) if (m[t] > nejN) { nejN = m[t]; nej = t; }
     return (TYPE[nej] && TYPE[nej].color) || TYPE.sale.color;
@@ -2027,8 +2040,15 @@
       });
       if (!map.hasLayer(shlukLayer)) shlukLayer.addTo(map);
       try {
+        /* Rozpad po druzích je tu kvůli zkoušce scripts/test-shluky.mjs:
+           ta se ptá, jestli barva odznaku odpovídá tomu, co je pod ním.
+           Bez něj by se to z DOM nedalo zjistit — odznak nese jen číslo. */
         window.PK_SHLUKY = { krajove: true, shluky: Object.keys(podleKraje).map(function (kn) {
-          return { kraj: kn, n: podleKraje[kn].length }; }), samotne: [] };
+          var t = {};
+          for (var q = 0; q < podleKraje[kn].length; q++) {
+            var ty = podleKraje[kn][q].type; t[ty] = (t[ty] || 0) + 1;
+          }
+          return { kraj: kn, n: podleKraje[kn].length, typy: t }; }), samotne: [] };
       } catch (e) {}
       return;
     }

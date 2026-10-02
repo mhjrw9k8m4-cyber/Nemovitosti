@@ -194,6 +194,9 @@ jobs:
       - name: Ovládání mapy (klepání do plátna)
         run: node scripts/test-mapa.mjs
 
+      - name: Odznaky shluků na mapě (barva nesmí lhát)
+        run: node scripts/test-shluky.mjs
+
       - name: Mapa s vrstvami v detailu pozemku
         run: node scripts/test-mapa-pozemku.mjs
 
