@@ -458,8 +458,22 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   const stav = () => p.evaluate(() => {
     const m = /(\d[\d\s\u00a0]*)/.exec(String((document.getElementById('map-count') || {}).textContent)
       .replace(/\u00a0/g, ' '));
+    const kde = document.querySelector('.opp-strany .ops-kde');
+    const str = kde ? /Strana\s+(\d+)\s+z\s+([\d\s\u00a0]+)/.exec(kde.textContent.replace(/\u00a0/g, ' ')) : null;
+    const btn = (krok) => document.querySelector('.opp-strany .ops-btn[data-krok="' + krok + '"]');
+    const seznam = document.getElementById('opp-list');
     return { karet: document.querySelectorAll('#opp-list .opp-item').length,
-      tlacitko: !!document.getElementById('opp-dalsi-btn'),
+      patka: !!document.querySelector('.opp-strany'),
+      strana: str ? +str[1] : -1,
+      stran: str ? +str[2].replace(/\s/g, '') : -1,
+      zpetVypnute: !!(btn('-1') && btn('-1').disabled),
+      vpredVypnute: !!(btn('1') && btn('1').disabled),
+      /* Kde je začátek výpisu vůči oknu. Po přechodu na další stranu
+         má být nahoře — o to u stránkování šlo především. */
+      vrchSeznamu: seznam ? Math.round(seznam.getBoundingClientRect().top) : null,
+      vrchPrvniKarty: (function () { const k = document.querySelector('#opp-list .opp-item');
+        return k ? Math.round(k.getBoundingClientRect().top) : null; }()),
+      vyskaOkna: window.innerHeight,
       pocet: m ? +m[1].replace(/\s/g, '') : -1 };
   });
   const pred = await stav();
@@ -488,41 +502,99 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
       bezMezer(c.hlavicka) === bezMezer(c.prepinac),
       `hlavička „${c.hlavicka}", přepínač „${c.prepinac}"`);
   }
-  pravda('výpis začíná osmi kartami', pred.karet === 8, `karet ${pred.karet}`);
-  pravda('a nabízí se dočtení dalších', pred.tlacitko && pred.pocet > 8,
-    `tlačítko ${pred.tlacitko}, nalezeno ${pred.pocet}`);
-  if (pred.tlacitko) {
-    await p.click('#opp-dalsi-btn');
+  /* STRÁNKY, NE DOČÍTÁNÍ DONEKONEČNA.
+     Výpis dřív začínal osmi kartami a tlačítkem „další", které kousek po
+     kousku přisypávalo až ke stropu 96. Kdo došel na konec a klepl, zůstal
+     stát v půlce dlouhé stránky a musel se znovu prorolovat dolů. Teď jsou
+     to strany po 24: klepnutí vymění obsah a vrátí člověka na začátek
+     výpisu. Tenhle oddíl to hlídá — počet na stranu, číslo strany, zhasnutá
+     tlačítka na koncích a hlavně ten skok nahoru. */
+  const NA_STRANKU = 24;
+  pravda('je co stránkovat (jinak zkouška níž nic neměří)',
+    pred.pocet > NA_STRANKU, `nalezeno ${pred.pocet}`);
+  pravda(`výpis začíná ${NA_STRANKU} kartami`, pred.karet === NA_STRANKU, `karet ${pred.karet}`);
+  pravda('a pod ním je patka se stranami', pred.patka,
+    'patka .opp-strany na stránce není');
+  pravda('patka říká, na které straně člověk je', pred.strana === 1,
+    `strana ${pred.strana} z ${pred.stran}`);
+  pravda('a kolik stran celkem — spočítaných z počtu nalezených',
+    pred.stran === Math.ceil(pred.pocet / NA_STRANKU),
+    `patka říká ${pred.stran}, z ${pred.pocet} nabídek po ${NA_STRANKU} vychází `
+    + Math.ceil(pred.pocet / NA_STRANKU));
+  pravda('na první straně se zpátky nedá', pred.zpetVypnute,
+    'tlačítko zpět je aktivní už na první straně');
+  pravda('a dopředu ano', !pred.vpredVypnute, 'tlačítko vpřed je vypnuté');
+
+  {
+    /* Napřed sjet dolů, aby bylo co poznat: kdyby se měřilo od vrchu
+       stránky, „skočilo to nahoru" by vyšlo i tehdy, když se nestalo nic.
+       Meze se NEHÁDAJÍ — berou se z klidové polohy výpisu, kterou si test
+       přečetl před odrolováním. Natvrdo napsaná čísla tu jednou už byla
+       a byla vedle: výpis v klidu začíná kolem 630 px a po sjetí dolů
+       vyjde na −47 px, ne na −200, jak jsem čekal. */
+    const klid = pred.vrchSeznamu;
+    pravda('klidová poloha výpisu je změřená', typeof klid === 'number' && klid > 0,
+      `vrch výpisu v klidu je ${klid} px`);
+    /* Sjet na dvacátou kartu, ne „na konec stránky". Konec stránky je
+       nespolehlivý: výška se mění podle toho, jak vysoko se usadí mapa,
+       a výpis pak zůstal jednou na −47 px a podruhé na +120 px. Dvacátá
+       karta je hluboko uvnitř strany vždycky. */
+    await p.evaluate(() => {
+      const k = document.querySelectorAll('#opp-list .opp-item')[19];
+      if (k) k.scrollIntoView({ block: 'center' });
+    });
+    await p.waitForTimeout(300);
+    const dole = await stav();
+    pravda('před klepnutím je začátek výpisu mimo obraz (jinak skok nahoru nic neukáže)',
+      dole.vrchPrvniKarty !== null && dole.vrchPrvniKarty < -100,
+      `první karta je na ${dole.vrchPrvniKarty} px, v klidu byl vrch výpisu ${klid} px`);
+
+    await p.click('.opp-strany .ops-btn[data-krok="1"]');
     await p.waitForTimeout(700);
     const po = await stav();
-    pravda('po klepnutí je karet víc', po.karet > pred.karet, `${pred.karet} → ${po.karet}`);
-    pravda('a počet nalezených se nezměnil (dočítání není filtr)',
+    pravda('po klepnutí je člověk na druhé straně', po.strana === 2,
+      `strana ${po.strana}`);
+    pravda(`a vidí zase ${NA_STRANKU} karet, ne víc`, po.karet === NA_STRANKU,
+      `karet ${po.karet}`);
+    pravda('počet nalezených se nezměnil (stránkování není filtr)',
       po.pocet === pred.pocet, `${pred.pocet} → ${po.pocet}`);
-    /* Strop: klikat, dokud tlačítko je. Víc než osm klepnutí být nemá. */
-    let klepnuti = 0;
-    while (klepnuti < 12 && (await p.$('#opp-dalsi-btn'))) {
-      await p.click('#opp-dalsi-btn');
-      await p.waitForTimeout(350);
-      klepnuti++;
-    }
-    const nakonec = await stav();
-    pravda('dočítání má strop, aby se výpis nezadusil',
-      !nakonec.tlacitko && nakonec.karet <= 96 && nakonec.karet >= 90,
-      `karet ${nakonec.karet}, tlačítko ${nakonec.tlacitko}, klepnutí ${klepnuti}`);
-    pravda('a pod stropem zůstane odkaz na mapu, kde je zbytek',
-      !!(await p.$('.opp-more')), 'řádka „na mapě" zmizela');
+    pravda('a stran je pořád stejně', po.stran === pred.stran,
+      `${pred.stran} → ${po.stran}`);
+    pravda('teď se dá i zpátky', !po.zpetVypnute, 'tlačítko zpět zůstalo vypnuté');
+    /* Kam to má skočit: na ZAČÁTEK VÝPISU, ne na vrch stránky. Tak to
+       stojí i v js/main.js, a je to rozdíl — nad výpisem je úvod a mapa,
+       a kdo si vybral druhou stranu, nechce je vidět znovu.
+       Měří se TVRZENÍ, ne pixel: první karta nové strany je vidět na
+       obrazovce. Pevná mez tu dvakrát selhala, protože poloha kolísá
+       podle toho, jak vysoko se zrovna usadí mapa nad výpisem — naměřeno
+       189 i 629 px mezi dvěma běhy téhož testu. Obojí je přitom správně:
+       v obou případech je začátek výpisu na obrazovce. */
+    pravda('a výpis skočil na svůj začátek, ne doprostřed',
+      po.vrchPrvniKarty !== null && po.vrchPrvniKarty >= -20
+      && po.vrchPrvniKarty < po.vyskaOkna
+      && po.vrchPrvniKarty > dole.vrchPrvniKarty,
+      `první karta po klepnutí na ${po.vrchPrvniKarty} px, před klepnutím `
+      + `na ${dole.vrchPrvniKarty} px, okno je vysoké ${po.vyskaOkna} px`);
+
+    await p.click('.opp-strany .ops-btn[data-krok="-1"]');
+    await p.waitForTimeout(700);
+    const zpet = await stav();
+    pravda('zpět vrátí na první stranu', zpet.strana === 1, `strana ${zpet.strana}`);
+    pravda('a tam se zpátky zase nedá', zpet.zpetVypnute,
+      'tlačítko zpět zůstalo aktivní');
   }
-  /* A NOVÉ HLEDÁNÍ ROZBALENÍ ZRUŠÍ — jinak by se po napsání jiného dotazu
-     vysypalo devadesát šest karet něčeho jiného, než si člověk napsal.
-     Čte se to ze zdroje, ne klepáním: políčko hledání je v tomhle
+
+  /* A ZMĚNA FILTRU VRACÍ NA PRVNÍ STRANU — jinak by člověk po zapnutí
+     jiného filtru skončil na páté straně z pěti, nebo na straně, která
+     už neexistuje. Čte se to ze zdroje: políčko hledání je v tomhle
      pohledu schované pod ovládacím panelem a klepat se do něj dá jen
-     přes rozbalení, které s dočítáním nemá nic společného (zkouší ho
-     scripts/test-naseptavac.mjs). */
+     přes rozbalení, které se stranami nemá nic společného. */
   {
     const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
-    const telo = /function nastavHledani\(v\)\s*\{[\s\S]*?\n  \}/.exec(main);
-    pravda('nové hledání výpis zase sbalí', !!telo && /listNavic = 0;/.test(telo[0]),
-      'v nastavHledani() se dočítání nenuluje');
+    const telo = /function renderList\(\)\s*\{[\s\S]*?\n  \}/.exec(main);
+    pravda('změna filtru vrací výpis na první stranu',
+      !!telo && /posledniOtiskFiltru[\s\S]{0,120}stranka = 0;/.test(telo[0]),
+      'v renderList() se při změně otisku filtru nenuluje strana');
   }
 }
 
