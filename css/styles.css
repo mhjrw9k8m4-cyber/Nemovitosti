@@ -2505,16 +2505,36 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
    stojí. Na úzkém displeji se pruh posouvá do strany, ne že by se zalomil
    na dva řádky: záložky mají zůstat v jedné linii, aby se daly přejet
    prstem a aby jich šlo poznat pořadí. */
-.uc-taby{border-bottom:1px solid var(--line);}
+/* Spodní linka patřila k podtrhávaným záložkám; u pilulek by to byla
+   čára pod ničím. Pruh od obsahu odděluje odsazení. */
+.uc-taby{padding:10px 0 2px;}
 .uc-taby .wrap{display:flex; gap:4px; overflow-x:auto; scrollbar-width:none;}
 .uc-taby .wrap::-webkit-scrollbar{display:none;}
-.uc-taby a{flex:none; padding:12px 14px 10px; font-size:14px; font-weight:600;
-  color:var(--text-ondark-mute); text-decoration:none; white-space:nowrap; margin-bottom:-1px;
-  border-bottom:2.5px solid transparent; transition:color var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
-.uc-taby a:hover{color:var(--text-ondark);}
-.uc-taby a[aria-current="page"]{color:var(--text-ondark); border-bottom-color:var(--plocha-znacka);}
+/* ZÁLOŽKY ÚČTU MUSÍ VYPADAT JAKO OVLÁDÁNÍ, NE JAKO NADPIS.
+ *
+ * Byl to holý text: pozadí rgba(0,0,0,0), žádný okraj, jen šedá barva —
+ * a jediný náznak, že jde o odkazy, přinášel :hover. Na telefonu žádný
+ * :hover není, takže tam neukazovalo na klikatelnost VŮBEC NIC. Aktivní
+ * záložku označovala tenká linka pod textem, což je spíš podtržení
+ * nadpisu než zapnutý přepínač.
+ *
+ * Změřeno, proč nestačí přidat plochu: #EDF3EF proti pozadí stránky
+ * #DFEBE2 má kontrast 1,09 : 1 a čistá bílá 1,23 : 1 — prakticky
+ * neviditelné. Afordanci nese okraj a hlavně PLNÁ VÝPLŇ aktivního prvku.
+ *
+ * Nic nového se nevymýšlí: tohle je přesně ošetření, které mají
+ * filtrační čipy na úvodní stránce (.filter-chip) a přepínač
+ * „Seznam / Mapa" (.mvt-btn) — plocha, okraj, a zapnutý je plný
+ * značkovou zelenou. Ty nikomu jako neklikatelné nepřišly. */
+.uc-taby a{flex:none; padding:10px 16px; font-size:14px; font-weight:600;
+  color:var(--text-ondark-mute); text-decoration:none; white-space:nowrap;
+  background:var(--ink-soft2); border:1.5px solid var(--line-strong);
+  border-radius:var(--r-pill); min-height:44px; display:inline-flex; align-items:center;
+  transition:color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
+.uc-taby a:hover{color:var(--text-ondark); background:var(--ink-soft);}
+.uc-taby a[aria-current="page"]{color:#fff; background:var(--plocha-znacka); border-color:transparent;}
 .uc-taby a:focus-visible{outline:2px solid var(--copper); outline-offset:-2px; border-radius:var(--r-xs);}
-@media (max-width:600px){ .uc-taby a{padding:10px 12px 10px; font-size:14px;} }
+@media (max-width:600px){ .uc-taby a{padding:10px 13px; font-size:14px;} }
 /* MÁM INZERÁT JINDE. Stojí NAD formulářem, ne v rozbalovátku dole:
    je to zkratka k vyplnění, takže musí být vidět dřív, než se člověk
    pustí do psaní. Jinak ji najde, až když je hotový. */

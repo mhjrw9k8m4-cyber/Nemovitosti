@@ -368,6 +368,9 @@ jobs:
       - name: Stránkování seznamu nabídek
         run: node scripts/test-strany.mjs
 
+      - name: Na ovládání je vidět, že je ovládání
+        run: node scripts/test-afordance.mjs
+
       - name: Přidání vlastního pozemku (celá cesta)
         run: node scripts/test-pridat.mjs
 
