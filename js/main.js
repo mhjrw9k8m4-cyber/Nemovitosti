@@ -3215,6 +3215,39 @@
     return !!(od && od.podleVelikosti && !od.nejisty && !od.podil && od.podOdhadem >= 15);
   }
 
+  var posledniVyber = [];
+
+  /* Stažení tabulky. Skládání řádků je v js/vyvoz.js, ať se dá zkoušet
+     i bez prohlížeče; tady zbývá jen připnout BOM a podstrčit odkaz. */
+  function stahniTabulku() {
+    var V = window.PKVyvoz;
+    if (!V || !posledniVyber.length) return;
+    var text = V.csv(posledniVyber, {
+      zaMetr: (window.PK_CENY && window.PK_CENY.zaMetr) || null,
+      klic: (window.PKKlic && window.PKKlic.pkey) || null
+    });
+    /* BOM na začátku: bez něj český Excel přečte diakritiku jako
+       zmatek. Patří k souboru, ne k textu — proto až tady. */
+    var blob = new Blob(['\ufeff' + text], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = V.nazev(popisVyberu());
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  /* Z čeho se skládá název souboru: co je zrovna nafiltrované. Ve
+     stažených souborech se jinak za týden nikdo nevyzná. */
+  function popisVyberu() {
+    var kusy = [];
+    try {
+      omezeni().forEach(function (o) { if (o && o.popis) kusy.push(o.popis); });
+    } catch (e) {}
+    return kusy.slice(0, 3).join(' ');
+  }
+
   function visible(d) {
     var okType = activeType === 'all' || d.type === activeType;
     // Hledá se i podle PARCELNÍHO ČÍSLA. Kdo drží v ruce výpis z katastru,
@@ -3779,6 +3812,10 @@
     if (selectedKraj) vis = vis.filter(function (d) { return (d._gkraj || krajOf(d)) === selectedKraj; });
     var matched = vis.length;
     sortVis(vis);
+    /* Co je právě na obrazovce — v tomhle pořadí a s těmihle filtry.
+       Odtud bere vývoz do tabulky; kdyby si sahal na DATA, vyvezl by
+       něco jiného, než co člověk vidí. */
+    posledniVyber = vis;
     // „Výhodná cena" jen pro skutečně nejlevnější špičku (podle Kč/m²),
     // ne pro třetinu — aby badge nesvítil skoro všude.
     var pv = vis.map(perM2Val).filter(function (x) { return isFinite(x) && x > 0; }).sort(function (a, b) { return a - b; });
@@ -4054,7 +4091,15 @@
        „1 996 pozemků", o kus níž „1996 na mapě" a v přepínači pohledů
        „Seznam (1996)" — tři různé zápisy téhož čísla na jedné obrazovce.
        fmt() dává nezlomitelnou mezeru po tisících, jako všude jinde. */
+    /* VÝVOZ DO TABULKY. Kdo vybírá víc pozemků najednou, stejně si je
+       přepisuje do tabulky — a dosud je musel opisovat z obrazovky.
+       Na tlačítku stojí POČET, ať je předem jasné, co se stáhne; a
+       stahuje se právě to, co je vyfiltrované, ne celá databáze. */
+    if (matched) pripisky += ' <button type="button" class="mc-skryte" id="mc-vyvoz"><span>Stáhnout tabulku ('
+      + fmt(matched) + ')</span></button>';
     countEl.innerHTML = headLabel + (matched ? ' · <span class="mc-sub">' + fmt(matched) + ' na mapě</span>' : '') + pripisky;
+    var vb = countEl.querySelector('#mc-vyvoz');
+    if (vb) vb.addEventListener('click', function (e) { e.stopPropagation(); stahniTabulku(); });
     var sb = countEl.querySelector('#mc-skryte');
     if (sb) sb.addEventListener('click', function (e) { e.stopPropagation(); ukazSkryte = !ukazSkryte; renderList(); });
     var pb = countEl.querySelector('#mc-prosle');
