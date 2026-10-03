@@ -230,6 +230,12 @@ jobs:
       - name: Skloňování podle počtu
         run: node scripts/test-sklonovani.mjs
 
+      - name: Jedna barevná teplota (závoje a stíny)
+        run: node scripts/test-odstiny.mjs
+
+      - name: Jeden styl (nadpisy a textura z palety)
+        run: node scripts/test-jeden-styl.mjs
+
       - name: Rychlý výběr (logika balíčku)
         run: node scripts/test-rychlovyber.mjs
 
