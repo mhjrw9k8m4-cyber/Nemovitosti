@@ -213,6 +213,12 @@ await p.evaluate(() => {
     localStorage.setItem('pk_navsteva_v1', JSON.stringify('2026-09-10'));
     localStorage.removeItem('pk_skryte_v1');
     localStorage.removeItem('pk_filtr_v1');
+    /* A ADRESU TAKY — od zavedení sdílených odkazů (js/odkaz.js) leží
+       výřez mapy i zapnuté filtry v hashi, ne v úložišti. „Vyčistit
+       localStorage" proto samo o sobě čistý stav nedá: reload by si
+       filtr z adresy přinesl zpátky. Změřeno: po klepnutí na „Dražba"
+       je v adrese „#…&t=drazba" a přežije to i vymazání úložiště. */
+    history.replaceState(null, '', location.pathname);
   } catch (e) {}
 });
 await p.reload({ waitUntil: 'domcontentloaded' });
@@ -441,6 +447,11 @@ await p.waitForTimeout(1500);
 await p.evaluate((m) => {
   try {
     ['pk_skryte_v1', 'pk_filtr_v1', 'pk_misto_v1', 'pk_videno_den_v1'].forEach((k) => localStorage.removeItem(k));
+    /* Viz výš: stav mapy a filtry jsou v adrese, ne v úložišti. Bez
+       tohohle řádku sem dojel filtr z dřívějšího oddílu a ze šesti
+       podstrčených pozemků zbyl v seznamu jediný — a hlásilo se to jako
+       „odznak Nové nefunguje", což byla úplně jiná diagnóza. */
+    history.replaceState(null, '', location.pathname);
     localStorage.setItem('pk_navsteva_v1', JSON.stringify(m));
   } catch (e) {}
 }, MINULE);

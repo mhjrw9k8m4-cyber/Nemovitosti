@@ -224,6 +224,9 @@ jobs:
       - name: Vývoz nabídek do tabulky
         run: node scripts/test-vyvoz.mjs
 
+      - name: Stav mapy v adrese (sdílené odkazy)
+        run: node scripts/test-odkaz.mjs
+
       - name: Dotykové terče na mobilu
         run: node scripts/test-dotyk.mjs
 
@@ -355,6 +358,9 @@ jobs:
 
       - name: Hlídání v aplikaci (celá cesta)
         run: node scripts/test-hlidani-prohlizec.mjs
+
+      - name: Sdílený odkaz na stav mapy (celá cesta)
+        run: node scripts/test-odkaz-prohlizec.mjs
 
       - name: Přidání vlastního pozemku (celá cesta)
         run: node scripts/test-pridat.mjs

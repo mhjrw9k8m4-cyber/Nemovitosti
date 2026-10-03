@@ -8,7 +8,10 @@
   // kotva (#…) — tam scroll řídí sama stránka.
   try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
   window.addEventListener('pageshow', function () {
-    if (!location.hash && !/[?&](p|kraj|lid)=/.test(location.search)) {
+    /* Stav mapy v adrese NENÍ kotva: je to sdílený výřez, ne odkaz
+       doprostřed textu, takže stránka má pořád začít nahoře. */
+    var kotva = location.hash && !(window.PKOdkaz && PKOdkaz.jeStavMapy(location.hash));
+    if (!kotva && !/[?&](p|kraj|lid)=/.test(location.search)) {
       try { window.scrollTo(0, 0); } catch (e) {}
     }
   });
@@ -3788,6 +3791,8 @@
   }
 
   function renderList() {
+    // Adresa drží krok s filtry — odtud se sdílí (viz zapisAdresu()).
+    zapisAdresu();
     /* Počty u štítků druhu se přepočítávají při každém překreslení —
        závisí na ostatních filtrech, takže statické číslo by lhalo,
        jakmile se zapne cokoli dalšího. */
@@ -4328,6 +4333,144 @@
   // Po použití sdíleného odkazu uklidíme adresu na čisté „/", ať další
   // znovunačtení začne na výchozím stavu (celá ČR), ne zase na tom pozemku.
   function cleanUrl() { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+
+  /* ---------- STAV MAPY V ADRESE (sdílené odkazy) ----------
+   *
+   * Kdo si nastavil „exekuce do 300 000 kolem Kolína", neměl jak to
+   * někomu poslat: adresa zůstávala pořád stejná. Teď se do ní zapisuje
+   * výřez i filtry, takže odkaz z adresního řádku ukáže příjemci totéž.
+   *
+   * Co se do adresy smí a co ne, rozhoduje js/odkaz.js — tam je i důvod,
+   * proč tam nepatří moje poloha ani moje uložené pozemky. Tady zbývá
+   * jen stav posbírat a zase rozdat.
+   *
+   * OBNOVA JDE PŘES SAMOTNÉ OVLADAČE, ne přes proměnné. Nastavit
+   * rozbalovátko a poslat mu `change` znamená projít přesně tím kódem,
+   * kterým projde člověk, když klepne — takže nemůže vzniknout druhá
+   * cesta, co by se časem rozešla s tou první. */
+  function stavProAdresu() {
+    var stred = null;
+    try { var c = map.getCenter(); stred = { lat: c.lat, lng: c.lng, zoom: map.getZoom() }; } catch (e) {}
+    return {
+      poloha: stred,
+      activeType: activeType, druhVybrane: druhVybrane,
+      minPrice: minPrice, maxPrice: maxPrice,
+      minArea: minArea, maxArea: maxArea, maxPerM2: maxPerM2,
+      zadaneVybaveni: zadaneVybaveni,
+      jenCelek: jenCelek, urgentOnly: urgentOnly, levneOnly: levneOnly,
+      ukazPodobne: ukazPodobne,
+      krajFiltr: krajFiltr, selectedKraj: selectedKraj,
+      /* Řazení není filtr, ale je to druhá půlka toho, co člověk vidí.
+         „Nejblíž ke mně" se nesdílí: stojí na mojí poloze, kterou
+         příjemce nemá — dostal by seznam v náhodném pořadí a nepoznal
+         by proč. Pošle se mu tedy výchozí. */
+      sortMode: sortMode === 'near' ? '' : sortMode,
+      hledani: searchEl ? searchEl.value : '',
+      mistoObec: mistoFiltr && mistoFiltr.place ? mistoFiltr.place : '',
+      mistoOkres: mistoFiltr && mistoFiltr.okres ? mistoFiltr.okres : ''
+    };
+  }
+  var adresaCeka = null, adresaDrzi = false;
+  /* Zapisuje se se zpožděním: při tažení mapy chodí moveend v jednom
+     kuse a psát do historie při každém pohybu je zbytečná práce. */
+  function zapisAdresu() {
+    if (adresaDrzi || !window.PKOdkaz) return;
+    if (adresaCeka) clearTimeout(adresaCeka);
+    adresaCeka = setTimeout(function () {
+      adresaCeka = null;
+      try {
+        /* KOTVU NEPŘEPISOVAT. Kdo přijde na index.html#podminky, má
+           v adrese odkaz na právní informace — a první překreslení
+           seznamu by ho přepsalo stavem mapy. Odkaz na podmínky by tím
+           přestal jít poslat dál. Píše se tedy jen do prázdného hashe
+           nebo do takového, který už stav mapy je. */
+        if (location.hash && !PKOdkaz.jeStavMapy(location.hash)) return;
+        var h = PKOdkaz.zapis(stavProAdresu());
+        /* Jednorázové příkazy (?p=, ?kraj=, ?obec=) si adresu uklízí sama
+           cleanUrl(); do jejich půlky adresy se tu nesahá. */
+        var nova = location.pathname + location.search + (h ? '#' + h : '');
+        if (nova !== location.pathname + location.search + location.hash) {
+          history.replaceState(null, '', nova);
+        }
+      } catch (e) {}
+    }, 350);
+  }
+
+  /* Obnova z adresy. Vrací true, když se z ní něco vzalo — volající pak
+     nesmí mapu srovnat na celou ČR, jinak by sdílený výřez zmizel dřív,
+     než si ho člověk stihne prohlédnout. */
+  function obnovZAdresy() {
+    if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(location.hash)) return false;
+    var st = PKOdkaz.cti(location.hash);
+    var neco = false;
+    /* Po dobu obnovy se do adresy nepíše: každý `change` níž spustí
+       renderList() a ten by adresu přepsal rozpracovaným stavem. */
+    adresaDrzi = true;
+    var posli = function (el, udalost) {
+      if (!el) return;
+      try { el.dispatchEvent(new Event(udalost, { bubbles: true })); } catch (e) {}
+    };
+    var dosadVyber = function (el, v) {
+      if (!el || !v) return;
+      if (el.tagName === 'SELECT') {
+        var ma = false;
+        for (var k = 0; k < el.options.length; k++) if (String(el.options[k].value) === String(v)) { ma = true; break; }
+        if (!ma) el.add(new Option(String(v), String(v)));
+      }
+      el.value = String(v);
+      posli(el, 'change');
+      neco = true;
+    };
+    try {
+      if (st.hledani && searchEl) { searchEl.value = st.hledani; nastavHledani(st.hledani); neco = true; }
+      if (st.mistoObec) {
+        mistoFiltr = { typ: 'obec', place: st.mistoObec, okres: st.mistoOkres || '' };
+        neco = true;
+      } else if (st.mistoOkres) {
+        mistoFiltr = { typ: 'okres', okres: st.mistoOkres };
+        neco = true;
+      }
+      dosadVyber(cenaOdEl, st.minPrice);
+      dosadVyber(cenaEl, st.maxPrice);
+      dosadVyber(areaEl, st.minArea);
+      dosadVyber(areaDoEl, st.maxArea);
+      dosadVyber(perm2El, st.maxPerM2);
+      if (st.krajFiltr && krajFiltrEl) dosadVyber(krajFiltrEl, st.krajFiltr);
+      if (st.sortMode && st.sortMode !== 'near' && sortEl) dosadVyber(sortEl, st.sortMode);
+      /* Přepínače: klepne se jen tam, kde se stav liší — jinak by se
+         zapnutý filtr klepnutím zase vypnul. */
+      if (st.urgentOnly && !urgentOnly && urgentEl) { urgentEl.click(); neco = true; }
+      if (st.levneOnly && !levneOnly && levneEl) { levneEl.click(); neco = true; }
+      if (st.activeType && st.activeType !== 'all') {
+        var tb = document.querySelector('[data-type="' + st.activeType + '"]');
+        if (tb) { tb.click(); neco = true; }
+      }
+      (st.druhVybrane || []).forEach(function (g) {
+        if (druhVybrane.indexOf(g) >= 0) return;
+        var b = druhyEl && druhyEl.querySelector('[data-druh="' + g.replace(/"/g, '') + '"]');
+        if (b) { b.click(); neco = true; }
+        else if (DRUHY_VSE.indexOf(g) >= 0) { druhVybrane.push(g); neco = true; }
+      });
+      /* Vybavení a „jen celé pozemky" sedí ve stejné řádce pilulek a
+         postavVybaveni() je překresluje ze stavu, takže stačí stav. */
+      if ((st.zadaneVybaveni || []).length) { zadaneVybaveni = st.zadaneVybaveni.slice(); neco = true; }
+      if (st.jenCelek) { jenCelek = true; neco = true; }
+      if (st.ukazPodobne) { ukazPodobne = true; neco = true; }
+      if (st.selectedKraj) { try { selectKraj(st.selectedKraj, true); neco = true; } catch (e) {} }
+      if (st.poloha) {
+        try {
+          map.invalidateSize();
+          map.setView([st.poloha.lat, st.poloha.lng], st.poloha.zoom || 10, { animate: false });
+          if ((st.poloha.zoom || 0) >= 10 && typeof lockDots === 'function') lockDots(false);
+          neco = true;
+        } catch (e) {}
+      }
+    } finally {
+      adresaDrzi = false;
+    }
+    if (neco) { try { if (typeof postavVybaveni === 'function') postavVybaveni(); renderList(); } catch (e) {} }
+    return neco;
+  }
   function openFromUrl() {
     // ?q=&druh=&maxc=&mina= — použij uložené hledání (odkaz ze stránky „Hlídání").
     if (/[?&](q|druh|maxc|mina)=/.test(location.search)) {
@@ -5828,7 +5971,10 @@
     if (holderEl) { [60, 240, 500].forEach(function (ms) { setTimeout(function () { holderEl.scrollIntoView({ block: 'center' }); }, ms); }); }
     return true;
   }
-  var deepLinked = openFromUrl() || restoreMapReturn();
+  /* Pořadí: jednorázový příkaz v ?parametru je nejsilnější (přišel teď),
+     pak sdílený stav mapy z adresy, a teprve nakonec návrat tam, kde
+     člověk minule skončil. */
+  var deepLinked = openFromUrl() || obnovZAdresy() || restoreMapReturn();
   // Po dopočítání rozměrů mapy znovu vyrovnáme na celou ČR (pokud nejde o
   // sdílený odkaz na konkrétní parcelu, který si drží vlastní přiblížení).
   setTimeout(function () { map.invalidateSize(); if (!deepLinked) fitAllCZ(); }, 300);
