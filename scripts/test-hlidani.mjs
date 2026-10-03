@@ -596,6 +596,45 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
     H.matches({ max_perm2: 30 }, P({ price: 100000, area: 4000 })), true);
 }
 
+/* --- NABÍZENÉ DRUHY MUSÍ POKRÝT VŠECHNO, CO JE V DATECH -------------
+ * Výběr druhů v hlidani.html stál na ručním seznamu devíti hodnot.
+ * Data ale chodí z divočiny: na „pozemek" (52 nabídek), „zemědělský
+ * pozemek", „zastavěná plocha a nádvoří" a „vodní plocha" nesedělo ani
+ * jedno z nich, takže se na ně hlídání nikdy nemohlo ozvat — a nedalo
+ * se to poznat, protože mlčící hlídání vypadá jako hlídání, kterému
+ * zatím nic nepřibylo. Stránka proto ruční seznam doplňuje o všechno
+ * ostatní, co v datech je. Tahle kontrola hlídá, že ta logika platí.
+ */
+{
+  const D = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const html = readFileSync(new URL('../hlidani.html', import.meta.url), 'utf8');
+  const m = /var DRUHY = \[([^\]]*)\]/.exec(html);
+  je('druhy k hlídání', 'v hlidani.html se našel ruční seznam druhů', !!m, true);
+  const RUCNE = m ? m[1].split(',').map((x) => x.trim().replace(/^'|'$/g, '')).filter(Boolean) : [];
+  je('druhy k hlídání', 'a není prázdný (jinak by se nemělo co doplňovat)', RUCNE.length >= 5, true);
+
+  // Totéž doplnění, jaké dělá stránka: ruční seznam plus zbytek z dat.
+  const pocet = {};
+  D.forEach((d) => { if (d.druh) pocet[d.druh] = (pocet[d.druh] || 0) + 1; });
+  const nabidka = RUCNE.slice();
+  Object.keys(pocet).forEach((v) => {
+    if (!nabidka.some((z) => H.druhSedi(z, v))) nabidka.push(v);
+  });
+
+  /* Pojistka proti bezzubosti: kdyby ruční seznam náhodou pokrýval
+     všechno sám, doplňování by se nemělo na čem poznat. */
+  const samotnyRucni = Object.keys(pocet).filter((v) => !RUCNE.some((z) => H.druhSedi(z, v)));
+  je('druhy k hlídání', 'ruční seznam sám o sobě nepokrývá všechno (jinak tahle kontrola měří prázdno)',
+    samotnyRucni.length > 0, true);
+
+  const nepokryte = Object.keys(pocet).filter((v) => !nabidka.some((z) => H.druhSedi(z, v)));
+  je('druhy k hlídání', 'po doplnění nezbyl druh, na který nesedí žádná volba', nepokryte, []);
+
+  /* Že se u voleb opravdu píšou počty, se ověřuje v prohlížeči
+     (scripts/test-hlidani-prohlizec.mjs) — tady by se to dalo jen
+     hádat z podoby zdroje. */
+}
+
 console.log(`\nHlídání lokality: ${bezi} testů`);
 if (spadlo) {
   console.log(vysledky.join('\n'));

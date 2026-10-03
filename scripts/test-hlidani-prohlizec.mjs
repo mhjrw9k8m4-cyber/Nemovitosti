@@ -12,6 +12,7 @@
 // E-MAIL SE NEPOSÍLÁ. Hlídání je záležitost aplikace; e-mailem chodí jen
 // potvrzení účtu a obnova hesla, což řeší Supabase samo.
 import { chromium } from 'playwright-core';
+import { readFileSync } from 'node:fs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -47,6 +48,8 @@ const NOVE = { updated: '2026-01-02', opportunities: STARE.opportunities.concat(
     site: ['elektrina', 'kanalizace', 'plyn', 'cesta'] },
 ]) };
 
+const RUCNI_SEZNAM = (/var DRUHY = \[([^\]]*)\]/.exec(
+  readFileSync(new URL('../hlidani.html', import.meta.url), 'utf8')) || [, ''])[1];
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 const ctx = await prohlizec.newContext({ viewport: { width: 420, height: 900 } });
@@ -154,6 +157,33 @@ pravda('stránka hlídání se otevřela přihlášenému člověku', true);
   });
   pravda('klepnutí na „Nové hlídání" ukáže formulář a schová seznam',
     po2.formular === true && po2.seznam === false && po2.vybrany === 'true', JSON.stringify(po2));
+}
+
+/* U KAŽDÉHO DRUHU MUSÍ STÁT, KOLIK NABÍDEK MU DNES VYHOVÍ.
+ * Stránka to tak dělá u „Musí mít" od začátku a sama si u toho píše proč:
+ * dalo se zaškrtnout něco, pod čím není NIC, a hlídání pak mlčelo navždy,
+ * aniž by se dalo poznat proč. U druhu pozemku ten počet chyběl — přitom
+ * je to první věc, kterou člověk ve formuláři vybírá. */
+{
+  const v = await p.evaluate(() => {
+    const sel = document.getElementById('ns-druh');
+    if (!sel) return null;
+    const o = [...sel.options].slice(1);     // první je „jakýkoli druh"
+    return { pocet: o.length, hodnoty: o.map((x) => x.value),
+      nenulovych: o.filter((x) => /\((?!0\))/.test(x.textContent)).length,
+      sPoctem: o.filter((x) => /\((\d[\d\s ]*)\)\s*$/.test(x.textContent)).length,
+      ukazka: o.slice(0, 3).map((x) => x.textContent) };
+  });
+  pravda('ve formuláři je výběr druhu pozemku', !!v && v.pocet >= 5,
+    v ? `voleb ${v.pocet}` : 'výběr #ns-druh nenalezen');
+  if (v) {
+    pravda('a u každé volby stojí, kolik nabídek jí dnes vyhoví',
+      v.sPoctem === v.pocet, `s počtem ${v.sPoctem} z ${v.pocet}: ${JSON.stringify(v.ukazka)}`);
+    /* Pojistka proti tomu, aby se počty měřily na prázdnu: aspoň jeden
+       musí být nenulový, jinak by „(0)" u všeho prošlo stejně dobře. */
+    pravda('a aspoň u jedné volby ten počet není nula',
+      v.nenulovych >= 1, `nenulových ${v.nenulovych} z ${v.pocet}`);
+  }
 }
 
 const pred = await p.$$eval('.hl-iname', (e) => e.map((x) => x.textContent));
@@ -422,6 +452,63 @@ if (smazat) {
   }
 
   await ctxOdhlaseny.close();
+}
+
+/* --- DRUH, KTERÝ V RUČNÍM SEZNAMU NENÍ, MUSÍ JÍT HLÍDAT TAKY -------
+ * Výběr druhu stál na ručním seznamu devíti hodnot. Data ale chodí
+ * z divočiny: v ostré nabídce na „pozemek" (52 nabídek), „zemědělský
+ * pozemek", „zastavěná plocha a nádvoří" ani „vodní plocha" nesedělo
+ * ani jedno z nich. Hlídání se na ně nikdy nemohlo ozvat — a nedalo se
+ * to poznat, protože mlčící hlídání vypadá stejně jako to, kterému
+ * zatím nic nepřibylo. Zdroje přitom nové názvy přidávají samy.
+ *
+ * Tady se podstrčí nabídka s druhem, který v ručním seznamu NENÍ,
+ * a čte se skutečný výběr ve formuláři.
+ */
+{
+  const EXOTICKY = 'vodní plocha';
+  const DATA_X = { updated: '2026-01-01', opportunities: [
+    { place: 'Kolín', okres: 'Kolín', type: 'sale', parcel: '7/1', druh: EXOTICKY,
+      area: 800, price: 120000, lat: 50.02, lng: 15.20, extra: 'inzerát', site: [] },
+    { place: 'Kolín', okres: 'Kolín', type: 'sale', parcel: '7/2', druh: 'orná půda',
+      area: 1200, price: 400000, lat: 50.03, lng: 15.21, extra: 'inzerát', site: [] },
+  ] };
+  const ctxX = await prohlizec.newContext({ viewport: { width: 420, height: 900 } });
+  await ctxX.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  await ctxX.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: JSON.stringify(DATA_X) }));
+  await ctxX.route('**/data/user-listings.json*', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: '[]' }));
+  await ctxX.addInitScript(() => {
+    localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok-majitel', refresh_token: 'ref-majitel',
+      user: { id: '11111111-1111-4111-8111-111111111111' } }));
+  });
+  const px = await ctxX.newPage();
+  await px.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
+  await px.waitForTimeout(2200);
+  await px.click('.hl-tab[data-zalozka="nove"]').catch(() => {});
+  await px.waitForTimeout(600);
+  const vx = await px.evaluate(() => {
+    const sel = document.getElementById('ns-druh');
+    if (!sel) return null;
+    const o = [...sel.options].slice(1);
+    return { hodnoty: o.map((x) => x.value), popisky: o.map((x) => x.textContent) };
+  });
+  pravda('formulář se složil i s neobvyklým druhem v datech', !!vx,
+    'výběr #ns-druh nenalezen');
+  if (vx) {
+    /* Pojistka: kdyby ten druh v ručním seznamu byl, kontrola pod tím
+       by neověřila doplňování, ale jen ten seznam. */
+    pravda(`„${EXOTICKY}" opravdu není v ručním seznamu (jinak by se doplnění nemělo na čem poznat)`,
+      !/vodní plocha/i.test(RUCNI_SEZNAM), RUCNI_SEZNAM);
+    pravda(`a přesto je mezi volbami k hlídání`,
+      vx.hodnoty.indexOf(EXOTICKY) !== -1, vx.hodnoty.join(' / '));
+    pravda('a stojí u něj počet nabídek, které mu vyhoví',
+      /\(\s*1\s*\)/.test(vx.popisky[vx.hodnoty.indexOf(EXOTICKY)] || ''),
+      vx.popisky[vx.hodnoty.indexOf(EXOTICKY)] || '—');
+  }
+  await ctxX.close();
 }
 
 je('na žádné stránce nespadl skript', padlo, []);

@@ -267,6 +267,8 @@
   var HL = window.PKHlidani;
   var normd = HL.normd;
   var TYPE_LABEL = { sale: 'Na prodej', drazba: 'Dražba', exekuce: 'Exekuce', obec: 'Obecní', majitel: 'Od majitele' };
+  /* Pořadí a názvy, které lidem něco říkají. Seznam je ale jen ZAČÁTEK —
+     doplní se o všechno, co je zrovna v datech, viz druhyKNabidnuti(). */
   var DRUHY = ['stavební pozemek', 'zahrada', 'lesní pozemek', 'orná půda', 'louka', 'trvalý travní porost', 'ostatní plocha', 'vinice', 'sad'];
   var FEATS = ['Elektřina', 'Voda', 'Kanalizace', 'Plyn', 'Oplocení', 'Stavba k rekonstrukci'];
 
@@ -391,7 +393,35 @@
 
   function newSearchCard() {
     var opt = function (v, l, sel) { return '<option value="' + esc(v) + '"' + (sel ? ' selected' : '') + '>' + esc(l) + '</option>'; };
-    var druhOpts = opt('', 'jakýkoli druh', true) + DRUHY.map(function (d) { return opt(d, d.charAt(0).toUpperCase() + d.slice(1)); }).join('');
+    /* DRUHY JE RUČNÍ SEZNAM, DATA JSOU Z DIVOČINY. Devět nabízených
+       voleb pokrývalo 1 949 z 2 018 nabídek: na „pozemek" (52),
+       „zemědělský pozemek" (7), „zastavěná plocha a nádvoří" (7)
+       a „vodní plocha" (3) nesedí ani jedna, takže se o ně hlídání
+       nikdy nemohlo ozvat a nedalo se to poznat. Zdroje přitom nové
+       názvy přidávají samy — příště to bude jiná čtveřice.
+       Nabízí se proto ruční seznam PLUS všechno ostatní, co je v datech. */
+    function druhyKNabidnuti() {
+      var pocet = {}, i;
+      for (i = 0; i < DATA.length; i++) {
+        var v = DATA[i] && DATA[i].druh;
+        if (v) pocet[v] = (pocet[v] || 0) + 1;
+      }
+      var ven = DRUHY.slice();
+      Object.keys(pocet).forEach(function (v) {
+        for (var j = 0; j < ven.length; j++) if (HL.druhSedi(ven[j], v)) return;
+        ven.push(v);
+      });
+      return ven;
+    }
+    /* A u každé volby stojí, kolik dnešních nabídek by jí vyhovělo —
+       přesně jako u „Musí mít" níž. Bez toho šlo vybrat druh, pod kterým
+       není NIC, a hlídání pak mlčelo navždy, aniž by se dalo poznat proč. */
+    var druhOpts = opt('', 'jakýkoli druh', true) + druhyKNabidnuti().map(function (d) {
+      var n = 0;
+      for (var i = 0; i < DATA.length; i++) if (matches({ druh: d }, DATA[i])) n++;
+      var nazev = d.charAt(0).toUpperCase() + d.slice(1);
+      return opt(d, nazev + ' (' + (n ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') : '0') + ')');
+    }).join('');
     var typeOpts = opt('', 'vše', true) + ['sale', 'drazba', 'exekuce', 'majitel'].map(function (t) { return opt(t, TYPE_LABEL[t]); }).join('');
     /* U každé volby stojí, kolik dnešních nabídek by jí vyhovělo. Bez
        toho se dalo zaškrtnout něco, pod čím není NIC, a hlídání pak
