@@ -4193,9 +4193,14 @@
        stahuje se právě to, co je vyfiltrované, ne celá databáze. */
     if (matched) pripisky += ' <button type="button" class="mc-skryte" id="mc-vyvoz"><span>Stáhnout tabulku ('
       + fmt(matched) + ')</span></button>';
+    /* RYCHLÝ VÝBĚR. Nabízí se jen tehdy, když je co třídit — pod pěti
+       nabídkami je rychlejší projít seznam než pouštět vrstvu. */
+    if (matched >= 5) pripisky += ' <button type="button" class="mc-skryte" id="mc-rychly"><span>Rychlý výběr</span></button>';
     countEl.innerHTML = headLabel + (matched ? ' · <span class="mc-sub">' + fmt(matched) + ' na mapě</span>' : '') + pripisky;
     var vb = countEl.querySelector('#mc-vyvoz');
     if (vb) vb.addEventListener('click', function (e) { e.stopPropagation(); stahniTabulku(); });
+    var rb = countEl.querySelector('#mc-rychly');
+    if (rb) rb.addEventListener('click', function (e) { e.stopPropagation(); otevriRychly(); });
     var sb = countEl.querySelector('#mc-skryte');
     if (sb) sb.addEventListener('click', function (e) { e.stopPropagation(); ukazSkryte = !ukazSkryte; renderList(); });
     var pb = countEl.querySelector('#mc-prosle');
@@ -4427,6 +4432,142 @@
   // Po použití sdíleného odkazu uklidíme adresu na čisté „/", ať další
   // znovunačtení začne na výchozím stavu (celá ČR), ne zase na tom pozemku.
   function cleanUrl() { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+
+  /* ---------- RYCHLÝ VÝBĚR ----------
+   *
+   * Třídění po jedné kartě, palcem. Logika (co je další, co dělá který
+   * směr, jak se vrací zpět) je v js/rychlovyber.js, aby se dala zkoušet
+   * bez prohlížeče; tady zbývá karty vykreslit a chytat prst.
+   *
+   * Balíček se staví z TOHO, CO JE PRÁVĚ VIDĚT — tedy po filtrech a ve
+   * stejném pořadí jako seznam. Kdo si nastavil „Jižní Morava do tří
+   * milionů", má třídit přesně to. */
+  var rvStav = null, rvVrstva = null;
+  function rvPrvek(id) { return document.getElementById(id); }
+
+  function otevriRychly() {
+    if (!window.PKRychly) return;
+    rvVrstva = rvPrvek('rv-vrstva');
+    if (!rvVrstva) return;
+    var karty = PKRychly.balicek(posledniVyber, { jeSkryty: jeSkryty, jeUlozeny: isFav });
+    rvStav = PKRychly.stav(karty);
+    rvVrstva.hidden = false;
+    document.body.style.overflow = 'hidden';
+    rvKresli();
+    var z = rvPrvek('rv-zavrit'); if (z) { try { z.focus(); } catch (e) {} }
+  }
+  function zavriRychly() {
+    if (rvVrstva) rvVrstva.hidden = true;
+    document.body.style.overflow = '';
+    rvStav = null;
+    renderList();   // uložené a skryté se musí projevit i ve výpisu
+  }
+
+  function tvarNabidek(n) {
+    var F = window.PKFeed;
+    return F && F.mnozne ? F.mnozne(n, ['nabídku', 'nabídky', 'nabídek']) : 'nabídek';
+  }
+
+  function rvKresli() {
+    var deck = rvPrvek('rv-deck');
+    if (!deck || !rvStav) return;
+    var zb = rvPrvek('rv-zbyva');
+    var d = PKRychly.aktualni(rvStav);
+    var souh = PKRychly.souhrn(rvStav);
+    if (zb) zb.textContent = d
+      ? ('Zbývá ' + fmt(PKRychly.zbyva(rvStav)))
+      : ('Hotovo — uloženo ' + souh.ulozeno + ', skryto ' + souh.skryto);
+    var zpetBtn = rvPrvek('rv-zpet');
+    if (zpetBtn) zpetBtn.disabled = !PKRychly.lzeZpet(rvStav);
+    ['rv-ne', 'rv-ano'].forEach(function (id) { var b = rvPrvek(id); if (b) b.disabled = !d; });
+    if (!d) {
+      deck.innerHTML = '<div class="rv-konec"><h3>To je všechno</h3>'
+        + '<p>Prošli jste ' + fmt(souh.celkem) + ' ' + tvarNabidek(souh.celkem) + '. Uloženo '
+        + souh.ulozeno + ', skryto ' + souh.skryto + '.</p></div>';
+      return;
+    }
+    var zaM2 = zaMetr(d);
+    var S = window.PK_SNIMEK;
+    var obraz = S ? S.html(d, { sirka: 460, vyska: 307, barva: (TYPE[d.type] || {}).color, id: 'rv' }) : '';
+    deck.innerHTML = '<article class="rv-karta" id="rv-karta">'
+      + '<div class="rv-obraz">' + obraz
+        + '<span class="opp-badge ' + d.type + '">' + esc((TYPE[d.type] || {}).label || '') + '</span></div>'
+      + '<div class="rv-telo">'
+        + '<div class="rv-cena">' + fmt(d.price) + ' Kč</div>'
+        + '<div class="rv-misto">' + esc(d.place || '') + '</div>'
+        + (d.okres && d.okres !== d.place ? '<div class="rv-okres">okres ' + esc(d.okres) + '</div>' : '')
+        + '<div class="rv-druh">' + esc(d.druh || '') + '</div>'
+        + '<div class="rv-cisla">'
+          + (d.area > 0 ? '<span class="rv-cislo">' + fmt(d.area) + ' m²</span>' : '')
+          + (zaM2 != null ? '<span class="rv-cislo">' + fmt(Math.round(zaM2)) + ' Kč/m²</span>' : '')
+        + '</div>'
+      + '</div></article>'
+      + '<p class="rv-stalo" id="rv-stalo" role="status"></p>';
+    rvChytejPrst();
+  }
+
+  /* Prst. Modul gesta nezná — dostane jen SMĚR, takže je jedno, jestli
+     přišel odsud, z tlačítka, nebo z klávesnice. */
+  function rvChytejPrst() {
+    var k = rvPrvek('rv-karta');
+    if (!k) return;
+    var x0 = null, dx = 0;
+    k.addEventListener('touchstart', function (e) {
+      if (!e.touches || e.touches.length !== 1) return;
+      x0 = e.touches[0].clientX; dx = 0;
+    }, { passive: true });
+    k.addEventListener('touchmove', function (e) {
+      if (x0 == null || !e.touches || !e.touches.length) return;
+      dx = e.touches[0].clientX - x0;
+      k.style.transform = 'translateX(' + Math.round(dx) + 'px) rotate(' + (dx / 28).toFixed(2) + 'deg)';
+    }, { passive: true });
+    k.addEventListener('touchend', function () {
+      if (x0 == null) return;
+      k.style.transform = '';
+      var prah = Math.max(60, k.getBoundingClientRect().width * 0.22);
+      if (Math.abs(dx) >= prah) rvRozhodni(dx > 0 ? PKRychly.VPRAVO : PKRychly.VLEVO);
+      x0 = null; dx = 0;
+    }, { passive: true });
+  }
+
+  function rvHlaska(text, trida) {
+    var h = rvPrvek('rv-stalo');
+    if (h) { h.textContent = text; h.className = 'rv-stalo' + (trida ? ' ' + trida : ''); }
+  }
+  function rvRozhodni(smer) {
+    if (!rvStav) return;
+    var v = PKRychly.rozhodni(rvStav, smer);
+    if (!v) return;
+    if (v.akce === 'uloz') { if (!isFav(v.pozemek)) toggleFav(v.pozemek); }
+    else if (!jeSkryty(v.pozemek)) prepniSkryty(v.pozemek);
+    rvKresli();
+    rvHlaska(v.akce === 'uloz' ? 'Uloženo' : 'Skryto', v.akce === 'uloz' ? 'uloz' : 'skryj');
+  }
+  function rvZpet() {
+    if (!rvStav) return;
+    var v = PKRychly.zpet(rvStav);
+    if (!v) return;
+    /* Vrácení musí stav OPRAVDU odvolat, ne jen posunout kartu zpátky —
+       jinak by „zpět" lhalo. */
+    if (v.akce === 'zrus-uloz' && isFav(v.pozemek)) toggleFav(v.pozemek);
+    if (v.akce === 'zrus-skryj' && jeSkryty(v.pozemek)) prepniSkryty(v.pozemek);
+    rvKresli();
+    rvHlaska('Vráceno', '');
+  }
+
+  (function rvOvladani() {
+    var ne = rvPrvek('rv-ne'), ano = rvPrvek('rv-ano'), zp = rvPrvek('rv-zpet'), za = rvPrvek('rv-zavrit');
+    if (ne) ne.addEventListener('click', function () { rvRozhodni(PKRychly.VLEVO); });
+    if (ano) ano.addEventListener('click', function () { rvRozhodni(PKRychly.VPRAVO); });
+    if (zp) zp.addEventListener('click', rvZpet);
+    if (za) za.addEventListener('click', zavriRychly);
+    document.addEventListener('keydown', function (e) {
+      if (!rvStav || !rvVrstva || rvVrstva.hidden) return;
+      if (e.key === 'Escape') { zavriRychly(); return; }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); rvRozhodni(PKRychly.VLEVO); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); rvRozhodni(PKRychly.VPRAVO); }
+    });
+  }());
 
   /* ---------- STAV MAPY V ADRESE (sdílené odkazy) ----------
    *

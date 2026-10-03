@@ -1773,6 +1773,73 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* „Zobrazit dalších 12" — nejdřív se dá seznam dočíst, až pak se odchází
    na mapu. Tlačítko je na celou šířku, protože je to to hlavní, co se
    pod výpisem dělá; na dotyk má 44 px (stejné pravidlo jako test-dotyk). */
+/* =====================================================================
+   RYCHLÝ VÝBĚR — třídění nabídek po jedné, palcem.
+
+   Na telefonu se dvěma tisíci nabídkami se seznam procházet nedá.
+   Tohle je rychlé síto: jedna velká karta, doprava „schovat si",
+   doleva „tohle ne".
+
+   Tlačítka jsou tu POVINNĚ, ne jako doplněk gesta: kdo ovládá web
+   klávesnicí nebo čtečkou, jinak nemá jak. A prostřední „Zpět" je tu
+   proto, že palec sklouzne — bez něj by rychlost byla past.
+
+   Ukládací tlačítko ÚMYSLNĚ NENÍ plná značková zelená: hlídač
+   hierarchie hlídá, kolik prvků na stránce nese sytou značkovou plochu,
+   a tahle vrstva je druhá úroveň, ne hlavní akce webu.
+   ===================================================================== */
+.rv-vrstva{position:fixed; inset:0; z-index:1200; display:flex; flex-direction:column;
+  background:var(--bg); padding:10px 14px calc(14px + env(safe-area-inset-bottom));}
+.rv-vrstva[hidden]{display:none;}
+.rv-hlava{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px;}
+.rv-zbyva{font-size:14px; font-weight:600; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+.rv-zavrit{min-height:44px; padding:0 16px; border-radius:var(--r-pill); cursor:pointer;
+  border:1.5px solid var(--line-strong); background:var(--ink-soft); color:var(--text-ondark);
+  font:inherit; font-size:14px; font-weight:700;}
+.rv-zavrit:hover{border-color:var(--copper-bright); color:var(--copper-bright);}
+
+.rv-deck{flex:1; min-height:0; display:flex; align-items:center; justify-content:center; padding:10px 0;}
+.rv-karta{width:100%; max-width:420px; background:var(--ink-soft); border:1px solid var(--line);
+  border-radius:var(--r-md); box-shadow:var(--e2); overflow:hidden; display:flex; flex-direction:column;
+  touch-action:pan-y;}
+.rv-obraz{position:relative; aspect-ratio:3/2; background:var(--ink-soft2); overflow:hidden;}
+.rv-obraz img, .rv-obraz svg{width:100%; height:100%; object-fit:cover; display:block;}
+.rv-telo{padding:14px 16px 16px;}
+.rv-cena{font-size:24px; font-weight:800; color:var(--text-ondark); line-height:1.1;}
+.rv-misto{font-size:17px; font-weight:700; color:var(--text-ondark); margin-top:4px;}
+.rv-okres{font-size:14px; color:var(--text-ondark-mute); margin-top:2px;}
+.rv-druh{font-size:15px; color:var(--text-ondark); margin-top:8px;}
+.rv-cisla{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+.rv-cislo{font-size:14px; font-weight:600; color:var(--text-ondark); background:var(--ink-soft2);
+  border:1px solid var(--line); border-radius:var(--r-pill); padding:5px 11px; font-variant-numeric:tabular-nums;}
+.rv-znacky{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
+
+/* Co se právě stalo. Bez téhle hlášky člověk neví, jestli palec zabral. */
+.rv-stalo{min-height:22px; text-align:center; font-size:14px; font-weight:700; margin-top:6px;}
+.rv-stalo.uloz{color:var(--c-ok-ink);}
+.rv-stalo.skryj{color:var(--text-ondark-mute);}
+
+.rv-akce{display:flex; align-items:center; justify-content:center; gap:14px; padding-top:6px;}
+.rv-btn{min-width:64px; min-height:64px; border-radius:var(--r-pill); cursor:pointer;
+  border:1.5px solid var(--line-strong); background:var(--ink-soft); color:var(--text-ondark);
+  font:inherit; font-size:22px; line-height:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:2px;}
+.rv-btn .rv-popis{font-size:11px; font-weight:700; letter-spacing:.02em;}
+.rv-btn:disabled{opacity:.42; cursor:default;}
+.rv-ne{color:var(--c-exekuce-ink); border-color:var(--c-exekuce-ink);}
+.rv-ano{color:var(--copper); border-color:var(--copper-bright); background:rgba(31,81,56,0.12);}
+.rv-zpet{min-width:54px; min-height:54px; font-size:18px;}
+
+/* Konec balíčku. Má to konec — kdyby se karty sypaly donekonečna, byl by
+   z nástroje na hledání pozemku hrací automat. */
+.rv-konec{text-align:center; padding:28px 16px;}
+.rv-konec h3{font-size:20px; margin:0 0 8px;}
+.rv-konec p{font-size:15px; color:var(--text-ondark-mute); margin:0 0 16px; line-height:1.55;}
+
+@media (min-width:700px){
+  .rv-vrstva{padding:18px 24px 24px;}
+  .rv-karta{max-width:460px;}
+}
 /* PATKA SE STRANAMI. Nahradila tlačítko „Zobrazit dalších 12", které
    seznam jen prodlužovalo — a hlavně mělo strop 96 položek, takže
    k většině nabídek se v seznamu nedalo dostat vůbec.

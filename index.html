@@ -129,7 +129,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=bf964ecb">
+  <link rel="stylesheet" href="css/styles.css?v=ef8c4f6f">
 </head>
 <body>
 
@@ -686,6 +686,26 @@
 <script src="js/dropdown.js?v=a32b9e01" defer></script>
 <script src="js/snimek.js?v=be1bb5cb" defer></script>
 <script src="js/terminy.js?v=63a1d1b6" defer></script>
+<!-- RYCHLÝ VÝBĚR. Třídění nabídek po jedné, palcem — na telefonu se
+     dvěma tisíci nabídkami nedá rozumně procházet seznam. Doprava
+     „schovat si", doleva „tohle ne"; obě akce web má odjakživa, tohle
+     je jen rychlejší způsob, jak je rozdat. Logiku drží
+     js/rychlovyber.js, ať se dá zkoušet bez prohlížeče. -->
+<div class="rv-vrstva" id="rv-vrstva" hidden role="dialog" aria-modal="true" aria-label="Rychlý výběr pozemků">
+  <div class="rv-hlava">
+    <span class="rv-zbyva" id="rv-zbyva"></span>
+    <button type="button" class="rv-zavrit" id="rv-zavrit" aria-label="Zavřít rychlý výběr">Hotovo</button>
+  </div>
+  <div class="rv-deck" id="rv-deck"></div>
+  <div class="rv-akce">
+    <button type="button" class="rv-btn rv-ne" id="rv-ne" aria-label="Tenhle ne — skrýt">
+      <span aria-hidden="true">✕</span><span class="rv-popis">Tenhle ne</span></button>
+    <button type="button" class="rv-btn rv-zpet" id="rv-zpet" aria-label="Vrátit poslední rozhodnutí" disabled>
+      <span aria-hidden="true">↩</span><span class="rv-popis">Zpět</span></button>
+    <button type="button" class="rv-btn rv-ano" id="rv-ano" aria-label="Uložit si tenhle pozemek">
+      <span aria-hidden="true">♥</span><span class="rv-popis">Uložit</span></button>
+  </div>
+</div>
 <script src="js/ceny.js?v=e797a6b0" defer></script>
   <script src="js/zlevneni.js?v=f9c34dd9" defer></script>
 <script src="js/radce.js?v=0d394917" defer></script>
@@ -693,13 +713,14 @@
 <script src="js/poradi.js?v=c79fbcab" defer></script>
 <script src="js/vyvoz.js?v=565e30f3" defer></script>
 <script src="js/odkaz.js?v=d9f46a30" defer></script>
+<script src="js/rychlovyber.js?v=2603e08e" defer></script>
 <script src="js/rozsah.js?v=d3b39f67" defer></script>
 <script src="js/vybaveni.js?v=cae1f79b" defer></script>
 <script src="js/dotaz.js?v=e26911f4" defer></script>
 <script src="js/hledani.js?v=9b51ed6d" defer></script>
 <script src="js/okruh.js?v=2495a6d8" defer></script>
 <script src="js/klic.js?v=805c6c82"></script>
-<script src="js/main.js?v=9b690f52" defer></script>
+<script src="js/main.js?v=9954f5d5" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,
