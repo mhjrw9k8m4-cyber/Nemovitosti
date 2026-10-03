@@ -5616,9 +5616,26 @@
 
   renderHeroLive();
   renderHeroLegenda();
-  renderHeroSouhvezdi();
-  renderDeals();
-  renderUserListings();
+  /* OZDOBA A PÁSY POD MAPOU AŽ PO PRVNÍM VYKRESLENÍ.
+     Celý boot() běžel v JEDNÉ úloze prohlížeče: od chvíle, kdy dorazí
+     data, se stránka zasekne a nepřekreslí ani neodpoví na klepnutí.
+     Naměřeno na čtyřikrát zpomaleném CPU (telefon 390×844, 5 kol):
+     nejdelší úloha 837–1 027 ms, první položka výpisu v 1 697 ms.
+     Souhvězdí nad nadpisem, pásy nabídek a inzeráty od majitelů v tom
+     mají dohromady okolo sta milisekund — a ani jedno z toho není to,
+     na co člověk čeká: výpis a mapa. Na telefonu jsou pásy navíc pod
+     ohybem, takže je do prvního vykreslení nikdo nevidí.
+     Dvě rámy, ne nula: první nechá prohlížeč vykreslit, co je hotové,
+     v druhé doběhne zbytek. Kdo requestAnimationFrame nemá, dostane
+     všechno rovnou jako dřív. */
+  (function (dokonci) {
+    if (typeof requestAnimationFrame !== 'function') { dokonci(); return; }
+    requestAnimationFrame(function () { requestAnimationFrame(dokonci); });
+  }(function () {
+    renderHeroSouhvezdi();
+    renderDeals();
+    renderUserListings();
+  }));
   // Návrat z detailu pozemku (tlačítko „zpět"): vrať mapu přesně tam, kde uživatel skončil.
   function restoreMapReturn() {
     var ret = null;

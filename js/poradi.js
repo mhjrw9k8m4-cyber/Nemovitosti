@@ -83,8 +83,16 @@
     var ven = [];
     Array.from(pasma.keys()).sort(function (a, b) { return b - a; }).forEach(function (p) {
       var skupina = pasma.get(p);
-      // Stálé pořadí uvnitř pásma — nezávislé na dni.
-      skupina.sort(function (a, b) { return otisk(fnKlic(a), 0) - otisk(fnKlic(b), 0); });
+      /* Stálé pořadí uvnitř pásma — nezávislé na dni.
+         OTISK SE POČÍTÁ RAZ ZA NABÍDKU, ne v porovnávači. Řazení dvou
+         tisíc nabídek vyvolá porovnávač asi dvaadvacet tisíckrát a pokaždé
+         se tentýž klíč hashoval znovu — naměřeno profilerem 47 ms jen
+         v otisk() při načtení stránky. Řadí se podle týchž čísel, takže
+         výsledné pořadí je stejné; že se nerozešlo, hlídá
+         scripts/test-poradi.mjs proti přímočaré podobě. */
+      var sOtiskem = skupina.map(function (x) { return { x: x, h: otisk(fnKlic(x), 0) }; });
+      sOtiskem.sort(function (a, b) { return a.h - b.h; });
+      skupina = sOtiskem.map(function (o) { return o.x; });
       // …a posunuté o „den × krok" míst. Malá pásma se otočí rychleji,
       // velká pomaleji, ale projdou celá.
       var n = skupina.length;

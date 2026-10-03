@@ -195,6 +195,70 @@ console.log('\nPořadí nabídek — nic nezapadne, ale kvalita rozhoduje');
   pravda('kratší výpis než obrazovka zůstane, jak byl', kopie.map(kl).join() === kratky.map(kl).join());
 }
 
+/* --- 6) Zrychlené řazení pásma dává TOTÉŽ pořadí ---------------------
+   Uvnitř pásma se řadí podle otisku klíče. Dřív se otisk počítal přímo
+   v porovnávači, takže se tentýž klíč hashoval při každém porovnání —
+   u dvou tisíc nabídek asi dvaadvacet tisíckrát. Teď se počítá raz za
+   nabídku a řadí se podle hotových čísel: naměřeno 9,9 → 0,8 ms.
+   Zrychlení je ale k ničemu, kdyby se změnilo pořadí — proto se tu
+   porovnává s PŘÍMOČAROU podobou, napsanou zvlášť, na ostrých datech.
+   Pozor na to, že tahle kontrola musí umět spadnout: kdyby se v obou
+   případech volala jedna a tatáž funkce, neověřovala by nic. */
+{
+  const DATA = JSON.parse(readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8')).opportunities;
+  const kl = (d) => [d.place || '', d.parcel || '', d.okres || '', d.lat, d.lng].join('|');
+  /* Přímočará podoba: hash se počítá v porovnávači, jak to bývalo. */
+  function prostridejNaivne(list, fnSkore, fnKlic, den, krok, prihozeni) {
+    const k = krok == null ? P.KROK_ZA_DEN : krok;
+    const j = prihozeni == null ? 0 : prihozeni;
+    const pasma = new Map();
+    list.forEach((x) => {
+      const p = P.pasmo(fnSkore(x));
+      if (!pasma.has(p)) pasma.set(p, []);
+      pasma.get(p).push(x);
+    });
+    let ven = [];
+    Array.from(pasma.keys()).sort((a, b) => b - a).forEach((p) => {
+      let skupina = pasma.get(p);
+      skupina.sort((a, b) => P.otisk(fnKlic(a), 0) - P.otisk(fnKlic(b), 0));
+      const n = skupina.length;
+      if (n > 1) {
+        const posun = ((den * k + j) % n + n) % n;
+        skupina = skupina.slice(posun).concat(skupina.slice(0, posun));
+      }
+      ven = ven.concat(skupina);
+    });
+    for (let i = 0; i < ven.length; i++) list[i] = ven[i];
+    return list;
+  }
+  /* Skóre se bere z dat, ne z hlavy: pásma musí být obsazená tak, jak
+     je obsazuje web, jinak by se zkoušelo jedno velké pásmo. */
+  const skoreZDat = (d) => {
+    const bonus = { drazba: 22, exekuce: 18, obec: 12, sale: 8, majitel: 10 }[d.type] || 0;
+    return Math.max(6, 9 + bonus + ((d.area || 0) % 37));
+  };
+  pravda('data na tuhle kontrolu vůbec jsou', DATA.length > 1000, `${DATA.length} nabídek`);
+  const pasmaObsazena = new Set(DATA.map((d) => P.pasmo(skoreZDat(d)))).size;
+  pravda('a rozpadnou se do víc pásem (jinak se neporovnává řazení)',
+    pasmaObsazena >= 3, `${pasmaObsazena} pásem`);
+  let rozdily = 0;
+  for (const den of [0, 1, 7, 365, 20000]) {
+    const a = P.prostridej(DATA.slice(), skoreZDat, kl, den).map(kl).join('\n');
+    const b = prostridejNaivne(DATA.slice(), skoreZDat, kl, den).map(kl).join('\n');
+    if (a !== b) rozdily++;
+  }
+  pravda('zrychlené řazení pásma dává stejné pořadí jako přímočaré (5 různých dní)',
+    rozdily === 0, `${rozdily} dní se rozešlo`);
+  // A že se ta kontrola nedívá do prázdna: obrácený otisk ji musí shodit.
+  const obracene = (list, fnSkore, fnKlic, den) => {
+    const kopie = prostridejNaivne(list.slice(), fnSkore, fnKlic, den);
+    return kopie.reverse();
+  };
+  const x = P.prostridej(DATA.slice(), skoreZDat, kl, 3).map(kl).join('\n');
+  const y = obracene(DATA.slice(), skoreZDat, kl, 3).map(kl).join('\n');
+  pravda('a kdyby se pořadí rozešlo, kontrola to pozná', x !== y);
+}
+
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.log('::error::Pořadí: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
