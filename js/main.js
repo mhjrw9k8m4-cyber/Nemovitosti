@@ -4267,6 +4267,34 @@
       cleanUrl();
       return true;
     }
+    /* ?obec=<obec>&okres=<okres> — odkaz ze stránky okresu („kde je
+       v okrese nabídek nejvíc"). Přes ?q= to udělat nejde: mapa hledá po
+       ZAČÁTCÍCH slov, takže „Brno" ukáže i Brno-venkov a každou obec,
+       která tím slovem začíná — naměřeno na ostrých datech: u sedmi obcí
+       (Brno, Ostrava, Plzeň, Kyjov, Konice, Desná, Police) by odkaz
+       slíbil jedno číslo a mapa ukázala jiné, u Brna 17 proti 39.
+       Tohle je PŘESNÉ místo: tentýž filtr, jaký nastaví volba
+       z našeptávače (mistoFiltr), tedy shoda celého názvu obce i okresu. */
+    var mo = /[?&]obec=([^&]+)/.exec(location.search);
+    if (mo) {
+      var dekod = function (x) { try { return decodeURIComponent(x); } catch (e) { return x; } };
+      var obec = dekod(mo[1]);
+      var mok = /[?&]okres=([^&]+)/.exec(location.search);
+      if (searchEl) searchEl.value = obec;
+      nastavHledani(obec);
+      /* AŽ ZA nastavHledani: to volbu místa schválně ruší (psaní ji má
+         rušit), takže se musí nastavit po něm. */
+      mistoFiltr = { typ: 'obec', place: obec, okres: mok ? dekod(mok[1]) : '' };
+      if (typeof lockDots === 'function') lockDots(false);
+      renderList();
+      var posObec = geocodeTownLocal(obec);
+      if (posObec && typeof map !== 'undefined' && map) {
+        try { map.setView([posObec.lat, posObec.lng], Math.max(map.getZoom(), 10), { animate: true }); } catch (e) {}
+      }
+      if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
+      cleanUrl();
+      return true;
+    }
     // ?kraj=<název> — přiblíž mapu na daný kraj (odkaz z krajských/okresních stránek).
     var mk = /[?&]kraj=([^&]+)/.exec(location.search);
     if (mk) {

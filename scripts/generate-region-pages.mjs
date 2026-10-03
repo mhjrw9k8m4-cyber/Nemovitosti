@@ -573,6 +573,35 @@ for(const okres of eligibleOkres){
   const desc = `${count} ${pluralPozemek(count)} v okrese ${okres} na jedné mapě — prodeje, dražby i exekuce z veřejných zdrojů.${minP?(' Ceny od '+fmt(minP)+' Kč.'):''}`;
   const items = list.slice(0,20).map((o,i)=>({"@type":"ListItem","position":i+1,"name":`${o.place} — ${TYPE_LABEL[o.type]||o.type}${o.area?', '+o.area+' m²':''}`}));
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky v okrese ${okres}`,"inLanguage":"cs","description":`Nabídky pozemků v okrese ${okres} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}};
+  /* KOLIK Z TOHO JSOU SPOLUVLASTNICKÉ PODÍLY. Je to čtvrtina celé
+     nabídky webu (531 z 2 019) a u podílu je v inzerátu výměra CELÉ
+     parcely, ale cena jen za ten zlomek — cena za metr proto vychází
+     nízko z podstaty věci, ne proto, že je nabídka výhodná. U jednotlivé
+     nabídky to web říká, u okresu to nikde nestálo, přitom právě tady si
+     člověk prohlíží ceny vedle sebe a ty podíly mu je sráží. */
+  const podilu = list.filter((o)=>o.podil).length;
+  /* PODLE OBCE. Okres má i přes třicet nabídek v jednom dlouhém sloupci.
+     Kdo hledá pozemek u konkrétní vsi, musí ho projít celý — a přitom
+     se nabídky kupí: v okrese Litoměřice je patnáct z nich v jedné obci.
+     Obce s aspoň dvěma nabídkami proto stojí nahoře jako rozcestník do
+     mapy. Jedna nabídka vlastní řádek nedostane: byl by z toho druhý
+     seznam všeho. V dotazu je i okres, protože stejných názvů obcí je
+     v republice spousta a bez něj by mapa ukázala Bystřici ze čtyř
+     okresů — číslo u odkazu by pak neplatilo. */
+  const poObci = {};
+  for (const o of list) if (o.place) poObci[o.place] = (poObci[o.place] || 0) + 1;
+  const obceVic = Object.keys(poObci)
+    .filter((m)=>poObci[m] >= 2 && m !== okres)
+    .sort((a,b)=>poObci[b]-poObci[a] || a.localeCompare(b,'cs'));
+  /* ČÍSLO U ODKAZU MUSÍ SEDĚT S TÍM, CO MAPA UKÁŽE — a proto odkaz nevede
+     na hledání textu (?q=), ale na PŘESNÉ místo (?obec=&okres=). Hledání
+     textem jde po začátcích slov, takže „Brno" ukáže i Brno-venkov a cizí
+     obce, které tím slovem začínají: u sedmi obcí z 345 by odkaz slíbil
+     jedno číslo a mapa ukázala jiné, u Brna 17 proti 39. Přesné místo
+     srovnává celý název obce i okresu, takže se číslo rozejít nemůže;
+     hlídá to scripts/test-okres-stranka.mjs. */
+  const obecLinks = obceVic.slice(0,12).map((m)=>
+    `<a href="index.html?obec=${encodeURIComponent(m)}&amp;okres=${encodeURIComponent(okres)}#mapa">${esc(m)} <span>${poObci[m]}</span></a>`).join('');
   const rows = list.map((o)=>itemRow(o, true)).join('\n');
   const mapName = (KRAJ_META[kraj]||{}).mapName || kraj;
   const krajLink = mapName ? `index.html?kraj=${encodeURIComponent(mapName)}#mapa` : 'index.html#mapa';
@@ -615,6 +644,7 @@ for(const okres of eligibleOkres){
         ${Object.keys(byType).length > 1 && byType.obec?`<div class="okr-stat"><b>${byType.obec}</b><span>${sklon(byType.obec,'záměr obce','záměry obcí','záměrů obcí')}</span></div>`:''}
       </div>
 ${priceLine(priceStats(list)) ? `      <p class="okr-more" style="margin-top:2px;">${priceLine(priceStats(list))} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
+${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(podilu,'je','jsou','je')} <b>${podilu}</b> ${sklon(podilu,'spoluvlastnický podíl','spoluvlastnické podíly','spoluvlastnických podílů')} — v inzerátu je pak výměra celé parcely, ale cena jen za ten zlomek, takže cena za metr vychází nízko sama od sebe. <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
 
       <div class="add-cross" style="margin-top:0;">
         <div class="acx-copy">
@@ -635,6 +665,16 @@ ${rows}
         </div>
       </div>
 
+${obecLinks ? `
+      <div class="add-card" style="margin-top:22px;">
+        <div class="rules-sect">
+          <h2>Kde je v okrese ${esc(okres)} nabídek nejvíc</h2>
+          <p class="rules-note" style="margin-top:0;">Obce, kde evidujeme víc než jednu nabídku. Odkaz otevře mapu rovnou na té obci.</p>
+          <div class="okr-index-grid">
+            ${obecLinks}
+          </div>
+        </div>
+      </div>` : ''}
 ${sibLinks ? `
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">

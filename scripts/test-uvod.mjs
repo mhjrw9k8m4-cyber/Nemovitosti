@@ -440,6 +440,50 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   }
 }
 
+/* --- ODKAZ Z OKRESNÍ STRÁNKY NA OBEC -------------------------------
+ * Stránka okresu u každé obce slibuje číslo („Lovečkovice 11"). Odkaz
+ * vede na index.html?obec=&okres= a mapa z něj musí ukázat PŘESNĚ tolik.
+ * Přes hledání textem (?q=) to nešlo: mapa jde po začátcích slov, takže
+ * „Brno" ukázalo i Brno-venkov a obce, které tím slovem začínají —
+ * odkaz sliboval 17 a mapa dala 39. Tady se neporovnává s vlastním
+ * výpočtem, ale s TÍM ČÍSLEM, co na stránce opravdu stojí.
+ */
+{
+  const fs2 = await import('node:fs');
+  const souboryOkresu = fs2.readdirSync(new URL('..', import.meta.url).pathname)
+    .filter((f) => /^pozemky-okres-[a-z0-9-]+\.html$/.test(f));
+  let nej = null;
+  for (const f of souboryOkresu) {
+    const html = readFileSync(new URL('../' + f, import.meta.url), 'utf8');
+    const re = /<a href="index\.html\?obec=([^&"]+)&amp;okres=([^"#]+)#mapa">([^<]*)<span>(\d+)<\/span><\/a>/g;
+    let m;
+    while ((m = re.exec(html))) {
+      const n = Number(m[4]);
+      if (!nej || n > nej.n) nej = { obec: decodeURIComponent(m[1]), okres: decodeURIComponent(m[2]),
+        jmeno: m[3].trim(), n: n };
+    }
+  }
+  if (!nej) {
+    pravda('na stránkách okresů je aspoň jeden odkaz na obec', false,
+      'žádný odkaz ?obec= se nenašel — buď se nevygeneroval, nebo se změnil tvar');
+  } else {
+    await p.goto(`${BASE}/index.html?obec=${encodeURIComponent(nej.obec)}`
+      + `&okres=${encodeURIComponent(nej.okres)}#mapa`, { waitUntil: 'domcontentloaded' });
+    await p.waitForTimeout(2400);
+    const v = await p.evaluate(() => {
+      const c = document.querySelector('.ms-chipy');
+      const m = /(\d[\d\s\u00a0]*)/.exec(String((document.getElementById('map-count') || {}).textContent)
+        .replace(/\u00a0/g, ' '));
+      return { pocet: m ? +m[1].replace(/\s/g, '') : -1,
+        text: (c ? c.textContent : '').replace(/\s+/g, ' ').trim() };
+    });
+    pravda(`odkaz na obec ${nej.jmeno} ukáže přesně tolik, kolik stránka okresu slíbila`,
+      v.pocet === nej.n, `slíbeno ${nej.n}, v seznamu ${v.pocet}`);
+    pravda('a je vidět, která obec je vybraná',
+      v.text.indexOf(nej.jmeno) >= 0, `odznaky: „${v.text.slice(0, 90)}"`);
+  }
+}
+
 /* --- TIPY MUSÍ ŘÍCT, KDE SE SROVNÁVALY ------------------------------
  * „Levnější než 98 % podobných" je tvrzení a dává smysl jen s místem.
  * Percentil se počítá nejdřív v okrese, a když tam není dost nabídek,
