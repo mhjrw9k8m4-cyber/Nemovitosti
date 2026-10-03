@@ -1708,6 +1708,59 @@
     return { color: 'rgba(31,81,56,0.5)', weight: 1.4, fill: true,
       fillColor: '#1F5138', fillOpacity: krajKrytí(k) };
   }
+  /* OKOLÍ SE ZTLUMÍ, ABY ČESKO VYSTOUPILO.
+   *
+   * Mapa byla plochá: Lipsko, Vídeň i Kalisz byly stejně výrazné jako
+   * Jihlava, takže oko nemělo kam jít dřív. Podklad je přitom OSM, kde
+   * cizina končí až na okraji dlaždice — republika se z něj sama
+   * nevydělí. Ztlumit vnitřek nejde: tam leží to podstatné.
+   *
+   * Standardní řešení je opačné — ZÁVOJ PŘES ZBYTEK SVĚTA S DÍRAMI TAM,
+   * KDE JE ČESKO. Dírami jsou prstence krajů z data/kraje.json, které
+   * stejně načítáme kvůli obrysům; nic dalšího se nestahuje.
+   *
+   * Prstenců je patnáct, ne čtrnáct: Středočeský má druhý, přesně tam,
+   * kde je Praha. Při pravidle „sudá/lichá" to vyjde správně — uvnitř
+   * Prahy se protne svět, obrys Středočeského, jeho vnitřní prstenec
+   * a obrys Prahy, tedy sudý počet, a Praha zůstane odkrytá. Vynechat
+   * ten vnitřní prstenec by ji naopak zakrylo.
+   *
+   * Závoj má barvu plochy stránky, ne šedou: mapa tím přestane být
+   * vystřižený obdélník a cizina se rozplyne do stránky. */
+  function postavMasku() {
+    if (!KRAJE_GEOM || !L.polygon) return null;
+    var diry = [];
+    Object.keys(KRAJE_GEOM).forEach(function (k) {
+      var g = KRAJE_GEOM[k];
+      if (!g || !g.coordinates) return;
+      var ringy = g.type === 'Polygon' ? g.coordinates : [].concat.apply([], g.coordinates);
+      ringy.forEach(function (r) {
+        if (r && r.length > 2) diry.push(r.map(function (b) { return [b[1], b[0]]; }));
+      });
+    });
+    if (!diry.length) return null;
+    // Obdélník přes celý svět; Leaflet si ho ořízne na výřez sám.
+    var svet = [[-89, -179.9], [-89, 179.9], [89, 179.9], [89, -179.9]];
+    return L.polygon([svet].concat(diry), {
+      /* ZTMAVIT, NE PROSVĚTLIT. Napoprvé tu byla barva plochy stránky
+         (#DFEBE2) na 0,66 — a změřeno to nedělalo NIC: podklad je už tak
+         odbarvený a bledý, takže se bledým závojem nedá ztlumit. Čísla
+         (jas v rozích výřezu proti středu, kde je Česko):
+
+             bez masky   cizina 219, Česko 202  → cizina SVĚTLEJŠÍ, splývá
+             bílá 0,55   cizina 232             → ještě horší
+             tmavá 0,12  cizina 195             → rozdíl 7, málo
+             tmavá 0,18  cizina 184             → rozdíl 18  ← tahle
+             tmavá 0,26  cizina 169             → rozdíl 33, už dusí kontext
+
+         Odstín je tmavý brandový tón, tentýž jako tmavý pás na stránce. */
+      stroke: false, fill: true, fillColor: '#14231C', fillOpacity: 0.18,
+      fillRule: 'evenodd', interactive: false, className: 'pk-maska'
+    });
+  }
+  var maska = postavMasku();
+  if (maska) maska.addTo(map);
+
   if (KRAJE_GEOM) {
     var feats = Object.keys(KRAJE_GEOM).map(function (k) { return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] }; });
     krajLayer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
@@ -2206,6 +2259,8 @@
     renderDots(lastVis);
     if (!map.hasLayer(dotLayer)) dotLayer.addTo(map);
     if (krajLayer) krajLayer.bringToBack();
+    // Závoj patří úplně dolů — nad dlaždice, pod obrysy krajů i tečky.
+    if (maska && map.hasLayer(maska)) maska.bringToBack();
   }
   function syncMarkers(visIds) {
     lastVis = visIds.map(function (id) { return DATA[id]; });

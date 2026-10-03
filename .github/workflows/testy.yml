@@ -371,6 +371,9 @@ jobs:
       - name: Na ovládání je vidět, že je ovládání
         run: node scripts/test-afordance.mjs
 
+      - name: Ztlumené okolí mapy
+        run: node scripts/test-maska.mjs
+
       - name: Přidání vlastního pozemku (celá cesta)
         run: node scripts/test-pridat.mjs
 
