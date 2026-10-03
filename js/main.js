@@ -1468,8 +1468,48 @@
     }
     return false;
   }
+  /* OBÁLKA KRAJE — nejmenší obdélník, do kterého se celý vejde.
+     Kraj se u každé nabídky hledal tak, že se bod zkusil proti všem
+     čtrnácti polygonům a u každého se projely všechny jeho hrany.
+     Při dvou tisících nabídkách je ptInRing nejdražší jméno v profilu
+     (naměřeno 81 ms na čtyřikrát zpomaleném CPU). Bod, který neleží
+     v obálce kraje, přitom v tom kraji ležet NEMŮŽE — a to se pozná
+     čtyřmi porovnáními místo stovek hran. Výsledek se tím nemění, je to
+     jen předřazené síto; shodu s podobou bez něj hlídá
+     scripts/test-kraje-geometrie.mjs na všech nabídkách.
+     Obálka se počítá z VNĚJŠÍCH prstenců: dírou v polygonu se obdélník
+     nezmenší, protože leží uvnitř něj. */
+  function obalkaGeom(geom) {
+    var polys = (geom && geom.type === 'MultiPolygon') ? geom.coordinates
+      : ((geom && geom.type === 'Polygon') ? [geom.coordinates] : []);
+    var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (var p = 0; p < polys.length; p++) {
+      var ring = polys[p][0] || [];
+      for (var i = 0; i < ring.length; i++) {
+        var x = ring[i][0], y = ring[i][1];
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+      }
+    }
+    return [x0, y0, x1, y1];
+  }
+  function vObalce(lng, lat, o) {
+    return !!o && lng >= o[0] && lng <= o[2] && lat >= o[1] && lat <= o[3];
+  }
+  var KRAJ_OBALKY = null;
   function krajGeoOf(d) {
-    if (KRAJE_GEOM) { for (var k in KRAJE_GEOM) { if (ptInGeom(d.lng, d.lat, KRAJE_GEOM[k])) return k; } }
+    if (KRAJE_GEOM) {
+      if (!KRAJ_OBALKY) {
+        KRAJ_OBALKY = {};
+        for (var kk in KRAJE_GEOM) KRAJ_OBALKY[kk] = obalkaGeom(KRAJE_GEOM[kk]);
+      }
+      for (var k in KRAJE_GEOM) {
+        if (!vObalce(d.lng, d.lat, KRAJ_OBALKY[k])) continue;
+        if (ptInGeom(d.lng, d.lat, KRAJE_GEOM[k])) return k;
+      }
+    }
     return krajOf(d); // záloha pro body mimo polygon (nepřesné geokódování)
   }
 

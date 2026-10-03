@@ -76,6 +76,9 @@ jobs:
       - name: Okruh kolem místa (do 30 km od Brna)
         run: node scripts/test-okruh.mjs
 
+      - name: Kraj podle polohy (obálka nesmí změnit odpověď)
+        run: node scripts/test-kraje-geometrie.mjs
+
       - name: Razítka verzí (aby lidem nechodila stará kopie)
         run: node scripts/test-verze.mjs
 
