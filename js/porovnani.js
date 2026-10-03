@@ -51,7 +51,7 @@
     return Math.round((t - dnes) / 86400000);
   }
 
-  function vykresli(nalezene, chybejicich) {
+  function tabulka(nalezene) {
     /* CENA ZA METR SE POČÍTÁ Z VÝMĚRY, KTERÁ KUPUJÍCÍMU PŘIPADNE.
        Dělit cenou lomeno celou výměrou je u spoluvlastnického podílu
        nesmysl: v inzerátu je výměra celé parcely, cena jen za zlomek.
@@ -96,9 +96,13 @@
         + '</tr>';
     }).join('');
 
+    return '<div class="por-tab-obal"><table class="por-tab"><thead>' + hlavicka + '</thead>'
+      + '<tbody>' + radky + '</tbody></table></div>';
+  }
+
+  function vykresli(nalezene, chybejicich) {
     host.innerHTML =
-      '<div class="por-tab-obal"><table class="por-tab"><thead>' + hlavicka + '</thead>'
-      + '<tbody>' + radky + '</tbody></table></div>'
+      tabulka(nalezene)
       + '<p class="por-pozn">Zeleně je <b>nejnižší cena za m²</b> a <b>největší výměra</b> z vašich uložených. '
       + 'Který pozemek je nejlepší, z tabulky nevyplývá — přístup, sítě a územní plán čísla neukážou.</p>'
       + (chybejicich
@@ -106,21 +110,89 @@
         : '');
   }
 
+  /* UKÁZKA, DOKUD NENÍ CO POROVNÁVAT.
+   *
+   * Stránka dřív novému návštěvníkovi neukázala vůbec nic — jen větu
+   * „zatím nemáte uložený žádný pozemek" a tlačítko na mapu. Kdo sem
+   * přišel z nabídky, odešel, aniž by zjistil, co tahle stránka umí,
+   * a neměl se proč vracet. Živá ukázka to řekne za jednu obrazovku.
+   *
+   * Vybírá se tak, aby ukázka vůbec dávala smysl: tři nabídky z JEDNOHO
+   * okresu a JEDNOHO druhu — jinak by tabulka srovnávala pole se
+   * stavební parcelou a zelená značka „nejnižší cena za m²" by
+   * neříkala nic. Z nich nejlevnější, prostřední a nejdražší metr, ať
+   * je mezi čím vybírat. Nic náhodného: stejná data, stejná trojice.
+   */
+  function ukazka(D) {
+    var C = window.PK_CENY;
+    if (!C || !C.zaMetr) return [];
+    var skupiny = {};
+    D.forEach(function (d) {
+      if (!d.okres || !d.druh || !d.price || !d.area) return;
+      var m = C.zaMetr(d);
+      if (m == null || !isFinite(m)) return;
+      var k = d.okres + '|' + d.druh;
+      (skupiny[k] = skupiny[k] || []).push({ d: d, m: m });
+    });
+    /* Stavební pozemek má přednost — kvůli němu sem lidé chodí.
+       Klíče se procházejí seřazené, ať je výběr pokaždé stejný. */
+    var nej = null, nejStav = null;
+    Object.keys(skupiny).sort().forEach(function (k) {
+      var s = skupiny[k];
+      if (s.length < 3) return;
+      if (!nej || s.length > nej.length) nej = s;
+      if (/stavebn/i.test(k) && (!nejStav || s.length > nejStav.length)) nejStav = s;
+    });
+    var vyber = nejStav || nej;
+    if (!vyber) return [];
+    vyber = vyber.slice().sort(function (a, b) { return a.m - b.m; });
+    /* Ne nejlevnější a nejdražší, ale 25., 50. a 75. percentil — totéž
+       rozpětí, které stránka „Ceny pozemků" označuje za typické. Krajní
+       hodnoty bývají podíl nebo špatně zařazená nabídka a ukázka by pak
+       vypadala jako chyba v datech (v jednom okrese vycházelo 699 proti
+       21 886 Kč/m² u téhož druhu). */
+    var kde = function (q) { return Math.min(vyber.length - 1, Math.floor(q * (vyber.length - 1))); };
+    var idx = [kde(0.25), kde(0.5), kde(0.75)];
+    /* U malé skupiny by percentily spadly na tutéž nabídku; pak ať je
+       ukázka radši kratší než s jedním pozemkem třikrát. */
+    idx = idx.filter(function (x, i) { return idx.indexOf(x) === i; });
+    return idx.map(function (i) { return vyber[i].d; });
+  }
+
+  function sUkazkou(D) {
+    var tri = ukazka(D);
+    if (!tri.length) return;      // bez vhodné trojice zůstane jen vysvětlení
+    host.insertAdjacentHTML('beforeend',
+      '<div class="por-ukazka"><h3>Takhle to vypadá</h3>'
+      + '<p class="por-pozn">Tohle <b>nejsou</b> vaše uložené pozemky — jsou to tři '
+      + 'skutečné nabídky ' + (tri[0].druh ? 'druhu ' + esc(tri[0].druh) + ' ' : '')
+      + 'z okresu ' + esc(tri[0].okres || '') + ', aby bylo vidět, co tabulka ukazuje.</p>'
+      + tabulka(tri)
+      + '<p class="por-pozn">Zeleně je <b>nejnižší cena za m²</b> a <b>největší výměra</b> '
+      + 'z porovnávaných. Svoje pozemky sem dostanete záložkou na jejich kartě.</p></div>');
+  }
+
   var klice = ulozene();
-  if (!klice.length) { prazdno('Zatím nemáte uložený žádný pozemek'); return; }
+  /* Vysvětlení se vypíše hned, ne až po datech: kdo nic uloženého nemá,
+     nemá na co čekat a při výpadku dat by jinak místo něj dostal hlášku
+     o nenačtených datech. Ukázka se k němu přisype, až data dojdou. */
+  if (!klice.length) prazdno('Zatím nemáte uložený žádný pozemek');
 
   fetch('data/opportunities.json', { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (j) {
       var D = (j && j.opportunities) || [];
+      if (!klice.length) { sUkazkou(D); return; }
       var podleKlice = {};
       D.forEach(function (d) { podleKlice[window.PKKlic.pkey(d)] = d; });
       var nalezene = [];
       klice.forEach(function (k) { if (podleKlice[k]) nalezene.push(podleKlice[k]); });
-      if (!nalezene.length) { prazdno('Uložené pozemky už v nabídce nejsou'); return; }
+      if (!nalezene.length) { prazdno('Uložené pozemky už v nabídce nejsou'); sUkazkou(D); return; }
       vykresli(nalezene, klice.length - nalezene.length);
     })
     .catch(function () {
+      // Vysvětlení pro prázdný seznam už na stránce je — hláška by ho přebila.
+      if (!klice.length) return;
       host.innerHTML = '<p class="por-prazdno">Data se teď nepodařilo načíst. Zkuste to prosím znovu.</p>';
     });
 })();

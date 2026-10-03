@@ -4663,10 +4663,29 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 .por-tab tbody th a{color:var(--text-ondark); text-decoration:none;}
 .por-tab tbody th a:hover{color:var(--copper-bright); text-decoration:underline;}
 .por-tab tbody tr + tr th, .por-tab tbody tr + tr td{border-top:1px solid var(--line);}
+/* NÁZEV POZEMKU ZŮSTÁVÁ NA MÍSTĚ. Tabulka má sedm sloupců a na telefonu
+   je 769 px široká v 350px okně: „Cena za m²" — kvůli které se porovnává
+   a kterou tabulka zeleně značí — začíná 87 px ZA okrajem. Posouvat se
+   dá odjakživa, ale po dvou švihnutích prstem už se nedá poznat, čí
+   číslo je čí. Přilepený první sloupec to řeší; stín napravo od něj je
+   jediná věc, která prozradí, že pod ním něco podjíždí. */
+.por-tab thead th:first-child, .por-tab tbody th{position:sticky; left:0; z-index:2;
+  background:var(--ink-soft);}
+.por-tab tbody th::after, .por-tab thead th:first-child::after{content:""; position:absolute;
+  top:0; right:0; bottom:-1px; width:10px; transform:translateX(100%);
+  background:linear-gradient(90deg, rgba(8,14,20,0.10), rgba(8,14,20,0)); pointer-events:none;}
+@media (min-width:1060px){   /* na šířku se tabulka vejde celá, stín by lhal */
+  .por-tab tbody th::after, .por-tab thead th:first-child::after{display:none;}
+}
 .por-nej{color:var(--c-ok-ink); font-weight:700;}
 .por-pozn{font-size:13px; line-height:1.55; color:var(--text-ondark-mute);
   margin:14px 0 0; max-width:var(--m-text);}
 .por-nacitam{font-size:14px; color:var(--text-ondark-mute);}
+/* Ukázka pod vysvětlením, dokud není co porovnávat. Oddělená linkou,
+   ať si ji nikdo nesplete se svými uloženými pozemky. */
+.por-ukazka{margin-top:28px; padding-top:24px; border-top:1px solid var(--line);}
+.por-ukazka h3{font-family:var(--font-display); font-size:20px; margin:0 0 6px;}
+.por-ukazka .por-pozn:first-of-type{margin-bottom:14px;}
 .por-prazdno{max-width:var(--m-sloupec);}
 .por-prazdno h2{font-family:var(--font-display); font-size:24px; margin:0 0 10px;}
 .por-prazdno p{font-size:15px; color:var(--text-ondark-mute); margin:0 0 16px;}

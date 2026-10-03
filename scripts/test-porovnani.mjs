@@ -134,11 +134,68 @@ await p.evaluate(() => localStorage.removeItem('pk_fav_v1'));
 await p.reload({ waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
 const prazdna = await p.evaluate(() => ({
-  tabulka: !!document.querySelector('.por-tab'),
-  text: (document.getElementById('porovnani') || {}).textContent.trim().slice(0, 80),
+  prazdnaTabulka: !!document.querySelector('.por-tab tbody tr:not(.por-ukazka *)')
+    && !document.querySelector('.por-ukazka'),
+  vysvetleni: !!document.querySelector('.por-prazdno'),
+  text: (document.querySelector('.por-prazdno') || {}).textContent.trim().slice(0, 80),
 }));
 pravda('bez uložených se neukáže prázdná tabulka, ale vysvětlení',
-  !prazdna.tabulka && /uložen/i.test(prazdna.text), JSON.stringify(prazdna));
+  !prazdna.prazdnaTabulka && prazdna.vysvetleni && /uložen/i.test(prazdna.text),
+  JSON.stringify(prazdna));
+
+/* --- 1b) A POD VYSVĚTLENÍM UKÁZKA ------------------------------------
+ * Stránka dřív novému návštěvníkovi neukázala vůbec nic — jen větu
+ * „zatím nemáte uložený žádný pozemek" a tlačítko na mapu. Kdo sem
+ * přišel z nabídky, odešel, aniž by zjistil, co tahle stránka umí.
+ * Ukázka musí být na skutečných datech, srovnatelná (jeden okres,
+ * jeden druh) a nesmí se dát splést s vlastními uloženými pozemky.
+ */
+{
+  // Pojistka: bez trojice stejného druhu v jednom okrese se ukázka
+  // složit nedá a všechno pod tím by platilo o prázdnu.
+  const skupiny = {};
+  D.forEach((d) => {
+    if (!d.okres || !d.druh || !d.price || !d.area) return;
+    const m = CENY.zaMetr(d);
+    if (m == null || !isFinite(m)) return;
+    const k = d.okres + '|' + d.druh;
+    (skupiny[k] = skupiny[k] || []).push(d);
+  });
+  const trojice = Object.keys(skupiny).filter((k) => skupiny[k].length >= 3);
+  pravda('v datech je skupina, ze které jde ukázka složit', trojice.length > 0,
+    'žádný okres nemá tři nabídky téhož druhu s cenou i výměrou');
+
+  const u = await p.evaluate(() => {
+    const o = document.querySelector('.por-ukazka');
+    if (!o) return null;
+    const rad = [...o.querySelectorAll('.por-tab tbody tr')];
+    return {
+      text: o.textContent.replace(/\s+/g, ' ').trim(),
+      radku: rad.length,
+      okresy: [...new Set(rad.map((r) => (r.querySelector('th span') || {}).textContent))],
+      druhy: [...new Set(rad.map((r) => (r.cells[4] || {}).textContent))],
+      zaM2: rad.map((r) => +(((r.cells[3] || {}).textContent || '').replace(/[^\d]/g, '')) || 0),
+      zelenych: rad.reduce((a, r) => a + [...r.cells].filter((c) => c.classList.contains('por-nej')).length, 0),
+      odkazy: rad.filter((r) => (r.querySelector('th a') || {}).getAttribute
+        && /pozemek\.html\?p=/.test(r.querySelector('th a').getAttribute('href'))).length,
+    };
+  });
+  pravda('bez uložených se ukáže živá ukázka porovnání', !!u && u.radku === 3,
+    u ? `řádků ${u.radku}` : 'blok s ukázkou na stránce není');
+  if (u) {
+    pravda('a stojí u ní, že to NEJSOU uložené pozemky uživatele',
+      /nejsou/i.test(u.text) && /uložen/i.test(u.text), u.text.slice(0, 140));
+    pravda('ukázka srovnává srovnatelné (jeden okres, jeden druh)',
+      u.okresy.length === 1 && u.druhy.length === 1,
+      `okresy ${u.okresy.join(', ')} | druhy ${u.druhy.join(', ')}`);
+    pravda('a ceny za m² se v ní liší (jinak by zelená značka neukázala nic)',
+      u.zaM2.length === 3 && u.zaM2[0] > 0 && new Set(u.zaM2).size === 3,
+      u.zaM2.join(' / '));
+    pravda('zelená značka je v ukázce vidět', u.zelenych >= 1, `zelených buněk ${u.zelenych}`);
+    pravda('a každý řádek ukázky vede na stránku toho pozemku', u.odkazy === 3,
+      `odkazů ${u.odkazy}`);
+  }
+}
 
 /* 2) se třemi uloženými se objeví právě ty tři */
 await p.evaluate((k) => localStorage.setItem('pk_fav_v1', JSON.stringify(k)), vzorky.map(klic));
@@ -180,6 +237,12 @@ if (t) {
     `v tabulce ${JSON.stringify(t.nej)}, spočítáno ${Math.round(nejM2)} Kč a ${nejPl} m²`);
 }
 
+/* Se svými pozemky už ukázka nemá co dělat — jinak by se dvě tabulky
+   pod sebou pletly a nebylo by jasné, která je čí. */
+pravda('s uloženými pozemky ukázka zmizí',
+  !(await p.evaluate(() => !!document.querySelector('.por-ukazka'))),
+  'blok s ukázkou zůstal i vedle vlastních uložených pozemků');
+
 /* 3) klíč, který v datech není, nesmí stránku shodit */
 await p.evaluate(() => localStorage.setItem('pk_fav_v1', JSON.stringify(['tenhle|klic|neexistuje||'])));
 await p.reload({ waitUntil: 'domcontentloaded' });
@@ -188,6 +251,48 @@ const zmizely = await p.evaluate(() => (document.getElementById('porovnani') || 
 pravda('uložený pozemek, který už v nabídce není, stránku neshodí',
   /uložen/i.test(zmizely) && chyby.length === 0, `${zmizely} | ${chyby.join(' ')}`);
 pravda('a při ničem z toho stránka nespadla', chyby.length === 0, chyby.join(' | '));
+
+/* --- 4) NA TELEFONU SE TABULKA NEVEJDE A MUSÍ JÍT ČÍST ---------------
+ * Sedm sloupců má v 350px okně 769 px: „Cena za m²", kvůli které se
+ * porovnává a kterou tabulka zeleně značí, začíná 87 px ZA okrajem.
+ * Posouvat se dá odjakživa — jenže po dvou švihnutích prstem už se
+ * nedalo poznat, čí číslo je čí. První sloupec proto zůstává na místě.
+ */
+{
+  const mob = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true });
+  const pm = await mob.newPage();
+  await pm.goto(`${BASE}/porovnani.html`, { waitUntil: 'domcontentloaded' });
+  await pm.evaluate(() => localStorage.removeItem('pk_fav_v1'));
+  await pm.reload({ waitUntil: 'domcontentloaded' });
+  await pm.waitForTimeout(2500);
+  const v = await pm.evaluate(() => {
+    const o = document.querySelector('.por-tab-obal');
+    if (!o) return null;
+    const prvni = o.querySelector('tbody th');
+    const zaOkrajem = (el, r) => {
+      const q = el.getBoundingClientRect();
+      return q.left >= r.left - 1 && q.right <= r.right + 1;
+    };
+    const pred = zaOkrajem(prvni, o.getBoundingClientRect());
+    o.scrollLeft = o.scrollWidth;              // posuň až na konec
+    const po = zaOkrajem(prvni, o.getBoundingClientRect());
+    return { presahuje: o.scrollWidth - o.clientWidth, pred, po,
+      lepi: getComputedStyle(prvni).position,
+      nazev: (prvni.textContent || '').trim().slice(0, 30) };
+  });
+  pravda('na telefonu se tabulka porovnání vůbec vykreslila', !!v, 'obal tabulky nenalezen');
+  if (v) {
+    /* Pojistka: kdyby se tabulka na telefon vešla, nebylo by co lepit
+       a kontrola pod tím by prošla naprázdno. */
+    pravda('a nevejde se do šířky (jinak by se neměla o čem posouvat)',
+      v.presahuje > 100, `přesah ${v.presahuje} px`);
+    pravda('název pozemku je vidět hned', v.pred, `„${v.nazev}" mimo okno`);
+    pravda('a zůstane vidět i po posunutí na druhý konec tabulky', v.po,
+      `po posunu je „${v.nazev}" mimo okno (position: ${v.lepi})`);
+  }
+  await mob.close();
+}
 
 await prohlizec.close();
 console.log('\nPorovnání uložených pozemků');
