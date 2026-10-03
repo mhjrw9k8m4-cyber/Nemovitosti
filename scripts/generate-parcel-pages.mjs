@@ -231,6 +231,11 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
      v chatech). Skript ho po načtení nahradí plným detailem — proto to
      nesmí být prázdná skořápka ani přesměrování: za doorway stránky bez
      obsahu Google trestá, a po právu. */
+  /* Text se skládá JEDNOU, v js/okruh.js: vepisuje se staticky do
+     stránky (i pro vyhledávače a pro toho, kdo nemá JavaScript) a tentýž
+     ho pak vypisuje js/pozemek.js z přiloženého kousku JSONu. Dvě
+     skládání téhož textu by se rozešla. */
+  const vzdalenosti = OKRUH.popisVzdalenosti(d);
   const staticky =
     `<article class="pz-staticky">`
     + `<h1>${esc(titul)}</h1>`
@@ -242,6 +247,10 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     + `<dt>Okres</dt><dd><a href="pozemky-okres-${slug(d.okres)}.html">${esc(d.okres)}</a></dd>`
     + (d.parcel && d.parcel !== '—' ? `<dt>Parcela</dt><dd>č. ${esc(d.parcel)}</dd>` : '')
     + (d.extra ? `<dt>Stav / zdroj</dt><dd>${esc(lidskeDatum(d.extra))}</dd>` : '')
+    /* JAK DALEKO JE TO DO MĚSTA. U pozemku na vsi je to první otázka
+       a z názvu obce se nepozná — „Lovečkovice" samy o sobě neřeknou
+       nic. Je to vzdušná čára, tak se to i píše. */
+    + (vzdalenosti ? `<dt>Vzdušnou čarou</dt><dd>${esc(vzdalenosti)}</dd>` : '')
     + `</dl>`
     + `<p><a href="pozemek.html?p=${encodeURIComponent(pkey(d))}&amp;ll=${d.lat},${d.lng}&amp;v=${d.area || 0}">Otevřít na mapě</a></p>`
     + `</article>`;
@@ -262,6 +271,10 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
      Text přichází z cizího inzerátu, takže jde do stránky přes
      jsonVeStrance a vykresluje ho js/pozemek.js přes textContent — do
      HTML se nikdy nevkládá jako značky. */
+  if (vzdalenosti) {
+    h = h.replace(/(<\/body>)/,
+      `<script type="application/json" id="pz-okoli-data">${jsonVeStrance(vzdalenosti)}</scr` + `ipt>\n$1`);
+  }
   const popisInzerenta = POPISY[klicNabidky(d)];
   if (popisInzerenta) {
     h = h.replace(/(<\/body>)/,
@@ -274,6 +287,10 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
    Ten soubor je obyčejný skript pro prohlížeč, ne modul — načte se
    stejně jako v scripts/generate-region-pages.mjs. */
 const PKH = createRequire(import.meta.url)(path.join(ROOT, 'js', 'hlidani-logika.js'));
+/* Vzdálenosti do měst počítá tentýž modul, jaký je v prohlížeči
+   (js/okruh.js) — a tabulku okresních měst v něm hlídá proti
+   data/okresy.json scripts/test-okruh.mjs. */
+const OKRUH = createRequire(import.meta.url)(path.join(ROOT, 'js', 'okruh.js'));
 
 /* KTERÉ NABÍDCE PATŘÍ KTERÁ STRÁNKA — a proč to bydlí tady.
    Regionální stránky na tyhle stránky odkazují, takže potřebují tentýž

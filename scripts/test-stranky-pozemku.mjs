@@ -62,17 +62,37 @@ function kus(jmeno) {
   }
   return '';
 }
+/* KLÍČ POZEMKU UŽ V TOM SOUBORU NENÍ. Mapa, stránka pozemku i porovnání
+   uložených ho počítaly každá po svém, takže se uložený pozemek po
+   znovuotevření nenašel; teď je na jednom místě v js/klic.js. Tahle
+   kontrola ho proto musí vzít odtud — jinak se ptá na kód, který
+   v souboru není, a spadne na „pkeyPlny is not defined" místo toho, aby
+   řekla, jestli se dva výpočty názvu stránky rozešly. */
 function vytahni(soubor) {
   src = fs.readFileSync(path.join(ROOT, soubor), 'utf8');
   const mapaM = /var PK_(?:MAPA|DIAKR) = \{[^}]*\};/.exec(src);
-  const klic = kus('pkeyPlny') || kus('pkey');
-  return [mapaM ? mapaM[0] : '', kus('pkSlug'), kus('pkOtisk'), klic, kus('souborPozemku')].join('\n');
+  let klic = kus('pkeyPlny') || kus('pkey');
+  let alias = '';
+  if (!klic) {
+    const puvodni = src;
+    src = fs.readFileSync(path.join(ROOT, 'js', 'klic.js'), 'utf8');
+    klic = kus('pkey');
+    src = puvodni;
+    /* V js/pozemek.js se tatáž funkce jmenuje pkeyPlny. */
+    alias = 'var pkeyPlny = pkey;';
+  }
+  return [mapaM ? mapaM[0] : '', kus('pkSlug'), kus('pkOtisk'), klic, alias,
+    kus('souborPozemku')].join('\n');
 }
 
 for (const [soubor] of ZDROJE) {
   const zdroj = vytahni(soubor);
   pravda(`výpočet názvu stránky se dá z ${soubor} vytáhnout`,
     zdroj.indexOf('souborPozemku') > 0, 'nenašly se funkce pkSlug/pkOtisk/souborPozemku');
+  /* Bez klíče by se níž porovnávalo něco jiného, než co web počítá —
+     a kontrola by mlčela. */
+  pravda('a je v něm i klíč pozemku (z js/klic.js, když ho soubor jen volá)',
+    /function pkey\s*\(/.test(zdroj), 'klíč se nenašel ani v js/klic.js');
   let fn = null;
   try { fn = new Function(zdroj + '\n return souborPozemku;')(); }
   catch (e) { pravda(`a ${soubor} se dá spustit`, false, String(e)); }

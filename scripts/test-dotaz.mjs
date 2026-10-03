@@ -463,9 +463,16 @@ function pravda(popis, vyslo, proc) {
   /* Že políčko snese celou větu, se dřív hlásilo řádkem s příkladem pod
      ním. Na přání pryč — bylo to v cestě. Zůstává to poznat z popisku
      v políčku a z odznaků, které se objeví, jakmile člověk začne psát. */
+  /* Hlídá se ZÁMĚR, ne doslovné znění. Dřív tu stál celý popisek jako
+     text, takže zkouška spadla ve chvíli, kdy se do políčka přidal
+     okruh („do 30 km od Brna") — tedy přesně tehdy, když popisek začal
+     o možnostech políčka říkat víc, ne méně. */
+  const vstup = (/<input[^>]*id="map-search"[^>]*>/.exec(idx) || [''])[0];
+  const popisek = (/placeholder="([^"]*)"/.exec(vstup) || ['', ''])[1];
+  const zminky = ['obec', 'druh', 'cena', 'km'].filter((w) => popisek.toLowerCase().indexOf(w) >= 0);
   pravda('popisek políčka nemluví jen o obci',
-    /placeholder="Obec, kraj, druh, cena/.test(idx),
-    'kdyby tam zase stálo jen „Hledat obec", nikdo by netušil, že jde napsat víc');
+    zminky.length >= 3,
+    `stojí tam „${popisek}" — pozná se z toho jen: ${zminky.join(', ') || 'nic'}`);
 }
 
 console.log('\nJedno políčko, které rozumí celé větě');

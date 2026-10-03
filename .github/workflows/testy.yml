@@ -73,6 +73,9 @@ jobs:
       - name: Hledání celou větou (druh, cena, sítě v jednom políčku)
         run: node scripts/test-dotaz.mjs
 
+      - name: Okruh kolem místa (do 30 km od Brna)
+        run: node scripts/test-okruh.mjs
+
       - name: Razítka verzí (aby lidem nechodila stará kopie)
         run: node scripts/test-verze.mjs
 
@@ -193,6 +196,9 @@ jobs:
 
       - name: Kalkulačka hypotéky
         run: node scripts/test-hypoteka.mjs
+
+      - name: Porovnání uložených pozemků
+        run: node scripts/test-porovnani.mjs
 
       - name: Dotykové terče na mobilu
         run: node scripts/test-dotyk.mjs

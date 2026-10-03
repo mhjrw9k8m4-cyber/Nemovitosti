@@ -159,6 +159,29 @@
      být odpovědí na to, co napsal. */
   var PRIBLIZNE = 0.25;
 
+  /* OKRUH KOLEM MÍSTA — „do 30 km od Brna".
+     Nejpřirozenější dotaz na pozemek byl do teď ten jediný, který vracel
+     nulu: „do" a „od" jsou výplňová slova, „km" nebyla jednotka a číslo
+     bez jednotky se pod deseti tisíci netipuje, takže do hledání OBCE
+     šlo „30 km brna". Změřeno na ostrých datech: „do 30 km od Brna",
+     „pozemek do 25 km od Prahy", „les do 10 km od Jihlavy" → 0 nalezených.
+     Kdo kupuje pozemek, přitom hledá skoro vždycky kolem něčeho.
+     Kde to místo na mapě je, počítá js/okruh.js; tady se čte jen věta. */
+  var KM_JEDNOTKA = /^(?:km|kilometr|kilometru|kilometry|kilometrem|kilometrech)$/;
+  /* Mez je tu, a ne v js/okruh.js, protože je to otázka o VĚTĚ:
+     „do 5000 km od Brna" není okruh, ale omyl v jednotce (a kdyby se
+     přečetl, vybral by celou republiku a vypadal jako rozbitý filtr).
+     Nad 300 km už okruh v Česku nic neomezuje — republika je 500 km
+     široká. Pod jedním kilometrem to zas není hledání, ale adresa. */
+  var OKRUH_MIN = 1, OKRUH_MAX = 300;
+  function platnyOkruh(n) {
+    return typeof n === 'number' && isFinite(n) && n >= OKRUH_MIN && n <= OKRUH_MAX;
+  }
+  /* Slova, která smí před číslem stát („do 30 km", „max 30 km").
+     „od" tu schválně NENÍ: „od 30 km" by byl okruh naopak, a to nikdo
+     nemyslí — „od" ve větě patří k místu („od Brna"). */
+  var OKRUH_PRED = { do: 1, max: 1, pod: 1, nejvys: 1 };
+
   function cislo(s) {
     var c = s.replace(/\s/g, '').replace(',', '.');
     if (!/^\d+(\.\d+)?$/.test(c)) return null;
@@ -174,7 +197,8 @@
     var vzato = new Array(slova.length);
     var ven = { druh: null, typ: null, kraj: null, site: [], nejakeSite: false,
       jenCelek: false, levne: false, zaMetrOd: null, zaMetrDo: null,
-      cenaOd: null, cenaDo: null, plochaOd: null, plochaDo: null, text: '', casti: [] };
+      cenaOd: null, cenaDo: null, plochaOd: null, plochaDo: null,
+      okruh: null, okruhMisto: '', text: '', casti: [] };
 
     function zkus(od, fraze) {
       var f = fraze.split(' ');
@@ -194,6 +218,28 @@
          slova, ne svůj popisek. */
       cast.slova = slova.slice(od, od + delka);
       ven.casti.push(cast);
+    }
+
+    /* --- 0) Okruh kolem místa: „do 30 km od Brna", „50 km od Brna" ----
+       Čte se PRVNÍ, aby si kilometry nespletl s cenou nikdo jiný: číslo
+       nad deset tisíc se dál ve větě čte jako koruny, takže „do 20000 km"
+       by se jinak stalo cenou a zbylo by „km od Brna".
+       Místo se tu ještě nehledá — to, co ve větě zbude, si jako „kolem
+       čeho" vezme až konec rozboru (viz níž). */
+    for (var ki = 0; ki < slova.length && ven.okruh == null; ki++) {
+      if (vzato[ki]) continue;
+      var pred = OKRUH_PRED[slova[ki]] ? 1 : 0;
+      var kpos = ki + pred;
+      if (vzato[kpos] || vzato[kpos + 1]) continue;
+      var kc = cislo(slova[kpos] || '');
+      if (kc == null || !KM_JEDNOTKA.test(slova[kpos + 1] || '')) continue;
+      if (!platnyOkruh(kc)) continue;
+      ven.okruh = kc;
+      /* V odznaku stojí jen vzdálenost; místo se k ní dopíše teprve,
+         až se najde (web nesmí v odznaku tvrdit „od Brna", když Brno
+         nenašel). Doplní ho js/main.js. */
+      zaber(ki, pred + 2, { druh: 'okruh', smer: 'do', hodnota: kc,
+        popis: 'do ' + slova[kpos] + ' km' });
     }
 
     /* --- 1) Rozsahy s jednotkou: „do 1,5 mil", „nad 2 ha", „od 500 tis" --- */
@@ -363,9 +409,25 @@
       zbytek.push(slova[z2]);
     }
     ven.text = zbytek.join(' ');
+    /* Když věta nese okruh, není zbytek hledáním obce, ale STŘEDEM toho
+       okruhu — „do 30 km od Brna" nehledá obec Brna (ta neexistuje,
+       je to 2. pád), hledá kolem Brna. Kdyby zbytek zůstal i textem,
+       vyšla by nula: text se hledá podřetězcem a „brna" v „Brno" není.
+       Slova místa se přidají k odznaku okruhu, aby ho křížek zrušil
+       celý; půlka věty („od Brna") by po zrušení nehledala nic. */
+    if (ven.okruh != null && zbytek.length) {
+      ven.okruhMisto = ven.text;
+      ven.text = '';
+      for (var oc = 0; oc < ven.casti.length; oc++) {
+        if (ven.casti[oc].druh !== 'okruh') continue;
+        ven.casti[oc].slova = (ven.casti[oc].slova || []).concat(zbytek);
+        break;
+      }
+    }
     return ven;
   }
 
-  return { norm: norm, rozeber: rozeber,
+  return { norm: norm, rozeber: rozeber, platnyOkruh: platnyOkruh,
+    OKRUH_MIN: OKRUH_MIN, OKRUH_MAX: OKRUH_MAX,
     DRUHY: DRUHY, TYPY: TYPY, SITE: SITE, KRAJE: KRAJE, OSTATNI: OSTATNI };
 });

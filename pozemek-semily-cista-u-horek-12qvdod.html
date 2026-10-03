@@ -39,7 +39,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=606b7bd9">
+  <link rel="stylesheet" href="css/styles.css?v=7295a655">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -63,6 +63,7 @@
     .pz-place{font-family:var(--font-display); font-size:28px; font-weight:700; letter-spacing:-.015em; color:var(--text-ondark); line-height:1.15;}
     .pz-okres{display:flex; align-items:center; gap:6px; font-size:15px; color:var(--text-ondark-mute); margin-top:6px;}
     .pz-okres svg{width:16px; height:16px; stroke-width:2.25;}
+    .pz-dalky{font-size:12px; letter-spacing:.02em; color:var(--text-ondark-mute); margin-top:4px; opacity:.85;}
 
     .pz-priceblock{margin:14px 0 4px;}
     .pz-pl{font-size:12px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--popisek); margin-bottom:4px;}
@@ -408,7 +409,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 2 635 m² — Čistá u Horek</h1><p><b>85 000 Kč</b> (32 Kč/m²) · 2 635 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>2 635 m²</dd><dt>Obec</dt><dd>Čistá u Horek</dd><dt>Okres</dt><dd><a href="pozemky-okres-semily.html">Semily</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd></dl><p><a href="pozemek.html?p=%C4%8Cist%C3%A1%20u%20Horek%7C%E2%80%94%7CSemily%7C50.540%7C15.611&amp;ll=50.539769,15.610882&amp;v=2635">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 2 635 m² — Čistá u Horek</h1><p><b>85 000 Kč</b> (32 Kč/m²) · 2 635 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>2 635 m²</dd><dt>Obec</dt><dd>Čistá u Horek</dd><dt>Okres</dt><dd><a href="pozemky-okres-semily.html">Semily</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Semily 21 km · Hradec Králové 40 km</dd></dl><p><a href="pozemek.html?p=%C4%8Cist%C3%A1%20u%20Horek%7C%E2%80%94%7CSemily%7C50.540%7C15.611&amp;ll=50.539769,15.610882&amp;v=2635">Otevřít na mapě</a></p></article></div></div>
   </div>
 </main>
 
@@ -418,7 +419,7 @@
       <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
       <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého.</p>
     </div>
-    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a></nav>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="porovnani.html">Porovnání uložených</a><a href="pridat.html">Přidat pozemek</a></nav>
     <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
@@ -435,9 +436,10 @@
 <script src="js/ceny.js?v=332e8c0d"></script>
 <script src="js/vybaveni.js?v=cae1f79b"></script>
 <script src="js/radce.js?v=05a68e63"></script>
+<script src="js/klic.js?v=805c6c82"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Trvalý travní porost 2 635 m² — Čistá u Horek","description":"Na prodej · 85 000 Kč (32 Kč/m²) · 2 635 m² · Čistá u Horek, okres Semily. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-semily-cista-u-horek-12qvdod.html","address":{"@type":"PostalAddress","addressLocality":"Čistá u Horek","addressRegion":"Semily","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.539769,"longitude":15.610882}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Semily","item":"https://www.parcelaka.cz/pozemky-okres-semily.html"},{"@type":"ListItem","position":4,"name":"Trvalý travní porost 2 635 m² — Čistá u Horek","item":"https://www.parcelaka.cz/pozemek-semily-cista-u-horek-12qvdod.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Čistá u Horek|—|Semily|50.540|15.611","ll":[50.539769,15.610882],"v":2635,"c":85000};</script>
-<script src="js/pozemek.js?v=b5054fc8"></script>
+<script src="js/pozemek.js?v=f9f0bd1a"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -451,6 +453,7 @@
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
 <script src="js/hlavicka.js?v=d154bfeb" defer></script>
+<script type="application/json" id="pz-okoli-data">"Semily 21 km · Hradec Králové 40 km"</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka - bez prostředníků a bez zbytečných výdajů navíc! k.ú. Čistá u Horek LV č. 742 o výměře 2635 m² • Parcela č. 2774 - o výměře 50 m² (Trvalý travní porost) • Parcela č. 2775 - o výměře 165 m² (Trvalý travní porost) • Parcela č. 2778 - o výměře 2420 m² (Trvalý travní porost) Přístupová cesta je zajištěna přes pozemky obce a kraje."</script>
 </body>
 </html>

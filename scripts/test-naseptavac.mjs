@@ -122,6 +122,60 @@ if (await seznam.isVisible()) {
   pravda('výpis po výběru něco ukazuje', false, 'nabídka se vůbec neukázala');
 }
 
+// --- 4c) Slovník: největší kategorie webu se musí nabídnout ----------
+/* „Zemědělská půda" není druh v katastru, ale nadřazená skupina (orná
+   půda + louky). Mapa ji odfiltrovat umí — jenže počet u nabídky se
+   počítal rovností `druhGroup(x) === 'Zemědělská půda'`, která neplatí
+   nikdy, takže vyšel nula. A nabídka s nulou se do našeptávače vůbec
+   nepřidává: 1 182 nabídek, tedy 59 % všeho, co web má, se nenabízelo.
+   Zkouší se celá cesta — že se nabídka ukáže, že u ní stojí počet a že
+   po klepnutí zbyde výpis, ne prázdno. */
+await pole.fill('');
+await pole.type('zeměděl', { delay: 30 });
+await p.waitForTimeout(300);
+const slovnik = await p.$$eval('#map-search-navrhy li', (ls) => ls.map((l) => l.innerText.replace(/\s+/g, ' ')));
+const radekZem = slovnik.filter((t) => /Zemědělská půda/.test(t))[0] || '';
+pravda('našeptávač nabídne „Zemědělská půda"', !!radekZem,
+  slovnik.length ? slovnik.join(' | ') : 'nic se nenabídlo');
+const mPocetZem = /(\d[\d\s\u00a0]*)×/.exec(radekZem);
+const pocetZem = mPocetZem ? Number(mPocetZem[1].replace(/[\s\u00a0]/g, '')) : 0;
+pravda('a u ní stojí počet za ornou půdu i louky dohromady (> 1 000)',
+  pocetZem > 1000, `stojí tam „${radekZem}"`);
+if (radekZem) {
+  await p.locator('#map-search-navrhy li', { hasText: 'Zemědělská půda' }).first().click({ timeout: 3000 });
+  await p.waitForTimeout(500);
+  const poZem = await p.locator('#opp-list li').count();
+  pravda('a po klepnutí se výpis zúží na ně, ne na nulu', poZem > 0, `položek: ${poZem}`);
+  const chipy = await p.locator('#ms-chipy').innerText().catch(() => '');
+  pravda('a odznak nad výpisem to pojmenuje', /Zemědělská půda/.test(chipy), `odznaky: „${chipy}"`);
+}
+
+// --- 4d) Okruh kolem místa: „do 30 km od Brna" -----------------------
+/* Nejpřirozenější dotaz na pozemek vracel nulu: „do" a „od" jsou
+   výplňová slova, „km" nebyla jednotka — a do hledání obce šlo „30 km
+   brna", což není žádná obec. Zkouší se celá cesta až na obrazovku:
+   odznak, zúžený výpis a to, že se výpis fakt zúžil (ne že se jen
+   nezměnil). */
+await pole.fill('');
+await p.waitForTimeout(400);
+const cislo = async () => {
+  const t = (await p.locator('#map-count').innerText().catch(() => '')).replace(/[\s\u00a0]/g, '');
+  const m = /(\d+)/.exec(t);
+  return m ? Number(m[1]) : 0;
+};
+const vseCelkem = await cislo();
+await pole.fill('do 30 km od Brna');
+await pole.press('Enter');
+await p.waitForTimeout(700);
+const chipyOkruh = await p.locator('#ms-chipy').innerText().catch(() => '');
+pravda('odznak nad výpisem řekne „do 30 km (Brno)"',
+  /do\s*30\s*km\s*\(Brno\)/.test(chipyOkruh.replace(/\u00a0/g, ' ')),
+  `odznaky: „${chipyOkruh}"`);
+const poOkruhu = await cislo();
+pravda('a výpis něco ukazuje (dřív vracela tahle věta nulu)', poOkruhu > 0, `položek: ${poOkruhu}`);
+pravda('a je kratší než bez okruhu (jinak filtr nic nedělá)',
+  vseCelkem > 0 && poOkruhu < vseCelkem, `${poOkruhu} proti ${vseCelkem}`);
+
 // --- 4b) Hotový název je volba, ne začátek ---------------------------
 /* Dvě stížnosti od lidí, obě o tomtéž:
      „když dám okres MOST, tak mi tam vyjede i Most u Jablunkova"

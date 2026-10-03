@@ -105,30 +105,13 @@
   // Souřadnice to rozdělí: robot je pro jeden pozemek počítá deterministicky
   // (jitter z názvu a parcely), takže se mezi běhy nemění, a tři desetinná
   // místa (~100 m) snesou i drobné zpřesnění geokódování.
-  /* KLÍČ SE POČÍTÁ JEN JEDNOU ZA ZÁZNAM.
-     Naměřeno na úvodní stránce (2 000 nabídek, brzda 4×): pkey se při
-     jediném načtení volá 63 258×, z toho 24 008× přes jeSkryty(). To je
-     jedenatřicet volání na jednu nabídku — a každé dělá dva toFixed(3)
-     a spojení pěti řetězců. V profilu z toho vyšlo 257 ms procesoru,
-     nejdražší funkce celé stránky.
-     Záznam je ale neměnný: souřadnice přicházejí z dat a nikdo je
-     nepřepisuje (jediné `.lat =` v souboru patří značkám krajů, ne
-     nabídkám). Klíč se proto schová k záznamu a podruhé se jen přečte.
-     Vlastnost je neviditelná pro Object.keys i JSON.stringify, aby se
-     nikomu nepřimíchala do dat. */
-  function pkey(d){
-    if (d && d.__pk) return d.__pk;
-    var la = (typeof d.lat === 'number') ? d.lat.toFixed(3) : '';
-    var ln = (typeof d.lng === 'number') ? d.lng.toFixed(3) : '';
-    var k = [d.place || '', d.parcel || '', d.okres || '', la, ln].join('|');
-    if (d && typeof d === 'object') {
-      try { Object.defineProperty(d, '__pk', { value: k, enumerable: false, configurable: true }); }
-      catch (e) {}
-    }
-    return k;
-  }
-  // Starý tvar klíče — jen pro odkazy rozeslané dřív, ať neskončí naprázdno.
-  function pkeyLegacy(d){ return [d.place || '', d.parcel || '', d.okres || ''].join('|'); }
+  /* Klíč pozemku počítá js/klic.js — jedno místo pro celý web. Byl tu
+     opsaný potřetí (main.js, pozemek.js, generátor) a tři kopie téhož
+     výpočtu se dřív nebo později rozejdou. Záloha pro případ, že by se
+     modul nenačetl, tu schválně NENÍ: tiše jiný klíč je horší než chyba,
+     protože by označil cizí pozemky jako uložené. */
+  var pkey = window.PKKlic.pkey;
+  var pkeyLegacy = window.PKKlic.pkeyLegacy;
   /* Název vlastní stránky pozemku. Týž výpočet dělá generátor v Node
      (scripts/generate-parcel-pages.mjs) i js/pozemek.js — kdyby se
      rozešly, vedly by odkazy na neexistující soubor. Hlídá to
@@ -159,16 +142,14 @@
   // Číslo parcely nemají všechny zdroje (typicky inzeráty) — pak ho nezobrazujeme jako „—".
   function hasParcel(d){ return d.parcel && d.parcel !== '—' && d.parcel !== ''; }
   // Sloučení mnoha variant druhu do pár skupin pro filtr
-  function druhGroup(s){
-    s = (s || '').toLowerCase();
-    if (s.indexOf('les') !== -1) return 'Lesní pozemek';
-    if (s.indexOf('stavební') !== -1 || s.indexOf('zastav') !== -1) return 'Stavební / zastavěná';
-    if (s.indexOf('orná') !== -1) return 'Orná půda';
-    if (s.indexOf('zahrad') !== -1) return 'Zahrada';
-    if (s.indexOf('travní') !== -1 || s.indexOf('louk') !== -1 || s.indexOf('pastvin') !== -1) return 'Louka / travní porost';
-    if (s.indexOf('vinice') !== -1 || s.indexOf('sad') !== -1) return 'Vinice / sad';
-    if (s.indexOf('ostatní') !== -1) return 'Ostatní plocha';
-    return 'Jiný pozemek';
+  /* Druh → skupina. Rozřazení je JEDNO a je v js/ceny.js, protože na něm
+     visí cenový model; tady bývala jeho doslovná kopie (a třetí byla na
+     stránce pozemku). Podle druhu se filtruje, počítá obvyklá cena
+     i staví statistiky okresů — tři kopie téhož rozřazení znamenají, že
+     se jednou rozejdou a web začne na dvou místech počítat jinak.
+     js/radce.js to takhle má odjakživa. */
+  function druhGroup(s) {
+    return (window.PK_CENY && window.PK_CENY.druhGroup) ? window.PK_CENY.druhGroup(s) : 'Jiný pozemek';
   }
 
   /* Nadřazená skupina druhů. „Zemědělská půda" = orná půda + louky —
@@ -850,6 +831,12 @@
      políčkem odznak, který jde zrušit — nic se neděje potají. */
   var dotazFiltr = { druh: null, typ: null, site: [], jenCelek: false,
     cenaOd: null, cenaDo: null, plochaOd: null, plochaDo: null, casti: [] };
+  /* Střed okruhu z věty („do 30 km od Brna"). Je to vlastní stav, ne
+     součást dotazFiltr: ten nese jen to, co se dá vyčíst z VĚTY, zatímco
+     tohle je výsledek hledání místa v datech — a může se nepovést.
+     Když se místo nenajde, okruh se NEPOUŽIJE: vybrat podle okruhu kolem
+     neznámého bodu by znamenalo ukázat náhodný výřez republiky. */
+  var okruhStred = null;
   /* Musí to stát TADY, ne až u obsluhy posuvníků dole: staví se hned po
      sestavení filtrů, a „var" dole by v tu chvíli bylo ještě undefined.
      (Chyceno až v prohlížeči — v konzoli to spadlo na „reading 'push'".) */
@@ -889,6 +876,27 @@
       var r = window.PKDotaz.rozeber(syrovy);
       dotazFiltr = r;
       searchTerm = r.text;            // na obec zbyde jen to, co web nepochopil
+      okruhStred = null;
+      if (r.okruh && r.okruhMisto && window.PKOkruh) {
+        okruhStred = window.PKOkruh.stred(DATA, r.okruhMisto);
+        /* Do odznaku se název dopisuje TEPRVE TADY, až je místo opravdu
+           najdené — parser v něm nechal jen „do 30 km". Kdyby se psal
+           dřív, odznak by tvrdil „od Brna" i u věty, u které web žádné
+           Brno nenašel a nic podle něj nevybral. */
+        /* NÁZEV SE PŘIPÍŠE V ZÁVORCE, NE ZA „od". Místo se najde v prvním
+           pádě („Brno"), ale věta „do 30 km od Brno" je špatně česky —
+           a druhý pád se u českých jmen míst neodvodí pravidlem
+           (Brno→Brna, Plzeň→Plzně, Česká Lípa→České Lípy). Závorka
+           stejně říká to podstatné: tohle web z věty pochopil. */
+        for (var ci0 = 0; ci0 < (r.casti || []).length; ci0++) {
+          if (r.casti[ci0].druh !== 'okruh') continue;
+          if (okruhStred) r.casti[ci0].popis += ' (' + okruhStred.nazev + ')';
+          break;
+        }
+        /* Místo se nenašlo → zbytek věty ať se aspoň zkusí jako obec,
+           jinak by se slova tiše spolkla a výpis by zůstal nedotčený. */
+        if (!okruhStred) searchTerm = r.okruhMisto;
+      }
     } else {
       dotazFiltr = { druh: null, typ: null, kraj: null, site: [], nejakeSite: false,
         jenCelek: false, levne: false, zaMetrOd: null, zaMetrDo: null,
@@ -1027,12 +1035,10 @@
     return (nej && nejKm <= 25) ? nej.place : null;
   }
   function ulozMisto(m) { mojeMisto = m; if (m) zapisUloz(MISTO_KLIC, m); else { try { localStorage.removeItem(MISTO_KLIC); } catch (e) {} } }
+  /* Vzdálenost je v js/okruh.js — tentýž výpočet potřebuje okolí místa,
+     okruh z věty i řazení podle blízkosti, a kopie se rozcházejí. */
   function kmOd(a, d) {
-    if (!a || typeof d.lat !== 'number') return Infinity;
-    var r = Math.PI / 180, dLat = (d.lat - a.lat) * r, dLng = (d.lng - a.lng) * r;
-    var x = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(a.lat * r) * Math.cos(d.lat * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+    return (window.PKOkruh && window.PKOkruh.km) ? window.PKOkruh.km(a, d) : Infinity;
   }
   /* Co u mého místa přibylo od minulé návštěvy. */
   function novinkyUMista() {
@@ -1075,6 +1081,19 @@
        (uložení funguje i bez přihlášení, což je záměr), ale mlčet o tom
        by znamenalo nechat člověka zjistit to ztrátou. */
     favEl.title = 'Uložené pozemky zůstávají v tomhle prohlížeči — na jiném zařízení je neuvidíte.';
+    /* ODKAZ NA POROVNÁNÍ AŽ OD DVOU. S jedním uloženým pozemkem není co
+       porovnávat a odkaz by byl jen další věc na obrazovce. Vyrábí se
+       tady, a ne v HTML, protože počet uložených zná jen prohlížeč. */
+    var por = document.getElementById('map-porovnat');
+    if (!por) {
+      por = document.createElement('a');
+      por.id = 'map-porovnat';
+      por.className = 'mc-prep msv-porovnat';
+      por.href = 'porovnani.html';
+      favEl.insertAdjacentElement('afterend', por);
+    }
+    por.textContent = 'Porovnat (' + n + ')';
+    por.hidden = n < 2;
   }
 
   // „Naposledy prohlédnuté" — malá vychytávka: parcely, které jste otevřeli,
@@ -2190,11 +2209,7 @@
   if (nearBtn) nearBtn.addEventListener('click', function () { otevriVyberMista(); });
   // Vzdálenost pozemku od uživatele (km) — pro řazení „nejblíž ke mně".
   function kmFromUser(d) {
-    if (!userPos || typeof d.lat !== 'number') return Infinity;
-    var R = 6371, r = Math.PI / 180;
-    var dLat = (d.lat - userPos.lat) * r, dLng = (d.lng - userPos.lng) * r;
-    var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(userPos.lat * r) * Math.cos(d.lat * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+    return userPos ? kmOd(userPos, d) : Infinity;
   }
   // Vybraný kraj: silnější obrys a lehké podbarvení, ať je jasně vidět,
   // ve kterém kraji se hledá.
@@ -3242,13 +3257,18 @@
        Teď je z toho jedna věc: když je okolí nastavené, seznam i mapa
        ukazují JEN to, co je v okruhu. */
     var okOkoli = !okoliAktivni() || kmOd(mojeMisto, d) <= (mojeMisto.km || 10);
+    /* Okruh z věty. Stojí vedle „okolí vašeho místa", ne místo něj:
+       kdo si hlídá okolí Křince a napíše „do 30 km od Brna", dostane
+       průnik — jediné čtení, které mu nic nepřepíše za zády. */
+    var okOkruh = !(dotazFiltr.okruh && okruhStred)
+      || kmOd(okruhStred, d) <= dotazFiltr.okruh;
     var okLevne = !levneOnly || podObvyklou(d);
     // Skryté zmizí ze seznamu — ale jen dokud si je člověk sám nevyžádá
     // (tlačítko „Zobrazit skryté"). Nenávratně se nic neztrácí.
     var okSkryt = ukazSkryte || !jeSkryty(d);
     var okProsle = ukazProsle || !jeProsle(d);
     return okType && okSearch && okMisto && okPresne && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
-      && okPerM2 && okKraj && okLevne && okOkoli && okProsle && okVybaveni && okCelek && okDotaz;
+      && okPerM2 && okKraj && okLevne && okOkoli && okOkruh && okProsle && okVybaveni && okCelek && okDotaz;
   }
   /* KTERÉ OMEZENÍ VYPRÁZDNILO VÝPIS
    *
@@ -3397,6 +3417,13 @@
     pol('okolí vašeho místa', 'okolí vašeho místa', okoliZap,
       function () { okoliZap = false; }, (function () { return function () { okoliZap = true; }; }()),
       'Do ' + ((mojeMisto && mojeMisto.km) || 10) + ' km od ' + ((mojeMisto && mojeMisto.nazev) || 'vašeho místa'));
+    /* Okruh z věty je taky omezení — a bez téhle řádky by u prázdného
+       výpisu nikdy nevyšel jako viník, takže by web radil zmírnit něco
+       jiného. Odznak vlastní nedostává (`popis` je prázdný): ten má
+       z věty, viz dotazFiltr.casti. */
+    pol('okruh od místa', 'okruh od místa', !!(d.okruh && okruhStred),
+      function () { d.okruh = null; },
+      (function () { var a = d.okruh; return function () { d.okruh = a; }; }()));
     return ven;
   }
 
@@ -3669,6 +3696,7 @@
        jakmile se zapne cokoli dalšího. */
     prekresliDruhy();
     updateFilterBadge();
+    vykresliOkruhNaMape();
     ulozFiltr();
     listEl.innerHTML = '';
     var vis = [], visIds = [];
@@ -4439,7 +4467,15 @@
     }
     window.PKDotaz.DRUHY.forEach(function (d) {
       if (!d[2].some(function (f) { return f.indexOf(posledni) === 0; })) return;
-      pridej('druh', d[0], d[1], function (x) { return druhGroup(x.druh) === d[0]; });
+      /* POČÍTAT SE MUSÍ TÍM, ČÍM SE FILTRUJE. Tady stálo
+         `druhGroup(x.druh) === d[0]`, jenže filtr používá druhSedi(),
+         který zná i nadřazené skupiny. „Zemědělská půda" není druh
+         v katastru, takže se jí ta rovnost nikdy nerovnala: počet vyšel
+         0, a nabídka s nulou se do našeptávače nepřidává. Největší
+         kategorie webu — 1 182 nabídek, tedy 59 % všeho — se proto
+         nenabízela vůbec, přesně ta, kterou mapa umí odfiltrovat jako
+         jediná navíc (viz NADRAZENE výš). */
+      pridej('druh', d[0], d[1], function (x) { return druhSedi(x.druh, d[0]); });
     });
     window.PKDotaz.TYPY.forEach(function (t) {
       if (!t[3].some(function (f) { return f.indexOf(posledni) === 0; })) return;
@@ -5435,6 +5471,32 @@
      nestalo, a měl pravdu.
      Teď je tam značka a kolem ní kruh s hlídaným okruhem, takže je vidět
      přesně to, co se hlídá — a mění se to hned, jak se okruh přepne. */
+  /* OKRUH Z VĚTY NA MAPĚ. Bez tohohle by se stalo přesně to, co se
+     u hlídaného místa už jednou stalo: text nad výpisem by řekl „do 30 km
+     od Brna", seznam by se zkrátil — a na mapě by se nestalo nic, takže
+     by to vypadalo rozbitě. Kruh se kreslí barvou webu, aby se nepletl
+     s měděným kruhem hlídaného místa; ten znamená něco jiného. */
+  var okruhKruh = null, okruhPodpis = '';
+  function vykresliOkruhNaMape() {
+    if (typeof map === 'undefined' || !map || typeof L === 'undefined' || !L.circle) return;
+    var podpis = (dotazFiltr.okruh && okruhStred)
+      ? (okruhStred.lat + ',' + okruhStred.lng + ',' + dotazFiltr.okruh) : '';
+    /* Překresluje se jen při změně. Jinak by každé překreslení výpisu
+       (tedy i přepnutí řazení) zacuklo mapou zpátky na okruh. */
+    if (podpis === okruhPodpis) return;
+    okruhPodpis = podpis;
+    if (okruhKruh) { map.removeLayer(okruhKruh); okruhKruh = null; }
+    if (!podpis) return;
+    var barva = tokenBarva('--brand-live', '#2C7150');
+    okruhKruh = L.circle([okruhStred.lat, okruhStred.lng], {
+      radius: dotazFiltr.okruh * 1000, pane: 'overlayPane', interactive: false,
+      color: barva, weight: 1.6, opacity: 0.8,
+      fillColor: barva, fillOpacity: 0.05
+    }).addTo(map);
+    try { map.fitBounds(okruhKruh.getBounds(), { padding: [30, 30], maxZoom: 13, animate: true }); }
+    catch (e) { map.setView([okruhStred.lat, okruhStred.lng], 10, { animate: true }); }
+  }
+
   var mistoZnacka = null, mistoKruh = null;
   function vykresliMistoNaMape() {
     if (typeof map === 'undefined' || !map) return;

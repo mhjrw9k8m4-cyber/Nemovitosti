@@ -30,16 +30,12 @@
   function hasParcel(d) { return d.parcel && d.parcel !== '—' && d.parcel !== ''; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
+  /* Rozřazení druhů je v js/ceny.js — visí na něm cenový model, takže
+     tady (ani v mapě) nesmí být vlastní kopie. Byly tři a stačilo by
+     doplnit druh do jedné z nich; web by pak na stránce pozemku psal
+     jiný druh, než podle kterého se počítá obvyklá cena. */
   function druhGroup(s) {
-    s = (s || '').toLowerCase();
-    if (s.indexOf('les') !== -1) return 'Lesní pozemek';
-    if (s.indexOf('stavební') !== -1 || s.indexOf('zastav') !== -1) return 'Stavební / zastavěná';
-    if (s.indexOf('orná') !== -1) return 'Orná půda';
-    if (s.indexOf('zahrad') !== -1) return 'Zahrada';
-    if (s.indexOf('travní') !== -1 || s.indexOf('louk') !== -1 || s.indexOf('pastvin') !== -1) return 'Louka / travní porost';
-    if (s.indexOf('vinice') !== -1 || s.indexOf('sad') !== -1) return 'Vinice / sad';
-    if (s.indexOf('ostatní') !== -1) return 'Ostatní plocha';
-    return 'Jiný pozemek';
+    return (window.PK_CENY && window.PK_CENY.druhGroup) ? window.PK_CENY.druhGroup(s) : 'Jiný pozemek';
   }
 
   /* Termíny dražeb — společné s mapou, viz js/terminy.js. Dřív tu byla
@@ -72,11 +68,10 @@
     for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
     return h.toString(36);
   }
-  function pkeyPlny(d) {
-    var la = (typeof d.lat === 'number') ? d.lat.toFixed(3) : '';
-    var ln = (typeof d.lng === 'number') ? d.lng.toFixed(3) : '';
-    return [d.place || '', d.parcel || '', d.okres || '', la, ln].join('|');
-  }
+  /* Klíč pozemku počítá js/klic.js — jedno místo pro celý web. Byl tu
+     opsaný podruhé a dvě kopie téhož výpočtu se rozejdou; tady by se to
+     projevilo tím, že by stránka odkazovala na soubor, který neexistuje. */
+  var pkeyPlny = window.PKKlic.pkey;
   function souborPozemku(d) {
     return 'pozemek-' + pkSlug(d.okres) + '-' + pkSlug(d.place) + '-' + pkOtisk(pkeyPlny(d)) + '.html';
   }
@@ -97,6 +92,15 @@
        řádek smysl má — proto se tahle výjimka řeší až za ní. */
     if (d.place && d.okres && String(d.place).trim() === String(d.okres).trim()) return '';
     return okr;
+  }
+  /* JAK DALEKO DO MĚSTA. Nepočítá se tady: hotovou větu vepsal do
+     stránky generátor (js/okruh.js → #pz-okoli-data), takže ji stránka
+     ukazuje i bez JavaScriptu a oba výpisy nemůžou říct nic jiného. */
+  function dalkyText() {
+    var el = document.getElementById('pz-okoli-data');
+    if (!el) return '';
+    try { var t = JSON.parse(el.textContent || '""'); return typeof t === 'string' ? t : ''; }
+    catch (e) { return ''; }
   }
   function katastrUrl(d) { return 'https://ikatastr.cz/#zoom=18&lat=' + d.lat + '&lon=' + d.lng + '&info=' + d.lat + ',' + d.lng; }
   function mapyUrl(d) { return 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat; }
@@ -894,6 +898,7 @@
       '<div class="pz-head">' +
         '<h1 class="pz-place">' + esc(d.place) + '</h1>' +
         (mistoRadek(d) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d) + '</div>' : '') +
+        (dalkyText() ? '<div class="pz-dalky">vzdušnou čarou: ' + esc(dalkyText()) + '</div>' : '') +
       '</div>' +
 
       '<div class="pz-priceblock">' +

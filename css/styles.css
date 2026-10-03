@@ -4617,6 +4617,35 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 .vm-ok:active{transform:translateY(1px);}
 
 /* =====================================================================
+   POROVNÁNÍ ULOŽENÝCH POZEMKŮ
+   Tabulka, protože to tabulka je: každý pozemek řádek, každá vlastnost
+   sloupec. Na telefonu se nerozpadá do karet — jede se do strany, aby
+   zůstaly sloupce pod sebou; právě kvůli tomu se sem člověk dívá.
+   ------------------------------------------------------------------ */
+.msv-porovnat{text-decoration:none; white-space:nowrap;}
+.msv-porovnat[hidden]{display:none;}
+.por-tab-obal{overflow-x:auto; -webkit-overflow-scrolling:touch;
+  border:1px solid var(--line-strong); border-radius:var(--r-plocha); background:var(--ink-soft);}
+.por-tab{width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; min-width:640px;}
+.por-tab th, .por-tab td{padding:12px 14px; text-align:right; white-space:nowrap; font-size:14px;}
+.por-tab thead th{text-align:right; font-size:12px; font-weight:700;
+  letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--popisek);
+  border-bottom:1px solid var(--line-strong);}
+.por-tab thead th:first-child, .por-tab tbody th{text-align:left;}
+.por-tab tbody th{font-weight:700; font-size:15px;}
+.por-tab tbody th span{display:block; font-weight:400; font-size:12px; color:var(--text-ondark-mute);}
+.por-tab tbody th a{color:var(--text-ondark); text-decoration:none;}
+.por-tab tbody th a:hover{color:var(--copper-bright); text-decoration:underline;}
+.por-tab tbody tr + tr th, .por-tab tbody tr + tr td{border-top:1px solid var(--line);}
+.por-nej{color:var(--c-ok-ink); font-weight:700;}
+.por-pozn{font-size:13px; line-height:1.55; color:var(--text-ondark-mute);
+  margin:14px 0 0; max-width:var(--m-text);}
+.por-nacitam{font-size:14px; color:var(--text-ondark-mute);}
+.por-prazdno{max-width:var(--m-sloupec);}
+.por-prazdno h2{font-family:var(--font-display); font-size:24px; margin:0 0 10px;}
+.por-prazdno p{font-size:15px; color:var(--text-ondark-mute); margin:0 0 16px;}
+
+/* =====================================================================
    KALKULAČKA NÁKLADŮ PŘI KOUPI
    Formulář, ne karta na každé položce: pět řádků pod sebou, u každého
    zaškrtávátko vlevo a částka vpravo. Kdyby měl každý řádek rámeček,

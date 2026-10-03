@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>Porovnání uložených pozemků — Parcelka</title>
+  <meta name="description" content="Porovnejte uložené pozemky vedle sebe — cena, výměra, cena za m², druh i okres v jedné tabulce.">
+  <meta name="theme-color" content="#FBFAF8">
+  <meta name="robots" content="noindex,follow">
+  <link rel="canonical" href="https://www.parcelaka.cz/porovnani.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Porovnání uložených pozemků — Parcelka">
+  <meta property="og:description" content="Uložené pozemky vedle sebe v jedné tabulce.">
+  <meta property="og:locale" content="cs_CZ">
+  <meta property="og:site_name" content="Parcelka">
+  <meta property="og:url" content="https://www.parcelaka.cz/porovnani.html">
+  <meta property="og:image" content="https://www.parcelaka.cz/assets/og.png?v=5">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Porovnání uložených pozemků — Parcelka">
+  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og.png?v=5">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <!-- Písma leží u nás (fonts/), ne na Googlu. Přednačítají se, aby dojela
+       souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
+       kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
+  <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
+  <link rel="stylesheet" href="css/styles.css?v=7295a655">
+  <style>
+    .kt-mail{display:flex; align-items:center; gap:14px; margin:6px 0 4px; padding:16px 16px; background:rgba(126,196,157,0.08); border:1px solid rgba(126,196,157,0.24); border-radius:var(--r-md); text-decoration:none;}
+    .kt-mail .kt-ico{flex:none; width:44px; height:44px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; background:var(--plocha-znacka);}
+    .kt-mail .kt-ico svg{width:23px; height:23px; stroke-width:1.57; color:#081410;}
+    .kt-mail .kt-txt{min-width:0;}
+    .kt-mail .kt-txt small{display:block; font-family:var(--font-mono); font-size:12px; letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--text-ondark-mute); font-weight:600;}
+    .kt-mail .kt-txt b{font-size:17px; color:var(--text-ondark); word-break:break-word;}
+    .kt-mail:hover{border-color:var(--copper-bright);}
+  </style>
+</head>
+<body>
+
+<a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+
+
+<header id="header">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="Parcelka — domů"><span class="logo-mark" aria-hidden="true"></span>Parcelka</a>
+    <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
+    <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+        <nav id="nav" aria-label="Hlavní navigace">
+      <!-- Pořadí: nejdřív KDO jsem, pak KAM jdu.
+           Účet je samostatný první řádek a nese stav přihlášení (doplní
+           ho js/hlavicka.js) — bez něj nešlo poznat, jestli je člověk
+           přihlášený. Hned pod ním je hlavní věc celého webu.
+           Dřív byl účet schovaný až čtvrtý ve skupině „Moje"; když jsem
+           pak nahoru posunul celou tu skupinu, spadlo hledání pozemků
+           na páté místo. Obojí bylo špatně — proto stojí účet sám. -->
+      <a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a>
+      <!-- „Hledat pozemek", ne „Pozemky": na webu o pozemcích podstatné
+           jméno neřekne nic, sloveso řekne, co se tam dělá. -->
+      <a href="index.html#mapa">Hledat pozemek</a>
+      <a href="cena-pozemku.html">Ceny pozemků</a>
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
+      <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
+    </nav>
+  </div>
+</header>
+
+<main id="obsah">
+
+  <section class="add-hero">
+    <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+    <div class="wrap add-wrap">
+      <div class="eyebrow"><span class="live-dot"></span>Porovnání</div>
+      <h1>Vaše uložené pozemky vedle sebe.</h1>
+      <p class="sub">Uložené pozemky leží jen v tomhle prohlížeči — na jiném zařízení je neuvidíte a nikam se neodesílají.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:20px;">
+    <div class="wrap okr-wrap">
+      <div id="porovnani" class="por-obal">
+        <p class="por-nacitam">Načítám uložené pozemky…</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div class="foot-brand-col">
+      <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
+      <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého. Děláme to s péčí, protože jsme se v tom sami hrabali.</p>
+    </div>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="porovnani.html">Porovnání uložených</a><a href="pridat.html">Přidat pozemek</a></nav>
+    <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
+    <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
+  </div>
+  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<!-- Vercel Web Analytics (navstevnost) -->
+<script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
+   chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
+   web běží na GitHub Pages pod vlastní doménou, takže si o neexistující soubor
+   říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
+   na nasazení u Vercelu. */
+(function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
+<script>
+/* Mobilní menu (hamburger) — statická stránka bez main.js, obsloužíme ho přímo tady. */
+(function () {
+  var toggle = document.querySelector('.nav-toggle');
+  var nav = document.getElementById('nav');
+  if (!toggle || !nav) return;
+  function closeNav() {
+    nav.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Otevřít menu');
+    document.body.classList.remove('nav-open');
+  }
+  toggle.addEventListener('click', function () {
+    var open = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Zavřít menu' : 'Otevřít menu');
+    document.body.classList.toggle('nav-open', open);
+  });
+  nav.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A' && nav.classList.contains('open')) closeNav();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNav(); });
+})();
+</script>
+
+<script src="js/config.js?v=7f55c4e1" defer></script>
+<script src="js/auth.js?v=9f10c463" defer></script>
+<script src="js/hlidani-logika.js?v=8c971165" defer></script>
+<script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
+<script src="js/upozorneni.js?v=990dc051" defer></script>
+<script src="js/klic.js?v=805c6c82"></script>
+<script src="js/porovnani.js?v=2325f63b" defer></script>
+<script src="js/hlavicka.js?v=d154bfeb" defer></script>
+</body>
+</html>

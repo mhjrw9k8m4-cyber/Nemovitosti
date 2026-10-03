@@ -39,7 +39,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=606b7bd9">
+  <link rel="stylesheet" href="css/styles.css?v=7295a655">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -63,6 +63,7 @@
     .pz-place{font-family:var(--font-display); font-size:28px; font-weight:700; letter-spacing:-.015em; color:var(--text-ondark); line-height:1.15;}
     .pz-okres{display:flex; align-items:center; gap:6px; font-size:15px; color:var(--text-ondark-mute); margin-top:6px;}
     .pz-okres svg{width:16px; height:16px; stroke-width:2.25;}
+    .pz-dalky{font-size:12px; letter-spacing:.02em; color:var(--text-ondark-mute); margin-top:4px; opacity:.85;}
 
     .pz-priceblock{margin:14px 0 4px;}
     .pz-pl{font-size:12px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--popisek); margin-bottom:4px;}
@@ -408,7 +409,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 2 232 m² — Zaječov, okres Beroun</h1><p><b>5 577 000 Kč</b> (2 499 Kč/m²) · 2 232 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>2 232 m²</dd><dt>Obec</dt><dd>Zaječov</dd><dt>Okres</dt><dd><a href="pozemky-okres-beroun.html">Beroun</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd></dl><p><a href="pozemek.html?p=Zaje%C4%8Dov%7C%E2%80%94%7CBeroun%7C49.764%7C13.837&amp;ll=49.764434340458,13.836634085878&amp;v=2232">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 2 232 m² — Zaječov, okres Beroun</h1><p><b>5 577 000 Kč</b> (2 499 Kč/m²) · 2 232 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>2 232 m²</dd><dt>Obec</dt><dd>Zaječov</dd><dt>Okres</dt><dd><a href="pozemky-okres-beroun.html">Beroun</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Beroun 28 km · Plzeň 33 km</dd></dl><p><a href="pozemek.html?p=Zaje%C4%8Dov%7C%E2%80%94%7CBeroun%7C49.764%7C13.837&amp;ll=49.764434340458,13.836634085878&amp;v=2232">Otevřít na mapě</a></p></article></div></div>
   </div>
 </main>
 
@@ -418,7 +419,7 @@
       <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
       <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého.</p>
     </div>
-    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a></nav>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="porovnani.html">Porovnání uložených</a><a href="pridat.html">Přidat pozemek</a></nav>
     <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
@@ -435,9 +436,10 @@
 <script src="js/ceny.js?v=332e8c0d"></script>
 <script src="js/vybaveni.js?v=cae1f79b"></script>
 <script src="js/radce.js?v=05a68e63"></script>
+<script src="js/klic.js?v=805c6c82"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 2 232 m² — Zaječov, okres Beroun","description":"Na prodej · 5 577 000 Kč (2 499 Kč/m²) · 2 232 m² · Zaječov, okres Beroun. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-beroun-zajecov-v9b3iu.html","address":{"@type":"PostalAddress","addressLocality":"Zaječov","addressRegion":"Beroun","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.764434340458,"longitude":13.836634085878}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Beroun","item":"https://www.parcelaka.cz/pozemky-okres-beroun.html"},{"@type":"ListItem","position":4,"name":"Stavební pozemek 2 232 m² — Zaječov, okres Beroun","item":"https://www.parcelaka.cz/pozemek-beroun-zajecov-v9b3iu.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Zaječov|—|Beroun|49.764|13.837","ll":[49.764434340458,13.836634085878],"v":2232,"c":5577000};</script>
-<script src="js/pozemek.js?v=b5054fc8"></script>
+<script src="js/pozemek.js?v=f9f0bd1a"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -451,6 +453,7 @@
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
 <script src="js/hlavicka.js?v=d154bfeb" defer></script>
+<script type="application/json" id="pz-okoli-data">"Beroun 28 km · Plzeň 33 km"</script>
 <script type="application/json" id="pz-popis-data">"Zaječov, okres Beroun – 2 232 m², přímo od majitele, bez provize. Prodáváme pozemek v klidné části obce jako jeden celek pro jeden rodinný dům. • Stavební část o rozloze 881 m² leží v ploše BI (bydlení individuální) dle územního plánu Zaječova. • Přilehlá zahrada o rozloze 1 351 m² (dvě parcely) leží mimo zastavitelné plochy. Parcelní čísla 279/1, 279/5, 259/8, k. ú. Zaječov (okres Beroun, 790389). Územní plán umožňuje (ÚP Zaječov, úplné znění po změnách č."</script>
 </body>
 </html>

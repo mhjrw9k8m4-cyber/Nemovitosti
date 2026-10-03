@@ -129,7 +129,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=606b7bd9">
+  <link rel="stylesheet" href="css/styles.css?v=7295a655">
 </head>
 <body>
 
@@ -254,7 +254,7 @@
     <div class="map-wide">
       <div class="map-app reveal mv-seznam" id="view-mapa">
         <div class="map-controls-panel">
-          <div class="map-search"><input type="text" id="map-search" placeholder="Obec, kraj, druh, cena…" autocomplete="off" aria-label="Hledat — dá se napsat celá věta, třeba orná Vysočina do 500 tis" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="map-search-navrhy"><ul class="ms-navrhy" id="map-search-navrhy" role="listbox" aria-label="Našeptané obce" hidden></ul></div>
+          <div class="map-search"><input type="text" id="map-search" placeholder="Obec, druh, cena, do 30 km od Brna…" autocomplete="off" aria-label="Hledat — dá se napsat celá věta, třeba les do 30 km od Brna do 500 tis" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="map-search-navrhy"><ul class="ms-navrhy" id="map-search-navrhy" role="listbox" aria-label="Našeptané obce" hidden></ul></div>
           <!-- Co web z napsané věty pochopil jako filtr; každý odznak jde zrušit. -->
           <div class="ms-chipy" id="ms-chipy" hidden aria-label="Rozpoznáno z hledání"></div>
           <!-- Hlídání okolí vlastního pozemku. Objeví se, až si člověk místo
@@ -655,7 +655,7 @@
       <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
       <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého. Děláme to s péčí, protože jsme se v tom sami hrabali.</p>
     </div>
-    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="#mapa">Pozemky</a><a href="cena-pozemku.html">Ceny pozemků</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a><a href="muj-inzerat.html">Můj profil</a></nav>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="#mapa">Pozemky</a><a href="cena-pozemku.html">Ceny pozemků</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="porovnani.html">Porovnání uložených</a><a href="pridat.html">Přidat pozemek</a><a href="muj-inzerat.html">Můj profil</a></nav>
     <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="#jak-funguje">Jak to funguje</a><a href="#slovnicek">Slovníček</a><a href="#faq">Časté dotazy</a></nav>
     <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html" data-info="soukromi">Zásady soukromí</a><a href="podminky.html" data-info="podminky">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
@@ -692,9 +692,11 @@
 <script src="js/poradi.js?v=670998bf" defer></script>
 <script src="js/rozsah.js?v=d3b39f67" defer></script>
 <script src="js/vybaveni.js?v=cae1f79b" defer></script>
-<script src="js/dotaz.js?v=341edd4b" defer></script>
+<script src="js/dotaz.js?v=ff2d70a2" defer></script>
 <script src="js/hledani.js?v=9b51ed6d" defer></script>
-<script src="js/main.js?v=4a7853e9" defer></script>
+<script src="js/okruh.js?v=2495a6d8" defer></script>
+<script src="js/klic.js?v=805c6c82"></script>
+<script src="js/main.js?v=0bb07138" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

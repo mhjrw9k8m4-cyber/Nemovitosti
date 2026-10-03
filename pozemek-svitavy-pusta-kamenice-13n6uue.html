@@ -39,7 +39,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=606b7bd9">
+  <link rel="stylesheet" href="css/styles.css?v=7295a655">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -63,6 +63,7 @@
     .pz-place{font-family:var(--font-display); font-size:28px; font-weight:700; letter-spacing:-.015em; color:var(--text-ondark); line-height:1.15;}
     .pz-okres{display:flex; align-items:center; gap:6px; font-size:15px; color:var(--text-ondark-mute); margin-top:6px;}
     .pz-okres svg{width:16px; height:16px; stroke-width:2.25;}
+    .pz-dalky{font-size:12px; letter-spacing:.02em; color:var(--text-ondark-mute); margin-top:4px; opacity:.85;}
 
     .pz-priceblock{margin:14px 0 4px;}
     .pz-pl{font-size:12px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--popisek); margin-bottom:4px;}
@@ -408,7 +409,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Lesní pozemek 17 425 m² — Pustá Kamenice</h1><p><b>629 000 Kč</b> (36 Kč/m²) · 17 425 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Lesní pozemek</dd><dt>Výměra</dt><dd>17 425 m²</dd><dt>Obec</dt><dd>Pustá Kamenice</dd><dt>Okres</dt><dd><a href="pozemky-okres-svitavy.html">Svitavy</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd></dl><p><a href="pozemek.html?p=Pust%C3%A1%20Kamenice%7C%E2%80%94%7CSvitavy%7C49.758%7C16.098&amp;ll=49.757648,16.097869&amp;v=17425">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Lesní pozemek 17 425 m² — Pustá Kamenice</h1><p><b>629 000 Kč</b> (36 Kč/m²) · 17 425 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Lesní pozemek</dd><dt>Výměra</dt><dd>17 425 m²</dd><dt>Obec</dt><dd>Pustá Kamenice</dd><dt>Okres</dt><dd><a href="pozemky-okres-svitavy.html">Svitavy</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Svitavy 27 km · Pardubice 39 km</dd></dl><p><a href="pozemek.html?p=Pust%C3%A1%20Kamenice%7C%E2%80%94%7CSvitavy%7C49.758%7C16.098&amp;ll=49.757648,16.097869&amp;v=17425">Otevřít na mapě</a></p></article></div></div>
   </div>
 </main>
 
@@ -418,7 +419,7 @@
       <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
       <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého.</p>
     </div>
-    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="pridat.html">Přidat pozemek</a></nav>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="porovnani.html">Porovnání uložených</a><a href="pridat.html">Přidat pozemek</a></nav>
     <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
@@ -435,9 +436,10 @@
 <script src="js/ceny.js?v=332e8c0d"></script>
 <script src="js/vybaveni.js?v=cae1f79b"></script>
 <script src="js/radce.js?v=05a68e63"></script>
+<script src="js/klic.js?v=805c6c82"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Lesní pozemek 17 425 m² — Pustá Kamenice","description":"Na prodej · 629 000 Kč (36 Kč/m²) · 17 425 m² · Pustá Kamenice, okres Svitavy. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-svitavy-pusta-kamenice-13n6uue.html","address":{"@type":"PostalAddress","addressLocality":"Pustá Kamenice","addressRegion":"Svitavy","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.757648,"longitude":16.097869}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Svitavy","item":"https://www.parcelaka.cz/pozemky-okres-svitavy.html"},{"@type":"ListItem","position":4,"name":"Lesní pozemek 17 425 m² — Pustá Kamenice","item":"https://www.parcelaka.cz/pozemek-svitavy-pusta-kamenice-13n6uue.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Pustá Kamenice|—|Svitavy|49.758|16.098","ll":[49.757648,16.097869],"v":17425,"c":629000};</script>
-<script src="js/pozemek.js?v=b5054fc8"></script>
+<script src="js/pozemek.js?v=f9f0bd1a"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -451,6 +453,7 @@
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
 <script src="js/hlavicka.js?v=d154bfeb" defer></script>
+<script type="application/json" id="pz-okoli-data">"Svitavy 27 km · Pardubice 39 km"</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka - bez prostředníků a bez zbytečných výdajů navíc! k.ú. Pustá Kamenice LV č. 440 o výměře 17425 m² • Parcela č. 377/5 - o výměře 706 m² (Ostatní plocha) • Parcela č. 377/62 - o výměře 1468 m² (Orná půda) • Parcela č. 528/15 - o výměře 726 m² (Lesní pozemek) • Parcela č. 528/16 - o výměře 275 m² (Lesní pozemek) • Parcela č. 528/17 - o výměře 1 m² (Lesní pozemek) • Parcela č."</script>
 </body>
 </html>
