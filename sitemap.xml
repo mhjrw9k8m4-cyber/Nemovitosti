@@ -7266,11 +7266,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-liberec-jindrichovice-pod-smrkem-m1a5kv.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-liberec-horni-rasnice-1yznij6.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -8531,6 +8526,11 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://www.parcelaka.cz/pozemek-cesky-krumlov-horni-plana-vurngm.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.parcelaka.cz/pozemek-praha-vychod-na-vrchach-ywxs5u.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -8562,11 +8562,6 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-praha-vychod-krenice-1nj5oxs.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-praha-vychod-mnichovice-1beauy0.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9896,12 +9891,12 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-vsetin-seninka-1pjzlmt.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-vsetin-seninka-yh014w.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-vsetin-seninka-yh014w.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-vsetin-seninka-1pjzlmt.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -10506,12 +10501,12 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-vsetin-vsetin-mauxml.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-prerov-prerov-1x7dopr.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-prerov-prerov-1x7dopr.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-vsetin-vsetin-mauxml.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
