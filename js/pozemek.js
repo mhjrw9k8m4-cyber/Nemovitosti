@@ -96,6 +96,18 @@
   /* JAK DALEKO DO MĚSTA. Nepočítá se tady: hotovou větu vepsal do
      stránky generátor (js/okruh.js → #pz-okoli-data), takže ji stránka
      ukazuje i bez JavaScriptu a oba výpisy nemůžou říct nic jiného. */
+  /* DALŠÍ POZEMKY V TÉŽE OBCI. Věta i adresa přicházejí hotové ze
+     generátoru (ostrůvek #pz-obec-data), stejně jako vzdálenosti: číslo
+     v té větě je slib a smí ho skládat jen jedno místo. Přes ostrůvek
+     jde čistý text, značky se stavějí tady a přes esc(). */
+  function vObciHtml() {
+    var el = document.getElementById('pz-obec-data');
+    if (!el) return '';
+    var o = null;
+    try { o = JSON.parse(el.textContent || 'null'); } catch (e) { return ''; }
+    if (!o || typeof o.text !== 'string' || typeof o.url !== 'string') return '';
+    return '<a href="' + esc(o.url) + '">' + esc(o.text) + '</a>';
+  }
   function dalkyText() {
     var el = document.getElementById('pz-okoli-data');
     if (!el) return '';
@@ -899,6 +911,7 @@
         '<h1 class="pz-place">' + esc(d.place) + '</h1>' +
         (mistoRadek(d) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d) + '</div>' : '') +
         (dalkyText() ? '<div class="pz-dalky">vzdušnou čarou: ' + esc(dalkyText()) + '</div>' : '') +
+        (vObciHtml() ? '<div class="pz-vobci">' + vObciHtml() + '</div>' : '') +
       '</div>' +
 
       '<div class="pz-priceblock">' +

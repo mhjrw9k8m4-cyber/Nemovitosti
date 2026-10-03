@@ -236,6 +236,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
      ho pak vypisuje js/pozemek.js z přiloženého kousku JSONu. Dvě
      skládání téhož textu by se rozešla. */
   const vzdalenosti = OKRUH.popisVzdalenosti(d);
+  const vObec = vObciOdkaz(d);
   const staticky =
     `<article class="pz-staticky">`
     + `<h1>${esc(titul)}</h1>`
@@ -253,6 +254,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     + (vzdalenosti ? `<dt>Vzdušnou čarou</dt><dd>${esc(vzdalenosti)}</dd>` : '')
     + `</dl>`
     + `<p><a href="pozemek.html?p=${encodeURIComponent(pkey(d))}&amp;ll=${d.lat},${d.lng}&amp;v=${d.area || 0}">Otevřít na mapě</a></p>`
+    + (vObec ? `<p><a href="${esc(vObec.url)}">${esc(vObec.text)}</a></p>` : '')
     + `</article>`;
   h = h.replace(/<div id="pz-detail">[\s\S]*?<\/div>/,
     `<div id="pz-detail">${staticky}</div>`);
@@ -275,6 +277,10 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     h = h.replace(/(<\/body>)/,
       `<script type="application/json" id="pz-okoli-data">${jsonVeStrance(vzdalenosti)}</scr` + `ipt>\n$1`);
   }
+  if (vObec) {
+    h = h.replace(/(<\/body>)/,
+      `<script type="application/json" id="pz-obec-data">${jsonVeStrance(vObec)}</scr` + `ipt>\n$1`);
+  }
   const popisInzerenta = POPISY[klicNabidky(d)];
   if (popisInzerenta) {
     h = h.replace(/(<\/body>)/,
@@ -291,6 +297,54 @@ const PKH = createRequire(import.meta.url)(path.join(ROOT, 'js', 'hlidani-logika
    (js/okruh.js) — a tabulku okresních měst v něm hlídá proti
    data/okresy.json scripts/test-okruh.mjs. */
 const OKRUH = createRequire(import.meta.url)(path.join(ROOT, 'js', 'okruh.js'));
+
+/* Termíny — tentýž modul jako mapa i stránka pozemku. Po termínu se
+   dražba ve výpisu neukazuje, takže se nesmí počítat ani do slibu
+   „v obci je ještě pět pozemků". */
+createRequire(import.meta.url)(path.join(ROOT, 'js', 'terminy.js'));
+const TERM = globalThis.PK_TERMINY;
+function poTerminu(o) {
+  const n = TERM && TERM.daysUntil ? TERM.daysUntil(o && o.extra) : null;
+  return n != null && n < 0;
+}
+
+/* KOLIK DALŠÍCH POZEMKŮ JE V TÉŽE OBCI. Stránka pozemku byla slepá
+   ulička: kdo na ni přijde z vyhledávače, neměl odkud se dozvědět, že ve
+   stejné obci je v nabídce ještě pět dalších — a to je zrovna to, co
+   kupující hledá (nekupuje se konkrétní parcela, kupuje se místo).
+   Počítá se z TOHO, co mapa ukazuje: bez duplicit a bez nabídek po
+   termínu, protože na to číslo se odkazuje a mapa po klepnutí musí
+   ukázat totéž. Adresa je PŘESNÉ místo (?obec=&okres=), ne hledání
+   textem — viz scripts/generate-region-pages.mjs, kde je to rozepsané. */
+let V_OBCI = null;
+export function vObci(d) {
+  if (!V_OBCI) {
+    V_OBCI = {};
+    for (const o of nabidky()) {
+      if (!o || !o.place || !o.okres || poTerminu(o)) continue;
+      const k = o.place + '|' + o.okres;
+      V_OBCI[k] = (V_OBCI[k] || 0) + 1;
+    }
+  }
+  if (!d || !d.place || !d.okres) return 0;
+  const n = V_OBCI[d.place + '|' + d.okres] || 0;
+  /* Sám sebe do „dalších" nepočítá. Nabídka po termínu v indexu není,
+     takže by se odečtením dostala na minus jednu. */
+  return poTerminu(d) ? n : Math.max(0, n - 1);
+}
+/* Věta a adresa zvlášť, bez HTML: tentýž text vypisuje staticky
+   generátor i js/pozemek.js, a do stránky nesmí přes ostrůvek s JSONem
+   putovat značky — viz scripts/json-do-stranky.mjs. */
+export function vObciOdkaz(d) {
+  const n = vObci(d);
+  if (!n) return null;
+  const kde = (d.place === d.okres ? 'okrese ' : 'obci ') + d.place;
+  const text = n === 1 ? `V ${kde} je v nabídce ještě jeden pozemek`
+    : (n < 5 ? `V ${kde} jsou v nabídce ještě ${n} pozemky`
+             : `V ${kde} je v nabídce ještě ${fmt(n)} pozemků`);
+  return { text: text, url: 'index.html?obec=' + encodeURIComponent(d.place)
+    + '&okres=' + encodeURIComponent(d.okres) };
+}
 
 /* KTERÉ NABÍDCE PATŘÍ KTERÁ STRÁNKA — a proč to bydlí tady.
    Regionální stránky na tyhle stránky odkazují, takže potřebují tentýž

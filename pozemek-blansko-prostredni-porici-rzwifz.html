@@ -64,6 +64,8 @@
     .pz-okres{display:flex; align-items:center; gap:6px; font-size:15px; color:var(--text-ondark-mute); margin-top:6px;}
     .pz-okres svg{width:16px; height:16px; stroke-width:2.25;}
     .pz-dalky{font-size:12px; letter-spacing:.02em; color:var(--text-ondark-mute); margin-top:4px; opacity:.85;}
+    .pz-vobci{font-size:12px; letter-spacing:.02em; margin-top:6px;}
+    .pz-vobci a{color:var(--text-ondark); text-decoration:underline; text-underline-offset:2px;}
 
     .pz-priceblock{margin:14px 0 4px;}
     .pz-pl{font-size:12px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--popisek); margin-bottom:4px;}
@@ -409,7 +411,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 5 010 m² — Prostřední Poříčí, okres Blansko</h1><p><b>185 000 Kč</b> (37 Kč/m²) · 5 010 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>5 010 m²</dd><dt>Obec</dt><dd>Prostřední Poříčí</dd><dt>Okres</dt><dd><a href="pozemky-okres-blansko.html">Blansko</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Blansko 26 km · Brno 43 km</dd></dl><p><a href="pozemek.html?p=Prost%C5%99edn%C3%AD%20Po%C5%99%C3%AD%C4%8D%C3%AD%7C%E2%80%94%7CBlansko%7C49.579%7C16.496&amp;ll=49.578522,16.495958&amp;v=5010">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 5 010 m² — Prostřední Poříčí, okres Blansko</h1><p><b>185 000 Kč</b> (37 Kč/m²) · 5 010 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>5 010 m²</dd><dt>Obec</dt><dd>Prostřední Poříčí</dd><dt>Okres</dt><dd><a href="pozemky-okres-blansko.html">Blansko</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Blansko 26 km · Brno 43 km</dd></dl><p><a href="pozemek.html?p=Prost%C5%99edn%C3%AD%20Po%C5%99%C3%AD%C4%8D%C3%AD%7C%E2%80%94%7CBlansko%7C49.579%7C16.496&amp;ll=49.578522,16.495958&amp;v=5010">Otevřít na mapě</a></p><p><a href="index.html?obec=Prost%C5%99edn%C3%AD%20Po%C5%99%C3%AD%C4%8D%C3%AD&amp;okres=Blansko">V obci Prostřední Poříčí je v nabídce ještě jeden pozemek</a></p></article></div></div>
   </div>
 </main>
 
@@ -439,7 +441,7 @@
 <script src="js/klic.js?v=805c6c82"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 5 010 m² — Prostřední Poříčí, okres Blansko","description":"Na prodej · 185 000 Kč (37 Kč/m²) · 5 010 m² · Prostřední Poříčí, okres Blansko. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-blansko-prostredni-porici-rzwifz.html","address":{"@type":"PostalAddress","addressLocality":"Prostřední Poříčí","addressRegion":"Blansko","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.578522,"longitude":16.495958}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Blansko","item":"https://www.parcelaka.cz/pozemky-okres-blansko.html"},{"@type":"ListItem","position":4,"name":"Orná půda 5 010 m² — Prostřední Poříčí, okres Blansko","item":"https://www.parcelaka.cz/pozemek-blansko-prostredni-porici-rzwifz.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Prostřední Poříčí|—|Blansko|49.579|16.496","ll":[49.578522,16.495958],"v":5010,"c":185000};</script>
-<script src="js/pozemek.js?v=f9f0bd1a"></script>
+<script src="js/pozemek.js?v=09371508"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -454,6 +456,7 @@
 <script src="js/upozorneni.js?v=990dc051" defer></script>
 <script src="js/hlavicka.js?v=d154bfeb" defer></script>
 <script type="application/json" id="pz-okoli-data">"Blansko 26 km · Brno 43 km"</script>
+<script type="application/json" id="pz-obec-data">{"text":"V obci Prostřední Poříčí je v nabídce ještě jeden pozemek","url":"index.html?obec=Prost%C5%99edn%C3%AD%20Po%C5%99%C3%AD%C4%8D%C3%AD\u0026okres=Blansko"}</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka – bez prostředníků a bez zbytečných výdajů navíc! k.ú. Prostřední Poříčí LV č. 392 o výměře 5010 m² • Parcela č. 498/18 - o výměře 2392 m² (Orná půda) • Parcela č. 614/1 - o výměře 597 m² (Ostatní plocha) • Parcela č. 651/22 - o výměře 2021 m² (Orná půda) Přístupová cesta je zajištěna přes pozemky obce kromě p. č. 651/22."</script>
 </body>
 </html>

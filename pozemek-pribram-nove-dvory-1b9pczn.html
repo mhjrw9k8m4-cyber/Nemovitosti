@@ -64,6 +64,8 @@
     .pz-okres{display:flex; align-items:center; gap:6px; font-size:15px; color:var(--text-ondark-mute); margin-top:6px;}
     .pz-okres svg{width:16px; height:16px; stroke-width:2.25;}
     .pz-dalky{font-size:12px; letter-spacing:.02em; color:var(--text-ondark-mute); margin-top:4px; opacity:.85;}
+    .pz-vobci{font-size:12px; letter-spacing:.02em; margin-top:6px;}
+    .pz-vobci a{color:var(--text-ondark); text-decoration:underline; text-underline-offset:2px;}
 
     .pz-priceblock{margin:14px 0 4px;}
     .pz-pl{font-size:12px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--popisek); margin-bottom:4px;}
@@ -409,7 +411,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 1 724 m² — Nové Dvory, okres Příbram</h1><p><b>85 000 Kč</b> (49 Kč/m²) · 1 724 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>1 724 m²</dd><dt>Obec</dt><dd>Nové Dvory</dd><dt>Okres</dt><dd><a href="pozemky-okres-pribram.html">Příbram</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Příbram 28 km · Praha 31 km</dd></dl><p><a href="pozemek.html?p=Nov%C3%A9%20Dvory%7C%E2%80%94%7CP%C5%99%C3%ADbram%7C49.806%7C14.352&amp;ll=49.805892,14.352116&amp;v=1724">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 1 724 m² — Nové Dvory, okres Příbram</h1><p><b>85 000 Kč</b> (49 Kč/m²) · 1 724 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>1 724 m²</dd><dt>Obec</dt><dd>Nové Dvory</dd><dt>Okres</dt><dd><a href="pozemky-okres-pribram.html">Příbram</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Příbram 28 km · Praha 31 km</dd></dl><p><a href="pozemek.html?p=Nov%C3%A9%20Dvory%7C%E2%80%94%7CP%C5%99%C3%ADbram%7C49.806%7C14.352&amp;ll=49.805892,14.352116&amp;v=1724">Otevřít na mapě</a></p><p><a href="index.html?obec=Nov%C3%A9%20Dvory&amp;okres=P%C5%99%C3%ADbram">V obci Nové Dvory je v nabídce ještě 6 pozemků</a></p></article></div></div>
   </div>
 </main>
 
@@ -439,7 +441,7 @@
 <script src="js/klic.js?v=805c6c82"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 1 724 m² — Nové Dvory, okres Příbram","description":"Na prodej · 85 000 Kč (49 Kč/m²) · 1 724 m² · Nové Dvory, okres Příbram. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-pribram-nove-dvory-1b9pczn.html","address":{"@type":"PostalAddress","addressLocality":"Nové Dvory","addressRegion":"Příbram","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.805892,"longitude":14.352116}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Příbram","item":"https://www.parcelaka.cz/pozemky-okres-pribram.html"},{"@type":"ListItem","position":4,"name":"Orná půda 1 724 m² — Nové Dvory, okres Příbram","item":"https://www.parcelaka.cz/pozemek-pribram-nove-dvory-1b9pczn.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Nové Dvory|—|Příbram|49.806|14.352","ll":[49.805892,14.352116],"v":1724,"c":85000};</script>
-<script src="js/pozemek.js?v=f9f0bd1a"></script>
+<script src="js/pozemek.js?v=09371508"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -454,6 +456,7 @@
 <script src="js/upozorneni.js?v=990dc051" defer></script>
 <script src="js/hlavicka.js?v=d154bfeb" defer></script>
 <script type="application/json" id="pz-okoli-data">"Příbram 28 km · Praha 31 km"</script>
+<script type="application/json" id="pz-obec-data">{"text":"V obci Nové Dvory je v nabídce ještě 6 pozemků","url":"index.html?obec=Nov%C3%A9%20Dvory\u0026okres=P%C5%99%C3%ADbram"}</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka - bez prostředníků a bez zbytečných výdajů navíc! k.ú. Nové Dvory u Dobříše LV č. 305 o výměře 1723 m², podíl 1/4 • Parcela č. 237/2 - o výměře 1660 m² (Orná půda) • Parcela č. 237/7 - o výměře 5234 m² (Trvalý travní porost) Pomáháme lidem bezpečně investovat do pozemků - ať už hledáte stabilní investici, nebo půdu pro hospodaření."</script>
 </body>
 </html>

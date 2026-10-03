@@ -421,6 +421,59 @@ pravda('každý okres má náhledový obrázek pro sdílení', bezNahledu.length
 }
 
 console.log('\nStránky jednotlivých pozemků');
+/* --- DALŠÍ POZEMKY V TÉŽE OBCI --------------------------------------
+   Stránka pozemku odkazuje na mapu zúženou na tu obec a říká u toho
+   číslo. Číslo je slib: mapa po klepnutí srovnává přesnou shodu obce
+   a okresu, takže se musí rovnat tomu, co je v datech — bez duplicit
+   a bez nabídek po termínu, protože ty mapa neukazuje.
+   Jde se od NABÍDEK ke stránkám, ne naopak: jen tak se dá u každé
+   stránky zeptat na tu její nabídku. */
+{
+  const { vObci } = await import('./generate-parcel-pages.mjs');
+  /* VŠECHNY stránky, ne vzorek. Napřed tu byla každá sedmá (180 z 1 995)
+     a při zkoušení sabotáže se ukázalo, proč to nestačí: přepsané číslo
+     na stránce mimo vzorek prošlo bez poznámky. Přečíst všechny stojí
+     pár sekund a chyba v generátoru se může týkat jen části stránek. */
+  const vzorek = ukazane;
+  let sOstruvkem = 0;
+  const spatne = [];
+  for (const d of vzorek) {
+    const f = souborPro(d);
+    const cesta = path.join(ROOT, f);
+    if (!fs.existsSync(cesta)) continue;
+    const html = fs.readFileSync(cesta, 'utf8');
+    const m = /<script type="application\/json" id="pz-obec-data">([\s\S]*?)<\/script>/.exec(html);
+    const ceka = vObci(d);
+    if (!m) {
+      if (ceka > 0) spatne.push(`${f}: v obci je ${ceka} dalších, ale stránka o tom mlčí`);
+      continue;
+    }
+    sOstruvkem++;
+    let o = null;
+    try { o = JSON.parse(m[1]); } catch (e) { spatne.push(`${f}: ostrůvek není JSON`); continue; }
+    if (!o || typeof o.text !== 'string' || typeof o.url !== 'string') {
+      spatne.push(`${f}: ostrůvek nemá text a adresu`);
+      continue;
+    }
+    const mu = /^index\.html\?obec=([^&]+)&okres=(.+)$/.exec(o.url);
+    if (!mu) { spatne.push(`${f}: podivná adresa „${o.url}"`); continue; }
+    const obec = decodeURIComponent(mu[1]), okres = decodeURIComponent(mu[2]);
+    if (obec !== d.place || okres !== d.okres) {
+      spatne.push(`${f}: odkaz vede na ${obec}/${okres}, pozemek je v ${d.place}/${d.okres}`);
+      continue;
+    }
+    const mc = /ještě (?:jeden|(\d[\d\s\u00a0]*)) pozem/.exec(o.text);
+    if (!mc) { spatne.push(`${f}: z věty nejde vyčíst počet („${o.text}")`); continue; }
+    const psano = mc[1] ? Number(mc[1].replace(/[\s\u00a0]/g, '')) : 1;
+    if (psano !== ceka) spatne.push(`${f} ${obec}: psáno ${psano}, v datech ${ceka}`);
+    if (o.text.indexOf(obec) < 0) spatne.push(`${f}: ve větě není ${obec}`);
+  }
+  pravda('stránky s dalšími pozemky v obci se našly (jinak se nic nekontroluje)',
+    sOstruvkem > 300, `${sOstruvkem} z ${vzorek.length} nabídek`);
+  pravda('a číslo v té větě sedí s daty i s adresou, na kterou odkazuje',
+    spatne.length === 0, spatne.slice(0, 4).join('; '));
+}
+
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb`);
 if (chyb) console.log('::error::Stránky pozemků: kontroly neprošly.');

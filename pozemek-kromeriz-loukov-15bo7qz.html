@@ -64,6 +64,8 @@
     .pz-okres{display:flex; align-items:center; gap:6px; font-size:15px; color:var(--text-ondark-mute); margin-top:6px;}
     .pz-okres svg{width:16px; height:16px; stroke-width:2.25;}
     .pz-dalky{font-size:12px; letter-spacing:.02em; color:var(--text-ondark-mute); margin-top:4px; opacity:.85;}
+    .pz-vobci{font-size:12px; letter-spacing:.02em; margin-top:6px;}
+    .pz-vobci a{color:var(--text-ondark); text-decoration:underline; text-underline-offset:2px;}
 
     .pz-priceblock{margin:14px 0 4px;}
     .pz-pl{font-size:12px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--popisek); margin-bottom:4px;}
@@ -409,7 +411,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 1 267 m² — Loukov, okres Kroměříž</h1><p><b>55 000 Kč</b> (43 Kč/m²) · 1 267 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>1 267 m²</dd><dt>Obec</dt><dd>Loukov</dd><dt>Okres</dt><dd><a href="pozemky-okres-kromeriz.html">Kroměříž</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Kroměříž 28 km · Olomouc 40 km</dd></dl><p><a href="pozemek.html?p=Loukov%7C%E2%80%94%7CKrom%C4%9B%C5%99%C3%AD%C5%BE%7C49.416%7C17.729&amp;ll=49.416047,17.728897&amp;v=1267">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 1 267 m² — Loukov, okres Kroměříž</h1><p><b>55 000 Kč</b> (43 Kč/m²) · 1 267 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>1 267 m²</dd><dt>Obec</dt><dd>Loukov</dd><dt>Okres</dt><dd><a href="pozemky-okres-kromeriz.html">Kroměříž</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Kroměříž 28 km · Olomouc 40 km</dd></dl><p><a href="pozemek.html?p=Loukov%7C%E2%80%94%7CKrom%C4%9B%C5%99%C3%AD%C5%BE%7C49.416%7C17.729&amp;ll=49.416047,17.728897&amp;v=1267">Otevřít na mapě</a></p><p><a href="index.html?obec=Loukov&amp;okres=Krom%C4%9B%C5%99%C3%AD%C5%BE">V obci Loukov je v nabídce ještě jeden pozemek</a></p></article></div></div>
   </div>
 </main>
 
@@ -439,7 +441,7 @@
 <script src="js/klic.js?v=805c6c82"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Trvalý travní porost 1 267 m² — Loukov, okres Kroměříž","description":"Na prodej · 55 000 Kč (43 Kč/m²) · 1 267 m² · Loukov, okres Kroměříž. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-kromeriz-loukov-15bo7qz.html","address":{"@type":"PostalAddress","addressLocality":"Loukov","addressRegion":"Kroměříž","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.416047,"longitude":17.728897}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Kroměříž","item":"https://www.parcelaka.cz/pozemky-okres-kromeriz.html"},{"@type":"ListItem","position":4,"name":"Trvalý travní porost 1 267 m² — Loukov, okres Kroměříž","item":"https://www.parcelaka.cz/pozemek-kromeriz-loukov-15bo7qz.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Loukov|—|Kroměříž|49.416|17.729","ll":[49.416047,17.728897],"v":1267,"c":55000};</script>
-<script src="js/pozemek.js?v=f9f0bd1a"></script>
+<script src="js/pozemek.js?v=09371508"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -454,6 +456,7 @@
 <script src="js/upozorneni.js?v=990dc051" defer></script>
 <script src="js/hlavicka.js?v=d154bfeb" defer></script>
 <script type="application/json" id="pz-okoli-data">"Kroměříž 28 km · Olomouc 40 km"</script>
+<script type="application/json" id="pz-obec-data">{"text":"V obci Loukov je v nabídce ještě jeden pozemek","url":"index.html?obec=Loukov\u0026okres=Krom%C4%9B%C5%99%C3%AD%C5%BE"}</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka - bez prostředníků a bez zbytečných výdajů navíc! k.ú. Loukov u Bystřice pod Hostýnem LV č. 1815 o výměře 1267 m² • Parcela č. 5413 - o výměře 58 m² (Ostatní plocha) • Parcela č. 5499 - o výměře 1209 m² (Trvalý travní porost) Pomáháme lidem bezpečně investovat do pozemků - ať už hledáte stabilní investici, nebo půdu pro hospodaření."</script>
 </body>
 </html>
