@@ -262,7 +262,7 @@
       return { lvl: 'warn', txt: '<b>Termín dražby už minul</b> (' + (-n) + ' dní zpátky). Záznam tu zůstává kvůli historii — u dražebníka si ověřte, jestli se vydražilo, nebo bude další kolo.' };
     }
     if (n <= 7) {
-      var kdy = n === 0 ? 'Dražba je dnes' : (n === 1 ? 'Dražba je zítra' : 'Do dražby zbývá ' + n + ' dní');
+      var kdy = n === 0 ? 'Dražba je dnes' : (n === 1 ? 'Dražba je zítra' : 'Do dražby zbývá ' + n + (n < 5 ? ' dny' : ' dní'));
       return { lvl: 'warn', txt: '<b>' + kdy + '.</b> Na prohlídku, ověření v katastru a složení dražební jistoty už je <b>málo času</b> — jistota musí být připsaná před zahájením, ne v den dražby.' };
     }
     if (n <= 30) {

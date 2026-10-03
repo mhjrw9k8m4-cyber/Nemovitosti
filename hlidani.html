@@ -290,6 +290,12 @@
   /* „1 pozemků" a „3 pozemků" vypadá jako strojový překlad. Skloňování
      umí js/upozorneni-feed.js (jedno místo pro celý web), tak se bere
      odtud — čtvrtá kopie tří řádků by se s ním jen rozešla. */
+  /* „Nový" se v odznaku ohýbá stejně jako „pozemek" — jeden zdroj
+     pravdy je PKFeed.mnozne, ne psát si tvary rukou u každého čísla. */
+  function tvarNovy(n) {
+    var F = window.PKFeed;
+    return F && F.mnozne ? F.mnozne(n, ['nový', 'nové', 'nových']) : 'nových';
+  }
   function tvarPozemku(n) {
     var F = window.PKFeed;
     return F && F.mnozne ? F.mnozne(n, ['pozemek', 'pozemky', 'pozemků']) : 'pozemků';
@@ -799,7 +805,10 @@
         var params = 'index.html?' + (s.okres ? 'q=' + encodeURIComponent(s.okres) + '&' : '') + (s.druh ? 'druh=' + encodeURIComponent(s.druh) + '&' : '') + (s.max_price ? 'maxc=' + s.max_price + '&' : '') + (s.min_area ? 'mina=' + s.min_area + '&' : '') + '#mapa';
         html += '<div class="hl-item" data-id="' + s.id + '">' +
           '<div class="hl-itop"><div class="hl-iname">' + esc(s.label || 'Hledání') + '</div>' +
-            '<span class="hl-new-badge' + (newN ? '' : ' zero') + '">' + (newN ? newN + ' nových' : 'žádné nové') + '</span></div>' +
+            /* „1 nových" byla ostuda hned v odznaku. Stránka přitom tvar podle
+             počtu umí — tvarPozemku() o pár řádků výš — jen se tu nepoužil. */
+            '<span class="hl-new-badge' + (newN ? '' : ' zero') + '">'
+              + (newN ? newN + ' ' + tvarNovy(newN) : 'žádné nové') + '</span></div>' +
           '<div class="hl-crit">' + critText(s) + '</div>' +
           '<div class="hl-count">Celkem sedí: <b>' + cur.length + '</b> ' + tvarPozemku(cur.length) + '</div>' +
           /* KDE TY NOVÉ POZEMKY JSOU. Odznak „3 nových" byl slepá ulička:

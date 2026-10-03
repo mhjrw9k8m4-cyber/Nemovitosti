@@ -5358,7 +5358,8 @@
         b.classList.toggle('rz-uvnitr', !!uvnitr);
         b.firstChild.style.height = Math.max(3, Math.round(hist[k] / nej * 100)) + '%';
         b.setAttribute('aria-label', (window.PKRozsah.popis(dolni, p.jednotka) || '0') + ' až ' +
-          (window.PKRozsah.popis(horni, p.jednotka) || 'výš') + ', ' + fmt(hist[k]) + ' nabídek');
+          (window.PKRozsah.popis(horni, p.jednotka) || 'výš') + ', ' + fmt(hist[k]) + ' '
+          + (window.PKFeed ? window.PKFeed.mnozne(hist[k], ['nabídka', 'nabídky', 'nabídek']) : 'nabídek'));
         b.setAttribute('aria-pressed', uvnitr ? 'true' : 'false');
         if (uvnitr) vybranych += hist[k];
       });

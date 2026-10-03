@@ -92,7 +92,7 @@
           + (m2 != null ? fmt(m2) + ' Kč' : '—') + '</td>'
         + '<td>' + esc(d.druh || '—') + '</td>'
         + '<td>' + esc(TYPY[d.type] || d.type || '—') + '</td>'
-        + '<td>' + (dni == null ? '—' : (dni < 0 ? 'proběhlo' : (dni === 0 ? 'dnes' : 'za ' + dni + ' dní'))) + '</td>'
+        + '<td>' + (dni == null ? '—' : (dni < 0 ? 'proběhlo' : (dni === 0 ? 'dnes' : dni === 1 ? 'zítra' : 'za ' + dni + (dni < 5 ? ' dny' : ' dní')))) + '</td>'
         + '</tr>';
     }).join('');
 
