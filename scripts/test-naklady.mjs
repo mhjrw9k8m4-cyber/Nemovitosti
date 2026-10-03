@@ -51,7 +51,7 @@ pravda('kalkulačka na stránce je', jeTam);
 
 const predvyplneno = await p.evaluate(() => (document.getElementById('nak-cena') || {}).value);
 pravda('cena z odkazu se předvyplní (ze stránky pozemku se sem chodí s ?cena=)',
-  predvyplneno === '450000', `v poli je „${predvyplneno}"`);
+  predvyplneno.replace(/[\s\u00a0]/g, '') === '450000', `v poli je „${predvyplneno}"`);
 
 function stav() {
   return p.evaluate(() => {
@@ -103,6 +103,68 @@ await p.waitForTimeout(250);
 const r3 = await stav();
 pravda('bez zadané ceny se neukazuje součet s cenou pozemku',
   !r3.some((r) => r.trida === 'nak-celkem'), JSON.stringify(r3.map((r) => r.trida)));
+
+/* --- POLE MUSÍ PŘIJMOUT ČÍSLO TAK, JAK STOJÍ V INZERÁTU ---------------
+ * Pole byla type="number". Ta mezeru nepustí dál: kdo zkopíroval
+ * „450 000 Kč" z inzerátu — přesně jak to nabízí zástupný text toho
+ * pole — dostal prázdno a nedozvěděl se proč. js/naklady.js přitom
+ * mezery i desetinnou čárku odmazávat umí od začátku; u číselného
+ * pole byl ten kód mrtvý, protože neplatnou hodnotu prohlížeč vůbec
+ * nepředá. Vedle toho stálo v poli „6000" a o dva řádky níž v tabulce
+ * „6 000 Kč" — totéž číslo dvakrát jinak na jedné obrazovce.
+ */
+{
+  const vstupy = await p.evaluate(() => ['nak-cena', 'nak-advokat-kc', 'nak-uschova-kc',
+    'nak-provize-pct', 'nak-geoplan-kc', 'nak-posudek-kc']
+    .map((id) => { const e = document.getElementById(id);
+      return e ? { id, typ: e.type, rezim: e.inputMode, hod: e.value } : { id, typ: null }; }));
+  pravda('všechna pole kalkulačky na stránce jsou', vstupy.every((v) => v.typ),
+    JSON.stringify(vstupy.filter((v) => !v.typ).map((v) => v.id)));
+  pravda('a žádné z nich není type="number" (to by mezeru v čísle zahodilo)',
+    vstupy.every((v) => v.typ !== 'number'),
+    vstupy.filter((v) => v.typ === 'number').map((v) => v.id).join(', '));
+  pravda('a každé si přesto říká o číselnou klávesnici',
+    vstupy.every((v) => v.rezim === 'numeric' || v.rezim === 'decimal'),
+    vstupy.map((v) => `${v.id}:${v.rezim || '—'}`).join(' '));
+
+  // Výchozí hodnoty v poli a v tabulce se musí psát stejně.
+  const vychozi = vstupy.filter((v) => v.id.endsWith('-kc'));
+  pravda('výchozí částky jsou tisícové (jinak se zápis nemá na čem poznat)',
+    vychozi.length >= 3 && vychozi.every((v) => v.hod.replace(/[\s ]/g, '').length >= 4),
+    vychozi.map((v) => v.id + '=' + v.hod).join(' '));
+  pravda('a v poli jsou psané s oddělovačem tisíců, stejně jako v tabulce pod nimi',
+    vychozi.every((v) => /[\s ]/.test(v.hod)),
+    vychozi.map((v) => `${v.id} „${v.hod}"`).join('; '));
+
+  /* Meze dřív hlídal atribut max na číselném poli. Ten na textovém nic
+     neznamená, takže je hlídá js/naklady.js — a ořez musí být vidět
+     i v poli, jinak by se nedalo poznat, které číslo vlastně platí. */
+  await p.fill('#nak-provize-pct', '99');
+  await p.locator('#nak-provize-pct').blur();
+  await p.waitForTimeout(250);
+  const poOrezu = await p.evaluate(() => (document.getElementById('nak-provize-pct') || {}).value);
+  pravda('nesmyslné procento se ořízne na mez a ořez je vidět i v poli',
+    poOrezu.replace(',', '.') === '20', `v poli zůstalo „${poOrezu}"`);
+  await p.fill('#nak-provize-pct', '5');
+  await p.waitForTimeout(150);
+
+  // A hlavní věc: číslo opsané z inzerátu projde.
+  // Provize je v tuhle chvíli zapnutá z kontroly výš a počítá se z ceny,
+  // takže by do součtu mluvila; pro tenhle výpočet ji vypnu.
+  await p.uncheck('#nak-realitka');
+  /* Vepsání si hlídá chybu samo: do type="number" prohlížeč mezeru
+     nepustí a Playwright to rovnou odmítne. Bez tohohle odchycení by
+     test spadl výjimkou dřív, než stihne vypsat, co se vlastně stalo. */
+  const vepsano = await p.fill('#nak-cena', '450 000 Kč').then(() => '', (e) => String(e).slice(0, 90));
+  pravda('do pole ceny jde vepsat číslo i s mezerou', !vepsano, vepsano);
+  await p.waitForTimeout(250);
+  const sMezerou = vepsano ? [] : await stav();
+  const celkem = sMezerou.find((r) => r.trida === 'nak-celkem');
+  pravda('a spočítá se z něj správná částka',
+    !!celkem && cislo(celkem.v) === 450000 + 2000 + 6000 + 5000,
+    celkem ? `v tabulce ${celkem.v}, čekáno ${450000 + 2000 + 6000 + 5000}`
+      : 'řádek s celkovou částkou chybí');
+}
 
 const pozn = await p.evaluate(() => (document.querySelector('.nak-pozn') || {}).textContent || '');
 pravda('pod tabulkou stojí, že je to odhad, ne cena, kterou web zaručuje',

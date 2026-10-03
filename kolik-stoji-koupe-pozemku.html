@@ -97,7 +97,7 @@
 
           <label class="nak-pole nak-hlavni" for="nak-cena">
             <span class="nak-k">Kupní cena pozemku</span>
-            <span class="nak-vstup"><input id="nak-cena" type="number" inputmode="numeric" min="0" step="1000" placeholder="např. 450 000"><i>Kč</i></span>
+            <span class="nak-vstup"><input autocomplete="off" id="nak-cena" type="text" inputmode="numeric" placeholder="např. 450 000"><i>Kč</i></span>
           </label>
 
           <fieldset class="nak-volby">
@@ -105,23 +105,23 @@
 
             <label class="nak-volba"><input type="checkbox" id="nak-advokat" checked>
               <span class="nak-t">Smlouvu připraví advokát nebo notář</span>
-              <span class="nak-vstup"><input id="nak-advokat-kc" type="number" inputmode="numeric" min="0" step="500" value="6000"><i>Kč</i></span></label>
+              <span class="nak-vstup"><input autocomplete="off" id="nak-advokat-kc" type="text" inputmode="numeric" value="6000"><i>Kč</i></span></label>
 
             <label class="nak-volba"><input type="checkbox" id="nak-uschova" checked>
               <span class="nak-t">Úschova peněz u advokáta nebo notáře</span>
-              <span class="nak-vstup"><input id="nak-uschova-kc" type="number" inputmode="numeric" min="0" step="500" value="5000"><i>Kč</i></span></label>
+              <span class="nak-vstup"><input autocomplete="off" id="nak-uschova-kc" type="text" inputmode="numeric" value="5000"><i>Kč</i></span></label>
 
             <label class="nak-volba"><input type="checkbox" id="nak-realitka">
               <span class="nak-t">Kupuji přes realitní kancelář</span>
-              <span class="nak-vstup"><input id="nak-provize-pct" type="number" inputmode="decimal" min="0" max="20" step="0.5" value="4"><i>%</i></span></label>
+              <span class="nak-vstup"><input autocomplete="off" id="nak-provize-pct" type="text" inputmode="decimal" value="4"><i>%</i></span></label>
 
             <label class="nak-volba"><input type="checkbox" id="nak-geoplan">
               <span class="nak-t">Bude potřeba geometrický plán</span>
-              <span class="nak-vstup"><input id="nak-geoplan-kc" type="number" inputmode="numeric" min="0" step="500" value="9000"><i>Kč</i></span></label>
+              <span class="nak-vstup"><input autocomplete="off" id="nak-geoplan-kc" type="text" inputmode="numeric" value="9000"><i>Kč</i></span></label>
 
             <label class="nak-volba"><input type="checkbox" id="nak-posudek">
               <span class="nak-t">Banka bude chtít znalecký posudek</span>
-              <span class="nak-vstup"><input id="nak-posudek-kc" type="number" inputmode="numeric" min="0" step="500" value="5000"><i>Kč</i></span></label>
+              <span class="nak-vstup"><input autocomplete="off" id="nak-posudek-kc" type="text" inputmode="numeric" value="5000"><i>Kč</i></span></label>
           </fieldset>
 
           <div id="nak-vysledek" class="nak-vysledek" aria-live="polite"></div>
@@ -226,7 +226,7 @@
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
 <script src="js/obsah.js?v=564d8537" defer></script>
-<script src="js/naklady.js?v=79b01717" defer></script>
+<script src="js/naklady.js?v=203063b2" defer></script>
 <script src="js/hlavicka.js?v=d154bfeb" defer></script>
 </body>
 </html>

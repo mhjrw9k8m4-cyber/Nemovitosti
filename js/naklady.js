@@ -20,11 +20,22 @@
   var box = document.getElementById('naklady');
   if (!box) return;
 
+  /* Meze, které dřív hlídal prohlížeč přes min/max. Pole jsou textová,
+     protože type="number" nepustí dál mezeru — a zástupný text u ceny
+     přitom nabízí „450 000", přesně jak to stojí v inzerátu. Kdo to
+     vložil, dostal prázdné pole a nedozvěděl se proč. */
+  var MEZE = { 'nak-provize-pct': [0, 20] };
+
   function cislo(id) {
     var el = document.getElementById(id);
     if (!el) return 0;
-    var v = parseFloat(String(el.value).replace(/\s/g, '').replace(',', '.'));
-    return isFinite(v) && v > 0 ? v : 0;
+    /* Tolerantně: „450 000 Kč", „450000", „4,5". Nečíselný zbytek utne
+       parseFloat sám, mezery a čárku je potřeba odmazat dřív. */
+    var v = parseFloat(String(el.value).replace(/[\s\u00a0]/g, '').replace(',', '.'));
+    if (!isFinite(v) || v <= 0) return 0;
+    var m = MEZE[id];
+    if (m) { if (v < m[0]) v = m[0]; if (v > m[1]) v = m[1]; }
+    return v;
   }
   function zapnuto(id) { var el = document.getElementById(id); return !!(el && el.checked); }
   function fmt(n) {
@@ -82,15 +93,46 @@
   box.addEventListener('input', spocti);
   box.addEventListener('change', spocti);
 
+  /* Při odchodu z pole se číslo přepíše do stejného tvaru, v jakém ho
+     ukazuje tabulka pod ním. Dřív stálo v poli „6000" a o dva řádky níž
+     „6 000 Kč" — totéž číslo dvakrát jinak na jedné obrazovce. Přepisuje
+     se AŽ po odchodu: během psaní by se pod rukama posouval kurzor. */
+  box.addEventListener('focusout', function (e) {
+    var el = e.target;
+    if (!el || el.tagName !== 'INPUT' || el.type !== 'text') return;
+    if (!String(el.value).trim()) return;      // prázdné pole se nedoplňuje
+    var v = cislo(el.id);
+    if (el.id === 'nak-provize-pct') {
+      /* Procento se nepíše s oddělovačem tisíců, zato se ořezává na mez.
+         Ořez se MUSÍ propsat i do pole: kdyby v něm zůstalo „99" a tabulka
+         počítala s 20, nedalo by se poznat, které číslo vlastně platí. */
+      el.value = String(v).replace('.', ',');
+    } else {
+      el.value = v ? fmt(v) : '';
+    }
+    spocti();
+  });
+
   /* Předvyplnění cenou z odkazu: ze stránky pozemku se sem dá přijít
      s ?cena=…, ať člověk nepřepisuje číslo, které web už zná. */
   try {
     var c = new URLSearchParams(location.search).get('cena');
     if (c && /^\d{3,12}$/.test(c)) {
       var el = document.getElementById('nak-cena');
-      if (el) el.value = c;
+      if (el) el.value = fmt(+c);
     }
   } catch (e) {}
+
+  /* Výchozí hodnoty jsou ve stránce psané bez mezer („6000"), ať se
+     v HTML dobře čtou. Do stejného tvaru jako tabulka je převede tohle,
+     jednou při načtení. */
+  ['nak-advokat-kc', 'nak-uschova-kc', 'nak-geoplan-kc', 'nak-posudek-kc', 'nak-cena']
+    .forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el || !el.value) return;
+      var v = cislo(id);
+      if (v) el.value = fmt(v);
+    });
 
   spocti();
 })();
