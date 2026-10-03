@@ -32,7 +32,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=5666c65a">
+  <link rel="stylesheet" href="css/styles.css?v=0bde7ae9">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .hl-wrap{max-width:var(--m-uzky); margin:0 auto;}
@@ -264,7 +264,7 @@
 <script src="js/config.js?v=7f55c4e1"></script>
 <script src="js/auth.js?v=9f10c463"></script>
 <script src="js/upozorneni-feed.js?v=d6d2bf4a"></script>
-<script src="js/hlidani-logika.js?v=583c6506"></script>
+<script src="js/hlidani-logika.js?v=94c83b26"></script>
 <script src="js/upozorneni.js?v=990dc051"></script>
 <script src="js/hlavicka.js?v=c6f32427"></script>
 <script>
@@ -323,6 +323,7 @@
     p.push.apply(p, rozsah(s.min_price, s.max_price, 'Kč'));
     p.push.apply(p, rozsah(s.min_area, s.max_area, 'm²'));
     if (s.max_perm2) p.push('do ' + fmt(s.max_perm2) + ' Kč/m²');
+    if (s.jen_celek) p.push('jen celé pozemky');
     if (s.features && s.features.length) p.push(s.features.map(esc).join(', '));
     /* Když po odečtení jména nezbylo nic, je to hlídání celého okresu bez
        dalších podmínek — a to je informace, ne prázdno: člověk podle ní
@@ -583,6 +584,13 @@
             '<span class="hl-jednotka" aria-hidden="true">Kč/m\u00b2</span>' +
           '</div>' +
           '<p class="hl-napoveda" id="ns-perm2-pozn">V Kč/m². Podle ceny za metr se pozemky srovnávají nejčastěji — velký levný pozemek tak neutopí malý drahý.</p>' +
+          /* Podíl patří k ceně, ne k výměře: je to jiná odpověď na otázku
+             „co vlastně kupuju", a nejčastěji si ho člověk všimne právě
+             u podezřele nízké ceny za metr. */
+          '<label class="hl-zaskrt"><input type="checkbox" id="ns-celek">' +
+            '<span>Jen celé pozemky <i>— bez spoluvlastnických podílů</i></span></label>' +
+          '<p class="hl-napoveda">U podílu je v ceně zlomek, ale výměra celé parcely, takže vychází podezřele levně. Dnes je takových ' +
+            fmt(DATA.filter(function (d) { return d.podil; }).length) + ' z ' + fmt(DATA.length) + '.</p>' +
         '</div>' +
 
         '<div class="hl-sekce">' +
@@ -628,6 +636,7 @@
         min_area: cislo('ns-area'),
         max_area: cislo('ns-area-do'),
         max_perm2: cislo('ns-perm2'),
+        jen_celek: !!(document.getElementById('ns-celek') || {}).checked,
         features: [].slice.call(root.querySelectorAll('.hl-chip.on')).map(function (c) { return c.getAttribute('data-feat'); }),
       };
     }
@@ -678,6 +687,10 @@
       var k = kriteria();
       var label = k.okres || (TYPE_LABEL[k.ptype] || 'Pozemky') + (k.druh ? ' · ' + k.druh : '');
       msg.textContent = 'Ukládám…'; msg.className = 'hl-msg';
+      var sCelkem = { p_label: label, p_okres: k.okres, p_druh: k.druh, p_type: k.ptype,
+        p_max_price: k.max_price, p_min_area: k.min_area, p_features: k.features,
+        p_min_price: k.min_price, p_max_area: k.max_area, p_max_perm2: k.max_perm2,
+        p_jen_celek: k.jen_celek };
       var siroke = { p_label: label, p_okres: k.okres, p_druh: k.druh, p_type: k.ptype,
         p_max_price: k.max_price, p_min_area: k.min_area, p_features: k.features,
         p_min_price: k.min_price, p_max_area: k.max_area, p_max_perm2: k.max_perm2 };
@@ -686,28 +699,50 @@
          a hlídání by přestalo jít uložit vůbec. Proto se pak zkusí i stará
          podoba; uloží se aspoň to, co uložit jde, a člověk se dozví, co se
          nepropsalo. Mlčky zahodit polovinu zadání by bylo horší než chyba. */
-      function uloz(parametry, jeSiroke) {
+      /* Tři stupně ústupu, ne dva: „jen celé pozemky" umí databáze až po
+         spuštění supabase/saved-searches-celek.sql. Když ho neumí,
+         zkusí se podoba bez něj, a teprve pak ta nejstarší. Pokaždé se
+         uloží aspoň to, co uložit jde, a člověk se dozví, co se
+         nepropsalo — mlčky zahodit část zadání je horší než chyba. */
+      function uloz(parametry, uroven) {
         return A.rpc('save_search', parametry, true).then(function (res) {
-          if (res && res.ok) return { res: res, jeSiroke: jeSiroke };
-          if (jeSiroke) {
+          if (res && res.ok) return { res: res, uroven: uroven };
+          if (uroven === 'celek') return uloz(siroke, 'siroke');
+          if (uroven === 'siroke') {
             var uzke = { p_label: label, p_okres: k.okres, p_druh: k.druh, p_type: k.ptype,
               p_max_price: k.max_price, p_min_area: k.min_area, p_features: k.features };
-            return uloz(uzke, false);
+            return uloz(uzke, 'uzke');
           }
-          return { res: res, jeSiroke: false };
+          return { res: res, uroven: 'uzke' };
         });
       }
-      uloz(siroke, true).then(function (v) {
+      uloz(sCelkem, 'celek').then(function (v) {
+        var jeSiroke = v.uroven !== 'uzke';
         var res = v.res;
         if (!res || !res.ok) { msg.textContent = (res && res.error && res.error.message) || 'Uložení se nepovedlo.'; msg.className = 'hl-msg err'; return; }
-        if (!v.jeSiroke && (k.min_price || k.max_area || k.max_perm2)) {
-          msg.textContent = 'Hlídání uloženo, ale cena od / výměra do / cena za m² se zatím neuložily — databáze je ještě neumí.';
+        /* CO SE NEPROPSALO, TO SE VYJMENUJE — všechno, ne jen první
+           věc. Dvě větve s „else if" tu jednu zprávu spolkly: kdo
+           ustoupil až na nejstarší podobu a zadal přitom i širší meze
+           i „jen celé pozemky", dozvěděl se jen o mezích a o druhé
+           volbě vůbec nic. Člověk má vědět, co mu v databázi doopravdy
+           leží, ne polovinu. */
+        var nepropsano = [];
+        if (!jeSiroke && (k.min_price || k.max_area || k.max_perm2)) nepropsano.push('cena od / výměra do / cena za m²');
+        if (v.uroven !== 'celek' && k.jen_celek) nepropsano.push('volba „jen celé pozemky"');
+        if (nepropsano.length) {
+          msg.textContent = 'Hlídání uloženo, ale ' + nepropsano.join(' ani ')
+            + ' se zatím neuložily — databáze je ještě neumí.';
           msg.className = 'hl-msg err';
         }
         var newId = res.data;
         // hned označíme aktuální pozemky jako „viděné" → nové se počítají až od teď
-        var ulozene = v.jeSiroke ? k : { okres: k.okres, druh: k.druh, ptype: k.ptype,
-          max_price: k.max_price, min_area: k.min_area, features: k.features };
+        /* „VIDĚNÉ" SE POČÍTAJÍ PŘESNĚ Z TOHO, CO SE ULOŽILO.
+           Kdyby se tu vzalo celé zadání i po ústupu, síto by bylo
+           přísnější než to, kterým hlídání pak porovnává — a co síto
+           odfiltruje navíc, se neoznačí za viděné a druhý den přijde
+           jako „nové". U „jen celých pozemků" je to 530 nabídek
+           z 2 018, tedy čtvrtina dat jako jedno upozornění. */
+        var ulozene = PKHlidani.kriteriaUlozena(k, v.uroven);
         var keys = DATA.filter(function (d) { return matches(ulozene, d); }).map(keyOf);
         A.rpc('mark_search_seen', { p_id: newId, p_keys: keys }, true).then(function () { afterSave(); }, function () { afterSave(); });
       });

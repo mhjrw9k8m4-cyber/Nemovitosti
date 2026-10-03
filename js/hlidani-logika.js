@@ -241,6 +241,15 @@
       if (zm == null) return false;
       if (zm > s.max_perm2) return false;
     }
+    /* JEN CELÉ POZEMKY. Mapa ten filtr umí odjakživa (js/main.js, okCelek),
+       hlídání ne — a to je vidět na číslech: z 2 018 nabídek je 530
+       spoluvlastnických podílů, tedy 26 %, a 71 z nich je menší než
+       desetina (zlomky jako 9/792 nebo 1/71). Kdo si uložil okres,
+       dostával tedy upozornění, z nichž čtvrtina byla na ideální podíl
+       na poli — pro většinu lidí bezcenný, a ještě vypadá jako trhák,
+       protože v ceně je zlomek, ale výměra celé parcely.
+       Prázdná hodnota znamená „neřeším", tedy přesně dosavadní chování. */
+    if (s.jen_celek && d.podil) return false;
     if (s.okres && !mistoSedi(s.okres, d)) return false;
     if (s.features && s.features.length) {
       var f = d.features || [];
@@ -401,8 +410,47 @@
     return Object.keys(nove).length;
   }
 
+  /* CO SE Z HLEDÁNÍ OPRAVDU ULOŽILO.
+   *
+   * Hlídání se ukládá na tři stupně: když databáze novější sloupce ještě
+   * nemá, web ustoupí k té podobě, kterou umí, a člověku řekne, co se
+   * nepropsalo. Jenže hned po uložení se ještě označují dnešní nabídky
+   * za „viděné", aby nepřišly jako nové — a ta množina se MUSÍ počítat
+   * ze stejných kritérií, jaká v databázi doopravdy leží.
+   *
+   * Když se spletou, chyba je tichá a nepříjemná: síto na „viděné" je
+   * přísnější než to, kterým hlídání pak porovnává, takže všechno, co
+   * odfiltruje navíc, se druhý den ozve jako nové. U „jen celých
+   * pozemků" je to 530 nabídek z 2 018 — čtvrtina dat v jednom
+   * upozornění, hned po uložení prvního hlídání.
+   *
+   * Proto to rozhodnutí nestojí ve stránce, ale tady, kde se dá zkoušet:
+   * scripts/test-hlidani.mjs. */
+  var SLOUPCE_STUPNU = {
+    // nejnovejsi podoba — vsechno
+    celek: null,
+    // bez „jen cele pozemky" (supabase/saved-searches-celek.sql nespusten)
+    siroke: ['jen_celek'],
+    // nejstarsi podoba (ani saved-searches-vice.sql nespusten)
+    uzke: ['jen_celek', 'min_price', 'max_area', 'max_perm2']
+  };
+  function kriteriaUlozena(k, uroven) {
+    if (!k) return k;
+    var pryc = SLOUPCE_STUPNU[uroven];
+    if (pryc === undefined) throw new Error('neznámý stupeň uložení: ' + uroven);
+    if (pryc === null) return k;
+    var out = {};
+    for (var kl in k) {
+      if (!Object.prototype.hasOwnProperty.call(k, kl)) continue;
+      if (pryc.indexOf(kl) >= 0) continue;
+      out[kl] = k[kl];
+    }
+    return out;
+  }
+
   return {
     tyzPozemek: tyzPozemek, normd: normd, keyOf: keyOf, matches: matches,
+           kriteriaUlozena: kriteriaUlozena, STUPNE_ULOZENI: SLOUPCE_STUPNU,
            mistoSedi: mistoSedi, druhSedi: druhSedi,
            klicShody: klicShody, bezDuplicit: bezDuplicit,
            noveProHledani: noveProHledani, novychProHledani: novychProHledani, kliceProHledani: kliceProHledani,

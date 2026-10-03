@@ -596,6 +596,39 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
     H.matches({ max_perm2: 30 }, P({ price: 100000, area: 4000 })), true);
 }
 
+/* --- JEN CELÉ POZEMKY ----------------------------------------------
+ * Čtvrtina nabídek (530 z 2 018) je spoluvlastnický podíl: kupující
+ * dostane zlomek parcely a nesmí si na ní sám nic postavit bez souhlasu
+ * ostatních. Mapa umí podíly skrýt odjakživa, hlídání ne — komu přišlo
+ * upozornění na „stavební pozemek do milionu", tomu chodily i podíly,
+ * které si nikdy nekoupí. Tenhle filtr to srovnává.
+ */
+{
+  const celek = P({ price: 500000, area: 800 });
+  const podil = P({ price: 500000, area: 800, podil: true, zlomek: '1/4' });
+
+  // Předpoklad: bez filtru projde obojí. Jinak by se níž neměřilo nic.
+  je('jen celé', 'bez filtru projde celý pozemek', H.matches({}, celek), true);
+  je('jen celé', 'bez filtru projde i podíl', H.matches({}, podil), true);
+
+  je('jen celé', 's filtrem projde celý pozemek', H.matches({ jen_celek: true }, celek), true);
+  je('jen celé', 's filtrem podíl neprojde', H.matches({ jen_celek: true }, podil), false);
+  /* Neplatné zadání podílu (podil bez zlomku) je pořád podíl — filtr
+     se nesmí nechat zmást tím, že velikost zlomku neznáme. */
+  je('jen celé', 'podíl bez zlomku taky neprojde',
+    H.matches({ jen_celek: true }, P({ price: 500000, area: 800, podil: true })), false);
+  // jen_celek: false se musí chovat jako vypnutý filtr, ne jako zapnutý.
+  je('jen celé', 'vypnutý filtr podíl pustí', H.matches({ jen_celek: false }, podil), true);
+
+  /* A že na tom filtru v živých datech opravdu něco visí: kdyby podíly
+     z dat zmizely, kontrola výš by prošla i bez jediného řádku logiky. */
+  const data = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8'));
+  const vse = data.opportunities || [];
+  const podily = vse.filter((d) => d && d.podil).length;
+  je('jen celé', 'v datech jsou podíly, které má co skrývat', podily > 100, true);
+  je('jen celé', 'a zároveň to není všechno (filtr by nepustil nic)', podily < vse.length / 2, true);
+}
+
 /* --- NABÍZENÉ DRUHY MUSÍ POKRÝT VŠECHNO, CO JE V DATECH -------------
  * Výběr druhů v hlidani.html stál na ručním seznamu devíti hodnot.
  * Data ale chodí z divočiny: na „pozemek" (52 nabídek), „zemědělský
@@ -633,6 +666,77 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   /* Že se u voleb opravdu píšou počty, se ověřuje v prohlížeči
      (scripts/test-hlidani-prohlizec.mjs) — tady by se to dalo jen
      hádat z podoby zdroje. */
+}
+
+/* --- CO SE Z HLEDÁNÍ OPRAVDU ULOŽILO -------------------------------
+ * Hned po uložení se dnešní nabídky označí za „viděné". Ta množina se
+ * musí počítat z kritérií, která v databázi doopravdy leží — ne z toho,
+ * co člověk zadal. Když se to splete, síto na „viděné" je PŘÍSNĚJŠÍ než
+ * to, kterým hlídání pak porovnává, a co odfiltruje navíc, přijde druhý
+ * den jako nové. Chyba je přitom úplně tichá.
+ */
+{
+  /* Na kontrolu sloupců zadání se všemi poli — ať je co zahazovat. */
+  const K0 = { okres: 'Kolín', druh: 'orná', ptype: 'sale', max_price: 500000,
+    min_area: 100, features: ['Přístupová cesta'],
+    min_price: 1000, max_area: 9000, max_perm2: 50, jen_celek: true };
+  /* Na měření nad ostrými daty schválně ŠIROKÁ: kdyby na nich nesedělo
+     nic, kontroly níž by prošly na prázdné množině a neznamenaly by nic. */
+  const K = { ptype: 'sale', min_area: 100, min_price: 1000,
+    max_area: 1000000, max_perm2: 1000, jen_celek: true };
+
+  je('uložené stupně', 'nejnovější stupeň nechá zadání být',
+    H.kriteriaUlozena(K0, 'celek'), K0);
+  je('uložené stupně', 'prostřední zahodí jen „jen celé pozemky"',
+    Object.keys(H.kriteriaUlozena(K0, 'siroke')).sort(),
+    Object.keys(K0).filter((x) => x !== 'jen_celek').sort());
+  je('uložené stupně', 'a širší meze v něm zůstanou',
+    H.kriteriaUlozena(K0, 'siroke').max_perm2, 50);
+  je('uložené stupně', 'nejstarší zahodí i širší meze',
+    Object.keys(H.kriteriaUlozena(K0, 'uzke')).sort(),
+    ['druh', 'features', 'max_price', 'min_area', 'okres', 'ptype']);
+  // Neznámý stupeň se nesmí tiše tvářit jako „všechno uloženo".
+  let vybuchlo = false;
+  try { H.kriteriaUlozena(K0, 'neznamy'); } catch (e) { vybuchlo = true; }
+  je('uložené stupně', 'neznámý stupeň se ohlásí chybou, netváří se jako celek', vybuchlo, true);
+  // Zadání se nesmí měnit pod rukama.
+  je('uložené stupně', 'původní zadání zůstane nedotčené', K0.jen_celek, true);
+
+  /* A TEĎ TA VLASTNOST, O KTEROU JDE, na ostrých datech: co uložené
+     hledání najde, to musí být i mezi „viděnými". Jinak to přijde jako
+     nové. Platí to pro každý stupeň ústupu. */
+  const vse = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const sada = (kr) => new Set(vse.filter((d) => H.matches(kr, d)).map(H.keyOf));
+  /* Samo „pokryje všechno, co zadání" by byla planá kontrola: zahodit
+     kritérium množinu vždycky rozšíří, takže spadnout nemůže. Měří se
+     proto to, co spadnout MŮŽE — že se po ústupu do viděných doopravdy
+     přidá to, co zahozené kritérium drželo venku. U „jen celých
+     pozemků" jsou to spoluvlastnické podíly. */
+  const dleZadani = sada(K);
+  for (const uroven of ['celek', 'siroke', 'uzke']) {
+    const videne = sada(H.kriteriaUlozena(K, uroven));
+    const chybi = [...dleZadani].filter((x) => !videne.has(x));
+    je('uložené stupně', `na stupni „${uroven}" nechybí nic z toho, co najde zadání`, chybi.length, 0);
+    if (uroven === 'celek') {
+      je('uložené stupně', 'na nejnovějším stupni je to přesně zadání', videne.size, dleZadani.size);
+    } else {
+      je('uložené stupně', `na stupni „${uroven}" se viděných OPRAVDU přidá`,
+        videne.size > dleZadani.size, true);
+    }
+  }
+  /* A konkrétně: po ústupu musí být mezi viděnými i spoluvlastnický
+     podíl — jinak přijde jako nový. */
+  const poUstupu = sada(H.kriteriaUlozena(K, 'siroke'));
+  const podilKlice = vse.filter((d) => d && d.podil && H.matches(H.kriteriaUlozena(K, 'siroke'), d)).map(H.keyOf);
+  je('uložené stupně', 'po ústupu je mezi viděnými i podíl (jinak se ozve jako nový)',
+    podilKlice.length > 0 && podilKlice.every((x) => poUstupu.has(x)), true);
+  /* Předpoklad, bez kterého by kontrola výš měřila prázdno: ty stupně se
+     na ostrých datech opravdu liší. */
+  const nCelek = sada(H.kriteriaUlozena(K, 'celek')).size;
+  const nUzke = sada(H.kriteriaUlozena(K, 'uzke')).size;
+  je('uložené stupně', 'nejpřísnější stupeň na datech na něco sedí (jinak by se měřilo prázdno)',
+    nCelek > 50, true);
+  je('uložené stupně', 'a ústup množinu opravdu rozšíří', nUzke > nCelek, true);
 }
 
 console.log(`\nHlídání lokality: ${bezi} testů`);

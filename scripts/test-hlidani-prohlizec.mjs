@@ -186,6 +186,57 @@ pravda('stránka hlídání se otevřela přihlášenému člověku', true);
   }
 }
 
+/* --- JEN CELÉ POZEMKY -----------------------------------------------
+ * Čtvrtina nabídek je spoluvlastnický podíl: kupující dostane zlomek
+ * parcely a sám na ní nic nepostaví. Mapa je umí skrýt odjakživa,
+ * hlídání ne — komu přišlo upozornění na „stavební pozemek do milionu",
+ * chodily i podíly, které si nikdy nekoupí.
+ *
+ * Tady se zkouší to, co ze zdroje poznat nejde: že zaškrtávátko ve
+ * formuláři opravdu je, že se u něj píše, kolika nabídek se to týká,
+ * a že se na něj dá na telefonu trefit prstem.
+ */
+{
+  const z = await p.evaluate(() => {
+    const vst = document.getElementById('ns-celek');
+    if (!vst) return null;
+    const radek = vst.closest('label') || vst.parentElement;
+    const r = radek.getBoundingClientRect();
+    /* Počet nabídek nestojí v samotném zaškrtávátku, ale v nápovědě
+       hned pod ním — čte se proto obojí. */
+    const pozn = radek.nextElementSibling;
+    return { jeTam: true, zaskrtnuto: vst.checked, typ: vst.type,
+      vyska: Math.round(r.height), sirka: Math.round(r.width),
+      text: (radek.textContent || '').replace(/\s+/g, ' ').trim(),
+      pozn: ((pozn && pozn.classList.contains('hl-napoveda') ? pozn.textContent : '') || '')
+        .replace(/\s+/g, ' ').trim() };
+  });
+  pravda('ve formuláři je volba „jen celé pozemky"', !!z,
+    z ? 'nalezena' : 'zaškrtávátko #ns-celek nenalezeno');
+  if (z) {
+    pravda('a je to zaškrtávátko, ne něco jiného', z.typ === 'checkbox', `typ „${z.typ}"`);
+    /* Nezaškrtnuté: zapnout filtr za člověka by mu schovalo čtvrtinu
+       nabídek, aniž by o to řekl. */
+    pravda('a ve výchozím stavu je vypnutá', z.zaskrtnuto === false, `zaškrtnuto ${z.zaskrtnuto}`);
+    /* Terč je celý řádek. 44 px je mez, kterou projekt drží i jinde
+       (scripts/test-dotyk.mjs) — do 20px čtverečku se prstem netrefí. */
+    pravda('a trefit se na ni dá i prstem (terč aspoň 44 px)',
+      z.vyska >= 44, `terč ${z.sirka}×${z.vyska} px`);
+    /* A hlavně: musí u ní stát, KOLIKA nabídek se to týká. Bez čísla je
+       to volba naslepo — člověk netuší, jestli odfiltruje tři, nebo pět
+       stovek. Číslo nesmí být nula, jinak by se měřilo na prázdnu. */
+    pravda('a je u ní vysvětleno, co podíl znamená',
+      /podíl/i.test(z.pozn), `nápověda: „${z.pozn}"`);
+    const cislo = /(\d[\d\s ]*)/.exec(z.pozn);
+    pravda('a stojí u ní, kolika nabídek se to týká',
+      !!cislo, `nápověda: „${z.pozn}"`);
+    if (cislo) {
+      const n = Number(cislo[1].replace(/[\s ]/g, ''));
+      pravda('a to číslo není nula (jinak by se měřilo prázdno)', n > 0, `uvedeno ${n}`);
+    }
+  }
+}
+
 const pred = await p.$$eval('.hl-iname', (e) => e.map((x) => x.textContent));
 await p.fill('#ns-okres', 'Kolín');
 await p.click('#ns-save');

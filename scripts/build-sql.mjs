@@ -23,6 +23,7 @@ const PORADI = [
   ['messaging-fix.sql', 'oprava chatu a úklid'],
   ['saved-searches.sql', 'uložená hledání'],
   ['saved-searches-vice.sql', 'hlídání: min. cena, max. výměra a cena za m²'],
+  ['saved-searches-celek.sql', 'hlídání: jen celé pozemky (bez spoluvlastnických podílů)'],
   ['watch-alerts.sql', 'hlídání lokality (double opt-in) + tabulka alert_seen'],
   ['listings-autopublish.sql', 'automatické zveřejnění inzerátu + token na úpravy'],
   ['listings-auth.sql', 'inzeráty pod účtem (user_id), my_listings, public_listings'],

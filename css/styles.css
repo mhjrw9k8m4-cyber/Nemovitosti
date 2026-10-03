@@ -4685,6 +4685,16 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 /* Změna ceny proti minulému běhu. Zlevnění zeleně jako ostatní dobré
    zprávy, zdražení v barvě upozornění — ne poplašně červeně, protože to
    není vada nabídky, jen informace. */
+/* Zaškrtávátko v hlídání. Terč je celý řádek, ne jen čtvereček —
+   na telefonu se do 16px čtverečku prstem netrefíte. */
+.hl-zaskrt{display:flex; align-items:flex-start; gap:10px; min-height:44px; padding:6px 0; cursor:pointer;}
+.hl-zaskrt input{width:20px; height:20px; margin:2px 0 0; flex:none; accent-color:var(--copper);}
+.hl-zaskrt span{font-size:15px; color:var(--text-ondark); line-height:1.4;}
+.hl-zaskrt i{font-style:normal; color:var(--text-ondark-mute);}
+.pz-zmena{margin-top:6px; font-size:14px; font-weight:700;}
+.pz-zmena span{display:block; font-weight:400; font-size:13px; color:var(--text-ondark-mute); margin-top:2px;}
+.pz-zmena.dolu{color:var(--c-ok-ink);}
+.pz-zmena.nahoru{color:var(--c-drazba-ink);}
 .opp-zlevneno{color:var(--c-ok-ink); border:1px solid currentColor;}
 .opp-zdrazeno{color:var(--c-drazba-ink); border:1px solid currentColor;}
 .por-pozn{font-size:13px; line-height:1.55; color:var(--text-ondark-mute);
