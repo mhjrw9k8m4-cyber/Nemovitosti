@@ -1253,6 +1253,49 @@ if (DRAZBA) {
     nesvoje.length === 0, `${nesvoje.length}: ` + nesvoje.slice(0, 4).join('; '));
 }
 
+/* --- PANORAMA Z ULICE --------------------------------------------------
+ * Letecký snímek ukáže tvar a okolí shora, ale ne to, co o pozemku
+ * rozhodne při prohlídce: jestli k němu vede zpevněná cesta a co stojí
+ * hned vedle. Odkaz na nejbližší panorama ušetří cestu přes půl
+ * republiky — ale musí vést na SPRÁVNÉ MÍSTO, jinak je horší než žádný:
+ * člověk by si prohlédl cizí ulici a myslel si, že viděl svůj pozemek.
+ */
+{
+  const vz = najdi(() => true);
+  if (!vz) throw new Error('nenašel se pozemek s polohou a cenou');
+  const { url, d } = vz;
+  const ctxP = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
+  const pz = await ctxP.newPage();
+  await pz.goto(`${BASE}/${url}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
+  await pz.waitForTimeout(2200);
+  const v = await pz.evaluate(() => {
+    const a = [...document.querySelectorAll('a.pz-btn')]
+      .find((x) => /panorama/i.test(x.textContent || ''));
+    if (!a) return null;
+    return { href: a.getAttribute('href'), popis: a.getAttribute('title') || '',
+      cil: a.getAttribute('target'), rel: a.getAttribute('rel') || '' };
+  }).catch(() => null);
+  pravda('na stránce pozemku je odkaz na nejbližší panorama', !!v,
+    'tlačítko s panoramatem nenalezeno');
+  if (v) {
+    pravda('vede na Mapy.cz a žádá panorama', /mapy\.cz/.test(v.href) && /[?&]pano=1\b/.test(v.href), v.href);
+    /* Souřadnice musí sedět na TENHLE pozemek — jinak si člověk
+       prohlédne cizí ulici v domnění, že vidí svoji parcelu. */
+    const x = Number((/[?&]x=([-\d.]+)/.exec(v.href) || [])[1]);
+    const y = Number((/[?&]y=([-\d.]+)/.exec(v.href) || [])[1]);
+    pravda('a na souřadnice toho pozemku, ne jiného',
+      Math.abs(x - d.lng) < 1e-6 && Math.abs(y - d.lat) < 1e-6,
+      `odkaz x=${x}, y=${y}; pozemek lng=${d.lng}, lat=${d.lat}`);
+    /* Mimo obce panorama často není. Tlačítko proto nesmí slibovat
+       pohled na parcelu — a popisek to musí říct. */
+    pravda('popisek přiznává, že panorama nemusí být nasnímané',
+      /nemus|nasnímán/i.test(v.popis), `title: „${v.popis}"`);
+    pravda('otevírá se v novém okně a bezpečně', v.cil === '_blank' && /noopener/.test(v.rel),
+      `target=${v.cil} rel=${v.rel}`);
+  }
+  await ctxP.close();
+}
+
 await prohlizec.close();
 console.log('\nMapa v detailu pozemku');
 console.log(zpravy.join('\n'));

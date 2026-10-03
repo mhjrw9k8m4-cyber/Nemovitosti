@@ -249,6 +249,14 @@
     if (!m) return '';
     return (+m[3]) + '. ' + MESICE[(+m[2]) - 1] + ' ' + m[1];
   }
+  function pzZmenaCenyHtml(d) {
+    var Z = window.PKZlevneni;
+    var z = Z ? Z.zmena(d) : null;
+    if (!z) return '';
+    return '<div class="pz-zmena' + (z.dolu ? ' dolu' : ' nahoru') + '">'
+      + esc(Z.text(z)) + ' <span>' + esc(Z.popis(z, fmt)) + '</span></div>';
+  }
+
   function pzDrazbaHtml(d, days) {
     if (d.type !== 'drazba' && d.type !== 'exekuce') return '';
     var kdy = datumText(d.extra);
@@ -874,6 +882,16 @@
     // „Zobrazit na mapě" vede na SKUTEČNOU mapu (Mapy.cz letecká) na daném místě,
     // ne na naši tečkovanou mapu. Přesný obrys pozemku je pak přes „Katastr".
     var mapHref = 'https://mapy.cz/letecka?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat;
+    /* PANORAMA Z ULICE. Letecký snímek ukáže tvar a okolí shora, ale ne
+       to, co o pozemku rozhodne při prohlídce: jestli k němu vede
+       zpevněná cesta, co stojí hned vedle a jak to tam vypadá z očí.
+       Jeden odkaz navíc ušetří cestu přes půl republiky.
+       Panorama ale NENÍ všude — mimo zastavěné území bývá nejbližší
+       snímek stovky metrů daleko. Proto to tlačítko neslibuje pohled na
+       parcelu, ale „nejbližší panorama"; když v okolí žádné není,
+       Mapy.cz ukážou mapu a člověk se dozví, že snímek neexistuje —
+       což je taky odpověď. */
+    var panoHref = 'https://mapy.cz/zakladni?x=' + d.lng + '&y=' + d.lat + '&z=18&pano=1&source=coor&id=' + d.lng + ',' + d.lat;
     var src = sourceLink(d);
     var favOn = isFav(d);
 
@@ -918,6 +936,12 @@
         '<div class="pz-pl">' + priceLabel + '</div>' +
         '<div class="pz-price"><span class="pv">' + fmt(d.price) + ' Kč</span>' +
           (perM2 ? '<span class="pm"' + (perM2Pozn ? ' title="' + esc(perM2Pozn) + '"' : '') + '>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
+        /* ZMĚNA CENY PATŘÍ POD CENU, NE MEZI ODZNAKY. Na kartě je na ni
+           jeden řádek, tady je místo říct celou věc: o kolik, z čeho
+           a kdy. Je to jediný údaj na stránce, který si člověk nemůže
+           ověřit jinde — minulou cenu vidí jen od nás — tak ať je aspoň
+           úplný. Větu skládá js/zlevneni.js, stejně jako pro kartu. */
+        pzZmenaCenyHtml(d) +
       '</div>' +
 
       /* Po termínu se blok jen vynechával, takže stránka vypadala jako
@@ -1019,9 +1043,11 @@
               return '<a class="pz-btn' + (d._lid ? ' ghost' : ' primary') + '" href="' + odkaz + '">'
                 + tr + esc(d.contact) + '</a>';
             })() +
-            '<a class="pz-btn ghost" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>'
+            '<a class="pz-btn ghost" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>' +
+            '<a class="pz-btn ghost" href="' + panoHref + '" target="_blank" rel="noopener" title="Otevře Mapy.cz na nejbližším panoramatu z ulice. Mimo obce nemusí být nasnímané.">' + MAP_SVG + 'Nejbližší panorama' + VEN + '</a>'
           : '<a class="pz-btn primary" href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.label) + VEN + '</a>' +
-            '<a class="pz-btn ghost" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>') +
+            '<a class="pz-btn ghost" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>' +
+            '<a class="pz-btn ghost" href="' + panoHref + '" target="_blank" rel="noopener" title="Otevře Mapy.cz na nejbližším panoramatu z ulice. Mimo obce nemusí být nasnímané.">' + MAP_SVG + 'Nejbližší panorama' + VEN + '</a>') +
       '</div>' +
       /* ZPOŽDĚNÍ DAT. Tohle na stránce chybělo úplně: člověk viděl cenu
          a termín, ale ne to, že se dívá na KOPII pořízenou někdy dřív.
