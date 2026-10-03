@@ -193,6 +193,14 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
         return { je: a ? (String(a.className).split(' ')[0] || a.tagName) : null,
           sirka: a ? Math.round(a.getBoundingClientRect().width) : null,
           preskokSirka: sl ? Math.round(sl.getBoundingClientRect().width) : null,
+          /* ROZHODUJE STYL, NE ŠÍŘKA. getComputedStyle(…).outlineWidth
+             vrací u nepoužitého rámečku výchozí „medium", a kolik to je,
+             si každá verze prohlížeče počítá po svém: Chromium 141
+             spočítá 0px, novější 3px. Test tím měsíce měřil verzi
+             prohlížeče, ne web — v CI padal pokaždé, lokálně nikdy.
+             Jestli je rámeček VIDĚT, říká outline-style: „none" znamená,
+             že se nekreslí, ať je šířka jakákoli. */
+          mainObrysStyl: m ? getComputedStyle(m).outlineStyle : null,
           mainObrys: m ? getComputedStyle(m).outlineWidth : null };
       });
       pravda(`${W}px ${s}: Enter taky vrátí na začátek`, yK2 === 0, `skončilo na ${yK2}`);
@@ -203,7 +211,8 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
       /* Kurzor nesmí jít na <main>: má id="obsah" a globální pravidlo
          `:focus-visible{outline:2px}` by obtáhlo rámečkem celý obsah. */
       pravda(`${W}px ${s}: obsah stránky nedostal rámeček přes celou šířku`,
-        kurzorK.mainObrys === '0px' || kurzorK.mainObrys === null, `obrys <main> ${kurzorK.mainObrys}`);
+        kurzorK.mainObrysStyl === 'none' || kurzorK.mainObrysStyl === null,
+        `outline-style <main> „${kurzorK.mainObrysStyl}", šířka ${kurzorK.mainObrys}`);
     }
     await p.close();
   }
