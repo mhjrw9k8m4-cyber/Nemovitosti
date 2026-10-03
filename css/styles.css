@@ -2299,11 +2299,18 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
      200 px a každý odznak si bral vlastní řádek — karta byla sloupec
      štítků. Užší náhled ještě pozná, kde pozemek je, a text se vejde. */
   .opp-media{width:116px; flex:none; aspect-ratio:auto; min-height:0; align-self:stretch;}
-  .opp-badge{top:7px; left:7px; font-size:12px; padding:2px 8px 2px 6px; gap:4px;}
+  /* Odznak dolů doleva. Nahoře vpravo sedí záložka (36 px, dotykové
+     minimum) a pod ní křížek, takže na odznak nahoře zbývá 63 px —
+     míň než nejkratší popisek. Dřív se tam odznak natáhl pod záložku
+     a ta ho překryla: z „Na prodej" zbylo na telefonu „Na prode",
+     což vypadalo jako ořez, ne jako překryv. Dole je náhled volný
+     (počet fotek je na mobilu schovaný) a stín je tam nejtmavší,
+     takže bílé písmo drží kontrast. */
+  .opp-badge{top:auto; bottom:7px; left:7px; font-size:12px; padding:2px 8px 2px 6px; gap:4px;}
   .opp-badge::before{width:7px; height:7px;}
-  /* Do 116px náhledu se vejde odznak nejvýš 109 px široký. „Obecní záměr"
-     (109) a „Přímo od majitele" (109 po oříznutí) na tu mez narazily
-     a text se ořízl bez výpustky uprostřed slova. Zkratky měří 97 a 94 px. */
+  /* Vedle toho: do 116px náhledu se vejde odznak nejvýš 102 px široký.
+     „Obecní záměr" (109) a „Přímo od majitele" na tu mez narazily
+     a text se ořízl bez výpustky uprostřed slova. Zkratky měří 97 a 94. */
   .opp-badge .ob-dlouhy{display:none;}
   .opp-badge .ob-kratky{display:inline;}
   .opp-count{display:none;}            /* počet fotek se do úzkého náhledu nevejde */

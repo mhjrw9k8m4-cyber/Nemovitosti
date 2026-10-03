@@ -1274,16 +1274,25 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
 }
 
 /* --- 6f) ODZNAK KATEGORIE SE OŘÍZL O HRANU NÁHLEDU -------------------
- * Na mobilu je náhled karty 116 px široký a má overflow:hidden. Odznak
- * v něm sedí 7 px od levé hrany, takže se vejde nejvýš 109 px široký.
- * „Obecní záměr" a „Přímo od majitele" na tu mez narazily a text se
- * ořízl uprostřed slova — bez výpustky, takže to v telefonu vypadalo
- * jako vada vykreslení. Nic přitom nepřetékalo z obrazovky a karta
- * měla správnou výšku, takže to neodhalila žádná jiná kontrola.
+ * Na mobilu je náhled karty 116 px široký a má overflow:hidden.
+ * Sešly se tam dvě vady naráz a obě vypadaly stejně — jako uříznuté
+ * písmeno:
  *
- * Proto odznak nese popisek dvakrát: plný pro široký náhled, zkratku
- * pro úzký. Tahle kontrola hlídá obojí — že se zkratka na mobilu
- * vejde a že plný popisek zůstal na desktopu.
+ * a) ODZNAK ZAJÍŽDĚL POD ZÁLOŽKU. Vpravo nahoře sedí srdíčko (36 px,
+ *    dotykové minimum) a pod ním křížek. Na odznak vlevo nahoře tím
+ *    zbývalo 63 px — míň než nejkratší popisek. Odznak se pod záložku
+ *    natáhl a ta ho překreslila, takže z „Na prodej" zbylo „Na prode".
+ *    Měření šířky to neodhalí: odznak má správný rozměr, jen ho něco
+ *    překrývá. Proto se tu neměří hrana, ale PRŮNIK s ovládacími
+ *    prvky uvnitř náhledu.
+ *
+ * b) DLOUHÝ POPISEK SE OŘÍZL O HRANU. „Obecní záměr" a „Přímo od
+ *    majitele" přesáhly i volnou šířku a text se ořízl uprostřed
+ *    slova, bez výpustky. Odznak proto nese popisek dvakrát: plný
+ *    pro široký náhled, zkratku pro úzký.
+ *
+ * Ani jedna vada nic nerozbila — nic nepřeteklo z obrazovky, karta
+ * měla správnou výšku — takže je neodhalila žádná jiná kontrola.
  */
 {
   // Popisky a zkratky se čtou z js/main.js, aby kontrola nehlídala
@@ -1322,6 +1331,8 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
       await po.waitForSelector('.opp-item .opp-badge', { timeout: 20000 }).catch(() => {});
       await po.waitForTimeout(500);
       const v = await po.evaluate(() => {
+        const prekryv = (a, b) => !(a.right <= b.left || b.right <= a.left ||
+          a.bottom <= b.top || b.bottom <= a.top);
         const out = [];
         document.querySelectorAll('.opp-item').forEach((li) => {
           const bg = li.querySelector('.opp-badge'), md = li.querySelector('.opp-media');
@@ -1337,6 +1348,14 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
             dl.style.display = puvod[0]; kr.style.display = puvod[1];
             return { sir, pres };
           };
+          // Co všechno v náhledu leží nad snímkem a může odznak překreslit.
+          const ovladani = [];
+          md.querySelectorAll('.opp-fav, .opp-skryt, .opp-count').forEach((e) => {
+            const st = getComputedStyle(e);
+            if (st.display === 'none' || st.visibility === 'hidden') return;
+            const re = e.getBoundingClientRect();
+            if (re.width && re.height) ovladani.push({ jm: e.className.split(' ')[0], r: re });
+          });
           out.push({
             druh: (bg.className.match(/opp-badge\s+(\w+)/) || [])[1] || '?',
             videt: bg.innerText.trim(),
@@ -1346,6 +1365,8 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
             presah: Math.round((rb.right - rm.right) * 10) / 10,
             vyska: Math.round(rb.height),
             nahled: Math.round(rm.width),
+            ovladani: ovladani.length,
+            koliduje: ovladani.filter((o) => prekryv(rb, o.r)).map((o) => o.jm),
             plny: dl && kr ? zmer('dl') : null,
           });
         });
@@ -1363,6 +1384,13 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
       const orez = v.filter((o) => o.presah > -1);
       pravda(`${sirka} px: žádný odznak nesahá až na hranu náhledu`, orez.length === 0,
         orez.map((o) => `${o.druh} „${o.videt}" přesah ${o.presah} px v náhledu ${o.nahled} px`).join('; '));
+      /* Pojistka: kdyby v náhledu žádné ovládání nebylo, kontrola pod tím
+         by prošla naprázdno — a přesně to je vada, kterou má chytat. */
+      pravda(`${sirka} px: v náhledu je ovládání, které může odznak překrýt`,
+        v.every((o) => o.ovladani > 0), 'žádné srdíčko ani křížek — není s čím kolidovat');
+      const kolize = v.filter((o) => o.koliduje.length);
+      pravda(`${sirka} px: a žádný odznak pod ně nezajíždí`, kolize.length === 0,
+        kolize.map((o) => `${o.druh} „${o.videt}" leží pod ${o.koliduje.join(' a ')}`).join('; '));
       const zalomene = v.filter((o) => o.vyska > 30);
       pravda(`${sirka} px: a žádný se nezalomil na dva řádky`, zalomene.length === 0,
         zalomene.map((o) => `${o.druh} „${o.videt}" vysoký ${o.vyska} px`).join('; '));
