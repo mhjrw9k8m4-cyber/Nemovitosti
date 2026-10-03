@@ -99,20 +99,37 @@ if (mapaJe) {
     await new Promise((r) => setTimeout(r, 900));
     m.setZoom(14, { animate: false });
     await new Promise((r) => setTimeout(r, 1500));
-    let maleMnohouhelniky = 0, velke = 0, tecky = 0;
+    let maleMnohouhelniky = 0, velke = 0, tecky = 0, masky = 0;
     m.eachLayer((l) => {
       if (l.getLatLng) { tecky++; return; }
       if (!L || !(l instanceof L.Polygon) || !l.getLatLngs) return;
       const ll = l.getLatLngs();
+      /* MASKA OKOLÍ není obrys pozemku. Je to jeden mnohoúhelník, jehož první
+         prstenec je obdélník celého světa a další prstence jsou díry ve tvaru
+         krajů — ztmaví všechno mimo Česko. Ten obdélník má čtyři body, takže
+         by se sem počítal jako „vymyšlený obrys", a přesně to se taky stalo.
+         Vyloučení je úzké, aby se za masku nemohl schovat skutečný vymyšlený
+         obrys: musí nést třídu pk-maska, mít aspoň dva prstence (tedy díry)
+         a nesmí reagovat na dotyk. Pozemek nakreslený do mapy by nesplnil
+         ani jedno z toho. */
+      const op = l.options || {};
+      const jeMaska = op.className === 'pk-maska'
+        && op.interactive === false
+        && Array.isArray(ll) && Array.isArray(ll[0]) && ll.length >= 2;
+      if (jeMaska) { masky++; return; }
       const n = (Array.isArray(ll[0]) ? ll[0] : ll).length;
       if (n <= 8) maleMnohouhelniky++; else velke++;
     });
-    return { zoom: m.getZoom(), maleMnohouhelniky, velke, tecky };
+    return { zoom: m.getZoom(), maleMnohouhelniky, velke, tecky, masky };
   });
   pravda('na mapě jsou vidět pozemky (jinak zkouška níž nic neměří)', v.tecky > 0,
     'značek pozemků ' + v.tecky + ' — bez nich by se tvary nekreslily tak jako tak');
   pravda('a mapa se opravdu přiblížila (tvary se kreslily od dvanáctky výš)', v.zoom >= 12,
     'přiblížení zůstalo na ' + v.zoom + ' — tam se nekreslily ani dřív a zkouška by mlčela');
+  /* Bez tohohle řádku by se vyloučení masky dalo splnit i tím, že by se
+     maska přestala kreslit — a zkouška níž by pak mlčela o ničem. */
+  pravda('maska okolí se na mapě kreslí (jinak vyloučení níž nic nevylučuje)',
+    v.masky === 1, 'masek nalezeno ' + v.masky + ', čekám právě jednu');
   pravda('po přiblížení se nekreslí žádný vymyšlený obrys pozemku',
     v.maleMnohouhelniky === 0,
     'mnohoúhelníků s nejvýš osmi body je ' + v.maleMnohouhelniky
