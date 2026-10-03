@@ -916,7 +916,7 @@
     /* Nový dotaz = nový výpis. Kdyby zůstalo rozbalení z předchozího
        hledání, vysypalo by se na člověka devadesát šest karet něčeho
        jiného, než si právě napsal. */
-    listNavic = 0;
+    stranka = 0;   // jiný výběr = zpátky na první stranu
   }
   var favOnly = false;
   var ukazSkryte = false;   // „Zobrazit skryté" — dočasně, neukládá se
@@ -3766,8 +3766,24 @@
      Teď se dá dočítat po dvanácti. Strop je, protože karta nese náhled
      i odznaky: devadesát šest karet je ještě plynulých, dva tisíce ne —
      a kdo prošel osm obrazovek, hledá stejně spíš filtrem než rolováním. */
-  var DAVKA = 12, STROP_SEZNAMU = 96;
-  var listNavic = 0;
+  /* STRÁNKY, NE DONEKONEČNA PRODLUŽOVANÝ SEZNAM.
+   *
+   * Dřív se začínalo na osmi a tlačítko přidávalo dalších dvanáct na
+   * konec. Mělo to dvě vady. Ta zjevná: člověk jel pořád dolů, klepl,
+   * jel dál a nikdy nebyl na konci. A ta horší, které si nikdo nevšiml —
+   * seznam měl STROP 96 POLOŽEK a pak už jen oznámil, že zbytek je na
+   * mapě. Při 1 994 nabídkách se jich tedy 1 898 v seznamu nedalo
+   * zobrazit vůbec.
+   *
+   * Stránkami se obojí řeší naráz: konec stránky je konec, klepnutí
+   * vrátí na začátek výpisu a projít jdou všechny nabídky.
+   *
+   * POZOR, LIST_LIMIT ZŮSTÁVÁ OSM. Neřídí stránku, ale střídání
+   * doporučených na první obrazovce (viz stridacka výš) — to je jiný
+   * systém a velikost stránky s ním nemá co dělat. */
+  var NA_STRANKU = 24;
+  var stranka = 0;
+  var posledniOtiskFiltru = null;
   // Ukazatel u „Cena, výměra a řazení" — kolik doplňkových filtrů je aktivních,
   // ať uživatel pozná, že něco filtruje, i když je panel sbalený.
   var msfBadge = document.getElementById('msf-badge');
@@ -3837,8 +3853,28 @@
         .sort(function (a, b) { return demand(b) - demand(a); }).slice(0, 1)
         .forEach(function (d) { hotIds[d._id] = true; });
     }
-    var kolik = Math.min(LIST_LIMIT + listNavic, STROP_SEZNAMU);
-    var top = vis.slice(0, kolik);
+    /* ZMĚNA FILTRU VRACÍ NA PRVNÍ STRANU.
+     *
+     * Nulovat to v každé obsluze zvlášť nejde uhlídat — filtrů je přes
+     * dvacet a na ten jediný, co se zapomene, se přijde až tím, že
+     * člověk po zapnutí „Dražba" skončí na páté straně z pěti. Místo
+     * toho se porovná OTISK FILTRŮ: skládá ho js/odkaz.js, tedy totéž,
+     * co se píše do adresy, jen bez výřezu mapy (ten se mění při každém
+     * posunu a stranu měnit nemá). Kdo přidá nový filtr do toho seznamu,
+     * dostane tohle zadarmo. */
+    if (window.PKOdkaz) {
+      var _st = stavProAdresu(); _st.poloha = null;
+      var otisk = PKOdkaz.zapis(_st);
+      if (otisk !== posledniOtiskFiltru) { posledniOtiskFiltru = otisk; stranka = 0; }
+    }
+    /* Když se filtrem seznam zkrátí, nesmí člověk zůstat na stránce,
+       která už neexistuje — vypadalo by to jako „nic nenalezeno". */
+    var stran = Math.max(1, Math.ceil(matched / NA_STRANKU));
+    if (stranka >= stran) stranka = stran - 1;
+    if (stranka < 0) stranka = 0;
+    var odKusu = stranka * NA_STRANKU;
+    var top = vis.slice(odKusu, odKusu + NA_STRANKU);
+    var kolik = odKusu + top.length;
     var karticky = [];
 
     top.forEach(function (d, rank) {
@@ -4194,34 +4230,37 @@
       });
       var eb = listEl.querySelector('#reset-filtry');
       if (eb) eb.addEventListener('click', resetFilters);
-    } else if (matched > kolik) {
-      var zbyva = matched - kolik;
-      /* Nejdřív nabídnout DOČÍST, teprve pod tím mapu. Dřív tu byla jen
-         mapa a byl to jediný způsob, jak se dostat k devětadevadesáti
-         procentům nabídky. */
-      if (kolik < STROP_SEZNAMU) {
-        var dalsi = document.createElement('li');
-        dalsi.className = 'opp-dalsi';
-        var kus = Math.min(DAVKA, zbyva, STROP_SEZNAMU - kolik);
-        dalsi.innerHTML = '<button type="button" id="opp-dalsi-btn">Zobrazit dalších '
-          + kus + ' <span>z ' + fmt(zbyva) + '</span></button>';
-        listEl.appendChild(dalsi);
-        var db = dalsi.querySelector('#opp-dalsi-btn');
-        if (db) db.addEventListener('click', function () {
-          listNavic += DAVKA;
+    } else if (stran > 1) {
+      /* Patka se stranami. „Strana 3 z 84" je tu schválně i slovy: samo
+         „‹ ›" neřekne, kde člověk je ani kolik toho ještě je. */
+      var pat = document.createElement('li');
+      pat.className = 'opp-strany';
+      var jePrvni = stranka === 0, jePosledni = stranka >= stran - 1;
+      pat.innerHTML =
+        '<button type="button" class="ops-btn" data-krok="-1"' + (jePrvni ? ' disabled' : '') + '>'
+          + '<span aria-hidden="true">‹</span> Předchozí</button>'
+        + '<span class="ops-kde">Strana <b>' + fmt(stranka + 1) + '</b> z ' + fmt(stran) + '</span>'
+        + '<button type="button" class="ops-btn" data-krok="1"' + (jePosledni ? ' disabled' : '') + '>'
+          + 'Další <span aria-hidden="true">›</span></button>';
+      listEl.appendChild(pat);
+      pat.querySelectorAll('.ops-btn').forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (b.disabled) return;
+          stranka += Number(b.getAttribute('data-krok'));
           renderList();
-          /* Ohlásit čtečkám, kolik je teď vidět — jinak se po klepnutí
-             „nic nestalo". A fokus zůstane u tlačítka, pokud ještě je. */
-          var nove = document.getElementById('opp-dalsi-btn');
-          if (nove) nove.focus();
-          else { var h = document.querySelector('#opp-list .opp-item:last-of-type'); if (h) h.focus(); }
+          /* NAHORU NA ZAČÁTEK VÝPISU, ne na vrch stránky: další strana
+             má začít tam, kde ta minulá začínala. Bez toho by člověk
+             přistál doprostřed nové strany. */
+          scrollNaVypis();
+          /* A kurzor na první kartu — kdo jede klávesnicí nebo čtečkou,
+             musí vědět, že se obsah vyměnil. */
+          var prvni = document.querySelector('#opp-list .opp-item');
+          if (prvni) { try { prvni.focus(); } catch (e) {} }
         });
-      }
+      });
       var more = document.createElement('li');
       more.className = 'opp-more';
-      more.textContent = kolik < STROP_SEZNAMU
-        ? '…nebo si zbytek projděte na mapě'
-        : '+ ' + fmt(zbyva) + ' dalších příležitostí najdete na mapě';
+      more.textContent = '…nebo si celou nabídku projděte na mapě';
       listEl.appendChild(more);
     }
     prepocitejCipy();   // čísla u kategorií musí sedět s tím, co je vidět
@@ -4234,7 +4273,7 @@
 
   function resetFilters() {
     activeType = 'all'; druhVybrane = []; maxPrice = 0; minArea = 0; urgentOnly = false; nastavHledani(''); favOnly = false;
-    listNavic = 0;
+    stranka = 0;   // jiný výběr = zpátky na první stranu
     if (searchEl) searchEl.value = '';
 
     minPrice = 0; maxArea = 0;

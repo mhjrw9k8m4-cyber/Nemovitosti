@@ -1747,6 +1747,25 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* „Zobrazit dalších 12" — nejdřív se dá seznam dočíst, až pak se odchází
    na mapu. Tlačítko je na celou šířku, protože je to to hlavní, co se
    pod výpisem dělá; na dotyk má 44 px (stejné pravidlo jako test-dotyk). */
+/* PATKA SE STRANAMI. Nahradila tlačítko „Zobrazit dalších 12", které
+   seznam jen prodlužovalo — a hlavně mělo strop 96 položek, takže
+   k většině nabídek se v seznamu nedalo dostat vůbec.
+   Okraj i zaoblení jsou stejné jako u toho tlačítka: ten recept už
+   prošel kontrolou okrajů (aspoň 3:1 proti výplni) i předlohou. */
+.opp-strany{list-style:none; display:flex; align-items:center; justify-content:space-between;
+  gap:10px; padding:14px 6px 2px; flex-wrap:wrap;}
+.ops-btn{min-height:44px; padding:0 16px; border-radius:var(--r-sm); cursor:pointer;
+  border:1px solid var(--text-ondark-mute); background:transparent; color:var(--text-ondark);
+  font:inherit; font-size:14px; font-weight:600; letter-spacing:.01em;
+  display:inline-flex; align-items:center; gap:6px;}
+.ops-btn:hover:not(:disabled){border-color:var(--copper-bright); color:var(--copper-bright);}
+/* Vypnuté tlačítko se nesmí tvářit jako klikatelné — ale ani zmizet:
+   když je vidět, že „Předchozí" je zašedlé, člověk pozná, že je na
+   začátku, místo aby hledal, kam se tlačítko podělo. */
+.ops-btn:disabled{opacity:.42; cursor:default;}
+.ops-kde{font-size:14px; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums; white-space:nowrap;}
+.ops-kde b{color:var(--text-ondark);}
+@media (max-width:380px){ .opp-strany{gap:6px;} .ops-btn{padding:0 12px;} }
 .opp-dalsi{list-style:none; padding:12px 6px 2px;}
 /* Okraj musí být proti výplni vidět aspoň 3:1 (hlídá test-okraje) —
    s jemnou linkou vyšlo 1,9:1 a tlačítko na bílé kartě splývalo.

@@ -362,6 +362,9 @@ jobs:
       - name: Sdílený odkaz na stav mapy (celá cesta)
         run: node scripts/test-odkaz-prohlizec.mjs
 
+      - name: Stránkování seznamu nabídek
+        run: node scripts/test-strany.mjs
+
       - name: Přidání vlastního pozemku (celá cesta)
         run: node scripts/test-pridat.mjs
 
