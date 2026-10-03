@@ -15,6 +15,44 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
+  /* KOLIK METRŮ ZA TY PENÍZE OPRAVDU DOSTANU.
+   *
+   * U spoluvlastnického podílu stojí v inzerátu výměra CELÉ parcely, ale
+   * cena jen za zlomek. Kdo dělí cenu celou výměrou, dostane číslo, které
+   * neplatí pro nikoho — v Praze tím vyšel podíl 1/13 lesa jako 75 Kč/m²,
+   * tedy nejlevnější nabídka ze všech, zatímco kupující platí 969 Kč/m²
+   * a je to ta nejdražší. Když velikost podílu neznáme, nevrací se NIC:
+   * raději žádné číslo než číslo, o kterém víme, že neplatí.
+   *
+   * TOHLE JE DRUHÁ KOPIE TÉHOŽ VÝPOČTU, co má js/ceny.js — a je to
+   * schválně. Cenový model se načítá na 1 998 stránkách, tenhle soubor na
+   * 2 111; na těch zbývajících (okresy, kraje, rádci) by hlídání jinak
+   * cenu za metr počítat neumělo. Přidat cenový model (40 kB) kvůli deseti
+   * řádkům všude, nebo vyrobit třetí soubor, který by se musel načítat
+   * ještě dřív než oba, je horší než tohle: ŽE SE TY DVĚ KOPIE NEROZEŠLY,
+   * HLÍDÁ scripts/test-hlidani.mjs — porovnává je na všech nabídkách
+   * z data/opportunities.json a na hraničních případech (podíl bez
+   * zlomku, rozbitý zlomek, nulová výměra). */
+  function zlomekPodilu(d) {
+    if (!d) return null;
+    if (!d.podil) return 1;
+    var m = /^\s*(\d+)\s*\/\s*(\d+)\s*$/.exec(String(d.zlomek || ''));
+    if (!m) return null;
+    var citatel = +m[1], jmenovatel = +m[2];
+    if (!(citatel > 0) || !(jmenovatel > 0) || citatel > jmenovatel) return null;
+    return citatel / jmenovatel;
+  }
+  function vymeraVCene(d) {
+    if (!d || typeof d.area !== 'number' || !(d.area > 0)) return null;
+    var z = zlomekPodilu(d);
+    return z == null ? null : d.area * z;
+  }
+  /** Cena za metr, který kupující opravdu dostane. null = nevíme. */
+  function zaMetr(d) {
+    var v = vymeraVCene(d);
+    return (v > 0 && d && d.price > 0) ? d.price / v : null;
+  }
+
   function normd(s) {
     return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
   }
@@ -192,10 +230,16 @@
     if (s.max_area && !(d.area > 0 && d.area <= s.max_area)) return false;
     /* Cena za metr je to, podle čeho se pozemky srovnávají nejčastěji —
        sto tisíc je u zahrady moc a u pole na deseti hektarech málo.
-       Počítá se stejně jako všude jinde na webu: cena děleno výměra. */
+       Počítá se z výměry, KTERÁ KUPUJÍCÍMU PŘIPADNE, viz zaMetr() výš:
+       dělit celou výměrou znamenalo pouštět do uloženého hledání „do 20
+       Kč/m²" právě ty nejklamavější nabídky — spoluvlastnické podíly,
+       které po přepočtu stojí desetinásobek. Mapa i stránka pozemku to
+       tak počítají odjakživa (js/ceny.js), hlídání ne. Komu přijde
+       upozornění, tomu má přijít na to, co si uložil. */
     if (s.max_perm2) {
-      if (!(d.price > 0 && d.area > 0)) return false;
-      if (d.price / d.area > s.max_perm2) return false;
+      var zm = zaMetr(d);
+      if (zm == null) return false;
+      if (zm > s.max_perm2) return false;
     }
     if (s.okres && !mistoSedi(s.okres, d)) return false;
     if (s.features && s.features.length) {
@@ -367,5 +411,8 @@
               vypsaný seznam s data/okresy.json. Bez toho by se rozešel
               potichu — chování se totiž změní jen u jména, které je
               předponou jiného okresu, tedy dnes jedině u Prahy. */
+           /* Ven kvůli zkoušce, která tenhle výpočet porovnává
+              s js/ceny.js — viz komentář u zaMetr(). */
+           zaMetr: zaMetr, vymeraVCene: vymeraVCene, zlomekPodilu: zlomekPodilu,
            OKRESY: OKRESY };
 });

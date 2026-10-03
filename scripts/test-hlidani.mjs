@@ -548,6 +548,54 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
     /type:\s*'majitel',\s*place:/.test(hlid), false);
 }
 
+/* --- CENA ZA METR: DVĚ KOPIE TÉHOŽ VÝPOČTU -------------------------
+   Hlídání potřebuje cenu za metr přepočtenou na spoluvlastnický podíl —
+   bez toho pouštělo do uloženého hledání „do 20 Kč/m²" právě ty
+   nejklamavější nabídky. Cenový model js/ceny.js se ale načítá na
+   1 998 stránkách, kdežto hlídání na 2 111, takže ten výpočet je
+   v obou souborech. Tahle kontrola je drží u sebe: porovnává je na
+   VŠECH nabídkách a na hraničních případech. Kdyby se rozešly, začne
+   web o téže nabídce tvrdit dvě různá čísla. */
+{
+  new Function(readFileSync(path.join(ROOT, 'js', 'ceny.js'), 'utf8'))();
+  const CENY = globalThis.PK_CENY;
+  je('cena za metr', 'cenový model se dá spustit i tady', !!(CENY && CENY.zaMetr), true);
+  const D = JSON.parse(readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8')).opportunities;
+  let podilu = 0, porovnano = 0;
+  const rozdily = [];
+  for (const d of D) {
+    const a = H.zaMetr(d), b = CENY.zaMetr(d);
+    if (d.podil) podilu++;
+    porovnano++;
+    if (a === b || (a != null && b != null && Math.abs(a - b) < 1e-9)) continue;
+    rozdily.push(`${d.place}: hlídání ${a}, model ${b}`);
+  }
+  je('cena za metr', 'porovnalo se dost nabídek', porovnano > 1000, true);
+  je('cena za metr', 'a jsou mezi nimi spoluvlastnické podíly', podilu > 300, true);
+  je('cena za metr', 'hlídání počítá stejně jako cenový model (' + porovnano + ' nabídek)',
+    rozdily.slice(0, 3), []);
+  const pasti = [
+    ['podíl bez zlomku', { price: 100000, area: 1000, podil: true }],
+    ['rozbitý zlomek', { price: 100000, area: 1000, podil: true, zlomek: '5/0' }],
+    ['zlomek větší než celek', { price: 100000, area: 1000, podil: true, zlomek: '7/3' }],
+    ['nulová výměra', { price: 100000, area: 0 }],
+    ['bez ceny', { price: 0, area: 1000 }],
+    ['celý pozemek', { price: 100000, area: 1000 }],
+    ['podíl 1/4', { price: 100000, area: 1000, podil: true, zlomek: '1/4' }],
+  ];
+  je('cena za metr', 'stejně i u hraničních případů',
+    pasti.filter(([, d]) => H.zaMetr(d) !== CENY.zaMetr(d)).map(([t]) => t), []);
+  je('cena za metr', 'podíl 1/4 zdraží metr na čtyřnásobek (jinak by se neměřilo nic)',
+    Math.round(H.zaMetr(pasti[6][1])), 400);
+  /* A že se ta mez v hlídání opravdu počítá z podílu: nabídka za
+     100 Kč/m² po přepočtu nesmí projít filtrem „do 30 Kč/m²". */
+  const podilDrahy = P({ price: 100000, area: 4000, podil: true, zlomek: '1/4' });
+  je('cena za metr', 'podíl se do „do 30 Kč/m²" nedostane (surově by vyšel 25)',
+    H.matches({ max_perm2: 30 }, podilDrahy), false);
+  je('cena za metr', 'a celý pozemek za 25 Kč/m² ano',
+    H.matches({ max_perm2: 30 }, P({ price: 100000, area: 4000 })), true);
+}
+
 console.log(`\nHlídání lokality: ${bezi} testů`);
 if (spadlo) {
   console.log(vysledky.join('\n'));
