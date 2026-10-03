@@ -2532,7 +2532,18 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   border-radius:var(--r-pill); min-height:44px; display:inline-flex; align-items:center;
   transition:color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
 .uc-taby a:hover{color:var(--text-ondark); background:var(--ink-soft);}
-.uc-taby a[aria-current="page"]{color:#fff; background:var(--plocha-znacka); border-color:transparent;}
+/* ZAPNUTÁ ZÁLOŽKA NESMÍ NÉST SYTOU ZNAČKOVOU PLOCHU.
+   Napoprvé jsem jí dal plnou zelenou — a shodilo to hlídač hierarchie
+   (scripts/test-hierarchie.mjs): na hlidani.html smí sytou značkovou
+   plochu nést nejvýš dva prvky a byly by tři (tlačítko v hlavičce,
+   „Přihlásit se" a tahle záložka). V komentáři u toho pravidla stojí,
+   že se v takovém případě má rozhodnout, co je opravdu hlavní, ne
+   zvednout to číslo — a hlavní tu rozhodně není záložka.
+   Použitý je proto vzor, který web má pro zapnutý stav DRUHÉ úrovně
+   (.hl-chip.on): tlumená plocha, značkový okraj a text. Rozeznatelné
+   na první pohled, ale hlavní akci nepřebíjí. */
+.uc-taby a[aria-current="page"]{color:var(--copper); background:rgba(31,81,56,0.12);
+  border-color:var(--copper-bright); font-weight:700;}
 .uc-taby a:focus-visible{outline:2px solid var(--copper); outline-offset:-2px; border-radius:var(--r-xs);}
 @media (max-width:600px){ .uc-taby a{padding:10px 13px; font-size:14px;} }
 /* MÁM INZERÁT JINDE. Stojí NAD formulářem, ne v rozbalovátku dole:
