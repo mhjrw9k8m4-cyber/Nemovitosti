@@ -684,9 +684,36 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   await ctxZ.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
     contentType: 'application/json', body: JSON.stringify(DATA) }));
   const pz = await ctxZ.newPage();
+  /* NEJDŘÍV SE MUSÍ DOLOŽIT, ŽE STRÁNKA BĚŽÍ NA PODSTRČENÝCH DATECH.
+   *
+   * Když se data/opportunities.json nestihne načíst, js/main.js sáhne po
+   * záložní hrstce nabídek, kterou má v sobě — a ta žádnou historii ceny
+   * nemá. Test pak hlásil „na kartách chybí Zlevněno", což je pravda,
+   * ale o funkci to neříká nic: měřil záložní data. Přesně tak to v sadě
+   * pod zátěží jednou spadlo (8 karet = záložní data), zatímco samotný
+   * test prošel.
+   *
+   * Proto se čeká na ODPOVĚĎ s daty a pak na to, až karet bude VÍC, než
+   * kolik má záloha. Teprve potom má smysl se ptát na odznak — a když
+   * se to nepovede, řekne se rovnou tohle, ne něco jiného. */
+  const odpoved = pz.waitForResponse(
+    (r) => /data\/opportunities\.json/.test(r.url()), { timeout: 30000 }).catch(() => null);
   await pz.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
-  await pz.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
-  await pz.waitForTimeout(1500);
+  const dataDojela = !!(await odpoved);
+  /* Počet karet ve výpisu je stránkovaný (je jich míň než záloha), takže
+     se nedá použít. Hlavička ale píše, kolik nabídek je na mapě CELKEM —
+     a to záloha od podstrčených dat odliší spolehlivě. */
+  const ZALOHA = 14;   // kolik nabídek má záložní seznam v js/main.js
+  const naMape = await pz.waitForFunction((mez) => {
+    const e = document.querySelector('#map-count');
+    if (!e) return 0;
+    const m = /(\d[\d\s\u00a0]*)\s*na mapě/.exec(e.textContent || '');
+    const n = m ? Number(m[1].replace(/[\s\u00a0]/g, '')) : 0;
+    return n > mez ? n : false;
+  }, ZALOHA, { timeout: 25000 }).then((h) => h.jsonValue()).catch(() => 0);
+  pravda('úvodní stránka běží na podstrčených datech, ne na záložních',
+    dataDojela && naMape > ZALOHA,
+    `odpověď s daty ${dataDojela ? 'přišla' : 'NEPŘIŠLA'}, na mapě ${naMape} nabídek (záloha jich má ${ZALOHA})`);
   const v = await pz.evaluate(() => ({
     modul: typeof window.PKZlevneni,
     karet: document.querySelectorAll('.opp-item').length,
