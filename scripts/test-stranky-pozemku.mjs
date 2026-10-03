@@ -474,6 +474,52 @@ console.log('\nStránky jednotlivých pozemků');
     spatne.length === 0, spatne.slice(0, 4).join('; '));
 }
 
+/* --- POPIS STRÁNKY A JEJÍ TĚLO MUSÍ ŘÍKAT TOTÉŽ --------------------
+   Titulek, popis pro vyhledávač i statický výpis se skládají v Node,
+   tělo stránky dopočítá prohlížeč. U spoluvlastnického podílu se ty dvě
+   strany rozešly: v popisu stálo „28 000 Kč (6 Kč/m²)" (cena dělená
+   celou výměrou) a ve stránce 33 Kč/m² (cena dělená podílem). To menší
+   číslo šlo do vyhledávače a do náhledu v chatu.
+   Kontrola jde přes VŠECHNY stránky a porovnává je s týmž modulem,
+   jakým počítá prohlížeč. */
+{
+  const fsy = await import('node:fs');
+  new Function(fsy.readFileSync(path.join(ROOT, 'js', 'ceny.js'), 'utf8'))();
+  const CENY = globalThis.PK_CENY;
+  pravda('cenový model se dá spustit i v Node', !!(CENY && CENY.zaMetr));
+  const { mapaSouboru } = await import('./generate-parcel-pages.mjs');
+  let kontrolovano = 0, podilu = 0, bezCisla = 0;
+  const spatne = [];
+  for (const { d, soubor } of mapaSouboru(ukazane).values()) {
+    const cesta = path.join(ROOT, soubor);
+    if (!fs.existsSync(cesta)) continue;
+    const html = fs.readFileSync(cesta, 'utf8');
+    const md = /name="description" content="([^"]*)"/.exec(html);
+    if (!md) { spatne.push(`${soubor}: chybí popis`); continue; }
+    kontrolovano++;
+    const ceka = (d.price && d.area) ? CENY.zaMetr(d) : null;
+    const mc = /\((\d[\d\s\u00a0]*) Kč\/m²\)/.exec(md[1].replace(/\u00a0/g, ' '));
+    const psano = mc ? Number(mc[1].replace(/[\s\u00a0]/g, '')) : null;
+    if (ceka == null || !isFinite(ceka)) {
+      if (psano != null) spatne.push(`${soubor}: cena za metr se spočítat nedá, a v popisu je ${psano}`);
+      else bezCisla++;
+    } else if (psano !== Math.round(ceka)) {
+      spatne.push(`${soubor}: v popisu ${psano}, modul dává ${Math.round(ceka)}`);
+    }
+    if (d.podil) {
+      podilu++;
+      if (html.indexOf('spoluvlastnický podíl') < 0) {
+        spatne.push(`${soubor}: je to podíl, ale ve statickém výpisu o tom nic není`);
+      }
+    }
+  }
+  pravda('popisy stránek se zkontrolovaly (jinak by kontrola mlčela)',
+    kontrolovano > 1500, `${kontrolovano} stránek`);
+  pravda('a jsou mezi nimi spoluvlastnické podíly', podilu > 300, `${podilu} podílů`);
+  pravda('cena za metr v popisu stránky je tatáž, jakou spočítá prohlížeč',
+    spatne.length === 0, spatne.slice(0, 4).join('; '));
+}
+
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb`);
 if (chyb) console.log('::error::Stránky pozemků: kontroly neprošly.');

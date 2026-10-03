@@ -160,7 +160,15 @@ export function textyPro(d) {
   const vym = d.area ? `${fmt(d.area)} m²` : '';
   const titul = slozTitulek(druh, vym, d.place, d.okres);
   const cena = d.price ? `${fmt(d.price)} Kč` : 'cena neuvedena';
-  const zaM2 = d.price && d.area ? ` (${fmt(d.price / d.area)} Kč/m²)` : '';
+  /* CENA ZA METR Z VÝMĚRY, KTERÁ KUPUJÍCÍMU PŘIPADNE. Titulek, popis pro
+     vyhledávač i náhled v chatu se skládaly dělením celé výměry —
+     zatímco tělo téže stránky (js/pozemek.js přes js/ceny.js) počítalo
+     s podílem. U podílu 1/6 v Benešově stálo v popisu „28 000 Kč
+     (6 Kč/m²)" a ve stránce 33 Kč/m²: jedna stránka, dvě různá čísla,
+     a to menší z nich šlo do vyhledávače. U podílu s neznámým zlomkem
+     se číslo neuvádí vůbec — stejně jako ho neuvádí stránka. */
+  const zaM2Hodnota = (d.price && d.area) ? CENY.zaMetr(d) : null;
+  const zaM2 = (zaM2Hodnota == null || !isFinite(zaM2Hodnota)) ? '' : ` (${fmt(zaM2Hodnota)} Kč/m²)`;
   const popis = slozPopis(d, cena, zaM2, vym);
   return { titul, popis, cena, zaM2, vym, druh };
 }
@@ -247,6 +255,12 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     + `<dt>Obec</dt><dd>${esc(d.place)}</dd>`
     + `<dt>Okres</dt><dd><a href="pozemky-okres-${slug(d.okres)}.html">${esc(d.okres)}</a></dd>`
     + (d.parcel && d.parcel !== '—' ? `<dt>Parcela</dt><dd>č. ${esc(d.parcel)}</dd>` : '')
+    /* PODÍL PATŘÍ I DO STATICKÉHO VÝPISU. Tělo stránky ho hlásí
+       (js/pozemek.js: „inzerát mluví o spoluvlastnickém podílu"), ale
+       v tom, co vidí vyhledávač a kdo nemá JavaScript, nestálo nic —
+       a zrovna u podílu je to ta nejdůležitější věta: cena je za zlomek,
+       výměra za celou parcelu. */
+    + (d.podil ? `<dt>Vlastnictví</dt><dd>spoluvlastnický podíl${d.zlomek ? ' ' + esc(d.zlomek) : ''} — cena je za podíl, výměra za celou parcelu</dd>` : '')
     + (d.extra ? `<dt>Stav / zdroj</dt><dd>${esc(lidskeDatum(d.extra))}</dd>` : '')
     /* JAK DALEKO JE TO DO MĚSTA. U pozemku na vsi je to první otázka
        a z názvu obce se nepozná — „Lovečkovice" samy o sobě neřeknou
@@ -297,6 +311,16 @@ const PKH = createRequire(import.meta.url)(path.join(ROOT, 'js', 'hlidani-logika
    (js/okruh.js) — a tabulku okresních měst v něm hlídá proti
    data/okresy.json scripts/test-okruh.mjs. */
 const OKRUH = createRequire(import.meta.url)(path.join(ROOT, 'js', 'okruh.js'));
+/* Cenový model — tentýž, jaký počítá mapa i samotná stránka pozemku.
+   Bez něj by titulek a popis stránky tvrdily jinou cenu za metr než její
+   vlastní tělo; viz textyPro(). js/ceny.js je skript pro prohlížeč, ne
+   modul, takže se spustí a zapíše se do globálu. */
+new Function(fs.readFileSync(path.join(ROOT, 'js', 'ceny.js'), 'utf8'))();
+const CENY = globalThis.PK_CENY;
+if (!CENY || !CENY.zaMetr) {
+  console.error('js/ceny.js se nenačetl — cena za metr by se počítala jinak než na stránce.');
+  process.exit(1);
+}
 
 /* Termíny — tentýž modul jako mapa i stránka pozemku. Po termínu se
    dražba ve výpisu neukazuje, takže se nesmí počítat ani do slibu
