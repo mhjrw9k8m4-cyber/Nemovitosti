@@ -246,6 +246,34 @@
      * by odhad zhoršil — tam se drží původní okno. Rozhoduje tedy měření na
      * datech, ne dojem: hranice je R² ≥ 0,15. Ověřeno protiproti všem druhům,
      * žádný si nepohoršil (scripts/test-ceny.mjs). */
+    /* ZKOUŠENO A ZAMÍTNUTO: FITOVAT SKLON BEZ SPOLUVLASTNICKÝCH PODÍLŮ.
+     *
+     * Výš stojí, proč podíly zůstávají ve srovnávací hladině. Fit sklonu
+     * je ale JINÉ rozhodnutí nad týmiž daty a svedlo by se měřit zvlášť:
+     * u podílu je cena za zlomek, ale výměra celá, takže velký podíl
+     * vypadá jako levný velký pozemek — a přesně to sklon zkresluje.
+     *
+     * Na datech to vyšlo nečekaně ostře. U lesního pozemku je podílů 84
+     * z 222 a sklon se bez nich změní z −0,147 (R² 0,03) na −0,380
+     * (R² 0,16) — les by tedy mez prolezl a přepočet na výměru dostal.
+     * U stavebních se nestane nic (−0,612 proti −0,600), podílů je tam
+     * 10 z 262.
+     *
+     * JENŽE ODHAD SE TÍM NEZLEPŠÍ. Měřeno křížově na desetinách (model
+     * se vždy postaví bez té desetiny, kterou odhaduje) na 1 131 celých
+     * pozemcích na prodej:
+     *
+     *     dnes                     medián chyby 30,9 %
+     *     bez podílů ve fitu       medián chyby 30,6 %
+     *     párově: lepší u 134, HORŠÍ u 154, medián rozdílu 0,00 p.b.
+     *     les: medián 34,7 % → 31,5 %, ale párově 44 lepších : 51 horších
+     *     stavební: 41,9 % → 42,4 %
+     *
+     * U lesa se tedy zlepší medián, ale znaménkový test jde proti
+     * (p ≈ 0,54, čistá náhoda) — stejný důvod, kterým tu níž padlo
+     * snížení MIN_VZOREK na 3. Že měřidlo rozdíl pozná, je ověřeno
+     * sabotáží: vnutit sklon −1,2 všem druhům zhorší chybu na 63,9 %
+     * a 754 nabídek proti 272. Zůstává to tedy, jak to je. */
     var R2_MEZ = 0.15;
     var SKLON = {};
     (function () {
@@ -305,6 +333,33 @@
      * Co opravdu předpovídá spolehlivost, není počet srovnání, ale jejich
      * rozptyl — viz MEZ_ROZPTYL výš. */
     var MIN_VZOREK = 8;
+    /* ZKOUŠENO A ZAMÍTNUTO: MÍCHAT OKRESNÍ MEDIÁN S KRAJSKÝM.
+     *
+     * Odhad bere PRVNÍ úroveň, která má aspoň MIN_VZOREK srovnání —
+     * okres s osmi nabídkami se tedy použije celý, kdežto se sedmi
+     * propadne na kraj. Taková mez vypadá hrubě a učebnicová oprava je
+     * míchat obě úrovně podle velikosti vzorku (w = n/(n+K)).
+     *
+     * Měřeno stejně jako výš, křížově na desetinách, v obou podobách
+     * (vážený průměr i geometrický):
+     *
+     *     dnes      30,9 %
+     *     K = 4     32,4 %     K = 16    33,3 %
+     *     K = 8     32,8 %     K = 64    34,0 %
+     *
+     * Čím víc kraje, tím hůř — a monotónně, takže to není náhoda.
+     * Kontrola K = 0 (tedy čistý okres) vyšla na číslo totožné s dneškem,
+     * čímž je ověřeno, že se opravdu měřila ta změna a ne nic.
+     *
+     * Vysvětlení je prosté: ceny půdy jsou extrémně místní. Krajský
+     * medián je složený z jiné směsi obcí, takže i osm okresních srovnání
+     * nese víc informace než sto krajských. Učebnice tu prohrála.
+     *
+     * (Stejně padla i úroveň OBCE před okresem: při prahu 8 by na ni
+     * dosáhlo jen 71 nabídek ze 2 018 a všech sedm skupin je zemědělských
+     * — tedy tam, kde je odhad už nejpřesnější. U stavebních, kde je
+     * chyba 42 %, ani jedna. Navíc `place` je u Bezrealitky často název
+     * ulice, ne obce.) */
     /* Obvyklá cena za m² pro tenhle pozemek — MÍSTNÍ, ne celostátní.
      * Nejdřív okres, pak kraj, pak celá ČR, a jako poslední záchrana
      * medián stejného typu a druhu.
