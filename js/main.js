@@ -910,6 +910,10 @@
        dotazu, ne k celé návštěvě. */
     mistoFiltr = null;
     ukazPodobne = false;
+    /* Nový dotaz = nový výpis. Kdyby zůstalo rozbalení z předchozího
+       hledání, vysypalo by se na člověka devadesát šest karet něčeho
+       jiného, než si právě napsal. */
+    listNavic = 0;
   }
   var favOnly = false;
   var ukazSkryte = false;   // „Zobrazit skryté" — dočasně, neukládá se
@@ -3708,6 +3712,17 @@
   }
 
   var LIST_LIMIT = 8;
+  /* KOLIK NABÍDEK SI ČLOVĚK MŮŽE DOČÍST. Výpis ukazoval osm z dvou tisíc
+     a pod nimi řádku „+ 1 988 dalších příležitostí najdete na mapě" —
+     klepnutí na ni přepnulo na mapu. Na telefonu je přitom výchozí pohled
+     SEZNAM, takže kdo si chtěl nabídky jen pročítat, dostal osm a dál
+     musel do mapy, kde se čte špatně (tečky se překrývají, viz zámek
+     krajů). Web tím působil prázdně, i když má 2 019 nabídek.
+     Teď se dá dočítat po dvanácti. Strop je, protože karta nese náhled
+     i odznaky: devadesát šest karet je ještě plynulých, dva tisíce ne —
+     a kdo prošel osm obrazovek, hledá stejně spíš filtrem než rolováním. */
+  var DAVKA = 12, STROP_SEZNAMU = 96;
+  var listNavic = 0;
   // Ukazatel u „Cena, výměra a řazení" — kolik doplňkových filtrů je aktivních,
   // ať uživatel pozná, že něco filtruje, i když je panel sbalený.
   var msfBadge = document.getElementById('msf-badge');
@@ -3771,7 +3786,8 @@
         .sort(function (a, b) { return demand(b) - demand(a); }).slice(0, 1)
         .forEach(function (d) { hotIds[d._id] = true; });
     }
-    var top = vis.slice(0, LIST_LIMIT);
+    var kolik = Math.min(LIST_LIMIT + listNavic, STROP_SEZNAMU);
+    var top = vis.slice(0, kolik);
     var karticky = [];
 
     top.forEach(function (d, rank) {
@@ -4106,10 +4122,34 @@
       });
       var eb = listEl.querySelector('#reset-filtry');
       if (eb) eb.addEventListener('click', resetFilters);
-    } else if (matched > LIST_LIMIT) {
+    } else if (matched > kolik) {
+      var zbyva = matched - kolik;
+      /* Nejdřív nabídnout DOČÍST, teprve pod tím mapu. Dřív tu byla jen
+         mapa a byl to jediný způsob, jak se dostat k devětadevadesáti
+         procentům nabídky. */
+      if (kolik < STROP_SEZNAMU) {
+        var dalsi = document.createElement('li');
+        dalsi.className = 'opp-dalsi';
+        var kus = Math.min(DAVKA, zbyva, STROP_SEZNAMU - kolik);
+        dalsi.innerHTML = '<button type="button" id="opp-dalsi-btn">Zobrazit dalších '
+          + kus + ' <span>z ' + fmt(zbyva) + '</span></button>';
+        listEl.appendChild(dalsi);
+        var db = dalsi.querySelector('#opp-dalsi-btn');
+        if (db) db.addEventListener('click', function () {
+          listNavic += DAVKA;
+          renderList();
+          /* Ohlásit čtečkám, kolik je teď vidět — jinak se po klepnutí
+             „nic nestalo". A fokus zůstane u tlačítka, pokud ještě je. */
+          var nove = document.getElementById('opp-dalsi-btn');
+          if (nove) nove.focus();
+          else { var h = document.querySelector('#opp-list .opp-item:last-of-type'); if (h) h.focus(); }
+        });
+      }
       var more = document.createElement('li');
       more.className = 'opp-more';
-      more.textContent = '+ ' + (matched - LIST_LIMIT) + ' dalších příležitostí najdete na mapě';
+      more.textContent = kolik < STROP_SEZNAMU
+        ? '…nebo si zbytek projděte na mapě'
+        : '+ ' + fmt(zbyva) + ' dalších příležitostí najdete na mapě';
       listEl.appendChild(more);
     }
     prepocitejCipy();   // čísla u kategorií musí sedět s tím, co je vidět
@@ -4122,6 +4162,7 @@
 
   function resetFilters() {
     activeType = 'all'; druhVybrane = []; maxPrice = 0; minArea = 0; urgentOnly = false; nastavHledani(''); favOnly = false;
+    listNavic = 0;
     if (searchEl) searchEl.value = '';
 
     minPrice = 0; maxArea = 0;

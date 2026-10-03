@@ -82,6 +82,9 @@ jobs:
       - name: Čísla na stránce okresu (podíly, kde je nabídek nejvíc)
         run: node scripts/test-okres-stranka.mjs
 
+      - name: Stránky podle druhu pozemku (les, orná, stavební…)
+        run: node scripts/test-druh-stranka.mjs
+
       - name: Razítka verzí (aby lidem nechodila stará kopie)
         run: node scripts/test-verze.mjs
 

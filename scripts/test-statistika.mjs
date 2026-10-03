@@ -146,7 +146,10 @@ pravda('stránka cen počítá jen z běžných nabídek k prodeji',
     /* „cen-druh" může nést i modifikátor (cen-siroke). Bez toho by řádek
        s varováním z kontroly vypadl a jeho medián by se proti datům
        neověřoval — kontrola by tiše přestala hlídat jeden druh. */
-    /<li class="cen-druh[^"]*"><b>([\d\s\u00a0]+)[\s\u00a0]Kč\/m²<\/b><span class="cen-nazev">([^<]+)<\/span>/g)]
+    /* Název druhu je teď odkaz na přehled toho druhu (pozemky-lesni.html
+       a spol.), takže vzorek musí snést i tu značku uvnitř. Bez toho
+       nenašel nic a kontrola čísel tiše přestala platit. */
+    /<li class="cen-druh[^"]*"><b>([\d\s\u00a0]+)[\s\u00a0]Kč\/m²<\/b><span class="cen-nazev">(?:<a [^>]*>)?([^<]+)(?:<\/a>)?<\/span>/g)]
     .map((m) => ({ med: +String(m[1]).replace(/\s|\u00a0/g, ''), druh: m[2].trim() }));
   pravda('na stránce jsou vypsané mediány podle druhu', dlazdice.length >= 3,
     'našel jsem jen ' + dlazdice.length);
@@ -194,7 +197,9 @@ const cislo = (x) => +String(x).replace(/\s|\u00a0/g, '');
    takže tahle kontrola zároveň hlídá, že si stránka nezavádí vlastní. */
 {
   const mez = (PK_CENY && PK_CENY.MEZ_ROZPTYL) || 2;
-  const RADEK = /<li class="cen-druh( cen-siroke)?"><b>([\d\s]+)[\s\u00a0]Kč\/m²<\/b><span class="cen-nazev">([^<]+)<\/span><span class="cen-detail">obvykle ([\d\s]+)–([\d\s]+)/g;
+  /* Název druhu je odkaz na přehled toho druhu, takže vzorek musí snést
+     i tu značku uvnitř — stejně jako vzorek o kus výš. */
+  const RADEK = /<li class="cen-druh( cen-siroke)?"><b>([\d\s]+)[\s\u00a0]Kč\/m²<\/b><span class="cen-nazev">(?:<a [^>]*>)?([^<]+)(?:<\/a>)?<\/span><span class="cen-detail">obvykle ([\d\s]+)–([\d\s]+)/g;
   const radky = [...stranka.matchAll(RADEK)];
   pravda('řádky s cenami se daly přečíst', radky.length >= 3, `přečteno ${radky.length}`);
   const c = (x) => +String(x).replace(/\s/g, '');
@@ -212,7 +217,7 @@ const cislo = (x) => +String(x).replace(/\s|\u00a0/g, '');
 const nar0 = stranka.match(
   /* Mezery ve vysázeném textu můžou být nezlomitelné (scripts/sazba.mjs),
    tak ať je vzor snese obě — jinak kontrola tiše přestane cokoli najít. */
-  /Zemědělská půda<\/span><span class="cen-detail">obvykle ([\d\s\u00a0]+)–([\d\s\u00a0]+)[\s\u00a0]Kč\/m²[\s\u00a0]·[\s\u00a0]z[\s\u00a0]([\d\s\u00a0]+)[\s\u00a0]nabídek/);
+  /Zemědělská půda(?:<\/a>)?<\/span><span class="cen-detail">obvykle ([\d\s\u00a0]+)–([\d\s\u00a0]+)[\s\u00a0]Kč\/m²[\s\u00a0]·[\s\u00a0]z[\s\u00a0]([\d\s\u00a0]+)[\s\u00a0]nabídek/);
 const nar = nar0 ? [nar0[0], cislo(nar0[1]), cislo(nar0[2]), cislo(nar0[3])] : null;
 pravda('celostátní rozpětí je vypsané', !!nar, 'nenalezeno');
 if (nar) {

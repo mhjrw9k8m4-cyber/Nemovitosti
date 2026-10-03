@@ -440,6 +440,62 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   }
 }
 
+/* --- SEZNAM SE DÁ DOČÍST -------------------------------------------
+ * Výpis ukazoval osm nabídek z dvou tisíc a pod nimi jen odkaz na mapu.
+ * Na telefonu je výchozí pohled seznam, takže kdo si chtěl nabídky
+ * pročítat, dostal osm — a web působil prázdně, i když má 2 019 nabídek.
+ * Zkouší se celá cesta: že tlačítko je, že po klepnutí karet přibude,
+ * že se tím NEZMĚNIL filtr (počet nalezených zůstává) a že to má strop.
+ */
+{
+  await p.goto(`${BASE}/index.html#mapa`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(2600);
+  const stav = () => p.evaluate(() => {
+    const m = /(\d[\d\s\u00a0]*)/.exec(String((document.getElementById('map-count') || {}).textContent)
+      .replace(/\u00a0/g, ' '));
+    return { karet: document.querySelectorAll('#opp-list .opp-item').length,
+      tlacitko: !!document.getElementById('opp-dalsi-btn'),
+      pocet: m ? +m[1].replace(/\s/g, '') : -1 };
+  });
+  const pred = await stav();
+  pravda('výpis začíná osmi kartami', pred.karet === 8, `karet ${pred.karet}`);
+  pravda('a nabízí se dočtení dalších', pred.tlacitko && pred.pocet > 8,
+    `tlačítko ${pred.tlacitko}, nalezeno ${pred.pocet}`);
+  if (pred.tlacitko) {
+    await p.click('#opp-dalsi-btn');
+    await p.waitForTimeout(700);
+    const po = await stav();
+    pravda('po klepnutí je karet víc', po.karet > pred.karet, `${pred.karet} → ${po.karet}`);
+    pravda('a počet nalezených se nezměnil (dočítání není filtr)',
+      po.pocet === pred.pocet, `${pred.pocet} → ${po.pocet}`);
+    /* Strop: klikat, dokud tlačítko je. Víc než osm klepnutí být nemá. */
+    let klepnuti = 0;
+    while (klepnuti < 12 && (await p.$('#opp-dalsi-btn'))) {
+      await p.click('#opp-dalsi-btn');
+      await p.waitForTimeout(350);
+      klepnuti++;
+    }
+    const nakonec = await stav();
+    pravda('dočítání má strop, aby se výpis nezadusil',
+      !nakonec.tlacitko && nakonec.karet <= 96 && nakonec.karet >= 90,
+      `karet ${nakonec.karet}, tlačítko ${nakonec.tlacitko}, klepnutí ${klepnuti}`);
+    pravda('a pod stropem zůstane odkaz na mapu, kde je zbytek',
+      !!(await p.$('.opp-more')), 'řádka „na mapě" zmizela');
+  }
+  /* A NOVÉ HLEDÁNÍ ROZBALENÍ ZRUŠÍ — jinak by se po napsání jiného dotazu
+     vysypalo devadesát šest karet něčeho jiného, než si člověk napsal.
+     Čte se to ze zdroje, ne klepáním: políčko hledání je v tomhle
+     pohledu schované pod ovládacím panelem a klepat se do něj dá jen
+     přes rozbalení, které s dočítáním nemá nic společného (zkouší ho
+     scripts/test-naseptavac.mjs). */
+  {
+    const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
+    const telo = /function nastavHledani\(v\)\s*\{[\s\S]*?\n  \}/.exec(main);
+    pravda('nové hledání výpis zase sbalí', !!telo && /listNavic = 0;/.test(telo[0]),
+      'v nastavHledani() se dočítání nenuluje');
+  }
+}
+
 /* --- ODKAZ Z OKRESNÍ STRÁNKY NA OBEC -------------------------------
  * Stránka okresu u každé obce slibuje číslo („Lovečkovice 11"). Odkaz
  * vede na index.html?obec=&okres= a mapa z něj musí ukázat PŘESNĚ tolik.

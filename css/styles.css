@@ -1742,6 +1742,18 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .opp-demand .watch{color:var(--text-ondark-mute);}
 .opp-demand .sep{color:var(--text-ondark-mute); opacity:0.55;}
 .opp-more{list-style:none; text-align:center; padding:14px 6px 6px; font-size:13px; color:var(--copper-bright); font-weight:600;}
+/* „Zobrazit dalších 12" — nejdřív se dá seznam dočíst, až pak se odchází
+   na mapu. Tlačítko je na celou šířku, protože je to to hlavní, co se
+   pod výpisem dělá; na dotyk má 44 px (stejné pravidlo jako test-dotyk). */
+.opp-dalsi{list-style:none; padding:12px 6px 2px;}
+/* Okraj musí být proti výplni vidět aspoň 3:1 (hlídá test-okraje) —
+   s jemnou linkou vyšlo 1,9:1 a tlačítko na bílé kartě splývalo.
+   Zaoblení je z paletky (--r-sm), ne vlastních 12 px: hlídá test-předloha. */
+.opp-dalsi button{width:100%; min-height:44px; border-radius:var(--r-sm); cursor:pointer;
+  border:1px solid var(--text-ondark-mute); background:transparent; color:var(--text-ondark);
+  font:inherit; font-size:14px; font-weight:600; letter-spacing:.01em;}
+.opp-dalsi button:hover{border-color:var(--copper-bright); color:var(--copper-bright);}
+.opp-dalsi button span{font-weight:400; opacity:.65;}
 .reset-btn{display:inline-block; margin-top:12px; padding:8px 16px; font-size:13px; font-weight:600; color:var(--ink); background:var(--copper-bright); border:0; border-radius:var(--r-sm); cursor:pointer;}
 .reset-btn:hover{background:var(--copper);}
 .opp-place{display:block; font-family:var(--font-ui); font-size:16px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:-0.01em; color:var(--text-ondark); margin-bottom:2px;}/* Barevná odrážka podle kategorie (prodej/dražba/exekuce…) — rychlá orientace v seznamu */
