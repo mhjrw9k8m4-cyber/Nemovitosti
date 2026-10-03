@@ -168,7 +168,12 @@
      Semaforová červená #FB2B2B měla s bílým textem jen 3,83 : 1, tedy pod
      normou. Cihlová má 8,3 : 1 — tohle není jen o vzhledu.
      --------------------------------------------------------------- */
-  --c-sale:#4361B8; --c-drazba:#CC6B33; --c-exekuce:#8C2F1E; --c-obec:#12AEBE; --c-majitel:#8B4FE0;
+  /* Obec byla jediná, která se do té rodiny nikdy nedostala: #12AEBE mělo
+     83 % sytosti, zatímco prodej, dražba a exekuce drží 47–65 %. Na
+     zeleno-bílém webu to byla nejhlasitější barva na obrazovce — a přitom
+     je to nejméně častá kategorie. Ztlumeno na 55 % ve stejném odstínu;
+     proti leteckému snímku je pořád dobře vidět. */
+  --c-sale:#4361B8; --c-drazba:#CC6B33; --c-exekuce:#8C2F1E; --c-obec:#277686; --c-majitel:#8B4FE0;
   --c-ok:#1FA363;               /* zelená = úspěch/ověřeno/„v pořádku" (NE kategorie „na prodej") */
   /* Tytéž barvy pro TEXT. Sytý odstín je správný pro puntík na mapě nebo
      výplň štítku, ale jako drobné písmo na světlém pozadí neprojde normou
@@ -1284,11 +1289,32 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Aktivní filtr „svítí" vlastní barvou kategorie — ať „Vše" a „Dražba" nesplývají */
 .filter-chip.active{color:#fff; border-color:transparent; box-shadow:var(--e1);}
 .filter-chip.active[data-type="all"]{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
-.filter-chip.active[data-type="sale"]{background:linear-gradient(135deg, #6C8AE6, var(--c-sale));}
-.filter-chip.active[data-type="drazba"]{background:linear-gradient(135deg, #FFC24A, var(--c-drazba)); color:#3a2c05;}
-.filter-chip.active[data-type="exekuce"]{background:linear-gradient(135deg, #FF6058, var(--c-exekuce));}
-.filter-chip.active[data-type="obec"]{background:linear-gradient(135deg, #3FCBD8, var(--c-obec));}
-.filter-chip.active[data-type="majitel"]{background:linear-gradient(135deg, #A46BEC, var(--c-majitel));}
+/* ZAPNUTÝ ČIP MÁ PLNOU VÝPLŇ, NE PŘECHOD — a barvu, kterou paleta už má.
+ *
+ * Přechody si přitáhly pět barev navíc (#6C8AE6, #FFC24A, #FF6058,
+ * #3FCBD8, #A46BEC), které nikde jinde na webu nejsou. Dvě z nich jely
+ * na 100 % sytosti, a vedle tlumené zelené značky to byl ten důvod, proč
+ * ovládání nevypadalo jako jedna věc, ale jako pět cizích.
+ *
+ * Nebyla to ale jen otázka vzhledu. Čip má bílý text a na světlejším
+ * konci přechodu kontrast nevycházel ANI U JEDNOHO z pěti:
+ *
+ *     Prodej 3,27 · Dražba 3,71 · Exekuce 2,97 · Obec 1,95 · Majitel 3,56
+ *
+ * Norma WCAG AA žádá 4,5. U dražby to bylo vidět — má proto výjimku
+ * s tmavým textem — ale u obce s 1,95 : 1 si toho nevšiml nikdo.
+ *
+ * Výplní jsou teď odstíny `--c-*-ink`, tedy ty, které paleta drží pro
+ * text na světlém: 6,97 až 8,27 na bílé. Leží tím ve stejném pásmu jako
+ * značková zelená na čipu „Vše" (7,96), takže řádka čipů konečně vypadá
+ * jako jedna rodina. Puntíky na mapě si syté odstíny nechávají — tam
+ * mají vyniknout proti leteckému snímku, ne nést text.
+ * Měří to scripts/test-kontrast.mjs. */
+.filter-chip.active[data-type="sale"]{background:var(--c-sale-ink);}
+.filter-chip.active[data-type="drazba"]{background:var(--c-drazba-ink);}
+.filter-chip.active[data-type="exekuce"]{background:var(--c-exekuce-ink);}
+.filter-chip.active[data-type="obec"]{background:var(--c-obec-ink);}
+.filter-chip.active[data-type="majitel"]{background:var(--c-majitel-ink);}
 .filter-chip.active .c{box-shadow:0 0 0 2px rgba(255,255,255,0.55);}
 /* Rozbalovací panel „Cena, výměra a řazení" — výchozí stav je klidný, detaily na klepnutí */
 /* Filtry v jednom bloku. Dřív to byla šedá krabička uvnitř bílého panelu a

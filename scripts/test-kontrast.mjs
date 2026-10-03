@@ -183,6 +183,36 @@ for (const s of STRANKY) {
   await p.waitForTimeout(400);
   const nalezy = await p.evaluate(MERENI);
   nalezy.forEach((n) => vse.push(Object.assign({ stranka: s }, n)));
+
+  /* MĚŘÍ SE JEN STAV, VE KTERÉM STRÁNKA PRÁVĚ JE — a to je málo.
+   *
+   * Čipy nad výpisem („Vše / Prodej / Dražba / Exekuce / Obec") mají
+   * zapnutý vždycky jen jeden, ve výchozím stavu „Vše". Ostatní čtyři se
+   * do stavu .active během měření nikdy nedostaly, takže se jejich barvy
+   * neměřily vůbec. A právě tam kontrast nevycházel: bílý text na
+   * světlejším konci přechodu dával 1,95 až 3,71 : 1 u VŠECH PĚTI, tedy
+   * hluboko pod normou 4,5. Měsíce to nikdo neviděl, protože test
+   * poctivě měřil jediný čip, který byl zapnutý.
+   *
+   * Proto se na ně teď klepne a změří se v tom stavu, v jakém je člověk
+   * opravdu uvidí. */
+  /* JEN NA VIDITELNÉ. Čip kategorie, pod kterou nejsou žádné nabídky, se
+     schválně vůbec nezobrazuje (má rozměr 0×0) — dnes je to „Obec"
+     a „Přímo od majitele". Klikat na ně znamená čekat na vypršení limitu
+     a měřit barvy, které nikdo neuvidí. */
+  const cipy = (await p.$$('.filter-chip[data-type]').catch(() => []));
+  for (let i = 0; i < cipy.length; i++) {
+    const vidu = await cipy[i].evaluate((e) => {
+      const r = e.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    }).catch(() => false);
+    if (!vidu) continue;
+    await cipy[i].click({ timeout: 3000 }).catch(() => {});
+    await p.waitForTimeout(180);
+    const vCipu = await p.evaluate(MERENI).catch(() => []);
+    vCipu.filter((n) => /filter-chip/.test(n.trida || ''))
+      .forEach((n) => vse.push(Object.assign({ stranka: s + ' (zapnutý čip)' }, n)));
+  }
   await ctx.close();
 }
 await prohlizec.close();
