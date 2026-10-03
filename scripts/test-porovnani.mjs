@@ -79,8 +79,41 @@ const D = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json
 pravda('data se načetla', D.length > 100, `${D.length} nabídek`);
 /* Vybírají se nabídky s cenou i výměrou, aby mělo smysl porovnávat
    cenu za metr; jinak by sloupec byl samá pomlčka. */
-const vzorky = D.filter((d) => d.price && d.area).slice(0, 3);
+/* Cena za metr se počítá přes js/ceny.js, protože u spoluvlastnického
+   podílu je v inzerátu výměra celé parcely a cena jen za ten zlomek.
+   Tahle kontrola si ji nesmí dělit sama — porovnávala by vytištěná čísla
+   s jinak spočítanými. */
+new Function(fs.readFileSync(path.join(ROOT, 'js', 'ceny.js'), 'utf8'))();
+const CENY = globalThis.PK_CENY;
+pravda('cenový model se načetl', !!(CENY && CENY.zaMetr));
+const zaMetrM = (d) => {
+  const v = CENY && CENY.zaMetr ? CENY.zaMetr(d) : null;
+  return (v == null || !isFinite(v)) ? null : v;
+};
+/* VZOREK JE SCHVÁLNĚ PAST. Tabulka nejnižší cenu za metr ZELENĚ
+   doporučuje, takže se do srovnání vybere podíl, u kterého surové
+   dělení celou výměrou dává nejnižší číslo ze všech tří, ale po
+   přepočtu na podíl je naopak nejdražší. Kdo by počítal surově,
+   doporučí zeleně ten nejdražší pozemek — a zkouška to pozná.
+   Když se taková trojice v datech nenajde (podíly se zlomkem zmizí),
+   vezmou se první tři nabídky jako dřív a řekne se to. */
+function najdiPast() {
+  const sZlomkem = D.filter((d) => d.price > 0 && d.area > 0 && d.podil && zaMetrM(d) != null
+    && zaMetrM(d) > (d.price / d.area) * 3);
+  const bezneVse = D.filter((d) => d.price > 0 && d.area > 0 && !d.podil && zaMetrM(d) != null);
+  for (const pod of sZlomkem) {
+    const surovyPod = pod.price / pod.area, prepocitanyPod = zaMetrM(pod);
+    const kandidati = bezneVse.filter((d) => (d.price / d.area) > surovyPod
+      && zaMetrM(d) < prepocitanyPod);
+    if (kandidati.length >= 2) return [pod, kandidati[0], kandidati[1]];
+  }
+  return null;
+}
+const past = najdiPast();
+const vzorky = past || D.filter((d) => d.price && d.area).slice(0, 3);
 pravda('našly se tři nabídky s cenou i výměrou', vzorky.length === 3, `nalezeno ${vzorky.length}`);
+pravda('a je mezi nimi podíl, u kterého by surový výpočet doporučil nejdražší pozemek',
+  !!past, 'v datech se taková trojice nenašla — kontrola zeleného zvýraznění je slabší');
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
@@ -130,8 +163,14 @@ if (t) {
     t.odkazy.length === 3 && t.odkazy.every((h) => /^pozemek\.html\?p=/.test(h)), JSON.stringify(t.odkazy));
 
   /* Zvýrazněná hodnota musí být opravdu ta nejlepší — spočítáno zvlášť. */
-  const m2 = vzorky.map((d) => d.price / d.area);
+  const m2 = vzorky.map(zaMetrM);
   const nejM2 = Math.min.apply(null, m2);
+  /* A kdyby se počítalo surově, vyšlo by něco jiného — jinak ta past
+     nic nechytá. */
+  const nejSurovy = Math.min.apply(null, vzorky.map((d) => d.price / d.area));
+  pravda('surový a přepočtený výpočet by zeleně označily jiný řádek',
+    !past || Math.round(nejSurovy) !== Math.round(nejM2),
+    `surově ${Math.round(nejSurovy)}, přepočteno ${Math.round(nejM2)}`);
   const nejPl = Math.max.apply(null, vzorky.map((d) => d.area));
   const cis = (x) => Number(String(x).replace(/[^\d]/g, ''));
   pravda('zeleně je opravdu nejnižší cena za m² a největší výměra',

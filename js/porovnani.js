@@ -52,7 +52,21 @@
   }
 
   function vykresli(nalezene, chybejicich) {
-    var zaM2 = nalezene.map(function (d) { return (d.area && d.price) ? d.price / d.area : null; });
+    /* CENA ZA METR SE POČÍTÁ Z VÝMĚRY, KTERÁ KUPUJÍCÍMU PŘIPADNE.
+       Dělit cenou lomeno celou výměrou je u spoluvlastnického podílu
+       nesmysl: v inzerátu je výměra celé parcely, cena jen za zlomek.
+       A tahle tabulka navíc nejnižší cenu za metr ZELENĚ DOPORUČUJE —
+       takže by jako nejvýhodnější označila podíl, který je ve skutečnosti
+       nejdražší z vybraných (týž omyl, jaký kdysi dělala mapa: podíl 1/13
+       lesa v Praze vyšel 75 Kč/m² místo 969). Počítá to js/ceny.js,
+       stejně jako mapa i stránka pozemku; u podílu s neznámým zlomkem
+       nevrací nic a do srovnání se takový pozemek nedostane. */
+    var zaM2 = nalezene.map(function (d) {
+      var C = window.PK_CENY;
+      if (!C || !C.zaMetr) return null;
+      var v = C.zaMetr(d);
+      return (v == null || !isFinite(v)) ? null : v;
+    });
     var platneM2 = zaM2.filter(function (x) { return x != null; });
     var nejM2 = platneM2.length ? Math.min.apply(null, platneM2) : null;
     var plochy = nalezene.map(function (d) { return d.area || null; });

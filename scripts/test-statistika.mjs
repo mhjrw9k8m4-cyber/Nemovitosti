@@ -75,13 +75,28 @@ function dolniMez(v) {
   }
   return 0;
 }
+/* js/ceny.js se tu spouští, ne jen čte: potřebujeme z něj cenu za metr,
+   která zná spoluvlastnický podíl. */
+new Function(readFileSync(new URL('../js/ceny.js', import.meta.url), 'utf8'))();
+const CENY_MODUL = globalThis.PK_CENY;
+if (!CENY_MODUL || !CENY_MODUL.zaMetr) {
+  console.error('js/ceny.js se nenačetl — kontrola by počítala jinak než web.');
+  process.exit(1);
+}
 const podle = {};
 for (const d of DATA) {
   // Jen běžné nabídky k prodeji — stejně jako generátor i js/ceny.js.
   if (d.type !== 'sale') continue;
   if (!(d.price > 0 && d.area >= 100 && d.area <= 500000)) continue;
   const g = dg(d.druh); if (g === 'Ostatní') continue;
-  const pm = d.price / d.area;
+  /* CENA ZA METR PŘES SPOLEČNÝ MODUL, ne dělením celou výměrou.
+     U spoluvlastnického podílu je v inzerátu výměra celé parcely a cena
+     jen za zlomek; generátor i mapa proto počítají přes js/ceny.js.
+     Kdyby si tahle kontrola dělila sama, porovnávala by vytištěná čísla
+     s jinak spočítanými a mlčela by přesně tam, kde se ty dva výpočty
+     rozejdou — tedy u toho, co má hlídat. */
+  const pm = CENY_MODUL.zaMetr(d);
+  if (pm == null) continue;
   if ((g === 'Zemědělská půda' || g === 'Lesní pozemek') && pm > 500) continue;
   (podle[g] = podle[g] || []).push(pm);
 }

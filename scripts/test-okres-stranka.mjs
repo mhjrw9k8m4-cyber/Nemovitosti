@@ -122,6 +122,57 @@ function okresZeStranky(html) {
     /HL\.norm\(d\.place\) === HL\.norm\(mistoFiltr\.place\)/.test(main));
 }
 
+/* --- 4) CENA ZA METR MUSÍ BÝT TÁŽ JAKO V MAPĚ -----------------------
+   U spoluvlastnického podílu je v inzerátu výměra CELÉ parcely a cena jen
+   za ten zlomek. Mapa i stránka pozemku to přepočítávají (js/ceny.js),
+   stránky okresů dělily cenou lomeno celou výměrou — a web o téže
+   nabídce tvrdil dvě různá čísla (Benešov, podíl 1/6: 6 proti 33 Kč/m²).
+   Tohle je pojistka proti tomu, aby se ta dvě místa znovu rozešla:
+   u KAŽDÉHO řádku na všech stránkách okresů se číslo porovná s tím, co
+   dá společný modul. */
+{
+  const fsx = await import('node:fs');
+  new Function(fsx.readFileSync(path.join(ROOT, 'js', 'ceny.js'), 'utf8'))();
+  const CENY = globalThis.PK_CENY;
+  /* Soubor → nabídka se musí složit TOU SAMOU funkcí, jakou skládá
+     odkazy generátor (mapaSouboru). Dvě nabídky můžou mít stejný klíč
+     a druhá dostane jiný soubor; se souborPro() samotným se pak
+     porovnávala cena jedné nabídky proti řádku té druhé a vycházely
+     rozdíly, které na stránce nejsou. */
+  const { mapaSouboru } = await import('./generate-parcel-pages.mjs');
+  const podleSouboru = new Map();
+  for (const { d, soubor } of mapaSouboru(all).values()) podleSouboru.set(soubor, d);
+  let radku = 0, podilu = 0;
+  const spatne = [];
+  for (const f of stranky) {
+    const html = readFileSync(path.join(ROOT, f), 'utf8');
+    const re = /<div class="okr-item">([\s\S]*?)<\/div>/g;
+    let m;
+    while ((m = re.exec(html))) {
+      const radek = m[1];
+      const mh = /<a class="okr-place" href="(pozemek-[^"]+\.html)"/.exec(radek);
+      const mz = /okr-zametr"[^>]*>([\d\s\u00a0]+)[\s\u00a0]*Kč\/m²/.exec(radek);
+      if (!mh) continue;
+      const o = podleSouboru.get(mh[1]);
+      if (!o) continue;
+      radku++;
+      if (o.podil) podilu++;
+      const ceka = CENY.zaMetr(o);
+      const psano = mz ? Number(mz[1].replace(/[\s\u00a0]/g, '')) : null;
+      if (ceka == null) {
+        if (psano != null) spatne.push(`${f} ${o.place}: podíl bez zlomku, a přesto ${psano} Kč/m²`);
+      } else if (psano !== Math.round(ceka)) {
+        spatne.push(`${f} ${o.place}: psáno ${psano}, modul dává ${Math.round(ceka)}`);
+      }
+    }
+  }
+  pravda('řádků s cenou za metr je dost na kontrolu', radku > 1000, `${radku} řádků`);
+  pravda('a jsou mezi nimi spoluvlastnické podíly (jinak by to nic neměřilo)',
+    podilu > 100, `${podilu} podílů`);
+  pravda('cena za metr na stránce okresu je tatáž jako v mapě',
+    spatne.length === 0, spatne.slice(0, 4).join('; '));
+}
+
 console.log('\nČísla na stránce okresu');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

@@ -222,6 +222,32 @@ function pctl(a,p){ if(!a.length) return 0; a=a.slice().sort((x,y)=>x-y); return
  * skoro bez nabídek, a nad ním trh. Když žádná taková mezera není,
  * neuřízne se nic. Rozhoduje tvar dat, ne můj odhad.
  */
+/* CENA ZA METR SE POČÍTÁ Z VÝMĚRY, KTERÁ KUPUJÍCÍMU PŘIPADNE.
+ *
+ * Tyhle stránky ji dělily cenou lomeno celou výměrou. U spoluvlastnického
+ * podílu je ale v inzerátu výměra CELÉ parcely a cena jen za ten zlomek,
+ * takže vyšlo číslo, které neplatí pro nikoho. Mapa i stránka pozemku
+ * přitom odjakživa počítají přes js/ceny.js s podílem — takže web o téže
+ * nabídce tvrdil dvě různá čísla:
+ *
+ *     Benešov, podíl 1/6, 28 000 Kč, 5 023 m²
+ *     stránka okresu:  6 Kč/m²        mapa a stránka pozemku: 33 Kč/m²
+ *
+ * Změřeno na ostrých datech: ze 1 980 řádků s cenou a výměrou se číslo
+ * mění u 510 (26 %) a u nejmenších podílů o dva řády (1/71: ze 14 na
+ * 1 008 Kč/m²) — takový podíl se na stránce tvářil jako nejlevnější
+ * pozemek v republice. U deseti nabídek velikost podílu neznáme; tam se
+ * číslo neukáže vůbec, stejně jako ho neukáže mapa. Vymyslet si ho nelze.
+ *
+ * Mediány okresů a krajů tím stoupnou (zemědělská půda 45 → 62 Kč/m²,
+ * les 35 → 48). Není to zdražení, jen přestalo tlačit dolů číslo, které
+ * do výpočtu nepatřilo. Spodní mez uvěřitelnosti zůstává: i po přepočtu
+ * najde v datech tutéž mezeru (16,2 místo 16,8 Kč/m²) a odřízne 137
+ * nabídek místo 140, takže ty nejlevnější shluky nejsou jen podíly. */
+function zaMetrPoctive(o){
+  const v = CENY.zaMetr(o);
+  return (v == null || !isFinite(v)) ? null : v;
+}
 function dolniMez(v){
   const n=v.length;
   if(n<60) return 0;                       // z hrstky se tvar rozdělení poznat nedá
@@ -251,7 +277,8 @@ function spoctiMeze(list){
     if(!jeBeznaNabidka(o)) continue;   // stejný vzorek jako priceStats
     if(!(o.price>0 && o.area>=100 && o.area<=500000)) continue;
     const g=druhGroup(o.druh); if(g==='Ostatní') continue;
-    const perm2=o.price/o.area;
+    const perm2=zaMetrPoctive(o);
+    if(perm2==null) continue;
     if((g==='Zemědělská půda' || g==='Lesní pozemek') && perm2>500) continue;
     (b[g]=b[g]||[]).push(perm2);
   }
@@ -283,7 +310,8 @@ function priceStats(list){
     if(!jeBeznaNabidka(o)) continue;
     if(!(o.price>0 && o.area>=100 && o.area<=500000)) continue;
     const g=druhGroup(o.druh); if(g==='Ostatní') continue;
-    const perm2 = o.price/o.area;
+    const perm2 = zaMetrPoctive(o);
+    if(perm2==null) continue;
     // Pole/les nad 500 Kč/m² jsou fakticky stavební parcely (jen vedené jako „orná"),
     // do ceny zemědělské půdy/lesa nepatří — jinak by zkreslily medián okresu nahoru.
     if((g==='Zemědělská půda' || g==='Lesní pozemek') && perm2>500) continue;
@@ -297,14 +325,23 @@ function priceStats(list){
   }
   return out;
 }
+/* CENOVÝ MODEL SE NAČÍTÁ PRVNÍ, protože z něj bere cenu za metr i hledání
+   mezí. Dřív stál až za spoctiMeze() a meze se počítaly ze surové ceny
+   za metr, zatímco mapa počítá jinak — viz zaMetrPoctive() výš. */
+new Function(fs.readFileSync(path.join(ROOT, 'js', 'ceny.js'), 'utf8'))();
+const CENY = globalThis.PK_CENY;
+if (!CENY || !CENY.zaMetr) {
+  /* Raději spadnout než vydat 91 stránek se špatnými čísly. */
+  console.error('js/ceny.js se nenačetl — cena za metr by se počítala jinak než v mapě.');
+  process.exit(1);
+}
 spoctiMeze(all);                 // meze napřed, ať platí všude stejné
 /* Mez „ceny se liší násobky" se bere z js/ceny.js, ne z vlastního čísla.
    Web už tenhle pojem má: u odhadu konkrétního pozemku hlásí „nejistý",
    když (p75 − p25) / medián přeleze MEZ_ROZPTYL. Kdyby si stránka s cenami
    držela vlastní hranici, mohla by u téhož druhu tvrdit něco jiného než
    odhad o dva kliky dál. */
-new Function(fs.readFileSync(path.join(ROOT, 'js', 'ceny.js'), 'utf8'))();
-const MEZ_ROZPTYL = (globalThis.PK_CENY && globalThis.PK_CENY.MEZ_ROZPTYL) || 2;
+const MEZ_ROZPTYL = CENY.MEZ_ROZPTYL || 2;
 
 const priceNational = priceStats(all);
 const priceByKraj = {}; for(const k of KRAJ_ORDER){ if(byKraj[k]) priceByKraj[k]=priceStats(byKraj[k]); }
@@ -531,10 +568,14 @@ function itemRow(o, skryjOkres){
   /* Cena za metr se dopočítá jen tam, kde dává smysl: bez výměry nebo
      bez ceny by to byla vymyšlená čísla. Zaokrouhluje se na celé koruny
      — desetiny u ceny za metr nikdo nečte. */
-  const zaMetr = (o.price && o.area) ? Math.round(o.price / o.area) : 0;
+  const zmHodnota = (o.price && o.area) ? zaMetrPoctive(o) : null;
+  const zaMetr = zmHodnota == null ? 0 : Math.round(zmHodnota);
+  /* U podílu se k číslu dopíše, proč je takové — tutéž větu má mapa
+     i stránka pozemku (js/ceny.js). */
+  const zmPopis = CENY.zaMetrPopis ? CENY.zaMetrPopis(o) : '';
   const cena = o.price
     ? `<span class="okr-cena"><b>${fmt(o.price)} Kč</b>` +
-      (zaMetr ? `<span class="okr-zametr">${fmt(zaMetr)} Kč/m²</span>` : '') + `</span>`
+      (zaMetr ? `<span class="okr-zametr"${zmPopis ? ` title="${attr(zmPopis)}"` : ''}>${fmt(zaMetr)} Kč/m²</span>` : '') + `</span>`
     : `<span class="okr-cena okr-bezceny">cena neuvedena</span>`;
   const strankaPozemku = STRANKY.get(klicNabidky(o));
   const misto = strankaPozemku
