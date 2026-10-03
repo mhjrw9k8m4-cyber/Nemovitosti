@@ -46,8 +46,8 @@
     sale:    { label: 'Na prodej',    color: tokenBarva('--c-sale', '#4361B8'), link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
     drazba:  { label: 'Dražba',       color: tokenBarva('--c-drazba', '#CC6B33'), link: { label: 'Detail dražby',       url: 'https://www.portaldrazeb.cz/' } },
     exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), link: { label: 'Ověřit v katastru', url: 'https://www.ikatastr.cz/' } },
-    obec:    { label: 'Obecní záměr', color: tokenBarva('--c-obec', '#12AEBE'), link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
-    majitel: { label: 'Přímo od majitele',  color: tokenBarva('--c-majitel', '#8B4FE0'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
+    obec:    { label: 'Obecní záměr', zkratka: 'Záměr obce', color: tokenBarva('--c-obec', '#12AEBE'), link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
+    majitel: { label: 'Přímo od majitele', zkratka: 'Od majitele', color: tokenBarva('--c-majitel', '#8B4FE0'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
   };
   // 14 krajů ČR — přehled po krajích (rozdělení mapy). Okres → kraj + střed kraje.
   var KRAJE = {
@@ -1393,11 +1393,20 @@
   }
   /* Odznak kategorie na náhledu. Barvu puntíku si nese s sebou, ze TÉŽE
      proměnné jako tečka na mapě (TYPE[].color čte --c-*). Dřív ji vypisovalo
-     CSS kategorii po kategorii — a na pátou se zapomnělo. */
+     CSS kategorii po kategorii — a na pátou se zapomnělo.
+
+     Popisek jde do odznaku dvakrát. Na mobilu je náhled 116 px široký
+     a má overflow:hidden, takže „Přímo od majitele" se v něm ořízlo
+     doprostřed slova — bez výpustky, takže to vypadalo jako vada
+     vykreslení, ne jako zkratka. Širší odznak nepomůže: stín přes celý
+     náhled by zakryl, co je na něm vidět. Který popisek se ukáže,
+     rozhoduje CSS podle šířky náhledu; druhý je display:none, takže ho
+     nepřečte ani odečítač. */
   function odznakDruhu(d) {
     var t = TYPE[d.type] || {};
     return '<span class="opp-badge ' + d.type + '" style="--c-druh:' + (t.color || '') + '">' +
-      esc(t.label || '') + '</span>';
+      '<span class="ob-dlouhy">' + esc(t.label || '') + '</span>' +
+      '<span class="ob-kratky">' + esc(t.zkratka || t.label || '') + '</span></span>';
   }
 
 
@@ -3981,7 +3990,7 @@
     });
     try { window.PK_KARTY = karticky; } catch (e) {}
 
-    var mvCount = document.getElementById('mvt-count'); if (mvCount) mvCount.textContent = matched ? '(' + matched + ')' : '';
+    var mvCount = document.getElementById('mvt-count'); if (mvCount) mvCount.textContent = matched ? '(' + fmt(matched) + ')' : '';
     /* Nadpis nad prázdným seznamem nesmí nic slibovat. „Doporučené
        příležitosti · 0 na mapě" a pod tím prázdno je protimluv —
        a ještě se to tváří, že web něco doporučil. */
@@ -3989,7 +3998,7 @@
       : (sortMode === 'demand' ? 'Doporučené příležitosti' : 'Vybrané příležitosti');
     var pripisky = '';
     var novych = pocetNovych();
-    if (novych) pripisky += ' <span class="mc-nove">' + novych + ' ' +
+    if (novych) pripisky += ' <span class="mc-nove">' + fmt(novych) + ' ' +
       (novych === 1 ? 'nový od minule' : (novych < 5 ? 'nové od minule' : 'nových od minule')) + '</span>';
     // Když se zrovna listují uložené, řekneme rovnou, kde bydlí.
     if (favOnly) pripisky += ' <span class="mc-pozn">uloženo jen v tomhle prohlížeči</span>';
@@ -4032,7 +4041,11 @@
     if (podobnychStranou || ukazPodobne) pripisky += ' <button type="button" class="mc-skryte" id="mc-podobne"><span>' +
       (ukazPodobne ? 'Jen přesný název'
                    : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '</span></button>';
-    countEl.innerHTML = headLabel + (matched ? ' · <span class="mc-sub">' + matched + ' na mapě</span>' : '') + pripisky;
+    /* ČÍSLA SE PÍŠOU JEDNÍM ZPŮSOBEM. V hlavičce stránky stálo
+       „1 996 pozemků", o kus níž „1996 na mapě" a v přepínači pohledů
+       „Seznam (1996)" — tři různé zápisy téhož čísla na jedné obrazovce.
+       fmt() dává nezlomitelnou mezeru po tisících, jako všude jinde. */
+    countEl.innerHTML = headLabel + (matched ? ' · <span class="mc-sub">' + fmt(matched) + ' na mapě</span>' : '') + pripisky;
     var sb = countEl.querySelector('#mc-skryte');
     if (sb) sb.addEventListener('click', function (e) { e.stopPropagation(); ukazSkryte = !ukazSkryte; renderList(); });
     var pb = countEl.querySelector('#mc-prosle');

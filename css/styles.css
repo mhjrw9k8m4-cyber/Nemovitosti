@@ -1722,6 +1722,8 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Odznak kategorie na fotce (vlevo nahoře) */
 .opp-badge{position:absolute; top:10px; left:10px; z-index:3; pointer-events:none; display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; letter-spacing:0.02em; padding:4px 10px 4px 8px; border-radius:var(--r-sm); color:#fff; background:rgba(8,14,20,0.55); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);}
 .opp-badge::before{content:""; width:8px; height:8px; border-radius:50%; flex:none;}
+/* Odznak nese plný popisek i zkratku; na širokém náhledu platí plný. */
+.opp-badge .ob-kratky{display:none;}
 /* Puntík u odznaku nese barvu kategorie — a BERE SI JI OD KARTY, ne ze
    seznamu pravidel. Vypsané byly čtyři kategorie z pěti a na „Přímo od
    majitele" se zapomnělo: změřeno, puntík měl rgba(0,0,0,0), tedy nic.
@@ -2299,6 +2301,11 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   .opp-media{width:116px; flex:none; aspect-ratio:auto; min-height:0; align-self:stretch;}
   .opp-badge{top:7px; left:7px; font-size:12px; padding:2px 8px 2px 6px; gap:4px;}
   .opp-badge::before{width:7px; height:7px;}
+  /* Do 116px náhledu se vejde odznak nejvýš 109 px široký. „Obecní záměr"
+     (109) a „Přímo od majitele" (109 po oříznutí) na tu mez narazily
+     a text se ořízl bez výpustky uprostřed slova. Zkratky měří 97 a 94 px. */
+  .opp-badge .ob-dlouhy{display:none;}
+  .opp-badge .ob-kratky{display:inline;}
   .opp-count{display:none;}            /* počet fotek se do úzkého náhledu nevejde */
   /* 36 px je spodní mez dotykového terče — pod ní se do srdíčka prstem
      netrefíte. Když jsem karty zúžil na řádek, spadlo na 30 px. */

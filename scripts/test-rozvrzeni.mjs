@@ -1273,6 +1273,117 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
   await ctx.close();
 }
 
+/* --- 6f) ODZNAK KATEGORIE SE OŘÍZL O HRANU NÁHLEDU -------------------
+ * Na mobilu je náhled karty 116 px široký a má overflow:hidden. Odznak
+ * v něm sedí 7 px od levé hrany, takže se vejde nejvýš 109 px široký.
+ * „Obecní záměr" a „Přímo od majitele" na tu mez narazily a text se
+ * ořízl uprostřed slova — bez výpustky, takže to v telefonu vypadalo
+ * jako vada vykreslení. Nic přitom nepřetékalo z obrazovky a karta
+ * měla správnou výšku, takže to neodhalila žádná jiná kontrola.
+ *
+ * Proto odznak nese popisek dvakrát: plný pro široký náhled, zkratku
+ * pro úzký. Tahle kontrola hlídá obojí — že se zkratka na mobilu
+ * vejde a že plný popisek zůstal na desktopu.
+ */
+{
+  // Popisky a zkratky se čtou z js/main.js, aby kontrola nehlídala
+  // svou vlastní kopii seznamu. Šestá kategorie se tím ohlásí sama.
+  const zdroj = readFileSync(path.join(KOREN, 'js', 'main.js'), 'utf8');
+  const blok = /var TYPE = \{([\s\S]*?)\n  \};/.exec(zdroj);
+  pravda('v js/main.js se našel seznam kategorií (bez něj není co měřit)', !!blok);
+  const DRUHY = [];
+  if (blok) {
+    const re = /^\s{4}(\w+):\s*\{\s*label: '([^']+)'(?:,\s*zkratka: '([^']+)')?/gm;
+    for (let m = re.exec(blok[1]); m; m = re.exec(blok[1]))
+      DRUHY.push({ k: m[1], dlouhy: m[2], kratky: m[3] || m[2] });
+  }
+  pravda('a je v něm aspoň pět kategorií', DRUHY.length >= 5, `nalezeno ${DRUHY.length}`);
+  pravda('a aspoň jedna má zkratku jinou než plný popisek (jinak se záměna nemá na čem poznat)',
+    DRUHY.some((d) => d.kratky !== d.dlouhy),
+    'žádná kategorie nemá zkratka: — plný popisek se do úzkého náhledu nevejde');
+
+  if (DRUHY.length >= 5) {
+    // Jeden pozemek od každé kategorie, ať se vykreslí všechny odznaky.
+    const DATA_O = { updated: '2026-01-01', opportunities: DRUHY.map((d, i) => ({
+      place: 'Kolín', okres: 'Kolín', type: d.k, parcel: (i + 1) + '/1', druh: 'orná půda',
+      area: 1200 + i, price: 400000 + i * 1000, lat: 50.02 + i * 0.01, lng: 15.20 + i * 0.01,
+      extra: 'inzerát', site: [] })) };
+    for (const sirka of [1400, 1040, 320]) {
+      const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: 900 },
+        locale: 'cs-CZ', permissions: [] });
+      await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+        contentType: 'application/json', body: JSON.stringify(DATA_O) }));
+      await ctx.route('**/data/user-listings.json*', (r) => r.fulfill({ status: 200,
+        contentType: 'application/json', body: '[]' }));
+      // Uložené filtry z jiného testu by výpis zúžily na jednu kategorii.
+      await ctx.addInitScript(() => { try { localStorage.clear(); } catch (e) {} });
+      const po = await ctx.newPage();
+      await po.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
+      await po.waitForSelector('.opp-item .opp-badge', { timeout: 20000 }).catch(() => {});
+      await po.waitForTimeout(500);
+      const v = await po.evaluate(() => {
+        const out = [];
+        document.querySelectorAll('.opp-item').forEach((li) => {
+          const bg = li.querySelector('.opp-badge'), md = li.querySelector('.opp-media');
+          if (!bg || !md) return;
+          const dl = bg.querySelector('.ob-dlouhy'), kr = bg.querySelector('.ob-kratky');
+          const rb = bg.getBoundingClientRect(), rm = md.getBoundingClientRect();
+          const zmer = (prvek) => {
+            const puvod = [dl.style.display, kr.style.display];
+            dl.style.display = prvek === 'dl' ? 'inline' : 'none';
+            kr.style.display = prvek === 'kr' ? 'inline' : 'none';
+            const r = bg.getBoundingClientRect();
+            const sir = r.width, pres = r.right - rm.right;
+            dl.style.display = puvod[0]; kr.style.display = puvod[1];
+            return { sir, pres };
+          };
+          out.push({
+            druh: (bg.className.match(/opp-badge\s+(\w+)/) || [])[1] || '?',
+            videt: bg.innerText.trim(),
+            maDl: !!dl, maKr: !!kr,
+            vidDl: dl ? getComputedStyle(dl).display !== 'none' : false,
+            vidKr: kr ? getComputedStyle(kr).display !== 'none' : false,
+            presah: Math.round((rb.right - rm.right) * 10) / 10,
+            vyska: Math.round(rb.height),
+            nahled: Math.round(rm.width),
+            plny: dl && kr ? zmer('dl') : null,
+          });
+        });
+        return out;
+      }).catch(() => []);
+      pravda(`${sirka} px: vykreslily se odznaky všech kategorií`, v.length >= DRUHY.length,
+        `odznaků ${v.length}, kategorií ${DRUHY.length}`);
+      if (!v.length) { await ctx.close(); continue; }
+      pravda(`${sirka} px: každý odznak nese plný popisek i zkratku`,
+        v.every((o) => o.maDl && o.maKr), 'některý odznak má jen jeden popisek');
+      pravda(`${sirka} px: vidět je právě jeden z nich`,
+        v.every((o) => o.vidDl !== o.vidKr), 'odznak ukazuje oba popisky, nebo žádný');
+      // Hlavní kontrola: odznak se musí vejít do náhledu s rezervou,
+      // a na jeden řádek (zalomený odznak je taky vada, jen tišší).
+      const orez = v.filter((o) => o.presah > -1);
+      pravda(`${sirka} px: žádný odznak nesahá až na hranu náhledu`, orez.length === 0,
+        orez.map((o) => `${o.druh} „${o.videt}" přesah ${o.presah} px v náhledu ${o.nahled} px`).join('; '));
+      const zalomene = v.filter((o) => o.vyska > 30);
+      pravda(`${sirka} px: a žádný se nezalomil na dva řádky`, zalomene.length === 0,
+        zalomene.map((o) => `${o.druh} „${o.videt}" vysoký ${o.vyska} px`).join('; '));
+      if (sirka <= 1040) {
+        pravda(`${sirka} px: v úzkém náhledu se ukazuje zkratka`,
+          v.every((o) => o.vidKr), 'ukazuje se plný popisek');
+        // Pojistka proti bezzubé kontrole: kdyby se plný popisek vešel,
+        // nebylo by tu co řešit a záměna by byla jen zbytečná složitost.
+        const nevesel = v.filter((o) => o.plny && o.plny.pres > -1);
+        pravda(`${sirka} px: a aspoň jeden plný popisek by se do náhledu nevešel`,
+          nevesel.length > 0,
+          'všechny plné popisky se vejdou — záměnu za zkratku už není proč mít');
+      } else {
+        pravda(`${sirka} px: v širokém náhledu se ukazuje plný popisek`,
+          v.every((o) => o.vidDl), 'ukazuje se zkratka i na desktopu');
+      }
+      await ctx.close();
+    }
+  }
+}
+
 await prohlizec.close();
 console.log('\nRozvržení a popisky stránek');
 console.log(zpravy.join('\n'));

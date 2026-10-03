@@ -448,7 +448,12 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
  * že se tím NEZMĚNIL filtr (počet nalezených zůstává) a že to má strop.
  */
 {
+  /* Mapa si uložené filtry pamatuje mezi návštěvami (pk_filtr_v1), takže
+     by sem došly z předchozích částí téhle zkoušky a výpis by byl zúžený.
+     Tahle část potřebuje stav, jaký vidí člověk poprvé. */
   await p.goto(`${BASE}/index.html#mapa`, { waitUntil: 'domcontentloaded' });
+  await p.evaluate(() => { try { localStorage.removeItem('pk_filtr_v1'); } catch (e) {} });
+  await p.reload({ waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(2600);
   const stav = () => p.evaluate(() => {
     const m = /(\d[\d\s\u00a0]*)/.exec(String((document.getElementById('map-count') || {}).textContent)
@@ -458,6 +463,31 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
       pocet: m ? +m[1].replace(/\s/g, '') : -1 };
   });
   const pred = await stav();
+  /* ČÍSLA SE PÍŠOU JEDNÍM ZPŮSOBEM. Na jedné obrazovce stálo „1 996
+     pozemků" v úvodu, „1996 na mapě" v hlavičce výpisu a „Seznam (1996)"
+     v přepínači — tři zápisy téhož čísla. Čte se to z obrazovky, ne ze
+     zdroje: skládají to tři různá místa a shodnout se musí výsledek.
+     Porovnává se ZÁPIS, ne hodnota: úvod ukazuje všechny nabídky, kdežto
+     hlavička a přepínač jen to, co prošlo filtry. */
+  {
+    const c = await p.evaluate(() => {
+      const t = (id) => ((document.getElementById(id) || {}).textContent || '');
+      const cislo = (s) => { const m = /(\d[\d\s\u00a0]*\d|\d)/.exec(s); return m ? m[1] : ''; };
+      return { hero: cislo(t('hero-n-count')), hlavicka: cislo(t('map-count')), prepinac: cislo(t('mvt-count')) };
+    });
+    const bezMezer = (x) => x.replace(/[\s\u00a0]/g, '');
+    const maOddelovac = (x) => bezMezer(x).length < 4 || /[\s\u00a0]/.test(x);
+    pravda('všechna tři čísla jsou tisícová (jinak by se zápis neměl na čem poznat)',
+      bezMezer(c.hero).length >= 4 && bezMezer(c.hlavicka).length >= 4
+      && bezMezer(c.prepinac).length >= 4,
+      `úvod „${c.hero}", hlavička „${c.hlavicka}", přepínač „${c.prepinac}"`);
+    pravda('a všechna tři čísla na obrazovce mají tisícový oddělovač',
+      [c.hero, c.hlavicka, c.prepinac].every(maOddelovac),
+      `úvod „${c.hero}", hlavička „${c.hlavicka}", přepínač „${c.prepinac}"`);
+    pravda('hlavička výpisu a přepínač Seznam/Mapa ukazují totéž',
+      bezMezer(c.hlavicka) === bezMezer(c.prepinac),
+      `hlavička „${c.hlavicka}", přepínač „${c.prepinac}"`);
+  }
   pravda('výpis začíná osmi kartami', pred.karet === 8, `karet ${pred.karet}`);
   pravda('a nabízí se dočtení dalších', pred.tlacitko && pred.pocet > 8,
     `tlačítko ${pred.tlacitko}, nalezeno ${pred.pocet}`);
