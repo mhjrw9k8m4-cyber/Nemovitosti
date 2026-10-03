@@ -361,6 +361,90 @@ function normDruh(d) {
   return s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
 }
 
+/* ZLEVNILO SE? TO JE FAKT, NE ODHAD.
+ *
+ * Web uměl říct, jak je nabídka drahá proti okolí — to je ale model,
+ * který se může mýlit. „Majitel šel sám dolů o 25 %" je naproti tomu
+ * fakt a pro kupujícího je to silnější signál: nabídka leží a prodávající
+ * už jednou ustoupil. V datech jsme na to dosud neměli nic — u nabídky
+ * byla jen dnešní cena.
+ *
+ * Robot běží každých 6 hodin a předchozí data má po ruce, takže stačí
+ * při každém běhu porovnat cenu se starou a zapsat tu minulou.
+ *
+ * PÁROVÁNÍ MUSÍ BÝT KONZERVATIVNÍ. Tvrdit „zlevněno" u nabídky, která
+ * je ve skutečnosti jiná, je horší než netvrdit nic:
+ *   · odkaz na zdroj je nejsilnější vodítko — párujeme hlavně podle něj;
+ *   · bez odkazu musí sedět obec, okres, parcela I VÝMĚRA. Když se změní
+ *     výměra, je to jiný pozemek, ne sleva;
+ *   · když minulý záznam cenu neměl, není z čeho počítat změnu.
+ * Co se nespáruje, zůstane bez historie — a to je v pořádku.
+ */
+export function klicCeny(o) {
+  const u = String(o && o.url || '').trim().toLowerCase()
+    .replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/[?#].*$/, '').replace(/\/+$/, '');
+  /* Generická adresa bez identifikátoru (farmy.cz/nabidka_detail) sedí
+     na sedm různých nabídek — jako klíč je k ničemu. */
+  return (u && /\d/.test(u.split('/').pop() || '')) ? 'u:' + u : null;
+}
+export function klicMista(o) {
+  if (!o || !o.place || !o.okres) return null;
+  const parc = String(o.parcel == null ? '' : o.parcel).trim();
+  if (!parc || parc === '—' || parc === '-') return null;
+  return 'm:' + [o.place, o.okres, parc, o.area || 0].join('|');
+}
+
+export function spojCeny(minule, nove, dnes) {
+  const den = (dnes instanceof Date ? dnes : new Date(dnes || Date.now())).toISOString().slice(0, 10);
+  const podle = new Map();
+  for (const o of (minule || [])) {
+    for (const k of [klicCeny(o), klicMista(o)]) if (k && !podle.has(k)) podle.set(k, o);
+  }
+  let zmen = 0;
+  for (const o of (nove || [])) {
+    const stary = podle.get(klicCeny(o)) || podle.get(klicMista(o));
+    if (!stary) continue;
+    if (!(stary.price > 0) || !(o.price > 0)) continue;
+    /* Jiná výměra = jiný pozemek, i když sedí odkaz (portál adresu
+       přepoužije). O slevě se pak nemluví. */
+    if ((stary.area || 0) !== (o.area || 0)) continue;
+    if (stary.price === o.price) {
+      /* Cena se nezměnila — minulou změnu si nese dál, jinak by historie
+         zmizela při prvním běhu beze změny. */
+      if (stary.cena_drive > 0) { o.cena_drive = stary.cena_drive; o.cena_zmena = stary.cena_zmena; }
+      continue;
+    }
+    o.cena_drive = stary.price;
+    o.cena_zmena = den;
+    zmen++;
+  }
+  return zmen;
+}
+
+/* JEDEN ROZBITÝ INZERÁT NESMÍ SHODIT CELÝ ZDROJ.
+ *
+ * Síťová volání ošetřená byla, ale cykly přes jednotlivé nabídky ne:
+ * stačilo, aby jeden inzerát měl nečekaný tvar, výjimka vyletěla z celé
+ * funkce a zdroj skončil jako „chyba" — u Bezrealitek je to 1 785
+ * nabídek pryč kvůli jedné. Každá nabídka se proto zpracovává zvlášť
+ * a co spadne, se PŘESKOČÍ A SPOČÍTÁ.
+ *
+ * Počítá se schválně, ne jen loguje: v GitHub Actions log po běhu zmizí
+ * i se strojem, kdežto číslo se zapíše do dat vedle stavu zdroje — je
+ * tedy vidět i na webu a hlídač níž se podle něj umí ozvat. Zdroj, který
+ * vrátí deset nabídek a dvanáct set jich zahodí, totiž vypadá jako
+ * „ok, 10" a to je ten nejtišší možný způsob, jak se rozbít. */
+const PRESKOCENO = new Map();
+function preskoc(zdroj, e) {
+  const z = PRESKOCENO.get(zdroj) || { pocet: 0, prvni: null };
+  z.pocet++;
+  if (!z.prvni) z.prvni = String((e && e.message) || e).slice(0, 140);
+  PRESKOCENO.set(zdroj, z);
+}
+export function ztratyZdroje(nazev) {
+  return PRESKOCENO.get(nazev) || { pocet: 0, prvni: null };
+}
+
 /* HLÍDAČ JEDNOTLIVÝCH ZDROJŮ.
  *
  * Pojistka proti „utržení" dat níž hlídá SOUČET: když se stáhne míň než
@@ -389,6 +473,9 @@ export function porovnejZdroje(minule, ted) {
     if (!(drive >= PRAH_SLEDOVANI)) continue;       // nový nebo malý zdroj neporovnáváme
     if (z.pocet === 0) nalezy.push({ nazev: z.nazev, druh: 'prazdno', drive, ted: z.pocet });
     else if (z.pocet < drive * PRAH_PROPADU) nalezy.push({ nazev: z.nazev, druh: 'propad', drive, ted: z.pocet });
+    /* Zdroj, který víc nabídek zahodí než přinese, je rozbitý, i když
+       něco vrátil — a sám o sobě by se tvářil jako „ok". */
+    else if ((z.preskoceno || 0) > z.pocet) nalezy.push({ nazev: z.nazev, druh: 'zahazuje', drive, ted: z.pocet, preskoceno: z.preskoceno });
   }
   return nalezy;
 }
@@ -590,6 +677,7 @@ async function fetchProdejSPU() {
      tady jako „málo řádků" a jinak nijak. */
   const ztraty = { radku: lines.length - 1, kratky: 0, stazeno: 0, bezCeny: 0, podil: 0, najem: 0 };
   for (let i = 1; i < lines.length; i++) {
+   try {
     const c = splitCsvLine(lines[i]);
     if (c.length < 8) { ztraty.kratky++; continue; }
     // Zadní sloupce (…;Cena;Nájem/pacht;Číslo OP;Staženo) čteme zprava — poznámka
@@ -615,6 +703,7 @@ async function fetchProdejSPU() {
       area, price,
       extra: 'prodej státní půdy (SPÚ, § 12)',
     });
+   } catch (e) { preskoc('SPÚ', e); }
   }
   console.log(`SPÚ: z ${ztraty.radku} řádků zůstalo ${out.length}`
     + ` (krátký řádek ${ztraty.kratky}, staženo ${ztraty.stazeno}, bez prodejní ceny ${ztraty.bezCeny},`
@@ -673,6 +762,7 @@ async function fetchBezrealitky() {
     } catch { break; }
     if (!Array.isArray(list) || !list.length) break;
     for (const a of list) {
+     try {
       const price = a.price || 0;
       if (!price) continue;
       const area = a.surfaceLand || a.surface || null;
@@ -707,6 +797,7 @@ async function fetchBezrealitky() {
         _popis: cistyPopis(a.description),
       });
       pridejVybaveni(out[out.length - 1], (a.description || '') + ' ' + (a.title || ''));
+     } catch (e) { preskoc('Bezrealitky', e); }
     }
     if (list.length < PER) break;
   }
@@ -813,6 +904,7 @@ async function fetchSreality() {
   const num = (v) => { const n = +String(v).replace(/[^\d.]/g, ''); return isFinite(n) ? n : NaN; };
   const out = [];
   for (const e of items) {
+   try {
     const price = Math.round(num(e.price ?? e.priceValue ?? e.price_czk ?? e.priceCzk)) || 0;
     if (!price || price < 5000) continue;
     const gps = e.gps || e.location || {};
@@ -838,6 +930,7 @@ async function fetchSreality() {
       _gps: isFinite(lat) && isFinite(lng),
       url,
     });
+   } catch (ch) { preskoc('Sreality (Apify)', ch); }
   }
   console.log(`Sreality/Apify: ${out.length} pozemků.`);
   return out;
@@ -916,6 +1009,9 @@ async function main() {
     pocet: r.status === 'fulfilled' ? (r.value || []).length : 0,
     cas: new Date().toISOString(),
     chyba: r.status === 'rejected' ? String((r.reason && r.reason.message) || r.reason).slice(0, 140) : null,
+    /* Kolik nabídek se u toho zdroje muselo přeskočit a proč ta první. */
+    preskoceno: ztratyZdroje(SOURCES[i][0]).pocet,
+    prvniPreskocena: ztratyZdroje(SOURCES[i][0]).prvni,
   }));
   /* Porovnání s minulým během. Čte se ze souboru, který se teprve bude
      přepisovat — tedy ještě ze starých dat. */
@@ -934,7 +1030,12 @@ async function main() {
     process.exit(1);
   }
   for (const n of nalezy) {
-    console.error(`POZOR: zdroj ${n.nazev} přinesl ${n.ted} záznamů, minule ${n.drive}.`);
+    if (n.druh === 'zahazuje') {
+      console.error(`POZOR: zdroj ${n.nazev} přinesl ${n.ted} záznamů a ${n.preskoceno} jich zahodil`
+        + ` — nejspíš se změnil tvar dat. První chyba: ${ztratyZdroje(n.nazev).prvni}`);
+    } else {
+      console.error(`POZOR: zdroj ${n.nazev} přinesl ${n.ted} záznamů, minule ${n.drive}.`);
+    }
   }
 
   zdroje.forEach((z) => {
@@ -1125,6 +1226,16 @@ async function main() {
   }
   console.log(`Poprvé viděno dnes: ${novych} z ${fresh.length}` +
     (drive.size ? '' : ' (první běh se značkováním — všechno dostalo dnešek)'));
+
+  /* Zlevnil majitel? Porovná se s cenami z minulého běhu — ještě než se
+     soubor přepíše. „Majitel sám šel dolů o 25 %" je fakt, kdežto odhad
+     proti okolí je model; pro kupujícího je to silnější informace. */
+  {
+    let minuleNabidky = [];
+    try { minuleNabidky = JSON.parse(readFileSync(OUT, 'utf8')).opportunities || []; } catch { /* první běh */ }
+    const zmen = spojCeny(minuleNabidky, fresh, new Date());
+    if (zmen) console.log(`Změna ceny u ${zmen} nabídek proti minulému běhu.`);
+  }
 
   const payload = {
     updated: new Date().toISOString().slice(0, 10),
