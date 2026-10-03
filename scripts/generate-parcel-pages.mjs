@@ -127,7 +127,7 @@ function slozTitulek(druh, vym, place, okres) {
    Zkracuje se ZÁVĚREČNÁ VĚTA, ne údaje: číslo a místo jsou to, kvůli
    čemu člověk z výsledků klikne. */
 const MEZ_POPISU = 165;
-function slozPopis(d, cena, zaM2, vym) {
+function slozPopis(d, cena, zaM2, vym, navic) {
   /* TERMÍN DRAŽBY PATŘÍ DO POPISKU. Dva důvody, oba naměřené:
      · Je to jediná věc na téhle stránce s lhůtou — kdo ji přehlédne,
        přijde o pozemek. Ve výpisu vyhledávače dosud nebyla vůbec.
@@ -142,7 +142,7 @@ function slozPopis(d, cena, zaM2, vym) {
     ? ' Termín ' + lidskeDatum((/(\d{4}-\d{2}-\d{2})/.exec(d.extra) || [])[1]) + '.'
     : '';
   const zaklad = `${TYP[d.type] || 'Nabídka'} · ${cena}${zaM2}${vym ? ' · ' + vym : ''}`
-    + ` · ${d.place}, okres ${d.okres}.${termin}`;
+    + ` · ${d.place}, okres ${d.okres}.${termin}${navic || ''}`;
   const varianty = [
     ' Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.',
     ' Poloha na mapě a srovnání s obvyklou cenou.',
@@ -155,10 +155,101 @@ function slozPopis(d, cena, zaM2, vym) {
   return zaklad.slice(0, MEZ_POPISU - 1).replace(/\s+\S*$/, '') + '…';
 }
 
+/* ROZLIŠENÍ SE DĚLÁ AŽ TAM, KDE SE TITULKY OPRAVDU SEJDOU.
+ *
+ * Pokus výš — přidat datum dražby do titulku VŠEM — věc zhoršil: shod
+ * bylo pět, po přidání deset, protože delší varianta přelezla mez
+ * 65 znaků, vybrala se kratší podoba bez výměry a tři dražby, které se
+ * lišily právě výměrou, dostaly tentýž titulek.
+ *
+ * Plošně to tedy nejde. Jde to cíleně: nejdřív se složí titulky všem,
+ * pak se najdou ty shodné a rozliší se JEN TY. Ostatní stránky zůstanou
+ * beze změny, takže ta past nemá kde sklapnout. U rozlišovaných se smí
+ * ustoupit i okresem — ten je ve stránce i v popisku, zatímco datum
+ * dražby je jediná věc na téhle stránce se lhůtou.
+ */
+const ROZLISENI = new Map();
+
+function datumDrazby(d) {
+  const m = /(\d{4}-\d{2}-\d{2})/.exec(d.extra || '');
+  return (m && (d.type === 'drazba' || d.type === 'exekuce')) ? lidskeDatum(m[1]) : '';
+}
+function cisloParcely(d) {
+  const x = (d.parcel == null) ? '' : String(d.parcel).trim();
+  return (x && x !== '—' && x !== '-') ? x : '';
+}
+
+/* Popisek má týž problém a řeší se stejně cíleně. Druh ani parcelní
+   číslo v něm nejsou — dvě nabídky, které se liší jen jimi, tedy dostanou
+   popisek slovo od slova stejný. Naměřeno: jedna dvojice z 1 995, a jsou
+   to dvě podoby TÉŽE dražby (okdrazby.cz/drazba/27754), kterou pravidlo
+   pro duplicity nesloučí, protože se liší druhem.
+   Sloučit je podle shodné URL jsem zkoušel a NEJDE to: jedno „URL"
+   (farmy.cz/nabidka_detail bez identifikátoru) sdílí sedm nabídek ze
+   sedmi různých obcí a jedna dražba kryje parcely ve dvou obcích —
+   slučovat podle toho by pozemky ztrácelo. Zbývá je tedy rozlišit. */
+const ROZLISENI_POPIS = new Map();
+
+export function pripravRozliseniPopisu(polozky) {
+  ROZLISENI_POPIS.clear();
+  const podle = new Map();
+  for (const d of polozky) {
+    const t = textyPro(d).popis;
+    if (!podle.has(t)) podle.set(t, []);
+    podle.get(t).push(d);
+  }
+  for (const skupina of podle.values()) {
+    if (skupina.length < 2) continue;
+    for (const d of skupina) {
+      const par = cisloParcely(d);
+      const navic = par ? ` Parcela ${par}.` : (d.druh ? ` Druh: ${d.druh}.` : '');
+      if (navic) ROZLISENI_POPIS.set(klicNabidky(d), navic);
+    }
+  }
+  return ROZLISENI_POPIS;
+}
+
+export function pripravRozliseni(polozky) {
+  ROZLISENI.clear();
+  const podleTitulku = new Map();
+  for (const d of polozky) {
+    const druh = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : 'Pozemek';
+    const vym = d.area ? `${fmt(d.area)} m²` : '';
+    const t = slozTitulek(druh, vym, d.place, d.okres);
+    if (!podleTitulku.has(t)) podleTitulku.set(t, []);
+    podleTitulku.get(t).push({ d, druh, vym });
+  }
+  const konec = ' | Parcelka';
+  for (const skupina of podleTitulku.values()) {
+    if (skupina.length < 2) continue;
+    for (const { d, druh, vym } of skupina) {
+      const dat = datumDrazby(d), par = cisloParcely(d);
+      const cena = d.price ? `${fmt(d.price)} Kč` : '';
+      /* Pořadí podle užitečnosti pro člověka ve výsledcích hledání:
+         termín dražby > číslo parcely > cena. Uvnitř každého se ustupuje
+         nejdřív okresem, pak výměrou. */
+      const varianty = [];
+      if (dat) varianty.push(`${druh}${vym ? ' ' + vym : ''} — ${d.place}, dražba ${dat}`,
+        `${druh} — ${d.place}, dražba ${dat}`, `${d.place}, dražba ${dat}`);
+      if (par) varianty.push(`${druh}${vym ? ' ' + vym : ''} — ${d.place}, parc. ${par}`,
+        `${druh} — ${d.place}, parc. ${par}`, `${d.place}, parc. ${par}`);
+      if (cena) varianty.push(`${druh}${vym ? ' ' + vym : ''} — ${d.place}, ${cena}`,
+        `${druh} — ${d.place}, ${cena}`, `${d.place}, ${cena}`);
+      for (const v of varianty) {
+        if ((v + konec).length <= MEZ_TITULKU) { ROZLISENI.set(klicNabidky(d), v); break; }
+      }
+      /* Když se nevejde nic, zůstane původní titulek. Dvě stránky se
+         shodným titulkem jsou menší zlo než titulek useknutý uprostřed
+         data — a kontrola v testu to nahlásí. */
+    }
+  }
+  return ROZLISENI;
+}
+
 export function textyPro(d) {
   const druh = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : 'Pozemek';
   const vym = d.area ? `${fmt(d.area)} m²` : '';
-  const titul = slozTitulek(druh, vym, d.place, d.okres);
+  const titul = ROZLISENI.get(klicNabidky(d)) || slozTitulek(druh, vym, d.place, d.okres);
   const cena = d.price ? `${fmt(d.price)} Kč` : 'cena neuvedena';
   /* CENA ZA METR Z VÝMĚRY, KTERÁ KUPUJÍCÍMU PŘIPADNE. Titulek, popis pro
      vyhledávač i náhled v chatu se skládaly dělením celé výměry —
@@ -169,7 +260,7 @@ export function textyPro(d) {
      se číslo neuvádí vůbec — stejně jako ho neuvádí stránka. */
   const zaM2Hodnota = (d.price && d.area) ? CENY.zaMetr(d) : null;
   const zaM2 = (zaM2Hodnota == null || !isFinite(zaM2Hodnota)) ? '' : ` (${fmt(zaM2Hodnota)} Kč/m²)`;
-  const popis = slozPopis(d, cena, zaM2, vym);
+  const popis = slozPopis(d, cena, zaM2, vym, ROZLISENI_POPIS.get(klicNabidky(d)));
   return { titul, popis, cena, zaM2, vym, druh };
 }
 
@@ -442,7 +533,13 @@ export function nabidky() {
 export function generuj() {
   const sablona = fs.readFileSync(path.join(ROOT, 'pozemek.html'), 'utf8');
   const hotove = [];
-  for (const { d, soubor } of mapaSouboru(nabidky()).values()) {
+  const mapa = mapaSouboru(nabidky());
+  /* Rozlišení shodných titulků potřebuje vidět všechny stránky naráz,
+     takže se spočítá dřív, než se začne psát. */
+  const vsechny = [...mapa.values()].map((x) => x.d);
+  pripravRozliseni(vsechny);
+  pripravRozliseniPopisu(vsechny);
+  for (const { d, soubor } of mapa.values()) {
     fs.writeFileSync(path.join(ROOT, soubor), stranka(sablona, d, soubor));
     hotove.push(soubor);
   }

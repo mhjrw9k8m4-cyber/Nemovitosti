@@ -511,6 +511,49 @@ if (smazat) {
   await ctxX.close();
 }
 
+/* --- SOUHRN HLÍDÁNÍ MUSÍ UKÁZAT VŠECHNY MEZE, KTERÉ SE ULOŽILY ------
+ * Formulář ukládá pět mezí (dolní i horní cenu, dolní i horní výměru
+ * a cenu za metr), karta hlídání ukazovala dvě. Kdo si uložil
+ * „od 500 000 Kč", „do 5 000 m²" nebo „do 20 Kč/m²", nenašel to na
+ * kartě nikde — a dvě hlídání, která se lišila právě tím, vypadala
+ * úplně stejně.
+ *
+ * Nepřihlášenému návštěvníkovi stránka ukazuje tytéž souhrny u příkladů,
+ * takže se čtou odtud — kdyby je critText zamlčel, bude to vidět tady.
+ */
+{
+  const ctxU = await prohlizec.newContext({ viewport: { width: 420, height: 900 } });
+  await ctxU.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  const pu = await ctxU.newPage();
+  await pu.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
+  await pu.waitForTimeout(3200);
+  const u = await pu.evaluate(() => {
+    const o = document.querySelector('.hl-ukazka');
+    if (!o) return null;
+    return { radky: [...o.querySelectorAll('.hlu-list li')].map((li) => ({
+      podminky: (li.querySelector('.hlu-p') || {}).textContent || '',
+      cislo: (li.querySelector('.hlu-n') || {}).textContent || '' })) };
+  });
+  pravda('nepřihlášenému stránka ukáže, co hlídání dělá', !!u && u.radky.length >= 2,
+    u ? `řádků ${u.radky.length}` : 'ukázka na stránce není');
+  if (u) {
+    pravda('a u každého příkladu stojí, kolik pozemků by mu přibylo',
+      u.radky.every((r) => /\d/.test(r.cislo)), JSON.stringify(u.radky.map((r) => r.cislo)));
+    /* Pojistka čte PŘEDPIS příkladů ze zdroje stránky: aspoň jeden musí
+       mít mez v Kč/m². Bez toho by kontrola pod tím hledala něco, co
+       nikdo nenastavil, a prošla by, i kdyby to souhrn zamlčoval. */
+    const zdroj = readFileSync(new URL('../hlidani.html', import.meta.url), 'utf8');
+    const predpis = (/var PRIKLADY = \[([\s\S]*?)\];/.exec(zdroj) || [, ''])[1];
+    pravda('mezi příklady je nastavená mez v Kč/m² (jinak nemá co zamlčet)',
+      /max_perm2\s*:\s*\d/.test(predpis), predpis.slice(0, 160));
+    pravda('a souhrn ji opravdu uvádí — formulář ukládá pět mezí, karta jich ukazovala dvě',
+      u.radky.some((r) => /Kč\/m²/.test(r.podminky)),
+      JSON.stringify(u.radky.map((r) => r.podminky)));
+  }
+  await ctxU.close();
+}
+
 je('na žádné stránce nespadl skript', padlo, []);
 
 await prohlizec.close();

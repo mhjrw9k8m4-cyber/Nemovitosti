@@ -19,7 +19,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { souborPro, souborProDalsi, pkey, textyPro, slug } from './generate-parcel-pages.mjs';
+import { souborPro, souborProDalsi, pkey, textyPro, slug, mapaSouboru, nabidky, pripravRozliseni, pripravRozliseniPopisu } from './generate-parcel-pages.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0; const zpravy = [];
@@ -518,6 +518,46 @@ console.log('\nStránky jednotlivých pozemků');
   pravda('a jsou mezi nimi spoluvlastnické podíly', podilu > 300, `${podilu} podílů`);
   pravda('cena za metr v popisu stránky je tatáž, jakou spočítá prohlížeč',
     spatne.length === 0, spatne.slice(0, 4).join('; '));
+}
+
+/* --- DVĚ STRÁNKY SE STEJNÝM TITULKEM JSOU PRO VYHLEDÁVAČ JEDNA ------
+ * Shodný titulek znamená, že vyhledávač stránky považuje za zaměnitelné
+ * a část jich zahodí — ty pozemky pak nejsou vidět vůbec. Měřeno: z 2 121
+ * stránek sdílelo titulek jedenáct (pět skupin) a popisek dvě.
+ *
+ * Nehlídá se „titulky jsou unikátní" natvrdo: u nabídek, které se v datech
+ * neliší vůbec ničím, by to po titulku chtělo nemožné. Hlídá se tohle —
+ * shodný titulek smí zůstat JEN tam, kde se ty nabídky neliší ani druhem,
+ * ani výměrou, ani cenou, ani parcelou, ani termínem dražby.
+ */
+{
+  const mapa = mapaSouboru(nabidky());
+  const polozky = [...mapa.values()];
+  pripravRozliseni(polozky.map((x) => x.d));
+  pripravRozliseniPopisu(polozky.map((x) => x.d));
+  pravda('stránek pozemků je dost na to, aby se shody vůbec mohly objevit',
+    polozky.length > 500, `stránek ${polozky.length}`);
+
+  const odlisitelne = (d) => [d.druh || '', d.area || 0, d.price || 0,
+    String(d.parcel == null ? '' : d.parcel).trim(),
+    (/(\d{4}-\d{2}-\d{2})/.exec(d.extra || '') || [''])[0]].join('|');
+
+  for (const [co, vyber] of [['titulek', (t) => t.titul], ['popisek', (t) => t.popis]]) {
+    const skupiny = new Map();
+    for (const { d } of polozky) {
+      const k = vyber(textyPro(d));
+      if (!skupiny.has(k)) skupiny.set(k, []);
+      skupiny.get(k).push(d);
+    }
+    const spatne = [];
+    for (const [k, nabidkyVeSkupine] of skupiny) {
+      if (nabidkyVeSkupine.length < 2) continue;
+      const otisky = new Set(nabidkyVeSkupine.map(odlisitelne));
+      if (otisky.size > 1) spatne.push(`„${k}" ×${nabidkyVeSkupine.length}`);
+    }
+    pravda(`žádné dvě rozlišitelné nabídky nemají týž ${co}`, spatne.length === 0,
+      spatne.slice(0, 4).join(' | '));
+  }
 }
 
 console.log(zpravy.join('\n'));

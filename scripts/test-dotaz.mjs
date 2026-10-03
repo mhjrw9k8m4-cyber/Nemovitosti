@@ -475,6 +475,66 @@ function pravda(popis, vyslo, proc) {
     `stojí tam „${popisek}" — pozná se z toho jen: ${zminky.join(', ') || 'nic'}`);
 }
 
+/* --- ODZNAK UKAZUJE, CO ČLOVĚK NAPSAL -------------------------------
+ * Pravidlo si ten soubor píše sám: „V odznaku stojí to, co člověk
+ * NAPSAL („nad 2 ha"), ne co si z toho web přeložil." Jenže popisek se
+ * skládal ze ZNORMALIZOVANÝCH slov — bez diakritiky a malými písmeny.
+ * U jednotek bez diakritiky („ha", „km", „mil") to vidět nebylo,
+ * u koruny ano: „pole do 20 Kč/m²" vyrobilo odznak „do 20 kc/m²"
+ * a „do 20 Kč za metr" dokonce „do 20 kc/m2".
+ */
+{
+  // Pojistka: normalizace opravdu komolí — jinak by se nebylo s čím míjet.
+  pravda('normalizace sundává diakritiku a velká písmena (jinak tahle kontrola měří prázdno)',
+    P.norm('Kč/m²') === 'kc/m²', `norm('Kč/m²') = „${P.norm('Kč/m²')}"`);
+
+  const popisy = (q) => P.rozeber(q).casti.map((c) => c.popis);
+  const pary = [
+    ['pole do 20 Kč/m²', 'do 20 Kč/m²'],
+    ['do 20 Kč za metr', 'do 20 Kč za metr'],
+    ['les do 1,5 mil', 'do 1,5 mil'],
+    ['nad 2 ha', 'nad 2 ha'],
+    ['louka 5 HA', 'kolem 5 HA'],
+  ];
+  for (const [dotaz, cekano] of pary) {
+    const p = popisy(dotaz);
+    pravda(`„${dotaz}" → odznak „${cekano}"`, p.indexOf(cekano) !== -1,
+      `odznaky: ${JSON.stringify(p)}`);
+  }
+  // A nikde nesmí prosáknout strojová podoba koruny.
+  const vsechny = ['pole do 20 Kč/m²', 'do 20 Kč za metr', 'zahrada do 300 Kč/m2']
+    .flatMap(popisy);
+  pravda('v žádném odznaku nestojí „kc" místo „Kč"',
+    !vsechny.some((x) => /\bkc\b|kc\//i.test(x) && !/Kč/.test(x)), JSON.stringify(vsechny));
+
+  /* Bez jednotky si korunu domyslel web, ne člověk — tam se dopsat musí. */
+  pravda('„les do 800000" dostane dopsané Kč (jednotku nikdo nenapsal)',
+    popisy('les do 800000').indexOf('do 800000 Kč') !== -1,
+    JSON.stringify(popisy('les do 800000')));
+}
+
+/* --- VĚTY, KTERÉ ČLOVĚK OPRAVDU NAPÍŠE ------------------------------
+ * Zbytek věty se hledá jen v názvu obce, okresu a parcely. Co parser
+ * nepozná, tedy skončí jako hledaná OBEC — a výpis je prázdný. Tyhle
+ * věty takhle padaly: z „chci pozemek na stavbu domu" zbylo „stavbu
+ * domu", z „potřebuji parcelu pod dům" dokonce „potrebuji dum".
+ */
+{
+  const pripady = [
+    ['chci pozemek na stavbu domu', 'Stavební / zastavěná', ''],
+    ['potřebuji parcelu pod dům', 'Stavební / zastavěná', ''],
+    ['pozemek k výstavbě', 'Stavební / zastavěná', ''],
+    ['zahrádka Praha', 'Zahrada', 'praha'],
+    ['hledám pozemek v Kolíně', null, 'koline'],
+  ];
+  for (const [dotaz, druh, zbytek] of pripady) {
+    const r = P.rozeber(dotaz);
+    pravda(`„${dotaz}" → druh ${druh || '—'}, zbytek „${zbytek}"`,
+      r.druh === druh && r.text === zbytek,
+      `vyšlo: druh ${r.druh}, zbytek „${r.text}"`);
+  }
+}
+
 console.log('\nJedno políčko, které rozumí celé větě');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

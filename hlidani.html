@@ -58,6 +58,18 @@
       display:inline-flex; align-items:center; justify-content:center;}
     .hl-tab.je .hl-tab-n{background:rgba(255,255,255,.24); color:#fff;}
     .hl-auth{padding:20px; max-width:var(--m-karta); margin:8px auto;}
+    /* Ukázka pod přihlášením: stejná šířka jako okénko, ať to drží jednu
+       osu, a čísla v jednom sloupci, aby šla porovnat očima. */
+    .hl-ukazka{padding:20px; max-width:var(--m-karta); margin:8px auto;}
+    .hl-ukazka h2{font-size:17px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
+    .hl-ukazka p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
+    .hlu-list{list-style:none; margin:0 0 12px; padding:0;}
+    .hlu-list li{padding:10px 0; border-top:1px solid var(--line);}
+    .hlu-list li:first-child{border-top:0; padding-top:0;}
+    .hlu-k{display:block; font-weight:700; font-size:15px; color:var(--text-ondark);}
+    .hlu-p{display:block; font-size:13px; color:var(--text-ondark-mute); margin-top:2px;}
+    .hlu-n{display:block; font-size:14px; color:var(--text-ondark); margin-top:4px;}
+    .hlu-pozn{font-size:13px; line-height:1.55; color:var(--text-ondark-mute); margin:0;}
     .hl-auth h2{font-size:17px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
     .hl-auth p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
     .hl-in,.hl-sel{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:17px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:8px; outline:none; font-family:inherit;}
@@ -283,6 +295,15 @@
     return F && F.mnozne ? F.mnozne(n, ['pozemek', 'pozemky', 'pozemků']) : 'pozemků';
   }
 
+  /* „od 500 000 Kč do 2 000 000 Kč" je dvakrát táž jednotka a dvakrát
+     táž informace. Rozsah patří do jednoho údaje. */
+  function rozsah(od, do_, jednotka) {
+    if (od && do_) return [fmt(od) + '\u2013' + fmt(do_) + ' ' + jednotka];
+    if (do_) return ['do ' + fmt(do_) + ' ' + jednotka];
+    if (od) return ['od ' + fmt(od) + ' ' + jednotka];
+    return [];
+  }
+
   function critText(s) {
     var p = [];
     /* JMÉNO HLÍDÁNÍ SE POD NÍM NEOPAKUJE. Hlídání okresu se tak i jmenuje,
@@ -293,8 +314,15 @@
     if (jmeno.toLowerCase() !== kde.toLowerCase()) p.push(esc(kde));
     if (s.ptype && TYPE_LABEL[s.ptype]) p.push(TYPE_LABEL[s.ptype]);
     if (s.druh) p.push(esc(s.druh));
-    if (s.max_price) p.push('do ' + fmt(s.max_price) + ' Kč');
-    if (s.min_area) p.push('od ' + fmt(s.min_area) + ' m²');
+    /* PĚT MEZÍ SE UKLÁDALO, DVĚ SE UKAZOVALY. Formulář umí dolní i horní
+       cenu, dolní i horní výměru a cenu za metr — na kartě ale stála jen
+       horní cena a dolní výměra. Kdo si uložil „od 500 000 Kč", „do 5 000 m²"
+       nebo „do 20 Kč/m²", nenašel to na kartě nikde: dvě hlídání, která se
+       lišila právě tím, vypadala úplně stejně. Rozsah se píše jedním
+       údajem („500 000–2 000 000 Kč"), ne dvěma vedle sebe. */
+    p.push.apply(p, rozsah(s.min_price, s.max_price, 'Kč'));
+    p.push.apply(p, rozsah(s.min_area, s.max_area, 'm²'));
+    if (s.max_perm2) p.push('do ' + fmt(s.max_perm2) + ' Kč/m²');
     if (s.features && s.features.length) p.push(s.features.map(esc).join(', '));
     /* Když po odečtení jména nezbylo nic, je to hlídání celého okresu bez
        dalších podmínek — a to je informace, ne prázdno: člověk podle ní
@@ -330,6 +358,69 @@
     });
   }
 
+  /* ---------- Ukázka pro nepřihlášené ----------
+   *
+   * Stránka hlídání ukazovala nepřihlášenému návštěvníkovi jedinou věc:
+   * přihlašovací okénko. Co hlídání dělá, jak často se ozve a jestli se
+   * na jeho vlastní představu vůbec něco najde, se nedalo zjistit jinak
+   * než si založit účet. Tohle to řekne na třech skutečných příkladech,
+   * spočítaných z veřejných dat TOUŽ funkcí matches(), která později
+   * vyhodnocuje opravdová hlídání — takže se čísla nemohou rozejít.
+   *
+   * Hlavní číslo není „kolik je v nabídce", ale KOLIK ZA TÝDEN PŘIBYLO:
+   * upozornění chodí jen na nové pozemky, takže právě tohle říká, jak
+   * často se hlídání ozve. Nula se neschovává, je to taky odpověď.
+   */
+  var PRIKLADY = [
+    { label: 'Stavební pozemky', druh: 'stavební pozemek', max_price: 2000000 },
+    { label: 'Orná půda', druh: 'orná půda', max_perm2: 20 },
+    { label: 'Zahrady', druh: 'zahrada', max_price: 500000 }
+  ];
+
+  function ukazkaHlidani() {
+    if (!DATA.length) return;
+    var dnes = new Date(); dnes.setHours(0, 0, 0, 0);
+    function den(x) { var t = new Date(String(x || '').slice(0, 10)); return isNaN(t) ? null : t; }
+    /* Táž past, jakou hlídá úvodní stránka: „poprvé viděno" se do dat
+       doplnilo najednou, takže po každém resetu historie vypadá skoro
+       celá databáze jako čerstvě přibylá. Nad třetinou se o přírůstku
+       mlčí — radši nic než nepravda. */
+    var sDatem = 0;
+    DATA.forEach(function (d) { if (den(d.first_seen)) sDatem++; });
+    var strop = Math.max(1, Math.round(sDatem / 3));
+
+    var radky = PRIKLADY.map(function (s) {
+      var vse = 0, tyden = 0;
+      for (var i = 0; i < DATA.length; i++) {
+        if (!matches(s, DATA[i])) continue;
+        vse++;
+        var t = den(DATA[i].first_seen);
+        if (!t) continue;
+        var r = Math.round((dnes - t) / 86400000);
+        if (r >= 0 && r < 7) tyden++;
+      }
+      if (!vse) return '';
+      var prirustek = tyden > strop ? ''
+        : (tyden ? '<b>' + fmt(tyden) + '</b> ' + tvarPozemku(tyden) + ' za poslední týden'
+                 : 'za poslední týden nepřibyl žádný');
+      return '<li><span class="hlu-k">' + esc(s.label) + '</span>'
+        + '<span class="hlu-p">' + critText(s) + '</span>'
+        + '<span class="hlu-n">' + (prirustek || (fmt(vse) + ' ' + tvarPozemku(vse) + ' v nabídce')) + '</span></li>';
+    }).filter(Boolean);
+    if (!radky.length) return;
+
+    var box = document.createElement('div');
+    box.className = 'hl-card hl-ukazka';
+    box.innerHTML = '<h2>Co vám hlídání pošle</h2>'
+      + '<p>Upozornění chodí jen na pozemky, které nově <b>přibudou</b> — ne na celý seznam. '
+      + 'Takhle často by se ozvala tahle tři hlídání:</p>'
+      + '<ul class="hlu-list">' + radky.join('') + '</ul>'
+      + '<p class="hlu-pozn">Počítáno z dnešní nabídky toutéž funkcí, která pak vyhodnocuje '
+      + 'vaše vlastní hlídání. Svoje podmínky si nastavíte po přihlášení — druh, okres, cenu, '
+      + 'výměru i to, co pozemek musí mít.</p>';
+    root.appendChild(box);
+  }
+
   /* ---------- Přihlášení ---------- */
   function renderAuth(msg, err) {
     root.innerHTML =
@@ -344,6 +435,8 @@
         '</form>' +
         '<div class="hl-msg' + (err ? ' err' : '') + '" id="hauthmsg">' + (msg || '') + '</div>' +
       '</div>';
+    if (DATA.length) ukazkaHlidani();
+    else loadData().then(ukazkaHlidani, function () {});
     var em = document.getElementById('he'), pw = document.getElementById('hp'), mEl = document.getElementById('hauthmsg');
     function creds() { return { e: (em.value || '').trim(), p: pw.value || '' }; }
     function okc(c) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e) && c.p.length >= 6; }

@@ -40,10 +40,19 @@
        „zemědělská půda" nerozpadla na jednotlivá slova. */
     ['Zemědělská půda', 'zemědělská', ['zemedelska puda', 'zemedelskou pudu', 'zemedelske pozemky', 'zemedelsky pozemek', 'zemedelska', 'zemedelsky']],
     ['Louka / travní porost', 'travní porost', ['trvaly travni porost', 'travni porost', 'louka', 'louky', 'travni', 'pastvina', 'pastviny']],
-    ['Stavební / zastavěná', 'stavební', ['stavebni pozemek', 'stavebni parcela', 'stavebni', 'stavebak', 'zastavena']],
+    /* „pozemek na stavbu domu" a „parcela pod dům" jsou věty, které
+       člověk napíše dřív než slovo „stavební" — měřeno na vlastních
+       dotazech: zbylo z nich „stavbu domu" a „dum", což se hledalo jako
+       NÁZEV OBCE, takže výpis byl prázdný. Delší vazby stojí první. */
+    ['Stavební / zastavěná', 'stavební', ['stavebni pozemek', 'stavebni parcela',
+      'na stavbu domu', 'pod stavbu domu', 'k vystavbe domu', 'na stavbu rodinneho domu',
+      'na stavbu', 'pod stavbu', 'k vystavbe', 'pro stavbu', 'pod dum', 'na dum',
+      'stavebni', 'stavebak', 'zastavena', 'stavbu', 'vystavbe', 'vystavba']],
     ['Lesní pozemek', 'lesní', ['lesni pozemek', 'lesni', 'les', 'lesy', 'lesa']],
     ['Orná půda', 'orná', ['orna puda', 'orna', 'pole', 'poli']],
-    ['Zahrada', 'zahrada', ['zahrada', 'zahrady', 'zahradu']],
+    /* Zahrádka je zahrada. Bez toho se „zahrádka Praha" hledala jako
+       obec „zahradka praha" a nenašla nic. */
+    ['Zahrada', 'zahrada', ['zahrada', 'zahrady', 'zahradu', 'zahradka', 'zahradky', 'zahradku']],
     ['Vinice / sad', 'vinice', ['ovocny sad', 'vinice', 'vinici', 'sad', 'sady']],
     ['Ostatní plocha', 'ostatní', ['ostatni plocha', 'ostatni']],
   ];
@@ -115,6 +124,7 @@
    + ' prodej prodam prodava nabidka nabidky nabizim inzerce'
    + ' pozemek pozemky pozemku pozemkem pozemcich parcela parcely parcelu parcelou'
    + ' okres okrese okresu obec obce obci'
+   + ' potrebuji potrebujeme bych bychom koupe prodeje'
    + ' prosim dekuji').split(' ').forEach(function (w) { if (w) VYPLN[w] = true; });
 
   /* Čísla s jednotkou. „1,5 mil" i „1.5 mil" i „500tis".
@@ -192,8 +202,26 @@
     return pole.slice().sort(function (a, b) { return b.split(' ').length - a.split(' ').length || b.length - a.length; });
   }
 
+  /* Táž slova, jak je člověk napsal. norm() jen zmenší písmena, sundá
+     diakritiku a udělá z pomlček mezery — nic nespojuje ani nerozděluje
+     jinak, takže se dělí na týchž místech a indexy si odpovídají. Kdyby
+     se přesto rozešly (jiný prohlížeč, jiná normalizace), bere se radši
+     znormalizovaná podoba než špatné slovo. */
+  function puvodniSlova(dotaz, slova) {
+    var p = String(dotaz == null ? '' : dotaz)
+      .replace(/[\u2010-\u2015-]/g, ' ').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+    return p.length === slova.length ? p : slova;
+  }
+
   function rozeber(dotaz) {
     var slova = norm(dotaz).split(' ').filter(Boolean);
+    /* V ODZNAKU STOJÍ, CO ČLOVĚK NAPSAL. Dřív se popisek skládal ze
+       znormalizovaných slov, takže „pole do 20 Kč/m²" vyrobilo odznak
+       „do 20 kc/m²" a „do 20 Kč za metr" dokonce „do 20 kc/m2" — web
+       člověku přepsal jeho vlastní větu do strojové podoby. U jednotek
+       bez diakritiky („ha", „km", „mil") to vidět nebylo, u koruny ano. */
+    var psano = puvodniSlova(dotaz, slova);
+    var usek = function (od, delka) { return psano.slice(od, od + delka).join(' '); };
     var vzato = new Array(slova.length);
     var ven = { druh: null, typ: null, kraj: null, site: [], nejakeSite: false,
       jenCelek: false, levne: false, zaMetrOd: null, zaMetrDo: null,
@@ -267,11 +295,13 @@
          v korunách. Malá čísla zůstávají textem: „do 5" může být
          cokoli a tipovat se nebude. */
       var delka = 2 + delkaJed;
+      var delkaJedZapsana = true;
       if (!nas) {
         if (c < BEZ_JEDNOTKY_OD) continue;
         nas = [null, 1, 'cena'];
         delka = 2;
         jed = 'Kč';
+        delkaJedZapsana = false;
       }
       var hodnota = Math.round(c * nas[1]);
       var kde = nas[2];                          // 'cena', 'plocha' nebo 'zaMetr'
@@ -283,8 +313,10 @@
       /* V odznaku stojí to, co člověk NAPSAL („nad 2 ha"), ne co si z toho
          web přeložil („od 2 ha“). Jinak se odznak nedá spárovat s větou
          a rušení by působilo, že se maže něco jiného. */
+      /* Bez jednotky si ji web domyslel, takže ji k odznaku dopíše;
+         jinak se vezme přesně ten úsek věty, který odznak zabral. */
       zaber(i, delka, { druh: kde, smer: smer, hodnota: hodnota,
-        popis: slova[i] + ' ' + slova[i + 1] + ' ' + jed });
+        popis: delka === 2 && !delkaJedZapsana ? usek(i, 2) + ' Kč' : usek(i, delka) });
     }
 
     /* --- 1b) Číslo s jednotkou BEZ „do" a „nad" ------------------------
@@ -309,12 +341,12 @@
         ven.plochaOd = Math.round(bhod * (1 - PRIBLIZNE));
         ven.plochaDo = Math.round(bhod * (1 + PRIBLIZNE));
         zaber(bi, 2, { druh: 'plocha', smer: 'kolem', hodnota: bhod,
-          popis: 'kolem ' + slova[bi] + ' ' + bjed });
+          popis: 'kolem ' + usek(bi, 2) });
       } else if (bnas[2] === 'cena') {
         if (ven.cenaOd != null || ven.cenaDo != null) continue;
         ven.cenaDo = bhod;
         zaber(bi, 2, { druh: 'cena', smer: 'do', hodnota: bhod,
-          popis: 'do ' + slova[bi] + ' ' + bjed });
+          popis: 'do ' + usek(bi, 2) });
       }
     }
 
