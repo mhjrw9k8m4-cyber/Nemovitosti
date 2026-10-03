@@ -213,6 +213,32 @@
     return p.length === slova.length ? p : slova;
   }
 
+  /* ČÍSLO A JEDNOTKA NAPSANÉ DOHROMADY. Komentář u NASOBEK slibuje, že
+     „500tis" se přečte — jenže slova se dělila jen mezerou, takže
+     „500tis", „2ha", „1000m2", „1mil" ani „20Kč/m²" neprošly a padaly
+     do hledání OBCE. Výsledek: nula nabídek na větu, které každý člověk
+     rozumí. Rozdělí se tu, a jen když je za číslem ZNÁMÁ jednotka —
+     parcelní číslo „769/2" ani obec s číslicí se tím nerozbije. */
+  function rozdelSlepene(slova, psano) {
+    var vsl = [], vps = [];
+    for (var i = 0; i < slova.length; i++) {
+      var t = slova[i], m = /^(\d+(?:[.,]\d+)?)(.+)$/.exec(t), jed = m && m[2];
+      var zname = false;
+      if (jed) {
+        if (KM_JEDNOTKA.test(jed)) zname = true;
+        else for (var n = 0; n < NASOBEK.length; n++) if (NASOBEK[n][0].test(jed)) { zname = true; break; }
+      }
+      /* Původní slovo se dělí na TÉMŽE místě. Kdyby mělo jinou délku
+         (jiná normalizace písmen), radši se nedělí nic — špatně
+         rozpůlené slovo je horší než nerozdělené. */
+      var orig = psano[i] == null ? t : psano[i];
+      if (!zname || orig.length !== t.length) { vsl.push(t); vps.push(orig); continue; }
+      vsl.push(m[1], jed);
+      vps.push(orig.slice(0, m[1].length), orig.slice(m[1].length));
+    }
+    return [vsl, vps];
+  }
+
   function rozeber(dotaz) {
     var slova = norm(dotaz).split(' ').filter(Boolean);
     /* V ODZNAKU STOJÍ, CO ČLOVĚK NAPSAL. Dřív se popisek skládal ze
@@ -221,6 +247,8 @@
        člověku přepsal jeho vlastní větu do strojové podoby. U jednotek
        bez diakritiky („ha", „km", „mil") to vidět nebylo, u koruny ano. */
     var psano = puvodniSlova(dotaz, slova);
+    var rozdelene = rozdelSlepene(slova, psano);
+    slova = rozdelene[0]; psano = rozdelene[1];
     var usek = function (od, delka) { return psano.slice(od, od + delka).join(' '); };
     var vzato = new Array(slova.length);
     var ven = { druh: null, typ: null, kraj: null, site: [], nejakeSite: false,
@@ -346,6 +374,15 @@
         if (ven.cenaOd != null || ven.cenaDo != null) continue;
         ven.cenaDo = bhod;
         zaber(bi, 2, { druh: 'cena', smer: 'do', hodnota: bhod,
+          popis: 'do ' + usek(bi, 2) });
+      } else if (bnas[2] === 'zaMetr') {
+        /* Táž úvaha jako u ceny o řádek výš: „20 Kč/m²" je strop, co je
+           člověk ochoten dát za metr, ne požadavek na přesně dvacet.
+           Bez tohohle zbylo „20 kc/m²" na hledání OBCE a výpis byl
+           prázdný — stejná vada jako u slepeného „500tis". */
+        if (ven.zaMetrOd != null || ven.zaMetrDo != null) continue;
+        ven.zaMetrDo = bhod;
+        zaber(bi, 2, { druh: 'zaMetr', smer: 'do', hodnota: bhod,
           popis: 'do ' + usek(bi, 2) });
       }
     }

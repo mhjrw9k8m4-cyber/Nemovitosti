@@ -2913,6 +2913,10 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 /* Aby podložení nekopírovalo tvar řádku na pixel k okrajům textu. */
 .okr-list .okr-item{border-radius:var(--r-sm);}
 .okr-item .okr-badge{font-size:12px; font-weight:700; letter-spacing:var(--odznak-proklad); text-transform:uppercase; padding:2px 8px; border-radius:var(--r-pill); border:1px solid currentColor;}
+/* Odhad proti okolí — táž barva jako na mapě, ať to člověk pozná,
+   i když přijde z vyhledávače rovnou sem. */
+.okr-sleva{color:var(--c-ok-ink);}
+.okr-overit{color:var(--c-exekuce-ink);}
 /* Štítek nese text i rámeček v jedné barvě (currentColor), takže se na něj
    vztahuje mez pro text. Sytá varianta měla 4,15 : 1 — pod normou. */
 .okr-badge.t-sale{color:var(--c-sale-ink);} .okr-badge.t-drazba{color:var(--c-drazba-ink);} .okr-badge.t-exekuce{color:var(--c-exekuce-ink);} .okr-badge.t-obec{color:var(--c-obec-ink);} .okr-badge.t-majitel{color:var(--c-majitel-ink);}

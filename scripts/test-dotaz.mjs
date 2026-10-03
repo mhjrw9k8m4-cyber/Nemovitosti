@@ -535,6 +535,38 @@ function pravda(popis, vyslo, proc) {
   }
 }
 
+/* --- ČÍSLO A JEDNOTKA NAPSANÉ DOHROMADY -----------------------------
+ * Komentář u tabulky jednotek slibuje, že „500tis" se přečte. Nikdy se
+ * nečetlo: slova se dělila jen mezerou, takže „500tis", „2ha",
+ * „1000m2", „1mil" ani „20Kč/m²" neprošly a padaly do hledání OBCE —
+ * tedy nula nabídek na větu, které rozumí každý. Se mezerou přitom
+ * všechny ty tvary fungovaly, takže si toho nikdo nemusel všimnout.
+ */
+{
+  const tvary = [
+    ['500tis', (r) => r.cenaDo === 500000],
+    ['do 500tis', (r) => r.cenaDo === 500000],
+    ['1mil', (r) => r.cenaDo === 1000000],
+    ['2ha', (r) => r.plochaOd > 0 && r.plochaDo > 0],
+    ['od 1000m2', (r) => r.plochaOd === 1000],
+    ['20Kč/m²', (r) => r.zaMetrDo === 20],
+    ['les 500tis', (r) => r.cenaDo === 500000 && r.druh === 'Lesní pozemek'],
+  ];
+  for (const [dotaz, sedi] of tvary) {
+    const r = P.rozeber(dotaz);
+    pravda(`„${dotaz}" se přečte i bez mezery`, sedi(r) && r.text === '',
+      `cena ${r.cenaOd}–${r.cenaDo}, plocha ${r.plochaOd}–${r.plochaDo}, Kč/m² ${r.zaMetrDo}, zbytek „${r.text}"`);
+  }
+  /* A hlavně: dělí se JEN před známou jednotkou. Parcelní číslo ani
+     název s číslicí se tím rozpadnout nesmí — to by vyměnilo jednu
+     prázdnou odpověď za druhou. */
+  const parcela = P.rozeber('769/2');
+  pravda('parcelní číslo „769/2" zůstane textem na hledání', parcela.text === '769/2',
+    `zbylo „${parcela.text}"`);
+  const praha = P.rozeber('Praha 5');
+  pravda('a „Praha 5" taky', praha.text === 'praha 5', `zbylo „${praha.text}"`);
+}
+
 console.log('\nJedno políčko, které rozumí celé větě');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

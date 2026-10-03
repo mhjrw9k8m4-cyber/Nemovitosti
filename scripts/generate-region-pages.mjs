@@ -336,6 +336,26 @@ if (!CENY || !CENY.zaMetr) {
   process.exit(1);
 }
 spoctiMeze(all);                 // meze napřed, ať platí všude stejné
+
+/* ODHAD CENY PATŘÍ I SEM. Mapa i stránka pozemku u každé nabídky říkají,
+   jak je drahá proti okolí — na okresních, krajských a druhových
+   stránkách, kam lidé chodí z vyhledávačů, stál jen holý ceník. Kdo
+   přišel odtud, neměl jak poznat, jestli je 1 200 Kč/m² v tom okrese
+   hodně, nebo málo.
+   Model je TENTÝŽ (js/ceny.js) a pravidla se opisují z js/main.js včetně
+   jejich opatrnosti: u spoluvlastnického podílu se o slevě nemluví
+   (cena je za zlomek, výměra celá), neuvěřitelná sleva není nabídka,
+   ale varování, a u odhadu, kterému sám model nevěří, se netvrdí nic. */
+const MODEL = CENY.postav ? CENY.postav(all) : null;
+
+function odznakCeny(o) {
+  const od = MODEL && MODEL.odhad ? MODEL.odhad(o) : null;
+  if (!od || !od.podleVelikosti) return '';
+  if (od.pochybna) return '<b class="okr-overit">cena k ověření</b>';
+  if (od.nejisty && od.podOdhadem >= 25 && !od.podil) return '<b class="okr-overit">cena k ověření</b>';
+  if (od.podOdhadem >= 25 && !od.podil) return `<b class="okr-sleva">\u2212${od.podOdhadem} % proti okolí</b>`;
+  return '';
+}
 /* Mez „ceny se liší násobky" se bere z js/ceny.js, ne z vlastního čísla.
    Web už tenhle pojem má: u odhadu konkrétního pozemku hlásí „nejistý",
    když (p75 − p25) / medián přeleze MEZ_ROZPTYL. Kdyby si stránka s cenami
@@ -530,6 +550,8 @@ function itemRow(o, skryjOkres){
   if(o.site && o.site.length) bits.push('inzerát uvádí <b>'+esc(o.site.map(k=>VYB.nazev(k).toLowerCase()).join(', '))+'</b>');
   /* Podíl mění, CO se kupuje — bez něj vypadá cena za metr jako trhák. */
   if(o.podil) bits.push('<b>spoluvlastnický podíl'+(o.zlomek?' '+esc(o.zlomek):'')+'</b>');
+  const oc = odznakCeny(o);
+  if (oc) bits.push(oc);
   /* Odkaz ven se musel poznat až po klepnutí. Šipka „→" vypadá jako
      „další stránka", ne jako „odcházíš z webu" — a kdo poslouchá čtečku
      obrazovky, nepozná ani to. Proto šikmá šipka, doména v popisku

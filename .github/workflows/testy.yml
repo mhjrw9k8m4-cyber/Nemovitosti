@@ -73,6 +73,12 @@ jobs:
       - name: Hledání celou větou (druh, cena, sítě v jednom políčku)
         run: node scripts/test-dotaz.mjs
 
+      - name: Hlídač jednotlivých zdrojů (tiše spadlý zdroj)
+        run: node scripts/test-hlidac-zdroju.mjs
+
+      - name: Odhad ceny na regionálních stránkách
+        run: node scripts/test-odhad-regiony.mjs
+
       - name: Okruh kolem místa (do 30 km od Brna)
         run: node scripts/test-okruh.mjs
 

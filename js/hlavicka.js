@@ -274,6 +274,16 @@
   if ('ResizeObserver' in window && document.body) {
     try { new ResizeObserver(premerPozdeji).observe(document.body); } catch (e) {}
   }
+  /* A JEŠTĚ JEDNOU, AŽ JE STRÁNKA HOTOVÁ. Míry se berou při startu a pak
+     už jen při změně velikosti okna nebo rozměru <body>. To stačí, dokud
+     se všechno, co stránku prodlužuje, promítne do výšky body — jenže
+     obrázky, písma a mapa dojíždějí po načtení a ne každá taková změna
+     se musí v body projevit (např. když roste prvek s vlastním
+     rozvržením). Zůstane pak uložená STARÁ poloha patičky a tlačítko
+     „nahoru" u ní neuhne, protože podle svých čísel k ní ještě nedojelo.
+     Jedno přeměření po `load` to srovná a nestojí nic: při rolování se
+     dál jen porovnávají dvě čísla. */
+  window.addEventListener('load', premerPozdeji);
   premer();
 
   b.addEventListener('click', function (e) {

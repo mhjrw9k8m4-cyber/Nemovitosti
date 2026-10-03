@@ -214,5 +214,14 @@ await prohlizec.close();
 console.log('\nTlačítko „nahoru" na dlouhých stránkách');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Tlačítko nahoru: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) {
+  /* Do anotace v CI se dostane jen tenhle jediný řádek. Dokud na něm
+     stál pouhý počet, nedalo se z něj poznat vůbec nic: osm kontrol
+     padalo několik dní po sobě a z e-mailu šlo zjistit jen to, že jich
+     bylo osm. Teď nese první padlou kontrolu i s naměřenými čísly. */
+  const prvni = zpravy.find((z) => z.indexOf('✕') !== -1) || '';
+  console.log('::error::Tlačítko nahoru: ' + chyb + ' kontrol neprošlo. První: '
+    + prvni.replace(/\s+/g, ' ').replace(/^\s*✕\s*/, '').slice(0, 240));
+  process.exit(1);
+}
 process.exit(0);

@@ -361,6 +361,38 @@ function normDruh(d) {
   return s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
 }
 
+/* HLÍDAČ JEDNOTLIVÝCH ZDROJŮ.
+ *
+ * Pojistka proti „utržení" dat níž hlídá SOUČET: když se stáhne míň než
+ * 60 % minula, běh skončí chybou a stará data zůstanou. To ale nechytí
+ * ten tišší případ: jeden zdroj změní podobu stránky, parser přestane
+ * cokoli najít — a protože odpověděl, zapíše se jako „ok, 0 záznamů".
+ * Součet přitom klesne třeba jen o 4 %, takže pojistka mlčí a web prostě
+ * přestane ukazovat nové dražby z toho portálu. Nikde se to nedozvíme.
+ *
+ * Proto se každý zdroj porovnává i SÁM SE SEBOU z minulého běhu:
+ *   · spadl na nulu, ačkoli minule nosil aspoň PRAH_SLEDOVANI → „prázdno"
+ *   · spadl pod polovinu → „propad"
+ * Prázdno běh zastaví (stejně jako u součtu), propad hlasitě ohlásí
+ * a zapíše se do dat, aby šel ukázat i na webu.
+ */
+export const PRAH_SLEDOVANI = 20;     // menší zdroj kolísá sám od sebe
+export const PRAH_PROPADU = 0.5;
+
+export function porovnejZdroje(minule, ted) {
+  const predchozi = {};
+  for (const z of (minule || [])) if (z && z.nazev) predchozi[z.nazev] = +z.pocet || 0;
+  const nalezy = [];
+  for (const z of (ted || [])) {
+    if (!z || z.stav !== 'ok') continue;            // chybu a vypnuto hlásí stav sám
+    const drive = predchozi[z.nazev];
+    if (!(drive >= PRAH_SLEDOVANI)) continue;       // nový nebo malý zdroj neporovnáváme
+    if (z.pocet === 0) nalezy.push({ nazev: z.nazev, druh: 'prazdno', drive, ted: z.pocet });
+    else if (z.pocet < drive * PRAH_PROPADU) nalezy.push({ nazev: z.nazev, druh: 'propad', drive, ted: z.pocet });
+  }
+  return nalezy;
+}
+
 async function fetchDrazby() {
   const year = new Date().getFullYear();
   const out = [];
@@ -885,6 +917,26 @@ async function main() {
     cas: new Date().toISOString(),
     chyba: r.status === 'rejected' ? String((r.reason && r.reason.message) || r.reason).slice(0, 140) : null,
   }));
+  /* Porovnání s minulým během. Čte se ze souboru, který se teprve bude
+     přepisovat — tedy ještě ze starých dat. */
+  let minuleZdroje = [];
+  try { minuleZdroje = JSON.parse(readFileSync(OUT, 'utf8')).zdroje || []; } catch { /* první běh */ }
+  const nalezy = porovnejZdroje(minuleZdroje, zdroje);
+  for (const n of nalezy) {
+    const z = zdroje.find((x) => x.nazev === n.nazev);
+    if (z) z.stav = n.druh;                  // „prazdno" / „propad" se zapíše do dat
+  }
+  const prazdne = nalezy.filter((n) => n.druh === 'prazdno');
+  if (prazdne.length) {
+    console.error('CHYBA: ' + prazdne.map((n) => `zdroj ${n.nazev} nevrátil nic (minule ${n.drive})`).join('; ')
+      + '. Nejspíš se změnila podoba stránky a parser přestal cokoli najít.'
+      + ' Ponechávám stará data a končím s chybou, ať přijde upozornění.');
+    process.exit(1);
+  }
+  for (const n of nalezy) {
+    console.error(`POZOR: zdroj ${n.nazev} přinesl ${n.ted} záznamů, minule ${n.drive}.`);
+  }
+
   zdroje.forEach((z) => {
     if (z.stav === 'ok') console.log(`Zdroj ${z.nazev}: ${z.pocet} záznamů.`);
     else if (z.stav === 'vypnuto') console.log(`Zdroj ${z.nazev}: vypnutý (${z.chyba}).`);
