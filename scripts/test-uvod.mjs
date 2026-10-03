@@ -666,6 +666,53 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   }
 }
 
+/* --- ZMĚNA CENY SE DOSTANE AŽ NA KARTU ------------------------------
+ * Logiku hlídá scripts/test-zlevneni.mjs; tady jde o to poslední, co se
+ * dá rozbít samostatně — že je modul na stránce vůbec načtený a že se
+ * odznak opravdu vykreslí. Data se podstrčí, protože `cena_drive` do
+ * ostrých dat doplní až robot při druhém běhu.
+ */
+{
+  const DATA = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8'));
+  DATA.opportunities.forEach((o, i) => {
+    if (i % 3 === 0) { o.cena_drive = Math.round(o.price * 1.4); o.cena_zmena = '2026-09-20'; }
+    else if (i % 3 === 1) { o.cena_drive = Math.round(o.price * 0.8); o.cena_zmena = '2026-09-25'; }
+    else { o.cena_drive = Math.round(o.price * 1.01); }   // pod mezí → musí mlčet
+  });
+  const ctxZ = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  await ctxZ.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: JSON.stringify(DATA) }));
+  const pz = await ctxZ.newPage();
+  await pz.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
+  await pz.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
+  await pz.waitForTimeout(1500);
+  const v = await pz.evaluate(() => ({
+    modul: typeof window.PKZlevneni,
+    karet: document.querySelectorAll('.opp-item').length,
+    dolu: [...document.querySelectorAll('.opp-zlevneno')].map((e) => ({ t: e.textContent.trim(), p: e.title })),
+    nahoru: [...document.querySelectorAll('.opp-zdrazeno')].map((e) => e.textContent.trim()),
+    drobne: [...document.querySelectorAll('.opp-item')].filter((li) => {
+      const t = li.textContent || '';
+      return /o 1 %/.test(t);
+    }).length,
+  })).catch(() => null);
+  pravda('modul pro změnu ceny je na úvodní stránce načtený',
+    !!v && v.modul === 'object', v ? `typeof PKZlevneni = ${v.modul}` : 'stránka nedojela');
+  if (v) {
+    pravda('a na kartách se objeví „Zlevněno o X %"', v.dolu.length > 0, `karet ${v.karet}`);
+    pravda('i „Zdraženo o X %" — pohyb nahoru se nezamlčuje', v.nahoru.length > 0,
+      JSON.stringify(v.nahoru));
+    pravda('v popisku odznaku stojí původní cena i datum',
+      v.dolu.every((x) => /Kč/.test(x.p) && /\d+\. \d+\. \d{4}/.test(x.p)),
+      JSON.stringify(v.dolu.slice(0, 2)));
+    /* Pojistka proti bezzubosti: podstrčená drobná změna (1 %) se na
+       kartě objevit NESMÍ, jinak by odznak svítil u všeho. */
+    pravda('a změna o jediné procento se neukazuje', v.drobne === 0, `karet s „o 1 %": ${v.drobne}`);
+  }
+  await ctxZ.close();
+}
+
 await prohlizec.close();
 
 console.log('\nÚvodní obrazovka — živá čísla a věrohodnost cen');

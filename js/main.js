@@ -3855,6 +3855,15 @@
       var srovnaniModel = null;
       if (isFeatured(d)) chips.push('<span class="opp-feat">Zvýrazněno</span>');
       if (cd) chips.push(cd);
+      /* ZMĚNA CENY JE FAKT, NE ODHAD. Odznak „−52 % proti okolí" je
+         model, který se může mýlit; „majitel sám šel dolů o 25 %" je
+         doložená věc — nabídka leží a prodávající už jednou ustoupil.
+         Proto stojí mezi odznaky hned nahoře. Text skládá js/zlevneni.js,
+         ať se karta, stránka pozemku a tabulka nerozejdou. */
+      var _zm = window.PKZlevneni ? window.PKZlevneni.zmena(d) : null;
+      if (_zm) chips.push('<span class="' + (_zm.dolu ? 'opp-zlevneno' : 'opp-zdrazeno')
+        + '" title="' + esc(window.PKZlevneni.popis(_zm, fmt)) + '">'
+        + esc(window.PKZlevneni.text(_zm)) + '</span>');
       /* Odznak výhodné ceny. Když umíme spočítat obvyklou cenu v okolí,
        * řekneme to rovnou takhle — „o 92 % pod obvyklou v okrese" je
        * údaj, kdežto „levnější než 92 % podobných" je pořadí v žebříčku

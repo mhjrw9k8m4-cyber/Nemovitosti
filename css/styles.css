@@ -4682,6 +4682,11 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   .por-tab tbody th::after, .por-tab thead th:first-child::after{display:none;}
 }
 .por-nej{color:var(--c-ok-ink); font-weight:700;}
+/* Změna ceny proti minulému běhu. Zlevnění zeleně jako ostatní dobré
+   zprávy, zdražení v barvě upozornění — ne poplašně červeně, protože to
+   není vada nabídky, jen informace. */
+.opp-zlevneno{color:var(--c-ok-ink); border:1px solid currentColor;}
+.opp-zdrazeno{color:var(--c-drazba-ink); border:1px solid currentColor;}
 .por-pozn{font-size:13px; line-height:1.55; color:var(--text-ondark-mute);
   margin:14px 0 0; max-width:var(--m-text);}
 .por-nacitam{font-size:14px; color:var(--text-ondark-mute);}

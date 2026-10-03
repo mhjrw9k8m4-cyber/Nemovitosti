@@ -82,6 +82,9 @@ jobs:
       - name: Historie ceny nabídky (zlevnil majitel?)
         run: node scripts/test-ceny-historie.mjs
 
+      - name: Věta o změně ceny
+        run: node scripts/test-zlevneni.mjs
+
       - name: Okruh kolem místa (do 30 km od Brna)
         run: node scripts/test-okruh.mjs
 
