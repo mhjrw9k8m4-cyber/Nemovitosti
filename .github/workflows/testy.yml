@@ -242,6 +242,9 @@ jobs:
       - name: Konec nabídky není konec adresy
         run: node scripts/test-ukonceno.mjs
 
+      - name: Cesta ven z okresu
+        run: node scripts/test-cesta-ven.mjs
+
       - name: Rychlý výběr (logika balíčku)
         run: node scripts/test-rychlovyber.mjs
 

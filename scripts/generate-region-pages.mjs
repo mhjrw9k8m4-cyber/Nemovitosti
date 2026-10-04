@@ -714,7 +714,10 @@ ${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(pod
           <h3>Prohlédněte si okres ${esc(okres)} na mapě</h3>
           <p>Interaktivní mapa s filtrováním podle ceny, výměry i druhu pozemku — a odkazy do katastru na ověření.</p>
         </div>
-        <a href="${krajLink}" class="btn-primary btn-glow">Otevřít na mapě →</a>
+        <div class="acx-akce">
+          <a href="${krajLink}" class="btn-primary btn-glow">Otevřít na mapě →</a>
+        <a href="index.html#mapa" class="acx-vse">nebo celá ČR</a>
+        </div>
       </div>
 
       <div class="add-card" style="margin-top:22px;">
@@ -818,7 +821,10 @@ ${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more" style="margin-to
           <h3>Otevřít ${esc(meta.disp)} na mapě</h3>
           <p>Celý kraj na interaktivní mapě — filtrujte podle ceny, výměry i druhu pozemku a proklikněte se do katastru.</p>
         </div>
-        <a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa" class="btn-primary btn-glow">Otevřít na mapě →</a>
+        <div class="acx-akce">
+          <a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa" class="btn-primary btn-glow">Otevřít na mapě →</a>
+        <a href="index.html#mapa" class="acx-vse">nebo celá ČR</a>
+        </div>
       </div>
 
       <div class="okr-blok">

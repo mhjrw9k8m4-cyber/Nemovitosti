@@ -2818,6 +2818,22 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .add-step h3{font-size:16px; margin-bottom:8px;}
 .add-step p{font-size:14px; color:var(--text-ondark-mute); line-height:1.5;}
 /* Proklik na druhou stránku (Prodej ↔ Inzerce) */
+/* CESTA VEN Z REGIONU. Hlavní tlačítko na okresní i krajské stránce
+   vede na mapu ZÚŽENOU na ten kraj — a dál už se z ní jinam nedostanete
+   jinak než přes menu. Změřeno na pozemky-okres-benesov.html (37 597
+   znaků těla): odkazy na sousední okresy leží až na znaku 34 604, tedy
+   za celým výpisem nabídek, a odkaz na celou republiku je jen v horním
+   menu. Kdo sjede k nabídkám a zjistí, že v okrese nic není, nemá
+   odtud kam jít.
+   Tahle cesta proto stojí HNED VEDLE hlavního tlačítka (znak 4 287,
+   kousek nad výpisem) — tiše, jako odkaz, ne jako druhé tlačítko:
+   zúžení na kraj zůstává tím, co se nabízí první. */
+.acx-akce{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+.acx-vse{font-size:14px; font-weight:600; color:var(--copper);
+  text-decoration:underline; text-underline-offset:3px;
+  /* 44px terč pro palec, aniž by odkaz vypadal jako tlačítko */
+  display:inline-flex; align-items:center; min-height:44px;}
+.acx-vse:hover{color:var(--copper-bright);}
 .add-cross{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
   margin-top:28px; padding:20px 20px; background:var(--ink-soft2); border:1px solid var(--line-strong); border-radius:var(--r-md);}
 .add-cross .acx-copy h3{font-size:16px; margin-bottom:4px;}
