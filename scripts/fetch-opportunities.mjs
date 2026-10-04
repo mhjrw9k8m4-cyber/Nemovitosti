@@ -325,6 +325,77 @@ function parseArea(text) {
   const n = parseInt(m[1].replace(/[\s.]/g, ''), 10);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
+/* VÝMĚRA Z DLOUHÉHO POPISU — a tady se první číslo brát NESMÍ.
+ *
+ * parseArea() výš bere první „N m²" v textu. U NÁZVU inzerátu je to
+ * v pořádku: název je krátký a jiná výměra v něm nebývá. U POPISU je to
+ * nebezpečné, protože popis je volný text, kde výměr bývá víc —
+ * sousední parcela, zastavěná plocha domu, rozloha obce, podlahová
+ * plocha. Změřeno na 1 585 stažených popisech: 1 029 z nich (64,9 %)
+ * obsahuje VÍC NEŽ JEDNU různou výměru. Vzít první znamená u dvou
+ * třetin textů hádat — a chybná výměra se nepozná: tiše z ní vyjde
+ * nesmyslná cena za metr, podle které web počítá odhady a staví
+ * statistiky okresů.
+ *
+ * Proto se bere jen výměra, která je NA POZEMKU NAPSANÁ: musí jí
+ * předcházet slovo, které o pozemku mluví (výměra, rozloha, plocha,
+ * pozemek, parcela, pole, zahrada…) v rozsahu pár slov. A když takových
+ * čísel vyjde víc RŮZNÝCH, nevrací se nic: záznam zůstane bez výměry.
+ * Je to táž zásada, kterou se tenhle soubor řídí u dražební jistoty —
+ * radši údaj neuvést než uvést cizí číslo.
+ */
+/* Dvě síly důkazu, ne jedna.
+   VÝSLOVNÁ vazba je „pozemek/parcela … o výměře 2 500 m²" — tedy číslo
+   navázané přímo na POZEMEK. Slabá vazba je pouhé sousedství se slovem
+   o pozemku; tam může jít i o sousední parcelu nebo o stavbu na ní.
+   Hledá se nejdřív výslovná, a jen když žádná není, zkouší se slabá.
+   Obojí platí jen tehdy, když vyjde JEDNO číslo — dvě různé výslovné
+   výměry znamenají, že se v textu prodává víc věcí, a tam se hádat
+   nesmí.
+
+   Pozor na skloňování: „rozloha" dělá „o ROZLOZE", takže kmen musí být
+   rozlo[hz], ne rozloh. Napoprvé tam stálo jen rozloh\w* a měření to
+   odhalilo: u inzerátu „pozemek o rozloze 1007 m²… sousední parcela
+   o výměře 431 m²" vyhrála sousední parcela. */
+const AREA_POZEMEK = '(?:pozem|parcel|zahrad|pole|poli|louk|les|orn|vinic|sad)\\w*';
+const AREA_VYSLOVNE = new RegExp(AREA_POZEMEK + '[^.;!?]{0,16}?(?:o\\s+)?(?:vymer|rozlo[hz]|velikosti)\\w*\\s*(?:cca\\s*|asi\\s*|priblizne\\s*)?$');
+const AREA_SLABE = new RegExp(AREA_POZEMEK + '|vymer\\w*|rozlo[hz]\\w*|plo(?:ch|s)\\w*|velikosti');
+/* „zastavěná / podlahová / užitná / obytná plocha" patří STAVBĚ, ne
+   pozemku — a právě tudy přišla do dat chata o 25 m² zapsaná jako
+   výměra pozemku. Nesmí to být přilepené na konec: v textech stojí
+   i „celková užitná plocha pak 105 m²“. */
+/* Kmen je plo(ch|s), ne ploch: „plocha" dělá „o PLOŠE", a po odstranění
+   diakritiky z toho je „plose". Je to táž past jako u „rozloha → o
+   rozloze" o kus výš a chytla se stejně — zkouškou, ne úvahou: text
+   „na pozemku stojí chata o zastavěné ploše cca 25 m²" vracel jako
+   výměru pozemku 25. */
+const AREA_CIZI = /(?:zastaven|podlahov|uzitn|obytn)\w*\s+plo(?:ch|s)\w*/;
+function parseAreaPopis(text) {
+  const t = String(text == null ? '' : text);
+  // bez diakritiky, ať „výměra" i „vymera" platí stejně
+  const bez = t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  /* Nejsilnější důkaz: „o CELKOVÉ výměře 18 966 m²". Takhle psaný údaj
+     stojí nad výčtem jednotlivých parcel a je to přesně to, co se
+     prodává — naměřeno na inzerátu, kde se po sobě jmenovaly parcely
+     8 579, 8 582 a 1 805 m² a teprve pak jejich součet. */
+  const celkem = new Set();
+  const vyslovne = new Set(), slabe = new Set();
+  const re = /(\d[\d\s.]*)\s*m(?:2|²)/gi;
+  let m;
+  while ((m = re.exec(bez))) {
+    const n = parseInt(m[1].replace(/[\s.]/g, ''), 10);
+    if (!Number.isFinite(n) || n <= 0) continue;
+    const pred = bez.slice(Math.max(0, m.index - 48), m.index).replace(/\s+$/, ' ');
+    if (AREA_CIZI.test(pred)) continue;
+    if (/celkov\w*\s+(?:vymer|rozlo[hz])\w*\s*$/.test(pred)) celkem.add(n);
+    else if (AREA_VYSLOVNE.test(pred)) vyslovne.add(n);
+    else if (AREA_SLABE.test(pred)) slabe.add(n);
+  }
+  if (celkem.size === 1) return [...celkem][0];
+  if (celkem.size === 0 && vyslovne.size === 1) return [...vyslovne][0];
+  if (celkem.size === 0 && vyslovne.size === 0 && slabe.size === 1) return [...slabe][0];
+  return null;
+}
 /* Druh pozemku z volného textu. Pravidla jsou ve sdíleném modulu
    js/druh.js — stejně jako u sítí a příjezdu (js/vybaveni.js), ať je web
    i robot čtou stejně a ať se dají zkoušet bez sítě.
@@ -598,7 +669,8 @@ async function fetchOkdrazby() {
         const price = Math.round(+(bma.lowestSubmission || bma.estimatedPrice || 0)) || 0;
         if (!price) continue;
         const txt = (j.name || '') + ' ' + (j.description || '');
-        const area = parseArea(j.name) || parseArea(j.description);
+        // Název je krátký a jednoznačný; popis se čte opatrně (viz parseAreaPopis).
+        const area = parseArea(j.name) || parseAreaPopis(j.description);
         // okres: z GPS (spolehlivé), jinak z textu „okres X"
         const maBod = typeof j.lat === 'number' && typeof j.lon === 'number';
         let okres = maBod ? nearestOkres(j.lat, j.lon) : null;
