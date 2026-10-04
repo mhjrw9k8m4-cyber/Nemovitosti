@@ -50,8 +50,10 @@ export function popisNabidky(d) {
 
 /* Odkaz vede na VLASTNÍ stránku pozemku, ne na mapu s parametry: je to
    adresa, kterou zná vyhledávač i kanál novinek, a dá se poslat dál.
-   Jméno souboru dodává rozesílač (souborPro() z generátoru stránek),
-   aby tenhle modul nemusel znát ani data, ani generátor.
+   Jméno souboru dodává rozesílač, a bere ho z MAPY JMEN (mapaSouboru
+   v generátoru stránek), ne z výpočtu souborPro(): na jeho klíči se
+   nabídky srážejí a odkaz by vedl na cizí pozemek. Tenhle modul tedy
+   nemusí znát ani data, ani generátor — jen trvá na tom, že jméno je.
    Chybějící jméno je chyba, ne důvod poslat odkaz na úvodní stránku:
    nabídka bez odkazu je v e-mailu k ničemu a tichý odkaz „někam" by se
    poznal až podle toho, že na něj nikdo neklikne. */

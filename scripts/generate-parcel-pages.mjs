@@ -294,6 +294,32 @@ export function textyPro(d) {
    při každém běhu. */
 const LEAFLET_ZNACKA = /<script src="vendor\/leaflet\/leaflet\.js[^"]*"[^>]*><\/script>\n?/;
 
+/* ŘEZ DAT A PŘEDNAČÍTÁNÍ — PŘEPIS ZAMRZLÝCH STRÁNEK.
+   Totéž co u mapové knihovny a ze stejného důvodu: stránka ukončené
+   nabídky se nepřepisuje ze šablony, takže by jí přechod na malé soubory
+   minul a dál by stahovala celých 639 kB (56,5 kB přes drát) místo
+   13 kB. Okres se bere z klíče, který už ve stránce je
+   (window.PK_POZEMEK.k = obec|parcela|okres|šířka|délka), takže se
+   nemusí nikde dohledávat. Idempotentní: co už řez má, se nemění. */
+export function migrujRezDat(h) {
+  let out = h;
+  const m = /<script>window\.PK_POZEMEK=(\{[^<]*?\});<\/script>/.exec(out);
+  if (m && m[1].indexOf('"r"') < 0) {
+    let ostrov = null;
+    try { ostrov = JSON.parse(m[1]); } catch (e) { ostrov = null; }
+    const okres = ostrov && typeof ostrov.k === 'string' ? String(ostrov.k).split('|')[2] : '';
+    if (ostrov && okres) {
+      ostrov.r = `data/okres/${slug(okres)}.json`;
+      out = out.replace(m[0], `<script>window.PK_POZEMEK=${jsonVeStrance(ostrov)};</scr` + 'ipt>');
+    }
+  }
+  /* Přednačítání velkého souboru: stahoval by se dál, jen by ho nikdo
+     nečetl. Nahradí se tím, co stránka opravdu čte. */
+  out = out.replace(/<link rel="preload" as="fetch" href="data\/opportunities\.json"[^>]*>/,
+    '<link rel="preload" as="fetch" href="data/model.json" crossorigin>');
+  return out;
+}
+
 export function migrujLeaflet(h) {
   if (!LEAFLET_ZNACKA.test(h)) return h;
   const adresa = (/<script src="(vendor\/leaflet\/leaflet\.js[^"]*)"/.exec(h) || [])[1]
@@ -316,7 +342,7 @@ export function ukoncenaStranka(obsah, den, podobne) {
     h = h.replace(/(<\/title>)/, '$1\n  <meta name="robots" content="noindex,follow">');
   }
 
-  h = migrujLeaflet(h);
+  h = migrujRezDat(migrujLeaflet(h));
 
   // 2) Datum do stránky, ať se podle něj dá po čase smazat bez evidence.
   if (!/window\.PK_UKONCENO=/.test(h)) {
@@ -459,7 +485,16 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     /* „v" a „c" (výměra a cena) jsou tu kvůli pozemkům, které sdílejí
        klíč: bez nich by stránka toho druhého z dvojice nedokázala ve
        stažených datech najít sám sebe a vzala by prostě první nález. */
-    + `<script>window.PK_POZEMEK=${jsonVeStrance({ k: pkey(d), ll: [d.lat, d.lng], v: d.area || 0, c: d.price || 0 })};</scr` + `ipt>\n$1`);
+    /* „r" je ŘEZ DAT, ze kterého si stránka vezme sebe. Celá data mají
+       638 kB (56,5 kB přes drát) a stránka z nich potřebuje dvě věci:
+       sebe — a ta je v řezu svého okresu (8,6 kB průměrně, 1,6 kB přes
+       drát) — a celostátní cenový model, který leží zvlášť
+       v data/model.json (38,7 kB, 11,5 kB přes drát). Dohromady tedy
+       místo 56,5 kB asi 13 kB, a surově 42 kB místo 638 kB, což je
+       hlavně míň práce pro parser v telefonu.
+       Cesta stojí tady, protože okres zná generátor; stránka by si ho
+       z vlastního HTML musela luštit. */
+    + `<script>window.PK_POZEMEK=${jsonVeStrance({ k: pkey(d), ll: [d.lat, d.lng], v: d.area || 0, c: d.price || 0, r: `data/okres/${slug(d.okres)}.json` })};</scr` + `ipt>\n$1`);
   /* POPIS OD INZERENTA, vepsaný rovnou do stránky. Leží v samostatném
      souboru (data/popisy.json), protože do opportunities.json, který čte
      úvodní stránka, nepatří — přidal by k němu zhruba megabajt. Sem se
@@ -684,7 +719,7 @@ export function generuj() {
       if (stari >= DNI_ARCHIV) { fs.unlinkSync(cesta); smazano++; continue; }
       /* Už ukončená a ještě ne stará: obsah se nepřepisuje. Jen přepisy,
          které se musí dostat na KAŽDOU stránku webu, projdou i tudy. */
-      const migrovano = migrujLeaflet(obsah);
+      const migrovano = migrujRezDat(migrujLeaflet(obsah));
       if (migrovano !== obsah) { fs.writeFileSync(cesta, migrovano); prepsano++; }
       continue;
     }

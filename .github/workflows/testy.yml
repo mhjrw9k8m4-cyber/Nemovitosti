@@ -215,6 +215,9 @@ jobs:
       - name: Řezy dat dávají dohromady celek
         run: node scripts/test-data-rezy.mjs
 
+      - name: Vstup cenového modelu (malý soubor dá totéž co velký)
+        run: node scripts/test-model-vstup.mjs
+
       - name: Jeden styl (nadpisy a textura z palety)
         run: node scripts/test-jeden-styl.mjs
 
@@ -330,6 +333,9 @@ jobs:
 
       - name: Mapová knihovna se stahuje až na dohled
         run: node scripts/test-leaflet.mjs
+
+      - name: Data stránky pozemku (dva malé soubory místo velkého)
+        run: node scripts/test-data-stranky.mjs
 
       - name: Předvyplnění inzerátu z odkazu
         run: node scripts/test-predvyplneni.mjs

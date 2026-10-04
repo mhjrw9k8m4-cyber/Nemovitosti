@@ -107,10 +107,22 @@ if (fs.existsSync(rejstrikCesta)) {
     const c = path.join(ROOT, r.soubor);
     if (!fs.existsSync(c)) { sedi.push(`${r.soubor} neexistuje`); continue; }
     const obsah = JSON.parse(fs.readFileSync(c, 'utf8'));
-    if ((obsah.opportunities || []).length !== r.pocet) {
-      sedi.push(`${r.soubor}: rejstřík ${r.pocet}, soubor ${(obsah.opportunities || []).length}`);
+    /* Vstup cenového modelu (uroven: 'model') nenese „opportunities",
+       ale sloupce — počet se u něj čte z délky sloupce s výměrou.
+       Měří ho scripts/test-model-vstup.mjs; tady jde jen o to, aby
+       rejstřík nelhal o tom, co na disku je. */
+    const kolik = r.uroven === 'model'
+      ? (Array.isArray(obsah.a) ? obsah.a.length : -1)
+      : (obsah.opportunities || []).length;
+    if (kolik !== r.pocet) {
+      sedi.push(`${r.soubor}: rejstřík ${r.pocet}, soubor ${kolik}`);
     }
   }
+  /* A ten jeden model v rejstříku být MUSÍ — jinak by se dal tiše
+     přestat vyrábět a stránky pozemků by zase sáhly po celku. */
+  pravda('rejstřík jmenuje i vstup cenového modelu',
+    (R.rezy || []).some((r) => r.uroven === 'model' && r.soubor === 'data/model.json'),
+    'data/model.json v rozcestníku není');
   pravda(`rozcestník popisuje to, co na disku je (${(R.rezy || []).length} řezů)`,
     sedi.length === 0, sedi.slice(0, 3).join('; '));
   pravda('a jmenuje okresy každého kraje (krajské řezy se schválně nedělají)',

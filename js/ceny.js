@@ -155,6 +155,43 @@
    * nabídek, 15 % u dvaceti) — proto se hlídá rozptyl, ne počet. */
   var MEZ_ROZPTYL = 2;
 
+  /* ROZBALENÍ SLOUPCOVÉHO VSTUPU MODELU (data/model.json).
+   *
+   * Stránka pozemku nepotřebuje celá data — z uložených nabídek čte
+   * model jen pět polí (okres, druh, typ, výměra, cena). Generátor řezů je
+   * proto ukládá sloupcově a se slovníky: 42,6 kB místo 638 kB surově
+   * a 12,0 kB místo 56,5 kB přes drát. Tady se to zpátky rozbalí na
+   * pole objektů, jaké postav() čeká.
+   *
+   * Nic se nedopočítává a nic nezaokrouhluje: výměra a cena jsou celá
+   * čísla ze zdroje, takže model z tohohle vstupu vyjde znak za znakem
+   * stejně jako z plných dat. Měří to scripts/test-model-vstup.mjs na
+   * všech nabídkách, ne na vzorku.
+   *
+   * Vrací null, když vstup nemá tvar, jaký má mít — volající pak ví, že
+   * má sáhnout po plných datech, místo aby postavil model z ničeho.
+   */
+  function rozbalModel(j) {
+    if (!j || !Array.isArray(j.a) || !Array.isArray(j.c)) return null;
+    var okresy = j.okresy || [], druhy = j.druhy || [], typy = j.typy || [];
+    var o = j.o || [], d = j.d || [], t = j.t || [], a = j.a, c = j.c;
+    var n = a.length;
+    if (!n || c.length !== n || o.length !== n || d.length !== n || t.length !== n) return null;
+    var ven = new Array(n);
+    for (var i = 0; i < n; i++) {
+      ven[i] = {
+        okres: okresy[o[i]] || '',
+        druh: druhy[d[i]] || '',
+        type: typy[t[i]] || '',
+        area: a[i],
+        price: c[i],
+        /* Příznak podílu ve vstupu není a nemá být: model ho čte vždy
+           z nabídky, o které se rozhoduje, ne z uložených polí. */
+      };
+    }
+    return ven;
+  }
+
   function postav(DATA, okresKraj) {
     okresKraj = okresKraj || OKRES_KRAJ;
     var podleTypu = {};     // type|druh  → ceny za m² (na věrohodnost)
@@ -671,7 +708,7 @@
   var DOST_NABIDEK = 25;
 
   root.PK_CENY = { DOST_NABIDEK: DOST_NABIDEK,
-    postav: postav, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
+    postav: postav, rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     kdeText: kdeText, blokOdhadu: blokOdhadu,
     zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis };
 }(typeof window !== 'undefined' ? window : globalThis));

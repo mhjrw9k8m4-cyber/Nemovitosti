@@ -155,6 +155,53 @@ export async function spust() {
         .map((o) => `data/okres/${slug(o)}.json`),
     };
   }
+  /* ---- VSTUP CENOVÉHO MODELU, SLOUPCOVĚ ----
+     Stránka pozemku potřebuje ze všech dat dvě věci: sebe (to má v řezu
+     svého okresu) a CELOSTÁTNÍ cenový model. Celý soubor kvůli tomu
+     stahovat nemusí: model čte z nabídky jen šest polí (okres, druh,
+     typ, výměra, cena, podíl). Naměřeno: 42,1 kB surově a 11,5 kB přes
+     drát proti 56,5 kB za celý soubor, a surově je to 42 kB místo 638 kB
+     — tedy i patnáctkrát méně práce pro parser v telefonu.
+
+     Proč sloupcově a se slovníky: okres, druh a typ se opakují, takže
+     se vyplatí uložit je jednou a dál jen čísla. Řádkově to vyšlo na
+     12,7 kB, sloupcově na 11,5 kB.
+
+     Nic se tím nezaokrouhluje: výměra i cena jsou celá čísla ze zdroje,
+     takže model postavený z tohohle souboru vyjde znak za znakem stejně
+     jako z plných dat. Hlídá to scripts/test-model-vstup.mjs na všech
+     nabídkách, ne na vzorku.
+
+     PŘÍZNAK PODÍLU TU SCHVÁLNĚ NENÍ, i když ho model zná. Čte ho totiž
+     vždycky z nabídky, o které se právě rozhoduje (nesrovnatelna(d)),
+     nikdy z uložených polí — podíly ve srovnávací hladině naopak
+     zůstávají, a je to tak napsané v js/ceny.js. Pole by tedy nikdo
+     nepoužil; zkusil jsem ho zahodit a model vyšel beze změny, takže
+     z vstupu vypadlo. */
+  const modelVstup = (() => {
+    const okresy = [...new Set(vse.map((o) => o.okres || ''))].sort();
+    const druhy = [...new Set(vse.map((o) => o.druh || ''))].sort();
+    const typy = [...new Set(vse.map((o) => o.type || ''))].sort();
+    const iO = new Map(okresy.map((x, i) => [x, i]));
+    const iD = new Map(druhy.map((x, i) => [x, i]));
+    const iT = new Map(typy.map((x, i) => [x, i]));
+    const o = [], d = [], t = [], a = [], c = [];
+    for (const x of vse) {
+      o.push(iO.get(x.okres || '')); d.push(iD.get(x.druh || '')); t.push(iT.get(x.type || ''));
+      a.push(x.area || 0); c.push(x.price || 0);
+    }
+    return Object.assign({}, hlavicka, {
+      rez: { uroven: 'model', nazev: null, soubor: 'data/model.json', pocet: vse.length },
+      popis: 'Vstup cenového modelu: pět polí, která z uložených nabídek čte js/ceny.js. '
+        + 'Sloupcově a se slovníky, ať je to malé. Pole o/d/t jsou indexy do okresy/druhy/typy, '
+        + 'a je výměra v m², c cena v Kč.',
+      okresy, druhy, typy, o, d, t, a, c,
+    });
+  })();
+  const bajtuModel = zapis('data/model.json', modelVstup);
+  rejstrik.rezy.push({ uroven: 'model', nazev: null, soubor: 'data/model.json',
+    pocet: vse.length, bajtu: bajtuModel });
+
   const prazdnych = uklid('okres', ziveOkres, 'okres');
 
   rejstrik.celek = {
@@ -177,6 +224,7 @@ export async function spust() {
   zapis('data/index.json', rejstrik);
 
   console.log(`Řezy dat: ${podleOkresu.size} okresů (${podleKraje.size} krajů jako soupis)`
+    + `, vstup modelu ${(bajtuModel / 1024).toFixed(0)} kB`
     + ` = ${(bajtu / 1024).toFixed(0)} kB dohromady`
     + ` (celek má ${(rejstrik.celek.bajtu / 1024).toFixed(0)} kB, nejmenší řez`
     + ` ${(Math.min(...rejstrik.rezy.map((r) => r.bajtu)) / 1024).toFixed(1)} kB)`

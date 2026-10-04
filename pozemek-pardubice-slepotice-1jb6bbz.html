@@ -47,7 +47,15 @@
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
   <link rel="stylesheet" href="css/styles.min.css?v=dcb0a773">
-  <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
+  <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
+       svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
+       stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
+       a přednačítalo se to i po přechodu na malé soubory, takže se
+       velký soubor stahoval dál, jen už ho nikdo nečetl. Naměřeno
+       v prohlížeči: stránka si brala všechny tři.
+       Adresa řezu je u každé stránky jiná, takže se tady psát nedá;
+       prohlížeč si ji vezme z ostrůvku window.PK_POZEMEK dole. -->
+  <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
     #obsah{background:var(--bg);}
@@ -538,7 +546,7 @@
 <script src="js/min/cisteni.js?v=96d10b2a"></script>
 <script src="js/min/snimek.js?v=5de42515"></script>
 <script src="js/min/terminy.js?v=97f740a8"></script>
-<script src="js/min/ceny.js?v=9d4d110f"></script>
+<script src="js/min/ceny.js?v=c3d676b4"></script>
   <script src="js/min/zlevneni.js?v=8cbae6d1" defer></script>
 <script src="js/min/vybaveni.js?v=68e3d418"></script>
 <script src="js/min/radce.js?v=3776a265"></script>
@@ -555,8 +563,8 @@
      skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=50f3cf6d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 580 m² — Slepotice, okres Pardubice","description":"Na prodej · 49 000 Kč (676 Kč/m²) · 580 m² · Slepotice, okres Pardubice. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-pardubice-slepotice-1jb6bbz.html","address":{"@type":"PostalAddress","addressLocality":"Slepotice","addressRegion":"Pardubice","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.976795,"longitude":15.959818}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Pardubice","item":"https://www.parcelaka.cz/pozemky-okres-pardubice.html"},{"@type":"ListItem","position":4,"name":"Orná půda 580 m² — Slepotice, okres Pardubice","item":"https://www.parcelaka.cz/pozemek-pardubice-slepotice-1jb6bbz.html"}]}]</script>
-<script>window.PK_POZEMEK={"k":"Slepotice|—|Pardubice|49.977|15.960","ll":[49.976795,15.959818],"v":580,"c":49000};</script>
-<script src="js/min/pozemek.js?v=e6bb8be5"></script>
+<script>window.PK_POZEMEK={"k":"Slepotice|—|Pardubice|49.977|15.960","ll":[49.976795,15.959818],"v":580,"c":49000,"r":"data/okres/pardubice.json"};</script>
+<script src="js/min/pozemek.js?v=74acdf2f"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

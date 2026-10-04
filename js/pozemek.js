@@ -1623,7 +1623,7 @@
   }
 
   // 2) Dotáhni celá data pro cenové srovnání (a jako záloha, když handoff chybí).
-  function zpracuj(j, zive, jenPresne) {
+  function zpracuj(j, zive, jenPresne, radkyModelu) {
     /* Táž branka jako na mapě (js/cisteni.js). Tady chyběla, a nebylo to
        jen pro pořádek: adresa inzerátu se sice escapovala, takže atribut
        nešlo rozbít, ale „javascript:" v ní zůstalo — na podstrčených datech
@@ -1659,7 +1659,13 @@
        odstraněním — kdo přijde s odkazem na tu podruhé vypsanou nabídku,
        má svou stránku dostat, ne „Pozemek nenalezen". */
     var PROMODEL = DATA;
-    if (window.PKHlidani && window.PKHlidani.bezDuplicit) {
+    if (radkyModelu) {
+      /* Model z malého souboru (data/model.json). Duplicity v něm už
+         nejsou — odstranil je generátor řezů týmž pravidlem jako mapa —
+         takže se tu nic dalšího nedělá. Že z toho vyjde znak za znakem
+         totéž co z plných dat, měří scripts/test-model-vstup.mjs. */
+      PROMODEL = radkyModelu;
+    } else if (window.PKHlidani && window.PKHlidani.bezDuplicit) {
       PROMODEL = window.PKHlidani.bezDuplicit(DATA);
     } else {
       /* NAHLAS. Tiché ustoupení na DATA by znamenalo jiný verdikt než na
@@ -1705,15 +1711,63 @@
   }
   // Obojí se pouští naráz, ať se nečeká jedno na druhé.
   var zivePrislib = ziveInzeraty();
-  loadJSON('data/opportunities.json').then(function (j) {
-    var sedlo = zpracuj(j, [], true);
-    zivePrislib.then(function (zive) {
-      if (!sedlo || zive.length) zpracuj(j, zive, false);
-      // Živá data po lhůtě: zpracuje se totéž ještě jednou, už s nimi.
-      pozdeji = function (z) { zpracuj(j, z, false); };
-      if (cekajici) { var z = cekajici; cekajici = null; pozdeji(z); }
+
+  /* DVA MALÉ SOUBORY MÍSTO JEDNOHO VELKÉHO.
+     Stránka pozemku si dřív brala celá data (638 kB, 56,5 kB přes drát),
+     přestože z nich potřebuje dvě věci: SEBE a CELOSTÁTNÍ CENOVÝ MODEL.
+     Sebe má v řezu svého okresu (8,6 kB průměrně, 1,6 kB přes drát),
+     model v data/model.json (38,7 kB, 11,5 kB přes drát) — a ten je pro
+     všechny stránky týž, takže se po první stránce bere z cache.
+     Dohromady tedy asi 13 kB místo 56,5 kB a surově 42 kB místo 638 kB.
+
+     ŽE Z TOHO VYJDE TOTÉŽ, NENÍ ÚVAHA: scripts/test-model-vstup.mjs staví
+     model z plných dat i z malého souboru a porovnává všech 13 965 volání
+     na všech nabídkách. Zkratka, která dá jiné číslo, by znamenala přesně
+     tu vadu, kterou už jednou stálo 310 stránek — jiný verdikt na mapě
+     a na stránce pozemku (scripts/test-shoda.mjs).
+
+     Kdyby některý z těch dvou souborů nedojel, sáhne se po plných datech.
+     Totéž když přijde živý inzerát od majitele: ten musí do modelu
+     stejně jako na mapě, ale duplicitu mezi ním a stahovanou nabídkou
+     rozhodne jen pravidlo, které zná obec — a tu malý vstup nenese.
+     Přidat ji by stálo 11,4 → 19,0 kB přes drát kvůli případu, který
+     dnes nenastává (v data/user-listings.json je nula inzerátů), takže
+     se v tom případě radši dotáhne celek. */
+  function plnaData() {
+    loadJSON('data/opportunities.json').then(function (j) {
+      var sedlo = zpracuj(j, [], true);
+      zivePrislib.then(function (zive) {
+        if (!sedlo || zive.length) zpracuj(j, zive, false);
+        // Živá data po lhůtě: zpracuje se totéž ještě jednou, už s nimi.
+        pozdeji = function (z) { zpracuj(j, z, false); };
+        if (cekajici) { var z = cekajici; cekajici = null; pozdeji(z); }
+      });
     });
-  });
+  }
+
+  var REZ = (window.PK_POZEMEK && window.PK_POZEMEK.r) || null;
+  if (!REZ) {
+    /* Šablona pozemek.html s ?p= (inzerát od majitele) řez nemá: neví se
+       dopředu, o který pozemek jde. Tam zůstává dnešní cesta. */
+    plnaData();
+  } else {
+    Promise.all([loadJSON(REZ), loadJSON('data/model.json')]).then(function (r) {
+      var jRez = r[0];
+      var radky = (r[1] && window.PK_CENY && window.PK_CENY.rozbalModel)
+        ? window.PK_CENY.rozbalModel(r[1]) : null;
+      if (!jRez || !radky) { plnaData(); return; }
+      var sedlo = zpracuj(jRez, [], true, radky);
+      zivePrislib.then(function (zive) {
+        if (zive && zive.length) { plnaData(); return; }
+        if (!sedlo) zpracuj(jRez, [], false, radky);
+        pozdeji = function (z) {
+          if (z && z.length) plnaData();
+          else zpracuj(jRez, [], false, radky);
+        };
+        if (cekajici) { var z = cekajici; cekajici = null; pozdeji(z); }
+      });
+    });
+  }
 
   // mobilní menu
   /* Mobilní menu má vlastní modul — js/menu.js. Tenhle kód tu byl

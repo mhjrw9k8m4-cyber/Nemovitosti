@@ -94,6 +94,26 @@
 
   var MEZ_ROZPTYL = 2;
 
+  function rozbalModel(j) {
+    if (!j || !Array.isArray(j.a) || !Array.isArray(j.c)) return null;
+    var okresy = j.okresy || [], druhy = j.druhy || [], typy = j.typy || [];
+    var o = j.o || [], d = j.d || [], t = j.t || [], a = j.a, c = j.c;
+    var n = a.length;
+    if (!n || c.length !== n || o.length !== n || d.length !== n || t.length !== n) return null;
+    var ven = new Array(n);
+    for (var i = 0; i < n; i++) {
+      ven[i] = {
+        okres: okresy[o[i]] || '',
+        druh: druhy[d[i]] || '',
+        type: typy[t[i]] || '',
+        area: a[i],
+        price: c[i],
+
+      };
+    }
+    return ven;
+  }
+
   function postav(DATA, okresKraj) {
     okresKraj = okresKraj || OKRES_KRAJ;
     var podleTypu = {};
@@ -327,7 +347,7 @@
   var DOST_NABIDEK = 25;
 
   root.PK_CENY = { DOST_NABIDEK: DOST_NABIDEK,
-    postav: postav, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
+    postav: postav, rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     kdeText: kdeText, blokOdhadu: blokOdhadu,
     zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis };
 }(typeof window !== 'undefined' ? window : globalThis));

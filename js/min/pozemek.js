@@ -1115,7 +1115,7 @@
     });
   }
 
-  function zpracuj(j, zive, jenPresne) {
+  function zpracuj(j, zive, jenPresne, radkyModelu) {
 
     var DATA = PKCisteni.pozemky((j && (j.opportunities || j.items || (Array.isArray(j) ? j : []))) || []);
 
@@ -1123,7 +1123,10 @@
     DATA.forEach(function (d, i) { d._id = i; });
 
     var PROMODEL = DATA;
-    if (window.PKHlidani && window.PKHlidani.bezDuplicit) {
+    if (radkyModelu) {
+
+      PROMODEL = radkyModelu;
+    } else if (window.PKHlidani && window.PKHlidani.bezDuplicit) {
       PROMODEL = window.PKHlidani.bezDuplicit(DATA);
     } else {
 
@@ -1149,14 +1152,40 @@
   }
 
   var zivePrislib = ziveInzeraty();
-  loadJSON('data/opportunities.json').then(function (j) {
-    var sedlo = zpracuj(j, [], true);
-    zivePrislib.then(function (zive) {
-      if (!sedlo || zive.length) zpracuj(j, zive, false);
 
-      pozdeji = function (z) { zpracuj(j, z, false); };
-      if (cekajici) { var z = cekajici; cekajici = null; pozdeji(z); }
+  function plnaData() {
+    loadJSON('data/opportunities.json').then(function (j) {
+      var sedlo = zpracuj(j, [], true);
+      zivePrislib.then(function (zive) {
+        if (!sedlo || zive.length) zpracuj(j, zive, false);
+
+        pozdeji = function (z) { zpracuj(j, z, false); };
+        if (cekajici) { var z = cekajici; cekajici = null; pozdeji(z); }
+      });
     });
-  });
+  }
+
+  var REZ = (window.PK_POZEMEK && window.PK_POZEMEK.r) || null;
+  if (!REZ) {
+
+    plnaData();
+  } else {
+    Promise.all([loadJSON(REZ), loadJSON('data/model.json')]).then(function (r) {
+      var jRez = r[0];
+      var radky = (r[1] && window.PK_CENY && window.PK_CENY.rozbalModel)
+        ? window.PK_CENY.rozbalModel(r[1]) : null;
+      if (!jRez || !radky) { plnaData(); return; }
+      var sedlo = zpracuj(jRez, [], true, radky);
+      zivePrislib.then(function (zive) {
+        if (zive && zive.length) { plnaData(); return; }
+        if (!sedlo) zpracuj(jRez, [], false, radky);
+        pozdeji = function (z) {
+          if (z && z.length) plnaData();
+          else zpracuj(jRez, [], false, radky);
+        };
+        if (cekajici) { var z = cekajici; cekajici = null; pozdeji(z); }
+      });
+    });
+  }
 
 })(window);
