@@ -43,6 +43,16 @@ jobs:
       # se zdrojem — když někdo zapomene po zásahu do js/ přerazítkovat,
       # spraví se to samo do šesti hodin místo aby zůstala červená kontrola.
       # Každý krok je přepočet ze zdroje, nic se neodhaduje.
+      # Časová řada cenových hladin. Bere jeden bod na den z historie
+      # repozitáře a dnešek z právě staženého souboru, takže roste sama
+      # a nepotřebuje žádnou databázi. Běží PŘED oprav.mjs, ať se nový
+      # soubor stihne zarazítkovat spolu s ostatními.
+      # Mělký klon jí nevadí: staré dny si opíše z data/historie-cen.json
+      # a přidá dnešek. Přestavba od začátku se na mělkém klonu sama
+      # zastaví, aby o historii nepřišla.
+      - name: Dopsat dnešek do časové řady cen
+        run: node scripts/historie-cen.mjs
+
       - name: Spravit vše odvozené (stránky, čísla v úvodu, sitemap, razítka, SQL)
         run: node scripts/oprav.mjs
 

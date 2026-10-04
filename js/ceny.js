@@ -578,8 +578,34 @@
       return null;
     }
 
+    /* HLADINA MÍSTA SAMA O SOBĚ — bez konkrétního pozemku.
+     *
+     * Celý model do téhle chvíle uměl odpovědět jen na otázku „co je
+     * obvyklé pro TENHLE pozemek". Pro časovou řadu je ale potřeba něco
+     * jiného: „jaká je hladina v okrese Blansko u orné půdy", bez
+     * ohledu na jakoukoli nabídku. Počítá se to tady, a ne v tom
+     * skriptu, který řadu staví, aby se pravidlo o tom, co se do
+     * hladiny započítává, nerozešlo s tím, co webu ukazuje dnes —
+     * přesně tak se už jednou rozešel cenový verdikt mezi mapou
+     * a stránkou pozemku.
+     *
+     * Velikost se schválně NEFILTRUJE (ceny(…, 0, …)): u konkrétního
+     * pozemku se srovnává s podobně velkými, ale hladina okresu má
+     * popsat celý okres. Vzorek pod MIN_VZOREK vrací null — radši
+     * v grafu díra než bod, který nic neznamená. */
+    function hladinaMista(uroven, nazev, druhG) {
+      var pole = uroven === 'okres' ? nabidkyOkres[druhG + '|' + nazev]
+        : uroven === 'kraj' ? nabidkyKraj[druhG + '|' + nazev]
+        : nabidkyCR[druhG];
+      var a = ceny(pole, 0, druhG);
+      if (!a || a.length < MIN_VZOREK) return null;
+      return { zaM2: median(a), vzorek: a.length };
+    }
+
     return {
       druhGroup: druhGroup,
+      hladinaMista: hladinaMista,
+      MIN_VZOREK: MIN_VZOREK,
       MEZ_POCHYBNA: MEZ_POCHYBNA,
       MEZ_SLEVA: MEZ_SLEVA,
       MEZ_ROZPTYL: MEZ_ROZPTYL,

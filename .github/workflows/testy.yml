@@ -82,6 +82,9 @@ jobs:
       - name: Historie ceny nabídky (zlevnil majitel?)
         run: node scripts/test-ceny-historie.mjs
 
+      - name: Časová řada cenových hladin
+        run: node scripts/test-historie-cen.mjs
+
       - name: Věta o změně ceny
         run: node scripts/test-zlevneni.mjs
 
