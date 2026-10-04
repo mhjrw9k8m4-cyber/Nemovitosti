@@ -1425,6 +1425,84 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
   }
 }
 
+/* ---- JMÉNO OBCE SE NA ÚZKÉ OBRAZOVCE NEROZPADÁ ----
+   Víceslovných obcí je v datech 266 a nejdelší má 31 znaků
+   („Blatnice pod Svatým Antonínkem"). Zlomené jméno se ve výpisu čte
+   jako dvě obce a seznam z toho má zuby.
+   NAMĚŘENO PŘED OPRAVOU: při 320 px se lámalo 35 jmen, dvě dokonce
+   přes TŘI řádky; při 390 px pět. Jméno totiž sdílelo řádek s cenou
+   a zbylo na něj 138 px z 222. Po opravě (jméno má na nejužší
+   obrazovce celý řádek) zbyla při 320 px dvě dvouřádková jména a při
+   390 px žádné.
+
+   POZOR NA ZPŮSOB MĚŘENÍ. Napoprvé se počítaly obdélníky
+   (getClientRects().length) — jenže .okr-place je blokový prvek, takže
+   vrací JEDEN obdélník i tehdy, když se text uvnitř láme přes tři
+   řádky. Vycházelo z toho „nula zlomených" a málem jsem tu vadu
+   zamítl jako neexistující. Měří se proto VÝŠKA proti výšce řádku. */
+{
+  const STRANKY = ['pozemky-okres-hodonin.html', 'pozemky-okres-mlada-boleslav.html'];
+  let mereno = 0, dlouhych = 0;
+  const pres3 = [], pres2pri390 = [];
+  for (const sirka of [320, 390]) {
+    for (const soubor of STRANKY) {
+      const { ctx, p } = await otevri(soubor, sirka, 900);
+      const v = await p.evaluate(() => {
+        const out = { vice: 0, dlouha: 0, radky: [] };
+        for (const e of document.querySelectorAll('.okr-place')) {
+          const t = ((e.firstChild && e.firstChild.nodeValue) || e.textContent).trim();
+          if (!/\s/.test(t)) continue;
+          out.vice++;
+          if (t.length >= 25) out.dlouha++;
+          const cs = getComputedStyle(e);
+          let lh = parseFloat(cs.lineHeight);
+          if (!isFinite(lh)) lh = parseFloat(cs.fontSize) * 1.2;
+          const radku = Math.max(1, Math.round(e.getBoundingClientRect().height / lh));
+          if (radku > 1) out.radky.push({ t: t.slice(0, 36), radku });
+        }
+        return out;
+      });
+      mereno += v.vice; dlouhych += v.dlouha;
+      for (const x of v.radky) {
+        if (x.radku >= 3) pres3.push(`${sirka}px ${soubor}: ${x.t} → ${x.radku} řádky`);
+        if (sirka === 390 && x.radku > 1) pres2pri390.push(`${soubor}: ${x.t} → ${x.radku} řádky`);
+      }
+      await ctx.close();
+    }
+  }
+  // PŘEDPOKLADY: bez víceslovných a bez DLOUHÝCH jmen by kontroly prošly naprázdno
+  pravda('je co měřit — víceslovná jména obcí ve výpisech okresů', mereno >= 10,
+    `naměřeno ${mereno} víceslovných jmen`);
+  pravda('a jsou mezi nimi i opravdu dlouhá (nad 25 znaků)', dlouhych >= 2,
+    `dlouhých jmen: ${dlouhych}`);
+  pravda('žádné jméno obce se nerozpadne na tři řádky ani při 320 px',
+    pres3.length === 0, pres3.slice(0, 4).join('\n      '));
+  /* Na „při 390 px se neláme vůbec" se spoléhat NEJDE: zkouška blokuje
+     vnější zdroje, takže běží bez webového písma a náhradní je širší —
+     láme se v ní i „Moravský Písek", který se ve skutečném prohlížeči
+     vejde. Hlídá se proto MECHANISMUS, který na písmu nezávisí: na
+     nejužší obrazovce musí jméno dostat celý řádek. Právě to je ta
+     oprava a právě to se dá pokazit. */
+  {
+    const { ctx, p } = await otevri('pozemky-okres-hodonin.html', 320, 900);
+    const v = await p.evaluate(() => {
+      const it = document.querySelector('.okr-item');
+      const pl = document.querySelector('.okr-place');
+      if (!it || !pl) return null;
+      const cs = getComputedStyle(it);
+      const ir = it.getBoundingClientRect(), pr = pl.getBoundingClientRect();
+      const vnitrni = ir.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      return { podil: pr.width / vnitrni, areas: cs.gridTemplateAreas,
+        sirkaJmena: Math.round(pr.width), sirkaRadku: Math.round(vnitrni) };
+    });
+    pravda('při 320 px má jméno obce k dispozici celý řádek',
+      v && v.podil > 0.8,
+      v ? `jméno ${v.sirkaJmena} px z ${v.sirkaRadku} px (${Math.round(v.podil * 100)} %), mřížka ${v.areas}`
+        : 'řádek výpisu se nenašel');
+    await ctx.close();
+  }
+}
+
 await prohlizec.close();
 console.log('\nRozvržení a popisky stránek');
 console.log(zpravy.join('\n'));

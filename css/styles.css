@@ -3162,7 +3162,18 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   padding:12px 14px; background:var(--surface-2,#1B2E25);
   border:1px solid var(--line,#2C3F35); border-radius:var(--r-md);}
 .okr-item .okr-badge{grid-area:znak; align-self:start; justify-self:start;}
-.okr-item .okr-place{grid-area:misto;}
+/* JMÉNO OBCE SE NA ÚZKÉ OBRAZOVCE LÁMALO AŽ NA TŘI ŘÁDKY.
+   Naměřeno při 320 px: 35 jmen přes dva řádky a „Blatnice pod Svatým
+   Antonínkem" i „Žeravice u Kyjova a k.ú. Syrovín" přes tři. Zlomené
+   jméno se čte jako dvě obce a seznam z toho má zuby.
+   Oříznutí (nowrap + tři tečky) by bylo HORŠÍ: useknuté jméno obce
+   nejde dohledat a člověk neví, jestli je to jeho vesnice.
+   Řeší se to místem, ne zkracováním: na úzké obrazovce dostane jméno
+   celou šířku řádku a cena se posune pod něj. A text-wrap:balance
+   rozdělí zbylé dvouřádkové názvy na dva zhruba stejné kusy místo
+   jednoho dlouhého a jednoho slova. */
+.okr-item .okr-place{grid-area:misto; text-wrap:balance;}
+
 .okr-item .okr-cena{grid-area:cena; justify-self:end; text-align:right;}
 .okr-item .okr-meta{grid-area:meta;}
 .okr-item .okr-src{grid-area:zdroj; justify-self:end;}
@@ -3252,6 +3263,17 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
     grid-template-areas:"znak zdroj" "misto cena" "meta meta";
     column-gap:10px; row-gap:4px;}
   .okr-item .okr-cena{align-self:baseline;}
+}
+/* NA NEJUŽŠÍ OBRAZOVCE DOSTANE JMÉNO OBCE CELÝ ŘÁDEK.
+   Při 320 px sdílelo jméno řádek s cenou a zbylo na něj 138 px z 222 —
+   a tak se lámalo: 35 jmen přes dva řádky, „Blatnice pod Svatým
+   Antonínkem" a „Žeravice u Kyjova a k.ú. Syrovín" dokonce přes tři.
+   Useknout je (nowrap a tři tečky) by bylo horší: podle poloviny jména
+   obec nikdo nedohledá. Cena se proto posune pod jméno — pořád má
+   vlastní řádek, takže se z ní dá číst stejně snadno. */
+@media (max-width:420px){
+  .okr-item{grid-template-areas:"znak zdroj" "misto misto" "cena cena" "meta meta";}
+  .okr-item .okr-cena{justify-self:start; text-align:left;}
 }
 
 
