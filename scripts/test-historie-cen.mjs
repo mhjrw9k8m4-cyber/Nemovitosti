@@ -104,7 +104,12 @@ pravda('a aspoň nějaká klidná NENÍ (jinak ta mez nic nefiltruje)', klidnych
 /* ---- 4) řada se počítá TÝMŽ pravidlem, jakým web odhaduje cenu ---- */
 {
   const d = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8'));
-  const model = CENY.postav(d.opportunities || []);
+  /* Model se staví Z TÉŽE HROMÁDKY jako řada a jako web, tedy bez
+     duplicit. Dokud se tu stavěl ze syrového snímku, mluvila kontrola
+     jiným jazykem než to, co měří — a hlásila rozdíl („v řadě 29,4,
+     model 33,7") i ve chvíli, kdy bylo všechno správně. */
+  const PKH_T = require_(path.join(KOREN, 'js', 'hlidani-logika.js'));
+  const model = CENY.postav(PKH_T.bezDuplicit(d.opportunities || []));
   const posledni = dny[dny.length - 1];
   let overeno = 0, rozchod = [];
   for (const k of klice) {
@@ -136,6 +141,11 @@ pravda('a aspoň nějaká klidná NENÍ (jinak ta mez nic nefiltruje)', klidnych
     execFileSync('git', ['-C', tmp, 'config', 'user.name', 'Zkouska']);
     for (const d of ['data', 'js', 'scripts']) execFileSync('mkdir', ['-p', path.join(tmp, d)]);
     copyFileSync(path.join(KOREN, 'js', 'ceny.js'), path.join(tmp, 'js', 'ceny.js'));
+    /* Od verze 2 si historie bere i odstranění duplicit (bezDuplicit),
+       aby počítala z téže hromádky jako mapa a stránky. Bez téhle kopie
+       zkušební běh skončil na „Cannot find module" — a vypadalo to jako
+       vada řady, ne jako chybějící soubor ve zkoušce. */
+    copyFileSync(path.join(KOREN, 'js', 'hlidani-logika.js'), path.join(tmp, 'js', 'hlidani-logika.js'));
     copyFileSync(path.join(KOREN, 'scripts', 'historie-cen.mjs'), path.join(tmp, 'scripts', 'historie-cen.mjs'));
     copyFileSync(path.join(KOREN, 'data', 'opportunities.json'), path.join(tmp, 'data', 'opportunities.json'));
     copyFileSync(SOUBOR, path.join(tmp, 'data', 'historie-cen.json'));

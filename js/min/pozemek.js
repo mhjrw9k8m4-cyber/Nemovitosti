@@ -1121,7 +1121,16 @@
 
     if (zive && zive.length) DATA = DATA.concat(zive);
     DATA.forEach(function (d, i) { d._id = i; });
-    buildIndex(DATA);
+
+    var PROMODEL = DATA;
+    if (window.PKHlidani && window.PKHlidani.bezDuplicit) {
+      PROMODEL = window.PKHlidani.bezDuplicit(DATA);
+    } else {
+
+      console.error('js/pozemek.js: chybí PKHlidani.bezDuplicit — cenový model by se '
+        + 'rozešel s mapou (model z ' + DATA.length + ' nabídek včetně duplicit)');
+    }
+    buildIndex(PROMODEL);
 
     var nalez = findTarget(DATA);
 

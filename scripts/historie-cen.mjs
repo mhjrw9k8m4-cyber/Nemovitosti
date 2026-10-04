@@ -28,7 +28,15 @@ import { fileURLToPath } from 'node:url';
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CIL = path.join(KOREN, 'data', 'historie-cen.json');
 const ZDROJ = 'data/opportunities.json';
-const VERZE = 1;          // zvýšit, když se změní pravidlo výpočtu → řada se přepočítá
+/* VERZE 2: hladiny se počítají BEZ DUPLICIT.
+   Do verze 1 se model stavěl ze syrového snímku, tedy i z nabídek, které
+   jsou v datech dvakrát. Mapa, stránky okresů i stránka pozemku je přitom
+   odstraňují (js/hlidani-logika.js: bezDuplicit) a model staví až z toho,
+   co zbude — řada v grafu tedy popisovala jinou hromádku než čísla pod
+   ním. Naměřeno na dnešním snímku: 2 018 nabídek syrově proti 1 995 bez
+   duplicit, a model se tím rozešel u 315 percentilů a 405 odhadů.
+   Zvýšení čísla přepočítá celou řadu, takže v ní nevznikne schod. */
+const VERZE = 2;          // zvýšit, když se změní pravidlo výpočtu → řada se přepočítá
 /* Od jakého denního skoku už řada nepopisuje ceny, ale výměnu nabídek.
    Tři procenta za den jsou u půdy nereálná: celostátní řady s velkým
    vzorkem se drží do 0,6 %, a i nejklidnější okresní do 2,6 %. */
@@ -38,6 +46,11 @@ const pouze = process.argv.includes('--kontrola');
 const prepocitat = process.argv.includes('--prepocitat');
 
 createRequire(import.meta.url)(path.join(KOREN, 'js', 'ceny.js'));
+const PKH = createRequire(import.meta.url)(path.join(KOREN, 'js', 'hlidani-logika.js'));
+if (!PKH || typeof PKH.bezDuplicit !== 'function') {
+  console.error('::error::js/hlidani-logika.js nedalo bezDuplicit — řada by se stavěla i z duplicit');
+  process.exit(1);
+}
 const CENY = globalThis.PK_CENY;
 if (!CENY || typeof CENY.postav !== 'function') {
   console.error('js/ceny.js se nenačetlo — bez něj by se hladina počítala jinak než na webu.');
@@ -61,7 +74,10 @@ function dnyZHistorie() {
 }
 
 /* Hladiny pro jeden snímek dat. Klíč je „úroveň|název|druh". */
-function hladinyZeSnimku(nabidky) {
+function hladinyZeSnimku(syrove) {
+  /* Táž funkce jako v prohlížeči (js/hlidani-logika.js), ne vlastní
+     pravidlo: duplicita musí znamenat totéž na všech stranách. */
+  const nabidky = PKH.bezDuplicit(syrove);
   const model = CENY.postav(nabidky);
   const out = new Map();
   const okresy = new Set(), kraje = new Set(), druhy = new Set();

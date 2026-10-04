@@ -1637,7 +1637,40 @@
        strany by u téhož pozemku tvrdily jinou cenovou hladinu. */
     if (zive && zive.length) DATA = DATA.concat(zive);
     DATA.forEach(function (d, i) { d._id = i; });
-    buildIndex(DATA);
+    /* CENOVÝ MODEL SE STAVÍ Z TÉŽE HROMÁDKY JAKO NA MAPĚ — tedy BEZ
+       DUPLICIT. Mapa odstraňuje duplicity hned na začátku boot()
+       (js/main.js: odstranDuplicity) a model staví až z toho, co zbude;
+       generátor okresních a krajských stránek taky (PKH.bezDuplicit).
+       Stránka pozemku to nedělala, takže model stavěla z 2 018 nabídek
+       místo 1 995 — a tentýž pozemek pak dostal na mapě a na své vlastní
+       stránce JINÝ verdikt.
+
+       Naměřeno na ostrých datech: ze 1 995 nabídek by se percentil
+       rozešel u 315 (16 %) a odhad u 405 (20 %). Nejsou to zaokrouhlovací
+       rozdíly: u Valašské Senice mapa říkala „3. percentil, vzorek 30,
+       kraj Zlínský" a stránka „10. percentil, vzorek 10, okres Vsetín" —
+       jiné číslo, jiný vzorek, jiná úroveň srovnání. Stačí, aby odebraná
+       duplicita srazila okresní vzorek pod deset, a srovnání přeskočí
+       o celou úroveň výš.
+
+       Duplicitu určuje js/hlidani-logika.js, ne vlastní pravidlo: právě
+       proto, že se to musí počítat stejně na všech stranách. Pro hledání
+       pozemku na téhle stránce (findTarget) se používá pole PŘED
+       odstraněním — kdo přijde s odkazem na tu podruhé vypsanou nabídku,
+       má svou stránku dostat, ne „Pozemek nenalezen". */
+    var PROMODEL = DATA;
+    if (window.PKHlidani && window.PKHlidani.bezDuplicit) {
+      PROMODEL = window.PKHlidani.bezDuplicit(DATA);
+    } else {
+      /* NAHLAS. Tiché ustoupení na DATA by znamenalo jiný verdikt než na
+         mapě, a nikde by to nebylo vidět. V stránce pozemku stojí
+         js/hlidani-logika.js jako obyčejný skript PŘED tímhle, takže se
+         to stát nemá; kdyby se to pořadí rozešlo, chytí to
+         scripts/test-konzole.mjs („stránka neshodila chybu"). */
+      console.error('js/pozemek.js: chybí PKHlidani.bezDuplicit — cenový model by se '
+        + 'rozešel s mapou (model z ' + DATA.length + ' nabídek včetně duplicit)');
+    }
+    buildIndex(PROMODEL);
     /* PŘEKRESLIT, i když už se něco vykreslilo — ale jen podle PŘESNÉHO
        nálezu. Vykreslení z handoffu je zkratka, aby stránka nebyla chvíli
        prázdná; plná data ze souboru jsou to pravé, a dřív se druhé

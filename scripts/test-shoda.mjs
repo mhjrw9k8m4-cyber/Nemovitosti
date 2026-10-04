@@ -31,6 +31,15 @@ function pravda(popis, vyslo, proc) {
 }
 
 const DATA = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+/* HROMÁDKA, ZE KTERÉ WEB OPRAVDU POČÍTÁ.
+   Mapa odstraní duplicity hned na začátku boot() a model staví až z toho,
+   co zbude; stránka pozemku i generátor okresních stránek stejně. Když si
+   tenhle test bral očekávání z hromádky SE duplicitami, mluvil jiným
+   jazykem než stránka, kterou měří — a „ukazuje tutéž částku, jakou
+   spočítal model" procházelo jen náhodou. */
+const require_ = (await import('node:module')).createRequire(import.meta.url);
+const PKH_NODE = require_(new URL('../js/hlidani-logika.js', import.meta.url).pathname);
+const CISTA = PKH_NODE.bezDuplicit(DATA);
 
 const kde = process.env.PW_CHROMIUM || '';
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
@@ -66,12 +75,31 @@ const p = await ctx.newPage();
 await p.goto(`${BASE}/predloha.html`, { waitUntil: 'domcontentloaded' });
 await p.addScriptTag({ url: '/js/ceny.js' });
 
-const vysledek = await p.evaluate((D) => {
+/* POZOR NA TAUTOLOGII. Tady dřív stálo
+       const mapa = postav(D); const stranka = postav(D);
+   a porovnávalo se to. Dvě stejná volání se stejným vstupem se nemohou
+   rozejít, takže „mapa i stránka pozemku dají u všech pozemků stejný
+   výsledek" platilo vždy — i ve chvíli, kdy se opravdu rozcházely.
+   A rozcházely: stránka pozemku si model stavěla ze VŠECH 2 018 nabídek,
+   kdežto mapa z 1 995 bez duplicit. Naměřeno: percentil jinak u 315
+   nabídek (16 %), odhad u 405 (20 %), a na 310 stránkách pozemků stálo
+   jiné číslo než na mapě — u Vsetína „levnější než 40 % v okrese"
+   proti „levnější než 67 % ve kraji".
+   Rozdíl tedy nevzniká v modelu, ale ve VSTUPU. Proto se tu teď staví
+   model ze syrové i z očištěné hromádky a ověřuje se, že se rozcházejí
+   (jinak by kontrola níž nic neznamenala); to, co ukazuje skutečná
+   stránka, se pak porovnává s tou OČIŠTĚNOU. */
+const vysledek = await p.evaluate((vstup) => {
   if (!window.PK_CENY) return { chyba: 'PK_CENY se nenačetlo' };
-  // Dva NEZÁVISLE postavené modely nad stejnými daty — tak, jak si je staví
-  // mapa a stránka pozemku každá zvlášť.
+  const D = vstup.ciste, SYROVE = vstup.syrove;
   const mapa = window.PK_CENY.postav(D);
   const stranka = window.PK_CENY.postav(D);
+  const syrovy = window.PK_CENY.postav(SYROVE);
+  let rozdilPct = 0, rozdilOdhad = 0;
+  for (const d of D) {
+    if (JSON.stringify(syrovy.percentil(d)) !== JSON.stringify(mapa.percentil(d))) rozdilPct++;
+    if (JSON.stringify(syrovy.odhad(d)) !== JSON.stringify(mapa.odhad(d))) rozdilOdhad++;
+  }
   const neshody = [];
   let sOdhadem = 0, kOvereni = 0, sPercentilem = 0;
   for (const d of D) {
@@ -84,11 +112,17 @@ const vysledek = await p.evaluate((D) => {
       neshody.push({ misto: d.place, a, b });
     }
   }
-  return { pocet: D.length, neshody, kOvereni, sPercentilem, sOdhadem };
-}, DATA);
+  return { pocet: D.length, syrovych: SYROVE.length, neshody, kOvereni, sPercentilem, sOdhadem,
+    rozdilPct, rozdilOdhad };
+}, { ciste: CISTA, syrove: DATA });
 
 pravda('cenový model se v prohlížeči načetl', !vysledek.chyba, vysledek.chyba);
 if (!vysledek.chyba) {
+  pravda(`v datech jsou duplicity (${vysledek.syrovych} syrově → ${vysledek.pocet} bez nich)`,
+    vysledek.syrovych > vysledek.pocet, 'duplicity nejsou — kontroly níž by neměly co měřit');
+  pravda(`a na modelu je to vidět: percentil jinak u ${vysledek.rozdilPct}, odhad u ${vysledek.rozdilOdhad}`,
+    vysledek.rozdilPct > 20 && vysledek.rozdilOdhad > 20,
+    'syrová a očištěná hromádka dávají týž model — pak ale tvrzení níž nic nehlídají');
   pravda('mapa i stránka pozemku dají u všech pozemků stejný výsledek',
     vysledek.neshody.length === 0,
     `neshod: ${vysledek.neshody.length}, první: ${JSON.stringify(vysledek.neshody[0])}`);
@@ -134,7 +168,7 @@ const cil = await p.evaluate((D) => {
     .sort((a, b) => M.odhad(b).podOdhadem - M.odhad(a).podOdhadem)[0];
   return n ? { klic: [n.place, n.parcel, n.okres, n.lat.toFixed(3), n.lng.toFixed(3)].join('|'),
     ll: n.lat + ',' + n.lng, castka: M.odhad(n).castka } : null;
-}, DATA);
+}, CISTA);
 pravda('v datech je aspoň jeden pozemek, u kterého se odhad má ukázat', !!cil);
 if (cil) {
   const p2 = await ctx.newPage();
@@ -170,7 +204,7 @@ const podezrely = await p.evaluate((D) => {
   const M = window.PK_CENY.postav(D);
   const d = D.find((x) => M.neduveryhodna(x));
   return d ? { place: d.place, parcel: d.parcel } : null;
-}, DATA);
+}, CISTA);
 pravda('v datech je aspoň jedna nabídka s nevěrohodnou cenou', !!podezrely);
 if (podezrely) {
   const p3 = await ctx.newPage();
@@ -192,7 +226,7 @@ if (podezrely) {
   const sParcelou = await p.evaluate((D) => {
     const d = D.find((x) => x.parcel && /^\d+\/\d+$/.test(x.parcel));
     return d ? { parcel: d.parcel, place: d.place } : null;
-  }, DATA);
+  }, CISTA);
   if (sParcelou) {
     await p3.evaluate((q) => {
       const e = document.getElementById('map-search');
@@ -208,6 +242,89 @@ if (podezrely) {
       `hledáno ${sParcelou.parcel} (${sParcelou.place}), vyšlo: ${nalez[0] || '—'}`);
   }
   await p3.close();
+}
+
+/* --- A TEĎ TO, CO JE OPRAVDU VIDĚT NA STRÁNCE POZEMKU ---------------
+   Výpočty výš se dějí v testovací stránce, ne na té skutečné. Tahle část
+   otevře STRÁNKY, kde se syrový a očištěný model rozcházejí nejvíc,
+   a přečte z nich větu o percentilu. Musí v ní stát číslo z OČIŠTĚNÉHO
+   modelu — toho, který používá mapa.
+
+   Právě tady by se poznalo, co předtím proklouzlo: na 310 stránkách
+   stálo číslo ze syrové hromádky. Kontroly, které se dívají jen na
+   výpočet, to vidět nemohly. */
+{
+  const vzorky = await p.evaluate((vstup) => {
+    const syrovy = window.PK_CENY.postav(vstup.syrove);
+    const cisty = window.PK_CENY.postav(vstup.ciste);
+    const out = [];
+    for (const d of vstup.ciste) {
+      const a = syrovy.percentil(d), b = cisty.percentil(d);
+      if (!a || !b) continue;
+      /* Vybírají se pozemky, u kterých se liší ÚROVEŇ srovnání (okres vs
+         kraj). Číslo samo se na stránce nemusí objevit: u prostřední ceny
+         tam stojí „zhruba uprostřed" bez procent, takže by se na něm
+         nedalo měřit. Název úrovně ve větě je naopak vždycky. */
+      if (a.uroven === b.uroven && a.kde === b.kde) continue;
+      out.push({ place: d.place, parcel: d.parcel, okres: d.okres,
+        lat: d.lat, lng: d.lng, area: d.area, price: d.price,
+        syroveKde: a.kde, syroveUroven: a.uroven, syrove: a.cheaper,
+        kde: b.kde, uroven: b.uroven, ciste: b.cheaper,
+        /* Jméno ve větě je SKLONĚNÉ („ve Zlínském kraji", ne „Zlínský“).
+           Skloňování umí js/ceny.js, tak ať se tu nepíše podruhé: první
+           podoba téhle kontroly hledala v textu „Zlínský" a hlásila
+           chybu na stránkách, které byly v pořádku. */
+        fraze: window.PK_CENY.kdeText(b.uroven, b.kde),
+        syroveFraze: window.PK_CENY.kdeText(a.uroven, a.kde),
+        rozdil: Math.abs(a.cheaper - b.cheaper) });
+    }
+    out.sort((x, y) => y.rozdil - x.rozdil);
+    return out;
+  }, { ciste: CISTA, syrove: DATA });
+  pravda(`našly se pozemky, u kterých se úroveň srovnání liší (${vzorky.length})`,
+    vzorky.length >= 3, `jen ${vzorky.length} — kontrola níž by neměla co měřit`);
+
+  /* Jméno souboru stránky se skládá TOUŽ funkcí jako v generátoru, ať se
+     neměří na adrese, která neexistuje. */
+  const { mapaSouboru, klicNabidky } = await import('./generate-parcel-pages.mjs');
+  const STRANKY = mapaSouboru(CISTA);
+  let zmereno = 0;
+  const spatne = [];
+  for (const v of vzorky) {
+    if (zmereno >= 3) break;
+    const zapis = STRANKY.get(klicNabidky(v));
+    if (!zapis) continue;
+    const cesta = new URL('../' + zapis.soubor, import.meta.url).pathname;
+    if (!existsSync(cesta)) continue;
+    const ps = await ctx.newPage();
+    await ps.goto(`${BASE}/${zapis.soubor}`, { waitUntil: 'load' });
+    await ps.waitForTimeout(3000);
+    const text = await ps.evaluate(() => {
+      const e = document.getElementById('pz-verdict');
+      return e ? e.textContent.replace(/\s+/g, ' ').trim() : '';
+    });
+    await ps.close();
+    if (!text) { spatne.push(`${zapis.soubor}: verdikt se vůbec nevykreslil`); zmereno++; continue; }
+    /* Věta zní „…pozemků téhož druhu v prodeji ve Zlínském kraji." nebo
+       „…v okrese Vsetín." — podle úrovně. Stačí tedy hledat jméno: kraj
+       se jmenuje jinak než okres (shoda jmen je jen u Prahy, a tu syrový
+       a očištěný model nerozliší, takže se takový vzorek nevybere). */
+    const maCiste = text.indexOf(v.fraze) !== -1;
+    const maSyrove = v.syroveFraze !== v.fraze && text.indexOf(v.syroveFraze) !== -1;
+    /* Když stránka procento vypisuje, musí být taky to očištěné. */
+    const cislo = /(?:Levnější|Dražší) než (\d+) %/.exec(text);
+    const cisloSedi = !cislo || +cislo[1] === v.ciste;
+    if (!maCiste || maSyrove || !cisloSedi) {
+      spatne.push(`${zapis.soubor}: čekáno srovnání „${v.fraze}" (${v.ciste} %), `
+        + `syrový model dává „${v.syroveFraze}" (${v.syrove} %); `
+        + `na stránce: „${text.slice(0, 120)}"`);
+    }
+    zmereno++;
+  }
+  pravda(`změřily se skutečné stránky pozemků (${zmereno})`, zmereno >= 3,
+    `jen ${zmereno} — stránky se nenašly nebo neexistují`);
+  pravda('a na každé stojí číslo z modelu BEZ duplicit, tedy totéž co na mapě',
+    spatne.length === 0, spatne.join('\n      '));
 }
 
 // --- Cena za metr u spoluvlastnického podílu: co je OPRAVDU na kartě ---
@@ -227,7 +344,7 @@ if (podezrely) {
     if (!d) return null;
     return { place: d.place, parcel: d.parcel, zlomek: d.zlomek,
       spravne: Math.round(d.price / (d.area * z(d))), spatne: Math.round(d.price / d.area) };
-  }, DATA);
+  }, CISTA);
   pravda('v datech je podíl se známou velikostí', !!podil,
     'není na čem ověřit, že se cena za metr počítá z podílové výměry');
   if (podil) {
