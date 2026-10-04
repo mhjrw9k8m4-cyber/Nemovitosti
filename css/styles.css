@@ -512,7 +512,7 @@ button, a, [role="button"], select, summary, .btn-primary, .lp-btn, input[type="
 .link-btn:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px; border-radius:3px;}/* Setrvačné (momentum) rolování uvnitř posuvných oblastí */
 
 
-.opp-list, .pz-gallery, .okr-list{ -webkit-overflow-scrolling:touch; }
+.opp-list, .okr-list{ -webkit-overflow-scrolling:touch; }
 
 /* „Přeskočit na obsah" — odkaz pro ovládání klávesnicí, vidět má být až při
    zaměření. Dřív se schovával na „left:-9999px", což je technika ze starých
@@ -4494,7 +4494,10 @@ h1, h2, h3,
 .pz-odhad .mo-rozdil.mo-pochybna{color:var(--text-ondark-mute);}
 .pz-odhad .mo-pozn{color:var(--text-ondark-mute);}
 .pz-odhad .mo-pozn b{color:var(--text-ondark);}
-.pz-verdict.warn{--vc:#8A5512; border-color:rgba(138,85,18,0.3); background:rgba(138,85,18,0.08);}
+/* .pz-verdict.warn se přestěhoval do vloženého stylu stránky pozemku,
+   ke svým sourozencům .good/.mid/.bad. Tatáž třída nastavovaná ze dvou
+   souborů se dřív nebo později rozejde — a tady už se rozcházet začala:
+   .warn mělo barvu napevno, kdežto ostatní braly tokeny. */
 
 
 /* =====================================================================

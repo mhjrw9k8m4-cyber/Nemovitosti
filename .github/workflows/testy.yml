@@ -242,6 +242,9 @@ jobs:
       - name: Typografická stupnice
         run: node scripts/test-typografie.mjs
 
+      - name: Vložený styl na stránce pozemku
+        run: node scripts/test-vlozeny-styl.mjs
+
       - name: Jeden styl (nadpisy a textura z palety)
         run: node scripts/test-jeden-styl.mjs
 

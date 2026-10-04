@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
-  <title>Ostatní plocha 4 352 m² — Rakovník, okres Rakovník | Parcelka</title>
+  <title>Ostatní plocha 4 352 m² — Rakovník, okres Rakovník | Parcelka</title>
   <meta name="description" content="Na prodej · 139 000 Kč (64 Kč/m²) · 4 352 m² · Rakovník, okres Rakovník. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
   <meta name="theme-color" content="#FBFAF8">
   <meta name="robots" content="index,follow">
@@ -40,7 +40,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=006ace23">
+  <link rel="stylesheet" href="css/styles.css?v=cc43db7b">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -55,7 +55,7 @@
     .pz-media .opp-badge::before{content:""; width:8px; height:8px; border-radius:50%; flex:none;}
     .opp-badge.sale::before{background:var(--c-sale);} .opp-badge.drazba::before{background:var(--c-drazba);} .opp-badge.exekuce::before{background:var(--c-exekuce);} .opp-badge.obec::before{background:var(--c-obec);} .opp-badge.majitel::before{background:var(--c-majitel);}
     /* Galerie nahraných fotek — vodorovný swipe (scroll-snap), bez JS */
-    .pz-gallery{position:absolute; inset:0; display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; z-index:1;}
+    .pz-gallery{position:absolute; inset:0; display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; z-index:1; -webkit-overflow-scrolling:touch;}
     .pz-gallery::-webkit-scrollbar{display:none;}
     .pz-shot{flex:0 0 100%; width:100%; height:100%; object-fit:cover; scroll-snap-align:center; scroll-snap-stop:always; display:block; user-select:none;}
     .pz-media .opp-count{position:absolute; right:13px; bottom:13px; left:auto; z-index:3;}
@@ -91,8 +91,13 @@
        75,169,125), takže si odznak a jeho vlastní deska protiřečily.
        Bílá na #13663E dává 7,01 : 1 (dřív 5,77 na modré). */
     .pz-verdict.good{--vc:var(--c-ok-ink); background:rgba(75,169,125,0.12); border-color:rgba(75,169,125,0.42);}
-    .pz-verdict.mid{--vc:var(--c-drazba); --vt:#0c1a12; background:rgba(204,107,51,0.12); border-color:rgba(204,107,51,0.46);}
+    .pz-verdict.mid{--vc:var(--c-drazba); --vt:var(--text-ondark); background:rgba(204,107,51,0.12); border-color:rgba(204,107,51,0.46);}
     .pz-verdict.bad{--vc:var(--c-exekuce); background:rgba(140,47,30,0.11); border-color:rgba(140,47,30,0.42);}
+    /* Přestěhováno z css/styles.css: tatáž třída ze dvou souborů se
+       rozejde. Barva teď bere token, takže poslechne i tmavý režim —
+       napevno zapsané #8A5512 by na tmavé ploše zůstalo mdlé. */
+    .pz-verdict.warn{--vc:var(--accent-warm); --vt:var(--text-ondark);
+      border-color:rgba(138,85,18,0.3); background:rgba(138,85,18,0.08);}
     .pv-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;}
     .pv-badge{font-size:13px; font-weight:700; padding:2px 10px; border-radius:999px;
       background:var(--vc); color:var(--vt);}
@@ -243,7 +248,7 @@
     .pz-btn.primary{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
     .pz-btn.primary:hover{filter:brightness(1.06);}
     .pz-btn.ghost{background:var(--ink-soft); color:var(--copper-bright); border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1);}
-    .pz-btn.ghost:hover{border-color:var(--copper-bright); background:#F2F6F3;}
+    .pz-btn.ghost:hover{border-color:var(--copper-bright); background:var(--ink-soft2);}
     .pz-btn.ghost:active{transform:scale(.985);}
     .pz-actions{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 4px;}
     .pz-actions .pz-abtn{flex:1 1 0; min-width:0;}
@@ -255,7 +260,7 @@
       border-color:var(--copper); border-width:1.5px; color:var(--copper); font-weight:700;}
     .pz-actions .pz-abtn:first-child svg{color:var(--copper-bright);}
     .pz-abtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:48px; padding:0 16px; border-radius:var(--r-ovladani); background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka); color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; box-shadow:var(--e1); transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
-    .pz-abtn:hover{border-color:var(--copper-bright); background:#F2F6F3; box-shadow:var(--e2);}
+    .pz-abtn:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
     .pz-abtn:active{transform:scale(.98);}
     .pz-abtn.on{color:#fff; border-color:transparent; background:var(--plocha-znacka); box-shadow:var(--glow);}
     .pz-abtn svg{width:17px; height:17px; stroke-width:2.12; color:var(--copper-bright);}
@@ -264,7 +269,7 @@
     /* Varování u nabídky od majitele — táž věta jako na mapě. Rámeček,
        ne kurzíva: musí být na první pohled jiné než údaje o pozemku. */
     .pz-pozor{margin:10px 0 0; padding:12px 14px; border-radius:var(--r-sm); font-size:13px; line-height:1.6;
-      background:rgba(232,179,65,.14); border:1px solid rgba(124,81,5,.34); color:#6b4604;}
+      background:rgba(232,179,65,.14); border:1px solid rgba(124,81,5,.34); color:var(--accent-warm);}
     /* Rádce je zabalený v <details>. Souhrn je celý řádek k poklepání:
        nadpis vlevo, kolik rad se pod ním skrývá vpravo, šipka na kraji.
        Bez toho by se z nadpisu nedalo poznat, že se dá rozbalit. */
@@ -318,7 +323,7 @@
        přepínače patří k té mapě, ne ke stránce. Ovládání je POD mapou, ne
        přes ni — přes mapu by zakrývalo právě to místo, o které jde. */
     .pzm{position:relative; border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; background:var(--ink-soft); box-shadow:var(--e2);}
-    .pzm-mapa{height:390px; width:100%; background:#14231C;}
+    .pzm-mapa{height:390px; width:100%; background:var(--ink);}
     /* Na celou obrazovku. Mapa se roztáhne přes okno, panel s přepínači
        zůstane pod ní — ovládání musí být po ruce i tam, jinak je
        zvětšení k ničemu. */
@@ -349,7 +354,7 @@
     .pzm-z.on{background:var(--ink-soft); color:var(--copper-bright); box-shadow:var(--e1);}
     .pzm-vr{display:flex; flex-wrap:wrap; gap:6px; align-items:center; min-height:34px;}
     .pzm-v{height:34px; padding:0 14px; border-radius:999px; border:1.5px solid rgba(31,81,56,.26); background:var(--ink-soft); font:inherit; font-size:13px; font-weight:600; color:var(--text-ondark); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
-    .pzm-v:hover{border-color:var(--copper-bright); background:#F2F6F3;}
+    .pzm-v:hover{border-color:var(--copper-bright); background:var(--ink-soft2);}
     .pzm-v:active{transform:scale(.98);}
     .pzm-v.on{background:var(--plocha-znacka); border-color:transparent; color:#fff; box-shadow:var(--glow);}
     .pzm-hleda, .pzm-nic{display:inline-flex; align-items:center; gap:8px; font-size:13px; line-height:1.45; color:var(--text-ondark-mute);}
@@ -358,7 +363,7 @@
        a vypadal by, že k nim nepatří. Takhle jde prostě za nimi. */
     .pzm-kryti{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; letter-spacing:0.02em; text-transform:uppercase; color:var(--text-ondark-mute);}
     .pzm-kryti input{width:104px; accent-color:var(--plocha-znacka);}
-    .pzm-popis{margin:0; padding:10px 12px; border-top:1px solid var(--line); background:#FBFCFB; font-size:13px; line-height:1.55; color:var(--text-ondark-mute);}
+    .pzm-popis{margin:0; padding:10px 12px; border-top:1px solid var(--line); background:var(--ink-soft); font-size:13px; line-height:1.55; color:var(--text-ondark-mute);}
     /* Vrstva je zapnutá, ale mapa je moc daleko na to, aby ji úřad
        nakreslil. Není to chyba, je to stav — proto ne červená, ale
        značková barva a rovnou tlačítko, které to spraví. */
@@ -370,7 +375,7 @@
     .pzm-priblizit:hover{background:var(--copper); color:#fff;}
     /* Vysvětlivky. Obrázek dodává sama služba, takže o jeho vzhledu
        nerozhodujeme — jen mu dáme bílý podklad, ať je čitelný i tmavý. */
-    .pzm-leg{display:flex; flex-wrap:wrap; gap:14px; padding:12px 12px; border-top:1px solid var(--line); background:#FBFCFB;}
+    .pzm-leg{display:flex; flex-wrap:wrap; gap:14px; padding:12px 12px; border-top:1px solid var(--line); background:var(--ink-soft);}
     .pzm-leg-k{margin:0; display:flex; flex-direction:column; gap:6px; max-width:100%;}
     .pzm-leg-k figcaption{font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-ondark-mute);}
     .pzm-leg-k img{max-width:100%; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); padding:6px;}
@@ -492,7 +497,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Ostatní plocha 4 352 m² — Rakovník, okres Rakovník</h1><p><b>139 000 Kč</b> (64 Kč/m²) · 4 352 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Ostatní plocha</dd><dt>Výměra</dt><dd>4 352 m²</dd><dt>Obec</dt><dd>Rakovník</dd><dt>Okres</dt><dd><a href="pozemky-okres-rakovnik.html">Rakovník</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 1/2 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Rakovník 2,9 km · Plzeň 47 km</dd></dl><p><a href="pozemek.html?p=Rakovn%C3%ADk%7C%E2%80%94%7CRakovn%C3%ADk%7C50.118%7C13.698&amp;ll=50.117842,13.69778&amp;v=4352">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Ostatní plocha 4 352 m² — Rakovník, okres Rakovník</h1><p><b>139 000 Kč</b> (64 Kč/m²) · 4 352 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Ostatní plocha</dd><dt>Výměra</dt><dd>4 352 m²</dd><dt>Obec</dt><dd>Rakovník</dd><dt>Okres</dt><dd><a href="pozemky-okres-rakovnik.html">Rakovník</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 1/2 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Rakovník 2,9 km · Plzeň 47 km</dd></dl><p><a href="pozemek.html?p=Rakovn%C3%ADk%7C%E2%80%94%7CRakovn%C3%ADk%7C50.118%7C13.698&amp;ll=50.117842,13.69778&amp;v=4352">Otevřít na mapě</a></p></article></div></div>
   </div>
 </main>
 
