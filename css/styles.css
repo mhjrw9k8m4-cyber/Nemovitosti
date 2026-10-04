@@ -233,6 +233,13 @@
      2,96 : 1 a test okrajů spadl. Zesíleno na 0,54. */
   --line-ui: rgba(20,35,28,0.55);
   --panel:#FFFFFF;
+  /* PLOVOUCÍ PANEL nad mapou a záhlaví. Psalo se to jako
+     rgba(255,255,255,0.95) na deseti místech — a právě tahle bílá
+     v tmavém režimu zůstala svítit uprostřed tmavé stránky, protože
+     napevno zapsaná barva token neposlechne. Teď je to token, takže
+     se o tmavý režim stará jedno místo. */
+  --plocha-plovouci:rgba(255,255,255,0.95);
+  --plocha-plovouci-tlum:rgba(255,255,255,0.85);
   /* ---------------------------------------------------------------
      HLOUBKA A TVARY — viz předloha.html
      V šabloně bylo 71 různých stínů a 19 různých zaoblení. Nic z toho
@@ -865,7 +872,7 @@ body.vm-otevreno{overflow:hidden;}
 .data-updated.is-stale{color:#E0A33A; opacity:1; font-weight:600;}
 /* Popisek kraje se musí vejít do mapy — bez omezení šířky utekl dlouhý
    výčet („381× na prodej, 13× dražba…") za okraj a uřízl se. */
-.leaflet-tooltip.kraj-tip{width:max-content; max-width:min(260px, 78vw); white-space:normal; background:rgba(255,255,255,0.95); border:1px solid rgba(31,81,56,0.3); color:var(--text-ondark); font-family:var(--font-ui); font-weight:500; font-size:12px; line-height:1.55; padding:8px 12px; border-radius:var(--r-sm); box-shadow:var(--e2);}
+.leaflet-tooltip.kraj-tip{width:max-content; max-width:min(260px, 78vw); white-space:normal; background:var(--plocha-plovouci); border:1px solid rgba(31,81,56,0.3); color:var(--text-ondark); font-family:var(--font-ui); font-weight:500; font-size:12px; line-height:1.55; padding:8px 12px; border-radius:var(--r-sm); box-shadow:var(--e2);}
 .leaflet-tooltip.kraj-tip b{display:inline-block; font-family:var(--font-ui); color:var(--copper-bright); font-weight:600; font-size:16px; margin-bottom:1px;}
 .leaflet-tooltip.kraj-tip::before{border-top-color:rgba(31,81,56,0.55);}
 /* Špendlík vybraného pozemku na mapě — bez rámečku divIconu, s jemným stínem */
@@ -889,7 +896,7 @@ body.vm-otevreno{overflow:hidden;}
    pak přes logo a přes „Přidat pozemek" prosvítalo měřítko, uvedení
    zdrojů i tlačítka zoomu. Vyšší vrstvy zůstávají nad hlavičkou tam, kde
    to dává smysl: mapa na celou obrazovku 1200, výběr okolí 5000. */
-header{border-bottom:1px solid var(--line); padding:20px 0; position:fixed; top:0; left:0; right:0; z-index:1100; background:rgba(255,255,255,0.85); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:padding var(--cas-zakladni) var(--ease);}
+header{border-bottom:1px solid var(--line); padding:20px 0; position:fixed; top:0; left:0; right:0; z-index:1100; background:var(--plocha-plovouci-tlum); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:padding var(--cas-zakladni) var(--ease);}
 /* PŘICHÁZÍ POMALU, ODCHÁZÍ RYCHLE — každý směr má svůj vlastní čas.
    Objevit se z ničeho nic za desetinu vteřiny působí jako cvaknutí:
    hlavička „připlave rychlostí světla" a člověk nestihne pochopit, odkud.
@@ -947,7 +954,7 @@ header:focus-within{opacity:1 !important; pointer-events:auto !important;}
    (Proměnná --vyska-hlavicky je tu kvůli čitelnosti; nikdo ji nenastavuje.) */
 body{padding-top:var(--vyska-hlavicky, 85px);}
 /* Mobil: silnější podklad + slabší blur = plynulejší scroll na iPhonu */
-@media (max-width:768px){ header{background:rgba(255,255,255,0.95); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);} }
+@media (max-width:768px){ header{background:var(--plocha-plovouci); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);} }
 header.shrink{padding:12px 0;}
 /* Rozmazané pozadí (backdrop-filter) je na lepivé hlavičce hezké na
    monitoru, ale na iPhonu je to hlavní příčina toho, že hlavička při
@@ -2161,7 +2168,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Legenda mapy (vpravo nahoře) */
 /* Legenda patří dolů k okraji, ne doprostřed mapy. Nahoře ukrajovala třetinu
    plochy a překrývala přesně to, na co se má klikat. */
-.map-legend{position:absolute; left:12px; bottom:36px; z-index:500; display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:4px 12px; max-width:calc(100% - 96px); background:rgba(255,255,255,0.95); border:1px solid rgba(31,81,56,0.16); border-radius:var(--r-md); padding:8px 12px; font-size:13px; font-weight:600; color:var(--text-ondark); box-shadow:var(--e2); pointer-events:none; backdrop-filter:blur(3px);}
+.map-legend{position:absolute; left:12px; bottom:36px; z-index:500; display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:4px 12px; max-width:calc(100% - 96px); background:var(--plocha-plovouci); border:1px solid rgba(31,81,56,0.16); border-radius:var(--r-md); padding:8px 12px; font-size:13px; font-weight:600; color:var(--text-ondark); box-shadow:var(--e2); pointer-events:none; backdrop-filter:blur(3px);}
 .map-legend:empty{display:none;}
 .lg-item{display:flex; align-items:center; gap:8px; white-space:nowrap;}
 .lg-dot{width:11px; height:11px; border-radius:50%; border:1.5px solid #fff; box-shadow:0 0 0 1px rgba(20,35,28,0.16); flex:none;}
@@ -2172,11 +2179,11 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Zámek mapy — mapa se hýbe jen když je odemčená */
 /* Lehké přepínání posouvání mapy (bez těžkého overlay) */
 .map-tools{position:absolute; top:12px; right:12px; z-index:600; display:flex; flex-direction:column; align-items:flex-end; gap:8px; max-width:calc(100% - 24px);}
-.map-reset{display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.95); color:var(--copper-bright); border:1px solid rgba(31,81,56,0.22); border-radius:var(--r-lg); padding:8px 14px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), border-color var(--cas-zakladni) var(--ease); backdrop-filter:blur(4px);}
+.map-reset{display:inline-flex; align-items:center; gap:6px; background:var(--plocha-plovouci); color:var(--copper-bright); border:1px solid rgba(31,81,56,0.22); border-radius:var(--r-lg); padding:8px 14px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), border-color var(--cas-zakladni) var(--ease); backdrop-filter:blur(4px);}
 .map-reset:hover{border-color:var(--copper-bright);}
 .map-reset:active{transform:translateY(1px);}
 .map-reset .mr-ic{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; flex:none;}
-.map-lock{position:absolute; bottom:12px; right:12px; z-index:600; display:inline-flex; align-items:center; gap:6px; max-width:calc(100% - 24px); background:rgba(255,255,255,0.95); color:var(--copper-bright); border:1px solid rgba(31,81,56,0.22); border-radius:var(--r-lg); padding:8px 14px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), border-color var(--cas-zakladni) var(--ease); backdrop-filter:blur(4px);}
+.map-lock{position:absolute; bottom:12px; right:12px; z-index:600; display:inline-flex; align-items:center; gap:6px; max-width:calc(100% - 24px); background:var(--plocha-plovouci); color:var(--copper-bright); border:1px solid rgba(31,81,56,0.22); border-radius:var(--r-lg); padding:8px 14px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), border-color var(--cas-zakladni) var(--ease); backdrop-filter:blur(4px);}
 .map-lock[hidden]{display:none;}
 .map-lock:hover{border-color:var(--copper-bright);}
 .map-lock:active{transform:translateY(1px);}
@@ -2184,12 +2191,12 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 @media (max-width:560px){ .map-reset{font-size:12px; padding:6px 10px; gap:6px;} .map-reset .mr-ic{width:14px; height:14px; stroke-width:2.57;} .map-lock{font-size:12px; padding:8px 12px;} .map-lock .ml-ic{width:14px; height:14px; stroke-width:2.57;} }
 /* Zoom +/− — moderní bílá tlačítka, VIDITELNÁ i na mobilu (snadné přiblížení bez gest). */
 .leaflet-control-zoom{display:block; margin:0 12px 80px 0 !important; border:none !important; box-shadow:var(--e2); border-radius:var(--r-md); overflow:hidden;}
-.leaflet-control-zoom a{width:46px; height:46px; line-height:44px; font-size:24px; font-weight:600; background:rgba(255,255,255,0.95); color:var(--copper-bright); border:1px solid rgba(31,81,56,0.16); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);}
+.leaflet-control-zoom a{width:46px; height:46px; line-height:44px; font-size:24px; font-weight:600; background:var(--plocha-plovouci); color:var(--copper-bright); border:1px solid rgba(31,81,56,0.16); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);}
 .leaflet-control-zoom a:first-child{border-bottom:1px solid rgba(31,81,56,0.16);}
 .leaflet-control-zoom a:last-child{border-top:none;}
 .leaflet-control-zoom a:hover{background:#fff; color:var(--copper); }
 .leaflet-control-zoom a:active{background:#EEF2FF;}
-.leaflet-control-zoom a.leaflet-disabled{opacity:0.4; color:#9AA3B4; background:rgba(255,255,255,0.85);}
+.leaflet-control-zoom a.leaflet-disabled{opacity:0.4; color:#9AA3B4; background:var(--plocha-plovouci-tlum);}
 @media (min-width:961px){ .leaflet-control-zoom a{width:40px; height:40px; line-height:38px; font-size:20px;} }
 
 /* Výběr kraje: dokud není vybrán, tečky (pozemky) nejsou klikací → klik vždy trefí kraj.
@@ -2201,11 +2208,11 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    tahle značka kraj vybírá taky, jen na ni jde zamířit prstem. */
 .kraj-lock .pk-shluk-kraj, .kraj-lock .pk-shluk-kraj *{pointer-events:auto !important;}
 /* Nápověda „vyberte kraj" (fáze 1) */
-.kraj-hint{position:absolute; top:12px; left:12px; z-index:600; display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.95); border:1px solid rgba(31,81,56,0.22); color:var(--text-ondark); font-size:13px; font-weight:600; padding:8px 12px; border-radius:var(--r-lg); box-shadow:var(--shadow); backdrop-filter:blur(4px); pointer-events:none; max-width:calc(100% - 118px);}
+.kraj-hint{position:absolute; top:12px; left:12px; z-index:600; display:inline-flex; align-items:center; gap:8px; background:var(--plocha-plovouci); border:1px solid rgba(31,81,56,0.22); color:var(--text-ondark); font-size:13px; font-weight:600; padding:8px 12px; border-radius:var(--r-lg); box-shadow:var(--shadow); backdrop-filter:blur(4px); pointer-events:none; max-width:calc(100% - 118px);}
 .kraj-hint[hidden]{display:none;}
 .kraj-hint .kh-pin{width:9px; height:9px; border-radius:50%; background:var(--copper-bright); box-shadow:0 0 0 4px rgba(31,81,56,0.22); flex:none;}
 /* Vymazlený nadpis vybraného kraje (fáze 2) */
-.kraj-head{position:absolute; top:12px; left:12px; z-index:600; max-width:calc(100% - 118px); display:inline-flex; align-items:center; gap:10px; background:rgba(255,255,255,0.95); border:1px solid rgba(31,81,56,0.3); border-radius:var(--r-md); padding:8px 14px 8px 8px; box-shadow:var(--e2); backdrop-filter:blur(6px);}
+.kraj-head{position:absolute; top:12px; left:12px; z-index:600; max-width:calc(100% - 118px); display:inline-flex; align-items:center; gap:10px; background:var(--plocha-plovouci); border:1px solid rgba(31,81,56,0.3); border-radius:var(--r-md); padding:8px 14px 8px 8px; box-shadow:var(--e2); backdrop-filter:blur(6px);}
 .kraj-head[hidden]{display:none;}
 .kh-back{flex:none; width:38px; height:38px; border-radius:var(--r-sm); border:1px solid rgba(31,81,56,0.22); background:rgba(31,81,56,0.06); color:var(--copper-bright); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
 .kh-back:hover{background:rgba(31,81,56,0.16); border-color:var(--copper-bright);}
@@ -4579,7 +4586,7 @@ h1, h2, h3,
    tam se najet nedá. */
 .opp-skryt{position:absolute; top:44px; right:8px; width:28px; height:28px;
   display:grid; place-items:center; border-radius:50%;
-  background:rgba(255,255,255,0.95); border:1px solid var(--line-strong);
+  background:var(--plocha-plovouci); border:1px solid var(--line-strong);
   color:var(--text-ondark-mute); font-size:13px; line-height:1; cursor:pointer;
   opacity:0; transition:opacity var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
 .opp-item:hover .opp-skryt, .opp-item:focus-within .opp-skryt{opacity:1;}
@@ -4620,7 +4627,7 @@ h1, h2, h3,
     content:""; position:absolute; top:50%; left:50%; width:32px; height:32px;
     margin:-16px 0 0 -16px; border-radius:50%;}
   .opp-media .opp-fav::before{background:rgba(8,20,14,0.55);}
-  .opp-skryt::before{background:rgba(255,255,255,0.95);
+  .opp-skryt::before{background:var(--plocha-plovouci);
     border:1px solid var(--line-strong);}
   .opp-media .opp-fav > *, .opp-skryt > *{position:relative;}
 }
@@ -5140,3 +5147,210 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   font-style:normal; font-size:11px; font-weight:600; line-height:1.6;
   letter-spacing:.01em; color:var(--text-ondark-mute); vertical-align:middle;
   white-space:nowrap;}
+
+/* ===================================================================
+   TMAVÝ REŽIM
+   ===================================================================
+   Není to převrácení světlého. Tmavý režim se VYBÍRÁ: každá plocha
+   i každý text má vlastní hodnotu a vlastní změřený kontrast, protože
+   stejný odstín se na tmavém pozadí chová jinak než na světlém —
+   zelená #1F5138, která na bílé kartě dává 7,0 : 1, má na tmavé ploše
+   1,6 : 1 a nepřečte se vůbec.
+
+   Změřeno (poměr kontrastu, norma WCAG AA je 4,5 : 1 pro běžný text):
+       plocha stránky   hlavní text 15,65  tlumený 8,85  akcent 9,82
+       zapuštěná        hlavní text 14,31  tlumený 8,09  akcent 8,98
+       karta            hlavní text 13,38  tlumený 7,57  akcent 8,40
+       nejvyšší         hlavní text 11,78  tlumený 6,67  akcent 7,39
+   Plochy se od sebe liší jen o 1,07 až 1,14 — na tmavém to stačí, aby
+   byla karta vidět, a zároveň to nedělá pruhy.
+
+   SVĚTLOST JDE OBRÁCENĚ. Na světlém je zvýšená plocha (karta) BĚLEJŠÍ
+   než stránka; na tmavém musí být SVĚTLEJŠÍ než stránka, ne tmavší —
+   světlo přichází shora v obou režimech.
+
+   STÍNY NA TMAVÉM NEFUNGUJÍ: černý stín na skoro černé ploše není
+   vidět. Hloubku proto nese okraj, a stíny se ztlumí, ať nedělají
+   špinavé fleky.
+
+   Přepínač: řídí se nastavením systému, ale dá se přebít ručně
+   (data-theme na <html>). Proto ta dvojí podmínka — jednou uvnitř
+   @media s vyloučením ručního „světlý", jednou mimo pro ruční „tmavý".
+   =================================================================== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0E1A14;
+    --ink:#14231C;
+    --ink-soft:#18291F;
+    --ink-soft2:#1F3328;
+    --surface-2:#1A2A21;
+    --panel:#18291F;
+    /* Tmavý pás musí zůstat PÁSEM i na tmavé stránce — proto je tmavší
+       než ona, ne světlejší. Kdyby splynul, zmizel by rytmus, kvůli
+       kterému vznikl. */
+    --ink-dark:#070F0B;
+    --ink-dark-2:#0B1510;
+    --parchment:#0B1510; --parchment-dim:#22332A;
+
+    --text-ondark:#EAF2EC;
+    --text-ondark-mute:#A9BBAF;
+    --muted:#A9BBAF;
+    --popisek:#9DB0A4;
+
+    /* Akcent se na tmavém musí ROZSVÍTIT. Tmavě zelená by splynula. */
+    --copper:#7FD1A3; --copper-bright:#9ADDB8;
+    --brand-live:#5FD99A; --brand-live-bright:#7FE3AF;
+    --accent-warm:#E0B878; --accent-warm-soft:rgba(224,184,120,0.14);
+    /* Plocha tlačítka: bílý text na ní má 5,21 : 1. */
+    --plocha-znacka:#2E7A55;
+    --obrys-tlacitka:rgba(127,209,163,0.55);
+
+    /* Kategorie nabídek — rozsvícené verze. Na kartě (#18291F) dávají
+       5,74 až 8,63 : 1; světlé odstíny tam měly 1,5 až 2,5. */
+    --c-sale:#8FA8F0;    --c-sale-ink:#A9BDF5;
+    --c-drazba:#F0A169;  --c-drazba-ink:#F4B88B;
+    --c-exekuce:#E8836E; --c-exekuce-ink:#EE9C8B;
+    --c-obec:#6FC2D4;    --c-obec-ink:#8FD3E1;
+    --c-majitel:#C3A0FF; --c-majitel-ink:#D0B5FF;
+    --c-ok:#5FD99A;      --c-ok-ink:#7FE3AF;
+
+    /* Čáry se počítají ze SVĚTLÉ barvy, ne z tmavé — na tmavém pozadí
+       odděluje světlejší linka, ne tmavší. */
+    --line:rgba(234,242,236,0.16);
+    --line-strong:rgba(234,242,236,0.30);
+    --line-ui:rgba(234,242,236,0.46);
+    --mrizka-cara-tmava:rgba(255,255,255,0.05);
+    --mrizka-cara-svetla:rgba(255,255,255,0.03);
+
+    /* Hloubka nese okraj, ne stín. Stíny zůstávají jen jako náznak. */
+    --e0:inset 0 1px 2px rgba(0,0,0,0.35);
+    --e1:0 1px 2px rgba(0,0,0,0.35);
+    --e2:0 2px 6px rgba(0,0,0,0.42);
+    --e3:0 8px 24px rgba(0,0,0,0.5);
+    --e3-up:0 -8px 24px rgba(0,0,0,0.5);
+    --glow:0 6px 16px -8px rgba(127,209,163,0.35);
+    --glow-lg:0 12px 30px -12px rgba(127,209,163,0.35);
+
+    --grad-warm:linear-gradient(135deg, #E0B878 0%, #C9A164 52%, #A8833F 100%);
+    --grad-warm-soft:linear-gradient(135deg, rgba(224,184,120,0.14), rgba(224,184,120,0.07));
+    --grad-cool-soft:linear-gradient(135deg, rgba(127,209,163,0.14), rgba(127,209,163,0.07));
+    --brand-grad:linear-gradient(135deg, #2E7A55 0%, #276646 55%, #1F5138 100%);
+    --brand-grad-soft:linear-gradient(135deg, #35855F 0%, #2E7A55 55%, #276646 100%);
+
+    color-scheme: dark;
+  }
+}
+/* Ruční volba „tmavý" — tatáž pravidla i na světlém systému. Opsat je
+   nejde: vlastní vlastnosti se nedědí přes seznam selektorů v @media,
+   takže deklarace musí být dvakrát. Drží to zkouška: obě větve musí
+   nastavovat tytéž tokeny na tytéž hodnoty. */
+:root[data-theme="dark"] {
+  --bg:#0E1A14; --ink:#14231C; --ink-soft:#18291F; --ink-soft2:#1F3328;
+  --surface-2:#1A2A21; --panel:#18291F;
+  --ink-dark:#070F0B; --ink-dark-2:#0B1510;
+  --parchment:#0B1510; --parchment-dim:#22332A;
+  --text-ondark:#EAF2EC; --text-ondark-mute:#A9BBAF; --muted:#A9BBAF; --popisek:#9DB0A4;
+  --copper:#7FD1A3; --copper-bright:#9ADDB8;
+  --brand-live:#5FD99A; --brand-live-bright:#7FE3AF;
+  --accent-warm:#E0B878; --accent-warm-soft:rgba(224,184,120,0.14);
+  --plocha-znacka:#2E7A55; --obrys-tlacitka:rgba(127,209,163,0.55);
+  --c-sale:#8FA8F0; --c-sale-ink:#A9BDF5;
+  --c-drazba:#F0A169; --c-drazba-ink:#F4B88B;
+  --c-exekuce:#E8836E; --c-exekuce-ink:#EE9C8B;
+  --c-obec:#6FC2D4; --c-obec-ink:#8FD3E1;
+  --c-majitel:#C3A0FF; --c-majitel-ink:#D0B5FF;
+  --c-ok:#5FD99A; --c-ok-ink:#7FE3AF;
+  --line:rgba(234,242,236,0.16); --line-strong:rgba(234,242,236,0.30);
+  --line-ui:rgba(234,242,236,0.46);
+  --mrizka-cara-tmava:rgba(255,255,255,0.05); --mrizka-cara-svetla:rgba(255,255,255,0.03);
+  --e0:inset 0 1px 2px rgba(0,0,0,0.35);
+  --e1:0 1px 2px rgba(0,0,0,0.35);
+  --e2:0 2px 6px rgba(0,0,0,0.42);
+  --e3:0 8px 24px rgba(0,0,0,0.5);
+  --e3-up:0 -8px 24px rgba(0,0,0,0.5);
+  --glow:0 6px 16px -8px rgba(127,209,163,0.35);
+  --glow-lg:0 12px 30px -12px rgba(127,209,163,0.35);
+  --grad-warm:linear-gradient(135deg, #E0B878 0%, #C9A164 52%, #A8833F 100%);
+  --grad-warm-soft:linear-gradient(135deg, rgba(224,184,120,0.14), rgba(224,184,120,0.07));
+  --grad-cool-soft:linear-gradient(135deg, rgba(127,209,163,0.14), rgba(127,209,163,0.07));
+  --brand-grad:linear-gradient(135deg, #2E7A55 0%, #276646 55%, #1F5138 100%);
+  --brand-grad-soft:linear-gradient(135deg, #35855F 0%, #2E7A55 55%, #276646 100%);
+  color-scheme: dark;
+}
+
+/* Co si bílou píše NAPEVNO. Pozadí zapsané jako #fff token neposlechne,
+   takže by v tmavém režimu zůstalo svítit uprostřed tmavé stránky.
+   Jsou to samé ovládací prvky — tlačítka, bublina na mapě, přepínače.
+   Text psaný bílou se nepředělává: ten leží na tmavém pásu nebo na
+   barevném tlačítku a je správně v obou režimech. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .btn-secondary,
+  :root:not([data-theme="light"]) .map-search input,
+  :root:not([data-theme="light"]) .map-near-btn,
+  :root:not([data-theme="light"]) .to-top,
+  :root:not([data-theme="light"]) .okr-stat,
+  :root:not([data-theme="light"]) .leaflet-popup-content-wrapper,
+  :root:not([data-theme="light"]) .leaflet-popup-tip,
+  :root:not([data-theme="light"]) .lp-btn,
+  :root:not([data-theme="light"]) .pz-odhad,
+  :root:not([data-theme="light"]) .vm-km span,
+  :root:not([data-theme="light"]) .mc-prep.on .mcp-v,
+  :root:not([data-theme="light"]) .leaflet-control-zoom a:hover{
+    background:var(--ink-soft); color:var(--text-ondark);}
+  /* Dlaždice mapy jsou fotografie světa — ty se ztmavovat NESMÍ.
+     Filtr by z lesa udělal černou kaši a z cedulek nečitelné skvrny.
+     Ztlumí se jen o kousek, ať nesvítí jako lampa v tmavé stránce. */
+  :root:not([data-theme="light"]) .leaflet-tile-pane{filter:brightness(.82) saturate(.92);}
+}
+:root[data-theme="dark"] .btn-secondary,
+:root[data-theme="dark"] .map-search input,
+:root[data-theme="dark"] .map-near-btn,
+:root[data-theme="dark"] .to-top,
+:root[data-theme="dark"] .okr-stat,
+:root[data-theme="dark"] .leaflet-popup-content-wrapper,
+:root[data-theme="dark"] .leaflet-popup-tip,
+:root[data-theme="dark"] .lp-btn,
+:root[data-theme="dark"] .pz-odhad,
+:root[data-theme="dark"] .vm-km span,
+:root[data-theme="dark"] .mc-prep.on .mcp-v,
+:root[data-theme="dark"] .leaflet-control-zoom a:hover{
+  background:var(--ink-soft); color:var(--text-ondark);}
+:root[data-theme="dark"] .leaflet-tile-pane{filter:brightness(.82) saturate(.92);}
+
+/* Plovoucí panely a plocha mapy v tmavém režimu. Plocha pod dlaždicemi
+   je vidět, než se dlaždice stáhnou — ve světlém je pergamenová, na
+   tmavém by blikla jako bílý list. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]){
+    --plocha-plovouci:rgba(24,41,31,0.94);
+    --plocha-plovouci-tlum:rgba(14,26,20,0.86);}
+  :root:not([data-theme="light"]) #leaflet-map,
+  :root:not([data-theme="light"]) .leaflet-container{background:var(--ink);}
+  :root:not([data-theme="light"]) .leaflet-control-attribution{
+    background:var(--plocha-plovouci-tlum); color:var(--text-ondark-mute);}
+  :root:not([data-theme="light"]) .leaflet-control-attribution a{color:var(--copper);}
+}
+:root[data-theme="dark"]{
+  --plocha-plovouci:rgba(24,41,31,0.94);
+  --plocha-plovouci-tlum:rgba(14,26,20,0.86);}
+:root[data-theme="dark"] #leaflet-map,
+:root[data-theme="dark"] .leaflet-container{background:var(--ink);}
+:root[data-theme="dark"] .leaflet-control-attribution{
+  background:var(--plocha-plovouci-tlum); color:var(--text-ondark-mute);}
+:root[data-theme="dark"] .leaflet-control-attribution a{color:var(--copper);}
+
+/* Přepínač vzhledu (js/rezim.js). Potlačený, v patičce — vzhled se mění
+   jednou za život účtu, takže nepatří do hlavní nabídky. */
+/* Okraj je SVĚTLÝ, ne --line. Tlačítko stojí na tmavém pásu patičky
+   a tmavá čára na tmavém pásu dala poměr 1,00 : 1 — tedy neviditelný
+   okraj, na který hlídač okrajů právem spadl. Alfa 0,42 dělá proti
+   #14231C poměr 3,97 : 1, tedy nad normou 3 : 1 pro ovládací prvky.
+   Platí v obou režimech: pás je tmavý vždycky. */
+.rezim-btn{display:inline-flex; align-items:center; gap:7px;
+  min-height:44px; padding:0 13px; border-radius:var(--r-pill);
+  border:1px solid rgba(255,255,255,0.42); background:none; font:inherit;
+  font-size:13px; font-weight:600; color:var(--text-ondeep-mute);
+  cursor:pointer; transition:border-color var(--cas-zakladni) var(--ease),
+    color var(--cas-zakladni) var(--ease);}
+.rezim-btn:hover{border-color:rgba(255,255,255,0.62); color:var(--text-ondeep);}
+.rezim-btn svg{width:16px; height:16px; flex:none;}

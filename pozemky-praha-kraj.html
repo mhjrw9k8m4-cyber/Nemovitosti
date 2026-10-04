@@ -2,6 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
+<script>/* Vzhled se nastavuje JEŠTĚ PŘED vykreslením — jinak by stránka blikla světle a hned ztmavla. */try{var v=localStorage.getItem('pk_rezim_v1');if(v==='dark'||v==='light')document.documentElement.setAttribute('data-theme',v);}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pozemky Praha — prodej a dražby | Parcelka</title>
   <meta name="description" content="Pozemky v Praze na jedné mapě — 25 pozemků z veřejných zdrojů: prodeje, dražby i exekuce. Ceny od 149 000 Kč.">
@@ -30,7 +31,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=2b35baad">
+  <link rel="stylesheet" href="css/styles.css?v=daca7982">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky Praha","inLanguage":"cs","description":"Nabídky pozemků v Praze — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-praha-kraj.html","publisher":{"@type":"Organization","name":"Parcelka"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Praha","item":"https://www.parcelaka.cz/pozemky-praha-kraj.html"}]}]
   </script>
@@ -220,7 +221,7 @@
     <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
-  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+  <div class="wrap foot-bottom"><span id="pk-rezim"></span><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -235,6 +236,7 @@
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
 <script src="js/graf-cen.js?v=7f925b32" defer></script>
+<script src="js/rezim.js?v=3decd02f" defer></script>
 <script src="js/hlavicka.js?v=c6f32427" defer></script>
 </body>
 </html>

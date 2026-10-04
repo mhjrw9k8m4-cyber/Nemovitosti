@@ -2,6 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
+<script>/* Vzhled se musí nastavit JEŠTĚ PŘED vykreslením: jinak se stránka stihne vykreslit světle a hned ztmavnout, a bílé bliknutí do očí v noci je přesně to, kvůli čemu si lidé tmavý režim zapínají. Proto je to vložené a synchronní, ne soubor s defer. */try{var v=localStorage.getItem('pk_rezim_v1');if(v==='dark'||v==='light')document.documentElement.setAttribute('data-theme',v);}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -34,7 +35,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=2b35baad">
+  <link rel="stylesheet" href="css/styles.css?v=daca7982">
 
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"Article","headline":"Územní plán: co lze na pozemku postavit","inLanguage":"cs","description":"Jak z územního plánu zjistíte, jestli je pozemek stavební a co na něm smíte postavit, kde do něj nahlédnout a jak souvisí s katastrem.","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntityOfPage":"https://www.parcelaka.cz/uzemni-plan-pozemek.html"}
@@ -158,7 +159,7 @@
     <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
-  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+  <div class="wrap foot-bottom"><span id="pk-rezim"></span><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -171,5 +172,6 @@
 <script src="js/upozorneni.js?v=990dc051" defer></script>
 <script src="js/obsah.js?v=564d8537" defer></script>
 <script src="js/hlavicka.js?v=c6f32427" defer></script>
+<script src="js/rezim.js?v=3decd02f" defer></script>
 </body>
 </html>

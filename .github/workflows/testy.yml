@@ -413,6 +413,9 @@ jobs:
       - name: Graf vývoje cenové hladiny
         run: node scripts/test-graf-cen.mjs
 
+      - name: Tmavý režim
+        run: node scripts/test-tmavy-rezim.mjs
+
       - name: Tah ikon je jeden (1,5 px)
         run: node scripts/test-tahy.mjs
 

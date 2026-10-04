@@ -2,6 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
+<script>/* Vzhled se musí nastavit JEŠTĚ PŘED vykreslením: jinak se stránka stihne vykreslit světle a hned ztmavnout, a bílé bliknutí do očí v noci je přesně to, kvůli čemu si lidé tmavý režim zapínají. Proto je to vložené a synchronní, ne soubor s defer. */try{var v=localStorage.getItem('pk_rezim_v1');if(v==='dark'||v==='light')document.documentElement.setAttribute('data-theme',v);}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -39,7 +40,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=2b35baad">
+  <link rel="stylesheet" href="css/styles.css?v=daca7982">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -241,7 +242,7 @@
     .pz-btn svg{width:19px; height:19px; stroke-width:1.89; flex:none;}
     .pz-btn.primary{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
     .pz-btn.primary:hover{filter:brightness(1.06);}
-    .pz-btn.ghost{background:#fff; color:var(--copper-bright); border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1);}
+    .pz-btn.ghost{background:var(--ink-soft); color:var(--copper-bright); border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1);}
     .pz-btn.ghost:hover{border-color:var(--copper-bright); background:#F2F6F3;}
     .pz-btn.ghost:active{transform:scale(.985);}
     .pz-actions{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 4px;}
@@ -253,7 +254,7 @@
     .pz-actions .pz-abtn:first-child{flex-basis:100%; background:rgba(31,81,56,0.10);
       border-color:var(--copper); border-width:1.5px; color:var(--copper); font-weight:700;}
     .pz-actions .pz-abtn:first-child svg{color:var(--copper-bright);}
-    .pz-abtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:48px; padding:0 16px; border-radius:var(--r-ovladani); background:#fff; border:1.5px solid var(--obrys-tlacitka); color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; box-shadow:var(--e1); transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
+    .pz-abtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:48px; padding:0 16px; border-radius:var(--r-ovladani); background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka); color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; box-shadow:var(--e1); transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
     .pz-abtn:hover{border-color:var(--copper-bright); background:#F2F6F3; box-shadow:var(--e2);}
     .pz-abtn:active{transform:scale(.98);}
     .pz-abtn.on{color:#fff; border-color:transparent; background:var(--plocha-znacka); box-shadow:var(--glow);}
@@ -331,7 +332,7 @@
        (2 ÷ 24 × 19 = 1,58 px proti 1,33 px u šestnáctibodových —
        přesně ten rozdíl hlídá scripts/test-ikony.mjs.) */
     .pzm-cela-btn svg{width:19px; height:19px; stroke-width:1.8;}
-    .pzm-cela-btn:hover{background:#fff;}
+    .pzm-cela-btn:hover{background:var(--ink-soft);}
     .pzm-cela-zap{position:fixed; inset:0; z-index:1200; border-radius:0; border:0; display:flex; flex-direction:column; background:var(--ink);}
     .pzm-cela-zap .pzm-mapa{flex:1 1 auto; height:auto; min-height:0;}
     .pzm-cela-zap .pzm-panel{flex:none;}
@@ -342,12 +343,12 @@
     .pzm-cela-zap .pzm-leg{max-height:17vh; overflow:auto; padding:8px 12px;}
     .pzm-cela-zap .pzm-leg-k img{max-height:11vh; width:auto;}
     body.pzm-cela-telo{overflow:hidden;}
-    .pzm-panel{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; border-top:1px solid var(--line); background:#fff;}
+    .pzm-panel{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; border-top:1px solid var(--line); background:var(--ink-soft);}
     .pzm-zaklad{display:inline-flex; background:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:2px; flex:none;}
     .pzm-z{height:31px; padding:0 12px; border:0; background:transparent; border-radius:999px; font:inherit; font-size:13px; font-weight:600; color:var(--text-ondark-mute); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
-    .pzm-z.on{background:#fff; color:var(--copper-bright); box-shadow:var(--e1);}
+    .pzm-z.on{background:var(--ink-soft); color:var(--copper-bright); box-shadow:var(--e1);}
     .pzm-vr{display:flex; flex-wrap:wrap; gap:6px; align-items:center; min-height:34px;}
-    .pzm-v{height:34px; padding:0 14px; border-radius:999px; border:1.5px solid rgba(31,81,56,.26); background:#fff; font:inherit; font-size:13px; font-weight:600; color:var(--text-ondark); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
+    .pzm-v{height:34px; padding:0 14px; border-radius:999px; border:1.5px solid rgba(31,81,56,.26); background:var(--ink-soft); font:inherit; font-size:13px; font-weight:600; color:var(--text-ondark); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
     .pzm-v:hover{border-color:var(--copper-bright); background:#F2F6F3;}
     .pzm-v:active{transform:scale(.98);}
     .pzm-v.on{background:var(--plocha-znacka); border-color:transparent; color:#fff; box-shadow:var(--glow);}
@@ -372,7 +373,7 @@
     .pzm-leg{display:flex; flex-wrap:wrap; gap:14px; padding:12px 12px; border-top:1px solid var(--line); background:#FBFCFB;}
     .pzm-leg-k{margin:0; display:flex; flex-direction:column; gap:6px; max-width:100%;}
     .pzm-leg-k figcaption{font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--text-ondark-mute);}
-    .pzm-leg-k img{max-width:100%; background:#fff; border:1px solid var(--line); border-radius:var(--r-sm); padding:6px;}
+    .pzm-leg-k img{max-width:100%; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); padding:6px;}
     .pzm-pod{margin:8px 0 0; font-size:13px; line-height:1.6; color:var(--text-ondark-mute);}
     .pzm-pod a{color:var(--copper-bright); font-weight:600;}
     .pzm-pin{filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));}
@@ -489,7 +490,7 @@
     <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
-  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+  <div class="wrap foot-bottom"><span id="pk-rezim"></span><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -521,6 +522,7 @@
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
 <script src="js/hlavicka.js?v=c6f32427" defer></script>
+<script src="js/rezim.js?v=3decd02f" defer></script>
 <script type="application/json" id="pz-okoli-data">"Břeclav 5,6 km · Brno 55 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Kostice je v nabídce ještě 5 pozemků","url":"index.html?obec=Kostice\u0026okres=B%C5%99eclav"}</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka – bez prostředníků a bez zbytečných výdajů navíc! k.ú. Kostice LV č. 365 o výměře 2181 m² • Parcela č. 4363 - o výměře 2181 m² (Orná půda) Přístupová cesta je zajištěna přes pozemky obce. Už přes 20 let pomáháme lidem bezpečně investovat do pozemků – ať už hledáte stabilní investici, nebo půdu pro hospodaření. Přidejte se k těm, kteří vsadili na jistotu a zhodnocují své peníze tam, kde má investice pevné základy."</script>
