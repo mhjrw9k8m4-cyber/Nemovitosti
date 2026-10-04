@@ -239,6 +239,9 @@ jobs:
       - name: Jedna barevná teplota (závoje a stíny)
         run: node scripts/test-odstiny.mjs
 
+      - name: Typografická stupnice
+        run: node scripts/test-typografie.mjs
+
       - name: Jeden styl (nadpisy a textura z palety)
         run: node scripts/test-jeden-styl.mjs
 

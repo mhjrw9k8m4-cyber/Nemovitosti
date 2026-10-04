@@ -783,7 +783,7 @@ body.vm-otevreno{overflow:hidden;}
 .vm-meritko span{position:absolute; left:0; top:0; transform:translate(9px,-50%);
   display:inline-block; white-space:nowrap;
   padding:2px 8px; border-radius:var(--r-pill); background:#8A5512; color:#fff;
-  font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:.02em;
+  font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:0.02em;
   box-shadow:var(--e2);}
 /* Počet je to, kvůli čemu se na tenhle panel člověk dívá — má tedy vypadat
    jako údaj, ne jako poznámka pod čarou. Pod ním stojí ROZPAD podle druhu:
@@ -802,7 +802,7 @@ body.vm-otevreno{overflow:hidden;}
   display:flex; flex-direction:column; justify-content:center; gap:4px; min-height:79px;}
 .vm-hlavni{line-height:1.3;}
 .vm-pocet b{font-family:var(--font-display); font-size:20px; font-weight:700;
-  letter-spacing:-.02em; margin-right:2px;}
+  letter-spacing:-0.02em; margin-right:2px;}
 .vm-obec{color:var(--text-ondark-mute);}
 .vm-rozpad{display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12px;
   color:var(--text-ondark-mute);}
@@ -810,7 +810,7 @@ body.vm-otevreno{overflow:hidden;}
 .vm-tecka{width:7px; height:7px; border-radius:50%; flex:none;}
 /* Popisek okruhu byl jen pro odečítač obrazovky, takže z řady „2 5 10 20 50"
    byla na obrazovce hádanka. */
-.vm-okruh-p{font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+.vm-okruh-p{font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
   color:var(--text-ondark-mute); font-family:var(--font-mono); margin-right:2px;}
 .vm-ok{flex:0 0 auto; font:inherit; font-size:16px; font-weight:700; cursor:pointer;
   min-height:46px; padding:10px 16px; border:0; border-radius:var(--r-ovladani);
@@ -845,7 +845,7 @@ body.vm-otevreno{overflow:hidden;}
 .pk-shluk{display:flex; align-items:center; justify-content:center;
   border-radius:50%; background:color-mix(in srgb, var(--sh) 82%, #fff);
   border:2px solid rgba(255,255,255,0.95); box-shadow:var(--e2);
-  color:#fff; font-family:var(--font-ui); font-weight:700; letter-spacing:-.01em;
+  color:#fff; font-family:var(--font-ui); font-weight:700; letter-spacing:-0.01em;
   cursor:pointer; transition:transform var(--cas-rychly) var(--ease);}
 .pk-shluk b{font-size:inherit; line-height:1;}
 .leaflet-marker-icon:hover .pk-shluk{transform:scale(1.08);}
@@ -1192,7 +1192,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
   .hero-band{padding:20px 0 80px;}
   /* Popisek se na úzkém displeji lámal na dvě slova; užší prostrkání
      a o půl bodu menší písmo ho udrží na jednom řádku. */
-  .hero-map .hero-head .eyebrow{font-size:12px; letter-spacing:0.05em;}
+  .hero-map .hero-head .eyebrow{font-size:12px; letter-spacing:0.04em;}
   .hero-map .map-wide{margin-top:-64px;}
   .hero-head{margin-bottom:20px;}
   .hero-head .eyebrow{margin-bottom:12px;}
@@ -1214,7 +1214,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 /* Hero prvky (sdílené) */
 .eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--copper-bright); margin-bottom:20px;}
 .eyebrow::before{content:""; width:16px; height:1px; background:var(--copper-bright);}
-h1{font-family:var(--font-display); font-weight:700; font-size:var(--h1-stranka); line-height:1.05; letter-spacing:-0.028em; margin-bottom:20px;}
+h1{font-family:var(--font-display); font-weight:700; font-size:var(--h1-stranka); line-height:1.05; letter-spacing:-0.03em; margin-bottom:20px;}
 /* Dřív tu byl modro-fialový přechod obtisknutý do písmen. Vypadalo to jako
    každá druhá technologická stránka a odstín uprostřed navíc vybledal.
    Teď plná hluboká modř a pod ní měděné podtržení — jeden akcent, který si
@@ -1276,7 +1276,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    Poměr je teď 5 : 1 a předěl je znát, aniž by stránka narostla. */
 .section-head{max-width:var(--m-sloupec); margin:0 0 28px; text-align:left;}
 .section-head .eyebrow{margin-bottom:16px;}
-.section-head h2{font-family:var(--font-display); font-weight:700; font-size:33px; line-height:1.12; letter-spacing:-0.026em; color:var(--text-ondark);}/* Srdce značky — proč to děláme */
+.section-head h2{font-family:var(--font-display); font-weight:700; font-size:32px; line-height:1.12; letter-spacing:-0.03em; color:var(--text-ondark);}/* Srdce značky — proč to děláme */
 /* Náš slib — čtyři lidské závazky, kompozice barev značky */
 /* Druhy pozemků */
 
@@ -1826,7 +1826,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Naposledy prohlédnuté — vodorovný pásek pro rychlý návrat k parcelám */
 .recent-strip{margin:-2px 0 14px;}
 .recent-strip[hidden]{display:none;}
-.recent-strip .rs-head{font-size:12px; letter-spacing:0.09em; text-transform:uppercase; color:var(--popisek); font-weight:700; margin-bottom:8px;}
+.recent-strip .rs-head{font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--popisek); font-weight:700; margin-bottom:8px;}
 .recent-strip .rs-row{display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
 .recent-strip .rs-row::-webkit-scrollbar{display:none;}
 .rs-chip{flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-pill); padding:6px 12px; font:inherit; font-size:13px; color:var(--text-ondark); cursor:pointer; white-space:nowrap; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
@@ -1954,7 +1954,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   border:1.5px solid var(--line-strong); background:var(--ink-soft); color:var(--text-ondark);
   font:inherit; font-size:22px; line-height:1; display:flex; flex-direction:column;
   align-items:center; justify-content:center; gap:2px;}
-.rv-btn .rv-popis{font-size:11px; font-weight:700; letter-spacing:.02em;}
+.rv-btn .rv-popis{font-size:11px; font-weight:700; letter-spacing:0.02em;}
 .rv-btn:disabled{opacity:.42; cursor:default;}
 .rv-ne{color:var(--c-exekuce-ink); border-color:var(--c-exekuce-ink);}
 .rv-ano{color:var(--copper); border-color:var(--copper-bright); background:rgba(31,81,56,0.12);}
@@ -1979,7 +1979,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   gap:10px; padding:14px 6px 2px; flex-wrap:wrap;}
 .ops-btn{min-height:44px; padding:0 16px; border-radius:var(--r-sm); cursor:pointer;
   border:1px solid var(--text-ondark-mute); background:transparent; color:var(--text-ondark);
-  font:inherit; font-size:14px; font-weight:600; letter-spacing:.01em;
+  font:inherit; font-size:14px; font-weight:600; letter-spacing:0.01em;
   display:inline-flex; align-items:center; gap:6px;}
 .ops-btn:hover:not(:disabled){border-color:var(--copper-bright); color:var(--copper-bright);}
 /* Vypnuté tlačítko se nesmí tvářit jako klikatelné — ale ani zmizet:
@@ -1995,7 +1995,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    Zaoblení je z paletky (--r-sm), ne vlastních 12 px: hlídá test-předloha. */
 .opp-dalsi button{width:100%; min-height:44px; border-radius:var(--r-sm); cursor:pointer;
   border:1px solid var(--text-ondark-mute); background:transparent; color:var(--text-ondark);
-  font:inherit; font-size:14px; font-weight:600; letter-spacing:.01em;}
+  font:inherit; font-size:14px; font-weight:600; letter-spacing:0.01em;}
 .opp-dalsi button:hover{border-color:var(--copper-bright); color:var(--copper-bright);}
 .opp-dalsi button span{font-weight:400; opacity:.65;}
 .reset-btn{display:inline-block; margin-top:12px; padding:8px 16px; font-size:13px; font-weight:600; color:var(--ink); background:var(--copper-bright); border:0; border-radius:var(--r-sm); cursor:pointer;}
@@ -2022,7 +2022,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .opp-chips{display:flex; flex-wrap:wrap; gap:6px;}
 .opp-hot{display:inline-block; font-size:12px; font-weight:700; letter-spacing:var(--odznak-proklad); color:var(--popisek); background:rgba(228,240,231,0.06); border:1px solid rgba(228,240,231,0.16); border-radius:var(--r-xs); padding:1px 8px; text-transform:uppercase;}
 /* Zvýrazněný (placený) inzerát — prémiový plný odznak + jemné orámování karty */
-.opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#fff; background:var(--plocha-znacka); border:0; border-radius:var(--r-sm); padding:2px 8px; letter-spacing:0.03em; text-transform:uppercase; box-shadow:var(--e1);}
+.opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#fff; background:var(--plocha-znacka); border:0; border-radius:var(--r-sm); padding:2px 8px; letter-spacing:0.02em; text-transform:uppercase; box-shadow:var(--e1);}
 .opp-item.is-featured{border-color:rgba(31,81,56,0.55); box-shadow:inset 0 0 0 1px rgba(31,81,56,0.3);}
 /* Odpočet do termínu dražby (reálné datum) */
 .opp-cd{display:inline-block; font-size:12px; font-weight:700; padding:1px 8px; border-radius:var(--r-xs); background:rgba(228,240,231,0.06); border:1px solid rgba(228,240,231,0.16); color:var(--text-ondark-mute); letter-spacing:0.01em; white-space:nowrap;}
@@ -2156,13 +2156,13 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .sn-popis{position:absolute; left:0; right:0; bottom:0; z-index:2; display:flex; flex-direction:column; gap:1px;
   padding:32px 16px 12px; pointer-events:none; color:#fff;
   background:linear-gradient(180deg, rgba(12,26,18,0) 0%, rgba(12,26,18,0.55) 55%, rgba(12,26,18,0.85) 100%);}
-.sn-popis b{font-family:var(--font-display); font-size:20px; font-weight:700; line-height:1.15; letter-spacing:-.01em;}
+.sn-popis b{font-family:var(--font-display); font-size:20px; font-weight:700; line-height:1.15; letter-spacing:-0.01em;}
 .sn-popis i{font-style:normal; font-size:13px; color:rgba(255,255,255,0.85);}
 /* Bez strojového písma. Na kartě je nadpis v patkovém a údaje
    v bezpatkovém — třetí řez, a ještě strojový, z toho dělá
    přehlídku písem. Monospace patří k číslům, která se mají
    srovnávat pod sebou, ne k větě. */
-.sn-popis u{text-decoration:none; font-size:12px; letter-spacing:.03em;
+.sn-popis u{text-decoration:none; font-size:12px; letter-spacing:0.02em;
   color:rgba(255,255,255,0.7); margin-top:2px;}
 @media (max-width:560px){ .sn-popis{padding:24px 12px 10px;} .sn-popis b{font-size:16px;} }
 /* Legenda mapy (vpravo nahoře) */
@@ -2241,7 +2241,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .step{border-top:1px solid var(--line); padding-top:24px;}
 .step .icon-badge{margin-bottom:14px;}
 .step .idx{color:var(--copper-bright); font-size:12px; letter-spacing:0.1em; margin-bottom:6px;}
-.step h3{font-family:var(--font-ui); font-weight:700; font-size:20px; letter-spacing:-0.012em; margin-bottom:10px;}
+.step h3{font-family:var(--font-ui); font-weight:700; font-size:20px; letter-spacing:-0.01em; margin-bottom:10px;}
 .step p{font-size:16px; color:var(--text-ondark-mute);}
 
 /* Status grid */
@@ -2267,7 +2267,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .rc-ico .ic{width:22px; height:22px; color:var(--copper-bright);}
 /* Poptávka pro realitky/obce */
 .realtor-contact{margin-top:20px; background:linear-gradient(135deg, var(--ink-soft) 0%, var(--ink-soft2) 100%); border:1px solid var(--line); border-radius:var(--r-md); padding:32px; display:grid; grid-template-columns:1fr 1.1fr; gap:32px; align-items:center;}
-.rct-copy h2{font-family:var(--font-display); font-size:24px; font-weight:700; letter-spacing:-0.018em; margin-bottom:10px;}
+.rct-copy h2{font-family:var(--font-display); font-size:24px; font-weight:700; letter-spacing:-0.02em; margin-bottom:10px;}
 .rct-copy p{font-size:16px; color:var(--text-ondark-mute); line-height:1.6;}
 .rct-form{display:flex; flex-direction:column; gap:10px;}
 .rct-form input, .rct-form textarea{background:var(--ink); border:1px solid var(--line); border-radius:var(--r-xs); padding:12px 14px; font-size:16px; color:var(--text-ondark); font-family:inherit; width:100%;}
@@ -2417,7 +2417,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .info-body a{color:var(--copper-bright);}
 
 /* Back to top */
-.to-top{position:fixed; bottom:24px; right:24px; display:inline-flex; align-items:center; gap:6px; height:46px; padding:0 16px 0 14px; border-radius:var(--r-pill); background:#fff; color:var(--copper-bright); border:1.5px solid var(--obrys-tlacitka); font-size:16px; font-weight:700; letter-spacing:.01em; cursor:pointer; box-shadow:var(--e2); opacity:0; pointer-events:none; transform:translateY(12px) scale(.96); transition:opacity var(--cas-zakladni) var(--ease), transform var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease); z-index:900;}
+.to-top{position:fixed; bottom:24px; right:24px; display:inline-flex; align-items:center; gap:6px; height:46px; padding:0 16px 0 14px; border-radius:var(--r-pill); background:#fff; color:var(--copper-bright); border:1.5px solid var(--obrys-tlacitka); font-size:16px; font-weight:700; letter-spacing:0.01em; cursor:pointer; box-shadow:var(--e2); opacity:0; pointer-events:none; transform:translateY(12px) scale(.96); transition:opacity var(--cas-zakladni) var(--ease), transform var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease); z-index:900;}
 .to-top svg{width:19px; height:19px; stroke-width:1.89; fill:none; stroke:currentColor;  stroke-linecap:round; stroke-linejoin:round;}
 .to-top span{line-height:1;}
 .to-top.show{opacity:1; pointer-events:auto; transform:none;}
@@ -2606,7 +2606,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
      nadpis oddílu a čtyři položky pod ním jsou rovnou vidět. */
   .nav-moje{display:block;}
   .nav-moje > summary{cursor:default; pointer-events:none;
-    font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    font-size:12px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase;
     color:var(--text-ondark-mute); padding:14px 12px 4px;}
   .nav-moje > summary::after{display:none;}
   /* Ve vysouvacím menu je skupina rozbalená vždycky, i když <details>
@@ -2677,7 +2677,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .add-hero{padding:128px 0 20px;}
 /* Nadpisy appkových stránek zůstávaly bezpatkové a ve váze 500 — vedle
    úvodní stránky pak působily jako jiný web. */
-.add-hero h1{font-family:var(--font-display); font-weight:700; line-height:1.12; letter-spacing:-0.022em; max-width:var(--m-sloupec);}
+.add-hero h1{font-family:var(--font-display); font-weight:700; line-height:1.12; letter-spacing:-0.02em; max-width:var(--m-sloupec);}
 .add-hero .sub{font-size:16px; color:var(--text-ondark-mute); margin-top:16px; max-width:var(--m-text);}
 .add-wrap{max-width:var(--m-sloupec);}
 
@@ -2953,7 +2953,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 /* ---------- Pravidla inzerce / nahlášení ---------- */
 .rules-sect{margin-bottom:6px;}
 .rules-sect + .rules-sect{margin-top:20px;}
-.rules-sect h2{font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:-0.015em; color:var(--text-ondark); margin-bottom:14px;}
+.rules-sect h2{font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:-0.01em; color:var(--text-ondark); margin-bottom:14px;}
 .rule-list{list-style:none; display:flex; flex-direction:column; gap:10px;}
 .rule-list li{position:relative; padding-left:28px; font-size:16px; color:var(--text-ondark-mute); line-height:1.55;}
 .rule-list li b{color:var(--text-ondark);}
@@ -2974,7 +2974,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 
 .ul-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:16px; display:flex; flex-direction:column; gap:6px; transition:border-color var(--cas-zakladni) var(--ease), transform var(--cas-zakladni) var(--ease);}
 .ul-card:hover{border-color:var(--line-strong); transform:translateY(-2px);}
-.ul-badge{align-self:flex-start; font-size:12px; font-weight:700; padding:2px 10px; border-radius:var(--r-lg); text-transform:uppercase; letter-spacing:0.03em; color:#fff;}
+.ul-badge{align-self:flex-start; font-size:12px; font-weight:700; padding:2px 10px; border-radius:var(--r-lg); text-transform:uppercase; letter-spacing:0.02em; color:#fff;}
 .ul-card h3{font-size:16px;}
 .ul-meta{font-size:13px; color:var(--text-ondark-mute);}
 .ul-price{font-family:var(--font-ui); font-size:20px; color:var(--copper-bright);}
@@ -3021,7 +3021,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .pp-obr{position:relative; line-height:0;}
 .pp-titulka{position:absolute; left:6px; bottom:6px; z-index:1; padding:2px 8px;
   border-radius:var(--r-pill); background:var(--plocha-znacka); color:#fff;
-  font-size:12px; font-weight:700; letter-spacing:.02em; box-shadow:var(--e1);}
+  font-size:12px; font-weight:700; letter-spacing:0.02em; box-shadow:var(--e1);}
 .pp-smaz{position:absolute; right:5px; top:5px; z-index:1; width:26px; height:26px; padding:0;
   display:flex; align-items:center; justify-content:center; cursor:pointer;
   border:0; border-radius:var(--r-pill); background:rgba(12,22,17,0.7); color:#fff;
@@ -3105,7 +3105,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .pcs-hint b{color:var(--text-ondark);}
 /* Úroveň inzerátu (Začínáme … Špičkový) */
 .pcs-right{display:inline-flex; align-items:center; gap:8px;}
-.pc-strength .pcs-tier{font-size:12px; font-weight:700; letter-spacing:.02em; padding:2px 8px; border-radius:var(--r-lg); background:rgba(228,240,231,0.08); color:var(--text-ondark-mute); transition:color var(--cas-pomaly) var(--ease), background var(--cas-pomaly) var(--ease);}
+.pc-strength .pcs-tier{font-size:12px; font-weight:700; letter-spacing:0.02em; padding:2px 8px; border-radius:var(--r-lg); background:rgba(228,240,231,0.08); color:var(--text-ondark-mute); transition:color var(--cas-pomaly) var(--ease), background var(--cas-pomaly) var(--ease);}
 .pc-strength[data-lvl="2"] .pcs-tier{color:#8FA6FF; background:rgba(44,113,80,0.12);}
 .pc-strength[data-lvl="3"] .pcs-tier{color:var(--copper-bright); background:rgba(44,113,80,0.16);}
 .pc-strength[data-lvl="4"] .pcs-tier{color:var(--copper-bright); background:rgba(44,113,80,0.22);}
@@ -3146,7 +3146,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .okr-stats{display:flex; flex-wrap:wrap; gap:10px; margin:0 0 20px;}
 .okr-stat{background:#fff; border:1px solid var(--line); border-radius:var(--r-md); padding:12px 16px; min-width:96px; box-shadow:var(--e1);}
 .okr-stat b{display:block; font-size:24px; line-height:1.1; color:var(--copper-bright,#8CC3A4);}
-.okr-stat span{font-size:12px; color:var(--muted,#A3B3A6); text-transform:uppercase; letter-spacing:.04em;}
+.okr-stat span{font-size:12px; color:var(--muted,#A3B3A6); text-transform:uppercase; letter-spacing:0.04em;}
 .okr-list{display:flex; flex-direction:column; gap:10px; margin:14px 0 0;}
 /* PEVNÁ MŘÍŽKA MÍSTO ZALAMOVÁNÍ.
    Dokud byl řádek flexbox, měnil tvar podle délky textu: v okrese
@@ -3452,7 +3452,7 @@ body{background:var(--bg);}
 .sources::before, .sources::after{display:none;}
 .src-stats{grid-template-columns:repeat(4,1fr); gap:28px; margin-bottom:40px;}
 .src-stat{border-left:0; padding:0; gap:8px;}
-.src-stat b{font-family:var(--font-display); font-weight:700; font-size:clamp(40px,5.4vw,68px); line-height:0.92; letter-spacing:-0.035em; color:var(--text-ondeep);}
+.src-stat b{font-family:var(--font-display); font-weight:700; font-size:clamp(40px,5.4vw,68px); line-height:0.92; letter-spacing:-0.04em; color:var(--text-ondeep);}
 .src-stat span{font-size:13px; color:var(--text-ondeep-mute); max-width:var(--m-nadpis);}
 .sources-lead{color:var(--text-ondeep-mute);}
 .sources .sources-over{color:var(--text-ondeep-mute);}
@@ -3560,7 +3560,7 @@ footer a:focus-visible{outline-color:var(--accent-warm-bright);}
 .step:nth-child(2) .icon-badge{background:var(--grad-cool-soft); color:var(--copper-bright);}
 .step:nth-child(3) .icon-badge{background:linear-gradient(135deg, rgba(27,74,52,0.16), rgba(27,74,52,0.06)); color:#1B4A34;}
 .step .icon-badge .ic{width:24px; height:24px;}
-.step .idx{grid-column:2; margin:2px 0 2px; font-size:12px; letter-spacing:.14em; color:var(--text-ondark-mute);}
+.step .idx{grid-column:2; margin:2px 0 2px; font-size:12px; letter-spacing:0.14em; color:var(--text-ondark-mute);}
 .step h3{grid-column:2; margin-bottom:6px;}
 .step p{grid-column:2;}
 
@@ -3607,7 +3607,7 @@ footer a:focus-visible{outline-color:var(--accent-warm-bright);}
 
   #nav a:not(.btn-primary){
     gap:12px; padding:8px 10px; margin-bottom:1px; border-radius:var(--r-sm);
-    font-size:16px; font-weight:600; letter-spacing:-0.005em;}
+    font-size:16px; font-weight:600; letter-spacing:-0.01em;}
   /* Ikona v dlaždici — nese barvu a drží řádek pohromadě.
      Dlouho ji nenesla: dlaždice byly zelené a hnědé podle skupiny, ale samy
      ikony měly natvrdo obtah #9fb4c8 — studenou modrošeď, která na tomhle
@@ -3809,7 +3809,7 @@ body::after{
    čtvrtině jeho výšky šedou mlhu a text úvodu do ní zasahoval. */
 .okr-band > .wrap{position:relative; z-index:1;}
 .okr-hero .eyebrow{color:#EAE6DD;}
-.okr-hero h1{color:#FFFFFF; font-size:var(--h1-stranka); line-height:1.04; letter-spacing:-0.028em;}
+.okr-hero h1{color:#FFFFFF; font-size:var(--h1-stranka); line-height:1.04; letter-spacing:-0.03em;}
 .okr-hero .sub{color:rgba(255,255,255,0.85); max-width:var(--m-text);}
 .okr-hero .sub b{color:#FFFFFF;}
 @media (max-width:880px){ .okr-band{padding:40px 0 32px;} }
@@ -3863,7 +3863,7 @@ body::after{
 .okr-item::after{content:none;}
 /* Kdy se zdroje naposledy procházely — slib z častých dotazů, který na
    krajských a okresních stránkách nebylo čím podepřít. */
-.okr-cerstvost{margin-top:8px; font-size:13px; color:var(--text-ondark-mute); letter-spacing:.01em;}
+.okr-cerstvost{margin-top:8px; font-size:13px; color:var(--text-ondark-mute); letter-spacing:0.01em;}
 /* Poznámka v hlavičce seznamu — drobná, ale musí být čitelná. */
 .mc-pozn{font-size:12px; color:var(--text-ondark-mute); white-space:nowrap;}
 /* Když mapová knihovna nedojede. Dřív tu zůstala prázdná plocha a žádné
@@ -4016,7 +4016,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .hero-map .hero-head h1{
   font-family:var(--font-display); font-weight:800;
 
-  font-size:var(--h1-domu); line-height:0.94; letter-spacing:-0.042em;
+  font-size:var(--h1-domu); line-height:0.94; letter-spacing:-0.04em;
   max-width:var(--m-nadpis); margin-bottom:24px;}
 /* Zvýrazněná část věty nesmí být kurzíva — z té byla ta „pohádka".
    Rozdíl dělá barva, ne jiný řez písma. */
@@ -4113,7 +4113,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
     display:block; margin:0; padding-top:6px;}
   .rail > .wrap > .section-head{grid-column:2; grid-row:1;}
   .rail > .wrap > .rail-mark .rm-n{display:block; font-weight:600;
-    font-size:44px; line-height:1; letter-spacing:-0.035em;
+    font-size:44px; line-height:1; letter-spacing:-0.04em;
     color:var(--text-ondark); margin-bottom:12px;}
   .rail > .wrap > .rail-mark .rm-l{display:block; max-width:13ch; line-height:1.5;
     padding-top:12px; border-top:1px solid var(--line-strong);}
@@ -4157,7 +4157,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .add-hero:not(.app-hero) > .wrap{position:relative; z-index:1;}
 .add-hero:not(.app-hero) .eyebrow{color:#EAE6DD;}
 .add-hero:not(.app-hero) h1{color:#FFFFFF; font-size:var(--h1-stranka);
-  line-height:1.03; letter-spacing:-0.032em; max-width:var(--m-nadpis);}
+  line-height:1.03; letter-spacing:-0.03em; max-width:var(--m-nadpis);}
 /* Zvýraznění v nadpisu nese barva, ne kurzíva. */
 .add-hero:not(.app-hero) h1 em{font-style:normal; font-weight:800; color:#E4C089;}
 /* Měděné podtržení pod zvýrazněním je na tmavém nadbytečné — barva stačí
@@ -4212,7 +4212,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   display:block; margin-bottom:10px;
   font-family:var(--font-display); font-weight:600; font-size:13px;
   letter-spacing:0.04em; color:var(--accent-warm); font-variant-numeric:tabular-nums;}
-.clanek .rules-sect h2{font-size:24px; line-height:1.18; letter-spacing:-0.022em;
+.clanek .rules-sect h2{font-size:24px; line-height:1.18; letter-spacing:-0.02em;
   margin-bottom:14px;}
 .clanek .rules-sect > p{margin-bottom:14px;}
 .clanek .rules-sect > p + .rule-list, .clanek .rules-sect > p + .rules-note{margin-top:16px;}
@@ -4256,7 +4256,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   .section:has(.clanek) > .add-wrap > .obsah{display:block; grid-column:1;
     grid-row:1 / span 99; position:sticky; top:109px; align-self:start;}
   .obsah-nadpis{font-family:var(--font-mono); font-size:12px; font-weight:600;
-    letter-spacing:.12em; text-transform:uppercase; color:var(--accent-warm);
+    letter-spacing:0.1em; text-transform:uppercase; color:var(--accent-warm);
     margin:24px 0 12px;}
   .obsah ol{list-style:none; margin:0; padding:0; counter-reset:pk-obsah;
     border-left:1px solid var(--line);}
@@ -4340,8 +4340,8 @@ h1, h2, h3,
 .section-head h2,
 .add-hero h1,
 .okr-hero h1,
-.clanek .rules-sect h2{letter-spacing:-0.012em;}
-.hero-map .hero-head h1{letter-spacing:-0.018em; line-height:1.0;}
+.clanek .rules-sect h2{letter-spacing:-0.01em;}
+.hero-map .hero-head h1{letter-spacing:-0.02em; line-height:1.0;}
 .rail-mark .rm-n{font-family:var(--font-display);}
 
 
@@ -4374,7 +4374,7 @@ h1, h2, h3,
 .hl-fact .hl-k{font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:var(--popisek-proklad);
   text-transform:uppercase; color:rgba(255,255,255,0.7);}
 .hl-fact .hl-v{font-family:var(--font-display); font-size:16px; line-height:1.25;
-  color:#FFFFFF; letter-spacing:-0.008em;}
+  color:#FFFFFF; letter-spacing:-0.01em;}
 .hl-fact:hover .hl-v{color:#E4C089;}
 .hl-fact:focus-visible{outline:2px solid #E4C089; outline-offset:4px; border-radius:2px;}
 @media (max-width:760px){
@@ -4445,11 +4445,11 @@ h1, h2, h3,
    vypadala, jako by každé pocházelo z jiné tabulky. Rodina je jedna
    a rozdíl dělá velikost a tloušťka, ne typ písma. */
 .mo-radek .mo-v{font-family:var(--font-display); font-variant-numeric:tabular-nums;
-  white-space:nowrap; letter-spacing:-0.012em;}
+  white-space:nowrap; letter-spacing:-0.01em;}
 .mo-radek.mo-hlavni{border-top:1px solid rgba(255,255,255,0.12); margin-top:4px; padding-top:8px;}
 .mo-radek.mo-hlavni .mo-k{color:var(--text-ondeep);}
 .mo-radek.mo-hlavni .mo-v{font-family:var(--font-display); font-size:20px; font-weight:700;
-  color:var(--text-ondeep); letter-spacing:-0.012em;}
+  color:var(--text-ondeep); letter-spacing:-0.01em;}
 .mo-rozdil{margin-top:8px; font-size:14px; color:#E4C089;}
 .mo-rozdil b{color:#E4C089;}
 .mo-pozn{margin:10px 0 0; font-size:12px; line-height:1.5; color:var(--text-ondeep-mute);}
@@ -4839,7 +4839,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 .hh-fakta .hl-fact .hl-v{font-size:16px; color:rgba(234,230,221,0.85); line-height:1.35;}
 /* Hlavní hodnota („dnes", „6", „−59 %") nese kartu — zbytek je upřesnění. */
 .hh-fakta .hl-fact .hl-v b{display:block; font-family:var(--font-display); font-weight:800;
-  font-size:clamp(23px,3.6vw,36px); line-height:1.02; letter-spacing:-.03em; color:#fff;}
+  font-size:clamp(23px,3.6vw,36px); line-height:1.02; letter-spacing:-0.03em; color:#fff;}
 /* Oddělovač zůstává v textu (kvůli odečítači i kontrolám), ale na kartě,
    kde hlavní údaj stojí na vlastním řádku, by visel na začátku druhého. */
 .hh-fakta .hl-sep{position:absolute; width:1px; height:1px; overflow:hidden;
@@ -4929,7 +4929,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
      (naměřeno 38 a 44 px). Na kartě je volných 179 až 193 px, takže
      širší sloupec tu nikomu nebere místo. */
   .hh-fakta .hl-fact .hl-k{display:block; flex:0 0 auto; max-width:142px;
-    font-size:12px; letter-spacing:.04em; line-height:1.15;}
+    font-size:12px; letter-spacing:0.04em; line-height:1.15;}
   .hh-fakta .hl-fact .hl-v{font-size:13px;}
   .hh-fakta .hl-fact .hl-v b{font-size:16px;}
   .hero-live.hh-fakta{gap:4px;}
@@ -4950,7 +4950,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 }
 /* Hlavička je pruh s vlasovou linkou, ne text ležící na mapě. */
 .vm-hlava{padding:14px 16px 12px; border-bottom:1px solid var(--line);}
-.vm-hlava b{font-size:20px; letter-spacing:-.01em;}
+.vm-hlava b{font-size:20px; letter-spacing:-0.01em;}
 .vm-x{border:1px solid var(--line); border-radius:var(--r-pill);}
 /* Mapa se zasouvá POD patičku — mezi nimi je stín, ne řez. */
 .vm-mapa-obal::after{content:""; position:absolute; left:0; right:0; bottom:0; height:26px;
@@ -5145,7 +5145,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 .opp-videne{display:inline-block; margin-left:8px; padding:1px 7px;
   border-radius:var(--r-pill); border:1px solid var(--line);
   font-style:normal; font-size:11px; font-weight:600; line-height:1.6;
-  letter-spacing:.01em; color:var(--text-ondark-mute); vertical-align:middle;
+  letter-spacing:0.01em; color:var(--text-ondark-mute); vertical-align:middle;
   white-space:nowrap;}
 
 /* ===================================================================

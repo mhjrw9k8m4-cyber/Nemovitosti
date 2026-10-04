@@ -33,7 +33,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=22c5a69f">
+  <link rel="stylesheet" href="css/styles.css?v=adc5714e">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .hl-wrap{max-width:var(--m-uzky); margin:0 auto;}
@@ -96,7 +96,7 @@
        a nadpis odbytý emodži. Teď má hlavičku, oddíly s linkou mezi nimi
        a rychlé volby — ať je na první pohled vidět, co všechno jde zadat. */
     .hl-new-head{margin-bottom:14px;}
-    .hl-new-head b{display:block; font-family:var(--font-display); font-size:20px; color:var(--text-ondark); letter-spacing:-.01em;}
+    .hl-new-head b{display:block; font-family:var(--font-display); font-size:20px; color:var(--text-ondark); letter-spacing:-0.01em;}
     .hl-new-head span{display:block; margin-top:2px; font-size:14px; color:var(--text-ondark-mute);}
     .hl-sekce{padding:16px 0; border-top:1px solid var(--line);}
     .hl-sekce:first-of-type{border-top:0; padding-top:0;}
@@ -107,7 +107,7 @@
     .hl-sekce-h{display:flex; align-items:center; gap:8px; margin-bottom:10px;}
     .hl-sekce-h svg{width:17px; height:17px; flex:none; fill:none; stroke:var(--copper);
       stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round;}
-    .hl-sekce-h b{font-size:15px; font-weight:700; color:var(--text-ondark); letter-spacing:.01em;}
+    .hl-sekce-h b{font-size:15px; font-weight:700; color:var(--text-ondark); letter-spacing:0.01em;}
     .hl-sekce-h .hl-pozn{font-size:13px;}
     /* ROZSAH JAKO JEDNA VĚC. „od (Kč)" a „do (Kč)" byly dvě osamocené
        krabičky pod sebou a jednotka se opakovala v obou popiscích.
@@ -122,7 +122,7 @@
       font-size:13px; font-weight:600; color:var(--text-ondark-mute); pointer-events:none;}
     /* Bez text-transform:uppercase — velká písmena z „Kč" udělají „KČ"
        a z „m²" „M²", což jsou v češtině obojí chybné zápisy jednotek. */
-    .hl-lbl.jemny{font-weight:600; color:var(--text-ondark-mute); font-size:12px; letter-spacing:.01em;}
+    .hl-lbl.jemny{font-weight:600; color:var(--text-ondark-mute); font-size:12px; letter-spacing:0.01em;}
     .hl-pozn{font-weight:400; text-transform:none; letter-spacing:0; color:var(--text-ondark-mute); opacity:.85;}
     .hl-napoveda{margin:6px 0 0; font-size:12px; line-height:1.45; color:var(--text-ondark-mute);}
     /* Hlavička je lepivá; bez tohohle odsazení se nadpis karty schová pod ni,

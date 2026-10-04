@@ -39,7 +39,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=22c5a69f">
+  <link rel="stylesheet" href="css/styles.css?v=adc5714e">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:var(--r-lg); padding:24px 20px 20px;
@@ -50,7 +50,7 @@
       background:radial-gradient(120% 90% at 88% -10%, rgba(126,196,157,.16), transparent 60%);}
     .pf-head{position:relative; display:flex; align-items:center; gap:14px;}
     .pf-avatar{flex:none; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-      font-weight:700; font-size:20px; color:#fff; background:var(--plocha-znacka); letter-spacing:.02em;
+      font-weight:700; font-size:20px; color:#fff; background:var(--plocha-znacka); letter-spacing:0.02em;
       box-shadow:0 0 0 4px rgba(31,81,56,0.16), var(--glow);}
     .pf-id{min-width:0; flex:1;}
     .pf-id .pf-hello{display:flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:12px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:var(--popisek-proklad); font-weight:600;}
@@ -102,7 +102,7 @@
     .mi-lthumb img{width:100%; height:160px; object-fit:cover; border-radius:var(--r-md); display:block;}
     .mi-lthumb .n{position:absolute; left:10px; bottom:10px; background:rgba(12,26,18,.66); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:var(--r-sm);}
     .mi-lhead{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:12px;}
-    .mi-lplace{font-size:17px; font-weight:700; color:var(--text-ondark); line-height:1.25; letter-spacing:-.01em;}
+    .mi-lplace{font-size:17px; font-weight:700; color:var(--text-ondark); line-height:1.25; letter-spacing:-0.01em;}
     .mi-lstatus{flex:none; font-size:12px; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap; background:var(--ink); color:var(--text-ondark-mute); border:1px solid var(--line-strong);}
     .mi-lstatus.ok{background:rgba(31,163,99,.12); color:#178a53; border-color:rgba(31,163,99,.4);}
     /* Nález noční kontroly. Jantar, ne červená: inzerát dál běží, jen je
@@ -123,7 +123,7 @@
     .mi-lstats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px;}
     .mi-lstat{background:var(--ink); border:1px solid var(--line); border-radius:var(--r-md); padding:10px 8px; text-align:center;}
     .mi-lstat b{display:block; font-size:20px; font-weight:800; color:var(--copper-bright); font-variant-numeric:tabular-nums; line-height:1.1;}
-    .mi-lstat span{display:block; font-size:11px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:.03em; margin-top:4px;}
+    .mi-lstat span{display:block; font-size:11px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:0.02em; margin-top:4px;}
     /* Tlačítka jsou tři („Otevřít inzerát", „Zobrazit na mapě", „Smazat"),
        tak se musí umět zalomit: natěsnané do jedné řady by se na úzkém
        telefonu lámal text uvnitř nich. Základ 130 px je tak akorát na
