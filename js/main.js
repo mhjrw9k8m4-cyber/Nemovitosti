@@ -4109,12 +4109,19 @@
     var kolik = odKusu + top.length;
     var karticky = [];
 
+    /* Množina už otevřených se čte JEDNOU na celou stránku výpisu, ne
+       u každé karty — schránka je synchronní a dvacet čtení za překreslení
+       by stálo víc než celé vykreslení. */
+    var videneKlice = (window.PKVideno && window.PKVideno.mnozina) ? window.PKVideno.mnozina() : {};
+
     top.forEach(function (d, rank) {
       var t = TYPE[d.type];
       var perM2 = zaMetr(d);
       var hot = !!hotIds[d._id];
+      var jeVidene = !!videneKlice[pkey(d)];
       var li = document.createElement('li');
-      li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '') + (isFeatured(d) ? ' is-featured' : '');
+      li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '') + (isFeatured(d) ? ' is-featured' : '')
+        + (jeVidene ? ' je-videne' : '');
       li.setAttribute('data-id', d._id);
       li.setAttribute('tabindex', '0');
       li.setAttribute('role', 'button');
@@ -4263,7 +4270,13 @@
         '</div>' +
         '<div class="opp-body">' +
           '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
-          '<span class="opp-place">' + d.place + '</span>' +
+          /* „Už otevřeno" stojí u NÁZVU MÍSTA, ne u ceny: oko po kartách
+             jede přes místo. Je to potlačený štítek, ne varování —
+             neznamená „prodáno" ani „nezajímavé", jen „tenhle jsi už
+             viděl", aby se nemuselo klepat podruhé. */
+          '<span class="opp-place">' + d.place +
+            (jeVidene ? '<i class="opp-videne" title="Tenhle pozemek jste už otevřeli">už otevřeno</i>' : '') +
+          '</span>' +
           (mistoRadek(d) ? '<div class="opp-loc">' + mistoRadek(d) + '</div>' : '') +
           (sub ? '<div class="opp-sub">' + sub + '</div>' : '') +
           '<div class="opp-figures">' + figs + '</div>' +

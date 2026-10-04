@@ -5130,3 +5130,13 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   .gc-ted{margin-left:0; width:100%;}
   .gc-bublina{font-size:12px; padding:6px 8px;}
 }
+
+/* „UŽ OTEVŘENO" NA KARTĚ VÝPISU (js/videno.js).
+   Potlačený štítek, ne varování: neznamená „prodáno" ani „nezajímavé",
+   jen že tam ten člověk už byl. Karta se proto nestmavuje a pořadí se
+   nemění — kdo si pozemek otevřel dvakrát, mohl ho mít rád. */
+.opp-videne{display:inline-block; margin-left:8px; padding:1px 7px;
+  border-radius:var(--r-pill); border:1px solid var(--line);
+  font-style:normal; font-size:11px; font-weight:600; line-height:1.6;
+  letter-spacing:.01em; color:var(--text-ondark-mute); vertical-align:middle;
+  white-space:nowrap;}

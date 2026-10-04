@@ -1182,6 +1182,11 @@
       sourNav.href = cil;
     }
 
+    /* Zapiš, že se tenhle pozemek OTEVŘEL — výpis podle toho označí
+       karty, které už člověk viděl. Až tady, po vykreslení: dokud
+       nevíme, co se vykreslilo, není co značit. */
+    try { if (global.PKVideno) global.PKVideno.oznac(d); } catch (e) {}
+
     postavListu();
   }
 

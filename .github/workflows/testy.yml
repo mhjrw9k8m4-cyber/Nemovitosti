@@ -422,5 +422,8 @@ jobs:
       - name: Souřadnice pozemku s sebou
         run: node scripts/test-souradnice.mjs
 
+      - name: Značka „už otevřeno"
+        run: node scripts/test-videno.mjs
+
       - name: Zařazení pozemku do okresu
         run: node scripts/test-okres.mjs
