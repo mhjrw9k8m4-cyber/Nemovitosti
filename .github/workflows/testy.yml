@@ -248,6 +248,9 @@ jobs:
       - name: Čeština ve viditelném textu
         run: node scripts/test-cestina.mjs
 
+      - name: Podřezaná písma pokrývají, co web ukazuje
+        run: node scripts/test-pisma.mjs
+
       - name: Poloha vs okres (patří k sobě?)
         run: node scripts/test-okres-poloha.mjs
 

@@ -95,6 +95,8 @@ async function projdi(sirka, popisSirky) {
   }
 
   const sChybou = [], sPretekem = [], sDoStran = [];
+
+  const sBezPisma = [];
   for (const s of STRANKY) {
     const p = await ctx.newPage();
     const chyby = [];
@@ -111,6 +113,52 @@ async function projdi(sirka, popisSirky) {
     await p.waitForTimeout(3800);
 
     if (chyby.length) sChybou.push({ s, proc: chyby[0] });
+
+    /* A JEŠTĚ: PÍSMA SE OPRAVDU POUŽILA.
+       Písma jsou podřezaná na znaky, které web ukazuje (fonts/PUVOD.md),
+       a 253 kB z nich je 149 kB. Že v sadě nic nechybí, hlídá staticky
+       scripts/test-pisma.mjs; tady se ověřuje to druhé — že podřezaný
+       soubor je pořád platné písmo a prohlížeč ho použil. Poškozený
+       woff2 by se tiše nahradil systémovým písmem a vypadalo by to jen
+       „trochu jinak".
+       Měří se obojí: jestli písmo umí celou českou větu se symboly,
+       a jestli se s ním text opravdu vykresluje — šířka téhož textu
+       v našem písmu se musí lišit od šířky v záložním. */
+    const pisma = await p.evaluate(async () => {
+      const CES = 'Příliš žluťoučký kůň úpěl ďábelské ódy — 6 336 m², 1 990 000 Kč §©°±²·×÷';
+      /* NEJDŘÍV SI O NĚ ŘÍCT. Prohlížeč stahuje řezy písma AŽ PODLE
+         znaků, které se na stránce opravdu vyskytnou, takže
+         fonts.check() napoprvé odpovídal „neumí" u stránek, kde se
+         zatím žádný znak z rozšířeného rozsahu nevykreslil — to ale
+         není vada písma, jen pořadí. Měří se tedy po načtení: umí ho
+         písmo vykreslit, když si o to řekneme? */
+      try {
+        await document.fonts.load('600 16px Inter', CES);
+        await document.fonts.load('700 32px Fraunces', CES);
+      } catch (e) {}
+      await document.fonts.ready;
+      /* Stránka bez našeho stylopisu (404.html) žádné @font-face nemá —
+         není co měřit a není to vada. */
+      if (!document.fonts.size) return { preskoc: true };
+      const sirka = (font) => {
+        const c = document.createElement('canvas').getContext('2d');
+        c.font = font;
+        return Math.round(c.measureText(CES).width);
+      };
+      return {
+        inter: document.fonts.check('600 16px Inter', CES),
+        fraunces: document.fonts.check('700 32px Fraunces', CES),
+        interPouzito: sirka('600 16px Inter, serif') !== sirka('600 16px serif'),
+        frauncesPouzito: sirka('700 32px Fraunces, monospace') !== sirka('700 32px monospace'),
+      };
+    });
+    if (pisma.preskoc) {
+      /* nic: stránka bez @font-face */
+    } else if (!pisma.inter || !pisma.fraunces) {
+      sBezPisma.push(`${s}: neumí celou českou větu (Inter ${pisma.inter}, Fraunces ${pisma.fraunces})`);
+    } else if (!pisma.interPouzito || !pisma.frauncesPouzito) {
+      sBezPisma.push(`${s}: písmo se nepoužilo (Inter ${pisma.interPouzito}, Fraunces ${pisma.frauncesPouzito})`);
+    }
 
     const pretek = await p.evaluate(() => {
       const w = document.documentElement.clientWidth;
@@ -161,6 +209,8 @@ async function projdi(sirka, popisSirky) {
   }
   await ctx.close();
 
+  pravda(`${popisSirky}: na každé stránce se použila podřezaná písma`,
+    sBezPisma.length === 0, sBezPisma.slice(0, 3).join(' | '));
   pravda(`${popisSirky}: žádná stránka nehlásí chybu skriptu`, sChybou.length === 0,
     sChybou.map((x) => `${x.s} → ${x.proc}`).join('\n      '));
   pravda(`${popisSirky}: žádnou stránkou nejde pohnout do stran`, sDoStran.length === 0,

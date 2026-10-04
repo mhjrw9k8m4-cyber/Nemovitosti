@@ -19,19 +19,45 @@
  * České háčky a kroužky jsou v latin-ext; bez něj by se ř, ě, ů a ž
  * vykreslily náhradním písmem a nadpis by byl zpola z jiné rodiny.
  */
-/* ROZSAH VAH JE 100–900, NE 400–700. Soubor proměnného písma nese celou
-   osu bez ohledu na to, jaký výsek si o něj člověk řekne — zúžený zápis
-   v @font-face ale prohlížeči říká, že víc nemá, a ten pak váhu 800
-   ořízne na 700. Sedm pravidel webu si o 800 říká (zvýrazněná slova
-   v nadpisech úvodu), takže by tiše zeslábla. */
+/* PÍSMA JSOU PODŘEZANÁ NA TO, CO WEB OPRAVDU UKAZUJE.
+   Naměřeno: čtyři soubory měly 253 kB a nesly 1 474 glyfů, kdežto na
+   celém webu — ve všech stránkách, v opsaných inzerátech i ve stylopisu —
+   se vyskytuje 159 různých znaků. Nejhorší byl inter-latin-ext: 83 kB
+   a 733 glyfů (IPA, vietnamština, latinka rozšířená o všechno možné).
+   Po podřezání je to 149 kB, tedy o 42 % méně — a písma se stahují na
+   KAŽDÉ stránce, kde dělala tři čtvrtiny všech bajtů.
+
+   Ověřeno znak po znaku: ze znaků, které web ukazuje, se neztratil ani
+   jeden. Šestnáct dalších (→ ↔ ✓ ✕ ● ♥ a emoji) nemají ani původní
+   písma, takže ta padala na systémové už dřív a padají dál.
+   Hlídá to scripts/test-pisma.mjs: kdyby se v obsahu objevil znak mimo
+   podřezanou sadu, řekne to a vypíše ho.
+
+   Jak se to dělá, je napsané ve fonts/PUVOD.md — včetně celého příkazu.
+
+   ROZSAH VAH JE 400–800, NE 100–900. Osa se zúžila na to, co stylopis
+   používá (nejmenší je 400, největší 800); samo zúžení osy ušetřilo
+   22 kB. Zápis v @font-face musí tomu souboru odpovídat: kdyby tvrdil
+   100–900, prohlížeč by o chybějící krajní váhy žádal a dopočítával si
+   je sám. Váha 800 zůstává — sedm pravidel webu si o ni říká
+   (zvýrazněná slova v nadpisech úvodu) a při zápisu 400–700 by tiše
+   zeslábla.
+
+   ROZSAHY ZNAKŮ ODPOVÍDAJÍ SOUBORŮM. Místo jednoho U+0000-00FF stojí
+   v zápisu U+0020-007E a U+00A0-00FF: řídicí znaky (U+0000-001F
+   a U+0080-009F) se nikdy nevykreslují, takže je písmo nenese a slibovat
+   je nemá smysl. U latin-ext stál dřív rozsah, který
+   dává Google (až po U+A7FF). Soubor už tolik nenese, takže by si o něj
+   prohlížeč u takového znaku řekl, stáhl 15 kB a stejně sáhl po
+   systémovém písmu. Teď je v zápisu to, co v souboru je. */
 @font-face{font-family:'Fraunces'; src:url('../fonts/fraunces-latin-ext.woff2') format('woff2');
-  font-weight:100 900; font-style:normal; font-display:swap; unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;}
+  font-weight:400 800; font-style:normal; font-display:swap; unicode-range:U+0100-017F, U+0304, U+0308, U+2020, U+20A0-20BF, U+2113;}
 @font-face{font-family:'Fraunces'; src:url('../fonts/fraunces-latin.woff2') format('woff2');
-  font-weight:100 900; font-style:normal; font-display:swap; unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+  font-weight:400 800; font-style:normal; font-display:swap; unicode-range:U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
 @font-face{font-family:'Inter'; src:url('../fonts/inter-latin-ext.woff2') format('woff2');
-  font-weight:100 900; font-style:normal; font-display:swap; unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;}
+  font-weight:400 800; font-style:normal; font-display:swap; unicode-range:U+0100-017F, U+0304, U+0308, U+2020, U+20A0-20BF, U+2113;}
 @font-face{font-family:'Inter'; src:url('../fonts/inter-latin.woff2') format('woff2');
-  font-weight:100 900; font-style:normal; font-display:swap; unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+  font-weight:400 800; font-style:normal; font-display:swap; unicode-range:U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
 
 :root{
   /* Neutrály — vrstvená hloubka ploch (architektura + stínování).
