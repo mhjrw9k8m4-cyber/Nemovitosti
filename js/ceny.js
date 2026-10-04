@@ -660,7 +660,18 @@
       '</p></div>';
   }
 
-  root.PK_CENY = { postav: postav, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
+  /* KOLIK NABÍDEK UŽ JE NA CENU OKRESU DOST.
+     Není to mez pro počítání (to je MIN_VZOREK = 8, nejmenší vzorek, ze
+     kterého se medián vůbec smí vzít), ale mez pro JISTOTU: pod ní se
+     u čísla píše „na cenu okresu je to málo, berte to jako hrubé
+     vodítko". Stojí to tady, protože ji potřebují tři místa — generátor
+     stránek okresů, soubor s historií cen a graf v prohlížeči — a tři
+     opsané dvacetpětky se jednou rozejdou. Rozejdou-li se, bude na téže
+     stránce číslo s výhradou a nad ním graf bez ní, oba z téhož vzorku. */
+  var DOST_NABIDEK = 25;
+
+  root.PK_CENY = { DOST_NABIDEK: DOST_NABIDEK,
+    postav: postav, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     kdeText: kdeText, blokOdhadu: blokOdhadu,
     zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis };
 }(typeof window !== 'undefined' ? window : globalThis));

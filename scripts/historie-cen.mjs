@@ -221,6 +221,14 @@ const vysledek = {
     + 'POZOR: hladina se mění i tím, že přibudou a zmizí nabídky, ne jen tím, '
     + 'že se mění ceny. Řady označené klidna:false se proto nemají ukazovat — '
     + 'u nich převažuje výměna nabídek nad pohybem cen (práh ' + MEZ_SKOKU + ' % za den).',
+  /* Mez pro JISTOTU, ne pro počítání: pod ní se u čísla na stránce píše
+     „na cenu okresu je to málo". Nese se v souboru proto, že graf běží
+     v prohlížeči, kde js/ceny.js (kde ta mez je definovaná) načtený
+     není — a opsat ji do grafu by znamenalo třetí kopii téhož čísla.
+     Bez toho se na stránce okresu stávalo, že medián z 23 nabídek měl
+     výhradu, a graf nad ním z téhož vzorku žádnou: oko přitom čte
+     spíš tvar čáry než poznámku pod číslem. */
+  dost: CENY.DOST_NABIDEK,
   klic: 'úroveň|název|druh — úroveň je okres, kraj nebo cr',
   dny,
   rady,

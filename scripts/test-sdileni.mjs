@@ -90,6 +90,39 @@ pravda(`indexovaná stránka má náhled celý (${indexovane.length} indexovaný
   bezZnacek.length === 0,
   `${bezZnacek.length} bez úplného náhledu: ` + bezZnacek.slice(0, 4).map((z) => z.f).join(', '));
 
+/* 2b. CO SE SMÍ INDEXOVAT, MÁ BÝT V MAPĚ WEBU.
+   Seznam ručních stránek v sitemap.xml se píše rukou (scripts/
+   generate-region-pages.mjs, staticUrls) — a ruční seznam se dá
+   přehlédnout. Přesně to se stalo s data.html: stránka indexovatelná,
+   odkazovaná z patičky všech 33 stránek, a v mapě webu nebyla, takže
+   vyhledávač ji měl najít jen náhodou.
+   Generované stránky (okresy, kraje, druhy, pozemky) se do mapy
+   přidávají cyklem, ty hlídá test-stranky-pozemku.mjs; tady jde o ty
+   ručně psané. Výjimky se píšou s důvodem, ne mlčením. */
+const VMAPE_NE = new Map([
+  ['pozemek.html', 'prázdná skořápka: obsah dodá až ?p=… z mapy a canonical '
+    + 'ukazuje na sebe bez parametrů. V mapě webu by to byla stránka bez obsahu. '
+    + 'Vlastní adresu má každý pozemek ve svém pozemek-*.html.'],
+]);
+{
+  const mapa = fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8');
+  const vMape = new Set([...mapa.matchAll(/<loc>https:\/\/www\.parcelaka\.cz\/([^<]*)<\/loc>/g)]
+    .map((m) => m[1] || 'index.html'));
+  pravda(`mapa webu se přečetla (${vMape.size} adres)`, vMape.size > 100, `adres ${vMape.size}`);
+  const chybi = rucni
+    .filter((z) => !/noindex/.test(z.robots))
+    .filter((z) => !vMape.has(z.f) && !VMAPE_NE.has(z.f))
+    .map((z) => z.f);
+  pravda('každá indexovatelná ruční stránka je v mapě webu',
+    chybi.length === 0, `${chybi.length} chybí: ` + chybi.slice(0, 5).join(', '));
+  const vyjimkaNavic = [...VMAPE_NE.keys()].filter((f) => vMape.has(f));
+  pravda('a výjimka se nepíše na stránku, která v mapě je',
+    vyjimkaNavic.length === 0, vyjimkaNavic.join(', '));
+  const vyjimkaNeexistuje = [...VMAPE_NE.keys()].filter((f) => !rucni.some((z) => z.f === f));
+  pravda('a ani na stránku, která neexistuje',
+    vyjimkaNeexistuje.length === 0, vyjimkaNeexistuje.join(', '));
+}
+
 /* 3. Vypůjčený titulek nebo popis od jiné stránky. */
 const jadro = (t) => String(t || '').replace(/\s*[|—–-]\s*Parcelka\s*$/, '').trim().toLowerCase();
 function pujcene(stranky) {

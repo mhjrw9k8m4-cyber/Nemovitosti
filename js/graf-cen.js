@@ -67,6 +67,24 @@
     return nej;
   }
 
+  /* TÁŽ VÝHRADA JAKO U ČÍSLA NAD GRAFEM.
+     Na stránce okresu stojí medián a u něj, je-li vzorek malý,
+     „na cenu okresu je to málo, berte to jako hrubé vodítko" (mez
+     DOST_NABIDEK, dnes 25). Graf kreslil už od osmi nabídek a žádnou
+     výhradu neměl — a to je horší, než kdyby ji neměl ani u čísla: oko
+     čte TVAR čáry, ne poznámku, takže méně doložené tvrzení vypadalo
+     přesvědčivěji než to lépe doložené. Dnes se ty dvě množiny nepřekrývají
+     (23 okresů s grafem, 30 s výhradou, průnik nula), ale nic tomu
+     nebránilo — stačilo jedno obnovení dat.
+     Mez se neopisuje, bere se ze souboru s historií (pole `dost`), kam ji
+     zapsal scripts/historie-cen.mjs z js/ceny.js. Chybí-li (starší soubor),
+     výhrada se nepíše: radši nic než mez, kterou si graf vymyslel sám. */
+  function maloVzorku(H, vzorek) {
+    var dost = H && typeof H.dost === 'number' ? H.dost : 0;
+    if (!dost || vzorek >= dost) return '';
+    return 'Na cenu celého okresu je to málo — berte to jako hrubé vodítko. ';
+  }
+
   function kresli(el, H, vyber, kde) {
     var dny = H.dny, r = vyber.r;
     var body = [];
@@ -151,6 +169,7 @@
           '<span>' + esc(denKratce(posledni.den)) + '</span></div>' +
         '<p class="gc-pozn">Medián <b>nabídkové</b> ceny z <b>' + vyber.vzorek + '</b> nabídek ' +
           esc(kde) + ' — ne ceny, za které se pozemky prodaly; ty ve veřejných zdrojích nejsou. ' +
+          maloVzorku(H, vyber.vzorek) +
           'Hladina se mění i tím, že nabídky přibývají a mizí. ' +
           'Svislá osa je v rozpětí ' + cislo(min) + '–' + cislo(max) + ' Kč/m², ne od nuly.</p>' +
         '<details class="gc-tab"><summary>Čísla v tabulce</summary>' +

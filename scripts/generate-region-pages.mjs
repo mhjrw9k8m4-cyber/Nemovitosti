@@ -375,7 +375,10 @@ const priceByOkres = {}; for(const ok of Object.keys(byOkres)){ priceByOkres[ok]
    o desítky procent. Číslo se ukazuje i pod ní — okresů s menším vzorkem
    je většina a mlčet by znamenalo nemít cenu skoro nikde — ale řekne se
    u něj rovnou, na čem stojí. */
-const DOST_NABIDEK = 25;
+/* Mez je jedna, a je v js/ceny.js — viz komentář u DOST_NABIDEK tam.
+   Opsané číslo by se rozešlo s grafem, který na téže stránce kreslí
+   z téhož vzorku. */
+const DOST_NABIDEK = CENY.DOST_NABIDEK;
 function priceLine(stats){
   const groups=Object.keys(stats).sort((a,b)=>stats[b].n-stats[a].n);
   if(!groups.length) return '';
@@ -1354,6 +1357,7 @@ const staticUrls=[
   {loc:'hypoteka-na-pozemek.html',cf:'monthly',pr:'0.7'},
   {loc:'uzemni-plan-pozemek.html',cf:'monthly',pr:'0.7'},
   {loc:'cena-pozemku.html',cf:'weekly',pr:'0.8'},
+  {loc:'data.html',cf:'daily',pr:'0.5'},
   {loc:'pravidla-inzerce.html',cf:'monthly',pr:'0.4'},
   {loc:'podminky.html',cf:'yearly',pr:'0.3'},
   {loc:'ochrana-udaju.html',cf:'yearly',pr:'0.3'},

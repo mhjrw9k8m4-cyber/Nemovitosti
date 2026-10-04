@@ -244,9 +244,29 @@ pravda('i to, že hranice není odhadem od stolu', /mezer[au][\s\u00a0]v[\s\u00a
 {
   const { readdirSync } = createRequire(import.meta.url)('node:fs');
   const KOREN = new URL('..', import.meta.url);
-  const DOST = Number((/const DOST_NABIDEK = (\d+)/.exec(gen) || [])[1] || 0);
-  pravda('generátor má napsané, od kolika nabídek je medián k něčemu', DOST >= 15,
-    `DOST_NABIDEK = ${DOST || 'chybí'}`);
+  /* Mez se čte TAM, KDE JE DEFINOVANÁ — v js/ceny.js. Dřív se vybírala
+     regulárním výrazem ze zdroje generátoru, a když se přestěhovala do
+     společného modulu (aby ji stejně znal i graf v prohlížeči), kontrola
+     ji přestala najít a hlásila „chybí". Číst hodnotu z toho jediného
+     místa je i jediný způsob, jak se nemůže rozejít s tím, co se počítá. */
+  const CENY_M = createRequire(import.meta.url)(new URL('js/ceny.js', KOREN).pathname);
+  const DOST = Number((CENY_M && CENY_M.DOST_NABIDEK) || globalThis.PK_CENY.DOST_NABIDEK || 0);
+  pravda('mez „kolik nabídek už je dost" je v js/ceny.js (jedno místo pro web i graf)',
+    DOST >= 15, `DOST_NABIDEK = ${DOST || 'chybí'}`);
+  /* A že si ji generátor neopisuje po svém: dvě dvacetpětky se rozejdou
+     a na stránce by pak stálo číslo s výhradou a nad ním graf bez ní. */
+  pravda('a generátor stránek okresů si ji neopisuje',
+    /const DOST_NABIDEK = CENY\.DOST_NABIDEK;/.test(gen) && !/const DOST_NABIDEK = \d/.test(gen),
+    'generate-region-pages.mjs má mez napsanou vlastním číslem');
+  /* Totéž pro graf: ten běží v prohlížeči bez js/ceny.js, tak mu mez
+     cestuje v souboru s historií. Opsané číslo v grafu by byla třetí kopie. */
+  const grafZdroj = readFileSync(new URL('js/graf-cen.js', KOREN), 'utf8');
+  pravda('a graf ji bere ze souboru s historií, ne z vlastního čísla',
+    /H\.dost/.test(grafZdroj) && !/vzorek\s*[<>]=?\s*\d\d/.test(grafZdroj),
+    'js/graf-cen.js si mez nese sám');
+  const historie = JSON.parse(readFileSync(new URL('data/historie-cen.json', KOREN), 'utf8'));
+  pravda('a v tom souboru ta mez opravdu je, a je to tatáž',
+    historie.dost === DOST, `v souboru ${historie.dost}, v js/ceny.js ${DOST}`);
 
   const soubory = readdirSync(KOREN).filter((f) => /^pozemky-(okres-|[a-z]+-kraj)/.test(f));
   const bezVyhrady = [], bezRozpeti = [];

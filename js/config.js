@@ -7,7 +7,11 @@
    Klíč PK_SUPABASE_KEY je „publishable" (veřejný) — je bezpečné mít ho
    v prohlížeči. Chrání ho pravidla řádkové bezpečnosti (RLS): z webu jde
    jen VKLÁDAT (odeslat formulář), ne číst cizí data. Zprávy uvidíte
-   v Supabase → Table Editor (tabulky messages a watch_subscriptions).
+   v Supabase → Table Editor, tabulka messages.
+   (Dřív tu stálo i watch_subscriptions. Ta tabulka zůstala prázdná —
+   hlídání se ukládá do saved_searches, viz supabase/watch-alerts.sql.
+   Poslat někoho hledat data do tabulky, která se neplní, znamená, že
+   dojde k závěru „nic se neukládá".)
    ===================================================================== */
 window.PK_SUPABASE_URL = 'https://tcinuzftgmkvjjgvadky.supabase.co';
 window.PK_SUPABASE_KEY = 'sb_publishable_mnPDOe03iHjoDxc7C2x2iA_q4HOSec0';

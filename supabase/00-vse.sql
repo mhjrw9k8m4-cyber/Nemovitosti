@@ -780,13 +780,16 @@ grant execute on function mail_odeslan(uuid, text[]) to service_role;
 --   3) unsubscribe_watch— odhlášení jedním klikem (zákon vyžaduje).
 --   4) alert_seen       — evidence už viděných příležitostí, aby robot
 --      posílal jen NOVÉ a neopakoval se.
--- POZOR: e-mailový rozesílač (scripts/send-alerts.mjs) v repozitáři NENÍ
--- a žádná GitHub Action ho nespouští. Hlídání dnes funguje V APLIKACI —
--- přihlášený člověk si ho uloží přes save_search a nové pozemky vidí
--- v centru upozornění. Tabulky níž (watch_subscriptions, alert_seen)
--- jsou pozůstatek dřívějšího e-mailového hlídání; nic do nich nezapisuje.
--- Kdo by e-maily chtěl vzkřísit, musí ten skript napsat — tenhle soubor
--- k němu jen připraví databázi.
+-- POZOR — TOHLE JE SLEPÁ VĚTEV. Rozesílač scripts/send-alerts.mjs už
+-- existuje, ale NEPOUŽÍVÁ tabulky z tohohle souboru: píše lidem podle
+-- uložených hledání (saved_searches + supabase/hlidani-mailem.sql), tedy
+-- přihlášeným účtům s potvrzenou adresou a s úplným zadáním filtru.
+-- Tahle starší cesta znala místo jen jako NÁZEV OKRESU a e-mail si
+-- potvrzovala sama; obojí dnes řeší účet lépe.
+-- watch_subscriptions a alert_seen tedy zůstávají prázdné a nic do nich
+-- nezapisuje. Soubor se nemaže jen proto, aby se v databázi, kde ty
+-- tabulky už jsou, nic neměnilo. KDO BY SEM CHTĚL ZAPOJIT ROZESÍLAČ,
+-- ZAPOJUJE HO ŠPATNĚ — patří k hlidani-mailem.sql.
 -- =====================================================================
 
 -- ---------- Jistota: tabulka hlídání a všechny potřebné sloupce ----------

@@ -235,5 +235,51 @@ async function otevri(okres, sirka) {
   await p.close();
 }
 
+/* ---- 4) VÝHRADA U MALÉHO VZORKU ------------------------------------
+   Nad grafem stojí medián a u něj, je-li nabídek málo, „na cenu okresu je
+   to málo". Graf kreslí od osmi nabídek — a dokud výhradu neměl, vypadalo
+   méně doložené tvrzení přesvědčivěji než to lépe doložené, protože oko
+   čte tvar čáry, ne poznámku.
+   Měří se oba směry na PODSTRČENÉM souboru s historií: ve skutečných
+   datech se dnes malý vzorek s klidnou řadou nesejde (23 okresů s grafem,
+   30 s výhradou, průnik nula), takže by se na nich nedalo ověřit nic —
+   a přitom nic nebrání tomu, aby se sešly po dalším obnovení dat. */
+{
+  const puvodni = JSON.parse(JSON.stringify(H));
+  async function sVzorkem(kolik) {
+    const kopie = JSON.parse(JSON.stringify(puvodni));
+    for (const k of Object.keys(kopie.rady)) {
+      kopie.rady[k].vzorek = kopie.rady[k].vzorek.map((x) => (x === null ? null : kolik));
+    }
+    const p = await prohlizec.newPage({ viewport: { width: 1100, height: 900 } });
+    await p.route('**/data/historie-cen.json*', (r) => r.fulfill({
+      status: 200, contentType: 'application/json', body: JSON.stringify(kopie) }));
+    await p.goto(`${BASE}/pozemky-okres-${slug(sGrafem)}.html`, { waitUntil: 'load' });
+    const misto = await p.$('[data-graf-cen]');
+    if (misto) await misto.scrollIntoViewIfNeeded();
+    await p.waitForTimeout(2500);
+    const pozn = await p.evaluate(() => {
+      const f = document.querySelector('figure.gc');
+      return f ? f.querySelector('.gc-pozn').textContent.replace(/\s+/g, ' ') : null;
+    });
+    await p.close();
+    return pozn;
+  }
+  const dost = puvodni.dost;
+  pravda('soubor s historií nese mez „kolik je dost"', typeof dost === 'number' && dost >= 15,
+    `dost = ${dost}`);
+  const male = await sVzorkem(Math.max(1, dost - 10));
+  pravda('u malého vzorku graf výhradu napíše',
+    !!male && /je to málo/.test(male) && /hrubé vodítko/.test(male), String(male).slice(0, 220));
+  const velke = await sVzorkem(dost + 40);
+  /* Druhá strana: kdyby se výhrada psala vždycky, přestala by něco
+     znamenat — a kontrola výš by procházela i tak. */
+  pravda('u dostatečného vzorku ji nepíše (jinak by nic neznamenala)',
+    !!velke && !/je to málo/.test(velke), String(velke).slice(0, 220));
+  pravda('a počet nabídek se v poznámce opravdu mění (podstrčení zabralo)',
+    !!male && !!velke && male !== velke,
+    'poznámka je v obou případech stejná — podstrčený soubor se nepoužil');
+}
+
 await prohlizec.close();
 hotovo();
