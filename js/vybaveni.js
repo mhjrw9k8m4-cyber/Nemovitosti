@@ -105,6 +105,12 @@
   var ZLOMEK = '(?:\\d+\\s*\\/\\s*\\d+|polovin\\w*|tretin\\w*|ctvrtin\\w*|petin\\w*|sestin\\w*|osmin\\w*|desetin\\w*)';
   var PODIL = new RegExp(
     'spoluvlastnick\\w*\\s+podil\\w*' +
+    /* „spoluvlastnické výměře 24 424 m2" — tentýž údaj, jiné slovo.
+       Naměřeno na 1 633 skutečných popisech: tahle dvojice vazeb
+       (a „prodej svého podílu" o kus níž) byly JEDINÉ dva podíly,
+       které modul minul. */
+    '|spoluvlastnick\\w*\\s+(?:vymer|cast|velikost)\\w*' +
+    '|prod\\w*\\s+(?:sveho|svuj|sve)\\s+podil\\w*' +
     '|podilov\\w*\\s+spoluvlastnictv\\w*' +
     '|\\bid\\.?\\s*podil\\w*' +
     '|podil\\w*\\s*(?:o\\s*velikosti\\s*)?\\d+\\s*\\/\\s*\\d+' +

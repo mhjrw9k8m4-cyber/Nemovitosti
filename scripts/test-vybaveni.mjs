@@ -99,6 +99,23 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
   pravda('ani obyčejný inzerát bez zmínky', !podil('Krásný stavební pozemek v klidné části obce.'));
   pravda('a výslovné popření podílu se respektuje',
     !podil('Nejedná se o podíl, prodává se celá parcela.'));
+  /* Dvě vazby, které vyšly najevo až z MĚŘENÍ na skutečných datech.
+     Modul se pustil na 1 633 stažených popisů a porovnal se s tím, co
+     o podílu říká text: ze 502 inzerátů, které o podílu mluví, jich
+     minul pět. Tři z nich ale minul SPRÁVNĚ (podíl na příjezdové cestě
+     a „100% vlastnický podíl", což je celek) — skutečné miny byly dvě,
+     obě jen jinak pojmenované. Minutý podíl není kosmetika: web by
+     u něj počítal cenu za celou výměru, přestože se kupuje zlomek. */
+  pravda('„spoluvlastnická výměra" je taky podíl',
+    podil('Nabízíme soubor pozemků o celkové spoluvlastnické výměře 24 424 m2.'));
+  pravda('a „prodej svého podílu" taky',
+    podil('Nabízím prodej svého podílu osobně vlastněného pole o rozloze 377 m².'));
+  /* A obojí smí platit jen potud, pokud to nerozbije to, co se chytat
+     NEMÁ — jinak by se záchyt koupil falešnými nálezy. */
+  pravda('ale „100% vlastnický podíl" je celek, ne podíl',
+    !podil('Vlastnictví: 100% vlastnický podíl (přímý majitel).'));
+  pravda('a „podíl na příjezdové cestě" se pořád nepočítá',
+    !podil('Součástí ceny je podíl na vlastní příjezdové cestě.'));
   /* Tohle vyšlo najevo až ze skutečných inzerátů: podíl na PŘÍSTUPOVÉ
      cestě není podíl na pozemku. Parcela se prodává celá a k ní patří
      osmina společné cesty — označit to za podíl by bylo zavádějící. */
