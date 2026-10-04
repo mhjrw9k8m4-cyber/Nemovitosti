@@ -189,8 +189,14 @@
     _nsfwState = 'loading';
     _nsfwProm = (function () {
       var chain = Promise.resolve();
-      if (!window.tf) chain = chain.then(function () { return loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js'); });
-      if (!window.nsfwjs) chain = chain.then(function () { return loadScript('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js'); });
+      /* VLASTNÍ KOPIE, NE CIZÍ CDN. Dřív se obě knihovny stahovaly
+         z cdn.jsdelivr.net — cizí program, který se spustí na téhle
+         stránce, tedy tam, kde člověk vyplňuje svůj kontakt, a bez
+         jakéhokoli ověření obsahu. Model přitom ležel u nás celou dobu,
+         takže na cizí server chodily jen ty dva skripty — a s nimi IP
+         adresa každého, kdo přidával fotku. Viz vendor/tfjs/PUVOD.md. */
+      if (!window.tf) chain = chain.then(function () { return loadScript('vendor/tfjs/tf.min.js'); });
+      if (!window.nsfwjs) chain = chain.then(function () { return loadScript('vendor/nsfwjs/nsfwjs.min.js'); });
       return chain
         .then(function () { return window.nsfwjs.load('assets/nsfw-model/', { size: 224 }); })
         .then(function (m) { _nsfw = m; _nsfwState = 'ready'; return m; })

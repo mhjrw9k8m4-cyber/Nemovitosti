@@ -130,11 +130,12 @@
               na polohu</b>, a to jen při <b>přidávání pozemku</b>. Když do formuláře začnete
               psát obec, pošle se napsaný text jejich serveru, aby vrátil souřadnice; předá se
               s ním i vaše IP adresa. Jinde na webu se na něj nechodí.</li>
-            <li><b>jsDelivr</b> (<code>cdn.jsdelivr.net</code>) — <b>knihovna na kontrolu
-              fotek</b>, a to jen při <b>přidávání pozemku s fotkou</b>. Odtud se stáhne
-              program (TensorFlow.js a NSFWJS), který fotku prohlédne <b>přímo ve vašem
-              prohlížeči</b> — fotka se nikam neposílá. jsDelivr se tím dozví vaši IP adresu
-              a to, že si ten program berete.</li>
+            <li><b>Kontrola fotek nikam nechodí.</b> Když přidáváte pozemek s fotkou,
+              prohlédne ji program, který se spustí <b>přímo ve vašem prohlížeči</b> — fotka
+              se nikam neposílá a program i jeho model leží na našem serveru
+              (<code>vendor/</code> a <code>assets/</code>). Dřív se ten program stahoval
+              z <code>cdn.jsdelivr.net</code>, který se tím dozvěděl vaši IP adresu; to už
+              neplatí.</li>
           </ul>
           <p class="rules-note"><b>Písma se u Googlu nenačítají.</b> Dřív tu stál i Google Fonts
             — web si tehdy písma bral z <code>fonts.googleapis.com</code> a Googlu se při každém

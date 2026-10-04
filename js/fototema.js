@@ -127,7 +127,8 @@
     if (_slib) return _slib;
     _stav = 'loading';
     _slib = Promise.resolve()
-      .then(function () { return window.tf ? null : nactiSkript(zdrojTf || 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js'); })
+      /* Vlastní kopie, ne cizí CDN — viz vendor/tfjs/PUVOD.md. */
+      .then(function () { return window.tf ? null : nactiSkript(zdrojTf || 'vendor/tfjs/tf.min.js'); })
       .then(function () { return window.tf.loadLayersModel('assets/mobilenet/model.json'); })
       .then(function (m) { _model = m; _stav = 'ready'; return m; })
       .catch(function () { _stav = 'failed'; return null; });

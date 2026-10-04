@@ -274,6 +274,9 @@ jobs:
       - name: Odhlášení z e-mailů a přepínač posílání
         run: node scripts/test-odhlaseni.mjs
 
+      - name: Kontrola fotek (že běží a odkud se bere)
+        run: node scripts/test-kontrola-fotek.mjs
+
       # Potřebuje prohlížeč (playwright-core). V rychlém jobu „testy" se
       # neinstaluje, takže tam krok padal na chybějícím balíčku — a s ním
       # celý běh. Patří sem, mezi ostatní testy v prohlížeči.
