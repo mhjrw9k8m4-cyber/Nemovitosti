@@ -38,7 +38,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=73631662">
+  <link rel="stylesheet" href="css/styles.css?v=135744c5">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:var(--r-lg); padding:24px 20px 20px;
@@ -73,7 +73,11 @@
     .pf-empty{text-align:center; padding:32px 20px; border-radius:var(--r-lg); border:1px dashed var(--line-strong); background:var(--ink-soft);}
     .pf-empty-ico{width:66px; height:66px; margin:0 auto 16px; border-radius:var(--r-lg); display:flex; align-items:center; justify-content:center;
       background:rgba(126,196,157,.09); border:1px solid var(--line-strong);}
-    .pf-empty-ico svg{width:32px; height:32px; color:var(--text-ondark);}
+    .pf-empty-ico svg{width:32px; height:32px; color:var(--text-ondark);
+      /* 1,125 proto, že 32 × 1,125 ÷ 24 = 1,5 px — tah jako u všech
+         ostatních ikon. V HTML je u ikony atribut stroke-width="1.6",
+         který kreslil tah 2,13 px; pravidlo v CSS ho přebije. */
+      stroke-width:1.125;}
     .pf-empty h3{font-family:var(--font-ui); font-size:20px; font-weight:600; color:var(--text-ondark); margin:0 0 8px;}
     .pf-empty p{font-size:14px; line-height:1.6; color:var(--text-ondark-mute); margin:0 auto 16px; max-width:var(--m-popisek);}
     .pf-empty .pf-add{width:auto; padding-left:20px; padding-right:20px;}

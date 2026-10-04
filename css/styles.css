@@ -1437,10 +1437,21 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    dokud člověk neklepne jinam. Přesně tohle přišlo jako stížnost.
    Hlídá to scripts/test-najeti.mjs. */
 .msf-summary:hover{background:var(--ink-soft2); color:var(--copper);}
+/* IKONY: TAH SE VYKRESLUJE VŽDY 1,5 px.
+   Čísla u stroke-width se proto u každé velikosti LIŠÍ a je to tak
+   správně: ikony jsou kreslené do viewBoxu 24, takže tah se musí
+   zmenšovat spolu s ikonou. Vykreslený tah = šířka × stroke-width ÷ 24
+   a ten má vyjít 1,5. Odtud 2,25 u šestnácti pixelů, 2,77 u třinácti,
+   1,57 u dvaceti tří. Jedno společné číslo by znamenalo, že malé ikony
+   jsou vlasové a velké tučné.
+   Naměřeno v prohlížeči: ze 47 ikon na pěti stránkách jich 43 leželo
+   na 1,5 px a čtyři vypadly — ne kvůli jinému záměru, ale protože
+   u nich stroke-width vůbec nestálo a zdědilo se cizí. Hlídá to
+   zkouška test-tahy.mjs, která tah měří v prohlížeči. */
 .msf-ic{width:16px; height:16px; flex:none; fill:none; stroke:var(--copper-bright); stroke-width:2.25; stroke-linecap:round; stroke-linejoin:round;}
 .msf-text{flex:1;}
 .msf-badge{min-width:18px; height:18px; padding:0 4px; border-radius:var(--r-sm); background:var(--copper); color:var(--ink); font-size:12px; font-weight:700; display:inline-flex; align-items:center; justify-content:center;}
-.msf-chev{width:16px; height:16px; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; transition:transform var(--cas-zakladni) var(--ease);}
+.msf-chev{width:16px; height:16px; flex:none; fill:none; stroke:currentColor; stroke-width:2.25; stroke-linecap:round; stroke-linejoin:round; transition:transform var(--cas-zakladni) var(--ease);}
 .ms-filters[open] .msf-chev{transform:rotate(180deg);}
 .ms-filters[open] .msf-summary{border-bottom:1px solid var(--line-strong);}
 /* Konec panelu filtrů: „kolik jich zbylo" a „zrušit". Drží se dole
@@ -2807,7 +2818,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .auth-forgot{text-align:center; margin-top:2px;}
 .auth-head{text-align:center; margin-bottom:24px;}
 .auth-mark{width:56px; height:56px; margin:0 auto 16px; border-radius:var(--r-lg); display:flex; align-items:center; justify-content:center; background:var(--plocha-znacka); box-shadow:var(--glow-lg);}
-.auth-mark svg{width:29px; height:29px; color:#081310;}
+.auth-mark svg{width:29px; height:29px; color:#081310; stroke-width:1.24;}
 .auth-title{font-family:var(--font-ui); font-size:24px; font-weight:600; letter-spacing:-0.01em; color:var(--text-ondark); margin:0 0 8px; line-height:1.25;}
 .auth-sub{font-size:14px; line-height:1.55; color:var(--text-ondark-mute); margin:0 auto; max-width:var(--m-popisek);}
 .auth-form{display:flex; flex-direction:column; gap:14px;}
@@ -2815,7 +2826,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .auth-field > label{font-size:13px; font-weight:600; color:var(--text-ondark); display:flex; align-items:center; gap:6px;}
 .auth-field .hint{font-size:12px; font-weight:400; color:var(--text-ondark-mute);}
 .auth-inp{position:relative; display:flex; align-items:center;}
-.auth-inp .auth-ico{position:absolute; left:14px; width:18px; height:18px; color:var(--text-ondark-mute); pointer-events:none; transition:color var(--cas-zakladni) var(--ease); z-index:1;}
+.auth-inp .auth-ico{position:absolute; left:14px; width:18px; height:18px; stroke-width:2; color:var(--text-ondark-mute); pointer-events:none; transition:color var(--cas-zakladni) var(--ease); z-index:1;}
 .auth-inp input{width:100%; background:var(--ink); border:1px solid var(--line-ui); border-radius:var(--r-md); padding:14px 40px 14px 40px; font-size:16px; color:var(--text-ondark); font-family:inherit; transition:border-color var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
 .auth-inp input::placeholder{color:#74857A;}
 .auth-inp input:focus{outline:none; border-color:var(--copper-bright); background:var(--ink-soft); box-shadow:0 0 0 3px rgba(126,196,157,0.16);}
@@ -3038,7 +3049,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   background:radial-gradient(circle at 50% 38%, #22493A, var(--ink) 88%);}
 .ul-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
 .ul-thumb .ph{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--text-ondark-mute);}
-.ul-thumb .ph svg{width:32px; height:32px; opacity:.45; stroke:currentColor; fill:none; stroke-width:1.6;}
+.ul-thumb .ph svg{width:32px; height:32px; opacity:.45; stroke:currentColor; fill:none; stroke-width:1.125;}
 .ul-topline{display:flex; align-items:center; justify-content:space-between; gap:8px;}
 .ul-verified{display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:var(--c-ok-ink);}
 .ul-verified svg{width:13px; height:13px; stroke-width:2.77; stroke:currentColor; fill:none; }

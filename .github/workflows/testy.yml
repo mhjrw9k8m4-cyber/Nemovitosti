@@ -404,6 +404,9 @@ jobs:
       - name: Okno „Vyberte své okolí"
         run: node scripts/test-vyber-okoli.mjs
 
+      - name: Tah ikon je jeden (1,5 px)
+        run: node scripts/test-tahy.mjs
+
       - name: Lišta s cenou a akcí na detailu
         run: node scripts/test-lista.mjs
 
