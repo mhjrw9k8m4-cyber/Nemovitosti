@@ -328,6 +328,9 @@ jobs:
       - name: Mapa s vrstvami v detailu pozemku
         run: node scripts/test-mapa-pozemku.mjs
 
+      - name: Mapová knihovna se stahuje až na dohled
+        run: node scripts/test-leaflet.mjs
+
       - name: Předvyplnění inzerátu z odkazu
         run: node scripts/test-predvyplneni.mjs
 

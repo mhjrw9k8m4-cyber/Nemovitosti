@@ -41,7 +41,13 @@ function otisk(rel) {
    stylu by se pak k lidem s uloženou kopií nedostala, tedy přesně to,
    proti čemu je tenhle skript. Naměřeno: stránka nesla ?v=c55dcd92
    (otisk zdroje), obsah odpovídal dcb0a773. */
-const VZOR = /((?:href|src)=")((?:css|js|js\/min|vendor\/[a-z0-9-]+)\/[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*\.(?:css|js))(?:\?v=([A-Za-z0-9]+))?(")/g;
+/* DATA-SRC. Mapová knihovna se na stránce pozemku nenačítá značkou
+   <script>, ale teprve když se rám mapy dostane na dohled. Adresa pro
+   to dotažení leží v <meta name="pk-leaflet" data-src="…">, aby se
+   razítkovala tady jako každý jiný odkaz — v JavaScriptu zadrátovaná
+   cesta by razítko nikdy nedostala a po výměně knihovny by vracející se
+   návštěvník dostal starou kopii. */
+const VZOR = /((?:href|src|data-src)=")((?:css|js|js\/min|vendor\/[a-z0-9-]+)\/[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*\.(?:css|js))(?:\?v=([A-Za-z0-9]+))?(")/g;
 
 const stranky = readdirSync(KOREN).filter((f) => f.endsWith('.html'));
 const otisky = new Map();

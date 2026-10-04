@@ -276,6 +276,36 @@ export function textyPro(d) {
    přidá pruh, značka pro vyhledávače a datum. Tím zůstane zachované
    všechno, co o pozemku víme, včetně popisu od inzerenta a odkazu do
    katastru: ty po skončení dražby neztrácejí smysl, naopak. */
+/* MAPOVÁ KNIHOVNA AŽ NA DOHLED — PŘEPIS ZAMRZLÝCH STRÁNEK.
+   Stránka ukončené nabídky se nepřepisuje ze šablony: nabídka už
+   v datech není, takže se k ní žádná pozdější úprava šablony sama
+   nedostane. Když stránka pozemku přešla z <script src="…leaflet.js"
+   defer> na dotahování teprve ve chvíli, kdy je mapa na dohled, šest
+   zamrzlých stránek u toho zůstalo — a dál by každému, kdo na ně přijde
+   z vyhledávače, poslalo 144 kB (36 kB přes drát) knihovny, kterou
+   možná vůbec neuvidí.
+
+   Jiné cesty k nim vedou: odkazy na skripty a styly přepisuje přes
+   všechny stránky scripts/minifikace.mjs, takže js/min/ dostaly. Tahle
+   změna ale není přepis cesty, je to změna způsobu načítání, a ta patří
+   sem — k jedinému místu, které na zamrzlé stránky pozemků sahá.
+
+   Idempotentní: stránka bez té značky se nemění, takže se dá pustit
+   při každém běhu. */
+const LEAFLET_ZNACKA = /<script src="vendor\/leaflet\/leaflet\.js[^"]*"[^>]*><\/script>\n?/;
+
+export function migrujLeaflet(h) {
+  if (!LEAFLET_ZNACKA.test(h)) return h;
+  const adresa = (/<script src="(vendor\/leaflet\/leaflet\.js[^"]*)"/.exec(h) || [])[1]
+    || 'vendor/leaflet/leaflet.js';
+  let out = h.replace(LEAFLET_ZNACKA, '');
+  if (!/<meta name="pk-leaflet"/.test(out)) {
+    out = out.replace(/(<link rel="stylesheet" href="vendor\/leaflet\/leaflet\.css)/,
+      `<meta name="pk-leaflet" data-src="${adresa}">\n  $1`);
+  }
+  return out;
+}
+
 export function ukoncenaStranka(obsah, den, podobne) {
   let h = obsah;
 
@@ -285,6 +315,8 @@ export function ukoncenaStranka(obsah, den, podobne) {
   } else {
     h = h.replace(/(<\/title>)/, '$1\n  <meta name="robots" content="noindex,follow">');
   }
+
+  h = migrujLeaflet(h);
 
   // 2) Datum do stránky, ať se podle něj dá po čase smazat bez evidence.
   if (!/window\.PK_UKONCENO=/.test(h)) {
@@ -634,7 +666,7 @@ export function generuj() {
     if (!podleOkresu.has(o)) podleOkresu.set(o, []);
     podleOkresu.get(o).push({ soubor, d });
   }
-  let smazano = 0, ukonceno = 0;
+  let smazano = 0, ukonceno = 0, prepsano = 0;
   for (const f of fs.readdirSync(ROOT)) {
     if (!/^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f) || zive.has(f)) continue;
     /* Na název se nespoléhat. Ručně psané stránky se jmenují podobně
@@ -649,8 +681,12 @@ export function generuj() {
     const uz = /window\.PK_UKONCENO="(\d{4}-\d{2}-\d{2})"/.exec(obsah);
     if (uz) {
       const stari = (Date.parse(dnes) - Date.parse(uz[1])) / 86400000;
-      if (stari >= DNI_ARCHIV) { fs.unlinkSync(cesta); smazano++; }
-      continue;                       // už ukončená a ještě ne stará: nechat být
+      if (stari >= DNI_ARCHIV) { fs.unlinkSync(cesta); smazano++; continue; }
+      /* Už ukončená a ještě ne stará: obsah se nepřepisuje. Jen přepisy,
+         které se musí dostat na KAŽDOU stránku webu, projdou i tudy. */
+      const migrovano = migrujLeaflet(obsah);
+      if (migrovano !== obsah) { fs.writeFileSync(cesta, migrovano); prepsano++; }
+      continue;
     }
 
     const okres = (f.match(/^pozemek-([a-z0-9-]+?)-[a-z0-9-]+-[0-9a-z]{5,8}\.html$/) || [])[1] || '';
@@ -658,7 +694,7 @@ export function generuj() {
     fs.writeFileSync(cesta, ukoncenaStranka(obsah, dnes, podobne));
     ukonceno++;
   }
-  return { hotove, smazano, ukonceno };
+  return { hotove, smazano, ukonceno, prepsano };
 }
 
 /* Mapa webu. Sitemap staví generátor regionálních stránek a přepisuje ji
@@ -685,8 +721,9 @@ export function doMapyWebu(soubory) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const { hotove, smazano } = generuj();
+  const { hotove, smazano, prepsano } = generuj();
   const vMape = doMapyWebu(hotove);
   console.log(`Stránek pozemků: ${hotove.length}${smazano ? `, smazáno zrušených: ${smazano}` : ''}`
-    + `, v mapě webu: ${vMape}`);
+    + `, v mapě webu: ${vMape}`
+    + (prepsano ? `, přepsáno ukončených: ${prepsano}` : ''));
 }

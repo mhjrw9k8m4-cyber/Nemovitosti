@@ -559,12 +559,21 @@
     global.addEventListener('orientationchange', function () { setTimeout(premer, 250); });
   }
 
+  var leafletSlib = null;
   function sLeafletem(hotovo) {
     if (global.L && global.L.map) return hotovo();
-    var pokusy = 0;
-    var t = setInterval(function () {
-      if ((global.L && global.L.map) || ++pokusy > 60) { clearInterval(t); hotovo(); }
-    }, 100);
+    if (!leafletSlib) {
+      leafletSlib = new Promise(function (dej) {
+        var zn = document.querySelector('meta[name="pk-leaflet"]');
+        var adresa = (zn && zn.getAttribute('data-src')) || 'vendor/leaflet/leaflet.js';
+        var s = document.createElement('script');
+        s.src = adresa;
+        s.onload = function () { dej(); };
+        s.onerror = function () { dej(); };
+        document.head.appendChild(s);
+      });
+    }
+    leafletSlib.then(hotovo);
   }
 
   var mapaVerze = 0;

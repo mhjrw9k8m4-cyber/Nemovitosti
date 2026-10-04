@@ -769,17 +769,40 @@
     global.addEventListener('orientationchange', function () { setTimeout(premer, 250); });
   }
 
-  /* Mapová knihovna se na stránce pozemku načítá ODLOŽENĚ (defer): mapa je
-     až dole a kvůli ní se nemá zdržovat cena nahoře. Jenže tenhle skript
-     běží dřív, takže „L" ještě nemusí existovat — a na širokém monitoru se
-     mapa dostane na dohled hned. Proto se na knihovnu krátce počká; když
-     nedojede ani do šesti vteřin, ukáže se nehybný snímek. */
+  /* MAPOVÁ KNIHOVNA SE DOTAHUJE, AŽ JE MAPA NA DOHLED.
+     Naměřeno: vendor/leaflet/leaflet.js má 144 kB, přes drát (brotli)
+     36,1 kB — a stránka pozemku si ho dřív brala značkou <script defer>
+     ve všech 2 001 případech, tedy i u každého, kdo k mapě dolů nikdy
+     nesjede. Mapa je na stránce pod cenou, popisem a vybavením.
+
+     Tahle funkce dřív Leaflet NENAČÍTALA, jen na něj čekala v cyklu po
+     100 ms a po šesti sekundách to vzdala. Teď se o načtení stará sama.
+
+     HOTOVO() SE VOLÁ I PŘI NEÚSPĚCHU, a to schválně: o tom, co se stane
+     bez knihovny, rozhoduje zapniMapu() — vloží do rámu tentýž nehybný
+     snímek jako nahoře, protože prázdný rám vypadá jako rozbitá stránka.
+     První podoba téhle změny volala hotovo() jen při úspěchu a tím tu
+     náhradu vyřadila; chytil to test-mapa-pozemku.mjs, oddíl E.
+
+     Adresa stojí v <meta name="pk-leaflet" data-src>, ne tady, aby jí
+     scripts/orazitkuj-verze.mjs dalo razítko ?v= jako každému jinému
+     odkazu; bez razítka by se po výměně knihovny vracejícím návštěvníkům
+     servírovala stará. */
+  var leafletSlib = null;   // null = nezkoušeno; jinak Promise<boolean>
   function sLeafletem(hotovo) {
     if (global.L && global.L.map) return hotovo();
-    var pokusy = 0;
-    var t = setInterval(function () {
-      if ((global.L && global.L.map) || ++pokusy > 60) { clearInterval(t); hotovo(); }
-    }, 100);
+    if (!leafletSlib) {
+      leafletSlib = new Promise(function (dej) {
+        var zn = document.querySelector('meta[name="pk-leaflet"]');
+        var adresa = (zn && zn.getAttribute('data-src')) || 'vendor/leaflet/leaflet.js';
+        var s = document.createElement('script');
+        s.src = adresa;
+        s.onload = function () { dej(); };
+        s.onerror = function () { dej(); };
+        document.head.appendChild(s);
+      });
+    }
+    leafletSlib.then(hotovo);
   }
 
   /** Mapa se staví, až když je na dohled — nahoře na stránce je cena, ne dlaždice. */
