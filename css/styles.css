@@ -5361,3 +5361,26 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   overflow:hidden; margin-top:4px; padding-left:8px;
   border-left:2px solid var(--copper); font-size:12px; line-height:1.45;
   font-weight:400; color:var(--text-ondark-mute); white-space:normal;}
+
+/* PŘEPÍNAČ PODKLADU MAPY. Dvě polohy vedle sebe, ne rozbalovací seznam:
+   volby jsou dvě a obě se vejdou. Tvarem i plochou sedí k „Celá ČR"
+   hned vedle — obojí je o tom, co je na mapě vidět. */
+.map-podklad{display:inline-flex; gap:2px; padding:2px;
+  background:var(--plocha-plovouci); border:1px solid rgba(31,81,56,0.22);
+  border-radius:var(--r-lg); box-shadow:var(--shadow); backdrop-filter:blur(4px);}
+.map-podklad button{min-height:34px; padding:0 11px; border:0; border-radius:var(--r-md);
+  background:none; font-family:inherit; font-size:12px; font-weight:600;
+  color:var(--text-ondark-mute); cursor:pointer;
+  transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
+.map-podklad button:hover{color:var(--text-ondark);}
+.map-podklad button.on{background:var(--plocha-znacka); color:#fff;}
+/* Letecký snímek se NEFILTRUJE: filtr .pk-basemap stahuje barevnost
+   základní mapy do palety webu, ale z fotografie by udělal vybledlou
+   šeď a nebylo by poznat les od pole. */
+.pk-basemap-foto{filter:none;}
+@media (max-width:560px){ .map-podklad button{padding:0 9px; font-size:11px;} }
+/* Na dotykovém zařízení 44 px. Hlídač dotykových cílů ovládání mapy
+   nekontroluje (sousední „Celá ČR" má 33 px odjakživa), ale využívat
+   tu výjimku by znamenalo vědomě dělat malý cíl — a tenhle přepínač se
+   mačká prstem venku, ne myší u stolu. */
+@media (hover:none){ .map-podklad button{min-height:44px;} }

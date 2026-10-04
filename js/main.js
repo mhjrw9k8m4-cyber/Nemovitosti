@@ -713,10 +713,66 @@
   // Podklad: OpenStreetMap (zdarma, bez API klíče). CARTO začal vyžadovat klíč
   // (dlaždice ukazovaly „API KEY REQUIRED"). Jemný filtr (viz .pk-basemap v CSS)
   // udrží čistý světlý vzhled; barevné tečky pozemků jsou v jiné vrstvě, filtr je nezmění.
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap',
-    subdomains: 'abc', maxZoom: 19, className: 'pk-basemap'
-  }).addTo(map);
+  /* PODKLAD SE DÁ PŘEPNOUT NA LETECKÝ. Na detailu pozemku to jde
+     odjakživa (a je tam letecký dokonce výchozí), na hlavní mapě ne —
+     takže kdo chtěl vidět, jestli u pozemku vede cesta nebo je tam les,
+     musel nejdřív otevřít konkrétní nabídku. Přitom právě na přehledu
+     se rozhoduje, kterou vůbec otevřít.
+     Definice podkladů se NEOPISUJÍ: berou se z js/snimek.js, kde už
+     jsou kvůli detailu. Dvě kopie adres dlaždic by se rozešly stejně
+     jako všechno ostatní, co se tu kdy zdvojilo.
+     Výchozí zůstává základní mapa, a schválně: na pohledu přes celou
+     republiku je letecký snímek jen hnědozelená kaše, ve které tečky
+     nabídek zaniknou. Letecký dává smysl až po přiblížení, a tam si ho
+     člověk zapne. */
+  var PODKLADY = (window.PK_SNIMEK && window.PK_SNIMEK.podklady) || [];
+  var PODKLAD_KLIC = 'pk_podklad_v1';
+  var zakladniDef = { id: 'zakladni', nazev: 'Základní',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    uvedeni: '&copy; OpenStreetMap', max: 19 };
+  function podkladDef(id) {
+    for (var i = 0; i < PODKLADY.length; i++) if (PODKLADY[i].id === id) return PODKLADY[i];
+    return zakladniDef;
+  }
+  var podkladVrstva = null;
+  function nastavPodklad(id, ulozit) {
+    var def = podkladDef(id);
+    if (podkladVrstva) map.removeLayer(podkladVrstva);
+    /* Filtr .pk-basemap stahuje barevnost ZÁKLADNÍ mapy do palety webu.
+       Na leteckém snímku nemá co dělat: ten filtr by z fotografie udělal
+       vybledlou šeď a nebylo by poznat les od pole — tedy právě to,
+       kvůli čemu si člověk letecký zapíná. */
+    podkladVrstva = L.tileLayer(def.url, {
+      attribution: def.uvedeni, subdomains: 'abc', maxZoom: def.max || 19,
+      className: def.id === 'zakladni' ? 'pk-basemap' : 'pk-basemap-foto'
+    }).addTo(map);
+    podkladVrstva.bringToBack();
+    var ovl = document.getElementById('map-podklad');
+    if (ovl) {
+      [].forEach.call(ovl.querySelectorAll('button'), function (b) {
+        var on = b.getAttribute('data-podklad') === def.id;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
+    }
+    if (ulozit) { try { localStorage.setItem(PODKLAD_KLIC, def.id); } catch (e) {} }
+  }
+  /* Jedno místo, kde se výchozí podklad určuje. Dřív tu stálo
+     zvoleny = 'zakladni' a hned pod tím totéž znovu uvnitř try —
+     první přiřazení bylo mrtvé a při zkoušce sabotáže se ukázalo, jak
+     je taková zdvojená hodnota zrádná: změna se zdála provedená
+     a neudělala nic. */
+  var zvoleny;
+  try { zvoleny = localStorage.getItem(PODKLAD_KLIC); } catch (e) { zvoleny = null; }
+  if (zvoleny !== 'letecka') zvoleny = 'zakladni';
+  nastavPodklad(zvoleny, false);
+  var podkladOvl = document.getElementById('map-podklad');
+  if (podkladOvl) {
+    podkladOvl.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button[data-podklad]') : null;
+      if (b) nastavPodklad(b.getAttribute('data-podklad'), true);
+    });
+  }
   // Lehké ovládání: mapa je hned použitelná (body klikací, stránka přes ni
   // normálně scrolluje). Tlačítko zapne režim posouvání/přibližování mapy.
   var mapLocked = true;

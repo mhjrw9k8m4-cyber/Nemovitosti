@@ -416,6 +416,9 @@ jobs:
       - name: Graf vývoje cenové hladiny
         run: node scripts/test-graf-cen.mjs
 
+      - name: Podklad hlavní mapy
+        run: node scripts/test-podklad-mapy.mjs
+
       - name: Tmavý režim
         run: node scripts/test-tmavy-rezim.mjs
 

@@ -130,7 +130,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=adc5714e">
+  <link rel="stylesheet" href="css/styles.css?v=cfad35a1">
 </head>
 <body>
 
@@ -461,6 +461,12 @@
             <div class="map-legend" id="map-legend" aria-hidden="true"></div>
             <div class="map-tools">
               <button class="map-reset" id="map-reset" type="button" aria-label="Zobrazit celou mapu"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h6M3 3v6M3 3l7 7M21 21h-6M21 21v-6M21 21l-7-7"/></svg>Celá ČR</button>
+              <!-- Přepínač podkladu. Stojí vedle „Celá ČR", protože obojí
+                   je o tom, CO je na mapě vidět, ne o tom, co se v ní hledá. -->
+              <div class="map-podklad" id="map-podklad" role="group" aria-label="Podklad mapy">
+                <button type="button" data-podklad="zakladni" class="on" aria-pressed="true">Základní</button>
+                <button type="button" data-podklad="letecka" aria-pressed="false">Letecká</button>
+              </div>
             </div>
             <button class="map-lock" id="map-lock" type="button" hidden aria-label="Zamknout mapu"><svg class="ml-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Zamknout mapu</button>
           </div>
@@ -722,7 +728,7 @@
 <script src="js/okruh.js?v=2495a6d8" defer></script>
 <script src="js/klic.js?v=805c6c82"></script>
 <script src="js/videno.js?v=7ad5a94c"></script>
-<script src="js/main.js?v=fba3fa9c" defer></script>
+<script src="js/main.js?v=2e71877b" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,
