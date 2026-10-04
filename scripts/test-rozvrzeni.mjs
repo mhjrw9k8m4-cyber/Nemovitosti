@@ -1257,19 +1257,32 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
       prazdnych: mista.filter((e) => !e.textContent.trim()).length,
       bezCisla: mista.filter((e) => !/\d/.test(e.textContent)).length,
       h1px: h1 ? Math.round(parseFloat(getComputedStyle(h1).fontSize)) : null,
+      /* NA CO SE ROZVINE STUPEŇ Z PALETY, tady a teď. Nadpis stránky už
+         nenese opsané číslo, ale --h1-stranka s clamp(), takže se velikost
+         mění se šířkou okna a v šabloně žádné pevné číslo není. Jediné
+         poctivé srovnání je proto s hodnotou, na kterou se ta proměnná
+         rozvine v témž prohlížeči při téže šířce. */
+      stupenPx: (function () {
+        const t = document.createElement('span');
+        t.style.cssText = 'position:absolute;visibility:hidden;font-size:var(--h1-stranka)';
+        document.body.appendChild(t);
+        const px = Math.round(parseFloat(getComputedStyle(t).fontSize));
+        t.remove();
+        return px;
+      }()),
     };
   });
   pravda('předloha má ukázky s doplňovanou mírou', v.mist >= 5, `míst: ${v.mist}`);
   pravda('a všechny se opravdu doplnily', v.prazdnych === 0 && v.bezCisla === 0,
     `prázdných ${v.prazdnych}, bez čísla ${v.bezCisla}`);
   const css = readFileSync(path.join(KOREN, 'css', 'styles.css'), 'utf8');
-  const vSablone = /(?:^|\n)h1\{[^}]*font-size:\s*(\d+)px/.exec(css);
-  pravda('v šabloně se našla velikost nadpisu stránky (jinak se nemá s čím porovnat)',
-    !!vSablone, 'pravidlo h1{…font-size} v css/styles.css nenalezeno');
-  if (vSablone) {
-    pravda('a předloha ukazuje touž velikost jako šablona',
-      v.h1px === +vSablone[1], `předloha ${v.h1px} px, šablona ${vSablone[1]} px`);
-  }
+  pravda('nadpis stránky bere velikost z pojmenovaného stupně, ne z opsaného čísla',
+    /(?:^|\n)h1\{[^}]*font-size:\s*var\(--h1-stranka\)/.test(css),
+    'pravidlo h1{…font-size:var(--h1-stranka)} v css/styles.css nenalezeno');
+  pravda('a ten stupeň se v prohlížeči na něco rozvine (jinak se nemá s čím porovnat)',
+    Number.isFinite(v.stupenPx) && v.stupenPx > 0, `rozvinulo se na ${v.stupenPx}`);
+  pravda('a předloha ukazuje touž velikost, na jakou se stupeň rozvine',
+    v.h1px === v.stupenPx, `předloha ${v.h1px} px, stupeň --h1-stranka ${v.stupenPx} px`);
   await ctx.close();
 }
 
