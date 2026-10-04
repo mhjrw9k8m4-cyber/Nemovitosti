@@ -30,7 +30,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=135744c5">
+  <link rel="stylesheet" href="css/styles.css?v=a6499803">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky v okrese Chrudim","inLanguage":"cs","description":"Nabídky pozemků v okrese Chrudim — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-okres-chrudim.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":24,"itemListElement":[{"@type":"ListItem","position":1,"name":"Rosice — Na prodej, 299 m²"},{"@type":"ListItem","position":2,"name":"Slatiňany — Na prodej, 699 m²"},{"@type":"ListItem","position":3,"name":"Skuteč — Na prodej, 1117 m²"},{"@type":"ListItem","position":4,"name":"Ronov nad Doubravou — Na prodej, 865 m²"},{"@type":"ListItem","position":5,"name":"Lipovec — Na prodej, 1134 m²"},{"@type":"ListItem","position":6,"name":"Chrudim — Na prodej, 907 m²"},{"@type":"ListItem","position":7,"name":"Lipovec — Na prodej, 1258 m²"},{"@type":"ListItem","position":8,"name":"Smrček — Na prodej, 2124 m²"},{"@type":"ListItem","position":9,"name":"Skuteč — Na prodej, 3165 m²"},{"@type":"ListItem","position":10,"name":"Chrast — Na prodej, 1825 m²"},{"@type":"ListItem","position":11,"name":"Proseč — Na prodej, 3539 m²"},{"@type":"ListItem","position":12,"name":"Lipovec — Na prodej, 2750 m²"},{"@type":"ListItem","position":13,"name":"Morašice — Na prodej, 2134 m²"},{"@type":"ListItem","position":14,"name":"Ronov nad Doubravou — Na prodej, 2502 m²"},{"@type":"ListItem","position":15,"name":"Míčov — Na prodej, 3971 m²"},{"@type":"ListItem","position":16,"name":"Načešice — Na prodej, 5172 m²"},{"@type":"ListItem","position":17,"name":"Vrbatův Kostelec — Na prodej, 6750 m²"},{"@type":"ListItem","position":18,"name":"Hluboká — Na prodej, 9302 m²"},{"@type":"ListItem","position":19,"name":"Perálec — Na prodej, 12661 m²"},{"@type":"ListItem","position":20,"name":"Stolany — Na prodej, 11354 m²"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Pardubický kraj","item":"https://www.parcelaka.cz/pozemky-pardubicky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Chrudim","item":"https://www.parcelaka.cz/pozemky-okres-chrudim.html"}]}]
   </script>
@@ -93,6 +93,8 @@
         
       </div>
       <p class="okr-more" style="margin-top:2px;">Medián ceny (zemědělská půda): <b>71 Kč/m²</b> · obvykle <b>54–89 Kč/m²</b> <span class="okr-more" style="display:inline">(jen z 17 nabídek — na cenu okresu je to málo, berte to jako hrubé vodítko)</span> — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>
+
+      <div data-graf-cen data-uroven="okres" data-nazev="Chrudim" data-kde="v okrese Chrudim"></div>
       <p class="okr-more" style="margin-top:2px;">Z toho je <b>15</b> spoluvlastnických podílů — v inzerátu je pak výměra celé parcely, ale cena jen za ten zlomek, takže cena za metr vychází nízko sama od sebe. <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>
 
       <div class="add-cross" style="margin-top:0;">
@@ -336,6 +338,7 @@
 <script src="js/hlidani-logika.js?v=94c83b26" defer></script>
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
+<script src="js/graf-cen.js?v=7f925b32" defer></script>
 <script src="js/hlavicka.js?v=c6f32427" defer></script>
 </body>
 </html>

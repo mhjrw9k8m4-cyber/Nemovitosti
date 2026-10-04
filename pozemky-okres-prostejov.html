@@ -30,7 +30,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=135744c5">
+  <link rel="stylesheet" href="css/styles.css?v=a6499803">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky v okrese Prostějov","inLanguage":"cs","description":"Nabídky pozemků v okrese Prostějov — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-okres-prostejov.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":33,"itemListElement":[{"@type":"ListItem","position":1,"name":"Protivanov — Na prodej, 1136 m²"},{"@type":"ListItem","position":2,"name":"Protivanov — Na prodej, 1094 m²"},{"@type":"ListItem","position":3,"name":"Ludmírov — Na prodej, 1834 m²"},{"@type":"ListItem","position":4,"name":"Lipová — Na prodej, 1338 m²"},{"@type":"ListItem","position":5,"name":"Protivanov — Na prodej, 1639 m²"},{"@type":"ListItem","position":6,"name":"Brodek u Konice — Na prodej, 1761 m²"},{"@type":"ListItem","position":7,"name":"Prostějovičky — Na prodej, 2079 m²"},{"@type":"ListItem","position":8,"name":"Brodek u Konice — Na prodej, 2138 m²"},{"@type":"ListItem","position":9,"name":"Kostelec na Hané — Na prodej, 1359 m²"},{"@type":"ListItem","position":10,"name":"Brodek u Konice — Na prodej, 2777 m²"},{"@type":"ListItem","position":11,"name":"Myslejovice — Na prodej, 1830 m²"},{"@type":"ListItem","position":12,"name":"Lipová — Na prodej, 3443 m²"},{"@type":"ListItem","position":13,"name":"Otinoves — Na prodej, 4314 m²"},{"@type":"ListItem","position":14,"name":"Plumlov — Na prodej, 2255 m²"},{"@type":"ListItem","position":15,"name":"Bousín — Na prodej, 4257 m²"},{"@type":"ListItem","position":16,"name":"Výšovice — Na prodej, 1300 m²"},{"@type":"ListItem","position":17,"name":"Protivanov — Na prodej, 6298 m²"},{"@type":"ListItem","position":18,"name":"Ludmírov — Na prodej, 5525 m²"},{"@type":"ListItem","position":19,"name":"Slatinky — Na prodej, 8967 m²"},{"@type":"ListItem","position":20,"name":"Stínava — Na prodej, 7994 m²"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Olomoucký kraj","item":"https://www.parcelaka.cz/pozemky-olomoucky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Prostějov","item":"https://www.parcelaka.cz/pozemky-okres-prostejov.html"}]}]
   </script>
@@ -93,6 +93,8 @@
         
       </div>
       <p class="okr-more" style="margin-top:2px;">Medián ceny (zemědělská půda): <b>62 Kč/m²</b> · obvykle <b>42–154 Kč/m²</b> <span class="okr-more" style="display:inline">(z 26 nabídek)</span> — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>
+
+      <div data-graf-cen data-uroven="okres" data-nazev="Prostějov" data-kde="v okrese Prostějov"></div>
       <p class="okr-more" style="margin-top:2px;">Z toho je <b>13</b> spoluvlastnických podílů — v inzerátu je pak výměra celé parcely, ale cena jen za ten zlomek, takže cena za metr vychází nízko sama od sebe. <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>
 
       <div class="add-cross" style="margin-top:0;">
@@ -399,6 +401,7 @@
 <script src="js/hlidani-logika.js?v=94c83b26" defer></script>
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
+<script src="js/graf-cen.js?v=7f925b32" defer></script>
 <script src="js/hlavicka.js?v=c6f32427" defer></script>
 </body>
 </html>

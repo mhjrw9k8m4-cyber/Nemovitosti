@@ -5084,3 +5084,49 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   .nak-tab .nak-celkem td{font-size:22px;}
 }
 
+
+/* GRAF VÝVOJE CENOVÉ HLADINY (js/graf-cen.js).
+   Jedna řada, takže žádná legenda — co je v grafu, říká nadpis, a popisek
+   nese poslední hodnota, ne každý bod. Čára i plocha berou barvu značky,
+   osy a mřížka jsou úmyslně potlačené: číst se má průběh, ne rastr. */
+.gc{margin:18px 0 0; padding:0;}
+.gc-hlava{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px;
+  padding:0 0 10px; font-size:15px;}
+.gc-hlava b{font-weight:700;}
+.gc-ted{margin-left:auto; display:inline-flex; align-items:baseline; gap:8px;
+  font-weight:700; font-variant-numeric:tabular-nums;}
+.gc-zmena{font-style:normal; font-size:13px; font-weight:600;
+  color:var(--text-ondark-mute);}
+.gc-plocha{position:relative; touch-action:pan-y;}
+.gc-plocha svg{display:block; width:100%; height:auto; overflow:visible;}
+/* 2 px čára: tenčí se na světlé ploše ztrácí, silnější překreslí vlastní tvar. */
+.gc-cara{fill:none; stroke:var(--copper); stroke-width:2;
+  stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke;}
+.gc-kriz{stroke:var(--line-strong); stroke-width:1; vector-effect:non-scaling-stroke;}
+/* Terč je širší než značka, ať se do bodu dá trefit prstem. */
+.gc-hit{fill:transparent;}
+.gc-tec{fill:var(--ink-soft); stroke:var(--copper); stroke-width:2;
+  vector-effect:non-scaling-stroke; opacity:0;
+  transition:opacity var(--cas-rychly) var(--ease);}
+.gc-bod.on .gc-tec{opacity:1;}
+.gc-bublina{position:absolute; top:0; z-index:2; pointer-events:none;
+  padding:7px 10px; border-radius:var(--r-sm); background:var(--ink-soft);
+  border:1px solid var(--line-strong); box-shadow:var(--e2); font-size:13px;
+  line-height:1.35; white-space:nowrap;}
+.gc-bublina b{display:block; font-variant-numeric:tabular-nums;}
+.gc-bublina span{color:var(--text-ondark-mute);}
+.gc-osa{display:flex; justify-content:space-between; padding:4px 0 0;
+  font-size:12px; color:var(--text-ondark-mute);}
+.gc-pozn{margin:10px 0 0; font-size:13px; line-height:1.5;
+  color:var(--text-ondark-mute);}
+.gc-tab{margin-top:8px; font-size:13px;}
+.gc-tab summary{cursor:pointer; min-height:44px; display:flex; align-items:center;
+  color:var(--copper); font-weight:600;}
+.gc-tab table{width:100%; border-collapse:collapse; margin-top:4px;}
+.gc-tab th, .gc-tab td{padding:6px 8px; text-align:left;
+  border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums;}
+.gc-tab th{font-weight:700; color:var(--text-ondark-mute);}
+@media (max-width:560px){
+  .gc-ted{margin-left:0; width:100%;}
+  .gc-bublina{font-size:12px; padding:6px 8px;}
+}

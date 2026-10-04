@@ -30,7 +30,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=135744c5">
+  <link rel="stylesheet" href="css/styles.css?v=a6499803">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky v okrese Vsetín","inLanguage":"cs","description":"Nabídky pozemků v okrese Vsetín — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-okres-vsetin.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":47,"itemListElement":[{"@type":"ListItem","position":1,"name":"Lešná — Na prodej, 1470 m²"},{"@type":"ListItem","position":2,"name":"Podolí — Na prodej, 1836 m²"},{"@type":"ListItem","position":3,"name":"Podolí — Na prodej, 1920 m²"},{"@type":"ListItem","position":4,"name":"Halenkov — Na prodej, 2148 m²"},{"@type":"ListItem","position":5,"name":"Kelč — Na prodej, 1667 m²"},{"@type":"ListItem","position":6,"name":"Podolí — Na prodej, 2186 m²"},{"@type":"ListItem","position":7,"name":"Huslenky — Na prodej, 2628 m²"},{"@type":"ListItem","position":8,"name":"Podolí — Na prodej, 3082 m²"},{"@type":"ListItem","position":9,"name":"Podolí — Na prodej, 591 m²"},{"@type":"ListItem","position":10,"name":"Hovězí — Na prodej, 4815 m²"},{"@type":"ListItem","position":11,"name":"Podolí — Na prodej, 3181 m²"},{"@type":"ListItem","position":12,"name":"Prlov — Na prodej, 2855 m²"},{"@type":"ListItem","position":13,"name":"Podolí — Na prodej, 4315 m²"},{"@type":"ListItem","position":14,"name":"Hovězí — Na prodej, 5071 m²"},{"@type":"ListItem","position":15,"name":"Vsetín — Na prodej, 3083 m²"},{"@type":"ListItem","position":16,"name":"Velké Karlovice — Na prodej, 2523 m²"},{"@type":"ListItem","position":17,"name":"Police — Na prodej, 4194 m²"},{"@type":"ListItem","position":18,"name":"Podolí — Na prodej, 3779 m²"},{"@type":"ListItem","position":19,"name":"Loučka — Na prodej, 3114 m²"},{"@type":"ListItem","position":20,"name":"Seninka — Dražba, 4104 m²"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Zlínský kraj","item":"https://www.parcelaka.cz/pozemky-zlinsky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Vsetín","item":"https://www.parcelaka.cz/pozemky-okres-vsetin.html"}]}]
   </script>
@@ -93,6 +93,8 @@
         
       </div>
       <p class="okr-more" style="margin-top:2px;">Medián ceny (zemědělská půda): <b>40 Kč/m²</b> · obvykle <b>33–48 Kč/m²</b> <span class="okr-more" style="display:inline">(jen z 23 nabídek — na cenu okresu je to málo, berte to jako hrubé vodítko)</span> — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>
+
+      <div data-graf-cen data-uroven="okres" data-nazev="Vsetín" data-kde="v okrese Vsetín"></div>
       <p class="okr-more" style="margin-top:2px;">Z toho je <b>16</b> spoluvlastnických podílů — v inzerátu je pak výměra celé parcely, ale cena jen za ten zlomek, takže cena za metr vychází nízko sama od sebe. <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>
 
       <div class="add-cross" style="margin-top:0;">
@@ -497,6 +499,7 @@
 <script src="js/hlidani-logika.js?v=94c83b26" defer></script>
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
+<script src="js/graf-cen.js?v=7f925b32" defer></script>
 <script src="js/hlavicka.js?v=c6f32427" defer></script>
 </body>
 </html>

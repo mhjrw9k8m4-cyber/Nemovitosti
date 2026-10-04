@@ -45,6 +45,7 @@ const V = {
   feed: razitko('js/upozorneni-feed.js'),
   upoz: razitko('js/upozorneni.js'),
   hlavicka: razitko('js/hlavicka.js'),
+  grafCen: razitko('js/graf-cen.js'),
   pridat: razitko('js/pridat.js'),
 };
 /* Práh byl 10 a bez vlastní stránky kvůli tomu zůstávalo DVANÁCT okresů,
@@ -514,6 +515,7 @@ function footer(){
 <script src="js/hlidani-logika.js?${V.hlidani}" defer></script>
 <script src="js/upozorneni-feed.js?${V.feed}" defer></script>
 <script src="js/upozorneni.js?${V.upoz}" defer></script>
+<script src="js/graf-cen.js?${V.grafCen}" defer></script>
 <script src="js/hlavicka.js?${V.hlavicka}" defer></script>
 </body>
 </html>
@@ -707,6 +709,10 @@ for(const okres of eligibleOkres){
         ${Object.keys(byType).length > 1 && byType.obec?`<div class="okr-stat"><b>${byType.obec}</b><span>${sklon(byType.obec,'záměr obce','záměry obcí','záměrů obcí')}</span></div>`:''}
       </div>
 ${priceLine(priceStats(list)) ? `      <p class="okr-more" style="margin-top:2px;">${priceLine(priceStats(list))} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
+${/* Graf vývoje hladiny. Vykreslí se JEN tehdy, když pro okres existuje
+      dost klidná řada (js/graf-cen.js) — jinak zůstane prázdné místo bez
+      rámečku. Data si skript stáhne sám, až se k němu někdo doroluje. */''}
+      <div data-graf-cen data-uroven="okres" data-nazev="${esc(okres)}" data-kde="v okrese ${esc(okres)}"></div>
 ${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(podilu,'je','jsou','je')} <b>${podilu}</b> ${sklon(podilu,'spoluvlastnický podíl','spoluvlastnické podíly','spoluvlastnických podílů')} — v inzerátu je pak výměra celé parcely, ale cena jen za ten zlomek, takže cena za metr vychází nízko sama od sebe. <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
 
       <div class="add-cross" style="margin-top:0;">
@@ -815,6 +821,7 @@ for(const kraj of eligibleKraj){
         ${byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b><span>${sklon(byType.exekuce,'exekuce','exekuce','exekucí')}</span></div>`:''}
       </div>
 ${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more" style="margin-top:2px;">${priceLine(priceByKraj[kraj]||{})} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
+      <div data-graf-cen data-uroven="kraj" data-nazev="${esc(kraj)}" data-kde="${esc(meta.kde || ('v kraji ' + kraj))}"></div>
 
       <div class="add-cross" style="margin-top:0;">
         <div class="acx-copy">

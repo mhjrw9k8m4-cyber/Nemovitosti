@@ -30,7 +30,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=135744c5">
+  <link rel="stylesheet" href="css/styles.css?v=a6499803">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky v okrese Česká Lípa","inLanguage":"cs","description":"Nabídky pozemků v okrese Česká Lípa — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-okres-ceska-lipa.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":45,"itemListElement":[{"@type":"ListItem","position":1,"name":"Houska — Na prodej, 947 m²"},{"@type":"ListItem","position":2,"name":"Houska — Na prodej, 1035 m²"},{"@type":"ListItem","position":3,"name":"Cvikov — Na prodej, 285 m²"},{"@type":"ListItem","position":4,"name":"Kruh v Podbezdězí — Na prodej, 2012 m²"},{"@type":"ListItem","position":5,"name":"Skalka u Doks — Na prodej, 2319 m²"},{"@type":"ListItem","position":6,"name":"Doksy u Máchova jezera — Na prodej, 410 m²"},{"@type":"ListItem","position":7,"name":"Zákupy — Na prodej, 1072 m²"},{"@type":"ListItem","position":8,"name":"Doksy u Máchova jezera — Na prodej, 519 m²"},{"@type":"ListItem","position":9,"name":"Doksy u Máchova jezera — Na prodej, 8912 m²"},{"@type":"ListItem","position":10,"name":"Kravaře — Na prodej, 2026 m²"},{"@type":"ListItem","position":11,"name":"Hamr na Jezeře — Na prodej, 1880 m²"},{"@type":"ListItem","position":12,"name":"Doksy u Máchova jezera — Na prodej, 12752 m²"},{"@type":"ListItem","position":13,"name":"Korce — Na prodej, 13859 m²"},{"@type":"ListItem","position":14,"name":"Česká Lípa — Exekuce"},{"@type":"ListItem","position":15,"name":"Houska — Na prodej, 15415 m²"},{"@type":"ListItem","position":16,"name":"Zákupy — Na prodej, 4791 m²"},{"@type":"ListItem","position":17,"name":"Chlum — Na prodej, 4751 m²"},{"@type":"ListItem","position":18,"name":"Hvězda pod Vlhoštěm — Na prodej, 15995 m²"},{"@type":"ListItem","position":19,"name":"Chlum — Na prodej, 4872 m²"},{"@type":"ListItem","position":20,"name":"Doksy u Máchova jezera — Na prodej, 17180 m²"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Liberecký kraj","item":"https://www.parcelaka.cz/pozemky-liberecky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Česká Lípa","item":"https://www.parcelaka.cz/pozemky-okres-ceska-lipa.html"}]}]
   </script>
@@ -93,6 +93,8 @@
         
       </div>
       <p class="okr-more" style="margin-top:2px;">Medián ceny (zemědělská půda): <b>66 Kč/m²</b> · obvykle <b>37–226 Kč/m²</b> <span class="okr-more" style="display:inline">(jen z 14 nabídek — na cenu okresu je to málo, berte to jako hrubé vodítko)</span> — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>
+
+      <div data-graf-cen data-uroven="okres" data-nazev="Česká Lípa" data-kde="v okrese Česká Lípa"></div>
       <p class="okr-more" style="margin-top:2px;">Z toho je <b>10</b> spoluvlastnických podílů — v inzerátu je pak výměra celé parcely, ale cena jen za ten zlomek, takže cena za metr vychází nízko sama od sebe. <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>
 
       <div class="add-cross" style="margin-top:0;">
@@ -483,6 +485,7 @@
 <script src="js/hlidani-logika.js?v=94c83b26" defer></script>
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
+<script src="js/graf-cen.js?v=7f925b32" defer></script>
 <script src="js/hlavicka.js?v=c6f32427" defer></script>
 </body>
 </html>

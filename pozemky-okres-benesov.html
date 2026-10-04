@@ -30,7 +30,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=135744c5">
+  <link rel="stylesheet" href="css/styles.css?v=a6499803">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky v okrese Benešov","inLanguage":"cs","description":"Nabídky pozemků v okrese Benešov — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-okres-benesov.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":34,"itemListElement":[{"@type":"ListItem","position":1,"name":"Benešov — Exekuce, 5023 m²"},{"@type":"ListItem","position":2,"name":"Kamberk — Na prodej, 2201 m²"},{"@type":"ListItem","position":3,"name":"Chocerady — Na prodej, 1559 m²"},{"@type":"ListItem","position":4,"name":"Chabeřice — Na prodej, 671 m²"},{"@type":"ListItem","position":5,"name":"Týnec nad Sázavou — Na prodej, 2080 m²"},{"@type":"ListItem","position":6,"name":"Pravonín — Na prodej, 3856 m²"},{"@type":"ListItem","position":7,"name":"Bystřice — Na prodej, 4889 m²"},{"@type":"ListItem","position":8,"name":"Votice — Na prodej, 6639 m²"},{"@type":"ListItem","position":9,"name":"Netvořice — Na prodej, 6305 m²"},{"@type":"ListItem","position":10,"name":"Lešany — Na prodej, 4263 m²"},{"@type":"ListItem","position":11,"name":"Bystřice — Na prodej, 6708 m²"},{"@type":"ListItem","position":12,"name":"Bystřice — Na prodej, 5521 m²"},{"@type":"ListItem","position":13,"name":"Ostředek — Na prodej, 11254 m²"},{"@type":"ListItem","position":14,"name":"Postupice — Na prodej, 8431 m²"},{"@type":"ListItem","position":15,"name":"Libež — Na prodej, 8010 m²"},{"@type":"ListItem","position":16,"name":"Libež — Na prodej, 8739 m²"},{"@type":"ListItem","position":17,"name":"Libež — Na prodej, 10185 m²"},{"@type":"ListItem","position":18,"name":"Pravonín — Na prodej, 13670 m²"},{"@type":"ListItem","position":19,"name":"Pravonín — Na prodej, 6515 m²"},{"@type":"ListItem","position":20,"name":"Olbramovice — Na prodej, 9602 m²"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Středočeský kraj","item":"https://www.parcelaka.cz/pozemky-stredocesky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Benešov","item":"https://www.parcelaka.cz/pozemky-okres-benesov.html"}]}]
   </script>
@@ -93,6 +93,8 @@
         
       </div>
       <p class="okr-more" style="margin-top:2px;">Medián ceny (zemědělská půda): <b>63 Kč/m²</b> · obvykle <b>50–110 Kč/m²</b> <span class="okr-more" style="display:inline">(jen z 18 nabídek — na cenu okresu je to málo, berte to jako hrubé vodítko)</span> — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>
+
+      <div data-graf-cen data-uroven="okres" data-nazev="Benešov" data-kde="v okrese Benešov"></div>
       <p class="okr-more" style="margin-top:2px;">Z toho je <b>9</b> spoluvlastnických podílů — v inzerátu je pak výměra celé parcely, ale cena jen za ten zlomek, takže cena za metr vychází nízko sama od sebe. <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>
 
       <div class="add-cross" style="margin-top:0;">
@@ -406,6 +408,7 @@
 <script src="js/hlidani-logika.js?v=94c83b26" defer></script>
 <script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
 <script src="js/upozorneni.js?v=990dc051" defer></script>
+<script src="js/graf-cen.js?v=7f925b32" defer></script>
 <script src="js/hlavicka.js?v=c6f32427" defer></script>
 </body>
 </html>
