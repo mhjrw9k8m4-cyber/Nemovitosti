@@ -2581,6 +2581,29 @@
           '</b>' +
           '<button class="vm-x" type="button" aria-label="Zavřít">✕</button>' +
         '</div>' +
+        /* HLEDÁNÍ OBCE. Komentář nad touhle funkcí hledání slibuje, ale
+           v okně nebylo — a bez něj se místo ukazuje jen klepnutím do
+           mapy. Při pohledu na celou republiku je přitom 10 km zhruba
+           tři pixely: klepnutím se trefíte do okresu, ne do svého okolí,
+           a doladit to jde jen roztahováním prsty přes půl obrazovky.
+           Souřadnice se počítají z našich vlastních dat — bez internetu,
+           mediánem z nabídek, které za návrhem stojí, protože stejný
+           název má 30 obcí až 309 km od sebe. */
+        '<div class="vm-hledani">' +
+          '<label class="vm-pole">' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/>' +
+              '<path d="m20 20-3.5-3.5"/></svg>' +
+            '<span class="visually-hidden">Napište obec nebo okres</span>' +
+            '<input type="search" id="vm-q" autocomplete="off" enterkeyhint="search"' +
+              ' placeholder="Napište obec nebo okres" role="combobox"' +
+              ' aria-expanded="false" aria-controls="vm-navrhy" aria-autocomplete="list">' +
+          '</label>' +
+          '<button class="vm-gps" id="vm-gps" type="button">' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/>' +
+              '<circle cx="12" cy="12" r="2.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>' +
+            '<span>Moje poloha</span></button>' +
+          '<ul class="vm-navrhy" id="vm-navrhy" role="listbox" hidden></ul>' +
+        '</div>' +
         /* Špendlík MUSÍ ležet ve stejném rámci jako mapa. Dřív byl
            potomkem celého panelu, takže jeho „50 % výšky" počítalo i
            hlavičku a patičku — a protože patička je vyšší, kreslil se
@@ -2780,6 +2803,146 @@
     function jdiNa(lat, lng, animovat, volnost) {
       m.fitBounds(ramecOkruhu(lat, lng, volnost), { animate: animovat !== false });
     }
+
+    /* ---------- Hledání obce v okně výběru ----------
+       Návrhy se skládají z MÍST, KTERÁ V DATECH OPRAVDU JSOU. Našeptávat
+       obce, kde žádný pozemek není, by znamenalo poslat člověka na
+       prázdnou mapu — a on by si myslel, že je rozbitý web. */
+    var qEl = ov.querySelector('#vm-q');
+    var navrhyEl = ov.querySelector('#vm-navrhy');
+    var gpsEl = ov.querySelector('#vm-gps');
+    var navrhy = [];
+    var kurzor = -1;
+
+    function mistaZDat() {
+      var mapa = Object.create(null);
+      for (var i = 0; i < DATA.length; i++) {
+        var d = DATA[i];
+        if (!d || !isFinite(d.lat) || !isFinite(d.lng) || !d.place) continue;
+        var k = d.place + '|' + (d.okres || '');
+        if (!mapa[k]) mapa[k] = { misto: d.place, okres: d.okres || '', pocet: 0, lat: [], lng: [] };
+        mapa[k].pocet++;
+        mapa[k].lat.push(d.lat); mapa[k].lng.push(d.lng);
+      }
+      /* Souřadnice návrhu se počítají z NABÍDEK, které za ním stojí, a to
+         MEDIÁNEM. Hledání podle názvu (geocodeTownLocal) umí minout —
+         stejných jmen je v Česku třicet a od sebe až 309 km — a když
+         minulo, výběr mlčel a nestalo se nic. Takhle souřadnice existují
+         vždycky a vedou přesně tam, kde ty pozemky leží. Mediánem, ne
+         průměrem: jeden pozemek zapsaný u vzdálené části obce by střed
+         odtáhl, prostřední hodnota ne. */
+      return Object.keys(mapa).map(function (k) {
+        var x = mapa[k];
+        x.lat.sort(function (a, b) { return a - b; });
+        x.lng.sort(function (a, b) { return a - b; });
+        var p = (x.lat.length - 1) / 2;
+        var lo = Math.floor(p), hi = Math.ceil(p);
+        return { misto: x.misto, okres: x.okres, pocet: x.pocet,
+                 lat: (x.lat[lo] + x.lat[hi]) / 2, lng: (x.lng[lo] + x.lng[hi]) / 2 };
+      });
+    }
+    var MISTA = mistaZDat();
+
+    function schovejNavrhy() {
+      navrhy = []; kurzor = -1;
+      navrhyEl.hidden = true; navrhyEl.innerHTML = '';
+      qEl.setAttribute('aria-expanded', 'false');
+    }
+
+    function ukazNavrhy(text) {
+      var n = String(text || '').trim();
+      if (n.length < 2) return schovejNavrhy();
+      var hledane = HL.norm(n);
+      navrhy = MISTA.filter(function (x) {
+        return HL.norm(x.misto).indexOf(hledane) === 0
+            || HL.norm(x.misto + ' ' + x.okres).indexOf(hledane) >= 0;
+      })
+        /* Nejdřív místa s víc nabídkami: kdo napíše „Nová", nejspíš míří
+           tam, kde je co vidět, ne do vsi s jedním pozemkem. */
+        .sort(function (a, b) { return b.pocet - a.pocet; })
+        .slice(0, 6);
+      if (!navrhy.length) return schovejNavrhy();
+      navrhyEl.innerHTML = navrhy.map(function (x, i) {
+        return '<li role="option" id="vm-n' + i + '" aria-selected="false">' +
+          '<b>' + esc(x.misto) + '</b>' +
+          (x.okres ? '<span>okres ' + esc(x.okres) + '</span>' : '') +
+          '<i>' + x.pocet + '</i></li>';
+      }).join('');
+      navrhyEl.hidden = false;
+      qEl.setAttribute('aria-expanded', 'true');
+      kurzor = -1;
+    }
+
+    function vyberNavrh(i) {
+      var x = navrhy[i];
+      if (!x) return;
+      var souradnice = { lat: x.lat, lng: x.lng };
+      if (!isFinite(souradnice.lat) || !isFinite(souradnice.lng)) return;
+      qEl.value = x.misto;
+      schovejNavrhy();
+      vybranoMisto = true;
+      nastavMisto(souradnice.lat, souradnice.lng);
+      jdiNa(souradnice.lat, souradnice.lng);
+      prepocti();
+      /* Klávesnice na telefonu zabírá půl obrazovky; po výběru nemá co
+         dělat přes mapu, na kterou se člověk jde podívat. */
+      try { qEl.blur(); } catch (e) {}
+    }
+
+    qEl.addEventListener('input', function () { ukazNavrhy(qEl.value); });
+    qEl.addEventListener('keydown', function (e) {
+      if (navrhyEl.hidden) {
+        if (e.key === 'Enter') { e.preventDefault(); ukazNavrhy(qEl.value); }
+        return;
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        kurzor += (e.key === 'ArrowDown' ? 1 : -1);
+        if (kurzor < 0) kurzor = navrhy.length - 1;
+        if (kurzor >= navrhy.length) kurzor = 0;
+        [].forEach.call(navrhyEl.children, function (li, i) {
+          li.setAttribute('aria-selected', String(i === kurzor));
+        });
+        qEl.setAttribute('aria-activedescendant', 'vm-n' + kurzor);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        vyberNavrh(kurzor >= 0 ? kurzor : 0);
+      } else if (e.key === 'Escape') {
+        schovejNavrhy();
+      }
+    });
+    navrhyEl.addEventListener('click', function (e) {
+      var li = e.target.closest ? e.target.closest('li') : null;
+      if (!li) return;
+      vyberNavrh([].indexOf.call(navrhyEl.children, li));
+    });
+
+    gpsEl.addEventListener('click', function () {
+      if (!navigator.geolocation) return;
+      gpsEl.disabled = true;
+      navigator.geolocation.getCurrentPosition(function (p) {
+        gpsEl.disabled = false;
+        vybranoMisto = true;
+        nastavMisto(p.coords.latitude, p.coords.longitude);
+        jdiNa(p.coords.latitude, p.coords.longitude);
+        prepocti();
+      }, function (err) {
+        gpsEl.disabled = false;
+        /* Když poloha nevyjde, nesmí se NESTAT NIC. Naměřeno v prohlížeči
+           se zakázanou polohou: tlačítko se rozsvítilo zpátky a tím to
+           skončilo — člověk nevěděl, jestli se něco děje, jestli to
+           odmítl prohlížeč, nebo jestli je rozbitý web. Teď to stojí
+           napsané tam, kde se čte počet (a čte to i odečítač, políčko má
+           aria-live), a kurzor jde do pole s hledáním, ať je vidět
+           náhradní cesta. */
+        if (pocetEl) {
+          pocetEl.textContent = (err && err.code === 1)
+            ? 'Polohu prohlížeč nedal — je zakázaná. Napište obec, nebo klepněte na mapu.'
+            : 'Polohu teď nejde zjistit. Napište obec, nebo klepněte na mapu.';
+        }
+        try { qEl.focus(); } catch (e) {}
+      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+    });
     /* Je okruh doopravdy VIDĚT? Nestačí, že se vejde do okna: při pohledu
        na celou republiku se desetikilometrový kruh „vejde" taky, jenže je
        z něj tečka o pár pixelech a člověk netuší, co vybírá. Proto se

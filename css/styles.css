@@ -625,7 +625,66 @@ body.vm-otevreno{overflow:hidden;}
 .vm-x{width:38px; height:38px; flex:none; border:0; background:none; cursor:pointer;
   font-size:16px; color:var(--text-ondark-mute); border-radius:var(--r-ovladani);}
 .vm-x:hover{background:var(--ink-soft2); color:var(--text-ondark);}
-.vm-mapa-obal{position:relative; flex:1 1 auto; min-height:180px; display:flex;}
+/* HLEDÁNÍ OBCE V OKNĚ VÝBĚRU OKOLÍ.
+   Stojí nad mapou, ne přes ni: přes výhled nemá viset nic, to byla
+   výtka k dřívějšímu tlačítku „Moje poloha". Při pohledu na celou
+   republiku je 10 km zhruba tři pixely, takže napsat obec je jediný
+   rozumný způsob, jak se trefit — klepnutím se trefíte do okresu. */
+.vm-hledani{position:relative; display:flex; gap:8px; align-items:center;
+  padding:0 16px 10px;}
+.vm-pole{flex:1 1 auto; display:flex; align-items:center; gap:8px;
+  /* 46 px, ne 44: rámeček 1 px z každé strany ukousne vnitřku dva
+     pixely a samotný vstup by měřil 42 px — pod hranicí dotyku. */
+  min-height:46px; padding:0 12px;
+  background:var(--ink); border:1px solid var(--line-ui);
+  border-radius:var(--r-sm);
+  transition:border-color var(--cas-zakladni) var(--ease);}
+.vm-pole:focus-within{border-color:var(--copper-bright);}
+.vm-pole svg{width:18px; height:18px; flex:none; fill:none; stroke:currentColor;
+  stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
+  color:var(--text-ondark-mute);}
+/* Pole musí být vysoké CELÉ, ne jen jeho rámeček. Naměřeno: vstup měl
+   252×25 px, zatímco obal (label) 44 px — klepnutí mimo text sice
+   zabralo, ale prohlídka šířek to právem označila za malý cíl a na
+   dotyk to tak i vypadá. align-self:stretch mu dá celou výšku řádku. */
+.vm-pole input{flex:1 1 auto; align-self:stretch; min-width:0; border:0;
+  background:none; font:inherit; font-size:15px; color:var(--text-ondark);
+  outline:none;}
+.vm-gps{flex:none; display:inline-flex; align-items:center; gap:6px;
+  /* Stejná výška jako pole vedle, ať řádek nedrží dva různě vysoké prvky. */
+  min-height:46px; padding:0 12px;
+  background:var(--ink); border:1px solid var(--line-ui);
+  border-radius:var(--r-sm); font:inherit; font-size:14px; font-weight:600;
+  color:var(--text-ondark); cursor:pointer;
+  transition:border-color var(--cas-zakladni) var(--ease);}
+.vm-gps:hover{border-color:var(--copper-bright);}
+.vm-gps:disabled{opacity:.6; cursor:progress;}
+.vm-gps svg{width:18px; height:18px; flex:none; fill:none; stroke:currentColor;
+  stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+/* Na úzké obrazovce by se popisek tlačítka a pole praly o místo. */
+@media (max-width:460px){ .vm-gps span{display:none;} .vm-gps{padding:0 13px;} }
+/* Návrhy překrývají horní okraj mapy — jsou dočasné a mizí po výběru. */
+.vm-navrhy{position:absolute; left:16px; right:16px; top:calc(100% - 4px);
+  z-index:5; margin:0; padding:4px; list-style:none;
+  background:var(--ink-soft); border:1px solid var(--line-strong);
+  border-radius:var(--r-sm); box-shadow:var(--e3); max-height:46vh;
+  overflow-y:auto;}
+.vm-navrhy[hidden]{display:none;}
+.vm-navrhy li{display:flex; align-items:center; gap:8px;
+  min-height:44px; padding:0 10px; border-radius:var(--r-xs);
+  cursor:pointer; font-size:15px;}
+.vm-navrhy li:hover, .vm-navrhy li[aria-selected="true"]{background:var(--ink-soft2);}
+.vm-navrhy li b{font-weight:700;}
+.vm-navrhy li span{color:var(--text-ondark-mute); font-size:13px;}
+.vm-navrhy li i{margin-left:auto; font-style:normal; font-size:13px;
+  font-weight:700; color:var(--text-ondark-mute);}
+/* Mapa je VLASTNÍ vrstva (z-index:0). Bez toho Leaflet maluje své panely
+   (z-index 400) ve stejné vrstvě jako okolní panel, takže našeptávač obce
+   se z-indexem 5 skončil POD plátnem mapy: návrhy byly vidět jen zpola a
+   klepnutí na ně mapa spolkla. Naměřeno v prohlížeči: klik na první návrh
+   plátno zachytilo a výběr se nikdy neprovedl. Uvnitř obalu se poměry
+   nemění — stín u patičky (600) je nad panely mapy dál. */
+.vm-mapa-obal{position:relative; z-index:0; flex:1 1 auto; min-height:180px; display:flex;}
 .vm-mapa{flex:1 1 auto; min-width:0; min-height:0; background:var(--ink-soft2);}
 /* Značka uprostřed mapy — klikat se přes ni nesmí.
    Pozor: obal měl width:0 a display:flex, což značku stlačilo z dvaceti

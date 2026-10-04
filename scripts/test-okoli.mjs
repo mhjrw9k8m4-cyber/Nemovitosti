@@ -1048,12 +1048,33 @@ const stavVybiraku = (p) => p.evaluate(() => {
   pravda('posun mapy nic nepřepočítává (nesmí se sekat)', cas <= 12,
     `20 událostí „move" trvalo ${cas} ms — při tažení jich přijde desítky za vteřinu`);
 
-  const zmizelo = await p.evaluate(() => ({
-    gps: !!document.getElementById('vm-gps'),
-    kriz: !!document.querySelector('.vm-kriz'),
-    znacka: !!document.querySelector('.vm-znacka'),
-  }));
-  pravda('bílé tlačítko „Moje poloha" přes mapu je pryč', !zmizelo.gps);
+  /* Výtka byla, že bílé tlačítko „Moje poloha" VISÍ PŘES MAPU a zakrývá
+     výhled, na který se člověk jde podívat. Dřív se to hlídalo tím, že
+     #vm-gps na stránce vůbec není — jenže to zakázalo i samotnou funkci,
+     a bez ní se poloha zjistit nedá. Hlídá se tedy to, co bylo špatně:
+     ovladač polohy nesmí ležet na plátně mapy. V řádku s hledáním nad
+     mapou stát může, a stojí. */
+  const zmizelo = await p.evaluate(() => {
+    const g = document.getElementById('vm-gps');
+    const mapa = document.querySelector('.vm-mapa');
+    let prekryv = null;
+    if (g && mapa) {
+      const a = g.getBoundingClientRect(), b = mapa.getBoundingClientRect();
+      const w = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+      const h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+      prekryv = { px: Math.round(Math.max(0, w) * Math.max(0, h)),
+        mapaPx: Math.round(b.width * b.height) };
+    }
+    return { gps: !!g, mapa: !!mapa, prekryv,
+      kriz: !!document.querySelector('.vm-kriz'),
+      znacka: !!document.querySelector('.vm-znacka') };
+  });
+  // PŘEDPOKLAD: bez plátna mapy se překryv nedá změřit a kontrola by prošla naprázdno
+  pravda('mapa výběru má změřitelné plátno', zmizelo.mapa && zmizelo.prekryv && zmizelo.prekryv.mapaPx > 10000,
+    JSON.stringify(zmizelo.prekryv));
+  pravda('ovladač polohy neleží přes mapu (nezakrývá výhled)',
+    !zmizelo.gps || (zmizelo.prekryv && zmizelo.prekryv.px === 0),
+    zmizelo.prekryv ? `tlačítko zabírá ${zmizelo.prekryv.px} px² plátna mapy` : 'nezměřeno');
   pravda('a místo kříže uprostřed okna je značka na mapě', !zmizelo.kriz && zmizelo.znacka,
     JSON.stringify(zmizelo));
   await ctx.close();

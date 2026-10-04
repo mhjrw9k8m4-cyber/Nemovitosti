@@ -401,6 +401,9 @@ jobs:
       - name: Sliby webu platí doopravdy
         run: node scripts/test-sliby.mjs
 
+      - name: Okno „Vyberte své okolí"
+        run: node scripts/test-vyber-okoli.mjs
+
       - name: Lišta s cenou a akcí na detailu
         run: node scripts/test-lista.mjs
 
