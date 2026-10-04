@@ -51,7 +51,14 @@
    podklad i obrys jako políčka nad ním, bajt po bajtu
    (rgb(243,241,236), rgba(20,35,28,0.55) 1px). Bere si teď podobu,
    kterou web pro vedlejší akci má — bílo, zelený obrys, měděný text. */
-    .zp-btn.sec{background:#fff; color:var(--copper-bright);
+    /* BÍLÁ NAPEVNO SVÍTILA V TMAVÉM REŽIMU. Tlačítko „Vytvořit účet"
+       a „Přidat vlastní pozemek" mělo background:#fff, takže na tmavé
+       stránce zůstala bílá plocha 24 864 px² — token --panel je bílý ve
+       světlém a #18291F v tmavém, takže poslechne obojí.
+       Nikdo to neviděl, protože tmavý režim se měřil jen na odhlášených
+       stránkách, a tahle tlačítka se bez přihlášení nevykreslí.
+       Kontrast textu: 6,83 : 1 ve světlém, 9,75 : 1 v tmavém. */
+    .zp-btn.sec{background:var(--panel); color:var(--copper-bright);
       border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1); margin-top:8px;}
     .zp-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--text-ondark-mute);}
     .zp-msg.err{color:var(--c-exekuce);}

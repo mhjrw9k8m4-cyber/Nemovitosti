@@ -150,7 +150,17 @@ const vse = [];
 for (const s of STRANKY) {
   const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 900 } });
   await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
-    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';`
+      + 'window.PK_MAIL_ZAPNUTO=true;' }));
+  /* PŘIHLÁŠENÝ. Bez toho se na Upozorněních, Zprávách a Hlídání měřila
+     jen výzva „přihlaste se" — tedy pár řádků místo celé stránky.
+     Totéž se ukázalo u dotykových terčů: odhlášený běh tam přehlédl tři
+     terče pod normou. */
+  await ctx.addInitScript(() => {
+    localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok-majitel',
+      refresh_token: 'ref-majitel',
+      user: { id: '11111111-1111-4111-8111-111111111111', email: 'majitel@test.cz' } }));
+  });
   // Bez Leafletu se skript mapy ukončí dřív, než vykreslí SEZNAM NABÍDEK —
   // a test pak měří jen horní část stránky, aniž by o tom věděl. Přesně to
   // se stalo: lokálně (kde na unpkg.com není přístup) hlásil „všechno

@@ -29,8 +29,12 @@ await new Promise((r) => setTimeout(r, 300));
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASE = 'http://127.0.0.1:8310';
+/* Upozornění a Zprávy jsou tu kvůli tomu, že se měřily jen odhlášené —
+   a tím se z nich měřila jen výzva „přihlaste se". Právě tam se našel
+   odznak s počtem, který měl v tmavém režimu 3,14 : 1. */
 const STRANKY = ['/index.html', '/pozemky-okres-breclav.html', '/hlidani.html',
-  '/cena-pozemku.html', '/porovnani.html', '/kontakt.html'];
+  '/cena-pozemku.html', '/porovnani.html', '/kontakt.html',
+  '/upozorneni.html', '/zpravy.html'];
 let ok = 0, chyb = 0;
 const zpravy = [];
 function pravda(popis, vyslo, proc) {
@@ -127,6 +131,16 @@ pravda('při tmavém nastavení systému je stránka opravdu tmavá',
 /* ---- 3) nic velkého nezůstane svítit ---- */
 {
   const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: 'dark' });
+  /* PŘIHLÁŠENÝ, jinak se na Upozorněních a Zprávách nevykreslí nic než
+     výzva k přihlášení — a odznaky, karty a vlákna, tedy to, co má
+     v tmavém režimu vlastní barvy, by se neměřily vůbec. */
+  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  await ctx.addInitScript(() => {
+    localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok-majitel',
+      refresh_token: 'ref-majitel',
+      user: { id: '11111111-1111-4111-8111-111111111111', email: 'majitel@test.cz' } }));
+  });
   const nalezy = [];
   for (const url of STRANKY) {
     const p = await ctx.newPage();

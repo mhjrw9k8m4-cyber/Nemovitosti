@@ -54,7 +54,16 @@
     .up-f:hover{border-color:var(--copper-bright);}
     .up-f[aria-pressed="true"]{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
     .up-f .n{font-size:12px; font-weight:700; background:rgba(0,0,0,.14); padding:1px 6px; border-radius:999px;}
-    .up-f[aria-pressed="true"] .n{background:rgba(255,255,255,.26);}
+    /* BÍLÝ TEXT CHCE TMAVŠÍ PODKLAD. Odznak s počtem měl na zapnutém
+       filtru světlý závoj (bílá 26 %), čímž ze značkové zeleně vznikla
+       barva rgb(92,134,113) — a bílé dvanáctipixelové číslo na ní dává
+       4,11 : 1, tedy pod normou 4,5. V tmavém režimu to bylo ještě
+       horší: 3,14 : 1.
+       Nikdo to neviděl, protože kontrast se měřil jen na ODHLÁŠENÝCH
+       stránkách — a odznak s počtem se bez přihlášení nevykreslí.
+       Tmavý závoj dává 9,96 : 1 ve světlém a 7,01 : 1 v tmavém režimu
+       a odznak je na zeleném tlačítku vidět pořád. */
+    .up-f[aria-pressed="true"] .n{background:rgba(0,0,0,.18);}
     /* 44 px je norma pro prst, a tenhle terč měl 38. Naměřeno na mobilu
        390×844 — a nehlásilo to nic, protože se dotyková kontrola dosud
        dívala jen na odhlášené stránky, kde se „Označit vše" nevykreslí. */
