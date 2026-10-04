@@ -990,6 +990,21 @@
         facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v + '</span></div>'; }).join('') +
       '</div>' +
 
+      /* SOUKROMÁ POZNÁMKA. Kdo obchází deset pozemků, po týdnu si
+         nepamatuje, který měl rozbitý plot. Web uměl jen „uložit",
+         tedy ANO/NE bez jediného slova proč. */
+      '<section class="pz-pozn-box" aria-labelledby="pz-pozn-nadpis">' +
+        '<div class="pz-pozn-hlava">' +
+          '<h2 id="pz-pozn-nadpis">Moje poznámka</h2>' +
+          '<span class="pz-pozn-stav" id="pz-pozn-stav" role="status" aria-live="polite"></span>' +
+        '</div>' +
+        '<textarea id="pz-pozn-text" class="pz-pozn-pole" rows="3" maxlength="2000" ' +
+          'placeholder="Co jste tu viděli — příjezd, sousedi, co říkal majitel…" ' +
+          'aria-describedby="pz-pozn-kde"></textarea>' +
+        '<p class="pz-pozn-kde" id="pz-pozn-kde">Zůstává <b>jen v tomhle prohlížeči</b>. ' +
+          'Nikam se neodesílá, nevidíme ji ani my — a do jiného telefonu se nepřenese.</p>' +
+      '</section>' +
+
       pzFeaturesHtml(d) +
 
       /* RÁDCE: ZABALENÝ, ALE V INZERÁTU — NE AŽ POD PATIČKOU.
@@ -1134,6 +1149,42 @@
       else if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).then(function () { toast('Odkaz zkopírován'); }); }
       else { toast(url); }
     });
+
+    /* ---- soukromá poznámka ---- */
+    var poznEl = document.getElementById('pz-pozn-text');
+    if (poznEl && global.PKPoznamky) {
+      var stavEl = document.getElementById('pz-pozn-stav');
+      poznEl.value = global.PKPoznamky.text(d);
+      var puvodni = poznEl.value;
+      var cas = null;
+      function rekni(t, chyba) {
+        if (!stavEl) return;
+        stavEl.textContent = t;
+        stavEl.classList.toggle('chyba', !!chyba);
+      }
+      if (puvodni) rekni('uloženo');
+      function ulozTed() {
+        var t = poznEl.value;
+        if (t === puvodni) return;
+        var ok = global.PKPoznamky.uloz(d, t);
+        puvodni = t;
+        /* Prázdná poznámka se SMAŽE, a říká se to — „uloženo" u prázdného
+           pole by znamenalo, že se někam uložilo prázdno. */
+        rekni(ok ? (t.trim() ? 'uloženo' : 'smazáno')
+          : 'nepovedlo se uložit — plná paměť prohlížeče', !ok);
+      }
+      /* Ukládá se po chvíli klidu, ne po každém písmenu: zápis do
+         schránky je synchronní a při psaní by se do něj šlo třicetkrát
+         za větu. A pak ještě při odchodu z pole a při opuštění stránky,
+         ať se neztratí poslední věta. */
+      poznEl.addEventListener('input', function () {
+        rekni('…');
+        clearTimeout(cas);
+        cas = setTimeout(ulozTed, 600);
+      });
+      poznEl.addEventListener('blur', function () { clearTimeout(cas); ulozTed(); });
+      window.addEventListener('pagehide', function () { clearTimeout(cas); ulozTed(); });
+    }
 
     /* ---- souřadnice: kopírování a navigace ---- */
     var sourKop = document.getElementById('pz-sour-kop');

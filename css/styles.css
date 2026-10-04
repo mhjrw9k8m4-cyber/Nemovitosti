@@ -5354,3 +5354,10 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
     color var(--cas-zakladni) var(--ease);}
 .rezim-btn:hover{border-color:rgba(255,255,255,0.62); color:var(--text-ondeep);}
 .rezim-btn svg{width:16px; height:16px; flex:none;}
+
+/* Poznámka v tabulce porovnání. Zkrácená na dva řádky — tabulka má
+   ukazovat, co se liší, ne být deníkem; celá je na stránce pozemku. */
+.por-pozn{display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden; margin-top:4px; padding-left:8px;
+  border-left:2px solid var(--copper); font-size:12px; line-height:1.45;
+  font-weight:400; color:var(--text-ondark-mute); white-space:normal;}

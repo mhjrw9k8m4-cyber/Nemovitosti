@@ -77,14 +77,27 @@
       + '<th scope="col">Výměra</th><th scope="col">Cena za m²</th>'
       + '<th scope="col">Druh</th><th scope="col">Kategorie</th><th scope="col">Termín</th></tr>';
 
+    /* Poznámky se čtou JEDNOU na celou tabulku, ne u každého řádku:
+       schránka je synchronní a deset čtení za vykreslení je zbytečných. */
+    var POZN = (window.PKPoznamky && window.PKPoznamky.vsechny) ? window.PKPoznamky.vsechny() : {};
+    function poznamka(d) {
+      var z = POZN[window.PKKlic.pkey(d)];
+      return (z && z.text) ? z.text : '';
+    }
     var radky = nalezene.map(function (d, i) {
       var m2 = zaM2[i];
       var dni = dniDo(d);
       var odkaz = 'pozemek.html?p=' + encodeURIComponent(window.PKKlic.pkey(d))
         + (typeof d.lat === 'number' ? '&ll=' + d.lat + ',' + d.lng : '');
       return '<tr>'
+        /* POZNÁMKA PATŘÍ SEM. Na detailu si ji člověk napsal, ale
+           rozhoduje se tady — v tabulce, kde vedle sebe vidí všechny
+           uložené pozemky. Bez ní je to tabulka čísel a čísla neřeknou,
+           u kterého z nich byl rozbitý plot. */
         + '<th scope="row"><a href="' + odkaz + '">' + esc(d.place || 'Pozemek') + '</a>'
-          + '<span>' + esc(d.okres || '') + '</span></th>'
+          + '<span>' + esc(d.okres || '') + '</span>'
+          + (poznamka(d) ? '<span class="por-pozn" title="Moje poznámka">' + esc(poznamka(d)) + '</span>' : '')
+          + '</th>'
         + '<td>' + (d.price ? fmt(d.price) + ' Kč' : '—') + '</td>'
         + '<td' + (nejPlocha != null && d.area === nejPlocha ? ' class="por-nej"' : '') + '>'
           + (d.area ? fmt(d.area) + ' m²' : '—') + '</td>'

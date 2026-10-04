@@ -425,6 +425,9 @@ jobs:
       - name: Souřadnice pozemku s sebou
         run: node scripts/test-souradnice.mjs
 
+      - name: Soukromá poznámka k pozemku
+        run: node scripts/test-poznamky.mjs
+
       - name: Značka „už otevřeno"
         run: node scripts/test-videno.mjs
 
