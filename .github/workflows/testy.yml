@@ -419,5 +419,8 @@ jobs:
       - name: Lišta s cenou a akcí na detailu
         run: node scripts/test-lista.mjs
 
+      - name: Souřadnice pozemku s sebou
+        run: node scripts/test-souradnice.mjs
+
       - name: Zařazení pozemku do okresu
         run: node scripts/test-okres.mjs

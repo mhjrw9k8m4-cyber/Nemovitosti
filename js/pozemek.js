@@ -902,6 +902,31 @@
     facts.push({ k: 'Výměra', v: areaTxt(d) + (d.podil && hasArea(d) ? ' <i class="pz-pozn">celá parcela — kupuje se jen podíl</i>' : '') });
     if (perM2) facts.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²' + (perM2Pozn ? ' <i class="pz-pozn">' + esc(perM2Pozn) + '</i>' : '') });
     if (hasParcel(d)) facts.push({ k: 'Parcela', v: 'č. ' + esc(d.parcel) });
+    /* SOUŘADNICE S SEBOU. Na prohlídku se jezdí autem a do navigace se
+       zadává bod, ne „okres Benešov". Stránka přitom souřadnice zná —
+       stavěla z nich mapu i odkazy do katastru — a člověku je neřekla,
+       takže si je musel opisovat z adresy nebo hádat z mapy.
+       Podoba je ta, kterou berou Mapy.cz, Google i Seznam navigace:
+       desetinné stupně s TEČKOU a čárkou mezi nimi. S desetinnou čárkou
+       by se při vložení rozpadly na čtyři čísla. */
+    if (isFinite(d.lat) && isFinite(d.lng)) {
+      var sour = d.lat.toFixed(5) + ', ' + d.lng.toFixed(5);
+      facts.push({ k: 'Souřadnice', v:
+        '<span class="pz-sour">' +
+          '<code id="pz-sour-text">' + esc(sour) + '</code>' +
+          '<button type="button" class="pz-sour-kop" id="pz-sour-kop" data-sour="' + esc(sour) + '">' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" ' +
+              'stroke-linecap="round" stroke-linejoin="round">' +
+              '<rect x="9" y="9" width="11" height="11" rx="2"/>' +
+              '<path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>' +
+            '<span>Kopírovat</span></button>' +
+          '<a class="pz-sour-nav" id="pz-sour-nav" href="#" rel="nofollow">' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" ' +
+              'stroke-linecap="round" stroke-linejoin="round">' +
+              '<path d="M3 11l19-9-9 19-2-8-8-2Z"/></svg>' +
+            '<span>Navigovat</span></a>' +
+        '</span>' });
+    }
     facts.push({ k: 'Kategorie', v: esc(t.label) });
     if (d.extra) facts.push({ k: 'Stav / zdroj', v: esc(zdrojText(d.extra)) });
     /* ŽÁDNÝ ŘÁDEK „INZERÁT UVÁDÍ" TADY UŽ NENÍ — a schválně.
@@ -1109,6 +1134,53 @@
       else if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).then(function () { toast('Odkaz zkopírován'); }); }
       else { toast(url); }
     });
+
+    /* ---- souřadnice: kopírování a navigace ---- */
+    var sourKop = document.getElementById('pz-sour-kop');
+    if (sourKop) sourKop.addEventListener('click', function () {
+      var txt = sourKop.getAttribute('data-sour') || '';
+      function hotovo() { toast('Souřadnice zkopírovány'); }
+      /* Záložní cesta pro prohlížeče bez schránky (a pro stránku
+         otevřenou bez HTTPS, kde clipboard API mlčí): text se vybere,
+         ať ho jde zkopírovat ručně. Nic nedělat by bylo nejhorší. */
+      function rucne() {
+        try {
+          var r = document.createRange();
+          r.selectNodeContents(document.getElementById('pz-sour-text'));
+          var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+          toast('Souřadnice označeny — zkopírujte je');
+        } catch (e) { toast(txt); }
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(hotovo).catch(rucne);
+      } else { rucne(); }
+    });
+    var sourNav = document.getElementById('pz-sour-nav');
+    if (sourNav) {
+      /* KAŽDÝ TELEFON CHCE JINOU ADRESU. „geo:" otevře navigaci na
+         Androidu, ale iPhone ji neumí a odkaz by prostě nic neudělal —
+         to je horší než odkaz, který vede na mapu v prohlížeči. Proto
+         se podle zařízení vybere: geo: na Androidu, maps.apple.com na
+         iPhonu a Mapy.cz všude jinde (na počítači navigace nedává
+         smysl, ale bod na mapě ano). */
+      var ua = navigator.userAgent || '';
+      /* Pět desetinných míst je asi metr — víc než dost na to, aby
+         navigace našla pozemek, a hlavně bez toho, aby v odkazu svítilo
+         15.014667000000031, což je jen zbytek po dvojkové aritmetice. */
+      var la = d.lat.toFixed(5), ln = d.lng.toFixed(5);
+      var cil;
+      if (/Android/i.test(ua)) {
+        cil = 'geo:' + la + ',' + ln + '?q=' + la + ',' + ln +
+          '(' + encodeURIComponent(d.place || 'Pozemek') + ')';
+      } else if (/iPhone|iPad|iPod/i.test(ua)) {
+        cil = 'https://maps.apple.com/?ll=' + la + ',' + ln + '&q=' +
+          encodeURIComponent(d.place || 'Pozemek');
+      } else {
+        cil = mapHref;
+        sourNav.target = '_blank'; sourNav.rel = 'noopener nofollow';
+      }
+      sourNav.href = cil;
+    }
 
     postavListu();
   }
