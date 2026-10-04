@@ -271,6 +271,50 @@ export function textyPro(d) {
    s jinou cenou a výměrou. Vyhledávač je podle toho zahodí a ukáže
    místo nich dvojče: pozemky, kterým jsem včera vlastní stránku
    udělal, by v hledání nebyly vidět. */
+/* Z ŽIVÉ STRÁNKY UDĚLÁ UKONČENOU.
+   Nepřepisuje se celá — bere se to, co na ní už je, a jen se k tomu
+   přidá pruh, značka pro vyhledávače a datum. Tím zůstane zachované
+   všechno, co o pozemku víme, včetně popisu od inzerenta a odkazu do
+   katastru: ty po skončení dražby neztrácejí smysl, naopak. */
+export function ukoncenaStranka(obsah, den, podobne) {
+  let h = obsah;
+
+  // 1) Vyhledávačům: neindexovat, ale odkazy sledovat.
+  if (/<meta name="robots"/.test(h)) {
+    h = h.replace(/(<meta name="robots" content=")[^"]*(">)/, '$1noindex,follow$2');
+  } else {
+    h = h.replace(/(<\/title>)/, '$1\n  <meta name="robots" content="noindex,follow">');
+  }
+
+  // 2) Datum do stránky, ať se podle něj dá po čase smazat bez evidence.
+  if (!/window\.PK_UKONCENO=/.test(h)) {
+    h = h.replace(/(<script>window\.PK_POZEMEK=)/,
+      `<script>window.PK_UKONCENO=${JSON.stringify(den)};</scr` + `ipt>\n$1`);
+  }
+
+  // 3) Pruh na začátek obsahu + podobné pozemky v témže okrese.
+  const odkazy = podobne.map(({ soubor, d }) =>
+    `<li><a href="${esc(soubor)}">${esc(d.place)}${d.area ? ' — ' + fmt(d.area) + '\u00a0m²' : ''}</a></li>`).join('');
+  /* DATUM PRO LIDI, ne pro stroje. „2026-10-04" je zápis pro ukládání;
+     na stránce má stát „4. 10. 2026". Web to pravidlo drží i jinde
+     (zdrojText v js/pozemek.js), tak ať se tady nerozchází. */
+  const cesky = (() => {
+    const [r, m, d] = String(den).split('-');
+    return `${Number(d)}. ${Number(m)}. ${r}`;
+  })();
+  const pruh = `<div class="pz-konec" role="status">`
+    + `<b>Tato nabídka už není aktuální.</b> `
+    + `<span>Zmizela ze zdroje ${esc(cesky)}. Stránku necháváme dostupnou, `
+    + `aby uložené odkazy vedly někam, ale pozemek už takhle koupit nejde.</span>`
+    + (odkazy ? `<p>Podobné pozemky ve stejném okrese:</p><ul>${odkazy}</ul>` : '')
+    + `<p><a href="index.html#mapa">Zpět na mapu všech pozemků</a></p>`
+    + `</div>`;
+  if (!/class="pz-konec"/.test(h)) {
+    h = h.replace(/(<div id="pz-detail">)/, `$1${pruh}`);
+  }
+  return h;
+}
+
 export function stranka(sablona, d, soubor = souborPro(d)) {
   const { titul, popis, cena, zaM2, vym, druh } = textyPro(d);
   const url = `${WEB}/${soubor}`;
@@ -543,23 +587,65 @@ export function generuj() {
     fs.writeFileSync(path.join(ROOT, soubor), stranka(sablona, d, soubor));
     hotove.push(soubor);
   }
-  // Stránky zrušených nabídek musí zmizet, jinak by web sliboval pozemky,
-  // které už nikde nejsou.
+  /* KONEC NABÍDKY NENÍ KONEC ADRESY.
+     Tohle místo stránky zmizelých nabídek MAZALO. Znělo to rozumně —
+     web nemá slibovat pozemky, které už nikde nejsou — jenže smazaná
+     stránka neřekne nic: vrátí 404. A protože se data obnovují čtyřikrát
+     denně a stránek je přes 1 990, znamenalo to nepřetržitý proud
+     mrtvých adres. Každý výsledek ve vyhledávači a každý uložený odkaz
+     na dražbu, která mezitím skončila, končil na chybové stránce.
+     U webu, jehož hlavní aktivum je 2 109 zaindexovaných adres, je to
+     ztráta, kterou nikdo neuvidí a každý na ni narazí.
+
+     Stránka proto nezmizí, jen se přepíše na UKONČENOU: zůstane titulek,
+     adresa i to, co o pozemku víme, přibude pruh s datem a odkazy na
+     podobné pozemky v témže okrese.
+
+     NEINDEXUJE SE. Dražba, která skončila, nemá hledajícímu co nabídnout
+     a vyhledávač ji vyhodnotí jako zastaralý obsah. Dostane proto
+     noindex a vypadne ze sitemap.xml — ale ZŮSTANE DOSTUPNÁ, takže kdo
+     přijde s uloženým odkazem, dostane užitečnou stránku místo 404.
+     „follow" zůstává, aby odkazy na živé pozemky dál měly váhu.
+
+     A po DNI_ARCHIV dnech se teprve smaže doopravdy, aby web nerostl
+     donekonečna. Datum si stránka nese v sobě, takže na to není potřeba
+     žádná další evidence. */
+  const DNI_ARCHIV = 90;
   const zive = new Set(hotove);
-  let smazano = 0;
+  const dnes = new Date().toISOString().slice(0, 10);
+  /* Podobné pozemky se berou z toho, co právě teď žije, podle okresu
+     v názvu souboru — ten ho nese jako první úsek za „pozemek-". */
+  const podleOkresu = new Map();
+  for (const { d, soubor } of mapa.values()) {
+    const o = slug(d.okres);
+    if (!podleOkresu.has(o)) podleOkresu.set(o, []);
+    podleOkresu.get(o).push({ soubor, d });
+  }
+  let smazano = 0, ukonceno = 0;
   for (const f of fs.readdirSync(ROOT)) {
     if (!/^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f) || zive.has(f)) continue;
     /* Na název se nespoléhat. Ručně psané stránky se jmenují podobně
-       (pozemek-od-obce.html) a smazat cizí soubor kvůli shodě vzorku je
-       chyba, která se pozná až tím, že ze stránky zbude 404. Maže se jen
-       to, co tenhle generátor sám vyrobil — pozná se podle značky uvnitř. */
+       (pozemek-od-obce.html) a sáhnout na cizí soubor kvůli shodě vzorku
+       je chyba, která se pozná až tím, že ze stránky zbude 404. Mění se
+       jen to, co tenhle generátor sám vyrobil — pozná se podle značky. */
     const cesta = path.join(ROOT, f);
     let obsah = '';
     try { obsah = fs.readFileSync(cesta, 'utf8'); } catch (e) { continue; }
     if (obsah.indexOf('window.PK_POZEMEK=') < 0) continue;
-    fs.unlinkSync(cesta); smazano++;
+
+    const uz = /window\.PK_UKONCENO="(\d{4}-\d{2}-\d{2})"/.exec(obsah);
+    if (uz) {
+      const stari = (Date.parse(dnes) - Date.parse(uz[1])) / 86400000;
+      if (stari >= DNI_ARCHIV) { fs.unlinkSync(cesta); smazano++; }
+      continue;                       // už ukončená a ještě ne stará: nechat být
+    }
+
+    const okres = (f.match(/^pozemek-([a-z0-9-]+?)-[a-z0-9-]+-[0-9a-z]{5,8}\.html$/) || [])[1] || '';
+    const podobne = (podleOkresu.get(okres) || []).slice(0, 3);
+    fs.writeFileSync(cesta, ukoncenaStranka(obsah, dnes, podobne));
+    ukonceno++;
   }
-  return { hotove, smazano };
+  return { hotove, smazano, ukonceno };
 }
 
 /* Mapa webu. Sitemap staví generátor regionálních stránek a přepisuje ji

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
-  <title>Trvalý travní porost 842 m² — Šluknov, okres Děčín | Parcelka</title>
+  <title>Trvalý travní porost 842 m² — Šluknov, okres Děčín | Parcelka</title>
   <meta name="description" content="Na prodej · 550 000 Kč (653 Kč/m²) · 842 m² · Šluknov, okres Děčín. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
   <meta name="theme-color" content="#FBFAF8">
   <meta name="robots" content="index,follow">
@@ -190,6 +190,24 @@
     .pz-cas b{color:var(--text-ondark); font-weight:600;}
     .pz-cas.je-stara{color:var(--c-exekuce-ink);}
     .pz-cta{display:flex; gap:10px; margin:32px 0 0; flex-wrap:wrap;}
+    /* PRUH U NABÍDKY, KTERÁ UŽ NENÍ AKTUÁLNÍ.
+       Stránka se po zmizení nabídky nemaže, jen se přepíše — jinak by
+       každý uložený odkaz a každý výsledek ve vyhledávači skončil na 404.
+       Pruh musí být vidět na první pohled a nesmí jít přehlédnout, proto
+       stojí hned nahoře v obsahu a nese barvu z řady upozornění, ne
+       značkovou zelenou: tohle není nabídka, tohle je oznámení. */
+    .pz-konec{margin:0 0 24px; padding:16px 18px;
+      border:1px solid var(--c-drazba-ink, #7E3C18);
+      border-left-width:4px; border-radius:var(--r-md, 14px);
+      background:rgba(204,107,51,0.08); font-size:15px; line-height:1.55;}
+    .pz-konec b{display:block; font-size:17px; margin-bottom:4px;}
+    .pz-konec p{margin:12px 0 4px; font-weight:700; font-size:14px;}
+    .pz-konec ul{margin:0; padding-left:20px;}
+    .pz-konec li{margin:2px 0;}
+    /* 44px terč i tady: odkazy v pruhu jsou často to jediné, kam se dá
+       z ukončené nabídky jít dál. */
+    .pz-konec a{display:inline-flex; align-items:center; min-height:44px;
+      color:var(--copper); text-underline-offset:3px;}
     /* LIŠTA S CENOU A AKCÍ U SPODNÍHO OKRAJE. Jen na úzké obrazovce:
        na stole jsou hlavní tlačítka vedle obsahu a lišta by jen ubírala
        místo. Naměřeno na telefonu 390×844: stránka je 3 106 px dlouhá,
@@ -202,7 +220,12 @@
       padding:10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
       background:rgba(255,255,255,0.96); backdrop-filter:blur(8px);
       border-top:1px solid var(--line-strong, rgba(20,35,28,0.3));
-      box-shadow:0 -8px 24px -18px rgba(20,35,28,0.5);}
+      /* Stín z paletky, ne vlastní. Napsal jsem si sem svůj
+         (0 -8px 24px -18px) a hlídač vizuálního jazyka to zachytil —
+         a pojmenoval přesně tenhle případ: „--e3-up pro panel zdola".
+         Přesně takhle se žebřík hloubky rozpadá: po jednom stínu,
+         pokaždé s dobrým úmyslem. */
+      box-shadow:var(--e3-up);}
     .pz-lista[hidden]{display:none;}
     .pzl-cena{font-weight:800; font-size:17px; white-space:nowrap;}
     /* Terč pro palec má 48 px, ne 44: je to jediné tlačítko na liště
@@ -435,7 +458,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 842 m² — Šluknov, okres Děčín</h1><p><b>550 000 Kč</b> (653 Kč/m²) · 842 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>842 m²</dd><dt>Obec</dt><dd>Šluknov</dd><dt>Okres</dt><dd><a href="pozemky-okres-decin.html">Děčín</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Děčín 30 km · Ústí nad Labem 47 km</dd></dl><p><a href="pozemek.html?p=%C5%A0luknov%7C%E2%80%94%7CD%C4%9B%C4%8D%C3%ADn%7C51.003%7C14.434&amp;ll=51.003236,14.434246&amp;v=842">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 842 m² — Šluknov, okres Děčín</h1><p><b>550 000 Kč</b> (653 Kč/m²) · 842 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>842 m²</dd><dt>Obec</dt><dd>Šluknov</dd><dt>Okres</dt><dd><a href="pozemky-okres-decin.html">Děčín</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Děčín 30 km · Ústí nad Labem 47 km</dd></dl><p><a href="pozemek.html?p=%C5%A0luknov%7C%E2%80%94%7CD%C4%9B%C4%8D%C3%ADn%7C51.003%7C14.434&amp;ll=51.003236,14.434246&amp;v=842">Otevřít na mapě</a></p></article></div></div>
   </div>
 </main>
 
