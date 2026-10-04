@@ -116,6 +116,55 @@ const hlavni = readFileSync(path.join(KOREN, 'novinky.xml'), 'utf8');
     'guid se mezi dvěma běhy změnilo — čtečky by hlásily staré pozemky jako nové');
 }
 
+/* ---- 3b) a totéž ve VŠECH kanálech, ne jen v hlavním ----
+   Kontrola „každá položka má jedinečné guid" o oddíl výš existovala,
+   jenže se dívala jedině do novinky.xml — a shody byly v krajských:
+   šestnáct položek ve čtyřech kanálech, z toho šest v jediném. Kanál
+   si přitom bral jméno stránky přes souborPro(), tedy z klíče, na kterém
+   se nabídky srážejí; generátor stránek dává druhé z nich jméno jiné.
+   Čtenář tedy klepl na jednu nabídku a dostal stránku jiné: cizí cenu,
+   cizí výměru. Kontrola, která se dívá na jeden soubor z patnácti,
+   neříká nic o těch čtrnácti. */
+{
+  const polozkyKanalu = (x) => [...x.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((m) => m[1]);
+  const kus = (it, tag) => (it.match(new RegExp('<' + tag + '[^>]*>([\\s\\S]*?)</' + tag + '>')) || [])[1] || '';
+  let polozek = 0, drazeb = 0;
+  const shodnyGuid = [], nerozlisitelne = [], bezTerminu = [], mrtvyOdkaz = [];
+  for (const f of soubory) {
+    const x = readFileSync(path.join(KOREN, f), 'utf8');
+    const it = polozkyKanalu(x);
+    polozek += it.length;
+    const guidy = new Map(), obsahy = new Map();
+    for (const i of it) {
+      const g = kus(i, 'guid'), t = kus(i, 'title'), d = kus(i, 'description');
+      guidy.set(g, (guidy.get(g) || 0) + 1);
+      obsahy.set(t + '|' + d, (obsahy.get(t + '|' + d) || 0) + 1);
+      const cil = g.replace('https://www.parcelaka.cz/', '');
+      if (/\.html$/.test(cil) && !existsSync(path.join(KOREN, cil))) mrtvyOdkaz.push(f + ' → ' + cil);
+      /* Dražba a exekuce musí nést termín: tři dražby v Polici nad
+         Metují měly stejnou výměru i cenu a lišily se jen datem, takže
+         bez něj byly v kanálu znak za znak stejné. */
+      if (/— (?:Dražba|Exekuce),/.test(t)) {
+        drazeb++;
+        if (!/\d{1,2}\.\s\d{1,2}\.\s\d{4}/.test(d)) bezTerminu.push(f + ': ' + t);
+      }
+    }
+    for (const [g, n] of guidy) if (n > 1) shodnyGuid.push(`${f}: ${g} ${n}×`);
+    for (const [, n] of obsahy) if (n > 1) nerozlisitelne.push(f);
+  }
+  pravda(`prohledalo se ${soubory.length} kanálů a ${polozek} položek (jinak kontrola měří prázdno)`,
+    soubory.length >= 15 && polozek > 600, `${soubory.length} kanálů, ${polozek} položek`);
+  pravda('v žádném kanálu nejsou dvě položky se shodným guid',
+    shodnyGuid.length === 0, `${shodnyGuid.length}: ` + shodnyGuid.slice(0, 4).join('; '));
+  pravda('a žádné dvě položky nejsou na pohled stejné (titulek i popis)',
+    nerozlisitelne.length === 0, `${nerozlisitelne.length}: ` + nerozlisitelne.slice(0, 4).join(', '));
+  pravda('a žádný odkaz nevede na stránku, která není',
+    mrtvyOdkaz.length === 0, `${mrtvyOdkaz.length}: ` + mrtvyOdkaz.slice(0, 3).join(', '));
+  pravda(`dražeb a exekucí je v kanálech dost na kontrolu (${drazeb})`, drazeb > 20, `jen ${drazeb}`);
+  pravda('a každá nese termín, aby se dvě různé nepletly',
+    bezTerminu.length === 0, `${bezTerminu.length}: ` + bezTerminu.slice(0, 3).join('; '));
+}
+
 /* ---- 4) datum, řazení a jazyk ---- */
 {
   const d = [...hlavni.matchAll(/<pubDate>([^<]+)<\/pubDate>/g)].map((m) => Date.parse(m[1]));

@@ -18,7 +18,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { souborPro } from './generate-parcel-pages.mjs';
+import { createRequire } from 'node:module';
+import { mapaSouboru, klicNabidky } from './generate-parcel-pages.mjs';
+
+const require_ = createRequire(import.meta.url);
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const WEB = 'https://www.parcelaka.cz';
@@ -26,6 +29,16 @@ const POLOZEK = 50;          // kolik nejnovějších se do kanálu dá
 
 const TYPY = { sale: 'Na prodej', drazba: 'Dražba', exekuce: 'Exekuce',
   obec: 'Záměr obce', majitel: 'Přímo od majitele' };
+
+/* České datum termínu přepisuje TÝŽ modul jako stránka pozemku. Načítá se
+   tady, a ne uvnitř spust(), protože ho potřebuje popisPolozky(); je to
+   čistá definice bez zápisu na disk, takže import nic nerozběhne. */
+const TERMINY = (() => {
+  const okno = {};
+  new Function('window', fs.readFileSync(path.join(ROOT, 'js', 'terminy.js'), 'utf8'))(okno);
+  if (!okno.PK_TERMINY || !okno.PK_TERMINY.zdrojText) throw new Error('js/terminy.js nedalo zdrojText');
+  return okno.PK_TERMINY;
+})();
 
 function esc(s) {
   return String(s == null ? '' : s)
@@ -66,13 +79,34 @@ function popisPolozky(o) {
      parcelu, takže cena za metr vychází nízko sama od sebe a nabídka
      vypadá jako trhák. Ve čtečce není nic, co by to vysvětlilo. */
   if (o.podil) c.push('<b>spoluvlastnický podíl</b> — v ceně je jen zlomek pozemku');
+  /* TERMÍN DRAŽBY. Bez něj vypadaly dvě RŮZNÉ dražby v kanálu úplně
+     stejně: Police nad Metují měla tři parcely po 719 m² za 1 078 500 Kč,
+     lišily se jen datem (15. 10., 22. 10. a 5. 11.) — a titulek i popis
+     byly znak za znak tytéž. Čtenář v tom nemohl poznat dvě příležitosti,
+     jen „zase to samé". Datum do českého tvaru přepisuje TÝŽ modul jako
+     stránka pozemku (js/terminy.js); psát si tu vlastní názvy měsíců by
+     byla třetí kopie, která se jednou rozejde. Naměřeno: datum v `extra`
+     mají všechny dražby a exekuce (166 ze 166). */
+  if ((o.type === 'drazba' || o.type === 'exekuce') && /\d{4}-\d{2}-\d{2}/.test(o.extra || '')) {
+    c.push(esc(TERMINY.zdrojText(o.extra)));
+  }
   return c.join(' · ');
 }
 
-function kanal({ nazev, popis, soubor, odkaz, polozky }) {
+function kanal({ nazev, popis, soubor, odkaz, polozky, stranky }) {
   const ted = rfc822(new Date());
   const radky = polozky.map((o, i) => {
-    const url = `${WEB}/${souborPro(o)}`;
+    /* ODKAZ SE BERE Z TÉŽE MAPY, ZE KTERÉ VZNIKAJÍ STRÁNKY.
+       Dřív tu stálo souborPro(o) — jméno spočítané z klíče (obec,
+       parcela, okres, souřadnice). Na tom klíči se ale nabídky srážejí:
+       generátor stránek proto druhé z nich dává jméno jiné
+       (souborProDalsi), kdežto kanál o tom nevěděl a poslal obě na
+       tutéž adresu. Naměřeno: 16 položek v patnácti kanálech mělo guid
+       shodný s jinou položkou, a šest z nich v jediném kanálu —
+       čtenář klepl na jednu nabídku a dostal stránku jiné: cizí cenu,
+       cizí výměru. Mapa odkazů je TATÁŽ, kterou používá generátor
+       okresních a krajských stránek, takže se rozejít nemůžou. */
+    const url = `${WEB}/${stranky.get(klicNabidky(o)).soubor}`;
     const titul = `${o.place}${o.okres ? ', okres ' + o.okres : ''} — `
       + `${TYPY[o.type] || 'Pozemek'}${o.area > 0 ? ', ' + fmt(o.area) + ' m²' : ''}`;
     return '    <item>\n'
@@ -107,12 +141,34 @@ const slug = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
 
 function spust() {
   const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8'));
-  const vse = (data.opportunities || []).filter((o) => o && o.place && isFinite(o.lat));
+  /* DUPLICITY TOUTÉŽ FUNKCÍ JAKO VŠUDE JINDE.
+     Mapa (js/main.js), stránky pozemků i okresní a krajské stránky
+     odstraňují duplicity přes PKHlidani.bezDuplicit — kanály to dosud
+     nedělaly, protože čtou data/opportunities.json samy. Naměřeno:
+     v sedmi z patnácti kanálů stálo osm nadbytečných položek a u dvou
+     šlo o tutéž nabídku se SHODNÝM guid (Záblatí, 1 258 m², dvakrát
+     tentýž odkaz). Shodný guid je v RSS vada sama pro sebe: čtečka
+     podle něj pozná, co už ukázala, takže jedna z těch dvou položek se
+     prostě zahodí — a místo v kanálu o padesáti položkách propadne.
+     Pravidlo pro duplicity je přitom opatrné: tři dražby v Polici nad
+     Metují mají stejnou výměru i cenu, ale jiný termín, a ty v kanálu
+     ZŮSTANOU (viz tyzPozemek v js/hlidani-logika.js). */
+  const PKH = require_(path.join(ROOT, 'js', 'hlidani-logika.js'));
+  const syrove = (data.opportunities || []).filter((o) => o && o.place && isFinite(o.lat));
+  const vse = PKH.bezDuplicit(syrove);
+  /* Nabídka bez vlastní stránky se do kanálu nedá: nebylo by kam odkázat.
+     Takové jsou ty, které mají shodný klíč I shodnou cenu a výměru —
+     tedy tentýž pozemek podruhé; mapaSouboru jim schválně dělá jednu
+     stránku, aby si dvě adresy pro jednu nabídku nekonkurovaly ve
+     vyhledávači. */
+  const stranky = mapaSouboru(vse);
+  const bezStranky = vse.filter((o) => !stranky.has(klicNabidky(o)));
+  const sStrankou = vse.filter((o) => stranky.has(klicNabidky(o)));
   /* Seřazeno od nejnovějšího. Při shodě dne rozhoduje cena za metr —
      ne proto, že by byla důležitější, ale aby bylo pořadí STÁLÉ: jinak
      by se při každém běhu zamíchalo a čtečky by hlásily staré položky
      jako nové. */
-  const podleStari = vse.slice().sort((a, b) => {
+  const podleStari = sStrankou.slice().sort((a, b) => {
     const d = String(b.first_seen || '').localeCompare(String(a.first_seen || ''));
     if (d) return d;
     const am = a.area > 0 ? a.price / a.area : 0, bm = b.area > 0 ? b.price / b.area : 0;
@@ -132,7 +188,7 @@ function spust() {
     nazev: 'Parcelka — nové pozemky',
     popis: 'Pozemky, které na Parcelce nově přibyly: dražby, exekuce i běžné nabídky z celé ČR.',
     soubor: 'novinky.xml', odkaz: WEB + '/',
-    polozky: podleStari.slice(0, POLOZEK),
+    polozky: podleStari.slice(0, POLOZEK), stranky,
   }));
 
   const kraje = new Map();
@@ -150,12 +206,13 @@ function spust() {
       popis: `Pozemky, které nově přibyly ${CENY.kdeText('kraj', kraj)}.`,
       soubor: `novinky-${slug(kraj)}.xml`,
       odkaz: `${WEB}/pozemky-${slug(kraj)}-kraj.html`,
-      polozky,
+      polozky, stranky,
     }));
   }
   const bajtu = vysledky.reduce((s, x) => s + x.bajtu, 0);
   console.log(`Kanály: ${vysledky.length} souborů, `
-    + `${vysledky[0].polozek} položek v celostátním, dohromady ${(bajtu / 1024).toFixed(1)} kB.`);
+    + `${vysledky[0].polozek} položek v celostátním, dohromady ${(bajtu / 1024).toFixed(1)} kB`
+    + (bezStranky.length ? `; mimo kanály ${bezStranky.length} nabídek bez vlastní stránky` : '') + '.');
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) spust();
