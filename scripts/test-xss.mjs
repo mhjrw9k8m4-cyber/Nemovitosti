@@ -119,11 +119,19 @@ if (LEAFLET) {
    jmenovitě, ne až nesrozumitelnou chybou v konzoli. */
 {
   const bezBranky = [];
+  let ctecu = 0;
   for (const f of readdirSync('.').filter((x) => x.endsWith('.html'))) {
     const t = readFileSync(f, 'utf8');
-    if (!/src="js\/(main|pozemek|centrum)\.js/.test(t)) continue;
+    if (!/src="js\/(?:min\/)?(main|pozemek|centrum)\.js/.test(t)) continue;
+    ctecu++;
     if (!/src="js\/(?:min\/)?cisteni\.js/.test(t)) bezBranky.push(f);
   }
+  /* POČET ČTEČŮ SE TVRDÍ ZVLÁŠŤ. Kdyby se vzor cesty rozešel se
+     skutečností (stalo se: stránky přešly na js/min/, vzor zůstal na
+     js/), tenhle cyklus by každou stránku přeskočil, seznam by zůstal
+     prázdný a kontrola by hlásila „v pořádku" o ničem. */
+  je(`našlo se ${ctecu} stránek, které data o pozemcích čtou (jinak kontrola měří prázdno)`,
+    ctecu > 1000, true);
   je('každá stránka, která čte data o pozemcích, načítá i branku', bezBranky.slice(0, 5), []);
 }
 

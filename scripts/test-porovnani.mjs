@@ -54,7 +54,11 @@ const klic = (d) => [d.place || '', d.parcel || '', d.okres || '',
    odložený, zatímco jeho uživatel ne. */
 {
   const stranky = fs.readdirSync(ROOT).filter((f) => f.endsWith('.html'));
-  const znacka = /<script\s+src="js\/([a-z0-9_-]+)\.js[^"]*"([^>]*)>/g;
+  /* Cesta se hledá v obou podobách: stránky odkazují na očištěné kopie
+     v js/min/. Dřív tu stálo jen js/ — a protože se pak nenašel ani jeden
+     uživatel klíče, celá kontrola pořadí tiše měřila prázdno. Právě na to
+     je tvrzení „našly se stránky, které klíč používají" o řádek níž. */
+  const znacka = /<script\s+src="js\/(?:min\/)?([a-z0-9_-]+)\.js[^"]*"([^>]*)>/g;
   const spatne = [];
   let uzivatelu = 0;
   for (const f of stranky) {
