@@ -209,6 +209,9 @@ jobs:
       - name: Cizí servery proti zásadám soukromí
         run: node scripts/test-cizi-servery.mjs
 
+      - name: Očištěný stylopis odpovídá zdroji
+        run: node scripts/test-minifikace.mjs
+
       - name: Jeden styl (nadpisy a textura z palety)
         run: node scripts/test-jeden-styl.mjs
 
@@ -276,6 +279,9 @@ jobs:
 
       - name: Kontrola fotek (že běží a odkud se bere)
         run: node scripts/test-kontrola-fotek.mjs
+
+      - name: Mobilní menu (jedno místo, funguje všude)
+        run: node scripts/test-menu.mjs
 
       # Potřebuje prohlížeč (playwright-core). V rychlém jobu „testy" se
       # neinstaluje, takže tam krok padal na chybějícím balíčku — a s ním

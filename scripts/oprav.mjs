@@ -34,6 +34,9 @@ const KROKY = [
   // Až po generátorech: česká sazba se dělá na HOTOVÉM textu, ať platí
   // stejně pro ručně psané stránky i pro 1 995 generovaných.
   ['sazba.mjs', 'nezlomitelné mezery (předložky, čísla s jednotkou)'],
+  /* Očištění PŘED razítkem: mění odkazy ve stránkách (styles.css →
+     styles.min.css), takže razítko se musí počítat až z výsledku. */
+  ['minifikace.mjs', 'očištěný stylopis pro prohlížeč'],
   ['orazitkuj-verze.mjs', 'razítka ?v= u skriptů a stylů'],
   ['build-sql.mjs', 'sloučené supabase/00-vse.sql'],
 ];

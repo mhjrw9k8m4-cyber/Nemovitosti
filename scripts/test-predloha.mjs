@@ -45,7 +45,12 @@ const RUCNI = (f) => f.endsWith('.html') &&
    objevila i v mé vlastní vysvětlivce („tahle stránka si NENAČÍTÁ
    css/styles.css"), takže kontrola prohlásila opak toho, co bylo pravda,
    a mlčela. Hledá se tedy skutečný odkaz, ne slovo v textu. */
-const MA_PALETKU = (html) => /<link[^>]+href="[^"]*css\/styles\.css/.test(html);
+/* A POZOR NA JMÉNO SOUBORU. Stránky načítají očištěnou kopii
+   css/styles.min.css (viz scripts/minifikace.mjs), ne zdroj. Když se
+   očištění zavedlo, tahle kontrola hlásila 624 odchylek: podle jména
+   usoudila, že paletku nevidí ŽÁDNÁ stránka. Platí obě jména —
+   rozhoduje, že stránka stylopis vůbec načítá. */
+const MA_PALETKU = (html) => /<link[^>]+href="[^"]*css\/styles(?:\.min)?\.css/.test(html);
 const zdroje = [{ jmeno: 'css/styles.css', css, maPaletku: true }];
 for (const f of readdirSync(ROOT).filter(RUCNI).sort()) {
   const syrove = readFileSync(path.join(ROOT, f), 'utf8');

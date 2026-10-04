@@ -66,7 +66,18 @@ async function projdi(sirka, popisSirky) {
     return LEAFLET ? r.abort() : r.continue();
   });
   await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
-    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';`
+      + 'window.PK_MAIL_ZAPNUTO=true;' }));
+  /* PŘIHLÁŠENÝ. Bez toho se na Upozorněních, Zprávách a Můj profil
+     vykreslí jen výzva „přihlaste se" — a chyba skriptu ve vypisování
+     upozornění, vláken nebo uložených hledání by se nikde neprojevila.
+     Fail-open chování webu ji navíc spolkne: co se nepovede, se tiše
+     vynechá. Totéž se ukázalo u dotykových terčů a u kontrastu. */
+  await ctx.addInitScript(() => {
+    localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok-majitel',
+      refresh_token: 'ref-majitel',
+      user: { id: '11111111-1111-4111-8111-111111111111', email: 'majitel@test.cz' } }));
+  });
   if (LEAFLET) {
     await ctx.route('https://unpkg.com/leaflet@**', (r) => {
       const f = path.join(LEAFLET, path.basename(new URL(r.request().url()).pathname));

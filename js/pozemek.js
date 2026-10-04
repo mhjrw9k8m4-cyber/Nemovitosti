@@ -1660,12 +1660,9 @@
   });
 
   // mobilní menu
-  var toggle = document.querySelector('.nav-toggle'), nav = document.getElementById('nav');
-  if (toggle && nav) {
-    toggle.addEventListener('click', function () {
-      var open = nav.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', String(open));
-      document.body.classList.toggle('nav-open', open);
-    });
-  }
+  /* Mobilní menu má vlastní modul — js/menu.js. Tenhle kód tu byl
+     ve své nejlepší podobě (se zavřením Escapem i klepnutím mimo), ale
+     byl jen jedním ze čtrnácti výskytů v jedenácti různých podobách,
+     a nejrozšířenější z nich (js/pozemek.js, 1 999 stránek) neumělo
+     ani to Escape. Teď je to na jednom místě; hlídá scripts/test-menu.mjs. */
 })(window);

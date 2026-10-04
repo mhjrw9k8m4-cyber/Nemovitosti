@@ -34,7 +34,14 @@ function otisk(rel) {
    NIKDY: nebylo co nahradit. Komentář nahoře přitom tvrdí, že zapomenout
    se to nedá. Dalo: přidal jsem js/naklady.js bez razítka a chytla to až
    zkouška v CI. Otazník s verzí je proto nepovinný a dopíše se sám. */
-const VZOR = /((?:href|src)=")((?:css|js|vendor\/[a-z0-9-]+)\/[A-Za-z0-9_-]+\.(?:css|js))(?:\?v=([A-Za-z0-9]+))?(")/g;
+/* TEČKA VE JMÉNĚ SOUBORU. Vzor dřív požadoval jméno bez tečky
+   ([A-Za-z0-9_-]+), takže css/styles.min.css — soubor, který si
+   prohlížeč opravdu stahuje — se neorazítkoval VŮBEC: staré razítko
+   ze zdroje se jen přepsalo zpátky a nikdo si toho nevšiml. Změna
+   stylu by se pak k lidem s uloženou kopií nedostala, tedy přesně to,
+   proti čemu je tenhle skript. Naměřeno: stránka nesla ?v=c55dcd92
+   (otisk zdroje), obsah odpovídal dcb0a773. */
+const VZOR = /((?:href|src)=")((?:css|js|vendor\/[a-z0-9-]+)\/[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*\.(?:css|js))(?:\?v=([A-Za-z0-9]+))?(")/g;
 
 const stranky = readdirSync(KOREN).filter((f) => f.endsWith('.html'));
 const otisky = new Map();

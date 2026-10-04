@@ -35,7 +35,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=c55dcd92">
+  <link rel="stylesheet" href="css/styles.min.css?v=dcb0a773">
   <style>
     .kt-mail{display:flex; align-items:center; gap:14px; margin:6px 0 4px; padding:16px 16px; background:rgba(126,196,157,0.08); border:1px solid rgba(126,196,157,0.24); border-radius:var(--r-md); text-decoration:none;}
     .kt-mail .kt-ico{flex:none; width:44px; height:44px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; background:var(--plocha-znacka);}
@@ -189,30 +189,7 @@
    říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
    na nasazení u Vercelu. */
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
-<script>
-/* Mobilní menu (hamburger) — statická stránka bez main.js, obsloužíme ho přímo tady. */
-(function () {
-  var toggle = document.querySelector('.nav-toggle');
-  var nav = document.getElementById('nav');
-  if (!toggle || !nav) return;
-  function closeNav() {
-    nav.classList.remove('open');
-    toggle.setAttribute('aria-expanded', 'false');
-    toggle.setAttribute('aria-label', 'Otevřít menu');
-    document.body.classList.remove('nav-open');
-  }
-  toggle.addEventListener('click', function () {
-    var open = nav.classList.toggle('open');
-    toggle.setAttribute('aria-expanded', String(open));
-    toggle.setAttribute('aria-label', open ? 'Zavřít menu' : 'Otevřít menu');
-    document.body.classList.toggle('nav-open', open);
-  });
-  nav.addEventListener('click', function (e) {
-    if (e.target.tagName === 'A' && nav.classList.contains('open')) closeNav();
-  });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNav(); });
-})();
-</script>
+<script src="js/menu.js?v=956bea0c" defer></script>
 
 <script src="js/config.js?v=e197e684" defer></script>
 <script src="js/auth.js?v=9f10c463" defer></script>

@@ -34,7 +34,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=c55dcd92">
+  <link rel="stylesheet" href="css/styles.min.css?v=dcb0a773">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .hl-wrap{max-width:var(--m-uzky); margin:0 auto;}
@@ -277,6 +277,7 @@
   <div class="wrap foot-bottom"><span id="pk-rezim"></span><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
 </footer>
 
+<script src="js/menu.js?v=956bea0c" defer></script>
 <script src="js/cisteni.js?v=c43084f5"></script>
 <script src="js/config.js?v=e197e684"></script>
 <script src="js/auth.js?v=9f10c463"></script>
@@ -1021,26 +1022,6 @@
   if (A && A.keepAlive) { A.keepAlive().then(start, start); } else { start(); }
 })();
 
-/* Mobilní menu (hamburger) — tato stránka nenačítá main.js, obsloužíme ho tady. */
-(function () {
-  var toggle = document.querySelector('.nav-toggle');
-  var nav = document.getElementById('nav');
-  if (!toggle || !nav) return;
-  function closeNav() {
-    nav.classList.remove('open');
-    toggle.setAttribute('aria-expanded', 'false');
-    toggle.setAttribute('aria-label', 'Otevřít menu');
-    document.body.classList.remove('nav-open');
-  }
-  toggle.addEventListener('click', function () {
-    var open = nav.classList.toggle('open');
-    toggle.setAttribute('aria-expanded', String(open));
-    toggle.setAttribute('aria-label', open ? 'Zavřít menu' : 'Otevřít menu');
-    document.body.classList.toggle('nav-open', open);
-  });
-  nav.addEventListener('click', function (e) { if (e.target.tagName === 'A' && nav.classList.contains('open')) closeNav(); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNav(); });
-})();
 </script>
 <script src="js/rezim.js?v=3decd02f" defer></script>
 </body>

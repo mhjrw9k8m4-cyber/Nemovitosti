@@ -41,7 +41,7 @@
        takže se její skript načítá odloženě; styly musí být dřív, jinak
        se mapa na chvíli rozsype. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.css?v=c55dcd92">
+  <link rel="stylesheet" href="css/styles.min.css?v=dcb0a773">
   <link rel="preload" as="fetch" href="data/opportunities.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -529,6 +529,7 @@
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="vendor/leaflet/leaflet.js?v=5a640ff8" defer></script>
+<script src="js/menu.js?v=956bea0c" defer></script>
 <script src="js/mapove-vrstvy.js?v=ef8c5c75" defer></script>
 <script src="js/cisteni.js?v=c43084f5"></script>
 <script src="js/snimek.js?v=be1bb5cb"></script>
@@ -542,7 +543,7 @@
 <script src="js/poznamky.js?v=312edc1e"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Ostatní plocha 4 108 m² — Horní Jiřetín, okres Most","description":"Na prodej · 289 000 Kč (70 Kč/m²) · 4 108 m² · Horní Jiřetín, okres Most. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-most-horni-jiretin-1gq3aaz.html","address":{"@type":"PostalAddress","addressLocality":"Horní Jiřetín","addressRegion":"Most","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.548585,"longitude":13.591623}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Most","item":"https://www.parcelaka.cz/pozemky-okres-most.html"},{"@type":"ListItem","position":4,"name":"Ostatní plocha 4 108 m² — Horní Jiřetín, okres Most","item":"https://www.parcelaka.cz/pozemek-most-horni-jiretin-1gq3aaz.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Horní Jiřetín|—|Most|50.549|13.592","ll":[50.548585,13.591623],"v":4108,"c":289000};</script>
-<script src="js/pozemek.js?v=7f88ca5a"></script>
+<script src="js/pozemek.js?v=8ad77a94"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

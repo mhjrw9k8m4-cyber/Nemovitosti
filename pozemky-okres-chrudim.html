@@ -32,7 +32,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=c55dcd92">
+  <link rel="stylesheet" href="css/styles.min.css?v=dcb0a773">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky v okrese Chrudim","inLanguage":"cs","description":"Nabídky pozemků v okrese Chrudim — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-okres-chrudim.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":24,"itemListElement":[{"@type":"ListItem","position":1,"name":"Rosice — Na prodej, 299 m²"},{"@type":"ListItem","position":2,"name":"Slatiňany — Na prodej, 699 m²"},{"@type":"ListItem","position":3,"name":"Skuteč — Na prodej, 1117 m²"},{"@type":"ListItem","position":4,"name":"Ronov nad Doubravou — Na prodej, 865 m²"},{"@type":"ListItem","position":5,"name":"Lipovec — Na prodej, 1134 m²"},{"@type":"ListItem","position":6,"name":"Chrudim — Na prodej, 907 m²"},{"@type":"ListItem","position":7,"name":"Lipovec — Na prodej, 1258 m²"},{"@type":"ListItem","position":8,"name":"Smrček — Na prodej, 2124 m²"},{"@type":"ListItem","position":9,"name":"Skuteč — Na prodej, 3165 m²"},{"@type":"ListItem","position":10,"name":"Chrast — Na prodej, 1825 m²"},{"@type":"ListItem","position":11,"name":"Proseč — Na prodej, 3539 m²"},{"@type":"ListItem","position":12,"name":"Lipovec — Na prodej, 2750 m²"},{"@type":"ListItem","position":13,"name":"Morašice — Na prodej, 2134 m²"},{"@type":"ListItem","position":14,"name":"Ronov nad Doubravou — Na prodej, 2502 m²"},{"@type":"ListItem","position":15,"name":"Míčov — Na prodej, 3971 m²"},{"@type":"ListItem","position":16,"name":"Načešice — Na prodej, 5172 m²"},{"@type":"ListItem","position":17,"name":"Vrbatův Kostelec — Na prodej, 6750 m²"},{"@type":"ListItem","position":18,"name":"Hluboká — Na prodej, 9302 m²"},{"@type":"ListItem","position":19,"name":"Perálec — Na prodej, 12661 m²"},{"@type":"ListItem","position":20,"name":"Stolany — Na prodej, 11354 m²"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Pardubický kraj","item":"https://www.parcelaka.cz/pozemky-pardubicky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Chrudim","item":"https://www.parcelaka.cz/pozemky-okres-chrudim.html"}]}]
   </script>
@@ -338,7 +338,13 @@
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="js/pridat.js?v=3f864bcd" defer></script>
+<!-- MENU, NE FORMULÁŘ. Tady býval js/pridat.js, tedy 73,4 kB logiky
+     k přidání pozemku — a to jen proto, že v něm byla obsluha mobilního
+     menu. Na téhle stránce žádný takový formulář není. Modul js/menu.js
+     má pod 2 kB a dělá to samé (a lépe: zavírá i Escapem a klepnutím
+     mimo). Stránky okresů a krajů jsou nejčastější vstup z vyhledávače,
+     takže těch 73 kB platil skoro každý návštěvník. -->
+<script src="js/menu.js?v=956bea0c" defer></script>
 <!-- Upozornění v menu: nepřečtené zprávy a nové pozemky z hlídání. Musí
      být i tady: tyhle stránky se generují znovu při každém běhu datového
      robota, takže co není v šabloně, to příští běh smaže — a lidé

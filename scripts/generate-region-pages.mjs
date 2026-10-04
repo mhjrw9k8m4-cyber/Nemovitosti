@@ -38,7 +38,11 @@ function razitko(rel) {
   } catch (e) { return 'v=0'; }
 }
 const V = {
-  css: razitko('css/styles.css'),
+  /* Očištěná kopie, ne zdroj — tu si stahuje prohlížeč
+     (viz scripts/minifikace.mjs). Razítko se musí počítat z TOHO
+     souboru, který se opravdu načítá, jinak se po úpravě stylu
+     nezmění a lidem zůstane v mezipaměti ta stará podoba. */
+  css: razitko('css/styles.min.css'),
   config: razitko('js/config.js'),
   auth: razitko('js/auth.js'),
   hlidani: razitko('js/hlidani-logika.js'),
@@ -47,7 +51,7 @@ const V = {
   hlavicka: razitko('js/hlavicka.js'),
   grafCen: razitko('js/graf-cen.js'),
   rezim: razitko('js/rezim.js'),
-  pridat: razitko('js/pridat.js'),
+  menu: razitko('js/menu.js'),
 };
 /* Práh byl 10 a bez vlastní stránky kvůli tomu zůstávalo DVANÁCT okresů,
    které data mají — mimo jiné Most. Člověk z Mostu klikl na svůj okres
@@ -481,7 +485,7 @@ function head(title, desc, canonicalPath, ld, crumbs, ogSoubor, kanal, kanalNaze
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?${V.css}">
+  <link rel="stylesheet" href="css/styles.min.css?${V.css}">
 ${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\n' : ''}</head>
 <body>
 
@@ -528,7 +532,13 @@ function footer(){
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="js/pridat.js?${V.pridat}" defer></script>
+<!-- MENU, NE FORMULÁŘ. Tady býval js/pridat.js, tedy 73,4 kB logiky
+     k přidání pozemku — a to jen proto, že v něm byla obsluha mobilního
+     menu. Na téhle stránce žádný takový formulář není. Modul js/menu.js
+     má pod 2 kB a dělá to samé (a lépe: zavírá i Escapem a klepnutím
+     mimo). Stránky okresů a krajů jsou nejčastější vstup z vyhledávače,
+     takže těch 73 kB platil skoro každý návštěvník. -->
+<script src="js/menu.js?${V.menu}" defer></script>
 <!-- Upozornění v menu: nepřečtené zprávy a nové pozemky z hlídání. Musí
      být i tady: tyhle stránky se generují znovu při každém běhu datového
      robota, takže co není v šabloně, to příští běh smaže — a lidé

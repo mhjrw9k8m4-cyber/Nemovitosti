@@ -179,39 +179,11 @@
   var FEEDBACK_EMAIL = (typeof window !== 'undefined' && window.PK_FORM_EMAIL) || '';
   // Zpětná vazba i kontakt jdou napřímo na e-mail info@parcelaka.cz (žádný formulář ani databáze).
 
-  /* ---------- Mobilní menu ---------- */
-  var toggle = document.querySelector('.nav-toggle');
-  var nav = document.getElementById('nav');
-  if (toggle && nav) {
-    toggle.addEventListener('click', function () {
-      var open = nav.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', String(open));
-      toggle.setAttribute('aria-label', open ? 'Zavřít menu' : 'Otevřít menu');
-      document.body.classList.toggle('nav-open', open); // ztmaví pozadí (scrim)
-    });
-    nav.addEventListener('click', function (e) {
-      if (e.target.tagName === 'A' && nav.classList.contains('open')) {
-        nav.classList.remove('open');
-        toggle.setAttribute('aria-expanded', 'false');
-        document.body.classList.remove('nav-open');
-      }
-    });
-    // Zavřít menu klepnutím na ztmavené pozadí (mimo panel i mimo tlačítko)
-    function closeNav() {
-      nav.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-      toggle.setAttribute('aria-label', 'Otevřít menu');
-      document.body.classList.remove('nav-open');
-    }
-    document.addEventListener('click', function (e) {
-      if (!nav.classList.contains('open')) return;
-      if (nav.contains(e.target) || toggle.contains(e.target)) return;
-      closeNav();
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && nav.classList.contains('open')) closeNav();
-    });
-  }
+  /* Mobilní menu má vlastní modul — js/menu.js. Tenhle kód tu byl
+     ve své nejlepší podobě (se zavřením Escapem i klepnutím mimo), ale
+     byl jen jedním ze čtrnácti výskytů v jedenácti různých podobách,
+     a nejrozšířenější z nich (js/pozemek.js, 1 999 stránek) neumělo
+     ani to Escape. Teď je to na jednom místě; hlídá scripts/test-menu.mjs. */
 
   /* ---------- Odesílání formulářů (do databáze Supabase) ----------
      Formuláře (hlídání lokality, kontakt, zpětná vazba) ukládají poptávky
