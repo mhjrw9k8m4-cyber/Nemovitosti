@@ -1,58 +1,92 @@
-# Parcelka — plán plné (automatické) verze
+# Parcelka — kde to stojí a co zbývá
 
-Cíl: web, který **sám** publikuje inzeráty, **sám** posílá upozornění na lokalitu
-a **sám** přijímá platby za zvýraznění (299 Kč). Bez ručního zásahu u běžného provozu.
+Cíl zůstává: web, který **sám** publikuje inzeráty, **sám** posílá upozornění na
+lokalitu a **sám** přijímá platby za zvýraznění (299 Kč). Bez ručního zásahu
+u běžného provozu.
 
-## Stack (co na čem poběží)
+Tenhle soubor dřív tvrdil, že není hotová ani první fáze — všech šest odrážek
+bylo nezaškrtnutých, včetně účtů, databáze a samoobsluhy inzerátů, které běží.
+Takový plán je horší než žádný: podle něj se nedá poznat, co ještě chybí.
+Čísla níž jsou proto naměřená, ne odhadnutá.
 
-| Vrstva | Nástroj | Proč | Cena |
-|---|---|---|---|
-| Web (to, co je vidět) | zůstává, jen se přesune na **Vercel** | auto-nasazení z GitHubu, jedno místo pro web i server | zdarma (Hobby) |
-| Server na pozadí | **Vercel Functions** (Node) | platby, publikace, odesílání | zdarma do slušného provozu |
-| Databáze | **Supabase** (Postgres) | inzeráty, přihlášky na hlídání, platby | zdarma do 500 MB |
-| Platby | **Stripe** | karty + Apple/Google Pay, rychlý start | ~1,4 % + 6 Kč z platby |
-| E-maily | **Resend** | potvrzení, upozornění na lokalitu | zdarma do 3000 e-mailů/měs. |
-| Data příležitostí | **GitHub Action** (už běží) | denní stahování z veřejných zdrojů | zdarma |
+## Stav k 4. 10. 2026
 
-Odhad nákladů do rozjezdu: **doména ~300 Kč/rok**, zbytek zdarma dokud není velký
-provoz. Platební poplatky platíte, jen když někdo zaplatí. „Pár tisíc" pokryje
-klidně první rok.
+| Co | Jak to je |
+|---|---|
+| Web | GitHub Pages, vlastní doména. **Přesun na Vercel z původního plánu se neuskutečnil a není potřeba** — Pages web nasazují samy z větve a server na pozadí dělá Supabase. U Vercelu zůstalo vedlejší nasazení, proto se tam zapíná jeho analytika. |
+| Databáze | Supabase, 11 tabulek a 25 funkcí (RPC). Sloučený balík k nahrání je `supabase/00-vse.sql`. |
+| Data příležitostí | 2 018 nabídek (1 852 prodejů, 131 dražeb, 35 exekucí), 1 629 popisů od inzerentů. Stahuje se samo každých 6 hodin (`update-data.yml`). |
+| Stránky | 2 000 vlastních stránek pozemků, 77 okresních, 14 krajských — všechny generované, v `sitemap.xml`. |
+| Zkoušky | 134 souborů, v CI dva úkoly: 62 bez prohlížeče, 68 s prohlížečem. |
 
-## Fáze (v tomto pořadí — každá je funkční celek)
+## Fáze
 
-- [ ] **Fáze 0 — Účty a základ** *(zařizuje majitel, provedu krok za krokem)*
-  - Založit: Vercel, Supabase, Stripe (test režim stačí hned), Resend, doména
-  - Propojit klíče (do Vercelu jako proměnné prostředí)
+- [x] **Fáze 0 — Účty a základ**
+  Supabase, Resend i Stripe jsou založené; klíče k datům (`SUPABASE_URL`,
+  `SUPABASE_SERVICE_ROLE_KEY`, `APIFY_TOKEN`) jsou v tajných proměnných
+  repozitáře a akce s nimi běží.
 
-- [ ] **Fáze 1 — Databáze + přesun na Vercel**
-  - Tabulky: `listings` (inzeráty), `watch_subscriptions` (hlídání), `payments`
-  - Web se načítá z Vercelu, mapa čte publikované inzeráty z databáze
+- [x] **Fáze 1 — Databáze + web na ní**
+  Tabulky `listings`, `watch_subscriptions`, `saved_searches`, `payments`,
+  `messages`, `chat_messages`, `account_tier`, `listing_checks`, `alert_seen`,
+  `mail_nastaveni`, `mail_poslane`. Mapa čte zveřejněné inzeráty z databáze
+  (RPC `public_listings`) a míchá je se stahovanými příležitostmi.
+  *Jediná odrážka, která se nesplnila podle plánu: web neběží na Vercelu.
+  Viz tabulka výš — nebylo proč.*
 
-- [ ] **Fáze 2 — Inzeráty automaticky**
-  - „Přidat pozemek" ukládá do databáze (stav: *čeká na kontrolu*)
-  - Jednoduchá schvalovací stránka pro majitele → po schválení je inzerát hned na mapě
+- [x] **Fáze 2 — Inzeráty automaticky**
+  Vyšlo to **lepší, než plán sliboval**: žádný stav „čeká na kontrolu" a žádná
+  schvalovací stránka. `create_listing` dá inzerát na mapu hned jako „Od
+  majitele" a vrátí tajný token, kterým majitel vidí svůj inzerát, počet
+  zhlédnutí a může ho smazat — bez přihlašování, jako na Bazoši. Fotky
+  kontroluje AI model rovnou v prohlížeči (`docs/kontrola-fotek.md`), denní
+  akce `kontrola-inzeratu.yml` hlídá inzeráty dál.
 
-- [ ] **Fáze 3 — Platby (Stripe) za zvýraznění** ← *výdělek*
-  - Tlačítko „Zvýraznit za 299 Kč" → Stripe Checkout → po zaplacení web **sám**
-    nastaví inzerátu `featured` a pošle potvrzení
-  - (Kód je připravený v `/api`, čeká na klíče a IČO pro ostrý režim)
+- [ ] **Fáze 3 — Platby (Stripe) za zvýraznění** ← *výdělek, ČEKÁ NA MAJITELE*
+  Kód hotový: `api/create-checkout.js`, `api/stripe-webhook.js`, zkouška
+  `scripts/test-platba.mjs`. Ve formuláři je zaškrtávátko „Zvýraznit inzerát
+  299 Kč" a pod ním poctivá věta, že se platba právě spouští a zatím je
+  přidání zdarma.
+  **Co chybí:** IČO pro ostrý režim a klíče Stripe. Do té doby se nic
+  neúčtuje a web to neslibuje.
 
-- [ ] **Fáze 4 — Automatické hlídání lokality**
-  - Denní robot porovná nové příležitosti s přihláškami a **sám** rozešle e-maily
-  - Odhlášení jedním klikem (zákon vyžaduje)
+- [ ] **Fáze 4 — Hlídání lokality e-mailem** ← *ČEKÁ NA MAJITELE*
+  V aplikaci hotové a běží: uložená hledání, odznak s počtem nových,
+  centrum upozornění (`docs/centrum-upozorneni.md`,
+  `docs/hlidani-v-aplikaci.md`).
+  E-mailem hotové v kódu, ale **vypnuté**: `supabase/hlidani-mailem.sql`,
+  `scripts/send-alerts.mjs`, `scripts/mail-sklad.mjs`,
+  `.github/workflows/rozesilani.yml` (denně v 7:35 UTC) a odhlášení jedním
+  klepnutím na `odhlasit-maily.html`. Akce zatím běží **nasucho** — vypíše,
+  co by odeslala, a neodešle nic.
+  **Co chybí, v tomhle pořadí:**
+  1. v Resendu potvrdit doménu odesílatele;
+  2. do tajných proměnných repozitáře dát `RESEND_API_KEY` a `PK_MAIL_FROM`
+     (např. `Parcelka <hlidani@parcelaka.cz>`);
+  3. zkusit to **jednou ručně**: Actions → „Rozeslat upozornění e-mailem" →
+     Run workflow → `opravdu` = true. První běh u každého hledání nic
+     neposílá, jen si zapamatuje, co už je staré — takže se nedá omylem
+     rozeslat dvě stě mailů o nabídkách, které tam byly včera;
+  4. teprve pak v `js/config.js` přepnout `PK_MAIL_ZAPNUTO` na `true`, aby
+     se v aplikaci ukázalo zaškrtávátko „posílat e-mailem".
 
-- [ ] **Fáze 5 — Účty uživatelů** *(volitelné)*
-  - Uložené pozemky napříč zařízeními (přihlášení e-mailem)
+- [x] **Fáze 5 — Účty uživatelů**
+  Přihlášení e-mailem a heslem (`js/auth.js`), uložené pozemky a hledání
+  napříč zařízeními, poznámky, psaní v aplikaci (`docs/psani-v-aplikaci.md`),
+  nastavení účtu (`docs/nastaveni-uctu.md`).
 
 ## Co musí zařídit majitel (nejde to za něj)
 
-1. **IČO / živnostenský list** — nutné pro legální příjem a danění plateb *(zařizuje se)*
-2. **Účty** u Vercel, Supabase, Stripe, Resend (vše zdarma, self-service)
-3. **Doména** (nepovinné hned)
-4. **Kontrola inzerátů** — schválit/zamítnout, ať se na web nedostane spam
-   (web to slibuje: „po naší kontrole")
+1. **IČO / živnostenský list** — bez něj nejde legálně brát a danit platby.
+   Blokuje fázi 3.
+2. **Resend: potvrzená doména odesílatele** + dvě tajné proměnné.
+   Blokuje fázi 4. Postup je o čtyřech krocích výš.
+3. **Klíče Stripe** (test stačí na zkoušku, ostré až s IČO). Blokuje fázi 3.
+
+Nic jiného už na majiteli nevisí: data, stránky, mapa, inzeráty, hlídání
+v aplikaci i kontrola fotek běží samy.
 
 ## Co dělám já
 
-Veškerý kód: databázi, serverové funkce, platební tok, rozesílání upozornění,
-napojení webu. Postupně, po fázích, a vždy ověřím, že to funguje.
+Kód a zkoušky. Každou změnu měřím na skutečných datech a každou pojistku
+zkouším rozbít — kontrola, kterou nejde položit sabotáží, nic nehlídá.
