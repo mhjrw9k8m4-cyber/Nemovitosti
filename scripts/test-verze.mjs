@@ -33,7 +33,7 @@ function otisk(rel) {
   catch (e) { return null; }
 }
 
-const VZOR = /(?:href|src)="((?:css|js)\/[A-Za-z0-9_-]+\.(?:css|js))\?v=([A-Za-z0-9]+)"/g;
+const VZOR = /(?:href|src)="((?:css|js|js\/min)\/[A-Za-z0-9_-]+\.(?:css|js))\?v=([A-Za-z0-9]+)"/g;
 const stranky = readdirSync(KOREN).filter((f) => f.endsWith('.html'));
 pravda('stránky se našly', stranky.length > 50, `jen ${stranky.length}`);
 
@@ -48,7 +48,7 @@ for (const f of stranky) {
   }
   // Odkaz na náš soubor BEZ razítka je stejný problém: prohlížeč si ho
   // může nechat, jak dlouho chce.
-  for (const m of t.matchAll(/(?:href|src)="((?:css|js)\/[A-Za-z0-9_-]+\.(?:css|js))"/g)) {
+  for (const m of t.matchAll(/(?:href|src)="((?:css|js|js\/min)\/[A-Za-z0-9_-]+\.(?:css|js))"/g)) {
     bezRazitka.push(`${f} → ${m[1]}`);
   }
 }

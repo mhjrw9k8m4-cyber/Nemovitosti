@@ -256,11 +256,13 @@ function pravda(popis, vyslo, proc) {
 {
   const main = readFileSync(path.join(ROOT, 'js', 'main.js'), 'utf8');
   const idx = readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-  pravda('index.html načítá js/okruh.js', /<script src="js\/okruh\.js/.test(idx), 'chybí <script>');
+  pravda('index.html načítá js/okruh.js', /<script src="js\/(?:min\/)?okruh\.js/.test(idx), 'chybí <script>');
   /* Pozice se hledají u ZNAČEK, ne kdekoli v souboru: o js/main.js se
      v index.html mluví i v komentáři nad ovládáním mapy a porovnání
      pak padalo na zmínce, ne na pořadí načítání. */
-  const tag = (jm) => idx.indexOf('<script src="' + jm);
+  /* Cesta se hledá v obou podobách: stránky odkazují na očištěné kopie
+     v js/min/, ale ve zdroji repozitáře stojí js/. */
+  const tag = (jm) => idx.search(new RegExp('<script src="js/(?:min/)?' + jm.replace(/^js\//, '').replace(/\./g, '\\.')));
   pravda('a dřív než js/main.js, který ho volá',
     tag('js/okruh.js') >= 0 && tag('js/okruh.js') < tag('js/main.js'),
     `okruh na ${tag('js/okruh.js')}, main na ${tag('js/main.js')}`);

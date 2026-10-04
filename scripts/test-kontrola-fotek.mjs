@@ -53,7 +53,7 @@ const prohlizec = await chromium.launch({
 });
 try {
   const ctx = await prohlizec.newContext();
-  await ctx.route('**/js/config.js*', (r) => r.fulfill({
+  await ctx.route('**/config.js*', (r) => r.fulfill({
     status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';`,
   }));

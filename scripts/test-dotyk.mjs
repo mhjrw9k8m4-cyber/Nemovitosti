@@ -60,7 +60,7 @@ for (const s of STRANKY) {
         body: (await o.text()).replace(/\s+integrity="[^"]*"/g, '') });
     });
   }
-  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';`
       + 'window.PK_MAIL_ZAPNUTO=true;' }));
   /* Přihlášení kvůli uloženým hledáním — bez něj je na hlidani.html jen

@@ -43,7 +43,7 @@ async function otevri(opt) {
     const u = new URL(r.request().url());
     return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();
   });
-  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   if (LEAFLET) {
     await ctx.route('https://unpkg.com/leaflet@**', (r) => {

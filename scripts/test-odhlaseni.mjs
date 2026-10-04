@@ -50,7 +50,7 @@ try {
      — tady by se to měřit nedalo, protože se ten soubor nahrazuje. */
   async function kontext(mailZapnuto, token) {
     const ctx = await prohlizec.newContext();
-    await ctx.route('**/js/config.js*', (r) => r.fulfill({
+    await ctx.route('**/config.js*', (r) => r.fulfill({
       status: 200, contentType: 'text/javascript',
       body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon-klic';`
         + `window.PK_MAIL_ZAPNUTO=${mailZapnuto ? 'true' : 'false'};`,

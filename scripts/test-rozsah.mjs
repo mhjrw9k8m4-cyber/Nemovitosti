@@ -113,7 +113,7 @@ for (const [jm, pole, jedn] of [['cena', DATA.map((d) => d.price), 'kc'],
 {
   const main = readFileSync(path.join(ROOT, 'js', 'main.js'), 'utf8');
   const idx = readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-  pravda('index.html načítá js/rozsah.js', /js\/rozsah\.js/.test(idx));
+  pravda('index.html načítá js/rozsah.js', /js\/(?:min\/)?rozsah\.js/.test(idx));
   pravda('v panelu zůstala políčka od–do (fungují i bez skriptu)',
     /id="map-cena-od"/.test(idx) && /id="map-area-do"/.test(idx));
   pravda('js/main.js staví stupnici ze společného modulu',

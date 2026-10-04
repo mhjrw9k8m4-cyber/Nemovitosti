@@ -149,7 +149,7 @@ const MERENI = `(() => {
 const vse = [];
 for (const s of STRANKY) {
   const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 900 } });
-  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';`
       + 'window.PK_MAIL_ZAPNUTO=true;' }));
   /* PŘIHLÁŠENÝ. Bez toho se na Upozorněních, Zprávách a Hlídání měřila

@@ -29,7 +29,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 
 async function stranka(sirka, prihlasit) {
   const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: 900 } });
-  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   if (prihlasit) await ctx.addInitScript(() => {
     localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok-majitel', refresh_token: 'ref-majitel',

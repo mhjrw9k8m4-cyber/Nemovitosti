@@ -134,7 +134,7 @@ pravda('při tmavém nastavení systému je stránka opravdu tmavá',
   /* PŘIHLÁŠENÝ, jinak se na Upozorněních a Zprávách nevykreslí nic než
      výzva k přihlášení — a odznaky, karty a vlákna, tedy to, co má
      v tmavém režimu vlastní barvy, by se neměřily vůbec. */
-  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   await ctx.addInitScript(() => {
     localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok-majitel',

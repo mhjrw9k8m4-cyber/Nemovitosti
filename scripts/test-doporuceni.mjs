@@ -164,7 +164,7 @@ pravda('stránka pozemku bere blok s odhadem ze sdíleného modulu',
     if (r.request().resourceType() === 'image') return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA });
     return r.abort();
   });
-  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   // Bez Leafletu se seznam vůbec nevykreslí a kontroly níž by mlčky
   // procházely na prázdné stránce — proto ta pojistka „karty se vykreslily".
@@ -209,7 +209,7 @@ pravda('stránka pozemku bere blok s odhadem ze sdíleného modulu',
       if (r.request().resourceType() === 'image') return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA });
       return LEAFLET ? r.abort() : r.continue();
     });
-    await c.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    await c.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
       body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
     if (LEAFLET) {
       const { existsSync } = await import('node:fs');

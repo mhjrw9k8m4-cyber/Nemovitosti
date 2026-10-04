@@ -408,7 +408,7 @@ function pravda(popis, vyslo, proc) {
 {
   const main = readFileSync(path.join(ROOT, 'js', 'main.js'), 'utf8');
   const idx = readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-  pravda('index.html načítá js/dotaz.js', /<script src="js\/dotaz\.js/.test(idx));
+  pravda('index.html načítá js/dotaz.js', /<script src="js\/(?:min\/)?dotaz\.js/.test(idx));
   pravda('web větu rozebírá', /PKDotaz\.rozeber\(syrovy\)/.test(main));
   pravda('a filtruje podle toho, co pochopil', /okDotaz;/.test(main));
   pravda('pochopené části se ukazují jako odznaky', /ms-chipy/.test(idx) && /prekresliChipy/.test(main));

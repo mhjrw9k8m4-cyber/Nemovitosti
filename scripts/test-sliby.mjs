@@ -307,7 +307,7 @@ async function host(inzeraty) {
     if (r.request().resourceType() === 'image') return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA });
     return r.abort();
   });
-  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   if (inzeraty) {
     await ctx.route('**/rest/v1/rpc/public_listings*', (r) => r.fulfill({ status: 200,

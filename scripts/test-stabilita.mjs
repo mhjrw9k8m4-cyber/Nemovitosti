@@ -69,7 +69,7 @@ for (const [sirka, vyska, jmeno] of [[390, 844, 'telefon'], [1280, 900, 'monitor
       }
       return LEAFLET ? r.abort() : r.continue();
     });
-    await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
       body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
     if (LEAFLET) {
       await ctx.route('https://unpkg.com/leaflet@**', (r) => {
@@ -148,7 +148,7 @@ for (const [sirka, vyska, jmeno] of [[390, 844, 'telefon'], [1280, 900, 'monitor
     }
     return LEAFLET ? r.abort() : r.continue();
   });
-  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   if (LEAFLET) {
     await ctx.route('https://unpkg.com/leaflet@**', (r) => {

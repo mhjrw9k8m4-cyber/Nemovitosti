@@ -408,8 +408,21 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
   h = h.replace(/<div id="pz-detail">[\s\S]*?<\/div>/,
     `<div id="pz-detail">${staticky}</div>`);
 
-  // Předání skriptu: která nabídka to je, bez tahání z adresy.
-  h = h.replace(/(<script src="js\/pozemek\.js)/,
+  /* Předání skriptu: která nabídka to je, bez tahání z adresy.
+
+     KOTVA SE HLEDÁ V OBOU PODOBÁCH CESTY. Stránky odkazují na očištěné
+     kopie v js/min/, ale dřív než se očištění zavedlo tu stálo jen
+     js/pozemek.js — a replace(), který nic nenajde, MLČÍ. Výsledek:
+     ostrůvek s window.PK_POZEMEK i strukturovaná data zmizely ze všech
+     1 988 stránek pozemků a generátor hlásil úspěch. Chytily to až
+     test-ukonceno a test-stranky-pozemku; proto se tu teď navíc
+     ověřuje, že se kotva opravdu našla. */
+  const kotvaPozemek = /(<script src="js\/(?:min\/)?pozemek\.js)/;
+  if (!kotvaPozemek.test(h)) {
+    throw new Error(`${soubor}: nenašla se kotva <script src="js/pozemek.js"> `
+      + '— ostrůvek s daty pozemku a strukturovaná data by ve stránce chyběly');
+  }
+  h = h.replace(kotvaPozemek,
     `<script type="application/ld+json">${ld}</scr` + `ipt>\n`
     /* „v" a „c" (výměra a cena) jsou tu kvůli pozemkům, které sdílejí
        klíč: bez nich by stránka toho druhého z dvojice nedokázala ve

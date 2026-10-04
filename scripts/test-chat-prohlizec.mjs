@@ -31,7 +31,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 async function kontext(uid, token) {
   const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 760 } });
   // config.js míří na ostrou Supabase — podstrčíme falešnou.
-  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon-klic';` }));
   await ctx.addInitScript(([u, t]) => {
     localStorage.setItem('pk_auth', JSON.stringify({ access_token: t, refresh_token: t.replace('tok-', 'ref-'), user: { id: u, email: u + '@test.cz' } }));

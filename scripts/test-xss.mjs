@@ -91,7 +91,7 @@ const JED = {
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
-await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
   body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
 await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
   contentType: 'application/json', body: JSON.stringify(JED) }));
@@ -122,7 +122,7 @@ if (LEAFLET) {
   for (const f of readdirSync('.').filter((x) => x.endsWith('.html'))) {
     const t = readFileSync(f, 'utf8');
     if (!/src="js\/(main|pozemek|centrum)\.js/.test(t)) continue;
-    if (!/src="js\/cisteni\.js/.test(t)) bezBranky.push(f);
+    if (!/src="js\/(?:min\/)?cisteni\.js/.test(t)) bezBranky.push(f);
   }
   je('každá stránka, která čte data o pozemcích, načítá i branku', bezBranky.slice(0, 5), []);
 }

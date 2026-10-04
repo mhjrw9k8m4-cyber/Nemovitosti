@@ -54,7 +54,7 @@ const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 const ctx = await prohlizec.newContext({ viewport: { width: 420, height: 900 } });
 let data = STARE;   // co server právě vydává; test to v průběhu přepne
-await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
   body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
 await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
   contentType: 'application/json', body: JSON.stringify(data) }));
@@ -446,7 +446,7 @@ if (smazat) {
    klávesa, po které se nedělo nic. */
 {
   const ctxOdhlaseny = await prohlizec.newContext({ viewport: { width: 420, height: 900 } });
-  await ctxOdhlaseny.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctxOdhlaseny.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   await ctxOdhlaseny.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
     contentType: 'application/json', body: JSON.stringify(data) }));
@@ -525,7 +525,7 @@ if (smazat) {
       area: 1200, price: 400000, lat: 50.03, lng: 15.21, extra: 'inzerát', site: [] },
   ] };
   const ctxX = await prohlizec.newContext({ viewport: { width: 420, height: 900 } });
-  await ctxX.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctxX.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   await ctxX.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
     contentType: 'application/json', body: JSON.stringify(DATA_X) }));
@@ -574,7 +574,7 @@ if (smazat) {
  */
 {
   const ctxU = await prohlizec.newContext({ viewport: { width: 420, height: 900 } });
-  await ctxU.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctxU.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   const pu = await ctxU.newPage();
   await pu.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });

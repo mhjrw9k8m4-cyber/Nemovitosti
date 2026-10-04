@@ -589,7 +589,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   ] };
   const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ', permissions: [] });
-  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
     contentType: 'application/json', body: JSON.stringify(DATA_H) }));
@@ -723,7 +723,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
      ne formulář — a kontrola by měřila ji. */
   const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ', permissions: [] });
-  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   await ctx.addInitScript(() => {
     localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok-majitel',

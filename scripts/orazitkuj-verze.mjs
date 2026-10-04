@@ -41,7 +41,7 @@ function otisk(rel) {
    stylu by se pak k lidem s uloženou kopií nedostala, tedy přesně to,
    proti čemu je tenhle skript. Naměřeno: stránka nesla ?v=c55dcd92
    (otisk zdroje), obsah odpovídal dcb0a773. */
-const VZOR = /((?:href|src)=")((?:css|js|vendor\/[a-z0-9-]+)\/[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*\.(?:css|js))(?:\?v=([A-Za-z0-9]+))?(")/g;
+const VZOR = /((?:href|src)=")((?:css|js|js\/min|vendor\/[a-z0-9-]+)\/[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*\.(?:css|js))(?:\?v=([A-Za-z0-9]+))?(")/g;
 
 const stranky = readdirSync(KOREN).filter((f) => f.endsWith('.html'));
 const otisky = new Map();

@@ -23,7 +23,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ocisti } from './minifikace.mjs';
+import { execFileSync } from 'node:child_process';
+import os from 'node:os';
+import { ocisti, ocistiJs } from './minifikace.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -126,7 +128,131 @@ const usetreno = Buffer.byteLength(zdroj) - Buffer.byteLength(mini);
 pravda('a ušetří to aspoň 100 kB', usetreno > 100 * 1024,
   `ušetřeno jen ${(usetreno / 1024).toFixed(1)} kB`);
 
-console.log('\nOčištěný stylopis');
+/* ==================================================================
+   OČIŠTĚNÉ SKRIPTY (js/min/)
+   ==================================================================
+   Totéž co u stylopisu, jen nebezpečnější: u CSS nejhůř přestane
+   platit pravidlo, u JavaScriptu se změní chování. Dvě pasti:
+
+   1. KOMENTÁŘ JE ODDĚLOVAČ. Stojí-li blokový komentář mezi `typeof`
+      a jménem, dá jeho prosté smazání `typeofy` — platný JavaScript,
+      jen jiný. Proto se blokový komentář nahrazuje mezerou, a jestli
+      obsahuje konec řádku, tak koncem řádku.
+   2. KONEC ŘÁDKU NESE VÝZNAM. Řádkový komentář hned za `return`
+      a hodnota až na dalším řádku znamená, že se vrací undefined:
+      za `return` je konec řádku a doplní se středník. Smazat ten
+      konec řádku by změnilo návratovou hodnotu.
+
+   Nekontroluje se to proti vlastnímu výstupu — to by byla kontrola
+   sebe sebou. Kontroluje se:
+     a) node --check nad každou kopií (cizí parser, ne náš),
+     b) sedm vymyšlených pastí s DOSLOVNĚ ZAPSANÝM očekávaným výstupem,
+     c) že v kopii nezůstal ani jeden komentář,
+     d) že kopie odpovídá zdroji a že na ni stránky odkazují.
+   ================================================================== */
+{
+  const JS = path.join(KOREN, 'js');
+  const MIN = path.join(JS, 'min');
+  const zdroje = fs.readdirSync(JS).filter((f) => f.endsWith('.js'));
+  pravda(`v js/ se našly skripty (${zdroje.length}) — jinak se nic neporovnává`,
+    zdroje.length > 40, `nalezeno ${zdroje.length}`);
+  pravda('js/min/ existuje', fs.existsSync(MIN), 'spusťte node scripts/minifikace.mjs');
+
+  /* b) PASTI. Očekávaný výstup je napsaný ručně, znak po znaku. Kdyby
+     se počítal tou funkcí, co se zkouší, prošlo by cokoli — a opravdu
+     to prošlo: první podoba téhle kontroly srovnávala posloupnost
+     tokenů, kterou si brala ze stejného rozebírače, a tři sabotáže
+     (komentář za nic, konec řádku za mezeru, vzor za dělení) všechny
+     prolezly. */
+  const PASTI = [
+    ['komentář mezi dvěma jmény nesmí jména slepit',
+      'var y = 1; var x = typeof/*c*/y; x;',
+      'var y = 1; var x = typeof y; x;'],
+    ['konec řádku za řádkovým komentářem zůstává (jinak se změní návratová hodnota)',
+      'function f(){ return // c\n 1; }\nf();',
+      'function f(){ return\n 1; }\nf();'],
+    ['apostrof uvnitř vzoru po return nesmí spustit text',
+      "function g(y){ return /it's/.test(y); }\n/* k */ var z = 1; g, z;",
+      "function g(y){ return /it's/.test(y); }\n  var z = 1; g, z;"],
+    ['dělení se nesmí přečíst jako vzor (spolklo by komentář za ním)',
+      'var b=1,c=2,e=3,f=4; var a = b / c; /* x */ var d = e / f; a, d;',
+      'var b=1,c=2,e=3,f=4; var a = b / c;   var d = e / f; a, d;'],
+    ['šablona přes víc řádků se nesahá, i když v ní stojí dvě lomítka',
+      'var t = `r1\n// není komentář\nr2`;\n/* k */ var u = 1; t, u;',
+      'var t = `r1\n// není komentář\nr2`;\n  var u = 1; t, u;'],
+    ['komentář mezi hodnotou a operátorem',
+      'var q = 1; var w = q/*c*/+ 1; w;',
+      'var q = 1; var w = q + 1; w;'],
+    ['blokový komentář s koncem řádku se nahradí koncem řádku',
+      'var i = 1 /* a\nb */ + 2; i;',
+      'var i = 1\n + 2; i;'],
+  ];
+  let spatnePasti = 0;
+  for (const [popis, vstup, cekano] of PASTI) {
+    const vyslo = ocistiJs(vstup);
+    if (vyslo !== cekano) {
+      spatnePasti++;
+      zpravy.push(`  ✕ past: ${popis}\n      čekáno ${JSON.stringify(cekano)}\n      vyšlo  ${JSON.stringify(vyslo)}`);
+      chyb++;
+    }
+  }
+  pravda(`všech ${PASTI.length} pastí na očištění skriptů dopadlo, jak má`, spatnePasti === 0,
+    `${spatnePasti} pastí selhalo (viz výš)`);
+
+  /* a) + c) + d) nad skutečnými soubory. */
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pk-min-'));
+  const chybejici = [], zastarale = [], nerozebrane = [], skomentarem = [];
+  let predB = 0, poB = 0;
+  for (const f of zdroje) {
+    const src = fs.readFileSync(path.join(JS, f), 'utf8');
+    const cil = path.join(MIN, f);
+    if (!fs.existsSync(cil)) { chybejici.push(f); continue; }
+    const kopie = fs.readFileSync(cil, 'utf8');
+    predB += Buffer.byteLength(src); poB += Buffer.byteLength(kopie);
+    if (kopie !== ocistiJs(src)) zastarale.push(f);
+    const t = path.join(tmp, f);
+    fs.writeFileSync(t, kopie);
+    try { execFileSync(process.execPath, ['--check', t], { stdio: 'pipe' }); }
+    catch (e) { nerozebrane.push(f + ': ' + String(e.stderr).split('\n')[1]); }
+    /* Hledá se hrubě, ale bez výjimek: kdyby „//" patřilo do adresy,
+       předchází mu dvojtečka. Naměřeno: v žádné z 51 kopií není ani
+       jedno takové místo, takže výjimka není potřeba. */
+    if (kopie.includes('/*') || /(^|[^:\\`'"])\/\//.test(kopie)) skomentarem.push(f);
+  }
+  fs.rmSync(tmp, { recursive: true, force: true });
+  pravda('každý skript má očištěnou kopii', chybejici.length === 0,
+    `${chybejici.length} chybí: ` + chybejici.slice(0, 3).join(', '));
+  pravda('žádná kopie není zapomenutá po úpravě zdroje', zastarale.length === 0,
+    `${zastarale.length} neodpovídá: ` + zastarale.slice(0, 3).join(', ') + ' — spusťte node scripts/oprav.mjs');
+  pravda('každou kopii přečte node --check (cizí parser, ne náš)', nerozebrane.length === 0,
+    nerozebrane.slice(0, 2).join('; '));
+  pravda('a v žádné kopii nezůstal komentář', skomentarem.length === 0,
+    `${skomentarem.length}: ` + skomentarem.slice(0, 3).join(', '));
+
+  /* Kopie bez zdroje — stránka by stahovala mrtvý kód. */
+  const osirele = fs.existsSync(MIN)
+    ? fs.readdirSync(MIN).filter((f) => f.endsWith('.js') && !zdroje.includes(f)) : [];
+  pravda('a žádná kopie nezbyla po smazaném zdroji', osirele.length === 0,
+    osirele.join(', '));
+
+  /* d) Odkazy. */
+  let naMinJs = 0; const naZdrojJs = [];
+  for (const f of stranky) {
+    const t = fs.readFileSync(path.join(KOREN, f), 'utf8');
+    if (/src="js\/min\//.test(t)) naMinJs++;
+    const bez = t.match(/src="js\/([A-Za-z0-9_-]+)\.js/g) || [];
+    if (bez.length) naZdrojJs.push(`${f} (${bez[0]})`);
+  }
+  pravda(`stránky odkazují na očištěné skripty (${naMinJs})`, naMinJs > 2000, `jen ${naMinJs}`);
+  pravda('a žádná už nestahuje neočištěný zdroj skriptu', naZdrojJs.length === 0,
+    `${naZdrojJs.length}: ` + naZdrojJs.slice(0, 3).join(', '));
+
+  const usetrenoJs = predB - poB;
+  pravda('a ušetří to aspoň 300 kB', usetrenoJs > 300 * 1024,
+    `ušetřeno jen ${(usetrenoJs / 1024).toFixed(1)} kB`);
+}
+
+console.log('\nOčištěný stylopis a skripty');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log(`::error::Očištěný stylopis: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.log(`::error::Očištěný stylopis a skripty: ${chyb} kontrol neprošlo.`); process.exit(1); }

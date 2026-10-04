@@ -73,7 +73,7 @@ for (const f of fs.readdirSync(KOREN)) {
   const s = fs.readFileSync(path.join(KOREN, f), 'utf8');
   if (!/class="[^"]*nav-toggle/.test(s)) continue;
   sPrepinacem++;
-  if (!/<script[^>]+src="js\/menu\.js/.test(s)) bezModulu.push(f);
+  if (!/<script[^>]+src="js\/(?:min\/)?menu\.js/.test(s)) bezModulu.push(f);
 }
 pravda(`stránky s přepínačem se našly (${sPrepinacem})`, sPrepinacem > 100, `jen ${sPrepinacem}`);
 pravda('a každá si načte js/menu.js',
@@ -91,7 +91,7 @@ const prohlizec = await chromium.launch({
 });
 try {
   const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
-  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   const p = await ctx.newPage();
   const chybyJs = [];

@@ -1,0 +1,146 @@
+(function (root, factory) {
+  var api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.PKFotoTema = api;
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  var CESKY = {
+    'packet': 'zabalené zboží', 'plastic bag': 'igelitová taška', 'carton': 'krabice',
+    'refrigerator, icebox': 'lednice', 'rotisserie': 'gril', 'plate': 'talíř',
+    'grocery store, grocery, food market, market': 'obchod', 'butcher shop, meat market': 'řeznictví',
+    'web site, website, internet site, site': 'webová stránka', 'envelope': 'dokument nebo obálka',
+    'screen, CRT screen': 'obrazovka', 'monitor': 'monitor', 'menu': 'jídelní lístek',
+    'military uniform': 'člověk v uniformě', 'suit, suit of clothes': 'člověk v obleku',
+    'jersey, T-shirt, tee shirt': 'oblečení', 'desk': 'psací stůl', 'dining table, board': 'jídelní stůl',
+    'toilet seat': 'záchod', 'bathtub, bathing tub, bath, tub': 'vana', 'cup': 'hrnek',
+    'pizza, pizza pie': 'pizza', 'cheeseburger': 'hamburger', 'laptop, laptop computer': 'notebook',
+    'nipple': 'dudlík nebo obal', 'oil filter': 'strojní součástka', 'hard disc, hard disk, fixed disk': 'elektronika',
+    'mousetrap': 'past', 'cassette': 'kazeta', 'racket, racquet': 'sportovní náčiní',
+    'pill bottle': 'lahvička', 'digital clock': 'hodiny', 'rule, ruler': 'pravítko',
+    'hard disc, hard disk, fixed disk': 'elektronika', 'switch, electric switch, electrical switch': 'vypínač',
+    'wall clock': 'hodiny', 'spotlight, spot': 'světlo', 'hamper': 'koš', 'confectionery, confectionary, candy store': 'cukrárna',
+    'hay': 'seno', 'barn': 'stodola', 'valley, vale': 'údolí', 'lakeside, lakeshore': 'břeh',
+    'alp': 'hory', 'tractor': 'traktor', 'picket fence, paling': 'plot', 'corn': 'kukuřice',
+    'greenhouse, nursery, glasshouse': 'skleník', 'agaric': 'houby', 'daisy': 'kopretiny'
+  };
+
+  var PRAHY = {
+    obrazovka: 25,
+    zamitnout: 35,
+    upozornit: 15,
+    venkuJistota: 5
+  };
+
+  function nazev(predikce) { return (predikce && predikce.trida) || ''; }
+
+  function cesky(trida) { return CESKY[trida] || ''; }
+
+  function vyhodnot(predikce, skupiny) {
+    var detail = { venku: 0, proti: 0, obrazovka: 0, nej: [] };
+    if (!predikce || !predikce.length) return { ok: true, detail: detail };
+    skupiny = skupiny || (typeof PKSkupiny !== 'undefined' ? PKSkupiny : null) ||
+      (typeof require === 'function' ? null : null);
+
+    var OBRAZOVKOVE = ['web site, website, internet site, site', 'screen, CRT screen', 'monitor',
+      'television, television system', 'laptop, laptop computer', 'notebook, notebook computer',
+      'desktop computer', 'hand-held computer, hand-held microcomputer', 'envelope', 'menu',
+      'comic book', 'crossword puzzle, crossword', 'book jacket, dust cover, dust jacket, dust wrapper',
+      'binder, ring-binder', 'cellular telephone, cellular phone, cellphone, cell, mobile phone'];
+
+    for (var i = 0; i < predikce.length; i++) {
+      var p = predikce[i];
+      var skupina = (skupiny && p.index != null) ? skupiny.charAt(p.index) : '.';
+      var j = p.jistota || 0;
+      if (skupina === 'V') detail.venku += j;
+      else if (skupina === 'N') detail.proti += j;
+      if (OBRAZOVKOVE.indexOf(p.trida) !== -1) detail.obrazovka += j;
+      if (detail.nej.length < 3) detail.nej.push({ trida: p.trida, cesky: cesky(p.trida), jistota: Math.round(j), skupina: skupina });
+    }
+    detail.venku = Math.round(detail.venku);
+    detail.proti = Math.round(detail.proti);
+    detail.obrazovka = Math.round(detail.obrazovka);
+
+    var prvniCesky = cesky(nazev(predikce[0]));
+
+    if (detail.obrazovka >= PRAHY.obrazovka && detail.venku < PRAHY.venkuJistota) {
+      return { ok: false, msg: 'vypadá jako snímek obrazovky nebo dokument, ne jako fotka pozemku', detail: detail };
+    }
+    if (detail.proti >= PRAHY.zamitnout && detail.venku < PRAHY.venkuJistota) {
+      return { ok: false, msg: 'nevypadá jako fotka pozemku' + (prvniCesky ? ' — spíš jako ' + prvniCesky : ' (není na ní vidět krajina ani porost)'), detail: detail };
+    }
+    if (detail.proti >= PRAHY.upozornit && detail.venku < 3) {
+      return { ok: true, varovani: 'Jedna fotka možná nezachycuje pozemek' + (prvniCesky ? ' (vypadá jako ' + prvniCesky + ')' : '') + ' — zkontrolujte ji prosím.', detail: detail };
+    }
+    return { ok: true, detail: detail };
+  }
+
+  var _model = null, _stav = 'idle', _slib = null;
+
+  function nactiSkript(src) {
+    return new Promise(function (res, rej) {
+      var s = document.createElement('script'); s.src = src; s.async = true;
+      s.onload = res; s.onerror = function () { rej(new Error('skript')); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function pripravModel(zdrojTf) {
+    if (_stav === 'ready') return Promise.resolve(_model);
+    if (_stav === 'failed') return Promise.resolve(null);
+    if (_slib) return _slib;
+    _stav = 'loading';
+    _slib = Promise.resolve()
+
+      .then(function () { return window.tf ? null : nactiSkript(zdrojTf || 'vendor/tfjs/tf.min.js'); })
+      .then(function () { return window.tf.loadLayersModel('assets/mobilenet/model.json'); })
+      .then(function (m) { _model = m; _stav = 'ready'; return m; })
+      .catch(function () { _stav = 'failed'; return null; });
+    return _slib;
+  }
+
+  function klasifikuj(imgEl, tridy, kolik) {
+    return pripravModel().then(function (m) {
+      if (!m || !window.tf) return [];
+      try {
+        var tf = window.tf;
+        return tf.tidy(function () {
+          var puvodni = tf.browser.fromPixels(imgEl).toFloat();
+          var v = puvodni.shape[0], s = puvodni.shape[1];
+          var vyrezy = [puvodni];
+          var strana = Math.min(v, s);
+          if (strana > 40) {
+            vyrezy.push(tf.slice(puvodni, [Math.round((v - strana) / 2), Math.round((s - strana) / 2), 0], [strana, strana, 3]));
+            var tretina = Math.round(v / 3);
+            if (tretina > 20) vyrezy.push(tf.slice(puvodni, [v - tretina, 0, 0], [tretina, s, 3]));
+          }
+          var vstup = tf.concat(vyrezy.map(function (t) {
+            return tf.image.resizeBilinear(t, [224, 224]).div(127.5).sub(1).expandDims(0);
+          }), 0);
+          var out = m.predict(vstup);
+          if (Array.isArray(out)) out = out[0];
+          var prumer = out.mean(0).dataSync();
+          var poradi = [];
+          for (var i = 0; i < prumer.length; i++) poradi.push(i);
+          poradi.sort(function (a, b) { return prumer[b] - prumer[a]; });
+          return poradi.slice(0, kolik || 6).map(function (i) {
+            return { index: i, trida: (tridy && tridy[i]) || String(i), jistota: prumer[i] * 100 };
+          });
+        });
+      } catch (e) { return []; }
+    });
+  }
+
+  function posud(imgEl, tridy, skupiny) {
+    return klasifikuj(imgEl, tridy, 6).then(function (p) { return vyhodnot(p, skupiny); });
+  }
+
+  return {
+    vyhodnot: vyhodnot,
+    klasifikuj: klasifikuj,
+    posud: posud,
+    pripravModel: pripravModel,
+    PRAHY: PRAHY,
+    cesky: cesky
+  };
+});

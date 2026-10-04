@@ -295,7 +295,9 @@ const bezDia = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
   /* Hledají se SKUTEČNÉ značky <script>, ne jen výskyt názvu — komentář
      v těle stránky, který soubor zmiňuje, by jinak posunul pořadí a test
      by hlásil chybu tam, kde je všechno správně. */
-  const znacka = (jm) => idx.indexOf('<script src="' + jm);
+  /* Cesta se hledá v obou podobách: stránky odkazují na očištěné kopie
+     v js/min/, ale ve zdroji repozitáře stojí js/. */
+  const znacka = (jm) => idx.search(new RegExp('<script src="js/(?:min/)?' + jm.replace(/^js\//, '').replace(/\./g, '\\.')));
   const pH = znacka('js/hledani.js'), pM = znacka('js/main.js');
   pravda('index.html načítá js/hledani.js, a dřív než js/main.js', pH > 0 && pH < pM, pH + ' × ' + pM);
   pravda('js/main.js hledá obec přes společný modul', /HL\.misto \? HL\.misto\(DATA, q\)/.test(main));

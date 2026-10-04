@@ -133,7 +133,7 @@ async function detail(nast) {
     const adresa = r.request().url();
     const u = new URL(adresa);
     if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') {
-      if (/\/js\/config\.js/.test(u.pathname)) {
+      if (/\/js\/(?:min\/)?config\.js/.test(u.pathname)) {
         return r.fulfill({ status: 200, contentType: 'text/javascript',
           body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` });
       }

@@ -220,7 +220,7 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
     /if \(v\.site\.length\) o\.site = v\.site;/.test(robot));
   pravda('web filtruje podle vybavení', /okVybaveni && okCelek/.test(main));
   pravda('a pilulku bez nabídek vůbec neukáže', /p\.el\.hidden = !maSmysl/.test(main));
-  pravda('index.html načítá js/vybaveni.js', /<script src="js\/vybaveni\.js/.test(idx));
+  pravda('index.html načítá js/vybaveni.js', /<script src="js\/(?:min\/)?vybaveni\.js/.test(idx));
   pravda('a stojí u toho, odkud se to bere',
     /Podle toho, co stojí[\s\u00a0]v[\s\u00a0]popisu nabídky/.test(idx),
     'bez téhle věty by to vypadalo, že nabídky bez popisu elektřinu nemají');
@@ -263,7 +263,7 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
      Hledá se proto obojí: spojení obou zdrojů i ta věta o původu. */
   pravda('stránka pozemku to ukazuje jako štítky z obou zdrojů',
     /PKVybaveni\.nazvy\(d\)/.test(poz) && /pz-feat-zdroj/.test(poz));
-  pravda('a stránka pozemku si modul vůbec načítá', /<script src="js\/vybaveni\.js/.test(pozHtml),
+  pravda('a stránka pozemku si modul vůbec načítá', /<script src="js\/(?:min\/)?vybaveni\.js/.test(pozHtml),
     'bez načtení by se řádek tiše nevypsal a nikde by to nezakřičelo');
   /* Schválně se hledá ten VÝPIS, ne jen slovo: „inzerát uvádí" stojí
      i v komentáři nad ním, takže volnější vzorek by přežil i vypnutí

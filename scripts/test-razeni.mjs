@@ -49,7 +49,7 @@ async function otevri(seance) {
     if (r.request().resourceType() === 'image') return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA });
     return LEAFLET ? r.abort() : r.continue();
   });
-  await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   if (LEAFLET) {
     await ctx.route('https://unpkg.com/leaflet@**', (r) => {
