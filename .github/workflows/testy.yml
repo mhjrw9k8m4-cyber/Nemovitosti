@@ -236,6 +236,9 @@ jobs:
       - name: Jeden styl (nadpisy a textura z palety)
         run: node scripts/test-jeden-styl.mjs
 
+      - name: Sliby o datech odpovídají tomu, co web dělá
+        run: node scripts/test-sliby-data.mjs
+
       - name: Rychlý výběr (logika balíčku)
         run: node scripts/test-rychlovyber.mjs
 

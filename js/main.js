@@ -262,9 +262,23 @@
       h: '<p>Parcelka je ve veřejné bétě. Upřímně, jak zacházíme s daty:</p>' +
         '<ul>' +
         '<li><b>E-mail:</b> použijeme jen pro upozornění nebo poptávku, o kterou si sami řeknete. Neprodáváme ho a neposíláme spam — kdykoli se odhlásíte.</li>' +
-        '<li><b>Účet a uložené pozemky:</b> běží zatím jen ve vašem prohlížeči (localStorage). Nic se neodesílá na server.</li>' +
+        /* TAHLE VĚTA BYLA DŘÍV PRAVDA A ZESTÁRLA. Stálo tu „běží zatím jen
+           ve vašem prohlížeči (localStorage), nic se neodesílá na server" —
+           jenže web mezitím dostal účty a hlídání. Změřeno v kódu:
+           js/auth.js volá auth/v1/signup, token, recover i user, a v
+           databázi je devět tabulek (listings, messages, payments,
+           saved_searches, watch_subscriptions, chat_messages, alert_seen,
+           account_tier, listing_checks). Slib o nakládání s cizími
+           osobními údaji musí odpovídat tomu, co web dělá — a tenhle
+           neodpovídal. Rozděleno proto na to, co kde opravdu je. */
+        '<li><b>Bez přihlášení:</b> uložené i skryté pozemky, vaše místo a okruh, nastavení filtrů a vrstev zůstávají jen ve vašem prohlížeči (localStorage). Na server nejdou.</li>' +
+        '<li><b>S účtem:</b> e-mail, hlídaná vyhledávání, vaše inzeráty a zprávy ukládáme na server (Supabase). Ke svým řádkům se dostanete jen vy — hlídá to databáze, ne jen kód stránky.</li>' +
         '<li><b>Data o pozemcích:</b> pocházejí z veřejných zdrojů (dražby, SPÚ, inzeráty, katastr). Nezveřejňujeme osobní údaje vlastníků.</li>' +
-        '<li><b>Provoz:</b> web běží na GitHub Pages. Žádné reklamní ani sledovací skripty třetích stran.</li>' +
+        /* „Žádné sledovací skripty“ tu stalo, zatímco 2 006 stránek
+           načítalo /_vercel/insights/script.js. Na GitHub Pages ten soubor
+           neexistuje, takže vrátí 404 a nic neposbírá — ale slib se nemá
+           opírat o to, že značka shodou okolností nefunguje. */
+        '<li><b>Provoz:</b> web běží na GitHub Pages. Žádná reklama a žádné profilování návštěvníků. Nepoužíváme cookies třetích stran.</li>' +
         '<li><b>Vaše práva (GDPR):</b> e-mail zpracováváme jen na základě vašeho souhlasu (upozornění nebo poptávka). Máte právo na přístup k údajům, jejich opravu i výmaz — napište nám a údaje bez zbytečného odkladu smažeme.</li>' +
         '</ul><p>Dotaz? Napište nám přes <a href="#realitky" data-close>kontaktní formulář</a>.</p>'
     },
