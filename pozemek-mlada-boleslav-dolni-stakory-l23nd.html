@@ -190,6 +190,30 @@
     .pz-cas b{color:var(--text-ondark); font-weight:600;}
     .pz-cas.je-stara{color:var(--c-exekuce-ink);}
     .pz-cta{display:flex; gap:10px; margin:32px 0 0; flex-wrap:wrap;}
+    /* LIŠTA S CENOU A AKCÍ U SPODNÍHO OKRAJE. Jen na úzké obrazovce:
+       na stole jsou hlavní tlačítka vedle obsahu a lišta by jen ubírala
+       místo. Naměřeno na telefonu 390×844: stránka je 3 106 px dlouhá,
+       cena stojí 542 px od začátku a tlačítka až 1 990 px, tedy 2,4
+       obrazovky — tak dlouho není na obrazovce nic, čím jednat.
+       Barvy i tvar jsou z palety, ne vlastní: lišta je kus webu, ne
+       cizí plovoucí prvek. */
+    .pz-lista{position:fixed; left:0; right:0; bottom:0; z-index:40;
+      display:none; align-items:center; gap:12px;
+      padding:10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+      background:rgba(255,255,255,0.96); backdrop-filter:blur(8px);
+      border-top:1px solid var(--line-strong, rgba(20,35,28,0.3));
+      box-shadow:0 -8px 24px -18px rgba(20,35,28,0.5);}
+    .pz-lista[hidden]{display:none;}
+    .pzl-cena{font-weight:800; font-size:17px; white-space:nowrap;}
+    /* Terč pro palec má 48 px, ne 44: je to jediné tlačítko na liště
+       a stojí u spodního okraje, kam se míří nejhůř. */
+    .pzl-akce{flex:1 1 0; min-width:0; height:48px; display:inline-flex;
+      align-items:center; justify-content:center; padding:0 14px;
+      border-radius:var(--r-sm, 10px); font-weight:700; font-size:15px;
+      text-decoration:none; white-space:nowrap; overflow:hidden;
+      text-overflow:ellipsis;
+      background:var(--plocha-znacka, #1F5138); color:#fff;}
+    @media (max-width:760px){ .pz-lista:not([hidden]){display:flex;} }
     .pz-btn{flex:1 1 200px; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; border-radius:var(--r-ovladani); font-weight:700; font-size:15px; text-decoration:none; cursor:pointer; border:1px solid transparent;}
     .pz-btn svg{width:19px; height:19px; stroke-width:1.89; flex:none;}
     .pz-btn.primary{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
@@ -442,7 +466,7 @@
 <script src="js/klic.js?v=805c6c82"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 3 982 m² — Dolní Stakory","description":"Na prodej · 215 000 Kč (54 Kč/m²) · 3 982 m² · Dolní Stakory, okres Mladá Boleslav. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-mlada-boleslav-dolni-stakory-l23nd.html","address":{"@type":"PostalAddress","addressLocality":"Dolní Stakory","addressRegion":"Mladá Boleslav","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.429304,"longitude":14.981668}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Mladá Boleslav","item":"https://www.parcelaka.cz/pozemky-okres-mlada-boleslav.html"},{"@type":"ListItem","position":4,"name":"Orná půda 3 982 m² — Dolní Stakory","item":"https://www.parcelaka.cz/pozemek-mlada-boleslav-dolni-stakory-l23nd.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Dolní Stakory|—|Mladá Boleslav|50.429|14.982","ll":[50.429304,14.981668],"v":3982,"c":215000};</script>
-<script src="js/pozemek.js?v=19d8853c"></script>
+<script src="js/pozemek.js?v=d9bca17d"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
