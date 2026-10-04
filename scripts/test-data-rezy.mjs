@@ -16,6 +16,7 @@
    ================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { slug } from './generate-data-rezy.mjs';
 
@@ -28,8 +29,22 @@ function pravda(popis, vyslo, proc) {
 }
 
 const celek = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8'));
-const vse = celek.opportunities || [];
-pravda(`celek se přečetl (${vse.length} nabídek)`, vse.length > 500, `nabídek ${vse.length}`);
+const syrove = celek.opportunities || [];
+/* ŘEZ JE TO, CO WEB UKAZUJE — tedy celek BEZ duplicit, a odstraněné
+   TOUŽ funkcí jako na mapě. Dokud se tu srovnávalo se syrovým souborem,
+   mluvila kontrola jiným jazykem než stránky: rejstřík tvrdil u Hodonína
+   121 pozemků, stránka 119, a nic to nehlásilo. */
+const PKH = createRequire(import.meta.url)(path.join(ROOT, 'js', 'hlidani-logika.js'));
+const vse = PKH.bezDuplicit(syrove);
+pravda(`celek se přečetl (${syrove.length} nabídek, bez duplicit ${vse.length})`,
+  syrove.length > 500, `nabídek ${syrove.length}`);
+pravda('a duplicity v něm opravdu jsou (jinak kontroly níž nic nerozliší)',
+  syrove.length > vse.length, `syrově ${syrove.length}, bez duplicit ${vse.length}`);
+/* Odstranit se smí jen hrstka. Kdyby pravidlo začalo zahazovat skutečné
+   nabídky, řezy by tichounku zhubly a tahle mez to zastaví. */
+pravda('a odstraní se jich jen hrstka, ne desetina webu',
+  syrove.length - vse.length < syrove.length * 0.05,
+  `odstraněno ${syrove.length - vse.length} z ${syrove.length}`);
 
 const dirOkres = path.join(ROOT, 'data', 'okres');
 pravda('adresář s řezy existuje', fs.existsSync(dirOkres), 'data/okres/ chybí');
@@ -106,6 +121,40 @@ if (fs.existsSync(rejstrikCesta)) {
   pravda('a počty v krajích dávají dohromady celek',
     soucetKraju === vse.filter((o) => o.okres).length,
     `kraje ${soucetKraju}, celek ${vse.length}`);
+  pravda('a rejstřík přiznává, kolik duplicit z celku odpadlo',
+    R.celek && R.celek.pocet === vse.length
+    && R.celek.pocet_v_souboru === syrove.length
+    && R.celek.duplicit === syrove.length - vse.length,
+    `rejstřík: ${JSON.stringify(R.celek)}`);
+}
+
+/* 5b) POČET V ŘEZU SE MUSÍ ROVNAT ČÍSLU NA STRÁNCE OKRESU.
+   Tohle je ta kontrola, která chyběla. Řezy a stránky vznikají ze
+   stejných dat, ale každé svým skriptem — a dokud se nikde nesrovnávaly,
+   mohly si tiše odporovat: u deseti okresů tvrdil řez o jeden až tři
+   pozemky víc než stránka, protože stránka duplicity odstraňuje a řez
+   ne. Číslo na stránce je to, co člověk vidí; číslo v datech je to, co
+   si odnese stroj. Dvě různá čísla pro tutéž věc jsou vada bez ohledu
+   na to, které z nich je „správnější". */
+{
+  const nesedi = [];
+  let zmereno = 0;
+  for (const r of (JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'index.json'), 'utf8')).rezy || [])) {
+    const stranka = path.join(ROOT, `pozemky-okres-${slug(r.nazev)}.html`);
+    if (!fs.existsSync(stranka)) continue;
+    const h = fs.readFileSync(stranka, 'utf8');
+    /* Číslo se bere z věty „… 119 pozemků …" — mezery v něm mohou být
+       nezlomitelné (sazba), tak se odstraní obojí. */
+    const m = /(\d[\d\u00a0\u202f ]*)\s*pozemk/.exec(h);
+    if (!m) continue;
+    zmereno++;
+    const naStrance = parseInt(m[1].replace(/[^\d]/g, ''), 10);
+    if (naStrance !== r.pocet) nesedi.push(`${r.nazev}: stránka ${naStrance}, řez ${r.pocet}`);
+  }
+  pravda(`srovnalo se ${zmereno} okresních stránek s řezy (jinak kontrola měří prázdno)`,
+    zmereno >= 70, `jen ${zmereno}`);
+  pravda('a u každého okresu stojí v datech totéž číslo jako na jeho stránce',
+    nesedi.length === 0, `${nesedi.length}: ` + nesedi.slice(0, 5).join('; '));
 }
 
 /* 6) k čemu to je */

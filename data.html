@@ -83,7 +83,7 @@
       registrace ani domluva — stačí si ho stáhnout. Obnovuje se čtyřikrát denně (0:00, 6:00, 12:00, 18:00 UTC).</p>
     <p class="dt-adresa"><code>https://www.parcelaka.cz/data/opportunities.json</code></p>
     <p class="dt-cisla">Teď je v něm <b>2 018</b> nabídek a má
-      <b>639&nbsp;kB</b>.</p>
+      <b>639&nbsp;kB</b>. Z toho je <b>23</b> duplicit — tentýž pozemek vypsaný dvakrát; web i řezy po okresech je odstraňují, takže na stránkách najdete <b>1 995</b> pozemků.</p>
   </section>
 
   <section class="wrap dt-sekce">
@@ -158,12 +158,17 @@
   <section class="wrap dt-sekce">
     <h2>Jen jeden okres? Nemusíte brát všechno</h2>
     <p class="dt-uvod">Celý soubor má 639&nbsp;kB. Komu jde
-      o jeden okres, tomu stačí jeho řez — a ten má 40&nbsp;kB
+      o jeden okres, tomu stačí jeho řez — a ten má 39&nbsp;kB
       v nejhorším případě.</p>
     <p class="dt-adresa"><code>https://www.parcelaka.cz/data/okres/benesov.json</code></p>
     <ul class="dt-seznam">
       <li><b>Tvar je stejný jako u celku</b> — tatáž hlavička, tatáž pole u nabídky. Navíc je
         tam <code>rez</code> s tím, čí výběr to je, aby se řez nedal splést s celkem.</li>
+      <li><b>Řez je to, co web ukazuje</b>, ne doslovný výřez souboru: duplicity (tentýž
+        pozemek vypsaný dvakrát) jsou odstraněné, a tou samou funkcí, jakou k tomu používá
+        mapa i stránky okresů. Počty v řezech proto odpovídají číslům na stránkách. Kdo chce
+        i duplicity, vezme si celek; kolik jich je, stojí v rozcestníku pod
+        <code>celek.duplicit</code>.</li>
       <li><b>Jméno souboru</b> je okres bez diakritiky a s pomlčkami, stejně jako v adrese
         stránky okresu: <code>praha-vychod.json</code>, <code>ceske-budejovice.json</code>.</li>
       <li><b>Rozcestník</b> <a href="data/index.json">data/index.json</a> vypisuje všechny

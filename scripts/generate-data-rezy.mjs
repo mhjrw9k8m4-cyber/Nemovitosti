@@ -16,6 +16,17 @@
    pole u nabídky (viz data/pole.json). Jediný rozdíl je „rez", kde
    stojí, čí výběr to je — aby se řez nedal splést s celkem.
 
+   ŘEZ JE TO, CO WEB UKAZUJE, NE DOSLOVNÝ VÝŘEZ SOUBORU. Z celku se
+   odstraní duplicity — tentýž pozemek vypsaný dvakrát — a to TOUŽ
+   funkcí, jakou k tomu používá mapa i stránky okresů
+   (js/hlidani-logika.js: bezDuplicit). Dokud se řezy brály doslova,
+   neodpovídaly stránkám: data/okres/hodonin.json a rejstřík tvrdily
+   121 pozemků, kdežto pozemky-okres-hodonin.html 119. Lišilo se to u
+   deseti okresů a u celkového počtu (2 018 proti 1 995). Číslo
+   v publikovaných datech má odpovídat číslu na stránce — jinak si web
+   sám se sebou odporuje a není poznat, které z nich platí.
+   Syrový soubor zůstává k dispozici: data/opportunities.json.
+
    data/index.json je rozcestník: co existuje, kolik to má nabídek
    a jak je to velké. Bez něj by se muselo hádat, jak se soubor okresu
    jmenuje.
@@ -44,14 +55,21 @@ export function slug(s) {
 export async function spust() {
   /* ---- sestavení ---- */
   const celek = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8'));
-  const vse = celek.opportunities || [];
-  if (!vse.length) {
+  const syrove = celek.opportunities || [];
+  if (!syrove.length) {
     console.error('::error::data/opportunities.json je prázdný — řezy by přepsaly dobrá data prázdnem.');
     process.exit(1);
   }
 
   const { createRequire } = await import('node:module');
   const require_ = createRequire(import.meta.url);
+  /* Duplicity odstraňuje TATÁŽ funkce jako na webu — viz hlavička. */
+  const PKH = require_(path.join(ROOT, 'js', 'hlidani-logika.js'));
+  if (!PKH || typeof PKH.bezDuplicit !== 'function') {
+    console.error('::error::js/hlidani-logika.js nedalo bezDuplicit — řezy by nesouhlasily se stránkami');
+    process.exit(1);
+  }
+  const vse = PKH.bezDuplicit(syrove);
   const CENY = (() => {
     require_(path.join(ROOT, 'js', 'ceny.js'));
     return globalThis.PK_CENY;
@@ -142,13 +160,20 @@ export async function spust() {
   rejstrik.celek = {
     soubor: 'data/opportunities.json',
     pocet: vse.length,
+    /* Kolik je v syrovém souboru a kolik z toho jsou duplicity. Bez
+       těchhle dvou čísel by se počet v rejstříku (bez duplicit) nedal
+       srovnat s velikostí souboru, na který ukazuje. */
+    pocet_v_souboru: syrove.length,
+    duplicit: syrove.length - vse.length,
     bajtu: fs.statSync(path.join(ROOT, 'data', 'opportunities.json')).size,
   };
   rejstrik.kraje = kraje;
-  rejstrik.popis = 'Řezy téhož souboru po okresech. Tvar je stejný jako u celku '
-    + '(viz data/pole.json), navíc je tu „rez" s tím, čí výběr to je. Kdo chce jeden okres, '
-    + 'nemusí stahovat celek. Krajské řezy nejsou schválně — kraj je součet svých okresů '
-    + 'a jejich soubory najdete v „kraje".';
+  rejstrik.popis = 'Řezy po okresech. Tvar je stejný jako u celku (viz data/pole.json), '
+    + 'navíc je tu „rez" s tím, čí výběr to je. Kdo chce jeden okres, nemusí stahovat celek. '
+    + 'Z celku jsou odstraněné duplicity (tentýž pozemek vypsaný dvakrát), takže počty tady '
+    + 'odpovídají počtům na stránkách okresů; kolik se odstranilo, stojí v „celek.duplicit". '
+    + 'Syrový soubor je data/opportunities.json. Krajské řezy nejsou schválně — kraj je součet '
+    + 'svých okresů a jejich soubory najdete v „kraje".';
   zapis('data/index.json', rejstrik);
 
   console.log(`Řezy dat: ${podleOkresu.size} okresů (${podleKraje.size} krajů jako soupis)`

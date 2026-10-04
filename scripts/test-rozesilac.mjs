@@ -23,9 +23,13 @@ import http from 'node:http';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { mapaSouboru, klicNabidky, souborPro } from './generate-parcel-pages.mjs';
+import { createRequire } from 'node:module';
 import * as sklad from './mail-sklad.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+/* Odstranění duplicit TOUŽ funkcí, jakou používá rozesílač. */
+const PKH_T = createRequire(import.meta.url)(path.join(ROOT, 'js', 'hlidani-logika.js'));
 let ok = 0, chyb = 0;
 const zpravy = [];
 function pravda(popis, vyslo, proc) {
@@ -233,6 +237,54 @@ try {
     stav.zapsano.length === 1 && (stav.zapsano[0].p_klice || []).length === 1,
     `zapsáno klíčů ${(stav.zapsano[0] && stav.zapsano[0].p_klice || []).length}`);
 
+  /* cb) ODKAZ MUSÍ VÉST NA TU NABÍDKU, O KTERÉ E-MAIL MLUVÍ.
+     Jméno stránky se dřív počítalo přes souborPro(), tedy z klíče (obec,
+     parcela, okres, souřadnice). Na tom klíči se nabídky srážejí a
+     generátor stránek druhé z nich dává jméno jiné — rozesílač o tom
+     nevěděl, takže by poslal člověka na stránku JINÉHO pozemku: cizí
+     cenu, cizí výměru. Táž vada byla v kanálech novinek; v e-mailu je
+     horší, protože se nedá vzít zpátky.
+     Měří se to z textové podoby e-mailu: pod každou nabídkou stojí řádek
+     s cenou a výměrou a pod ním její adresa. Stránka na té adrese nese
+     v ostrůvku window.PK_POZEMEK svou cenu a výměru — a ty se musí
+     rovnat. Dvě různá čísla znamenají odkaz na cizí pozemek. */
+  function zkontrolujOdkazy(kde) {
+    const text = String((stav.poslano[0] || {}).text || '');
+    const radky = text.split('\n');
+    const pary = [];
+    for (let i = 0; i < radky.length; i++) {
+      const u = /https:\/\/www\.parcelaka\.cz\/(pozemek-[A-Za-z0-9-]+\.html)/.exec(radky[i]);
+      if (!u) continue;
+      /* Detailní řádek je ten nad adresou; čísla se z něj vytáhnou bez
+         mezer (v sazbě jsou nezlomitelné). */
+      const cisla = (radky[i - 1] || '').match(/\d[\d\u00a0\u202f ]*/g) || [];
+      pary.push({ soubor: u[1], cisla: cisla.map((x) => parseInt(x.replace(/[^\d]/g, ''), 10)) });
+    }
+    pravda(`${kde}: našly se odkazy na stránky pozemků (${pary.length})`,
+      pary.length >= 1, 'žádný odkaz — kontrola níž by neměla co měřit');
+    const spatne = [];
+    for (const par of pary) {
+      const cesta = path.join(ROOT, par.soubor);
+      if (!fs.existsSync(cesta)) { spatne.push(`${par.soubor}: stránka neexistuje`); continue; }
+      const h = fs.readFileSync(cesta, 'utf8');
+      const m2 = /window\.PK_POZEMEK=(\{[^<]*?\});/.exec(h);
+      if (!m2) { spatne.push(`${par.soubor}: ve stránce není ostrůvek s daty pozemku`); continue; }
+      let ostrov = null;
+      try { ostrov = JSON.parse(m2[1]); } catch (e) { spatne.push(`${par.soubor}: ostrůvek není JSON`); continue; }
+      /* Cena i výměra z ostrůvku musí stát v řádku e-mailu. */
+      for (const [jmeno, hodnota] of [['výměra', ostrov.v], ['cena', ostrov.c]]) {
+        if (!(hodnota > 0)) continue;
+        if (!par.cisla.includes(hodnota)) {
+          spatne.push(`${par.soubor}: ${jmeno} stránky ${hodnota} není v řádku e-mailu (${par.cisla.join(', ')})`);
+        }
+      }
+    }
+    pravda(`${kde}: a každý odkaz vede na stránku TOHO pozemku (cena i výměra sedí)`,
+      spatne.length === 0, spatne.slice(0, 3).join('; '));
+    return pary.length;
+  }
+  zkontrolujOdkazy('jedna novinka');
+
   /* cc) VÍC NOVINEK, NEŽ SE DO E-MAILU VEJDE. Bez téhle dvojice by
          kontrola „zapíše se jen to, co v e-mailu stálo" procházela i
          rozbitá: při jediné novince je „prvních osm" totéž jako „všechno".
@@ -260,6 +312,56 @@ try {
   pravda('a řekne, kolik jich zbývá (číslo si nepočítám po svém — jen musí být)',
     /a dalších (\d+)\./.test(telo) && parseInt(RegExp.$1, 10) >= 1,
     telo.slice(-400));
+  /* A na všech osmi odkazech znovu totéž: na jedné novince se odkaz na
+     cizí pozemek nemusí projevit, protože srážejí se jen některé klíče. */
+  zkontrolujOdkazy('osm novinek');
+
+  /* cd) A TEĎ NA NABÍDCE, KTERÁ SE O JMÉNO STRÁNKY SRÁŽÍ S JINOU.
+     Předchozí kontrola odkazů je pravdivá, ale sama by vadu NENAŠLA:
+     mezi osmi náhodnými novinkami se srážející nabídka nemusí objevit,
+     a pak projde i rozesílač, který jméno počítá přes souborPro().
+     Ověřeno sabotáží — s vráceným souborPro() prošlo všech 48 kontrol.
+     Proto se tady ta nabídka vybere adresně: je to ta, u které se jméno
+     z mapy a jméno ze souborPro() liší. Naměřeno: takových nabídek je 37
+     a jejich stránky VŠECHNY existují, takže špatný odkaz nevrací 404 —
+     ukáže cizí pozemek a nic to nenapoví. */
+  {
+    const vseData = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
+    const ciste = PKH_T.bezDuplicit(vseData);
+    const MAPA = mapaSouboru(ciste);
+    const srazejici = ciste.filter((d) => {
+      if (d.okres !== radek.okres) return false;
+      const z = MAPA.get(klicNabidky(d));
+      if (!z) return false;
+      let sp = null; try { sp = souborPro(d); } catch (e) { return false; }
+      return sp && sp !== z.soubor;
+    });
+    pravda(`v okrese ${radek.okres} je nabídka, která se o jméno stránky sráží (${srazejici.length})`,
+      srazejici.length >= 1,
+      'žádná — kontrola odkazu níž by nebyla rozhodující; vyberte okres, kde taková je');
+    if (srazejici.length) {
+      const cil = srazejici[0];
+      /* Zapomene se PRÁVĚ jeho klíč (končí na |cena|výměra), takže
+         novinka bude jedna a určitě ta naše. */
+      const konec = `|${cil.price || ''}|${cil.area || ''}`;
+      stav.poslano = []; stav.zapsano = [];
+      stav.poslaneKlice = prvniKlice.filter((k) => !String(k).endsWith(konec));
+      pravda('a nějaký jeho klíč se v datech opravdu našel',
+        stav.poslaneKlice.length < prvniKlice.length,
+        `zapomenuto ${prvniKlice.length - stav.poslaneKlice.length} klíčů`);
+      v = await spust(['--opravdu'], { RESEND_API_KEY: 'k', PK_MAIL_FROM: 'a@b.cz' });
+      pravda('e-mail o té nabídce odejde', stav.poslano.length === 1,
+        `odesláno ${stav.poslano.length}; ` + v.vystup.slice(-200));
+      const telo2 = String((stav.poslano[0] || {}).text || '');
+      const spravna = MAPA.get(klicNabidky(cil)).soubor;
+      let spatna = null; try { spatna = souborPro(cil); } catch (e) {}
+      pravda('a vede na stránku z mapy jmen, ne na tu ze souborPro()',
+        telo2.indexOf(spravna) !== -1 && (!spatna || telo2.indexOf(spatna) === -1),
+        `čekáno „${spravna}", nesmí tam být „${spatna}"; v e-mailu: `
+        + (telo2.match(/pozemek-[A-Za-z0-9-]+\.html/g) || []).join(', '));
+      zkontrolujOdkazy('srážející se nabídka');
+    }
+  }
 
   /* d) NASUCHO: tytéž podmínky, ale bez --opravdu — a nic neodejde. */
   stav.poslano = []; stav.zapsano = [];

@@ -16,6 +16,17 @@ export function spust() {
   const popis = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'pole.json'), 'utf8'));
   const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8'));
   const nabidek = (data.opportunities || []).length;
+  /* KOLIK Z TOHO JSOU DUPLICITY. Bez tohohle čísla si stránka
+     odporovala sama se zbytkem webu: tady stálo „2 018 nabídek",
+     kdežto stránka okresu Hodonín 119 a řez 121. Číslo se nepočítá
+     tady podruhé — bere se z rozcestníku, který ho zapisuje generátor
+     řezů (data/index.json → celek.duplicit). */
+  const duplicit = (() => {
+    try {
+      const R = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'index.json'), 'utf8'));
+      return (R.celek && R.celek.duplicit) || 0;
+    } catch (e) { return 0; }
+  })();
   const velikost = fs.statSync(path.join(ROOT, 'data', 'opportunities.json')).size;
 
   const radek = (jmeno, d, vzdy) =>
@@ -68,7 +79,9 @@ export function spust() {
       registrace ani domluva — stačí si ho stáhnout. Obnovuje se ${esc(popis.obnova)}.</p>
     <p class="dt-adresa"><code>https://www.parcelaka.cz/${esc(popis.soubor)}</code></p>
     <p class="dt-cisla">Teď je v něm <b>${fmt(nabidek)}</b> nabídek a má
-      <b>${(velikost / 1024).toFixed(0)}&nbsp;kB</b>.</p>
+      <b>${(velikost / 1024).toFixed(0)}&nbsp;kB</b>.${duplicit ? ` Z toho je <b>${fmt(duplicit)}</b>`
+      + ' duplicit — tentýž pozemek vypsaný dvakrát; web i řezy po okresech je odstraňují,'
+      + ` takže na stránkách najdete <b>${fmt(nabidek - duplicit)}</b> pozemků.` : ''}</p>
   </section>
 
   <section class="wrap dt-sekce">
@@ -128,6 +141,11 @@ ${pole}
     <ul class="dt-seznam">
       <li><b>Tvar je stejný jako u celku</b> — tatáž hlavička, tatáž pole u nabídky. Navíc je
         tam <code>rez</code> s tím, čí výběr to je, aby se řez nedal splést s celkem.</li>
+      <li><b>Řez je to, co web ukazuje</b>, ne doslovný výřez souboru: duplicity (tentýž
+        pozemek vypsaný dvakrát) jsou odstraněné, a tou samou funkcí, jakou k tomu používá
+        mapa i stránky okresů. Počty v řezech proto odpovídají číslům na stránkách. Kdo chce
+        i duplicity, vezme si celek; kolik jich je, stojí v rozcestníku pod
+        <code>celek.duplicit</code>.</li>
       <li><b>Jméno souboru</b> je okres bez diakritiky a s pomlčkami, stejně jako v adrese
         stránky okresu: <code>praha-vychod.json</code>, <code>ceske-budejovice.json</code>.</li>
       <li><b>Rozcestník</b> <a href="data/index.json">data/index.json</a> vypisuje všechny

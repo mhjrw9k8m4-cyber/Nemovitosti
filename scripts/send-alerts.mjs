@@ -37,7 +37,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { souborPro } from './generate-parcel-pages.mjs';
+import { mapaSouboru, klicNabidky } from './generate-parcel-pages.mjs';
 import * as sklad from './mail-sklad.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -112,9 +112,29 @@ async function main() {
      že se při přejmenování nic nepozná: skript by tiše rozesílal nic. */
   const data = Array.isArray(soubor) ? soubor : (soubor.opportunities || []);
   if (!data.length) { console.error('::error::v datech není jediná nabídka — nic se nerozesílá'); process.exit(1); }
-  /* Jméno vlastní stránky se dopočítá tady, jednou pro všechny: e-mail
-     odkazuje na tutéž adresu jako kanál novinek a vyhledávač. */
-  for (const d of data) { try { d.soubor = souborPro(d); } catch (e) { d.soubor = null; } }
+  /* ODKAZ SE BERE Z TÉŽE MAPY, ZE KTERÉ VZNIKAJÍ STRÁNKY.
+     Dřív tu stálo souborPro(d) — jméno spočítané z klíče (obec, parcela,
+     okres, souřadnice). Na tom klíči se ale nabídky srážejí: generátor
+     stránek proto druhé z nich dává jméno jiné (souborProDalsi), kdežto
+     tenhle skript o tom nevěděl a poslal by člověka na stránku JINÉHO
+     pozemku — cizí cenu, cizí výměru, v e-mailu, který si nikdo nevyžádal
+     dvakrát. Táž vada byla v kanálech novinek a našla se při jejich
+     opravě; tady by byla horší, protože e-mail se nedá vzít zpátky.
+
+     Duplicity se zahodí hned: tentýž pozemek vypsaný dvakrát nemá chodit
+     jako dvě upozornění a nemá ani počítat dvakrát do srovnání. Je to
+     táž funkce jako na mapě (js/hlidani-logika.js).
+
+     Nabídka bez vlastní stránky se do e-mailu nedá — nebylo by kam
+     odkázat — a filtr o pár řádků níž ji odsud vyhodí. */
+  const bezDuplicit = PKH.bezDuplicit(data);
+  const STRANKY = mapaSouboru(bezDuplicit);
+  for (const d of bezDuplicit) {
+    const zapis = STRANKY.get(klicNabidky(d));
+    d.soubor = zapis ? zapis.soubor : null;
+  }
+  const bezStranky = bezDuplicit.filter((d) => !d.soubor).length;
+  if (bezStranky) log(`${bezStranky} nabídek nemá vlastní stránku — do e-mailu nejdou`);
 
   if (!SERVICE_KEY) {
     log('SUPABASE_SERVICE_ROLE_KEY není nastavený — není z čeho číst uložená hledání. Nic se nedělá.');
@@ -151,7 +171,7 @@ async function main() {
       let poslaneUz;
       try { poslaneUz = await poslaneKlice(h.hledani_id); } catch (e) { chyb++; log('  ! ' + e.message); continue; }
       const hledani = { ...h, seen_keys: poslaneUz };
-      const nove = PKH.noveProHledani(hledani, data).filter((d) => d.soubor);
+      const nove = PKH.noveProHledani(hledani, bezDuplicit).filter((d) => d.soubor);
       /* PRVNÍ BĚH: zapíše se stav a nic se neposílá. */
       if (!poslaneUz.length && !h.mail_odeslano_at) {
         const klice = data.filter((d) => PKH.matches(hledani, d)).map((d) => PKH.keyOf(d));
