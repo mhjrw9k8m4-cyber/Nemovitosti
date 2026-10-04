@@ -235,6 +235,51 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
   if (zle) process.exit(1);
 }
 
+/* ---- ZKOUŠKA SI NESMÍ SPUSTIT TO, CO ZKOUŠÍ ------------------------
+ *
+ * scripts/test-data-rezy.mjs si z generátoru řezů bralo jen slug().
+ * Jenže ten generátor měl práci na nejvyšší úrovni modulu, takže ji
+ * prostý `import` SPUSTIL: zkouška si řezy přestavěla a teprve pak je
+ * kontrolovala. Všechny čtyři sabotáže prošly — kontrola si je sama
+ * spravila dřív, než se podívala. Tohle je ta nejnepříjemnější podoba
+ * nefunkční zkoušky: svítí zeleně a nehlídá nic.
+ *
+ * Pravidlo: kdo z build skriptu importuje, ten skript musí mít svou
+ * práci pod stráží `if (import.meta.url === …)`. Kontroluje se jen
+ * u skriptů, které si nějaká zkouška opravdu importuje — stráž sama
+ * o sobě povinná není.
+ *
+ * A JEN U TĚCH, KTERÉ NĚCO ZAPISUJÍ. Napoprvé tu stálo „chybí stráž"
+ * na pěti dvojicích, a byly to samé knihovny bez vlastní práce
+ * (okres-podle-gps.mjs, json-do-stranky.mjs, mail-sklad.mjs — jen
+ * exporty, nic se při importu nestane). Takové hlášení by se naučilo
+ * přeskakovat a s ním i to pravé. Nebezpečný je modul, který při
+ * importu SÁHNE NA DISK; pozná se podle writeFileSync/mkdirSync.
+ */
+{
+  const testy = fs.readdirSync('scripts').filter((f) => /^test-[a-z0-9-]+\.mjs$/.test(f));
+  const bezStraze = [];
+  let dvojic = 0;
+  for (const t of testy) {
+    const zdroj = fs.readFileSync(path.join('scripts', t), 'utf8');
+    for (const m of zdroj.matchAll(/from\s+'\.\/([a-z0-9-]+\.mjs)'/g)) {
+      const cil = m[1];
+      if (/^test-/.test(cil) || !fs.existsSync(path.join('scripts', cil))) continue;
+      dvojic++;
+      const kod = fs.readFileSync(path.join('scripts', cil), 'utf8');
+      const zapisuje = /\b(?:writeFileSync|mkdirSync|rmSync|unlinkSync)\s*\(/.test(kod);
+      if (zapisuje && !/import\.meta\.url === /.test(kod)) bezStraze.push(`${t} → ${cil}`);
+    }
+  }
+  console.log(`Importy mezi skripty: ${dvojic} dvojic zkouška → skript`
+    + (bezStraze.length ? '' : ', žádný se importem nespustí.'));
+  if (bezStraze.length) {
+    console.error('::error::Zkouška importuje skript, který se importem SPUSTÍ '
+      + '(chybí stráž if (import.meta.url === …)): ' + bezStraze.join(', '));
+    process.exit(1);
+  }
+}
+
 /* ------------------------------------------------------------------
    WEB SMÍ RADIT JEDINÝ SQL SOUBOR
    ------------------------------------------------------------------

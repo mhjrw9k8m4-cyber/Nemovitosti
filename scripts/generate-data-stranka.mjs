@@ -28,6 +28,16 @@ export function spust() {
   const hlava = Object.entries(popis.hlava).map(([k, v]) => radek(k, v)).join('\n');
   const pole = Object.entries(popis.pole).map(([k, v]) => radek(k, v, true)).join('\n');
 
+  /* Čísla se berou z disku, ne z hlavy: stránka nemá tvrdit „10 kB",
+     když řez vyroste. Rozcestník staví scripts/generate-data-rezy.mjs
+     a běží v řetězci před touhle stránkou. */
+  const velikostCelku = fs.statSync(path.join(ROOT, 'data', 'opportunities.json')).size;
+  let nejvetsiRez = 0;
+  try {
+    const R = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'index.json'), 'utf8'));
+    nejvetsiRez = Math.max(...(R.rezy || []).map((r) => r.bajtu || 0), 0);
+  } catch (e) { nejvetsiRez = 0; }
+
   const sablona = fs.readFileSync(path.join(ROOT, 'moje-data.html'), 'utf8');
   const hlavicka = sablona.slice(0, sablona.indexOf('</header>') + '</header>'.length)
     .replace(/<title>[^<]*<\/title>/, '<title>Data Parcelky | Parcelka</title>')
@@ -107,6 +117,29 @@ ${pole}
         <a href="novinky-jihomoravsky.xml">novinky-jihomoravsky.xml</a></li>
       <li><a href="sitemap.xml">sitemap.xml</a> — všechny stránky webu</li>
     </ul>
+  </section>
+
+  <section class="wrap dt-sekce">
+    <h2>Jen jeden okres? Nemusíte brát všechno</h2>
+    <p class="dt-uvod">Celý soubor má ${fmt(Math.round(velikostCelku / 1024))}&nbsp;kB. Komu jde
+      o jeden okres, tomu stačí jeho řez — a ten má ${fmt(Math.round(nejvetsiRez / 1024))}&nbsp;kB
+      v nejhorším případě.</p>
+    <p class="dt-adresa"><code>https://www.parcelaka.cz/data/okres/benesov.json</code></p>
+    <ul class="dt-seznam">
+      <li><b>Tvar je stejný jako u celku</b> — tatáž hlavička, tatáž pole u nabídky. Navíc je
+        tam <code>rez</code> s tím, čí výběr to je, aby se řez nedal splést s celkem.</li>
+      <li><b>Jméno souboru</b> je okres bez diakritiky a s pomlčkami, stejně jako v adrese
+        stránky okresu: <code>praha-vychod.json</code>, <code>ceske-budejovice.json</code>.</li>
+      <li><b>Rozcestník</b> <a href="data/index.json">data/index.json</a> vypisuje všechny
+        řezy s počtem nabídek a velikostí — není potřeba jména hádat.</li>
+      <li><b>Krajské řezy schválně nejsou.</b> Kraj je součet svých okresů, takže by to byla
+        druhá kopie týchž dat při každé ze čtyř denních obnov. Které okresy do kterého kraje
+        patří, stojí v rozcestníku pod <code>kraje</code>.</li>
+      <li><b>Okres bez nabídek</b> má řez taky — prázdný. Vrátit 404 by znamenalo, že si
+        každý musí ošetřit rozdíl mezi „nic tam není" a „spletl jsem adresu".</li>
+    </ul>
+    <p class="dt-pozn">Je to obyčejný soubor na obyčejném serveru: cachovatelný, bez klíče,
+      bez limitu dotazů a bez aplikační vrstvy, která by mohla spadnout.</p>
   </section>
 
   <section class="wrap dt-sekce">

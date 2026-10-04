@@ -212,6 +212,9 @@ jobs:
       - name: Očištěný stylopis odpovídá zdroji
         run: node scripts/test-minifikace.mjs
 
+      - name: Řezy dat dávají dohromady celek
+        run: node scripts/test-data-rezy.mjs
+
       - name: Jeden styl (nadpisy a textura z palety)
         run: node scripts/test-jeden-styl.mjs
 
