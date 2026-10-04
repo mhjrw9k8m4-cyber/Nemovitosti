@@ -9,14 +9,15 @@
   <title>Pozemek 16 430 m² — Mnichovice, okres Praha-východ | Parcelka</title>
   <meta name="description" content="Na prodej · 1 643 000 Kč (100 Kč/m²) · 16 430 m² · Mnichovice, okres Praha-východ. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
   <meta name="theme-color" content="#FBFAF8">
-  <meta name="robots" content="noindex,follow">
+  <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://www.parcelaka.cz/pozemek-praha-vychod-mnichovice-1nzd9l3.html">
+  <link rel="alternate" type="application/rss+xml" title="Parcelka — nové pozemky" href="novinky.xml">
   <meta property="og:type" content="article">
-  <meta property="og:url" content="https://www.parcelaka.cz/pozemek-praha-vychod-mnichovice-1nzd9l3.html">
   <meta property="og:title" content="Pozemek 16 430 m² — Mnichovice, okres Praha-východ">
   <meta property="og:description" content="Na prodej · 1 643 000 Kč (100 Kč/m²) · 16 430 m² · Mnichovice, okres Praha-východ. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
   <meta property="og:locale" content="cs_CZ">
   <meta property="og:site_name" content="Parcelka">
+  <meta property="og:url" content="https://www.parcelaka.cz/pozemek-praha-vychod-mnichovice-1nzd9l3.html">
   <meta property="og:image" content="https://www.parcelaka.cz/assets/og/okres-praha-vychod.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -55,7 +56,7 @@
     .pz-media .opp-badge::before{content:""; width:8px; height:8px; border-radius:50%; flex:none;}
     .opp-badge.sale::before{background:var(--c-sale);} .opp-badge.drazba::before{background:var(--c-drazba);} .opp-badge.exekuce::before{background:var(--c-exekuce);} .opp-badge.obec::before{background:var(--c-obec);} .opp-badge.majitel::before{background:var(--c-majitel);}
     /* Galerie nahraných fotek — vodorovný swipe (scroll-snap), bez JS */
-    .pz-gallery{position:absolute; inset:0; display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; z-index:1; -webkit-overflow-scrolling:touch;}
+    .pz-gallery{position:absolute; inset:0; display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; z-index:1;}
     .pz-gallery::-webkit-scrollbar{display:none;}
     .pz-shot{flex:0 0 100%; width:100%; height:100%; object-fit:cover; scroll-snap-align:center; scroll-snap-stop:always; display:block; user-select:none;}
     .pz-media .opp-count{position:absolute; right:13px; bottom:13px; left:auto; z-index:3;}
@@ -91,12 +92,23 @@
        75,169,125), takže si odznak a jeho vlastní deska protiřečily.
        Bílá na #13663E dává 7,01 : 1 (dřív 5,77 na modré). */
     .pz-verdict.good{--vc:var(--c-ok-ink); background:rgba(75,169,125,0.12); border-color:rgba(75,169,125,0.42);}
-    .pz-verdict.mid{--vc:var(--c-drazba); --vt:var(--text-ondark); background:rgba(204,107,51,0.12); border-color:rgba(204,107,51,0.46);}
+    /* ODZNAK JE PODKLAD, NE TEXT. Oranžová --c-drazba je kategorijní barva
+       pro dražbu; jako POZADÍ drobného odznaku nestačí ani s nejtmavším
+       inkoustem (#CC6B33 + #14231C = 4,44 : 1, norma žádá 4,5). Dřív to
+       držel napevno zapsaný odstín #0c1a12 (4,88), tedy barva mimo paletu
+       — a při převodu na token o pět setin spadl pod normu. Správné
+       řešení je totéž, co u „good": na podklad jde tmavší odstín z řady
+       (--c-drazba-ink) a text zůstane bílý (8,25 : 1). */
+    .pz-verdict.mid{--vc:var(--c-drazba-ink); background:rgba(204,107,51,0.12); border-color:rgba(204,107,51,0.46);}
     .pz-verdict.bad{--vc:var(--c-exekuce); background:rgba(140,47,30,0.11); border-color:rgba(140,47,30,0.42);}
     /* Přestěhováno z css/styles.css: tatáž třída ze dvou souborů se
        rozejde. Barva teď bere token, takže poslechne i tmavý režim —
-       napevno zapsané #8A5512 by na tmavé ploše zůstalo mdlé. */
-    .pz-verdict.warn{--vc:var(--accent-warm); --vt:var(--text-ondark);
+       napevno zapsané #8A5512 by na tmavé ploše zůstalo mdlé.
+       --vt se NEPŘEPISUJE: --accent-warm je tmavá hněď a bílá na ní dává
+       6,20 : 1. Tmavý inkoust, který tu chvíli stál, dával 2,63 : 1 —
+       tmavé na tmavém. Jméno --text-ondark svádí: znamená text, který
+       se píše tam, kde je plocha světlá, ne text na tmavý podklad. */
+    .pz-verdict.warn{--vc:var(--accent-warm);
       border-color:rgba(138,85,18,0.3); background:rgba(138,85,18,0.08);}
     .pv-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;}
     .pv-badge{font-size:13px; font-weight:700; padding:2px 10px; border-radius:999px;
@@ -497,7 +509,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><div class="pz-konec" role="status"><b>Tato nabídka už není aktuální.</b> <span>Zmizela ze zdroje 4. 10. 2026. Stránku necháváme dostupnou, aby uložené odkazy vedly někam, ale pozemek už takhle koupit nejde.</span><p>Podobné pozemky ve stejném okrese:</p><ul><li><a href="pozemek-praha-praha-1yogv99.html">Praha — 7 770 m²</a></li><li><a href="pozemek-praha-praha-1vdxiie.html">Praha — 4 214 m²</a></li><li><a href="pozemek-praha-praha-1s76lj1.html">Praha — 1 305 m²</a></li></ul><p><a href="index.html#mapa">Zpět na mapu všech pozemků</a></p></div><article class="pz-staticky"><h1>Pozemek 16 430 m² — Mnichovice, okres Praha-východ</h1><p><b>1 643 000 Kč</b> (100 Kč/m²) · 16 430 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Pozemek</dd><dt>Výměra</dt><dd>16 430 m²</dd><dt>Obec</dt><dd>Mnichovice</dd><dt>Okres</dt><dd><a href="pozemky-okres-praha-vychod.html">Praha-východ</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Farmy.cz</dd><dt>Vzdušnou čarou</dt><dd>Praha 26 km</dd></dl><p><a href="pozemek.html?p=Mnichovice%7C%E2%80%94%7CPraha-v%C3%BDchod%7C49.947%7C14.719&amp;ll=49.9471056,14.7190169&amp;v=16430">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Pozemek 16 430 m² — Mnichovice, okres Praha-východ</h1><p><b>1 643 000 Kč</b> (100 Kč/m²) · 16 430 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Pozemek</dd><dt>Výměra</dt><dd>16 430 m²</dd><dt>Obec</dt><dd>Mnichovice</dd><dt>Okres</dt><dd><a href="pozemky-okres-praha-vychod.html">Praha-východ</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Farmy.cz</dd><dt>Vzdušnou čarou</dt><dd>Praha 26 km</dd></dl><p><a href="pozemek.html?p=Mnichovice%7C%E2%80%94%7CPraha-v%C3%BDchod%7C49.947%7C14.719&amp;ll=49.9471056,14.7190169&amp;v=16430">Otevřít na mapě</a></p></article></div></div>
   </div>
 </main>
 
@@ -507,7 +519,7 @@
       <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
       <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého.</p>
     </div>
-    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="porovnani.html">Porovnání uložených</a><a href="pridat.html">Přidat pozemek</a></nav>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="porovnani.html">Porovnání uložených</a><a href="pridat.html">Přidat pozemek</a><a href="novinky.xml">Kanál nových pozemků</a><a href="data.html">Data ke stažení</a></nav>
     <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="moje-data.html">Moje data</a><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
@@ -530,7 +542,6 @@
 <script src="js/videno.js?v=7ad5a94c"></script>
 <script src="js/poznamky.js?v=312edc1e"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Pozemek 16 430 m² — Mnichovice, okres Praha-východ","description":"Na prodej · 1 643 000 Kč (100 Kč/m²) · 16 430 m² · Mnichovice, okres Praha-východ. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-praha-vychod-mnichovice-1nzd9l3.html","address":{"@type":"PostalAddress","addressLocality":"Mnichovice","addressRegion":"Praha-východ","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.9471056,"longitude":14.7190169}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Praha-východ","item":"https://www.parcelaka.cz/pozemky-okres-praha-vychod.html"},{"@type":"ListItem","position":4,"name":"Pozemek 16 430 m² — Mnichovice, okres Praha-východ","item":"https://www.parcelaka.cz/pozemek-praha-vychod-mnichovice-1nzd9l3.html"}]}]</script>
-<script>window.PK_UKONCENO="2026-10-04";</script>
 <script>window.PK_POZEMEK={"k":"Mnichovice|—|Praha-východ|49.947|14.719","ll":[49.9471056,14.7190169],"v":16430,"c":1643000};</script>
 <script src="js/pozemek.js?v=8ad77a94"></script>
 <!-- Vercel Web Analytics -->
