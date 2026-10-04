@@ -434,6 +434,9 @@ jobs:
       - name: Soukromá poznámka k pozemku
         run: node scripts/test-poznamky.mjs
 
+      - name: Moje data — co si web pamatuje
+        run: node scripts/test-ulozene.mjs
+
       - name: Značka „už otevřeno"
         run: node scripts/test-videno.mjs
 

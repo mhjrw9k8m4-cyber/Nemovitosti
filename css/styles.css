@@ -5406,3 +5406,54 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    tu výjimku by znamenalo vědomě dělat malý cíl — a tenhle přepínač se
    mačká prstem venku, ne myší u stolu. */
 @media (hover:none){ .map-podklad button{min-height:44px;} }
+
+/* STRÁNKA „MOJE DATA". Výpis toho, co si web pamatuje v prohlížeči.
+   Vypadá jako seznam, ne jako nastavení: každý řádek říká co, kolik
+   toho je, a má vedle sebe tlačítko, kterým to zmizí. */
+.md-hlava{padding-top:28px;}
+.md-uvod{max-width:var(--m-text); margin-top:10px; line-height:1.6;}
+.md-obsah{padding-bottom:40px;}
+.md-skup{margin-top:26px;}
+.md-skup-h{display:flex; flex-wrap:wrap; align-items:baseline; gap:10px 14px;}
+.md-skup-h h2{font-size:20px; margin:0;}
+.md-skup-p{margin:6px 0 10px; max-width:var(--m-text); font-size:14px;
+  color:var(--text-ondark-mute);}
+.md-smaz-skup{margin-left:auto; min-height:44px; padding:0 13px;
+  border:1px solid var(--line-ui); border-radius:var(--r-pill); background:none;
+  font:inherit; font-size:13px; font-weight:600; color:var(--text-ondark-mute);
+  cursor:pointer; transition:border-color var(--cas-zakladni) var(--ease),
+    color var(--cas-zakladni) var(--ease);}
+.md-smaz-skup:hover{border-color:var(--c-exekuce); color:var(--c-exekuce);}
+.md-radek{display:flex; align-items:center; gap:14px; padding:12px 14px;
+  border:1px solid var(--line); border-radius:var(--r-plocha);
+  background:var(--ink-soft); margin-top:8px;}
+.md-r-text{min-width:0; flex:1 1 auto;}
+.md-r-text b{display:block; font-size:15px;}
+.md-r-text span{display:block; margin-top:2px; font-size:13px; line-height:1.5;
+  color:var(--text-ondark-mute);}
+.md-r-kolik{display:block; margin-top:4px; font-style:normal; font-size:12px;
+  color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+.md-smaz{flex:none; min-height:44px; padding:0 14px; border-radius:var(--r-sm);
+  border:1px solid var(--line-ui); background:var(--ink); font:inherit;
+  font-size:13px; font-weight:600; color:var(--text-ondark); cursor:pointer;
+  transition:border-color var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
+.md-smaz:hover{border-color:var(--c-exekuce); color:var(--c-exekuce);}
+.md-vse{margin-top:30px; padding:16px; border:1px solid var(--line-strong);
+  border-radius:var(--r-plocha); background:var(--ink);}
+.md-smaz-vse{min-height:44px; margin-top:10px; padding:0 16px;
+  border:1px solid var(--c-exekuce); border-radius:var(--r-sm); background:none;
+  font:inherit; font-size:14px; font-weight:700; color:var(--c-exekuce); cursor:pointer;}
+.md-smaz-vse:hover{background:var(--c-exekuce); color:#fff;}
+.md-pozn{margin:14px 0 0; font-size:13px; line-height:1.55; color:var(--text-ondark-mute);}
+.md-prazdno{margin-top:24px; padding:22px; border:1px solid var(--line);
+  border-radius:var(--r-plocha); background:var(--ink-soft);}
+.md-prazdno h2{font-size:20px; margin:0 0 6px;}
+.md-hotovo{margin:0 0 14px; padding:10px 14px; border-radius:var(--r-sm);
+  border:1px solid var(--copper); background:var(--ink-soft); font-size:14px;
+  font-weight:600;}
+.md-nacitam{color:var(--text-ondark-mute);}
+@media (max-width:560px){
+  .md-radek{flex-wrap:wrap;}
+  .md-smaz{width:100%;}
+  .md-smaz-skup{margin-left:0;}
+}
