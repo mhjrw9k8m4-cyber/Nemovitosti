@@ -120,6 +120,29 @@ pravda('přepínač u hledání se bez té vlajky ani nevykreslí',
    naopak objeví), měří scripts/test-odhlaseni.mjs — tady je jen pojistka
    na to, aby vlajka v repozitáři nezůstala zapnutá omylem. */
 
+/* ---------- 2c) ZÁSADY SOUKROMÍ MUSÍ ŘÍKAT PRAVDU ------------
+   V zásadách stálo rovnou: „Žádné e-maily o nových pozemcích
+   neposíláme." Dokud rozesílač neexistoval, byla to pravda. Ve chvíli,
+   kdy se zapne vlajka a přidá klíč, by se z téže věty stala nepravda
+   v dokumentu, kde na pravdě záleží nejvíc — a nikdo by si toho nemusel
+   všimnout, protože to není kód a nic to neshodí.
+   Kontroluje se proto obojí: že tam ta věta NENÍ, a že místo ní stojí,
+   za jakých podmínek se posílá — souhlas, výchozí vypnuto a odhlášení
+   jedním klikem. */
+const zasady = fs.readFileSync(path.join(ROOT, 'ochrana-udaju.html'), 'utf8')
+  .replace(/\u00a0/g, ' ');
+pravda('zásady soukromí netvrdí, že se e-maily neposílají',
+  !/e-maily o nových pozemcích neposíláme/i.test(zasady),
+  'ta věta tam pořád je — po zapnutí rozesílače by to byla nepravda');
+pravda('a popisují, že se posílá jen se zapnutím',
+  /Posílat e-mailem/.test(zasady) && /vypnut/i.test(zasady),
+  'zásady nikde neříkají, že je posílání ve výchozím stavu vypnuté');
+pravda('a že právní základ je souhlas',
+  /Právní základ: <b>váš souhlas<\/b>/.test(zasady),
+  'u e-mailů není uvedený souhlas jako právní základ');
+pravda('a že se dá odhlásit jedním klikem',
+  /jedním klikem/.test(zasady), 'o odhlášení jedním klikem tam nic není');
+
 /* ---------- 3) Shoda se počítá týmž kódem jako v prohlížeči ---- */
 const zdroj = fs.readFileSync(path.join(ROOT, 'scripts', 'send-alerts.mjs'), 'utf8')
   .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');

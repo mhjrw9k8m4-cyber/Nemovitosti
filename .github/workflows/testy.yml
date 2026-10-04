@@ -206,6 +206,9 @@ jobs:
       - name: Rozesílač upozornění e-mailem
         run: node scripts/test-rozesilac.mjs
 
+      - name: Cizí servery proti zásadám soukromí
+        run: node scripts/test-cizi-servery.mjs
+
       - name: Jeden styl (nadpisy a textura z palety)
         run: node scripts/test-jeden-styl.mjs
 

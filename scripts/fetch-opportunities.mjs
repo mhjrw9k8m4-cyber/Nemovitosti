@@ -370,6 +370,46 @@ const AREA_SLABE = new RegExp(AREA_POZEMEK + '|vymer\\w*|rozlo[hz]\\w*|plo(?:ch|
    „na pozemku stojí chata o zastavěné ploše cca 25 m²" vracel jako
    výměru pozemku 25. */
 const AREA_CIZI = /(?:zastaven|podlahov|uzitn|obytn)\w*\s+plo(?:ch|s)\w*/;
+/* HEKTARY. U polí, lesů a louk se výměra píše v hektarech („o výměře
+   2,5 ha") a tohle čtení ji dosud celou přeskočilo: hledaly se jen m².
+   Nabídka pak měla area: null, čímž vypadla z filtru podle výměry,
+   z ceny za m² i ze statistik okresu — a na stránce stálo „výměra
+   neuvedena", i když ji inzerát říkal rovnou v první větě.
+
+   DESETINNÁ ČÁST SE NESMÍ ZAHODIT. U m² se mezery i tečky škrtají jako
+   oddělovače tisíců („18 966" a „18.966" je totéž číslo), ale u hektarů
+   je tečka i čárka ODDĚLOVAČ DESETIN: „1.5 ha" je 15 000 m², ne 150 000.
+   Proto se hektary čtou vlastním vzorkem a vlastním přepočtem.
+
+   `ha` musí končit slovo, jinak by „halda" nebo „hangár" za číslem
+   platily za hektary. Čísla s mezerou v tisících („10 000 ha") se
+   schválně nečtou: vzorek by z nich vzal jen „000". Je to ztráta
+   jednoho vzácného tvaru, zato se nemůže splést řádově.
+
+   A VÝŠKA STROPU. Pozemek nad 5 000 ha (50 km²) je v inzerátu
+   překlep nebo něco jiného než parcela, ne nález. */
+const AREA_HA = /(\d+(?:[.,]\d+)?)\s*(?:ha|hektar\w*)(?![a-z])/g;
+const AREA_HA_STROP = 5000 * 10000;
+function parseAreaHektary(bez) {
+  const celkem = new Set(), vyslovne = new Set(), slabe = new Set();
+  const re = new RegExp(AREA_HA.source, 'gi');
+  let m;
+  while ((m = re.exec(bez))) {
+    const x = parseFloat(m[1].replace(',', '.'));
+    if (!Number.isFinite(x) || x <= 0) continue;
+    const n = Math.round(x * 10000);
+    if (n <= 0 || n > AREA_HA_STROP) continue;
+    const pred = bez.slice(Math.max(0, m.index - 48), m.index).replace(/\s+$/, ' ');
+    if (AREA_CIZI.test(pred)) continue;
+    if (/celkov\w*\s+(?:vymer|rozlo[hz])\w*\s*$/.test(pred)) celkem.add(n);
+    else if (AREA_VYSLOVNE.test(pred)) vyslovne.add(n);
+    else if (AREA_SLABE.test(pred)) slabe.add(n);
+  }
+  if (celkem.size === 1) return [...celkem][0];
+  if (celkem.size === 0 && vyslovne.size === 1) return [...vyslovne][0];
+  if (celkem.size === 0 && vyslovne.size === 0 && slabe.size === 1) return [...slabe][0];
+  return null;
+}
 function parseAreaPopis(text) {
   const t = String(text == null ? '' : text);
   // bez diakritiky, ať „výměra" i „vymera" platí stejně
@@ -394,6 +434,16 @@ function parseAreaPopis(text) {
   if (celkem.size === 1) return [...celkem][0];
   if (celkem.size === 0 && vyslovne.size === 1) return [...vyslovne][0];
   if (celkem.size === 0 && vyslovne.size === 0 && slabe.size === 1) return [...slabe][0];
+  /* Hektary se čtou TEPRVE TEHDY, když se v textu nenašel ani jeden
+     údaj v m². Je to schválně přístavba, ne přepis: kdyby se obě čtení
+     míchala, nabídka, která dnes vrací správných 11 950 m², by při
+     formulaci „1,2 ha (11 950 m²)" skončila na dvou různých číslech
+     v jedné hromádce — a tedy na null. Přidávat se smí jen to, co
+     dosavadní výsledky nechá být. */
+  if (!celkem.size && !vyslovne.size && !slabe.size) {
+    const h = parseAreaHektary(bez);
+    if (h !== null) return h;
+  }
   return null;
 }
 /* Druh pozemku z volného textu. Pravidla jsou ve sdíleném modulu

@@ -98,7 +98,14 @@
         <div class="rules-sect">
           <h2>Jaké údaje sbíráme a proč</h2>
           <ul class="rule-list">
-            <li><b>Uložené hlídání.</b> Když si necháte hlídat lokalitu, uložíme k vašemu účtu, co hledáte (okres, druh, cena, výměra) a které pozemky jste už viděli — jinak bychom vám neuměli ukázat, co přibylo. <b>Žádné e-maily o nových pozemcích neposíláme</b>, nové nabídky uvidíte v aplikaci. Právní základ: <b>plnění služby</b>.</li>
+            <li><b>Uložené hlídání.</b> Když si necháte hlídat lokalitu, uložíme k vašemu účtu, co hledáte (okres, druh, cena, výměra) a které pozemky jste už viděli — jinak bychom vám neuměli ukázat, co přibylo. Nové nabídky uvidíte v aplikaci. Právní základ: <b>plnění služby</b>.</li>
+            <li><b>E-mail o nových pozemcích — jen když si ho zapnete.</b> U každého uloženého
+              hledání je přepínač „Posílat e-mailem". Ve výchozím stavu je <b>vypnutý</b>, takže
+              bez vašeho zapnutí nepřijde nic. Když si ho zapnete, posíláme nejvýš jeden e-mail
+              za den na adresu, kterou máte u účtu, a u hledání si vedeme seznam už odeslaných
+              nabídek, abychom tutéž neposlali dvakrát. V každém e-mailu je odkaz, kterým se
+              <b>jedním klikem</b> odhlásíte ze všech hledání naráz — bez přihlašování.
+              Právní základ: <b>váš souhlas</b>, který můžete kdykoli odvolat.</li>
             <li><b>Účet pro přidání inzerátu.</b> Při registraci ukládáme e-mail a (zašifrované) heslo, abyste mohli vkládat a spravovat vlastní inzeráty. Právní základ: <b>plnění služby</b>.</li>
             <li><b>Údaje z inzerátu.</b> Co sami vyplníte u pozemku (obec, výměra, cena, případně kontakt na vás). Tyto údaje jsou <b>veřejné</b> — zobrazí se na mapě. Právní základ: <b>plnění služby</b>.</li>
             <li><b>Zpráva přes formulář.</b> Když nám napíšete zpětnou vazbu nebo dotaz, uložíme text a e-mail, který uvedete, abychom vám mohli odpovědět. Právní základ: <b>oprávněný zájem</b>.</li>
@@ -113,8 +120,26 @@
             <li><b>Supabase</b> — databáze a přihlašování (uložení e-mailů, účtů a inzerátů).</li>
             <li><b>Vercel</b> a <b>GitHub Pages</b> — hosting webu a anonymní statistiky návštěvnosti.</li>
             <li><b>Stripe</b> — zpracování platby, pokud si zaplatíte volitelné zvýraznění inzerátu. Platební údaje (číslo karty) zadáváte přímo u Stripe — <b>my je nevidíme ani neukládáme</b>.</li>
-            <li><b>Google Fonts</b> — web načítá písma ze serverů Googlu, kterým se přitom předá vaše IP adresa.</li>
+            <li><b>Esri</b> (<code>server.arcgisonline.com</code>) a <b>OpenStreetMap</b>
+              (<code>tile.openstreetmap.org</code>) — <b>podklad mapy</b>. Mapa se skládá
+              z dlaždic, které se stahují z jejich serverů, takže se jim předá vaše IP adresa
+              a to, na kterou část mapy se právě koukáte. Letecký snímek je od Esri, základní
+              mapa od OpenStreetMap; přepínač je v mapě. Dokud mapu neotevřete, nepředá se
+              jim nic.</li>
+            <li><b>Nominatim</b> (<code>nominatim.openstreetmap.org</code>) — <b>převod adresy
+              na polohu</b>, a to jen při <b>přidávání pozemku</b>. Když do formuláře začnete
+              psát obec, pošle se napsaný text jejich serveru, aby vrátil souřadnice; předá se
+              s ním i vaše IP adresa. Jinde na webu se na něj nechodí.</li>
+            <li><b>jsDelivr</b> (<code>cdn.jsdelivr.net</code>) — <b>knihovna na kontrolu
+              fotek</b>, a to jen při <b>přidávání pozemku s fotkou</b>. Odtud se stáhne
+              program (TensorFlow.js a NSFWJS), který fotku prohlédne <b>přímo ve vašem
+              prohlížeči</b> — fotka se nikam neposílá. jsDelivr se tím dozví vaši IP adresu
+              a to, že si ten program berete.</li>
           </ul>
+          <p class="rules-note"><b>Písma se u Googlu nenačítají.</b> Dřív tu stál i Google Fonts
+            — web si tehdy písma bral z <code>fonts.googleapis.com</code> a Googlu se při každém
+            načtení stránky předala vaše IP adresa. Dnes leží písma na našem serveru (složka
+            <code>fonts/</code>), takže se o vaší návštěvě Google nedozví nic.</p>
           <p class="rules-note">Se všemi těmito službami spolupracujeme jen v rozsahu nutném pro fungování webu. Někteří poskytovatelé mohou data zpracovávat i mimo EU, vždy ale se zárukami podle GDPR.</p>
         </div>
 

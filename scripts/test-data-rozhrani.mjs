@@ -140,4 +140,31 @@ const nabidky = D.opportunities || [];
     `${(b / 1024 / 1024).toFixed(2)} MB — nad dva megabajty už je čas na dělení po krajích`);
 }
 
+/* ---- 5) PODMÍNKY NESMĚJÍ ZAKAZOVAT TO, K ČEMU STRÁNKA ZVE ----
+   data.html říká „není potřeba klíč, registrace ani domluva — stačí si ho
+   stáhnout" a hned pod tím odkazuje na podmínky použití. V podmínkách
+   přitom stálo, že se nesmí „hromadné stahování dat". Kdo si přečetl
+   obojí, dostal ano i ne — a platí ten dokument, ne ta pozvánka.
+   Zákaz má smysl proti obcházení stránek robotem, ne proti souboru, který
+   je k tomu připravený; proto se vyžaduje, aby každý zákaz mluvící
+   o stahování ve stejném bodě ukázal na data.html. */
+{
+  const podm = readFileSync(new URL('../podminky.html', import.meta.url), 'utf8');
+  const zakazy = [...podm.matchAll(/<ul class="rule-list no">([\s\S]*?)<\/ul>/g)]
+    .flatMap((m) => [...m[1].matchAll(/<li>([\s\S]*?)<\/li>/g)].map((x) => x[1]));
+  pravda(`v podmínkách se našel seznam zákazů (${zakazy.length} bodů)`, zakazy.length >= 2,
+    `bodů ${zakazy.length} — změnila se podoba stránky?`);
+  const oStahovani = zakazy.filter((t) => /stahov/i.test(t));
+  pravda('a některý z nich mluví o stahování (jinak se nic nekontroluje)',
+    oStahovani.length > 0, 'žádný zákaz o stahování — zmizel, nebo se přeformuloval?');
+  const bezVyjimky = oStahovani.filter((t) => !/data\.html/.test(t));
+  pravda('zákaz stahování ukazuje na soubor, který si vzít smíte',
+    bezVyjimky.length === 0,
+    'zákaz bez odkazu na data.html: ' + bezVyjimky.map((t) => t.replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ').trim().slice(0, 120)).join(' | '));
+  const stranka2 = readFileSync(new URL('../data.html', import.meta.url), 'utf8');
+  pravda('a stránka s daty na podmínky dál odkazuje',
+    /href="podminky\.html"/.test(stranka2), 'data.html na podmínky neodkazuje');
+}
+
 hotovo();

@@ -146,16 +146,93 @@ pravda('prázdný text nevrátí nic', p('') === null && p(null) === null && p(u
   pravda('a opatrné čtení v nejednoznačných textech mlčí, místo aby hádalo',
     odmitlo > 100, `odmítlo hádat u ${odmitlo} popisů`);
 
-  // A nikde nesmí vrátit číslo, které v textu vůbec není.
+  /* A nikde nesmí vrátit číslo, které v textu vůbec není. Počítají se
+     OBA zápisy: m² i hektary. Dokud se hektary nečetly, stačilo tu
+     hledat m² — a při přidání hektarů tahle kontrola rovnou spadla na
+     devíti skutečných popisech. Spadla správně: devět výměr se našlo
+     tam, kde dřív nebylo nic (např. „o celkové výměře téměř 7,2 hektaru"
+     = 72 000 m²). */
+  const vTextu = (t) => {
+    const out = new Set();
+    for (const x of String(t).matchAll(/(\d[\d\s.]*)\s*m(?:2|²)/gi)) {
+      out.add(parseInt(x[1].replace(/[\s.]/g, ''), 10));
+    }
+    for (const x of String(t).matchAll(/(\d+(?:[.,]\d+)?)\s*(?:ha|hektar\w*)(?![a-z])/gi)) {
+      out.add(Math.round(parseFloat(x[1].replace(',', '.')) * 10000));
+    }
+    return out;
+  };
   const vymyslene = texty.filter((t) => {
     const v = F.parseAreaPopis(t);
-    if (!v) return false;
-    const vse = [...String(t).matchAll(/(\d[\d\s.]*)\s*m(?:2|²)/gi)]
-      .map((x) => parseInt(x[1].replace(/[\s.]/g, ''), 10));
-    return !vse.includes(v);
+    return v && !vTextu(t).has(v);
   });
-  pravda('a nikdy nevrátí výměru, která v textu nestojí', vymyslene.length === 0,
-    `vymyšlených: ${vymyslene.length}`);
+  pravda('a nikdy nevrátí výměru, která v textu nestojí (v m² ani v hektarech)',
+    vymyslene.length === 0, `vymyšlených: ${vymyslene.length}`);
+
+  /* HEKTARY SE SMĚJÍ JEN PŘISTAVĚT, NE PŘEPSAT. Kdyby se obě čtení
+     míchala, popis „1,2 ha (11 950 m²)" by skončil na dvou různých
+     číslech v jedné hromádce, tedy na null — a nabídka, která dnes
+     výměru má, by ji ztratila. Proto: kde je v textu aspoň jeden údaj
+     v m², musí výsledek být jeden z NICH, nikdy z hektarů. */
+  const prebite = texty.filter((t) => {
+    const m2 = [...String(t).matchAll(/(\d[\d\s.]*)\s*m(?:2|²)/gi)]
+      .map((x) => parseInt(x[1].replace(/[\s.]/g, ''), 10)).filter((n) => n > 0);
+    if (!m2.length) return false;
+    const v = F.parseAreaPopis(t);
+    return v && !m2.includes(v);
+  });
+  pravda('a kde text říká m², hektary to nepřebijí',
+    prebite.length === 0, `přebitých: ${prebite.length}`);
+
+  const zHektaru = texty.filter((t) => {
+    const m2 = [...String(t).matchAll(/\d[\d\s.]*\s*m(?:2|²)/gi)].length;
+    return !m2 && F.parseAreaPopis(t);
+  });
+  /* Předpoklad obou kontrol výš: hektarové popisy v datech vůbec jsou.
+     Kdyby zmizely, nehlídalo by se nic a tohle to řekne. */
+  pravda('a hektarové popisy v datech opravdu jsou (jinak se nic nekontroluje)',
+    zHektaru.length > 0, `popisů s výměrou jen v hektarech: ${zHektaru.length}`);
 }
+
+/* --- 6) hektary: zápisy, jak je lidé píšou ------------------------- */
+pravda('„o výměře 2,5 ha" je 25 000 m²', p('Prodej pozemku o výměře 2,5 ha v obci X.') === 25000,
+  'vrátilo ' + p('Prodej pozemku o výměře 2,5 ha v obci X.'));
+pravda('„o celkové výměře 12 ha" je 120 000 m²',
+  p('Prodej lesa o celkové výměře 12 ha.') === 120000,
+  'vrátilo ' + p('Prodej lesa o celkové výměře 12 ha.'));
+pravda('slovo „hektar" se čte stejně jako „ha"',
+  p('Nabízíme soubor pozemků o celkové výměře téměř 7,2 hektaru.') === 72000,
+  'vrátilo ' + p('Nabízíme soubor pozemků o celkové výměře téměř 7,2 hektaru.'));
+/* DESETINNÁ TEČKA NENÍ ODDĚLOVAČ TISÍCŮ. U m² se tečka škrtá („18.966"
+   = 18 966), u hektarů znamená desetiny — „1.5 ha" je 15 000 m², ne
+   150 000. Kdyby se hektary počítaly týmž přepočtem jako m², bylo by to
+   řádově vedle, a to u ceny za m² znamená desetinásobek. */
+pravda('„1.5 ha" je 15 000 m², ne 150 000', p('Pozemek o výměře 1.5 ha u lesa.') === 15000,
+  'vrátilo ' + p('Pozemek o výměře 1.5 ha u lesa.'));
+pravda('slovo, které jen začíná na „ha", se za hektary nebere',
+  p('Pozemek u haldy, 3 ha orné půdy.') === 30000,
+  'vrátilo ' + p('Pozemek u haldy, 3 ha orné půdy.'));
+pravda('nesmyslně velká výměra se nebere', p('Pozemek o výměře 9000 ha.') === null,
+  'vrátilo ' + p('Pozemek o výměře 9000 ha.'));
+pravda('zastavěná plocha v hektarech taky nepatří pozemku',
+  p('Areál, zastavěná plocha 2 ha.') === null,
+  'vrátilo ' + p('Areál, zastavěná plocha 2 ha.'));
+pravda('dvě hektarové výměry ve dvou větách = mlčení',
+  p('Prodej pozemku o výměře 2 ha. Prodej pozemku o výměře 3 ha.') === null,
+  'vrátilo ' + p('Prodej pozemku o výměře 2 ha. Prodej pozemku o výměře 3 ha.'));
+/* A ZDE SE HEKTARY CHOVAJÍ STEJNĚ JAKO m², I V TOM HORŠÍM.
+   Ve větě „pozemku o výměře 2 ha a druhého o výměře 3 ha" se vybere ta
+   první: druhý údaj od slova „pozemek" dělí víc než šestnáct znaků, takže
+   propadne do slabé hromádky, a výslovná zůstane jediná. Vypadá to jako
+   vada hektarů, není: s m² („2000 m2 a druhého 3000 m2") to dělá totéž
+   a dělalo odjakživa. Zapsané je to tu proto, aby se to vědělo — ne aby
+   se to tvářilo jako správné. Měnit kvůli tomu hromádky by přepsalo
+   čtení všech 1 630 popisů, což je docela jiná práce než přístavba
+   jedné jednotky. */
+pravda('ve dvou výměrách v jedné větě vyhraje ta první — u obou jednotek stejně',
+  p('Prodej pozemku o výměře 2 ha a druhého o výměře 3 ha.') === 20000
+  && p('Prodej pozemku o výměře 2000 m2 a druhého o výměře 3000 m2.') === 2000,
+  'hektary: ' + p('Prodej pozemku o výměře 2 ha a druhého o výměře 3 ha.')
+  + ', m²: ' + p('Prodej pozemku o výměře 2000 m2 a druhého o výměře 3000 m2.'));
 
 hotovo();
