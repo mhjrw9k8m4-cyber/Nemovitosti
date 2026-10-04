@@ -35,7 +35,16 @@ function ocisti(kod) {
     .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ')        // // … (dvojlomítko v URL necháme)
     .replace(/'(?:\\.|[^'\\\n])*'/g, "''")
     .replace(/"(?:\\.|[^"\\\n])*"/g, '""')
-    .replace(/`(?:\\.|[^`\\])*`/g, '``');
+    .replace(/`(?:\\.|[^`\\])*`/g, '``')
+    /* A VZORKY TAKY. Tahle kontrola hlásila „belektro() se volá, ale
+       v souboru není definované" — js/vybaveni.js hledá vybavení pozemku
+       vzorkem …|\belektro(?:pripojk|mer)\w*|… a `\b` + `elektro` + `(`
+       se od volání funkce nedá rozeznat. Falešný poplach, který se dva
+       měsíce vypisoval při každém běhu, je horší než žádná kontrola:
+       člověk si zvykne výpis přeskakovat a přehlédne i ten pravý.
+       Vzorky se odstraňují TEPRVE PO textech v uvozovkách: v opačném
+       pořadí by se lomítko v 'http://…' vzalo za začátek vzorku. */
+    .replace(/(^|[(,=:[!&|?{};]|\breturn|\btypeof)(\s*)\/(?:\\.|\[(?:\\.|[^\]\\\n])*\]|[^/\\\n])+\/[gimsuyd]*/g, '$1$2/./');
 }
 
 function osireleVolani(zdroj) {
@@ -168,12 +177,33 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
   const vProh = new Set(jmena(ulohaProh));
   const vsechny = jmena(wf);
 
-  const spatnaUloha = [];
-  for (const cesta of vBez) {
-    /* Hledá se IMPORT, ne slovo kdekoli v souboru — tenhle soubor sám
-       o playwrightu mluví v komentáři a hlásil by chybu na sebe. */
-    if (/from\s+['"]playwright-core['"]/.test(fs.readFileSync(cesta, 'utf8'))) spatnaUloha.push(cesta);
-  }
+  /* Hledá se IMPORT, ne slovo kdekoli v souboru — tenhle soubor sám
+     o playwrightu mluví v komentáři a hlásil by chybu na sebe.
+     POČÍTÁ SE I LÍNÝ IMPORT. Dřív tu stálo jen `from 'playwright-core'`,
+     a zkoušky, které si prohlížeč berou až uvnitř funkce přes
+     `await import('playwright-core')`, se tím jevily jako zkoušky bez
+     prohlížeče — tedy přesně ta chyba, na kterou je tahle pojistka
+     (test-doporuceni.mjs to tak dělá a do rychlé úlohy nesmí).
+     A ČTE SE ZDROJ BEZ KOMENTÁŘŮ. Rozšířený vzorek začal okamžitě hlásit
+     chybu na tenhle soubor sám — v komentáři o dva řádky výš je napsané
+     `import('playwright-core')` jako příklad. Varování v původním
+     komentáři platilo dál, jen se na něj při rozšíření vzorku dalo
+     zapomenout; proto se komentáře odstraňují, ne obchází. */
+  const CHCE_PROHLIZEC = /(?:from|import)\s*\(?\s*['"]playwright-core['"]/;
+  const bezKomentaru = (t) => t.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+  const chceProhlizec = (cesta) => CHCE_PROHLIZEC.test(bezKomentaru(fs.readFileSync(cesta, 'utf8')));
+
+  const spatnaUloha = [...vBez].filter(chceProhlizec);
+  /* DRUHÁ STRANA TÉHOŽ. Zkouška, která prohlížeč nepotřebuje a přesto
+     sedí v úloze s ním, nic nerozbije — jen čeká. Úloha „v-prohlizeci"
+     nejdřív instaluje chromium (asi minuta) a pak jede jednu zkoušku po
+     druhé; obyčejná uzlová kontrola tam jen prodlužuje frontu, místo aby
+     běžela současně v rychlé úloze. Naměřeno 23 takových z 87, než se
+     přesunuly. Výjimky se píšou sem, s důvodem — ne zamlčením. */
+  const PATRI_K_PROHLIZECI = new Set([
+    // scripts/test-neco.mjs  (důvod, proč patří do pomalé úlohy)
+  ]);
+  const zbytecneProh = [...vProh].filter((c) => !chceProhlizec(c) && !PATRI_K_PROHLIZECI.has(c));
   const dvakrat = [...new Set(vsechny.filter((x, i) => vsechny.indexOf(x) !== i))];
   // Pomocný server není zkouška, jen kulisa pro scripts/test-kontrola-e2e.mjs.
   const POMOCNE = new Set(['scripts/test-server.mjs']);
@@ -194,6 +224,11 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
   if (zapomenute.length) {
     zle++;
     console.error('::error::Zkouška existuje, ale nikdo ji nespouští: ' + zapomenute.join(', '));
+  }
+  if (zbytecneProh.length) {
+    zle++;
+    console.error(`::error::Zkouška prohlížeč nepotřebuje, ale čeká v úloze s ním (${zbytecneProh.length}): `
+      + zbytecneProh.join(', '));
   }
   console.log(`Zařazení zkoušek: ${vBez.size} bez prohlížeče, ${vProh.size} s prohlížečem`
     + (zle ? '' : ' — všechny na svém místě, žádná dvakrát, na žádnou se nezapomnělo.'));

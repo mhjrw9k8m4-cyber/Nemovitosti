@@ -120,7 +120,6 @@ jobs:
       - name: Meze platí v prohlížeči i na serveru
         run: node scripts/test-meze.mjs
 
-
       - name: Placené zvýraznění (za peníze se musí něco stát)
         run: node scripts/test-platba.mjs
 
@@ -171,6 +170,78 @@ jobs:
       - name: Vizuální jazyk (hloubka a tvary z předlohy)
         run: node scripts/test-predloha.mjs
 
+      - name: Mlčky přebité třídy ve stylopisu
+        run: node scripts/test-prebiti.mjs
+
+      - name: Popisy od inzerentů (úklid a doručení na stránku)
+        run: node scripts/test-popisy.mjs
+
+      - name: Vývoz nabídek do tabulky
+        run: node scripts/test-vyvoz.mjs
+
+      - name: Stav mapy v adrese (sdílené odkazy)
+        run: node scripts/test-odkaz.mjs
+
+      - name: Skloňování podle počtu
+        run: node scripts/test-sklonovani.mjs
+
+      - name: Jedna barevná teplota (závoje a stíny)
+        run: node scripts/test-odstiny.mjs
+
+      - name: Typografická stupnice
+        run: node scripts/test-typografie.mjs
+
+      - name: Vložený styl na stránce pozemku
+        run: node scripts/test-vlozeny-styl.mjs
+
+      - name: Kanál s novými pozemky
+        run: node scripts/test-rss.mjs
+
+      - name: Popis dat odpovídá datům
+        run: node scripts/test-data-rozhrani.mjs
+
+      - name: Náhled odkazu patří k vlastní stránce
+        run: node scripts/test-sdileni.mjs
+
+      - name: Jeden styl (nadpisy a textura z palety)
+        run: node scripts/test-jeden-styl.mjs
+
+      - name: Sliby o datech odpovídají tomu, co web dělá
+        run: node scripts/test-sliby-data.mjs
+
+      - name: Konec nabídky není konec adresy
+        run: node scripts/test-ukonceno.mjs
+
+      - name: Cesta ven z okresu
+        run: node scripts/test-cesta-ven.mjs
+
+      - name: Rychlý výběr (logika balíčku)
+        run: node scripts/test-rychlovyber.mjs
+
+      - name: Čtvrť u nabídek, kde je místo jen celá obec
+        run: node scripts/test-ctvrt.mjs
+
+      - name: Cenový model (odhad obvyklé ceny)
+        run: node scripts/test-ceny.mjs
+
+      - name: Rádce u pozemku (rady podle skutečných údajů)
+        run: node scripts/test-radce.mjs
+
+      - name: Integrita datového souboru
+        run: node scripts/test-data.mjs
+
+      - name: Čeština ve viditelném textu
+        run: node scripts/test-cestina.mjs
+
+      - name: Poloha vs okres (patří k sobě?)
+        run: node scripts/test-okres-poloha.mjs
+
+      - name: Vlastní stránka pro každý pozemek
+        run: node scripts/test-stranky-pozemku.mjs
+
+      - name: Zařazení pozemku do okresu
+        run: node scripts/test-okres.mjs
+
   # Všechno, co potřebuje opravdový prohlížeč: chat, mapa, hlavička,
   # kontrast, dotykové terče, výpadky… Běží zvlášť od rychlých testů, aby
   # se kvůli stahování Chromia nečekalo na každou drobnost. Kroky, které
@@ -212,12 +283,6 @@ jobs:
       - name: Tlačítko „nahoru" na dlouhých stránkách
         run: node scripts/test-nahoru.mjs
 
-      - name: Mlčky přebité třídy ve stylopisu
-        run: node scripts/test-prebiti.mjs
-
-      - name: Popisy od inzerentů (úklid a doručení na stránku)
-        run: node scripts/test-popisy.mjs
-
       - name: Kalkulačka nákladů při koupi
         run: node scripts/test-naklady.mjs
 
@@ -226,42 +291,6 @@ jobs:
 
       - name: Porovnání uložených pozemků
         run: node scripts/test-porovnani.mjs
-
-      - name: Vývoz nabídek do tabulky
-        run: node scripts/test-vyvoz.mjs
-
-      - name: Stav mapy v adrese (sdílené odkazy)
-        run: node scripts/test-odkaz.mjs
-
-      - name: Skloňování podle počtu
-        run: node scripts/test-sklonovani.mjs
-
-      - name: Jedna barevná teplota (závoje a stíny)
-        run: node scripts/test-odstiny.mjs
-
-      - name: Typografická stupnice
-        run: node scripts/test-typografie.mjs
-
-      - name: Vložený styl na stránce pozemku
-        run: node scripts/test-vlozeny-styl.mjs
-
-      - name: Kanál s novými pozemky
-        run: node scripts/test-rss.mjs
-
-      - name: Jeden styl (nadpisy a textura z palety)
-        run: node scripts/test-jeden-styl.mjs
-
-      - name: Sliby o datech odpovídají tomu, co web dělá
-        run: node scripts/test-sliby-data.mjs
-
-      - name: Konec nabídky není konec adresy
-        run: node scripts/test-ukonceno.mjs
-
-      - name: Cesta ven z okresu
-        run: node scripts/test-cesta-ven.mjs
-
-      - name: Rychlý výběr (logika balíčku)
-        run: node scripts/test-rychlovyber.mjs
 
       - name: Dotykové terče na mobilu
         run: node scripts/test-dotyk.mjs
@@ -278,17 +307,8 @@ jobs:
       - name: Mapa s vrstvami v detailu pozemku
         run: node scripts/test-mapa-pozemku.mjs
 
-      - name: Čtvrť u nabídek, kde je místo jen celá obec
-        run: node scripts/test-ctvrt.mjs
-
       - name: Předvyplnění inzerátu z odkazu
         run: node scripts/test-predvyplneni.mjs
-
-      - name: Cenový model (odhad obvyklé ceny)
-        run: node scripts/test-ceny.mjs
-
-      - name: Rádce u pozemku (rady podle skutečných údajů)
-        run: node scripts/test-radce.mjs
 
       - name: Shoda cen mezi mapou a stránkou pozemku
         run: node scripts/test-shoda.mjs
@@ -307,9 +327,6 @@ jobs:
 
       - name: Rozvržení na všech šířkách a popisky stránek
         run: node scripts/test-rozvrzeni.mjs
-
-      - name: Integrita datového souboru
-        run: node scripts/test-data.mjs
 
       - name: Pohyb (odezva mapy a měřítka, i s vypnutými animacemi)
         run: node scripts/test-pohyb.mjs
@@ -365,17 +382,11 @@ jobs:
       - name: Barvy po najetí myší
         run: node scripts/test-najeti.mjs
 
-      - name: Čeština ve viditelném textu
-        run: node scripts/test-cestina.mjs
-
       - name: Odolnost proti vloženému kódu (XSS)
         run: node scripts/test-xss.mjs
 
       - name: JSON ve stránce (nejde rozbít cizím textem)
         run: node scripts/test-json-ve-strance.mjs
-
-      - name: Poloha vs okres (patří k sobě?)
-        run: node scripts/test-okres-poloha.mjs
 
       - name: Obrys pozemku (nekreslíme, co nevíme)
         run: node scripts/test-obrys.mjs
@@ -388,9 +399,6 @@ jobs:
 
       - name: Funkční kontrola stránek a odkazů
         run: node scripts/test-stranky.mjs
-
-      - name: Vlastní stránka pro každý pozemek
-        run: node scripts/test-stranky-pozemku.mjs
 
       - name: Hlídání v aplikaci (celá cesta)
         run: node scripts/test-hlidani-prohlizec.mjs
@@ -448,6 +456,3 @@ jobs:
 
       - name: Hlídání okruhu od místa
         run: node scripts/test-okruh-hlidani.mjs
-
-      - name: Zařazení pozemku do okresu
-        run: node scripts/test-okres.mjs

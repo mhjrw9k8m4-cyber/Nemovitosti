@@ -5460,3 +5460,27 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   .md-smaz{width:100%;}
   .md-smaz-skup{margin-left:0;}
 }
+
+/* STRÁNKA S POPISEM DAT (data.html). Je to dokumentace, ne marketing:
+   tabulka polí, co v datech není, a za jakých podmínek. */
+.dt-hlava{padding-top:28px;}
+.dt-uvod{max-width:var(--m-text); margin-top:10px; line-height:1.6; font-size:17px;}
+.dt-adresa{margin:14px 0 0;}
+.dt-adresa code{display:inline-block; padding:10px 14px; border-radius:var(--r-sm);
+  border:1px solid var(--line-strong); background:var(--ink);
+  font-size:14px; overflow-wrap:anywhere;}
+.dt-cisla{margin-top:10px; color:var(--text-ondark-mute); font-size:14px;}
+.dt-sekce{margin-top:34px;}
+.dt-sekce h2{font-size:20px; margin:0 0 10px;}
+.dt-seznam{max-width:var(--m-text); margin:10px 0 0; padding-left:20px; line-height:1.65;}
+.dt-seznam li{margin-top:7px;}
+.dt-tab-obal{overflow-x:auto; margin-top:10px; border:1px solid var(--line);
+  border-radius:var(--r-plocha); background:var(--ink-soft);}
+.dt-tab{width:100%; border-collapse:collapse; font-size:14px;}
+.dt-tab th, .dt-tab td{padding:9px 12px; text-align:left; vertical-align:top;
+  border-bottom:1px solid var(--line);}
+.dt-tab thead th{font-weight:700; color:var(--text-ondark-mute); white-space:nowrap;}
+.dt-tab tbody tr:last-child td{border-bottom:0;}
+.dt-tab code{font-size:13px; white-space:nowrap;}
+.dt-pozn{max-width:var(--m-text); margin:12px 0 0; font-size:14px; line-height:1.6;
+  color:var(--text-ondark-mute);}

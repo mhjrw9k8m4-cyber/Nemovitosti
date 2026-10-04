@@ -171,13 +171,50 @@ const majiByt = new Set();
 /* Ne každý soubor „pozemek-*.html" je generovaný — pozemek-od-obce.html
    je ručně psaná stránka. Poznají se podle značky, kterou do nich píše
    generátor, ne podle jména: jméno by se dalo splést a ruční stránka by
-   pak zkoušku shodila. Čtou se jen soubory navíc, ne všech 1 900. */
-const navic = fs.readdirSync(ROOT)
-  .filter((f) => /^pozemek-.+\.html$/.test(f) && !majiByt.has(f))
-  .filter((f) => fs.readFileSync(path.join(ROOT, f), 'utf8').includes('window.PK_POZEMEK='));
-pravda(`pro tentýž pozemek nevzniknou dvě stránky (${majiByt.size} stránek)`,
+   pak zkoušku shodila. Čtou se jen soubory navíc, ne všech 1 900.
+
+   UKONČENÉ STRÁNKY SEM NEPATŘÍ. Generátor nabídku, která z dat zmizela,
+   nemaže — přepíše ji na ukončenou a nechá ji 90 dní žít, aby uložený
+   odkaz nekončil na 404 (viz generate-parcel-pages.mjs). Takových
+   stránek je na disku vždycky nějaká hrst a tahle kontrola je dřív
+   počítala jako „stránky navíc": padala tedy po každém obnovení dat,
+   při kterém nějaká dražba skončila — naměřeno 11 hned po prvním běhu.
+   Falešná chyba je horší než žádná: zakrývá tu pravou. Ukončené se proto
+   nepočítají, ale JEJICH POČET SE VYPISUJE — kdyby je začal generátor
+   vyrábět po tisících, bude to vidět, a ne tiše spolknuté.
+
+   ČTE SE VŠECHNO, ne jen soubory navíc. Dřív se tu otevíraly jen stránky,
+   které v datech nejsou — a druhá kontrola („nic živého se neschová za
+   značku ukončení") tím nemohla nikdy nic najít: hledala živé stránky
+   v hromadě, ze které byly živé předem vyřazené. Sabotáž, která označila
+   živou stránku jako ukončenou, prošla. Jeden průchod přes 2 000 stránek
+   stojí 0,4 s, což je za kontrolu, která doopravdy měří, zanedbatelné. */
+const vseNaDisku = fs.readdirSync(ROOT)
+  .filter((f) => /^pozemek-.+\.html$/.test(f))
+  .map((f) => ({ f, obsah: fs.readFileSync(path.join(ROOT, f), 'utf8') }))
+  .filter((z) => z.obsah.includes('window.PK_POZEMEK='))
+  .map((z) => ({ f: z.f, ukonceno: /window\.PK_UKONCENO="\d{4}-\d{2}-\d{2}"/.test(z.obsah) }));
+const ukoncene = vseNaDisku.filter((z) => z.ukonceno);
+const navic = vseNaDisku.filter((z) => !z.ukonceno && !majiByt.has(z.f)).map((z) => z.f);
+pravda(`pro tentýž pozemek nevzniknou dvě stránky (${majiByt.size} živých`
+  + `${ukoncene.length ? `, ${ukoncene.length} ukončených` : ''})`,
   navic.length === 0,
-  `${navic.length} stránek navíc proti tomu, co ukazuje mapa: ` + navic.slice(0, 4).join(', '));
+  `${navic.length} stránek navíc proti tomu, co ukazuje mapa, a ani jedna není`
+  + ` ukončená: ` + navic.slice(0, 4).join(', '));
+/* Druhá strana téhož: ukončená stránka je výjimka z pravidla výš, takže
+   se musí ověřit, že se tou výjimkou neomlouvá něco živého. Co je na
+   disku označené jako ukončené, nesmí být v datech jako živá nabídka. */
+const ukonceneZive = ukoncene.map((z) => z.f).filter((f) => majiByt.has(f));
+/* Pojistka proti tomu, aby kontrola nad tím neměřila prázdno: stránky
+   v mapě se opravdu musely přečíst. Kdyby se filtr výš někdy zúžil zpátky
+   jen na soubory navíc, tohle to řekne. */
+pravda('kontrola ukončení se dívá i na stránky, které v datech jsou (jinak nic neměří)',
+  vseNaDisku.filter((z) => majiByt.has(z.f)).length > majiByt.size * 0.9,
+  `přečteno jen ${vseNaDisku.filter((z) => majiByt.has(z.f)).length} z ${majiByt.size} živých stránek`);
+pravda('žádná ukončená stránka není zároveň v mapě jako živá',
+  ukonceneZive.length === 0,
+  `${ukonceneZive.length} stránek nese značku ukončení, a přesto je v datech: `
+  + ukonceneZive.slice(0, 4).join(', '));
 /* A ať kontrola není prázdná: pravidlo aplikace musí být přísnější než
    vlastní klíč generátoru, jinak by výše uvedené mlčelo vždycky. */
 pravda('pravidlo aplikace je přísnější než klíč generátoru (jinak zkouška nic neměří)',

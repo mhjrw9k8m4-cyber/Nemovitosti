@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+<script>/* Vzhled se musí nastavit JEŠTĚ PŘED vykreslením: jinak se stránka stihne vykreslit světle a hned ztmavnout, a bílé bliknutí do očí v noci je přesně to, kvůli čemu si lidé tmavý režim zapínají. Proto je to vložené a synchronní, ne soubor s defer. */try{var v=localStorage.getItem('pk_rezim_v1');if(v==='dark'||v==='light')document.documentElement.setAttribute('data-theme',v);}catch(e){}</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>Data Parcelky | Parcelka</title>
+  <meta name="description" content="Jak si vzít data Parcelky k sobě: jeden soubor, popsaná pole, čtyři obnovy denně.">
+  <meta name="theme-color" content="#FBFAF8">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://www.parcelaka.cz/data.html">
+  <link rel="alternate" type="application/rss+xml" title="Parcelka — nové pozemky" href="novinky.xml">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Data Parcelky | Parcelka">
+  <meta property="og:description" content="Všechny nabídky pozemků v jednom souboru — popsaná pole, bez klíče a bez registrace.">
+  <meta property="og:locale" content="cs_CZ">
+  <meta property="og:site_name" content="Parcelka">
+  <meta property="og:url" content="https://www.parcelaka.cz/data.html">
+  <meta property="og:image" content="https://www.parcelaka.cz/assets/og.png?v=5">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Data Parcelky — Parcelka">
+  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og.png?v=5">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <!-- Písma leží u nás (fonts/), ne na Googlu. Přednačítají se, aby dojela
+       souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
+       kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
+  <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
+  <link rel="stylesheet" href="css/styles.css?v=4e8a9523">
+  <style>
+    .kt-mail{display:flex; align-items:center; gap:14px; margin:6px 0 4px; padding:16px 16px; background:rgba(126,196,157,0.08); border:1px solid rgba(126,196,157,0.24); border-radius:var(--r-md); text-decoration:none;}
+    .kt-mail .kt-ico{flex:none; width:44px; height:44px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; background:var(--plocha-znacka);}
+    .kt-mail .kt-ico svg{width:23px; height:23px; stroke-width:1.57; color:#081410;}
+    .kt-mail .kt-txt{min-width:0;}
+    .kt-mail .kt-txt small{display:block; font-family:var(--font-mono); font-size:12px; letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--text-ondark-mute); font-weight:600;}
+    .kt-mail .kt-txt b{font-size:17px; color:var(--text-ondark); word-break:break-word;}
+    .kt-mail:hover{border-color:var(--copper-bright);}
+  </style>
+</head>
+<body>
+
+<a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+
+
+<header id="header">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="Parcelka — domů"><span class="logo-mark" aria-hidden="true"></span>Parcelka</a>
+    <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
+    <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+        <nav id="nav" aria-label="Hlavní navigace">
+      <!-- Pořadí: nejdřív KDO jsem, pak KAM jdu.
+           Účet je samostatný první řádek a nese stav přihlášení (doplní
+           ho js/hlavicka.js) — bez něj nešlo poznat, jestli je člověk
+           přihlášený. Hned pod ním je hlavní věc celého webu.
+           Dřív byl účet schovaný až čtvrtý ve skupině „Moje"; když jsem
+           pak nahoru posunul celou tu skupinu, spadlo hledání pozemků
+           na páté místo. Obojí bylo špatně — proto stojí účet sám. -->
+      <a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a>
+      <!-- „Hledat pozemek", ne „Pozemky": na webu o pozemcích podstatné
+           jméno neřekne nic, sloveso řekne, co se tam dělá. -->
+      <a href="index.html#mapa">Hledat pozemek</a>
+      <a href="cena-pozemku.html">Ceny pozemků</a>
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
+      <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
+    </nav>
+  </div>
+</header>
+<main id="obsah">
+  <section class="wrap dt-hlava">
+    <h1>Data Parcelky</h1>
+    <p class="dt-uvod">Všechny nabídky jsou v <b>jednom souboru</b>. Není k němu potřeba klíč,
+      registrace ani domluva — stačí si ho stáhnout. Obnovuje se čtyřikrát denně (0:00, 6:00, 12:00, 18:00 UTC).</p>
+    <p class="dt-adresa"><code>https://www.parcelaka.cz/data/opportunities.json</code></p>
+    <p class="dt-cisla">Teď je v něm <b>2 012</b> nabídek a má
+      <b>637&nbsp;kB</b>.</p>
+  </section>
+
+  <section class="wrap dt-sekce">
+    <h2>Co v něm NENÍ</h2>
+    <p>Tohle je potřeba vědět dřív, než na datech někdo něco postaví:</p>
+    <ul class="dt-seznam">
+      <li><b>Nejsou to prodejní ceny.</b> Jsou to ceny <b>nabídkové</b> — za kolik se pozemek
+        nabízí, ne za kolik se prodal. Skutečné prodejní ceny ve veřejných zdrojích nejsou.</li>
+      <li><b>Nejsou to všechny pozemky v ČR</b>, jen ty, které jsou právě někde nabízené.</li>
+      <li><b>U spoluvlastnického podílu</b> (<code>podil: true</code>, 530 nabídek)
+        je cena za zlomek, ale výměra za celou parcelu. Kdo dělí jedno druhým bez ohledu na
+        <code>zlomek</code>, dostane číslo, které neplatí pro nikoho.</li>
+      <li><b>Co není v poli <code>site</code>, není totéž co „není".</b> Sítě se čtou z popisu
+        inzerátu; chybějící údaj znamená, že o tom inzerát mlčel.</li>
+      <li><b>Výměra může být <code>null</code></b> — zdroj ji neuvedl a z textu se nedala
+        bezpečně přečíst. Raději nic než cizí číslo.</li>
+    </ul>
+  </section>
+
+  <section class="wrap dt-sekce">
+    <h2>Hlavička souboru</h2>
+    <div class="dt-tab-obal"><table class="dt-tab">
+      <thead><tr><th>Pole</th><th>Typ</th><th></th><th>Co to je</th></tr></thead>
+      <tbody>
+<tr><td><code>updated</code></td><td>string</td><td>—</td><td>Den poslední obnovy (YYYY-MM-DD).</td></tr>
+<tr><td><code>updated_at</code></td><td>string</td><td>—</td><td>Přesný čas poslední obnovy (ISO 8601, UTC).</td></tr>
+<tr><td><code>source</code></td><td>string</td><td>—</td><td>Věta o tom, odkud data pocházejí.</td></tr>
+<tr><td><code>sources</code></td><td>pole</td><td>—</td><td>Stav jednotlivých zdrojů z posledního běhu: název, stav, počet záznamů, čas.</td></tr>
+<tr><td><code>opportunities</code></td><td>pole</td><td>—</td><td>Samotné nabídky.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="wrap dt-sekce">
+    <h2>Jedna nabídka</h2>
+    <div class="dt-tab-obal"><table class="dt-tab">
+      <thead><tr><th>Pole</th><th>Typ</th><th>Přítomnost</th><th>Co to je</th></tr></thead>
+      <tbody>
+<tr><td><code>place</code></td><td>string</td><td>vždy</td><td>Obec nebo katastrální území.</td></tr>
+<tr><td><code>okres</code></td><td>string</td><td>vždy</td><td>Okres. Jeden ze 77 okresů ČR.</td></tr>
+<tr><td><code>type</code></td><td>string</td><td>vždy</td><td>Druh nabídky. <b>Hodnoty:</b> <code>sale</code>, <code>drazba</code>, <code>exekuce</code>, <code>obec</code>, <code>majitel</code></td></tr>
+<tr><td><code>parcel</code></td><td>string</td><td>vždy</td><td>Parcelní číslo. Pomlčka „—“ znamená, že ho zdroj neuvedl.</td></tr>
+<tr><td><code>druh</code></td><td>string</td><td>vždy</td><td>Druh pozemku tak, jak ho uvádí zdroj (orná půda, les, stavební…).</td></tr>
+<tr><td><code>area</code></td><td>number|null</td><td>vždy</td><td>Výměra v m². null = zdroj ji neuvedl a z textu se nedala bezpečně přečíst.</td></tr>
+<tr><td><code>price</code></td><td>number</td><td>vždy</td><td>Cena v Kč. U dražby vyvolávací, u exekuce uváděná. Je to cena NABÍDKOVÁ, ne prodejní.</td></tr>
+<tr><td><code>extra</code></td><td>string</td><td>vždy</td><td>Zdroj a stav — například „inzerát – Bezrealitky“ nebo termín dražby.</td></tr>
+<tr><td><code>lat</code></td><td>number</td><td>vždy</td><td>Zeměpisná šířka (WGS 84).</td></tr>
+<tr><td><code>lng</code></td><td>number</td><td>vždy</td><td>Zeměpisná délka (WGS 84).</td></tr>
+<tr><td><code>first_seen</code></td><td>string</td><td>vždy</td><td>Den, kdy robot nabídku poprvé uviděl (YYYY-MM-DD). Ne datum vzniku inzerátu.</td></tr>
+<tr><td><code>url</code></td><td>string</td><td>někdy</td><td>Odkaz na původní inzerát. Chybí tam, kde ho zdroj nedává.</td></tr>
+<tr><td><code>site</code></td><td>pole</td><td>někdy</td><td>Sítě a příjezd vyčtené z popisu inzerátu (elektrina, voda, plyn, kanalizace, cesta). Co není uvedeno, NENÍ totéž co „není“.</td></tr>
+<tr><td><code>podil</code></td><td>boolean</td><td>někdy</td><td>true = prodává se spoluvlastnický podíl. POZOR: cena je za zlomek, ale výměra za celou parcelu, takže cena za metr vychází nízko sama od sebe.</td></tr>
+<tr><td><code>zlomek</code></td><td>string</td><td>někdy</td><td>Velikost podílu, například „1/66“.</td></tr>
+<tr><td><code>cast</code></td><td>string</td><td>někdy</td><td>Část obce, je-li uvedena.</td></tr>
+<tr><td><code>cena_drive</code></td><td>number</td><td>někdy</td><td>Předchozí cena, pokud se změnila.</td></tr>
+<tr><td><code>cena_zmena</code></td><td>string</td><td>někdy</td><td>Den změny ceny (YYYY-MM-DD).</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="wrap dt-sekce">
+    <h2>Kanály a mapa webu</h2>
+    <p>Kdo chce jen sledovat, co přibylo, nemusí stahovat celý soubor:</p>
+    <ul class="dt-seznam">
+      <li><a href="novinky.xml">novinky.xml</a> — nové pozemky z celé ČR (RSS)</li>
+      <li><code>novinky-&lt;kraj&gt;.xml</code> — totéž po krajích, například
+        <a href="novinky-jihomoravsky.xml">novinky-jihomoravsky.xml</a></li>
+      <li><a href="sitemap.xml">sitemap.xml</a> — všechny stránky webu</li>
+    </ul>
+  </section>
+
+  <section class="wrap dt-sekce">
+    <h2>Za jakých podmínek</h2>
+    <p>Data pocházejí z veřejných zdrojů a Parcelka je dává k dispozici tak, jak jsou.
+      Platí pro ně <a href="podminky.html">podmínky použití</a>. Prosíme o uvedení zdroje
+      (<b>Parcelka.cz</b>) tam, kde se data zobrazují dál.</p>
+    <p class="dt-pozn">Soubor je statický a leží na běžném webovém serveru, takže se chová
+      jako každý jiný soubor: dá se cachovat a stahovat opakovaně. Žádné omezení počtu
+      dotazů nenastavujeme — ale je slušné stahovat ho jen tehdy, když se mohl změnit,
+      tedy nejvýš několikrát denně.</p>
+    <p class="dt-pozn">Něco chybí nebo je potřeba jiný tvar? <a href="kontakt.html">Napište nám</a>.</p>
+  </section>
+</main>
+<footer>
+  <div class="wrap foot-grid">
+    <div class="foot-brand-col">
+      <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
+      <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého. Děláme to s péčí, protože jsme se v tom sami hrabali.</p>
+    </div>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="porovnani.html">Porovnání uložených</a><a href="pridat.html">Přidat pozemek</a><a href="novinky.xml">Kanál nových pozemků</a><a href="data.html">Data ke stažení</a></nav>
+    <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
+    <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
+  </div>
+  <div class="wrap foot-bottom"><span id="pk-rezim"></span><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<!-- Vercel Web Analytics (navstevnost) -->
+<script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
+   chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
+   web běží na GitHub Pages pod vlastní doménou, takže si o neexistující soubor
+   říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
+   na nasazení u Vercelu. */
+(function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
+<script>
+/* Mobilní menu (hamburger) — statická stránka bez main.js, obsloužíme ho přímo tady. */
+(function () {
+  var toggle = document.querySelector('.nav-toggle');
+  var nav = document.getElementById('nav');
+  if (!toggle || !nav) return;
+  function closeNav() {
+    nav.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Otevřít menu');
+    document.body.classList.remove('nav-open');
+  }
+  toggle.addEventListener('click', function () {
+    var open = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Zavřít menu' : 'Otevřít menu');
+    document.body.classList.toggle('nav-open', open);
+  });
+  nav.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A' && nav.classList.contains('open')) closeNav();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNav(); });
+})();
+</script>
+
+<script src="js/config.js?v=7f55c4e1" defer></script>
+<script src="js/auth.js?v=9f10c463" defer></script>
+<script src="js/hlidani-logika.js?v=34589855" defer></script>
+<script src="js/upozorneni-feed.js?v=d6d2bf4a" defer></script>
+<script src="js/upozorneni.js?v=990dc051" defer></script>
+<script src="js/ceny.js?v=d6a26b98" defer></script>
+<script src="js/klic.js?v=805c6c82"></script>
+<script src="js/ulozene.js?v=367bbc97"></script>
+<script src="js/moje-data.js?v=6d6bc407" defer></script>
+<script src="js/poznamky.js?v=312edc1e"></script>
+<script src="js/porovnani.js?v=1143c76c" defer></script>
+<script src="js/hlavicka.js?v=c6f32427" defer></script>
+<script src="js/rezim.js?v=3decd02f" defer></script>
+</body>
+</html>

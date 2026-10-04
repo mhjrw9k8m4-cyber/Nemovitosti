@@ -30,6 +30,7 @@ const KROKY = [
   ['generate-parcel-pages.mjs', 'vlastní stránka pro každý pozemek (sdílení a vyhledávače)'],
   // Až PO stránkách pozemků: kanál na ně odkazuje, takže musí existovat.
   ['generate-rss.mjs', 'kanály s novými pozemky (celostátní a krajské)'],
+  ['generate-data-stranka.mjs', 'stránka s popisem dat (data.html)'],
   // Až po generátorech: česká sazba se dělá na HOTOVÉM textu, ať platí
   // stejně pro ručně psané stránky i pro 1 995 generovaných.
   ['sazba.mjs', 'nezlomitelné mezery (předložky, čísla s jednotkou)'],

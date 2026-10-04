@@ -34,8 +34,19 @@ const ZKOUSKA = 'pozemek-benesov-zkouskatestu-9q7k2x.html';
 const cesta = path.join(KOREN, ZKOUSKA);
 
 function uklid() { try { if (existsSync(cesta)) unlinkSync(cesta); } catch (e) {} }
+/* GENERÁTOR SE PUSTÍ V ŽIVÉM ADRESÁŘI a přepíše při tom všech 1 988
+   stránek pozemků. To samo o sobě nevadí — píše je ze stejných dat —
+   jenže česká sazba se v řetězci dělá TEPRVE PO generátorech, takže po
+   takovém běhu zůstanou stránky bez nezlomitelných mezer. Zkouška, která
+   běží později a sazbu kontroluje (test-cestina.mjs), pak padne na vadu,
+   kterou nezpůsobila: 1 988 stránek „není vysázeno". Naměřeno — a dosud
+   to nepraskalo jen proto, že běh skončil na jiné chybě dřív, než na
+   čeština vůbec došlo. Pořadí zkoušek nemá rozhodovat o výsledku, proto
+   se sazba po generátoru dohání zpátky (2 s). */
 function generuj() {
   execFileSync(process.execPath, [path.join(KOREN, 'scripts', 'generate-parcel-pages.mjs')],
+    { cwd: KOREN, stdio: 'ignore' });
+  execFileSync(process.execPath, [path.join(KOREN, 'scripts', 'sazba.mjs')],
     { cwd: KOREN, stdio: 'ignore' });
 }
 
