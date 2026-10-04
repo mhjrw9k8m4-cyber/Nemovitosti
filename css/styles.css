@@ -4499,7 +4499,45 @@ h1, h2, h3,
 .opp-item:hover .opp-skryt, .opp-item:focus-within .opp-skryt{opacity:1;}
 .opp-skryt:hover{color:var(--c-exekuce-ink); border-color:var(--c-exekuce-ink);}
 .opp-skryt:focus-visible{opacity:1; outline:2px solid var(--copper); outline-offset:2px;}
-@media (hover:none){ .opp-skryt{opacity:1;} }
+/* PRST NENÍ MYŠ. Na dotykovém zařízení se obě tlačítka nad fotkou zvětší
+   na 44×44 px a dostanou mezi sebe mezeru.
+   Změřeno na mobilu 390×844 na pěti stránkách: ze 110 dotykových terčů
+   bylo pod normou 44 px jen 48 — a byla to právě tahle dvě tlačítka,
+   každé 24× (jednou na kartu). Všechno ostatní na webu už 44 px mělo.
+     ✕ „skrýt"  28×28 px
+     ♥ „uložit" 36×36 px
+   Ta osmadvacítka byla nejhorší místo na webu: nejmenší terč nese akci,
+   která nabídku odstraní, a ležel 2 px pod srdíčkem, které dělá pravý
+   opak. Dvě sousední malá tlačítka s opačným významem — to je omyl,
+   který se stane každému, kdo kartu jen posouvá palcem.
+   Komentář u srdíčka přitom říkal „36 px je spodní mez dotykového
+   terče"; to byla sleva z normy, ne norma. Mez je 44.
+   ROSTE JEN PLOCHA, ne značka: srdíčko i křížek zůstávají stejně velké,
+   mění se jen to, kam dosáhne prst. Na myši se nemění nic — proto je to
+   tady, v pravidle pro zařízení bez kurzoru.
+   Hlídá scripts/test-dotyk.mjs. */
+@media (hover:none){
+  .opp-skryt{opacity:1;}
+  /* Plocha pro prst je 44 px, ale VIDITELNÝ kroužek jen 32 px — kreslí ho
+     pseudoprvek uprostřed. Na mobilu je totiž karta vodorovný řádek
+     a fotka v něm jen 116 px široká miniatura: dva plné kroužky po 44 px
+     by na ní zabraly 38 % šířky. Takhle je ta dvojice na miniatuře
+     MENŠÍ než dnes (32 místo 36 px), a přesto se do ní dá trefit. */
+  .opp-media .opp-fav, .opp-skryt{
+    width:44px; height:44px; right:0; background:none; border:0;
+    border-radius:0; backdrop-filter:none; box-shadow:none;}
+  .opp-media .opp-fav{top:0;}
+  /* 50 = 44 (srdíčko) + 6 px hluchého místa: dvě sousední tlačítka dělají
+     opak, takže mezi nimi musí být pruh, kde se nestane nic. */
+  .opp-skryt{top:50px;}
+  .opp-media .opp-fav::before, .opp-skryt::before{
+    content:""; position:absolute; top:50%; left:50%; width:32px; height:32px;
+    margin:-16px 0 0 -16px; border-radius:50%;}
+  .opp-media .opp-fav::before{background:rgba(8,20,14,0.55);}
+  .opp-skryt::before{background:rgba(255,255,255,0.95);
+    border:1px solid var(--line-strong);}
+  .opp-media .opp-fav > *, .opp-skryt > *{position:relative;}
+}
 /* Skrytý pozemek, když si ho člověk nechá zobrazit: ztlumený, ať je jasné,
    že do seznamu normálně nepatří. */
 .opp-item.je-skryty{opacity:0.55;}
