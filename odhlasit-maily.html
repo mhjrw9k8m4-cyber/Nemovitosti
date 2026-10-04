@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+<script>/* Vzhled se musí nastavit JEŠTĚ PŘED vykreslením: jinak se stránka stihne vykreslit světle a hned ztmavnout, a bílé bliknutí do očí v noci je přesně to, kvůli čemu si lidé tmavý režim zapínají. Proto je to vložené a synchronní, ne soubor s defer. */try{var v=localStorage.getItem('pk_rezim_v1');if(v==='dark'||v==='light')document.documentElement.setAttribute('data-theme',v);}catch(e){}</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>Odhlášení z e-mailů | Parcelka</title>
+  <meta name="description" content="Vypnutí e-mailů s novými pozemky — jedním klikem, bez přihlášení.">
+  <meta name="theme-color" content="#FBFAF8">
+  <meta name="robots" content="noindex,follow">
+  <link rel="canonical" href="https://www.parcelaka.cz/odhlasit-maily.html">
+  <link rel="alternate" type="application/rss+xml" title="Parcelka — nové pozemky" href="novinky.xml">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Odhlášení z e-mailů | Parcelka">
+  <meta property="og:description" content="Vypnutí e-mailů s novými pozemky — jedním klikem.">
+  <meta property="og:locale" content="cs_CZ">
+  <meta property="og:site_name" content="Parcelka">
+  <meta property="og:url" content="https://www.parcelaka.cz/odhlasit-maily.html">
+  <meta property="og:image" content="https://www.parcelaka.cz/assets/og.png?v=5">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Odhlášení z e-mailů — Parcelka">
+  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og.png?v=5">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <!-- Písma leží u nás (fonts/), ne na Googlu. Přednačítají se, aby dojela
+       souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
+       kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
+  <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
+  <link rel="stylesheet" href="css/styles.css?v=9208f48b">
+  <style>
+    .kt-mail{display:flex; align-items:center; gap:14px; margin:6px 0 4px; padding:16px 16px; background:rgba(126,196,157,0.08); border:1px solid rgba(126,196,157,0.24); border-radius:var(--r-md); text-decoration:none;}
+    .kt-mail .kt-ico{flex:none; width:44px; height:44px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; background:var(--plocha-znacka);}
+    .kt-mail .kt-ico svg{width:23px; height:23px; stroke-width:1.57; color:#081410;}
+    .kt-mail .kt-txt{min-width:0;}
+    .kt-mail .kt-txt small{display:block; font-family:var(--font-mono); font-size:12px; letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--text-ondark-mute); font-weight:600;}
+    .kt-mail .kt-txt b{font-size:17px; color:var(--text-ondark); word-break:break-word;}
+    .kt-mail:hover{border-color:var(--copper-bright);}
+  </style>
+</head>
+<body>
+
+<a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+
+
+<header id="header">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="Parcelka — domů"><span class="logo-mark" aria-hidden="true"></span>Parcelka</a>
+    <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
+    <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+        <nav id="nav" aria-label="Hlavní navigace">
+      <!-- Pořadí: nejdřív KDO jsem, pak KAM jdu.
+           Účet je samostatný první řádek a nese stav přihlášení (doplní
+           ho js/hlavicka.js) — bez něj nešlo poznat, jestli je člověk
+           přihlášený. Hned pod ním je hlavní věc celého webu.
+           Dřív byl účet schovaný až čtvrtý ve skupině „Moje"; když jsem
+           pak nahoru posunul celou tu skupinu, spadlo hledání pozemků
+           na páté místo. Obojí bylo špatně — proto stojí účet sám. -->
+      <a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a>
+      <!-- „Hledat pozemek", ne „Pozemky": na webu o pozemcích podstatné
+           jméno neřekne nic, sloveso řekne, co se tam dělá. -->
+      <a href="index.html#mapa">Hledat pozemek</a>
+      <a href="cena-pozemku.html">Ceny pozemků</a>
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
+      <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
+    </nav>
+  </div>
+</header>
+<main id="obsah">
+  <section class="wrap om-hlava">
+    <h1>Odhlášení z e-mailů</h1>
+    <p class="om-uvod" id="om-stav" role="status">Odhlašuji…</p>
+    <p class="om-pozn">Odhlášení platí pro všechna uložená hledání naráz. Nové pozemky
+      uvidíte dál v <a href="upozorneni.html">Upozorněních</a> i v
+      <a href="novinky.xml">kanálu novinek</a> — jen vám o nich nebudeme psát.</p>
+    <p class="om-pozn">Posílání si můžete kdykoli zapnout zpátky na stránce
+      <a href="hlidani.html">Hlídání</a>, u konkrétního hledání.</p>
+  </section>
+</main>
+<footer>
+  <div class="wrap foot-grid">
+    <div class="foot-brand-col">
+      <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
+      <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého. Děláme to s péčí, protože jsme se v tom sami hrabali.</p>
+    </div>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="porovnani.html">Porovnání uložených</a><a href="pridat.html">Přidat pozemek</a><a href="novinky.xml">Kanál nových pozemků</a><a href="data.html">Data ke stažení</a></nav>
+    <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
+    <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
+  </div>
+  <div class="wrap foot-bottom"><span id="pk-rezim"></span><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<!-- Vercel Web Analytics (navstevnost) -->
+<script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
+   chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
+   web běží na GitHub Pages pod vlastní doménou, takže si o neexistující soubor
+   říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
+   na nasazení u Vercelu. */
+(function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
+<script>
+/* Mobilní menu (hamburger) — statická stránka bez main.js, obsloužíme ho přímo tady. */
+(function () {
+  var toggle = document.querySelector('.nav-toggle');
+  var nav = document.getElementById('nav');
+  if (!toggle || !nav) return;
+  function closeNav() {
+    nav.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Otevřít menu');
+    document.body.classList.remove('nav-open');
+  }
+  toggle.addEventListener('click', function () {
+    var open = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Zavřít menu' : 'Otevřít menu');
+    document.body.classList.toggle('nav-open', open);
+  });
+  nav.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A' && nav.classList.contains('open')) closeNav();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNav(); });
+})();
+</script>
+
+<!-- Jen to, co stránka opravdu potřebuje. Zkopírovaný seznam z předlohy
+     tahal porovnání, poznámky i centrum upozornění — na stránce, kterou
+     člověk otevře z e-mailu jedním klikem a chce jedinou věc: vypnout
+     poštu. Každý zbytečný skript je jen další způsob, jak se to může
+     nepovést. -->
+<script src="js/config.js?v=2092645e" defer></script>
+<script src="js/odhlasit-maily.js?v=3e4fa0c3" defer></script>
+<script src="js/hlavicka.js?v=c6f32427" defer></script>
+<script src="js/rezim.js?v=3decd02f" defer></script>
+</body>
+</html>

@@ -34,7 +34,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=4e8a9523">
+  <link rel="stylesheet" href="css/styles.css?v=9208f48b">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .hl-wrap{max-width:var(--m-uzky); margin:0 auto;}
@@ -166,6 +166,10 @@
     .hl-new-badge{background:var(--copper); color:#fff; font-size:12px; font-weight:800; padding:2px 8px; border-radius:999px; white-space:nowrap;}
     .hl-new-badge.zero{background:var(--ink-soft2); color:var(--text-ondark-mute);}
     .hl-crit{font-size:13px; color:var(--text-ondark-mute); margin-top:4px; line-height:1.5;}
+    .hl-mail{display:inline-flex; align-items:center; gap:8px; margin-top:10px;
+      font-size:14px; font-weight:600; cursor:pointer;}
+    .hl-mail input{width:18px; height:18px; accent-color:var(--copper); cursor:pointer;}
+    .hl-mail-pozn{margin:4px 0 0; font-size:13px; color:var(--text-ondark-mute); max-width:46ch;}
     .hl-count{font-size:13px; color:var(--text-ondark-mute); margin-top:2px;}
     .hl-kam{font-size:13px; color:var(--text-ondark-mute); margin:8px 0 0; line-height:1.5;}
     .hl-kam a{color:var(--copper-bright); text-decoration:underline; text-underline-offset:2px;}
@@ -267,7 +271,7 @@
 </footer>
 
 <script src="js/cisteni.js?v=c43084f5"></script>
-<script src="js/config.js?v=7f55c4e1"></script>
+<script src="js/config.js?v=2092645e"></script>
 <script src="js/auth.js?v=9f10c463"></script>
 <script src="js/upozorneni-feed.js?v=d6d2bf4a"></script>
 <script src="js/okruh.js?v=2495a6d8"></script>
@@ -864,6 +868,20 @@
      Drží se proto mimo formulář a vykreslí se nad seznamem; zmizí při
      dalším vykreslení, které si člověk vyvolá sám. */
   var varovaniPoUlozeni = '';
+  /* Řádek s přepínačem posílání. Prázdný řetězec, když je rozesílání
+     vypnuté — a prázdný řetězec v řetězení HTML nic neudělá, takže se
+     nemusí nikde kolem větvit. */
+  function mailRow(s) {
+    if (!window.PK_MAIL_ZAPNUTO) return '';
+    var zap = !!s.mailem;
+    return '<label class="hl-mail"><input type="checkbox" data-mail="' + s.id + '"'
+      + (zap ? ' checked' : '') + '> <span>Posílat e-mailem</span></label>'
+      + '<p class="hl-mail-pozn">' + (zap
+        ? 'Nové pozemky vám přijdou na e-mail, kterým se přihlašujete — nejvíc jeden e-mail za den.'
+        : 'Bez zapnutí nic neposíláme. Nové pozemky uvidíte v Upozorněních.')
+      + '</p>';
+  }
+
   function renderList(rows) {
     var html = '';
     if (!rows.length) {
@@ -895,6 +913,12 @@
             '<span class="hl-new-badge' + (newN ? '' : ' zero') + '">'
               + (newN ? newN + ' ' + tvarNovy(newN) : 'žádné nové') + '</span></div>' +
           '<div class="hl-crit">' + critText(s) + '</div>' +
+          /* POSÍLAT E-MAILEM — jen když rozesílač opravdu běží.
+             Přepínač se nevykreslí, dokud window.PK_MAIL_ZAPNUTO není
+             true (js/config.js): přepínač, po kterém nikdy nic nepřijde,
+             je slib, který web nemůže dodržet, a člověk pak přestane
+             chodit, protože čeká, že se mu ozveme sami. */
+          mailRow(s) +
           '<div class="hl-count">Celkem sedí: <b>' + cur.length + '</b> ' + tvarPozemku(cur.length) + '</div>' +
           /* KDE TY NOVÉ POZEMKY JSOU. Odznak „3 nových" byl slepá ulička:
              řekl počet a nic víc. Jediné tlačítko vedlo na mapu, kde je
@@ -950,6 +974,20 @@
        Označuje se tam, kde jsou nové pozemky opravdu vypsané —
        v Upozorněních, po jednom nebo tlačítkem „označit vše"
        (js/centrum.js). */
+    /* Přepnutí posílání. Zaškrtnutí se vrací zpátky, když to databáze
+       odmítne — jinak by přepínač tvrdil něco, co není uložené. */
+    root.querySelectorAll('[data-mail]').forEach(function (ch) {
+      ch.addEventListener('change', function () {
+        var id = ch.getAttribute('data-mail');
+        var chtene = ch.checked;
+        ch.disabled = true;
+        A.rpc('set_search_mail', { p_id: id, p_mailem: chtene }, true).then(function (res) {
+          ch.disabled = false;
+          if (res && res.error) { ch.checked = !chtene; return; }
+          loadSearches();
+        }, function () { ch.disabled = false; ch.checked = !chtene; });
+      });
+    });
     root.querySelectorAll('[data-del]').forEach(function (b) {
       b.addEventListener('click', function () {
         var id = b.getAttribute('data-del');

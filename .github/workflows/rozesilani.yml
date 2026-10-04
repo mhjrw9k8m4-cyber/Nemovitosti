@@ -1,0 +1,50 @@
+name: Rozeslat upozornění e-mailem
+
+# Nové pozemky pošle těm, kdo si u uloženého hledání zapnuli „Posílat
+# e-mailem". Shodu počítá týž kód jako prohlížeč (js/hlidani-logika.js).
+#
+# NIC SE NEPOSÍLÁ, DOKUD NEJSOU KLÍČE. Krok níž se pouští bez přepínače
+# --opravdu, takže jen vypíše, co by odešlo. Teprve až v nastavení
+# repozitáře budou tajné klíče RESEND_API_KEY a PK_MAIL_FROM a v tomhle
+# souboru se k příkazu dopíše --opravdu, začne pošta odcházet. Dvě
+# nezávislé podmínky schválně: cron, který se po prvním zeleném běhu
+# rozjede na skutečné lidi, se nemá stát omylem.
+#
+# Potřebné tajné klíče (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY  — už v repozitáři jsou
+#   RESEND_API_KEY                           — klíč poštovní služby
+#   PK_MAIL_FROM                             — např. Parcelka <hlidani@parcelaka.cz>
+#                                              (doména musí být u služby potvrzená)
+
+on:
+  schedule:
+    # Jednou denně, dopoledne (UTC). Data se obnovují 4× denně, ale čtyři
+    # e-maily denně nikdo nechce — a hlídání na hodinách nestojí.
+    - cron: '35 7 * * *'
+  workflow_dispatch:
+    inputs:
+      opravdu:
+        description: 'Opravdu odeslat (jinak jen vypsat)'
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  rozeslat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Rozeslat (nebo vypsat)
+        run: node scripts/send-alerts.mjs ${{ (github.event_name == 'workflow_dispatch' && inputs.opravdu) && '--opravdu' || '' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          PK_MAIL_FROM: ${{ secrets.PK_MAIL_FROM }}

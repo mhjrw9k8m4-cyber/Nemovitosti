@@ -116,6 +116,21 @@ const server = http.createServer((req, res) => {
         if (id) zhlednuti.set(id, (zhlednuti.get(id) || 0) + 1);
         return send(200, JSON.stringify(null));
       }
+      /* ODHLÁŠENÍ Z E-MAILŮ bez přihlášení — doopravdy je unsubscribe_mail
+         povolená i anonymním (grant … to anon), protože kdo se odhlašuje,
+         nebude se kvůli tomu přihlašovat. Odpověď se řídí tokenem, ať je
+         zkouška určitá: TOKEN-OK uspěje, TOKEN-CHYBA selže na serveru,
+         cokoli jiného je token, který nikam nepatří. */
+      if (fn === 'unsubscribe_mail') {
+        const tok = String(args.p_token || '');
+        if (tok === 'TOKEN-CHYBA') return send(500, JSON.stringify({ message: 'nepovedlo se' }));
+        if (tok === 'TOKEN-OK') {
+          for (const [u, hs] of hledani) hledani.set(u, hs.map((h) => Object.assign({}, h, { mailem: false })));
+          return send(200, JSON.stringify(true));
+        }
+        return send(200, JSON.stringify(false));
+      }
+
       const uid = kdo(req);
       if (!uid) return send(401, JSON.stringify({ message: 'musíte být přihlášeni' }));
 
@@ -263,6 +278,18 @@ const server = http.createServer((req, res) => {
           okruh_km: args.p_okruh_km || 0 });
         hledani.set(uid, moje);
         return send(200, JSON.stringify(id));
+      }
+
+      /* Zapnutí/vypnutí posílání u vlastního hledání. Cizí id nic
+         nezmění a vrátí false — stejně jako v databázi, kde to omezuje
+         podmínka user_id = auth.uid(). */
+      if (fn === 'set_search_mail') {
+        const moje = hledani.get(uid) || [];
+        const h = moje.find((x) => x.id === args.p_id);
+        if (!h) return send(200, JSON.stringify(false));
+        h.mailem = !!args.p_mailem;
+        hledani.set(uid, moje);
+        return send(200, JSON.stringify(true));
       }
 
       if (fn === 'delete_search') {

@@ -5484,3 +5484,13 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 .dt-tab code{font-size:13px; white-space:nowrap;}
 .dt-pozn{max-width:var(--m-text); margin:12px 0 0; font-size:14px; line-height:1.6;
   color:var(--text-ondark-mute);}
+
+/* ODHLÁŠENÍ Z E-MAILŮ (odhlasit-maily.html). Stránka, kterou člověk
+   otevře z e-mailu a po pěti sekundách zavře — proto jen text, žádné
+   ovládání. */
+.om-hlava{padding-top:28px;}
+.om-uvod{max-width:var(--m-text); margin-top:10px; line-height:1.6; font-size:17px;}
+.om-uvod.om-hotovo{font-weight:600; color:var(--c-ok-ink);}
+.om-uvod.om-chyba{font-weight:600; color:var(--c-exekuce-ink);}
+.om-pozn{max-width:var(--m-text); margin:14px 0 0; font-size:14px; line-height:1.6;
+  color:var(--text-ondark-mute);}

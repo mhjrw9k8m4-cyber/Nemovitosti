@@ -94,7 +94,15 @@ try {
     /* Na Supabase je auth.uid() přihlášený člověk a auth.users tabulka
        účtů. Tady se obojí podstrčí tak, aby se dal uživatel PŘEPÍNAT —
        jinak by se průchod novým účtem nedal zahrát. */
-    create table if not exists auth.users (id uuid primary key, email_confirmed_at timestamptz);
+    /* Sloupec email tu musí být taky: rozesílač upozornění
+       (hlidani_k_odeslani v supabase/hlidani-mailem.sql) z auth.users
+       čte adresu, na kterou se píše. Bez něj hlásil tenhle test chybu
+       prostředí, ne skriptu — a protože se chyba tvářila jako vada
+       migrace, dala se snadno „opravit" tím, že by se funkce přestala
+       na adresu ptát. Na Supabase ten sloupec je. */
+    create table if not exists auth.users (id uuid primary key, email text,
+      email_confirmed_at timestamptz);
+    alter table auth.users add column if not exists email text;
     create or replace function auth.uid() returns uuid language sql stable as $$
       select nullif(current_setting('pk.uid', true), '')::uuid $$;
     create extension if not exists pgcrypto;
@@ -157,7 +165,7 @@ try {
       `set pk.uid = '${uid}'; select create_listing('${misto}','Kolín','orná půda','1/1',1000,100000,50.0,15.0,'popis',${kontakt || "'777111222'"})`]);
 
     psql(['-d', 'zkouska', '-q', '-c',
-      `insert into auth.users(id, email_confirmed_at) values ('${U1}', null), ('${U2}', now())`]);
+      `insert into auth.users(id, email, email_confirmed_at) values ('${U1}', 'u1@test.cz', null), ('${U2}', 'u2@test.cz', now())`]);
 
     /* 1) Nepotvrzený e-mail = za inzerátem nestojí ani schránka. */
     const bezMailu = vloz(U1, 'Bez potvrzení');
@@ -252,6 +260,56 @@ try {
     const zamitnuty = jako(U2, `select count(*) from public_listings() where place='Druha obec'`).trim();
     pravda('zamítnutý inzerát se nezveřejní ani po čase', zamitnuty === '0',
       `na mapě: ${zamitnuty} — zamítnutí se dá přečkat`);
+
+    /* ---- POSÍLÁNÍ HLÍDÁNÍ E-MAILEM -------------------------------
+       Tyhle čtyři kontroly běží na SKUTEČNÉM PostgreSQL, ne nad zdrojem
+       migrace: „default false" se dá napsat správně a stejně zrušit
+       pozdějším příkazem v témže souboru. Souhlas je jediná věc, kterou
+       se u pošty nedá omluvit — proto se ověřuje tam, kde platí. */
+    const hledani = jako(U2, "select save_search('Pošta','Kolín','','',0,0,'{}',0,0,0,false,null,null,null)");
+    pravda('nové hledání má posílání vypnuté',
+      jako(U2, `select mailem from saved_searches where id = '${hledani}'`) === 'f',
+      'nově uložené hledání má mailem = true — souhlas se předpokládal');
+    pravda('rozesílač takové hledání nevidí',
+      jako(U2, 'select count(*) from hlidani_k_odeslani(20)') === '0',
+      'vypnuté hledání se objevilo v seznamu k odeslání');
+
+    jako(U2, `select set_search_mail('${hledani}', true)`);
+    const kOdeslani = jako(U2, 'select count(*) from hlidani_k_odeslani(20)');
+    pravda('po zapnutí ho vidí (jinak by předchozí kontrola nic neměřila)',
+      kOdeslani === '1', `v seznamu je ${kOdeslani} řádků, má být 1`);
+
+    const tok = jako(U2, `select token from mail_nastaveni where user_id = '${U2}'`);
+    pravda('a k účtu vznikl odhlašovací token', /[0-9a-f-]{20,}/.test(tok), `token: „${tok}"`);
+    /* Odhlášení se zkouší BEZ přihlášení (pk.uid prázdné) — přesně tak,
+       jak to dělá odkaz z e-mailu. */
+    const odhl = jako('', `select unsubscribe_mail('${tok}')`);
+    pravda('odhlášení jedním klikem funguje i bez přihlášení', odhl === 't', `vrátilo: „${odhl}"`);
+    pravda('a vypne posílání u všech hledání naráz',
+      jako(U2, `select count(*) from saved_searches where user_id = '${U2}' and mailem`) === '0',
+      'po odhlášení zůstalo nějaké hledání zapnuté');
+    pravda('a rozesílač už nikoho nevidí',
+      jako(U2, 'select count(*) from hlidani_k_odeslani(20)') === '0',
+      'odhlášený účet je pořád v seznamu k odeslání');
+    /* DRUHÝ ZÁMEK, A MĚŘENÝ ZVLÁŠŤ. Odhlášení vypne obojí — příznak
+       u účtu i jednotlivá hledání — takže při běžném průběhu by stačil
+       jeden z nich a sabotáž „zruš filtr na odhlášení" by prošla
+       (vyzkoušeno: prošla). Tady se proto hledání zapne natvrdo, jako
+       by se k němu někdo dostal jinou cestou než funkcí set_search_mail,
+       a účet zůstane odhlášený. Rozesílač pořád nesmí vidět nic. */
+    psql(['-d', 'zkouska', '-q', '-c',
+      `update saved_searches set mailem = true where id = '${hledani}'`]);
+    pravda('odhlášený účet nedostane poštu, ani když je hledání zapnuté',
+      jako(U2, 'select count(*) from hlidani_k_odeslani(20)') === '0',
+      'zapnuté hledání přebilo odhlášení celého účtu');
+    pravda('a po zapnutí přes set_search_mail (které odhlášení ruší) ho vidí znovu',
+      (() => { jako(U2, `select set_search_mail('${hledani}', true)`);
+        return jako(U2, 'select count(*) from hlidani_k_odeslani(20)'); })() === '1',
+      'ani zapnutí přes funkci účet znovu nepřihlásilo');
+
+    pravda('cizí token nic nezmění',
+      jako('', "select unsubscribe_mail('00000000-0000-0000-0000-000000000000')") === 'f',
+      'neznámý token vrátil true');
   }
 } finally {
   try { if (bezi) execSync(`su postgres -c ${JSON.stringify(`${bin}/pg_ctl -D ${data} stop -m immediate`)}`, { stdio: 'ignore' }); } catch (e) {}

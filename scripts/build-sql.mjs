@@ -7,7 +7,7 @@
 // tuhle otázku ruší.
 //
 // Ruční spuštění: node scripts/build-sql.mjs
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,6 +24,9 @@ const PORADI = [
   ['saved-searches.sql', 'uložená hledání'],
   ['saved-searches-vice.sql', 'hlídání: min. cena, max. výměra a cena za m²'],
   ['saved-searches-celek.sql', 'hlídání: jen celé pozemky (bez spoluvlastnických podílů)'],
+  ['saved-searches-okruh.sql', 'hlídání: střed a okruh v km, ne jen název okresu'],
+  // Až za okruhem: funkce hlidani_k_odeslani() vrací i stred_lat/okruh_km.
+  ['hlidani-mailem.sql', 'hlídání e-mailem — dobrovolné, vypnuté, s odhlášením na klik'],
   ['watch-alerts.sql', 'hlídání lokality (double opt-in) + tabulka alert_seen'],
   ['listings-autopublish.sql', 'automatické zveřejnění inzerátu + token na úpravy'],
   ['listings-auth.sql', 'inzeráty pod účtem (user_id), my_listings, public_listings'],
@@ -69,6 +72,45 @@ drop function if exists create_listing(text,text,text,text,integer,integer,doubl
 drop function if exists create_listing(text,text,text,text,integer,integer,double precision,double precision,text,text,jsonb);
 `;
 
+/* NA ŽÁDNOU MIGRACI SE NESMÍ ZAPOMENOUT.
+   Seznam výš se píše ručně, protože na pořadí záleží — jenže ruční seznam
+   se dá přehlédnout. Přesně to se stalo: saved-searches-okruh.sql přidává
+   do uložených hledání střed a okruh, v repozitáři ležel, ale v seznamu
+   nebyl. 00-vse.sql ho tedy neobsahoval, a protože web radí pouštět JEN
+   00-vse.sql, nikdo by ty sloupce v databázi nezaložil: hlídání okruhu by
+   po nasazení padalo na chybějící sloupec. Vada bez jediného příznaku
+   v repozitáři — všechny soubory byly na svém místě.
+   Teď se seznam porovnává s adresářem v obou směrech a sestavení se
+   zastaví, dokud se nedoplní. Nic se nedoplňuje samo: kam soubor
+   v pořadí patří, ví člověk, ne skript. */
+/* A co se do balíku ÚMYSLNĚ nedává, se píše sem s důvodem. Mlčení by
+   znamenalo, že se na soubor dá zapomenout podruhé. */
+const MIMO = new Map([
+  ['aktualizace.sql', 'starší dohánějící balík: nese create_listing o 13 parametrech '
+    + 'a tabulku listing_checks, obojí už je v listings-rekonstrukce.sql '
+    + 'a listing-checks.sql. V balíku by podle místa v pořadí mohl přepsat '
+    + 'create_listing starší podobou — tedy přesně to, proti čemu 00-vse.sql je.'],
+]);
+{
+  const naDisku = readdirSync(SQL).filter((f) => f.endsWith('.sql') && f !== '00-vse.sql').sort();
+  const vSeznamu = PORADI.map(([j]) => j);
+  const zapomenute = naDisku.filter((f) => !vSeznamu.includes(f) && !MIMO.has(f));
+  const mimoNeexistuje = [...MIMO.keys()].filter((f) => !naDisku.includes(f));
+  const mimoAZaroven = [...MIMO.keys()].filter((f) => vSeznamu.includes(f));
+  const prebyvajici = vSeznamu.filter((f) => !naDisku.includes(f));
+  const dvakrat = vSeznamu.filter((f, i) => vSeznamu.indexOf(f) !== i);
+  const zle = [];
+  if (zapomenute.length) {
+    zle.push(`Tyhle soubory v supabase/ nejsou v seznamu PORADI, takže se do 00-vse.sql `
+      + `nedostanou: ${zapomenute.join(', ')}. Zařaďte je tam, kam podle závislostí patří.`);
+  }
+  if (prebyvajici.length) zle.push(`V seznamu je soubor, který na disku není: ${prebyvajici.join(', ')}.`);
+  if (mimoNeexistuje.length) zle.push(`Výjimka se píše na soubor, který na disku není: ${mimoNeexistuje.join(', ')}.`);
+  if (mimoAZaroven.length) zle.push(`Soubor je zařazený i vyřazený naráz: ${mimoAZaroven.join(', ')}.`);
+  if (dvakrat.length) zle.push(`V seznamu je soubor dvakrát: ${[...new Set(dvakrat)].join(', ')}.`);
+  if (zle.length) { for (const z of zle) console.error('::error::' + z); process.exit(1); }
+}
+
 const casti = [HLAVA];
 for (const [jmeno, popis] of PORADI) {
   const obsah = readFileSync(path.join(SQL, jmeno), 'utf8').trimEnd();
@@ -82,4 +124,5 @@ for (const [jmeno, popis] of PORADI) {
 
 const cil = path.join(SQL, '00-vse.sql');
 writeFileSync(cil, casti.join(''), 'utf8');
-console.log(`Složeno ${PORADI.length} souborů do ${path.relative(ROOT, cil)}.`);
+console.log(`Složeno ${PORADI.length} souborů do ${path.relative(ROOT, cil)}.`
+  + (MIMO.size ? ` Mimo balík zůstává ${MIMO.size} (s napsaným důvodem).` : ''));

@@ -203,6 +203,9 @@ jobs:
       - name: Náhled odkazu patří k vlastní stránce
         run: node scripts/test-sdileni.mjs
 
+      - name: Rozesílač upozornění e-mailem
+        run: node scripts/test-rozesilac.mjs
+
       - name: Jeden styl (nadpisy a textura z palety)
         run: node scripts/test-jeden-styl.mjs
 
@@ -264,6 +267,9 @@ jobs:
 
       - name: Projít chat v prohlížeči
         run: node scripts/test-chat-prohlizec.mjs
+
+      - name: Odhlášení z e-mailů a přepínač posílání
+        run: node scripts/test-odhlaseni.mjs
 
       # Potřebuje prohlížeč (playwright-core). V rychlém jobu „testy" se
       # neinstaluje, takže tam krok padal na chybějícím balíčku — a s ním
