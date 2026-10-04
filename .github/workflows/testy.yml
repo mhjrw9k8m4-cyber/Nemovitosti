@@ -245,6 +245,9 @@ jobs:
       - name: Vložený styl na stránce pozemku
         run: node scripts/test-vlozeny-styl.mjs
 
+      - name: Kanál s novými pozemky
+        run: node scripts/test-rss.mjs
+
       - name: Jeden styl (nadpisy a textura z palety)
         run: node scripts/test-jeden-styl.mjs
 
