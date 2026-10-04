@@ -248,7 +248,19 @@ const server = http.createServer((req, res) => {
           druh: (args.p_druh || '').trim() || null,
           ptype: (args.p_type || '').trim() || null,
           max_price: args.p_max_price || 0, min_area: args.p_min_area || 0,
-          features: args.p_features || [], created_at: new Date().toISOString() });
+          features: args.p_features || [], created_at: new Date().toISOString(),
+          /* Ukládá se VŠECHNO, co volající pošle — i novější sloupce.
+             Dřív se braly jen ty nejstarší a zbytek se tiše zahazoval,
+             takže zkouška nemohla poznat, jestli se „jen celé pozemky"
+             nebo okruh do databáze doopravdy dostaly. Test double, který
+             část zadání spolkne, hlídá míň, než si kdo myslí. */
+          min_price: args.p_min_price || 0,
+          max_area: args.p_max_area || 0,
+          max_perm2: args.p_max_perm2 || 0,
+          jen_celek: !!args.p_jen_celek,
+          stred_lat: args.p_stred_lat == null ? null : args.p_stred_lat,
+          stred_lng: args.p_stred_lng == null ? null : args.p_stred_lng,
+          okruh_km: args.p_okruh_km || 0 });
         hledani.set(uid, moje);
         return send(200, JSON.stringify(id));
       }

@@ -425,5 +425,8 @@ jobs:
       - name: Značka „už otevřeno"
         run: node scripts/test-videno.mjs
 
+      - name: Hlídání okruhu od místa
+        run: node scripts/test-okruh-hlidani.mjs
+
       - name: Zařazení pozemku do okresu
         run: node scripts/test-okres.mjs

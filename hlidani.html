@@ -84,6 +84,10 @@
       border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1); margin-top:8px;}
     .hl-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--text-ondark-mute);}
     .hl-msg.err{color:var(--c-exekuce);}
+    /* Varování o tom, co se neuložilo — stojí nad seznamem, aby přežilo
+       přepnutí záložky po uložení. */
+    .hl-varovani{border-color:var(--c-exekuce); color:var(--text-ondark);
+      font-size:14px; line-height:1.55;}
     .hl-auth form{margin:0;}
     /* Nové hledání (formulář) */
     .hl-new{padding:16px;}
@@ -264,7 +268,8 @@
 <script src="js/config.js?v=7f55c4e1"></script>
 <script src="js/auth.js?v=9f10c463"></script>
 <script src="js/upozorneni-feed.js?v=d6d2bf4a"></script>
-<script src="js/hlidani-logika.js?v=94c83b26"></script>
+<script src="js/okruh.js?v=2495a6d8"></script>
+<script src="js/hlidani-logika.js?v=34589855"></script>
 <script src="js/upozorneni.js?v=990dc051"></script>
 <script src="js/hlavicka.js?v=c6f32427"></script>
 <script>
@@ -567,6 +572,21 @@
              začne psát — tedy přesně ve chvíli, kdy by radu potřeboval. */
           '<input class="hl-in" id="ns-okres" placeholder="okres nebo obec" aria-label="Okres nebo obec" aria-describedby="ns-okres-pozn">' +
           '<p class="hl-napoveda" id="ns-okres-pozn">Když necháte prázdné, hlídáme celou ČR.</p>' +
+          /* OKRUH MÍSTO HRANICE OKRESU. Okres je jednou příliš velký
+             a jindy končí pár kilometrů od domu: z okolí Tišnova do
+             25 km spadá pět okresů naráz a žádný z nich celý. Kdo
+             dojede za hodinu, hledá okolí, ne správní jednotku. */
+          '<div class="hl-okruh">' +
+            '<label class="hl-lbl" for="ns-okruh">Místo hranic okresu hlídat okolí</label>' +
+            '<select class="hl-sel" id="ns-okruh">' +
+              '<option value="">— celý okres (jak to bylo)</option>' +
+              '<option value="10">do 10 km od místa</option>' +
+              '<option value="25">do 25 km od místa</option>' +
+              '<option value="50">do 50 km od místa</option>' +
+              '<option value="100">do 100 km od místa</option>' +
+            '</select>' +
+            '<p class="hl-napoveda" id="ns-okruh-pozn"></p>' +
+          '</div>' +
           '<div class="hl-row2">' +
             '<div><label class="hl-lbl" for="ns-druh">Druh pozemku</label><select class="hl-sel" id="ns-druh">' + druhOpts + '</select></div>' +
             '<div><label class="hl-lbl" for="ns-type">Typ nabídky</label><select class="hl-sel" id="ns-type">' + typeOpts + '</select></div>' +
@@ -632,8 +652,23 @@
       var e = document.getElementById(id);
       return e ? (parseInt((e.value || '').replace(/\D/g, ''), 10) || 0) : 0;
     };
+    /* Střed okruhu se hledá z NAPSANÉHO MÍSTA týmž modulem, jakým ho
+       hledá pole hledání na mapě (PKOkruh.stred) — jinak by „do 25 km
+       od Tišnova" znamenalo v hlídání něco jiného než ve vyhledávání.
+       Vrací null, když místo není napsané, okruh není vybraný, nebo se
+       střed nenašel: „do 25 km od ničeho" by pouštělo všechno. */
+    function okruhZeZadani() {
+      var sel = document.getElementById('ns-okruh');
+      var km = sel ? (parseInt(sel.value, 10) || 0) : 0;
+      var misto = document.getElementById('ns-okres').value.trim();
+      if (!km || !misto) return null;
+      var st = (window.PKOkruh && window.PKOkruh.stred) ? window.PKOkruh.stred(DATA, misto) : null;
+      if (!st || !isFinite(st.lat) || !isFinite(st.lng)) return null;
+      return { stred_lat: st.lat, stred_lng: st.lng, okruh_km: km };
+    }
     function kriteria() {
-      return {
+      var o = okruhZeZadani();
+      var k = {
         okres: document.getElementById('ns-okres').value.trim(),
         druh: document.getElementById('ns-druh').value,
         ptype: document.getElementById('ns-type').value,
@@ -645,6 +680,8 @@
         jen_celek: !!(document.getElementById('ns-celek') || {}).checked,
         features: [].slice.call(root.querySelectorAll('.hl-chip.on')).map(function (c) { return c.getAttribute('data-feat'); }),
       };
+      if (o) { k.stred_lat = o.stred_lat; k.stred_lng = o.stred_lng; k.okruh_km = o.okruh_km; }
+      return k;
     }
     /* Živý souhrn. Dřív se člověk dozvěděl až po uložení, jestli mu na to
        hledání vůbec něco sedí — a když ne, neměl podle čeho poznat, které
@@ -687,12 +724,44 @@
         prepocti();
       });
     });
+    /* Co se doopravdy bude hlídat, se musí dát přečíst DŘÍV, než se to
+       uloží. Bez toho by člověk vybral „do 25 km", nechal pole místa
+       prázdné nebo napsal obec, kterou modul nezná, a dozvěděl se až
+       z upozornění, že se hlídá celý okres. */
+    function obnovOkruhPozn() {
+      var p = document.getElementById('ns-okruh-pozn');
+      var sel = document.getElementById('ns-okruh');
+      if (!p || !sel) return;
+      var km = parseInt(sel.value, 10) || 0;
+      if (!km) { p.textContent = ''; return; }
+      var misto = document.getElementById('ns-okres').value.trim();
+      if (!misto) { p.textContent = 'Napište nahoru místo — bez něj není od čeho okruh měřit.'; return; }
+      var o = okruhZeZadani();
+      p.textContent = o
+        ? 'Hlídá se vše do ' + km + ' km od místa „' + misto + '", i přes hranice okresů.'
+        : 'Místo „' + misto + '" neumíme na mapě najít, takže se bude hlídat celý okres.';
+    }
+    var okruhSel = document.getElementById('ns-okruh');
+    if (okruhSel) okruhSel.addEventListener('change', function () { obnovOkruhPozn(); prepocti(); });
+    var okresIn = document.getElementById('ns-okres');
+    if (okresIn) okresIn.addEventListener('input', obnovOkruhPozn);
+    obnovOkruhPozn();
     prepocti();
 
     document.getElementById('ns-save').addEventListener('click', function () {
       var k = kriteria();
       var label = k.okres || (TYPE_LABEL[k.ptype] || 'Pozemky') + (k.druh ? ' · ' + k.druh : '');
       msg.textContent = 'Ukládám…'; msg.className = 'hl-msg';
+      /* Nejvyšší stupeň umí i okruh (supabase/saved-searches-okruh.sql).
+         Když ho databáze ještě nemá, ustoupí se o patro níž — na podobu
+         bez okruhu — a člověk se dozví, že se okruh nepropsal. */
+      var sOkruh = { p_label: label, p_okres: k.okres, p_druh: k.druh, p_type: k.ptype,
+        p_max_price: k.max_price, p_min_area: k.min_area, p_features: k.features,
+        p_min_price: k.min_price, p_max_area: k.max_area, p_max_perm2: k.max_perm2,
+        p_jen_celek: k.jen_celek,
+        p_stred_lat: k.stred_lat === undefined ? null : k.stred_lat,
+        p_stred_lng: k.stred_lng === undefined ? null : k.stred_lng,
+        p_okruh_km: k.okruh_km || 0 };
       var sCelkem = { p_label: label, p_okres: k.okres, p_druh: k.druh, p_type: k.ptype,
         p_max_price: k.max_price, p_min_area: k.min_area, p_features: k.features,
         p_min_price: k.min_price, p_max_area: k.max_area, p_max_perm2: k.max_perm2,
@@ -713,7 +782,8 @@
       function uloz(parametry, uroven) {
         return A.rpc('save_search', parametry, true).then(function (res) {
           if (res && res.ok) return { res: res, uroven: uroven };
-          if (uroven === 'celek') return uloz(siroke, 'siroke');
+          if (uroven === 'celek') return uloz(sCelkem, 'bezOkruhu');
+          if (uroven === 'bezOkruhu') return uloz(siroke, 'siroke');
           if (uroven === 'siroke') {
             var uzke = { p_label: label, p_okres: k.okres, p_druh: k.druh, p_type: k.ptype,
               p_max_price: k.max_price, p_min_area: k.min_area, p_features: k.features };
@@ -722,7 +792,7 @@
           return { res: res, uroven: 'uzke' };
         });
       }
-      uloz(sCelkem, 'celek').then(function (v) {
+      uloz(sOkruh, 'celek').then(function (v) {
         var jeSiroke = v.uroven !== 'uzke';
         var res = v.res;
         if (!res || !res.ok) { msg.textContent = (res && res.error && res.error.message) || 'Uložení se nepovedlo.'; msg.className = 'hl-msg err'; return; }
@@ -734,11 +804,15 @@
            leží, ne polovinu. */
         var nepropsano = [];
         if (!jeSiroke && (k.min_price || k.max_area || k.max_perm2)) nepropsano.push('cena od / výměra do / cena za m²');
-        if (v.uroven !== 'celek' && k.jen_celek) nepropsano.push('volba „jen celé pozemky"');
+        if (v.uroven !== 'celek' && v.uroven !== 'bezOkruhu' && k.jen_celek) nepropsano.push('volba „jen celé pozemky"');
+        if (v.uroven !== 'celek' && k.okruh_km) nepropsano.push('okruh od místa (hlídá se celý okres)');
         if (nepropsano.length) {
-          msg.textContent = 'Hlídání uloženo, ale ' + nepropsano.join(' ani ')
+          var text = 'Hlídání uloženo, ale ' + nepropsano.join(' ani ')
             + ' se zatím neuložily — databáze je ještě neumí.';
+          msg.textContent = text;
           msg.className = 'hl-msg err';
+          // a hlavně: ať to přežije přepnutí záložky hned za chvíli
+          if (typeof varovaniPoUlozeni === 'string') varovaniPoUlozeni = text;
         }
         var newId = res.data;
         // hned označíme aktuální pozemky jako „viděné" → nové se počítají až od teď
@@ -779,6 +853,15 @@
     root.querySelectorAll('.hl-panel').forEach(function (x) { x.hidden = x.id !== 'hl-p-' + id; });
   }
 
+  /* VAROVÁNÍ MUSÍ PŘEŽÍT PŘEKRESLENÍ.
+     Po uložení se přepne záložka a seznam se vykreslí znovu — a tím se
+     dosud smazala hláška „… se zatím neuložily, databáze je ještě
+     neumí", kterou si člověk nestihl přečíst. Platilo to pro všechna
+     ta varování, nejen pro okruh: kdo si uložil hlídání s cenou od
+     a výměrou do, nedozvěděl se, že v databázi leží jen půlka zadání.
+     Drží se proto mimo formulář a vykreslí se nad seznamem; zmizí při
+     dalším vykreslení, které si člověk vyvolá sám. */
+  var varovaniPoUlozeni = '';
   function renderList(rows) {
     var html = '';
     if (!rows.length) {
@@ -832,6 +915,14 @@
         '</div>';
       });
       html += '</div></div>';
+    }
+    /* Varování se připojuje AŽ TADY, těsně před vložením do stránky.
+       Napoprvé stálo na začátku funkce — jenže obě větve níž přiřazují
+       do `html` znovu (html = …), takže se varování pokaždé přepsalo
+       a nikdy se neukázalo. Hezky napsané a k ničemu. */
+    if (varovaniPoUlozeni) {
+      html = '<div class="hl-card hl-varovani" role="status">' + esc(varovaniPoUlozeni) + '</div>' + html;
+      varovaniPoUlozeni = '';
     }
     root.innerHTML = html;
     /* Šipkami vlevo/vpravo se mezi záložkami přepíná i z klávesnice —

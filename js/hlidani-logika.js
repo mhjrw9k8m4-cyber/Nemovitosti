@@ -9,10 +9,18 @@
  * které už uživatel viděl (seen_keys). Nic se nikam neposílá — počítá se
  * to tady v prohlížeči a výsledek je vidět u hlídání a v odznaku v menu.
  */
+/* Modul s výpočtem vzdálenosti se podává LÍNĚ, ne hned při načtení.
+   Dva důvody, oba naměřené: v index.html stojí js/okruh.js AŽ ZA tímhle
+   souborem, takže v okamžiku vzniku ještě neexistuje, a hlidani.html ho
+   dřív nenačítala vůbec. Kdyby se odkaz uložil natvrdo, zůstal by
+   navždycky prázdný a hlídání s okruhem by tiše nepouštělo nic. */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else root.PKHlidani = factory();
-})(typeof self !== 'undefined' ? self : this, function () {
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory(function () { return require('./okruh.js'); });
+  } else {
+    root.PKHlidani = factory(function () { return root.PKOkruh; });
+  }
+})(typeof self !== 'undefined' ? self : this, function (dejOkruh) {
   'use strict';
 
   /* KOLIK METRŮ ZA TY PENÍZE OPRAVDU DOSTANU.
@@ -250,6 +258,23 @@
        protože v ceně je zlomek, ale výměra celé parcely.
        Prázdná hodnota znamená „neřeším", tedy přesně dosavadní chování. */
     if (s.jen_celek && d.podil) return false;
+    /* OKRUH OD MÍSTA. Mapa to umí odjakživa („Pozemky v okolí"),
+       hlídání znalo jedinou podobu místa — NÁZEV okresu nebo obce.
+       Jenže kdo bydlí v Tišnově a dojede za hodinu, nehledá „okres
+       Brno-venkov": z okolí Tišnova do 25 km spadá pět okresů naráz
+       a žádný z nich celý.
+       Počítá se TÝMŽ modulem jako na mapě (PKOkruh.km), aby upozornění
+       chodila přesně na to, co člověk viděl, když si hledání ukládal.
+       Kdyby modul chyběl, hlídání radši NEPUSTÍ nic než aby pouštělo
+       všechno: tiché rozšíření okruhu na celou republiku by se poznalo
+       až podle záplavy upozornění. */
+    if (s.okruh_km > 0) {
+      if (!isFinite(s.stred_lat) || !isFinite(s.stred_lng)) return false;
+      if (!isFinite(d.lat) || !isFinite(d.lng)) return false;
+      var O = dejOkruh && dejOkruh();
+      var okruhKm = (O && O.km) ? O.km({ lat: s.stred_lat, lng: s.stred_lng }, d) : Infinity;
+      if (!(okruhKm <= s.okruh_km)) return false;
+    }
     if (s.okres && !mistoSedi(s.okres, d)) return false;
     if (s.features && s.features.length) {
       var f = d.features || [];
@@ -426,13 +451,16 @@
    *
    * Proto to rozhodnutí nestojí ve stránce, ale tady, kde se dá zkoušet:
    * scripts/test-hlidani.mjs. */
+  var OKRUH_SLOUPCE = ['stred_lat', 'stred_lng', 'okruh_km'];
   var SLOUPCE_STUPNU = {
-    // nejnovejsi podoba — vsechno
+    // nejnovejsi podoba — vsechno vcetne okruhu
     celek: null,
-    // bez „jen cele pozemky" (supabase/saved-searches-celek.sql nespusten)
-    siroke: ['jen_celek'],
+    // bez okruhu (supabase/saved-searches-okruh.sql nespusten)
+    bezOkruhu: OKRUH_SLOUPCE,
+    // a navic bez „jen cele pozemky" (saved-searches-celek.sql nespusten)
+    siroke: OKRUH_SLOUPCE.concat(['jen_celek']),
     // nejstarsi podoba (ani saved-searches-vice.sql nespusten)
-    uzke: ['jen_celek', 'min_price', 'max_area', 'max_perm2']
+    uzke: OKRUH_SLOUPCE.concat(['jen_celek', 'min_price', 'max_area', 'max_perm2'])
   };
   function kriteriaUlozena(k, uroven) {
     if (!k) return k;
