@@ -557,7 +557,16 @@ html.pk-prihlasen #prodej-card[hidden], html.pk-prihlasen #mi-panel[hidden]{disp
 .auth-bar{margin:0 0 14px; padding:10px 14px; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); font-size:14px; color:var(--text-ondark-mute);}
 .auth-bar b{color:var(--text-ondark);}
 .auth-bar a{color:var(--copper-bright); text-decoration:underline; text-underline-offset:2px;}
+/* 44 px pro prst. Tahle třída nese „Odhlásit" na pridat.html a terč měl
+   22 px, tedy polovinu normy. Nehlásilo to nic, protože se dotyková
+   kontrola dívala jen na odhlášené stránky — a odhlašovací tlačítko se
+   přihlášenému ukáže právě tam, kde se dřív nikdo nekoukal.
+   Výška se dává jen na dotykových zařízeních: na myš je podtržený odkaz
+   uvnitř věty v pořádku a 44px řádek by text rozrazil. */
 .linklike{background:none; border:0; padding:0; font:inherit; color:var(--copper-bright); text-decoration:underline; text-underline-offset:2px; cursor:pointer;}
+@media (hover:none){
+  .linklike{min-height:44px; display:inline-flex; align-items:center;}
+}
 
 /* Lišta postupu scrollování */
 

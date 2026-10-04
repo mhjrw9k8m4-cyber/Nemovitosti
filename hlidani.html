@@ -34,7 +34,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=9208f48b">
+  <link rel="stylesheet" href="css/styles.css?v=c55dcd92">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .hl-wrap{max-width:var(--m-uzky); margin:0 auto;}
@@ -166,7 +166,14 @@
     .hl-new-badge{background:var(--copper); color:#fff; font-size:12px; font-weight:800; padding:2px 8px; border-radius:999px; white-space:nowrap;}
     .hl-new-badge.zero{background:var(--ink-soft2); color:var(--text-ondark-mute);}
     .hl-crit{font-size:13px; color:var(--text-ondark-mute); margin-top:4px; line-height:1.5;}
-    .hl-mail{display:inline-flex; align-items:center; gap:8px; margin-top:10px;
+    /* TERČ MÁ MÍT 44 px. Napsané to tu bylo na 22 px — zaškrtávátko 18 px
+       a kolem nic. Naměřeno na mobilu 390×844: ze všech zaškrtávátek na
+       webu bylo pod normou právě tohle jedno (ostatní na pridat.html
+       normu splňují). A nebylo to vidět, protože se přepínač vykresluje
+       jen se zapnutou vlajkou PK_MAIL_ZAPNUTO — vada by přišla na svět
+       až v den, kdy se posílání zapne. */
+    .hl-mail{display:inline-flex; align-items:center; gap:8px; margin-top:6px;
+      min-height:44px; padding:2px 0;
       font-size:14px; font-weight:600; cursor:pointer;}
     .hl-mail input{width:18px; height:18px; accent-color:var(--copper); cursor:pointer;}
     .hl-mail-pozn{margin:4px 0 0; font-size:13px; color:var(--text-ondark-mute); max-width:46ch;}

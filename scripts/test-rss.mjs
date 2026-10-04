@@ -154,8 +154,50 @@ const hlavni = readFileSync(path.join(KOREN, 'novinky.xml'), 'utf8');
   if (okres) {
     const t = readFileSync(path.join(KOREN, okres), 'utf8');
     pravda('a platí to i pro stránky, které se generují při každém běhu robota',
-      /application\/rss\+xml/.test(t) && /href="novinky\.xml"/.test(t), okres);
+      /application\/rss\+xml/.test(t), okres);
   }
+}
+
+/* ---- 7) KRAJSKÉ KANÁLY MUSÍ BÝT ODKUD NAJÍT ----------------------
+   Čtrnáct krajských kanálů se obnovuje čtyřikrát denně — a odkazovala na
+   ně JEDINÁ stránka, data.html s popisem dat. Na stránce kraje si čtenář
+   nemohl všimnout, že existuje kanál právě pro jeho kraj: v hlavičce
+   stál celostátní a ve textu nic. Soubory, které nikdo nenajde, se
+   stejně dobře nemusely dělat.
+   Kontroluje se obojí, protože obojí je potřeba k něčemu jinému:
+   <link rel="alternate"> najde ČTEČKA, viditelný odkaz najde ČLOVĚK. */
+{
+  const kanaly = readdirSync(KOREN).filter((f) => /^novinky-[a-z0-9-]+\.xml$/.test(f));
+  pravda(`krajských kanálů se našlo dost na kontrolu (${kanaly.length})`,
+    kanaly.length >= 10, `nalezeno ${kanaly.length}`);
+
+  const bezCtecky = [], bezOdkazu = [], naNeexistujici = [];
+  for (const kanal of kanaly) {
+    const stranka = 'pozemky-' + kanal.replace(/^novinky-/, '').replace(/\.xml$/, '') + '-kraj.html';
+    if (!existsSync(path.join(KOREN, stranka))) { naNeexistujici.push(`${kanal} → ${stranka}`); continue; }
+    const t = readFileSync(path.join(KOREN, stranka), 'utf8');
+    const re = new RegExp('<link rel="alternate"[^>]*href="' + kanal.replace('.', '\\.') + '"');
+    if (!re.test(t)) bezCtecky.push(stranka);
+    if (!new RegExp('<a href="' + kanal.replace('.', '\\.') + '"').test(t)) bezOdkazu.push(stranka);
+  }
+  pravda('každý krajský kanál najde čtečka na stránce svého kraje',
+    bezCtecky.length === 0, bezCtecky.slice(0, 4).join(', '));
+  pravda('a člověk se k němu doklikne z textu té stránky',
+    bezOdkazu.length === 0, bezOdkazu.slice(0, 4).join(', '));
+  pravda('a ke každému kanálu ta stránka vůbec existuje',
+    naNeexistujici.length === 0, naNeexistujici.join(', '));
+
+  /* Druhá strana: stránka nesmí nabízet kanál, který neexistuje —
+     to by byl mrtvý odkaz v hlavičce, který čtečka ohlásí jako chybu. */
+  const slibyNaPrazdno = [];
+  for (const f of readdirSync(KOREN).filter((x) => /\.html$/.test(x) && !/^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(x))) {
+    const t = readFileSync(path.join(KOREN, f), 'utf8');
+    for (const m of t.matchAll(/(?:href)="(novinky[a-z0-9-]*\.xml)"/g)) {
+      if (!existsSync(path.join(KOREN, m[1]))) slibyNaPrazdno.push(`${f} → ${m[1]}`);
+    }
+  }
+  pravda('a žádná stránka nenabízí kanál, který neexistuje',
+    slibyNaPrazdno.length === 0, slibyNaPrazdno.slice(0, 4).join(', '));
 }
 
 hotovo();

@@ -17,7 +17,11 @@ await new Promise((r) => setTimeout(r, 300));
 
 const BASE = 'http://127.0.0.1:8310';
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
-const STRANKY = ['index.html', 'pridat.html', 'pozemky-okres-tabor.html', 'upozorneni.html', 'kontakt.html'];
+/* hlidani.html je tu kvůli přepínači „Posílat e-mailem": vykresluje se
+   jen přihlášenému a jen se zapnutou vlajkou, takže by se bez obojího
+   nikdy nezměřil — a právě on byl pod normou. */
+const STRANKY = ['index.html', 'pridat.html', 'pozemky-okres-tabor.html', 'upozorneni.html',
+  'kontakt.html', 'hlidani.html'];
 /* MEZ JE 44 — tedy norma, ne sleva z ní. Stála tu 36 s poznámkou
    „nižší než doporučených 44, ale vyšší než dnešní stav": ráčna nasazená
    proto, aby aspoň něco držela, dokud se web nespraví.
@@ -32,6 +36,7 @@ const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
 const male = new Map();
+let zaskrtavatek = 0;
 for (const s of STRANKY) {
   /* DOTYKOVÉ ZAŘÍZENÍ, ne jen úzké okno. Bez hasTouch/isMobile neplatí
      pravidla @media (hover:none) — tedy zrovna ta, která terče na dotyk
@@ -56,15 +61,49 @@ for (const s of STRANKY) {
     });
   }
   await ctx.route('**/js/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
-    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';`
+      + 'window.PK_MAIL_ZAPNUTO=true;' }));
+  /* Přihlášení kvůli uloženým hledáním — bez něj je na hlidani.html jen
+     formulář a přepínač posílání se nevykreslí. */
+  await ctx.addInitScript(() => {
+    localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok-majitel',
+      refresh_token: 'ref-majitel',
+      user: { id: '11111111-1111-4111-8111-111111111111', email: 'majitel@test.cz' } }));
+  });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${s}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
   await p.waitForTimeout(1600);
+  /* CO SE NEUKÁŽE ODHLÁŠENÉMU, TO SE DŘÍV NEMĚŘILO. Tahle kontrola běžela
+     bez přihlášení a tím minula celou jednu polovinu webu: formulář na
+     pridat.html, přepínače v Upozorněních, uložená hledání. Naměřeno:
+     bez přihlášení se nezměřilo ANI JEDNO zaškrtávátko, s přihlášením
+     deset — a mezi nimi tři terče pod normou („Odhlásit" 22 px,
+     „Označit vše jako viděné" 38 px a přepínač filtru 38 px).
+     Zkoušel jsem k tomu i rozbalovat kartu #prodej-card; ukázalo se, že
+     to není potřeba (se stejným počtem i bez toho), tak to tu není. */
+  await p.waitForTimeout(300);
   const nalezy = await p.evaluate((MIN) => {
     const out = [];
-    document.querySelectorAll('button, a.btn-primary, a.filter-chip, .filter-chip, .nav-toggle, .mvt-btn, .up-f, .up-a').forEach((e) => {
+    /* ZAŠKRTÁVÁTKA SE DŘÍV NEMĚŘILA. Seznam selektorů znal tlačítka
+       a odkazy, ale ne input[type=checkbox] — a prstem se klepe i na ně.
+       Projevilo se to na přepínači „Posílat e-mailem" u uloženého
+       hledání: terč 22 px, tedy polovina normy, a nic to nehlásilo.
+       U zaškrtávátka se měří TERČ, ne vstup sám: obalující <label>
+       (nebo label[for=…]) je to, na co se klepe, takže 18px vstup uvnitř
+       44px label je v pořádku — a právě tak to má pridat.html. */
+    const terc = (e) => {
+      const lab = e.closest('label') || (e.id ? document.querySelector('label[for="' + e.id + '"]') : null);
       const r = e.getBoundingClientRect();
+      if (!lab) return r;
+      const lr = lab.getBoundingClientRect();
+      return { width: Math.max(r.width, lr.width), height: Math.max(r.height, lr.height) };
+    };
+    let zaskrtnuto = 0;
+    document.querySelectorAll('button, a.btn-primary, a.filter-chip, .filter-chip, .nav-toggle, .mvt-btn, .up-f, .up-a, input[type=checkbox], input[type=radio]').forEach((e) => {
+      const jeZaskrt = /^(checkbox|radio)$/.test(e.type || '');
+      const r = jeZaskrt ? terc(e) : e.getBoundingClientRect();
       if (!r.width || !r.height) return;
+      if (jeZaskrt) zaskrtnuto++;
       const s = getComputedStyle(e);
       if (s.visibility === 'hidden' || parseFloat(s.opacity) < 0.05) return;
       if (r.height < MIN || r.width < MIN) out.push({
@@ -73,15 +112,28 @@ for (const s of STRANKY) {
         rozmer: Math.round(r.width) + '×' + Math.round(r.height)
       });
     });
-    return out;
+    return { out: out, zaskrtnuto: zaskrtnuto };
   }, MIN);
-  nalezy.forEach((n) => male.set(n.trida + n.rozmer, Object.assign({ stranka: s }, n)));
+  zaskrtavatek += nalezy.zaskrtnuto;
+  if (process.env.PK_DOTYK_PODROBNE) console.log(`   ${s}: zaškrtávátek ${nalezy.zaskrtnuto}`);
+  nalezy.out.forEach((n) => male.set(n.trida + n.rozmer, Object.assign({ stranka: s }, n)));
   await ctx.close();
 }
 await prohlizec.close();
 
 const seznam = [...male.values()];
-console.log(`\nDotykové terče (min ${MIN} px): ${seznam.length} pod mezí`);
+console.log(`\nDotykové terče (min ${MIN} px): ${seznam.length} pod mezí`
+  + ` · zaškrtávátek změřeno: ${zaskrtavatek}`);
+/* PŘEDPOKLAD: zaškrtávátka se opravdu měřila. Formulář na pridat.html je
+   zabalený a dokud se nerozbalí, mají jeho vstupy nulové rozměry — kdyby
+   se nerozbalil, kontrola by hlásila „všechny prošly" a přitom by se
+   na žádné zaškrtávátko nepodívala. */
+if (!zaskrtavatek) {
+  console.error('\n::error::Nezměřilo se ani jedno zaškrtávátko. Nejčastější důvod: '
+    + 'nepovedlo se přihlášení (odhlášenému se formulář ani přepínače nevykreslí) '
+    + 'nebo se změnily selektory. Kontrola by mlčela o celé jedné třídě ovládání.');
+  process.exit(1);
+}
 seznam.slice(0, 15).forEach((n) => console.log(`  ✕ ${n.rozmer.padStart(7)}  ${n.trida}  „${n.co}"  · ${n.stranka}`));
 if (seznam.length) {
   console.error(`\n::error::${seznam.length} ovládacích prvků je na mobilu menších než ${MIN} px.`);

@@ -420,7 +420,27 @@ function ogObrazek(nazevSouboru){
   }
   return 'https://www.parcelaka.cz/assets/og.png?v=5';
 }
-function head(title, desc, canonicalPath, ld, crumbs, ogSoubor){
+/* KANÁL, KTERÝ SE K TÉHLE STRÁNCE HODÍ.
+   Kanálů je patnáct: celostátní a čtrnáct krajských (scripts/generate-rss.mjs).
+   Všechny stránky ale v hlavičce nabízely jen ten celostátní, takže se
+   čtenář na stránce kraje nedozvěděl, že existuje kanál právě pro jeho
+   kraj — a odkazoval na ně jen data.html. Čtrnáct souborů, které se
+   obnovují čtyřikrát denně a nikdo je nenajde.
+   Stránka kraje teď nabízí svůj kanál; stránka okresu kanál svého kraje,
+   protože okresní kanály nejsou (a dělat 77 dalších souborů by bylo
+   spíš na obtíž). Jméno souboru se skládá stejně jako v generátoru
+   kanálů — že se ty dva nerozejdou, hlídá scripts/test-rss.mjs. */
+function kanalKraje(kraj){
+  return kraj ? `novinky-${slug(kraj)}.xml` : 'novinky.xml';
+}
+/* Jméno kanálu se čtenáři ukáže ve čtečce, takže čtrnáct stejných
+   „Parcelka — nové pozemky" by k ničemu nebylo. Skládá se stejnými slovy
+   jako v generátoru kanálů. */
+function kanalNazevKraje(kraj){
+  if (!kraj) return 'Parcelka — nové pozemky';
+  return `Parcelka — nové pozemky, ${kraj === 'Vysočina' ? 'Vysočina' : kraj + ' kraj'}`;
+}
+function head(title, desc, canonicalPath, ld, crumbs, ogSoubor, kanal, kanalNazev){
   // ld může být objekt nebo pole; přidáme BreadcrumbList, je-li předán.
   let ldArr = Array.isArray(ld) ? ld.slice() : (ld ? [ld] : []);
   if(crumbs && crumbs.length) ldArr.push(crumbLd(crumbs));
@@ -438,7 +458,7 @@ function head(title, desc, canonicalPath, ld, crumbs, ogSoubor){
   <meta name="theme-color" content="#FBFAF8">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://www.parcelaka.cz/${canonicalPath}">
-<link rel="alternate" type="application/rss+xml" title="Parcelka — nové pozemky" href="novinky.xml">
+<link rel="alternate" type="application/rss+xml" title="${attr(kanalNazev || 'Parcelka — nové pozemky')}" href="${kanal || 'novinky.xml'}">
   <meta property="og:type" content="website">
   <meta property="og:title" content="${attr(title)}">
   <meta property="og:description" content="${attr(desc)}">
@@ -684,7 +704,7 @@ for(const okres of eligibleOkres){
   if(hasKrajPage.has(kraj)) crumbs.push({name:dispK, href:krajFile(kraj), abs:SITE+krajFile(kraj)});
   crumbs.push({name:'Okres '+okres, abs:SITE+file});
 
-  const html = head(title,desc,file,jsonld,crumbs,`okres-${slug(okres)}.png`) + `
+  const html = head(title,desc,file,jsonld,crumbs,`okres-${slug(okres)}.png`,kanalKraje(kraj),kanalNazevKraje(kraj)) + `
 <main id="obsah">
 
   <section class="okr-hero">
@@ -762,6 +782,14 @@ ${sibLinks ? `
         </div>
       </div>` : ''}
 
+      <!-- ODBĚR KANÁLEM. Čtrnáct krajských kanálů se obnovuje čtyřikrát
+           denně a odkazovala na ně jediná stránka (data.html), takže je
+           nikdo nenašel. Tady stojí u výpisu, kde to má smysl: kdo si
+           okres prochází, ten se sem vrací. -->
+      <p class="okr-more" style="margin-top:22px;">Nechcete se sem vracet a koukat?
+        <a href="${kanalKraje(kraj)}">Nové pozemky ${CENY.kdeText('kraj', kraj)} odebírejte kanálem</a>
+        — bez účtu a bez e-mailu.</p>
+
       <p class="okr-more" style="margin-top:22px;">Než koupíte, projděte si <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> a <a href="list-vlastnictvi-katastr.html">jak číst list vlastnictví</a>.</p>
 
     </div>
@@ -802,7 +830,7 @@ for(const kraj of eligibleKraj){
     {name:meta.disp, abs:SITE+file},
   ];
 
-  const html = head(title,desc,file,jsonld,crumbs,`kraj-${slug(kraj)}.png`) + `
+  const html = head(title,desc,file,jsonld,crumbs,`kraj-${slug(kraj)}.png`,kanalKraje(kraj),kanalNazevKraje(kraj)) + `
 <main id="obsah">
 
   <section class="okr-hero">
@@ -857,6 +885,10 @@ ${rows}
           </div>
         </div>
       </div>
+
+      <p class="okr-more" style="margin-top:22px;">Nechcete se sem vracet a koukat?
+        <a href="${kanalKraje(kraj)}">Nové pozemky ${CENY.kdeText('kraj', kraj)} odebírejte kanálem</a>
+        — bez účtu a bez e-mailu.</p>
 
       <p class="okr-more" style="margin-top:22px;">Než koupíte, projděte si <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> nebo <a href="pozemky-podle-okresu.html">všechny kraje a okresy</a>.</p>
 

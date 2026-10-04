@@ -34,7 +34,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=9208f48b">
+  <link rel="stylesheet" href="css/styles.css?v=c55dcd92">
   <!-- Pět ploch na téhle stránce se odkazovalo na var(--card). Taková
        proměnná ale v paletce není (žije jen ve vlastním :root diagnostiky),
        takže se těch pět deklarací tiše zahodilo a karty, pole i prstenec
@@ -55,8 +55,12 @@
     .up-f[aria-pressed="true"]{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
     .up-f .n{font-size:12px; font-weight:700; background:rgba(0,0,0,.14); padding:1px 6px; border-radius:999px;}
     .up-f[aria-pressed="true"] .n{background:rgba(255,255,255,.26);}
+    /* 44 px je norma pro prst, a tenhle terč měl 38. Naměřeno na mobilu
+       390×844 — a nehlásilo to nic, protože se dotyková kontrola dosud
+       dívala jen na odhlášené stránky, kde se „Označit vše" nevykreslí. */
     .up-clear{appearance:none; border:0; background:none; color:var(--copper); font:inherit; font-size:14px;
-      font-weight:700; cursor:pointer; padding:8px 4px; text-decoration:underline; text-underline-offset:3px;}
+      font-weight:700; cursor:pointer; padding:8px 4px; min-height:44px;
+      text-decoration:underline; text-underline-offset:3px;}
     .up-clear:disabled{color:var(--text-ondark-mute); cursor:default; text-decoration:none;}
 
     .up-group{margin:20px 0 10px; font-size:12px; font-weight:800; letter-spacing:0.07em;
@@ -131,7 +135,10 @@
     .up-prefs{margin-top:20px; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:16px;}
     .up-prefs h2{font-size:14px; margin:0 0 4px;}
     .up-prefs p{font-size:13px; color:var(--text-ondark-mute); margin:0 0 12px;}
-    .up-sw{display:flex; align-items:center; gap:10px; padding:8px 0; font-size:14px; cursor:pointer;}
+    /* Terč je celý <label>, ne jen to 19px zaškrtávátko — musí tedy mít
+       44 px i on. Mělo 38. */
+    .up-sw{display:flex; align-items:center; gap:10px; padding:8px 0; min-height:44px;
+      font-size:14px; cursor:pointer;}
     .up-sw input{width:19px; height:19px; accent-color:#276646; cursor:pointer; flex:none;}
     .up-note{font-size:13px; color:var(--text-ondark-mute); line-height:1.55; margin-top:12px;
       padding-top:12px; border-top:1px solid var(--line);}

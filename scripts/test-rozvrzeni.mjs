@@ -612,7 +612,14 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
     await p2.evaluate(() => { document.querySelectorAll('details').forEach((x) => { x.open = true; }); });
     await p2.waitForTimeout(500);
     const male = await p2.evaluate(() => {
-      const VYJIMKY = ['skip-link', 'logo', 'opp-fav', 'opp-skryt', 'linklike'];
+      /* „linklike" z výjimek odešel: tahle třída nese „Odhlásit" a měla
+         22 px, tedy polovinu normy. Dnes má pod (hover:none) 44 px, takže
+         výjimku nepotřebuje — a výjimka, kterou nic nepotřebuje, jen
+         zakrývá další takový případ. Zbylé čtyři jsou prvky, u nichž
+         44 px nemá smysl: skip-link je pro čtečky, logo je nadpis
+         s odkazem a dvě ikonky na kartě mají vlastní, větší klikací
+         obálku. */
+      const VYJIMKY = ['skip-link', 'logo', 'opp-fav', 'opp-skryt'];
       const ven = [];
       document.querySelectorAll('a[href], button, summary, select, label.chip-check').forEach((e) => {
         const r = e.getBoundingClientRect();
