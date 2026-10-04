@@ -196,6 +196,49 @@ if (existsSync(HRUBE_SOUBOR)) {
     prosle.slice(0, 5).join(', ') + (prosle.length > 5 ? ` …a dalších ${prosle.length - 5}` : ''));
 }
 
+/* ---- OKRES → KRAJ SMÍ BÝT JEN NA JEDNOM MÍSTĚ -----------------
+   Tabulka o 78 položkách ležela v repozitáři TŘIKRÁT: js/ceny.js,
+   js/main.js a scripts/generate-region-pages.mjs. Všechny tři tehdy
+   souhlasily — jenže tenhle repozitář už má svou historii rozejitých
+   kopií (cenový verdikt, termíny dražeb, adresa snímku) a každá z nich
+   se poznala až tím, že web o téže věci tvrdil dvě různé věci.
+   Sestavení stránek si ji teď bere z js/ceny.js. V js/main.js zůstat
+   MUSÍ: hlidani.html a zpravy.html ho načítají bez js/ceny.js, takže
+   by tam PK_CENY nebylo. Na dvě kopie tedy dohlíží tahle kontrola. */
+{
+  const vytahni = (soubor, zacatek) => {
+    const t = readFileSync(path.join(KOREN, soubor), 'utf8');
+    const i = t.indexOf(zacatek);
+    if (i < 0) return null;
+    const j = t.indexOf('{', i);
+    const k = t.indexOf('};', j);
+    if (j < 0 || k < 0) return null;
+    const blok = t.slice(j, k + 1);
+    const out = {};
+    for (const m of blok.matchAll(/'([^']+)'\s*:\s*'([^']+)'/g)) out[m[1]] = m[2];
+    return out;
+  };
+  const vCenach = vytahni('js/ceny.js', 'OKRES_KRAJ =');
+  const vMape = vytahni('js/main.js', 'var OKRES_KRAJ =');
+  pravda('tabulka okres → kraj se našla v js/ceny.js i v js/main.js',
+    !!vCenach && !!vMape && Object.keys(vCenach).length > 70 && Object.keys(vMape).length > 70,
+    `ceny.js: ${vCenach ? Object.keys(vCenach).length : 'nenašlo'}, `
+    + `main.js: ${vMape ? Object.keys(vMape).length : 'nenašlo'}`);
+  if (vCenach && vMape) {
+    const klice = [...new Set([...Object.keys(vCenach), ...Object.keys(vMape)])];
+    const rozdily = klice.filter((k) => vCenach[k] !== vMape[k]);
+    pravda(`a obě kopie říkají totéž (${klice.length} okresů)`,
+      rozdily.length === 0,
+      rozdily.slice(0, 5).map((k) => `${k}: ceny.js „${vCenach[k] || '—'}" vs main.js „${vMape[k] || '—'}"`).join('; '));
+  }
+  /* A že si generátor stránek svou kopii opravdu nedrží. */
+  const gen = readFileSync(path.join(KOREN, 'scripts', 'generate-region-pages.mjs'), 'utf8');
+  pravda('a generátor stránek si tabulku neopisuje',
+    /const OKRES_KRAJ = \(CENY && CENY\.OKRES_KRAJ\)/.test(gen)
+    && !/const OKRES_KRAJ = \{/.test(gen),
+    'generate-region-pages.mjs má tabulku napsanou vlastním výčtem');
+}
+
 console.log('\nZařazení pozemku do okresu');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

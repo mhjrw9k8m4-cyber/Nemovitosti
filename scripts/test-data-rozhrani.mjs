@@ -140,6 +140,30 @@ const nabidky = D.opportunities || [];
     `${(b / 1024 / 1024).toFixed(2)} MB — nad dva megabajty už je čas na dělení po krajích`);
 }
 
+/* ---- 4b) VYJMENOVANÉ HODNOTY SE BEROU OD ROBOTA -------------
+   Pole „type" má v popisu výčet možných hodnot a ten se dá napsat
+   z hlavy — což jsem udělal a připsal k nim „majitel". Jenže robot
+   takovou nabídku do souboru nikdy nedá: inzeráty od lidí leží
+   v databázi a na mapu se berou odtamtud. Kdo by na datech stavěl, psal
+   by obsluhu případu, který nikdy nepřijde — a hlavně by si myslel, že
+   v souboru inzeráty od lidí najde.
+   Výčet se proto porovnává s množinou TYPES ve scripts/fetch-opportunities.mjs,
+   tedy s tím, co robot opravdu pustí dovnitř. Čte se ze zdroje: kdyby se
+   ta množina přejmenovala, kontrola to řekne, místo aby mlčela. */
+{
+  const robot = readFileSync(new URL('../scripts/fetch-opportunities.mjs', import.meta.url), 'utf8');
+  const m = /const TYPES = new Set\(\[([^\]]*)\]\)/.exec(robot);
+  pravda('v robotovi se našla množina povolených typů', !!m,
+    'const TYPES = new Set([…]) ve fetch-opportunities.mjs není — přejmenovalo se to?');
+  if (m) {
+    const uRobota = m[1].split(',').map((x) => x.trim().replace(/^['"]|['"]$/g, '')).filter(Boolean).sort();
+    const vPopisu = ((P.pole.type || {}).hodnoty || []).slice().sort();
+    pravda(`výčet hodnot type sedí s tím, co robot pustí dovnitř (${uRobota.length})`,
+      JSON.stringify(uRobota) === JSON.stringify(vPopisu),
+      `robot: ${JSON.stringify(uRobota)}, popis: ${JSON.stringify(vPopisu)}`);
+  }
+}
+
 /* ---- 5) PODMÍNKY NESMĚJÍ ZAKAZOVAT TO, K ČEMU STRÁNKA ZVE ----
    data.html říká „není potřeba klíč, registrace ani domluva — stačí si ho
    stáhnout" a hned pod tím odkazuje na podmínky použití. V podmínkách

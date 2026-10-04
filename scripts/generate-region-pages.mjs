@@ -56,22 +56,16 @@ const V = {
 const MIN_OKRES = 3;    // okres musí mít aspoň tolik nabídek pro vlastní stránku
 const MIN_KRAJ = 15;    // kraj musí mít aspoň tolik nabídek pro vlastní stránku
 
-const OKRES_KRAJ = {
- 'Hlavní město Praha':'Praha','Praha':'Praha',
- 'Benešov':'Středočeský','Beroun':'Středočeský','Kladno':'Středočeský','Kolín':'Středočeský','Kutná Hora':'Středočeský','Mělník':'Středočeský','Mladá Boleslav':'Středočeský','Nymburk':'Středočeský','Praha-východ':'Středočeský','Praha-západ':'Středočeský','Příbram':'Středočeský','Rakovník':'Středočeský',
- 'České Budějovice':'Jihočeský','Český Krumlov':'Jihočeský','Jindřichův Hradec':'Jihočeský','Písek':'Jihočeský','Prachatice':'Jihočeský','Strakonice':'Jihočeský','Tábor':'Jihočeský',
- 'Domažlice':'Plzeňský','Klatovy':'Plzeňský','Plzeň-město':'Plzeňský','Plzeň-jih':'Plzeňský','Plzeň-sever':'Plzeňský','Rokycany':'Plzeňský','Tachov':'Plzeňský',
- 'Cheb':'Karlovarský','Karlovy Vary':'Karlovarský','Sokolov':'Karlovarský',
- 'Děčín':'Ústecký','Chomutov':'Ústecký','Litoměřice':'Ústecký','Louny':'Ústecký','Most':'Ústecký','Teplice':'Ústecký','Ústí nad Labem':'Ústecký',
- 'Česká Lípa':'Liberecký','Jablonec nad Nisou':'Liberecký','Liberec':'Liberecký','Semily':'Liberecký',
- 'Hradec Králové':'Královéhradecký','Jičín':'Královéhradecký','Náchod':'Královéhradecký','Rychnov nad Kněžnou':'Královéhradecký','Trutnov':'Královéhradecký',
- 'Chrudim':'Pardubický','Pardubice':'Pardubický','Svitavy':'Pardubický','Ústí nad Orlicí':'Pardubický',
- 'Havlíčkův Brod':'Vysočina','Jihlava':'Vysočina','Pelhřimov':'Vysočina','Třebíč':'Vysočina','Žďár nad Sázavou':'Vysočina',
- 'Blansko':'Jihomoravský','Brno-město':'Jihomoravský','Brno-venkov':'Jihomoravský','Břeclav':'Jihomoravský','Hodonín':'Jihomoravský','Vyškov':'Jihomoravský','Znojmo':'Jihomoravský',
- 'Jeseník':'Olomoucký','Olomouc':'Olomoucký','Prostějov':'Olomoucký','Přerov':'Olomoucký','Šumperk':'Olomoucký',
- 'Kroměříž':'Zlínský','Uherské Hradiště':'Zlínský','Vsetín':'Zlínský','Zlín':'Zlínský',
- 'Bruntál':'Moravskoslezský','Frýdek-Místek':'Moravskoslezský','Karviná':'Moravskoslezský','Nový Jičín':'Moravskoslezský','Opava':'Moravskoslezský','Ostrava-město':'Moravskoslezský'
-};
+/* OKRES → KRAJ SE NEOPISUJE. Tahle tabulka o 78 položkách ležela
+   v repozitáři třikrát: tady, v js/ceny.js a v js/main.js. Dnes všechny
+   tři souhlasí (naměřeno), ale tenhle repozitář už má svou historii
+   rozejitých kopií — cenový verdikt, termíny dražeb, adresa snímku —
+   a každá z nich se poznala až tím, že web o téže věci tvrdil dvě různé
+   věci. Sestavení stránek si ji proto bere z js/ceny.js, který se
+   stejně načítá o pár řádků níž kvůli cenám.
+   js/main.js svou kopii mít MUSÍ: hlidani.html a zpravy.html ho
+   načítají bez js/ceny.js. Že se ty dvě nerozejdou, hlídá
+   scripts/test-okres.mjs. */
 const KRAJ_ORDER = ['Praha','Středočeský','Jihočeský','Plzeňský','Karlovarský','Ústecký','Liberecký','Královéhradecký','Pardubický','Vysočina','Jihomoravský','Olomoucký','Zlínský','Moravskoslezský'];
 const KRAJ_META = {
  'Praha':            { disp:'Praha',              loc:'v Praze',                 mapName:'Praha' },
@@ -176,6 +170,20 @@ function proslyTermin(o){
 const prosle = all.filter(proslyTermin);
 const aktualni = all.filter((o) => !proslyTermin(o));
 if(prosle.length) console.log(`Po termínu vynecháno: ${prosle.length} (zůstalo ${aktualni.length}) — stejně jako v aplikaci.`);
+
+/* CENOVÝ MODEL SE NAČÍTÁ PRVNÍ, protože z něj bere cenu za metr i hledání
+   mezí. Dřív stál až za spoctiMeze() a meze se počítaly ze surové ceny
+   za metr, zatímco mapa počítá jinak — viz zaMetrPoctive() výš.
+   A ještě o kus výš, než býval: bere se z něj i tabulka okres → kraj,
+   kterou potřebuje hned první průchod daty pár řádků pod tímhle. */
+new Function(fs.readFileSync(path.join(ROOT, 'js', 'ceny.js'), 'utf8'))();
+const CENY = globalThis.PK_CENY;
+const OKRES_KRAJ = (CENY && CENY.OKRES_KRAJ) || {};
+if (!CENY || !CENY.zaMetr || !Object.keys(OKRES_KRAJ).length) {
+  /* Raději spadnout než vydat 91 stránek se špatnými čísly. */
+  console.error('js/ceny.js se nenačetl — cena za metr by se počítala jinak než v mapě.');
+  process.exit(1);
+}
 
 const byOkres = {}, byKraj = {};
 for(const o of aktualni){
@@ -326,16 +334,6 @@ function priceStats(list){
     if(v.length>=MIN_PRICE) out[g]={ n:v.length, med:Math.round(median(v)), lo:Math.round(pctl(v,0.25)), hi:Math.round(pctl(v,0.75)) };
   }
   return out;
-}
-/* CENOVÝ MODEL SE NAČÍTÁ PRVNÍ, protože z něj bere cenu za metr i hledání
-   mezí. Dřív stál až za spoctiMeze() a meze se počítaly ze surové ceny
-   za metr, zatímco mapa počítá jinak — viz zaMetrPoctive() výš. */
-new Function(fs.readFileSync(path.join(ROOT, 'js', 'ceny.js'), 'utf8'))();
-const CENY = globalThis.PK_CENY;
-if (!CENY || !CENY.zaMetr) {
-  /* Raději spadnout než vydat 91 stránek se špatnými čísly. */
-  console.error('js/ceny.js se nenačetl — cena za metr by se počítala jinak než v mapě.');
-  process.exit(1);
 }
 spoctiMeze(all);                 // meze napřed, ať platí všude stejné
 
