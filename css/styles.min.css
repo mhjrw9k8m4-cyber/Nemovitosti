@@ -2182,3 +2182,6 @@ to{opacity:1;transform:none}
 :root.mapa-tazeni .map-tools{pointer-events:none}
 header,.map-legend,.map-tools,.kraj-hint{transition:transform var(--cas-zakladni) var(--ease),opacity var(--cas-zakladni) var(--ease)}
 }
+#leaflet-map.kresli{touch-action:none;cursor:crosshair}
+#leaflet-map.kresli .leaflet-grab{cursor:crosshair}
+#map-kresli.on{background:var(--plocha-znacka);color:#fff;border-color:var(--plocha-znacka)}

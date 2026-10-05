@@ -131,7 +131,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=5ec11552">
+  <link rel="stylesheet" href="css/styles.min.css?v=334af126">
 </head>
 <body>
 
@@ -462,6 +462,12 @@
             <div class="map-legend" id="map-legend" aria-hidden="true"></div>
             <div class="map-tools">
               <button class="map-reset" id="map-reset" type="button" aria-label="Zobrazit celou mapu"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h6M3 3v6M3 3l7 7M21 21h-6M21 21v-6M21 21l-7-7"/></svg>Celá ČR</button>
+              <!-- KRESLENÍ VÝBĚRU. Okruh kolem místa už web umí („do 30 km
+                   od Brna"), jenže kruh sedí jen na dotaz „kolem čeho".
+                   Na „podél téhle řeky" nebo „mezi dálnicí a lesem" kruh
+                   není — a právě tak lidé pozemky hledají. -->
+              <button class="map-reset" id="map-kresli" type="button" aria-pressed="false"
+                aria-label="Nakreslit výběr na mapě"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20c2-6 6-10 12-13M4 20l4-1M4 20l1-4M14 5l5 5"/></svg>Kreslit výběr</button>
               <!-- Přepínač podkladu. Stojí vedle „Celá ČR", protože obojí
                    je o tom, CO je na mapě vidět, ne o tom, co se v ní hledá. -->
               <div class="map-podklad" id="map-podklad" role="group" aria-label="Podklad mapy">
@@ -721,16 +727,16 @@
 <script src="js/min/hlidani-logika.js?v=50f3cf6d" defer></script>
 <script src="js/min/poradi.js?v=92ac1fb1" defer></script>
 <script src="js/min/vyvoz.js?v=871efeda" defer></script>
-<script src="js/min/odkaz.js?v=25ae3f4f" defer></script>
+<script src="js/min/odkaz.js?v=db9c4bfe" defer></script>
 <script src="js/min/rychlovyber.js?v=39a2fc71" defer></script>
 <script src="js/min/rozsah.js?v=80f376b4" defer></script>
 <script src="js/min/vybaveni.js?v=68e3d418" defer></script>
 <script src="js/min/dotaz.js?v=baaac921" defer></script>
 <script src="js/min/hledani.js?v=61175e7b" defer></script>
-<script src="js/min/okruh.js?v=4f449b9b" defer></script>
+<script src="js/min/okruh.js?v=f11683ef" defer></script>
 <script src="js/min/klic.js?v=17fa93b6"></script>
 <script src="js/min/videno.js?v=a269d74b"></script>
-<script src="js/min/main.js?v=0501628b" defer></script>
+<script src="js/min/main.js?v=3efb1c24" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

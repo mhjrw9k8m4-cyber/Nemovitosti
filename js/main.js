@@ -2340,6 +2340,151 @@
       };
     } catch (e) {}
   }
+  /* ---------- KRESLENÍ VÝBĚRU PRSTEM --------------------------------
+   *
+   * Co to řeší: okruh kolem místa web uměl, ale kruh odpovídá jen na
+   * dotaz „kolem čeho". „Podél téhle řeky", „mezi dálnicí a lesem", „v
+   * tomhle údolí" kruhem nejde popsat — a přitom tak se pozemky hledají.
+   *
+   * PROČ NE HOTOVÁ KNIHOVNA. Leaflet.draw ani Mapbox GL JS se sem
+   * netáhnou: repozitář má dvě závislosti a tohle je jedna obrazovka
+   * kódu. Bod-v-mnohoúhelníku navíc web už umí (js/okruh.js, vTvaru),
+   * takže by knihovna přinesla hlavně kreslítko, které nepotřebuje nic
+   * než pointer události.
+   *
+   * ZATÍMCO SE KRESLÍ, MAPA SE NESMÍ HÝBAT. Jinak by prst zároveň táhl
+   * podklad a čára by se kreslila do ujíždějící mapy. Tažení se tedy na
+   * dobu kreslení vypne a po dokončení zase zapne — a vypíná se i to,
+   * aby prohlížeč bral tah jako rolování stránky (touch-action).
+   *
+   * BODY SE ŘEDÍ. Prst vygeneruje stovky událostí; ukládá se jen bod
+   * vzdálený aspoň 6 px od posledního. Bez toho by tvar měl tisíce
+   * vrcholů a každé překreslení mapy by přes ně muselo projít u každé
+   * z dvou tisíc nabídek.
+   *
+   * MÁLO BODŮ NENÍ VÝBĚR. Kdo se jen dotkne nebo udělá čárku, nedostane
+   * prázdnou mapu — tvar se zahodí a nic se nefiltruje. Prázdný výpis bez
+   * vysvětlení je horší než žádný výběr. */
+  var kresliZap = false, kresliBody = null, kresliCara = null, vyberVrstva = null;
+  var kresliBtn = document.getElementById('map-kresli');
+
+  function vykresliVyber() {
+    if (vyberVrstva) { map.removeLayer(vyberVrstva); vyberVrstva = null; }
+    if (!vyberTvar) return;
+    vyberVrstva = L.polygon(vyberTvar, {
+      color: '#C2703A', weight: 2, fillColor: '#C2703A', fillOpacity: 0.08,
+      interactive: false, pane: 'shadowPane'
+    }).addTo(map);
+  }
+
+  /* STAV PŘED KRESLENÍM SE MUSÍ VRÁTIT, NE ZAPNOUT.
+     Napoprvé tu stálo map.dragging.enable() natvrdo — a to je chyba:
+     mapa je po načtení ZAMČENÁ schválně (setPan(false)), aby se na
+     telefonu dalo prstem přes ni rolovat stránkou a aby web nekradl
+     gesto. Odemkne se, až na ni člověk klepne. Kreslení by tedy zámek
+     potichu odstranilo a stránka by přes mapu přestala jít rolovat.
+     Pamatuje se proto, co bylo, a to se po dokreslení vrátí. */
+  var kresliPredtim = null;
+  function zapniKresleni(zap) {
+    kresliZap = !!zap;
+    if (kresliBtn) {
+      kresliBtn.setAttribute('aria-pressed', kresliZap ? 'true' : 'false');
+      kresliBtn.classList.toggle('on', kresliZap);
+    }
+    mapEl.classList.toggle('kresli', kresliZap);
+    if (kresliZap) {
+      if (!kresliPredtim) {
+        kresliPredtim = {
+          tazeni: map.dragging.enabled(),
+          dvojklik: map.doubleClickZoom.enabled(),
+          touchAction: mapEl.style.touchAction
+        };
+      }
+      map.dragging.disable();
+      map.doubleClickZoom.disable();
+    } else if (kresliPredtim) {
+      map.dragging[kresliPredtim.tazeni ? 'enable' : 'disable']();
+      map.doubleClickZoom[kresliPredtim.dvojklik ? 'enable' : 'disable']();
+      mapEl.style.touchAction = kresliPredtim.touchAction;
+      kresliPredtim = null;
+    }
+  }
+
+  function kresliKonec(dokonci) {
+    if (kresliCara) { map.removeLayer(kresliCara); kresliCara = null; }
+    var body = kresliBody; kresliBody = null;
+    zapniKresleni(false);
+    /* Tři body jsou nejmenší plocha; pod tím to byl dotyk nebo čárka. */
+    if (dokonci && body && body.length >= 3) {
+      vyberTvar = body;
+      vykresliVyber();
+      renderList();
+    }
+  }
+
+  if (kresliBtn) {
+    kresliBtn.addEventListener('click', function () {
+      if (vyberTvar) {
+        /* Druhé klepnutí při hotovém výběru ho zruší — nejkratší cesta
+           zpátky, bez hledání odznaku ve filtrech. */
+        vyberTvar = null; vykresliVyber(); renderList();
+        return;
+      }
+      zapniKresleni(!kresliZap);
+    });
+  }
+
+  mapEl.addEventListener('pointerdown', function (e) {
+    if (!kresliZap) return;
+    e.preventDefault();
+    try { mapEl.setPointerCapture(e.pointerId); } catch (err) {}
+    var r = mapEl.getBoundingClientRect();
+    var ll = map.containerPointToLatLng([e.clientX - r.left, e.clientY - r.top]);
+    kresliBody = [[ll.lat, ll.lng]];
+    kresliCara = L.polyline(kresliBody, { color: '#C2703A', weight: 3, interactive: false }).addTo(map);
+  });
+
+  var posledniPx = null;
+  mapEl.addEventListener('pointermove', function (e) {
+    if (!kresliZap || !kresliBody) return;
+    e.preventDefault();
+    var r = mapEl.getBoundingClientRect();
+    var x = e.clientX - r.left, y = e.clientY - r.top;
+    if (posledniPx) {
+      var dx = x - posledniPx[0], dy = y - posledniPx[1];
+      if (dx * dx + dy * dy < 36) return;   // ředění: aspoň 6 px
+    }
+    posledniPx = [x, y];
+    var ll = map.containerPointToLatLng([x, y]);
+    kresliBody.push([ll.lat, ll.lng]);
+    if (kresliCara) kresliCara.setLatLngs(kresliBody);
+  });
+
+  function kresliPusteni(e) {
+    if (!kresliZap || !kresliBody) return;
+    posledniPx = null;
+    kresliKonec(true);
+  }
+  mapEl.addEventListener('pointerup', kresliPusteni);
+  /* Když prst sjede mimo mapu nebo gesto přeruší systém, kreslení se
+     musí ukončit taky — jinak by zůstala viset čára a vypnuté tažení. */
+  mapEl.addEventListener('pointercancel', function () { posledniPx = null; kresliKonec(true); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (kresliBody) { posledniPx = null; kresliKonec(false); }
+    else if (kresliZap) zapniKresleni(false);
+  });
+
+  /* Úchyt pro zkoušky: nakreslit tvar programově a ověřit, že se podle
+     něj opravdu filtruje. Web sám ho nepoužívá. */
+  try {
+    window.PK_VYBER = {
+      nastav: function (body) { vyberTvar = (body && body.length >= 3) ? body : null; vykresliVyber(); renderList(); },
+      ctiPocet: function () { return vyberTvar ? vyberTvar.length : 0; },
+      kresliZap: function () { return kresliZap; }
+    };
+  } catch (e) {}
+
   // Vždy: tečky pozemků + obrysy krajů přes ně
   function updateMapView() {
     if (krajLayer && !map.hasLayer(krajLayer)) krajLayer.addTo(map);
@@ -3556,6 +3701,13 @@
     return kusy.slice(0, 3).join(' ');
   }
 
+  /* VÝBĚR NAKRESLENÝ NA MAPĚ. Pole bodů [lat, lng], nebo null.
+     Okruh kolem místa web uměl už dřív („do 30 km od Brna"), jenže kruh
+     odpovídá jen na dotaz „kolem čeho". Na „podél téhle řeky", „mezi
+     dálnicí a lesem" nebo „v tomhle údolí" kruh není — a přitom tak se
+     pozemky hledají. */
+  var vyberTvar = null;
+
   function visible(d) {
     var okType = activeType === 'all' || d.type === activeType;
     // Hledá se i podle PARCELNÍHO ČÍSLA. Kdo drží v ruce výpis z katastru,
@@ -3661,8 +3813,12 @@
     // (tlačítko „Zobrazit skryté"). Nenávratně se nic neztrácí.
     var okSkryt = ukazSkryte || !jeSkryty(d);
     var okProsle = ukazProsle || !jeProsle(d);
+    /* Nakreslený výběr. Bod-v-mnohoúhelníku drží js/okruh.js, tedy týž
+       modul jako vzdálenosti — aby mapa, výpis i počet v nadpisu
+       počítaly z jednoho místa. */
+    var okTvar = !vyberTvar || (PKOkruh.vTvaru(d.lat, d.lng, vyberTvar));
     return okType && okSearch && okMisto && okPresne && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
-      && okPerM2 && okKraj && okLevne && okOkoli && okOkruh && okProsle && okVybaveni && okCelek && okDotaz;
+      && okPerM2 && okKraj && okLevne && okOkoli && okOkruh && okProsle && okVybaveni && okCelek && okDotaz && okTvar;
   }
   /* KTERÉ OMEZENÍ VYPRÁZDNILO VÝPIS
    *
@@ -3818,6 +3974,13 @@
     pol('okruh od místa', 'okruh od místa', !!(d.okruh && okruhStred),
       function () { d.okruh = null; },
       (function () { var a = d.okruh; return function () { d.okruh = a; }; }()));
+    /* Nakreslený výběr se ruší stejnou cestou jako ostatní omezení —
+       jinak by u prázdného výpisu web radil zmírnit cenu, přestože za to
+       může tvar nakreslený přes kus pole bez nabídek. */
+    pol('nakreslený výběr', 'nakreslený výběr', !!vyberTvar,
+      function () { vyberTvar = null; },
+      (function () { var a = vyberTvar; return function () { vyberTvar = a; }; }()),
+      'Nakreslený výběr na mapě');
     return ven;
   }
 

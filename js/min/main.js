@@ -1579,6 +1579,115 @@
     } catch (e) {}
   }
 
+  var kresliZap = false, kresliBody = null, kresliCara = null, vyberVrstva = null;
+  var kresliBtn = document.getElementById('map-kresli');
+
+  function vykresliVyber() {
+    if (vyberVrstva) { map.removeLayer(vyberVrstva); vyberVrstva = null; }
+    if (!vyberTvar) return;
+    vyberVrstva = L.polygon(vyberTvar, {
+      color: '#C2703A', weight: 2, fillColor: '#C2703A', fillOpacity: 0.08,
+      interactive: false, pane: 'shadowPane'
+    }).addTo(map);
+  }
+
+  var kresliPredtim = null;
+  function zapniKresleni(zap) {
+    kresliZap = !!zap;
+    if (kresliBtn) {
+      kresliBtn.setAttribute('aria-pressed', kresliZap ? 'true' : 'false');
+      kresliBtn.classList.toggle('on', kresliZap);
+    }
+    mapEl.classList.toggle('kresli', kresliZap);
+    if (kresliZap) {
+      if (!kresliPredtim) {
+        kresliPredtim = {
+          tazeni: map.dragging.enabled(),
+          dvojklik: map.doubleClickZoom.enabled(),
+          touchAction: mapEl.style.touchAction
+        };
+      }
+      map.dragging.disable();
+      map.doubleClickZoom.disable();
+    } else if (kresliPredtim) {
+      map.dragging[kresliPredtim.tazeni ? 'enable' : 'disable']();
+      map.doubleClickZoom[kresliPredtim.dvojklik ? 'enable' : 'disable']();
+      mapEl.style.touchAction = kresliPredtim.touchAction;
+      kresliPredtim = null;
+    }
+  }
+
+  function kresliKonec(dokonci) {
+    if (kresliCara) { map.removeLayer(kresliCara); kresliCara = null; }
+    var body = kresliBody; kresliBody = null;
+    zapniKresleni(false);
+
+    if (dokonci && body && body.length >= 3) {
+      vyberTvar = body;
+      vykresliVyber();
+      renderList();
+    }
+  }
+
+  if (kresliBtn) {
+    kresliBtn.addEventListener('click', function () {
+      if (vyberTvar) {
+
+        vyberTvar = null; vykresliVyber(); renderList();
+        return;
+      }
+      zapniKresleni(!kresliZap);
+    });
+  }
+
+  mapEl.addEventListener('pointerdown', function (e) {
+    if (!kresliZap) return;
+    e.preventDefault();
+    try { mapEl.setPointerCapture(e.pointerId); } catch (err) {}
+    var r = mapEl.getBoundingClientRect();
+    var ll = map.containerPointToLatLng([e.clientX - r.left, e.clientY - r.top]);
+    kresliBody = [[ll.lat, ll.lng]];
+    kresliCara = L.polyline(kresliBody, { color: '#C2703A', weight: 3, interactive: false }).addTo(map);
+  });
+
+  var posledniPx = null;
+  mapEl.addEventListener('pointermove', function (e) {
+    if (!kresliZap || !kresliBody) return;
+    e.preventDefault();
+    var r = mapEl.getBoundingClientRect();
+    var x = e.clientX - r.left, y = e.clientY - r.top;
+    if (posledniPx) {
+      var dx = x - posledniPx[0], dy = y - posledniPx[1];
+      if (dx * dx + dy * dy < 36) return;
+    }
+    posledniPx = [x, y];
+    var ll = map.containerPointToLatLng([x, y]);
+    kresliBody.push([ll.lat, ll.lng]);
+    if (kresliCara) kresliCara.setLatLngs(kresliBody);
+  });
+
+  function kresliPusteni(e) {
+    if (!kresliZap || !kresliBody) return;
+    posledniPx = null;
+    kresliKonec(true);
+  }
+  mapEl.addEventListener('pointerup', kresliPusteni);
+
+  mapEl.addEventListener('pointercancel', function () { posledniPx = null; kresliKonec(true); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (kresliBody) { posledniPx = null; kresliKonec(false); }
+    else if (kresliZap) zapniKresleni(false);
+  });
+
+  try {
+    window.PK_VYBER = {
+      nastav: function (body) { vyberTvar = (body && body.length >= 3) ? body : null; vykresliVyber(); renderList(); },
+      ctiPocet: function () { return vyberTvar ? vyberTvar.length : 0; },
+      kresliZap: function () { return kresliZap; }
+    };
+  } catch (e) {}
+
   function updateMapView() {
     if (krajLayer && !map.hasLayer(krajLayer)) krajLayer.addTo(map);
     renderDots(lastVis);
@@ -2459,6 +2568,8 @@
     return kusy.slice(0, 3).join(' ');
   }
 
+  var vyberTvar = null;
+
   function visible(d) {
     var okType = activeType === 'all' || d.type === activeType;
 
@@ -2530,8 +2641,10 @@
 
     var okSkryt = ukazSkryte || !jeSkryty(d);
     var okProsle = ukazProsle || !jeProsle(d);
+
+    var okTvar = !vyberTvar || (PKOkruh.vTvaru(d.lat, d.lng, vyberTvar));
     return okType && okSearch && okMisto && okPresne && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
-      && okPerM2 && okKraj && okLevne && okOkoli && okOkruh && okProsle && okVybaveni && okCelek && okDotaz;
+      && okPerM2 && okKraj && okLevne && okOkoli && okOkruh && okProsle && okVybaveni && okCelek && okDotaz && okTvar;
   }
 
   function bezVolnehoTextu() {
@@ -2629,6 +2742,11 @@
     pol('okruh od místa', 'okruh od místa', !!(d.okruh && okruhStred),
       function () { d.okruh = null; },
       (function () { var a = d.okruh; return function () { d.okruh = a; }; }()));
+
+    pol('nakreslený výběr', 'nakreslený výběr', !!vyberTvar,
+      function () { vyberTvar = null; },
+      (function () { var a = vyberTvar; return function () { vyberTvar = a; }; }()),
+      'Nakreslený výběr na mapě');
     return ven;
   }
 

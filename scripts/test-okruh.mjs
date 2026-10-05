@@ -284,6 +284,108 @@ function pravda(popis, vyslo, proc) {
     `ceny ${vlastni(ceny)}, main ${vlastni(main)}, pozemek ${vlastni(poz)}`);
 }
 
+/* --- 5. BOD UVNITŘ NAKRESLENÉHO TVARU --------------------------------
+   Pro výběr kreslený prstem na mapě. Týž paprskový test je v js/okruh.js
+   (vTvaru) i v js/kontrola.js (vPrstenci) — sloučené nejsou schválně,
+   protože kontrola.js se načítá i tam, kde okruh.js není. Rozejít se ale
+   nesmí: kdyby jedna z nich počítala jinak, vybral by výběr na mapě jiné
+   pozemky, než které v něm leží podle zbytku webu.
+
+   Zkouší se na SKUTEČNÝCH hranicích okresů (data/okresy-hrube.json), ne
+   na vymyšleném čtverci — na čtverci se shodne i chybná implementace. */
+{
+  const KONTROLA = req(path.join(ROOT, 'js', 'kontrola.js'));
+  pravda('oba moduly ten test vyvážejí',
+    typeof O.vTvaru === 'function' && typeof KONTROLA.vPrstenci === 'function',
+    `okruh ${typeof O.vTvaru}, kontrola ${typeof KONTROLA.vPrstenci}`);
+
+  /* Vymyšlený čtverec — aspoň základní pravdy, než se pustíme na ostrá data. */
+  const ctverec = [[49, 14], [50, 14], [50, 15], [49, 15]];
+  pravda('střed čtverce je uvnitř', O.vTvaru(49.5, 14.5, ctverec) === true);
+  pravda('bod pod čtvercem je venku', O.vTvaru(48.5, 14.5, ctverec) === false);
+  pravda('tvar o dvou bodech nic neobsahuje (není to plocha)',
+    O.vTvaru(49.5, 14.5, [[49, 14], [50, 15]]) === false);
+  pravda('bod bez souřadnic není nikde', O.vTvaru(NaN, 14.5, ctverec) === false);
+
+  const hranice = JSON.parse(readFileSync(path.join(ROOT, 'data', 'okresy-hrube.json'), 'utf8'));
+  const jmena = Object.keys(hranice);
+  pravda(`hranice okresů se načetly (${jmena.length})`, jmena.length === 77, `${jmena.length}`);
+
+  /* Body se rozsévají DO OKOLÍ KAŽDÉHO OKRESU, ne přes celou republiku.
+     Napoprvé tu byla mřížka přes celé Česko a z 924 bodů padlo dovnitř
+     jedenáct — okres je proti republice malý, takže se skoro netrefily
+     a shoda obou implementací stála hlavně na tom, že obě vracejí
+     „venku". Chytila to předběžná kontrola o dva řádky níž.
+     Teď se bere obálka každého prstence a body se rozsévají po ní
+     s přesahem, takže část padne dovnitř a část ven. Deterministicky:
+     náhoda by znamenala, že test jednou chytí a podruhé ne. */
+  let srovnano = 0, neshod = 0, uvnitrKolik = 0;
+  const priklady = [];
+  for (const jm of jmena) {
+    for (const prstenec of hranice[jm]) {
+      if (!prstenec || prstenec.length < 3) continue;
+      let lo0 = Infinity, lo1 = -Infinity, la0 = Infinity, la1 = -Infinity;
+      for (const b of prstenec) {
+        if (b[0] < lo0) lo0 = b[0]; if (b[0] > lo1) lo1 = b[0];
+        if (b[1] < la0) la0 = b[1]; if (b[1] > la1) la1 = b[1];
+      }
+      /* Přesah o desetinu obálky na každou stranu: ať jsou body i těsně
+         za hranicí, kde se implementace nejspíš rozejdou. */
+      const dx = (lo1 - lo0) * 0.1, dy = (la1 - la0) * 0.1;
+      /* okruh.js bere [lat, lng], kontrola.js [lng, lat] — pořadí je
+         součást toho, co se tu ověřuje. */
+      const proOkruh = prstenec.map((b) => [b[1], b[0]]);
+      for (let gx = 0; gx <= 6; gx++) {
+        for (let gy = 0; gy <= 6; gy++) {
+          const lng = (lo0 - dx) + (lo1 - lo0 + 2 * dx) * (gx / 6);
+          const lat = (la0 - dy) + (la1 - la0 + 2 * dy) * (gy / 6);
+          const a1 = O.vTvaru(lat, lng, proOkruh);
+          const b1 = KONTROLA.vPrstenci(lng, lat, prstenec);
+          srovnano++;
+          if (a1) uvnitrKolik++;
+          if (a1 !== b1) {
+            neshod++;
+            if (priklady.length < 3) priklady.push(`${jm} ${lat.toFixed(4)},${lng.toFixed(4)}: okruh ${a1}, kontrola ${b1}`);
+          }
+        }
+      }
+    }
+  }
+  /* A ještě body PŘESNĚ NA ÚROVNI VRCHOLŮ. Paprskový test se dá napsat
+     s „>" nebo s „>=" a liší se jedině tam, kde bod leží přesně na výšce
+     vrcholu — jinde dají obě varianty totéž. Mřížka počítaná z obálky na
+     vrchol nikdy netrefí, takže tahle záměna testem prošla, dokud se
+     nepřidaly body odvozené přímo z vrcholů. */
+  for (const jm of jmena) {
+    for (const prstenec of hranice[jm]) {
+      if (!prstenec || prstenec.length < 3) continue;
+      const proOkruh = prstenec.map((b) => [b[1], b[0]]);
+      for (let vi = 0; vi < prstenec.length; vi += Math.max(1, Math.floor(prstenec.length / 6))) {
+        const lat = prstenec[vi][1];
+        for (const posun of [-0.004, 0, 0.004]) {
+          const lng = prstenec[vi][0] + posun;
+          const a1 = O.vTvaru(lat, lng, proOkruh);
+          const b1 = KONTROLA.vPrstenci(lng, lat, prstenec);
+          srovnano++;
+          if (a1) uvnitrKolik++;
+          if (a1 !== b1) {
+            neshod++;
+            if (priklady.length < 3) priklady.push(`vrchol ${jm} ${lat.toFixed(5)},${lng.toFixed(5)}: okruh ${a1}, kontrola ${b1}`);
+          }
+        }
+      }
+    }
+  }
+  pravda(`srovnalo se dost bodů (${srovnano})`, srovnano > 500,
+    `jen ${srovnano} — shoda by nic neznamenala`);
+  /* Bez tohohle by shoda mohla stát na tom, že oba vracejí všude false. */
+  pravda(`a část bodů opravdu padla dovnitř (${uvnitrKolik})`,
+    uvnitrKolik > srovnano * 0.15,
+    `jen ${uvnitrKolik} z ${srovnano} — kdyby test vracel skoro všude false, shoda by platila taky`);
+  pravda('obě implementace odpovídají u každého bodu stejně', neshod === 0,
+    `${neshod} neshod z ${srovnano}: ${priklady.join(' | ')}`);
+}
+
 console.log('\nOkruh kolem místa');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb`);

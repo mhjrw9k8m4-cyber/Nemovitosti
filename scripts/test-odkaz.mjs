@@ -148,7 +148,9 @@ const stejne = (popis, a, b) => pravda(popis, JSON.stringify(a) === JSON.stringi
       'nejakeSite', 'SITE_KLICE', 'DNI_KONCI', 'podObvyklou', 'okoli', 'min',
       'okType', 'okSearch', 'okMisto', 'okPresne', 'okDruh', 'okPrice', 'okArea',
       'okUrgent', 'okFav', 'okVybaveni', 'okCelek', 'okDotaz', 'okPerM2', 'okKraj',
-      'okOkoli', 'okOkruh', 'okLevne', 'okSkryt', 'okProsle',
+      'okOkoli', 'okOkruh', 'okLevne', 'okSkryt', 'okProsle', 'okTvar',
+      // PKOkruh je modul (geometrie), ne stav, na kterém se filtruje
+      'PKOkruh', 'vTvaru', 'lat', 'lng',
       // z řadicí funkce: místní proměnné a nástroje, ne stav
       'arr', 'a', 'b', 'String', 'Infinity', 'da', 'db', 'pa', 'pb', 'slevaVal', 'o',
       'window', 'LIST_LIMIT', 'isFeatured', 'perM2Val', 'daysUntil', 'MODEL',

@@ -5680,3 +5680,14 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
     transition:transform var(--cas-zakladni) var(--ease), opacity var(--cas-zakladni) var(--ease);
   }
 }
+
+/* ---------- KRESLENÍ VÝBĚRU NA MAPĚ ----------------------------------
+   Zapíná js/main.js třídou .kresli na rámu mapy.
+   touch-action:none je tu nutnost, ne ozdoba: bez něj by prohlížeč bral
+   tah prstem jako rolování stránky a kreslení by se nedalo dokončit.
+   Kurzor křížku říká na počítači totéž co zvýrazněné tlačítko. */
+#leaflet-map.kresli{touch-action:none; cursor:crosshair;}
+#leaflet-map.kresli .leaflet-grab{cursor:crosshair;}
+/* Zapnuté kreslítko musí být poznat — jinak člověk táhne mapou a diví se,
+   že se nehýbe. */
+#map-kresli.on{background:var(--plocha-znacka); color:#fff; border-color:var(--plocha-znacka);}

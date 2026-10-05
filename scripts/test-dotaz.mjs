@@ -410,7 +410,12 @@ function pravda(popis, vyslo, proc) {
   const idx = readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   pravda('index.html načítá js/dotaz.js', /<script src="js\/(?:min\/)?dotaz\.js/.test(idx));
   pravda('web větu rozebírá', /PKDotaz\.rozeber\(syrovy\)/.test(main));
-  pravda('a filtruje podle toho, co pochopil', /okDotaz;/.test(main));
+  /* Vzor byl původně /okDotaz;/ — tedy „okDotaz je v návratu poslední".
+     To je přísnější, než co se tu má hlídat: jakmile za něj přibyl další
+     filtr (nakreslený výběr), kontrola spadla, přestože zapojené to bylo
+     dál. Záměr je „pochopená věta se do filtrování opravdu promítá", ne
+     pořadí členů. */
+  pravda('a filtruje podle toho, co pochopil', /&&\s*okDotaz\b/.test(main));
   pravda('pochopené části se ukazují jako odznaky', /ms-chipy/.test(idx) && /prekresliChipy/.test(main));
   pravda('a jdou zrušit', /class="msch"/.test(main));
   pravda('křížek škrtá slova, ze kterých odznak vznikl (ne popisek)',

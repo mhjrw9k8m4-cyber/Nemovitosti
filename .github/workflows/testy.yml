@@ -355,6 +355,9 @@ jobs:
       - name: Mapa při tažení (rozhraní zmizí a vrátí se)
         run: node scripts/test-mapa-tazeni.mjs
 
+      - name: Kreslení výběru na mapě (filtruje podle tvaru)
+        run: node scripts/test-kresleni.mjs
+
       - name: Předvyplnění inzerátu z odkazu
         run: node scripts/test-predvyplneni.mjs
 

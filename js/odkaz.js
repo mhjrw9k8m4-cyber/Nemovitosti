@@ -78,7 +78,14 @@
     { stav: 'searchToks',   proc: 'odvozeno z hledaného textu (q)' },
     { stav: 'userPos',      proc: 'moje poloha — a s ní i řazení „nejblíž ke mně", které z ní vychází' },
     { stav: 'kmFromUser',   proc: 'počítá vzdálenost od mojí polohy' },
-    { stav: 'dotazFiltr',   proc: 'odvozeno z hledaného textu (q)' }
+    { stav: 'dotazFiltr',   proc: 'odvozeno z hledaného textu (q)' },
+    /* Nakreslený tvar by se do adresy zakódovat DAL — je to jen geometrie,
+       nic osobního. Nesdílí se z jiného důvodu: hlídání i uložená hledání
+       umí OKRUH (střed a poloměr), ne mnohoúhelník. Odkaz s nakresleným
+       tvarem by tedy vedl k výběru, který si příjemce nemůže uložit ani
+       hlídat — a první, o co se pokusí, je právě to. Kreslení je rychlé
+       zúžení na místě; co má přetrvat, patří do hlídání jako okruh. */
+    { stav: 'vyberTvar',    proc: 'nakreslený tvar je zúžení na místě; hlídání umí okruh, ne mnohoúhelník' }
   ];
 
   function cislo(x) { var n = Number(x); return isFinite(n) && n > 0 ? Math.round(n) : 0; }

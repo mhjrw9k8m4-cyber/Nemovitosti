@@ -505,6 +505,11 @@
   }
 
   return {
+    /* Vyváží se jen kvůli zkoušce: scripts/test-okruh.mjs porovnává tenhle
+       paprskový test s týmž testem v js/okruh.js (vTvaru). Dvě kopie
+       stejného algoritmu jsou tu schválně (viz komentář tam), ale rozejít
+       se nesmí. */
+    vPrstenci: vPrstenci,
     MEZE: MEZE,
     obec: obec, vymera: vymera, cena: cena, cenaZaMetr: cenaZaMetr,
     popis: popis, odkaz: odkaz, kontakt: kontakt, jmeno: jmeno, parcela: parcela, okres: okres,

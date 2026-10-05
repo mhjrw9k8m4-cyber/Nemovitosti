@@ -40,7 +40,9 @@
     { stav: 'searchToks',   proc: 'odvozeno z hledaného textu (q)' },
     { stav: 'userPos',      proc: 'moje poloha — a s ní i řazení „nejblíž ke mně", které z ní vychází' },
     { stav: 'kmFromUser',   proc: 'počítá vzdálenost od mojí polohy' },
-    { stav: 'dotazFiltr',   proc: 'odvozeno z hledaného textu (q)' }
+    { stav: 'dotazFiltr',   proc: 'odvozeno z hledaného textu (q)' },
+
+    { stav: 'vyberTvar',    proc: 'nakreslený tvar je zúžení na místě; hlídání umí okruh, ne mnohoúhelník' }
   ];
 
   function cislo(x) { var n = Number(x); return isFinite(n) && n > 0 ? Math.round(n) : 0; }

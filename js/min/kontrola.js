@@ -396,6 +396,8 @@
   }
 
   return {
+
+    vPrstenci: vPrstenci,
     MEZE: MEZE,
     obec: obec, vymera: vymera, cena: cena, cenaZaMetr: cenaZaMetr,
     popis: popis, odkaz: odkaz, kontakt: kontakt, jmeno: jmeno, parcela: parcela, okres: okres,

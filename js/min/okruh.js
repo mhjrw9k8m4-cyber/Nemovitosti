@@ -240,9 +240,22 @@
     return kusy.join(' · ');
   }
 
+  function vTvaru(lat, lng, body) {
+    if (!body || body.length < 3) return false;
+    if (!isFinite(lat) || !isFinite(lng)) return false;
+    var uvnitr = false;
+    for (var i = 0, j = body.length - 1; i < body.length; j = i++) {
+      var yi = body[i][0], xi = body[i][1];
+      var yj = body[j][0], xj = body[j][1];
+      if (((yi > lat) !== (yj > lat))
+        && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) uvnitr = !uvnitr;
+    }
+    return uvnitr;
+  }
+
   return { km: km, stred: stred, norm: norm, kmenSedi: kmenSedi, nazevSedi: nazevSedi,
     nazevMesta: nazevMesta, median: median, OKRESNI_MESTA: OKRESNI_MESTA,
     VELKA_MESTA: VELKA_MESTA, maMesto: maMesto, nahradniSouradnice: nahradniSouradnice,
     kmDo: kmDo, nejblizsiVelke: nejblizsiVelke, celeKm: celeKm,
-    popisVzdalenosti: popisVzdalenosti };
+    popisVzdalenosti: popisVzdalenosti, vTvaru: vTvaru };
 }));
