@@ -1121,9 +1121,23 @@
         /* Dva odkazy na jednom řádku, ne dva odstavce: jsou to dvě strany
            téže otázky („kolik to stojí" a „na kolik si půjčím") a každá
            vlastní krabička by z detailu udělala rozcestník. */
+        /* A třetí: až se člověk rozhodne, přijde smlouva. Odkaz nese, co
+           o pozemku víme — cenu, výměru a druh, a parcelní číslo jen
+           tehdy, když ho opravdu známe.
+           KATASTRÁLNÍ ÚZEMÍ SE NEPOSÍLÁ, PROTOŽE HO NEMÁME. V datech
+           nabídek není; je tam obec, a ta se s katastrálním územím
+           často neshoduje. Poslat obec jako katastrální území by bylo
+           pohodlné a byla by to nejhorší možná chyba — podklad by
+           určoval jiný pozemek. Zůstane tedy prázdné a stránka si
+           o ně řekne. */
+        var q = ['cena=' + c];
+        if (hasArea(d)) q.push('vymera=' + encodeURIComponent(String(Math.round(d.area))));
+        if (d.druh) q.push('druh=' + encodeURIComponent(String(d.druh)));
+        if (d.parcel && !/^[\s—-]*$/.test(String(d.parcel))) q.push('parcela=' + encodeURIComponent(String(d.parcel)));
         return '<p class="pz-naklady">'
           + '<a href="kolik-stoji-koupe-pozemku.html?cena=' + c + '">Kolik koupě stojí dohromady</a>'
           + ' · <a href="hypoteka-na-pozemek.html?cena=' + c + '">Spočítat splátku hypotéky</a>'
+          + ' · <a href="kupni-smlouva-pozemek.html?' + q.join('&') + '">Podklad pro smlouvu</a>'
           + '</p>';
       }()) : '') +
 

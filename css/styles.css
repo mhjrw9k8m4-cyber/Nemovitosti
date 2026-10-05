@@ -116,7 +116,7 @@
   --text-ondeep:#fff;
   --text-ondeep-mute:#C9D2CB;   /* 10,8 : 1 na tmavém pásu */
   --accent-warm-bright:#E0B878; /* měď na tmavém pásu — 8,0 : 1 */
-  --parchment:#1B2B22; --parchment-dim:#3D4A42;
+  --parchment:#1B2B22;
   /* --text-onlight:#1B2B22 byla deklarovaná a nikde nepoužitá; čtyři
      místa si tu barvu psala rovnou do pravidla. Všechna to byl tmavý
      text na bílém překryvu, tedy přesně --text-ondark (#12241A): o něco
@@ -174,7 +174,7 @@
   --mrizka-cara-tmava:rgba(255,255,255,0.06);
   --mrizka-cara-svetla:rgba(20,35,28,0.04);
   /* Živý odstín zůstává pro plochy a přechody, kde text neleží. */
-  --brand-live:#2C7150; --brand-live-bright:#2C7150;
+  --brand-live:#2C7150;
   /* Teplý akcent. Proměnné se odjakživa jmenují --copper (měď), jenže držely
      modrofialovou — původní teplý tón se cestou ztratil a zůstala obecná
      „technologická" modrá. Tahle měď se vrací, ale ve vší střídmosti: jen
@@ -237,7 +237,6 @@
      Bílý text na ní drží 8,0 : 1. */
   --plocha-znacka:#004F2F;
   --brand-grad:linear-gradient(135deg, #2C7150 0%, #256546 55%, #1B4A34 100%);
-  --brand-grad-soft:linear-gradient(135deg, #35855F 0%, #2C7150 55%, #0F5C3B 100%);
   /* ---------------------------------------------------------------
      KATEGORIE. Dřív to byla duha: chladná modř, sytá zlatá a semaforová
      červená. Na zeleno-béžovém webu to nepůsobilo jako systém, ale jako tři
@@ -386,7 +385,6 @@
   --r-obraz:var(--r-lg);       /* bylo 22px — mapa, fotky */
 
   /* Staré názvy zůstávají, ať se nemusí přepisovat celý soubor naráz. */
-  --radius:var(--r-sm); --radius-lg:var(--r-lg);
   --shadow:var(--e2);
   --shadow-lg:var(--e3);
   --ease:cubic-bezier(.22,.61,.36,1);
@@ -1140,7 +1138,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .upo-toast button:hover{color:var(--text-ondark);}
 @media (prefers-reduced-motion: reduce){ .upo-toast{transition:opacity .01s;} }
 
-.btn-primary{background:var(--plocha-znacka); color:#fff; font-weight:700; font-size:14px; padding:10px 20px; border-radius:var(--r-ovladani); text-decoration:none; border:1px solid rgba(31,81,56,0.55); box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease); white-space:nowrap; cursor:pointer;}
+.btn-primary{background:var(--brand-grad); background-color:var(--plocha-znacka); color:#fff; font-weight:700; font-size:14px; padding:10px 20px; border-radius:var(--r-ovladani); text-decoration:none; border:1px solid rgba(31,81,56,0.55); box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease); white-space:nowrap; cursor:pointer;}
 .btn-primary:hover{filter:brightness(1.06); box-shadow:var(--glow-lg);}
 /* Obrysy ovládacích prvků drží alfu 0,6. Při 0,4 vyjde proti bílé kontrast
    2,07:1 a při 0,28 dokonce 1,66:1 — a u tlačítka, které je bílé na bílém,
@@ -5217,6 +5215,98 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 }
 
 
+/* PODKLAD PRO KUPNÍ SMLOUVU (js/smlouva.js, js/smlouva-stranka.js).
+   Bere stejné tokeny jako zbytek webu — plochy, linky, zaoblení i barvu
+   značky — takže se tahle stránka nemá čím vymykat. Vlastní je jen
+   dvousloupcová mřížka polí a výpis textu neproporcionálním písmem.
+
+   UPOZORNĚNÍ NAHOŘE JE OBRÁCENĚ BAREVNÉ. Je to jediné místo na stránce,
+   které se nesmí dát přeskočit pohledem: říká, že tohle není smlouva. */
+.sml-upozorneni{border-left:3px solid var(--plocha-znacka); margin-bottom:22px;}
+.sml-upozorneni h2{font-family:var(--font-display); font-size:22px; line-height:1.2; margin:0 0 10px;}
+.sml-upozorneni p{font-size:15px; line-height:1.6; margin:0 0 10px; max-width:var(--m-text);}
+.sml-upozorneni p:last-child{margin-bottom:0;}
+.sml-soukromi{font-size:13.5px; color:var(--text-ondark-mute);}
+
+.sml-karta-form{margin-bottom:22px;}
+.sml-predvypln{font-size:13.5px; line-height:1.55; margin:0 0 18px; padding:10px 12px;
+  border-radius:var(--r-ovladani); background:var(--surface-2); color:var(--text-ondark-mute);}
+.sml-blok{border:0; padding:0; margin:0 0 26px;}
+.sml-blok:last-child{margin-bottom:0;}
+.sml-blok legend{font-size:12px; font-weight:700; letter-spacing:var(--popisek-proklad);
+  text-transform:uppercase; color:var(--text-ondark-mute); padding:0; margin:0 0 12px;}
+/* Dva sloupce na šířku, jeden na telefonu. Pole, které potřebuje celou
+   řádku (adresa, výběr způsobu platby), si ji vezme přes .sml-siroke. */
+.sml-form{display:block;}
+.sml-blok{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px 18px;}
+.sml-blok legend{grid-column:1 / -1;}
+.sml-siroke, .sml-napoveda, .sml-pridat, .sml-dalsi{grid-column:1 / -1;}
+.sml-pole{display:block; min-width:0;}
+.sml-pole > span{display:block; font-size:13px; font-weight:600; margin-bottom:5px;}
+.sml-pole input, .sml-pole select{font:inherit; width:100%; box-sizing:border-box;
+  padding:10px 12px; border-radius:var(--r-ovladani); border:1px solid var(--line-strong);
+  background:var(--plocha-plovouci-plna); color:inherit;}
+.sml-pole input:focus-visible, .sml-pole select:focus-visible{
+  outline:2px solid var(--copper-bright); outline-offset:2px;}
+.sml-volba{display:flex; align-items:center; gap:10px; font-size:14px;}
+.sml-volba input[type=checkbox]{width:20px; height:20px; accent-color:var(--copper-bright); cursor:pointer;}
+.sml-napoveda{font-size:13px; line-height:1.55; color:var(--text-ondark-mute);
+  margin:4px 0 0; max-width:var(--m-text);}
+.sml-pridat{justify-self:start; font-size:13px; padding:8px 14px;}
+.sml-dalsi{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px 18px;
+  padding-top:14px; border-top:1px solid var(--line);}
+.sml-dalsi .sml-siroke{grid-column:1 / -1;}
+
+.sml-vystup{display:block;}
+.sml-karta{background:var(--ink-soft); border:1px solid var(--line);
+  border-radius:var(--r-lg); padding:22px 24px; margin-bottom:22px;
+  box-shadow:var(--e3);}
+.sml-karta h3{font-family:var(--font-display); font-size:20px; line-height:1.2; margin:0 0 10px;}
+.sml-karta .sml-lead{font-size:14px; line-height:1.6; color:var(--text-ondark-mute);
+  margin:0 0 16px; max-width:var(--m-text);}
+/* Výpis podkladu: neproporcionální písmo a zachované konce řádků — je to
+   text, který se bude kopírovat a tisknout, takže se nesmí přeskládat. */
+.sml-text{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size:13px; line-height:1.65; white-space:pre-wrap; word-break:break-word;
+  margin:0; padding:16px; border-radius:var(--r-ovladani); border:1px solid var(--line);
+  background:var(--surface-2); max-height:460px; overflow:auto;}
+.sml-akce{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+.sml-akce .btn-secondary{font-size:13px; padding:9px 16px; text-decoration:none;}
+
+.sml-tabulka{width:100%; border-collapse:collapse; font-size:14px;}
+.sml-tabulka th{text-align:left; font-weight:600; padding:9px 12px 9px 0; vertical-align:top;
+  width:38%; color:var(--text-ondark-mute);}
+.sml-tabulka td{padding:9px 0; vertical-align:top; word-break:break-word;}
+.sml-tabulka tr + tr th, .sml-tabulka tr + tr td{border-top:1px solid var(--line);}
+
+.sml-kontrola{margin:0; padding-left:22px; display:grid; gap:14px;}
+.sml-kontrola li{font-size:14px; line-height:1.55;}
+.sml-kontrola b{display:block; font-size:15px;}
+.sml-proc{display:block; color:var(--text-ondark-mute); margin-top:2px;}
+.sml-kde{display:inline-block; margin-top:4px; font-size:13px;}
+
+.sml-chyby{border-left:3px solid var(--copper);}
+.sml-seznam{margin:0; padding-left:20px; display:grid; gap:8px;}
+.sml-seznam li{font-size:14px; line-height:1.55;}
+
+@media (max-width:620px){
+  .sml-blok, .sml-dalsi{grid-template-columns:minmax(0,1fr);}
+  .sml-karta{padding:18px 16px;}
+  .sml-tabulka th{width:auto; display:block; padding-bottom:0;}
+  .sml-tabulka td{display:block; padding-top:2px;}
+  .sml-tabulka tr + tr th{border-top:1px solid var(--line); padding-top:10px;}
+  .sml-tabulka tr + tr td{border-top:0;}
+}
+/* Tisk: na papír patří jen podklad. Formulář, hlavička, patička ani
+   tlačítka tam nemají co dělat — člověk tiskne text pro advokáta. */
+@media print{
+  header, footer, .add-hero, .sml-karta-form, .sml-upozorneni, .sml-akce,
+  .clanek, .skip-link{display:none !important;}
+  .sml-karta{box-shadow:none; border:0; padding:0;}
+  .sml-text{border:0; background:none; max-height:none; overflow:visible; padding:0;}
+}
+
+
 /* GRAF VÝVOJE CENOVÉ HLADINY (js/graf-cen.js).
    Jedna řada, takže žádná legenda — co je v grafu, říká nadpis, a popisek
    nese poslední hodnota, ne každý bod. Čára i plocha berou barvu značky,
@@ -5310,10 +5400,10 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   --bg:#0E1A14; --ink:#12241A; --ink-soft:#18291F; --ink-soft2:#1F3328;
   --surface-2:#1A2A21; --panel:#18291F;
   --ink-dark:#070F0B; --ink-dark-2:#0B1510;
-  --parchment:#0B1510; --parchment-dim:#22332A;
+  --parchment:#0B1510;
   --text-ondark:#EAF2EC; --text-ondark-mute:#A9BBAF; --muted:#A9BBAF; --popisek:#9DB0A4;
   --copper:#7FD1A3; --copper-bright:#9ADDB8;
-  --brand-live:#5FD99A; --brand-live-bright:#7FE3AF;
+  --brand-live:#5FD99A;
   --accent-warm:#E0B878; --accent-warm-soft:rgba(224,184,120,0.14);
   --plocha-znacka:#2E7A55; --obrys-tlacitka:rgba(127,209,163,0.55);
   --c-sale:#8FA8F0; --c-sale-ink:#A9BDF5;
@@ -5336,7 +5426,6 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   --grad-warm-soft:linear-gradient(135deg, rgba(224,184,120,0.14), rgba(224,184,120,0.07));
   --grad-cool-soft:linear-gradient(135deg, rgba(127,209,163,0.14), rgba(127,209,163,0.07));
   --brand-grad:linear-gradient(135deg, #2E7A55 0%, #2B7652 55%, #0F5C3B 100%);
-  --brand-grad-soft:linear-gradient(135deg, #35855F 0%, #2E7A55 55%, #2B7652 100%);
   color-scheme: dark;
 }
 
