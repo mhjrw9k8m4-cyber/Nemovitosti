@@ -17,6 +17,15 @@
        a karta by se roztáhla přes celou šířku. Jednou se to stalo. -->
   <style>
     :root{color-scheme:light;}
+    /* ATRIBUT hidden MUSÍ PLATIT I TADY. Prohlížeč ho uplatňuje jen tím, že
+       prvku ve svém vlastním stylu nastaví display:none, a pravidlo `a` níž
+       nese display:inline-block — to ho přebije. Odkaz na okres, který se
+       ukazuje jen tehdy, když se okres z adresy pozná, se proto kreslil
+       vždycky: prázdná zelená pilulka 284×26 px bez textu, na kterou se
+       navíc dalo dostat tabulátorem. Tahle stránka schválně nenačítá
+       css/styles.css (404 má vyjít i tehdy, když ostatní soubory chybí),
+       takže tu pojistka musí stát zvlášť. Hlídá scripts/test-skryte.mjs. */
+    [hidden]{display:none !important;}
     html,body{height:100%;margin:0;}
     body{display:flex;align-items:center;justify-content:center;background:#EAEEE9;color:#15231B;
       font-family:'Inter','Helvetica Neue',Arial,sans-serif;text-align:center;padding:24px;}

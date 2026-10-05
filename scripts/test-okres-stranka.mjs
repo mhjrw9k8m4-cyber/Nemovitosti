@@ -227,6 +227,58 @@ console.log('\nČísla na stránce okresu');
   }
 }
 
+/* ---------- CELOSTÁTNÍ PŘEHLED DRAŽEB -------------------------------
+   Číslo v podtitulu („Evidujeme 86 dražeb") je slib jako každé jiné:
+   kdo sjede o obrazovku níž, přepočítá si řádky. Nehlídalo to nic —
+   a přitom se ten počet bere z jiné hromádky než řádky (filtruje se
+   podle termínu) a rozejít se může tiše.
+
+   Počítají se DRAŽBY, ne pozemky: jeden řádek je jeden dražební celek
+   s jednou vyvolávací cenou a jeho výměra je SOUČET všech parcel v tom
+   celku (viz nabidkyZDrazby v scripts/fetch-opportunities.mjs). Mluvit
+   o něm jako o jednom pozemku by u celku s víc parcelami nebyla pravda.
+
+   PROČ JEN TADY, A NE NA OKRESNÍCH STRÁNKÁCH. Tam se do počtu sčítají
+   prodeje i dražby a dražební celky z toho dělají 6,1 % řádků (120
+   z 1957) — slovo „pozemků" je tam tedy u čtyřiadevadesáti procent řádků
+   pravda. Ve dvou okresech je to ale jinak: v Litoměřicích tvoří dražby
+   53 % výpisu a v Ústí nad Orlicí 44 %. Přepisovat kvůli tomu znění na
+   jednadevadesáti stránkách, které jsou hlavním vstupem z vyhledávačů,
+   je větší zásah, než na co mám podklad — zaznamenáno, neděláno. */
+{
+  const f = 'drazby-pozemku-nabidky.html';
+  const h = readFileSync(path.join(ROOT, f), 'utf8');
+  const drazby = aktualni.filter((o) => o.type === 'drazba');
+  pravda(`z dat vyšly nějaké dražby (${drazby.length})`, drazby.length > 0);
+
+  /* Dělení podle značky kategorie — kdyby se rozešlo s tvarem stránky,
+     vyšlo by nula řádků a shoda čísel by prošla naprázdno. Právě tohle
+     se mi při psaní téhle kontroly stalo: první vzor hledal <li>,
+     zatímco řádek je <div>, a „nula rozporů" nic neznamenalo. */
+  const radky = (h.match(/<div class="okr-item"/g) || []).length;
+  const znacek = (h.match(/class="okr-badge/g) || []).length;
+  pravda(`${f}: řádky se daly spočítat (${radky})`, radky > 0 && radky === znacek,
+    `řádků ${radky}, značek kategorie ${znacek}`);
+  pravda(`${f}: řádků je tolik, kolik je aktuálních dražeb`, radky === drazby.length,
+    `stránka ${radky}, data ${drazby.length}`);
+
+  /* Mezera před číslem i uvnitř něj je PEVNÁ (&nbsp;) — s obyčejnou
+     mezerou ve vzoru se neshodne nic. */
+  /* Předpona musí snést všechny tři tvary: „1 dražbu", „2 dražby",
+     „86 dražeb". Napsal jsem nejdřív „dražb", a to na genitiv plurálu
+     nesedne — po „draž" následuje „e", ne „b". Kontrola si pak myslela,
+     že se podtitul změnil. */
+  const m = /Evidujeme <b>([0-9\u00a0 ]+)(draž|pozemk)[^<]*<\/b>/.exec(h);
+  pravda(`${f}: podtitul uvádí počet`, !!m, 'vzor se neshodl — podtitul se změnil?');
+  if (m) {
+    const tvrdi = Number(m[1].replace(/[\u00a0 ]/g, ''));
+    pravda(`${f}: podtitul tvrdí tentýž počet jako řádky`, tvrdi === radky,
+      `podtitul ${tvrdi}, řádků ${radky}`);
+    pravda(`${f}: podtitul mluví o dražbách, ne o pozemcích`, m[2] === 'draž',
+      'jeden řádek je dražební celek, jehož výměra je součet jeho parcel — nazvat ho jedním pozemkem není pravda');
+  }
+}
+
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.log('::error::Stránka okresu: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }

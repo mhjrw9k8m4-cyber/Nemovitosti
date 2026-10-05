@@ -934,7 +934,7 @@ const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>(a.price||1e15)
   const file='drazby-pozemku-nabidky.html';
   const rows = drazby.map(itemRow).join('\n');
   const title = `Dražby pozemků — aktuální nabídky v ČR | Parcelka`;
-  const desc = `${count} ${pluralPozemek(count)} v dražbě z celé ČR na jedné mapě, z veřejné evidence dražeb.${minP?(' Vyvolávací ceny od '+fmt(minP)+' Kč.'):''}`;
+  const desc = `${count} ${sklon(count,'dražba pozemku','dražby pozemků','dražeb pozemků')} z celé ČR na jedné mapě, z veřejné evidence dražeb.${minP?(' Vyvolávací ceny od '+fmt(minP)+' Kč.'):''}`;
   const items = drazby.slice(0,20).map((o,i)=>({"@type":"ListItem","position":i+1,"name":`${o.place} — dražba${o.area?', '+o.area+' m²':''}`}));
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Dražby pozemků v ČR","inLanguage":"cs","description":`Aktuální nabídky pozemků v dražbě z veřejné evidence dražeb.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}};
   const crumbs = [
@@ -950,7 +950,7 @@ const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>(a.price||1e15)
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Dražby pozemků · celá ČR</div>
       <h1>Dražby pozemků — aktuální nabídky.</h1>
-      <p class="sub">Evidujeme <b>${count} ${pluralPozemek(count)}</b> v dražbě z celé České republiky, z <b>veřejné evidence dražeb</b>. ${minP?('Vyvolávací ceny od <b>'+fmt(minP)+' Kč</b>. '):''}V dražbě jde často pořídit pozemek pod tržní cenou — ale je potřeba znát pravidla.</p>
+      <p class="sub">Evidujeme <b>${count} ${sklon(count,'dražbu','dražby','dražeb')}</b> pozemků z celé České republiky, z <b>veřejné evidence dražeb</b>. ${minP?('Vyvolávací ceny od <b>'+fmt(minP)+' Kč</b>. '):''}V dražbě jde často pořídit pozemek pod tržní cenou — ale je potřeba znát pravidla.</p>
     </div>
     </div>
   </section>

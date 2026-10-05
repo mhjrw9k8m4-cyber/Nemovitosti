@@ -103,6 +103,9 @@ jobs:
       - name: Čísla na stránce okresu (podíly, kde je nabídek nejvíc)
         run: node scripts/test-okres-stranka.mjs
 
+      - name: Odkazy na zdroj nabídky slibují, kam vedou
+        run: node scripts/test-zdroje-odkazu.mjs
+
       - name: Stránky podle druhu pozemku (les, orná, stavební…)
         run: node scripts/test-druh-stranka.mjs
 
@@ -309,6 +312,12 @@ jobs:
 
       - name: Vrstvení (co je nad čím)
         run: node scripts/test-vrstveni.mjs
+
+      - name: Co má hidden, nesmí být vidět
+        run: node scripts/test-skryte.mjs
+
+      - name: Barevné odznaky jsou čitelné v obou režimech
+        run: node scripts/test-odznaky.mjs
 
       - name: Kontrast textu (WCAG AA)
         run: node scripts/test-kontrast.mjs

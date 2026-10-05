@@ -2177,10 +2177,14 @@ to{opacity:1;transform:none}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cen-mapa-legenda i{border-color:rgba(255,255,255,0.22)}
 }
 :root[data-theme="dark"] .cen-mapa-legenda i{border-color:rgba(255,255,255,0.22)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .opp-overit{color:#EFC97A;border-color:rgba(239,201,122,0.35)}
+}
+:root[data-theme="dark"] .opp-overit{color:#EFC97A;border-color:rgba(239,201,122,0.35)}
 @media (hover:none){:root.mapa-tazeni header{transform:translateY(-100%)}
 :root.mapa-tazeni .map-legend,:root.mapa-tazeni .map-tools,:root.mapa-tazeni .kraj-hint{opacity:0}
 :root.mapa-tazeni .map-tools{pointer-events:none}
-header,.map-legend,.map-tools,.kraj-hint{transition:transform var(--cas-zakladni) var(--ease),opacity var(--cas-zakladni) var(--ease)}
+header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-zakladni) var(--ease)}
+.map-legend,.map-tools,.kraj-hint{transition:transform var(--cas-zakladni) var(--ease),opacity var(--cas-zakladni) var(--ease)}
 }
 #leaflet-map.kresli{touch-action:none;cursor:crosshair}
 #leaflet-map.kresli .leaflet-grab{cursor:crosshair}

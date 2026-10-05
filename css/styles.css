@@ -5651,6 +5651,29 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 }
 :root[data-theme="dark"] .cen-mapa-legenda i{border-color:rgba(255,255,255,0.22);}
 
+/* ODZNAK „CENA K OVĚŘENÍ" V TMAVÉM REŽIMU.
+   Měl jedinou barvu — natvrdo zapsaný tmavý jantar #7C5105 — a žádnou
+   tmavou variantu. V tmavém režimu se tím stal tmavým textem na tmavé
+   ploše: naměřeno 1,59 : 1, tedy prakticky neviditelný, při mezi 4,5.
+   Byl to nejhorší prvek na celém webu a jediný pod normou.
+
+   Proč si toho dlouho nikdo nevšiml: ten odznak se vykresluje jen
+   u nabídky, které model nevěří cenu, takže na stránce někdy je a někdy
+   ne. Zkouška kontrastu proto jednou padala a podruhé prošla a vypadalo
+   to jako její nestálost. Vedle něj přitom stojí .opp-deal, který tmavou
+   variantu nedávno dostal — tenhle se přeskočil.
+
+   Jantar zůstává (je to pobídka „podívej se", ne tvrzení o podvodu), jen
+   se v tmavém režimu rozsvítí. Naměřeno: #EFC97A dává 6,95 : 1 na kartě
+   a 6,15 : 1 na nejvyšší ploše. Rezerva je tu schválně velká — na hraně
+   už jednou proklouzl. Obrys se rozsvěcuje se stejným důvodem jako
+   u .opp-deal: tmavá linka na tmavé ploše není vidět.
+   Na OBĚ místa, pro systémové nastavení i pro ruční přepnutí. */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .opp-overit{color:#EFC97A; border-color:rgba(239,201,122,0.35);}
+}
+:root[data-theme="dark"] .opp-overit{color:#EFC97A; border-color:rgba(239,201,122,0.35);}
+
 /* ---------- MAPA DOSTANE PŘI TAŽENÍ CELOU PLOCHU ----------------------
    Naměřeno na telefonu 390×844 v režimu mapy: mapa je vysoká 625 px, ale
    23,4 % její plochy překrývá rozhraní — pevná hlavička 9,9 %, legenda
@@ -5675,7 +5698,15 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   /* Schované ovládání nesmí chytat doteky — prst projíždějící přes
      neviditelné tlačítko by jinak při tažení něco zmáčkl. */
   :root.mapa-tazeni .map-tools{pointer-events:none;}
-  header,
+  /* HLAVIČKA SE JEN POSOUVÁ — PŘECHOD OPACITY JÍ DÁT NESMÍM.
+     Zhasínání hlavičky při rolování má vlastní rychlý přechod
+     (header.hl-zhasnuta) a příjezd obstarává krátká animace; kdyby měl
+     přechod opacity i základní stav, přebije obojí a hlavička doplouvá
+     přes obsah, i když se už zase roluje. Právě tudy jsem to rozbil —
+     naměřila to kontrola „rozjetý příjezd nepřebije zhasnutí při novém
+     rolování" v scripts/test-hlavicka.mjs. Přechod padding je z pravidla
+     u header výš; tady se celý seznam přepisuje, takže se musí zopakovat. */
+  header{transition:padding var(--cas-zakladni) var(--ease), transform var(--cas-zakladni) var(--ease);}
   .map-legend, .map-tools, .kraj-hint{
     transition:transform var(--cas-zakladni) var(--ease), opacity var(--cas-zakladni) var(--ease);
   }

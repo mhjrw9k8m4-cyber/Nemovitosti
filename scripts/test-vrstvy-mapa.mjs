@@ -66,11 +66,29 @@ try {
 
   /* Při pohledu na celou ČR se žádná vrstva nevykreslí, takže se tlačítko
      nemá nabízet. */
+/* Vidí to OKO, ne jen DOM. Dřív se tu ptalo na `.hidden === true`, tedy
+   na ATRIBUT — a ten tam je vždycky, protože ho nastavuje právě ten kód,
+   který se zkouší. Kontrola tím říkala jen „atribut jsme nastavili", ne
+   „tlačítko není vidět", a prošla by i u prvku, který je vidět: autorské
+   pravidlo s display totiž [hidden] z prohlížeče přebije a .map-reset
+   nese display:inline-flex. Tady to ve výsledku drží plošná pojistka
+   [hidden]{display:none !important} v css/styles.css — ale na tu se
+   kontrola spoléhat nemá, má ji ověřovat. Proto se teď měří box.
+   Tentýž druh vady, kde pojistka nedosáhne, našla scripts/test-skryte.mjs
+   v 404.html. */
+const vidu = (sel) => p.evaluate((s) => {
+  const el = document.querySelector(s);
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  const st = getComputedStyle(el);
+  return !(r.width === 0 && r.height === 0) && st.display !== 'none' && st.visibility !== 'hidden';
+}, sel);
+
   const zoom0 = await p.evaluate(() => window.PK_MAPA.getZoom());
   pravda(`mapa startuje oddálená (zoom ${zoom0})`, zoom0 < 10, `${zoom0}`);
   pravda('a tlačítko „Vrstvy" tam není vidět',
-    await p.evaluate(() => document.getElementById('map-vrstvy').hidden) === true,
-    'tlačítko je vidět, přitom by po něm nic nepřišlo');
+    await vidu('#map-vrstvy') === false,
+    'tlačítko MÁ BOX, přitom by po něm nic nepřišlo');
 
   /* TOHLE JE TA HLAVNÍ: bez vyžádání se na cizí servery nesmí sáhnout. */
   pravda('při otevření mapy neodešel ani jeden požadavek na službu úřadu',
@@ -79,21 +97,19 @@ try {
   await p.evaluate(() => { window.PK_MAPA.setZoom(13); });
   await p.waitForTimeout(1500);
   pravda('po přiblížení se tlačítko „Vrstvy" ukáže',
-    await p.evaluate(() => document.getElementById('map-vrstvy').hidden) === false,
+    await vidu('#map-vrstvy') === true,
     'zůstalo schované');
   pravda('ani po přiblížení se na službu úřadu nesáhlo (zkouška čeká na vyžádání)',
     cizi.length === 0, cizi.slice(0, 3).join(', '));
 
-  const panelPred = await p.evaluate(() => document.getElementById('map-vrstvy-panel').hidden);
-  pravda('a panel s vrstvami je zavřený', panelPred === true);
+  pravda('a panel s vrstvami je zavřený', await vidu('#map-vrstvy-panel') === false);
 
   /* Teprve klepnutí smí sáhnout ven. Služby úřadů jsou odsud nedostupné
      (proxy je blokuje), takže se neověřuje, že vrstvy naskočí — ověřuje
      se, že se o to web POKUSÍ až teď, a že to bez odpovědi řekne. */
   await p.evaluate(() => document.getElementById('map-vrstvy').click());
   await p.waitForTimeout(1200);
-  pravda('po klepnutí se panel otevře',
-    await p.evaluate(() => document.getElementById('map-vrstvy-panel').hidden) === false);
+  pravda('po klepnutí se panel otevře', await vidu('#map-vrstvy-panel') === true);
   pravda('a TEPRVE TEĎ se zkouší služby úřadů', cizi.length > 0,
     'nesáhlo se nikam — zkouška vrstev se nespustila, takže by se žádná nenabídla');
   pravda('a míří to na služby vypsané v ochraně údajů',
