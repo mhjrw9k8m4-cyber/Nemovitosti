@@ -9,7 +9,7 @@
   <title>Lesní pozemek 547 418 m² — Hodonín, okres Hodonín | Parcelka</title>
   <meta name="description" content="Exekuce · 42 000 Kč (7 Kč/m²) · 547 418 m² · Hodonín, okres Hodonín. Termín 11. 11. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
   <meta name="theme-color" content="#FBFAF8">
-  <meta name="robots" content="index,follow">
+  <meta name="robots" content="noindex,follow">
   <link rel="canonical" href="https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html">
   <link rel="alternate" type="application/rss+xml" title="Parcelka — nové pozemky" href="novinky.xml">
   <meta property="og:type" content="article">
@@ -522,7 +522,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Lesní pozemek 547 418 m² — Hodonín, okres Hodonín</h1><p><b>42 000 Kč</b> (7 Kč/m²) · 547 418 m² · Exekuce</p><dl><dt>Druh pozemku</dt><dd>Lesní pozemek</dd><dt>Výměra</dt><dd>547 418 m²</dd><dt>Obec</dt><dd>Hodonín</dd><dt>Okres</dt><dd><a href="pozemky-okres-hodonin.html">Hodonín</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 1/88 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>nucená dražba 11. 11. 2026 · OK dražby</dd><dt>Vzdušnou čarou</dt><dd>Hodonín 5,8 km · Brno 56 km</dd></dl><p><a href="pozemek.html?p=Hodon%C3%ADn%7C%E2%80%94%7CHodon%C3%ADn%7C48.810%7C17.092&amp;ll=48.809662,17.09211&amp;v=547418">Otevřít na mapě</a></p><p><a href="index.html?obec=Hodon%C3%ADn&amp;okres=Hodon%C3%ADn">V okrese Hodonín jsou v nabídce ještě 2 pozemky</a></p></article></div></div>
+    <div id="pz-detail"><div class="pz-konec" role="status"><b>Tato nabídka už není aktuální.</b> <span>Zmizela ze zdroje 5. 10. 2026. Stránku necháváme dostupnou, aby uložené odkazy vedly někam, ale pozemek už takhle koupit nejde.</span><p>Podobné pozemky ve stejném okrese:</p><ul><li><a href="pozemek-hodonin-lovcice-5fr3l2.html">Lovčice — 1 710 m²</a></li><li><a href="pozemek-hodonin-louka-zp19rj.html">Louka — 5 254 m²</a></li><li><a href="pozemek-hodonin-velka-nad-velickou-1oofao8.html">Velká nad Veličkou — 2 939 m²</a></li></ul><p><a href="index.html#mapa">Zpět na mapu všech pozemků</a></p></div><article class="pz-staticky"><h1>Lesní pozemek 547 418 m² — Hodonín, okres Hodonín</h1><p><b>42 000 Kč</b> (7 Kč/m²) · 547 418 m² · Exekuce</p><dl><dt>Druh pozemku</dt><dd>Lesní pozemek</dd><dt>Výměra</dt><dd>547 418 m²</dd><dt>Obec</dt><dd>Hodonín</dd><dt>Okres</dt><dd><a href="pozemky-okres-hodonin.html">Hodonín</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 1/88 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>nucená dražba 11. 11. 2026 · OK dražby</dd><dt>Vzdušnou čarou</dt><dd>Hodonín 5,8 km · Brno 56 km</dd></dl><p><a href="pozemek.html?p=Hodon%C3%ADn%7C%E2%80%94%7CHodon%C3%ADn%7C48.810%7C17.092&amp;ll=48.809662,17.09211&amp;v=547418">Otevřít na mapě</a></p><p><a href="index.html?obec=Hodon%C3%ADn&amp;okres=Hodon%C3%ADn">V okrese Hodonín jsou v nabídce ještě 2 pozemky</a></p></article></div></div>
   </div>
 </main>
 
@@ -547,31 +547,14 @@
 <script src="js/min/snimek.js?v=5de42515"></script>
 <script src="js/min/terminy.js?v=97f740a8"></script>
 <script src="js/min/ceny.js?v=8f494901"></script>
-  <script src="js/min/zlevneni.js?v=8cbae6d1" defer></script>
+<script src="js/min/zlevneni.js?v=8cbae6d1" defer></script>
 <script src="js/min/vybaveni.js?v=68e3d418"></script>
 <script src="js/min/radce.js?v=f8a46b6d"></script>
 <script src="js/min/klic.js?v=17fa93b6"></script>
 <script src="js/min/videno.js?v=a269d74b"></script>
 <script src="js/min/poznamky.js?v=998fa698"></script>
-<!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
-     než js/pozemek.js postaví cenový model: staví ho z téže hromádky
-     jako mapa, tedy bez duplicit. Proto tu tenhle modul stojí jako
-     obyčejný skript PŘED ním, a ne v odložené skupině níž — odložené
-     skripty běží teprve po doparsování a stránka by si model mohla
-     postavit z 2 018 nabídek místo 1 995. Pozdější spotřebitelé
-     (upozorneni-feed.js, upozorneni.js) ho najdou stejně: obyčejné
-     skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=d0b8b1a8"></script>
-<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Lesní pozemek 547 418 m² — Hodonín, okres Hodonín","description":"Exekuce · 42 000 Kč (7 Kč/m²) · 547 418 m² · Hodonín, okres Hodonín. Termín 11. 11. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html","address":{"@type":"PostalAddress","addressLocality":"Hodonín","addressRegion":"Hodonín","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":48.809662,"longitude":17.09211}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Hodonín","item":"https://www.parcelaka.cz/pozemky-okres-hodonin.html"},{"@type":"ListItem","position":4,"name":"Lesní pozemek 547 418 m² — Hodonín, okres Hodonín","item":"https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html"}]}]</script>
-<script>window.PK_POZEMEK={"k":"Hodonín|—|Hodonín|48.810|17.092","ll":[48.809662,17.09211],"v":547418,"c":42000,"r":"data/okres/hodonin.json"};</script>
 <script src="js/min/pozemek.js?v=74acdf2f"></script>
-<!-- Vercel Web Analytics -->
-<script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
-   chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
-   web běží na GitHub Pages pod vlastní doménou, takže si o neexistující soubor
-   říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
-   na nasazení u Vercelu. */
-(function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=bec7a315" defer></script>
 <script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
@@ -579,6 +562,24 @@
 <script src="js/min/hlavicka.js?v=8d2b1304" defer></script>
 <script src="js/min/rezim.js?v=9077a020" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
+  <!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
+     než js/pozemek.js postaví cenový model: staví ho z téže hromádky
+     jako mapa, tedy bez duplicit. Proto tu tenhle modul stojí jako
+     obyčejný skript PŘED ním, a ne v odložené skupině níž — odložené
+     skripty běží teprve po doparsování a stránka by si model mohla
+     postavit z 2 018 nabídek místo 1 995. Pozdější spotřebitelé
+     (upozorneni-feed.js, upozorneni.js) ho najdou stejně: obyčejné
+     skripty běží před odloženými. -->
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Lesní pozemek 547 418 m² — Hodonín, okres Hodonín","description":"Exekuce · 42 000 Kč (7 Kč/m²) · 547 418 m² · Hodonín, okres Hodonín. Termín 11. 11. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html","address":{"@type":"PostalAddress","addressLocality":"Hodonín","addressRegion":"Hodonín","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":48.809662,"longitude":17.09211}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Hodonín","item":"https://www.parcelaka.cz/pozemky-okres-hodonin.html"},{"@type":"ListItem","position":4,"name":"Lesní pozemek 547 418 m² — Hodonín, okres Hodonín","item":"https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html"}]}]</script>
+<script>window.PK_UKONCENO="2026-10-05";</script>
+<script>window.PK_POZEMEK={"k":"Hodonín|—|Hodonín|48.810|17.092","ll":[48.809662,17.09211],"v":547418,"c":42000,"r":"data/okres/hodonin.json"};</script>
+<!-- Vercel Web Analytics -->
+<script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
+   chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
+   web běží na GitHub Pages pod vlastní doménou, takže si o neexistující soubor
+   říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
+   na nasazení u Vercelu. */
+(function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script type="application/json" id="pz-okoli-data">"Hodonín 5,8 km · Brno 56 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V okrese Hodonín jsou v nabídce ještě 2 pozemky","url":"index.html?obec=Hodon%C3%ADn\u0026okres=Hodon%C3%ADn"}</script>
 </body>

@@ -406,12 +406,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-usti-nad-orlici.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-chrudim.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-chrudim.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-usti-nad-orlici.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -3176,6 +3176,11 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://www.parcelaka.cz/pozemek-hodonin-prusanky-ky5il5.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.parcelaka.cz/pozemek-zdar-nad-sazavou-ruda-1jcdwvr.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -3357,6 +3362,11 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-blansko-velke-opatovice-4dhhou.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-hodonin-louka-1q8qo2y.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -4256,11 +4266,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-hodonin-drazuvky-gxhhsp.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-kromeriz-korycany-1pyck6m.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -4481,11 +4486,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-hodonin-louka-1q8qo2y.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-frydek-mistek-malenovice-1l3agej.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -4547,11 +4547,6 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-zlin-hrivinuv-ujezd-jtxvx5.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-louny-kostice-171wxib.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -6111,11 +6106,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-pribram-obecnice-vsgklc.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-mlada-boleslav-lipnik-1d1ms6n.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -6936,11 +6926,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-pisek-kostelec-nad-vltavou-1mluod3.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-jablonec-nad-nisou-rychnov-u-jablonce-nad-nisou-86irw4.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -7731,6 +7716,11 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://www.parcelaka.cz/pozemek-teplice-ruska-188boj3.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.parcelaka.cz/pozemek-klatovy-klatovy-1wmgjde.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -7787,11 +7777,6 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-karvina-bucinska-4ngfdh.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-teplice-ruska-188boj3.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -8196,6 +8181,11 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://www.parcelaka.cz/pozemek-chrudim-chrudim-19lpqnz.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.parcelaka.cz/pozemek-praha-zapad-psary-178ksu2.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -8237,11 +8227,6 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-brno-mesto-brno-1eyq50o.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-praha-vychod-kostelec-nad-cernymi-lesy-18eg46x.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -8357,11 +8342,6 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-pardubice-sezemice-18emqkq.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-liberec-slezska-4xr4cw.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -8496,12 +8476,12 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-praha-zapad-nucice-1gxhr7u.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-beroun-ve-visnovce-1j067sc.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-beroun-ve-visnovce-1j067sc.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-praha-zapad-nucice-1gxhr7u.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9861,7 +9841,7 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-vsetin-seninka-1pjzlmt.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-vsetin-seninka-yh014w.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9876,7 +9856,7 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-vsetin-seninka-yh014w.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-vsetin-seninka-1pjzlmt.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -10216,7 +10196,7 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-hodonin-hodonin-5d0d8f.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -10281,12 +10261,12 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-kolin-prisimasy-1bwxxh3.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-znojmo-znojmo-123erjs.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-znojmo-znojmo-123erjs.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-kolin-prisimasy-1bwxxh3.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -10326,12 +10306,12 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-brno-venkov-brno-venkov-13fh0s5.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-prerov-prerov-1x7dopr.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-prerov-prerov-1x7dopr.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-brno-venkov-brno-venkov-13fh0s5.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
