@@ -51,6 +51,7 @@ const V = {
   hlavicka: razitko('js/hlavicka.js'),
   grafCen: razitko('js/graf-cen.js'),
   rezim: razitko('js/rezim.js'),
+  offline: razitko('js/offline.js'),
   menu: razitko('js/menu.js'),
 };
 /* Práh byl 10 a bez vlastní stránky kvůli tomu zůstávalo DVANÁCT okresů,
@@ -550,6 +551,7 @@ function footer(){
 <script src="js/upozorneni.js?${V.upoz}" defer></script>
 <script src="js/graf-cen.js?${V.grafCen}" defer></script>
 <script src="js/rezim.js?${V.rezim}" defer></script>
+<script src="js/offline.js?${V.offline}" defer></script>
 <script src="js/hlavicka.js?${V.hlavicka}" defer></script>
 </body>
 </html>

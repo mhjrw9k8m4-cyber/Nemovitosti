@@ -397,6 +397,27 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
     process.exit(1);
   }
   console.log(`Manifest aplikace: ${stranky.filter((f) => /rel="manifest"/.test(fs.readFileSync(path.join(KOREN2, f), 'utf8'))).length} z ${stranky.length} hlavních stránek (zbytek ho mít nemá).`);
+
+  /* A kdo se tváří jako aplikace, musí se dát použít i bez signálu.
+     Registrace service workeru se musí stát na KAŽDÉ stránce: většina
+     návštěv přichází z vyhledávače přímo na stránku pozemku, ne na úvod,
+     a kdo se na úvod nikdy nedostane, offline režim by nedostal. */
+  const vsechnyStranky = fs.readdirSync(KOREN2).filter((f) => f.endsWith('.html'));
+  const bezOffline = vsechnyStranky.filter((f) => {
+    const h = fs.readFileSync(path.join(KOREN2, f), 'utf8');
+    return /rel="manifest"/.test(h) && !/<script src="js\/(?:min\/)?offline\.js/.test(h);
+  });
+  if (bezOffline.length) {
+    console.error('::error::Stránka má manifest, ale nepřihlašuje service worker (bez signálu neukáže nic): '
+      + bezOffline.slice(0, 5).join(', ') + (bezOffline.length > 5 ? ` a ${bezOffline.length - 5} dalších` : ''));
+    process.exit(1);
+  }
+  const sOffline = vsechnyStranky.filter((f) => /<script src="js\/(?:min\/)?offline\.js/.test(fs.readFileSync(path.join(KOREN2, f), 'utf8'))).length;
+  if (sOffline < 2000) {
+    console.error(`::error::Service worker se přihlašuje jen na ${sOffline} stránkách — čekáno přes 2 000.`);
+    process.exit(1);
+  }
+  console.log(`Offline režim: service worker se přihlašuje na ${sOffline} stránkách.`);
 }
 
 console.log(`\nStatická kontrola: ${souboru} souborů, ${podezreni ? podezreni + ' podezřelých volání' : 'žádné osiřelé volání'}.`);

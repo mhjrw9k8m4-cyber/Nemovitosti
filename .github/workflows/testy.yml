@@ -343,6 +343,9 @@ jobs:
       - name: Data stránky pozemku (dva malé soubory místo velkého)
         run: node scripts/test-data-stranky.mjs
 
+      - name: Offline režim (service worker, bez signálu i bez cizích serverů)
+        run: node scripts/test-offline.mjs
+
       - name: Předvyplnění inzerátu z odkazu
         run: node scripts/test-predvyplneni.mjs
 
