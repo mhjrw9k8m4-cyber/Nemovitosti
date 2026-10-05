@@ -135,6 +135,30 @@ for (const f of soubory) {
     for (const m of t.matchAll(/https?:\/\/([^/"'`\s)>]+)/g)) pridej(stahovane, m[1], f);
   }
 }
+/* MAPOVÉ VRSTVY LEŽÍ V DATECH, NE V KÓDU — a tím se téhle kontrole
+   schovaly. Adresy služeb (katastr, územní plán, záplavy, bonita půdy,
+   ochrana přírody) jsou schválně v data/mapove-vrstvy.json, aby se daly
+   opravit bez zásahu do skriptu; jenže kontrola četla jen js/ a html,
+   takže pět úředních serverů, na které prohlížeč chodí, v zásadách
+   ochrany údajů chybělo. A nechodí se na ně až po zapnutí přepínače:
+   js/mapove-vrstvy.js si z KAŽDÉ služby stáhne zkušební dlaždici hned,
+   jak se mapa pozemku postaví — tedy i když vrstvu nikdo nezapne. */
+{
+  const nast = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'mapove-vrstvy.json'), 'utf8'));
+  let adres = 0;
+  for (const v of nast.vrstvy || []) {
+    for (const sl of v.sluzby || []) {
+      const m = /^https?:\/\/([^/"'\s)>]+)/.exec(sl.url || '');
+      if (!m) continue;
+      adres++;
+      pridej(vsechny, m[1], 'data/mapove-vrstvy.json');
+      pridej(stahovane, m[1], 'data/mapove-vrstvy.json');
+    }
+  }
+  pravda(`mapové vrstvy mají adresy služeb (${adres}) — jinak se o nich nic nekontroluje`,
+    adres >= 5, `adres ${adres}`);
+}
+
 pravda(`a nějaké cizí adresy v nich jsou (${vsechny.size}) — jinak se nic nekontroluje`,
   vsechny.size >= 3, `cizích adres ${vsechny.size}`);
 
