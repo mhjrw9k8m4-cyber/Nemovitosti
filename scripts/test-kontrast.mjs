@@ -146,9 +146,30 @@ const MERENI = `(() => {
   return out;
 })()`;
 
+/* OBA REŽIMY, A NA DOTYKOVÉM ZAŘÍZENÍ.
+   Dřív se měřilo jen takhle: 390 px, světlý režim, bez dotyku. Tmavý
+   režim měl vlastní zkoušku (test-tmavy-rezim.mjs), ale ta běží na
+   monitoru 1280 px. Ta jediná kombinace, ve které lidé web nejčastěji
+   vidí — telefon v tmavém režimu — se tedy neměřila vůbec.
+
+   Naměřeno, když se zapnula: 39 prvků pod normou, nejhorší 1,55 : 1.
+   Mezi nimi hlavička, která na dotykovém zařízení zůstala krémová
+   (vypíná se na ní rozmazání pozadí a barva tam stála natvrdo), zatímco
+   nápis „Parcelka" a přepínač menu se obarvily světle: 1,05 : 1, tedy
+   prakticky neviditelné. Na tom je vidět, proč nestačí měřit režimy
+   odděleně — vada byla v PRŮSEČÍKU dvou pravidel, ne v jednom z nich.
+
+   hasTouch zapíná @media (hover:none), což je na telefonu skoro vždycky
+   pravda; isMobile k tomu přidá dotykové události a správné měřítko. */
+const REZIMY = [
+  { jmeno: 'světlý', colorScheme: 'light' },
+  { jmeno: 'tmavý', colorScheme: 'dark' },
+];
 const vse = [];
+for (const REZIM of REZIMY)
 for (const s of STRANKY) {
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 900 } });
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 900 },
+    colorScheme: REZIM.colorScheme, hasTouch: true, isMobile: true });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';`
       + 'window.PK_MAIL_ZAPNUTO=true;' }));
@@ -192,7 +213,7 @@ for (const s of STRANKY) {
   await p.evaluate(() => window.scrollTo(0, 0));
   await p.waitForTimeout(400);
   const nalezy = await p.evaluate(MERENI);
-  nalezy.forEach((n) => vse.push(Object.assign({ stranka: s }, n)));
+  nalezy.forEach((n) => vse.push(Object.assign({ stranka: s + ' (' + REZIM.jmeno + ')' }, n)));
 
   /* MĚŘÍ SE JEN STAV, VE KTERÉM STRÁNKA PRÁVĚ JE — a to je málo.
    *
@@ -221,7 +242,7 @@ for (const s of STRANKY) {
     await p.waitForTimeout(180);
     const vCipu = await p.evaluate(MERENI).catch(() => []);
     vCipu.filter((n) => /filter-chip/.test(n.trida || ''))
-      .forEach((n) => vse.push(Object.assign({ stranka: s + ' (zapnutý čip)' }, n)));
+      .forEach((n) => vse.push(Object.assign({ stranka: s + ' (' + REZIM.jmeno + ', zapnutý čip)' }, n)));
   }
   await ctx.close();
 }
