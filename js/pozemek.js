@@ -653,6 +653,32 @@
       prepocitejLegendy();
     }
 
+    /* Zeptá se služeb na bonitu v pořadí, v jakém jsou v datech — první,
+       která odpoví čitelně, platí. Když neodpoví ani jedna, řekne se to;
+       mlčet by znamenalo, že si člověk může myslet, že se to načítá. */
+    function zjistiBonitu(zapis, vrstva) {
+      var sluzby = (zapis.def && zapis.def.sluzby) || [];
+      var i = 0;
+      function dal() {
+        if (i >= sluzby.length) { dopis('Bonitu se u tohohle bodu nepodařilo zjistit.'); return; }
+        var u = global.PKBpej.dotazUrl(sluzby[i++], d.lat, d.lng);
+        if (!u) { dal(); return; }
+        fetch(u, { mode: 'cors' }).then(function (r) { return r.ok ? r.text() : ''; })
+          .then(function (t) {
+            var kod = global.PKBpej.kodZOdpovedi(t);
+            if (kod) dopis('BPEJ na tomhle místě: ' + kod + '.');
+            else dal();
+          })
+          .catch(function () { dal(); });
+      }
+      function dopis(veta) {
+        if (!zive[zapis.def.id]) return;          // mezitím si ji vypnul
+        vrstva._pkPopis = (zapis.def.popis || '') + ' ' + veta;
+        prepocitejKryti();
+      }
+      dal();
+    }
+
     function pridejPrepinac(zapis) {
       var def = zapis.def;
       if (!pridano++) vrstvy.innerHTML = '';
@@ -685,6 +711,22 @@
              tak se mapa přiblíží sama, aby bylo co vidět. */
           if (def.odPriblizeni && m.getZoom() < def.odPriblizeni) m.setZoom(def.odPriblizeni);
           pridejLegendu(zapis);
+          /* BONITA: KE KRESBĚ PATŘÍ I ČÍSLO.
+             Vrstva BPEJ obarví půdu, ale kód nenese — dlaždice je obrázek.
+             Kdo si ji zapne, ptá se „jaká je tady půda", a na to se dá
+             odpovědět přesně: zeptat se téže služby na TENHLE bod
+             (GetFeatureInfo) a vypsat kód, který vrátí.
+
+             Dotaz odchází až teď, tedy po vyžádání vrstvy — žádný nový
+             cizí server nad rámec toho, o co si člověk právě řekl.
+
+             Úřední cena se z kódu NEPOČÍTÁ: tabulka je v příloze vyhlášky
+             298/2014 Sb. a v repozitáři není. Vypsat se dá kód, ne cena.
+             Čtení odpovědi hlídá scripts/test-bpej.mjs. */
+          if (def.id === 'bpej' && global.PKBpej && typeof fetch === 'function'
+              && typeof d.lat === 'number' && typeof d.lng === 'number') {
+            zjistiBonitu(zapis, v);
+          }
         }
         prepocitejKryti();
       }

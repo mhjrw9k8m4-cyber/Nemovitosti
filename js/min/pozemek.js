@@ -467,6 +467,29 @@
       prepocitejLegendy();
     }
 
+    function zjistiBonitu(zapis, vrstva) {
+      var sluzby = (zapis.def && zapis.def.sluzby) || [];
+      var i = 0;
+      function dal() {
+        if (i >= sluzby.length) { dopis('Bonitu se u tohohle bodu nepodařilo zjistit.'); return; }
+        var u = global.PKBpej.dotazUrl(sluzby[i++], d.lat, d.lng);
+        if (!u) { dal(); return; }
+        fetch(u, { mode: 'cors' }).then(function (r) { return r.ok ? r.text() : ''; })
+          .then(function (t) {
+            var kod = global.PKBpej.kodZOdpovedi(t);
+            if (kod) dopis('BPEJ na tomhle místě: ' + kod + '.');
+            else dal();
+          })
+          .catch(function () { dal(); });
+      }
+      function dopis(veta) {
+        if (!zive[zapis.def.id]) return;
+        vrstva._pkPopis = (zapis.def.popis || '') + ' ' + veta;
+        prepocitejKryti();
+      }
+      dal();
+    }
+
     function pridejPrepinac(zapis) {
       var def = zapis.def;
       if (!pridano++) vrstvy.innerHTML = '';
@@ -497,6 +520,11 @@
 
           if (def.odPriblizeni && m.getZoom() < def.odPriblizeni) m.setZoom(def.odPriblizeni);
           pridejLegendu(zapis);
+
+          if (def.id === 'bpej' && global.PKBpej && typeof fetch === 'function'
+              && typeof d.lat === 'number' && typeof d.lng === 'number') {
+            zjistiBonitu(zapis, v);
+          }
         }
         prepocitejKryti();
       }

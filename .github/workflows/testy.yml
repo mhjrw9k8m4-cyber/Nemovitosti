@@ -103,6 +103,9 @@ jobs:
       - name: Čísla na stránce okresu (podíly, kde je nabídek nejvíc)
         run: node scripts/test-okres-stranka.mjs
 
+      - name: Bonita půdy (BPEJ) — dotaz na bod a čtení odpovědi
+        run: node scripts/test-bpej.mjs
+
       - name: Místem nabídky je obec, ne ulice
         run: node scripts/test-misto-inzeratu.mjs
 
