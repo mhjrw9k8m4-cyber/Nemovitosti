@@ -174,6 +174,59 @@ function okresZeStranky(html) {
 }
 
 console.log('\nČísla na stránce okresu');
+/* --- STRÁNKA OKRESU PROTI CENOVÉ MAPĚ -------------------------------
+   Cenová mapa na cena-pozemku.html a stránka okresu jsou dvě místa, která
+   o témž okresu tvrdí cenu. Přesně v téhle situaci si web začne
+   odporovat — stalo se to mezi mapou a stránkou pozemku a dopadlo to na
+   310 stránek. Porovnává se tedy číslo v ostrůvku mapy s číslem
+   vysázeným na stránce okresu.
+
+   POZOR NA RŮZNÉ VELIČINY: stránka okresu uvádí medián té kategorie,
+   která v okrese PŘEVAŽUJE — v Praze-východ jsou to stavební pozemky
+   (9 714 Kč/m²), kdežto mapa je celá o zemědělské půdě (160 Kč/m²).
+   To není rozpor, obojí je označené. Srovnává se proto jen tam, kde
+   stránka mluví taky o zemědělské půdě. */
+{
+  const cesta = path.join(ROOT, 'cena-pozemku.html');
+  let mapa = null;
+  try {
+    const h = readFileSync(cesta, 'utf8');
+    const m = /<script type="application\/json" id="cen-mapa-data">([\s\S]*?)<\/script>/.exec(h);
+    mapa = m ? JSON.parse(m[1]) : null;
+  } catch (e) { mapa = null; }
+  pravda('cena-pozemku.html nese ostrůvek dat cenové mapy', !!mapa && Object.keys(mapa).length > 20,
+    mapa ? `jen ${Object.keys(mapa).length} okresů` : 'ostrůvek se nenašel');
+
+  if (mapa) {
+    const slugOkres = (x) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    let srovnano = 0;
+    const rozpory = [], chybiStranka = [];
+    for (const [okres, z] of Object.entries(mapa)) {
+      const f = path.join(ROOT, `pozemky-okres-${slugOkres(okres)}.html`);
+      let h = '';
+      try { h = readFileSync(f, 'utf8'); } catch (e) { chybiStranka.push(okres); continue; }
+      /* Mezera před „Kč" je PEVNÁ (&nbsp;). S literální mezerou ve vzoru
+         se neshodne nic a kontrola projde naprázdno — narazil jsem na to
+         při psaní cenové mapy dvakrát. */
+      const m = /Medián ceny \(zemědělská půda\): <b>([0-9\u00a0 ]+)Kč\/m²/.exec(h);
+      if (!m) continue;   // stránka mluví o jiné kategorii — viz komentář výš
+      srovnano++;
+      const c = Number(m[1].replace(/[\u00a0 ]/g, ''));
+      if (c !== z.med) rozpory.push(`${okres}: mapa ${z.med}, stránka ${c}`);
+      const n = /jen z ([0-9]+) nabídek/.exec(h);
+      if (n && Number(n[1]) !== z.n) rozpory.push(`${okres}: počet nabídek mapa ${z.n}, stránka ${n[1]}`);
+    }
+    pravda('každý okres z mapy má svou stránku', chybiStranka.length === 0, chybiStranka.slice(0, 4).join(', '));
+    /* Bez tohohle by kontrola pod tím prošla i tehdy, kdyby se vzor
+       neshodl ani jednou. */
+    pravda(`srovnalo se dost okresů (${srovnano})`, srovnano >= 20,
+      `jen ${srovnano} — kontrola shody by nic neznamenala`);
+    pravda('cenová mapa a stránka okresu tvrdí u zemědělské půdy TOTÉŽ',
+      rozpory.length === 0, rozpory.slice(0, 5).join(' | '));
+  }
+}
+
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.log('::error::Stránka okresu: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
