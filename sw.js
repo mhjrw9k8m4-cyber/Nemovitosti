@@ -68,12 +68,19 @@ const STROP = { [TRVALE]: 80, [DATA]: 40, [STRANKY]: 60 };
 
 const OTISKOVANE = /^(?:css|js|vendor|fonts|assets)\//;
 
+/* ÚKLID SE SPOUŠTÍ A NEČEKÁ SE NA NĚJ — odpověď nemá na čem záviset,
+   stránka ji potřebuje hned. Chyba se ale musí spolknout TADY: nezachycené
+   odmítnutí v service workeru si prohlížeč zapíše do konzole, a to se na
+   tomhle webu hlídá testem (scripts/test-konzole.mjs). Spolkne se proto
+   uvnitř, ne na každém místě volání zvlášť. */
 async function uklid(jmeno) {
   const strop = STROP[jmeno];
   if (!strop) return;
-  const c = await caches.open(jmeno);
-  const klice = await c.keys();
-  for (let i = 0; i < klice.length - strop; i++) await c.delete(klice[i]);
+  try {
+    const c = await caches.open(jmeno);
+    const klice = await c.keys();
+    for (let i = 0; i < klice.length - strop; i++) await c.delete(klice[i]);
+  } catch (e) { /* viz komentář výš: úklid není za co obětovat odpověď */ }
 }
 
 /* Uloží se jen vlastní a úspěšná odpověď. „opaque" (cizí původ bez CORS)

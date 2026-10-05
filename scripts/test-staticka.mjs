@@ -417,7 +417,37 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
     console.error(`::error::Service worker se přihlašuje jen na ${sOffline} stránkách — čekáno přes 2 000.`);
     process.exit(1);
   }
-  console.log(`Offline režim: service worker se přihlašuje na ${sOffline} stránkách.`);
+  /* SERVICE WORKER SE NESMÍ STAMPOVAT ANI MINIFIKOVAT, a je to tiché
+     riziko: kdyby sw.js někdo přidal do scripts/minifikace.mjs nebo do
+     scripts/orazitkuj-verze.mjs, registrace by ukazovala na adresu, která
+     neexistuje — a offline režim by beze slova přestal fungovat.
+     Prohlížeč navíc pozná novou verzi workeru tím, že porovná BAJTY na
+     TÉŽE adrese; s ?v=… v adrese by se nová verze tvářila jako jiný
+     worker a přestal by platit i postup na vypnutí, který je v hlavičce
+     sw.js popsaný (náhrada obsahu za verzi, co se sama odhlásí). */
+  if (!fs.existsSync(path.join(KOREN2, 'sw.js'))) {
+    console.error('::error::sw.js chybí — offline režim by nefungoval.');
+    process.exit(1);
+  }
+  if (fs.existsSync(path.join(KOREN2, 'js', 'min', 'sw.js'))) {
+    console.error('::error::sw.js se minifikuje do js/min/ — registrace ukazuje na sw.js v korenu, takže by přestala platit.');
+    process.exit(1);
+  }
+  const reg = fs.readFileSync(path.join(KOREN2, 'js', 'offline.js'), 'utf8');
+  const regMin = fs.existsSync(path.join(KOREN2, 'js', 'min', 'offline.js'))
+    ? fs.readFileSync(path.join(KOREN2, 'js', 'min', 'offline.js'), 'utf8') : '';
+  for (const [kde, text] of [['js/offline.js', reg], ['js/min/offline.js', regMin]]) {
+    if (!text) continue;
+    if (!/register\('sw\.js'\)/.test(text)) {
+      console.error(`::error::${kde} už neregistruje 'sw.js' — offline režim by nefungoval.`);
+      process.exit(1);
+    }
+    if (/sw\.js\?v=/.test(text)) {
+      console.error(`::error::${kde} registruje sw.js s verzí v adrese — prohlížeč pozná novou verzi podle bajtů na téže adrese, takže by to rozbilo i vypnutí workeru.`);
+      process.exit(1);
+    }
+  }
+  console.log(`Offline režim: service worker se přihlašuje na ${sOffline} stránkách, sw.js se nestampuje.`);
 }
 
 console.log(`\nStatická kontrola: ${souboru} souborů, ${podezreni ? podezreni + ' podezřelých volání' : 'žádné osiřelé volání'}.`);

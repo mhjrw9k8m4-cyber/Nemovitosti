@@ -46,7 +46,24 @@ function pridejVybaveni(o, text) {
 const OUT = join(__dirname, '..', 'data', 'opportunities.json');
 const OKRESY = join(__dirname, '..', 'data', 'okresy.json');
 const GEOCACHE = join(__dirname, '..', 'data', 'geocode-cache.json');
-/* Popisy od inzerentů. Zvlášť, aby je nemusela stahovat úvodní stránka. */
+/* Popisy od inzerentů. Zvlášť, aby je nemusela stahovat úvodní stránka.
+ *
+ * TENHLE SOUBOR SE ZVEŘEJŇUJE, A JE TO V POŘÁDKU — jednou změřeno, ať se
+ * to nerozhoduje potřetí. Čte ho jen build (generátor stránek a tenhle
+ * skript) a zkoušky; žádný kód v prohlížeči po něm nejde a data.html ho
+ * nenabízí. Vypadá to tedy jako hromada cizího inzertního textu ležící
+ * veřejně pro nikoho.
+ *
+ * Jenže: uložené texty jsou ÚRYVKY (medián 415 znaků, nejdelší 461)
+ * a dohromady mají 663 777 znaků — zatímco v 1 635 stránkách pozemků je
+ * týž text už vysázený v rozsahu 665 949 znaků. Je to tedy tentýž obsah,
+ * který web stejně musí ukázat u pozemku, jen posbíraný do jednoho
+ * souboru. Odebráním by nikdo nepřišel o nic, co by nenašel po stránkách.
+ *
+ * Nezveřejnit ho by znamenalo zapnout Jekyll a jeho exclude (dnes tu
+ * .nojekyll ani _config.yml nejsou), tedy sáhnout na nasazení celého
+ * webu kvůli ničemu. A do robots.txt se nepíše schválně: ta adresa
+ * odnikud nevede, takže zákaz v robots.txt by ji jako jediný prozradil. */
 const POPISY = join(__dirname, '..', 'data', 'popisy.json');
 
 // Geokódování: okres → přibližné souřadnice (s malým rozptylem, ať se body nekryjí)
