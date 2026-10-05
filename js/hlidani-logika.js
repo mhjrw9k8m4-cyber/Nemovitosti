@@ -55,10 +55,19 @@
     var z = zlomekPodilu(d);
     return z == null ? null : d.area * z;
   }
+  /* Strop uvěřitelnosti musí být stejný jako v js/ceny.js — tam je
+     i celé odůvodnění s naměřenými čísly. Tady stojí jen hodnota,
+     protože tenhle soubor musí fungovat i bez ceny.js (hlidani.html ho
+     dřív nenačítala vůbec). Že se ty dvě kopie nerozešly, hlídá
+     scripts/test-hlidani.mjs — a právě on tenhle rozchod zachytil, když
+     jsem mez přidal jen do jedné z nich. */
+  var MEZ_NEUVERITELNA = 30000;
   /** Cena za metr, který kupující opravdu dostane. null = nevíme. */
   function zaMetr(d) {
     var v = vymeraVCene(d);
-    return (v > 0 && d && d.price > 0) ? d.price / v : null;
+    if (!(v > 0) || !d || !(d.price > 0)) return null;
+    var zm = d.price / v;
+    return zm > MEZ_NEUVERITELNA ? null : zm;
   }
 
   function normd(s) {

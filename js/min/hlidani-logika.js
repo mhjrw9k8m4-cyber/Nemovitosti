@@ -22,9 +22,13 @@
     return z == null ? null : d.area * z;
   }
 
+  var MEZ_NEUVERITELNA = 30000;
+
   function zaMetr(d) {
     var v = vymeraVCene(d);
-    return (v > 0 && d && d.price > 0) ? d.price / v : null;
+    if (!(v > 0) || !d || !(d.price > 0)) return null;
+    var zm = d.price / v;
+    return zm > MEZ_NEUVERITELNA ? null : zm;
   }
 
   function normd(s) {

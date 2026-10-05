@@ -50,10 +50,36 @@
     var z = zlomekPodilu(d);
     return z == null ? null : d.area * z;
   }
+  /* STROP UVĚŘITELNOSTI. Nad ním se cena za metr NEVRACÍ — platí tu
+   * stejná věta jako u neznámého podílu o pár řádků výš: raději žádné
+   * číslo než číslo, o kterém víme, že neplatí.
+   *
+   * Naměřeno na ostrých datech (1 957 nabídek, z toho 516 podílových):
+   *   nabídky BEZ podílu   medián 54, 99 % 13 500, maximum 23 498 Kč/m²
+   *   podíly, jak se počítají tady   medián 150, 99 % 10 906, maximum 370 703
+   *   tytéž podíly, kdyby se nedělilo   medián 38, 99 % 1 032, maximum 5 078
+   *
+   * Nad 30 000 Kč/m² jsou přesně dvě nabídky a obě jsou podíly:
+   *   Jihlava, zahrada 256 m² za 1 300 000 Kč, podíl 1/73 → 370 703 Kč/m²
+   *   Praha, stavební 2 992 m² za 12 490 000 Kč, podíl 3/69 → 96 013 Kč/m²
+   * U té jihlavské by z toho vyšlo, že celá ta zahrada má hodnotu
+   * 94,9 milionu. Taková zahrada v Jihlavě není. Nevíme, které z těch
+   * dvou čísel v inzerátu je špatně — jestli je cena za celou parcelu,
+   * nebo je výměra už jen podílová — takže se netvrdí ani jedno.
+   *
+   * Proč pevné číslo a ne percentil z dat: percentil by s počtem
+   * nesmyslů v datech sám vyrostl a strážce by se tiše rozpustil.
+   * Pevné číslo naopak stárne, až trh poroste — proto k němu patří
+   * zkouška, která přeměří skutečné maximum nabídek bez podílu a ozve
+   * se, až se k mezi přiblíží (scripts/test-strop-ceny.mjs). Dnes je
+   * mezi maximem a mezí 28 %. */
+  var MEZ_NEUVERITELNA = 30000;
   /** Cena za metr, který kupující opravdu dostane. null = nevíme. */
   function zaMetr(d) {
     var v = vymeraVCene(d);
-    return (v > 0 && d && d.price > 0) ? d.price / v : null;
+    if (!(v > 0) || !d || !(d.price > 0)) return null;
+    var zm = d.price / v;
+    return zm > MEZ_NEUVERITELNA ? null : zm;
   }
   /** Vysvětlení k číslu, když je přepočtené z podílu (jinak prázdné). */
   function zaMetrPopis(d) {
@@ -821,5 +847,8 @@
   root.PK_CENY = { DOST_NABIDEK: DOST_NABIDEK,
     postav: postav, rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     kdeText: kdeText, blokOdhadu: blokOdhadu,
-    zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis };
+    zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis,
+    /* Ven kvůli scripts/test-strop-ceny.mjs: zkouška přeměřuje, jestli
+       je mez pořád dost daleko od skutečných cen. */
+    MEZ_NEUVERITELNA: MEZ_NEUVERITELNA };
 }(typeof window !== 'undefined' ? window : globalThis));
