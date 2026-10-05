@@ -5650,3 +5650,33 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   :root:not([data-theme="light"]) .cen-mapa-legenda i{border-color:rgba(255,255,255,0.22);}
 }
 :root[data-theme="dark"] .cen-mapa-legenda i{border-color:rgba(255,255,255,0.22);}
+
+/* ---------- MAPA DOSTANE PŘI TAŽENÍ CELOU PLOCHU ----------------------
+   Naměřeno na telefonu 390×844 v režimu mapy: mapa je vysoká 625 px, ale
+   23,4 % její plochy překrývá rozhraní — pevná hlavička 9,9 %, legenda
+   6,1 %, nástroje 5,2 % a nápověda kraje 2,3 %. Skoro čtvrtina. Ve chvíli,
+   kdy člověk mapou táhne, nepotřebuje ani jedno: dívá se, kam jede.
+
+   Třídu .mapa-tazeni nasazuje a snímá js/main.js podle událostí mapy.
+
+   SCHOVÁVÁ SE JEN POSUNEM A PRŮHLEDNOSTÍ. Žádná změna rozměrů ani
+   display:none — kdyby se měnila výška mapy, musel by Leaflet uprostřed
+   gesta přepočítat velikost a tažení by sebou trhlo. Posun a průhlednost
+   navíc prohlížeč kreslí mimo hlavní vlákno, takže to nestojí plynulost.
+
+   DRŽÍ SE TO NA DOTYKOVÝCH ZAŘÍZENÍCH. Na počítači je mapa v kartě
+   s okrajem, hlavička jí nic nebere a myš nikdo netáhne přes půl obrazovky.
+   Tam by to bylo blikání bez užitku. */
+@media (hover:none){
+  :root.mapa-tazeni header{transform:translateY(-100%);}
+  :root.mapa-tazeni .map-legend,
+  :root.mapa-tazeni .map-tools,
+  :root.mapa-tazeni .kraj-hint{opacity:0;}
+  /* Schované ovládání nesmí chytat doteky — prst projíždějící přes
+     neviditelné tlačítko by jinak při tažení něco zmáčkl. */
+  :root.mapa-tazeni .map-tools{pointer-events:none;}
+  header,
+  .map-legend, .map-tools, .kraj-hint{
+    transition:transform var(--cas-zakladni) var(--ease), opacity var(--cas-zakladni) var(--ease);
+  }
+}

@@ -447,6 +447,30 @@
 
   try { window.PK_MAPA = map; } catch (e) {}
 
+  (function schovejPriTazeni() {
+    var korenEl = document.documentElement;
+    var casovac = null;
+    function zpet() {
+      if (casovac) { clearTimeout(casovac); casovac = null; }
+      korenEl.classList.remove('mapa-tazeni');
+    }
+    function tahne() {
+      korenEl.classList.add('mapa-tazeni');
+
+      if (casovac) clearTimeout(casovac);
+      casovac = setTimeout(zpet, 2000);
+    }
+    map.on('movestart', tahne);
+    map.on('zoomstart', tahne);
+    map.on('moveend', zpet);
+    map.on('zoomend', zpet);
+
+    document.addEventListener('focusin', zpet, true);
+    document.addEventListener('pointerdown', function (e) {
+      if (!mapEl.contains(e.target)) zpet();
+    }, true);
+  }());
+
   map.createPane('dotsPane');
   map.getPane('dotsPane').style.zIndex = 450;
   map.getPane('dotsPane').style.pointerEvents = 'none';

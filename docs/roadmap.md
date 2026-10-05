@@ -86,6 +86,29 @@ Takový plán je horší než žádný: podle něj se nedá poznat, co ještě c
 Nic jiného už na majiteli nevisí: data, stránky, mapa, inzeráty, hlídání
 v aplikaci i kontrola fotek běží samy.
 
+## Nápady, které čekají na data (ne na práci)
+
+**Časová osa trhu** (posuvník zpět do historie: jak se na mapě objevovaly
+a mizely exekuce a jak se hýbala cena). Technicky je to snadné a snímky
+už se sbírají — `scripts/historie-cen.mjs` běží spolu s obnovou dat 4×
+denně. Zatím ale není z čeho:
+
+| co máme | rozsah |
+|---|---|
+| nabídky (`first_seen`) | 19. 9. – 4. 10. 2026, tedy **16 dní** |
+| historie cenových hladin | **21 dní** |
+
+Posuvník přes šestnáct dní by předstíral stroj času, který neexistuje.
+Za **půl roku** sbírání začne ukazovat sezónu, za rok meziroční srovnání —
+teprve tam to má cenu stavět. Do té doby by to byla ozdoba, ne nástroj.
+
+**Realizované ceny.** Celý cenový model stojí na cenách *nabídkových*,
+ne na tom, za kolik se pozemky opravdu prodaly. To je strop, o který se
+opře každé zlepšení modelu (změřeno: vlastní predikční model nad týmiž
+daty nepřidal nic, viz `scripts/mericka-model.mjs`). Realizované ceny má
+ČÚZK a vydává je přes dálkový přístup na smlouvu — otázka smlouvy
+a peněz, ne kódu.
+
 ## Co dělám já
 
 Kód a zkoušky. Každou změnu měřím na skutečných datech a každou pojistku

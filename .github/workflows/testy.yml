@@ -352,6 +352,9 @@ jobs:
       - name: Cenová mapa okresů (mapa říká totéž jako seznam)
         run: node scripts/test-cenova-mapa.mjs
 
+      - name: Mapa při tažení (rozhraní zmizí a vrátí se)
+        run: node scripts/test-mapa-tazeni.mjs
+
       - name: Předvyplnění inzerátu z odkazu
         run: node scripts/test-predvyplneni.mjs
 

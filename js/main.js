@@ -611,6 +611,51 @@
   // Web sám ho nikde nepoužívá — čte se jen zvenčí (poloha teček, přiblížení),
   // aby se dalo strojově ověřit, že se mapa chová, jak má.
   try { window.PK_MAPA = map; } catch (e) {}
+
+  /* MAPA DOSTANE PŘI TAŽENÍ CELOU PLOCHU.
+   *
+   * Naměřeno na telefonu 390×844 v režimu mapy: mapa je vysoká 625 px, ale
+   * 23,4 % její plochy překrývá rozhraní — pevná hlavička 9,9 %, legenda
+   * 6,1 %, nástroje 5,2 % a nápověda kraje 2,3 %. Skoro čtvrtina. Přitom ve
+   * chvíli, kdy člověk mapou táhne, nepotřebuje ani jedno z toho: dívá se,
+   * kam jede.
+   *
+   * Zapne se to tedy při movestart a vypne při moveend. Schovává se POUZE
+   * posunem a průhledností (transform a opacity) — žádná změna rozměrů:
+   * kdyby se měnila výška mapy, musel by Leaflet přepočítat velikost
+   * uprostřed tažení a gesto by sebou trhlo.
+   *
+   * ZPÁTKY SE TO VRACÍ VŽDYCKY. Kromě moveend i při dotyku na obrazovku,
+   * při focusu z klávesnice a z pojistky po dvou vteřinách: schované
+   * ovládání, které se nevrátí, je horší vada než ovládání, které zabírá
+   * místo. Leaflet moveend za jistých okolností nepošle (přerušené gesto),
+   * takže se na něj nespoléhá jako na jedinou cestu zpět.
+   *
+   * Kdo má v systému zapnuté omezení pohybu, dostane totéž bez přechodu
+   * (řeší css/styles.css, ne tenhle kód). */
+  (function schovejPriTazeni() {
+    var korenEl = document.documentElement;
+    var casovac = null;
+    function zpet() {
+      if (casovac) { clearTimeout(casovac); casovac = null; }
+      korenEl.classList.remove('mapa-tazeni');
+    }
+    function tahne() {
+      korenEl.classList.add('mapa-tazeni');
+      /* Pojistka: kdyby moveend nedorazil, ovládání se vrátí samo. */
+      if (casovac) clearTimeout(casovac);
+      casovac = setTimeout(zpet, 2000);
+    }
+    map.on('movestart', tahne);
+    map.on('zoomstart', tahne);
+    map.on('moveend', zpet);
+    map.on('zoomend', zpet);
+    /* Klávesnice a dotyk mimo mapu musí ovládání vrátit okamžitě. */
+    document.addEventListener('focusin', zpet, true);
+    document.addEventListener('pointerdown', function (e) {
+      if (!mapEl.contains(e.target)) zpet();
+    }, true);
+  }());
   // Tečky kreslíme přes CANVAS (jeden obraz místo tisíce HTML značek) → plynulé i s ~1000 pozemky na mobilu.
   // Vrstva teček je vizuálně nad kraji, ale klikání propouští dolů (pointer-events:none),
   // takže se dá vždy vybrat kraj pod ní. Klik na tečku řešíme ručně (map click + nejbližší bod).
