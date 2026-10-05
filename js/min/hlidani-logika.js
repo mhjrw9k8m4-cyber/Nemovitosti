@@ -56,8 +56,50 @@
     return true;
   }
 
+  function klicZdroje(d) {
+    var u = (d && d.url) ? String(d.url) : '';
+    if (!u) return null;
+    return u.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '').toLowerCase();
+  }
+
+  function lepsiZeDvou(a, b) {
+    var va = (typeof a.area === 'number') ? a.area : 0;
+    var vb = (typeof b.area === 'number') ? b.area : 0;
+    var lepsi, druhy;
+    if (va !== vb) {
+      lepsi = (vb > va) ? b : a;
+    } else {
+
+      var da = String(a.first_seen || ''), db = String(b.first_seen || '');
+      lepsi = (db > da) ? b : a;
+    }
+    druhy = (lepsi === a) ? b : a;
+
+    if (va === vb && !znamaParcela(lepsi) && znamaParcela(druhy)) {
+      var kopie = {};
+      for (var k in lepsi) if (Object.prototype.hasOwnProperty.call(lepsi, k)) kopie[k] = lepsi[k];
+      kopie.parcel = druhy.parcel;
+      return kopie;
+    }
+    return lepsi;
+  }
+
   function bezDuplicit(list) {
     var skupiny = {}, ven = [];
+
+    var podleZdroje = {}, poZdroji = [];
+    for (var z = 0; z < (list || []).length; z++) {
+      var zd = list[z], kz = klicZdroje(zd);
+      if (!kz) { poZdroji.push(zd); continue; }
+      if (!Object.prototype.hasOwnProperty.call(podleZdroje, kz)) {
+        podleZdroje[kz] = poZdroji.length;
+        poZdroji.push(zd);
+      } else {
+        var kam = podleZdroje[kz];
+        poZdroji[kam] = lepsiZeDvou(poZdroji[kam], zd);
+      }
+    }
+    list = poZdroji;
     for (var i = 0; i < (list || []).length; i++) {
       var d = list[i], k = klicShody(d);
       var skup = skupiny[k] || (skupiny[k] = []);

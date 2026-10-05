@@ -116,8 +116,92 @@
      a nikde se nedozví proč.
      A i kdyby ne: záznam od majitele nese přímý kontakt, bez provize
      a bez portálu mezi tím. To je ta lepší z těch dvou. */
+  /* TÁŽ DRAŽBA DVAKRÁT — a klíč shody ji nechytí.
+   *
+   * Nahlášeno z webu a změřeno: ze 166 vedených dražeb a exekucí bylo
+   * jen 106 skutečných. 45 jich tam leželo dvakrát, dvacet z nich pod
+   * DVĚMA RŮZNÝMI OBCEMI (okdrazby 28338 jako Úštěk i jako Kalovice —
+   * Kalovice jsou část Úštěku) a dvacet čtyři s DVĚMA RŮZNÝMI VÝMĚRAMI,
+   * a tedy s nesmyslnou cenou za metr: dražba 28319 vyšla jednou na
+   * 25 Kč/m² a podruhé na 134 Kč/m².
+   *
+   * Klíč shody (obec, okres, cena, výměra, druh) je na to krátký —
+   * rozcházely se právě obec a výměra. Jenže obě ty nabídky odkazovaly
+   * na TUTÁŽ stránku dražby. Adresa zdroje je tedy silnější identita než
+   * cokoli, co se dá z inzerátu přečíst: když dva záznamy míří na jednu
+   * dražbu, je to jedna dražba, i kdyby se ve všem ostatním lišily.
+   *
+   * Adresa se před porovnáním SROVNÁ. Příčina té duplicity byla, že
+   * starší záznamy nesly „okdrazby.cz" a novější „www.okdrazby.cz" —
+   * pro člověka táž stránka, pro porovnání řetězců dvě různé.
+   *
+   * Srovnává se jen protokol, „www." a lomítko na konci. Dotaz za
+   * otazníkem se NEODSTRAŇUJE: u některých zdrojů je v něm identita
+   * nabídky, takže by se jeho zahozením slily různé nabídky do jedné. */
+  function klicZdroje(d) {
+    var u = (d && d.url) ? String(d.url) : '';
+    if (!u) return null;
+    return u.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '').toLowerCase();
+  }
+
+  /* KTERÝ ZE DVOU ZÁZNAMŮ TÉŽE DRAŽBY JE TEN SPRÁVNÝ.
+   *
+   * Změřeno na všech 45 dvojicích: starší záznam měl parcelní číslo ve
+   * všech 45 případech a vždy menší nebo stejnou výměru; novější měl
+   * v názvu zdroje „OK dražby" a ve všech 24 rozdílných případech
+   * výměru větší. Starší tedy popisuje JEDNU PARCELU, novější CELOU
+   * DRAŽBU — a vyvolávací cena platí pro celou dražbu, ne pro jednu
+   * parcelu z ní. Správná je proto ta větší výměra; s menší vycházela
+   * cena za metr pětkrát vyšší, než jaká je.
+   *
+   * Parcelní číslo ze staršího záznamu se přebírá JEN TEHDY, když se
+   * výměry shodují. Když se liší, popisoval starší záznam jednu parcelu
+   * z několika — přilepit jeho číslo k výměře celé dražby by znamenalo
+   * tvrdit, že ta parcela má výměru všech dohromady. */
+  function lepsiZeDvou(a, b) {
+    var va = (typeof a.area === 'number') ? a.area : 0;
+    var vb = (typeof b.area === 'number') ? b.area : 0;
+    var lepsi, druhy;
+    if (va !== vb) {
+      lepsi = (vb > va) ? b : a;
+    } else {
+      /* Při shodné výměře rozhoduje, který záznam je ŽIVÝ. Starší pochází
+         z dřívější podoby stahovače a ten ho už neobnovuje — novější se
+         obnovuje při každém běhu, takže termín i cena u něj drží krok. */
+      var da = String(a.first_seen || ''), db = String(b.first_seen || '');
+      lepsi = (db > da) ? b : a;
+    }
+    druhy = (lepsi === a) ? b : a;
+    /* Parcelní číslo z toho druhého se přebírá JEN při shodné výměře —
+       viz komentář výš: u rozdílné výměry popisoval jednu parcelu
+       z několika a jeho číslo by k výměře celé dražby nepatřilo. */
+    if (va === vb && !znamaParcela(lepsi) && znamaParcela(druhy)) {
+      var kopie = {};
+      for (var k in lepsi) if (Object.prototype.hasOwnProperty.call(lepsi, k)) kopie[k] = lepsi[k];
+      kopie.parcel = druhy.parcel;
+      return kopie;
+    }
+    return lepsi;
+  }
+
   function bezDuplicit(list) {
     var skupiny = {}, ven = [];
+    /* NEJDŘÍV PODLE ADRESY ZDROJE. Až to, co zbude, prochází klíčem
+       shody — ten řeší jiný případ: tutéž nabídku ze dvou různých
+       zdrojů, kde adresa pochopitelně shodná není. */
+    var podleZdroje = {}, poZdroji = [];
+    for (var z = 0; z < (list || []).length; z++) {
+      var zd = list[z], kz = klicZdroje(zd);
+      if (!kz) { poZdroji.push(zd); continue; }
+      if (!Object.prototype.hasOwnProperty.call(podleZdroje, kz)) {
+        podleZdroje[kz] = poZdroji.length;
+        poZdroji.push(zd);
+      } else {
+        var kam = podleZdroje[kz];
+        poZdroji[kam] = lepsiZeDvou(poZdroji[kam], zd);
+      }
+    }
+    list = poZdroji;
     for (var i = 0; i < (list || []).length; i++) {
       var d = list[i], k = klicShody(d);
       var skup = skupiny[k] || (skupiny[k] = []);

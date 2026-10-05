@@ -79,6 +79,9 @@ jobs:
       - name: Hlídač jednotlivých zdrojů (tiše spadlý zdroj)
         run: node scripts/test-hlidac-zdroju.mjs
 
+      - name: Dražby z otevřených dat CEVD (výměra celé položky)
+        run: node scripts/test-drazby-cevd.mjs
+
       - name: Odhad ceny na regionálních stránkách
         run: node scripts/test-odhad-regiony.mjs
 

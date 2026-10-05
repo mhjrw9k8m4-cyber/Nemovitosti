@@ -629,8 +629,22 @@ async function fetchDrazby() {
       data = await r.json();
     } catch { continue; }
     const arr = Array.isArray(data) ? data : (Object.values(data).find(Array.isArray) || []);
-    for (const rec of arr) {
-      const zi = rec.zakladniInformace || {};
+    for (const rec of arr) out.push(...nabidkyZDrazby(rec));
+  }
+  return out;
+}
+
+/* Jeden záznam dražby z otevřených dat CEVD na nabídky pro web.
+ *
+ * Oddělené od stahování schválně: parsování je to, co se dá splést
+ * tiše, a bez sítě se dá vyzkoušet jedině tak, že se mu dá záznam
+ * přímo. Právě tudy prošla chyba, kvůli které měly dražby z tohohle
+ * zdroje nesmyslnou cenu za metr (viz komentář u součtu výměr níž). */
+export function nabidkyZDrazby(rec) {
+  const out = [];
+  {
+    {
+      const zi = (rec && rec.zakladniInformace) || {};
       const konani = zi.konaniDrazby || {};
       const zah = konani.zacatek || konani.zahajeni || konani.konec;
       // Odkaz na dražbu: jen KONKRÉTNÍ odkaz na dražbu (musí mít cestu za doménou) —
@@ -650,24 +664,47 @@ async function fetchDrazby() {
       // cenou). Dřív jsme z každé dražby brali jen první předmět — teď bereme
       // všechny, ať se ukážou i dražby s víc pozemkovými celky. Cena je vždy za
       // daný celek, takže je to poctivé (neopakujeme jednu cenu u víc parcel).
-      for (const p of (rec.predmetyDrazby || [])) {
+      /* Vadný záznam nesmí shodit stahování: kdyby v otevřených datech
+         přistál prázdný prvek, přišel by web o VŠECHNY dražby, ne jen
+         o tu jednu. */
+      for (const p of ((rec && rec.predmetyDrazby) || [])) {
+        if (!p) continue;
         if (p.stavPredmetu !== 'Uveřejněno') continue; // jen aktivní/nadcházející
-        // vyber nejvhodnější věc s pozemkem (preferuj čistý pozemek)
-        let cand = null, candBudova = false;
+        /* VÝMĚRA JE SOUČET VŠECH PARCEL V TÉHLE POLOŽCE, ne jedné z nich.
+         *
+         * Dřív se vybrala jedna „nejvhodnější" parcela a její výměra se
+         * spárovala s vyvolávací cenou CELÉ položky. Když položka obsahuje
+         * víc parcel, vyjde cena za metr tolikrát vyšší, kolikrát je celek
+         * větší než ta jedna parcela.
+         *
+         * Nahlášeno z webu a změřeno na ostrých datech: dražby, které web
+         * znal jen z tohohle zdroje, měly medián 2 276 Kč/m², kdežto
+         * dražby ze stahování okdrazby.cz 82 Kč/m² — osmadvacetkrát míň.
+         * Nahoře seznamu stála „orná půda v Brně, 721 m² za 15 300 000 Kč",
+         * tedy 21 221 Kč/m². Taková orná půda není; ta cena patřila celé
+         * dražbě, ne těm 721 metrům.
+         *
+         * Parcelní číslo se uvádí jen tehdy, když je položka JEDNOPARCELNÍ.
+         * U víc parcel by jedno číslo u součtu výměr tvrdilo, že ta parcela
+         * má výměru všech dohromady. */
+        let cand = null, candBudova = false, soucetVymer = 0, pozemku = 0;
         for (const v of (p.veci || [])) {
           const vn = v.vecNemovita;
           if (!vn || !vn.pozemek) continue;
           const budova = !!(vn.jednotka || vn.stavba);
           if (budova && !nucena) continue; // dobrovolná: budovy vynecháváme
+          const vym = Number(vn.pozemek.vymera) || 0;
+          if (vym > 0) { soucetVymer += vym; pozemku++; }
+          /* Zástupce pro obec, okres, druh a souřadnice: čistý pozemek má
+             přednost před tím se stavbou, jinak první v pořadí. */
           if (!cand || (candBudova && !budova)) { cand = { vn, v }; candBudova = budova; }
-          if (!budova) break; // čistý pozemek má přednost, dál nehledáme
         }
         if (!cand) continue;
         const { vn, v } = cand;
         const ku = vn.katastralniUzemi || {};
         const okres = ku.okres, place = ku.obec || ku.nazev;
         if (!okres || !place) continue;
-        const area = vn.pozemek.vymera || parseArea(v.nazev) || parseArea(p.nazevPredmetu);
+        const area = soucetVymer || parseArea(v.nazev) || parseArea(p.nazevPredmetu);
         const price = (p.vyvolavaciCena && p.vyvolavaciCena.castka && p.vyvolavaciCena.castka.vyse)
           || (p.obvyklaCena && p.obvyklaCena.vyse) || 0;
         if (!price) continue;
@@ -675,7 +712,7 @@ async function fetchDrazby() {
         const druhBase = vn.pozemek.druhPozemku || parseDruh(v.nazev, [place, okres]);
         out.push({
           place, okres, type,
-          parcel: String(vn.pozemek.parcelniCislo || '—').slice(0, 40),
+          parcel: pozemku > 1 ? '—' : String(vn.pozemek.parcelniCislo || '—').slice(0, 40),
           druh: normDruh(candBudova ? (druhBase + ' se stavbou') : druhBase),
           area: area ? Math.round(area) : null, price: Math.round(price),
           extra: (nucena ? 'nucená dražba' : 'dražba') + (datum ? ' ' + datum : ''),
@@ -686,8 +723,6 @@ async function fetchDrazby() {
         });
       }
     }
-    // Bereme oba roky — aktivní dražby (stav „Uveřejněno") mohou přesahovat
-    // přes přelom roku; neaktivní stejně odfiltruje stavPredmetu výše.
   }
   return out;
 }

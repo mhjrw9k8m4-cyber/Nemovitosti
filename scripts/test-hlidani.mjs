@@ -739,6 +739,108 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   je('uložené stupně', 'a ústup množinu opravdu rozšíří', nUzke > nCelek, true);
 }
 
+/* ---------- TÁŽ DRAŽBA DVAKRÁT, POD JINOU OBCÍ I VÝMĚROU ------------
+   Nahlášeno z webu a změřeno na ostrých datech: ze 166 vedených dražeb
+   a exekucí bylo jen 120 skutečných. 45 jich tam leželo dvakrát —
+   dvacet pod dvěma různými obcemi (okdrazby 28338 jako Úštěk i jako
+   Kalovice, což je část Úštěku) a dvacet čtyři se dvěma různými
+   výměrami, a tedy s nesmyslnou cenou za metr (dražba 28319 vyšla
+   jednou na 25 Kč/m² a podruhé na 134 Kč/m²).
+
+   Klíč shody (obec, okres, cena, výměra, druh) je na to krátký, protože
+   se rozcházela právě obec a výměra. Obě ty nabídky ale mířily na TUTÁŽ
+   stránku dražby — jen jedna přes „okdrazby.cz" a druhá přes
+   „www.okdrazby.cz". */
+{
+  const u = 'https://www.okdrazby.cz/drazba/28338';
+  const bezWww = 'https://okdrazby.cz/drazba/28338';
+
+  const stary = { place: 'Úštěk', okres: 'Litoměřice', type: 'drazba', parcel: '849',
+    druh: 'zahrada', area: 94, price: 9644, url: bezWww, first_seen: '2026-09-24' };
+  const novy = { place: 'Kalovice', okres: 'Litoměřice', type: 'drazba', parcel: '—',
+    druh: 'zahrada', area: 94, price: 9644, url: u, first_seen: '2026-09-30' };
+
+  je('dražby', 'táž dražba pod dvěma obcemi je jedna dražba',
+    H.bezDuplicit([stary, novy]).length, 1);
+  je('dražby', 'a nezáleží na pořadí',
+    H.bezDuplicit([novy, stary]).length, 1);
+  je('dražby', 'při shodné výměře zůstane ŽIVÝ záznam (ten novější)',
+    H.bezDuplicit([stary, novy])[0].url, u);
+  /* Starší záznam zná parcelní číslo, novější ne — při shodné výměře se
+     tedy přebírá, ať se o pozemku neví MÍŇ než předtím. */
+  je('dražby', 'a převezme parcelní číslo z toho druhého',
+    H.bezDuplicit([stary, novy])[0].parcel, '849');
+
+  /* Rozdílná výměra: starší popisuje jednu parcelu, novější celou
+     dražbu — a vyvolávací cena platí pro celou dražbu. Správná je proto
+     ta větší; s menší vycházela cena za metr pětkrát vyšší. */
+  const jednaParcela = { ...stary, area: 1053, parcel: '770/3' };
+  const celaDrazba = { ...novy, area: 5602 };
+  je('dražby', 'při rozdílné výměře zůstane ta větší (cena platí za celou dražbu)',
+    H.bezDuplicit([jednaParcela, celaDrazba])[0].area, 5602);
+  /* A parcelní číslo se v tom případě NEPŘEBÍRÁ: patřilo jedné parcele
+     z několika a u výměry celé dražby by tvrdilo něco, co neplatí. */
+  je('dražby', 'a parcelní číslo jedné parcely se k celé dražbě nepřilepí',
+    H.bezDuplicit([jednaParcela, celaDrazba])[0].parcel, '—');
+
+  /* Srovnává se protokol, „www." i lomítko na konci. */
+  const varianty = [
+    { ...novy, url: 'https://www.okdrazby.cz/drazba/28338' },
+    { ...novy, url: 'http://okdrazby.cz/drazba/28338' },
+    { ...novy, url: 'https://OKDRAZBY.cz/drazba/28338/' },
+  ];
+  je('dražby', 'protokol, www i lomítko na konci jsou táž adresa',
+    H.bezDuplicit(varianty).length, 1);
+
+  /* ALE DOTAZ ZA OTAZNÍKEM SE NESMÍ ZAHODIT: u některých zdrojů je
+     v něm identita nabídky, takže by se jeho odstraněním slily různé
+     nabídky do jedné. */
+  je('dražby', 'různý dotaz v adrese jsou různé nabídky',
+    H.bezDuplicit([
+      { ...novy, url: 'https://e.cz/d?id=1' },
+      { ...novy, place: 'Jinde', url: 'https://e.cz/d?id=2' },
+    ]).length, 2);
+
+  /* Nabídky bez adresy se podle adresy srovnávat nedají — musí projít
+     dál na klíč shody, ne zmizet. */
+  je('dražby', 'nabídky bez adresy nezmizí',
+    H.bezDuplicit([{ place: 'A', okres: 'B', price: 1, area: 2, druh: 'x' },
+      { place: 'C', okres: 'D', price: 3, area: 4, druh: 'y' }]).length, 2);
+}
+
+/* ---------- A totéž na OSTRÝCH datech ------------------------------- */
+{
+  const DATA = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const ciste = H.bezDuplicit(DATA);
+  const norm = (x) => String(x && x.url || '').replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '').replace(/\/+$/, '').toLowerCase();
+
+  const sAdresou = DATA.filter((x) => x.url).length;
+  je('dražby', 'na ostrých datech je co měřit', sAdresou > 1000, true);
+
+  const videno = {};
+  let zbylo = 0;
+  for (const x of ciste) {
+    const k = norm(x);
+    if (!k) continue;
+    if (videno[k]) zbylo++;
+    videno[k] = 1;
+  }
+  je('dražby', 'po očištění nevede na jednu adresu víc nabídek', zbylo, 0);
+
+  /* Bez téhle podmínky by nula výš mohla platit i tehdy, kdyby v datech
+     žádná duplicita nebyla a funkce nedělala nic. */
+  const videno2 = {};
+  let predtim = 0;
+  for (const x of DATA) {
+    const k = norm(x);
+    if (!k) continue;
+    if (videno2[k]) predtim++;
+    videno2[k] = 1;
+  }
+  je('dražby', 'a v surových datech jich opravdu bylo (jinak se nic neměří)', predtim > 0, true);
+}
+
 console.log(`\nHlídání lokality: ${bezi} testů`);
 if (spadlo) {
   console.log(vysledky.join('\n'));
