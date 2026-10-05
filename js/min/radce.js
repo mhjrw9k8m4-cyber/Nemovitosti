@@ -222,6 +222,18 @@
     return out.slice(0, 3);
   }
 
+  function energie(g, d) {
+    if (!maVymeru(d) || d.area < 10000) return null;
+    if (g !== 'Orná půda' && g !== 'Louka / travní porost' && g !== 'Vinice / sad') return null;
+    return { lvl: 'mid', txt: 'U pole téhle velikosti (<b>' + ha(d.area) + ' ha</b>) se často ptá, '
+      + 'jestli by tu šla <b>fotovoltaika</b> nebo <b>agrolesnictví</b>. Slunce tu není to podstatné — '
+      + 'po Česku se liší jen asi o desetinu. Rozhodnou tři věci: co na pozemku dovoluje '
+      + '<b>územní plán</b>, jakou má půda <b>třídu ochrany</b> (u I. a II. se vynětí ze ZPF povoluje '
+      + 'jen výjimečně, viz vrstva BPEJ v mapě) a jestli je v místě <b>volná kapacita pro připojení '
+      + 'do sítě</b> — to poslední bývá v praxi ta tvrdá podmínka. Zjistěte si to na stavebním úřadě '
+      + 'obce a u distributora, než za pozemek zaplatíte.' };
+  }
+
   function rady(d, model) {
     var g = (root.PK_CENY && root.PK_CENY.druhGroup) ? root.PK_CENY.druhGroup(d.druh) : '';
     var radky = [];
@@ -229,6 +241,7 @@
     var t = termin(d); if (t) radky.push(Object.assign({ klic: 'Kolik zbývá času' }, t));
     var c = cena(d, model); if (c) radky.push(Object.assign({ klic: 'Co říká cena' }, c));
     var v = vymera(d); if (v) radky.push(Object.assign({ klic: 'Co znamená výměra' }, v));
+    var en = energie(g, d); if (en) radky.push(Object.assign({ klic: 'Energie nebo stromy?' }, en));
     var s = zInzeratu(d); if (s) radky.push(Object.assign({ klic: 'Co uvádí inzerát' }, s));
     radky.push({ klic: 'Na co si dát pozor', lvl: 'warn', txt: pozor(d) });
     return { radky: radky, otazky: otazky(d, model) };

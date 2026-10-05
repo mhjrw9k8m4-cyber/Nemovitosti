@@ -322,6 +322,43 @@
     return out.slice(0, 3);
   }
 
+  /* --- Energie a stromy na zemědělské půdě ---------------------------
+     Na velkém poli je první otázka po ceně obvykle „nedala by se tu
+     postavit fotovoltaika?". Na webu k tomu nestálo nic.
+
+     CO SE TADY NEŘÍKÁ: kolik by to vyrobilo. Slunečního svitu je po
+     Česku skoro stejně — mezi nejslabším a nejsilnějším místem je
+     rozdíl kolem desetiny — takže z výnosu se o KONKRÉTNÍM pozemku
+     nedozvíte nic, co by rozhodlo. Číslo „kolik by to vyrobilo" by
+     navíc předstíralo, že známe sklon, orientaci a zastínění; neznáme
+     ani jedno.
+
+     ROZHODUJÍ TŘI JINÉ VĚCI, a všechny tři se dají zjistit dopředu:
+     co na pozemku dovoluje územní plán, jakou má půda třídu ochrany
+     (u I. a II. se vynětí ze ZPF povoluje jen výjimečně — to je na
+     dobrém poli konec úvah) a jestli je v místě volná kapacita pro
+     připojení do sítě. Ta poslední bývá v praxi ta, na které to
+     spadne, a nikdo ji nezmiňuje.
+
+     Agrolesnictví a agrovoltaika (stromy či panely nad hospodařením)
+     mají vlastní podmínky i podpory, které se po letech mění — proto
+     se tu neslibují, jen se na ně ukáže. Platí pravidlo celého rádce:
+     co nevíme, netvrdíme.
+
+     Jen od hektaru: na dvou tisících metrů tahle úvaha nestojí. Na
+     ostrých datech se to týká 319 pozemků z 2 018. */
+  function energie(g, d) {
+    if (!maVymeru(d) || d.area < 10000) return null;
+    if (g !== 'Orná půda' && g !== 'Louka / travní porost' && g !== 'Vinice / sad') return null;
+    return { lvl: 'mid', txt: 'U pole téhle velikosti (<b>' + ha(d.area) + ' ha</b>) se často ptá, '
+      + 'jestli by tu šla <b>fotovoltaika</b> nebo <b>agrolesnictví</b>. Slunce tu není to podstatné — '
+      + 'po Česku se liší jen asi o desetinu. Rozhodnou tři věci: co na pozemku dovoluje '
+      + '<b>územní plán</b>, jakou má půda <b>třídu ochrany</b> (u I. a II. se vynětí ze ZPF povoluje '
+      + 'jen výjimečně, viz vrstva BPEJ v mapě) a jestli je v místě <b>volná kapacita pro připojení '
+      + 'do sítě</b> — to poslední bývá v praxi ta tvrdá podmínka. Zjistěte si to na stavebním úřadě '
+      + 'obce a u distributora, než za pozemek zaplatíte.' };
+  }
+
   /* --- Poskládání ---------------------------------------------------- */
   function rady(d, model) {
     var g = (root.PK_CENY && root.PK_CENY.druhGroup) ? root.PK_CENY.druhGroup(d.druh) : '';
@@ -330,6 +367,7 @@
     var t = termin(d); if (t) radky.push(Object.assign({ klic: 'Kolik zbývá času' }, t));
     var c = cena(d, model); if (c) radky.push(Object.assign({ klic: 'Co říká cena' }, c));
     var v = vymera(d); if (v) radky.push(Object.assign({ klic: 'Co znamená výměra' }, v));
+    var en = energie(g, d); if (en) radky.push(Object.assign({ klic: 'Energie nebo stromy?' }, en));
     var s = zInzeratu(d); if (s) radky.push(Object.assign({ klic: 'Co uvádí inzerát' }, s));
     radky.push({ klic: 'Na co si dát pozor', lvl: 'warn', txt: pozor(d) });
     return { radky: radky, otazky: otazky(d, model) };

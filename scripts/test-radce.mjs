@@ -306,7 +306,35 @@ for (const f of ['../js/main.js', '../js/pozemek.js']) {
 }
 
 console.log('\nRádce u pozemku — rady podle skutečných údajů');
+/* --- Energie nebo stromy na velkém poli -----------------------------
+   Řádek smí vzniknout jen tam, kde ta úvaha stojí, a NESMÍ tvrdit výnos:
+   sklon, orientaci ani zastínění neznáme, takže číslo „kolik by to
+   vyrobilo" by si web vymyslel. */
+{
+  const velkeOrna = { ...orna, area: 72600 };
+  const maleOrna = { ...orna, area: 5000 };
+  const velkyLes = { ...les, area: 72600 };
+  const velkeStavebni = { ...stavebni, area: 72600 };
+  const KLIC = 'Energie nebo stromy?';
+  const radek = (d) => PK_RADCE.rady(d, null).radky.find((x) => x.klic === KLIC);
+
+  pravda('na velkém poli se o fotovoltaice mluví', !!radek(velkeOrna), 'řádek nevznikl');
+  pravda('na malém poli ne (na 0,5 ha ta úvaha nestojí)', !radek(maleOrna), 'řádek vznikl');
+  pravda('na lese ne (výstavba je prakticky vyloučená)', !radek(velkyLes), 'řádek vznikl');
+  pravda('ani na stavebním pozemku', !radek(velkeStavebni), 'řádek vznikl');
+
+  const t = radek(velkeOrna) ? radek(velkeOrna).txt : '';
+  pravda('je v tom výměra TOHO pozemku', /7,26 ha/.test(t), t.slice(0, 120));
+  pravda('jmenuje všechny tři rozhodující věci', /územní plán/.test(t) && /třídu ochrany/.test(t)
+    && /kapacita pro připojení/.test(t), t.replace(/<[^>]+>/g, '').slice(0, 200));
+  /* Tohle je ta hlavní: žádný výnos, žádné kWh, žádné „vydělá". */
+  pravda('a NEtvrdí žádný výnos (kWh, MWh, Kč za rok)',
+    !/kwh|mwh|kilowat|megawat|vydělá|výnos [0-9]|ročně [0-9]/i.test(t),
+    t.replace(/<[^>]+>/g, ''));
+}
+
 console.log(zpravy.join('\n'));
+
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
   console.log('::error::Rádce: ' + chyb + ' kontrol neprošlo.');
