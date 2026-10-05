@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+<script>/* Vzhled se musí nastavit JEŠTĚ PŘED vykreslením: jinak se stránka stihne vykreslit světle a hned ztmavnout, a bílé bliknutí do očí v noci je přesně to, kvůli čemu si lidé tmavý režim zapínají. Proto je to vložené a synchronní, ne soubor s defer. Zároveň se vloží theme-color — barva lišty prohlížeče. Vložený meta stojí v pořadí PŘED statickým níž a prohlížeč bere první, takže vyhraje tenhle; statický zůstává pro případ, že skripty neběží. */try{var v=localStorage.getItem('pk_rezim_v1');if(v==='dark'||v==='light')document.documentElement.setAttribute('data-theme',v);var m=document.createElement('meta');m.setAttribute('name','theme-color');m.setAttribute('content',v==='dark'?'#17281E':'#F9FAF9');document.head.appendChild(m);}catch(e){}</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>Stavební pozemek 650 m² — Děčín, okres Děčín | Parcelka</title>
+  <meta name="description" content="Na prodej · 2 275 000 Kč (3 500 Kč/m²) · 650 m² · Děčín, okres Děčín. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
+  <meta name="theme-color" content="#F9FAF9">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://www.parcelaka.cz/pozemek-decin-decin-c9t78z.html">
+  <link rel="alternate" type="application/rss+xml" title="Parcelka — nové pozemky" href="novinky.xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Stavební pozemek 650 m² — Děčín, okres Děčín">
+  <meta property="og:description" content="Na prodej · 2 275 000 Kč (3 500 Kč/m²) · 650 m² · Děčín, okres Děčín. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
+  <meta property="og:locale" content="cs_CZ">
+  <meta property="og:site_name" content="Parcelka">
+  <meta property="og:url" content="https://www.parcelaka.cz/pozemek-decin-decin-c9t78z.html">
+  <meta property="og:image" content="https://www.parcelaka.cz/assets/og/okres-decin.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Stavební pozemek 650 m² — Děčín, okres Děčín">
+  <meta name="twitter:description" content="Na prodej · 2 275 000 Kč (3 500 Kč/m²) · 650 m² · Děčín, okres Děčín. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
+  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og/okres-decin.png">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <!-- Písma leží u nás (fonts/), ne na Googlu. Přednačítají se, aby dojela
+       souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
+       kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
+  <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
+  <!-- Mapová knihovna z VLASTNÍHO serveru, ne z cizího CDN — viz
+       vendor/leaflet/PUVOD.md. Na stránce pozemku je mapa až dole, pod
+       cenou, popisem a vybavením, takže se jejích 144 kB (36 kB přes
+       drát) NEBERE dopředu: js/pozemek.js si je dotáhne teprve ve chvíli,
+       kdy se rám mapy dostane na dohled. Adresa je tady, a ne v tom
+       skriptu, aby jí orazitkuj-verze.mjs dalo razítko ?v=.
+       Styly zůstávají dopředu: jsou 14 kB (2,9 kB přes drát) a bez nich
+       se mapa na chvíli rozsype. -->
+  <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
+  <link rel="stylesheet" href="css/styles.min.css?v=133f2df5">
+  <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
+       svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
+       stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
+       a přednačítalo se to i po přechodu na malé soubory, takže se
+       velký soubor stahoval dál, jen už ho nikdo nečetl. Naměřeno
+       v prohlížeči: stránka si brala všechny tři.
+       Adresa řezu je u každé stránky jiná, takže se tady psát nedá;
+       prohlížeč si ji vezme z ostrůvku window.PK_POZEMEK dole. -->
+  <link rel="preload" as="fetch" href="data/model.json" crossorigin>
+  <style>
+    /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
+    #obsah{background:var(--bg);}
+    .pz-wrap{max-width:var(--m-sloupec); margin:0 auto; padding:20px 16px 56px; color:var(--text-ondark); font-family:var(--font-ui);}
+    .pz-back{display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--text-ondark-mute); text-decoration:none; margin-bottom:16px;}
+    .pz-back:hover{color:var(--text-ondark);}
+    .pz-back svg{width:16px; height:16px; stroke-width:2.25;}
+
+    .pz-media{position:relative; width:100%; aspect-ratio:16/10; max-height:400px; border-radius:var(--r-obraz); overflow:hidden; background:var(--ink-soft2); border:1px solid var(--line); box-shadow:var(--e2);}
+    .pz-media .opp-badge{position:absolute; top:13px; left:13px; z-index:3; display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; letter-spacing:0.02em; padding:6px 12px 6px 10px; border-radius:var(--r-sm); color:#fff; background:rgba(12,26,18,.6); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);}
+    .pz-media .opp-badge::before{content:""; width:8px; height:8px; border-radius:50%; flex:none;}
+    .opp-badge.sale::before{background:var(--c-sale);} .opp-badge.drazba::before{background:var(--c-drazba);} .opp-badge.exekuce::before{background:var(--c-exekuce);} .opp-badge.obec::before{background:var(--c-obec);} .opp-badge.majitel::before{background:var(--c-majitel);}
+    /* Galerie nahraných fotek — vodorovný swipe (scroll-snap), bez JS */
+    .pz-gallery{position:absolute; inset:0; display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; z-index:1;}
+    .pz-gallery::-webkit-scrollbar{display:none;}
+    .pz-shot{flex:0 0 100%; width:100%; height:100%; object-fit:cover; scroll-snap-align:center; scroll-snap-stop:always; display:block; user-select:none;}
+    .pz-media .opp-count{position:absolute; right:13px; bottom:13px; left:auto; z-index:3;}
+
+    .pz-head{margin:20px 0 0;}
+    .pz-place{font-family:var(--font-display); font-size:28px; font-weight:700; letter-spacing:-0.01em; color:var(--text-ondark); line-height:1.15;}
+    .pz-okres{display:flex; align-items:center; gap:6px; font-size:15px; color:var(--text-ondark-mute); margin-top:6px;}
+    .pz-okres svg{width:16px; height:16px; stroke-width:2.25;}
+    .pz-dalky{font-size:12px; letter-spacing:0.02em; color:var(--text-ondark-mute); margin-top:4px; opacity:.85;}
+    .pz-vobci{font-size:12px; letter-spacing:0.02em; margin-top:6px;}
+    .pz-vobci a{color:var(--text-ondark); text-decoration:underline; text-underline-offset:2px;}
+
+    .pz-priceblock{margin:14px 0 4px;}
+    .pz-pl{font-size:12px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--popisek); margin-bottom:4px;}
+    .pz-price{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+    .pz-price .pv{font-family:var(--font-display); font-size:38px; font-weight:700; letter-spacing:-0.01em; color:var(--text-ondark); font-variant-numeric:tabular-nums; line-height:1;}
+    .pz-price .pm{font-size:15px; font-weight:600; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+
+    /* BARVU VERDIKTU NESE KARTA, ne seznam u každého prvku zvlášť.
+       Odznak i pruh stupnice ji měly vypsanou každý po svém — a obojí
+       vyjmenovávalo good/mid/bad a na „warn" (cena k ověření) zapomnělo.
+       Změřeno: odznak i pruh u warn měly pozadí rgba(0, 0, 0, 0).
+       Text jde s barvou, protože tmavý text na modré „Výhodné ceně"
+       dával 3,11 : 1 proti normě 4,5 pro drobné tučné písmo. Naměřené
+       kontrasty: sale #4361B8 s bílou 5,77 · drazba #CC6B33 s tmavou
+       4,88 · exekuce #8C2F1E s bílou 8,27 · warn #8A5512 s bílou 6,20. */
+    .pz-verdict{--vc:var(--copper-bright); --vt:#fff;
+      margin:16px 0 6px; padding:14px 16px; border-radius:var(--r-plocha); border:1px solid;}
+    /* VERDIKT O CENĚ NENÍ KATEGORIE. „Výhodná cena" tu nosila --c-sale,
+       tedy MODROU, kterou má na mapě i v odznaku význam „na prodej" —
+       a v paletce u ní stojí výslovně: zelená = „v pořádku", NE kategorie
+       „na prodej". Panel kolem byl přitom celou dobu zelený (tón
+       75,169,125), takže si odznak a jeho vlastní deska protiřečily.
+       Bílá na #13663E dává 7,01 : 1 (dřív 5,77 na modré). */
+    .pz-verdict.good{--vc:var(--c-ok-ink); background:rgba(75,169,125,0.12); border-color:rgba(75,169,125,0.42);}
+    /* ODZNAK JE PODKLAD, NE TEXT. Oranžová --c-drazba je kategorijní barva
+       pro dražbu; jako POZADÍ drobného odznaku nestačí ani s nejtmavším
+       inkoustem (#CC6B33 + #14231C = 4,44 : 1, norma žádá 4,5). Dřív to
+       držel napevno zapsaný odstín #0c1a12 (4,88), tedy barva mimo paletu
+       — a při převodu na token o pět setin spadl pod normu. Správné
+       řešení je totéž, co u „good": na podklad jde tmavší odstín z řady
+       (--c-drazba-ink) a text zůstane bílý (8,25 : 1). */
+    .pz-verdict.mid{--vc:var(--c-drazba-ink); background:rgba(204,107,51,0.12); border-color:rgba(204,107,51,0.46);}
+    .pz-verdict.bad{--vc:var(--c-exekuce); background:rgba(140,47,30,0.11); border-color:rgba(140,47,30,0.42);}
+    /* Přestěhováno z css/styles.css: tatáž třída ze dvou souborů se
+       rozejde. Barva teď bere token, takže poslechne i tmavý režim —
+       napevno zapsané #8A5512 by na tmavé ploše zůstalo mdlé.
+       --vt se NEPŘEPISUJE: --accent-warm je tmavá hněď a bílá na ní dává
+       6,20 : 1. Tmavý inkoust, který tu chvíli stál, dával 2,63 : 1 —
+       tmavé na tmavém. Jméno --text-ondark svádí: znamená text, který
+       se píše tam, kde je plocha světlá, ne text na tmavý podklad. */
+    .pz-verdict.warn{--vc:var(--accent-warm);
+      border-color:rgba(138,85,18,0.3); background:rgba(138,85,18,0.08);}
+    .pv-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;}
+    .pv-badge{font-size:13px; font-weight:700; padding:2px 10px; border-radius:999px;
+      background:var(--vc); color:var(--vt);}
+    .pv-cmp{font-size:12px; color:var(--text-ondark-mute); font-weight:600;}
+    .pv-text{font-size:14px; color:var(--text-ondark-mute); line-height:1.5;}
+    .pv-text b{color:var(--text-ondark);}
+    /* Podklad byl rgba(228,240,231,0.12) — zbytek po tmavém motivu.
+       Na světlé kartě z něj nebylo nic vidět, takže lišta vypadala, že
+       končí u puntíku. Odtud ten dojem vypínače. */
+    .pv-track{position:relative; height:8px; border-radius:var(--r-pill); margin-top:10px;
+      background:rgba(20,35,28,0.13); box-shadow:inset 0 1px 2px rgba(24,45,34,0.07);}
+    /* Ryska uprostřed: bez ní puntík neříká, jestli je „spíš vlevo"
+       hodně, nebo skoro uprostřed. */
+    .pv-stred{position:absolute; left:50%; top:-3px; bottom:-3px; width:1.5px;
+      background:rgba(20,35,28,0.3); transform:translateX(-50%); border-radius:2px;}
+    /* Pruh dojede na svou hodnotu. Barvu bere z --vc jako odznak. */
+    .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill); background:var(--vc);
+      width:var(--w); animation:pruhNajed .62s var(--ease) both;}
+    /* Puntík je barevný podle verdiktu a má bílý prstenec, aby byl
+       poznat i tam, kde leží na tmavší části lišty. Bílý puntík na
+       světlé liště splýval. */
+    .pv-dot{position:absolute; top:50%; left:var(--w); width:15px; height:15px; border-radius:50%;
+      background:var(--vc); border:3px solid #fff; box-shadow:var(--e1);
+      transform:translate(-50%,-50%); animation:puntikNajed .62s var(--ease) both;}
+    .pv-scale{display:flex; justify-content:space-between; font-size:11px; color:var(--text-ondark-mute); margin-top:6px;}
+
+    /* Popisek sekce je NADPIS (h2), i když vypadá jako drobný štítek.
+       Stránka pozemku měla jediný nadpis — ten hlavní — a zbytek byly
+       obyčejné divy, takže se v ní odečítačem obrazovky nedalo skákat po
+       sekcích; byl to jeden dlouhý blok. Vzhled se nemění, mění se
+       význam. */
+    .pz-sect-h{font-size:12px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--popisek); margin:40px 0 10px;}
+    /* Popis od inzerenta. Cizí text, u kterého nevíme, jak bude dlouhý ani
+       jak bude psaný — drží se proto na čtecí míře a odsazuje se jako
+       odstavec, ne jako karta. Žádný rámeček: na stránce už tři jsou
+       a čtvrtý by z ní udělal šuplíkový systém. */
+    .pz-naklady{margin:0 0 28px; font-size:14px; color:var(--text-ondark-mute);}
+    .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
+    .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
+      line-height:1.62; color:var(--text-ondark);}
+    .pz-specs{border:1px solid var(--line-strong); border-radius:var(--r-plocha); overflow:hidden; background:var(--ink-soft); box-shadow:var(--e1);}
+    .pz-spec{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line);}
+    .pz-spec:last-child{border-bottom:none;}
+    .pz-spec .k{color:var(--text-ondark-mute); font-size:15px; flex:none;}
+    /* Hodnota se smí zalomit. S nowrap + ellipsis se delší údaj uřízl
+       třemi tečkami („inzerát mluví o spoluvlastnickém podíl…") — a byla
+       to zrovna ta věta, kvůli které se na cenu nedá spoléhat. */
+    .pz-spec .v{color:var(--text-ondark); font-weight:600; font-size:15px; text-align:right; font-variant-numeric:tabular-nums; min-width:0; overflow-wrap:anywhere;
+      /* Vyvažování řádků (text-wrap:balance) se sem nehodí: rozlomilo
+         datum na „8. / 10. 2026". Radši nechat viset poslední slovo než
+         přetrhnout číslo. */
+      line-height:1.4;}
+    .pz-spec{align-items:flex-start;}
+    .pz-spec .k{padding-top:1px;}
+    .pz-feats{display:flex; flex-wrap:wrap; gap:8px;}
+    .pz-feat{display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--text-ondark); background:var(--ink-soft); border:1px solid var(--line-strong); padding:8px 12px; border-radius:var(--r-plocha);}
+    .pz-feat svg{width:17px; height:17px; stroke-width:2.12; color:var(--copper-bright);}
+    .pz-feat-acc svg{color:var(--text-ondark-mute);}
+    /* ODKUD TY SÍTĚ JSOU. U stažených nabídek je z textu inzerátu vytáhl
+       robot — není to úřední evidence a slibovat to tak by byla lež
+       přesně v tom místě, kde se člověk rozhoduje, jestli se pro pozemek
+       rozjede. */
+    .pz-feat-zdroj{margin:8px 0 0; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
+    /* Popis od majitele: jeho vlastní slova, takže dostanou karta a klid
+       na čtení. Odstavce zůstávají odstavci — člověk je tak psal. */
+    .pz-popis{padding:14px 16px; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md);}
+    .pz-popis p{margin:0 0 10px; font-size:15px; line-height:1.62; color:var(--text-ondark);}
+    .pz-popis p:last-child{margin-bottom:0;}
+
+    /* Blok o dražbě. Oranžová je barva dražeb všude na webu; do sedmi
+       dnů se zesílí, po termínu zšedne. */
+    .pz-drazba{margin:14px 0 2px; padding:12px 14px; border-radius:var(--r-plocha);
+      background:rgba(204,107,51,0.11); border:1.5px solid rgba(204,107,51,0.44);}
+    .pz-drazba.blizko{background:rgba(204,107,51,0.17); border-color:var(--c-drazba);}
+    .pz-drazba.prosle{background:var(--ink-soft2); border-color:var(--line-ui);}
+    .pzd-hlava{display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; color:var(--c-drazba-ink);}
+    .pz-drazba.prosle .pzd-hlava{color:var(--text-ondark-mute);}
+    .pzd-hlava svg{width:17px; height:17px; stroke-width:2.1; flex:none;}
+    .pzd-hlava b{font-size:15px; font-weight:700;}
+    .pzd-kdy{font-size:13px; font-weight:600; color:var(--text-ondark-mute);}
+    .pzd-pozn{margin:6px 0 0; font-size:13px; line-height:1.55; color:var(--text-ondark-mute);}
+    .pzd-pozn b{color:var(--text-ondark);}
+    .pzd-odkaz{display:inline-flex; align-items:center; min-height:40px; margin-top:10px;
+      padding:0 14px; border-radius:var(--r-ovladani); background:var(--ink-soft);
+      border:1.5px solid var(--c-drazba); color:var(--c-drazba-ink);
+      font-size:14px; font-weight:700; text-decoration:none;}
+    .pzd-odkaz:hover{background:var(--c-drazba); color:#fff;}
+    .pz-term{display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--c-drazba-ink); background:rgba(204,107,51,0.13); border:1px solid rgba(204,107,51,0.44); padding:6px 12px; border-radius:var(--r-plocha); margin:14px 0 2px; white-space:nowrap;}
+    .pz-term svg{width:16px; height:16px; stroke-width:2.25; flex:none;}
+    /* Dražba po termínu: šedě a bez naléhavosti — už to není příležitost,
+       jen záznam. Oranžová „termín se blíží" by tu lhala. */
+    .pz-term.prosle{color:var(--text-ondark-mute); background:var(--ink-soft2);
+      border-color:var(--line-strong); white-space:normal;}
+
+    .pz-cas{margin:10px 0 0; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
+    .pz-cas b{color:var(--text-ondark); font-weight:600;}
+    .pz-cas.je-stara{color:var(--c-exekuce-ink);}
+    .pz-cta{display:flex; gap:10px; margin:32px 0 0; flex-wrap:wrap;}
+    /* PRUH U NABÍDKY, KTERÁ UŽ NENÍ AKTUÁLNÍ.
+       Stránka se po zmizení nabídky nemaže, jen se přepíše — jinak by
+       každý uložený odkaz a každý výsledek ve vyhledávači skončil na 404.
+       Pruh musí být vidět na první pohled a nesmí jít přehlédnout, proto
+       stojí hned nahoře v obsahu a nese barvu z řady upozornění, ne
+       značkovou zelenou: tohle není nabídka, tohle je oznámení. */
+    .pz-konec{margin:0 0 24px; padding:16px 18px;
+      border:1px solid var(--c-drazba-ink, #7E3C18);
+      border-left-width:4px; border-radius:var(--r-md, 14px);
+      background:rgba(204,107,51,0.08); font-size:15px; line-height:1.55;}
+    .pz-konec b{display:block; font-size:17px; margin-bottom:4px;}
+    .pz-konec p{margin:12px 0 4px; font-weight:700; font-size:14px;}
+    .pz-konec ul{margin:0; padding-left:20px;}
+    .pz-konec li{margin:2px 0;}
+    /* 44px terč i tady: odkazy v pruhu jsou často to jediné, kam se dá
+       z ukončené nabídky jít dál. */
+    .pz-konec a{display:inline-flex; align-items:center; min-height:44px;
+      color:var(--copper); text-underline-offset:3px;}
+    /* LIŠTA S CENOU A AKCÍ U SPODNÍHO OKRAJE. Jen na úzké obrazovce:
+       na stole jsou hlavní tlačítka vedle obsahu a lišta by jen ubírala
+       místo. Naměřeno na telefonu 390×844: stránka je 3 106 px dlouhá,
+       cena stojí 542 px od začátku a tlačítka až 1 990 px, tedy 2,4
+       obrazovky — tak dlouho není na obrazovce nic, čím jednat.
+       Barvy i tvar jsou z palety, ne vlastní: lišta je kus webu, ne
+       cizí plovoucí prvek. */
+    .pz-lista{position:fixed; left:0; right:0; bottom:0; z-index:40;
+      display:none; align-items:center; gap:12px;
+      padding:10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+      background:rgba(255,255,255,0.96); backdrop-filter:blur(8px);
+      border-top:1px solid var(--line-strong, rgba(20,35,28,0.3));
+      /* Stín z paletky, ne vlastní. Napsal jsem si sem svůj
+         (0 -8px 24px -18px) a hlídač vizuálního jazyka to zachytil —
+         a pojmenoval přesně tenhle případ: „--e3-up pro panel zdola".
+         Přesně takhle se žebřík hloubky rozpadá: po jednom stínu,
+         pokaždé s dobrým úmyslem. */
+      box-shadow:var(--e3-up);}
+    .pz-lista[hidden]{display:none;}
+    .pzl-cena{font-weight:800; font-size:17px; white-space:nowrap;}
+    /* Terč pro palec má 48 px, ne 44: je to jediné tlačítko na liště
+       a stojí u spodního okraje, kam se míří nejhůř. */
+    .pzl-akce{flex:1 1 0; min-width:0; height:48px; display:inline-flex;
+      align-items:center; justify-content:center; padding:0 14px;
+      border-radius:var(--r-sm, 10px); font-weight:700; font-size:15px;
+      text-decoration:none; white-space:nowrap; overflow:hidden;
+      text-overflow:ellipsis;
+      background:var(--plocha-znacka, #1F5138); color:#fff;}
+    @media (max-width:760px){ .pz-lista:not([hidden]){display:flex;} }
+    .pz-btn{flex:1 1 200px; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; border-radius:var(--r-ovladani); font-weight:700; font-size:15px; text-decoration:none; cursor:pointer; border:1px solid transparent;}
+    .pz-btn svg{width:19px; height:19px; stroke-width:1.89; flex:none;}
+    .pz-btn.primary{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
+    .pz-btn.primary:hover{filter:brightness(1.06);}
+    .pz-btn.ghost{background:var(--ink-soft); color:var(--copper-bright); border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1);}
+    .pz-btn.ghost:hover{border-color:var(--copper-bright); background:var(--ink-soft2);}
+    .pz-btn.ghost:active{transform:scale(.985);}
+    .pz-actions{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 4px;}
+    .pz-actions .pz-abtn{flex:1 1 0; min-width:0;}
+    /* „Otevřít v katastru" působilo jako vypnuté: bledá výplň, tenká
+       linka a stejná váha písma jako u popisků. Je to přitom odkaz,
+       kterým se ověřuje vlastník — na téhle stránce jedna z mála věcí,
+       co má člověk opravdu udělat. */
+    .pz-actions .pz-abtn:first-child{flex-basis:100%; background:rgba(31,81,56,0.10);
+      border-color:var(--copper); border-width:1.5px; color:var(--copper); font-weight:700;}
+    .pz-actions .pz-abtn:first-child svg{color:var(--copper-bright);}
+    .pz-abtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:48px; padding:0 16px; border-radius:var(--r-ovladani); background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka); color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; box-shadow:var(--e1); transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
+    .pz-abtn:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
+    .pz-abtn:active{transform:scale(.98);}
+    .pz-abtn.on{color:#fff; border-color:transparent; background:var(--plocha-znacka); box-shadow:var(--glow);}
+    .pz-abtn svg{width:17px; height:17px; stroke-width:2.12; color:var(--copper-bright);}
+    .pz-abtn.on svg{color:#fff;}
+
+    /* Varování u nabídky od majitele — táž věta jako na mapě. Rámeček,
+       ne kurzíva: musí být na první pohled jiné než údaje o pozemku. */
+    .pz-pozor{margin:10px 0 0; padding:12px 14px; border-radius:var(--r-sm); font-size:13px; line-height:1.6;
+      background:rgba(232,179,65,.14); border:1px solid rgba(124,81,5,.34); color:var(--accent-warm);}
+    /* Rádce je zabalený v <details>. Souhrn je celý řádek k poklepání:
+       nadpis vlevo, kolik rad se pod ním skrývá vpravo, šipka na kraji.
+       Bez toho by se z nadpisu nedalo poznat, že se dá rozbalit. */
+    .pz-gtk-obal{margin:20px 0 24px;}
+    .pz-gtk-sum{display:flex; align-items:center; gap:8px; cursor:pointer; list-style:none;
+      padding:14px 14px; border:1px solid var(--line); border-radius:var(--r-md);
+      background:var(--grad-cool-soft); box-shadow:var(--e1);
+      transition:border-color var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
+    .pz-gtk-sum::-webkit-details-marker{display:none;}
+    .pz-gtk-sum:hover{border-color:var(--copper-bright); box-shadow:var(--e2);}
+    /* NADPIS UVNITŘ SOUHRNU SE NESMÍ TVÁŘIT JAKO POPISEK SEKCE. Zděděná
+       podoba .pz-sect-h je 11,5px verzálky v šedé — to se čte jako
+       nadpis odstavce, ne jako něco, na co se klepe. H2 zůstává kvůli
+       osnově stránky, ale vypadá jako titulek ovládacího prvku. */
+    .pz-gtk-sum .pz-sect-h{margin:0; border:0; padding:0; font-size:15px;
+      letter-spacing:0; text-transform:none; color:var(--copper-bright);}
+    .pz-gtk-kolik{margin-left:auto; font-size:13px; font-weight:700; white-space:nowrap;
+      color:var(--copper-bright); background:var(--ink-soft); border:1px solid var(--line);
+      padding:2px 8px; border-radius:var(--r-pill);}
+    .pz-gtk-kolik:empty{display:none;}
+    /* Slovo „Rozbalit" je jediné, co bez pochyb říká, že se s blokem dá
+       něco dělat; samotná šipka u nadpisu vypadá jako ozdoba. */
+    .pz-gtk-akce{font-size:13px; font-weight:700; color:var(--copper-bright); white-space:nowrap;}
+    .pz-gtk-akce .otv{display:none;}
+    .pz-gtk-obal[open] .pz-gtk-akce .zav{display:none;}
+    .pz-gtk-obal[open] .pz-gtk-akce .otv{display:inline;}
+    .pz-gtk-sum::after{content:""; flex:none; width:9px; height:9px; margin-left:1px;
+      border-right:2px solid var(--copper-bright); border-bottom:2px solid var(--copper-bright);
+      transform:rotate(45deg) translate(-2px,-2px); transition:transform var(--cas-zakladni) var(--ease);}
+    .pz-gtk-obal[open] .pz-gtk-sum{border-bottom-left-radius:0; border-bottom-right-radius:0; box-shadow:none;}
+    .pz-gtk-obal[open] .pz-gtk-sum::after{transform:rotate(-135deg) translate(-3px,-3px);}
+    .pz-gtk-obal[open] .pz-gtk{border-top-left-radius:0; border-top-right-radius:0; border-top:0;}
+    .pz-gtk{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:16px 16px;}
+    .pz-gtk .g-row{display:flex; flex-direction:column; gap:2px; padding:10px 0; border-bottom:1px solid var(--line);}
+    .pz-gtk .g-row:first-child{padding-top:0;} .pz-gtk .g-row:last-of-type{border-bottom:none;}
+    .pz-gtk .g-k{font-size:12px; font-weight:700; letter-spacing:0.02em; text-transform:uppercase; color:var(--text-ondark-mute);}
+    .pz-gtk .g-v{font-size:14px; color:var(--text-ondark-mute); line-height:1.55;} .pz-gtk .g-v b{color:var(--text-ondark);}
+    /* Barva podle závažnosti — varování musí jít poznat od informace. */
+    .pz-gtk .g-warn .g-k{color:var(--accent-warm);}
+    .pz-gtk .g-ok .g-k{color:var(--c-ok-ink);}
+    /* Tři otázky k položení. Číslovaný seznam, ne odrážky: je to seznam
+       věcí k odbavení, ne výčet možností. */
+    .pz-gtk .g-otazky{padding-top:12px; margin-top:2px; border-top:1px solid var(--line);}
+    .pz-gtk .g-otazky .g-k{display:block; margin-bottom:8px;}
+    .pz-gtk .g-ol{margin:0; padding-left:1.35em; display:flex; flex-direction:column; gap:8px;}
+    .pz-gtk .g-ol li{font-size:14px; line-height:1.55; color:var(--text-ondark);}
+    .pz-gtk .g-ol li::marker{font-family:var(--font-mono); font-size:12px; color:var(--accent-warm);}
+    .pz-gtk .g-foot{font-size:12px; color:var(--text-ondark-mute); line-height:1.5; margin-top:12px; font-style:italic;}
+
+    /* MAPA S VRSTVAMI. Rám drží mapu a ovládání pohromadě jako jednu věc:
+       přepínače patří k té mapě, ne ke stránce. Ovládání je POD mapou, ne
+       přes ni — přes mapu by zakrývalo právě to místo, o které jde. */
+    .pzm{position:relative; border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; background:var(--ink-soft); box-shadow:var(--e2);}
+    .pzm-mapa{height:390px; width:100%; background:var(--ink);}
+    /* Na celou obrazovku. Mapa se roztáhne přes okno, panel s přepínači
+       zůstane pod ní — ovládání musí být po ruce i tam, jinak je
+       zvětšení k ničemu. */
+    .pzm-mapa{position:relative;}
+    .pzm-cela-btn{position:absolute; z-index:500; right:10px; top:10px; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center;
+      border-radius:var(--r-sm); border:1px solid rgba(24,45,34,.25); background:rgba(255,255,255,.93); color:var(--copper-bright); cursor:pointer; padding:0;
+      box-shadow:var(--e1); -webkit-tap-highlight-color:transparent;}
+    /* Tloušťka tahu se dopočítává k velikosti, ne opisuje z předlohy:
+       stejné „stroke-width 2" má při 19 px na obrazovce silnější stopu
+       než při 16 px a ikona pak vypadá tučnější než ostatní.
+       (2 ÷ 24 × 19 = 1,58 px proti 1,33 px u šestnáctibodových —
+       přesně ten rozdíl hlídá scripts/test-ikony.mjs.) */
+    .pzm-cela-btn svg{width:19px; height:19px; stroke-width:1.8;}
+    .pzm-cela-btn:hover{background:var(--ink-soft);}
+    .pzm-cela-zap{position:fixed; inset:0; z-index:1200; border-radius:0; border:0; display:flex; flex-direction:column; background:var(--ink);}
+    .pzm-cela-zap .pzm-mapa{flex:1 1 auto; height:auto; min-height:0;}
+    .pzm-cela-zap .pzm-panel{flex:none;}
+    /* Ve zvětšení má být vidět hlavně MAPA. Vysvětlující věta k vrstvě
+       je i v malém zobrazení, takže tady jen ubírá místo; vysvětlivky
+       barev zůstávají (bez nich je plán jen skvrna), ale jen na pruh. */
+    .pzm-cela-zap .pzm-popis{display:none;}
+    .pzm-cela-zap .pzm-leg{max-height:17vh; overflow:auto; padding:8px 12px;}
+    .pzm-cela-zap .pzm-leg-k img{max-height:11vh; width:auto;}
+    body.pzm-cela-telo{overflow:hidden;}
+    .pzm-panel{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; border-top:1px solid var(--line); background:var(--ink-soft);}
+    .pzm-zaklad{display:inline-flex; background:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:2px; flex:none;}
+    .pzm-z{height:31px; padding:0 12px; border:0; background:transparent; border-radius:999px; font:inherit; font-size:13px; font-weight:600; color:var(--text-ondark-mute); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
+    .pzm-z.on{background:var(--ink-soft); color:var(--copper-bright); box-shadow:var(--e1);}
+    .pzm-vr{display:flex; flex-wrap:wrap; gap:6px; align-items:center; min-height:34px;}
+    .pzm-v{height:34px; padding:0 14px; border-radius:999px; border:1.5px solid rgba(31,81,56,.26); background:var(--ink-soft); font:inherit; font-size:13px; font-weight:600; color:var(--text-ondark); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
+    .pzm-v:hover{border-color:var(--copper-bright); background:var(--ink-soft2);}
+    .pzm-v:active{transform:scale(.98);}
+    .pzm-v.on{background:var(--plocha-znacka); border-color:transparent; color:#fff; box-shadow:var(--glow);}
+    .pzm-hleda, .pzm-nic{display:inline-flex; align-items:center; gap:8px; font-size:13px; line-height:1.45; color:var(--text-ondark-mute);}
+    /* Posuvník se NEODTLAČUJE doprava (margin-left:auto). Když se přepínače
+       zalomí do druhého řádku, zůstal by viset sám v pravém rohu pod nimi
+       a vypadal by, že k nim nepatří. Takhle jde prostě za nimi. */
+    .pzm-kryti{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; letter-spacing:0.02em; text-transform:uppercase; color:var(--text-ondark-mute);}
+    .pzm-kryti input{width:104px; accent-color:var(--plocha-znacka);}
+    .pzm-popis{margin:0; padding:10px 12px; border-top:1px solid var(--line); background:var(--ink-soft); font-size:13px; line-height:1.55; color:var(--text-ondark-mute);}
+    /* Vrstva je zapnutá, ale mapa je moc daleko na to, aby ji úřad
+       nakreslil. Není to chyba, je to stav — proto ne červená, ale
+       značková barva a rovnou tlačítko, které to spraví. */
+    .pzm-daleko{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px; color:var(--text-ondark);}
+    .pzm-priblizit{flex:none; font:inherit; font-size:13px; font-weight:700; cursor:pointer;
+      padding:6px 12px; min-height:34px; border-radius:var(--r-ovladani);
+      border:1.5px solid var(--copper); background:var(--ink-soft); color:var(--copper);
+      transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
+    .pzm-priblizit:hover{background:var(--copper); color:#fff;}
+    /* Vysvětlivky. Obrázek dodává sama služba, takže o jeho vzhledu
+       nerozhodujeme — jen mu dáme bílý podklad, ať je čitelný i tmavý. */
+    .pzm-leg{display:flex; flex-wrap:wrap; gap:14px; padding:12px 12px; border-top:1px solid var(--line); background:var(--ink-soft);}
+    .pzm-leg-k{margin:0; display:flex; flex-direction:column; gap:6px; max-width:100%;}
+    .pzm-leg-k figcaption{font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-ondark-mute);}
+    .pzm-leg-k img{max-width:100%; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); padding:6px;}
+    .pzm-pod{margin:8px 0 0; font-size:13px; line-height:1.6; color:var(--text-ondark-mute);}
+    .pzm-pod a{color:var(--copper-bright); font-weight:600;}
+    .pzm-pin{filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));}
+    /* Bez mapové knihovny zbyde nehybný snímek — ať to není prázdný rám.
+       Snímek se kreslí jako podklad karty, takže je položený absolutně
+       (.opp-map má inset:0) a sám rámu žádnou výšku nedá. Výšku proto
+       drží rám, stejnou jako by měla mapa. */
+    .pzm-nahrada{height:390px;}
+    .pzm .leaflet-control-attribution{font-size:10px; max-width:70%;}
+    @media (max-width:560px){
+      .pzm-mapa{height:300px;}
+      /* Na úzkém displeji se posuvník nevejde do řádku s přepínači, a když
+         se zalomí doprava, visí v prázdnu. Ať zabere celý řádek. */
+      .pzm-kryti{width:100%;}
+      .pzm-kryti input{flex:1;}
+    }
+
+    /* Vysvětlivka u přepočtené ceny za metr — kurzívou, menší, pod číslem:
+       je to poznámka k údaji, ne další údaj. */
+    /* SOUKROMÁ POZNÁMKA (js/poznamky.js). Vypadá jako papír na stole,
+       ne jako formulář: nic se neodesílá a není co potvrzovat. */
+    .pz-pozn-box{margin-top:18px; padding:14px; border:1px solid var(--line-strong);
+      border-radius:var(--r-plocha); background:var(--ink-soft); box-shadow:var(--e1);}
+    .pz-pozn-hlava{display:flex; align-items:baseline; gap:10px; margin-bottom:8px;}
+    .pz-pozn-hlava h2{font-size:16px; margin:0;}
+    .pz-pozn-stav{margin-left:auto; font-size:12px; color:var(--text-ondark-mute);}
+    .pz-pozn-stav.chyba{color:var(--c-exekuce);}
+    .pz-pozn-pole{display:block; width:100%; min-height:88px; padding:10px 12px;
+      border:1px solid var(--line-ui); border-radius:var(--r-sm);
+      background:var(--ink); color:var(--text-ondark);
+      font:inherit; font-size:15px; line-height:1.55; resize:vertical;
+      transition:border-color var(--cas-zakladni) var(--ease);}
+    .pz-pozn-pole:focus{outline:none; border-color:var(--copper-bright);}
+    .pz-pozn-kde{margin:8px 0 0; font-size:12px; line-height:1.5;
+      color:var(--text-ondark-mute);}
+    .pz-spec .pz-pozn{display:block; margin-top:2px; font-size:12px; line-height:1.5; font-style:italic; color:var(--text-ondark-mute);}
+    /* SOUŘADNICE: číslo ke zkopírování a odkaz do navigace.
+       Číslo stojí v <code>, aby šlo označit prstem i myší a aby bylo
+       vidět, že se má vzít doslova. Obě tlačítka mají 44 px — jedou se
+       mačkat venku u pozemku, ne u stolu. */
+    .pz-sour{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
+    .pz-sour code{font-family:var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+      font-size:14px; letter-spacing:-0.01em; user-select:all; -webkit-user-select:all;}
+    .pz-sour-kop, .pz-sour-nav{display:inline-flex; align-items:center; gap:6px;
+      min-height:44px; padding:0 12px; border-radius:var(--r-sm);
+      border:1px solid var(--line-ui); background:var(--ink);
+      font:inherit; font-size:13px; font-weight:600; color:var(--text-ondark);
+      text-decoration:none; cursor:pointer;
+      transition:border-color var(--cas-zakladni) var(--ease);}
+    .pz-sour-kop:hover, .pz-sour-nav:hover{border-color:var(--copper-bright);}
+    /* 2,18 proto, že 16 × 2,18 ÷ 24 = 1,45 px — tah jako u ostatních ikon. */
+    .pz-sour-kop svg, .pz-sour-nav svg{width:16px; height:16px; flex:none; stroke-width:2.18;}
+    @media (max-width:420px){ .pz-sour code{flex:1 1 100%;} }
+    .pz-loading, .pz-empty{padding:64px 16px; text-align:center; color:var(--text-ondark-mute);}
+    /* NEŽ SKRIPT DOPLNÍ CELÝ DETAIL, DRŽÍ SE TU VÝŠKA OBRAZOVKY.
+       Vygenerovaná stránka nese statický náhled vysoký 343 px (mobil),
+       kdežto vykreslený detail má 2 015 px. Patička tím stála na prvním
+       okně a ve 120. ms odskočila o půl druhého tisíce pixelů dolů —
+       naměřeno CLS 0,29 na vlastní stránce pozemku a 0,56 na
+       pozemek.html?p=…, tedy nejvíc na celém webu (mez je 0,1).
+       Sto procent výšky okna je míň, než co přijde, takže se nic
+       nezmenší; a když skript nedoběhne, zbude dole prázdno místo
+       patičky nalepené pod odstavec. */
+    #pz-detail{min-height:100vh;}
+    .pz-empty a{color:var(--copper-bright); font-weight:600;}
+  
+    /* PRST POTŘEBUJE 44 PX. Web si tu mez klade sám, jenže měřila se jen
+       na úvodní stránce — sem o ní nikdo nevěděl. Změřeno na 390×844:
+       odkaz zpět na seznam 22 px, zvětšení mapy 36 px, přepínače
+       podkladu 31 px a vrstev 34 px — a to jsou prvky, kterými se mapa
+       na telefonu jedině ovládá.
+       Platí jen na dotykových displejích, aby se na počítači nic
+       nezvětšovalo zbytečně. */
+    @media (pointer: coarse) {
+      .pz-back{min-height:44px;}
+      /* Posuvník průhlednosti vrstvy měl 16 px. Prstem se do šestnácti
+         pixelů netrefí nikdo — a je to jediný způsob, jak si na telefonu
+         prohlédnout, co je pod úřední vrstvou. Vyšší plocha na chytání;
+         samotná dráha posuvníku zůstává tenká, prohlížeč ji vystředí. */
+      .pzm-kryti input{height:44px;}
+      .pzm-cela-btn{width:44px; height:44px;}
+      .pzm-z, .pzm-v{height:44px;}
+    }
+  </style>
+</head>
+<body>
+
+<a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+
+<header id="header">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="Parcelka — domů"><span class="logo-mark" aria-hidden="true"></span>Parcelka</a>
+    <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
+    <button class="nav-toggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+        <nav id="nav" aria-label="Hlavní navigace">
+      <!-- Pořadí: nejdřív KDO jsem, pak KAM jdu.
+           Účet je samostatný první řádek a nese stav přihlášení (doplní
+           ho js/hlavicka.js) — bez něj nešlo poznat, jestli je člověk
+           přihlášený. Hned pod ním je hlavní věc celého webu.
+           Dřív byl účet schovaný až čtvrtý ve skupině „Moje"; když jsem
+           pak nahoru posunul celou tu skupinu, spadlo hledání pozemků
+           na páté místo. Obojí bylo špatně — proto stojí účet sám. -->
+      <a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a>
+      <!-- „Hledat pozemek", ne „Pozemky": na webu o pozemcích podstatné
+           jméno neřekne nic, sloveso řekne, co se tam dělá. -->
+      <a href="index.html#mapa">Hledat pozemek</a>
+      <a href="cena-pozemku.html">Ceny pozemků</a>
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
+      <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
+    </nav>
+  </div>
+</header>
+
+<main id="obsah">
+  <div class="pz-wrap">
+    <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 650 m² — Děčín, okres Děčín</h1><p><b>2 275 000 Kč</b> (3 500 Kč/m²) · 650 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>650 m²</dd><dt>Obec</dt><dd>Děčín</dd><dt>Okres</dt><dd><a href="pozemky-okres-decin.html">Děčín</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Děčín 3,3 km · Ústí nad Labem 17 km</dd></dl><p><a href="pozemek.html?p=D%C4%9B%C4%8D%C3%ADn%7C%E2%80%94%7CD%C4%9B%C4%8D%C3%ADn%7C50.789%7C14.172&amp;ll=50.7890989,14.1716739&amp;v=650">Otevřít na mapě</a></p><p><a href="index.html?obec=D%C4%9B%C4%8D%C3%ADn&amp;okres=D%C4%9B%C4%8D%C3%ADn">V okrese Děčín jsou v nabídce ještě 2 pozemky</a></p></article></div></div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div class="foot-brand-col">
+      <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
+      <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého.</p>
+    </div>
+    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="porovnani.html">Porovnání uložených</a><a href="pridat.html">Přidat pozemek</a><a href="novinky.xml">Kanál nových pozemků</a><a href="data.html">Data ke stažení</a></nav>
+    <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
+    <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="moje-data.html">Moje data</a><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="kontakt.html">Kontakt</a></nav>
+  </div>
+  <div class="wrap foot-bottom"><span id="pk-rezim"></span><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="js/min/menu.js?v=bba4d4d0" defer></script>
+<script src="js/min/mapove-vrstvy.js?v=93a96d67" defer></script>
+<script src="js/min/bpej.js?v=6050e644" defer></script>
+<script src="js/min/cisteni.js?v=96d10b2a"></script>
+<script src="js/min/snimek.js?v=d4e40486"></script>
+<script src="js/min/terminy.js?v=97f740a8"></script>
+<script src="js/min/ceny.js?v=16c72c57"></script>
+  <script src="js/min/zlevneni.js?v=8cbae6d1" defer></script>
+<script src="js/min/vybaveni.js?v=68e3d418"></script>
+<script src="js/min/radce.js?v=f8a46b6d"></script>
+<script src="js/min/klic.js?v=17fa93b6"></script>
+<script src="js/min/videno.js?v=a269d74b"></script>
+<script src="js/min/poznamky.js?v=998fa698"></script>
+<!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
+     než js/pozemek.js postaví cenový model: staví ho z téže hromádky
+     jako mapa, tedy bez duplicit. Proto tu tenhle modul stojí jako
+     obyčejný skript PŘED ním, a ne v odložené skupině níž — odložené
+     skripty běží teprve po doparsování a stránka by si model mohla
+     postavit z 2 018 nabídek místo 1 995. Pozdější spotřebitelé
+     (upozorneni-feed.js, upozorneni.js) ho najdou stejně: obyčejné
+     skripty běží před odloženými. -->
+<script src="js/min/hlidani-logika.js?v=404eb49d"></script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 650 m² — Děčín, okres Děčín","description":"Na prodej · 2 275 000 Kč (3 500 Kč/m²) · 650 m² · Děčín, okres Děčín. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-decin-decin-c9t78z.html","address":{"@type":"PostalAddress","addressLocality":"Děčín","addressRegion":"Děčín","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.7890989,"longitude":14.1716739}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Děčín","item":"https://www.parcelaka.cz/pozemky-okres-decin.html"},{"@type":"ListItem","position":4,"name":"Stavební pozemek 650 m² — Děčín, okres Děčín","item":"https://www.parcelaka.cz/pozemek-decin-decin-c9t78z.html"}]}]</script>
+<script>window.PK_POZEMEK={"k":"Děčín|—|Děčín|50.789|14.172","ll":[50.7890989,14.1716739],"v":650,"c":2275000,"r":"data/okres/decin.json"};</script>
+<script src="js/min/pozemek.js?v=f2af1302"></script>
+<!-- Vercel Web Analytics -->
+<script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
+   chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
+   web běží na GitHub Pages pod vlastní doménou, takže si o neexistující soubor
+   říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
+   na nasazení u Vercelu. */
+(function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
+<script src="js/min/config.js?v=8ba36013" defer></script>
+<script src="js/min/auth.js?v=bec7a315" defer></script>
+<script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
+<script src="js/min/upozorneni.js?v=4cc6941e" defer></script>
+<script src="js/min/hlavicka.js?v=8d2b1304" defer></script>
+<script src="js/min/rezim.js?v=5689e136" defer></script>
+<script src="js/min/offline.js?v=16a48df3" defer></script>
+<script type="application/json" id="pz-okoli-data">"Děčín 3,3 km · Ústí nad Labem 17 km"</script>
+<script type="application/json" id="pz-obec-data">{"text":"V okrese Děčín jsou v nabídce ještě 2 pozemky","url":"index.html?obec=D%C4%9B%C4%8D%C3%ADn\u0026okres=D%C4%9B%C4%8D%C3%ADn"}</script>
+<script type="application/json" id="pz-popis-data">"Nabízím k prodeji stavební pozemek o rozloze 650 m², který jako přímý vlastník nabízím za podmínek osobního vlastnictví. Pozemek představuje ideální příležitost pro realizaci různých stavebních projektů dle Vašich představ. Lokalita je atraktivní a zajímavá díky svému potenciálu a dostupnosti nezbytné infrastruktury. V místě školka, škola. Pro další informace a domluvení prohlídky mne neváhejte kontaktovat prostřednictvím zpráv na komunikační platformě."</script>
+</body>
+</html>
