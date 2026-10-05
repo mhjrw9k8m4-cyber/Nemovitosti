@@ -3195,6 +3195,29 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .okr-stat{background:#fff; border:1px solid var(--line); border-radius:var(--r-md); padding:12px 16px; min-width:96px; box-shadow:var(--e1);}
 .okr-stat b{display:block; font-size:24px; line-height:1.1; color:var(--copper-bright,#8CC3A4);}
 .okr-stat span{font-size:12px; color:var(--muted,#A3B3A6); text-transform:uppercase; letter-spacing:0.04em;}
+/* CENOVÁ MAPA OKRESŮ (cena-pozemku.html, js/cenova-mapa.js).
+   Výška je pevná v poměru, ne v pixelech: obrys ČR je širší než vysoký
+   (zhruba 1,75 : 1), takže pevná výška by na telefonu nechala nad mapou
+   i pod ní pruh prázdna a na širokém okně by mapu zploštila. */
+.cen-mapa-obal{margin:14px 0 0;}
+#cen-mapa{width:100%; aspect-ratio:175/100; border-radius:var(--r-md);
+  border:1px solid var(--line); background:var(--surface-2);
+  /* Leaflet si jinak nastaví vlastní pozadí a vykreslí šedou plochu
+     i tam, kde žádný okres není. */
+  overflow:hidden;}
+#cen-mapa .leaflet-container{background:transparent;}
+#cen-mapa[data-hotovo] + .cen-mapa-stav{display:none;}
+/* BARVA TEXTU SE TADY NENASTAVUJE SCHVÁLNĚ. Stálo tu color:var(--ink-soft),
+   což vypadá jako „tlumený text" — ale --ink-soft je PLOCHA (ve světlém
+   režimu čistě bílá, v tmavém #18291F), ne text. Legenda tím byla bílá na
+   bílém a v tmavém režimu tmavá na tmavém: kontrast 1 : 1 v obou režimech.
+   Chytil to scripts/test-kontrast.mjs ještě před nahráním. Text se teď
+   dědí z karty, takže má zaručeně tentýž kontrast jako okolní popisky. */
+.cen-mapa-legenda{display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px;
+  list-style:none; margin:10px 0 0; padding:0; font-size:13px;}
+.cen-mapa-legenda li{display:flex; align-items:center; gap:5px;}
+.cen-mapa-legenda i{width:22px; height:12px; border-radius:var(--r-xs); display:block;
+  border:1px solid var(--line);}
 .okr-list{display:flex; flex-direction:column; gap:10px; margin:14px 0 0;}
 /* PEVNÁ MŘÍŽKA MÍSTO ZALAMOVÁNÍ.
    Dokud byl řádek flexbox, měnil tvar podle délky textu: v okrese
@@ -5618,3 +5641,12 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   :root:not([data-theme="light"]) .okr-item .okr-meta{color:#C9D8CD;}
 }
 :root[data-theme="dark"] .okr-item .okr-meta{color:#C9D8CD;}
+
+/* Cenová mapa v tmavém režimu: linka okresů musí být světlejší než
+   podklad, jinak se obrysy slijí. Zapisuje se na OBĚ místa — pro
+   systémové nastavení i pro ruční přepnutí; kdo přidá jen jedno,
+   opraví režim jen pro polovinu lidí. */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .cen-mapa-legenda i{border-color:rgba(255,255,255,0.22);}
+}
+:root[data-theme="dark"] .cen-mapa-legenda i{border-color:rgba(255,255,255,0.22);}

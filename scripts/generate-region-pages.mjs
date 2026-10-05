@@ -52,6 +52,9 @@ const V = {
   grafCen: razitko('js/graf-cen.js'),
   rezim: razitko('js/rezim.js'),
   offline: razitko('js/offline.js'),
+  cenovaMapa: razitko('js/cenova-mapa.js'),
+  leafletJs: razitko('vendor/leaflet/leaflet.js'),
+  leafletCss: razitko('vendor/leaflet/leaflet.css'),
   menu: razitko('js/menu.js'),
 };
 /* Práh byl 10 a bez vlastní stránky kvůli tomu zůstávalo DVANÁCT okresů,
@@ -445,7 +448,13 @@ function kanalNazevKraje(kraj){
   if (!kraj) return 'Parcelka — nové pozemky';
   return `Parcelka — nové pozemky, ${kraj === 'Vysočina' ? 'Vysočina' : kraj + ' kraj'}`;
 }
-function head(title, desc, canonicalPath, ld, crumbs, ogSoubor, kanal, kanalNazev){
+/* MAPA JE JEN NA JEDNÉ STRÁNCE. Leaflet (42 kB skript + 15 kB stylu) se
+   proto nepřipojuje do hlavičky všech 2 092 generovaných stránek, ale jen
+   tam, kde se kreslí — jinak by 2 091 stránek stahovalo styl pro mapu,
+   kterou nemají. Skript se navíc nestahuje ani tady hned: js/cenova-mapa.js
+   si ho vyžádá z <meta name="pk-leaflet"> teprve, až se mapa dostane na
+   dohled (stejně jako stránka pozemku). */
+function head(title, desc, canonicalPath, ld, crumbs, ogSoubor, kanal, kanalNazev, sMapou){
   // ld může být objekt nebo pole; přidáme BreadcrumbList, je-li předán.
   let ldArr = Array.isArray(ld) ? ld.slice() : (ld ? [ld] : []);
   if(crumbs && crumbs.length) ldArr.push(crumbLd(crumbs));
@@ -487,7 +496,8 @@ function head(title, desc, canonicalPath, ld, crumbs, ogSoubor, kanal, kanalNaze
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
   <link rel="stylesheet" href="css/styles.min.css?${V.css}">
-${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\n' : ''}</head>
+${sMapou ? `  <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?${V.leafletJs}">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css?${V.leafletCss}">\n` : ''}${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\n' : ''}</head>
 <body>
 
 <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
@@ -1209,6 +1219,15 @@ ${okresLinks ? `
   const okrMeds = okrData.map(x=>x.s.med);
   const okMin = okrMeds.length?Math.min.apply(null,okrMeds):0, okMax = okrMeds.length?Math.max.apply(null,okrMeds):1;
   function heatOk(v){ const t = okMax>okMin ? (v-okMin)/(okMax-okMin) : 0.5; return `background:rgba(91,184,214,${(0.06+t*0.20).toFixed(3)});`; }
+  /* CENOVÁ MAPA: stejná čísla jako tabulka, protože ze stejného okrData.
+     Kdyby si mapa počítala vlastní medián, mohla by u téhož okresu
+     ukázat jinou cenu než řádek o kus níž — a to už se na tomhle webu
+     jednou stalo (mapa proti stránce pozemku, viz js/ceny.js). */
+  const cenMapaData = {};
+  for (const x of okrData) {
+    cenMapaData[x.ok] = { med: x.s.med, lo: x.s.lo, hi: x.s.hi, n: x.s.n,
+      odkaz: hasOkresPage.has(x.ok) ? okresFile(x.ok) : null };
+  }
   const okresRows = okrData.map(x=>{
     const link = hasOkresPage.has(x.ok) ? okresFile(x.ok) : ('index.html?kraj='+encodeURIComponent((KRAJ_META[OKRES_KRAJ[x.ok]]||{}).mapName||'')+'#mapa');
     return `      <div class="okr-item" style="${heatOk(x.s.med)}">
@@ -1237,7 +1256,7 @@ ${okresLinks ? `
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Ceny pozemků v ČR","inLanguage":"cs","description":"Orientační medián cen pozemků (Kč/m²) podle druhu a kraje z aktuálních nabídek.","mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"}};
   const crumbs=[{name:'Pozemky',href:'index.html',abs:SITE},{name:'Ceny pozemků',abs:SITE+file}];
 
-  const html = head(title,desc,file,jsonld,crumbs) + `
+  const html = head(title,desc,file,jsonld,crumbs,undefined,undefined,undefined,true) + `
 <main id="obsah">
 
   <section class="okr-hero">
@@ -1284,6 +1303,26 @@ ${krajRows || '      <p class="rules-note" style="margin:0;">Zatím není dost d
 ${okresRows ? `
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
+          <h2>Cenová mapa okresů</h2>
+          <p class="rules-note" style="margin-top:0;">Zemědělská půda, tmavší = dražší. Okresy bez dostatku nabídek jsou šedé. Klepnutím otevřete okres. <b>Tytéž ceny jsou v seznamu pod mapou</b> — ten je čitelný i bez barev.</p>
+          <div class="cen-mapa-obal">
+            <div id="cen-mapa" role="img" aria-label="Mapa České republiky s okresy podbarvenými podle mediánu ceny zemědělské půdy. Tytéž údaje jsou v seznamu pod mapou."></div>
+            <p class="rules-note cen-mapa-stav" id="cen-mapa-stav">Mapa se načte, až se k ní dorolujete.</p>
+          </div>
+          <ul class="cen-mapa-legenda" aria-hidden="true">
+            <li><i style="background:rgba(91,184,214,0.12);"></i>nejlevnější</li>
+            <li><i style="background:rgba(91,184,214,0.33);"></i></li>
+            <li><i style="background:rgba(91,184,214,0.51);"></i></li>
+            <li><i style="background:rgba(91,184,214,0.70);"></i></li>
+            <li><i style="background:rgba(91,184,214,0.90);"></i>nejdražší</li>
+            <li><i style="background:rgba(128,128,128,0.18);"></i>málo dat</li>
+          </ul>
+          <script type="application/json" id="cen-mapa-data">${JSON.stringify(cenMapaData).replace(/</g, '\\u003c')}</script>
+        </div>
+      </div>
+
+      <div class="add-card" style="margin-top:22px;">
+        <div class="rules-sect">
           <h2>Zemědělská půda podle okresu</h2>
           <p class="rules-note" style="margin-top:0;">Okresy s dostatkem nabídek, seřazeno od nejdražšího. Klepnutím otevřete okres.</p>
 ${razitkoCerstvosti}
@@ -1307,7 +1346,8 @@ ${okresRows}
   </section>
 
 </main>
-` + footer();
+` + footer() + `<script src="js/cenova-mapa.js?${V.cenovaMapa}" defer></scr` + `ipt>
+`;
   write(file, html);
 }
 

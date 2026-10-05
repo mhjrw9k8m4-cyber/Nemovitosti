@@ -27,6 +27,7 @@ const PORADI = [
   ['saved-searches-okruh.sql', 'hlídání: střed a okruh v km, ne jen název okresu'],
   // Až za okruhem: funkce hlidani_k_odeslani() vrací i stred_lat/okruh_km.
   ['hlidani-mailem.sql', 'hlídání e-mailem — dobrovolné, vypnuté, s odhlášením na klik'],
+  ['hlidani-pushem.sql', 'hlídání jako upozornění do telefonu — dobrovolné, vypnuté'],
   ['watch-alerts.sql', 'hlídání lokality (double opt-in) + tabulka alert_seen'],
   ['listings-autopublish.sql', 'automatické zveřejnění inzerátu + token na úpravy'],
   ['listings-auth.sql', 'inzeráty pod účtem (user_id), my_listings, public_listings'],

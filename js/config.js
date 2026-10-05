@@ -36,3 +36,22 @@ window.PK_FORM_EMAIL = '';
    Až klíč bude, stačí přepsat na true. Nic jiného se neupravuje.
    --------------------------------------------------------------------- */
 window.PK_MAIL_ZAPNUTO = false;
+
+/* ---------------------------------------------------------------------
+   UPOZORNĚNÍ DO TELEFONU (push) — vypnuté, dokud nejsou klíče.
+
+   Veřejný klíč VAPID. Je veřejný ze své podstaty: prohlížeč ho potřebuje
+   ve chvíli, kdy si člověk odběr zapíná, takže patří do stránky.
+   Vyrobí se spolu s privátním: node scripts/vapid-klice.mjs.
+   Privátní patří do secrets repozitáře (PK_VAPID_PRIVATNI), NIKDY sem.
+
+   Dokud je tu prázdný řetězec, web o upozorněních nikde nemluví:
+   přepínač u uloženého hledání se vůbec nevykreslí. Bez klíče by odběr
+   ani nemohl vzniknout, takže by to byl přepínač, po kterém nikdy nic
+   nepřijde.
+
+   Hotové je všechno ostatní: migrace supabase/hlidani-pushem.sql,
+   obsluha v sw.js, strana prohlížeče v js/push.js, šifrování
+   v scripts/web-push.mjs a rozesílač scripts/send-push.mjs.
+   --------------------------------------------------------------------- */
+window.PK_PUSH_VEREJNY_KLIC = '';

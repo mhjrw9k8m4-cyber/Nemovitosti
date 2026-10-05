@@ -32,7 +32,9 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=0a141656">
+  <link rel="stylesheet" href="css/styles.min.css?v=8c323446">
+  <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Ceny pozemků v ČR","inLanguage":"cs","description":"Orientační medián cen pozemků (Kč/m²) podle druhu a kraje z aktuálních nabídek.","mainEntityOfPage":"https://www.parcelaka.cz/cena-pozemku.html","publisher":{"@type":"Organization","name":"Parcelka"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Ceny pozemků","item":"https://www.parcelaka.cz/cena-pozemku.html"}]}]
   </script>
@@ -166,6 +168,26 @@
         <span class="okr-meta">Zemědělská půda <b>41 Kč/m²</b> · rozpětí 38–62 · 59 nab. &nbsp;·&nbsp; les <b>43 Kč/m²</b> (14)</span>
       </div>
           </div>
+        </div>
+      </div>
+
+      <div class="add-card" style="margin-top:22px;">
+        <div class="rules-sect">
+          <h2>Cenová mapa okresů</h2>
+          <p class="rules-note" style="margin-top:0;">Zemědělská půda, tmavší = dražší. Okresy bez dostatku nabídek jsou šedé. Klepnutím otevřete okres. <b>Tytéž ceny jsou v seznamu pod mapou</b> — ten je čitelný i bez barev.</p>
+          <div class="cen-mapa-obal">
+            <div id="cen-mapa" role="img" aria-label="Mapa České republiky s okresy podbarvenými podle mediánu ceny zemědělské půdy. Tytéž údaje jsou v seznamu pod mapou."></div>
+            <p class="rules-note cen-mapa-stav" id="cen-mapa-stav">Mapa se načte, až se k ní dorolujete.</p>
+          </div>
+          <ul class="cen-mapa-legenda" aria-hidden="true">
+            <li><i style="background:rgba(91,184,214,0.12);"></i>nejlevnější</li>
+            <li><i style="background:rgba(91,184,214,0.33);"></i></li>
+            <li><i style="background:rgba(91,184,214,0.51);"></i></li>
+            <li><i style="background:rgba(91,184,214,0.70);"></i></li>
+            <li><i style="background:rgba(91,184,214,0.90);"></i>nejdražší</li>
+            <li><i style="background:rgba(128,128,128,0.18);"></i>málo dat</li>
+          </ul>
+          <script type="application/json" id="cen-mapa-data">{"Praha-východ":{"med":160,"lo":95,"hi":265,"n":12,"odkaz":"pozemky-okres-praha-vychod.html"},"Pardubice":{"med":116,"lo":54,"hi":139,"n":19,"odkaz":"pozemky-okres-pardubice.html"},"Praha-západ":{"med":90,"lo":80,"hi":127,"n":25,"odkaz":"pozemky-okres-praha-zapad.html"},"Písek":{"med":87,"lo":46,"hi":231,"n":12,"odkaz":"pozemky-okres-pisek.html"},"Liberec":{"med":85,"lo":63,"hi":250,"n":12,"odkaz":"pozemky-okres-liberec.html"},"Vyškov":{"med":81,"lo":47,"hi":146,"n":11,"odkaz":"pozemky-okres-vyskov.html"},"Brno-venkov":{"med":80,"lo":68,"hi":150,"n":32,"odkaz":"pozemky-okres-brno-venkov.html"},"Rokycany":{"med":77,"lo":41,"hi":144,"n":10,"odkaz":"pozemky-okres-rokycany.html"},"Semily":{"med":75,"lo":43,"hi":345,"n":18,"odkaz":"pozemky-okres-semily.html"},"Mělník":{"med":74,"lo":51,"hi":150,"n":20,"odkaz":"pozemky-okres-melnik.html"},"Kolín":{"med":73,"lo":54,"hi":281,"n":16,"odkaz":"pozemky-okres-kolin.html"},"Jablonec nad Nisou":{"med":73,"lo":43,"hi":95,"n":15,"odkaz":"pozemky-okres-jablonec-nad-nisou.html"},"Chrudim":{"med":71,"lo":54,"hi":89,"n":17,"odkaz":"pozemky-okres-chrudim.html"},"Mladá Boleslav":{"med":68,"lo":51,"hi":132,"n":35,"odkaz":"pozemky-okres-mlada-boleslav.html"},"Česká Lípa":{"med":66,"lo":37,"hi":226,"n":14,"odkaz":"pozemky-okres-ceska-lipa.html"},"Benešov":{"med":63,"lo":50,"hi":110,"n":18,"odkaz":"pozemky-okres-benesov.html"},"Cheb":{"med":62,"lo":29,"hi":183,"n":10,"odkaz":"pozemky-okres-cheb.html"},"Prostějov":{"med":62,"lo":42,"hi":154,"n":26,"odkaz":"pozemky-okres-prostejov.html"},"Břeclav":{"med":62,"lo":46,"hi":94,"n":58,"odkaz":"pozemky-okres-breclav.html"},"Hodonín":{"med":61,"lo":45,"hi":83,"n":95,"odkaz":"pozemky-okres-hodonin.html"},"Kroměříž":{"med":59,"lo":46,"hi":155,"n":25,"odkaz":"pozemky-okres-kromeriz.html"},"Litoměřice":{"med":54,"lo":38,"hi":118,"n":23,"odkaz":"pozemky-okres-litomerice.html"},"Přerov":{"med":53,"lo":43,"hi":140,"n":19,"odkaz":"pozemky-okres-prerov.html"},"Jičín":{"med":50,"lo":45,"hi":86,"n":18,"odkaz":"pozemky-okres-jicin.html"},"Žďár nad Sázavou":{"med":50,"lo":45,"hi":56,"n":12,"odkaz":"pozemky-okres-zdar-nad-sazavou.html"},"Uherské Hradiště":{"med":49,"lo":39,"hi":72,"n":22,"odkaz":"pozemky-okres-uherske-hradiste.html"},"Tábor":{"med":46,"lo":44,"hi":51,"n":17,"odkaz":"pozemky-okres-tabor.html"},"Rakovník":{"med":46,"lo":43,"hi":99,"n":15,"odkaz":"pozemky-okres-rakovnik.html"},"Jindřichův Hradec":{"med":44,"lo":35,"hi":68,"n":18,"odkaz":"pozemky-okres-jindrichuv-hradec.html"},"Svitavy":{"med":43,"lo":37,"hi":71,"n":13,"odkaz":"pozemky-okres-svitavy.html"},"Zlín":{"med":43,"lo":31,"hi":74,"n":19,"odkaz":"pozemky-okres-zlin.html"},"Vsetín":{"med":40,"lo":33,"hi":48,"n":23,"odkaz":"pozemky-okres-vsetin.html"},"Pelhřimov":{"med":40,"lo":39,"hi":162,"n":10,"odkaz":"pozemky-okres-pelhrimov.html"},"Plzeň-jih":{"med":40,"lo":38,"hi":58,"n":21,"odkaz":"pozemky-okres-plzen-jih.html"},"Blansko":{"med":39,"lo":37,"hi":48,"n":22,"odkaz":"pozemky-okres-blansko.html"},"Klatovy":{"med":39,"lo":38,"hi":42,"n":16,"odkaz":"pozemky-okres-klatovy.html"}}</script>
         </div>
       </div>
 
@@ -363,7 +385,7 @@
      být i tady: tyhle stránky se generují znovu při každém běhu datového
      robota, takže co není v šabloně, to příští běh smaže — a lidé
      z vyhledávání chodí nejčastěji právě na stránky okresů. -->
-<script src="js/min/config.js?v=5f93c126" defer></script>
+<script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=bec7a315" defer></script>
 <script src="js/min/hlidani-logika.js?v=50f3cf6d" defer></script>
 <script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
@@ -374,3 +396,4 @@
 <script src="js/min/hlavicka.js?v=8d2b1304" defer></script>
 </body>
 </html>
+<script src="js/min/cenova-mapa.js?v=914c8862" defer></script>

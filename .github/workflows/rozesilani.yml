@@ -1,4 +1,4 @@
-name: Rozeslat upozornění e-mailem
+name: Rozeslat upozornění (e-mail a telefon)
 
 # Nové pozemky pošle těm, kdo si u uloženého hledání zapnuli „Posílat
 # e-mailem". Shodu počítá týž kód jako prohlížeč (js/hlidani-logika.js).
@@ -48,3 +48,24 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           PK_MAIL_FROM: ${{ secrets.PK_MAIL_FROM }}
+
+      # UPOZORNĚNÍ DO TELEFONU jde stejnou cestou a se stejnou pojistkou:
+      # bez --opravdu se jen vypíše, co by odešlo, a bez klíčů VAPID se
+      # neodešle nic ani s ním. Upozornění přijde na uzamčenou obrazovku
+      # a nedá se vzít zpátky, takže tady ta opatrnost platí dvojnásob.
+      #
+      # Potřebné tajné klíče: PK_VAPID_PRIVATNI, PK_VAPID_VEREJNY
+      # a PK_VAPID_SUBJECT (např. mailto:vase@adresa.cz). Vyrobí je
+      # node scripts/vapid-klice.mjs; veřejný patří i do js/config.js.
+      #
+      # Krok neshodí běh, když push selže: e-mail už odešel a opakovat
+      # celý běh by znamenalo poslat ho dvakrát.
+      - name: Rozeslat upozornění do telefonu (nebo vypsat)
+        continue-on-error: true
+        run: node scripts/send-push.mjs ${{ (github.event_name == 'workflow_dispatch' && inputs.opravdu) && '--opravdu' || '' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PK_VAPID_PRIVATNI: ${{ secrets.PK_VAPID_PRIVATNI }}
+          PK_VAPID_VEREJNY: ${{ secrets.PK_VAPID_VEREJNY }}
+          PK_VAPID_SUBJECT: ${{ secrets.PK_VAPID_SUBJECT }}

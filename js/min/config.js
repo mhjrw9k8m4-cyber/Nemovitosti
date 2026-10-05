@@ -5,3 +5,5 @@ window.PK_FORM_ENDPOINT = '';
 window.PK_FORM_EMAIL = '';
 
 window.PK_MAIL_ZAPNUTO = false;
+
+window.PK_PUSH_VEREJNY_KLIC = '';

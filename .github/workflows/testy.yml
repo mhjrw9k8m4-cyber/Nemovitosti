@@ -260,6 +260,9 @@ jobs:
       - name: Tmavý režim a skripty na všech stránkách
         run: node scripts/test-rezim-stranek.mjs
 
+      - name: Šifrování push zpráv (proti vzorku referenční implementace)
+        run: node scripts/test-web-push.mjs
+
       - name: Zařazení pozemku do okresu
         run: node scripts/test-okres.mjs
 
@@ -345,6 +348,9 @@ jobs:
 
       - name: Offline režim (service worker, bez signálu i bez cizích serverů)
         run: node scripts/test-offline.mjs
+
+      - name: Cenová mapa okresů (mapa říká totéž jako seznam)
+        run: node scripts/test-cenova-mapa.mjs
 
       - name: Předvyplnění inzerátu z odkazu
         run: node scripts/test-predvyplneni.mjs

@@ -139,3 +139,62 @@ self.addEventListener('fetch', (e) => {
      nového) jde přímo na síť a nikam se neukládá. Mlčet je tu správná
      odpověď: co se neuloží, nemůže zastarat. */
 });
+
+/* ====================================================================
+ * UPOZORNĚNÍ DO TELEFONU (push)
+ *
+ * Zpráva přijde zašifrovaná pro TOHLE zařízení a prohlížeč ji rozšifruje
+ * ještě před touhle obsluhou — push služba (Google, Mozilla, Apple) obsah
+ * nevidí. Šifruje se u nás v scripts/web-push.mjs podle RFC 8291.
+ *
+ * TVAR ZPRÁVY je JSON { nadpis, text, odkaz, znacka }. Kdyby přišlo něco
+ * jiného (cizí odesílatel se stejným odběrem, starší verze rozesílače),
+ * nesmí to obsluhu shodit: bez oznámení by prohlížeč na některých
+ * systémech ukázal vlastní náhradní text „tato stránka byla aktualizována
+ * na pozadí", což je horší než nic. Proto se vždycky něco zobrazí.
+ *
+ * ZNAČKA (tag) slouží ke SLUČOVÁNÍ: když přijdou tři upozornění z téhož
+ * hledání, nemá na člověka vyskočit třikrát totéž. Rozesílač posílá jako
+ * značku id hledání.
+ * ==================================================================== */
+self.addEventListener('push', function (e) {
+  var z = {};
+  try { z = e.data ? e.data.json() : {}; } catch (err) { z = {}; }
+  var nadpis = (typeof z.nadpis === 'string' && z.nadpis) || 'Parcelka';
+  var text = (typeof z.text === 'string' && z.text) || 'Máte nový pozemek v hlídání.';
+  /* Odkaz se bere jen vlastní. Kdyby v něm přišla cizí adresa, bylo by
+     z upozornění s naším jménem rozcestí kamkoli. */
+  var odkaz = 'index.html';
+  if (typeof z.odkaz === 'string' && z.odkaz) {
+    try {
+      var u = new URL(z.odkaz, self.location.origin);
+      if (u.origin === self.location.origin) odkaz = u.pathname.replace(/^\//, '') + u.search + u.hash;
+    } catch (err2) { /* zůstane výchozí */ }
+  }
+  e.waitUntil(self.registration.showNotification(nadpis, {
+    body: text,
+    icon: 'assets/icon-192.png',
+    badge: 'assets/icon-192.png',
+    tag: (typeof z.znacka === 'string' && z.znacka) || 'parcelka',
+    data: { odkaz: odkaz }
+  }));
+});
+
+/* Klepnutí na upozornění má otevřít TO, o čem bylo — ne jen web.
+ * A když už je karta s webem otevřená, použije se ona: otevírat druhou
+ * kopii téhož webu je způsob, jak člověku nechat v telefonu pět karet. */
+self.addEventListener('notificationclick', function (e) {
+  e.notification.close();
+  var odkaz = (e.notification.data && e.notification.data.odkaz) || 'index.html';
+  e.waitUntil((async function () {
+    var cil = new URL(odkaz, self.location.origin).href;
+    var okna = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (var i = 0; i < okna.length; i++) {
+      if (okna[i].url === cil) return okna[i].focus();
+    }
+    for (var j = 0; j < okna.length; j++) {
+      if (okna[j].navigate) { await okna[j].navigate(cil); return okna[j].focus(); }
+    }
+    return self.clients.openWindow(cil);
+  })());
+});
