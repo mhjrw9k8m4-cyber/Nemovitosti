@@ -1527,7 +1527,7 @@
       var p0 = d.photos[0];
       var cnt = d.photos.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + (d.photos.length) + '</span>' : '';
       return '<svg class="opp-map" viewBox="0 0 384 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
-        '<rect width="384" height="240" fill="#14231C"/>' +
+        '<rect width="384" height="240" fill="#12241A"/>' +
         '<image href="' + p0 + '" xlink:href="' + p0 + '" x="0" y="0" width="384" height="240" preserveAspectRatio="xMidYMid slice"/>' +
         '</svg>' +
         '<span class="opp-mgrad"></span>' +
@@ -1849,7 +1849,7 @@
   }
   function styleKraj(k) {
     return { color: 'rgba(31,81,56,0.5)', weight: 1.4, fill: true,
-      fillColor: '#1F5138', fillOpacity: krajKrytí(k) };
+      fillColor: '#0F5C3B', fillOpacity: krajKrytí(k) };
   }
   /* OKOLÍ SE ZTLUMÍ, ABY ČESKO VYSTOUPILO.
    *
@@ -1886,7 +1886,7 @@
     var svet = [[-89, -179.9], [-89, 179.9], [89, 179.9], [89, -179.9]];
     return L.polygon([svet].concat(diry), {
       /* ZTMAVIT, NE PROSVĚTLIT. Napoprvé tu byla barva plochy stránky
-         (#DFEBE2) na 0,66 — a změřeno to nedělalo NIC: podklad je už tak
+         (#E3EFE7) na 0,66 — a změřeno to nedělalo NIC: podklad je už tak
          odbarvený a bledý, takže se bledým závojem nedá ztlumit. Čísla
          (jas v rozích výřezu proti středu, kde je Česko):
 
@@ -1897,7 +1897,7 @@
              tmavá 0,26  cizina 169             → rozdíl 33, už dusí kontext
 
          Odstín je tmavý brandový tón, tentýž jako tmavý pás na stránce. */
-      stroke: false, fill: true, fillColor: '#14231C', fillOpacity: 0.18,
+      stroke: false, fill: true, fillColor: '#12241A', fillOpacity: 0.18,
       fillRule: 'evenodd', interactive: false, className: 'pk-maska'
     });
   }
@@ -1915,7 +1915,7 @@
           if (selectedKraj !== f.properties.kraj) krajJustSelected = true; // přepnutí kraje neotevírá detail
           selectKraj(f.properties.kraj);
         });
-        layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2.4, color: '#1F5138', fillColor: '#1F5138', fillOpacity: krajKrytí(f.properties.kraj) + 0.09 }); layer.bringToFront(); } });
+        layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2.4, color: '#0F5C3B', fillColor: '#0F5C3B', fillOpacity: krajKrytí(f.properties.kraj) + 0.09 }); layer.bringToFront(); } });
         layer.on('mouseout', function () { prekresliKraje(); });
         // Dotyk: po 2 s popisek plynule zhasne, ať nezůstane „viset" a nebrání dalšímu klikání.
         layer.on('tooltipopen', function (e) {
@@ -2713,7 +2713,7 @@
   }
   // Vybraný kraj: silnější obrys a lehké podbarvení, ať je jasně vidět,
   // ve kterém kraji se hledá.
-  function styleSelectedKraj(layer) { layer.setStyle({ weight: 2.6, color: '#2E42B4', fillColor: '#1F5138', fillOpacity: 0.07 }); layer.bringToFront(); }
+  function styleSelectedKraj(layer) { layer.setStyle({ weight: 2.6, color: '#2E42B4', fillColor: '#0F5C3B', fillOpacity: 0.07 }); layer.bringToFront(); }
   // Ostatní kraje, když je nějaký vybraný: překryjeme je světlým závojem.
   // Podklad pod nimi zešedne a oko jde samo tam, kde jsou nabídky.
   function styleKrajMimo() { return { color: 'rgba(30,38,66,0.16)', weight: 1, fill: true, fillColor: '#F4F2ED', fillOpacity: 0.42 }; }
@@ -3035,7 +3035,7 @@
       L.geoJSON({ type: 'FeatureCollection', features: Object.keys(KRAJE_GEOM).map(function (k) {
         return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] };
       }) }, { interactive: false, renderer: L.svg(),
-        style: function () { return { color: '#1F5138', weight: 1, opacity: 0.38, fill: false }; } }).addTo(m);
+        style: function () { return { color: '#0F5C3B', weight: 1, opacity: 0.38, fill: false }; } }).addTo(m);
     }
     // Tečky pozemků, ať je vidět, kde vůbec něco je — jinak člověk vybírá naslepo.
     var vrstvaTecek = L.layerGroup().addTo(m);

@@ -39,7 +39,7 @@
   function html(d, nast) {
     nast = nast || {};
     var Vw = nast.sirka || 384, Vh = nast.vyska || 240;
-    var barva = nast.barva || '#1F5138';
+    var barva = nast.barva || '#0F5C3B';
     var id = 'sn' + (nast.id != null ? nast.id : 0);
     var z = priblizeni(d, Vw, Vh), n = Math.pow(2, z);
     var WX = worldX(d.lng, n), WY = worldY(d.lat, n);
@@ -64,7 +64,7 @@
       'xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
       '<defs><filter id="' + id + '" x="-40%" y="-40%" width="180%" height="180%">' +
       '<feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="rgba(0,0,0,0.5)"/></filter></defs>' +
-      '<rect width="' + Vw + '" height="' + Vh + '" fill="#14231C"/>' +
+      '<rect width="' + Vw + '" height="' + Vh + '" fill="#12241A"/>' +
       '<g stroke="rgba(206,228,212,0.06)" stroke-width="1">' +
       '<path d="M64 0V' + Vh + 'M128 0V' + Vh + 'M192 0V' + Vh + 'M256 0V' + Vh + 'M320 0V' + Vh +
       'M0 60H' + Vw + 'M0 120H' + Vw + 'M0 180H' + Vw + '"/></g>' +

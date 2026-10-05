@@ -358,6 +358,29 @@ const MODEL = CENY.postav ? CENY.postav(all) : null;
 
 function odznakCeny(o) {
   const od = MODEL && MODEL.odhad ? MODEL.odhad(o) : null;
+  /* NEDŮVĚRYHODNOU CENU MUSÍ OHLÁSIT I TAHLE STRÁNKA.
+     js/ceny.js má vlastní pojem „nedůvěryhodná nabídka": cena za metr pod
+     padesátinou místní hladiny není skvělá koupě, ale skoro jistě podíl
+     nebo chyba v inzerátu. Jeho důsledkem je, že odhad vrátí null — tedy
+     model MLČÍ — a tahle funkce mlčela s ním, protože se ptala jenom
+     odhadu. Mapa (js/main.js) i stránka pozemku (js/pozemek.js) se přitom
+     neduveryhodna() ptají a odznak ukazují; tahle kopie pravidel se s nimi
+     rozešla. A je to ta kopie, na kterou lidé chodí z vyhledávačů.
+
+     Naměřeno: z 1 922 nabídek s cenou za metr jsou takové tři (0,16 %),
+     a dvě z nich byly nejlevnější nabídky na celém webu — stavební
+     pozemky za 3 a 7 Kč/m², oba s přivedenou vodou a elektřinou. V řazení
+     podle ceny stály první, bez jediného varování. U toho v Českém Brodě
+     píše sám inzerent „dva stavební pozemky ve velmi žádané lokalitě
+     města", takže 11 000 Kč prodejní cena není.
+
+     Výjimka u podílu je opsaná z js/main.js i s důvodem: u známého podílu
+     to samé říká přesněji odznak „spoluvlastnický podíl" v řádku, a dva
+     odznaky o téže věci jen zabírají místo. */
+  if (MODEL && MODEL.neduveryhodna && MODEL.neduveryhodna(o) && !o.podil
+      && !(od && od.podleVelikosti && (od.pochybna || od.nejisty))) {
+    return '<b class="okr-overit">cena k ověření</b>';
+  }
   if (!od || !od.podleVelikosti) return '';
   if (od.pochybna) return '<b class="okr-overit">cena k ověření</b>';
   if (od.nejisty && od.podOdhadem >= 25 && !od.podil) return '<b class="okr-overit">cena k ověření</b>';

@@ -59,30 +59,22 @@ function hotovo() {
     }
     return out;
   }
-  /* Blok uvnitř @media (systémové nastavení) a blok pro ruční volbu.
-     Berou se jen ty, které NASTAVUJÍ tokeny — podmínky pro jednotlivé
-     prvky (pozadí tlačítek) jsou jinde a tokeny nenesou. */
-  const mediaBloky = [...css.matchAll(/:root:not\(\[data-theme="light"\]\)\s*\{([^}]*)\}/g)]
-    .map((m) => tokeny(m[1])).filter((t) => Object.keys(t).length > 3);
+  /* TMAVÁ PALETA JE ZAPSANÁ JEDNOU, A TO PRO RUČNÍ VOLBU.
+     Dřív byla dvakrát: jednou v @media (prefers-color-scheme: dark), tedy
+     podle nastavení systému, a jednou pro ruční přepnutí. Zadání se
+     změnilo — web se podle telefonu ztmavovat nemá. Kdo si o tmavý řekne
+     přepínačem, dostane ho; komu se nic neuloží, vidí zelenobílou. Dvě
+     kopie tím odpadly a s nimi celá třída chyb, kde se jedna změnila
+     a druhá ne — přesně na to tahle kontrola kdysi vznikla. */
+  pravda('web se podle nastavení systému sám neztmaví',
+    !/prefers-color-scheme:\s*dark/.test(css),
+    'v CSS zůstalo pravidlo podle systému — výchozí by pak nebyla světlá');
   const rucniBloky = [...css.matchAll(/:root\[data-theme="dark"\]\s*\{([^}]*)\}/g)]
     .map((m) => tokeny(m[1])).filter((t) => Object.keys(t).length > 3);
-  const spoj = (a) => Object.assign({}, ...a);
-  const media = spoj(mediaBloky), rucni = spoj(rucniBloky);
-
-  // PŘEDPOKLAD: bez obou bloků by porovnání prošlo naprázdno
-  pravda('tmavá paleta je zapsaná pro systémové nastavení i pro ruční volbu',
-    Object.keys(media).length > 20 && Object.keys(rucni).length > 20,
-    `systémová ${Object.keys(media).length} tokenů, ruční ${Object.keys(rucni).length}`);
-  if (Object.keys(media).length < 20 || Object.keys(rucni).length < 20) { hotovo(); }
-
-  const chybi = Object.keys(media).filter((k) => !(k in rucni));
-  const navic = Object.keys(rucni).filter((k) => !(k in media));
-  const jine = Object.keys(media).filter((k) => k in rucni && media[k] !== rucni[k]);
-  pravda('a obě kopie nastavují tytéž tokeny', chybi.length === 0 && navic.length === 0,
-    `jen v systémové: ${chybi.join(', ') || '—'} | jen v ruční: ${navic.join(', ') || '—'}`);
-  pravda('a na tytéž hodnoty (jinak by se ruční volba lišila od systémové)',
-    jine.length === 0,
-    jine.slice(0, 4).map((k) => `${k}: „${media[k]}" × „${rucni[k]}"`).join('\n      '));
+  const rucni = Object.assign({}, ...rucniBloky);
+  pravda('tmavá paleta pro ruční volbu je zapsaná a je úplná',
+    Object.keys(rucni).length > 20, `${Object.keys(rucni).length} tokenů`);
+  if (Object.keys(rucni).length < 20) { hotovo(); }
 }
 
 const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || undefined });
@@ -102,9 +94,16 @@ function kontrast(a, b) {
 }
 
 /* ---- 2) přepne se podle systému ---- */
+/* SYSTÉM JE V OBOU BĚZÍCH NASTAVENÝ NA TMAVÝ. U světlého případu je to
+   schválně: právě tím se dokáže, že web systémové nastavení ignoruje.
+   Tmavý se zapíná tak, jak ho zapíná člověk — uloženým rozhodnutím,
+   které si stránka přečte ještě před vykreslením. */
 let svetloJas = null, tmaJas = null;
 for (const rezim of ['light', 'dark']) {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: rezim });
+  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: 'dark' });
+  if (rezim === 'dark') {
+    await ctx.addInitScript(() => { try { localStorage.setItem('pk_rezim_v1', 'dark'); } catch (e) { /* ok */ } });
+  }
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
   await p.waitForTimeout(2000);
@@ -124,13 +123,16 @@ for (const rezim of ['light', 'dark']) {
   }
   await ctx.close();
 }
-pravda('při tmavém nastavení systému je stránka opravdu tmavá',
-  svetloJas !== null && tmaJas !== null && tmaJas < 0.1 && svetloJas > 0.5,
-  `jas plochy: světlý ${svetloJas && svetloJas.toFixed(3)}, tmavý ${tmaJas && tmaJas.toFixed(3)}`);
+pravda('se systémem na tmavém, ale bez uložené volby, zůstane stránka SVĚTLÁ',
+  svetloJas !== null && svetloJas > 0.5,
+  `jas plochy ${svetloJas && svetloJas.toFixed(3)} — web se ztmavil podle systému, i když neměl`);
+pravda('a po uložené volbě je opravdu tmavá',
+  tmaJas !== null && tmaJas < 0.1, `jas plochy ${tmaJas && tmaJas.toFixed(3)}`);
 
 /* ---- 3) nic velkého nezůstane svítit ---- */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: 'dark' });
+  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
+  await ctx.addInitScript(() => { try { localStorage.setItem('pk_rezim_v1', 'dark'); } catch (e) { /* ok */ } });
   /* PŘIHLÁŠENÝ, jinak se na Upozorněních a Zprávách nevykreslí nic než
      výzva k přihlášení — a odznaky, karty a vlákna, tedy to, co má
      v tmavém režimu vlastní barvy, by se neměřily vůbec. */
@@ -202,12 +204,16 @@ pravda('při tmavém nastavení systému je stránka opravdu tmavá',
   await p2.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
   await p2.waitForTimeout(400);
   const bg2 = await p2.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  pravda('a ruční „světlý" přebije tmavé nastavení systému', jas(bg2) > 0.5,
+  /* Dřív tohle znamenalo „ruční volba přebije systém". Od chvíle, kdy se
+     web podle systému neztmavuje, je to prostě kontrola, že ruční
+     „světlý" drží i na stroji s tmavým systémem — tedy že se nic
+     neztmaví ani omylem. */
+  pravda('ruční „světlý" drží i na tmavém systému', jas(bg2) > 0.5,
     `plocha ${bg2} (jas ${jas(bg2) && jas(bg2).toFixed(3)})`);
   await c2.close();
 }
 
-/* ---- 5) přepínač: tři stavy, vydrží, a nebliká ---- */
+/* ---- 5) přepínač: dvě polohy, vydrží, a nebliká ---- */
 {
   const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: 'light' });
   const p = await ctx.newPage();
@@ -230,8 +236,12 @@ pravda('při tmavém nastavení systému je stránka opravdu tmavá',
   if (!s0.je) { await ctx.close(); await prohlizec.close(); hotovo(); }
 
   pravda('a dá se trefit prstem (44 px)', s0.vyska >= 44, `${s0.vyska} px`);
-  pravda('začíná se „podle systému" (nikomu se nic nepřepíná za zády)',
-    s0.theme === null && /systém/i.test(s0.popis), JSON.stringify(s0));
+  /* Začíná se SVĚTLÝM. Dřív tu stálo „podle systému" — tenkrát se web
+     podle telefonu ztmavoval, takže ta poloha něco znamenala. Dnes už ne,
+     a poloha, která dělá totéž co „světlý", jen se jmenuje jinak, by
+     člověka jen pletla. */
+  pravda('začíná se „světlým" (nikomu se nic nepřepíná za zády ani podle telefonu)',
+    s0.theme === 'light' && /světl/i.test(s0.popis), JSON.stringify(s0));
   pravda('a odečítač se dozví i to, co klepnutí udělá',
     /klepnutím/i.test(s0.popisek || ''), String(s0.popisek));
 
@@ -241,14 +251,12 @@ pravda('při tmavém nastavení systému je stránka opravdu tmavá',
   const s2 = await stav();
   await p.click('#pk-rezim-btn'); await p.waitForTimeout(350);
   const s3 = await stav();
-  pravda('klepáním se projdou tři stavy a vrátí se na začátek',
-    s1.theme === 'light' && s2.theme === 'dark' && s3.theme === null,
+  pravda('klepáním se projdou obě polohy a vrátí se na začátek',
+    s1.theme === 'dark' && s2.theme === 'light' && s3.theme === 'dark',
     `${s1.theme} → ${s2.theme} → ${s3.theme}`);
-  /* Tři stavy, ne dva: s přepínačem na dvě polohy se k „podle systému"
-     už nedá vrátit a volba zůstane nalepená napořád. */
-  pravda('a „tmavý" stránku opravdu ztmaví', jas(s2.bg) < 0.1, s2.bg);
+  pravda('a „tmavý" stránku opravdu ztmaví', jas(s1.bg) < 0.1, s1.bg);
 
-  await p.click('#pk-rezim-btn'); await p.waitForTimeout(300);   // na „světlý"
+  await p.click('#pk-rezim-btn'); await p.waitForTimeout(300);   // zpátky na „světlý"
   await p.reload({ waitUntil: 'load' });
   await p.waitForTimeout(1500);
   const s4 = await stav();

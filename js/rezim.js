@@ -1,10 +1,14 @@
 /* Přepínač světlý / tmavý.
  *
- * ŘÍDÍ SE SYSTÉMEM, dokud si člověk nevybere jinak. To je výchozí stav
- * a je správně: kdo má v telefonu noční režim, čeká ho i tady, a nikdo
- * nechce nastavovat totéž na každém webu zvlášť. Volba je proto trojí —
- * „podle systému", „světlý", „tmavý" — a ne přepínač se dvěma polohami,
- * u kterého se k „podle systému" už nedá vrátit.
+ * VÝCHOZÍ JE SVĚTLÁ, a to pro každého. Dřív se web řídil nastavením
+ * telefonu a volba byla trojí — „podle systému", „světlý", „tmavý".
+ * Od té doby se zadání změnilo: Parcelka je zelenobílá a tak má vypadat
+ * i tomu, kdo má v systému noční režim. Kdo chce tmavou, řekne si o ni
+ * tímhle tlačítkem; nikomu se nic nepřepíná za zády ani podle telefonu.
+ *
+ * Polohy jsou proto dvě, ne tři. Třetí („podle systému") by po zrušení
+ * automatiky dělala přesně totéž co „světlý" — a dvě polohy se stejným
+ * chováním a různým jménem jsou horší než jedna.
  *
  * MUSÍ SE POUŽÍT JEŠTĚ PŘED VYKRESLENÍM. Kdyby se atribut nastavoval až
  * po načtení skriptu, stihla by se stránka vykreslit světle a hned
@@ -16,28 +20,28 @@
 (function (root) {
   'use strict';
   var KLIC = 'pk_rezim_v1';
-  var VOLBY = ['system', 'light', 'dark'];
-  var POPIS = { system: 'Podle systému', light: 'Světlý', dark: 'Tmavý' };
+  var VOLBY = ['light', 'dark'];
+  var POPIS = { light: 'Světlý', dark: 'Tmavý' };
 
   function cti() {
     try {
       var v = localStorage.getItem(KLIC);
-      return VOLBY.indexOf(v) >= 0 ? v : 'system';
-    } catch (e) { return 'system'; }
+      return VOLBY.indexOf(v) >= 0 ? v : 'light';
+    } catch (e) { return 'light'; }
   }
   function uloz(v) {
-    try { if (v === 'system') localStorage.removeItem(KLIC); else localStorage.setItem(KLIC, v); }
+    /* Světlá se ukládá taky, i když je výchozí: kdyby se jen mazala,
+       nedalo by se odlišit „nic si nevybral" od „vybral si světlou",
+       a obojí se sice dnes chová stejně, ale uložená volba má vydržet. */
+    try { localStorage.setItem(KLIC, v); }
     catch (e) { /* zakázaná schránka: volba vydrží do konce návštěvy */ }
   }
   function pouzij(v) {
-    var h = document.documentElement;
-    if (v === 'system') h.removeAttribute('data-theme');
-    else h.setAttribute('data-theme', v);
+    document.documentElement.setAttribute('data-theme', v === 'dark' ? 'dark' : 'light');
   }
   function dalsi(v) { return VOLBY[(VOLBY.indexOf(v) + 1) % VOLBY.length]; }
 
   var IKONY = {
-    system: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18" /><path d="M12 3a9 9 0 0 1 0 18" fill="currentColor" stroke="none"/>',
     light: '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>',
     dark: '<path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.6 6.6 0 0 0 9.5 9.5Z"/>',
   };
@@ -46,6 +50,10 @@
     var misto = document.getElementById('pk-rezim');
     if (!misto) return;
     var stav = cti();
+    /* Výchozí polohu nasadíme hned, ať atribut odpovídá tomu, co tlačítko
+       ukazuje. Nic to nepřekreslí — bez atributu je stránka světlá taky —
+       jen se stav přestane dohadovat z jeho nepřítomnosti. */
+    pouzij(stav);
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'rezim-btn';

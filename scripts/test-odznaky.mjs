@@ -144,7 +144,12 @@ let zmereno = 0;
 for (const rezim of ['light', 'dark'])
 for (const s of STRANKY) {
   const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 900 },
-    colorScheme: rezim, hasTouch: true, isMobile: true });
+    hasTouch: true, isMobile: true });
+  /* Tmavý jen uloženou volbou — web se podle systému neztmavuje, takže
+     emulace přes colorScheme by měřila dvakrát světlý motiv. */
+  if (rezim === 'dark') {
+    await ctx.addInitScript(() => { try { localStorage.setItem('pk_rezim_v1', 'dark'); } catch (e) { /* ok */ } });
+  }
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   const p = await ctx.newPage();

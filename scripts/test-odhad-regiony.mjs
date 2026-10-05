@@ -61,6 +61,18 @@ for (const o of vsechny) podleUdaju.set(klic(o.place, o.druh, o.area || 0, o.pri
    sebe a prošla by i s úplně obrácenou úvahou. */
 function cekano(o) {
   const od = MODEL.odhad(o);
+  /* NEDŮVĚRYHODNÁ NABÍDKA JE PRVNÍ PRAVIDLO, a tady chybělo — i když
+     komentář výš správně říká, že se opisuje z js/main.js. Tam stojí:
+     když model nabídku považuje za nedůvěryhodnou (cena za metr pod
+     padesátinou místní hladiny) a odhad sám už ji neoznačil, ukaž „cena
+     k ověření"; u známého podílu ne, protože to samé říká přesněji odznak
+     „spoluvlastnický podíl".
+     Nedůvěryhodnost přitom znamená, že odhad vrátí null — takže řádek
+     `if (!od || !od.podleVelikosti) return ''` pod tím ji spolehlivě
+     spolkl a kontrola čekala u těch nabídek prázdno. Generátor to dělal
+     stejně, takže se obě strany mýlily shodně a nic nepadalo. */
+  const odhadPochybny = !!(od && od.podleVelikosti && (od.pochybna || od.nejisty));
+  if (MODEL.neduveryhodna(o) && !odhadPochybny && !o.podil) return 'overit';
   if (!od || !od.podleVelikosti) return '';
   if (od.pochybna) return 'overit';
   if (od.nejisty && od.podOdhadem >= 25 && !od.podil) return 'overit';

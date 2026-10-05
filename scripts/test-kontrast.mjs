@@ -167,16 +167,22 @@ const MERENI = `(() => {
 
    hasTouch zapíná @media (hover:none), což je na telefonu skoro vždycky
    pravda; isMobile k tomu přidá dotykové události a správné měřítko. */
+/* TMAVÝ SE ZAPÍNÁ ULOŽENOU VOLBOU, NE NASTAVENÍM SYSTÉMU. Web se podle
+   systému neztmavuje — kdyby se tu tmavý emuloval přes colorScheme, měřil
+   by se dvakrát světlý motiv a kontrola tmavého by tiše zmizela. */
 const REZIMY = [
-  { jmeno: 'světlý', colorScheme: 'light' },
-  { jmeno: 'tmavý', colorScheme: 'dark' },
+  { jmeno: 'světlý', volba: null },
+  { jmeno: 'tmavý', volba: 'dark' },
 ];
 const vse = [];
 let zmerenoCelkem = 0;
 for (const REZIM of REZIMY)
 for (const s of STRANKY) {
   const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 900 },
-    colorScheme: REZIM.colorScheme, hasTouch: true, isMobile: true });
+    hasTouch: true, isMobile: true });
+  if (REZIM.volba) {
+    await ctx.addInitScript((v) => { try { localStorage.setItem('pk_rezim_v1', v); } catch (e) { /* ok */ } }, REZIM.volba);
+  }
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';`
       + 'window.PK_MAIL_ZAPNUTO=true;' }));

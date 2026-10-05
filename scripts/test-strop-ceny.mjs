@@ -31,6 +31,10 @@ const PKH = req(path.join(ROOT, 'js', 'hlidani-logika.js'));
 new Function(readFileSync(path.join(ROOT, 'js', 'ceny.js'), 'utf8'))();
 const CENY = globalThis.PK_CENY;
 
+/* Jméno souboru okresní stránky — stejný převod jako v generátoru. */
+const okresSlug = (x) => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
 let ok = 0, chyb = 0; const zpravy = [];
 function pravda(popis, vyslo, proc) {
   if (vyslo) { ok++; zpravy.push('  ✓ ' + popis); }
@@ -111,6 +115,47 @@ for (const f of stranky) {
 pravda(`cen za metr se na stránkách našlo dost (${cisel})`, cisel > 1000,
   'vzor se neshodl — kontrola pod tím by nic neznamenala');
 pravda('žádná vysázená cena za metr není nad mezí', nad.length === 0, nad.slice(0, 5).join(' | '));
+
+/* ---------- A DRUHÁ STRANA TÉŽE POCTIVOSTI ---------------------------
+   js/ceny.js má vlastní pojem „nedůvěryhodná nabídka": cena za metr pod
+   padesátinou místní hladiny není skvělá koupě, ale skoro jistě podíl nebo
+   chyba v inzerátu. Mapa i stránka pozemku se na něj ptají a ukazují
+   odznak „cena k ověření"; generátor regionálních stránek se ptal jenom
+   odhadu, a protože nedůvěryhodnost dělá to, že odhad MLČÍ, mlčel s ním.
+   Byla to rozešlá kopie pravidel — a zrovna ta, na kterou lidé chodí
+   z vyhledávačů. Tahle kontrola hlídá, že se to znovu nerozejde. */
+{
+  const MODEL = CENY.postav ? CENY.postav(aktualni) : null;
+  pravda('cenový model se postavil', !!(MODEL && MODEL.neduveryhodna && MODEL.odhad));
+  if (MODEL && MODEL.neduveryhodna) {
+    const ndv = aktualni.filter((o) => CENY.zaMetr(o) !== null && MODEL.neduveryhodna(o) && !o.podil);
+    /* Kdyby data přestala nedůvěryhodné nabídky obsahovat, kontrola pod
+       tím by neměla co měřit a tiše by procházela. */
+    pravda(`model nějaké nabídky za nedůvěryhodné má (${ndv.length})`, ndv.length > 0);
+    const chybi = [];
+    let nalezeno = 0;
+    for (const o of ndv) {
+      const f = `pozemky-okres-${okresSlug(o.okres)}.html`;
+      let h;
+      try { h = readFileSync(path.join(ROOT, f), 'utf8'); } catch { chybi.push(`${f} neexistuje`); continue; }
+      /* HLEDÁ SE UVNITŘ ŘÁDKŮ, ne v celé stránce. Napsal jsem to nejdřív
+         přes celý soubor a vzor se shodl s podtitulem („Ceny od 5 000 Kč"),
+         kde žádný odznak samozřejmě není — kontrola tedy hlásila chybu
+         u řádků, které odznak mají. Mezery v ceně jsou navíc PEVNÉ. */
+      const cena = String(o.price).replace(/\B(?=(\d{3})+(?!\d))/g, '[\\s\\u00a0]');
+      const vzor = new RegExp('<b>' + cena + '[\\s\\u00a0]Kč</b>');
+      const radky = h.split('<div class="okr-item"').slice(1);
+      const radek = radky.find((r) => vzor.test(r));
+      if (!radek) { chybi.push(`${f}: řádek s ${o.price} Kč se nenašel (${radky.length} řádků)`); continue; }
+      nalezeno++;
+      if (radek.indexOf('okr-overit') === -1) chybi.push(`${f}: ${o.place} ${o.price} Kč bez odznaku`);
+    }
+    pravda(`řádky nedůvěryhodných nabídek se na stránkách našly (${nalezeno} z ${ndv.length})`,
+      nalezeno === ndv.length, chybi.slice(0, 3).join(' | '));
+    pravda('u každé nedůvěryhodné nabídky stojí „cena k ověření"', chybi.length === 0,
+      chybi.slice(0, 4).join(' | '));
+  }
+}
 
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

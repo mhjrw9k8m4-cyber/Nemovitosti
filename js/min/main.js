@@ -1045,7 +1045,7 @@
       var p0 = d.photos[0];
       var cnt = d.photos.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + (d.photos.length) + '</span>' : '';
       return '<svg class="opp-map" viewBox="0 0 384 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
-        '<rect width="384" height="240" fill="#14231C"/>' +
+        '<rect width="384" height="240" fill="#12241A"/>' +
         '<image href="' + p0 + '" xlink:href="' + p0 + '" x="0" y="0" width="384" height="240" preserveAspectRatio="xMidYMid slice"/>' +
         '</svg>' +
         '<span class="opp-mgrad"></span>' +
@@ -1268,7 +1268,7 @@
   }
   function styleKraj(k) {
     return { color: 'rgba(31,81,56,0.5)', weight: 1.4, fill: true,
-      fillColor: '#1F5138', fillOpacity: krajKrytí(k) };
+      fillColor: '#0F5C3B', fillOpacity: krajKrytí(k) };
   }
 
   function postavMasku() {
@@ -1287,7 +1287,7 @@
     var svet = [[-89, -179.9], [-89, 179.9], [89, 179.9], [89, -179.9]];
     return L.polygon([svet].concat(diry), {
 
-      stroke: false, fill: true, fillColor: '#14231C', fillOpacity: 0.18,
+      stroke: false, fill: true, fillColor: '#12241A', fillOpacity: 0.18,
       fillRule: 'evenodd', interactive: false, className: 'pk-maska'
     });
   }
@@ -1305,7 +1305,7 @@
           if (selectedKraj !== f.properties.kraj) krajJustSelected = true;
           selectKraj(f.properties.kraj);
         });
-        layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2.4, color: '#1F5138', fillColor: '#1F5138', fillOpacity: krajKrytí(f.properties.kraj) + 0.09 }); layer.bringToFront(); } });
+        layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2.4, color: '#0F5C3B', fillColor: '#0F5C3B', fillOpacity: krajKrytí(f.properties.kraj) + 0.09 }); layer.bringToFront(); } });
         layer.on('mouseout', function () { prekresliKraje(); });
 
         layer.on('tooltipopen', function (e) {
@@ -1839,7 +1839,7 @@
     return userPos ? kmOd(userPos, d) : Infinity;
   }
 
-  function styleSelectedKraj(layer) { layer.setStyle({ weight: 2.6, color: '#2E42B4', fillColor: '#1F5138', fillOpacity: 0.07 }); layer.bringToFront(); }
+  function styleSelectedKraj(layer) { layer.setStyle({ weight: 2.6, color: '#2E42B4', fillColor: '#0F5C3B', fillOpacity: 0.07 }); layer.bringToFront(); }
 
   function styleKrajMimo() { return { color: 'rgba(30,38,66,0.16)', weight: 1, fill: true, fillColor: '#F4F2ED', fillOpacity: 0.42 }; }
 
@@ -2081,7 +2081,7 @@
       L.geoJSON({ type: 'FeatureCollection', features: Object.keys(KRAJE_GEOM).map(function (k) {
         return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] };
       }) }, { interactive: false, renderer: L.svg(),
-        style: function () { return { color: '#1F5138', weight: 1, opacity: 0.38, fill: false }; } }).addTo(m);
+        style: function () { return { color: '#0F5C3B', weight: 1, opacity: 0.38, fill: false }; } }).addTo(m);
     }
 
     var vrstvaTecek = L.layerGroup().addTo(m);
