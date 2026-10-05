@@ -2,6 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
+<script>/* Vzhled se musí nastavit JEŠTĚ PŘED vykreslením: jinak se stránka stihne vykreslit světle a hned ztmavnout, a bílé bliknutí do očí v noci je přesně to, kvůli čemu si lidé tmavý režim zapínají. Proto je to vložené a synchronní, ne soubor s defer. */try{var v=localStorage.getItem('pk_rezim_v1');if(v==='dark'||v==='light')document.documentElement.setAttribute('data-theme',v);}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -484,14 +485,23 @@
 <script src="js/min/snimek.js?v=5de42515"></script>
 <script src="js/min/terminy.js?v=97f740a8"></script>
 <script src="js/min/ceny.js?v=8f494901"></script>
-  <script src="js/min/zlevneni.js?v=8cbae6d1" defer></script>
+<script src="js/min/zlevneni.js?v=8cbae6d1" defer></script>
 <script src="js/min/vybaveni.js?v=68e3d418"></script>
 <script src="js/min/radce.js?v=3776a265"></script>
 <script src="js/min/klic.js?v=17fa93b6"></script>
-<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 975 m² — Slaný, okres Kladno","description":"Na prodej · 7 361 250 Kč (7 550 Kč/m²) · 975 m² · Slaný, okres Kladno. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-kladno-slany-ueb3xa.html","address":{"@type":"PostalAddress","addressLocality":"Slaný","addressRegion":"Kladno","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.230132071783,"longitude":14.099190759595}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Kladno","item":"https://www.parcelaka.cz/pozemky-okres-kladno.html"},{"@type":"ListItem","position":4,"name":"Stavební pozemek 975 m² — Slaný, okres Kladno","item":"https://www.parcelaka.cz/pozemek-kladno-slany-ueb3xa.html"}]}]</script>
+<script src="js/min/videno.js?v=a269d74b"></script>
+<script src="js/min/poznamky.js?v=998fa698"></script>
+<script src="js/min/hlidani-logika.js?v=50f3cf6d"></script>
+<script src="js/min/pozemek.js?v=74acdf2f"></script>
+<script src="js/min/config.js?v=5f93c126" defer></script>
+<script src="js/min/auth.js?v=bec7a315" defer></script>
+<script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
+<script src="js/min/upozorneni.js?v=4cc6941e" defer></script>
+<script src="js/min/hlavicka.js?v=8d2b1304" defer></script>
+<script src="js/min/rezim.js?v=9077a020" defer></script>
+  <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 975 m² — Slaný, okres Kladno","description":"Na prodej · 7 361 250 Kč (7 550 Kč/m²) · 975 m² · Slaný, okres Kladno. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-kladno-slany-ueb3xa.html","address":{"@type":"PostalAddress","addressLocality":"Slaný","addressRegion":"Kladno","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.230132071783,"longitude":14.099190759595}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Kladno","item":"https://www.parcelaka.cz/pozemky-okres-kladno.html"},{"@type":"ListItem","position":4,"name":"Stavební pozemek 975 m² — Slaný, okres Kladno","item":"https://www.parcelaka.cz/pozemek-kladno-slany-ueb3xa.html"}]}]</script>
 <script>window.PK_UKONCENO="2026-10-04";</script>
 <script>window.PK_POZEMEK={"k":"Slaný|—|Kladno|50.230|14.099","ll":[50.230132071783,14.099190759595],"v":975,"c":7361250,"r":"data/okres/kladno.json"};</script>
-<script src="js/min/pozemek.js?v=74acdf2f"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -499,12 +509,6 @@
    říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
    na nasazení u Vercelu. */
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
-<script src="js/min/config.js?v=5f93c126" defer></script>
-<script src="js/min/auth.js?v=bec7a315" defer></script>
-<script src="js/min/hlidani-logika.js?v=50f3cf6d" defer></script>
-<script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
-<script src="js/min/upozorneni.js?v=4cc6941e" defer></script>
-<script src="js/min/hlavicka.js?v=8d2b1304" defer></script>
 <script type="application/json" id="pz-okoli-data">"Kladno 9,2 km · Praha 28 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Slaný je v nabídce ještě jeden pozemek","url":"index.html?obec=Slan%C3%BD\u0026okres=Kladno"}</script>
 <script type="application/json" id="pz-popis-data">"Nabízíme k prodeji atraktivní stavební pozemek parc. č. 832/47 o výměře 975 m², situovaný ve vyhledávané lokalitě na východním okraji města Slaný, v bezprostřední blízkosti Slánské hory a v dochozí vzdálenosti do centra města. Pozemek vyniká jižní orientací, která zajišťuje dostatek slunečního svitu po celý den a vytváří ideální podmínky pro moderní energeticky úsporné bydlení."</script>

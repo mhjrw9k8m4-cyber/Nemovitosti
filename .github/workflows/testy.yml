@@ -257,6 +257,9 @@ jobs:
       - name: Vlastní stránka pro každý pozemek
         run: node scripts/test-stranky-pozemku.mjs
 
+      - name: Tmavý režim a skripty na všech stránkách
+        run: node scripts/test-rezim-stranek.mjs
+
       - name: Zařazení pozemku do okresu
         run: node scripts/test-okres.mjs
 

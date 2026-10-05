@@ -332,6 +332,75 @@ export function migrujLeaflet(h) {
   return out;
 }
 
+/* SKRIPTY NA UKONČENÝCH STRÁNKÁCH ZAOSTÁVALY ZA PŘEDLOHOU.
+ *
+ * Ukončená stránka se obsahově nepřepisuje (viz generuj()), takže se na
+ * ni nedostal žádný skript, který se do pozemek.html přidal POZDĚJI —
+ * ani přesun už vloženého skriptu na jiné místo.
+ *
+ * Naměřeno na čtyřech stránkách ukončených nabídek z 2 001:
+ *   · chyběl js/min/videno.js (značení viděného),
+ *   · chyběl js/min/poznamky.js (poznámky k pozemku),
+ *   · chyběl js/min/rezim.js, tedy PŘEPÍNAČ TMAVÉHO REŽIMU. Skript
+ *     v hlavičce režim z localStorage nastaví, takže stránka tmavá je,
+ *     ale přepnout ji na ní nelze.
+ *   · a js/min/hlidani-logika.js na nich stál ZA js/min/pozemek.js.
+ *     Všechny mají defer, takže se spouštějí v pořadí dokumentu —
+ *     pozemek.js tedy běžel dřív, než vzniklo window.PKHlidani, a
+ *     odstranění duplicitních nabídek na těch stránkách nefungovalo.
+ *
+ * Proto se nedoplňuje, co chybí, ale rovná se celý seznam podle předlohy:
+ * pořadí je součást správnosti. Na čtyřech stránkách z 2 001 by si toho
+ * nikdo nestěžoval a každý, kdo na ně přijde, na to narazí.
+ *
+ * Verze v adrese se nehlídá, tu stejně přepíše scripts/orazitkuj-verze.mjs.
+ * Idempotentní: druhý průchod vloží tentýž blok na totéž místo. */
+/* PŘEDVYKRESLOVACÍ NASTAVENÍ REŽIMU na ukončených stránkách chybělo.
+ *
+ * V hlavičce každé stránky stojí vložený synchronní skript, který ještě
+ * před vykreslením přečte z localStorage uložený režim a nastaví
+ * data-theme. Bez něj se stránka vykreslí SVĚTLE, i když má návštěvník
+ * zapnutý tmavý režim — a tmavý režim si lidé zapínají právě proto, aby
+ * jim bílá stránka nesvítila do očí.
+ *
+ * Na čtyřech stránkách ukončených nabídek ten skript chyběl, protože se
+ * do předlohy přidal po jejich archivaci. Projde tedy i tudy.
+ *
+ * Idempotentní: pozná se podle klíče localStorage, ne podle celého textu,
+ * takže se úryvek nevloží dvakrát, ani když se jeho komentář přepíše. */
+export function migrujPredvykresleni(sablona, h) {
+  if (h.indexOf('pk_rezim_v1') >= 0) return h;
+  const m = /<script>\/\* Vzhled se musí nastavit[\s\S]*?<\/script>\n?/.exec(sablona);
+  if (!m) throw new Error('migrujPredvykresleni: v předloze není úryvek pro nastavení režimu — změnil se?');
+  /* Musí stát co nejdřív: před prvním stylem i před <body>. Hned za
+     charsetem to splňuje vždycky. */
+  const kotva = /<meta charset="[^"]*">\n/.exec(h);
+  if (!kotva) throw new Error('migrujPredvykresleni: ve stránce není <meta charset> — nemám kam vložit');
+  return h.replace(kotva[0], kotva[0] + m[0].replace(/\n$/, '') + '\n');
+}
+
+export function migrujSkripty(sablona, h) {
+  const VZOR = /<script src="(js\/(?:min\/)?([A-Za-z0-9_-]+)\.js)(?:\?v=[A-Za-z0-9]+)?"([^>]*)><\/script>\n?/g;
+  const zPredlohy = [...sablona.matchAll(VZOR)].map((m) => ({ cela: m[0].replace(/\n$/, ''), jmeno: m[2] }));
+  if (!zPredlohy.length) throw new Error('migrujSkripty: v předloze nejsou žádné skripty js/ — změnil se zápis?');
+  const znam = new Set(zPredlohy.map((x) => x.jmeno));
+
+  /* Nejdřív se ze stránky vyjmou VŠECHNY skripty, které předloha zná;
+     cizí (kdyby někdy nějaký byl) zůstanou na místě. Pak se na místo
+     prvního vyjmutého vloží celá sekvence z předlohy. Tím se opraví
+     i pořadí, ne jen chybějící kusy. */
+  let prvni = -1;
+  let out = h.replace(VZOR, (cela, _adr, jmeno, _zbytek, odkud) => {
+    if (!znam.has(jmeno)) return cela;
+    if (prvni < 0) prvni = odkud;
+    return '';
+  });
+  if (prvni < 0) throw new Error('migrujSkripty: ve stránce není ani jeden skript předlohy — nemám kam vložit');
+  const blok = zPredlohy.map((x) => x.cela).join('\n') + '\n';
+  out = out.slice(0, prvni) + blok + out.slice(prvni);
+  return out;
+}
+
 export function ukoncenaStranka(obsah, den, podobne) {
   let h = obsah;
 
@@ -719,7 +788,7 @@ export function generuj() {
       if (stari >= DNI_ARCHIV) { fs.unlinkSync(cesta); smazano++; continue; }
       /* Už ukončená a ještě ne stará: obsah se nepřepisuje. Jen přepisy,
          které se musí dostat na KAŽDOU stránku webu, projdou i tudy. */
-      const migrovano = migrujRezDat(migrujLeaflet(obsah));
+      const migrovano = migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah))));
       if (migrovano !== obsah) { fs.writeFileSync(cesta, migrovano); prepsano++; }
       continue;
     }
