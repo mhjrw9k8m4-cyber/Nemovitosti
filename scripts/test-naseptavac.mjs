@@ -861,8 +861,30 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   await p.waitForTimeout(1600);
   const poKlepnuti = await stav();
   pravda('klepnutí panel zavře', !poKlepnuti.panelOtevren);
-  pravda('a vytáhne výpis nahoru', poKlepnuti.vypisTop !== null && poKlepnuti.vypisTop <= 220,
-    `před klepnutím ${predKlepnutim.vypisTop} px, po klepnutí ${poKlepnuti.vypisTop} px (okno ${poKlepnuti.okno})`);
+  /* MĚŘÍ SE TO, CO SE TVRDÍ: že je výpis po klepnutí vidět v horní části
+     okna. Dřív tu stála pevná mez 220 px a ta byla naladěná na jedno
+     konkrétní vykreslení — lokálně vycházelo 217 px, tedy průchod
+     o tři pixely. Na běžci v CI je stránka nad výpisem o 52 px vyšší
+     (před klepnutím 1 959 px proti 1 907, po klepnutí 269 proti 217),
+     takže zkouška tam dvanáct běhů z třinácti padala, zatímco lokálně
+     procházela 117 ze 117. Výpis je přitom na 269 px při okně 844
+     normálně vidět — chovalo se správně a padala MEZ, ne web.
+
+     Rozdíl 52 px sám není vada: běžec má jiné vykreslení (jiný build
+     prohlížeče a jiná výchozí písma) a stránka tam prostě vyjde vyšší.
+     Naladit mez znovu by znamenalo jen přesunout ten problém o pár
+     pixelů dál. Kontrola proto žádá dvě věci, které obě plynou z toho,
+     co se tvrdí, a ani jedna nezávisí na pár pixelech:
+       – výpis je v okně a v jeho horní polovině,
+       – a posunul se nahoru proti stavu před klepnutím.
+     Zkoušku to neoslabuje: bez posouvání zůstane výpis na 1 907 px,
+     což je čtyřikrát dál než polovina okna. */
+  pravda('a vytáhne výpis nahoru',
+    poKlepnuti.vypisTop !== null && poKlepnuti.vypisTop >= 0
+      && poKlepnuti.vypisTop <= poKlepnuti.okno / 2
+      && poKlepnuti.vypisTop < predKlepnutim.vypisTop,
+    `před klepnutím ${predKlepnutim.vypisTop} px, po klepnutí ${poKlepnuti.vypisTop} px `
+    + `(okno ${poKlepnuti.okno}, čekáno 0 až ${Math.round(poKlepnuti.okno / 2)})`);
 
   await p.evaluate(() => { document.getElementById('ms-filters').open = true; });
   await p.waitForTimeout(300);
