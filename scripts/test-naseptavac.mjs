@@ -1082,5 +1082,18 @@ await prohlizec.close();
 console.log('\nNašeptávač obcí, oprava překlepu a výběr ceny/výměry');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Našeptávač: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) {
+  /* KAŽDÁ SPADLÁ KONTROLA DOSTANE SVOU ANOTACI. Shrnutí „1 kontrol
+     neprošlo" je v CI k ničemu: anotace u běhu nese jen tuhle větu a
+     nepojmenuje, CO spadlo. Celý výpis je sice v logu kroku, jenže ten
+     se z prostředí, kde pracuju, stahovat nedá (GitHub ho podává z jiného
+     serveru). Tahle zkouška padá v CI dvanáct běhů z posledních třinácti,
+     zatímco lokálně prochází 117 ze 117 — a bez jména kontroly se to
+     hádat nedá. */
+  for (const z of zpravy.filter((x) => x.indexOf('✕') >= 0).slice(0, 12)) {
+    console.log('::error::Našeptávač: ' + z.replace(/\s+/g, ' ').replace(/^ *✕ */, '').trim());
+  }
+  console.log('::error::Našeptávač: ' + chyb + ' kontrol neprošlo.');
+  process.exit(1);
+}
 process.exit(0);
