@@ -29,6 +29,38 @@
      neshodnou ani na velikosti písmen, natož na jméně. */
   var JMENA = ['bpej', 'kod_bpej', 'kodbpej', 'kod', 'bpej_kod', 'bpejkod', 'cislo_bpej'];
 
+  /* Diakritika: služby píšou „Třída ochrany" i „TRIDA_OCHRANY". Jméno se
+     proto skládá na písmena bez háčků a podtržítka, ať se dá srovnávat. */
+  var HACKY = 'áäčďéěíľĺňóôöřŕšťúůüýž';
+  var BEZ   = 'aacdeeillnooorrstuuuyz';
+  function jmenoAtributu(x) {
+    var s = String(x == null ? '' : x).toLowerCase(), v = '';
+    for (var i = 0; i < s.length; i++) {
+      var p = HACKY.indexOf(s.charAt(i));
+      v += p === -1 ? s.charAt(i) : BEZ.charAt(p);
+    }
+    return v.replace(/[^a-z_]/g, '');
+  }
+
+  /* TŘÍDU OCHRANY NEPOČÍTÁME — VRACÍ JI SAMA SLUŽBA.
+     Převod kódu BPEJ na třídu ochrany je tabulka ve vyhlášce 48/2011 Sb.
+     a v repozitáři není, stejně jako tabulka cen. Jenže ona tu tabulku
+     nepotřebujeme: vrstvy úřadů třídu nesou jako vlastní údaj, takže se
+     dá jen přečíst. Je to přitom ta odpověď, kvůli které se lidé na
+     bonitu ptají — u I. a II. třídy stát vynětí ze zemědělského půdního
+     fondu povoluje jen výjimečně, takže se na takovém poli nestaví,
+     i kdyby to územní plán dovoloval. */
+  var JMENA_TRIDA = ['trida', 'trida_ochrany', 'tridaochrany', 'tr_ochrany', 'ochrana', 'trida_och'];
+  /* Třída se píše římsky (I–V), občas s tečkou, občas arabsky. */
+  var RIMSKE = { 1: 'I.', 2: 'II.', 3: 'III.', 4: 'IV.', 5: 'V.' };
+  function normalizujTridu(x) {
+    if (x == null) return null;
+    var t = String(x).trim().toUpperCase().replace(/\.$/, '');
+    if (/^(I|II|III|IV|V)$/.test(t)) return t + '.';
+    if (/^[1-5]$/.test(t)) return RIMSKE[+t];
+    return null;
+  }
+
   /* Pětimístný kód se píše slitě (50810) i po částech (5.08.10). Tvar je
      vždycky 1 + 2 + 2 číslice. */
   var TVAR = /(?:^|[^0-9])([0-9])[.\-\s]?([0-9]{2})[.\-\s]?([0-9]{2})(?:[^0-9]|$)/;
@@ -62,17 +94,13 @@
     return sluzba.url + (sluzba.url.indexOf('?') >= 0 ? '&' : '?') + p.join('&');
   }
 
-  /* Z odpovědi vytáhne kód. Formáty jsou tři a každá služba posílá jiný:
-     JSON (GeoServer), GML/XML (ČÚZK) a HTML tabulka (ArcGIS).
-
-     POŘADÍ JE PODSTATNÉ. Nejdřív se hledá POJMENOVANÝ atribut — tam je kód
-     jistě kód. Teprve když žádný není, zkusí se tvar 1+2+2 kdekoli v textu,
-     a to je záloha, která se může splést: parcelní číslo „5.0810" má
-     stejný tvar. Proto se tvarová shoda bere jen z hodnot atributů, ne
-     z celého dokumentu i s hlavičkami. */
-  function kodZOdpovedi(text) {
-    if (text == null) return null;
-    var s = String(text);
+  /* DVOJICE JMÉNO→HODNOTA. Formáty jsou tři a každá služba posílá jiný:
+     JSON (GeoServer), GML/XML (ČÚZK) a HTML tabulka (ArcGIS). Rozebrání je
+     jen jedno a vytažené sem, aby se přes tytéž dvojice dalo hledat i něco
+     jiného než kód — totiž třída ochrany — a nevznikl druhý, jinak se
+     chovající parser. */
+  function dvojiceZ(text) {
+    var s = String(text == null ? '' : text);
     var dvojice = [];
 
     /* JSON: vlastnosti jsou v properties, ale bereme je i z plochého objektu. */
@@ -94,15 +122,30 @@
       /* HTML tabulka: <th>BPEJ</th><td>5.08.10</td> i <td>BPEJ</td><td>…</td> */
       var rt = /<t[hd][^>]*>\s*([^<]{1,40}?)\s*<\/t[hd]>\s*<t[hd][^>]*>\s*([^<]{1,60}?)\s*<\/t[hd]>/gi, t;
       while ((t = rt.exec(s))) dvojice.push([t[1], t[2]]);
-      /* Prostý text: „BPEJ = 50810" nebo „BPEJ: 5.08.10" */
+      /* Prostý text, číselná hodnota: „BPEJ = 50810" nebo „BPEJ: 5.08.10" */
       var rp = /([A-Za-z_]{3,20})\s*[:=]\s*([0-9.\-\s]{5,12})/g, q;
       while ((q = rp.exec(s))) dvojice.push([q[1], q[2]]);
+      /* Prostý text, krátká slovní hodnota: „Třída ochrany: I." Přidává se
+         ZA číselnou podobu schválně — hledání bere první vyhovující dvojici,
+         takže se dosavadní čtení kódu nemá o co změnit. */
+      var rs = /([A-Za-z\u00C0-\u017F_][A-Za-z\u00C0-\u017F_ ]{2,24})\s*[:=]\s*([A-Za-z0-9]{1,6}\.?)(?![0-9])/g, w;
+      while ((w = rs.exec(s))) dvojice.push([w[1], w[2]]);
     }
 
-    /* 1) pojmenovaný atribut */
+    return dvojice;
+  }
+
+  /* Z odpovědi vytáhne kód.
+
+     POŘADÍ JE PODSTATNÉ. Hledá se POJMENOVANÝ atribut — tam je kód jistě
+     kód. Tvarová shoda 1+2+2 se bere jen z hodnoty takového atributu, ne
+     z celého dokumentu i s hlavičkami: parcelní číslo „5.0810" má stejný
+     tvar. */
+  function kodZOdpovedi(text) {
+    if (text == null) return null;
+    var dvojice = dvojiceZ(text);
     for (var i = 0; i < dvojice.length; i++) {
-      var jm = String(dvojice[i][0] || '').toLowerCase().replace(/[^a-z_]/g, '');
-      if (JMENA.indexOf(jm) === -1) continue;
+      if (JMENA.indexOf(jmenoAtributu(dvojice[i][0])) === -1) continue;
       var k = normalizuj(dvojice[i][1]);
       if (k) return k;
     }
@@ -121,5 +164,26 @@
     return null;
   }
 
-  return { dotazUrl: dotazUrl, kodZOdpovedi: kodZOdpovedi, normalizuj: normalizuj, JMENA: JMENA };
+  /* Třída ochrany ze stejných dvojic. Žádné hádání ani tady: bez
+     pojmenovaného atributu se vrací null. */
+  function tridaZOdpovedi(text) {
+    if (text == null) return null;
+    var d = dvojiceZ(text);
+    for (var i = 0; i < d.length; i++) {
+      if (JMENA_TRIDA.indexOf(jmenoAtributu(d[i][0])) === -1) continue;
+      var t = normalizujTridu(d[i][1]);
+      if (t) return t;
+    }
+    return null;
+  }
+
+  /* Jedním průchodem obojí — tak to volá stránka pozemku. */
+  function precti(text) {
+    return { kod: kodZOdpovedi(text), trida: tridaZOdpovedi(text) };
+  }
+
+  return { dotazUrl: dotazUrl, kodZOdpovedi: kodZOdpovedi, tridaZOdpovedi: tridaZOdpovedi,
+           precti: precti, normalizuj: normalizuj, normalizujTridu: normalizujTridu,
+           JMENA: JMENA, JMENA_TRIDA: JMENA_TRIDA,
+           dvojiceZ: dvojiceZ, jmenoAtributu: jmenoAtributu };
 }));

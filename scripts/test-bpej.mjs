@@ -99,6 +99,76 @@ je('ani prostý pětimístný text bez jména',
 je('chybný zápis (čtyři číslice) se nepřijme', B.normalizuj('5081'), null);
 je('ani text', B.normalizuj('nevím'), null);
 
+/* --- Třída ochrany --------------------------------------------------- */
+/* PROČ SE ČTE A NEPOČÍTÁ. Převod kódu BPEJ na třídu ochrany je tabulka
+   ve vyhlášce 48/2011 Sb., kterou v repozitáři nemáme — stejně jako
+   tabulku cen. Jenže ji nepotřebujeme: vrstvy úřadů třídu nesou jako
+   vlastní údaj. A je to ta odpověď, kvůli které se lidé na bonitu ptají:
+   u I. a II. třídy stát vynětí ze zemědělského půdního fondu povoluje
+   jen výjimečně, takže se na takovém poli nestaví, i kdyby to územní
+   plán dovoloval. */
+je('třída z JSONu (GeoServer)',
+  B.tridaZOdpovedi(JSON.stringify({ features: [{ properties: { KOD_BPEJ: '50810', TRIDA_OCHRANY: 'II.' } }] })), 'II.');
+je('třída z GML (ČÚZK)',
+  B.tridaZOdpovedi('<bpej:KOD_BPEJ>50810</bpej:KOD_BPEJ><bpej:TRIDA>3</bpej:TRIDA>'), 'III.');
+je('třída z HTML tabulky i s háčky',
+  B.tridaZOdpovedi('<tr><th>BPEJ</th><td>5.08.10</td></tr><tr><th>Třída ochrany</th><td>I.</td></tr>'), 'I.');
+je('třída z prostého textu', B.tridaZOdpovedi('BPEJ = 50810\nTrida ochrany: 2'), 'II.');
+
+/* Zápis třídy: římsky, římsky s tečkou, arabsky. Nic jiného. */
+je('římská s tečkou', B.normalizujTridu('IV.'), 'IV.');
+je('římská bez tečky', B.normalizujTridu('IV'), 'IV.');
+je('arabská', B.normalizujTridu('4'), 'IV.');
+je('malými písmeny', B.normalizujTridu('iii'), 'III.');
+je('s mezerami okolo', B.normalizujTridu('  II  '), 'II.');
+je('šestá třída neexistuje', B.normalizujTridu('6'), null);
+je('nula taky ne', B.normalizujTridu('0'), null);
+je('ani VI', B.normalizujTridu('VI'), null);
+je('ani slovo', B.normalizujTridu('vysoká'), null);
+je('ani prázdno', B.normalizujTridu(''), null);
+
+/* PASTI. Aby „třída" nebyla cokoli, co v odpovědi vypadá jako číslice. */
+je('třída pod neznámým jménem se nevydá',
+  B.tridaZOdpovedi(JSON.stringify({ features: [{ properties: { NECO: 'II.' } }] })), null);
+je('ani samotné číslo bez jména', B.tridaZOdpovedi('2'), null);
+je('za třídu se nevydá kód BPEJ',
+  B.tridaZOdpovedi(JSON.stringify({ features: [{ properties: { KOD_BPEJ: '50810' } }] })), null);
+je('ani počet podlaží v jiném atributu',
+  B.tridaZOdpovedi(JSON.stringify({ features: [{ properties: { PODLAZI: '3', KATASTR: 'Brno' } }] })), null);
+je('odpověď bez třídy nevrací nic',
+  B.tridaZOdpovedi('<tr><th>BPEJ</th><td>5.08.10</td></tr>'), null);
+je('prázdná odpověď nevrací třídu', B.tridaZOdpovedi(''), null);
+je('null nevrací třídu', B.tridaZOdpovedi(null), null);
+
+/* Jeden průchod obojí — tak to volá stránka pozemku. */
+je('precti vrátí kód i třídu',
+  B.precti(JSON.stringify({ features: [{ properties: { bpej: '50810', trida_ochrany: '1' } }] })),
+  { kod: '50810', trida: 'I.' });
+je('precti unese odpověď jen s kódem',
+  B.precti(JSON.stringify({ features: [{ properties: { bpej: '50810' } }] })),
+  { kod: '50810', trida: null });
+je('precti unese odpověď jen s třídou',
+  B.precti(JSON.stringify({ features: [{ properties: { trida_ochrany: 'V' } }] })),
+  { kod: null, trida: 'V.' });
+je('precti unese cizí odpověď',
+  B.precti('<html><body>Service unavailable</body></html>'), { kod: null, trida: null });
+
+/* OBĚ ČTENÍ MUSÍ KOUKAT DO TÝCHŽ DVOJIC. Dřív měl kód rozebírání
+   odpovědi uvnitř sebe a třída by si ho musela napsat podruhé — dva
+   parsery, které se časem rozejdou. Tahle kontrola to drží pohromadě:
+   co najde jedno, musí být vidět i v dvojicích, nad kterými hledá druhé. */
+const UKAZKA = '<tr><th>BPEJ</th><td>5.08.10</td></tr><tr><th>Třída ochrany</th><td>I.</td></tr>';
+const PARY = B.dvojiceZ(UKAZKA);
+pravda('dvojiceZ ukázku vůbec rozebere', PARY.length >= 2, 'vyšlo ' + PARY.length + ' dvojic');
+pravda('a jsou v nich jména obou údajů',
+  PARY.some((d) => B.JMENA.indexOf(B.jmenoAtributu(d[0])) >= 0)
+  && PARY.some((d) => B.JMENA_TRIDA.indexOf(B.jmenoAtributu(d[0])) >= 0),
+  'jména: ' + PARY.map((d) => B.jmenoAtributu(d[0])).join(', '));
+
+/* Skládání jmen bez háčků — bez něj by „Třída ochrany" z HTML neprošla. */
+je('jméno se složí bez háčků', B.jmenoAtributu('Třída ochrany'), 'tridaochrany');
+je('a bez čísel a dvojtržek', B.jmenoAtributu('KOD_BPEJ:2'), 'kod_bpej');
+
 console.log('\nBPEJ: dotaz na bod a čtení odpovědi');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

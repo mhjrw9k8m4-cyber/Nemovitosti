@@ -6,6 +6,28 @@
 
   var JMENA = ['bpej', 'kod_bpej', 'kodbpej', 'kod', 'bpej_kod', 'bpejkod', 'cislo_bpej'];
 
+  var HACKY = 'áäčďéěíľĺňóôöřŕšťúůüýž';
+  var BEZ   = 'aacdeeillnooorrstuuuyz';
+  function jmenoAtributu(x) {
+    var s = String(x == null ? '' : x).toLowerCase(), v = '';
+    for (var i = 0; i < s.length; i++) {
+      var p = HACKY.indexOf(s.charAt(i));
+      v += p === -1 ? s.charAt(i) : BEZ.charAt(p);
+    }
+    return v.replace(/[^a-z_]/g, '');
+  }
+
+  var JMENA_TRIDA = ['trida', 'trida_ochrany', 'tridaochrany', 'tr_ochrany', 'ochrana', 'trida_och'];
+
+  var RIMSKE = { 1: 'I.', 2: 'II.', 3: 'III.', 4: 'IV.', 5: 'V.' };
+  function normalizujTridu(x) {
+    if (x == null) return null;
+    var t = String(x).trim().toUpperCase().replace(/\.$/, '');
+    if (/^(I|II|III|IV|V)$/.test(t)) return t + '.';
+    if (/^[1-5]$/.test(t)) return RIMSKE[+t];
+    return null;
+  }
+
   var TVAR = /(?:^|[^0-9])([0-9])[.\-\s]?([0-9]{2})[.\-\s]?([0-9]{2})(?:[^0-9]|$)/;
 
   function normalizuj(s) {
@@ -34,9 +56,8 @@
     return sluzba.url + (sluzba.url.indexOf('?') >= 0 ? '&' : '?') + p.join('&');
   }
 
-  function kodZOdpovedi(text) {
-    if (text == null) return null;
-    var s = String(text);
+  function dvojiceZ(text) {
+    var s = String(text == null ? '' : text);
     var dvojice = [];
 
     try {
@@ -60,11 +81,19 @@
 
       var rp = /([A-Za-z_]{3,20})\s*[:=]\s*([0-9.\-\s]{5,12})/g, q;
       while ((q = rp.exec(s))) dvojice.push([q[1], q[2]]);
+
+      var rs = /([A-Za-z\u00C0-\u017F_][A-Za-z\u00C0-\u017F_ ]{2,24})\s*[:=]\s*([A-Za-z0-9]{1,6}\.?)(?![0-9])/g, w;
+      while ((w = rs.exec(s))) dvojice.push([w[1], w[2]]);
     }
 
+    return dvojice;
+  }
+
+  function kodZOdpovedi(text) {
+    if (text == null) return null;
+    var dvojice = dvojiceZ(text);
     for (var i = 0; i < dvojice.length; i++) {
-      var jm = String(dvojice[i][0] || '').toLowerCase().replace(/[^a-z_]/g, '');
-      if (JMENA.indexOf(jm) === -1) continue;
+      if (JMENA.indexOf(jmenoAtributu(dvojice[i][0])) === -1) continue;
       var k = normalizuj(dvojice[i][1]);
       if (k) return k;
     }
@@ -72,5 +101,23 @@
     return null;
   }
 
-  return { dotazUrl: dotazUrl, kodZOdpovedi: kodZOdpovedi, normalizuj: normalizuj, JMENA: JMENA };
+  function tridaZOdpovedi(text) {
+    if (text == null) return null;
+    var d = dvojiceZ(text);
+    for (var i = 0; i < d.length; i++) {
+      if (JMENA_TRIDA.indexOf(jmenoAtributu(d[i][0])) === -1) continue;
+      var t = normalizujTridu(d[i][1]);
+      if (t) return t;
+    }
+    return null;
+  }
+
+  function precti(text) {
+    return { kod: kodZOdpovedi(text), trida: tridaZOdpovedi(text) };
+  }
+
+  return { dotazUrl: dotazUrl, kodZOdpovedi: kodZOdpovedi, tridaZOdpovedi: tridaZOdpovedi,
+           precti: precti, normalizuj: normalizuj, normalizujTridu: normalizujTridu,
+           JMENA: JMENA, JMENA_TRIDA: JMENA_TRIDA,
+           dvojiceZ: dvojiceZ, jmenoAtributu: jmenoAtributu };
 }));

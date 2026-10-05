@@ -665,9 +665,25 @@
         if (!u) { dal(); return; }
         fetch(u, { mode: 'cors' }).then(function (r) { return r.ok ? r.text() : ''; })
           .then(function (t) {
-            var kod = global.PKBpej.kodZOdpovedi(t);
-            if (kod) dopis('BPEJ na tomhle místě: ' + kod + '.');
-            else dal();
+            var o = global.PKBpej.precti(t);
+            if (!o.kod && !o.trida) { dal(); return; }
+            /* CO SE NAPÍŠE. Kód sám je pětimístné číslo, které člověku
+               neřekne nic. Třída ochrany ano, a je to ta odpověď, kvůli
+               které se na bonitu ptá: u I. a II. třídy stát vynětí ze
+               zemědělského půdního fondu povoluje jen výjimečně, takže
+               se na takovém poli nestaví, i kdyby to územní plán
+               dovoloval. Proto se u nich píše i ta věta.
+               Úřední cena se tu NEPOČÍTÁ — tabulka z vyhlášky 298/2014
+               Sb. v repozitáři není a vymýšlet ceny půdy web nesmí. */
+            var v = [];
+            if (o.kod) v.push('BPEJ na tomhle místě: ' + o.kod + '.');
+            if (o.trida === 'I.' || o.trida === 'II.') {
+              v.push('Třída ochrany ' + o.trida + ' — nejkvalitnější půda, vynětí ze'
+                + ' zemědělského půdního fondu stát povoluje jen výjimečně.');
+            } else if (o.trida) {
+              v.push('Třída ochrany ' + o.trida + ' z pěti (I. je nejkvalitnější).');
+            }
+            dopis(v.join(' '));
           })
           .catch(function () { dal(); });
       }
