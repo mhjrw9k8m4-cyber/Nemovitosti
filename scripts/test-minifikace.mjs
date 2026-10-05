@@ -153,7 +153,25 @@ pravda('a ušetří to aspoň 100 kB', usetreno > 100 * 1024,
 {
   const JS = path.join(KOREN, 'js');
   const MIN = path.join(JS, 'min');
-  const zdroje = fs.readdirSync(JS).filter((f) => f.endsWith('.js'));
+  /* OČIŠTĚNOU KOPII MÁ MÍT JEN TO, CO SI NĚJAKÁ STRÁNKA BERE.
+     Ne všechno v js/ je pro prohlížeč: js/druh.js používá stahovač dat
+     a js/opakovana-kontrola.js kontrola inzerátů (oba běží v Node),
+     a js/mereni-hlavicky.js si úvodní stránka natahuje jen s „?mereni"
+     v adrese, a to neočištěný. Kopie těch tří se přesto vyráběly
+     a publikovaly — 10,9 kB souborů, které si nikdo nestáhne.
+     Hledá se obojí zápis (js/… i js/min/…), protože čerstvě vysázená
+     stránka odkazuje na první a po přepisu odkazů na druhý. */
+  const vsechny = fs.readdirSync(JS).filter((f) => f.endsWith('.js'));
+  const pouzite = new Set();
+  for (const f of fs.readdirSync(KOREN)) {
+    if (!f.endsWith('.html')) continue;
+    const h = fs.readFileSync(path.join(KOREN, f), 'utf8');
+    const vzor = /(?:src|href)="js\/(?:min\/)?([A-Za-z0-9_-]+)\.js/g;
+    let m;
+    while ((m = vzor.exec(h))) pouzite.add(m[1] + '.js');
+  }
+  const zdroje = vsechny.filter((f) => pouzite.has(f));
+  const jenProBuild = vsechny.filter((f) => !pouzite.has(f));
   pravda(`v js/ se našly skripty (${zdroje.length}) — jinak se nic neporovnává`,
     zdroje.length > 40, `nalezeno ${zdroje.length}`);
   pravda('js/min/ existuje', fs.existsSync(MIN), 'spusťte node scripts/minifikace.mjs');
@@ -220,7 +238,18 @@ pravda('a ušetří to aspoň 100 kB', usetreno > 100 * 1024,
     if (kopie.includes('/*') || /(^|[^:\\`'"])\/\//.test(kopie)) skomentarem.push(f);
   }
   fs.rmSync(tmp, { recursive: true, force: true });
-  pravda('každý skript má očištěnou kopii', chybejici.length === 0,
+  /* A OBRÁCENĚ: co si žádná stránka nebere, nesmí mít kopii v js/min/.
+     Tahle kontrola tu chyběla a právě tudy se tři mrtvé soubory
+     publikovaly. Horší než zbytečnost je past: kdo takovou kopii uvidí,
+     může ji omylem zapojit do stránky — u mereni-hlavicky.js by si tím
+     na web pustil měřidlo pro ladění. */
+  pravda(`moduly jen pro build se našly (${jenProBuild.length})`, jenProBuild.length > 0,
+    'ani jeden — pak kontrola pod tím nic neměří');
+  const zbytecneKopie = jenProBuild.filter((f) => fs.existsSync(path.join(MIN, f)));
+  pravda('a žádný z nich nemá očištěnou kopii, kterou si nikdo nestáhne',
+    zbytecneKopie.length === 0, `zbytečně se publikuje: ${zbytecneKopie.join(', ')}`);
+
+  pravda('každý skript, který si stránka bere, má očištěnou kopii', chybejici.length === 0,
     `${chybejici.length} chybí: ` + chybejici.slice(0, 3).join(', '));
   pravda('žádná kopie není zapomenutá po úpravě zdroje', zastarale.length === 0,
     `${zastarale.length} neodpovídá: ` + zastarale.slice(0, 3).join(', ') + ' — spusťte node scripts/oprav.mjs');

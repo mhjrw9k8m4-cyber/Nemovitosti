@@ -1724,6 +1724,78 @@
     };
   } catch (e) {}
 
+  var vrstvyBtn = document.getElementById('map-vrstvy');
+  var vrstvyPanel = document.getElementById('map-vrstvy-panel');
+  var vrstvyZive = {};
+  var vrstvyNacteno = false;
+  var VRSTVY_OD_ZOOMU = 10;
+
+  function vrstvyViditelnost() {
+    if (!vrstvyBtn) return;
+    var jde = map.getZoom() >= VRSTVY_OD_ZOOMU;
+    vrstvyBtn.hidden = !jde;
+    if (!jde && vrstvyPanel) {
+      vrstvyPanel.hidden = true;
+      vrstvyBtn.setAttribute('aria-pressed', 'false');
+    }
+  }
+
+  function vrstvyPrepinac(zapis) {
+    var def = zapis.def;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mv-v';
+    b.setAttribute('data-id', def.id);
+    b.setAttribute('aria-pressed', 'false');
+    b.textContent = def.nazev;
+    b.title = def.popis || '';
+    b.addEventListener('click', function () {
+      if (vrstvyZive[def.id]) {
+        map.removeLayer(vrstvyZive[def.id]);
+        delete vrstvyZive[def.id];
+        b.classList.remove('on');
+        b.setAttribute('aria-pressed', 'false');
+      } else {
+        var v = window.PK_VRSTVY.leafletVrstva(zapis, L);
+        if (!v) return;
+        v.addTo(map);
+
+        if (v.bringToBack) v.bringToBack();
+        vrstvyZive[def.id] = v;
+        b.classList.add('on');
+        b.setAttribute('aria-pressed', 'true');
+      }
+    });
+    if (vrstvyPanel) vrstvyPanel.appendChild(b);
+  }
+
+  if (vrstvyBtn && vrstvyPanel) {
+    vrstvyBtn.addEventListener('click', function () {
+      var otevreno = vrstvyBtn.getAttribute('aria-pressed') === 'true';
+      vrstvyBtn.setAttribute('aria-pressed', otevreno ? 'false' : 'true');
+      vrstvyPanel.hidden = otevreno;
+      if (otevreno || vrstvyNacteno) return;
+      vrstvyNacteno = true;
+      if (!window.PK_VRSTVY) { vrstvyPanel.textContent = 'Vrstvy se nepodařilo načíst.'; return; }
+      vrstvyPanel.textContent = 'Zkouším, které vrstvy odpovídají…';
+      var s2 = map.getCenter();
+      var prvni = true;
+      window.PK_VRSTVY.pripravene({ lat: s2.lat, lng: s2.lng }, function (zapis) {
+        if (prvni) { vrstvyPanel.textContent = ''; prvni = false; }
+        vrstvyPrepinac(zapis);
+      }).then(function (vse) {
+
+        if (!vse || !vse.length) {
+          vrstvyPanel.textContent = 'Vrstvy úřadů teď neodpovídají. Mapa i tak funguje.';
+        }
+      }).catch(function () {
+        vrstvyPanel.textContent = 'Vrstvy úřadů teď neodpovídají. Mapa i tak funguje.';
+      });
+    });
+    map.on('zoomend', vrstvyViditelnost);
+    vrstvyViditelnost();
+  }
+
   function updateMapView() {
     if (krajLayer && !map.hasLayer(krajLayer)) krajLayer.addTo(map);
     renderDots(lastVis);

@@ -2185,3 +2185,8 @@ header,.map-legend,.map-tools,.kraj-hint{transition:transform var(--cas-zakladni
 #leaflet-map.kresli{touch-action:none;cursor:crosshair}
 #leaflet-map.kresli .leaflet-grab{cursor:crosshair}
 #map-kresli.on{background:var(--plocha-znacka);color:#fff;border-color:var(--plocha-znacka)}
+.map-vrstvy-panel{display:flex;flex-direction:column;align-items:stretch;gap:4px;margin-top:6px;padding:6px;max-width:240px;background:var(--plocha-plovouci);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--e2);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.map-vrstvy-panel[hidden]{display:none}
+.mv-v{appearance:none;border:1px solid var(--line);background:transparent;color:inherit;font-family:inherit;font-size:13px;font-weight:600;padding:8px 10px;border-radius:var(--r-sm);cursor:pointer;text-align:left;transition:background var(--cas-zakladni) var(--ease),border-color var(--cas-zakladni) var(--ease)}
+.mv-v.on{background:var(--plocha-znacka);color:#fff;border-color:var(--plocha-znacka)}
+#map-vrstvy.on,#map-vrstvy[aria-pressed="true"]{background:var(--plocha-znacka);color:#fff;border-color:var(--plocha-znacka)}

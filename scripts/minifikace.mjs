@@ -276,9 +276,40 @@ function prepisOdkazy(kontrolaJen) {
    Naměřeno: js/ má 982 kB, z toho 412 kB komentářů; přes drát (brotli)
    329 kB proti 162 kB, tedy o 51 % méně. Domovská stránka sama tahá
    deset z těch souborů. */
+/* KTERÉ MODULY SI STRÁNKY OPRAVDU BEROU.
+ *
+ * Ne všechno v js/ je pro prohlížeč. js/druh.js používá stahovač dat
+ * a js/opakovana-kontrola.js kontrola inzerátů — oba běží v Node, na
+ * žádné stránce nejsou. A js/mereni-hlavicky.js si úvodní stránka
+ * natahuje jen s „?mereni" v adrese, a to v NEMINIFIKOVANÉ podobě,
+ * protože je to měřidlo pro ladění na telefonu.
+ *
+ * Očištěné kopie těch tří se přesto vyráběly a publikovaly: 10,9 kB
+ * souborů, které si nikdo nestáhne, a práce navíc při každém sestavení.
+ * Horší než zbytečnost je ale past — kdo takovou kopii uvidí, může ji
+ * omylem zapojit do stránky a dostane měřidlo pro ladění.
+ *
+ * Hledá se OBOJÍ zápis: čerstvě vygenerovaná stránka odkazuje do js/
+ * a po přepisu odkazů do js/min/. Kdyby se hledal jen
+ * jeden, při jednom ze dvou stavů by vyšlo, že modul nikdo nepoužívá,
+ * a jeho kopie by se smazala uprostřed sestavení. */
+function pouzivaneStrankami() {
+  const pouzite = new Set();
+  for (const f of fs.readdirSync(KOREN)) {
+    if (!f.endsWith('.html')) continue;
+    const h = fs.readFileSync(path.join(KOREN, f), 'utf8');
+    const vzor = /(?:src|href)="js\/(?:min\/)?([A-Za-z0-9_-]+)\.js/g;
+    let m;
+    while ((m = vzor.exec(h))) pouzite.add(m[1] + '.js');
+  }
+  return pouzite;
+}
+
 function minifikujJs(kontrolaJen) {
-  const zdroje = fs.readdirSync(path.join(KOREN, 'js'))
+  const pouzite = pouzivaneStrankami();
+  const vsechny = fs.readdirSync(path.join(KOREN, 'js'))
     .filter((f) => f.endsWith('.js') && !f.endsWith('.min.js')).sort();
+  const zdroje = vsechny.filter((f) => pouzite.has(f));
   const chyby = [];
   let pred = 0, po = 0, zapsano = 0;
   if (!kontrolaJen) fs.mkdirSync(JS_MIN, { recursive: true });
@@ -293,15 +324,19 @@ function minifikujJs(kontrolaJen) {
     fs.writeFileSync(cil, out);
     zapsano++;
   }
-  /* Zdroj smazán, kopie zůstala — stránka by pak stahovala mrtvý kód. */
+  /* Kopie bez zdroje NEBO bez stránky, která by si ji vzala. V obojím
+     případě je to soubor, který se publikuje a nikdo ho nestáhne. */
   const zbytecne = fs.existsSync(JS_MIN)
     ? fs.readdirSync(JS_MIN).filter((f) => f.endsWith('.js') && !zdroje.includes(f))
     : [];
   for (const f of zbytecne) {
-    if (kontrolaJen) chyby.push(`js/min/${f} nemá zdroj v js/`);
-    else fs.unlinkSync(path.join(JS_MIN, f));
+    if (kontrolaJen) {
+      chyby.push(vsechny.includes(f)
+        ? `js/min/${f} si nebere žádná stránka`
+        : `js/min/${f} nemá zdroj v js/`);
+    } else fs.unlinkSync(path.join(JS_MIN, f));
   }
-  return { chyby, pred, po, zapsano, kolik: zdroje.length };
+  return { chyby, pred, po, zapsano, kolik: zdroje.length, mimo: vsechny.length - zdroje.length };
 }
 
 export function spust(kontrolaJen = false) {

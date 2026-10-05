@@ -5691,3 +5691,21 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 /* Zapnuté kreslítko musí být poznat — jinak člověk táhne mapou a diví se,
    že se nehýbe. */
 #map-kresli.on{background:var(--plocha-znacka); color:#fff; border-color:var(--plocha-znacka);}
+
+/* ---------- VRSTVY ÚŘADŮ NA HLAVNÍ MAPĚ ------------------------------
+   Panel se rozbaluje pod tlačítkem „Vrstvy" v nástrojích mapy.
+   Barvy se nenastavují: dědí se z karty, takže mají zaručeně tentýž
+   kontrast jako okolní ovládání (na tohle jsem u legendy cenové mapy
+   už jednou narazil — --ink-soft je plocha, ne text). */
+.map-vrstvy-panel{display:flex; flex-direction:column; align-items:stretch; gap:4px;
+  margin-top:6px; padding:6px; max-width:240px;
+  background:var(--plocha-plovouci); border:1px solid var(--line);
+  border-radius:var(--r-md); box-shadow:var(--e2);
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);}
+.map-vrstvy-panel[hidden]{display:none;}
+.mv-v{appearance:none; border:1px solid var(--line); background:transparent;
+  color:inherit; font-family:inherit; font-size:13px; font-weight:600;
+  padding:8px 10px; border-radius:var(--r-sm); cursor:pointer; text-align:left;
+  transition:background var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
+.mv-v.on{background:var(--plocha-znacka); color:#fff; border-color:var(--plocha-znacka);}
+#map-vrstvy.on,#map-vrstvy[aria-pressed="true"]{background:var(--plocha-znacka); color:#fff; border-color:var(--plocha-znacka);}

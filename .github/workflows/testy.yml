@@ -364,6 +364,9 @@ jobs:
       - name: Obarvení teček podle ceny (levnější je modřejší)
         run: node scripts/test-barva-ceny.mjs
 
+      - name: Vrstvy úřadů na hlavní mapě (až na vyžádání)
+        run: node scripts/test-vrstvy-mapa.mjs
+
       - name: Předvyplnění inzerátu z odkazu
         run: node scripts/test-predvyplneni.mjs
 

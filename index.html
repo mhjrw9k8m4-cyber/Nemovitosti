@@ -131,7 +131,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=334af126">
+  <link rel="stylesheet" href="css/styles.min.css?v=bc2f404b">
 </head>
 <body>
 
@@ -473,6 +473,17 @@
                    a zelená za 2 400 Kč/m² vypadají stejně. -->
               <button class="map-reset" id="map-barva" type="button" aria-pressed="false"
                 aria-label="Obarvit tečky podle ceny za metr"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h3v3H4zM10 13h3v8h-3zM16 7h3v14h-3z"/></svg>Podle ceny</button>
+              <!-- VRSTVY ÚŘADŮ. Hranice parcel, územní plán, záplavy, bonita
+                   půdy a ochrana přírody byly jen v mapě u jednotlivého
+                   pozemku — tedy až na konci cesty. Na hlavní mapě, kde si
+                   člověk vybírá, kam vůbec jet, nebyly vůbec.
+                   Tlačítko se ukáže AŽ PO PŘIBLÍŽENÍ: při pohledu na celou
+                   republiku se žádná z nich nevykreslí (nejnižší z nich
+                   začíná na zoomu 10), takže by to byl přepínač, po kterém
+                   se nic nestane. -->
+              <button class="map-reset" id="map-vrstvy" type="button" aria-pressed="false" hidden
+                aria-label="Vrstvy úřadů v mapě"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 17l9 5 9-5"/></svg>Vrstvy</button>
+              <div class="map-vrstvy-panel" id="map-vrstvy-panel" hidden role="group" aria-label="Vrstvy úřadů"></div>
               <!-- Přepínač podkladu. Stojí vedle „Celá ČR", protože obojí
                    je o tom, CO je na mapě vidět, ne o tom, co se v ní hledá. -->
               <div class="map-podklad" id="map-podklad" role="group" aria-label="Podklad mapy">
@@ -741,7 +752,8 @@
 <script src="js/min/okruh.js?v=f11683ef" defer></script>
 <script src="js/min/klic.js?v=17fa93b6"></script>
 <script src="js/min/videno.js?v=a269d74b"></script>
-<script src="js/min/main.js?v=04ace535" defer></script>
+<script src="js/min/mapove-vrstvy.js?v=93a96d67" defer></script>
+<script src="js/min/main.js?v=7cacf817" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,
