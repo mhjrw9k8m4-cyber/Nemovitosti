@@ -185,17 +185,26 @@ export async function spust() {
     const iO = new Map(okresy.map((x, i) => [x, i]));
     const iD = new Map(druhy.map((x, i) => [x, i]));
     const iT = new Map(typy.map((x, i) => [x, i]));
-    const o = [], d = [], t = [], a = [], c = [];
+    const o = [], d = [], t = [], a = [], c = [], la = [], lo = [];
     for (const x of vse) {
       o.push(iO.get(x.okres || '')); d.push(iD.get(x.druh || '')); t.push(iT.get(x.type || ''));
       a.push(x.area || 0); c.push(x.price || 0);
+      /* SOUŘADNICE JAKO CELÁ ČÍSLA, ZAOKROUHLENÉ NA ČTYŘI DESETINNÁ
+         MÍSTA (asi 11 m). Model je potřebuje: obvyklá cena se počítá
+         z nejbližších nabídek v okolí, ne jen z okresu — naměřeno, že je
+         to přesnější (scripts/mericka-odhadu.mjs). Na hledání deseti
+         nejbližších do 25 km je deset metrů přesnost až zbytečná, a na
+         pěti místech by soubor narostl o 6 kB přes drát.
+         Na TUTÉŽ přesnost zaokrouhluje i postav() v js/ceny.js, aby
+         model z malého souboru dal totéž co z plných dat. */
+      la.push(Math.round((x.lat || 0) * 1e4)); lo.push(Math.round((x.lng || 0) * 1e4));
     }
     return Object.assign({}, hlavicka, {
       rez: { uroven: 'model', nazev: null, soubor: 'data/model.json', pocet: vse.length },
-      popis: 'Vstup cenového modelu: pět polí, která z uložených nabídek čte js/ceny.js. '
+      popis: 'Vstup cenového modelu: pole, která z uložených nabídek čte js/ceny.js. '
         + 'Sloupcově a se slovníky, ať je to malé. Pole o/d/t jsou indexy do okresy/druhy/typy, '
-        + 'a je výměra v m², c cena v Kč.',
-      okresy, druhy, typy, o, d, t, a, c,
+        + 'a je výměra v m², c cena v Kč, la/lo souřadnice ×10 000 (celá čísla).',
+      okresy, druhy, typy, o, d, t, a, c, la, lo,
     });
   })();
   const bajtuModel = zapis('data/model.json', modelVstup);

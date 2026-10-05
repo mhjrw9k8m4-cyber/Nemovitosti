@@ -118,6 +118,9 @@
   };
   /** „ve Středočeském kraji" / „na Vysočině" / „v okrese Benešov". */
   function kdeText(uroven, nazev) {
+    /* Okolí se jmenuje poloměrem, ne obcí: je to kruh kolem pozemku,
+       ne správní jednotka, a tvářit se jinak by bylo nepřesné. */
+    if (uroven === 'okoli') return 'v okolí do ' + nazev;
     if (uroven === 'okres') return 'v okrese ' + nazev;
     return KRAJ_KDE[nazev] || ('v kraji ' + nazev);
   }
@@ -140,20 +143,42 @@
    * Když se ceny srovnávaných pozemků mezi sebou liší málo, je medián
    * pevný. Když se liší o násobky, je medián náhoda — a číslo pod ním
    * taky. Měřítkem je mezikvartilové rozpětí dělené mediánem: 0 znamená
-   * „všechny stejné", 2 znamená „prostřední polovina se liší dvojnásobkem
-   * mediánu".
+   * „všechny stejné", 1,2 znamená „prostřední polovina se liší o 1,2
+   * mediánu" — a protože dolní kvartil je vždy pod mediánem, znamená to
+   * taky, že horní kvartil je nejmíň 2,2krát vyšší než dolní. Naměřeno
+   * na označených odhadech: nejmíň 2,6krát, obvykle 4,8krát. Text „ceny
+   * se mezi sebou liší násobky" tedy není nadsázka u žádného z nich.
    *
-   * Že to není dojem, ukázalo měření BEZ použití ceny měřeného pozemku
-   * (tedy bez kruhu): data se rozpůlila a z každé půlky se postavil
-   * samostatný model. Kde je rozptyl malý, obě půlky se o témž pozemku
-   * shodnou na 8–20 %. Nad 2 se rozcházejí o 41 % a nad 3 o 73 % — tedy
-   * o víc, než kolik činí celá slevá, o které bychom člověku psali.
-   * Takový odhad se nesmí podávat jako číslo, které něco znamená.
-   * Na ostrých datech se to týká 34 ze 403 štítků „pod odhadem".
+   * ČÍM SE HRANICE OVĚŘILA. Ne dojmem, a ne ani srovnáním modelu se sebou:
+   * desetinovým křížovým měřením, ve kterém model cenu odhadovaného
+   * pozemku NEVIDÍ (postaví se z devíti desetin dat a odhaduje tu
+   * desátou). U označených odhadů je medián chyby 44–51 %, u ostatních
+   * 23–24 % — tedy dvojnásobek, a shodně při šesti různých rozdělení do
+   * desetin (poměr 1,90 až 2,11). Tolik se mýlit a tvrdit přitom částku
+   * na korunu nelze.
+   *
+   * HRANICE SE MUSELA PŘEPOČÍTAT, když se první krok srovnání změnil na
+   * deset nejbližších pozemků do 25 km. Dřív se srovnávalo s celým
+   * okresem nebo krajem, kde jsou ceny roztahanější (medián rozptylu
+   * 0,80), a hranice 2 tam dávala smysl. V okolí je rozptyl těsnější
+   * (medián 0,47), takže 2 najednou označovalo jen 4 % odhadů — a u těch
+   * byla chyba 32 % proti 26 % u neoznačených, tedy skoro žádný rozdíl.
+   * Příznak tím přestal cokoli oddělovat. Měření na pěti hranicích:
+   *
+   *   hranice  označeno  chyba označených / ostatních  štítků „pod odhadem"
+   *   0,75     33 %      44 % / 21 %                   43 %  (moc)
+   *   1,0      20 %      52 % / 22 %                   29 %  (moc)
+   *   1,2      14 %      46 % / 23 %                   18 %
+   *   1,5       8 %      46 % / 25 %                   12 %  (slabší odstup)
+   *   2,0       5 %      32 % / 26 %                    6 %  (neoddělí nic)
+   *
+   * 1,2 je nejnižší hranice, u které „nejistých" zůstává menšina štítků
+   * „pod odhadem" (18 % ze 488) — nad ní by z varování byl šum — a zároveň
+   * nejvyšší, u které odstup chyby drží dvojnásobek při každém rozdělení.
    *
    * Velikost vzorku NIC nepředpovídá (rozchod 13 % u vzorku do deseti
    * nabídek, 15 % u dvaceti) — proto se hlídá rozptyl, ne počet. */
-  var MEZ_ROZPTYL = 2;
+  var MEZ_ROZPTYL = 1.2;
 
   /* ROZBALENÍ SLOUPCOVÉHO VSTUPU MODELU (data/model.json).
    *
@@ -175,6 +200,7 @@
     if (!j || !Array.isArray(j.a) || !Array.isArray(j.c)) return null;
     var okresy = j.okresy || [], druhy = j.druhy || [], typy = j.typy || [];
     var o = j.o || [], d = j.d || [], t = j.t || [], a = j.a, c = j.c;
+    var la = j.la || [], lo = j.lo || [];
     var n = a.length;
     if (!n || c.length !== n || o.length !== n || d.length !== n || t.length !== n) return null;
     var ven = new Array(n);
@@ -185,6 +211,8 @@
         type: typy[t[i]] || '',
         area: a[i],
         price: c[i],
+        lat: la[i] ? la[i] / 1e4 : 0,
+        lng: lo[i] ? lo[i] / 1e4 : 0,
         /* Příznak podílu ve vstupu není a nemá být: model ho čte vždy
            z nabídky, o které se rozhoduje, ne z uložených polí. */
       };
@@ -210,6 +238,12 @@
     var nabidkyOkres = {};  // druh|okres → ceny za m² POUZE z běžných nabídek
     var nabidkyKraj = {};
     var nabidkyCR = {};
+    /* Přihrádky po půl stupni (asi 55 × 35 km). Hledá se v devíti
+       sousedních, takže kruh 25 km se do nich vždycky vejde — a místo
+       dvou tisíc nabídek se projde pár desítek. Bez toho by úvodní mapa
+       počítala vzdálenosti dva miliony krát. */
+    var OKOLI_PRIHRADKA = 0.5;
+    var okoliPrihradky = {};
 
     DATA.forEach(function (d) {
       if (!hasArea(d) || !d.price) return;
@@ -255,6 +289,22 @@
       // dvanáctihektarový pozemek nejde poměřovat mediánem postaveným
       // z tisícimetrových parcel — vyšel by vždycky jako trhák.
       var z = { a: d.area, m: m2 };
+      /* ---- OKOLÍ: tytéž ceny, ale se souřadnicemi ----
+         Hranice okresu je úřední čára a cena se po ní neláme. Naměřeno
+         křížově na desetinách (scripts/mericka-odhadu.mjs, čtyři různá
+         rozdělení dat): odhad z deseti nejbližších nabídek téhož druhu
+         do 25 km má medián chyby o 1,7 až 3,0 p.b. nižší než dnešní
+         žebřík okres → kraj, a znaménkový test je pokaždé pro
+         (např. 388 nabídek blíž proti 319 dál).
+         Souřadnice se zaokrouhlují na čtyři desetinná místa (asi 11 m),
+         protože na tutéž přesnost je ukládá data/model.json — jinak by
+         model z malého souboru dal jiné číslo než z plných dat. */
+      if (isFinite(d.lat) && isFinite(d.lng)) {
+        var zz = { a: d.area, m: m2,
+          lat: Math.round(d.lat * 1e4) / 1e4, lng: Math.round(d.lng * 1e4) / 1e4 };
+        var klic = g + '|' + Math.floor(zz.lat / OKOLI_PRIHRADKA) + '|' + Math.floor(zz.lng / OKOLI_PRIHRADKA);
+        (okoliPrihradky[klic] = okoliPrihradky[klic] || []).push(zz);
+      }
       (nabidkyCR[g] = nabidkyCR[g] || []).push(z);
       if (d.okres) (nabidkyOkres[g + '|' + d.okres] = nabidkyOkres[g + '|' + d.okres] || []).push(z);
       var kraj = okresKraj[d.okres];
@@ -335,6 +385,59 @@
         SKLON[g] = r2 >= R2_MEZ ? b : 0;
       });
     }());
+
+    /* ---- CENY Z OKOLÍ POZEMKU ----
+       Vrátí SEŘAZENÉ pole cen za m² z OKOLI_K nejbližších nabídek téhož
+       druhu do OKOLI_R km, přepočtených na výměru odhadovaného pozemku
+       týmž sklonem, jakým to dělá ceny(). Když jich tolik není, vrátí
+       null a odhad pokračuje okresem a krajem jako dřív.
+
+       Nefiltruje se tu podle výměry (jak to dělá ceny() svým oknem):
+       změřená varianta brala deset nejbližších bez ohledu na velikost
+       a přepočet sklonem si s rozdílem poradí. Filtrovat navíc by
+       znamenalo měřit něco jiného, než co se naměřilo. */
+    var OKOLI_K = 10;
+    var OKOLI_R = 25;
+    function kmVzdalenost(aLat, aLng, bLat, bLng) {
+      var R = 6371, r = Math.PI / 180;
+      var dx = (bLat - aLat) * r, dy = (bLng - aLng) * r;
+      var h = Math.sin(dx / 2) * Math.sin(dx / 2)
+        + Math.cos(aLat * r) * Math.cos(bLat * r) * Math.sin(dy / 2) * Math.sin(dy / 2);
+      return 2 * R * Math.asin(Math.sqrt(Math.min(1, h)));
+    }
+    function okoliCeny(d, g) {
+      if (!isFinite(d.lat) || !isFinite(d.lng) || !hasArea(d)) return null;
+      var lat = Math.round(d.lat * 1e4) / 1e4, lng = Math.round(d.lng * 1e4) / 1e4;
+      var pi = Math.floor(lat / OKOLI_PRIHRADKA), pj = Math.floor(lng / OKOLI_PRIHRADKA);
+      var bliz = [];
+      for (var i = -1; i <= 1; i++) {
+        for (var j = -1; j <= 1; j++) {
+          var pole = okoliPrihradky[g + '|' + (pi + i) + '|' + (pj + j)];
+          if (!pole) continue;
+          for (var n = 0; n < pole.length; n++) {
+            var x = pole[n];
+            /* Sám sebe do srovnání ne: porovnávat cenu s cenou téhož
+               pozemku by odhad vždycky přitáhlo k ní. */
+            if (x.lat === lat && x.lng === lng && x.a === d.area && x.m * x.a === d.price) continue;
+            var vzd = kmVzdalenost(lat, lng, x.lat, x.lng);
+            if (vzd > OKOLI_R) continue;
+            bliz.push({ vzd: vzd, a: x.a, m: x.m });
+          }
+        }
+      }
+      if (bliz.length < OKOLI_K) return null;
+      /* Při shodné vzdálenosti rozhoduje výměra a pak cena — ať je pořadí
+         dané daty, ne pořadím v souboru. */
+      bliz.sort(function (p, q) { return (p.vzd - q.vzd) || (p.a - q.a) || (p.m - q.m); });
+      var b = SKLON[g] || 0;
+      var ven = [];
+      for (var k = 0; k < OKOLI_K; k++) {
+        var y = bliz[k];
+        ven.push(b ? y.m * Math.pow(d.area / y.a, b) : y.m);
+      }
+      ven.sort(function (p, q) { return p - q; });
+      return ven;
+    }
 
     /* Výměra a cena za m² zůstávají spolu; řadí se až vybraný výřez.
        Když pro druh máme spolehlivý sklon, ceny se přepočítají na výměru
@@ -548,11 +651,16 @@
          zůstává: napřed podle velikosti (okres, kraj), potom bez ohledu
          na ni. */
       var kroky = [];
+      /* OKOLÍ JDE PRVNÍ. Je to nejtěsnější srovnání, jaké máme: deset
+         nejbližších pozemků téhož druhu. Když jich tolik do 25 km není
+         (řídké okresy), ustoupí se na okres a kraj jako dřív. */
+      var okoli = okoliCeny(d, g);
+      if (okoli) kroky.push({ arr: okoli, uroven: 'okoli', kde: OKOLI_R + ' km', podleVelikosti: true });
       zdroje.forEach(function (z) { kroky.push({ pole: z.pole, plocha: d.area, uroven: z.uroven, kde: z.kde, podleVelikosti: true }); });
       zdroje.forEach(function (z) { kroky.push({ pole: z.pole, plocha: 0, uroven: z.uroven, kde: z.kde, podleVelikosti: false }); });
       for (var i = 0; i < kroky.length; i++) {
         var k = kroky[i];
-        k.arr = ceny(k.pole, k.plocha, g);
+        if (!k.arr) k.arr = ceny(k.pole, k.plocha, g);
         if (!k.arr || k.arr.length < MIN_VZOREK) continue;
         var med = median(k.arr);
         if (!med) continue;
@@ -649,7 +757,10 @@
       neduveryhodna: neduveryhodna,
       percentil: percentil,
       odhad: odhad,
-      medianTypu: medianTypu
+      medianTypu: medianTypu,
+      /* Ven kvůli scripts/mericka-odhadu.mjs: měřidlo porovnává varianty
+         odhadu a potřebuje týž sklon, jaký používá model sám. */
+      sklon: SKLON
     };
   }
 

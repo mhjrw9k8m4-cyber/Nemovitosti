@@ -15,6 +15,7 @@
 //    protože celostátní medián o konkrétním okrese nevypovídá nic,
 //  · a vždy musí přiznat, z čeho počítal.
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -400,50 +401,102 @@ for (const f of ['../js/main.js', '../js/pozemek.js', '../js/radce.js']) {
   pravda('u jistého odhadu částka zůstává', /tedy zhruba o/.test(blokJ));
 }
 
-/* Teď totéž na OSTRÝCH datech — a hlavně důkaz, že hranice něco znamená.
- * Měří se bez použití ceny měřeného pozemku: data se rozpůlí a z každé
- * půlky se postaví samostatný model. Když se dvě nezávislé půlky o témž
- * pozemku neshodnou, odhad není spolehlivý. Přesně to má „nejistý" chytat. */
+/* Teď totéž na OSTRÝCH datech — a hlavně důkaz, že hranice MEZ_ROZPTYL
+ * něco znamená.
+ *
+ * MĚŘÍ SE PROTI CENĚ, KTEROU MODEL NEVIDĚL. Nabídky se rozdělí na deset
+ * dílů; model se postaví z devíti a odhaduje ten desátý. Chyba je rozdíl
+ * proti nabídkové ceně toho pozemku. Tu cenu model při odhadu nemá, takže
+ * se neporovnává sám se sebou — a „správná odpověď" nepochází z jeho
+ * kódu, ale z inzerátu.
+ *
+ * Příznak „nejistý" tvrdí jednu věc: tomuhle číslu nevěřte jako číslu.
+ * Test to bere za slovo a žádá, aby u označených odhadů byla chyba
+ * alespoň 1,7krát větší než u ostatních.
+ *
+ * PROČ UŽ NE ROZCHOD DVOU PŮLEK DAT. Dřív se tady půlila data, z každé
+ * půlky se postavil model a měřilo se, jak moc se o témž pozemku
+ * rozejdou. Jenže od chvíle, kdy se nejdřív srovnává s deseti nejbližšími
+ * pozemky, se mezi půlkami mění i to, KTEŘÍ sousedé to jsou — rozchod tedy
+ * měří hlavně přelosování sousedů. Přeměřeno na dvanácti různých
+ * půleních: se správnou hranicí (1,2) vyšla míra 62–82 %, s rozbitou
+ * hranicí 2 vyšla 51–75 %. Ty dva rozsahy se překrývají, takže ta míra
+ * neumí rozlišit funkční hranici od nefunkční — a test, který neoddělí
+ * správné od rozbitého, nehlídá nic. Chyba proti zadržené ceně to umí:
+ * 1,90–2,11 se správnou hranicí proti 1,20–1,26 (nejhorší případ)
+ * s rozbitou, měřeno přes šest různých rozdělení do desetin.
+ *
+ * Měří se na CELÝCH POZEMCÍCH NA PRODEJ: u spoluvlastnického podílu je
+ * cena za zlomek a výměra celá, u dražby je cena vyvolávací — v obou
+ * případech by „chyba odhadu" měřila tu nesrovnalost, ne model. */
 {
-  const DATA = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
-  const M = PK_CENY.postav(DATA);
-  const MA = PK_CENY.postav(DATA.filter((_, i) => i % 2 === 0));
-  const MB = PK_CENY.postav(DATA.filter((_, i) => i % 2 === 1));
+  const SYROVE = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  /* Duplicitní inzeráty téhož pozemku odstraňuje i web, tak ať model
+     ve testu dostane přesně to, z čeho počítá na stránce. */
+  const PKH = createRequire(import.meta.url)('../js/hlidani-logika.js');
+  const DATA = PKH.bezDuplicit(SYROVE);
+  const CELY = PK_CENY.postav(DATA);
   const med = (a) => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y), n = b.length;
     return n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2; };
-  const jisty = [], nejisty = [];
-  let sStitkem = 0, zNichNejistych = 0;
+
+  let sStitkem = 0, zNichNejistych = 0, sOdhadem = 0, nejistychCelkem = 0;
   for (const d of DATA) {
-    const o = M.odhad(d);
+    const o = CELY.odhad(d);
     if (!o || !o.podleVelikosti) continue;
-    if (o.podOdhadem >= M.MEZ_SLEVA) { sStitkem++; if (o.nejisty) zNichNejistych++; }
-    const a = MA.odhad(d), b = MB.odhad(d);
-    if (!a || !b) continue;
-    const rozchod = Math.abs(a.zaM2 - b.zaM2) / ((a.zaM2 + b.zaM2) / 2) * 100;
-    (o.nejisty ? nejisty : jisty).push(rozchod);
+    sOdhadem++;
+    if (o.nejisty) nejistychCelkem++;
+    if (o.podOdhadem >= CELY.MEZ_SLEVA) { sStitkem++; if (o.nejisty) zNichNejistych++; }
   }
-  pravda('na ostrých datech nějaké nejisté odhady jsou', nejisty.length > 5, `jen ${nejisty.length}`);
+  pravda('na ostrých datech vůbec nějaké odhady podle velikosti jsou',
+    sOdhadem > 500, `jen ${sOdhadem} — pak následující čísla nic neváží`);
+  pravda('a nějaké nejisté odhady mezi nimi', nejistychCelkem > 50, `jen ${nejistychCelkem}`);
   pravda('ale je to menšina štítků „pod odhadem"', zNichNejistych < sStitkem * 0.25,
     `${zNichNejistych} z ${sStitkem} — to už by nebylo upozornění, ale šum`);
-  /* Porovnává se POŘADÍM, ne poměrem mediánů.
-     Původně tu stálo rN > rJ * 2. Jenže „nejistých" je jen kolem osmdesáti
-     a jejich rozchod má těžký chvost, takže medián té hrstky skákal podle
-     toho, co zrovna robot přinesl. Přes dvanáct snímků dat vyšel poměr
-     1,44 až 7,99 — test by tedy náhodně červenal asi každý šestý běh,
-     aniž by se v modelu cokoli změnilo. A test, kterému se nedá věřit,
-     škodí stejně jako test, který nemůže spadnout.
 
-     Tahle míra je odolná: kolik procent nejistých překoná medián jistých.
-     Když příznak nic neodděluje, vyjde kolem 50 %. Na týchž dvanácti
-     snímcích vyšla 71 až 83 %, tedy i tehdy, kdy poměr mediánů spadl na
-     1,44. Práh 62 % má odstup od náhody i od naměřeného dna. */
-  const rJ = med(jisty), rN = med(nejisty);
-  const nadMedianem = jisty.length && nejisty.length
-    ? nejisty.filter((x) => x > rJ).length / nejisty.length * 100 : 0;
-  pravda('nejisté odhady se mezi dvěma půlkami dat rozcházejí víc než jisté',
-    nadMedianem >= 62,
-    `nad mediánem jistých je jen ${nadMedianem.toFixed(0)} % nejistých (náhoda dává 50 %) — `
-    + `příznak „nejistý" pak nic neodděluje; mediány: nejisté ${rN && rN.toFixed(0)} %, jisté ${rJ && rJ.toFixed(0)} %`);
+  /* Jen celé pozemky na prodej — viz úvodní komentář. */
+  const MERENE = new Set(DATA.filter((d) => d.type === 'sale' && !d.podil && d.price > 0 && d.area > 0));
+  /* Rozdělení do desetin: jedno podle pořadí v datech, dvě podle obsahu
+     nabídky. Obsahové proto, aby se výsledek neopíral o jedno jediné
+     rozdělení — a hash se bere po tisícovkách, ne po dvojkách: nejnižší
+     bit FNV-1a je pouhý XOR nejnižších bitů znaků, takže „jiný posun" by
+     vracel tutéž (nebo zrcadlenou) hromádku. Na to se tady už jednou
+     narazilo. */
+  const otisk = (d, posun) => {
+    const t = `${posun}|${d.place}|${d.okres}|${d.price}|${d.area}`;
+    let h = 2166136261;
+    for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return Math.abs(h) % 1000;
+  };
+  const POMERY = [];
+  for (const posun of [0, 1, 2]) {
+    const dil = (d, i) => (posun === 0 ? i % 10 : Math.floor(otisk(d, posun) / 100));
+    const chybyN = [], chybyJ = [];
+    for (let k = 0; k < 10; k++) {
+      const M = PK_CENY.postav(DATA.filter((d, i) => dil(d, i) !== k));
+      for (let i = 0; i < DATA.length; i++) {
+        const d = DATA[i];
+        if (dil(d, i) !== k || !MERENE.has(d)) continue;
+        const o = M.odhad(d);
+        if (!o || !o.podleVelikosti) continue;
+        (o.nejisty ? chybyN : chybyJ).push(Math.abs(o.castka - d.price) / d.price * 100);
+      }
+    }
+    /* Bez téhle podmínky by poměr mohl vyjít z pěti pozemků a test by
+       procházel na náhodě. */
+    pravda(`rozdělení ${posun}: označených odhadů je dost na medián`,
+      chybyN.length >= 50 && chybyJ.length >= 200, `nejistých ${chybyN.length}, jistých ${chybyJ.length}`);
+    const mN = med(chybyN), mJ = med(chybyJ);
+    POMERY.push({ posun, mN, mJ, pomer: mN && mJ ? mN / mJ : 0, pocet: chybyN.length });
+  }
+  /* Práh 1,7 leží mezi naměřeným dnem správné hranice (1,90) a stropem
+     nejhoršího případu u rozbité (1,26) — odstup na obě strany. */
+  const nejhorsi = POMERY.reduce((a, b) => (a.pomer < b.pomer ? a : b));
+  pravda('nejisté odhady se od zadržené ceny mýlí nejmíň 1,7krát víc než jisté',
+    nejhorsi.pomer >= 1.7,
+    `nejhůř vyšlo rozdělení ${nejhorsi.posun}: nejisté ${nejhorsi.mN && nejhorsi.mN.toFixed(0)} %, `
+    + `jisté ${nejhorsi.mJ && nejhorsi.mJ.toFixed(0)} % (poměr ${nejhorsi.pomer.toFixed(2)}, `
+    + `${nejhorsi.pocet} označených) — příznak „nejistý" pak neodděluje spolehlivé odhady od nespolehlivých; `
+    + `všechna rozdělení: ${POMERY.map((x) => x.pomer.toFixed(2)).join(', ')}`);
 }
 
 /* A že se podle toho web opravdu řídí — jinak by model věděl a stránka

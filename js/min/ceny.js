@@ -79,6 +79,8 @@
   };
 
   function kdeText(uroven, nazev) {
+
+    if (uroven === 'okoli') return 'v okolí do ' + nazev;
     if (uroven === 'okres') return 'v okrese ' + nazev;
     return KRAJ_KDE[nazev] || ('v kraji ' + nazev);
   }
@@ -92,12 +94,13 @@
   var MEZ_SLEVA = 15;
   var MEZ_POCHYBNA = 60;
 
-  var MEZ_ROZPTYL = 2;
+  var MEZ_ROZPTYL = 1.2;
 
   function rozbalModel(j) {
     if (!j || !Array.isArray(j.a) || !Array.isArray(j.c)) return null;
     var okresy = j.okresy || [], druhy = j.druhy || [], typy = j.typy || [];
     var o = j.o || [], d = j.d || [], t = j.t || [], a = j.a, c = j.c;
+    var la = j.la || [], lo = j.lo || [];
     var n = a.length;
     if (!n || c.length !== n || o.length !== n || d.length !== n || t.length !== n) return null;
     var ven = new Array(n);
@@ -108,6 +111,8 @@
         type: typy[t[i]] || '',
         area: a[i],
         price: c[i],
+        lat: la[i] ? la[i] / 1e4 : 0,
+        lng: lo[i] ? lo[i] / 1e4 : 0,
 
       };
     }
@@ -124,6 +129,9 @@
     var nabidkyKraj = {};
     var nabidkyCR = {};
 
+    var OKOLI_PRIHRADKA = 0.5;
+    var okoliPrihradky = {};
+
     DATA.forEach(function (d) {
       if (!hasArea(d) || !d.price) return;
       var g = druhGroup(d.druh), m2 = d.price / d.area;
@@ -138,6 +146,13 @@
       if (d.type !== 'sale') return;
 
       var z = { a: d.area, m: m2 };
+
+      if (isFinite(d.lat) && isFinite(d.lng)) {
+        var zz = { a: d.area, m: m2,
+          lat: Math.round(d.lat * 1e4) / 1e4, lng: Math.round(d.lng * 1e4) / 1e4 };
+        var klic = g + '|' + Math.floor(zz.lat / OKOLI_PRIHRADKA) + '|' + Math.floor(zz.lng / OKOLI_PRIHRADKA);
+        (okoliPrihradky[klic] = okoliPrihradky[klic] || []).push(zz);
+      }
       (nabidkyCR[g] = nabidkyCR[g] || []).push(z);
       if (d.okres) (nabidkyOkres[g + '|' + d.okres] = nabidkyOkres[g + '|' + d.okres] || []).push(z);
       var kraj = okresKraj[d.okres];
@@ -173,6 +188,47 @@
         SKLON[g] = r2 >= R2_MEZ ? b : 0;
       });
     }());
+
+    var OKOLI_K = 10;
+    var OKOLI_R = 25;
+    function kmVzdalenost(aLat, aLng, bLat, bLng) {
+      var R = 6371, r = Math.PI / 180;
+      var dx = (bLat - aLat) * r, dy = (bLng - aLng) * r;
+      var h = Math.sin(dx / 2) * Math.sin(dx / 2)
+        + Math.cos(aLat * r) * Math.cos(bLat * r) * Math.sin(dy / 2) * Math.sin(dy / 2);
+      return 2 * R * Math.asin(Math.sqrt(Math.min(1, h)));
+    }
+    function okoliCeny(d, g) {
+      if (!isFinite(d.lat) || !isFinite(d.lng) || !hasArea(d)) return null;
+      var lat = Math.round(d.lat * 1e4) / 1e4, lng = Math.round(d.lng * 1e4) / 1e4;
+      var pi = Math.floor(lat / OKOLI_PRIHRADKA), pj = Math.floor(lng / OKOLI_PRIHRADKA);
+      var bliz = [];
+      for (var i = -1; i <= 1; i++) {
+        for (var j = -1; j <= 1; j++) {
+          var pole = okoliPrihradky[g + '|' + (pi + i) + '|' + (pj + j)];
+          if (!pole) continue;
+          for (var n = 0; n < pole.length; n++) {
+            var x = pole[n];
+
+            if (x.lat === lat && x.lng === lng && x.a === d.area && x.m * x.a === d.price) continue;
+            var vzd = kmVzdalenost(lat, lng, x.lat, x.lng);
+            if (vzd > OKOLI_R) continue;
+            bliz.push({ vzd: vzd, a: x.a, m: x.m });
+          }
+        }
+      }
+      if (bliz.length < OKOLI_K) return null;
+
+      bliz.sort(function (p, q) { return (p.vzd - q.vzd) || (p.a - q.a) || (p.m - q.m); });
+      var b = SKLON[g] || 0;
+      var ven = [];
+      for (var k = 0; k < OKOLI_K; k++) {
+        var y = bliz[k];
+        ven.push(b ? y.m * Math.pow(d.area / y.a, b) : y.m);
+      }
+      ven.sort(function (p, q) { return p - q; });
+      return ven;
+    }
 
     function ceny(pole, plocha, druhG) {
       if (!pole) return null;
@@ -257,11 +313,14 @@
       ];
 
       var kroky = [];
+
+      var okoli = okoliCeny(d, g);
+      if (okoli) kroky.push({ arr: okoli, uroven: 'okoli', kde: OKOLI_R + ' km', podleVelikosti: true });
       zdroje.forEach(function (z) { kroky.push({ pole: z.pole, plocha: d.area, uroven: z.uroven, kde: z.kde, podleVelikosti: true }); });
       zdroje.forEach(function (z) { kroky.push({ pole: z.pole, plocha: 0, uroven: z.uroven, kde: z.kde, podleVelikosti: false }); });
       for (var i = 0; i < kroky.length; i++) {
         var k = kroky[i];
-        k.arr = ceny(k.pole, k.plocha, g);
+        if (!k.arr) k.arr = ceny(k.pole, k.plocha, g);
         if (!k.arr || k.arr.length < MIN_VZOREK) continue;
         var med = median(k.arr);
         if (!med) continue;
@@ -314,7 +373,9 @@
       neduveryhodna: neduveryhodna,
       percentil: percentil,
       odhad: odhad,
-      medianTypu: medianTypu
+      medianTypu: medianTypu,
+
+      sklon: SKLON
     };
   }
 
