@@ -885,6 +885,63 @@ async function fetchProdejSPU() {
   return out;
 }
 
+/* Místo u nabídky z Bezrealitky: OBEC, ne ulice.
+ *
+ * Adresa z API mívá tvar „Obec - katastrální území" a brala se z ní první
+ * část. U inzerátů z města je ale první část ULICE — a na webu pak stálo
+ * jako místo „Františka Macháčka", „Ruská" nebo „Za Krétou".
+ *
+ * Naměřeno na ostrých datech: z 1 637 nabídek z Bezrealitky je takových
+ * devět, a jsou mezi nimi tři z nejdražších nabídek na celém webu:
+ *   „Františka Macháčka" místo Český Brod   (okres Kolín)
+ *   „Čs. armády"         místo Žamberk      (Ústí nad Orlicí)
+ *   „Ruská"              místo Teplice      (Teplice)
+ *   „V Drahách"          místo Luhačovice   (Zlín)
+ *   „Saská"              místo Děčín        (Děčín)
+ *   „Višňovka II"        místo Kamenice     (Praha-východ)
+ *   „Za Krétou"          místo Tišnov       (Brno-venkov)
+ *   „Ke Kocandě"         místo Roztoky      (Praha-západ)
+ *   „Třezalková"         místo Říčany       (Praha-východ)
+ *
+ * Poznat se to dá z adresy inzerátu: u těchto devíti nese tvar
+ * „<ulice>-so-pou-<obec>" (so pou = správní obvod POÚ). Když se jméno
+ * z první části adresy rovná tomu, co v adrese stojí jako ulice, je to
+ * ulice a obec se vezme z další části adresy.
+ *
+ * ČEHO SE TO NETÝKÁ, a proto se porovnává: týž tvar „-so-pou-" má
+ * dalších devětadvacet nabídek, u kterých je místo správně — obec je
+ * vesnice uvnitř toho obvodu, třeba Křenice ve správním obvodu Říčan.
+ * Kdyby se brala obec z adresy vždycky, Křenice by se změnila na Říčany.
+ *
+ * KDYŽ ADRESA DALŠÍ ČÁST NEMÁ, zůstane to, co bylo. Přeložit „cesky-brod"
+ * na „Český Brod" by znamenalo seznam obcí, a ten tu není; napsat to bez
+ * diakritiky by na českém webu bylo vidět. Lepší neúplná oprava než
+ * vymyšlené jméno.
+ *
+ * Odděleno od stahování schválně: API Bezrealitky je z prostředí, kde se
+ * tahle oprava psala, nedostupné (proxy), takže jedině takhle se dá
+ * ověřit — dát funkci adresu přímo. Zkouší scripts/test-misto-inzeratu.mjs. */
+export function mistoZBezrealitky(adresa, uri) {
+  const casti = String(adresa || '').split(',').map((x) => x.trim()).filter(Boolean);
+  const jmeno = (c) => String(c || '').split(/\s*-\s*/)[0].trim();
+  const prvni = jmeno(casti[0]);
+  if (!prvni) return { place: null, ulice: null };
+  const bezDiakritiky = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const m = /^(.*)-so-pou-[a-z0-9-]+$/.exec(String(uri || ''));
+  /* Je první část adresy ulice? Jen když to tak říká i adresa inzerátu. */
+  const jeUlice = !!m && m[1].endsWith('-' + bezDiakritiky(prvni));
+  if (jeUlice) {
+    for (let i = 1; i < casti.length; i++) {
+      const dalsi = jmeno(casti[i]);
+      /* Kraj není obec — adresa ho na konci občas nese a jako místo by
+         to bylo horší než ulice. */
+      if (dalsi && !/kraj$/i.test(dalsi)) return { place: dalsi.slice(0, 60), ulice: prvni };
+    }
+  }
+  return { place: prvni.slice(0, 60), ulice: jeUlice ? prvni : null };
+}
+
 // Bezrealitky.cz — inzeráty pozemků na prodej od majitelů.
 // Veřejné GraphQL API (robots.txt dovoluje). Vrací i GPS a odkaz na inzerát.
 /* Popis z inzerátu se musí uklidit, než se někam uloží.
@@ -946,7 +1003,8 @@ async function fetchBezrealitky() {
       const parts = String(a.address || '').split(',').map((s) => s.trim()).filter(Boolean);
       // Adresa mívá tvar „Obec - katastrální území" — pro přehlednost bereme
       // jen obec (první část), ať se nezobrazuje dlouhý zdvojený název.
-      const place = (parts[0] || a.title || 'Pozemek').split(/\s*-\s*/)[0].trim().slice(0, 60) || 'Pozemek';
+      const misto = mistoZBezrealitky(a.address, a.uri);
+      const place = misto.place || String(a.title || 'Pozemek').split(/\s*-\s*/)[0].trim().slice(0, 60) || 'Pozemek';
       let okres = hasGps ? nearestOkres(gps.lat, gps.lng) : null;
       if (!okres) okres = (parts[parts.length - 1] || place).replace(/\s*kraj$/i, '').slice(0, 40);
       // Druh vytáhneme z popisu + názvu (API druh pozemku neuvádí) —

@@ -103,6 +103,9 @@ jobs:
       - name: Čísla na stránce okresu (podíly, kde je nabídek nejvíc)
         run: node scripts/test-okres-stranka.mjs
 
+      - name: Místem nabídky je obec, ne ulice
+        run: node scripts/test-misto-inzeratu.mjs
+
       - name: Cena za metr nad stropem uvěřitelnosti se netvrdí
         run: node scripts/test-strop-ceny.mjs
 
