@@ -1,5 +1,5 @@
 {
-  "verze": 2,
+  "verze": 3,
   "kdyzNic": "Tenhle soubor je jediné místo, kde se mění adresy mapových služeb. Kód z něj jen čte. Vrstva, jejíž služba neodpoví na zkušební dlaždici, se v mapě vůbec nenabídne — radši ji nemít, než nabízet přepínač, který nic neudělá. Když se vrstva nezobrazuje, opravte tady adresu nebo názvy vrstev; nic jiného není potřeba.",
   "vrstvy": [
     {
@@ -116,6 +116,16 @@
           "vrstvy": "0"
         }
       ]
+    }
+  ],
+  "nezarazeno": [
+    {
+      "id": "slunecni-expozice",
+      "duvod": "Změřeno: slunečního svitu je po Česku skoro stejně — mezi nejslabším a nejsilnějším místem je rozdíl kolem desetiny, takže z vrstvy by se o KONKRÉTNÍM pozemku nedalo poznat nic, co by rozhodlo. Skutečný výnos navíc určuje sklon, orientace a zastínění, a výškový model nemáme; barevná mapa by tedy předstírala přesnost, kterou nikde nebereme. Co o tom web říct umí, říká rádce u velkých polí (js/radce.js): rozhodne územní plán, třída ochrany půdy a volná kapacita pro připojení do sítě."
+    },
+    {
+      "id": "hluk-a-smog",
+      "duvod": "Vrstva by smysl dávala — hluk ze silnice je u pozemku skutečná vada. Chybí ale ověřitelný zdroj: z prostředí, kde se web staví, jsou české geoportály nedostupné (proxy je blokuje), takže nejde potvrdit, že by se adresa služby vůbec ozvala. Přidat vrstvu, kterou nikdo nezkusil, znamená slíbit v rozcestníku něco, co se u návštěvníka nemusí vykreslit. Až bude adresa ověřená, patří sem stejně jako BPEJ (ta má tři kandidáty a bere se první, která odpoví)."
     }
   ]
 }

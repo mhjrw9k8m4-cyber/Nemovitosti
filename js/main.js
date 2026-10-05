@@ -1390,8 +1390,64 @@
   // Jednotlivý pozemek = čistá tečka v barvě kategorie (ukáže se po přiblížení).
   // Kreslí se přes canvas (L.circleMarker) — proto styl, ne HTML.
   var DOT_R = 3.9, DOT_R_SEL = 6.4;
+  /* OBARVENÍ TEČEK PODLE CENY ZA METR.
+   *
+   * Mapa barví tečky podle DRUHU příležitosti (prodej, dražba, exekuce).
+   * To je správné jako výchozí stav — člověk se nejdřív ptá, co to je.
+   * Druhá otázka ale zní „kde je to levné", a na tu barva podle druhu
+   * neodpovídá vůbec: zelená tečka za 8 Kč/m² a zelená za 2 400 Kč/m²
+   * vypadají stejně.
+   *
+   * Na cena-pozemku.html je kvůli tomu choropleth okresů, jenže ten
+   * průměruje přes celý okres. Tady jde o KONKRÉTNÍ pozemky: v jednom
+   * okrese bývá pole za 20 Kč i stavební parcela za 2 000 Kč.
+   *
+   * STUPNICE JE PODLE POŘADÍ, NE LINEÁRNÍ. Ceny za metr se liší o tři
+   * řády (změřeno: od jednotek korun po desetitisíce), takže lineární
+   * škála by slila 95 % nabídek do jednoho odstínu a zbytek by utekl.
+   * Barví se tedy podle percentilu v tom, co je právě vidět.
+   *
+   * CO CENU ZA METR NEMÁ, ZŮSTÁVÁ ŠEDÉ. Dohadovat se nesmí: u nabídky
+   * bez výměry nebo bez ceny se tvářit, že je levná, by byla lež.
+   * Spoluvlastnický podíl má cenu za metr z výměry, která kupci opravdu
+   * připadne (PK_CENY.zaMetr) — jinak by podíl svítil jako trhák. */
+  var rezimBarvy = 'druh';          // 'druh' | 'cena'
+  var cenovaStupnice = null;        // seřazené ceny za m² pro percentil
+
+  function prepocitejStupnici(vis) {
+    if (rezimBarvy !== 'cena') { cenovaStupnice = null; return; }
+    var zm = (window.PK_CENY && window.PK_CENY.zaMetr) || null;
+    var ceny = [];
+    for (var i = 0; i < vis.length; i++) {
+      var v = zm ? zm(vis[i]) : null;
+      if (v != null && isFinite(v) && v > 0) ceny.push(v);
+    }
+    ceny.sort(function (a2, b2) { return a2 - b2; });
+    cenovaStupnice = ceny.length >= 8 ? ceny : null;
+  }
+
+  /* Modrá (levné) → oranžová (drahé). Jedna plynulá stupnice, ne skoky:
+     mezi dvěma sousedními pozemky nemá být vidět hrana, která v datech
+     není. */
+  function barvaCeny(t) {
+    var r = Math.round(74 + t * 136);
+    var g = Math.round(144 - t * 32);
+    var b = Math.round(190 - t * 132);
+    return 'rgb(' + r + ',' + g + ',' + b + ')';
+  }
+  function cenovaBarva(d) {
+    if (!cenovaStupnice) return null;
+    var zm = (window.PK_CENY && window.PK_CENY.zaMetr) || null;
+    var v = zm ? zm(d) : null;
+    if (v == null || !isFinite(v) || v <= 0) return '#8A9A92';   // neznámo = šedá
+    var lo = 0, hi = cenovaStupnice.length;
+    while (lo < hi) { var mid = (lo + hi) >> 1; if (cenovaStupnice[mid] < v) lo = mid + 1; else hi = mid; }
+    return barvaCeny(cenovaStupnice.length > 1 ? lo / (cenovaStupnice.length - 1) : 0.5);
+  }
+
   function dotStyle(d) {
     var col = TYPE[d.type].color, urgent = isUrgent(d), feat = isFeatured(d);
+    if (rezimBarvy === 'cena') { var cb = cenovaBarva(d); if (cb) col = cb; }
     // Klidnější body: nespěšné mají jen jemný okraj (ne výrazný bílý kroužek),
     // ať mapa při celostátním pohledu nepůsobí přeplácaně. Urgentní zůstávají výrazné.
     // Zvýrazněné (placené) inzeráty jsou o něco větší s plnějším okrajem.
@@ -2238,6 +2294,12 @@
   }
 
   function renderDots(vis) {
+    /* Stupnice se počítá z TOHO, CO JE PRÁVĚ VIDĚT. Kdyby stála na všech
+       datech, po zafiltrování na jeden okres by všechny tečky vyšly
+       stejně — a barva by přestala nést informaci právě tam, kde se
+       člověk dívá nejpozorněji. */
+    prepocitejStupnici(vis);
+    if (rezimBarvy === 'cena') resizeDots();
     dotLayer.clearLayers();
     shlukLayer.clearLayers();
     // Tečky VŽDYCKY všechny: hustota, zeměpis i najetí myší zůstávají.
@@ -3570,7 +3632,20 @@
   // Legenda mapy — jen kategorie, které v datech opravdu jsou, + upozornění na
   // blížící se dražby (pulzující body). Vysvětlí barvy přímo nad mapou.
   var legendEl = document.getElementById('map-legend');
-  if (legendEl) {
+  /* LEGENDA SE MUSÍ MĚNIT S REŽIMEM BARVY. Kdyby zůstala u druhů,
+     zatímco tečky barví cena, popisovala by něco, co na mapě není —
+     a to je horší než nemít legendu vůbec. */
+  function prekresliLegendu() {
+    if (!legendEl) return;
+    if (rezimBarvy === 'cena') {
+      var kusy = '';
+      for (var i = 0; i <= 4; i++) {
+        kusy += '<span class="lg-dot" style="background:' + barvaCeny(i / 4) + '"></span>';
+      }
+      legendEl.innerHTML = '<span class="lg-item">levné ' + kusy + ' drahé</span>'
+        + '<span class="lg-item"><span class="lg-dot" style="background:#8A9A92"></span>cena za m² neznámá</span>';
+      return;
+    }
     var present2 = {};
     DATA.forEach(function (d) { present2[d.type] = true; });
     var urgentN = DATA.filter(isUrgent).length;
@@ -3582,6 +3657,50 @@
     if (urgentN) lh += '<span class="lg-item lg-urgent"><span class="lg-dot lg-ring"></span>končí do ' + DNI_KONCI + ' dní</span>';
     legendEl.innerHTML = lh;
   }
+  prekresliLegendu();
+
+  /* Přepínač obarvení. Stojí mezi nástroji mapy, protože je to otázka
+     „co je na mapě vidět", ne „co se v ní hledá" — stejně jako podklad. */
+  var barvaBtn = document.getElementById('map-barva');
+  if (barvaBtn) {
+    barvaBtn.addEventListener('click', function () {
+      rezimBarvy = (rezimBarvy === 'cena') ? 'druh' : 'cena';
+      barvaBtn.setAttribute('aria-pressed', rezimBarvy === 'cena' ? 'true' : 'false');
+      barvaBtn.classList.toggle('on', rezimBarvy === 'cena');
+      prekresliStupnici();
+      prekresliLegendu();
+    });
+  }
+  function prekresliStupnici() {
+    prepocitejStupnici(lastVis && lastVis.length ? lastVis : DATA);
+    resizeDots();
+    renderDots(lastVis && lastVis.length ? lastVis : DATA);
+  }
+
+  /* Úchyt pro zkoušky: jaká barva tečce vyšla a v jakém je mapa režimu.
+     Web sám ho nepoužívá. */
+  try {
+    window.PK_BARVY = {
+      rezim: function () { return rezimBarvy; },
+      prepni: function (r) {
+        rezimBarvy = (r === 'cena') ? 'cena' : 'druh';
+        if (barvaBtn) {
+          barvaBtn.setAttribute('aria-pressed', rezimBarvy === 'cena' ? 'true' : 'false');
+          barvaBtn.classList.toggle('on', rezimBarvy === 'cena');
+        }
+        prekresliStupnici(); prekresliLegendu();
+      },
+      barvaTecky: function (i) { var m = markers[i]; return m ? dotStyle(m._d).fillColor : null; },
+      /* Cena za metr i barva k téže tečce — aby šlo ověřit, že barva
+         s cenou roste, a ne jen že je pestrá. */
+      tecka: function (i) {
+        var m = markers[i]; if (!m) return null;
+        var zm = (window.PK_CENY && window.PK_CENY.zaMetr) || null;
+        return { zaM2: zm ? zm(m._d) : null, barva: dotStyle(m._d).fillColor };
+      },
+      stupnice: function () { return cenovaStupnice ? cenovaStupnice.length : 0; }
+    };
+  } catch (e) {}
 
 
   // Po přiblížení mapy zpřístupníme tečky přímo (netřeba nejdřív vybírat kraj).

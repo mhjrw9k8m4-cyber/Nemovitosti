@@ -971,8 +971,41 @@
   function isFeatured(d) { return !!d.featured; }
 
   var DOT_R = 3.9, DOT_R_SEL = 6.4;
+
+  var rezimBarvy = 'druh';
+  var cenovaStupnice = null;
+
+  function prepocitejStupnici(vis) {
+    if (rezimBarvy !== 'cena') { cenovaStupnice = null; return; }
+    var zm = (window.PK_CENY && window.PK_CENY.zaMetr) || null;
+    var ceny = [];
+    for (var i = 0; i < vis.length; i++) {
+      var v = zm ? zm(vis[i]) : null;
+      if (v != null && isFinite(v) && v > 0) ceny.push(v);
+    }
+    ceny.sort(function (a2, b2) { return a2 - b2; });
+    cenovaStupnice = ceny.length >= 8 ? ceny : null;
+  }
+
+  function barvaCeny(t) {
+    var r = Math.round(74 + t * 136);
+    var g = Math.round(144 - t * 32);
+    var b = Math.round(190 - t * 132);
+    return 'rgb(' + r + ',' + g + ',' + b + ')';
+  }
+  function cenovaBarva(d) {
+    if (!cenovaStupnice) return null;
+    var zm = (window.PK_CENY && window.PK_CENY.zaMetr) || null;
+    var v = zm ? zm(d) : null;
+    if (v == null || !isFinite(v) || v <= 0) return '#8A9A92';
+    var lo = 0, hi = cenovaStupnice.length;
+    while (lo < hi) { var mid = (lo + hi) >> 1; if (cenovaStupnice[mid] < v) lo = mid + 1; else hi = mid; }
+    return barvaCeny(cenovaStupnice.length > 1 ? lo / (cenovaStupnice.length - 1) : 0.5);
+  }
+
   function dotStyle(d) {
     var col = TYPE[d.type].color, urgent = isUrgent(d), feat = isFeatured(d);
+    if (rezimBarvy === 'cena') { var cb = cenovaBarva(d); if (cb) col = cb; }
 
     var z = (typeof map !== 'undefined' && map.getZoom) ? map.getZoom() : 8;
     var blizko = Math.max(0, Math.min(1, (z - 8) / 4));
@@ -1512,6 +1545,9 @@
   }
 
   function renderDots(vis) {
+
+    prepocitejStupnici(vis);
+    if (rezimBarvy === 'cena') resizeDots();
     dotLayer.clearLayers();
     shlukLayer.clearLayers();
 
@@ -2476,7 +2512,18 @@
   updateKrajHead();
 
   var legendEl = document.getElementById('map-legend');
-  if (legendEl) {
+
+  function prekresliLegendu() {
+    if (!legendEl) return;
+    if (rezimBarvy === 'cena') {
+      var kusy = '';
+      for (var i = 0; i <= 4; i++) {
+        kusy += '<span class="lg-dot" style="background:' + barvaCeny(i / 4) + '"></span>';
+      }
+      legendEl.innerHTML = '<span class="lg-item">levné ' + kusy + ' drahé</span>'
+        + '<span class="lg-item"><span class="lg-dot" style="background:#8A9A92"></span>cena za m² neznámá</span>';
+      return;
+    }
     var present2 = {};
     DATA.forEach(function (d) { present2[d.type] = true; });
     var urgentN = DATA.filter(isUrgent).length;
@@ -2488,6 +2535,45 @@
     if (urgentN) lh += '<span class="lg-item lg-urgent"><span class="lg-dot lg-ring"></span>končí do ' + DNI_KONCI + ' dní</span>';
     legendEl.innerHTML = lh;
   }
+  prekresliLegendu();
+
+  var barvaBtn = document.getElementById('map-barva');
+  if (barvaBtn) {
+    barvaBtn.addEventListener('click', function () {
+      rezimBarvy = (rezimBarvy === 'cena') ? 'druh' : 'cena';
+      barvaBtn.setAttribute('aria-pressed', rezimBarvy === 'cena' ? 'true' : 'false');
+      barvaBtn.classList.toggle('on', rezimBarvy === 'cena');
+      prekresliStupnici();
+      prekresliLegendu();
+    });
+  }
+  function prekresliStupnici() {
+    prepocitejStupnici(lastVis && lastVis.length ? lastVis : DATA);
+    resizeDots();
+    renderDots(lastVis && lastVis.length ? lastVis : DATA);
+  }
+
+  try {
+    window.PK_BARVY = {
+      rezim: function () { return rezimBarvy; },
+      prepni: function (r) {
+        rezimBarvy = (r === 'cena') ? 'cena' : 'druh';
+        if (barvaBtn) {
+          barvaBtn.setAttribute('aria-pressed', rezimBarvy === 'cena' ? 'true' : 'false');
+          barvaBtn.classList.toggle('on', rezimBarvy === 'cena');
+        }
+        prekresliStupnici(); prekresliLegendu();
+      },
+      barvaTecky: function (i) { var m = markers[i]; return m ? dotStyle(m._d).fillColor : null; },
+
+      tecka: function (i) {
+        var m = markers[i]; if (!m) return null;
+        var zm = (window.PK_CENY && window.PK_CENY.zaMetr) || null;
+        return { zaM2: zm ? zm(m._d) : null, barva: dotStyle(m._d).fillColor };
+      },
+      stupnice: function () { return cenovaStupnice ? cenovaStupnice.length : 0; }
+    };
+  } catch (e) {}
 
   map.on('zoomend', function () {
     if (nearMode) return;

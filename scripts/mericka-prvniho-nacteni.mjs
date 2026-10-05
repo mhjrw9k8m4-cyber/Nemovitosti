@@ -55,25 +55,24 @@ try {
         serviceWorkers: BEZ ? 'block' : 'allow' });
       if (BEZ) await ctx.route('**/offline.js*', (r) => r.abort());
       const p = await ctx.newPage();
-      let pocet = 0, velikost = 0;
-      p.on('response', async (r) => {
-        pocet++;
-        try {
-          const h = await r.allHeaders();
-          const d = h['content-length'];
-          if (d) velikost += parseInt(d, 10) || 0;
-        } catch (e) { /* odpověď mohla zmizet s kontextem */ }
-      });
+      let pocet = 0;
       await p.goto(`${BASE}/${soubor}`, { waitUntil: 'load' });
       /* Registrace service workeru běží až po load, takže se na ni počká —
          jinak by se neměřila vůbec a číslo by bylo falešně dobré. */
       await p.waitForTimeout(1500);
+      /* BAJTY SE ČTOU Z PROHLÍŽEČE, ne z hlavičky Content-Length.
+         Zkušební server ji neposílá, takže měření přes ni vycházelo
+         na 0,0 kB u všech stránek — a to vypadá jako výsledek, přitom
+         se neměřilo nic. encodedBodySize zná prohlížeč vždycky. */
       const t = await p.evaluate(() => {
         const n = performance.getEntriesByType('navigation')[0];
-        return n ? { dcl: n.domContentLoadedEventEnd, load: n.loadEventEnd } : null;
+        let b = n ? (n.encodedBodySize || 0) : 0, k = 0;
+        for (const r of performance.getEntriesByType('resource')) { b += r.encodedBodySize || 0; k++; }
+        return { dcl: n ? n.domContentLoadedEventEnd : 0, load: n ? n.loadEventEnd : 0,
+          bajtu: b, zdroju: k + 1 };
       });
-      pozadavku.push(pocet); bajtu.push(velikost);
-      if (t) { dcl.push(t.dcl); load.push(t.load); }
+      pozadavku.push(t.zdroju); bajtu.push(t.bajtu);
+      dcl.push(t.dcl); load.push(t.load);
       await ctx.close();
     }
     console.log(`${jmeno.padEnd(10)}${String(median(pozadavku)).padStart(6)}`
@@ -86,4 +85,9 @@ try {
 }
 console.log('');
 console.log(`(medián z ${KOLIKRAT} načtení, vždy s prázdnou mezipamětí)`);
+/* ČASY PŘES LOCALHOST NIC NEŘÍKAJÍ. Server běží na témž stroji, takže
+   latence sítě je nula a rozdíl mezi dvěma běhy je šum většího rozsahu
+   než to, co se měří. Rozhodující je POČET POŽADAVKŮ a BAJTY — ty se
+   po drátě nezmění podle toho, kde server stojí. */
+console.log('(časy přes localhost jsou šum — rozhoduje počet požadavků a bajty)');
 process.exit(0);
