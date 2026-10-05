@@ -33,7 +33,7 @@
     { klic: 'pk_vrstvy_v1', kde: 'local', skupina: 'nastaveni', nazev: 'Zapnuté vrstvy mapy',
       popis: 'Katastr, územní plán, záplavy, ochrana přírody.', pocet: jeNeco },
     { klic: 'pk_rezim_v1', kde: 'local', skupina: 'nastaveni', nazev: 'Vzhled',
-      popis: 'Světlý, nebo tmavý.', pocet: jeNeco },
+      popis: 'Světlý, nebo tmavý režim. Přepíná se tlačítkem v hlavičce a drží i barvu lišty prohlížeče.', pocet: jeNeco },
     { klic: 'pk_up_prefs_v1', kde: 'local', skupina: 'nastaveni', nazev: 'Co chci v upozorněních',
       popis: 'Které druhy zpráv se mají ukazovat.', pocet: jeNeco },
 
