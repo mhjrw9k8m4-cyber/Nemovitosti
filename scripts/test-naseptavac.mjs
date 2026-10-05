@@ -94,11 +94,31 @@ pravda('řádky nabídky jsou na dotyk dost velké (≥ 36 px)',
   vysky.length > 0 && Math.min(...vysky) >= 36, 'nejnižší ' + Math.min(...vysky).toFixed(1) + ' px');
 
 // --- 3) Ovládání klávesnicí -----------------------------------------
+/* ČEKÁ SE NA STAV, NE NA LHŮTU. Dřív tu stálo waitForTimeout(120) a za ním
+   hned tvrzení — tedy spoleh na to, že prohlížeč stihne za sto dvacet
+   milisekund překreslit. Čekání na podmínku je proti tomu lepší bez
+   ohledu na stroj a zkoušku to neoslabuje: rozbité ovládání klávesnicí
+   nabídku neoznačí ani za tři sekundy, takže kontrola padne stejně.
+
+   POCTIVĚ: NEJDE O PROKÁZANOU OPRAVU ZNÁMÉ VADY. Tahle zkouška v CI
+   desetkrát po sobě padla („Našeptávač: 1 kontrol neprošlo", běhy #278
+   až #290), zatímco lokálně procházela, a od běhu #291 prochází i tam.
+   Tyhle dvě tvrzení jsou jediná, která stojí každé samo, takže by
+   odpovídala tomu „1 kontrol" — jenže reprodukovat se to nepovedlo:
+   při zpomalení procesoru šestkrát, desetkrát ani čtrnáctkrát stará
+   pevná lhůta nespadla, a při dvacetkrát umře celá zkouška neodchycenou
+   výjimkou, což CI nehlásilo. Příčina tedy zůstává neznámá.
+
+   Co se vyloučit DALO: na data to nebylo. Past, kterou si zkouška z dat
+   vybírá, je v obou sadách shodná (Benešov, cizí „Benešovice
+   u Všelibic") a zemědělských nabídek bylo 1 237 proti 1 234, obojí
+   vysoko nad mezí tisíc. */
 await p.keyboard.press('ArrowDown');
-await p.waitForTimeout(120);
-pravda('šipka dolů označí první nabídku', (await p.locator('#map-search-navrhy li.on').count()) === 1);
+const oznacena = p.locator('#map-search-navrhy li.on');
+await oznacena.first().waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
+pravda('šipka dolů označí první nabídku', (await oznacena.count()) === 1);
 await p.keyboard.press('Escape');
-await p.waitForTimeout(120);
+await seznam.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
 pravda('Escape nabídku zavře', !(await seznam.isVisible()));
 
 // --- 4) Výběr nabídky zúží výpis ------------------------------------

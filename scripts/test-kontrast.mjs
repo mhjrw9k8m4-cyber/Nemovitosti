@@ -114,6 +114,11 @@ const MERENI = `(() => {
   };
 
   const out = [];
+  /* Počítá se i to, KOLIK prvků se vůbec změřilo. Bez toho by „0 prvků
+     neprošlo" znamenalo totéž jako „stránka se nenačetla a nebylo co
+     měřit" — a tahle zkouška by mlčela právě tehdy, kdy je potřeba
+     nejvíc. Viz guard na konci souboru. */
+  let zmereno = 0;
   const videt = (el) => {
     const s = getComputedStyle(el), r = el.getBoundingClientRect();
     return s.display !== 'none' && s.visibility !== 'hidden' && parseFloat(s.opacity) > 0.05 && r.width > 0 && r.height > 0;
@@ -136,6 +141,7 @@ const MERENI = `(() => {
     const px = parseFloat(s.fontSize), tucne = (parseInt(s.fontWeight, 10) || 400) >= 700;
     const velky = px >= 24 || (px >= 18.66 && tucne);
     const mez = velky ? 3 : 4.5;
+    zmereno++;
     if (pomer < mez) out.push({
       text: (el.textContent || '').trim().slice(0, 42),
       trida: (el.className && typeof el.className === 'string' ? el.className.trim().split(/\\s+/)[0] : el.tagName.toLowerCase()),
@@ -143,7 +149,7 @@ const MERENI = `(() => {
       pomer: Math.round(pomer * 100) / 100, mez, px: Math.round(px)
     });
   });
-  return out;
+  return { zmereno: zmereno, nalezy: out };
 })()`;
 
 /* OBA REŽIMY, A NA DOTYKOVÉM ZAŘÍZENÍ.
@@ -166,6 +172,7 @@ const REZIMY = [
   { jmeno: 'tmavý', colorScheme: 'dark' },
 ];
 const vse = [];
+let zmerenoCelkem = 0;
 for (const REZIM of REZIMY)
 for (const s of STRANKY) {
   const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 900 },
@@ -212,8 +219,9 @@ for (const s of STRANKY) {
   await p.waitForTimeout(700);
   await p.evaluate(() => window.scrollTo(0, 0));
   await p.waitForTimeout(400);
-  const nalezy = await p.evaluate(MERENI);
-  nalezy.forEach((n) => vse.push(Object.assign({ stranka: s + ' (' + REZIM.jmeno + ')' }, n)));
+  const vysledek = await p.evaluate(MERENI);
+  zmerenoCelkem += vysledek.zmereno;
+  vysledek.nalezy.forEach((n) => vse.push(Object.assign({ stranka: s + ' (' + REZIM.jmeno + ')' }, n)));
 
   /* MĚŘÍ SE JEN STAV, VE KTERÉM STRÁNKA PRÁVĚ JE — a to je málo.
    *
@@ -240,7 +248,7 @@ for (const s of STRANKY) {
     if (!vidu) continue;
     await cipy[i].click({ timeout: 3000 }).catch(() => {});
     await p.waitForTimeout(180);
-    const vCipu = await p.evaluate(MERENI).catch(() => []);
+    const vCipu = (await p.evaluate(MERENI).catch(() => ({ nalezy: [] }))).nalezy || [];
     vCipu.filter((n) => /filter-chip/.test(n.trida || ''))
       .forEach((n) => vse.push(Object.assign({ stranka: s + ' (' + REZIM.jmeno + ', zapnutý čip)' }, n)));
   }
@@ -259,7 +267,27 @@ for (const n of vse) {
 }
 const seznam = [...podle.values()].sort((a, b) => a.pomer - b.pomer);
 
-console.log(`\nKontrast textu (WCAG AA): ${vse.length} prvků neprošlo, ${seznam.length} různých případů\n`);
+console.log(`\nKontrast textu (WCAG AA): změřeno ${zmerenoCelkem} prvků, ${vse.length} neprošlo, ${seznam.length} různých případů\n`);
+
+/* „VŠECHNO PROJDE" MUSÍ ZNAMENAT, ŽE SE OPRAVDU MĚŘILO.
+   Tahle zkouška nic netvrdí o objemu — jen vypíše, co neprošlo. Když se
+   tedy stránky nenačtou (spadlý server, nedostupný Leaflet, změněné
+   adresy), vyjde z ní „Všechno projde" a vypadá to jako dobrá zpráva.
+   Narazil jsem na to při hledání jedné vady: zkouška jednou padala
+   a podruhé procházela a první, co jsem musel udělat, bylo odlišit
+   „nic neprošlo" od „nebylo co měřit". Teď to odlišuje sama.
+   Mez je naměřená, ne odhadnutá — viz číslo níž. */
+/* Naměřeno na deseti stránkách ve dvou režimech: 3 048 prvků s vlastním
+   textem. Mez je necelá polovina — zachytí nenačtené stránky a přitom
+   nepadne na tom, že se v datech ubere nebo přibere pár nabídek (výpis
+   na úvodu je navíc natvrdo omezený na osm položek, takže objem na
+   datech skoro nezávisí). */
+const MIN_ZMERENO = 1500;
+if (zmerenoCelkem < MIN_ZMERENO) {
+  console.error(`\n::error::Kontrast: změřilo se jen ${zmerenoCelkem} prvků, čekáno aspoň ${MIN_ZMERENO}. `
+    + 'Stránky se nenačetly — „všechno projde" by tady nic neznamenalo.');
+  process.exit(1);
+}
 for (const z of seznam.slice(0, 25)) {
   console.log(`  ${String(z.pomer).padStart(5)} : 1  (nutné ${z.mez})  ${String(z.px).padStart(2)}px  .${z.trida}`);
   console.log(`          ${z.barva} na ${z.pozadi} · ${z.kolik}× · ${[...z.stranky].slice(0, 3).join(', ')}`);
