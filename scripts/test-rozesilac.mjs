@@ -387,6 +387,47 @@ try {
 }
 
 console.log('\nRozesílač upozornění e-mailem');
+/* --- TERMÍN DRAŽBY V UPOZORNĚNÍ -------------------------------------
+   Naměřeno na ostrých datech: ze 166 dražeb a exekucí s termínem je 24 do
+   týdne a 6 do dvou dnů. U dražby je termín ta jediná věc, která nutí
+   jednat — a e-mail i push ho dřív neuváděly vůbec. */
+{
+  const zaDni = (n) => {
+    const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  };
+  const drazba = { ...nabidka(), type: 'drazba', extra: 'dražba ' + zaDni(3) };
+  const exekuce = { ...nabidka(), type: 'exekuce', extra: 'nucená dražba ' + zaDni(30) };
+  const prodej = { ...nabidka(), type: 'sale', extra: 'inzerát – Bezrealitky' };
+  const prosla = { ...nabidka(), type: 'drazba', extra: 'dražba ' + zaDni(-5) };
+
+  const t = sklad.terminText(drazba);
+  pravda('u dražby se řekne, za jak dlouho je', /za 3 dny/.test(t), t);
+  pravda('a k tomu konkrétní datum (e-mail se čte i později, odpočet by lhal)',
+    /\(\d+\. \d+\. \d{4}\)/.test(t), t);
+  pravda('u exekuce se řekne, že je nucená', /nucená dražba/.test(sklad.terminText(exekuce)),
+    sklad.terminText(exekuce));
+  pravda('u běžného prodeje se termín netvrdí', sklad.terminText(prodej) === '',
+    sklad.terminText(prodej));
+  /* Proběhlá dražba se nesmí poslat jako novinka: data se obnovují 4× denně
+     a proběhlé z nich padají, ale mezi obnovou a odesláním je mezera. */
+  pravda('proběhlá dražba se jako termín neuvádí', sklad.terminText(prosla) === '',
+    sklad.terminText(prosla));
+
+  const radek = sklad.popisNabidky(drazba).radek;
+  pravda('a termín se dostane do řádku e-mailu', /dražba za 3 dny/.test(radek), radek);
+  pravda('u prodeje v řádku termín není', !/dražba/.test(sklad.popisNabidky(prodej).radek),
+    sklad.popisNabidky(prodej).radek);
+
+  /* Čeština má tři tvary. „2 nových pozemků" už tenhle web jednou
+     opravoval v odznaku hlídání („1 nových"). */
+  pravda('tvar pro jeden pozemek', sklad.tvarNovyPozemek(1) === 'nový pozemek', sklad.tvarNovyPozemek(1));
+  pravda('tvar pro dva', sklad.tvarNovyPozemek(2) === 'nové pozemky', sklad.tvarNovyPozemek(2));
+  pravda('tvar pro čtyři', sklad.tvarNovyPozemek(4) === 'nové pozemky', sklad.tvarNovyPozemek(4));
+  pravda('tvar pro pět', sklad.tvarNovyPozemek(5) === 'nových pozemků', sklad.tvarNovyPozemek(5));
+  pravda('tvar pro dvanáct', sklad.tvarNovyPozemek(12) === 'nových pozemků', sklad.tvarNovyPozemek(12));
+}
+
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.log(`::error::Rozesílač: ${chyb} kontrol neprošlo.`); process.exit(1); }

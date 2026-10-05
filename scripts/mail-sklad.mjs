@@ -13,6 +13,7 @@
      3. Víc než MAX_V_MAILU nabídek se nevypisuje. Kdo si uloží celý
         okres, dostane jinak sloupec o dvou stech řádcích, který
         neotevře — a zbytek se dohledá na webu. */
+import { readFileSync } from 'node:fs';
 
 export const MAX_V_MAILU = 8;
 export const WEB = 'https://www.parcelaka.cz';
@@ -35,6 +36,37 @@ export function cislo(n) {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 }
 
+/* TERMÍN DRAŽBY SE MUSÍ ŘÍCT, a bere se z js/terminy.js — jednoho místa
+   pro celý web. Čtvrtá kopie počítání dní by znamenala, že e-mail tvrdí
+   o téže dražbě něco jiného než mapa; přesně tak se tu už jednou rozešel
+   cenový verdikt.
+
+   PROČ TO TU CHYBĚLO A PROČ TO VADÍ. Naměřeno na ostrých datech: ze 166
+   dražeb a exekucí s termínem je 24 do týdne a 6 do dvou dnů, medián je
+   16 dní. U dražby je termín ta jediná věc, která nutí jednat — web na to
+   má celý řádek rádce „Kolik zbývá času" — a upozornění místo něj
+   posílalo jen cenu a výměru. „Nový pozemek, 480 000 Kč, 2 000 m²"
+   o dražbě, která je pozítří, zamlčuje to podstatné. */
+const okno = {};
+new Function('window', readFileSync(new URL('../js/terminy.js', import.meta.url), 'utf8'))(okno);
+const T = okno.PK_TERMINY;
+
+/** „dražba zítra", „dražba za 2 týdny" — nebo prázdno, když termín není. */
+export function terminText(d) {
+  if (d.type !== 'drazba' && d.type !== 'exekuce') return '';
+  const dni = T.daysUntil(d.extra);
+  if (dni == null) return '';
+  /* Proběhlou dražbu se neposílá jako novinku: data se obnovují 4× denně
+     a proběhlé z nich padají, ale mezi obnovou a odesláním je mezera. */
+  if (dni < 0) return '';
+  const slovo = d.type === 'exekuce' ? 'nucená dražba' : 'dražba';
+  /* Datum v českém tvaru, ne strojové „20261008": zdrojText() je právě na
+     tohle a je v témž modulu. Samotné „za 3 dny" by nestačilo — e-mail se
+     čte i za týden a odpočet by pak lhal; datum platí vždycky. */
+  const kdy = T.zdrojText((/(\d{4})-(\d{2})-(\d{2})/.exec(d.extra || '') || [''])[0]);
+  return `${slovo} ${T.countdownText(dni)}${kdy ? ` (${kdy})` : ''}`;
+}
+
 export function popisNabidky(d) {
   const c = d.price > 0 ? `${cislo(d.price)} Kč` : 'cena neuvedena';
   const v = d.area > 0 ? `${cislo(d.area)} m²` : 'výměra neuvedena';
@@ -45,7 +77,9 @@ export function popisNabidky(d) {
      pojmenovává na každé stránce. Mlčet o ní v poště by bylo horší než
      neposlat nic. */
   const podil = d.podil ? ` — spoluvlastnický podíl${d.podil_zlomek ? ` ${d.podil_zlomek}` : ''}` : '';
-  return { nadpis: `${druh} ${v} — ${kde}`, radek: `${c} · ${v}${podil}`, podil: !!d.podil };
+  const termin = terminText(d);
+  return { nadpis: `${druh} ${v} — ${kde}`,
+    radek: `${c} · ${v}${podil}${termin ? ' · ' + termin : ''}`, podil: !!d.podil };
 }
 
 /* Odkaz vede na VLASTNÍ stránku pozemku, ne na mapu s parametry: je to
@@ -62,10 +96,20 @@ export function odkazNaPozemek(d) {
   return `${WEB}/${d.soubor}`;
 }
 
+/* ČEŠTINA MÁ TŘI TVARY, ne dva. „2 nových pozemků" je ostuda, kterou
+   tenhle web už jednou opravoval v odznaku hlídání („1 nových"). Je to
+   tady jednou a vyváží se, aby si to rozesílač push zpráv nemusel psát
+   znovu — třetí kopie by znamenala, že se dřív nebo později rozejdou. */
+export function tvarNovyPozemek(n) {
+  if (n === 1) return 'nový pozemek';
+  if (n >= 2 && n <= 4) return 'nové pozemky';
+  return 'nových pozemků';
+}
+
 export function predmet(skupiny) {
   const kolik = skupiny.reduce((s, g) => s + g.nove.length, 0);
   if (!kolik) throw new Error('prázdný e-mail se neposílá');
-  const slovo = kolik === 1 ? 'nový pozemek' : (kolik < 5 ? 'nové pozemky' : 'nových pozemků');
+  const slovo = tvarNovyPozemek(kolik);
   if (skupiny.length === 1 && skupiny[0].label) {
     return `${kolik} ${slovo} — ${skupiny[0].label}`;
   }

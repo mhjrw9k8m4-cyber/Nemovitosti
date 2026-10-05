@@ -34,6 +34,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { mapaSouboru, klicNabidky } from './generate-parcel-pages.mjs';
 import { posli as posliPush } from './web-push.mjs';
+import { terminText, tvarNovyPozemek } from './mail-sklad.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require_ = createRequire(import.meta.url);
@@ -84,13 +85,20 @@ export function zprava(hledani, nove) {
   const kusy = prvni.map((d) => {
     const misto = d.place || d.okres || 'pozemek';
     const cena = (d.price > 0 && d.area > 0) ? ` ${Math.round(d.price / d.area)} Kč/m²` : '';
-    return misto + cena;
+    /* TERMÍN DRAŽBY JDE PŘED CENU. Naměřeno: ze 166 dražeb a exekucí je
+       24 do týdne a 6 do dvou dnů. U dražby je termín ta jediná věc, která
+       nutí jednat hned — cena se dá přečíst i za dva dny, dražba ne.
+       Na uzamčené obrazovce jsou vidět dva řádky, takže na místě, kde se
+       krátí, musí zůstat on. Odpočet („zítra") i datum: upozornění se čte
+       i později a odpočet by pak lhal. */
+    const termin = terminText(d);
+    return misto + (termin ? ` — ${termin}` : cena);
   });
   const zbytek = nove.length - prvni.length;
   return {
     nadpis: nove.length === 1
       ? 'Nový pozemek v hlídání'
-      : `${nove.length} nových pozemků v hlídání`,
+      : `${nove.length} ${tvarNovyPozemek(nove.length)} v hlídání`,
     text: (hledani.label ? hledani.label + ': ' : '') + kusy.join(' · ')
       + (zbytek > 0 ? ` a ${zbytek} dalších` : ''),
     /* Vede se na Upozornění, kde jsou vypsané — ne na mapu, kde by se
