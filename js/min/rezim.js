@@ -15,8 +15,21 @@
     try { localStorage.setItem(KLIC, v); }
     catch (e) {   }
   }
+
+  var LISTA = { light: '#F9FAF9', dark: '#17281E' };
+  function obarviListu(v) {
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (!m) {
+      m = document.createElement('meta');
+      m.setAttribute('name', 'theme-color');
+      document.head.appendChild(m);
+    }
+    m.setAttribute('content', LISTA[v === 'dark' ? 'dark' : 'light']);
+  }
+
   function pouzij(v) {
     document.documentElement.setAttribute('data-theme', v === 'dark' ? 'dark' : 'light');
+    obarviListu(v);
   }
   function dalsi(v) { return VOLBY[(VOLBY.indexOf(v) + 1) % VOLBY.length]; }
 

@@ -36,8 +36,42 @@
     try { localStorage.setItem(KLIC, v); }
     catch (e) { /* zakázaná schránka: volba vydrží do konce návštěvy */ }
   }
+  /* BARVA LIŠTY PROHLÍŽEČE. Na mobilu si Chrome i Safari obarví lištu
+     s adresou podle theme-color. Dokud byla na všech 2153 stránkách
+     jedna statická hodnota, byla ta lišta v tmavém režimu téměř bílá
+     nad stránkou, která je skoro černá — nejnápadnější šev na celém
+     webu a naprosto zbytečný.
+
+     Hodnoty nejsou odhad ani výpočet, ale měření: ze snímku hlavičky na
+     mobilní šířce se vzala nejčastější barva ze všech 33 150 pixelů.
+     V tmavém režimu to je #17281E (44 % pixelů, zbytek do jedné
+     jednotky), ve světlém #F9FAF9 (rozptyl #F8F9F8–#FBFCFB — hlavička
+     má backdrop-filter, a ten výsledek po pixelech rozechvěje).
+
+     Spočítat se to nedalo: složení bílé na 95 % nad #E3EFE7 vychází
+     #FEFEFE, a tak hlavička NEVYPADÁ. Proto měření, ne aritmetika.
+
+     A ještě poctivě: ve SVĚTLÉM režimu byla stará jediná hodnota
+     #FBFAF8 prakticky správná (dvě jednotky vedle). Vada byla celá
+     v tmavém — tam svítila nad stránkou #0E1A14 téměř bílá lišta.
+
+     První nastavení dělá vložený úryvek v hlavičce ještě před
+     vykreslením (jinak by lišta blikla). Tohle je ta druhá polovina:
+     když si člověk režim přepne, musí se lišta přebarvit s ním. */
+  var LISTA = { light: '#F9FAF9', dark: '#17281E' };
+  function obarviListu(v) {
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (!m) {
+      m = document.createElement('meta');
+      m.setAttribute('name', 'theme-color');
+      document.head.appendChild(m);
+    }
+    m.setAttribute('content', LISTA[v === 'dark' ? 'dark' : 'light']);
+  }
+
   function pouzij(v) {
     document.documentElement.setAttribute('data-theme', v === 'dark' ? 'dark' : 'light');
+    obarviListu(v);
   }
   function dalsi(v) { return VOLBY[(VOLBY.indexOf(v) + 1) % VOLBY.length]; }
 

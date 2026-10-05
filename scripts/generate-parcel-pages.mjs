@@ -369,14 +369,24 @@ export function migrujLeaflet(h) {
  * Idempotentní: pozná se podle klíče localStorage, ne podle celého textu,
  * takže se úryvek nevloží dvakrát, ani když se jeho komentář přepíše. */
 export function migrujPredvykresleni(sablona, h) {
-  if (h.indexOf('pk_rezim_v1') >= 0) return h;
-  const m = /<script>\/\* Vzhled se musí nastavit[\s\S]*?<\/script>\n?/.exec(sablona);
+  const m = /<script>\/\* Vzhled se musí nastavit[\s\S]*?<\/script>/.exec(sablona);
   if (!m) throw new Error('migrujPredvykresleni: v předloze není úryvek pro nastavení režimu — změnil se?');
+  const uryvek = m[0];
+
+  /* UŽ TAM JE, ALE JINÝ: PŘEPSAT, NE NECHAT.
+     Dřív tu stálo „když stránka obsahuje pk_rezim_v1, nech ji být" —
+     a to je idempotence, která zakonzervuje starou verzi. Když do
+     úryvku přišla barva lišty prohlížeče (theme-color), archivované
+     stránky by ji nikdy nedostaly: klíč v nich byl, takže se přeskočily.
+     Porovnává se tedy celý text úryvku, a liší-li se, vymění se. */
+  const ve = /<script>\/\* Vzhled se musí nastavit[\s\S]*?<\/script>/.exec(h);
+  if (ve) return ve[0] === uryvek ? h : h.replace(ve[0], uryvek);
+
   /* Musí stát co nejdřív: před prvním stylem i před <body>. Hned za
      charsetem to splňuje vždycky. */
   const kotva = /<meta charset="[^"]*">\n/.exec(h);
   if (!kotva) throw new Error('migrujPredvykresleni: ve stránce není <meta charset> — nemám kam vložit');
-  return h.replace(kotva[0], kotva[0] + m[0].replace(/\n$/, '') + '\n');
+  return h.replace(kotva[0], kotva[0] + uryvek + '\n');
 }
 
 export function migrujSkripty(sablona, h) {

@@ -488,11 +488,11 @@ function head(title, desc, canonicalPath, ld, crumbs, ogSoubor, kanal, kanalNaze
   return `<!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8">\n<script>/* Vzhled se nastavuje JEŠTĚ PŘED vykreslením — jinak by stránka blikla světle a hned ztmavla. */try{var v=localStorage.getItem('pk_rezim_v1');if(v==='dark'||v==='light')document.documentElement.setAttribute('data-theme',v);}catch(e){}</script>
+  <meta charset="UTF-8">\n<script>/* Vzhled se musí nastavit JEŠTĚ PŘED vykreslením: jinak se stránka stihne vykreslit světle a hned ztmavnout, a bílé bliknutí do očí v noci je přesně to, kvůli čemu si lidé tmavý režim zapínají. Proto je to vložené a synchronní, ne soubor s defer. Zároveň se vloží theme-color — barva lišty prohlížeče. Vložený meta stojí v pořadí PŘED statickým níž a prohlížeč bere první, takže vyhraje tenhle; statický zůstává pro případ, že skripty neběží. */try{var v=localStorage.getItem('pk_rezim_v1');if(v==='dark'||v==='light')document.documentElement.setAttribute('data-theme',v);var m=document.createElement('meta');m.setAttribute('name','theme-color');m.setAttribute('content',v==='dark'?'#17281E':'#F9FAF9');document.head.appendChild(m);}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${esc(title)}</title>
   <meta name="description" content="${attr(desc)}">
-  <meta name="theme-color" content="#FBFAF8">
+  <meta name="theme-color" content="#F9FAF9">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://www.parcelaka.cz/${canonicalPath}">
 <link rel="alternate" type="application/rss+xml" title="${attr(kanalNazev || 'Parcelka — nové pozemky')}" href="${kanal || 'novinky.xml'}">
