@@ -97,6 +97,49 @@ pravda(`mez sebrala cenu za metr jen hrstce nabídek (${sebrano} z ${sCenou.leng
   podil <= 0.01,
   'mez je nasazená moc nízko, nebo se zdroje zhoršily — v obou případech to chce podívat se, komu to čísla bere');
 
+// --- 2b) Dvojčata: obě kopie téhož pravidla musí dát totéž ---------
+/* PROČ TU TA KOPIE VŮBEC JE. Tři funkce — zaMetr, vymeraVCene a
+   zlomekPodilu — stojí doslovně dvakrát: v js/ceny.js pro web a
+   v js/hlidani-logika.js pro rozesílání upozornění. Rozesílání běží
+   v Node, kde se js/ceny.js nenačítá (je to prohlížečový modul, který
+   si věší window.PK_CENY), takže si pravidlo nese s sebou.
+
+   ČÍM TO MŮŽE DOPADNOUT. Když se kopie rozejdou, nic se nerozbije —
+   jen začne web tvrdit jiné číslo než mail, který o téže nabídce
+   přijde. Člověk dostane upozornění „levný pozemek za 40 Kč/m²",
+   klikne, a na stránce žádná cena za metr není. Přesně tohle se už
+   jednou stalo: mez uvěřitelnosti se přidala do js/ceny.js a druhá
+   kopie o ní týden nevěděla.
+
+   Proto se obě kopie proženou CELÝMI skutečnými daty a výsledek musí
+   být na znak stejný. Není to porovnání dvou zápisů téhož vzorce —
+   je to porovnání dvou nezávisle načtených modulů nad 2 000 nabídek. */
+{
+  const dvojcata = ['zaMetr', 'vymeraVCene', 'zlomekPodilu'];
+  pravda('obě kopie pravidla jsou vůbec k mání',
+    dvojcata.every((k) => typeof CENY[k] === 'function' && typeof PKH[k] === 'function'),
+    'chybí: ' + dvojcata.filter((k) => typeof CENY[k] !== 'function' || typeof PKH[k] !== 'function').join(', '));
+
+  for (const k of dvojcata) {
+    let srovnano = 0, necoVraci = 0;
+    const rozdily = [];
+    for (const o of all) {
+      const a = CENY[k](o), b = PKH[k](o);
+      srovnano++;
+      if (a != null) necoVraci++;
+      if (JSON.stringify(a) !== JSON.stringify(b) && rozdily.length < 4) {
+        rozdily.push(`${o.place || '?'} (${o.price}/${o.area}): ceny.js ${JSON.stringify(a)} × hlidani-logika.js ${JSON.stringify(b)}`);
+      }
+    }
+    /* PŘEDPOKLADY. Kdyby data byla prázdná nebo funkce vracela všude
+       null, „žádný rozdíl" by byla pravda o ničem. */
+    pravda(`${k}: je co srovnávat (${srovnano} nabídek)`, srovnano >= 1000, 'jen ' + srovnano);
+    pravda(`${k}: a opravdu něco vrací (${necoVraci}×)`, necoVraci >= 100, 'nenulových jen ' + necoVraci);
+    pravda(`${k}: obě kopie dávají na všech datech totéž`, rozdily.length === 0,
+      rozdily.join('\n      '));
+  }
+}
+
 // --- 3) Na vysázených stránkách žádné takové číslo nestojí ----------
 const stranky = readdirSync(ROOT).filter((f) => /^(pozemky-okres-[a-z0-9-]+|pozemky-[a-z-]+-kraj|drazby-pozemku-nabidky)\.html$/.test(f));
 pravda(`stránky s výpisem se našly (${stranky.length})`, stranky.length > 50);

@@ -111,6 +111,12 @@ function sklon(n, jedna, dveAzCtyri, petAVic){
   return petAVic;
 }
 function pluralPozemek(n){ return sklon(n, 'pozemek', 'pozemky', 'pozemků'); }
+/* PŘÍDAVNÉ JMÉNO SE MUSÍ SKLOŇOVAT S NÍM. Podstatné jméno se tu
+   skloňovalo správně, ale „Zbývajících" stálo natvrdo ve druhém pádě,
+   takže na stránce vinic a sadů (zbývaly dva pozemky) svítilo
+   „Zbývajících 2 pozemky". Velikost chyby je jedno slovo, ale je to
+   přesně ten druh, který nikdo nehlásí a každý vidí. */
+function zbyvajici(n){ return sklon(n, 'Zbývající', 'Zbývající', 'Zbývajících'); }
 function krajFile(kraj){ return `pozemky-${slug(kraj)}-kraj.html`; }
 function okresFile(okres){ return `pozemky-okres-${slug(okres)}.html`; }
 function write(file, html){ fs.writeFileSync(path.join(ROOT, file), html); }
@@ -1142,7 +1148,7 @@ ${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}
           </div>
-${zbyva ? `          <p class="okr-more" style="margin-top:14px;"><a href="${mapaOdkaz}">Zbývajících ${fmt(zbyva)} ${pluralPozemek(zbyva)} najdete na mapě →</a></p>` : ''}
+${zbyva ? `          <p class="okr-more" style="margin-top:14px;"><a href="${mapaOdkaz}">${zbyvajici(zbyva)} ${fmt(zbyva)} ${pluralPozemek(zbyva)} najdete na mapě →</a></p>` : ''}
         </div>
       </div>
 

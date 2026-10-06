@@ -114,6 +114,64 @@ for (const f of stranky) {
     zkontroluj(f, m[1].replace(/&nbsp;/g, ' '), m[2], m[1].trim() + ' ' + m[2]);
   }
 }
+/* ---------- A TVAR SLOVA PŘED ČÍSLEM ----------
+   Kontrola výš hlídá podstatné jméno ZA číslem. Jenže čeština skloňuje
+   i to, co stojí PŘED ním, a tam se to dá snadno zapomenout: slovo se
+   do šablony napíše jednou a napevno, zatímco podstatné jméno si projde
+   funkcí.
+
+   Takhle se to taky stalo. Na stránce vinic a sadů zbývaly dva pozemky
+   a svítilo tam „Zbývajících 2 pozemky": podstatné jméno správně,
+   přídavné natvrdo ve druhém pádě. Kontrola nad tím mlčela, protože
+   „2 pozemky" je v pořádku.
+
+   Tabulka je schválně krátká — jen slova, která se na webu před číslem
+   opravdu objevují. Co v ní není, se nekontroluje; plané poplachy jsou
+   horší než mezera. */
+const PRIDAVNA = [
+  ['zbývající', 'zbývající', 'zbývajících'],
+
+  ['nalezený', 'nalezené', 'nalezených'],
+  ['vypsaný', 'vypsané', 'vypsaných'],
+  ['další', 'další', 'dalších'],
+];
+const PRED = new Map();
+for (const t of PRIDAVNA) for (const tvar of t) PRED.set(tvar, t);
+const pridavna = [];
+for (const f of stranky) {
+  const html = readFileSync(new URL(f, KOREN), 'utf8')
+    .replace(/<(script|style)\b[\s\S]*?<\/\1>/g, ' ');
+  for (const uzel of html.split(/<[^>]+>/)) {
+    const t = uzel.replace(/&nbsp;/g, '\u00a0').replace(/&[a-z]+;/g, ' ');
+    for (const m of t.matchAll(CISLO_A_SLOVO)) {
+      const pred = t.slice(0, m.index).match(/([A-Za-zÁ-Žá-ž]+)[\s\u00a0]*$/);
+      if (!pred) continue;
+      const klic = pred[1].toLowerCase();
+      if (!PRED.has(klic)) continue;
+      const n = Number(String(m[1]).replace(/[\s\u00a0]/g, ''));
+      if (!isFinite(n)) continue;
+      const ma = spravnyTvar(n, PRED.get(klic));
+      if (ma !== klic) pridavna.push(`${f}: „${pred[1]} ${m[0].trim()}" → má být „${ma} ${n}…"`);
+    }
+  }
+}
+/* PŘEDPOKLAD: kdyby se na webu žádné takové slovo nevyskytovalo,
+   „nic není špatně" by byla pravda o ničem. Hledá se tedy i to, kolik
+   dvojic vůbec prošlo rukama. */
+let nalezenoDvojic = 0;
+for (const f of stranky) {
+  const html = readFileSync(new URL(f, KOREN), 'utf8');
+  for (const t of PRED.keys()) {
+    const re = new RegExp(t + '[\\s\\u00a0]+[0-9]', 'gi');
+    nalezenoDvojic += (html.match(re) || []).length;
+  }
+}
+pravda(`slova před číslem se na webu vyskytují (${nalezenoDvojic}×)`, nalezenoDvojic >= 3,
+  'našlo se jen ' + nalezenoDvojic + ' — kontrola pod tím by neznamenala nic');
+pravda('tvar slova před číslem sedí (Zbývající 2 pozemky, Zbývajících 5 pozemků)',
+  pridavna.length === 0,
+  [...new Set(pridavna)].slice(0, 6).join('; '));
+
 pravda('tvar slova za číslem sedí (1 okres, 2 okresy, 5 okresů)', tvary.length === 0,
   [...new Set(tvary)].slice(0, 6).join('; ') + (tvary.length > 6 ? ` … a dalších ${tvary.length - 6}` : ''));
 

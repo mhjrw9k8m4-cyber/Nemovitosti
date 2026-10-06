@@ -63,6 +63,12 @@
      jsem mez přidal jen do jedné z nich. */
   var MEZ_NEUVERITELNA = 30000;
   /** Cena za metr, který kupující opravdu dostane. null = nevíme. */
+  /* DVOJČE. Tahle funkce stojí doslovně i v js/ceny.js. Rozesílání
+     upozornění běží v Node, kde se prohlížečový modul js/ceny.js
+     nenačte, takže si pravidlo musí nést s sebou.
+     Když se kopie rozejdou, nic nespadne — jen začne web tvrdit jiné
+     číslo než mail o téže nabídce. Hlídá to scripts/test-strop-ceny.mjs:
+     prožene obě kopie celými daty a výsledek musí být na znak stejný. */
   function zaMetr(d) {
     var v = vymeraVCene(d);
     if (!(v > 0) || !d || !(d.price > 0)) return null;
