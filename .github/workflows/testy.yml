@@ -347,6 +347,9 @@ jobs:
       - name: Vazby ARIA vedou na prvky, které existují
         run: node scripts/test-aria-cile.mjs
 
+      - name: Do posuvné oblasti se vejde aspoň jedna položka
+        run: node scripts/test-vmacknuto.mjs
+
       - name: Tlačítko „nahoru" na dlouhých stránkách
         run: node scripts/test-nahoru.mjs
 

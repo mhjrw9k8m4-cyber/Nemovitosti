@@ -302,17 +302,11 @@
     var okr = {};
     DATA.forEach(function (d) { if (d.okres) okr[d.okres] = 1; });
     var okresN = Object.keys(okr).length;
-    var nums = document.querySelectorAll('.counters .c-num');
-    if (nums.length) {
-      if (nums[0]) nums[0].setAttribute('data-count', String(DATA.length));
-      if (nums[1]) nums[1].setAttribute('data-count', String(okresN));
-    }
 
     var sc = document.getElementById('stat-count'); if (sc) sc.textContent = fmt(DATA.length);
     var so = document.getElementById('stat-okres'); if (so) so.textContent = String(okresN);
 
     var hc = document.getElementById('hero-n-count'); if (hc) hc.textContent = fmt(DATA.length);
-    var ho = document.getElementById('hero-n-okres'); if (ho) ho.textContent = String(okresN);
   })();
 
   (function () {
@@ -603,9 +597,9 @@
   var areaDoEl = document.getElementById('map-area-do');
   var minPrice = 0, maxArea = 0;
   var perm2El = document.getElementById('map-perm2');
-  var krajFiltrEl = document.getElementById('map-kraj');
   var levneEl = document.getElementById('map-levne');
   var maxPerM2 = 0;
+
   var krajFiltr = 'all';
   var levneOnly = false;
   var activeType = 'all';
@@ -1952,7 +1946,6 @@
     okoliZap = true;
     selectedKraj = null;
     krajFiltr = 'all';
-    if (krajFiltrEl) krajFiltrEl.value = 'all';
     prekresliKraje();
     resizeDots();
     nearMode = true;
@@ -2953,6 +2946,23 @@
     scrollNaVypis();
   });
 
+  (function zavirani() {
+    var panel = document.getElementById('ms-filters');
+    if (!panel || !window.matchMedia) return;
+    var siroko = window.matchMedia('(min-width:1041px)');
+    function vrstva() { return panel.open && siroko.matches; }
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' || !vrstva()) return;
+      panel.open = false;
+      var sum = panel.querySelector('summary');
+      if (sum) sum.focus();
+    });
+    document.addEventListener('pointerdown', function (e) {
+      if (!vrstva() || panel.contains(e.target)) return;
+      panel.open = false;
+    });
+  })();
+
   function nejvicOmezuje() {
     var kandidati = [];
     omezeni().forEach(function (o) {
@@ -3723,7 +3733,6 @@
       dosadVyber(areaEl, st.minArea);
       dosadVyber(areaDoEl, st.maxArea);
       dosadVyber(perm2El, st.maxPerM2);
-      if (st.krajFiltr && krajFiltrEl) dosadVyber(krajFiltrEl, st.krajFiltr);
       if (st.sortMode && st.sortMode !== 'near' && sortEl) dosadVyber(sortEl, st.sortMode);
 
       if (st.urgentOnly && !urgentOnly && urgentEl) { urgentEl.click(); neco = true; }
@@ -4505,25 +4514,6 @@
     levneEl.setAttribute('aria-pressed', String(levneOnly));
     renderList();
   });
-  if (krajFiltrEl) {
-
-    var pocty = {};
-    DATA.forEach(function (d) { var k = d._gkraj || krajOf(d); if (k) pocty[k] = (pocty[k] || 0) + 1; });
-    Object.keys(pocty).sort(function (a, b) { return a.localeCompare(b, 'cs'); }).forEach(function (k) {
-      var o = document.createElement('option');
-      o.value = k;
-      o.textContent = (k === 'Praha' ? 'Praha' : (k === 'Vysočina' ? 'Vysočina' : k)) + ' (' + pocty[k] + ')';
-      krajFiltrEl.appendChild(o);
-    });
-    krajFiltrEl.addEventListener('change', function () {
-      krajFiltr = krajFiltrEl.value;
-      renderList();
-
-      if (krajFiltr !== 'all' && typeof selectKraj === 'function') { try { selectKraj(krajFiltr); } catch (e) {} }
-      else if (typeof clearKraj === 'function') { try { clearKraj(); } catch (e) {} }
-    });
-  }
-
   refreshFavBtn();
   renderList();
   renderRecent();
@@ -4684,7 +4674,6 @@
     if (f.kraj) krajFiltr = f.kraj;
     levneOnly = !!f.levne;
     if (perm2El && maxPerM2) perm2El.value = String(maxPerM2);
-    if (krajFiltrEl && krajFiltr) krajFiltrEl.value = krajFiltr;
     if (levneEl) { levneEl.classList.toggle('on', levneOnly); levneEl.setAttribute('aria-pressed', String(levneOnly)); }
     if (urgentEl) urgentEl.checked = urgentOnly;
     if (sortEl) sortEl.value = sortMode;

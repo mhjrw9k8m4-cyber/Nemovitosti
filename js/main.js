@@ -412,17 +412,15 @@
     var okr = {};
     DATA.forEach(function (d) { if (d.okres) okr[d.okres] = 1; });
     var okresN = Object.keys(okr).length;
-    var nums = document.querySelectorAll('.counters .c-num');
-    if (nums.length) {
-      if (nums[0]) nums[0].setAttribute('data-count', String(DATA.length));
-      if (nums[1]) nums[1].setAttribute('data-count', String(okresN));
-    }
+    /* Dvě místa, která tu čísla doopravdy berou. Odsud zmizely dvě další,
+       po kterých v žádné z 2 163 stránek nezbyl prvek: .counters .c-num
+       (celá sekce s počítadly je pryč) a #hero-n-okres (v proužku nad
+       hlavičkou zůstal jen počet pozemků, ne počet okresů). */
     // Statistiky v sekci zdrojů (důvěra + hodnota v číslech)
     var sc = document.getElementById('stat-count'); if (sc) sc.textContent = fmt(DATA.length);
     var so = document.getElementById('stat-okres'); if (so) so.textContent = String(okresN);
     // Živá čísla v hero proužku (sociální důkaz hned nahoře).
     var hc = document.getElementById('hero-n-count'); if (hc) hc.textContent = fmt(DATA.length);
-    var ho = document.getElementById('hero-n-okres'); if (ho) ho.textContent = String(okresN);
   })();
 
   // „Naposledy aktualizováno" — signál čerstvosti dat (z pole updated).
@@ -843,9 +841,19 @@
   var areaDoEl = document.getElementById('map-area-do');
   var minPrice = 0, maxArea = 0;
   var perm2El = document.getElementById('map-perm2');
-  var krajFiltrEl = document.getElementById('map-kraj');
   var levneEl = document.getElementById('map-levne');
   var maxPerM2 = 0;
+  /* KRAJ UŽ NEMÁ VLASTNÍ ROZBALOVÁTKO. Z recenze panelu: kraj je moc hrubé
+     síto a zabíral místo, které patří našeptávači na obec a okres (hlídá
+     test-uvod — #map-kraj nesmí existovat). Odsud zmizela i jeho obsluha:
+     plnila nabídku a věšela posluchač na prvek, který v žádné z 2 163
+     stránek není, takže nikdy neproběhla.
+     Proměnná ale zůstává, a není mrtvá. Uložený filtr si kraj pořád může
+     nést z doby, kdy rozbalovátko existovalo (ukládá se pod klíčem
+     pk_filtr_v1 a obnovFiltr ho dosadí zpátky). Čte ji proto visible()
+     i seznam aktivních omezení — a ten je zároveň jediná cesta ven:
+     odstranitelný štítek „kraj". Živý výběr kraje dnes drží selectedKraj
+     (klepnutí do mapy) a d.kraj (rychlý výběr). */
   var krajFiltr = 'all';
   var levneOnly = false;
   var activeType = 'all';
@@ -2846,7 +2854,6 @@
     okoliZap = true;
     selectedKraj = null;
     krajFiltr = 'all';
-    if (krajFiltrEl) krajFiltrEl.value = 'all';
     prekresliKraje();
     resizeDots();
     nearMode = true;
@@ -4261,6 +4268,30 @@
     scrollNaVypis();
   });
 
+  /* ZAVÍRÁNÍ PLOVOUCÍHO PANELU. Od šířky 1041 px panel filtrů neleží
+     v toku stránky, ale visí z lišty přes mapu — je to vrstva. Vrstva se
+     musí dát zavřít i jinak než trefením se zpátky do záhlaví: klávesou
+     Esc a klepnutím vedle. (Dokud panel roztahoval sloupec, nic z toho
+     nebylo potřeba; teď zakrývá mapu, takže otevřený panel překáží.)
+     Na užších displejích panel v toku pořád je a zavírání klepnutím
+     vedle by tam jen vadilo, proto se poslouchá jen nad 1041 px. */
+  (function zavirani() {
+    var panel = document.getElementById('ms-filters');
+    if (!panel || !window.matchMedia) return;
+    var siroko = window.matchMedia('(min-width:1041px)');
+    function vrstva() { return panel.open && siroko.matches; }
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' || !vrstva()) return;
+      panel.open = false;
+      var sum = panel.querySelector('summary');
+      if (sum) sum.focus();
+    });
+    document.addEventListener('pointerdown', function (e) {
+      if (!vrstva() || panel.contains(e.target)) return;
+      panel.open = false;
+    });
+  })();
+
   /* Které omezení výpis vyprázdnilo. Zkusí se každé zvlášť vypnout
      a spočítá se, kolik by nabídek zbylo; vypíše se to, po jehož vypnutí
      jich je nejvíc. Když nepomůže ani jedno samo o sobě, neřekne se nic —
@@ -5315,7 +5346,6 @@
       dosadVyber(areaEl, st.minArea);
       dosadVyber(areaDoEl, st.maxArea);
       dosadVyber(perm2El, st.maxPerM2);
-      if (st.krajFiltr && krajFiltrEl) dosadVyber(krajFiltrEl, st.krajFiltr);
       if (st.sortMode && st.sortMode !== 'near' && sortEl) dosadVyber(sortEl, st.sortMode);
       /* Přepínače: klepne se jen tam, kde se stav liší — jinak by se
          zapnutý filtr klepnutím zase vypnul. */
@@ -6244,27 +6274,6 @@
     levneEl.setAttribute('aria-pressed', String(levneOnly));
     renderList();
   });
-  if (krajFiltrEl) {
-    // Nabídka krajů se plní z DAT, ne z pevného seznamu — kraj bez jediného
-    // pozemku by byl slepá ulička.
-    var pocty = {};
-    DATA.forEach(function (d) { var k = d._gkraj || krajOf(d); if (k) pocty[k] = (pocty[k] || 0) + 1; });
-    Object.keys(pocty).sort(function (a, b) { return a.localeCompare(b, 'cs'); }).forEach(function (k) {
-      var o = document.createElement('option');
-      o.value = k;
-      o.textContent = (k === 'Praha' ? 'Praha' : (k === 'Vysočina' ? 'Vysočina' : k)) + ' (' + pocty[k] + ')';
-      krajFiltrEl.appendChild(o);
-    });
-    krajFiltrEl.addEventListener('change', function () {
-      krajFiltr = krajFiltrEl.value;
-      renderList();
-      // Kraj vybraný ze seznamu má mapu rovnou ukázat — jinak by člověk
-      // filtroval naslepo a mapa by dál stála nad celou republikou.
-      if (krajFiltr !== 'all' && typeof selectKraj === 'function') { try { selectKraj(krajFiltr); } catch (e) {} }
-      else if (typeof clearKraj === 'function') { try { clearKraj(); } catch (e) {} }
-    });
-  }
-
   refreshFavBtn();
   renderList();
   renderRecent();
@@ -6494,7 +6503,6 @@
     if (f.kraj) krajFiltr = f.kraj;
     levneOnly = !!f.levne;
     if (perm2El && maxPerM2) perm2El.value = String(maxPerM2);
-    if (krajFiltrEl && krajFiltr) krajFiltrEl.value = krajFiltr;
     if (levneEl) { levneEl.classList.toggle('on', levneOnly); levneEl.setAttribute('aria-pressed', String(levneOnly)); }
     if (urgentEl) urgentEl.checked = urgentOnly;
     if (sortEl) sortEl.value = sortMode;

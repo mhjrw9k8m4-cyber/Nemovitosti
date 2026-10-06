@@ -100,7 +100,12 @@ const cerne = nalezy.filter((n) => n.l <= CERNA_L);
 const barevne = nalezy.filter((n) => n.s >= NEUTRALNI_S);
 
 // --- Předpoklady: test nesmí projít na prázdnu -----------------------
-pravda('v předloze jsou barvy k měření', nalezy.length >= 300,
+/* Mez je 250, ne 300. Nehlídá se tu velikost souboru, ale jestli se vůbec
+   přečetl — nepřečtený dá nulu. Na 300 byla naladěná na tehdejší stav
+   a spadla ve chvíli, kdy ze stylu zmizelo 64 pravidel po smazaných
+   sekcích (barev v pravidlech 291). To je úklid, ne vada, a test, který
+   na úklidu padá, by lidi učil uklízet míň. */
+pravda('v předloze jsou barvy k měření', nalezy.length >= 250,
   `nalezeno jen ${nalezy.length} — čte test vůbec css/styles.css?`);
 pravda('paleta má odstínové rodiny', rodiny.size >= 10,
   `rodin jen ${rodiny.size}`);

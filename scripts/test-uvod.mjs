@@ -309,10 +309,10 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
       druhSPoctem: stitky.filter((b) => b.querySelector('.mcv-n') && /\d/.test(b.querySelector('.mcv-n').textContent)).length,
       druhRozbalovatko: !!document.getElementById('map-druh'),
       krajRozbalovatko: !!document.getElementById('map-kraj'),
-      razeniVPanelu: !!document.querySelector('.map-controls #map-sort'),
-      razeniNadVysledky: vidno(document.querySelector('.ms-vysledky #map-sort')),
-      ulozeneVPanelu: !!document.querySelector('.map-controls #map-fav'),
-      ulozeneNadVysledky: vidno(document.querySelector('.ms-vysledky #map-fav')),
+      razeniMeziFiltry: !!document.querySelector('#ms-filters #map-sort'),
+      razeniVidet: vidno(document.getElementById('map-sort')),
+      ulozeneMeziFiltry: !!document.querySelector('#ms-filters #map-fav'),
+      ulozeneVidet: vidno(document.getElementById('map-fav')),
       prepinaceJakoStitky: [...document.querySelectorAll('.mc-toggles button')]
         .every((b) => b.classList.contains('mc-prep') && !b.classList.contains('map-select')),
     };
@@ -324,10 +324,19 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
     `s počtem ${v.druhSPoctem} z ${v.druhStitku}`);
   pravda('kraj už panel nezabírá — od toho je nahoře našeptávač',
     v.krajRozbalovatko === false);
-  pravda('řazení je nad výsledky, ne mezi filtry',
-    v.razeniNadVysledky === true && v.razeniVPanelu === false, JSON.stringify(v));
+  /* PRAVIDLO, NE MÍSTO. Dřív tu stálo „musí být uvnitř .ms-vysledky",
+     což je jedno konkrétní místo v dokumentu, a to se změnilo: řazení
+     i „Uložené" se přestěhovaly do lišty nad mapou, napravo za dělicí
+     linku. Důvod byl měřený — ve sloupci širokém 380 px se počet,
+     „Uložené" a řazení nevešly na řádek, zlomily se na tři (102 px
+     z 684 px aplikace) a na výpis zbylo 271 px při kartě vysoké 420 px.
+     Pravidlo z recenze panelu ale zní jinak než ta poloha: řazení
+     a „Uložené" nepatří MEZI FILTRY, protože nic neubírají. To platí
+     dál a hlídá se dál — jen se ptáme na to pravidlo, ne na rodiče. */
+  pravda('řazení není mezi filtry a je vidět',
+    v.razeniVidet === true && v.razeniMeziFiltry === false, JSON.stringify(v));
   pravda('„Uložené" taky — není to vlastnost pozemku, ale můj výběr',
-    v.ulozeneNadVysledky === true && v.ulozeneVPanelu === false, JSON.stringify(v));
+    v.ulozeneVidet === true && v.ulozeneMeziFiltry === false, JSON.stringify(v));
   pravda('přepínače v panelu vypadají jako štítky, ne jako rozbalovátka',
     v.prepinaceJakoStitky === true, 'zbyla třída map-select — přepínač se tváří jako seznam');
 

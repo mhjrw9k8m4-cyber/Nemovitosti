@@ -591,10 +591,9 @@ path.leaflet-interactive:focus, path.leaflet-interactive:focus-visible{ outline:
 /* Scroll reveal */
 .reveal{opacity:0; transform:translateY(22px); transition:opacity var(--cas-pomaly) var(--ease), transform var(--cas-pomaly) var(--ease);}
 .reveal.in{opacity:1; transform:none;}
-
 /* Postupné nabíhání karet (stagger) */
-.steps>.reveal:nth-child(2),.features>.reveal:nth-child(2),.status-grid>.reveal:nth-child(2),.reviews>.reveal:nth-child(2),.pricing>.reveal:nth-child(2){transition-delay:.09s;}
-.steps>.reveal:nth-child(3),.features>.reveal:nth-child(3),.status-grid>.reveal:nth-child(3),.reviews>.reveal:nth-child(3),.pricing>.reveal:nth-child(3){transition-delay:.18s;}
+.steps>.reveal:nth-child(2), .features>.reveal:nth-child(2), .status-grid>.reveal:nth-child(2), .reviews>.reveal:nth-child(2){transition-delay:.09s;}
+.steps>.reveal:nth-child(3), .features>.reveal:nth-child(3), .status-grid>.reveal:nth-child(3), .reviews>.reveal:nth-child(3){transition-delay:.18s;}
 .status-grid>.reveal:nth-child(4){transition-delay:.27s;}
 .status-grid>.reveal:nth-child(5){transition-delay:.36s;}
 
@@ -739,7 +738,7 @@ html.pk-prihlasen #prodej-card[hidden], html.pk-prihlasen #mi-panel[hidden]{disp
   .aurora span{animation:none !important; will-change:auto; filter:blur(70px); opacity:0.12;}
 }
 .hero{position:relative; overflow:hidden;}
-.hero .hero-grid{position:relative; z-index:1;}
+
 /* teplá záře shora — útulnost + šmrnc */
 .hero::before{content:""; position:absolute; inset:0; background:radial-gradient(120% 80% at 50% -15%, rgba(110,150,125,0.06), transparent 58%); pointer-events:none; z-index:0;}
 /* elegantní podtržení zvýrazněného slova */
@@ -748,10 +747,8 @@ h1 em{position:relative; z-index:0;}
    ocásky u „y" a „j" a vypadalo by to jako chyba; takhle to čte jako
    zvýrazňovač. */
 h1 em::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:6px; border-radius:2px; background:var(--accent-warm); opacity:0.85; z-index:-1; transform:scaleX(0); transform-origin:left; animation:undersweep 0.9s var(--ease) 0.6s forwards;}
-@keyframes undersweep{to{transform:scaleX(1);}}/* Jednotlivý pozemek = čistá tečka v barvě kategorie (po přiblížení) */
+@keyframes undersweep{to{transform:scaleX(1);}}
 
-.pk-dot.sel{transform:scale(1.55); box-shadow:var(--e1);}
-.pk-dot.urgent{animation:dotpulse 1.6s ease-out infinite;}
 /* Značka „vaše poloha" (režim Nejblíž ke mně) — s jemným pulzem */
 /* =====================================================================
    VÝBĚR MÍSTA — vlastní mapa přes celou obrazovku
@@ -1337,7 +1334,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .hero-map .hero-head .hero-stats{color:var(--muted);}
 .hero-map .hero-head .hero-stats .ts-n{color:var(--text-ondark);}
 .hero-map .hero-head .hero-stats .ts-n b{color:var(--text-ondark);}
-.hero-map .hero-head .hero-stats .ts-sep{color:rgba(20,35,28,0.35);}
+
 .hero-map .wrap{position:relative; z-index:1;}
 .hero-head{text-align:center; max-width:var(--m-stredni); margin:0 auto 20px; display:flex; flex-direction:column; align-items:center;}
 .hero-head .eyebrow{margin-bottom:16px;}
@@ -1349,8 +1346,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    stálo 400 proti 800 a půlka věty vypadala vybledle. */
 .hero-head h1 em{font-weight:700;}
 .hero-head .sub{font-size:16px; color:var(--pas-text-mute); max-width:var(--m-text); margin-bottom:16px;}
-.hero-head .hero-ctas{justify-content:center; margin-bottom:20px;}
-.hero-head .trust-line{justify-content:center; margin:0;}
+
 /* Mapa je hlavní produkt — dopřejeme jí víc šířky (jako velké realitní weby),
    nadpis nad ní zůstává vycentrovaný v užší míře. */
 .hero-map .map-wide{position:relative; z-index:1; max-width:var(--m-wrap); margin:0 auto; padding:0 32px;}
@@ -1373,7 +1369,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
   .hero-head .eyebrow{margin-bottom:12px;}
   .hero-head h1{font-size:34px; margin-bottom:12px;}
   .hero-head .sub{font-size:16px; margin-bottom:16px;}
-  .hero-head .hero-ctas{margin-bottom:12px;}
+  
 }
 @media (max-width:560px){
   /* Nadpis stránky na telefonu měl TŘI různé velikosti podle toho, jaká
@@ -1382,8 +1378,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
   .hero-head h1{font-size:32px;}
   /* podnadpis necháme i na mobilu — vysvětluje smysl webu (na první dobrou) */
   .hero-head .sub{font-size:16px; margin-bottom:14px;}
-  /* Číselný proužek (důvěra) necháme i na mobilu, jen kompaktnější. */
-  .hero-head .trust-line.hero-stats{display:flex; gap:6px 8px; font-size:13px; margin-bottom:4px;}
+  
 }
 
 /* Hero prvky (sdílené) */
@@ -1454,8 +1449,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Náš slib — čtyři lidské závazky, kompozice barev značky */
 /* Druhy pozemků */
 
-.druh-demand.high{color:var(--c-ok-ink); background:rgba(31,163,99,0.16); border:1px solid rgba(31,163,99,0.4);}
-.druh-demand.mid{color:var(--copper-bright); background:rgba(44,113,80,0.16); border:1px solid rgba(44,113,80,0.4);}/* Vypilovaná mapa-hrdina */
+/* Vypilovaná mapa-hrdina */
 
 .filter-chip:active, .copy-btn:active{transform:translateY(1px);}
 .opp-item:active{transform:translateX(2px) scale(0.995);}/* Rotující tip u mapy */
@@ -1468,9 +1462,9 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Jeden ucelený panel „aplikace" (jako velké realitní weby) — místo roztroušených
    boxů má vše společný rám, stín a oblé rohy; uvnitř dělí sekce jemné linky. */
 .map-app{display:grid; grid-template-columns:380px 1fr; grid-template-rows:auto 1fr; gap:0; height:min(76vh, 820px); height:min(76dvh, 820px); min-height:600px; background:var(--ink-soft); border:1px solid var(--line-strong); border-radius:var(--r-obraz); overflow:hidden; box-shadow:var(--e3);}
-.map-controls-panel{grid-column:1; grid-row:1; background:transparent; border:0; border-right:1px solid var(--line); border-bottom:1px solid var(--line); border-radius:0; padding:16px;}
+.map-controls-panel{grid-column:1 / -1; grid-row:1; background:transparent; border:0; border-bottom:1px solid var(--line); border-radius:0; padding:16px;}
 .map-side{grid-column:1; grid-row:2; display:flex; flex-direction:column; background:transparent; border:0; border-right:1px solid var(--line); border-radius:0; padding:16px 16px; min-height:0;}
-.map-holder{grid-column:2; grid-row:1 / span 2;}
+.map-holder{grid-column:2; grid-row:2;}
 .map-controls-panel .map-search{margin-top:0;}
 .map-search input{width:100%; background:#fff; border:1px solid var(--line-ui); border-radius:var(--r-sm); padding:12px 14px; font-size:14px; color:#12241A; font-family:inherit; box-shadow:var(--e1);}
 .map-search input::placeholder{color:var(--text-zastupny);}
@@ -1807,6 +1801,9 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 
 /* Řada nad výsledky: počet, „Uložené" a řazení. */
 .ms-vysledky{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 12px; margin-bottom:10px;}
+/* Zůstal v něm jen počet; jeho vlastní odsazení dolů by se s odsazením
+   skupiny sčítalo na 22 px. */
+.ms-vysledky .map-count{margin-bottom:0;}
 .msv-ovladani{display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;}
 .msv-ulozene{min-height:36px; padding:6px 12px; font-size:12px;}
 .msv-razeni{display:flex; min-width:0;}
@@ -1999,20 +1996,11 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .cdd-opt.sel::after{content:""; margin-left:auto; width:14px; height:14px; flex:none;
   background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath d='M4 12l5 5L20 6' fill='none' stroke='%230F5C3B' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");}
 /* Vlastní cena / výměra — pole pro vlastní číslo + rychlé volby */
-.fav-toggle{background-image:none; padding:8px 12px; display:inline-flex; align-items:center; justify-content:center; gap:6px; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
-.fav-toggle svg{width:13px; height:13px; stroke-width:2.77; fill:none; stroke:currentColor;  stroke-linejoin:round;}
-.fav-toggle:hover{border-color:var(--copper-bright);}
-.fav-toggle.on{background:rgba(44,113,80,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
-.fav-toggle.on svg{fill:currentColor;}
+
 /* „Pod obvyklou cenou" se chová stejně jako ostatní přepínače, jen svítí
    mosazně — je to jediný filtr, který stojí na našem výpočtu, ne na údaji
    z inzerátu, a má to být poznat. */
-.levne-toggle{background-image:none; padding:8px 12px; text-align:center;
-  transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
-.levne-toggle.on{background:rgba(138,85,18,0.16); border-color:var(--accent-warm); color:var(--accent-warm);}
-.urgent-toggle{background-image:none; padding:8px 12px; text-align:center; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
-.urgent-toggle:hover{border-color:var(--copper-bright);}
-.urgent-toggle.on{background:rgba(44,113,80,0.16); border-color:var(--copper-bright); color:var(--copper-bright);}
+
 .opp-fav{background:none; border:0; padding:2px; line-height:0; cursor:pointer; color:var(--text-ondark-mute); transition:color var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
 .opp-fav svg{display:block; width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round;}
 .opp-fav:hover{color:var(--copper-bright);}
@@ -2120,7 +2108,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .opp-media{position:relative; width:100%; aspect-ratio:16/10; min-height:150px; overflow:hidden; background:var(--ink-soft2) linear-gradient(135deg, rgba(110,150,130,0.12), rgba(110,150,130,0) 60%);}
 /* Vrstvy náhledu nechytají klik — ťuknutí projde na celou kartu (jinak na iOS obrázek „spolkne" klik) */
 /* Záložní plán parcely (prosvítá, když se nenačte satelit) */
-.opp-plan{position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none;}
+
 /* Skutečný letecký snímek — kryje plán, když se načte */
 .opp-map{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; z-index:1; pointer-events:none;}
 /* Závoj nad snímkem je ZELENOČERNÝ, ne modročerný. Nebyl: do teď měl
@@ -2158,9 +2146,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Tělo karty pod fotkou */
 .opp-body{padding:10px 14px 12px;}
 .opp-price{font-family:var(--font-ui); font-weight:700; font-size:24px; line-height:1.1; letter-spacing:-0.02em; color:var(--text-ondark); font-variant-numeric:tabular-nums; margin-bottom:2px;}
-.opp-demand .hot{color:#E8863F; font-weight:700;}
-.opp-demand .watch{color:var(--text-ondark-mute);}
-.opp-demand .sep{color:var(--text-ondark-mute); opacity:0.55;}
+
 .opp-more{list-style:none; text-align:center; padding:14px 6px 6px; font-size:13px; color:var(--copper-bright); font-weight:600;}
 /* „Zobrazit dalších 12" — nejdřív se dá seznam dočíst, až pak se odchází
    na mapu. Tlačítko je na celou šířku, protože je to to hlavní, co se
@@ -2204,7 +2190,6 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .rv-cisla{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
 .rv-cislo{font-size:14px; font-weight:600; color:var(--text-ondark); background:var(--ink-soft2);
   border:1px solid var(--line); border-radius:var(--r-pill); padding:5px 11px; font-variant-numeric:tabular-nums;}
-.rv-znacky{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
 
 /* Co se právě stalo. Bez téhle hlášky člověk neví, jestli palec zabral. */
 .rv-stalo{min-height:22px; text-align:center; font-size:14px; font-weight:700; margin-top:6px;}
@@ -2251,15 +2236,11 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .ops-kde{font-size:14px; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums; white-space:nowrap;}
 .ops-kde b{color:var(--text-ondark);}
 @media (max-width:380px){ .opp-strany{gap:6px;} .ops-btn{padding:0 12px;} }
-.opp-dalsi{list-style:none; padding:12px 6px 2px;}
+
 /* Okraj musí být proti výplni vidět aspoň 3:1 (hlídá test-okraje) —
    s jemnou linkou vyšlo 1,9:1 a tlačítko na bílé kartě splývalo.
    Zaoblení je z paletky (--r-sm), ne vlastních 12 px: hlídá test-předloha. */
-.opp-dalsi button{width:100%; min-height:44px; border-radius:var(--r-sm); cursor:pointer;
-  border:1px solid var(--text-ondark-mute); background:transparent; color:var(--text-ondark);
-  font:inherit; font-size:14px; font-weight:600; letter-spacing:0.01em;}
-.opp-dalsi button:hover{border-color:var(--copper-bright); color:var(--copper-bright);}
-.opp-dalsi button span{font-weight:400; opacity:.65;}
+
 .reset-btn{display:inline-block; margin-top:12px; padding:8px 16px; font-size:13px; font-weight:600; color:var(--ink); background:var(--copper-bright); border:0; border-radius:var(--r-sm); cursor:pointer;}
 .reset-btn:hover{background:var(--copper);}
 .opp-place{display:block; font-family:var(--font-ui); font-size:16px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:-0.01em; color:var(--text-ondark); margin-bottom:2px;}/* Barevná odrážka podle kategorie (prodej/dražba/exekuce…) — rychlá orientace v seznamu */
@@ -2342,9 +2323,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .md-gtk[open] summary{border-bottom:1px solid rgba(126,196,157,0.16);}
 .gtk-body{padding:12px 14px; display:flex; flex-direction:column; gap:10px;}
 .gtk-row{display:flex; flex-direction:column; gap:2px; padding-left:10px; border-left:2px solid var(--copper);}
-.gtk-row.gtk-ok{border-left-color:var(--c-ok);}
-.gtk-row.gtk-mid{border-left-color:var(--copper-bright);}
-.gtk-row.gtk-warn{border-left-color:var(--c-drazba);}
+
 .gtk-k{font-size:12px; font-weight:700; letter-spacing:0.02em; text-transform:uppercase; color:var(--popisek);}
 .gtk-v{font-size:13px; line-height:1.5; color:var(--text-ondark);}
 .gtk-v b{font-weight:700;}
@@ -2537,10 +2516,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .status-list li::before{content:""; position:absolute; left:2px; top:8px; width:6px; height:6px; border-radius:50%; background:var(--copper-bright); opacity:0.85;}
 .status-list li b{color:var(--text-ondark);}/* Alert form */
 
-.alert-benefits .ic{width:17px; height:17px; color:var(--c-ok-ink); flex:none;}
-.modal-benefits .ic{width:16px; height:16px; color:var(--c-ok-ink); flex:none; margin-top:2px;}
-.alert-form .btn-primary{padding:14px; font-size:16px; text-align:center;}
-.form-msg.err{color:var(--c-exekuce-ink);}/* Embed */
+/* Embed */
 
 .rc-ico{width:44px; height:44px; border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center; background:rgba(44,113,80,0.12); border:1px solid rgba(44,113,80,0.3); margin-bottom:16px;}
 .rc-ico .ic{width:22px; height:22px; color:var(--copper-bright);}
@@ -2588,9 +2564,6 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    token/text ve stylopisu. --c-ok-ink je tatáž zelená v tmavší
    čitelné variantě: 7,01 : 1. */
 .copy-btn.copied{background:var(--c-ok-ink); color:#fff;}
-.ep-dot.sale{background:var(--c-sale); color:var(--c-sale);}
-.ep-dot.drazba{background:var(--c-drazba); color:var(--c-drazba);}
-.ep-dot.exekuce{background:var(--c-exekuce); color:var(--c-exekuce);}
 
 /* FAQ */
 .faq{display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; align-items:start;}
@@ -2600,9 +2573,6 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .faq-item summary::after{content:"+"; font-family:var(--font-mono); color:var(--copper-bright); font-size:20px; transition:transform var(--cas-zakladni) var(--ease);}
 .faq-item[open] summary::after{transform:rotate(45deg);}
 .faq-item p{padding:0 20px 20px; font-size:16px; color:var(--text-ondark-mute); max-width:var(--m-text);}/* CTA */
-
-.cta-banner .btn-primary{padding:14px 24px; font-size:16px; background:#fff; color:var(--copper); border:0; box-shadow:var(--e2);}
-.cta-banner .btn-primary:hover{background:#EEF6F1; filter:none;}
 
 /* Footer */
 footer{border-top:1px solid var(--line); padding:28px 0;}
@@ -2614,8 +2584,8 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .foot-brand{display:flex; align-items:center; gap:8px; font-family:var(--font-ui); font-size:16px; color:var(--text-ondark);}/* ===== Oznamovací lišta (jemná, ne křiklavá) ===== *//* Velké tlačítko */
 
 /* Trust line + social proof */
-.trust-line{display:flex; gap:20px; flex-wrap:wrap; font-size:13px; color:var(--text-ondark-mute); margin-bottom:24px;}
-.trust-line span{white-space:nowrap;}/* Before / After */
+
+/* Before / After */
 
 /* Slovníček */
 .glossary{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
@@ -2643,7 +2613,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .gl-item p{font-size:14px; color:var(--text-ondark-mute); padding:0 16px 16px;}/* Srovnání */
 /* Recenze *//* Upřímná beta sekce (místo vymyšlených recenzí) */
 
-.beta-note .eyebrow{display:inline-flex; justify-content:center; margin-bottom:12px;}/* Ceník */
+/* Ceník */
 
 .price-card.featured{border-color:var(--copper); box-shadow:var(--glow-lg); transform:translateY(-6px);}
 .price-card .btn-primary{text-align:center; padding:12px;}/* form fine print */
@@ -2670,7 +2640,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .price-card:not(.featured):hover{border-color:var(--line-strong); transform:translateY(-4px); box-shadow:var(--shadow);}
 
 /* Feature/step ikona barevná */
-.feature-card .icon-badge .ic{color:var(--copper-bright);}
+
 .status-top .ic{width:20px; height:20px;}
 
 /* ===== Okno hlídání (modal) ===== */
@@ -2682,8 +2652,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .modal.open .modal-card{transform:none; opacity:1;}
 .modal-card .eyebrow{margin-bottom:12px;}
 .modal-card h3{font-family:var(--font-display); font-size:24px; font-weight:700; margin-bottom:8px;}
-.modal-form .btn-primary{padding:14px; font-size:16px; text-align:center;}
-.wm-types .chip-check{font-size:13px; padding:8px 12px;}
+
 .modal-close-bar{width:100%; margin-top:16px; background:none; border:0; border-top:1px solid var(--line); padding:14px 0 2px; color:var(--text-ondark-mute); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:color var(--cas-zakladni) var(--ease);}
 .modal-close-bar:hover{color:var(--text-ondark);}
 .info-card{max-width:var(--m-uzky);}
@@ -2734,7 +2703,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .loc-ic svg{width:30px; height:30px; color:var(--copper-bright);}
 .loc-card h3{font-size:20px; font-weight:700; margin-bottom:8px;}
 .loc-card p{font-size:16px; color:var(--text-ondark-mute); line-height:1.5; margin-bottom:14px;}
-.loc-card p.loc-hint{font-size:13px; background:var(--ink-soft2); border:1px solid var(--line); border-radius:var(--r-sm); padding:10px 12px;}
+
 .loc-card b{color:var(--text-ondark);}
 .loc-btns{display:flex; flex-direction:column; gap:8px; margin-top:6px;}
 .loc-btn{height:48px; border-radius:var(--r-md); font-size:16px; font-weight:700; border:1px solid transparent; cursor:pointer; display:flex; align-items:center; justify-content:center;}
@@ -2788,6 +2757,107 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .loc-err{color:var(--c-exekuce-ink); font-size:13px; margin:8px 2px 0; text-align:left;}
 @media (prefers-reduced-motion: reduce){.loc-ov,.loc-card{animation-duration:.01ms;}}
 
+/* ——— LIŠTA NAD MAPOU A PLOVOUCÍ PANEL FILTRŮ (od 1041 px) ———————————
+   Dřív stálo hledání, okolí, rozpoznané odznaky a filtry na sobě v levém
+   sloupci širokém 380 px. Změřeno na 1280×900: ta čtveřice si vzala 267 px
+   z 684 px aplikace, nad výpisem sedělo dalších 102 px (počet, Uložené
+   a řazení se do 380 px nevešly na řádek a zlomily se na tři) a na seznam
+   zbylo 271 px — při kartě vysoké 420 px. Nebyla vidět ani jedna celá
+   nabídka.
+   HORŠÍ BYLO ROZKLIKNUTÍ. Otevřené filtry měly 1204 px, panel s nimi
+   1472 px — v aplikaci vysoké 684 px s overflow:hidden. Vidět bylo 434 px,
+   zbylých 771 px se nedalo doscrollovat, protože posuvné nebylo nic.
+   Na desktopu se tak většina filtrů ani tlačítko „Zobrazit pozemky"
+   nedala použít vůbec, a výpis vedle nich spadl na 0 px.
+   Teď je ovládání lišta přes celou šířku a filtry v ní visí jako plovoucí
+   panel přes mapu, s vlastním posuvem a vlastní výškou. Tak to řeší
+   Idealista, Funda i Rightmove, a ze stejného důvodu: ovládání patří nad
+   mapu i seznam, ne do sloupce s výsledky. */
+@media (min-width:1041px){
+  .map-app{position:relative;}
+  /* Lišta má dva řádky záměrně, a jsou vyskládané, ne zlomené. Těch pět
+     prvků potřebuje na jeden řádek 1 425 px a lišta má 1 102. Při
+     samovolném zlomu (flex-wrap) se dole octne jen pravý ostrůvek
+     a 790 px zůstane prázdných — a rychlé filtry zůstanou viset
+     nahoře, kde se ořežou v půlce odznaku. Mřížka s pojmenovanými
+     plochami řekne rovnou, co kde stojí: nahoře hledání, okolí
+     a filtry, dole rychlé filtry vlevo a pohled na výsledky vpravo. */
+  .map-controls-panel{position:relative; display:grid; align-items:center;
+    gap:8px 10px; padding:10px 16px;
+    grid-template-columns:minmax(220px, 1fr) auto auto;
+    grid-template-areas:
+      "hledani okoli  filtry"
+      "rychle  rychle pohled";}
+  .map-controls-panel > .map-search{grid-area:hledani;}
+  .map-controls-panel > .map-okoli{grid-area:okoli;}
+  .map-controls-panel > .ms-filters{grid-area:filtry; justify-self:stretch;}
+  .map-controls-panel > .ms-group{grid-area:rychle;}
+  .map-controls-panel > .msv-ovladani{grid-area:pohled;}
+  /* Rozpoznané odznaky a pruh hlídaného místa jsou věty, ne tlačítka:
+     dostanou vlastní řádek pod lištou, přes celou šířku. */
+  .map-controls-panel > .ms-chipy, .map-controls-panel > .misto-pruh{grid-column:1 / -1;}
+  /* A KDYŽ SE OBJEVÍ, PŘIDÁ SI APLIKACE NA VÝŠKU. Jinak by ten řádek
+     navíc ukrojil ze seznamu: lišta roste ze 111 px na 144 (odznaky),
+     153 (hlídané místo) nebo 186 px (obojí), a na notebooku 1280×700,
+     kde se uplatní spodní mez 600 px, spadl výpis z 399 px na 324 —
+     pod výšku jedné karty (362 px). Na vyšších displejích se nic
+     nemění, tam 76 dvh tu mez převýší. */
+  .map-app:has(.map-controls-panel > :is(.ms-chipy, .misto-pruh):not([hidden])){min-height:660px;}
+  .map-app:has(.map-controls-panel > .ms-chipy:not([hidden])):has(.map-controls-panel > .misto-pruh:not([hidden])){min-height:700px;}
+  /* V liště nestojí nic na sobě, takže odsazení shora (14 px, 12 px, 8 px)
+     by jen rozhodila svislé zarovnání. */
+  .map-controls-panel > *{margin-top:0;}
+  .map-controls-panel > .map-search{min-width:0;}
+  .map-controls-panel .map-near-btn{margin-top:0; width:auto; white-space:nowrap;}
+  .map-controls-panel > .ms-group{min-width:0;}
+  /* Rozpoznané odznaky i rychlé filtry na jeden řádek: v liště nesmí
+     druhý řádek odznaků zvednout celou lištu a ukrojit ze seznamu. */
+  .map-controls-panel .map-filters, .map-controls-panel .ms-chipy{flex-wrap:nowrap;
+    overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none;}
+  .map-controls-panel .map-filters::-webkit-scrollbar,
+  .map-controls-panel .ms-chipy::-webkit-scrollbar{display:none;}
+  .map-controls-panel .map-filters > *, .map-controls-panel .ms-chipy > *{flex:none;}
+  /* Uložené a řazení vpravo za dělicí linkou. Nejsou to filtry — mění
+     pohled na tentýž výsledek — a oddělená skupina to říká beze slov.
+     Tahle poznámka nahrazuje starší, podle které řazení patří nad seznam:
+     platil u ní důvod (v panelu filtrů si ho lidi pletli s filtrem), jen
+     se tehdy řešil místem ve sloupci. V liště vpravo stojí mimo filtry. */
+  .map-controls-panel > .msv-ovladani{justify-self:end; flex-wrap:nowrap;
+    padding-left:14px; border-left:1px solid var(--line);}
+  /* Na vlastním sloupci se vejde celý popisek řazení; v 210 px se
+     „Doporučené (denně se střídá)" ořízlo na „Doporučené (denně se s…". */
+  .map-controls-panel .msv-razeni .map-select{max-width:260px;}
+  /* Filtry jako plovoucí panel. Rám i pozadí drží panel, ne <details>. */
+  .ms-filters{border:0; background:none; overflow:visible;}
+  .ms-filters .msf-summary{border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    background:var(--ink-soft); padding:11px 14px;}
+  .ms-filters[open] .msf-summary{border-color:var(--copper-bright); border-bottom-width:1px;
+    background:var(--ink);}
+  .ms-filters > .map-controls{position:absolute; top:calc(100% + 1px); left:16px; right:16px;
+    z-index:45; max-height:min(60vh, 520px); overflow-y:auto; overscroll-behavior:contain;
+    padding:18px; background:var(--ink-soft); border:1px solid var(--line-strong);
+    border-radius:var(--r-lg); box-shadow:var(--e3);
+    grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:16px 18px;}
+  /* NÁHLED V POSTRANNÍM SLOUPCI JE NIŽŠÍ. Karta měla 420 px (náhled 208,
+     tedy polovinu) a do seznamu vysokého 399–483 px se nevešla celá ani
+     jedna nabídka. Z karty se přitom nedá ubrat nic textového: podřádek
+     „co to je" je schválně dvouřádkový (jednořádkový ořez vyráběl
+     „Stavební pozemek · parc….") a odznaky nesou to nejcennější, totiž
+     o kolik je cena pod okolím.
+     Ubrat jde náhled. Vedle seznamu stojí velká mapa, takže výřez mapky
+     u každé karty je tu to nejvíc zdvojené, co karta má — a 150 px je
+     výška, kterou si karta sama drží jako svoje minimum (min-height
+     u .opp-media). Karta tím spadne na 362 px a celá se vejde i na
+     notebooku 1280×700. V širokých mřížkách na stránkách okresů zůstává
+     náhled v poměru 16/10, tam vedle nic nestojí. */
+  .map-side .opp-media{aspect-ratio:auto; height:150px;}
+
+  /* V 1 070 px širokém panelu už pilulky na sloupce vyjdou. V sloupci
+     širokém 380 px nevyšly (nejdelší popisek „Zemědělská půda" + počet
+     potřeboval 174 px z 166 dostupných), proto je základ jeden sloupec. */
+  .map-controls .mcv-rada, .map-controls .mcv-rada.mcv-sloupec,
+  .map-controls .mc-toggles{grid-template-columns:repeat(auto-fit, minmax(190px, 1fr));}
+}
 /* Responsive */
 /* Přepínač Seznam / Mapa — jen na mobilu, kde se obojí nevejde vedle sebe */
 .mv-toggle{display:none;}
@@ -2800,6 +2870,12 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
      buď seznam, nebo mapa. Výchozí je SEZNAM — na úvodní stránce mají být
      hned vidět nabídky, ne ovládání mapy. Mapa je na jedno klepnutí vedle. */
   .map-controls-panel{order:1; border-right:0; border-bottom:1px solid var(--line);}
+  /* Uložené a řazení jsou teď v panelu (na desktopu v liště vpravo).
+     Tady stojí nad přepínačem Seznam/Mapa, a aby je nikdo nečetl jako
+     další filtr, dělí je od filtrů linka — stejná role, jakou má na
+     desktopu svislý oddělovač v liště. */
+  .map-controls-panel > .msv-ovladani{margin-top:12px; padding-top:12px;
+    border-top:1px solid var(--line);}
   .map-side{order:2; border-right:0; max-height:none;}
   .map-holder{order:3; height:74vh; height:74dvh; max-height:640px; min-height:460px;}
   .map-canvas{flex:1; min-height:0;}
@@ -3221,8 +3297,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .benefit .rc-ico .ic{width:19px; height:19px;}
 .benefit .b-txt b{display:block; font-size:14px; color:var(--text-ondark); margin-bottom:2px;}
 .benefit .b-txt span{font-size:13px; color:var(--text-ondark-mute); line-height:1.45;}
-.ep-dot.you{width:16px; height:16px; background:var(--copper-bright); color:var(--copper-bright);
-  border-color:#fff; z-index:2; animation:youpulse 1.9s ease-out infinite;}
+
 @keyframes youpulse{0%{box-shadow:0 0 0 0 rgba(31,81,56,0.55);}70%{box-shadow:0 0 0 13px rgba(31,81,56,0);}100%{box-shadow:0 0 0 0 rgba(31,81,56,0);}}
 @media (max-width:900px){
   .add-grid{grid-template-columns:1fr; gap:24px;}
@@ -3259,13 +3334,10 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .ul-price{font-family:var(--font-ui); font-size:20px; color:var(--copper-bright);}
 .ul-desc{font-size:13px; color:var(--text-ondark-mute); line-height:1.5;}/* ---------- Přepínač Naše mapa / Pozemky od lidí (na jedné stránce) ---------- */
 
-.vs-btn.active{background:var(--copper); color:var(--ink);}
 #view-mapa[hidden]{display:none;}
 #view-lide[hidden]{display:none;}/* Pozemky od lidí — hlavička sekce */
 
-.lide-hero .eyebrow{margin-bottom:12px;}/* Prázdný stav — „Buďte první" + ukázková karta */
-
-.le-sample .ul-card.is-sample{opacity:.9; pointer-events:none; text-align:left; box-shadow:var(--e3);}
+/* Prázdný stav — „Buďte první" + ukázková karta */
 
 /* ---------- Bohatší inzerce pozemku (formulář + karty) ---------- */
 .calc-hint{font-size:13px; color:var(--copper-bright); font-weight:600; min-height:15px; margin-top:-8px;}
@@ -3595,7 +3667,6 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .hero-stats{align-items:baseline;}
 .hero-stats .ts-n{color:var(--text-ondark, #12241A);}
 .hero-stats .ts-n b{color:var(--copper-bright,#8CC3A4); font-weight:700; font-size:1.08em;}
-.hero-stats .ts-sep{color:var(--line-strong,#3d4a42);}
 
 /* ---------- Čitelnost obsahových stránek (rádce, regiony, ceny) ---------- */
 .add-card p{ color:var(--text-ondark); font-size:16px; line-height:1.68; }
@@ -3659,8 +3730,6 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   -webkit-mask-image:radial-gradient(ellipse 78% 68% at 50% 42%, #000 35%, transparent 100%);
           mask-image:radial-gradient(ellipse 78% 68% at 50% 42%, #000 35%, transparent 100%);}/* Měděná vlasová linka jako předěl sekce — jeden akcent, ne ozdoba. */
 
-.s-linka.stred{margin-left:auto; margin-right:auto;}
-
 @media (prefers-reduced-motion:reduce){ .s-mrizka::before{opacity:.6;} }
 
 /* =====================================================================
@@ -3708,18 +3777,6 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
    tmavém zmizela a měď by zhnědla. Proto --text-ondeep-mute (10,8 : 1)
    a --accent-warm-bright (8,0 : 1).
    ===================================================================== */
-/* Světlo z rohu — jemný nádech, ne neonová skvrna. */
-/* Katastrální mřížka i tady, jen otočená do světla. */
-
-.alert-box .eyebrow{color:var(--accent-warm-bright);}
-.alert-box .live-dot, .alert-box .live-dot::after{background:var(--accent-warm-bright);}
-.alert-box .alert-benefits .ic{color:var(--accent-warm-bright);}/* Každý text na tmavém pásu musí dostat svou barvu — jedna zapomenutá
-   třída stačí k tomu, aby byl drobný text nečitelný. Tohle odhalil až
-   test kontrastu: .form-fine tu měla 2,02 : 1. */
-
-.alert-box .form-msg.err{color:#FF9B9B;}
-.alert-box .btn-primary{background:#fff; color:var(--ink-dark); border:0;}
-.alert-box .btn-primary:hover{background:#EEF6F1; filter:none;}
 
 /* =====================================================================
    NASAZENÍ BAREVNÝCH PŘECHODŮ
@@ -3948,7 +4005,12 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
   background:linear-gradient(180deg, var(--line-strong), rgba(138,85,18,0.4)); z-index:0;}
 .step:last-child::before{display:none;}
 
-@media (min-width:961px){
+/* ZLOM JE 1041, NE 961. Kroky se do řady srovnají až nad 1040 px
+   (.steps má do 1040 px jeden sloupec), ale vodorovná spojnice se
+   zapínala už od 961. V pásmu 961–1040 px tak z posledního kroku
+   trčela doprava čára do prázdna: na šířce 1040 px měřil dokument
+   1 054 px a stránka se dala posunout do strany o 14 px. */
+@media (min-width:1041px){
   /* Na počítači jdou kroky vedle sebe, takže spojnice je vodorovná. */
   .step::before{left:52px; right:-36px; top:25px; bottom:auto; width:auto; height:2px;
     background:linear-gradient(90deg, var(--line-strong), rgba(138,85,18,0.4));}
@@ -4078,9 +4140,10 @@ body::after{
 .step h3{display:block; font-size:24px; margin-bottom:8px;}
 .step p{display:block;}
 .step::before{display:none;}
-@media (min-width:961px){
+@media (min-width:1041px){
   /* Vlasová linka po účaří číslic drží tři kroky pohromadě jako jednu
-     větu — bez jediného rámečku. */
+     větu — bez jediného rámečku. Zlom stejný jako výš: pod 1041 px
+     stojí kroky pod sebou a vodorovná linka by z nich trčela ven. */
   .step::before{display:block; content:""; position:absolute; left:0; right:-46px; top:30px;
     height:1px; background:linear-gradient(90deg, rgba(138,85,18,0.4), var(--line)); z-index:0;}
   .step:last-child::before{display:none;}
@@ -4348,8 +4411,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   font-family:inherit; white-space:nowrap;}
 .hero-map .hero-stats .ts-n b{font-family:inherit; font-weight:700;
   font-size:inherit; line-height:inherit; letter-spacing:inherit; color:var(--pas-text);}
-.hero-map .hero-stats .ts-sep{width:auto; background:none; align-self:auto;
-  color:var(--pas-text-mute); overflow:visible; text-indent:0; margin:0 10px;}
+
 @media (max-width:880px){
   .hero-map .hero-head .hero-stats{margin-top:16px; font-size:12px;}
 }
@@ -5585,22 +5647,6 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   font-style:normal; font-size:11px; font-weight:600; line-height:1.6;
   letter-spacing:0.01em; color:var(--text-ondark-mute); vertical-align:middle;
   white-space:nowrap;}
-
-/* Přepínač vzhledu (js/rezim.js). Potlačený, v patičce — vzhled se mění
-   jednou za život účtu, takže nepatří do hlavní nabídky. */
-/* Okraj je SVĚTLÝ, ne --line. Tlačítko stojí na tmavém pásu patičky
-   a tmavá čára na tmavém pásu dala poměr 1,00 : 1 — tedy neviditelný
-   okraj, na který hlídač okrajů právem spadl. Alfa 0,42 dělá proti
-   #12241A poměr 3,97 : 1, tedy nad normou 3 : 1 pro ovládací prvky.
-   Platí v obou režimech: pás je tmavý vždycky. */
-.rezim-btn{display:inline-flex; align-items:center; gap:7px;
-  min-height:44px; padding:0 13px; border-radius:var(--r-pill);
-  border:1px solid var(--pas-obrys); background:none; font:inherit;
-  font-size:13px; font-weight:600; color:var(--pas-text-mute);
-  cursor:pointer; transition:border-color var(--cas-zakladni) var(--ease),
-    color var(--cas-zakladni) var(--ease);}
-.rezim-btn:hover{border-color:var(--pas-akcent); color:var(--pas-text);}
-.rezim-btn svg{width:16px; height:16px; flex:none;}
 
 /* Poznámka v tabulce porovnání. Zkrácená na dva řádky — tabulka má
    ukazovat, co se liší, ne být deníkem; celá je na stránce pozemku. */
