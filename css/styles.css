@@ -448,7 +448,16 @@
    někdy změnilo, nemá se to zakrývat ořezáním: to jen schová obsah, který
    má být vidět. Hlídá scripts/test-konzole.mjs na osmnácti druzích
    stránek, na mobilu i na monitoru. */
-html{scroll-behavior:smooth;}
+/* ODSAZENÍ PRO PEVNOU HLAVIČKU. Bez něj každé skákání na kotvu —
+   odkaz s #, scrollIntoView, návrat tlačítkem zpět — položí cíl přesně
+   pod hlavičku, která ho překryje. Dosud to řešilo jediné pravidlo
+   `section[id]{scroll-margin-top:80px}`: platilo jen pro <section> s id
+   (ne pro nadpisy, karty ani cokoli jiného) a 80 px bylo o pět míň, než
+   kolik hlavička doopravdy měří.
+   Naměřeno: 85 px na šířkách 390, 768 i 1280, odrolovaná i neodrolovaná.
+   scroll-padding na kořeni platí pro VŠECHNA posouvání v té ploše,
+   takže stačí jedno místo. */
+html{scroll-behavior:smooth; scroll-padding-top:calc(var(--vyska-hlavicky, 85px) + 14px);}
 @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} *{animation:none !important; transition:none !important;} }
 
 
@@ -532,7 +541,7 @@ path.leaflet-interactive:focus, path.leaflet-interactive:focus-visible{ outline:
 
 /* ===== Jemné detaily (polish) ===== */
 ::selection{background:var(--copper); color:var(--ink);}
-section[id]{scroll-margin-top:80px;}
+section[id]{scroll-margin-top:calc(var(--vyska-hlavicky, 85px) + 14px);}
 h1,h2{text-wrap:balance;}
 .c-num, .stat .num{font-variant-numeric:tabular-nums;}
 .btn-primary:hover{transform:translateY(-1px);}
@@ -617,7 +626,19 @@ button, a, [role="button"], select, summary, .btn-primary, .lp-btn, input[type="
    Sto procent výšky okna bez hlavičky znamená, že patička začíná až pod
    okrajem obrazovky — a co není vidět, to nemá kam odskočit. Zároveň to
    spraví starší nešvar: na krátké stránce patička nevisí uprostřed. */
-main.ceka-na-skript{min-height:calc(100vh - 90px);}
+/* ZRUŠENO: tahle výška se počítala DVAKRÁT.
+   Záměr byl správný — než doběhnou skripty, má mít stránka vyhrazenou
+   první obrazovku, ať obsah neodskočí. Jenže o kus níž už stojí
+   `body{display:flex; min-height:calc(100vh - hlavička)}` a
+   `body > main{flex:1 0 auto}`, což přesně tohle dělá: main doroste do
+   zbytku první obrazovky. Tahle druhá min-height se k tomu přičetla
+   a byla navíc počítaná od CELÉ výšky okna, přestože main začíná až
+   pod hlavičkou a pod úvodní plochou.
+   Výsledek: na stránce hlídání vyšla stránka 1 413 px vysoká, i když
+   obsah končil na 1 314 px — pod poslední kartou zůstalo přes tři sta
+   pixelů prázdna a patička spadla hluboko pod okraj obrazovky.
+   Ochrana proti odskočení zůstává, dělá ji flex. (Naměřeno na šířkách
+   390, 768 a 1280; min-height vycházela 754 px na všech.) */
 html.pk-odhlasen #auth-gate[hidden], html.pk-odhlasen #mi-auth[hidden]{display:block !important;}
 html.pk-prihlasen #prodej-card[hidden], html.pk-prihlasen #mi-panel[hidden]{display:block !important;}
 .auth-bar{margin:0 0 14px; padding:10px 14px; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); font-size:14px; color:var(--text-ondark-mute);}
