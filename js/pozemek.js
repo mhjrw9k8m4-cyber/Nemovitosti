@@ -663,7 +663,14 @@
         if (i >= sluzby.length) { dopis('Bonitu se u tohohle bodu nepodařilo zjistit.'); return; }
         var u = global.PKBpej.dotazUrl(sluzby[i++], d.lat, d.lng);
         if (!u) { dal(); return; }
-        fetch(u, { mode: 'cors' }).then(function (r) { return r.ok ? r.text() : ''; })
+        /* NEUKLÁDAT. Odpověď je údaj o JEDNOM konkrétním bodu, který si
+           návštěvník vybral — tedy záznam o tom, na který pozemek se
+           díval. Nechávat ho ležet v mezipaměti prohlížeče není k ničemu
+           dobré (dotaz odejde jednou za zapnutí vrstvy) a je to stopa
+           navíc. „no-store" zároveň splňuje pravidlo, které hlídá
+           scripts/test-cerstvost.mjs: co se stahuje, se neservíruje ze
+           staré kopie. */
+        fetch(u, { mode: 'cors', cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; })
           .then(function (t) {
             var o = global.PKBpej.precti(t);
             if (!o.kod && !o.trida) { dal(); return; }

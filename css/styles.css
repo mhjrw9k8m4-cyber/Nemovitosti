@@ -3164,8 +3164,18 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .pcs-top{display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text-ondark-mute); margin-bottom:6px;}
 .pcs-top b{color:var(--copper-bright); font-size:13px;}
 .pcs-bar{height:8px; border-radius:var(--r-lg); background:rgba(228,240,231,0.08); overflow:hidden;}
+/* PRUH SE PLNÍ ZE ZNAČKOVÉ ZELENÉ DO MĚDĚNÉ, ne do fialové.
+   Konec pruhu byl #9B72E6 — jediný fialový odstín na celém webu, odstín
+   261°, zatímco všechno ostatní je zelená (100–170°) nebo měď (20–55°).
+   Zbytek po starší paletě, kterého si nikdo nevšiml, protože ten konec
+   je vidět jen u inzerátu vyplněného skoro nadoraz.
+   Nová řada míří tam, kam míří i celá součást: z hluboké značkové
+   zelené do --c-ok, tedy do barvy, kterou web používá pro „hotovo,
+   v pořádku". Přesně ji má i nejvyšší stupeň (Špičkový inzerát), takže
+   konec pruhu a odznak vedle něj konečně ukazují totéž. Všechny tři
+   zastávky jsou tokeny, takže se v tmavém režimu přeladí s paletou. */
 .pcs-bar i{display:block; height:100%; width:0; border-radius:var(--r-lg);
-  background:linear-gradient(90deg, var(--copper), var(--copper-bright), #9B72E6);
+  background:linear-gradient(90deg, var(--copper), var(--copper-bright), var(--c-ok));
   transition:width var(--cas-pomaly) var(--ease);}
 .pcs-bar i.full{background:linear-gradient(90deg, var(--c-ok), #5FB07E);}
 .pcs-hint{font-size:12px; color:var(--text-ondark-mute); margin-top:8px; line-height:1.45;}
@@ -3173,9 +3183,24 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 /* Úroveň inzerátu (Začínáme … Špičkový) */
 .pcs-right{display:inline-flex; align-items:center; gap:8px;}
 .pc-strength .pcs-tier{font-size:12px; font-weight:700; letter-spacing:0.02em; padding:2px 8px; border-radius:var(--r-lg); background:rgba(228,240,231,0.08); color:var(--text-ondark-mute); transition:color var(--cas-pomaly) var(--ease), background var(--cas-pomaly) var(--ease);}
-.pc-strength[data-lvl="2"] .pcs-tier{color:#8FA6FF; background:rgba(44,113,80,0.12);}
+/* ŘADA STUPŇŮ JDE OD TLUMENÉHO K ZELENÉMU, bez modré uprostřed.
+   Stupeň 2 byl #8FA6FF, tedy modrá 228° — odstín z rodiny „na prodej",
+   který na tomhle místě nic neznačí, a hlavně stál mezi stupněm 1
+   (tlumený text) a stupni 3–5 (zelená). Řada tedy šla tlumená → modrá
+   → zelená → zelená → zelená a nedala se přečíst jako postup.
+   Teď je stupeň 2 jen o něco výraznější tlumená barva: začátek cesty,
+   ne jiná kategorie. */
+.pc-strength[data-lvl="2"] .pcs-tier{color:var(--text-ondark); background:rgba(44,113,80,0.12);}
 .pc-strength[data-lvl="3"] .pcs-tier{color:var(--copper-bright); background:rgba(44,113,80,0.16);}
 .pc-strength[data-lvl="4"] .pcs-tier{color:var(--copper-bright); background:rgba(44,113,80,0.22);}
+/* KONEC ŘADY ZŮSTÁVÁ SVĚTLEJŠÍ ZELENÁ, A SCHVÁLNĚ NE TOKENEM.
+   Zkusil jsem #5FB07E nahradit za var(--c-ok-ink), ať je to „čistě
+   z palety". Jenže přípona -ink v téhle paletě znamená čitelnější
+   variantu PRO DANÝ REŽIM, ne světlejší odstín: ve světlém režimu je
+   --c-ok-ink #13663E, tedy TMAVŠÍ než --c-ok. Odznak má na sobě skoro
+   černý text, takže by poměr spadl z 6,80 : 1 na 2,55 : 1 — tedy pod
+   normu, a vypadalo by to jako překlep ve vykreslování.
+   (Naměřeno: #5FB07E 6,80 : 1, --c-ok 5,51 : 1, --c-ok-ink 2,55 : 1.) */
 .pc-strength[data-lvl="5"] .pcs-tier{color:#0e1a14; background:linear-gradient(90deg, var(--c-ok), #5FB07E);}
 
 /* Hero — 3 kroky, jak přidání funguje */

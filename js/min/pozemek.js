@@ -474,7 +474,8 @@
         if (i >= sluzby.length) { dopis('Bonitu se u tohohle bodu nepodařilo zjistit.'); return; }
         var u = global.PKBpej.dotazUrl(sluzby[i++], d.lat, d.lng);
         if (!u) { dal(); return; }
-        fetch(u, { mode: 'cors' }).then(function (r) { return r.ok ? r.text() : ''; })
+
+        fetch(u, { mode: 'cors', cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; })
           .then(function (t) {
             var o = global.PKBpej.precti(t);
             if (!o.kod && !o.trida) { dal(); return; }
