@@ -34,7 +34,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=392de3a5">
+  <link rel="stylesheet" href="css/styles.min.css?v=79bcf34e">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .zp-wrap{max-width:var(--m-uzky); margin:0 auto;}
@@ -73,7 +73,15 @@
     .zp-tplace{font-weight:700; font-size:15px; color:var(--text-ondark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
     .zp-tlast{font-size:13px; color:var(--text-ondark-mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;}
     .zp-trole{font-size:11px; color:var(--copper-bright); font-weight:600;}
-    .zp-badge{min-width:20px; height:20px; padding:0 6px; border-radius:var(--r-sm); background:var(--copper); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none;}
+        /* PLNÁ PLOCHA SE BERE Z --plocha-znacka, NE Z --copper.
+       --copper je barva PÍSMA a mezi režimy se obrací: ve světlém je to
+       tmavá zelená #0F5C3B, v tmavém světlá máta #7FD1A3. Jako podklad pod
+       bílé písmo tedy funguje jen v jednom z nich — v tmavém dává 1,82 : 1,
+       což je nečitelné. --plocha-znacka je naopak určená právě k tomuhle:
+       9,72 : 1 ve světlém a 5,21 : 1 v tmavém.
+       Zkoušky to neodhalily, protože se tyhle prvky kreslí jen přihlášenému
+       (odznaky s počtem) nebo při najetí myší. */
+    .zp-badge{min-width:20px; height:20px; padding:0 6px; border-radius:var(--r-sm); background:var(--plocha-znacka); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none;}
     .zp-empty{padding:32px 20px; text-align:center; color:var(--text-ondark-mute); font-size:14px; line-height:1.6;}
     .zp-empty svg{width:40px; height:40px; color:var(--line-strong); margin-bottom:8px;}
     /* Konverzace */

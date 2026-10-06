@@ -34,7 +34,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=392de3a5">
+  <link rel="stylesheet" href="css/styles.min.css?v=79bcf34e">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .hl-wrap{max-width:var(--m-uzky); margin:0 auto;}
@@ -54,11 +54,24 @@
     .hl-tab:hover{color:var(--text-ondark);}
     /* Vybraná záložka je plná značková plocha, ne jen jiný odstín textu:
        přebarvený text sám o sobě nestačí tomu, kdo barvy nerozezná. */
-    .hl-tab.je{background:var(--plocha-znacka); color:#fff;}
+    /* ZAPNUTÁ ZÁLOŽKA NENESE SYTOU ZNAČKOVOU PLOCHU — tak jako o řádek výš.
+       U záložek účtu (.uc-taby) je to napsané černé na bílém: na téhle
+       stránce smí sytou značkovou plochu nést nejvýš dva prvky a záložka
+       mezi ně nepatří. Tenhle přepínač to pravidlo porušoval: hned pod
+       tlumenými záložkami účtu stál druhý řádek, a v něm plná zelená
+       plocha s bílým písmem. Dvě řady ovládání nad sebou, z toho spodní
+       křiklavější než vrchní — oko z toho nepozná, co je kde.
+       Použitý je vzor, který zná každý segmentovaný přepínač: zapuštěná
+       dráha (--ink) a na ní zvednutý světlý jezdec (--ink-soft) se
+       značkovým textem. Rozeznatelné na první pohled, a nic to
+       nepřekřikuje. */
+    .hl-tab.je{background:var(--ink-soft); color:var(--copper); box-shadow:var(--e1);}
     .hl-tab-n{min-width:21px; height:21px; padding:0 6px; border-radius:var(--r-sm);
-      background:var(--copper); color:#fff; font-size:12px; font-weight:700;
+      background:var(--plocha-znacka); color:#fff; font-size:12px; font-weight:700;
       display:inline-flex; align-items:center; justify-content:center;}
-    .hl-tab.je .hl-tab-n{background:rgba(255,255,255,.24); color:#fff;}
+    /* Odznak s počtem zůstává značkový i na zapnuté záložce — jezdec je
+       teď světlý, takže bílá na bílé by zmizela. */
+    .hl-tab.je .hl-tab-n{background:var(--plocha-znacka); color:#fff;}
     .hl-auth{padding:20px; max-width:var(--m-karta); margin:8px auto;}
     /* Ukázka pod přihlášením: stejná šířka jako okénko, ať to drží jednu
        osu, a čísla v jednom sloupci, aby šla porovnat očima. */
@@ -163,7 +176,15 @@
     .hl-item:last-child{border-bottom:0;}
     .hl-itop{display:flex; align-items:center; gap:10px;}
     .hl-iname{font-weight:700; font-size:15px; color:var(--text-ondark); flex:1; min-width:0;}
-    .hl-new-badge{background:var(--copper); color:#fff; font-size:12px; font-weight:800; padding:2px 8px; border-radius:999px; white-space:nowrap;}
+        /* PLNÁ PLOCHA SE BERE Z --plocha-znacka, NE Z --copper.
+       --copper je barva PÍSMA a mezi režimy se obrací: ve světlém je to
+       tmavá zelená #0F5C3B, v tmavém světlá máta #7FD1A3. Jako podklad pod
+       bílé písmo tedy funguje jen v jednom z nich — v tmavém dává 1,82 : 1,
+       což je nečitelné. --plocha-znacka je naopak určená právě k tomuhle:
+       9,72 : 1 ve světlém a 5,21 : 1 v tmavém.
+       Zkoušky to neodhalily, protože se tyhle prvky kreslí jen přihlášenému
+       (odznaky s počtem) nebo při najetí myší. */
+    .hl-new-badge{background:var(--plocha-znacka); color:#fff; font-size:12px; font-weight:800; padding:2px 8px; border-radius:999px; white-space:nowrap;}
     .hl-new-badge.zero{background:var(--ink-soft2); color:var(--text-ondark-mute);}
     .hl-crit{font-size:13px; color:var(--text-ondark-mute); margin-top:4px; line-height:1.5;}
     /* TERČ MÁ MÍT 44 px. Napsané to tu bylo na 22 px — zaškrtávátko 18 px

@@ -2224,7 +2224,15 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .odl-cta-txt b{font-size:16px; color:var(--text-ondark); font-weight:700;}
 .odl-cta-txt span{font-size:14px; color:var(--text-ondark-mute);}
 @media (max-width:560px){ .odl-cta{flex-direction:column; align-items:stretch; text-align:center;} .odl-cta .btn-primary{text-align:center;} }
-.nav-unread{display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 4px; margin-left:4px; border-radius:var(--r-sm); background:var(--copper); color:#fff; font-size:12px; font-weight:700; vertical-align:middle;}
+/* PLNÁ PLOCHA SE BERE Z --plocha-znacka, NE Z --copper.
+   --copper je barva PÍSMA a mezi režimy se obrací: ve světlém je to
+   tmavá zelená #0F5C3B, v tmavém světlá máta #7FD1A3. Jako podklad pod
+   bílé písmo tedy funguje jen v jednom z nich — v tmavém dává 1,82 : 1,
+   což je nečitelné. --plocha-znacka je naopak určená právě k tomuhle:
+   9,72 : 1 ve světlém a 5,21 : 1 v tmavém.
+   Zkoušky to neodhalily, protože se tyhle prvky kreslí jen přihlášenému
+   (odznaky s počtem) nebo při najetí myší. */
+.nav-unread{display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 4px; margin-left:4px; border-radius:var(--r-sm); background:var(--plocha-znacka); color:#fff; font-size:12px; font-weight:700; vertical-align:middle;}
 @media (max-width:760px){
 }
 .map-holder{position:relative; display:flex; flex-direction:column; overflow:hidden; min-height:0;}
@@ -4876,7 +4884,7 @@ h1, h2, h3,
   padding:6px 12px; min-height:36px; border-radius:var(--r-ovladani);
   border:1.5px solid var(--copper); background:var(--ink-soft); color:var(--copper);
   transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
-.mp-zapnout:hover{background:var(--copper); color:#fff;}
+.mp-zapnout:hover{background:var(--plocha-znacka); color:#fff;}
 .mp-zapnout.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
 @media (max-width:560px){
   .mp-akce{width:100%; display:flex; flex-wrap:wrap; gap:8px 10px;}
