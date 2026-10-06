@@ -2969,11 +2969,11 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
    světlý obrys a text, ne zelený jako jinde na webu. */
 .add-jak{margin-top:16px;}
 .add-jak-sum{display:inline-flex; align-items:center; gap:10px; cursor:pointer; list-style:none;
-  padding:10px 16px; border-radius:var(--r-pill); border:1.5px solid rgba(255,255,255,0.4);
-  color:#fff; font-size:14px; font-weight:600; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
+  padding:10px 16px; border-radius:var(--r-pill); border:1.5px solid var(--pas-linka);
+  color:var(--pas-text); font-size:14px; font-weight:600; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
 .add-jak-sum::-webkit-details-marker{display:none;}
-.add-jak-sum:hover{border-color:var(--copper-bright); background:rgba(255,255,255,0.06);}
-.add-jak-sum .aj-kolik{color:rgba(255,255,255,0.7); font-weight:500;}
+.add-jak-sum:hover{border-color:var(--pas-akcent); background:var(--pas-dlazdice);}
+.add-jak-sum .aj-kolik{color:var(--pas-text-mute); font-weight:500;}
 .add-jak-sum::after{content:""; width:9px; height:9px; flex:none;
   border-right:2px solid currentColor; border-bottom:2px solid currentColor;
   transform:rotate(45deg) translate(-2px,-2px); transition:transform var(--cas-zakladni) var(--ease);}
@@ -3963,15 +3963,16 @@ body::after{
    ===================================================================== */
 .okr-wrap{max-width:var(--m-siroky);}
 
-/* Úvod krajské stránky: stejná tmavá plocha s mapovou mřížkou jako na
-   hlavní stránce — web tím drží pohromadě. */
+/* Úvod krajské stránky: táž plocha s mapovou mřížkou jako úvod ostatních
+   stránek — web tím drží pohromadě. Barvu i mřížku bere z tokenů pásu,
+   takže se ve světlém režimu nerozejde se zbytkem stránky. */
 .okr-hero{position:relative; padding:0;}
 .okr-band{position:relative; padding:64px 0 48px;
-  background:linear-gradient(180deg, #1b2b22 0%, #17281e 62%, #12241A 100%);}
+  background:var(--pas-plocha);}
 .okr-band::before{content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
   background-image:
-    linear-gradient(to right, var(--mrizka-cara-tmava) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--mrizka-cara-tmava) 1px, transparent 1px);
+    linear-gradient(to right, var(--pas-mrizka) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--pas-mrizka) 1px, transparent 1px);
   background-size:var(--mrizka-bunka) var(--mrizka-bunka);
   -webkit-mask-image:radial-gradient(ellipse 76% 80% at 50% 44%, #000 16%, transparent 100%);
           mask-image:radial-gradient(ellipse 76% 80% at 50% 44%, #000 16%, transparent 100%);}
@@ -5541,11 +5542,11 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    Platí v obou režimech: pás je tmavý vždycky. */
 .rezim-btn{display:inline-flex; align-items:center; gap:7px;
   min-height:44px; padding:0 13px; border-radius:var(--r-pill);
-  border:1px solid rgba(255,255,255,0.42); background:none; font:inherit;
-  font-size:13px; font-weight:600; color:var(--text-ondeep-mute);
+  border:1px solid var(--pas-linka); background:none; font:inherit;
+  font-size:13px; font-weight:600; color:var(--pas-text-mute);
   cursor:pointer; transition:border-color var(--cas-zakladni) var(--ease),
     color var(--cas-zakladni) var(--ease);}
-.rezim-btn:hover{border-color:rgba(255,255,255,0.62); color:var(--text-ondeep);}
+.rezim-btn:hover{border-color:var(--pas-akcent); color:var(--pas-text);}
 .rezim-btn svg{width:16px; height:16px; flex:none;}
 
 /* Poznámka v tabulce porovnání. Zkrácená na dva řádky — tabulka má

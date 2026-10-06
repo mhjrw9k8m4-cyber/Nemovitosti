@@ -1217,10 +1217,10 @@ to{opacity:1;transform:none}
 .kt-mail:hover{border-color:var(--copper-bright);background:rgba(126,196,157,0.12)}
 .add-check.err input{outline:2px solid var(--c-exekuce);outline-offset:1px}
 .add-jak{margin-top:16px}
-.add-jak-sum{display:inline-flex;align-items:center;gap:10px;cursor:pointer;list-style:none;padding:10px 16px;border-radius:var(--r-pill);border:1.5px solid rgba(255,255,255,0.4);color:#fff;font-size:14px;font-weight:600;transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease)}
+.add-jak-sum{display:inline-flex;align-items:center;gap:10px;cursor:pointer;list-style:none;padding:10px 16px;border-radius:var(--r-pill);border:1.5px solid var(--pas-linka);color:var(--pas-text);font-size:14px;font-weight:600;transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease)}
 .add-jak-sum::-webkit-details-marker{display:none}
-.add-jak-sum:hover{border-color:var(--copper-bright);background:rgba(255,255,255,0.06)}
-.add-jak-sum .aj-kolik{color:rgba(255,255,255,0.7);font-weight:500}
+.add-jak-sum:hover{border-color:var(--pas-akcent);background:var(--pas-dlazdice)}
+.add-jak-sum .aj-kolik{color:var(--pas-text-mute);font-weight:500}
 .add-jak-sum::after{content:"";width:9px;height:9px;flex:none;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);transition:transform var(--cas-zakladni) var(--ease)}
 .add-jak[open] .add-jak-sum::after{transform:rotate(-135deg) translate(-3px,-3px)}
 .add-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:12px}
@@ -1619,8 +1619,8 @@ body::after{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;o
 }
 .okr-wrap{max-width:var(--m-siroky)}
 .okr-hero{position:relative;padding:0}
-.okr-band{position:relative;padding:64px 0 48px;background:linear-gradient(180deg,#1b2b22 0%,#17281e 62%,#12241A 100%)}
-.okr-band::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(to right,var(--mrizka-cara-tmava) 1px,transparent 1px),linear-gradient(to bottom,var(--mrizka-cara-tmava) 1px,transparent 1px);background-size:var(--mrizka-bunka) var(--mrizka-bunka);-webkit-mask-image:radial-gradient(ellipse 76% 80% at 50% 44%,#000 16%,transparent 100%);mask-image:radial-gradient(ellipse 76% 80% at 50% 44%,#000 16%,transparent 100%)}
+.okr-band{position:relative;padding:64px 0 48px;background:var(--pas-plocha)}
+.okr-band::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(to right,var(--pas-mrizka) 1px,transparent 1px),linear-gradient(to bottom,var(--pas-mrizka) 1px,transparent 1px);background-size:var(--mrizka-bunka) var(--mrizka-bunka);-webkit-mask-image:radial-gradient(ellipse 76% 80% at 50% 44%,#000 16%,transparent 100%);mask-image:radial-gradient(ellipse 76% 80% at 50% 44%,#000 16%,transparent 100%)}
 .okr-band>.wrap{position:relative;z-index:1}
 .okr-hero .eyebrow{color:var(--pas-text)}
 .okr-hero h1{color:var(--pas-text);font-size:var(--h1-stranka);line-height:1.04;letter-spacing:-0.03em}
@@ -2145,8 +2145,8 @@ to{opacity:1;transform:none}
 :root[data-theme="dark"] #leaflet-map,:root[data-theme="dark"] .leaflet-container{background:var(--ink)}
 :root[data-theme="dark"] .leaflet-control-attribution{background:var(--plocha-plovouci-tlum);color:var(--text-ondark-mute)}
 :root[data-theme="dark"] .leaflet-control-attribution a{color:var(--copper)}
-.rezim-btn{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 13px;border-radius:var(--r-pill);border:1px solid rgba(255,255,255,0.42);background:none;font:inherit;font-size:13px;font-weight:600;color:var(--text-ondeep-mute);cursor:pointer;transition:border-color var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease)}
-.rezim-btn:hover{border-color:rgba(255,255,255,0.62);color:var(--text-ondeep)}
+.rezim-btn{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 13px;border-radius:var(--r-pill);border:1px solid var(--pas-linka);background:none;font:inherit;font-size:13px;font-weight:600;color:var(--pas-text-mute);cursor:pointer;transition:border-color var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease)}
+.rezim-btn:hover{border-color:var(--pas-akcent);color:var(--pas-text)}
 .rezim-btn svg{width:16px;height:16px;flex:none}
 .por-pozn{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:4px;padding-left:8px;border-left:2px solid var(--copper);font-size:12px;line-height:1.45;font-weight:400;color:var(--text-ondark-mute);white-space:normal}
 .map-podklad{display:inline-flex;gap:2px;padding:2px;background:var(--plocha-plovouci);border:1px solid rgba(31,81,56,0.22);border-radius:var(--r-lg);box-shadow:var(--shadow);backdrop-filter:blur(4px)}
