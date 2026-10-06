@@ -33,7 +33,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=4a24a35d">
+  <link rel="stylesheet" href="css/styles.min.css?v=9dbe0807">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .hl-wrap{max-width:var(--m-uzky); margin:0 auto;}
@@ -75,6 +75,16 @@
     /* Ukázka pod přihlášením: stejná šířka jako okénko, ať to drží jednu
        osu, a čísla v jednom sloupci, aby šla porovnat očima. */
     .hl-ukazka{padding:20px; max-width:var(--m-karta); margin:8px auto;}
+    /* Prázdné místo pro kartu, než se dopočítá. Výška je naměřená
+       z hotové karty (531 px na širokém displeji), ať patička nemusí
+       nikam skákat. */
+    .hl-ukazka-misto{min-height:531px; display:flex; flex-direction:column; gap:14px; justify-content:center;}
+    .hl-ukazka-misto .sk{height:18px;}
+    .hl-ukazka-misto .sk:nth-child(1){width:46%;}
+    .hl-ukazka-misto .sk:nth-child(2){width:92%;}
+    .hl-ukazka-misto .sk:nth-child(3){width:84%;}
+    .hl-ukazka-misto .sk:nth-child(4){width:88%;}
+    .hl-ukazka-misto .sk:nth-child(5){width:60%;}
     .hl-ukazka h2{font-size:17px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
     .hl-ukazka p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
     .hlu-list{list-style:none; margin:0 0 12px; padding:0;}
@@ -208,7 +218,25 @@
     .hl-a.pri{background:var(--plocha-znacka); color:#fff; border-color:transparent; box-shadow:var(--glow);}
     .hl-a.del{flex:0 0 44px; color:var(--c-exekuce);}
     .hl-empty{padding:28px 20px; text-align:center; color:var(--text-ondark-mute); font-size:14px; line-height:1.6;}
-    .hl-load{padding:24px; text-align:center; color:var(--text-ondark-mute);}
+    /* DRŽÍ MÍSTO, NEŽ OBSAH DOJDE. Změřeno: zástupný text měl 104 px
+       a obsah, který ho vystřídá, 372–400 px, takže patička skočila
+       o ~300 px dolů — a byla přitom vidět. Posun rozvržení 0,19
+       při mezi 0,05. Rezervuje se proto rovnou ta výška; místo
+       holého „Načítám…" jsou v ní pruhy kostry, ať je vidět, že se
+       něco děje. */
+    .hl-load{padding:24px; text-align:center; color:var(--text-ondark-mute); min-height:880px; box-sizing:border-box;
+      display:flex; flex-direction:column; gap:12px; justify-content:center;}
+    .hl-load .sk{height:18px;}
+    .hl-load .sk:nth-child(1){width:52%;}
+    .hl-load .sk:nth-child(2){width:88%;}
+    .hl-load .sk:nth-child(3){width:70%;}
+    .hl-load .sk:nth-child(4){width:40%;}
+    /* Na širokém displeji je karta jiná, takže i rezerva musí být jiná.
+       Změřeno po krocích (rezerva → posun na 1280 px): 296 → 0,082;
+       340 → 0,061; 370 → 0,049; 390 → ?; 410 → 0,064 (to už přestřelí
+       a karta se po načtení naopak smrští). Mez je 0,05, takže 370 by
+       sedělo přesně na ní. */
+    @media (min-width:700px){ .hl-load{min-height:862px;} }
   
     /* PRST POTŘEBUJE 44 PX. Web si tu mez klade sám, jenže měřila se jen
        na úvodní stránce — sem o ní nikdo nevěděl. Změřeno na 390×844:
@@ -278,7 +306,7 @@
   <section class="section app-section">
     <div class="wrap">
       <div class="hl-wrap">
-        <div id="hl-root"><div class="hl-card"><div class="hl-load">Načítám…</div></div></div>
+        <div id="hl-root"><div class="hl-card"><div class="hl-load" aria-label="Načítám…"><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div></div>
       </div>
     </div>
   </section>
@@ -454,7 +482,14 @@
         + '<span class="hlu-p">' + critText(s) + '</span>'
         + '<span class="hlu-n">' + (prirustek || (fmt(vse) + ' ' + tvarPozemku(vse) + ' v nabídce')) + '</span></li>';
     }).filter(Boolean);
-    if (!radky.length) return;
+    /* MÍSTO SI DRŽÍ OD ZAČÁTKU. Tahle karta se dopočítává z dnešní
+       nabídky, takže přišla až o sto milisekund po kartě přihlášení —
+       a tím odsunula patičku, která byla do té chvíle vidět. Změřeno:
+       kořen stránky 372 → 911 px, posun rozvržení 0,19 při mezi 0,05.
+       renderAuth proto vykreslí prázdnou kartu téže výšky a tahle ji
+       jen vymění; když se nemá co ukázat, zmizí. */
+    var misto = root.querySelector('.hl-ukazka-misto');
+    if (!radky.length) { if (misto) misto.remove(); return; }
 
     var box = document.createElement('div');
     box.className = 'hl-card hl-ukazka';
@@ -465,7 +500,7 @@
       + '<p class="hlu-pozn">Počítáno z dnešní nabídky toutéž funkcí, která pak vyhodnocuje '
       + 'vaše vlastní hlídání. Svoje podmínky si nastavíte po přihlášení — druh, okres, cenu, '
       + 'výměru i to, co pozemek musí mít.</p>';
-    root.appendChild(box);
+    if (misto) misto.replaceWith(box); else root.appendChild(box);
   }
 
   /* ---------- Přihlášení ---------- */
@@ -481,7 +516,11 @@
           '<button class="hl-btn sec" type="button" id="hsignup">Vytvořit účet</button>' +
         '</form>' +
         '<div class="hl-msg' + (err ? ' err' : '') + '" id="hauthmsg">' + (msg || '') + '</div>' +
-      '</div>';
+      '</div>' +
+      /* Místo pro kartu „Co vám hlídání pošle“, která se teprve počítá. */
+      '<div class="hl-card hl-ukazka hl-ukazka-misto" aria-hidden="true">'
+        + '<i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i>'
+      + '</div>';
     if (DATA.length) ukazkaHlidani();
     else loadData().then(ukazkaHlidani, function () {});
     var em = document.getElementById('he'), pw = document.getElementById('hp'), mEl = document.getElementById('hauthmsg');

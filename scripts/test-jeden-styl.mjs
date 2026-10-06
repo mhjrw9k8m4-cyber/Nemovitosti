@@ -113,16 +113,23 @@ pravda('obsahový nadpis už velikost nemění přes @media',
   skokem.map((n) => `r.${n.radek} „${n.sel}" = ${n.hodnota} v ${n.media.join(' ')}`).join('\n      '));
 
 // =====================================================================
-// MŘÍŽKOVÁ TEXTURA na tmavých plochách
+// MŘÍŽKOVÁ TEXTURA
 //
-// Tutéž mřížku (bílá čára 1 px při 6 % krytí) nesou tři tmavé plochy:
-// proužek na titulní, krajský pás a úvod návodů. Dvě z nich měly buňku
-// 52 px a třetí 58 px — rozdíl, který nikdo nerozhodl a který se při
-// přechodu mezi stránkami pozná jako jiná hrubost podkladu.
-// Teď je velikost i barva čáry v paletě a všechny tři ji berou odtud.
+// Tutéž mřížku nese několik ploch: proužek na titulní, krajský pás
+// a úvod návodů. Dvě z nich měly buňku 52 px a třetí 58 px — rozdíl,
+// který nikdo nerozhodl a který se při přechodu mezi stránkami pozná
+// jako jiná hrubost podkladu. Velikost i barva čáry je proto v paletě
+// a všechny ji berou odtud.
+//
+// BARVA JE DNES JEN JEDNA. Dokud web měl tmavý režim, byly dvě:
+// --mrizka-cara-svetla (inkoust pro světlé plochy) a --mrizka-cara-tmava
+// (bílá pro tmavé). Tmavý režim je pryč a ta bílá se mezitím ukázala
+// jako vada: dvě mřížky ji braly i na SVĚTLÉM pásu, kde z nich nebylo
+// vidět vůbec nic. Obě dnes berou --pas-mrizka, která ukazuje na
+// --mrizka-cara-svetla, a bílá varianta je odstraněná.
 // =====================================================================
 const TEXTURA = ['--mrizka-bunka', '--mrizka-bunka-panel',
-                 '--mrizka-cara-tmava', '--mrizka-cara-svetla'];
+                 '--mrizka-cara-svetla'];
 pravda('mřížková textura má hodnoty v paletě',
   TEXTURA.every((t) => new RegExp(`${t}\\s*:`).test(css)),
   'chybí: ' + TEXTURA.filter((t) => !new RegExp(`${t}\\s*:`).test(css)).join(', '));
@@ -155,11 +162,11 @@ pravda('test našel všech sedm ploch s mřížkovou texturou', mrizky.length ==
 /* JEDEN STUPEŇ PŘEZDÍVKY SE UZNÁ — ALE MUSÍ SE OVĚŘIT, KAM VEDE.
    Patička sdílí barvy s úvodní plochou přes tokeny pásu, takže její
    mřížka bere --pas-mrizka. To není obcházení pravidla: --pas-mrizka
-   se sám nedefinuje žádnou barvou, jen ukazuje na --mrizka-cara-svetla
-   (světlý režim) a --mrizka-cara-tmava (tmavý). Test si proto najde
+   se sám nedefinuje žádnou barvou, jen ukazuje na --mrizka-cara-svetla.
+   Test si proto najde
    všechny tokeny, které se definují JEN odkazem na jednu z těch dvou
    čar, a uzná je. Token s vlastní barvou se neuzná ani náhodou. */
-const ZAKLADNI = ['--mrizka-cara-tmava', '--mrizka-cara-svetla'];
+const ZAKLADNI = ['--mrizka-cara-svetla'];
 const prezdivky = [];
 for (const m of css.matchAll(/(--[\w-]+)\s*:\s*var\((--mrizka-cara-[a-z]+)\)\s*;/g)) {
   if (ZAKLADNI.includes(m[2]) && !prezdivky.includes(m[1])) prezdivky.push(m[1]);

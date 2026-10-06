@@ -200,7 +200,9 @@
      Hlídá scripts/test-jeden-styl.mjs. */
   --mrizka-bunka:52px;
   --mrizka-bunka-panel:34px;
-  --mrizka-cara-tmava:rgba(255,255,255,0.06);
+  /* --mrizka-cara-tmava (bílá linka pro tmavé plochy) odstraněn: po
+     zrušení tmavého režimu ho nepoužívalo nic a obě mřížky dnes berou
+     --pas-mrizka, tedy barvu pro světlý povrch. */
   /* Mřížka při 4 % se na pásu neprojevila ani o jednu úroveň jasu.
      6,5 % je pořád jen náznak, ale je vidět — a je to ta textura, kvůli
      které tu kreslení polí nahradila síť poledníků a rovnoběžek. */
@@ -295,6 +297,15 @@
   --c-sale-ink:#3C55A2; --c-drazba-ink:#7E3C18; --c-exekuce-ink:#8C2F1E;
   --c-obec-ink:#0A626B; --c-majitel-ink:#6E3EB1; --c-ok-ink:#13663E;
   --surface-2:#EEF6F1;
+  /* JEMNÁ PLOCHA. Třináct míst na webu mělo rgba(228,240,231, 0.04–0.12),
+     což je #E4F0E7 — téměř bílá barva z odstraněného tmavého režimu.
+     Na světlé kartě z ní není vidět nic: odznaky u nabídek neměly ani
+     výplň, ani rámeček, třpyt u načítacích kostiček se nekreslil, dráha
+     ukazatele síly hesla byla prázdná. Inkoustová s nízkou průhledností
+     dělá to, co ta barva měla dělat: o stupeň jiná plocha než karta pod
+     ní, ať je ta karta bílá nebo zelenkavá. */
+  --plocha-jemna: rgba(20,35,28,0.05);
+  --plocha-jemna-vic: rgba(20,35,28,0.075);
   --line: rgba(20,35,28,0.16);
   --line-strong: rgba(20,35,28,0.3);
   /* Okraj ovládacího prvku. Políčko, seznam nebo tlačítko musí být od plochy
@@ -477,7 +488,7 @@
 
 /* Ikony */
 .ic{width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex:none;}
-.icon-badge{width:44px; height:44px; border-radius:var(--r-md); display:inline-flex; align-items:center; justify-content:center; margin-bottom:20px; background:rgba(228,240,231,0.06); border:1px solid var(--line);}
+.icon-badge{width:44px; height:44px; border-radius:var(--r-md); display:inline-flex; align-items:center; justify-content:center; margin-bottom:20px; background:var(--plocha-jemna); border:1px solid var(--line);}
 .icon-badge .ic{width:22px; height:22px;}
 
 *{box-sizing:border-box; margin:0; padding:0;}
@@ -1558,7 +1569,11 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   transition:background var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease),
     color var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
 .filter-chip .c{width:8px; height:8px; border-radius:50%;}
-.filter-chip:hover{color:var(--text-ondark); border-color:rgba(228,240,231,0.3);}
+/* NAJETÍ MYŠÍ OKRAJ ZTRÁCELO. border-color byla rgba(228,240,231,0.3),
+   tedy téměř bílá z tmavého režimu — na světlém štítku se okraj při
+   najetí prakticky rozpustil. Zvýrazní se, stejně jako u voleb v panelu
+   filtrů. */
+.filter-chip:hover{color:var(--text-ondark); border-color:var(--copper);}
 /* Aktivní filtr „svítí" vlastní barvou kategorie — ať „Vše" a „Dražba" nesplývají */
 .filter-chip.active{color:#fff; border-color:transparent; box-shadow:var(--e1);}
 .filter-chip.active[data-type="all"]{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
@@ -1725,13 +1740,18 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    zaškrtnutí, pilulky bez zaškrtnutí a pilulky se zaškrtnutím. Teď je
    to jedno a totéž — zaškrtávátko vlevo, popisek, počet vpravo —
    a .mc-prep sdílí tatáž pravidla, protože to je tatáž věc. */
-.mcv-btn, .mc-prep{display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+/* JEN UVNITŘ PANELU. Třída .mc-prep se používá i v liště nad výsledky
+   („Uložené", „Porovnat"), kde to mají být malé štítky vedle sebe.
+   Když jsem jí dal width:100% a výšku řádku, roztáhlo se „Uložené" na
+   302×232 px, ujedlo lištu i sloupec a na celý výpis pozemků zbylo
+   31 px výšky při obsahu 9 836 px. Změřeno na 1280×900. */
+.mcv-btn, .mc-toggles .mc-prep{display:flex; align-items:center; gap:10px; width:100%; text-align:left;
   font:inherit; font-size:14px; font-weight:600;
   cursor:pointer; min-height:44px; padding:9px 12px; border-radius:var(--r-sm);
   border:1px solid var(--line-ui); background:var(--ink-soft); color:var(--text-ondark);
   transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
-.mcv-btn:hover, .mc-prep:hover{border-color:var(--copper); background:var(--ink);}
-.mcv-btn.on, .mc-prep.on{background:var(--plocha-znacka); border-color:var(--plocha-znacka); color:#fff;}
+.mcv-btn:hover, .mc-toggles .mc-prep:hover{border-color:var(--copper); background:var(--ink);}
+.mcv-btn.on, .mc-toggles .mc-prep.on{background:var(--plocha-znacka); border-color:var(--plocha-znacka); color:#fff;}
 /* Popisek si bere místo, počet se drží vpravo — čísla tak stojí nad
    sebou v jednom sloupci a dají se porovnat očima. */
 .mcp-t{flex:1 1 auto; min-width:0; line-height:1.2;}
@@ -1760,7 +1780,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    seděly „Příležitosti" v půlce mřížky a „Pod obvyklou cenou"
    přetékalo o 16 px (116 > 100). Celá šířka to řeší na všech šířkách
    naráz a panel je přitom jeden sloupec seshora dolů. */
-.mc-druhy, .mc-vybaveni, .mc-prilezitosti, .mc-hodnoty, .mc-hodnoty-nadpis{grid-column:1 / -1;}
+.mc-druhy, .mc-vybaveni, .mc-prilezitosti, .mc-hodnoty-blok{grid-column:1 / -1;}
 /* PŘEPÍNAČ, KTERÝ VYPADÁ JAKO PŘEPÍNAČ. „Končí do 14 dní", „Pod
    obvyklou cenou" a „Uložené" měly doslova třídu rozbalovacího
    seznamu (class="map-select urgent-toggle") — široká krabička
@@ -1768,7 +1788,14 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    navíc jen jiná barva, takže kdo barvy nerozezná, nepoznal nic.
    Teď je to tentýž štítek jako Elektřina/Voda a po zapnutí se
    zaškrtne. */
-/* Vzhled .mc-prep je výš, společně s .mcv-btn — je to tatáž volba. */
+/* Štítkový vzhled .mc-prep pro použití MIMO panel filtrů (lišta nad
+   výsledky). Uvnitř panelu ho přebíjí řádková součástka výš. */
+.mc-prep{display:inline-flex; align-items:center; gap:6px; font:inherit; font-size:13px; font-weight:600;
+  cursor:pointer; min-height:38px; padding:8px 12px; border-radius:var(--r-pill);
+  border:1px solid var(--line-ui); background:none; color:var(--text-ondark-mute);
+  transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
+.mc-prep:hover{border-color:var(--copper); color:var(--copper);}
+.mc-prep.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
 /* Zaškrtnutí se nekreslí obrázkem, ale rámečkem s fajfkou: v zapnutém
    stavu je bílé na zelené, ve vypnutém je z něj prázdný čtvereček. */
 .mcp-v{flex:none; width:18px; height:18px; border-radius:var(--r-xs); position:relative;
@@ -1830,7 +1857,6 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    mimo rámeček, odsazení nad ním dělá tu mezeru. */
 .mc-hodnoty{grid-column:1 / -1; display:flex; flex-direction:column;
   border:1px solid var(--line-ui); border-radius:var(--r-sm); background:var(--ink-soft); overflow:hidden;}
-.mc-hodnoty-nadpis{grid-column:1 / -1;}
 .mc-shrnuti{display:flex; flex-direction:column;}
 .mc-hodnoty .mcs-btn{border:0; border-radius:0; background:none; min-height:48px; padding:0 12px;}
 .mc-hodnoty .mcs-btn:hover{background:var(--ink);}
@@ -2077,7 +2103,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .opp-skel{display:flex; gap:12px; align-items:flex-start; border:1px solid var(--line); border-radius:var(--r-sm); padding:12px 14px; margin-bottom:8px; background:var(--ink);}
 .opp-skel .skel-thumb{flex:none; width:48px; height:48px; border-radius:var(--r-sm);}
 .opp-skel .skel-body{flex:1; display:flex; flex-direction:column; gap:8px; padding-top:4px;}
-.sk{background:linear-gradient(90deg, var(--ink-soft2) 25%, rgba(228,240,231,0.12) 37%, var(--ink-soft2) 63%); background-size:400% 100%; border-radius:var(--r-xs); animation:skShimmer 1.4s ease infinite;}
+.sk{background:linear-gradient(90deg, var(--ink-soft2) 25%, var(--plocha-jemna-vic) 37%, var(--ink-soft2) 63%); background-size:400% 100%; border-radius:var(--r-xs); animation:skShimmer 1.4s ease infinite;}
 .sk-l1{height:12px; width:58%;} .sk-l2{height:10px; width:85%;} .sk-l3{height:10px; width:42%;}
 @keyframes skShimmer{0%{background-position:100% 0;} 100%{background-position:0 0;}}
 @media (prefers-reduced-motion:reduce){ .sk{animation:none;} }
@@ -2253,22 +2279,22 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .opp-figures{display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin-top:8px; margin-bottom:2px;}
 .opp-figures .m{font-size:13px; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
 /* Kč/m² jako jemný neutrální štítek — hodnotný, ale bez dalších barev */
-.opp-perm2{align-self:center; font-size:12px; font-weight:600; color:var(--text-ondark-mute); background:rgba(228,240,231,0.06); border:1px solid rgba(228,240,231,0.12); border-radius:var(--r-xs); padding:2px 8px; font-variant-numeric:tabular-nums; white-space:nowrap;}
+.opp-perm2{align-self:center; font-size:12px; font-weight:600; color:var(--text-ondark-mute); background:var(--plocha-jemna); border:1px solid var(--line); border-radius:var(--r-xs); padding:2px 8px; font-variant-numeric:tabular-nums; white-space:nowrap;}
 /* Řádek odznaků — všechny stavy pohromadě, stejný tvar */
 .opp-chips{display:flex; flex-wrap:wrap; gap:6px;}
-.opp-hot{display:inline-block; font-size:12px; font-weight:700; letter-spacing:var(--odznak-proklad); color:var(--popisek); background:rgba(228,240,231,0.06); border:1px solid rgba(228,240,231,0.16); border-radius:var(--r-xs); padding:1px 8px; text-transform:uppercase;}
+.opp-hot{display:inline-block; font-size:12px; font-weight:700; letter-spacing:var(--odznak-proklad); color:var(--popisek); background:var(--plocha-jemna); border:1px solid var(--line); border-radius:var(--r-xs); padding:1px 8px; text-transform:uppercase;}
 /* Zvýrazněný (placený) inzerát — prémiový plný odznak + jemné orámování karty */
 .opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#fff; background:var(--plocha-znacka); border:0; border-radius:var(--r-sm); padding:2px 8px; letter-spacing:0.02em; text-transform:uppercase; box-shadow:var(--e1);}
 .opp-item.is-featured{border-color:rgba(31,81,56,0.55); box-shadow:inset 0 0 0 1px rgba(31,81,56,0.3);}
 /* Odpočet do termínu dražby (reálné datum) */
-.opp-cd{display:inline-block; font-size:12px; font-weight:700; padding:1px 8px; border-radius:var(--r-xs); background:rgba(228,240,231,0.06); border:1px solid rgba(228,240,231,0.16); color:var(--text-ondark-mute); letter-spacing:0.01em; white-space:nowrap;}
+.opp-cd{display:inline-block; font-size:12px; font-weight:700; padding:1px 8px; border-radius:var(--r-xs); background:var(--plocha-jemna); border:1px solid var(--line); color:var(--text-ondark-mute); letter-spacing:0.01em; white-space:nowrap;}
 /* Odpočet do termínu. Světlé odstíny tu zbyly z doby, kdy byly karty tmavé —
    na bílé kartě z nich bylo 1,6 : 1, tedy nečitelné. Textové varianty (-ink)
    jsou na to v paletě přesně pro tenhle případ. */
 .opp-cd.soon{color:var(--c-drazba-ink); border-color:rgba(204,107,51,0.55);}
 .opp-cd.urg{color:var(--c-exekuce-ink); border-color:rgba(228,72,61,0.4);}
 /* Počet nabídek na filtračních tlačítkách */
-.chip-n{display:inline-block; margin-left:6px; font-size:12px; font-weight:700; padding:0 6px; border-radius:var(--r-sm); background:rgba(228,240,231,0.12); color:var(--text-ondark-mute); min-width:16px; line-height:16px; text-align:center; vertical-align:middle;}
+.chip-n{display:inline-block; margin-left:6px; font-size:12px; font-weight:700; padding:0 6px; border-radius:var(--r-sm); background:var(--plocha-jemna-vic); color:var(--text-ondark-mute); min-width:16px; line-height:16px; text-align:center; vertical-align:middle;}
 .filter-chip.active .chip-n{background:rgba(22,47,35,0.3); color:inherit;}
 
 /* Zavírací lišta přes celou šířku nahoře */
@@ -2504,7 +2530,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .status-top{display:flex; align-items:center; gap:8px; font-family:var(--font-ui); font-size:16px; font-weight:500; margin-bottom:12px;}
 .status-top .dot{width:11px; height:11px; border-radius:50%;}
 .status-n{margin-left:auto; font-family:var(--font-ui); font-size:12px; font-weight:700; letter-spacing:0.01em; color:var(--copper-bright); background:rgba(44,113,80,0.12); border:1px solid rgba(44,113,80,0.4); border-radius:var(--r-sm); padding:2px 8px; white-space:nowrap;}
-.status-n.is-zero{color:var(--text-ondark-mute); background:rgba(228,240,231,0.06); border-color:var(--line);}
+.status-n.is-zero{color:var(--text-ondark-mute); background:var(--plocha-jemna); border-color:var(--line);}
 .status-card p{font-size:14px; color:var(--text-ondark-mute);}
 .status-list{list-style:none; display:flex; flex-direction:column; gap:8px; margin:0;}
 .status-list li{position:relative; padding-left:20px; font-size:14px; line-height:1.5; color:var(--text-ondark-mute);}
@@ -2548,8 +2574,8 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 #realitky .rct-copy h2{color:var(--text-ondeep);}
 #realitky .rct-copy p{color:var(--text-ondeep-mute);}
 #realitky .eyebrow{color:var(--accent-warm-bright);}
-#realitky .kt-mail{background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.16);}
-#realitky .kt-mail:hover{background:rgba(255,255,255,0.12); border-color:var(--accent-warm-bright);}
+#realitky .kt-mail{background:var(--plocha-jemna); border-color:var(--line);}
+#realitky .kt-mail:hover{background:var(--plocha-jemna-vic); border-color:var(--accent-warm-bright);}
 #realitky .kt-txt small{color:var(--text-ondeep-mute);}
 #realitky .kt-txt b{color:var(--text-ondeep);}
 #realitky .rules-note{color:var(--text-ondeep-mute);}
@@ -3029,7 +3055,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .add-sekce-hint{font-weight:500; text-transform:none; letter-spacing:0;
   color:var(--text-ondark-mute); font-size:12px;}
 /* Rozbalovací „další údaje" — formulář je na první pohled kratší a lehčí */
-.add-more{border:1px solid var(--line); border-radius:var(--r-sm); background:rgba(228,240,231,0.04);}
+.add-more{border:1px solid var(--line); border-radius:var(--r-sm); background:var(--plocha-jemna);}
 .add-more > summary{list-style:none; cursor:pointer; padding:12px 16px; font-size:14px; font-weight:600;
   color:var(--copper-bright); display:flex; align-items:center; justify-content:space-between; gap:12px;}
 .add-more > summary::-webkit-details-marker{display:none;}
@@ -3317,7 +3343,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .ul-desc{font-size:13px; line-height:1.5; color:var(--text-ondark-mute); margin:8px 0 0; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;}
 .ul-desc[hidden]{display:none;}
 .ul-tags{display:flex; flex-wrap:wrap; gap:4px; margin-top:2px;}
-.ul-tags span{font-size:12px; color:var(--text-ondark-mute); background:rgba(228,240,231,0.06); border:1px solid var(--line); border-radius:var(--r-xs); padding:2px 8px;}
+.ul-tags span{font-size:12px; color:var(--text-ondark-mute); background:var(--plocha-jemna); border:1px solid var(--line); border-radius:var(--r-xs); padding:2px 8px;}
 
 /* ---------- Grády: živý náhled inzerátu + víc energie ---------- */
 .add-chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
@@ -3349,7 +3375,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .pc-strength{margin-top:16px; padding-top:14px; border-top:1px solid var(--line);}
 .pcs-top{display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text-ondark-mute); margin-bottom:6px;}
 .pcs-top b{color:var(--copper-bright); font-size:13px;}
-.pcs-bar{height:8px; border-radius:var(--r-lg); background:rgba(228,240,231,0.08); overflow:hidden;}
+.pcs-bar{height:8px; border-radius:var(--r-lg); background:var(--plocha-jemna-vic); overflow:hidden;}
 /* PRUH SE PLNÍ ZE ZNAČKOVÉ ZELENÉ DO MĚDĚNÉ, ne do fialové.
    Konec pruhu byl #9B72E6 — jediný fialový odstín na celém webu, odstín
    261°, zatímco všechno ostatní je zelená (100–170°) nebo měď (20–55°).
@@ -3368,7 +3394,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .pcs-hint b{color:var(--text-ondark);}
 /* Úroveň inzerátu (Začínáme … Špičkový) */
 .pcs-right{display:inline-flex; align-items:center; gap:8px;}
-.pc-strength .pcs-tier{font-size:12px; font-weight:700; letter-spacing:0.02em; padding:2px 8px; border-radius:var(--r-lg); background:rgba(228,240,231,0.08); color:var(--text-ondark-mute); transition:color var(--cas-pomaly) var(--ease), background var(--cas-pomaly) var(--ease);}
+.pc-strength .pcs-tier{font-size:12px; font-weight:700; letter-spacing:0.02em; padding:2px 8px; border-radius:var(--r-lg); background:var(--plocha-jemna-vic); color:var(--text-ondark-mute); transition:color var(--cas-pomaly) var(--ease), background var(--cas-pomaly) var(--ease);}
 /* ŘADA STUPŇŮ JDE OD TLUMENÉHO K ZELENÉMU, bez modré uprostřed.
    Stupeň 2 byl #8FA6FF, tedy modrá 228° — odstín z rodiny „na prodej",
    který na tomhle místě nic neznačí, a hlavně stál mezi stupněm 1
@@ -3540,7 +3566,26 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
    náhradní hodnoty (#9db0a4, #8CC3A4, #3d4a42) jsou světlé barvy pro
    tmavý režim, který už na webu není; všechny čtyři tokeny definované
    jsou, takže se náhrady nikdy nepoužily. */
+/* NA ÚZKÉM DISPLEJI JEDEN POSUVNÝ ŘÁDEK, NE TŘI ZALOMENÉ.
+   Změřeno na okresní stránce při 390 px: cesta zabírala 69 px (dva
+   řádky) a po doskočení webového písma se přelomila jinak — první
+   odkaz spadl o 31 px a s ním všechno pod ním. Posun rozvržení 0,236,
+   mez je 0,05. Dokázáno vyloučením: se zablokovaným písmem je posun
+   nula, s písmem 0,236. (Zkoušel jsem i to, jestli za to nemůže moje
+   zvětšení odsazení z 24 na 32 px — nemůže, s obojím vyjde 0,236.)
+   Co se nezalomí, nemůže se přelomit jinak; a tři řádky drobečků na
+   telefonu stejně jen ujídaly první obrazovku. */
 .crumbs{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; max-width:var(--m-wrap); margin:0 auto; padding:14px 32px 0; font-size:13px; color:var(--muted);}
+@media (max-width:700px){
+  /* Posuvný řádek musí být ohraničený oknem, jinak se z něj stane
+     široký obsah a do stran se rozjede celá stránka: změřeno 456 px
+     obsahu v 390px okně. Proto max-width a min-width:0. */
+  .crumbs{flex-wrap:nowrap; overflow-x:auto; overscroll-behavior-x:contain;
+    max-width:100%; min-width:0;
+    scrollbar-width:none; -ms-overflow-style:none; padding:14px 16px 0;}
+  .crumbs::-webkit-scrollbar{display:none;}
+  .crumbs > *{flex:none; white-space:nowrap;}
+}
 .crumbs a{color:var(--muted); text-decoration:none;}
 .crumbs a:hover{color:var(--copper-bright); text-decoration:underline;}
 .crumbs span[aria-current="page"]{color:var(--text-ondark); font-weight:600;}

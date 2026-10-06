@@ -33,7 +33,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=4a24a35d">
+  <link rel="stylesheet" href="css/styles.min.css?v=9dbe0807">
   <!-- Pět ploch na téhle stránce se odkazovalo na var(--card). Taková
        proměnná ale v paletce není (žije jen ve vlastním :root diagnostiky),
        takže se těch pět deklarací tiše zahodilo a karty, pole i prstenec
@@ -130,7 +130,19 @@
     .up-empty svg{width:44px; height:44px; opacity:.4; margin-bottom:12px;}
     .up-empty b{display:block; color:var(--text-ondark); font-size:17px; margin-bottom:6px;}
     .up-empty .up-a{margin-top:16px;}
-    .up-load{padding:40px; text-align:center; color:var(--text-ondark-mute); font-size:14px;}
+    /* DRŽÍ MÍSTO, NEŽ OBSAH DOJDE. Změřeno: zástupný text měl 104 px
+       a obsah, který ho vystřídá, 372–400 px, takže patička skočila
+       o ~300 px dolů — a byla přitom vidět. Posun rozvržení 0,19
+       při mezi 0,05. Rezervuje se proto rovnou ta výška; místo
+       holého „Načítám…" jsou v ní pruhy kostry, ať je vidět, že se
+       něco děje. */
+    .up-load{padding:40px; text-align:center; color:var(--text-ondark-mute); font-size:14px; min-height:352px; box-sizing:border-box;
+      display:flex; flex-direction:column; gap:12px; justify-content:center;}
+    .up-load .sk{height:18px;}
+    .up-load .sk:nth-child(1){width:52%;}
+    .up-load .sk:nth-child(2){width:88%;}
+    .up-load .sk:nth-child(3){width:70%;}
+    .up-load .sk:nth-child(4){width:40%;}
 
     /* Přihlášení rovnou tady. Stejná podoba jako na hlídání a ve zprávách —
        tři stránky pro jeden účet mají vypadat jako jedna věc. */
@@ -247,7 +259,7 @@
              nestihne zaregistrovat a hlášení zapadne. „polite" proto, že jde
              o novinky, ne o chybu — „assertive" by skákalo do řeči. -->
         <div id="up-live" role="status" aria-live="polite" class="visually-hidden"></div>
-        <div id="up-root"><div class="up-card"><div class="up-load">Načítám…</div></div></div>
+        <div id="up-root"><div class="up-card"><div class="up-load" aria-label="Načítám…"><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div></div>
       </div>
     </div>
   </section>

@@ -370,16 +370,40 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   pravda('na úzké obrazovce zbude na ovládání dost místa', sirka >= 300,
     `k prvkům se dostalo ${sirka} px z 390 — rámečky a odsazení berou ${390 - sirka} px`);
 
-  /* CENA ZA METR PATŘÍ K CENĚ, ne až za sítě. */
-  const poradi = await p.evaluate(() => [...document.querySelector('.map-controls').children]
-    .map((x) => (x.className || '').toString()));
-  const iCena = poradi.findIndex((c) => /mc-shrnuti|mc-rozsah/.test(c));
-  const iPerM22 = await p.evaluate(() => [...document.querySelector('.map-controls').children]
-    .findIndex((x) => x.querySelector && x.querySelector('#map-perm2')));
-  const iVybaveni = poradi.findIndex((c) => /mc-vybaveni/.test(c));
-  pravda('cena za metr stojí hned u ceny, ne až za sítěmi',
-    iCena >= 0 && iPerM22 === iCena + 1, `pořadí: ${poradi.map((c) => c.split(' ')[1] || c).join(' → ')}`);
-  pravda('a sítě jsou až za ní', iVybaveni > iPerM22, `sítě na ${iVybaveni}, cena/m² na ${iPerM22}`);
+  /* CENA ZA METR PATŘÍ K CENĚ, ne až za sítě.
+     Dřív to byli tři sourozenci v panelu a kontrola hlídala, že cena za
+     metr stojí hned ZA cenou. Dnes jsou cena, výměra i cena za metr
+     jedna skupina (.mc-hodnoty) se třemi stejnými řádky — tedy blíž,
+     než pravidlo kdy žádalo. Ptá se proto na totéž podle dnešní stavby:
+     všechny tři musí být v jedné skupině a ta musí stát před sítěmi.
+     Políčka od–do v té skupině nehledej: js/main.js je stěhuje do
+     celoobrazovkového výběru a v panelu po nich zůstanou souhrnné
+     řádky — změřeno, uvnitř skupiny jsou popisky „Cena" a „Výměra"
+     a rozbalovátko #map-perm2. */
+  const skupina = await p.evaluate(() => {
+    const mc = document.querySelector('.map-controls');
+    const g = mc && mc.querySelector('.mc-hodnoty');
+    const deti = mc ? [...mc.children] : [];
+    return {
+      je: !!g,
+      popisky: g ? [...g.querySelectorAll('.mcs-k')].map((e) => e.textContent.trim()) : [],
+      maPerM2: !!(g && g.querySelector('#map-perm2')),
+      /* Skupina hodnot je zabalená v bloku s návěštím (.mc-hodnoty-blok),
+         takže .mc-hodnoty NENÍ přímé dítě panelu — indexOf by vrátil -1.
+         Hledá se tedy to dítě, které skupinu obsahuje. */
+      iSkupina: g ? deti.findIndex((x) => x === g || x.contains(g)) : -1,
+      iVybaveni: deti.findIndex((x) => /mc-vybaveni/.test((x.className || '').toString())),
+      poradi: deti.map((x) => ((x.className || '').toString().split(' ')[0]) || x.tagName.toLowerCase()),
+    };
+  });
+  const maCenu = skupina.popisky.some((t) => /cena/i.test(t));
+  const maVymeru = skupina.popisky.some((t) => /výměra/i.test(t));
+  pravda('cena, výměra i cena za metr jsou v jedné skupině',
+    skupina.je && maCenu && maVymeru && skupina.maPerM2,
+    `ve skupině: ${skupina.popisky.join(', ') || '(nic)'}${skupina.maPerM2 ? ' + cena za m²' : ' — cena za m² chybí'}`);
+  pravda('a sítě jsou až za ní',
+    skupina.iSkupina >= 0 && skupina.iVybaveni > skupina.iSkupina,
+    `pořadí: ${skupina.poradi.join(' → ')}`);
 
   /* TLAČÍTKO S POČTEM SE PŘILEPÍ DOLE. Panel je delší než obrazovka;
      bez toho se člověk o počtu dozvěděl, až když dorolal na konec. */

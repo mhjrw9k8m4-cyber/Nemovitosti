@@ -130,7 +130,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=4a24a35d">
+  <link rel="stylesheet" href="css/styles.min.css?v=9dbe0807">
 </head>
 <body>
 
@@ -335,7 +335,13 @@
                    rozbalují do vlastní obrazovky, takže mají být tři stejné
                    řádky pod sebou, ne dvě kartičky a pod nimi rozbalovátko.
                    Souhrnná tlačítka sem js/main.js vloží před první blok. -->
-              <span class="mc-cap mc-hodnoty-nadpis">Cena a výměra</span>
+              <!-- Návěští a skupina patří do JEDNOHO bloku, stejně jako
+                   u ostatních skupin panelu. Jako sourozenci dostali mezi
+                   sebe oddělovací linku a dělily je 4 px, zatímco položky
+                   uvnitř skupin mají 6 px — skupina pak splývala s tím,
+                   co ji pojmenovává, víc než se svým vlastním obsahem. -->
+              <div class="mc-field mc-hodnoty-blok">
+              <span class="mc-cap">Cena a výměra</span>
               <div class="mc-hodnoty">
               <div class="mc-field mc-rozsah"><span class="mc-cap">Cena (Kč)</span>
                 <div class="mc-dvoj">
@@ -367,6 +373,7 @@
                 </div>
               </div>
               </div><!-- /mc-hodnoty -->
+              </div><!-- /mc-hodnoty-blok -->
               <!-- Co je u pozemku zavedené a jestli nejde jen o podíl. Vyplní
                    js/main.js podle toho, co se povedlo vyčíst z popisů
                    (js/vybaveni.js); co v datech není, se ani nenabízí. -->

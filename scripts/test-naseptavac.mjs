@@ -586,10 +586,19 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   /* A hlavně: to tlačítko musí opravdu fungovat. */
   await prazdno('stavební Vysočina do 50 tis');
   const cisloVeZprave = parseInt(((await p4.$eval('#opp-list .map-count', (e) => e.textContent)).match(/bez tohoto filtru by jich bylo\s*([\d\s\u00a0]+)/) || [])[1]?.replace(/\D/g, '') || '0', 10);
-  const btn = await p4.$('#pusti-vinika');
-  pravda('tlačítko „Zrušit …" je na stránce', !!btn);
-  if (btn) {
-    await btn.click();
+  /* LOCATOR, NE ULOŽENÝ UZEL. `$()` vrátí odkaz na konkrétní prvek —
+     jenže výpis nabídek se mezitím překreslí a ten prvek z dokumentu
+     zmizí. Playwright pak třicet vteřin klepe na souřadnice, kde už
+     tlačítko není, a hlásí, že mu tam „překáží" aside s výpisem nebo
+     oddíl s mapou. (Napřed jsem to svedl na plynulé rolování, které
+     jsem webu přidal; vyzkoušel jsem režim pro omezený pohyb a nepomohl
+     — tak jsem ho zase odebral.) Locator se před každým pokusem
+     dohledá znovu, takže klepne na ten prvek, který tam je teď. */
+  const btn = p4.locator('#pusti-vinika');
+  const jeBtn = (await btn.count()) > 0;
+  pravda('tlačítko „Zrušit …" je na stránce', jeBtn);
+  if (jeBtn) {
+    await btn.first().click();
     await p4.waitForTimeout(900);
     const po = await p4.$eval('#map-count', (e) => {
       const m = e.textContent.match(/([\d\s\u00a0]+)\s*na mapě/);

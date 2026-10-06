@@ -273,6 +273,30 @@ pravda('každý token, na který se styl odvolává, je určený', chybi.length 
       kategoriiModrych >= 2, 'modrou kategorii nerozpoznalo — výpočet odstínu je rozbitý');
     pravda('mimo barvy kategorií není na webu nic modrého', modre.length === 0,
       [...new Set(modre)].slice(0, 10).join('\n      '));
+
+    /* --- Barva zrušeného tmavého režimu ------------------------------
+     *
+     * rgba(228,240,231, …) je #E4F0E7, téměř bílá, kterou tmavý režim
+     * používal jako „o stupeň jinou plochu". Na světlé kartě z ní není
+     * vidět nic: změřeno na úvodu, odznaky .opp-hot, .opp-cd a
+     * .opp-perm2 měly výplň rgba(228,240,231,0.06) nad rgb(249,253,251),
+     * což je posun pod jednu úroveň jasu — tedy žádná plocha. Stejně
+     * dopadl třpyt u načítacích kostiček a dráha ukazatele síly hesla.
+     * Bylo jich třináct a jedno místo (pozemek.html) už opravené bylo,
+     * takže to není nahodilost, ale celá skupina.
+     *
+     * Kontrola je schválně doslovná: tahle konkrétní barva na webu bez
+     * tmavého režimu nemá co dělat. Žádné plané nálezy, žádné dohady. */
+    const zbytky = [];
+    for (const [jmeno, text] of zdrojeStylu) {
+      const bez = text.replace(/\/\*[\s\S]*?\*\//g, ' ');
+      for (const m of bez.matchAll(/([^{}]+)\{([^{}]*rgba\(\s*228\s*,\s*240\s*,\s*231[^}]*)\}/g)) {
+        zbytky.push(`${jmeno}: ${m[1].trim().replace(/\s+/g, ' ').slice(0, 56)}`);
+      }
+    }
+    pravda('žádná barva po zrušeném tmavém režimu', zbytky.length === 0,
+      [...new Set(zbytky)].slice(0, 8).join('\n      ')
+      + '\n      (rgba(228,240,231,…) je #E4F0E7 — na světlé ploše neviditelná)');
   }
 }
 
