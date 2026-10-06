@@ -197,6 +197,49 @@ pravda('a oba mají řádek na podpis',
   tDva && (tDva.match(/\.{20,}/g) || []).length >= 3,
   'řádků na podpis: ' + (tDva ? (tDva.match(/\.{20,}/g) || []).length : '—'));
 
+/* --- 5b) Předání a náklady ---------------------------------------- */
+/* Dvě věci, o které se nejčastěji vede spor. Kdo zaplatí poplatek za
+   návrh na vklad, zákon nepředepisuje — je to ujednání stran, takže to
+   ve smlouvě stát MUSÍ, jinak se na to přijde až na úřadě. */
+function radek(d, vzor) { return (S.smlouva(d) || '').split('\n').filter((x) => vzor.test(x))[0] || ''; }
+const PLATI = [['kupujici', 'kupující.'], ['prodavajici', 'prodávající.'],
+               ['napul', 'strany společně, každá jednou polovinou.']];
+for (const [k, konec] of PLATI) {
+  const r = radek(Object.assign({}, PLNY, { vklad: { plati: k } }), /poplatek/);
+  pravda(`poplatek za vklad: ${k} → „…${konec}"`, r.endsWith(konec), 'vyšlo „' + r + '"');
+}
+pravda('bez volby se poplatek nezamlčí, padne na kupujícího',
+  /hradí kupující\.$/.test(radek(PLNY, /poplatek/)), 'vyšlo „' + radek(PLNY, /poplatek/) + '"');
+
+/* Po předložce „do" je druhý pád: „do 1 dne", „do 14 dnů". Tabulka je
+   ruční, ne dopočítaná týmž pravidlem. */
+const DNY = [[1, 'do 1 dne'], [2, 'do 2 dnů'], [4, 'do 4 dnů'], [5, 'do 5 dnů'], [14, 'do 14 dnů'], [21, 'do 21 dnů']];
+const spatneDny = DNY.filter(([n, t]) => !radek(Object.assign({}, PLNY, { vklad: { predaniDni: n } }), /předán/).includes(t));
+je('tvar slova „den" po předložce „do" sedí', spatneDny.map(([n, t]) => n + ': čekáno „' + t + '"'), []);
+for (const n of [0, -3, null, '', 'brzy']) {
+  pravda(`nesmyslná lhůta (${JSON.stringify(n)}) se nevymýšlí, řekne se, že chybí`,
+    /strany doplní/.test(radek(Object.assign({}, PLNY, { vklad: { predaniDni: n } }), /předán|doplní/)),
+    'vyšlo „' + radek(Object.assign({}, PLNY, { vklad: { predaniDni: n } }), /předán|doplní/) + '"');
+}
+/* ČÁSTKA POPLATKU V PODKLADU NESTOJÍ. Web ji uvádí jen řádově a na
+   jednom místě (rádce o nákladech). Opsat ji sem by znamenalo mít ji
+   dvakrát a jednou špatně — a je to číslo, které se vyhláškou mění. */
+pravda('výše poplatku se v podkladu netvrdí',
+  !/\d[\d\s\u00a0]*Kč[^)]{0,30}(poplat|vklad)/i.test(S.smlouva(PLNY) || '')
+  && !/poplat[^.]{0,60}\d[\d\s\u00a0]{2,}/i.test(S.smlouva(PLNY) || ''),
+  'v textu se objevila konkrétní částka u poplatku');
+
+/* Články musí jít po sobě. Přidáním nového se dvakrát posunula řada —
+   a „VI. Závěrečná ustanovení" hned za „VI. Vklad" by si nikdo nevšiml
+   dřív než na papíře u advokáta. */
+{
+  const rimske = (S.smlouva(PLNY) || '').split('\n')
+    .map((x) => (/^([IVX]+)\. /.exec(x) || [])[1]).filter(Boolean);
+  pravda(`články jsou očíslované (${rimske.join(', ')})`, rimske.length >= 6, 'našlo se jen ' + rimske.length);
+  const CEKANO = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+  je('a jdou po sobě bez díry a bez opakování', rimske, CEKANO.slice(0, rimske.length));
+}
+
 /* --- 6) Hodnoty do formuláře návrhu na vklad ---------------------- */
 /* Vlastní listina „návrh na vklad" se NEVYRÁBÍ: podává se na formuláři
    ČÚZK a jiné podání úřad odmítne. Vypisují se tedy hodnoty do kolonek. */

@@ -304,13 +304,38 @@
       t.push('smlouvě není totéž co zápis v katastru.');
     }
     t.push('');
-    t.push('V. Vklad do katastru nemovitostí');
+    t.push('V. Předání pozemku a náklady');
+    /* DVĚ VĚCI, O KTERÉ SE NEJČASTĚJI VEDE SPOR, A V KOSTŘE CHYBĚLY.
+       Kdo zaplatí správní poplatek za návrh na vklad, zákon
+       nepředepisuje — je to ujednání stran, takže to do smlouvy patří,
+       jinak se na to přijde až na úřadě. A kdy se pozemek předává:
+       bez data se předává „někdy", a prodávající na něm zatím seče,
+       pase nebo ho má pronajatý.
+       Konkrétní částka tu NESTOJÍ. Výši poplatku web uvádí jen řádově
+       a na jednom jediném místě (rádce o nákladech); opisovat ji sem
+       by znamenalo mít ji dvakrát a jednou špatně. */
+    var kdo = { kupujici: 'kupující', prodavajici: 'prodávající', napul: 'strany společně, každá jednou polovinou' };
+    t.push('Správní poplatek za návrh na vklad hradí '
+      + (kdo[(d.vklad || {}).plati] || kdo.kupujici) + '.');
+    /* Po předložce „do" je druhý pád, a ten má u dne jen dva tvary:
+       „do 1 dne" a „do N dnů". Žádná trojice jako u jmenovaného pádu. */
+    var dni = cislo((d.vklad || {}).predaniDni);
+    t.push(dni != null && dni >= 1
+      ? 'Pozemek bude předán do ' + mezery(dni) + (dni === 1 ? ' dne' : ' dnů')
+        + ' od zápisu vlastnického práva do katastru nemovitostí.'
+      : 'Den předání pozemku strany doplní — bez něj se pozemek předává „někdy".');
+    t.push('Daň z nemovitých věcí za rok, ve kterém dojde ke změně');
+    t.push('vlastníka, a přiznání k ní strany vyřeší podle zákona;');
+    t.push('přiznání podává nový vlastník do konce ledna roku');
+    t.push('následujícího po nabytí.');
+    t.push('');
+    t.push('VI. Vklad do katastru nemovitostí');
     t.push('Vlastnické právo přechází na kupujícího zápisem (vkladem) do');
     t.push('katastru nemovitostí. Do té doby kupující vlastníkem není, i');
     t.push('kdyby byla smlouva podepsaná a cena zaplacená.');
     t.push('Návrh na vklad se podává na formuláři, který vydává ČÚZK.');
     t.push('');
-    t.push('VI. Závěrečná ustanovení');
+    t.push('VII. Závěrečná ustanovení');
     t.push('Smlouva se vyhotovuje v počtu potřebném pro strany a pro');
     t.push('katastrální úřad. Podpisy stran na vyhotovení určeném pro');
     t.push('katastrální úřad musí být úředně ověřené.');

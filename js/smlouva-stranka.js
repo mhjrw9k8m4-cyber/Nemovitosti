@@ -56,6 +56,7 @@
         zastava: zaskrtnuto('sml-zastava'), bremeno: zaskrtnuto('sml-bremeno'),
         najem: zaskrtnuto('sml-najem'), popisVad: pole('sml-vady'),
       },
+      vklad: { plati: pole('sml-plati'), predaniDni: pole('sml-predani') },
     };
   }
 

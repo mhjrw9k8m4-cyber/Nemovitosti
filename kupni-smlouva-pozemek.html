@@ -155,6 +155,18 @@
           </fieldset>
 
           <fieldset class="sml-blok">
+            <legend>Předání a náklady</legend>
+            <label class="sml-pole sml-siroke"><span>Správní poplatek za vklad hradí</span>
+              <select id="sml-plati">
+                <option value="kupujici">Kupující</option>
+                <option value="prodavajici">Prodávající</option>
+                <option value="napul">Obě strany napůl</option>
+              </select></label>
+            <label class="sml-pole"><span>Předání do (dnů od zápisu)</span><input id="sml-predani" type="text" inputmode="numeric" autocomplete="off" placeholder="14"></label>
+            <p class="sml-napoveda">O tyhle dvě věci se vede spor nejčastěji a v kostře smlouvy chybí nejspíš. Kdo zaplatí poplatek za návrh na vklad, zákon nepředepisuje — je to ujednání stran, a bez něj se na to přijde až na úřadě. A bez data předání se pozemek předává „někdy", zatímco prodávající na něm zatím seče nebo ho má pronajatý.</p>
+          </fieldset>
+
+          <fieldset class="sml-blok">
             <legend>Co je na pozemku zapsané</legend>
             <label class="sml-volba"><input type="checkbox" id="sml-zastava"><span>Zástavní právo</span></label>
             <label class="sml-volba"><input type="checkbox" id="sml-bremeno"><span>Věcné břemeno (služebnost)</span></label>
@@ -218,8 +230,8 @@
 <script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
 <script src="js/min/upozorneni.js?v=4cc6941e" defer></script>
 <script src="js/min/obsah.js?v=6a8bca35" defer></script>
-<script src="js/min/smlouva.js?v=bb731f2d" defer></script>
-<script src="js/min/smlouva-stranka.js?v=8f26b6ee" defer></script>
+<script src="js/min/smlouva.js?v=8e345f1d" defer></script>
+<script src="js/min/smlouva-stranka.js?v=3c2108b9" defer></script>
 <script src="js/min/hlavicka.js?v=8d2b1304" defer></script>
 <script src="js/min/rezim.js?v=5689e136" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
