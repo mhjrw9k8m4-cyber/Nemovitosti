@@ -2738,14 +2738,14 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   /* Ikony podle cíle odkazu (bez zásahu do HTML) */
   #nav a[href$="#mapa"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");}
   #nav a[href$="cena-pozemku.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-8-8V3h9.6l8.4 8.4a2 2 0 0 1 0 2.8z'/%3E%3Cline x1='7.5' y1='7.5' x2='7.51' y2='7.5'/%3E%3C/svg%3E");}
-  #nav a[href$="muj-inzerat.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A5512' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4 4-6 8-6s8 2 8 6'/%3E%3C/svg%3E");}
+  #nav a[href$="muj-inzerat.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4 4-6 8-6s8 2 8 6'/%3E%3C/svg%3E");}
   #nav a[href$="#faq"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M9.5 9.2a2.5 2.5 0 1 1 3.4 2.4c-.7.3-1.1.9-1.1 1.7'/%3E%3Cline x1='12' y1='16.6' x2='12.01' y2='16.6'/%3E%3C/svg%3E");}
   #nav a[href$="kontakt.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2'/%3E%3Cpath d='m3 7 9 6 9-6'/%3E%3C/svg%3E");}
-  #nav a[href$="zpravy.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A5512' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");}
-  #nav a[href$="upozorneni.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A5512' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'/%3E%3Cpath d='M10.3 21a1.94 1.94 0 0 0 3.4 0'/%3E%3C/svg%3E");}
+  #nav a[href$="zpravy.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");}
+  #nav a[href$="upozorneni.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'/%3E%3Cpath d='M10.3 21a1.94 1.94 0 0 0 3.4 0'/%3E%3C/svg%3E");}
   /* Hlídání má oko, ne druhý zvonek: dva zvonky vedle sebe se pletou
      a hlídání lokality je spíš sledování než zvonění. */
-  #nav a[href$="hlidani.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A5512' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E");}
+  #nav a[href$="hlidani.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E");}
   /* Vizuální seskupení menu (nejlepší kompozice): jemný oddělovač před skupinou
      „Můj účet" (Zprávy) a před „Kontakt". Tři čitelné bloky místo dlouhého seznamu. */
   /* Oddělovač skupin v menu. Dvě opravy proti dřívějšku:
@@ -3797,8 +3797,8 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
   #nav > *{position:relative; z-index:1;}
 
   #nav a:not(.btn-primary){
-    gap:12px; padding:8px 10px; margin-bottom:1px; border-radius:var(--r-sm);
-    font-size:16px; font-weight:600; letter-spacing:-0.01em;}
+    gap:14px; padding:11px 12px; margin-bottom:0; border-radius:var(--r-sm);
+    min-height:48px; font-size:16px; font-weight:600; letter-spacing:-0.01em;}
   /* Ikona v dlaždici — nese barvu a drží řádek pohromadě.
      Dlouho ji nenesla: dlaždice byly zelené a hnědé podle skupiny, ale samy
      ikony měly natvrdo obtah #9fb4c8 — studenou modrošeď, která na tomhle
@@ -3806,21 +3806,30 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
      cize a celé menu kvůli ní vypadalo jako cizí šablona vložená do stránky.
      Teď má ikona barvu své skupiny: zelenou u veřejné části, hnědou
      u osobní — přesně to, co tenhle komentář tvrdil už předtím. */
+  /* BEZ DLAŽDIC POD IKONAMI. Každá ikona seděla na vybarveném čtverci
+     s obtaženým okrajem, takže v menu bylo sedm malých tlačítek, která
+     se nedala zmáčknout — a vedle toho teprve text, který se zmáčknout
+     dal. Oko to čte jako dvě soustavy prvků nad sebou.
+     Ikona sama o sobě řádek zarovná stejně dobře (šířka zůstává pevná)
+     a sheet je o celou jednu vrstvu tišší.
+
+     A JEDNA BARVA, NE DVĚ. Osobní část menu (Můj profil, Upozornění,
+     Zprávy, Hlídání) měla dlaždice i obtahy ikon měděné (#8A5512),
+     veřejná zelené. Záměr byl „oko pozná, že vstupuje do svého", jenže
+     na obrazovce z toho vyšlo menu složené ze dvou různých šablon.
+     Že jde o osobní část, říká nadpis skupiny a předěl — barvu na to
+     potřeba není. Měď zůstává druhou barvou webu, ale pro důrazy, ne
+     pro polovinu nabídky. */
   #nav a:not(.btn-primary)::before{
-    width:34px; height:34px; border-radius:var(--r-sm); background-size:19px 19px;
-    background-color:rgba(31,81,56,0.08); box-shadow:inset 0 0 0 1px rgba(20,35,28,0.08);
-    background-position:center; opacity:1;}
-  /* Osobní část menu (od Upozornění dolů) je teplá — oko tím pozná,
-     že vstupuje do „svého". */
-  #nav a[href$="upozorneni.html"]::before, #nav a[href$="zpravy.html"]::before,
-  #nav a[href$="hlidani.html"]::before, #nav a[href$="muj-inzerat.html"]::before{
-    background-color:rgba(138,85,18,0.08);}
+    width:24px; height:24px; background-size:22px 22px;
+    background-position:center; opacity:0.88;}
   #nav a:not(.btn-primary)::after{font-size:20px; opacity:.45;}
 
-  /* Aktivní položka: měděný proužek vlevo a teplý podklad. */
+  /* Aktivní položka: značkový proužek vlevo a jemný podklad téže barvy.
+     Býval měděný, což byla jediná teplá plocha v jinak zeleném sheetu. */
   #nav a:not(.btn-primary).active, #nav a:not(.btn-primary)[aria-current="page"]{
-    background:linear-gradient(90deg, rgba(138,85,18,0.12), rgba(138,85,18,0.04));
-    box-shadow:inset 3px 0 0 var(--accent-warm); color:var(--text-ondark);}
+    background:linear-gradient(90deg, rgba(31,81,56,0.10), rgba(31,81,56,0.02));
+    box-shadow:inset 3px 0 0 var(--copper); color:var(--text-ondark);}
   #nav a:not(.btn-primary):active{background:rgba(31,81,56,0.08);}
 
   /* Předěl skupin: užší, a beze změny odsazení řádků. */
