@@ -457,3 +457,43 @@ if (podezreni > 40) {
   console.error('::error::Podezřelých volání je nezvykle moc — zkontrolujte skripty.');
   process.exit(1);
 }
+
+/* --- Každý testovací skript musí být aspoň přeložitelný ----------------
+ *
+ * Tohle se stalo: odstranění tmavého režimu smazalo z test-rozvrzeni.mjs
+ * blok, který otvíral prohlížeč, ale nechalo tam jeho poslední dva řádky
+ * (`await rozbor.close();` a závorku). Soubor přestal být přeložitelný —
+ * a dávka ho dál hlásila jako spuštěný, protože jsem čtl výpis z běhu
+ * před tím commitem. Dva commity tak odešly s testem, který se ani
+ * nenačte. Nejde o to, že test neprošel; nešel ani spustit.
+ *
+ * Kontrola je schválně hloupá: nic nespouští, jen se zeptá Node, jestli
+ * tomu rozumí. To stačí — tahle vada je vždycky syntaktická.
+ */
+{
+  const { execFileSync } = await import('node:child_process');
+  const testy = fs.readdirSync(path.join(ROOT, 'scripts'))
+    .filter((f) => f.endsWith('.mjs'))
+    .map((f) => path.join('scripts', f));
+  /* Pojistka proti měření prázdna: kdyby se adresář přejmenoval, seznam
+     by byl prázdný a kontrola by „prošla" s nulou souborů. */
+  if (testy.length < 100) {
+    console.error(`::error::Ke kontrole přeložitelnosti se našlo jen ${testy.length} skriptů — seznam se nenaplnil, kontrola nic neměřila.`);
+    process.exit(1);
+  }
+  const nepreloziltelne = [];
+  for (const rel of testy) {
+    try {
+      execFileSync(process.execPath, ['--check', path.join(ROOT, rel)], { stdio: 'pipe' });
+    } catch (e) {
+      const prvni = String(e.stderr || '').split('\n').find((r) => /Error/.test(r)) || 'nepřeložitelné';
+      nepreloziltelne.push(`${rel}: ${prvni.trim()}`);
+    }
+  }
+  if (nepreloziltelne.length) {
+    console.error('::error::Tyhle skripty se ani nenačtou:');
+    for (const z of nepreloziltelne) console.error('  ✕ ' + z);
+    process.exit(1);
+  }
+  console.log(`Přeložitelnost: ${testy.length} skriptů ve scripts/ se načte.`);
+}

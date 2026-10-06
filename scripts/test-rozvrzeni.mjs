@@ -44,9 +44,18 @@ function pravda(popis, vyslo, proc) {
 {
   const stranky = readdirSync(KOREN).filter((f) => f.endsWith('.html'));
   const dlouheT = [], dlouheD = [], bezT = [];
+  // Stejný titulek na dvou stránkách znamená, že jedna vznikla kopií druhé
+  // a titulek se zapomněl přepsat. U vygenerovaných stránek parcel to ale
+  // dvě různé parcely stejného druhu, výměry a katastru mít klidně mohou,
+  // takže se shoda hledá jen mezi psanými stránkami.
+  const titulky = new Map();
   for (const s of stranky) {
     const h = readFileSync(path.join(KOREN, s), 'utf8');
     const t = (h.match(/<title>([^<]*)<\/title>/) || [])[1];
+    if (t && !s.startsWith('pozemek-') && !s.startsWith('pozemky-')) {
+      if (!titulky.has(t)) titulky.set(t, []);
+      titulky.get(t).push(s);
+    }
     const d = (h.match(/<meta\s+name="description"\s+content="([^"]*)"/) || [])[1];
     if (!t) bezT.push(s);
     else if (t.length > 65) dlouheT.push(`${s} (${t.length})`);
@@ -57,6 +66,12 @@ function pravda(popis, vyslo, proc) {
   pravda('každá stránka má titulek', bezT.length === 0, bezT.join(', '));
   pravda('žádný titulek se ve výpisu Googlu neusekne',
     dlouheT.length === 0, `přes 65 znaků: ${dlouheT.slice(0, 6).join(', ')}${dlouheT.length > 6 ? ` … a dalších ${dlouheT.length - 6}` : ''}`);
+  const shodneT = [...titulky.entries()].filter(([, v]) => v.length > 1);
+  pravda('žádné dvě psané stránky nemají stejný titulek',
+    titulky.size > 20 && shodneT.length === 0,
+    titulky.size <= 20
+      ? `titulků ke srovnání jen ${titulky.size} — kontrola nic neměřila`
+      : shodneT.map(([t, v]) => `„${t}" má ${v.join(' i ')}`).join(' | '));
   pravda('ani žádný popisek', dlouheD.length === 0,
     `přes 165 znaků: ${dlouheD.slice(0, 6).join(', ')}${dlouheD.length > 6 ? ` … a dalších ${dlouheD.length - 6}` : ''}`);
 }
@@ -903,9 +918,6 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   pravda('a nic se přes hlavičku nekreslí', cizi.length === 0,
     `navrchu je místo hlavičky: ${cizi.slice(0, 5).join(', ')}`);
   await ctx.close();
-}
-
-  await rozbor.close();
 }
 
 // --- 7) Úvod na telefonu nedrží hledání pod obzorem -------------------

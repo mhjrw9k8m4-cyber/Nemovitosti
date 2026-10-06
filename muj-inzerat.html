@@ -39,7 +39,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=9694fa5b">
+  <link rel="stylesheet" href="css/styles.min.css?v=25055897">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:var(--r-lg); padding:24px 20px 20px;
@@ -204,10 +204,23 @@
 
       <!-- Přihlášení -->
       <div class="auth-card" id="mi-auth" hidden>
+        <!-- KARTA UŽ NEOPAKUJE ÚVOD STRÁNKY.
+             Nad ní stojí „Váš profil. Vaše inzeráty, jejich zhlédnutí
+             i uložené pozemky — všechno na jednom místě. Přihlaste se
+             stejným účtem, kterým jste inzerát přidali." a karta to
+             říkala podruhé skoro týmiž slovy („Uvidíte své inzeráty,
+             jejich zhlédnutí i uložené pozemky"). Dvakrát totéž pod
+             sebou dělá ze stránky formulář k vyplnění, ne místo, kam
+             se člověk vrací.
+             Zbylá věta říká něco, co výš nestojí — a stejnou věc,
+             jakou říkají přihlašovací karty na ostatních stránkách
+             účtu: čí to je a jak dlouho to trvá.
+             Pryč je i kolečko s panáčkem: je jediné na webu, nic
+             neznamená a oko na ně padne dřív než na nadpis. Ostatní
+             tři stránky účtu mají nad polem rovnou nadpis. -->
         <div class="auth-head">
-          <div class="auth-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
-          <h2 class="auth-title">Přihlaste se ke svému profilu</h2>
-          <p class="auth-sub">Zadejte e-mail a heslo, kterými jste si vytvořili účet. Uvidíte své inzeráty, jejich zhlédnutí i uložené pozemky.</p>
+          <h2 class="auth-title">Přihlaste se</h2>
+          <p class="auth-sub">Profil je soukromý — vidíte v něm jen své věci. Přihlášení je na pár vteřin, nový účet taky.</p>
         </div>
         <form class="auth-form" id="mi-auth-form" novalidate>
           <div class="auth-field">
@@ -248,7 +261,6 @@
       <!-- Nastavení nového hesla (po kliknutí na odkaz z e-mailu) -->
       <div class="auth-card" id="mi-newpw" hidden>
         <div class="auth-head">
-          <div class="auth-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
           <h2 class="auth-title">Nastavte si nové heslo</h2>
           <p class="auth-sub">Zadejte nové heslo ke svému účtu. Po uložení vás rovnou přihlásíme.</p>
         </div>

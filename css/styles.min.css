@@ -1168,8 +1168,6 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){flex-direction:column;align-items
 .auth-tab.active{background:var(--plocha-znacka);color:#fff}
 .auth-forgot{text-align:center;margin-top:2px}
 .auth-head{text-align:center;margin-bottom:24px}
-.auth-mark{width:56px;height:56px;margin:0 auto 16px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;background:var(--plocha-znacka);box-shadow:var(--glow-lg)}
-.auth-mark svg{width:29px;height:29px;color:#0b1510;stroke-width:1.24}
 .auth-title{font-family:var(--font-ui);font-size:24px;font-weight:600;letter-spacing:-0.01em;color:var(--text-ondark);margin:0 0 8px;line-height:1.25}
 .auth-sub{font-size:14px;line-height:1.55;color:var(--text-ondark-mute);margin:0 auto;max-width:var(--m-popisek)}
 .auth-form{display:flex;flex-direction:column;gap:14px}
@@ -1776,7 +1774,7 @@ body:has(.clanek) .add-hero>.add-wrap>*{grid-column:2;min-width:0}
 }
 h1 em{font-style:normal;font-weight:800}
 h1 em::after{content:none;animation:none}
-.add-hero.app-hero{background:none;background-image:none;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:24px}
+.add-hero.app-hero{background:none;background-image:none;padding-bottom:4px;margin-bottom:26px}
 .add-hero.app-hero::before,.add-hero.app-hero::after{content:none}
 body{display:flex;flex-direction:column;min-height:calc(100vh - var(--vyska-hlavicky,85px))}
 body>main{flex:1 0 auto}
