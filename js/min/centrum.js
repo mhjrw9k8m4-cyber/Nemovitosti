@@ -96,7 +96,7 @@
     }
     h += '<div class="up-acts"><a class="up-a pri" href="' + esc(u.odkaz) + '">' + esc(u.odkazPopis) + '</a>';
 
-    if (u.druh === 'pozemky') h += '<button class="up-a" type="button" data-videno="' + esc(u.hledaniId) + '">Označit jako viděné</button>';
+    if (u.druh === 'pozemky') h += '<button class="up-a" type="button" aria-label="Označit jako viděné" title="Označit jako viděné" data-videno="' + esc(u.hledaniId) + '">Viděné</button>';
     h += '</div></div></div>';
     return h;
   }
@@ -116,7 +116,7 @@
         tlacitkoFiltru('pozemky', 'Pozemky', c.pozemky) +
       '</div>' +
 
-      (c.pozemky ? '<button class="up-clear" type="button" id="up-all">Označit vše jako viděné</button>' : '') +
+      (c.pozemky ? '<button class="up-clear" type="button" id="up-all">Označit vše</button>' : '') +
     '</div>';
 
     if (!videt.length) {
@@ -134,8 +134,9 @@
       });
     }
 
-    h += '<div class="up-prefs">' +
-      '<h2>Co mi ukazovat</h2>' +
+    h += '<details class="up-prefs">' +
+      '<summary><h2>Co mi ukazovat</h2></summary>' +
+      '<div class="up-prefs-telo">' +
       '<p>Platí jen pro tenhle prohlížeč. Nic se tím neruší — jen se to tu neukáže.</p>' +
       '<label class="up-sw"><input type="checkbox" id="pf-z"' + (p.zpravy ? ' checked' : '') + '> Zprávy od lidí</label>' +
       '<label class="up-sw"><input type="checkbox" id="pf-p"' + (p.pozemky ? ' checked' : '') + '> Nové pozemky z hlídání</label>' +
@@ -143,7 +144,8 @@
       '<div class="up-note">Upozornění tady uvidíte jen tehdy, když na web přijdete — ' +
         'e-mailem je zatím neposíláme. Co hlídat, si nastavíte na stránce ' +
         '<a href="hlidani.html">Hlídání</a>.</div>' +
-    '</div>';
+      '</div>' +
+    '</details>';
 
     root.innerHTML = h;
     zapoj();

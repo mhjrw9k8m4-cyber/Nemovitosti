@@ -122,7 +122,12 @@
     h += '<div class="up-acts"><a class="up-a pri" href="' + esc(u.odkaz) + '">' + esc(u.odkazPopis) + '</a>';
     // Označit jako viděné jde jen u hlídání: u zpráv to udělá samo otevření
     // konverzace a dvě cesty k témuž by si mohly protiřečit.
-    if (u.druh === 'pozemky') h += '<button class="up-a" type="button" data-videno="' + esc(u.hledaniId) + '">Označit jako viděné</button>';
+    /* NA ŘÁDKU JE 266 px A OBĚ CELÁ JMÉNA SE TAM NEVEJDOU (147 + 159).
+       Lámala se proto pod sebe a jedna novinka zabrala dva plné řádky
+       ovládání. Vidět je zkrácené „Viděné", ale odečítač obrazovky i
+       nápověda dostanou celou větu přes aria-label a title — zkrácené
+       popisky nesmí platit i pro toho, kdo stránku neviděl. */
+    if (u.druh === 'pozemky') h += '<button class="up-a" type="button" aria-label="Označit jako viděné" title="Označit jako viděné" data-videno="' + esc(u.hledaniId) + '">Viděné</button>';
     h += '</div></div></div>';
     return h;
   }
@@ -145,7 +150,7 @@
       /* Když není co označit, tlačítko se nekreslí vůbec. Zakázané ztrácí
          podtržení i barvu, takže vypadalo jako zbloudilý tučný popisek —
          člověk na něj mířil prstem a nic se nedělo. */
-      (c.pozemky ? '<button class="up-clear" type="button" id="up-all">Označit vše jako viděné</button>' : '') +
+      (c.pozemky ? '<button class="up-clear" type="button" id="up-all">Označit vše</button>' : '') +
     '</div>';
 
     if (!videt.length) {
@@ -163,8 +168,13 @@
       });
     }
 
-    h += '<div class="up-prefs">' +
-      '<h2>Co mi ukazovat</h2>' +
+    /* Nastavení je sbalené. Rozbalené měřilo 287 px a stálo pod každým
+       seznamem napořád — tedy víc místa než novinka, kvůli které sem
+       člověk přišel. Kdo si to chce přenastavit, klepne; kdo ne, vidí
+       jeden řádek. */
+    h += '<details class="up-prefs">' +
+      '<summary><h2>Co mi ukazovat</h2></summary>' +
+      '<div class="up-prefs-telo">' +
       '<p>Platí jen pro tenhle prohlížeč. Nic se tím neruší — jen se to tu neukáže.</p>' +
       '<label class="up-sw"><input type="checkbox" id="pf-z"' + (p.zpravy ? ' checked' : '') + '> Zprávy od lidí</label>' +
       '<label class="up-sw"><input type="checkbox" id="pf-p"' + (p.pozemky ? ' checked' : '') + '> Nové pozemky z hlídání</label>' +
@@ -179,7 +189,8 @@
       '<div class="up-note">Upozornění tady uvidíte jen tehdy, když na web přijdete — ' +
         'e-mailem je zatím neposíláme. Co hlídat, si nastavíte na stránce ' +
         '<a href="hlidani.html">Hlídání</a>.</div>' +
-    '</div>';
+      '</div>' +
+    '</details>';
 
     root.innerHTML = h;
     zapoj();
