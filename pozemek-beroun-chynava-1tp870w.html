@@ -8,7 +8,7 @@
   <title>Lesní pozemek 12 033 m² — Chyňava, okres Beroun | Parcelka</title>
   <meta name="description" content="Na prodej · 640 000 Kč (53 Kč/m²) · 12 033 m² · Chyňava, okres Beroun. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
   <meta name="theme-color" content="#F9FAF9">
-  <meta name="robots" content="index,follow">
+  <meta name="robots" content="noindex,follow">
   <link rel="canonical" href="https://www.parcelaka.cz/pozemek-beroun-chynava-1tp870w.html">
   <link rel="alternate" type="application/rss+xml" title="Parcelka — nové pozemky" href="novinky.xml">
   <meta property="og:type" content="article">
@@ -533,7 +533,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Lesní pozemek 12 033 m² — Chyňava, okres Beroun</h1><p><b>640 000 Kč</b> (53 Kč/m²) · 12 033 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Lesní pozemek</dd><dt>Výměra</dt><dd>12 033 m²</dd><dt>Obec</dt><dd>Chyňava</dd><dt>Okres</dt><dd><a href="pozemky-okres-beroun.html">Beroun</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Beroun 6,5 km · Praha 25 km</dd></dl><p><a href="pozemek.html?p=Chy%C5%88ava%7C%E2%80%94%7CBeroun%7C50.022%7C14.084&amp;ll=50.022115,14.083624&amp;v=12033">Otevřít na mapě</a></p><p><a href="index.html?obec=Chy%C5%88ava&amp;okres=Beroun">V obci Chyňava jsou v nabídce ještě 2 pozemky</a></p></article></div></div>
+    <div id="pz-detail"><div class="pz-konec" role="status"><b>Tato nabídka už není aktuální.</b> <span>Zmizela ze zdroje 6. 10. 2026. Stránku necháváme dostupnou, aby uložené odkazy vedly někam, ale pozemek už takhle koupit nejde.</span><p>Podobné pozemky ve stejném okrese:</p><ul><li><a href="pozemek-beroun-neumetely-pyf3iy.html">Neumětely — 2 204 m²</a></li><li><a href="pozemek-beroun-korno-d39nc3.html">Korno — 22 542 m²</a></li><li><a href="pozemek-beroun-beroun-1ajcqgh.html">Beroun — 7 344 m²</a></li></ul><p><a href="index.html#mapa">Zpět na mapu všech pozemků</a></p></div><article class="pz-staticky"><h1>Lesní pozemek 12 033 m² — Chyňava, okres Beroun</h1><p><b>640 000 Kč</b> (53 Kč/m²) · 12 033 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Lesní pozemek</dd><dt>Výměra</dt><dd>12 033 m²</dd><dt>Obec</dt><dd>Chyňava</dd><dt>Okres</dt><dd><a href="pozemky-okres-beroun.html">Beroun</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Beroun 6,5 km · Praha 25 km</dd></dl><p><a href="pozemek.html?p=Chy%C5%88ava%7C%E2%80%94%7CBeroun%7C50.022%7C14.084&amp;ll=50.022115,14.083624&amp;v=12033">Otevřít na mapě</a></p><p><a href="index.html?obec=Chy%C5%88ava&amp;okres=Beroun">V obci Chyňava jsou v nabídce ještě 2 pozemky</a></p></article></div></div>
   </div>
 </main>
 
@@ -559,13 +559,21 @@
 <script src="js/min/snimek.js?v=d4e40486"></script>
 <script src="js/min/terminy.js?v=97f740a8"></script>
 <script src="js/min/ceny.js?v=16c72c57"></script>
-  <script src="js/min/zlevneni.js?v=8cbae6d1" defer></script>
+<script src="js/min/zlevneni.js?v=8cbae6d1" defer></script>
 <script src="js/min/vybaveni.js?v=68e3d418"></script>
 <script src="js/min/radce.js?v=f8a46b6d"></script>
 <script src="js/min/klic.js?v=17fa93b6"></script>
 <script src="js/min/videno.js?v=a269d74b"></script>
 <script src="js/min/poznamky.js?v=998fa698"></script>
-<!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
+<script src="js/min/hlidani-logika.js?v=404eb49d"></script>
+<script src="js/min/pozemek.js?v=b71780a4"></script>
+<script src="js/min/config.js?v=8ba36013" defer></script>
+<script src="js/min/auth.js?v=bec7a315" defer></script>
+<script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
+<script src="js/min/upozorneni.js?v=4cc6941e" defer></script>
+<script src="js/min/hlavicka.js?v=8d2b1304" defer></script>
+<script src="js/min/offline.js?v=16a48df3" defer></script>
+  <!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
      než js/pozemek.js postaví cenový model: staví ho z téže hromádky
      jako mapa, tedy bez duplicit. Proto tu tenhle modul stojí jako
      obyčejný skript PŘED ním, a ne v odložené skupině níž — odložené
@@ -573,10 +581,9 @@
      postavit z 2 018 nabídek místo 1 995. Pozdější spotřebitelé
      (upozorneni-feed.js, upozorneni.js) ho najdou stejně: obyčejné
      skripty běží před odloženými. -->
-<script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Lesní pozemek 12 033 m² — Chyňava, okres Beroun","description":"Na prodej · 640 000 Kč (53 Kč/m²) · 12 033 m² · Chyňava, okres Beroun. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-beroun-chynava-1tp870w.html","address":{"@type":"PostalAddress","addressLocality":"Chyňava","addressRegion":"Beroun","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.022115,"longitude":14.083624}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Beroun","item":"https://www.parcelaka.cz/pozemky-okres-beroun.html"},{"@type":"ListItem","position":4,"name":"Lesní pozemek 12 033 m² — Chyňava, okres Beroun","item":"https://www.parcelaka.cz/pozemek-beroun-chynava-1tp870w.html"}]}]</script>
+<script>window.PK_UKONCENO="2026-10-06";</script>
 <script>window.PK_POZEMEK={"k":"Chyňava|—|Beroun|50.022|14.084","ll":[50.022115,14.083624],"v":12033,"c":640000,"r":"data/okres/beroun.json"};</script>
-<script src="js/min/pozemek.js?v=b71780a4"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -584,12 +591,6 @@
    říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
    na nasazení u Vercelu. */
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
-<script src="js/min/config.js?v=8ba36013" defer></script>
-<script src="js/min/auth.js?v=bec7a315" defer></script>
-<script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
-<script src="js/min/upozorneni.js?v=4cc6941e" defer></script>
-<script src="js/min/hlavicka.js?v=8d2b1304" defer></script>
-<script src="js/min/offline.js?v=16a48df3" defer></script>
 <script type="application/json" id="pz-okoli-data">"Beroun 6,5 km · Praha 25 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Chyňava jsou v nabídce ještě 2 pozemky","url":"index.html?obec=Chy%C5%88ava\u0026okres=Beroun"}</script>
 <script type="application/json" id="pz-popis-data">"Vlastníka Vám nabízíme pozemky ke koupi. k.ú. Chyňava LV č. 1204 o celkové výměře 12033 m² • Parcela č. 1660/2 - o výměře 2959 m² (Orná půda) • Parcela č. 2782/20 - o výměře 2703 m² (Orná půda) • Parcela č. 2792/2 - o výměře 437 m² (Lesní pozemek) • Parcela č. 511 - o výměře 5934 m² (Orná půda) Přístupová cesta je zajištěna přes pozemky obce a kraje. Pomáháme lidem bezpečně investovat do pozemků - ať už hledáte stabilní investici, nebo půdu pro hospodaření."</script>
