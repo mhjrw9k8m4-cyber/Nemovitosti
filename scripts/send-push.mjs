@@ -140,7 +140,22 @@ async function main() {
     log(`Režim NASUCHO (${proc}): vypíšu, co by odešlo, a neodešlu nic.`);
   }
 
-  const rady = await rpc('hlidani_k_odeslani_push', { p_odstup_hodin: ODSTUP });
+  let rady;
+  try {
+    rady = await rpc('hlidani_k_odeslani_push', { p_odstup_hodin: ODSTUP });
+  } catch (e) {
+  /* PGRST202 = tahle funkce v databázi není. To není porucha běhu, ale
+     stav nasazení: SQL ze supabase/00-vse.sql ještě nikdo nepustil
+     v editoru Supabase. Dokud to někdo neudělá, nemá co odejít — a padat
+     kvůli tomu každý den cronem znamená jen denní e-mail o chybě, se
+     kterou tenhle skript nic nenadělá. Stejnou pojistku má celá tahle
+     větev už u klíčů: bez nich běží nasucho, ne načerveno. Jakmile SQL
+     proběhne, funkce se najde a tahle větev se přestane uplatňovat. */
+    if (!/PGRST202/.test(String((e && e.message) || e))) throw e;
+    log('Upozornění do telefonu ještě nejsou v databázi: chybí funkce hlidani_k_odeslani_push.');
+    log('Nasadí se spuštěním supabase/00-vse.sql v SQL editoru Supabase.');
+    return;
+  }
   if (!rady || !rady.length) { log('Není komu posílat: žádné hledání se zapnutým upozorněním.'); return; }
 
   /* Jedno hledání může mít víc zařízení (telefon, tablet, počítač).
