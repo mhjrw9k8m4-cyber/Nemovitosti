@@ -149,7 +149,7 @@ pravda('stránka cen počítá jen z běžných nabídek k prodeji',
     /* Název druhu je teď odkaz na přehled toho druhu (pozemky-lesni.html
        a spol.), takže vzorek musí snést i tu značku uvnitř. Bez toho
        nenašel nic a kontrola čísel tiše přestala platit. */
-    /<li class="cen-druh[^"]*"><b>([\d\s\u00a0]+)[\s\u00a0]Kč\/m²<\/b><span class="cen-nazev">(?:<a [^>]*>)?([^<]+)(?:<\/a>)?<\/span>/g)]
+    /<li class="cen-druh[^"]*"><span class="cen-nazev">(?:<a [^>]*>)?([^<]+)(?:<\/a>)?<\/span><b>([\d\s\u00a0]+)[\s\u00a0]Kč\/m²<\/b>/g)]
     .map((m) => ({ med: +String(m[1]).replace(/\s|\u00a0/g, ''), druh: m[2].trim() }));
   pravda('na stránce jsou vypsané mediány podle druhu', dlazdice.length >= 3,
     'našel jsem jen ' + dlazdice.length);
@@ -199,13 +199,18 @@ const cislo = (x) => +String(x).replace(/\s|\u00a0/g, '');
   const mez = (PK_CENY && PK_CENY.MEZ_ROZPTYL) || 2;
   /* Název druhu je odkaz na přehled toho druhu, takže vzorek musí snést
      i tu značku uvnitř — stejně jako vzorek o kus výš. */
-  const RADEK = /<li class="cen-druh( cen-siroke)?"><b>([\d\s]+)[\s\u00a0]Kč\/m²<\/b><span class="cen-nazev">(?:<a [^>]*>)?([^<]+)(?:<\/a>)?<\/span><span class="cen-detail">obvykle ([\d\s]+)–([\d\s]+)/g;
+  /* Mezi názvem a podrobnostmi stojí od předělání ještě pruh na společné
+     ose (.cen-pas). Je to obrázek k týmž číslům, takže vzorek ho jen
+     přeskočí — ale přeskočit ho MUSÍ, jinak kontrola tiše nenajde nic. */
+  const RADEK = /<li class="cen-druh( cen-siroke)?"><span class="cen-nazev">(?:<a [^>]*>)?([^<]+)(?:<\/a>)?<\/span><b>([\d\s]+)[\s\u00a0]Kč\/m²<\/b>(?:<span class="cen-pas"[^>]*>.*?<\/span>)?<span class="cen-detail">obvykle ([\d\s]+)–([\d\s]+)/g;
   const radky = [...stranka.matchAll(RADEK)];
   pravda('řádky s cenami se daly přečíst', radky.length >= 3, `přečteno ${radky.length}`);
   const c = (x) => +String(x).replace(/\s/g, '');
   const spatne = [];
   for (const m of radky) {
-    const oznaceno = !!m[1], med = c(m[2]), druh = m[3], lo = c(m[4]), hi = c(m[5]);
+    /* Pořadí skupin jde za podobou řádku: od zúžení stojí název první
+       a cena za ním (viz generate-region-pages.mjs). */
+    const oznaceno = !!m[1], druh = m[2], med = c(m[3]), lo = c(m[4]), hi = c(m[5]);
     const rozptyl = med ? (hi - lo) / med : 0;
     if (rozptyl > mez && !oznaceno) spatne.push(`${druh}: rozptyl ${rozptyl.toFixed(1)}× a bez varování`);
     if (rozptyl <= mez && oznaceno) spatne.push(`${druh}: rozptyl jen ${rozptyl.toFixed(1)}×, varování tam nepatří`);
@@ -214,10 +219,51 @@ const cislo = (x) => +String(x).replace(/\s|\u00a0/g, '');
     spatne.join('; '));
 }
 
+/* ===== GRAF NESMÍ ŘÍKAT NĚCO JINÉHO NEŽ ČÍSLA VEDLE NĚJ ===============
+   Čtyři ceny pod sebou se nedaly porovnat pohledem — les 48 Kč/m²
+   a stavební pozemek 2 904 měly stejně velké písmo, takže ten
+   šedesátinásobek nebyl vidět. Každý druh proto dostal pruh „obvykle
+   od–do" na společné logaritmické ose se značkou mediánu.
+   Jenže obrázek, který nesedí na čísla, je horší než holá tabulka: lže
+   rychleji, než se čte. Proto se tu neměří vzhled, ale SOULAD — pořadí
+   pruhů musí odpovídat pořadí cen a značka mediánu musí ležet uvnitř
+   vlastního rozpětí. Ten dopočet má generátor jen na jednom místě, takže
+   tahle kontrola chytí i překlep v něm. */
+{
+  const PAS = /<li class="cen-druh[^"]*">.*?<b>([\d\s\u00a0]+)[\s\u00a0]Kč\/m²<\/b>.*?<i class="cen-rozsah" style="left:([\d.]+)%;width:([\d.]+)%"><\/i><i class="cen-med" style="left:([\d.]+)%">/g;
+  const pasy = [...stranka.matchAll(PAS)].map((m) => ({
+    med: +String(m[1]).replace(/[\s\u00a0]/g, ''),
+    l: +m[2], w: +m[3], z: +m[4],
+  }));
+  pravda(`pruhy na společné ose se daly přečíst (${pasy.length})`, pasy.length >= 3,
+    `přečteno ${pasy.length} — změnila se podoba pruhu?`);
+
+  const mimo = pasy.filter((x) => x.z < x.l - 0.5 || x.z > x.l + x.w + 0.5);
+  pravda('značka mediánu leží uvnitř svého rozpětí', mimo.length === 0,
+    mimo.map((x) => `medián ${x.med}: značka ${x.z}% mimo ${x.l}–${(x.l + x.w).toFixed(1)}%`).join('; '));
+
+  const vOse = [...pasy].sort((a, b) => a.med - b.med);
+  const prohozene = [];
+  for (let i = 1; i < vOse.length; i++) {
+    if (vOse[i].z < vOse[i - 1].z) {
+      prohozene.push(`${vOse[i - 1].med} Kč/m² je na ose dál než ${vOse[i].med} Kč/m²`);
+    }
+  }
+  pravda('a dražší druh stojí na ose vždycky vpravo od levnějšího',
+    prohozene.length === 0, prohozene.join('; '));
+
+  /* Pojistka proti stupnici, která se zhroutí do jednoho bodu: kdyby se
+     osa spočítala špatně, všechny pruhy by seděly na sobě a obrázek by
+     neříkal nic — a všechny kontroly výš by přitom prošly. */
+  const rozpeti = Math.max(...pasy.map((x) => x.z)) - Math.min(...pasy.map((x) => x.z));
+  pravda(`osa je opravdu roztažená (mediány pokrývají ${rozpeti.toFixed(0)} % šířky)`,
+    rozpeti > 30, `jen ${rozpeti.toFixed(1)} % — pruhy leží na sobě`);
+}
+
 const nar0 = stranka.match(
   /* Mezery ve vysázeném textu můžou být nezlomitelné (scripts/sazba.mjs),
    tak ať je vzor snese obě — jinak kontrola tiše přestane cokoli najít. */
-  /Zemědělská půda(?:<\/a>)?<\/span><span class="cen-detail">obvykle ([\d\s\u00a0]+)–([\d\s\u00a0]+)[\s\u00a0]Kč\/m²[\s\u00a0]·[\s\u00a0]z[\s\u00a0]([\d\s\u00a0]+)[\s\u00a0]nabídek/);
+  /Zemědělská půda(?:<\/a>)?<\/span>(?:<b>[^<]*<\/b>)?(?:<span class="cen-pas"[^>]*>.*?<\/span>)?<span class="cen-detail">obvykle ([\d\s\u00a0]+)–([\d\s\u00a0]+)[\s\u00a0]Kč\/m²[\s\u00a0]·[\s\u00a0]z[\s\u00a0]([\d\s\u00a0]+)[\s\u00a0]nabídek/);
 const nar = nar0 ? [nar0[0], cislo(nar0[1]), cislo(nar0[2]), cislo(nar0[3])] : null;
 pravda('celostátní rozpětí je vypsané', !!nar, 'nenalezeno');
 if (nar) {

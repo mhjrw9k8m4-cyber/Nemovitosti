@@ -576,6 +576,13 @@
     if (on) setTimeout(function () { map.invalidateSize(); }, 60);
   }
   setPan(false);
+
+  var dotykoveOvladani = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  function probudMapu() {
+    if (!dotykoveOvladani || !mapLocked) return false;
+    setPan(true);
+    return true;
+  }
   if (lockBtn) lockBtn.addEventListener('click', function () { setPan(false); });
 
   var resetBtn = document.getElementById('map-reset');
@@ -985,9 +992,9 @@
   }
 
   function barvaCeny(t) {
-    var r = Math.round(74 + t * 136);
-    var g = Math.round(144 - t * 32);
-    var b = Math.round(190 - t * 132);
+    var r = Math.round(198 - t * 126);
+    var g = Math.round(178 - t * 140);
+    var b = Math.round(222 - t * 112);
     return 'rgb(' + r + ',' + g + ',' + b + ')';
   }
   function cenovaBarva(d) {
@@ -1215,6 +1222,7 @@
       enterNearAt({ lat: e.latlng.lat, lng: e.latlng.lng }, false, null, 'seznam');
       return;
     }
+    if (probudMapu()) return;
     if (krajJustSelected) { krajJustSelected = false; return; }
 
     if (dotsLocked || (!lastSingles.length && !lastShluky.length)) return;
@@ -1299,6 +1307,7 @@
         krajByName[f.properties.kraj] = layer;
         layer.bindTooltip(krajTitul(f.properties.kraj), { sticky: true, direction: 'top', className: 'kraj-tip' });
         layer.on('click', function () {
+          if (probudMapu()) return;
           if (selectedKraj !== f.properties.kraj) krajJustSelected = true;
           selectKraj(f.properties.kraj);
         });
@@ -1453,6 +1462,7 @@
       riseOnHover: true, zIndexOffset: 400 });
     mk.on('click', function (e) {
       if (e && e.originalEvent) L.DomEvent.stop(e.originalEvent);
+      if (probudMapu()) return;
       otevriShluk(s);
     });
     mk.on('keypress', function (e) {
@@ -1642,6 +1652,8 @@
       }
       map.dragging.disable();
       map.doubleClickZoom.disable();
+
+      mapEl.style.touchAction = 'none';
     } else if (kresliPredtim) {
       map.dragging[kresliPredtim.tazeni ? 'enable' : 'disable']();
       map.doubleClickZoom[kresliPredtim.dvojklik ? 'enable' : 'disable']();
@@ -2663,8 +2675,11 @@
 
       var st2 = dotStyle(m._d);
       if (m.options.radius !== st2.radius) m.setRadius(st2.radius);
-      if (m.options.fillOpacity !== st2.fillOpacity || m.options.weight !== st2.weight) {
-        m.setStyle({ fillOpacity: st2.fillOpacity, weight: st2.weight, color: st2.color });
+
+      if (m.options.fillOpacity !== st2.fillOpacity || m.options.weight !== st2.weight
+          || m.options.fillColor !== st2.fillColor || m.options.color !== st2.color) {
+        m.setStyle({ fillOpacity: st2.fillOpacity, weight: st2.weight,
+          color: st2.color, fillColor: st2.fillColor });
       }
     }
   }

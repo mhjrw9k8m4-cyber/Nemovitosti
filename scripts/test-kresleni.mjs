@@ -118,6 +118,23 @@ try {
   pravda('a tažení mapy se na tu dobu vypne (jinak by se kreslilo do ujíždějící mapy)',
     tazeniVyp, 'dragging zůstalo zapnuté');
 
+  /* A PROHLÍŽEČ SI TAH NESMÍ VZÍT PRO ROLOVÁNÍ STRÁNKY. Vypnout tažení
+     mapy nestačí: zamčená mapa má touch-action:pan-y, aby se přes ni dalo
+     stránkou rolovat prstem. Když to zůstane i při kreslení, prohlížeč
+     svislý tah zabere jako rolování, zruší sérii pointermove a čára se
+     nezačne ani kreslit — myší to přitom funguje, takže se na to nepřijde.
+     Kód to měl popsané v poznámce, ale nedělal to: starou hodnotu si
+     uložil a novou nenastavil.
+     Zkoušky dotyku přes CDP tohle chování neumí napodobit (synteticky
+     poslaný dotyk touch-action obejde), takže se neměří důsledek, ale
+     sama vlastnost — ta je měřitelná a byla špatně. */
+  const ta = await p.evaluate(() => {
+    const el = document.getElementById('leaflet-map');
+    return el ? getComputedStyle(el).touchAction : null;
+  });
+  pravda('a prst při kreslení patří mapě, ne rolování stránky (touch-action:none)',
+    ta === 'none', `touch-action je ${ta} — tah spolkne prohlížeč jako rolování`);
+
   /* MAPA JE NÍŽ, NEŽ SAHÁ OKNO. Napoprvé se gesto kreslilo na souřadnice
      spočítané z rámu mapy (y 674, výška 682) v okně vysokém 900 — tedy
      pod jeho okrajem, kde nic není, a na mapu nedorazila ani jedna

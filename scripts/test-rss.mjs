@@ -247,6 +247,32 @@ const hlavni = readFileSync(path.join(KOREN, 'novinky.xml'), 'utf8');
   }
   pravda('a žádná stránka nenabízí kanál, který neexistuje',
     slibyNaPrazdno.length === 0, slibyNaPrazdno.slice(0, 4).join(', '));
+
+  /* SESTAVENÍ NENÍ ZMĚNA OBSAHU. lastBuildDate se dřív plnilo časem běhu
+     generátoru, takže každé `node scripts/oprav.mjs` přepsalo patnáct
+     kanálů rozdílem jediného řádku, i když nepřibyla jediná nabídka —
+     a při slučování s robotí aktualizací dat z toho vzniklo patnáct
+     konfliktů naráz. Podle RSS má to pole znamenat „kdy se naposledy
+     změnil obsah kanálu", takže se bere z nejnovější položky.
+     Kontroluje se to na datech, ne dvojím sestavením: když se lastBuildDate
+     rovná nejnovějšímu pubDate, nemůže se mezi běhy hýbat. */
+  const posunute = [];
+  let sKanalem = 0;
+  for (const f of readdirSync(KOREN).filter((x) => /^novinky[a-z0-9-]*\.xml$/.test(x))) {
+    const t = readFileSync(path.join(KOREN, f), 'utf8');
+    const build = (t.match(/<lastBuildDate>([^<]+)</) || [])[1];
+    const polozky = [...t.matchAll(/<pubDate>([^<]+)</g)].map((m) => Date.parse(m[1]));
+    if (!build || !polozky.length) continue;
+    sKanalem++;
+    const nejnovejsi = Math.max(...polozky);
+    if (Date.parse(build) !== nejnovejsi) {
+      posunute.push(`${f}: lastBuildDate ${build}, nejnovější položka ${new Date(nejnovejsi).toUTCString()}`);
+    }
+  }
+  pravda('kanály se nemění pouhým sestavením (lastBuildDate = nejnovější položka)',
+    posunute.length === 0, posunute.slice(0, 3).join('; '));
+  pravda('a bylo na čem to měřit', sKanalem >= 10,
+    `kanálů s položkami jen ${sKanalem} — čte test vůbec novinky*.xml?`);
 }
 
 hotovo();

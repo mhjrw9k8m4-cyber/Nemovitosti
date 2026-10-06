@@ -164,6 +164,7 @@ pravda('každý token, na který se styl odvolává, je určený', chybi.length 
    * stejnou mezí jako každý jiný text. */
   const NAHRADY = {
     '--vyska-hlavicky': 'pojmenovaná konstanta výšky hlavičky; schválně ji nikdo nenastavuje a body má stejné odsazení (viz vysvětlivka u body{padding-top})',
+    '--cen-kroku': 'počet řádů na ose cen; nastavuje ho generátor na seznamu (cena-pozemku.html) podle skutečných dat. Záloha 3 je tam proto, že čáry řádů v pruhu jsou kresba: bez proměnné se nakreslí tři a pruh zůstane čitelný, místo aby zmizel celý.',
   };
   const PLOCHY = [['bílá karta', [255, 255, 255]],
     ['plocha stránky', naRgb(hodnoty.get('--bg') || '#ffffff')],

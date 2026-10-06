@@ -350,6 +350,9 @@ jobs:
       - name: Do posuvné oblasti se vejde aspoň jedna položka
         run: node scripts/test-vmacknuto.mjs
 
+      - name: První dotek mapu jen probudí, nehýbe s ní
+        run: node scripts/test-probuzeni.mjs
+
       - name: Tlačítko „nahoru" na dlouhých stránkách
         run: node scripts/test-nahoru.mjs
 

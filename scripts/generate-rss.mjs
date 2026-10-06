@@ -94,7 +94,19 @@ function popisPolozky(o) {
 }
 
 function kanal({ nazev, popis, soubor, odkaz, polozky, stranky }) {
-  const ted = rfc822(new Date());
+  /* lastBuildDate SE BERE Z NEJNOVĚJŠÍ POLOŽKY, NE Z HODIN.
+     Dřív tu stál čas běhu generátoru. Podle RSS má ale to pole znamenat
+     „kdy se naposledy změnil obsah kanálu", a čas běhu je něco jiného:
+     každé sestavení přepsalo patnáct kanálů rozdílem jediného řádku,
+     i když nepřibyla jediná nabídka. Pracovní strom byl po každém
+     `node scripts/oprav.mjs` špinavý a každý commit nesl patnáct
+     bezobsažných změn — a při slučování s robotí aktualizací dat
+     z toho vzniklo patnáct konfliktů, které se nedaly vyřešit jinak
+     než přegenerováním.
+     Datum nejnovější položky je stabilní, odvozené z dat, a navíc
+     pravdivější: mění se právě tehdy, když do kanálu něco přibude. */
+  const data = polozky.map((o, i) => kdy(o.first_seen, i));
+  const ted = rfc822(data.length ? new Date(Math.max(...data)) : new Date());
   const radky = polozky.map((o, i) => {
     /* ODKAZ SE BERE Z TÉŽE MAPY, ZE KTERÉ VZNIKAJÍ STRÁNKY.
        Dřív tu stálo souborPro(o) — jméno spočítané z klíče (obec,

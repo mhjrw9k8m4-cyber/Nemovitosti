@@ -4263,6 +4263,16 @@ body::after{
 .okr-stats{gap:32px; margin:24px 0 16px;}
 .okr-stat{background:none; border:0; border-radius:0; box-shadow:none; padding:0; min-width:0;}
 .okr-stat b{font-family:var(--font-display); font-weight:700; font-size:clamp(30px,3.6vw,44px); line-height:0.95; letter-spacing:-0.03em; color:var(--text-ondark);}
+/* VELKÉ ČÍSLO JE PRO JEDNO ČÍSLO. Dlaždice .okr-stat je dělaná tak, že
+   v ní stojí popisek a pod ním jeden údaj přes půl šířky. Na stránce cen
+   se do ní ale dávají TŘI okresy vedle sebe („Klatovy 39 Kč/m²") — a
+   každá z těch cen se pak vysází jako nadpis 30–44 px. Tři nadpisy v jedné
+   větě se zalomí přes tři řádky, názvy okresů se od svých cen oddělí a
+   z přehledu je plakát. Uvnitř odkazu je to pořád jen údaj: velikost
+   textu, tučně, čísla na stejnou šířku, ať jdou porovnat. */
+.okr-stat .okr-place b{font-family:inherit; font-size:inherit; font-weight:700;
+  line-height:inherit; letter-spacing:0; font-variant-numeric:tabular-nums;
+  color:var(--text-ondark);}
 .okr-stat span{color:var(--text-ondark-mute); text-transform:none; letter-spacing:0; font-size:13px;}
 /* Dvě čísla stejné velikosti vedle sebe oko slepí v jedno („20 20"). Mezi
    ně patří svislice — stejně jako u čísel na hlavní stránce. */
@@ -4275,21 +4285,75 @@ body::after{
    jako by lesy a zahrady patřily pod zemědělskou půdu. Tady se odděluje
    vodorovně, což při zalomení pod sebe znamená pořád totéž. */
 .cen-druhy{list-style:none; margin:14px 0 0; padding:0;}
-.cen-druh{display:grid; grid-template-columns:auto 1fr; align-items:baseline;
-  column-gap:14px; row-gap:2px; padding:14px 0; border-top:1px solid var(--line);}
-.cen-druh:first-child{border-top:0; padding-top:0;}
-.cen-druh b{font-family:var(--font-display); font-weight:700;
-  font-size:clamp(26px,5.2vw,34px); line-height:1; letter-spacing:-0.03em;
-  color:var(--text-ondark); white-space:nowrap;}
-.cen-nazev{font-size:16px; font-weight:600; color:var(--text-ondark);}
-.cen-detail{grid-column:2; font-size:13px; color:var(--text-ondark-mute);}
-.cen-varovani{grid-column:2; margin-top:4px; font-size:13px; line-height:1.45;
-  color:var(--text-ondark-mute); border-left:3px solid var(--c-drazba,#CC6B33);
-  padding-left:8px;}
+/* NÁZEV VLEVO, CENA VPRAVO, POD TÍM PRUH. Dřív stálo nad každým druhem
+   číslo přes půl obrazovky (až 34 px) na vlastním řádku a teprve pod ním
+   název — čtyři takové bloky pod sebou udělaly z přehledu dlouhý seznam,
+   ve kterém se nedalo nic porovnat okem. Čísla zarovnaná vpravo do jednoho
+   sloupce se dají přejet shora dolů, a výšku řádku drží text, ne ozdoba. */
+.cen-druh{display:grid; grid-template-columns:1fr auto; align-items:baseline;
+  column-gap:14px; row-gap:0; padding:11px 0; border-top:1px solid var(--line);}
+.cen-druh:first-child{border-top:0; padding-top:2px;}
+/* 20px, ne 19: ve stupnici webu už 20px je a dvě velikosti vzdálené
+   o jediný pixel jsou jen rozsypaná stupnice (hlídá test-typografie). */
+.cen-druh b{grid-column:2; grid-row:1; font-family:var(--font-display); font-weight:700;
+  font-size:20px; line-height:1.2; letter-spacing:-0.02em;
+  color:var(--text-ondark); white-space:nowrap; font-variant-numeric:tabular-nums;}
+.cen-nazev{grid-column:1; grid-row:1; font-size:16px; font-weight:600; color:var(--text-ondark);}
+.cen-detail{grid-column:1 / -1; font-size:12.5px; color:var(--text-ondark-mute);}
+/* ===== PRUH „OBVYKLE OD–DO" NA SPOLEČNÉ OSE ==========================
+   Čtyři čísla pod sebou se nedají porovnat pohledem: les 48 Kč/m²
+   a stavební pozemek 2 904 mají stejně velké písmo, takže ten
+   šedesátinásobek — na stránce „Kolik stojí pozemek?" to nejdůležitější —
+   nebyl vidět vůbec. Pruh to řekne naráz, a zadarmo ukáže i rozptyl:
+   u zahrad sahá přes půl osy, u pole je úzký.
+   Pruhy VŠECH druhů stojí na jedné logaritmické ose, kterou generátor
+   počítá na celé řády kolem skutečných dat. Jsou to ale jen obrázky
+   k číslům, která stojí slovy hned pod nimi — proto aria-hidden
+   a žádný vlastní popis. */
+/* Čáry řádů jdou skrz každý pruh, jinak sdílená osa nefunguje: bez nich
+   je popisek „1 000" dole jen číslo, které se nemá k čemu vztáhnout.
+   Protože je osa logaritmická, leží řády v pravidelných rozestupech —
+   kolik jich je, řekne generátor proměnnou --cen-kroku. */
+.cen-pas{grid-column:1 / -1; position:relative; display:block; height:9px; margin:7px 0 4px;
+  border-radius:var(--r-pill); background:var(--plocha-jemna);
+  background-image:repeating-linear-gradient(90deg,
+    var(--line) 0 1px, transparent 1px calc(100% / var(--cen-kroku, 3)));
+  box-shadow:inset 0 0 0 1px var(--line);}
+.cen-rozsah{position:absolute; top:0; bottom:0; border-radius:var(--r-pill);
+  background:var(--plocha-znacka); opacity:0.42; min-width:3px;}
+/* Medián je ČÁRKA, ne tečka: tečka na pruhu vypadá jako kolík navíc,
+   kdežto čárka napříč čte každý jako „tady je ta hodnota". */
+.cen-med{position:absolute; top:-3px; bottom:-3px; width:2.5px; margin-left:-1.25px;
+  border-radius:2px; background:var(--plocha-znacka);
+  box-shadow:0 0 0 1.5px var(--ink-soft);}
+.cen-osa{position:relative; height:17px; margin:2px 0 0;
+  border-top:1px solid var(--line); padding-top:4px;
+  font-size:11px; font-variant-numeric:tabular-nums; color:var(--text-ondark-mute);}
+.cen-osa-znacka{position:absolute; top:0; transform:translateX(-50%); white-space:nowrap;}
+/* Krajní popisky by jinak visely půlkou mimo kartu. */
+.cen-osa-znacka:first-child{transform:none;}
+.cen-osa-znacka:last-child{transform:translateX(-100%);}
+.cen-osa-pozn{margin:8px 0 0; font-size:12.5px; line-height:1.5; color:var(--text-ondark-mute);}
+/* Metodika sbalená: odpověď napřed, podmínky na vyžádání. */
+.cen-metodika{margin-top:14px; border-top:1px solid var(--line); padding-top:10px;}
+.cen-metodika > summary{cursor:pointer; list-style:none; font-size:14px; font-weight:600;
+  color:var(--copper); display:inline-flex; align-items:center; gap:6px;
+  /* 44 px, ne 34: je to jediné ovládání v té kartě a na telefonu se do něj
+     musí dát trefit prstem (hlídá test-rozvrzeni). */
+  min-height:44px;}
+.cen-metodika > summary::-webkit-details-marker{display:none;}
+.cen-metodika > summary::after{content:""; width:8px; height:8px; flex:none;
+  border-right:2px solid currentColor; border-bottom:2px solid currentColor;
+  transform:rotate(45deg) translate(-2px,-2px); transition:transform var(--cas-zakladni) var(--ease);}
+.cen-metodika[open] > summary::after{transform:rotate(-135deg) translate(-2px,-2px);}
+.cen-metodika > summary:hover{color:var(--copper-bright);}
+/* Varování je teď dovětek téže věty, ne vlastní odstavec s linkou:
+   u jednoho druhu ze čtyř zabíralo tři řádky a rozbíjelo rytmus sloupce.
+   Barvu si nechává — je to výstraha, ne poznámka. */
+.cen-varovani{color:var(--c-drazba-ink, #8A5512); font-weight:600;}
 /* Na úzkém displeji se „2 771 Kč/m²" a název vedle sebe nevejdou. */
 @media (max-width:430px){
-  .cen-druh{grid-template-columns:1fr;}
-  .cen-detail, .cen-varovani{grid-column:1;}
+  .cen-detail, .cen-pas{grid-column:1 / -1;}
 }
 
 /* Oddíly bez vnější karty — nadpis, linka, obsah. */
@@ -5182,7 +5246,12 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    s údaji. Tam oddělovač visel na konci řádku úplně stejně („Vitice ·"
    a pod tím nový řádek), a to na všech 77 okresních stránkách u každé
    nabídky. Proto je teď omezený na ty odznaky, pro které vznikl. */
-.okr-stat .okr-place:not(:last-child)::after{content:"\00a0·"; color:var(--text-ondark-mute); font-weight:400;}
+/* A NAKONEC JE PRYČ ÚPLNĚ. Nezlomitelná mezera oddělovač k položce
+   přilepila, jenže na 390 px je sama položka užší než „Klatovy 39 Kč/m²",
+   takže se zalomí i s ní — a tečka skončí sama na dalším řádku stejně
+   jako předtím. Ta lišta je přitom flex s mezerou 10 px: položky od sebe
+   oddělené už jsou a oddělovač v ní nemá co dělat. */
+.okr-stat .okr-place:not(:last-child)::after{content:none;}
 
 /* =====================================================================
    PÍSMO V POLÍCH NA DOTYKOVÝCH ZAŘÍZENÍCH

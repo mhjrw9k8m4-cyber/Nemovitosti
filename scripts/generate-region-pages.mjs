@@ -1189,6 +1189,36 @@ ${okresLinks ? `
   const NAZEV_DRUHU = { 'Stavební': 'Stavební pozemek' };
   const natGroups = DRUH_GROUPS.filter(g=>priceNational[g])
     .sort((a,b)=>priceNational[a].med - priceNational[b].med);
+  /* ===== SPOLEČNÁ OSA PRO VŠECHNY DRUHY ================================
+     Doteď to byl výpis čtyř čísel pod sebou, všechna stejně velká. Jenže
+     les stojí 48 Kč/m² a stavební pozemek 2 904 — šedesátinásobek — a na
+     stránce, která se jmenuje „Kolik stojí pozemek?", to byla ta úplně
+     nejdůležitější informace, kterou nebylo vidět. Kdo čte čísla pod
+     sebou, musí je v hlavě dělit; obrázek to řekne naráz.
+     Každý druh proto dostane svůj pruh „obvykle od–do" na JEDNÉ ose, se
+     značkou mediánu. Tím se zadarmo ukáže i druhá věc, kterou dřív musela
+     říkat věta: u zahrad je pruh přes půl osy, u pole úzký — tedy že
+     u zahrad medián skoro nic neznamená.
+     OSA JE LOGARITMICKÁ, a je to u ní napsané. Na lineární by se první tři
+     druhy slily do jedné čárky u levého okraje a obrázek by lhal o tom,
+     co je vidět. Meze se berou na celé řády kolem skutečných dat, ne od
+     stolu. */
+  const vsechnyLo = natGroups.map((g) => priceNational[g].lo).filter((x) => x > 0);
+  const vsechnyHi = natGroups.map((g) => priceNational[g].hi).filter((x) => x > 0);
+  const osaMin = vsechnyLo.length ? Math.pow(10, Math.floor(Math.log10(Math.min(...vsechnyLo)))) : 10;
+  const osaMax = vsechnyHi.length ? Math.pow(10, Math.ceil(Math.log10(Math.max(...vsechnyHi)))) : 10000;
+  const osaRozsah = Math.log10(osaMax) - Math.log10(osaMin);
+  const naOse = (v) => {
+    if (!(v > 0) || !(osaRozsah > 0)) return 0;
+    const t = (Math.log10(v) - Math.log10(osaMin)) / osaRozsah;
+    return Math.max(0, Math.min(100, t * 100));
+  };
+  const osaZnacky = [];
+  for (let d = Math.log10(osaMin); d <= Math.log10(osaMax) + 0.001; d++) {
+    const v = Math.pow(10, Math.round(d));
+    osaZnacky.push(`<span class="cen-osa-znacka" style="left:${naOse(v).toFixed(2)}%">${fmt(v)}</span>`);
+  }
+
   const natCards = natGroups.map(g=>{
     const s=priceNational[g];
     /* Když se čtvrtiny rozestoupí o víc než násobek meze, není to „typická
@@ -1208,11 +1238,24 @@ ${okresLinks ? `
     const nazevHtml = cil
       ? `<span class="cen-nazev"><a href="${cil.soubor}">${esc(NAZEV_DRUHU[g] || g)}</a></span>`
       : `<span class="cen-nazev">${esc(NAZEV_DRUHU[g] || g)}</span>`;
-    return `<li class="cen-druh${siroke ? ' cen-siroke' : ''}"><b>${fmt(s.med)} Kč/m²</b>`
+    /* Pruh je OZDOBA, ne informace navíc: tatáž čísla stojí slovy hned
+       pod ním, takže se čtečce neříká dvakrát totéž. */
+    const l = naOse(s.lo), r = naOse(s.hi), m = naOse(s.med);
+    const pruh = (s.lo > 0 && s.hi > 0)
+      ? `<span class="cen-pas" aria-hidden="true">`
+        + `<i class="cen-rozsah" style="left:${l.toFixed(2)}%;width:${Math.max(0.8, r - l).toFixed(2)}%"></i>`
+        + `<i class="cen-med" style="left:${m.toFixed(2)}%"></i></span>`
+      : '';
+    /* Název a cena na JEDNOM řádku, cena vpravo. Čtyři obří čísla pod
+       sebou, každé na vlastním řádku, dělala z přehledu dlouhý seznam —
+       a sloupec čísel zarovnaný vpravo se dá přejet okem shora dolů. */
+    return `<li class="cen-druh${siroke ? ' cen-siroke' : ''}">`
       + nazevHtml
-      + `<span class="cen-detail">obvykle ${fmt(s.lo)}–${fmt(s.hi)} Kč/m² · z ${fmt(s.n)} nabídek</span>`
-      + (siroke ? `<span class="cen-varovani">Ceny se tu liší násobky — medián berte jen jako hrubé vodítko, ne jako obvyklou cenu.</span>` : '')
-      + `</li>`;
+      + `<b>${fmt(s.med)} Kč/m²</b>`
+      + pruh
+      + `<span class="cen-detail">obvykle ${fmt(s.lo)}–${fmt(s.hi)} Kč/m² · z ${fmt(s.n)} nabídek`
+      + (siroke ? ` · <span class="cen-varovani">liší se násobky, berte jako hrubé vodítko</span>` : '')
+      + `</span></li>`;
   }).join('\n        ');
 
   // Kraje seřazené podle mediánu zemědělské půdy (nejvíc dat) – barevná „teplota".
@@ -1281,8 +1324,13 @@ ${okresLinks ? `
   const chips = list => list.map(x=>`<a class="okr-place" href="${okrLink(x.ok)}" style="text-decoration:none;">${esc(x.ok)} <b>${fmt(x.s.med)} Kč/m²</b></a>`).join('');
   const highlight = (cheapest.length && dearest.length) ? `
       <div class="okr-stats" style="gap:14px;">
-        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span style="color:var(--c-sale-ink,#3C55A2);">Nejlevnější zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(cheapest)}</div></div>
-        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span style="color:var(--c-exekuce-ink,#AE1E1E);">Nejdražší zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(dearest)}</div></div>
+        <!-- POPISKY NEJSOU KATEGORIE. Stály tu modře a červeně, jenže modrá
+             na tomhle webu znamená „na prodej" a červená „exekuce" — ne
+             „levné" a „drahé". Kdo ty barvy zná z mapy a z odznaků, čte
+             tady něco jiného, než co je napsáno. Rozdíl mezi levným
+             a drahým nesou čísla pod popiskem; popisek je návěští. -->
+        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span>Nejlevnější zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(cheapest)}</div></div>
+        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span>Nejdražší zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(dearest)}</div></div>
       </div>` : '';
 
   const natZ = priceNational[key];
@@ -1310,11 +1358,22 @@ ${okresLinks ? `
       <div class="add-card">
         <div class="rules-sect">
           <h2>Medián ceny podle druhu (celá ČR)</h2>
-          ${natCards ? `<ul class="cen-druhy">
+          ${natCards ? `<ul class="cen-druhy" style="--cen-kroku:${Math.max(1, Math.round(osaRozsah))}">
         ${natCards}
-          </ul>` : '<p class="rules-note" style="margin:0;">Zatím není dost dat pro spolehlivý výpočet.</p>'}
-          <p class="rules-note">Jde o <b>medián nabídkových cen</b> (ne realizovaných prodejů) z pozemků, u kterých známe cenu i výměru. Počítáme <b>jen běžné nabídky k prodeji</b> — vyvolávací cena dražby je pod trhem z podstaty věci a do ceny „kolik stojí pozemek" nepatří; stejně to počítá i odhad u konkrétního pozemku, aby web neříkal na dvou místech dvě čísla. Rozpětí ukazuje typické ceny (25.–75. percentil, tj. bez krajních výkyvů). Skutečná cena závisí na kvalitě půdy (BPEJ), přístupu, sítích i lokalitě — berte to jako orientaci, ne odhad konkrétního pozemku.</p>
-          <p class="rules-note">${ODFILTROVANO ? `Do výpočtu <b>nezapočítáváme ${ODFILTROVANO} ${ODFILTROVANO===1?'nabídku':(ODFILTROVANO<5?'nabídky':'nabídek')}</b>, u kterých cena za metr vychází hluboko pod trhem — bývají to <b>spoluvlastnické podíly</b> (v inzerátu je výměra celé parcely, ale prodává se jen zlomek) nebo špatně načtené ceny. Bez toho vycházel medián pole v některých okresech na 8 Kč/m², což není cena, za kterou se u nás pole prodává. Hranici nestanovujeme od stolu: hledá se mezera v samotném rozdělení cen, a kde žádná není (zahrady, stavební pozemky), nevyřazuje se nic.` : ''}</p>
+          </ul>
+          <div class="cen-osa" aria-hidden="true">${osaZnacky.join('')}</div>
+          <p class="cen-osa-pozn">Pruh je rozpětí obvyklých cen, čárka medián. Osa je <b>logaritmická</b> — každý krok desetinásobek.</p>` : '<p class="rules-note" style="margin:0;">Zatím není dost dat pro spolehlivý výpočet.</p>'}
+          <!-- VYSVĚTLIVKY SE SBALILY. Byly to tři odstavce drobného textu
+               hned pod přehledem, delší než samotná čísla — stránka pak
+               působila jako poznámkový aparát s grafem nahoře. Nic z toho
+               se nemaže: kdo se ptá „jak to počítáte", to rozbalí; kdo se
+               ptá „kolik stojí pozemek", dostane odpověď a nemusí ji
+               hledat nad hromadou podmínek. -->
+          <details class="cen-metodika">
+            <summary>Jak to počítáme</summary>
+            <p class="rules-note">Jde o <b>medián nabídkových cen</b> (ne realizovaných prodejů) z pozemků, u kterých známe cenu i výměru. Počítáme <b>jen běžné nabídky k prodeji</b> — vyvolávací cena dražby je pod trhem z podstaty věci a do ceny „kolik stojí pozemek" nepatří; stejně to počítá i odhad u konkrétního pozemku, aby web neříkal na dvou místech dvě čísla. Rozpětí ukazuje typické ceny (25.–75. percentil, tj. bez krajních výkyvů). Skutečná cena závisí na kvalitě půdy (BPEJ), přístupu, sítích i lokalitě — berte to jako orientaci, ne odhad konkrétního pozemku.</p>
+            <p class="rules-note">${ODFILTROVANO ? `Do výpočtu <b>nezapočítáváme ${ODFILTROVANO} ${ODFILTROVANO===1?'nabídku':(ODFILTROVANO<5?'nabídky':'nabídek')}</b>, u kterých cena za metr vychází hluboko pod trhem — bývají to <b>spoluvlastnické podíly</b> (v inzerátu je výměra celé parcely, ale prodává se jen zlomek) nebo špatně načtené ceny. Bez toho vycházel medián pole v některých okresech na 8 Kč/m², což není cena, za kterou se u nás pole prodává. Hranici nestanovujeme od stolu: hledá se mezera v samotném rozdělení cen, a kde žádná není (zahrady, stavební pozemky), nevyřazuje se nic.` : ''}</p>
+          </details>
         </div>
       </div>
 ${highlight ? `

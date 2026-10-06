@@ -810,6 +810,30 @@
     if (on) setTimeout(function () { map.invalidateSize(); }, 60);
   }
   setPan(false);
+  /* PRVNÍ DOTEK MAPU JEN PROBUDÍ. Mapa se načítá zamčená schválně: přes
+     zamčenou mapu jde stránku rolovat prstem, což je na telefonu to první,
+     co člověk dělá. Jenže zamčená mapa uměla na klepnutí jedinou věc —
+     vybrat kraj — a ta skočí z přehledu rovnou na kraj. Naměřeno na
+     telefonu 390×844: první klepnutí doprostřed mapy posunulo střed
+     a zvedlo přiblížení ze 6 na 8, druhé z 8 na 11. Mapa tedy člověku
+     pod prstem utíkala dřív, než s ní vůbec mohl hýbat.
+     Teď dělá první dotek to, co dělá na velkých mapách: probudí ji.
+     Odemkne posouvání, přiblížení i dvojklik a tím skončí — nevybere
+     kraj ani neotevře pozemek. Druhé klepnutí už vybírá, jak vybíralo.
+     Rozdělit „zapnout mapu" a „vybrat na mapě" je celý ten rozdíl mezi
+     „blbě reaguje na první klik" a klidnou mapou. */
+  /* JEN NA DOTYKU. Zámek je tu kvůli prstu: přes zamčenou mapu jde rolovat
+     stránkou, a právě proto uměla zamčená mapa na klepnutí jedinou věc —
+     skočit na kraj. Myš ten problém nemá: kolečko mapa nebere
+     (scrollWheelZoom:false), takže stránka přes ni roluje tak jako tak
+     a tažením myší se čeká, že se mapa posune. Brát na počítači první
+     klik jako „probuzení" by znamenalo jen klik navíc za nic. */
+  var dotykoveOvladani = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  function probudMapu() {
+    if (!dotykoveOvladani || !mapLocked) return false;
+    setPan(true);
+    return true;
+  }
   if (lockBtn) lockBtn.addEventListener('click', function () { setPan(false); }); // jen zamkne (výběr kraje zůstává)
   // Tlačítko „Celá ČR" — vrátí pohled nad celou mapu a zruší výběr kraje (místo +/− ovládání zoomu).
   var resetBtn = document.getElementById('map-reset');
@@ -1442,10 +1466,21 @@
   /* Modrá (levné) → oranžová (drahé). Jedna plynulá stupnice, ne skoky:
      mezi dvěma sousedními pozemky nemá být vidět hrana, která v datech
      není. */
+  /* CENOVÁ STUPNICE NESMÍ MLUVIT BARVAMI DRUHŮ. Dřív šla z rgb(74,144,190)
+     do rgb(210,112,58) — tedy přesně z modré „na prodej" do oranžové
+     „dražba". Po přepnutí na „Podle ceny" se obrázek skoro nezměnil
+     (naměřeno na telefonu: tytéž dvě barvy, jen přerozdělené) a oranžová
+     najednou znamenala „drahé" místo „dražba". Člověk pak nepozná ani to,
+     že přepnul, ani co která barva říká — a legenda nad mapou tvrdí jedno,
+     zatímco tečky nesou barvy z druhé soustavy.
+     Teď je stupnice fialová, od světlé po tmavou. Fialová na webu nic
+     jiného neznamená (druhy jsou modrá, oranžová a tmavě červená, značka
+     je zelená), takže přepnutí je vidět na první pohled, a tmavnutí čte
+     každý jako „víc" bez legendy. */
   function barvaCeny(t) {
-    var r = Math.round(74 + t * 136);
-    var g = Math.round(144 - t * 32);
-    var b = Math.round(190 - t * 132);
+    var r = Math.round(198 - t * 126);
+    var g = Math.round(178 - t * 140);
+    var b = Math.round(222 - t * 112);
     return 'rgb(' + r + ',' + g + ',' + b + ')';
   }
   function cenovaBarva(d) {
@@ -1781,6 +1816,7 @@
       enterNearAt({ lat: e.latlng.lat, lng: e.latlng.lng }, false, null, 'seznam');
       return;
     }
+    if (probudMapu()) return;
     if (krajJustSelected) { krajJustSelected = false; return; }
     // Tečky jsou klikací, když nejsou zamčené (po výběru kraje NEBO po přiblížení mapy).
     /* Hledá se jen mezi SAMOTNÝMI tečkami. Kdyby se hledalo mezi všemi,
@@ -1925,6 +1961,7 @@
         krajByName[f.properties.kraj] = layer;
         layer.bindTooltip(krajTitul(f.properties.kraj), { sticky: true, direction: 'top', className: 'kraj-tip' });
         layer.on('click', function () {
+          if (probudMapu()) return;   // první dotek mapu jen probudí
           if (selectedKraj !== f.properties.kraj) krajJustSelected = true; // přepnutí kraje neotevírá detail
           selectKraj(f.properties.kraj);
         });
@@ -2187,6 +2224,7 @@
       riseOnHover: true, zIndexOffset: 400 });
     mk.on('click', function (e) {
       if (e && e.originalEvent) L.DomEvent.stop(e.originalEvent);
+      if (probudMapu()) return;   // první dotek mapu jen probudí
       otevriShluk(s);
     });
     mk.on('keypress', function (e) {
@@ -2477,6 +2515,16 @@
       }
       map.dragging.disable();
       map.doubleClickZoom.disable();
+      /* TOHLE TU CHYBĚLO, A PROTO KRESLENÍ NA TELEFONU NEŠLO. Poznámka
+         nad touhle částí slibuje, že se na dobu kreslení vypne i to, aby
+         prohlížeč bral tah jako rolování stránky — jenže kód si starou
+         hodnotu touch-action jen uložil a novou nenastavil. Zamčená mapa
+         má touch-action:pan-y, takže svislý tah prstem prohlížeč spolkl
+         jako rolování, pointermove přestal chodit a čára se nezačala ani
+         kreslit. Myší to přitom fungovalo, takže se na to nepřišlo.
+         'none' znamená „tenhle tah patří mně"; po dokreslení se vrací
+         přesně to, co tu bylo (kresliPredtim.touchAction). */
+      mapEl.style.touchAction = 'none';
     } else if (kresliPredtim) {
       map.dragging[kresliPredtim.tazeni ? 'enable' : 'disable']();
       map.doubleClickZoom[kresliPredtim.dvojklik ? 'enable' : 'disable']();
@@ -3837,8 +3885,16 @@
       // a oddálená přeplácaná) a ztlumení mimo vybraný kraj taky.
       var st2 = dotStyle(m._d);
       if (m.options.radius !== st2.radius) m.setRadius(st2.radius);
-      if (m.options.fillOpacity !== st2.fillOpacity || m.options.weight !== st2.weight) {
-        m.setStyle({ fillOpacity: st2.fillOpacity, weight: st2.weight, color: st2.color });
+      /* VÝPLŇ TU DŘÍV CHYBĚLA, A TÍM NEFUNGOVALO „PODLE CENY". Přepisovalo
+         se krytí, tloušťka a obrys, ale fillColor ne — takže tečka, která
+         se jednou nakreslila podle druhu, zůstala barvou druhu napořád.
+         Přepínač tedy přepsal legendu a nic víc: na mapě se nezměnilo nic.
+         (Zkouška PK_BARVY.barvaTecky si barvu počítala znovu z dotStyle,
+         tedy to, co by vyjít MĚLO — proto na to nepřišel ani test.) */
+      if (m.options.fillOpacity !== st2.fillOpacity || m.options.weight !== st2.weight
+          || m.options.fillColor !== st2.fillColor || m.options.color !== st2.color) {
+        m.setStyle({ fillOpacity: st2.fillOpacity, weight: st2.weight,
+          color: st2.color, fillColor: st2.fillColor });
       }
     }
   }

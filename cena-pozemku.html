@@ -31,7 +31,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=438c39ef">
+  <link rel="stylesheet" href="css/styles.min.css?v=bebfcc2c">
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
   <script type="application/ld+json">
@@ -86,14 +86,25 @@
       <div class="add-card">
         <div class="rules-sect">
           <h2>Medián ceny podle druhu (celá ČR)</h2>
-          <ul class="cen-druhy">
-        <li class="cen-druh"><b>48 Kč/m²</b><span class="cen-nazev"><a href="pozemky-lesni.html">Lesní pozemek</a></span><span class="cen-detail">obvykle 31–98 Kč/m² · z 202 nabídek</span></li>
-        <li class="cen-druh"><b>62 Kč/m²</b><span class="cen-nazev"><a href="pozemky-orna-puda.html">Zemědělská půda</a></span><span class="cen-detail">obvykle 43–115 Kč/m² · z 963 nabídek</span></li>
-        <li class="cen-druh cen-siroke"><b>156 Kč/m²</b><span class="cen-nazev"><a href="pozemky-zahrada.html">Zahrada</a></span><span class="cen-detail">obvykle 47–1 163 Kč/m² · z 71 nabídek</span><span class="cen-varovani">Ceny se tu liší násobky — medián berte jen jako hrubé vodítko, ne jako obvyklou cenu.</span></li>
-        <li class="cen-druh"><b>2 904 Kč/m²</b><span class="cen-nazev"><a href="pozemky-stavebni.html">Stavební pozemek</a></span><span class="cen-detail">obvykle 1 272–5 500 Kč/m² · z 249 nabídek</span></li>
+          <ul class="cen-druhy" style="--cen-kroku:3">
+        <li class="cen-druh"><span class="cen-nazev"><a href="pozemky-lesni.html">Lesní pozemek</a></span><b>48 Kč/m²</b><span class="cen-pas" aria-hidden="true"><i class="cen-rozsah" style="left:16.38%;width:16.66%"></i><i class="cen-med" style="left:22.71%"></i></span><span class="cen-detail">obvykle 31–98 Kč/m² · z 202 nabídek</span></li>
+        <li class="cen-druh"><span class="cen-nazev"><a href="pozemky-orna-puda.html">Zemědělská půda</a></span><b>62 Kč/m²</b><span class="cen-pas" aria-hidden="true"><i class="cen-rozsah" style="left:21.12%;width:14.24%"></i><i class="cen-med" style="left:26.41%"></i></span><span class="cen-detail">obvykle 43–115 Kč/m² · z 963 nabídek</span></li>
+        <li class="cen-druh cen-siroke"><span class="cen-nazev"><a href="pozemky-zahrada.html">Zahrada</a></span><b>156 Kč/m²</b><span class="cen-pas" aria-hidden="true"><i class="cen-rozsah" style="left:22.40%;width:46.45%"></i><i class="cen-med" style="left:39.77%"></i></span><span class="cen-detail">obvykle 47–1 163 Kč/m² · z 71 nabídek · <span class="cen-varovani">liší se násobky, berte jako hrubé vodítko</span></span></li>
+        <li class="cen-druh"><span class="cen-nazev"><a href="pozemky-stavebni.html">Stavební pozemek</a></span><b>2 904 Kč/m²</b><span class="cen-pas" aria-hidden="true"><i class="cen-rozsah" style="left:70.15%;width:21.20%"></i><i class="cen-med" style="left:82.10%"></i></span><span class="cen-detail">obvykle 1 272–5 500 Kč/m² · z 249 nabídek</span></li>
           </ul>
-          <p class="rules-note">Jde o <b>medián nabídkových cen</b> (ne realizovaných prodejů) z pozemků, u kterých známe cenu i výměru. Počítáme <b>jen běžné nabídky k prodeji</b> — vyvolávací cena dražby je pod trhem z podstaty věci a do ceny „kolik stojí pozemek" nepatří; stejně to počítá i odhad u konkrétního pozemku, aby web neříkal na dvou místech dvě čísla. Rozpětí ukazuje typické ceny (25.–75. percentil, tj. bez krajních výkyvů). Skutečná cena závisí na kvalitě půdy (BPEJ), přístupu, sítích i lokalitě — berte to jako orientaci, ne odhad konkrétního pozemku.</p>
-          <p class="rules-note">Do výpočtu <b>nezapočítáváme 137 nabídek</b>, u kterých cena za metr vychází hluboko pod trhem — bývají to <b>spoluvlastnické podíly</b> (v inzerátu je výměra celé parcely, ale prodává se jen zlomek) nebo špatně načtené ceny. Bez toho vycházel medián pole v některých okresech na 8 Kč/m², což není cena, za kterou se u nás pole prodává. Hranici nestanovujeme od stolu: hledá se mezera v samotném rozdělení cen, a kde žádná není (zahrady, stavební pozemky), nevyřazuje se nic.</p>
+          <div class="cen-osa" aria-hidden="true"><span class="cen-osa-znacka" style="left:0.00%">10</span><span class="cen-osa-znacka" style="left:33.33%">100</span><span class="cen-osa-znacka" style="left:66.67%">1 000</span><span class="cen-osa-znacka" style="left:100.00%">10 000</span></div>
+          <p class="cen-osa-pozn">Pruh je rozpětí obvyklých cen, čárka medián. Osa je <b>logaritmická</b> — každý krok desetinásobek.</p>
+          <!-- VYSVĚTLIVKY SE SBALILY. Byly to tři odstavce drobného textu
+               hned pod přehledem, delší než samotná čísla — stránka pak
+               působila jako poznámkový aparát s grafem nahoře. Nic z toho
+               se nemaže: kdo se ptá „jak to počítáte", to rozbalí; kdo se
+               ptá „kolik stojí pozemek", dostane odpověď a nemusí ji
+               hledat nad hromadou podmínek. -->
+          <details class="cen-metodika">
+            <summary>Jak to počítáme</summary>
+            <p class="rules-note">Jde o <b>medián nabídkových cen</b> (ne realizovaných prodejů) z pozemků, u kterých známe cenu i výměru. Počítáme <b>jen běžné nabídky k prodeji</b> — vyvolávací cena dražby je pod trhem z podstaty věci a do ceny „kolik stojí pozemek" nepatří; stejně to počítá i odhad u konkrétního pozemku, aby web neříkal na dvou místech dvě čísla. Rozpětí ukazuje typické ceny (25.–75. percentil, tj. bez krajních výkyvů). Skutečná cena závisí na kvalitě půdy (BPEJ), přístupu, sítích i lokalitě — berte to jako orientaci, ne odhad konkrétního pozemku.</p>
+            <p class="rules-note">Do výpočtu <b>nezapočítáváme 137 nabídek</b>, u kterých cena za metr vychází hluboko pod trhem — bývají to <b>spoluvlastnické podíly</b> (v inzerátu je výměra celé parcely, ale prodává se jen zlomek) nebo špatně načtené ceny. Bez toho vycházel medián pole v některých okresech na 8 Kč/m², což není cena, za kterou se u nás pole prodává. Hranici nestanovujeme od stolu: hledá se mezera v samotném rozdělení cen, a kde žádná není (zahrady, stavební pozemky), nevyřazuje se nic.</p>
+          </details>
         </div>
       </div>
 
@@ -102,8 +113,13 @@
           <h2>Kde je půda nejlevnější a nejdražší</h2>
 
       <div class="okr-stats" style="gap:14px;">
-        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span style="color:var(--c-sale-ink,#3C55A2);">Nejlevnější zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;"><a class="okr-place" href="pozemky-okres-klatovy.html" style="text-decoration:none;">Klatovy <b>39 Kč/m²</b></a><a class="okr-place" href="pozemky-okres-blansko.html" style="text-decoration:none;">Blansko <b>39 Kč/m²</b></a><a class="okr-place" href="pozemky-okres-plzen-jih.html" style="text-decoration:none;">Plzeň-jih <b>40 Kč/m²</b></a></div></div>
-        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span style="color:var(--c-exekuce-ink,#AE1E1E);">Nejdražší zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;"><a class="okr-place" href="pozemky-okres-praha-vychod.html" style="text-decoration:none;">Praha-východ <b>160 Kč/m²</b></a><a class="okr-place" href="pozemky-okres-pardubice.html" style="text-decoration:none;">Pardubice <b>116 Kč/m²</b></a><a class="okr-place" href="pozemky-okres-praha-zapad.html" style="text-decoration:none;">Praha-západ <b>90 Kč/m²</b></a></div></div>
+        <!-- POPISKY NEJSOU KATEGORIE. Stály tu modře a červeně, jenže modrá
+             na tomhle webu znamená „na prodej" a červená „exekuce" — ne
+             „levné" a „drahé". Kdo ty barvy zná z mapy a z odznaků, čte
+             tady něco jiného, než co je napsáno. Rozdíl mezi levným
+             a drahým nesou čísla pod popiskem; popisek je návěští. -->
+        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span>Nejlevnější zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;"><a class="okr-place" href="pozemky-okres-klatovy.html" style="text-decoration:none;">Klatovy <b>39 Kč/m²</b></a><a class="okr-place" href="pozemky-okres-blansko.html" style="text-decoration:none;">Blansko <b>39 Kč/m²</b></a><a class="okr-place" href="pozemky-okres-plzen-jih.html" style="text-decoration:none;">Plzeň-jih <b>40 Kč/m²</b></a></div></div>
+        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span>Nejdražší zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;"><a class="okr-place" href="pozemky-okres-praha-vychod.html" style="text-decoration:none;">Praha-východ <b>160 Kč/m²</b></a><a class="okr-place" href="pozemky-okres-pardubice.html" style="text-decoration:none;">Pardubice <b>116 Kč/m²</b></a><a class="okr-place" href="pozemky-okres-praha-zapad.html" style="text-decoration:none;">Praha-západ <b>90 Kč/m²</b></a></div></div>
       </div>
         </div>
       </div>
