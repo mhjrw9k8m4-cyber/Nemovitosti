@@ -17,8 +17,8 @@
   <style>
     :root{
       color-scheme:light;
-      --bg:#EAEEE9; --card:#fff; --ink:#15231B; --dim:#565F72; --line:rgba(20,35,28,.13);
-      --ok:#1F7A4D; --okbg:#E6F4EC; --bad:#B3321F; --badbg:#FBEAE6; --warn:#8A5A00; --warnbg:#FFF4DC;
+      --bg:#E3EFE7; --card:#fff; --ink:#12241A; --dim:#4A5750; --line:rgba(20,35,28,0.16);
+      --ok:#13663E; --okbg:#E6F4EC; --bad:#8C2F1E; --badbg:#FBEAE6; --warn:#8A5512; --warnbg:#FFF4DC;
       --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     }
     *{box-sizing:border-box}
@@ -34,22 +34,22 @@
     .dot{flex:0 0 auto;width:22px;height:22px;border-radius:999px;display:grid;place-items:center;
       font-size:13px;font-weight:700;margin-top:1px}
     .ok .dot{background:var(--okbg);color:var(--ok)} .bad .dot{background:var(--badbg);color:var(--bad)}
-    .warn .dot{background:var(--warnbg);color:var(--warn)} .run .dot{background:#E8EAEE;color:var(--dim)}
+    .warn .dot{background:var(--warnbg);color:var(--warn)} .run .dot{background:#EEF6F1;color:var(--dim)}
     .txt{min-width:0;flex:1}
     .name{display:block;font-weight:600;font-size:15px}
     .det{display:block;color:var(--dim);font-size:14px;margin-top:2px;word-break:break-word}
-    .det code{font-family:var(--mono);font-size:13px;background:#F2F4F7;padding:1px 5px;border-radius:6px}
+    .det code{font-family:var(--mono);font-size:13px;background:#EEF6F1;padding:1px 5px;border-radius:6px}
     h2{font-size:15px;margin:18px 0 0;letter-spacing:0.02em;text-transform:uppercase;color:var(--dim)}
     button{font:inherit;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--ink);
       padding:9px 15px;border-radius:10px;cursor:pointer}
-    button:hover{background:#F6F7F9}
-    button.primary{background:#26694A;border-color:#26694A;color:#fff}
-    button:focus-visible{outline:2px solid #26694A;outline-offset:2px}
+    button:hover{background:#F5FAF7}
+    button.primary{background:#004F2F;border-color:#004F2F;color:#fff}
+    button:focus-visible{outline:2px solid #2B7652;outline-offset:2px}
     .btns{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 18px}
     .note{font-size:13px;color:var(--dim);margin:10px 0 16px}
-    pre{background:#14231C;color:#E7EEE8;border-radius:14px;padding:14px;overflow:auto;
+    pre{background:#12241A;color:#EEF6F1;border-radius:14px;padding:14px;overflow:auto;
       font-family:var(--mono);font-size:13px;line-height:1.5;max-height:340px}
-    a{color:#26694A}
+    a{color:#0F5C3B}
   </style>
 </head>
 <body>

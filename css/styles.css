@@ -133,6 +133,27 @@
      vybledle. Ztmaveno v rámci stejného odstínu: 5,2 : 1 na nejtmavším
      světlém čipu, 7,0 : 1 na bílé kartě. Měří to scripts/test-kontrast.mjs. */
   --copper:#0F5C3B; --copper-bright:#2B7652;
+  /* ZÁSTUPNÝ TEXT V POLÍCH. Pět polí na webu ho mělo ve třech různých
+     barvách: #74857A (formuláře), var(--text-ondark-mute) (pole polohy)
+     a #8A93A3 v políčku hledání na mapě — a to je modrošedá, 218°, na
+     zeleném webu. Navíc ani jedna z prvních dvou nebyla dobře čitelná:
+     #74857A má na bílém poli 3,90 : 1, #8A93A3 jen 3,10 : 1, norma žádá
+     4,5 : 1. Tahle hodnota je nejsvětlejší v témž odstínu (141°, sytost
+     7 %), která projde na všech třech plochách: 5,44 : 1 na bílé,
+     4,95 : 1 na zapuštěné, 4,61 : 1 na ploše stránky. Zůstává zřetelně
+     světlejší než napsaný text, takže se pole netváří jako vyplněné. */
+  --text-zastupny:#5F6D64;
+  /* BARVY STAVŮ. Na obě se stylopis odkazoval s náhradní hodnotou —
+     `var(--c-warn, #E8B341)` a `var(--c-danger, #FF6B6B)` — a žádná
+     z nich nebyla nikde definovaná. Kreslila se tedy ta náhrada, a ta
+     je na světlém pozadí nečitelná: #E8B341 má 1,92 : 1 na bílé a
+     1,62 : 1 na ploše stránky, #FF6B6B 2,78 : 1 a 2,35 : 1 (norma žádá
+     4,5 : 1 pro běžný text). Nešlo to poznat pohledem: `.add-warn b`
+     se objeví jen u podezřelého údaje ve formuláři a `.pp-stav` jen
+     u některých stavů, takže měření hotové stránky na ně nedosáhlo.
+     Hodnoty nejsou vymyšlené, jsou to barvy, které už web má:
+     --accent-warm (6,20 : 1 na bílé) a --c-exekuce-ink (8,27 : 1). */
+  --c-warn:#8A5512; --c-danger:#8C2F1E;
   /* VELIKOST NADPISU STRÁNKY. O ní rozhodovalo patnáct pravidel na pěti
      místech předlohy a vyšlo z toho, že tentýž prvek měl na široké
      obrazovce 92 px na titulní, 54 px na návodu a 50 px na kraji —
@@ -578,7 +599,7 @@ button, a, [role="button"], select, summary, .btn-primary, .lp-btn, input[type="
    mobilu vada. Vypínáme ho proto všude, kde prvkem hýbe (ne jen u tlačítek,
    jak to bylo dřív — na kartách pozemků a živém náhledu to chybělo). */
 @media (hover:none){
-  .btn-primary:hover, .lp-btn:hover, .map-reset:hover, .to-top:hover, .pf-stat:hover, .okr-item:hover, .deal-card:hover, .opp-item:hover, .odl-card:hover, .status-card:hover, .gl-item:hover, .price-card:not(.featured):hover, .ul-card:hover{ transform:none; }
+  .btn-primary:hover, .lp-btn:hover, .map-reset:hover, .to-top:hover, .pf-stat--jde:hover, .okr-item:hover, .deal-card:hover, .opp-item:hover, .odl-card:hover, .status-card:hover, .gl-item:hover, .price-card:not(.featured):hover, .ul-card:hover{ transform:none; }
 }
 /* Upozornění u formuláře — něco vypadá podezřele, ale odeslat to jde.
    Odlišené od chyby: chyba je červená a zastaví, tohle jen zvedne obočí. */
@@ -1412,8 +1433,13 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .map-holder{grid-column:2; grid-row:1 / span 2;}
 .map-controls-panel .map-search{margin-top:0;}
 .map-search input{width:100%; background:#fff; border:1px solid var(--line-ui); border-radius:var(--r-sm); padding:12px 14px; font-size:14px; color:#12241A; font-family:inherit; box-shadow:var(--e1);}
-.map-search input::placeholder{color:#8A93A3;}
-.map-search input:focus-visible{border-color:var(--copper-bright); outline:none; box-shadow:0 0 0 3px rgba(110,155,255,0.22);}
+.map-search input::placeholder{color:var(--text-zastupny);}
+/* ZÁŘ PŘI ZAOSTŘENÍ BYLA MODRÁ. Okraj se barvil zeleně (--copper-bright),
+   ale záře kolem něj byla rgba(110,155,255) — modrá 221°. Stejná dvojice
+   byla u rozbalovátka mapy. Zelenou záři, kterou web používá u polí
+   přihlášení, má teď i tohle; sytost zůstává 0,22 (ne 0,16 jako tam),
+   protože tady leží pole nad mapou, kde je slabší záře vidět méně. */
+.map-search input:focus-visible{border-color:var(--copper-bright); outline:none; box-shadow:0 0 0 3px rgba(126,196,157,0.22);}
 /* Našeptávač obcí. V nabídce je přes tisíc obcí a nikdo neví, jak se
    která jmenuje v katastru („Dobšice u Znojma"). Ať si člověk vybere
    z nabídky místo hádání — i s tím, kolik tam čeho je. */
@@ -1612,6 +1638,17 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   .map-controls{padding:12px 10px 12px; gap:4px 8px;}
 }
 .mc-field{display:flex; flex-direction:column; gap:6px; min-width:0;}
+/* Řádek s rozbalovátkem uvnitř skupiny hodnot: popisek vlevo, hodnota
+   vpravo. Nativní rozbalovátko zůstává (na telefonu je jeho výběr lepší
+   než cokoli vlastního), jen přestalo vypadat jako krabička navíc. */
+.mc-hodnota-radek{flex-direction:row; align-items:center; justify-content:space-between;
+  gap:12px; padding:0 12px; min-height:48px; cursor:pointer;}
+.mc-hodnota-radek .mc-cap{flex:none; font-family:inherit; font-size:14px; font-weight:600;
+  letter-spacing:0; text-transform:none; color:var(--text-ondark);}
+.mc-hodnota-radek .map-select{flex:1 1 auto; width:auto; min-width:0; text-align:right;
+  border:0; background-color:transparent; padding:10px 22px 10px 0; font-size:14px;
+  font-weight:600; color:var(--muted); background-position:right 2px center;}
+.mc-hodnota-radek .map-select:focus-visible{box-shadow:none; outline:2px solid var(--copper-bright); outline-offset:-2px; border-radius:var(--r-xs);}
 /* Popisek pole. Musí být čitelný sám o sobě — ne jen tušený odstín pozadí. */
 /* NÁVĚŠTÍ SKUPINY, ne další řádek textu. Popisek měl 11,5px/700 a
    TUTÉŽ barvu jako běžný text (rgb(21,35,27)), takže „Druh pozemku"
@@ -1639,22 +1676,62 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    významem: zapínají se nezávisle na sobě a každá nese počet. Pilulka bez
    nabídek se vůbec nezobrazí — nabízet filtr, po kterém zůstane prázdno,
    je horší než ho nemít. */
-.mcv-rada{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
-.mcv-btn{display:inline-flex; align-items:center; gap:6px; font:inherit; font-size:13px; font-weight:600;
-  cursor:pointer; min-height:38px; padding:8px 12px; border-radius:var(--r-pill);
-  border:1px solid var(--line-ui); background:none; color:var(--text-ondark-mute);
+/* VOLBY STOJÍ POD SEBOU, NE V ŘADĚ ZA SEBOU. Změřeno na 390 px: osm
+   štítků druhu mělo šířky 105, 169, 186, 134, 131, 92 … a zalomily se
+   do pěti řad po dvou, jedné, dvou, dvou a jedné. Žádné dva okraje
+   nebyly nad sebou, takže panel vypadal roztřepeně — a bylo to to
+   první, co na něm bylo vidět.
+   DVA SLOUPCE JSEM ZKOUŠEL A NEVEJDOU SE. V buňce 151 px zbyde po
+   odsazení (20), zaškrtávátku (18), mezerách (16) a počtu (22) na
+   popisek 75 px; „Kanalizace" jich při 14px/600 potřebuje 80. Slepilo
+   se to na „Kanalizace150" a „Jen celé pozemky" se zalomilo na tři
+   řádky. Jeden sloupec je proto rozhodnutí z měření, ne z chuti:
+   popisek má místo, počty stojí v jednom sloupci vpravo nad sebou
+   a terč pro prst je přes celou šířku panelu.
+   Panel je tím delší. To je u filtrů v pořádku — proto má dole
+   přilepené tlačítko, které průběžně říká, kolik nabídek zbývá. */
+.mcv-rada, .mcv-rada.mcv-sloupec{display:grid; grid-template-columns:minmax(0,1fr); gap:6px; margin-top:8px;}
+/* JEDNA SOUČÁSTKA PRO VŠECHNY VOLBY V PANELU. Druh pozemku, co uvádí
+   inzerát i příležitosti byly tři různě vypadající věci: pilulky bez
+   zaškrtnutí, pilulky bez zaškrtnutí a pilulky se zaškrtnutím. Teď je
+   to jedno a totéž — zaškrtávátko vlevo, popisek, počet vpravo —
+   a .mc-prep sdílí tatáž pravidla, protože to je tatáž věc. */
+.mcv-btn, .mc-prep{display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+  font:inherit; font-size:14px; font-weight:600;
+  cursor:pointer; min-height:44px; padding:9px 12px; border-radius:var(--r-sm);
+  border:1px solid var(--line-ui); background:var(--ink-soft); color:var(--text-ondark);
   transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
-.mcv-btn:hover{border-color:var(--copper); color:var(--copper);}
-.mcv-btn.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
-.mcv-n{font-size:12px; font-weight:700; opacity:.75; font-variant-numeric:tabular-nums;}
+.mcv-btn:hover, .mc-prep:hover{border-color:var(--copper); background:var(--ink);}
+.mcv-btn.on, .mc-prep.on{background:var(--plocha-znacka); border-color:var(--plocha-znacka); color:#fff;}
+/* Popisek si bere místo, počet se drží vpravo — čísla tak stojí nad
+   sebou v jednom sloupci a dají se porovnat očima. */
+.mcp-t{flex:1 1 auto; min-width:0; line-height:1.2;}
+/* Mezera před počtem musí být vlastní, ne jen „zbylé místo": v úzké
+   buňce mřížky popisek všechno místo vyplní a z „Kanalizace 150" se
+   stane „Kanalizace150". */
+.mcv-n{margin-left:auto; padding-left:8px; flex:none; font-size:12px; font-weight:700;
+  color:var(--muted); font-variant-numeric:tabular-nums;}
+.mcv-btn.on .mcv-n{color:rgba(255,255,255,0.82);}
 /* Štítek, pod kterým při dnešním nastavení nic není. Neschovává se —
    schovaná možnost vypadá, jako by neexistovala; takhle je vidět, že
    existuje a je prázdná. Kliknout na něj jde dál: sám o sobě filtr
    rozšiřuje, takže se po něm může něco objevit. */
-.mcv-btn.mcv-nula{opacity:.5;}
-.mcv-btn.mcv-nula.on{opacity:1;}
-/* Řada štítků druhu. Je to první filtr v panelu, tak ať má vzduch. */
-.mc-druhy{grid-column:1 / -1;}
+/* PRŮHLEDNOST BYLA ŠPATNÝ NÁSTROJ. opacity:.5 na textu --text-ondark
+   nad bílou dává kolem 2,3 : 1, a to je popisek volby, ne ozdoba —
+   norma žádá 4,5. Ztlumí se tedy jen to, co je opravdu prázdné: počet
+   a okraj. Popisek zůstává čitelný. */
+.mcv-btn.mcv-nula{border-color:var(--line); background:none;}
+.mcv-btn.mcv-nula .mcp-t{color:var(--muted);}
+.mcv-btn.mcv-nula .mcv-n{color:var(--muted);}
+.mcv-btn.mcv-nula.on{border-color:var(--plocha-znacka); background:var(--plocha-znacka);}
+.mcv-btn.mcv-nula.on .mcp-t, .mcv-btn.mcv-nula.on .mcv-n{color:#fff;}
+/* VŠECHNY SKUPINY PŘES CELOU ŠÍŘKU. Dřív to měl jen druh a na úzkém
+   displeji to doháněl @media. Jenže volby jsou teď jednosloupcové
+   seznamy, které se nedokážou zmenšit pod šířku svého textu: na 1280 px
+   seděly „Příležitosti" v půlce mřížky a „Pod obvyklou cenou"
+   přetékalo o 16 px (116 > 100). Celá šířka to řeší na všech šířkách
+   naráz a panel je přitom jeden sloupec seshora dolů. */
+.mc-druhy, .mc-vybaveni, .mc-prilezitosti, .mc-hodnoty, .mc-hodnoty-nadpis{grid-column:1 / -1;}
 /* PŘEPÍNAČ, KTERÝ VYPADÁ JAKO PŘEPÍNAČ. „Končí do 14 dní", „Pod
    obvyklou cenou" a „Uložené" měly doslova třídu rozbalovacího
    seznamu (class="map-select urgent-toggle") — široká krabička
@@ -1662,18 +1739,14 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    navíc jen jiná barva, takže kdo barvy nerozezná, nepoznal nic.
    Teď je to tentýž štítek jako Elektřina/Voda a po zapnutí se
    zaškrtne. */
-.mc-prep{display:inline-flex; align-items:center; gap:6px; font:inherit; font-size:13px; font-weight:600;
-  cursor:pointer; min-height:38px; padding:8px 12px; border-radius:var(--r-pill);
-  border:1px solid var(--line-ui); background:none; color:var(--text-ondark-mute);
-  transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
-.mc-prep:hover{border-color:var(--copper); color:var(--copper);}
-.mc-prep.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
+/* Vzhled .mc-prep je výš, společně s .mcv-btn — je to tatáž volba. */
 /* Zaškrtnutí se nekreslí obrázkem, ale rámečkem s fajfkou: v zapnutém
    stavu je bílé na zelené, ve vypnutém je z něj prázdný čtvereček. */
-.mcp-v{flex:none; width:15px; height:15px; border-radius:var(--r-xs); position:relative;
-  border:1.5px solid currentColor; opacity:.55;}
-.mc-prep.on .mcp-v{opacity:1; background:#fff; border-color:#fff;}
-.mc-prep.on .mcp-v::after{content:""; position:absolute; left:4px; top:1px; width:4px; height:8px;
+.mcp-v{flex:none; width:18px; height:18px; border-radius:var(--r-xs); position:relative;
+  border:1.5px solid var(--line-ui); background:var(--ink-soft);
+  transition:background var(--cas-rychly) var(--ease), border-color var(--cas-rychly) var(--ease);}
+.mcv-btn.on .mcp-v, .mc-prep.on .mcp-v{background:#fff; border-color:#fff;}
+.mcv-btn.on .mcp-v::after, .mc-prep.on .mcp-v::after{content:""; position:absolute; left:5.5px; top:2px; width:4px; height:9px;
   border:solid var(--plocha-znacka); border-width:0 2px 2px 0; transform:rotate(43deg);}
 
 /* Řada nad výsledky: počet, „Uložené" a řazení. */
@@ -1718,7 +1791,23 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
  * jako terče pro prst a dole tlačítko, které průběžně říká, kolik nabídek
  * výběr znamená. Panel se tím zkrátil o víc než polovinu.
  */
-.mc-shrnuti{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+/* CENA, VÝMĚRA A CENA ZA METR JSOU TOTÉŽ: hodnota, která se někam
+   rozbalí. Byly to ale tři různé věci — dvě kartičky vedle sebe
+   s návěštím uvnitř, a pod nimi návěští skupiny a nativní rozbalovátko
+   s modrou šipkou. Teď je z toho jedna skupina tří stejných řádků:
+   popisek vlevo, hodnota vpravo, šipka. */
+/* Skupina potřebuje návěští jako každá jiná — bez něj seděla rovnou
+   pod posledním druhem a četla se jako jeho pokračování. Návěští je
+   mimo rámeček, odsazení nad ním dělá tu mezeru. */
+.mc-hodnoty{grid-column:1 / -1; display:flex; flex-direction:column;
+  border:1px solid var(--line-ui); border-radius:var(--r-sm); background:var(--ink-soft); overflow:hidden;}
+.mc-hodnoty-nadpis{grid-column:1 / -1;}
+.mc-shrnuti{display:flex; flex-direction:column;}
+.mc-hodnoty .mcs-btn{border:0; border-radius:0; background:none; min-height:48px; padding:0 12px;}
+.mc-hodnoty .mcs-btn:hover{background:var(--ink);}
+.mc-hodnoty .mc-hodnota-radek:hover{background:var(--ink);}
+.mc-hodnoty > * + *, .mc-shrnuti > * + *{border-top:1px solid var(--line);}
+.mc-hodnoty .mc-shrnuti + .mc-hodnota-radek{border-top:1px solid var(--line);}
 /* Vypadat jako tlačítko, ne jako vypsaný údaj. Byla to bílá krabička
    s tenkou linkou a textem „CENA / libovolná" — od popisku k nerozeznání,
    takže lidem nedošlo, že se dá otevřít. Teď má šipku, silnější okraj,
@@ -1728,14 +1817,16 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   border:1.5px solid var(--line-ui); border-radius:var(--r-sm); background:var(--ink-soft);
   box-shadow:var(--e1);
   transition:border-color var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease), background var(--cas-rychly) var(--ease), transform var(--cas-rychly) var(--ease);}
-.mcs-txt{display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0;}
+/* Popisek a hodnota vedle sebe, ne pod sebou: řádek je pak nižší
+   a hodnoty všech tří řádků stojí v jednom sloupci vpravo. */
+.mcs-txt{display:flex; flex-direction:row; align-items:baseline; justify-content:space-between; gap:12px; flex:1 1 auto; min-width:0;}
 .mcs-sip{width:17px; height:17px; flex:none; fill:none; stroke:var(--copper);
   stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round;}
 .mcs-btn:hover{border-color:var(--copper);}
 .mcs-btn:active{transform:scale(.99); background:var(--ink-soft2);}
-.mcs-btn.mcs-aktivni{border-color:var(--plocha-znacka); box-shadow:inset 0 0 0 1px var(--plocha-znacka);}
-.mcs-k{font-size:12px; font-weight:700; letter-spacing:var(--odznak-proklad); text-transform:uppercase; color:var(--muted);}
-.mcs-v{font-size:14px; font-weight:600; color:var(--text-ondark);}
+.mcs-btn.mcs-aktivni{box-shadow:none;}
+.mcs-k{flex:none; font-size:14px; font-weight:600; letter-spacing:0; text-transform:none; color:var(--text-ondark);}
+.mcs-v{min-width:0; text-align:right; font-size:14px; font-weight:600; color:var(--muted);}
 .mcs-btn.mcs-aktivni .mcs-v{color:var(--plocha-znacka);}
 
 /* Obrazovka s rozsahem — stejný tvar jako výběr místa na mapě (.vm-ov),
@@ -1814,7 +1905,9 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   .map-controls > .mcf-akce::before{display:none;}
 }
 
-.mc-toggles{grid-column:1 / -1; display:flex; gap:8px; flex-wrap:wrap;}
+/* Příležitosti mají dlouhé popisky („Pod obvyklou cenou"), takže
+   stejně jako druh stojí pod sebou — tatáž mřížka, jeden sloupec. */
+.mc-toggles{grid-column:1 / -1; display:grid; grid-template-columns:minmax(0,1fr); gap:6px; margin-top:8px;}
 .mc-toggles .map-select{flex:1 1 0; min-width:0;}
 /* Tři přepínače vedle sebe se na telefonu lámaly na tři řádky textu
    („Pod / obvyklou / cenou"). Radši každý přes celou šířku a na jeden řádek. */
@@ -1825,10 +1918,12 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Okraj musí být vidět. S linkou na 18 % splývalo bílé políčko s bílým
    panelem a vypadalo to, že tam žádné pole není. */
 .map-select{width:100%; background:var(--ink-soft); border:1px solid var(--line-ui); color:var(--text-ondark); border-radius:var(--r-sm); padding:10px 28px 10px 12px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; appearance:none; -webkit-appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236E9BFF' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 11px center;}
+  /* Šipka byla modrá (#6E9BFF) — zadrátovaná v adrese obrázku, takže
+   si jí nevšimlo ani hledání barev. Je zelená jako všechno ostatní. */
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%230F5C3B' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 11px center;}
 /* Zaostření klávesnicí vypadalo na seznamech jinak než na políčku hledání —
    jen změna okraje, žádný prstenec. Teď je to stejné všude. */
-.map-select:focus-visible{border-color:var(--copper-bright); outline:none; box-shadow:0 0 0 3px rgba(110,155,255,0.22);}
+.map-select:focus-visible{border-color:var(--copper-bright); outline:none; box-shadow:0 0 0 3px rgba(126,196,157,0.22);}
 .map-select option{background:var(--ink); color:var(--text-ondark);}
 /* Vlastní rozbalovací seznam (místo ošklivého systémového na iPhonu) */
 .cdd{position:relative; width:100%;}
@@ -1847,7 +1942,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .cdd-opt:active{background:var(--ink-soft2, var(--ink-soft));}
 .cdd-opt.sel{color:var(--copper-bright);}
 .cdd-opt.sel::after{content:""; margin-left:auto; width:14px; height:14px; flex:none;
-  background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath d='M4 12l5 5L20 6' fill='none' stroke='%236E9BFF' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");}
+  background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath d='M4 12l5 5L20 6' fill='none' stroke='%230F5C3B' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");}
 /* Vlastní cena / výměra — pole pro vlastní číslo + rychlé volby */
 .fav-toggle{background-image:none; padding:8px 12px; display:inline-flex; align-items:center; justify-content:center; gap:6px; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
 .fav-toggle svg{width:13px; height:13px; stroke-width:2.77; fill:none; stroke:currentColor;  stroke-linejoin:round;}
@@ -2315,8 +2410,8 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .leaflet-control-zoom a:first-child{border-bottom:1px solid rgba(31,81,56,0.16);}
 .leaflet-control-zoom a:last-child{border-top:none;}
 .leaflet-control-zoom a:hover{background:#fff; color:var(--copper); }
-.leaflet-control-zoom a:active{background:#EEF2FF;}
-.leaflet-control-zoom a.leaflet-disabled{opacity:0.4; color:#9AA3B4; background:var(--plocha-plovouci-tlum);}
+.leaflet-control-zoom a:active{background:var(--ink);}
+.leaflet-control-zoom a.leaflet-disabled{opacity:0.4; color:var(--text-ondark-mute); background:var(--plocha-plovouci-tlum);}
 @media (min-width:961px){ .leaflet-control-zoom a{width:40px; height:40px; line-height:38px; font-size:20px;} }
 
 /* Výběr kraje: dokud není vybrán, tečky (pozemky) nejsou klikací → klik vždy trefí kraj.
@@ -2366,8 +2461,17 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 
 /* Status grid */
 .status-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px;}
-.status-card{background:var(--ink-soft2); border:1px solid var(--line); border-radius:var(--r-md); padding:24px; transition:border-color var(--cas-zakladni) var(--ease), transform var(--cas-zakladni) var(--ease);}
-.status-card:hover{border-color:rgba(228,240,231,0.3); transform:translateY(-2px);}
+/* KARTA STAVU NENÍ OVLÁDÁNÍ. Je to vysvětlení, co který zdroj nabídek
+   znamená — nevede nikam, nemá obsluhu klepnutí a adresa pro „jen
+   dražby" ani neexistuje (index.html umí p, kraj, lid, q, druh, maxc,
+   mina, obec, okres). Přitom se pod myší zvedala o dva pixely, měnila
+   okraj a dostávala stín — tedy přesně to, co na téhle stránce dělají
+   karty, na které se klepe (.deal-card, .opp-item, .okr-item). Kdo se
+   to u nich naučí, zkusí klepnout i sem. Hover tedy nedělá nic.
+   (Barva okraje tu navíc byla rgba(228,240,231,0.3), světlý odstín pro
+   tmavý režim, který už na webu není — nad světlou plochou byla stejně
+   neviditelná.) Našel to scripts/test-zdvih.mjs. */
+.status-card{background:var(--ink-soft2); border:1px solid var(--line); border-radius:var(--r-md); padding:24px;}
 .status-top{display:flex; align-items:center; gap:8px; font-family:var(--font-ui); font-size:16px; font-weight:500; margin-bottom:12px;}
 .status-top .dot{width:11px; height:11px; border-radius:50%;}
 .status-n{margin-left:auto; font-family:var(--font-ui); font-size:12px; font-weight:700; letter-spacing:0.01em; color:var(--copper-bright); background:rgba(44,113,80,0.12); border:1px solid rgba(44,113,80,0.4); border-radius:var(--r-sm); padding:2px 8px; white-space:nowrap;}
@@ -2392,7 +2496,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .rct-form{display:flex; flex-direction:column; gap:10px;}
 .rct-form input, .rct-form textarea{background:var(--ink); border:1px solid var(--line); border-radius:var(--r-xs); padding:12px 14px; font-size:16px; color:var(--text-ondark); font-family:inherit; width:100%;}
 .rct-form textarea{resize:vertical; min-height:70px;}
-.rct-form input::placeholder, .rct-form textarea::placeholder{color:#74857A;}
+.rct-form input::placeholder, .rct-form textarea::placeholder{color:var(--text-zastupny);}
 .rct-form input:focus-visible, .rct-form textarea:focus-visible{border-color:var(--copper-bright); outline:none;}
 .rct-form .btn-primary{padding:12px; font-size:16px; text-align:center;}
 @media (max-width:820px){ .realtor-contact{grid-template-columns:1fr; padding:24px;} }
@@ -2505,7 +2609,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 /* Kicker linka nad nadpisem sekce (grády) */
 .section-head h2{position:relative;}/* Jemné vypilování karet */
 
-.status-card:hover, .gl-item:hover{box-shadow:var(--shadow);}
+.gl-item:hover{box-shadow:var(--shadow);}
 .gl-item{transition:border-color var(--cas-zakladni) var(--ease), transform var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
 .gl-item:hover{border-color:var(--line-strong); transform:translateY(-2px);}
 .price-card:not(.featured):hover{border-color:var(--line-strong); transform:translateY(-4px); box-shadow:var(--shadow);}
@@ -2624,7 +2728,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .loc-btn:active{transform:scale(.975);}
 .loc-btn.primary{box-shadow:var(--e2);}
 .loc-input{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:16px; background:var(--ink-soft2); color:var(--text-ondark); outline:none; transition:border-color var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease); -webkit-appearance:none; appearance:none;}
-.loc-input::placeholder{color:var(--text-ondark-mute);}
+.loc-input::placeholder{color:var(--text-zastupny);}
 .loc-input:focus{border-color:var(--copper-bright); background:var(--ink-soft); box-shadow:0 0 0 4px rgba(31,81,56,0.16);}
 .loc-err{color:var(--c-exekuce-ink); font-size:13px; margin:8px 2px 0; text-align:left;}
 @media (prefers-reduced-motion: reduce){.loc-ov,.loc-card{animation-duration:.01ms;}}
@@ -2914,7 +3018,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   font-size:16px; color:var(--text-ondark); font-family:inherit; width:100%;
 }
 .add-form textarea{resize:vertical; min-height:96px;}
-.add-form input::placeholder, .add-form textarea::placeholder{color:#74857A;}
+.add-form input::placeholder, .add-form textarea::placeholder{color:var(--text-zastupny);}
 .add-form input:focus-visible, .add-form select:focus-visible, .add-form textarea:focus-visible{border-color:var(--copper-bright); outline:none;}
 .add-row{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
 .add-check{display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--text-ondark-mute); line-height:1.45;}
@@ -2955,7 +3059,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .auth-inp{position:relative; display:flex; align-items:center;}
 .auth-inp .auth-ico{position:absolute; left:14px; width:18px; height:18px; stroke-width:2; color:var(--text-ondark-mute); pointer-events:none; transition:color var(--cas-zakladni) var(--ease); z-index:1;}
 .auth-inp input{width:100%; background:var(--ink); border:1px solid var(--line-ui); border-radius:var(--r-md); padding:14px 40px 14px 40px; font-size:16px; color:var(--text-ondark); font-family:inherit; transition:border-color var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
-.auth-inp input::placeholder{color:#74857A;}
+.auth-inp input::placeholder{color:var(--text-zastupny);}
 .auth-inp input:focus{outline:none; border-color:var(--copper-bright); background:var(--ink-soft); box-shadow:0 0 0 3px rgba(126,196,157,0.16);}
 .auth-inp:focus-within .auth-ico{color:var(--copper-bright);}
 .auth-eye{position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-ondark-mute); padding:8px; display:flex; border-radius:var(--r-sm); line-height:0;}
@@ -3400,11 +3504,18 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   text-transform:uppercase; letter-spacing:var(--popisek-proklad); color:var(--copper-bright,#8CC3A4);}
 
 /* ---------- Drobečková navigace na regionálních/rádcových stránkách ---------- */
-.crumbs{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; max-width:var(--maxw,1120px); margin:0 auto; padding:14px 24px 0; font-size:13px; color:var(--muted,#9db0a4);}
-.crumbs a{color:var(--muted,#9db0a4); text-decoration:none;}
-.crumbs a:hover{color:var(--copper-bright,#8CC3A4); text-decoration:underline;}
-.crumbs span[aria-current="page"]{color:var(--text-ondark, #12241A); font-weight:600;}
-.crumbs .crumb-sep{color:var(--line-strong,#3d4a42);}
+/* ŠÍŘKA I ODSAZENÍ JAKO .wrap. Stálo tu max-width:var(--maxw,1120px),
+   jenže --maxw nebyl nikde definovaný, takže platilo 1120 px — a obsah
+   pod cestou stojí v .wrap, který má 1200 px a odsazení 32 px. Text
+   cesty tedy začínal o 32 px dál vpravo než nadpis pod ním. Zbylé
+   náhradní hodnoty (#9db0a4, #8CC3A4, #3d4a42) jsou světlé barvy pro
+   tmavý režim, který už na webu není; všechny čtyři tokeny definované
+   jsou, takže se náhrady nikdy nepoužily. */
+.crumbs{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; max-width:var(--m-wrap); margin:0 auto; padding:14px 32px 0; font-size:13px; color:var(--muted);}
+.crumbs a{color:var(--muted); text-decoration:none;}
+.crumbs a:hover{color:var(--copper-bright); text-decoration:underline;}
+.crumbs span[aria-current="page"]{color:var(--text-ondark); font-weight:600;}
+.crumbs .crumb-sep{color:var(--line-strong);}
 
 /* ---------- Hero číselný proužek (sociální důkaz) ---------- */
 .hero-stats{align-items:baseline;}
@@ -3926,7 +4037,6 @@ body::after{
     transparent 240px);
   border-radius:0 var(--r-md) var(--r-md) 0;
   border-left:3px solid var(--c-druh, var(--accent-warm)); padding:12px 16px 16px; margin-bottom:20px;}
-.status-card:hover{transform:none; border-left-color:var(--c-druh, var(--accent-warm));}
 /* Lichý poslední (dnes pátý druh) by v dvousloupcové mřížce zůstal sám
    v řádku s prázdnem vedle sebe. Roztáhne se tedy přes oba sloupce. */
 .status-grid > .status-card:nth-child(odd):last-child{grid-column:1 / -1;}

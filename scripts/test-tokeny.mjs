@@ -39,8 +39,11 @@ const STYL = STYL_SUROVY.replace(/\/\*[\s\S]*?\*\//g, ' ');
 
 /* Definice: `--jmeno:` kdekoli (v :root, v tmavém režimu, v pravidle). */
 const urcene = new Set([...STYL.matchAll(/(--[A-Za-z0-9_-]+)\s*:/g)].map((m) => m[1]));
-/* Použití BEZ záložní hodnoty. S `var(--x, 10px)` se nic nestane, i když
-   token chybí, takže se nekontroluje. */
+/* Použití BEZ záložní hodnoty — tyhle musí být určené, jinak celá
+   deklarace propadne. Použití SE záložní hodnotou se kontroluje zvlášť,
+   níž: psal jsem tu původně, že „s var(--x, 10px) se nic nestane", a to
+   byla mýlka. Stane se to, že se tiše kreslí ta záložní hodnota — a tak
+   se na webu kreslila barva s poměrem 1,92 : 1. */
 const pouzite = [...STYL.matchAll(/var\(\s*(--[A-Za-z0-9_-]+)\s*\)/g)].map((m) => m[1]);
 
 /* PŘEDPOKLADY. Kdyby se rozbila jedna z těch dvou regulárek, seznam by
@@ -146,6 +149,131 @@ pravda('každý token, na který se styl odvolává, je určený', chybi.length 
   }
   pravda(`dvojice bílá/plocha se opravdu počítaly (${overeno})`, overeno >= 5, 'spočítáno jen ' + overeno);
   pravda('bílý text na plné ploše je všude nad 4,5 : 1', slabe.length === 0, slabe.join('\n      '));
+
+  /* --- Záložní hodnota je tichá výchozí hodnota -----------------------
+   *
+   * `var(--c-warn, #E8B341)` nevypadá jako rozhodnutí o barvě, ale je
+   * jím: když --c-warn nikde není, kreslí se #E8B341. A ten měl na
+   * bílé 1,92 : 1 — nečitelný text. Nikdo si toho nevšiml, protože
+   * `.add-warn b` se objeví jen u podezřelého údaje ve formuláři, kam
+   * měření hotové stránky nedosáhne. Stejně tak `var(--maxw, 1120px)`
+   * dělalo drobečkovou cestu o 80 px širší než zbytek stránky.
+   *
+   * Pravidlo: na nedefinovaný token se smí odvolávat jen to, co je tady
+   * vypsané s důvodem. A je-li tou záložní hodnotou barva, musí projít
+   * stejnou mezí jako každý jiný text. */
+  const NAHRADY = {
+    '--vyska-hlavicky': 'pojmenovaná konstanta výšky hlavičky; schválně ji nikdo nenastavuje a body má stejné odsazení (viz vysvětlivka u body{padding-top})',
+  };
+  const PLOCHY = [['bílá karta', [255, 255, 255]],
+    ['plocha stránky', naRgb(hodnoty.get('--bg') || '#ffffff')],
+    ['zapuštěná plocha', naRgb(hodnoty.get('--ink') || '#ffffff')]];
+
+  const sNahradou = [...STYL.matchAll(/var\(\s*(--[A-Za-z0-9_-]+)\s*,\s*([^(),]+?)\s*\)/g)]
+    .map((m) => [m[1], m[2]]);
+  /* Předpoklad: kdyby se regulárka rozbila, seznam by byl prázdný
+     a „nic se tiše nekreslí" by byla pravda o ničem. */
+  pravda(`záložní hodnoty se vůbec našly (${sNahradou.length})`, sNahradou.length >= 10,
+    'nalezeno jen ' + sNahradou.length);
+
+  const tiche = new Map();
+  for (const [t, nahrada] of sNahradou) {
+    if (urcene.has(t) || (t in ZJS)) continue;
+    if (!tiche.has(t)) tiche.set(t, new Set());
+    tiche.get(t).add(nahrada);
+  }
+  const nevypsane = [...tiche.keys()].filter((t) => !(t in NAHRADY));
+  pravda('každá tichá výchozí hodnota je vypsaná s důvodem', nevypsane.length === 0,
+    nevypsane.map((t) => `${t} → kreslí se ${[...tiche.get(t)].join(' / ')}`).join('\n      ')
+    + '\n      (buď ten token určete, nebo ho sem dopište a napište proč)');
+
+  const nective = [];
+  for (const [t, hodnotyNahrad] of tiche) {
+    for (const nahrada of hodnotyNahrad) {
+      const rgb = naRgb(nahrada);
+      if (!rgb) continue;                 // délka, přechod — barva to není
+      for (const [kde, plocha] of PLOCHY) {
+        if (!plocha) continue;
+        const pp = pomer(rgb, plocha);
+        if (pp < 4.5) nective.push(`${t} → ${nahrada} má na ${kde} jen ${pp.toFixed(2)} : 1`);
+      }
+    }
+  }
+  pravda('a žádná z nich není nečitelná', nective.length === 0,
+    [...new Set(nective)].join('\n      '));
+
+  /* --- Web je zelený -------------------------------------------------
+   *
+   * Zadání znělo, že web má být všude stejný. Modrá se do něj přesto
+   * vracela po jednom pravidle: zástupný text v políčku hledání
+   * (#8A93A3, odstín 218°), záře při zaostření u políčka i rozbalovátka
+   * mapy (rgba(110,155,255), 221°), záblesk tlačítka zvětšení (#EEF2FF)
+   * a nedostupné tlačítko (#9AA3B4) — a na profilu tečka „přihlášeno",
+   * která si vzala modrou barvu PŮVODU INZERÁTU.
+   *
+   * Modrá a fialová na webu smí být, ale jen jako barva kategorie:
+   * --c-sale (inzerát od realitky) a --c-majitel (od majitele). Poznají
+   * se podle toho, že je jim přiřazen token --c-*. Modrá napsaná přímo
+   * v pravidle je nález.
+   *
+   * MĚŘÍ SE ODSTÍN, NE JMÉNO. Hledat „modrá" podle názvu by nefungovalo:
+   * #8A93A3 si o sobě nikde neřekne, že je modrá. */
+  {
+    const naHsl = ([r, g, b]) => {
+      const mx = Math.max(r, g, b) / 255, mn = Math.min(r, g, b) / 255, d = mx - mn;
+      let h = 0;
+      if (d) {
+        if (mx === r / 255) h = ((g - b) / 255 / d) % 6;
+        else if (mx === g / 255) h = (b - r) / 255 / d + 2;
+        else h = (r - g) / 255 / d + 4;
+      }
+      const l = (mx + mn) / 2;
+      return { h: ((h * 60) + 360) % 360, s: d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1)), l };
+    };
+    const jeModra = (rgb) => { const x = naHsl(rgb); return x.h >= 195 && x.h <= 285 && x.s > 0.10; };
+
+    /* Hodnoty přiřazené tokenům --c-* jsou barvy kategorií a modré být
+       smějí. Ostatní tokeny ne — token jménem --line modrý být nemá. */
+    const kategorie = new Set();
+    for (const m of STYL.matchAll(/(--c-[\w-]+)\s*:\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]*\))/g)) {
+      kategorie.add(m[2].replace(/\s+/g, '').toLowerCase());
+    }
+
+    let barev = 0, kategoriiModrych = 0;
+    const modre = [];
+    for (const [jmeno, text] of zdrojeStylu) {
+      const bez = text.replace(/\/\*[\s\S]*?\*\//g, ' ');
+      for (const m of bez.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+        const sel = m[1].trim().replace(/\s+/g, ' ').slice(0, 48), dek = m[2];
+        /* I BARVY SCHOVANÉ V ADRESE OBRÁZKU. Šipka rozbalovátka byla
+           modrá (#6E9BFF) a tahle kontrola ji nenašla, protože uvnitř
+           data:image/svg+xml se mřížka píše jako %23. Hledání bez toho
+           by přehlédlo každou barvu nakreslenou do vloženého SVG. */
+        for (const b of dek.matchAll(/#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b|%23[0-9a-fA-F]{6}\b|%23[0-9a-fA-F]{3}\b|rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+[^)]*\)/g)) {
+          const zapis = b[0].replace(/^%23/, '#');
+          let rgb = naRgb(zapis);
+          if (!rgb) {
+            const c = zapis.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+            rgb = c ? [+c[1], +c[2], +c[3]] : null;
+          }
+          if (!rgb) continue;
+          barev++;
+          if (!jeModra(rgb)) continue;
+          if (kategorie.has(zapis.replace(/\s+/g, '').toLowerCase())) { kategoriiModrych++; continue; }
+          modre.push(`${jmeno}: ${sel} — ${zapis} (odstín ${Math.round(naHsl(rgb).h)}°)`);
+        }
+      }
+    }
+    /* Dva předpoklady, bez kterých by „nic modrého tu není" nic
+       neznamenalo: barvy se musí najít, a odstín se musí počítat
+       správně — což dokazuje právě to, že barvy kategorií jako modré
+       rozpozná. */
+    pravda(`barvy se v pravidlech opravdu našly (${barev})`, barev >= 300, 'nalezeno jen ' + barev);
+    pravda(`a počítání odstínu funguje (${kategoriiModrych} modrých barev kategorií)`,
+      kategoriiModrych >= 2, 'modrou kategorii nerozpoznalo — výpočet odstínu je rozbitý');
+    pravda('mimo barvy kategorií není na webu nic modrého', modre.length === 0,
+      [...new Set(modre)].slice(0, 10).join('\n      '));
+  }
 }
 
 /* A obráceně: token určený a nikde nepoužitý je mrtvý řádek v paletě.

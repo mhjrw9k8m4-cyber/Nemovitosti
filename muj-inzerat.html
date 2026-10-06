@@ -39,7 +39,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=25055897">
+  <link rel="stylesheet" href="css/styles.min.css?v=81c18e30">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:var(--r-lg); padding:24px 20px 20px;
@@ -54,7 +54,11 @@
       box-shadow:0 0 0 4px rgba(31,81,56,0.16), var(--glow);}
     .pf-id{min-width:0; flex:1;}
     .pf-id .pf-hello{display:flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:12px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:var(--popisek-proklad); font-weight:600;}
-    .pf-dot{width:7px; height:7px; border-radius:50%; background:var(--c-sale); box-shadow:0 0 0 3px rgba(67,97,184,0.22);}
+    /* Tečka u „Přihlášeno jako" svítila --c-sale, což je modrá barva
+       PŮVODU INZERÁTU (od realitky). S přihlášením nemá nic společného
+       a na zeleném webu to byla jediná modrá na stránce. Zelená --c-ok
+       znamená „v pořádku, běží" — to je přesně, co ta tečka říká. */
+    .pf-dot{width:7px; height:7px; border-radius:50%; background:var(--c-ok); box-shadow:0 0 0 3px rgba(31,163,99,0.22);}
     .pf-id .pf-mail{font-size:17px; font-weight:700; color:var(--text-ondark); overflow-wrap:anywhere; margin-top:2px; line-height:1.3;}
     .pf-logout{flex:none; align-self:flex-start; display:inline-flex; align-items:center; gap:6px; background:var(--ink); border:1px solid var(--line-strong);
       color:var(--text-ondark-mute); border-radius:var(--r-sm); padding:8px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:color var(--cas-zakladni), border-color var(--cas-zakladni);}
@@ -63,7 +67,17 @@
     .pf-logout span{display:none;}
     .pf-stats{position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:20px;}
     .pf-stat{background:var(--ink); border:1px solid var(--line); border-radius:var(--r-md); padding:14px 12px 12px; min-width:0; text-align:center; transition:border-color var(--cas-zakladni), transform var(--cas-zakladni);}
-    .pf-stat:hover{border-color:var(--line-strong); transform:translateY(-2px);}
+    /* ZDVIH JEN TAM, KDE SE NĚCO STANE. Pravidlo platilo pro všechny
+       tři dlaždice, ale obsluhu klepnutí měla jen „Uložené pozemky".
+       Dvě dlaždice se tedy pod myší zvedly a slíbily klepnutí, které
+       nic neudělá. Třídu pf-stat--jde přidává skript těm, kterým
+       zároveň dává role="button" a tabindex — kdo se hýbe, musí být
+       ovládání i pro klávesnici a čtečku. */
+    .pf-stat--jde{cursor:pointer;}
+    .pf-stat--jde:hover{border-color:var(--line-strong); transform:translateY(-2px);}
+    /* A ať to jde poznat i bez myši (na telefonu žádný :hover není). */
+    .pf-stat--jde span{text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:3px;}
+    .pf-stat--jde:hover span{text-decoration-color:var(--copper-bright);}
     .pf-stat-ico{width:20px; height:20px; color:var(--text-ondark-mute); margin-bottom:6px;}
     .pf-stat b{display:block; font-size:28px; line-height:1; color:var(--copper-bright); font-variant-numeric:tabular-nums;}
     .pf-stat span{display:block; font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:var(--popisek-proklad); line-height:1.25; margin-top:4px;}
@@ -183,8 +197,13 @@
     <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
     <div class="wrap add-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Můj profil</div>
-      <h1>Váš profil.</h1>
-      <p class="sub">Vaše inzeráty, jejich zhlédnutí i uložené pozemky — všechno na jednom místě. Přihlaste se stejným účtem, kterým jste inzerát přidali.</p>
+      <!-- Tři ostatní stránky účtu zvou do práce („Co je nového.",
+           „Pište přímo v aplikaci.", „Hlídejte si nové pozemky.").
+           Tahle se jen představila cedulkou „Váš profil." — a slovo
+           profil stálo i v nadpisku nad ní a v záložce pod ní, takže
+           totéž třikrát. Nadpis teď říká, co tu člověk má. -->
+      <h1>Všechno vaše <em>na jednom místě.</em></h1>
+      <p class="sub">Inzeráty, jejich zhlédnutí i pozemky, které jste si uložili. Přihlaste se stejným účtem, kterým jste inzerát přidali.</p>
     </div>
   </section>
 
@@ -314,7 +333,7 @@
           </div>
         </div>
 
-        <div class="rules-sect" style="margin:28px 2px 0;"><h2>Moje inzeráty</h2></div>
+        <div class="rules-sect" id="mi-moje-wrap" style="margin:28px 2px 0;"><h2>Moje inzeráty</h2></div>
         <p class="add-msg" id="mi-status" role="status" aria-live="polite">Načítám…</p>
         <div id="mi-list"></div>
         <div id="mi-empty" hidden>
@@ -656,15 +675,25 @@
        nevěděla. Role a tabindex z ní udělají tlačítko i pro ně; mezerník
        a Enter musí dělat totéž co klepnutí, jinak je to tlačítko jen
        naoko. */
-    var favTileEl = q('pf-fav'); if (favTileEl && favTileEl.closest){ var st = favTileEl.closest('.pf-stat'); if(st){
-      var skoc = function(){ var w=q('mi-saved-wrap'); if(w) w.scrollIntoView({behavior:'smooth', block:'start'}); };
-      st.style.cursor='pointer';
+    /* Profil je dlouhý (přes dva tisíce pixelů), takže dlaždice slouží
+       i jako zkratka k oddílu, který počítá. Platí to pro „Moje
+       inzeráty" a „Uložené pozemky"; u „Zhlédnutí celkem" není kam jít,
+       a tak ta dlaždice zůstává jen číslem — a po úpravě stylu se už
+       pod myší ani netváří jinak. */
+    var naviguj = function(idCisla, idCile, popis){
+      var cislo = q(idCisla); if (!cislo || !cislo.closest) return;
+      var st = cislo.closest('.pf-stat'); var cil = q(idCile);
+      if (!st || !cil) return;
+      var skoc = function(){ cil.scrollIntoView({behavior:'smooth', block:'start'}); };
+      st.classList.add('pf-stat--jde');
       st.setAttribute('role','button');
       st.setAttribute('tabindex','0');
-      st.setAttribute('aria-label','Přejít na uložené pozemky');
+      st.setAttribute('aria-label', popis);
       st.addEventListener('click', skoc);
       st.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); skoc(); } });
-    } }
+    };
+    naviguj('pf-count', 'mi-moje-wrap', 'Přejít na moje inzeráty');
+    naviguj('pf-fav', 'mi-saved-wrap', 'Přejít na uložené pozemky');
     // „Načíst znovu" v prázdném stavu (kdyby se inzeráty nenačetly napoprvé)
     var reloadBtn = q('mi-reload'); if (reloadBtn) reloadBtn.addEventListener('click', function(){ emptyEl.hidden = true; load(); });
 

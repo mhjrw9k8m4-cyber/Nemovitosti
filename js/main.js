@@ -1283,7 +1283,12 @@
       var n = pocty[g2] || 0;
       html += '<button type="button" class="mcv-btn' + (on ? ' on' : '') + (n ? '' : ' mcv-nula') + '"'
         + ' data-druh="' + esc(g2) + '" aria-pressed="' + (on ? 'true' : 'false') + '">'
-        + esc(g2) + '<span class="mcv-n">' + fmt(n) + '</span></button>';
+        /* Zaškrtávátko má každá volba v panelu, ne jen příležitosti —
+           je to tatáž otázka („je tohle zapnuté?") a má na ni být tatáž
+           odpověď. Bez něj se zapnutý stav poznal jen podle barvy. */
+        + '<span class="mcp-v" aria-hidden="true"></span>'
+        + '<span class="mcp-t">' + esc(g2) + '</span>'
+        + '<span class="mcv-n">' + fmt(n) + '</span></button>';
     }
     druhyEl.innerHTML = html;
   }
@@ -5869,7 +5874,8 @@
       b.type = 'button';
       b.className = 'mcv-btn';
       b.setAttribute('aria-pressed', 'false');
-      b.innerHTML = '<span>' + d.nazev + '</span><span class="mcv-n"></span>';
+      b.innerHTML = '<span class="mcp-v" aria-hidden="true"></span>'
+        + '<span class="mcp-t">' + d.nazev + '</span><span class="mcv-n"></span>';
       b.addEventListener('click', function () {
         if (d.druh === 'celek') jenCelek = !jenCelek;
         else {

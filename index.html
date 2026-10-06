@@ -130,7 +130,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=25055897">
+  <link rel="stylesheet" href="css/styles.min.css?v=81c18e30">
 </head>
 <body>
 
@@ -329,8 +329,14 @@
                    i louka. Jako hodnota v odkazu fungují dál. -->
               <div class="mc-field mc-druhy">
                 <span class="mc-cap">Druh pozemku</span>
-                <div class="mcv-rada" id="mc-druhy" role="group" aria-label="Druh pozemku"></div>
+                <div class="mcv-rada mcv-sloupec" id="mc-druhy" role="group" aria-label="Druh pozemku"></div>
               </div>
+              <!-- JEDNA SKUPINA HODNOT. Cena, výměra i cena za metr se
+                   rozbalují do vlastní obrazovky, takže mají být tři stejné
+                   řádky pod sebou, ne dvě kartičky a pod nimi rozbalovátko.
+                   Souhrnná tlačítka sem js/main.js vloží před první blok. -->
+              <span class="mc-cap mc-hodnoty-nadpis">Cena a výměra</span>
+              <div class="mc-hodnoty">
               <div class="mc-field mc-rozsah"><span class="mc-cap">Cena (Kč)</span>
                 <div class="mc-dvoj">
                   <input type="number" class="map-num" id="map-cena-od" inputmode="numeric" min="0" step="1000" placeholder="od" aria-label="Cena od (Kč)">
@@ -341,9 +347,9 @@
               <!-- CENA ZA METR PATŘÍ K CENĚ. Stála až za výměrou a za
                    sítěmi, takže kdo nastavoval cenu, musel ji hledat
                    o dva bloky níž — a přitom je to totéž kritérium. -->
-              <label class="mc-field"><span class="mc-cap">Cena za m² do</span>
+              <label class="mc-field mc-hodnota-radek"><span class="mc-cap">Cena za m²</span>
                 <select class="map-select" id="map-perm2" aria-label="Maximální cena za metr čtvereční">
-                  <option value="">Libovolná</option>
+                  <option value="">libovolná</option>
                   <option value="20">do 20 Kč/m²</option>
                   <option value="50">do 50 Kč/m²</option>
                   <option value="100">do 100 Kč/m²</option>
@@ -360,6 +366,7 @@
                   <input type="number" class="map-num" id="map-area-do" inputmode="numeric" min="0" step="100" placeholder="do" aria-label="Výměra do (m²)">
                 </div>
               </div>
+              </div><!-- /mc-hodnoty -->
               <!-- Co je u pozemku zavedené a jestli nejde jen o podíl. Vyplní
                    js/main.js podle toho, co se povedlo vyčíst z popisů
                    (js/vybaveni.js); co v datech není, se ani nenabízí. -->
@@ -751,7 +758,7 @@
 <script src="js/min/klic.js?v=17fa93b6"></script>
 <script src="js/min/videno.js?v=a269d74b"></script>
 <script src="js/min/mapove-vrstvy.js?v=93a96d67" defer></script>
-<script src="js/min/main.js?v=fa25f506" defer></script>
+<script src="js/min/main.js?v=89461850" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,
