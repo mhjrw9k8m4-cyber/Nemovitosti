@@ -44,6 +44,11 @@ const STRANKY = [
   'pridat.html', 'hlidani.html', 'upozorneni.html', 'zpravy.html',
   'muj-inzerat.html', 'kontakt.html', 'cena-pozemku.html',
   'hypoteka-na-pozemek.html', 'podminky.html', 'pravidla-inzerce.html',
+  /* Nový druh stránky: velký formulář, který při každém stisku klávesy
+     překresluje výstup. Je to jediné místo na webu, kde se text skládá
+     průběžně z toho, co člověk píše — tedy i jediné, kde se chyba
+     skriptu projeví až po vyplnění, ne hned při načtení. */
+  'kupni-smlouva-pozemek.html',
   'pozemky-okres-tabor.html', 'pozemky-stredocesky-kraj.html',
   'pozemky-podle-okresu.html', 'drazby-pozemku.html',
   'drazby-pozemku-nabidky.html', 'predloha.html', '404.html',

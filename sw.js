@@ -1,8 +1,14 @@
 /* OFFLINE REŽIM — service worker
  * ====================================================================
  * Co to řeší: web se dá nainstalovat jako aplikace (manifest.webmanifest
- * je na 2 125 stránkách), ale bez service workeru to byla aplikace, která
- * bez signálu neukáže nic. Pozemky se přitom prohlížejí venku, na place,
+ * nese prakticky každá stránka), ale bez service workeru to byla
+ * aplikace, která bez signálu neukáže nic.
+ *
+ * Číslo tu schválně nestojí. Stálo — „na 2 125 stránkách" — a za pár
+ * týdnů jich bylo 2 158, protože stránek pozemku přibývá a ubývá
+ * s nabídkami. Počet, který se mění sám od sebe, se do komentáře psát
+ * nemá: nikdo ho neopraví a začne lhát. Spočítá ho scripts/test-staticka.mjs
+ * při každém běhu a vypíše ho. Pozemky se přitom prohlížejí venku, na place,
  * kde signál bývá nejhorší.
  *
  * ---------------------------------------------------------------------

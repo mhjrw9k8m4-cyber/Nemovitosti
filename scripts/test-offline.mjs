@@ -3,8 +3,11 @@
    Spuštění: node scripts/test-offline.mjs
      (potřebuje playwright-core; v sandboxu navíc PW_CHROMIUM=…/chrome)
 
-   Web se dá nainstalovat jako aplikace (manifest.webmanifest je na 2 125
-   stránkách) a pozemky se prohlížejí venku, kde signál bývá nejhorší.
+   Web se dá nainstalovat jako aplikace (manifest.webmanifest nese
+   prakticky každá stránka) a pozemky se prohlížejí venku, kde signál
+   bývá nejhorší. Přesný počet se tu schválně nedrží: mění se s tím,
+   kolik je nabídek, takže by zastaral a začal lhát — spočítá ho
+   scripts/test-staticka.mjs při každém běhu.
    Bez service workeru to byla aplikace, která bez signálu neukáže nic.
 
    JAK SE TO MĚŘÍ, ABY TO NEMĚŘILO NĚCO JINÉHO. Kdyby se jen zkusilo
