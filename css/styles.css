@@ -285,6 +285,28 @@
      nesmí prosvítat obsah — musí to být plná barva, ne průsvitná. */
   --plocha-plovouci-plna:#F5FAF7;
   --plocha-plovouci-tlum:rgba(255,255,255,0.85);
+  /* PÁSY: úvodní plocha stránky a patička.
+     Byl to druhý barevný systém vedle světlého webu — tmavě zelený pás
+     nahoře, světlý obsah uprostřed, tmavě zelený pás dole. Na mobilu se
+     přes ten tmavý pás posouvá světlá průsvitná hlavička, a vypadá to
+     jako dva různé weby slepené k sobě.
+     Teď pás vede jedna sada tokenů: ve světlém režimu je světlý a je
+     součástí stránky, v tmavém zůstává takový, jaký byl. Nikde v
+     pravidlech pásu už nestojí barva natvrdo — jinak by se za rok
+     rozešly zas. */
+  --pas-plocha:linear-gradient(180deg, #fff 0%, var(--ink-soft2) 58%, var(--bg) 100%);
+  --pas-plocha-paticka:linear-gradient(170deg, var(--bg) 0%, var(--ink-soft2) 58%, #fff 100%);
+  --pas-text:var(--text-ondark);
+  --pas-text-mute:var(--text-ondark-mute);
+  --pas-akcent:var(--copper);
+  --pas-na-akcentu:#fff;
+  --pas-dlazdice:rgba(20,35,28,0.04);
+  --pas-linka:var(--line);
+  --pas-zavoj-a:rgba(138,85,18,0.07);
+  --pas-zavoj-b:rgba(31,81,56,0.07);
+  --pas-nadpis:var(--accent-warm);
+  --pas-mrizka:var(--mrizka-cara-svetla);
+
   /* ---------------------------------------------------------------
      HLOUBKA A TVARY — viz předloha.html
      V šabloně bylo 71 různých stínů a 19 různých zaoblení. Nic z toho
@@ -1240,7 +1262,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 /* Zvýrazněné slovo musí mít stejnou váhu jako zbytek nadpisu. Dřív tu
    stálo 400 proti 800 a půlka věty vypadala vybledle. */
 .hero-head h1 em{font-weight:700;}
-.hero-head .sub{font-size:16px; color:#4B5464; max-width:var(--m-text); margin-bottom:16px;}
+.hero-head .sub{font-size:16px; color:var(--pas-text-mute); max-width:var(--m-text); margin-bottom:16px;}
 .hero-head .hero-ctas{justify-content:center; margin-bottom:20px;}
 .hero-head .trust-line{justify-content:center; margin:0;}
 /* Mapa je hlavní produkt — dopřejeme jí víc šířky (jako velké realitní weby),
@@ -3364,7 +3386,10 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .rules-sect p{ color:var(--text-ondark); }
 .add-card .rules-note, .rules-sect .rules-note{ color:var(--text-ondark-mute); }
 .rule-list li{ color:var(--text-ondark); line-height:1.62; }
-.add-hero .sub, .hero-head .sub{ color:#434C5E; }
+/* Podtitul bere barvu pásu, ne vlastní šedomodrou. Byla tu #434C5E,
+   tedy odstín 225° — modrá na zeleném webu, a ještě z časů, kdy byl
+   pás tmavý a tahle hodnota se pod ním stejně neprojevila. */
+.add-hero .sub, .hero-head .sub{ color:var(--pas-text-mute); }
 
 /* ---------- Detail pozemku: přehledná hlavička + hero cena + skládací „Detaily" ---------- */
 /* Typový štítek nahoře (barevná tečka + název druhu nabídky) */
@@ -3641,33 +3666,41 @@ body{background:var(--bg);}
    uzavře — a spolu s tmavým pásem u hlídání drží web pohromadě, aby
    ta tmavá sekce uprostřed nepůsobila jako výjimka.
    ===================================================================== */
-footer{position:relative; isolation:isolate; overflow:hidden; border-top:0;
-  background:linear-gradient(170deg, var(--ink-dark-2) 0%, var(--ink-dark) 55%, #0b1510 100%);
-  color:var(--text-ondeep); padding:48px 0 24px; margin-top:8px;}
+footer{position:relative; isolation:isolate; overflow:hidden;
+  border-top:1px solid var(--line);
+  background:var(--pas-plocha-paticka);
+  color:var(--pas-text-mute); padding:48px 0 24px; margin-top:8px;}
 /* Světlo z rohů a katastrální mřížka — stejný jazyk jako tmavý pás. */
 footer::before{content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
-  background:radial-gradient(60% 80% at 8% 0%, rgba(138,85,18,0.22), transparent 62%),
-             radial-gradient(55% 75% at 96% 100%, rgba(31,81,56,0.22), transparent 66%);}
+  background:radial-gradient(60% 80% at 8% 0%, var(--pas-zavoj-a), transparent 62%),
+             radial-gradient(55% 75% at 96% 100%, var(--pas-zavoj-b), transparent 66%);}
 footer::after{content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
-  background-image:linear-gradient(to right, var(--mrizka-cara-tmava) 1px, transparent 1px),
-                   linear-gradient(to bottom, var(--mrizka-cara-tmava) 1px, transparent 1px);
+  background-image:linear-gradient(to right, var(--pas-mrizka) 1px, transparent 1px),
+                   linear-gradient(to bottom, var(--pas-mrizka) 1px, transparent 1px);
   background-size:var(--mrizka-bunka) var(--mrizka-bunka);
   -webkit-mask-image:radial-gradient(ellipse 90% 90% at 25% 30%, #000 20%, transparent 100%);
           mask-image:radial-gradient(ellipse 90% 90% at 25% 30%, #000 20%, transparent 100%);}
 
-footer .wrap{color:var(--text-ondeep-mute);}
-.foot-grid{border-bottom-color:rgba(255,255,255,0.16);}
+/* Patička bere barvy z tokenů pásu, ne z hodnot psaných pro tmavý pruh.
+   Dokud byl pruh tmavý, stálo tu --text-ondeep (bílá) a
+   --accent-warm-bright (#E0B878). Na světlé patičce měly ty nadpisy
+   poměr 1,57 : 1 — tedy nečitelné. Teď je nese --pas-nadpis: ve světlém
+   --accent-warm (5,24 : 1 na nejtmavším místě patičky), v tmavém
+   zůstává --accent-warm-bright. Měděná barva zůstává jako druhá barva
+   webu, jen v tom odstínu, který na dané ploše obstojí. */
+footer .wrap{color:var(--pas-text-mute);}
+.foot-grid{border-bottom-color:var(--pas-linka);}
 /* JMÉNO ZNAČKY MÁ JEDNO PÍSMO. V hlavičce bylo bezpatkové (.logo →
    --font-ui), v patičce patkové — tedy dvakrát na téže stránce, pokaždé
    jinak. Rozhoduje hlavička: to je ten výskyt, který člověk vidí na
    každé stránce a pořád. */
-.foot-brand{color:var(--text-ondeep); font-family:var(--font-ui); font-weight:700; font-size:16px; letter-spacing:-0.02em;}
-.foot-tag{color:var(--text-ondeep-mute);}
-.foot-col h5{color:var(--accent-warm-bright);}
-.foot-col a{color:var(--text-ondeep-mute);}
-.foot-col a:hover{color:var(--text-ondeep);}
-.foot-bottom{color:rgba(255,255,255,0.55); border-top:0;}
-footer a:focus-visible{outline-color:var(--accent-warm-bright);}
+.foot-brand{color:var(--pas-text); font-family:var(--font-ui); font-weight:700; font-size:16px; letter-spacing:-0.02em;}
+.foot-tag{color:var(--pas-text-mute);}
+.foot-col h5{color:var(--pas-nadpis);}
+.foot-col a{color:var(--pas-text-mute);}
+.foot-col a:hover{color:var(--pas-text);}
+.foot-bottom{color:var(--pas-text-mute); border-top:0;}
+footer a:focus-visible{outline-color:var(--pas-nadpis);}
 
 /* Zbylé drobné ovládací prvky, které našel scripts/test-dotyk.mjs. */
 @media (max-width:880px){
@@ -3945,10 +3978,10 @@ body::after{
 /* Ostrá hrana, žádné vytrácení. Světlý přechod přes tmavý pás dělá na
    čtvrtině jeho výšky šedou mlhu a text úvodu do ní zasahoval. */
 .okr-band > .wrap{position:relative; z-index:1;}
-.okr-hero .eyebrow{color:#EAF2EC;}
-.okr-hero h1{color:#fff; font-size:var(--h1-stranka); line-height:1.04; letter-spacing:-0.03em;}
-.okr-hero .sub{color:rgba(255,255,255,0.85); max-width:var(--m-text);}
-.okr-hero .sub b{color:#fff;}
+.okr-hero .eyebrow{color:var(--pas-text);}
+.okr-hero h1{color:var(--pas-text); font-size:var(--h1-stranka); line-height:1.04; letter-spacing:-0.03em;}
+.okr-hero .sub{color:var(--pas-text-mute); max-width:var(--m-text);}
+.okr-hero .sub b{color:var(--pas-text);}
 @media (max-width:880px){ .okr-band{padding:40px 0 32px;} }
 
 /* Čísla: velké číslice, ne čtyři malé krabičky. Stejný jazyk jako na
@@ -4136,12 +4169,12 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   gap:0; margin-top:20px; flex-wrap:wrap;
   font-family:var(--font-mono); font-size:13px; letter-spacing:0.04em;}
 .hero-map .hero-stats .ts-n{display:inline; padding:0; font-size:inherit;
-  letter-spacing:inherit; text-transform:none; color:rgba(255,255,255,0.7);
+  letter-spacing:inherit; text-transform:none; color:var(--pas-text-mute);
   font-family:inherit; white-space:nowrap;}
 .hero-map .hero-stats .ts-n b{font-family:inherit; font-weight:700;
-  font-size:inherit; line-height:inherit; letter-spacing:inherit; color:#fff;}
+  font-size:inherit; line-height:inherit; letter-spacing:inherit; color:var(--pas-text);}
 .hero-map .hero-stats .ts-sep{width:auto; background:none; align-self:auto;
-  color:rgba(255,255,255,0.4); overflow:visible; text-indent:0; margin:0 10px;}
+  color:var(--pas-text-mute); overflow:visible; text-indent:0; margin:0 10px;}
 @media (max-width:880px){
   .hero-map .hero-head .hero-stats{margin-top:16px; font-size:12px;}
 }
@@ -4165,7 +4198,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   max-width:var(--m-nadpis); margin-bottom:24px;}
 /* Zvýrazněná část věty nesmí být kurzíva — z té byla ta „pohádka".
    Rozdíl dělá barva, ne jiný řez písma. */
-.hero-map .hero-head h1 em{font-style:normal; font-weight:800; color:#9ADDB8;}
+.hero-map .hero-head h1 em{font-style:normal; font-weight:800; color:var(--pas-akcent);}
 .hero-map .hero-head .eyebrow{margin-bottom:20px;}
 
 /* Čísla jako datový pás u levé hrany, ne vycentrovaná trojice. */
@@ -4282,9 +4315,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
    ------------------------------------------------------------------ */
 .add-hero:not(.app-hero){position:relative; isolation:isolate; overflow:hidden;
   padding:96px 0 56px;
-  background:linear-gradient(180deg, #1b2b22 0%, #17281e 62%, #12241A 100%);
-  /* Světlé hodnoty z předchozí verze tu nemají co dělat. */
-  --copper-bright:#9ADDB8; --text-ondark-mute:rgba(255,255,255,0.85);}
+  background:var(--pas-plocha);}
 .add-hero:not(.app-hero)::before{content:""; position:absolute; inset:0;
   pointer-events:none; z-index:0;
   background-image:
@@ -4300,11 +4331,11 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
    (nechávalo tu inset:0 a elipsovou masku). */
 .add-hero:not(.app-hero)::after{content:none;}
 .add-hero:not(.app-hero) > .wrap{position:relative; z-index:1;}
-.add-hero:not(.app-hero) .eyebrow{color:#EAF2EC;}
-.add-hero:not(.app-hero) h1{color:#fff; font-size:var(--h1-stranka);
+.add-hero:not(.app-hero) .eyebrow{color:var(--pas-text);}
+.add-hero:not(.app-hero) h1{color:var(--pas-text); font-size:var(--h1-stranka);
   line-height:1.03; letter-spacing:-0.03em; max-width:var(--m-nadpis);}
 /* Zvýraznění v nadpisu nese barva, ne kurzíva. */
-.add-hero:not(.app-hero) h1 em{font-style:normal; font-weight:800; color:#9ADDB8;}
+.add-hero:not(.app-hero) h1 em{font-style:normal; font-weight:800; color:var(--pas-akcent);}
 /* Měděné podtržení pod zvýrazněním je na tmavém nadbytečné — barva stačí
    a linka uprostřed věty vypadá jako omylem zapnutý odkaz. */
 .add-hero:not(.app-hero) h1 em::after{display:none;}
@@ -4312,17 +4343,17 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
    roztáhnout přes celou stránku, ale nadpis pak začínal o 300 px vlevo
    od prvního odstavce — dvě různé svislice na jedné stránce. Společná
    svislice je důležitější než široký nadpis. */
-.add-hero:not(.app-hero) .sub{color:rgba(255,255,255,0.85); max-width:var(--m-text); font-size:16px;}
-.add-hero:not(.app-hero) .sub b{color:#fff;}
+.add-hero:not(.app-hero) .sub{color:var(--pas-text-mute); max-width:var(--m-text); font-size:16px;}
+.add-hero:not(.app-hero) .sub b{color:var(--pas-text);}
 
 /* Co stojí uvnitř úvodní plochy (Přidat pozemek), musí na tmavém taky obstát. */
-.add-hero:not(.app-hero) .add-chips span{color:#9ADDB8; background:rgba(228,192,137,0.12);
+.add-hero:not(.app-hero) .add-chips span{color:var(--pas-akcent); background:var(--pas-dlazdice);
   border-color:rgba(228,192,137,0.3);}
-.add-hero:not(.app-hero) .add-steps li{background:rgba(255,255,255,0.04);
-  border-color:rgba(255,255,255,0.16);}
-.add-hero:not(.app-hero) .as-num{color:#17281e; background:#9ADDB8; box-shadow:none;}
-.add-hero:not(.app-hero) .as-txt b{color:#fff;}
-.add-hero:not(.app-hero) .as-txt > span{color:rgba(255,255,255,0.85);}
+.add-hero:not(.app-hero) .add-steps li{background:var(--pas-dlazdice);
+  border-color:var(--pas-linka);}
+.add-hero:not(.app-hero) .as-num{color:var(--pas-na-akcentu); background:var(--pas-akcent); box-shadow:none;}
+.add-hero:not(.app-hero) .as-txt b{color:var(--pas-text);}
+.add-hero:not(.app-hero) .as-txt > span{color:var(--pas-text-mute);}
 
 @media (max-width:880px){ .add-hero:not(.app-hero){padding:80px 0 40px;} }
 /* Na telefonu ještě míň. Změřeno: nad nadpisem bylo 84 px prázdna, kdežto
@@ -5422,6 +5453,20 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    takže deklarace musí být dvakrát. Drží to zkouška: obě větve musí
    nastavovat tytéž tokeny na tytéž hodnoty. */
 :root[data-theme="dark"] {
+  /* Pás v tmavém režimu zůstává, jaký byl — tam je tmavý celý web. */
+  --pas-plocha:linear-gradient(180deg, #1b2b22 0%, #17281e 62%, #12241A 100%);
+  --pas-plocha-paticka:linear-gradient(170deg, var(--ink-dark-2) 0%, var(--ink-dark) 55%, #0b1510 100%);
+  --pas-text:#fff;
+  --pas-text-mute:rgba(255,255,255,0.85);
+  --pas-akcent:#9ADDB8;
+  --pas-na-akcentu:#17281e;
+  --pas-dlazdice:rgba(255,255,255,0.04);
+  --pas-linka:rgba(255,255,255,0.16);
+  --pas-zavoj-a:rgba(138,85,18,0.22);
+  --pas-zavoj-b:rgba(31,81,56,0.22);
+  --pas-nadpis:var(--accent-warm-bright);
+  --pas-mrizka:var(--mrizka-cara-tmava);
+
   --bg:#0E1A14; --ink:#12241A; --ink-soft:#18291F; --ink-soft2:#1F3328;
   --surface-2:#1A2A21; --panel:#18291F;
   --ink-dark:#070F0B; --ink-dark-2:#0B1510;
@@ -5646,8 +5691,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 :root[data-theme="dark"] .add-hero{
   --copper-bright:#9ADDB8;
   --text-ondark-mute:#A9BBAF;}
-:root[data-theme="dark"] .add-hero .sub,
-:root[data-theme="dark"] .hero-head .sub{color:var(--text-ondark-mute);}
+/* (Tmavý protějšek k podtitulu zrušen — barvu řídí --pas-text-mute.) */
 :root[data-theme="dark"] .deal-badge,
 :root[data-theme="dark"] .ul-badge,
 :root[data-theme="dark"] .hl-new-badge,

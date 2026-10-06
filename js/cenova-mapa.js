@@ -69,12 +69,17 @@
   }
 
   function barva(t) {
-    /* Táž modř jako podbarvení řádků v seznamu pod mapou (--c-sale),
-       jen s větším rozsahem krytí, ať je rozdíl vidět i na malé ploše.
+    /* TÁŽ ZELENÁ jako podbarvení řádků v seznamu pod mapou, jen s větším
+       rozsahem krytí, ať je rozdíl vidět i na malé ploše.
+
+       Bývala to modř rgba(91,184,214) a komentář tvrdil, že je to
+       --c-sale. Nebyla: --c-sale je #4361B8, kdežto tohle byl tyrkys
+       o odstínu 196° — jediná modrá plocha na zeleno-bílém webu.
+
        Krytí, ne jiná barva: funguje to ve světlém i tmavém režimu, kde
        pozadí prosvítá, a nevzniká odstín, který by v jednom z nich
        zmizel. */
-    return 'rgba(91,184,214,' + (0.12 + t * 0.78).toFixed(3) + ')';
+    return 'rgba(44,113,80,' + (0.12 + t * 0.78).toFixed(3) + ')';
   }
 
   function kresli(data) {

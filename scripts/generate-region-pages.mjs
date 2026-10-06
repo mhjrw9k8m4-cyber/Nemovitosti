@@ -1226,9 +1226,18 @@ ${okresLinks ? `
     .sort((a,b)=>b.s.med-a.s.med);
   const meds = rowsData.map(x=>x.s.med);
   const minM=Math.min.apply(null,meds), maxM=Math.max.apply(null,meds);
-  function heat(v){ // 0..1 → jemné copper pozadí
+  /* PODBARVENÍ ŘÁDKŮ: ZELENÁ ZE ZNAČKY, NE MODŘ.
+     Bylo tu rgba(91,184,214), tedy tyrkys o odstínu 196° — jediná
+     modrá plocha na zeleno-bílém webu, a ještě přes celý seznam krajů.
+     Teď je to značková zelená, takže seznam patří ke stránce.
+
+     JE TO KRYTÍ, NE JINÁ BARVA, a to schválně: v tmavém režimu
+     prosvítá pozadí, takže jedna barva s měnícím se krytím funguje
+     v obou režimech a nevznikne odstín, který by v jednom z nich
+     zmizel. */
+  function heat(v){
     const t = maxM>minM ? (v-minM)/(maxM-minM) : 0.5;
-    return `background:rgba(91,184,214,${(0.06+t*0.20).toFixed(3)});`;
+    return `background:rgba(44,113,80,${(0.06+t*0.20).toFixed(3)});`;
   }
   const krajRows = rowsData.map(x=>{
     const les = priceByKraj[x.k] && priceByKraj[x.k]['Lesní pozemek'];
@@ -1247,7 +1256,7 @@ ${okresLinks ? `
     .sort((a,b)=>b.s.med-a.s.med);
   const okrMeds = okrData.map(x=>x.s.med);
   const okMin = okrMeds.length?Math.min.apply(null,okrMeds):0, okMax = okrMeds.length?Math.max.apply(null,okrMeds):1;
-  function heatOk(v){ const t = okMax>okMin ? (v-okMin)/(okMax-okMin) : 0.5; return `background:rgba(91,184,214,${(0.06+t*0.20).toFixed(3)});`; }
+  function heatOk(v){ const t = okMax>okMin ? (v-okMin)/(okMax-okMin) : 0.5; return `background:rgba(44,113,80,${(0.06+t*0.20).toFixed(3)});`; }
   /* CENOVÁ MAPA: stejná čísla jako tabulka, protože ze stejného okrData.
      Kdyby si mapa počítala vlastní medián, mohla by u téhož okresu
      ukázat jinou cenu než řádek o kus níž — a to už se na tomhle webu
@@ -1322,7 +1331,7 @@ ${highlight}
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
           <h2>Zemědělská půda podle kraje</h2>
-          <p class="rules-note" style="margin-top:0;">Seřazeno od nejdražšího kraje. Klepnutím otevřete nabídky v kraji. Tmavší = dražší.</p>
+          <p class="rules-note" style="margin-top:0;">Seřazeno od nejdražšího kraje. Klepnutím otevřete nabídky v kraji. Sytější podbarvení = dražší.</p>
 ${razitkoCerstvosti}
           <div class="okr-list">
 ${krajRows || '      <p class="rules-note" style="margin:0;">Zatím není dost dat po krajích.</p>'}
@@ -1339,11 +1348,11 @@ ${okresRows ? `
             <p class="rules-note cen-mapa-stav" id="cen-mapa-stav">Mapa se načte, až se k ní dorolujete.</p>
           </div>
           <ul class="cen-mapa-legenda" aria-hidden="true">
-            <li><i style="background:rgba(91,184,214,0.12);"></i>nejlevnější</li>
-            <li><i style="background:rgba(91,184,214,0.33);"></i></li>
-            <li><i style="background:rgba(91,184,214,0.51);"></i></li>
-            <li><i style="background:rgba(91,184,214,0.70);"></i></li>
-            <li><i style="background:rgba(91,184,214,0.90);"></i>nejdražší</li>
+            <li><i style="background:rgba(44,113,80,0.12);"></i>nejlevnější</li>
+            <li><i style="background:rgba(44,113,80,0.33);"></i></li>
+            <li><i style="background:rgba(44,113,80,0.51);"></i></li>
+            <li><i style="background:rgba(44,113,80,0.70);"></i></li>
+            <li><i style="background:rgba(44,113,80,0.90);"></i>nejdražší</li>
             <li><i style="background:rgba(128,128,128,0.18);"></i>málo dat</li>
           </ul>
           <script type="application/json" id="cen-mapa-data">${JSON.stringify(cenMapaData).replace(/</g, '\\u003c')}</script>

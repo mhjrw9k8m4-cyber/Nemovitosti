@@ -152,7 +152,25 @@ pravda('test našel všech sedm ploch s mřížkovou texturou', mrizky.length ==
   + 'zvedni číslo v testu:\n      '
   + mrizky.map((b) => b.sel.trim().slice(0, 34)).join(' | '));
 
-const CARY = ['var(--mrizka-cara-tmava)', 'var(--mrizka-cara-svetla)'];
+/* JEDEN STUPEŇ PŘEZDÍVKY SE UZNÁ — ALE MUSÍ SE OVĚŘIT, KAM VEDE.
+   Patička sdílí barvy s úvodní plochou přes tokeny pásu, takže její
+   mřížka bere --pas-mrizka. To není obcházení pravidla: --pas-mrizka
+   se sám nedefinuje žádnou barvou, jen ukazuje na --mrizka-cara-svetla
+   (světlý režim) a --mrizka-cara-tmava (tmavý). Test si proto najde
+   všechny tokeny, které se definují JEN odkazem na jednu z těch dvou
+   čar, a uzná je. Token s vlastní barvou se neuzná ani náhodou. */
+const ZAKLADNI = ['--mrizka-cara-tmava', '--mrizka-cara-svetla'];
+const prezdivky = [];
+for (const m of css.matchAll(/(--[\w-]+)\s*:\s*var\((--mrizka-cara-[a-z]+)\)\s*;/g)) {
+  if (ZAKLADNI.includes(m[2]) && !prezdivky.includes(m[1])) prezdivky.push(m[1]);
+}
+/* Přezdívka, která by někde měla i vlastní barvu, se zahodí. */
+const nepoctive = prezdivky.filter((t) =>
+  new RegExp(t.replace(/[-]/g, '\\-') + '\\s*:\\s*(?!var\\(--mrizka-cara-)', 'g').test(css));
+pravda('přezdívky za mřížkovou čáru nikde nenesou vlastní barvu',
+  nepoctive.length === 0, nepoctive.join(', '));
+const CARY = [...ZAKLADNI, ...prezdivky.filter((t) => !nepoctive.includes(t))]
+  .map((t) => 'var(' + t + ')');
 const ROZTECE = ['var(--mrizka-bunka)', 'var(--mrizka-bunka-panel)'];
 const opsane = mrizky.filter((b) => {
   const bunka = (b.text.match(/background-size:\s*([^;}]+)/) || [])[1] || '';

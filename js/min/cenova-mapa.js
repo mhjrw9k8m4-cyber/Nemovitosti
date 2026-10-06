@@ -32,7 +32,7 @@
 
   function barva(t) {
 
-    return 'rgba(91,184,214,' + (0.12 + t * 0.78).toFixed(3) + ')';
+    return 'rgba(44,113,80,' + (0.12 + t * 0.78).toFixed(3) + ')';
   }
 
   function kresli(data) {
