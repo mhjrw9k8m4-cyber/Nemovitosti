@@ -107,7 +107,15 @@
      Bílý text na značkové zeleni má 9,72 : 1, na akcentu 8,03 : 1. */
   --bg:#E3EFE7;                 /* plocha stránky — jedna barva, ta, kterou přechod ukazoval nejvíc */
   --ink:#EEF6F1;                /* zapuštěná plocha: vstupy, pole — stejná rodina jako plocha, ne teplá */
-  --ink-soft:#fff;           /* zvýšená plocha: karty a panely — čistě bílá */
+  /* ZVÝŠENÁ PLOCHA: karty a panely. Byla čistě bílá, a byla tím jediná
+     v celé rodině ploch bez zeleně: --ink je #EEF6F1 a --ink-soft2
+     #F5FAF7, obě zelenkavé. Přitom je ze všech největší — změřeno na
+     úvodu, kde šedobílé plochy vykreslily map-app (607 vzorků), karty
+     hl-fact (345) a ovládání filtru, všechno v tónech R=G=B. Teď je
+     bílá se stopou zeleně: pořád čte jako bílá, ale do rodiny patří.
+     Kontrast skoro beze změny: #12241A 15,9 : 1 (bylo 16,1),
+     --muted 7,4 : 1 (7,58), zástupný text 5,3 : 1 (5,44). */
+  --ink-soft:#F9FDFB;
   --ink-soft2:#F5FAF7;          /* nejvyšší plocha: hover, aktivní */
   /* Tmavý pás. Web byl celý světlý, takže neměl rytmus — jedna dlouhá
      plocha bez nádechu. Tmavá sekce je to, čím velké weby dělají předěl. */
@@ -193,7 +201,10 @@
   --mrizka-bunka:52px;
   --mrizka-bunka-panel:34px;
   --mrizka-cara-tmava:rgba(255,255,255,0.06);
-  --mrizka-cara-svetla:rgba(20,35,28,0.04);
+  /* Mřížka při 4 % se na pásu neprojevila ani o jednu úroveň jasu.
+     6,5 % je pořád jen náznak, ale je vidět — a je to ta textura, kvůli
+     které tu kreslení polí nahradila síť poledníků a rovnoběžek. */
+  --mrizka-cara-svetla:rgba(20,35,28,0.065);
   /* Živý odstín zůstává pro plochy a přechody, kde text neleží. */
   --brand-live:#2C7150;
   /* Teplý akcent. Proměnné se odjakživa jmenují --copper (měď), jenže držely
@@ -315,8 +326,13 @@
      součástí stránky, v tmavém zůstává takový, jaký byl. Nikde v
      pravidlech pásu už nestojí barva natvrdo — jinak by se za rok
      rozešly zas. */
-  --pas-plocha:linear-gradient(180deg, #fff 0%, var(--ink-soft2) 58%, var(--bg) 100%);
-  --pas-plocha-paticka:linear-gradient(170deg, var(--bg) 0%, var(--ink-soft2) 58%, #fff 100%);
+  /* PÁS ZAČÍNAL ČISTĚ BÍLE. Změřeno na úvodu: 64 % první obrazovky bylo
+     téměř bílých a pět nejčastějších barev (#FAFAFA, #FBFBFB, #F9F9F9,
+     #FCFCFC, #F8F8F8) mělo R=G=B — tedy ani stopu zeleně. Pás teď začíná
+     zelenkavě a plynule přechází do plochy stránky; bílé karty na něm
+     pak samy vystoupí, místo aby s ním splývaly. */
+  --pas-plocha:linear-gradient(180deg, #EFF6F2 0%, #E8F1EC 52%, var(--bg) 100%);
+  --pas-plocha-paticka:linear-gradient(170deg, var(--bg) 0%, #E8F1EC 52%, #EFF6F2 100%);
   --pas-text:var(--text-ondark);
   --pas-text-mute:var(--text-ondark-mute);
   --pas-akcent:var(--copper);
@@ -325,6 +341,11 @@
   --pas-linka:var(--line);
   --pas-zavoj-a:rgba(138,85,18,0.07);
   --pas-zavoj-b:rgba(31,81,56,0.07);
+  /* SVĚTLO Z ROHŮ. Patička ho měla a vysvětlivka u ní tvrdila „stejný
+     jazyk jako tmavý pás" — jenže úvodní pás ho neměl, takže patička
+     byla bohatší než úvod. Teď je to jeden předpis pro obojí. */
+  --pas-zavoje:radial-gradient(60% 80% at 8% 0%, var(--pas-zavoj-a), transparent 62%),
+               radial-gradient(55% 75% at 96% 100%, var(--pas-zavoj-b), transparent 66%);
   --pas-nadpis:var(--accent-warm);
   /* OBRYS OVLÁDACÍHO PRVKU NA PÁSU. --pas-linka je na jemné předěly
      (1,22 : 1), ale hranice prvku, se kterým se dá pracovat, musí mít
@@ -1268,18 +1289,26 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    působilo jako dva weby slepené k sobě. Teď přechází z nejsvětlejší
    plochy do barvy stránky, takže hlavička, pás i karty jsou jedna
    soustava a nic se nikde neláme. */
+/* JEDEN PÁS, JEDEN PŘEDPIS. Tenhle přechod tu byl opsaný ručně, i když
+   token --pas-plocha říká dnes totéž a používají ho patička i ostatní
+   pásy. Dva zápisy téhož znamenají, že se jednou rozejdou. */
 .hero-band{position:relative; padding:32px 0 132px;
-  background:
-    linear-gradient(180deg, var(--ink-soft) 0%, var(--ink-soft2) 58%, var(--bg) 100%);}
+  background:var(--pas-zavoje), var(--pas-plocha);}
 /* Jemná mapová mřížka. Kresba polí z leteckého pohledu, která tu byla
    předtím, vypadala jako maskáče — nepravidelné skvrny v tlumené zeleni
    a písku takhle dopadnou vždycky, ať se obarví jakkoli. Mřížka je
    PRAVIDELNÁ, takže ten dojem vzniknout nemůže, a přitom odkazuje na
    mapu: je to síť poledníků a rovnoběžek, ne textura. */
+/* BÍLÁ NA SVĚTLÉM SE NEKRESLÍ. Mřížka měla --mrizka-cara-tmava, což je
+   rgba(255,255,255,0.06) — barva pro TMAVÉ plochy. Pás je ale světlý,
+   takže z celé té sítě poledníků a rovnoběžek, kterou vysvětlivka výš
+   popisuje, nebylo vidět vůbec nic. Token --pas-mrizka přesně pro tohle
+   existoval a nepoužíval ho nikdo. Totéž platilo o pásu na ostatních
+   stránkách (.add-hero). */
 .hero-band::before{content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
   background-image:
-    linear-gradient(to right, var(--mrizka-cara-tmava) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--mrizka-cara-tmava) 1px, transparent 1px);
+    linear-gradient(to right, var(--pas-mrizka) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--pas-mrizka) 1px, transparent 1px);
   background-size:var(--mrizka-bunka) var(--mrizka-bunka);
   -webkit-mask-image:radial-gradient(ellipse 78% 76% at 50% 42%, #000 18%, transparent 100%);
           mask-image:radial-gradient(ellipse 78% 76% at 50% 42%, #000 18%, transparent 100%);}
@@ -3808,8 +3837,7 @@ footer{position:relative; isolation:isolate; overflow:hidden;
   color:var(--pas-text-mute); padding:48px 0 24px; margin-top:8px;}
 /* Světlo z rohů a katastrální mřížka — stejný jazyk jako tmavý pás. */
 footer::before{content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
-  background:radial-gradient(60% 80% at 8% 0%, var(--pas-zavoj-a), transparent 62%),
-             radial-gradient(55% 75% at 96% 100%, var(--pas-zavoj-b), transparent 66%);}
+  background:var(--pas-zavoje);}
 footer::after{content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
   background-image:linear-gradient(to right, var(--pas-mrizka) 1px, transparent 1px),
                    linear-gradient(to bottom, var(--pas-mrizka) 1px, transparent 1px);
@@ -4414,12 +4442,12 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
    ------------------------------------------------------------------ */
 .add-hero:not(.app-hero){position:relative; isolation:isolate; overflow:hidden;
   padding:96px 0 56px;
-  background:var(--pas-plocha);}
+  background:var(--pas-zavoje), var(--pas-plocha);}
 .add-hero:not(.app-hero)::before{content:""; position:absolute; inset:0;
   pointer-events:none; z-index:0;
   background-image:
-    linear-gradient(to right, var(--mrizka-cara-tmava) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--mrizka-cara-tmava) 1px, transparent 1px);
+    linear-gradient(to right, var(--pas-mrizka) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--pas-mrizka) 1px, transparent 1px);
   background-size:var(--mrizka-bunka) var(--mrizka-bunka);
   -webkit-mask-image:radial-gradient(ellipse 76% 80% at 50% 44%, #000 16%, transparent 100%);
           mask-image:radial-gradient(ellipse 76% 80% at 50% 44%, #000 16%, transparent 100%);}
