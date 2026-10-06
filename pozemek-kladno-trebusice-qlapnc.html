@@ -45,7 +45,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=ee358273">
+  <link rel="stylesheet" href="css/styles.min.css?v=9694fa5b">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -114,8 +114,9 @@
     .pz-verdict.mid{--vc:var(--c-drazba-ink); background:rgba(204,107,51,0.12); border-color:rgba(204,107,51,0.46);}
     .pz-verdict.bad{--vc:var(--c-exekuce); background:rgba(140,47,30,0.11); border-color:rgba(140,47,30,0.42);}
     /* Přestěhováno z css/styles.css: tatáž třída ze dvou souborů se
-       rozejde. Barva teď bere token, takže poslechne i tmavý režim —
-       napevno zapsané #8A5512 by na tmavé ploše zůstalo mdlé.
+       rozejde. Barva bere token, ne napevno zapsané #8A5512 — jedna
+       paleta na celém webu. (Dřív tu stál i důvod „poslechne tmavý
+       režim"; ten už neplatí, tmavý režim web nemá.)
        --vt se NEPŘEPISUJE: --accent-warm je tmavá hněď a bílá na ní dává
        6,20 : 1. Tmavý inkoust, který tu chvíli stál, dával 2,63 : 1 —
        tmavé na tmavém. Jméno --text-ondark svádí: znamená text, který
@@ -208,7 +209,10 @@
       padding:0 14px; border-radius:var(--r-ovladani); background:var(--ink-soft);
       border:1.5px solid var(--c-drazba); color:var(--c-drazba-ink);
       font-size:14px; font-weight:700; text-decoration:none;}
-    .pzd-odkaz:hover{background:var(--c-drazba); color:#fff;}
+    /* Bílá na jasné dražební oranžové je 3,67 : 1, tedy pod normou.
+       Stav při najetí myší zkouška kontrastu nevidí; --c-drazba-ink je
+       tatáž barva v tmavší čitelné variantě. */
+    .pzd-odkaz:hover{background:var(--c-drazba-ink); color:#fff;}
     .pz-term{display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--c-drazba-ink); background:rgba(204,107,51,0.13); border:1px solid rgba(204,107,51,0.44); padding:6px 12px; border-radius:var(--r-plocha); margin:14px 0 2px; white-space:nowrap;}
     .pz-term svg{width:16px; height:16px; stroke-width:2.25; flex:none;}
     /* Dražba po termínu: šedě a bez naléhavosti — už to není příležitost,

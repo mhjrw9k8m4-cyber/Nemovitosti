@@ -33,7 +33,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=ee358273">
+  <link rel="stylesheet" href="css/styles.min.css?v=9694fa5b">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .zp-wrap{max-width:var(--m-uzky); margin:0 auto;}
@@ -51,12 +51,12 @@
    (rgb(243,241,236), rgba(20,35,28,0.55) 1px). Bere si teď podobu,
    kterou web pro vedlejší akci má — bílo, zelený obrys, měděný text. */
     /* BÍLÁ NAPEVNO SVÍTILA V TMAVÉM REŽIMU. Tlačítko „Vytvořit účet"
-       a „Přidat vlastní pozemek" mělo background:#fff, takže na tmavé
-       stránce zůstala bílá plocha 24 864 px² — token --panel je bílý ve
-       světlém a #18291F v tmavém, takže poslechne obojí.
-       Nikdo to neviděl, protože tmavý režim se měřil jen na odhlášených
-       stránkách, a tahle tlačítka se bez přihlášení nevykreslí.
-       Kontrast textu: 6,83 : 1 ve světlém, 9,75 : 1 v tmavém. */
+       a „Přidat vlastní pozemek" mělo background:#fff, tedy barvu
+       zapsanou napevno místo tokenu --panel. Vzniklo to v době, kdy web
+       měl i tmavý režim a ta bílá plocha v něm zůstávala svítit
+       (24 864 px²); tmavý režim je pryč, ale důvod zůstává stejný:
+       plocha má brát token, aby se s paletou nerozešla.
+       Kontrast textu 6,83 : 1. */
     .zp-btn.sec{background:var(--panel); color:var(--copper-bright);
       border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1); margin-top:8px;}
     .zp-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--text-ondark-mute);}

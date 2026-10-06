@@ -2423,7 +2423,12 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 #realitky .rules-note a{color:var(--accent-warm-bright);}
 .copy-btn{position:absolute; top:10px; right:10px; background:var(--copper); color:var(--ink); border:0; border-radius:3px; font-family:var(--font-mono); font-size:12px; font-weight:500; padding:4px 10px; cursor:pointer; transition:background var(--cas-zakladni) var(--ease);}
 .copy-btn:hover{background:var(--copper-bright);}
-.copy-btn.copied{background:var(--c-ok); color:#fff;}
+/* BÍLÁ NA JASNÉ ZELENÉ JE 3,24 : 1 — POD NORMOU. Stav „zkopírováno"
+   se objeví na vteřinu po klepnutí, takže ho zkouška kontrastu na
+   vykreslené stránce nikdy nezastihne; našlo se to počítáním dvojic
+   token/text ve stylopisu. --c-ok-ink je tatáž zelená v tmavší
+   čitelné variantě: 7,01 : 1. */
+.copy-btn.copied{background:var(--c-ok-ink); color:#fff;}
 .ep-dot.sale{background:var(--c-sale); color:var(--c-sale);}
 .ep-dot.drazba{background:var(--c-drazba); color:var(--c-drazba);}
 .ep-dot.exekuce{background:var(--c-exekuce); color:var(--c-exekuce);}

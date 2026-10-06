@@ -81,19 +81,44 @@ const chybi = [...new Set(pouzite)].filter((t) => !urcene.has(t) && !(t in ZJS))
 pravda('každý token, na který se styl odvolává, je určený', chybi.length === 0,
   chybi.map((t) => t + ' (×' + pouzite.filter((x) => x === t).length + ')').join(', '));
 
-/* --- Barva písma se nesmí používat jako plocha pod bílý text -------- */
-/* --copper a --copper-bright jsou barvy PÍSMA a mezi režimy se obrací:
-   ve světlém tmavá zelená (#0F5C3B), v tmavém světlá máta (#7FD1A3).
-   Jako podklad pod bílé písmo tedy fungují jen v jednom režimu — v tom
-   druhém dávají 1,8 : 1, což je nečitelné. Na plnou značkovou plochu
-   je --plocha-znacka: 9,72 : 1 ve světlém a 5,21 : 1 v tmavém.
+/* --- Bílý text na plné ploše musí být čitelný ----------------------- */
+/* PRAVIDLO SE PŘESTAVĚLO, PROTOŽE JEHO DŮVOD ZMIZEL.
+   Původně tu stálo: „--copper a --copper-bright se nesmí používat jako
+   plocha pod bílým písmem, protože se mezi režimy obracejí — ve světlém
+   tmavá zelená, v tmavém světlá máta, a bílá na mátě dává 1,82 : 1."
+   To platilo, dokud web měl tmavý režim. Nemá. --copper je dnes vždycky
+   #0F5C3B a bílá na něm dává 8,03 : 1, takže ten zákaz by od teď
+   zakazoval něco, co je v pořádku — a to je horší než žádné pravidlo.
 
-   NAŠLO SE JICH SEDM a žádný z nich neuvidí zkouška kontrastu: jsou to
-   odznaky s počtem (kreslí se jen přihlášenému) a stavy při najetí
-   myší. Proto se to kontroluje ve stylopisu, ne na vykreslené stránce. */
+   Zůstává ale otázka, kvůli které pravidlo vzniklo, a ta se nezměnila:
+   je ten bílý text na té ploše vidět? Místo zákazu konkrétního tokenu
+   se proto POČÍTÁ POMĚR. Je to přísnější: chytí každou špatnou dvojici,
+   ne jen tu jednu, kterou jsem tehdy našel.
+
+   Měří se jen tam, kde se dá: plocha zapsaná tokenem s jednoznačnou
+   barvou (ne přechod, ne průhlednost). Co spočítat nejde, se nehlásí —
+   od toho je zkouška kontrastu na vykreslené stránce. */
 {
-  const OBRACEJICI = ['--copper', '--copper-bright'];
-  const BILA = /(?:^|;)\s*color\s*:\s*(?:#fff(?:fff)?\b|white\b|rgba?\(\s*255\s*,\s*255\s*,\s*255)/i;
+  const BILA = /(?:^|;)\s*color\s*:\s*(?:#fff(?:fff)?\b|white\b|rgb\(\s*255\s*,\s*255\s*,\s*255\s*\))/i;
+  function naRgb(h) {
+    const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(h.trim());
+    if (!m) return null;
+    let x = m[1];
+    if (x.length === 3) x = x.split('').map((c) => c + c).join('');
+    return [0, 2, 4].map((i) => parseInt(x.slice(i, i + 2), 16));
+  }
+  function svetlost(c) {
+    const v = c.map((x) => x / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)));
+    return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  }
+  function pomer(a, b) {
+    const la = svetlost(a), lb = svetlost(b);
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  }
+  /* Hodnoty tokenů z :root. Bere se poslední zápis, ať platí přepisy. */
+  const hodnoty = new Map();
+  for (const m of STYL.matchAll(/(--[\w-]+)\s*:\s*(#[0-9a-fA-F]{3,6})\s*[;}]/g)) hodnoty.set(m[1], m[2]);
+
   const zdrojeStylu = [['css/styles.css', STYL_SUROVY]];
   for (const f of readdirSync(ROOT)) {
     if (!f.endsWith('.html')) continue;
@@ -102,24 +127,25 @@ pravda('každý token, na který se styl odvolává, je určený', chybi.length 
     const m = t.match(/<style>([\s\S]*?)<\/style>/);
     if (m) zdrojeStylu.push([f, m[1]]);
   }
-  let pravidelProsito = 0;
-  const spatne = [];
+  let overeno = 0;
+  const slabe = [];
   for (const [jmeno, text] of zdrojeStylu) {
     const bez = text.replace(/\/\*[\s\S]*?\*\//g, ' ');
     for (const m of bez.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-      pravidelProsito++;
       const dek = m[2];
-      const bg = dek.match(/background(?:-color)?\s*:\s*var\((--[a-z0-9-]+)\)/);
-      if (!bg || !OBRACEJICI.includes(bg[1])) continue;
       if (!BILA.test(dek)) continue;
-      spatne.push(`${jmeno}: ${m[1].trim().slice(0, 44)} — ${bg[1]} jako plocha pod bílým písmem`);
+      const bg = dek.match(/background(?:-color)?\s*:\s*var\((--[a-z0-9-]+)\)/);
+      if (!bg) continue;
+      const hex = hodnoty.get(bg[1]);
+      const rgb = hex && naRgb(hex);
+      if (!rgb) continue;                 // přechod, průhlednost, nedopočítatelné
+      overeno++;
+      const p = pomer([255, 255, 255], rgb);
+      if (p < 4.5) slabe.push(`${jmeno}: ${m[1].trim().slice(0, 40)} — bílá na ${bg[1]} (${hex}) je ${p.toFixed(2)} : 1`);
     }
   }
-  pravda(`styly se opravdu prošly (${zdrojeStylu.length} souborů, ${pravidelProsito} pravidel)`,
-    zdrojeStylu.length >= 10 && pravidelProsito >= 1000,
-    `souborů ${zdrojeStylu.length}, pravidel ${pravidelProsito}`);
-  pravda('barva písma nikde nedělá plochu pod bílým textem', spatne.length === 0,
-    spatne.join('\n      '));
+  pravda(`dvojice bílá/plocha se opravdu počítaly (${overeno})`, overeno >= 5, 'spočítáno jen ' + overeno);
+  pravda('bílý text na plné ploše je všude nad 4,5 : 1', slabe.length === 0, slabe.join('\n      '));
 }
 
 /* A obráceně: token určený a nikde nepoužitý je mrtvý řádek v paletě.
