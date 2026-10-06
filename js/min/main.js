@@ -4540,127 +4540,6 @@
     });
   }
 
-  function renderHeroSouhvezdi() {
-    var cv = document.getElementById('hero-souhvezdi');
-    if (!cv || !cv.getContext) return;
-    var pas = cv.parentElement && cv.parentElement.closest ? cv.closest('.hero-band') : null;
-    if (!pas) pas = cv.parentElement;
-    var ctx = cv.getContext('2d');
-
-    var dpr = 1;
-    var klid = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var vidno = true, posledni = 0;
-    var P = [], bezi = false;
-    function yOf(la) { var r = la * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2; }
-    function prepocti2() {
-      var r = pas.getBoundingClientRect();
-      if (!r.width || !r.height) return false;
-      cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
-      cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px';
-      var body = DATA.filter(function (d) { return isFinite(d.lat) && isFinite(d.lng); });
-      if (!body.length) return false;
-      var xs = body.map(function (d) { return (d.lng + 180) / 360; });
-      var ys = body.map(function (d) { return yOf(d.lat); });
-      var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
-      var y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
-      var W = cv.width, H = cv.height;
-
-      var uzky = (cv.width / dpr) < 760;
-      var s2 = Math.min(W / (x1 - x0), H / (y1 - y0)) * (uzky ? 0.96 : 0.78);
-      var ox = uzky ? (W - (x1 - x0) * s2) / 2 : W - (x1 - x0) * s2 - W * 0.02;
-
-      var oy = uzky ? H * 0.02 : (H - (y1 - y0) * s2) / 2;
-      P = body.map(function (d, i) {
-        return { x: ox + ((d.lng + 180) / 360 - x0) * s2, y: oy + (yOf(d.lat) - y0) * s2,
-          c: (TYPE[d.type] && TYPE[d.type].color) || '#4361B8',
-          h: d.type === 'drazba' || d.type === 'exekuce', f: ((i * 37) % 100) / 100 };
-      });
-      return true;
-    }
-
-    var statik = document.createElement('canvas');
-
-    var ZAR_R = 32;
-    var zare = {};
-    function zarPro(barva) {
-      if (zare[barva]) return zare[barva];
-      var z = document.createElement('canvas');
-      z.width = z.height = ZAR_R * 2;
-      var zc = z.getContext('2d');
-      var g = zc.createRadialGradient(ZAR_R, ZAR_R, 0, ZAR_R, ZAR_R, ZAR_R);
-      g.addColorStop(0, barva); g.addColorStop(0.3, barva);
-      g.addColorStop(1, 'rgba(0,0,0,0)');
-      zc.fillStyle = g; zc.fillRect(0, 0, ZAR_R * 2, ZAR_R * 2);
-      zare[barva] = z;
-      return z;
-    }
-    function statickaVrstva() {
-      statik.width = cv.width; statik.height = cv.height;
-      var sc = statik.getContext('2d');
-      sc.clearRect(0, 0, statik.width, statik.height);
-      for (var i = 0; i < P.length; i++) {
-        var p = P[i];
-        if (p.h) continue;
-        sc.beginPath();
-        sc.arc(p.x, p.y, 1.5 * dpr, 0, 6.283);
-        sc.fillStyle = p.c; sc.globalAlpha = 0.42;
-        sc.fill();
-      }
-      sc.globalAlpha = 1;
-    }
-    function kresli(cas) {
-      var el = cas / 1000;
-      ctx.clearRect(0, 0, cv.width, cv.height);
-      ctx.drawImage(statik, 0, 0);
-      for (var i = 0; i < P.length; i++) {
-        var p = P[i];
-        if (!p.h) continue;
-        var puls = klid ? 0.5 : 0.5 + 0.5 * Math.sin(el * 1.1 + p.f * 6.283);
-        var r = (7 + puls * 7) * dpr;
-        ctx.globalAlpha = 0.3 + puls * 0.28;
-        ctx.drawImage(zarPro(p.c), p.x - r, p.y - r, r * 2, r * 2);
-        ctx.globalAlpha = 0.85 + puls * 0.15;
-        ctx.beginPath(); ctx.arc(p.x, p.y, (1.7 + puls * 1.2) * dpr, 0, 6.283);
-        ctx.fillStyle = p.c; ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-      if (!klid && vidno) requestAnimationFrame(tik);
-    }
-    function tik(cas) {
-      if (klid || !vidno) { bezi = false; return; }
-
-      if (cas - posledni < 66) { requestAnimationFrame(tik); return; }
-      posledni = cas;
-      kresli(cas);
-    }
-    function start() {
-      if (!prepocti2()) return;
-      statickaVrstva();
-      if (bezi || klid) { if (klid) kresli(0); return; }
-      bezi = true;
-      requestAnimationFrame(tik);
-    }
-    start();
-
-    if (typeof IntersectionObserver === 'function') {
-      try {
-        new IntersectionObserver(function (zaznamy) {
-          vidno = zaznamy.some(function (z) { return z.isIntersecting; });
-          if (vidno && !bezi && !klid) { bezi = true; requestAnimationFrame(tik); }
-        }, { rootMargin: '80px' }).observe(pas);
-      } catch (e) {}
-    }
-    var cas2 = null;
-    window.addEventListener('resize', function () {
-      clearTimeout(cas2);
-      cas2 = setTimeout(function () {
-        if (!prepocti2()) return;
-        statickaVrstva();
-        if (klid) requestAnimationFrame(kresli);
-      }, 180);
-    });
-  }
-
   function renderHeroLive() {
     var box = document.getElementById('hero-live');
     if (!box) return;
@@ -4944,7 +4823,6 @@
     if (typeof requestAnimationFrame !== 'function') { dokonci(); return; }
     requestAnimationFrame(function () { requestAnimationFrame(dokonci); });
   }(function () {
-    renderHeroSouhvezdi();
     renderDeals();
     renderUserListings();
   }));

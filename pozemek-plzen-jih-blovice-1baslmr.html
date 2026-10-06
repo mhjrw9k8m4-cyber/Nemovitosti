@@ -2,7 +2,6 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-<script>/* Vzhled se musí nastavit JEŠTĚ PŘED vykreslením: jinak se stránka stihne vykreslit světle a hned ztmavnout, a bílé bliknutí do očí v noci je přesně to, kvůli čemu si lidé tmavý režim zapínají. Proto je to vložené a synchronní, ne soubor s defer. Zároveň se vloží theme-color — barva lišty prohlížeče. Vložený meta stojí v pořadí PŘED statickým níž a prohlížeč bere první, takže vyhraje tenhle; statický zůstává pro případ, že skripty neběží. */try{var v=localStorage.getItem('pk_rezim_v1');if(v==='dark'||v==='light')document.documentElement.setAttribute('data-theme',v);var m=document.createElement('meta');m.setAttribute('name','theme-color');m.setAttribute('content',v==='dark'?'#17281E':'#F9FAF9');document.head.appendChild(m);}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -42,7 +41,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=79bcf34e">
+  <link rel="stylesheet" href="css/styles.min.css?v=ee358273">
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>
     /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
@@ -524,7 +523,7 @@
     <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="moje-data.html">Moje data</a><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
-  <div class="wrap foot-bottom"><span id="pk-rezim"></span><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -549,7 +548,6 @@
 <script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
 <script src="js/min/upozorneni.js?v=4cc6941e" defer></script>
 <script src="js/min/hlavicka.js?v=8d2b1304" defer></script>
-<script src="js/min/rezim.js?v=5689e136" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
   <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 441 m² — Blovice, okres Plzeň-jih","description":"Na prodej · 1 741 950 Kč (3 950 Kč/m²) · 441 m² · Blovice, okres Plzeň-jih. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-plzen-jih-blovice-1baslmr.html","address":{"@type":"PostalAddress","addressLocality":"Blovice","addressRegion":"Plzeň-jih","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.57784456107,"longitude":13.533692512373}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Plzeň-jih","item":"https://www.parcelaka.cz/pozemky-okres-plzen-jih.html"},{"@type":"ListItem","position":4,"name":"Stavební pozemek 441 m² — Blovice, okres Plzeň-jih","item":"https://www.parcelaka.cz/pozemek-plzen-jih-blovice-1baslmr.html"}]}]</script>
 <script>window.PK_UKONCENO="2026-10-04";</script>

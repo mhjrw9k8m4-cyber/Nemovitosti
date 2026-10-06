@@ -55,8 +55,6 @@
       popis: 'Jestli se mapa kreslí základní, nebo leteckým snímkem.', pocet: jeNeco },
     { klic: 'pk_vrstvy_v1', kde: 'local', skupina: 'nastaveni', nazev: 'Zapnuté vrstvy mapy',
       popis: 'Katastr, územní plán, záplavy, ochrana přírody.', pocet: jeNeco },
-    { klic: 'pk_rezim_v1', kde: 'local', skupina: 'nastaveni', nazev: 'Vzhled',
-      popis: 'Světlý, nebo tmavý režim. Přepíná se tlačítkem v hlavičce a drží i barvu lišty prohlížeče.', pocet: jeNeco },
     { klic: 'pk_up_prefs_v1', kde: 'local', skupina: 'nastaveni', nazev: 'Co chci v upozorněních',
       popis: 'Které druhy zpráv se mají ukazovat.', pocet: jeNeco },
 
@@ -84,7 +82,7 @@
     { klic: 'pk_videno_v1', kde: 'session', skupina: 'provoz', nazev: 'Započítaná zhlédnutí',
       popis: 'Aby se zhlédnutí inzerátu nepočítalo dvakrát za návštěvu.', pocet: jeNeco },
     { klic: 'pk_poradi_seance', kde: 'session', skupina: 'provoz', nazev: 'Pořadí v této návštěvě',
-      popis: 'Aby se nabídky nepřeskupovaly při každém překreslení.', pocet: jeNeco },
+      popis: 'Aby se nabídky nepřeskupovaly při každém překreslení.', pocet: jeNeco }
   ];
 
   var SKUPINY = [
@@ -94,7 +92,7 @@
       popis: 'Nastavení, aby se nemuselo klikat pokaždé znovu.' },
     { id: 'provoz', nazev: 'Drobnosti kvůli chodu webu',
       popis: 'Pomocné údaje. Smazáním o nic nepřijdete, jen se pár věcí nastaví znovu.' },
-    { id: 'ucet', nazev: 'Přihlášení', popis: '' },
+    { id: 'ucet', nazev: 'Přihlášení', popis: '' }
   ];
 
   function skladiste(kde) {

@@ -133,6 +133,15 @@
   }
 
   /* ---------- celý seznam ---------- */
+  /* ZŮSTANE OTEVŘENÉ, KDYŽ SE SEZNAM PŘEKRESLÍ.
+     Překreslení staví celý seznam znovu z řetězce, takže <details>
+     vznikne pokaždé zavřené. Jenže zaškrtnutím přepínače uvnitř se
+     překreslení spustí — a nastavení člověku zapadlo pod rukou hned
+     po prvním kliknutí. Otevřenost se proto pamatuje.
+     Našla to zkouška: klepnutí na druhý přepínač čekalo na prvek,
+     který mezitím zmizel pod zavřeným rozbalovátkem. */
+  var prefsOtevreno = false;
+
   function vykresli() {
     var p = prefs();
     var podlePrefs = seznam.filter(function (u) {
@@ -172,7 +181,7 @@
        seznamem napořád — tedy víc místa než novinka, kvůli které sem
        člověk přišel. Kdo si to chce přenastavit, klepne; kdo ne, vidí
        jeden řádek. */
-    h += '<details class="up-prefs">' +
+    h += '<details class="up-prefs"' + (prefsOtevreno ? ' open' : '') + '>' +
       '<summary><h2>Co mi ukazovat</h2></summary>' +
       '<div class="up-prefs-telo">' +
       '<p>Platí jen pro tenhle prohlížeč. Nic se tím neruší — jen se to tu neukáže.</p>' +
@@ -193,6 +202,8 @@
     '</details>';
 
     root.innerHTML = h;
+    var det = root.querySelector('details.up-prefs');
+    if (det) det.addEventListener('toggle', function () { prefsOtevreno = det.open; });
     zapoj();
   }
 

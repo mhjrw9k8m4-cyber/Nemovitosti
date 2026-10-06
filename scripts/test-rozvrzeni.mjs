@@ -153,14 +153,9 @@ const PRAZDNA = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 
 /** Stránka o dané šířce, bez cizích zdrojů. */
-async function otevri(soubor, sirka, vyska, rezim) {
+async function otevri(soubor, sirka, vyska) {
   const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: vyska },
     isMobile: sirka < 700, hasTouch: sirka < 700, locale: 'cs-CZ', permissions: [] });
-  /* Tmavý režim se zapíná uloženou volbou, ne nastavením systému — web se
-     podle systému neztmavuje. */
-  if (rezim === 'dark') {
-    await ctx.addInitScript(() => { try { localStorage.setItem('pk_rezim_v1', 'dark'); } catch (e) { /* ok */ } });
-  }
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
     if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
@@ -910,93 +905,6 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   await ctx.close();
 }
 
-/* --- 6e) OZDOBA NESMÍ LÉZT POD PÍSMO ---------------------------------
- *
- * Za nadpisem úvodu svítí souhvězdí skutečných nabídek. Je stavěné na
- * rozvržení „text vlevo, tečky vpravo" — jenže na telefonu je text přes
- * celou šířku a tečky mu spadnou rovnou pod písmo. Změřeno na
- * vykreslených pixelech: v obdélníku nadpisu bylo 17,3 % teplých
- * (oranžových) pixelů na 390 px a 20,9 % na 320 px, zatímco na monitoru
- * 0,2 %. Nadpis je bílý a mátový, takže teplý pixel se do něj nemá jak
- * dostat jinak než z ozdoby.
- *
- * Závoj, který to měl řešit, visel na .hero-plot se z-index:-1, kdežto
- * plátno je jeho vnuk se z-index:0 — ležel tedy POD tečkami a netlumil
- * nic. Kontrola měří následek, ne zápis v CSS: tentýž nepořádek se dá
- * vyrobit i jinak. */
-{
-  /* Rozbor obrázku potřebuje stránku, která umí kreslit — screenshot je
-     PNG a Node ho sám rozbalit neumí. */
-  const rozbor = await prohlizec.newContext();
-  const rp = await rozbor.newPage();
-  await rp.goto('about:blank');
-  async function teple(el) {
-    const buf = await el.screenshot();
-    return rp.evaluate(async (dataUrl) => {
-      const img = new Image();
-      await new Promise((r) => { img.onload = r; img.onerror = r; img.src = dataUrl; });
-      const c = document.createElement('canvas');
-      c.width = img.width; c.height = img.height;
-      c.getContext('2d').drawImage(img, 0, 0);
-      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-      let t = 0;
-      for (let i = 0; i < d.length; i += 4) {
-        if (d[i] > d[i + 1] + 12 && d[i] > d[i + 2] + 12) t++;
-      }
-      return { podil: +(100 * t / (c.width * c.height)).toFixed(1), px: c.width * c.height };
-    }, 'data:image/png;base64,' + buf.toString('base64'));
-  }
-  /* MĚŘÍ SE V TMAVÉM REŽIMU, protože tam ta ozdoba vůbec je.
-     Ve světlém se souhvězdí nekreslí (byla by z něj tmavá šmouha přes
-     tmavý nadpis), takže měřit „teplé pixely" na světlém úvodu nedává
-     smysl — a hlavně by to měřilo něco jiného, než se tvrdí: Chromium
-     vyhlazuje tmavé písmo na světlém podkladu subpixelově a dělá na
-     hranách písmen červené lemy. Vyšlo z toho 7,5 % „teplých" pixelů
-     v nadpisu, na kterém ale žádná ozdoba není — výřez jsem si uložil
-     a podíval se na něj. Měřilo by to tedy písmo, ne ozdobu.
-     Ve světlém se proto kontroluje to, co se tvrdit dá: že se souhvězdí
-     nekreslí vůbec. */
-  for (const [w, h] of [[390, 844], [320, 568]]) {
-    {
-      const { ctx: cs, p: ps } = await otevri('index.html', w, h);
-      await ps.waitForTimeout(1800);
-      const vidu = await ps.evaluate(() => {
-        const c = document.getElementById('hero-souhvezdi');
-        if (!c) return 'chybí';
-        return getComputedStyle(c).display;
-      });
-      pravda(`${w} px: ve světlém režimu se souhvězdí pod nadpis vůbec nekreslí`,
-        vidu === 'none', `display: ${vidu}`);
-      await cs.close();
-    }
-    const { ctx, p } = await otevri('index.html', w, h, 'dark');
-    await p.waitForTimeout(2600);
-    const nadpis = await p.$('.hero-plot h1');
-    const platno = await p.$('#hero-souhvezdi');
-    if (!nadpis || !platno) {
-      pravda(`${w} px: úvod má nadpis i souhvězdí (jinak zkouška nic neměří)`, false,
-        'chybí .hero-plot h1 nebo #hero-souhvezdi');
-      await ctx.close();
-      continue;
-    }
-    /* POJISTKA: ozdoba se musí opravdu kreslit. Kdyby se souhvězdí
-       nepostavilo (nenačtená data, chyba skriptu), byl by nadpis čistý
-       sám od sebe a kontrola by prošla, ať je v CSS cokoli. */
-    const kresli = await p.evaluate(() => {
-      const c = document.getElementById('hero-souhvezdi');
-      if (!c || !c.width) return 0;
-      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-      let n = 0;
-      for (let i = 3; i < d.length; i += 4) if (d[i] > 12) n++;
-      return +(100 * n / (c.width * c.height)).toFixed(1);
-    });
-    pravda(`${w} px: souhvězdí se opravdu kreslí (jinak zkouška nic neměří)`, kresli > 3,
-      `pokresleno jen ${kresli} % plátna`);
-    const v = await teple(nadpis);
-    pravda(`${w} px: a nelezou z něj tečky pod nadpis (tmavý režim)`, v.podil <= 2,
-      `${v.podil} % teplých pixelů v obdélníku nadpisu (${v.px} px) — přes písmo svítí ozdoba`);
-    await ctx.close();
-  }
   await rozbor.close();
 }
 

@@ -101,7 +101,6 @@ const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIU
   await ctx.addInitScript(() => {
     localStorage.setItem('pk_fav_v1', JSON.stringify(['a|1|X|50.0|14.0', 'b|2|Y|49.0|15.0']));
     localStorage.setItem('pk_poznamky_v1', JSON.stringify({ k1: { text: 'plot', kdy: Date.now() } }));
-    localStorage.setItem('pk_rezim_v1', 'dark');
     sessionStorage.setItem('pk_map_return', JSON.stringify({ lat: 50, lng: 14 }));
   });
   const p = await ctx.newPage();

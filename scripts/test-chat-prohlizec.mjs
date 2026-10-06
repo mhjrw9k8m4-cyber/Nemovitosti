@@ -199,6 +199,13 @@ await pC.click('[data-f="vse"]');
 await pC.waitForFunction(() => document.querySelectorAll('.up-item').length === 2, null, { timeout: 5000 });
 
 // nastavení: co nechci vidět
+/* Přepínače jsou od té doby, co se blok „Co mi ukazovat" sbalil, o jedno
+   klepnutí dál — rozbalené měřil 287 px a stál pod každým seznamem
+   napořád. Zkouška proto nejdřív otevře rozbalovátko, jako to udělá
+   člověk; že se po otevření opravdu dají zmáčknout, je ta podstatná
+   část (předtím tu stál jen klik a ten po sbalení tiše vypršel). */
+await pC.evaluate(() => { const d = document.querySelector('details.up-prefs'); if (d) d.open = true; });
+await pC.waitForSelector('#pf-p', { state: 'visible', timeout: 5000 });
 await pC.click('#pf-p');
 await pC.waitForFunction(() => document.querySelectorAll('.up-ico.pozemky').length === 0, null, { timeout: 5000 });
 je('vypnutí pozemků je schová', await pC.locator('.up-ico.pozemky').count(), 0);

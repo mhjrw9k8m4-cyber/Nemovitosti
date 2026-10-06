@@ -141,15 +141,11 @@ const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 const STRANKY = [...new Set(ODZNAKY.map((o) => o.stranka))];
 let zmereno = 0;
-for (const rezim of ['light', 'dark'])
+/* Jen světlý — tmavý režim web nemá. */
+for (const rezim of ['light'])
 for (const s of STRANKY) {
   const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 900 },
     hasTouch: true, isMobile: true });
-  /* Tmavý jen uloženou volbou — web se podle systému neztmavuje, takže
-     emulace přes colorScheme by měřila dvakrát světlý motiv. */
-  if (rezim === 'dark') {
-    await ctx.addInitScript(() => { try { localStorage.setItem('pk_rezim_v1', 'dark'); } catch (e) { /* ok */ } });
-  }
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   const p = await ctx.newPage();
@@ -157,9 +153,9 @@ for (const s of STRANKY) {
   await p.waitForTimeout(1300);
   for (const o of ODZNAKY.filter((x) => x.stranka === s)) {
     const v = await p.evaluate(MERIC, o).catch((e) => ({ chyba: String(e).slice(0, 80) }));
-    if (v.chyba) { pravda(`.${o.trida} (${rezim === 'dark' ? 'tmavý' : 'světlý'}) se dal změřit`, false, v.chyba); continue; }
+    if (v.chyba) { pravda(`.${o.trida} (světlý) se dal změřit`, false, v.chyba); continue; }
     zmereno++;
-    pravda(`.${o.trida} na ${s} (${rezim === 'dark' ? 'tmavý' : 'světlý'}): ${v.pomer} : 1, nutné ${v.mez}`,
+    pravda(`.${o.trida} na ${s} (světlý): ${v.pomer} : 1, nutné ${v.mez}`,
       v.pomer >= v.mez,
       `${v.barva} na ${v.pozadi}, ${v.px} px, vloženo do ${v.rodic}`);
   }
@@ -168,8 +164,11 @@ for (const s of STRANKY) {
 await prohlizec.close();
 
 /* Kdyby se rodič nenašel ani jednou, všechno výš by se přeskočilo
-   a zkouška by prošla, aniž by cokoli změřila. */
-pravda(`změřilo se dost odznaků (${zmereno})`, zmereno === ODZNAKY.length * 2,
+   a zkouška by prošla, aniž by cokoli změřila.
+   Číslo bývalo ODZNAKY.length * 2, protože se měřilo ve světlém i
+   tmavém režimu. Tmavý režim web nemá, takže je to jednou tolik —
+   a dvojnásobek by tu zůstal jako mez, kterou nic nikdy nesplní. */
+pravda(`změřilo se dost odznaků (${zmereno})`, zmereno === ODZNAKY.length,
   `${zmereno} z ${ODZNAKY.length * 2} — některý se nedal vložit`);
 
 console.log(zpravy.join('\n'));

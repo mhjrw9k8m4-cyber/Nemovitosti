@@ -355,38 +355,21 @@ export function migrujLeaflet(h) {
  *
  * Verze v adrese se nehlídá, tu stejně přepíše scripts/orazitkuj-verze.mjs.
  * Idempotentní: druhý průchod vloží tentýž blok na totéž místo. */
-/* PŘEDVYKRESLOVACÍ NASTAVENÍ REŽIMU na ukončených stránkách chybělo.
+/* ÚKLID PO TMAVÉM REŽIMU.
+ * V hlavičce každé stránky stával vložený synchronní skript, který ještě
+ * před vykreslením přečetl z localStorage uložený režim a nastavil
+ * data-theme (a od jisté doby i barvu lišty prohlížeče). Tmavý režim je
+ * pryč celý, takže ten úryvek nemá co dělat, a tahle funkce ho ze
+ * stránek VYNDÁVÁ místo aby ho vkládala.
  *
- * V hlavičce každé stránky stojí vložený synchronní skript, který ještě
- * před vykreslením přečte z localStorage uložený režim a nastaví
- * data-theme. Bez něj se stránka vykreslí SVĚTLE, i když má návštěvník
- * zapnutý tmavý režim — a tmavý režim si lidé zapínají právě proto, aby
- * jim bílá stránka nesvítila do očí.
- *
- * Na čtyřech stránkách ukončených nabídek ten skript chyběl, protože se
- * do předlohy přidal po jejich archivaci. Projde tedy i tudy.
- *
- * Idempotentní: pozná se podle klíče localStorage, ne podle celého textu,
- * takže se úryvek nevloží dvakrát, ani když se jeho komentář přepíše. */
+ * Proč to tu zůstává a nezmizelo to taky: archivované stránky ukončených
+ * nabídek se znovu negenerují, jen se jimi projde. Bez tohohle kroku by
+ * jim ten mrtvý skript zůstal v hlavičce — nastavoval by atribut, na
+ * který se už žádný styl neptá, a četl by klíč, který Moje data už
+ * nevypisují. */
 export function migrujPredvykresleni(sablona, h) {
-  const m = /<script>\/\* Vzhled se musí nastavit[\s\S]*?<\/script>/.exec(sablona);
-  if (!m) throw new Error('migrujPredvykresleni: v předloze není úryvek pro nastavení režimu — změnil se?');
-  const uryvek = m[0];
-
-  /* UŽ TAM JE, ALE JINÝ: PŘEPSAT, NE NECHAT.
-     Dřív tu stálo „když stránka obsahuje pk_rezim_v1, nech ji být" —
-     a to je idempotence, která zakonzervuje starou verzi. Když do
-     úryvku přišla barva lišty prohlížeče (theme-color), archivované
-     stránky by ji nikdy nedostaly: klíč v nich byl, takže se přeskočily.
-     Porovnává se tedy celý text úryvku, a liší-li se, vymění se. */
-  const ve = /<script>\/\* Vzhled se musí nastavit[\s\S]*?<\/script>/.exec(h);
-  if (ve) return ve[0] === uryvek ? h : h.replace(ve[0], uryvek);
-
-  /* Musí stát co nejdřív: před prvním stylem i před <body>. Hned za
-     charsetem to splňuje vždycky. */
-  const kotva = /<meta charset="[^"]*">\n/.exec(h);
-  if (!kotva) throw new Error('migrujPredvykresleni: ve stránce není <meta charset> — nemám kam vložit');
-  return h.replace(kotva[0], kotva[0] + uryvek + '\n');
+  const ve = /<script>\/\* Vzhled se musí nastavit[\s\S]*?<\/script>\n?/.exec(h);
+  return ve ? h.replace(ve[0], '') : h;
 }
 
 export function migrujSkripty(sablona, h) {

@@ -278,8 +278,6 @@ jobs:
       - name: Vlastní stránka pro každý pozemek
         run: node scripts/test-stranky-pozemku.mjs
 
-      - name: Tmavý režim a skripty na všech stránkách
-        run: node scripts/test-rezim-stranek.mjs
 
       - name: Šifrování push zpráv (proti vzorku referenční implementace)
         run: node scripts/test-web-push.mjs
@@ -523,8 +521,6 @@ jobs:
       - name: Podklad hlavní mapy
         run: node scripts/test-podklad-mapy.mjs
 
-      - name: Tmavý režim
-        run: node scripts/test-tmavy-rezim.mjs
 
       - name: Tah ikon je jeden (1,5 px)
         run: node scripts/test-tahy.mjs

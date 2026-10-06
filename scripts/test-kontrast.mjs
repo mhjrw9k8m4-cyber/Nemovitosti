@@ -167,12 +167,12 @@ const MERENI = `(() => {
 
    hasTouch zapíná @media (hover:none), což je na telefonu skoro vždycky
    pravda; isMobile k tomu přidá dotykové události a správné měřítko. */
-/* TMAVÝ SE ZAPÍNÁ ULOŽENOU VOLBOU, NE NASTAVENÍM SYSTÉMU. Web se podle
-   systému neztmavuje — kdyby se tu tmavý emuloval přes colorScheme, měřil
-   by se dvakrát světlý motiv a kontrola tmavého by tiše zmizela. */
+/* JEDEN REŽIM. Web míval i tmavý a tahle zkouška měřila oba; tmavý je
+   celý pryč, takže se měří jen to, co web doopravdy má. Pole tu zůstává
+   kvůli tvaru cyklu níž — a kdyby někdy přibyl druhý motiv, přidá se
+   sem jeden řádek. */
 const REZIMY = [
   { jmeno: 'světlý', volba: null },
-  { jmeno: 'tmavý', volba: 'dark' },
 ];
 const vse = [];
 let zmerenoCelkem = 0;

@@ -2,7 +2,6 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-<script>/* Vzhled se musí nastavit JEŠTĚ PŘED vykreslením: jinak se stránka stihne vykreslit světle a hned ztmavnout, a bílé bliknutí do očí v noci je přesně to, kvůli čemu si lidé tmavý režim zapínají. Proto je to vložené a synchronní, ne soubor s defer. Zároveň se vloží theme-color — barva lišty prohlížeče. Vložený meta stojí v pořadí PŘED statickým níž a prohlížeč bere první, takže vyhraje tenhle; statický zůstává pro případ, že skripty neběží. */try{var v=localStorage.getItem('pk_rezim_v1');if(v==='dark'||v==='light')document.documentElement.setAttribute('data-theme',v);var m=document.createElement('meta');m.setAttribute('name','theme-color');m.setAttribute('content',v==='dark'?'#17281E':'#F9FAF9');document.head.appendChild(m);}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Orná půda na prodej — nabídky z celé ČR | Parcelka</title>
   <meta name="description" content="851 pozemků s ornou půdou z celé ČR na jedné mapě — z veřejných zdrojů. Ceny od 5 057 Kč.">
@@ -32,7 +31,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=79bcf34e">
+  <link rel="stylesheet" href="css/styles.min.css?v=ee358273">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Orná půda na prodej","inLanguage":"cs","description":"851 pozemků s ornou půdou z celé ČR na jedné mapě — z veřejných zdrojů. Ceny od 5 057 Kč.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-orna-puda.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":851,"itemListElement":[{"@type":"ListItem","position":1,"name":"Velké Výkleky — Na prodej, 578 m²"},{"@type":"ListItem","position":2,"name":"Újezd u Brna — Na prodej, 545 m²"},{"@type":"ListItem","position":3,"name":"Pravlov — Na prodej, 570 m²"},{"@type":"ListItem","position":4,"name":"Újezd u Brna — Na prodej, 628 m²"},{"@type":"ListItem","position":5,"name":"Štítary na Moravě — Na prodej, 786 m²"},{"@type":"ListItem","position":6,"name":"Hůrky u Lišova — Na prodej, 1238 m²"},{"@type":"ListItem","position":7,"name":"Újezd u Brna — Na prodej, 647 m²"},{"@type":"ListItem","position":8,"name":"Hůrky u Lišova — Na prodej, 1293 m²"},{"@type":"ListItem","position":9,"name":"Bílá u Českého Dubu — Na prodej, 1247 m²"},{"@type":"ListItem","position":10,"name":"Holešov — Exekuce"},{"@type":"ListItem","position":11,"name":"Jundrov — Na prodej, 723 m²"},{"@type":"ListItem","position":12,"name":"Rosice — Na prodej, 299 m²"},{"@type":"ListItem","position":13,"name":"Velké Výkleky — Na prodej, 860 m²"},{"@type":"ListItem","position":14,"name":"Zaliny — Na prodej, 1479 m²"},{"@type":"ListItem","position":15,"name":"Houska — Na prodej, 947 m²"},{"@type":"ListItem","position":16,"name":"Houska — Na prodej, 1035 m²"},{"@type":"ListItem","position":17,"name":"Újezd u Brna — Na prodej, 1041 m²"},{"@type":"ListItem","position":18,"name":"Zdeslav u Rakovníka — Na prodej, 1356 m²"},{"@type":"ListItem","position":19,"name":"Zdeslav u Rakovníka — Na prodej, 1358 m²"},{"@type":"ListItem","position":20,"name":"Zdeslav u Rakovníka — Na prodej, 1361 m²"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Ceny pozemků","item":"https://www.parcelaka.cz/cena-pozemku.html"},{"@type":"ListItem","position":3,"name":"Orná půda na prodej","item":"https://www.parcelaka.cz/pozemky-orna-puda.html"}]}]
   </script>
@@ -564,7 +563,7 @@
     <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="kupni-smlouva-pozemek.html">Podklad pro smlouvu</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="moje-data.html">Moje data</a><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
-  <div class="wrap foot-bottom"><span id="pk-rezim"></span><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -585,7 +584,6 @@
 <script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
 <script src="js/min/upozorneni.js?v=4cc6941e" defer></script>
 <script src="js/min/graf-cen.js?v=5fe809e3" defer></script>
-<script src="js/min/rezim.js?v=5689e136" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/hlavicka.js?v=8d2b1304" defer></script>
 </body>

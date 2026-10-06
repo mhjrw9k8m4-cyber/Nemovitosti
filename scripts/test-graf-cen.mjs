@@ -89,9 +89,24 @@ pravda('v datech je okres s klidnou řadou i okres bez ní (je co porovnat)',
 if (!sGrafem || !bezGrafu) hotovo();
 
 const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || undefined });
+/* SERVICE WORKER SE TU MUSÍ ZABLOKOVAT, JINAK PODSTRČENÍ DAT TIŠE PŘESTANE PLATIT.
+   Kontrola čtvrtá podstrkuje vlastní data/historie-cen.json přes p.route()
+   a ptá se, co graf napíše. Jenže web má service worker, který si datové
+   soubory ukládá — a jakmile se jednou zaregistruje, obslouží je z
+   mezipaměti a k route() se požadavek vůbec nedostane. Podstrčení pak
+   nedělá nic, graf čte skutečná data a kontrola spadne nebo projde podle
+   toho, jaká data zrovna jsou.
+   Přistiženo takhle: zkouška v dávce spadla, při třech samostatných
+   bězích prošla, a pak spadla zas — po obnovení dat, kdy okres vybraný
+   pro graf měl 18 nabídek proti mezi 25. Ostatní zkoušky, které data
+   podstrkují (test-barva-ceny, test-cenova-mapa), si service worker
+   blokují; tahle jediná ne, protože si stránky otevírala rovnou z
+   prohlížeče, bez vlastního kontextu. */
+const kontext = await prohlizec.newContext({ serviceWorkers: 'block' });
 
 async function otevri(okres, sirka) {
-  const p = await prohlizec.newPage({ viewport: { width: sirka, height: 900 } });
+  const p = await kontext.newPage();
+  await p.setViewportSize({ width: sirka, height: 900 });
   const chybyJs = [];
   p.on('pageerror', (e) => chybyJs.push(String(e)));
   await p.goto(`${BASE}/pozemky-okres-${slug(okres)}.html`, { waitUntil: 'load' });
@@ -251,7 +266,8 @@ async function otevri(okres, sirka) {
     for (const k of Object.keys(kopie.rady)) {
       kopie.rady[k].vzorek = kopie.rady[k].vzorek.map((x) => (x === null ? null : kolik));
     }
-    const p = await prohlizec.newPage({ viewport: { width: 1100, height: 900 } });
+    const p = await kontext.newPage();
+    await p.setViewportSize({ width: 1100, height: 900 });
     await p.route('**/data/historie-cen.json*', (r) => r.fulfill({
       status: 200, contentType: 'application/json', body: JSON.stringify(kopie) }));
     await p.goto(`${BASE}/pozemky-okres-${slug(sGrafem)}.html`, { waitUntil: 'load' });

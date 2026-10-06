@@ -50,7 +50,6 @@ const V = {
   upoz: razitko('js/upozorneni.js'),
   hlavicka: razitko('js/hlavicka.js'),
   grafCen: razitko('js/graf-cen.js'),
-  rezim: razitko('js/rezim.js'),
   offline: razitko('js/offline.js'),
   cenovaMapa: razitko('js/cenova-mapa.js'),
   leafletJs: razitko('vendor/leaflet/leaflet.js'),
@@ -494,8 +493,7 @@ function head(title, desc, canonicalPath, ld, crumbs, ogSoubor, kanal, kanalNaze
   return `<!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8">\n<script>/* Vzhled se musí nastavit JEŠTĚ PŘED vykreslením: jinak se stránka stihne vykreslit světle a hned ztmavnout, a bílé bliknutí do očí v noci je přesně to, kvůli čemu si lidé tmavý režim zapínají. Proto je to vložené a synchronní, ne soubor s defer. Zároveň se vloží theme-color — barva lišty prohlížeče. Vložený meta stojí v pořadí PŘED statickým níž a prohlížeč bere první, takže vyhraje tenhle; statický zůstává pro případ, že skripty neběží. */try{var v=localStorage.getItem('pk_rezim_v1');if(v==='dark'||v==='light')document.documentElement.setAttribute('data-theme',v);var m=document.createElement('meta');m.setAttribute('name','theme-color');m.setAttribute('content',v==='dark'?'#17281E':'#F9FAF9');document.head.appendChild(m);}catch(e){}</script>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${esc(title)}</title>
   <meta name="description" content="${attr(desc)}">
   <meta name="theme-color" content="#F9FAF9">
@@ -568,7 +566,7 @@ function footer(){
     <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="kupni-smlouva-pozemek.html">Podklad pro smlouvu</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="moje-data.html">Moje data</a><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
-  <div class="wrap foot-bottom"><span id="pk-rezim"></span><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -589,7 +587,6 @@ function footer(){
 <script src="js/upozorneni-feed.js?${V.feed}" defer></script>
 <script src="js/upozorneni.js?${V.upoz}" defer></script>
 <script src="js/graf-cen.js?${V.grafCen}" defer></script>
-<script src="js/rezim.js?${V.rezim}" defer></script>
 <script src="js/offline.js?${V.offline}" defer></script>
 <script src="js/hlavicka.js?${V.hlavicka}" defer></script>
 </body>

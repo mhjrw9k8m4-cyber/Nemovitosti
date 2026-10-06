@@ -2,7 +2,6 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-<script>/* Vzhled se musí nastavit JEŠTĚ PŘED vykreslením: jinak se stránka stihne vykreslit světle a hned ztmavnout, a bílé bliknutí do očí v noci je přesně to, kvůli čemu si lidé tmavý režim zapínají. Proto je to vložené a synchronní, ne soubor s defer. Zároveň se vloží theme-color — barva lišty prohlížeče. Vložený meta stojí v pořadí PŘED statickým níž a prohlížeč bere první, takže vyhraje tenhle; statický zůstává pro případ, že skripty neběží. */try{var v=localStorage.getItem('pk_rezim_v1');if(v==='dark'||v==='light')document.documentElement.setAttribute('data-theme',v);var m=document.createElement('meta');m.setAttribute('name','theme-color');m.setAttribute('content',v==='dark'?'#17281E':'#F9FAF9');document.head.appendChild(m);}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pozemky Jihočeský kraj — prodej a dražby | Parcelka</title>
   <meta name="description" content="Pozemky v Jihočeském kraji na jedné mapě — 115 pozemků z veřejných zdrojů: prodeje, dražby i exekuce. Ceny od 6 499 Kč.">
@@ -32,7 +31,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=79bcf34e">
+  <link rel="stylesheet" href="css/styles.min.css?v=ee358273">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky Jihočeský kraj","inLanguage":"cs","description":"Nabídky pozemků v Jihočeském kraji — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-jihocesky-kraj.html","publisher":{"@type":"Organization","name":"Parcelka"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Jihočeský kraj","item":"https://www.parcelaka.cz/pozemky-jihocesky-kraj.html"}]}]
   </script>
@@ -232,7 +231,7 @@
     <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="kupni-smlouva-pozemek.html">Podklad pro smlouvu</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
     <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="moje-data.html">Moje data</a><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
   </div>
-  <div class="wrap foot-bottom"><span id="pk-rezim"></span><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
+  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -253,7 +252,6 @@
 <script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
 <script src="js/min/upozorneni.js?v=4cc6941e" defer></script>
 <script src="js/min/graf-cen.js?v=5fe809e3" defer></script>
-<script src="js/min/rezim.js?v=5689e136" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/hlavicka.js?v=8d2b1304" defer></script>
 </body>
