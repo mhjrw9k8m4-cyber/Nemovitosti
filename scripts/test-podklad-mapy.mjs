@@ -143,5 +143,54 @@ const stav = (p) => p.evaluate(() => {
   await ctx.close();
 }
 
+/* ===== OSTRÉ DLAŽDICE JEN NA LETECKÉ =================================
+   Na telefonu s trojnásobnou hustotou pixelů se dlaždice 256 px jen
+   roztáhne. detectRetina si řekne o dlaždice o stupeň hlouběji a vykreslí
+   je na poloviční stranu — změřeno na šachovnici v hustotě mapového
+   detailu: hranová energie 14,8 → 29,5, tedy dvojnásobek. Stojí to ale
+   čtyřnásobek stažených dlaždic (6 → 24 na obrazovku), a to z cizího
+   serveru.
+   Proto se zapíná JEN na leteckém snímku: ten si zapíná ten, kdo chce
+   vidět, co na pozemku roste. Základní mapa jede z veřejných dlaždic
+   OpenStreetMap, které na takový provoz nejsou, a je navíc odbarvená na
+   92 % — jemný detail v ní nikdo nehledá.
+   Je to rozhodnutí o cizím serveru, ne vkusovka, takže se hlídá: aby se
+   nezaplo plošně nedopatřením ani nevyplo, až na to někdo sáhne. */
+{
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 3, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(2600);
+
+  const zjisti = () => p.evaluate(() => {
+    let vrstva = null;
+    window.PK_MAPA.eachLayer((l) => { if (l.getTileUrl) vrstva = l; });
+    if (!vrstva) return null;
+    return { retina: !!vrstva.options.detectRetina, url: String(vrstva._url || ''),
+      /* Leaflet si při detectRetina sám zvedne zoomOffset o 1. */
+      posun: vrstva.options.zoomOffset || 0 };
+  });
+
+  const zakl = await zjisti();
+  pravda('základní podklad se vůbec našel', !!zakl, 'žádná dlaždicová vrstva');
+  pravda('základní mapa ostré dlaždice NEžádá (jede z veřejných dlaždic OSM)',
+    zakl && zakl.retina === false, zakl ? `detectRetina=${zakl.retina} na ${zakl.url.slice(0, 48)}` : '—');
+
+  await p.evaluate(() => {
+    const b = document.querySelector('#map-podklad [data-podklad="letecka"]');
+    if (b) b.click();
+  });
+  await p.waitForTimeout(1200);
+  const foto = await zjisti();
+  pravda('letecký snímek naopak ostré dlaždice žádá',
+    foto && foto.retina === true, foto ? `detectRetina=${foto.retina} na ${foto.url.slice(0, 48)}` : '—');
+  pravda('a Leaflet si o ně opravdu sáhne o stupeň hlouběji',
+    foto && foto.posun >= 1, foto ? `zoomOffset ${foto.posun}` : '—');
+  await ctx.close();
+}
+
 await prohlizec.close();
 hotovo();

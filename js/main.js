@@ -757,8 +757,23 @@
        Na leteckém snímku nemá co dělat: ten filtr by z fotografie udělal
        vybledlou šeď a nebylo by poznat les od pole — tedy právě to,
        kvůli čemu si člověk letecký zapíná. */
+    /* OSTRÉ DLAŽDICE JEN NA LETECKÉ. Na telefonu s trojnásobnou hustotou
+       pixelů se dlaždice 256 px jen roztáhne, takže podklad je měkký.
+       detectRetina si proto řekne o dlaždice o jeden stupeň hlouběji
+       a vykreslí je na poloviční stranu — změřeno na šachovnici v hustotě
+       mapového detailu: hranová energie 14,8 → 29,5, tedy přesně dvojnásobek.
+       Stojí to ale ČTYŘNÁSOBEK stažených dlaždic (6 → 24 na obrazovku),
+       a to je cizí server, ne náš. Základní mapa jede z veřejných dlaždic
+       OpenStreetMap, které na takový provoz nejsou, a je navíc odbarvená
+       na 92 % — jemný detail v ní stejně nikdo nehledá. Letecký snímek je
+       přesný opak: zapíná si ho ten, kdo chce vidět, co na pozemku roste
+       a kudy se k němu jede. Tam se ty dlaždice vyplatí.
+       maxNativeZoom drží hloubku, pro kterou dlaždice existují; za ní
+       Leaflet poslední úroveň zvětší, místo aby si říkal o prázdno. */
+    var ostre = def.id !== 'zakladni';
     podkladVrstva = L.tileLayer(def.url, {
       attribution: def.uvedeni, subdomains: 'abc', maxZoom: def.max || 19,
+      detectRetina: ostre, maxNativeZoom: def.max || 19,
       className: def.id === 'zakladni' ? 'pk-basemap' : 'pk-basemap-foto'
     }).addTo(map);
     podkladVrstva.bringToBack();

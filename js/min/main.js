@@ -533,8 +533,10 @@
     var def = podkladDef(id);
     if (podkladVrstva) map.removeLayer(podkladVrstva);
 
+    var ostre = def.id !== 'zakladni';
     podkladVrstva = L.tileLayer(def.url, {
       attribution: def.uvedeni, subdomains: 'abc', maxZoom: def.max || 19,
+      detectRetina: ostre, maxNativeZoom: def.max || 19,
       className: def.id === 'zakladni' ? 'pk-basemap' : 'pk-basemap-foto'
     }).addTo(map);
     podkladVrstva.bringToBack();
