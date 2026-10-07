@@ -123,11 +123,13 @@ async function stranka(sirka, prihlasit) {
   // v menu něco špatně vrství.
   const oddelovace = await p.evaluate(() => {
     const out = [];
-    document.querySelectorAll('#nav a').forEach((a) => {
+    document.querySelectorAll('#nav a:not(.btn-primary)').forEach((a) => {
       const s = getComputedStyle(a);
-      // Jen to, co je opravdu vidět. „Přidat pozemek" je v menu na mobilu
-      // skryté, ale rámeček mít nepřestane — počítat ho jako oddělovač by
-      // byla chyba měření, ne nález.
+      /* Jen to, co je opravdu vidět — a jen položky seznamu. „Přidat
+         pozemek" je od přestavby lišty v nabídce vidět jako plné tlačítko
+         dole; rámeček i zaoblení má proto, že je to TLAČÍTKO, ne proto, že
+         by něco oddělovalo. Počítat ho mezi oddělovače by byla chyba
+         měření, ne nález. */
       if (a.getBoundingClientRect().height === 0) return;
       if (parseFloat(s.borderTopWidth) > 0) out.push({
         kam: a.getAttribute('href'),

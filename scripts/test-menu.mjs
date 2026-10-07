@@ -138,7 +138,19 @@ try {
 
   await p.click('.nav-toggle');
   await p.waitForTimeout(200);
-  await p.mouse.click(5, 700);
+  /* MIMO PANEL SE MUSÍ ZMĚŘIT, NE ODHADNOUT. Dřív tu stálo pevné
+     mouse.click(5, 700) — to platilo, dokud nabídka visela z lišty.
+     Od přestavby stojí dnem na spodní hraně okna, takže ten bod leží
+     UVNITŘ ní a zkouška měřila nesmysl. Klepne se tedy nad panel —
+     a nejdřív se ověří, že tam panel opravdu není. */
+  const mimo = await p.evaluate(() => {
+    const r = document.getElementById('nav').getBoundingClientRect();
+    const h = document.querySelector('header').getBoundingClientRect();
+    return { y: Math.round((h.bottom + r.top) / 2), nadPanelem: Math.round(r.top - h.bottom) };
+  });
+  pravda(`nad nabídkou zůstává místo, kam se dá klepnout (${mimo.nadPanelem} px)`,
+    mimo.nadPanelem >= 40, 'nabídka sahá až pod hlavičku — kontrola níž by neměřila nic');
+  await p.mouse.click(195, mimo.y);
   await p.waitForTimeout(200);
   pravda('a klepnutí mimo menu ho taky zavře', !(await stav()).otevreno, JSON.stringify(await stav()));
 

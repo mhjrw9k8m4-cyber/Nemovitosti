@@ -167,9 +167,13 @@ const hlavickaBlok = css.slice(css.indexOf('header{border-bottom'), css.indexOf(
 pravda('hlavička nemá transform',
   !/transform:/.test(hlavickaBlok),
   'v pravidle pro <header> je transform: ' + (hlavickaBlok.match(/transform:[^;]*/) || [''])[0]);
-pravda('menu se věší na hlavičku přes position:absolute',
-  /#nav\{position:absolute;\s*top:100%/.test(css),
-  'jako fixed by potřebovalo vztažný rámec navíc — a ten dělal právě ten transform');
+/* Panel nabídky musí zůstat ABSOLUTE. Jako fixed by se nepočítal podle
+   okna, ale podle hlavičky: ta má backdrop-filter a ten — stejně jako
+   transform — dělá vztažný rámec i pro pevně polohované potomky.
+   Panel proto zůstává absolute a dno si spočítá z výšky hlavičky. */
+pravda('nabídka zůstává position:absolute a sedá dnem na spodek okna',
+  /#nav\{position:absolute;\s*top:auto;\s*bottom:calc\(100% - 100dvh\)/.test(css),
+  'jako fixed by se počítala podle hlavičky (backdrop-filter), ne podle okna');
 /* Ořezávající rodič je na Safari past u lepivých i pevných prvků a kvůli
    bočnímu posuvu ho tu nepotřebujeme (změřeno: 282 zkoušek, 0 nálezů). */
 pravda('<body> ani <html> neořezávají do stran',
@@ -187,12 +191,19 @@ pravda('<body> ani <html> neořezávají do stran',
     const n = document.getElementById('nav');
     const h = document.getElementById('header');
     const r = n.getBoundingClientRect(), hr = h.getBoundingClientRect();
-    return { navTop: Math.round(r.top), navSirka: Math.round(r.width), okno: innerWidth,
+    return { navTop: Math.round(r.top), navDole: Math.round(r.bottom),
+      navSirka: Math.round(r.width), okno: innerWidth, okno_v: innerHeight,
       hlavDole: Math.round(hr.bottom), vidno: r.height > 100 };
   });
   pravda('menu se otevře a je vidět', v.vidno, JSON.stringify(v));
-  pravda('menu navazuje na spodek hlavičky', Math.abs(v.navTop - v.hlavDole) <= 2,
-    `menu začíná na ${v.navTop}, hlavička končí na ${v.hlavDole}`);
+  /* NABÍDKA STOJÍ NA SPODNÍ HRANĚ OKNA, nevisí z lišty. Změřeno na
+     390×844: když visela pod lištou, ležel první řádek 686 px nad
+     spodní hranou a tři z šesti položek byly mimo dosah palce. */
+  pravda('nabídka sedá dnem na spodní hranu okna',
+    Math.abs(v.navDole - v.okno_v) <= 2,
+    `dno nabídky ${v.navDole}, okno ${v.okno_v}`);
+  pravda('a pod hlavičku nezaleze', v.navTop >= v.hlavDole - 2,
+    `nabídka začíná na ${v.navTop}, hlavička končí na ${v.hlavDole}`);
   pravda('a je přes celou šířku okna', Math.abs(v.navSirka - v.okno) <= 2,
     `${v.navSirka} × ${v.okno}`);
   await ctx.close();

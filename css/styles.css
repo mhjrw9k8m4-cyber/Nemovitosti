@@ -3168,15 +3168,14 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
    s názvem webu. Všechny čtyři bloky navigace musí mít tentýž zlom, jinak
    by se naráz ukázalo tlačítko i plné menu. */
 @media (max-width:1040px){
-  .nav-toggle{display:flex;}
-  /* „Přidat pozemek" stále v liště (ne schované v menu). Kompaktní, hned viditelné. */
+  .nav-toggle{display:flex; margin-left:auto;}
+  /* DVĚ VĚCI V LIŠTĚ, NE TŘI. Na 390 px se vedle sebe tlačily logo,
+     zelené „Přidat pozemek" a hamburger — tři věci na šířku, kterou má
+     telefon. Akce se vrátila do nabídky, kde pro ni je i věta „zdarma
+     a bez provize"; v liště zůstalo jméno a jedno tlačítko. */
   .logo{font-size:20px;}
-  .header-cta{display:inline-flex; align-items:center; margin-left:auto; margin-right:12px; padding:8px 14px; font-size:13px; border-radius:var(--r-sm); flex:none;}
-  .header-cta .cta-short{display:none;}
-  /* Duplicitní odkaz na „Přidat pozemek" + popisek uvnitř menu už netřeba
-     (akce je stále v liště). Skryjeme je jen na mobilu. Vyšší specificita
-     (#header) přebije obecné pravidlo pro odkazy v menu. */
-  #header #nav .nav-add, #header #nav .nav-cta-note{display:none;}
+  .header-cta{display:none;}
+  /* V nabídce už akce NĚNÍ duplicitní — je jediná, takže se ukazuje. */
   /* Mobilní menu = kompaktní panel u horní lišty (jen na výšku obsahu), sjíždí
      zpod hlavičky se zaoblenými spodními rohy. Pod ním je stránka jen zjemněná,
      menu zůstává nahoře v liště — nezabírá celou obrazovku. max-height
@@ -3186,8 +3185,27 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
      „100 dvh − 100 %" = zbytek obrazovky pod ní. Dřív to bylo fixed
      a rámec držel transform na hlavičce — jenže sticky + transform
      dohromady Safari přilepí hlavičku o kus níž. */
-  #nav{position:absolute; top:100%; left:0; right:0; max-height:calc(100dvh - 100%); flex-direction:column; align-items:stretch; gap:0; background:var(--ink); padding:12px 12px calc(18px + env(safe-area-inset-bottom, 0px)); border-radius:0 0 var(--r-lg) var(--r-lg); box-shadow:var(--e3); border-bottom:1px solid var(--line); display:none; overflow-y:auto; overscroll-behavior:contain; z-index:5;}
-  #nav.open{display:flex; animation:navdrop .22s var(--ease);}
+  /* NABÍDKA VYJÍZDÍ ZESPODA, ne shora. Změřeno na 390×844: když visela
+     pod lištou, ležel první řádek 674 px nad spodní hranou — palcem
+     nedosažitelný, a člověk musí sáhnout přes celou obrazovku zpátky
+     nahoru. Zespoda je nejbližší to, co se používá nejčastěji.
+
+     PROČ TAK PODIVNÉ „bottom": pro position:fixed by vztažným rámcem
+     NEBYLO okno, ale hlavička — ta má backdrop-filter a ten (stejně jako
+     transform) dělá vztažný rámec i pro pevně polohované potomky. Panel
+     tedy zůstává absolute a spodní hranu si spočítá: 100 % je výška
+     hlavičky, takže „výška hlavičky mínus celé okno" posadí dno panelu
+     přesně na dno obrazovky. Bez zásahu do HTML 2 170 stránek. */
+  #nav{position:absolute; top:auto; bottom:calc(100% - 100dvh); left:0; right:0;
+    max-height:calc(100dvh - 100% - 12px); flex-direction:column; align-items:stretch; gap:0;
+    background:var(--ink); padding:8px 12px calc(18px + env(safe-area-inset-bottom, 0px));
+    border-radius:var(--r-lg) var(--r-lg) 0 0; box-shadow:var(--e3); border-top:1px solid var(--line);
+    border-bottom:0; display:none; overflow-y:auto; overscroll-behavior:contain; z-index:5;}
+  #nav.open{display:flex; animation:navup .24s var(--ease);}
+  /* Pod otevřenou nabídkou se stránka nesmí rolovat. Kromě toho, že je to
+     u překryvu správně, to drží výšku hlavičky — ta se při rolování
+     smršťuje a panel počítaný z „100 %" by se jinak za ní sunul. */
+  body.nav-open{overflow:hidden;}
   /* Ve vysouvacím menu je všechno pod sebou, takže zanořovat skupinu do
      rozbalovátka by znamenalo jedno klepnutí navíc pro nic. „Moje" je tu
      nadpis oddílu a čtyři položky pod ním jsou rovnou vidět. */
@@ -3206,6 +3224,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   /* Ztmavené pozadí pod panelem (bez zásahu do HTML — pseudo na body) */
   body.nav-open::before{content:""; position:fixed; inset:0; background:rgba(6,16,12,0.55); z-index:4; animation:navdrop .22s var(--ease);}
   @keyframes navdrop{from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);}}
+  @keyframes navup{from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:translateY(0);}}
   /* Položky menu jako řádky aplikace: ikona + název + jemná šipka, zaoblené, reagují na dotek */
   #nav a:not(.btn-primary){display:flex; align-items:center; gap:14px; padding:14px 14px; margin-bottom:2px; border-radius:var(--r-md); border-bottom:none; font-family:var(--font-ui); font-size:16px; font-weight:600; color:var(--text-ondark); letter-spacing:-0.01em; transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
   #nav a:not(.btn-primary)::before{content:""; flex:none; width:24px; height:24px; background-repeat:no-repeat; background-position:center; background-size:22px 22px; opacity:0.92;}
@@ -3236,20 +3255,18 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   #nav a[href$="zpravy.html"], #nav a[href$="kontakt.html"]{
     margin-top:8px; padding-top:20px; border-top:1px solid var(--line);
     border-top-left-radius:0; border-top-right-radius:0;}
-  /* Případné tlačítko, které v menu zůstává (např. „Zpět na mapu" na podstránkách),
-     dole jako plná akce. „Přidat pozemek" je stále v liště (.header-cta). */
-  #nav a.btn-primary{text-align:center; margin-top:16px; border-bottom:0; padding:14px 20px; font-size:16px; font-weight:700; color:var(--ink); border-radius:var(--r-md);}
+  /* Akce dole jako plné tlačítko — „Přidat pozemek" i případné „Zpět na
+     mapu" na podstránkách. Dole proto, že tam má člověk palec. */
+  #nav a.btn-primary{text-align:center; margin-top:16px; border-bottom:0; padding:14px 20px; font-size:16px; font-weight:700; color:var(--ink); border-radius:var(--r-md); min-height:44px; display:flex; align-items:center; justify-content:center;}
+  .nav-cta-note{display:block; margin-top:8px; text-align:center; font-size:13px; color:var(--text-ondark-mute);}
   .steps{grid-template-columns:1fr;}
   :root{ --oddil-y:80px; }     /* o stupeň míň, ale pořád víc než dřívějších 64 */
   /* h1 už velikost nemění skokem, nese ji --h1-stranka. */
   .section-head h2{font-size:28px;}
   footer .wrap:not(.foot-grid):not(.foot-bottom){flex-direction:column; align-items:flex-start;}
 }
-/* Úzké telefony (iPhone mini/SE): CTA zkrátíme na „Přidat", ať se nekříží s logem. */
-@media (max-width:384px){
-  .header-cta .cta-full{display:none;}
-  .header-cta .cta-short{display:inline;}
-}
+/* (Zkrácená podoba CTA pro úzké telefony už není potřeba — v liště žádné
+   CTA není. Samotný text „Přidat" zůstává v HTML pro široké displeje.) */
 @media (max-width:520px){
   /* Jen do stran. Zkratka „padding" by srazila i svislé odsazení, které si
      některé obaly nesou (patička) — a ta pak na telefonu splývala v jeden blok. */
@@ -4263,9 +4280,18 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
    jako zbytek webu, jen zmenšený do menu.
    ===================================================================== */
 @media (max-width:1040px){
+  /* Zaoblení NAHOŘE, ne dole: panel už nevisí z lišty, ale stojí na
+     spodní hraně obrazovky (viz #nav výš). */
   #nav{padding:10px 10px calc(14px + env(safe-area-inset-bottom, 0px));
     background:linear-gradient(180deg, #F5FAF7 0%, #EEF6F1 100%);
-    border-radius:0 0 var(--r-lg) var(--r-lg); box-shadow:var(--e3);}
+    border-radius:var(--r-lg) var(--r-lg) 0 0; box-shadow:var(--e3);}
+  /* Úchytka — říká „tohle přijelo zespoda a dá se to shodit", stejně jako
+     v telefonních aplikacích; bez ní panel vypadá jako useknutý kus
+     stránky. Je to ::after s order:-1, protože ::before si už vzala
+     katastrální mřížka níž. */
+  #nav::after{content:""; order:-1; flex:none; width:40px; height:4px;
+    margin:2px auto 10px; border-radius:2px; background:var(--line-ui);
+    position:relative; z-index:1;}
   /* Katastrální mřížka i tady — menu patří k webu, ne vedle něj. */
   #nav::before{content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
     background-image:linear-gradient(to right, var(--mrizka-cara-svetla) 1px, transparent 1px),
