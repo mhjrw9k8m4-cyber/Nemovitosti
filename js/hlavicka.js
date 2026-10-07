@@ -150,6 +150,18 @@
     var A = window.PKAuth;
     var prihlasen = !!(A && A.loggedIn && A.loggedIn());
     odkaz.classList.toggle('je-prihlasen', prihlasen);
+    /* Příznak na <body>, ať se stránky účtu dají odlišit stylem. Kdo je
+       přihlášený, nepotřebuje číst, k čemu Zprávy nebo Hlídání jsou —
+       používá je. Změřeno na 390×844: ten úvodní blok zabral 162 až 189 px
+       a záložky účtu začínaly až na y 297–324. */
+    /* Tytéž třídy, jaké nasadil vložený skript v hlavičce stránky ještě
+       před vykreslením. Tady se jen opraví, když token mezitím vypršel —
+       vložený skript se dívá jen na to, jestli nějaký je. */
+    try {
+      var k = document.documentElement.classList;
+      k.toggle('pk-prihlasen', prihlasen);
+      k.toggle('pk-odhlasen', !prihlasen);
+    } catch (e) {}
     var skupina = odkaz.closest ? odkaz.closest('.nav-moje') : null;
     if (skupina) skupina.classList.toggle('prihlasen', prihlasen);
     if (!prihlasen) { stav.textContent = 'Nepřihlášeno'; return; }

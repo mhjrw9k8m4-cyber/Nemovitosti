@@ -97,6 +97,12 @@
     var A = window.PKAuth;
     var prihlasen = !!(A && A.loggedIn && A.loggedIn());
     odkaz.classList.toggle('je-prihlasen', prihlasen);
+
+    try {
+      var k = document.documentElement.classList;
+      k.toggle('pk-prihlasen', prihlasen);
+      k.toggle('pk-odhlasen', !prihlasen);
+    } catch (e) {}
     var skupina = odkaz.closest ? odkaz.closest('.nav-moje') : null;
     if (skupina) skupina.classList.toggle('prihlasen', prihlasen);
     if (!prihlasen) { stav.textContent = 'Nepřihlášeno'; return; }

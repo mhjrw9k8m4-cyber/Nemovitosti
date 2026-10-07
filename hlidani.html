@@ -2,6 +2,16 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
+  <!-- Stav přihlášení se musí vědět PŘED prvním vykreslením — viz tentýž
+       řádek v muj-inzerat.html a pridat.html. Stránky účtu začínají
+       odstavcem, který vysvětluje, k čemu ta funkce je, a ten přihlášený
+       člověk nepotřebuje. Skrýt ho až skriptem na konci stránky znamená,
+       že se nejdřív vykreslí a pak zmizí: změřeno pozorovatelem
+       layout-shift, CLS 0,1745 na Zprávách a 0,0939 na Hlídání — obojí nad
+       mezí webu 0,05. -->
+  <script>try{var t=JSON.parse(localStorage.getItem('pk_auth')||'null');
+    document.documentElement.className+=(t&&t.access_token)?' pk-prihlasen':' pk-odhlasen';}
+    catch(e){document.documentElement.className+=' pk-odhlasen';}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <title>Hlídání pozemků — Parcelka</title>
@@ -33,7 +43,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=16d252f1">
+  <link rel="stylesheet" href="css/styles.min.css?v=b3ff4ca0">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .hl-wrap{max-width:var(--m-uzky); margin:0 auto;}
@@ -295,9 +305,8 @@
   <section class="add-hero app-hero">
     <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
     <div class="wrap add-wrap">
-      <div class="eyebrow"><span class="live-dot"></span>Hlídání pozemků</div>
-      <h1>Hlídejte si <em>nové pozemky.</em></h1>
-      <p class="sub">Uložte si, co hledáte — a uvidíte, kolik <b>nových pozemků</b> vám sedí. Vše přehledně v aplikaci, i s detaily jako elektřina nebo přístupová cesta.</p>
+      <h1>Hlídání pozemků</h1>
+      <p class="sub"><b>Hlídejte si nové pozemky.</b> Uložte si, co hledáte — a uvidíte, kolik <b>nových pozemků</b> vám sedí. Vše přehledně v aplikaci, i s detaily jako elektřina nebo přístupová cesta.</p>
     </div>
   </section>
 
@@ -339,7 +348,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script src="js/min/nove-pozemky.js?v=d2d55ede"></script>
 <script src="js/min/push.js?v=0884b9c2" defer></script>
-<script src="js/min/hlavicka.js?v=1ca59d70"></script>
+<script src="js/min/hlavicka.js?v=bf85dd50"></script>
 <script>
 (function () {
   var A = window.PKAuth;

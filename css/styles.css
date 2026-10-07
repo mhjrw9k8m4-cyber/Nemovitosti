@@ -3284,6 +3284,16 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .add-hero h1{font-family:var(--font-display); font-weight:700; line-height:1.12; letter-spacing:-0.02em; max-width:var(--m-sloupec);}
 .add-hero .sub{font-size:16px; color:var(--text-ondark-mute); margin-top:16px; max-width:var(--m-text);}
 .add-wrap{max-width:var(--m-sloupec);}
+/* JEDEN PROFIL, TŘI ZÁLOŽKY.
+   Zprávy, Hlídání a Můj profil jsou tři stránky jednoho účtu. Každá
+   začínala sloganem a odstavcem, který vysvětluje, k čemu ta funkce je —
+   jenže kdo je přihlášený, ten ji už používá. Změřeno na 390×844:
+   úvodní blok zabíral 162–189 px a záložky účtu začínaly až na y 297–324,
+   takže cesta mezi vlastními stránkami byla pod ohybem.
+   Přihlášenému proto zůstane jen název stránky a hned pod ním záložky;
+   nepřihlášený povídání vidí dál, tomu říká, kam se chystá. */
+html.pk-prihlasen .app-hero .sub{display:none;}
+html.pk-prihlasen .app-hero{padding-bottom:4px;}
 
 /* ---------- Osobní stránky: upozornění, zprávy, hlídání, profil ----------
    Nadpis je proti ostatním úvodům sražený: sem člověk nechodí číst, ale

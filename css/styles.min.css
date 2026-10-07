@@ -1159,6 +1159,8 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){flex-direction:column;align-items
 .add-hero h1{font-family:var(--font-display);font-weight:700;line-height:1.12;letter-spacing:-0.02em;max-width:var(--m-sloupec)}
 .add-hero .sub{font-size:16px;color:var(--text-ondark-mute);margin-top:16px;max-width:var(--m-text)}
 .add-wrap{max-width:var(--m-sloupec)}
+html.pk-prihlasen .app-hero .sub{display:none}
+html.pk-prihlasen .app-hero{padding-bottom:4px}
 .add-hero.app-hero{padding:28px 0 4px}
 .add-hero.app-hero .eyebrow{margin-bottom:12px}
 .add-hero.app-hero h1{font-size:var(--h1-nastroj);font-weight:600;max-width:var(--m-uzky)}
