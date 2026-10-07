@@ -2747,9 +2747,20 @@
         var v = window.PK_VRSTVY.leafletVrstva(zapis, L);
         if (!v) return;
         v.addTo(map);
-        /* Pod tečky pozemků: vrstva je podklad, ne obsah. Tečky jsou to,
-           kvůli čemu sem člověk přišel, a nesmí je nic překrýt. */
-        if (v.bringToBack) v.bringToBack();
+        /* NAD PODKLAD, POD TEČKY. Stálo tu bringToBack() s úmyslem
+           „vrstva je podklad, ať nepřekryje tečky pozemků" — jenže
+           tečky kreslí Leaflet v jiné vrstvě plátna (overlay/marker
+           pane), která je nad dlaždicemi vždycky. bringToBack() tedy
+           žádné tečky nechránilo a jen poslalo vrstvu POD LETECKOU
+           MAPU, kde ji nikdo nevidí.
+           Naměřeno v prohlížeči: po zapnutí „Hranice parcel" měl
+           kontejner vrstvy z-index 0 a podklad 1 — dlaždice se stáhly
+           a byly neviditelné. Tlačítko přitom zezelenalo, takže to
+           vypadalo, že vrstva běží. Přesně na tohle si majitel webu
+           stěžoval („nefunguje vrstvení a tlačítko hranice parcel").
+           Dvojka je mezi podkladem (1) a ostatními vrstvami plátna,
+           takže vrstva je vidět a tečky pořád nad ní. */
+        if (v.setZIndex) v.setZIndex(2);
         vrstvyZive[def.id] = v;
         b.classList.add('on');
         b.setAttribute('aria-pressed', 'true');

@@ -1812,7 +1812,7 @@
         if (!v) return;
         v.addTo(map);
 
-        if (v.bringToBack) v.bringToBack();
+        if (v.setZIndex) v.setZIndex(2);
         vrstvyZive[def.id] = v;
         b.classList.add('on');
         b.setAttribute('aria-pressed', 'true');

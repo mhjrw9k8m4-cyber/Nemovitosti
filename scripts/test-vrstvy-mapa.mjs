@@ -125,6 +125,75 @@ const vidu = (sel) => p.evaluate((s) => {
   pravda('nic z toho nespadlo do konzole', chybyKonzole.length === 0,
     chybyKonzole.slice(0, 2).join(' | '));
   await ctx.close();
+  /* ===== ZAPNUTÁ VRSTVA MUSÍ BÝT VIDĚT ==========================
+     Služby úřadů jsou odsud nedostupné, takže se podstrčí vlastní
+     dlaždicová vrstva na místní adresu — ta vždycky odpoví. Neměří se
+     tím ČÚZK, ale zapojení: co se stane s vrstvou, když ji člověk
+     zapne.
+     NALEZENÁ VADA: v kódu stálo `v.bringToBack()` s úmyslem „vrstva je
+     podklad, ať nepřekryje tečky pozemků". Jenže tečky kreslí Leaflet
+     v jiné vrstvě plátna, která je nad dlaždicemi vždycky — takže to
+     žádné tečky nechránilo a jen poslalo vrstvu POD leteckou mapu.
+     Naměřeno: kontejner vrstvy měl z-index 0, podklad 1. Dlaždice se
+     stáhly a nebyly vidět, tlačítko přitom zezelenalo. Stížnost zněla
+     „nefunguje vrstvení a tlačítko hranice parcel" a byla oprávněná. */
+  {
+    const CERVENA = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAAAA3NCSVQICAjb4U/gAAAAW0lEQVR4nO3BAQ0AAADCoPdPbQ8HFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHwbQe4AAeLq6lAAAAAASUVORK5CYII=', 'base64');
+    const ctx2 = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+      isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+    await ctx2.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+      body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+    await ctx2.route('**/data/mapove-vrstvy.json*', (r) => r.fulfill({ status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ verze: 3, vrstvy: [{ id: 'katastr', nazev: 'Hranice parcel',
+        popis: 'podstrčená vrstva pro zkoušku', uvedeni: '© zkouška', kryti: 1, odPriblizeni: 10,
+        sluzby: [{ typ: 'dlazdice', url: BASE + '/zkouska/{z}/{x}/{y}.png', zkusebniPriblizeni: 14 }] }] }) }));
+    await ctx2.route('**/zkouska/**', (r) => r.fulfill({ status: 200, contentType: 'image/png', body: CERVENA }));
+    const p2 = await ctx2.newPage();
+    await p2.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
+    await p2.waitForTimeout(2500);
+    await p2.evaluate(() => { window.PK_MAPA.setZoom(13); });
+    await p2.waitForTimeout(1200);
+    await p2.evaluate(() => document.getElementById('map-vrstvy').click());
+    await p2.waitForTimeout(2500);
+    const nabidka = await p2.evaluate(() => document.querySelectorAll('#map-vrstvy-panel .mv-v').length);
+    // PŘEDPOKLAD: bez nabídnuté vrstvy není co zapínat a kontroly níž by prošly naprázdno
+    pravda('podstrčená vrstva se nabídne (jinak není co měřit)', nabidka === 1,
+      `přepínačů v panelu: ${nabidka}`);
+    if (nabidka === 1) {
+      await p2.evaluate(() => document.querySelector('#map-vrstvy-panel .mv-v').click());
+      await p2.waitForTimeout(1500);
+      const v = await p2.evaluate(() => {
+        const pane = document.querySelector('.leaflet-tile-pane');
+        const vrstvy = [...pane.children].map((c) => ({
+          podklad: /pk-basemap/.test(c.className),
+          z: parseInt(getComputedStyle(c).zIndex, 10) || 0,
+          dlazdic: c.querySelectorAll('img').length }));
+        const overlay = document.querySelector('.leaflet-overlay-pane');
+        return { vrstvy,
+          zOverlay: overlay ? (parseInt(getComputedStyle(overlay).zIndex, 10) || 0) : null,
+          zTilePane: parseInt(getComputedStyle(pane).zIndex, 10) || 0 };
+      });
+      const podklad = v.vrstvy.find((x) => x.podklad);
+      const vrstva = v.vrstvy.find((x) => !x.podklad);
+      pravda('po zapnutí je v mapě podklad i zapnutá vrstva', !!podklad && !!vrstva,
+        JSON.stringify(v.vrstvy));
+      if (podklad && vrstva) {
+        pravda('a zapnutá vrstva leží NAD podkladem, ne pod ním',
+          vrstva.z > podklad.z, `vrstva z-index ${vrstva.z}, podklad ${podklad.z}`);
+        pravda('a opravdu si stáhla dlaždice', vrstva.dlazdic > 0,
+          `dlaždic ${vrstva.dlazdic}`);
+      }
+      /* A pořád musí platit to, kvůli čemu tam bringToBack bylo: tečky
+         pozemků nesmí nic překrýt. Drží to vrstva plátna, ne pořadí
+         dlaždic — overlay pane je nad celou vrstvou dlaždic. */
+      pravda('tečky pozemků zůstávají nad vrstvami dlaždic',
+        v.zOverlay !== null && v.zOverlay > v.zTilePane,
+        `overlay ${v.zOverlay}, dlaždice ${v.zTilePane}`);
+    }
+    await ctx2.close();
+  }
 } finally {
   await prohlizec.close();
 }

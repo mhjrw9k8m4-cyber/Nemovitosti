@@ -153,7 +153,11 @@ async function stranka(sirka, prihlasit) {
   await ctx.close();
 }
 
-/* ---------- 3. vyskakovací upozornění nad vším ostatním ---------- */
+/* ---------- 3. odznak novinek v hlavičce nad vším ostatním ----------
+   Dřív se tu měřila vyskakovací hláška „Přibylo N nových pozemků" —
+   ta je pryč (majitel webu ji odmítl: vyskakovala přes obsah uprostřed
+   čtení). Zůstal odznak v hlavičce a platí pro něj totéž, co platilo
+   pro hlášku: nesmí ho nic překrýt, ani otevřené menu. */
 {
   const ctx = await stranka(390, true);
   const p = await ctx.newPage();
@@ -164,15 +168,24 @@ async function stranka(sirka, prihlasit) {
     sessionStorage.removeItem('pk_upozorneni_v1');
   });
   await p.reload();
-  await p.waitForSelector('.upo-toast.show', { timeout: 15000 });
-  await p.click('.nav-toggle');            // otevřeme i menu, ať se potkají
-  await p.waitForTimeout(400);
-  const nahore = await p.evaluate(() => {
-    const r = document.querySelector('.upo-toast').getBoundingClientRect();
-    const el = document.elementFromPoint(Math.round(r.x + r.width / 2), Math.round(r.y + 20));
-    return el ? (el.closest('.upo-toast') ? 'toast' : (el.className || el.tagName) + '') : 'nic';
-  });
-  je('vyskakovací upozornění zůstane nahoře i při otevřeném menu', nahore, 'toast');
+  await p.waitForTimeout(2500);
+  je('žádná vyskakovací hláška se neukáže', await p.locator('.upo-toast').count(), 0);
+  const tecka = await p.locator('.nav-dot').count();
+  // PŘEDPOKLAD: bez odznaku by kontrola níž neměla co měřit
+  je('v hlavičce svítí odznak novinek', tecka > 0, true);
+  if (tecka > 0) {
+    await p.click('.nav-toggle');          // otevřeme menu, ať se potkají
+    await p.waitForTimeout(400);
+    const nahore = await p.evaluate(() => {
+      const r = document.querySelector('.nav-dot').getBoundingClientRect();
+      const el = document.elementFromPoint(Math.round(r.x + r.width / 2), Math.round(r.y + r.height / 2));
+      /* Ptáme se na BOD, ne na pořadí v kódu: co je na tom místě doopravdy
+         vidět. Odznak je kolečko na tlačítku menu, takže trefit se smí
+         buď do něj, nebo do toho tlačítka — pod menu zmizet nesmí. */
+      return el ? !!(el.closest('.nav-dot') || el.closest('.nav-toggle')) : false;
+    });
+    je('odznak zůstane nahoře i při otevřeném menu', nahore, true);
+  }
   await ctx.close();
 }
 
