@@ -1,0 +1,58 @@
+name: Nasadit databázi do Supabase
+
+# Pošle supabase/00-vse.sql do databáze. Doteď se to muselo udělat ručně:
+# otevřít soubor, označit 2 300 řádků, zkopírovat a vložit do SQL editoru
+# Supabase. U počítače dvě minuty, na telefonu neproveditelné — a výsledek
+# byl, že hotová práce ležela nenasazená.
+#
+# POUŠTÍ SE JEN RUČNĚ, žádný cron. Zakládání tabulek, které se rozjede
+# samo po nějakém pushnutí, je přesně to, co se nemá stát. A i po stisku
+# tlačítka je výchozí volba „nasucho": soubor se jen zkontroluje a vypíše,
+# co by poslal. Teprve přepnutí na „opravdu" ho odešle.
+#
+# JE TO BEZPEČNÉ PUSTIT OPAKOVANĚ. Sám soubor je tak psaný — tabulky přes
+# „if not exists", pravidla se před vytvořením ruší, funkce se přepisují.
+#
+# Potřebné tajné klíče (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL   — už v repozitáři je, odvodí se z něj označení projektu
+#   SUPABASE_PAT   — osobní přístupový token Supabase, viz
+#                    https://supabase.com/dashboard/account/tokens
+#
+# Proč token navíc a nestačí SUPABASE_SERVICE_ROLE_KEY: tím se mluví
+# s PostgREST, a ten umí jen volat funkce a sahat na tabulky, které už
+# existují. Zakládat je neumí; na to je Management API Supabase.
+
+on:
+  workflow_dispatch:
+    inputs:
+      opravdu:
+        description: 'Opravdu nasadit (bez zaškrtnutí jen zkontroluje)'
+        type: boolean
+        required: false
+        default: false
+
+# Dvě nasazení naráz by si šla do zelí.
+concurrency:
+  group: nasad-sql
+  cancel-in-progress: false
+
+jobs:
+  nasadit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Soubor se před odesláním složí znovu ze supabase/*.sql, ať se
+      # nenasadí verze, která se rozešla s jednotlivými soubory.
+      - name: Složit databázi z jednotlivých souborů
+        run: node scripts/build-sql.mjs
+
+      - name: Nasadit
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PAT: ${{ secrets.SUPABASE_PAT }}
+        run: node scripts/nasad-sql.mjs ${{ inputs.opravdu && '--opravdu' || '' }}

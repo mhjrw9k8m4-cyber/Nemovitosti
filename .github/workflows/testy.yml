@@ -266,6 +266,9 @@ jobs:
       - name: Návratnost koupě pozemku
         run: node scripts/test-navratnost.mjs
 
+      - name: Nasazení databáze jedním tlačítkem
+        run: node scripts/test-nasad-sql.mjs
+
       - name: Rádce u pozemku (rady podle skutečných údajů)
         run: node scripts/test-radce.mjs
 
