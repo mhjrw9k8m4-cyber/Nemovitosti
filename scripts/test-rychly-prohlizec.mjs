@@ -157,6 +157,56 @@ pravda('nabízená karta nese klíč pozemku (jinak není co porovnávat)', nevr
 pravda('a nabízená karta není ani jeden z nich', nevraci.kolize === 0,
   `nabízí „${nevraci.nabizi}", a ten je mezi rozhodnutými`);
 
+/* --- POZNÁMKA ROVNOU PŘI TŘÍDĚNÍ --------------------------------
+   Přání: „zde by taky měla být možnost přidat poznámku." Při třídění po
+   jedné kartě je právě ta chvíle, kdy člověk ví, proč si pozemek nechává
+   — a dosud to neměl kam napsat; musel ho uložit, dojet dávku, najít ho
+   ve výpisu a otevřít.
+   Měří se tři věci: že se poznámka uloží pod klíč TÉ karty (tedy je to
+   táž poznámka, jakou ukazuje výpis i stránka pozemku, ne druhá vedle
+   ní), že psaní nehne kartou, a že se při přechodu na další kartu
+   nepřenese do cizí nabídky. */
+{
+  const klic = await p.evaluate(() => (document.getElementById('rv-karta') || { dataset: {} }).dataset.pk || '');
+  const start = await p.evaluate(() => ({
+    vyzva: !!document.getElementById('rv-pozn-vyzva'),
+    skryte: (document.getElementById('rv-pozn') || {}).hidden,
+  }));
+  pravda('na kartě je nabídka „Přidat poznámku"', start.vyzva === true, JSON.stringify(start));
+  pravda('a políčko je do klepnutí schované (karta má zůstat čitelná)',
+    start.skryte === true, JSON.stringify(start));
+  if (start.vyzva) {
+    await p.evaluate(() => document.getElementById('rv-pozn-vyzva').click());
+    await p.waitForTimeout(250);
+    await p.type('#rv-pozn', 'U lesa, zavolat.');
+    await p.waitForTimeout(1100);
+    const ulozeno = await p.evaluate((k) => {
+      let m = {};
+      try { m = JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}'); } catch (e) {}
+      return { stav: (document.getElementById('rv-pozn-stav') || {}).textContent,
+        podKlicem: !!(m[k] && /U lesa/.test(m[k].text || '')), klice: Object.keys(m) };
+    }, klic);
+    pravda('poznámka se uloží a řekne to', /ulož/i.test(ulozeno.stav || ''), `stav „${ulozeno.stav}"`);
+    pravda('a uloží se pod klíč TÉ karty', ulozeno.podKlicem === true,
+      `karta ${klic}, uloženo pod ${JSON.stringify(ulozeno.klice)}`);
+    /* Šipky jinak kartu rozhodují — uprostřed psaní by pozemek odletěl. */
+    await p.focus('#rv-pozn');
+    await p.keyboard.press('ArrowRight');
+    await p.waitForTimeout(500);
+    const poSipce = await p.evaluate(() => (document.getElementById('rv-karta') || { dataset: {} }).dataset.pk || '');
+    pravda('šipka uprostřed psaní kartou nehne', poSipce === klic,
+      `před ${klic}, po ${poSipce}`);
+    await p.evaluate(() => document.getElementById('rv-ne').click());
+    await p.waitForTimeout(900);
+    const dalsi = await p.evaluate(() => ({
+      karta: (document.getElementById('rv-karta') || { dataset: {} }).dataset.pk || '',
+      hodnota: (document.getElementById('rv-pozn') || { value: null }).value,
+    }));
+    pravda('a na další kartě je políčko prázdné (poznámka se nepřenese)',
+      dalsi.karta !== klic && !dalsi.hodnota, JSON.stringify(dalsi));
+  }
+}
+
 await ctx.close(); await prohlizec.close();
 console.log(`\nRychlý výběr v prohlížeči: ${ok + chyb} kontrol`);
 console.log(zpravy.join('\n'));

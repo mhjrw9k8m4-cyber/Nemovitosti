@@ -696,6 +696,14 @@ to{opacity:1;transform:none}
 .rv-druh{font-size:15px;color:var(--text-ondark);margin-top:8px}
 .rv-cisla{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .rv-cislo{font-size:14px;font-weight:600;color:var(--text-ondark);background:var(--ink-soft2);border:1px solid var(--line);border-radius:var(--r-pill);padding:5px 11px;font-variant-numeric:tabular-nums}
+.rv-pozn-box{margin-top:10px}
+.rv-pozn-vyzva{min-height:36px;padding:0 12px;border-radius:var(--r-pill);cursor:pointer;border:1px dashed var(--line-strong);background:none;color:var(--text-ondark-mute);font:inherit;font-size:13px;font-weight:600}
+.rv-pozn-vyzva:hover{border-style:solid;border-color:var(--copper-bright);color:var(--copper)}
+@media (hover:none){.rv-pozn-vyzva{min-height:44px}
+}
+.rv-pozn{display:block;width:100%;min-height:56px;padding:8px 10px;resize:vertical;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:var(--plocha-jemna);color:var(--text-ondark);font:inherit;font-size:14px;line-height:1.5}
+.rv-pozn:focus{outline:none;border-color:var(--copper-bright)}
+.rv-pozn-stav{display:block;min-height:16px;margin-top:4px;font-size:12px;color:var(--text-ondark-mute)}
 .rv-stalo{min-height:22px;text-align:center;font-size:14px;font-weight:700;margin:6px 0 0}
 .rv-stalo.uloz{color:var(--c-ok-ink)}
 .rv-stalo.skryj{color:var(--text-ondark-mute)}

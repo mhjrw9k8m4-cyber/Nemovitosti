@@ -5514,6 +5514,8 @@
     }
     if (napoveda) napoveda.hidden = false;
     var zaM2 = zaMetr(d);
+    var poznTed = '';
+    try { if (window.PKPoznamky && window.PKPoznamky.text) poznTed = window.PKPoznamky.text(d) || ''; } catch (e) {}
     var S = window.PK_SNIMEK;
     var obraz = S ? S.html(d, { sirka: 460, vyska: 307, barva: (TYPE[d.type] || {}).color, id: 'rv' }) : '';
     /* Dvě ztlumené karty vzadu říkají beze slov, že se bere z balíčku.
@@ -5540,8 +5542,57 @@
           + (d.area > 0 ? '<span class="rv-cislo">' + fmt(d.area) + ' m²</span>' : '')
           + (zaM2 != null ? '<span class="rv-cislo">' + fmt(Math.round(zaM2)) + ' Kč/m²</span>' : '')
         + '</div>'
+        /* POZNÁMKA ROVNOU NA KARTĚ. Při třídění po jedné je právě ta
+           chvíle, kdy člověk ví, proč si pozemek nechává — a dosud to
+           neměl kam napsat; musel ho uložit, dojet dávku, najít ho ve
+           výpisu a otevřít. Políčko se rozbalí až klepnutím, ať karta
+           zůstane čitelná; když poznámka už je, je vidět rovnou. */
+        + (window.PKPoznamky ? ('<div class="rv-pozn-box">'
+            + '<button type="button" class="rv-pozn-vyzva" id="rv-pozn-vyzva"'
+              + (poznTed ? ' hidden' : '') + '>Přidat poznámku</button>'
+            + '<textarea class="rv-pozn" id="rv-pozn" rows="2" maxlength="2000"'
+              + (poznTed ? '' : ' hidden')
+              + ' placeholder="Proč si ho nechávám…"'
+              + ' aria-label="Moje poznámka k pozemku">' + esc(poznTed) + '</textarea>'
+            + '<span class="rv-pozn-stav" id="rv-pozn-stav" role="status"></span>'
+          + '</div>') : '')
       + '</div></article></div>';
     rvChytejPrst();
+    rvPoznamka(d);
+  }
+
+  /* Poznámka na kartě rychlého výběru. Ukládá se do téhož místa jako na
+     stránce pozemku (js/poznamky.js), takže ji člověk hned vidí ve výpisu
+     i na stránce pozemku — není to druhá poznámka vedle té pravé. */
+  function rvPoznamka(d) {
+    var pole = rvPrvek('rv-pozn');
+    var vyzva = rvPrvek('rv-pozn-vyzva');
+    var stav = rvPrvek('rv-pozn-stav');
+    if (!pole || !window.PKPoznamky) return;
+    if (vyzva) vyzva.addEventListener('click', function () {
+      vyzva.hidden = true;
+      pole.hidden = false;
+      try { pole.focus(); } catch (e) {}
+    });
+    var puvodni = pole.value, cas = null;
+    function uloz() {
+      var t = pole.value;
+      if (t === puvodni) return;
+      var ok = window.PKPoznamky.uloz(d, t);
+      puvodni = t;
+      if (stav) stav.textContent = ok ? (t.trim() ? 'uloženo' : 'smazáno') : 'nepovedlo se uložit';
+    }
+    pole.addEventListener('input', function () {
+      if (stav) stav.textContent = '…';
+      clearTimeout(cas);
+      cas = setTimeout(uloz, 600);
+    });
+    pole.addEventListener('blur', function () { clearTimeout(cas); uloz(); });
+    /* PSANÍ NENÍ POSOUVÁNÍ KARTY. Bez tohohle by se kartou při psaní
+       táhlo a pozemek by odletěl doprostřed věty. */
+    ['touchstart', 'touchmove', 'touchend', 'click'].forEach(function (u) {
+      pole.addEventListener(u, function (e) { e.stopPropagation(); }, { passive: true });
+    });
   }
 
   /* Konec dávky. Říká tři věci, které dřív nikde nestály: co se stalo,
@@ -5658,7 +5709,12 @@
     });
     document.addEventListener('keydown', function (e) {
       if (!rvStav || !rvVrstva || rvVrstva.hidden) return;
-      if (e.key === 'Escape') { zavriRychly(); return; }
+      /* Kdo píše poznámku, posouvá kurzor, ne kartu. Bez téhle výjimky
+         by šipka uprostřed věty pozemek uložila nebo schovala. */
+      var cil = e.target;
+      var pise = cil && (cil.tagName === 'TEXTAREA' || cil.tagName === 'INPUT');
+      if (e.key === 'Escape') { if (pise) { try { cil.blur(); } catch (x) {} return; } zavriRychly(); return; }
+      if (pise) return;
       if (e.key === 'ArrowLeft') { e.preventDefault(); rvRozhodni(PKRychly.VLEVO); }
       if (e.key === 'ArrowRight') { e.preventDefault(); rvRozhodni(PKRychly.VPRAVO); }
     });
