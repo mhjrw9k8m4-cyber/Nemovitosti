@@ -3,20 +3,19 @@
 // Spuštění: node scripts/test-paticka.mjs
 //   (potřebuje playwright-core; v sandboxu navíc PW_CHROMIUM=cesta/k/chrome)
 //
-// Patička působila „slitě" a stály za tím tři samostatné příčiny, ani jedna
-// vidět v kódu na první pohled:
+// PATIČKA JE DNES JEDEN ŘÁDEK. Byly v ní čtyři sloupce odkazů (Produkt,
+// Informace, Rádce, Právní) — rozcestník přes celou obrazovku pod každou
+// stránkou, kterým nikdo neprochází; všechno, co v něm stálo, vede i
+// z menu v hlavičce. Majitel webu ho opakovaně odmítl, tak je pryč.
 //
-// 1) Pravidlo „footer .wrap" (zbytek po staré jednořádkové patičce) je silnější
-//    než „.foot-grid", takže se mřížka nikdy nevykreslila jako mřížka. Sloupce
-//    se jen vystředily vedle sebe a nadpisy byly každý jinde vysoko.
-// 2) Odkazy měly na telefonu „display:inline-block" kvůli ploše k trefení —
-//    tím ale přestaly být řádky a slily se do odstavce: „MapaCeny pozemků".
-// 3) Na úzkých telefonech přepisovala „.wrap{padding:0 20px}" zkratkou i svislé
-//    odsazení, které si patička nese. Dělicí čára pak ležela natěsno na
-//    posledním odkazu.
-//
-// Žádnou z nich by nechytil test chyb skriptů ani kontrastu — patička dál
-// fungovala, jen vypadala, že ji nikdo nedodělal. Proto se tu měří rozvržení.
+// Zůstaly PRÁVNÍ ODKAZY, a to schválně: web zakládá účty, posílá e-maily
+// a zpracovává osobní údaje, takže na zásady soukromí, podmínky a kontakt
+// musí jít dosáhnout z každé stránky. Právě to se tu měří — spolu s tím,
+// co už jednou bylo rozbité:
+//   • odkazy se musí dát trefit prstem (44 px, ne 21),
+//   • tlačítko „Nahoru" nesmí ležet na copyrightu (to je nalezená vada,
+//     naměřeno 66×19 px překryvu, viz scripts/test-nahoru.mjs),
+//   • a řádek se nesmí rozsypat do slitého odstavce na úzkém telefonu.
 import { chromium } from 'playwright-core';
 
 await import('./falesna-supabase-chat.mjs');
@@ -32,26 +31,21 @@ function pravda(popis, vyslo, proc) {
 
 // Úvod má patičku s mapou nad sebou, textová stránka bez ní — obě ji sdílejí.
 const STRANKY = ['index.html', 'cena-pozemku.html'];
+// Odkazy, které v patičce musí zůstat, ať se nestane, že je někdo „uklidí" taky.
+const POVINNE = [['ochrana-udaju.html', 'zásady soukromí'], ['podminky.html', 'podmínky'],
+  ['kontakt.html', 'kontakt']];
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
 /** Změří patičku na jedné stránce v jedné šířce. */
 async function zmer(stranka, sirka) {
-  const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: 900 } });
-  await ctx.route('**/*', (r) => {
-    const u = new URL(r.request().url());
-    return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();
-  });
+  const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: 900 },
+    isMobile: sirka < 700, hasTouch: sirka < 700, locale: 'cs-CZ' });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(2200);
-  /* POČKAT, AŽ SE ROLOVÁNÍ ZASTAVÍ — ne pevných 700 ms.
-     Stránka roluje plynule (smooth), takže po 700 ms ještě klouže:
-     naměřeno na index.html odroleno 5 524 px z 5 625 a copyright o 101 px
-     níž, než kde doopravdy skončí. Tlačítko „Zpět nahoru" ho v tu chvíli
-     míjelo o dva pixely, takže kontrola překryvu hlásila jednou tak,
-     jednou onak — podle toho, jak rychle zrovna běžel stroj. Měřit
+  await p.waitForTimeout(1500);
+  /* POČKAT, AŽ SE STRÁNKA ZASTAVÍ. Posouvá se plynule, takže měřit
      stránku, která se ještě hýbe, znamená měřit něco, co nikdo neuvidí. */
   await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   await p.evaluate(async () => {
@@ -64,35 +58,29 @@ async function zmer(stranka, sirka) {
     }
   });
   const v = await p.evaluate(() => {
-    const g = document.querySelector('.foot-grid');
+    const f = document.querySelector('footer');
     const fb = document.querySelector('.foot-bottom');
-    const cs = getComputedStyle(g);
-    // Nadpisy sloupců: seskupíme je po řádcích podle svislé polohy.
-    const hlavicky = [...document.querySelectorAll('.foot-col h5')]
-      .map((h) => Math.round(h.getBoundingClientRect().top));
-    const radky = {};
-    hlavicky.forEach((y) => { radky[y] = (radky[y] || 0) + 1; });
-    // Odkazy v jednom sloupci: každý musí být na svém řádku.
-    const sloupec = document.querySelector('.foot-col');
-    const odkazy = [...sloupec.querySelectorAll('a')].map((a) => {
+    if (!f || !fb) return { chybi: true, paticka: !!f, radek: !!fb };
+    const odkazy = [...fb.querySelectorAll('a')].map((a) => {
       const r = a.getBoundingClientRect();
-      return { text: a.textContent.trim(), top: Math.round(r.top), vyska: Math.round(r.height) };
+      return { text: a.textContent.replace(/\s+/g, ' ').trim(), href: a.getAttribute('href') || '',
+        top: Math.round(r.top), vyska: Math.round(r.height), sirka: Math.round(r.width) };
     });
-    const naStejnemRadku = odkazy.filter((a, i) => i > 0 && Math.abs(a.top - odkazy[i - 1].top) < 4);
     const t = document.getElementById('to-top');
-    const posl = fb.lastElementChild.getBoundingClientRect();
-    const tr = t ? t.getBoundingClientRect() : null;
-    return {
-      mrizka: cs.display,
-      pocetSloupcu: cs.gridTemplateColumns.split(' ').filter(Boolean).length,
-      radkyNadpisu: Object.values(radky),
-      odkazy, naStejnemRadku,
-      odstupPodMrizkou: Math.round(fb.getBoundingClientRect().top - g.getBoundingClientRect().bottom)
-        + parseFloat(cs.paddingBottom) + parseFloat(getComputedStyle(fb).paddingTop),
-      cara: cs.borderBottomWidth,
-      nahoruVidno: !!(t && t.classList.contains('show')),
-      nahoruPrekryva: !!(t && t.classList.contains('show') && tr.left < posl.right
-        && tr.top < posl.bottom && tr.bottom > posl.top),
+    const copy = fb.querySelector('.mono');
+    const rc = copy ? copy.getBoundingClientRect() : null;
+    const tr = (t && t.classList.contains('show')) ? t.getBoundingClientRect() : null;
+    const prekryv = (a, b) => (a && b)
+      ? Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))
+        * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top))
+      : 0;
+    /* Rozcestník ze čtyř sloupců se sem vrátit nesmí: byl to přesně ten
+       blok, co měl zmizet. */
+    return { chybi: false, odkazy,
+      sloupcu: document.querySelectorAll('footer .foot-col').length,
+      vyskaPaticky: Math.round(f.getBoundingClientRect().height),
+      radkuOdkazu: new Set(odkazy.map((a) => a.top)).size,
+      nahoruNaCopyrightu: Math.round(prekryv(rc, tr)),
     };
   });
   await ctx.close();
@@ -100,38 +88,35 @@ async function zmer(stranka, sirka) {
 }
 
 for (const s of STRANKY) {
-  // --- Počítač ---
-  const pc = await zmer(s, 1280);
-  pravda(`${s} — patička je na počítači opravdu mřížka`, pc.mrizka === 'grid',
-    `vyšlo display:${pc.mrizka} — staré pravidlo „footer .wrap" ji přebíjí`);
-  pravda(`${s} — všech pět sloupců vedle sebe`, pc.pocetSloupcu === 5,
-    `sloupců ${pc.pocetSloupcu}`);
-  pravda(`${s} — nadpisy sloupců jsou na jedné lince`, pc.radkyNadpisu.length === 1,
-    `nadpisy v ${pc.radkyNadpisu.length} různých výškách: ${JSON.stringify(pc.radkyNadpisu)}`);
-
-  // --- Telefon ---
-  const mob = await zmer(s, 390);
-  pravda(`${s} — na telefonu je každý odkaz na svém řádku`, mob.naStejnemRadku.length === 0,
-    'slité: ' + mob.naStejnemRadku.map((a) => a.text).join(' | '));
-  /* „Žádný odkaz" projde touhle podmínkou stejně dobře jako „všechny
-     dost vysoké" — .every() nad prázdným polem je true. Patička, která
-     by se přestala vykreslovat, by tedy prošla. Ptáme se proto nejdřív,
-     jestli tam nějaké odkazy vůbec jsou. */
-  pravda(`${s} — odkazy se na telefonu dají trefit prstem`,
-    mob.odkazy.length > 0 && mob.odkazy.every((a) => a.vyska >= 28),
-    mob.odkazy.length === 0 ? 'v patičce není ani jeden odkaz'
-      : 'nejnižší ' + Math.min(...mob.odkazy.map((a) => a.vyska)) + ' px');
-  pravda(`${s} — pod sloupci je dělicí čára`, parseFloat(mob.cara) >= 1, `čára ${mob.cara}`);
-  pravda(`${s} — a kolem ní je na telefonu prostor`, mob.odstupPodMrizkou >= 36,
-    `odstup jen ${mob.odstupPodMrizkou} px — zkratka „padding" v .wrap sráží svislé odsazení`);
-  pravda(`${s} — tlačítko „Nahoru" neleží na copyrightu`, mob.nahoruPrekryva === false,
-    'v patičce se překrývají');
-  const pcNahoru = pc.nahoruPrekryva;
-  pravda(`${s} — ani na počítači`, pcNahoru === false);
+  for (const sirka of [1280, 390]) {
+    const v = await zmer(s, sirka);
+    const kde2 = `${s} @ ${sirka}`;
+    pravda(`${kde2} — patička i její řádek jsou na stránce`, v.chybi === false, JSON.stringify(v));
+    if (v.chybi) continue;
+    pravda(`${kde2} — a není z ní zase rozcestník se sloupci`, v.sloupcu === 0,
+      `sloupců ${v.sloupcu} — čtyřsloupcový rozcestník se vrátil`);
+    for (const [href, jmeno] of POVINNE) {
+      pravda(`${kde2} — vede z ní odkaz na ${jmeno}`,
+        v.odkazy.some((a) => a.href === href),
+        `odkazy: ${v.odkazy.map((a) => a.href).join(', ') || '(žádné)'}`);
+    }
+    /* „Žádný odkaz" by prošel .every() stejně dobře jako „všechny dost
+       vysoké" — proto se nejdřív ptáme, jestli tam nějaké jsou. */
+    if (sirka < 700) {
+      pravda(`${kde2} — odkazy se dají trefit prstem (44 px)`,
+        v.odkazy.length > 0 && v.odkazy.every((a) => a.vyska >= 44),
+        v.odkazy.length === 0 ? 'v patičce není ani jeden odkaz'
+          : 'nejnižší ' + Math.min(...v.odkazy.map((a) => a.vyska)) + ' px');
+      pravda(`${kde2} — patička zůstala řádkem, ne odstavcem`, v.radkuOdkazu <= 2,
+        `odkazy jsou v ${v.radkuOdkazu} řádcích`);
+    }
+    pravda(`${kde2} — tlačítko „Nahoru" neleží na copyrightu`, v.nahoruNaCopyrightu === 0,
+      `překryv ${v.nahoruNaCopyrightu} px²`);
+  }
 }
 
 await prohlizec.close();
-console.log('\nPatička — rozvržení na počítači i na telefonu');
+console.log('\nPatička — jeden řádek, a ten musí držet');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {

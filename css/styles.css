@@ -1222,27 +1222,9 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
   color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;
   cursor:pointer; flex:none;}
 .toast-akce:hover{color:var(--copper);}
-/* Vyskakovací upozornění na novinku. Vlastní, ne sdílený .toast — ten
-   používá mapa pro potvrzení akcí a tyhle dvě věci se nesmí přebíjet.
-   Ukazuje se JEN když počet novinek vzroste, tedy vzácně: návody na
-   upozornění se shodují, že častý toast si lidé odnaučí vnímat. */
-.upo-toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px); z-index:4100;
-  max-width:calc(100% - 28px); width:380px; display:flex; gap:10px; align-items:flex-start;
-  /* --card v téhle šabloně nikdy neexistovala (jmenuje se --panel). Prohlížeč
-     takovou deklaraci tiše zahodí a vrátí se k výchozí hodnotě — toast tedy
-     neměl ŽÁDNÉ pozadí a text plaval přes obsah stránky. Nešlo to poznat
-     jinak než okem, protože chyba v konzoli žádná není. */
-  background:var(--panel); border:1px solid var(--line-strong); border-left:4px solid var(--copper);
-  color:var(--text-ondark); padding:12px 14px; border-radius:var(--r-md);
-  box-shadow:var(--e3); opacity:0; transition:opacity var(--cas-pomaly) var(--ease), transform var(--cas-pomaly) var(--ease);}
-.upo-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
-.upo-toast .t{flex:1; min-width:0;}
-.upo-toast b{display:block; font-size:14px; margin-bottom:2px;}
-.upo-toast a{font-size:13px; font-weight:700; color:var(--copper);}
-.upo-toast button{flex:none; appearance:none; border:0; background:none; color:var(--text-ondark-mute);
-  font-size:20px; line-height:1; cursor:pointer; padding:2px 4px; border-radius:var(--r-xs);}
-.upo-toast button:hover{color:var(--text-ondark);}
-@media (prefers-reduced-motion: reduce){ .upo-toast{transition:opacity .01s;} }
+/* Vyskakovací upozornění na novinku (.upo-toast) tu bylo a je pryč:
+   vyskakovalo přes obsah uprostřed čtení a říkalo totéž, co je vidět
+   v hlavičce. Upozornění patří nahoru, ne doprostřed obrazovky. */
 
 .btn-primary{background:var(--brand-grad); background-color:var(--plocha-znacka); color:#fff; font-weight:700; font-size:14px; padding:10px 20px; border-radius:var(--r-ovladani); text-decoration:none; border:1px solid rgba(31,81,56,0.55); box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease); white-space:nowrap; cursor:pointer;}
 .btn-primary:hover{filter:brightness(1.06); box-shadow:var(--glow-lg);}
@@ -2773,6 +2755,21 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 /* CTA sub */
 
 /* Footer grid */
+/* PATIČKA JE JEDEN ŘÁDEK. Čtyři sloupce odkazů (Produkt, Informace,
+   Rádce, Právní) pod každou stránkou byly rozcestník, kterým nikdo
+   neprochází — všechno, co v něm stálo, vede i z menu v hlavičce.
+   Zůstaly právní odkazy: web zakládá účty, posílá e-maily a zpracovává
+   osobní údaje, takže na zásady, podmínky a kontakt musí jít dosáhnout.
+   Pravidla .foot-grid a .foot-col níž zůstávají pro stránky, které si
+   vlastní rozcestník drží (rozcestník okresů), ne pro patičku. */
+.foot-pravni{display:flex; flex-wrap:wrap; align-items:center; gap:2px 18px;}
+/* 44 px na výšku i tady: jsou to samostatné odkazy, ne slova ve větě,
+   a prstem se na ně míří stejně jako na cokoli jiného. Podtržení drží
+   u písmen (je na vnitřním řádku), takže terč roste, čára ne. */
+.foot-pravni a{display:inline-flex; align-items:center; min-height:44px;
+  color:var(--text-ondark-mute); text-decoration:none; border-bottom:1px solid var(--line-strong);
+  line-height:1.2; padding-bottom:1px;}
+.foot-pravni a:hover{color:var(--copper); border-bottom-color:var(--copper);}
 .foot-grid{display:grid; grid-template-columns:1.6fr repeat(4, minmax(0,1fr)); gap:32px 28px; padding-bottom:28px; border-bottom:1px solid var(--line); align-items:start;}
 .foot-brand{display:flex; align-items:center; gap:8px; font-family:var(--font-ui); font-size:16px; color:var(--text-ondark); margin-bottom:12px;}
 .foot-tag{font-size:13px; color:var(--text-ondark-mute); max-width:260px;}

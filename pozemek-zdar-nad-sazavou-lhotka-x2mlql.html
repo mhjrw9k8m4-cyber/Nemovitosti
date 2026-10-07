@@ -45,7 +45,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=757325da">
+  <link rel="stylesheet" href="css/styles.min.css?v=94d1d6b3">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -525,16 +525,14 @@
 </main>
 
 <footer>
-  <div class="wrap foot-grid">
-    <div class="foot-brand-col">
-      <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
-      <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého.</p>
-    </div>
-    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="porovnani.html">Porovnání uložených</a><a href="pridat.html">Přidat pozemek</a><a href="novinky.xml">Kanál nových pozemků</a><a href="data.html">Data ke stažení</a></nav>
-    <nav class="foot-col" aria-label="Informace"><h5>Informace</h5><a href="index.html#jak-funguje">Jak to funguje</a><a href="index.html#slovnicek">Slovníček</a><a href="index.html#faq">Časté dotazy</a></nav>
-    <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="moje-data.html">Moje data</a><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="kontakt.html">Kontakt</a></nav>
+  <div class="wrap foot-bottom">
+    <span class="mono">© 2026 Parcelka · data z veřejných zdrojů</span>
+    <span class="foot-pravni">
+      <a href="ochrana-udaju.html" data-info="soukromi">Zásady soukromí</a>
+      <a href="podminky.html" data-info="podminky">Podmínky použití</a>
+      <a href="kontakt.html">Kontakt</a>
+    </span>
   </div>
-  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -574,7 +572,7 @@
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=bec7a315" defer></script>
 <script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
-<script src="js/min/upozorneni.js?v=4cc6941e" defer></script>
+<script src="js/min/upozorneni.js?v=99e78c4f" defer></script>
 <script src="js/min/hlavicka.js?v=1ca59d70" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script type="application/json" id="pz-okoli-data">"Žďár nad Sázavou 5 km · Pardubice 53 km"</script>

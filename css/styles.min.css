@@ -272,15 +272,6 @@ header .wrap{display:flex;align-items:center;justify-content:space-between}
 .toast.s-akci{display:flex;align-items:center;gap:14px;pointer-events:auto}
 .toast-akce{min-height:44px;padding:0 14px;margin:-6px -8px -6px 0;background:none;border:0;font:inherit;font-size:14px;font-weight:700;color:var(--copper-bright);text-decoration:underline;text-underline-offset:3px;cursor:pointer;flex:none}
 .toast-akce:hover{color:var(--copper)}
-.upo-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(16px);z-index:4100;max-width:calc(100% - 28px);width:380px;display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line-strong);border-left:4px solid var(--copper);color:var(--text-ondark);padding:12px 14px;border-radius:var(--r-md);box-shadow:var(--e3);opacity:0;transition:opacity var(--cas-pomaly) var(--ease),transform var(--cas-pomaly) var(--ease)}
-.upo-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.upo-toast .t{flex:1;min-width:0}
-.upo-toast b{display:block;font-size:14px;margin-bottom:2px}
-.upo-toast a{font-size:13px;font-weight:700;color:var(--copper)}
-.upo-toast button{flex:none;appearance:none;border:0;background:none;color:var(--text-ondark-mute);font-size:20px;line-height:1;cursor:pointer;padding:2px 4px;border-radius:var(--r-xs)}
-.upo-toast button:hover{color:var(--text-ondark)}
-@media (prefers-reduced-motion:reduce){.upo-toast{transition:opacity .01s}
-}
 .btn-primary{background:var(--brand-grad);background-color:var(--plocha-znacka);color:#fff;font-weight:700;font-size:14px;padding:10px 20px;border-radius:var(--r-ovladani);text-decoration:none;border:1px solid rgba(31,81,56,0.55);box-shadow:var(--glow);transition:filter var(--cas-zakladni) var(--ease),transform var(--cas-rychly) var(--ease),box-shadow var(--cas-zakladni) var(--ease);white-space:nowrap;cursor:pointer}
 .btn-primary:hover{filter:brightness(1.06);box-shadow:var(--glow-lg)}
 .btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:var(--copper-bright);font-weight:700;font-size:14px;padding:10px 20px;border-radius:var(--r-ovladani);text-decoration:none;border:1.5px solid var(--obrys-tlacitka);box-shadow:var(--e1);cursor:pointer;white-space:nowrap;transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),transform var(--cas-rychly) var(--ease)}
@@ -937,6 +928,9 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex;justify-content:spac
 .gl-item p{font-size:14px;color:var(--text-ondark-mute);padding:0 16px 16px}
 .price-card.featured{border-color:var(--copper);box-shadow:var(--glow-lg);transform:translateY(-6px)}
 .price-card .btn-primary{text-align:center;padding:12px}
+.foot-pravni{display:flex;flex-wrap:wrap;align-items:center;gap:2px 18px}
+.foot-pravni a{display:inline-flex;align-items:center;min-height:44px;color:var(--text-ondark-mute);text-decoration:none;border-bottom:1px solid var(--line-strong);line-height:1.2;padding-bottom:1px}
+.foot-pravni a:hover{color:var(--copper);border-bottom-color:var(--copper)}
 .foot-grid{display:grid;grid-template-columns:1.6fr repeat(4,minmax(0,1fr));gap:32px 28px;padding-bottom:28px;border-bottom:1px solid var(--line);align-items:start}
 .foot-brand{display:flex;align-items:center;gap:8px;font-family:var(--font-ui);font-size:16px;color:var(--text-ondark);margin-bottom:12px}
 .foot-tag{font-size:13px;color:var(--text-ondark-mute);max-width:260px}

@@ -553,16 +553,14 @@ ${crumbNav(crumbs)}`;
 function footer(){
   return `
 <footer>
-  <div class="wrap foot-grid">
-    <div class="foot-brand-col">
-      <div class="foot-brand"><span class="logo-mark small" aria-hidden="true"></span><span>Parcelka</span></div>
-      <p class="foot-tag">Mapa příležitostí u pozemků — srozumitelně a pro každého.</p>
-    </div>
-    <nav class="foot-col" aria-label="Produkt"><h5>Produkt</h5><a href="index.html#mapa">Pozemky</a><a href="pozemky-podle-okresu.html">Pozemky podle okresů</a><a href="porovnani.html">Porovnání uložených</a><a href="cena-pozemku.html">Ceny pozemků</a><a href="pridat.html">Přidat pozemek</a><a href="novinky.xml">Kanál nových pozemků</a><a href="data.html">Data ke stažení</a></nav>
-    <nav class="foot-col" aria-label="Rádce"><h5>Rádce</h5><a href="drazby-pozemku.html">Koupě v dražbě</a><a href="kolik-stoji-koupe-pozemku.html">Náklady při koupi</a><a href="list-vlastnictvi-katastr.html">List vlastnictví</a><a href="pozemek-od-obce.html">Pozemek od obce</a><a href="kupni-smlouva-pozemek.html">Podklad pro smlouvu</a><a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a></nav>
-    <nav class="foot-col" aria-label="Právní"><h5>Právní</h5><a href="moje-data.html">Moje data</a><a href="ochrana-udaju.html">Ochrana osobních údajů</a><a href="podminky.html">Podmínky použití</a><a href="pravidla-inzerce.html">Pravidla inzerce</a><a href="kontakt.html">Kontakt</a></nav>
+  <div class="wrap foot-bottom">
+    <span class="mono">© 2026 Parcelka · data z veřejných zdrojů</span>
+    <span class="foot-pravni">
+      <a href="ochrana-udaju.html" data-info="soukromi">Zásady soukromí</a>
+      <a href="podminky.html" data-info="podminky">Podmínky použití</a>
+      <a href="kontakt.html">Kontakt</a>
+    </span>
   </div>
-  <div class="wrap foot-bottom"><span class="mono">Tvořeno s péčí v Česku · data z veřejných zdrojů</span><span class="mono">© 2026 Parcelka</span></div>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -1575,8 +1573,10 @@ console.log(`Vygenerováno: ${okresPages.length} okresních + ${krajPages.length
   const pocetKraj = {};
   for (const o of bezDup) { const k = OKRES_KRAJ[o.okres]; if (k) pocetKraj[k] = (pocetKraj[k] || 0) + 1; }
 
-  h = h.replace(/(<b id="hero-n-count">)[^<]*(<\/b>)/, `$1${fmt(celkem)}$2`);
-  h = h.replace(/(<b id="hero-n-okres">)[^<]*(<\/b>)/, `$1${okresu}$2`);
+  /* Uvítací blok s počtem pozemků z index.html zmizel (na přání majitele
+     webu: bylo to číslo, které hned pod ním rozepisovaly pilulky, a věta
+     o webu nad nástrojem). Doplňování těch dvou čísel tedy taky padá —
+     zbyly počty u krajů v rozcestníku, kde jsou pořád na místě. */
   h = h.replace(/(<span class="kj-c mono" data-kraj=")([^"]+)(">)[^<]*(<\/span>)/g,
     (_, a, kraj, b, c) => {
       const n = pocetKraj[kraj] || 0;

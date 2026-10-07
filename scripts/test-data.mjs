@@ -235,15 +235,16 @@ pravda('každá nabídka ví, kdy ji robot viděl poprvé', bezData.length === 0
   const cislo = (t) => parseInt(String(t || '').replace(/[^\d]/g, ''), 10);
 
   const idx = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-  const hero = cislo((idx.match(/<b id="hero-n-count">([^<]*)<\/b>/) || [])[1]);
   const roz = readFileSync(new URL('../pozemky-podle-okresu.html', import.meta.url), 'utf8');
   const rozcestnik = cislo((roz.match(/přes <b>([^<]*)<\/b>/) || [])[1]);
 
-  /* Dvě VYGENEROVANÉ stránky vznikly v tomtéž okamžiku z týchž dat —
-     ty se musí shodovat na kus přesně. Tohle je jádro kontroly: právě
-     tady se kdysi rozešla tři čísla (1 954 / 1 971 / 1 958). */
-  pravda('úvod a rozcestník hlásí stejné číslo',
-    hero === rozcestnik, `úvod ${hero}, rozcestník ${rozcestnik}`);
+  /* Úvod už žádné své číslo nemá: uvítací blok („1 955 pozemků na jedné
+     mapě") majitel webu zrušil. Porovnání „úvod proti rozcestníku" tím
+     padá, zůstává ale to podstatné — že číslo na rozcestníku sedí
+     s daty. Právě na tomhle se kdysi rozešla tři čísla
+     (1 954 / 1 971 / 1 958), takže pásmo níž platí dál, jen se měří
+     na rozcestníku. */
+  const hero = rozcestnik;
 
   /* Proti DATŮM se ale nedá porovnávat na kus. Stránky jsou snímek
      z chvíle, kdy je robot sestavil; „po termínu" se posouvá každou

@@ -110,10 +110,11 @@ const LEAFLET = process.env.PK_LEAFLET_DIR || '';
      „1900+" a u krajů pomlčky — a vyhledávač, který skript nespouští,
      viděl totéž. Navíc „1900+" nesedělo s živým počtem. */
   const idx = readFileSync(path.join(KOREN, 'index.html'), 'utf8');
-  const hrdina = /<b id="hero-n-count">([^<]*)<\/b>/.exec(idx);
-  pravda('počet pozemků je přímo v HTML, ne až ze skriptu',
-    !!(hrdina && /^\d[\d\s\u00a0]*$/.test(hrdina[1].trim())),
-    `v HTML stojí „${hrdina ? hrdina[1] : '(nic)'}"`);
+  /* Kontrola „počet pozemků je přímo v HTML" tu byla kvůli uvítacímu
+     bloku („1 955 pozemků na jedné mapě"). Ten je pryč — na přání
+     majitele webu, protože to bylo číslo, které hned pod ním rozepisovaly
+     pilulky. Zůstávají počty u krajů v rozcestníku, a ty se měří dál:
+     tam má číslo smysl i pro vyhledávač, který skript nespouští. */
   const pomlcky = [...idx.matchAll(/<span class="kj-c mono" data-kraj="[^"]+">([^<]*)<\/span>/g)]
     .filter((m) => !/\d/.test(m[1]) && !/žádné/.test(m[1]));
   pravda('ani u krajů nejsou místo čísel pomlčky', pomlcky.length === 0,
@@ -260,14 +261,19 @@ async function otevri(soubor, sirka, vyska) {
        říkal potřetí totéž co nadpis a řádek pod ním. Smysl kontroly ale
        trvá: nad nadpisem nesmí zůstat prázdný pruh. Měří se proto rovnou
        ta mezera, ne přítomnost jednoho konkrétního řádku. */
-    const h1 = document.querySelector('.hero-map .hero-head h1');
-    const pas = document.querySelector('.hero-map .hero-band') || document.querySelector('.hero-map');
-    const nadNadpisem = (h1 && pas)
-      ? Math.round(h1.getBoundingClientRect().top - pas.getBoundingClientRect().top) : null;
-    return { nadNadpisem, mezera };
+    /* Nadpis úvodu je pryč (uvítací blok zrušen na přání majitele webu),
+       takže se neměří prázdno nad ním, ale prázdno nad PRVNÍ VĚCÍ, kvůli
+       které sem člověk jde — nad polem „Hledat obec". Smysl je týž:
+       na telefonu nesmí nahoře zůstat ukradený pruh. Měří se od spodní
+       hrany hlavičky, protože ta je přilepená a místo nebere. */
+    const hledani = document.getElementById('map-search');
+    const hlavicka = document.querySelector('header');
+    const nadHledanim = (hledani && hlavicka)
+      ? Math.round(hledani.getBoundingClientRect().top - hlavicka.getBoundingClientRect().bottom) : null;
+    return { nadHledanim, mezera };
   });
-  pravda('nad nadpisem nezůstal prázdný pruh', v.nadNadpisem !== null && v.nadNadpisem <= 60,
-    `nad nadpisem je ${v.nadNadpisem} px prázdna — na telefonu je to ukradený kus obrazovky`);
+  pravda('nad hledáním nezůstal prázdný pruh', v.nadHledanim !== null && v.nadHledanim <= 60,
+    `nad hledáním je ${v.nadHledanim} px prázdna — na telefonu je to ukradený kus obrazovky`);
   await ctx.close();
 }
 

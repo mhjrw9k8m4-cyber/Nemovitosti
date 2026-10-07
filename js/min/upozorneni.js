@@ -83,29 +83,7 @@
     var drive = parseInt(ulozene, 10);
     if (!isFinite(drive)) return;
     if (celkem <= drive) return;
-    ukazToast(celkem - drive, zpravy, hlidani);
-  }
 
-  function ukazToast(pribylo, zpravy, hlidani) {
-    if (document.querySelector('.upo-toast')) return;
-    var F = window.PKFeed;
-    var co = F
-      ? (hlidani && !zpravy ? F.cislovka(pribylo, ['nový pozemek', 'nové pozemky', 'nových pozemků'])
-        : zpravy && !hlidani ? F.cislovka(pribylo, ['nová zpráva', 'nové zprávy', 'nových zpráv'])
-        : F.cislovka(pribylo, ['novinka', 'novinky', 'novinek']))
-      : pribylo + ' novinek';
-    var el = document.createElement('div');
-    el.className = 'upo-toast';
-    el.setAttribute('role', 'status');
-    el.setAttribute('aria-live', 'polite');
-    el.innerHTML = '<div class="t"><b></b><a href="upozorneni.html">Zobrazit upozornění</a></div>' +
-                   '<button type="button" aria-label="Zavřít">×</button>';
-    el.querySelector('b').textContent = 'Přibylo ' + co;
-    document.body.appendChild(el);
-    requestAnimationFrame(function () { el.classList.add('show'); });
-    var zavri = function () { el.classList.remove('show'); setTimeout(function () { el.remove(); }, 320); };
-    el.querySelector('button').addEventListener('click', zavri);
-    setTimeout(zavri, 9000);
   }
 
   function spocitejHlidani(A) {

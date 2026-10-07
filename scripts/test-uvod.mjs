@@ -394,17 +394,19 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
     const c = await p.evaluate(() => {
       const t = (id) => ((document.getElementById(id) || {}).textContent || '');
       const cislo = (s) => { const m = /(\d[\d\s\u00a0]*\d|\d)/.exec(s); return m ? m[1] : ''; };
-      return { hero: cislo(t('hero-n-count')), hlavicka: cislo(t('map-count')), prepinac: cislo(t('mvt-count')) };
+      return { hlavicka: cislo(t('map-count')), prepinac: cislo(t('mvt-count')) };
     });
     const bezMezer = (x) => x.replace(/[\s\u00a0]/g, '');
     const maOddelovac = (x) => bezMezer(x).length < 4 || /[\s\u00a0]/.test(x);
-    pravda('všechna tři čísla jsou tisícová (jinak by se zápis neměl na čem poznat)',
-      bezMezer(c.hero).length >= 4 && bezMezer(c.hlavicka).length >= 4
-      && bezMezer(c.prepinac).length >= 4,
-      `úvod „${c.hero}", hlavička „${c.hlavicka}", přepínač „${c.prepinac}"`);
-    pravda('a všechna tři čísla na obrazovce mají tisícový oddělovač',
-      [c.hero, c.hlavicka, c.prepinac].every(maOddelovac),
-      `úvod „${c.hero}", hlavička „${c.hlavicka}", přepínač „${c.prepinac}"`);
+    /* Třetí číslo (uvítací blok „1 955 pozemků na jedné mapě") už na
+       stránce není — majitel webu ten blok zrušil. Zbyla dvě a mezi nimi
+       ta shoda, o kterou tu šlo především. */
+    pravda('obě čísla jsou tisícová (jinak by se zápis neměl na čem poznat)',
+      bezMezer(c.hlavicka).length >= 4 && bezMezer(c.prepinac).length >= 4,
+      `hlavička „${c.hlavicka}", přepínač „${c.prepinac}"`);
+    pravda('a obě čísla na obrazovce mají tisícový oddělovač',
+      [c.hlavicka, c.prepinac].every(maOddelovac),
+      `hlavička „${c.hlavicka}", přepínač „${c.prepinac}"`);
     pravda('hlavička výpisu a přepínač Seznam/Mapa ukazují totéž',
       bezMezer(c.hlavicka) === bezMezer(c.prepinac),
       `hlavička „${c.hlavicka}", přepínač „${c.prepinac}"`);

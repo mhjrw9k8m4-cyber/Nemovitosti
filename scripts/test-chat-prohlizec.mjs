@@ -226,28 +226,34 @@ await pC.waitForSelector('.up-item', { timeout: 15000 });
 je('označení přežije obnovení stránky', await pC.locator('.up-ico.pozemky').count(), 0);
 await pC.close();
 
-/* ---------- 9. vyskakovací upozornění jen při přírůstku ---------- */
+/* ---------- 9. upozornění na novinku patří do hlavičky ----------
+   Vyskakovací hláška „Přibylo N nových pozemků" tu byla a je pryč, a to
+   na výslovné přání majitele webu: vyskakovala přes obsah uprostřed
+   čtení a říkala totéž, co je vidět nahoře. Zůstal odznak v hlavičce,
+   a právě ten se tu teď měří — na tomtéž přírůstku, na kterém se dřív
+   měřila ta hláška. */
 const pT = await cMajitel.newPage();
 pT.on('pageerror', (e) => chybyKonzole.push(String(e)));
 await pT.goto(`${BASE}/pozemky-okres-tabor.html`);
 await pT.waitForTimeout(1500);
-je('při prvním příchodu nic nevyskakuje', await pT.locator('.upo-toast').count(), 0);
-
+je('žádná vyskakovací hláška se neukáže', await pT.locator('.upo-toast').count(), 0);
 // jako by mezitím něco přibylo: snížíme poslední známý počet a zahodíme paměť
 await pT.evaluate(() => {
   sessionStorage.setItem('pk_upozorneni_znamo_v1', '0');
   sessionStorage.removeItem('pk_upozorneni_v1');
 });
 await pT.reload();
-await pT.waitForSelector('.upo-toast.show', { timeout: 15000 });
-je('při přírůstku vyskočí upozornění', await pT.locator('.upo-toast').isVisible(), true);
-je('a vede do centra',
-  (await pT.getAttribute('.upo-toast a', 'href')), 'upozorneni.html');
-je('vyskakovací upozornění je oznámeno šetrně, ne přes hlasitý alert',
-  await pT.getAttribute('.upo-toast', 'aria-live'), 'polite');
-await pT.click('.upo-toast button');
-await pT.waitForFunction(() => !document.querySelector('.upo-toast'), null, { timeout: 5000 });
-je('jde zavřít', await pT.locator('.upo-toast').count(), 0);
+await pT.waitForTimeout(2500);
+je('ani při přírůstku nic nevyskočí', await pT.locator('.upo-toast').count(), 0);
+/* Zato v hlavičce musí být poznat, že něco přibylo — jinak by se
+   odebráním hlášky ztratila jediná zpráva o novince. */
+const odznak = await pT.evaluate(() => {
+  const t = document.querySelector('.nav-dot');
+  const o = [...document.querySelectorAll('header a, header button')]
+    .map((e) => (e.textContent || '').replace(/\s+/g, ' ').trim()).filter(Boolean);
+  return { tecka: !!t, popisky: o.slice(0, 8) };
+});
+je('v hlavičce je značka, že je co číst', odznak.tecka, true);
 await pT.close();
 
 /* ---------- 10. žádné chyby v konzoli ---------- */
