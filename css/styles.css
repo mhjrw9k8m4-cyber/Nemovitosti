@@ -2161,6 +2161,27 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Karta ve stylu realitního portálu (Sreality): náhled mapy nahoře přes celou
    šířku jako fotka, pod ním velká cena a detaily. */
 .opp-item{position:relative; display:block; padding:0; border:1px solid var(--line-strong); border-radius:var(--r-plocha); overflow:hidden; margin-bottom:14px; cursor:pointer; background:var(--ink-soft); box-shadow:var(--e2); transition:border-color var(--cas-zakladni) var(--ease), transform var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
+/* OBTAŽENÍ PODLE DRUHU. Karta nesla barvu druhu jen v odznaku na rohu
+   snímku; ve výpisu plném karet se tím druh poznal až po přečtení.
+   Okraj ho řekne dřív, než člověk začne číst — a je to právě okraj,
+   ne plocha: barevná výplň by z výpisu udělala duhu a brala pozornost
+   fotkám i ceně.
+   SÍLA JE ZMĚŘENÁ, ne odhadnutá. Neutrální okraj karty (--line-strong)
+   má proti výplni 1,90 : 1 a barevná obtažení míří do téhož pásma —
+   naměřeno 1,90 až 2,00 : 1. Je tedy vidět barvu, ale karta nekřičí.
+   Procenta jsou proto u každého druhu jiná: oranžová u dražby a tyrkys
+   u obce jsou samy o sobě světlé, tmavě červená u exekuce naopak tmavá,
+   takže stejné číslo by dalo pětkrát jinak silný okraj (při jednotných
+   45 % vycházelo 1,82 až 2,24).
+   Zbytek webu používá stejný recept (rgba 0,4–0,55 u .is-hot
+   a .is-featured), takže tohle nic nového nezavádí.
+   Fallback: color-mix neumí starý prohlížeč, ten nechá neutrální okraj
+   z pravidla výš — karta pak vypadá jako dřív, nerozbije se nic. */
+.opp-item.sale{border-color:color-mix(in srgb, var(--c-sale) 45%, transparent);}
+.opp-item.drazba{border-color:color-mix(in srgb, var(--c-drazba) 57%, transparent);}
+.opp-item.exekuce{border-color:color-mix(in srgb, var(--c-exekuce) 38%, transparent);}
+.opp-item.obec{border-color:color-mix(in srgb, var(--c-obec) 47%, transparent);}
+.opp-item.majitel{border-color:color-mix(in srgb, var(--c-majitel) 45%, transparent);}
 /* Zvednutí karty bylo dřív jen posunutí — stín zůstal stejný, takže se karta
    nezvedla, jen poskočila. Teď se zvedne i stínem. */
 .opp-item:hover, .opp-item.hl{border-color:var(--copper-bright); transform:translateY(-2px); box-shadow:var(--e3);}

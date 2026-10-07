@@ -256,6 +256,103 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
   await p.close();
 }
 
+/* --- 8) KARTA VE VÝPISU JE OBTAŽENÁ BARVOU SVÉHO DRUHU -------------
+ * Druh nesla karta jen v odznaku na rohu snímku; ve výpisu plném karet
+ * se poznal až po přečtení. Okraj ho řekne dřív — a je to okraj, ne
+ * výplň: barevná plocha by z výpisu udělala duhu.
+ * Hlídají se dvě věci, obě měřitelné:
+ *  · okraj musí nést barvu SVÉHO druhu (ne cizí a ne neutrální šedou),
+ *  · a musí být stejně silný jako neutrální okraj karty. Tohle je ta
+ *    těžší půlka: „ne moc výrazně ani málo" se nedá napsat do CSS,
+ *    dá se ale změřit. Neutrální okraj má proti výplni 1,90 : 1,
+ *    barevná obtažení 1,90 až 2,00 : 1. Pásmo 1,65–2,35 nechává prostor
+ *    na doladění odstínů, ale nepustí ani neviditelný okraj, ani křiklavý.
+ */
+{
+  const p = await ctx.newPage();
+  /* ÚLOŽIŠTĚ SE MUSÍ VYČISTIT. Předchozí oddíly v témže kontextu po sobě
+     nechávají nastavení filtrů i skryté pozemky — s nimi zbyla ve výpisu
+     jediná karta a kontrola níž by měřila skoro nic. */
+  await p.addInitScript(() => { try { localStorage.clear(); } catch (e) {} });
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  /* Čeká se na VYKRESLENÝ výpis, ne na první kartu: napoprvé tu byla
+     jedna (výpis se dokresluje po dávkách) a kontrola „karty doopravdy
+     nejsou šedé" by měřila jedinou kartu. */
+  await p.waitForFunction(() => document.querySelectorAll('.opp-item').length > 5,
+    { timeout: 25000 }).catch(() => {});
+  await p.waitForTimeout(1200);
+  const v = await p.evaluate(() => {
+    /* Prohlížeč vrací color-mix jako „color(srgb 0.26 0.38 0.72 / 0.45)",
+       tedy složky 0–1, kdežto rgba() má 0–255. Bez tohohle rozlišení
+       vycházely poměry třikrát větší a kontrola by lhala. */
+    const rozlozit = (s) => {
+      const srgb = /^color\(srgb/.test(s);
+      const n = (String(s).replace(/^color\(srgb/, '').match(/-?\d+(\.\d+)?/g) || []).map(Number);
+      const k = srgb ? 255 : 1;
+      return { r: (n[0] || 0) * k, g: (n[1] || 0) * k, b: (n[2] || 0) * k, a: n.length > 3 ? n[3] : 1 };
+    };
+    const na = (c, pod) => ({ r: c.r * c.a + pod.r * (1 - c.a), g: c.g * c.a + pod.g * (1 - c.a),
+      b: c.b * c.a + pod.b * (1 - c.a), a: 1 });
+    const jas = (c) => { const f = [c.r, c.g, c.b].map((x) => { x /= 255;
+      return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
+      return 0.2126 * f[0] + 0.7152 * f[1] + 0.0722 * f[2]; };
+    const pomer = (x, y) => { const a = jas(x), c = jas(y);
+      return Math.round((Math.max(a, c) + 0.05) / (Math.min(a, c) + 0.05) * 100) / 100; };
+    const DRUHY = ['sale', 'drazba', 'exekuce', 'obec', 'majitel'];
+    const vzor = document.querySelector('.opp-item');
+    if (!vzor) return null;
+    const seznam = vzor.parentElement;
+    const out = { karet: document.querySelectorAll('.opp-item').length, druhy: {} };
+    /* Měří se na PODSTRČENÉ kartě každého druhu, ne na těch, co zrovna
+       ve výpisu jsou: obecní záměr ani nabídka od majitele tam být
+       nemusí, a stavy „doporučeno"/„hot" mají okraj vlastní. */
+    DRUHY.forEach((druh) => {
+      const d = document.createElement('li');
+      d.className = 'opp-item ' + druh;
+      seznam.appendChild(d);
+      const cs = getComputedStyle(d);
+      const vypln = rozlozit(cs.backgroundColor);
+      out.druhy[druh] = { okraj: cs.borderTopColor,
+        pomer: pomer(na(rozlozit(cs.borderTopColor), vypln), vypln) };
+      d.remove();
+    });
+    const neutral = document.createElement('li');
+    neutral.className = 'opp-item';
+    seznam.appendChild(neutral);
+    const csn = getComputedStyle(neutral);
+    const vyplnN = rozlozit(csn.backgroundColor);
+    out.neutral = { okraj: csn.borderTopColor, pomer: pomer(na(rozlozit(csn.borderTopColor), vyplnN), vyplnN) };
+    neutral.remove();
+    /* A co doopravdy visí ve výpisu: kolik karet má okraj svého druhu. */
+    out.zivé = [...document.querySelectorAll('.opp-item')].map((e) => {
+      const druh = DRUHY.find((c) => e.classList.contains(c));
+      return { druh, okraj: getComputedStyle(e).borderTopColor,
+        zvlastni: e.classList.contains('is-hot') || e.classList.contains('is-featured') };
+    });
+    return out;
+  });
+  pravda('výpis má karty, na kterých jde obtažení měřit', !!v && v.karet > 5,
+    v ? `karet ${v.karet}` : 'výpis se nevykreslil');
+  if (v) {
+    for (const druh of Object.keys(v.druhy)) {
+      const m = v.druhy[druh];
+      pravda(`karta druhu „${druh}" je obtažená vlastní barvou, ne šedou`,
+        m.okraj !== v.neutral.okraj, `okraj je ${m.okraj}, neutrální je ${v.neutral.okraj}`);
+      pravda(`a to obtažení je stejně silné jako neutrální okraj (${m.pomer} : 1)`,
+        m.pomer >= 1.65 && m.pomer <= 2.35,
+        `${m.pomer} : 1 proti výplni, neutrální má ${v.neutral.pomer} : 1`);
+    }
+    /* Pojistka: kdyby pravidla přestala platit, karty by zešedly a obě
+       kontroly výš by měřily jen podstrčené prvky. */
+    const bezne = v.zivé.filter((k) => k.druh && !k.zvlastni);
+    const sede = bezne.filter((k) => k.okraj === v.neutral.okraj);
+    pravda('a karty, které jsou ve výpisu doopravdy, nejsou šedé',
+      bezne.length > 0 && sede.length === 0,
+      `ze ${bezne.length} běžných karet má šedý okraj ${sede.length}`);
+  }
+  await p.close();
+}
+
 await prohlizec.close();
 console.log('\nBarvy kategorií — jeden zdroj pro mapu i karty');
 console.log(zpravy.join('\n'));

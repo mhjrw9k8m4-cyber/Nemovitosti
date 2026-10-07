@@ -638,6 +638,11 @@ to{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.sk{animation:none}
 }
 .opp-item{position:relative;display:block;padding:0;border:1px solid var(--line-strong);border-radius:var(--r-plocha);overflow:hidden;margin-bottom:14px;cursor:pointer;background:var(--ink-soft);box-shadow:var(--e2);transition:border-color var(--cas-zakladni) var(--ease),transform var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
+.opp-item.sale{border-color:color-mix(in srgb,var(--c-sale) 45%,transparent)}
+.opp-item.drazba{border-color:color-mix(in srgb,var(--c-drazba) 57%,transparent)}
+.opp-item.exekuce{border-color:color-mix(in srgb,var(--c-exekuce) 38%,transparent)}
+.opp-item.obec{border-color:color-mix(in srgb,var(--c-obec) 47%,transparent)}
+.opp-item.majitel{border-color:color-mix(in srgb,var(--c-majitel) 45%,transparent)}
 .opp-item:hover,.opp-item.hl{border-color:var(--copper-bright);transform:translateY(-2px);box-shadow:var(--e3)}
 .opp-item.is-hot{border-color:rgba(204,107,51,0.4)}
 .opp-media{position:relative;width:100%;aspect-ratio:16/10;min-height:150px;overflow:hidden;background:var(--ink-soft2) linear-gradient(135deg,rgba(110,150,130,0.12),rgba(110,150,130,0) 60%)}
