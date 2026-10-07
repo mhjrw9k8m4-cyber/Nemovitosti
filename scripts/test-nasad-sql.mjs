@@ -11,7 +11,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { oznaceniProjektu, popisSQL } from './nasad-sql.mjs';
+import { oznaceniProjektu, popisSQL, adresaZKonfigurace } from './nasad-sql.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -41,6 +41,30 @@ for (const [co, popis] of [
 ]) {
   pravda(`${popis} nedá žádné označení`, oznaceniProjektu(co) === null,
     `vyšlo „${oznaceniProjektu(co)}"`);
+}
+
+/* --- 1b) Adresa projektu se nemusí nikam vkládat --------------------
+   Není tajná — stojí v js/config.js, odkud ji čte každý prohlížeč.
+   Kdyby ji skript nenašel, musel by ji člověk vkládat mezi tajné klíče
+   jako další krok navíc, a přesně o jeden krok navíc tu jde. */
+{
+  const z = adresaZKonfigurace();
+  pravda('adresa projektu se najde v js/config.js', !!z, `vyšlo „${z}"`);
+  pravda('a dá se z ní odvodit označení projektu',
+    !!oznaceniProjektu(z), `z „${z}" nic nevyšlo`);
+  /* Napevno opsaná adresa by byla druhá kopie téhož údaje — přesně tak
+     se na tomhle webu už jednou rozešly ceny i rádce. */
+  /* Komentáře se musí odstranit, než se hledá. Napoprvé tahle kontrola
+     spadla na větě „Z https://abcdefgh.supabase.co udělá abcdefgh",
+     která vysvětluje, co funkce dělá — tedy na dokumentaci, ne na
+     opsané adrese. Kontrola, která padá na komentářích, by vedla
+     k mazání komentářů, a to je přesně naopak, než má být. */
+  const kod = readFileSync(path.join(KOREN, 'scripts', 'nasad-sql.mjs'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '');
+  pravda('a skript si ji neopisuje napevno (mimo komentáře)',
+    !/supabase\.(co|in|net)['"]/.test(kod),
+    'v nasad-sql.mjs je adresa napsaná natvrdo');
 }
 
 /* --- 2) Co se vlastně pošle ---------------------------------------- */

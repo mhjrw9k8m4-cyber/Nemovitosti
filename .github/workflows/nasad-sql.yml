@@ -14,9 +14,12 @@ name: Nasadit databázi do Supabase
 # „if not exists", pravidla se před vytvořením ruší, funkce se přepisují.
 #
 # Potřebné tajné klíče (Settings → Secrets and variables → Actions):
-#   SUPABASE_URL   — už v repozitáři je, odvodí se z něj označení projektu
 #   SUPABASE_PAT   — osobní přístupový token Supabase, viz
 #                    https://supabase.com/dashboard/account/tokens
+#
+# Adresa projektu se NEVKLÁDÁ: není tajná a stojí v js/config.js, odkud
+# ji čte každý prohlížeč. Skript si ji vezme odtamtud. (Dá se přebít
+# proměnnou SUPABASE_URL, kdyby se nasazovalo do jiného projektu.)
 #
 # Proč token navíc a nestačí SUPABASE_SERVICE_ROLE_KEY: tím se mluví
 # s PostgREST, a ten umí jen volat funkce a sahat na tabulky, které už

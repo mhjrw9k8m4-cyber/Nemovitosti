@@ -21,8 +21,8 @@
    token — proto je potřeba klíč navíc.
 
    CO POTŘEBUJE (proměnné prostředí):
-     SUPABASE_URL   — adresa projektu, např. https://abcdefgh.supabase.co
-                      (v repozitáři už je, odvodí se z ní označení projektu)
+     SUPABASE_URL   — nepovinné. Když chybí, vezme se adresa z js/config.js,
+                      kde stejně stojí veřejně — odvodí se z ní označení projektu.
      SUPABASE_PAT   — osobní přístupový token ze supabase.com/dashboard/account/tokens
                       (Settings → Secrets and variables → Actions)
 
@@ -40,6 +40,20 @@ const API = process.env.SUPABASE_API || 'https://api.supabase.com';
 
 function log(s) { console.log(s); }
 function chyba(s) { console.log('::error::' + s); }
+
+/* ADRESA PROJEKTU NENÍ TAJNÁ a nemusí být mezi tajnými klíči: stojí
+   v js/config.js, odkud ji čte každý prohlížeč. Čte se tedy odtamtud,
+   ne z napevno opsané konstanty — scripts/send-alerts.mjs si ji opsal
+   a tím vznikla druhá kopie téhož údaje, která se může rozejít.
+   Proměnná prostředí má přednost, aby šlo nasadit i do jiného projektu
+   (třeba zkušebního), aniž by se sahalo do kódu webu. */
+export function adresaZKonfigurace() {
+  try {
+    const kod = readFileSync(path.join(KOREN, 'js', 'config.js'), 'utf8');
+    const m = /PK_SUPABASE_URL\s*=\s*['"]([^'"]+)['"]/.exec(kod);
+    return m ? m[1] : null;
+  } catch (e) { return null; }
+}
 
 /** Z „https://abcdefgh.supabase.co" udělá „abcdefgh". */
 export function oznaceniProjektu(url) {
@@ -61,7 +75,7 @@ export function popisSQL(sql) {
 
 async function main() {
   const opravdu = process.argv.includes('--opravdu');
-  const url = process.env.SUPABASE_URL || '';
+  const url = process.env.SUPABASE_URL || adresaZKonfigurace() || '';
   const token = process.env.SUPABASE_PAT || '';
 
   let sql;
@@ -84,7 +98,8 @@ async function main() {
 
   const ref = oznaceniProjektu(url);
   if (!ref) {
-    chyba('SUPABASE_URL chybí nebo nevypadá jako https://neco.supabase.co — bez něj nevím, kam SQL poslat.');
+    chyba('Adresa projektu se nenašla ani v SUPABASE_URL, ani v js/config.js'
+      + ' — bez ní nevím, kam SQL poslat.');
     process.exit(1);
   }
   log(`Projekt: ${ref}`);
