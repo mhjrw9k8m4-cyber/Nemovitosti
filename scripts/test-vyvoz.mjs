@@ -133,6 +133,122 @@ const pomocne = { zaMetr: CENY.zaMetr, klic: (d) => 'K:' + (d.place || '') };
     V.nazev('', new Date(2026, 9, 3)));
 }
 
+/* --- 6) Nové sloupce: to, co se z obrazovky opsat nedá -------------
+   Tabulka měla třináct sloupců a každý z nich se dal přečíst z karty,
+   takže vývoz byl jen rychlejší opisování. Těchto šest dělá z tabulky
+   pracovní list: souřadnice (bez nich se seznam nedá nahrát do mapy),
+   dní do dražby (podle data se v Excelu netřídí, podle čísla ano),
+   vzdálenost od zvoleného místa, příznak uloženo a vlastní poznámka. */
+const STARE_SLOUPCE = 'Obec;Okres;Druh;Kategorie;Výměra (m²);Cena (Kč);'
+  + 'Cena za m² (Kč);Předchozí cena (Kč);Změna ceny;Podíl;Termín dražby;'
+  + 'Odkaz na zdroj;Stránka na Parcelce';
+{
+  const d = {
+    place: 'Kolín', okres: 'Kolín', type: 'drazba', druh: 'orná půda',
+    area: 1000, price: 500000, lat: 50.0281, lng: 15.2003,
+    extra: 'dražba 2026-11-01', url: 'https://example.invalid/a',
+  };
+  const radky = V.csv([d], {
+    zaMetr: () => 500,
+    poznamka: () => 'u lesa; pozor na plot',
+    jeUlozeny: () => true,
+    kmOd: () => 12.34,
+  }).split('\r\n');
+  const hlavicka = radky[0].split(';');
+  const bunky = radky[1].split(';');
+  const kde = (jm) => hlavicka.indexOf(jm);
+
+  for (const jm of ['Zeměpisná šířka', 'Zeměpisná délka', 'Dní do dražby',
+    'Vzdálenost (km)', 'Uloženo', 'Moje poznámka']) {
+    pravda(`tabulka má sloupec ${jm}`, kde(jm) !== -1, radky[0]);
+  }
+  /* Starý tvar musí zůstat: kdo má na sloupcích postavený vzorec, najde
+     je tam, kde byly. Nové sloupce se proto připisují na konec. */
+  pravda('a staré sloupce zůstaly na svých místech',
+    hlavicka.slice(0, 13).join(';') === STARE_SLOUPCE,
+    hlavicka.slice(0, 13).join(';'));
+
+  pravda('souřadnice jsou v tabulce na pět míst',
+    bunky[kde('Zeměpisná šířka')] === '50.02810', bunky[kde('Zeměpisná šířka')]);
+  /* Desetinná ČÁRKA: s tečkou si český Excel myslí, že je to text. */
+  pravda('vzdálenost je s desetinnou čárkou',
+    bunky[kde('Vzdálenost (km)')] === '12,3', bunky[kde('Vzdálenost (km)')]);
+  pravda('uloženo se píše slovem', bunky[kde('Uloženo')] === 'ano',
+    bunky[kde('Uloženo')]);
+  /* Poznámka je poslední sloupec a středník v ní rozdělí řádek na dvě
+     části — po spojení zpátky musí být vidět, že je celá v uvozovkách. */
+  pravda('poznámka se středníkem se uzavře do uvozovek',
+    bunky.slice(kde('Moje poznámka')).join(';') === '"u lesa; pozor na plot"',
+    bunky.slice(kde('Moje poznámka')).join(';'));
+}
+
+/* Poznámka se píše do víceřádkového pole, takže v ní Enter být může —
+   a při vložení z Windows přijde jako CRLF, tedy přesně ten pár znaků,
+   kterým se v tabulce oddělují řádky. Nezabalený by rozlomil řádek na
+   dva a zbytek sloupců by se posunul; v Excelu to vypadá jako poškozený
+   soubor. Zkouší se oba tvary, LF i CRLF. */
+{
+  const d = { place: 'Kolín', okres: 'Kolín', type: 'sale', area: 1000, price: 100000 };
+  const lf = V.csv([d], { zaMetr: () => 100, poznamka: () => 'první\ndruhý' });
+  pravda('poznámka s koncem řádku se uzavře do uvozovek',
+    lf.indexOf('"první\ndruhý"') !== -1, JSON.stringify(lf.split('\r\n')[1]));
+
+  const crlf = V.csv([d], { zaMetr: () => 100, poznamka: () => 'první\r\ndruhý' });
+  pravda('a s CRLF taky', crlf.indexOf('"první\r\ndruhý"') !== -1,
+    JSON.stringify(crlf));
+  /* Past je skutečná: CRLF v poznámce je tentýž pár znaků, jakým se
+     oddělují řádky tabulky. Bez uvozovek by jich bylo o jeden víc, než
+     je nabídek — a právě na tom to v Excelu praskne. */
+  pravda('a řádky zůstanou dva: hlavička a jedna nabídka',
+    crlf.replace(/"[^"]*"/g, 'X').trim().split('\r\n').length === 2,
+    String(crlf.replace(/"[^"]*"/g, 'X').trim().split('\r\n').length));
+}
+
+/* --- 7) Dní do dražby ----------------------------------------------
+   Počítá se ode dneška, takže se porovnává proti pevnému dni — jinak by
+   zkouška začala padat zítra. */
+{
+  pravda('budoucí termín dá kladné číslo',
+    V.dniDo('dražba 2026-11-01', new Date(2026, 9, 7)) === 25,
+    String(V.dniDo('dražba 2026-11-01', new Date(2026, 9, 7))));
+  pravda('a minulý termín záporné (ať je poznat, že proběhl)',
+    V.dniDo('dražba 2026-09-30', new Date(2026, 9, 7)) === -7,
+    String(V.dniDo('dražba 2026-09-30', new Date(2026, 9, 7))));
+  pravda('bez termínu zůstane prázdno', V.dniDo('inzerát') === '',
+    JSON.stringify(V.dniDo('inzerát')));
+}
+
+/* --- 8) Body do navigace (GPX) -------------------------------------
+   Tabulka je pro počítání, tohle pro cestu: kdo si vybere pět pozemků,
+   chce je mít v telefonu a objet je. GPX čte Mapy.cz, Locus i Garmin. */
+{
+  const D = [
+    { place: 'Kolín & okolí', type: 'drazba', druh: 'orná', area: 1000,
+      price: 500000, lat: 50.0281, lng: 15.2003, extra: 'dražba 2026-11-01',
+      url: 'https://example.invalid/a?x=1&y=2' },
+    { place: 'Bez polohy', type: 'sale', price: 100000 },
+  ];
+  const g = V.gpx(D, { zaMetr: () => 500, ted: new Date('2026-10-07T08:00:00Z') });
+  pravda('je to GPX', /^<\?xml[^>]*\?>\n<gpx /.test(g), g.slice(0, 60));
+  pravda('a má právě jeden bod (nabídka bez souřadnic se vynechá)',
+    (g.match(/<wpt /g) || []).length === 1, String((g.match(/<wpt /g) || []).length));
+  pravda('v názvu bodu je obec i cena',
+    /<name>Kolín &amp; okolí · 500[\s ]000 Kč<\/name>/.test(g),
+    (g.match(/<name>[^<]*<\/name>/) || [''])[0]);
+  /* Ampersand v názvu i v odkazu musí být zapsaný jako &amp;, jinak je
+     soubor nevalidní XML a navigace ho odmítne otevřít — tiše. */
+  pravda('a zvláštní znaky jsou zapsané jako XML',
+    g.indexOf('x=1&y=2') === -1 && g.indexOf('x=1&amp;y=2') > 0,
+    (g.match(/<link[^>]*>/) || [''])[0]);
+  pravda('a soubor je uzavřený', /<\/gpx>\n$/.test(g), JSON.stringify(g.slice(-8)));
+  pravda('přípona v názvu souboru jde zvolit',
+    V.nazev('dražby', new Date(2026, 9, 7), 'gpx') === 'parcelka-2026-10-07-drazby.gpx',
+    V.nazev('dražby', new Date(2026, 9, 7), 'gpx'));
+  pravda('a bez zvolení zůstává csv',
+    V.nazev('', new Date(2026, 9, 7)) === 'parcelka-2026-10-07.csv',
+    V.nazev('', new Date(2026, 9, 7)));
+}
+
 console.log('\nVývoz do tabulky');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

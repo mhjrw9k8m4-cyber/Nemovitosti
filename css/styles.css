@@ -5307,6 +5307,39 @@ h1, h2, h3,
 .opp-item.je-skryty .opp-skryt{opacity:1; color:var(--accent-warm); border-color:var(--accent-warm);}
 
 /* =====================================================================
+   STAŽENÍ VÝBĚRU — okno s volbou, co a v jakém tvaru
+   Dřív to bylo jedno klepnutí a hned soubor. Okno je tu proto, že
+   volby jsou tři a každá mění, co v souboru bude; bez něj by se musely
+   tlačit do názvu tlačítka.
+   ===================================================================== */
+.vyv-vrstva{position:fixed; inset:0; z-index:1300; display:flex; align-items:center;
+  justify-content:center; padding:16px; background:rgba(8,20,14,0.5);}
+.vyv-vrstva[hidden]{display:none;}
+.vyv-okno{width:100%; max-width:420px; max-height:90vh; overflow:auto; padding:18px;
+  background:var(--plocha-plovouci); border:1px solid var(--line-strong);
+  border-radius:var(--r-md); box-shadow:var(--e3);}
+.vyv-nadpis{font-size:20px; margin:0 0 14px;}
+.vyv-skup{border:0; padding:0; margin:0 0 14px;}
+.vyv-skup legend{padding:0; margin-bottom:8px; font-size:12px; font-weight:700;
+  letter-spacing:0.1em; text-transform:uppercase; color:var(--popisek);}
+.vyv-volba{display:flex; align-items:center; gap:10px; min-height:44px; padding:0 10px;
+  border:1px solid var(--line); border-radius:var(--r-sm); margin-bottom:6px; cursor:pointer;
+  background:var(--ink-soft);}
+.vyv-volba:hover{border-color:var(--copper-bright);}
+.vyv-volba span{flex:1 1 auto; font-size:15px;}
+.vyv-volba b{font-variant-numeric:tabular-nums; color:var(--text-ondark-mute); font-size:14px;}
+.vyv-volba input{width:20px; height:20px; accent-color:var(--plocha-znacka); flex:none;}
+/* Prázdná možnost se nenabízí — stáhl by se prázdný soubor. */
+.vyv-volba.nejde{opacity:0.45; cursor:default;}
+.vyv-popis{margin:0 0 14px; font-size:13px; line-height:1.55; color:var(--text-ondark-mute);}
+.vyv-akce{display:flex; gap:10px; justify-content:flex-end;}
+.vyv-zrus, .vyv-ok{min-height:44px; padding:0 18px; border-radius:var(--r-ovladani);
+  font:inherit; font-size:15px; font-weight:700; cursor:pointer;}
+.vyv-zrus{border:1px solid var(--line-strong); background:none; color:var(--text-ondark);}
+.vyv-ok{border:1px solid rgba(31,81,56,0.55); background:var(--plocha-znacka); color:#fff;}
+.vyv-ok:disabled{opacity:0.5; cursor:default;}
+
+/* =====================================================================
    HLÍDÁNÍ OKOLÍ VLASTNÍHO POZEMKU
    Kdo má dům, zajímá ho ze všeho nejvíc sousední pozemek. Proužek se
    ukáže, až si člověk místo uloží, a říká jedinou věc: co u něj od

@@ -528,6 +528,9 @@ jobs:
       - name: Rychlý výběr v prohlížeči (celá cesta)
         run: node scripts/test-rychly-prohlizec.mjs
 
+      - name: Okno „Stáhnout výběr" (co slíbí, to stáhne)
+        run: node scripts/test-vyvoz-okno.mjs
+
       - name: Přidání vlastního pozemku (celá cesta)
         run: node scripts/test-pridat.mjs
 

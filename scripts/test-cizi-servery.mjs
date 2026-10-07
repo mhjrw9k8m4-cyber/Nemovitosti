@@ -80,6 +80,11 @@ const JEN_ODKAZ = new Map([
      W3C jako zpracovatele — a to by byl nesmysl, který by lidi jen
      pletl. */
   ['www.w3.org', 'jmenný prostor SVG a XLink ve značkách, ne stahování'],
+  /* Totéž u vývozu bodů do navigace: http://www.topografix.com/GPX/1/1
+     je jmenný prostor formátu GPX, který musí stát v hlavičce souboru,
+     aby ho navigace přečetla. Soubor se skládá v prohlížeči a nikam se
+     neposílá — ta adresa se nenačte ani při jeho otevření v Mapy.cz. */
+  ['www.topografix.com', 'jmenný prostor formátu GPX v hlavičce souboru, ne stahování'],
 ]);
 
 /* Zdroje, které se čtou: ručně psané stránky, všechny skripty a styly.

@@ -2794,23 +2794,127 @@
 
   var posledniVyber = [];
 
-  function stahniTabulku() {
-    var V = window.PKVyvoz;
-    if (!V || !posledniVyber.length) return;
-    var text = V.csv(posledniVyber, {
-      zaMetr: (window.PK_CENY && window.PK_CENY.zaMetr) || null,
-      klic: (window.PKKlic && window.PKKlic.pkey) || null
+  function zamkniTab(ov) {
+    ov.addEventListener('keydown', function (e) {
+      if (e.key !== 'Tab') return;
+      var f = ov.querySelectorAll('button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])');
+      var viditelne = [];
+      for (var i = 0; i < f.length; i++) {
+        if (f[i].disabled) continue;
+        if (f[i].offsetParent !== null || f[i] === document.activeElement) viditelne.push(f[i]);
+      }
+      if (!viditelne.length) return;
+      var prvni = viditelne[0], posledni = viditelne[viditelne.length - 1];
+      if (e.shiftKey && document.activeElement === prvni) { e.preventDefault(); posledni.focus(); }
+      else if (!e.shiftKey && document.activeElement === posledni) { e.preventDefault(); prvni.focus(); }
     });
+  }
 
-    var blob = new Blob(['\ufeff' + text], { type: 'text/csv;charset=utf-8;' });
+  function vyvozPomocne() {
+    return {
+      zaMetr: (window.PK_CENY && window.PK_CENY.zaMetr) || null,
+      klic: (window.PKKlic && window.PKKlic.pkey) || null,
+      poznamka: (window.PKPoznamky && window.PKPoznamky.text)
+        ? function (d) { return window.PKPoznamky.text(d); } : null,
+      jeUlozeny: function (d) { return isFav(d); },
+
+      kmOd: (mojeMisto && typeof kmOd === 'function')
+        ? function (d) { return kmOd(mojeMisto, d); } : null
+    };
+  }
+  function vyvozSada(co) {
+    if (co === 'ulozene') return DATA.filter(function (d) { return isFav(d); });
+    if (co === 'poznamky') {
+      var P = window.PKPoznamky;
+      if (!P || !P.text) return [];
+      return DATA.filter(function (d) { return !!P.text(d); });
+    }
+    return posledniVyber;
+  }
+  function vyvozPopisStav() {
+    var vrstva = document.getElementById('vyv-vrstva');
+    if (!vrstva) return;
+    var zvol = function (jm) { var e = vrstva.querySelector('input[name="' + jm + '"]:checked'); return e ? e.value : ''; };
+    var pocty = { vypis: vyvozSada('vypis').length, ulozene: vyvozSada('ulozene').length,
+      poznamky: vyvozSada('poznamky').length };
+    ['vypis', 'ulozene', 'poznamky'].forEach(function (k) {
+      var b = document.getElementById('vyv-n-' + k);
+      if (b) b.textContent = fmt(pocty[k]);
+      var vol = vrstva.querySelector('input[value="' + k + '"]');
+
+      if (vol) { vol.disabled = !pocty[k]; if (vol.closest('.vyv-volba')) vol.closest('.vyv-volba').classList.toggle('nejde', !pocty[k]); }
+    });
+    var co = zvol('vyv-co'), tvar = zvol('vyv-tvar');
+    var n = pocty[co] || 0;
+    var popis = document.getElementById('vyv-popis');
+    if (popis) {
+
+      popis.textContent = tvar === 'gpx'
+        ? (fmt(n) + ' ' + tvarPozemku(n) + ' jako body do navigace (Mapy.cz, Locus, Garmin). '
+          + 'Bez souřadnic se bod uložit nedá, takže nabídky bez polohy vypadnou.')
+        : (fmt(n) + ' ' + tvarPozemku(n) + ' a ' + window.PKVyvoz.SLOUPCE.length
+          + ' sloupců — včetně souřadnic, dní do dražby a vaší poznámky. '
+          + 'Ceny jsou NABÍDKOVÉ, ne za kolik se prodalo.');
+    }
+    var ok = document.getElementById('vyv-ok');
+    if (ok) ok.disabled = !n;
+  }
+  function stahniTabulku() {
+    var vrstva = document.getElementById('vyv-vrstva');
+    if (!vrstva || !window.PKVyvoz) return;
+    vyvozPopisStav();
+    vrstva.hidden = false;
+    var ok = document.getElementById('vyv-ok');
+    if (ok) { try { ok.focus(); } catch (e) {} }
+  }
+  function vyvozZavri() {
+    var vrstva = document.getElementById('vyv-vrstva');
+    if (!vrstva || vrstva.hidden) return;
+    vrstva.hidden = true;
+
+    var tl = document.getElementById('mc-vyvoz');
+    if (tl) { try { tl.focus(); } catch (e) {} }
+  }
+  function vyvozStahni() {
+    var V = window.PKVyvoz, vrstva = document.getElementById('vyv-vrstva');
+    if (!V || !vrstva) return;
+    var zvol = function (jm) { var e = vrstva.querySelector('input[name="' + jm + '"]:checked'); return e ? e.value : ''; };
+    var co = zvol('vyv-co') || 'vypis', tvar = zvol('vyv-tvar') || 'csv';
+    var sada = vyvozSada(co);
+    if (!sada.length) return;
+    var pom = vyvozPomocne();
+    var text, typ, pripona;
+    if (tvar === 'gpx') {
+      text = V.gpx(sada, pom); typ = 'application/gpx+xml;charset=utf-8;'; pripona = 'gpx';
+    } else {
+
+      text = '\ufeff' + V.csv(sada, pom); typ = 'text/csv;charset=utf-8;'; pripona = 'csv';
+    }
+    var popis = co === 'ulozene' ? 'ulozene' : (co === 'poznamky' ? 'poznamky' : popisVyberu());
+    var blob = new Blob([text], { type: typ });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = V.nazev(popisVyberu());
+    a.download = V.nazev(popis, null, pripona);
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    vyvozZavri();
+    showToast(fmt(sada.length) + ' ' + tvarPozemku(sada.length) + ' staženo');
   }
+  (function vyvozOvladani() {
+    var vrstva = document.getElementById('vyv-vrstva');
+    if (!vrstva) return;
+    vrstva.addEventListener('change', vyvozPopisStav);
+    zamkniTab(vrstva);
+    var z = document.getElementById('vyv-zrus'); if (z) z.addEventListener('click', vyvozZavri);
+    var o = document.getElementById('vyv-ok'); if (o) o.addEventListener('click', vyvozStahni);
+
+    vrstva.addEventListener('click', function (e) { if (e.target === vrstva) vyvozZavri(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !vrstva.hidden) vyvozZavri();
+    });
+  }());
 
   function popisVyberu() {
     var kusy = [];
@@ -3485,7 +3589,7 @@
       (ukazPodobne ? 'Jen přesný název'
                    : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '</button>';
 
-    if (matched) tlacitka += '<button type="button" class="mc-skryte" id="mc-vyvoz">Stáhnout tabulku ('
+    if (matched) tlacitka += '<button type="button" class="mc-skryte" id="mc-vyvoz">Stáhnout výběr ('
       + fmt(matched) + ')</button>';
 
     if (matched >= 5) tlacitka += '<button type="button" class="mc-skryte" id="mc-rychly">Rychlý výběr</button>';
@@ -4678,16 +4782,7 @@
         tlac.focus();
       }
 
-      ov.addEventListener('keydown', function (e) {
-        if (e.key !== 'Tab') return;
-        var f = ov.querySelectorAll('button, input, [tabindex]:not([tabindex="-1"])');
-        var viditelne = [];
-        for (var i = 0; i < f.length; i++) if (f[i].offsetParent !== null || f[i] === document.activeElement) viditelne.push(f[i]);
-        if (!viditelne.length) return;
-        var prvni = viditelne[0], posledni = viditelne[viditelne.length - 1];
-        if (e.shiftKey && document.activeElement === prvni) { e.preventDefault(); posledni.focus(); }
-        else if (!e.shiftKey && document.activeElement === posledni) { e.preventDefault(); prvni.focus(); }
-      });
+      zamkniTab(ov);
       tlac.addEventListener('click', otevri);
       ov.querySelector('.rz-x').addEventListener('click', zavri);
       p.hotovoEl.addEventListener('click', zavri);
