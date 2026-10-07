@@ -46,8 +46,6 @@ const V = {
   config: razitko('js/config.js'),
   auth: razitko('js/auth.js'),
   hlidani: razitko('js/hlidani-logika.js'),
-  feed: razitko('js/upozorneni-feed.js'),
-  upoz: razitko('js/upozorneni.js'),
   hlavicka: razitko('js/hlavicka.js'),
   grafCen: razitko('js/graf-cen.js'),
   offline: razitko('js/offline.js'),
@@ -541,7 +539,7 @@ ${sMapou ? `  <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?${V.le
       <!-- „Hledat pozemek", ne „Pozemky": podstatné jméno tu neřekne nic. -->
       <a href="index.html#mapa">Hledat pozemek</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
@@ -578,8 +576,6 @@ function footer(){
 <script src="js/config.js?${V.config}" defer></script>
 <script src="js/auth.js?${V.auth}" defer></script>
 <script src="js/hlidani-logika.js?${V.hlidani}" defer></script>
-<script src="js/upozorneni-feed.js?${V.feed}" defer></script>
-<script src="js/upozorneni.js?${V.upoz}" defer></script>
 <script src="js/graf-cen.js?${V.grafCen}" defer></script>
 <script src="js/offline.js?${V.offline}" defer></script>
 <script src="js/hlavicka.js?${V.hlavicka}" defer></script>

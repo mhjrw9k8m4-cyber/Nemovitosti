@@ -29,7 +29,7 @@ await new Promise((r) => setTimeout(r, 300));
 const BASE = 'http://127.0.0.1:8310';
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const STRANKY = ['index.html', 'pridat.html', 'kontakt.html', 'hlidani.html',
-  'upozorneni.html', 'pozemky-okres-benesov.html', 'hypoteka-na-pozemek.html', 'pozemek.html',
+  'pozemky-okres-benesov.html', 'hypoteka-na-pozemek.html', 'pozemek.html',
   /* Nejdelší formulář na webu — osmnáct polí ve čtyřech skupinách.
      Kdo ho vyplňuje klávesnicí, projde jím celý tabulátorem. */
   'kupni-smlouva-pozemek.html'];

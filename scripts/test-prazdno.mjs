@@ -50,7 +50,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 
 /* Stránky, které obsah dostávají až ze skriptu — tedy ty, kterých se
    vyhrazená výška týkala — plus pár běžných pro srovnání. */
-const STRANKY = ['hlidani.html', 'upozorneni.html', 'muj-inzerat.html', 'zpravy.html',
+const STRANKY = ['hlidani.html', 'muj-inzerat.html', 'zpravy.html',
   'kontakt.html', 'kupni-smlouva-pozemek.html', 'podminky.html'];
 /* Kolik prázdna se ještě snese. Odstup mezi posledním obsahem a patičkou
    je normální (sekce mají spodní odsazení); 454 px není. */

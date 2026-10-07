@@ -3219,7 +3219,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
         se ta jednopixelová čára na obou koncích zakřivila a četla se jako
         HORNÍ HRANA PLOVOUCÍ KARTY — vypadalo to, že se v menu něco
         špatně vrství. Oddělovač má být rovná vlasová linka. */
-  #nav a[href$="upozorneni.html"], #nav a[href$="kontakt.html"]{
+  #nav a[href$="zpravy.html"], #nav a[href$="kontakt.html"]{
     margin-top:8px; padding-top:20px; border-top:1px solid var(--line);
     border-top-left-radius:0; border-top-right-radius:0;}
   /* Případné tlačítko, které v menu zůstává (např. „Zpět na mapu" na podstránkách),
@@ -4297,8 +4297,9 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
     box-shadow:inset 3px 0 0 var(--copper); color:var(--text-ondark);}
   #nav a:not(.btn-primary):active{background:rgba(31,81,56,0.08);}
 
-  /* Předěl skupin: užší, a beze změny odsazení řádků. */
-  #nav a[href$="upozorneni.html"], #nav a[href$="kontakt.html"]{
+  /* Předěl skupin: užší, a beze změny odsazení řádků. Osobní skupinu
+     otevíraly Upozornění; ta jsou odebraná, takže ji otevírají Zprávy. */
+  #nav a[href$="zpravy.html"], #nav a[href$="kontakt.html"]{
     margin-top:8px; padding-top:8px;
     border-top:1px solid var(--line); border-top-left-radius:0; border-top-right-radius:0;}
 }

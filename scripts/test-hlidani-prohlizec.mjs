@@ -303,10 +303,17 @@ await p.waitForTimeout(2400);
   pravda('počty pozemků jsou skloňované', spatne.length === 0,
     JSON.stringify(karty.map((k) => k.pocet)));
   if (karta) {
-    const doUpozorneni = karta.odkazy.find((a) => /^upozorneni\.html/.test(a.href));
-    pravda('karta vede tam, kde jsou ty nové pozemky vypsané',
-      !!doUpozorneni && /ukázat nové/i.test(doUpozorneni.text),
-      `odkazy na kartě: ${JSON.stringify(karta.odkazy)}`);
+    /* NOVÉ POZEMKY JSOU V KARTĚ. Dřív tu byl odkaz „Ukázat nové" do
+       Upozornění; ta se na přání majitele odebrala a karta na otázku
+       „kde je uvidím" odpovídá sama. */
+    const vypsane = await p.evaluate(() => [...document.querySelectorAll('.hl-item .hl-nove li')]
+      .map((li) => (li.textContent || '').trim()));
+    pravda('karta nové pozemky rovnou vypíše', vypsane.length > 0,
+      'v kartě není .hl-nove ani s jedním řádkem');
+    pravda('a je mezi nimi ten nový', vypsane.some((t) => /Sendražice/.test(t)),
+      JSON.stringify(vypsane.slice(0, 4)));
+    pravda('kdežto staré se jako nové nehlásí',
+      !vypsane.some((t) => /Kolín/.test(t) && /1\/1/.test(t)), JSON.stringify(vypsane.slice(0, 4)));
 
     const naMapu = karta.odkazy.find((a) => /^index\.html/.test(a.href));
     pravda('a druhá cesta vede na mapu', !!naMapu, JSON.stringify(karta.odkazy));
@@ -329,30 +336,24 @@ await p.waitForTimeout(2400);
   }
 }
 
-await p.goto(`${BASE}/upozorneni.html`, { waitUntil: 'domcontentloaded' });
-await p.waitForTimeout(2200);
-const centrum = await p.evaluate(() => ({
-  text: (document.getElementById('up-root') || {}).textContent || '',
-  polozek: document.querySelectorAll('.up-item, .up-row, .up-card .up-list > *').length,
-}));
-pravda('v centru upozornění je nový pozemek', /Sendražice/.test(centrum.text),
-  'text centra: ' + centrum.text.replace(/\s+/g, ' ').slice(0, 160));
-pravda('staré pozemky se jako nové nehlásí', !/„?Kolín"?\s*·\s*1\/1/.test(centrum.text));
-
 /* VYPSANÝ POZEMEK MUSÍ JÍT OTEVŘÍT. Byly to jen řádky textu: člověk se
    dozvěděl, že mu přibyly tři a které to jsou, a otevřít si mohl leda
    celou mapu a hledat je mezi tečkami. */
 {
-  const odkazy = await p.evaluate(() => [...document.querySelectorAll('.up-list li a')]
+  /* Zpátky na hlídání: kontrola o kus výš klepla na „Zobrazit na mapě",
+     takže se stránka přepnula a karty tu už nejsou. */
+  await p.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(2400);
+  const odkazy = await p.evaluate(() => [...document.querySelectorAll('.hl-nove li a')]
     .map((a) => ({ href: a.getAttribute('href') || '', text: (a.textContent || '').trim() })));
-  pravda('nové pozemky jsou v upozornění odkazy, ne jen text', odkazy.length > 0,
-    'v seznamu upozornění není ani jeden odkaz na pozemek');
+  pravda('vypsané pozemky jsou odkazy, ne jen text', odkazy.length > 0,
+    'v kartě hlídání není ani jeden odkaz na pozemek');
   const sendrazice = odkazy.find((a) => /Sendražice/.test(a.text));
   pravda('a vede z nich odkaz na vlastní stránku toho pozemku',
     !!sendrazice && /^pozemek\.html\?p=/.test(sendrazice.href),
     JSON.stringify(odkazy.slice(0, 3)));
   if (sendrazice) {
-    await p.click(`.up-list li a[href="${sendrazice.href.replace(/"/g, '\\"')}"]`);
+    await p.click(`.hl-nove li a[href="${sendrazice.href.replace(/"/g, '\\"')}"]`);
     await p.waitForTimeout(2200);
     const nadpis = await p.evaluate(() => (document.querySelector('.pz-place') || {}).textContent || '');
     pravda('a otevře se opravdu ten pozemek, ne jiný',
@@ -361,46 +362,14 @@ pravda('staré pozemky se jako nové nehlásí', !/„?Kolín"?\s*·\s*1\/1/.tes
 }
 
 /* ---------- 3. odznak v menu ---------- */
-// Na stránce hlídání a upozornění se odznak schválně neukazuje (po přečtení
-// by lhal), takže se zkouší tam, kde patří — na úvodní stránce.
-await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-await p.waitForTimeout(3000);
-const odznak = await p.evaluate(() => {
-  const b = document.getElementById('nav-hlidani');
-  const tecka = document.querySelector('.nav-toggle .nav-dot');
-  return {
-    menu: b ? (b.textContent || '').replace(/\s+/g, ' ').trim() : '(odkaz chybí)',
-    titul: document.title,
-    teckaNaHamburgeru: !!(tecka && getComputedStyle(tecka).display !== 'none'),
-  };
-});
-pravda('v menu je vidět, že z hlídání něco přibylo',
-  /\d/.test(odznak.menu) || /\(\d+\)/.test(odznak.titul) || odznak.teckaNaHamburgeru,
-  `menu: „${odznak.menu}", titulek: „${odznak.titul}", tečka: ${odznak.teckaNaHamburgeru}`);
+/* ODZNAK JE PRYČ. Byl to „nepřečtená upozornění" v nabídce a šel
+   s Upozorněními, která se na přání majitele odebrala. Kdo chce vědět,
+   co přibylo, otevře Hlídání, kde je to vypsané u každého hledání. */
 
 /* ---------- 4. označení za viděné ---------- */
-await p.goto(`${BASE}/upozorneni.html`, { waitUntil: 'domcontentloaded' });
-await p.waitForTimeout(2200);
-const tlacitko = await p.$('#up-seen, .up-seen, button:has-text("označit vše")');
-if (tlacitko) {
-  await tlacitko.click();
-  await p.waitForTimeout(1200);
-  const hned = await p.evaluate(() => (document.getElementById('up-root') || {}).textContent || '');
-  pravda('po označení za viděné upozornění hned zmizí', !/Sendražice/.test(hned),
-    'zbylo: ' + hned.replace(/\s+/g, ' ').slice(0, 140));
-  // A TEĎ to podstatné: centrum položky schová rovnou v prohlížeči, ať server
-  // odpoví jakkoli. Kdyby se označení neuložilo, po obnovení stránky by se
-  // upozornění vrátilo — a člověk by ho odklikával pořád dokola. Bez tohohle
-  // kroku test prošel i s rozbitým ukládáním; ověřeno.
-  await p.reload({ waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(2400);
-  const poObnoveni = await p.evaluate(() => (document.getElementById('up-root') || {}).textContent || '');
-  pravda('označení za viděné si zapamatoval server (po obnovení se nevrátí)',
-    !/Sendražice/.test(poObnoveni),
-    'po obnovení zbylo: ' + poObnoveni.replace(/\s+/g, ' ').slice(0, 140));
-} else {
-  chyb++; zpravy.push('  ✕ tlačítko „označit vše jako viděné" se nenašlo');
-}
+/* Odklikávalo se v centru upozornění („označit vše"), které je pryč.
+   Co se označuje a kdy, hlídá dál kontrola výš: otevření mapy z karty
+   nové pozemky NEODKLIKNE. */
 
 /* ---------- 5. smazání hlídání ---------- */
 await p.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
@@ -414,14 +383,13 @@ await p.waitForSelector('#ns-okres', { state: 'attached', timeout: 15000 });
   const nulova = await p.evaluate(() => {
     const it = [...document.querySelectorAll('.hl-item')]
       .find((e) => /zero/.test(((e.querySelector('.hl-new-badge') || {}).className || '')));
-    return it ? { text: (it.textContent || '').replace(/\s+/g, ' '),
-      naUpozorneni: [...it.querySelectorAll('a')].some((a) => /^upozorneni\.html/.test(a.getAttribute('href') || '')) } : null;
+    return it ? { text: (it.textContent || '').replace(/\s+/g, ' ') } : null;
   });
   pravda('je hlídání bez nových pozemků (jinak zkouška nic neměří)', !!nulova,
     'žádná karta s nulovým odznakem');
   if (nulova) {
     pravda('i u prázdného odznaku je napsané, kde se nové objeví',
-      /Upozorn/i.test(nulova.text) && nulova.naUpozorneni,
+      /vypíšeme ho rovnou sem/i.test(nulova.text),
       `na kartě stojí: „${nulova.text.slice(0, 160)}"`);
   }
 }
@@ -439,9 +407,10 @@ if (smazat) {
 }
 
 /* ---------- 6. přihlášení na osobních stránkách ---------- */
-/* Nepřihlášený člověk se musí přihlásit PŘÍMO tam, kam přišel. Upozornění
-   byla výjimka: nabízela tlačítko „Přihlásit se", které vedlo na zpravy.html
-   — po přihlášení koukal na cizí seznam a nic ho nevedlo zpátky.
+/* Nepřihlášený člověk se musí přihlásit PŘÍMO tam, kam přišel. Výjimkou
+   bývala Upozornění: nabízela tlačítko „Přihlásit se", které vedlo na
+   zpravy.html — po přihlášení koukal na cizí seznam a nic ho nevedlo
+   zpátky. Stránka je pryč, pravidlo platí pro zbylé dvě.
    A Enter v heslu musí odeslat: bez <form> to byla na telefonu největší
    klávesa, po které se nedělo nic. */
 {
@@ -458,7 +427,6 @@ if (smazat) {
   for (const [stranka, poleMail, poleHeslo] of [
     ['hlidani.html', '#he', '#hp'],
     ['zpravy.html', '#ze', '#zp'],
-    ['upozorneni.html', '#up-e', '#up-p'],
   ]) {
     await o.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' });
     await o.waitForTimeout(2000);
@@ -485,18 +453,21 @@ if (smazat) {
      po sobě nenechá souhrn — a chyba, kterou nikdo nepřečte, je horší než
      chyba nahlášená. (Ověřeno: při návratu ke staré podobě přihlášení tudy
      test padal výjimkou místo hlášení.) */
-  await o.goto(`${BASE}/upozorneni.html`, { waitUntil: 'domcontentloaded' });
+  /* Zkouší se na Hlídání; dřív to bylo na stránce upozornění, která je
+     pryč. Pravidlo je stejné: Enter v heslu je na telefonu největší
+     klávesa a bez <form> se po ní nedělo nic. */
+  await o.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
   await o.waitForTimeout(2200);
-  if (!(await o.$('#up-p'))) {
-    chyb++; zpravy.push('  ✕ Enter v heslu přihlásí — pole pro heslo na upozorneni.html vůbec není');
+  if (!(await o.$('#hp'))) {
+    chyb++; zpravy.push('  ✕ Enter v heslu přihlásí — pole pro heslo na hlidani.html vůbec není');
   } else {
-    await o.fill('#up-e', 'zajemce@example.com');
-    await o.fill('#up-p', 'tajneheslo');
-    await o.press('#up-p', 'Enter');
+    await o.fill('#he', 'zajemce@example.com');
+    await o.fill('#hp', 'tajneheslo');
+    await o.press('#hp', 'Enter');
     await o.waitForTimeout(2200);
     const poEnteru = await o.evaluate(() => ({
-      formular: !!document.getElementById('up-authf'),
-      text: (document.getElementById('up-root') || {}).textContent || '',
+      formular: !!document.querySelector('#hp'),
+      text: (document.body || {}).textContent || '',
     }));
     pravda('Enter v heslu přihlásí (formulář zmizí a seznam se načte)', !poEnteru.formular,
       'na stránce zbylo: ' + poEnteru.text.replace(/\s+/g, ' ').slice(0, 160));

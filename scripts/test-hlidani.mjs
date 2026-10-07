@@ -12,9 +12,9 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const H = createRequire(import.meta.url)(path.join(ROOT, 'js', 'hlidani-logika.js'));
-/* Centrum upozornění staví seznam z týchž hlídání — a musí z nich
+/* Výpis nových pozemků staví seznam z týchž hlídání — a musí z nich
    vyjít stejná čísla jako tady. Proto se zkouší spolu. */
-const F = createRequire(import.meta.url)(path.join(ROOT, 'js', 'upozorneni-feed.js'));
+const F = createRequire(import.meta.url)(path.join(ROOT, 'js', 'nove-pozemky.js'));
 
 let bezi = 0, spadlo = 0;
 const vysledky = [];
@@ -376,41 +376,37 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
       [A, P({ parcel: 'z', okres: 'Nymburk', place: 'Poděbrady' })]).length, 1);
 }
 
-/* --- ODZNAK A HLAVIČKA CENTRA MUSÍ ŘÍKAT TOTÉŽ -------------------
+/* --- JEDEN POZEMEK NA DVĚ HLEDÁNÍ --------------------------------
  *
- * Jeden pozemek může sedět na dvě uložená hledání a být tedy ve dvou
- * upozorněních. Odznak v menu ho počítá jednou (novychCelkem to má
- * i v komentáři), ale hlavička centra sečetla počty jednotlivých
- * upozornění — na dvou hledáních přes týž okres tak vycházelo 56 proti
- * 28 na odznaku. Dvě čísla pro tutéž věc, a to jedno z nich bylo
- * u druhého na dosah jednoho klepnutí.
+ * Pozemek může sedět na dvě uložená hledání. Dokud existovala
+ * Upozornění, byl z toho spor dvou čísel: odznak ho počítal jednou,
+ * hlavička centra sečetla obě upozornění a na dvou hledáních přes týž
+ * okres vycházelo 56 proti 28. Upozornění jsou pryč i s odznakem, takže
+ * žádný součet přes hledání už nikde nestojí — zbylo pravidlo, které
+ * platit musí dál: v kartě KAŽDÉHO z těch hledání ten pozemek je.
+ * Kdyby se odečítal „protože už byl vidět jinde", zmizel by člověku
+ * z hledání, které si uložil právě na něj.
  */
 {
   const A = P({ parcel: 'a' }), B = P({ parcel: 'b' });
   const data = [A, B];
   const dveStejne = [{ id: 'a', okres: 'Kolín', seen_keys: [] }, { id: 'b', okres: 'Kolín', seen_keys: [] }];
-  const odznak = H.novychCelkem(dveStejne, data);
-  const centrum = F.pocty(F.sestav({ vlakna: [], hledani: dveStejne, data: data })).pozemky;
-  je('součty', 'dvě hledání přes týž okres: odznak počítá pozemky jednou', odznak, 2);
-  je('součty', 'a hlavička centra hlásí totéž', centrum, odznak);
-  je('součty', 'obě upozornění přitom v seznamu zůstanou',
-    F.sestav({ vlakna: [], hledani: dveStejne, data: data }).length, 2);
+  const vypis = F.zeHlidani(dveStejne, data);
+  je('součty', 'dvě hledání přes týž okres dají dvě karty', vypis.length, 2);
+  je('součty', 'a v každé jsou oba pozemky',
+    vypis.map((x) => x.pocet), [2, 2]);
 
-  // Nepřekrývající se hledání se naopak sečíst MUSÍ.
+  // Nepřekrývající se hledání vrací každé to svoje.
   const dveJine = [{ id: 'a', okres: 'Kolín', seen_keys: [] },
     { id: 'b', okres: 'Nymburk', seen_keys: [] }];
   const dataJine = [A, P({ parcel: 'n', okres: 'Nymburk', place: 'Poděbrady' })];
-  je('součty', 'dvě různá hledání se sečtou',
-    F.pocty(F.sestav({ vlakna: [], hledani: dveJine, data: dataJine })).pozemky, 2);
-  je('součty', 'a odznak taky', H.novychCelkem(dveJine, dataJine), 2);
+  je('součty', 'dvě různá hledání mají každé svůj jeden pozemek',
+    F.zeHlidani(dveJine, dataJine).map((x) => x.pocet), [1, 1]);
 
-  /* Zprávy se naopak SČÍTAJÍ — dvě nepřečtené zprávy jsou dvě zprávy,
-     ne jeden pozemek. Kdyby se i ty začaly počítat přes klíče, zmizely by. */
-  const vlakna = [
-    { listing_id: 'L1', buyer_id: 'B1', unread: 2, is_owner: true, place: 'Kolín', last_at: '2026-09-20T10:00:00Z' },
-    { listing_id: 'L2', buyer_id: 'B2', unread: 3, is_owner: false, place: 'Nymburk', last_at: '2026-09-20T11:00:00Z' }
-  ];
-  je('součty', 'zprávy se sčítají dál', F.pocty(F.sestav({ vlakna: vlakna, hledani: [], data: [] })).zpravy, 5);
+
+  /* Nepřečtené zprávy se sem už nepletou. Sčítala je Upozornění, která
+     míchala zprávy a pozemky do jednoho seznamu; ta jsou pryč a zprávy
+     si počítá stránka Zprávy sama. Hlídání je o pozemcích. */
 }
 
 /* --- ZMĚNA CENY NENÍ NOVÝ POZEMEK ---------------------------------
@@ -466,13 +462,15 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
       [levnejsi, P({ parcel: 'b', price: 900000 })])[0].titulek,
     '2 pozemky změnily cenu');
 
-  /* A odznak s hlavičkou si musí odpovídat i tady — odznak, který změnu
-     ceny vynechá, hlásí menší číslo než stránka pod ním. */
+  /* Součet přes hledání a výpis v kartě si musí odpovídat — kdyby jeden
+     z nich změnu ceny vynechal, tvrdil by web o témž hledání dvě různá
+     čísla. (Součet dnes nikdo nevykresluje, viz novychCelkem
+     v js/hlidani-logika.js; pravidlo ale platí dál.) */
   const smes = [P({ parcel: 'a', price: 400000 }), P({ parcel: 'c' })];
   const hled2 = { id: 'h', okres: 'Kolín', seen_keys: [H.keyOf(A)] };
-  je('cena', 'odznak počítá i změnu ceny', H.novychCelkem([hled2], smes), 2);
-  je('cena', 'a hlavička centra hlásí totéž',
-    F.pocty(F.zeHlidani([hled2], smes)).pozemky, H.novychCelkem([hled2], smes));
+  je('cena', 'součet počítá i změnu ceny', H.novychCelkem([hled2], smes), 2);
+  je('cena', 'a výpis v kartě hlásí totéž',
+    F.zeHlidani([hled2], smes).reduce((n, x) => n + x.pocet, 0), H.novychCelkem([hled2], smes));
 }
 
 /* Rozebrání klíče na SKUTEČNÝCH datech: kdyby se v nějakém poli objevilo
@@ -494,11 +492,14 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
 
 /* --- VŠICHNI SE MUSÍ DÍVAT DO TÝCHŽ ZDROJŮ -------------------------
  *
- * „Kolik nových pozemků mi sedí" odpovídají DVĚ místa: odznak v nabídce
- * (js/upozorneni.js) a stránka hlídání (hlidani.html). Dívaly se každé
- * jinam: odznak jen do data/opportunities.json, stránka i na inzeráty od
- * majitelů. Odznak tedy mohl říkat „žádné nové", a stránka hned vedle
- * „1 nový" — přitom odznak je zrovna to, co člověka na stránku pošle.
+ * „Kolik nových pozemků mi sedí" odpovídala tři místa: odznak v nabídce,
+ * stránka upozornění a stránka hlídání. Dívaly se každé jinam — odznak
+ * jen do data/opportunities.json, stránka i na inzeráty od majitelů —
+ * takže odznak mohl říkat „žádné nové" a stránka hned vedle „1 nový".
+ * Upozornění se na přání majitele odebrala celá, takže ta místa zbyla
+ * dvě: stránka hlídání (hlidani.html) a výpis nových pozemků v její
+ * kartě (js/nove-pozemky.js). Rozejít se mohou pořád stejně snadno,
+ * a tahle kontrola je u sebe drží dál.
  *
  * A druhá věc: řádek z živého inzerátu skládá PKCisteni.majitele() —
  * mapa i stránka pozemku ho tak berou, hlidani.html si ho skládal ručně
@@ -518,28 +519,24 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
     .replace(/<!--[\s\S]*?-->/g, ' ')
     .replace(/\/\*[\s\S]*?\*\//g, ' ')
     .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ');
-  const upoz = bezKomentaru(readFileSync(new URL('../js/upozorneni.js', import.meta.url), 'utf8'));
   const hlid = bezKomentaru(readFileSync(new URL('../hlidani.html', import.meta.url), 'utf8'));
-  /* A TŘETÍ MÍSTO: stránka upozornění (js/centrum.js). Tu jsem při první
-     opravě přehlédl — spravil jsem odznak, aby počítal i inzeráty od
-     majitelů, ale stránka, NA KTEROU TEN ODZNAK POSÍLÁ, je dál nečetla.
-     Odznak by tím mohl slíbit „1 nový" a na stránce by nebylo nic, což je
-     horší než původní stav, kdy se obojí mýlilo stejně. */
-  const centrum = bezKomentaru(readFileSync(new URL('../js/centrum.js', import.meta.url), 'utf8'));
+  /* Výpis nových pozemků v kartě hledání. Dřív to byla stránka
+     upozornění (js/centrum.js) a odznak v nabídce (js/upozorneni.js);
+     obojí šlo pryč s Upozorněními a zbyl tenhle modul, který hlídání
+     používá přímo. */
+  const vypis = bezKomentaru(readFileSync(new URL('../js/nove-pozemky.js', import.meta.url), 'utf8'));
   /* Pojistka: kdyby se ta místa přejmenovala, kontroly níž by hlídaly
      prázdno a tvářily se spokojeně. */
-  je('zdroje', 'odznak opravdu počítá nové pozemky (jinak se nic neměří)',
-    /novychCelkem/.test(upoz), true);
-  je('zdroje', 'a stránka hlídání taky (jinak se nic neměří)',
+  je('zdroje', 'stránka hlídání opravdu počítá nové pozemky (jinak se nic neměří)',
     /matches\(/.test(hlid), true);
-
-  je('zdroje', 'stránka upozornění opravdu skládá seznam (jinak se nic neměří)',
-    /F\.sestav\(/.test(centrum), true);
-
-  je('zdroje', 'odznak čte i inzeráty od majitelů, ne jen stažená data',
-    /user-listings\.json/.test(upoz), true);
-  je('zdroje', 'a stránka upozornění taky (co odznak slíbí, musí být vidět)',
-    /user-listings\.json/.test(centrum), true);
+  je('zdroje', 'a výpis v kartě je taky umí najít (jinak se nic neměří)',
+    /noveProHledani\(/.test(vypis), true);
+  /* Nové pozemky hledá JEDNA funkce v js/hlidani-logika.js. Právě tím,
+     že si je každé místo filtrovalo po svém, se dřív rozcházela: centrum
+     hlásilo 1 970 nových, hlídání i mapa 1 957 — a odznak vedl právě na
+     to centrum. */
+  je('zdroje', 'a bere je ze společné funkce, ne z vlastního filtru',
+    /HL\.noveProHledani\(/.test(vypis), true);
   je('zdroje', 'stránka hlídání skládá živý inzerát sdílenou funkcí',
     /PKCisteni\.majitele\(/.test(hlid), true);
   /* A hlavně: NESKLÁDÁ si ho ručně. Tohle je ta chyba, která se vrací —

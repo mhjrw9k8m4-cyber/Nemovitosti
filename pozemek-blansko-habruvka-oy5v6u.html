@@ -45,7 +45,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=2d972d98">
+  <link rel="stylesheet" href="css/styles.min.css?v=118f5e24">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -526,7 +526,7 @@
            jméno neřekne nic, sloveso řekne, co se tam dělá. -->
       <a href="index.html#mapa">Hledat pozemek</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
@@ -573,8 +573,8 @@
      obyčejný skript PŘED ním, a ne v odložené skupině níž — odložené
      skripty běží teprve po doparsování a stránka by si model mohla
      postavit z 2 018 nabídek místo 1 995. Pozdější spotřebitelé
-     (upozorneni-feed.js, upozorneni.js) ho najdou stejně: obyčejné
-     skripty běží před odloženými. -->
+     (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
+     obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 3 897 m² — Habrůvka, okres Blansko","description":"Na prodej · 399 000 Kč (102 Kč/m²) · 3 897 m² · Habrůvka, okres Blansko. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-blansko-habruvka-oy5v6u.html","address":{"@type":"PostalAddress","addressLocality":"Habrůvka","addressRegion":"Blansko","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.303067,"longitude":16.716972}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Blansko","item":"https://www.parcelaka.cz/pozemky-okres-blansko.html"},{"@type":"ListItem","position":4,"name":"Orná půda 3 897 m² — Habrůvka, okres Blansko","item":"https://www.parcelaka.cz/pozemek-blansko-habruvka-oy5v6u.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Habrůvka|—|Blansko|49.303|16.717","ll":[49.303067,16.716972],"v":3897,"c":399000,"r":"data/okres/blansko.json"};</script>
@@ -588,8 +588,6 @@
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=bec7a315" defer></script>
-<script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
-<script src="js/min/upozorneni.js?v=99e78c4f" defer></script>
 <script src="js/min/hlavicka.js?v=1ca59d70" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script type="application/json" id="pz-okoli-data">"Blansko 8,7 km · Brno 14 km"</script>

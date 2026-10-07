@@ -156,8 +156,6 @@ jobs:
       - name: Hlídání lokality (co je nový pozemek)
         run: node scripts/test-hlidani.mjs
 
-      - name: Centrum upozornění (věty, čas, seskupení)
-        run: node scripts/test-upozorneni.mjs
 
       - name: Celá kontrola inzerátů (proti zkušebnímu serveru)
         run: |

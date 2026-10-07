@@ -435,12 +435,13 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
     };
   });
   pravda('osobní položky jsou pod jednou skupinou', v.skupina, 'skupina .nav-moje v liště chybí');
-  /* Ve skupině jsou tři: upozornění, zprávy, hlídání — samá činnost.
+  /* Ve skupině jsou dvě: zprávy a hlídání — samá činnost. Bývaly tři,
+     ale Upozornění se na přání majitele odebrala celá.
      Účet z ní odešel nahoru jako samostatný první řádek, protože byl
      schovaný až čtvrtý a nešlo z nabídky poznat, jestli je člověk
      přihlášený. Že je nahoře a nese stav, hlídá test-data.mjs. */
-  pravda('a jsou v ní všechny tři',
-    v.odkazyUvnitr.length === 3 && /Upozorn/.test(v.odkazyUvnitr.join(' ')) && /Hlídání/.test(v.odkazyUvnitr.join(' ')),
+  pravda('a jsou v ní obě',
+    v.odkazyUvnitr.length === 2 && /Zprávy/.test(v.odkazyUvnitr.join(' ')) && /Hlídání/.test(v.odkazyUvnitr.join(' ')),
     v.odkazyUvnitr.join(' | '));
   pravda('účet je mimo ni, nahoře a se stavem', v.ucetNahore,
     'v liště chybí #nav-ucet jako samostatná položka');
@@ -453,7 +454,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   await p.waitForTimeout(400);
   const po = await p.evaluate(() => [...document.querySelectorAll('.nav-moje-panel a')]
     .filter((e) => e.getClientRects().length > 0).length);
-  pravda('po klepnutí se rozbalí', po === 3, `vidět je ${po} ze tří`);
+  pravda('po klepnutí se rozbalí', po === 2, `vidět je ${po} ze dvou`);
   await ctx.close();
 }
 {
@@ -465,8 +466,8 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   const n = await p.evaluate(() => [...document.querySelectorAll('.nav-moje-panel a')]
     .filter((e) => { const s = getComputedStyle(e);
       return s.display !== 'none' && e.getClientRects().length > 0; }).length);
-  pravda('ve vysouvacím menu jsou osobní položky rovnou vidět', n === 3,
-    `vidět je ${n} ze tří — ve výsuvném menu se nemá nic rozbalovat`);
+  pravda('ve vysouvacím menu jsou osobní položky rovnou vidět', n === 2,
+    `vidět je ${n} ze dvou — ve výsuvném menu se nemá nic rozbalovat`);
   await ctx.close();
 }
 
@@ -803,7 +804,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
       refresh_token: 'ref-majitel', user: { id: '11111111-1111-4111-8111-111111111111' } }));
   });
   const p2 = await ctx.newPage();
-  const STRANKY = ['hlidani.html', 'upozorneni.html', 'zpravy.html', 'muj-inzerat.html',
+  const STRANKY = ['hlidani.html', 'zpravy.html', 'muj-inzerat.html',
     'pridat.html', 'pozemek.html?ll=50.02,15.20', 'pozemky-podle-okresu.html',
     'kontakt.html', 'cena-pozemku.html'];
   const nalezy = [];

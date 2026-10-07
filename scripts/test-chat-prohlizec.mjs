@@ -1,6 +1,6 @@
 // Projde chat v opravdovém prohlížeči: zájemce napíše, majitel to uvidí
 // a odpoví, zájemce odpověď dostane. Plus věci, které se v Node otestovat
-// nedají — odznak v menu, hlavička konverzace a chování posuvníku.
+// nedají — schránka vláken, hlavička konverzace a chování posuvníku.
 import { chromium } from 'playwright-core';
 
 // Zkušební Supabase si test spustí sám — jedním příkazem a bez přípravy.
@@ -57,62 +57,17 @@ await pZ.waitForFunction(() => document.querySelectorAll('.zp-b.me').length === 
 je('zpráva zájemce odešla a je vidět', (await pZ.textContent('.zp-b.me')).includes('je pozemek ještě volný'), true);
 je('psací pole se vyprázdnilo', await pZ.inputValue('#zc-ta'), '');
 
-/* ---------- 2. majitel vidí vlákno ve schránce i odznak v menu ---------- */
+/* ---------- 2. majitel vidí vlákno ve schránce ---------- */
 const cMajitel = await kontext(UID_MAJITEL, 'tok-majitel');
 const pM = await cMajitel.newPage();
 pM.on('pageerror', (e) => chybyKonzole.push(String(e)));
 
-// odznak se zkouší na běžné stránce okresu — tam dřív nebyl vůbec,
-// a rovnou v mobilním rozměru, kde je celé menu schované za hamburgerem
-await pM.goto(`${BASE}/pozemky-okres-tabor.html`);
-await pM.waitForSelector('.nav-toggle .nav-dot', { timeout: 10000 });
-je('na mobilu je nepřečtená zpráva vidět i se zavřeným menu',
-  await pM.locator('.nav-toggle .nav-dot').isVisible(), true);
-// Tečka pokrývá zprávy i hlídání, proto neutrální „novinky".
-je('tlačítko menu to řekne i nevidomému',
-  await pM.getAttribute('.nav-toggle', 'aria-label'), 'Otevřít menu — čekají na vás novinky');
-je('odznak u položky Zprávy existuje', (await pM.textContent('#nav-zpravy .nav-unread')).trim(), '1');
-await pM.click('.nav-toggle');
-je('po otevření menu je odznak vidět',
-  await pM.locator('#nav-zpravy .nav-unread').isVisible(), true);
-
-/* ---------- odznak hlídání: hlídací pes musí štěkat i mimo svou stránku ---------- */
-// Kolik nových pozemků má vyjít, spočítáme týmž modulem, který používá web —
-// tady se ověřuje to ostatní: že se data vůbec stáhnou, spojí s uloženým
-// hledáním a výsledek doputuje až do menu.
-const { createRequire } = await import('node:module');
-const req2 = createRequire(import.meta.url);
-const HL = req2(new URL('../js/hlidani-logika.js', import.meta.url).pathname);
-const dataSoubor = JSON.parse((await import('node:fs')).readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8'));
-const cekanoHl = HL.novychCelkem(
-  [{ okres: 'Tábor', druh: '', ptype: '', max_price: 0, min_area: 0, features: [], seen_keys: [] }],
-  dataSoubor.opportunities || []);
-je('zkušební hledání vůbec něco najde', cekanoHl > 0, true);
-
-await pM.waitForSelector('#nav-hlidani .nav-unread', { state: 'attached', timeout: 15000 });
-je('odznak hlídání ukazuje počet nových pozemků',
-  (await pM.textContent('#nav-hlidani .nav-unread')).trim(), cekanoHl > 9 ? '9+' : String(cekanoHl));
-je('titulek záložky sečte zprávy i hlídání',
-  (await pM.title()).startsWith('(' + (1 + cekanoHl > 9 ? '9+' : String(1 + cekanoHl)) + ') '), true);
-
-/* Na širokém displeji je lišta rozbalená, tam tečka na tlačítku menu
-   překážet nemusí. Osobní položky (Upozornění, Zprávy, Hlídání, Můj
-   profil) jsou ale nově pod jednou skupinou „Moje", takže odznak
-   u Zpráv je v zavřené nabídce — a tím pádem neviditelný. Počet proto
-   svítí i na samotné skupině; kdyby nesvítil, člověk by se o čekající
-   zprávě dozvěděl, jen kdyby nabídku náhodou rozbalil. */
-const pSirs = await cMajitel.newPage();
-await pSirs.setViewportSize({ width: 1280, height: 800 });
-await pSirs.goto(`${BASE}/pozemky-okres-tabor.html`);
-await pSirs.waitForSelector('#nav-moje-sum .nav-unread', { timeout: 10000 });
-je('na počítači je odznak rovnou vidět na skupině „Moje"',
-  await pSirs.locator('#nav-moje-sum .nav-unread').isVisible(), true);
-// A po rozbalení i u konkrétní položky.
-await pSirs.click('#nav-moje-sum');
-await pSirs.waitForTimeout(400);
-je('a po rozbalení i u Zpráv',
-  await pSirs.locator('#nav-zpravy .nav-unread').isVisible(), true);
-await pSirs.close();
+/* ODZNAK V MENU JE PRYČ. Tady se zkoušelo, že nepřečtená zpráva
+   i nové pozemky z hlídání svítí v nabídce — na tečce u hamburgeru,
+   u položek Zprávy a Hlídání, na skupině „Moje" a v titulku záložky.
+   Vyráběl to js/upozorneni.js, který šel s odebranými Upozorněními.
+   Počty nepřečtených ukazuje stránka Zprávy sama (kontroly hned níž)
+   a nové pozemky stránka Hlídání. */
 
 await pM.goto(`${BASE}/zpravy.html`);
 await pM.waitForSelector('.zp-thread', { timeout: 10000 });
@@ -150,19 +105,12 @@ je('u dlouhé zprávy se ukáže, kolik zbývá', (await pZ.textContent('#zc-poc
 await pZ.fill('#zc-ta', 'a'.repeat(2005));
 je('po překročení meze to pole řekne samo', (await pZ.textContent('#zc-pocet')).trim(), 'o 5 znaků moc');
 
-/* ---------- 7. po přečtení odznak zprávy zmizí, hlídání zůstane ---------- */
-// Počet se drží minutu v paměti prohlížeče, ať se web neptá na každé
-// stránce znovu. Návštěva schránky ho proto musí zahodit — jinak by odznak
-// ještě minutu hlásil zprávu, kterou si člověk právě přečetl.
-const pPo = await cMajitel.newPage();
-await pPo.goto(`${BASE}/pozemky-okres-tabor.html`);
-await pPo.waitForSelector('#nav-hlidani .nav-unread', { state: 'attached', timeout: 15000 });
-je('po přečtení zpráv odznak u Zpráv zhasne', await pPo.locator('#nav-zpravy .nav-unread').count(), 0);
-je('odznak hlídání tím ale nezhasne', await pPo.locator('#nav-hlidani .nav-unread').count(), 1);
-je('tečka na menu svítí dál kvůli hlídání', await pPo.locator('.nav-toggle .nav-dot').isVisible(), true);
-await pPo.close();
+/* ---------- 7. (bývalý odznak po přečtení) ---------- */
+/* Zkoušelo se, že po návštěvě schránky zhasne odznak u Zpráv, ale
+   odznak hlídání svítí dál. Odznaky šly s odebranými Upozorněními;
+   že se zpráva po přečtení přestane hlásit, měří stránka Zprávy
+   sama o kus výš („u vlákna svítí počet nepřečtených"). */
 
-/* ---------- 8. centrum upozornění ---------- */
 // Odznak řekne, že něco je. Teprve tahle stránka řekne CO a od koho —
 // a to je celý smysl centra upozornění.
 // Majitelova konverzace z kroku 3 se musí zavřít. Dokud je otevřená, ptá
@@ -170,61 +118,12 @@ await pPo.close();
 // je to správné chování aplikace, ale nepřečtená zpráva by tu nevydržela.
 await pM.close();
 
-const pC = await cMajitel.newPage();
-pC.on('pageerror', (e) => chybyKonzole.push(String(e)));
-// ať je zas jedna nepřečtená zpráva, na které jde centrum ukázat
-await fetch(`${BASE}/rest/v1/rpc/send_message`, { method: 'POST',
-  headers: { Authorization: 'Bearer tok-zajemce', 'Content-Type': 'application/json' },
-  body: JSON.stringify({ p_listing: LISTING, p_buyer: null, p_body: 'Ještě dotaz na přístupovou cestu.' }) });
-
-await pC.goto(`${BASE}/upozorneni.html`);
-await pC.waitForSelector('.up-item', { timeout: 15000 });
-je('centrum ukáže obojí — zprávu i pozemky', await pC.locator('.up-item').count(), 2);
-je('u zprávy je vidět ukázka textu',
-  (await pC.textContent('.up-ico.zprava ~ .up-main .up-quote')).includes('přístupovou cestu'), true);
-je('u pozemků je vidět, co přibylo',
-  await pC.locator('.up-ico.pozemky ~ .up-main .up-list li').count() > 0, true);
-je('nepřečtené má tečku', await pC.locator('.up-ico .dot').count(), 2);
-je('je tam živá oblast pro odečítač obrazovky',
-  await pC.getAttribute('#up-live', 'aria-live'), 'polite');
-
-// filtry
-await pC.click('[data-f="zpravy"]');
-await pC.waitForFunction(() => document.querySelectorAll('.up-item').length === 1, null, { timeout: 5000 });
-je('filtr Zprávy nechá jen zprávy', await pC.locator('.up-ico.zprava').count(), 1);
-je('filtr Zprávy schová pozemky', await pC.locator('.up-ico.pozemky').count(), 0);
-je('vybraný filtr je označený i pro odečítač',
-  await pC.getAttribute('[data-f="zpravy"]', 'aria-pressed'), 'true');
-await pC.click('[data-f="vse"]');
-await pC.waitForFunction(() => document.querySelectorAll('.up-item').length === 2, null, { timeout: 5000 });
-
-// nastavení: co nechci vidět
-/* Přepínače jsou od té doby, co se blok „Co mi ukazovat" sbalil, o jedno
-   klepnutí dál — rozbalené měřil 287 px a stál pod každým seznamem
-   napořád. Zkouška proto nejdřív otevře rozbalovátko, jako to udělá
-   člověk; že se po otevření opravdu dají zmáčknout, je ta podstatná
-   část (předtím tu stál jen klik a ten po sbalení tiše vypršel). */
-await pC.evaluate(() => { const d = document.querySelector('details.up-prefs'); if (d) d.open = true; });
-await pC.waitForSelector('#pf-p', { state: 'visible', timeout: 5000 });
-await pC.click('#pf-p');
-await pC.waitForFunction(() => document.querySelectorAll('.up-ico.pozemky').length === 0, null, { timeout: 5000 });
-je('vypnutí pozemků je schová', await pC.locator('.up-ico.pozemky').count(), 0);
-await pC.click('#pf-p');
-await pC.waitForFunction(() => document.querySelectorAll('.up-ico.pozemky').length === 1, null, { timeout: 5000 });
-
-// označit vše jako viděné
-await pC.click('#up-all');
-await pC.waitForFunction(() => document.querySelectorAll('.up-ico.pozemky').length === 0, null, { timeout: 8000 });
-je('po označení pozemky z centra zmizí', await pC.locator('.up-ico.pozemky').count(), 0);
-je('zpráva tím ale nezmizí', await pC.locator('.up-ico.zprava').count(), 1);
-je('odečítači se řekne, co se stalo',
-  (await pC.textContent('#up-live')).includes('viděné'), true);
-
-// a po obnovení stránky to platí dál (server si to opravdu zapsal)
-await pC.reload();
-await pC.waitForSelector('.up-item', { timeout: 15000 });
-je('označení přežije obnovení stránky', await pC.locator('.up-ico.pozemky').count(), 0);
-await pC.close();
+/* CENTRUM UPOZORNĚNÍ UŽ NENÍ. Zde se zkoušelo, že míchá zprávy
+   a nové pozemky do jednoho seznamu, umí je filtrovat, dá se v něm
+   vypnout druh upozornění a označit vše za viděné. Stránka se na
+   přání majitele odebrala celá; nepřečtené zprávy ukazuje stránka
+   Zprávy (kontroly výš) a nové pozemky stránka Hlídání
+   (scripts/test-hlidani-prohlizec.mjs). */
 
 /* ---------- 9. upozornění na novinku patří do hlavičky ----------
    Vyskakovací hláška „Přibylo N nových pozemků" tu byla a je pryč, a to
@@ -245,15 +144,10 @@ await pT.evaluate(() => {
 await pT.reload();
 await pT.waitForTimeout(2500);
 je('ani při přírůstku nic nevyskočí', await pT.locator('.upo-toast').count(), 0);
-/* Zato v hlavičce musí být poznat, že něco přibylo — jinak by se
-   odebráním hlášky ztratila jediná zpráva o novince. */
-const odznak = await pT.evaluate(() => {
-  const t = document.querySelector('.nav-dot');
-  const o = [...document.querySelectorAll('header a, header button')]
-    .map((e) => (e.textContent || '').replace(/\s+/g, ' ').trim()).filter(Boolean);
-  return { tecka: !!t, popisky: o.slice(0, 8) };
-});
-je('v hlavičce je značka, že je co číst', odznak.tecka, true);
+/* Značka v hlavičce („něco přibylo") byla součást odznaku upozornění
+   a šla s ním. Hlášku, která tu dřív vyskakovala, nic nenahrazuje —
+   to je záměr: upozornění mají být nahoře a vyžádaná, ne vyskakovat. */
+
 await pT.close();
 
 /* ---------- 10. žádné chyby v konzoli ---------- */

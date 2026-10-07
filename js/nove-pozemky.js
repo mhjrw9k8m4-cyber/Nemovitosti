@@ -1,20 +1,28 @@
-/* Centrum upozornění — sestavení seznamu z toho, co web už ví.
+/* Nové pozemky z uložených hledání — z čísel udělá věty.
  *
- * Proč vlastní soubor a proč vůbec: odznak s číslem řekne jen „něco je".
- * Teprve seznam řekne CO, OD KOHO a PROČ — a podle návodů na navrhování
- * upozornění to musí jít přečíst zhruba za dvě vteřiny. Tohle je ta část,
- * která z čísel dělá věty.
+ * Byla to část centra upozornění; to se na přání majitele odebralo celé
+ * a tenhle kus zůstal, protože dělá něco jiného: ví, které pozemky jsou
+ * u daného hledání nové, a umí je vypsat s obcí, výměrou a cenou. Používá
+ * ho stránka hlídání, která je vypisuje rovnou v kartě hledání.
  *
- * Nic nového se nikam neukládá. Upozornění se skládají z věcí, které web
- * stejně načítá: z vláken chatu (my_threads) a z uložených hledání
- * (my_searches) porovnaných s pozemky. Díky tomu nepotřebuje nic v databázi
- * a nemůže se rozejít s tím, co ukazují stránky Zprávy a Hlídání.
+ * Nic se nikam neukládá. Skládá se to z toho, co web stejně načítá —
+ * z uložených hledání (my_searches) porovnaných s pozemky — takže se to
+ * nemůže rozejít s tím, co ukazuje mapa.
  */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory(require('./hlidani-logika.js'));
-  else root.PKFeed = factory(root.PKHlidani);
-})(typeof self !== 'undefined' ? self : this, function (HL) {
+  if (typeof module === 'object' && module.exports) module.exports = factory(function () { return require('./hlidani-logika.js'); });
+  /* PRAVIDLA HLÍDÁNÍ SE HLEDAJÍ AŽ PŘI VOLÁNÍ, ne při načtení. Dřív se
+     brala rovnou (factory(root.PKHlidani)), takže stačilo, aby se
+     tenhle soubor načetl o řádek dřív než js/hlidani-logika.js, a HL
+     bylo navždycky undefined. Na stránce hlídání to tak doopravdy je
+     a skript padal na „Cannot read properties of undefined". Pořadí
+     je srovnané, ale spoléhat se na něj znamená čekat, až ho někdo
+     zase prohodí. */
+  else root.PKFeed = factory(function () { return root.PKHlidani; });
+})(typeof self !== 'undefined' ? self : this, function (pravidla) {
   'use strict';
+
+  var HL = new Proxy({}, { get: function (_, jm) { return pravidla()[jm]; } });
 
   var DEN = 86400000;
 
@@ -47,92 +55,14 @@
      „včera" je den, ne časový úsek. Dokud se to počítalo z uplynulého
      času, dostalo označení „včera" všechno mezi 24 a 48 hodinami: ve
      dvě ráno v pondělí tedy i to, co přišlo v sobotu v poledne. */
-  function dnuZpet(t, ted) {
-    var a = new Date(t), b = new Date(ted);
-    var da = new Date(a.getFullYear(), a.getMonth(), a.getDate());
-    var db = new Date(b.getFullYear(), b.getMonth(), b.getDate());
-    return Math.round((db - da) / DEN);
-  }
-  function relativniCas(iso, ted) {
-    if (!iso) return '';
-    var t = new Date(iso).getTime();
-    if (!isFinite(t)) return '';
-    ted = ted || Date.now();
-    var r = ted - t;
-    if (r < 0) return 'právě teď';
-    if (r < 60000) return 'právě teď';
-    if (r < 3600000) return 'před ' + cislovka(Math.floor(r / 60000), ['minutou', 'minutami', 'minutami']);
-    /* Do čtyřiadvaceti hodin se počítají HODINY, i když už je po
-       půlnoci: „před 3 hodinami" je pro čerstvou věc užitečnější než
-       „včera", které znělo, jako by to leželo celý den. Který den to
-       bylo, říká nadpis skupiny — ten se řídí kalendářem. */
-    if (r < DEN) return 'před ' + cislovka(Math.floor(r / 3600000), ['hodinou', 'hodinami', 'hodinami']);
-    var dnu = dnuZpet(t, ted);
-    if (dnu <= 1) return 'včera';
-    if (dnu < 7) return 'před ' + cislovka(dnu, ['dnem', 'dny', 'dny']);
-    var d = new Date(t);
-    return d.getDate() + '. ' + (d.getMonth() + 1) + '. ' + d.getFullYear();
-  }
 
-  // Seskupení podle času. Upozornění se čtou shora dolů a člověk potřebuje
-  // hned vidět, kde končí „dnes" a začíná „to už jsem viděl".
-  function seskupPodleCasu(polozky, ted) {
-    ted = ted || Date.now();
-    // První koš je pro to, u čeho datum neznáme. Datum nese až robot
-    // (first_seen v data/opportunities.json) a starší záznamy ho nemají.
-    // Hodit je pod nadpis „Starší" by bylo tvrzení, které nemáme čím
-    // podložit — a znělo by to, jako by je uživatel už dávno minul.
-    var kose = [
-      { nadpis: 'Čeká na vás', polozky: [] },
-      { nadpis: 'Dnes', polozky: [] },
-      { nadpis: 'Včera', polozky: [] },
-      { nadpis: 'Tento týden', polozky: [] },
-      { nadpis: 'Starší', polozky: [] }
-    ];
-    (polozky || []).forEach(function (p) {
-      var t = p.cas ? new Date(p.cas).getTime() : NaN;
-      if (!isFinite(t) || !t) { kose[0].polozky.push(p); return; }
-      /* Taky podle kalendáře, ne podle uplynulých hodin — pod nadpisem
-         „Dnes" nemá stát něco z včerejšího večera jen proto, že od té
-         doby neuplynulo čtyřiadvacet hodin. Nadpis tvrdí den. */
-      var dnu = dnuZpet(t, ted);
-      if (dnu <= 0) kose[1].polozky.push(p);
-      else if (dnu === 1) kose[2].polozky.push(p);
-      else if (dnu < 7) kose[3].polozky.push(p);
-      else kose[4].polozky.push(p);
-    });
-    return kose.filter(function (k) { return k.polozky.length; });
-  }
 
-  /* ---------- jednotlivá upozornění ---------- */
-
-  function zeZprav(vlakna) {
-    var out = [];
-    (vlakna || []).forEach(function (t) {
-      var n = t.unread | 0;
-      if (n <= 0) return;
-      out.push({
-        druh: 'zprava',
-        id: 'z:' + t.listing_id + ':' + t.buyer_id,
-        cas: t.last_at || null,
-        nove: true,
-        pocet: n,
-        titulek: t.is_owner
-          ? cislovka(n, ['nová zpráva od zájemce', 'nové zprávy od zájemce', 'nových zpráv od zájemce'])
-          : cislovka(n, ['nová zpráva od majitele', 'nové zprávy od majitele', 'nových zpráv od majitele']),
-        misto: (t.place || 'Pozemek') + (t.okres ? ' · okr. ' + t.okres : ''),
-        ukazka: (t.last_body || '').slice(0, 90),
-        odkaz: 'zpravy.html?l=' + encodeURIComponent(t.listing_id) +
-               '&b=' + encodeURIComponent(t.buyer_id) + '&o=' + (t.is_owner ? '1' : '0'),
-        odkazPopis: 'Otevřít konverzaci'
-      });
-    });
-    return out;
-  }
 
   // U hlídání nestačí počet: člověk chce vidět, CO přibylo, jinak musí na
   // mapu a hledat to sám. Ukazují se první tři a zbytek se dopočítá.
-  var UKAZKA = 3;
+  /* Kolik pozemků se u jednoho hledání vypíše. Tři stačily do řádku
+     upozornění; v kartě hlídání, kde je na to místo, jich unese pět. */
+  var UKAZKA = 5;
 
   function zeHlidani(hledani, data) {
     var out = [];
@@ -237,20 +167,6 @@
     return out;
   }
 
-  /* ---------- celý seznam ---------- */
-
-  function sestav(vstup) {
-    vstup = vstup || {};
-    var vse = zeZprav(vstup.vlakna).concat(zeHlidani(vstup.hledani, vstup.data));
-    // Nejnovější nahoře; co nemá čas, jde dospodu (ne nahoru — jinak by se
-    // nedatovaný pozemek tvářil jako to nejčerstvější, co uživatel má).
-    vse.sort(function (a, b) {
-      var ta = a.cas ? new Date(a.cas).getTime() : -Infinity;
-      var tb = b.cas ? new Date(b.cas).getTime() : -Infinity;
-      return tb - ta;
-    });
-    return vse;
-  }
 
   /* Součty do hlavičky.
      Zprávy se sčítají — dvě nepřečtené zprávy jsou dvě zprávy.
@@ -260,29 +176,14 @@
      (novychCelkem v js/hlidani-logika.js). Na dvou hledáních přes týž
      okres to dělalo 56 proti 28. Proto se tady pozemky spočítají přes
      klíče, tedy stejně jako na odznaku. */
-  function pocty(seznam) {
-    var z = 0, videne = {}, p = 0;
-    (seznam || []).forEach(function (u) {
-      if (u.druh === 'zprava') { z += u.pocet | 0; return; }
-      var klice = u.noveKlice;
-      if (klice && klice.length) {
-        klice.forEach(function (k) { if (!videne[k]) { videne[k] = 1; p++; } });
-      } else {
-        p += u.pocet | 0;      // upozornění bez klíčů (jiný druh) — aspoň nezmizí
-      }
-    });
-    return { zpravy: z, pozemky: p, celkem: z + p };
-  }
 
-  function filtruj(seznam, druh) {
-    if (!druh || druh === 'vse') return seznam || [];
-    return (seznam || []).filter(function (u) { return u.druh === druh; });
-  }
 
+  /* Ven jde jen to, co po odebrání upozornění někdo volá: skloňování
+     (používá ho i hlídání pro „3 nové") a výpis nových pozemků.
+     Zbytek — řazení podle času, upozornění ze zpráv, slučování a
+     počítání druhů — patřil centru upozornění a šel s ním. */
   return {
     mnozne: mnozne, cislovka: cislovka, cena: cena, vymera: vymera,
-    relativniCas: relativniCas, seskupPodleCasu: seskupPodleCasu, dnuZpet: dnuZpet,
-    zeZprav: zeZprav, zeHlidani: zeHlidani, sestav: sestav,
-    pocty: pocty, filtruj: filtruj, UKAZKA: UKAZKA
+    zeHlidani: zeHlidani, UKAZKA: UKAZKA
   };
 });

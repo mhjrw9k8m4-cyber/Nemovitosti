@@ -108,8 +108,8 @@ pravda('a bylo co prohledávat', SOUBORY.length >= 30, `souborů ${SOUBORY.lengt
 
 /* Samotná funkce na tvary musí umět všechny tři případy. */
 {
-  const src = readFileSync(path.join(ROOT, 'js', 'upozorneni-feed.js'), 'utf8');
-  const F = (await import('node:module')).createRequire(import.meta.url)(path.join(ROOT, 'js', 'upozorneni-feed.js'));
+  const src = readFileSync(path.join(ROOT, 'js', 'nove-pozemky.js'), 'utf8');
+  const F = (await import('node:module')).createRequire(import.meta.url)(path.join(ROOT, 'js', 'nove-pozemky.js'));
   const t = ['pozemek', 'pozemky', 'pozemků'];
   pravda('1 → první tvar', F.mnozne(1, t) === 'pozemek', F.mnozne(1, t));
   pravda('2 až 4 → druhý', F.mnozne(2, t) === 'pozemky' && F.mnozne(4, t) === 'pozemky');

@@ -1138,7 +1138,7 @@ to{opacity:1;transform:translateY(0)}
 #nav a[href$="zpravy.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E")}
 #nav a[href$="upozorneni.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'/%3E%3Cpath d='M10.3 21a1.94 1.94 0 0 0 3.4 0'/%3E%3C/svg%3E")}
 #nav a[href$="hlidani.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E")}
-#nav a[href$="upozorneni.html"],#nav a[href$="kontakt.html"]{margin-top:8px;padding-top:20px;border-top:1px solid var(--line);border-top-left-radius:0;border-top-right-radius:0}
+#nav a[href$="zpravy.html"],#nav a[href$="kontakt.html"]{margin-top:8px;padding-top:20px;border-top:1px solid var(--line);border-top-left-radius:0;border-top-right-radius:0}
 #nav a.btn-primary{text-align:center;margin-top:16px;border-bottom:0;padding:14px 20px;font-size:16px;font-weight:700;color:var(--ink);border-radius:var(--r-md)}
 .steps{grid-template-columns:1fr}
 :root{--oddil-y:80px}
@@ -1617,7 +1617,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis)}
 #nav a:not(.btn-primary)::after{font-size:20px;opacity:.45}
 #nav a:not(.btn-primary).active,#nav a:not(.btn-primary)[aria-current="page"]{background:linear-gradient(90deg,rgba(31,81,56,0.10),rgba(31,81,56,0.02));box-shadow:inset 3px 0 0 var(--copper);color:var(--text-ondark)}
 #nav a:not(.btn-primary):active{background:rgba(31,81,56,0.08)}
-#nav a[href$="upozorneni.html"],#nav a[href$="kontakt.html"]{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);border-top-left-radius:0;border-top-right-radius:0}
+#nav a[href$="zpravy.html"],#nav a[href$="kontakt.html"]{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);border-top-left-radius:0;border-top-right-radius:0}
 }
 body::after{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.30;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='z'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23z)' opacity='0.5'/%3E%3C/svg%3E");mix-blend-mode:multiply}
 @media (prefers-reduced-motion:reduce){body::after{opacity:.22}

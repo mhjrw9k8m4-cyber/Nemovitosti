@@ -515,8 +515,14 @@
     return out;
   }
 
-  /* Součet přes všechna hledání — to je číslo na odznaku. Jeden pozemek
-     může sedět na dvě hledání; počítá se jednou, ať odznak nenafukuje.
+  /* Součet přes všechna hledání: kolik nových věcí na člověka čeká.
+     Jeden pozemek může sedět na dvě hledání; počítá se jednou, ať se
+     číslo nenafukuje.
+
+     DNES HO NIKDO NEVYKRESLUJE. Býval to odznak v nabídce a ten šel
+     pryč s Upozorněními. Nechává se tu schválně: je to pravidlo
+     HLÍDÁNÍ, ne upozornění, a jeho zkoušky drží slučování duplicit
+     i započítání zlevnění — tedy chování, které živé zůstává.
 
      Co je nové, se tu nerozhoduje podruhé — bere se z noveProHledani().
      Vlastní kopie toho pravidla tu dřív byla a právě tím se rozešla

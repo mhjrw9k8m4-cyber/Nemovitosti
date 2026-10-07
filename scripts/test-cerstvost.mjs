@@ -151,7 +151,7 @@ await prohlizec.close();
    musí u serveru ověřit („no-cache" = použij kopii, ale zeptej se, jestli
    platí; při shodě přijde jen prázdná odpověď, nic se nestahuje znovu). */
 {
-  const SOUBORY = ['js/main.js', 'js/pozemek.js', 'js/centrum.js', 'hlidani.html', 'muj-inzerat.html'];
+  const SOUBORY = ['js/main.js', 'js/pozemek.js', 'js/nove-pozemky.js', 'hlidani.html', 'muj-inzerat.html'];
   const spatne = [];
   for (const f of SOUBORY) {
     const t = readFileSync(path.join(KOREN_TESTU, f), 'utf8');

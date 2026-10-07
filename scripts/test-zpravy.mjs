@@ -1,5 +1,5 @@
 // Testy psaní v aplikaci — logika schránky a konverzace
-// (js/zpravy-logika.js) a odznak nepřečtených (js/upozorneni.js).
+// (js/zpravy-logika.js).
 //
 // Spuštění: node scripts/test-zpravy.mjs
 //
@@ -14,7 +14,6 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const req = createRequire(import.meta.url);
 const Z = req(path.join(ROOT, 'js', 'zpravy-logika.js'));
-const O = req(path.join(ROOT, 'js', 'upozorneni.js'));
 
 let bezi = 0, spadlo = 0;
 const vysledky = [];
@@ -103,20 +102,9 @@ je('délka', 'prázdné pole nespadne', Z.stavDelky('').delka, 0);
 // o překročení až od serveru, po odeslání.
 je('délka', 'mez je stejná jako v databázi', Z.MAX_ZPRAVA, 2000);
 
-/* ---------------- odznak nepřečtených ---------------- */
-je('odznak', 'nula se neukazuje', O.textOdznaku(0), '');
-je('odznak', 'záporné číslo se neukazuje', O.textOdznaku(-3), '');
-je('odznak', 'malé číslo rovnou', O.textOdznaku(4), '4');
-je('odznak', 'devět ještě celé', O.textOdznaku(9), '9');
-je('odznak', 'nad devět zkráceně', O.textOdznaku(10), '9+');
-je('odznak', 'titulek dostane počet', O.titulekSPoctem('Parcelka', 3), '(3) Parcelka');
-je('odznak', 'počet v titulku se nehromadí',
-  O.titulekSPoctem(O.titulekSPoctem('Parcelka', 3), 5), '(5) Parcelka');
-je('odznak', 'po přečtení z titulku zmizí',
-  O.titulekSPoctem(O.titulekSPoctem('Parcelka', 3), 0), 'Parcelka');
-je('odznak', 'i zkrácený počet se z titulku uklidí',
-  O.titulekSPoctem(O.titulekSPoctem('Parcelka', 40), 0), 'Parcelka');
-
+/* ODZNAK NEPŘEČTENÝCH JE PRYČ. Byl v nabídce vedle „Upozornění" a šel
+   s nimi (js/upozorneni.js). Počty nepřečtených si počítá a ukazuje
+   stránka Zprávy sama — to hlídají kontroly výš. */
 /* ---------------- výsledek ---------------- */
 console.log(`\nPsaní v aplikaci: ${bezi} testů`);
 if (spadlo) {

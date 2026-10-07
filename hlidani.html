@@ -33,7 +33,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=2d972d98">
+  <link rel="stylesheet" href="css/styles.min.css?v=118f5e24">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .hl-wrap{max-width:var(--m-uzky); margin:0 auto;}
@@ -208,6 +208,15 @@
     .hl-mail input{width:18px; height:18px; accent-color:var(--copper); cursor:pointer;}
     .hl-mail-pozn{margin:4px 0 0; font-size:13px; color:var(--text-ondark-mute); max-width:46ch;}
     .hl-count{font-size:13px; color:var(--text-ondark-mute); margin-top:2px;}
+    /* Výpis nových pozemků rovnou v kartě hledání. Vznikl po odebrání
+       Upozornění, kam karta dřív odkazovala — teď na otázku „kde je
+       uvidím" odpovídá sama. */
+    .hl-nove{list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:2px;}
+    .hl-nove li{font-size:14px; line-height:1.5;}
+    .hl-nove a{display:flex; min-height:44px; align-items:center;
+      color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
+    .hl-nove a:hover{color:var(--copper);}
+    .hl-nove-vic{margin:4px 0 0; font-size:13px; color:var(--text-ondark-mute);}
     .hl-kam{font-size:13px; color:var(--text-ondark-mute); margin:8px 0 0; line-height:1.5;}
     .hl-kam a{color:var(--copper-bright); text-decoration:underline; text-underline-offset:2px;}
     /* Tlačítka jsou u hlídání s novými pozemky tři („Ukázat nové",
@@ -274,7 +283,7 @@
            jméno neřekne nic, sloveso řekne, co se tam dělá. -->
       <a href="index.html#mapa">Hledat pozemek</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
@@ -296,7 +305,7 @@
        stránkami jednoho účtu jen přes rozbalovací nabídku v hlavičce. -->
   <nav class="uc-taby" aria-label="Můj účet">
     <div class="wrap">
-      <a href="upozorneni.html">Upozornění</a>
+      <a href="hlidani.html">Hlídání</a>
       <a href="zpravy.html">Zprávy</a>
       <a href="hlidani.html" aria-current="page">Hlídání</a>
       <a href="muj-inzerat.html">Můj profil</a>
@@ -327,11 +336,10 @@
 <script src="js/min/cisteni.js?v=96d10b2a"></script>
 <script src="js/min/config.js?v=8ba36013"></script>
 <script src="js/min/auth.js?v=bec7a315"></script>
-<script src="js/min/upozorneni-feed.js?v=8871148a"></script>
 <script src="js/min/okruh.js?v=f11683ef"></script>
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
+<script src="js/min/nove-pozemky.js?v=d2d55ede"></script>
 <script src="js/min/push.js?v=0884b9c2" defer></script>
-<script src="js/min/upozorneni.js?v=99e78c4f"></script>
 <script src="js/min/hlavicka.js?v=1ca59d70"></script>
 <script>
 (function () {
@@ -354,7 +362,7 @@
   var matches = HL.matches;
 
   /* „1 pozemků" a „3 pozemků" vypadá jako strojový překlad. Skloňování
-     umí js/upozorneni-feed.js (jedno místo pro celý web), tak se bere
+     umí js/nove-pozemky.js (jedno místo pro celý web), tak se bere
      odtud — čtvrtá kopie tří řádků by se s ním jen rozešla. */
   /* „Nový" se v odznaku ohýbá stejně jako „pozemek" — jeden zdroj
      pravdy je PKFeed.mnozne, ne psát si tvary rukou u každého čísla. */
@@ -993,6 +1001,25 @@
         '<div class="hl-panel" id="hl-p-moje" role="tabpanel" aria-labelledby="hl-t-moje"' +
           (zalozka === 'moje' ? '' : ' hidden') + '>';
       html += '<div class="hl-card">';
+      /* VÝPIS NOVÝCH POZEMKŮ V KARTĚ. Nejvýš pět — kdo si uloží celý
+         okres, by jinak dostal sloupec o dvou stech řádcích. Zbytek
+         říká poslední řádek a vede na mapu s týmž filtrem. */
+      function noveSeznam(s) {
+        var F = window.PKFeed;
+        if (!F || !F.zeHlidani) return '';
+        var polozky = F.zeHlidani([s], DATA);
+        if (!polozky.length || !polozky[0].polozky || !polozky[0].polozky.length) return '';
+        var p = polozky[0];
+        var radky = p.polozky.map(function (x) {
+          return x.odkaz
+            ? '<li><a href="' + x.odkaz + '">' + esc(x.popis) + '</a></li>'
+            : '<li>' + esc(x.popis) + '</li>';
+        }).join('');
+        var zbyva = p.pocet - p.polozky.length;
+        return '<ul class="hl-nove">' + radky + '</ul>'
+          + (zbyva > 0 ? '<p class="hl-nove-vic">a ' + zbyva + ' další</p>' : '');
+      }
+
       rows.forEach(function (s) {
         var cur = DATA.filter(function (d) { return matches(s, d); });
         var seen = s.seen_keys || [];
@@ -1018,16 +1045,17 @@
              řekl počet a nic víc. Jediné tlačítko vedlo na mapu, kde je
              vidět všech 27 nálezů a nové se od ostatních nijak neliší —
              takže na otázku „kde je uvidím" karta neodpovídala vůbec.
-             Vypsané jsou v Upozorněních, i s obcí, výměrou a cenou
-             (js/upozorneni-feed.js), tak tam karta vede. A když žádné
-             nové nejsou, řekne se aspoň, kde se objeví, až přibudou. */
+             Chvíli se na ně odkazovalo do Upozornění; ta jsou odebraná,
+             a vypisují se proto rovnou tady, v kartě toho hledání, kam
+             patří: obec, výměra, cena a odkaz na pozemek. Skládá je
+             js/nove-pozemky.js, tedy týž kód, co je skládal předtím. */
+          (newN ? noveSeznam(s) : '') +
           (newN
             ? '<div class="hl-acts">' +
-                '<a class="hl-a pri" href="upozorneni.html">Ukázat nové (' + newN + ')</a>' +
-                '<a class="hl-a" href="' + params + '">Zobrazit na mapě</a>' +
+                '<a class="hl-a pri" href="' + params + '">Zobrazit na mapě</a>' +
                 '<button class="hl-a del" type="button" data-del="' + s.id + '" aria-label="Smazat">🗑</button>' +
               '</div>'
-            : '<p class="hl-kam">Až nějaký přibude, vypíšeme ho v <a href="upozorneni.html">Upozorněních</a>.</p>' +
+            : '<p class="hl-kam">Až nějaký přibude, vypíšeme ho rovnou sem.</p>' +
               '<div class="hl-acts">' +
                 '<a class="hl-a pri" href="' + params + '">Zobrazit na mapě</a>' +
                 '<button class="hl-a del" type="button" data-del="' + s.id + '" aria-label="Smazat">🗑</button>' +
@@ -1065,9 +1093,8 @@
        člověk nikdy neviděl: mapa jich ukáže všech 27 a nové v nich
        nijak nevyznačí. Seznam nových tím zmizel dřív, než ho někdo
        stačil přečíst, a v Upozorněních po něm nezbylo nic.
-       Označuje se tam, kde jsou nové pozemky opravdu vypsané —
-       v Upozorněních, po jednom nebo tlačítkem „označit vše"
-       (js/centrum.js). */
+       Označuje se tam, kde jsou nové pozemky opravdu vypsané — dnes
+       rovnou v kartě hledání na téhle stránce. */
     /* Přepnutí posílání. Zaškrtnutí se vrací zpátky, když to databáze
        odmítne — jinak by přepínač tvrdil něco, co není uložené. */
     root.querySelectorAll('[data-mail]').forEach(function (ch) {

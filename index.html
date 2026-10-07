@@ -130,7 +130,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=2d972d98">
+  <link rel="stylesheet" href="css/styles.min.css?v=118f5e24">
 </head>
 <body>
 
@@ -172,7 +172,7 @@
            jméno neřekne nic, sloveso řekne, co se tam dělá. -->
       <a href="#mapa">Hledat pozemek</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="upozorneni.html" id="nav-upozorneni">Upozornění</a><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
+      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
@@ -181,6 +181,14 @@
 </header>
 
 <main>
+
+  <!-- HLAVNÍ NADPIS STRÁNKY, ALE NEVIDITELNÝ. Jediný <h1>, co úvodní
+       stránka měla, byl uvítací blok „1 955 pozemků na jedné mapě" —
+       a ten šel na výslovné přání pryč. Odešel s ním i nadpis, takže
+       stránka neměla ŽÁDNÝ: odečítač obrazovky nemá kde začít a
+       vyhledávač neví, o čem stránka je. Zpátky tedy jen nadpis, ne
+       ta věta: říká, co na stránce je, a nikomu nepřekáží. -->
+  <h1 class="visually-hidden">Pozemky na prodej, v dražbě a v exekuci — mapa a výpis</h1>
 
   <!-- 1 · MAPA JAKO HRDINA -->
   <section class="hero-map" id="mapa">
@@ -540,7 +548,7 @@
       <div class="steps">
         <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-map"/></svg></div><div class="idx mono">01</div><h3>Otevřete mapu</h3><p>Sbíráme data z veřejných zdrojů a spojíme je na jednu mapu. Jsou tam jen pozemky, kde se něco děje — barva napoví druh příležitosti.</p></div>
         <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-click"/></svg></div><div class="idx mono">02</div><h3>Klikněte na příležitost</h3><p>Detail ukáže výměru, druh a termín. Proklik rovnou do katastru pro ověření, nebo na inzerát.</p></div>
-        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-bell"/></svg></div><div class="idx mono">03</div><h3>Nechte si hlídat lokalitu</h3><p>Uložíte si hledání — okres, druh, cenu. Nové pozemky, které mu sedí, pak najdete v <a href="upozorneni.html">Upozorněních</a>, aniž byste hledali znovu.</p></div>
+        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-bell"/></svg></div><div class="idx mono">03</div><h3>Nechte si hlídat lokalitu</h3><p>Uložíte si hledání — okres, druh, cenu. Nové pozemky, které mu sedí, se pak vypíšou přímo v <a href="hlidani.html">Hlídání</a>, aniž byste hledali znovu.</p></div>
       </div>
     </div>
   </section>
@@ -825,8 +833,6 @@
    říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
    na nasazení u Vercelu. */
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
-<script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
-<script src="js/min/upozorneni.js?v=99e78c4f" defer></script>
 <script src="js/min/hlavicka.js?v=1ca59d70" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 </body>

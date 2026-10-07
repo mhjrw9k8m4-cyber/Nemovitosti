@@ -72,7 +72,7 @@ zpravy.push(`  · prošlo se ${odkazu} odkazů ve ${soubory.length} souborech`);
    vlastní — musí být označená jako otevřená. Kdyby se označení rozešlo
    se stránkou, ukazoval by pruh na špatné místo, což je horší než žádný. */
 {
-  const UCET = ['upozorneni.html', 'zpravy.html', 'hlidani.html', 'muj-inzerat.html'];
+  const UCET = ['zpravy.html', 'hlidani.html', 'muj-inzerat.html'];
   const potize = [];
   for (const f of UCET) {
     const h = readFileSync(f, 'utf8');
@@ -126,7 +126,7 @@ function sPozemkem() {
 }
 
 const VZOREK = ['index.html', 'pozemek.html', sPozemkem(), 'pridat.html', 'hlidani.html', 'zpravy.html',
-  'upozorneni.html', 'muj-inzerat.html', 'kontakt.html', 'cena-pozemku.html',
+  'muj-inzerat.html', 'kontakt.html', 'cena-pozemku.html',
   'podminky.html', 'ochrana-udaju.html', 'pozemky-podle-okresu.html',
   'pozemky-stredocesky-kraj.html', 'pozemky-okres-kolin.html', '404.html']
   .filter(Boolean)

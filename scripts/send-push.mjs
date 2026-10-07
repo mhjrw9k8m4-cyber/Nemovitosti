@@ -101,9 +101,11 @@ export function zprava(hledani, nove) {
       : `${nove.length} ${tvarNovyPozemek(nove.length)} v hlídání`,
     text: (hledani.label ? hledani.label + ': ' : '') + kusy.join(' · ')
       + (zbytek > 0 ? ` a ${zbytek} dalších` : ''),
-    /* Vede se na Upozornění, kde jsou vypsané — ne na mapu, kde by se
-       nové od ostatních nijak nelišily. */
-    odkaz: 'upozorneni.html',
+    /* Vede se na Hlídání, kde se nové pozemky vypisují rovnou v kartě
+       hledání — ne na mapu, kde by se od ostatních nijak nelišily.
+       Dřív to vedlo na Upozornění; ta se odebrala a odkaz by končil
+       na nenalezené stránce. */
+    odkaz: 'hlidani.html',
     /* Značka slučuje upozornění z téhož hledání: tři zprávy ze stejného
        hledání nemají vyskočit třikrát. */
     znacka: String(hledani.hledani_id || 'parcelka'),
