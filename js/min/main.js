@@ -1371,7 +1371,7 @@
         layer.on('click', function () {
           if (probudMapu()) return;
           if (selectedKraj !== f.properties.kraj) krajJustSelected = true;
-          selectKraj(f.properties.kraj);
+          selectKraj(f.properties.kraj, false, true);
         });
         layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2.4, color: '#0F5C3B', fillColor: '#0F5C3B', fillOpacity: krajKrytí(f.properties.kraj) + 0.09 }); layer.bringToFront(); } });
         layer.on('mouseout', function () { prekresliKraje(); });
@@ -1592,7 +1592,7 @@
       riseOnHover: true, zIndexOffset: 400 });
     function vyber(e) {
       if (e && e.originalEvent) L.DomEvent.stop(e.originalEvent);
-      selectKraj(nazev);
+      selectKraj(nazev, false, true);
     }
     mk.on('click', vyber);
     mk.on('keypress', function (e) {
@@ -1957,9 +1957,22 @@
       } else {
         var o = krajCounts[selectedKraj];
         var n = o ? o.total : 0;
-        krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>' + krajTitul(selectedKraj) + '</b><span>' + (n ? (n + ' ' + plPozemek(n) + ' · vyberte ze seznamu') : 'zatím žádné nabídky') + '</span></div>';
+
+        var platiVeVypisu = krajProVypis === selectedKraj;
+        var popis = n ? (n + ' ' + plPozemek(n)) : 'zatím žádné nabídky';
+        krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>' + krajTitul(selectedKraj) + '</b><span>'
+          + popis + (n ? (platiVeVypisu ? ' · ve výpisu jen tenhle kraj' : ' · výpis zůstává celá ČR') : '') + '</span></div>'
+          + (n ? '<button type="button" class="kh-uzsi" id="kh-uzsi">'
+            + (platiVeVypisu ? 'Zpět na celou ČR ve výpisu' : 'Jen tenhle kraj ve výpisu') + '</button>' : '');
         krajHeadEl.hidden = false;
         var b1 = krajHeadEl.querySelector('.kh-back'); if (b1) b1.addEventListener('click', clearKraj);
+        var bu = krajHeadEl.querySelector('#kh-uzsi');
+        if (bu) bu.addEventListener('click', function (e) {
+          e.stopPropagation();
+          krajProVypis = platiVeVypisu ? null : selectedKraj;
+          updateKrajHead();
+          renderList();
+        });
       }
     }
     if (krajHintEl) krajHintEl.hidden = !!(selectedKraj || okoliAktivni());
@@ -1971,10 +1984,13 @@
     if (nearCircle) { map.removeLayer(nearCircle); nearCircle = null; }
     if (nearBtn) nearBtn.classList.remove('on');
   }
-  function selectKraj(k, skipFit) {
-    if (selectedKraj === k && !nearMode) return;
+
+  var krajProVypis = null;
+  function selectKraj(k, skipFit, jenMapa) {
+    if (selectedKraj === k && !nearMode && (jenMapa ? !krajProVypis : krajProVypis === k)) return;
     clearNear();
     selectedKraj = k;
+    krajProVypis = jenMapa ? null : k;
     prekresliKraje();
     resizeDots();
     var layer = krajByName[k];
@@ -1989,6 +2005,7 @@
   }
   function clearKraj() {
     selectedKraj = null;
+    krajProVypis = null;
     var wasNear = nearMode;
     clearNear();
     if (wasNear) { sortMode = 'demand'; if (sortEl) sortEl.value = 'demand'; }
@@ -3229,7 +3246,7 @@
     syncMarkers(visIds);
     prekresliRadar();
 
-    if (selectedKraj) vis = vis.filter(function (d) { return (d._gkraj || krajOf(d)) === selectedKraj; });
+    if (krajProVypis) vis = vis.filter(function (d) { return (d._gkraj || krajOf(d)) === krajProVypis; });
     var matched = vis.length;
     sortVis(vis);
 
@@ -3624,7 +3641,9 @@
 
       var c = map.getCenter();
       sessionStorage.setItem('pk_map_return', JSON.stringify({
-        lat: c.lat, lng: c.lng, z: map.getZoom(), kraj: selectedKraj || null, t: Date.now(),
+        lat: c.lat, lng: c.lng, z: map.getZoom(), kraj: selectedKraj || null,
+
+        krajVypis: krajProVypis || null, t: Date.now(),
 
         y: Math.round(window.scrollY || window.pageYOffset || 0)
       }));
@@ -3964,7 +3983,8 @@
       if ((st.zadaneVybaveni || []).length) { zadaneVybaveni = st.zadaneVybaveni.slice(); neco = true; }
       if (st.jenCelek) { jenCelek = true; neco = true; }
       if (st.ukazPodobne) { ukazPodobne = true; neco = true; }
-      if (st.selectedKraj) { try { selectKraj(st.selectedKraj, true); neco = true; } catch (e) {} }
+
+      if (st.selectedKraj) { try { selectKraj(st.selectedKraj, true, true); neco = true; } catch (e) {} }
       if (st.poloha) {
         try {
           map.invalidateSize();
@@ -4976,7 +4996,7 @@
     var ret = navratZPozemku;
     if (!ret || typeof ret.lat !== 'number') return false;
     var z = ret.z || 12;
-    if (ret.kraj) { try { selectKraj(ret.kraj, true); } catch (e) {} }
+    if (ret.kraj) { try { selectKraj(ret.kraj, true, ret.krajVypis !== ret.kraj); } catch (e) {} }
     map.invalidateSize();
     map.setView([ret.lat, ret.lng], z, { animate: false });
     if (z >= 10) { try { if (dotsLocked) lockDots(false); } catch (e) {} }

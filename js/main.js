@@ -2073,7 +2073,7 @@
         layer.on('click', function () {
           if (probudMapu()) return;   // první dotek mapu jen probudí
           if (selectedKraj !== f.properties.kraj) krajJustSelected = true; // přepnutí kraje neotevírá detail
-          selectKraj(f.properties.kraj);
+          selectKraj(f.properties.kraj, false, true);   // jen mapa, karty zůstávají
         });
         layer.on('mouseover', function () { if (selectedKraj !== f.properties.kraj) { layer.setStyle({ weight: 2.4, color: '#0F5C3B', fillColor: '#0F5C3B', fillOpacity: krajKrytí(f.properties.kraj) + 0.09 }); layer.bringToFront(); } });
         layer.on('mouseout', function () { prekresliKraje(); });
@@ -2417,7 +2417,7 @@
       riseOnHover: true, zIndexOffset: 400 });
     function vyber(e) {
       if (e && e.originalEvent) L.DomEvent.stop(e.originalEvent);
-      selectKraj(nazev);
+      selectKraj(nazev, false, true);   // shluk v mapě je taky jen mapa
     }
     mk.on('click', vyber);
     mk.on('keypress', function (e) {
@@ -2962,9 +2962,25 @@
       } else {
         var o = krajCounts[selectedKraj];
         var n = o ? o.total : 0;
-        krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>' + krajTitul(selectedKraj) + '</b><span>' + (n ? (n + ' ' + plPozemek(n) + ' · vyberte ze seznamu') : 'zatím žádné nabídky') + '</span></div>';
+        /* Dvě různé věty podle toho, co doopravdy platí. Dřív tu stálo
+           „vyberte ze seznamu" i tehdy, když se seznam sám přefiltroval;
+           teď hlavička říká, jestli kraj platí jen pro mapu, a nabízí
+           tlačítko, kterým si ho člověk pustí i do karet. */
+        var platiVeVypisu = krajProVypis === selectedKraj;
+        var popis = n ? (n + ' ' + plPozemek(n)) : 'zatím žádné nabídky';
+        krajHeadEl.innerHTML = BACK_BTN + '<div class="kh-txt"><b>' + krajTitul(selectedKraj) + '</b><span>'
+          + popis + (n ? (platiVeVypisu ? ' · ve výpisu jen tenhle kraj' : ' · výpis zůstává celá ČR') : '') + '</span></div>'
+          + (n ? '<button type="button" class="kh-uzsi" id="kh-uzsi">'
+            + (platiVeVypisu ? 'Zpět na celou ČR ve výpisu' : 'Jen tenhle kraj ve výpisu') + '</button>' : '');
         krajHeadEl.hidden = false;
         var b1 = krajHeadEl.querySelector('.kh-back'); if (b1) b1.addEventListener('click', clearKraj);
+        var bu = krajHeadEl.querySelector('#kh-uzsi');
+        if (bu) bu.addEventListener('click', function (e) {
+          e.stopPropagation();
+          krajProVypis = platiVeVypisu ? null : selectedKraj;
+          updateKrajHead();
+          renderList();
+        });
       }
     }
     if (krajHintEl) krajHintEl.hidden = !!(selectedKraj || okoliAktivni());
@@ -2976,10 +2992,22 @@
     if (nearCircle) { map.removeLayer(nearCircle); nearCircle = null; }
     if (nearBtn) nearBtn.classList.remove('on');
   }
-  function selectKraj(k, skipFit) {
-    if (selectedKraj === k && !nearMode) return;
+  /* MAPA A VÝPIS JSOU DVĚ VĚCI. Klepnutí na kraj v mapě dosud rovnou
+     přefiltrovalo i karty pod ní — člověk si na mapě prohlédl Prahu
+     a od té chvíle měl ve výpisu jenom Prahu, aniž by si o to řekl.
+     Stížnost zněla: „když kliknu na mapě na Prahu, nechci mít potom
+     v hlavních kartách ve filtru Prahu."
+     Od teď se to rozděluje: selectedKraj je, co je zvýrazněné NA MAPĚ,
+     krajProVypis je, podle čeho se filtrují KARTY. Klepnutí v mapě
+     nastaví jen to první a nabídne tlačítko, kterým si člověk kraj do
+     výpisu pustí sám. Odkazy zvenčí (?kraj=…, rozcestník krajů, návrat
+     z pozemku) nastavují obojí — tam o ten kraj člověk výslovně stál. */
+  var krajProVypis = null;
+  function selectKraj(k, skipFit, jenMapa) {
+    if (selectedKraj === k && !nearMode && (jenMapa ? !krajProVypis : krajProVypis === k)) return;
     clearNear();       // výběr kraje ruší režim „okolí"
     selectedKraj = k;
+    krajProVypis = jenMapa ? null : k;
     prekresliKraje();   // vybraný kraj napřed, zbytek pod závoj
     resizeDots();       // a tečky mimo něj se ztiší
     var layer = krajByName[k];
@@ -2994,6 +3022,7 @@
   }
   function clearKraj() {
     selectedKraj = null;
+    krajProVypis = null;
     var wasNear = nearMode;
     clearNear();
     if (wasNear) { sortMode = 'demand'; if (sortEl) sortEl.value = 'demand'; }
@@ -4776,7 +4805,9 @@
     // u počtu v hlavičce. Dřív se tu filtrovalo podle okresu (krajOf) — a
     // protože se u 7 záznamů okres a poloha neshodnou, hlavička slibovala
     // jiné číslo, než kolik seznam ukázal (u 9 ze 14 krajů, o 1–3 nabídky).
-    if (selectedKraj) vis = vis.filter(function (d) { return (d._gkraj || krajOf(d)) === selectedKraj; });
+    /* Podle krajProVypis, ne selectedKraj: na mapě si člověk může
+       prohlížet kraj, aniž by si tím zúžil karty. Viz selectKraj(). */
+    if (krajProVypis) vis = vis.filter(function (d) { return (d._gkraj || krajOf(d)) === krajProVypis; });
     var matched = vis.length;
     sortVis(vis);
     /* Co je právě na obrazovce — v tomhle pořadí a s těmihle filtry.
@@ -5340,7 +5371,10 @@
       // TAM, kde skončil (ne na výchozí pohled na celou ČR).
       var c = map.getCenter();
       sessionStorage.setItem('pk_map_return', JSON.stringify({
-        lat: c.lat, lng: c.lng, z: map.getZoom(), kraj: selectedKraj || null, t: Date.now(),
+        lat: c.lat, lng: c.lng, z: map.getZoom(), kraj: selectedKraj || null,
+        /* Kraj na mapě a kraj ve výpisu jsou dvě věci (viz selectKraj);
+           návrat musí vrátit obojí tak, jak to bylo. */
+        krajVypis: krajProVypis || null, t: Date.now(),
         /* Kam až byl člověk posunutý. Bez toho se vracel na začátek
            stránky, i když odcházel od páté karty odspoda. */
         y: Math.round(window.scrollY || window.pageYOffset || 0)
@@ -5751,7 +5785,10 @@
       if ((st.zadaneVybaveni || []).length) { zadaneVybaveni = st.zadaneVybaveni.slice(); neco = true; }
       if (st.jenCelek) { jenCelek = true; neco = true; }
       if (st.ukazPodobne) { ukazPodobne = true; neco = true; }
-      if (st.selectedKraj) { try { selectKraj(st.selectedKraj, true); neco = true; } catch (e) {} }
+      /* „krajmapa" je kraj NA MAPĚ — tak se i obnovuje, bez sahání na
+         karty. Filtr výpisu se sdílí zvlášť pod klíčem „kraj"
+         (rozbalovátko nad mapou), takže příjemce uvidí totéž co odesílatel. */
+      if (st.selectedKraj) { try { selectKraj(st.selectedKraj, true, true); neco = true; } catch (e) {} }
       if (st.poloha) {
         try {
           map.invalidateSize();
@@ -6983,7 +7020,7 @@
     var ret = navratZPozemku;
     if (!ret || typeof ret.lat !== 'number') return false;
     var z = ret.z || 12;
-    if (ret.kraj) { try { selectKraj(ret.kraj, true); } catch (e) {} }
+    if (ret.kraj) { try { selectKraj(ret.kraj, true, ret.krajVypis !== ret.kraj); } catch (e) {} }
     map.invalidateSize();
     map.setView([ret.lat, ret.lng], z, { animate: false });
     if (z >= 10) { try { if (dotsLocked) lockDots(false); } catch (e) {} }

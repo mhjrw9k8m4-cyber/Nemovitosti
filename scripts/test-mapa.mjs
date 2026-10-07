@@ -440,12 +440,31 @@ pravda('mapa se ke kraji přiblížila', s.zoom > zoom0, `${zoom0} → ${s.zoom}
              prepinac: ((n && n.textContent) || '').trim() };
   });
   const cislo = (x) => (x ? Number(String(x).replace(/[\s\u00a0]/g, '')) : null);
-  pravda('hlavička kraje posílá do seznamu', /seznam/i.test(h.text), `hlavička: „${h.text}"`);
+  pravda('hlavička kraje nabídne cestu do seznamu',
+    /Jen tenhle kraj ve výpisu/i.test(h.text), `hlavička: „${h.text}"`);
   pravda('hlavička kraje neslibuje klepnutí na pozemek (mapa to neumí splnit)',
     !/klepn\u011bte na pozemek/i.test(h.text), `hlavička: „${h.text}"`);
-  je('kolik hlavička slíbí, tolik seznam ukáže',
-    cislo((h.text.match(/(\d[\d\s\u00a0]*)\s*pozem/) || [])[1]),
-    cislo((h.prepinac.match(/(\d[\d\s\u00a0]*)/) || [])[1]));
+  /* ČÍSLO MUSÍ SEDĚT, JEN SE POROVNÁVÁ AŽ PO ZÚŽENÍ. Klepnutí na kraj
+     v mapě dnes výpis nefiltruje (mapa a výpis jsou dvě věci, viz oddíl
+     níž), takže hlavička mluví o kraji a přepínač o celé ČR — porovnávat
+     je rovnou by bylo porovnávání dvou různých věcí. Jakmile si ale
+     člověk kraj do výpisu pustí, musí se shodnout na kus: právě tady
+     se kdysi rozcházely o 1–3 nabídky u 9 ze 14 krajů, protože hlavička
+     počítala kraj podle POLOHY a seznam podle OKRESU. */
+  await p.evaluate(() => { const b = document.getElementById('kh-uzsi'); if (b) b.click(); });
+  await p.waitForTimeout(900);
+  const h2 = await p.evaluate(() => {
+    const el = document.getElementById('kraj-head');
+    const n = document.getElementById('mvt-count');
+    return { text: ((el && !el.hidden && el.textContent) || '').trim(),
+             prepinac: ((n && n.textContent) || '').trim() };
+  });
+  je('po zúžení ukáže seznam právě tolik, kolik hlavička slíbila',
+    cislo((h2.text.match(/(\d[\d\s\u00a0]*)\s*pozem/) || [])[1]),
+    cislo((h2.prepinac.match(/(\d[\d\s\u00a0]*)/) || [])[1]));
+  // a zpátky, ať další oddíly měří tentýž stav jako dřív
+  await p.evaluate(() => { const b = document.getElementById('kh-uzsi'); if (b) b.click(); });
+  await p.waitForTimeout(600);
 }
 
 /* ---------- 2. klepnutí vedle tečky přiblíží; do prázdna nehne ---------- */
@@ -569,6 +588,62 @@ if (daleko) {
                     || /selectedKraj\s*===\s*krajOf\(/.test(r));
   je('kraj se nikde neporovnává přes okres místo polohy',
     spatne.map(([i, r]) => `${i}: ${r.trim().slice(0, 80)}`), []);
+}
+
+/* ===== MAPA A VÝPIS JSOU DVĚ VĚCI ===============================
+   Stížnost od majitele webu: „když kliknu na mapě na Prahu, nechci mít
+   potom v hlavních kartách ve filtru Prahu." Dřív klepnutí na kraj
+   rovnou přefiltrovalo i karty pod mapou — člověk si prohlédl kraj
+   a od té chvíle měl ve výpisu jenom ten kraj, aniž by si o to řekl.
+   Teď klepnutí nastaví jen mapu a nabídne tlačítko, kterým si kraj do
+   výpisu pustí sám. Měří se obojí: že se karty samy nezúžily, a že se
+   tím tlačítkem zúžit DAJÍ — jinak by stačilo filtrování zrušit. */
+{
+  const ctx2 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
+  await ctx2.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  const p2 = await ctx2.newPage();
+  await p2.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
+  await p2.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
+  await p2.waitForTimeout(2500);
+  const pocet = () => p2.evaluate(() => {
+    const t = (document.querySelector('.map-count') || { textContent: '' }).textContent;
+    const m = /·\s*([\d\s\u00a0]+)\s*na mapě/.exec(t);
+    return m ? parseInt(m[1].replace(/[\s\u00a0]/g, ''), 10) : -1;
+  });
+  const predKlepnutim = await pocet();
+  const kliknuto = await p2.evaluate(() => {
+    if (!window.PK_MAPA) return 'mapa není';
+    let cil = null;
+    window.PK_MAPA.eachLayer((l) => {
+      if (!cil && l.feature && l.feature.properties && l.feature.properties.kraj === 'Jihomoravský') cil = l;
+    });
+    if (!cil) return 'vrstva kraje nenalezena';
+    cil.fire('click');
+    return 'ok';
+  });
+  await p2.waitForTimeout(1500);
+  const poKlepnuti = await pocet();
+  const hlava = await p2.evaluate(() => ({
+    text: (document.querySelector('.kh-txt') || { textContent: '' }).textContent.replace(/\s+/g, ' ').trim(),
+    tlacitko: (document.getElementById('kh-uzsi') || {}).textContent || null,
+  }));
+  // PŘEDPOKLADY: bez klepnutí a bez nabídek by kontroly níž neměřily nic
+  je('klepnutí na kraj v mapě prošlo', kliknuto, 'ok');
+  je('výpis má co ukazovat', predKlepnutim > 100, true);
+  je('klepnutí na kraj v mapě NEZÚŽÍ výpis', poKlepnuti, predKlepnutim);
+  je('a hlavička mapy to říká narovinu', /celá ČR/.test(hlava.text), true);
+  je('a nabídne tlačítko, kterým si kraj do výpisu pustím',
+    /Jen tenhle kraj/.test(hlava.tlacitko || ''), true);
+  if (hlava.tlacitko) {
+    await p2.evaluate(() => document.getElementById('kh-uzsi').click());
+    await p2.waitForTimeout(1200);
+    const poZuzeni = await pocet();
+    je('a to tlačítko výpis opravdu zúží', poZuzeni > 0 && poZuzeni < predKlepnutim, true);
+    const zpatky = await p2.evaluate(() => (document.getElementById('kh-uzsi') || {}).textContent || '');
+    je('a dá se tím vrátit zpátky na celou ČR', /celou ČR/.test(zpatky), true);
+  }
+  await ctx2.close();
 }
 
 je('stránka neshodila žádnou chybu', chybyStranky, []);
