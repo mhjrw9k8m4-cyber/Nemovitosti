@@ -356,7 +356,11 @@
     spyTargets.forEach(function (t) { if (t) spy.observe(t); });
   }
 
-  function boot(DATA, KRAJE_GEOM, updated, updatedAt, zdrojeStav) {
+  function dechni() {
+    return new Promise(function (r) { setTimeout(r, 0); });
+  }
+
+  async function boot(DATA, KRAJE_GEOM, updated, updatedAt, zdrojeStav) {
 
   (function odstranDuplicity() {
     var ven = window.PKHlidani.bezDuplicit(DATA);
@@ -5011,8 +5015,18 @@
     renderList();
   });
   refreshFavBtn();
+
+  await dechni();
+
+  for (var rozehrej = 0; rozehrej < DATA.length; rozehrej += 250) {
+    var konecDavky = Math.min(rozehrej + 250, DATA.length);
+    for (var vD = rozehrej; vD < konecDavky; vD++) demand(DATA[vD]);
+    if (konecDavky < DATA.length) await dechni();
+  }
   renderList();
   renderRecent();
+
+  await dechni();
 
   function renderHeroLegenda() {
     var box = document.getElementById('hh-legenda');

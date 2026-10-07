@@ -450,6 +450,9 @@ jobs:
       - name: Šipka zpět nad vrstvou (zavírá, neodchází ze stránky)
         run: node scripts/test-zpet.mjs
 
+      - name: Plynulost startu mapy (není to jedna dlouhá úloha)
+        run: node scripts/test-plynulost.mjs
+
       - name: Barva lišty prohlížeče (theme-color sedí s hlavičkou)
         run: node scripts/test-barva-listy.mjs
 
