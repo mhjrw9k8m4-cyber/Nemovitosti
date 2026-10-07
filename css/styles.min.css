@@ -2213,7 +2213,7 @@ header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-za
 .mv-v{appearance:none;border:1px solid var(--line);background:transparent;color:inherit;font-family:inherit;font-size:13px;font-weight:600;padding:8px 10px;border-radius:var(--r-sm);cursor:pointer;text-align:left;transition:background var(--cas-zakladni) var(--ease),border-color var(--cas-zakladni) var(--ease)}
 .mv-v.on{background:var(--plocha-znacka);color:#fff;border-color:var(--plocha-znacka)}
 #map-vrstvy.on,#map-vrstvy[aria-pressed="true"]{background:var(--plocha-znacka);color:#fff;border-color:var(--plocha-znacka)}
-.pz-nav-box{margin:0 0 28px;padding:18px;background:var(--ink-soft);border:1px solid var(--line-strong);border-radius:var(--r-plocha);box-shadow:var(--e1)}
+.pz-nav-box{margin:20px 0 0;padding:18px;background:var(--ink-soft);border:1px solid var(--line-strong);border-radius:var(--r-plocha);box-shadow:var(--e1)}
 .pz-nav-box h2{margin:0 0 6px;font-family:var(--font-display);font-size:20px;font-weight:800;letter-spacing:-0.01em;color:var(--text-ondark)}
 .nav-uvod{margin:0 0 14px;font-size:14px;line-height:1.55;color:var(--text-ondark-mute)}
 .nav-pola{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
@@ -2236,6 +2236,8 @@ header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-za
 .nav-pozn{margin:14px 0 0;font-size:12px;line-height:1.55;color:var(--text-ondark-mute)}
 .nav-pozn a{color:var(--copper-bright);font-weight:600;text-decoration:underline;text-underline-offset:3px}
 .pz-klice{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin:0 0 10px}
+@media (max-width:560px){.pz-klice>.pz-klic:last-child:nth-child(odd){grid-column:1 / -1}
+}
 .pz-klic{display:flex;flex-direction:column;gap:3px;padding:14px 16px;background:var(--ink-soft);border:1px solid var(--line-strong);border-radius:var(--r-plocha);box-shadow:var(--e1)}
 .pz-klic b{font-size:22px;line-height:1.22;color:var(--text-ondark);font-variant-numeric:tabular-nums}
 .pz-klic>span{font-size:13px;color:var(--text-ondark-mute)}

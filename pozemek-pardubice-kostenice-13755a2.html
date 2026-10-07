@@ -45,7 +45,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=ee0a15a5">
+  <link rel="stylesheet" href="css/styles.min.css?v=e527f9c4">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -81,7 +81,7 @@
     .pz-vobci{font-size:12px; letter-spacing:0.02em; margin-top:6px;}
     .pz-vobci a{color:var(--text-ondark); text-decoration:underline; text-underline-offset:2px;}
 
-    .pz-priceblock{margin:14px 0 4px;}
+    .pz-priceblock{margin:10px 0 0;}
     .pz-pl{font-size:12px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--popisek); margin-bottom:4px;}
     .pz-price{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
     .pz-price .pv{font-family:var(--font-display); font-size:38px; font-weight:700; letter-spacing:-0.01em; color:var(--text-ondark); font-variant-numeric:tabular-nums; line-height:1;}
@@ -96,7 +96,7 @@
        kontrasty: sale #4361B8 s bílou 5,77 · drazba #CC6B33 s tmavou
        4,88 · exekuce #8C2F1E s bílou 8,27 · warn #8A5512 s bílou 6,20. */
     .pz-verdict{--vc:var(--copper-bright); --vt:#fff;
-      margin:16px 0 6px; padding:14px 16px; border-radius:var(--r-plocha); border:1px solid;}
+      margin:10px 0 0; padding:14px 16px; border-radius:var(--r-plocha); border:1px solid;}
     /* VERDIKT O CENĚ NENÍ KATEGORIE. „Výhodná cena" tu nosila --c-sale,
        tedy MODROU, kterou má na mapě i v odznaku význam „na prodej" —
        a v paletce u ní stojí výslovně: zelená = „v pořádku", NE kategorie
@@ -154,12 +154,23 @@
        obyčejné divy, takže se v ní odečítačem obrazovky nedalo skákat po
        sekcích; byl to jeden dlouhý blok. Vzhled se nemění, mění se
        význam. */
+    /* RYTMUS STRÁNKY MÁ ČTYŘI ODSTUPY, NE DESET. Naměřeno na telefonu
+       390 px: mezi dvaceti bloky bylo DESET různých mezer (8, 10, 14,
+       16, 18, 20, 24, 28, 32, 40 px) — každý blok jinak daleko, takže
+       stránka nevypadala jako jeden celek, ale jako poskládané kostky.
+       Stížnost zněla „je to jak z Minecraftu" a byla oprávněná.
+       Teď platí čtyři hodnoty a každá něco znamená:
+         40 px — před nadpisem oddílu (nový oddíl),
+         20 px — mezi samostatnými bloky,
+         10 px — uvnitř skupiny, co patří k sobě (místo → cena → verdikt),
+          8 px — poznámka pod blokem, ke kterému se váže.
+       Kdo přidá další blok, ať si vybere z těchhle čtyř. */
     .pz-sect-h{font-size:12px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--popisek); margin:40px 0 10px;}
     /* Popis od inzerenta. Cizí text, u kterého nevíme, jak bude dlouhý ani
        jak bude psaný — drží se proto na čtecí míře a odsazuje se jako
        odstavec, ne jako karta. Žádný rámeček: na stránce už tři jsou
        a čtvrtý by z ní udělal šuplíkový systém. */
-    .pz-naklady{margin:0 0 28px; font-size:14px; color:var(--text-ondark-mute);}
+    .pz-naklady{margin:20px 0 0; font-size:14px; color:var(--text-ondark-mute);}
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
@@ -213,7 +224,7 @@
     .pz-cas{margin:10px 0 0; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
     .pz-cas b{color:var(--text-ondark); font-weight:600;}
     .pz-cas.je-stara{color:var(--c-exekuce-ink);}
-    .pz-cta{display:flex; gap:10px; margin:32px 0 0; flex-wrap:wrap;}
+    .pz-cta{display:flex; gap:10px; margin:20px 0 0; flex-wrap:wrap;}
     /* PRUH U NABÍDKY, KTERÁ UŽ NENÍ AKTUÁLNÍ.
        Stránka se po zmizení nabídky nemaže, jen se přepíše — jinak by
        každý uložený odkaz a každý výsledek ve vyhledávači skončil na 404.
@@ -272,7 +283,7 @@
     /* Rádce je zabalený v <details>. Souhrn je celý řádek k poklepání:
        nadpis vlevo, kolik rad se pod ním skrývá vpravo, šipka na kraji.
        Bez toho by se z nadpisu nedalo poznat, že se dá rozbalit. */
-    .pz-gtk-obal{margin:20px 0 24px;}
+    .pz-gtk-obal{margin:20px 0 0;}
     .pz-gtk-sum{display:flex; align-items:center; gap:8px; cursor:pointer; list-style:none;
       padding:14px 14px; border:1px solid var(--line); border-radius:var(--r-md);
       background:var(--grad-cool-soft); box-shadow:var(--e1);
@@ -421,7 +432,7 @@
        je to poznámka k údaji, ne další údaj. */
     /* SOUKROMÁ POZNÁMKA (js/poznamky.js). Vypadá jako papír na stole,
        ne jako formulář: nic se neodesílá a není co potvrzovat. */
-    .pz-pozn-box{margin-top:18px; padding:14px; border:1px solid var(--line-strong);
+    .pz-pozn-box{margin-top:20px; padding:14px; border:1px solid var(--line-strong);
       border-radius:var(--r-plocha); background:var(--ink-soft); box-shadow:var(--e1);}
     .pz-pozn-hlava{display:flex; align-items:baseline; gap:10px; margin-bottom:8px;}
     .pz-pozn-hlava h2{font-size:16px; margin:0;}

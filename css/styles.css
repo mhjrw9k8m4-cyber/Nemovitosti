@@ -6014,7 +6014,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    vypadají jako vstupy (bílé pole, rámeček), ne jako vypsané údaje —
    aby bylo na první pohled jasné, co je jeho a co naše.
    Výsledek je oddělený čárou: nad ní se zadává, pod ní se čte. */
-.pz-nav-box{margin:0 0 28px; padding:18px; background:var(--ink-soft);
+.pz-nav-box{margin:20px 0 0; padding:18px; background:var(--ink-soft);
   border:1px solid var(--line-strong); border-radius:var(--r-plocha); box-shadow:var(--e1);}
 .pz-nav-box h2{margin:0 0 6px; font-family:var(--font-display); font-size:20px;
   font-weight:800; letter-spacing:-0.01em; color:var(--text-ondark);}
@@ -6067,6 +6067,14 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    na úzkém displeji dvě a pak jedna. */
 .pz-klice{display:grid; grid-template-columns:repeat(auto-fit, minmax(148px, 1fr));
   gap:10px; margin:0 0 10px;}
+/* OSAMĚLÁ DLAŽDICE SE ROZTÁHNE. Na telefonu se vejdou dvě vedle sebe,
+   takže tři údaje nechávaly třetí samotný a vedle něj díru — naměřeno
+   184 px prázdna z 358, tedy přes polovinu řádku. Právě tohle dělalo
+   ze stránky „kostky". Pravidlo platí jen tam, kde jsou sloupce dva
+   (na širší obrazovce se tři vejdou na jeden řádek a není co řešit). */
+@media (max-width:560px){
+  .pz-klice > .pz-klic:last-child:nth-child(odd){grid-column:1 / -1;}
+}
 .pz-klic{display:flex; flex-direction:column; gap:3px; padding:14px 16px;
   background:var(--ink-soft); border:1px solid var(--line-strong);
   border-radius:var(--r-plocha); box-shadow:var(--e1);}

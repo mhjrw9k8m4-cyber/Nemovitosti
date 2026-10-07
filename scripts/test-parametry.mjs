@@ -149,5 +149,68 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
   await p.close();
 }
 
+/* ===== RYTMUS STRÁNKY: ČTYŘI ODSTUPY, NE DESET ==================
+ * Stížnost majitele webu: „koukni, jak je to položené, ty mezery — web
+ * má být sloučený a místo toho je to jak z Minecraftu."
+ * Naměřeno na telefonu 390 px: mezi dvaceti bloky stránky pozemku bylo
+ * DESET různých mezer (8, 10, 14, 16, 18, 20, 24, 28, 32, 40 px). Každý
+ * blok jinak daleko — a to je přesně to, proč stránka nevypadá jako
+ * jeden celek, ale jako poskládané kostky. Nic přitom nepřetékalo, takže
+ * to žádná jiná kontrola nemohla najít.
+ * Platí čtyři hodnoty a každá něco znamená: 40 před nadpisem oddílu,
+ * 20 mezi bloky, 10 uvnitř skupiny, 8 pro poznámku pod blokem.
+ * A druhá půlka téže stížnosti: osamělá dlaždice nechávala vedle sebe
+ * díru (naměřeno 184 px z 358, tedy přes polovinu řádku).
+ */
+{
+  const p = await prohlizec.newPage({ viewport: { width: 390, height: 1000 } });
+  await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
+  await p.waitForTimeout(2400);
+  const v = await p.evaluate(() => {
+    const h = [...document.querySelectorAll('h2')].find((x) => /Parametry pozemku/i.test(x.textContent));
+    if (!h) return { chyba: 'nadpis „Parametry pozemku" nenalezen' };
+    const sloupec = h.parentElement;
+    const deti = [...sloupec.children].filter((c) => c.getBoundingClientRect().height > 2);
+    const mez = [];
+    for (let i = 1; i < deti.length; i++) {
+      const a = deti[i - 1].getBoundingClientRect(), c = deti[i].getBoundingClientRect();
+      mez.push(Math.round(c.top - a.bottom));
+    }
+    // díra vedle osamělé dlaždice
+    const mrizka = document.querySelector('.pz-klice');
+    let dira = 0, dlazdic = 0;
+    if (mrizka) {
+      const dl = [...mrizka.querySelectorAll('.pz-klic')];
+      dlazdic = dl.length;
+      if (dl.length) {
+        const r0 = mrizka.getBoundingClientRect();
+        const posl = dl[dl.length - 1].getBoundingClientRect();
+        const vRadku = dl.filter((c) => Math.abs(c.getBoundingClientRect().top - posl.top) < 6);
+        const obsah = vRadku.reduce((a, c) => a + c.getBoundingClientRect().width, 0);
+        const mezera = (parseFloat(getComputedStyle(mrizka).columnGap) || 0) * (vRadku.length - 1);
+        dira = Math.round(r0.width - obsah - mezera);
+      }
+    }
+    return { bloku: deti.length, mezery: mez, ruzne: [...new Set(mez)].sort((a, b) => a - b),
+      dlazdic, dira, sirkaMrizky: mrizka ? Math.round(mrizka.getBoundingClientRect().width) : 0 };
+  });
+  pravda('je co měřit — stránka pozemku má svoje bloky',
+    !v.chyba && v.bloku >= 10, v.chyba || `bloků ${v.bloku}`);
+  if (!v.chyba) {
+    const SLOVNIK = [8, 10, 20, 40];
+    const mimo = v.ruzne.filter((x) => SLOVNIK.indexOf(x) === -1);
+    pravda(`odstupy mezi bloky jsou ze slovníku ${SLOVNIK.join('/')} px`,
+      mimo.length === 0, `navíc: ${mimo.join(', ')} px (všechny: ${v.ruzne.join(', ')})`);
+    pravda('a není jich rozsypaných deset', v.ruzne.length <= 5,
+      `různých odstupů ${v.ruzne.length}: ${v.ruzne.join(', ')}`);
+    // PŘEDPOKLAD: bez dlaždic by kontrola díry neměřila nic
+    pravda('dlaždice s čísly jsou na stránce', v.dlazdic >= 2, `dlaždic ${v.dlazdic}`);
+    pravda('a nenechávají vedle sebe díru přes půl řádku',
+      v.dira <= v.sirkaMrizky * 0.25,
+      `díra ${v.dira} px z ${v.sirkaMrizky} px`);
+  }
+  await p.close();
+}
+
 await prohlizec.close();
 hotovo();
