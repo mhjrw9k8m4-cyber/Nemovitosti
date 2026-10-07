@@ -6074,51 +6074,6 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    to, co je vidět hned — kalkulačka je až za rádcem, hluboko pod
    ohybem. Hlídá to scripts/test-vlozeny-styl.mjs (mez 240 pravidel).
    ------------------------------------------------------------------ */
-/* VYPLATÍ SE TO? Jediné místo na webu, kde člověk zadává vlastní
-   číslo, podle kterého se rozhodne o statisících. Vstupy proto
-   vypadají jako vstupy (bílé pole, rámeček), ne jako vypsané údaje —
-   aby bylo na první pohled jasné, co je jeho a co naše.
-   Výsledek je oddělený čárou: nad ní se zadává, pod ní se čte. */
-.pz-nav-box{margin:20px 0 0; padding:18px; background:var(--ink-soft);
-  border:1px solid var(--line-strong); border-radius:var(--r-plocha); box-shadow:var(--e1);}
-/* Sbalená do rozbalovátka: vlastní rám by byl rám v rámu. Rozhoduje
-   se o tom tady, a ne ve vloženém stylu stránky pozemku — tytéž
-   vlastnosti na dvou místech se rozejdou. */
-.pz-nav-obal .pz-nav-box{margin:0; border:0; border-radius:0;}
-.pz-nav-box h2{margin:0 0 6px; font-family:var(--font-display); font-size:20px;
-  font-weight:800; letter-spacing:-0.01em; color:var(--text-ondark);}
-.nav-uvod{margin:0 0 14px; font-size:14px; line-height:1.55; color:var(--text-ondark-mute);}
-.nav-pola{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:12px;}
-.nav-pole{display:flex; flex-direction:column; gap:4px;}
-.nav-k{font-size:13px; font-weight:600; color:var(--text-ondark);}
-.nav-k i{display:block; margin-top:1px; font-size:12px; line-height:1.4;
-  font-style:italic; font-weight:400; color:var(--text-ondark-mute);}
-.nav-vstup{position:relative; display:flex; align-items:center;}
-/* 16 px i tady: pod touhle hranicí Safari na iPhonu po klepnutí do
-   pole přiblíží celou stránku. */
-.nav-vstup input{width:100%; min-height:44px; padding:0 46px 0 12px; font:inherit; font-size:16px;
-  font-variant-numeric:tabular-nums; color:var(--text-ondark); background:#fff;
-  border:1px solid var(--line-ui); border-radius:var(--r-sm);}
-.nav-vstup input:focus{outline:none; border-color:var(--copper-bright);
-  box-shadow:0 0 0 3px rgba(126,196,157,0.22);}
-.nav-vstup em{position:absolute; right:12px; font-style:normal; font-size:13px;
-  color:var(--text-ondark-mute); pointer-events:none;}
-.nav-vysledek{margin-top:16px; padding-top:14px; border-top:1px solid var(--line);}
-.nav-ceka{margin:0; font-size:14px; color:var(--text-ondark-mute);}
-.nav-r{display:flex; align-items:baseline; justify-content:space-between; gap:12px;
-  padding:7px 0; font-size:14px; color:var(--text-ondark-mute);}
-.nav-r b{font-variant-numeric:tabular-nums; color:var(--text-ondark); font-weight:600;}
-.nav-r.nav-dan b{font-weight:400; font-size:13px;}
-/* Čistý zisk je to, kvůli čemu se sem kouká — a prodělek musí být
-   poznat dřív, než se přečte znaménko. */
-.nav-r.nav-cisty{padding-top:10px; margin-top:4px; border-top:1px solid var(--line);
-  font-size:15px; color:var(--text-ondark);}
-.nav-r.nav-cisty b{font-family:var(--font-display); font-size:22px; font-weight:800;
-  color:var(--copper);}
-.nav-r.nav-cisty.je-minus b{color:var(--c-danger);}
-.nav-r.nav-pct b{font-weight:700;}
-.nav-pozn{margin:14px 0 0; font-size:12px; line-height:1.55; color:var(--text-ondark-mute);}
-.nav-pozn a{color:var(--copper-bright); font-weight:600; text-decoration:underline; text-underline-offset:3px;}
 
 /* ===================================================================
    PARAMETRY POZEMKU — tři čísla nahoře a tabulka pod nimi

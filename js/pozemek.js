@@ -1002,51 +1002,6 @@
     var _zm = global.PK_CENY && global.PK_CENY.zaMetr ? global.PK_CENY.zaMetr(d) : null;
     var perM2 = _zm == null ? null : Math.round(_zm);
     var perM2Pozn = global.PK_CENY && global.PK_CENY.zaMetrPopis ? global.PK_CENY.zaMetrPopis(d) : '';
-    /* Kupní cena je POLE, ne převzaté číslo. U dražby je v inzerátu
-       vyvolávací cena a vydražuje se výš, takže převzít ji jako kupní by
-       znamenalo počítat návratnost z částky, kterou nikdo nezaplatí.
-       U ostatních se předvyplní, protože tam ta cena doopravdy platí. */
-    function pzNavratnostHtml(d) {
-      if (!(typeof d.price === 'number' && d.price > 0)) return '';
-      var drazba = d.type === 'drazba';
-      var N = global.PKNavratnost || {};
-      function pole(id, popis, hodnota, pozn, sufix) {
-        return '<label class="nav-pole" for="' + id + '"><span class="nav-k">' + popis
-          + (pozn ? '<i>' + pozn + '</i>' : '') + '</span>'
-          + '<span class="nav-vstup"><input type="text" inputmode="decimal" id="' + id
-          + '" value="' + (hodnota == null ? '' : hodnota) + '">'
-          + '<em>' + sufix + '</em></span></label>';
-      }
-      /* Nadpis nese rozbalovátko, do kterého je sekce zabalená — tady by
-         stál podruhé, dva „Vyplatí se to?" pod sebou. */
-      return '<section class="pz-nav-box" id="pz-nav" aria-label="Vyplatí se to?">'
-        + '<p class="nav-uvod">Za kolik myslíte, že byste ho jednou prodali? '
-        + 'To číslo je <b>vaše</b> — web ho nenapovídá a neumí ho odhadnout. '
-        + 'Zbytek dopočítáme.</p>'
-        + '<div class="nav-pola">'
-        + pole('nav-kupni', drazba ? 'Kolik za něj dáte' : 'Kupní cena',
-            drazba ? '' : Math.round(d.price),
-            drazba ? 'v inzerátu je vyvolávací cena — vydražuje se výš' : '', 'Kč')
-        + pole('nav-naklady', 'Náklady kolem koupě', N.VKLAD || 2000,
-            'vklad do katastru, advokát, úschova…', 'Kč')
-        + pole('nav-prodejni', 'Za kolik prodáte', '', 'vaše číslo, ne naše', 'Kč')
-        + pole('nav-let', 'Za jak dlouho', 10,
-            'do deseti let se z výdělku platí daň', 'let')
-        + '</div>'
-        /* TABULKA NENÍ ŽIVÁ OBLAST. Překresluje se při každém stisku
-           klávesy, takže s aria-live by odečítač při psaní „2 800 000"
-           přečetl celý výsledek sedmkrát za sebou. Hlásí se proto jen
-           jedna věta, a to se zpožděním — stejně jako u pole poznámky,
-           kde se „uloženo" taky neříká po každém písmenu. */
-        + '<div class="nav-vysledek" id="nav-vysledek"></div>'
-        + '<p class="visually-hidden" id="nav-hlaseni" role="status" aria-live="polite"></p>'
-        + '<p class="nav-pozn">Není to daňová rada ani odhad ceny. Lhůta osvobození '
-        + 'i sazba daně se mění — ověřte si je, než se podle čísla rozhodnete. '
-        + '<a href="kolik-stoji-koupe-pozemku.html?cena=' + Math.round(d.price) + '">'
-        + 'Rozepsané náklady koupě</a></p>'
-        + '</section>';
-    }
-
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'sale' || d.type === 'majitel' ? 'Cena' : 'Odhadní cena');
     var days = daysUntil(d.extra);
     // „Zobrazit na mapě" vede na SKUTEČNOU mapu (Mapy.cz letecká) na daném místě,
@@ -1140,7 +1095,6 @@
        Nahoru jdou právě DVĚ tlačítka. Vedlejší odkazy (Mapy.cz,
        panorama, katastr, sdílení) zůstávají dole — nahoře by z toho
        byla zeď šesti tlačítek, tedy přesně to „přeplácané na sílu". */
-    var navratnost = pzNavratnostHtml(d);
     var hlavniAkce = (d.type === 'majitel'
       ? (d._lid
           ? '<a class="pz-btn primary" href="zpravy.html?l=' + encodeURIComponent(d._lid)
@@ -1259,23 +1213,6 @@
       pzPopisHtml(d) +
 
 
-      /* KALKULAČKA JE NÁSTROJ, NE ČTENÍ — A BYLA NEJVĚTŠÍ BLOK STRÁNKY.
-         681 px z 3 748 na telefonu, tedy skoro celá obrazovka formuláře
-         uprostřed cesty, kterou musel překročit každý, i když počítat
-         nechtěl. Je proto sbalená: kdo chce počítat, rozbalí si ji;
-         komu stačí cena, jde dál. Rozbalovátko je totéž, jaké má
-         „Co byste měli vědět" o kus výš. */
-      (navratnost
-        ? '<details class="pz-gtk-obal pz-nav-obal">'
-          + '<summary class="pz-gtk-sum">'
-            + '<h2 class="pz-sect-h">Vyplatí se to?</h2>'
-            + '<span class="pz-gtk-kolik">spočítat návratnost</span>'
-            + '<span class="pz-gtk-akce"><span class="zav">Rozbalit</span><span class="otv">Skrýt</span></span>'
-          + '</summary>'
-          + navratnost
-        + '</details>'
-        : '') +
-
       /* KOLIK TO BUDE STÁT DOHROMADY. Stránka říká cenu pozemku, ale ta
          není celá pravda: k ní se přičte vklad do katastru, smlouva,
          úschova a případně provize. Dosud se to člověk dozvěděl jen
@@ -1393,75 +1330,6 @@
       else if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).then(function () { toast('Odkaz zkopírován'); }); }
       else { toast(url); }
     });
-
-    /* ---- návratnost ---- */
-    (function () {
-      var box = document.getElementById('pz-nav');
-      if (!box || !global.PKNavratnost) return;
-      var vysl = document.getElementById('nav-vysledek');
-      function hod(id) { var e = document.getElementById(id); return e ? e.value : ''; }
-      function kc(n) {
-        return (n < 0 ? '−' : '') + Math.round(Math.abs(n)).toString()
-          .replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + '\u00a0Kč';
-      }
-      function pct(n) { return (n < 0 ? '−' : '') + Math.abs(n).toFixed(1).replace('.', ',') + '\u00a0%'; }
-      function radek(k, v, trida) {
-        return '<div class="nav-r' + (trida ? ' ' + trida : '') + '">'
-          + '<span>' + k + '</span><b>' + v + '</b></div>';
-      }
-      function prepocti() {
-        var r = global.PKNavratnost.spocti({
-          kupni: hod('nav-kupni'), naklady: hod('nav-naklady'),
-          prodejni: hod('nav-prodejni'), let: hod('nav-let')
-        });
-        if (!r) {
-          /* Dokud chybí zadání, NEUKAZUJE SE nula — nula je taky odpověď
-             a člověk by ji přečetl jako výsledek. */
-          vysl.innerHTML = '<p class="nav-ceka">Doplňte kupní a prodejní cenu.</p>';
-          ohlas(null);
-          return;
-        }
-        ohlas(r);
-        vysl.innerHTML =
-          radek('Vložíte celkem', kc(r.vlozeno))
-          + radek('Rozdíl při prodeji', kc(r.vydelek))
-          + (r.osvobozeno
-            ? radek('Daň z příjmu', 'neplatí se — po ' + r.lhuta + ' letech', 'nav-dan')
-            : (r.dan > 0
-              ? radek('Daň z příjmu (' + String(r.sazba).replace('.', ',') + ' %)', '−' + kc(r.dan), 'nav-dan')
-              : radek('Daň z příjmu', 'z prodělku se neplatí', 'nav-dan')))
-          + radek(r.prodelek ? 'Proděláte' : 'Čistý zisk', kc(r.cisty),
-              'nav-cisty' + (r.prodelek ? ' je-minus' : ''))
-          + radek('Zhodnocení', pct(r.zhodnoceni), 'nav-pct')
-          + (r.rocne != null ? radek('Ročně', pct(r.rocne), 'nav-pct') : '');
-      }
-      /* Jedna věta po pauze v psaní. 700 ms je zhruba doba, po které
-         člověk dopsal číslo — ne mezera mezi dvěma číslicemi. */
-      var hlasic = document.getElementById('nav-hlaseni');
-      var casHlaseni = null;
-      function ohlas(r) {
-        if (!hlasic) return;
-        clearTimeout(casHlaseni);
-        casHlaseni = setTimeout(function () {
-          hlasic.textContent = r
-            ? ((r.prodelek ? 'Proděláte ' : 'Čistý zisk ') + kc(Math.abs(r.cisty))
-               + ', zhodnocení ' + pct(r.zhodnoceni) + '.')
-            : '';
-        }, 700);
-      }
-      box.addEventListener('input', prepocti);
-      /* Po odchodu z pole se číslo přepíše do stejného tvaru, v jakém ho
-         ukazuje výsledek — jinak stojí „500000" a o řádek níž „500 000 Kč",
-         totéž číslo dvakrát jinak na jedné obrazovce. */
-      box.addEventListener('focusout', function (e) {
-        var el = e.target;
-        if (!el || el.tagName !== 'INPUT' || el.id === 'nav-let') return;
-        var v = parseFloat(String(el.value).replace(/[\s\u00a0]/g, '').replace(',', '.'));
-        if (!isFinite(v) || v <= 0) return;
-        el.value = Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
-      });
-      prepocti();
-    }());
 
     /* ---- soukromá poznámka ---- */
     var poznEl = document.getElementById('pz-pozn-text');

@@ -263,8 +263,6 @@ jobs:
       - name: Cenový model (odhad obvyklé ceny)
         run: node scripts/test-ceny.mjs
 
-      - name: Návratnost koupě pozemku
-        run: node scripts/test-navratnost.mjs
 
       - name: Nasazení databáze jedním tlačítkem
         run: node scripts/test-nasad-sql.mjs

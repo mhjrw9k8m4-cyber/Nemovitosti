@@ -11,8 +11,9 @@
      · mapa na 2 543, ačkoli u pozemku je poloha hned po ceně to první,
        co se člověk ptá;
      · kalkulačka návratnosti na 1 758 a vysoká 681 px — skoro celá
-       obrazovka formuláře uprostřed cesty, kterou musel překročit
-       každý, i kdo počítat nechtěl;
+       obrazovka formuláře uprostřed cesty. Napřed se sbalila, pak se
+       na přání majitele odebrala úplně; tahle zkouška proto hlídá,
+       že se nevrátí;
      · „Moje poznámka" na 1 439, tedy dřív, než si člověk pozemek vůbec
        prohlédl — a psal si ji přitom až potom, co se rozhodl.
 
@@ -73,8 +74,10 @@ try {
       radce: y('details.pz-gtk-obal:not(.pz-nav-obal)'),
       akce: y('.pz-akce-hlavni'), hlavniBtn: y('.pz-akce-hlavni .pz-btn.primary'),
       uloz: y('#pz-fav'), popis: y('.pz-popis-inzerent'), klice: y('.pz-klice'),
-      mapa: y('.pzm'), kalk: y('.pz-nav-obal'), kalkV: v('.pz-nav-obal'),
-      kalkOtevrena: (() => { const d = document.querySelector('.pz-nav-obal'); return d ? d.open : null; })(),
+      /* Hledá se kalkulačka SAMA, ne obal, do kterého byla chvíli
+         sbalená. Napsat sem obal znamená, že se po jeho zrušení
+         nenajde nic a kontrola projde, i kdyby se formulář vrátil. */
+      mapa: y('.pzm'), kalk: y('.pz-nav-box, .pz-nav-obal, #pz-nav, #nav-kupni'),
       pozn: y('.pz-pozn-box'), sdilet: y('.pz-actions'),
       cela: Math.round(document.body.scrollHeight), obrazovka: window.innerHeight,
     };
@@ -113,11 +116,12 @@ try {
     je(m.mapa) && je(m.klice) && m.klice < m.mapa, `parametry ${m.klice}, mapa ${m.mapa}`);
 
   /* 4) NÁSTROJE AŽ POTOM -------------------------------------------- */
-  pravda('kalkulačka je sbalená, ne rozložená přes celou obrazovku',
-    m.kalkOtevrena === false && je(m.kalkV) && m.kalkV < 150,
-    `otevřená: ${m.kalkOtevrena}, vysoká ${m.kalkV} px`);
-  pravda('a stojí až za mapou', je(m.kalk) && je(m.mapa) && m.mapa < m.kalk,
-    `mapa ${m.mapa}, kalkulačka ${m.kalk}`);
+  /* Kalkulačka „Vyplatí se to?" je pryč na přání majitele. Byl to
+     formulář, do kterého člověk hádal budoucí prodejní cenu — číslo,
+     které web stejně neumí ověřit — a zabíral nejvíc místa ze všeho
+     na stránce. Rozepsané náklady koupě zůstávají jako odkaz. */
+  pravda('kalkulačka návratnosti na stránce není', !je(m.kalk),
+    `našla se na ${m.kalk} px`);
   pravda('moje poznámka je u ostatních mých věcí, ne před prohlídkou',
     je(m.pozn) && je(m.mapa) && m.pozn > m.mapa, `poznámka ${m.pozn}, mapa ${m.mapa}`);
   pravda('a sdílení s katastrem až úplně na konci',
@@ -130,15 +134,11 @@ try {
   pravda('celá stránka se vejde do 4,2 obrazovky telefonu',
     m.cela <= m.obrazovka * 4.2,
     `${m.cela} px = ${(m.cela / m.obrazovka).toFixed(1)} obrazovky`);
-  /* Rozbalit kalkulačku musí jít — sbalit neznamená zahodit. */
-  await p.click('.pz-nav-obal .pz-gtk-sum');
-  await p.waitForTimeout(400);
-  pravda('a kalkulačka jde rozbalit a je v ní pole na kupní cenu',
-    await p.evaluate(() => {
-      const d = document.querySelector('.pz-nav-obal');
-      const pole = document.getElementById('nav-kupni');
-      return !!(d && d.open && pole && pole.getBoundingClientRect().height > 10);
-    }), 'po klepnutí se nerozbalila nebo v ní pole není');
+  /* Co po kalkulačce zbylo a zůstat má: odkaz na rozepsané náklady
+     koupě. Ten počítá z vlastní ceny pozemku, ne z hádání. */
+  pravda('ale odkaz na rozepsané náklady koupě zůstal',
+    await p.evaluate(() => !!document.querySelector('.pz-naklady a[href*="kolik-stoji-koupe"]')),
+    'odkaz na náklady koupě se ztratil i s kalkulačkou');
 } catch (e) {
   try { await prohlizec.close(); } catch (e2) {}
   hotovo(e);
