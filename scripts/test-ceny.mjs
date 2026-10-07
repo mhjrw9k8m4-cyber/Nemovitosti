@@ -837,6 +837,88 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
     naJedno1 / naJedno2 >= 5, `poprvé ${Math.round(naJedno1)} ns, podruhé ${Math.round(naJedno2)} ns na nabídku`);
 }
 
+/* --- Hledání okolí: síto nesmí zaříznout nic z okruhu --------------
+ *
+ * Odhad bere deset nejbližších nabídek do 25 km. Procházet kvůli tomu
+ * celé pásmo tři na tři přihrádky (přes sto šedesát kilometrů) je plýtvání,
+ * takže se sousedi nejdřív přesívají podle rozdílu zeměpisných
+ * souřadnic — ten je skoro zadarmo, kdežto skutečná vzdálenost stojí
+ * šest goniometrických funkcí.
+ *
+ * TOHLE JE PRÁVĚ TO MÍSTO, KDE SE DÁ TIŠE UBRAT. Kdyby bylo síto
+ * o kousek těsnější, než má být, odhad by se počítal z méně sousedů —
+ * nic by nespadlo, jen by vycházela jiná čísla. Nejhůř je na tom
+ * vzdálenost na VÝCHOD A ZÁPAD: stupeň zeměpisné délky měří na jihu
+ * Česka asi 74 km, na severu už jen 70 — pevné číslo by tedy sedělo
+ * jen někde. Zkouší se proto na obou krajích republiky a těsně pod
+ * hranicí okruhu. */
+{
+  const KM_STUPEN = 111.32;
+  /* Dva body, které jsou od sebe přesně na východ–západ danou vzdálenost. */
+  const naVychod = (lat, km) => km / (KM_STUPEN * Math.cos(lat * Math.PI / 180));
+  for (const [kde, lat] of [['na jihu Česka', 48.6], ['na severu Česka', 51.0]]) {
+    /* Jedna nabídka uprostřed a jedenáct sousedů 24 km na východ — tedy
+       uvnitř okruhu. Musí se najít (deset stačí) a odhad vyjít. */
+    const krok = naVychod(lat, 24);
+    const sousedi = [];
+    for (let i = 0; i < 11; i++) {
+      sousedi.push({ okres: 'Kolín', druh: 'Zemědělská půda', type: 'sale',
+        area: 10000, price: 600000, lat: lat, lng: 15 + krok + i * 0.0002 });
+    }
+    const stred = { okres: 'Kolín', druh: 'Zemědělská půda', type: 'sale',
+      area: 10000, price: 900000, lat: lat, lng: 15 };
+    const m = PK_CENY.postav([stred, ...sousedi], OKRES_KRAJ);
+    const o = m.odhad(stred);
+    pravda(`soused 24 km na východ se ${kde} do okruhu počítá`,
+      !!o && o.uroven === 'okoli',
+      `odhad vyšel ${JSON.stringify(o)} — čekala se úroveň „okoli“; síto je užší než okruh 25 km`);
+    /* A pojistka na druhou stranu: 40 km už je mimo okruh, tam odhad
+       z okolí vzniknout nesmí — jinak by kontrola výš prošla i se sítem
+       roztáhnutým do nekonečna a neměřila by nic. */
+    const daleko = naVychod(lat, 40);
+    const sousedi2 = [];
+    for (let i = 0; i < 11; i++) {
+      sousedi2.push({ okres: 'Kolín', druh: 'Zemědělská půda', type: 'sale',
+        area: 10000, price: 600000, lat: lat, lng: 15 + daleko + i * 0.0002 });
+    }
+    const stred2 = { okres: 'Kolín', druh: 'Zemědělská půda', type: 'sale',
+      area: 10000, price: 900000, lat: lat, lng: 15 };
+    const m2x = PK_CENY.postav([stred2, ...sousedi2], OKRES_KRAJ);
+    const o2 = m2x.odhad(stred2);
+    pravda(`a soused 40 km daleko se ${kde} do okruhu nepočítá`,
+      !o2 || o2.uroven !== 'okoli',
+      `odhad se opřel o okolí přes 25 km: ${JSON.stringify(o2)}`);
+
+    /* A TOTÉŽ NA SEVER A JIH. Síto má dvě meze, jednu pro každý směr,
+       a zkouška, která klade sousedy jen na východ, tu druhou nehlídá
+       vůbec — naměřeno: utáhnutí meze na šířku o pětinu neshodilo nic. */
+    const krokS = 24 / KM_STUPEN;
+    const sousediS = [];
+    for (let i = 0; i < 11; i++) {
+      sousediS.push({ okres: 'Kolín', druh: 'Zemědělská půda', type: 'sale',
+        area: 10000, price: 600000, lat: lat + krokS + i * 0.0002, lng: 15 });
+    }
+    const stredS = { okres: 'Kolín', druh: 'Zemědělská půda', type: 'sale',
+      area: 10000, price: 900000, lat: lat, lng: 15 };
+    const oS = PK_CENY.postav([stredS, ...sousediS], OKRES_KRAJ).odhad(stredS);
+    pravda(`soused 24 km na sever se ${kde} do okruhu počítá`,
+      !!oS && oS.uroven === 'okoli',
+      `odhad vyšel ${JSON.stringify(oS)} — síto na šířku je užší než okruh`);
+    const dalekoS = 40 / KM_STUPEN;
+    const sousediS2 = [];
+    for (let i = 0; i < 11; i++) {
+      sousediS2.push({ okres: 'Kolín', druh: 'Zemědělská půda', type: 'sale',
+        area: 10000, price: 600000, lat: lat + dalekoS + i * 0.0002, lng: 15 });
+    }
+    const stredS2 = { okres: 'Kolín', druh: 'Zemědělská půda', type: 'sale',
+      area: 10000, price: 900000, lat: lat, lng: 15 };
+    const oS2 = PK_CENY.postav([stredS2, ...sousediS2], OKRES_KRAJ).odhad(stredS2);
+    pravda(`a soused 40 km na sever se ${kde} do okruhu nepočítá`,
+      !oS2 || oS2.uroven !== 'okoli',
+      `odhad se opřel o okolí přes 25 km: ${JSON.stringify(oS2)}`);
+  }
+}
+
 console.log(zpravy.join('\n'));
 
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

@@ -163,6 +163,12 @@
       if (kraj) (nabidkyKraj[g + '|' + kraj] = nabidkyKraj[g + '|' + kraj] || []).push(z);
     });
 
+    Object.keys(okoliPrihradky).forEach(function (k) {
+      okoliPrihradky[k].sort(function (x, y) {
+        return (x.lat - y.lat) || (x.lng - y.lng) || (x.a - y.a) || (x.m - y.m);
+      });
+    });
+
     function serad(idx) { Object.keys(idx).forEach(function (k) { idx[k].sort(function (a, b) { return a - b; }); }); }
     serad(podleTypu);
     serad(typOkres);
@@ -202,33 +208,55 @@
         + Math.cos(aLat * r) * Math.cos(bLat * r) * Math.sin(dy / 2) * Math.sin(dy / 2);
       return 2 * R * Math.asin(Math.sqrt(Math.min(1, h)));
     }
+
+    var nejVzd = new Array(OKOLI_K), nejA = new Array(OKOLI_K), nejM = new Array(OKOLI_K);
+
+    var KM_NA_STUPEN = 111.32;
+    var SITO_LAT = (OKOLI_R / KM_NA_STUPEN) * 1.05;
     function okoliCeny(d, g) {
       if (!isFinite(d.lat) || !isFinite(d.lng) || !hasArea(d)) return null;
       var lat = Math.round(d.lat * 1e4) / 1e4, lng = Math.round(d.lng * 1e4) / 1e4;
       var pi = Math.floor(lat / OKOLI_PRIHRADKA), pj = Math.floor(lng / OKOLI_PRIHRADKA);
-      var bliz = [];
+      var sirkaKm = KM_NA_STUPEN * Math.cos(lat * Math.PI / 180);
+      var sitoLng = sirkaKm > 1 ? (OKOLI_R / sirkaKm) * 1.05 : 360;
+      var mam = 0;
       for (var i = -1; i <= 1; i++) {
         for (var j = -1; j <= 1; j++) {
           var pole = okoliPrihradky[g + '|' + (pi + i) + '|' + (pj + j)];
           if (!pole) continue;
-          for (var n = 0; n < pole.length; n++) {
+
+          var lo = 0, hi = pole.length, dolni = lat - SITO_LAT;
+          while (lo < hi) { var stred = (lo + hi) >> 1; if (pole[stred].lat < dolni) lo = stred + 1; else hi = stred; }
+          var horni = lat + SITO_LAT;
+          for (var n = lo; n < pole.length; n++) {
             var x = pole[n];
+            if (x.lat > horni) break;
 
             if (x.lat === lat && x.lng === lng && x.a === d.area && x.m * x.a === d.price) continue;
+            var dlng = x.lng - lng; if (dlng < 0) dlng = -dlng;
+            if (dlng > sitoLng) continue;
             var vzd = kmVzdalenost(lat, lng, x.lat, x.lng);
             if (vzd > OKOLI_R) continue;
-            bliz.push({ vzd: vzd, a: x.a, m: x.m });
+
+            if (mam === OKOLI_K) {
+              var r = (vzd - nejVzd[OKOLI_K - 1]) || (x.a - nejA[OKOLI_K - 1]) || (x.m - nejM[OKOLI_K - 1]);
+              if (r >= 0) continue;
+            }
+            var k = (mam < OKOLI_K ? mam : OKOLI_K - 1);
+            while (k > 0 && ((vzd - nejVzd[k - 1]) || (x.a - nejA[k - 1]) || (x.m - nejM[k - 1])) < 0) {
+              nejVzd[k] = nejVzd[k - 1]; nejA[k] = nejA[k - 1]; nejM[k] = nejM[k - 1];
+              k--;
+            }
+            nejVzd[k] = vzd; nejA[k] = x.a; nejM[k] = x.m;
+            if (mam < OKOLI_K) mam++;
           }
         }
       }
-      if (bliz.length < OKOLI_K) return null;
-
-      bliz.sort(function (p, q) { return (p.vzd - q.vzd) || (p.a - q.a) || (p.m - q.m); });
+      if (mam < OKOLI_K) return null;
       var b = SKLON[g] || 0;
       var ven = [];
-      for (var k = 0; k < OKOLI_K; k++) {
-        var y = bliz[k];
-        ven.push(b ? y.m * Math.pow(d.area / y.a, b) : y.m);
+      for (var q = 0; q < OKOLI_K; q++) {
+        ven.push(b ? nejM[q] * Math.pow(d.area / nejA[q], b) : nejM[q]);
       }
       ven.sort(function (p, q) { return p - q; });
       return ven;

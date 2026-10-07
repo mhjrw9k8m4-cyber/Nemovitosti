@@ -343,6 +343,18 @@
       if (kraj) (nabidkyKraj[g + '|' + kraj] = nabidkyKraj[g + '|' + kraj] || []).push(z);
     });
 
+    /* PŘIHRÁDKY SEŘADIT PODLE ŠÍŘKY. Přihrádka měří půl stupně (asi
+       56 km) a hledá se v devíti najednou, tedy v pásmu přes sto šedesát
+       kilometrů — z toho je ale okruh 25 km jen úzký proužek. Když jsou
+       sousedé v přihrádce seřazení, dá se ten proužek najít půlením
+       a zbytek se vůbec neprochází. Pořadí uvnitř stejné šířky rozhoduje
+       délka, výměra a cena — ať je dáné daty, ne pořadím v souboru. */
+    Object.keys(okoliPrihradky).forEach(function (k) {
+      okoliPrihradky[k].sort(function (x, y) {
+        return (x.lat - y.lat) || (x.lng - y.lng) || (x.a - y.a) || (x.m - y.m);
+      });
+    });
+
     function serad(idx) { Object.keys(idx).forEach(function (k) { idx[k].sort(function (a, b) { return a - b; }); }); }
     serad(podleTypu);
     serad(typOkres);
@@ -437,35 +449,73 @@
         + Math.cos(aLat * r) * Math.cos(bLat * r) * Math.sin(dy / 2) * Math.sin(dy / 2);
       return 2 * R * Math.asin(Math.sqrt(Math.min(1, h)));
     }
+    /* DESET NEJBLIŽŠÍCH SE VYBÍRÁ, NETVŘÍDÍ SE CELÉ OKOLÍ.
+       Původně se pro každou nabídku vyrobil objekt pro KAŽDÉHO souseda
+       v přihrádce 0,5° × 0,5° (tři na tři, tedy pásmo přes sto kilometrů)
+       a to celé se setřídilo — kvůli deseti položkám. Při dvou tisících
+       nabídkách to dělá statisíce zbytečných objektů a s nimi úklid paměti.
+       Teď se drží deset nejlepších v jednom poli, které se nealokuje
+       znovu, a vkládá se do něj rozřazováním. Pořadí rozhoduje týž klíč
+       (vzdálenost, výměra, cena), takže výsledek je znak za znakem stejný
+       — hlídá to scripts/test-ceny.mjs na všech nabídkách. */
+    var nejVzd = new Array(OKOLI_K), nejA = new Array(OKOLI_K), nejM = new Array(OKOLI_K);
+    /* HRUBÉ SÍTO PŘED VÝPOČTEM VZDÁLENOSTI. Haversin je šest goniometrických
+       funkcí; rozdíl dvou čísel je skoro zadarmo. Co leží dál než 25 km
+       v zeměpisné šířce nebo délce, nemůže být v okruhu 25 km, takže se
+       nemusí počítat vůbec.
+
+       MEZ SE NEODHADUJE OD STOLU, POČÍTÁ SE. Stupeň šířky měří vždycky
+       zhruba 111,32 km, stupeň délky ale jen 111,32 × cos(šířka) — u nás
+       kolem 70 km, u pólu skoro nic. Pevné číslo by tedy fungovalo jen pro
+       Česko a tiše by zařízlo sousedy kdekoli výš na severu. Počítá se
+       proto ze šířky té nabídky, s pětiprocentní rezervou nahoru. */
+    var KM_NA_STUPEN = 111.32;
+    var SITO_LAT = (OKOLI_R / KM_NA_STUPEN) * 1.05;
     function okoliCeny(d, g) {
       if (!isFinite(d.lat) || !isFinite(d.lng) || !hasArea(d)) return null;
       var lat = Math.round(d.lat * 1e4) / 1e4, lng = Math.round(d.lng * 1e4) / 1e4;
       var pi = Math.floor(lat / OKOLI_PRIHRADKA), pj = Math.floor(lng / OKOLI_PRIHRADKA);
-      var bliz = [];
+      var sirkaKm = KM_NA_STUPEN * Math.cos(lat * Math.PI / 180);
+      var sitoLng = sirkaKm > 1 ? (OKOLI_R / sirkaKm) * 1.05 : 360;
+      var mam = 0;
       for (var i = -1; i <= 1; i++) {
         for (var j = -1; j <= 1; j++) {
           var pole = okoliPrihradky[g + '|' + (pi + i) + '|' + (pj + j)];
           if (!pole) continue;
-          for (var n = 0; n < pole.length; n++) {
+          /* Půlením na prvního souseda, který už není příliš na jih. */
+          var lo = 0, hi = pole.length, dolni = lat - SITO_LAT;
+          while (lo < hi) { var stred = (lo + hi) >> 1; if (pole[stred].lat < dolni) lo = stred + 1; else hi = stred; }
+          var horni = lat + SITO_LAT;
+          for (var n = lo; n < pole.length; n++) {
             var x = pole[n];
+            if (x.lat > horni) break;      // dál už jsou jen vzdálenější
             /* Sám sebe do srovnání ne: porovnávat cenu s cenou téhož
                pozemku by odhad vždycky přitáhlo k ní. */
             if (x.lat === lat && x.lng === lng && x.a === d.area && x.m * x.a === d.price) continue;
+            var dlng = x.lng - lng; if (dlng < 0) dlng = -dlng;
+            if (dlng > sitoLng) continue;
             var vzd = kmVzdalenost(lat, lng, x.lat, x.lng);
             if (vzd > OKOLI_R) continue;
-            bliz.push({ vzd: vzd, a: x.a, m: x.m });
+            /* Horší než desátý? Pak není co řešit. */
+            if (mam === OKOLI_K) {
+              var r = (vzd - nejVzd[OKOLI_K - 1]) || (x.a - nejA[OKOLI_K - 1]) || (x.m - nejM[OKOLI_K - 1]);
+              if (r >= 0) continue;
+            }
+            var k = (mam < OKOLI_K ? mam : OKOLI_K - 1);
+            while (k > 0 && ((vzd - nejVzd[k - 1]) || (x.a - nejA[k - 1]) || (x.m - nejM[k - 1])) < 0) {
+              nejVzd[k] = nejVzd[k - 1]; nejA[k] = nejA[k - 1]; nejM[k] = nejM[k - 1];
+              k--;
+            }
+            nejVzd[k] = vzd; nejA[k] = x.a; nejM[k] = x.m;
+            if (mam < OKOLI_K) mam++;
           }
         }
       }
-      if (bliz.length < OKOLI_K) return null;
-      /* Při shodné vzdálenosti rozhoduje výměra a pak cena — ať je pořadí
-         dané daty, ne pořadím v souboru. */
-      bliz.sort(function (p, q) { return (p.vzd - q.vzd) || (p.a - q.a) || (p.m - q.m); });
+      if (mam < OKOLI_K) return null;
       var b = SKLON[g] || 0;
       var ven = [];
-      for (var k = 0; k < OKOLI_K; k++) {
-        var y = bliz[k];
-        ven.push(b ? y.m * Math.pow(d.area / y.a, b) : y.m);
+      for (var q = 0; q < OKOLI_K; q++) {
+        ven.push(b ? nejM[q] * Math.pow(d.area / nejA[q], b) : nejM[q]);
       }
       ven.sort(function (p, q) { return p - q; });
       return ven;
