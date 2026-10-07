@@ -2010,6 +2010,15 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Vlastní rozbalovací seznam (místo ošklivého systémového na iPhonu) */
 .cdd{position:relative; width:100%;}
 .cdd-native{position:absolute; width:1px; height:1px; padding:0; margin:0; overflow:hidden; clip:rect(0 0 0 0); border:0; opacity:0; pointer-events:none;}
+/* NAŠEPTANÁ VÝJIMKA, KTEROU PŘEBILA SPECIFIČNOST. Pravidlo o řádek výš
+   zmenšuje původní <select> na 1×1 px, jenže .mc-hodnota-radek .map-select
+   a .msv-razeni .map-select jsou specifičtější a vracely mu šířku i výšku
+   zpátky. Naměřeno: #map-perm2 83×44 px, #map-sort 242×44 px — neviditelné
+   a neklikací (opacity:0, pointer-events:none), ale s plnou krabicí přes
+   vlastní tlačítko. Škodu to nedělalo, past ano: kdyby někdo
+   pointer-events zrušil, byla by přes ovládání neviditelná vrstva.
+   Tahle věta je specifičtější než obě a drží to na 1×1. */
+.cdd > select.cdd-native{width:1px; height:1px; min-width:0; max-width:none; min-height:0; flex:none; padding:0;}
 .cdd-btn{display:flex; align-items:center; text-align:left;}
 .cdd-btn .cdd-lbl{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .cdd.open>.cdd-btn{border-color:var(--copper-bright); background:var(--ink-soft2, var(--ink-soft));}
@@ -5068,19 +5077,29 @@ h1, h2, h3,
   border:1px solid var(--line-strong); border-radius:var(--r-pill);
   padding:2px 8px; font-size:12px; font-weight:700; letter-spacing:0.02em;}
 .mc-nove{margin-left:8px; color:var(--accent-warm); font-weight:700;}
-/* Textové tlačítko („Zobrazit dražby po termínu"). Vypadá jako odkaz, ale
-   prstem se musí trefit jako do tlačítka: samotný text má na výšku 21 px,
-   což je pod hranicí, kde se dá spolehlivě klepnout. Terč proto zvětšíme
-   odsazením a podtržení přesuneme na vnitřní <span>, aby čára zůstala
-   těsně u písmen a neodskočila dolů. Záporný svislý okraj vrátí řádek
-   zpátky na původní výšku — vedle stojí počet nabídek a ten se hýbat nemá. */
-.mc-skryte{margin-left:10px; margin-top:-8px; margin-bottom:-8px; font:inherit; font-size:12px; font-weight:600;
-  color:var(--text-ondark-mute); background:none; border:0;
-  padding:8px 2px 8px; cursor:pointer; text-transform:none; letter-spacing:0;
-  display:inline-flex; align-items:center; min-height:36px;}
-.mc-skryte > span{border-bottom:1px solid var(--line-strong); padding-bottom:1px;}
-.mc-skryte:hover{color:var(--text-ondark);}
-.mc-skryte:hover > span{border-bottom-color:var(--text-ondark);}
+/* OVLÁDÁNÍ NAD VÝPISEM („Zobrazit skryté", „Stáhnout tabulku",
+   „Rychlý výběr").
+   PŘEDTÍM to byla podtržená slůvka pověšená na konec nadpisu: 12 px,
+   ztlumená barva, bez okraje. Dvě vady naráz, obě naměřené na 390×844:
+   a) PŘEKRÝVALA SE. Kvůli dotyku měla 44 px na výšku, ale řádek nadpisu
+      jen 28 — takže jakmile se zalomila pod sebe, zasahovala jedno do
+      druhého o 16 px (průniky 111×16 a 80×16 px). V tom pruhu
+      rozhodovalo pořadí v kódu, ne to, kam člověk klepl: klepnutí na
+      „Stáhnout tabulku" spustilo rychlý výběr. Dělal to ZÁPORNÝ svislý
+      okraj (−8 px nahoře i dole), který měl udržet řádek nízký.
+   b) NEBYLA VIDĚT. Písmo 12 px, tedy menší než nadpis nad nimi, a bez
+      plochy. Vypadalo to jako poznámka pod čarou, ne jako ovládání.
+   TEĎ mají vlastní řádek (.mc-akce), plochu, okraj a 13 px. Řádek
+   nadpisu se tím nehýbe, protože s ním už nesdílejí místo — a právě
+   kvůli tomu může zápornému okraji odzvonit.
+   Hlídá scripts/test-rozvrzeni.mjs (sousední terče se nesmí překrývat). */
+.mc-akce{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+.mc-skryte{font:inherit; font-size:13px; font-weight:700; letter-spacing:0; text-transform:none;
+  color:var(--text-ondark); background:var(--plocha-jemna); border:1px solid var(--line-strong);
+  border-radius:var(--r-pill); padding:0 14px; min-height:36px; cursor:pointer;
+  display:inline-flex; align-items:center; white-space:nowrap;
+  transition:border-color var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
+.mc-skryte:hover{color:var(--copper); border-color:var(--copper-bright);}
 
 /* =====================================================================
    PRSTEM SE TREFÍTE JEN DO TOHO, CO MÁ ASPOŇ 44 px

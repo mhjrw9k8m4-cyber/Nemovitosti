@@ -565,6 +565,7 @@ to{opacity:1;transform:none}
 .map-select option{background:var(--ink);color:var(--text-ondark)}
 .cdd{position:relative;width:100%}
 .cdd-native{position:absolute;width:1px;height:1px;padding:0;margin:0;overflow:hidden;clip:rect(0 0 0 0);border:0;opacity:0;pointer-events:none}
+.cdd>select.cdd-native{width:1px;height:1px;min-width:0;max-width:none;min-height:0;flex:none;padding:0}
 .cdd-btn{display:flex;align-items:center;text-align:left}
 .cdd-btn .cdd-lbl{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cdd.open>.cdd-btn{border-color:var(--copper-bright);background:var(--ink-soft2,var(--ink-soft))}
@@ -1859,10 +1860,9 @@ h1,h2,h3,.hero-map .hero-head h1,.section-head h2,.add-hero h1,.okr-hero h1,.cla
 .opp-nove{background:var(--accent-warm-soft);color:var(--accent-warm);border:1px solid rgba(138,85,18,0.3);border-radius:var(--r-pill);padding:2px 8px;font-size:12px;font-weight:700;letter-spacing:0.02em}
 .opp-pozn{background:var(--plocha-jemna-vic);color:var(--copper);border:1px solid var(--line-strong);border-radius:var(--r-pill);padding:2px 8px;font-size:12px;font-weight:700;letter-spacing:0.02em}
 .mc-nove{margin-left:8px;color:var(--accent-warm);font-weight:700}
-.mc-skryte{margin-left:10px;margin-top:-8px;margin-bottom:-8px;font:inherit;font-size:12px;font-weight:600;color:var(--text-ondark-mute);background:none;border:0;padding:8px 2px 8px;cursor:pointer;text-transform:none;letter-spacing:0;display:inline-flex;align-items:center;min-height:36px}
-.mc-skryte>span{border-bottom:1px solid var(--line-strong);padding-bottom:1px}
-.mc-skryte:hover{color:var(--text-ondark)}
-.mc-skryte:hover>span{border-bottom-color:var(--text-ondark)}
+.mc-akce{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.mc-skryte{font:inherit;font-size:13px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--text-ondark);background:var(--plocha-jemna);border:1px solid var(--line-strong);border-radius:var(--r-pill);padding:0 14px;min-height:36px;cursor:pointer;display:inline-flex;align-items:center;white-space:nowrap;transition:border-color var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease)}
+.mc-skryte:hover{color:var(--copper);border-color:var(--copper-bright)}
 @media (pointer:coarse){.mvt-btn,.mc-prep,.map-select,.msv-razeni .map-select,.filter-chip,.map-near-btn,.mc-skryte{min-height:44px}
 .header-cta{min-height:44px}
 .foot-col a{min-height:44px;display:flex;align-items:center;margin-bottom:2px}

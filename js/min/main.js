@@ -3391,14 +3391,16 @@
     var headLabel = matched === 0 ? 'Nic nenalezeno'
       : (sortMode === 'demand' ? 'Doporučené příležitosti' : 'Vybrané příležitosti');
     var pripisky = '';
+
+    var tlacitka = '';
     var novych = pocetNovych();
     if (novych) pripisky += ' <span class="mc-nove">' + fmt(novych) + ' ' +
       (novych === 1 ? 'nový od minule' : (novych < 5 ? 'nové od minule' : 'nových od minule')) + '</span>';
 
     if (favOnly) pripisky += ' <span class="mc-pozn">uloženo jen v tomhle prohlížeči</span>';
 
-    if (skryte.length) pripisky += ' <button type="button" class="mc-skryte" id="mc-skryte"><span>' +
-      (ukazSkryte ? 'Schovat skryté' : 'Zobrazit skryté (' + skryte.length + ')') + '</span></button>';
+    if (skryte.length) tlacitka += '<button type="button" class="mc-skryte" id="mc-skryte">' +
+      (ukazSkryte ? 'Schovat skryté' : 'Zobrazit skryté (' + skryte.length + ')') + '</button>';
 
     var proslychStranou = 0;
     if (!ukazProsle) {
@@ -3410,9 +3412,9 @@
         }
       } finally { ukazProsle = false; }
     }
-    if (proslychStranou || ukazProsle) pripisky += ' <button type="button" class="mc-skryte" id="mc-prosle"><span>' +
+    if (proslychStranou || ukazProsle) tlacitka += '<button type="button" class="mc-skryte" id="mc-prosle">' +
       (ukazProsle ? 'Schovat dražby po termínu'
-                  : 'Zobrazit dražby po termínu (' + proslychStranou + ')') + '</span></button>';
+                  : 'Zobrazit dražby po termínu (' + proslychStranou + ')') + '</button>';
 
     var podobnychStranou = 0;
     var _pnNazev = (!mistoFiltr && !ukazPodobne) ? presnyNazev() : null;
@@ -3426,15 +3428,16 @@
         }
       } finally { ukazPodobne = false; }
     }
-    if (podobnychStranou || ukazPodobne) pripisky += ' <button type="button" class="mc-skryte" id="mc-podobne"><span>' +
+    if (podobnychStranou || ukazPodobne) tlacitka += '<button type="button" class="mc-skryte" id="mc-podobne">' +
       (ukazPodobne ? 'Jen přesný název'
-                   : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '</span></button>';
+                   : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '</button>';
 
-    if (matched) pripisky += ' <button type="button" class="mc-skryte" id="mc-vyvoz"><span>Stáhnout tabulku ('
-      + fmt(matched) + ')</span></button>';
+    if (matched) tlacitka += '<button type="button" class="mc-skryte" id="mc-vyvoz">Stáhnout tabulku ('
+      + fmt(matched) + ')</button>';
 
-    if (matched >= 5) pripisky += ' <button type="button" class="mc-skryte" id="mc-rychly"><span>Rychlý výběr</span></button>';
-    countEl.innerHTML = headLabel + (matched ? ' · <span class="mc-sub">' + fmt(matched) + ' na mapě</span>' : '') + pripisky;
+    if (matched >= 5) tlacitka += '<button type="button" class="mc-skryte" id="mc-rychly">Rychlý výběr</button>';
+    countEl.innerHTML = headLabel + (matched ? ' · <span class="mc-sub">' + fmt(matched) + ' na mapě</span>' : '')
+      + pripisky + (tlacitka ? '<span class="mc-akce">' + tlacitka + '</span>' : '');
     var vb = countEl.querySelector('#mc-vyvoz');
     if (vb) vb.addEventListener('click', function (e) { e.stopPropagation(); stahniTabulku(); });
     var rb = countEl.querySelector('#mc-rychly');

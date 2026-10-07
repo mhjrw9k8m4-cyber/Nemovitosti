@@ -610,6 +610,92 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
      Kdyby se tam vrátil, tahle kontrola spadne jako první. */
   pravda('a na každé kartě je od toho středu dál než na svém starém místě',
     kriz.horsiNezDriv.length === 0, kriz.horsiNezDriv.slice(0, 3).join('; '));
+
+  /* DVĚ TLAČÍTKA NESMÍ SDÍLET TYTÉŽ BODY.
+     Stížnost: „funkce se překrývají." Byla přesná. Ovládání nad výpisem
+     („Zobrazit skryté", „Stáhnout tabulku", „Rychlý výběr") viselo na
+     konci nadpisu jako podtržená slůvka a mělo kvůli dotyku 44 px na
+     výšku, jenže řádek nadpisu měl 28. Jakmile se zalomilo pod sebe,
+     zasahovalo jedno do druhého o 16 px (naměřeno 111×16 a 80×16 px)
+     a v tom pruhu rozhodovalo pořadí v kódu, ne to, kam člověk klepl:
+     klepnutí na „Stáhnout tabulku" spustilo rychlý výběr.
+     Porovnávají se jen SOUROZENCI. Tlačítko uvnitř karty, která je
+     sama klikací, se s ní překrývat musí — to je vnoření, ne vada;
+     a pevná hlavička nad obsahem taky, ta má vlastní pozadí. */
+  const prekryvy = async (kde) => kde.evaluate(() => {
+    const vidno = (e) => {
+      const r = e.getBoundingClientRect();
+      if (r.width < 4 || r.height < 4) return false;
+      const st = getComputedStyle(e);
+      if (st.visibility === 'hidden' || st.display === 'none') return false;
+      /* Co nepropouští klepnutí, není terč. Vlastní rozbalovátka si pod
+         sebou nechávají původní <select> (opacity:0, pointer-events:none,
+         aria-hidden) jako náhradní vrstvu téhož ovládání — to není druhá
+         funkce na týchž bodech, to je tatáž funkce podruhé. */
+      if (st.pointerEvents === 'none' || e.getAttribute('aria-hidden') === 'true') return false;
+      return !!e.offsetParent || st.position === 'fixed';
+    };
+    const cile = [...document.querySelectorAll('a[href], button, summary, select, [role="button"]')]
+      .filter(vidno);
+    const podleRodice = new Map();
+    cile.forEach((e) => {
+      const k = e.parentElement;
+      if (!k) return;
+      if (!podleRodice.has(k)) podleRodice.set(k, []);
+      podleRodice.get(k).push(e);
+    });
+    const nalez = [];
+    const jmeno = (e) => (e.id ? '#' + e.id : e.tagName.toLowerCase() + '.' + String(e.className || '').split(' ')[0])
+      + ' „' + (e.textContent || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim().slice(0, 18) + '"';
+    podleRodice.forEach((skupina) => {
+      for (let i = 0; i < skupina.length; i++) for (let j = i + 1; j < skupina.length; j++) {
+        const a = skupina[i].getBoundingClientRect(), b = skupina[j].getBoundingClientRect();
+        const px = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+        const py = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+        if (px > 1 && py > 1) nalez.push(`${jmeno(skupina[i])} × ${jmeno(skupina[j])} = ${Math.round(px)}×${Math.round(py)} px`);
+      }
+    });
+    return { cilu: cile.length, nalez };
+  });
+  const bezZasahu = await prekryvy(p);
+  // PŘEDPOKLAD: bez terčů by kontrola prošla naprázdno
+  pravda('na úvodní stránce je co měřit (dotykové terče)', bezZasahu.cilu > 20,
+    `terčů ${bezZasahu.cilu}`);
+  pravda('žádná dvě sousední tlačítka se nepřekrývají',
+    bezZasahu.nalez.length === 0, bezZasahu.nalez.slice(0, 4).join('\n      '));
+  /* ZÁMĚRNÁ SABOTÁŽ: vrátíme přesně to, co vadu dělalo — záporný svislý
+     okraj u ovládání nad výpisem. Bez tohohle kroku by se nepoznalo,
+     jestli kontrola něco hlídá, nebo jen prošla. */
+  await p.evaluate(() => {
+    const st = document.createElement('style');
+    st.id = 'sabotaz';
+    /* Úzký pruh je součást sabotáže: vada se projeví, teprve když se
+       tlačítka zalomí pod sebe. V téhle chvíli jsou ve výpisu jen dvě
+       („Stáhnout tabulku" a „Rychlý výběr") a ta se na 390 px vejdou
+       vedle sebe — bez zúžení by tedy sabotáž nic nevyrobila a kontrola
+       by se tvářila bezzubě, přestože bezzubá není. */
+    st.textContent = '.mc-akce{display:block !important; max-width:170px !important;}'
+      + ' .mc-skryte{margin-top:-8px !important; margin-bottom:-8px !important;}';
+    document.head.appendChild(st);
+    /* Mezery mezi tlačítky patří k sabotáži, ne k ozdobě: bez nich nemá
+       řádek kde zalomit, tlačítka by přetekla do strany a NEPŘEKRÝVALA
+       by se. Napoprvé jsem je zapomněl a sabotáž nic nevyrobila —
+       vypadalo to, že kontrola je bezzubá, a přitom byla špatně
+       postavená sabotáž. Takhle je to přesně ten původní stav:
+       tlačítka v textovém toku, zalomená pod sebe, se záporným okrajem. */
+    document.querySelectorAll('.mc-akce .mc-skryte').forEach((b, i) => {
+      if (i) b.parentNode.insertBefore(document.createTextNode(' '), b);
+    });
+  });
+  const seZasahem = await prekryvy(p);
+  await p.evaluate(() => {
+    const st = document.getElementById('sabotaz'); if (st) st.remove();
+    const a = document.querySelector('.mc-akce');
+    if (a) [...a.childNodes].forEach((n) => { if (n.nodeType === 3) n.remove(); });
+  });
+  pravda('a kdyby se vrátil záporný okraj, kontrola to pozná',
+    seZasahem.nalez.length > 0,
+    'po sabotáži se nenašel žádný průnik — kontrola je bezzubá');
   await ctx.close();
 }
 
