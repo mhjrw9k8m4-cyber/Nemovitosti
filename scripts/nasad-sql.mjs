@@ -142,7 +142,13 @@ async function main() {
     } else {
       chyba(`Databáze SQL odmítla (${odpoved.status}).`);
     }
-    log(text.slice(0, 4000));
+    /* ODPOVĚĎ MUSÍ JÍT DO ::error::, ne jen do výpisu. Běžný výpis
+       běhu servíruje GitHub z jiného serveru, kam se z některých míst
+       nedá; do hlášení u běhu je vidět vždycky. A právě v odpovědi stojí,
+       který příkaz selhal a proč — bez toho se nedá opravit nic.
+       Token v ní není, posílá se jen v hlavičce. */
+    String(text || '(prázdná odpověď)').slice(0, 2000).split('\n')
+      .forEach((r) => { if (r.trim()) chyba('Supabase: ' + r.trim()); });
     process.exit(1);
   }
 
