@@ -1213,6 +1213,15 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 /* Toast */
 .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px); z-index:4000; max-width:calc(100% - 32px); background:var(--ink-soft2); border:1px solid var(--copper); color:var(--text-ondark); font-size:14px; font-weight:500; padding:12px 20px; border-radius:var(--r-sm); box-shadow:var(--e2); opacity:0; transition:opacity var(--cas-pomaly) var(--ease), transform var(--cas-pomaly) var(--ease); pointer-events:none;}
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+/* HLÁŠKA S VRÁCENÍM. Běžná hláška má pointer-events:none, aby
+   nepřekážela — jenže tlačítko, na které nejde klepnout, je horší než
+   žádné. Zapíná se proto jen tehdy, když v hlášce opravdu něco je. */
+.toast.s-akci{display:flex; align-items:center; gap:14px; pointer-events:auto;}
+.toast-akce{min-height:44px; padding:0 14px; margin:-6px -8px -6px 0;
+  background:none; border:0; font:inherit; font-size:14px; font-weight:700;
+  color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;
+  cursor:pointer; flex:none;}
+.toast-akce:hover{color:var(--copper);}
 /* Vyskakovací upozornění na novinku. Vlastní, ne sdílený .toast — ten
    používá mapa pro potvrzení akcí a tyhle dvě věci se nesmí přebíjet.
    Ukazuje se JEN když počet novinek vzroste, tedy vzácně: návody na
@@ -5112,7 +5121,24 @@ h1, h2, h3,
   .opp-media .opp-fav{top:0;}
   /* 50 = 44 (srdíčko) + 6 px hluchého místa: dvě sousední tlačítka dělají
      opak, takže mezi nimi musí být pruh, kde se nestane nic. */
-  .opp-skryt{top:50px;}
+  /* KŘÍŽEK PATŘÍ DO ROHU, NE DO STŘEDU FOTKY. Seděl na jejím pravém
+     okraji ve svislém středu (109..153 × 733..777 při 390 px) — tedy
+     přesně tam, kam palec dopadne, když míří na fotku nebo na hranici
+     mezi fotkou a textem. Stížnost zněla „klikám na pozemky a skrývají
+     se mi a nevím proč" a byla oprávněná: destruktivní tlačítko leželo
+     na terči pro otevření.
+     ZMĚŘENO, PROČ NEMŮŽE JÍT MIMO FOTKU: karta má při 390 px 306 px,
+     z toho fotka 116 a text 164 px. Na 44px tlačítko v textovém sloupci
+     není místo — cena „379 320 000 Kč" je 150 px široká a při 320 px má
+     text na všechno jen 94 px. Každé umístění mimo fotku by tedy
+     přepsalo cenu nebo rozlámalo řádky na všech kartách.
+     ZŮSTÁVÁ TEDY NA FOTCE, ALE V JEJÍM LEVÉM HORNÍM ROHU: nejdál od
+     srdíčka (pravý horní roh), mimo odznak kategorie (levý dolní roh)
+     a hlavně mimo střed fotky, kam prst míří. Na pravém dolním rohu,
+     kde stál napoprvé, ležel na odznaku „Na prodej" — 23×23 px průniku.
+     A protože omylem skrýt se pořád dá, hláška po skrytí nabízí
+     „Vrátit" (js/main.js, showToast). */
+  .opp-skryt{top:0; left:0; right:auto; bottom:auto;}
   .opp-media .opp-fav::before, .opp-skryt::before{
     content:""; position:absolute; top:50%; left:50%; width:32px; height:32px;
     margin:-16px 0 0 -16px; border-radius:50%;}

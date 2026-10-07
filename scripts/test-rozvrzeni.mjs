@@ -535,6 +535,81 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   });
   pravda(`ovládání na úvodní stránce se dá trefit prstem (44 px)`, male.length === 0,
     male.map((m) => `${m.co} „${m.text}" ${m.v} px`).join(' | '));
+
+  /* KŘÍŽEK „SKRÝT" NESMÍ LEŽET TAM, KAM PRST MÍŘÍ.
+     Stížnost od člověka, který web používá: „klikám na pozemky
+     a skrývají se mi a nevím proč." Křížek sedel na pravém okraji
+     fotky ve svislém středu (109..153 × 733..777 při 390 px) — fotka
+     je přitom celý terč pro otevření pozemku a prst míří na její
+     střed, od kterého mělo tlačítko 14 px. Palec mířící na pozemek
+     tak trefil destruktivní tlačítko.
+     Mimo fotku se dát nedá: karta má 306 px, z toho fotka 116 a text
+     164, a cena „379 320 000 Kč" je sama 150 px široká. Leží proto
+     v LEVÉM HORNÍM ROHU fotky — nejdál od jejího středu (naměřeno
+     60 px při 390 px, 82 px při 320 px), mimo srdíčko (pravý horní
+     roh) i mimo odznak kategorie (levý dolní roh). Na pravém dolním
+     rohu, kde stál napoprvé, ležel na odznaku „Na prodej".
+     Hlídá se tedy to, co vadu způsobovalo: vzdálenost od středu fotky
+     a průnik s oběma sousedy. */
+  const kriz = await p.evaluate(() => {
+    const prek = (a, c) => Math.max(0, Math.min(a.right, c.right) - Math.max(a.left, c.left))
+      * Math.max(0, Math.min(a.bottom, c.bottom) - Math.max(a.top, c.top));
+    const out = { karet: 0, bezKrizku: 0, naOdznaku: [], naSrdcku: [], blizkoStredu: [],
+      horsiNezDriv: [], stredVTlacitku: [], odstupy: [] };
+    document.querySelectorAll('.opp-item').forEach((li, i) => {
+      out.karet++;
+      const sk = li.querySelector('.opp-skryt');
+      const md = li.querySelector('.opp-media');
+      if (!sk || !md || getComputedStyle(sk).display === 'none') { out.bezKrizku++; return; }
+      const rs = sk.getBoundingClientRect(), rm = md.getBoundingClientRect();
+      const fav = li.querySelector('.opp-fav');
+      const bg = li.querySelector('.opp-badge');
+      if (fav && prek(rs, fav.getBoundingClientRect()) > 0) out.naSrdcku.push(i);
+      if (bg && prek(rs, bg.getBoundingClientRect()) > 0) out.naOdznaku.push(i);
+      const sx = (rm.left + rm.right) / 2, sy = (rm.top + rm.bottom) / 2;
+      const odstup = (r) => {
+        const dx = Math.max(r.left - sx, sx - r.right, 0);
+        const dy = Math.max(r.top - sy, sy - r.bottom, 0);
+        return Math.round(Math.sqrt(dx * dx + dy * dy));
+      };
+      const d = odstup(rs);
+      /* ZÁMĚRNÁ SABOTÁŽ: tatáž karta s křížkem tam, kde stál před
+         opravou (pravý okraj fotky, svisle na střed). Bez toho by se
+         nepoznalo, jestli kontrola něco hlídá, nebo jestli jen prošla.
+         Styl se hned vrací. */
+      const puvodni = sk.getAttribute('style') || '';
+      sk.style.cssText = puvodni + ';top:44px;right:0;left:auto;bottom:auto;';
+      const dSabot = odstup(sk.getBoundingClientRect());
+      if (puvodni) sk.setAttribute('style', puvodni); else sk.removeAttribute('style');
+      out.odstupy.push(d);
+      if (d < 25) out.blizkoStredu.push(`karta ${i}: ${d} px od středu fotky`);
+      if (d <= dSabot) out.horsiNezDriv.push(`karta ${i}: ${d} px, na starém místě ${dSabot} px`);
+      if (sx >= rs.left && sx <= rs.right && sy >= rs.top && sy <= rs.bottom)
+        out.stredVTlacitku.push(i);
+    });
+    return out;
+  });
+  // PŘEDPOKLAD: bez karet s křížkem by kontroly níž prošly naprázdno
+  pravda('ve výpisu jsou karty s křížkem „skrýt" (jinak není co měřit)',
+    kriz.karet > 0 && kriz.karet - kriz.bezKrizku >= 5,
+    `karet ${kriz.karet}, z nich s křížkem ${kriz.karet - kriz.bezKrizku}`);
+  pravda('křížek „skrýt" neleží na srdíčku „uložit" (dvě tlačítka s opačným významem)',
+    kriz.naSrdcku.length === 0, `překrývá se na kartách ${kriz.naSrdcku.join(', ')}`);
+  pravda('ani na odznaku kategorie', kriz.naOdznaku.length === 0,
+    `překrývá se na kartách ${kriz.naOdznaku.join(', ')}`);
+  pravda('a střed fotky, kam prst míří, do něj vůbec nepadne',
+    kriz.stredVTlacitku.length === 0, `padá na kartách ${kriz.stredVTlacitku.join(', ')}`);
+  /* MEZ JE 25 PX, A JE NAMĚŘENÁ, NE VYMYŠLENÁ. Nejkratší karty ve
+     skutečném výpisu mají nízkou fotku, takže od jejího středu k rohu
+     je blíž: nejhorší naměřená karta má 34 px (napoprvé jsem mez
+     napsal na 40 podle jedné vysoké karty a kontrola spadla na dvou
+     skutečných). Na starém místě to bylo 14 px. */
+  pravda(`a je aspoň 25 px od středu fotky (nejblíž ${kriz.odstupy.length ? Math.min(...kriz.odstupy) : '?'} px)`,
+    kriz.blizkoStredu.length === 0, kriz.blizkoStredu.slice(0, 3).join('; '));
+  /* A hlavně: na každé kartě musí být DÁL než na místě, kde stál dřív.
+     Kdyby se tam vrátil, tahle kontrola spadne jako první. */
+  pravda('a na každé kartě je od toho středu dál než na svém starém místě',
+    kriz.horsiNezDriv.length === 0, kriz.horsiNezDriv.slice(0, 3).join('; '));
   await ctx.close();
 }
 

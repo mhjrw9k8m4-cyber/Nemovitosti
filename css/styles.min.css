@@ -269,6 +269,9 @@ header .wrap{display:flex;align-items:center;justify-content:space-between}
 .nav-cta-note{display:none}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(16px);z-index:4000;max-width:calc(100% - 32px);background:var(--ink-soft2);border:1px solid var(--copper);color:var(--text-ondark);font-size:14px;font-weight:500;padding:12px 20px;border-radius:var(--r-sm);box-shadow:var(--e2);opacity:0;transition:opacity var(--cas-pomaly) var(--ease),transform var(--cas-pomaly) var(--ease);pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.s-akci{display:flex;align-items:center;gap:14px;pointer-events:auto}
+.toast-akce{min-height:44px;padding:0 14px;margin:-6px -8px -6px 0;background:none;border:0;font:inherit;font-size:14px;font-weight:700;color:var(--copper-bright);text-decoration:underline;text-underline-offset:3px;cursor:pointer;flex:none}
+.toast-akce:hover{color:var(--copper)}
 .upo-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(16px);z-index:4100;max-width:calc(100% - 28px);width:380px;display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line-strong);border-left:4px solid var(--copper);color:var(--text-ondark);padding:12px 14px;border-radius:var(--r-md);box-shadow:var(--e3);opacity:0;transition:opacity var(--cas-pomaly) var(--ease),transform var(--cas-pomaly) var(--ease)}
 .upo-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .upo-toast .t{flex:1;min-width:0}
@@ -1846,7 +1849,7 @@ h1,h2,h3,.hero-map .hero-head h1,.section-head h2,.add-hero h1,.okr-hero h1,.cla
 @media (hover:none){.opp-skryt{opacity:1}
 .opp-media .opp-fav,.opp-skryt{width:44px;height:44px;right:0;background:none;border:0;border-radius:0;backdrop-filter:none;box-shadow:none}
 .opp-media .opp-fav{top:0}
-.opp-skryt{top:50px}
+.opp-skryt{top:0;left:0;right:auto;bottom:auto}
 .opp-media .opp-fav::before,.opp-skryt::before{content:"";position:absolute;top:50%;left:50%;width:32px;height:32px;margin:-16px 0 0 -16px;border-radius:50%}
 .opp-media .opp-fav::before{background:rgba(8,20,14,0.74)}
 .opp-skryt::before{background:var(--plocha-plovouci);border:1px solid var(--line-strong)}

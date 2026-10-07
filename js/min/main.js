@@ -142,16 +142,31 @@
 
   var toastEl = document.getElementById('toast');
   var toastT = null;
-  function showToast(msg) {
+
+  function showToast(msg, akce) {
     if (!toastEl) return;
     toastEl.textContent = msg;
+    toastEl.classList.toggle('s-akci', !!akce);
+    if (akce) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'toast-akce';
+      b.textContent = akce.text;
+      b.addEventListener('click', function () {
+        clearTimeout(toastT);
+        toastEl.classList.remove('show');
+        setTimeout(function () { toastEl.setAttribute('hidden', ''); }, 300);
+        akce.fn();
+      });
+      toastEl.appendChild(b);
+    }
     toastEl.removeAttribute('hidden');
     requestAnimationFrame(function () { toastEl.classList.add('show'); });
     clearTimeout(toastT);
     toastT = setTimeout(function () {
       toastEl.classList.remove('show');
       setTimeout(function () { toastEl.setAttribute('hidden', ''); }, 300);
-    }, 2600);
+    }, akce ? 6000 : 2600);
   }
 
   var INFO = {
@@ -795,6 +810,14 @@
     var k = pkey(d), i = skryte.indexOf(k);
     if (i === -1) skryte.push(k); else skryte.splice(i, 1);
     zapisUloz(SKRYTE_KLIC, skryte);
+  }
+
+  function odskryj(d) {
+    var i = skryte.indexOf(pkey(d));
+    if (i === -1) return false;
+    skryte.splice(i, 1);
+    zapisUloz(SKRYTE_KLIC, skryte);
+    return true;
   }
 
   var FAV_KEY = 'pk_fav_v1';
@@ -3347,8 +3370,15 @@
       var skrytBtn = li.querySelector('.opp-skryt');
       if (skrytBtn) skrytBtn.addEventListener('click', function (e) {
         e.stopPropagation();
+        var bylSkryty = jeSkryty(d);
         prepniSkryty(d);
         renderList();
+
+        if (!bylSkryty) {
+          showToast('Pozemek skrytý z výpisu', { text: 'Vrátit', fn: function () {
+            if (odskryj(d)) renderList();
+          } });
+        }
       });
 
       karticky.push({ srovnani: srovnaniModel, okres: d.okres });

@@ -151,6 +151,104 @@ pravda('skrytí se uložilo do prohlížeče', poSkryti.ulozeno.length === 1, JS
 pravda('v hlavičce přibylo tlačítko „Zobrazit skryté"', /Zobrazit skryté \(1\)/.test(poSkryti.tlacitko),
   `tlačítko: „${poSkryti.tlacitko}"`);
 
+/* --- 3b) VRÁCENÍ MUSÍ BÝT TAM, KDE SE TO STALO -----------------------
+   Stížnost od člověka, který web používá: „klikám na pozemky a skrývají
+   se mi a nevím proč, a nejdou dát pryč." Vrátit skrytí šlo jedině
+   tlačítkem „Zobrazit skryté (1)" v hlavičce výpisu — a to je při
+   skrývání uprostřed seznamu mimo obrazovku (naměřeno na mobilu
+   390×844: leželo na y=692, zatímco klepnutí bylo u y=835). Člověk se
+   o něm tedy nedozvěděl a skrytí pro něj bylo nevratné.
+   Hláška po skrytí proto nese tlačítko „Vrátit". */
+const hlaska = await p.evaluate(() => {
+  const t = document.getElementById('toast');
+  if (!t) return { chyba: 'na stránce není #toast' };
+  const akce = t.querySelector('.toast-akce');
+  const r = akce ? akce.getBoundingClientRect() : null;
+  return { videt: !t.hasAttribute('hidden') && getComputedStyle(t).opacity !== '0',
+    text: t.textContent.replace(/\s+/g, ' ').trim(),
+    akce: akce ? akce.textContent.trim() : null,
+    vyska: r ? Math.round(r.height) : 0,
+    /* Běžná hláška má pointer-events:none, aby nepřekážela. Tlačítko,
+       na které nejde klepnout, je ale horší než žádné — a vypadalo by
+       přitom správně. */
+    udalosti: akce ? getComputedStyle(t).pointerEvents : null };
+});
+pravda('po skrytí se ukáže hláška, že se pozemek skryl',
+  hlaska.videt === true && /skryt/i.test(hlaska.text || ''), JSON.stringify(hlaska));
+pravda('a nabídne v ní „Vrátit"', hlaska.akce === 'Vrátit', `v hlášce je „${hlaska.akce}"`);
+pravda('a na to tlačítko se dá klepnout prstem (44 px)', hlaska.vyska >= 44,
+  `vysoké ${hlaska.vyska} px`);
+pravda('a hláška kvůli němu propouští klepnutí', hlaska.udalosti === 'auto',
+  `pointer-events: ${hlaska.udalosti}`);
+
+await p.evaluate(() => document.querySelector('.toast-akce').click());
+await p.waitForTimeout(400);
+const poVraceni = await p.evaluate(() => ({
+  celkem: document.querySelectorAll('.opp-item').length,
+  ulozeno: (() => { try { return (JSON.parse(localStorage.getItem('pk_skryte_v1')) || []).length; } catch (e) { return -1; } })(),
+}));
+pravda('„Vrátit" vrátí pozemek do výpisu', poVraceni.celkem === 5 && poVraceni.ulozeno === 0,
+  `karet ${poVraceni.celkem}, skrytých ${poVraceni.ulozeno}`);
+
+/* ZASTARALÁ HLÁŠKA NESMÍ SKRÝT PODRUHÉ. Hláška žije šest sekund a za tu
+   dobu se stav může změnit jinde — třeba tlačítkem „Zobrazit skryté".
+   Kdyby „Vrátit" jen PŘEPÍNALO (a tak to napsané bylo), udělalo by pak
+   pravý opak toho, co na něm stojí: pozemek, který už ve výpisu je, by
+   znovu skrylo. Projde se tedy celá ta cesta: skrýt, vrátit jinudy,
+   a teprve pak klepnout na staré „Vrátit". */
+await p.evaluate(() => {
+  const li = [...document.querySelectorAll('.opp-item')].find((x) => /Obec 5(\D|$)/.test(x.textContent));
+  li.querySelector('.opp-skryt').click();
+});
+await p.waitForTimeout(400);
+const znovuSkryto = await p.evaluate(() => ({
+  ulozeno: (JSON.parse(localStorage.getItem('pk_skryte_v1')) || []).length,
+  akce: !!document.querySelector('.toast-akce'),
+}));
+pravda('druhé skrytí zabralo a hláška s „Vrátit" je zpátky',
+  znovuSkryto.ulozeno === 1 && znovuSkryto.akce, JSON.stringify(znovuSkryto));
+await p.evaluate(() => document.getElementById('mc-skryte').click());
+await p.waitForTimeout(400);
+await p.evaluate(() => {
+  const li = document.querySelector('.opp-item.je-skryty');
+  if (li) li.querySelector('.opp-skryt').click();
+});
+await p.waitForTimeout(400);
+const jinudy = await p.evaluate(() => (JSON.parse(localStorage.getItem('pk_skryte_v1')) || []).length);
+pravda('pozemek se dá vrátit i tlačítkem v hlavičce (předpoklad pro kontrolu níž)',
+  jinudy === 0, `skrytých ${jinudy}`);
+const pozdni = await p.evaluate(() => {
+  const a = document.querySelector('.toast-akce');
+  if (!a) return { chyba: 'staré „Vrátit" už v hlášce není — nebylo co zkoušet' };
+  a.click();
+  return { ok: true };
+});
+await p.waitForTimeout(400);
+const poPozdnim = await p.evaluate(() => (JSON.parse(localStorage.getItem('pk_skryte_v1')) || []).length);
+pravda('klepnutí na už zastaralé „Vrátit" pozemek NESKRYJE',
+  pozdni.ok === true && poPozdnim === 0, `${JSON.stringify(pozdni)}, skrytých ${poPozdnim}`);
+
+/* Zbytek zkoušky pokračuje ze stejného stavu jako dřív: jeden pozemek
+   skrytý a „Zobrazit skryté" vypnuté. */
+/* SKRÝVÁ SE ZNOVU „OBEC 5", NE „ta první v seznamu". Pořadí výpisu je
+   losované (js/poradi.js) a oddíl 4 níž filtruje cenou do 250 000, kterou
+   splňuje jedině „Obec 1". Kdyby se omylem skryla ta, zbyl by po filtru
+   prázdný výpis a kontrola by hlásila vadu webu, který se chová správně.
+   Přesně tahle past tu už jednou byla, viz poznámka u prvního skrytí. */
+await p.evaluate(() => {
+  const li = [...document.querySelectorAll('.opp-item')].find((x) => /Obec 5(\D|$)/.test(x.textContent));
+  li.querySelector('.opp-skryt').click();
+});
+await p.waitForTimeout(400);
+await p.evaluate(() => document.getElementById('mc-skryte').click());
+await p.waitForTimeout(400);
+const zpet = await p.evaluate(() => ({
+  celkem: document.querySelectorAll('.opp-item').length,
+  ulozeno: (JSON.parse(localStorage.getItem('pk_skryte_v1')) || []).length,
+}));
+pravda('po té zacházce je stav zpátky: jeden skrytý, výpis bez něj',
+  zpet.celkem === 4 && zpet.ulozeno === 1, JSON.stringify(zpet));
+
 await p.evaluate(() => document.getElementById('mc-skryte').click());
 await p.waitForTimeout(500);
 const poZobrazeni = await p.evaluate(() => ({

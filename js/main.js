@@ -215,16 +215,35 @@
   // Krátká oznamovací hláška (toast)
   var toastEl = document.getElementById('toast');
   var toastT = null;
-  function showToast(msg) {
+  /* Druhý parametr je VRÁCENÍ. Bez něj se dá akce vzít zpátky jedině
+     tak, že člověk ví, kde se to dělá — a u skrývání pozemku to nevěděl:
+     jediná cesta zpět bylo tlačítko „Zobrazit skryté" nahoře u počtu
+     nabídek, tedy mimo obrazovku, když se skrývá uprostřed výpisu.
+     Hláška, která jen oznámí „skryto", je v takové chvíli k ničemu. */
+  function showToast(msg, akce) {
     if (!toastEl) return;
     toastEl.textContent = msg;
+    toastEl.classList.toggle('s-akci', !!akce);
+    if (akce) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'toast-akce';
+      b.textContent = akce.text;
+      b.addEventListener('click', function () {
+        clearTimeout(toastT);
+        toastEl.classList.remove('show');
+        setTimeout(function () { toastEl.setAttribute('hidden', ''); }, 300);
+        akce.fn();
+      });
+      toastEl.appendChild(b);
+    }
     toastEl.removeAttribute('hidden');
     requestAnimationFrame(function () { toastEl.classList.add('show'); });
     clearTimeout(toastT);
     toastT = setTimeout(function () {
       toastEl.classList.remove('show');
       setTimeout(function () { toastEl.setAttribute('hidden', ''); }, 300);
-    }, 2600);
+    }, akce ? 6000 : 2600);
   }
 
   /* ---------- Zásady soukromí / Podmínky (info modal) ---------- */
@@ -1199,6 +1218,20 @@
     var k = pkey(d), i = skryte.indexOf(k);
     if (i === -1) skryte.push(k); else skryte.splice(i, 1);
     zapisUloz(SKRYTE_KLIC, skryte);
+  }
+  /* VRÁCENÍ MUSÍ BÝT „UKAŽ ZPÁTKY", NE „PŘEPNI". Hláška s tlačítkem
+     „Vrátit" žije šest sekund a za tu dobu se stav může změnit jinde —
+     tlačítkem „Zobrazit skryté", druhým klepnutím na tentýž křížek,
+     v jiné kartě prohlížeče. Přepínač by pak udělal pravý opak toho,
+     co na tlačítku stojí: pozemek, který už v seznamu je, by znovu
+     skryl. Vrací true, jen když opravdu něco vrátil — jinak není co
+     překreslovat. */
+  function odskryj(d) {
+    var i = skryte.indexOf(pkey(d));
+    if (i === -1) return false;
+    skryte.splice(i, 1);
+    zapisUloz(SKRYTE_KLIC, skryte);
+    return true;
   }
 
   /* ---------- Oblíbené pozemky (uložené v prohlížeči) ---------- */
@@ -4940,8 +4973,17 @@
       var skrytBtn = li.querySelector('.opp-skryt');
       if (skrytBtn) skrytBtn.addEventListener('click', function (e) {
         e.stopPropagation();
+        var bylSkryty = jeSkryty(d);
         prepniSkryty(d);
         renderList();
+        /* Vrácení se nabídne jen při SKRÝVÁNÍ. Při vracení do seznamu je
+           výsledek vidět rovnou — karta se objeví — a hláška s tlačítkem
+           „Vrátit" by u ní znamenala pravý opak toho, co by člověk čekal. */
+        if (!bylSkryty) {
+          showToast('Pozemek skrytý z výpisu', { text: 'Vrátit', fn: function () {
+            if (odskryj(d)) renderList();
+          } });
+        }
       });
       /* Pro zkoušku: co o TÉHLE kartě řekl model, ne co se vypsalo. */
       karticky.push({ srovnani: srovnaniModel, okres: d.okres });
