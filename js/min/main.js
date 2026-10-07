@@ -3614,24 +3614,36 @@
 
   function cleanUrl() { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
 
-  var rvStav = null, rvVrstva = null;
+  var rvStav = null, rvVrstva = null, rvOdlet = null;
   function rvPrvek(id) { return document.getElementById(id); }
+
+  function rvBezPohybu() {
+    try { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
+    catch (e) { return false; }
+  }
 
   function otevriRychly() {
     if (!window.PKRychly) return;
     rvVrstva = rvPrvek('rv-vrstva');
     if (!rvVrstva) return;
-    var karty = PKRychly.balicek(posledniVyber, { jeSkryty: jeSkryty, jeUlozeny: isFav });
-    rvStav = PKRychly.stav(karty);
+    rvNalozDavku();
     rvVrstva.hidden = false;
     document.body.style.overflow = 'hidden';
-    rvKresli();
     var z = rvPrvek('rv-zavrit'); if (z) { try { z.focus(); } catch (e) {} }
+  }
+
+  function rvNalozDavku() {
+    var pomer = { jeSkryty: jeSkryty, jeUlozeny: isFav };
+    var karty = PKRychly.balicek(posledniVyber, pomer);
+    rvStav = PKRychly.stav(karty, PKRychly.nerozhodnutych(posledniVyber, pomer));
+    rvHlaska('', '');
+    rvKresli();
   }
   function zavriRychly() {
     if (rvVrstva) rvVrstva.hidden = true;
     document.body.style.overflow = '';
     rvStav = null;
+    if (rvOdlet) { clearTimeout(rvOdlet); rvOdlet = null; }
     renderList();
   }
 
@@ -3639,43 +3651,90 @@
     var F = window.PKFeed;
     return F && F.mnozne ? F.mnozne(n, ['nabídku', 'nabídky', 'nabídek']) : 'nabídek';
   }
+  function tvarPozemku(n) {
+    var F = window.PKFeed;
+    return F && F.mnozne ? F.mnozne(n, ['pozemek', 'pozemky', 'pozemků']) : 'pozemků';
+  }
 
-  function rvKresli() {
-    var deck = rvPrvek('rv-deck');
-    if (!deck || !rvStav) return;
-    var zb = rvPrvek('rv-zbyva');
+  function rvHlavicka(zmena) {
+    if (!rvStav) return;
     var d = PKRychly.aktualni(rvStav);
+    var delka = PKRychly.delkaDavky(rvStav);
+    var hotovych = delka - PKRychly.zbyva(rvStav);
+    var zb = rvPrvek('rv-zbyva');
+    if (zb) zb.textContent = d ? ('Karta ' + PKRychly.poradi(rvStav) + ' z ' + delka)
+      : (delka ? 'Dávka hotová' : 'Není co třídit');
+    var pr = rvPrvek('rv-pruh');
+    if (pr) pr.style.width = (delka ? Math.round(hotovych / delka * 100) : 0) + '%';
     var souh = PKRychly.souhrn(rvStav);
-    if (zb) zb.textContent = d
-      ? ('Zbývá ' + fmt(PKRychly.zbyva(rvStav)))
-      : ('Hotovo — uloženo ' + souh.ulozeno + ', skryto ' + souh.skryto);
+    var bil = rvPrvek('rv-bilance');
+    if (bil) {
+      bil.innerHTML = souh.celkem
+        ? ('<span class="rvb-ano' + (zmena === 'uloz' ? ' zmena' : '') + '">♥ ' + souh.ulozeno + '</span>'
+          + '<span class="rvb-ne' + (zmena === 'skryj' ? ' zmena' : '') + '">✕ ' + souh.skryto + '</span>')
+        : '';
+    }
     var zpetBtn = rvPrvek('rv-zpet');
     if (zpetBtn) zpetBtn.disabled = !PKRychly.lzeZpet(rvStav);
     ['rv-ne', 'rv-ano'].forEach(function (id) { var b = rvPrvek(id); if (b) b.disabled = !d; });
+  }
+
+  function rvKresli(zmena) {
+    rvHlavicka(zmena);
+    var deck = rvPrvek('rv-deck');
+    if (!deck || !rvStav) return;
+    var d = PKRychly.aktualni(rvStav);
+    var napoveda = document.querySelector('.rv-napoveda');
     if (!d) {
-      deck.innerHTML = '<div class="rv-konec"><h3>To je všechno</h3>'
-        + '<p>Prošli jste ' + fmt(souh.celkem) + ' ' + tvarNabidek(souh.celkem) + '. Uloženo '
-        + souh.ulozeno + ', skryto ' + souh.skryto + '.</p></div>';
+      deck.innerHTML = rvKonecHtml();
+
+      rvHlaska('', '');
+      if (napoveda) napoveda.hidden = true;
       return;
     }
+    if (napoveda) napoveda.hidden = false;
     var zaM2 = zaMetr(d);
     var S = window.PK_SNIMEK;
     var obraz = S ? S.html(d, { sirka: 460, vyska: 307, barva: (TYPE[d.type] || {}).color, id: 'rv' }) : '';
-    deck.innerHTML = '<article class="rv-karta" id="rv-karta">'
+
+    var duchu = Math.min(2, PKRychly.zbyva(rvStav) - 1);
+    var duchove = '';
+    for (var i = duchu; i >= 1; i--) duchove += '<div class="rv-duch rv-duch' + i + '" aria-hidden="true"></div>';
+    deck.innerHTML = '<div class="rv-stoh">' + duchove
+
+      + '<article class="rv-karta" id="rv-karta" data-pk="' + esc(pkey(d)) + '">'
       + '<div class="rv-obraz">' + obraz
-        + '<span class="opp-badge ' + d.type + '">' + esc((TYPE[d.type] || {}).label || '') + '</span></div>'
+        + '<span class="opp-badge ' + d.type + '">' + esc((TYPE[d.type] || {}).label || '') + '</span>'
+        + '<span class="rv-razitko ano" aria-hidden="true">Uloženo</span>'
+        + '<span class="rv-razitko ne" aria-hidden="true">Tenhle ne</span></div>'
       + '<div class="rv-telo">'
-        + '<div class="rv-cena">' + fmt(d.price) + ' Kč</div>'
+        + '<div class="rv-cena">' + fmt(d.price) + ' Kč</div>'
         + '<div class="rv-misto">' + esc(d.place || '') + '</div>'
         + (d.okres && d.okres !== d.place ? '<div class="rv-okres">okres ' + esc(d.okres) + '</div>' : '')
         + '<div class="rv-druh">' + esc(d.druh || '') + '</div>'
         + '<div class="rv-cisla">'
-          + (d.area > 0 ? '<span class="rv-cislo">' + fmt(d.area) + ' m²</span>' : '')
-          + (zaM2 != null ? '<span class="rv-cislo">' + fmt(Math.round(zaM2)) + ' Kč/m²</span>' : '')
+          + (d.area > 0 ? '<span class="rv-cislo">' + fmt(d.area) + ' m²</span>' : '')
+          + (zaM2 != null ? '<span class="rv-cislo">' + fmt(Math.round(zaM2)) + ' Kč/m²</span>' : '')
         + '</div>'
-      + '</div></article>'
-      + '<p class="rv-stalo" id="rv-stalo" role="status"></p>';
+      + '</div></article></div>';
     rvChytejPrst();
+  }
+
+  function rvKonecHtml() {
+    var souh = PKRychly.souhrn(rvStav);
+    var dal = PKRychly.zbyvaPoDavce(rvStav);
+    var vety = [];
+    if (souh.ulozeno) vety.push('<b>' + souh.ulozeno + '</b> ' + tvarPozemku(souh.ulozeno)
+      + ' máte mezi uloženými (v menu „Uložené").');
+    if (souh.skryto) vety.push('<b>' + souh.skryto + '</b> ' + tvarPozemku(souh.skryto)
+      + ' se schovalo z výpisu; vrátí je tlačítko „Zobrazit skryté" nad seznamem.');
+    if (!souh.celkem) vety.push('Nerozhodli jste nic — ve výpisu zůstalo všechno tak, jak bylo.');
+    return '<div class="rv-konec"><h3>' + (souh.celkem ? 'Dávka hotová' : 'Není co třídit') + '</h3>'
+      + '<p>' + vety.join(' ') + '</p>'
+      + (dal ? '<p>Nerozhodnutých zbývá ' + fmt(dal) + ' ' + tvarNabidek(dal) + '.</p>'
+        + '<button type="button" class="rv-dalsi" id="rv-dalsi">Projít dalších '
+        + Math.min(dal, PKRychly.DAVKA) + '</button>' : '')
+      + '</div>';
   }
 
   function rvChytejPrst() {
@@ -3690,12 +3749,19 @@
       if (x0 == null || !e.touches || !e.touches.length) return;
       dx = e.touches[0].clientX - x0;
       k.style.transform = 'translateX(' + Math.round(dx) + 'px) rotate(' + (dx / 28).toFixed(2) + 'deg)';
+
+      k.classList.toggle('chystam-ano', dx > 30);
+      k.classList.toggle('chystam-ne', dx < -30);
     }, { passive: true });
     k.addEventListener('touchend', function () {
       if (x0 == null) return;
-      k.style.transform = '';
       var prah = Math.max(60, k.getBoundingClientRect().width * 0.22);
-      if (Math.abs(dx) >= prah) rvRozhodni(dx > 0 ? PKRychly.VPRAVO : PKRychly.VLEVO);
+      var rozhodl = Math.abs(dx) >= prah;
+      if (!rozhodl) {
+        k.style.transform = '';
+        k.classList.remove('chystam-ano', 'chystam-ne');
+      }
+      if (rozhodl) rvRozhodni(dx > 0 ? PKRychly.VPRAVO : PKRychly.VLEVO);
       x0 = null; dx = 0;
     }, { passive: true });
   }
@@ -3704,17 +3770,38 @@
     var h = rvPrvek('rv-stalo');
     if (h) { h.textContent = text; h.className = 'rv-stalo' + (trida ? ' ' + trida : ''); }
   }
+
   function rvRozhodni(smer) {
     if (!rvStav) return;
+    if (rvOdlet) { clearTimeout(rvOdlet); rvOdlet = null; rvKresli(); }
+    var karta = rvPrvek('rv-karta');
     var v = PKRychly.rozhodni(rvStav, smer);
     if (!v) return;
     if (v.akce === 'uloz') { if (!isFav(v.pozemek)) toggleFav(v.pozemek); }
     else if (!jeSkryty(v.pozemek)) prepniSkryty(v.pozemek);
-    rvKresli();
-    rvHlaska(v.akce === 'uloz' ? 'Uloženo' : 'Skryto', v.akce === 'uloz' ? 'uloz' : 'skryj');
+    rvHlaska(v.akce === 'uloz' ? 'Uloženo mezi vaše pozemky' : 'Schováno z výpisu',
+      v.akce === 'uloz' ? 'uloz' : 'skryj');
+    if (v.akce === 'uloz') {
+      var ano = rvPrvek('rv-ano');
+      if (ano) {
+        ano.classList.remove('zabralo');
+        void ano.offsetWidth;
+        ano.classList.add('zabralo');
+        setTimeout(function () { ano.classList.remove('zabralo'); }, 600);
+      }
+    }
+    rvHlavicka(v.akce);
+    if (karta && !rvBezPohybu()) {
+      karta.classList.add(v.akce === 'uloz' ? 'chystam-ano' : 'chystam-ne');
+      karta.classList.add(v.akce === 'uloz' ? 'odlet-vpravo' : 'odlet-vlevo');
+      rvOdlet = setTimeout(function () { rvOdlet = null; rvKresli(); }, 300);
+    } else {
+      rvKresli();
+    }
   }
   function rvZpet() {
     if (!rvStav) return;
+    if (rvOdlet) { clearTimeout(rvOdlet); rvOdlet = null; }
     var v = PKRychly.zpet(rvStav);
     if (!v) return;
 
@@ -3730,6 +3817,12 @@
     if (ano) ano.addEventListener('click', function () { rvRozhodni(PKRychly.VPRAVO); });
     if (zp) zp.addEventListener('click', rvZpet);
     if (za) za.addEventListener('click', zavriRychly);
+
+    var deck = rvPrvek('rv-deck');
+    if (deck) deck.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('#rv-dalsi') : null;
+      if (b) rvNalozDavku();
+    });
     document.addEventListener('keydown', function (e) {
       if (!rvStav || !rvVrstva || rvVrstva.hidden) return;
       if (e.key === 'Escape') { zavriRychly(); return; }

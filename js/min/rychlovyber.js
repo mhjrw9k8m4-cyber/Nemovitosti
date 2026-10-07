@@ -6,22 +6,46 @@
 
   var VPRAVO = 'vpravo', VLEVO = 'vlevo';
 
+  var DAVKA = 20;
+
   function balicek(viditelne, pomer) {
     pomer = pomer || {};
     var jeSkryty = pomer.jeSkryty || function () { return false; };
     var jeUlozeny = pomer.jeUlozeny || function () { return false; };
+    var davka = pomer.davka === 0 ? 0 : (pomer.davka || DAVKA);
     var out = [];
     for (var i = 0; i < (viditelne || []).length; i++) {
       var d = viditelne[i];
       if (!d) continue;
       if (jeSkryty(d) || jeUlozeny(d)) continue;
       out.push(d);
+      if (davka && out.length >= davka) break;
     }
     return out;
   }
 
-  function stav(karty) {
-    return { karty: karty || [], i: 0, historie: [] };
+  function nerozhodnutych(viditelne, pomer) {
+    return balicek(viditelne, (function () {
+      var k = {}, n;
+      for (n in (pomer || {})) if (Object.prototype.hasOwnProperty.call(pomer, n)) k[n] = pomer[n];
+      k.davka = 0;
+      return k;
+    }())).length;
+  }
+
+  function stav(karty, celkem) {
+    var k = karty || [];
+    return { karty: k, i: 0, historie: [],
+      celkem: typeof celkem === 'number' ? celkem : k.length };
+  }
+
+  function poradi(s) { return s ? Math.min(s.i + 1, s.karty.length) : 0; }
+
+  function delkaDavky(s) { return s ? s.karty.length : 0; }
+
+  function zbyvaPoDavce(s) {
+    if (!s) return 0;
+    return Math.max(0, (s.celkem || 0) - s.karty.length);
   }
 
   function aktualni(s) { return (s && s.karty && s.i < s.karty.length) ? s.karty[s.i] : null; }
@@ -54,7 +78,9 @@
     return { ulozeno: u, skryto: sk, celkem: u + sk };
   }
 
-  return { VPRAVO: VPRAVO, VLEVO: VLEVO, balicek: balicek, stav: stav,
+  return { VPRAVO: VPRAVO, VLEVO: VLEVO, DAVKA: DAVKA,
+    balicek: balicek, nerozhodnutych: nerozhodnutych, stav: stav,
     aktualni: aktualni, zbyva: zbyva, hotovo: hotovo,
+    poradi: poradi, delkaDavky: delkaDavky, zbyvaPoDavce: zbyvaPoDavce,
     rozhodni: rozhodni, zpet: zpet, lzeZpet: lzeZpet, souhrn: souhrn };
 });

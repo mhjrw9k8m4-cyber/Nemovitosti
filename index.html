@@ -130,7 +130,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=63095950">
+  <link rel="stylesheet" href="css/styles.min.css?v=bae88b7f">
 </head>
 <body>
 
@@ -723,21 +723,38 @@
      dvěma tisíci nabídkami nedá rozumně procházet seznam. Doprava
      „schovat si", doleva „tohle ne"; obě akce web má odjakživa, tohle
      je jen rychlejší způsob, jak je rozdat. Logiku drží
-     js/rychlovyber.js, ať se dá zkoušet bez prohlížeče. -->
+     js/rychlovyber.js, ať se dá zkoušet bez prohlížeče.
+     NABÍZÍ SE PO DVACETI. Napoprvé se sypal celý výpis a v hlavičce
+     stálo „Zbývá 1 955" — běžící pás, ne síto. Teď je vidět, kolikátá
+     karta z dávky je na řadě a kolik zbývá potom. -->
 <div class="rv-vrstva" id="rv-vrstva" hidden role="dialog" aria-modal="true" aria-label="Rychlý výběr pozemků">
   <div class="rv-hlava">
-    <span class="rv-zbyva" id="rv-zbyva"></span>
+    <div class="rv-postup">
+      <span class="rv-zbyva" id="rv-zbyva"></span>
+      <span class="rv-pruh"><i id="rv-pruh"></i></span>
+    </div>
+    <!-- Kolik čeho už člověk rozdal. Bez toho nebylo po pěti kartách
+         poznat, jestli se vůbec něco uložilo. -->
+    <span class="rv-bilance" id="rv-bilance"></span>
     <button type="button" class="rv-zavrit" id="rv-zavrit" aria-label="Zavřít rychlý výběr">Hotovo</button>
   </div>
   <div class="rv-deck" id="rv-deck"></div>
+  <!-- Hláška leží MIMO balíček karet: uvnitř se při každém překreslení
+       zahodila i s tím, co měla říct. -->
+  <p class="rv-stalo" id="rv-stalo" role="status"></p>
   <div class="rv-akce">
-    <button type="button" class="rv-btn rv-ne" id="rv-ne" aria-label="Tenhle ne — skrýt">
-      <span aria-hidden="true">✕</span><span class="rv-popis">Tenhle ne</span></button>
+    <button type="button" class="rv-btn rv-ne" id="rv-ne" aria-label="Tenhle ne — skrýt z výpisu">
+      <span class="rv-znak" aria-hidden="true">✕</span><span class="rv-popis">Tenhle ne</span></button>
     <button type="button" class="rv-btn rv-zpet" id="rv-zpet" aria-label="Vrátit poslední rozhodnutí" disabled>
-      <span aria-hidden="true">↩</span><span class="rv-popis">Zpět</span></button>
+      <span class="rv-znak" aria-hidden="true">↩</span><span class="rv-popis">Zpět</span></button>
     <button type="button" class="rv-btn rv-ano" id="rv-ano" aria-label="Uložit si tenhle pozemek">
-      <span aria-hidden="true">♥</span><span class="rv-popis">Uložit</span></button>
+      <span class="rv-znak" aria-hidden="true">♥</span><span class="rv-popis">Uložit</span></button>
   </div>
+  <!-- CO SE S POZEMKEM STANE, MUSÍ BÝT NAPSANÉ. „Tenhle ne" ho schová
+       z celého výpisu, ne jen z téhle vrstvy — a to se nikde nedočetl,
+       takže po zavření chyběly pozemky a nebylo jasné proč. -->
+  <p class="rv-napoveda">Posuňte kartu prstem, nebo klepněte. <b>Uložit</b> si ho dá mezi uložené,
+    <b>Tenhle ne</b> ho schová z výpisu — vrátit jde obojí.</p>
 </div>
 <script src="js/min/ceny.js?v=16c72c57" defer></script>
   <script src="js/min/zlevneni.js?v=8cbae6d1" defer></script>
@@ -746,7 +763,7 @@
 <script src="js/min/poradi.js?v=92ac1fb1" defer></script>
 <script src="js/min/vyvoz.js?v=871efeda" defer></script>
 <script src="js/min/odkaz.js?v=db9c4bfe" defer></script>
-<script src="js/min/rychlovyber.js?v=39a2fc71" defer></script>
+<script src="js/min/rychlovyber.js?v=fd603238" defer></script>
 <script src="js/min/rozsah.js?v=80f376b4" defer></script>
 <script src="js/min/vybaveni.js?v=68e3d418" defer></script>
 <script src="js/min/dotaz.js?v=baaac921" defer></script>
@@ -758,7 +775,7 @@
      člověk něco poznamenal. Soubor má 1,5 kB po minifikaci. -->
 <script src="js/min/poznamky.js?v=966134ca"></script>
 <script src="js/min/mapove-vrstvy.js?v=93a96d67" defer></script>
-<script src="js/min/main.js?v=d5e2ade2" defer></script>
+<script src="js/min/main.js?v=5a715717" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

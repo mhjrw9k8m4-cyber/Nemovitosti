@@ -39,6 +39,36 @@ const P = (k) => ({ k: k, place: 'Obec ' + k });
   je('prázdný vstup nerozbije nic', R.balicek(null, {}), []);
 }
 
+/* --- 1b) DÁVKA: konec musí být na dohled -------------------------
+   Bez stropu měl balíček 1 955 karet a v hlavičce stálo „Zbývá 1 955".
+   To není síto, to je běžící pás — a modul si přitom v hlavičce psal,
+   že „má to konec". Konec po dvou tisících rozhodnutích žádný konec
+   není. */
+{
+  const vse = [];
+  for (let i = 1; i <= 55; i++) vse.push(P(i));
+  const b = R.balicek(vse, {});
+  je('balíček se nabízí po dávkách, ne celý najednou', b.length, R.DAVKA);
+  je('a dávka je tak malá, aby se dala dojet', R.DAVKA <= 30, true);
+  je('a bere se od začátku (doporučené první)', b[0].k, 1);
+  je('kdo chce jinou dávku, řekne si o ni', R.balicek(vse, { davka: 3 }).map((d) => d.k), [1, 2, 3]);
+  je('davka:0 znamená bez stropu (pro spočítání, kolik zbývá)',
+    R.balicek(vse, { davka: 0 }).length, 55);
+  je('nerozhodnutých se počítá všech, ne jen dávka', R.nerozhodnutych(vse, {}), 55);
+  je('a rozhodnuté se do toho počtu nepletou',
+    R.nerozhodnutych(vse, { jeSkryty: (d) => d.k <= 5 }), 50);
+
+  const s = R.stav(b, R.nerozhodnutych(vse, {}));
+  je('stav ví, kolikátá karta je na řadě', R.poradi(s), 1);
+  je('a jak velká dávka je', R.delkaDavky(s), R.DAVKA);
+  je('a kolik zbude, až se dojede', R.zbyvaPoDavce(s), 55 - R.DAVKA);
+  R.rozhodni(s, R.VPRAVO);
+  je('po rozhodnutí je na řadě druhá', R.poradi(s), 2);
+  /* Předpoklad: kdyby se počet nerozhodnutých nepředal, konec dávky by
+     tvrdil, že je hotovo všechno — a to by byla lež. */
+  je('bez druhého parametru se zbytek nevymýšlí', R.zbyvaPoDavce(R.stav(b)), 0);
+}
+
 /* --- 2) Rozhodování ----------------------------------------------- */
 {
   const s = R.stav([P(1), P(2), P(3)]);

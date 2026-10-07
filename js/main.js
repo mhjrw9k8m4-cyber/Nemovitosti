@@ -5301,24 +5301,41 @@
    * Balíček se staví z TOHO, CO JE PRÁVĚ VIDĚT — tedy po filtrech a ve
    * stejném pořadí jako seznam. Kdo si nastavil „Jižní Morava do tří
    * milionů", má třídit přesně to. */
-  var rvStav = null, rvVrstva = null;
+  var rvStav = null, rvVrstva = null, rvOdlet = null;
   function rvPrvek(id) { return document.getElementById(id); }
+  /* Kdo si vypnul pohyb v nastavení systému, nemá na co čekat — karta se
+     vymění rovnou. Stejné pravidlo drží i css (prefers-reduced-motion),
+     tohle je jen jeho druhá polovina: bez něj by se čekalo na animaci,
+     která se nekoná. */
+  function rvBezPohybu() {
+    try { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
+    catch (e) { return false; }
+  }
 
   function otevriRychly() {
     if (!window.PKRychly) return;
     rvVrstva = rvPrvek('rv-vrstva');
     if (!rvVrstva) return;
-    var karty = PKRychly.balicek(posledniVyber, { jeSkryty: jeSkryty, jeUlozeny: isFav });
-    rvStav = PKRychly.stav(karty);
+    rvNalozDavku();
     rvVrstva.hidden = false;
     document.body.style.overflow = 'hidden';
-    rvKresli();
     var z = rvPrvek('rv-zavrit'); if (z) { try { z.focus(); } catch (e) {} }
+  }
+  /* Jedna dávka, ne celý výpis. Napoprvé se sypaly všechny nabídky
+     a v hlavičce stálo „Zbývá 1 955" — to není síto, to je běžící pás.
+     Po dvaceti kartách se člověk rozhodne, jestli chce další. */
+  function rvNalozDavku() {
+    var pomer = { jeSkryty: jeSkryty, jeUlozeny: isFav };
+    var karty = PKRychly.balicek(posledniVyber, pomer);
+    rvStav = PKRychly.stav(karty, PKRychly.nerozhodnutych(posledniVyber, pomer));
+    rvHlaska('', '');
+    rvKresli();
   }
   function zavriRychly() {
     if (rvVrstva) rvVrstva.hidden = true;
     document.body.style.overflow = '';
     rvStav = null;
+    if (rvOdlet) { clearTimeout(rvOdlet); rvOdlet = null; }
     renderList();   // uložené a skryté se musí projevit i ve výpisu
   }
 
@@ -5326,43 +5343,101 @@
     var F = window.PKFeed;
     return F && F.mnozne ? F.mnozne(n, ['nabídku', 'nabídky', 'nabídek']) : 'nabídek';
   }
+  function tvarPozemku(n) {
+    var F = window.PKFeed;
+    return F && F.mnozne ? F.mnozne(n, ['pozemek', 'pozemky', 'pozemků']) : 'pozemků';
+  }
 
-  function rvKresli() {
-    var deck = rvPrvek('rv-deck');
-    if (!deck || !rvStav) return;
-    var zb = rvPrvek('rv-zbyva');
+  /* Hlavička: kolikátá karta z dávky, pruh a bilance. Kreslí se zvlášť od
+     karty, protože karta při rozhodnutí odlétá a mění se až po animaci —
+     kdežto počet má naskočit hned. */
+  function rvHlavicka(zmena) {
+    if (!rvStav) return;
     var d = PKRychly.aktualni(rvStav);
+    var delka = PKRychly.delkaDavky(rvStav);
+    var hotovych = delka - PKRychly.zbyva(rvStav);
+    var zb = rvPrvek('rv-zbyva');
+    if (zb) zb.textContent = d ? ('Karta ' + PKRychly.poradi(rvStav) + ' z ' + delka)
+      : (delka ? 'Dávka hotová' : 'Není co třídit');
+    var pr = rvPrvek('rv-pruh');
+    if (pr) pr.style.width = (delka ? Math.round(hotovych / delka * 100) : 0) + '%';
     var souh = PKRychly.souhrn(rvStav);
-    if (zb) zb.textContent = d
-      ? ('Zbývá ' + fmt(PKRychly.zbyva(rvStav)))
-      : ('Hotovo — uloženo ' + souh.ulozeno + ', skryto ' + souh.skryto);
+    var bil = rvPrvek('rv-bilance');
+    if (bil) {
+      bil.innerHTML = souh.celkem
+        ? ('<span class="rvb-ano' + (zmena === 'uloz' ? ' zmena' : '') + '">♥ ' + souh.ulozeno + '</span>'
+          + '<span class="rvb-ne' + (zmena === 'skryj' ? ' zmena' : '') + '">✕ ' + souh.skryto + '</span>')
+        : '';
+    }
     var zpetBtn = rvPrvek('rv-zpet');
     if (zpetBtn) zpetBtn.disabled = !PKRychly.lzeZpet(rvStav);
     ['rv-ne', 'rv-ano'].forEach(function (id) { var b = rvPrvek(id); if (b) b.disabled = !d; });
+  }
+
+  function rvKresli(zmena) {
+    rvHlavicka(zmena);
+    var deck = rvPrvek('rv-deck');
+    if (!deck || !rvStav) return;
+    var d = PKRychly.aktualni(rvStav);
+    var napoveda = document.querySelector('.rv-napoveda');
     if (!d) {
-      deck.innerHTML = '<div class="rv-konec"><h3>To je všechno</h3>'
-        + '<p>Prošli jste ' + fmt(souh.celkem) + ' ' + tvarNabidek(souh.celkem) + '. Uloženo '
-        + souh.ulozeno + ', skryto ' + souh.skryto + '.</p></div>';
+      deck.innerHTML = rvKonecHtml();
+      /* Na konci dávky nesmí pod tlačítky viset hláška o poslední kartě
+         („Schováno z výpisu") ani návod, jak kartou posunout — karta
+         žádná není a obojí pak mate. */
+      rvHlaska('', '');
+      if (napoveda) napoveda.hidden = true;
       return;
     }
+    if (napoveda) napoveda.hidden = false;
     var zaM2 = zaMetr(d);
     var S = window.PK_SNIMEK;
     var obraz = S ? S.html(d, { sirka: 460, vyska: 307, barva: (TYPE[d.type] || {}).color, id: 'rv' }) : '';
-    deck.innerHTML = '<article class="rv-karta" id="rv-karta">'
+    /* Dvě ztlumené karty vzadu říkají beze slov, že se bere z balíčku.
+       Jsou ozdoba, ne obsah — čtečka je přeskočí. */
+    var duchu = Math.min(2, PKRychly.zbyva(rvStav) - 1);
+    var duchove = '';
+    for (var i = duchu; i >= 1; i--) duchove += '<div class="rv-duch rv-duch' + i + '" aria-hidden="true"></div>';
+    deck.innerHTML = '<div class="rv-stoh">' + duchove
+      /* data-pk nese klíč pozemku: podle něj se pozná, že se rozhodnutá
+         nabídka nevrátila do balíčku (scripts/test-rychly-prohlizec.mjs).
+         Podle jména obce by to poznat nešlo — obcí s víc pozemky jsou
+         v datech stovky. */
+      + '<article class="rv-karta" id="rv-karta" data-pk="' + esc(pkey(d)) + '">'
       + '<div class="rv-obraz">' + obraz
-        + '<span class="opp-badge ' + d.type + '">' + esc((TYPE[d.type] || {}).label || '') + '</span></div>'
+        + '<span class="opp-badge ' + d.type + '">' + esc((TYPE[d.type] || {}).label || '') + '</span>'
+        + '<span class="rv-razitko ano" aria-hidden="true">Uloženo</span>'
+        + '<span class="rv-razitko ne" aria-hidden="true">Tenhle ne</span></div>'
       + '<div class="rv-telo">'
-        + '<div class="rv-cena">' + fmt(d.price) + ' Kč</div>'
+        + '<div class="rv-cena">' + fmt(d.price) + ' Kč</div>'
         + '<div class="rv-misto">' + esc(d.place || '') + '</div>'
         + (d.okres && d.okres !== d.place ? '<div class="rv-okres">okres ' + esc(d.okres) + '</div>' : '')
         + '<div class="rv-druh">' + esc(d.druh || '') + '</div>'
         + '<div class="rv-cisla">'
-          + (d.area > 0 ? '<span class="rv-cislo">' + fmt(d.area) + ' m²</span>' : '')
-          + (zaM2 != null ? '<span class="rv-cislo">' + fmt(Math.round(zaM2)) + ' Kč/m²</span>' : '')
+          + (d.area > 0 ? '<span class="rv-cislo">' + fmt(d.area) + ' m²</span>' : '')
+          + (zaM2 != null ? '<span class="rv-cislo">' + fmt(Math.round(zaM2)) + ' Kč/m²</span>' : '')
         + '</div>'
-      + '</div></article>'
-      + '<p class="rv-stalo" id="rv-stalo" role="status"></p>';
+      + '</div></article></div>';
     rvChytejPrst();
+  }
+
+  /* Konec dávky. Říká tři věci, které dřív nikde nestály: co se stalo,
+     kde to člověk najde, a že to jde vzít zpátky. */
+  function rvKonecHtml() {
+    var souh = PKRychly.souhrn(rvStav);
+    var dal = PKRychly.zbyvaPoDavce(rvStav);
+    var vety = [];
+    if (souh.ulozeno) vety.push('<b>' + souh.ulozeno + '</b> ' + tvarPozemku(souh.ulozeno)
+      + ' máte mezi uloženými (v menu „Uložené").');
+    if (souh.skryto) vety.push('<b>' + souh.skryto + '</b> ' + tvarPozemku(souh.skryto)
+      + ' se schovalo z výpisu; vrátí je tlačítko „Zobrazit skryté" nad seznamem.');
+    if (!souh.celkem) vety.push('Nerozhodli jste nic — ve výpisu zůstalo všechno tak, jak bylo.');
+    return '<div class="rv-konec"><h3>' + (souh.celkem ? 'Dávka hotová' : 'Není co třídit') + '</h3>'
+      + '<p>' + vety.join(' ') + '</p>'
+      + (dal ? '<p>Nerozhodnutých zbývá ' + fmt(dal) + ' ' + tvarNabidek(dal) + '.</p>'
+        + '<button type="button" class="rv-dalsi" id="rv-dalsi">Projít dalších '
+        + Math.min(dal, PKRychly.DAVKA) + '</button>' : '')
+      + '</div>';
   }
 
   /* Prst. Modul gesta nezná — dostane jen SMĚR, takže je jedno, jestli
@@ -5379,12 +5454,20 @@
       if (x0 == null || !e.touches || !e.touches.length) return;
       dx = e.touches[0].clientX - x0;
       k.style.transform = 'translateX(' + Math.round(dx) + 'px) rotate(' + (dx / 28).toFixed(2) + 'deg)';
+      /* RAZÍTKO UŽ PŘI TAHU. Dokud se neukázalo, člověk tahal kartu
+         naslepo a o výsledku se dozvěděl, až když zmizela. */
+      k.classList.toggle('chystam-ano', dx > 30);
+      k.classList.toggle('chystam-ne', dx < -30);
     }, { passive: true });
     k.addEventListener('touchend', function () {
       if (x0 == null) return;
-      k.style.transform = '';
       var prah = Math.max(60, k.getBoundingClientRect().width * 0.22);
-      if (Math.abs(dx) >= prah) rvRozhodni(dx > 0 ? PKRychly.VPRAVO : PKRychly.VLEVO);
+      var rozhodl = Math.abs(dx) >= prah;
+      if (!rozhodl) {
+        k.style.transform = '';
+        k.classList.remove('chystam-ano', 'chystam-ne');
+      }
+      if (rozhodl) rvRozhodni(dx > 0 ? PKRychly.VPRAVO : PKRychly.VLEVO);
       x0 = null; dx = 0;
     }, { passive: true });
   }
@@ -5393,17 +5476,40 @@
     var h = rvPrvek('rv-stalo');
     if (h) { h.textContent = text; h.className = 'rv-stalo' + (trida ? ' ' + trida : ''); }
   }
+  /* Rozhodnutí se do úložiště zapíše HNED, animace je jen doprovod.
+     Kdyby se čekalo na její konec, zavření vrstvy uprostřed odletu by
+     rozhodnutí ztratilo. */
   function rvRozhodni(smer) {
     if (!rvStav) return;
+    if (rvOdlet) { clearTimeout(rvOdlet); rvOdlet = null; rvKresli(); }
+    var karta = rvPrvek('rv-karta');
     var v = PKRychly.rozhodni(rvStav, smer);
     if (!v) return;
     if (v.akce === 'uloz') { if (!isFav(v.pozemek)) toggleFav(v.pozemek); }
     else if (!jeSkryty(v.pozemek)) prepniSkryty(v.pozemek);
-    rvKresli();
-    rvHlaska(v.akce === 'uloz' ? 'Uloženo' : 'Skryto', v.akce === 'uloz' ? 'uloz' : 'skryj');
+    rvHlaska(v.akce === 'uloz' ? 'Uloženo mezi vaše pozemky' : 'Schováno z výpisu',
+      v.akce === 'uloz' ? 'uloz' : 'skryj');
+    if (v.akce === 'uloz') {
+      var ano = rvPrvek('rv-ano');
+      if (ano) {
+        ano.classList.remove('zabralo');
+        void ano.offsetWidth;          // ať se animace pustí i při rychlém klepání
+        ano.classList.add('zabralo');
+        setTimeout(function () { ano.classList.remove('zabralo'); }, 600);
+      }
+    }
+    rvHlavicka(v.akce);
+    if (karta && !rvBezPohybu()) {
+      karta.classList.add(v.akce === 'uloz' ? 'chystam-ano' : 'chystam-ne');
+      karta.classList.add(v.akce === 'uloz' ? 'odlet-vpravo' : 'odlet-vlevo');
+      rvOdlet = setTimeout(function () { rvOdlet = null; rvKresli(); }, 300);
+    } else {
+      rvKresli();
+    }
   }
   function rvZpet() {
     if (!rvStav) return;
+    if (rvOdlet) { clearTimeout(rvOdlet); rvOdlet = null; }
     var v = PKRychly.zpet(rvStav);
     if (!v) return;
     /* Vrácení musí stav OPRAVDU odvolat, ne jen posunout kartu zpátky —
@@ -5420,6 +5526,13 @@
     if (ano) ano.addEventListener('click', function () { rvRozhodni(PKRychly.VPRAVO); });
     if (zp) zp.addEventListener('click', rvZpet);
     if (za) za.addEventListener('click', zavriRychly);
+    /* „Projít dalších 20" vzniká až na konci dávky, takže se na něj
+       poslouchá přes balíček karet, ne přímo. */
+    var deck = rvPrvek('rv-deck');
+    if (deck) deck.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('#rv-dalsi') : null;
+      if (b) rvNalozDavku();
+    });
     document.addEventListener('keydown', function (e) {
       if (!rvStav || !rvVrstva || rvVrstva.hidden) return;
       if (e.key === 'Escape') { zavriRychly(); return; }

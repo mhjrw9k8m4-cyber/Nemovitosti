@@ -79,13 +79,83 @@ pravda('a šipkou doleva skrýt', (await stav()).skryte === 1);
 await p.keyboard.press('Escape'); await p.waitForTimeout(600);
 pravda('Escape vrstvu zavře', (await stav()).otevreno === false);
 
-/* --- rozhodnuté se nevrací ---------------------------------------- */
+/* --- VIDĚT, ŽE SE NĚCO STALO --------------------------------------
+   Stížnost od člověka, který web používá: „chtělo by to animaci, když
+   klikám, že si ho ukládám — nikde to nevidím." Odezva byla jediný
+   řádek písmem 14 px pod kartou a karta se tiše vyměnila za jinou.
+   Třídy se sledují přes MutationObserver, ne čtením po kliknutí:
+   animace trvá 300 ms a na pomalém stroji by se stihla uklidit dřív,
+   než by se test stačil zeptat. Kontrola by pak padala náhodně. */
 await p.click('#mc-rychly'); await p.waitForTimeout(900);
-const s5 = await stav();
-const rozhodnuto = s4.ulozene + 1;   // uložené + skryté
-pravda('po znovuotevření se rozhodnuté nenabízejí',
-  /Zbývá/.test(s5.zbyva) && !new RegExp('Zbývá\\s*1[\\s\\u00a0]*994').test(s5.zbyva),
-  `zbývá: „${s5.zbyva}" (rozhodnuto ${rozhodnuto})`);
+await p.evaluate(() => {
+  window.__tridy = [];
+  const zapis = (el) => new MutationObserver(() => window.__tridy.push(String(el.className)))
+    .observe(el, { attributes: true, attributeFilter: ['class'] });
+  document.querySelectorAll('#rv-karta, #rv-ano').forEach(zapis);
+});
+await p.click('#rv-ano'); await p.waitForTimeout(600);
+const videt = await p.evaluate(() => window.__tridy || []);
+pravda('karta při uložení odletí doprava (vidět, že rozhodnutí zabralo)',
+  videt.some((t) => /odlet-vpravo/.test(t)), JSON.stringify(videt));
+pravda('a na kartě se při tom ukáže razítko „Uloženo"',
+  videt.some((t) => /chystam-ano/.test(t)), JSON.stringify(videt));
+pravda('a srdíčko na tlačítku poskočí', videt.some((t) => /zabralo/.test(t)), JSON.stringify(videt));
+const bilance = await p.evaluate(() => (document.getElementById('rv-bilance') || {}).textContent || '');
+pravda('a v hlavičce je vidět, kolik toho člověk uložil', /♥\s*\d/.test(bilance),
+  `v hlavičce stojí „${bilance}"`);
+
+/* --- DÁVKA MÁ KONEC NA DOHLED -------------------------------------
+   Napoprvé se sypal celý výpis: v hlavičce stálo „Zbývá 1 955" a konec
+   byl po dvou tisících rozhodnutích, tedy nikdy. Teď se nabízí dvacet
+   karet a je vidět, kolikátá je na řadě. */
+const hlavicka = await p.evaluate(() => (document.getElementById('rv-zbyva') || {}).textContent || '');
+pravda('hlavička říká, kolikátá karta z dávky je na řadě (ne „zbývá 1 955")',
+  /^Karta \d+ z \d+$/.test(hlavicka.trim()) && !/1\s*9\d\d/.test(hlavicka),
+  `v hlavičce stojí „${hlavicka}"`);
+const davka = Number((hlavicka.match(/z (\d+)/) || [])[1] || 0);
+pravda('a dávka je tak velká, aby se dala dojet (nejvýš 30 karet)',
+  davka > 0 && davka <= 30, `dávka ${davka}`);
+pravda('pod tlačítky stojí, co se s pozemkem stane',
+  /schová/i.test(await p.evaluate(() => (document.querySelector('.rv-napoveda') || {}).textContent || '')),
+  'nápověda o skrytí z výpisu tam není');
+
+// Dojet dávku do konce — konec musí opravdu přijít a nabídnout další.
+for (let i = 0; i < davka + 1; i++) { await p.keyboard.press('ArrowRight'); await p.waitForTimeout(90); }
+await p.waitForTimeout(600);
+const konec = await p.evaluate(() => ({
+  text: (document.querySelector('.rv-konec') || { textContent: '' }).textContent.replace(/\s+/g, ' ').trim(),
+  dalsi: !!document.getElementById('rv-dalsi'),
+  hlavicka: (document.getElementById('rv-zbyva') || {}).textContent,
+}));
+pravda('dávka opravdu skončí', /Dávka hotová/.test(konec.text), JSON.stringify(konec));
+pravda('a konec řekne, kde uložené pozemky najdu', /Uložené/.test(konec.text), konec.text.slice(0, 160));
+pravda('a nabídne další dávku, ne nekonečné sypání karet', konec.dalsi, konec.text.slice(0, 160));
+await p.click('#rv-dalsi'); await p.waitForTimeout(700);
+const po = await p.evaluate(() => ({
+  hlavicka: (document.getElementById('rv-zbyva') || {}).textContent,
+  karta: (document.querySelector('.rv-misto') || { textContent: '' }).textContent.trim(),
+}));
+pravda('„Projít dalších" naloží novou dávku', /^Karta 1 z/.test((po.hlavicka || '').trim()) && po.karta.length > 0,
+  JSON.stringify(po));
+
+/* --- rozhodnuté se nevrací ----------------------------------------
+   Logiku hlídá scripts/test-rychlovyber.mjs; tady jde o zapojení —
+   že se do balíčku opravdu předají obě sady (uložené i skryté). */
+const nevraci = await p.evaluate(() => {
+  const cti = (k) => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch (e) { return []; } };
+  const rozhodnute = cti('pk_fav_v1').concat(cti('pk_skryte_v1'));
+  /* Porovnává se KLÍČ pozemku z data-pk, ne jméno obce: obcí s víc
+     pozemky jsou v datech stovky, takže shoda jména by nic neznamenala. */
+  const k = (document.getElementById('rv-karta') || { dataset: {} }).dataset.pk || '';
+  return { rozhodnutych: rozhodnute.length, nabizi: k,
+    maKlic: !!k, kolize: rozhodnute.filter((x) => x === k).length };
+});
+pravda('rozhodnutých je dost na to, aby kontrola něco znamenala',
+  nevraci.rozhodnutych >= 5, `rozhodnuto ${nevraci.rozhodnutych}`);
+pravda('nabízená karta nese klíč pozemku (jinak není co porovnávat)', nevraci.maKlic,
+  'karta nemá data-pk');
+pravda('a nabízená karta není ani jeden z nich', nevraci.kolize === 0,
+  `nabízí „${nevraci.nabizi}", a ten je mezi rozhodnutými`);
 
 await ctx.close(); await prohlizec.close();
 console.log(`\nRychlý výběr v prohlížeči: ${ok + chyb} kontrol`);
