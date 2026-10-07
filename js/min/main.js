@@ -860,17 +860,31 @@
     var idx = keyIndex();
     var items = recentKeys().map(function (k) { return idx[k]; }).filter(Boolean).slice(0, 8);
     if (items.length < 2) { el.hidden = true; el.innerHTML = ''; return; }
-    var h = '<div class="rs-head">Naposledy prohlédnuté</div><div class="rs-row">';
+
+    var h = '<div class="rs-head">Naposledy prohlédnuté'
+      + '<span class="rs-pocet">' + items.length + '</span></div><div class="rs-row">';
     items.forEach(function (d) {
       h += '<button type="button" class="rs-chip" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
         '<span class="rs-dot" style="background:' + TYPE[d.type].color + '"></span>' +
-        '<span class="rs-place">' + d.place + '</span>' +
+        '<span class="rs-place">' + esc(d.place || '') + '</span>' +
         '<span class="rs-price">' + fmt(d.price) + ' Kč</span>' +
       '</button>';
     });
     h += '</div>';
     el.innerHTML = h;
     el.hidden = false;
+    rsStin(el.querySelector('.rs-row'));
+  }
+
+  function rsStin(row) {
+    if (!row) return;
+    var prepni = function () {
+      row.classList.toggle('je-dal', row.scrollWidth - row.clientWidth - row.scrollLeft > 8);
+      row.classList.toggle('je-zpet', row.scrollLeft > 8);
+    };
+    prepni();
+    row.addEventListener('scroll', prepni, { passive: true });
+    if (window.ResizeObserver) { try { new ResizeObserver(prepni).observe(row); } catch (e) {} }
   }
   (function () {
     var el = document.getElementById('recent-strip');

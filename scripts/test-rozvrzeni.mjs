@@ -699,6 +699,76 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   await ctx.close();
 }
 
+/* --- PRUH „NAPOSLEDY PROHLÉDNUTÉ" MUSÍ BÝT VIDĚT --------------------
+ *
+ * Stížnost: „to samé by chtělo i u naposledy prohlédnutých, chce to
+ * nějak zvýraznit." Nadpis pruhu měl 12 px ztlumenou barvou, tedy MENŠÍ
+ * písmo než nadpis výpisu pod ním (14 px), a pruh neměl vlastní plochu —
+ * splýval s okolím.
+ * A druhá, horší půlka: řádek se posouvá do strany, posuvník je schovaný
+ * a ze čtyř prohlédnutých byly na telefonu vidět dvě (naměřeno 438 px za
+ * pravou hranou). Nic o zbytku neřeklo. Proto je v nadpisu počet a za
+ * hranou stín.
+ */
+{
+  const { ctx, p } = await otevri('index.html', 390, 844);
+  await p.waitForTimeout(2200);
+  const klice = (() => {
+    const d = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
+    return d.filter((x) => typeof x.lat === 'number' && typeof x.lng === 'number' && x.price > 0)
+      .slice(0, 5)
+      .map((x) => [x.place || '', x.parcel || '', x.okres || '', x.lat.toFixed(3), x.lng.toFixed(3)].join('|'));
+  })();
+  await p.evaluate((k) => { try { localStorage.setItem('pk_recent_v1', JSON.stringify(k)); } catch (e) {} }, klice);
+  await p.reload({ waitUntil: 'domcontentloaded' });
+  await p.waitForSelector('#recent-strip .rs-chip', { timeout: 20000 }).catch(() => {});
+  await p.waitForTimeout(900);
+  const pruh = await p.evaluate(() => {
+    const el = document.getElementById('recent-strip');
+    const hd = document.querySelector('.rs-head');
+    const row = document.querySelector('.rs-row');
+    if (!el || !hd || !row) return null;
+    const vyp = document.querySelector('.map-count');
+    const cislo = (s) => parseFloat(s) || 0;
+    return {
+      skryty: el.hidden,
+      cipu: row.querySelectorAll('.rs-chip').length,
+      pocetVNadpisu: (document.querySelector('.rs-pocet') || { textContent: '' }).textContent.trim(),
+      pismoNadpisu: cislo(getComputedStyle(hd).fontSize),
+      pismoVypisu: vyp ? cislo(getComputedStyle(vyp).fontSize) : 0,
+      maPlochu: getComputedStyle(el).backgroundColor !== 'rgba(0, 0, 0, 0)',
+      prectiva: Math.round(row.scrollWidth - row.clientWidth),
+      tridy: row.className,
+    };
+  });
+  pravda('pruh „Naposledy prohlédnuté" se ukázal (jinak není co měřit)',
+    !!pruh && pruh.skryty === false && pruh.cipu >= 3, JSON.stringify(pruh));
+  if (pruh) {
+    pravda('nadpis pruhu není menší než nadpis výpisu pod ním',
+      pruh.pismoNadpisu >= pruh.pismoVypisu - 1,
+      `pruh ${pruh.pismoNadpisu} px, výpis ${pruh.pismoVypisu} px`);
+    pravda('a pruh má vlastní plochu, ať nesplývá s okolím', pruh.maPlochu,
+      'pozadí je průhledné');
+    pravda('a v nadpisu stojí, kolik jich je', String(pruh.cipu) === pruh.pocetVNadpisu,
+      `čipů ${pruh.cipu}, v nadpisu „${pruh.pocetVNadpisu}"`);
+    // PŘEDPOKLAD: bez přetečení by kontrola stínu nic neznamenala
+    pravda('řádek opravdu přetéká za hranu (jinak se stín nemá proč ukázat)',
+      pruh.prectiva > 40, `za hranou ${pruh.prectiva} px`);
+    pravda('a je za ní stín, který říká, že to pokračuje',
+      /je-dal/.test(pruh.tridy), `třídy „${pruh.tridy}"`);
+    const naKonci = await p.evaluate(async () => {
+      const row = document.querySelector('.rs-row');
+      row.scrollLeft = row.scrollWidth;
+      row.dispatchEvent(new Event('scroll'));
+      await new Promise((r) => setTimeout(r, 120));
+      return row.className;
+    });
+    pravda('a na konci řádku stín zmizí (neslibuje, co tam není)',
+      !/je-dal/.test(naKonci) && /je-zpet/.test(naKonci), `třídy „${naKonci}"`);
+  }
+  await ctx.close();
+}
+
 /* --- 6b) A TÝŽ METR NA ZBYTEK WEBU -----------------------------------
  *
  * Mez 44 px se měřila JEN na úvodní stránce, takže na ostatních o ní
