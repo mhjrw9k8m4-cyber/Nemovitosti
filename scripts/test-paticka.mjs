@@ -46,8 +46,23 @@ async function zmer(stranka, sirka) {
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(2200);
+  /* POČKAT, AŽ SE ROLOVÁNÍ ZASTAVÍ — ne pevných 700 ms.
+     Stránka roluje plynule (smooth), takže po 700 ms ještě klouže:
+     naměřeno na index.html odroleno 5 524 px z 5 625 a copyright o 101 px
+     níž, než kde doopravdy skončí. Tlačítko „Zpět nahoru" ho v tu chvíli
+     míjelo o dva pixely, takže kontrola překryvu hlásila jednou tak,
+     jednou onak — podle toho, jak rychle zrovna běžel stroj. Měřit
+     stránku, která se ještě hýbe, znamená měřit něco, co nikdo neuvidí. */
   await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-  await p.waitForTimeout(700);
+  await p.evaluate(async () => {
+    let minuly = -1, stejne = 0;
+    for (let i = 0; i < 60 && stejne < 3; i++) {
+      await new Promise((r) => setTimeout(r, 100));
+      const y = Math.round(window.scrollY);
+      stejne = (y === minuly) ? stejne + 1 : 0;
+      minuly = y;
+    }
+  });
   const v = await p.evaluate(() => {
     const g = document.querySelector('.foot-grid');
     const fb = document.querySelector('.foot-bottom');
