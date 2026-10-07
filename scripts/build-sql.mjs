@@ -126,7 +126,35 @@ for (const [jmeno, popis] of PORADI) {
   );
 }
 
+/* FUNKCE BEZ PARAMETRŮ SE PŘED VYTVOŘENÍM ZAHODÍ.
+   „create or replace function" umí přepsat tělo, ale NE návratový typ.
+   Jakmile se u takové funkce změní tvar vracené tabulky — třeba se do
+   výpisu inzerátů přidá sloupec — odmítne Postgres celý balík hláškou
+   „cannot change return type of existing function" a nenasadí se NIC,
+   ani to, co s tou funkcí nesouvisí. Právě na tom první ostré nasazení
+   spadlo (public_listings).
+   Zahazuje se podle PŘESNÉ podoby bez parametrů, ne přes cascade: cascade
+   by vzal s sebou i to, co na funkci visí, a to je u databáze s ostrými
+   daty příliš velká pravomoc na jeden příkaz. Seznam se čte ze složeného
+   SQL, takže na novou funkci se nedá zapomenout.
+   Funkce S parametry se nezahazují: u nich se podoba mění vzácně a slepé
+   zahození by mohlo sebrat jinou funkci téhož jména s jinými parametry. */
+const slozene = casti.join('');
+const bezParametru = [...new Set(
+  [...slozene.matchAll(/create\s+or\s+replace\s+function\s+([a-z_][a-z0-9_]*)\s*\(\s*\)/gi)]
+    .map((m) => m[1])
+)].sort();
+const dropy = bezParametru.length
+  ? '\n-- Funkce bez parametrů: zahodit, než se vytvoří znovu. Viz komentář\n'
+    + '-- v scripts/build-sql.mjs — jde o změnu návratového typu, kterou\n'
+    + '-- „create or replace" neumí a která by shodila celé nasazení.\n'
+    + bezParametru.map((f) => `drop function if exists ${f}();`).join('\n') + '\n'
+  : '';
+
 const cil = path.join(SQL, '00-vse.sql');
-writeFileSync(cil, casti.join(''), 'utf8');
+/* Dropy patří hned za hlavičku, tedy před všechno ostatní. */
+const znacka = HLAVA;
+writeFileSync(cil, slozene.replace(znacka, znacka + dropy), 'utf8');
+console.log(`Funkcí bez parametrů k zahození: ${bezParametru.length}`);
 console.log(`Složeno ${PORADI.length} souborů do ${path.relative(ROOT, cil)}.`
   + (MIMO.size ? ` Mimo balík zůstává ${MIMO.size} (s napsaným důvodem).` : ''));

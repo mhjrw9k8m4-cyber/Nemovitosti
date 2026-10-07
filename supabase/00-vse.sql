@@ -25,6 +25,19 @@
 drop function if exists create_listing(text,text,text,text,integer,integer,double precision,double precision,text,text);
 drop function if exists create_listing(text,text,text,text,integer,integer,double precision,double precision,text,text,jsonb);
 
+-- Funkce bez parametrů: zahodit, než se vytvoří znovu. Viz komentář
+-- v scripts/build-sql.mjs — jde o změnu návratového typu, kterou
+-- „create or replace" neumí a která by shodila celé nasazení.
+drop function if exists moje_poznamky();
+drop function if exists my_limit();
+drop function if exists my_listing_quota();
+drop function if exists my_listings();
+drop function if exists my_searches();
+drop function if exists my_threads();
+drop function if exists pending_count();
+drop function if exists public_listings();
+drop function if exists unread_count();
+
 
 -- ---------------------------------------------------------------------
 -- schema.sql — základní tabulky: listings, watch_subscriptions, payments, messages
