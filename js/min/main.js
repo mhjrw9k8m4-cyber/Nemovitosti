@@ -2,11 +2,34 @@
   'use strict';
 
   try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
-  window.addEventListener('pageshow', function () {
+
+  var pkVraciSeZPozemku = false;
+  window.addEventListener('pageshow', function (e) {
+
+    if (e && e.persisted) {
+
+      var zp = null;
+      try { zp = JSON.parse(sessionStorage.getItem('pk_map_return') || 'null'); } catch (x1) {}
+      try { sessionStorage.removeItem('pk_map_return'); } catch (x2) {}
+      if (zp && typeof zp.y === 'number' && zp.y > 0 && zp.t && Date.now() - zp.t < 30 * 60 * 1000) {
+        try { window.scrollTo(0, zp.y); } catch (x3) {}
+
+        setTimeout(function () {
+          try {
+            if (Math.abs((window.scrollY || 0) - zp.y) > 24) window.scrollTo(0, zp.y);
+          } catch (x4) {}
+        }, 160);
+      }
+      return;
+    }
+
+    var vraciSe = pkVraciSeZPozemku;
+    try { vraciSe = vraciSe || !!sessionStorage.getItem('pk_map_return'); } catch (x) {}
+    if (vraciSe) return;
 
     var kotva = location.hash && !(window.PKOdkaz && PKOdkaz.jeStavMapy(location.hash));
     if (!kotva && !/[?&](p|kraj|lid)=/.test(location.search)) {
-      try { window.scrollTo(0, 0); } catch (e) {}
+      try { window.scrollTo(0, 0); } catch (e2) {}
     }
   });
 
@@ -3365,8 +3388,7 @@
           (chips.length ? '<div class="opp-chips">' + chips.join('') + '</div>' : '') +
         '</div>';
 
-      var pozHref = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng;
-      function openInzerat() { location.href = pozHref; }
+      function openInzerat() { gotoInzerat(d); }
       li.addEventListener('click', openInzerat);
       li.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInzerat(); }
@@ -3602,7 +3624,9 @@
 
       var c = map.getCenter();
       sessionStorage.setItem('pk_map_return', JSON.stringify({
-        lat: c.lat, lng: c.lng, z: map.getZoom(), kraj: selectedKraj || null, t: Date.now()
+        lat: c.lat, lng: c.lng, z: map.getZoom(), kraj: selectedKraj || null, t: Date.now(),
+
+        y: Math.round(window.scrollY || window.pageYOffset || 0)
       }));
     } catch (e) {}
 
@@ -4918,23 +4942,54 @@
     renderUserListings();
   }));
 
+  var navratZPozemku = null;
+  try { navratZPozemku = JSON.parse(sessionStorage.getItem('pk_map_return') || 'null'); } catch (e) {}
+  try { sessionStorage.removeItem('pk_map_return'); } catch (e) {}
+  if (navratZPozemku && (!navratZPozemku.t || Date.now() - navratZPozemku.t > 30 * 60 * 1000)) {
+    navratZPozemku = null;
+  }
+  if (navratZPozemku) pkVraciSeZPozemku = true;
+
+  function vratPozici(ret) {
+    var cil = ret && typeof ret.y === 'number' && ret.y > 0 ? ret.y : null;
+    if (cil == null) return false;
+    var nasePosledni = -1, hotovo = false;
+    var prestan = function () { hotovo = true; };
+    ['wheel', 'touchstart', 'keydown'].forEach(function (u) {
+      window.addEventListener(u, prestan, { once: true, passive: true });
+    });
+    [60, 250, 600, 1000, 1600].forEach(function (ms) {
+      setTimeout(function () {
+        if (hotovo) return;
+        var ted = Math.round(window.scrollY || 0);
+
+        if (ted !== 0 && nasePosledni >= 0 && Math.abs(ted - nasePosledni) > 24) { hotovo = true; return; }
+        var max = Math.max(0, document.body.scrollHeight - window.innerHeight);
+        window.scrollTo(0, Math.min(cil, max));
+        nasePosledni = Math.round(window.scrollY || 0);
+      }, ms);
+    });
+    return true;
+  }
+
   function restoreMapReturn() {
-    var ret = null;
-    try { ret = JSON.parse(sessionStorage.getItem('pk_map_return') || 'null'); } catch (e) {}
-    try { sessionStorage.removeItem('pk_map_return'); } catch (e) {}
-    if (!ret || typeof ret.lat !== 'number' || !ret.t) return false;
-    if (Date.now() - ret.t > 30 * 60 * 1000) return false;
+    var ret = navratZPozemku;
+    if (!ret || typeof ret.lat !== 'number') return false;
     var z = ret.z || 12;
     if (ret.kraj) { try { selectKraj(ret.kraj, true); } catch (e) {} }
     map.invalidateSize();
     map.setView([ret.lat, ret.lng], z, { animate: false });
     if (z >= 10) { try { if (dotsLocked) lockDots(false); } catch (e) {} }
 
-    if (holderEl) { [60, 240, 500].forEach(function (ms) { setTimeout(function () { holderEl.scrollIntoView({ block: 'center' }); }, ms); }); }
+    if (typeof ret.y !== 'number' && holderEl) {
+      [60, 240, 500].forEach(function (ms) { setTimeout(function () { holderEl.scrollIntoView({ block: 'center' }); }, ms); });
+    }
     return true;
   }
 
   var deepLinked = openFromUrl() || obnovZAdresy() || restoreMapReturn();
+
+  vratPozici(navratZPozemku);
 
   setTimeout(function () { map.invalidateSize(); if (!deepLinked) fitAllCZ(); }, 300);
   }

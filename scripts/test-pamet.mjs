@@ -587,6 +587,60 @@ pravda('a po návštěvě, na které byly vidět obě, není nové nic',
 
 pravda('na stránce nespadl žádný skript', chyby.length === 0, chyby[0]);
 
+/* --- 8) NÁVRAT Z POZEMKU VRACÍ TAM, KDE JSEM BYL -------------------
+ *
+ * Stížnost od člověka, který web používá: „když odejdu z pozemku, hodí
+ * mě to až do hlavního menu; mělo by mě to hodit tam, kde jsem skočil."
+ * Sedělo to: naměřeno odchod při posunu 1 004 px, návrat na 0 a mapa
+ * ani nebyla na obrazovce.
+ *
+ * Byly v tom tři vady za sebou:
+ *  1. karta ve výpisu si adresu skládala sama a míjela gotoInzerat(),
+ *     takže se vůbec nezapamatovalo, kde člověk byl;
+ *  2. obsluha pageshow skákala nahoru VŽDYCKY, tedy i při návratu;
+ *  3. obnova pozice byla schovaná uvnitř obnovy mapy, a ta se po
+ *     návratu skoro vždycky nedostane ke slovu — výřez obnoví adresa
+ *     (#m=…), protože ho tam web průběžně zapisuje.
+ * Tahle zkouška projde tutéž cestu jako člověk: odroluje k pozemku
+ * v půlce výpisu, otevře ho klepnutím a vrátí se zpět.
+ */
+{
+  const ctx2 = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  await ctx2.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  const p2 = await ctx2.newPage();
+  await p2.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
+  await p2.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
+  await p2.waitForTimeout(2500);
+  const odchod = await p2.evaluate(() => {
+    const k = document.querySelectorAll('.opp-item')[4];
+    if (!k) return null;
+    k.scrollIntoView({ block: 'center' });
+    return new Promise((r) => setTimeout(() => r({ y: Math.round(window.scrollY),
+      klic: k.getAttribute('data-pk') }), 500));
+  });
+  // PŘEDPOKLAD: bez odrolovaného výpisu by se návrat neměl kam vracet
+  pravda('ve výpisu jde dojet k páté kartě (jinak není co měřit)',
+    !!odchod && odchod.y > 300, JSON.stringify(odchod));
+  if (odchod && odchod.y > 300) {
+    await p2.evaluate(() => document.querySelectorAll('.opp-item')[4].click());
+    await p2.waitForTimeout(2500);
+    pravda('klepnutí na kartu otevře stránku pozemku', /pozemek/.test(p2.url()), p2.url());
+    await p2.goBack({ waitUntil: 'load' }).catch(() => {});
+    await p2.waitForTimeout(3500);
+    const navrat = await p2.evaluate(() => ({ y: Math.round(window.scrollY),
+      vyska: document.body.scrollHeight }));
+    /* Tolerance 120 px: výpis se po návratu dokresluje a stránka může být
+       o kus jinak vysoká. Jde o to, že člověk přistane u SVÉ karty, ne
+       o pixel. Bez opravy tu vycházela nula. */
+    pravda('a návrat zpět vrátí člověka tam, kde ve výpisu byl',
+      Math.abs(navrat.y - odchod.y) <= 120,
+      `odešel z ${odchod.y} px, vrátil se na ${navrat.y} px`);
+  }
+  await ctx2.close();
+}
+
 await prohlizec.close();
 console.log('\nPaměť prohlížeče — nové od minule, skryté, filtr, hlídání okolí');
 console.log(zpravy.join('\n'));

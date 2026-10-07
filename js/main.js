@@ -7,12 +7,55 @@
   // Výjimka: sdílený odkaz na konkrétní pozemek/kraj (?p=/?kraj=/?lid=) nebo
   // kotva (#…) — tam scroll řídí sama stránka.
   try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
-  window.addEventListener('pageshow', function () {
+  /* Vrací se člověk ze stránky pozemku? Nastaví restoreMapReturn() níž,
+     čte obsluha pageshow hned pod tím — viz komentář u ní. */
+  var pkVraciSeZPozemku = false;
+  window.addEventListener('pageshow', function (e) {
+    /* NÁVRAT ZPĚT NENÍ NOVÉ OTEVŘENÍ. Tohle pravidlo skákalo nahoru
+       VŽDYCKY, tedy i když se člověk vracel z pozemku — přistál
+       v hlavičce, ne tam, kde odešel. Naměřeno: odchod při posunu
+       1 020 px, návrat na 0 a mapa ani nebyla na obrazovce.
+       Dva případy, kdy se nahoru skákat nesmí:
+       · stránka se vrátila ze zpětné paměti prohlížeče (persisted) —
+         tam ji prohlížeč ukáže přesně takovou, jaká byla, i s pozicí;
+       · vracíme se z pozemku (v paměti čeká pk_map_return) — pozici
+         i mapu vrátí restoreMapReturn() níž, až budou karty vykreslené. */
+    if (e && e.persisted) {
+      /* ZPĚTNÁ PAMĚŤ PROHLÍŽEČE (bfcache). Stránka se neskládá znovu —
+         boot() ani restoreMapReturn() neběží, mapa i karty jsou pořád
+         takové, jaké byly. Pozici by normálně vrátil prohlížeč sám,
+         jenže o pár řádků výš mu to bereme (scrollRestoration='manual'),
+         takže ji musíme vrátit tady. Bez toho člověk přistál na nule —
+         přesně to se při zkoušce naměřilo, i když záznam o návratu
+         v paměti ležel nedotčený. */
+      var zp = null;
+      try { zp = JSON.parse(sessionStorage.getItem('pk_map_return') || 'null'); } catch (x1) {}
+      try { sessionStorage.removeItem('pk_map_return'); } catch (x2) {}
+      if (zp && typeof zp.y === 'number' && zp.y > 0 && zp.t && Date.now() - zp.t < 30 * 60 * 1000) {
+        try { window.scrollTo(0, zp.y); } catch (x3) {}
+        /* Ještě jednou po dokreslení: po návratu ze zpětné paměti se
+           obrázky a karty někdy dorovnávají a stránka se tím posune. */
+        setTimeout(function () {
+          try {
+            if (Math.abs((window.scrollY || 0) - zp.y) > 24) window.scrollTo(0, zp.y);
+          } catch (x4) {}
+        }, 160);
+      }
+      return;
+    }
+    /* Dvě cesty, jak to poznat, protože záleží na pořadí: když se data
+       načtou z cache dřív než doběhne „load", stihne restoreMapReturn()
+       záznam přečíst a smazat JEŠTĚ PŘED touhle obsluhou — a ta by pak
+       skočila nahoru i při návratu. Naměřeno přesně tohle: záznam byl
+       spotřebovaný, mapa vrácená, a stránka přesto na nule. */
+    var vraciSe = pkVraciSeZPozemku;
+    try { vraciSe = vraciSe || !!sessionStorage.getItem('pk_map_return'); } catch (x) {}
+    if (vraciSe) return;
     /* Stav mapy v adrese NENÍ kotva: je to sdílený výřez, ne odkaz
        doprostřed textu, takže stránka má pořád začít nahoře. */
     var kotva = location.hash && !(window.PKOdkaz && PKOdkaz.jeStavMapy(location.hash));
     if (!kotva && !/[?&](p|kraj|lid)=/.test(location.search)) {
-      try { window.scrollTo(0, 0); } catch (e) {}
+      try { window.scrollTo(0, 0); } catch (e2) {}
     }
   });
 
@@ -4974,18 +5017,22 @@
         '</div>';
       // Ťuknutí kamkoli na kartu (i na snímek) → samostatná stránka inzerátu.
       // Na mapu se dostaneš z inzerátu (snímek nebo tlačítko „Zobrazit na mapě").
-      /* Procházení webu vede na OBECNOU pozemek.html?p=…, ne na vlastní
-         stránku nabídky. Vlastní stránky jsou soubory, které vyrábí
-         generátor — a kdyby se data aktualizovala a generátor selhal,
-         odkazovalo by se na soubory, které neexistují, a KAŽDÉ klepnutí ve
-         výpisu by skončilo na 404. Obecná adresa si data načte sama, takže
-         funguje vždycky.
-         Vlastní stránka se přitom neztrácí tam, kde na ní záleží: detail
-         pozemku ji nastavuje jako kanonickou a posílá ji tlačítko Sdílet.
-         Tím dostanou vyhledávače i sdílený odkaz správnou stránku, aniž by
-         na ní stálo procházení webu. */
-      var pozHref = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng;
-      function openInzerat() { location.href = pozHref; }
+      /* JEDNA CESTA NA POZEMEK PRO CELÝ WEB. Karta si tu skládala
+         adresu sama a tím míjela gotoInzerat() — a s ním TŘI věci:
+         · předání pozemku přes sessionStorage, takže se stránka
+           vykreslila okamžitě, ne až po stažení dat;
+         · zapamatování, KDE člověk ve výpisu byl, aby ho „zpět" vrátilo
+           tam a ne na začátek stránky (naměřeno: odchod na 1 004 px,
+           návrat na 0);
+         · rozlišovače „v" (výměra) a „l" (id inzerátu od majitele).
+           Bez „v" otevře dvojice pozemků se shodným klíčem tu první —
+           v datech je takových dvojic 21.
+         Adresa zůstává OBECNÁ (pozemek.html?p=…), ne vlastní vygenerovaná
+         stránka: kdyby generátor selhal, odkazovalo by se na soubory,
+         které neexistují, a každé klepnutí ve výpisu by skončilo na 404.
+         Vlastní stránka se neztrácí — detail ji nastavuje jako kanonickou
+         a posílá ji tlačítko Sdílet. */
+      function openInzerat() { gotoInzerat(d); }
       li.addEventListener('click', openInzerat);
       li.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInzerat(); }
@@ -5293,7 +5340,10 @@
       // TAM, kde skončil (ne na výchozí pohled na celou ČR).
       var c = map.getCenter();
       sessionStorage.setItem('pk_map_return', JSON.stringify({
-        lat: c.lat, lng: c.lng, z: map.getZoom(), kraj: selectedKraj || null, t: Date.now()
+        lat: c.lat, lng: c.lng, z: map.getZoom(), kraj: selectedKraj || null, t: Date.now(),
+        /* Kam až byl člověk posunutý. Bez toho se vracel na začátek
+           stránky, i když odcházel od páté karty odspoda. */
+        y: Math.round(window.scrollY || window.pageYOffset || 0)
       }));
     } catch (e) {}
     /* U inzerátu od majitele se přidává i jeho ID. Klíč „?p=" je složený
@@ -6891,26 +6941,73 @@
     renderDeals();
     renderUserListings();
   }));
+  /* Záznam o návratu z pozemku se čte JEDNOU a sáhnou si do něj oba:
+     obnova výřezu mapy i obnova pozice ve stránce. Dřív si ho bral jen
+     první z nich a druhý o něm nevěděl. */
+  var navratZPozemku = null;
+  try { navratZPozemku = JSON.parse(sessionStorage.getItem('pk_map_return') || 'null'); } catch (e) {}
+  try { sessionStorage.removeItem('pk_map_return'); } catch (e) {}
+  if (navratZPozemku && (!navratZPozemku.t || Date.now() - navratZPozemku.t > 30 * 60 * 1000)) {
+    navratZPozemku = null;    // starší než půl hodiny už není návrat, to je nová návštěva
+  }
+  if (navratZPozemku) pkVraciSeZPozemku = true;
+
+  /* Vrátit člověka tam, kde ve výpisu byl. Zkouší se několikrát, protože
+     karty dotékají a stránka mezitím roste; jakmile ale člověk sám
+     pohne, přestane se to plést. */
+  function vratPozici(ret) {
+    var cil = ret && typeof ret.y === 'number' && ret.y > 0 ? ret.y : null;
+    if (cil == null) return false;
+    var nasePosledni = -1, hotovo = false;
+    var prestan = function () { hotovo = true; };
+    ['wheel', 'touchstart', 'keydown'].forEach(function (u) {
+      window.addEventListener(u, prestan, { once: true, passive: true });
+    });
+    [60, 250, 600, 1000, 1600].forEach(function (ms) {
+      setTimeout(function () {
+        if (hotovo) return;
+        var ted = Math.round(window.scrollY || 0);
+        /* Skok na nulu není „člověk si roluje sám" — to dělá obsluha
+           pageshow. Přerušit se kvůli ní by znamenalo neudělat nic. */
+        if (ted !== 0 && nasePosledni >= 0 && Math.abs(ted - nasePosledni) > 24) { hotovo = true; return; }
+        var max = Math.max(0, document.body.scrollHeight - window.innerHeight);
+        window.scrollTo(0, Math.min(cil, max));
+        nasePosledni = Math.round(window.scrollY || 0);
+      }, ms);
+    });
+    return true;
+  }
+
   // Návrat z detailu pozemku (tlačítko „zpět"): vrať mapu přesně tam, kde uživatel skončil.
   function restoreMapReturn() {
-    var ret = null;
-    try { ret = JSON.parse(sessionStorage.getItem('pk_map_return') || 'null'); } catch (e) {}
-    try { sessionStorage.removeItem('pk_map_return'); } catch (e) {}
-    if (!ret || typeof ret.lat !== 'number' || !ret.t) return false;
-    if (Date.now() - ret.t > 30 * 60 * 1000) return false; // starší než 30 min → ignoruj
+    var ret = navratZPozemku;
+    if (!ret || typeof ret.lat !== 'number') return false;
     var z = ret.z || 12;
     if (ret.kraj) { try { selectKraj(ret.kraj, true); } catch (e) {} }
     map.invalidateSize();
     map.setView([ret.lat, ret.lng], z, { animate: false });
     if (z >= 10) { try { if (dotsLocked) lockDots(false); } catch (e) {} }
-    // ukázat mapu (ne vršek stránky) — několikrát po sobě, ať to sedne i po dorovnání layoutu
-    if (holderEl) { [60, 240, 500].forEach(function (ms) { setTimeout(function () { holderEl.scrollIntoView({ block: 'center' }); }, ms); }); }
+    /* Mapu máme; pozici ve stránce vrací vratPozici() za všech okolností
+       (i když výřez obnovila adresa), tak se tu o ni nestaráme.
+       Když záznam pozici nenese (starší podoba), aspoň ukážeme mapu. */
+    if (typeof ret.y !== 'number' && holderEl) {
+      [60, 240, 500].forEach(function (ms) { setTimeout(function () { holderEl.scrollIntoView({ block: 'center' }); }, ms); });
+    }
     return true;
   }
   /* Pořadí: jednorázový příkaz v ?parametru je nejsilnější (přišel teď),
      pak sdílený stav mapy z adresy, a teprve nakonec návrat tam, kde
      člověk minule skončil. */
   var deepLinked = openFromUrl() || obnovZAdresy() || restoreMapReturn();
+  /* POZICE SE VRACÍ VŽDYCKY, AŤ MAPU OBNOVIL KDOKOLI. Byla schovaná
+     uvnitř restoreMapReturn(), jenže ten se volá až jako třetí v pořadí
+     — a po návratu z pozemku se skoro vždycky nedostane ke slovu:
+     adresa totiž nese stav mapy (#m=…, zapisuje ho js/odkaz.js při
+     každé změně výřezu), takže obnovu provede obnovZAdresy() a zbytek
+     se přeskočí. Naměřeno: open:false, adresa:true — a pozice nikde.
+     Proto se záznam o návratu čte zvlášť a pozice se vrací za všech
+     okolností. */
+  vratPozici(navratZPozemku);
   // Po dopočítání rozměrů mapy znovu vyrovnáme na celou ČR (pokud nejde o
   // sdílený odkaz na konkrétní parcelu, který si drží vlastní přiblížení).
   setTimeout(function () { map.invalidateSize(); if (!deepLinked) fitAllCZ(); }, 300);
