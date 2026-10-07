@@ -1080,61 +1080,6 @@
     }
 
     try { if (global.PKVideno) global.PKVideno.oznac(d); } catch (e) {}
-
-    postavListu();
-  }
-
-  function postavListu() {
-    var cena = document.querySelector('.pz-price');
-    var cta = document.querySelector('.pz-cta');
-    var hlavni = cta && (cta.querySelector('.pz-btn.primary') || cta.querySelector('.pz-btn'));
-    if (!cena || !cta || !hlavni) return;
-    if (document.querySelector('.pz-lista')) return;
-
-    var lista = document.createElement('div');
-    lista.className = 'pz-lista';
-    lista.hidden = true;
-    var kopie = document.createElement('a');
-    kopie.className = 'pzl-akce';
-    kopie.href = hlavni.getAttribute('href') || '#';
-    if (hlavni.hasAttribute('target')) kopie.setAttribute('target', hlavni.getAttribute('target'));
-    if (hlavni.hasAttribute('rel')) kopie.setAttribute('rel', hlavni.getAttribute('rel'));
-
-    var klon = hlavni.cloneNode(true);
-    Array.prototype.forEach.call(klon.querySelectorAll('.visually-hidden'),
-      function (x) { x.parentNode.removeChild(x); });
-    kopie.textContent = (klon.textContent || '').replace(/\s+/g, ' ').trim();
-    if (hlavni.querySelector('.visually-hidden')) {
-      var dovetek = document.createElement('span');
-      dovetek.className = 'visually-hidden';
-      dovetek.textContent = ' — otevře se v novém okně mimo Parcelku';
-      kopie.appendChild(dovetek);
-    }
-
-    var castka = document.createElement('span');
-    castka.className = 'pzl-cena';
-    var hlavniCena = cena.querySelector('.pv') || cena;
-
-    castka.textContent = (hlavniCena.textContent || '').trim();
-    lista.appendChild(castka);
-    lista.appendChild(kopie);
-    document.body.appendChild(lista);
-
-    if (typeof IntersectionObserver !== 'function') return;
-    var vidimCenu = true, vidimTlacitka = false;
-    function prekresli() {
-      var ukaz = !vidimCenu && !vidimTlacitka;
-      if (ukaz === !lista.hidden) return;
-      lista.hidden = !ukaz;
-    }
-    new IntersectionObserver(function (z) {
-      z.forEach(function (x) { vidimCenu = x.isIntersecting; });
-      prekresli();
-    }).observe(cena);
-    new IntersectionObserver(function (z) {
-      z.forEach(function (x) { vidimTlacitka = x.isIntersecting; });
-      prekresli();
-    }).observe(cta);
   }
 
   function nastavKanonickou(url) {

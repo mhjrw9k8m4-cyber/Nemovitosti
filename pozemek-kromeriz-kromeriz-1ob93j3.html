@@ -239,43 +239,9 @@
        obrazovky — tak dlouho není na obrazovce nic, čím jednat.
        Barvy i tvar jsou z palety, ne vlastní: lišta je kus webu, ne
        cizí plovoucí prvek. */
-    .pz-lista{position:fixed; left:0; right:0; bottom:0; z-index:40;
-      display:none; align-items:center; gap:12px;
-      padding:10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
-      background:rgba(255,255,255,0.96); backdrop-filter:blur(8px);
-      border-top:1px solid var(--line-strong, rgba(20,35,28,0.3));
-      /* Stín z paletky, ne vlastní. Napsal jsem si sem svůj
-         (0 -8px 24px -18px) a hlídač vizuálního jazyka to zachytil —
-         a pojmenoval přesně tenhle případ: „--e3-up pro panel zdola".
-         Přesně takhle se žebřík hloubky rozpadá: po jednom stínu,
-         pokaždé s dobrým úmyslem. */
-      box-shadow:var(--e3-up);}
-    .pz-lista[hidden]{display:none;}
-    .pzl-cena{font-weight:800; font-size:17px; white-space:nowrap;}
-    /* Terč pro palec má 48 px, ne 44: je to jediné tlačítko na liště
-       a stojí u spodního okraje, kam se míří nejhůř. */
-    .pzl-akce{flex:1 1 0; min-width:0; height:48px; display:inline-flex;
-      align-items:center; justify-content:center; padding:0 14px;
-      border-radius:var(--r-sm, 10px); font-weight:700; font-size:15px;
-      text-decoration:none; white-space:nowrap; overflow:hidden;
-      text-overflow:ellipsis;
-      background:var(--plocha-znacka, #1F5138); color:#fff;}
-    @media (max-width:760px){ .pz-lista:not([hidden]){display:flex;} }
-    /* TLAČÍTKO „NAHORU" NESMÍ SEDĚT NA LIŠTĚ. Oboje je připnuté ke
-       spodnímu okraji okna: lišta na 0, kolečko na 24 px — jenže lišta
-       je 69 px vysoká, takže kolečko (46×46) leželo CELOU plochou na ní.
-       Naměřeno na 390×844: překryv 100 %, a to zrovna na pravém konci
-       tlačítka „K dražbě", které se roztahuje přes zbytek lišty. Klepnutí
-       mířené na hlavní akci stránky tak trefilo posun nahoru.
-       Kolečko se proto o lištu opře shora. Počítá se z její skutečné
-       výšky (69 px) plus mezera a bezpečná zóna telefonu — ne z čísla
-       odhadnutého od oka. :has() hlídá, že se zvedne jen tehdy, když
-       lišta opravdu je: na širokém displeji ani před jejím objevením
-       by to jen odsunulo kolečko do prázdna. */
-    @media (max-width:760px){
-      body:has(.pz-lista:not([hidden])) .to-top{
-        bottom:calc(69px + 12px + env(safe-area-inset-bottom, 0px));}
-    }
+    /* Lišta s cenou a akcí u spodního okraje tu byla a je pryč — viz
+       js/pozemek.js. S ní odešlo i pravidlo, které kvůli ní zvedalo
+       kolečko „Nahoru" o její výšku. */
     .pz-btn{flex:1 1 200px; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; border-radius:var(--r-ovladani); font-weight:700; font-size:15px; text-decoration:none; cursor:pointer; border:1px solid transparent;}
     .pz-btn svg{width:19px; height:19px; stroke-width:1.89; flex:none;}
     .pz-btn.primary{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
@@ -597,7 +563,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script src="js/min/navratnost.js?v=870054e8"></script><script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 215 m² — Kroměříž, okres Kroměříž","description":"Na prodej · 1 740 000 Kč (8 093 Kč/m²) · 215 m² · Kroměříž, okres Kroměříž. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-kromeriz-kromeriz-1ob93j3.html","address":{"@type":"PostalAddress","addressLocality":"Kroměříž","addressRegion":"Kroměříž","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.269672644076,"longitude":17.436691498156}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Kroměříž","item":"https://www.parcelaka.cz/pozemky-okres-kromeriz.html"},{"@type":"ListItem","position":4,"name":"Stavební pozemek 215 m² — Kroměříž, okres Kroměříž","item":"https://www.parcelaka.cz/pozemek-kromeriz-kromeriz-1ob93j3.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Kroměříž|—|Kroměříž|49.270|17.437","ll":[49.269672644076,17.436691498156],"v":215,"c":1740000,"r":"data/okres/kromeriz.json"};</script>
-<script src="js/min/pozemek.js?v=56e84ad4"></script>
+<script src="js/min/pozemek.js?v=82a9419c"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

@@ -547,9 +547,6 @@ jobs:
       - name: Tah ikon je jeden (1,5 px)
         run: node scripts/test-tahy.mjs
 
-      - name: Lišta s cenou a akcí na detailu
-        run: node scripts/test-lista.mjs
-
       - name: Souřadnice pozemku s sebou
         run: node scripts/test-souradnice.mjs
 

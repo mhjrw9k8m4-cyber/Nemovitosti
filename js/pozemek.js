@@ -1567,87 +1567,18 @@
        karty, které už člověk viděl. Až tady, po vykreslení: dokud
        nevíme, co se vykreslilo, není co značit. */
     try { if (global.PKVideno) global.PKVideno.oznac(d); } catch (e) {}
-
-    postavListu();
   }
 
-  /* LIŠTA S CENOU A HLAVNÍ AKCÍ U SPODNÍHO OKRAJE (jen na mobilu).
-     Naměřeno na telefonu 390×844: stránka detailu je 3 106 px dlouhá,
-     tedy 3,7 obrazovky. Cena stojí 542 px od začátku a hlavní tlačítka
-     až 1 990 px — tedy 2,4 obrazovky. Pro první dvě a půl obrazovky
-     čtení tak na obrazovce není ani cena, ani čím jednat.
-     Lišta to zaceluje, ale nesmí překážet tam, kde to potřeba není:
-     ukáže se, teprve když cena odjede nahoru, a zase zmizí, jakmile
-     jsou vidět skutečná tlačítka — jinak by na obrazovce stála dvě
-     stejná a člověk by nevěděl, které je to pravé.
-     TEXT I ODKAZ SE BEROU Z EXISTUJÍCÍHO TLAČÍTKA, neopisují se.
-     Opsaná kopie se rozejde s předlohou; přesně tak se kdysi rozešly
-     dvě kopie výpočtu snímku a dvě kopie barev kategorií. */
-  function postavListu() {
-    var cena = document.querySelector('.pz-price');
-    var cta = document.querySelector('.pz-cta');
-    var hlavni = cta && (cta.querySelector('.pz-btn.primary') || cta.querySelector('.pz-btn'));
-    if (!cena || !cta || !hlavni) return;        // není co ukazovat
-    if (document.querySelector('.pz-lista')) return;   // podruhé ne
-
-    var lista = document.createElement('div');
-    lista.className = 'pz-lista';
-    lista.hidden = true;
-    var kopie = document.createElement('a');
-    kopie.className = 'pzl-akce';
-    kopie.href = hlavni.getAttribute('href') || '#';
-    if (hlavni.hasAttribute('target')) kopie.setAttribute('target', hlavni.getAttribute('target'));
-    if (hlavni.hasAttribute('rel')) kopie.setAttribute('rel', hlavni.getAttribute('rel'));
-    /* POPISEK BEZ VĚTY PRO ODEČÍTAČ. Tlačítko nese skrytý dovětek
-       „otevře se v novém okně mimo Parcelku"; ten patří do zvuku, ne na
-       lištu. Kopíruje se proto obsah bez prvků .visually-hidden —
-       a protože je lišta sama odkazem ven, dostane ten dovětek vlastní.
-       Při prvním měření se na liště objevilo „Inzerát — otevře se
-       v novém o…", useknuté uprostřed věty. */
-    var klon = hlavni.cloneNode(true);
-    Array.prototype.forEach.call(klon.querySelectorAll('.visually-hidden'),
-      function (x) { x.parentNode.removeChild(x); });
-    kopie.textContent = (klon.textContent || '').replace(/\s+/g, ' ').trim();
-    if (hlavni.querySelector('.visually-hidden')) {
-      var dovetek = document.createElement('span');
-      dovetek.className = 'visually-hidden';
-      dovetek.textContent = ' — otevře se v novém okně mimo Parcelku';
-      kopie.appendChild(dovetek);
-    }
-    /* JEN CENA, NE CELÝ BLOK. V .pz-price stojí vedle sebe celková cena
-       a cena za metr; bez tohohle se na liště slepily do
-       „1 990 000 Kč314 Kč/m²". Na úzkou lištu patří to hlavní číslo. */
-    var castka = document.createElement('span');
-    castka.className = 'pzl-cena';
-    var hlavniCena = cena.querySelector('.pv') || cena;
-    /* NEZLOMITELNÉ MEZERY ZŮSTÁVAJÍ. „1 990 000 Kč" je drží proto, aby se
-       číslo nezalomilo mezi číslicemi; web na to má vlastní sázecí krok
-       (scripts/sazba.mjs). Sjednocení bílých znaků přes \s+ je všechny
-       převede na obyčejné a tu práci zahodí — proto se tu jen ořezávají
-       okraje. Odhalil to test lišty porovnáním se zdrojem. */
-    castka.textContent = (hlavniCena.textContent || '').trim();
-    lista.appendChild(castka);
-    lista.appendChild(kopie);
-    document.body.appendChild(lista);
-
-    /* Bez IntersectionObserver (starší prohlížeč) se lišta prostě neukáže.
-       Je to doplněk, ne jediná cesta k akci — ta zůstává v textu stránky. */
-    if (typeof IntersectionObserver !== 'function') return;
-    var vidimCenu = true, vidimTlacitka = false;
-    function prekresli() {
-      var ukaz = !vidimCenu && !vidimTlacitka;
-      if (ukaz === !lista.hidden) return;
-      lista.hidden = !ukaz;
-    }
-    new IntersectionObserver(function (z) {
-      z.forEach(function (x) { vidimCenu = x.isIntersecting; });
-      prekresli();
-    }).observe(cena);
-    new IntersectionObserver(function (z) {
-      z.forEach(function (x) { vidimTlacitka = x.isIntersecting; });
-      prekresli();
-    }).observe(cta);
-  }
+  /* LIŠTA S CENOU A HLAVNÍ AKCÍ U SPODNÍHO OKRAJE TU BYLA A JE PRYČ.
+     Na mobilu se po odrolování ceny přilepila ke spodnímu okraji kopie
+     ceny a tlačítka „Inzerát". Vzniklo to z měření (stránka má 3 106 px,
+     tedy 3,7 obrazovky, a hlavní tlačítka jsou až ve druhé polovině),
+     jenže majitel webu to opakovaně odmítl: obojí už na stránce jednou
+     je, lišta byla jejich kopie a na telefonu stála přes obsah.
+     Je to tedy rozhodnutí, ne opomenutí — kdyby se to mělo vracet, ať
+     se to vrací s jiným řešením než s pruhem přes obsah.
+     S ní odešla i její zkouška (byla to jediná, co lištu měřila)
+     a pravidlo, které kvůli ní zvedalo kolečko „Nahoru". */
 
   /* Adresa a indexování.
      Stránka detailu je jedna šablona pro všechny pozemky, rozlišená až
