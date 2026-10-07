@@ -3,6 +3,31 @@
 
   try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
 
+  var pkVrstvy = [];
+  function vrstvaOtevrena(jmeno, zavri) {
+    pkVrstvy.push({ jmeno: jmeno, zavri: zavri, couvlo: false });
+    try { history.pushState({ pkVrstva: jmeno }, '', location.href); } catch (e) {}
+  }
+
+  function vrstvaZavrena(jmeno) {
+    var v = pkVrstvy[pkVrstvy.length - 1];
+    if (!v || v.jmeno !== jmeno) return;
+    try { history.back(); } catch (e) {}
+
+    setTimeout(function () {
+      if (v.couvlo) return;
+      var i = pkVrstvy.indexOf(v);
+      if (i >= 0) pkVrstvy.splice(i, 1);
+      try { v.zavri(); } catch (e) {}
+    }, 300);
+  }
+  window.addEventListener('popstate', function () {
+    var v = pkVrstvy.pop();
+    if (!v) return;
+    v.couvlo = true;
+    try { v.zavri(); } catch (e) {}
+  });
+
   var pkVraciSeZPozemku = false;
   window.addEventListener('pageshow', function (e) {
 
@@ -226,9 +251,11 @@
     iModal.removeAttribute('hidden');
     requestAnimationFrame(function () { iModal.classList.add('open'); });
     document.body.style.overflow = 'hidden';
+    vrstvaOtevrena('zdroje', function () { closeInfo(true); });
   }
-  function closeInfo() {
-    if (!iModal) return;
+  function closeInfo(zHistorie) {
+    if (!iModal || iModal.hasAttribute('hidden')) return;
+    if (!zHistorie) { vrstvaZavrena('zdroje'); return; }
     iModal.classList.remove('open');
     document.body.style.overflow = '';
     setTimeout(function () { iModal.setAttribute('hidden', ''); }, 250);
@@ -2534,7 +2561,9 @@
 
     var potvrzeno = false;
     function naKlavesu(e) { if (e.key === 'Escape') zavri(); }
-    function zavri() {
+    function zavri(zHistorie) {
+      if (!ov.parentNode) return;
+      if (!zHistorie) { vrstvaZavrena('misto'); return; }
       try { m.remove(); } catch (e) {}
       try { window.PK_VM_MAPA = null; } catch (e) {}
       if (ov.parentNode) ov.parentNode.removeChild(ov);
@@ -2544,8 +2573,10 @@
       if (!potvrzeno && typeof nast.zruseno === 'function') nast.zruseno();
     }
     document.addEventListener('keydown', naKlavesu);
-    ov.querySelector('.vm-x').addEventListener('click', zavri);
+
+    ov.querySelector('.vm-x').addEventListener('click', function () { zavri(); });
     ov.addEventListener('click', function (e) { if (e.target === ov) zavri(); });
+    vrstvaOtevrena('misto', function () { zavri(true); });
     ov.querySelector('#vm-ok').addEventListener('click', function () {
       potvrzeno = true;
       var c = stred();
@@ -2575,7 +2606,12 @@
         '</div>' +
       '</div>';
     document.body.appendChild(ov);
-    function close() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    function close(zHistorie) {
+      if (!ov.parentNode) return;
+      if (!zHistorie) { vrstvaZavrena('kde-hledat'); return; }
+      ov.parentNode.removeChild(ov);
+    }
+    vrstvaOtevrena('kde-hledat', function () { close(true); });
     var inp = ov.querySelector('#loc-town');
     var errEl = ov.querySelector('#loc-err');
     function submitTown() {
@@ -2866,10 +2902,12 @@
     vrstva.hidden = false;
     var ok = document.getElementById('vyv-ok');
     if (ok) { try { ok.focus(); } catch (e) {} }
+    vrstvaOtevrena('vyvoz', function () { vyvozZavri(true); });
   }
-  function vyvozZavri() {
+  function vyvozZavri(zHistorie) {
     var vrstva = document.getElementById('vyv-vrstva');
     if (!vrstva || vrstva.hidden) return;
+    if (!zHistorie) { vrstvaZavrena('vyvoz'); return; }
     vrstva.hidden = true;
 
     var tl = document.getElementById('mc-vyvoz');
@@ -2907,7 +2945,8 @@
     if (!vrstva) return;
     vrstva.addEventListener('change', vyvozPopisStav);
     zamkniTab(vrstva);
-    var z = document.getElementById('vyv-zrus'); if (z) z.addEventListener('click', vyvozZavri);
+
+    var z = document.getElementById('vyv-zrus'); if (z) z.addEventListener('click', function () { vyvozZavri(); });
     var o = document.getElementById('vyv-ok'); if (o) o.addEventListener('click', vyvozStahni);
 
     vrstva.addEventListener('click', function (e) { if (e.target === vrstva) vyvozZavri(); });
@@ -3817,6 +3856,7 @@
     rvUkazUvod(prvne);
     var z = rvPrvek(prvne ? 'rv-uvod-ok' : 'rv-zavrit');
     if (z) { try { z.focus(); } catch (e) {} }
+    vrstvaOtevrena('rychly', function () { zavriRychly(true); });
   }
   (function rvUvodOvladani() {
     var ok = document.getElementById('rv-uvod-ok');
@@ -3837,8 +3877,10 @@
     rvHlaska('', '');
     rvKresli();
   }
-  function zavriRychly() {
-    if (rvVrstva) rvVrstva.hidden = true;
+  function zavriRychly(zHistorie) {
+    if (!rvVrstva || rvVrstva.hidden) return;
+    if (!zHistorie) { vrstvaZavrena('rychly'); return; }
+    rvVrstva.hidden = true;
     document.body.style.overflow = '';
     rvStav = null;
     if (rvOdlet) { clearTimeout(rvOdlet); rvOdlet = null; }
@@ -4057,7 +4099,7 @@
     if (ne) ne.addEventListener('click', function () { rvRozhodni(PKRychly.VLEVO); });
     if (ano) ano.addEventListener('click', function () { rvRozhodni(PKRychly.VPRAVO); });
     if (zp) zp.addEventListener('click', rvZpet);
-    if (za) za.addEventListener('click', zavriRychly);
+    if (za) za.addEventListener('click', function () { zavriRychly(); });
 
     var deck = rvPrvek('rv-deck');
     if (deck) deck.addEventListener('click', function (e) {
@@ -4848,8 +4890,11 @@
         prekresliPosuvniky();
         var prvni = ov.querySelector('.rz-x');
         if (prvni) prvni.focus();
+        vrstvaOtevrena('rozsah-' + zkratka, function () { zavri(true); });
       }
-      function zavri() {
+      function zavri(zHistorie) {
+        if (ov.hidden) return;
+        if (!zHistorie) { vrstvaZavrena('rozsah-' + zkratka); return; }
         ov.hidden = true;
         tlac.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('vm-otevreno');
@@ -4859,8 +4904,9 @@
 
       zamkniTab(ov);
       tlac.addEventListener('click', otevri);
-      ov.querySelector('.rz-x').addEventListener('click', zavri);
-      p.hotovoEl.addEventListener('click', zavri);
+
+      ov.querySelector('.rz-x').addEventListener('click', function () { zavri(); });
+      p.hotovoEl.addEventListener('click', function () { zavri(); });
       ov.querySelector('.rz-vymaz').addEventListener('click', function () {
         poleOd.value = ''; poleDo.value = ''; p.prvni = -1;
         prectiRozsahy();

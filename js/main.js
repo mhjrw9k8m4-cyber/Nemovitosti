@@ -7,6 +7,56 @@
   // Výjimka: sdílený odkaz na konkrétní pozemek/kraj (?p=/?kraj=/?lid=) nebo
   // kotva (#…) — tam scroll řídí sama stránka.
   try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
+
+  /* =====================================================================
+     ŠIPKA ZPĚT MÁ ZAVÍRAT, NE ODCHÁZET
+     =====================================================================
+     Na mapě se otevírá šest celoobrazovkových vrstev — výběr místa,
+     rychlý výběr, stahování tabulky, rozsah ceny a výměry, „kde hledat"
+     a zdroje dat. Ani jedna z nich nedělala záznam v historii, takže
+     systémová šipka zpět neměla co zavřít a odvedla člověka z celé
+     index.html. Změřeno: otevřu vrstvu, zmáčknu zpět — a jsem na
+     předchozí stránce, sám stav mapy (výřez, filtry, kresba) je pryč.
+
+     NEJDE TO ODCHYTIT Až PŘI ZPĚT. Krok z index.html na předchozí
+     dokument je přechod mezi stránkami — popstate se při něm vůbec
+     nezavolá. Záznam proto musí vzniknout už při OTEVŘENÍ vrstvy.
+
+     A při zavření vlastním křížkem se musí zase spotřebovat, jinak by
+     příští šipka zpět nezavřela nic a vypadala by zaseknutě. Proto
+     křížek nezavírá sám, ale couvne v historii — a zavře to až
+     popstate, jedinou cestou pro obě možnosti. */
+  var pkVrstvy = [];          // zásobník otevřených vrstev
+  function vrstvaOtevrena(jmeno, zavri) {
+    pkVrstvy.push({ jmeno: jmeno, zavri: zavri, couvlo: false });
+    try { history.pushState({ pkVrstva: jmeno }, '', location.href); } catch (e) {}
+  }
+  /* JEDNA CESTA VEN PRO OBĚ MOŽNOSTI. Křížek vrstvu nezavírá sám, jen
+     couvne v historii — a zavře ji až popstate, stejně jako když couvne
+     člověk šipkou. Dvě cesty by znamenaly dva stavy, které se dokážou
+     rozejít: po zavření křížkem by v historii zůstal ležet záznam
+     a příští šipka zpět by nezavřela nic. */
+  function vrstvaZavrena(jmeno) {
+    var v = pkVrstvy[pkVrstvy.length - 1];
+    if (!v || v.jmeno !== jmeno) return;      // není nahoře — nesahat na historii
+    try { history.back(); } catch (e) {}
+    /* POJISTKA. Kdyby couvnutí neprobleslo (záznam už v historii není,
+       prohlížeč ho zahodil), zůstala by vrstva otevřená a nešla by zavřít
+       — a to je horší než záznam navíc. Po třech desetinách se tedy
+       zavře sama. */
+    setTimeout(function () {
+      if (v.couvlo) return;
+      var i = pkVrstvy.indexOf(v);
+      if (i >= 0) pkVrstvy.splice(i, 1);
+      try { v.zavri(); } catch (e) {}
+    }, 300);
+  }
+  window.addEventListener('popstate', function () {
+    var v = pkVrstvy.pop();
+    if (!v) return;
+    v.couvlo = true;
+    try { v.zavri(); } catch (e) {}
+  });
   /* Vrací se člověk ze stránky pozemku? Nastaví restoreMapReturn() níž,
      čte obsluha pageshow hned pod tím — viz komentář u ní. */
   var pkVraciSeZPozemku = false;
@@ -335,9 +385,11 @@
     iModal.removeAttribute('hidden');
     requestAnimationFrame(function () { iModal.classList.add('open'); });
     document.body.style.overflow = 'hidden';
+    vrstvaOtevrena('zdroje', function () { closeInfo(true); });
   }
-  function closeInfo() {
-    if (!iModal) return;
+  function closeInfo(zHistorie) {
+    if (!iModal || iModal.hasAttribute('hidden')) return;
+    if (!zHistorie) { vrstvaZavrena('zdroje'); return; }
     iModal.classList.remove('open');
     document.body.style.overflow = '';
     setTimeout(function () { iModal.setAttribute('hidden', ''); }, 250);
@@ -3787,7 +3839,9 @@
 
     var potvrzeno = false;
     function naKlavesu(e) { if (e.key === 'Escape') zavri(); }
-    function zavri() {
+    function zavri(zHistorie) {
+      if (!ov.parentNode) return;
+      if (!zHistorie) { vrstvaZavrena('misto'); return; }
       try { m.remove(); } catch (e) {}
       try { window.PK_VM_MAPA = null; } catch (e) {}
       if (ov.parentNode) ov.parentNode.removeChild(ov);
@@ -3799,8 +3853,11 @@
       if (!potvrzeno && typeof nast.zruseno === 'function') nast.zruseno();
     }
     document.addEventListener('keydown', naKlavesu);
-    ov.querySelector('.vm-x').addEventListener('click', zavri);
+    /* Bez obalu by se do zavri() dostala událost kliknutí a chovala se
+       jako „už couvnuto v historii" — záznam by v ní zůstal ležet. */
+    ov.querySelector('.vm-x').addEventListener('click', function () { zavri(); });
     ov.addEventListener('click', function (e) { if (e.target === ov) zavri(); });
+    vrstvaOtevrena('misto', function () { zavri(true); });
     ov.querySelector('#vm-ok').addEventListener('click', function () {
       potvrzeno = true;
       var c = stred();
@@ -3832,7 +3889,12 @@
         '</div>' +
       '</div>';
     document.body.appendChild(ov);
-    function close() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    function close(zHistorie) {
+      if (!ov.parentNode) return;
+      if (!zHistorie) { vrstvaZavrena('kde-hledat'); return; }
+      ov.parentNode.removeChild(ov);
+    }
+    vrstvaOtevrena('kde-hledat', function () { close(true); });
     var inp = ov.querySelector('#loc-town');
     var errEl = ov.querySelector('#loc-err');
     function submitTown() {
@@ -4212,10 +4274,12 @@
     vrstva.hidden = false;
     var ok = document.getElementById('vyv-ok');
     if (ok) { try { ok.focus(); } catch (e) {} }
+    vrstvaOtevrena('vyvoz', function () { vyvozZavri(true); });
   }
-  function vyvozZavri() {
+  function vyvozZavri(zHistorie) {
     var vrstva = document.getElementById('vyv-vrstva');
     if (!vrstva || vrstva.hidden) return;
+    if (!zHistorie) { vrstvaZavrena('vyvoz'); return; }
     vrstva.hidden = true;
     /* Fokus zpátky na tlačítko, ze kterého se okno otevřelo. Jinak po
        Escape spadne na začátek dokumentu a kdo jede klávesnicí, musí se
@@ -4256,7 +4320,11 @@
     if (!vrstva) return;
     vrstva.addEventListener('change', vyvozPopisStav);
     zamkniTab(vrstva);
-    var z = document.getElementById('vyv-zrus'); if (z) z.addEventListener('click', vyvozZavri);
+    /* Obal kvůli události: předaný click by se ve vyvozZavri(zHistorie)
+       choval jako příznak „už couvnuto v historii" — okno by se zavřelo,
+       ale záznam by v historii zůstal ležet a příští šipka zpět by
+       nezavřela nic. Změřeno zkouškou test-zpet. */
+    var z = document.getElementById('vyv-zrus'); if (z) z.addEventListener('click', function () { vyvozZavri(); });
     var o = document.getElementById('vyv-ok'); if (o) o.addEventListener('click', vyvozStahni);
     /* Klepnutí mimo okno a Escape zavírají — jako u každého jiného okna
        na webu, ať se to nemusí nikde učit zvlášť. */
@@ -5605,6 +5673,7 @@
     rvUkazUvod(prvne);
     var z = rvPrvek(prvne ? 'rv-uvod-ok' : 'rv-zavrit');
     if (z) { try { z.focus(); } catch (e) {} }
+    vrstvaOtevrena('rychly', function () { zavriRychly(true); });
   }
   (function rvUvodOvladani() {
     var ok = document.getElementById('rv-uvod-ok');
@@ -5628,8 +5697,10 @@
     rvHlaska('', '');
     rvKresli();
   }
-  function zavriRychly() {
-    if (rvVrstva) rvVrstva.hidden = true;
+  function zavriRychly(zHistorie) {
+    if (!rvVrstva || rvVrstva.hidden) return;
+    if (!zHistorie) { vrstvaZavrena('rychly'); return; }
+    rvVrstva.hidden = true;
     document.body.style.overflow = '';
     rvStav = null;
     if (rvOdlet) { clearTimeout(rvOdlet); rvOdlet = null; }
@@ -5873,7 +5944,7 @@
     if (ne) ne.addEventListener('click', function () { rvRozhodni(PKRychly.VLEVO); });
     if (ano) ano.addEventListener('click', function () { rvRozhodni(PKRychly.VPRAVO); });
     if (zp) zp.addEventListener('click', rvZpet);
-    if (za) za.addEventListener('click', zavriRychly);
+    if (za) za.addEventListener('click', function () { zavriRychly(); });   // bez obalu by se předal click jako „zHistorie"
     /* „Projít dalších 20" vzniká až na konci dávky, takže se na něj
        poslouchá přes balíček karet, ne přímo. */
     var deck = rvPrvek('rv-deck');
@@ -6818,8 +6889,11 @@
         prekresliPosuvniky();
         var prvni = ov.querySelector('.rz-x');
         if (prvni) prvni.focus();
+        vrstvaOtevrena('rozsah-' + zkratka, function () { zavri(true); });
       }
-      function zavri() {
+      function zavri(zHistorie) {
+        if (ov.hidden) return;
+        if (!zHistorie) { vrstvaZavrena('rozsah-' + zkratka); return; }
         ov.hidden = true;
         tlac.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('vm-otevreno');
@@ -6830,8 +6904,10 @@
          stahování, ať se slib `aria-modal` drží všude stejně. */
       zamkniTab(ov);
       tlac.addEventListener('click', otevri);
-      ov.querySelector('.rz-x').addEventListener('click', zavri);
-      p.hotovoEl.addEventListener('click', zavri);
+      /* Obal kvůli události: bez něj by se kliknutí předalo jako příznak
+         „už couvnuto v historii" a záznam by v ní zůstal ležet. */
+      ov.querySelector('.rz-x').addEventListener('click', function () { zavri(); });
+      p.hotovoEl.addEventListener('click', function () { zavri(); });
       ov.querySelector('.rz-vymaz').addEventListener('click', function () {
         poleOd.value = ''; poleDo.value = ''; p.prvni = -1;
         prectiRozsahy();
