@@ -531,6 +531,9 @@ jobs:
       - name: Okno „Stáhnout výběr" (co slíbí, to stáhne)
         run: node scripts/test-vyvoz-okno.mjs
 
+      - name: Na co je vidět, na to se dá klepnout
+        run: node scripts/test-pod-hlavickou.mjs
+
       - name: Přidání vlastního pozemku (celá cesta)
         run: node scripts/test-pridat.mjs
 

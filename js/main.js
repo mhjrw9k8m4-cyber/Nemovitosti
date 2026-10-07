@@ -5245,6 +5245,11 @@
       (novych === 1 ? 'nový od minule' : (novych < 5 ? 'nové od minule' : 'nových od minule')) + '</span>';
     // Když se zrovna listují uložené, řekneme rovnou, kde bydlí.
     if (favOnly) pripisky += ' <span class="mc-pozn">uloženo jen v tomhle prohlížeči</span>';
+    /* „Doporučené" není žebříček, pořadí se každý den zamíchá. Stávalo
+       to v závorce u volby řazení, kde to přečetl jen ten, kdo rozbalil
+       seznam — a v zavřeném rozbalovači se text ještě ořízl. Tady to
+       vidí každý, komu se tak právě řadí, a je to výchozí pořadí. */
+    if (sortMode === 'demand' && matched) pripisky += ' <span class="mc-pozn">pořadí se střídá každý den</span>';
     // Text je ve <span>, aby podtržení zůstalo u písmen — tlačítko samo je
     // vyšší kvůli dotyku (viz .mc-skryte v css/styles.css).
     if (skryte.length) tlacitka += '<button type="button" class="mc-skryte" id="mc-skryte">' +
@@ -5300,16 +5305,22 @@
        nabídkami je rychlejší projít seznam než pouštět vrstvu. */
     if (matched >= 5) tlacitka += '<button type="button" class="mc-skryte" id="mc-rychly">Rychlý výběr</button>';
     countEl.innerHTML = headLabel + (matched ? ' · <span class="mc-sub">' + fmt(matched) + ' na mapě</span>' : '')
-      + pripisky + (tlacitka ? '<span class="mc-akce">' + tlacitka + '</span>' : '');
-    var vb = countEl.querySelector('#mc-vyvoz');
+      + pripisky;
+    /* Tlačítka do VLASTNÍHO obalu, ne do hlavičky. Vedle nich stojí
+       „Uložené" a rozbalovač řazení, které se nepřekreslují — kdyby se
+       přepisoval celý pruh, zmizely by uprostřed výběru. */
+    var akceEl = document.getElementById('mc-akce') || countEl;
+    if (akceEl !== countEl) akceEl.innerHTML = tlacitka;
+    else if (tlacitka) countEl.innerHTML += '<span class="mc-akce">' + tlacitka + '</span>';
+    var vb = akceEl.querySelector('#mc-vyvoz');
     if (vb) vb.addEventListener('click', function (e) { e.stopPropagation(); stahniTabulku(); });
-    var rb = countEl.querySelector('#mc-rychly');
+    var rb = akceEl.querySelector('#mc-rychly');
     if (rb) rb.addEventListener('click', function (e) { e.stopPropagation(); otevriRychly(); });
-    var sb = countEl.querySelector('#mc-skryte');
+    var sb = akceEl.querySelector('#mc-skryte');
     if (sb) sb.addEventListener('click', function (e) { e.stopPropagation(); ukazSkryte = !ukazSkryte; renderList(); });
-    var pb = countEl.querySelector('#mc-prosle');
+    var pb = akceEl.querySelector('#mc-prosle');
     if (pb) pb.addEventListener('click', function (e) { e.stopPropagation(); ukazProsle = !ukazProsle; renderList(); });
-    var qb = countEl.querySelector('#mc-podobne');
+    var qb = akceEl.querySelector('#mc-podobne');
     if (qb) qb.addEventListener('click', function (e) { e.stopPropagation(); ukazPodobne = !ukazPodobne; renderList(); });
     if (matched === 0) {
       /* Dřív to byl vlastní výčet, který neznal kraj, cenu za metr,
@@ -5563,6 +5574,26 @@
     catch (e) { return false; }
   }
 
+  /* ÚVOD SE UKÁŽE JEDNOU. Kdo funkci nezná, dostane napřed tři řádky
+     o tom, co se bude dít a kterým směrem — jinak se první kartu bojí
+     chytit, protože neví, co tah udělá. Kdo ji zná, ho nikdy neuvidí.
+     Odpověď je v prohlížeči jako všechno ostatní, takže na jiném
+     zařízení se ukáže znovu; to je lepší než nic, a účet na to není. */
+  var RV_UVOD_KLIC = 'pk_rv_uvod_v1';
+  function rvUvodVidel() {
+    try { return localStorage.getItem(RV_UVOD_KLIC) === '1'; } catch (e) { return false; }
+  }
+  function rvUkazUvod(ukaz) {
+    var u = rvPrvek('rv-uvod'), d = rvPrvek('rv-deck'), a = rvVrstva && rvVrstva.querySelector('.rv-akce');
+    var n = rvVrstva && rvVrstva.querySelector('.rv-napoveda');
+    if (u) u.hidden = !ukaz;
+    /* Karta a tlačítka se na tu chvíli schovají — s úvodem přes ně by
+       okno jen přetékalo a nebylo by poznat, co si má člověk přečíst. */
+    if (d) d.hidden = ukaz;
+    if (a) a.hidden = ukaz;
+    if (n) n.hidden = ukaz;
+    if (ukaz) { var ok = rvPrvek('rv-uvod-ok'); if (ok) { try { ok.focus(); } catch (e) {} } }
+  }
   function otevriRychly() {
     if (!window.PKRychly) return;
     rvVrstva = rvPrvek('rv-vrstva');
@@ -5570,8 +5601,23 @@
     rvNalozDavku();
     rvVrstva.hidden = false;
     document.body.style.overflow = 'hidden';
-    var z = rvPrvek('rv-zavrit'); if (z) { try { z.focus(); } catch (e) {} }
+    var prvne = !rvUvodVidel();
+    rvUkazUvod(prvne);
+    var z = rvPrvek(prvne ? 'rv-uvod-ok' : 'rv-zavrit');
+    if (z) { try { z.focus(); } catch (e) {} }
   }
+  (function rvUvodOvladani() {
+    var ok = document.getElementById('rv-uvod-ok');
+    if (ok) ok.addEventListener('click', function () {
+      try { localStorage.setItem(RV_UVOD_KLIC, '1'); } catch (e) {}
+      rvUkazUvod(false);
+      var z = rvPrvek('rv-zavrit'); if (z) { try { z.focus(); } catch (e) {} }
+    });
+    /* A kdo si to chce přečíst znovu, má otazník v hlavičce. Bez něj by
+       se vysvětlení dalo vyvolat jen vymazáním paměti prohlížeče. */
+    var jak = document.getElementById('rv-jak');
+    if (jak) jak.addEventListener('click', function () { rvUkazUvod(true); });
+  }());
   /* Jedna dávka, ne celý výpis. Napoprvé se sypaly všechny nabídky
      a v hlavičce stálo „Zbývá 1 955" — to není síto, to je běžící pás.
      Po dvaceti kartách se člověk rozhodne, jestli chce další. */

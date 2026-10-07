@@ -3556,6 +3556,8 @@
 
     if (favOnly) pripisky += ' <span class="mc-pozn">uloženo jen v tomhle prohlížeči</span>';
 
+    if (sortMode === 'demand' && matched) pripisky += ' <span class="mc-pozn">pořadí se střídá každý den</span>';
+
     if (skryte.length) tlacitka += '<button type="button" class="mc-skryte" id="mc-skryte">' +
       (ukazSkryte ? 'Schovat skryté' : 'Zobrazit skryté (' + skryte.length + ')') + '</button>';
 
@@ -3594,16 +3596,20 @@
 
     if (matched >= 5) tlacitka += '<button type="button" class="mc-skryte" id="mc-rychly">Rychlý výběr</button>';
     countEl.innerHTML = headLabel + (matched ? ' · <span class="mc-sub">' + fmt(matched) + ' na mapě</span>' : '')
-      + pripisky + (tlacitka ? '<span class="mc-akce">' + tlacitka + '</span>' : '');
-    var vb = countEl.querySelector('#mc-vyvoz');
+      + pripisky;
+
+    var akceEl = document.getElementById('mc-akce') || countEl;
+    if (akceEl !== countEl) akceEl.innerHTML = tlacitka;
+    else if (tlacitka) countEl.innerHTML += '<span class="mc-akce">' + tlacitka + '</span>';
+    var vb = akceEl.querySelector('#mc-vyvoz');
     if (vb) vb.addEventListener('click', function (e) { e.stopPropagation(); stahniTabulku(); });
-    var rb = countEl.querySelector('#mc-rychly');
+    var rb = akceEl.querySelector('#mc-rychly');
     if (rb) rb.addEventListener('click', function (e) { e.stopPropagation(); otevriRychly(); });
-    var sb = countEl.querySelector('#mc-skryte');
+    var sb = akceEl.querySelector('#mc-skryte');
     if (sb) sb.addEventListener('click', function (e) { e.stopPropagation(); ukazSkryte = !ukazSkryte; renderList(); });
-    var pb = countEl.querySelector('#mc-prosle');
+    var pb = akceEl.querySelector('#mc-prosle');
     if (pb) pb.addEventListener('click', function (e) { e.stopPropagation(); ukazProsle = !ukazProsle; renderList(); });
-    var qb = countEl.querySelector('#mc-podobne');
+    var qb = akceEl.querySelector('#mc-podobne');
     if (qb) qb.addEventListener('click', function (e) { e.stopPropagation(); ukazPodobne = !ukazPodobne; renderList(); });
     if (matched === 0) {
 
@@ -3786,6 +3792,20 @@
     catch (e) { return false; }
   }
 
+  var RV_UVOD_KLIC = 'pk_rv_uvod_v1';
+  function rvUvodVidel() {
+    try { return localStorage.getItem(RV_UVOD_KLIC) === '1'; } catch (e) { return false; }
+  }
+  function rvUkazUvod(ukaz) {
+    var u = rvPrvek('rv-uvod'), d = rvPrvek('rv-deck'), a = rvVrstva && rvVrstva.querySelector('.rv-akce');
+    var n = rvVrstva && rvVrstva.querySelector('.rv-napoveda');
+    if (u) u.hidden = !ukaz;
+
+    if (d) d.hidden = ukaz;
+    if (a) a.hidden = ukaz;
+    if (n) n.hidden = ukaz;
+    if (ukaz) { var ok = rvPrvek('rv-uvod-ok'); if (ok) { try { ok.focus(); } catch (e) {} } }
+  }
   function otevriRychly() {
     if (!window.PKRychly) return;
     rvVrstva = rvPrvek('rv-vrstva');
@@ -3793,8 +3813,22 @@
     rvNalozDavku();
     rvVrstva.hidden = false;
     document.body.style.overflow = 'hidden';
-    var z = rvPrvek('rv-zavrit'); if (z) { try { z.focus(); } catch (e) {} }
+    var prvne = !rvUvodVidel();
+    rvUkazUvod(prvne);
+    var z = rvPrvek(prvne ? 'rv-uvod-ok' : 'rv-zavrit');
+    if (z) { try { z.focus(); } catch (e) {} }
   }
+  (function rvUvodOvladani() {
+    var ok = document.getElementById('rv-uvod-ok');
+    if (ok) ok.addEventListener('click', function () {
+      try { localStorage.setItem(RV_UVOD_KLIC, '1'); } catch (e) {}
+      rvUkazUvod(false);
+      var z = rvPrvek('rv-zavrit'); if (z) { try { z.focus(); } catch (e) {} }
+    });
+
+    var jak = document.getElementById('rv-jak');
+    if (jak) jak.addEventListener('click', function () { rvUkazUvod(true); });
+  }());
 
   function rvNalozDavku() {
     var pomer = { jeSkryty: jeSkryty, jeUlozeny: isFav };

@@ -130,7 +130,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=259d0f95">
+  <link rel="stylesheet" href="css/styles.min.css?v=6844762e">
 </head>
 <body>
 
@@ -370,25 +370,6 @@
             </div>
           </details>
 
-          <div class="msv-ovladani">
-            <button type="button" class="mc-prep msv-ulozene" id="map-fav" aria-pressed="false"><span class="mcp-v" aria-hidden="true"></span>Uložené</button>
-            <label class="msv-razeni">
-              <span class="visually-hidden">Seřadit výsledky</span>
-              <select class="map-select" id="map-sort" aria-label="Řazení příležitostí">
-                <option value="demand">Doporučené (denně se střídá)</option>
-                <option value="near">Nejblíž ke mně</option>
-                <option value="perm2_asc">Nejlepší cena/m²</option>
-                <option value="price_asc">Nejlevnější</option>
-                <option value="price_desc">Nejdražší</option>
-                <option value="area_desc">Největší výměra</option>
-                <option value="area_asc">Nejmenší výměra</option>
-                <option value="sleva_desc">Největší sleva proti okolí</option>
-                <option value="drazba_asc">Nejdřív končící dražba</option>
-                <option value="nove">Nejnovější</option>
-                <option value="nahodne">Náhodně (zamíchat)</option>
-              </select>
-            </label>
-          </div>
 
           <div class="mv-toggle" role="tablist" aria-label="Přepnout seznam a mapu">
             <button type="button" class="mvt-btn active" data-mv="seznam" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Seznam <span class="mvt-n" id="mvt-count"></span></button>
@@ -398,15 +379,46 @@
         </div>
 
         <aside class="map-side">
-          <!-- Nad výsledky zůstal jen počet. Řazení a Uložené se
-               přestěhovaly do lišty nad mapou: ve sloupci si brala tři
-               řádky (102 px z 684) a seznam pak byl 271 px vysoký, kdežto
-               jedna karta má 420 px — nešla vidět ani jedna celá nabídka.
-               Pořád to nejsou filtry: v liště stojí vpravo za dělicí
-               linkou, odděleně od hledání a filtrů, a na mobilu je od
-               filtrů dělí linka taky. -->
+          <!-- VŠECHNO, CO DĚLÁM SE SVÝM VÝPISEM, JE NA JEDNOM MÍSTĚ.
+               „Uložené" a řazení stály v liště nad mapou, kdežto
+               „Zobrazit skryté", „Stáhnout výběr" a „Rychlý výběr"
+               v hlavičce výpisu — naměřeno na telefonu 360×800:
+               Uložené na 331 px, ostatní na 554 a 606, tedy 223 px
+               a celý pruh mezi tlačítky, která dělají totéž.
+               Ani jedno z nich přitom nic neubírá z mapy: řazení i
+               „jen uložené" sahají výhradně na seznam (renderList),
+               takže nad mapou neměly co dělat. V panelu filtrů být
+               nesmějí — tam patří jen to, co opravdu ubírá nabídky.
+               Tlačítka, která se překreslují podle výpisu, jdou do
+               #mc-akce; ten obal zůstává, aby přepsání hlavičky
+               nesmazalo rozbalovač řazení uprostřed výběru. -->
           <div class="ms-vysledky">
             <div class="map-count mono" id="map-count">Načítám…</div>
+            <div class="msv-ovladani">
+              <button type="button" class="mc-prep msv-ulozene" id="map-fav" aria-pressed="false"><span class="mcp-v" aria-hidden="true"></span>Uložené</button>
+              <label class="msv-razeni">
+                <span class="visually-hidden">Seřadit výsledky</span>
+                <select class="map-select" id="map-sort" aria-label="Řazení příležitostí">
+                  <!-- „denně se střídá" stálo tady v závorce a bylo to
+                       jediné místo na webu, kde se to přiznávalo — jenže
+                       v zavřeném rozbalovači se text ořízl a přečetl ho
+                       jen ten, kdo ho rozbalil. Je to teď v hlavičce
+                       výpisu, kde to vidí každý, komu se tak právě řadí. -->
+                  <option value="demand">Doporučené</option>
+                  <option value="near">Nejblíž ke mně</option>
+                  <option value="perm2_asc">Nejlepší cena/m²</option>
+                  <option value="price_asc">Nejlevnější</option>
+                  <option value="price_desc">Nejdražší</option>
+                  <option value="area_desc">Největší výměra</option>
+                  <option value="area_asc">Nejmenší výměra</option>
+                  <option value="sleva_desc">Největší sleva proti okolí</option>
+                  <option value="drazba_asc">Nejdřív končící dražba</option>
+                  <option value="nove">Nejnovější</option>
+                  <option value="nahodne">Náhodně (zamíchat)</option>
+                </select>
+              </label>
+            </div>
+            <span class="mc-akce" id="mc-akce"></span>
           </div>
           <div class="recent-strip" id="recent-strip" hidden></div>
           <ul class="opp-list" id="opp-list" aria-label="Seznam příležitostí"><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li></ul>
@@ -734,7 +746,32 @@
     <!-- Kolik čeho už člověk rozdal. Bez toho nebylo po pěti kartách
          poznat, jestli se vůbec něco uložilo. -->
     <span class="rv-bilance" id="rv-bilance"></span>
+    <button type="button" class="rv-napoveda-btn" id="rv-jak" aria-label="Jak to funguje">?</button>
     <button type="button" class="rv-zavrit" id="rv-zavrit" aria-label="Zavřít rychlý výběr">Hotovo</button>
+  </div>
+  <!-- CO TO VLASTNĚ JE. Před otevřením o funkci neexistovalo jediné
+       slovo kromě názvu „Rychlý výběr" — a ten může znamenat uložený
+       filtr, přednastavené hledání, cokoli. Jediná věta, která ji
+       vysvětlovala, byla NEJMENŠÍ text (12 px) v nejspodnějším koutě
+       okna, na y 750–786 z 800, tedy pod kartou i pod tlačítky. A
+       hlavně neříkala to podstatné: KTERÝM SMĚREM se co děje.
+       Ukáže se jednou; podruhé na otazník v hlavičce. -->
+  <div class="rv-uvod" id="rv-uvod" hidden>
+    <h3>Pozemky po jednom</h3>
+    <p>Místo dlouhého seznamu dostanete jednu nabídku přes celou obrazovku
+       a řeknete u ní jen ano, nebo ne. Po dvaceti kartách se zastavíme.</p>
+    <!-- Text každého řádku musí být v JEDNOM obalu. Bez něj se z každého
+         <b> stala samostatná položka pružného rozvržení a věta se
+         rozpadla do poskakujících sloupečků. -->
+    <ul class="rv-uvod-smery">
+      <li><span class="rv-uvod-znak ano" aria-hidden="true">♥</span>
+        <span><b>Doprava</b> (nebo tlačítko <b>Uložit</b>) — pozemek si uložíte mezi uložené.</span></li>
+      <li><span class="rv-uvod-znak ne" aria-hidden="true">✕</span>
+        <span><b>Doleva</b> (nebo <b>Tenhle ne</b>) — schová se vám z výpisu, i mimo tohle okno.</span></li>
+      <li><span class="rv-uvod-znak zpet" aria-hidden="true">↩</span>
+        <span>Spletli jste se? <b>Zpět</b> vrátí poslední kartu.</span></li>
+    </ul>
+    <button type="button" class="rv-uvod-ok" id="rv-uvod-ok">Začít</button>
   </div>
   <div class="rv-deck" id="rv-deck"></div>
   <!-- Hláška leží MIMO balíček karet: uvnitř se při každém překreslení
@@ -751,8 +788,10 @@
   <!-- CO SE S POZEMKEM STANE, MUSÍ BÝT NAPSANÉ. „Tenhle ne" ho schová
        z celého výpisu, ne jen z téhle vrstvy — a to se nikde nedočetl,
        takže po zavření chyběly pozemky a nebylo jasné proč. -->
-  <p class="rv-napoveda">Posuňte kartu prstem, nebo klepněte. <b>Uložit</b> si ho dá mezi uložené,
-    <b>Tenhle ne</b> ho schová z výpisu — vrátit jde obojí.</p>
+  <!-- SMĚR JE TO PODSTATNÉ. Stálo tu „Posuňte kartu prstem" — a člověk
+       se musel odvážit zatáhnout, aby zjistil, co se stane. -->
+  <p class="rv-napoveda"><b>Doprava</b> uložit, <b>doleva</b> schovat z výpisu — prstem
+    nebo tlačítky. Obojí jde vrátit.</p>
 </div>
 <script src="js/min/ceny.js?v=16c72c57" defer></script>
   <script src="js/min/zlevneni.js?v=8cbae6d1" defer></script>
@@ -773,7 +812,7 @@
      člověk něco poznamenal. Soubor má 1,5 kB po minifikaci. -->
 <script src="js/min/poznamky.js?v=966134ca"></script>
 <script src="js/min/mapove-vrstvy.js?v=93a96d67" defer></script>
-<script src="js/min/main.js?v=21f836e9" defer></script>
+<script src="js/min/main.js?v=5437b405" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

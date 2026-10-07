@@ -1341,10 +1341,14 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 /* Mapa je hlavní produkt — dopřejeme jí víc šířky (jako velké realitní weby),
    nadpis nad ní zůstává vycentrovaný v užší míře. */
 .hero-map .map-wide{position:relative; z-index:1; max-width:var(--m-wrap); margin:0 auto; padding:0 32px;}
-/* Panel hledání přeloží spodek obrazu — plave nad ním, jako na velkých
-   realitních webech. Vlasová linka na horní hraně mu dá tloušťku: bez ní
-   vypadal jako nalepený papír, ne jako karta ležící nad obrazem. */
-.hero-map .map-wide{margin-top:-80px;}
+/* ŽÁDNÉ VYTAŽENÍ NAHORU. Stálo tu margin-top:-80px, aby panel hledání
+   překládal spodek uvítacího obrazu — jenže ten obraz je pryč (odebral
+   se na výslovné přání) a odskok zůstal. Překrýval tedy prázdno a tahal
+   celou aplikaci pod pevnou hlavičku: naměřeno na 1280×900 začínala
+   .map-wide na y=5 místo 85 a z ovládacího pruhu (y 6–111) bylo horních
+   79 px schovaných za hlavičkou — hrany filtrů Vše/Prodej/Dražba/Exekuce
+   rozpůlené a po 40 px posunutí docela nedosažitelné. */
+.hero-map .map-wide{margin-top:20px;}
 .hero-map .map-app{box-shadow:var(--e3), inset 0 1px 0 rgba(255,255,255,0.95);}
 .hero-map .map-app{margin-top:0;}
 @media (max-width:1200px){ .hero-map .map-wide{max-width:100%;} }
@@ -1355,7 +1359,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
   /* Popisek se na úzkém displeji lámal na dvě slova; užší prostrkání
      a o půl bodu menší písmo ho udrží na jednom řádku. */
   .hero-map .hero-head .eyebrow{font-size:12px; letter-spacing:0.04em;}
-  .hero-map .map-wide{margin-top:-64px;}
+  .hero-map .map-wide{margin-top:20px;}
   .hero-head{margin-bottom:20px;}
   .hero-head .eyebrow{margin-bottom:12px;}
   .hero-head h1{font-size:34px; margin-bottom:12px;}
@@ -1816,6 +1820,12 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Zůstal v něm jen počet; jeho vlastní odsazení dolů by se s odsazením
    skupiny sčítalo na 22 px. */
 .ms-vysledky .map-count{margin-bottom:0;}
+/* Tlačítka výpisu dostanou celý řádek pod počtem a ovládáním. Vedle sebe
+   by se tlačila s rozbalovačem řazení; je jich podle stavu až pět.
+   Vlastní margin se ruší: odstup řeší mezera pruhu, a dohromady dávaly
+   18 px proti 8 px nad ovládáním — tři různé odstupy na třech řádcích
+   téže hlavičky. */
+.ms-vysledky > .mc-akce{flex:1 1 100%; margin-top:0;}
 .msv-ovladani{display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;}
 .msv-ulozene{min-height:36px; padding:6px 12px; font-size:12px;}
 .msv-razeni{display:flex; min-width:0;}
@@ -1823,7 +1833,15 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 @media (max-width:560px){
   .ms-vysledky{flex-direction:column; align-items:stretch;}
   .msv-ovladani{justify-content:space-between;}
-  .msv-razeni{flex:1 1 auto;}
+  /* Řazení se smrskne, aby se vedle něj vešlo „Uložené". S flex-basis
+     auto si bralo celých 288 px z 288 a osmdesátipixelové „Uložené"
+     odsunulo na vlastní řádek — čtyři ovládací prvky pod sebou a
+     250 px, než začne první nabídka.
+     A ŘÁDEK SE NELÁME. Se zalomením si šířky sedly na 79,6 + 8 + 200,4
+     = přesně 288 px z 288 — tedy o zlomek pixelu přes, a pruh naskočil
+     zpátky na dva řádky (96 px místo 44). Rozbalovač se radši zúží. */
+  .msv-ovladani{flex-wrap:nowrap;}
+  .msv-razeni{flex:1 1 120px; min-width:0;}
   .msv-razeni .map-select{width:100%; max-width:none;}
 }
 .mcv-pozn{margin:6px 0 0; font-size:12px; line-height:1.45; color:var(--muted);}
@@ -2296,6 +2314,34 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .rv-obraz img, .rv-obraz svg{width:100%; height:100%; object-fit:cover; display:block;}
 /* RAZÍTKO. Objeví se při tahu prstem i při klepnutí na tlačítko, takže
    je vidět rozhodnutí, ne jen jeho následek. */
+/* ÚVOD RYCHLÉHO VÝBĚRU. Ukáže se jednou, místo první karty. */
+.rv-uvod{display:flex; flex-direction:column; justify-content:center; gap:14px;
+  flex:1 1 auto; min-height:0; overflow:auto; padding:20px; text-align:left;}
+.rv-uvod[hidden]{display:none;}
+.rv-uvod h3{margin:0; font-size:24px; color:var(--text-ondark);}
+.rv-uvod > p{margin:0; font-size:15px; line-height:1.55; color:var(--text-ondark-mute);}
+.rv-uvod-smery{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:14px;}
+.rv-uvod-smery li{display:flex; align-items:flex-start; gap:12px;
+  font-size:15px; line-height:1.5; color:var(--text-ondark);}
+/* Značka má tutéž barvu jako tlačítko, které dělá totéž — podle ní se
+   pak v okně pozná, co je co, bez čtení. */
+.rv-uvod-znak{flex:none; display:flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:50%; font-size:16px; font-weight:700;
+  border:1px solid var(--line-strong); background:var(--plocha-jemna);}
+.rv-uvod-znak.ano{color:var(--c-ok-ink);}
+.rv-uvod-znak.ne{color:var(--c-exekuce-ink);}
+.rv-uvod-znak.zpet{color:var(--text-ondark-mute);}
+.rv-uvod-ok{align-self:stretch; min-height:48px; margin-top:6px; padding:0 20px;
+  border:0; border-radius:var(--r-ovladani); cursor:pointer;
+  font-family:inherit; font-size:16px; font-weight:700;
+  color:var(--text-na-znacce); background:var(--plocha-znacka);}
+/* Otazník v hlavičce vrstvy: dostat se k vysvětlení i podruhé. */
+.rv-napoveda-btn{flex:none; width:36px; height:36px; margin-left:auto; padding:0;
+  border:1px solid var(--line-strong); border-radius:50%; cursor:pointer;
+  font-family:inherit; font-size:15px; font-weight:700;
+  color:var(--text-ondark-mute); background:var(--plocha-jemna);}
+.rv-napoveda-btn:hover{color:var(--copper); border-color:var(--copper-bright);}
+
 .rv-razitko{position:absolute; top:16px; z-index:4; padding:6px 14px; border-radius:var(--r-sm);
   border:3px solid currentColor; font-size:18px; font-weight:800; letter-spacing:0.04em;
   text-transform:uppercase; background:var(--plocha-plovouci); opacity:0;
@@ -2975,12 +3021,11 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
     grid-template-columns:minmax(220px, 1fr) auto auto;
     grid-template-areas:
       "hledani okoli  filtry"
-      "rychle  rychle pohled";}
+      "rychle  rychle rychle";}
   .map-controls-panel > .map-search{grid-area:hledani;}
   .map-controls-panel > .map-okoli{grid-area:okoli;}
   .map-controls-panel > .ms-filters{grid-area:filtry; justify-self:stretch;}
   .map-controls-panel > .ms-group{grid-area:rychle;}
-  .map-controls-panel > .msv-ovladani{grid-area:pohled;}
   /* Rozpoznané odznaky a pruh hlídaného místa jsou věty, ne tlačítka:
      dostanou vlastní řádek pod lištou, přes celou šířku. */
   .map-controls-panel > .ms-chipy, .map-controls-panel > .misto-pruh{grid-column:1 / -1;}
@@ -3005,16 +3050,6 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   .map-controls-panel .map-filters::-webkit-scrollbar,
   .map-controls-panel .ms-chipy::-webkit-scrollbar{display:none;}
   .map-controls-panel .map-filters > *, .map-controls-panel .ms-chipy > *{flex:none;}
-  /* Uložené a řazení vpravo za dělicí linkou. Nejsou to filtry — mění
-     pohled na tentýž výsledek — a oddělená skupina to říká beze slov.
-     Tahle poznámka nahrazuje starší, podle které řazení patří nad seznam:
-     platil u ní důvod (v panelu filtrů si ho lidi pletli s filtrem), jen
-     se tehdy řešil místem ve sloupci. V liště vpravo stojí mimo filtry. */
-  .map-controls-panel > .msv-ovladani{justify-self:end; flex-wrap:nowrap;
-    padding-left:14px; border-left:1px solid var(--line);}
-  /* Na vlastním sloupci se vejde celý popisek řazení; v 210 px se
-     „Doporučené (denně se střídá)" ořízlo na „Doporučené (denně se s…". */
-  .map-controls-panel .msv-razeni .map-select{max-width:260px;}
   /* Filtry jako plovoucí panel. Rám i pozadí drží panel, ne <details>. */
   .ms-filters{border:0; background:none; overflow:visible;}
   .ms-filters .msf-summary{border:1px solid var(--line-strong); border-radius:var(--r-sm);
@@ -3058,12 +3093,6 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
      buď seznam, nebo mapa. Výchozí je SEZNAM — na úvodní stránce mají být
      hned vidět nabídky, ne ovládání mapy. Mapa je na jedno klepnutí vedle. */
   .map-controls-panel{order:1; border-right:0; border-bottom:1px solid var(--line);}
-  /* Uložené a řazení jsou teď v panelu (na desktopu v liště vpravo).
-     Tady stojí nad přepínačem Seznam/Mapa, a aby je nikdo nečetl jako
-     další filtr, dělí je od filtrů linka — stejná role, jakou má na
-     desktopu svislý oddělovač v liště. */
-  .map-controls-panel > .msv-ovladani{margin-top:12px; padding-top:12px;
-    border-top:1px solid var(--line);}
   .map-side{order:2; border-right:0; max-height:none;}
   .map-holder{order:3; height:74vh; height:74dvh; max-height:640px; min-height:460px;}
   .map-canvas{flex:1; min-height:0;}
@@ -4722,7 +4751,10 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   /* Ušetřeno na odsazeních, ne na textu. Hodnoty jsou naměřené:
      rozpad výšky úvodu na 320×568 ukázal, kde se místo ztrácelo. */
   .hero-band{padding:10px 0 64px;}
-  .hero-map .map-wide{margin-top:-56px;}   /* překryv panelu zůstává stejný */
+  /* Vytažení nahoru je pryč i tady. Překrývat se nemá co — uvítací blok
+     je odebraný — a na 390×844 to schovávalo hledací pole: z jeho 46 px
+     bylo 45 za hlavičkou a klepnutí trefilo „Přidat pozemek". */
+  .hero-map .map-wide{margin-top:20px;}
   .hero-plot{padding:8px 0 6px;}
   .hero-map .hero-head{margin-bottom:10px;}
   .hero-map .hero-head .eyebrow{margin-bottom:6px;}
@@ -5158,7 +5190,7 @@ h1, h2, h3,
 .mc-akce{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
 .mc-skryte{font:inherit; font-size:13px; font-weight:700; letter-spacing:0; text-transform:none;
   color:var(--text-ondark); background:var(--plocha-jemna); border:1px solid var(--line-strong);
-  border-radius:var(--r-pill); padding:0 14px; min-height:36px; cursor:pointer;
+  border-radius:var(--r-pill); padding:0 12px; min-height:36px; cursor:pointer;
   display:inline-flex; align-items:center; white-space:nowrap;
   transition:border-color var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
 .mc-skryte:hover{color:var(--copper); border-color:var(--copper-bright);}

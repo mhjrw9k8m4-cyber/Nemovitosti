@@ -44,6 +44,46 @@ const stav = () => p.evaluate(() => {
 pravda('na telefonu je tlačítko rychlého výběru vidět', await p.isVisible('#mc-rychly'));
 await p.click('#mc-rychly');
 await p.waitForTimeout(800);
+
+/* --- NAPRVÉ SE FUNKCE PŘEDSTAVÍ ------------------------------------
+   Před otevřením o ní neexistovalo jediné slovo kromě názvu „Rychlý
+   výběr" — a ten může znamenat uložený filtr nebo přednastavené
+   hledání. Jediná věta, která ji vysvětlovala, byla nejmenší text
+   (12 px) v nejspodnějším koutě okna, na y 750–786 z 800: pod kartou
+   i pod tlačítky. A neříkala to podstatné, totiž KTERÝM SMĚREM se co
+   děje, takže se první kartu nikdo nemohl odvážit chytit. */
+{
+  const u = await p.evaluate(() => {
+    const e = document.getElementById('rv-uvod');
+    return { videt: !!e && !e.hidden, text: e ? e.innerText.replace(/\s+/g, ' ') : '',
+      kartaVidet: !!document.querySelector('.rv-karta') && !document.getElementById('rv-deck').hidden };
+  });
+  pravda('napoprvé se funkce nejdřív představí', u.videt, 'úvod se neukázal');
+  pravda('a řekne, co dělá doprava i doleva',
+    /[Dd]oprava/.test(u.text) && /[Dd]oleva/.test(u.text), u.text.slice(0, 120));
+  pravda('a jmenuje obě tlačítka, ne jen tahy',
+    /Uložit/.test(u.text) && /Tenhle ne/.test(u.text), u.text.slice(0, 120));
+  /* Karta pod úvodem nesmí prosvítat: dvě vrstvy přes sebe by ho
+     přebily a nebylo by poznat, co si má člověk přečíst. */
+  pravda('a karta se zatím neplete do cesty', !u.kartaVidet, 'karta je vidět i přes úvod');
+  /* Klepnout jen tehdy, když je na co. Jinak by se zkouška zasekla na
+     skrytém tlačítku a místo „úvod se neukázal" by vypsala timeout —
+     a ten o příčině neřekne nic. */
+  if (u.videt) {
+    await p.click('#rv-uvod-ok');
+    await p.waitForTimeout(500);
+  } else {
+    await p.evaluate(() => { try { localStorage.setItem('pk_rv_uvod_v1', '1'); } catch (e) {} });
+    await p.click('#rv-zavrit').catch(() => {});
+    await p.waitForTimeout(300);
+    await p.click('#mc-rychly').catch(() => {});
+    await p.waitForTimeout(700);
+  }
+  pravda('po „Začít" úvod zmizí a karta je tu',
+    await p.evaluate(() => document.getElementById('rv-uvod').hidden
+      && !!document.querySelector('.rv-karta')), 'úvod nezmizel nebo karta nepřišla');
+}
+
 const s0 = await stav();
 pravda('otevře se vrstva s kartou', s0.otevreno && s0.karta.length > 0, JSON.stringify(s0));
 pravda('a na začátku není co vracet', s0.zpetVyp === true);
@@ -115,9 +155,16 @@ pravda('hlavička říká, kolikátá karta z dávky je na řadě (ne „zbývá
 const davka = Number((hlavicka.match(/z (\d+)/) || [])[1] || 0);
 pravda('a dávka je tak velká, aby se dala dojet (nejvýš 30 karet)',
   davka > 0 && davka <= 30, `dávka ${davka}`);
-pravda('pod tlačítky stojí, co se s pozemkem stane',
-  /schová/i.test(await p.evaluate(() => (document.querySelector('.rv-napoveda') || {}).textContent || '')),
-  'nápověda o skrytí z výpisu tam není');
+{
+  const n = await p.evaluate(() => (document.querySelector('.rv-napoveda') || {}).textContent || '');
+  pravda('pod tlačítky stojí, co se s pozemkem stane', /schov/i.test(n),
+    `nápověda o skrytí z výpisu tam není: „${n.trim()}"`);
+  /* A ROVNOU KTERÝM SMĚREM. Stálo tu jen „Posuňte kartu prstem" —
+     takže se člověk musel odvážit zatáhnout, aby zjistil, co se stane,
+     a tah je přitom nevratnější než klepnutí na tlačítko. */
+  pravda('a kterým směrem se co děje', /doprava/i.test(n) && /doleva/i.test(n),
+    `v nápovědě stojí „${n.trim()}"`);
+}
 
 // Dojet dávku do konce — konec musí opravdu přijít a nabídnout další.
 for (let i = 0; i < davka + 1; i++) { await p.keyboard.press('ArrowRight'); await p.waitForTimeout(90); }
@@ -205,6 +252,29 @@ pravda('a nabízená karta není ani jeden z nich', nevraci.kolize === 0,
     pravda('a na další kartě je políčko prázdné (poznámka se nepřenese)',
       dalsi.karta !== klic && !dalsi.hodnota, JSON.stringify(dalsi));
   }
+}
+
+/* --- A PODRUHÉ UŽ NE -----------------------------------------------
+   Vysvětlení, které se ukazuje pokaždé, je po třetím spuštění otrava
+   a lidi se ho naučí odklikávat bez čtení. Kdo si ho chce přečíst
+   znovu, má v hlavičce otazník — bez něj by se dalo vyvolat jedině
+   vymazáním paměti prohlížeče. */
+{
+  await p.click('#rv-zavrit');
+  await p.waitForTimeout(400);
+  await p.click('#mc-rychly');
+  await p.waitForTimeout(700);
+  pravda('podruhé se už úvod neukáže',
+    await p.evaluate(() => document.getElementById('rv-uvod').hidden), 'ukázal se znovu');
+  /* Úvod mohl zůstat otevřený (když se ukazuje pokaždé), a pak by se
+     na otazník klepalo přes něj. Zavře se tedy napřed, ať se měří
+     opravdu otazník. */
+  await p.evaluate(() => { const o = document.getElementById('rv-uvod-ok'); if (o && !o.closest('.rv-uvod').hidden) o.click(); });
+  await p.waitForTimeout(300);
+  await p.click('#rv-jak');
+  await p.waitForTimeout(400);
+  pravda('ale otazník v hlavičce ho vrátí',
+    await p.evaluate(() => !document.getElementById('rv-uvod').hidden), 'otazník nic neudělal');
 }
 
 await ctx.close(); await prohlizec.close();
