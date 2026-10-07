@@ -1345,7 +1345,15 @@
     }
     buildIndex(PROMODEL);
 
-    var nalez = findTarget(DATA);
+    var hledaci = DATA;
+    if (window.PKHlidani && window.PKHlidani.bezDuplicit) {
+      var bez = window.PKHlidani.bezDuplicit(DATA);
+
+      bez.forEach(function (d) { try { d.__vbez = true; } catch (e) {} });
+      hledaci = bez.concat(DATA.filter(function (d) { return !d.__vbez; }));
+      bez.forEach(function (d) { try { delete d.__vbez; } catch (e) {} });
+    }
+    var nalez = findTarget(hledaci);
 
     if (jenPresne && !(nalez && nalez.presne)) return false;
     var target = quick;

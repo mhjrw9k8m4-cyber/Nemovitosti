@@ -1996,7 +1996,34 @@
        do cizího pozemku. Tenhle cizí nález se dosud aspoň nevykresloval,
        jenže počítal se z něj cenový verdikt — na inzerátu od majitele
        tedy mohla stát věta o ceně sousedního pozemku. */
-    var nalez = findTarget(DATA);
+    /* HLEDÁ SE V TÉMŽE SEZNAMU, JAKÝ UKAZUJE VÝPIS — tedy BEZ DUPLICIT.
+       Odstranění duplicit nejen zahazuje, ono i SKLÁDÁ: u dražby, kterou
+       hlásí dva zdroje, se k té s celou výměrou přebere parcelní číslo
+       z té druhé (js/hlidani-logika.js, lepsiZeDvou). Vznikne tím záznam,
+       jaký v datech samostatně NENÍ — a právě ten je na kartě ve výpisu.
+       Naměřeno na ostrých datech: 20 karet z 1 955 má klíč, který se
+       v syrových datech nevyskytuje.
+       Stránka pozemku přitom hledala v syrových datech, takže u těch
+       dvaceti přesná shoda nikdy nenastala a padalo se na náhradní
+       „nejbližší bod do 500 m" — a to je v obci s víc dražbami CIZÍ
+       pozemek. Změřeno na kartě Rohatce: karta 1 043 887 Kč, stránka
+       2 795 918 Kč. Tím se rozešel i klíč pozemku, takže poznámka
+       napsaná na stránce se ukládala pod klíč, který na kartě nikdo
+       nehledá — a odznak „Poznámka" se ve výpisu neukázal. Přesně na to
+       si člověk, který web používá, stěžoval.
+       Syrové záznamy zůstávají v seznamu ZA nimi: kdo přijde se starším
+       odkazem na tu podruhé vypsanou nabídku, má svou stránku dostat,
+       ne „Pozemek nenalezen". */
+    var hledaci = DATA;
+    if (window.PKHlidani && window.PKHlidani.bezDuplicit) {
+      var bez = window.PKHlidani.bezDuplicit(DATA);
+      /* Značka místo hledání v poli: porovnávat 2 012 × 1 955 záznamů
+         kus po kuse by na telefonu stálo zbytečný čas. */
+      bez.forEach(function (d) { try { d.__vbez = true; } catch (e) {} });
+      hledaci = bez.concat(DATA.filter(function (d) { return !d.__vbez; }));
+      bez.forEach(function (d) { try { delete d.__vbez; } catch (e) {} });
+    }
+    var nalez = findTarget(hledaci);
     /* PRVNÍ KOLO JEN NA PŘESNÝ NÁLEZ. Živé inzeráty od majitelů leží
        v databázi a čekat na její odpověď u všech stažených nabídek by
        znamenalo držet stránku na statické kostře kvůli něčemu, co se jich

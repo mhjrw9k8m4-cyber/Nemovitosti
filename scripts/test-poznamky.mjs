@@ -478,5 +478,96 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
   await ctx.close();
 }
 
+/* --- KARTA A JEJÍ STRÁNKA MUSÍ BÝT TÝŽ POZEMEK --------------------
+ *
+ * Stížnost od člověka, který web používá: „napsání poznámky nefunguje
+ * a neukazuje se u pozemku na hlavní kartě před rozkliknutím."
+ *
+ * Příčina nebyla v poznámkách. Odstranění duplicit (js/hlidani-logika.js)
+ * nejen zahazuje, ono i SKLÁDÁ: u dražby hlášené dvěma zdroji se k té
+ * s celou výměrou přebere parcelní číslo z té druhé. Vznikne záznam,
+ * jaký v datech samostatně NENÍ — a právě ten je na kartě ve výpisu.
+ * Stránka pozemku ale hledala v syrových datech, takže u takové karty
+ * přesná shoda nenastala a padalo se na „nejbližší bod do 500 m", tedy
+ * v obci s víc dražbami na CIZÍ pozemek. Naměřeno na kartě Rohatce:
+ * karta 1 043 887 Kč, stránka 2 795 918 Kč. Tím se rozešel i klíč
+ * pozemku, takže se poznámka ukládala pod klíč, který na kartě nikdo
+ * nehledá.
+ * V ostrých datech je takových karet 20 z 1 955 — tedy jedna z sta,
+ * což je přesně ta četnost, kdy to vypadá, že „to prostě nefunguje".
+ *
+ * Zkouška jde po té nejtěžší kartě: najde ve výpisu tu, jejíž klíč
+ * v syrových datech NEEXISTUJE, otevře ji klepnutím a ptá se na dvě
+ * věci — ukazuje stránka tentýž pozemek, a najde poznámku napsanou na
+ * ní ta karta?
+ */
+{
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
+  await p.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
+  await p.waitForTimeout(2600);
+  /* Která karta je ta „složená", se počítá ze SKUTEČNÝCH dat týmž
+     pravidlem jako web — ne z ručního seznamu, který by zestárl. */
+  const slozena = await p.evaluate(async () => {
+    const r = await fetch('data/opportunities.json');
+    const j = await r.json();
+    const syrove = {};
+    (j.opportunities || []).forEach((x) => { syrove[window.PKKlic.pkey(x)] = true; });
+    const karty = [...document.querySelectorAll('.opp-item')];
+    const i = karty.findIndex((e) => !syrove[e.getAttribute('data-pk') || '']);
+    if (i === -1) return { zadna: true, karet: karty.length };
+    const cena = (karty[i].querySelector('.opp-price') || { textContent: '' }).textContent.replace(/\s/g, '');
+    return { i, klic: karty[i].getAttribute('data-pk'), cena, karet: karty.length };
+  });
+  /* PŘEDPOKLAD: kdyby ve výpisu žádná složená karta nebyla, zkouška by
+     neměřila nic — a vada by se vrátila nepozorovaně. */
+  pravda('ve výpisu je karta, jejíž záznam vznikl složením dvou (jinak není co měřit)',
+    !slozena.zadna, JSON.stringify(slozena));
+  if (!slozena.zadna) {
+    await p.evaluate((i) => document.querySelectorAll('.opp-item')[i].click(), slozena.i);
+    await p.waitForTimeout(3200);
+    const stranka = await p.evaluate(() => ({
+      url: location.pathname,
+      /* Cena stojí v .pz-price > .pv; vedle ní v témže bloku bývá i cena
+         za metr, takže se bere ten vnitřní prvek, ne celý blok. */
+      cena: ((document.querySelector('.pz-price .pv') || { textContent: '' })
+        .textContent.match(/[\d\s\u00a0]+Kč/) || [''])[0].replace(/\s/g, ''),
+      poleJe: !!document.getElementById('pz-pozn-text'),
+    }));
+    pravda('klepnutí na ni vede na stránku pozemku', /pozemek/.test(stranka.url), stranka.url);
+    pravda('a ta stránka ukazuje TENTÝŽ pozemek, ne sousední',
+      !!stranka.cena && stranka.cena === slozena.cena,
+      `karta ${slozena.cena}, stránka ${stranka.cena}`);
+    if (stranka.poleJe) {
+      await p.evaluate(() => {
+        const t = document.getElementById('pz-pozn-text');
+        t.value = 'Ověřit v katastru.';
+        t.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      await p.waitForTimeout(1000);
+      const klicPoznamky = await p.evaluate(() =>
+        Object.keys(JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}')));
+      pravda('poznámka se uloží pod klíč TÉ karty, ze které jsem přišel',
+        klicPoznamky.indexOf(slozena.klic) !== -1,
+        `uloženo pod ${JSON.stringify(klicPoznamky)}, karta má ${slozena.klic}`);
+      await p.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
+      await p.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
+      await p.waitForTimeout(2600);
+      const odznak = await p.evaluate((k) => {
+        const e = [...document.querySelectorAll('.opp-item')].find((x) => x.getAttribute('data-pk') === k);
+        return { kartaJe: !!e, maOdznak: e ? !!e.querySelector('.opp-pozn') : null };
+      }, slozena.klic);
+      pravda('a ve výpisu je ta karta zase (jinak se odznak nemá kde ukázat)',
+        odznak.kartaJe, JSON.stringify(odznak));
+      pravda('a nese odznak „Poznámka"', odznak.maOdznak === true, JSON.stringify(odznak));
+    }
+  }
+  await ctx.close();
+}
+
 await prohlizec.close();
 hotovo();
