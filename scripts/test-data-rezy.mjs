@@ -35,7 +35,15 @@ const syrove = celek.opportunities || [];
    mluvila kontrola jiným jazykem než stránky: rejstřík tvrdil u Hodonína
    121 pozemků, stránka 119, a nic to nehlásilo. */
 const PKH = createRequire(import.meta.url)(path.join(ROOT, 'js', 'hlidani-logika.js'));
-const vse = PKH.bezDuplicit(syrove);
+/* A NEJEN BEZ DUPLICIT — taky bez dražeb po termínu. Proběhlá dražba
+   není nabídka a okresní stránky ji nepočítají odjakživa; řezy ji
+   počítaly dál, takže web o Praze-východ tvrdil 54 na stránce a 55
+   v datech. Pozná se to jediný den v roce, totiž den po dražbě.
+   Podmínka je společná, viz js/terminy.js. */
+createRequire(import.meta.url)(path.join(ROOT, 'js', 'terminy.js'));
+const T = globalThis.PK_TERMINY;
+const bezDuplicit = PKH.bezDuplicit(syrove);
+const vse = bezDuplicit.filter((o) => !T.poTerminu(o));
 pravda(`celek se přečetl (${syrove.length} nabídek, bez duplicit ${vse.length})`,
   syrove.length > 500, `nabídek ${syrove.length}`);
 pravda('a duplicity v něm opravdu jsou (jinak kontroly níž nic nerozliší)',
@@ -136,7 +144,8 @@ if (fs.existsSync(rejstrikCesta)) {
   pravda('a rejstřík přiznává, kolik duplicit z celku odpadlo',
     R.celek && R.celek.pocet === vse.length
     && R.celek.pocet_v_souboru === syrove.length
-    && R.celek.duplicit === syrove.length - vse.length,
+    && R.celek.duplicit === syrove.length - bezDuplicit.length
+    && R.celek.po_terminu === bezDuplicit.length - vse.length,
     `rejstřík: ${JSON.stringify(R.celek)}`);
 }
 

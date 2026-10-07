@@ -240,16 +240,14 @@
      Teď se míry berou JEN při změně velikosti (a ty se stejně dějí
      v dávkách, takže je sbírá requestAnimationFrame). Při rolování už
      zbývá jen porovnání dvou čísel. */
-  var vyskaStranky = 0, vysKna = 0, patkaOd = 1e9, cekaRam = false;
+  var vyskaStranky = 0, vysKna = 0, cekaRam = false;
 
   function premer() {
     cekaRam = false;
     vyskaStranky = document.documentElement.scrollHeight;
     vysKna = window.innerHeight;
-    var pat = document.querySelector('footer');
-    /* offsetTop sčítá odsazení předků, ne polohu v okně — nezávisí tedy
-       na rolování a nepotřebuje se číst znovu při každém pohybu. */
-    patkaOd = pat ? (pat.getBoundingClientRect().top + (window.pageYOffset || 0)) : 1e9;
+    /* Poloha patičky se tu brala kvůli schovávání u ní; to je pryč,
+       takže odpadl i jeden dotaz na rozvržení při každém přeměření. */
     prekresli();
   }
   function premerPozdeji() {
@@ -261,10 +259,19 @@
   function prekresli() {
     var y = window.pageYOffset || document.documentElement.scrollTop || 0;
     var dlouha = vyskaStranky > vysKna * PRAH_OBRAZOVEK;
-    /* U patičky tlačítko uhne. Kdo je na konci, chce její odkazy, ne aby
-       mu přes ně ležel knoflík — a zpátky nahoru se odtud dostane i tak. */
-    var vPatce = (patkaOd - y) < (vysKna - 60);
-    b.classList.toggle('show', dlouha && y > PRAH_POSUNU && !vPatce);
+    /* U PATIČKY SE UŽ NESCHOVÁVÁ. Stálo tu, že kdo je na konci, chce
+       odkazy patičky a ne přes ně knoflík — „a zpátky nahoru se odtud
+       dostane i tak". To druhé prostě není pravda: na telefonu se odtud
+       nahoru nedostane nijak než palcem přes celou stránku, a ta má
+       4 000 px (pozemek) až 14 000 px (úvod). Tlačítko tedy mizelo přesně
+       tam, kde je nejvíc potřeba.
+       A to první se nepotvrdilo. Změřeno na třech typech stránek
+       (pozemek, úvod, okres) ve třech šířkách (390, 768, 1280): tlačítko
+       stojí v pravém dolním rohu a překrývá NULA odkazů patičky ve všech
+       devíti případech — patička má odkazy ve sloupcích vlevo a pravý
+       okraj volný. Důvod ke schovávání tedy nebyl žádný, jen se to nikdy
+       nezměřilo. */
+    b.classList.toggle('show', dlouha && y > PRAH_POSUNU);
   }
 
   window.addEventListener('scroll', prekresli, { passive: true });

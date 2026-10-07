@@ -1296,6 +1296,117 @@ if (DRAZBA) {
   await ctxP.close();
 }
 
+/* ===== ZPÁTKY NA POZEMEK ============================================
+   Mapa v detailu jde posouvat a přibližovat, ale nic nevedlo zpátky:
+   kdo si odjel podívat se, kudy se k pozemku jede, musel načíst stránku
+   znovu, aby ho zase našel. Velká mapa na úvodu na to má „Celá ČR",
+   výběr okolí „Ukázat okruh" — tady nebylo nic.
+   Hlídá se chování, ne vzhled: skryté, dokud je pozemek v záběru;
+   vidět, jakmile se pohled odlepí; a stisk vrátí PŘESNĚ původní střed
+   i přiblížení (jinak by se z „zpátky" stalo „někam zpátky"). */
+{
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/${CIL.url}`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(1500);
+  await p.locator('#pzm').scrollIntoViewIfNeeded().catch(() => {});
+  await p.waitForFunction(() => !!window.PK_PZ_MAPA, null, { timeout: 12000 }).catch(() => {});
+  await p.waitForTimeout(800);
+
+  const stav = () => p.evaluate(() => {
+    const m = window.PK_PZ_MAPA, b = document.getElementById('pzm-zpet');
+    if (!m) return null;
+    const c = m.getCenter(), r = b ? b.getBoundingClientRect() : null;
+    return { lat: +c.lat.toFixed(5), lng: +c.lng.toFixed(5), zoom: m.getZoom(),
+      je: !!b, skryte: b ? b.hidden : null,
+      sirka: r ? Math.round(r.width) : 0, vyska: r ? Math.round(r.height) : 0 };
+  });
+
+  const doma = await stav();
+  pravda('mapa pozemku se otevřela a dá se změřit', !!doma, 'PK_PZ_MAPA chybí');
+  if (doma) {
+    pravda('tlačítko „Na pozemek" na mapě je', doma.je, 'chybí #pzm-zpet');
+    pravda('a dokud jsem na pozemku, nezabírá výhled', doma.skryte === true,
+      'je vidět i bez toho, že by se pohled hnul');
+
+    await p.evaluate(() => { const m = window.PK_PZ_MAPA; const c = m.getCenter();
+      m.setView([c.lat + 0.02, c.lng + 0.02], m.getZoom()); });
+    await p.waitForTimeout(800);
+    const pryc = await stav();
+    pravda('po odjetí od pozemku se ukáže', pryc.skryte === false,
+      'zůstalo skryté — cesta zpátky zase není');
+    pravda('a dá se trefit prstem (44 px)', pryc.vyska >= 44, `${pryc.sirka}×${pryc.vyska} px`);
+
+    await p.evaluate(() => { document.getElementById('pzm-zpet').click(); });
+    await p.waitForTimeout(1200);
+    const zpet = await stav();
+    pravda('a stisk vrátí přesně původní pohled',
+      zpet.lat === doma.lat && zpet.lng === doma.lng && zpet.zoom === doma.zoom,
+      `${zpet.lat},${zpet.lng} z=${zpet.zoom} proti ${doma.lat},${doma.lng} z=${doma.zoom}`);
+    pravda('a pak se zase schová', zpet.skryte === true, 'zůstalo viset na mapě');
+
+    /* Oddálení se počítá taky: značka je pořád „v záběru", jenže na
+       pohledu přes celý okres už to o pozemku nic neříká. */
+    await p.evaluate(() => { window.PK_PZ_MAPA.setZoom(window.PK_PZ_MAPA.getZoom() - 3); });
+    await p.waitForTimeout(800);
+    pravda('ukáže se i po pořádném oddálení, ne jen po posunu',
+      (await stav()).skryte === false, 'po oddálení o tři stupně zůstalo skryté');
+  }
+  await ctx.close();
+}
+
+/* ===== DVĚ PLOVOUCÍ TLAČÍTKA SI NESMÍ SEDĚT NA HLAVĚ ================
+   Lišta s cenou a hlavní akcí je připnutá ke spodnímu okraji okna
+   (bottom:0, výška 69 px) a kolečko „Nahoru" taky (bottom:24 px, 46×46).
+   Naměřeno na 390×844: kolečko leželo na liště CELOU plochou — překryv
+   100 %, a to na pravém konci tlačítka „K dražbě", které se přes zbytek
+   lišty roztahuje. Klepnutí mířené na hlavní akci stránky tedy trefilo
+   posun nahoru.
+   Neměří se tu vzhled, ale to jediné, na čem záleží: jestli se ty dvě
+   plochy protínají. */
+{
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/${CIL.url}`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(1800);
+  /* Lišta se ukáže, až jsou mimo obrazovku CENA I BLOK S TLAČÍTKY — na
+     každé stránce je to jinde, takže se nescrolluje na odhadnuté číslo,
+     ale postupuje se po obrazovkách, dokud se neukáže. */
+  for (let i = 1; i <= 12; i++) {
+    const mam = await p.evaluate((k) => {
+      window.scrollTo(0, Math.round(window.innerHeight * k * 0.8));
+      const l = document.querySelector('.pz-lista');
+      return !!l && !l.hidden && l.getBoundingClientRect().height > 0;
+    }, i);
+    await p.waitForTimeout(350);
+    if (mam) break;
+  }
+  await p.waitForTimeout(500);
+  const v = await p.evaluate(() => {
+    const l = document.querySelector('.pz-lista');
+    const t = document.getElementById('to-top');
+    if (!l || !t) return { je: false, lista: !!l, nahoru: !!t };
+    const a2 = l.getBoundingClientRect(), b2 = t.getBoundingClientRect();
+    const videt = (q) => q.width > 0 && q.height > 0;
+    if (!videt(a2) || !videt(b2)) return { je: false, listaVidet: videt(a2), nahoruVidet: videt(b2) };
+    const px = Math.max(0, Math.min(a2.right, b2.right) - Math.max(a2.left, b2.left));
+    const py = Math.max(0, Math.min(a2.bottom, b2.bottom) - Math.max(a2.top, b2.top));
+    return { je: true, prekryv: Math.round(px * py),
+      podil: Math.round(px * py / (b2.width * b2.height) * 100),
+      lista: `${Math.round(a2.top)}–${Math.round(a2.bottom)}`,
+      nahoru: `${Math.round(b2.top)}–${Math.round(b2.bottom)}` };
+  });
+  pravda('lišta i tlačítko „Nahoru" jsou na telefonu obě vidět', v.je === true,
+    JSON.stringify(v) + ' — bez obou se nedá nic změřit');
+  if (v.je) {
+    pravda('a nesedí si na hlavě (klepnutí na akci netrefí posun nahoru)',
+      v.prekryv === 0, `překryv ${v.prekryv} px² (${v.podil} % kolečka), lišta ${v.lista}, nahoru ${v.nahoru}`);
+  }
+  await ctx.close();
+}
+
 await prohlizec.close();
 console.log('\nMapa v detailu pozemku');
 console.log(zpravy.join('\n'));

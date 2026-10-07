@@ -108,6 +108,32 @@ try {
   await p.evaluate(() => window.PK_VYBER.nastav(null));
   await p.waitForTimeout(600);
 
+  /* KRESLIT JDE OPAKOVANĚ. Tlačítko při hotovém výběru ten výběr zrušilo
+     a skončilo — druhé kreslení tedy nikdy nezačalo a kdo chtěl tvar
+     překreslit, musel mačkat dvakrát a mezitím koukat na prázdnou mapu.
+     Z používání to znělo „můžu kreslit jen jednou".
+     Hlídá se tedy stav po stisku, ne pixely: s hotovým výběrem musí
+     stisk ZAPNOUT kreslení, ne jen uklidit. */
+  await p.evaluate(() => window.PK_VYBER.nastav([[49.1, 15.9], [49.1, 16.3], [49.5, 16.3], [49.5, 15.9]]));
+  await p.waitForTimeout(700);
+  const mamTvar = await p.evaluate(() => window.PK_VYBER.ctiPocet());
+  pravda('zkušební tvar se nasadil', mamTvar >= 3, `bodů ${mamTvar}`);
+  await p.evaluate(() => { document.getElementById('map-kresli').click(); });
+  await p.waitForTimeout(400);
+  const znovu = await p.evaluate(() => ({ kresli: window.PK_VYBER.kresliZap(),
+    bodu: window.PK_VYBER.ctiPocet() }));
+  pravda('s hotovým výběrem tlačítko rovnou začne kreslit znovu',
+    znovu.kresli === true, JSON.stringify(znovu));
+  pravda('a starý tvar zatím leží dál, dokud nový nedokreslím',
+    znovu.bodu >= 3, `bodů ${znovu.bodu} — tvar zmizel dřív, než vznikl nový`);
+  /* A druhý stisk uprostřed kreslení ho zruší, ne aby kreslil donekonečna. */
+  await p.evaluate(() => { document.getElementById('map-kresli').click(); });
+  await p.waitForTimeout(400);
+  pravda('druhý stisk rozkreslené kreslení zruší',
+    (await p.evaluate(() => window.PK_VYBER.kresliZap())) === false, 'kresliZap zůstalo true');
+  await p.evaluate(() => window.PK_VYBER.nastav(null));
+  await p.waitForTimeout(600);
+
   /* --- Samotné gesto --- */
   const tazeniPred = await p.evaluate(() => window.PK_MAPA.dragging.enabled());
   await p.evaluate(() => { document.getElementById('map-kresli').click(); });
@@ -134,6 +160,22 @@ try {
   });
   pravda('a prst při kreslení patří mapě, ne rolování stránky (touch-action:none)',
     ta === 'none', `touch-action je ${ta} — tah spolkne prohlížeč jako rolování`);
+
+  /* A MAPA SE PŘI KRESLENÍ NESMÍ HÝBAT VŮBEC. Vypínalo se jen tažení
+     a dvojklik — jenže mapu posune i přiblížení: dvěma prsty na telefonu
+     nebo kolečkem na počítači. Prst kreslí do souřadnic mapy, takže když
+     se pod čárou posune, zbytek tvaru vznikne jinde než začátek a výběr
+     nesedí na to, co měl člověk pod rukou. Dvěma prsty se navíc skoro
+     vždycky trochu posune i střed, takže „jen zoom" neexistuje. */
+  const pohyb = await p.evaluate(() => ({
+    tazeni: window.PK_MAPA.dragging.enabled(),
+    pinch: !!(window.PK_MAPA.touchZoom && window.PK_MAPA.touchZoom.enabled()),
+    kolecko: !!(window.PK_MAPA.scrollWheelZoom && window.PK_MAPA.scrollWheelZoom.enabled()),
+    dvojklik: !!(window.PK_MAPA.doubleClickZoom && window.PK_MAPA.doubleClickZoom.enabled()),
+  }));
+  pravda('a při kreslení se s mapou nedá hnout ani přiblížením',
+    pohyb.pinch === false && pohyb.kolecko === false && pohyb.dvojklik === false,
+    JSON.stringify(pohyb));
 
   /* MAPA JE NÍŽ, NEŽ SAHÁ OKNO. Napoprvé se gesto kreslilo na souřadnice
      spočítané z rámu mapy (y 674, výška 682) v okně vysokém 900 — tedy

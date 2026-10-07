@@ -173,13 +173,9 @@ for(const f of fs.readdirSync(ROOT)){
    které musí zavřít obě strany stejně.
    Stránka pozemku zůstává (odkaz z e-mailu nebo ze záložek nesmí spadnout
    na 404); vypíná se jen její řádek ve výpisu a započítání do součtů. */
-const DNES = new Date(); DNES.setHours(0, 0, 0, 0);
-function proslyTermin(o){
-  const m = /(\d{4})-(\d{2})-(\d{2})/.exec(o.extra || '');
-  if(!m) return false;
-  const t = new Date(+m[1], +m[2] - 1, +m[3]);
-  return !isNaN(t) && t < DNES;
-}
+/* Podmínka bydlí v js/terminy.js, ať ji nemá každá strana svou. Tady
+   stála doslova a strojové řezy ji neměly vůbec — viz komentář tam. */
+const proslyTermin = T.poTerminu;
 const prosle = all.filter(proslyTermin);
 const aktualni = all.filter((o) => !proslyTermin(o));
 if(prosle.length) console.log(`Po termínu vynecháno: ${prosle.length} (zůstalo ${aktualni.length}) — stejně jako v aplikaci.`);

@@ -43,6 +43,9 @@ const PORADI = [
   // Úplně poslední: přepisuje create_listing, public_listings i my_listings
   // (tomu přidává public_at), takže musí běžet až za vším, co je definuje.
   ['listings-prvni-kontrola.sql', 'první inzerát nového účtu čeká na kontrolu'],
+  // Na ničem výš nezávisí: váže se jen na účet (auth.uid()) a na klíč
+  // pozemku, který je text z dat, ne cizí klíč do listings.
+  ['poznamky.sql', 'soukromé poznámky k pozemkům na účet, ne jen v prohlížeči'],
 ];
 
 const HLAVA = `-- =====================================================================

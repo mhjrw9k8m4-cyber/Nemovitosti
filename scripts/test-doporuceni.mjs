@@ -99,10 +99,15 @@ pravda('nejvýš stojí nabídka se skutečnou, uvěřitelnou slevou',
   `${nejlepsi.place} (${nejlepsi.okres}) ${Math.round(nejlepsi.price / nejlepsi.area)} Kč/m² · ` +
   (oNej ? `−${oNej.podOdhadem} %` : 'bez odhadu'));
 
-// --- 3) Úvod webu nesmí pochybnou nabídku dávat do titulku ------------
-const heroBlok = main.slice(main.indexOf("// 3) Nejvýhodnější dnes"), main.indexOf("vypln('deal'"));
-pravda('„Nejvýhodnější dnes" pochybné přeskakuje', /o\.pochybna/.test(heroBlok),
-  'do úvodu se tak dostane ta nejpodezřelejší nabídka na celém webu');
+/* --- 3) Pruh „Nejvíc pod cenou" v úvodu UŽ NENÍ -----------------------
+   Stávaly tu dvě kontroly: že se do úvodního pruhu nedostane pochybná
+   nabídka, a že v něm nesvítí neuvěřitelné číslo. Pruh je zrušený, takže
+   obě ztratily předmět. Nenechávám je tu ani „pro jistotu": první by
+   padala na tom, že krájí main.js mezi značkami, které zmizely, a druhá
+   by procházela NAPRÁZDNO — prázdný text žádné číslo neobsahuje, takže
+   by hlásila úspěch, i kdyby se pruh vrátil rozbitý. Kontrola, která
+   nemůže spadnout, je horší než žádná: tváří se jako ochrana.
+   Hlídání samotných slev na kartách zůstává beze změny níž. */
 let best = null, bo = null;
 for (const d of DATA) {
   const o = M.odhad(d);
@@ -193,7 +198,6 @@ pravda('stránka pozemku bere blok s odhadem ze sdíleného modulu',
       sleva: (e.querySelector('.opp-deal') || {}).textContent || '',
       hot: !!e.querySelector('.opp-hot'),
     })),
-    hero: (document.querySelector('.hl-fact[data-fakt="deal"] .hl-v') || {}).textContent || '',
   }));
   /* --- Střídání pořadí ------------------------------------------------
      Výpis ukazuje osm nabídek. Dokud rozhodovalo jen skóre, stálo na těch
@@ -255,9 +259,6 @@ pravda('stránka pozemku bere blok s odhadem ze sdíleného modulu',
     .filter(Boolean).map(Number).filter((n) => n >= M.MEZ_POCHYBNA);
   pravda('nikde nesvítí sleva hlubší než hranice uvěřitelnosti', hluboke.length === 0,
     'na kartách: ' + hluboke.map((n) => '−' + n + ' %').join(', '));
-  const heroProc = (v.hero.match(/(\d+) %/) || [])[1];
-  pravda('v úvodu svítí uvěřitelné číslo, ne „o 95 % pod obvyklou"',
-    !heroProc || +heroProc < M.MEZ_POCHYBNA, `úvod hlásí: „${v.hero}"`);
 }
 
 /* --- Podíl se nesmí vydávat za výhodnou koupi -------------------------

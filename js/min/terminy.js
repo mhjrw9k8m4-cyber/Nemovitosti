@@ -39,8 +39,14 @@
       });
   }
 
+  function poTerminu(o) {
+    var d = daysUntil(o && o.extra);
+    return d != null && d < 0;
+  }
+
   root.PK_TERMINY = {
     daysUntil: daysUntil,
+    poTerminu: poTerminu,
     countdownText: countdownText,
     countdownClass: countdownClass,
     auctionYMD: auctionYMD,

@@ -139,15 +139,13 @@
     (document.body || document.documentElement).appendChild(b);
   }
 
-  var vyskaStranky = 0, vysKna = 0, patkaOd = 1e9, cekaRam = false;
+  var vyskaStranky = 0, vysKna = 0, cekaRam = false;
 
   function premer() {
     cekaRam = false;
     vyskaStranky = document.documentElement.scrollHeight;
     vysKna = window.innerHeight;
-    var pat = document.querySelector('footer');
 
-    patkaOd = pat ? (pat.getBoundingClientRect().top + (window.pageYOffset || 0)) : 1e9;
     prekresli();
   }
   function premerPozdeji() {
@@ -160,8 +158,7 @@
     var y = window.pageYOffset || document.documentElement.scrollTop || 0;
     var dlouha = vyskaStranky > vysKna * PRAH_OBRAZOVEK;
 
-    var vPatce = (patkaOd - y) < (vysKna - 60);
-    b.classList.toggle('show', dlouha && y > PRAH_POSUNU && !vPatce);
+    b.classList.toggle('show', dlouha && y > PRAH_POSUNU);
   }
 
   window.addEventListener('scroll', prekresli, { passive: true });

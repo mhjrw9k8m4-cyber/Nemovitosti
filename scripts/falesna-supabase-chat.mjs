@@ -28,6 +28,10 @@ const kvota = new Map();
 const zhlednuti = new Map();
 // Výsledky noční kontroly (id inzerátu → {ok, kdy, nalezy}); plní si je test.
 const kontroly = new Map();
+/* Poznámky na účtu: uid → Map(klíč → {text, zmeneno}). Chová se jako
+   supabase/poznamky.sql — prázdný text maže, nad 2 000 znaků se ODMÍTNE
+   (ne tiše zkrátí) a jeden účet nevidí do druhého. */
+const poznamky = new Map();
 hledani.set(UID_MAJITEL, [{ id: 's1', label: 'Tábor', okres: 'Tábor', druh: null, ptype: null,
   max_price: 0, min_area: 0, features: [], created_at: new Date().toISOString() }]);
 let poradi = 0;
@@ -133,6 +137,24 @@ const server = http.createServer((req, res) => {
 
       const uid = kdo(req);
       if (!uid) return send(401, JSON.stringify({ message: 'musíte být přihlášeni' }));
+
+      if (fn === 'poznamka_uloz') {
+        const klic = String(args.p_klic || '').trim();
+        if (!klic) return send(400, JSON.stringify({ message: 'chybí klíč pozemku' }));
+        const t = String(args.p_text == null ? '' : args.p_text);
+        if (t.length > 2000) return send(400, JSON.stringify({ message: 'poznámka je delší než 2000 znaků' }));
+        if (!poznamky.has(uid)) poznamky.set(uid, new Map());
+        const moje = poznamky.get(uid);
+        if (!t.trim()) moje.delete(klic);
+        else moje.set(klic, { text: t, zmeneno: new Date().toISOString() });
+        return send(200, JSON.stringify(null));
+      }
+      if (fn === 'moje_poznamky') {
+        const moje = poznamky.get(uid) || new Map();
+        const out = [...moje.entries()].map(([klic, z]) => ({ klic, text: z.text, zmeneno: z.zmeneno }));
+        out.sort((a, b) => String(b.zmeneno).localeCompare(String(a.zmeneno)));
+        return send(200, JSON.stringify(out));
+      }
 
       if (fn === 'send_message') {
         const jeMajitel = uid === UID_MAJITEL;

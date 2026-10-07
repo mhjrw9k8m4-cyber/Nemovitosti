@@ -69,7 +69,21 @@ export async function spust() {
     console.error('::error::js/hlidani-logika.js nedalo bezDuplicit — řezy by nesouhlasily se stránkami');
     process.exit(1);
   }
-  const vse = PKH.bezDuplicit(syrove);
+  /* PO TERMÍNU SE NEPOČÍTÁ. Dražba, která už proběhla, není nabídka —
+     a okresní stránky ji vynechávají odjakživa. Řezy ji počítaly dál,
+     takže web o témže okrese tvrdil dvě různá čísla; projevilo se to
+     jediný den v roce, totiž den po dražbě (Praha-východ: stránka 54,
+     řez 55). Podmínka je společná, viz js/terminy.js. */
+  const T_ = (() => {
+    require_(path.join(ROOT, 'js', 'terminy.js'));
+    return globalThis.PK_TERMINY;
+  })();
+  if (!T_ || typeof T_.poTerminu !== 'function') {
+    console.error('::error::js/terminy.js nedalo poTerminu — řezy by počítaly i proběhlé dražby');
+    process.exit(1);
+  }
+  const bezDuplicit = PKH.bezDuplicit(syrove);
+  const vse = bezDuplicit.filter((o) => !T_.poTerminu(o));
   const CENY = (() => {
     require_(path.join(ROOT, 'js', 'ceny.js'));
     return globalThis.PK_CENY;
@@ -178,15 +192,23 @@ export async function spust() {
      zůstávají, a je to tak napsané v js/ceny.js. Pole by tedy nikdo
      nepoužil; zkusil jsem ho zahodit a model vyšel beze změny, takže
      z vstupu vypadlo. */
+  /* MODEL BERE I PROBĚHLÉ DRAŽBY, a je to schválně. Filtr na termín
+     odpovídá na otázku „dá se to ještě koupit" — tou se řídí počty na
+     stránkách a v řezech. Cenový model ale odpovídá na jinou otázku:
+     „kolik tady pozemky stojí". Na to je dražba, která proběhla včera,
+     pozorování jako každé jiné, dokonce lepší než inzerát, protože cena
+     byla skutečně zaplacená. Vyhodit ji by znamenalo zahazovat data bez
+     důvodu. Model proto čte `bezDuplicit`, ne `vse`. */
   const modelVstup = (() => {
-    const okresy = [...new Set(vse.map((o) => o.okres || ''))].sort();
-    const druhy = [...new Set(vse.map((o) => o.druh || ''))].sort();
-    const typy = [...new Set(vse.map((o) => o.type || ''))].sort();
+    const proModel = bezDuplicit;
+    const okresy = [...new Set(proModel.map((o) => o.okres || ''))].sort();
+    const druhy = [...new Set(proModel.map((o) => o.druh || ''))].sort();
+    const typy = [...new Set(proModel.map((o) => o.type || ''))].sort();
     const iO = new Map(okresy.map((x, i) => [x, i]));
     const iD = new Map(druhy.map((x, i) => [x, i]));
     const iT = new Map(typy.map((x, i) => [x, i]));
     const o = [], d = [], t = [], a = [], c = [], la = [], lo = [];
-    for (const x of vse) {
+    for (const x of proModel) {
       o.push(iO.get(x.okres || '')); d.push(iD.get(x.druh || '')); t.push(iT.get(x.type || ''));
       a.push(x.area || 0); c.push(x.price || 0);
       /* SOUŘADNICE JAKO CELÁ ČÍSLA, ZAOKROUHLENÉ NA ČTYŘI DESETINNÁ
@@ -200,7 +222,7 @@ export async function spust() {
       la.push(Math.round((x.lat || 0) * 1e4)); lo.push(Math.round((x.lng || 0) * 1e4));
     }
     return Object.assign({}, hlavicka, {
-      rez: { uroven: 'model', nazev: null, soubor: 'data/model.json', pocet: vse.length },
+      rez: { uroven: 'model', nazev: null, soubor: 'data/model.json', pocet: bezDuplicit.length },
       popis: 'Vstup cenového modelu: pole, která z uložených nabídek čte js/ceny.js. '
         + 'Sloupcově a se slovníky, ať je to malé. Pole o/d/t jsou indexy do okresy/druhy/typy, '
         + 'a je výměra v m², c cena v Kč, la/lo souřadnice ×10 000 (celá čísla).',
@@ -209,7 +231,7 @@ export async function spust() {
   })();
   const bajtuModel = zapis('data/model.json', modelVstup);
   rejstrik.rezy.push({ uroven: 'model', nazev: null, soubor: 'data/model.json',
-    pocet: vse.length, bajtu: bajtuModel });
+    pocet: bezDuplicit.length, bajtu: bajtuModel });
 
   const prazdnych = uklid('okres', ziveOkres, 'okres');
 
@@ -220,7 +242,11 @@ export async function spust() {
        těchhle dvou čísel by se počet v rejstříku (bez duplicit) nedal
        srovnat s velikostí souboru, na který ukazuje. */
     pocet_v_souboru: syrove.length,
-    duplicit: syrove.length - vse.length,
+    /* Dvě odečtení, ne jedno. Kdyby se „duplicit" počítalo proti
+       konečnému počtu, spadly by do něj i proběhlé dražby a číslo by
+       lhalo o tom, co se vlastně odstranilo. */
+    duplicit: syrove.length - bezDuplicit.length,
+    po_terminu: bezDuplicit.length - vse.length,
     bajtu: fs.statSync(path.join(ROOT, 'data', 'opportunities.json')).size,
   };
   rejstrik.kraje = kraje;
@@ -228,6 +254,8 @@ export async function spust() {
     + 'navíc je tu „rez" s tím, čí výběr to je. Kdo chce jeden okres, nemusí stahovat celek. '
     + 'Z celku jsou odstraněné duplicity (tentýž pozemek vypsaný dvakrát), takže počty tady '
     + 'odpovídají počtům na stránkách okresů; kolik se odstranilo, stojí v „celek.duplicit". '
+    + 'Nepočítají se ani dražby, jejichž termín už minul („celek.po_terminu") — stránky je '
+    + 'taky nepočítají, protože proběhlá dražba není nabídka. '
     + 'Syrový soubor je data/opportunities.json. Krajské řezy nejsou schválně — kraj je součet '
     + 'svých okresů a jejich soubory najdete v „kraje".';
   zapis('data/index.json', rejstrik);

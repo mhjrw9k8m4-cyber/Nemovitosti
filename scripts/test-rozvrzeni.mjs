@@ -233,38 +233,13 @@ async function otevri(soubor, sirka, vyska) {
 }
 
 // --- 2) Proužek s údaji se vejde do rodiče ---------------------------
-{
-  /* Měří se na 700 px, ne na telefonu: na displeji do 560 px je proužek
-     schovaný schválně (drží hledání pod obzorem, viz bod 7 níž), takže
-     by tu nebylo co poměřovat. Vytékal ale i na širších displejích. */
-  const { ctx, p } = await otevri('index.html', 700, 900);
-  await p.waitForTimeout(2600);
-  const v = await p.evaluate(() => {
-    const e = document.getElementById('hero-live');
-    if (!e || e.hidden || getComputedStyle(e).display === 'none') return null;
-    const r = e.getBoundingClientRect(), rr = e.parentElement.getBoundingClientRect();
-    return { sirka: Math.round(r.width), rodic: Math.round(rr.width),
-      vpravo: Math.round(r.right), okno: innerWidth,
-      pretekaObsah: e.scrollWidth > e.clientWidth + 1,
-      posuv: getComputedStyle(e).overflowX };
-  });
-  pravda('proužek s údaji v úvodu je vidět', !!v, 'element #hero-live chybí nebo zůstal schovaný');
-  if (v) {
-    // Tohle je jádro: proužek si bral šířku obsahu, ne sloupce.
-    pravda('proužek se vejde do svého sloupce', v.sirka <= v.rodic + 1,
-      `proužek je ${v.sirka} px v ${v.rodic}px sloupci — vytéká o ${v.sirka - v.rodic} px`);
-    pravda('a nepřesahuje obrazovku', v.vpravo <= v.okno + 1,
-      `pravý okraj je na ${v.vpravo} px, obrazovka končí na ${v.okno}`);
-    /* Co se do šířky nevejde, musí jít posunout. Když se vejde všechno,
-       není co posouvat — a to je taky v pořádku; chyba je jen případ
-       „obsah přetéká a posunout to nejde", kdy se poslední údaj nedá
-       přečíst ani nijak dostat na obrazovku. */
-    pravda('co se do proužku nevejde, jde posunout do strany',
-      !v.pretekaObsah || /auto|scroll/.test(v.posuv),
-      `obsah přetéká (${v.sirka} px rámeček), ale overflow-x je „${v.posuv}" — poslední údaj je nedostupný`);
-  }
-  await ctx.close();
-}
+/* Proužek s živými údaji v úvodu je ZRUŠENÝ, takže zmizely i tři
+   kontroly jeho přetékání. Nemá cenu je nechávat „kdyby se vrátil":
+   první by padala na chybějícím elementu a zbylé dvě byly schované za
+   `if (v)`, takže by po zrušení proužku procházely naprázdno. Co z toho
+   platilo obecně — že se nic nesmí vysypat ze sloupce ani z obrazovky —
+   hlídají na úvodní stránce kontroly přetečení níž. */
+
 
 {
   /* Proužek s živými údaji byl na malých telefonech schovaný, aby se
@@ -289,10 +264,8 @@ async function otevri(soubor, sirka, vyska) {
     const pas = document.querySelector('.hero-map .hero-band') || document.querySelector('.hero-map');
     const nadNadpisem = (h1 && pas)
       ? Math.round(h1.getBoundingClientRect().top - pas.getBoundingClientRect().top) : null;
-    return { prouzek: vidno('hero-live'), nadNadpisem, mezera };
+    return { nadNadpisem, mezera };
   });
-  pravda('proužek s živými údaji je na telefonu vidět', v.prouzek,
-    'po schovaném proužku zbyde v úvodu prázdné místo — a to neřekne nic');
   pravda('nad nadpisem nezůstal prázdný pruh', v.nadNadpisem !== null && v.nadNadpisem <= 60,
     `nad nadpisem je ${v.nadNadpisem} px prázdna — na telefonu je to ukradený kus obrazovky`);
   await ctx.close();
@@ -387,33 +360,11 @@ async function otevri(soubor, sirka, vyska) {
   await ctx.close();
 }
 
-/* ---- Popisky u živých údajů se nesmí lámat ------------------------
-   Tři kartičky pod nadpisem mají popisek ve sloupci pevné šířky, aby
-   hodnoty stály v jedné ose. Když se do něj nejdelší popisek nevejde,
-   zalomí se na dva řádky — ta karta je pak o patnáct bodů vyšší než
-   zbylé dvě a řada vypadá roztřepeně. Širší sloupec tedy místo
-   neubírá, naopak. */
-for (const [w, h] of [[390, 844], [360, 780], [430, 932]]) {
-  const { ctx, p } = await otevri('index.html', w, h);
-  await p.waitForTimeout(1800);
-  const karty = await p.evaluate(() => [...document.querySelectorAll('.hh-fakta .hl-fact')].map((f) => {
-    const k = f.querySelector('.hl-k');
-    if (!k || getComputedStyle(k).display === 'none') return null;
-    const r = k.getBoundingClientRect();
-    const radek = parseFloat(getComputedStyle(k).lineHeight) || 14;
-    return { text: k.textContent.trim(), radku: Math.round(r.height / radek),
-      vyska: Math.round(f.getBoundingClientRect().height) };
-  }).filter(Boolean));
-  if (karty.length) {
-    const lamane = karty.filter((k) => k.radku > 1).map((k) => `„${k.text}"`);
-    pravda(`${w} px: popisek u živých údajů se vejde na řádek`, lamane.length === 0,
-      `láme se: ${lamane.join(', ')}`);
-    const vysky = [...new Set(karty.map((k) => k.vyska))];
-    pravda(`${w} px: a všechny tři kartičky jsou stejně vysoké`, vysky.length === 1,
-      `výšky ${vysky.join(', ')} px`);
-  }
-  await ctx.close();
-}
+/* Kontrola lámání popisků u živých údajů je pryč spolu s tím pruhem.
+   Byla schovaná za `if (karty.length)`, takže bez kartiček procházela
+   naprázdno — a kontrola, která nemůže spadnout, se jen tváří jako
+   ochrana. */
+
 
 for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   const { ctx, p } = await otevri('index.html', w, h);

@@ -111,7 +111,7 @@
      v celé rodině ploch bez zeleně: --ink je #EEF6F1 a --ink-soft2
      #F5FAF7, obě zelenkavé. Přitom je ze všech největší — změřeno na
      úvodu, kde šedobílé plochy vykreslily map-app (607 vzorků), karty
-     hl-fact (345) a ovládání filtru, všechno v tónech R=G=B. Teď je
+     ovládání filtru, všechno v tónech R=G=B. Teď je
      bílá se stopou zeleně: pořád čte jako bílá, ale do rodiny patří.
      Kontrast skoro beze změny: #12241A 15,9 : 1 (bylo 16,1),
      --muted 7,4 : 1 (7,58), zástupný text 5,3 : 1 (5,44). */
@@ -1466,7 +1466,28 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .map-side{grid-column:1; grid-row:2; display:flex; flex-direction:column; background:transparent; border:0; border-right:1px solid var(--line); border-radius:0; padding:16px 16px; min-height:0;}
 .map-holder{grid-column:2; grid-row:2;}
 .map-controls-panel .map-search{margin-top:0;}
-.map-search input{width:100%; background:#fff; border:1px solid var(--line-ui); border-radius:var(--r-sm); padding:12px 14px; font-size:14px; color:#12241A; font-family:inherit; box-shadow:var(--e1);}
+/* LUPA A VĚTŠÍ PÍSMO. Pole říkalo, co do něj jde psát, dlouhou větou
+   („Obec, druh, cena, do 30 km od Brna…"). Vešla se sice všude — měřeno
+   252 px textu do 272 px místa i na nejužším telefonu, takže se nic
+   neořezávalo — ale celou šířku zabrala návodem a samo pole tím nebylo
+   poznat na první pohled. Co to je, teď říká lupa; text zbyl na tři
+   slova a je větší. Celou větu o tom, že jde napsat „les do 30 km od
+   Brna do 500 tis", nese dál aria-label pole, takže se neztratila.
+   16 px schválně: pod touhle hranicí Safari na iPhonu při klepnutí do
+   pole přiblíží celou stránku a zpátky se člověk musí dostat sám.
+   Zvětšení písma je tedy i oprava, ne jen vzhled.
+   Odsazení vlevo 40 px: lupa končí na 32 (14 okraj + 18 šířka), takže
+   mezi ní a textem zbývá 8 px. Čtyřicítka schválně — web ji používá
+   na 32 místech, kdežto 42 by byla nová hodnota jen pro tenhle jeden
+   případ. Na tom hlídá scripts/test-jazyk.mjs: slovník odstupů má mít
+   nejvýš 22 hodnot, jinak se z návrhu stane sbírka náhodných čísel. */
+.map-search input{width:100%; background:#fff; border:1px solid var(--line-ui); border-radius:var(--r-sm); padding:12px 14px 12px 40px; font-size:16px; color:#12241A; font-family:inherit; box-shadow:var(--e1);}
+.ms-lupa{position:absolute; left:14px; top:50%; transform:translateY(-50%);
+  width:18px; height:18px; color:var(--text-zastupny); pointer-events:none; z-index:1;}
+/* `:has()`, ne `~`: obecný sourozenecký selektor míří jen na prvky ZA
+   polem, kdežto lupa stojí před ním. S `~` by barva nikdy nenaskočila
+   a pravidlo by se jen tvářilo, že funguje. */
+.map-search:has(input:focus) .ms-lupa{color:var(--copper);}
 .map-search input::placeholder{color:var(--text-zastupny);}
 /* ZÁŘ PŘI ZAOSTŘENÍ BYLA MODRÁ. Okraj se barvil zeleně (--copper-bright),
    ale záře kolem něj byla rgba(110,155,255) — modrá 221°. Stejná dvojice
@@ -2364,8 +2385,6 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    Zkoušky to neodhalily, protože se tyhle prvky kreslí jen přihlášenému
    (odznaky s počtem) nebo při najetí myší. */
 .nav-unread{display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 4px; margin-left:4px; border-radius:var(--r-sm); background:var(--plocha-znacka); color:#fff; font-size:12px; font-weight:700; vertical-align:middle;}
-@media (max-width:760px){
-}
 .map-holder{position:relative; display:flex; flex-direction:column; overflow:hidden; min-height:0;}
 /* isolation:isolate uzavře vnitřní z-indexy Leafletu (tečky, popisky), ať panel detailu
    spolehlivě překryje mapu a nic z ní neprosvítá */
@@ -2627,7 +2646,23 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   letter-spacing:var(--popisek-proklad); color:var(--popisek); margin-bottom:14px; font-weight:600;}
 .foot-col a{display:block; font-size:14px; color:var(--text-ondark-mute); text-decoration:none; margin-bottom:8px;}
 .foot-col a:hover{color:var(--text-ondark);}
-.foot-bottom{display:flex; justify-content:space-between; align-items:center; padding-top:20px; font-size:12px; color:var(--text-ondark-mute); flex-wrap:wrap; gap:10px 16px;}/* Risk reversal / záruky */
+/* MÍSTO PRO PLOVOUCÍ TLAČÍTKO „Zpět nahoru". Knoflík visí v pravém
+   dolním rohu OKNA, kdežto copyright stál v pravém dolním rohu
+   STRÁNKY — a na konci dlouhé stránky je to totéž místo. Změřeno na
+   1280 px: tlačítko 1142–1256 × 730–776, copyright 1107–1208 ×
+   757–776, tedy překryv 66 × 19 px — knoflík ležel na dvou třetinách
+   nápisu. Dřív to nevadilo jen proto, že tlačítko u patičky mizelo;
+   jenže tím mizelo přesně tam, kde ho člověk nejvíc potřebuje
+   (stránky mají 4 000 až 17 000 px), a to byla horší cena.
+   Odsazení zdola je proto to, co ustoupí: text se zvedne nad knoflík
+   a oba se vejdou.
+   80 px: knoflík zabírá spodních 70 px okna (24 od spodu + 46 výšky),
+   takže nad ním zbývá 10 px. Osmdesátka proto, že ji web už používá —
+   přesných 82 by přidalo do slovníku odstupů hodnotu navíc. Kdyby
+   se knoflík někdy zvětšil, rozejde se to — a spadne na tom
+   scripts/test-paticka.mjs, který ten překryv měří. Ta zkouška je tu
+   tedy tím, co obě čísla drží u sebe. */
+.foot-bottom{display:flex; justify-content:space-between; align-items:center; padding-top:20px; font-size:12px; color:var(--text-ondark-mute); flex-wrap:wrap; gap:10px 16px; padding-bottom:80px;}/* Risk reversal / záruky */
 
 .guarantee .ic{width:16px; height:16px; color:var(--c-ok-ink);}
 
@@ -4838,22 +4873,11 @@ h1, h2, h3,
 .hero-live{display:flex; flex-wrap:wrap; gap:0; margin-top:28px;
   align-self:stretch; max-width:100%;
   border-top:1px solid rgba(255,255,255,0.22);}
-.hl-fact{display:flex; flex-direction:column; gap:4px; padding:16px 24px 0 0;
-  margin-right:24px; text-decoration:none; min-width:0;
-  border-right:1px solid rgba(255,255,255,0.16);}
-.hl-fact:last-child{border-right:0; margin-right:0; padding-right:0;}
 /* Dokud se hodnoty nespočítají, pruh je NEVIDITELNÝ, ale místo si drží —
    jinak se po načtení dat vysune a odsune celou stránku pod sebou.
    Prázdná hodnota by přitom byla nulově vysoká, takže by se rezervovalo
    míň, než co pak přijde; proto min-height na řádek hodnoty. */
 .hero-live.je-ceka{visibility:hidden;}
-.hl-fact .hl-v{min-height:21px;}
-.hl-fact .hl-k{font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:var(--popisek-proklad);
-  text-transform:uppercase; color:rgba(255,255,255,0.7);}
-.hl-fact .hl-v{font-family:var(--font-display); font-size:16px; line-height:1.25;
-  color:#fff; letter-spacing:-0.01em;}
-.hl-fact:hover .hl-v{color:#9ADDB8;}
-.hl-fact:focus-visible{outline:2px solid #9ADDB8; outline-offset:4px; border-radius:2px;}
 @media (max-width:760px){
   /* Na telefonu stály tyhle tři údaje pod sebou a každý zabral dva řádky —
      dohromady 208 px, tedy čtvrtina obrazovky jen na ně. Pak jeden řádek na
@@ -4872,12 +4896,6 @@ h1, h2, h3,
     -webkit-mask-image:linear-gradient(to right, #000 86%, transparent);
     mask-image:linear-gradient(to right, #000 86%, transparent);}
   .hero-live::-webkit-scrollbar{display:none;}
-  .hl-fact{flex:0 0 auto; flex-direction:row; align-items:baseline; gap:6px;
-    padding:0 12px 0 0; margin-right:12px;
-    border-right:1px solid rgba(255,255,255,0.16); border-bottom:0;}
-  .hl-fact:last-child{border-right:0; margin-right:0; padding-right:0;}
-  .hl-fact .hl-k{flex:none; font-size:12px; letter-spacing:0.07em;}
-  .hl-fact .hl-v{font-size:14px; white-space:nowrap;}
 }
 
 /* =====================================================================
@@ -4959,6 +4977,13 @@ h1, h2, h3,
    ------------------------------------------------------------------ */
 .opp-nove{background:var(--accent-warm-soft); color:var(--accent-warm);
   border:1px solid rgba(138,85,18,0.3); border-radius:var(--r-pill);
+  padding:2px 8px; font-size:12px; font-weight:700; letter-spacing:0.02em;}
+/* MOJE POZNÁMKA. Jediný odznak, který napsal ČLOVĚK — ostatní říkají, co
+   o pozemku víme my. Proto má jinou barvu než „Nové": zelenou značkovou,
+   ne měď. Nová barva se tu nezavádí schválně; web stojí na dvou tónech
+   a třetí odstín na kartě plné odznaků by nic nerozlišil, jen přidal šum. */
+.opp-pozn{background:var(--plocha-jemna-vic); color:var(--copper);
+  border:1px solid var(--line-strong); border-radius:var(--r-pill);
   padding:2px 8px; font-size:12px; font-weight:700; letter-spacing:0.02em;}
 .mc-nove{margin-left:8px; color:var(--accent-warm); font-weight:700;}
 /* Textové tlačítko („Zobrazit dražby po termínu"). Vypadá jako odkaz, ale
@@ -5044,19 +5069,7 @@ h1, h2, h3,
      Týká se výběru okolí i mapy na stránce pozemku (obojí zoom má). */
   .leaflet-touch .leaflet-bar a { width:44px; height:44px; line-height:44px; }
 }
-/* Tři živé údaje v úvodu mají 44 px taky — ale až od 361 px šířky.
-   NA NEJMENŠÍCH DISPLEJÍCH (do 360 px) TO NEJDE a zkouška rozvržení to chytila:
-   úvod je na 320×568 vyždímaný do poslední kapky (štítek pryč, legenda
-   pryč, fakta na jeden řádek), aby pole „Hledat obec" zůstalo nad
-   ohybem. Devět pixelů navíc u každého ze tří řádků je 27 px a hledání
-   spadne pod 60 % výšky — a to je mez, kterou si web klade proto, že
-   první, co má člověk na webu o pozemcích vidět, je hledání pozemků.
-   Ty řádky jsou navíc přes celou šířku (350 px), takže se trefí
-   i palcem; chybí jim výška, ne plocha. Tohle je vědomý ústupek, ne
-   přehlédnutí. */
-@media (pointer: coarse) and (min-width:361px) {
-  .hh-fakta .hl-fact { min-height:44px; }
-}
+
 
 /* Křížek „tenhle mě nezajímá" sedí pod záložkou pro uložení. Objeví se až
    při najetí nebo zaměření klávesnicí — na dotyku je vidět vždy, protože
@@ -5273,82 +5286,12 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   select, textarea{font-size:16px !important;}
 }
 
-/* =====================================================================
-   ŽIVÁ FAKTA JAKO KARTY, NE JAKO POSUVNÝ PÁS
-   Tři údaje bývaly vodorovný pás, po kterém se posouvalo prstem, a
-   u pravého okraje se poslední z nich vytrácel do masky. Mělo to říct
-   „posuň si to", jenže na snímku od člověka to vypadá prostě uříznuté —
-   a co vypadá uříznuté, to se nečte. Teď je z nich mřížka karet: na
-   monitoru tři vedle sebe, na telefonu tři pod sebou. Nic nemizí.
-   ===================================================================== */
-.hero-live.hh-fakta{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
-  align-self:stretch; width:100%; max-width:var(--m-stredni); margin-top:4px;
-  border-top:0; overflow:visible;
-  -webkit-mask-image:none; mask-image:none;}
-.hh-fakta .hl-fact{flex-direction:column; align-items:flex-start; gap:2px;
-  padding:14px 14px; margin:0; border:1px solid rgba(234,230,221,0.16); border-radius:var(--r-md);
-  /* Karta musí být KARTA, ne průsvitka: pod ní svítí souhvězdí a přes
-     poloprůhledné pozadí jím tekly tečky rovnou přes text. */
-  background:var(--ink-soft); min-width:0;
-  transition:transform var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
-.hh-fakta .hl-fact:hover{transform:translateY(-2px); border-color:rgba(143,224,180,0.55);}
-/* TYHLE TŘI ÚDAJE JSOU ODKAZY — vedou na mapu a rovnou ji přefiltrují
-   („Přibylo dnes" navíc přepne řazení na nejnovější). Jenže vypadaly
-   jako vypsané informace: tmavý obdélník, sotva znatelný rámeček
-   (krytí 16 %) a nic, co by naznačilo, že se s nimi dá něco dělat.
-   Šipka „›" je na tomhle webu ZNAČKA „tenhle řádek někam vede" — má ji
-   každá položka v menu (#nav a::after), tak ať ji mají i tady. Kreslí
-   se napevno k pravému okraji, aby seděla i na monitoru, kde jsou
-   z řádků karty pod sebou skládané do sloupce. */
-.hh-fakta .hl-fact{position:relative; padding-right:32px;}
-.hh-fakta .hl-fact::after{content:"›"; position:absolute; right:13px; top:50%;
-  transform:translateY(-50%); font-family:var(--font-ui); font-size:24px;
-  font-weight:600; line-height:1; color:rgba(234,230,221,0.55);
-  transition:transform var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
-.hh-fakta .hl-fact:hover::after, .hh-fakta .hl-fact:active::after,
-.hh-fakta .hl-fact:focus-visible::after{color:#9ADDB8;
-  transform:translateY(-50%) translateX(2px);}
-/* Rámeček musel zesílit taky: v 16 % se karta od pozadí skoro
-   neodlepila a celý pruh vypadal jako popiska, ne jako tři tlačítka. */
-.hh-fakta .hl-fact{border-color:var(--line-strong);}
-/* Popisek je to jediné, co říká, CO to číslo vedle je. V 10,5 px
-   s krytím 62 % ho oko přeskočí a zbydou tři velké údaje pod sebou,
-   které spolu nesouvisí — „není jasné, co je co". */
-.hh-fakta .hl-fact .hl-k{font-size:12px; letter-spacing:var(--popisek-proklad); color:var(--muted);}
-.hh-fakta .hl-fact .hl-v{font-size:16px; color:var(--muted); line-height:1.35;}
-/* Hlavní hodnota („dnes", „6", „−59 %") nese kartu — zbytek je upřesnění. */
-.hh-fakta .hl-fact .hl-v b{display:block; font-family:var(--font-display); font-weight:800;
-  font-size:clamp(23px,3.6vw,36px); line-height:1.02; letter-spacing:-0.03em; color:var(--text-ondark);}
-/* Oddělovač zůstává v textu (kvůli odečítači i kontrolám), ale na kartě,
-   kde hlavní údaj stojí na vlastním řádku, by visel na začátku druhého. */
-.hh-fakta .hl-sep{position:absolute; width:1px; height:1px; overflow:hidden;
-  clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap;}
-.hh-fakta .hl-fact.hl-hit .hl-v b{color:var(--copper-bright);}
-.hh-fakta .hl-fact:hover .hl-v{color:var(--text-ondark);}
-@media (max-width:760px){
-  .hero-live.hh-fakta{grid-template-columns:1fr; gap:8px; margin-top:2px; padding-top:0;
-    border-top:0; overflow:visible;
-    -webkit-mask-image:none; mask-image:none;}
-  .hh-fakta .hl-fact{flex-direction:row; align-items:baseline; gap:10px; padding:10px 12px;}
-  /* Sloupec s popiskem musí pobrat nejdelší z nich („NEJBLIŽŠÍ DRAŽBA")
-     na JEDEN řádek. Ve 104 bodech se lámal na dva a karty pak byly každá
-     jinak vysoká a roztřepené. Šířka je pevná schválně: hodnoty vedle
-     sebe pak stojí v jedné ose. */
-  .hh-fakta .hl-fact .hl-k{flex:0 0 126px;}
-  .hh-fakta .hl-fact .hl-v b{display:inline; font-size:20px;}
-  /* Na úzké kartě stojí údaj i upřesnění na jednom řádku — tam oddělovač
-     dává smysl i očím. */
-  .hh-fakta .hl-sep{position:static; width:auto; height:auto; overflow:visible;
-    clip:auto; clip-path:none; color:rgba(234,230,221,0.4);}
-  /* ŠIPKA PATŘÍ K TEXTU, NE K OKRAJI KARTY. Byla přilepená vpravo
-     napevno, takže na řádkovém rozvržení stála 114 až 127 px za koncem
-     textu — třetina karty prázdná a šipka, která nevypadá, že k něčemu
-     patří. Na sloupcové kartě (monitor) to nevadí, tam je nad ní nadpis;
-     tady se z ní stane poslední článek řádku. */
-  .hh-fakta .hl-fact{padding-right:12px;}
-  .hh-fakta .hl-fact::after{position:static; transform:none; margin-left:2px;}
-  .hh-fakta .hl-fact .hl-v{flex:0 1 auto; min-width:0;}
-}
+
+
+
+
+
+
 
 /* =====================================================================
    ÚVOD NA TELEFONU: ŽIVĚ, ALE KRÁTCE
@@ -5366,23 +5309,12 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   .hh-legenda{gap:4px; margin-bottom:12px;}
   .hh-l{font-size:12px; padding:4px 8px; gap:4px;}
   .hh-l i{width:7px; height:7px;}
-  .hh-fakta .hl-fact{padding:6px 10px;}
   /* 92 bodů na „NEJBLIŽŠÍ DRAŽBA" nestačilo: popisek se lámal na dva
      řádky a ta karta pak byla o 15 bodů vyšší než ostatní. Širší sloupec
      tedy místo NEUBÍRÁ, naopak — a karty jsou stejně vysoké.
      Změřeno: nejdelší popisek potřebuje 109 bodů, zbylé dva 82 a 88.
      Rezerva je na jiná písma na jiných zařízeních. */
-  /* Sloupec popisku se šířkou řídí podle naměřené potřeby, ne od oka.
-     Při sjednocení velikostí (10 a 11 px pryč, nejmenší je 12) popisky
-     povyrostly a všechny tři se zalomily na dva řádky — „NEJBLIŽŠÍ
-     DRAŽBA" potřebuje 125 px, „PŘIBYLO ZA TÝDEN" 133 a „NEJVÍC POD
-     CENOU" 135. Na kartě je volných 179 až 193 px, takže se tam vejdou;
-     142 px je ta potřeba plus rezerva na jiná písma na jiných
-     zařízeních. */
-  .hh-fakta .hl-fact .hl-k{flex:0 0 142px; font-size:12px;}
-  .hh-fakta .hl-fact .hl-v{font-size:13px;}
-  .hh-fakta .hl-fact .hl-v b{font-size:16px;}
-  .hero-live.hh-fakta{gap:6px;}
+  
 }
 
 /* Nejmenší displeje (iPhone SE a spol.). Ani po zeštíhlení se úvod na
@@ -5394,7 +5326,6 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 @media (max-width:380px){
   .hh-legenda{display:none;}
   .hero-map .hero-head h1{font-size:24px; line-height:1.06; margin-bottom:10px;}
-  .hh-fakta .hl-fact{padding:4px 10px; gap:6px;}
   /* POPISEK ZŮSTÁVÁ, JEN SE ZÚŽÍ. Dřív tu bylo display:none a z karty
      zbylo „dnes · Teplice", „8 pozemků", „−59 % · Bílina" — údaje, které
      bez popisku neříkají nic: osm pozemků čeho, minus padesát devět
@@ -5402,16 +5333,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
      (hledání nesmí spadnout pod obzor), kdežto popisek stojí vedle
      hodnoty, tedy na šířku — a té bylo na kartě naměřeno 179 až 193 px
      volných. */
-  /* 104 px stačilo na IBM Plex Mono. Inter má verzálky širší: „NEJVÍC POD
-     CENOU" potřebuje při zdejším prostrkání 105 px a lámal se na dva
-     řádky — ta kartička pak byla o šest bodů vyšší než zbylé dvě
-     (naměřeno 38 a 44 px). Na kartě je volných 179 až 193 px, takže
-     širší sloupec tu nikomu nebere místo. */
-  .hh-fakta .hl-fact .hl-k{display:block; flex:0 0 auto; max-width:142px;
-    font-size:12px; letter-spacing:0.04em; line-height:1.15;}
-  .hh-fakta .hl-fact .hl-v{font-size:13px;}
-  .hh-fakta .hl-fact .hl-v b{font-size:16px;}
-  .hero-live.hh-fakta{gap:4px;}
+  
 }
 
 /* =====================================================================
@@ -5898,3 +5820,102 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   transition:background var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
 .mv-v.on{background:var(--plocha-znacka); color:#fff; border-color:var(--plocha-znacka);}
 #map-vrstvy.on,#map-vrstvy[aria-pressed="true"]{background:var(--plocha-znacka); color:#fff; border-color:var(--plocha-znacka);}
+
+/* ===================================================================
+   NÁVRATNOST KOUPĚ POZEMKU (stránka pozemku)
+   Tyhle styly stály ve vloženém <style> stránky pozemku, kam nepatří:
+   ten se vkládá do 1 995 vygenerovaných stránek, takže každý jeho
+   kilobajt stojí skoro dva megabajty napříč webem. Kritické je na něm
+   to, co je vidět hned — kalkulačka je až za rádcem, hluboko pod
+   ohybem. Hlídá to scripts/test-vlozeny-styl.mjs (mez 240 pravidel).
+   ------------------------------------------------------------------ */
+/* VYPLATÍ SE TO? Jediné místo na webu, kde člověk zadává vlastní
+   číslo, podle kterého se rozhodne o statisících. Vstupy proto
+   vypadají jako vstupy (bílé pole, rámeček), ne jako vypsané údaje —
+   aby bylo na první pohled jasné, co je jeho a co naše.
+   Výsledek je oddělený čárou: nad ní se zadává, pod ní se čte. */
+.pz-nav-box{margin:0 0 28px; padding:18px; background:var(--ink-soft);
+  border:1px solid var(--line-strong); border-radius:var(--r-plocha); box-shadow:var(--e1);}
+.pz-nav-box h2{margin:0 0 6px; font-family:var(--font-display); font-size:20px;
+  font-weight:800; letter-spacing:-0.01em; color:var(--text-ondark);}
+.nav-uvod{margin:0 0 14px; font-size:14px; line-height:1.55; color:var(--text-ondark-mute);}
+.nav-pola{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:12px;}
+.nav-pole{display:flex; flex-direction:column; gap:4px;}
+.nav-k{font-size:13px; font-weight:600; color:var(--text-ondark);}
+.nav-k i{display:block; margin-top:1px; font-size:12px; line-height:1.4;
+  font-style:italic; font-weight:400; color:var(--text-ondark-mute);}
+.nav-vstup{position:relative; display:flex; align-items:center;}
+/* 16 px i tady: pod touhle hranicí Safari na iPhonu po klepnutí do
+   pole přiblíží celou stránku. */
+.nav-vstup input{width:100%; min-height:44px; padding:0 46px 0 12px; font:inherit; font-size:16px;
+  font-variant-numeric:tabular-nums; color:var(--text-ondark); background:#fff;
+  border:1px solid var(--line-ui); border-radius:var(--r-sm);}
+.nav-vstup input:focus{outline:none; border-color:var(--copper-bright);
+  box-shadow:0 0 0 3px rgba(126,196,157,0.22);}
+.nav-vstup em{position:absolute; right:12px; font-style:normal; font-size:13px;
+  color:var(--text-ondark-mute); pointer-events:none;}
+.nav-vysledek{margin-top:16px; padding-top:14px; border-top:1px solid var(--line);}
+.nav-ceka{margin:0; font-size:14px; color:var(--text-ondark-mute);}
+.nav-r{display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  padding:7px 0; font-size:14px; color:var(--text-ondark-mute);}
+.nav-r b{font-variant-numeric:tabular-nums; color:var(--text-ondark); font-weight:600;}
+.nav-r.nav-dan b{font-weight:400; font-size:13px;}
+/* Čistý zisk je to, kvůli čemu se sem kouká — a prodělek musí být
+   poznat dřív, než se přečte znaménko. */
+.nav-r.nav-cisty{padding-top:10px; margin-top:4px; border-top:1px solid var(--line);
+  font-size:15px; color:var(--text-ondark);}
+.nav-r.nav-cisty b{font-family:var(--font-display); font-size:22px; font-weight:800;
+  color:var(--copper);}
+.nav-r.nav-cisty.je-minus b{color:var(--c-danger);}
+.nav-r.nav-pct b{font-weight:700;}
+.nav-pozn{margin:14px 0 0; font-size:12px; line-height:1.55; color:var(--text-ondark-mute);}
+.nav-pozn a{color:var(--copper-bright); font-weight:600; text-decoration:underline; text-underline-offset:3px;}
+
+/* ===================================================================
+   PARAMETRY POZEMKU — tři čísla nahoře a tabulka pod nimi
+   Přesunuto z vloženého <style> stránky pozemku. Ten se vkládá do
+   1 995 vygenerovaných stránek i s komentáři, takže každý jeho kilobajt
+   stojí skoro dva megabajty napříč webem; kritické je na něm jen to, co
+   je vidět hned, a parametry stojí až za cenou, posudkem a popisem.
+   Mez 36 kB hlídá scripts/test-vlozeny-styl.mjs — a hlídá i to, aby
+   tatáž vlastnost nebyla nastavená na obou místech, protože dvě místa
+   pro jednu věc se dřív nebo později rozejdou.
+   ------------------------------------------------------------------ */
+/* TŘI ČÍSLA, PODLE KTERÝCH SE ČLOVĚK ROZHODUJE. Velké číslo nahoře,
+   popisek pod ním — tak se to čte na jedno kouknutí, místo aby se
+   luštil řádek tabulky. Buňky se samy přeskládají: tři vedle sebe,
+   na úzkém displeji dvě a pak jedna. */
+.pz-klice{display:grid; grid-template-columns:repeat(auto-fit, minmax(148px, 1fr));
+  gap:10px; margin:0 0 10px;}
+.pz-klic{display:flex; flex-direction:column; gap:3px; padding:14px 16px;
+  background:var(--ink-soft); border:1px solid var(--line-strong);
+  border-radius:var(--r-plocha); box-shadow:var(--e1);}
+.pz-klic b{font-size:22px; line-height:1.22; color:var(--text-ondark);
+  font-variant-numeric:tabular-nums;}
+.pz-klic > span{font-size:13px; color:var(--text-ondark-mute);}
+.pz-klic i{font-size:12px; line-height:1.45; font-style:italic; color:var(--text-ondark-mute);}/* POPISEK A HODNOTA VEDLE SEBE, NE NA OPAČNÝCH KONCÍCH.
+   Řádky byly flex se space-between, takže se hodnota lepila na pravý
+   okraj — na počítači 435 px od svého popisku. Mřížka je na .pz-specs
+   (ne na řádku), aby sloupec popisků byl JEDEN pro všechny řádky
+   a hodnoty začínaly na stejné svislici; řádek se proto rozpouští
+   přes display:contents. Čáry pak nese každá buňka zvlášť. */
+.pz-specs{display:grid; grid-template-columns:max-content 1fr; align-items:start;
+  border:1px solid var(--line-strong); border-radius:var(--r-plocha); overflow:hidden;
+  background:var(--ink-soft); box-shadow:var(--e1);}
+.pz-spec{display:contents;}
+.pz-spec .k, .pz-spec .v{padding:12px 0; border-bottom:1px solid var(--line);}
+.pz-spec .k{padding-left:14px; padding-right:18px;}
+.pz-spec .v{padding-right:14px;}
+.pz-spec:last-child .k, .pz-spec:last-child .v{border-bottom:none;}
+.pz-spec .k{color:var(--text-ondark-mute); font-size:15px;}/* Hodnota se smí zalomit. S nowrap + ellipsis se delší údaj uřízl
+   třemi tečkami („inzerát mluví o spoluvlastnickém podíl…") — a byla
+   to zrovna ta věta, kvůli které se na cenu nedá spoléhat. */
+.pz-spec .v{color:var(--text-ondark); font-weight:600; font-size:15px; text-align:left; font-variant-numeric:tabular-nums; min-width:0; overflow-wrap:anywhere;
+  /* Vyvažování řádků (text-wrap:balance) se sem nehodí: rozlomilo
+     datum na „8. / 10. 2026". Radši nechat viset poslední slovo než
+     přetrhnout číslo. */
+  line-height:1.4;}
+.pz-spec .pz-pozn{display:block; margin-top:2px; font-size:12px; line-height:1.5; font-style:italic; color:var(--text-ondark-mute);}
+@media (max-width:560px){
+  .pz-spec:has(.pz-sour) .k{grid-column:1 / -1; padding-bottom:0; border-bottom:none;}
+  .pz-spec:has(.pz-sour) .v{grid-column:1 / -1; padding-left:14px; padding-top:6px;}}

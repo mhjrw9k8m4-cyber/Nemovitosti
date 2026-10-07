@@ -56,8 +56,23 @@
       });
   }
 
+  /** Je ta dražba už za sebou? Záznam bez termínu po termínu není.
+   *
+   * PROČ TADY A NE V GENERÁTORU. Tahle podmínka byla napsaná jen
+   * v scripts/generate-region-pages.mjs a u ní komentář, že je to „okno,
+   * které musí zavřít obě strany stejně". Druhá strana — strojové řezy
+   * dat — ho nezavírala vůbec, a nikdo si toho nevšiml, protože se to
+   * pozná jedině DEN PO dražbě: okresní stránka Prahy-východ hlásila
+   * 54 pozemků a řez téhož okresu 55. Jedna dražba z 6. 10. 2026.
+   * Dokud je podmínka na jednom místě, rozejít se nemůže. */
+  function poTerminu(o) {
+    var d = daysUntil(o && o.extra);
+    return d != null && d < 0;
+  }
+
   root.PK_TERMINY = {
     daysUntil: daysUntil,
+    poTerminu: poTerminu,
     countdownText: countdownText,
     countdownClass: countdownClass,
     auctionYMD: auctionYMD,

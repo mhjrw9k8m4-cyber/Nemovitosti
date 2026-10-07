@@ -589,8 +589,19 @@ if (smazat) {
   pravda('nepřihlášenému stránka ukáže, co hlídání dělá', !!u && u.radky.length >= 2,
     u ? `řádků ${u.radky.length}` : 'ukázka na stránce není');
   if (u) {
+    /* „Kolik přibylo" má DVĚ správné podoby a dřív se uznávala jen jedna.
+       Když za týden nepřibylo nic, stránka napíše „za poslední týden
+       nepřibyl žádný" — žádná číslice v tom není, a přitom je to přesná
+       odpověď; napsat „0 pozemků" by byla horší čeština. Zkouška na to
+       padala jeden den v týdnu, kdy se zrovna nic nenašlo, a vypadalo to
+       jako vada webu. Co se hlídat MUSÍ, je prázdná buňka: ta neříká nic
+       a člověk z ní nepozná, jestli se počítalo. */
     pravda('a u každého příkladu stojí, kolik pozemků by mu přibylo',
-      u.radky.every((r) => /\d/.test(r.cislo)), JSON.stringify(u.radky.map((r) => r.cislo)));
+      u.radky.every((r) => /\d/.test(r.cislo) || /nepřibyl|žádn/i.test(r.cislo)),
+      JSON.stringify(u.radky.map((r) => r.cislo)));
+    pravda('a žádný ten řádek není prázdný',
+      u.radky.every((r) => String(r.cislo).trim().length > 0),
+      JSON.stringify(u.radky.map((r) => r.cislo)));
     /* Pojistka čte PŘEDPIS příkladů ze zdroje stránky: aspoň jeden musí
        mít mez v Kč/m². Bez toho by kontrola pod tím hledala něco, co
        nikdo nenastavil, a prošla by, i kdyby to souhrn zamlčoval. */

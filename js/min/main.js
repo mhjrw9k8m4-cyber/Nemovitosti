@@ -1649,16 +1649,23 @@
         kresliPredtim = {
           tazeni: map.dragging.enabled(),
           dvojklik: map.doubleClickZoom.enabled(),
+
+          pinch: map.touchZoom ? map.touchZoom.enabled() : false,
+          kolecko: map.scrollWheelZoom ? map.scrollWheelZoom.enabled() : false,
           touchAction: mapEl.style.touchAction
         };
       }
       map.dragging.disable();
       map.doubleClickZoom.disable();
+      if (map.touchZoom) map.touchZoom.disable();
+      if (map.scrollWheelZoom) map.scrollWheelZoom.disable();
 
       mapEl.style.touchAction = 'none';
     } else if (kresliPredtim) {
       map.dragging[kresliPredtim.tazeni ? 'enable' : 'disable']();
       map.doubleClickZoom[kresliPredtim.dvojklik ? 'enable' : 'disable']();
+      if (map.touchZoom) map.touchZoom[kresliPredtim.pinch ? 'enable' : 'disable']();
+      if (map.scrollWheelZoom) map.scrollWheelZoom[kresliPredtim.kolecko ? 'enable' : 'disable']();
       mapEl.style.touchAction = kresliPredtim.touchAction;
       kresliPredtim = null;
     }
@@ -1678,12 +1685,9 @@
 
   if (kresliBtn) {
     kresliBtn.addEventListener('click', function () {
-      if (vyberTvar) {
 
-        vyberTvar = null; vykresliVyber(); renderList();
-        return;
-      }
-      zapniKresleni(!kresliZap);
+      if (kresliZap) { kresliKonec(false); return; }
+      zapniKresleni(true);
     });
   }
 
@@ -3131,7 +3135,25 @@
     else { msfBadge.hidden = true; }
   }
 
+  var poznStazeno = false;
+  function stahniPoznamky() {
+    if (poznStazeno || !window.PKPoznamky || !window.PKPoznamky.sync) return;
+    poznStazeno = true;
+    window.PKPoznamky.sync().then(function (zmen) {
+      if (zmen) renderList();
+    }).catch(function () {});
+  }
+
+  window.addEventListener('pageshow', function (e) {
+    if (!e || !e.persisted) return;
+    var l = document.getElementById('opp-list');
+    if (!l || !l.children.length) return;
+    poznStazeno = false;
+    renderList();
+  });
+
   function renderList() {
+    stahniPoznamky();
 
     zapisAdresu();
 
@@ -3190,6 +3212,8 @@
       li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '') + (isFeatured(d) ? ' is-featured' : '')
         + (jeVidene ? ' je-videne' : '');
       li.setAttribute('data-id', d._id);
+
+      li.setAttribute('data-pk', pkey(d));
       li.setAttribute('tabindex', '0');
       li.setAttribute('role', 'button');
       li.setAttribute('aria-label', t.label + ' · ' + d.place + ' · ' + areaTxt(d));
@@ -3275,6 +3299,14 @@
       if (hot) chips.push('<span class="opp-hot">Doporučujeme</span>');
 
       if (jeNovy(d)) chips.unshift('<span class="opp-nove">Nové</span>');
+
+      if (window.PKPoznamky && window.PKPoznamky.text) {
+        try {
+          if (window.PKPoznamky.text(d)) {
+            chips.unshift('<span class="opp-pozn" title="U tohohle pozemku máte svoji poznámku">Poznámka</span>');
+          }
+        } catch (e) {}
+      }
 
       if (chips.length > 3) chips = chips.slice(0, 3);
       if (jeSkryty(d)) li.classList.add('je-skryty');
@@ -4551,96 +4583,6 @@
     });
   }
 
-  function renderHeroLive() {
-    var box = document.getElementById('hero-live');
-    if (!box) return;
-    var dnes = new Date(); dnes.setHours(0, 0, 0, 0);
-    function den(iso) {
-      var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
-      if (!m) return null;
-      var d = new Date(+m[1], +m[2] - 1, +m[3]); d.setHours(0, 0, 0, 0);
-      return d;
-    }
-    function zaKolik(d) {
-      var r = Math.round((d - dnes) / 86400000);
-      if (r <= 0) return 'dnes';
-      if (r === 1) return 'zítra';
-      if (r < 5) return 'za ' + r + ' dny';
-      return 'za ' + r + ' dní';
-    }
-    var hotovo = 0;
-    function vypln(fakt, klic, hodnota, cil) {
-      var a = box.querySelector('[data-fakt="' + fakt + '"]');
-      if (!a) return;
-      if (!hodnota) { a.hidden = true; return; }
-      if (klic) a.querySelector('.hl-k').textContent = klic;
-
-      var kus = String(hodnota).split(' · ');
-      var hlavni = kus.shift();
-      var vEl = a.querySelector('.hl-v');
-      vEl.textContent = '';
-      var bEl = document.createElement('b');
-      bEl.textContent = hlavni;
-      vEl.appendChild(bEl);
-      if (kus.length) {
-
-        var sep = document.createElement('span');
-        sep.className = 'hl-sep';
-        sep.textContent = ' · ';
-        vEl.appendChild(sep);
-        vEl.appendChild(document.createTextNode(kus.join(' · ')));
-      }
-      if (cil) a.addEventListener('click', function (e) { e.preventDefault(); gotoInzerat(cil); });
-
-      else if (fakt === 'nove') a.addEventListener('click', function (e) {
-        e.preventDefault();
-        if (sortEl) { sortEl.value = 'nove'; sortEl.dispatchEvent(new Event('change', { bubbles: true })); }
-
-        if (typeof scrollToMap === 'function') scrollToMap();
-      });
-      hotovo++;
-    }
-
-    var nej = null, nejD = null;
-    DATA.forEach(function (d) {
-      if (d.type !== 'drazba' && d.type !== 'exekuce') return;
-      var m = /(\d{4}-\d{2}-\d{2})/.exec(d.extra || '');
-      if (!m) return;
-      var t = den(m[1]);
-      if (!t || t < dnes) return;
-      if (!nejD || t < nejD) { nejD = t; nej = d; }
-    });
-    vypln('drazba', null, nej ? (zaKolik(nejD) + ' · ' + nej.place) : '', nej);
-
-    var dnesN = 0, tydenN = 0, sDatem = 0;
-    DATA.forEach(function (d) {
-      var t = den(d.first_seen);
-      if (!t) return;
-      sDatem++;
-      var r = Math.round((dnes - t) / 86400000);
-      if (r === 0) dnesN++;
-      if (r >= 0 && r < 7) tydenN++;
-    });
-    var STROP = Math.max(1, Math.round(sDatem / 3));
-    function kusy(n) { return n === 1 ? '1 pozemek' : (n < 5 ? n + ' pozemky' : fmt(n) + ' pozemků'); }
-    if (dnesN > 0 && dnesN <= STROP) vypln('nove', 'Přibylo dnes', kusy(dnesN));
-    else if (tydenN > 0 && tydenN <= STROP) vypln('nove', 'Přibylo za týden', kusy(tydenN));
-    else vypln('nove', '', '');
-
-    var best = null, bestO = null;
-    DATA.forEach(function (d) {
-      var o = MODEL ? MODEL.odhad(d) : null;
-
-      if (!o || !o.podleVelikosti || o.pochybna || o.nejisty || o.podil || o.podOdhadem < 25) return;
-      if (!bestO || o.podOdhadem > bestO.podOdhadem) { bestO = o; best = d; }
-    });
-
-    vypln('deal', null, best ? ('\u2212' + bestO.podOdhadem + ' % · ' + best.place) : '', best);
-
-    if (hotovo) box.classList.remove('je-ceka');
-    else box.hidden = true;
-  }
-
   (function () {
     var dnes = new Date();
     var iso = dnes.getFullYear() + '-' +
@@ -4826,7 +4768,6 @@
   if (zmenitBtn) zmenitBtn.addEventListener('click', function () { otevriVyberMista(); });
   vykresliMisto();
 
-  renderHeroLive();
   renderHeroLegenda();
 
   (function (dokonci) {

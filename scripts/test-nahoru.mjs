@@ -150,7 +150,21 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
     }
 
     if (dlouha) {
-      /* U patičky uhne: kdo je na konci, chce její odkazy. */
+      /* U PATIČKY TLAČÍTKO ZŮSTÁVÁ — a tahle zkouška dřív vyžadovala opak.
+         Stálo tu „u patičky uhne: kdo je na konci, chce její odkazy".
+         Jenže to druhé se nikdy neověřilo: změřeno na třech typech
+         stránek ve třech šířkách, tlačítko nepřekrývalo ANI JEDEN odkaz
+         patičky v devíti případech z devíti — patička má odkazy ve
+         sloupcích vlevo a pravý dolní roh volný. Zato cena byla
+         skutečná: tlačítko mizelo přesně na konci stránky dlouhé
+         4 000 až 17 000 px, tedy tam, kde ho člověk potřebuje nejvíc,
+         a zpátky nahoru se odtud nedalo dostat jinak než palcem přes
+         celou stránku.
+         Hlídá se proto to, co ta původní úvaha chtěla, jen přímo:
+         tlačítko je vidět A ZÁROVEŇ nepřekrývá nic, na co se dá
+         v patičce klepnout. Kdyby patička někdy narostla doprava,
+         spadne tahle kontrola — a to je správně, protože to je ta
+         chvíle, kdy začne vadit. */
       await p.evaluate(() => window.scrollTo(0, 1e7));
       const yK = await p.evaluate(KLID);
       const konec = await stav(p);
@@ -160,8 +174,27 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
       });
       pravda(`${W}px ${s}: na konci je patička v obraze`, patka !== null && patka < H - 60,
         `patička začíná na ${patka}, okno ${H}`);
-      pravda(`${W}px ${s}: u patičky tlačítko uhne`, konec.show === false,
+      pravda(`${W}px ${s}: na konci stránky je tlačítko pořád vidět`,
+        konec.show === true && konec.kryti > 0.9 && konec.navrchu,
         `y=${yK}, ${JSON.stringify(konec)}`);
+      const prekryv = await p.evaluate(() => {
+        const b = document.querySelector('#to-top');
+        const f = document.querySelector('footer');
+        if (!b || !f) return { chybi: true };
+        const rb = b.getBoundingClientRect();
+        const kolize = [];
+        f.querySelectorAll('a, button, input, [role="button"]').forEach((e) => {
+          const r = e.getBoundingClientRect();
+          if (!r.width || !r.height) return;
+          if (r.left < rb.right && r.right > rb.left && r.top < rb.bottom && r.bottom > rb.top) {
+            kolize.push((e.textContent || e.getAttribute('aria-label') || e.tagName).trim().slice(0, 30));
+          }
+        });
+        return { kolize: kolize, odkazu: f.querySelectorAll('a, button').length };
+      });
+      pravda(`${W}px ${s}: a nepřekrývá nic, na co se dá v patičce klepnout`,
+        !prekryv.chybi && prekryv.kolize.length === 0,
+        `překrývá: ${(prekryv.kolize || []).join(', ')} (z ${prekryv.odkazu} prvků patičky)`);
 
       /* Klepnutí myší: vrátí stránku nahoru a kurzor nikam neodskočí. */
       await p.evaluate(() => window.scrollTo(0, 1600));

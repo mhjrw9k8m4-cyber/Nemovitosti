@@ -468,6 +468,21 @@
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
             '<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>' +
           '</button>' +
+          /* ZPÁTKY NA POZEMEK. Mapa jde posouvat a přibližovat, ale nic
+             nevedlo zpátky — kdo si odjel podívat se, kudy se k pozemku
+             jede, musel stránku načíst znovu, aby ho zase našel. Velká
+             mapa na úvodu na to má „Celá ČR", výběr okolí „Ukázat okruh";
+             tady nebylo nic.
+             Ukazuje se, až když je opravdu k čemu: dokud je značka
+             v záběru a přiblížení beze změny, tlačítko by jen zabíralo
+             výhled. Stojí pod zvětšením, tedy v témž sloupci vpravo —
+             levý okraj displeje si bere telefon na gesto „zpět". */
+          '<button type="button" class="pzm-zpet-btn" id="pzm-zpet" hidden ' +
+            'aria-label="Vrátit mapu na pozemek" title="Zpátky na pozemek">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+            '<span>Na pozemek</span>' +
+          '</button>' +
         '</div>' +
         '<div class="pzm-panel">' +
           '<div class="pzm-zaklad" role="group" aria-label="Podklad mapy">' +
@@ -533,6 +548,28 @@
     L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(m);
     m.on('click', function () { m.scrollWheelZoom.enable(); });
     global.PK_PZ_MAPA = m;
+
+    /* Tlačítko „Na pozemek" se ukáže, až se pohled od značky odlepí.
+       Rozhoduje o tom VIDITELNOST ZNAČKY, ne vzdálenost v kilometrech:
+       dokud je pozemek v záběru, člověk ví, kde je, a nic nepotřebuje.
+       Přibližování se počítá taky — na dvacetinásobek oddálená mapa má
+       značku pořád „v záběru", jenže to už je pohled na okres. */
+    var domaStred = L.latLng(d.lat, d.lng);
+    var domaZoom = m.getZoom();
+    var zpetBtn = document.getElementById('pzm-zpet');
+    function hlidejZpet() {
+      if (!zpetBtn) return;
+      var vidim = m.getBounds().pad(-0.12).contains(domaStred);
+      zpetBtn.hidden = vidim && Math.abs(m.getZoom() - domaZoom) < 1.5;
+    }
+    m.on('moveend zoomend', hlidejZpet);
+    hlidejZpet();
+    if (zpetBtn) {
+      zpetBtn.addEventListener('click', function () {
+        m.setView(domaStred, domaZoom, { animate: true });
+        hlidejZpet();
+      });
+    }
 
     // podklad
     var zaklad = null;
@@ -965,6 +1002,50 @@
     var _zm = global.PK_CENY && global.PK_CENY.zaMetr ? global.PK_CENY.zaMetr(d) : null;
     var perM2 = _zm == null ? null : Math.round(_zm);
     var perM2Pozn = global.PK_CENY && global.PK_CENY.zaMetrPopis ? global.PK_CENY.zaMetrPopis(d) : '';
+    /* Kupní cena je POLE, ne převzaté číslo. U dražby je v inzerátu
+       vyvolávací cena a vydražuje se výš, takže převzít ji jako kupní by
+       znamenalo počítat návratnost z částky, kterou nikdo nezaplatí.
+       U ostatních se předvyplní, protože tam ta cena doopravdy platí. */
+    function pzNavratnostHtml(d) {
+      if (!(typeof d.price === 'number' && d.price > 0)) return '';
+      var drazba = d.type === 'drazba';
+      var N = global.PKNavratnost || {};
+      function pole(id, popis, hodnota, pozn, sufix) {
+        return '<label class="nav-pole" for="' + id + '"><span class="nav-k">' + popis
+          + (pozn ? '<i>' + pozn + '</i>' : '') + '</span>'
+          + '<span class="nav-vstup"><input type="text" inputmode="decimal" id="' + id
+          + '" value="' + (hodnota == null ? '' : hodnota) + '">'
+          + '<em>' + sufix + '</em></span></label>';
+      }
+      return '<section class="pz-nav-box" id="pz-nav" aria-labelledby="pz-nav-nadpis">'
+        + '<h2 id="pz-nav-nadpis">Vyplatí se to?</h2>'
+        + '<p class="nav-uvod">Za kolik myslíte, že byste ho jednou prodali? '
+        + 'To číslo je <b>vaše</b> — web ho nenapovídá a neumí ho odhadnout. '
+        + 'Zbytek dopočítáme.</p>'
+        + '<div class="nav-pola">'
+        + pole('nav-kupni', drazba ? 'Kolik za něj dáte' : 'Kupní cena',
+            drazba ? '' : Math.round(d.price),
+            drazba ? 'v inzerátu je vyvolávací cena — vydražuje se výš' : '', 'Kč')
+        + pole('nav-naklady', 'Náklady kolem koupě', N.VKLAD || 2000,
+            'vklad do katastru, advokát, úschova…', 'Kč')
+        + pole('nav-prodejni', 'Za kolik prodáte', '', 'vaše číslo, ne naše', 'Kč')
+        + pole('nav-let', 'Za jak dlouho', 10,
+            'do deseti let se z výdělku platí daň', 'let')
+        + '</div>'
+        /* TABULKA NENÍ ŽIVÁ OBLAST. Překresluje se při každém stisku
+           klávesy, takže s aria-live by odečítač při psaní „2 800 000"
+           přečetl celý výsledek sedmkrát za sebou. Hlásí se proto jen
+           jedna věta, a to se zpožděním — stejně jako u pole poznámky,
+           kde se „uloženo" taky neříká po každém písmenu. */
+        + '<div class="nav-vysledek" id="nav-vysledek"></div>'
+        + '<p class="visually-hidden" id="nav-hlaseni" role="status" aria-live="polite"></p>'
+        + '<p class="nav-pozn">Není to daňová rada ani odhad ceny. Lhůta osvobození '
+        + 'i sazba daně se mění — ověřte si je, než se podle čísla rozhodnete. '
+        + '<a href="kolik-stoji-koupe-pozemku.html?cena=' + Math.round(d.price) + '">'
+        + 'Rozepsané náklady koupě</a></p>'
+        + '</section>';
+    }
+
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'sale' || d.type === 'majitel' ? 'Cena' : 'Odhadní cena');
     var days = daysUntil(d.extra);
     // „Zobrazit na mapě" vede na SKUTEČNOU mapu (Mapy.cz letecká) na daném místě,
@@ -983,12 +1064,27 @@
     var src = sourceLink(d);
     var favOn = isFav(d);
 
+    /* TŘI ČÍSLA NAHOŘE, ZBYTEK POD NIMI.
+       Všech šest údajů stálo jako stejně vypadající řádky popisek-vlevo,
+       hodnota-vpravo. Změřeno: na počítači bylo mezi popiskem a hodnotou
+       435 px prázdna (na telefonu 133 px), takže oko muselo u každého
+       řádku přeskočit půl obrazovky — a protože měly všechny řádky tutéž
+       velikost i váhu, nic nevedlo. Výsledek vypadal jako výpis
+       z databáze, ne jako nabídka pozemku.
+       Výměra, cena za metr a druh jsou to, podle čeho se člověk
+       rozhoduje; ty tedy stojí nahoře jako tři buňky s velkým číslem
+       a popiskem pod ním. Zbytek (parcela, souřadnice, kategorie, zdroj)
+       je dohledávka a zůstává řádkem — jen už s popiskem a hodnotou
+       vedle sebe, ne na opačných koncích. */
+    var klice = [];
+    /* U podílu je v inzerátu výměra CELÉ parcely — musí to být napsané,
+       jinak si ji každý vydělí cenou za podíl. */
+    klice.push({ k: 'Výměra', v: areaTxt(d),
+      pozn: (d.podil && hasArea(d)) ? 'celá parcela — kupuje se jen podíl' : '' });
+    if (perM2) klice.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²', pozn: perM2Pozn || '' });
+    klice.push({ k: 'Druh pozemku', v: esc(d.druh || '—'), pozn: '' });
+
     var facts = [];
-    facts.push({ k: 'Druh pozemku', v: esc(d.druh || '—') });
-    /* U podílu je v inzerátu výměra CELÉ parcely — v řádku „Výměra" to
-       musí být napsané, jinak si ji každý vydělí cenou za podíl. */
-    facts.push({ k: 'Výměra', v: areaTxt(d) + (d.podil && hasArea(d) ? ' <i class="pz-pozn">celá parcela — kupuje se jen podíl</i>' : '') });
-    if (perM2) facts.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²' + (perM2Pozn ? ' <i class="pz-pozn">' + esc(perM2Pozn) + '</i>' : '') });
     if (hasParcel(d)) facts.push({ k: 'Parcela', v: 'č. ' + esc(d.parcel) });
     /* SOUŘADNICE S SEBOU. Na prohlídku se jezdí autem a do navigace se
        zadává bod, ne „okres Benešov". Stránka přitom souřadnice zná —
@@ -1074,9 +1170,20 @@
       pzPopisInzerentaHtml() +
 
       '<h2 class="pz-sect-h">Parametry pozemku</h2>' +
-      '<div class="pz-specs">' +
-        facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v + '</span></div>'; }).join('') +
+      '<div class="pz-klice">' +
+        klice.map(function (f) {
+          return '<div class="pz-klic"><b>' + f.v + '</b><span>' + f.k + '</span>' +
+            (f.pozn ? '<i>' + esc(f.pozn) + '</i>' : '') + '</div>';
+        }).join('') +
       '</div>' +
+      /* Prázdný rámeček by vypadal jako chybějící obsah: když u pozemku
+         není ani parcelní číslo, ani souřadnice, ani zdroj, nevykreslí
+         se tabulka vůbec. */
+      (facts.length
+        ? '<div class="pz-specs">' +
+            facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v + '</span></div>'; }).join('') +
+          '</div>'
+        : '') +
 
       /* SOUKROMÁ POZNÁMKA. Kdo obchází deset pozemků, po týdnu si
          nepamatuje, který měl rozbitý plot. Web uměl jen „uložit",
@@ -1089,8 +1196,13 @@
         '<textarea id="pz-pozn-text" class="pz-pozn-pole" rows="3" maxlength="2000" ' +
           'placeholder="Co jste tu viděli — příjezd, sousedi, co říkal majitel…" ' +
           'aria-describedby="pz-pozn-kde"></textarea>' +
-        '<p class="pz-pozn-kde" id="pz-pozn-kde">Zůstává <b>jen v tomhle prohlížeči</b>. ' +
-          'Nikam se neodesílá, nevidíme ji ani my — a do jiného telefonu se nepřenese.</p>' +
+        /* VĚTA SE MUSELA ZMĚNIT SPOLU S CHOVÁNÍM. Stálo tu „zůstává jen
+           v tomhle prohlížeči, nikam se neodesílá, nevidíme ji ani my".
+           Od chvíle, kdy se poznámky vážou na účet, by to byla lež —
+           a lež zrovna v tom jediném místě, kde se člověk rozhoduje,
+           co o cizích lidech napíše. Píše se proto obojí, podle toho,
+           jestli je přihlášený; text dosadí skript níž. */
+        '<p class="pz-pozn-kde" id="pz-pozn-kde"></p>' +
       '</section>' +
 
       pzFeaturesHtml(d) +
@@ -1117,6 +1229,22 @@
       '</details>' +
 
       pzPopisHtml(d) +
+
+      /* NÁVRATNOST. Stránka uměla říct, co pozemek stojí; co z toho zbude
+         při prodeji, si musel člověk spočítat sám — a přesně kvůli tomu
+         na pozemek jako na investici kouká.
+         Prodejní cenu zadává ON. Kdybychom ji dopočítali my, byla by
+         z kalkulačky předpověď, a předpovídat, za kolik se pozemek prodá,
+         neumíme: záleží na územním plánu, na sítích a na tom, kdo zrovna
+         shání. Pole je proto prázdné a nic v něm nenapovídáme.
+
+         PROČ AŽ TADY A NE HNED ZA PARAMETRY. Napoprvé stála hned pod nimi
+         a odsunula rádce („na co si dát pozor") pod polovinu stránky —
+         2 312 ze 4 268 px. Rádce má být tam, kde člověk ještě čte;
+         kalkulačka je nástroj, po kterém sáhne, až si přečte, co kupuje.
+         Stojí proto rovnou nad odkazy na rozepsané náklady, se kterými
+         počítá — všechno kolem peněz na jednom místě. */
+      pzNavratnostHtml(d) +
 
       /* KOLIK TO BUDE STÁT DOHROMADY. Stránka říká cenu pozemku, ale ta
          není celá pravda: k ní se přičte vklad do katastru, smlouva,
@@ -1252,10 +1380,110 @@
       else { toast(url); }
     });
 
+    /* ---- návratnost ---- */
+    (function () {
+      var box = document.getElementById('pz-nav');
+      if (!box || !global.PKNavratnost) return;
+      var vysl = document.getElementById('nav-vysledek');
+      function hod(id) { var e = document.getElementById(id); return e ? e.value : ''; }
+      function kc(n) {
+        return (n < 0 ? '−' : '') + Math.round(Math.abs(n)).toString()
+          .replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + '\u00a0Kč';
+      }
+      function pct(n) { return (n < 0 ? '−' : '') + Math.abs(n).toFixed(1).replace('.', ',') + '\u00a0%'; }
+      function radek(k, v, trida) {
+        return '<div class="nav-r' + (trida ? ' ' + trida : '') + '">'
+          + '<span>' + k + '</span><b>' + v + '</b></div>';
+      }
+      function prepocti() {
+        var r = global.PKNavratnost.spocti({
+          kupni: hod('nav-kupni'), naklady: hod('nav-naklady'),
+          prodejni: hod('nav-prodejni'), let: hod('nav-let')
+        });
+        if (!r) {
+          /* Dokud chybí zadání, NEUKAZUJE SE nula — nula je taky odpověď
+             a člověk by ji přečetl jako výsledek. */
+          vysl.innerHTML = '<p class="nav-ceka">Doplňte kupní a prodejní cenu.</p>';
+          ohlas(null);
+          return;
+        }
+        ohlas(r);
+        vysl.innerHTML =
+          radek('Vložíte celkem', kc(r.vlozeno))
+          + radek('Rozdíl při prodeji', kc(r.vydelek))
+          + (r.osvobozeno
+            ? radek('Daň z příjmu', 'neplatí se — po ' + r.lhuta + ' letech', 'nav-dan')
+            : (r.dan > 0
+              ? radek('Daň z příjmu (' + String(r.sazba).replace('.', ',') + ' %)', '−' + kc(r.dan), 'nav-dan')
+              : radek('Daň z příjmu', 'z prodělku se neplatí', 'nav-dan')))
+          + radek(r.prodelek ? 'Proděláte' : 'Čistý zisk', kc(r.cisty),
+              'nav-cisty' + (r.prodelek ? ' je-minus' : ''))
+          + radek('Zhodnocení', pct(r.zhodnoceni), 'nav-pct')
+          + (r.rocne != null ? radek('Ročně', pct(r.rocne), 'nav-pct') : '');
+      }
+      /* Jedna věta po pauze v psaní. 700 ms je zhruba doba, po které
+         člověk dopsal číslo — ne mezera mezi dvěma číslicemi. */
+      var hlasic = document.getElementById('nav-hlaseni');
+      var casHlaseni = null;
+      function ohlas(r) {
+        if (!hlasic) return;
+        clearTimeout(casHlaseni);
+        casHlaseni = setTimeout(function () {
+          hlasic.textContent = r
+            ? ((r.prodelek ? 'Proděláte ' : 'Čistý zisk ') + kc(Math.abs(r.cisty))
+               + ', zhodnocení ' + pct(r.zhodnoceni) + '.')
+            : '';
+        }, 700);
+      }
+      box.addEventListener('input', prepocti);
+      /* Po odchodu z pole se číslo přepíše do stejného tvaru, v jakém ho
+         ukazuje výsledek — jinak stojí „500000" a o řádek níž „500 000 Kč",
+         totéž číslo dvakrát jinak na jedné obrazovce. */
+      box.addEventListener('focusout', function (e) {
+        var el = e.target;
+        if (!el || el.tagName !== 'INPUT' || el.id === 'nav-let') return;
+        var v = parseFloat(String(el.value).replace(/[\s\u00a0]/g, '').replace(',', '.'));
+        if (!isFinite(v) || v <= 0) return;
+        el.value = Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+      });
+      prepocti();
+    }());
+
     /* ---- soukromá poznámka ---- */
     var poznEl = document.getElementById('pz-pozn-text');
     if (poznEl && global.PKPoznamky) {
       var stavEl = document.getElementById('pz-pozn-stav');
+      /* KDE TA POZNÁMKA LEŽÍ, ZÁLEŽÍ NA PŘIHLÁŠENÍ — a člověk to musí
+         vědět DŘÍV, než začne psát, ne až potom. Proto se věta dosazuje
+         podle skutečného stavu, ne jako jeden text pro obě situace. */
+      var kdeEl = document.getElementById('pz-pozn-kde');
+      function rekniKde() {
+        if (!kdeEl) return;
+        if (global.PKPoznamky.prihlasen && global.PKPoznamky.prihlasen()) {
+          kdeEl.innerHTML = 'Uloží se <b>k vašemu účtu</b>, takže ji uvidíte '
+            + 'i na jiném telefonu a mezi uloženými pozemky. '
+            + 'Čte ji jen váš účet — nikdo další, ani majitel pozemku.';
+        } else {
+          kdeEl.innerHTML = 'Zůstává <b>jen v tomhle prohlížeči</b>. '
+            + 'Nikam se neodesílá, nevidíme ji ani my — a do jiného telefonu '
+            + 'se nepřenese. Po přihlášení ji web uloží k účtu.';
+        }
+      }
+      rekniKde();
+      /* Doplnění z účtu může dorazit až po vykreslení; pak se políčko
+         i věta srovnají podle toho, co doopravdy platí. */
+      if (global.PKPoznamky.sync) {
+        global.PKPoznamky.sync().then(function (n) {
+          if (n == null) return;
+          rekniKde();
+          var zUctu = global.PKPoznamky.text(d);
+          /* Nepřepisovat, co má člověk rozepsané pod rukou. */
+          if (document.activeElement !== poznEl && zUctu && zUctu !== poznEl.value) {
+            poznEl.value = zUctu;
+            puvodni = zUctu;
+          }
+        }).catch(function () {});
+      }
       poznEl.value = global.PKPoznamky.text(d);
       var puvodni = poznEl.value;
       var cas = null;

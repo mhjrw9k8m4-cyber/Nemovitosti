@@ -110,149 +110,23 @@ p.on('pageerror', (e) => chyby.push(String(e)));
 await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(4500);
 
-const proužek = await p.evaluate(() => {
-  const box = document.getElementById('hero-live');
-  if (!box) return null;
-  const el = (f) => box.querySelector(`[data-fakt="${f}"]`);
-  const cti = (f) => {
-    const a = el(f);
-    if (!a || a.hidden) return null;
-    return {
-      klic: a.querySelector('.hl-k').textContent.trim(),
-      hodnota: a.querySelector('.hl-v').textContent.trim(),
-    };
-  };
-  return { skryty: box.hidden, drazba: cti('drazba'), nove: cti('nove'), deal: cti('deal') };
-});
-
-pravda('živý proužek se v úvodu objevil', proužek && proužek.skryty === false,
-  'element #hero-live chybí nebo zůstal schovaný');
-
-if (proužek) {
-  for (const [klic, popis] of [['drazba', 'nejbližší dražba'], ['deal', 'nejvýhodnější dnes']]) {
-    const f = proužek[klic];
-    pravda(`fakt „${popis}" má popisek i hodnotu`,
-      !!(f && f.klic && f.hodnota && f.hodnota !== '—'),
-      `vyšlo ${JSON.stringify(f)}`);
-  }
-
-  /* „Kolik přibylo" je jediný fakt, který SMÍ chybět — a musí chybět
-     tehdy, když by lhal. Datum „poprvé viděno" se do dat doplnilo
-     najednou, takže po jeho zavedení vypadalo 1 947 z 1 953 nabídek jako
-     čerstvě přibylých a v úvodu stálo „Přibylo za týden: 1 940 pozemků"
-     hned vedle údaje „1 940 pozemků celkem". Dvě stejná čísla vedle sebe
-     nejsou novinka, ale datum zavedení sloupce. Buď se tedy ukáže číslo,
-     které jako novinka obstojí, nebo se mlčí. */
-  const nove = proužek.nove;
-  const surova = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
-  const celkem = new Set(surova.map((d) => [d.place, d.okres, d.price, d.area, d.druh].join('|'))).size;
-  if (nove && nove.hodnota) {
-    const n = +String(nove.hodnota).replace(/[^\d]/g, '');
-    pravda('„kolik přibylo" nehlásí skoro celou databázi jako novinku',
-      n > 0 && n <= Math.round(celkem / 3),
-      `hlásí ${n} z ${celkem} — to není novinka, to je den, kdy se zavedlo „poprvé viděno"`);
-    pravda('a má u sebe popisek', !!nove.klic, JSON.stringify(nove));
-  } else {
-    pravda('„kolik přibylo" radši mlčí, než aby lhalo', true);
-  }
-
-  // Dražba nesmí být z minulosti — a „dnes/zítra/za N dní" je vždy budoucnost.
-  const d = proužek.drazba;
-  pravda('termín nejbližší dražby není v minulosti',
-    !!(d && /^(dnes|zítra|za \d+ dn[yí])\b/.test(d.hodnota)),
-    `vyšlo ${JSON.stringify(d && d.hodnota)} — čekal se tvar „zítra · Obec"`);
-
-  /* Nejvýhodnější nabídka se hlásí ČÁSTKOU, ne pořadím v žebříčku.
-     „Levnější než 92 % podobných" je pořadí a člověk si pod tím nic
-     nepředstaví; rozdíl proti obvyklé ceně je údaj.
-     Tvar se změnil z „o 92 % pod obvyklou · Obec" na „−92 % · Obec":
-     hodnota se dělí na PRVNÍM oddělovači, takže dřív byl tím velkým
-     údajem celý útržek „o 92 % pod obvyklou" — rozlomená věta bez
-     podstatného jména — a na obec zbylo drobné písmo. Co to procento
-     znamená, říká teď popisek vlevo („Nejvíc pod cenou"). Číslo ale
-     zůstává číslem, a přesně to tahle kontrola hlídá. */
-  pravda('nejvýhodnější se hlásí jako rozdíl proti obvyklé ceně',
-    !!(proužek.deal && /^\u2212\d+ % · .+/.test(proužek.deal.hodnota)),
-    `vyšlo „${proužek.deal && proužek.deal.hodnota}"`);
-
-  // Jádro testu: nabídka s nevěrohodnou cenou se nesmí vydávat za koupi roku.
-  const deal = proužek.deal;
-  const misto = deal ? deal.hodnota.split('·').pop().trim() : '';
-  pravda('jako nejvýhodnější se nenabízí pozemek s nevěrohodnou cenou',
-    !!(misto && !podezrelaMista.has(misto)),
-    `stránka nabízí „${misto}", což je mezi ${podezrela.length} podezřelými záznamy ` +
-    `(cena za m² pod padesátinou mediánu skupiny)`);
-}
-
-/* ---- Ty tři údaje musí VYPADAT jako odkazy ------------------------
-   Odkazy to jsou odjakživa: vedou na mapu a rovnou ji přefiltrují.
-   Jenže vypadaly jako vypsané informace — tmavý obdélník se sotva
-   znatelným rámečkem a nic víc. Stížnost se snímkem zněla „nepůsobí
-   klikatelně", a měla pravdu: co vypadá jako popiska, na to nikdo
-   neklepne, takže ta práce pod tím je k ničemu.
-   Značka „tenhle řádek někam vede" je na tomhle webu šipka „›" —
-   má ji každá položka v menu. Zkouška se proto ptá na VYKRESLENÝ stav
-   (obsah ::after), ne na řádek v CSS. */
-{
-  const v = await p.evaluate(() => [...document.querySelectorAll('.hh-fakta .hl-fact')]
-    .filter((a) => !a.hidden)
-    .map((a) => ({
-      odkaz: a.tagName.toLowerCase() === 'a' && !!a.getAttribute('href'),
-      sipka: (getComputedStyle(a, '::after').content || '').replace(/["']/g, ''),
-      popisek: Math.round(parseFloat(getComputedStyle(a.querySelector('.hl-k')).fontSize)),
-    })));
-  pravda(`v úvodu jsou ${v.length} živé údaje (jinak zkouška nic neměří)`, v.length >= 2,
-    'proužek je prázdný');
-  pravda('všechny tři jsou odkazy', v.every((x) => x.odkaz),
-    'některý údaj není odkaz — klepnutí by nikam nevedlo');
-  pravda('a je na nich vidět, že někam vedou (šipka jako v menu)',
-    v.every((x) => x.sipka.indexOf('\u203a') >= 0),
-    `vykreslené šipky: ${JSON.stringify(v.map((x) => x.sipka))}`);
-  /* Popisek je to jediné, co říká, CO to číslo vedle je. V 10,5 px
-     s krytím 62 % ho oko přeskočí a zbydou tři velké údaje, které spolu
-     nesouvisí — odtud druhá půlka téže stížnosti, „není jasné co je co". */
-  pravda('a popisek je čitelný, ne ozdoba', v.every((x) => x.popisek >= 11),
-    `velikosti popisků: ${JSON.stringify(v.map((x) => x.popisek))} px`);
-}
+/* ---- PRUH S ŽIVÝMI ÚDAJI V ÚVODU UŽ NENÍ --------------------------
+   Byly tu tři skupiny kontrol: že se pruh vykreslil a každý ze tří údajů
+   má popisek i hodnotu; že vypadají jako odkazy (šipka „›", čitelný
+   popisek); a že se jako „nejvýhodnější" nenabídne pozemek s nevěrohodnou
+   cenou. Pruh je zrušený, takže všechny ztratily předmět a odcházejí
+   s ním — nechat je tu by znamenalo mít kontroly, které buď padají na
+   chybějícím elementu, nebo procházejí naprázdno.
+   Co z nich platilo obecně, hlídá dál něco jiného: že se nevěrohodně
+   levná nabídka nesmí nikde vydávat za koupi roku, měří
+   scripts/test-doporuceni.mjs na kartách výpisu (tam ten odznak slevy
+   zůstal). Proměnné `podezrela` a `podezrelaMista` proto zůstávají —
+   používá je souhrn na konci téhle zkoušky. */
 
 pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby[0]);
 
-/* ---- „Přibylo dnes" musí ty novinky opravdu ukázat -----------------
-   Kartička v úvodu slíbí „Přibylo dnes: 19 pozemků". Dokud se po
-   klepnutí jen sjelo k mapě, ukázal se celý výpis 1 960 pozemků —
-   slíbí se novinky, ukáže se všechno a kdo má najít těch devatenáct,
-   neví kudy. Klepnutí proto přepne řazení na nejnovější. */
-{
-  const je = await p.evaluate(() => {
-    const a = document.querySelector('[data-fakt="nove"]');
-    return !!(a && !a.hidden);
-  });
-  if (je) {
-    const pred = await p.evaluate(() => (document.getElementById('map-sort') || {}).value);
-    await p.locator('[data-fakt="nove"]').click();
-    await p.waitForTimeout(1600);
-    /* Rolování je plynulé (smooth), takže chvíli trvá — a na širokém
-       monitoru nemusí být vůbec potřeba. Nekouká se proto na scrollY,
-       ale na to, co je ve výsledku vidět. */
-    await p.waitForTimeout(1400);
-    const po = await p.evaluate(() => {
-      const l = document.querySelector('.opp-list') || document.querySelector('.map-app');
-      const r = l ? l.getBoundingClientRect() : null;
-      return { razeni: (document.getElementById('map-sort') || {}).value,
-        vidnoVypis: !!r && r.top < innerHeight && r.bottom > 0, top: r ? Math.round(r.top) : null };
-    });
-    pravda('klepnutí na „Přibylo dnes" seřadí od nejnovějších', po.razeni === 'nove',
-      `řazení zůstalo „${po.razeni}" (před klepnutím „${pred}") — ukáže se celý výpis a novinky se v něm ztratí`);
-    pravda('a výpis je pak vidět', po.vidnoVypis, `výpis začíná na ${po.top} px, okno je vysoké ${900}`);
-    // vrátit řazení, ať další kontroly vidí výchozí stav
-    await p.evaluate(() => {
-      const s = document.getElementById('map-sort');
-      if (s) { s.value = 'demand'; s.dispatchEvent(new Event('change', { bubbles: true })); }
-      scrollTo(0, 0);
-    });
-    await p.waitForTimeout(1200);
-  }
-}
+/* Kontrola klepnutí na „Přibylo dnes" odešla s tím pruhem. Byla
+   schovaná za `if (je)`, takže bez kartičky procházela naprázdno. */
 
 /* ---- Když nic nesedí, nadpis nesmí nic slibovat --------------------
    „Doporučené příležitosti · 0 na mapě" a pod tím prázdno je protimluv:

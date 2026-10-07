@@ -2525,11 +2525,22 @@
         kresliPredtim = {
           tazeni: map.dragging.enabled(),
           dvojklik: map.doubleClickZoom.enabled(),
+          /* PŘIBLIŽOVÁNÍ TAKY. Vypínalo se jen tažení a dvojklik, jenže
+             mapa se dá posunout i zoomem: dvěma prsty na telefonu nebo
+             kolečkem na počítači. Prst přitom kreslí do SOUŘADNIC MAPY —
+             když se mapa pod čárou posune nebo přiblíží, zbytek tvaru
+             vznikne jinde než ten začátek a výběr nesedí na to, co měl
+             člověk pod rukou. Dvěma prsty se navíc skoro vždycky trochu
+             posune i střed, takže „jen zoom" neexistuje. */
+          pinch: map.touchZoom ? map.touchZoom.enabled() : false,
+          kolecko: map.scrollWheelZoom ? map.scrollWheelZoom.enabled() : false,
           touchAction: mapEl.style.touchAction
         };
       }
       map.dragging.disable();
       map.doubleClickZoom.disable();
+      if (map.touchZoom) map.touchZoom.disable();
+      if (map.scrollWheelZoom) map.scrollWheelZoom.disable();
       /* TOHLE TU CHYBĚLO, A PROTO KRESLENÍ NA TELEFONU NEŠLO. Poznámka
          nad touhle částí slibuje, že se na dobu kreslení vypne i to, aby
          prohlížeč bral tah jako rolování stránky — jenže kód si starou
@@ -2543,6 +2554,8 @@
     } else if (kresliPredtim) {
       map.dragging[kresliPredtim.tazeni ? 'enable' : 'disable']();
       map.doubleClickZoom[kresliPredtim.dvojklik ? 'enable' : 'disable']();
+      if (map.touchZoom) map.touchZoom[kresliPredtim.pinch ? 'enable' : 'disable']();
+      if (map.scrollWheelZoom) map.scrollWheelZoom[kresliPredtim.kolecko ? 'enable' : 'disable']();
       mapEl.style.touchAction = kresliPredtim.touchAction;
       kresliPredtim = null;
     }
@@ -2562,13 +2575,17 @@
 
   if (kresliBtn) {
     kresliBtn.addEventListener('click', function () {
-      if (vyberTvar) {
-        /* Druhé klepnutí při hotovém výběru ho zruší — nejkratší cesta
-           zpátky, bez hledání odznaku ve filtrech. */
-        vyberTvar = null; vykresliVyber(); renderList();
-        return;
-      }
-      zapniKresleni(!kresliZap);
+      /* KRESLIT JDE OPAKOVANĚ. Dřív tohle tlačítko při hotovém výběru
+         ten výběr zrušilo a skončilo — druhé kreslení tedy nikdy
+         nezačalo a kdo chtěl tvar překreslit, musel mačkat dvakrát
+         a mezitím koukat na prázdnou mapu. „Můžu kreslit jen jednou."
+         Teď tlačítko znamená vždycky „kreslit": rozkreslené kreslení
+         zruší, jinak nové začne. Starý tvar přitom zůstane ležet, dokud
+         nový nedokreslíš — a když kreslení zrušíš, zůstane úplně.
+         Zrušit výběr jde dál jedním klepnutím na odznak „nakreslený
+         výběr" mezi aktivními filtry; ta cesta tu byla celou dobu. */
+      if (kresliZap) { kresliKonec(false); return; }
+      zapniKresleni(true);
     });
   }
 
@@ -4595,7 +4612,41 @@
     else { msfBadge.hidden = true; }
   }
 
+  /* POZNÁMKY SE STÁHNOU Z ÚČTU JEDNOU ZA NAČTENÍ. Značka „Poznámka" na
+     kartě se čte z prohlížeče, aby bylo vykreslování okamžité — jenže
+     v novém nebo vyčištěném prohlížeči tam nic není, dokud se poznámky
+     nestáhnou. Bez tohohle by poznámka napsaná na telefonu nebyla na
+     počítači ve výpisu vidět vůbec, a právě o to tu šlo.
+     Stahuje se odsud, ne z bootu: výpis se vykresluje i cestami, které
+     bootem neprojdou (sdílený odkaz, obnovený filtr), a značka má být
+     vidět při každé z nich. */
+  var poznStazeno = false;
+  function stahniPoznamky() {
+    if (poznStazeno || !window.PKPoznamky || !window.PKPoznamky.sync) return;
+    poznStazeno = true;   // nastavit PŘED voláním, ať se překreslení nezacyklí
+    window.PKPoznamky.sync().then(function (zmen) {
+      if (zmen) renderList();
+    }).catch(function () {});
+  }
+
+  /* NÁVRAT Z PAMĚTI PROHLÍŽEČE. Poznámka se píše na stránce pozemku,
+     takže cesta je vždycky výpis → pozemek → napíšu → zpátky. Při
+     běžném načtení se výpis vykreslí znovu a značka je hned vidět
+     (změřeno). Jenže prohlížeč umí stránku vrátit z paměti tak, jak
+     byla — žádný skript se znovu nespustí — a pak by na kartě visel
+     stav z doby PŘED napsáním. Na telefonu je to ta obvyklá cesta,
+     ne výjimka. Překresluje se jen při persisted; při obyčejném načtení
+     už vykreslil boot a druhé kolo by bylo zbytečné. */
+  window.addEventListener('pageshow', function (e) {
+    if (!e || !e.persisted) return;
+    var l = document.getElementById('opp-list');
+    if (!l || !l.children.length) return;   // ještě se nestihlo nic vykreslit
+    poznStazeno = false;                    // ať se poznámky z účtu doberou znovu
+    renderList();
+  });
+
   function renderList() {
+    stahniPoznamky();
     // Adresa drží krok s filtry — odtud se sdílí (viz zapisAdresu()).
     zapisAdresu();
     /* Počty u štítků druhu se přepočítávají při každém překreslení —
@@ -4680,6 +4731,12 @@
       li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '') + (isFeatured(d) ? ' is-featured' : '')
         + (jeVidene ? ' je-videne' : '');
       li.setAttribute('data-id', d._id);
+      /* Klíč pozemku na kartě. _id je číslo z dat a mezi běhy robota se
+         mění; klíč je to, pod čím si web pamatuje oblíbené, viděné
+         i poznámky. Díky němu se dá o kartě poznat, ke kterému pozemku
+         patří, bez prohledávání dat — a zkouška může ověřit, že značka
+         „Poznámka" visí na SPRÁVNÉ kartě, ne na kterékoli. */
+      li.setAttribute('data-pk', pkey(d));
       li.setAttribute('tabindex', '0');
       li.setAttribute('role', 'button');
       li.setAttribute('aria-label', t.label + ' · ' + d.place + ' · ' + areaTxt(d));
@@ -4813,6 +4870,19 @@
       // „Nové od minulé návštěvy" — první odznak v řadě, ať je hned vidět,
       // co člověk ještě neviděl.
       if (jeNovy(d)) chips.unshift('<span class="opp-nove">Nové</span>');
+      /* MOJE POZNÁMKA ÚPLNĚ PRVNÍ. Poznámka byla doteď vidět jen uvnitř
+         toho jednoho inzerátu — člověk si ji napsal, za týden procházel
+         výpis a nic mu nepřipomnělo, že u téhle nabídky už něco ví.
+         Je to zároveň jediný odznak, který napsal ON; ostatní říkají, co
+         o pozemku víme my. Proto stojí před „Nové" a proto nese slovo,
+         ne jen ikonu: ikona na kartě plné odznaků zapadne. */
+      if (window.PKPoznamky && window.PKPoznamky.text) {
+        try {
+          if (window.PKPoznamky.text(d)) {
+            chips.unshift('<span class="opp-pozn" title="U tohohle pozemku máte svoji poznámku">Poznámka</span>');
+          }
+        } catch (e) {}
+      }
       /* Nejvýš tři odznaky. Karta jich uměla vyrobit pět a na mobilu pak
        * každý zabral vlastní řádek — místo přehledu vznikl sloupec štítků.
        * Pořadí výš je zároveň pořadím důležitosti, takže se ořezává odzadu:
@@ -6376,140 +6446,6 @@
     });
   }
 
-  function renderHeroLive() {
-    var box = document.getElementById('hero-live');
-    if (!box) return;
-    var dnes = new Date(); dnes.setHours(0, 0, 0, 0);
-    function den(iso) {
-      var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
-      if (!m) return null;
-      var d = new Date(+m[1], +m[2] - 1, +m[3]); d.setHours(0, 0, 0, 0);
-      return d;
-    }
-    function zaKolik(d) {
-      var r = Math.round((d - dnes) / 86400000);
-      if (r <= 0) return 'dnes';
-      if (r === 1) return 'zítra';
-      if (r < 5) return 'za ' + r + ' dny';
-      return 'za ' + r + ' dní';
-    }
-    var hotovo = 0;
-    function vypln(fakt, klic, hodnota, cil) {
-      var a = box.querySelector('[data-fakt="' + fakt + '"]');
-      if (!a) return;
-      if (!hodnota) { a.hidden = true; return; }
-      if (klic) a.querySelector('.hl-k').textContent = klic;
-      /* „dnes · Police nad Metují" → hlavní údaj a upřesnění. Karta stojí
-         na tom prvním; kdyby byl celý řetězec stejně velký, nebylo by na
-         co se podívat. Dělí se jen na PRVNÍM oddělovači, aby se z „−59 %
-         pod obvyklou · Bílina" nestaly tři kusy. */
-      var kus = String(hodnota).split(' · ');
-      var hlavni = kus.shift();
-      var vEl = a.querySelector('.hl-v');
-      vEl.textContent = '';
-      var bEl = document.createElement('b');
-      bEl.textContent = hlavni;
-      vEl.appendChild(bEl);
-      if (kus.length) {
-        /* Oddělovač musí v TEXTU zůstat, i když ho na široké kartě není
-           vidět (hlavní údaj tam stojí na vlastním řádku). Když jsem ho
-           zahodil, slilo se „dnes · Police nad Metují" na „dnesPolice nad
-           Metují" — a to není jen ošklivé: čte to odečítač obrazovky
-           a kontrola termínu dražby na tom stojí. */
-        var sep = document.createElement('span');
-        sep.className = 'hl-sep';
-        sep.textContent = ' · ';
-        vEl.appendChild(sep);
-        vEl.appendChild(document.createTextNode(kus.join(' · ')));
-      }
-      if (cil) a.addEventListener('click', function (e) { e.preventDefault(); gotoInzerat(cil); });
-      /* „Přibylo dnes: 19 pozemků" na žádnou jednu nabídku neukazuje —
-         a dokud se to klepnutím jen sjelo k mapě, byl výsledek celý
-         výpis 1 960 pozemků. Slíbí se novinky, ukáže se všechno: kdo
-         má najít těch devatenáct, neví kudy. Klepnutí proto přepne
-         řazení na nejnovější, takže jsou nahoře. */
-      else if (fakt === 'nove') a.addEventListener('click', function (e) {
-        e.preventDefault();
-        if (sortEl) { sortEl.value = 'nove'; sortEl.dispatchEvent(new Event('change', { bubbles: true })); }
-        /* Rolování dělá scrollToMap — tentýž kód jako u ostatních cest
-           k mapě. Počítá s výškou přilepené hlavičky, která by jinak
-           schovala první řádek výpisu. */
-        if (typeof scrollToMap === 'function') scrollToMap();
-      });
-      hotovo++;
-    }
-
-    // 1) Nejbližší dražba — termín je v poli extra („dražba 2026-10-12").
-    var nej = null, nejD = null;
-    DATA.forEach(function (d) {
-      if (d.type !== 'drazba' && d.type !== 'exekuce') return;
-      var m = /(\d{4}-\d{2}-\d{2})/.exec(d.extra || '');
-      if (!m) return;
-      var t = den(m[1]);
-      if (!t || t < dnes) return;                 // prošlé termíny sem nepatří
-      if (!nejD || t < nejD) { nejD = t; nej = d; }
-    });
-    vypln('drazba', null, nej ? (zaKolik(nejD) + ' · ' + nej.place) : '', nej);
-
-    /* 2) Kolik přibylo. Přednost má dnešek; když dnes nic, vezmeme týden.
-
-       Pozor na jednu past: „poprvé viděno" se do dat doplnilo najednou,
-       takže po zavedení toho pole (a po každém dalším resetu historie)
-       vypadalo 1 947 z 1 953 nabídek jako čerstvě přibylých. Web pak
-       v úvodu hlásil „Přibylo za týden: 1 940 pozemků" vedle údaje
-       „1 940 pozemků celkem — dvě čísla, jedno vedle druhého, a obě
-       stejná. To není novinka, to je datum zavedení sloupce.
-
-       Proto se číslo ukáže, jen když dává smysl jako novinka: nejvýš
-       třetina databáze. Nad tím se mlčí — radši nic než nepravda. */
-    var dnesN = 0, tydenN = 0, sDatem = 0;
-    DATA.forEach(function (d) {
-      var t = den(d.first_seen);
-      if (!t) return;
-      sDatem++;
-      var r = Math.round((dnes - t) / 86400000);
-      if (r === 0) dnesN++;
-      if (r >= 0 && r < 7) tydenN++;
-    });
-    var STROP = Math.max(1, Math.round(sDatem / 3));
-    function kusy(n) { return n === 1 ? '1 pozemek' : (n < 5 ? n + ' pozemky' : fmt(n) + ' pozemků'); }
-    if (dnesN > 0 && dnesN <= STROP) vypln('nove', 'Přibylo dnes', kusy(dnesN));
-    else if (tydenN > 0 && tydenN <= STROP) vypln('nove', 'Přibylo za týden', kusy(tydenN));
-    else vypln('nove', '', '');
-
-    // 3) Nejvýhodnější dnes — o kolik je pod podobnými nabídkami. Používáme
-    //    tentýž výpočet jako karty níž, ne vlastní (jinak by si dvě čísla
-    //    na jedné stránce odporovala). Holé minimum ceny za m² by sem
-    //    nepatřilo: nejlevnější nabídka bývá podíl nebo chyba v inzerátu.
-    var best = null, bestO = null;
-    DATA.forEach(function (d) {
-      var o = MODEL ? MODEL.odhad(d) : null;
-      /* Tohle místo je na webu to nejvíc vidět — svítí to v úvodu jako
-         „NEJVÝHODNĚJŠÍ DNES". A dokud se bralo prosté maximum slevy, svítil
-         tu Doubravník „o 95 % pod obvyklou": stavební pozemek za 59 Kč/m²,
-         tedy skoro jistě podíl nebo špatně zařazený druh. Nejpodezřelejší
-         nabídka na webu jako titulek. Pochybné sem nepatří. */
-      /* A podíl sem nepatří ze stejného důvodu jako do filtru: jeho sleva
-         proti odhadu vzniká tím, že se cena za zlomek dělí výměrou celé
-         parcely. Obava z podílu je v poznámce nahoře — tohle je ta
-         kontrola, která jí odpovídá. */
-      if (!o || !o.podleVelikosti || o.pochybna || o.nejisty || o.podil || o.podOdhadem < 25) return;
-      if (!bestO || o.podOdhadem > bestO.podOdhadem) { bestO = o; best = d; }
-    });
-    /* Velké písmo patří ČÍSLU. Dřív se do něj dostalo „o 59 % pod obvyklou"
-       — hodnota se dělí na prvním oddělovači, takže tenhle celý útržek byl
-       ten velký údaj a na obec zbylo drobné písmo za tečkou. Co ta sleva
-       znamená, říká popisek vlevo („Nejvíc pod cenou"); sem patří kolik
-       a kde. */
-    vypln('deal', null, best ? ('\u2212' + bestO.podOdhadem + ' % · ' + best.place) : '', best);
-
-    /* Pruh je v HTML od začátku a drží si místo (třída je-ceka). Při
-       úspěchu se jen odkryje — nic se tím neposune. Když se nepodaří
-       spočítat nic, teprve tehdy se sbalí; posun v tu chvíli je menší zlo
-       než napořád prázdný pruh. */
-    if (hotovo) box.classList.remove('je-ceka');
-    else box.hidden = true;
-  }
 
   /* Zápis data návštěvy. Rozhodující bylo, že se výš už přečetlo do
    * proměnné; tohle je jen opatrnost navíc — když se stránka mezitím
@@ -6741,7 +6677,6 @@
   if (zmenitBtn) zmenitBtn.addEventListener('click', function () { otevriVyberMista(); });
   vykresliMisto();
 
-  renderHeroLive();
   renderHeroLegenda();
   /* OZDOBA A PÁSY POD MAPOU AŽ PO PRVNÍM VYKRESLENÍ.
      Celý boot() běžel v JEDNÉ úloze prohlížeče: od chvíle, kdy dorazí

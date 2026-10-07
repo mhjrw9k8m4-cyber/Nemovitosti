@@ -263,6 +263,9 @@ jobs:
       - name: Cenový model (odhad obvyklé ceny)
         run: node scripts/test-ceny.mjs
 
+      - name: Návratnost koupě pozemku
+        run: node scripts/test-navratnost.mjs
+
       - name: Rádce u pozemku (rady podle skutečných údajů)
         run: node scripts/test-radce.mjs
 
@@ -358,6 +361,7 @@ jobs:
 
       - name: Kalkulačka nákladů při koupi
         run: node scripts/test-naklady.mjs
+
 
       - name: Kalkulačka hypotéky
         run: node scripts/test-hypoteka.mjs
@@ -548,6 +552,9 @@ jobs:
 
       - name: Soukromá poznámka k pozemku
         run: node scripts/test-poznamky.mjs
+
+      - name: Parametry pozemku — tři čísla nahoře, popisek u hodnoty
+        run: node scripts/test-parametry.mjs
 
       - name: Moje data — co si web pamatuje
         run: node scripts/test-ulozene.mjs

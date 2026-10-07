@@ -313,6 +313,13 @@
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
             '<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>' +
           '</button>' +
+
+          '<button type="button" class="pzm-zpet-btn" id="pzm-zpet" hidden ' +
+            'aria-label="Vrátit mapu na pozemek" title="Zpátky na pozemek">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+            '<span>Na pozemek</span>' +
+          '</button>' +
         '</div>' +
         '<div class="pzm-panel">' +
           '<div class="pzm-zaklad" role="group" aria-label="Podklad mapy">' +
@@ -363,6 +370,23 @@
     L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(m);
     m.on('click', function () { m.scrollWheelZoom.enable(); });
     global.PK_PZ_MAPA = m;
+
+    var domaStred = L.latLng(d.lat, d.lng);
+    var domaZoom = m.getZoom();
+    var zpetBtn = document.getElementById('pzm-zpet');
+    function hlidejZpet() {
+      if (!zpetBtn) return;
+      var vidim = m.getBounds().pad(-0.12).contains(domaStred);
+      zpetBtn.hidden = vidim && Math.abs(m.getZoom() - domaZoom) < 1.5;
+    }
+    m.on('moveend zoomend', hlidejZpet);
+    hlidejZpet();
+    if (zpetBtn) {
+      zpetBtn.addEventListener('click', function () {
+        m.setView(domaStred, domaZoom, { animate: true });
+        hlidejZpet();
+      });
+    }
 
     var zaklad = null;
     function nastavZaklad(id) {
@@ -669,6 +693,43 @@
     var _zm = global.PK_CENY && global.PK_CENY.zaMetr ? global.PK_CENY.zaMetr(d) : null;
     var perM2 = _zm == null ? null : Math.round(_zm);
     var perM2Pozn = global.PK_CENY && global.PK_CENY.zaMetrPopis ? global.PK_CENY.zaMetrPopis(d) : '';
+
+    function pzNavratnostHtml(d) {
+      if (!(typeof d.price === 'number' && d.price > 0)) return '';
+      var drazba = d.type === 'drazba';
+      var N = global.PKNavratnost || {};
+      function pole(id, popis, hodnota, pozn, sufix) {
+        return '<label class="nav-pole" for="' + id + '"><span class="nav-k">' + popis
+          + (pozn ? '<i>' + pozn + '</i>' : '') + '</span>'
+          + '<span class="nav-vstup"><input type="text" inputmode="decimal" id="' + id
+          + '" value="' + (hodnota == null ? '' : hodnota) + '">'
+          + '<em>' + sufix + '</em></span></label>';
+      }
+      return '<section class="pz-nav-box" id="pz-nav" aria-labelledby="pz-nav-nadpis">'
+        + '<h2 id="pz-nav-nadpis">Vyplatí se to?</h2>'
+        + '<p class="nav-uvod">Za kolik myslíte, že byste ho jednou prodali? '
+        + 'To číslo je <b>vaše</b> — web ho nenapovídá a neumí ho odhadnout. '
+        + 'Zbytek dopočítáme.</p>'
+        + '<div class="nav-pola">'
+        + pole('nav-kupni', drazba ? 'Kolik za něj dáte' : 'Kupní cena',
+            drazba ? '' : Math.round(d.price),
+            drazba ? 'v inzerátu je vyvolávací cena — vydražuje se výš' : '', 'Kč')
+        + pole('nav-naklady', 'Náklady kolem koupě', N.VKLAD || 2000,
+            'vklad do katastru, advokát, úschova…', 'Kč')
+        + pole('nav-prodejni', 'Za kolik prodáte', '', 'vaše číslo, ne naše', 'Kč')
+        + pole('nav-let', 'Za jak dlouho', 10,
+            'do deseti let se z výdělku platí daň', 'let')
+        + '</div>'
+
+        + '<div class="nav-vysledek" id="nav-vysledek"></div>'
+        + '<p class="visually-hidden" id="nav-hlaseni" role="status" aria-live="polite"></p>'
+        + '<p class="nav-pozn">Není to daňová rada ani odhad ceny. Lhůta osvobození '
+        + 'i sazba daně se mění — ověřte si je, než se podle čísla rozhodnete. '
+        + '<a href="kolik-stoji-koupe-pozemku.html?cena=' + Math.round(d.price) + '">'
+        + 'Rozepsané náklady koupě</a></p>'
+        + '</section>';
+    }
+
     var priceLabel = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'sale' || d.type === 'majitel' ? 'Cena' : 'Odhadní cena');
     var days = daysUntil(d.extra);
 
@@ -678,11 +739,14 @@
     var src = sourceLink(d);
     var favOn = isFav(d);
 
-    var facts = [];
-    facts.push({ k: 'Druh pozemku', v: esc(d.druh || '—') });
+    var klice = [];
 
-    facts.push({ k: 'Výměra', v: areaTxt(d) + (d.podil && hasArea(d) ? ' <i class="pz-pozn">celá parcela — kupuje se jen podíl</i>' : '') });
-    if (perM2) facts.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²' + (perM2Pozn ? ' <i class="pz-pozn">' + esc(perM2Pozn) + '</i>' : '') });
+    klice.push({ k: 'Výměra', v: areaTxt(d),
+      pozn: (d.podil && hasArea(d)) ? 'celá parcela — kupuje se jen podíl' : '' });
+    if (perM2) klice.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²', pozn: perM2Pozn || '' });
+    klice.push({ k: 'Druh pozemku', v: esc(d.druh || '—'), pozn: '' });
+
+    var facts = [];
     if (hasParcel(d)) facts.push({ k: 'Parcela', v: 'č. ' + esc(d.parcel) });
 
     if (isFinite(d.lat) && isFinite(d.lng)) {
@@ -737,9 +801,18 @@
       pzPopisInzerentaHtml() +
 
       '<h2 class="pz-sect-h">Parametry pozemku</h2>' +
-      '<div class="pz-specs">' +
-        facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v + '</span></div>'; }).join('') +
+      '<div class="pz-klice">' +
+        klice.map(function (f) {
+          return '<div class="pz-klic"><b>' + f.v + '</b><span>' + f.k + '</span>' +
+            (f.pozn ? '<i>' + esc(f.pozn) + '</i>' : '') + '</div>';
+        }).join('') +
       '</div>' +
+
+      (facts.length
+        ? '<div class="pz-specs">' +
+            facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v + '</span></div>'; }).join('') +
+          '</div>'
+        : '') +
 
       '<section class="pz-pozn-box" aria-labelledby="pz-pozn-nadpis">' +
         '<div class="pz-pozn-hlava">' +
@@ -749,8 +822,8 @@
         '<textarea id="pz-pozn-text" class="pz-pozn-pole" rows="3" maxlength="2000" ' +
           'placeholder="Co jste tu viděli — příjezd, sousedi, co říkal majitel…" ' +
           'aria-describedby="pz-pozn-kde"></textarea>' +
-        '<p class="pz-pozn-kde" id="pz-pozn-kde">Zůstává <b>jen v tomhle prohlížeči</b>. ' +
-          'Nikam se neodesílá, nevidíme ji ani my — a do jiného telefonu se nepřenese.</p>' +
+
+        '<p class="pz-pozn-kde" id="pz-pozn-kde"></p>' +
       '</section>' +
 
       pzFeaturesHtml(d) +
@@ -765,6 +838,8 @@
       '</details>' +
 
       pzPopisHtml(d) +
+
+      pzNavratnostHtml(d) +
 
       (d.price ? (function () {
         var c = encodeURIComponent(String(Math.round(d.price)));
@@ -844,9 +919,101 @@
       else { toast(url); }
     });
 
+    (function () {
+      var box = document.getElementById('pz-nav');
+      if (!box || !global.PKNavratnost) return;
+      var vysl = document.getElementById('nav-vysledek');
+      function hod(id) { var e = document.getElementById(id); return e ? e.value : ''; }
+      function kc(n) {
+        return (n < 0 ? '−' : '') + Math.round(Math.abs(n)).toString()
+          .replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + '\u00a0Kč';
+      }
+      function pct(n) { return (n < 0 ? '−' : '') + Math.abs(n).toFixed(1).replace('.', ',') + '\u00a0%'; }
+      function radek(k, v, trida) {
+        return '<div class="nav-r' + (trida ? ' ' + trida : '') + '">'
+          + '<span>' + k + '</span><b>' + v + '</b></div>';
+      }
+      function prepocti() {
+        var r = global.PKNavratnost.spocti({
+          kupni: hod('nav-kupni'), naklady: hod('nav-naklady'),
+          prodejni: hod('nav-prodejni'), let: hod('nav-let')
+        });
+        if (!r) {
+
+          vysl.innerHTML = '<p class="nav-ceka">Doplňte kupní a prodejní cenu.</p>';
+          ohlas(null);
+          return;
+        }
+        ohlas(r);
+        vysl.innerHTML =
+          radek('Vložíte celkem', kc(r.vlozeno))
+          + radek('Rozdíl při prodeji', kc(r.vydelek))
+          + (r.osvobozeno
+            ? radek('Daň z příjmu', 'neplatí se — po ' + r.lhuta + ' letech', 'nav-dan')
+            : (r.dan > 0
+              ? radek('Daň z příjmu (' + String(r.sazba).replace('.', ',') + ' %)', '−' + kc(r.dan), 'nav-dan')
+              : radek('Daň z příjmu', 'z prodělku se neplatí', 'nav-dan')))
+          + radek(r.prodelek ? 'Proděláte' : 'Čistý zisk', kc(r.cisty),
+              'nav-cisty' + (r.prodelek ? ' je-minus' : ''))
+          + radek('Zhodnocení', pct(r.zhodnoceni), 'nav-pct')
+          + (r.rocne != null ? radek('Ročně', pct(r.rocne), 'nav-pct') : '');
+      }
+
+      var hlasic = document.getElementById('nav-hlaseni');
+      var casHlaseni = null;
+      function ohlas(r) {
+        if (!hlasic) return;
+        clearTimeout(casHlaseni);
+        casHlaseni = setTimeout(function () {
+          hlasic.textContent = r
+            ? ((r.prodelek ? 'Proděláte ' : 'Čistý zisk ') + kc(Math.abs(r.cisty))
+               + ', zhodnocení ' + pct(r.zhodnoceni) + '.')
+            : '';
+        }, 700);
+      }
+      box.addEventListener('input', prepocti);
+
+      box.addEventListener('focusout', function (e) {
+        var el = e.target;
+        if (!el || el.tagName !== 'INPUT' || el.id === 'nav-let') return;
+        var v = parseFloat(String(el.value).replace(/[\s\u00a0]/g, '').replace(',', '.'));
+        if (!isFinite(v) || v <= 0) return;
+        el.value = Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+      });
+      prepocti();
+    }());
+
     var poznEl = document.getElementById('pz-pozn-text');
     if (poznEl && global.PKPoznamky) {
       var stavEl = document.getElementById('pz-pozn-stav');
+
+      var kdeEl = document.getElementById('pz-pozn-kde');
+      function rekniKde() {
+        if (!kdeEl) return;
+        if (global.PKPoznamky.prihlasen && global.PKPoznamky.prihlasen()) {
+          kdeEl.innerHTML = 'Uloží se <b>k vašemu účtu</b>, takže ji uvidíte '
+            + 'i na jiném telefonu a mezi uloženými pozemky. '
+            + 'Čte ji jen váš účet — nikdo další, ani majitel pozemku.';
+        } else {
+          kdeEl.innerHTML = 'Zůstává <b>jen v tomhle prohlížeči</b>. '
+            + 'Nikam se neodesílá, nevidíme ji ani my — a do jiného telefonu '
+            + 'se nepřenese. Po přihlášení ji web uloží k účtu.';
+        }
+      }
+      rekniKde();
+
+      if (global.PKPoznamky.sync) {
+        global.PKPoznamky.sync().then(function (n) {
+          if (n == null) return;
+          rekniKde();
+          var zUctu = global.PKPoznamky.text(d);
+
+          if (document.activeElement !== poznEl && zUctu && zUctu !== poznEl.value) {
+            poznEl.value = zUctu;
+            puvodni = zUctu;
+          }
+        }).catch(function () {});
+      }
       poznEl.value = global.PKPoznamky.text(d);
       var puvodni = poznEl.value;
       var cas = null;
