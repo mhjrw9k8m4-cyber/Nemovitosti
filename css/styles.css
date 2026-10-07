@@ -2334,7 +2334,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .rv-uvod-ok{align-self:stretch; min-height:48px; margin-top:6px; padding:0 20px;
   border:0; border-radius:var(--r-ovladani); cursor:pointer;
   font-family:inherit; font-size:16px; font-weight:700;
-  color:var(--text-na-znacce); background:var(--plocha-znacka);}
+  color:#fff; background:var(--plocha-znacka);}
 /* Otazník v hlavičce vrstvy: dostat se k vysvětlení i podruhé. */
 .rv-napoveda-btn{flex:none; width:36px; height:36px; margin-left:auto; padding:0;
   border:1px solid var(--line-strong); border-radius:50%; cursor:pointer;
@@ -6081,6 +6081,10 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    Výsledek je oddělený čárou: nad ní se zadává, pod ní se čte. */
 .pz-nav-box{margin:20px 0 0; padding:18px; background:var(--ink-soft);
   border:1px solid var(--line-strong); border-radius:var(--r-plocha); box-shadow:var(--e1);}
+/* Sbalená do rozbalovátka: vlastní rám by byl rám v rámu. Rozhoduje
+   se o tom tady, a ne ve vloženém stylu stránky pozemku — tytéž
+   vlastnosti na dvou místech se rozejdou. */
+.pz-nav-obal .pz-nav-box{margin:0; border:0; border-radius:0;}
 .pz-nav-box h2{margin:0 0 6px; font-family:var(--font-display); font-size:20px;
   font-weight:800; letter-spacing:-0.01em; color:var(--text-ondark);}
 .nav-uvod{margin:0 0 14px; font-size:14px; line-height:1.55; color:var(--text-ondark-mute);}

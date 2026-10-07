@@ -1017,8 +1017,9 @@
           + '" value="' + (hodnota == null ? '' : hodnota) + '">'
           + '<em>' + sufix + '</em></span></label>';
       }
-      return '<section class="pz-nav-box" id="pz-nav" aria-labelledby="pz-nav-nadpis">'
-        + '<h2 id="pz-nav-nadpis">Vyplatí se to?</h2>'
+      /* Nadpis nese rozbalovátko, do kterého je sekce zabalená — tady by
+         stál podruhé, dva „Vyplatí se to?" pod sebou. */
+      return '<section class="pz-nav-box" id="pz-nav" aria-label="Vyplatí se to?">'
         + '<p class="nav-uvod">Za kolik myslíte, že byste ho jednou prodali? '
         + 'To číslo je <b>vaše</b> — web ho nenapovídá a neumí ho odhadnout. '
         + 'Zbytek dopočítáme.</p>'
@@ -1131,6 +1132,31 @@
         : 'inzerát mluví o spoluvlastnickém podílu — ověřte si velikost podílu v katastru' });
     }
 
+    /* HLAVNÍ AKCE PATŘÍ NAHORU, NE NA ČTVRTOU OBRAZOVKU. Odkaz na
+       skutečnou nabídku (nebo na majitele) byl na telefonu 360×800 až
+       na y 3 078 z 3 748 px a „Uložit" dokonce na 3 386 — tedy obojí
+       za mapou, kalkulačkou i poznámkou. Kvůli tomu přitom člověk na
+       stránku jde: rozhodnout se a pak jít na inzerát.
+       Nahoru jdou právě DVĚ tlačítka. Vedlejší odkazy (Mapy.cz,
+       panorama, katastr, sdílení) zůstávají dole — nahoře by z toho
+       byla zeď šesti tlačítek, tedy přesně to „přeplácané na sílu". */
+    var navratnost = pzNavratnostHtml(d);
+    var hlavniAkce = (d.type === 'majitel'
+      ? (d._lid
+          ? '<a class="pz-btn primary" href="zpravy.html?l=' + encodeURIComponent(d._lid)
+            + '&new=1&p=' + encodeURIComponent(d.place || '')
+            + '&ok=' + encodeURIComponent(d.okres || '') + '">Napsat majiteli</a>'
+          : '') +
+        (function () {
+          var odkaz = PKCisteni.kontaktOdkaz(d.contact);
+          if (!odkaz) return '';
+          var tr = PKCisteni.jeEmail(d.contact) ? 'E-mail: ' : 'Telefon: ';
+          return '<a class="pz-btn' + (d._lid ? ' ghost' : ' primary') + '" href="' + odkaz + '">'
+            + tr + esc(d.contact) + '</a>';
+        })()
+      : '<a class="pz-btn primary" href="' + esc(src.url) + '" target="_blank" rel="noopener">'
+        + esc(src.label) + VEN + '</a>');
+
     var html =
       '<div class="pz-media">' + heroLayers(d) + '</div>' +
 
@@ -1160,6 +1186,27 @@
 
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
 
+      /* RÁDCE JEŠTĚ PŘED TLAČÍTKEM. Vypisuje, co je u tohohle pozemku
+         k ověření — a to se má člověk dozvědět DŘÍV, než odejde na
+         inzerát, ne až se vrátí. Je sbalený, takže ho to stojí jeden
+         řádek; hlídá to scripts/test-mapa-pozemku.mjs. */
+      '<details class="pz-gtk-obal">' +
+        '<summary class="pz-gtk-sum">' +
+          '<h2 class="pz-sect-h">Co byste měli vědět</h2>' +
+          '<span class="pz-gtk-kolik">' + pzGtkKolik(d) + '</span>' +
+          '<span class="pz-gtk-akce"><span class="zav">Rozbalit</span><span class="otv">Skrýt</span></span>' +
+        '</summary>' +
+        pzGtkHtml(d) +
+      '</details>' +
+
+      /* ROZHODNUTÍ A AKCE HNED POD NÍM. Nahoře jsou dvě tlačítka a ne
+         víc: jít na nabídku a schovat si ji. Ostatní cesty ven čekají
+         dole, kde se po nich sáhne, až když pozemek zaujme. */
+      '<div class="pz-akce-hlavni">' + hlavniAkce +
+        '<button class="pz-btn ulozit' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">'
+          + HEART_SVG + '<span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
+      '</div>' +
+
       /* POPIS OD INZERENTA. Dosud na stránce pozemku nestálo ani slovo od
          toho, kdo ho zná — jen čísla a věty, které si web poskládal sám.
          Text přichází z inzerátu, je zbavený kontaktů (celé věty s telefonem
@@ -1188,22 +1235,11 @@
       /* SOUKROMÁ POZNÁMKA. Kdo obchází deset pozemků, po týdnu si
          nepamatuje, který měl rozbitý plot. Web uměl jen „uložit",
          tedy ANO/NE bez jediného slova proč. */
-      '<section class="pz-pozn-box" aria-labelledby="pz-pozn-nadpis">' +
-        '<div class="pz-pozn-hlava">' +
-          '<h2 id="pz-pozn-nadpis">Moje poznámka</h2>' +
-          '<span class="pz-pozn-stav" id="pz-pozn-stav" role="status" aria-live="polite"></span>' +
-        '</div>' +
-        '<textarea id="pz-pozn-text" class="pz-pozn-pole" rows="3" maxlength="2000" ' +
-          'placeholder="Co jste tu viděli — příjezd, sousedi, co říkal majitel…" ' +
-          'aria-describedby="pz-pozn-kde"></textarea>' +
-        /* VĚTA SE MUSELA ZMĚNIT SPOLU S CHOVÁNÍM. Stálo tu „zůstává jen
-           v tomhle prohlížeči, nikam se neodesílá, nevidíme ji ani my".
-           Od chvíle, kdy se poznámky vážou na účet, by to byla lež —
-           a lež zrovna v tom jediném místě, kde se člověk rozhoduje,
-           co o cizích lidech napíše. Píše se proto obojí, podle toho,
-           jestli je přihlášený; text dosadí skript níž. */
-        '<p class="pz-pozn-kde" id="pz-pozn-kde"></p>' +
-      '</section>' +
+      /* KDE TO JE, PATŘÍ K TOMU, CO TO JE. Mapa stála až za poznámkou,
+         kalkulačkou i rádcem — na telefonu na y 2 543 z 3 748, tedy na
+         čtvrté obrazovce. U pozemku je přitom poloha hned po ceně to
+         první, co se člověk ptá: vede tam cesta? co je kolem? */
+      pzMapaHtml(d) +
 
       pzFeaturesHtml(d) +
 
@@ -1219,32 +1255,26 @@
          .pz-gtk-sum v pozemek.html): slovo „Rozbalit", počet rad a šipka.
          Nadpis zůstává nadpisem i uvnitř souhrnu, ať se nerozpadne
          osnova stránky pro odečítače a vyhledávače. */
-      '<details class="pz-gtk-obal">' +
-        '<summary class="pz-gtk-sum">' +
-          '<h2 class="pz-sect-h">Co byste měli vědět</h2>' +
-          '<span class="pz-gtk-kolik">' + pzGtkKolik(d) + '</span>' +
-          '<span class="pz-gtk-akce"><span class="zav">Rozbalit</span><span class="otv">Skrýt</span></span>' +
-        '</summary>' +
-        pzGtkHtml(d) +
-      '</details>' +
 
       pzPopisHtml(d) +
 
-      /* NÁVRATNOST. Stránka uměla říct, co pozemek stojí; co z toho zbude
-         při prodeji, si musel člověk spočítat sám — a přesně kvůli tomu
-         na pozemek jako na investici kouká.
-         Prodejní cenu zadává ON. Kdybychom ji dopočítali my, byla by
-         z kalkulačky předpověď, a předpovídat, za kolik se pozemek prodá,
-         neumíme: záleží na územním plánu, na sítích a na tom, kdo zrovna
-         shání. Pole je proto prázdné a nic v něm nenapovídáme.
 
-         PROČ AŽ TADY A NE HNED ZA PARAMETRY. Napoprvé stála hned pod nimi
-         a odsunula rádce („na co si dát pozor") pod polovinu stránky —
-         2 312 ze 4 268 px. Rádce má být tam, kde člověk ještě čte;
-         kalkulačka je nástroj, po kterém sáhne, až si přečte, co kupuje.
-         Stojí proto rovnou nad odkazy na rozepsané náklady, se kterými
-         počítá — všechno kolem peněz na jednom místě. */
-      pzNavratnostHtml(d) +
+      /* KALKULAČKA JE NÁSTROJ, NE ČTENÍ — A BYLA NEJVĚTŠÍ BLOK STRÁNKY.
+         681 px z 3 748 na telefonu, tedy skoro celá obrazovka formuláře
+         uprostřed cesty, kterou musel překročit každý, i když počítat
+         nechtěl. Je proto sbalená: kdo chce počítat, rozbalí si ji;
+         komu stačí cena, jde dál. Rozbalovátko je totéž, jaké má
+         „Co byste měli vědět" o kus výš. */
+      (navratnost
+        ? '<details class="pz-gtk-obal pz-nav-obal">'
+          + '<summary class="pz-gtk-sum">'
+            + '<h2 class="pz-sect-h">Vyplatí se to?</h2>'
+            + '<span class="pz-gtk-kolik">spočítat návratnost</span>'
+            + '<span class="pz-gtk-akce"><span class="zav">Rozbalit</span><span class="otv">Skrýt</span></span>'
+          + '</summary>'
+          + navratnost
+        + '</details>'
+        : '') +
 
       /* KOLIK TO BUDE STÁT DOHROMADY. Stránka říká cenu pozemku, ale ta
          není celá pravda: k ní se přičte vklad do katastru, smlouva,
@@ -1276,49 +1306,14 @@
           + '</p>';
       }()) : '') +
 
-      pzMapaHtml(d) +
 
       '<div class="pz-cta">' +
-        /* Tlačítka vedou pryč z webu a do nového okna. Vidět to jde podle
-           šipky, slyšet ne — proto věta navíc jen pro odečítač obrazovky. */
-        /* „Zobrazit na mapě" stálo hned pod NAŠÍ mapou — dvě věci se stejným
-           slovem vedle sebe a u jedné se neví, kam vede. Tahle vede pryč
-           z webu, tak ať je to na ní vidět, stejně jako u „Otevřít
-           v katastru" o kus níž. */
-        /* HLAVNÍ TLAČÍTKO VEDE NA NABÍDKU. Zelené, tedy hlavní, bývalo
-           „Otevřít v Mapy.cz" — jenže kdo se dívá na pozemek, chce se
-           dostat k inzerátu nebo k dražbě, ne se kochat mapou. Ta je
-           doplněk, tak ať tak i vypadá.
-           U nabídky od majitele žádný cizí odkaz není a Mapy.cz jsou
-           jediné tlačítko — tam hlavní zůstávají. */
-        /* KONTAKT NA MAJITELE. Na celé téhle stránce nebyl ŽÁDNÝ —
-           ani zpráva, ani telefon, ani e-mail. Bydlel v panelu nad mapou
-           (detailHtml v js/main.js), do kterého se dnes nedá dostat;
-           klepnutí na pozemek vede sem. Formulář kontakt vyžaduje, server
-           ho ukládá, public_listings ho vrací — a nikdo ho neviděl.
-           Věta o zálohách pod tlačítky tím stála úplně bez souvislosti:
-           varuje před okamžikem, kdy člověk volá majiteli, a ten okamžik
-           na stránce nebyl. Handoff z mapy kontakt taky nenesl, proto ho
-           js/main.js posílá s sebou. */
-        (d.type === 'majitel'
-          ? (d._lid
-              ? '<a class="pz-btn primary" href="zpravy.html?l=' + encodeURIComponent(d._lid)
-                + '&new=1&p=' + encodeURIComponent(d.place || '')
-                + '&ok=' + encodeURIComponent(d.okres || '') + '">Napsat majiteli</a>'
-              : '') +
-            (function () {
-              var odkaz = PKCisteni.kontaktOdkaz(d.contact);
-              if (!odkaz) return '';
-              var tr = PKCisteni.jeEmail(d.contact) ? 'E-mail: ' : 'Telefon: ';
-              return '<a class="pz-btn' + (d._lid ? ' ghost' : ' primary') + '" href="' + odkaz + '">'
-                + tr + esc(d.contact) + '</a>';
-            })() +
-            '<a class="pz-btn ghost" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>' +
-            '<a class="pz-btn ghost" href="' + panoHref + '" target="_blank" rel="noopener" title="Otevře Mapy.cz na nejbližším panoramatu z ulice. Mimo obce nemusí být nasnímané.">' + MAP_SVG + 'Nejbližší panorama' + VEN + '</a>'
-          : '<a class="pz-btn primary" href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.label) + VEN + '</a>' +
-            '<a class="pz-btn ghost" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>' +
-            '<a class="pz-btn ghost" href="' + panoHref + '" target="_blank" rel="noopener" title="Otevře Mapy.cz na nejbližším panoramatu z ulice. Mimo obce nemusí být nasnímané.">' + MAP_SVG + 'Nejbližší panorama' + VEN + '</a>') +
-      '</div>' +
+        /* Vedlejší cesty ven. Hlavní tlačítko (inzerát nebo majitel)
+           je nahoře u ceny; tady zůstalo, co se hodí AŽ když se člověk
+           rozhodl, že ho pozemek zajímá: podívat se na něj v mapách
+           a projít se kolem v panoramatu. */
+        '<a class="pz-btn ghost" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>' +
+        '<a class="pz-btn ghost" href="' + panoHref + '" target="_blank" rel="noopener" title="Otevře Mapy.cz na nejbližším panoramatu z ulice. Mimo obce nemusí být nasnímané.">' + MAP_SVG + 'Nejbližší panorama' + VEN + '</a>' +      '</div>' +
       /* ZPOŽDĚNÍ DAT. Tohle na stránce chybělo úplně: člověk viděl cenu
          a termín, ale ne to, že se dívá na KOPII pořízenou někdy dřív.
          U dražby nebo exekuce je to rozdíl mezi „stihnu to" a marnou
@@ -1327,6 +1322,26 @@
          nedá: pole „poprvé viděno" má sice každý záznam, jenže všech
          1 965 má tutéž hodnotu, protože se sloupec nastavil najednou.
          „V nabídce od" by tedy u všech lhalo stejně. */
+      /* MOJE POZNÁMKA AŽ TADY. Stála na y 1 439 z 3 748, tedy dřív, než
+         si člověk pozemek vůbec prohlédl — a psal si ji přitom až
+         potom, co se rozhodl. Teď je u ostatních vlastních věcí. */
+      '<section class="pz-pozn-box" aria-labelledby="pz-pozn-nadpis">' +
+        '<div class="pz-pozn-hlava">' +
+          '<h2 id="pz-pozn-nadpis">Moje poznámka</h2>' +
+          '<span class="pz-pozn-stav" id="pz-pozn-stav" role="status" aria-live="polite"></span>' +
+        '</div>' +
+        '<textarea id="pz-pozn-text" class="pz-pozn-pole" rows="3" maxlength="2000" ' +
+          'placeholder="Co jste tu viděli — příjezd, sousedi, co říkal majitel…" ' +
+          'aria-describedby="pz-pozn-kde"></textarea>' +
+        /* VĚTA SE MUSELA ZMĚNIT SPOLU S CHOVÁNÍM. Stálo tu „zůstává jen
+           v tomhle prohlížeči, nikam se neodesílá, nevidíme ji ani my".
+           Od chvíle, kdy se poznámky vážou na účet, by to byla lež —
+           a lež zrovna v tom jediném místě, kde se člověk rozhoduje,
+           co o cizích lidech napíše. Píše se proto obojí, podle toho,
+           jestli je přihlášený; text dosadí skript níž. */
+        '<p class="pz-pozn-kde" id="pz-pozn-kde"></p>' +
+      '</section>' +
+
       '<p class="pz-cas" id="pz-cas" hidden></p>' +
 
       /* VAROVÁNÍ U INZERÁTU OD MAJITELE — stejná věta jako na mapě
@@ -1336,7 +1351,6 @@
 
       '<div class="pz-actions">' +
         '<a class="pz-abtn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">' + PIN_SVG + 'Otevřít v katastru' + VEN + '</a>' +
-        '<button class="pz-abtn' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">' + HEART_SVG + '<span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
         '<button class="pz-abtn" type="button" id="pz-share">' + SHARE_SVG + 'Sdílet</button>' +
       '</div>';
 

@@ -705,8 +705,8 @@
           + '" value="' + (hodnota == null ? '' : hodnota) + '">'
           + '<em>' + sufix + '</em></span></label>';
       }
-      return '<section class="pz-nav-box" id="pz-nav" aria-labelledby="pz-nav-nadpis">'
-        + '<h2 id="pz-nav-nadpis">Vyplatí se to?</h2>'
+
+      return '<section class="pz-nav-box" id="pz-nav" aria-label="Vyplatí se to?">'
         + '<p class="nav-uvod">Za kolik myslíte, že byste ho jednou prodali? '
         + 'To číslo je <b>vaše</b> — web ho nenapovídá a neumí ho odhadnout. '
         + 'Zbytek dopočítáme.</p>'
@@ -776,6 +776,23 @@
         : 'inzerát mluví o spoluvlastnickém podílu — ověřte si velikost podílu v katastru' });
     }
 
+    var navratnost = pzNavratnostHtml(d);
+    var hlavniAkce = (d.type === 'majitel'
+      ? (d._lid
+          ? '<a class="pz-btn primary" href="zpravy.html?l=' + encodeURIComponent(d._lid)
+            + '&new=1&p=' + encodeURIComponent(d.place || '')
+            + '&ok=' + encodeURIComponent(d.okres || '') + '">Napsat majiteli</a>'
+          : '') +
+        (function () {
+          var odkaz = PKCisteni.kontaktOdkaz(d.contact);
+          if (!odkaz) return '';
+          var tr = PKCisteni.jeEmail(d.contact) ? 'E-mail: ' : 'Telefon: ';
+          return '<a class="pz-btn' + (d._lid ? ' ghost' : ' primary') + '" href="' + odkaz + '">'
+            + tr + esc(d.contact) + '</a>';
+        })()
+      : '<a class="pz-btn primary" href="' + esc(src.url) + '" target="_blank" rel="noopener">'
+        + esc(src.label) + VEN + '</a>');
+
     var html =
       '<div class="pz-media">' + heroLayers(d) + '</div>' +
 
@@ -798,6 +815,20 @@
 
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
 
+      '<details class="pz-gtk-obal">' +
+        '<summary class="pz-gtk-sum">' +
+          '<h2 class="pz-sect-h">Co byste měli vědět</h2>' +
+          '<span class="pz-gtk-kolik">' + pzGtkKolik(d) + '</span>' +
+          '<span class="pz-gtk-akce"><span class="zav">Rozbalit</span><span class="otv">Skrýt</span></span>' +
+        '</summary>' +
+        pzGtkHtml(d) +
+      '</details>' +
+
+      '<div class="pz-akce-hlavni">' + hlavniAkce +
+        '<button class="pz-btn ulozit' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">'
+          + HEART_SVG + '<span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
+      '</div>' +
+
       pzPopisInzerentaHtml() +
 
       '<h2 class="pz-sect-h">Parametry pozemku</h2>' +
@@ -814,32 +845,22 @@
           '</div>'
         : '') +
 
-      '<section class="pz-pozn-box" aria-labelledby="pz-pozn-nadpis">' +
-        '<div class="pz-pozn-hlava">' +
-          '<h2 id="pz-pozn-nadpis">Moje poznámka</h2>' +
-          '<span class="pz-pozn-stav" id="pz-pozn-stav" role="status" aria-live="polite"></span>' +
-        '</div>' +
-        '<textarea id="pz-pozn-text" class="pz-pozn-pole" rows="3" maxlength="2000" ' +
-          'placeholder="Co jste tu viděli — příjezd, sousedi, co říkal majitel…" ' +
-          'aria-describedby="pz-pozn-kde"></textarea>' +
-
-        '<p class="pz-pozn-kde" id="pz-pozn-kde"></p>' +
-      '</section>' +
+      pzMapaHtml(d) +
 
       pzFeaturesHtml(d) +
 
-      '<details class="pz-gtk-obal">' +
-        '<summary class="pz-gtk-sum">' +
-          '<h2 class="pz-sect-h">Co byste měli vědět</h2>' +
-          '<span class="pz-gtk-kolik">' + pzGtkKolik(d) + '</span>' +
-          '<span class="pz-gtk-akce"><span class="zav">Rozbalit</span><span class="otv">Skrýt</span></span>' +
-        '</summary>' +
-        pzGtkHtml(d) +
-      '</details>' +
-
       pzPopisHtml(d) +
 
-      pzNavratnostHtml(d) +
+      (navratnost
+        ? '<details class="pz-gtk-obal pz-nav-obal">'
+          + '<summary class="pz-gtk-sum">'
+            + '<h2 class="pz-sect-h">Vyplatí se to?</h2>'
+            + '<span class="pz-gtk-kolik">spočítat návratnost</span>'
+            + '<span class="pz-gtk-akce"><span class="zav">Rozbalit</span><span class="otv">Skrýt</span></span>'
+          + '</summary>'
+          + navratnost
+        + '</details>'
+        : '') +
 
       (d.price ? (function () {
         var c = encodeURIComponent(String(Math.round(d.price)));
@@ -855,29 +876,22 @@
           + '</p>';
       }()) : '') +
 
-      pzMapaHtml(d) +
-
       '<div class="pz-cta">' +
 
-        (d.type === 'majitel'
-          ? (d._lid
-              ? '<a class="pz-btn primary" href="zpravy.html?l=' + encodeURIComponent(d._lid)
-                + '&new=1&p=' + encodeURIComponent(d.place || '')
-                + '&ok=' + encodeURIComponent(d.okres || '') + '">Napsat majiteli</a>'
-              : '') +
-            (function () {
-              var odkaz = PKCisteni.kontaktOdkaz(d.contact);
-              if (!odkaz) return '';
-              var tr = PKCisteni.jeEmail(d.contact) ? 'E-mail: ' : 'Telefon: ';
-              return '<a class="pz-btn' + (d._lid ? ' ghost' : ' primary') + '" href="' + odkaz + '">'
-                + tr + esc(d.contact) + '</a>';
-            })() +
-            '<a class="pz-btn ghost" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>' +
-            '<a class="pz-btn ghost" href="' + panoHref + '" target="_blank" rel="noopener" title="Otevře Mapy.cz na nejbližším panoramatu z ulice. Mimo obce nemusí být nasnímané.">' + MAP_SVG + 'Nejbližší panorama' + VEN + '</a>'
-          : '<a class="pz-btn primary" href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.label) + VEN + '</a>' +
-            '<a class="pz-btn ghost" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>' +
-            '<a class="pz-btn ghost" href="' + panoHref + '" target="_blank" rel="noopener" title="Otevře Mapy.cz na nejbližším panoramatu z ulice. Mimo obce nemusí být nasnímané.">' + MAP_SVG + 'Nejbližší panorama' + VEN + '</a>') +
-      '</div>' +
+        '<a class="pz-btn ghost" href="' + mapHref + '" target="_blank" rel="noopener">' + MAP_SVG + 'Otevřít v Mapy.cz' + VEN + '</a>' +
+        '<a class="pz-btn ghost" href="' + panoHref + '" target="_blank" rel="noopener" title="Otevře Mapy.cz na nejbližším panoramatu z ulice. Mimo obce nemusí být nasnímané.">' + MAP_SVG + 'Nejbližší panorama' + VEN + '</a>' +      '</div>' +
+
+      '<section class="pz-pozn-box" aria-labelledby="pz-pozn-nadpis">' +
+        '<div class="pz-pozn-hlava">' +
+          '<h2 id="pz-pozn-nadpis">Moje poznámka</h2>' +
+          '<span class="pz-pozn-stav" id="pz-pozn-stav" role="status" aria-live="polite"></span>' +
+        '</div>' +
+        '<textarea id="pz-pozn-text" class="pz-pozn-pole" rows="3" maxlength="2000" ' +
+          'placeholder="Co jste tu viděli — příjezd, sousedi, co říkal majitel…" ' +
+          'aria-describedby="pz-pozn-kde"></textarea>' +
+
+        '<p class="pz-pozn-kde" id="pz-pozn-kde"></p>' +
+      '</section>' +
 
       '<p class="pz-cas" id="pz-cas" hidden></p>' +
 
@@ -885,7 +899,6 @@
 
       '<div class="pz-actions">' +
         '<a class="pz-abtn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">' + PIN_SVG + 'Otevřít v katastru' + VEN + '</a>' +
-        '<button class="pz-abtn' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">' + HEART_SVG + '<span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
         '<button class="pz-abtn" type="button" id="pz-share">' + SHARE_SVG + 'Sdílet</button>' +
       '</div>';
 

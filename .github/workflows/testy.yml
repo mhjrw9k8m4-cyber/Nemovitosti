@@ -534,6 +534,9 @@ jobs:
       - name: Na co je vidět, na to se dá klepnout
         run: node scripts/test-pod-hlavickou.mjs
 
+      - name: Pořadí na stránce pozemku (důležité nahoře)
+        run: node scripts/test-poradi-pozemku.mjs
+
       - name: Přidání vlastního pozemku (celá cesta)
         run: node scripts/test-pridat.mjs
 
