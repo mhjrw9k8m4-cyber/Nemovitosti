@@ -8,7 +8,7 @@
   <title>Lesní pozemek 547 418 m² — Hodonín, okres Hodonín | Parcelka</title>
   <meta name="description" content="Exekuce · 42 000 Kč (7 Kč/m²) · 547 418 m² · Hodonín, okres Hodonín. Termín 11. 11. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
   <meta name="theme-color" content="#F9FAF9">
-  <meta name="robots" content="index,follow">
+  <meta name="robots" content="noindex,follow">
   <link rel="canonical" href="https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html">
   <link rel="alternate" type="application/rss+xml" title="Parcelka — nové pozemky" href="novinky.xml">
   <meta property="og:type" content="article">
@@ -163,10 +163,20 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
-    
-
-    
-    
+    .pz-specs{border:1px solid var(--line-strong); border-radius:var(--r-plocha); overflow:hidden; background:var(--ink-soft); box-shadow:var(--e1);}
+    .pz-spec{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line);}
+    .pz-spec:last-child{border-bottom:none;}
+    .pz-spec .k{color:var(--text-ondark-mute); font-size:15px; flex:none;}
+    /* Hodnota se smí zalomit. S nowrap + ellipsis se delší údaj uřízl
+       třemi tečkami („inzerát mluví o spoluvlastnickém podíl…") — a byla
+       to zrovna ta věta, kvůli které se na cenu nedá spoléhat. */
+    .pz-spec .v{color:var(--text-ondark); font-weight:600; font-size:15px; text-align:right; font-variant-numeric:tabular-nums; min-width:0; overflow-wrap:anywhere;
+      /* Vyvažování řádků (text-wrap:balance) se sem nehodí: rozlomilo
+         datum na „8. / 10. 2026". Radši nechat viset poslední slovo než
+         přetrhnout číslo. */
+      line-height:1.4;}
+    .pz-spec{align-items:flex-start;}
+    .pz-spec .k{padding-top:1px;}
     .pz-feats{display:flex; flex-wrap:wrap; gap:8px;}
     .pz-feat{display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--text-ondark); background:var(--ink-soft); border:1px solid var(--line-strong); padding:8px 12px; border-radius:var(--r-plocha);}
     .pz-feat svg{width:17px; height:17px; stroke-width:2.12; color:var(--copper-bright);}
@@ -261,21 +271,6 @@
       text-overflow:ellipsis;
       background:var(--plocha-znacka, #1F5138); color:#fff;}
     @media (max-width:760px){ .pz-lista:not([hidden]){display:flex;} }
-    /* TLAČÍTKO „NAHORU" NESMÍ SEDĚT NA LIŠTĚ. Oboje je připnuté ke
-       spodnímu okraji okna: lišta na 0, kolečko na 24 px — jenže lišta
-       je 69 px vysoká, takže kolečko (46×46) leželo CELOU plochou na ní.
-       Naměřeno na 390×844: překryv 100 %, a to zrovna na pravém konci
-       tlačítka „K dražbě", které se roztahuje přes zbytek lišty. Klepnutí
-       mířené na hlavní akci stránky tak trefilo posun nahoru.
-       Kolečko se proto o lištu opře shora. Počítá se z její skutečné
-       výšky (69 px) plus mezera a bezpečná zóna telefonu — ne z čísla
-       odhadnutého od oka. :has() hlídá, že se zvedne jen tehdy, když
-       lišta opravdu je: na širokém displeji ani před jejím objevením
-       by to jen odsunulo kolečko do prázdna. */
-    @media (max-width:760px){
-      body:has(.pz-lista:not([hidden])) .to-top{
-        bottom:calc(69px + 12px + env(safe-area-inset-bottom, 0px));}
-    }
     .pz-btn{flex:1 1 200px; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; border-radius:var(--r-ovladani); font-weight:700; font-size:15px; text-decoration:none; cursor:pointer; border:1px solid transparent;}
     .pz-btn svg{width:19px; height:19px; stroke-width:1.89; flex:none;}
     .pz-btn.primary{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
@@ -371,20 +366,6 @@
        přesně ten rozdíl hlídá scripts/test-ikony.mjs.) */
     .pzm-cela-btn svg{width:19px; height:19px; stroke-width:1.8;}
     .pzm-cela-btn:hover{background:var(--ink-soft);}
-    /* ZPÁTKY NA POZEMEK. Pod zvětšením, tedy v témž sloupci vpravo —
-       u levého okraje si telefon bere gesto „zpět". Má popisek, ne jen
-       špendlík: samotná ikona na mapě plné špendlíků neřekne nic, a tohle
-       tlačítko se objevuje jen občas, takže se nemá kde naučit. */
-    .pzm-zpet-btn{position:absolute; z-index:500; right:10px; top:56px;
-      min-height:36px; display:inline-flex; align-items:center; gap:6px;
-      padding:0 11px 0 9px; border-radius:var(--r-sm);
-      border:1px solid rgba(24,45,34,.25); background:rgba(255,255,255,.93);
-      color:var(--copper-bright); cursor:pointer; box-shadow:var(--e1);
-      font:inherit; font-size:13px; font-weight:600; white-space:nowrap;
-      -webkit-tap-highlight-color:transparent;}
-    .pzm-zpet-btn svg{width:16px; height:16px; stroke-width:2; flex:none;}
-    .pzm-zpet-btn:hover{background:var(--ink-soft);}
-    .pzm-zpet-btn[hidden]{display:none;}
     .pzm-cela-zap{position:fixed; inset:0; z-index:1200; border-radius:0; border:0; display:flex; flex-direction:column; background:var(--ink);}
     .pzm-cela-zap .pzm-mapa{flex:1 1 auto; height:auto; min-height:0;}
     .pzm-cela-zap .pzm-panel{flex:none;}
@@ -469,6 +450,7 @@
     .pz-pozn-pole:focus{outline:none; border-color:var(--copper-bright);}
     .pz-pozn-kde{margin:8px 0 0; font-size:12px; line-height:1.5;
       color:var(--text-ondark-mute);}
+    .pz-spec .pz-pozn{display:block; margin-top:2px; font-size:12px; line-height:1.5; font-style:italic; color:var(--text-ondark-mute);}
     /* SOUŘADNICE: číslo ke zkopírování a odkaz do navigace.
        Číslo stojí v <code>, aby šlo označit prstem i myší a aby bylo
        vidět, že se má vzít doslova. Obě tlačítka mají 44 px — jedou se
@@ -486,7 +468,6 @@
     /* 2,18 proto, že 16 × 2,18 ÷ 24 = 1,45 px — tah jako u ostatních ikon. */
     .pz-sour-kop svg, .pz-sour-nav svg{width:16px; height:16px; flex:none; stroke-width:2.18;}
     @media (max-width:420px){ .pz-sour code{flex:1 1 100%;} }
-    
     .pz-loading, .pz-empty{padding:64px 16px; text-align:center; color:var(--text-ondark-mute);}
     /* NEŽ SKRIPT DOPLNÍ CELÝ DETAIL, DRŽÍ SE TU VÝŠKA OBRAZOVKY.
        Vygenerovaná stránka nese statický náhled vysoký 343 px (mobil),
@@ -515,8 +496,6 @@
          samotná dráha posuvníku zůstává tenká, prohlížeč ji vystředí. */
       .pzm-kryti input{height:44px;}
       .pzm-cela-btn{width:44px; height:44px;}
-      /* Na dotyku terč 44 px a o kousek níž, ať nesedí na zvětšení. */
-      .pzm-zpet-btn{min-height:44px; top:64px; font-size:14px;}
       .pzm-z, .pzm-v{height:44px;}
     }
   </style>
@@ -554,7 +533,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Lesní pozemek 547 418 m² — Hodonín, okres Hodonín</h1><p><b>42 000 Kč</b> (7 Kč/m²) · 547 418 m² · Exekuce</p><dl><dt>Druh pozemku</dt><dd>Lesní pozemek</dd><dt>Výměra</dt><dd>547 418 m²</dd><dt>Obec</dt><dd>Hodonín</dd><dt>Okres</dt><dd><a href="pozemky-okres-hodonin.html">Hodonín</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 1/88 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>nucená dražba 11. 11. 2026 · OK dražby</dd><dt>Vzdušnou čarou</dt><dd>Hodonín 5,8 km · Brno 56 km</dd></dl><p><a href="pozemek.html?p=Hodon%C3%ADn%7C%E2%80%94%7CHodon%C3%ADn%7C48.810%7C17.092&amp;ll=48.809662,17.09211&amp;v=547418">Otevřít na mapě</a></p><p><a href="index.html?obec=Hodon%C3%ADn&amp;okres=Hodon%C3%ADn">V okrese Hodonín jsou v nabídce ještě 2 pozemky</a></p></article></div></div>
+    <div id="pz-detail"><div class="pz-konec" role="status"><b>Tato nabídka už není aktuální.</b> <span>Zmizela ze zdroje 6. 10. 2026. Stránku necháváme dostupnou, aby uložené odkazy vedly někam, ale pozemek už takhle koupit nejde.</span><p>Podobné pozemky ve stejném okrese:</p><ul><li><a href="pozemek-hodonin-lovcice-5fr3l2.html">Lovčice — 1 710 m²</a></li><li><a href="pozemek-hodonin-louka-zp19rj.html">Louka — 5 254 m²</a></li><li><a href="pozemek-hodonin-velka-nad-velickou-1oofao8.html">Velká nad Veličkou — 2 939 m²</a></li></ul><p><a href="index.html#mapa">Zpět na mapu všech pozemků</a></p></div><article class="pz-staticky"><h1>Lesní pozemek 547 418 m² — Hodonín, okres Hodonín</h1><p><b>42 000 Kč</b> (7 Kč/m²) · 547 418 m² · Exekuce</p><dl><dt>Druh pozemku</dt><dd>Lesní pozemek</dd><dt>Výměra</dt><dd>547 418 m²</dd><dt>Obec</dt><dd>Hodonín</dd><dt>Okres</dt><dd><a href="pozemky-okres-hodonin.html">Hodonín</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 1/88 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>nucená dražba 11. 11. 2026 · OK dražby</dd><dt>Vzdušnou čarou</dt><dd>Hodonín 5,8 km · Brno 56 km</dd></dl><p><a href="pozemek.html?p=Hodon%C3%ADn%7C%E2%80%94%7CHodon%C3%ADn%7C48.810%7C17.092&amp;ll=48.809662,17.09211&amp;v=547418">Otevřít na mapě</a></p><p><a href="index.html?obec=Hodon%C3%ADn&amp;okres=Hodon%C3%ADn">V okrese Hodonín jsou v nabídce ještě 2 pozemky</a></p></article></div></div>
   </div>
 </main>
 
@@ -580,13 +559,22 @@
 <script src="js/min/snimek.js?v=d4e40486"></script>
 <script src="js/min/terminy.js?v=cf102557"></script>
 <script src="js/min/ceny.js?v=16c72c57"></script>
-  <script src="js/min/zlevneni.js?v=8cbae6d1" defer></script>
+<script src="js/min/zlevneni.js?v=8cbae6d1" defer></script>
 <script src="js/min/vybaveni.js?v=68e3d418"></script>
 <script src="js/min/radce.js?v=f8a46b6d"></script>
 <script src="js/min/klic.js?v=17fa93b6"></script>
 <script src="js/min/videno.js?v=a269d74b"></script>
 <script src="js/min/poznamky.js?v=966134ca"></script>
-<!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
+<script src="js/min/hlidani-logika.js?v=404eb49d"></script>
+<script src="js/min/navratnost.js?v=870054e8"></script>
+<script src="js/min/pozemek.js?v=b169ff36"></script>
+<script src="js/min/config.js?v=8ba36013" defer></script>
+<script src="js/min/auth.js?v=bec7a315" defer></script>
+<script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
+<script src="js/min/upozorneni.js?v=4cc6941e" defer></script>
+<script src="js/min/hlavicka.js?v=1ca59d70" defer></script>
+<script src="js/min/offline.js?v=16a48df3" defer></script>
+  <!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
      než js/pozemek.js postaví cenový model: staví ho z téže hromádky
      jako mapa, tedy bez duplicit. Proto tu tenhle modul stojí jako
      obyčejný skript PŘED ním, a ne v odložené skupině níž — odložené
@@ -594,10 +582,9 @@
      postavit z 2 018 nabídek místo 1 995. Pozdější spotřebitelé
      (upozorneni-feed.js, upozorneni.js) ho najdou stejně: obyčejné
      skripty běží před odloženými. -->
-<script src="js/min/hlidani-logika.js?v=404eb49d"></script>
-<script src="js/min/navratnost.js?v=870054e8"></script><script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Lesní pozemek 547 418 m² — Hodonín, okres Hodonín","description":"Exekuce · 42 000 Kč (7 Kč/m²) · 547 418 m² · Hodonín, okres Hodonín. Termín 11. 11. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html","address":{"@type":"PostalAddress","addressLocality":"Hodonín","addressRegion":"Hodonín","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":48.809662,"longitude":17.09211}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Hodonín","item":"https://www.parcelaka.cz/pozemky-okres-hodonin.html"},{"@type":"ListItem","position":4,"name":"Lesní pozemek 547 418 m² — Hodonín, okres Hodonín","item":"https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html"}]}]</script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Lesní pozemek 547 418 m² — Hodonín, okres Hodonín","description":"Exekuce · 42 000 Kč (7 Kč/m²) · 547 418 m² · Hodonín, okres Hodonín. Termín 11. 11. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html","address":{"@type":"PostalAddress","addressLocality":"Hodonín","addressRegion":"Hodonín","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":48.809662,"longitude":17.09211}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Hodonín","item":"https://www.parcelaka.cz/pozemky-okres-hodonin.html"},{"@type":"ListItem","position":4,"name":"Lesní pozemek 547 418 m² — Hodonín, okres Hodonín","item":"https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html"}]}]</script>
+<script>window.PK_UKONCENO="2026-10-06";</script>
 <script>window.PK_POZEMEK={"k":"Hodonín|—|Hodonín|48.810|17.092","ll":[48.809662,17.09211],"v":547418,"c":42000,"r":"data/okres/hodonin.json"};</script>
-<script src="js/min/pozemek.js?v=b169ff36"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -605,12 +592,6 @@
    říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
    na nasazení u Vercelu. */
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
-<script src="js/min/config.js?v=8ba36013" defer></script>
-<script src="js/min/auth.js?v=bec7a315" defer></script>
-<script src="js/min/upozorneni-feed.js?v=8871148a" defer></script>
-<script src="js/min/upozorneni.js?v=4cc6941e" defer></script>
-<script src="js/min/hlavicka.js?v=1ca59d70" defer></script>
-<script src="js/min/offline.js?v=16a48df3" defer></script>
 <script type="application/json" id="pz-okoli-data">"Hodonín 5,8 km · Brno 56 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V okrese Hodonín jsou v nabídce ještě 2 pozemky","url":"index.html?obec=Hodon%C3%ADn\u0026okres=Hodon%C3%ADn"}</script>
 </body>

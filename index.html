@@ -224,12 +224,27 @@
              vysoký před i po a pole „Hledat obec" začíná ve 44 % výšky. Je to
              tedy změna textu, ne místa — což je dobře, protože na 320×568
              leží hledání v 58 % a strop zkoušky je 60 %. -->
-        <h1><b id="hero-n-count">1 953</b> pozemků<br>na jedné mapě.</h1>
+        <h1><b id="hero-n-count">1 955</b> pozemků<br>na jedné mapě.</h1>
         <!-- Počty druhů plní generátor z dat; skript je po načtení přepočítá. -->
         <div class="hh-legenda" id="hh-legenda">
           <span class="hh-l" data-druh="sale"><i aria-hidden="true"></i><b>—</b> na prodej</span>
           <span class="hh-l" data-druh="drazba"><i aria-hidden="true"></i><b>—</b> v dražbě</span>
           <span class="hh-l" data-druh="exekuce"><i aria-hidden="true"></i><b>—</b> v exekuci</span>
+        </div>
+        <!-- Živý důkaz, že web není skanzen. Vyplní ho skript ze skutečných
+             dat; dokud se nenačtou, není tu vůbec nic (žádné „Načítám…"). -->
+        <!-- Pruh si drží MÍSTO od začátku (je-ceka = visibility:hidden), místo aby
+           se po načtení dat vysunul. Naměřeno: naskočil ve 180.–240. ms, přidal
+           128 px a odsunul celou stránku i mapu o 129 px dolů — CLS 0,11 na
+           telefonu. Zmizí jen tehdy, když se nepodaří spočítat vůbec nic. -->
+        <div class="hero-live hh-fakta je-ceka" id="hero-live">
+          <a class="hl-fact" href="#mapa" data-fakt="drazba"><span class="hl-k">Nejbližší dražba</span><span class="hl-v"></span></a>
+          <a class="hl-fact" href="#mapa" data-fakt="nove"><span class="hl-k"></span><span class="hl-v"></span></a>
+          <!-- Popisek nese VÝZNAM, hodnota nese ČÍSLO. Dřív stálo vlevo
+               „Nejvýhodnější" a velkým písmem se vypisovalo „o 59 % pod
+               obvyklou" — rozlomená věta bez podstatného jména (pod obvyklou
+               čím?), a drobně za tečkou zbyla obec. -->
+          <a class="hl-fact hl-hit" href="#mapa" data-fakt="deal"><span class="hl-k">Nejvíc pod cenou</span><span class="hl-v"></span></a>
         </div>
         </div>
         </div>
@@ -239,7 +254,7 @@
     <div class="map-wide">
       <div class="map-app reveal mv-seznam" id="view-mapa">
         <div class="map-controls-panel">
-          <div class="map-search"><svg class="ms-lupa" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="text" id="map-search" placeholder="Obec, druh, cena…" autocomplete="off" aria-label="Hledat — dá se napsat celá věta, třeba les do 30 km od Brna do 500 tis" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="map-search-navrhy"><ul class="ms-navrhy" id="map-search-navrhy" role="listbox" aria-label="Našeptané obce" hidden></ul></div>
+          <div class="map-search"><input type="text" id="map-search" placeholder="Obec, druh, cena, do 30 km od Brna…" autocomplete="off" aria-label="Hledat — dá se napsat celá věta, třeba les do 30 km od Brna do 500 tis" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="map-search-navrhy"><ul class="ms-navrhy" id="map-search-navrhy" role="listbox" aria-label="Našeptané obce" hidden></ul></div>
           <!-- Co web z napsané věty pochopil jako filtr; každý odznak jde zrušit. -->
           <div class="ms-chipy" id="ms-chipy" hidden aria-label="Rozpoznáno z hledání"></div>
           <!-- Hlídání okolí vlastního pozemku. Objeví se, až si člověk místo
@@ -512,19 +527,19 @@
       </div>
       <div class="kraj-grid reveal">
         <a class="kraj-item" href="pozemky-praha-kraj.html"><span class="kj-n">Praha</span><span class="kj-c mono" data-kraj="Praha">25 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-stredocesky-kraj.html"><span class="kj-n">Středočeský</span><span class="kj-c mono" data-kraj="Středočeský">391 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-jihocesky-kraj.html"><span class="kj-n">Jihočeský</span><span class="kj-c mono" data-kraj="Jihočeský">117 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-stredocesky-kraj.html"><span class="kj-n">Středočeský</span><span class="kj-c mono" data-kraj="Středočeský">390 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-jihocesky-kraj.html"><span class="kj-n">Jihočeský</span><span class="kj-c mono" data-kraj="Jihočeský">119 pozemků</span></a>
         <a class="kraj-item" href="pozemky-plzensky-kraj.html"><span class="kj-n">Plzeňský</span><span class="kj-c mono" data-kraj="Plzeňský">115 pozemků</span></a>
         <a class="kraj-item" href="pozemky-karlovarsky-kraj.html"><span class="kj-n">Karlovarský</span><span class="kj-c mono" data-kraj="Karlovarský">29 pozemků</span></a>
         <a class="kraj-item" href="pozemky-ustecky-kraj.html"><span class="kj-n">Ústecký</span><span class="kj-c mono" data-kraj="Ústecký">160 pozemků</span></a>
         <a class="kraj-item" href="pozemky-liberecky-kraj.html"><span class="kj-n">Liberecký</span><span class="kj-c mono" data-kraj="Liberecký">146 pozemků</span></a>
         <a class="kraj-item" href="pozemky-kralovehradecky-kraj.html"><span class="kj-n">Královéhradecký</span><span class="kj-c mono" data-kraj="Královéhradecký">79 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-pardubicky-kraj.html"><span class="kj-n">Pardubický</span><span class="kj-c mono" data-kraj="Pardubický">98 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-pardubicky-kraj.html"><span class="kj-n">Pardubický</span><span class="kj-c mono" data-kraj="Pardubický">100 pozemků</span></a>
         <a class="kraj-item" href="pozemky-vysocina-kraj.html"><span class="kj-n">Vysočina</span><span class="kj-c mono" data-kraj="Vysočina">54 pozemků</span></a>
         <a class="kraj-item" href="pozemky-jihomoravsky-kraj.html"><span class="kj-n">Jihomoravský</span><span class="kj-c mono" data-kraj="Jihomoravský">396 pozemků</span></a>
         <a class="kraj-item" href="pozemky-olomoucky-kraj.html"><span class="kj-n">Olomoucký</span><span class="kj-c mono" data-kraj="Olomoucký">102 pozemků</span></a>
         <a class="kraj-item" href="pozemky-zlinsky-kraj.html"><span class="kj-n">Zlínský</span><span class="kj-c mono" data-kraj="Zlínský">154 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-moravskoslezsky-kraj.html"><span class="kj-n">Moravskoslezský</span><span class="kj-c mono" data-kraj="Moravskoslezský">87 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-moravskoslezsky-kraj.html"><span class="kj-n">Moravskoslezský</span><span class="kj-c mono" data-kraj="Moravskoslezský">86 pozemků</span></a>
         <a class="kraj-item kraj-vse" href="pozemky-podle-okresu.html"><span class="kj-n">Všechny okresy</span><span class="kj-c mono">77 okresů</span></a>
       </div>
     </div>
@@ -754,9 +769,6 @@
 <script src="js/min/okruh.js?v=f11683ef" defer></script>
 <script src="js/min/klic.js?v=17fa93b6"></script>
 <script src="js/min/videno.js?v=a269d74b"></script>
-<!-- Poznámky i tady: aby bylo na kartě vidět, u kterého pozemku si
-     člověk něco poznamenal. Soubor má 1,5 kB po minifikaci. -->
-<script src="js/min/poznamky.js?v=966134ca"></script>
 <script src="js/min/mapove-vrstvy.js?v=93a96d67" defer></script>
 <script src="js/min/main.js?v=179290f1" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
