@@ -19,7 +19,7 @@
 // nebo výplň samo nasadilo — protože pak se od pozadí odlišit CHCE.
 import { chromium } from 'playwright-core';
 
-const STRANKY = ['index.html', 'pridat.html', 'hlidani.html', 'upozorneni.html', 'zpravy.html', 'muj-inzerat.html', 'kontakt.html'];
+const STRANKY = ['index.html', 'pridat.html', 'hlidani.html', 'zpravy.html', 'muj-inzerat.html', 'kontakt.html'];
 const PRVKY = 'select, input:not([type=hidden]), textarea, button, .map-select, .filter-chip, summary';
 const MIN = 3;
 

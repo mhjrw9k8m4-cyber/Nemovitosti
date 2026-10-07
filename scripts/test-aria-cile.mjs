@@ -22,7 +22,7 @@ await new Promise((r) => setTimeout(r, 300));
 const BASE = 'http://127.0.0.1:8310';
 /* Stránky, které mají záložky, rozbalovátka, formuláře a panely —
    tam tyhle vazby vůbec jsou. */
-const STRANKY = ['hlidani.html', 'upozorneni.html', 'zpravy.html', 'muj-inzerat.html',
+const STRANKY = ['hlidani.html', 'zpravy.html', 'muj-inzerat.html',
   'index.html', 'pridat.html', 'kolik-stoji-koupe-pozemku.html',
   'kupni-smlouva-pozemek.html', 'hypoteka-na-pozemek.html', 'kontakt.html'];
 

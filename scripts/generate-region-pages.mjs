@@ -49,7 +49,8 @@ const V = {
   hlavicka: razitko('js/hlavicka.js'),
   grafCen: razitko('js/graf-cen.js'),
   offline: razitko('js/offline.js'),
-  cenovaMapa: razitko('js/cenova-mapa.js'),
+  hledani: razitko('js/hledani.js'),
+  cenyHledani: razitko('js/ceny-hledani.js'),
   leafletJs: razitko('vendor/leaflet/leaflet.js'),
   leafletCss: razitko('vendor/leaflet/leaflet.css'),
   menu: razitko('js/menu.js'),
@@ -473,9 +474,9 @@ function kanalNazevKraje(kraj){
 /* MAPA JE JEN NA JEDNÉ STRÁNCE. Leaflet (42 kB skript + 15 kB stylu) se
    proto nepřipojuje do hlavičky všech 2 092 generovaných stránek, ale jen
    tam, kde se kreslí — jinak by 2 091 stránek stahovalo styl pro mapu,
-   kterou nemají. Skript se navíc nestahuje ani tady hned: js/cenova-mapa.js
-   si ho vyžádá z <meta name="pk-leaflet"> teprve, až se mapa dostane na
-   dohled (stejně jako stránka pozemku). */
+   kterou nemají. (Cenová mapa okresů tu bývala taky; nahradil ji
+   vyhledávač lokality, takže na stránce cen už se Leaflet nenačítá
+   vůbec.) */
 function head(title, desc, canonicalPath, ld, crumbs, ogSoubor, kanal, kanalNazev, sMapou){
   // ld může být objekt nebo pole; přidáme BreadcrumbList, je-li předán.
   let ldArr = Array.isArray(ld) ? ld.slice() : (ld ? [ld] : []);
@@ -1164,6 +1165,42 @@ ${okresLinks ? `
 
 // ---------- CENOVÝ PŘEHLED (unikátní: kolik stojí m² podle druhu a kraje) ----------
 {
+  /* ===== REJSTŘÍK LOKALIT PRO VYHLEDÁVÁNÍ ============================
+     Místo dvou dlouhých seznamů (14 krajů a 36 okresů pod sebou) si
+     člověk lokalitu najde. Hledá se i podle OBCE — tak lidé přemýšlejí —
+     ale cena se ukazuje za OKRES, a je to u ní napsané: změřeno, že
+     z 1 046 obcí v nabídce by na vlastní medián jednoho druhu mělo dost
+     dat jen devět. Číslo z pěti nabídek v jedné vesnici není cena
+     v té vesnici, je to náhoda; okres je nejmenší celek, za který se
+     dá něco tvrdit.
+
+     Rejstřík se NEVKLÁDÁ do stránky, ale leží vedle v data/ceny-mist.json
+     a stáhne se, teprve když někdo začne psát. Je to 30 kB obcí, které
+     by jinak nesl každý, kdo stránku jen proletí. */
+  const cenyMist = {
+    ok: Object.keys(byOkres).sort((a, b) => a.localeCompare(b, 'cs')).map((okres) => ({
+      n: okres,
+      kraj: OKRES_KRAJ[okres] || '',
+      h: okresFile(okres),
+      c: byOkres[okres].length,
+      p: priceByOkres[okres] || {},
+    })),
+    ob: (() => {
+      const m = {};
+      for (const o of all) {
+        if (!o.place || !o.okres) continue;
+        const k = o.place + '|' + o.okres;
+        m[k] = (m[k] || 0) + 1;
+      }
+      return Object.keys(m).sort((a, b) => a.localeCompare(b, 'cs'))
+        .map((k) => { const i = k.indexOf('|'); return [k.slice(0, i), k.slice(i + 1), m[k]]; })
+        /* „25935" není obec, je to šum ze zdroje (PSČ v poli místa).
+           V našeptávači by to vypadalo jako chyba webu. */
+        .filter(([obec]) => !/^\d+$/.test(obec.trim()));
+    })(),
+  };
+  write('data/ceny-mist.json', JSON.stringify(cenyMist));
+
   const file='cena-pozemku.html';
   // Národní karty podle druhu (jen skupiny s dost vzorky).
   /* Seřazeno od nejlevnějšího druhu k nejdražšímu. Dřív to šlo v pořadí,
@@ -1376,45 +1413,36 @@ ${highlight}
 
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
-          <h2>Zemědělská půda podle kraje</h2>
-          <p class="rules-note" style="margin-top:0;">Seřazeno od nejdražšího kraje. Klepnutím otevřete nabídky v kraji. Sytější podbarvení = dražší.</p>
-${razitkoCerstvosti}
-          <div class="okr-list">
-${krajRows || '      <p class="rules-note" style="margin:0;">Zatím není dost dat po krajích.</p>'}
+          <!-- VYHLEDÁVAČ MÍSTO DVOU DLOUHÝCH SEZNAMŮ. Pod tímhle nadpisem
+               stál seznam 14 krajů, pod ním barevná mapa okresů a pod ní
+               seznam 36 okresů — tedy padesát řádků, ze kterých každého
+               zajímá jeden. Kdo chce vědět, kolik stojí půda u něj,
+               nechce procházet republiku; chce napsat jméno a dostat
+               odpověď.
+               HLEDÁ SE I PODLE OBCE, protože tak lidi přemýšlejí. Cena se
+               ale ukazuje za OKRES a je to u ní napsané: z 1 046 obcí
+               v nabídce by na vlastní medián jednoho druhu mělo dost dat
+               devět. Číslo z pěti nabídek v jedné vesnici není cena v té
+               vesnici, je to náhoda. -->
+          <h2 id="ceny-hledat-nadpis">Kolik stojí půda u vás</h2>
+          <p class="rules-note" style="margin-top:0;">Napište obec, město nebo okres. Ukážeme medián za okres — nejmenší celek, za který se dá něco tvrdit.</p>
+          <div class="cenh">
+            <div class="cenh-pole">
+              <svg class="cenh-lupa" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.2-4.2"/></svg>
+              <input type="text" id="cenh-vstup" role="combobox" autocomplete="off"
+                aria-expanded="false" aria-autocomplete="list" aria-controls="cenh-navrhy"
+                aria-labelledby="ceny-hledat-nadpis" placeholder="Třeba Benešov nebo Zdice">
+              <!-- Nabídka patří DOVNITŘ pole, ne vedle něj: plave na
+                   top:100 % a to se počítá z nejbližšího polohovaného rodiče.
+                   Vedle pole by to byla celá .cenh včetně karty s výsledkem,
+                   takže by návrhy skočily až pod ni. -->
+              <ul class="cenh-navrhy" id="cenh-navrhy" role="listbox" hidden></ul>
+            </div>
+            <div class="cenh-vysledek" id="cenh-vysledek" role="status" aria-live="polite"></div>
           </div>
+${razitkoCerstvosti}
         </div>
       </div>
-${okresRows ? `
-      <div class="add-card" style="margin-top:22px;">
-        <div class="rules-sect">
-          <h2>Cenová mapa okresů</h2>
-          <p class="rules-note" style="margin-top:0;">Zemědělská půda, tmavší = dražší. Okresy bez dostatku nabídek jsou šedé. Klepnutím otevřete okres. <b>Tytéž ceny jsou v seznamu pod mapou</b> — ten je čitelný i bez barev.</p>
-          <div class="cen-mapa-obal">
-            <div id="cen-mapa" role="img" aria-label="Mapa České republiky s okresy podbarvenými podle mediánu ceny zemědělské půdy. Tytéž údaje jsou v seznamu pod mapou."></div>
-            <p class="rules-note cen-mapa-stav" id="cen-mapa-stav">Mapa se načte, až se k ní dorolujete.</p>
-          </div>
-          <ul class="cen-mapa-legenda" aria-hidden="true">
-            <li><i style="background:rgba(44,113,80,0.12);"></i>nejlevnější</li>
-            <li><i style="background:rgba(44,113,80,0.33);"></i></li>
-            <li><i style="background:rgba(44,113,80,0.51);"></i></li>
-            <li><i style="background:rgba(44,113,80,0.70);"></i></li>
-            <li><i style="background:rgba(44,113,80,0.90);"></i>nejdražší</li>
-            <li><i style="background:rgba(128,128,128,0.18);"></i>málo dat</li>
-          </ul>
-          <script type="application/json" id="cen-mapa-data">${JSON.stringify(cenMapaData).replace(/</g, '\\u003c')}</script>
-        </div>
-      </div>
-
-      <div class="add-card" style="margin-top:22px;">
-        <div class="rules-sect">
-          <h2>Zemědělská půda podle okresu</h2>
-          <p class="rules-note" style="margin-top:0;">Okresy s dostatkem nabídek, seřazeno od nejdražšího. Klepnutím otevřete okres.</p>
-${razitkoCerstvosti}
-          <div class="okr-list">
-${okresRows}
-          </div>
-        </div>
-      </div>` : ''}
 
       <div class="add-cross" style="margin-top:22px;">
         <div class="acx-copy">
@@ -1430,7 +1458,8 @@ ${okresRows}
   </section>
 
 </main>
-` + footer() + `<script src="js/cenova-mapa.js?${V.cenovaMapa}" defer></scr` + `ipt>
+` + footer() + `<script src="js/hledani.js?${V.hledani}" defer></scr` + `ipt>
+<script src="js/ceny-hledani.js?${V.cenyHledani}" defer></scr` + `ipt>
 `;
   write(file, html);
 }

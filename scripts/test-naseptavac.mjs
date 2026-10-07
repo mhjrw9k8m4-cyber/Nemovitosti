@@ -16,6 +16,8 @@
 //   3. dá se ovládat šipkami a Enterem, Escape ji zavře,
 //   4. řádky jsou na dotyk dost velké (stejné pravidlo jako test-dotyk),
 //   5. při překlepu web nabídne opravu místo strohého „nic nemáme".
+//   6. seznam návrhů se vešel nad vyjetou klávesnici,
+//   7. překlep našeptávač nezavře — ukáže opravu i názvy k ní.
 import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -37,8 +39,11 @@ const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
-async function otevri(opt) {
+async function otevri(opt, init) {
   const ctx = await prohlizec.newContext(opt);
+  /* Init skript musí jít do kontextu PŘED prvním načtením stránky —
+     potom už by se do běžícího main.js nedostal. */
+  if (init) await ctx.addInitScript(init);
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
     return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();
@@ -72,6 +77,15 @@ for (const d of DATA) if (d.place && d.okres) { const k = d.place + '|' + d.okre
 const nejcastejsi = Object.entries(pocty).sort((a, b) => b[1] - a[1])[0][0].split('|');
 const OBEC = nejcastejsi[0];
 const ZACATEK = norm(OBEC).slice(0, 4);
+/* Začátek jména, na který se v datech shodne nejvíc různých obcí — ať je
+   našeptávač plný a je na čem měřit, co se vejde nad klávesnici. Bere se
+   z dat, ne z hlavy: „Pra" by u jiné sady mohlo nabídnout jediný řádek. */
+const podleZacatku = {};
+for (const d of DATA) if (d.place) {
+  const z = norm(d.place).slice(0, 2);
+  if (z.length === 2) (podleZacatku[z] = podleZacatku[z] || new Set()).add(norm(d.place));
+}
+const HODNE = Object.entries(podleZacatku).sort((a, b) => b[1].size - a[1].size)[0][0];
 
 const { ctx, p } = await otevri(TELEFON);
 const pole = p.locator('#map-search');
@@ -1106,6 +1120,173 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
       `bez čtverečku: ${bezCtverecku.join(', ')}`);
   }
   await ctx.close();
+}
+
+/* --- 7) Našeptávač a klávesnice ----------------------------------
+ *
+ * Dvě vady, které nahlásil člověk z iPhonu:
+ *
+ *   a) Seznam návrhů se schoval pod klávesnici. Jeho výška se v CSS
+ *      počítala z min(46vh,320px), jenže vh je LAYOUTOVÝ viewport — ten
+ *      se vyjetím klávesnice nezmenší. Na 390×844 se tedy seznam měřil
+ *      proti 844 px, i když nad klávesnicí bylo vidět něco přes 400.
+ *   b) Jedno písmeno vedle a našeptávač zml…kl — při nula shodách se
+ *      prostě zavřel, takže člověk nevěděl, jestli tu obec nemáme, nebo
+ *      jestli má překlep. Oprava (HL.mysleliJste) se používala teprve
+ *      v hlášce pod výpisem, tedy až když už bylo pozdě.
+ *
+ * BEZHLAVÝ PROHLÍŽEČ ŽÁDNOU KLÁVESNICI NEVYSUNE, takže visualViewport
+ * se podstrčí: falešný objekt se stejným rozhraním (height, offsetTop,
+ * událost resize), jehož výšku zkouška řídí. Co se tím NEDOKAZUJE: že
+ * prohlížeč na telefonu visualViewport při vyjetí klávesnice opravdu
+ * zmenší (to je vlastnost platformy, nikoli tohoto webu). Co se tím
+ * dokazuje: že se web podle naměřené volné výšky zařídí — až do
+ * posledního pixelu, včetně odsunu seznamu (offsetTop).
+ */
+{
+  const PODSTRC = () => {
+    const et = new EventTarget();
+    const vv = {
+      get width() { return 390; },
+      get height() { return window.__vvH === undefined ? window.innerHeight : window.__vvH; },
+      get offsetTop() { return window.__vvT || 0; },
+      get offsetLeft() { return 0; },
+      get pageTop() { return 0; }, get pageLeft() { return 0; }, get scale() { return 1; },
+      addEventListener: et.addEventListener.bind(et),
+      removeEventListener: et.removeEventListener.bind(et),
+      dispatchEvent: et.dispatchEvent.bind(et),
+    };
+    Object.defineProperty(window, 'visualViewport', { value: vv, configurable: true });
+    window.__klavesnice = (h, t) => {
+      window.__vvH = h; window.__vvT = t || 0;
+      vv.dispatchEvent(new Event('resize'));
+    };
+  };
+  const { ctx: k, p: q } = await otevri(TELEFON, PODSTRC);
+  const kPole = q.locator('#map-search');
+  const kSeznam = q.locator('#map-search-navrhy');
+
+  const podstrceno = await q.evaluate(() => typeof window.__klavesnice === 'function');
+  pravda('falešný visualViewport se do stránky dostal',
+    podstrceno, 'bez něj by celá sekce neměřila nic');
+
+  /* Změří seznam proti dolní hraně toho, co je po vyjetí klávesnice
+     vidět. Při tom si odloží i stav, ve kterém by byl seznam BEZ opravy
+     (tedy jen podle CSS) — aby šlo říct, jestli se vůbec měří vada. */
+  const zmer = () => q.evaluate(() => {
+    const n = document.getElementById('map-search-navrhy');
+    const o = document.querySelector('.msn-oprava');
+    const dno = window.visualViewport.offsetTop + window.visualViewport.height;
+    const li = [...n.querySelectorAll('li')];
+    const nb = n.getBoundingClientRect();
+    const po = { presah: Math.round(Math.max(0, nb.bottom - dno)), vyska: Math.round(nb.height) };
+    const dovnitr = n.scrollHeight > n.clientHeight + 1;
+    const ulozeno = n.style.maxHeight;
+    n.style.maxHeight = '';          // jak by to vypadalo jen podle CSS
+    const sb = n.getBoundingClientRect();
+    const pred = { presah: Math.round(Math.max(0, sb.bottom - dno)), vyska: Math.round(sb.height) };
+    n.style.maxHeight = ulozeno;
+    return { po, pred, dovnitr, polozek: li.length, skryty: n.hidden,
+      top: Math.round(nb.top), dno: Math.round(dno), maxh: ulozeno,
+      oprava: o && !o.hidden ? o.textContent.trim() : null,
+      opravaDno: o && !o.hidden ? Math.round(o.getBoundingClientRect().bottom) : null,
+      jmena: li.map((x) => x.querySelector('.msn-jmeno').textContent) };
+  });
+  const napis = async (text, h, t) => {
+    await kPole.click();
+    await kPole.fill('');
+    await q.evaluate(([a, b]) => window.__klavesnice(a, b), [h, t || 0]);
+    await kPole.fill(text);
+    await q.waitForTimeout(450);
+    return zmer();
+  };
+
+  // a) Seznam se vešel nad klávesnici
+  const plno = await napis(HODNE, 844, 0);
+  pravda(`našeptávač nabízí na „${HODNE}" dost řádků, aby se mělo co schovat (${plno.polozek})`,
+    plno.polozek >= 4, 'při dvou řádcích by kontroly níž procházely naprázdno');
+  pravda(`bez klávesnice zůstává strop 320 px jako v CSS (${plno.maxh || 'nic nenastaveno'})`,
+    parseInt(plno.maxh, 10) > 0 && parseInt(plno.maxh, 10) <= 320,
+    plno.maxh ? `nastaveno ${plno.maxh}` : 'výška se vůbec neměří, seznam se řídí jen CSS');
+
+  let merilosePred = 0;
+  for (const volno of [440, 414, 380, 300]) {
+    const r = await napis(HODNE, volno, 0);
+    if (r.pred.presah > 0) merilosePred++;
+    pravda(`při volné výšce ${volno} px seznam nepřelézá pod klávesnici`,
+      r.po.presah === 0,
+      `seznam y ${r.top}–${r.top + r.po.vyska}, vidět je po ${r.dno} → přesáhá ${r.po.presah} px`);
+    if (r.po.vyska < r.pred.vyska) {
+      pravda(`a zkrácený seznam se dá posouvat (${volno} px)`, r.dovnitr,
+        'je uříznutý a nejde v něm rolovat — spodní návrhy by byly nedostupné');
+    }
+  }
+  /* POJISTKA PROTI PROCHÁZENÍ NAPRÁZDNO. Kdyby se seznam jednou zkrátil
+     (méně návrhů, nižší řádky), vešel by se i bez opravy a kontroly
+     výš by potvrzovaly něco, co se nemůže pokazit. */
+  pravda(`CSS samo by seznam pod klávesnici schovalo (${merilosePred} ze 4 výšek)`,
+    merilosePred >= 2, 'ani v jedné výšce by CSS nepřesahovalo — sekce neměří vadu');
+
+  /* ODSUN SE TAKY POČÍTÁ. Když prohlížeč stránku při zaostření posune,
+     visualViewport má nenulový offsetTop a volného místa je o něj víc.
+     Bez něj by se seznam řezal zbytečně krátký. */
+  const bezOdsunu = await napis(HODNE, 300, 0);
+  const sOdsunem = await napis(HODNE, 300, 90);
+  pravda(`posun stránky se do volné výšky započítá (${bezOdsunu.po.vyska} → ${sOdsunem.po.vyska} px)`,
+    sOdsunem.po.vyska > bezOdsunu.po.vyska,
+    'offsetTop se nebere v potaz — seznam zůstává krátký, i když je místo');
+  pravda('a přitom pod klávesnici nepřelézá ani tak', sOdsunem.po.presah === 0,
+    `přesáhá ${sOdsunem.po.presah} px`);
+
+  // b) Překlep: návrhy zůstanou a je vidět, co se hledalo
+  const PREKLEP = preklep.charAt(0).toUpperCase() + preklep.slice(1);
+  const op = await napis(PREKLEP, 414, 0);
+  const ukazal = pravda(`překlep „${PREKLEP}" našeptávač nezavře`,
+    !op.skryty && op.polozek > 0,
+    `skrytý: ${op.skryty}, položek: ${op.polozek} — člověk se nedozví, že má překlep`);
+  pravda('a nad návrhy stojí „Mysleli jste…"', !!op.oprava && /Mysleli jste/i.test(op.oprava || ''),
+    String(op.oprava));
+  pravda('oprava jmenuje správnou obec', !!op.oprava && norm(op.oprava).indexOf(norm(OBEC)) >= 0,
+    String(op.oprava));
+  pravda('a v hlášce je napsané to, co člověk opravdu napsal (ne počítačová podoba)',
+    !!op.oprava && op.oprava.indexOf(PREKLEP) >= 0,
+    `čekalo se „${PREKLEP}" v „${op.oprava}"`);
+  if (ukazal) {
+    pravda('a nabídnuté názvy už patří k opravenému slovu',
+      op.jmena.some((j) => norm(j).indexOf(norm(OBEC)) >= 0), op.jmena.join(' | '));
+    pravda('hláška seznam nepřekrývá', op.opravaDno !== null && op.opravaDno <= op.top,
+      `hláška končí na y ${op.opravaDno}, seznam začíná na y ${op.top}`);
+    /* HLÁŠKA LEŽÍ MIMO <ul>. Uvnitř by to byla položka listboxu, která
+       se nedá vybrat — a hlavně by posunula indexy: označování jede přes
+       children, takže by šipka dolů svítila na jiný návrh, než který by
+       se pak Enterem vybral. */
+    const vUl = await q.evaluate(() => {
+      const n = document.getElementById('map-search-navrhy');
+      return { cizi: n.children.length - n.querySelectorAll('li[role="option"]').length,
+        rozbaleno: document.getElementById('map-search').getAttribute('aria-expanded') };
+    });
+    pravda('v seznamu nejsou jiné prvky než nabízené položky', vUl.cizi === 0,
+      `navíc prvků: ${vUl.cizi}`);
+    pravda('a pole hlásí rozbalenou nabídku', vUl.rozbaleno === 'true', String(vUl.rozbaleno));
+    await q.keyboard.press('ArrowDown');
+    await q.waitForTimeout(150);
+    const prvniJmeno = op.jmena[0];
+    await q.keyboard.press('Enter');
+    await q.waitForTimeout(400);
+    const napsano = await kPole.inputValue();
+    pravda('šipka dolů a Enter vybere právě první návrh',
+      norm(napsano).indexOf(norm(prvniJmeno)) >= 0,
+      `první návrh byl „${prvniJmeno}", v poli je „${napsano}"`);
+  }
+
+  /* AŤ to není ochotné až k lži: na co oprava není, u toho se nic
+     nevymýšlí a nabídka se zavře. */
+  const nesmysl = await napis('qwxzj', 414, 0);
+  pravda('na smyšlené slovo si našeptávač nic nevymyslí',
+    nesmysl.skryty || nesmysl.polozek === 0,
+    `nabízí ${nesmysl.polozek}: ${nesmysl.jmena.join(' | ')}`);
+
+  await k.close();
 }
 
 await ctx.close();

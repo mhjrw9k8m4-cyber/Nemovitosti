@@ -28,7 +28,12 @@ await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
 const BASE = 'http://127.0.0.1:8310';
-const STRANKY = ['muj-inzerat.html', 'upozorneni.html', 'hlidani.html', 'zpravy.html', 'index.html', 'cena-pozemku.html'];
+/* Stránka okresu je tu kvůli vzorku: dlaždice .okr-item nesla hlavně
+   stránka cen (50 řádků krajů a okresů) a ta je teď vyhledávač, takže
+   by pojistka „bylo vůbec co měřit" hlásila 18 dlaždic místo dvaceti.
+   Upozornění ze seznamu vypadla — ta stránka je odebraná. */
+const STRANKY = ['muj-inzerat.html', 'hlidani.html', 'zpravy.html', 'index.html',
+  'cena-pozemku.html', 'pozemky-okres-kolin.html'];
 
 /* Prvky, které se podle stylopisu pod myší hýbou nebo mění okraj.
    Vypsané schválně: projíždět všechno na stránce a hoverovat to po

@@ -31,7 +31,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=118f5e24">
+  <link rel="stylesheet" href="css/styles.min.css?v=9bf57046">
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
   <script type="application/ld+json">
@@ -126,237 +126,34 @@
 
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
-          <h2>Zemědělská půda podle kraje</h2>
-          <p class="rules-note" style="margin-top:0;">Seřazeno od nejdražšího kraje. Klepnutím otevřete nabídky v kraji. Sytější podbarvení = dražší.</p>
+          <!-- VYHLEDÁVAČ MÍSTO DVOU DLOUHÝCH SEZNAMŮ. Pod tímhle nadpisem
+               stál seznam 14 krajů, pod ním barevná mapa okresů a pod ní
+               seznam 36 okresů — tedy padesát řádků, ze kterých každého
+               zajímá jeden. Kdo chce vědět, kolik stojí půda u něj,
+               nechce procházet republiku; chce napsat jméno a dostat
+               odpověď.
+               HLEDÁ SE I PODLE OBCE, protože tak lidi přemýšlejí. Cena se
+               ale ukazuje za OKRES a je to u ní napsané: z 1 046 obcí
+               v nabídce by na vlastní medián jednoho druhu mělo dost dat
+               devět. Číslo z pěti nabídek v jedné vesnici není cena v té
+               vesnici, je to náhoda. -->
+          <h2 id="ceny-hledat-nadpis">Kolik stojí půda u vás</h2>
+          <p class="rules-note" style="margin-top:0;">Napište obec, město nebo okres. Ukážeme medián za okres — nejmenší celek, za který se dá něco tvrdit.</p>
+          <div class="cenh">
+            <div class="cenh-pole">
+              <svg class="cenh-lupa" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.2-4.2"/></svg>
+              <input type="text" id="cenh-vstup" role="combobox" autocomplete="off"
+                aria-expanded="false" aria-autocomplete="list" aria-controls="cenh-navrhy"
+                aria-labelledby="ceny-hledat-nadpis" placeholder="Třeba Benešov nebo Zdice">
+              <!-- Nabídka patří DOVNITŘ pole, ne vedle něj: plave na
+                   top:100 % a to se počítá z nejbližšího polohovaného rodiče.
+                   Vedle pole by to byla celá .cenh včetně karty s výsledkem,
+                   takže by návrhy skočily až pod ni. -->
+              <ul class="cenh-navrhy" id="cenh-navrhy" role="listbox" hidden></ul>
+            </div>
+            <div class="cenh-vysledek" id="cenh-vysledek" role="status" aria-live="polite"></div>
+          </div>
 <p class="okr-cerstvost mono">Zdroje naposledy zkontrolovány 7. 10. 2026 · robot je prochází každých 6 hodin</p>
-          <div class="okr-list">
-      <div class="okr-item" style="background:rgba(44,113,80,0.260);">
-        <a class="okr-place" href="pozemky-stredocesky-kraj.html" style="text-decoration:none;">Středočeský kraj</a>
-        <span class="okr-meta">Zemědělská půda <b>85 Kč/m²</b> · rozpětí 54–160 · 178 nab. &nbsp;·&nbsp; les <b>65 Kč/m²</b> (31)</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.196);">
-        <a class="okr-place" href="pozemky-pardubicky-kraj.html" style="text-decoration:none;">Pardubický kraj</a>
-        <span class="okr-meta">Zemědělská půda <b>71 Kč/m²</b> · rozpětí 47–118 · 54 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.187);">
-        <a class="okr-place" href="pozemky-liberecky-kraj.html" style="text-decoration:none;">Liberecký kraj</a>
-        <span class="okr-meta">Zemědělská půda <b>69 Kč/m²</b> · rozpětí 43–174 · 57 nab. &nbsp;·&nbsp; les <b>58 Kč/m²</b> (17)</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.165);">
-        <a class="okr-place" href="pozemky-jihocesky-kraj.html" style="text-decoration:none;">Jihočeský kraj</a>
-        <span class="okr-meta">Zemědělská půda <b>64 Kč/m²</b> · rozpětí 43–132 · 59 nab. &nbsp;·&nbsp; les <b>63 Kč/m²</b> (15)</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.165);">
-        <a class="okr-place" href="pozemky-jihomoravsky-kraj.html" style="text-decoration:none;">Jihomoravský kraj</a>
-        <span class="okr-meta">Zemědělská půda <b>64 Kč/m²</b> · rozpětí 45–100 · 232 nab. &nbsp;·&nbsp; les <b>75 Kč/m²</b> (33)</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.160);">
-        <a class="okr-place" href="pozemky-olomoucky-kraj.html" style="text-decoration:none;">Olomoucký kraj</a>
-        <span class="okr-meta">Zemědělská půda <b>63 Kč/m²</b> · rozpětí 42–105 · 63 nab. &nbsp;·&nbsp; les <b>52 Kč/m²</b> (13)</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.155);">
-        <a class="okr-place" href="pozemky-moravskoslezsky-kraj.html" style="text-decoration:none;">Moravskoslezský kraj</a>
-        <span class="okr-meta">Zemědělská půda <b>62 Kč/m²</b> · rozpětí 40–131 · 28 nab. &nbsp;·&nbsp; les <b>41 Kč/m²</b> (19)</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.128);">
-        <a class="okr-place" href="pozemky-kralovehradecky-kraj.html" style="text-decoration:none;">Královéhradecký kraj</a>
-        <span class="okr-meta">Zemědělská půda <b>56 Kč/m²</b> · rozpětí 44–104 · 37 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.115);">
-        <a class="okr-place" href="pozemky-ustecky-kraj.html" style="text-decoration:none;">Ústecký kraj</a>
-        <span class="okr-meta">Zemědělská půda <b>53 Kč/m²</b> · rozpětí 35–109 · 53 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.110);">
-        <a class="okr-place" href="pozemky-karlovarsky-kraj.html" style="text-decoration:none;">Karlovarský kraj</a>
-        <span class="okr-meta">Zemědělská půda <b>52 Kč/m²</b> · rozpětí 35–175 · 17 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.083);">
-        <a class="okr-place" href="pozemky-vysocina-kraj.html" style="text-decoration:none;">Kraj Vysočina</a>
-        <span class="okr-meta">Zemědělská půda <b>46 Kč/m²</b> · rozpětí 40–57 · 33 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.078);">
-        <a class="okr-place" href="pozemky-zlinsky-kraj.html" style="text-decoration:none;">Zlínský kraj</a>
-        <span class="okr-meta">Zemědělská půda <b>45 Kč/m²</b> · rozpětí 38–74 · 89 nab. &nbsp;·&nbsp; les <b>37 Kč/m²</b> (26)</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.060);">
-        <a class="okr-place" href="pozemky-plzensky-kraj.html" style="text-decoration:none;">Plzeňský kraj</a>
-        <span class="okr-meta">Zemědělská půda <b>41 Kč/m²</b> · rozpětí 38–62 · 59 nab. &nbsp;·&nbsp; les <b>43 Kč/m²</b> (14)</span>
-      </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="add-card" style="margin-top:22px;">
-        <div class="rules-sect">
-          <h2>Cenová mapa okresů</h2>
-          <p class="rules-note" style="margin-top:0;">Zemědělská půda, tmavší = dražší. Okresy bez dostatku nabídek jsou šedé. Klepnutím otevřete okres. <b>Tytéž ceny jsou v seznamu pod mapou</b> — ten je čitelný i bez barev.</p>
-          <div class="cen-mapa-obal">
-            <div id="cen-mapa" role="img" aria-label="Mapa České republiky s okresy podbarvenými podle mediánu ceny zemědělské půdy. Tytéž údaje jsou v seznamu pod mapou."></div>
-            <p class="rules-note cen-mapa-stav" id="cen-mapa-stav">Mapa se načte, až se k ní dorolujete.</p>
-          </div>
-          <ul class="cen-mapa-legenda" aria-hidden="true">
-            <li><i style="background:rgba(44,113,80,0.12);"></i>nejlevnější</li>
-            <li><i style="background:rgba(44,113,80,0.33);"></i></li>
-            <li><i style="background:rgba(44,113,80,0.51);"></i></li>
-            <li><i style="background:rgba(44,113,80,0.70);"></i></li>
-            <li><i style="background:rgba(44,113,80,0.90);"></i>nejdražší</li>
-            <li><i style="background:rgba(128,128,128,0.18);"></i>málo dat</li>
-          </ul>
-          <script type="application/json" id="cen-mapa-data">{"Praha-východ":{"med":160,"lo":95,"hi":265,"n":12,"odkaz":"pozemky-okres-praha-vychod.html"},"Pardubice":{"med":116,"lo":56,"hi":139,"n":18,"odkaz":"pozemky-okres-pardubice.html"},"Praha-západ":{"med":90,"lo":80,"hi":127,"n":25,"odkaz":"pozemky-okres-praha-zapad.html"},"Písek":{"med":87,"lo":46,"hi":231,"n":13,"odkaz":"pozemky-okres-pisek.html"},"Liberec":{"med":85,"lo":63,"hi":250,"n":12,"odkaz":"pozemky-okres-liberec.html"},"Brno-venkov":{"med":81,"lo":68,"hi":135,"n":33,"odkaz":"pozemky-okres-brno-venkov.html"},"Vyškov":{"med":81,"lo":47,"hi":146,"n":11,"odkaz":"pozemky-okres-vyskov.html"},"Rokycany":{"med":77,"lo":41,"hi":144,"n":10,"odkaz":"pozemky-okres-rokycany.html"},"Semily":{"med":75,"lo":43,"hi":345,"n":18,"odkaz":"pozemky-okres-semily.html"},"Kolín":{"med":73,"lo":54,"hi":281,"n":16,"odkaz":"pozemky-okres-kolin.html"},"Jablonec nad Nisou":{"med":73,"lo":43,"hi":95,"n":15,"odkaz":"pozemky-okres-jablonec-nad-nisou.html"},"Chrudim":{"med":71,"lo":54,"hi":89,"n":17,"odkaz":"pozemky-okres-chrudim.html"},"Mladá Boleslav":{"med":68,"lo":51,"hi":132,"n":35,"odkaz":"pozemky-okres-mlada-boleslav.html"},"Mělník":{"med":65,"lo":51,"hi":106,"n":21,"odkaz":"pozemky-okres-melnik.html"},"Benešov":{"med":63,"lo":50,"hi":110,"n":18,"odkaz":"pozemky-okres-benesov.html"},"Cheb":{"med":62,"lo":29,"hi":183,"n":10,"odkaz":"pozemky-okres-cheb.html"},"Prostějov":{"med":62,"lo":42,"hi":154,"n":26,"odkaz":"pozemky-okres-prostejov.html"},"Břeclav":{"med":62,"lo":46,"hi":94,"n":58,"odkaz":"pozemky-okres-breclav.html"},"Hodonín":{"med":61,"lo":45,"hi":83,"n":94,"odkaz":"pozemky-okres-hodonin.html"},"Kroměříž":{"med":59,"lo":46,"hi":155,"n":25,"odkaz":"pozemky-okres-kromeriz.html"},"Česká Lípa":{"med":55,"lo":37,"hi":224,"n":12,"odkaz":"pozemky-okres-ceska-lipa.html"},"Litoměřice":{"med":54,"lo":38,"hi":118,"n":23,"odkaz":"pozemky-okres-litomerice.html"},"Přerov":{"med":53,"lo":43,"hi":140,"n":19,"odkaz":"pozemky-okres-prerov.html"},"Jičín":{"med":50,"lo":45,"hi":86,"n":18,"odkaz":"pozemky-okres-jicin.html"},"Žďár nad Sázavou":{"med":50,"lo":45,"hi":56,"n":12,"odkaz":"pozemky-okres-zdar-nad-sazavou.html"},"Uherské Hradiště":{"med":49,"lo":39,"hi":72,"n":22,"odkaz":"pozemky-okres-uherske-hradiste.html"},"Tábor":{"med":46,"lo":44,"hi":51,"n":17,"odkaz":"pozemky-okres-tabor.html"},"Rakovník":{"med":46,"lo":43,"hi":99,"n":15,"odkaz":"pozemky-okres-rakovnik.html"},"Jindřichův Hradec":{"med":44,"lo":35,"hi":68,"n":18,"odkaz":"pozemky-okres-jindrichuv-hradec.html"},"Svitavy":{"med":43,"lo":37,"hi":71,"n":13,"odkaz":"pozemky-okres-svitavy.html"},"Zlín":{"med":43,"lo":31,"hi":74,"n":19,"odkaz":"pozemky-okres-zlin.html"},"Vsetín":{"med":40,"lo":33,"hi":48,"n":23,"odkaz":"pozemky-okres-vsetin.html"},"Pelhřimov":{"med":40,"lo":39,"hi":162,"n":10,"odkaz":"pozemky-okres-pelhrimov.html"},"Plzeň-jih":{"med":40,"lo":38,"hi":58,"n":21,"odkaz":"pozemky-okres-plzen-jih.html"},"Blansko":{"med":39,"lo":37,"hi":48,"n":22,"odkaz":"pozemky-okres-blansko.html"},"Klatovy":{"med":39,"lo":38,"hi":42,"n":16,"odkaz":"pozemky-okres-klatovy.html"}}</script>
-        </div>
-      </div>
-
-      <div class="add-card" style="margin-top:22px;">
-        <div class="rules-sect">
-          <h2>Zemědělská půda podle okresu</h2>
-          <p class="rules-note" style="margin-top:0;">Okresy s dostatkem nabídek, seřazeno od nejdražšího. Klepnutím otevřete okres.</p>
-<p class="okr-cerstvost mono">Zdroje naposledy zkontrolovány 7. 10. 2026 · robot je prochází každých 6 hodin</p>
-          <div class="okr-list">
-      <div class="okr-item" style="background:rgba(44,113,80,0.260);">
-        <a class="okr-place" href="pozemky-okres-praha-vychod.html" style="text-decoration:none;">Praha-východ</a>
-        <span class="okr-meta">Zemědělská půda <b>160 Kč/m²</b> · rozpětí 95–265 · 12 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.187);">
-        <a class="okr-place" href="pozemky-okres-pardubice.html" style="text-decoration:none;">Pardubice</a>
-        <span class="okr-meta">Zemědělská půda <b>116 Kč/m²</b> · rozpětí 56–139 · 18 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.144);">
-        <a class="okr-place" href="pozemky-okres-praha-zapad.html" style="text-decoration:none;">Praha-západ</a>
-        <span class="okr-meta">Zemědělská půda <b>90 Kč/m²</b> · rozpětí 80–127 · 25 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.139);">
-        <a class="okr-place" href="pozemky-okres-pisek.html" style="text-decoration:none;">Písek</a>
-        <span class="okr-meta">Zemědělská půda <b>87 Kč/m²</b> · rozpětí 46–231 · 13 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.136);">
-        <a class="okr-place" href="pozemky-okres-liberec.html" style="text-decoration:none;">Liberec</a>
-        <span class="okr-meta">Zemědělská půda <b>85 Kč/m²</b> · rozpětí 63–250 · 12 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.129);">
-        <a class="okr-place" href="pozemky-okres-brno-venkov.html" style="text-decoration:none;">Brno-venkov</a>
-        <span class="okr-meta">Zemědělská půda <b>81 Kč/m²</b> · rozpětí 68–135 · 33 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.129);">
-        <a class="okr-place" href="pozemky-okres-vyskov.html" style="text-decoration:none;">Vyškov</a>
-        <span class="okr-meta">Zemědělská půda <b>81 Kč/m²</b> · rozpětí 47–146 · 11 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.123);">
-        <a class="okr-place" href="pozemky-okres-rokycany.html" style="text-decoration:none;">Rokycany</a>
-        <span class="okr-meta">Zemědělská půda <b>77 Kč/m²</b> · rozpětí 41–144 · 10 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.120);">
-        <a class="okr-place" href="pozemky-okres-semily.html" style="text-decoration:none;">Semily</a>
-        <span class="okr-meta">Zemědělská půda <b>75 Kč/m²</b> · rozpětí 43–345 · 18 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.116);">
-        <a class="okr-place" href="pozemky-okres-kolin.html" style="text-decoration:none;">Kolín</a>
-        <span class="okr-meta">Zemědělská půda <b>73 Kč/m²</b> · rozpětí 54–281 · 16 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.116);">
-        <a class="okr-place" href="pozemky-okres-jablonec-nad-nisou.html" style="text-decoration:none;">Jablonec nad Nisou</a>
-        <span class="okr-meta">Zemědělská půda <b>73 Kč/m²</b> · rozpětí 43–95 · 15 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.113);">
-        <a class="okr-place" href="pozemky-okres-chrudim.html" style="text-decoration:none;">Chrudim</a>
-        <span class="okr-meta">Zemědělská půda <b>71 Kč/m²</b> · rozpětí 54–89 · 17 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.108);">
-        <a class="okr-place" href="pozemky-okres-mlada-boleslav.html" style="text-decoration:none;">Mladá Boleslav</a>
-        <span class="okr-meta">Zemědělská půda <b>68 Kč/m²</b> · rozpětí 51–132 · 35 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.103);">
-        <a class="okr-place" href="pozemky-okres-melnik.html" style="text-decoration:none;">Mělník</a>
-        <span class="okr-meta">Zemědělská půda <b>65 Kč/m²</b> · rozpětí 51–106 · 21 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.100);">
-        <a class="okr-place" href="pozemky-okres-benesov.html" style="text-decoration:none;">Benešov</a>
-        <span class="okr-meta">Zemědělská půda <b>63 Kč/m²</b> · rozpětí 50–110 · 18 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.098);">
-        <a class="okr-place" href="pozemky-okres-cheb.html" style="text-decoration:none;">Cheb</a>
-        <span class="okr-meta">Zemědělská půda <b>62 Kč/m²</b> · rozpětí 29–183 · 10 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.098);">
-        <a class="okr-place" href="pozemky-okres-prostejov.html" style="text-decoration:none;">Prostějov</a>
-        <span class="okr-meta">Zemědělská půda <b>62 Kč/m²</b> · rozpětí 42–154 · 26 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.098);">
-        <a class="okr-place" href="pozemky-okres-breclav.html" style="text-decoration:none;">Břeclav</a>
-        <span class="okr-meta">Zemědělská půda <b>62 Kč/m²</b> · rozpětí 46–94 · 58 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.096);">
-        <a class="okr-place" href="pozemky-okres-hodonin.html" style="text-decoration:none;">Hodonín</a>
-        <span class="okr-meta">Zemědělská půda <b>61 Kč/m²</b> · rozpětí 45–83 · 94 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.093);">
-        <a class="okr-place" href="pozemky-okres-kromeriz.html" style="text-decoration:none;">Kroměříž</a>
-        <span class="okr-meta">Zemědělská půda <b>59 Kč/m²</b> · rozpětí 46–155 · 25 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.086);">
-        <a class="okr-place" href="pozemky-okres-ceska-lipa.html" style="text-decoration:none;">Česká Lípa</a>
-        <span class="okr-meta">Zemědělská půda <b>55 Kč/m²</b> · rozpětí 37–224 · 12 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.085);">
-        <a class="okr-place" href="pozemky-okres-litomerice.html" style="text-decoration:none;">Litoměřice</a>
-        <span class="okr-meta">Zemědělská půda <b>54 Kč/m²</b> · rozpětí 38–118 · 23 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.083);">
-        <a class="okr-place" href="pozemky-okres-prerov.html" style="text-decoration:none;">Přerov</a>
-        <span class="okr-meta">Zemědělská půda <b>53 Kč/m²</b> · rozpětí 43–140 · 19 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.078);">
-        <a class="okr-place" href="pozemky-okres-jicin.html" style="text-decoration:none;">Jičín</a>
-        <span class="okr-meta">Zemědělská půda <b>50 Kč/m²</b> · rozpětí 45–86 · 18 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.078);">
-        <a class="okr-place" href="pozemky-okres-zdar-nad-sazavou.html" style="text-decoration:none;">Žďár nad Sázavou</a>
-        <span class="okr-meta">Zemědělská půda <b>50 Kč/m²</b> · rozpětí 45–56 · 12 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.077);">
-        <a class="okr-place" href="pozemky-okres-uherske-hradiste.html" style="text-decoration:none;">Uherské Hradiště</a>
-        <span class="okr-meta">Zemědělská půda <b>49 Kč/m²</b> · rozpětí 39–72 · 22 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.072);">
-        <a class="okr-place" href="pozemky-okres-tabor.html" style="text-decoration:none;">Tábor</a>
-        <span class="okr-meta">Zemědělská půda <b>46 Kč/m²</b> · rozpětí 44–51 · 17 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.072);">
-        <a class="okr-place" href="pozemky-okres-rakovnik.html" style="text-decoration:none;">Rakovník</a>
-        <span class="okr-meta">Zemědělská půda <b>46 Kč/m²</b> · rozpětí 43–99 · 15 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.068);">
-        <a class="okr-place" href="pozemky-okres-jindrichuv-hradec.html" style="text-decoration:none;">Jindřichův Hradec</a>
-        <span class="okr-meta">Zemědělská půda <b>44 Kč/m²</b> · rozpětí 35–68 · 18 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.067);">
-        <a class="okr-place" href="pozemky-okres-svitavy.html" style="text-decoration:none;">Svitavy</a>
-        <span class="okr-meta">Zemědělská půda <b>43 Kč/m²</b> · rozpětí 37–71 · 13 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.067);">
-        <a class="okr-place" href="pozemky-okres-zlin.html" style="text-decoration:none;">Zlín</a>
-        <span class="okr-meta">Zemědělská půda <b>43 Kč/m²</b> · rozpětí 31–74 · 19 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.062);">
-        <a class="okr-place" href="pozemky-okres-vsetin.html" style="text-decoration:none;">Vsetín</a>
-        <span class="okr-meta">Zemědělská půda <b>40 Kč/m²</b> · rozpětí 33–48 · 23 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.062);">
-        <a class="okr-place" href="pozemky-okres-pelhrimov.html" style="text-decoration:none;">Pelhřimov</a>
-        <span class="okr-meta">Zemědělská půda <b>40 Kč/m²</b> · rozpětí 39–162 · 10 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.062);">
-        <a class="okr-place" href="pozemky-okres-plzen-jih.html" style="text-decoration:none;">Plzeň-jih</a>
-        <span class="okr-meta">Zemědělská půda <b>40 Kč/m²</b> · rozpětí 38–58 · 21 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.060);">
-        <a class="okr-place" href="pozemky-okres-blansko.html" style="text-decoration:none;">Blansko</a>
-        <span class="okr-meta">Zemědělská půda <b>39 Kč/m²</b> · rozpětí 37–48 · 22 nab.</span>
-      </div>
-      <div class="okr-item" style="background:rgba(44,113,80,0.060);">
-        <a class="okr-place" href="pozemky-okres-klatovy.html" style="text-decoration:none;">Klatovy</a>
-        <span class="okr-meta">Zemědělská půda <b>39 Kč/m²</b> · rozpětí 38–42 · 16 nab.</span>
-      </div>
-          </div>
         </div>
       </div>
 
@@ -406,4 +203,5 @@
 <script src="js/min/hlavicka.js?v=1ca59d70" defer></script>
 </body>
 </html>
-<script src="js/min/cenova-mapa.js?v=e280f41f" defer></script>
+<script src="js/min/hledani.js?v=c49c1410" defer></script>
+<script src="js/min/ceny-hledani.js?v=20859030" defer></script>

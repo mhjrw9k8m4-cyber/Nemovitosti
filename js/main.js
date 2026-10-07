@@ -6281,9 +6281,15 @@
      na výběr rovnou s počtem nabídek — a klepnutím se mapa zaměří tam,
      kde ty pozemky opravdu jsou. */
   var navrhyEl = document.getElementById('map-search-navrhy');
+  var opravaNavrhu = null;
   var navrhyData = [], navrhyKurzor = -1;
   function zavriNavrhy() {
+    if (opravaEl) { opravaEl.hidden = true; opravaEl.style.top = ''; opravaEl.style.bottom = ''; }
     if (!navrhyEl) return;
+    /* Naměřené hodnoty se musí uklidit všechny: při příštím rozbalení se
+       měří znovu a starý směr nebo starý odsun by na okamžik probliknul. */
+    navrhyEl.style.marginTop = ''; navrhyEl.style.marginBottom = '';
+    navrhyEl.style.top = ''; navrhyEl.style.bottom = ''; navrhyEl.style.maxHeight = '';
     navrhyEl.hidden = true; navrhyEl.innerHTML = '';
     navrhyData = []; navrhyKurzor = -1;
     searchEl.setAttribute('aria-expanded', 'false');
@@ -6389,7 +6395,24 @@
   function ukazNavrhy() {
     if (!navrhyEl || !HL.navrhy) return;
     var slovnik = navrhySlovnik(searchEl.value);
-    var mista = HL.navrhy(DATA, dotazFiltr && dotazFiltr.text ? dotazFiltr.text : searchEl.value, 6 - slovnik.length);
+    var dotaz = dotazFiltr && dotazFiltr.text ? dotazFiltr.text : searchEl.value;
+    var mista = HL.navrhy(DATA, dotaz, 6 - slovnik.length);
+    /* JEDNO PÍSMENO VEDLE A NAŠEPTÁVAČ ZMLKNE. Když se nic neshodlo,
+       seznam se prostě zavřel — a člověk nevěděl, jestli tu obec
+       nemáme, nebo jestli má překlep. Oprava přitom na webu je
+       (HL.mysleliJste), jenže se používala teprve v hlášce „nic
+       nenalezeno" PO odfiltrování, tedy až když už bylo pozdě.
+       Teď se zkusí hned: najde-li se oprava, vypíšou se rovnou NÁZVY
+       k ní — opravený dotaz v návrzích, označený, ať je vidět, že se
+       hledalo něco jiného, než co je napsané. */
+    opravaNavrhu = null;
+    if (!slovnik.length && !mista.length && HL.mysleliJste) {
+      var op = HL.mysleliJste(DATA, dotaz);
+      if (op) {
+        var jine = HL.navrhy(DATA, op, 6);
+        if (jine.length) { opravaNavrhu = op; mista = jine; }
+      }
+    }
     navrhyData = slovnik.concat(mista);
     if (!navrhyData.length || document.activeElement !== searchEl) { zavriNavrhy(); return; }
     var html = '';
@@ -6402,9 +6425,44 @@
         '<span class="msn-pocet">' + fmt(n.pocet) + '×</span></li>';
     }
     navrhyEl.innerHTML = html;
+    /* Hlavička s opravou leží VEDLE seznamu, ne v něm. Uvnitř by to byl
+       <li> bez role v listboxu (čtečka by hlásila položku, která se
+       nedá vybrat) a hlavně by posunula indexy: oznacNavrh() jede přes
+       children, takže by šipka dolů označila jiný návrh, než který by
+       se pak Enterem vybral. */
+    ukazOpravu(opravaNavrhu, searchEl.value);
     navrhyEl.hidden = false;
     searchEl.setAttribute('aria-expanded', 'true');
     navrhyKurzor = -1;
+    /* Teprve teď, když je seznam v DOM a vidět: změřit, kolik místa nad
+       klávesnicí zůstalo, a seznam tomu přizpůsobit. */
+    srovnejNaKlavesnici();
+  }
+  /* Řádek „Mysleli jste…" nad návrhy. Vyrábí se až když je potřeba,
+     ať prázdný prvek nesedí v DOM na každé stránce. */
+  var opravaEl = null;
+  function ukazOpravu(oprava, dotaz) {
+    if (!oprava) { if (opravaEl) opravaEl.hidden = true; return; }
+    if (!opravaEl) {
+      opravaEl = document.createElement('p');
+      opravaEl.className = 'msn-oprava';
+      navrhyEl.parentNode.insertBefore(opravaEl, navrhyEl);
+    }
+    opravaEl.innerHTML = 'Nic jako „' + esc(String(dotaz).trim())
+      + '". Mysleli jste <b>' + esc(oprava) + '</b>?';
+    opravaEl.hidden = false;
+  }
+  /* Aby se seznam vešel nad vyjetou klávesnici — a aby ho nepřekryla
+     hláška „Mysleli jste…“. Obojí počítá společná funkce v js/hledani.js,
+     stejně to potřebuje i vyhledávání cen pozemků. 320 px je strop z CSS,
+     ať se bez klávesnice nic nemění. */
+  function srovnejNaKlavesnici() {
+    if (!navrhyEl || navrhyEl.hidden || !HL.nadKlavesnici) return;
+    HL.nadKlavesnici(navrhyEl, { pole: searchEl, hlaska: opravaEl, strop: 320 });
+  }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', srovnejNaKlavesnici);
+    window.visualViewport.addEventListener('scroll', srovnejNaKlavesnici);
   }
   if (navrhyEl) {
     navrhyEl.addEventListener('mousedown', function (e) {

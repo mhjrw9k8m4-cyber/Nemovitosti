@@ -9,7 +9,10 @@
 // říká CLS. Mez „v pořádku" je 0,1. Naměřeno před opravami:
 //
 //   muj-inzerat 0,55 · pozemek 0,56 · pridat 0,22 · hlidani 0,20
-//   upozorneni 0,20 · index 0,11          (všechno na telefonu 390 px)
+//   index 0,11                            (všechno na telefonu 390 px)
+//
+// (Upozornění měla 0,20, ale stránka šla na přání celá pryč — místo ní
+// se měří Zprávy, které se dokreslují stejně, až po načtení dat.)
 //
 // Příčina byla pokaždé táž: stránka se vykreslí v jednom stavu a skript ji
 // hned přepíše do jiného, vyššího. Přihlašovací karta naskočila o 588 px,
@@ -46,7 +49,7 @@ const STRANKY = [
   ['pozemek-tabor-nemysl-16a8tol.html', '.pz-media, .pz-empty'],
   ['pozemky-okres-tabor.html', '.okr-item'],
   ['hlidani.html', '#hl-root *'],
-  ['upozorneni.html', '#up-root *'],
+  ['zpravy.html', '#zp-root *'],
   ['muj-inzerat.html', '#mi-auth, #mi-panel'],
 ];
 

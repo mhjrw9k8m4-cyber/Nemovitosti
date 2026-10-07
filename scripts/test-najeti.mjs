@@ -23,7 +23,7 @@
 import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
-const STRANKY = ['index.html', 'pridat.html', 'hlidani.html', 'upozorneni.html',
+const STRANKY = ['index.html', 'pridat.html', 'hlidani.html',
   'zpravy.html', 'muj-inzerat.html', 'kontakt.html', 'pozemek.html',
   'cena-pozemku.html', 'drazby-pozemku.html', 'inzerce.html'];
 

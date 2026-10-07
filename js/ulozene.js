@@ -55,15 +55,11 @@
       popis: 'Jestli se mapa kreslí základní, nebo leteckým snímkem.', pocet: jeNeco },
     { klic: 'pk_vrstvy_v1', kde: 'local', skupina: 'nastaveni', nazev: 'Zapnuté vrstvy mapy',
       popis: 'Katastr, územní plán, záplavy, ochrana přírody.', pocet: jeNeco },
-    { klic: 'pk_up_prefs_v1', kde: 'local', skupina: 'nastaveni', nazev: 'Co chci v upozorněních',
-      popis: 'Které druhy zpráv se mají ukazovat.', pocet: jeNeco },
 
     { klic: 'pk_navsteva_v1', kde: 'local', skupina: 'provoz', nazev: 'Datum minulé návštěvy',
       popis: 'Podle něj se pozná, co od té doby přibylo.', pocet: jeNeco },
     { klic: 'pk_videno_den_v1', kde: 'local', skupina: 'provoz', nazev: 'Co se už ukázalo jako nové',
       popis: 'Aby tatáž nabídka nesvítila jako nová podruhé.', pocet: jeNeco },
-    { klic: 'pk_upozorneni_znamo_v1', kde: 'local', skupina: 'provoz', nazev: 'Přečtená upozornění',
-      popis: 'Poslední počet, který jste viděli — kvůli odznaku v menu.', pocet: jeNeco },
     { klic: 'pk_add_draft_v1', kde: 'local', skupina: 'provoz', nazev: 'Rozepsaný inzerát',
       popis: 'Co jste nedopsali ve formuláři „Přidat pozemek".', pocet: jeNeco },
     { klic: 'pk_rv_uvod_v1', kde: 'local', skupina: 'provoz', nazev: 'Viděný úvod rychlého výběru',
@@ -80,8 +76,6 @@
       popis: 'Co jste měli otevřené, než jste přešli jinam.', pocet: jeNeco },
     { klic: 'pk_map_return', kde: 'session', skupina: 'provoz', nazev: 'Návrat na mapu',
       popis: 'Kam se mapa vrátí, až se vrátíte z detailu.', pocet: jeNeco },
-    { klic: 'pk_upozorneni_v1', kde: 'session', skupina: 'provoz', nazev: 'Upozornění mezi stránkami',
-      popis: 'Krátkodobá paměť, ať se počet nenačítá na každé stránce znovu.', pocet: jeNeco },
     { klic: 'pk_videno_v1', kde: 'session', skupina: 'provoz', nazev: 'Započítaná zhlédnutí',
       popis: 'Aby se zhlédnutí inzerátu nepočítalo dvakrát za návštěvu.', pocet: jeNeco },
     { klic: 'pk_poradi_seance', kde: 'session', skupina: 'provoz', nazev: 'Pořadí v této návštěvě',
@@ -96,6 +90,22 @@
     { id: 'provoz', nazev: 'Drobnosti kvůli chodu webu',
       popis: 'Pomocné údaje. Smazáním o nic nepřijdete, jen se pár věcí nastaví znovu.' },
     { id: 'ucet', nazev: 'Přihlášení', popis: '' }
+  ];
+
+  /* CO UŽ NEUKLÁDÁME, ALE V PROHLÍŽEČÍCH TO LEŽÍ.
+     Funkce Upozornění šla na přání celá pryč, jenže komu se tři její
+     klíče už uložily, tomu v prohlížeči zůstaly. Vyškrtnout je ze seznamu
+     a tím skončit by bylo nejhorší z obou světů: data by tam dál byla,
+     ale už by nebyla vidět ani se nedala smazat — a tahle stránka slibuje
+     pravý opak. Proto se při jejím otevření rovnou zahodí.
+
+     POCTIVĚ: js/ulozene.js se načítá jen na „Moje data" a „Data", takže
+     uúklid proběhne až těm, kdo si tam zajdou. Zašít kvůli třem mrtvým
+     klíčům další skript do 2 170 stránek by stálo víc, než co to řeší. */
+  var ZRUSENE = [
+    { klic: 'pk_up_prefs_v1', kde: 'local' },
+    { klic: 'pk_upozorneni_znamo_v1', kde: 'local' },
+    { klic: 'pk_upozorneni_v1', kde: 'session' }
   ];
 
   function skladiste(kde) {
@@ -113,6 +123,15 @@
       out.push({ def: d, pocet: d.pocet ? d.pocet(v) : null, bajtu: v.length });
     }
     return out;
+  }
+  /** Zahodí klíče po odebraných funkcích. Vrací, kolik jich zmizelo. */
+  function uklidZrusene() {
+    var n = 0;
+    for (var i = 0; i < ZRUSENE.length; i++) {
+      var s = skladiste(ZRUSENE[i].kde);
+      try { if (s && s.getItem(ZRUSENE[i].klic) != null) { s.removeItem(ZRUSENE[i].klic); n++; } } catch (e) {}
+    }
+    return n;
   }
   /** Smaže jeden klíč. */
   function smaz(klic) {
@@ -146,6 +165,10 @@
     return formy[2];
   }
 
-  root.PKUlozene = { KLICE: KLICE, SKUPINY: SKUPINY, stav: stav, smaz: smaz,
-    smazSkupinu: smazSkupinu, tvar: tvar };
+  /* Hned při načtení, ne až na tlačítko: kdo si stránku otevře, má na ní
+     vidět stav po úklidu, ne mrtvé klíče z odebrané funkce. */
+  uklidZrusene();
+
+  root.PKUlozene = { KLICE: KLICE, SKUPINY: SKUPINY, ZRUSENE: ZRUSENE, stav: stav, smaz: smaz,
+    smazSkupinu: smazSkupinu, uklidZrusene: uklidZrusene, tvar: tvar };
 }(typeof window !== 'undefined' ? window : globalThis));

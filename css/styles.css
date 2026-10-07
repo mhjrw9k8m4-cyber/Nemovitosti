@@ -294,7 +294,12 @@
      výplň štítku, ale jako drobné písmo na světlém pozadí neprojde normou
      (zlatá #FFA60A má 1,7 : 1 — prakticky nečitelná). Tyhle varianty mají
      přes 5 : 1 a odstín si drží. Puntíky a výplně používají dál ty syté. */
-  --c-sale-ink:#3C55A2; --c-drazba-ink:#7E3C18; --c-exekuce-ink:#8C2F1E;
+  /* Modrá „na prodej" ztmavena z #3C55A2: na podbarveném řádku krajské
+     stránky (rgb 188,211,198) měla 4,40 : 1 proti požadovaným 4,5 —
+     jedenáct odznaků. Na bílé byla v pořádku, takže se to ukázalo
+     teprve tehdy, když se krajská stránka dostala do měřené sady.
+     Nová hodnota: 4,95 : 1 na tom řádku, 7,83 : 1 na bílé. */
+  --c-sale-ink:#364E95; --c-drazba-ink:#7E3C18; --c-exekuce-ink:#8C2F1E;
   --c-obec-ink:#0A626B; --c-majitel-ink:#6E3EB1; --c-ok-ink:#13663E;
   --surface-2:#EEF6F1;
   /* JEMNÁ PLOCHA. Třináct míst na webu mělo rgba(228,240,231, 0.04–0.12),
@@ -1503,6 +1508,15 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .ms-navrhy .msn-jmeno{font-weight:700;}
 .ms-navrhy .msn-kde{color:var(--muted); font-size:13px;}
 .ms-navrhy .msn-pocet{margin-left:auto; color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; white-space:nowrap;}
+/* „Mysleli jste Kolín?" nad návrhy. Leží mimo <ul>, protože uvnitř by
+   to byla položka listboxu, která se nedá vybrat — a posunula by indexy
+   šipek. Plave nad stránkou stejně jako seznam. */
+.msn-oprava{position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:41;
+  margin:0; padding:8px 12px; font-size:13px; line-height:1.4;
+  color:var(--text-ondark-mute); background:var(--ink-soft);
+  border:1px solid var(--line-ui); border-radius:var(--r-sm); box-shadow:var(--e2);}
+.msn-oprava[hidden]{display:none;}
+.msn-oprava b{color:var(--text-ondark);}
 @media (prefers-reduced-motion:no-preference){ .ms-navrhy{animation:msnPrijed .12s ease-out;} }
 @keyframes msnPrijed{from{opacity:0; transform:translateY(-3px);} to{opacity:1; transform:none;}}
 /* Odznaky toho, co web z napsané věty pochopil. Bez nich by filtrování
@@ -4502,6 +4516,63 @@ body::after{
    telefonu zalomí pod sebe a z čárky se stane odsazení, takže to vypadá,
    jako by lesy a zahrady patřily pod zemědělskou půdu. Tady se odděluje
    vodorovně, což při zalomení pod sebe znamená pořád totéž. */
+/* =====================================================================
+   CENY PODLE LOKALITY — lupa místo padesáti řádků
+   =====================================================================
+   Nahradilo seznam 14 krajů, mapu okresů a seznam 36 okresů. Pole je
+   široké přes celou kartu a vysoké jako tlačítko: je to hlavní věc,
+   kterou se na té stránce dělá, ne doplněk v rohu.
+   ===================================================================== */
+.cenh{position:relative; margin-top:14px;}
+.cenh-pole{position:relative; display:flex; align-items:center;}
+.cenh-lupa{position:absolute; left:14px; width:20px; height:20px; flex:none;
+  color:var(--popisek); pointer-events:none;}
+.cenh-pole input{width:100%; min-height:52px; padding:0 14px 0 44px;
+  font:inherit; font-size:16px; color:var(--text-ondark);
+  background:#fff; border:1.5px solid var(--line-strong); border-radius:var(--r-ovladani);}
+.cenh-pole input:focus{outline:none; border-color:var(--copper-bright);
+  box-shadow:0 0 0 3px rgba(176,116,42,0.16);}
+/* Návrhy plavou nad kartou, ať netlačí obsah dolů při každém písmenu. */
+.cenh-navrhy{position:absolute; z-index:20; left:0; right:0; top:calc(100% + 4px);
+  list-style:none; margin:0; padding:4px; max-height:320px; overflow:auto;
+  background:var(--plocha-plovouci); border:1px solid var(--line-strong);
+  border-radius:var(--r-sm); box-shadow:var(--e3);}
+.cenh-navrhy[hidden]{display:none;}
+/* „Mysleli jste Kolín?“ nad návrhy. Leží mimo <ul> — uvnitř by to byla
+   položka listboxu, která se nedá vybrat, a posunula by indexy šipek.
+   Plave nad stránkou stejně jako seznam, o 1 výš. */
+.cenh-hlaska{position:absolute; z-index:21; left:0; right:0; top:calc(100% + 4px);
+  margin:0; padding:8px 12px; font-size:13px; line-height:1.4;
+  color:var(--text-ondark-mute); background:var(--plocha-plovouci);
+  border:1px solid var(--line-strong); border-radius:var(--r-sm); box-shadow:var(--e3);}
+.cenh-hlaska[hidden]{display:none;}
+.cenh-hlaska b{color:var(--text-ondark);}
+.cenh-navrh{display:flex; align-items:center; justify-content:space-between; gap:12px;
+  min-height:44px; padding:0 12px; border-radius:var(--r-sm); cursor:pointer;}
+.cenh-navrh.je, .cenh-navrh:hover{background:var(--ink-soft);}
+.cenh-n-nazev{font-size:15px; font-weight:600; color:var(--text-ondark);}
+.cenh-n-kde{font-size:13px; color:var(--text-ondark-mute); white-space:nowrap;}
+.cenh-vysledek:empty{display:none;}
+.cenh-karta{margin-top:16px; padding:16px; background:var(--ink-soft);
+  border:1px solid var(--line); border-radius:var(--r-md);}
+.cenh-hlava{margin:0 0 12px; font-family:var(--font-display); font-size:22px;
+  color:var(--text-ondark);}
+.cenh-okres{font-family:inherit; font-size:14px; font-weight:400; color:var(--text-ondark-mute);}
+.cenh-radky{list-style:none; margin:0; padding:0;}
+.cenh-radek{display:grid; grid-template-columns:1fr auto; gap:2px 12px;
+  padding:10px 0; border-top:1px solid var(--line);}
+.cenh-radek:first-child{border-top:0; padding-top:0;}
+.cenh-druh{font-size:15px; font-weight:600; color:var(--text-ondark);}
+.cenh-cena{font-variant-numeric:tabular-nums; font-size:18px; font-weight:700;
+  color:var(--text-ondark); text-align:right; white-space:nowrap;}
+.cenh-detail{grid-column:1 / -1; font-size:13px; color:var(--text-ondark-mute);}
+.cenh-pozn{margin:12px 0 0; font-size:13px; line-height:1.55; color:var(--text-ondark-mute);}
+.cenh-nic{margin:0; font-size:14px; color:var(--text-ondark-mute);}
+.cenh-odkaz{display:inline-flex; align-items:center; min-height:44px; margin-top:4px;
+  font-size:14px; font-weight:600; color:var(--copper-bright);
+  text-decoration:underline; text-underline-offset:3px;}
+.cenh-odkaz:hover{color:var(--copper);}
+
 .cen-druhy{list-style:none; margin:14px 0 0; padding:0;}
 /* NÁZEV VLEVO, CENA VPRAVO, POD TÍM PRUH. Dřív stálo nad každým druhem
    číslo přes půl obrazovky (až 34 px) na vlastním řádku a teprve pod ním
@@ -5190,7 +5261,11 @@ h1, h2, h3,
    Hlídá scripts/test-rozvrzeni.mjs (sousední terče se nesmí překrývat). */
 .mc-akce{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
 .mc-skryte{font:inherit; font-size:13px; font-weight:700; letter-spacing:0; text-transform:none;
-  color:var(--text-ondark); background:var(--plocha-jemna); border:1px solid var(--line-strong);
+  /* Okraj z --line-strong byl proti výplní tlačítka 1,87 : 1 — změřeno
+     zkouškou okrajů, mez je 3 : 1 (WCAG 1.4.11). Tlačítko tak vypadalo
+     jako pouhý text. --line-ui je táž čára, jakou mají pilulky filtrů
+     vedle. */
+  color:var(--text-ondark); background:var(--plocha-jemna); border:1px solid var(--line-ui);
   border-radius:var(--r-pill); padding:0 12px; min-height:36px; cursor:pointer;
   display:inline-flex; align-items:center; white-space:nowrap;
   transition:border-color var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}

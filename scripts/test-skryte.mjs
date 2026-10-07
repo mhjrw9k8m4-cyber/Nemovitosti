@@ -61,7 +61,7 @@ STRANKY.sort((a, b) => b.kolik - a.kolik);
    společný kus (hlavičku, patičku, toast). Bereme ty, kde je atributů
    nejvíc, a k nim ty, které mají vlastní aplikační část. */
 const VYBER = [...new Set(['index.html', 'cena-pozemku.html', 'pridat.html', 'muj-inzerat.html',
-  'hlidani.html', 'upozorneni.html', 'zpravy.html', 'kontakt.html',
+  'hlidani.html', 'zpravy.html', 'kontakt.html',
   ...STRANKY.slice(0, 6).map((s) => s.f)])].filter((f) => existsSync(path.join(ROOT, f)));
 pravda(`stránky s atributem hidden se našly (${STRANKY.length}, měří se ${VYBER.length})`,
   STRANKY.length > 10 && VYBER.length >= 8);

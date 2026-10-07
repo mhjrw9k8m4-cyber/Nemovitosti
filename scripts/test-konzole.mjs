@@ -41,7 +41,7 @@ function pravda(popis, vyslo, proc) {
 const STRANKY = [
   'index.html',
   'pozemek.html?p=Police%7C6242%7CVset%C3%ADn&ll=48.97,15.63',
-  'pridat.html', 'hlidani.html', 'upozorneni.html', 'zpravy.html',
+  'pridat.html', 'hlidani.html', 'zpravy.html',
   'muj-inzerat.html', 'kontakt.html', 'cena-pozemku.html',
   'hypoteka-na-pozemek.html', 'podminky.html', 'pravidla-inzerce.html',
   /* Nový druh stránky: velký formulář, který při každém stisku klávesy

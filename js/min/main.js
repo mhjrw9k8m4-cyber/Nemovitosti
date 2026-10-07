@@ -4395,9 +4395,14 @@
   });
 
   var navrhyEl = document.getElementById('map-search-navrhy');
+  var opravaNavrhu = null;
   var navrhyData = [], navrhyKurzor = -1;
   function zavriNavrhy() {
+    if (opravaEl) { opravaEl.hidden = true; opravaEl.style.top = ''; opravaEl.style.bottom = ''; }
     if (!navrhyEl) return;
+
+    navrhyEl.style.marginTop = ''; navrhyEl.style.marginBottom = '';
+    navrhyEl.style.top = ''; navrhyEl.style.bottom = ''; navrhyEl.style.maxHeight = '';
     navrhyEl.hidden = true; navrhyEl.innerHTML = '';
     navrhyData = []; navrhyKurzor = -1;
     searchEl.setAttribute('aria-expanded', 'false');
@@ -4487,7 +4492,17 @@
   function ukazNavrhy() {
     if (!navrhyEl || !HL.navrhy) return;
     var slovnik = navrhySlovnik(searchEl.value);
-    var mista = HL.navrhy(DATA, dotazFiltr && dotazFiltr.text ? dotazFiltr.text : searchEl.value, 6 - slovnik.length);
+    var dotaz = dotazFiltr && dotazFiltr.text ? dotazFiltr.text : searchEl.value;
+    var mista = HL.navrhy(DATA, dotaz, 6 - slovnik.length);
+
+    opravaNavrhu = null;
+    if (!slovnik.length && !mista.length && HL.mysleliJste) {
+      var op = HL.mysleliJste(DATA, dotaz);
+      if (op) {
+        var jine = HL.navrhy(DATA, op, 6);
+        if (jine.length) { opravaNavrhu = op; mista = jine; }
+      }
+    }
     navrhyData = slovnik.concat(mista);
     if (!navrhyData.length || document.activeElement !== searchEl) { zavriNavrhy(); return; }
     var html = '';
@@ -4500,9 +4515,35 @@
         '<span class="msn-pocet">' + fmt(n.pocet) + '×</span></li>';
     }
     navrhyEl.innerHTML = html;
+
+    ukazOpravu(opravaNavrhu, searchEl.value);
     navrhyEl.hidden = false;
     searchEl.setAttribute('aria-expanded', 'true');
     navrhyKurzor = -1;
+
+    srovnejNaKlavesnici();
+  }
+
+  var opravaEl = null;
+  function ukazOpravu(oprava, dotaz) {
+    if (!oprava) { if (opravaEl) opravaEl.hidden = true; return; }
+    if (!opravaEl) {
+      opravaEl = document.createElement('p');
+      opravaEl.className = 'msn-oprava';
+      navrhyEl.parentNode.insertBefore(opravaEl, navrhyEl);
+    }
+    opravaEl.innerHTML = 'Nic jako „' + esc(String(dotaz).trim())
+      + '". Mysleli jste <b>' + esc(oprava) + '</b>?';
+    opravaEl.hidden = false;
+  }
+
+  function srovnejNaKlavesnici() {
+    if (!navrhyEl || navrhyEl.hidden || !HL.nadKlavesnici) return;
+    HL.nadKlavesnici(navrhyEl, { pole: searchEl, hlaska: opravaEl, strop: 320 });
+  }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', srovnejNaKlavesnici);
+    window.visualViewport.addEventListener('scroll', srovnejNaKlavesnici);
   }
   if (navrhyEl) {
     navrhyEl.addEventListener('mousedown', function (e) {

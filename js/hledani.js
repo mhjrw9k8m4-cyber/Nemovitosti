@@ -252,6 +252,82 @@
     return nej ? nej.text : null;
   }
 
+  /* VÝJIMKA: JEDINÁ FUNKCE V TOMHLE SOUBORU, KTERÁ SE DOTÝKÁ STRÁNKY.
+     Leží tu proto, že ji potřebují OBA našeptávače webu — na mapě
+     (js/main.js) i u cen pozemků (js/ceny-hledani.js) — a tenhle soubor
+     je jediné, co mají společného. Vlastní soubor kvůli třiceti řádkům by
+     znamenal další <script> na každé stránce. V node se nespustí nikdy
+     (není window), takže logické zkoušky má kudy projít.
+
+     CO ŘEŠÍ: rozbalený seznam se choval, jako kdyby byla celá obrazovka
+     volná. Jeho výška se v CSS počítala z vh nebo z pevného čísla — a ani
+     jedno neví o vyjeté klávesnici: vh je LAYOUTOVÝ viewport a ten se
+     klávesnicí nezmenší. Na iPhonu 390×844 se seznam měřil proti 844 px,
+     i když nad klávesnicí bylo vidět něco přes čtyři stovky. Skutečnou
+     volnou výšku zná jedině visualViewport: height je to, co je vidět,
+     offsetTop to, o kolik prohlížeč stránku odsunul.
+
+     A DŘÍV NEŽ SE ZKRACOVAT: když pod polem místo není (u cen pozemků
+     leží pole v polovině stránky, takže po vyjetí klávesnice je těsně nad
+     její hranou), je správná odpověď otevřít seznam NAHORU, ne ho uříznout
+     na dva řádky. Nahoru se jde jen tehdy, když se tam vejdou aspoň tři
+     řádky A dole jich je mín — ať seznam neposkakuje při každém písmenu.
+
+     opt: { pole, hlaska, strop, nejmen }. Vrací true, když se opravdu
+     měřilo (tedy prohlížeč visualViewport má). */
+  var DOLU_NEJMIN = 132;          // tři řádky po 44 px
+  function nadKlavesnici(seznam, opt) {
+    if (!seznam || seznam.hidden || typeof window === 'undefined') return false;
+    opt = opt || {};
+    var hlaska = opt.hlaska || null;
+    /* Hláška „Mysleli jste…“ plave nad stránkou od stejného rodiče jako
+       seznam, takže by se překryly. Seznam se odsune přesně o naměřenou
+       výšku hlášky a 4 px — ne o číslo od stolu, které by se rozešlo
+       s delším jménem obce. */
+    var hv = (hlaska && !hlaska.hidden) ? hlaska.offsetHeight + 4 : 0;
+    var vv = window.visualViewport;
+    var pole = opt.pole;
+    var nahoru = false, volno = 0;
+    if (vv && pole) {
+      var r = pole.getBoundingClientRect();
+      /* NAHORU, ALE NE POD HLAVIČKU. Hlavička webu je position:fixed —
+         nad polem tedy místo je, ale horních pár desítek pixelů z něj
+         zakrývá. Měří se ta skutečná, ne číslo z CSS: po srolování se
+         zmenšuje. */
+      var horni = vv.offsetTop;
+      var hl = document.querySelector('header');
+      if (hl && window.getComputedStyle(hl).position === 'fixed') {
+        var hr = hl.getBoundingClientRect();
+        if (hr.bottom > horni) horni = hr.bottom;
+      }
+      /* 16 px vzduchu, ať poslední řádek nelepí na hranu klávesnice. */
+      var pod = Math.round(vv.offsetTop + vv.height - r.bottom - 16) - hv;
+      var nad = Math.round(r.top - horni - 16) - hv;
+      nahoru = pod < DOLU_NEJMIN && nad >= DOLU_NEJMIN && nad > pod;
+      volno = nahoru ? nad : pod;
+    }
+    if (nahoru) {
+      seznam.style.top = 'auto';
+      seznam.style.bottom = 'calc(100% + 4px)';
+      seznam.style.marginTop = '';
+      seznam.style.marginBottom = hv ? hv + 'px' : '';
+      if (hlaska) { hlaska.style.top = 'auto'; hlaska.style.bottom = 'calc(100% + 4px)'; }
+    } else {
+      seznam.style.top = '';            // zpátky na to, co říká CSS
+      seznam.style.bottom = '';
+      seznam.style.marginBottom = '';
+      seznam.style.marginTop = hv ? hv + 'px' : '';
+      if (hlaska) { hlaska.style.top = ''; hlaska.style.bottom = ''; }
+    }
+    if (!vv || !pole) { seznam.style.maxHeight = ''; return false; }
+    /* Když je místa málo i po překlopení, je lepší krátký seznam, kterým
+       se dá posouvat, než dlouhý schovaný pod klávesnicí. Spodní hranice
+       (dva řádky), ať z něj nezůstane škvíra; horní strop je to, co
+       stojí v CSS, aby se bez klávesnice nic nezměnilo. */
+    seznam.style.maxHeight = Math.max(Math.min(volno, opt.strop || 320), opt.nejmen || 88) + 'px';
+    return true;
+  }
+
   return { norm: norm, tokeny: tokeny, seno: seno, vyhovuje: vyhovuje, zacatekSlova: zacatekSlova, median: median, bod: bod,
-    misto: misto, navrhy: navrhy, vzdalenost: vzdalenost, mysleliJste: mysleliJste };
+    misto: misto, navrhy: navrhy, vzdalenost: vzdalenost, mysleliJste: mysleliJste, nadKlavesnici: nadKlavesnici };
 });

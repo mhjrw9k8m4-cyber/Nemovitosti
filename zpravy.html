@@ -33,7 +33,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=118f5e24">
+  <link rel="stylesheet" href="css/styles.min.css?v=9bf57046">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     .zp-wrap{max-width:var(--m-uzky); margin:0 auto;}
@@ -113,6 +113,21 @@
     .zp-send svg{width:20px; height:20px; stroke-width:1.8;}
     .zp-note{font-size:12px; color:var(--text-ondark-mute); text-align:center; padding:8px 14px 0; line-height:1.5;}
     .zp-load{padding:28px; text-align:center; color:var(--text-ondark-mute); font-size:14px;}
+    /* KOSTRA NEŽ DORAZÍ DATA. #zp-root byl do příchodu skriptu prázdný a
+       patička mu seděla těsně pod nohama; jakmile se vykreslila první karta,
+       skočila patička o 321 px důl. Změřeno pozorovatelem layout-shift:
+       CLS 0,115 na telefonu a 0,053 na monitoru — na telefonu tedy nad
+       obecnou mezí 0,1, natož nad mezí tohoto webu (0,05).
+       Rezerva se rovná výšce první karty: změřeno 393 px na 390×844 a
+       372 px na 1280×900. Stejně to řeší Hlídání (.hl-load). */
+    .zp-kostra{min-height:393px; box-sizing:border-box; padding:24px;
+      display:flex; flex-direction:column; gap:12px; justify-content:center;}
+    .zp-kostra .sk{height:18px;}
+    .zp-kostra .sk:nth-child(1){width:52%;}
+    .zp-kostra .sk:nth-child(2){width:88%;}
+    .zp-kostra .sk:nth-child(3){width:70%;}
+    .zp-kostra .sk:nth-child(4){width:40%;}
+    @media (min-width:700px){ .zp-kostra{min-height:372px;} }
   </style>
 </head>
 <body>
@@ -159,7 +174,6 @@
        stránkami jednoho účtu jen přes rozbalovací nabídku v hlavičce. -->
   <nav class="uc-taby" aria-label="Můj účet">
     <div class="wrap">
-      <a href="hlidani.html">Hlídání</a>
       <a href="zpravy.html" aria-current="page">Zprávy</a>
       <a href="hlidani.html">Hlídání</a>
       <a href="muj-inzerat.html">Můj profil</a>
@@ -169,7 +183,7 @@
   <section class="section app-section">
     <div class="wrap">
       <div class="zp-wrap">
-        <div id="zp-root"></div>
+        <div id="zp-root"><div class="zp-card"><div class="zp-kostra" aria-label="Načítám…"><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div></div>
       </div>
     </div>
   </section>

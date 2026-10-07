@@ -65,12 +65,17 @@ zpravy.push(`  · prošlo se ${odkazu} odkazů ve ${soubory.length} souborech`);
 }
 
 /* ---------- 1c. pruh se záložkami účtu ----------
-   Upozornění, zprávy, hlídání a profil jsou čtyři stránky jednoho účtu.
+   Zprávy, hlídání a profil jsou tři stránky jednoho účtu.
    Přejít mezi nimi šlo jen rozbalovací nabídkou „Moje" v hlavičce a nic
    neukazovalo, na které z nich člověk stojí. Pruh se záložkami musí být
-   na všech čtyřech, vést na všechny čtyři a právě jedna záložka — ta
+   na všech třech, vést na všechny tři a právě jedna záložka — ta
    vlastní — musí být označená jako otevřená. Kdyby se označení rozešlo
-   se stránkou, ukazoval by pruh na špatné místo, což je horší než žádný. */
+   se stránkou, ukazoval by pruh na špatné místo, což je horší než žádný.
+
+   A ŽÁDNÁ ZÁLOŽKA DVAKRÁT. Když šla na přání pryč čtvrtá stránka
+   (Upozornění), zůstala po ní záložka s přepisaným odkazem — na všech
+   třech stránkách tak stálo „Hlídání“ dvakrát vedle sebe. Kontroly výš
+   to prošly: každý cíl tam byl a označená byla právě jedna. */
 {
   const UCET = ['zpravy.html', 'hlidani.html', 'muj-inzerat.html'];
   const potize = [];
@@ -81,12 +86,18 @@ zpravy.push(`  · prošlo se ${odkazu} odkazů ve ${soubory.length} souborech`);
     const pruh = h.slice(i, h.indexOf('</nav>', i));
     const chybne = UCET.filter((c) => !new RegExp(`href="${c}"`).test(pruh));
     if (chybne.length) potize.push(`v záložkách na ${f} chybí odkaz na: ${chybne.join(', ')}`);
+    const vsechny = [...pruh.matchAll(/<a href="([^"]+)"/g)].map((m) => m[1]);
+    const dvakrat = [...new Set(vsechny.filter((x, i) => vsechny.indexOf(x) !== i))];
+    if (dvakrat.length) potize.push(`v záložkách na ${f} je dvakrát odkaz na: ${dvakrat.join(', ')}`);
+    if (vsechny.length !== UCET.length) {
+      potize.push(`v záložkách na ${f} je ${vsechny.length} položek, má jich být ${UCET.length}`);
+    }
     const tady = [...pruh.matchAll(/<a href="([^"]+)"[^>]*aria-current="page"/g)].map((m) => m[1]);
     if (tady.length !== 1) potize.push(`na ${f} je označeno ${tady.length} otevřených záložek, má být právě jedna`);
     else if (tady[0] !== f) potize.push(`na ${f} je jako otevřená označena záložka „${tady[0]}"`);
   }
   for (const t of potize) chyba(t);
-  if (!potize.length) zpravy.push('  ✓ čtyři stránky účtu mají pruh se záložkami a vědí, na které z nich člověk stojí');
+  if (!potize.length) zpravy.push('  ✓ tři stránky účtu mají pruh se záložkami a vědí, na které z nich člověk stojí');
 }
 
 /* ---------- 1d. seznam okresů v 404.html ----------

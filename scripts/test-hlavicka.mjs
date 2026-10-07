@@ -494,28 +494,18 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
   await ctx.close();
 }
 
-/* --- 8) Jméno značky má na stránce jedno písmo -----------------------
+/* --- 8) ODEBRÁNO: jméno značky dvakrát na jedné stránce --------------
  *
- * V hlavičce bylo bezpatkové, v patičce patkové — dvakrát „Parcelka" na
- * téže stránce, pokaždé jiným písmem. Není to chyba, která by něco
- * rozbila, a proto by tu vydržela: všimne si jí jen oko. */
-{
-  const { ctx, p } = await otevri(MONITOR, 'index.html');
-  const v = await p.evaluate(() => {
-    const a = document.querySelector('header .logo');
-    const b = document.querySelector('footer .foot-brand');
-    if (!a || !b) return null;
-    const rod = (e) => getComputedStyle(e).fontFamily.split(',')[0].replace(/['"]/g, '').trim();
-    return { h: rod(a), pa: rod(b) };
-  });
-  pravda('logo je v hlavičce i v patičce (jinak zkouška nic neměří)', !!v,
-    'na úvodní stránce chybí .logo nebo .foot-brand');
-  if (v) {
-    pravda('a jméno značky má na obou místech totéž písmo', v.h === v.pa,
-      `hlavička „${v.h}", patička „${v.pa}"`);
-  }
-  await ctx.close();
-}
+ * Tahle sekce porovnávala písmo „Parcelka" v hlavičce a v patičce
+ * (v hlavičce bezpatkové, v patičce patkové). Už není co porovnávat:
+ * patička jako rozcestík šla na přání celá pryč (commit bf1dcf195d)
+ * a s ní i .foot-brand. Značka teď stojí na stránce jediné místo.
+ *
+ * Proč se to tu nenechává „najdi, co je k dispozici": v patičce zůstalo
+ * jméno v řádku „© 2026 Parcelka", a ten je psaný strojovým
+ * písmem záměrně, celý. Porovnávání s ním by padalo z důvodu, který
+ * vadou není — a zkouška, která padá pro nic, přestane být brána vážně.
+ * Kdyby se patička se značkou někdy vrátila, patří sem zpátky i tohle. */
 
 await prohlizec.close();
 console.log('\nLepivá hlavička — drží nahoře a nic pod ní neprosvítá');

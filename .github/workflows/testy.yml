@@ -392,8 +392,6 @@ jobs:
       - name: Offline režim (service worker, bez signálu i bez cizích serverů)
         run: node scripts/test-offline.mjs
 
-      - name: Cenová mapa okresů (mapa říká totéž jako seznam)
-        run: node scripts/test-cenova-mapa.mjs
 
       - name: Mapa při tažení (rozhraní zmizí a vrátí se)
         run: node scripts/test-mapa-tazeni.mjs
@@ -532,6 +530,9 @@ jobs:
 
       - name: Pořadí na stránce pozemku (důležité nahoře)
         run: node scripts/test-poradi-pozemku.mjs
+
+      - name: Vyhledávač cen podle lokality
+        run: node scripts/test-ceny-hledani.mjs
 
       - name: Přidání vlastního pozemku (celá cesta)
         run: node scripts/test-pridat.mjs

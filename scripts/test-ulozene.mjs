@@ -78,6 +78,17 @@ if (!U || !U.KLICE) hotovo();
   const navic = U.KLICE.map((k) => k.klic).filter((k) => !nalezene.has(k));
   pravda('a seznam neuvádí nic, co se nikde neukládá', navic.length === 0,
     navic.join(', '));
+  /* SEZNAM K ZAHOZENÍ SE NESMÍ POTKAT SE ŽIVÝM KLÍČEM. Po odebraných
+     funkcích zůstávají v prohlížečích klíče, které už nikdo nepoužívá, a
+     stránka je při otevření zahodí. Kdyby se na ten seznam omylem dostal
+     klíč, který se ještě používá, mazala by stránka lidem data pod rukama
+     — a žádná jiná kontrola by si toho nevšimla. */
+  const zrusene = (U.ZRUSENE || []).map((z) => z.klic);
+  pravda(`seznam klíčů k zahození se dá přečíst (${zrusene.length})`,
+    Array.isArray(U.ZRUSENE), 'PKUlozene.ZRUSENE chybí — kontrola níž by neměřila nic');
+  const koliduje = zrusene.filter((k) => vSeznamu.has(k) || nalezene.has(k));
+  pravda('a není na něm nic, co se ještě používá', koliduje.length === 0,
+    koliduje.map((k) => `${k} (${nalezene.get(k) || 'je v seznamu Moje data'})`).join(', '));
 }
 
 /* ---- 2) každý řádek má česky napsané, co to je ---- */

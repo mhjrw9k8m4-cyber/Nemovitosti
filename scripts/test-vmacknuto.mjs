@@ -26,7 +26,7 @@ await new Promise((r) => setTimeout(r, 300));
 
 const BASE = 'http://127.0.0.1:8310';
 const STRANKY = ['index.html', 'pozemky-okres-tabor.html', 'hlidani.html',
-  'upozorneni.html', 'zpravy.html', 'muj-inzerat.html', 'porovnani.html'];
+  'zpravy.html', 'muj-inzerat.html', 'porovnani.html'];
 const SIRKY = [[390, 844], [1280, 900]];
 
 let ok = 0, chyb = 0; const zpravy = [];

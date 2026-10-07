@@ -164,6 +164,50 @@
     return nej ? nej.text : null;
   }
 
+  var DOLU_NEJMIN = 132;
+  function nadKlavesnici(seznam, opt) {
+    if (!seznam || seznam.hidden || typeof window === 'undefined') return false;
+    opt = opt || {};
+    var hlaska = opt.hlaska || null;
+
+    var hv = (hlaska && !hlaska.hidden) ? hlaska.offsetHeight + 4 : 0;
+    var vv = window.visualViewport;
+    var pole = opt.pole;
+    var nahoru = false, volno = 0;
+    if (vv && pole) {
+      var r = pole.getBoundingClientRect();
+
+      var horni = vv.offsetTop;
+      var hl = document.querySelector('header');
+      if (hl && window.getComputedStyle(hl).position === 'fixed') {
+        var hr = hl.getBoundingClientRect();
+        if (hr.bottom > horni) horni = hr.bottom;
+      }
+
+      var pod = Math.round(vv.offsetTop + vv.height - r.bottom - 16) - hv;
+      var nad = Math.round(r.top - horni - 16) - hv;
+      nahoru = pod < DOLU_NEJMIN && nad >= DOLU_NEJMIN && nad > pod;
+      volno = nahoru ? nad : pod;
+    }
+    if (nahoru) {
+      seznam.style.top = 'auto';
+      seznam.style.bottom = 'calc(100% + 4px)';
+      seznam.style.marginTop = '';
+      seznam.style.marginBottom = hv ? hv + 'px' : '';
+      if (hlaska) { hlaska.style.top = 'auto'; hlaska.style.bottom = 'calc(100% + 4px)'; }
+    } else {
+      seznam.style.top = '';
+      seznam.style.bottom = '';
+      seznam.style.marginBottom = '';
+      seznam.style.marginTop = hv ? hv + 'px' : '';
+      if (hlaska) { hlaska.style.top = ''; hlaska.style.bottom = ''; }
+    }
+    if (!vv || !pole) { seznam.style.maxHeight = ''; return false; }
+
+    seznam.style.maxHeight = Math.max(Math.min(volno, opt.strop || 320), opt.nejmen || 88) + 'px';
+    return true;
+  }
+
   return { norm: norm, tokeny: tokeny, seno: seno, vyhovuje: vyhovuje, zacatekSlova: zacatekSlova, median: median, bod: bod,
-    misto: misto, navrhy: navrhy, vzdalenost: vzdalenost, mysleliJste: mysleliJste };
+    misto: misto, navrhy: navrhy, vzdalenost: vzdalenost, mysleliJste: mysleliJste, nadKlavesnici: nadKlavesnici };
 });

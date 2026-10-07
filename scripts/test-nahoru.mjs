@@ -5,7 +5,7 @@
  * PROČ TAHLE ZKOUŠKA EXISTUJE. Tlačítko „nahoru" bylo napsané v HTML
  * jediné stránky z 2 105 — v index.html. Přitom na telefonu (390×844)
  * měří drazby-pozemku-nabidky 18 700 px (22 obrazovek), okresní výpis
- * Prahy-východ 11 086 px (13), cena-pozemku 10 287 px (12). Kdo dojel
+ * Prahy-východ 11 086 px (13), krajský výpis přes deset. Kdo dojel
  * na konec, neměl čím se vrátit: hlavička je pevná, ale při pohybu
  * zhasíná, a obsahový rozcestník rádců se na telefonu neukazuje vůbec.
  * Nic nespadlo a nic nevypadalo rozbitě — proto to tak dlouho vydrželo
@@ -48,8 +48,13 @@ const PRAZDNA = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0l
 /* Dlouhé: výpis dražeb, okresní výpis, rádce, úvod. Krátké: aplikační
    stránky, kde se nic nevypisuje. Čísla v komentáři jsou naměřená na
    390×844; zkouška si délku ověřuje sama, aby nestála na mém odhadu. */
+/* Stránka cen tu bývala (10 287 px, 12 obrazovek). Dva dlouhé seznamy
+   na ní nahradil vyhledávač, takže má 2 666 px — tedy 3,16 obrazovky
+   proti prahu 3. Jako příklad „dlouhé stránky" by stála na hraně
+   a zkouška by se lámala podle délky jedné věty; nahradila ji krajská
+   stránka, která seznam okresů pořád má. */
 const DLOUHE = ['drazby-pozemku-nabidky.html', 'pozemky-okres-benesov.html',
-  'cena-pozemku.html', 'index.html'];
+  'pozemky-stredocesky-kraj.html', 'index.html'];
 const KRATKE = ['hlidani.html', 'zpravy.html', 'kontakt.html'];
 const PRAH_OBRAZOVEK = 3;   // stejný práh jako v js/hlavicka.js
 

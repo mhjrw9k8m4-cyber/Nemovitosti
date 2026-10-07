@@ -25,7 +25,7 @@ function pravda(popis, vyslo, proc) {
 }
 
 const STRANKY = ['index.html', 'pozemek.html?p=Police%7C6242%7CVset%C3%ADn&ll=48.97,15.63',
-  'kontakt.html', 'zpravy.html', 'upozorneni.html', 'muj-inzerat.html'];
+  'kontakt.html', 'zpravy.html', 'muj-inzerat.html'];
 
 const PRAZDNA = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');

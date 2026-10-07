@@ -20,7 +20,7 @@ const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 /* hlidani.html je tu kvůli přepínači „Posílat e-mailem": vykresluje se
    jen přihlášenému a jen se zapnutou vlajkou, takže by se bez obojího
    nikdy nezměřil — a právě on byl pod normou. */
-const STRANKY = ['index.html', 'pridat.html', 'pozemky-okres-tabor.html', 'upozorneni.html',
+const STRANKY = ['index.html', 'pridat.html', 'pozemky-okres-tabor.html',
   'kontakt.html', 'hlidani.html'];
 /* MEZ JE 44 — tedy norma, ne sleva z ní. Stála tu 36 s poznámkou
    „nižší než doporučených 44, ale vyšší než dnešní stav": ráčna nasazená
