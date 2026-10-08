@@ -253,8 +253,45 @@
     var Z = window.PKZlevneni;
     var z = Z ? Z.zmena(d) : null;
     if (!z) return '';
-    return '<div class="pz-zmena' + (z.dolu ? ' dolu' : ' nahoru') + '">'
+    return '<div class="pz-zmena' + (z.podezrela ? ' overit' : (z.dolu ? ' dolu' : ' nahoru')) + '">'
       + esc(Z.text(z)) + ' <span>' + esc(Z.popis(z, fmt)) + '</span></div>';
+  }
+
+  /* HISTORIE CENY. Dvojice [den, cena] vepsané do stránky při sestavení
+     (window.PK_POZEMEK.h, staví scripts/cenova-historie.mjs z archivu).
+     Je to jediná věc na webu, kterou se o pozemku nedočtete nikde jinde:
+     že prodávající už jednou ustoupil, o kolik a kdy.
+     KROKY SKLÁDÁ js/zlevneni.js, tentýž modul jako kartu na mapě —
+     včetně obou mezí: pod 3 % se mlčí (zaokrouhlení u zdroje) a nad
+     50 % se neříká „zlevněno", protože takový skok u pozemku bývá
+     chyba zdroje. Kdyby se pravidlo napsalo podruhé tady, karta
+     a historie by o téže ceně tvrdily dvě různé věci. */
+  function pzHistorieHtml() {
+    var P = window.PK_POZEMEK, Z = window.PKZlevneni;
+    var h = P && P.h;
+    if (!h || !Z || h.length < 2) return '';
+    var radky = [], zmen = 0;
+    for (var i = 0; i < h.length; i++) {
+      var den = h[i][0], c = +h[i][1];
+      var k = i > 0 ? Z.krok(+h[i - 1][1], c, den) : null;
+      if (k) zmen++;
+      radky.push('<li class="pz-hist-radek' + (i === h.length - 1 ? ' ted' : '') + '">'
+        + '<span class="pz-hist-den">' + esc(Z.lidsky(den)) + '</span>'
+        + '<b class="pz-hist-cena">' + fmt(c) + ' Kč</b>'
+        + (k ? '<span class="pz-hist-zmena ' + (k.podezrela ? 'overit' : (k.dolu ? 'dolu' : 'nahoru'))
+          + '">' + (k.podezrela ? '' : (k.dolu ? '−' : '+')) + k.procent + ' %</span>' : '')
+        + '</li>');
+    }
+    /* Když všechny kroky spadly pod mez (samé zaokrouhlení), není co
+       ukazovat — jen by to vypadalo, že se cena měnila, a neměnila. */
+    if (!zmen) return '';
+    return '<div class="pz-historie">'
+      + '<h3 class="pz-hist-nadpis">Historie ceny</h3>'
+      + '<ul class="pz-hist">' + radky.join('') + '</ul>'
+      + '<p class="pz-hist-pozn">Ceny si zapisujeme sami při každém průchodu zdrojů'
+      + ' — jiný web tuhle historii nemá. První řádek je nejstarší cena, kterou o pozemku víme;'
+      + ' starší mohla být a my ji nevidíme.</p>'
+      + '</div>';
   }
 
   function pzDrazbaHtml(d, days) {
@@ -1170,6 +1207,10 @@
            úplný. Větu skládá js/zlevneni.js, stejně jako pro kartu. */
         pzZmenaCenyHtml(d) +
       '</div>' +
+
+      /* HISTORIE POD CENOU, NE MEZI PORADAMI. Celá sekce se vynechá,
+         když o pozemku známe jedinou cenu — a to je většina. */
+      pzHistorieHtml() +
 
       /* Po termínu se blok jen vynechával, takže stránka vypadala jako
          běžná nabídka a o tom, že dražba už proběhla, nepadlo slovo.

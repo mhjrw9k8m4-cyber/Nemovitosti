@@ -5141,7 +5141,12 @@
          Proto stojí mezi odznaky hned nahoře. Text skládá js/zlevneni.js,
          ať se karta, stránka pozemku a tabulka nerozejdou. */
       var _zm = window.PKZlevneni ? window.PKZlevneni.zmena(d) : null;
-      if (_zm) chips.push('<span class="' + (_zm.dolu ? 'opp-zlevneno' : 'opp-zdrazeno')
+      /* Skok nad PKZlevneni.MEZ_PODEZRELA není sleva, ale pravděpodobně
+         chyba zdroje — dostane proto odznak „k ověření", ne zelené
+         „Zlevněno". Zelená na kartě zve ke kliknutí a u 125 000 → 9 000
+         by zvala na cenu, která v inzerátu nestojí. */
+      if (_zm) chips.push('<span class="' + (_zm.podezrela ? 'opp-overit'
+        : (_zm.dolu ? 'opp-zlevneno' : 'opp-zdrazeno'))
         + '" title="' + esc(window.PKZlevneni.popis(_zm, fmt)) + '">'
         + esc(window.PKZlevneni.text(_zm)) + '</span>');
       /* Odznak výhodné ceny. Když umíme spočítat obvyklou cenu v okolí,

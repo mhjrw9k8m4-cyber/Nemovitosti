@@ -407,6 +407,9 @@ jobs:
       - name: Sekce o chování trhu sedí na archiv
         run: node scripts/test-trh-sekce.mjs
 
+      - name: Historie ceny u pozemku sedí na archiv
+        run: node scripts/test-cenova-historie.mjs
+
       - name: Profil při výpadku netvrdí, že inzeráty nemáte
         run: node scripts/test-profil-vypadek.mjs
 

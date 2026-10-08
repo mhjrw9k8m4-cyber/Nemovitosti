@@ -3476,7 +3476,9 @@
       if (cd) chips.push(cd);
 
       var _zm = window.PKZlevneni ? window.PKZlevneni.zmena(d) : null;
-      if (_zm) chips.push('<span class="' + (_zm.dolu ? 'opp-zlevneno' : 'opp-zdrazeno')
+
+      if (_zm) chips.push('<span class="' + (_zm.podezrela ? 'opp-overit'
+        : (_zm.dolu ? 'opp-zlevneno' : 'opp-zdrazeno'))
         + '" title="' + esc(window.PKZlevneni.popis(_zm, fmt)) + '">'
         + esc(window.PKZlevneni.text(_zm)) + '</span>');
 

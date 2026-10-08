@@ -25,6 +25,28 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { jsonVeStrance } from './json-do-stranky.mjs';
+/* Historie ceny jedné nabídky — z archivu, ne z posledního běhu robota.
+   `cena_drive` v datech má 21 nabídek z 2 004 (přepíše se při každém
+   běhu), archiv ví o 129. Stránka pozemku je přitom jediné místo, kde
+   má věta „cena šla dolů z 450 000 na 399 000" smysl: je to argument
+   při smlouvání a nikde jinde se nedočte.
+   Čte se LÍNĚ, až když se stránky opravdu staví: scripts/archiv.mjs
+   běží před generátorem (viz .github/workflows/update-data.yml), takže
+   při prvním dotazu je archiv už dnešní. */
+import { historiePodleKlice } from './cenova-historie.mjs';
+import { nactiArchiv } from './archiv-statistiky.mjs';
+let _historie = null;
+function historieCeny(d) {
+  if (_historie === null) {
+    try { const a = nactiArchiv(); _historie = historiePodleKlice(a.uzavrene, a.stav); }
+    catch (e) { _historie = new Map(); }
+  }
+  const h = _historie.get(pkey(d));
+  /* Jeden bod není historie — to je dnešní cena, a ta na stránce stojí
+     velkým písmem o dva řádky výš. */
+  if (!h || h.body.length < 2) return null;
+  return h.body.map((b) => [b.d, b.c]);
+}
 
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -577,7 +599,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
        hlavně míň práce pro parser v telefonu.
        Cesta stojí tady, protože okres zná generátor; stránka by si ho
        z vlastního HTML musela luštit. */
-    + `<script>window.PK_POZEMEK=${jsonVeStrance({ k: pkey(d), ll: [d.lat, d.lng], v: d.area || 0, c: d.price || 0, r: `data/okres/${slug(d.okres)}.json` })};</scr` + `ipt>\n$1`);
+    + `<script>window.PK_POZEMEK=${jsonVeStrance(Object.assign({ k: pkey(d), ll: [d.lat, d.lng], v: d.area || 0, c: d.price || 0, r: `data/okres/${slug(d.okres)}.json` }, historieCeny(d) ? { h: historieCeny(d) } : {}))};</scr` + `ipt>\n$1`);
   /* POPIS OD INZERENTA, vepsaný rovnou do stránky. Leží v samostatném
      souboru (data/popisy.json), protože do opportunities.json, který čte
      úvodní stránka, nepatří — přidal by k němu zhruba megabajt. Sem se

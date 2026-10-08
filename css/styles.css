@@ -5589,6 +5589,33 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 .pz-zmena span{display:block; font-weight:400; font-size:13px; color:var(--text-ondark-mute); margin-top:2px;}
 .pz-zmena.dolu{color:var(--c-ok-ink);}
 .pz-zmena.nahoru{color:var(--c-drazba-ink);}
+/* Podezřelý skok ceny (nad PKZlevneni.MEZ_PODEZRELA) není ani dobrá,
+   ani zlá zpráva — je to upozornění, a nese tedy stejnou barvu jako
+   odznak „cena k ověření" na kartě, ne zelenou nebo červenou. */
+.pz-zmena.overit{color:#7C5105;}
+/* ===== HISTORIE CENY ================================================
+   Dny pod sebou, ceny vpravo do jednoho sloupce, aby se daly přejet
+   okem; procentní změna jako třetí sloupec. Poslední řádek je dnešní
+   cena a je zvýrazněný — bez toho se v seznamu nedá poznat, která
+   z těch cen platí teď. */
+.pz-historie{margin-top:14px; border-top:1px solid var(--line); padding-top:12px;}
+.pz-hist-nadpis{margin:0; font-size:14px; font-weight:600; color:var(--text-ondark);}
+.pz-hist{list-style:none; margin:8px 0 0; padding:0;}
+.pz-hist-radek{display:grid; grid-template-columns:1fr auto auto; align-items:baseline;
+  column-gap:10px; padding:5px 0; font-size:14px; color:var(--text-ondark-mute);}
+.pz-hist-radek.ted{color:var(--text-ondark); font-weight:600;}
+.pz-hist-den{font-variant-numeric:tabular-nums;}
+.pz-hist-cena{font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums;}
+.pz-hist-radek.ted .pz-hist-cena{font-weight:700;}
+/* Sloupec procent drží šířku, jinak by se ceny při každém řádku
+   posunuly. První řádek změnu nemá (není proti čemu), proto ji drží
+   grid: třetí sloupec je `auto` a prázdný. */
+.pz-hist-zmena{min-width:48px; text-align:right; font-size:13px; font-weight:700;
+  font-variant-numeric:tabular-nums;}
+.pz-hist-zmena.dolu{color:var(--c-ok-ink);}
+.pz-hist-zmena.nahoru{color:var(--c-drazba-ink);}
+.pz-hist-zmena.overit{color:#7C5105;}
+.pz-hist-pozn{margin:8px 0 0; font-size:12.5px; line-height:1.5; color:var(--text-ondark-mute);}
 .opp-zlevneno{color:var(--c-ok-ink); border:1px solid currentColor;}
 .opp-zdrazeno{color:var(--c-drazba-ink); border:1px solid currentColor;}
 .por-pozn{font-size:13px; line-height:1.55; color:var(--text-ondark-mute);

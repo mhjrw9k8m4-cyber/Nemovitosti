@@ -160,8 +160,35 @@
     var Z = window.PKZlevneni;
     var z = Z ? Z.zmena(d) : null;
     if (!z) return '';
-    return '<div class="pz-zmena' + (z.dolu ? ' dolu' : ' nahoru') + '">'
+    return '<div class="pz-zmena' + (z.podezrela ? ' overit' : (z.dolu ? ' dolu' : ' nahoru')) + '">'
       + esc(Z.text(z)) + ' <span>' + esc(Z.popis(z, fmt)) + '</span></div>';
+  }
+
+  function pzHistorieHtml() {
+    var P = window.PK_POZEMEK, Z = window.PKZlevneni;
+    var h = P && P.h;
+    if (!h || !Z || h.length < 2) return '';
+    var radky = [], zmen = 0;
+    for (var i = 0; i < h.length; i++) {
+      var den = h[i][0], c = +h[i][1];
+      var k = i > 0 ? Z.krok(+h[i - 1][1], c, den) : null;
+      if (k) zmen++;
+      radky.push('<li class="pz-hist-radek' + (i === h.length - 1 ? ' ted' : '') + '">'
+        + '<span class="pz-hist-den">' + esc(Z.lidsky(den)) + '</span>'
+        + '<b class="pz-hist-cena">' + fmt(c) + ' Kč</b>'
+        + (k ? '<span class="pz-hist-zmena ' + (k.podezrela ? 'overit' : (k.dolu ? 'dolu' : 'nahoru'))
+          + '">' + (k.podezrela ? '' : (k.dolu ? '−' : '+')) + k.procent + ' %</span>' : '')
+        + '</li>');
+    }
+
+    if (!zmen) return '';
+    return '<div class="pz-historie">'
+      + '<h3 class="pz-hist-nadpis">Historie ceny</h3>'
+      + '<ul class="pz-hist">' + radky.join('') + '</ul>'
+      + '<p class="pz-hist-pozn">Ceny si zapisujeme sami při každém průchodu zdrojů'
+      + ' — jiný web tuhle historii nemá. První řádek je nejstarší cena, kterou o pozemku víme;'
+      + ' starší mohla být a my ji nevidíme.</p>'
+      + '</div>';
   }
 
   function pzDrazbaHtml(d, days) {
@@ -789,6 +816,8 @@
 
         pzZmenaCenyHtml(d) +
       '</div>' +
+
+      pzHistorieHtml() +
 
       pzDrazbaHtml(d, days) +
 
