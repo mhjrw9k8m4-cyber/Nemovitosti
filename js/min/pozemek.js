@@ -626,13 +626,28 @@
     if (global.L && global.L.map) return hotovo();
     if (!leafletSlib) {
       leafletSlib = new Promise(function (dej) {
-        var zn = document.querySelector('meta[name="pk-leaflet"]');
-        var adresa = (zn && zn.getAttribute('data-src')) || 'vendor/leaflet/leaflet.js';
-        var s = document.createElement('script');
-        s.src = adresa;
-        s.onload = function () { dej(); };
-        s.onerror = function () { dej(); };
-        document.head.appendChild(s);
+
+        var styl = document.querySelector('meta[name="pk-leaflet-css"]');
+        var adresaStylu = styl && styl.getAttribute('data-src');
+        function knihovna() {
+          var zn = document.querySelector('meta[name="pk-leaflet"]');
+          var adresa = (zn && zn.getAttribute('data-src')) || 'vendor/leaflet/leaflet.js';
+          var s = document.createElement('script');
+          s.src = adresa;
+          s.onload = function () { dej(); };
+          s.onerror = function () { dej(); };
+          document.head.appendChild(s);
+        }
+        if (!adresaStylu || document.querySelector('link[href^="vendor/leaflet/leaflet.css"]')) {
+          knihovna();
+          return;
+        }
+        var l = document.createElement('link');
+        l.rel = 'stylesheet';
+        l.href = adresaStylu;
+        l.onload = knihovna;
+        l.onerror = knihovna;
+        document.head.appendChild(l);
       });
     }
     leafletSlib.then(hotovo);

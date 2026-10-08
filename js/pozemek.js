@@ -895,13 +895,37 @@
     if (global.L && global.L.map) return hotovo();
     if (!leafletSlib) {
       leafletSlib = new Promise(function (dej) {
-        var zn = document.querySelector('meta[name="pk-leaflet"]');
-        var adresa = (zn && zn.getAttribute('data-src')) || 'vendor/leaflet/leaflet.js';
-        var s = document.createElement('script');
-        s.src = adresa;
-        s.onload = function () { dej(); };
-        s.onerror = function () { dej(); };
-        document.head.appendChild(s);
+        /* STYL SE DOTAHUJE SPOLU S KNIHOVNOU, ne značkou <link> v hlavičce.
+           Naměřeno pokrytím stylů: vendor/leaflet/leaflet.css má 14 806 B
+           a na stránce pozemku se z něj použije 0 B — mapa je dole pod
+           cenou, popisem a vybavením a staví se teprve, až je na dohled.
+           Přesto ten soubor blokoval první vykreslení na 2 055 stránkách.
+           Teď jde dolů až s knihovnou, a to PŘED ní: Leaflet si po startu
+           měří rozměry dlaždic, a kdyby styl dorazil až po něm, byly by
+           chvíli posunuté. Proto se na dojetí stylu čeká — ale jen do
+           chvíle, než se ohlásí; chyba ani tady běh nezastaví, o náhradní
+           podobu se stará zapniMapu(). */
+        var styl = document.querySelector('meta[name="pk-leaflet-css"]');
+        var adresaStylu = styl && styl.getAttribute('data-src');
+        function knihovna() {
+          var zn = document.querySelector('meta[name="pk-leaflet"]');
+          var adresa = (zn && zn.getAttribute('data-src')) || 'vendor/leaflet/leaflet.js';
+          var s = document.createElement('script');
+          s.src = adresa;
+          s.onload = function () { dej(); };
+          s.onerror = function () { dej(); };
+          document.head.appendChild(s);
+        }
+        if (!adresaStylu || document.querySelector('link[href^="vendor/leaflet/leaflet.css"]')) {
+          knihovna();
+          return;
+        }
+        var l = document.createElement('link');
+        l.rel = 'stylesheet';
+        l.href = adresaStylu;
+        l.onload = knihovna;
+        l.onerror = knihovna;
+        document.head.appendChild(l);
       });
     }
     leafletSlib.then(hotovo);
