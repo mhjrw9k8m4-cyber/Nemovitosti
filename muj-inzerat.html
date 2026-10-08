@@ -39,7 +39,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.min.css?v=b3ff4ca0">
+  <link rel="stylesheet" href="css/styles.min.css?v=3abf2751">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:var(--r-lg); padding:24px 20px 20px;
@@ -81,6 +81,15 @@
     .pf-stat-ico{width:20px; height:20px; color:var(--text-ondark-mute); margin-bottom:6px;}
     .pf-stat b{display:block; font-size:28px; line-height:1; color:var(--copper-bright); font-variant-numeric:tabular-nums;}
     .pf-stat span{display:block; font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:var(--popisek-proklad); line-height:1.25; margin-top:4px;}
+    /* DRUHÝ PÁS: ne statistika o mně, ale MÍSTA, kam se odsud jde.
+       Proto vlastní řádek o dvou dlaždicích, a ne šest v mřížce po
+       třech — pět dlaždic ve třech sloupcích nechá třetí místo
+       v druhém řádku prázdné. Vzhled je shodný s pásem nad tím
+       (.pf-stat), mění se jen počet sloupců. A jsou to <a>, ne <div>
+       s role="button": odkaz na jinou stránku umí klávesnice i čtečka
+       bez jediného řádku skriptu. */
+    .pf-stats--2{grid-template-columns:repeat(2,minmax(0,1fr));}
+    a.pf-stat{text-decoration:none; display:block;}
     .pf-actions{position:relative; display:flex; margin-top:16px;}
     .pf-add{display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;}
     .pf-add svg{width:18px; height:18px; stroke-width:2.0;}
@@ -199,7 +208,7 @@
   <section class="add-hero app-hero">
     <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
     <div class="wrap add-wrap">
-      <h1>Můj profil</h1>      <p class="sub"><b>Všechno vaše na jednom místě.</b> Inzeráty, jejich zhlédnutí i pozemky, které jste si uložili. Přihlaste se stejným účtem, kterým jste inzerát přidali.</p>
+      <h1>Můj profil</h1>      <p class="sub"><b>Všechno vaše na jednom místě.</b> Inzeráty, jejich zhlédnutí, uložené pozemky, zprávy i hlídání. Přihlaste se stejným účtem, kterým jste inzerát přidali.</p>
     </div>
   </section>
 
@@ -319,6 +328,25 @@
               <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"/></svg>
               <b id="pf-fav">—</b><span>Uložené pozemky</span>
             </div>
+          </div>
+          <!-- „VŠECHNO VAŠE NA JEDNOM MÍSTĚ" stálo v úvodu stránky,
+               ale Zprávy a Hlídání tu nebyly vůbec — vedly na ně jen
+               záložky nahoře, tedy totéž, co vidí i nepřihlášený.
+               Profil o nich nevěděl nic: kdo čekal na odpověď od
+               majitele, nepoznal to odsud nijak. Čísla doplňuje týž
+               dotaz, kterým si je načítá samotná stránka Zpráv
+               (my_threads) a Hlídání (my_searches), takže se nemohou
+               rozejít. Dlaždice stojí ve značce od začátku s pomlčkou,
+               ať se nic neposune, až čísla dojdou. -->
+          <div class="pf-stats pf-stats--2">
+            <a class="pf-stat pf-stat--jde" href="zpravy.html">
+              <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>
+              <b id="pf-zpravy">—</b><span>Nepřečtené zprávy</span>
+            </a>
+            <a class="pf-stat pf-stat--jde" href="hlidani.html">
+              <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+              <b id="pf-hlidani">—</b><span>Moje hlídání</span>
+            </a>
           </div>
           <div class="pf-actions">
             <a class="btn-primary pf-add" href="pridat.html">
@@ -482,8 +510,27 @@
         var m = q('pf-mail'); if (m) m.textContent = mail;
         var av = q('pf-avatar'); if (av) av.textContent = initials(mail);
         var f = q('pf-fav'); if (f) f.textContent = fmt(favCount());
-        if (!skipLoad) load();          // seznam inzerátů načteme až s obnovenou session (bez chybového bliknutí)
+        if (!skipLoad) { load(); prehledJinych(); }   // seznam inzerátů načteme až s obnovenou session (bez chybového bliknutí)
       }
+    }
+    /* ČÍSLA ZE ZPRÁV A HLÍDÁNÍ. Dva dotazy navíc, oba naráz a oba bez
+       vlivu na zbytek stránky: když neodpovědí, zůstane pomlčka
+       a dlaždice je pořád odkaz, který funguje. Nuly se NESCHOVÁVAJÍ —
+       „0 nepřečtených" je odpověď, kdežto pomlčka by lhala, že se to
+       nepovedlo zjistit. */
+    function prehledJinych() {
+      if (!A || !A.rpc) return;
+      var zp = q('pf-zpravy'), hl = q('pf-hlidani');
+      if (zp) A.rpc('my_threads', {}, true).then(function (res) {
+        if (!res || !res.ok || !Array.isArray(res.data)) return;
+        var n = 0;
+        res.data.forEach(function (t) { n += Math.max(0, parseInt(t && t.unread, 10) || 0); });
+        zp.textContent = fmt(n);
+      }, function () {});
+      if (hl) A.rpc('my_searches', {}, true).then(function (res) {
+        if (!res || !res.ok || !Array.isArray(res.data)) return;
+        hl.textContent = fmt(res.data.length);
+      }, function () {});
     }
     function load(attempt) {
       attempt = attempt || 0;
@@ -739,7 +786,7 @@ document.addEventListener('click', function (e) {
   b.setAttribute('aria-label', show ? 'Skrýt heslo' : 'Zobrazit heslo');
 });
 </script>
-<script src="js/min/menu.js?v=bba4d4d0" defer></script>
+<script src="js/min/menu.js?v=242cc626" defer></script>
 <script src="js/min/hlidani-logika.js?v=404eb49d" defer></script>
 <script src="js/min/hlavicka.js?v=bf85dd50" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>

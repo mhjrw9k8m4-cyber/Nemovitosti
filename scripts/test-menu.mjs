@@ -154,6 +154,83 @@ try {
   await p.waitForTimeout(200);
   pravda('a klepnutí mimo menu ho taky zavře', !(await stav()).otevreno, JSON.stringify(await stav()));
 
+  /* ---------- panel se chová jako panel ----------
+   *
+   * Nabídka vyjíždí zespoda a má nahoře úchytku, takže slibuje, že se
+   * dá shodit. Neslibovala pravdu: zavřít šlo jedině křížkem úplně
+   * nahoře na obrazovce — u panelu stojícího na SPODNÍ hraně to nejdál,
+   * kam musí palec dojít. Měří se tedy obojí, co úchytka slibuje. */
+  await p.click('.nav-toggle');
+  await p.waitForTimeout(250);
+  const uchyt = await p.evaluate(() => {
+    const r = document.getElementById('nav').getBoundingClientRect();
+    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + 12), dno: Math.round(r.bottom), vrch: Math.round(r.top) };
+  });
+  pravda('nabídka je otevřená, než se zkusí shodit', (await stav()).otevreno);
+  await p.mouse.click(uchyt.x, uchyt.y);
+  await p.waitForTimeout(250);
+  pravda('klepnutí na úchytku nabídku zavře', !(await stav()).otevreno, JSON.stringify(await stav()));
+
+  /* OTEVŘÍT, AŤ JE OTEVŘENO — ne „klepnout na přepínač". Přepínač
+     přepíná: když předchozí kontrola spadla a nabídka zůstala otevřená,
+     tohle by ji zavřelo a další kontrola by hlásila vadu, která je jen
+     následkem té první. Jedna sabotáž má shodit jednu kontrolu. */
+  async function otevri() {
+    if (!(await stav()).otevreno) { await p.click('.nav-toggle'); await p.waitForTimeout(250); }
+  }
+  await otevri();
+  /* Krátký tah NESMÍ zavřít: kdo panelem jen roluje, nemá ho shazovat. */
+  const tah = async (odkud, kam) => p.evaluate(([x, y1, y2]) => {
+    const nav = document.getElementById('nav');
+    const dotek = (typ, y) => nav.dispatchEvent(new TouchEvent(typ, {
+      bubbles: true, cancelable: true,
+      touches: typ === 'touchend' ? [] : [new Touch({ identifier: 1, target: nav, clientX: x, clientY: y })],
+      changedTouches: [new Touch({ identifier: 1, target: nav, clientX: x, clientY: y })]
+    }));
+    nav.scrollTop = 0;
+    dotek('touchstart', y1); dotek('touchend', y2);
+  }, [uchyt.x, odkud, kam]);
+  await tah(uchyt.vrch + 20, uchyt.vrch + 50);     // 30 px, pod mezí
+  await p.waitForTimeout(250);
+  pravda('krátký tah dolů nabídku NEzavře (jinak by nešlo rolovat)', (await stav()).otevreno,
+    JSON.stringify(await stav()));
+  await tah(uchyt.vrch + 20, uchyt.vrch + 140);    // 120 px, nad mezí
+  await p.waitForTimeout(250);
+  pravda('tah dolů nabídku shodí', !(await stav()).otevreno, JSON.stringify(await stav()));
+
+  /* ---------- a jak to vypadá ----------
+   *
+   * Tohle nejsou kosmetické kontroly. Nabídka měla na 390x844 řádky
+   * 48, 52, 54 a 64 px vysoké — čtyři výšky pro tutéž věc, protože
+   * Zprávy a Hlídání sedí v .nav-moje-panel a braly si odsazení
+   * z podoby pro počítač. Šest cílů zabralo 515 px, tedy 61 %
+   * obrazovky. A dva z těch šesti řádků vedly nepřihlášenému do slepé
+   * uličky: zpravy.html i hlidani.html mu ukážou jen přihlašovací
+   * okénko. Měří se proto to, co se pokazilo. */
+  await otevri();
+  await p.waitForTimeout(150);
+  const vzhled = await p.evaluate(() => {
+    const nav = document.getElementById('nav');
+    const r = nav.getBoundingClientRect();
+    const radky = [...nav.querySelectorAll('a:not(.btn-primary)')]
+      .filter((a) => a.id !== 'nav-ucet' && a.getClientRects().length)
+      .map((a) => ({ kam: a.getAttribute('href'), v: Math.round(a.getBoundingClientRect().height) }));
+    return { podil: r.height / innerHeight, vysky: [...new Set(radky.map((x) => x.v))].sort((a, b) => a - b),
+      kam: radky.map((x) => x.kam), pocet: radky.length };
+  });
+  pravda(`běžné řádky mají všechny tutéž výšku (${vzhled.vysky.join(', ')} px)`,
+    vzhled.vysky.length === 1,
+    `výšek je ${vzhled.vysky.length} — nabídka vypadá nesrovnaná`);
+  pravda(`a je jich na čem měřit (${vzhled.pocet})`, vzhled.pocet >= 3, 'málo řádků');
+  pravda(`nabídka nezabere víc než polovinu obrazovky (${Math.round(vzhled.podil * 100)} %)`,
+    vzhled.podil <= 0.5, `zabírá ${Math.round(vzhled.podil * 100)} % — bylo 61 %`);
+  /* SLEPÉ ULIČKY. Nepřihlášený tu nesmí mít odkaz na stránku, která mu
+     ukáže jen přihlašovací okénko. Cestu k přihlášení nabízí karta
+     účtu hned nahoře — druhá a třetí není potřeba. */
+  const zaHradbou = vzhled.kam.filter((h) => /zpravy\.html|hlidani\.html/.test(h || ''));
+  pravda('a nepřihlášenému nenabízí stránky, které mu ukážou jen přihlášení',
+    zaHradbou.length === 0, `vedou tam: ${zaHradbou.join(', ')}`);
+
   pravda('a nic se u toho nerozbilo', chybyJs.length === 0, chybyJs.slice(0, 2).join(' | '));
 } finally {
   await prohlizec.close();

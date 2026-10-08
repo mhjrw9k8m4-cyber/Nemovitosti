@@ -121,29 +121,48 @@ async function stranka(sirka, prihlasit) {
   // Oddělovače skupin: rovná linka, ne zaoblená hrana karty. Zakřivený
   // konec se četl jako horní hrana plovoucí karty a budil dojem, že se
   // v menu něco špatně vrství.
+  /* ODDĚLOVAČ UŽ NENÍ HORNÍ OKRAJ ŘÁDKU. Byl jím a měnil tím jeho výšku:
+     naměřeno 48, 52, 54 a 64 px — čtyři výšky pro tutéž věc. Osobní
+     skupinu teď otevírá vlastní nadpis („MOJE") a čára sedí na něm;
+     u „Kontakt" zůstává na řádku, ale bez změny jeho výšky. Hledá se
+     proto i mezi nadpisy skupin, ne jen mezi odkazy. */
   const oddelovace = await p.evaluate(() => {
     const out = [];
-    document.querySelectorAll('#nav a:not(.btn-primary)').forEach((a) => {
-      const s = getComputedStyle(a);
+    document.querySelectorAll('#nav a:not(.btn-primary), #nav .nav-moje > summary').forEach((el) => {
+      const s = getComputedStyle(el);
       /* Jen to, co je opravdu vidět — a jen položky seznamu. „Přidat
          pozemek" je od přestavby lišty v nabídce vidět jako plné tlačítko
          dole; rámeček i zaoblení má proto, že je to TLAČÍTKO, ne proto, že
          by něco oddělovalo. Počítat ho mezi oddělovače by byla chyba
          měření, ne nález. */
-      if (a.getBoundingClientRect().height === 0) return;
+      if (el.getBoundingClientRect().height === 0) return;
+      /* KARTA ÚČTU NENÍ ODDĚLOVAČ. Má rámeček dokola a zaoblené rohy,
+         protože je to karta — spočítat ji mezi oddělovače by byla chyba
+         měření, ne nález (stejně jako u tlačítka níž). Oddělovač se
+         pozná tím, že má čáru JEN nahoře. */
+      if (parseFloat(s.borderBottomWidth) > 0 || parseFloat(s.borderLeftWidth) > 0) return;
       if (parseFloat(s.borderTopWidth) > 0) out.push({
-        kam: a.getAttribute('href'),
+        kam: el.getAttribute('href') || el.textContent.trim(),
+        sirka: Math.round(el.getBoundingClientRect().width),
         rohy: [s.borderTopLeftRadius, s.borderTopRightRadius]
       });
     });
-    return out;
+    return { out, sirkaPanelu: Math.round(document.getElementById('nav').getBoundingClientRect().width) };
   });
-  je('oddělovače jsou dva', oddelovace.length, 2);
-  /* Osobní stránky začínaly Upozorněními; ta jsou odebraná, takže
-     skupinu otevírají Zprávy. */
-  je('první oddělovač odděluje osobní stránky', oddelovace[0] && oddelovace[0].kam, 'zpravy.html');
+  /* Tahle zkouška běží PŘIHLÁŠENÁ (viz localStorage výš), takže osobní
+     skupina je vidět a oddělovače jsou dva: nad jejím nadpisem a nad
+     „Kontakt". Nepřihlášenému je ta skupina skrytá — vedla by jen na
+     přihlašovací okénko — a oddělovač by zbyl jeden; to měří
+     scripts/test-menu.mjs. */
+  je('oddělovače otevírají osobní skupinu a Kontakt',
+    oddelovace.out.map((o) => o.kam), ['Moje', 'kontakt.html']);
   je('oddělovače nejsou zaoblené',
-    oddelovace.every((o) => o.rohy.every((r) => parseFloat(r) === 0)), true);
+    oddelovace.out.every((o) => o.rohy.every((r) => parseFloat(r) === 0)), true);
+  /* A ČÁRA MUSÍ JÍT PŘES CELOU ŠÍŘKU. Nadpis skupiny je v podobě pro
+     počítač inline-flex; kdyby si to nesl i sem, natáhl by se jeho horní
+     okraj jen pod slovo „MOJE" a z předělu by zbyl pahýl u levého kraje. */
+  je('a jdou přes celou šířku panelu',
+    oddelovace.out.every((o) => o.sirka >= oddelovace.sirkaPanelu - 24), true);
 
   // Každá položka menu musí mít ikonu — prázdné místo vypadá jako chyba.
   const bezIkony = await p.evaluate(() => {

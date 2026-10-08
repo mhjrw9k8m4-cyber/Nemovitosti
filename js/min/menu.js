@@ -33,6 +33,26 @@
       if (nav.contains(e.target) || toggle.contains(e.target)) return;
       zavri();
     });
+
+    var zacY = null, rolovaniNaZacatku = 0;
+    nav.addEventListener('touchstart', function (e) {
+      if (!e.touches || e.touches.length !== 1) { zacY = null; return; }
+      zacY = e.touches[0].clientY;
+      rolovaniNaZacatku = nav.scrollTop;
+    }, { passive: true });
+    nav.addEventListener('touchend', function (e) {
+      if (zacY === null) return;
+      var t = (e.changedTouches && e.changedTouches[0]) || null;
+      var posun = t ? t.clientY - zacY : 0;
+      zacY = null;
+
+      if (rolovaniNaZacatku <= 0 && posun >= 60) zavri();
+    }, { passive: true });
+    nav.addEventListener('click', function (e) {
+      if (!nav.classList.contains('open')) return;
+      if (e.target !== nav) return;
+      if (e.offsetY <= 30) zavri();
+    });
     return true;
   }
 

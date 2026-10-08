@@ -61,6 +61,38 @@
       if (nav.contains(e.target) || toggle.contains(e.target)) return;
       zavri();
     });
+
+    /* SHODIT TAHEM DOLŮ — a klepnutím na úchytku.
+       Panel vyjíždí zespoda a má nahoře úchytku, tedy vypadá jako
+       vysouvací panel z telefonní aplikace. Jenže se tak nechoval:
+       zavřít ho šlo jedině křížkem úplně nahoře na obrazovce, nebo
+       klepnutím mimo. Úchytka tak slibovala pohyb, který nikam nevedl —
+       a křížek je u panelu, co stojí na spodní hraně, to nejvzdálenější
+       místo, kam musí palec dojít.
+       Úchytka je ::after, tedy nic, na co jde pověsit obsluhu; bere se
+       proto podle polohy: horních 30 px panelu, a jen když se netrefím
+       do odkazu. Tah dolů o 60 px a víc panel zavře. Pod tu mez se nic
+       neděje — kdo panelem jen rolujeme, nemá ho tím shazovat. */
+    var zacY = null, rolovaniNaZacatku = 0;
+    nav.addEventListener('touchstart', function (e) {
+      if (!e.touches || e.touches.length !== 1) { zacY = null; return; }
+      zacY = e.touches[0].clientY;
+      rolovaniNaZacatku = nav.scrollTop;
+    }, { passive: true });
+    nav.addEventListener('touchend', function (e) {
+      if (zacY === null) return;
+      var t = (e.changedTouches && e.changedTouches[0]) || null;
+      var posun = t ? t.clientY - zacY : 0;
+      zacY = null;
+      /* Jen když panel stál nahoře. Uprostřed dlouhého seznamu je tah
+         dolů rolování, ne zavírání. */
+      if (rolovaniNaZacatku <= 0 && posun >= 60) zavri();
+    }, { passive: true });
+    nav.addEventListener('click', function (e) {
+      if (!nav.classList.contains('open')) return;
+      if (e.target !== nav) return;                       // trefa do prázdna, ne do řádku
+      if (e.offsetY <= 30) zavri();                       // pruh s úchytkou
+    });
     return true;
   }
 

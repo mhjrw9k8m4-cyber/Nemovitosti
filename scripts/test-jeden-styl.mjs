@@ -154,8 +154,12 @@ const mrizky = bloky.filter((b) =>
    plocha, má to být rozhodnutí: zvedni číslo a dole ověř, že nová plocha
    bere rozteč i barvu z palety. Kdyby tu stálo „aspoň", přibyla by plocha
    s opsanými čísly a test by mlčel. */
-pravda('test našel všech sedm ploch s mřížkovou texturou', mrizky.length === 7,
-  `nalezeno ${mrizky.length}, čekám 7 — pokud texturu dostala další plocha, `
+/* ŠEST, NE SEDM. Sedmá byla vysouvací nabídka na telefonu (#nav::before).
+   Mřížka patří na plochy, které něco ukazují — mapa, karty, hlavička;
+   za seznamem šesti řádků z ní pod horním okrajem zbyl šedý flek
+   a panel vypadal ušpiněný, ne značkový. Odebrána záměrně. */
+pravda('test našel všech šest ploch s mřížkovou texturou', mrizky.length === 6,
+  `nalezeno ${mrizky.length}, čekám 6 — pokud texturu dostala další plocha, `
   + 'zvedni číslo v testu:\n      '
   + mrizky.map((b) => b.sel.trim().slice(0, 34)).join(' | '));
 

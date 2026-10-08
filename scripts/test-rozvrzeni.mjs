@@ -458,17 +458,38 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   await ctx.close();
 }
 {
-  // Na telefonu je menu samo o sobě seznam pod sebou, takže zanořovat
-  // skupinu do rozbalovátka by bylo klepnutí navíc pro nic.
-  const { ctx, p } = await otevri('kontakt.html', 390, 844);
-  await p.click('.nav-toggle').catch(() => {});
-  await p.waitForTimeout(600);
-  const n = await p.evaluate(() => [...document.querySelectorAll('.nav-moje-panel a')]
-    .filter((e) => { const s = getComputedStyle(e);
-      return s.display !== 'none' && e.getClientRects().length > 0; }).length);
-  pravda('ve vysouvacím menu jsou osobní položky rovnou vidět', n === 2,
-    `vidět je ${n} ze dvou — ve výsuvném menu se nemá nic rozbalovat`);
-  await ctx.close();
+  /* Na telefonu je menu samo o sobě seznam pod sebou, takže zanořovat
+     skupinu do rozbalovátka by bylo klepnutí navíc pro nic. Celá skupina
+     se ale ukazuje jen PŘIHLÁŠENÉMU: nepřihlášenému obě její stránky
+     (zpravy.html, hlidani.html) ukážou jedině přihlašovací okénko, takže
+     by to byly dvě slepé uličky ze šesti řádků nabídky. Cestu k přihlášení
+     nabízí karta účtu hned nahoře.
+     Měří se obojí — a to druhé i proto, že samotné „nepřihlášenému se
+     neukáže" by splnilo i menu, které tu skupinu nemá vůbec. */
+  const spocti = async (prihlasen) => {
+    const { ctx, p } = await otevri('kontakt.html', 390, 844);
+    if (prihlasen) {
+      await p.evaluate(() => {
+        try { localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok', refresh_token: 'ref',
+          user: { id: 'u1', email: 'jan@test.cz' } })); } catch (e) {}
+      });
+      await p.reload({ waitUntil: 'load' });
+      await p.waitForTimeout(800);
+    }
+    await p.click('.nav-toggle').catch(() => {});
+    await p.waitForTimeout(600);
+    const n = await p.evaluate(() => [...document.querySelectorAll('.nav-moje-panel a')]
+      .filter((e) => { const s = getComputedStyle(e);
+        return s.display !== 'none' && e.getClientRects().length > 0; }).length);
+    await ctx.close();
+    return n;
+  };
+  const bezUctu = await spocti(false);
+  pravda('nepřihlášenému nabídka osobní stránky nenabízí', bezUctu === 0,
+    `vidět jsou ${bezUctu} — vedly by jen na přihlašovací okénko`);
+  const sUctem = await spocti(true);
+  pravda('přihlášenému jsou osobní položky rovnou vidět, bez rozbalování', sUctem === 2,
+    `vidět je ${sUctem} ze dvou — ve výsuvném menu se nemá nic rozbalovat`);
 }
 
 /* --- OVLÁDÁNÍ SE MUSÍ DÁT TREFIT PRSTEM ------------------------------

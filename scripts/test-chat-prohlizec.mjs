@@ -150,6 +150,78 @@ je('ani při přírůstku nic nevyskočí', await pT.locator('.upo-toast').count
 
 await pT.close();
 
+/* ---------- 9b. profil ví o zprávách a hlídání ----------
+ *
+ * „Všechno vaše na jednom místě" stálo v úvodu profilu, ale Zprávy
+ * a Hlídání tam nebyly vůbec: vedly na ně jen záložky nahoře, tedy
+ * totéž, co vidí i nepřihlášený. Kdo čekal na odpověď od majitele,
+ * nepoznal to z profilu nijak.
+ *
+ * Nestačí ověřit, že tam číslo je. Musí se shodnout s tím, co ukazuje
+ * sama stránka: profil i Zprávy čtou týž dotaz (my_threads), takže
+ * rozdíl by znamenal, že si profil počítá něco jiného — třeba vlákna
+ * místo nepřečtených zpráv. A hlavně se to ověřuje ZMĚNOU: po přečtení
+ * konverzace musí číslo spadnout. Samotná rovnost dvou čísel by prošla
+ * i tehdy, kdyby obě byla trvale nula. */
+{
+  /* NEJDŘÍV SE MUSÍ VYROBIT NEPŘEČTENÁ ZPRÁVA. Zájemce i majitel mají
+     v tuhle chvíli všechno přečtené — kroky výš jim obě vlákna otevřely.
+     Bez toho by „profil ukáže týž počet" prošlo s nulou na obou stranách
+     a neměřilo nic; přesně to se při prvním běhu stalo a zachytila to
+     pojistka pod tím. Zájemce proto napíše ještě jednu zprávu a profil
+     se pak čte za MAJITELE, který ji nečetl. */
+  const cZpis = await kontext(UID_ZAJEMCE, 'tok-zajemce');
+  const pZpis = await cZpis.newPage();
+  await pZpis.goto(`${BASE}/zpravy.html`, { waitUntil: 'load' });
+  await pZpis.waitForTimeout(1500);
+  await pZpis.evaluate(([lid]) => window.PKAuth.rpc('send_message',
+    { p_listing: lid, p_buyer: null, p_body: 'Ještě jeden dotaz k přístupové cestě.' }, true), [LISTING]);
+  await pZpis.close();
+  await cZpis.close();
+
+  const cZ2 = await kontext(UID_MAJITEL, 'tok-majitel');
+  const pP = await cZ2.newPage();
+  pP.on('pageerror', (e) => chybyKonzole.push('profil: ' + e.message));
+
+  await pP.goto(`${BASE}/zpravy.html`, { waitUntil: 'load' });
+  await pP.waitForTimeout(2000);
+  const odznaky = await pP.locator('.zp-badge').allInnerTexts();
+  const naZpravach = odznaky.reduce((a, t) => a + (parseInt(t, 10) || 0), 0);
+
+  await pP.goto(`${BASE}/hlidani.html`, { waitUntil: 'load' });
+  await pP.waitForTimeout(3000);
+  const naHlidani = await pP.locator('#hl-root .hl-item').count();
+
+  await pP.goto(`${BASE}/muj-inzerat.html`, { waitUntil: 'load' });
+  await pP.waitForTimeout(2500);
+  const cti = async (id) => parseInt((await pP.locator('#' + id).innerText()).replace(/[^0-9]/g, ''), 10);
+
+  /* VIDĚT, ne jen „být v DOMu". Napoprvé tu stálo count() === 1 a sabotáž
+     (celý pás dostal hidden) prošla bez povšimnutí: prvky v dokumentu
+     zůstaly a innerText je přečte i na skrytém prvku. Člověk by přitom
+     neviděl nic. */
+  const vidim = (sel) => pP.locator(sel).isVisible();
+  je('profil má dlaždici na zprávy a VIDĚT ji je',
+    await vidim('a.pf-stat[href="zpravy.html"]'), true);
+  je('a dlaždici na hlídání taky', await vidim('a.pf-stat[href="hlidani.html"]'), true);
+  je('a obě čísla jsou vidět', [await vidim('#pf-zpravy'), await vidim('#pf-hlidani')], [true, true]);
+  je('kontrola má na čem měřit: na Zprávách je nepřečtených víc než nula', naZpravach > 0, true);
+  je('profil ukáže týž počet nepřečtených jako Zprávy', await cti('pf-zpravy'), naZpravach);
+  je('a týž počet hlídání, jako kolik je karet na stránce Hlídání', await cti('pf-hlidani'), naHlidani);
+
+  /* A teď ZMĚNA: konverzace se přečte, číslo v profilu musí spadnout. */
+  await pP.goto(`${BASE}/zpravy.html`, { waitUntil: 'load' });
+  await pP.waitForTimeout(1500);
+  await pP.locator('.zp-thread').first().click();
+  await pP.waitForTimeout(2000);
+  await pP.goto(`${BASE}/muj-inzerat.html`, { waitUntil: 'load' });
+  await pP.waitForTimeout(2500);
+  je('po přečtení konverzace číslo v profilu spadne na nulu', await cti('pf-zpravy'), 0);
+
+  await pP.close();
+  await cZ2.close();
+}
+
 /* ---------- 10. žádné chyby v konzoli ---------- */
 je('na stránkách nespadl žádný skript', chybyKonzole, []);
 
