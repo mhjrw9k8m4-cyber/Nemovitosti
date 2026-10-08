@@ -512,6 +512,54 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
   console.log(`Odkazy na skripty: ${odkazu} na ${stranek} stránkách, všechny soubory existují.`);
 }
 
+/* ----------------------------------------------------------------------
+ * A TOTÉŽ NA ODKAZY. Mrtvý <script src> se našel měřením; mrtvý <a href>
+ * by se nenašel vůbec — nikdo nekontroloval, že cíl odkazu existuje.
+ * Je to přesně ten druh vady, který vzniká odebráním: stránka se smaže
+ * nebo přejmenuje, odkazy na ni zůstanou, a návštěvník dostane 404.
+ * U webu, jehož hlavní aktivum je přes 2 100 zaindexovaných adres, je
+ * rozbitý vnitřní odkaz dražší než kdekoli jinde.
+ *
+ * Skripty a komentáře se odstřihnou PŘED hledáním. Uvnitř nich bývají
+ * skládané adresy (href="' + params + '") a vypnuté úryvky — adresa
+ * z nich není adresa stránky a kontrola by hlásila pět vad, které
+ * žádné vady nejsou. Naměřeno: s nimi 105 118 odkazů a 5 planých
+ * nálezů, bez nich 63 082 odkazů a nula. */
+{
+  const chybi = new Map();
+  let stranek = 0, odkazu = 0;
+  for (const f of fs.readdirSync(ROOT)) {
+    if (!f.endsWith('.html')) continue;
+    stranek++;
+    const h = fs.readFileSync(path.join(ROOT, f), 'utf8')
+      .replace(/<script[\s\S]*?<\/script>/g, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
+    for (const m of h.matchAll(/(?:href|src)="([^"]+)"/g)) {
+      const cil = m[1].split('#')[0].split('?')[0];
+      if (!cil || /^(https?:|mailto:|tel:|data:|javascript:|\/\/)/i.test(cil)) continue;
+      odkazu++;
+      const rel = cil.startsWith('/') ? cil.slice(1) : cil;
+      if (fs.existsSync(path.join(ROOT, rel))) continue;
+      if (!chybi.has(rel)) chybi.set(rel, []);
+      chybi.get(rel).push(f);
+    }
+  }
+  /* Pojistka: kdyby se změnil zápis atributů a vzor přestal sedět,
+     kontrola by prošla s nulou odkazů — a mlčela by navždy. */
+  if (odkazu < 1000) {
+    console.error(`::error::Vnitřních odkazů se našlo jen ${odkazu} — kontrola by prošla naprázdno.`);
+    process.exit(1);
+  }
+  if (chybi.size) {
+    for (const [cil, kde] of [...chybi].sort((a, b) => b[1].length - a[1].length).slice(0, 8)) {
+      console.error(`::error::Odkaz na ${cil} nikam nevede (${kde.length}×, např. ${kde[0]}).`);
+    }
+    if (chybi.size > 8) console.error(`::error::… a dalších ${chybi.size - 8} cílů.`);
+    process.exit(1);
+  }
+  console.log(`Vnitřní odkazy: ${odkazu} na ${stranek} stránkách, všechny cíle existují.`);
+}
+
 console.log(`\nStatická kontrola: ${souboru} souborů, ${podezreni ? podezreni + ' podezřelých volání' : 'žádné osiřelé volání'}.`);
 // Nepadáme — jsou to podezření, ne jistoty. Padá se jen tehdy, když by
 // bylo podezření nápadně moc (to už znamená, že se rozbil rozbor sám).
