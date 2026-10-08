@@ -82,6 +82,29 @@ Dvě možnosti:
   nastavit vlastní SMTP (klidně přes Resend — hostitel `smtp.resend.com`, port 465,
   uživatel `resend`, heslo = API klíč). Vyžaduje hotový krok 2.
 
+### Konkrétně pro Wedos (tam je doména vedená)
+
+DNS se u Wedosu spravuje v **WEDOS Admin → Domény → parcelaka.cz → DNS**.
+Do políčka **Název** se píše JEN první část (`send`, `resend._domainkey`) —
+Wedos si doménu dopisuje sám. Po uložení to v seznamu musí stát jako
+`send.parcelaka.cz`; kdyby tam bylo `send.parcelaka.cz.parcelaka.cz`,
+je v názvu doména navíc a ověření selže.
+
+A hlavně: Wedos změny v DNS **nepublikuje hned**. Nejdřív se u každého
+záznamu klepne na **Přidat**, a teprve pak se nahoře nebo dole objeví
+**Provést změny** — dokud se neklepne i na to, nic se ven nedostane.
+Tohle je u Wedosu nejčastější důvod, proč „záznamy tam jsou, a stejně
+to nejde".
+
+Tři záznamy, které Resend chce (DMARC je označený jako volitelný, ten ne):
+
+| Typ | Název | Hodnota | Priorita |
+|-----|-------|---------|----------|
+| TXT | `resend._domainkey` | `p=MIGf…` (dlouhý, kopírovat tlačítkem) | — |
+| MX  | `send` | `feedback-smtp.…amazonses.com` | 10 |
+| TXT | `send` | `v=spf1 include:amazonses.com ~all` | — |
+
+
 ---
 
 ## Co se změnilo v kódu (už je hotové)
