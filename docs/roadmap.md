@@ -19,7 +19,7 @@ Takový plán je horší než žádný: podle něj se nedá poznat, co ještě c
 | Databáze | Supabase, 15 tabulek a 36 funkcí (RPC). Sloučený balík k nahrání je `supabase/00-vse.sql`. |
 | Data příležitostí | 2 004 nabídek (1 846 prodejů, 130 dražeb, 28 exekucí), 1 621 popisů od inzerentů. Na webu je z toho vidět 1 948 — zbytek je týž pozemek na druhém portálu. Stahuje se samo každých 6 hodin (`update-data.yml`). |
 | Stránky | 2 061 vlastních stránek pozemků, 77 okresních, 14 krajských — všechny generované, v `sitemap.xml`. |
-| Zkoušky | 174 souborů, v CI dva úkoly: 77 bez prohlížeče, 93 s prohlížečem. |
+| Zkoušky | 175 souborů, v CI dva úkoly: 78 bez prohlížeče, 93 s prohlížečem. |
 
 <!-- PK-STAV-DO -->
 
@@ -148,8 +148,17 @@ postup je známý jako *git scraping* (simonwillison.net/2021/Dec/7/git-history/
 `data/opportunities.json` v gitu a archiv z ní postaví. Při zavedení to
 dalo 920 uzavřených období z 25 dnů (97 otisků od 14. 9. 2026).
 
-**Co z toho jde dnes spočítat:** doba na trhu (medián 7 dnů u zmizelých),
-kolik nabídek zlevnilo (138 z 920) a kde (Hodonín 14, Praha-východ 8).
+**Co z toho jde dnes spočítat:** `node scripts/archiv-statistiky.mjs` vypíše
+podíl nabídek, které jsou po N dnech pryč — k 8. 10. 2026 do 7 dní 6 %
+(z 852) a do 14 dní 11 % (z 678) — a kolik nabídek zlevnilo (138× u 128
+nabídek).
+
+**Medián doby na trhu se spočítat NEDÁ** a skript ho odmítá vydat. Okno je
+24 dní, ale 1 949 nabídek na trhu pořád je a 95 % z nich déle než týden;
+medián „u zmizelých" (vycházel 7 dní) popisuje jen tu menšinu, která
+zmizela rychle. Je to cenzurování zprava — delší případy ještě neskončily,
+takže ve vzorku chybí. Pravdivá podoba téhož je ta křivka výš: pozemky se
+prodávají pomalu.
 
 **Pozor:** jsou to ceny NABÍDKOVÉ a „zmizela" neznamená „prodáno" —
 nabídka mohla být i stažena. Nic jiného se z veřejných zdrojů poznat nedá.

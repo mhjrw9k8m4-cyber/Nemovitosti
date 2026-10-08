@@ -231,6 +231,9 @@ jobs:
       - name: Archiv nabídek (co se nabízelo a jak dlouho)
         run: node scripts/test-archiv.mjs
 
+      - name: Statistika z archivu nelže o krátkém okně
+        run: node scripts/test-archiv-statistiky.mjs
+
       - name: Cizí servery proti zásadám soukromí
         run: node scripts/test-cizi-servery.mjs
 
