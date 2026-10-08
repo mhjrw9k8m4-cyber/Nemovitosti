@@ -18,6 +18,7 @@
    číslo nenajde, kontrola spadne na „řádek se nenašel" — ne na ticho.
    ================================================================== */
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -69,6 +70,15 @@ maCislo('| Data příležitostí |', 'prodejů', podleTypu('sale'));
 maCislo('| Data příležitostí |', 'dražeb', podleTypu('drazba'));
 maCislo('| Data příležitostí |', 'exekucí', podleTypu('exekuce'));
 maCislo('| Data příležitostí |', 'popisů od inzerentů', popisy);
+/* A počet BEZ DUPLICIT, protože to je číslo, které návštěvník opravdu
+   vidí. Roadmapa uváděla jen surových 2 006 a web ukazoval 1 950;
+   při kontrole čísel to vypadalo jako chyba webu, přitom se jen
+   porovnávaly dvě různé věci. */
+const PKH = createRequire(import.meta.url)(path.join(KOREN, 'js', 'hlidani-logika.js'));
+const bezDup = PKH.bezDuplicit(nab).length;
+pravda(`duplicity se opravdu odstraňují (${nab.length} → ${bezDup})`,
+  bezDup > 0 && bezDup <= nab.length, `${bezDup} z ${nab.length}`);
+maCislo('| Data příležitostí |', 'nabídek po odstranění duplicit', bezDup);
 
 /* ---- 3) stránky ----------------------------------------------- */
 const html = fs.readdirSync(KOREN).filter((f) => f.endsWith('.html'));

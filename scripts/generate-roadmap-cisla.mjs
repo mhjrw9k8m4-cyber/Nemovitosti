@@ -17,10 +17,13 @@
    ================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CESTA = path.join(KOREN, 'docs', 'roadmap.md');
+/* Táž funkce, jakou duplicity odstraňuje mapa i generátor stránek. */
+const PKH = createRequire(import.meta.url)(path.join(KOREN, 'js', 'hlidani-logika.js'));
 const OD = '<!-- PK-STAV-OD: přepočítá scripts/generate-roadmap-cisla.mjs -->';
 const DO = '<!-- PK-STAV-DO -->';
 
@@ -36,6 +39,12 @@ export function spocitej() {
 
   const opp = JSON.parse(fs.readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8'));
   const nab = opp.opportunities || [];
+  /* DVĚ ČÍSLA, OBĚ PRAVDIVÁ, A LIŠÍ SE O 56. V souboru je 2 006 nabídek,
+     ale tentýž pozemek bývá vyvěšený na dvou portálech — mapa i generátor
+     duplicity odstraňují (js/hlidani-logika.js), takže návštěvník vidí
+     1 950. Roadmapa dlouho uváděla jen to první a vypadalo to, že se
+     web o padesát šest pozemků plete. Uvádějí se proto obě. */
+  const bezDup = PKH.bezDuplicit(nab).length;
   const popisy = Object.keys(JSON.parse(fs.readFileSync(path.join(KOREN, 'data', 'popisy.json'), 'utf8'))).length;
 
   const html = fs.readdirSync(KOREN).filter((f) => f.endsWith('.html'));
@@ -49,7 +58,7 @@ export function spocitej() {
 
   return {
     tabulky: tabulky.size, funkce: funkce.size,
-    nabidek: nab.length,
+    nabidek: nab.length, bezDup,
     prodeju: nab.filter((d) => d.type === 'sale').length,
     drazeb: nab.filter((d) => d.type === 'drazba').length,
     exekuci: nab.filter((d) => d.type === 'exekuce').length,
@@ -71,7 +80,7 @@ export function tabulka(c) {
 |---|---|
 | Web | GitHub Pages, vlastní doména. **Přesun na Vercel z původního plánu se neuskutečnil a není potřeba** — Pages web nasazují samy z větve a server na pozadí dělá Supabase. U Vercelu zůstalo vedlejší nasazení, proto se tam zapíná jeho analytika. |
 | Databáze | Supabase, ${c.tabulky} tabulek a ${c.funkce} funkcí (RPC). Sloučený balík k nahrání je \`supabase/00-vse.sql\`. |
-| Data příležitostí | ${fmt(c.nabidek)} nabídek (${fmt(c.prodeju)} prodejů, ${fmt(c.drazeb)} dražeb, ${fmt(c.exekuci)} exekucí), ${fmt(c.popisy)} popisů od inzerentů. Stahuje se samo každých 6 hodin (\`update-data.yml\`). |
+| Data příležitostí | ${fmt(c.nabidek)} nabídek (${fmt(c.prodeju)} prodejů, ${fmt(c.drazeb)} dražeb, ${fmt(c.exekuci)} exekucí), ${fmt(c.popisy)} popisů od inzerentů. Na webu je z toho vidět ${fmt(c.bezDup)} — zbytek je týž pozemek na druhém portálu. Stahuje se samo každých 6 hodin (\`update-data.yml\`). |
 | Stránky | ${fmt(c.pozemku)} vlastních stránek pozemků, ${c.okresnich} okresních, ${c.krajskych} krajských — všechny generované, v \`sitemap.xml\`. |
 | Zkoušky | ${fmt(c.souboru)} souborů, v CI dva úkoly: ${c.bezProhlizece} bez prohlížeče, ${c.sProhlizecem} s prohlížečem. |`;
 }
