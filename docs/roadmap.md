@@ -19,7 +19,7 @@ Takový plán je horší než žádný: podle něj se nedá poznat, co ještě c
 | Databáze | Supabase, 15 tabulek a 36 funkcí (RPC). Sloučený balík k nahrání je `supabase/00-vse.sql`. |
 | Data příležitostí | 2 004 nabídek (1 846 prodejů, 130 dražeb, 28 exekucí), 1 621 popisů od inzerentů. Na webu je z toho vidět 1 948 — zbytek je týž pozemek na druhém portálu. Stahuje se samo každých 6 hodin (`update-data.yml`). |
 | Stránky | 2 061 vlastních stránek pozemků, 77 okresních, 14 krajských — všechny generované, v `sitemap.xml`. |
-| Zkoušky | 177 souborů, v CI dva úkoly: 78 bez prohlížeče, 95 s prohlížečem. |
+| Zkoušky | 178 souborů, v CI dva úkoly: 78 bez prohlížeče, 96 s prohlížečem. |
 
 <!-- PK-STAV-DO -->
 
@@ -144,21 +144,34 @@ jeden soubor na měsíc, nikdy se nic nepřepisuje — git pak vidí jen nové
 verze se v gitu uloží celá. Databáze se z těchhle řádků kdykoli vyrobí;
 postup je známý jako *git scraping* (simonwillison.net/2021/Dec/7/git-history/).
 
+**Čím je nabídka v archivu určená.** `PKKlic.klicArchivu` — místo, parcela,
+okres, souřadnice a k tomu ČÍSLO INZERÁTU u zdroje. Hrubý `pkey` tu nestačí
+(má ho uložení pozemků a poznámky, kde záměrně snese zpřesnění geokódování):
+sedí na 26 klíčů z 1 948 dvakrát, takže archiv slepil dva různé pozemky do
+jedné nabídky a podle pořadí v souboru si zapisoval zlevnění, která se nikdy
+nestala. Z adresy se bere jen číslo inzerátu, protože portály mění „slug"
+za ním — měřeno na 25 dnech vydrží identita 45 730 přechodů mezi dny podle
+čísla, 45 670 podle celé adresy a 45 144 podle `pkey`.
+
 **Zpětný dopočet.** `node scripts/archiv.mjs --zpetne` projde historii
-`data/opportunities.json` v gitu a archiv z ní postaví. Při zavedení to
-dalo 920 uzavřených období z 25 dnů (97 otisků od 14. 9. 2026).
+`data/opportunities.json` v gitu a archiv z ní postaví; `--prepocitat` ho
+předtím smaže (nutné při změně klíče). Bere POSLEDNÍ otisk dne: robot běží
+čtyřikrát denně a podle prvního běhu vypadala nabídka, která se do večera
+vrátila, jako zmizelá. Dnes to dává 1 047 uzavřených období z 25 dnů
+(od 14. 9. 2026) a 1 948 živých nabídek — tedy přesně tolik, kolik ukazuje
+web, protože duplicity se odstraňují touž cestou (`PKCisteni.pozemky` →
+`PKHlidani.bezDuplicit`).
 
 **Co z toho jde dnes spočítat:** `node scripts/archiv-statistiky.mjs` vypíše
-podíl nabídek, které jsou po N dnech pryč — k 8. 10. 2026 do 7 dní 6 %
-(z 852) a do 14 dní 11 % (z 678) — a kolik nabídek zlevnilo (138× u 128
-nabídek).
+podíl nabídek, které jsou po N dnech pryč — k 8. 10. 2026 do 7 dní 11 %
+(z 954) a do 14 dní 17 % (z 708) — a kolik nabídek zlevnilo (124× u 120
+nabídek, obvykle o 9 % po 11 dnech). Totéž čte veřejně `cena-pozemku.html`.
 
 **Medián doby na trhu se spočítat NEDÁ** a skript ho odmítá vydat. Okno je
-24 dní, ale 1 949 nabídek na trhu pořád je a 95 % z nich déle než týden;
-medián „u zmizelých" (vycházel 7 dní) popisuje jen tu menšinu, která
-zmizela rychle. Je to cenzurování zprava — delší případy ještě neskončily,
-takže ve vzorku chybí. Pravdivá podoba téhož je ta křivka výš: pozemky se
-prodávají pomalu.
+24 dní, ale 1 948 nabídek na trhu pořád je; medián „u zmizelých" popisuje
+jen tu menšinu, která zmizela rychle. Je to cenzurování zprava — delší
+případy ještě neskončily, takže ve vzorku chybí. Pravdivá podoba téhož je ta
+křivka výš: pozemky se prodávají pomalu.
 
 **Pozor:** jsou to ceny NABÍDKOVÉ a „zmizela" neznamená „prodáno" —
 nabídka mohla být i stažena. Nic jiného se z veřejných zdrojů poznat nedá.

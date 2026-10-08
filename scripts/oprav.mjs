@@ -32,6 +32,10 @@ const KROKY = [
   /* Řezy dat po okresech — vedle celku, pro toho, kdo chce jeden okres.
      Staví se z hotového data/opportunities.json, tedy až za robotem. */
   ['generate-data-rezy.mjs', 'řezy dat po okresech'],
+  /* Které nabídky zlevnily — z archivu, pro mapu a výpis. Až za
+     robotem a za archivem (scripts/archiv.mjs běží před oprav.mjs,
+     viz .github/workflows/update-data.yml). */
+  ['generate-zlevneni.mjs', 'které nabídky zlevnily (data/zlevneni.json)'],
   ['generate-rss.mjs', 'kanály s novými pozemky (celostátní a krajské)'],
   ['generate-data-stranka.mjs', 'stránka s popisem dat (data.html)'],
   // Až po generátorech: česká sazba se dělá na HOTOVÉM textu, ať platí

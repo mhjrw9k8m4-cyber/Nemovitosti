@@ -41,7 +41,7 @@ function historieCeny(d) {
     try { const a = nactiArchiv(); _historie = historiePodleKlice(a.uzavrene, a.stav); }
     catch (e) { _historie = new Map(); }
   }
-  const h = _historie.get(pkey(d));
+  const h = _historie.get(_KLIC.klicArchivu(d));
   /* Jeden bod není historie — to je dnešní cena, a ta na stránce stojí
      velkým písmem o dva řádky výš. */
   if (!h || h.body.length < 2) return null;
@@ -50,6 +50,10 @@ function historieCeny(d) {
 
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+/* Klíč archivu — tentýž výpočet jako v prohlížeči (js/klic.js). Hrubý
+   pkey by tu nestačil: sedí na dva různé pozemky naráz a stránka by
+   ukázala cizí historii ceny. */
+const _KLIC = createRequire(import.meta.url)(path.join(ROOT, 'js', 'klic.js')).PKKlic;
 /* Popisy od inzerentů. Soubor vzniká při sběru dat; než robot poprvé
    doběhne, prostě není — a generátor tím nesmí spadnout, jinak by se
    kvůli chybějícímu popisu nevygenerovaly stránky vůbec. */

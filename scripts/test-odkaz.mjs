@@ -37,7 +37,7 @@ const stejne = (popis, a, b) => pravda(popis, JSON.stringify(a) === JSON.stringi
     activeType: 'exekuce', druhVybrane: ['orná půda', 'zahrada'],
     minPrice: 50000, maxPrice: 300000, minArea: 500, maxArea: 5000,
     maxPerM2: 40, zadaneVybaveni: ['voda', 'cesta'],
-    jenCelek: true, urgentOnly: true, levneOnly: true, ukazPodobne: true,
+    jenCelek: true, urgentOnly: true, levneOnly: true, zlevneneOnly: true, ukazPodobne: true,
     selectedKraj: 'Středočeský kraj', hledani: 'Kolín 412/3',
     mistoObec: 'Zásmuky', mistoOkres: 'Kolín',
   };
@@ -148,7 +148,9 @@ const stejne = (popis, a, b) => pravda(popis, JSON.stringify(a) === JSON.stringi
       'nejakeSite', 'SITE_KLICE', 'DNI_KONCI', 'podObvyklou', 'okoli', 'min',
       'okType', 'okSearch', 'okMisto', 'okPresne', 'okDruh', 'okPrice', 'okArea',
       'okUrgent', 'okFav', 'okVybaveni', 'okCelek', 'okDotaz', 'okPerM2', 'okKraj',
-      'okOkoli', 'okOkruh', 'okLevne', 'okSkryt', 'okProsle', 'okTvar',
+      'okOkoli', 'okOkruh', 'okLevne', 'okZlevnene', 'okSkryt', 'okProsle', 'okTvar',
+      // zlevnila() se ptá PKZlevneni, jestli u nabídky spadla cena
+      'zlevnila', 'PKZlevneni', 'zmena', 'dolu', 'podezrela',
       // PKOkruh je modul (geometrie), ne stav, na kterém se filtruje
       'PKOkruh', 'vTvaru', 'lat', 'lng',
       // z řadicí funkce: místní proměnné a nástroje, ne stav

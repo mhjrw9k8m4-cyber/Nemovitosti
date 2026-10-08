@@ -10,9 +10,17 @@
 
   function zmena(d) {
     if (!d) return null;
-    var drive = +d.cena_drive, ted = +d.price;
-    if (!(drive > 0) || !(ted > 0) || drive === ted) return null;
-    return krok(drive, ted, d.cena_zmena || '');
+    var ted = +d.price;
+    var drive = +d.cena_drive;
+    if (drive > 0 && ted > 0) return krok(drive, ted, d.cena_zmena || '');
+
+    var h = d.h;
+    if (h && h.length > 1 && ted > 0) {
+      var i = h.length - 1;
+      if (+h[i][1] !== ted) return null;
+      return krok(+h[i - 1][1], +h[i][1], h[i][0]);
+    }
+    return null;
   }
 
   function krok(drive, ted, kdy) {

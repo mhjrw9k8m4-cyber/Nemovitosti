@@ -410,6 +410,9 @@ jobs:
       - name: Historie ceny u pozemku sedí na archiv
         run: node scripts/test-cenova-historie.mjs
 
+      - name: Filtr „Zlevněné" ukazuje právě to, co zlevnilo
+        run: node scripts/test-zlevnene-filtr.mjs
+
       - name: Profil při výpadku netvrdí, že inzeráty nemáte
         run: node scripts/test-profil-vypadek.mjs
 

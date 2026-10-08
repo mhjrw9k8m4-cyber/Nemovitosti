@@ -38,15 +38,41 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { pkey } from './generate-parcel-pages.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ADR = path.join(KOREN, 'data', 'archiv');
 const STAV = path.join(ADR, 'stav.json');
 
+/* KLÍČ I ODSTRANĚNÍ DUPLICIT BERE ARCHIV Z TÝCHŽE MODULŮ JAKO WEB.
+   Kdyby si to tu počítal po svém, archiv by si pamatoval něco jiného,
+   než co web ukazuje — a to je právě ten druh rozdílu, který se pozná
+   až za rok, kdy už se s tím nedá nic dělat. */
+const _req = createRequire(import.meta.url);
+const KLIC = _req(path.join(KOREN, 'js', 'klic.js')).PKKlic;
+const PKH = _req(path.join(KOREN, 'js', 'hlidani-logika.js'));
+const PKC = _req(path.join(KOREN, 'js', 'cisteni.js'));
+
+/* VERZE STAVU. Při změně klíče se stará podoba MUSÍ zahodit, jinak by
+   se v jednom souboru potkaly dvě soustavy klíčů: všechno staré by
+   vypadalo jako zmizelé a všechno nové jako právě přidané. */
+export const VERZE = 2;
+
 export function nactiStav() {
-  try { return JSON.parse(fs.readFileSync(STAV, 'utf8')); }
-  catch (e) { return { verze: 1, den: '', nabidky: {} }; }
+  try {
+    const s = JSON.parse(fs.readFileSync(STAV, 'utf8'));
+    if (s && s.verze === VERZE) return s;
+    /* Starou verzi nejde dopočítat, jen přepočítat z historie gitu
+       (node scripts/archiv.mjs --prepocitat). Tiše ji přijmout je
+       to nejhorší, co se dá udělat. */
+    if (s && s.verze !== VERZE) {
+      console.error(`::error::data/archiv/stav.json je verze ${s.verze}, čekám ${VERZE}.`
+        + ' Spusťte: node scripts/archiv.mjs --prepocitat');
+      process.exit(1);
+    }
+  } catch (e) { /* není, začíná se od nuly */ }
+  return { verze: VERZE, den: '', nabidky: {} };
 }
 
 /* Z jedné nabídky udělá to, co si o ní archiv pamatuje. Víc ne: popisy
@@ -59,13 +85,30 @@ function zaznam(d) {
 /* JEDEN KROK: stav + dnešní nabídky → nový stav a uzavřené řádky.
    Čistá funkce, aby se dala zkoušet bez souborů i bez gitu. */
 export function krok(stav, nabidky, den) {
+  /* NEJDŘÍV DUPLICITY, PAK KLÍČ — a obojí tak, jak to dělá web.
+     Dřív tu stálo `if (!zive.has(pkey(d))) zive.set(...)` s poznámkou
+     „duplicity řeší web jinde; tady platí první". To odstranění duplicit
+     opravdu zastávalo, jenže pkey je hrubý: 38 klíčů sedí na 94 nabídek
+     a u 25 z nich se liší cena. Dva různé pozemky v jedné vsi tím
+     splynuly v jednu nabídku a archiv si podle pořadí v souboru
+     zapisoval, že „zlevnila" a zdražila zpátky. Osm ze 138 změn ceny
+     takhle vzniklo a nikdy se nestalo.
+     Teď duplicity odstraňuje PKHlidani.bezDuplicit (tentýž modul jako
+     mapa) a klíč rozlišuje podle adresy inzerátu (PKKlic.klicArchivu). */
+  /* POŘADÍ MUSÍ BÝT TOTÉŽ JAKO V APLIKACI: nejdřív PKCisteni.pozemky
+     (js/main.js ho volá na načtená data), až potom PKHlidani.bezDuplicit
+     (volá ho boot()). Když jsem to zkusil jen přes bezDuplicit nad
+     surovými daty, vybralo z dvojice duplicit JINÉHO zástupce než web —
+     a protože klíč archivu vychází z adresy inzerátu, sedlo z 131
+     historií na nabídky jen 73. Dedup musí být tatáž cesta, ne jen
+     tatáž funkce. */
+  const cista = PKH.bezDuplicit(PKC.pozemky((nabidky || []).filter((d) => d && d.place && d.okres)));
   const zive = new Map();
-  for (const d of nabidky || []) {
-    if (!d || !d.place || !d.okres) continue;
-    const k = pkey(d);
-    if (!zive.has(k)) zive.set(k, d);     // duplicity řeší web jinde; tady platí první
+  for (const d of cista) {
+    const k = KLIC.klicArchivu(d);
+    if (!zive.has(k)) zive.set(k, d);
   }
-  const novy = { verze: 1, den, nabidky: {} };
+  const novy = { verze: VERZE, den, nabidky: {} };
   const uzavrene = [];
 
   for (const [k, d] of zive) {
@@ -126,11 +169,30 @@ function dnes() { return new Date().toISOString().slice(0, 10); }
    běhu, takže historie trhu v repozitáři JE — jen se v ní nedá hledat.
    Tohle ji projde odzadu dopředu a udělá z ní archiv. Běží jen tehdy,
    když archiv ještě neexistuje; jinak by řádky přibyly podruhé. */
-function zpetne() {
+function zpetne({ prepocitat = false } = {}) {
+  if (prepocitat && fs.existsSync(ADR)) {
+    /* Maže se jen to, co tenhle skript sám vyrábí. */
+    for (const f of fs.readdirSync(ADR)) {
+      if (f.endsWith('.jsonl') || f === 'stav.json') fs.unlinkSync(path.join(ADR, f));
+    }
+    console.log('Archiv smazán, počítá se znovu z historie gitu.');
+  }
   const log = execFileSync('git', ['log', '--reverse', '--format=%H %ad', '--date=short',
     '--', 'data/opportunities.json'], { cwd: KOREN, encoding: 'utf8', maxBuffer: 1 << 28 });
-  const radky = log.trim().split('\n').filter(Boolean);
-  let stav = { verze: 1, den: '', nabidky: {} };
+  /* POSLEDNÍ OTISK DNE, NE PRVNÍ. Komentář výš to slibuje („stačí
+     poslední stav dne"), kód ale bral první: podmínka `den ===
+     posledniDen` přeskočila všechny další commity téhož dne. Robot
+     běží čtyřikrát denně a zdroje blikají — podle prvního běhu dne
+     vypadala nabídka, která se do večera vrátila, jako zmizelá. */
+  const radky = (function () {
+    const posledni = new Map();
+    for (const r of log.trim().split('\n').filter(Boolean)) {
+      const i = r.indexOf(' ');
+      posledni.set(r.slice(i + 1), r);          // --reverse: poslední zápis dne vyhraje
+    }
+    return [...posledni.values()];
+  }());
+  let stav = { verze: VERZE, den: '', nabidky: {} };
   let celkem = 0, pouzito = 0, posledniDen = '';
   for (const r of radky) {
     const [sha, den] = r.split(' ');
@@ -166,5 +228,6 @@ function krokDneska() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  if (process.argv.includes('--zpetne')) zpetne(); else krokDneska();
+  const prepocitat = process.argv.includes('--prepocitat');
+  if (prepocitat || process.argv.includes('--zpetne')) zpetne({ prepocitat }); else krokDneska();
 }

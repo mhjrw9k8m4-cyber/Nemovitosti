@@ -16,6 +16,8 @@
     { klic: 'celek',    stav: 'jenCelek',        tvar: 'logicka' },
     { klic: 'konci',    stav: 'urgentOnly',      tvar: 'logicka' },
     { klic: 'levne',    stav: 'levneOnly',       tvar: 'logicka' },
+
+    { klic: 'slevy',    stav: 'zlevneneOnly',    tvar: 'logicka' },
     { klic: 'podobne',  stav: 'ukazPodobne',     tvar: 'logicka' },
 
     { klic: 'kraj',     stav: 'krajFiltr',       tvar: 'text',    vychozi: 'all' },

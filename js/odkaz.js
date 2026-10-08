@@ -44,6 +44,10 @@
     { klic: 'celek',    stav: 'jenCelek',        tvar: 'logicka' },
     { klic: 'konci',    stav: 'urgentOnly',      tvar: 'logicka' },
     { klic: 'levne',    stav: 'levneOnly',       tvar: 'logicka' },
+    /* „Zlevněné" se sdílí stejně jako „pod obvyklou cenou": odkaz na
+       zlevněné pozemky v jednom okrese je přesně to, co si lidi posílají.
+       Bez tohohle řádku by se filtr zapnul, ale z odkazu vypadl. */
+    { klic: 'slevy',    stav: 'zlevneneOnly',    tvar: 'logicka' },
     { klic: 'podobne',  stav: 'ukazPodobne',     tvar: 'logicka' },
     /* DVA FILTRY NA KRAJ, NE JEDEN. „krajFiltr" je rozbalovátko nad
        mapou, „selectedKraj" je kraj vybraný klepnutím do mapy (ta se na

@@ -676,10 +676,18 @@
   var minPrice = 0, maxArea = 0;
   var perm2El = document.getElementById('map-perm2');
   var levneEl = document.getElementById('map-levne');
+  var zlevneneEl = document.getElementById('map-zlevnene');
   var maxPerM2 = 0;
 
   var krajFiltr = 'all';
   var levneOnly = false;
+
+  var zlevneneOnly = false;
+  function zlevnila(d) {
+    var Z = window.PKZlevneni;
+    var z = Z ? Z.zmena(d) : null;
+    return !!(z && z.dolu && !z.podezrela);
+  }
   var activeType = 'all';
 
   var druhVybrane = [];
@@ -3037,13 +3045,14 @@
     var okOkruh = !(dotazFiltr.okruh && okruhStred)
       || kmOd(okruhStred, d) <= dotazFiltr.okruh;
     var okLevne = !levneOnly || podObvyklou(d);
+    var okZlevnene = !zlevneneOnly || zlevnila(d);
 
     var okSkryt = ukazSkryte || !jeSkryty(d);
     var okProsle = ukazProsle || !jeProsle(d);
 
     var okTvar = !vyberTvar || (PKOkruh.vTvaru(d.lat, d.lng, vyberTvar));
     return okType && okSearch && okMisto && okPresne && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
-      && okPerM2 && okKraj && okLevne && okOkoli && okOkruh && okProsle && okVybaveni && okCelek && okDotaz && okTvar;
+      && okPerM2 && okKraj && okLevne && okZlevnene && okOkoli && okOkruh && okProsle && okVybaveni && okCelek && okDotaz && okTvar;
   }
 
   function bezVolnehoTextu() {
@@ -3128,6 +3137,10 @@
       function () { levneOnly = false; d.levne = false; },
       (function () { var a = levneOnly, b = d.levne; return function () { levneOnly = a; d.levne = b; }; }()),
       levneOnly ? 'Pod obvyklou cenou' : '');
+    pol('„zlevněné"', '„zlevněné"', zlevneneOnly,
+      function () { zlevneneOnly = false; },
+      (function () { var a = zlevneneOnly; return function () { zlevneneOnly = a; }; }()),
+      zlevneneOnly ? 'Zlevněné' : '');
     pol('blížící se termín', 'blížící se termín', urgentOnly,
       function () { urgentOnly = false; }, (function () { return function () { urgentOnly = true; }; }()),
       'Končí do ' + DNI_KONCI + ' dní');
@@ -4137,7 +4150,7 @@
       minPrice: minPrice, maxPrice: maxPrice,
       minArea: minArea, maxArea: maxArea, maxPerM2: maxPerM2,
       zadaneVybaveni: zadaneVybaveni,
-      jenCelek: jenCelek, urgentOnly: urgentOnly, levneOnly: levneOnly,
+      jenCelek: jenCelek, urgentOnly: urgentOnly, levneOnly: levneOnly, zlevneneOnly: zlevneneOnly,
       ukazPodobne: ukazPodobne,
       krajFiltr: krajFiltr, selectedKraj: selectedKraj,
 
@@ -4206,6 +4219,7 @@
 
       if (st.urgentOnly && !urgentOnly && urgentEl) { urgentEl.click(); neco = true; }
       if (st.levneOnly && !levneOnly && levneEl) { levneEl.click(); neco = true; }
+      if (st.zlevneneOnly && !zlevneneOnly && zlevneneEl) { zlevneneEl.click(); neco = true; }
       if (st.activeType && st.activeType !== 'all') {
         var tb = document.querySelector('[data-type="' + st.activeType + '"]');
         if (tb) { tb.click(); neco = true; }
@@ -4949,6 +4963,7 @@
     }
     prepinacPodleModelu(urgentEl, urgentOnly);
     prepinacPodleModelu(levneEl, levneOnly);
+    prepinacPodleModelu(zlevneneEl, zlevneneOnly);
 
     if (nearBtn) nearBtn.classList.toggle('on', !!okoliZap);
 
@@ -5020,6 +5035,12 @@
     levneEl.setAttribute('aria-pressed', String(levneOnly));
     renderList();
   });
+  if (zlevneneEl) zlevneneEl.addEventListener('click', function () {
+    zlevneneOnly = !zlevneneOnly;
+    zlevneneEl.classList.toggle('on', zlevneneOnly);
+    zlevneneEl.setAttribute('aria-pressed', String(zlevneneOnly));
+    renderList();
+  });
   refreshFavBtn();
 
   await dechni();
@@ -5072,7 +5093,7 @@
   function ulozFiltr() {
     zapisUloz(FILTR_KLIC, { typ: activeType, druh: druhVybrane.slice(), cena: maxPrice,
       plocha: minArea, cenaOd: minPrice, plochaDo: maxArea, urgent: urgentOnly, razeni: sortMode,
-      zaMetr: maxPerM2, kraj: krajFiltr, levne: levneOnly });
+      zaMetr: maxPerM2, kraj: krajFiltr, levne: levneOnly, zlevnene: zlevneneOnly });
   }
   function obnovFiltr() {
     var f = ctiUloz(FILTR_KLIC, null);
@@ -5099,8 +5120,10 @@
     if (f.zaMetr) maxPerM2 = f.zaMetr;
     if (f.kraj) krajFiltr = f.kraj;
     levneOnly = !!f.levne;
+    zlevneneOnly = !!f.zlevnene;
     if (perm2El && maxPerM2) perm2El.value = String(maxPerM2);
     if (levneEl) { levneEl.classList.toggle('on', levneOnly); levneEl.setAttribute('aria-pressed', String(levneOnly)); }
+    if (zlevneneEl) { zlevneneEl.classList.toggle('on', zlevneneOnly); zlevneneEl.setAttribute('aria-pressed', String(zlevneneOnly)); }
     if (urgentEl) urgentEl.checked = urgentOnly;
     if (sortEl) sortEl.value = sortMode;
     return true;
@@ -5298,9 +5321,10 @@
   }
 
   function loadJSON(url) { return fetch(url, { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
-  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), sbRpc('public_listings')])
+
+  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), sbRpc('public_listings'), loadJSON('data/zlevneni.json')])
     .then(function (res) {
-      var j = res[0], kraje = res[1], ul = res[2], live = res[3];
+      var j = res[0], kraje = res[1], ul = res[2], live = res[3], zl = res[4];
       var arr = Array.isArray(j) ? j : (j && j.opportunities);
 
       var nouzovyRezim = !(arr && arr.length);
@@ -5333,6 +5357,15 @@
       PKCisteni.majitele(live).forEach(function (d) { base.push(d); });
 
       base = PKCisteni.pozemky(base);
+
+      if (zl && zl.nabidky) {
+        var _h = 0;
+        base.forEach(function (d) {
+          var h = zl.nabidky[window.PKKlic.klicArchivu(d)];
+          if (h && h.length > 1) { d.h = h; _h++; }
+        });
+        if (window.PK_DEBUG) console.log('historie ceny: ' + _h);
+      }
       boot(base, kraje || null, j && j.updated, j && j.updated_at, j && j.sources);
     });
 })();
