@@ -1,0 +1,183 @@
+/* Test: měření návštěvnosti počítá, co má, a neodesílá, co nemá.
+   ==================================================================
+   Spuštění: node scripts/test-mereni.mjs
+     (potřebuje playwright-core; v sandboxu navíc PW_CHROMIUM=…/chrome)
+
+   js/mereni.js je na 2 177 stránkách a posílá do databáze. Dvě věci se
+   tedy musí držet úplně přesně:
+
+     A) NEODESLAT NIC, CO NEMÁ ODEJÍT. Mimo ostrý web, při „nesledovat",
+        v automatizovaném prohlížeči. Kdyby se měřilo z localhostu
+        a ze zkoušek, byla by čísla k ničemu — a to je horší než je
+        nemít, protože se podle nich rozhoduje.
+     B) NEPOSLAT NIC OSOBNÍHO. Z odkazujícího jen doména. Celá adresa
+        umí nést jméno (odkaz z pošty, ze sdílené konverzace), takže se
+        zahazuje v prohlížeči a na server nesmí dorazit vůbec.
+
+   Měří se na podstrčené doméně parcelaka.cz — jinak by se kontrolovalo
+   jen to, že stráž na localhostu mlčí, a nikdy to, co se posílá doopravdy.
+   ================================================================== */
+import { chromium } from 'playwright-core';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+let ok = 0, chyb = 0;
+const zpravy = [];
+function pravda(popis, vyslo, proc) {
+  if (vyslo) { ok++; zpravy.push('  ✓ ' + popis); }
+  else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
+}
+
+const TYPY = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript',
+  '.json': 'application/json', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
+
+const PW = process.env.PW_CHROMIUM;
+const browser = await chromium.launch(PW ? { executablePath: PW } : {});
+
+/* Otevře stránku, jako by běžela na parcelaka.cz, a vrátí, co odletělo
+   do zapis_navstevu. `nastav` smí před načtením dosadit vlastní stráže
+   (nesledovat, webdriver…). */
+async function otevri(stranka, nastav) {
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const page = await ctx.newPage();
+  const poslano = [];
+  /* Celý web se servíruje z disku pod jménem parcelaka.cz. */
+  await ctx.route('https://parcelaka.cz/**', (r) => {
+    const u = new URL(r.request().url());
+    const rel = decodeURIComponent(u.pathname).replace(/^\//, '') || 'index.html';
+    const f = path.join(KOREN, rel);
+    if (!f.startsWith(KOREN) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) return r.fulfill({ status: 404, body: '' });
+    return r.fulfill({ status: 200, contentType: TYPY[path.extname(f)] || 'application/octet-stream', body: fs.readFileSync(f) });
+  });
+  /* Databáze: zachytit volání a odpovědět prázdnem. */
+  await ctx.route('**/rest/v1/rpc/zapis_navstevu*', (r) => {
+    let telo = null;
+    try { telo = JSON.parse(r.request().postData() || '{}'); } catch (e) { telo = { nelzePrecist: true }; }
+    poslano.push({ telo, adresa: r.request().url() });
+    return r.fulfill({ status: 204, body: '' });
+  });
+  /* Nic jiného ven nepouštět — ať se nepozná měření od cizího volání. */
+  for (const v of ['**://*.tile.*/**', '**://*.openstreetmap.org/**', '**/_vercel/**']) {
+    await ctx.route(v, (r) => r.fulfill({ status: 204, body: '' })).catch(() => {});
+  }
+  /* PLAYWRIGHT JE PODLE PROHLÍŽEČE ROBOT a js/mereni.js roboty schválně
+     nepočítá — jinak by čísla nafoukly vlastní zkoušky. Pro případy,
+     kde se MÁ měřit, se tedy musí tvářit jako člověk; že stráž na
+     roboty funguje, ověřuje vlastní případ níž. */
+  /* `configurable: true` je tu podstatné: bez něj by se druhé
+     addInitScript (to z `nastav`) na téže vlastnosti rozbilo o tu
+     první definici, tiše by ho spolkl try/catch a případ s robotem by
+     měřil opak toho, co tvrdí. */
+  await page.addInitScript(() => {
+    try { Object.defineProperty(navigator, 'webdriver', { get: () => false, configurable: true }); } catch (e) {}
+  });
+  if (nastav) await page.addInitScript(nastav);
+  await page.goto('https://parcelaka.cz/' + stranka, { waitUntil: 'load' });
+  await page.waitForTimeout(1200);
+  await ctx.close();
+  return poslano;
+}
+
+/* ---- A) co se posílá, když se posílat má --------------------------- */
+const a = await otevri('kontakt.html');
+pravda('na ostré doméně se měření odešle (právě jednou)', a.length === 1, `odesláno ${a.length}×`);
+if (a.length) {
+  const t = a[0].telo;
+  pravda(`posílá jméno stránky („${t.p_stranka}")`, t.p_stranka === 'kontakt.html', JSON.stringify(t));
+  pravda(`posílá druh displeje („${t.p_zarizeni}")`, t.p_zarizeni === 'stolni' || t.p_zarizeni === 'mobil', JSON.stringify(t));
+  pravda('první stránka v relaci se počítá jako návštěva', t.p_prvni === true, JSON.stringify(t));
+  pravda('a nic víc než čtyři pole neposílá',
+    Object.keys(t).sort().join(',') === 'p_prvni,p_stranka,p_zarizeni,p_zdroj',
+    'pole: ' + Object.keys(t).join(', '));
+}
+
+/* ---- B) z odkazujícího jen doména ---------------------------------- */
+const b = await otevri('kontakt.html', () => {
+  Object.defineProperty(document, 'referrer', {
+    get: () => 'https://mail.seznam.cz/tajna-slozka?token=abc123&email=jan.novak%40seznam.cz',
+  });
+});
+if (b.length) {
+  const z = b[0].telo.p_zdroj;
+  pravda(`z odkazu zbyde jen doména („${z}")`, z === 'mail.seznam.cz', `posláno „${z}"`);
+  pravda('a nic z cesty, parametrů ani adresy v nich',
+    !/token|email|jan|novak|tajna|\/|\?|=/.test(String(z)),
+    `v poli zdroj stojí „${z}" — tohle by byl osobní údaj v databázi`);
+} else {
+  pravda('měření s odkazujícím odešlo', false, 'nic neodletělo, zkouška B nic neměří');
+}
+
+/* Proklik v rámci webu není zdroj návštěvy. */
+const c = await otevri('kontakt.html', () => {
+  Object.defineProperty(document, 'referrer', { get: () => 'https://parcelaka.cz/index.html' });
+});
+pravda('vlastní web se jako zdroj nepočítá', c.length === 1 && c[0].telo.p_zdroj === '',
+  c.length ? `posláno „${c[0].telo.p_zdroj}"` : 'nic neodletělo');
+
+/* ---- C) kdy se nesmí poslat nic ------------------------------------ */
+const dnt = await otevri('kontakt.html', () => {
+  Object.defineProperty(navigator, 'doNotTrack', { get: () => '1' });
+});
+pravda('„nesledovat" (DNT) měření úplně vypne', dnt.length === 0, `přesto odesláno ${dnt.length}×`);
+
+const gpc = await otevri('kontakt.html', () => {
+  Object.defineProperty(navigator, 'globalPrivacyControl', { get: () => true });
+});
+pravda('Global Privacy Control taky', gpc.length === 0, `přesto odesláno ${gpc.length}×`);
+
+/* Robot se nepočítá — tohle je ta stráž, kterou si otevri() vypíná. */
+const robot = await otevri('kontakt.html', () => {
+  try { Object.defineProperty(navigator, 'webdriver', { get: () => true, configurable: true }); } catch (e) {}
+});
+pravda('automatizovaný prohlížeč se nepočítá (vlastní zkoušky nekazí čísla)',
+  robot.length === 0, `přesto odesláno ${robot.length}×`);
+
+/* ---- D) mimo ostrý web ---------------------------------------------- */
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const page = await ctx.newPage();
+  const poslano = [];
+  await ctx.route('**/rest/v1/rpc/zapis_navstevu*', (r) => { poslano.push(1); return r.fulfill({ status: 204, body: '' }); });
+  await ctx.route('http://127.0.0.1:8777/**', (r) => {
+    const rel = decodeURIComponent(new URL(r.request().url()).pathname).replace(/^\//, '') || 'index.html';
+    const f = path.join(KOREN, rel);
+    if (!f.startsWith(KOREN) || !fs.existsSync(f)) return r.fulfill({ status: 404, body: '' });
+    return r.fulfill({ status: 200, contentType: TYPY[path.extname(f)] || 'application/octet-stream', body: fs.readFileSync(f) });
+  });
+  await page.goto('http://127.0.0.1:8777/kontakt.html', { waitUntil: 'load' });
+  await page.waitForTimeout(1200);
+  pravda('z localhostu se neměří (jinak by čísla počítala vývoj a zkoušky)',
+    poslano.length === 0, `přesto odesláno ${poslano.length}×`);
+  await ctx.close();
+}
+
+/* ---- E) pokrytí stránek a obsah migrace ---------------------------- */
+const stranky = fs.readdirSync(KOREN).filter((f) => f.endsWith('.html'));
+const s = stranky.filter((f) => /<script src="js\/(min\/)?mereni\.js/.test(fs.readFileSync(path.join(KOREN, f), 'utf8')));
+pravda(`měření je skoro na všech stránkách (${s.length} z ${stranky.length})`,
+  s.length > stranky.length - 10, `jen ${s.length}`);
+/* 404 schválně ne: musí se zobrazit, i když je web rozbitý, takže si
+   nenačítá vůbec nic. Diagnostika a přesměrovací útržky taky ne. */
+pravda('404.html měření nemá (musí jít zobrazit i při rozbitém webu)',
+  !/mereni\.js/.test(fs.readFileSync(path.join(KOREN, '404.html'), 'utf8')), '404 si načítá měření');
+
+const sql = fs.readFileSync(path.join(KOREN, 'supabase', 'navstevnost.sql'), 'utf8');
+pravda('tabulka nemá sloupec, do kterého by šel uložit člověk',
+  !/\b(ip|ip_adresa|user_agent|user_id|email|session|cookie|fingerprint)\b/i.test(sql.split('create table')[1].split(');')[0]),
+  'v tabulce je sloupec, který umí identifikovat návštěvníka');
+pravda('číst souhrn smí jen přihlášený, zapisovat i nepřihlášený',
+  /grant execute on function zapis_navstevu[\s\S]*?to anon, authenticated/.test(sql)
+  && /grant execute on function prehled_navstevnosti[\s\S]*?to authenticated/.test(sql),
+  'oprávnění nesedí');
+pravda('a je to v balíku supabase/00-vse.sql',
+  fs.readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8').includes('zapis_navstevu'),
+  'migrace by se při nasazení přeskočila');
+
+await browser.close();
+console.log('\nMěření návštěvnosti');
+console.log(zpravy.join('\n'));
+console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
+if (chyb) { console.log('::error::Měření: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+process.exit(0);

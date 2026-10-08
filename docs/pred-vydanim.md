@@ -7,6 +7,28 @@ za majitele nikdo udělat nemůže — jsou to účty, klíče a peníze.
 
 ---
 
+## 0. Nahrát měření návštěvnosti  ← nejlevnější a nejdřív
+
+**Proč první:** je to jediný údaj, který o webu chybí úplně. Dokud ho
+není, nedá se rozhodnout, co dodělávat, jestli má smysl platit doménu,
+ani kolik ten web stojí. A hlavně: **měření začíná dnem nasazení.**
+Zpětně se nedopočítá nic, takže každý den odkladu je den, který už
+nikdy nebude v grafu.
+
+**Co udělat (jednou, pár minut):**
+1. Supabase → SQL Editor → nahrát `supabase/navstevnost.sql`
+   (nebo celý `supabase/00-vse.sql`, je tam taky).
+2. Za pár dní si to přečíst:
+   `SUPABASE_SERVICE_ROLE_KEY=… node scripts/navstevnost.mjs`
+   Servisní klíč je v Supabase → Project Settings → API → service_role.
+
+**Co se měří:** datum, jméno stránky, doména odkazu, telefon/počítač.
+Nic víc. Žádná cookie, žádná IP, žádný identifikátor — v databázi
+nevzniká řádek za návštěvu, jen se zvedne čítač. Proto to nepotřebuje
+souhlas ani lištu. Kdo má v prohlížeči „nesledovat", se nepočítá.
+
+---
+
 ## 1. Obnova hesla chodí z cizí adresy  ← nejnaléhavější
 
 **Co se děje dnes:** `js/auth.js` volá `/auth/v1/recover`, tedy Supabase.

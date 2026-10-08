@@ -108,7 +108,23 @@
             <li><b>Účet pro přidání inzerátu.</b> Při registraci ukládáme e-mail a (zašifrované) heslo, abyste mohli vkládat a spravovat vlastní inzeráty. Právní základ: <b>plnění služby</b>.</li>
             <li><b>Údaje z inzerátu.</b> Co sami vyplníte u pozemku (obec, výměra, cena, případně kontakt na vás). Tyto údaje jsou <b>veřejné</b> — zobrazí se na mapě. Právní základ: <b>plnění služby</b>.</li>
             <li><b>Zpráva přes formulář.</b> Když nám napíšete zpětnou vazbu nebo dotaz, uložíme text a e-mail, který uvedete, abychom vám mohli odpovědět. Právní základ: <b>oprávněný zájem</b>.</li>
-            <li><b>Základní návštěvnost.</b> Anonymní statistiky návštěvnosti (kolik lidí web navštívilo, které stránky). Právní základ: <b>oprávněný zájem</b> na zlepšování webu.</li>
+            <!-- TAHLE ODRÁŽKA DLOUHO POPISOVALA NĚCO, CO SE NEDĚLO.
+                 Stálo tu „anonymní statistiky návštěvnosti" a o kus níž,
+                 že je zajišťuje Vercel a GitHub Pages. Ve skutečnosti se
+                 neměřilo nic: GitHub Pages majiteli žádná čísla nedává
+                 a vercelový skript se na parcelaka.cz vůbec nespouští
+                 (hlídá si doménu, viz konec téhle stránky). Zásady tedy
+                 slibovaly zpracování, které neexistovalo, a jmenovaly
+                 k němu zpracovatele, kteří s ním nemají nic společného.
+                 Dnes se měří doopravdy — a je tu napsané přesně co. -->
+            <li><b>Základní návštěvnost.</b> Počítáme, kolikrát se která stránka otevřela.
+              Ukládá se k tomu jen <b>datum</b>, <b>jméno stránky</b>, <b>doména odkazu</b>, odkud jste přišli
+              (tedy třeba „google.com" — nikdy celá adresa), a jestli jste na <b>telefonu, nebo na počítači</b>.
+              Nevzniká záznam o návštěvě ani o návštěvníkovi: v databázi je jen číslo, které se o jedničku zvýší.
+              <b>Žádná cookie, žádná IP adresa, žádný identifikátor zařízení.</b> Z toho, co se uloží, se tedy
+              nedá zjistit, kdo kde byl — ta informace nikdy nevznikla. Má-li váš prohlížeč zapnuté
+              „nesledovat" (DNT nebo Global Privacy Control), nepočítáme vás vůbec.
+              Právní základ: <b>oprávněný zájem</b> na zlepšování webu.</li>
           </ul>
           <p class="rules-note">Nesbíráme nic navíc. Neprodáváme ani nepronajímáme vaše údaje třetím stranám pro reklamu.</p>
         </div>
@@ -117,7 +133,8 @@
           <h2>Komu se údaje mohou dostat (zpracovatelé)</h2>
           <ul class="rule-list">
             <li><b>Supabase</b> — databáze a přihlašování (uložení e-mailů, účtů a inzerátů).</li>
-            <li><b>Vercel</b> a <b>GitHub Pages</b> — hosting webu a anonymní statistiky návštěvnosti.</li>
+            <li><b>Vercel</b> a <b>GitHub&nbsp;Pages</b> — hosting webu. Statistiky návštěvnosti od nich nebereme;
+              počítáme si je sami do vlastní databáze (Supabase), viz výš.</li>
             <li><b>Stripe</b> — zpracování platby, pokud si zaplatíte volitelné zvýraznění inzerátu. Platební údaje (číslo karty) zadáváte přímo u Stripe — <b>my je nevidíme ani neukládáme</b>.</li>
             <li><b>Esri</b> (<code>server.arcgisonline.com</code>) a <b>OpenStreetMap</b>
               (<code>tile.openstreetmap.org</code>) — <b>podklad mapy</b>. Mapa se skládá
@@ -235,5 +252,6 @@
 <script src="js/min/obsah.js?v=6a8bca35" defer></script>
 <script src="js/min/hlavicka.js?v=8249999c" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
+<script src="js/min/mereni.js?v=b2023a39" defer></script>
 </body>
 </html>

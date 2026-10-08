@@ -46,6 +46,9 @@ const PORADI = [
   // Na ničem výš nezávisí: váže se jen na účet (auth.uid()) a na klíč
   // pozemku, který je text z dat, ne cizí klíč do listings.
   ['poznamky.sql', 'soukromé poznámky k pozemkům na účet, ne jen v prohlížeči'],
+  // Taky na ničem nezávisí: vlastní tabulka čítačů, žádný cizí klíč,
+  // žádná vazba na účet. Může být kdekoli, je tedy na konci.
+  ['navstevnost.sql', 'vlastní měření návštěvnosti — čítače, bez cookies a bez IP'],
 ];
 
 const HLAVA = `-- =====================================================================

@@ -49,6 +49,7 @@ const V = {
   hlavicka: razitko('js/hlavicka.js'),
   grafCen: razitko('js/graf-cen.js'),
   offline: razitko('js/offline.js'),
+  mereni: razitko('js/mereni.js'),
   hledani: razitko('js/hledani.js'),
   cenyHledani: razitko('js/ceny-hledani.js'),
   leafletJs: razitko('vendor/leaflet/leaflet.js'),
@@ -578,6 +579,7 @@ function footer(){
 <script src="js/hlidani-logika.js?${V.hlidani}" defer></script>
 <script src="js/graf-cen.js?${V.grafCen}" defer></script>
 <script src="js/offline.js?${V.offline}" defer></script>
+<script src="js/mereni.js?${V.mereni}" defer></script>
 <script src="js/hlavicka.js?${V.hlavicka}" defer></script>
 </body>
 </html>

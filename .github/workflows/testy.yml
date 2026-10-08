@@ -413,6 +413,9 @@ jobs:
       - name: U verdiktu o ceně je vidět, z kolika nabídek vyšel
         run: node scripts/test-vzorek-verdiktu.mjs
 
+      - name: Měření návštěvnosti (co se posílá a co ne)
+        run: node scripts/test-mereni.mjs
+
       - name: Data stránky pozemku (dva malé soubory místo velkého)
         run: node scripts/test-data-stranky.mjs
 
