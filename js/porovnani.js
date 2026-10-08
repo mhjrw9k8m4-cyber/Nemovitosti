@@ -81,7 +81,8 @@
        schránka je synchronní a deset čtení za vykreslení je zbytečných. */
     var POZN = (window.PKPoznamky && window.PKPoznamky.vsechny) ? window.PKPoznamky.vsechny() : {};
     function poznamka(d) {
-      var z = POZN[window.PKKlic.pkey(d)];
+      var k = window.PKKlic.klicVe(POZN, d);
+      var z = k ? POZN[k] : null;
       return (z && z.text) ? z.text : '';
     }
     var radky = nalezene.map(function (d, i) {
@@ -196,8 +197,15 @@
     .then(function (j) {
       var D = (j && j.opportunities) || [];
       if (!klice.length) { sUkazkou(D); return; }
+      /* INDEX POD OBA TVARY KLÍČE. Uložené pozemky se od teď zapisují
+         jako pkey + výměra (PKKlic.klicPozemku), ale co si člověk uložil
+         dřív, nese hrubý pkey. Kdyby se indexovalo jen jedním tvarem,
+         polovina uložených by se tu „už nenašla v nabídce".
+         Nový tvar se zapisuje POZDĚJI, takže v případě shody vyhraje —
+         a to je správně: je přesnější. */
       var podleKlice = {};
       D.forEach(function (d) { podleKlice[window.PKKlic.pkey(d)] = d; });
+      D.forEach(function (d) { podleKlice[window.PKKlic.klicPozemku(d)] = d; });
       var nalezene = [];
       klice.forEach(function (k) { if (podleKlice[k]) nalezene.push(podleKlice[k]); });
       if (!nalezene.length) { prazdno('Uložené pozemky už v nabídce nejsou'); sUkazkou(D); return; }

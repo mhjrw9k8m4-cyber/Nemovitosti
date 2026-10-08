@@ -79,7 +79,14 @@
     { klic: 'pk_videno_v1', kde: 'session', skupina: 'provoz', nazev: 'Započítaná zhlédnutí',
       popis: 'Aby se zhlédnutí inzerátu nepočítalo dvakrát za návštěvu.', pocet: jeNeco },
     { klic: 'pk_poradi_seance', kde: 'session', skupina: 'provoz', nazev: 'Pořadí v této návštěvě',
-      popis: 'Aby se nabídky nepřeskupovaly při každém překreslení.', pocet: jeNeco }
+      popis: 'Aby se nabídky nepřeskupovaly při každém překreslení.', pocet: jeNeco },
+    /* Měření návštěvnosti (js/mereni.js) si tu drží jedinou informaci:
+       že tahle návštěva už byla započítaná. Chybělo to tady, takže
+       stránka „Moje data" o jedné věci, kterou si web pamatuje, mlčela —
+       a právě to je slib, který ta stránka dává. Našla to zkouška
+       scripts/test-ulozene.mjs, ne já. */
+    { klic: 'pk_mereni_relace', kde: 'session', skupina: 'provoz', nazev: 'Započítaná návštěva',
+      popis: 'Aby se jedna návštěva nepočítala do statistiky dvakrát.', pocet: jeNeco }
   ];
 
   var SKUPINY = [

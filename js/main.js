@@ -208,6 +208,7 @@
      protože by označil cizí pozemky jako uložené. */
   var pkey = window.PKKlic.pkey;
   var pkeyLegacy = window.PKKlic.pkeyLegacy;
+  var PKKlic = window.PKKlic;
   /* Název vlastní stránky pozemku. Týž výpočet dělá generátor v Node
      (scripts/generate-parcel-pages.mjs) i js/pozemek.js — kdyby se
      rozešly, vedly by odkazy na neexistující soubor. Hlídá to
@@ -1275,7 +1276,7 @@
     if (!minulaNavsteva || !d.first_seen) return false;
     if (d.first_seen > minulaNavsteva) return true;
     // Dávka z dne poslední návštěvy, která tu tehdy ještě nebyla.
-    return d.first_seen === minulaNavsteva && !videnoVse && !videnoMap[pkey(d)];
+    return d.first_seen === minulaNavsteva && !videnoVse && !PKKlic.jeMezi(videnoMap, d);
   }
   function pocetNovych() {
     var n = 0;
@@ -1337,10 +1338,13 @@
    * potřebuje odškrtávat, co už viděl. */
   var SKRYTE_KLIC = 'pk_skryte_v1';
   var skryte = ctiUloz(SKRYTE_KLIC, []) || [];
-  function jeSkryty(d) { return skryte.indexOf(pkey(d)) !== -1; }
+  /* Tentýž klíč jako u uložených, ze stejného důvodu: skrytí jednoho
+     pozemku schovávalo i jeho sousedy pod stejným hrubým klíčem. */
+  function jeSkryty(d) { return PKKlic.jeMezi(skryte, d); }
   function prepniSkryty(d) {
-    var k = pkey(d), i = skryte.indexOf(k);
-    if (i === -1) skryte.push(k); else skryte.splice(i, 1);
+    var stary = PKKlic.klicVe(skryte, d);
+    if (stary !== null) skryte.splice(skryte.indexOf(stary), 1);
+    else skryte.push(PKKlic.klicPozemku(d));
     zapisUloz(SKRYTE_KLIC, skryte);
   }
   /* VRÁCENÍ MUSÍ BÝT „UKAŽ ZPÁTKY", NE „PŘEPNI". Hláška s tlačítkem
@@ -1362,10 +1366,15 @@
   var FAV_KEY = 'pk_fav_v1';
   var favs = (function () { try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch (e) { return []; } })();
   function saveFavs(){ try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch (e) {} }
-  function isFav(d){ return favs.indexOf(pkey(d)) !== -1; }
+  /* KLÍČ NESMÍ BÝT HRUBÝ pkey. Prokázáno v prohlížeči: jeden uložený
+     klíč v Jirnech označil pět různých pozemků za 6,6 až 11,2 milionu.
+     Ukládá se proto PKKlic.klicPozemku (pkey + výměra), ale ČTE se
+     i starý tvar — co si člověk uložil dřív, nesmí zmizet. */
+  function isFav(d){ return PKKlic.jeMezi(favs, d); }
   function toggleFav(d){
-    var k = pkey(d), i = favs.indexOf(k);
-    if (i === -1) favs.push(k); else favs.splice(i, 1);
+    var stary = PKKlic.klicVe(favs, d);
+    if (stary !== null) favs.splice(favs.indexOf(stary), 1);
+    else favs.push(PKKlic.klicPozemku(d));
     saveFavs(); refreshFavBtn();
   }
   function refreshFavBtn(){
@@ -5091,7 +5100,7 @@
       var t = TYPE[d.type];
       var perM2 = zaMetr(d);
       var hot = !!hotIds[d._id];
-      var jeVidene = !!videneKlice[pkey(d)];
+      var jeVidene = PKKlic.jeMezi(videneKlice, d);
       var li = document.createElement('li');
       li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '') + (isFeatured(d) ? ' is-featured' : '')
         + (jeVidene ? ' je-videne' : '');
@@ -7193,7 +7202,7 @@
          filtrem. */
       var klice = [];
       for (var i = 0; i < DATA.length && klice.length <= VIDENO_STROP; i++) {
-        if (DATA[i].first_seen === iso) klice.push(pkey(DATA[i]));
+        if (DATA[i].first_seen === iso) klice.push(PKKlic.klicPozemku(DATA[i]));
       }
       zapisUloz(VIDENO_KLIC, klice.length > VIDENO_STROP
         ? { den: iso, vse: true }

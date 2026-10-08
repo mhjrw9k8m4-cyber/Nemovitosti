@@ -964,10 +964,21 @@ if (DRAZBA) {
 {
   const zdrojStranky = readFileSync('js/pozemek.js', 'utf8');
   const zdrojMapy = readFileSync('js/main.js', 'utf8');
-  pravda('stránka pozemku ukládá pod klíč se souřadnicemi, ne pod krátký',
-    /isFav\(d\)\s*\{\s*return favs\(\)\.indexOf\(pkeyPlny\(d\)\)/.test(zdrojStranky)
-    && /toggleFav\(d\)\s*\{\s*var arr = favs\(\), k = pkeyPlny\(d\)/.test(zdrojStranky),
-    'isFav/toggleFav v js/pozemek.js nepoužívají pkeyPlny — uložené pozemky se rozejdou s mapou');
+  /* TŘETÍ KOLO TÉHOŽ PROBLÉMU. Nejdřív se tu hlídalo, že stránka
+     nebere krátký klíč (bez souřadnic), potom že bere pkeyPlny. Ani ten
+     ale nestačil: 26 klíčů sedí na 59 nabídek a v Jirnech je pod jedním
+     pět parcel za 6,6 až 11,2 milionu. Obě poloviny teď musí sahat po
+     PKKlic.klicPozemku (pkey + výměra) — a hlavně po TÉMŽE, protože
+     zapisují do jednoho úložiště. Jak se to projeví uživateli, zkouší
+     scripts/test-klic-ulozenych.mjs; tady se hlídá jen ta shoda. */
+  pravda('stránka pozemku ukládá pod klicPozemku, ne pod hrubý klíč',
+    /isFav\(d\)\s*\{\s*return window\.PKKlic\.jeMezi\(favs\(\), d\)/.test(zdrojStranky)
+    && /arr\.push\(window\.PKKlic\.klicPozemku\(d\)\)/.test(zdrojStranky),
+    'isFav/toggleFav v js/pozemek.js nepoužívají PKKlic.klicPozemku — uložené se rozejdou s mapou');
+  pravda('a mapa taky',
+    /function isFav\(d\)\{ return PKKlic\.jeMezi\(favs, d\); \}/.test(zdrojMapy)
+    && /favs\.push\(PKKlic\.klicPozemku\(d\)\)/.test(zdrojMapy),
+    'isFav/toggleFav v js/main.js nepoužívají PKKlic.klicPozemku');
   pravda('a obě poloviny sahají do téhož úložiště (proto na tom záleží)',
     /pk_fav_v1/.test(zdrojStranky) && /pk_fav_v1/.test(zdrojMapy),
     'kdyby si každá polovina vedla vlastní seznam, tohle by nebyl problém — a tahle zkouška by neměla smysl');

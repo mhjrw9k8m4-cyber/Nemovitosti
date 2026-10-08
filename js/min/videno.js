@@ -37,8 +37,16 @@
 
   function klicPozemku(d) {
     if (!d) return '';
-    if (root.PKKlic && root.PKKlic.pkey) { try { return root.PKKlic.pkey(d); } catch (e) {} }
+    if (root.PKKlic && root.PKKlic.klicPozemku) { try { return root.PKKlic.klicPozemku(d); } catch (e) {} }
     return '';
+  }
+
+  function klicVeSchrance(m, d) {
+    if (!d) return '';
+    if (root.PKKlic && root.PKKlic.klicVe) {
+      try { var k = root.PKKlic.klicVe(m, d); if (k) return k; } catch (e) {}
+    }
+    return klicPozemku(d);
   }
 
   function oznac(d) {
@@ -51,8 +59,9 @@
   }
 
   function je(d) {
-    var k = klicPozemku(d);
-    return !!(k && cti()[k]);
+    var m = cti();
+    var k = klicVeSchrance(m, d);
+    return !!(k && m[k]);
   }
 
   function mnozina() {

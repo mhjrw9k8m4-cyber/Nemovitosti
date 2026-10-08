@@ -129,6 +129,7 @@
 
   var pkey = window.PKKlic.pkey;
   var pkeyLegacy = window.PKKlic.pkeyLegacy;
+  var PKKlic = window.PKKlic;
 
   var PK_DIAKR = { 'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z' };
 
@@ -827,7 +828,7 @@
     if (!minulaNavsteva || !d.first_seen) return false;
     if (d.first_seen > minulaNavsteva) return true;
 
-    return d.first_seen === minulaNavsteva && !videnoVse && !videnoMap[pkey(d)];
+    return d.first_seen === minulaNavsteva && !videnoVse && !PKKlic.jeMezi(videnoMap, d);
   }
   function pocetNovych() {
     var n = 0;
@@ -867,10 +868,12 @@
 
   var SKRYTE_KLIC = 'pk_skryte_v1';
   var skryte = ctiUloz(SKRYTE_KLIC, []) || [];
-  function jeSkryty(d) { return skryte.indexOf(pkey(d)) !== -1; }
+
+  function jeSkryty(d) { return PKKlic.jeMezi(skryte, d); }
   function prepniSkryty(d) {
-    var k = pkey(d), i = skryte.indexOf(k);
-    if (i === -1) skryte.push(k); else skryte.splice(i, 1);
+    var stary = PKKlic.klicVe(skryte, d);
+    if (stary !== null) skryte.splice(skryte.indexOf(stary), 1);
+    else skryte.push(PKKlic.klicPozemku(d));
     zapisUloz(SKRYTE_KLIC, skryte);
   }
 
@@ -885,10 +888,12 @@
   var FAV_KEY = 'pk_fav_v1';
   var favs = (function () { try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch (e) { return []; } })();
   function saveFavs(){ try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch (e) {} }
-  function isFav(d){ return favs.indexOf(pkey(d)) !== -1; }
+
+  function isFav(d){ return PKKlic.jeMezi(favs, d); }
   function toggleFav(d){
-    var k = pkey(d), i = favs.indexOf(k);
-    if (i === -1) favs.push(k); else favs.splice(i, 1);
+    var stary = PKKlic.klicVe(favs, d);
+    if (stary !== null) favs.splice(favs.indexOf(stary), 1);
+    else favs.push(PKKlic.klicPozemku(d));
     saveFavs(); refreshFavBtn();
   }
   function refreshFavBtn(){
@@ -3444,7 +3449,7 @@
       var t = TYPE[d.type];
       var perM2 = zaMetr(d);
       var hot = !!hotIds[d._id];
-      var jeVidene = !!videneKlice[pkey(d)];
+      var jeVidene = PKKlic.jeMezi(videneKlice, d);
       var li = document.createElement('li');
       li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '') + (isFeatured(d) ? ' is-featured' : '')
         + (jeVidene ? ' je-videne' : '');
@@ -5081,7 +5086,7 @@
 
       var klice = [];
       for (var i = 0; i < DATA.length && klice.length <= VIDENO_STROP; i++) {
-        if (DATA[i].first_seen === iso) klice.push(pkey(DATA[i]));
+        if (DATA[i].first_seen === iso) klice.push(PKKlic.klicPozemku(DATA[i]));
       }
       zapisUloz(VIDENO_KLIC, klice.length > VIDENO_STROP
         ? { den: iso, vse: true }

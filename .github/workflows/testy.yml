@@ -413,6 +413,9 @@ jobs:
       - name: Filtr „Zlevněné" ukazuje právě to, co zlevnilo
         run: node scripts/test-zlevnene-filtr.mjs
 
+      - name: Uložení jednoho pozemku neoznačí sousedy
+        run: node scripts/test-klic-ulozenych.mjs
+
       - name: Profil při výpadku netvrdí, že inzeráty nemáte
         run: node scripts/test-profil-vypadek.mjs
 

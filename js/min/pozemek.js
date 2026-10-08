@@ -130,12 +130,13 @@
   var FAV_KEY = 'pk_fav_v1';
   function favs() { try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch (e) { return []; } }
 
-  function isFav(d) { return favs().indexOf(pkeyPlny(d)) !== -1; }
+  function isFav(d) { return window.PKKlic.jeMezi(favs(), d); }
   function toggleFav(d) {
-    var arr = favs(), k = pkeyPlny(d), i = arr.indexOf(k);
-    if (i === -1) arr.push(k); else arr.splice(i, 1);
+    var arr = favs(), stary = window.PKKlic.klicVe(arr, d);
+    if (stary !== null) arr.splice(arr.indexOf(stary), 1);
+    else arr.push(window.PKKlic.klicPozemku(d));
     try { localStorage.setItem(FAV_KEY, JSON.stringify(arr)); } catch (e) {}
-    return i === -1;
+    return stary === null;
   }
 
   function toast(msg) {

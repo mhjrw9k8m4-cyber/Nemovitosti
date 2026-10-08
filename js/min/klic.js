@@ -40,6 +40,39 @@
     }
     return s;
   }
+
+  function klicPozemku(d) {
+    if (!d) return '';
+    var v = (typeof d.area === 'number' && isFinite(d.area)) ? Math.round(d.area) : 0;
+    return pkey(d) + '#v' + v;
+  }
+
+  function kliceProCteni(d) {
+    if (!d) return [];
+    return [klicPozemku(d), pkey(d)];
+  }
+
+  function jeMezi(sbirka, d) {
+    if (!sbirka) return false;
+    var kl = kliceProCteni(d);
+    for (var i = 0; i < kl.length; i++) {
+      if (!kl[i]) continue;
+      if (Array.isArray(sbirka)) { if (sbirka.indexOf(kl[i]) !== -1) return true; }
+      else if (Object.prototype.hasOwnProperty.call(sbirka, kl[i])) return true;
+    }
+    return false;
+  }
+
+  function klicVe(sbirka, d) {
+    var kl = kliceProCteni(d);
+    for (var i = 0; i < kl.length; i++) {
+      if (!kl[i]) continue;
+      if (Array.isArray(sbirka)) { if (sbirka.indexOf(kl[i]) !== -1) return kl[i]; }
+      else if (sbirka && Object.prototype.hasOwnProperty.call(sbirka, kl[i])) return kl[i];
+    }
+    return null;
+  }
+
   function klicArchivu(d) {
     if (!d) return '';
     var t = totoznostZdroje(typeof d.url === 'string' ? d.url.trim() : '');
@@ -48,5 +81,6 @@
     return pkey(d) + '#v' + v;
   }
   root.PKKlic = { pkey: pkey, pkeyLegacy: pkeyLegacy, klicArchivu: klicArchivu,
+    klicPozemku: klicPozemku, kliceProCteni: kliceProCteni, jeMezi: jeMezi, klicVe: klicVe,
     totoznostZdroje: totoznostZdroje, otisk: otisk };
 }(typeof window !== 'undefined' ? window : this));

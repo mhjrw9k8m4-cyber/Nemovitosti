@@ -99,6 +99,61 @@
     }
     return s;
   }
+  /* ===== KLÍČ PRO TO, CO SI ČLOVĚK ULOŽIL =============================
+     Uložené pozemky, poznámky, skryté a „už otevřené" se dosud klíčovaly
+     hrubým pkey. Prokázáno v prohlížeči: jeden uložený klíč v Jirnech
+     označil PĚT různých pozemků (616, 715, 897, 492 a 514 m² za 6,6 až
+     11,2 milionu). Člověk si uloží jeden a ve „Uložených" jich má pět,
+     každý za jinou cenu. Dotčeno je 59 nabídek z 1 948 ve 26 skupinách.
+
+     PŘIDÁVÁ SE VÝMĚRA, NE ČÍSLO INZERÁTU. U archivu rozlišuje číslo
+     inzerátu, tady ne — uložený pozemek musí zůstat uložený i tehdy,
+     když portál inzerát přepíše. Měřeno na 25 dnech historie, kolik
+     přechodů mezi dny identita vydrží:
+         pkey            45 144 vydrželo · 824 ztraceno
+         pkey + výměra   45 722 vydrželo · 851 ztraceno
+         číslo inzerátu  45 730 vydrželo · 909 ztraceno
+     Výměra tedy drží skoro tolik jako číslo inzerátu a ztrácí méně.
+     Kolizí z 26 zbydou 4 (osm nabídek): dvojice, které se liší JEN
+     cenou — ty se rozlišit nedají, protože cena do klíče patřit nesmí
+     (jinak by se po zlevnění uložený pozemek „odložil").
+
+     STARÝ TVAR SE POŘÁD ČTE. Co si člověk uložil dřív, je v prohlížeči
+     i na serveru zapsané pod pkey; kdyby se přestalo číst, přišel by
+     o to. Zapisuje se nový tvar, čte se oboje — viz kliceProCteni. */
+  function klicPozemku(d) {
+    if (!d) return '';
+    var v = (typeof d.area === 'number' && isFinite(d.area)) ? Math.round(d.area) : 0;
+    return pkey(d) + '#v' + v;
+  }
+  /* Klíče, pod kterými se pozemek může mít uložený: nový tvar a starý.
+     Jedno místo, aby se všechny části webu ptaly stejně. */
+  function kliceProCteni(d) {
+    if (!d) return [];
+    return [klicPozemku(d), pkey(d)];
+  }
+  /* Je pozemek v tom seznamu klíčů? Snese pole i objekt (poznámky). */
+  function jeMezi(sbirka, d) {
+    if (!sbirka) return false;
+    var kl = kliceProCteni(d);
+    for (var i = 0; i < kl.length; i++) {
+      if (!kl[i]) continue;
+      if (Array.isArray(sbirka)) { if (sbirka.indexOf(kl[i]) !== -1) return true; }
+      else if (Object.prototype.hasOwnProperty.call(sbirka, kl[i])) return true;
+    }
+    return false;
+  }
+  /* Pod kterým klíčem to v té sbírce doopravdy je (nový má přednost). */
+  function klicVe(sbirka, d) {
+    var kl = kliceProCteni(d);
+    for (var i = 0; i < kl.length; i++) {
+      if (!kl[i]) continue;
+      if (Array.isArray(sbirka)) { if (sbirka.indexOf(kl[i]) !== -1) return kl[i]; }
+      else if (sbirka && Object.prototype.hasOwnProperty.call(sbirka, kl[i])) return kl[i];
+    }
+    return null;
+  }
+
   function klicArchivu(d) {
     if (!d) return '';
     var t = totoznostZdroje(typeof d.url === 'string' ? d.url.trim() : '');
@@ -107,5 +162,6 @@
     return pkey(d) + '#v' + v;
   }
   root.PKKlic = { pkey: pkey, pkeyLegacy: pkeyLegacy, klicArchivu: klicArchivu,
+    klicPozemku: klicPozemku, kliceProCteni: kliceProCteni, jeMezi: jeMezi, klicVe: klicVe,
     totoznostZdroje: totoznostZdroje, otisk: otisk };
 }(typeof window !== 'undefined' ? window : this));

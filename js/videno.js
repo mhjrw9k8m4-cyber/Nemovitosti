@@ -59,10 +59,23 @@
     return o2;
   }
 
+  /* KLÍČ SE BERE Z js/klic.js, a je to klicPozemku (pkey + výměra),
+     ne hrubý pkey. Pod hrubým klíčem sedí v Jirnech pět různých pozemků
+     a už otevřené jednoho se objevily u všech pěti.
+     ČTE SE I STARÝ TVAR: co si člověk zapsal dřív, je uložené pod pkey
+     a nesmí zmizet. Zapisuje se nový. */
   function klicPozemku(d) {
     if (!d) return '';
-    if (root.PKKlic && root.PKKlic.pkey) { try { return root.PKKlic.pkey(d); } catch (e) {} }
+    if (root.PKKlic && root.PKKlic.klicPozemku) { try { return root.PKKlic.klicPozemku(d); } catch (e) {} }
     return '';
+  }
+  /* Pod kterým klíčem to v té schránce doopravdy je — nový, nebo starý. */
+  function klicVeSchrance(m, d) {
+    if (!d) return '';
+    if (root.PKKlic && root.PKKlic.klicVe) {
+      try { var k = root.PKKlic.klicVe(m, d); if (k) return k; } catch (e) {}
+    }
+    return klicPozemku(d);
   }
 
   /** Zapíše, že se pozemek otevřel. Vrací klíč, nebo prázdný řetězec. */
@@ -76,8 +89,9 @@
   }
   /** Byl už otevřený? */
   function je(d) {
-    var k = klicPozemku(d);
-    return !!(k && cti()[k]);
+    var m = cti();
+    var k = klicVeSchrance(m, d);
+    return !!(k && m[k]);
   }
   /** Celá množina klíčů — pro výpis, ať se nečte schránka u každé karty. */
   function mnozina() {

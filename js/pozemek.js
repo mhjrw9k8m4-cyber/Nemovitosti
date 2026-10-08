@@ -215,12 +215,19 @@
      pkeyPlny() přidává souřadnice a je to týž výpočet jako v main.js;
      kolizí je 21 místo 310. Že se ty dvě poloviny nerozejdou, hlídá
      scripts/test-mapa-pozemku.mjs. */
-  function isFav(d) { return favs().indexOf(pkeyPlny(d)) !== -1; }
+  /* A POŘÁD TO NEBYLO DOST. S pkeyPlny zbylo 26 klíčů, pod kterými leží
+     59 různých nabídek — v Jirnech pět stavebních parcel za 6,6 až 11,2
+     milionu. Uložení jedné označilo všech pět. Klíč je proto
+     PKKlic.klicPozemku (pkey + výměra), 26 kolizí → 4; co se liší jen
+     cenou, rozlišit nejde, protože cena v klíči být nesmí. Starý tvar se
+     dál čte, aby o dřív uložené pozemky nikdo nepřišel. */
+  function isFav(d) { return window.PKKlic.jeMezi(favs(), d); }
   function toggleFav(d) {
-    var arr = favs(), k = pkeyPlny(d), i = arr.indexOf(k);
-    if (i === -1) arr.push(k); else arr.splice(i, 1);
+    var arr = favs(), stary = window.PKKlic.klicVe(arr, d);
+    if (stary !== null) arr.splice(arr.indexOf(stary), 1);
+    else arr.push(window.PKKlic.klicPozemku(d));
     try { localStorage.setItem(FAV_KEY, JSON.stringify(arr)); } catch (e) {}
-    return i === -1;
+    return stary === null;
   }
 
   function toast(msg) {

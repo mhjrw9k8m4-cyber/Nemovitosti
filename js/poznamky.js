@@ -61,10 +61,23 @@
     meziText = surovy;
     return mezi;
   }
+  /* KLÍČ SE BERE Z js/klic.js, a je to klicPozemku (pkey + výměra),
+     ne hrubý pkey. Pod hrubým klíčem sedí v Jirnech pět různých pozemků
+     a poznámky jednoho se objevily u všech pěti.
+     ČTE SE I STARÝ TVAR: co si člověk zapsal dřív, je uložené pod pkey
+     a nesmí zmizet. Zapisuje se nový. */
   function klicPozemku(d) {
     if (!d) return '';
-    if (root.PKKlic && root.PKKlic.pkey) { try { return root.PKKlic.pkey(d); } catch (e) {} }
+    if (root.PKKlic && root.PKKlic.klicPozemku) { try { return root.PKKlic.klicPozemku(d); } catch (e) {} }
     return '';
+  }
+  /* Pod kterým klíčem to v té schránce doopravdy je — nový, nebo starý. */
+  function klicVeSchrance(m, d) {
+    if (!d) return '';
+    if (root.PKKlic && root.PKKlic.klicVe) {
+      try { var k = root.PKKlic.klicVe(m, d); if (k) return k; } catch (e) {}
+    }
+    return klicPozemku(d);
   }
   /* Když je plno, vyhodí se NEJSTARŠÍ podle času úpravy. Pořadí klíčů
      v JSON není nic, na co by se dalo spolehnout. */
@@ -79,9 +92,10 @@
 
   /** Text poznámky k pozemku ('' = žádná). */
   function text(d) {
-    var k = klicPozemku(d);
+    var m = cti();
+    var k = klicVeSchrance(m, d);
     if (!k) return '';
-    var z = cti()[k];
+    var z = m[k];
     return (z && typeof z.text === 'string') ? z.text : '';
   }
   /** Uloží (prázdný text poznámku smaže). Vrací true, když se to povedlo. */
@@ -90,6 +104,11 @@
     if (!k) return false;
     var m = cti();
     var t = String(novy == null ? '' : novy).slice(0, ZNAKU);
+    /* Kdyby tu poznámka ležela pod STARÝM klíčem, zůstala by vedle nové
+       a text by se po uložení nezměnil — čte se totiž ta, která se najde
+       první. Starý zápis se proto vždycky zahodí. */
+    var stary = klicVeSchrance(m, d);
+    if (stary && stary !== k) delete m[stary];
     if (!t.trim()) delete m[k];
     /* `nahrano` se zápisem SHAZUJE: tenhle text na účtu ještě není.
        Nastaví se až tím, co se z účtu doopravdy vrátí (viz sync). */

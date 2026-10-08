@@ -18,10 +18,19 @@
     meziText = surovy;
     return mezi;
   }
+
   function klicPozemku(d) {
     if (!d) return '';
-    if (root.PKKlic && root.PKKlic.pkey) { try { return root.PKKlic.pkey(d); } catch (e) {} }
+    if (root.PKKlic && root.PKKlic.klicPozemku) { try { return root.PKKlic.klicPozemku(d); } catch (e) {} }
     return '';
+  }
+
+  function klicVeSchrance(m, d) {
+    if (!d) return '';
+    if (root.PKKlic && root.PKKlic.klicVe) {
+      try { var k = root.PKKlic.klicVe(m, d); if (k) return k; } catch (e) {}
+    }
+    return klicPozemku(d);
   }
 
   function uklid(m) {
@@ -34,9 +43,10 @@
   }
 
   function text(d) {
-    var k = klicPozemku(d);
+    var m = cti();
+    var k = klicVeSchrance(m, d);
     if (!k) return '';
-    var z = cti()[k];
+    var z = m[k];
     return (z && typeof z.text === 'string') ? z.text : '';
   }
 
@@ -45,6 +55,9 @@
     if (!k) return false;
     var m = cti();
     var t = String(novy == null ? '' : novy).slice(0, ZNAKU);
+
+    var stary = klicVeSchrance(m, d);
+    if (stary && stary !== k) delete m[stary];
     if (!t.trim()) delete m[k];
 
     else m[k] = { text: t, kdy: Date.now() };

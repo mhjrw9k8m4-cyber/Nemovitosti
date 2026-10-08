@@ -420,7 +420,11 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
   await p.waitForTimeout(2400);
 
   const d = { place: 'Mazání', parcel: '7', okres: 'Benešov', lat: 49.9, lng: 14.7 };
-  const klic = await p.evaluate((dd) => window.PKKlic.pkey(dd), d);
+  /* klicPozemku, ne pkey: pod hrubým pkey ležely poznámky k pěti různým
+     pozemkům naráz (viz scripts/test-klic-ulozenych.mjs), takže se klíč
+     zpřesnil o výměru. Tady výměra není, takže vyjde „…#v0" — podstatné
+     je, že se zkouška ptá TÝMŽ výpočtem jako modul. */
+  const klic = await p.evaluate((dd) => window.PKKlic.klicPozemku(dd), d);
 
   // 1) napsat a nechat potvrdit účtem
   await p.evaluate((dd) => window.PKPoznamky.uloz(dd, 'u plotu je studna'), d);
@@ -459,7 +463,7 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
      opravou mazání rozbilo tohle, přihlášení by lidem mazalo poznámky. */
   const d2 = { place: 'PredPrihlasenim', parcel: '8', okres: 'Benešov', lat: 49.9, lng: 14.7 };
   const klic2 = await p.evaluate((dd) => {
-    const k = window.PKKlic.pkey(dd);
+    const k = window.PKKlic.klicPozemku(dd);
     const m = JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}');
     m[k] = { text: 'psáno bez účtu', kdy: Date.now() };   // bez nahrano
     localStorage.setItem('pk_poznamky_v1', JSON.stringify(m));
@@ -549,11 +553,35 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
         t.dispatchEvent(new Event('input', { bubbles: true }));
       });
       await p.waitForTimeout(1000);
-      const klicPoznamky = await p.evaluate(() =>
-        Object.keys(JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}')));
+      /* KLÍČ SE SKLÁDÁ Z OBOJÍHO: z pkey té karty (data-pk) a z výměry,
+         kterou si stránka nese vepsanou (window.PK_POZEMEK.v). Prosté
+         „začíná na data-pk" by nestačilo — pod jedním pkey leží až pět
+         různých pozemků a právě jejich záměna je to, co tahle zkouška
+         hlídá od začátku. */
+      /* Výměra se čte z toho, co stránka UKAZUJE (řádek „Výměra"), ne
+         z ostrůvku window.PK_POZEMEK: na obecné stránce
+         pozemek.html?p=… žádný ostrůvek není a vracelo to nulu. */
+      const ulozeno = await p.evaluate(() => {
+        /* Dlaždice .pz-klic má hodnotu v <b> a popisek v <span>. */
+        let v = 0;
+        for (const el of document.querySelectorAll('.pz-klic')) {
+          const popis = ((el.querySelector('span') || {}).textContent || '').trim();
+          if (popis !== 'Výměra') continue;
+          const hodnota = ((el.querySelector('b') || {}).textContent || '').replace(/[\s\u00a0]/g, '');
+          const m = hodnota.match(/^(\d+)m²/);
+          if (m) { v = Number(m[1]); break; }
+        }
+        return {
+          klice: Object.keys(JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}')),
+          vymera: v,
+        };
+      });
+      pravda('a na stránce je vidět výměra, podle které se klíč skládá',
+        ulozeno.vymera > 0, 'řádek „Výměra" se nenašel — kontrola níž by měřila nulu');
+      const cekanyKlic = slozena.klic + '#v' + Math.round(ulozeno.vymera);
       pravda('poznámka se uloží pod klíč TÉ karty, ze které jsem přišel',
-        klicPoznamky.indexOf(slozena.klic) !== -1,
-        `uloženo pod ${JSON.stringify(klicPoznamky)}, karta má ${slozena.klic}`);
+        ulozeno.klice.indexOf(cekanyKlic) !== -1,
+        `uloženo pod ${JSON.stringify(ulozeno.klice)}, čekáno ${cekanyKlic}`);
       await p.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
       await p.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
       await p.waitForTimeout(2600);

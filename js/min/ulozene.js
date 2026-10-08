@@ -56,7 +56,10 @@
     { klic: 'pk_videno_v1', kde: 'session', skupina: 'provoz', nazev: 'Započítaná zhlédnutí',
       popis: 'Aby se zhlédnutí inzerátu nepočítalo dvakrát za návštěvu.', pocet: jeNeco },
     { klic: 'pk_poradi_seance', kde: 'session', skupina: 'provoz', nazev: 'Pořadí v této návštěvě',
-      popis: 'Aby se nabídky nepřeskupovaly při každém překreslení.', pocet: jeNeco }
+      popis: 'Aby se nabídky nepřeskupovaly při každém překreslení.', pocet: jeNeco },
+
+    { klic: 'pk_mereni_relace', kde: 'session', skupina: 'provoz', nazev: 'Započítaná návštěva',
+      popis: 'Aby se jedna návštěva nepočítala do statistiky dvakrát.', pocet: jeNeco }
   ];
 
   var SKUPINY = [

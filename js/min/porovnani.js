@@ -55,7 +55,8 @@
 
     var POZN = (window.PKPoznamky && window.PKPoznamky.vsechny) ? window.PKPoznamky.vsechny() : {};
     function poznamka(d) {
-      var z = POZN[window.PKKlic.pkey(d)];
+      var k = window.PKKlic.klicVe(POZN, d);
+      var z = k ? POZN[k] : null;
       return (z && z.text) ? z.text : '';
     }
     var radky = nalezene.map(function (d, i) {
@@ -146,8 +147,10 @@
     .then(function (j) {
       var D = (j && j.opportunities) || [];
       if (!klice.length) { sUkazkou(D); return; }
+
       var podleKlice = {};
       D.forEach(function (d) { podleKlice[window.PKKlic.pkey(d)] = d; });
+      D.forEach(function (d) { podleKlice[window.PKKlic.klicPozemku(d)] = d; });
       var nalezene = [];
       klice.forEach(function (k) { if (podleKlice[k]) nalezene.push(podleKlice[k]); });
       if (!nalezene.length) { prazdno('Uložené pozemky už v nabídce nejsou'); sUkazkou(D); return; }
