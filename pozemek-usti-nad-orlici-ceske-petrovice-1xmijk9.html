@@ -561,13 +561,20 @@
 <script src="js/min/snimek.js?v=d4e40486"></script>
 <script src="js/min/terminy.js?v=cf102557"></script>
 <script src="js/min/ceny.js?v=17955bd7"></script>
-  <script src="js/min/zlevneni.js?v=8cbae6d1" defer></script>
+<script src="js/min/zlevneni.js?v=8cbae6d1" defer></script>
 <script src="js/min/vybaveni.js?v=68e3d418"></script>
 <script src="js/min/radce.js?v=f8a46b6d"></script>
 <script src="js/min/klic.js?v=17fa93b6"></script>
 <script src="js/min/videno.js?v=a269d74b"></script>
 <script src="js/min/poznamky.js?v=966134ca"></script>
-<!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
+<script src="js/min/hlidani-logika.js?v=404eb49d"></script>
+<script src="js/min/pozemek.js?v=79719cfe"></script>
+<script src="js/min/config.js?v=8ba36013" defer></script>
+<script src="js/min/auth.js?v=bec7a315" defer></script>
+<script src="js/min/hlavicka.js?v=8249999c" defer></script>
+<script src="js/min/offline.js?v=16a48df3" defer></script>
+<script src="js/min/mereni.js?v=b2023a39" defer></script>
+  <!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
      než js/pozemek.js postaví cenový model: staví ho z téže hromádky
      jako mapa, tedy bez duplicit. Proto tu tenhle modul stojí jako
      obyčejný skript PŘED ním, a ne v odložené skupině níž — odložené
@@ -575,11 +582,9 @@
      postavit z 2 018 nabídek místo 1 995. Pozdější spotřebitelé
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
-<script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 1 975 m² — České Petrovice","description":"Na prodej · 1 256 100 Kč (636 Kč/m²) · 1 975 m² · České Petrovice, okres Ústí nad Orlicí. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-usti-nad-orlici-ceske-petrovice-1xmijk9.html","address":{"@type":"PostalAddress","addressLocality":"České Petrovice","addressRegion":"Ústí nad Orlicí","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.1192764,"longitude":16.6053693}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Ústí nad Orlicí","item":"https://www.parcelaka.cz/pozemky-okres-usti-nad-orlici.html"},{"@type":"ListItem","position":4,"name":"Stavební pozemek 1 975 m² — České Petrovice","item":"https://www.parcelaka.cz/pozemek-usti-nad-orlici-ceske-petrovice-1xmijk9.html"}]}]</script>
 <script>window.PK_UKONCENO="2026-10-08";</script>
 <script>window.PK_POZEMEK={"k":"České Petrovice|—|Ústí nad Orlicí|50.119|16.605","ll":[50.1192764,16.6053693],"v":1975,"c":1256100,"r":"data/okres/usti-nad-orlici.json"};</script>
-<script src="js/min/pozemek.js?v=79719cfe"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -587,11 +592,6 @@
    říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
    na nasazení u Vercelu. */
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
-<script src="js/min/config.js?v=8ba36013" defer></script>
-<script src="js/min/auth.js?v=bec7a315" defer></script>
-<script src="js/min/hlavicka.js?v=8249999c" defer></script>
-<script src="js/min/offline.js?v=16a48df3" defer></script>
-<script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Ústí nad Orlicí 22 km · Hradec Králové 56 km"</script>
 <script type="application/json" id="pz-popis-data">"Nabízím k prodeji stavební pozemek o rozloze 1975 m², který představuje ideální investici pro realizaci stavebních projektů. Jako přímý majitel této nemovitosti zdůrazňuji, že se jedná o pozemek určený ke stavebním účelům, což otevírá široké možnosti využití podle individuálních představ a potřeb. Díky své prostornosti a strategické poloze působí tento pozemek atraktivně zejména pro zájemce hledající investici s perspektivou dalšího rozvoje."</script>
 </body>
