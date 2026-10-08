@@ -382,16 +382,37 @@ export function migrujSkripty(sablona, h) {
      cizí (kdyby někdy nějaký byl) zůstanou na místě. Pak se na místo
      prvního vyjmutého vloží celá sekvence z předlohy. Tím se opraví
      i pořadí, ne jen chybějící kusy. */
+  /* KAM se blok vloží, se nesmí počítat jako odstup ve VSTUPU. Ten odstup
+     platí ve `h`, ale krájí se jím `out`, tedy text UŽ bez vyjmutých
+     skriptů — a jakmile něco padne před prvním skriptem předlohy, vloží
+     se blok o ten kus dál. Naměřeno na pozemek-beroun-beroun-cpw8uy.html,
+     kde mrtvý skript stál před menu.js: blok se usadil o 55 znaků dál,
+     doprostřed komentáře („MUSÍ <script src=…"), takže `<!--` spolklo
+     všech devatenáct skriptů stránky. Místo odstupu tu proto stojí
+     značka, kterou si text odnese sám, ať se před ní vyjme cokoli. */
+  const ZNACKA = '<!--PK-SEM-SKRIPTY-->';
+  if (h.indexOf(ZNACKA) >= 0) throw new Error('migrujSkripty: ve stránce už je značka ' + ZNACKA);
   let prvni = -1;
-  let out = h.replace(VZOR, (cela, _adr, jmeno, _zbytek, odkud) => {
-    if (!znam.has(jmeno)) return cela;
-    if (prvni < 0) prvni = odkud;
+  let out = h.replace(VZOR, (cela, adr, jmeno, _zbytek, odkud) => {
+    if (!znam.has(jmeno)) {
+      /* CIZÍ SKRIPT ZŮSTÁVÁ — ALE JEN KDYŽ OPRAVDU EXISTUJE.
+         „Cizí" tu znamenalo „plátno nezná předloha", a to sedělo, dokud
+         šlo o skript přidaný ručně. Jenže týž popis sedí i na skript,
+         který z předlohy ZMIZEL — ten už předloha také nezná, takže tu
+         zůstával navěky. Naměřeno po odebrání kalkulačky návratnosti:
+         94 ukončených stránek si dál říkalo o js/min/navratnost.js, který
+         na disku není — tedy 94 stránek s jedním požadavkem, který skončí
+         chybou 404. Rozhoduje tedy disk, ne předloha: co existuje,
+         zůstává; co ne, jde pryč. */
+      try { if (!fs.existsSync(path.join(ROOT, adr))) return ''; } catch (e) {}
+      return cela;
+    }
+    if (prvni < 0) { prvni = odkud; return ZNACKA; }
     return '';
   });
   if (prvni < 0) throw new Error('migrujSkripty: ve stránce není ani jeden skript předlohy — nemám kam vložit');
   const blok = zPredlohy.map((x) => x.cela).join('\n') + '\n';
-  out = out.slice(0, prvni) + blok + out.slice(prvni);
-  return out;
+  return out.replace(ZNACKA, blok);
 }
 
 export function ukoncenaStranka(obsah, den, podobne) {

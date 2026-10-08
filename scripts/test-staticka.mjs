@@ -450,6 +450,68 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
   console.log(`Offline režim: service worker se přihlašuje na ${sOffline} stránkách, sw.js se nestampuje.`);
 }
 
+/* --- ŽÁDNÁ STRÁNKA SI NESMÍ ŘÍKAT O SKRIPT, KTERÝ NEEXISTUJE -------
+ *
+ * Tohle se stalo: kalkulačka návratnosti šla na přání pryč i se svým
+ * js/navratnost.js, jenže 94 už UKONČENÝCH stránek pozemků (ty, co
+ * čekají devadesát dní, než se smažou) si o něj dál říkalo. Generátor je
+ * nepřepisuje celé — záměrně, už jsou to náhrobky — a jeho migrace
+ * skriptů nechávala na pokoji všechno, co nezná předloha. Týž popis
+ * ale sedí na ručně přidaný skript i na skript, který z předlohy zmizel.
+ * Výsledek: 94 stránek, z nichž každá posílala požadavek končící 404.
+ *
+ * Kontrola je záměrně hloupá: vezme každý <script src="js/…">
+ * a podívá se, jestli ten soubor na disku je. */
+{
+  const chybejici = new Map();
+  const zakomentovane = [];
+  let stranek = 0, odkazu = 0;
+  for (const f of fs.readdirSync(ROOT)) {
+    if (!f.endsWith('.html')) continue;
+    stranek++;
+    const h = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    for (const m of h.matchAll(/<script[^>]+src="(js\/[^"?]+\.js)/g)) {
+      odkazu++;
+      if (fs.existsSync(path.join(ROOT, m[1]))) continue;
+      if (!chybejici.has(m[1])) chybejici.set(m[1], []);
+      chybejici.get(m[1]).push(f);
+    }
+    /* A DRUHÁ POLOVINA TÉŽE KONTROLY: soubor sice existuje, ale stránka
+       ho nespustí, protože celý odkaz leží v komentáři. Naměřeno na
+       pozemek-beroun-beroun-cpw8uy.html: migrace skriptů vložila blok
+       o 55 znaků dál, doprostřed vysvětlivky, takže `<!--` spolklo
+       všech devatenáct skriptů. Soubory přitom na disku všechny byly,
+       takže kontrola výš mlčela — a stránka nedělala vůbec nic.
+       Takový stav se navíc sám nespraví: ukončená stránka se nevyrábí
+       z dat, jen se jí dohánějí přepisy, a migrace skriptů komentáře
+       nerozlišuje — vyjme devatenáct skriptů a vloží je zpátky na
+       totéž místo, tedy znovu dovnitř komentáře. Zastavit to musí
+       tahle kontrola, než se to dostane do commitu. */
+    for (const k of h.matchAll(/<!--[\s\S]*?-->/g)) {
+      const kolik = (k[0].match(/<script[^>]+src="js\//g) || []).length;
+      if (kolik) zakomentovane.push({ f, kolik });
+    }
+  }
+  if (zakomentovane.length) {
+    for (const { f, kolik } of zakomentovane.slice(0, 5)) {
+      console.error(`::error::${f}: ${kolik} odkazů na skripty uvízlo v HTML komentáři — stránka je nespustí.`);
+    }
+    if (zakomentovane.length > 5) console.error(`::error::… a dalších ${zakomentovane.length - 5} stránek.`);
+    process.exit(1);
+  }
+  if (!odkazu) {
+    console.error('::error::Na žádné stránce není odkaz na skript js/ — kontrola by prošla naprázdno.');
+    process.exit(1);
+  }
+  if (chybejici.size) {
+    for (const [adr, kde] of chybejici) {
+      console.error(`::error::Stránky si říkají o ${adr}, který neexistuje (${kde.length}×, např. ${kde[0]}).`);
+    }
+    process.exit(1);
+  }
+  console.log(`Odkazy na skripty: ${odkazu} na ${stranek} stránkách, všechny soubory existují.`);
+}
+
 console.log(`\nStatická kontrola: ${souboru} souborů, ${podezreni ? podezreni + ' podezřelých volání' : 'žádné osiřelé volání'}.`);
 // Nepadáme — jsou to podezření, ne jistoty. Padá se jen tehdy, když by
 // bylo podezření nápadně moc (to už znamená, že se rozbil rozbor sám).

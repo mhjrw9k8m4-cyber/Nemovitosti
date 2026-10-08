@@ -68,6 +68,54 @@ try {
   writeFileSync(cesta, readFileSync(path.join(KOREN, vzor), 'utf8'));
   pravda('zkušební osiřelá stránka vznikla', existsSync(cesta), cesta);
 
+  /* MIGRACE SKRIPTŮ NA UKONČENÉ STRÁNCE — bez prohlížeče, na čisté funkci.
+     Ukončená stránka se znovu nevyrábí z dat, jen se jí dohánějí přepisy,
+     které musí platit všude. Jeden z nich vyměňuje blok skriptů. Dvě vady
+     v něm se naměřily, obě na skutečných stránkách:
+
+     1) Skript, který z předlohy ZMIZEL, tu zůstával navěky — „předloha ho
+        nezná" platilo pro skript ručně přidaný i pro skript odebraný.
+        Po odebrání kalkulačky návratnosti si o js/min/navratnost.js
+        říkalo 94 ukončených stránek, a ten soubor na disku není.
+     2) Jakmile se takový mrtvý skript vyjímal PŘED prvním skriptem
+        předlohy, vložil se celý blok o jeho délku dál — na jedné stránce
+        o 55 znaků, doprostřed komentáře. Tím `<!--` spolklo všech
+        devatenáct skriptů a stránka nespustila vůbec nic. */
+  {
+    const { migrujSkripty } = await import('./generate-parcel-pages.mjs');
+    const sablona = readFileSync(path.join(KOREN, 'pozemek.html'), 'utf8');
+    const puvodni = readFileSync(cesta, 'utf8');
+    const MRTVY = '<script src="js/min/tenhle-soubor-neexistuje.js?v=deadbeef"></script>\n';
+    const PRVNI = (/<script src="js\/(?:min\/)?[A-Za-z0-9_-]+\.js(?:\?v=[A-Za-z0-9]+)?"[^>]*><\/script>\n/.exec(puvodni) || [''])[0];
+    pravda('ve zkušební stránce se našel první skript předlohy', !!PRVNI,
+      'bez něj není kam mrtvý skript postavit a kontroly níž by mlčely');
+
+    const cista = migrujSkripty(sablona, puvodni);
+    for (const [kde, h] of [
+      ['před prvním skriptem předlohy', puvodni.replace(PRVNI, MRTVY + PRVNI)],
+      ['za posledním skriptem předlohy', puvodni.replace(PRVNI, PRVNI + MRTVY)]
+    ]) {
+      const out = migrujSkripty(sablona, h);
+      pravda(`mrtvý skript ${kde} jde pryč`, out.indexOf('tenhle-soubor-neexistuje') < 0,
+        'zůstal — stránka si říká o soubor, který na disku není, a dostane 404');
+      pravda(`a blok skriptů se vloží na totéž místo (${kde})`, out === cista,
+        'výsledek se liší od běhu bez mrtvého skriptu — místo vložení se posunulo');
+      const vKomentari = (out.match(/<!--[\s\S]*?-->/g) || []).filter((x) => x.indexOf('<script src="js/') >= 0);
+      pravda(`žádný skript neskončil v komentáři (${kde})`, vKomentari.length === 0,
+        `v komentáři uvízlo skriptů: ${vKomentari.length} — stránka by nespustila nic`);
+    }
+
+    /* A naopak: cizí skript, který NA DISKU JE, se nesmí vyhodit.
+       Rozhoduje disk, ne předloha. */
+    const ZIVY = 'js/min/dotaz.js';   // existuje, ale předloha pozemku ho nemá
+    pravda('podmínka má smysl: zkušební cizí skript na disku opravdu je',
+      existsSync(path.join(KOREN, ZIVY)), ZIVY + ' chybí — kontrola níž by mlčela o ničem');
+    pravda('cizí skript, který existuje, zůstává',
+      migrujSkripty(sablona, puvodni.replace(PRVNI, '<script src="' + ZIVY + '?v=deadbeef" data-cizi></script>\n' + PRVNI))
+        .indexOf('data-cizi') >= 0,
+      'vyhozen — ruční doplněk na jedné stránce by se tichounce ztrácel');
+  }
+
   generuj();
 
   pravda('generátor ji NESMAZAL', existsSync(cesta),
