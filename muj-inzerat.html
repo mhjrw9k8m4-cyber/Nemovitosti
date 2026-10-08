@@ -39,7 +39,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=cafe95a5">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=bd7e6669">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:var(--r-lg); padding:24px 20px 20px;
@@ -537,11 +537,12 @@
     function prehledJinych() {
       if (!A || !A.rpc) return;
       var zp = q('pf-zpravy'), hl = q('pf-hlidani');
-      if (zp) A.rpc('my_threads', {}, true).then(function (res) {
-        if (!res || !res.ok || !Array.isArray(res.data)) return;
-        var n = 0;
-        res.data.forEach(function (t) { n += Math.max(0, parseInt(t && t.unread, 10) || 0); });
-        zp.textContent = fmt(n);
+      /* TÝŽ DOTAZ, DVĚ MÍSTA. Počet nepřečtených potřebuje dlaždice
+         i odznak na záložce (js/ucet-taby.js). Modul si ho vyzvedne
+         jednou a půjčí přes příslib — kdyby se tu volalo `my_threads`
+         znovu, šly by ze stránky dva stejné dotazy za sebou. */
+      if (zp && window.PKUcetTaby) PKUcetTaby.nepreCtene().then(function (n) {
+        if (typeof n === 'number') zp.textContent = fmt(n);
       }, function () {});
       if (hl) A.rpc('my_searches', {}, true).then(function (res) {
         if (!res || !res.ok || !Array.isArray(res.data)) return;
@@ -811,6 +812,7 @@ document.addEventListener('click', function (e) {
 });
 </script>
 <script src="js/min/menu.js?v=252f6284" defer></script>
+<script src="js/min/ucet-taby.js?v=8f9d9301" defer></script>
 <script src="js/min/hlidani-logika.js?v=404eb49d" defer></script>
 <script src="js/min/hlavicka.js?v=8249999c" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>

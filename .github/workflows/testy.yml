@@ -404,6 +404,9 @@ jobs:
       - name: Profil při výpadku netvrdí, že inzeráty nemáte
         run: node scripts/test-profil-vypadek.mjs
 
+      - name: Počet nepřečtených na záložce Zprávy
+        run: node scripts/test-odznak-zprav.mjs
+
       - name: Data stránky pozemku (dva malé soubory místo velkého)
         run: node scripts/test-data-stranky.mjs
 

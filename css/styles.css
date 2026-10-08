@@ -3364,6 +3364,17 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
   border-color:var(--copper-bright); font-weight:700;}
 .uc-taby a:focus-visible{outline:2px solid var(--copper); outline-offset:-2px; border-radius:var(--r-xs);}
 @media (max-width:600px){ .uc-taby a{padding:10px 13px; font-size:14px;} }
+/* POČET NEPŘEČTENÝCH NA ZÁLOŽCE ZPRÁV (js/ucet-taby.js).
+   Kroužek, ne jen číslo: u slova „Zprávy" by se holá číslovka četla
+   jako část názvu. Barvu nese značková plocha, protože tohle je jediné
+   místo v účtu, které si říká o pozornost hned teď — zájemce čeká na
+   odpověď. Odznak se vůbec nevykreslí, dokud není co ukázat. */
+.uc-taby a{display:inline-flex; align-items:center; gap:7px;}
+.uc-tab-pocet{display:inline-flex; align-items:center; justify-content:center;
+  min-width:20px; height:20px; padding:0 6px; border-radius:999px;
+  background:var(--plocha-znacka); color:#fff;
+  font-family:var(--font-mono); font-size:11px; font-weight:700; line-height:1;
+  font-variant-numeric:tabular-nums;}
 /* MÁM INZERÁT JINDE. Stojí NAD formulářem, ne v rozbalovátku dole:
    je to zkratka k vyplnění, takže musí být vidět dřív, než se člověk
    pustí do psaní. Jinak ji najde, až když je hotový. */
