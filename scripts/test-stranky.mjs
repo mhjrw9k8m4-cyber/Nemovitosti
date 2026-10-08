@@ -92,6 +92,21 @@ zpravy.push(`  · prošlo se ${odkazu} odkazů ve ${soubory.length} souborech`);
     if (vsechny.length !== UCET.length) {
       potize.push(`v záložkách na ${f} je ${vsechny.length} položek, má jich být ${UCET.length}`);
     }
+    /* O PŘIHLÁŠENÍ SE MUSÍ VĚDĚT PŘED PRVNÍM VYKRESLENÍM.
+       Stránky účtu vypadají přihlášenému jinak: povídání o funkci se
+       neukazuje, místo přihlašovací karty přijde obsah. Když se to rozhodne
+       až skriptem na konci stránky, nejdřív se nakreslí jedna podoba a pak
+       uhne druhé — změřeno CLS 0,1745 na Zprávách a 0,0939 na Hlídání.
+       Vložený skript v hlavičce stránky to rozhodne dřív, než se cokoli
+       nakreslí. Hlídá se tady, protože měření CLS ho spolehlivě
+       nezachytí: na rychlém stroji stihne i odložený skript běžet dřív,
+       než prohlížeč poprvé kreslí, a zkouška by prošla. */
+    const hlavicka = h.slice(0, h.indexOf('</head>'));
+    if (!/localStorage\.getItem\('pk_auth'\)/.test(hlavicka)) {
+      potize.push(`${f} nezjišťuje přihlášení před vykreslením (chybí vložený skript v <head>)`);
+    } else if (!/pk-prihlasen/.test(hlavicka) || !/pk-odhlasen/.test(hlavicka)) {
+      potize.push(`${f}: vložený skript v <head> nenasazuje obě třídy (pk-prihlasen i pk-odhlasen)`);
+    }
     const tady = [...pruh.matchAll(/<a href="([^"]+)"[^>]*aria-current="page"/g)].map((m) => m[1]);
     if (tady.length !== 1) potize.push(`na ${f} je označeno ${tady.length} otevřených záložek, má být právě jedna`);
     else if (tady[0] !== f) potize.push(`na ${f} je jako otevřená označena záložka „${tady[0]}"`);

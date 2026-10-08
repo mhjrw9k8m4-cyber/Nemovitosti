@@ -160,7 +160,10 @@
     @media (pointer: coarse) {
       .pf-logout{min-height:44px;}
     }
-  </style>
+      /* Rezerva viz komentář u #mi-dole v těle stránky. */
+    #mi-dole{min-height:354px;}
+    @media (min-width:700px){ #mi-dole{min-height:332px;} }
+</style>
 </head>
 <body>
 
@@ -326,6 +329,17 @@
         </div>
 
         <div class="rules-sect" id="mi-moje-wrap" style="margin:28px 2px 0;"><h2>Moje inzeráty</h2></div>
+        <!-- MÍSTO PRO INZERÁTY SI DRŽÍ VÝŠKU OD ZAČÁTKU.
+             Nejdřív je tu jen řádek „Načítám…" (22 px) a po odpovědi
+             databáze ho vystřídá buď seznam, nebo karta „zatím žádný
+             inzerát" (354 px na telefonu, 332 na monitoru). Bez rezervy
+             tedy všechno pod tím — Uložené pozemky — uskočilo o tři sta
+             pixelů: změřeno pozorovatelem layout-shift, CLS 0,0699
+             u přihlášeného, mez webu je 0,05.
+             Rezerva se rovná prázdnému stavu, protože ten vidí každý nový
+             účet. Kdo má inzerátů víc, tomu se místo roztáhne — to už je
+             růst dolů, ne uskočení nahoru. -->
+        <div id="mi-dole">
         <p class="add-msg" id="mi-status" role="status" aria-live="polite">Načítám…</p>
         <div id="mi-list"></div>
         <div id="mi-empty" hidden>
@@ -337,7 +351,23 @@
             <div style="margin-top:14px;"><button type="button" id="mi-reload" class="linklike" style="font-size:13px;">Už jste inzerát přidali? Načíst znovu</button></div>
           </div>
         </div>
+        </div><!-- /mi-dole -->
       </div>
+
+      <!-- KTERÁ Z TĚCH DVOU KARET SE UKÁŽE, SE MUSÍ VĚDĚT PŘED VYKRESLENÍM.
+           Obě jsou v HTML hidden a odkrýval je až skript na konci stránky —
+           to znamená, že se stránka nejdřív nakreslí bez nich a všechno pod
+           nimi pak uskočí o jejich výšku (přihlašovací karta 590 px, panel
+           profilu 731 px). Změřeno pozorovatelem layout-shift
+           s přihlášeným účtem: CLS 0,0699, mez webu je 0,05.
+           Třídu pk-prihlasen už v té chvíli nasadil vložený skript
+           v hlavičce stránky, takže tady stačí podle ní odkrýt tu správnou.
+           Skript na konci stránky dělá totéž co dřív; nastaví už nastavené. -->
+      <script>(function(){try{
+        var jePrihlasen = document.documentElement.classList.contains('pk-prihlasen');
+        var e = document.getElementById(jePrihlasen ? 'mi-panel' : 'mi-auth');
+        if (e) e.hidden = false;
+      }catch(e){}}());</script>
 
       <!-- Uložené pozemky (lokální, funguje i bez přihlášení) -->
       <div id="mi-saved-wrap" style="margin-top:24px;">

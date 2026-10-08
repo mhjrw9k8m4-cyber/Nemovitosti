@@ -123,6 +123,67 @@ for (const [sirka, vyska, jmeno] of [[390, 844, 'telefon'], [1280, 900, 'monitor
   }
 }
 
+/* ---------- Totéž, ale PŘIHLÁŠENÉMU ----------
+ *
+ * Kontroly výš měří odhlášeného návštěvníka — a stránky účtu vypadají
+ * po přihlášení ÚPLNĚ JINAK: místo přihlašovací karty přijde panel
+ * profilu, místo povídání o funkci rovnou obsah. Co se neměří, to se
+ * rozbije: změřeno pozorovatelem layout-shift s přihlášeným účtem
+ * CLS 0,1745 na Zprávách, 0,0939 na Hlídání a 0,0699 na profilu —
+ * všechno nad mezí, a žádná zkouška o tom nevěděla.
+ *
+ * Token se podstrkuje do úložiště, ne přihlašováním formulářem: měří
+ * se rozvržení, ne přihlašování (to má svou zkoušku). */
+for (const [sirka, vyska, jmeno] of [[390, 844, 'telefon'], [1280, 900, 'monitor']]) {
+  for (const [stranka, coMusiByt] of [
+    ['hlidani.html', '#hl-root *'],
+    ['zpravy.html', '#zp-root *'],
+    ['muj-inzerat.html', '#mi-panel'],
+  ]) {
+    const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: vyska } });
+    await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+      body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+    const p = await ctx.newPage();
+    await p.addInitScript(() => {
+      window.__cls = 0; window.__kdo = [];
+      try {
+        new PerformanceObserver((l) => {
+          for (const e of l.getEntries()) {
+            if (e.hadRecentInput) continue;
+            window.__cls += e.value;
+            window.__kdo.push(Math.round(e.startTime) + ' ms, ' + e.value.toFixed(3) + ': '
+              + (e.sources || []).map((x) => {
+                const n = x.node;
+                return n ? (n.tagName || '?') + (n.id ? '#' + n.id : '') : '?';
+              }).join(', '));
+          }
+        }).observe({ type: 'layout-shift', buffered: true });
+      } catch (e) {}
+    });
+    /* Jiná stránka téhož původu, ať je kam uložit token. */
+    await p.goto(`${BASE}/kontakt.html`, { waitUntil: 'domcontentloaded' });
+    await p.evaluate(() => localStorage.setItem('pk_auth', JSON.stringify({
+      access_token: 'tok-zajemce', refresh_token: 'r1',
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      user: { id: 'u1', email: 'test@example.invalid' },
+    })));
+    await p.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' });
+    await p.waitForTimeout(6000);
+    const v = await p.evaluate((sel) => ({
+      cls: +window.__cls.toFixed(4), kdo: window.__kdo,
+      obsah: document.querySelectorAll(sel).length,
+      prihlasen: document.documentElement.classList.contains('pk-prihlasen'),
+    }), coMusiByt);
+    pravda(`${jmeno} · ${stranka} (přihlášen): stránka ví, že je přihlášeno`,
+      v.prihlasen, 'chybí třída pk-prihlasen — měřil by se odhlášený stav');
+    pravda(`${jmeno} · ${stranka} (přihlášen): vykreslil se obsah (jinak zkouška nic neměří)`,
+      v.obsah > 0, `prvků „${coMusiByt}": ${v.obsah}`);
+    pravda(`${jmeno} · ${stranka} (přihlášen): rozvržení neposkakuje (CLS ${v.cls} ≤ ${MEZ})`,
+      v.cls <= MEZ, v.kdo.join(' | '));
+    await ctx.close();
+  }
+}
+
 /* ---------- Hlídka vršku: stránka začíná nahoře ----------
  *
  * iOS Safari si pamatuje předchozí polohu rolování a rád web otevře
