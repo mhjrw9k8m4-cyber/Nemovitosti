@@ -97,7 +97,12 @@ for (const s of STRANKY) {
    vazby staví JavaScript. Odhlášenému jich tam našel JEDNU, přihlášenému
    patnáct. Kdyby se přihlášení rozbilo, spadne tahle kontrola, a ne
    až někdo za půl roku. */
-pravda(`a bylo vůbec co měřit (${vazeb} vazeb)`, vazeb >= 45,
+/* 52 → 43 PO ODEBRÁNÍ HAMBURGERU. Tlačítko neslo aria-controls="nav"
+   a aria-expanded na každé měřené stránce, takže s ním zmizelo devět
+   vazeb. Mez se proto snížila na naměřenou skutečnost — ne proto, aby
+   zkouška prošla, ale aby zase hlídala těsně: kdyby teď ubyla jediná
+   další, pozná se to. */
+pravda(`a bylo vůbec co měřit (${vazeb} vazeb)`, vazeb >= 43,
   `nalezeno jen ${vazeb} vazeb — stránky se nenačetly`);
 pravda(`a záložky na Hlídání se opravdu postavily (${poStrankach['hlidani.html'] || 0})`,
   (poStrankach['hlidani.html'] || 0) >= 10,

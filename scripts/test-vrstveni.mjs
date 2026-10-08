@@ -78,101 +78,48 @@ async function stranka(sirka, prihlasit) {
   await ctx.close();
 }
 
-/* ---------- 2. mobilní menu ---------- */
+/* ---------- 2. pás navigace drží v hlavičce ----------
+   Nabídka byla postupně panel pod křížkem, pak spodní lišta a teď je
+   to vodorovný pás odkazů v hlavičce. U panelu se tu měřilo, že leží
+   nad obsahem; u pásu je otázka jiná: drží v hlavičce, kryje ho její
+   podklad, a nepřekrývá ho nic, co po stránce plave? */
 {
   const ctx = await stranka(390, true);
   const p = await ctx.newPage();
   await p.goto(`${BASE}/pozemky-okres-tabor.html`);
-  await p.waitForTimeout(1200);
-  await p.click('.nav-toggle');
-  await p.waitForTimeout(500);
+  await p.waitForTimeout(1500);
 
   const stav = await p.evaluate(() => {
     const nav = document.querySelector('#nav');
-    const r = nav.getBoundingClientRect();
-    const el = document.elementFromPoint(Math.round(r.x + r.width / 2), Math.round(r.y + r.height / 2));
-    const hlavicka = document.querySelector('header').getBoundingClientRect();
+    const h = document.querySelector('header');
+    const r = nav.getBoundingClientRect(), hr = h.getBoundingClientRect();
+    const bod = (x, y) => { const el = document.elementFromPoint(x, y); return el ? (el.closest('#nav') ? 'pás' : (el.className || el.tagName) + '') : 'nic'; };
+    const st = getComputedStyle(h);
+    const kryje = st.backgroundColor.indexOf('rgba') < 0 ||
+      parseFloat((st.backgroundColor.match(/([\d.]+)\)$/) || [0, '0'])[1]) >= 0.8 ||
+      (st.backdropFilter && st.backdropFilter !== 'none');
     return {
-      nahore: el ? (el.closest('#nav') ? 'menu' : (el.className || el.tagName) + '') : 'nic',
-      menuZacinaPodHlavickou: Math.round(r.top) >= Math.round(hlavicka.bottom) - 2,
-      // Neprůhlednost se nedá číst jen z backgroundColor: menu má přechod,
-      // takže barva je průhledná a kryje až obrázek. Bereme obojí a
-      // hlídáme, že ani jedna zarážka není průsvitná.
-      pozadiNepruhledne: (() => {
-        const st = getComputedStyle(nav);
-        const barvaKryje = st.backgroundColor.indexOf('rgba') < 0 &&
-                           st.backgroundColor !== 'transparent';
-        if (barvaKryje) return true;
-        const obr = st.backgroundImage;
-        if (!obr || obr === 'none') return false;
-        const zarazky = obr.match(/rgba?\([^)]+\)/g) || [];
-        if (!zarazky.length) return false;
-        return zarazky.every((z) => {
-          const c = z.replace(/rgba?\(|\)/g, '').split(',').map(parseFloat);
-          return c.length < 4 || c[3] >= 0.99;
-        });
-      })()
+      vHlavicce: !!nav.closest('header'),
+      uvnitr: Math.round(r.bottom) <= Math.round(hr.bottom) + 1,
+      nahoreVlevo: bod(Math.round(r.x + 20), Math.round(r.y + r.height / 2)),
+      pozadiKryje: !!kryje
     };
   });
-  je('otevřené menu je nahoře', stav.nahore, 'menu');
-  je('menu začíná pod hlavičkou, ne přes ni', stav.menuZacinaPodHlavickou, true);
-  je('menu je neprůhledné — obsah stránky skrz něj neprosvítá', stav.pozadiNepruhledne, true);
+  je('pás je součástí hlavičky', stav.vHlavicce, true);
+  je('a nevyčuhuje pod ni', stav.uvnitr, true);
+  je('nahoře na pásu je opravdu pás', stav.nahoreVlevo, 'pás');
+  je('a hlavička pod ním kryje obsah stránky', stav.pozadiKryje, true);
 
-  // Oddělovače skupin: rovná linka, ne zaoblená hrana karty. Zakřivený
-  // konec se četl jako horní hrana plovoucí karty a budil dojem, že se
-  // v menu něco špatně vrství.
-  /* ODDĚLOVAČ UŽ NENÍ HORNÍ OKRAJ ŘÁDKU. Byl jím a měnil tím jeho výšku:
-     naměřeno 48, 52, 54 a 64 px — čtyři výšky pro tutéž věc. Osobní
-     skupinu teď otevírá vlastní nadpis („MOJE") a čára sedí na něm;
-     u „Kontakt" zůstává na řádku, ale bez změny jeho výšky. Hledá se
-     proto i mezi nadpisy skupin, ne jen mezi odkazy. */
-  const oddelovace = await p.evaluate(() => {
-    const out = [];
-    document.querySelectorAll('#nav a:not(.btn-primary), #nav .nav-moje > summary').forEach((el) => {
-      const s = getComputedStyle(el);
-      /* Jen to, co je opravdu vidět — a jen položky seznamu. „Přidat
-         pozemek" je od přestavby lišty v nabídce vidět jako plné tlačítko
-         dole; rámeček i zaoblení má proto, že je to TLAČÍTKO, ne proto, že
-         by něco oddělovalo. Počítat ho mezi oddělovače by byla chyba
-         měření, ne nález. */
-      if (el.getBoundingClientRect().height === 0) return;
-      /* KARTA ÚČTU NENÍ ODDĚLOVAČ. Má rámeček dokola a zaoblené rohy,
-         protože je to karta — spočítat ji mezi oddělovače by byla chyba
-         měření, ne nález (stejně jako u tlačítka níž). Oddělovač se
-         pozná tím, že má čáru JEN nahoře. */
-      if (parseFloat(s.borderBottomWidth) > 0 || parseFloat(s.borderLeftWidth) > 0) return;
-      if (parseFloat(s.borderTopWidth) > 0) out.push({
-        kam: el.getAttribute('href') || el.textContent.trim(),
-        sirka: Math.round(el.getBoundingClientRect().width),
-        rohy: [s.borderTopLeftRadius, s.borderTopRightRadius]
-      });
-    });
-    return { out, sirkaPanelu: Math.round(document.getElementById('nav').getBoundingClientRect().width) };
-  });
-  /* Tahle zkouška běží PŘIHLÁŠENÁ (viz localStorage výš), takže osobní
-     skupina je vidět a oddělovače jsou dva: nad jejím nadpisem a nad
-     „Kontakt". Nepřihlášenému je ta skupina skrytá — vedla by jen na
-     přihlašovací okénko — a oddělovač by zbyl jeden; to měří
-     scripts/test-menu.mjs. */
-  je('oddělovače otevírají osobní skupinu a Kontakt',
-    oddelovace.out.map((o) => o.kam), ['Moje', 'kontakt.html']);
-  je('oddělovače nejsou zaoblené',
-    oddelovace.out.every((o) => o.rohy.every((r) => parseFloat(r) === 0)), true);
-  /* A ČÁRA MUSÍ JÍT PŘES CELOU ŠÍŘKU. Nadpis skupiny je v podobě pro
-     počítač inline-flex; kdyby si to nesl i sem, natáhl by se jeho horní
-     okraj jen pod slovo „MOJE" a z předělu by zbyl pahýl u levého kraje. */
-  je('a jdou přes celou šířku panelu',
-    oddelovace.out.every((o) => o.sirka >= oddelovace.sirkaPanelu - 24), true);
-
-  // Každá položka menu musí mít ikonu — prázdné místo vypadá jako chyba.
+  // Každý odkaz musí mít ikonu — prázdné místo vypadá jako chyba.
   const bezIkony = await p.evaluate(() => {
     const out = [];
-    document.querySelectorAll('#nav a:not(.btn-primary)').forEach((a) => {
+    document.querySelectorAll('#nav a').forEach((a) => {
+      if (!a.getClientRects().length) return;
       if (getComputedStyle(a, '::before').backgroundImage === 'none') out.push(a.getAttribute('href'));
     });
     return out;
   });
-  je('žádná položka menu není bez ikony', bezIkony, []);
+  je('žádný odkaz není bez ikony', bezIkony, []);
   await ctx.close();
 }
 

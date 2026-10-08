@@ -22,77 +22,57 @@
    js/pridat.js, tedy 73,4 kB formulářové logiky k přidání pozemku —
    na stránce, kde žádný takový formulář není. Tohle má pod 2 kB.
 
-   Nic se tu nespouští, když na stránce menu není: bez .nav-toggle
-   a #nav se funkce vrátí a neudělá nic. */
+   A PAK UŽ NENÍ CO OTEVÍRAT. Panel pod křížkem je zrušený: na úzkém
+   displeji je nabídka spodní lišta (vidět pořád), na širokém vodorovná
+   navigace v hlavičce. S panelem zmizela i celá jeho obsluha —
+   přepínač, Escape, klepnutí mimo, tah dolů — a tlačítko „hamburger"
+   je odebrané i ze značky 2 178 stránek, protože se po té změně
+   nezobrazovalo nikde.
+
+   Nic se tu nespouští, když na stránce nabídka není: bez #nav se
+   funkce vrátí a neudělá nic. */
 (function (root) {
   'use strict';
 
+  /* NABÍDKA V HLAVIČCE.
+     ------------------------------------------------------------------
+     Na úzkém displeji není nabídka schovaná pod ničím: je to vodorovný
+     pás odkazů v hlavičce, který se dá posunout prstem do strany.
+     Skript k tomu dělá jedinou věc, kterou stylem udělat nejde —
+     OZNAČÍ, NA KTERÉ STRÁNCE JSEM. Třídu .active nasazoval jen
+     scroll-spy na úvodní stránce, a ten sleduje kotvy v textu, ne
+     adresu; na ostatních stránkách tedy nesvítil žádný odkaz. */
+  function oznacStranku(d, nav) {
+    if (nav.getAttribute('data-lista') === 'ano') return;
+    nav.setAttribute('data-lista', 'ano');
+
+    var tady = (d.location && d.location.pathname || '').split('/').pop() || 'index.html';
+    /* Stránky účtu nemají v liště vlastní záložku — mají dlaždice
+       v profilu, protože nepřihlášenému vedou jen na přihlášení. Když
+       je člověk na nich, má svítit Profil; jinak by na nich nesvítilo
+       nic a lišta by tvrdila, že jsem někde jinde. */
+    var podProfilem = { 'zpravy.html': 1, 'hlidani.html': 1 };
+    var oznac = podProfilem[tady] ? 'muj-inzerat.html' : tady;
+    var odkazy = nav.querySelectorAll('a[href]');
+    for (var i = 0; i < odkazy.length; i++) {
+      var h = odkazy[i].getAttribute('href') || '';
+      if (h.charAt(0) === '#') continue;                    // kotva řeší scroll-spy
+      var cil = h.split('#')[0].split('?')[0].split('/').pop();
+      if (cil && cil === oznac) odkazy[i].setAttribute('aria-current', 'page');
+    }
+
+  }
+
+  /* NAPOJENÍ. Přepínač „hamburger" tu býval a s ním otevírání, zavírání
+     Escapem, klepnutím mimo i tahem dolů. Všechno zmizelo s panelem:
+     na úzkém displeji je nabídka spodní lišta, která je vidět pořád,
+     Není co otevírat, takže není co obsluhovat — a tlačítko, které se
+     nikde nezobrazí, je odebrané i ze značky (bylo na 2 178 stránkách). */
   function napoj(doc) {
     var d = doc || document;
-    var toggle = d.querySelector('.nav-toggle');
     var nav = d.getElementById('nav');
-    if (!toggle || !nav) return false;
-    /* Dvakrát napojit by znamenalo dvakrát přepnout, tedy nic. */
-    if (toggle.getAttribute('data-menu') === 'ano') return true;
-    toggle.setAttribute('data-menu', 'ano');
-
-    function nastav(otevreno) {
-      nav.classList.toggle('open', otevreno);
-      toggle.setAttribute('aria-expanded', String(otevreno));
-      toggle.setAttribute('aria-label', otevreno ? 'Zavřít menu' : 'Otevřít menu');
-      d.body.classList.toggle('nav-open', otevreno);
-    }
-    function zavri() { if (nav.classList.contains('open')) nastav(false); }
-
-    toggle.addEventListener('click', function (e) {
-      e.stopPropagation();
-      nastav(!nav.classList.contains('open'));
-    });
-    /* Klepnutí na odkaz v menu: stránka se mění, menu musí zmizet. */
-    nav.addEventListener('click', function (e) {
-      if (e.target && e.target.tagName === 'A') zavri();
-    });
-    d.addEventListener('keydown', function (e) { if (e.key === 'Escape') zavri(); });
-    /* Klepnutí mimo. Přišlo z js/main.js — jedenáct vložených kopií to
-       nemělo, takže menu na většině stránek nešlo zavřít jinak než
-       druhým klepnutím na přepínač. */
-    d.addEventListener('click', function (e) {
-      if (!nav.classList.contains('open')) return;
-      if (nav.contains(e.target) || toggle.contains(e.target)) return;
-      zavri();
-    });
-
-    /* SHODIT TAHEM DOLŮ — a klepnutím na úchytku.
-       Panel vyjíždí zespoda a má nahoře úchytku, tedy vypadá jako
-       vysouvací panel z telefonní aplikace. Jenže se tak nechoval:
-       zavřít ho šlo jedině křížkem úplně nahoře na obrazovce, nebo
-       klepnutím mimo. Úchytka tak slibovala pohyb, který nikam nevedl —
-       a křížek je u panelu, co stojí na spodní hraně, to nejvzdálenější
-       místo, kam musí palec dojít.
-       Úchytka je ::after, tedy nic, na co jde pověsit obsluhu; bere se
-       proto podle polohy: horních 30 px panelu, a jen když se netrefím
-       do odkazu. Tah dolů o 60 px a víc panel zavře. Pod tu mez se nic
-       neděje — kdo panelem jen rolujeme, nemá ho tím shazovat. */
-    var zacY = null, rolovaniNaZacatku = 0;
-    nav.addEventListener('touchstart', function (e) {
-      if (!e.touches || e.touches.length !== 1) { zacY = null; return; }
-      zacY = e.touches[0].clientY;
-      rolovaniNaZacatku = nav.scrollTop;
-    }, { passive: true });
-    nav.addEventListener('touchend', function (e) {
-      if (zacY === null) return;
-      var t = (e.changedTouches && e.changedTouches[0]) || null;
-      var posun = t ? t.clientY - zacY : 0;
-      zacY = null;
-      /* Jen když panel stál nahoře. Uprostřed dlouhého seznamu je tah
-         dolů rolování, ne zavírání. */
-      if (rolovaniNaZacatku <= 0 && posun >= 60) zavri();
-    }, { passive: true });
-    nav.addEventListener('click', function (e) {
-      if (!nav.classList.contains('open')) return;
-      if (e.target !== nav) return;                       // trefa do prázdna, ne do řádku
-      if (e.offsetY <= 30) zavri();                       // pruh s úchytkou
-    });
+    if (!nav) return false;
+    oznacStranku(d, nav);
     return true;
   }
 

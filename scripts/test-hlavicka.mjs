@@ -167,45 +167,51 @@ const hlavickaBlok = css.slice(css.indexOf('header{border-bottom'), css.indexOf(
 pravda('hlavička nemá transform',
   !/transform:/.test(hlavickaBlok),
   'v pravidle pro <header> je transform: ' + (hlavickaBlok.match(/transform:[^;]*/) || [''])[0]);
-/* Panel nabídky musí zůstat ABSOLUTE. Jako fixed by se nepočítal podle
-   okna, ale podle hlavičky: ta má backdrop-filter a ten — stejně jako
-   transform — dělá vztažný rámec i pro pevně polohované potomky.
-   Panel proto zůstává absolute a dno si spočítá z výšky hlavičky. */
-pravda('nabídka zůstává position:absolute a sedá dnem na spodek okna',
-  /#nav\{position:absolute;\s*top:auto;\s*bottom:calc\(100% - 100dvh\)/.test(css),
-  'jako fixed by se počítala podle hlavičky (backdrop-filter), ne podle okna');
+/* TADY SE MĚŘILO, ŽE PANEL NABÍDKY ZŮSTÁVÁ ABSOLUTE — jako fixed by se
+   nepočítal podle okna, ale podle hlavičky (backdrop-filter dělá vztažný
+   rámec i pro pevně polohované potomky). Panel je zrušený: nabídka je
+   vodorovný pás uvnitř hlavičky, takže se nikam nepolohuje a tenhle
+   problém zmizel i se svou obezličkou. Místo toho se hlídá, že si web
+   pod lepivou hlavičkou nechává dost místa — to je vada, kterou pás
+   doopravdy způsobil (hlavička 119 px proti rezervě 85 px) a kterou
+   zachytily kontroly níž. */
+pravda('rezerva pod lepivou hlavičkou je napsaná proměnnou, ne natvrdo',
+  /--vyska-hlavicky/.test(css) && /body\{padding-top:var\(--vyska-hlavicky/.test(css),
+  'bez proměnné se rezerva a skutečná výška rozejdou při první změně hlavičky');
 /* Ořezávající rodič je na Safari past u lepivých i pevných prvků a kvůli
    bočnímu posuvu ho tu nepotřebujeme (změřeno: 282 zkoušek, 0 nálezů). */
 pravda('<body> ani <html> neořezávají do stran',
   !/\bbody\{[^}]*overflow-x:\s*(clip|hidden)/.test(css) && !/\bhtml\{overflow-x:\s*(clip|hidden)/.test(css),
   'overflow-x na kořeni nebo na body dělá ořezávající rámec nad hlavičkou');
 
-// --- 4) A menu se opravdu vykreslí přes celé okno --------------------
+// --- 4) Nabídka je vidět bez otevírání a vejde se do hlavičky -------
+/* Tady se dřív otevíral panel pod křížkem a měřilo se, že sedá dnem
+   na spodní hranu okna. Panel i křížek jsou pryč: nabídka je vodorovný
+   pás odkazů přímo v hlavičce, protože navigace, kterou nikdo
+   neotevře, je navigace, která není. Měří se tedy to, co teď platí. */
 {
   const { ctx, p } = await otevri(TELEFON, 'index.html');
-  await p.evaluate(() => window.scrollTo(0, 800));
-  await p.waitForTimeout(350);
-  await p.locator('.nav-toggle').first().click();
-  await p.waitForTimeout(600);
+  await p.waitForTimeout(400);
   const v = await p.evaluate(() => {
     const n = document.getElementById('nav');
     const h = document.getElementById('header');
     const r = n.getBoundingClientRect(), hr = h.getBoundingClientRect();
-    return { navTop: Math.round(r.top), navDole: Math.round(r.bottom),
-      navSirka: Math.round(r.width), okno: innerWidth, okno_v: innerHeight,
-      hlavDole: Math.round(hr.bottom), vidno: r.height > 100 };
+    const a = [...n.querySelectorAll('a')].filter((x) => x.getClientRects().length);
+    return { odkazu: a.length, vHlavicce: !!n.closest('header'),
+      navDole: Math.round(r.bottom), hlavDole: Math.round(hr.bottom),
+      hlavVyska: Math.round(hr.height), okno_v: innerHeight,
+      jednaRada: new Set(a.map((x) => Math.round(x.getBoundingClientRect().top))).size };
   });
-  pravda('menu se otevře a je vidět', v.vidno, JSON.stringify(v));
-  /* NABÍDKA STOJÍ NA SPODNÍ HRANĚ OKNA, nevisí z lišty. Změřeno na
-     390×844: když visela pod lištou, ležel první řádek 686 px nad
-     spodní hranou a tři z šesti položek byly mimo dosah palce. */
-  pravda('nabídka sedá dnem na spodní hranu okna',
-    Math.abs(v.navDole - v.okno_v) <= 2,
-    `dno nabídky ${v.navDole}, okno ${v.okno_v}`);
-  pravda('a pod hlavičku nezaleze', v.navTop >= v.hlavDole - 2,
-    `nabídka začíná na ${v.navTop}, hlavička končí na ${v.hlavDole}`);
-  pravda('a je přes celou šířku okna', Math.abs(v.navSirka - v.okno) <= 2,
-    `${v.navSirka} × ${v.okno}`);
+  pravda('nabídka je vidět bez otevírání', v.odkazu >= 5, `vidět je ${v.odkazu} odkazů`);
+  pravda('a je v hlavičce', v.vHlavicce && v.navDole <= v.hlavDole + 1,
+    `v hlavičce: ${v.vHlavicce}, dno pásu ${v.navDole}, dno hlavičky ${v.hlavDole}`);
+  pravda('pás je jedna řada (posouvá se do strany, nezalamuje se)', v.jednaRada === 1,
+    `odkazy jsou ve ${v.jednaRada} řadách`);
+  /* Hlavička je lepivá, takže každý její pixel chybí obsahu. S pásem
+     má dvě řady; naměřeno 119 px na 390×844 (bez něj 82). Mez 150 px
+     je tam, kam se nedá dostat omylem. */
+  pravda(`a nepřeroste (${v.hlavVyska} px z ${v.okno_v})`, v.hlavVyska <= 150,
+    `${v.hlavVyska} px — lepivá hlavička bere obsahu každý pixel`);
   await ctx.close();
 }
 

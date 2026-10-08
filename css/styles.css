@@ -1210,14 +1210,23 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
     background:var(--copper-bright); background-image:none;}
 }
 .nav-moje-panel a .nav-unread{margin-left:auto;}
-#nav a:not(.btn-primary).active{color:var(--text-ondark);}
-#nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--copper-bright); border-radius:2px;}
-/* NA TELEFONU ŽÁDNÁ ŠIPKA ZA NÁZVEM. Podtržení aktivní položky (výš)
-   dává smysl ve vodorovné liště na počítači; ve vysouvací nabídce se
-   z něj dělala šipka „→" přilepená za text — a stála vedle plné
-   pilulky, která tutéž věc říkala sama. Dvě označení téhož a jedno
-   z nich vypadalo jako překlep. Aktivní položku tu označuje pilulka. */
-@media (max-width:1040px){ #nav a:not(.btn-primary).active::after{content:none;} }
+/* PODTRŽENÍ AKTIVNÍ POLOŽKY JEN NA POČÍTAČI. Kreslí se jako ::after
+   s content:"" — a na telefonu je ::after popisek záložky („Hledat").
+   Pravidlo je přitom zapsané přísněji (id + dvě třídy + prvek) než
+   pravidlo s popiskem (id + třída + prvek), takže mu content přebíjelo
+   a aktivní záložka zůstávala bez textu: naměřeno, ikona a pod ní nic.
+   Rozsah média to řeší najisto — na telefonu to pravidlo neexistuje. */
+@media (min-width:1041px){
+  #nav a:not(.btn-primary).active{color:var(--text-ondark);}
+  #nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--copper-bright); border-radius:2px;}
+}
+/* NA TELEFONU ŽÁDNÉ PODTRŽENÍ. Pruh pod aktivní položkou (pravidlo výš)
+   dává smysl ve vodorovné navigaci na počítači. Ve spodní liště je
+   ::after popisek záložky („Hledat"), takže se sem podtržení nesmí
+   dostat — přebilo by ho a aktivní záložka by zůstala bez textu.
+   Naměřeno: první záložka měla ikonu a pod ní nic. Aktivní záložku tu
+   pozná člověk podle plné barvy ikony i popisku. */
+
 /* Přihlášení / profil v hlavičce */
 .nav-cta-note{display:none;}
 /* Toast */
@@ -1264,16 +1273,11 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    ne schované v menu). */
 .header-cta{display:none;}
 
-.nav-toggle{display:none; flex-direction:column; gap:4px; background:none; border:0; cursor:pointer; padding:6px; position:relative;}
-/* Tečka na hamburgeru, když čekají nepřečtené zprávy. Odznak u položky
-   „Zprávy" je na mobilu schovaný uvnitř zavřeného menu — bez tohohle by
-   se o nové zprávě nikdo s telefonem nedozvěděl. */
-.nav-toggle .nav-dot{position:absolute; top:-2px; right:-2px; width:10px; height:10px; border-radius:50%;
-  background:var(--copper); box-shadow:0 0 0 2.5px #fff;}
-.nav-toggle span{display:block; width:24px; height:2px; background:var(--text-ondark); border-radius:2px; transition:transform var(--cas-zakladni) var(--ease), opacity var(--cas-zakladni) var(--ease);}
-.nav-toggle[aria-expanded="true"] span:nth-child(1){transform:translateY(7px) rotate(45deg);}
-.nav-toggle[aria-expanded="true"] span:nth-child(2){opacity:0;}
-.nav-toggle[aria-expanded="true"] span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+/* (Tečka na hamburgeru je pryč i s hamburgerem. Žádný skript ji stejně
+   nikdy nevytvářel — byl to styl bez prvku. Že na telefonu není vidět
+   čekající zpráva, zůstává mezera: počet nepřečtených ukazuje dlaždice
+   v profilu, ale sama lišta mlčí. Doplnit by to znamenalo dotaz do
+   databáze na každé z 2 183 stránek, což za tečku nestojí.) */
 
 /* ===== Hero s mapou (raketový styl) ===== */
 /* ÚVODNÍ PLOCHA
@@ -3173,7 +3177,6 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
    s názvem webu. Všechny čtyři bloky navigace musí mít tentýž zlom, jinak
    by se naráz ukázalo tlačítko i plné menu. */
 @media (max-width:1040px){
-  .nav-toggle{display:flex; margin-left:auto;}
   /* DVĚ VĚCI V LIŠTĚ, NE TŘI. Na 390 px se vedle sebe tlačily logo,
      zelené „Přidat pozemek" a hamburger — tři věci na šířku, kterou má
      telefon. Akce se vrátila do nabídky, kde pro ni je i věta „zdarma
@@ -3201,93 +3204,144 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
      tedy zůstává absolute a spodní hranu si spočítá: 100 % je výška
      hlavičky, takže „výška hlavičky mínus celé okno" posadí dno panelu
      přesně na dno obrazovky. Bez zásahu do HTML 2 170 stránek. */
-  #nav{position:absolute; top:auto; bottom:calc(100% - 100dvh); left:0; right:0;
-    max-height:calc(100dvh - 100% - 12px); flex-direction:column; align-items:stretch; gap:0;
-    background:var(--ink); padding:4px 10px calc(14px + env(safe-area-inset-bottom, 0px));
-    border-radius:var(--r-lg) var(--r-lg) 0 0; box-shadow:var(--e3); border-top:1px solid var(--line);
-    border-bottom:0; display:none; overflow-y:auto; overscroll-behavior:contain; z-index:5;}
-  #nav.open{display:flex; animation:navup .24s var(--ease);}
-  /* Pod otevřenou nabídkou se stránka nesmí rolovat. Kromě toho, že je to
-     u překryvu správně, to drží výšku hlavičky — ta se při rolování
-     smršťuje a panel počítaný z „100 %" by se jinak za ní sunul. */
-  body.nav-open{overflow:hidden;}
-  /* Ve vysouvacím menu je všechno pod sebou, takže zanořovat skupinu do
-     rozbalovátka by znamenalo jedno klepnutí navíc pro nic. „Moje" je tu
-     nadpis oddílu a čtyři položky pod ním jsou rovnou vidět. */
-  .nav-moje{display:block;}
-  /* Nadpis skupiny: zarovnaný na TÝŽ sloupec jako názvy položek (12 px),
-     ne o kus vlevo. A předěl patří NAD nadpis, ne pod něj — čára pod
-     nadpisem ho odřízne od vlastní skupiny a vypadá, že k ní nepatří. */
-  /* `display:block` tu není pro nic za nic: v podobě pro počítač je
-     summary inline-flex, takže se jeho horní okraj natáhl jen pod text
-     („MOJE") a z předělu zbyl 143px dlouhý pahýl u levého okraje.
-     Vypadalo to jako nedotažené podtržení nadpisu. */
-  .nav-moje > summary{display:block; cursor:default; pointer-events:none;
-    font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
-    color:var(--text-ondark-mute); padding:14px 12px 6px; margin-top:6px;
-    border-top:1px solid var(--line);}
-  .nav-moje > summary::after{display:none;}
-  /* Ve vysouvacím menu je skupina rozbalená vždycky, i když <details>
-     zavřené je — proto i varianta se :not([open]), aby přebila pravidlo
-     pro počítač. */
-  .nav-moje-panel, .nav-moje:not([open]) > .nav-moje-panel{
-    display:flex; position:static; min-width:0; padding:0; gap:0;
-    background:none; border:0; border-radius:0; box-shadow:none;}
-  .nav-moje::details-content{content-visibility:visible; block-size:auto;}
-  /* Ztmavené pozadí pod panelem (bez zásahu do HTML — pseudo na body) */
-  body.nav-open::before{content:""; position:fixed; inset:0; background:rgba(6,16,12,0.55); z-index:4; animation:navdrop .22s var(--ease);}
-  @keyframes navdrop{from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);}}
-  @keyframes navup{from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:translateY(0);}}
-  /* Položky menu jako řádky aplikace: ikona + název + jemná šipka, zaoblené, reagují na dotek */
-  /* JEDEN ŘÁDEK, JEDNA VÝŠKA. Naměřeno na 390x844: řádky měly 48, 52, 54
-     a 64 px — čtyři výšky pro tutéž věc, protože Zprávy a Hlídání sedí
-     v .nav-moje-panel a braly si jeho odsazení z počítačové podoby.
-     Výška se proto neurčuje odsazením (to se dá přebít), ale min-height,
-     a odsazení je jen do stran. */
-  #nav a:not(.btn-primary){display:flex; align-items:center; gap:12px;
-    min-height:52px; padding:0 12px; margin:0; border-radius:12px; border-bottom:none;
-    font-family:var(--font-ui); font-size:16px; font-weight:600; color:var(--text-ondark);
-    letter-spacing:-0.01em; transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
-  #nav a:not(.btn-primary)::before{content:""; flex:none; width:22px; height:22px; background-repeat:no-repeat; background-position:center; background-size:21px 21px; opacity:0.9;}
-  /* ŠIPKA JEN U ÚČTU. Šest stejných „›" pod sebou neřekne nic — v nabídce
-     vede někam každý řádek. U účtu zůstává, protože ten řádek je karta
-     a šipka na ní je jediné, co prozradí, že se dá otevřít. */
+  /* =================================================================
+     NABÍDKA JE VIDĚT. Nic se neschovává a nic nejde zespoda.
+     =================================================================
+     Tři pokusy, než to sedlo, a každý měl svou chybu:
+
+       1. panel pod křížkem   — 515 px, tedy 61 % obrazovky na šest cílů
+       2. týž panel přestavěný— 345 px (41 %), pořád schovaný pod křížkem
+       3. spodní lišta        — vidět pořád, ale majitel webu ji nechce dole
+
+     Co z toho zbylo jako pravidlo: NAVIGACI NEMÁ SMYSL SCHOVÁVAT.
+     Průvodce mobilní navigací (designstudiouiux.com, aktualizováno
+     v říjnu 2026) cituje měření přisuzované Nielsen Norman Group:
+     lidé navigaci použili v 57 % úkolů, když byla schovaná pod
+     hamburgerem, proti 86 %, když část zůstala vidět. To číslo jsem
+     neověřil u zdroje — ale směr sedí na to, co se tu stalo:
+     nabídka, kterou nikdo neotevře, je nabídka, která není.
+
+     Takže: vodorovný pás odkazů v hlavičce. Vejde se jich pět a šestý
+     kouká zpoza kraje, takže je vidět, že se dá posunout prstem.
+     Všechny cíle zůstávají, Zprávy a Hlídání v tom nejsou výjimka —
+     schovat je bylo moje rozhodnutí a bylo špatné: kdo hlídá pozemky,
+     potřebuje se k nim dostat na jedno klepnutí, ne přes profil.
+
+     POZOR NA ROLOVÁNÍ: hlavička při něm zhasíná (header.hl-zhasnuta),
+     takže s ní zmizí i tenhle pás. To je v pořádku — je to součást
+     hlavičky a vrací se s ní, jakmile se roluje nahoru. */
+  /* S pásem navigace má hlavička dvě řady, takže se jí ubere svislé
+     odsazení — jinak na 390 px zabere 175 px, tedy pětinu obrazovky.
+     A MÍSTO POD NÍ SE MUSÍ ZVĚTŠIT ZÁROVEŇ: hlavička je lepivá a web
+     si pro ni drží odstup proměnnou --vyska-hlavicky (85 px, což byla
+     její výška s jednou řadou). S pásem má 119 px, takže by se za ni
+     schovalo 34 px obsahu — na úvodní stránce půlka nadpisu. Naměřeno
+     a zachyceno zkouškou test-hlavicka hned při první verzi. */
+  :root{ --vyska-hlavicky:119px; }
+  /* A `header.shrink` TADY NESMÍ ZVĚTŠOVAT. Je to pravidlo pro
+     zmenšení při rolování (20 → 12 px) a na počítači dává smysl.
+     Na telefonu je ale základ 10 px, takže hlavičku o 4 px naopak
+     nafouklo: naměřeno 119 px nahoře a 123 px po odrolování, a těmi
+     čtyřmi pixely se obsah schoval pod ni. Na úzkém displeji se tedy
+     nezmenšuje — hlavička je tu nízká od začátku. */
+  header, header.shrink{padding:10px 0;}
+  /* Mimo vrchol stránky pás zmizí — viz js/hlavicka.js. Hlavička tím
+     spadne zpátky na jednu řadu a nemá čím překážet obsahu. */
+  header.hl-bez-pasu #nav{display:none;}
+  header .wrap{flex-wrap:wrap; row-gap:8px;}
+  .header-cta{display:inline-flex; order:2; margin-left:auto; padding:9px 14px; font-size:14px;}
+  .header-cta .cta-full{display:none;}
+  .header-cta .cta-short{display:inline;}
+
+  #nav{order:3; flex-basis:100%; position:static; display:flex; flex-direction:row;
+    align-items:center; gap:4px; margin:0 -32px; padding:0 32px 2px;
+    max-height:none; background:none; border:0; border-radius:0; box-shadow:none;
+    overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none; scroll-snap-type:x proximity;}
+  #nav::-webkit-scrollbar{display:none;}
+  #nav::after, #nav::before{content:none;}
+
+  #nav a:not(.btn-primary){
+    flex:none; display:inline-flex; align-items:center; gap:7px; white-space:nowrap;
+    min-height:44px; padding:0 13px; margin:0; border:1px solid var(--line); border-radius:999px;
+    font-family:var(--font-ui); font-size:14px; font-weight:600; letter-spacing:-0.01em;
+    color:var(--text-ondark); background:rgba(255,255,255,0.55); scroll-snap-align:start;
+    transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease),
+               border-color var(--cas-zakladni) var(--ease);}
+  #nav a:not(.btn-primary)::before{content:""; flex:none; width:17px; height:17px;
+    background-repeat:no-repeat; background-position:center; background-size:17px 17px; opacity:0.75;}
   #nav a:not(.btn-primary)::after{content:none;}
-  #nav #nav-ucet::after{content:"›"; position:static; margin-left:auto; width:auto; height:auto;
-    background:none; border-radius:0; font-family:var(--font-ui); font-size:22px; font-weight:600;
-    color:var(--text-ondark-mute); opacity:0.6;}
-  #nav a:not(.btn-primary):active{background:rgba(31,81,56,0.10);}
+
+  /* AKTIVNÍ ODKAZ: plná značková barva, ne obtah. Na pásu pilulek je
+     obtah k nerozeznání od ostatních — plná plocha je vidět na první
+     pohled a nemá kde se rozbít (předchozí podoba kreslila proužek
+     vnitřním stínem, který zaoblení ohnulo do srpku). */
+  #nav a:not(.btn-primary).active, #nav a:not(.btn-primary)[aria-current="page"]{
+    background:var(--copper-bright); border-color:var(--copper-bright); color:#fff;}
+  #nav a:not(.btn-primary).active::before,
+  #nav a:not(.btn-primary)[aria-current="page"]::before{opacity:1; filter:brightness(0) invert(1);}
+  #nav a:not(.btn-primary):active{background:rgba(31,81,56,0.14);}
+
+  /* ÚČET. „Můj profil" je v pásu zbytečně dlouhé a stav přihlášení se
+     do pilulky nevejde — obojí patří na kartu v profilu, kde je místo. */
+  #nav #nav-ucet{display:inline-flex; background:rgba(255,255,255,0.55); border:1px solid var(--line);
+    padding:0 13px; min-height:44px; order:5;}
+  /* A AKTIVNÍ STAV SE MUSÍ ZAPSAT STEJNĚ PŘÍSNĚ. Pravidlo výš má dvě
+     id (#nav #nav-ucet), kdežto obecné pravidlo pro aktivní odkaz
+     jedno id a třídu — takže účtu přebilo pozadí, ale ne barvu textu.
+     Na Zprávách a Hlídání (kde je aktivní právě Profil) z toho byl
+     bílý text na bílé pilulce: naměřeno 1,02 : 1 proti nutným 4,5. */
+  #nav #nav-ucet[aria-current="page"], #nav #nav-ucet.active{
+    background:var(--copper-bright); border-color:var(--copper-bright); color:#fff;}
+  #nav #nav-ucet .nav-stav{display:none;}
+  /* ZKRATKA „PROFIL" TU BYLA A ŠLA PRYČ. Dělala se přes font-size:0 na
+     textu a ::after s náhradním slovem — zbytek po spodní liště, kde
+     měla záložka jen 95 px. V pásu žádná taková tíseň není („Můj
+     profil" je 94 px pilulka jako ostatní), zato ta obezlička nechala
+     v dokumentu bílý text o velikosti 0 px: na Zprávách a Hlídání,
+     kde je pilulka aktivní a text bílý, to kontrolor kontrastu našel
+     jako 1,02 : 1 proti nutným 4,5. Text zůstává, jak je napsaný. */
+
+  /* SKUPINA „MOJE" SE V PÁSU NEZANOŘUJE. Zprávy a Hlídání jsou plné
+     odkazy jako ostatní; nadpis skupiny by byl jen překážka navíc. */
+  /* DISPLAY:CONTENTS NA <details> NE. Vyzkoušeno a naměřeno: Zprávy
+     i Hlídání se vykreslily na sobě u levého kraje (oba x=0) a pás
+     narostl na dvě řady. Prvek <details> má vlastní vykreslovací
+     mašinerii (::details-content) a tohle ji rozhodí. Skupina proto
+     zůstává skutečným boxem — v řadě vypadá stejně, protože nemá
+     vlastní pozadí ani okraj. */
+  .nav-moje{display:inline-flex; align-items:center; gap:4px; flex:none; order:3; position:static;}
+  .nav-moje > summary{display:none;}
+  .nav-moje-panel, .nav-moje:not([open]) > .nav-moje-panel{
+    display:inline-flex; flex-direction:row; align-items:center; gap:4px; position:static; min-width:0;
+    padding:0; background:none; border:0; border-radius:0; box-shadow:none;}
+  .nav-moje::details-content{content-visibility:visible; block-size:auto;}
+
+  /* Pořadí v pásu: kde hledám, čím to poměřím, co mi chodí, co hlídám,
+     kdo jsem, a nakonec kontakt. */
+  #nav a[href$="#mapa"]{order:1;}
+  #nav a[href$="cena-pozemku.html"]{order:2;}
+  #nav a[href$="zpravy.html"]{order:3;}
+  #nav a[href$="hlidani.html"]{order:4;}
+  #nav a[href$="kontakt.html"]{order:6;}
+
+  /* „Přidat pozemek" v pásu NENÍ — je z něj tlačítko nahoře vpravo,
+     kde je vidět bez posouvání. Dvakrát totéž by byl zmatek. */
+  #nav a.btn-primary, .nav-cta-note{display:none;}
+
   /* Ikony podle cíle odkazu (bez zásahu do HTML) */
+  #nav a[href$="#mapa"]{order:1;}
+  #nav a[href$="cena-pozemku.html"]{order:2;}
   #nav a[href$="#mapa"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");}
   #nav a[href$="cena-pozemku.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-8-8V3h9.6l8.4 8.4a2 2 0 0 1 0 2.8z'/%3E%3Cline x1='7.5' y1='7.5' x2='7.51' y2='7.5'/%3E%3C/svg%3E");}
   #nav a[href$="muj-inzerat.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4 4-6 8-6s8 2 8 6'/%3E%3C/svg%3E");}
-  #nav a[href$="#faq"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M9.5 9.2a2.5 2.5 0 1 1 3.4 2.4c-.7.3-1.1.9-1.1 1.7'/%3E%3Cline x1='12' y1='16.6' x2='12.01' y2='16.6'/%3E%3C/svg%3E");}
   #nav a[href$="kontakt.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2'/%3E%3Cpath d='m3 7 9 6 9-6'/%3E%3C/svg%3E");}
   #nav a[href$="zpravy.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");}
-  #nav a[href$="upozorneni.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'/%3E%3Cpath d='M10.3 21a1.94 1.94 0 0 0 3.4 0'/%3E%3C/svg%3E");}
-  /* Hlídání má oko, ne druhý zvonek: dva zvonky vedle sebe se pletou
-     a hlídání lokality je spíš sledování než zvonění. */
   #nav a[href$="hlidani.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E");}
-  /* Vizuální seskupení menu (nejlepší kompozice): jemný oddělovač před skupinou
-     „Můj účet" (Zprávy) a před „Kontakt". Tři čitelné bloky místo dlouhého seznamu. */
-  /* Oddělovač skupin v menu. Dvě opravy proti dřívějšku:
-     1) Čára vede nad „Upozornění", ne nad „Zprávy". Upozornění, Zprávy,
-        Hlídání a Můj profil patří k sobě — jsou to osobní stránky. Dokud
-        čára stála až nad Zprávami, spadlo Upozornění mezi veřejné stránky.
-     2) Horní rohy se nezaoblují. Položky mají border-radius:14px, takže
-        se ta jednopixelová čára na obou koncích zakřivila a četla se jako
-        HORNÍ HRANA PLOVOUCÍ KARTY — vypadalo to, že se v menu něco
-        špatně vrství. Oddělovač má být rovná vlasová linka. */
-  /* (Předěly skupin řeší nadpis .nav-moje > summary a pravidlo
-     u „Kontakt" níž — ne odsazení uvnitř řádku, které měnilo jeho výšku.) */
-  /* Akce dole jako plné tlačítko — „Přidat pozemek" i případné „Zpět na
-     mapu" na podstránkách. Dole proto, že tam má člověk palec. */
-  #nav a.btn-primary{text-align:center; margin-top:16px; border-bottom:0; padding:14px 20px; font-size:16px; font-weight:700; color:var(--ink); border-radius:var(--r-md); min-height:44px; display:flex; align-items:center; justify-content:center;}
-  /* MARKETINGOVÁ VĚTA V NAVIGACI NE. „Prodáváte pozemek? Přidejte ho
-     zdarma a bez provize." stálo pod tlačítkem v nabídce, tedy v místě,
-     kam se chodí přepnout stránku, ne číst nabídku. Na úvodní stránce
-     ta věta zůstává; tady brala 21 px a pozornost. */
-  .nav-cta-note{display:none;}
+
+  /* Panel pod křížkem je zrušený — nic se neotevírá, nic se nezatmavuje. */
+  body.nav-open{overflow:visible;}
+  body.nav-open::before{content:none;}
   .steps{grid-template-columns:1fr;}
   :root{ --oddil-y:80px; }     /* o stupeň míň, ale pořád víc než dřívějších 64 */
   /* h1 už velikost nemění skokem, nese ji --h1-stranka. */
@@ -3300,6 +3354,9 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   /* Jen do stran. Zkratka „padding" by srazila i svislé odsazení, které si
      některé obaly nesou (patička) — a ta pak na telefonu splývala v jeden blok. */
   .wrap{padding-left:20px; padding-right:20px;}
+  /* Pás odkazů jde od kraje ke kraji, ať je vidět, že pokračuje dál;
+     odsazení si proto musí sám dorovnat podle .wrap na téhle šířce. */
+  #nav{margin:0 -20px; padding:0 20px 2px;}
   .status-grid{grid-template-columns:1fr;}
   .c-num{font-size:38px;}
 }
@@ -4199,7 +4256,6 @@ body{background:var(--bg);}
    klepnout.
    ===================================================================== */
 @media (max-width:1040px){
-  .nav-toggle{width:44px; height:44px; align-items:center; justify-content:center; padding:0;}
   .filter-chip{min-height:40px;}
 }
 /* Odkazy v patičce a v drobečkové navigaci dostanou svislý prostor —
@@ -4321,90 +4377,8 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
 @media (max-width:1040px){
   /* Zaoblení NAHOŘE, ne dole: panel už nevisí z lišty, ale stojí na
      spodní hraně obrazovky (viz #nav výš). */
-  /* ČISTÁ PLOCHA, ŽÁDNÝ PŘECHOD. Panel je ovládání, ne obsah. Přechod
-     shora dolů na 515 px plochy není vidět jako záměr, jen jako špína. */
-  #nav{padding:4px 10px calc(14px + env(safe-area-inset-bottom, 0px));
-    background:var(--ink); border-radius:var(--r-lg) var(--r-lg) 0 0; box-shadow:var(--e3);}
-  /* Úchytka — říká „tohle přijelo zespoda a dá se to shodit", stejně jako
-     v telefonních aplikacích; bez ní panel vypadá jako useknutý kus
-     stránky. Je to ::after s order:-1, protože ::before si už vzala
-     katastrální mřížka níž. */
-  #nav::after{content:""; order:-1; flex:none; width:44px; height:5px;
-    margin:8px auto 8px; border-radius:3px; background:var(--line-ui); opacity:0.6;
-    position:relative; z-index:1;}
-  /* KATASTRÁLNÍ MŘÍŽKA TU NENÍ. Patří na plochy, které něco ukazují —
-     mapa, karty, hlavička. Za seznamem šesti řádků z ní zbyde šedý
-     flek pod horním okrajem a panel vypadá ušpiněný, ne značkový. */
-  #nav > *{position:relative; z-index:1;}
-
-  /* (Rozměr řádku drží pravidlo výš — jedna výška pro všechny.) */
-  /* Ikona v dlaždici — nese barvu a drží řádek pohromadě.
-     Dlouho ji nenesla: dlaždice byly zelené a hnědé podle skupiny, ale samy
-     ikony měly natvrdo obtah #9fb4c8 — studenou modrošeď, která na tomhle
-     webu není nikde jinde. Proti teplému papíru a zelené značce působila
-     cize a celé menu kvůli ní vypadalo jako cizí šablona vložená do stránky.
-     Teď má ikona barvu své skupiny: zelenou u veřejné části, hnědou
-     u osobní — přesně to, co tenhle komentář tvrdil už předtím. */
-  /* BEZ DLAŽDIC POD IKONAMI. Každá ikona seděla na vybarveném čtverci
-     s obtaženým okrajem, takže v menu bylo sedm malých tlačítek, která
-     se nedala zmáčknout — a vedle toho teprve text, který se zmáčknout
-     dal. Oko to čte jako dvě soustavy prvků nad sebou.
-     Ikona sama o sobě řádek zarovná stejně dobře (šířka zůstává pevná)
-     a sheet je o celou jednu vrstvu tišší.
-
-     A JEDNA BARVA, NE DVĚ. Osobní část menu (Můj profil, Upozornění,
-     Zprávy, Hlídání) měla dlaždice i obtahy ikon měděné (#8A5512),
-     veřejná zelené. Záměr byl „oko pozná, že vstupuje do svého", jenže
-     na obrazovce z toho vyšlo menu složené ze dvou různých šablon.
-     Že jde o osobní část, říká nadpis skupiny a předěl — barvu na to
-     potřeba není. Měď zůstává druhou barvou webu, ale pro důrazy, ne
-     pro polovinu nabídky. */
-  #nav a:not(.btn-primary)::before{
-    width:22px; height:22px; background-size:21px 21px;
-    background-position:center; opacity:0.9;}
-
-  /* AKTIVNÍ POLOŽKA: celá vyplněná pilulka, nic jiného.
-     Dřív to byl `inset 3px 0 0` proužek vlevo na boxu se zaoblením 14 px.
-     Vnitřní stín kopíruje zaoblení, takže z proužku byl nahoře a dole
-     zahnutý srpek uříznutý hranou panelu — na fotce z telefonu to
-     vypadalo jako chyba vykreslení, ne jako označení. K tomu přechod
-     zleva doprava, takže pilulka vpravo mizela. Teď jedna plná barva
-     a text ve značkové zelené: pozná se to na první pohled a nemá to
-     kde se rozbít. */
-  #nav a:not(.btn-primary).active, #nav a:not(.btn-primary)[aria-current="page"]{
-    background:rgba(31,81,56,0.11); color:var(--copper-bright);}
-  #nav a:not(.btn-primary).active::before, #nav a:not(.btn-primary)[aria-current="page"]::before{opacity:1;}
-  #nav a:not(.btn-primary):active{background:rgba(31,81,56,0.16);}
-
-  /* Předěl před „Kontakt" jako samostatná vlasová linka NAD řádkem —
-     ne jako jeho horní okraj. Jako okraj měnil výšku řádku a zaoblení
-     mu na koncích čáru zakřivilo. */
-  #nav a[href$="kontakt.html"]{margin-top:7px; border-top:1px solid var(--line);
-    border-top-left-radius:0; border-top-right-radius:0; padding-top:6px;}
-
-  /* ÚČET JE KARTA, NE ŘÁDEK. Je to jediná položka, která kromě cíle nese
-     i stav („Nepřihlášeno" / e-mail), a jako šestý stejný řádek v řadě
-     se to ztratilo. Ikona dostává kolečko, aby z ní byl portrét. */
-  #nav #nav-ucet{min-height:64px; padding:10px 12px; margin-bottom:8px;
-    background:#fff; border:1px solid var(--line); border-radius:14px;
-    column-gap:12px;}
-  #nav #nav-ucet::before{width:38px; height:38px; background-size:22px 22px;
-    border-radius:50%; background-color:#fff; box-shadow:inset 0 0 0 1px var(--line); opacity:1;}
-  #nav #nav-ucet .nav-ucet-t{font-size:16px; font-weight:700; line-height:1.2;}
-  #nav #nav-ucet .nav-stav{font-size:13px; font-weight:500; margin-top:2px;}
-  #nav #nav-ucet:active{background:rgba(31,81,56,0.10);}
-
-  /* ZPRÁVY A HLÍDÁNÍ JEN PŘIHLÁŠENÉMU. Naměřeno: nepřihlášenému obě
-     stránky ukážou jen přihlašovací okénko („Zprávy jsou soukromé, tak
-     se stačí rychle přihlásit", „Hlídání je vázané na váš účet"). Byly
-     to tedy dvě slepé uličky ze šesti řádků nabídky. Cestu k přihlášení
-     nabízí karta účtu hned nahoře — druhá a třetí není potřeba.
-     Třídu na <html> nasazuje js/hlavicka.js už při DOMContentLoaded
-     z místního tokenu, tedy dávno předtím, než stihne někdo nabídku
-     otevřít; skrytí je výchozí stav, takže se v nejhorším neukáže nic,
-     místo aby se ukázaly slepé uličky. */
-  #nav .nav-moje{display:none;}
-  html.pk-prihlasen #nav .nav-moje{display:block;}
+  /* (Vysouvací panel je zrušený — nabídka je spodní lišta, viz výš.
+     Zbylo jen to, co se týká karty účtu na STRÁNCE profilu, ne v liště.) */
 }
 
 /* =====================================================================

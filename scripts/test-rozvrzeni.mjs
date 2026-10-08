@@ -207,10 +207,18 @@ async function otevri(soubor, sirka, vyska) {
     const v = await p.evaluate(() => {
       const nav = document.getElementById('nav');
       const logo = document.querySelector('.logo');
-      const burger = document.querySelector('.nav-toggle');
-      const vidno = (e) => { const s = getComputedStyle(e); return s.display !== 'none' && s.visibility !== 'hidden' && e.getClientRects().length > 0; };
-      const menuVidno = vidno(burger);
-      const odkazy = [...nav.querySelectorAll('a')].filter(vidno);
+      const vidno = (e) => { if (!e) return false; const s = getComputedStyle(e); return s.display !== 'none' && s.visibility !== 'hidden' && e.getClientRects().length > 0; };
+      /* HAMBURGER UŽ NEEXISTUJE a nabídka se neschovává. Na úzkém
+         displeji má hlavička ZÁMĚRNĚ dvě řady: logo s tlačítkem
+         a pod nimi vodorovný pás odkazů, který se posouvá prstem.
+         Měřit u něj „kolik řádků zabírají odkazy" nedává smysl —
+         pás je jedna řada a za okraj schválně přesahuje. Tahle
+         kontrola se proto týká jen široké podoby, kde navigace
+         stojí v jedné řadě vedle loga. Dřív se tu četl .nav-toggle;
+         po jeho odebrání byl null a zkouška spadla výjimkou. */
+      const pas = getComputedStyle(nav).overflowX === 'auto';
+      const menuVidno = pas || !nav.closest('header');
+      const odkazy = menuVidno ? [] : [...nav.querySelectorAll('a')].filter(vidno);
       if (menuVidno || !odkazy.length) return { menuVidno, radku: 1, mezera: 999, sirsi: [] };
       // Kolik různých řádků odkazy zabírají a jaká je mezera za logem.
       const radku = new Set(odkazy.map((a) => Math.round(a.getBoundingClientRect().top))).size;
@@ -458,15 +466,14 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   await ctx.close();
 }
 {
-  /* Na telefonu je menu samo o sobě seznam pod sebou, takže zanořovat
-     skupinu do rozbalovátka by bylo klepnutí navíc pro nic. Celá skupina
-     se ale ukazuje jen PŘIHLÁŠENÉMU: nepřihlášenému obě její stránky
-     (zpravy.html, hlidani.html) ukážou jedině přihlašovací okénko, takže
-     by to byly dvě slepé uličky ze šesti řádků nabídky. Cestu k přihlášení
-     nabízí karta účtu hned nahoře.
-     Měří se obojí — a to druhé i proto, že samotné „nepřihlášenému se
-     neukáže" by splnilo i menu, které tu skupinu nemá vůbec. */
-  const spocti = async (prihlasen) => {
+  /* PÁS MÁ VŠECHNY CÍLE, AŤ JSEM PŘIHLÁŠENÝ NEBO NE.
+     V jedné verzi jsem Zprávy a Hlídání nepřihlášenému schoval —
+     obě stránky mu ukážou jen přihlašovací okénko, tak mi to přišlo
+     logické. Bylo to špatně: kdo hlídá pozemky, potřebuje se k nim
+     dostat na jedno klepnutí, ne přes profil. Měří se oba stavy,
+     protože samotné „jsou tam" by prošlo i tehdy, kdyby se jeden
+     ze stavů choval jinak. */
+  const zalozky = async (prihlasen) => {
     const { ctx, p } = await otevri('kontakt.html', 390, 844);
     if (prihlasen) {
       await p.evaluate(() => {
@@ -474,22 +481,22 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
           user: { id: 'u1', email: 'jan@test.cz' } })); } catch (e) {}
       });
       await p.reload({ waitUntil: 'load' });
-      await p.waitForTimeout(800);
+      await p.waitForTimeout(900);
     }
-    await p.click('.nav-toggle').catch(() => {});
-    await p.waitForTimeout(600);
-    const n = await p.evaluate(() => [...document.querySelectorAll('.nav-moje-panel a')]
-      .filter((e) => { const s = getComputedStyle(e);
-        return s.display !== 'none' && e.getClientRects().length > 0; }).length);
+    const v = await p.evaluate(() => [...document.querySelectorAll('#nav a')]
+      .filter((a) => a.getClientRects().length).map((a) => a.getAttribute('href')));
     await ctx.close();
-    return n;
+    return v;
   };
-  const bezUctu = await spocti(false);
-  pravda('nepřihlášenému nabídka osobní stránky nenabízí', bezUctu === 0,
-    `vidět jsou ${bezUctu} — vedly by jen na přihlašovací okénko`);
-  const sUctem = await spocti(true);
-  pravda('přihlášenému jsou osobní položky rovnou vidět, bez rozbalování', sUctem === 2,
-    `vidět je ${sUctem} ze dvou — ve výsuvném menu se nemá nic rozbalovat`);
+  const bezUctu = await zalozky(false);
+  const sUctem = await zalozky(true);
+  pravda(`pás má šest cílů (${bezUctu.join(', ')})`, bezUctu.length === 6,
+    `je jich ${bezUctu.length}: ${bezUctu.join(', ')}`);
+  pravda('a přihlášení s nimi nehýbe', JSON.stringify(sUctem) === JSON.stringify(bezUctu),
+    `nepřihlášený ${bezUctu.join(', ')} | přihlášený ${sUctem.join(', ')}`);
+  pravda('Zprávy i Hlídání jsou v něm i bez přihlášení',
+    ['zpravy.html', 'hlidani.html'].every((c) => bezUctu.some((h) => (h || '').endsWith(c))),
+    `chybí: ${bezUctu.join(', ')}`);
 }
 
 /* --- OVLÁDÁNÍ SE MUSÍ DÁT TREFIT PRSTEM ------------------------------
