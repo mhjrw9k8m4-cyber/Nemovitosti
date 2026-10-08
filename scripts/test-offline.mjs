@@ -25,6 +25,7 @@
    chodí token z e-mailu na obnovu hesla).
    ================================================================== */
 import { chromium } from 'playwright-core';
+import { writeFileSync, unlinkSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -144,6 +145,38 @@ try {
   const data = vsechny.filter((u) => /\/data\/.+\.json$/.test(u));
   pravda('a data taky', data.length >= 1, `${data.length}`);
 
+  /* ---------- ČERSTVOST: uložená data nesmí přebít nová ----------
+   *
+   * Tohle je pravidlo B z hlavičky sw.js a hlavní slib celého webu:
+   * nabídky se obnovují čtyřikrát denně a stará cena je horší než žádná.
+   * Nic to ale nehlídalo. Všechny kontroly výš i níž ověřují, že se data
+   * ULOŽÍ a že se bez signálu dají přečíst — tedy přesně to, co by
+   * zůstalo pravda i tehdy, kdyby worker začal vydávat svou kopii
+   * navždycky. Jediný znak v sw.js (zeSiteNejdriv → zUlozisteNejdriv,
+   * nebo přidání data/ mezi OTISKOVANE) by vracejícímu se člověku
+   * ukazoval včerejší dražby a žádná zkouška by nehlesla.
+   *
+   * Měří se to na vlastním souboru, ne na datech webu: ta se během běhu
+   * měnit nesmí, běží nad nimi další zkoušky. Prostřední krok (offline
+   * vydá starou kopii) tu není do počtu — bez něj by se „vidí nové"
+   * dalo splnit i tím, že se soubor neuloží vůbec, a kontrola by
+   * neměřila nic. */
+  const ZK = path.join(KOREN, 'data', 'zkouska-cerstvosti.json');
+  const cti = () => p.evaluate(() => fetch('data/zkouska-cerstvosti.json', { cache: 'no-cache' })
+    .then((r) => r.ok ? r.json() : null).then((j) => (j && j.v) || 0).catch(() => -1));
+  writeFileSync(ZK, JSON.stringify({ v: 1 }));
+  const c1 = await cti();
+  pravda('zkušební datový soubor se přečte (jinak kontroly pod tím nic neváží)', c1 === 1, `vyšlo ${c1}`);
+  await ctx.setOffline(true);
+  const cOff = await cti();
+  await ctx.setOffline(false);
+  pravda('a worker si ho uložil (bez signálu ho vydá)', cOff === 1,
+    `bez signálu vyšlo ${cOff} — soubor v úložišti není, takže kontrola níž by prošla naprázdno`);
+  writeFileSync(ZK, JSON.stringify({ v: 2 }));
+  const c2 = await cti();
+  pravda('po obnově dat vidí vracející se člověk NOVÁ data, ne uloženou kopii', c2 === 2,
+    `vyšlo ${c2} místo 2 — worker přebil novou odpověď svou kopií, tedy stará cena na novém pozemku`);
+
   /* ---------- a teď bez signálu ---------- */
   await ctx.setOffline(true);
   let nacetlo = true;
@@ -184,6 +217,9 @@ try {
     chybyKonzole.slice(0, 2).join(' | '));
   await ctx.close();
 } finally {
+  /* Zkušební soubor zmizí, i kdyby test spadl výjimkou — jinak by po
+     něm zůstal v data/ a další zkoušky by na něj narazily. */
+  try { const z = path.join(KOREN, 'data', 'zkouska-cerstvosti.json'); if (existsSync(z)) unlinkSync(z); } catch (e) {}
   await prohlizec.close();
 }
 hotovo();
