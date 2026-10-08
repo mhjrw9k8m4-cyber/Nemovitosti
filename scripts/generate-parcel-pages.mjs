@@ -33,9 +33,26 @@ import { jsonVeStrance } from './json-do-stranky.mjs';
    Čte se LÍNĚ, až když se stránky opravdu staví: scripts/archiv.mjs
    běží před generátorem (viz .github/workflows/update-data.yml), takže
    při prvním dotazu je archiv už dnešní. */
+/* Parcelní číslo z textu inzerátu — a hlavně PRAVIDLA, kdy se o něm
+   mlčí. V datech ho má 273 nabídek z 1 948; z popisů se bezpečně doplní
+   221. Nevkládá se do pole `parcel` (je v klíči pozemku, viz
+   PKKlic.pkey), jde to vedle jako údaj „podle inzerátu". */
+import { najdi as najdiParcelu, klicPopisu } from './parcely-z-textu.mjs';
 import { historiePodleKlice } from './cenova-historie.mjs';
 import { nactiArchiv } from './archiv-statistiky.mjs';
 let _historie = null;
+let _popisy = null;
+/* Líně, až když se stránky staví: popisy mají 827 kB a při pouhém
+   importu modulu by se načetly nadarmo. */
+function parcelaZTextu(d) {
+  if (d.parcel && d.parcel !== '—') return null;     // vlastní je lepší
+  if (_popisy === null) {
+    try { _popisy = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'popisy.json'), 'utf8')); }
+    catch (e) { _popisy = {}; }
+  }
+  const v = najdiParcelu(_popisy[klicPopisu(d, pkey)], d);
+  return v.cislo || null;
+}
 function historieCeny(d) {
   if (_historie === null) {
     try { const a = nactiArchiv(); _historie = historiePodleKlice(a.uzavrene, a.stav); }
@@ -603,7 +620,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
        hlavně míň práce pro parser v telefonu.
        Cesta stojí tady, protože okres zná generátor; stránka by si ho
        z vlastního HTML musela luštit. */
-    + `<script>window.PK_POZEMEK=${jsonVeStrance(Object.assign({ k: pkey(d), ll: [d.lat, d.lng], v: d.area || 0, c: d.price || 0, r: `data/okres/${slug(d.okres)}.json` }, historieCeny(d) ? { h: historieCeny(d) } : {}))};</scr` + `ipt>\n$1`);
+    + `<script>window.PK_POZEMEK=${jsonVeStrance(Object.assign({ k: pkey(d), ll: [d.lat, d.lng], v: d.area || 0, c: d.price || 0, r: `data/okres/${slug(d.okres)}.json` }, historieCeny(d) ? { h: historieCeny(d) } : {}, parcelaZTextu(d) ? { pc: parcelaZTextu(d) } : {}))};</scr` + `ipt>\n$1`);
   /* POPIS OD INZERENTA, vepsaný rovnou do stránky. Leží v samostatném
      souboru (data/popisy.json), protože do opportunities.json, který čte
      úvodní stránka, nepatří — přidal by k němu zhruba megabajt. Sem se

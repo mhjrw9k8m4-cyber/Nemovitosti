@@ -757,6 +757,11 @@
     var facts = [];
     if (hasParcel(d)) facts.push({ k: 'Parcela', v: 'č. ' + esc(d.parcel) });
 
+    else if (!hasParcel(d) && window.PK_POZEMEK && window.PK_POZEMEK.pc) {
+      facts.push({ k: 'Parcela', v: 'č. ' + esc(window.PK_POZEMEK.pc),
+        pozn: 'podle textu inzerátu, neověřeno v katastru' });
+    }
+
     if (isFinite(d.lat) && isFinite(d.lng)) {
       var sour = d.lat.toFixed(5) + ', ' + d.lng.toFixed(5);
       facts.push({ k: 'Souřadnice', v:
@@ -850,7 +855,9 @@
 
       (facts.length
         ? '<div class="pz-specs">' +
-            facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v + '</span></div>'; }).join('') +
+
+            facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v
+              + (f.pozn ? '<small class="pz-spec-pozn">' + esc(f.pozn) + '</small>' : '') + '</span></div>'; }).join('') +
           '</div>'
         : '') +
 

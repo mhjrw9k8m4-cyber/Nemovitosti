@@ -7518,9 +7518,16 @@
      pozemky i po opravě. „no-store" by soubor stahoval celý pokaždé znovu;
      takhle při shodě přijde jen prázdná odpověď „nezměnilo se". */
   function loadJSON(url) { return fetch(url, { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
-  /* ZLEVNĚNÍ SE STAHUJE SOUBĚŽNĚ, ne po. 10,8 kB vedle 650 kB nabídek
-     v téže vlně požadavků nic nestojí; kdyby se čekalo až na hotová
+  /* ZLEVNĚNÍ SE STAHUJE SOUBĚŽNĚ, ne po. Kdyby se čekalo až na hotová
      data, odznak by na kartách doskočil později a výpis by poskočil.
+     ŽE TO NIC NESTOJÍ, JE ZMĚŘENÉ, ne odhadnuté. Na pomalé 4G (1,6 Mb/s,
+     150 ms RTT) a čtyřnásobně zpomaleném procesoru skončil ve všech pěti
+     bězích požadavek na zlevneni.json (7 kB) asi 900 ms PŘED
+     opportunities.json (635 kB) — 7 505 vs 8 441 ms. Promise.all tedy
+     čeká na velký soubor a na tenhle vůbec. Měřilo se to uvnitř jednoho
+     načtení schválně: porovnání mediánů mezi běhy ukazovalo +589 ms,
+     což byl rozptyl mezi běhy, a málem jsem podle toho opravoval něco,
+     co není rozbité.
      Když soubor chybí, nic se nestane — karty se vrátí k tomu, co ví
      z posledního běhu robota (cena_drive). */
   Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), sbRpc('public_listings'), loadJSON('data/zlevneni.json')])

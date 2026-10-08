@@ -1124,6 +1124,19 @@
 
     var facts = [];
     if (hasParcel(d)) facts.push({ k: 'Parcela', v: 'č. ' + esc(d.parcel) });
+    /* A KDYŽ V DATECH NENÍ, ZKUSÍ SE TEXT INZERÁTU. Číslo vepsal
+       generátor do window.PK_POZEMEK.pc a vzal ho z popisu jen tehdy,
+       když v něm bylo JEDNO a výměra hned za ním sedla na výměru
+       nabídky (pravidla i naměřené počty jsou v
+       scripts/parcely-z-textu.mjs). U 1 675 nabídek z 1 948 parcelní
+       číslo chybí, takže je to u čtvrtiny z nich ta jediná cesta, jak
+       pozemek vůbec dohledat v katastru.
+       MUSÍ U TOHO STÁT, ODKUD JE. Podle parcelního čísla se podepisuje
+       smlouva; tohle není z katastru, je to z inzerátu. */
+    else if (!hasParcel(d) && window.PK_POZEMEK && window.PK_POZEMEK.pc) {
+      facts.push({ k: 'Parcela', v: 'č. ' + esc(window.PK_POZEMEK.pc),
+        pozn: 'podle textu inzerátu, neověřeno v katastru' });
+    }
     /* SOUŘADNICE S SEBOU. Na prohlídku se jezdí autem a do navigace se
        zadává bod, ne „okres Benešov". Stránka přitom souřadnice zná —
        stavěla z nich mapu i odkazy do katastru — a člověku je neřekla,
@@ -1268,7 +1281,12 @@
          se tabulka vůbec. */
       (facts.length
         ? '<div class="pz-specs">' +
-            facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v + '</span></div>'; }).join('') +
+            /* `pozn` je vysvětlivka k hodnotě, ne další údaj: u parcelního
+               čísla z inzerátu u ní MUSÍ stát, odkud je. Dřív řádek nic
+               takového neumožňoval a vysvětlivka by musela být v hodnotě,
+               tedy stejně velkým písmem jako samo číslo. */
+            facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v
+              + (f.pozn ? '<small class="pz-spec-pozn">' + esc(f.pozn) + '</small>' : '') + '</span></div>'; }).join('') +
           '</div>'
         : '') +
 

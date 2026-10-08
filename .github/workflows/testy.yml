@@ -416,6 +416,9 @@ jobs:
       - name: Uložení jednoho pozemku neoznačí sousedy
         run: node scripts/test-klic-ulozenych.mjs
 
+      - name: Parcelní číslo z inzerátu — a kdy se o něm mlčí
+        run: node scripts/test-parcely-z-textu.mjs
+
       - name: Profil při výpadku netvrdí, že inzeráty nemáte
         run: node scripts/test-profil-vypadek.mjs
 
