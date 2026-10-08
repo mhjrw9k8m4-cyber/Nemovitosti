@@ -401,6 +401,9 @@ jobs:
       - name: Zkrácený stylopis vypadá jako plný (vypočtené styly)
         run: node scripts/test-rozdeleni-stylu.mjs
 
+      - name: Profil při výpadku netvrdí, že inzeráty nemáte
+        run: node scripts/test-profil-vypadek.mjs
+
       - name: Data stránky pozemku (dva malé soubory místo velkého)
         run: node scripts/test-data-stranky.mjs
 

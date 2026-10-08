@@ -370,6 +370,22 @@
         <div id="mi-dole">
         <p class="add-msg" id="mi-status" role="status" aria-live="polite">Načítám…</p>
         <div id="mi-list"></div>
+        <!-- NEDOSTUPNÉ ≠ PRÁZDNÉ. Když dotaz na inzeráty neodpoví,
+             stávalo se tohle: dlaždice se přepsaly na „0 inzerátů,
+             0 zhlédnutí" a dole se objevilo „Zatím tu žádný inzerát
+             nemáte". Komentář u toho říkal, že nula „nepůsobí rozbitě" —
+             jenže člověku, který inzerát MÁ, web právě oznámil, že
+             zmizel. To je horší než vypadat rozbitě; to je nepravda
+             o jeho majetku. Sousední stránky (zpravy.html, hlidani.html)
+             to říkají rovnou: „nepovedlo se načíst". Tady to chybělo. -->
+        <div id="mi-chyba" hidden>
+          <div class="pf-empty">
+            <div class="pf-empty-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6" stroke="var(--copper-bright)"/><path d="M12 16.5v.01" stroke="var(--copper-bright)"/></svg></div>
+            <h3>Inzeráty se teď nepovedlo načíst</h3>
+            <p>Spojení se serverem se nepodařilo navázat. Vaše inzeráty nikam nezmizely — zkuste to prosím za chvíli znovu.</p>
+            <button type="button" class="btn-primary pf-add" id="mi-znovu">Zkusit znovu</button>
+          </div>
+        </div>
         <div id="mi-empty" hidden>
           <div class="pf-empty">
             <div class="pf-empty-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M12 14v3M10.5 15.5h3" stroke="var(--copper-bright)"/></svg></div>
@@ -442,7 +458,7 @@
     function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
     function favCount(){ try { return (JSON.parse(localStorage.getItem('pk_fav_v1'))||[]).length; } catch(e){ return 0; } }
     function initials(mail){ var s=(mail||'').trim(); if(!s) return '?'; var name=s.split('@')[0].replace(/[^A-Za-z0-9]/g,''); return (name.slice(0,2)||s.slice(0,1)).toUpperCase(); }
-    var authBox = q('mi-auth'), panel = q('mi-panel'), statusEl = q('mi-status'), listEl = q('mi-list'), emptyEl = q('mi-empty');
+    var authBox = q('mi-auth'), panel = q('mi-panel'), statusEl = q('mi-status'), listEl = q('mi-list'), emptyEl = q('mi-empty'), chybaEl = q('mi-chyba');
     /* „13. 9." místo ISO řetězce — datum má člověk přečíst, ne luštit. */
     function datumCesky(iso) {
       try {
@@ -534,16 +550,23 @@
     }
     function load(attempt) {
       attempt = attempt || 0;
-      statusEl.hidden = false; statusEl.textContent = 'Načítám…'; listEl.innerHTML = ''; emptyEl.hidden = true;
+      statusEl.hidden = false; statusEl.textContent = 'Načítám…'; listEl.innerHTML = '';
+      emptyEl.hidden = true; if (chybaEl) chybaEl.hidden = true;
       A.rpc('my_listings', {}, true).then(function (res) {
         if (!res || !res.ok) {
           // Občas první pokus krátce po přihlášení selže (obnova session) → chvíli počkat a zkusit znovu.
           if (attempt < 2) { setTimeout(function () { load(attempt + 1); }, 600 * (attempt + 1)); return; }
-          // Ani po opakování → nový uživatel stejně nic nemá: ukaž přívětivý „přidejte první inzerát"
-          // a statistiky nastav na 0 (ne „—"), ať to nepůsobí rozbitě.
-          var pc0 = q('pf-count'); if (pc0) pc0.textContent = '0';
-          var pv0 = q('pf-views'); if (pv0) pv0.textContent = '0';
-          statusEl.hidden = true; emptyEl.hidden = false;
+          /* ANI PO TŘECH POKUSECH ŽÁDNÁ ODPOVĚĎ — A TO NENÍ TOTÉŽ CO
+             PRÁZDNO. Dřív se tu dosadily nuly a ukázalo se „Zatím tu
+             žádný inzerát nemáte", s odůvodněním, že nový účet stejně
+             nic nemá a pomlčka by působila rozbitě. Jenže tahle větev
+             nastane i tomu, kdo inzeráty MÁ: vypadne mu síť, server
+             odpoví 500, vyprší session. Web mu pak oznámí, že o ně
+             přišel. Pomlčka a věta „nepovedlo se načíst" je méně
+             příjemná, ale je pravdivá — a to je u cizího majetku
+             jediné měřítko, které platí. */
+          statusEl.hidden = true;
+          if (chybaEl) chybaEl.hidden = false; else emptyEl.hidden = false;
           return;
         }
         var rows = Array.isArray(res.data) ? res.data : [];
@@ -763,6 +786,7 @@
     naviguj('pf-fav', 'mi-saved-wrap', 'Přejít na uložené pozemky');
     // „Načíst znovu" v prázdném stavu (kdyby se inzeráty nenačetly napoprvé)
     var reloadBtn = q('mi-reload'); if (reloadBtn) reloadBtn.addEventListener('click', function(){ emptyEl.hidden = true; load(); });
+    var znovuBtn = q('mi-znovu'); if (znovuBtn) znovuBtn.addEventListener('click', function(){ if (chybaEl) chybaEl.hidden = true; load(); });
 
     // HNED ukázat stav podle zapamatovaného přihlášení (žádná prázdná/nejasná stránka),
     // pak na pozadí obnovit session a doplnit seznam inzerátů.
