@@ -51,9 +51,12 @@ Takový plán je horší než žádný: podle něj se nedá poznat, co ještě c
   neúčtuje a web to neslibuje.
 
 - [ ] **Fáze 4 — Hlídání lokality e-mailem** ← *ČEKÁ NA MAJITELE*
-  V aplikaci hotové a běží: uložená hledání, odznak s počtem nových,
-  centrum upozornění (`docs/centrum-upozorneni.md`,
-  `docs/hlidani-v-aplikaci.md`).
+  V aplikaci hotové a běží: uložená hledání na `hlidani.html`
+  (`docs/hlidani-v-aplikaci.md`). Centrum upozornění a odznak s počtem
+  nových tu dřív stály taky — funkce byla na přání odebrána celá
+  (skript i stránka upozornění jsou z repozitáře pryč, stejně jako obě
+  její dokumentace). Co z ní zbylo: počet nepřečtených zpráv ukazuje
+  dlaždice v profilu.
   E-mailem hotové v kódu, ale **vypnuté**: `supabase/hlidani-mailem.sql`,
   `scripts/send-alerts.mjs`, `scripts/mail-sklad.mjs`,
   `.github/workflows/rozesilani.yml` (denně v 7:35 UTC) a odhlášení jedním

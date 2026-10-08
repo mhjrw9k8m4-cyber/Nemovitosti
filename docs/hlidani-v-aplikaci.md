@@ -23,7 +23,7 @@ jinak by číslo rostlo s počtem hledání, ne s počtem pozemků.
 | Kus | Kde |
 |---|---|
 | porovnávání a počítání | `js/hlidani-logika.js` |
-| odznaky v menu a tečka na mobilu | `js/upozorneni.js` |
+| ~~odznaky v menu a tečka na mobilu~~ | odebráno i s funkcí Upozornění |
 | stránka s hledáními | `hlidani.html` |
 | e-mailový robot | **není** — rozesílač v repozitáři chybí, hlídání běží jen v aplikaci |
 
@@ -40,8 +40,10 @@ nestahuje nic navíc.
 Spočítané číslo se drží **minutu** v paměti prohlížeče, ať se web neptá na
 každé stránce znovu. Návštěva stránky Hlídání nebo Zprávy paměť zahodí —
 jinak by odznak ještě minutu hlásil to, co si tam člověk právě přečetl.
-Proto se `js/upozorneni.js` načítá i na těchto dvou stránkách: sám pozná,
-kde je, paměť smaže a skončí.
+ODEBRÁNO. Tenhle odstavec popisoval, proč se skript upozornění načítá
+i na dalších stránkách — odznaky v nabídce. Funkce Upozornění byla na
+přání zrušená celá a ten soubor v repozitáři není. Počet nepřečtených
+zpráv dnes ukazuje dlaždice v profilu (`muj-inzerat.html`).
 
 ## Proč to nenahrazuje e-mail
 

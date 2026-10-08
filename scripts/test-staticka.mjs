@@ -560,6 +560,58 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
   console.log(`Vnitřní odkazy: ${odkazu} na ${stranek} stránkách, všechny cíle existují.`);
 }
 
+/* ----------------------------------------------------------------------
+ * A TOTÉŽ NA DOKUMENTACI. Dokumentace stárne tiše: funkce se odebere,
+ * soubor se smaže, a text o něm mluví dál v přítomném čase. Naměřeno
+ * při úklidu: ze 66 odkazů na soubory v docs/*.md mířily dva na
+ * js/upozorneni.js a upozorneni.html — funkci Upozornění přitom
+ * majitel webu nechal odebrat celou. Roadmapa k tomu tvrdila, že
+ * „centrum upozornění je v aplikaci hotové a běží".
+ *
+ * Kontrola je stejně hloupá jako ty dvě nad ní: vezme každý název
+ * souboru v `zpětných uvozovkách` a podívá se, jestli existuje.
+ * Holý název bez složky (00-vse.sql) se hledá i podle jména, protože
+ * dokumentace píše o souborech lidsky, ne cestou od kořene. */
+{
+  const vzor = /`([a-z0-9][a-z0-9._/-]*\.(?:mjs|js|html|css|sql|json|yml|md))`/g;
+  const vsechny = new Map();          // jméno souboru → kolik jich v repozitáři je
+  (function projdi(adr) {
+    for (const f of fs.readdirSync(path.join(ROOT, adr), { withFileTypes: true })) {
+      if (f.name === 'node_modules' || f.name === '.git') continue;
+      const rel = adr ? adr + '/' + f.name : f.name;
+      if (f.isDirectory()) projdi(rel);
+      else vsechny.set(f.name, (vsechny.get(f.name) || 0) + 1);
+    }
+  }('')); 
+  const chybi = new Map();
+  let odkazu = 0;
+  const dokumenty = fs.readdirSync(path.join(ROOT, 'docs')).filter((f) => f.endsWith('.md'));
+  for (const f of dokumenty) {
+    const s = fs.readFileSync(path.join(ROOT, 'docs', f), 'utf8');
+    for (const m of s.matchAll(vzor)) {
+      const cil = m[1];
+      odkazu++;
+      if (fs.existsSync(path.join(ROOT, cil))) continue;
+      if (fs.existsSync(path.join(ROOT, 'docs', cil))) continue;
+      if (vsechny.has(cil.split('/').pop())) continue;   // holé jméno, soubor existuje jinde
+      if (!chybi.has(f)) chybi.set(f, new Set());
+      chybi.get(f).add(cil);
+    }
+  }
+  if (odkazu < 20) {
+    console.error(`::error::V dokumentaci se našlo jen ${odkazu} odkazů na soubory — kontrola by prošla naprázdno.`);
+    process.exit(1);
+  }
+  if (chibi(chybi)) {
+    for (const [f, cile] of chybi) {
+      console.error(`::error::docs/${f} mluví o souborech, které nejsou: ${[...cile].join(', ')}`);
+    }
+    process.exit(1);
+  }
+  console.log(`Dokumentace: ${odkazu} odkazů na soubory v ${dokumenty.length} textech, všechny existují.`);
+}
+function chibi(m) { return m.size > 0; }
+
 console.log(`\nStatická kontrola: ${souboru} souborů, ${podezreni ? podezreni + ' podezřelých volání' : 'žádné osiřelé volání'}.`);
 // Nepadáme — jsou to podezření, ne jistoty. Padá se jen tehdy, když by
 // bylo podezření nápadně moc (to už znamená, že se rozbil rozbor sám).
