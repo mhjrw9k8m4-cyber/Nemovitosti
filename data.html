@@ -99,6 +99,21 @@
         inzerátu; chybějící údaj znamená, že o tom inzerát mlčel.</li>
       <li><b>Výměra může být <code>null</code></b> — zdroj ji neuvedl a z textu se nedala
         bezpečně přečíst. Raději nic než cizí číslo.</li>
+      <!-- INZERÁTY OD MAJITELŮ V TOM SOUBORU NEJSOU. Nahoře je napsané
+           „všechny nabídky jsou v jednom souboru" a u stažených dat to
+           platí. Jenže na mapě jsou vedle nich i inzeráty, které sem
+           vloží sami majitelé — ty chodí ze serveru a do
+           data/opportunities.json je robot nepíše. Dnes je jich nula,
+           takže si toho nikdo nevšimne; ten slib se tedy rozbije přesně
+           ve chvíli, kdy někdo první inzerát vloží. Proto to tu stojí
+           teď, ne až potom. Hlídá to scripts/test-data-rozhrani.mjs. -->
+      <li><b>Nejsou v něm inzeráty od majitelů.</b> Co sem vloží sám
+        majitel pozemku, se na mapě ukazuje vedle stažených nabídek, ale
+        do tohohle souboru to nepatří — chodí to z naší databáze a může
+        se to měnit každou minutou. Statický odraz schválených inzerátů
+        je v <code>data/user-listings.json</code> (teď 0
+        inzeráty);
+        ve stažených nabídkách jsou jen pozemky z veřejných zdrojů.</li>
     </ul>
   </section>
 
@@ -180,6 +195,38 @@
     </ul>
     <p class="dt-pozn">Je to obyčejný soubor na obyčejném serveru: cachovatelný, bez klíče,
       bez limitu dotazů a bez aplikační vrstvy, která by mohla spadnout.</p>
+  </section>
+
+  <!-- HISTORIE CENY JE JEDINÁ VĚC, KTEROU NIKDE JINDE NESEŽENETE.
+       Soubor data/zlevneni.json leží veřejně, web si ho bere na mapu
+       a dosud o něm na téhle stránce nestálo nic — kdo si bere naše
+       data, o něm nevěděl, přestože je to to nejcennější, co tu je.
+       Čísla se dopočítávají při sestavení, ať se nerozejdou. -->
+  <section class="wrap dt-sekce">
+    <h2>Komu cena spadla — a kdy</h2>
+    <p class="dt-uvod">Tohle je jediná část našich dat, která se nikde jinde nedá vzít:
+      zapisujeme si nabídky den po dni, takže u 72 nabídek
+      víme, jak se u nich cena měnila.</p>
+    <p class="dt-adresa"><code>https://www.parcelaka.cz/data/zlevneni.json</code></p>
+    <ul class="dt-seznam">
+      <li><b>Tvar</b> je <code>{ den, nabidky: { "&lt;klíč&gt;": [[den, cena], …] } }</code>.
+        Dvojice jdou odpředu a den u každé znamená, kdy ta cena <b>začala</b> platit.</li>
+      <li><b>Klíč je náš vnitřní</b> — obec, parcela, okres, souřadnice a otisk adresy
+        inzerátu. Na nabídky z <code>opportunities.json</code> se dá napojit jen tím
+        výpočtem, který na to má web (<code>js/klic.js</code>); jako trvalý identifikátor
+        ho neberte, může se změnit.</li>
+      <li><b>Jen nabídky, které na trhu jsou.</b> U těch, co zmizely, historii máme, ale
+        do tohohle souboru nepatří — na mapě by se nikdy nepoužila.</li>
+      <li><b>Změnu pod 3 % nehlásíme</b> ani tady, ani na stránkách: bývá to zaokrouhlení
+        nebo přepis u zdroje, ne sleva.</li>
+      <li><b>Pozor na to, co to NEZNAMENÁ.</b> Jsou to pořád ceny nabídkové. „Cena spadla"
+        neznamená, že se pozemek prodal pod původní cenou — znamená, že prodávající změnil,
+        za kolik ho nabízí.</li>
+      <li><b>Nejdřív je 14. 9. 2026.</b> Dřív si nabídky nikdo nezapisoval, takže o starších
+        změnách ceny nevíme a nikdy se nedozvíme.</li>
+    </ul>
+    <p class="dt-pozn">Souhrn přes celý trh — kolik nabídek je po N dnech pryč a jak hluboko
+      se slevuje — je na stránce <a href="cena-pozemku.html">ceny pozemků</a>.</p>
   </section>
 
   <section class="wrap dt-sekce">

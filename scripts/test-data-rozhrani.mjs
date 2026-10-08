@@ -16,7 +16,7 @@
 // u ceny stojí „nabídková, ne prodejní", a že u podílu je napsané,
 // proč cena za metr vychází nízko. To jsou dvě věci, kvůli kterým by
 // cizí výpočet nad těmihle daty vyšel nesmyslně.
-import { readFileSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -189,6 +189,81 @@ const nabidky = D.opportunities || [];
   const stranka2 = readFileSync(new URL('../data.html', import.meta.url), 'utf8');
   pravda('a stránka s daty na podmínky dál odkazuje',
     /href="podminky\.html"/.test(stranka2), 'data.html na podmínky neodkazuje');
+}
+
+/* ---- KAŽDÝ VEŘEJNĚ STAHOVANÝ SOUBOR DAT MUSÍ BÝT POPSANÝ ----
+   Stránka data.html začíná větou „všechny nabídky jsou v jednom
+   souboru". U stažených nabídek to platí, ale web si tahá i další
+   soubory z data/ — a dva z nich nesou údaje, které
+   v opportunities.json vůbec nejsou:
+     • data/zlevneni.json — jak se u nabídky měnila cena
+     • data/user-listings.json — inzeráty od majitelů
+   Druhý je dnes PRÁZDNÝ, takže se ten slib rozbije přesně ve chvíli,
+   kdy někdo vloží první inzerát a nikdo se nebude dívat. Proto se to
+   hlídá teď.
+   Co popis nepotřebuje, je vyjmenované s důvodem — nový soubor spadne
+   do „nezařazeno" a vyžádá si rozhodnutí, ne mlčení. */
+{
+  const VNITRNI = {
+    'data/model.json': 'vstup cenového modelu — odvozený z opportunities.json',
+    'data/kraje.json': 'obrysy krajů pro mapu, žádné údaje o pozemcích',
+    'data/okresy-hrube.json': 'zjednodušené obrysy okresů pro mapu',
+    'data/ceny-mist.json': 'medián ceny podle místa — dopočítaný z opportunities.json',
+    'data/historie-cen.json': 'cenové hladiny v čase, dopočítané z historie gitu',
+    'data/mapove-vrstvy.json': 'nastavení mapových vrstev, ne data o pozemcích',
+  };
+  /* PROHLEDÁVAJÍ SE VŠECHNY SKRIPTY, ne vyjmenovaná hrstka. Nejdřív
+     tu stál seznam deseti souborů a tři výjimky v tabulce výš se podle
+     něj jevily jako mrtvé — data/okresy.json a spol. si totiž říká jiný
+     skript. Ruční seznam zdrojů by navíc znamenal, že nový skript s novým
+     souborem dat tuhle kontrolu obejde. */
+  const zdroje = readdirSync(new URL('../js/', import.meta.url))
+    .filter((f) => f.endsWith('.js'))
+    .map((f) => 'js/' + f);
+  pravda('prohledalo se ' + zdroje.length + ' skriptů webu', zdroje.length >= 20,
+    'skriptů jen ' + zdroje.length + ' — změnilo se rozložení složek?');
+  const tahane = new Set();
+  for (const f of zdroje) {
+    const t = readFileSync(new URL('../' + f, import.meta.url), 'utf8');
+    for (const m of t.matchAll(/['"`](data\/[a-z0-9-]+\.json)['"`]/g)) tahane.add(m[1]);
+  }
+  pravda('a našlo se ' + tahane.size + ' stahovaných souborů dat', tahane.size >= 5,
+    'našlo se jen: ' + [...tahane].join(', '));
+  const dataHtml = readFileSync(new URL('../data.html', import.meta.url), 'utf8');
+  const nepopsane = [...tahane].filter((f) => !dataHtml.includes(f) && !VNITRNI[f]);
+  /* POZOR NA TVAR TÉHLE KONTROLY. Napsal jsem ji nejdřív jako
+     pravda(popis, JSON.stringify(nepopsane), '[]') — a pravda() bere
+     druhý parametr jako pravdivostní hodnotu, takže neprázdný řetězec
+     '["data/user-listings.json"]' prošel jako „v pořádku". Kontrola
+     tedy mlčela přesně o tom souboru, kvůli kterému vznikla. */
+  pravda('každý stahovaný soubor dat je na data.html popsaný, nebo vyjmenovaný jako vnitřní',
+    nepopsane.length === 0, 'nepopsané: ' + nepopsane.join(', '));
+  /* A OPAČNÝM SMĚREM: co je vyjmenované jako vnitřní, se opravdu musí
+     stahovat — jinak seznam výjimek zestárne a zakryje i soubor, který
+     už nikdo nečte. */
+  const mrtve = Object.keys(VNITRNI).filter((f) => !tahane.has(f));
+  pravda('a žádná výjimka neplatí pro soubor, který se už nestahuje',
+    mrtve.length === 0, 'mrtvé výjimky: ' + mrtve.join(', '));
+
+  /* A ten slib o inzerátech od majitelů. Nesmí záležet na tom, že je
+     jich dnes nula. */
+  pravda('data.html říká, že inzeráty od majitelů v souboru nejsou',
+    /inzer[áa]ty\s+od\s+majitel/i.test(dataHtml.replace(/<[^>]+>/g, ' ')),
+    'stránka o tom mlčí — rozbije se to prvním vloženým inzerátem');
+  /* NESTAČÍ, ŽE JMÉNO SOUBORU NA STRÁNCE JE. Napsal jsem to nejdřív
+     jako prostý includes('data/zlevneni.json') a sabotáž „sekce
+     o historii ceny ze stránky zmizí" neprošla — jméno totiž zůstalo
+     v řádku s adresou. Hlídá se proto to, co z toho souboru dělá
+     použitelná data: tvar, mez a odkdy to vůbec je. */
+  const popisZlevneni = [
+    ['jméno souboru', /data\/zlevneni\.json/],
+    ['tvar (nabidky: { klíč: [[den, cena]] })', /nabidky\s*:/],
+    ['mez 3 %, pod kterou se mlčí', /3[\s\u00a0]*%/],
+    ['odkdy se to zapisuje', /14\.[\s\u00a0]*9\.[\s\u00a0]*2026/],
+    ['a že jsou to ceny nabídkové', /nabídkov/i],
+  ].filter(([, re]) => !re.test(dataHtml));
+  pravda('a popisuje historii ceny tak, aby se dala použít',
+    popisZlevneni.length === 0, 'na data.html chybí: ' + popisZlevneni.map(([k]) => k).join(', '));
 }
 
 hotovo();
