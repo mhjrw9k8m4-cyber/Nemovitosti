@@ -532,7 +532,7 @@ img, svg, table, pre{max-width:100%;}
 /* Přístupnost: čistý focus rámeček při ovládání klávesnicí (nezobrazí se u myši/dotyku) */
 a:focus-visible, button:focus-visible, select:focus-visible, [role="button"]:focus-visible, [tabindex]:focus-visible, summary:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px; border-radius:var(--r-xs);}/* Grid/flex sloupce se musí umět zmenšit — jinak vytlačí stránku do stran */
 
-.hero-head > *, .map-app > *, .foot-grid > *, .steps > *, .status-grid > *, .glossary > *{min-width:0;}
+.map-app > *, .foot-grid > *, .steps > *, .status-grid > *, .glossary > *{min-width:0;}
 .opp-list{min-width:0; max-width:100%;}
 .wrap{max-width:var(--m-wrap); margin:0 auto; padding:0 32px;}
 /* Třída se jmenuje .mono po písmu, které tu bývalo. Jeho jediná práce,
@@ -635,7 +635,7 @@ button, a, [role="button"], select, summary, .btn-primary, .lp-btn, input[type="
    mobilu vada. Vypínáme ho proto všude, kde prvkem hýbe (ne jen u tlačítek,
    jak to bylo dřív — na kartách pozemků a živém náhledu to chybělo). */
 @media (hover:none){
-  .btn-primary:hover, .lp-btn:hover, .map-reset:hover, .to-top:hover, .pf-stat--jde:hover, .okr-item:hover, .deal-card:hover, .opp-item:hover, .odl-card:hover, .status-card:hover, .gl-item:hover, .price-card:not(.featured):hover, .ul-card:hover{ transform:none; }
+  .btn-primary:hover, .lp-btn:hover, .map-reset:hover, .to-top:hover, .pf-stat--jde:hover, .okr-item:hover, .deal-card:hover, .opp-item:hover, .odl-card:hover, .status-card:hover, .gl-item:hover, .ul-card:hover{ transform:none; }
 }
 /* Upozornění u formuláře — něco vypadá podezřele, ale odeslat to jde.
    Odlišené od chyby: chyba je červená a zastaví, tohle jen zvedne obočí. */
@@ -1209,7 +1209,6 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
     width:6px; height:6px; margin-top:-2px; border-radius:50%;
     background:var(--copper-bright); background-image:none;}
 }
-.nav-moje-panel a .nav-unread{margin-left:auto;}
 /* PODTRŽENÍ AKTIVNÍ POLOŽKY JEN NA POČÍTAČI. Kreslí se jako ::after
    s content:"" — a na telefonu je ::after popisek záložky („Hledat").
    Pravidlo je přitom zapsané přísněji (id + dvě třídy + prvek) než
@@ -1291,66 +1290,8 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    hledání pak leží na rozhraní a „plave" nad obrazem. */
 .hero-map{position:relative; overflow:hidden; padding:0 0 48px;}
 .hero-map::before{content:none;}
-/* Obraz je POZADÍM textu, ne vrstvou vedle něj. Zní to jako detail, ale není:
-   kdyby ležel v samostatném prvku, kontrolor kontrastu by ho neviděl a měřil
-   by text proti světlé stránce — tedy proti něčemu, co tam vůbec není.
-   Spodní barva #E2D8BC je nejsvětlejší pole z kresby: tmavý přechod nad ní
-   tak drží i v tom nejnepříznivějším místě obrazu. */
-/* Pás už nemusí dělat odstupy sám — dělá je vyměřená parcela uvnitř. */
-/* ÚVODNÍ PÁS JE SVĚTLÝ, a to je ta hlavní změna. Dřív to byl skoro černý
-   zelený přechod — na bílé hlavičce a zelenobílých kartách pod ním to
-   působilo jako dva weby slepené k sobě. Teď přechází z nejsvětlejší
-   plochy do barvy stránky, takže hlavička, pás i karty jsou jedna
-   soustava a nic se nikde neláme. */
-/* JEDEN PÁS, JEDEN PŘEDPIS. Tenhle přechod tu byl opsaný ručně, i když
-   token --pas-plocha říká dnes totéž a používají ho patička i ostatní
-   pásy. Dva zápisy téhož znamenají, že se jednou rozejdou. */
-.hero-band{position:relative; padding:32px 0 132px;
-  background:var(--pas-zavoje), var(--pas-plocha);}
-/* Jemná mapová mřížka. Kresba polí z leteckého pohledu, která tu byla
-   předtím, vypadala jako maskáče — nepravidelné skvrny v tlumené zeleni
-   a písku takhle dopadnou vždycky, ať se obarví jakkoli. Mřížka je
-   PRAVIDELNÁ, takže ten dojem vzniknout nemůže, a přitom odkazuje na
-   mapu: je to síť poledníků a rovnoběžek, ne textura. */
-/* BÍLÁ NA SVĚTLÉM SE NEKRESLÍ. Mřížka měla --mrizka-cara-tmava, což je
-   rgba(255,255,255,0.06) — barva pro TMAVÉ plochy. Pás je ale světlý,
-   takže z celé té sítě poledníků a rovnoběžek, kterou vysvětlivka výš
-   popisuje, nebylo vidět vůbec nic. Token --pas-mrizka přesně pro tohle
-   existoval a nepoužíval ho nikdo. Totéž platilo o pásu na ostatních
-   stránkách (.add-hero). */
-.hero-band::before{content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
-  background-image:
-    linear-gradient(to right, var(--pas-mrizka) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--pas-mrizka) 1px, transparent 1px);
-  background-size:var(--mrizka-bunka) var(--mrizka-bunka);
-  -webkit-mask-image:radial-gradient(ellipse 78% 76% at 50% 42%, #000 18%, transparent 100%);
-          mask-image:radial-gradient(ellipse 78% 76% at 50% 42%, #000 18%, transparent 100%);}
-/* Spodní okraj pásu končí ostře. Rozplývání do barvy stránky znělo jako
-   dobrý nápad, ale světlý přechod přes tmavé pozadí dá na čtvrtině výšky
-   pásu šedou mlhu — a mlha byla přesně to, co na téhle ploše vadilo.
-   Ostrá hrana navíc drží, protože ji karta s mapou stejně překrývá. */
-.hero-band > .wrap{position:relative; z-index:1;}
-/* Text leží na tmavém obraze — potřebuje vlastní barvy, jinak by zmizel. */
-/* Na obraze musí i drobné písmo držet 4,5:1 i nad nejsvětlejším polem —
-   proto je teplá barva výrazně světlejší než jinde na webu. */
-.hero-map .hero-head .eyebrow{color:var(--copper-bright);}
-.hero-map .hero-head h1{color:var(--text-ondark);}
-.hero-map .hero-head h1 em{color:var(--copper);}
-.hero-map .hero-head .hero-stats{color:var(--muted);}
-.hero-map .hero-head .hero-stats .ts-n{color:var(--text-ondark);}
-.hero-map .hero-head .hero-stats .ts-n b{color:var(--text-ondark);}
 
 .hero-map .wrap{position:relative; z-index:1;}
-.hero-head{text-align:center; max-width:var(--m-stredni); margin:0 auto 20px; display:flex; flex-direction:column; align-items:center;}
-.hero-head .eyebrow{margin-bottom:16px;}
-/* Tloušťka 360 u 54px nadpisu je hodně světlé písmo — na světlém pozadí
-   z toho byl bledý, nerozhodný dojem. Sebevědomí dělá typografie, ne efekty:
-   plná tloušťka a sevřenější prostrkání. */
-.hero-head h1{font-size:60px; font-weight:700; line-height:1.03; letter-spacing:-0.03em; margin-bottom:20px;}
-/* Zvýrazněné slovo musí mít stejnou váhu jako zbytek nadpisu. Dřív tu
-   stálo 400 proti 800 a půlka věty vypadala vybledle. */
-.hero-head h1 em{font-weight:700;}
-.hero-head .sub{font-size:16px; color:var(--pas-text-mute); max-width:var(--m-text); margin-bottom:16px;}
 
 /* Mapa je hlavní produkt — dopřejeme jí víc šířky (jako velké realitní weby),
    nadpis nad ní zůstává vycentrovaný v užší míře. */
@@ -1369,24 +1310,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 @media (max-width:520px){ .hero-map .map-wide{padding:0 20px;} }
 @media (max-width:880px){
   .hero-map{padding:0 0 40px;}
-  .hero-band{padding:20px 0 80px;}
-  /* Popisek se na úzkém displeji lámal na dvě slova; užší prostrkání
-     a o půl bodu menší písmo ho udrží na jednom řádku. */
-  .hero-map .hero-head .eyebrow{font-size:12px; letter-spacing:0.04em;}
   .hero-map .map-wide{margin-top:20px;}
-  .hero-head{margin-bottom:20px;}
-  .hero-head .eyebrow{margin-bottom:12px;}
-  .hero-head h1{font-size:34px; margin-bottom:12px;}
-  .hero-head .sub{font-size:16px; margin-bottom:16px;}
-  
-}
-@media (max-width:560px){
-  /* Nadpis stránky na telefonu měl TŘI různé velikosti podle toho, jaká
-     stránka to je: úvod 31 px, běžná stránka 32, rádce 30. Rozdíl jednoho
-     pixelu nikdo nepozná jednotlivě — pozná se ale to, že web nemá míru. */
-  .hero-head h1{font-size:32px;}
-  /* podnadpis necháme i na mobilu — vysvětluje smysl webu (na první dobrou) */
-  .hero-head .sub{font-size:16px; margin-bottom:14px;}
   
 }
 
@@ -1461,9 +1385,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Vypilovaná mapa-hrdina */
 
 .filter-chip:active, .copy-btn:active{transform:translateY(1px);}
-.opp-item:active{transform:translateX(2px) scale(0.995);}/* Rotující tip u mapy */
-
-#map-tip-text{transition:opacity var(--cas-pomaly) var(--ease);}
+.opp-item:active{transform:translateX(2px) scale(0.995);}
 
 /* ===== Interaktivní mapa ===== */
 /* Layout: vlevo nahoře hledání a filtry, vlevo dole výsledky, vpravo mapa přes obě řady.
@@ -2576,15 +2498,6 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .odl-cta-txt b{font-size:16px; color:var(--text-ondark); font-weight:700;}
 .odl-cta-txt span{font-size:14px; color:var(--text-ondark-mute);}
 @media (max-width:560px){ .odl-cta{flex-direction:column; align-items:stretch; text-align:center;} .odl-cta .btn-primary{text-align:center;} }
-/* PLNÁ PLOCHA SE BERE Z --plocha-znacka, NE Z --copper.
-   --copper je barva PÍSMA a mezi režimy se obrací: ve světlém je to
-   tmavá zelená #0F5C3B, v tmavém světlá máta #7FD1A3. Jako podklad pod
-   bílé písmo tedy funguje jen v jednom z nich — v tmavém dává 1,82 : 1,
-   což je nečitelné. --plocha-znacka je naopak určená právě k tomuhle:
-   9,72 : 1 ve světlém a 5,21 : 1 v tmavém.
-   Zkoušky to neodhalily, protože se tyhle prvky kreslí jen přihlášenému
-   (odznaky s počtem) nebo při najetí myší. */
-.nav-unread{display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 4px; margin-left:4px; border-radius:var(--r-sm); background:var(--plocha-znacka); color:#fff; font-size:12px; font-weight:700; vertical-align:middle;}
 .map-holder{position:relative; display:flex; flex-direction:column; overflow:hidden; min-height:0;}
 /* isolation:isolate uzavře vnitřní z-indexy Leafletu (tečky, popisky), ať panel detailu
    spolehlivě překryje mapu a nic z ní neprosvítá */
@@ -2659,13 +2572,25 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 @media (max-width:560px){ .map-reset{font-size:12px; padding:6px 10px; gap:6px;} .map-reset .mr-ic{width:14px; height:14px; stroke-width:2.57;} .map-lock{font-size:12px; padding:8px 12px;} .map-lock .ml-ic{width:14px; height:14px; stroke-width:2.57;} }
 /* Zoom +/− — moderní bílá tlačítka, VIDITELNÁ i na mobilu (snadné přiblížení bez gest). */
 .leaflet-control-zoom{display:block; margin:0 12px 80px 0 !important; border:none !important; box-shadow:var(--e2); border-radius:var(--r-md); overflow:hidden;}
-.leaflet-control-zoom a{width:46px; height:46px; line-height:44px; font-size:24px; font-weight:600; background:var(--plocha-plovouci); color:var(--copper-bright); border:1px solid rgba(31,81,56,0.16); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);}
+/* SPECIFIČNOST MUSÍ PŘEBÍT KNIHOVNU, JINAK JSOU TLAČÍTKA 30 px.
+   vendor/leaflet/leaflet.css má `.leaflet-touch .leaflet-bar a{width:30px;
+   height:30px}` — to je (0,2,1), kdežto `.leaflet-control-zoom a` jen
+   (0,1,1). Na dotykovém zařízení tedy vyhrávala knihovna bez ohledu na
+   pořadí souborů a + i − měly 30 px, tedy pod 44 px, které se dají
+   trefit prstem. Naměřeno v scripts/test-rozvrzeni.mjs na stránce
+   pozemku. Pozor, `.leaflet-touch` si Leaflet dává i na stolním
+   prohlížeči, takže to není jen mobilní případ.
+   Dvě třídy nestačí: `.leaflet-bar.leaflet-control-zoom a` je taky
+   (0,2,1), a protože se leaflet.css vkládá AŽ ZA náš stylopis (viz
+   js/pozemek.js — knihovna i její styl se stahují až na dohled),
+   při rovnosti vyhraje on. Proto tři třídy. */
+.leaflet-container .leaflet-bar.leaflet-control-zoom a{width:46px; height:46px; line-height:44px; font-size:24px; font-weight:600; background:var(--plocha-plovouci); color:var(--copper-bright); border:1px solid rgba(31,81,56,0.16); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);}
 .leaflet-control-zoom a:first-child{border-bottom:1px solid rgba(31,81,56,0.16);}
 .leaflet-control-zoom a:last-child{border-top:none;}
 .leaflet-control-zoom a:hover{background:#fff; color:var(--copper); }
 .leaflet-control-zoom a:active{background:var(--ink);}
 .leaflet-control-zoom a.leaflet-disabled{opacity:0.4; color:var(--text-ondark-mute); background:var(--plocha-plovouci-tlum);}
-@media (min-width:961px){ .leaflet-control-zoom a{width:40px; height:40px; line-height:38px; font-size:20px;} }
+@media (min-width:961px){ .leaflet-container .leaflet-bar.leaflet-control-zoom a{width:40px; height:40px; line-height:38px; font-size:20px;} }
 
 /* Výběr kraje: dokud není vybrán, tečky (pozemky) nejsou klikací → klik vždy trefí kraj.
    Značky mají v Leafletu vlastní pointer-events, proto je nutné je přebít napřímo. */
@@ -2841,8 +2766,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 
 /* Ceník */
 
-.price-card.featured{border-color:var(--copper); box-shadow:var(--glow-lg); transform:translateY(-6px);}
-.price-card .btn-primary{text-align:center; padding:12px;}/* form fine print */
+/* form fine print */
 /* CTA sub */
 
 /* Footer grid */
@@ -2884,9 +2808,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
    se knoflík někdy zvětšil, rozejde se to — a spadne na tom
    scripts/test-paticka.mjs, který ten překryv měří. Ta zkouška je tu
    tedy tím, co obě čísla drží u sebe. */
-.foot-bottom{display:flex; justify-content:space-between; align-items:center; padding-top:20px; font-size:12px; color:var(--text-ondark-mute); flex-wrap:wrap; gap:10px 16px; padding-bottom:80px;}/* Risk reversal / záruky */
-
-.guarantee .ic{width:16px; height:16px; color:var(--c-ok-ink);}
+.foot-bottom{display:flex; justify-content:space-between; align-items:center; padding-top:20px; font-size:12px; color:var(--text-ondark-mute); flex-wrap:wrap; gap:10px 16px; padding-bottom:80px;}
 
 /* Kicker linka nad nadpisem sekce (grády) */
 .section-head h2{position:relative;}/* Jemné vypilování karet */
@@ -2894,7 +2816,6 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 .gl-item:hover{box-shadow:var(--shadow);}
 .gl-item{transition:border-color var(--cas-zakladni) var(--ease), transform var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
 .gl-item:hover{border-color:var(--line-strong); transform:translateY(-2px);}
-.price-card:not(.featured):hover{border-color:var(--line-strong); transform:translateY(-4px); box-shadow:var(--shadow);}
 
 /* Feature/step ikona barevná */
 
@@ -3165,7 +3086,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   .opp-item::after{display:none;}      /* rohová značka by se na řádku bila se srdíčkem */
   #leaflet-map{position:absolute; inset:0;}
   .status-grid{grid-template-columns:repeat(2,1fr);}
-  .glossary{grid-template-columns:repeat(2,1fr);} .price-card.featured{transform:none;}
+  .glossary{grid-template-columns:repeat(2,1fr);}
   .foot-grid{grid-template-columns:repeat(2, minmax(0,1fr)); gap:28px 24px;}
   .foot-brand-col{grid-column:1 / -1;}
 }
@@ -3589,10 +3510,6 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
   transform:rotate(45deg) translate(-2px,-2px); transition:transform var(--cas-zakladni) var(--ease);}
 .add-jak[open] .add-jak-sum::after{transform:rotate(-135deg) translate(-3px,-3px);}
 .add-steps{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:12px;}
-.add-step{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:20px;}
-.add-step .n{font-family:var(--font-mono); font-size:13px; color:var(--copper-bright); margin-bottom:10px;}
-.add-step h3{font-size:16px; margin-bottom:8px;}
-.add-step p{font-size:14px; color:var(--text-ondark-mute); line-height:1.5;}
 /* Proklik na druhou stránku (Prodej ↔ Inzerce) */
 /* CESTA VEN Z REGIONU. Hlavní tlačítko na okresní i krajské stránce
    vede na mapu ZÚŽENOU na ten kraj — a dál už se z ní jinam nedostanete
@@ -3678,8 +3595,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .ul-price{font-family:var(--font-ui); font-size:20px; color:var(--copper-bright);}
 .ul-desc{font-size:13px; color:var(--text-ondark-mute); line-height:1.5;}/* ---------- Přepínač Naše mapa / Pozemky od lidí (na jedné stránce) ---------- */
 
-#view-mapa[hidden]{display:none;}
-#view-lide[hidden]{display:none;}/* Pozemky od lidí — hlavička sekce */
+#view-mapa[hidden]{display:none;}/* Pozemky od lidí — hlavička sekce */
 
 /* Prázdný stav — „Buďte první" + ukázková karta */
 
@@ -3867,29 +3783,6 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .okr-stat{background:#fff; border:1px solid var(--line); border-radius:var(--r-md); padding:12px 16px; min-width:96px; box-shadow:var(--e1);}
 .okr-stat b{display:block; font-size:24px; line-height:1.1; color:var(--copper-bright,#8CC3A4);}
 .okr-stat span{font-size:12px; color:var(--muted,#9db0a4); text-transform:uppercase; letter-spacing:0.04em;}
-/* CENOVÁ MAPA OKRESŮ (cena-pozemku.html, js/cenova-mapa.js).
-   Výška je pevná v poměru, ne v pixelech: obrys ČR je širší než vysoký
-   (zhruba 1,75 : 1), takže pevná výška by na telefonu nechala nad mapou
-   i pod ní pruh prázdna a na širokém okně by mapu zploštila. */
-.cen-mapa-obal{margin:14px 0 0;}
-#cen-mapa{width:100%; aspect-ratio:175/100; border-radius:var(--r-md);
-  border:1px solid var(--line); background:var(--surface-2);
-  /* Leaflet si jinak nastaví vlastní pozadí a vykreslí šedou plochu
-     i tam, kde žádný okres není. */
-  overflow:hidden;}
-#cen-mapa .leaflet-container{background:transparent;}
-#cen-mapa[data-hotovo] + .cen-mapa-stav{display:none;}
-/* BARVA TEXTU SE TADY NENASTAVUJE SCHVÁLNĚ. Stálo tu color:var(--ink-soft),
-   což vypadá jako „tlumený text" — ale --ink-soft je PLOCHA (ve světlém
-   režimu čistě bílá, v tmavém #18291F), ne text. Legenda tím byla bílá na
-   bílém a v tmavém režimu tmavá na tmavém: kontrast 1 : 1 v obou režimech.
-   Chytil to scripts/test-kontrast.mjs ještě před nahráním. Text se teď
-   dědí z karty, takže má zaručeně tentýž kontrast jako okolní popisky. */
-.cen-mapa-legenda{display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px;
-  list-style:none; margin:10px 0 0; padding:0; font-size:13px;}
-.cen-mapa-legenda li{display:flex; align-items:center; gap:5px;}
-.cen-mapa-legenda i{width:22px; height:12px; border-radius:var(--r-xs); display:block;
-  border:1px solid var(--line);}
 .okr-list{display:flex; flex-direction:column; gap:10px; margin:14px 0 0;}
 /* PEVNÁ MŘÍŽKA MÍSTO ZALAMOVÁNÍ.
    Dokud byl řádek flexbox, měnil tvar podle délky textu: v okrese
@@ -4007,11 +3900,6 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .crumbs span[aria-current="page"]{color:var(--text-ondark); font-weight:600;}
 .crumbs .crumb-sep{color:var(--line-strong);}
 
-/* ---------- Hero číselný proužek (sociální důkaz) ---------- */
-.hero-stats{align-items:baseline;}
-.hero-stats .ts-n{color:var(--text-ondark, #12241A);}
-.hero-stats .ts-n b{color:var(--copper-bright,#8CC3A4); font-weight:700; font-size:1.08em;}
-
 /* ---------- Čitelnost obsahových stránek (rádce, regiony, ceny) ---------- */
 .add-card p{ color:var(--text-ondark); font-size:16px; line-height:1.68; }
 .rules-sect p{ color:var(--text-ondark); }
@@ -4020,7 +3908,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 /* Podtitul bere barvu pásu, ne vlastní šedomodrou. Byla tu #434C5E,
    tedy odstín 225° — modrá na zeleném webu, a ještě z časů, kdy byl
    pás tmavý a tahle hodnota se pod ním stejně neprojevila. */
-.add-hero .sub, .hero-head .sub{ color:var(--pas-text-mute); }
+.add-hero .sub{ color:var(--pas-text-mute); }
 
 /* ---------- Detail pozemku: přehledná hlavička + hero cena + skládací „Detaily" ---------- */
 /* Typový štítek nahoře (barevná tečka + název druhu nabídky) */
@@ -4754,32 +4642,10 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .okr-index-grid a span{font-family:var(--font-mono); font-size:12px; white-space:nowrap;}
 @media (max-width:880px){ .okr-index-grid{grid-template-columns:1fr 1fr; gap:0 20px;} }
 @media (max-width:620px){ .okr-index-grid{grid-template-columns:1fr;} }
-
-/* =====================================================================
-   ÚVODNÍ BLOK
-   Zkusil jsem sem dát vyměřenou parcelu — čerchovanou hranici, zaměřovací
-   kříže v rozích, souřadnice. Nápad z oboru, ale dohromady to vypadalo
-   jako hledáček ve hře, ne jako realitní web. Profesionální dojem dělá
-   zdrženlivost, ne počet prvků, tak je to pryč.
-   Zbylo jen to, co něco nese: obraz, nadpis, čísla. A prostor kolem nich.
-   ===================================================================== */
-.hero-plot{position:relative; max-width:var(--m-stredni); margin:0 auto; padding:28px 0 20px;}
-@media (max-width:880px){ .hero-plot{padding:16px 0 10px;} }
-
-.hero-map .hero-plot{position:relative; z-index:1;}
-/* Štítek se živou tečkou: web se hlásí, že je při smyslech. */
-.hh-stit{display:inline-flex; align-items:center; gap:8px; font-family:var(--font-mono);
-  font-size:12px; font-weight:600; letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--copper-bright);
-  background:var(--ink-soft2); border:1px solid var(--line);
-  padding:6px 12px; border-radius:999px; margin-bottom:16px;}
-.hh-zive{width:8px; height:8px; border-radius:50%; background:#5BD98A; flex:none;
-  animation:hhTep 1.9s ease-out infinite;}
 @keyframes hhTep{
   0%{box-shadow:0 0 0 0 rgba(91,217,138,0.7);}
   70%{box-shadow:0 0 0 9px rgba(91,217,138,0);}
   100%{box-shadow:0 0 0 0 rgba(91,217,138,0);}}
-.hero-map .hero-head h1 em{font-style:normal; color:var(--copper);}
-.hero-map .hero-head h1 b{font-weight:800; color:var(--copper-bright);}
 /* Kolik čeho — barvou, ne slovem. Táž barva jako tečky na mapě i v legendě. */
 .hh-legenda{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 20px;}
 .hh-l{display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600;
@@ -4793,78 +4659,9 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
    v proužku živých faktů — byla to jediná drobnost na webu, která ji
    měla, a pátá tloušťka písma kvůli osmi prvkům. */
 .hh-l b{font-weight:700;}
-@media (max-width:760px){
 
-  /* ZÁVOJ POD NADPISEM — a tentokrát opravdu NAD tečkami.
-     Byl tu i dřív, jenže visel na .hero-plot se z-index:-1, kdežto plátno
-     souhvězdí je jeho vnuk se z-index:0. V téže vrstvě tedy závoj ležel
-     POD tečkami a neztlumil z nich vůbec nic — změřeno na vykreslených
-     pixelech: v obdélníku nadpisu bylo 17,3 % teplých (oranžových) pixelů
-     na 390 px a 20,9 % na 320 px, zatímco na monitoru 0,2 %. Souhvězdí je
-     totiž stavěné na rozvržení „text vlevo, tečky vpravo"; na telefonu
-     spadne rovnou pod písmo.
-     Teď sedí na .hero-head nad plátnem a text je nad ním. Tečky se tím
-     neschovají — jen se pod písmem ztlumí, takže obojí obstojí. */
-  .hero-map .hero-plot .hero-head{position:relative;}
-  /* Text musí nad závoj. Plátno zůstává na nule, takže pořadí je
-     jednoznačné: tečky 0, závoj 1, písmo 2. */
-  .hero-map .hero-plot .hero-head > *:not(canvas){position:relative; z-index:2;}
-}
-@media (prefers-reduced-motion: reduce){
-  .hh-zive{animation:none;}
-}
-
-/* Velká patková číslice s popiskem pod sebou tu byla, dokud se tímhle
-   řádkem web představoval („1 962 POZEMKŮ | 77 OKRESŮ"). Hlavní číslo se
-   přestěhovalo do nadpisu, kde je mu líp — a co zbylo, je doplněk. Kdyby
-   si doplněk nechal sloupcovou sazbu, zůstala by z něj osamělá
-   sedmdesátsedmička nad slovem „okresů" vedle vět na jiném účaří. */
-.hero-map .hero-head .hero-stats{display:flex; justify-content:flex-start; align-items:center;
-  gap:0; margin-top:20px; flex-wrap:wrap;
-  font-family:var(--font-mono); font-size:13px; letter-spacing:0.04em;}
-.hero-map .hero-stats .ts-n{display:inline; padding:0; font-size:inherit;
-  letter-spacing:inherit; text-transform:none; color:var(--pas-text-mute);
-  font-family:inherit; white-space:nowrap;}
-.hero-map .hero-stats .ts-n b{font-family:inherit; font-weight:700;
-  font-size:inherit; line-height:inherit; letter-spacing:inherit; color:var(--pas-text);}
 
 @media (max-width:880px){
-  .hero-map .hero-head .hero-stats{margin-top:16px; font-size:12px;}
-}
-
-/* =====================================================================
-   ÚVOD NA LEVÝ PRAPOREK
-   Vycentrovaný sloupec textu uprostřed tmavé plochy je postavení menu ve
-   hře, ne realitního webu. Profesionální weby sázejí text na levý
-   praporek: oko má jednu náběhovou hranu a nemusí ji u každého řádku
-   hledat znovu. Asymetrie navíc dává stránce směr.
-   Nadpis je proto větší, přitažený k sobě a ROZŠÍŘENÝ (Archivo má
-   proměnnou šířku) — právě z toho vzniká ten dojem autority.
-   ===================================================================== */
-.hero-plot{max-width:var(--m-wrap); padding:48px 0 32px;}
-.hero-map .hero-head{align-items:flex-start; text-align:left; max-width:none;}
-.hero-map .hero-head h1{
-  font-family:var(--font-display); font-weight:800;
-
-  font-size:var(--h1-domu); line-height:0.94; letter-spacing:-0.04em;
-  max-width:var(--m-nadpis); margin-bottom:24px;}
-/* Zvýrazněná část věty nesmí být kurzíva — z té byla ta „pohádka".
-   Rozdíl dělá barva, ne jiný řez písma. */
-.hero-map .hero-head h1 em{font-style:normal; font-weight:800; color:var(--pas-akcent);}
-.hero-map .hero-head .eyebrow{margin-bottom:20px;}
-
-/* Čísla jako datový pás u levé hrany, ne vycentrovaná trojice. */
-.hero-map .hero-head .hero-stats{justify-content:flex-start; margin-top:28px;}
-.hero-map .hero-stats .ts-n:first-child{padding-left:0;}
-
-@media (max-width:880px){
-  /* Úvod se na telefonu roztahoval přes celou obrazovku a hledání zůstalo
-     až pod ní. Odsazení jde dolů všude o kus — nic nemizí, jen se to
-     nedrží od sebe jako na monitoru. */
-  .hero-plot{padding:16px 0 12px;}
-  .hero-map .hero-head h1{font-size:clamp(29px,8.2vw,42px); max-width:none; margin-bottom:12px;}
-  .hero-map .hero-head .eyebrow{margin-bottom:10px;}
-  .hero-map .hero-head .hero-stats{margin-top:14px;}
   .hero-map{padding:0 0 24px;}
 }
 
@@ -4883,26 +4680,10 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
    Text je proto zpátky a místo se ušetřilo tam, kde ho opravdu ubylo:
    na odsazeních. Kolik to dělá, hlídá scripts/test-uvod.mjs. */
 @media (max-width:560px){
-  /* Ušetřeno na odsazeních, ne na textu. Hodnoty jsou naměřené:
-     rozpad výšky úvodu na 320×568 ukázal, kde se místo ztrácelo. */
-  .hero-band{padding:10px 0 64px;}
   /* Vytažení nahoru je pryč i tady. Překrývat se nemá co — uvítací blok
      je odebraný — a na 390×844 to schovávalo hledací pole: z jeho 46 px
      bylo 45 za hlavičkou a klepnutí trefilo „Přidat pozemek". */
   .hero-map .map-wide{margin-top:20px;}
-  .hero-plot{padding:8px 0 6px;}
-  .hero-map .hero-head{margin-bottom:10px;}
-  .hero-map .hero-head .eyebrow{margin-bottom:6px;}
-  .hero-map .hero-head .hero-stats{margin-top:8px;}
-  .hero-head h1{margin-bottom:8px;}
-  /* Vyšší specificita než obecné pravidlo pro .hero-live níž, jinak by
-     si odsazení nechalo svoje. */
-  .hero-map .hero-live{margin-top:8px; padding-top:6px;}
-  /* Nadstavec se na 320 px lámal na dva řádky. Čárka před ním je ozdoba —
-     bez ní se text vejde na jeden a ušetří to 16 px. Tečka zůstává, ta
-     nese význam (živá data). */
-  .hero-map .hero-head .eyebrow::before{display:none;}
-  .hero-map .hero-head .eyebrow{gap:6px;}
 }
 
 /* =====================================================================
@@ -5169,54 +4950,11 @@ body > footer{flex:none;}
    grotesk. U antikvy se tím patky slepí a nadpis zhoustne v šedou masu.
    ------------------------------------------------------------------ */
 h1, h2, h3,
-.hero-map .hero-head h1,
 .section-head h2,
 .add-hero h1,
 .okr-hero h1,
 .clanek .rules-sect h2{letter-spacing:-0.01em;}
-.hero-map .hero-head h1{letter-spacing:-0.02em; line-height:1.0;}
 .rail-mark .rm-n{font-family:var(--font-display);}
-
-/* =====================================================================
-   ŽIVÝ PROUŽEK V ÚVODU
-   „1 953 pozemků · 77 okresů" je pravda, ale neříká, jestli se tu něco
-   děje. Tři fakta z dat: nejbližší dražba, kolik přibylo, nejvýhodnější
-   nabídka. Každé vede rovnou na ten pozemek.
-   Klíč je v Plex Mono a prostrkaný, hodnota v antikve — ať je na první
-   pohled vidět, co je popisek a co údaj.
-   ------------------------------------------------------------------ */
-/* align-self:stretch je tu nosné. Hlavička je svislý flex a zarovnává
-   potomky na začátek (respektive na střed), takže si tenhle proužek bral
-   šířku svého OBSAHU: 557 px uvnitř 350px sloupce, tedy 187 px mimo
-   obrazovku. Jeho vlastní overflow-x pak neměl co posouvat a poslední
-   údaj se nedal přečíst ani posunout. */
-.hero-live{display:flex; flex-wrap:wrap; gap:0; margin-top:28px;
-  align-self:stretch; max-width:100%;
-  border-top:1px solid rgba(255,255,255,0.22);}
-/* Dokud se hodnoty nespočítají, pruh je NEVIDITELNÝ, ale místo si drží —
-   jinak se po načtení dat vysune a odsune celou stránku pod sebou.
-   Prázdná hodnota by přitom byla nulově vysoká, takže by se rezervovalo
-   míň, než co pak přijde; proto min-height na řádek hodnoty. */
-.hero-live.je-ceka{visibility:hidden;}
-@media (max-width:760px){
-  /* Na telefonu stály tyhle tři údaje pod sebou a každý zabral dva řádky —
-     dohromady 208 px, tedy čtvrtina obrazovky jen na ně. Pak jeden řádek na
-     údaj, to bylo 105 px. Pořád moc: pole „Hledat obec" kvůli tomu leželo
-     až v druhé polovině obrazovky, takže první, co člověk na webu o pozemcích
-     uvidí, není hledání pozemků.
-     Teď je z toho JEDEN vodorovný pás, po kterém se dá posunout prstem.
-     Popisek zmizel, hodnota mluví sama („zítra · Karlovice"). 44 px. */
-  .hero-live{flex-direction:row; flex-wrap:nowrap; gap:0; margin-top:12px;
-    overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch;
-    border-top:1px solid rgba(255,255,255,0.22); padding-top:8px;
-    /* Třetí údaj se u pravého okraje uřízne uprostřed slova a vypadá to
-       jako rozbité rozvržení, ne jako „posuň si to". Změkčený okraj to
-       řekne beze slov. Maska, ne barevný přechod — pod pásem je přechod
-       pozadí a plná barva by se s ním neshodla. */
-    -webkit-mask-image:linear-gradient(to right, #000 86%, transparent);
-    mask-image:linear-gradient(to right, #000 86%, transparent);}
-  .hero-live::-webkit-scrollbar{display:none;}
-}
 
 /* =====================================================================
    TVARY DRUHŮ PŘÍLEŽITOSTI
@@ -5688,8 +5426,6 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    v drobnějším řádkování. Nic nemizí, jen se to přestane roztahovat.
    ===================================================================== */
 @media (max-width:560px){
-  .hh-stit{display:none;}
-  .hero-map .hero-head h1{font-size:clamp(27px,7.6vw,34px); margin-bottom:10px;}
   .hh-legenda{gap:4px; margin-bottom:12px;}
   .hh-l{font-size:12px; padding:4px 8px; gap:4px;}
   .hh-l i{width:7px; height:7px;}
@@ -5709,7 +5445,6 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    popisků. Souhvězdí i nadpis zůstávají: to je ta živá část. */
 @media (max-width:380px){
   .hh-legenda{display:none;}
-  .hero-map .hero-head h1{font-size:24px; line-height:1.06; margin-bottom:10px;}
   /* POPISEK ZŮSTÁVÁ, JEN SE ZÚŽÍ. Dřív tu bylo display:none a z karty
      zbylo „dnes · Teplice", „8 pozemků", „−59 % · Bílina" — údaje, které
      bez popisku neříkají nic: osm pozemků čeho, minus padesát devět

@@ -39,7 +39,7 @@ const STRANKY = ['muj-inzerat.html', 'hlidani.html', 'zpravy.html', 'index.html'
    Vypsané schválně: projíždět všechno na stránce a hoverovat to po
    jednom trvá minuty a najede to i na věci, co se hýbat mají (mapa). */
 const ZDVIHANE = ['.pf-stat', '.okr-item', '.deal-card', '.opp-item', '.odl-card',
-  '.status-card', '.gl-item', '.price-card', '.ul-card', '.kraj-item', '.filter-chip',
+  '.status-card', '.gl-item', '.ul-card', '.kraj-item', '.filter-chip',
   '.vm-navrhy li', '.ms-navrhy li'];
 /* OD KAŽDÉ TŘÍDY STAČÍ PÁR KUSŮ. Vada je vlastnost pravidla v CSS, ne
    jednotlivé karty — když se chová špatně první .opp-item, chovají se

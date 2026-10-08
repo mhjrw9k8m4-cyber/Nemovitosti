@@ -262,9 +262,6 @@ async function otevri(soubor, sirka, vyska) {
   const v = await p.evaluate(() => {
     const vidno = (id) => { const e = document.getElementById(id) || document.querySelector(id);
       return !!(e && !e.hidden && getComputedStyle(e).display !== 'none' && e.getClientRects().length); };
-    const stat = document.querySelector('.hero-stats');
-    const panel = document.querySelector('.map-controls-panel') || document.querySelector('.map-app');
-    const mezera = (stat && panel) ? Math.round(panel.getBoundingClientRect().top - stat.getBoundingClientRect().bottom) : null;
     /* Dřív se tu hlídalo, že nad nadpisem stojí nadstavec. Ten je pryč —
        říkal potřetí totéž co nadpis a řádek pod ním. Smysl kontroly ale
        trvá: nad nadpisem nesmí zůstat prázdný pruh. Měří se proto rovnou
@@ -278,7 +275,7 @@ async function otevri(soubor, sirka, vyska) {
     const hlavicka = document.querySelector('header');
     const nadHledanim = (hledani && hlavicka)
       ? Math.round(hledani.getBoundingClientRect().top - hlavicka.getBoundingClientRect().bottom) : null;
-    return { nadHledanim, mezera };
+    return { nadHledanim };
   });
   pravda('nad hledáním nezůstal prázdný pruh', v.nadHledanim !== null && v.nadHledanim <= 60,
     `nad hledáním je ${v.nadHledanim} px prázdna — na telefonu je to ukradený kus obrazovky`);

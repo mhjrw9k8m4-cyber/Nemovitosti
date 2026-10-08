@@ -243,6 +243,9 @@ jobs:
       - name: Čísla v roadmapě se rovnají repozitáři
         run: node scripts/test-roadmap.mjs
 
+      - name: Ve stylopisu nezbyla mrtvá pravidla
+        run: node scripts/test-mrtve-styly.mjs
+
       - name: Řezy dat dávají dohromady celek
         run: node scripts/test-data-rezy.mjs
 

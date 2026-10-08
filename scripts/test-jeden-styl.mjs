@@ -36,14 +36,13 @@ const STUPNE = ['--h1-stranka', '--h1-domu', '--h1-nastroj'];
 
 // Výjimky: pravidlo, které velikost h1 mění, ale stupeň nést nemůže.
 // Klíč je selektor, hodnota důvod. Bez důvodu tu nemá co dělat.
-const VYJIMKY = {
-  '.hero-map .hero-head h1':
-    'plakát na titulní straně se na úzkém okně chová jinak než ostatní nadpisy: '
-    + 'nad mapou musí ustoupit, aby zůstalo vidět Česko, ne jen písmo',
-  '.hero-head h1':
-    'starší podoba hlavičky titulní strany, kterou .hero-map přebíjí; '
-    + 'nese jen záchranné hodnoty, kdyby se mapa nenačetla',
-};
+/* Dvě výjimky tu stály pro .hero-map .hero-head h1 a .hero-head h1 —
+   plakát nad mapou na titulní straně. Ten blok ze stránky zmizel
+   (uvítací blok zrušen na přání majitele) a .hero-head nezůstalo
+   v žádném HTML ani skriptu; pravidla pro něj jsou dnes smazaná.
+   Prázdná tabulka je v pořádku: každé pravidlo, které velikost h1
+   mění, má dnes nést pojmenovaný stupeň. */
+const VYJIMKY = {};
 
 // --- Projdi předlohu a najdi KAŽDÉ pravidlo s font-size u h1 ----------
 // Čte se po znacích, protože @media se zavírají a „poslední @media nad
@@ -74,7 +73,9 @@ for (let i = 0; i < radky.length; i++) {
 pravda('stupně nadpisu jsou v paletě',
   STUPNE.every((t) => new RegExp(`${t}\\s*:`).test(css)),
   'chybí: ' + STUPNE.filter((t) => !new RegExp(`${t}\\s*:`).test(css)).join(', '));
-pravda('test našel pravidla, která velikost h1 určují', nalezy.length >= 5,
+/* Bylo „aspoň pět", dokud existoval plakát nad mapou se dvěma vlastními
+   pravidly. Po jeho smazání jsou tři: h1, .okr-hero h1 a .add-hero h1. */
+pravda('test našel pravidla, která velikost h1 určují', nalezy.length >= 3,
   `nalezeno jen ${nalezy.length} — čte test vůbec předlohu?`);
 
 // --- Pravidlo ---------------------------------------------------------
@@ -154,12 +155,14 @@ const mrizky = bloky.filter((b) =>
    plocha, má to být rozhodnutí: zvedni číslo a dole ověř, že nová plocha
    bere rozteč i barvu z palety. Kdyby tu stálo „aspoň", přibyla by plocha
    s opsanými čísly a test by mlčel. */
-/* ŠEST, NE SEDM. Sedmá byla vysouvací nabídka na telefonu (#nav::before).
-   Mřížka patří na plochy, které něco ukazují — mapa, karty, hlavička;
-   za seznamem šesti řádků z ní pod horním okrajem zbyl šedý flek
-   a panel vypadal ušpiněný, ne značkový. Odebrána záměrně. */
-pravda('test našel všech šest ploch s mřížkovou texturou', mrizky.length === 6,
-  `nalezeno ${mrizky.length}, čekám 6 — pokud texturu dostala další plocha, `
+/* PĚT. Sedmá byla vysouvací nabídka na telefonu (#nav::before): mřížka
+   patří na plochy, které něco ukazují — mapa, karty, hlavička — a za
+   seznamem šesti řádků z ní pod horním okrajem zbyl šedý flek, takže
+   panel vypadal ušpiněný, ne značkový. Šestá byl .hero-band::before,
+   tedy pás pod uvítacím blokem titulní strany; ten blok je pryč a
+   .hero-band nezůstalo v žádném HTML ani skriptu. Obě odebrány záměrně. */
+pravda('test našel všech pět ploch s mřížkovou texturou', mrizky.length === 5,
+  `nalezeno ${mrizky.length}, čekám 5 — pokud texturu dostala další plocha, `
   + 'zvedni číslo v testu:\n      '
   + mrizky.map((b) => b.sel.trim().slice(0, 34)).join(' | '));
 
