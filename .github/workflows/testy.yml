@@ -410,6 +410,9 @@ jobs:
       - name: „Výhodná cena" jen tam, kde je čím ji podložit
         run: node scripts/test-vyhodna-cena.mjs
 
+      - name: U verdiktu o ceně je vidět, z kolika nabídek vyšel
+        run: node scripts/test-vzorek-verdiktu.mjs
+
       - name: Data stránky pozemku (dva malé soubory místo velkého)
         run: node scripts/test-data-stranky.mjs
 

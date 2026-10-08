@@ -346,9 +346,23 @@
        větě, takže se to dá ověřit i zpochybnit. */
     var kdeTxt = (window.PK_CENY && window.PK_CENY.kdeText && pc.uroven)
       ? ' ' + window.PK_CENY.kdeText(pc.uroven, pc.kde) : '';
-    if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + pc.cheaper + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + '.'; }
-    else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + '.'; }
-    else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> pozemků téhož druhu ' + typeWord + kdeTxt + '.'; }
+    /* Z KOLIKA NABÍDEK TO VYŠLO, SE MUSÍ ŘÍCT.
+       „Levnější než 82 % pozemků téhož druhu v okrese Tábor" zní jako
+       statistika trhu. Model přitom stačí deset srovnatelných nabídek
+       (pod to verdikt nedá vůbec) — a naměřeno na ostrých datech:
+       verdikt o ceně dostane 1 159 z 1 950 nabídek a u 489 z nich,
+       tedy u 42 %, stojí na vzorku menším než dvacet. Medián je 21.
+       „Levnější než 82 %" z dvanácti nabídek je něco jiného než z dvou
+       set a člověk, který se podle toho rozhoduje o kupní ceně, má
+       nárok ten rozdíl vidět. Číslo model vrací (pc.sample) a stránka
+       ho dosud zahazovala.
+       Je to ve stejné větě, ne na novém řádku: KDE se srovnávalo tam
+       stojí z téhož důvodu a dva řádky drobného písma pod verdiktem
+       už nikdo nečte. */
+    var zKolika = (pc.sample > 0) ? ' (' + pc.sample + ' ' + (pc.sample < 5 ? 'nabídky' : 'nabídek') + ')' : '';
+    if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + pc.cheaper + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
+    else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
+    else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
     return '<div class="pz-verdict ' + cls + '">' +
       '<div class="pv-top"><span class="pv-badge">' + badge + '</span><span class="pv-cmp">Cena za m²</span></div>' +
       '<div class="pv-text">' + text + '</div>' +

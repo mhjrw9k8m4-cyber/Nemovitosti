@@ -5225,9 +5225,14 @@
         var _di = dealInfo(d);
         srovnaniModel = _di ? { uroven: _di.uroven, kde: _di.kde } : null;
         kdeKarty = kdeSrovnani(_di);
+        /* I v popisku se říká, z kolika nabídek to vyšlo — stejný důvod
+           jako na stránce pozemku (js/pozemek.js): u 42 % verdiktů je
+           vzorek menší než dvacet. V popisku to nic nestojí, protože
+           ten se stejně rozbaluje až pod prstem. */
+        var _zKolika = (_di && _di.sample > 0) ? ' (' + _di.sample + ' ' + (_di.sample < 5 ? 'nabídky' : 'nabídek') + ')' : '';
         chips.push('<span class="opp-deal" data-kde="' + esc(kdeKarty) + '" title="' +
           (_di && _di.cheaper >= 70
-            ? 'Levnější než ' + _di.cheaper + ' % pozemků téhož druhu ' + esc(kdeKarty || 'v okolí')
+            ? 'Levnější než ' + _di.cheaper + ' % pozemků téhož druhu ' + esc(kdeKarty || 'v okolí') + _zKolika
             : 'Cena za m² patří k nejnižším u pozemků téhož druhu ' + esc(kdeKarty || 'v okolí')) + '">' +
           (_di && _di.cheaper >= 70 ? 'levnější než ' + _di.cheaper + ' %' : 'výhodná cena') + '</span>');
       }
