@@ -116,3 +116,36 @@ a peněz, ne kódu.
 
 Kód a zkoušky. Každou změnu měřím na skutečných datech a každou pojistku
 zkouším rozbít — kontrola, kterou nejde položit sabotáží, nic nehlídá.
+
+---
+
+## Archiv nabídek (od 10/2026)
+
+`data/archiv/YYYY-MM.jsonl` + `data/archiv/stav.json`, plní `scripts/archiv.mjs`
+při každém běhu robota (`.github/workflows/update-data.yml`).
+
+**Proč.** Web znal jen dnešek. `data/opportunities.json` se při každém běhu
+přepíše celý a po zmizelé nabídce zbyl jen náhrobek, který se po 90 dnech
+smaže. Nikde pak nebylo, že pozemek byl za tolik nabízený od–do — přitom
+je to jediný údaj o trhu, který tenhle web získává sám.
+
+**Co je řádek.** Uzavřené období, kdy jedna nabídka visela za jednu cenu:
+klíč pozemku (bez ceny!), obec, okres, druh, typ, výměra, cena, `od`, `do`
+a důvod (`zmizela` / `cena`). Z navazujících období se poskládá celá doba
+na trhu i historie slev u konkrétního pozemku.
+
+**Proč JSONL a ne SQLite nebo Parquet.** Jeden řádek na řádek souboru,
+jeden soubor na měsíc, nikdy se nic nepřepisuje — git pak vidí jen nové
+řádky a repozitář neroste. Binární formáty se nedají porovnat a každá
+verze se v gitu uloží celá. Databáze se z těchhle řádků kdykoli vyrobí;
+postup je známý jako *git scraping* (simonwillison.net/2021/Dec/7/git-history/).
+
+**Zpětný dopočet.** `node scripts/archiv.mjs --zpetne` projde historii
+`data/opportunities.json` v gitu a archiv z ní postaví. Při zavedení to
+dalo 920 uzavřených období z 25 dnů (97 otisků od 14. 9. 2026).
+
+**Co z toho jde dnes spočítat:** doba na trhu (medián 7 dnů u zmizelých),
+kolik nabídek zlevnilo (138 z 920) a kde (Hodonín 14, Praha-východ 8).
+
+**Pozor:** jsou to ceny NABÍDKOVÉ a „zmizela" neznamená „prodáno" —
+nabídka mohla být i stažena. Nic jiného se z veřejných zdrojů poznat nedá.

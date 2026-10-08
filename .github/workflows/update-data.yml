@@ -37,6 +37,14 @@ jobs:
           APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
           APIFY_SREALITY_ACTOR: ${{ secrets.APIFY_SREALITY_ACTOR }}
 
+      # ARCHIV. Musí běžet HNED po stažení a PŘED přegenerováním webu:
+      # porovnává nová data s tím, co si pamatuje z minula. Kdyby běžel
+      # později, nic se nezkazí — ale kdyby neběžel vůbec, zmizelé
+      # nabídky se ztratí a zpětně se dopočítat dají jen z historie
+      # gitu, tedy dokud ji někdo nepřepíše.
+      - name: Archiv nabídek (co zmizelo a co zlevnilo)
+        run: node scripts/archiv.mjs
+
       # Nejen přegenerovat stránky, ale spravit všechno odvozené: stránky
       # krajů a okresů, čísla v úvodu, dražby, rozcestník, sitemap, razítka
       # ?v= u skriptů i sloučené SQL. Robot tím strom čtyřikrát denně srovná
