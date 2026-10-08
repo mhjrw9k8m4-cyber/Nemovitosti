@@ -78,6 +78,16 @@ await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 't
 const p = await ctx.newPage();
 await p.goto(BASE + '/index.html', { waitUntil: 'domcontentloaded' });
 await p.waitForFunction(() => !!window.PK_MAPA && window.PK_MAPA.getZoom, null, { timeout: 15000 }).catch(() => {});
+/* A POČKAT, AŽ SI MAPA DOSEDNE. `PK_MAPA` vznikne hned, jenže boot si
+   300 ms po dojití dat zavolá invalidateSize() a fitAllCZ() — a ten
+   přepíše jakékoli přiblížení nastavené před ním. Zkouška pak zjistila,
+   že je pořád na 7,25, a správně ohlásila, že neměří nic. Nebyla to
+   vada webu: dokud je mapa zamčená, nepohne s ní ani návštěvník
+   (tažení i kolečko jsou vypnuté, viz probudMapu v js/main.js), takže
+   fitAllCZ nemá komu výřez vzít. Čeká se proto na vykreslený výpis —
+   ten je až za bootem — a teprve pak se přibližuje. */
+await p.waitForFunction(() => document.querySelectorAll('.opp-item').length > 0, null, { timeout: 15000 }).catch(() => {});
+await p.waitForTimeout(700);
 const mapaJe = await p.evaluate(() => !!(window.PK_MAPA && window.PK_MAPA.getZoom));
 pravda('mapa se načetla (jinak zkouška níž nic neměří)', mapaJe,
   'bez mapy se tvary nekreslí a zkouška by mlčela i u rozbitého webu');

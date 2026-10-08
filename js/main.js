@@ -5162,7 +5162,8 @@
       /* U známého podílu se obecné „cena k ověření" nepřidává: odznak
          „podíl" níž říká totéž, jen přesně a jedním slovem. Dva odznaky
          o téže věci jen zabírají řádek. */
-      if (MODEL && MODEL.neduveryhodna(d) && !_odhadPochybny && !d.podil) {
+      var varujemeOCene = !!(MODEL && MODEL.neduveryhodna(d) && !_odhadPochybny && !d.podil);
+      if (varujemeOCene) {
         chips.push('<span class="opp-overit" title="Cena za m² je hluboko pod obvyklou — bývá to spoluvlastnický podíl, pozemek bez přístupu nebo chyba v inzerátu">cena k ověření</span>');
       }
       var _od = MODEL ? MODEL.odhad(d) : null;
@@ -5198,7 +5199,29 @@
         kdeKarty = kdeSrovnani(_od);
         chips.push('<span class="opp-deal" data-kde="' + esc(kdeKarty) + '" title="Cena je o ' + _od.podOdhadem +
           ' % pod obvyklou cenou podobných pozemků ' + esc(kdeKarty || 'v okolí') + '">−' + _od.podOdhadem + ' % proti okolí</span>');
-      } else if (perM2 && dealMax && perM2 <= dealMax) {
+      } else if (perM2 && dealMax && perM2 <= dealMax && !varujemeOCene) {
+        /* NA JEDNÉ KARTĚ NESMÍ STÁT „CENA K OVĚŘENÍ" A „VÝHODNÁ CENA" ZÁROVEŇ.
+           Tahle větev se chytá jen podle ceny za metr — je to „tři
+           nejlevnější na obrazovce" — a tři podmínky nad ní, které hlídají
+           důvěryhodnost, všechny vyžadují `odhad.podleVelikosti`. Když
+           odhad vyjde NULL (málo srovnatelných pozemků téže velikosti
+           v okrese i v kraji), nabídka jimi proklouzne až sem. Odznak
+           „cena k ověření" se přitom přidává o kus výš a na jiném
+           pravidle (MODEL.neduveryhodna), takže se obě hlášky sešly na
+           téže kartě: varuj a zároveň doporuč.
+
+           Naměřeno na ostrých datech přes celou ČR a všech 77 okresů:
+           odznak padne 137×, z toho 3× na kartu, která o téže ceně
+           zároveň varuje. Všechny tři jsou stavební pozemky bez odhadu —
+           Český Brod za 3,3 Kč/m² (11 000 Kč za 3 315 m²) a Jizerní
+           Vtelno za 6,7. U toho prvního píše sám inzerent „dva stavební
+           pozemky ve velmi žádané lokalitě města", takže 11 000 Kč není
+           prodejní cena; stránka pozemku k němu proto žádný verdikt
+           neukazuje. Jen karta na mapě ho vedla jako trhák.
+
+           Totéž pravidlo už drží „★ Doporučujeme" o kus níž („Doporučit
+           a zároveň varovat nejde") i okresní stránky
+           (scripts/generate-region-pages.mjs). Chybělo jen tady. */
         var _di = dealInfo(d);
         srovnaniModel = _di ? { uroven: _di.uroven, kde: _di.kde } : null;
         kdeKarty = kdeSrovnani(_di);

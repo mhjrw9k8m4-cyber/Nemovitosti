@@ -3485,7 +3485,8 @@
         return !!(x && x.podleVelikosti && (x.pochybna || x.nejisty));
       })();
 
-      if (MODEL && MODEL.neduveryhodna(d) && !_odhadPochybny && !d.podil) {
+      var varujemeOCene = !!(MODEL && MODEL.neduveryhodna(d) && !_odhadPochybny && !d.podil);
+      if (varujemeOCene) {
         chips.push('<span class="opp-overit" title="Cena za m² je hluboko pod obvyklou — bývá to spoluvlastnický podíl, pozemek bez přístupu nebo chyba v inzerátu">cena k ověření</span>');
       }
       var _od = MODEL ? MODEL.odhad(d) : null;
@@ -3505,7 +3506,8 @@
         kdeKarty = kdeSrovnani(_od);
         chips.push('<span class="opp-deal" data-kde="' + esc(kdeKarty) + '" title="Cena je o ' + _od.podOdhadem +
           ' % pod obvyklou cenou podobných pozemků ' + esc(kdeKarty || 'v okolí') + '">−' + _od.podOdhadem + ' % proti okolí</span>');
-      } else if (perM2 && dealMax && perM2 <= dealMax) {
+      } else if (perM2 && dealMax && perM2 <= dealMax && !varujemeOCene) {
+
         var _di = dealInfo(d);
         srovnaniModel = _di ? { uroven: _di.uroven, kde: _di.kde } : null;
         kdeKarty = kdeSrovnani(_di);

@@ -86,7 +86,17 @@ p.on('pageerror', (e) => chyby.push(String(e)));
 // addInitScript to nejde: ten se pouští při KAŽDÉM načtení, takže by se
 // datum pořád vracelo zpátky a druhá návštěva by se nikdy nenasimulovala.
 await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-await p.waitForTimeout(1500);
+/* POČKAT, AŽ SI STRÁNKA ZAPÍŠE SVOJE DATUM, A TEPRVE PAK HO PŘEPSAT.
+   Dřív tu stálo čekání 1 500 ms, jenže web si datum návštěvy ukládá
+   1 200 ms po spuštění skriptu — mezi tím zbývalo 300 ms. Když byl
+   stroj vytížený (celá dávka prohlížečových zkoušek za sebou), zápis
+   webu dorazil až PO tom našem a přepsal ho dneškem; druhá návštěva
+   se pak nenasimulovala a tři kontroly spadly. Samotná zkouška přitom
+   procházela, takže to vypadalo jako vada webu.
+   Čeká se proto na skutečnost, ne na hodinky. */
+await p.waitForFunction(() => {
+  try { return !!localStorage.getItem('pk_navsteva_v1'); } catch (e) { return false; }
+}, null, { timeout: 15000 });
 await p.evaluate((d) => { try { localStorage.setItem('pk_navsteva_v1', JSON.stringify(d)); } catch (e) {} }, MINULE);
 await p.reload({ waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(4200);

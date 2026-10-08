@@ -407,6 +407,9 @@ jobs:
       - name: Počet nepřečtených na záložce Zprávy
         run: node scripts/test-odznak-zprav.mjs
 
+      - name: „Výhodná cena" jen tam, kde je čím ji podložit
+        run: node scripts/test-vyhodna-cena.mjs
+
       - name: Data stránky pozemku (dva malé soubory místo velkého)
         run: node scripts/test-data-stranky.mjs
 
