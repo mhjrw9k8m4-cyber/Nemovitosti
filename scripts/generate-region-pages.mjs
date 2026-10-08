@@ -1365,7 +1365,13 @@ ${okresLinks ? `
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Ceny pozemků v ČR","inLanguage":"cs","description":"Orientační medián cen pozemků (Kč/m²) podle druhu a kraje z aktuálních nabídek.","mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"}};
   const crumbs=[{name:'Pozemky',href:'index.html',abs:SITE},{name:'Ceny pozemků',abs:SITE+file}];
 
-  const html = head(title,desc,file,jsonld,crumbs,undefined,undefined,undefined,true) + `
+  /* Mapová knihovna tu NENÍ. Barevná mapa okresů ze stránky zmizela,
+     když ji vystřídal vyhledávač lokality — jen `sMapou: true` tu zůstalo
+     stát, takže si 100 % návštěvníků téhle stránky stahovalo 14,5 kB
+     mapového stylopisu (a ten blokuje vykreslení) a značku pro knihovnu,
+     kterou tu nikdo nečte: skript, který `pk-leaflet` čte, je
+     js/pozemek.js a ten se sem nenačítá. */
+  const html = head(title,desc,file,jsonld,crumbs) + `
 <main id="obsah">
 
   <section class="okr-hero">

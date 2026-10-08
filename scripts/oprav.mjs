@@ -40,8 +40,14 @@ const KROKY = [
   /* Očištění PŘED razítkem: mění odkazy ve stránkách (styles.css →
      styles.min.css), takže razítko se musí počítat až z výsledku. */
   ['minifikace.mjs', 'očištěný stylopis pro prohlížeč'],
+  /* Až PO minifikaci: zkrácený stylopis se staví ze zdroje, ale odkazy
+     ve stránkách přepisuje z css/styles.min.css, který vyrobí krok výš. */
+  ['rozdel-styly.mjs', 'zkrácený stylopis pro stránky bez mapy'],
   ['orazitkuj-verze.mjs', 'razítka ?v= u skriptů a stylů'],
   ['build-sql.mjs', 'sloučené supabase/00-vse.sql'],
+  /* Až na konci: tabulka stavu v roadmapě počítá stránky, zkoušky
+     i funkce v databázi, takže musí vidět hotový výsledek. */
+  ['generate-roadmap-cisla.mjs', 'přepočítaná tabulka stavu v docs/roadmap.md'],
 ];
 
 let selhalo = 0;

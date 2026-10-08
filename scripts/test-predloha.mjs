@@ -49,8 +49,13 @@ const RUCNI = (f) => f.endsWith('.html') &&
    css/styles.min.css (viz scripts/minifikace.mjs), ne zdroj. Když se
    očištění zavedlo, tahle kontrola hlásila 624 odchylek: podle jména
    usoudila, že paletku nevidí ŽÁDNÁ stránka. Platí obě jména —
-   rozhoduje, že stránka stylopis vůbec načítá. */
-const MA_PALETKU = (html) => /<link[^>]+href="[^"]*css\/styles(?:\.min)?\.css/.test(html);
+   rozhoduje, že stránka stylopis vůbec načítá.
+   A JMÉNA JSOU DNES TŘI: po rozdělení (scripts/rozdel-styly.mjs) si
+   2 182 stránek bere css/zaklad.min.css. Paletka (`:root`) je v obou
+   kopiích — pravidlo bez tříd a id se nikdy nevyjímá. Když jsem to
+   jméno zapomněl doplnit, nahlásila kontrola 567 odchylek. */
+const MA_PALETKU = (html) =>
+  /<link[^>]+href="[^"]*css\/(?:styles(?:\.min)?|zaklad\.min)\.css/.test(html);
 const zdroje = [{ jmeno: 'css/styles.css', css, maPaletku: true }];
 for (const f of readdirSync(ROOT).filter(RUCNI).sort()) {
   const syrove = readFileSync(path.join(ROOT, f), 'utf8');

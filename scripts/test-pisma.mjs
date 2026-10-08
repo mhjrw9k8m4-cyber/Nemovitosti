@@ -166,7 +166,7 @@ pravda('a rozsahy v @font-face neslibují znaky mimo podřezanou sadu',
   for (const f of fs.readdirSync(KOREN)) {
     if (!f.endsWith('.html')) continue;
     const s = fs.readFileSync(path.join(KOREN, f), 'utf8');
-    if (!/<link[^>]+rel="stylesheet"[^>]+css\/styles/.test(s)) continue;
+    if (!/<link[^>]+rel="stylesheet"[^>]+css\/(?:styles|zaklad)/.test(s)) continue;
     sPreload++;
     if (!/<link[^>]+rel="preload"[^>]+as="font"[^>]+fonts\//.test(s)) bez.push(f);
   }

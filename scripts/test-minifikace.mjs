@@ -112,10 +112,13 @@ pravda(`a stejně mnoho deklarací (${dZdroj})`, dZdroj === dMini,
 
 /* 4) Stránky na ni odkazují, a na zdroj už ne. */
 const stranky = fs.readdirSync(KOREN).filter((f) => f.endsWith('.html'));
+/* Očištěné kopie jsou dvě: plná (index.html, kde stojí mapa) a zkrácená
+   css/zaklad.min.css pro zbytek webu — viz scripts/rozdel-styly.mjs.
+   Tady se hlídá jen to, že se nikde neservíruje NEočištěný zdroj. */
 let naMini = 0; const naZdroj = [];
 for (const f of stranky) {
   const s = fs.readFileSync(path.join(KOREN, f), 'utf8');
-  if (/(?:href|src)="css\/styles\.min\.css/.test(s)) naMini++;
+  if (/(?:href|src)="css\/(?:styles|zaklad)\.min\.css/.test(s)) naMini++;
   if (/(?:href|src)="css\/styles\.css/.test(s)) naZdroj.push(f);
 }
 pravda(`stránky odkazují na očištěnou kopii (${naMini})`, naMini > 2000, `jen ${naMini}`);
