@@ -22,12 +22,13 @@
      D) co tu bylo před začátkem pozorování, se nepočítá
      E) zlevnění (`proc: 'cena'`) není zmizení
      F) na opravdovém archivu musí medián být pořád NELZE
+     H) nová cena se bere z NÁSLEDUJÍCÍHO období, ne z téhož řádku
      G) roadmapa už to zavádějící číslo neuvádí
    ================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { statistiky, dny, nactiArchiv, MIN_KOHORTA } from './archiv-statistiky.mjs';
+import { statistiky, zmenyCen, dny, nactiArchiv, MIN_KOHORTA, MIN_ZMEN } from './archiv-statistiky.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -42,6 +43,11 @@ function je(popis, vyslo, cekano) {
    výjimkou — spadlá zkouška je horší než červená, protože z ní není
    vidět, co se pokazilo. */
 const koh = (s, n) => s.krivka.find((k) => k.dni === n) || { chybi: true };
+/* A totéž pro změny ceny. Při sabotáži „zdražení se počítá jako sleva"
+   zmizel z pole zdrazeni nulový prvek a test spadl výjimkou „Cannot
+   read properties of undefined" — CI by bylo červené, ale bez jediné
+   hlášky, podle které by se poznalo proč. */
+const pol = (pole, i) => (pole && pole[i]) || { chybi: true };
 
 /* Vymyšlený trh. `zavrene` jsou období, která skončila, `zive` nabídky,
    které na trhu pořád jsou. Klíče se jen číslují, na jejich podobě
@@ -49,8 +55,6 @@ const koh = (s, n) => s.krivka.find((k) => k.dni === n) || { chybi: true };
 let poradi = 0;
 const zmizele = (pocet, od, do_) => Array.from({ length: pocet }, () =>
   ({ k: 'z' + (++poradi), od, do: do_, proc: 'zmizela' }));
-const zlevnele = (pocet, od, do_) => Array.from({ length: pocet }, () =>
-  ({ k: 'c' + (++poradi), od, do: do_, proc: 'cena' }));
 const zive = (pocet, od) => {
   const n = {};
   for (let i = 0; i < pocet; i++) n['l' + (++poradi)] = { od, videno: od };
@@ -142,15 +146,23 @@ je('stejný den je nula', dny('2026-05-05', '2026-05-05'), 0);
    Když nabídka zlevní, archiv uzavře období se starou cenou a nabídka
    běží dál. Takový řádek nesmí vypadat jako zmizelá nabídka. */
 {
-  const t = trh(
-    zlevnele(150, '2026-02-01', '2026-02-03'),
-    Object.assign(zive(1, '2026-01-01'), zive(150, '2026-02-04')),
-  );
-  const s = statistiky(t.uzavrene, t.stav, '2026-04-01');
+  /* 150× tentýž příběh: nabídka visela od 1. 2., 3. 2. zlevnila
+     z milionu na 900 tisíc a od 4. 2. visí dál. Uzavřené období
+     i živá nabídka musí mít TENTÝŽ klíč, jinak to není jedna
+     nabídka, ale dvě — a přesně na tom se pozná, že se nová cena
+     opravdu páruje se starou. */
+  const zavrene = [], nabidky = zive(1, '2026-01-01');
+  for (let i = 0; i < 150; i++) {
+    const k = 'p' + i;
+    zavrene.push({ k, o: 'Kolín', dr: 'orná půda', c: 1000000, od: '2026-02-01', do: '2026-02-03', proc: 'cena' });
+    nabidky[k] = { od: '2026-02-04', videno: '2026-04-01', c: 900000 };
+  }
+  const s = statistiky(zavrene, { nabidky }, '2026-04-01');
   je('E: zlevnělé nabídky se počítají jako živé', s.sledovano.pozorovanych, 150);
   je('E: a jako zmizelé ne', koh(s, 3).pryc, 0);
-  je('E: medián se z nich nevydá, žádná neskončila', s.median, null);
+  je('E: medián doby na trhu se z nich nevydá, žádná neskončila', s.median, null);
   je('E: zlevnění se spočítá zvlášť', [s.zlevneni.pocet, s.zlevneni.nabidek], [150, 150]);
+  je('E: a ví, o kolik procent', s.zlevneni.medianSleva, 10);
 }
 
 /* ---- F) na opravdovém archivu musí medián být pořád NELZE ----
@@ -168,6 +180,60 @@ je('stejný den je nula', dny('2026-05-05', '2026-05-05'), 0);
     || k.zKolika < MIN_KOHORTA);
   je('F: každá vypsaná kohorta drží tvar', spatne, []);
   je('F: a je jich aspoň dvě', s.krivka.length >= 2, true);
+}
+
+/* ---- H) změny ceny ----
+   Archiv při zlevnění uzavře období se STAROU cenou a nabídka běží dál
+   s novou. Novou cenu tedy drží NÁSLEDUJÍCÍ řádek, a u poslední změny
+   živý stav. Kdo to spojí špatně, spočítá procenta ze dvou různých
+   pozemků — a nikdo si toho nevšimne, protože výsledek vypadá jako
+   procento. */
+{
+  const A = 'Kolín|1/1|Kolín|50.0|15.2';
+  const B = 'Brno|2/2|Brno|49.2|16.6';
+  const uzavrene = [
+    /* A: 1 000 000 → 900 000 (10 %) → 810 000 (10 %), pak visí dál */
+    { k: A, o: 'Kolín', dr: 'orná půda', c: 1000000, od: '2026-02-01', do: '2026-02-11', proc: 'cena' },
+    { k: A, o: 'Kolín', dr: 'orná půda', c: 900000, od: '2026-02-12', do: '2026-02-22', proc: 'cena' },
+    /* B: 500 000 → 600 000 (zdražení), pak zmizela */
+    { k: B, o: 'Brno', dr: 'zahrada', c: 500000, od: '2026-03-01', do: '2026-03-05', proc: 'cena' },
+    { k: B, o: 'Brno', dr: 'zahrada', c: 600000, od: '2026-03-06', do: '2026-03-20', proc: 'zmizela' },
+  ];
+  const stav = { nabidky: { [A]: { od: '2026-02-23', c: 810000 } } };
+  const z = zmenyCen(uzavrene, stav);
+  je('H: dvě zlevnění a jedno zdražení', [z.zlevneni.length, z.zdrazeni.length], [2, 1]);
+  je('H: první zlevnění je z 1 000 000 na 900 000',
+    [pol(z.zlevneni, 0).stara, pol(z.zlevneni, 0).nova, pol(z.zlevneni, 0).procent], [1000000, 900000, 10]);
+  je('H: poslední zlevnění vezme novou cenu z živého stavu',
+    [pol(z.zlevneni, 1).stara, pol(z.zlevneni, 1).nova, pol(z.zlevneni, 1).procent], [900000, 810000, 10]);
+  je('H: a ví, po kolika dnech k němu došlo', pol(z.zlevneni, 0).dni, 10);
+  je('H: zdražení se nepočítá jako sleva', [pol(z.zdrazeni, 0).stara, pol(z.zdrazeni, 0).nova], [500000, 600000]);
+  je('H: cizí pozemek se do výpočtu nezamíchá',
+    z.zlevneni.every((x) => x.k === A), true);
+
+  /* Řádek s poslední cenou, ke kterému není následník ani živý stav,
+     se musí mlčky zahodit — jinak by se proti němu počítalo nic. */
+  const osirely = zmenyCen([{ k: B, c: 500000, od: '2026-03-01', do: '2026-03-05', proc: 'cena' }], { nabidky: {} });
+  je('H: změna bez známé nové ceny se zahodí', osirely.zlevneni.length + osirely.zdrazeni.length, 0);
+
+  /* Medián slevy se nevypíše, dokud případů není dost: jedna špatně
+     načtená cena (viděli jsme slevu 93 %) přetočí medián z deseti. */
+  const malo = statistiky(uzavrene, stav, '2026-04-01');
+  je('H: hranice pro medián slevy je ' + MIN_ZMEN, MIN_ZMEN, 30);
+  je('H: ze dvou zlevnění se medián slevy nevydá', malo.zlevneni.medianSleva, null);
+  je('H: ale počet se vypíše vždy', [malo.zlevneni.pocet, malo.zlevneni.zdrazeni], [2, 1]);
+
+  /* A nad hranicí už ano. 30 nabídek, každá zlevnila o 20 % po 5 dnech. */
+  const hodne = [], hodneStav = { nabidky: {} };
+  for (let i = 0; i < MIN_ZMEN; i++) {
+    const k = 'X' + i;
+    hodne.push({ k, o: 'Kolín', c: 1000000, od: '2026-02-01', do: '2026-02-06', proc: 'cena' });
+    hodneStav.nabidky[k] = { od: '2026-02-07', c: 800000 };
+  }
+  const sHodne = statistiky(hodne, hodneStav, '2026-04-01');
+  je('H: přesně na hranici se medián slevy vydá', sHodne.zlevneni.medianSleva, 20);
+  je('H: i medián dnů do zlevnění', sHodne.zlevneni.medianDni, 5);
+  je('H: a okresy jsou seřazené podle počtu', sHodne.zlevneni.okresy, [['Kolín', MIN_ZMEN]]);
 }
 
 /* ---- G) roadmapa už to zavádějící číslo neuvádí ---- */

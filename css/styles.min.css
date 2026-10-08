@@ -1683,6 +1683,20 @@ body::after{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;o
 .cen-metodika>summary::after{content:"";width:8px;height:8px;flex:none;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);transition:transform var(--cas-zakladni) var(--ease)}
 .cen-metodika[open]>summary::after{transform:rotate(-135deg) translate(-2px,-2px)}
 .cen-metodika>summary:hover{color:var(--copper-bright)}
+.trh-podnadpis{margin:20px 0 0;font-size:16px;font-weight:600;color:var(--text-ondark)}
+.trh-seznam{list-style:none;margin:10px 0 0;padding:0}
+.trh-radek{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:12px;row-gap:2px;padding:10px 0;border-top:1px solid var(--line)}
+.trh-radek:first-child{border-top:0;padding-top:2px}
+.trh-popis{font-size:14px;font-weight:600;color:var(--text-ondark);white-space:nowrap;font-variant-numeric:tabular-nums}
+.trh-pas{position:relative;display:block;height:9px;border-radius:var(--r-pill);background:var(--plocha-jemna);box-shadow:inset 0 0 0 1px var(--line)}
+.trh-pas>i{position:absolute;left:0;top:0;bottom:0;border-radius:var(--r-pill);background:var(--plocha-znacka);opacity:0.42}
+.trh-cislo{font-family:var(--font-display);font-weight:700;font-size:20px;line-height:1.2;letter-spacing:-0.02em;color:var(--text-ondark);white-space:nowrap;font-variant-numeric:tabular-nums}
+.trh-zkolika{grid-column:2 / -1;font-size:12.5px;color:var(--text-ondark-mute);font-variant-numeric:tabular-nums}
+.trh-veta{margin:10px 0 0;font-size:14px;line-height:1.6;color:var(--text-ondark)}
+@media (max-width:420px){.trh-radek{grid-template-columns:1fr auto}
+.trh-pas{grid-column:1 / -1;grid-row:2;margin-top:4px}
+.trh-zkolika{grid-column:1 / -1;grid-row:3}
+}
 .cen-varovani{color:var(--c-drazba-ink,#8A5512);font-weight:600}
 @media (max-width:430px){.cen-detail,.cen-pas{grid-column:1 / -1}
 }

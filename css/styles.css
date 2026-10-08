@@ -4598,6 +4598,43 @@ body::after{
   transform:rotate(45deg) translate(-2px,-2px); transition:transform var(--cas-zakladni) var(--ease);}
 .cen-metodika[open] > summary::after{transform:rotate(-135deg) translate(-2px,-2px);}
 .cen-metodika > summary:hover{color:var(--copper-bright);}
+/* ===== JAK SE TRH CHOVÁ V ČASE =======================================
+   Sekce „Jak dlouho se pozemek prodává" (generuje
+   scripts/generate-region-pages.mjs z archivu). Jeden řádek = jedna
+   kohorta: „do 7 dní · 6 % · 53 z 852".
+   PRUH STOJÍ NA STUPNICI 0–100 %, NE NA MAXIMU ŘÁDKŮ. Čísla jsou malá
+   (3, 6, 11 %) a při přepočtu na nejdelší pruh by z nich byly tři
+   skoro stejně dlouhé pruhy — obrázek by říkal „pozemky mizí rychle",
+   přesně naopak než data. Takhle je vidět prázdná část dráhy, a to je
+   ta informace: za dva týdny nezmizí skoro nic.
+   Pruh je ozdoba k číslu, které stojí hned vedle, proto aria-hidden. */
+.trh-podnadpis{margin:20px 0 0; font-size:16px; font-weight:600; color:var(--text-ondark);}
+.trh-seznam{list-style:none; margin:10px 0 0; padding:0;}
+.trh-radek{display:grid; grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center; column-gap:12px; row-gap:2px;
+  padding:10px 0; border-top:1px solid var(--line);}
+.trh-radek:first-child{border-top:0; padding-top:2px;}
+.trh-popis{font-size:14px; font-weight:600; color:var(--text-ondark);
+  white-space:nowrap; font-variant-numeric:tabular-nums;}
+.trh-pas{position:relative; display:block; height:9px; border-radius:var(--r-pill);
+  background:var(--plocha-jemna); box-shadow:inset 0 0 0 1px var(--line);}
+.trh-pas > i{position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill);
+  background:var(--plocha-znacka); opacity:0.42;}
+.trh-cislo{font-family:var(--font-display); font-weight:700; font-size:20px;
+  line-height:1.2; letter-spacing:-0.02em; color:var(--text-ondark);
+  white-space:nowrap; font-variant-numeric:tabular-nums;}
+/* „53 z 852" patří pod pruh, ne za procento: je to velikost kohorty,
+   tedy poznámka k tomu číslu, a kdo ji nepotřebuje, přejede ji okem. */
+.trh-zkolika{grid-column:2 / -1; font-size:12.5px; color:var(--text-ondark-mute);
+  font-variant-numeric:tabular-nums;}
+.trh-veta{margin:10px 0 0; font-size:14px; line-height:1.6; color:var(--text-ondark);}
+/* Na telefonu se popisek „do 14 dní" a pruh o 12px mezery nevejdou
+   vedle sebe s dvacetipixelovým číslem — pruh se posune pod ně. */
+@media (max-width:420px){
+  .trh-radek{grid-template-columns:1fr auto;}
+  .trh-pas{grid-column:1 / -1; grid-row:2; margin-top:4px;}
+  .trh-zkolika{grid-column:1 / -1; grid-row:3;}
+}
 /* Varování je teď dovětek téže věty, ne vlastní odstavec s linkou:
    u jednoho druhu ze čtyř zabíralo tři řádky a rozbíjelo rytmus sloupce.
    Barvu si nechává — je to výstraha, ne poznámka. */

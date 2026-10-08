@@ -13,6 +13,11 @@ import { jsonVeStrance } from './json-do-stranky.mjs';
    PŮJČUJE. Spočítat si ho tu podruhé by znamenalo dvě pravdy o jednom
    názvu souboru a odkazy na 404, jakmile se rozejdou. */
 import { mapaSouboru, klicNabidky } from './generate-parcel-pages.mjs';
+/* Archiv: jediné místo na webu, které ví, jak se trh chová v ČASE.
+   Co se z něj smí a nesmí tvrdit, řeší scripts/archiv-statistiky.mjs —
+   stránka si nic nepočítá sama, aby na dvou místech nevznikla dvě
+   čísla. */
+import { statistiky, nactiArchiv, MIN_ZMEN } from './archiv-statistiky.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -125,10 +130,14 @@ const data = JSON.parse(fs.readFileSync(path.join(ROOT,'data','opportunities.jso
    lokality vidíte, kdy proběhla poslední aktualizace" — a na krajských
    ani okresních stránkách to nikde nestálo, takže ten slib nebyl čím
    podepřít. Píše se česky, ne 2026-09-22. */
-const zkontrolovano = (() => {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(data.updated || '');
+/* Jedno místo, kde se „2026-09-14" mění na „14. 9. 2026". Psalo se to
+   tu jednou pro razítko čerstvosti; se sekcí o chování trhu by to bylo
+   podruhé, a dvě kopie téhož převodu se dřív nebo později rozejdou. */
+function datumCesky(ymd) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(ymd || ''));
   return m ? `${+m[3]}. ${+m[2]}. ${m[1]}` : '';
-})();
+}
+const zkontrolovano = datumCesky(data.updated);
 const razitkoCerstvosti = zkontrolovano
   ? `<p class="okr-cerstvost mono">Zdroje naposledy zkontrolovány ${zkontrolovano} · robot je prochází každých 6 hodin</p>`
   : '';
@@ -1361,6 +1370,58 @@ ${okresLinks ? `
         <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span>Nejdražší zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(dearest)}</div></div>
       </div>` : '';
 
+  /* ===== JAK SE TRH CHOVÁ V ČASE =================================
+     Zbytek téhle stránky je fotka: kolik pozemek stojí DNES. To má
+     každý portál. Co nemá nikdo, je druhá osa — jak dlouho nabídka
+     vydrží a kdy prodejce sleví. Na to je potřeba historie, a ta na
+     webu je: archiv si od 14. 9. 2026 zapisuje každou nabídku a každou
+     změnu ceny (scripts/archiv.mjs).
+
+     KDE JE PAST. „Zmizelým nabídkám vyšel medián 7 dnů" je spočítané
+     správně a je to nepravda: většina nabídek na trhu pořád je a je
+     tam déle. Proto se tady medián doby na trhu NEUKAZUJE a je u toho
+     napsané proč. Místo něj stojí otázka, která z krátkého okna
+     odpověď má: kolik nabídek je po N dnech pryč.
+
+     Celý výpočet i to, co odmítá vydat, je v scripts/archiv-statistiky.mjs
+     a hlídá ho scripts/test-archiv-statistiky.mjs. Stránka jen kreslí. */
+  const AT = (() => { try { const a = nactiArchiv();
+    return statistiky(a.uzavrene, a.stav, a.stav.den || new Date().toISOString().slice(0, 10)); }
+    catch (e) { return null; } })();
+  const atZl = AT && AT.zlevneni;
+  /* Bez dvou kohort a bez dost změn ceny tu není co říct a sekce se
+     celá vynechá. Prázdná karta s nadpisem je horší než žádná. */
+  const maTrh = !!(AT && (AT.krivka.length >= 2 || (atZl && atZl.pocet >= MIN_ZMEN)));
+  const trhPruhy = maTrh ? AT.krivka.map((k) => `          <li class="trh-radek">
+            <span class="trh-popis">do ${k.dni} dní</span>
+            <span class="trh-pas" aria-hidden="true"><i style="width:${Math.max(1.5, k.podil).toFixed(1)}%"></i></span>
+            <b class="trh-cislo">${k.podil} %</b>
+            <span class="trh-zkolika">${fmt(k.pryc)} z ${fmt(k.zKolika)}</span>
+          </li>`).join('\n') : '';
+  const trhOkresy = (atZl && atZl.okresy.length)
+    ? atZl.okresy.map(([o, n]) => `<a class="okr-place" href="${okrLink(o)}" style="text-decoration:none;">${esc(o)} <b>${n}×</b></a>`).join('')
+    : '';
+  const sekceTrhu = !maTrh ? '' : `
+      <div class="add-card" style="margin-top:22px;">
+        <div class="rules-sect">
+          <h2 id="trh-nadpis">Jak dlouho se pozemek prodává a kdy jde cena dolů</h2>
+          <p class="rules-note" style="margin-top:0;">Sledujeme nabídky den po dni od <b>${esc(datumCesky(AT.okno.od))}</b>, tedy ${fmt(AT.okno.dni)} dní. Tohle není cena, ale <b>chování trhu</b> — a jde z toho poznat, jak silnou pozici má kupující při smlouvání.</p>
+${trhPruhy ? `          <h3 class="trh-podnadpis">Kolik nabídek je po N dnech pryč</h3>
+          <ul class="trh-seznam" aria-labelledby="trh-nadpis">
+${trhPruhy}
+          </ul>
+          <p class="rules-note">Do každého podílu jdou <b>jen nabídky, které jsme mohli sledovat celých N dní</b> — proto je u každého řádku napsané, z kolika. „Pryč" znamená, že nabídka zmizela ze zdroje; nemusí to znamenat prodáno, mohla být i stažena.</p>` : ''}
+${atZl && atZl.pocet >= MIN_ZMEN ? `          <h3 class="trh-podnadpis">Kdo slevuje</h3>
+          <p class="trh-veta">Za sledovanou dobu <b>šla cena dolů u ${fmt(atZl.nabidek)} ${atZl.nabidek === 1 ? 'nabídky' : 'nabídek'}</b>${atZl.medianSleva !== null ? `, obvykle o <b>${atZl.medianSleva} %</b> po <b>${atZl.medianDni} dnech</b> na trhu` : ''}. Opačným směrem, tedy zdražení, jsme viděli ${fmt(atZl.zdrazeni)}×.</p>
+${trhOkresy ? `          <div class="okr-stat" style="min-width:0;"><span>Nejčastěji se slevuje</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${trhOkresy}</div></div>` : ''}` : ''}
+          <details class="cen-metodika">
+            <summary>Proč tu není „průměrná doba prodeje"</summary>
+            <p class="rules-note">Protože by to byla nepravda. Okno je ${fmt(AT.okno.dni)} dní a <b>${fmt(AT.sledovano.zivych)} nabídek na trhu pořád je</b> — u většiny z nich tedy ještě nevíme, jak dlouho tam nakonec budou. Kdybychom spočítali medián jen z těch, co už zmizely, vyšlo by krátké číslo: zmizely přece ty rychlé. Statistika tomu říká <b>cenzurování zprava</b>. Jediná poctivá podoba téže informace je ta tabulka výš, protože do každého řádku jdou jen nabídky, které měly šanci být sledované celou tu dobu. Až okno povyroste a většina sledovaných nabídek skončí, bude se dát spočítat i medián — do té doby ne.</p>
+            <p class="rules-note">Pracujeme s cenami <b>nabídkovými</b>. Za kolik se pozemek nakonec prodal, se z veřejných zdrojů zjistit nedá.</p>
+          </details>
+        </div>
+      </div>`;
+
   const natZ = priceNational[key];
   const title = 'Ceny pozemků v ČR — kolik stojí m² půdy | Parcelka';
   const desc = `Kolik stojí metr čtvereční pozemku v Česku? Orientační medián cen z aktuálních nabídek podle druhu a kraje.${natZ?' Zemědělská půda medián '+fmt(natZ.med)+' Kč/m².':''}`;
@@ -1417,6 +1478,7 @@ ${highlight ? `
 ${highlight}
         </div>
       </div>` : ''}
+${sekceTrhu}
 
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">

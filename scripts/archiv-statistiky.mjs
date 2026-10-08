@@ -50,6 +50,55 @@ export function dny(od, do_) {
    ne vlastnost trhu. */
 export const MIN_KOHORTA = 100;
 
+/* Kolik změn ceny musí být po kupě, aby se z nich vypsal medián.
+   Pod to je to jednotlivý případ, ne vlastnost trhu: u max 92,8%
+   slevy jde o špatně načtenou cenu, a tři takové uprostřed deseti
+   případů medián přetočí. */
+export const MIN_ZMEN = 30;
+
+/**
+ * ZMĚNY CENY — kdo zlevnil, o kolik a po kolika dnech.
+ *
+ * Archiv při změně ceny uzavře období se STAROU cenou a nabídka běží
+ * dál s novou. Novou cenu tedy nemá ten řádek, ale ten NÁSLEDUJÍCÍ —
+ * a u poslední změny ji drží živý stav. Kdo to spojí špatně, dostane
+ * procenta spočítaná ze dvou různých pozemků.
+ *
+ * Vrací se i zdražení, protože bez nich by „trh zlevňuje" byla
+ * polovina pravdy.
+ */
+export function zmenyCen(uzavrene, stav) {
+  const zive = (stav && stav.nabidky) || {};
+  const podle = new Map();
+  for (const r of uzavrene) {
+    if (!podle.has(r.k)) podle.set(r.k, []);
+    podle.get(r.k).push(r);
+  }
+  const zlevneni = [], zdrazeni = [];
+  for (const [k, rs] of podle) {
+    rs.sort((a, b) => (a.od === b.od ? String(a.do).localeCompare(String(b.do)) : String(a.od).localeCompare(String(b.od))));
+    for (let i = 0; i < rs.length; i++) {
+      const r = rs[i];
+      if (r.proc !== 'cena') continue;
+      const nova = i + 1 < rs.length ? rs[i + 1].c : (zive[k] || {}).c;
+      if (!(r.c > 0) || !(nova > 0) || nova === r.c) continue;
+      const z = {
+        k, o: r.o || '', dr: r.dr || '', stara: r.c, nova,
+        procent: Math.round((100 * Math.abs(nova - r.c)) / r.c),
+        dni: dny(r.od, r.do),
+      };
+      (nova < r.c ? zlevneni : zdrazeni).push(z);
+    }
+  }
+  return { zlevneni, zdrazeni };
+}
+
+function prostredni(cisla) {
+  if (!cisla.length) return null;
+  const d = cisla.slice().sort((a, b) => a - b);
+  return d[Math.floor(d.length / 2)];
+}
+
 /**
  * Poctivé statistiky z archivu.
  *   uzavrene — řádky z data/archiv/*.jsonl
@@ -90,10 +139,14 @@ export function statistiky(uzavrene, stav, dnes) {
     median = d[Math.floor(d.length / 2)];
   }
 
-  const zlevneni = uzavrene.filter((x) => x.proc === 'cena');
-  /* Podíl zlevnění se počítá ze STEJNÉ pozorované množiny jako křivka,
-     ne ze všeho — jinak by se dělilo jablky a hruškami. */
-  const zlevnilyKlice = new Set(zlevneni.map((x) => x.k));
+  /* ZMĚNY CENY. Počítají se ze všech období, ne jen z pozorovaných:
+     u zlevnění nejde o to, kdy se nabídka objevila, ale že jsme tu
+     změnu viděli — a tu jsme viděli celou. */
+  const zm = zmenyCen(uzavrene, stav);
+  const zlevnilyKlice = new Set(zm.zlevneni.map((x) => x.k));
+  const dostZmen = zm.zlevneni.length >= MIN_ZMEN;
+  const okresy = new Map();
+  for (const z of zm.zlevneni) if (z.o) okresy.set(z.o, (okresy.get(z.o) || 0) + 1);
 
   return {
     okno: { od: zacatek, do: dnes, dni: oknoDni },
@@ -103,7 +156,15 @@ export function statistiky(uzavrene, stav, dnes) {
     medianProc: median === null
       ? `okno má ${oknoDni} dní a skončilo jen ${skoncilo} z ${pozorovane.length} pozorovaných nabídek — medián leží za hranicí pozorování a nedá se spočítat`
       : null,
-    zlevneni: { pocet: zlevneni.length, nabidek: zlevnilyKlice.size },
+    zlevneni: {
+      pocet: zm.zlevneni.length,
+      nabidek: zlevnilyKlice.size,
+      zdrazeni: zm.zdrazeni.length,
+      /* null = případů je málo, medián by byl náhoda */
+      medianSleva: dostZmen ? prostredni(zm.zlevneni.map((x) => x.procent)) : null,
+      medianDni: dostZmen ? prostredni(zm.zlevneni.map((x) => x.dni)) : null,
+      okresy: [...okresy].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'cs')).slice(0, 5),
+    },
   };
 }
 
@@ -136,5 +197,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   console.log('\nMedián doby na trhu');
   console.log(s.median === null ? `  NELZE: ${s.medianProc}` : `  ${s.median} dní`);
-  console.log(`\nZlevnění: ${s.zlevneni.pocet}× u ${s.zlevneni.nabidek} nabídek\n`);
+  const z = s.zlevneni;
+  console.log(`\nZměny ceny: ${z.pocet}× zlevnění u ${z.nabidek} nabídek, ${z.zdrazeni}× zdražení`);
+  console.log(z.medianSleva === null
+    ? `  medián slevy: NELZE, je to jen ${z.pocet} případů (potřeba ${MIN_ZMEN})`
+    : `  medián slevy ${z.medianSleva} % po ${z.medianDni} dnech na trhu`);
+  console.log('  nejčastěji: ' + (z.okresy.map(([o, n]) => `${o} ${n}×`).join(' · ') || '—') + '\n');
 }

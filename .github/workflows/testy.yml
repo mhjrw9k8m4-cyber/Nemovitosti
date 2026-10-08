@@ -404,6 +404,9 @@ jobs:
       - name: Zkrácený stylopis vypadá jako plný (vypočtené styly)
         run: node scripts/test-rozdeleni-stylu.mjs
 
+      - name: Sekce o chování trhu sedí na archiv
+        run: node scripts/test-trh-sekce.mjs
+
       - name: Profil při výpadku netvrdí, že inzeráty nemáte
         run: node scripts/test-profil-vypadek.mjs
 
