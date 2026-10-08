@@ -89,7 +89,7 @@ Dvě možnosti:
 | Změna | Proč |
 |---|---|
 | `supabase/00-vse.sql` + `scripts/build-sql.mjs` | jeden spustitelný soubor místo dohadování, které z dvanácti skriptů už v databázi běží |
-| `scripts/send-alerts.mjs` | **soubor v repozitáři není** — tahle řádka popisuje stav, který nenastal; e-maily se dnes neposílají |
+| `scripts/send-alerts.mjs` | odesílač upozornění — v repozitáři JE (12 kB, 66 zelených kontrol v `test-rozesilac.mjs`). Bez klíčů běží nasucho a sám vypíše, co mu chybí. Dřív tu stálo „soubor v repozitáři není“; to přestalo platit a nikdo to nepřepsal. |
 | `js/pridat.js` | když databáze nezná aktuální funkci, uživatel se to dozví — dřív viděl jen „nepovedlo se" |
 | `diagnostika.html` | ověří podpisy funkcí, které web volá, a nastavení přihlašování |
 
