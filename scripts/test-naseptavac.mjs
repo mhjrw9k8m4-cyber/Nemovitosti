@@ -142,18 +142,41 @@ pravda('Escape nabídku zavře', !(await seznam.isVisible()));
 await pole.fill('');
 await pole.type(ZACATEK, { delay: 40 });
 await p.waitForTimeout(250);
-if (await seznam.isVisible()) {
-  await p.locator('#map-search-navrhy li').first().click({ timeout: 3000 });
+/* NA DÉLKU SE TO MĚŘIT NESMÍ. Dřív tu stálo `hodnota.length >
+   ZACATEK.length`, tedy „do políčka se dostalo něco delšího, než jsem
+   napsal". To je zástupné měřítko a rozbilo se, jakmile se v datech
+   změnila nejčastější obec: ZACATEK je první čtyři znaky jejího jména,
+   a u Brna jsou to znaky všechny. Políčko se vyplnilo správně („Brno"),
+   jen to nebylo DELŠÍ, a zkouška hlásila vadu, která na webu není.
+   Měří se proto to, o co jde: v políčku stojí přesně ten název, na který
+   se kleplo. To je zároveň přísnější — odhalí i vyplnění odrhnutou
+   podobou („brno" bez velkého B), kterou by délka propustila.
+
+   Klepnout se musí na nabídku MÍSTA, ne na slovníkové slovo: slovníkové
+   se k větě přidává, nenahrazuje ji, takže by se políčko s názvem
+   neporovnávalo. Místo se pozná tím, co o sobě nabídka píše v .msn-kde
+   („okr. …" nebo „celý okres"); slovníkové tam má jméno skupiny. */
+const mistaVNabidce = p.locator('#map-search-navrhy li').filter({
+  has: p.locator('.msn-kde', { hasText: /^(okr\.|celý okres)/ })
+});
+if (await seznam.isVisible() && (await mistaVNabidce.count()) > 0) {
+  const prvni = mistaVNabidce.first();
+  const jmeno = (await prvni.locator('.msn-jmeno').innerText()).trim();
+  await prvni.click({ timeout: 3000 });
   await p.waitForTimeout(400);
   const hodnota = await pole.inputValue();
-  pravda('klepnutí na nabídku vyplní políčko celým názvem', hodnota.length > ZACATEK.length, `„${hodnota}"`);
+  pravda('klepnutí na nabídku vyplní políčko celým názvem', hodnota === jmeno,
+    `v políčku „${hodnota}", v nabídce „${jmeno}"`);
   pravda('a nabídka se zavře', !(await seznam.isVisible()));
   const poVyberu = await p.locator('#opp-list li.opp-item, #opp-list li').count();
   pravda('výpis po výběru něco ukazuje', poVyberu > 0, `položek: ${poVyberu}`);
 } else {
-  pravda('klepnutí na nabídku vyplní políčko celým názvem', false, 'nabídka se vůbec neukázala');
-  pravda('a nabídka se zavře', false, 'nabídka se vůbec neukázala');
-  pravda('výpis po výběru něco ukazuje', false, 'nabídka se vůbec neukázala');
+  const proc = (await seznam.isVisible())
+    ? `nabídka je vidět, ale ani jedna položka není místo (${await p.locator('#map-search-navrhy li').count()} řádků)`
+    : 'nabídka se vůbec neukázala';
+  pravda('klepnutí na nabídku vyplní políčko celým názvem', false, proc);
+  pravda('a nabídka se zavře', false, proc);
+  pravda('výpis po výběru něco ukazuje', false, proc);
 }
 
 // --- 4c) Slovník: největší kategorie webu se musí nabídnout ----------
