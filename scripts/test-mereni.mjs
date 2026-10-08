@@ -175,6 +175,32 @@ pravda('a je to v balíku supabase/00-vse.sql',
   fs.readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8').includes('zapis_navstevu'),
   'migrace by se při nasazení přeskočila');
 
+/* ---- F) zásady soukromí popisují to, co se opravdu děje ------------
+   scripts/test-cizi-servery.mjs hlídá jinou osu: kdo se o návštěvě
+   dozví tím, že se z něj něco stahuje. Tahle odrážka neprasklo —
+   měření totiž žádný cizí server nestahuje. Zásady přesto roky
+   slibovaly „anonymní statistiky návštěvnosti" od Vercelu a GitHub
+   Pages, a neměřilo se nic. Dokument o zpracování osobních údajů
+   nemá popisovat ani víc, ani míň, než co kód dělá. */
+{
+  const z = fs.readFileSync(path.join(KOREN, 'ochrana-udaju.html'), 'utf8')
+    .replace(/<!--[\s\S]*?-->/g, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  const meriSe = fs.existsSync(path.join(KOREN, 'js', 'mereni.js'))
+    && /<script src="js\/(min\/)?mereni\.js/.test(fs.readFileSync(path.join(KOREN, 'index.html'), 'utf8'));
+  pravda('web návštěvnost opravdu měří (jinak následující nic neznamená)', meriSe,
+    'js/mereni.js chybí nebo ho index nenačítá');
+  pravda('zásady měření popisují', /návštěvnost/i.test(z) && /čítač|zvýší|počítáme/i.test(z),
+    'v zásadách o měření nic není — nepopsané zpracování osobních údajů');
+  pravda('a říkají, co se NEukládá (cookie, IP, identifikátor)',
+    /žádná cookie/i.test(z) && /žádná IP/i.test(z) && /identifikátor/i.test(z),
+    'chybí výčet toho, co se neukládá — to je u čítačů ta podstatná věta');
+  pravda('a že „nesledovat" měření vypne', /nesledovat|Global Privacy Control|DNT/i.test(z),
+    'respekt k DNT není nikde napsaný');
+  pravda('a NEtvrdí, že statistiky dělá Vercel nebo GitHub Pages',
+    !/(Vercel|GitHub\s*Pages)[^.]{0,80}statistik/i.test(z),
+    'zásady jmenují zpracovatele, který s měřením nemá nic společného — přesně tahle věta tam roky stála nepravdivě');
+}
+
 await browser.close();
 console.log('\nMěření návštěvnosti');
 console.log(zpravy.join('\n'));
