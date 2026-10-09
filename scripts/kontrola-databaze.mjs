@@ -122,32 +122,57 @@ export async function zkontroluj({ url, anonKlic, serviceKlic, sql, token = null
   }
 
   /* --- 2) co uvidí nepřihlášený ---------------------------------- */
+  /* NEJDŘÍV JESTLI TEN KLÍČ VŮBEC PLATÍ, a teprve pak co s ním jde
+     přečíst. První ostrý běh vrátil na kořenovém výpisu HTTP 401
+     a z toho se nedalo poznat nic: buď je veřejný klíč neplatný —
+     a pak se k datům nedostane ani web — nebo kořenový výpis jen
+     nové klíče „sb_publishable_…" nepouští. To jsou dvě úplně různě
+     vážné věci a hádat se mezi nimi nemá.
+     Rozhodne dotaz na skutečná data: zveřejněné inzeráty má přečíst
+     každý, to je jejich smysl. Když projdou, klíč platí. */
+  const zkouska = await g(url, '/rest/v1/listings?select=*&limit=1', anonKlic);
+  const klicPlati = zkouska.stav === 200;
+  if (!klicPlati) {
+    chyba('veřejný klíč nefunguje', `dotaz na zveřejněné inzeráty vrátil HTTP ${zkouska.stav}`,
+      'Tenhle klíč má v js/config.js i prohlížeč — web se takhle k datům nedostane vůbec.'
+      + ' Supabase → Project Settings → API, zkopírovat platný publishable key.');
+  }
+
+  /* Seznam funkcí vydá PostgREST jen na kořeni, a ten nové klíče
+     nemusí pustit. Když nepustí, NEŘEKNE SE NIC — ne „v pořádku". */
   const verejne = await g(url, '/rest/v1/', anonKlic);
-  if (verejne.stav !== 200 || !verejne.json) {
-    varovani('veřejný klíč nedostal seznam', `HTTP ${verejne.stav}`,
-      'Klíč v js/config.js nemusí platit — web by se k datům nedostal taky.');
-  } else {
+  if (verejne.stav === 200 && verejne.json) {
     const anon = zeSpecifikace(verejne.json);
-    prehled.proNeprihlaseneTabulek = anon.tabulky.length;
     prehled.proNeprihlaseneFunkci = anon.funkce.length;
-    /* Funkce, kterou SQL veřejnosti výslovně zakazuje, a přesto ji
-       nepřihlášený vidí — tedy na ni nikdo to „revoke" nepustil. */
     const unikle = ma.zavrene.filter((f) => anon.funkce.indexOf(f) >= 0);
     if (unikle.length) {
       chyba(`${unikle.length} funkcí má v SQL zákaz, ale nepřihlášený je vidí`, unikle.join(', '),
         'Nahrajte supabase/00-vse.sql znovu — ty řádky „revoke all on function" neproběhly.');
     }
-    /* A teď to hlavní: data. Prázdnou tabulku nejde odlišit od zavřené,
-       takže se pokaždé ptáme i servisním klíčem — teprve „služba vidí
-       řádky, nepřihlášený ne" je důkaz, že je zavřená doopravdy. */
+  } else if (klicPlati) {
+    varovani('seznam funkcí pro nepřihlášeného se nepodařilo získat',
+      `kořenový výpis vrátil HTTP ${verejne.stav}, data přitom veřejný klíč čte`,
+      'Zákazy spuštění funkcí se takhle ověřit nedají. Data níž ověřená jsou.');
+  }
+
+  /* A TEĎ TA DŮLEŽITĚJŠÍ PŮLKA: data. Běží VŽDYCKY, i když kořenový
+     výpis selhal — seznam tabulek je z klíče služby, ne odtamtud.
+     Dřív byla celá tahle smyčka schovaná za úspěchem kořenového
+     výpisu, takže se při 401 nezkontrolovalo ani jedno. Prázdnou
+     tabulku navíc nejde odlišit od zavřené, proto je nález teprve
+     „služba vidí řádky a nepřihlášený taky". */
+  if (klicPlati) {
+    let overeno = 0;
     for (const t of je.tabulky) {
       if (VEREJNE_TABULKY.indexOf(t) >= 0) continue;
       const jakoAnon = await g(url, `/rest/v1/${t}?select=*&limit=1`, anonKlic);
+      overeno++;
       if (jakoAnon.stav !== 200 || !Array.isArray(jakoAnon.json) || !jakoAnon.json.length) continue;
       chyba(`tabulku ${t} přečte kdokoli bez přihlášení`,
         'vrátila řádek i na veřejný klíč',
         `V SQL chybí zapnuté RLS nebo pravidlo pro ${t}. Viz supabase/00-vse.sql.`);
     }
+    prehled.proNeprihlaseneTabulek = overeno;
   }
 
   /* --- 3) co uvidí přihlášený (jen když je čím se přihlásit) ------ */
@@ -276,8 +301,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
        ZVLÁŠŤ, co se ověřit nepodařilo, a nikdy netvrdí číslo, které
        nemá. */
     const kdoVidi = prehled.proNeprihlaseneTabulek != null
-      ? `nepřihlášený vidí ${prehled.proNeprihlaseneTabulek} tabulek`
-        + ` a ${prehled.proNeprihlaseneFunkci} funkcí`
+      ? `u ${prehled.proNeprihlaseneTabulek} neveřejných tabulek ověřeno, že je`
+        + ' nepřihlášený nepřečte'
       : 'POZOR: co vidí nepřihlášený, se ověřit nepodařilo';
     const shrnuti = chyby.length
       ? `Kontrola databáze: ${chyby.length} nálezů — ` + chyby.map((n) => n.co).join('; ')

@@ -71,12 +71,17 @@ function falesna(jak = {}) {
         if (jak.sluzbaMlci) return { stav: 503, json: null, telo: '' };
         return { stav: 200, json: spec(jak.vDatabazi || PLNA) };
       }
+      /* Ostrá Supabase vrátila na kořeni 401, i když data veřejný klíč
+         čte — nové klíče „sb_publishable_…" sem nepouští. */
+      if (jak.korenAnon401) return { stav: 401, json: null, telo: '' };
       const viditelne = role === 'prihlaseny'
         ? (jak.proPrihlaseneho || VEREJNA) : (jak.proAnon || VEREJNA);
       return { stav: 200, json: spec(viditelne) };
     }
     const tab = (/^\/rest\/v1\/([a-z_]+)\?/.exec(cesta) || [])[1];
     if (role === 'sluzba') return { stav: 200, json: [{ id: 1 }] };
+    if (jak.klicNeplati) return { stav: 401, json: null, telo: '' };
+    if (tab === 'listings') return { stav: 200, json: [{ id: 1 }] };
     const vidi = role === 'prihlaseny' ? (jak.radkyPrihlasenemu || [])
       : (jak.radkyAnonovi || []);
     return { stav: 200, json: vidi.indexOf(tab) >= 0 ? [{ id: 1 }] : [] };
@@ -135,6 +140,31 @@ const chybyZ = (v) => v.nalezy.filter((n) => n.vaha === 'chyba');
   pravda('když databáze neodpoví, řekne to a nepředstírá úspěch',
     chybyZ(v).length === 1 && /neodpověděla/.test(chybyZ(v)[0].co),
     JSON.stringify(v.nalezy));
+}
+
+/* ---- 4b) 401 na kořeni není totéž co nefunkční klíč ------------ */
+{
+  /* TOHLE NAŠEL AŽ OSTRÝ BĚH. Kořenový výpis vrátil 401, celá otázka
+     „kdo co vidí" se kvůli tomu přeskočila — a souhrn přesto hlásil
+     zelenou. Dvě různě vážné věci se musí rozlišit: neplatný klíč
+     znamená, že se k datům nedostane ani web. */
+  const v = await spust({ korenAnon401: true, radkyAnonovi: ['messages'] });
+  pravda('když kořenový výpis odmítne klíč, kontrola dat se přesto udělá',
+    chybyZ(v).some((n) => /messages.*bez přihlášení/.test(n.co)), JSON.stringify(v.nalezy));
+  pravda('a řekne se, že seznam funkcí se ověřit nepodařilo',
+    v.nalezy.some((n) => /seznam funkcí.*nepodařilo/.test(n.co)),
+    JSON.stringify(v.nalezy.map((x) => x.co)));
+  pravda('neplatný klíč se z toho ale nevyrábí',
+    !chybyZ(v).some((n) => /klíč nefunguje/.test(n.co)), JSON.stringify(chybyZ(v)));
+}
+{
+  const v = await spust({ klicNeplati: true });
+  pravda('naopak klíč, se kterým nejdou přečíst ani zveřejněné inzeráty, je chyba',
+    chybyZ(v).some((n) => /klíč nefunguje/.test(n.co)), JSON.stringify(v.nalezy));
+  pravda('a je u toho napsané, že se k datům nedostane ani web',
+    chybyZ(v).some((n) => /web/.test(n.rada)), JSON.stringify(chybyZ(v).map((x) => x.rada)));
+  pravda('tabulky se s neplatným klíčem ani nezkouší (nemělo by to co znamenat)',
+    !chybyZ(v).some((n) => /bez přihlášení/.test(n.co)), JSON.stringify(chybyZ(v)));
 }
 
 /* ---- 5) servisní klíč se nesmí dostat do výpisu ---------------- */
