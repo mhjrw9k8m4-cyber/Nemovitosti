@@ -468,6 +468,67 @@ k tomu, co se právě opravilo. Dvě sabotáže vyzkoušeny, obě padají.
 Vedlejší úklid: `test-nahoru` si tutéž věc psal zvlášť a ručně.
 Teď volá společnou funkci, takže je implementace jedna.
 
+## 3q. ~~Výpis stavebních pozemků slíbil stavební a stránka za odkazem říkala orná~~ — *opraveno 9. 10.*
+
+Nález z přeměření toho, co tematické stránky tvrdí, proti datům:
+u každé okresní, krajské, druhové a rozpočtové stránky jsem si ověřil,
+že každý vypsaný pozemek opravdu patří tam, kde je. Ze 101 stránek
+sedělo všechno kromě jednoho řádku.
+
+Na `pozemky-stavebni.html` stálo **„stavební pozemek · 1 370 m² ·
+okres Karviná"** za 999 000 Kč. Odkaz z toho řádku vedl na stránku
+s nadpisem **„Orná půda 1 370 m²"**. Inzerát sám přitom píše: „Tento
+pozemek je v současné době veden jako **orná půda**, avšak s možností
+změny územního plánu v budoucnu může být ideální pro výstavbu."
+
+Příčina: ten pozemek je na Bezrealitkách vyvěšený **dvakrát**, pod
+dvěma čísly inzerátu (1050655 a 1050656), a prodejce u jednoho zvolil
+„stavební pozemek" a u druhého „orná půda". Shodné je všechno
+ostatní — obec, okres, souřadnice, výměra 1 370 m², cena. A obě
+hlásí parcelu č. 232 v k. ú. Pudlov.
+
+Web duplicity odstraňuje (`js/hlidani-logika.js`, `bezDuplicit`) —
+ale `tyzPozemek` porovnává i **druh**, takže dva zápisy lišící se
+jen prodejcovou škatulkou projdou jako dva různé pozemky. A protože
+jméno stránky se skládá z klíče, výměry a ceny — a ty jsou shodné —
+**stránka vznikla jen jedna**. Řádek stavebního pozemku tedy vedl na
+stránku toho druhého zápisu.
+
+Opraveno u zdroje, ne u následku: `bezDvojnic()` v
+`scripts/fetch-opportunities.mjs` sloučí zápisy, které se liší jedině
+číslem inzerátu. **Při rozporu v druhu zůstane ta méně tvrdící
+varianta** — pozemek se nemá tvářit jako stavební, dokud o tom nemáme
+doklad; stejné pravidlo jako u ceny za metr, která se u neznámého
+podílu neuvádí vůbec.
+
+Změřeno na 2 001 nabídkách: **12 takových dvojic**, všechny
+z Bezrealitky, všechny se shodným dnem prvního vidění. Tři jsou
+podíly — a i zlomek mají shodný (1/10, 1/2, 1/4), takže to nejsou dva
+různé podíly na jedné parcele. Vyhazované zápisy nenesou nic, co by
+ten ponechaný neměl: stejný počet polí, stejné sítě, stejné parcelní
+číslo.
+
+Jedenáct z těch dvanácti web nikomu neukazoval — `bezDuplicit` je
+zahodil až u sebe, ale v `data/opportunities.json` ležely dál a
+zabíraly místo ve stropu na zdroj. Dvanáctý, ten bohumínský, prošel
+až na stránku. Čísla, která web o datech zveřejňuje, se změnila
+z **1 945 / 2 001 / 56 duplicit** na **1 944 / 1 989 / 45** — ten
+jeden ubraný ukazovaný pozemek je právě Bohumín.
+
+Vedlejší nález: `data/popisy.json` se klíčuje týmž klíčem s cenou
+a výměrou, takže si ty dvojice **přepisovaly text inzerátu** mezi
+sebou. Teď je na klíč jeden.
+
+`scripts/test-dvojnici.mjs` (18 kontrol) hlídá tři věci: funkci samu
+na nasazených vzorcích — každý rozlišující údaj (výměra, cena,
+parcelní číslo, typ, obec, okres, souřadnice) má vlastní kontrolu, že
+se dvě různé nabídky **ne**sloučí, protože sloučit skutečné dvě by
+bylo horší než nechat projít jednu duplicitu; dál že v hotových
+datech nezůstal ani jeden dvojník; a nakonec invariant, na kterém to
+celé stojí — že **každá nabídka má vlastní jméno stránky**. Právě ten
+se v Bohumíně porušil. Sabotáž (data zpátky na stav před opravou)
+hlásí obě poslední kontroly a jmenuje konkrétní pozemky.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

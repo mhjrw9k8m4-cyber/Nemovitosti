@@ -316,6 +316,64 @@ export function zahodZastupneGps(nabidky) {
   return kolik;
 }
 
+/* TÝŽ POZEMEK DVAKRÁT, POD DVĚMA ČÍSLY INZERÁTU.
+   Duplicity se dosud odstraňovaly podle ČÍSLA INZERÁTU (`_key`), a to
+   je záměr — jeden inzerát se nemá počítat dvakrát. Jenže prodejci
+   týž pozemek vyvěšují znovu, takže dva různé inzeráty popisují jednu
+   parcelu: shodná obec, okres, parcelní číslo, souřadnice, výměra
+   i cena, jen jiné číslo v odkazu.
+
+   Naměřeno na 2 001 nabídkách: 12 takových dvojic, všechny
+   z Bezrealitky, všechny se shodným dnem prvního vidění. Tři z nich
+   jsou podíly — a i zlomek mají shodný (1/10, 1/2, 1/4), takže to
+   nejsou dva různé podíly na jedné parcele.
+
+   Čím to vadí: pozemek je ve výpisu dvakrát, započítá se dvakrát do
+   součtů i do mediánů, a vlastní stránku dostane jen jeden z dvojice
+   (jméno souboru se počítá z klíče, výměry a ceny — a ty jsou shodné),
+   takže řádek toho druhého vede na stránku prvního. V Bohumíně se ty
+   dva inzeráty lišily druhem: řádek na stránce stavebních pozemků
+   slíbil „stavební pozemek · 1 370 m²" a stránka za odkazem říkala
+   „Orná půda 1 370 m²". Inzerát sám přitom píše „veden jako orná
+   půda, avšak s možností změny územního plánu".
+
+   PŘI ROZPORU SE BERE MÉNĚ TVRDÍCÍ VARIANTA. Pozemek se nemá tvářit
+   jako stavební, dokud o tom nemáme doklad — stejné pravidlo jako
+   u ceny za metr, která se u neznámého podílu neuvádí vůbec.
+
+   Klíč schválně NESE parcelní číslo: dvě různé parcely v jedné obci
+   se stejnou výměrou i cenou jsou nepravděpodobné, ale sloučit dvě
+   skutečné nabídky by bylo horší než nechat projít jednu duplicitu.
+   Na dnešních datech vyjde oběma způsoby týchž 12 dvojic. */
+export function klicDvojnika(o) {
+  const la = typeof o.lat === 'number' ? o.lat.toFixed(3) : '';
+  const ln = typeof o.lng === 'number' ? o.lng.toFixed(3) : '';
+  return [o.type || '', o.okres || '', o.place || '', o.parcel || '',
+    la, ln, o.area || 0, o.price || 0].join('|');
+}
+export function bezDvojnic(nabidky) {
+  const skupiny = new Map();
+  for (const o of nabidky || []) {
+    const k = klicDvojnika(o);
+    if (!skupiny.has(k)) skupiny.set(k, []);
+    skupiny.get(k).push(o);
+  }
+  const vyhozeno = [];
+  const vybrane = new Set();
+  for (const skupina of skupiny.values()) {
+    let drzi = skupina[0];
+    if (skupina.length > 1) {
+      /* Méně tvrdící varianta: cokoli před „stavební". */
+      const skromna = skupina.find((o) => !/stav/i.test(String(o.druh || '')));
+      if (skromna && /stav/i.test(String(drzi.druh || ''))) drzi = skromna;
+      for (const o of skupina) if (o !== drzi) vyhozeno.push(o);
+    }
+    vybrane.add(drzi);
+  }
+  /* Pořadí zůstává takové, v jakém nabídky přišly — řadí se až dál. */
+  return { cisto: (nabidky || []).filter((o) => vybrane.has(o)), vyhozeno };
+}
+
 /* SEMÍNKO MUSÍ BÝT U KAŽDÉ NABÍDKY JINÉ, jinak z rozptylu kolem středu
    okresu nezbude rozptyl, ale jeden bod. Bralo se `o.parcel` — jenže
    parcelní číslo je u 1 723 z 2 020 nabídek „—", takže semínko vycházelo
@@ -1391,15 +1449,21 @@ async function main() {
   // odstranění duplicit (okres + parcela) a seřazení podle výhodnosti
   const seen = new Set();
   const byDeal = (a, b) => (a.area ? a.price / a.area : Infinity) - (b.area ? b.price / b.area : Infinity);
-  const clean = raw
+  const podleInzeratu = raw
     .filter(valid)
     .filter((o) => {
       const k = (o.type + '|' + o.okres + '|' + (o._key || o.parcel)).toLowerCase();
       if (seen.has(k)) return false;
       seen.add(k);
       return true;
-    })
-    .sort(byDeal);
+    });
+  /* A ještě týž pozemek pod dvěma čísly inzerátu — viz bezDvojnic(). */
+  const { cisto, vyhozeno: dvojnici } = bezDvojnic(podleInzeratu);
+  if (dvojnici.length) {
+    console.log(`Dvojníci (týž pozemek pod jiným číslem inzerátu): ${dvojnici.length} vynecháno`);
+    for (const o of dvojnici.slice(0, 5)) console.log(`  · ${o.place}, okres ${o.okres} — ${o.area} m², ${o.price} Kč (${o.druh})`);
+  }
+  const clean = cisto.sort(byDeal);
 
   // Vyvážený výběr — ať žádná kategorie nepřeváží (jinak by stovky prodejů
   // zaplavily mapu). Dražby/exekuce bereme podle výhodnosti; u prodeje vybíráme
