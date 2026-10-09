@@ -546,12 +546,62 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
   }
   drobecky.push({ '@type': 'ListItem', position: drobecky.length + 1, name: titul, item: url });
 
-  const ld = jsonVeStrance([
+  /* CENA I PRO STROJE. Stránka cenu vypisuje, ale ve strukturovaných
+     datech nebyla ani na jedné z 1 941 živých stránek — byl tam jen
+     Place a drobečky. Vyhledávač tedy o ceně, měně ani o tom, jestli
+     nabídka ještě platí, nevěděl nic.
+
+     POCTIVÁ VÝHRADA: pro pozemky nemá Google vyhrazený bohatý výsledek,
+     takže se nedá slíbit, že se cena ve výsledcích ukáže. Značkování je
+     ale správné a stojí ~200 bajtů na stránku.
+
+     PROČ Offer A NE Product: Product je zboží s názvem a výrobcem,
+     pozemek není. Offer visí přímo na místě (Place.makesOffer), což je
+     přesně to, co se tu tvrdí: tohle místo se nabízí za tolik.
+
+     DRAŽBA SE NEVYDÁVÁ ZA PRODEJ. U dražby a exekuce je cena vyvolávací,
+     ne požadovaná — kdyby se označila jako běžná nabídka, byl by web
+     ve výsledcích nejlevnější na trhu a lhal by. Dostane proto jen
+     odhad ceny (PriceSpecification) bez příslibu, že se za to prodá.
+
+     CENA ZA PODÍL NENÍ CENA ZA POZEMEK. U spoluvlastnického podílu se
+     platí za zlomek, ale výměra je celé parcely; nabídka se proto
+     popíše jako podíl rovnou v názvu, ne jen číslem. */
+  /* VÝHRADY SE SČÍTAJÍ, NEPŘEPISUJÍ SE. První verze je skládala přes
+     Object.assign, každou jako vlastní „description" — takže u dražby,
+     která je ZÁROVEŇ spoluvlastnický podíl, druhá poznámka tu první
+     přepsala a ze stránky zmizelo, že jde o vyvolávací cenu. Takových
+     je v datech většina dražeb. Našla to zkouška teprve ve chvíli, kdy
+     přestala být slepá. */
+  const jeProdej = d.type === 'sale';
+  const vyhrady = [];
+  if (!jeProdej) vyhrady.push('Vyvolávací cena ve veřejné dražbě, ne cena požadovaná prodávajícím.');
+  if (d.podil) vyhrady.push('Cena je za spoluvlastnický podíl; uvedená výměra patří celé parcele.');
+  const nabidka = d.price > 0 ? Object.assign(
     {
-      '@context': 'https://schema.org', '@type': 'Place', name: titul, description: popis, url,
-      address: { '@type': 'PostalAddress', addressLocality: d.place, addressRegion: d.okres, addressCountry: 'CZ' },
-      geo: { '@type': 'GeoCoordinates', latitude: d.lat, longitude: d.lng },
+      '@type': 'Offer', price: d.price, priceCurrency: 'CZK', url,
+      itemOffered: { '@type': 'Place', name: titul },
     },
+    jeProdej ? { availability: 'https://schema.org/InStock' } : {},
+    vyhrady.length ? { description: vyhrady.join(' ') } : {}
+  ) : null;
+
+  const misto = {
+    '@context': 'https://schema.org', '@type': 'Place', name: titul, description: popis, url,
+    address: { '@type': 'PostalAddress', addressLocality: d.place, addressRegion: d.okres, addressCountry: 'CZ' },
+    geo: { '@type': 'GeoCoordinates', latitude: d.lat, longitude: d.lng },
+  };
+  /* Výměra strojově čitelně. Na stránce stojí „6 336 m²", ale jako text;
+     QuantitativeValue z ní dělá číslo s jednotkou (MTK = metr čtvereční
+     podle UN/CEFACT, což schema.org používá). */
+  if (d.area > 0) {
+    misto.additionalProperty = { '@type': 'QuantitativeValue', name: 'Výměra',
+      value: d.area, unitCode: 'MTK' };
+  }
+  if (nabidka) misto.makesOffer = nabidka;
+
+  const ld = jsonVeStrance([
+    misto,
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: drobecky },
   ]);
 
