@@ -779,7 +779,12 @@
         : 'Uvádí majitel pozemku.') + '</p>';
   }
 
+  function strankaUkoncena() {
+    return !!document.querySelector('.pz-konec');
+  }
+
   function render(d) {
+    if (strankaUkoncena()) return;
     var t = TYPE[d.type];
 
     var _zm = global.PK_CENY && global.PK_CENY.zaMetr ? global.PK_CENY.zaMetr(d) : null;
@@ -1104,6 +1109,9 @@
   }
 
   function renderEmpty() {
+
+    var hotovy = document.getElementById('pz-detail');
+    if (hotovy && hotovy.querySelector('.pz-staticky')) return;
     document.title = 'Pozemek nenalezen — Parcelka';
     neindexovat();
     document.getElementById('pz-detail').innerHTML =

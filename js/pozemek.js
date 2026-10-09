@@ -1144,7 +1144,21 @@
         : 'Uvádí majitel pozemku.') + '</p>';
   }
 
+  /* UKONČENÁ STRÁNKA SE UŽ NEPŘEKRESLUJE.
+     Generátor na stránku zmizelé nabídky přidá pruh „Tato nabídka už
+     není aktuální" a nechá na ní všechno, co o pozemku víme. Je to
+     rozhodnutí o TÉHLE adrese: je odložená, nemá se indexovat a nemá
+     se tvářit jako živá nabídka. Ve třech případech přitom nabídka
+     v datech pořád je — dostala jen jiný soubor (stránky se rozlišují
+     otiskem klíče) — a tahle stránka ji pak vykreslila jako živou,
+     i když o sobě o kus výš tvrdila opak. Dvě adresy s týmž obsahem
+     a jedna z nich si odporuje. Rozhoduje pruh. */
+  function strankaUkoncena() {
+    return !!document.querySelector('.pz-konec');
+  }
+
   function render(d) {
+    if (strankaUkoncena()) return;
     var t = TYPE[d.type];
     /* Cena za metr, který kupující opravdu dostane. U spoluvlastnického
        podílu je v inzerátu výměra celé parcely, ale cena jen za zlomek —
@@ -1683,6 +1697,23 @@
   // kde je, ani čtečka pro nevidomé, ani vyhledávač — a je to přesně stav,
   // do kterého spadne každý starý odkaz na stažený inzerát.
   function renderEmpty() {
+    /* STRÁNKA, KTERÁ UŽ OBSAH MÁ, SE NEPŘEPISUJE.
+       Naměřeno v prohlížeči: 128 stránek ukončených nabídek hlásilo
+       „Pozemek nenalezen". Generátor je přitom schválně nemaže a
+       nechává na nich všechno, co o pozemku víme — cenu, výměru,
+       parcelu, zdroj, tři podobné pozemky v okrese a pruh „Tato
+       nabídka už není aktuální" i s datem. Důvod je v generátoru
+       napsaný: smazaná stránka vrátí 404 a neřekne nic, a hlavní
+       aktivum webu jsou zaindexované adresy.
+       Jenže nabídka v datech logicky NENÍ (proto je stránka ukončená),
+       tenhle skript ji nenašel a celý #pz-detail přepsal hláškou. Pro
+       člověka to byla prázdná stránka, pro vyhledávač měkká
+       čtyřistačtyřka — tedy přesně to, čemu se mělo předejít.
+       Totéž platí, když se jen nepovede stáhnout řez dat: statická
+       část je pořád lepší než hláška. Proto se tu nejdřív podíváme,
+       jestli stránka něco má. */
+    var hotovy = document.getElementById('pz-detail');
+    if (hotovy && hotovy.querySelector('.pz-staticky')) return;
     document.title = 'Pozemek nenalezen — Parcelka';
     neindexovat();
     document.getElementById('pz-detail').innerHTML =

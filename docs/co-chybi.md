@@ -215,6 +215,35 @@ styl, takže by se vyplatilo je nepsat. Měří se teď hotová stránka
 (21,0 kB, strop 24) a zvlášť se hlídá, že se komentáře do hotových
 stránek opravdu nedostanou a že z předlohy nezmizí.
 
+## 3h. ~~128 ukončených stránek hlásilo „Pozemek nenalezen"~~ — *opraveno 9. 10.*
+
+Generátor stránky zmizelých nabídek schválně **nemaže**. Nechává na
+nich všechno, co o pozemku víme — cenu, výměru, parcelu, zdroj, tři
+podobné pozemky v okrese — a přidá pruh „Tato nabídka už není
+aktuální" i s datem. Důvod je v generátoru napsaný: smazaná stránka
+vrátí 404 a neřekne nic, a hlavní aktivum webu jsou zaindexované
+adresy. Hlídá to `scripts/test-ukonceno.mjs` — jenže **ze souboru**,
+a soubor byl v pořádku.
+
+V prohlížeči to dopadlo jinak. Nabídka v datech logicky není (proto je
+stránka ukončená), `js/pozemek.js` ji nenašel a celý `#pz-detail`
+přepsal hláškou **„Pozemek nenalezen"**. Pro člověka prázdná stránka,
+pro vyhledávač měkká čtyřistačtyřka — přesně to, čemu se mělo
+předejít. Takových stránek bylo **124 ze 127** a žádná zkouška to
+neviděla, protože všechny četly HTML, ne vykreslenou stránku.
+
+Zbylé tři byly druhá strana téže mince: jejich nabídka v datech pořád
+je (dostala jen jiný soubor, stránky se rozlišují otiskem klíče),
+takže se vykreslily jako **živé** — na adrese, která o sobě o kus výš
+tvrdí, že aktuální není. Dvě adresy s týmž obsahem a jedna si
+odporuje. Rozhoduje pruh: ukončená stránka se už nepřekresluje.
+
+Nová zkouška `scripts/test-ukoncena-v-prohlizeci.mjs` otevírá vzorek
+v prohlížeči a hlídá obojí — že ukončená stránka svůj obsah udrží,
+**a** že se hláška pořád objeví tam, kam patří (`pozemek.html`
+s neznámým klíčem, i s `noindex`). Do vzorku se schválně přidávají ty
+tři těžké případy. Dvě sabotáže vyzkoušeny, obě padají.
+
 ## 3i. ~~Emodži z cizího inzerátu uprostřed věty~~ — *opraveno 9. 10.*
 
 Nahlásila to `scripts/test-pisma.mjs` po obnově dat: prohledá všechny
