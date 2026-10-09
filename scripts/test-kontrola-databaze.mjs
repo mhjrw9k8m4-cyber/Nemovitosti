@@ -167,6 +167,19 @@ const chybyZ = (v) => v.nalezy.filter((n) => n.vaha === 'chyba');
     !chybyZ(v).some((n) => /bez přihlášení/.test(n.co)), JSON.stringify(chybyZ(v)));
 }
 
+{
+  /* Tatáž past v roli přihlášeného — a tam byla ještě tišší, protože
+     varování hlídalo jen chybějící přihlášení, ne neúspěšný výpis. */
+  const v = await spust({ korenAnon401: true, radkyPrihlasenemu: ['navstevnost'] },
+    { token: 'TOKEN' });
+  pravda('i u přihlášeného se tabulky zkontrolují, i když kořenový výpis odmítne',
+    chybyZ(v).some((n) => /navstevnost.*přihlášený uživatel/.test(n.co)),
+    JSON.stringify(v.nalezy.map((n) => n.co)));
+  pravda('a řekne se, že jeho seznam funkcí se ověřit nepodařilo',
+    v.nalezy.some((n) => /seznam funkcí pro přihlášeného.*nepodařilo/.test(n.co)),
+    JSON.stringify(v.nalezy.map((n) => n.co)));
+}
+
 /* ---- 5) servisní klíč se nesmí dostat do výpisu ---------------- */
 {
   const k = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.tajne.podpis';

@@ -177,6 +177,12 @@ export async function zkontroluj({ url, anonKlic, serviceKlic, sql, token = null
 
   /* --- 3) co uvidí přihlášený (jen když je čím se přihlásit) ------ */
   if (token) {
+    /* TÁŽ PAST JAKO O KUS VÝŠ, a tady byla ještě tišší: smyčka přes
+       tabulky visela na kořenovém výpisu, a ten vrací 401 i tomuhle
+       klíči. Role přihlášeného se tedy nezkontrolovala vůbec — a na
+       rozdíl od případu „není čím se přihlásit" o tom nepadlo ani
+       slovo, protože varování hlídá jen chybějící přihlášení.
+       Je to zrovna ta role, ve které tu díra byla. */
     const prih = await g(url, '/rest/v1/', anonKlic, token);
     if (prih.stav === 200 && prih.json) {
       const uzivatel = zeSpecifikace(prih.json);
@@ -186,19 +192,25 @@ export async function zkontroluj({ url, anonKlic, serviceKlic, sql, token = null
         chyba(`${unikle.length} funkcí má v SQL zákaz, ale přihlášený je vidí`, unikle.join(', '),
           'Přesně tahle díra už tu jednou byla (prehled_navstevnosti). Nahrát SQL znovu.');
       }
-      for (const t of je.tabulky) {
-        if (VEREJNE_TABULKY.indexOf(t) >= 0) continue;
-        const jako = await g(url, `/rest/v1/${t}?select=*&limit=1`, anonKlic, token);
-        if (jako.stav !== 200 || !Array.isArray(jako.json) || !jako.json.length) continue;
-        /* Přihlášený SVÁ data vidět má — nález je to jen u tabulek,
-           kde cizí data nemá co vidět nikdo kromě služby. Rozhodnout
-           to odsud nejde (nevíme, čí ten řádek je), tak se to hlásí
-           jako varování k přečtení, ne jako chyba. */
-        varovani(`tabulku ${t} přečte přihlášený uživatel`,
-          'vrátila řádek — ověřte, že to jsou JEHO data',
-          `Projděte pravidla RLS pro ${t} v supabase/00-vse.sql.`);
-      }
+    } else {
+      varovani('seznam funkcí pro přihlášeného se nepodařilo získat',
+        `kořenový výpis vrátil HTTP ${prih.stav}`,
+        'Zákazy spuštění funkcí se v téhle roli ověřit nedají. Tabulky ověřené jsou.');
     }
+    let overeno = 0;
+    for (const t of je.tabulky) {
+      if (VEREJNE_TABULKY.indexOf(t) >= 0) continue;
+      const jako = await g(url, `/rest/v1/${t}?select=*&limit=1`, anonKlic, token);
+      overeno++;
+      if (jako.stav !== 200 || !Array.isArray(jako.json) || !jako.json.length) continue;
+      /* Přihlášený SVÁ data vidět má. Rozhodnout odsud, čí ten řádek
+         je, nejde — jenže účet je čerstvý a prázdný, takže žádná data
+         mít nemůže. Co mu tabulka přesto vydá, je cizí. */
+      chyba(`tabulku ${t} přečte přihlášený uživatel`,
+        'vrátila řádek účtu, který v ní nemá nic svého',
+        `Projděte pravidla RLS pro ${t} v supabase/00-vse.sql.`);
+    }
+    prehled.proPrihlaseneTabulek = overeno;
   } else {
     varovani('kontrola „co vidí přihlášený" se nespustila',
       'chybí PK_TEST_EMAIL a PK_TEST_HESLO',
@@ -313,8 +325,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   } finally {
     if (zkusebni && zkusebni.id) {
       const smazano = await smazZkusebniUcet(url, serviceKlic, zkusebni.id);
+      /* Řádek s ::warning:: musí začínat na kraji — odsazený příkaz
+         se nemusí rozpoznat a zrovna tenhle vzkaz se ztratit nesmí. */
       console.log(smazano ? '  (dočasný účet smazán)'
-        : '  ::warning::Dočasný účet se nepodařilo smazat — zkontrolujte Supabase → Authentication.');
+        : '::warning::Dočasný účet se nepodařilo smazat — zkontrolujte Supabase → Authentication.');
     }
   }
   const { nalezy, prehled } = vysledek;
@@ -368,7 +382,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const shrnuti = chyby.length
       ? `Kontrola databáze: ${chyby.length} nálezů — ` + chyby.map((n) => n.co).join('; ')
       : `Databáze sedí: ${prehled.vDatabaziTabulek} tabulek, `
-        + `${prehled.vDatabaziFunkci} funkcí. ${kdoVidi}.`;
+        + `${prehled.vDatabaziFunkci} funkcí. ${kdoVidi}`
+        + (prehled.proPrihlaseneTabulek != null
+          ? `, a totéž ověřeno i pro přihlášeného uživatele`
+          : '') + '.';
     console.log(`::${chyby.length ? 'error' : 'notice'}::` + bezKlicu(shrnuti, tajne));
     /* Varování taky do souhrnu — jinak se o nich člověk doví jen tak,
        že si otevře protokol, což je přesně to, čemu se tenhle řádek
