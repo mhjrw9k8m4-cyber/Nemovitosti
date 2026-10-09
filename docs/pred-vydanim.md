@@ -27,6 +27,24 @@ Nic víc. Žádná cookie, žádná IP, žádný identifikátor — v databázi
 nevzniká řádek za návštěvu, jen se zvedne čítač. Proto to nepotřebuje
 souhlas ani lištu. Kdo má v prohlížeči „nesledovat", se nepočítá.
 
+**Jak si ověřit, že to opravdu sedlo** (a zároveň že sedí zbytek
+databáze — tabulky, funkce i to, kdo se k nim dostane):
+
+```
+SUPABASE_SERVICE_ROLE_KEY=… node scripts/kontrola-databaze.mjs
+```
+
+Nic nezapisuje a nevolá jedinou funkci — jen se databáze zeptá, co
+v ní je, a porovná to s `supabase/00-vse.sql`. Co nesedí, vypíše
+i s tím, co s tím dělat. Servisní klíč se do výpisu nedostane, takže
+se výstup dá v klidu poslat dál.
+
+Volitelně, a stojí to za to, přidejte přihlašovací údaje zkušebního
+účtu: `PK_TEST_EMAIL=… PK_TEST_HESLO=…`. Projde se tím i role
+„přihlášený uživatel" — a přesně v ní tu jednou byla díra, kvůli
+které si statistiku návštěvnosti mohl přečíst každý, kdo si založil
+účet.
+
 ---
 
 ## 1. Obnova hesla chodí z cizí adresy  ← nejnaléhavější
