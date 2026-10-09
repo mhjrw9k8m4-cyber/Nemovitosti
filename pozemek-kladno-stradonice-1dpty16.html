@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 2 296 m² — Stradonice, okres Kladno</h1><p><b>205 000 Kč</b> (408 Kč/m²) · 2 296 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>2 296 m²</dd><dt>Obec</dt><dd>Stradonice</dd><dt>Okres</dt><dd><a href="pozemky-okres-kladno.html">Kladno</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 7/32 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Kladno 16 km · Praha 35 km</dd></dl><p><a href="pozemek.html?p=Stradonice%7C%E2%80%94%7CKladno%7C50.290%7C14.049&amp;ll=50.290392,14.049432&amp;v=2296&amp;c=205000">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 2 296 m² — Stradonice, okres Kladno</h1><p><b>205 000 Kč</b> (408 Kč/m²) · 2 296 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>2 296 m²</dd><dt>Obec</dt><dd>Stradonice</dd><dt>Okres</dt><dd><a href="pozemky-okres-kladno.html">Kladno</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 7/32 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Kladno 16 km · Praha 35 km</dd></dl><p><a href="pozemek.html?p=Stradonice%7C%E2%80%94%7CKladno%7C50.290%7C14.049&amp;ll=50.290392,14.049432&amp;v=2296&amp;c=205000">Otevřít na mapě</a></p><h2>Srovnatelné spoluvlastnické podíly v okolí</h2><p>Z pěti nabídek do 17 km je tenhle nejdražší. Ceny jsou za metr, který kupujícímu připadne — výměra je celá parcela.</p><ul><li>408 Kč/m² — <b>tenhle pozemek</b>, 2 296 m²</li><li>140 Kč/m² — <a href="pozemek-kladno-malikovice-1x8rbsy.html">Malíkovice</a>, 2 121 m², 9 km</li><li>121 Kč/m² — <a href="pozemek-kladno-sazena-1kazpx2.html">Sazená</a>, 1 361 m², 17 km</li><li>118 Kč/m² — <a href="pozemek-litomerice-prestavlky-15dpu8e.html">Přestavlky</a>, 2 885 m², 17 km</li><li>68 Kč/m² — <a href="pozemek-louny-vinarice-csmuxf.html">Vinařice</a>, 2 388 m², 16 km</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 2 296 m² — Stradonice, okres Kladno","description":"Na prodej · 205 000 Kč (408 Kč/m²) · 2 296 m² · Stradonice, okres Kladno. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-kladno-stradonice-1dpty16.html","address":{"@type":"PostalAddress","addressLocality":"Stradonice","addressRegion":"Kladno","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.290392,"longitude":14.049432}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Kladno","item":"https://www.parcelaka.cz/pozemky-okres-kladno.html"},{"@type":"ListItem","position":4,"name":"Orná půda 2 296 m² — Stradonice, okres Kladno","item":"https://www.parcelaka.cz/pozemek-kladno-stradonice-1dpty16.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Stradonice|—|Kladno|50.290|14.049","ll":[50.290392,14.049432],"v":2296,"c":205000,"r":"data/okres/kladno.json"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -592,6 +629,7 @@
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Kladno 16 km · Praha 35 km"</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 17 km je tenhle nejdražší.","r":[{"ja":1,"o":"Stradonice","vym":2296,"m":408},{"s":"pozemek-kladno-malikovice-1x8rbsy.html","o":"Malíkovice","vym":2121,"m":140,"km":9},{"s":"pozemek-kladno-sazena-1kazpx2.html","o":"Sazená","vym":1361,"m":121,"km":17},{"s":"pozemek-litomerice-prestavlky-15dpu8e.html","o":"Přestavlky","vym":2885,"m":118,"km":17},{"s":"pozemek-louny-vinarice-csmuxf.html","o":"Vinařice","vym":2388,"m":68,"km":16}],"p":1}</script>
 <script type="application/json" id="pz-popis-data">"Vlastníka Vám nabízíme pozemek ke koupi. k.ú. Stradonice u Zlonic LV č. 122 o celkové výměře 2296 m², podíl 7/32 • Parcela č. 287/1 - o výměře 10496 m² (Orná půda) Pomáháme lidem bezpečně investovat do pozemků - ať už hledáte stabilní investici, nebo půdu pro hospodaření. Přidejte se k těm, kteří vsadili na jistotu a zhodnocují své peníze tam, kde má investice pevné základy. Zajišťujeme celou transakci - přípravu smluv i právní servis."</script>
 </body>
 </html>

@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 12 661 m² — Perálec, okres Chrudim","description":"Na prodej · 599 000 Kč (71 Kč/m²) · 12 661 m² · Perálec, okres Chrudim. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-chrudim-peralec-fkco2n.html","address":{"@type":"PostalAddress","addressLocality":"Perálec","addressRegion":"Chrudim","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.829566,"longitude":16.087453}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Chrudim","item":"https://www.parcelaka.cz/pozemky-okres-chrudim.html"},{"@type":"ListItem","position":4,"name":"Orná půda 12 661 m² — Perálec, okres Chrudim","item":"https://www.parcelaka.cz/pozemek-chrudim-peralec-fkco2n.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Perálec|—|Chrudim|49.830|16.087","ll":[49.829566,16.087453],"v":12661,"c":599000,"r":"data/okres/chrudim.json"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

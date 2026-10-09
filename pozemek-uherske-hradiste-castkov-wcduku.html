@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 1 352 m² — Částkov</h1><p><b>29 000 Kč</b> (21 Kč/m²) · 1 352 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>1 352 m²</dd><dt>Obec</dt><dd>Částkov</dd><dt>Okres</dt><dd><a href="pozemky-okres-uherske-hradiste.html">Uherské Hradiště</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Uherské Hradiště 12 km · Olomouc 60 km</dd></dl><p><a href="pozemek.html?p=%C4%8C%C3%A1stkov%7C%E2%80%94%7CUhersk%C3%A9%20Hradi%C5%A1t%C4%9B%7C49.109%7C17.610&amp;ll=49.108843,17.60956&amp;v=1352&amp;c=29000">Otevřít na mapě</a></p><p><a href="index.html?obec=%C4%8C%C3%A1stkov&amp;okres=Uhersk%C3%A9%20Hradi%C5%A1t%C4%9B">V obci Částkov jsou v nabídce ještě 3 pozemky</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 1 352 m² — Částkov</h1><p><b>29 000 Kč</b> (21 Kč/m²) · 1 352 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>1 352 m²</dd><dt>Obec</dt><dd>Částkov</dd><dt>Okres</dt><dd><a href="pozemky-okres-uherske-hradiste.html">Uherské Hradiště</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Uherské Hradiště 12 km · Olomouc 60 km</dd></dl><p><a href="pozemek.html?p=%C4%8C%C3%A1stkov%7C%E2%80%94%7CUhersk%C3%A9%20Hradi%C5%A1t%C4%9B%7C49.109%7C17.610&amp;ll=49.108843,17.60956&amp;v=1352&amp;c=29000">Otevřít na mapě</a></p><p><a href="index.html?obec=%C4%8C%C3%A1stkov&amp;okres=Uhersk%C3%A9%20Hradi%C5%A1t%C4%9B">V obci Částkov jsou v nabídce ještě 3 pozemky</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 13 km je tenhle 3. nejdražší.</p><ul><li>30 Kč/m² — <a href="pozemek-zlin-napajedla-1tm2lfg.html">Napajedla</a>, 2 466 m², 13 km</li><li>25 Kč/m² — <a href="pozemek-uherske-hradiste-castkov-wcdulp.html">Částkov</a>, 1 787 m², 1 km</li><li>21 Kč/m² — <b>tenhle pozemek</b>, 1 352 m²</li><li>6 Kč/m² — <a href="pozemek-zlin-napajedla-1mefj0l.html">Napajedla</a>, 1 075 m², 9 km</li><li>6 Kč/m² — <a href="pozemek-zlin-napajedla-azo66k.html">Napajedla</a>, 2 279 m², 11 km</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Trvalý travní porost 1 352 m² — Částkov","description":"Na prodej · 29 000 Kč (21 Kč/m²) · 1 352 m² · Částkov, okres Uherské Hradiště. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-castkov-wcduku.html","address":{"@type":"PostalAddress","addressLocality":"Částkov","addressRegion":"Uherské Hradiště","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.108843,"longitude":17.60956}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Uherské Hradiště","item":"https://www.parcelaka.cz/pozemky-okres-uherske-hradiste.html"},{"@type":"ListItem","position":4,"name":"Trvalý travní porost 1 352 m² — Částkov","item":"https://www.parcelaka.cz/pozemek-uherske-hradiste-castkov-wcduku.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Částkov|—|Uherské Hradiště|49.109|17.610","ll":[49.108843,17.60956],"v":1352,"c":29000,"r":"data/okres/uherske-hradiste.json","h":[["2026-09-19",35000],["2026-09-28",29000]],"pc":"278/3"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -593,6 +630,7 @@
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Uherské Hradiště 12 km · Olomouc 60 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Částkov jsou v nabídce ještě 3 pozemky","url":"index.html?obec=%C4%8C%C3%A1stkov\u0026okres=Uhersk%C3%A9%20Hradi%C5%A1t%C4%9B"}</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 13 km je tenhle 3. nejdražší.","r":[{"s":"pozemek-zlin-napajedla-1tm2lfg.html","o":"Napajedla","vym":2466,"m":30,"km":13},{"s":"pozemek-uherske-hradiste-castkov-wcdulp.html","o":"Částkov","vym":1787,"m":25,"km":1},{"ja":1,"o":"Částkov","vym":1352,"m":21},{"s":"pozemek-zlin-napajedla-1mefj0l.html","o":"Napajedla","vym":1075,"m":6,"km":9},{"s":"pozemek-zlin-napajedla-azo66k.html","o":"Napajedla","vym":2279,"m":6,"km":11}]}</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka – bez prostředníků a bez zbytečných výdajů navíc! k.ú. Částkov LV č. 233 o výměře 1352 m² • Parcela č. 278/3 - o výměře 1352 m² (Trvalý travní porost) Přístupová cesta je zajištěna přes pozemky obce. Už přes 20 let pomáháme lidem bezpečně investovat do pozemků – ať už hledáte stabilní investici, nebo půdu pro hospodaření."</script>
 </body>
 </html>

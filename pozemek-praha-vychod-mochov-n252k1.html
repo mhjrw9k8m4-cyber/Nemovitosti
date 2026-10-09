@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 4 061 m² — Mochov, okres Praha-východ</h1><p><b>21 320 Kč</b> (5 Kč/m²) · 4 061 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>4 061 m²</dd><dt>Obec</dt><dd>Mochov</dd><dt>Okres</dt><dd><a href="pozemky-okres-praha-vychod.html">Praha-východ</a></dd><dt>Parcela</dt><dd>č. KN 1324</dd><dt>Stav / zdroj</dt><dd>prodej státní půdy (SPÚ, § 12)</dd><dt>Vzdušnou čarou</dt><dd>Praha 27 km</dd></dl><p><a href="pozemek.html?p=Mochov%7CKN%201324%7CPraha-v%C3%BDchod%7C50.143%7C14.791&amp;ll=50.14255,14.79051&amp;v=4061&amp;c=21320">Otevřít na mapě</a></p><p><a href="index.html?obec=Mochov&amp;okres=Praha-v%C3%BDchod">V obci Mochov je v nabídce ještě 11 pozemků</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 4 061 m² — Mochov, okres Praha-východ</h1><p><b>21 320 Kč</b> (5 Kč/m²) · 4 061 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>4 061 m²</dd><dt>Obec</dt><dd>Mochov</dd><dt>Okres</dt><dd><a href="pozemky-okres-praha-vychod.html">Praha-východ</a></dd><dt>Parcela</dt><dd>č. KN 1324</dd><dt>Stav / zdroj</dt><dd>prodej státní půdy (SPÚ, § 12)</dd><dt>Vzdušnou čarou</dt><dd>Praha 27 km</dd></dl><p><a href="pozemek.html?p=Mochov%7CKN%201324%7CPraha-v%C3%BDchod%7C50.143%7C14.791&amp;ll=50.14255,14.79051&amp;v=4061&amp;c=21320">Otevřít na mapě</a></p><p><a href="index.html?obec=Mochov&amp;okres=Praha-v%C3%BDchod">V obci Mochov je v nabídce ještě 11 pozemků</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 1 km je tenhle 4. nejdražší.</p><ul><li>9 Kč/m² — <a href="pozemek-praha-vychod-mochov-pzvobz.html">Mochov</a>, 2 851 m², 1 km</li><li>9 Kč/m² — <a href="pozemek-praha-vychod-mochov-1p8d15.html">Mochov</a>, 10 674 m², 1 km</li><li>6 Kč/m² — <a href="pozemek-praha-vychod-mochov-1i5qsx.html">Mochov</a>, 5 732 m², 1 km</li><li>5 Kč/m² — <b>tenhle pozemek</b>, 4 061 m²</li><li>5 Kč/m² — <a href="pozemek-praha-vychod-mochov-1l06cqf.html">Mochov</a>, 6 094 m², 1 km</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 4 061 m² — Mochov, okres Praha-východ","description":"Na prodej · 21 320 Kč (5 Kč/m²) · 4 061 m² · Mochov, okres Praha-východ. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-praha-vychod-mochov-n252k1.html","address":{"@type":"PostalAddress","addressLocality":"Mochov","addressRegion":"Praha-východ","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.14255,"longitude":14.79051}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Praha-východ","item":"https://www.parcelaka.cz/pozemky-okres-praha-vychod.html"},{"@type":"ListItem","position":4,"name":"Orná půda 4 061 m² — Mochov, okres Praha-východ","item":"https://www.parcelaka.cz/pozemek-praha-vychod-mochov-n252k1.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Mochov|KN 1324|Praha-východ|50.143|14.791","ll":[50.14255,14.79051],"v":4061,"c":21320,"r":"data/okres/praha-vychod.json"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -593,5 +630,6 @@
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Praha 27 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Mochov je v nabídce ještě 11 pozemků","url":"index.html?obec=Mochov\u0026okres=Praha-v%C3%BDchod"}</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 1 km je tenhle 4. nejdražší.","r":[{"s":"pozemek-praha-vychod-mochov-pzvobz.html","o":"Mochov","vym":2851,"m":9,"km":1},{"s":"pozemek-praha-vychod-mochov-1p8d15.html","o":"Mochov","vym":10674,"m":9,"km":1},{"s":"pozemek-praha-vychod-mochov-1i5qsx.html","o":"Mochov","vym":5732,"m":6,"km":1},{"ja":1,"o":"Mochov","vym":4061,"m":5},{"s":"pozemek-praha-vychod-mochov-1l06cqf.html","o":"Mochov","vym":6094,"m":5,"km":1}]}</script>
 </body>
 </html>

@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 778 m² — Ibišková, okres Praha</h1><p><b>15 521 100 Kč</b> (19 950 Kč/m²) · 778 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>778 m²</dd><dt>Obec</dt><dd>Ibišková</dd><dt>Okres</dt><dd><a href="pozemky-okres-praha.html">Praha</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Praha 12 km</dd></dl><p><a href="pozemek.html?p=Ibi%C5%A1kov%C3%A1%7C%E2%80%94%7CPraha%7C50.018%7C14.563&amp;ll=50.01795995423,14.563293856591&amp;v=778&amp;c=15521100">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 778 m² — Ibišková, okres Praha</h1><p><b>15 521 100 Kč</b> (19 950 Kč/m²) · 778 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>778 m²</dd><dt>Obec</dt><dd>Ibišková</dd><dt>Okres</dt><dd><a href="pozemky-okres-praha.html">Praha</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Praha 12 km</dd></dl><p><a href="pozemek.html?p=Ibi%C5%A1kov%C3%A1%7C%E2%80%94%7CPraha%7C50.018%7C14.563&amp;ll=50.01795995423,14.563293856591&amp;v=778&amp;c=15521100">Otevřít na mapě</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 8 km je tenhle 3. nejdražší.</p><ul><li>22 628 Kč/m² — <a href="pozemek-praha-zapad-k-rybniku-xvw3ky.html">K Rybníku</a>, 506 m², 6 km</li><li>20 722 Kč/m² — <a href="pozemek-praha-vychod-ricany-15udxeb.html">Říčany</a>, 859 m², 7 km</li><li>19 950 Kč/m² — <b>tenhle pozemek</b>, 778 m²</li><li>10 878 Kč/m² — <a href="pozemek-praha-zapad-jesenice-ypcr6y.html">Jesenice</a>, 900 m², 8 km</li><li>8 322 Kč/m² — <a href="pozemek-praha-vychod-krenice-1nj5oxs.html">Křenice</a>, 1 043 m², 8 km</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 778 m² — Ibišková, okres Praha","description":"Na prodej · 15 521 100 Kč (19 950 Kč/m²) · 778 m² · Ibišková, okres Praha. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-praha-ibiskova-1rdrt9e.html","address":{"@type":"PostalAddress","addressLocality":"Ibišková","addressRegion":"Praha","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.01795995423,"longitude":14.563293856591}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Praha","item":"https://www.parcelaka.cz/pozemky-okres-praha.html"},{"@type":"ListItem","position":4,"name":"Stavební pozemek 778 m² — Ibišková, okres Praha","item":"https://www.parcelaka.cz/pozemek-praha-ibiskova-1rdrt9e.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Ibišková|—|Praha|50.018|14.563","ll":[50.01795995423,14.563293856591],"v":778,"c":15521100,"r":"data/okres/praha.json"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -592,6 +629,7 @@
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Praha 12 km"</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 8 km je tenhle 3. nejdražší.","r":[{"s":"pozemek-praha-zapad-k-rybniku-xvw3ky.html","o":"K Rybníku","vym":506,"m":22628,"km":6},{"s":"pozemek-praha-vychod-ricany-15udxeb.html","o":"Říčany","vym":859,"m":20722,"km":7},{"ja":1,"o":"Ibišková","vym":778,"m":19950},{"s":"pozemek-praha-zapad-jesenice-ypcr6y.html","o":"Jesenice","vym":900,"m":10878,"km":8},{"s":"pozemek-praha-vychod-krenice-1nj5oxs.html","o":"Křenice","vym":1043,"m":8322,"km":8}]}</script>
 <script type="application/json" id="pz-popis-data">"Stavební pozemek 778 m², Praha – Křeslice Nabízím k prodeji stavební pozemek p.č. 272/450 o výměře 741 m² a pozemek p.č. 97/53 o výměře 37 m2 v atraktivní městské části Praha – Křeslice. Pozemek představuje zajímavou příležitost pro ty, kteří hledají možnost vlastního rodinného bydlení v Praze a zároveň chtějí mít přírodu doslova na dosah."</script>
 </body>
 </html>

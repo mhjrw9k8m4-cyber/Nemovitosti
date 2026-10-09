@@ -234,6 +234,34 @@
       + '<p class="pz-popis-inzerent">' + esc(t) + '</p>';
   }
 
+  function pzSrovnaniHtml() {
+    var el = document.getElementById('pz-srovnani-data');
+    if (!el) return '';
+    var s = null;
+    try { s = JSON.parse(el.textContent || 'null'); } catch (e) { return ''; }
+    if (!s || typeof s.v !== 'string' || !s.r || !s.r.length) return '';
+    var radky = s.r.map(function (x) {
+      var cena = '<b class="srv-c">' + fmt(x.m) + ' Kč/m²</b>';
+      var kde = x.ja
+        ? '<span class="srv-kde">tenhle pozemek</span>'
+        : '<a class="srv-kde" href="' + esc(x.s) + '">' + esc(x.o) + '</a>';
+      var detail = fmt(x.vym) + ' m²' + (x.km ? ' · ' + x.km + ' km' : '');
+      return '<li class="srv-radek' + (x.ja ? ' srv-ja' : '') + '">'
+        + kde + cena + '<span class="srv-detail">' + detail + '</span></li>';
+    }).join('');
+    return '<section class="srv">'
+      + '<h2 class="pz-sect-h">'
+      + (s.p ? 'Srovnatelné spoluvlastnické podíly' : 'Srovnatelné pozemky v okolí') + '</h2>'
+      + '<p class="srv-veta">' + esc(s.v)
+      + (s.p ? ' Ceny jsou za metr, který kupujícímu připadne — výměra je celá parcela.' : '')
+      + '</p>'
+      + '<ul class="srv-seznam">' + radky + '</ul>'
+      + '<p class="srv-pozn">Týž druh pozemku, výměra v poměru do trojnásobku, '
+      + 'vzdušnou čarou do 25 km. Když se tolik srovnatelných nenajde, '
+      + 'tahle část stránky není.</p>'
+      + '</section>';
+  }
+
   function pzVerdictHtml(d) {
     if (!MODEL || !hasArea(d) || !d.price) return '';
 
@@ -828,6 +856,8 @@
       pzDrazbaHtml(d, days) +
 
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
+
+      pzSrovnaniHtml() +
 
       '<details class="pz-gtk-obal">' +
         '<summary class="pz-gtk-sum">' +

@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 4 038 m² — Týnec, okres Břeclav</h1><p><b>175 000 Kč</b> (43 Kč/m²) · 4 038 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>4 038 m²</dd><dt>Obec</dt><dd>Týnec</dd><dt>Okres</dt><dd><a href="pozemky-okres-breclav.html">Břeclav</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Břeclav 11 km · Brno 55 km</dd></dl><p><a href="pozemek.html?p=T%C3%BDnec%7C%E2%80%94%7CB%C5%99eclav%7C48.783%7C17.029&amp;ll=48.782864,17.028707&amp;v=4038&amp;c=175000">Otevřít na mapě</a></p><p><a href="index.html?obec=T%C3%BDnec&amp;okres=B%C5%99eclav">V obci Týnec je v nabídce ještě jeden pozemek</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 4 038 m² — Týnec, okres Břeclav</h1><p><b>175 000 Kč</b> (43 Kč/m²) · 4 038 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>4 038 m²</dd><dt>Obec</dt><dd>Týnec</dd><dt>Okres</dt><dd><a href="pozemky-okres-breclav.html">Břeclav</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Břeclav 11 km · Brno 55 km</dd></dl><p><a href="pozemek.html?p=T%C3%BDnec%7C%E2%80%94%7CB%C5%99eclav%7C48.783%7C17.029&amp;ll=48.782864,17.028707&amp;v=4038&amp;c=175000">Otevřít na mapě</a></p><p><a href="index.html?obec=T%C3%BDnec&amp;okres=B%C5%99eclav">V obci Týnec je v nabídce ještě jeden pozemek</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 7 km je tenhle 4. nejdražší.</p><ul><li>65 Kč/m² — <a href="pozemek-breclav-hrusky-jxckvb.html">Hrušky</a>, 6 494 m², 6 km</li><li>54 Kč/m² — <a href="pozemek-breclav-kostice-15s4isc.html">Kostice</a>, 8 699 m², 6 km</li><li>45 Kč/m² — <a href="pozemek-breclav-kostice-3tat8y.html">Kostice</a>, 2 181 m², 6 km</li><li>43 Kč/m² — <b>tenhle pozemek</b>, 4 038 m²</li><li>43 Kč/m² — <a href="pozemek-breclav-tynec-d42p04.html">Týnec</a>, 5 576 m², 3 km</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 4 038 m² — Týnec, okres Břeclav","description":"Na prodej · 175 000 Kč (43 Kč/m²) · 4 038 m² · Týnec, okres Břeclav. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-breclav-tynec-10072u3.html","address":{"@type":"PostalAddress","addressLocality":"Týnec","addressRegion":"Břeclav","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":48.782864,"longitude":17.028707}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Břeclav","item":"https://www.parcelaka.cz/pozemky-okres-breclav.html"},{"@type":"ListItem","position":4,"name":"Orná půda 4 038 m² — Týnec, okres Břeclav","item":"https://www.parcelaka.cz/pozemek-breclav-tynec-10072u3.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Týnec|—|Břeclav|48.783|17.029","ll":[48.782864,17.028707],"v":4038,"c":175000,"r":"data/okres/breclav.json"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -593,6 +630,7 @@
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Břeclav 11 km · Brno 55 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Týnec je v nabídce ještě jeden pozemek","url":"index.html?obec=T%C3%BDnec\u0026okres=B%C5%99eclav"}</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 7 km je tenhle 4. nejdražší.","r":[{"s":"pozemek-breclav-hrusky-jxckvb.html","o":"Hrušky","vym":6494,"m":65,"km":6},{"s":"pozemek-breclav-kostice-15s4isc.html","o":"Kostice","vym":8699,"m":54,"km":6},{"s":"pozemek-breclav-kostice-3tat8y.html","o":"Kostice","vym":2181,"m":45,"km":6},{"ja":1,"o":"Týnec","vym":4038,"m":43},{"s":"pozemek-breclav-tynec-d42p04.html","o":"Týnec","vym":5576,"m":43,"km":3}]}</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka - bez prostředníků a bez zbytečných výdajů navíc! k.ú. Týnec na Moravě a Moravská Nová Ves Týnec na Moravě - LV č. 3797 o výměře 2585 m² • Parcela č. 1584/181 - o výměře 356 m² (Orná půda) • Parcela č. 1584/250 - o výměře 2229 m² (Orná půda) Moravská Nová Ves - LV č. 3502 o výměře 1453 m² • Parcela č."</script>
 </body>
 </html>

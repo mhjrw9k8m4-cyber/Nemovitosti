@@ -356,6 +356,47 @@
       + '<p class="pz-popis-inzerent">' + esc(t) + '</p>';
   }
 
+  /* SROVNATELNÉ POZEMKY — důkaz pod verdikt.
+     Verdikt o kus výš říká „dražší než 98 % pozemků téhož druhu
+     v kraji". Je spočítaný správně, ale ověřit se nedá: kdo mu
+     nevěří, musí odejít na mapu. Tohle pod něj postaví čtyři
+     konkrétní nabídky, se kterými se ten pozemek porovnával, i s
+     cenami a s odkazy — pořadí ve větě si tak může každý v seznamu
+     přepočítat.
+     Seznam přichází HOTOVÝ z generátoru (ostrůvek #pz-srovnani-data),
+     stejně jako vzdálenosti a počet pozemků v obci: pravidla výběru
+     i pořadí skládá jedno místo (scripts/srovnatelne.mjs), tady se
+     jen vypisuje. Dvě místa, která počítají pořadí, by se jednou
+     rozešla a stránka by si ve dvou větách odporovala.
+     Názvy obcí chodí z cizích inzerátů, proto všechno přes esc(). */
+  function pzSrovnaniHtml() {
+    var el = document.getElementById('pz-srovnani-data');
+    if (!el) return '';
+    var s = null;
+    try { s = JSON.parse(el.textContent || 'null'); } catch (e) { return ''; }
+    if (!s || typeof s.v !== 'string' || !s.r || !s.r.length) return '';
+    var radky = s.r.map(function (x) {
+      var cena = '<b class="srv-c">' + fmt(x.m) + ' Kč/m²</b>';
+      var kde = x.ja
+        ? '<span class="srv-kde">tenhle pozemek</span>'
+        : '<a class="srv-kde" href="' + esc(x.s) + '">' + esc(x.o) + '</a>';
+      var detail = fmt(x.vym) + ' m²' + (x.km ? ' · ' + x.km + ' km' : '');
+      return '<li class="srv-radek' + (x.ja ? ' srv-ja' : '') + '">'
+        + kde + cena + '<span class="srv-detail">' + detail + '</span></li>';
+    }).join('');
+    return '<section class="srv">'
+      + '<h2 class="pz-sect-h">'
+      + (s.p ? 'Srovnatelné spoluvlastnické podíly' : 'Srovnatelné pozemky v okolí') + '</h2>'
+      + '<p class="srv-veta">' + esc(s.v)
+      + (s.p ? ' Ceny jsou za metr, který kupujícímu připadne — výměra je celá parcela.' : '')
+      + '</p>'
+      + '<ul class="srv-seznam">' + radky + '</ul>'
+      + '<p class="srv-pozn">Týž druh pozemku, výměra v poměru do trojnásobku, '
+      + 'vzdušnou čarou do 25 km. Když se tolik srovnatelných nenajde, '
+      + 'tahle část stránky není.</p>'
+      + '</section>';
+  }
+
   function pzVerdictHtml(d) {
     if (!MODEL || !hasArea(d) || !d.price) return '';
     /* Známý podíl dostane VLASTNÍ verdikt, ne mlčení. Bez něj by se
@@ -1238,6 +1279,11 @@
       pzDrazbaHtml(d, days) +
 
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
+
+      /* DŮKAZ HNED POD VERDIKT, ne na konec stránky. Tvrzení a to, z
+         čeho vzniklo, patří k sobě — kdo verdikt čte, má mít seznam
+         na očích, ne o tři obrazovky níž. */
+      pzSrovnaniHtml() +
 
       /* RÁDCE JEŠTĚ PŘED TLAČÍTKEM. Vypisuje, co je u tohohle pozemku
          k ověření — a to se má člověk dozvědět DŘÍV, než odejde na

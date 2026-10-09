@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 8 115 m² — Holešov, okres Kroměříž</h1><p><b>370 670 Kč</b> (46 Kč/m²) · 8 115 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>8 115 m²</dd><dt>Obec</dt><dd>Holešov</dd><dt>Okres</dt><dd><a href="pozemky-okres-kromeriz.html">Kroměříž</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Kroměříž 16 km · Olomouc 37 km</dd></dl><p><a href="pozemek.html?p=Hole%C5%A1ov%7C%E2%80%94%7CKrom%C4%9B%C5%99%C3%AD%C5%BE%7C49.350%7C17.600&amp;ll=49.349997,17.600242&amp;v=8115&amp;c=370670">Otevřít na mapě</a></p><p><a href="index.html?obec=Hole%C5%A1ov&amp;okres=Krom%C4%9B%C5%99%C3%AD%C5%BE">V obci Holešov jsou v nabídce ještě 2 pozemky</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 8 115 m² — Holešov, okres Kroměříž</h1><p><b>370 670 Kč</b> (46 Kč/m²) · 8 115 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>8 115 m²</dd><dt>Obec</dt><dd>Holešov</dd><dt>Okres</dt><dd><a href="pozemky-okres-kromeriz.html">Kroměříž</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Kroměříž 16 km · Olomouc 37 km</dd></dl><p><a href="pozemek.html?p=Hole%C5%A1ov%7C%E2%80%94%7CKrom%C4%9B%C5%99%C3%AD%C5%BE%7C49.350%7C17.600&amp;ll=49.349997,17.600242&amp;v=8115&amp;c=370670">Otevřít na mapě</a></p><p><a href="index.html?obec=Hole%C5%A1ov&amp;okres=Krom%C4%9B%C5%99%C3%AD%C5%BE">V obci Holešov jsou v nabídce ještě 2 pozemky</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 18 km je tenhle 3. nejdražší.</p><ul><li>101 Kč/m² — <a href="pozemek-kromeriz-holesov-9cqole.html">Holešov</a>, 12 223 m², 3 km</li><li>70 Kč/m² — <a href="pozemek-kromeriz-loukov-63zfrz.html">Loukov</a>, 8 613 m², 11 km</li><li>46 Kč/m² — <b>tenhle pozemek</b>, 8 115 m²</li><li>45 Kč/m² — <a href="pozemek-kromeriz-chvalcov-1iy15bk.html">Chvalčov</a>, 9 197 m², 10 km</li><li>37 Kč/m² — <a href="pozemek-prerov-prerov-1kzfoib.html">Přerov</a>, 5 327 m², 18 km</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 8 115 m² — Holešov, okres Kroměříž","description":"Na prodej · 370 670 Kč (46 Kč/m²) · 8 115 m² · Holešov, okres Kroměříž. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-kromeriz-holesov-11gus86.html","address":{"@type":"PostalAddress","addressLocality":"Holešov","addressRegion":"Kroměříž","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.349997,"longitude":17.600242}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Kroměříž","item":"https://www.parcelaka.cz/pozemky-okres-kromeriz.html"},{"@type":"ListItem","position":4,"name":"Orná půda 8 115 m² — Holešov, okres Kroměříž","item":"https://www.parcelaka.cz/pozemek-kromeriz-holesov-11gus86.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Holešov|—|Kroměříž|49.350|17.600","ll":[49.349997,17.600242],"v":8115,"c":370670,"r":"data/okres/kromeriz.json"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -593,6 +630,7 @@
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Kroměříž 16 km · Olomouc 37 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Holešov jsou v nabídce ještě 2 pozemky","url":"index.html?obec=Hole%C5%A1ov\u0026okres=Krom%C4%9B%C5%99%C3%AD%C5%BE"}</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 18 km je tenhle 3. nejdražší.","r":[{"s":"pozemek-kromeriz-holesov-9cqole.html","o":"Holešov","vym":12223,"m":101,"km":3},{"s":"pozemek-kromeriz-loukov-63zfrz.html","o":"Loukov","vym":8613,"m":70,"km":11},{"ja":1,"o":"Holešov","vym":8115,"m":46},{"s":"pozemek-kromeriz-chvalcov-1iy15bk.html","o":"Chvalčov","vym":9197,"m":45,"km":10},{"s":"pozemek-prerov-prerov-1kzfoib.html","o":"Přerov","vym":5327,"m":37,"km":18}]}</script>
 <script type="application/json" id="pz-popis-data">"Vlastníka Vám nabízíme pozemky ke koupi. k.ú. Dobrotice LV č. 128 o celkové výměře 8115 m² • Parcela č. 3051 - o výměře 2709 m² (Orná půda) • Parcela č. 3241 - o výměře 3457 m² (Trvalý travní porost) • Parcela č. 3771 - o výměře 869 m² (Orná půda) • Parcela č. 3928 - o výměře 1080 m² (Orná půda) Přístupová cesta je zajištěna přes pozemky města, kraje a České republiky."</script>
 </body>
 </html>

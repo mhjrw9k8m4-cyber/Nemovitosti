@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 1 028 m² — Libež, okres Benešov</h1><p><b>2 499 000 Kč</b> (2 431 Kč/m²) · 1 028 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>1 028 m²</dd><dt>Obec</dt><dd>Libež</dd><dt>Okres</dt><dd><a href="pozemky-okres-benesov.html">Benešov</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Benešov 17 km · Praha 51 km</dd></dl><p><a href="pozemek.html?p=Libe%C5%BE%7C%E2%80%94%7CBene%C5%A1ov%7C49.757%7C14.921&amp;ll=49.7570978,14.921187&amp;v=1028&amp;c=2499000">Otevřít na mapě</a></p><p><a href="index.html?obec=Libe%C5%BE&amp;okres=Bene%C5%A1ov">V obci Libež jsou v nabídce ještě 4 pozemky</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 1 028 m² — Libež, okres Benešov</h1><p><b>2 499 000 Kč</b> (2 431 Kč/m²) · 1 028 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>1 028 m²</dd><dt>Obec</dt><dd>Libež</dd><dt>Okres</dt><dd><a href="pozemky-okres-benesov.html">Benešov</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Benešov 17 km · Praha 51 km</dd></dl><p><a href="pozemek.html?p=Libe%C5%BE%7C%E2%80%94%7CBene%C5%A1ov%7C49.757%7C14.921&amp;ll=49.7570978,14.921187&amp;v=1028&amp;c=2499000">Otevřít na mapě</a></p><p><a href="index.html?obec=Libe%C5%BE&amp;okres=Bene%C5%A1ov">V obci Libež jsou v nabídce ještě 4 pozemky</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 17 km je tenhle 2. nejdražší.</p><ul><li>2 854 Kč/m² — <a href="pozemek-benesov-popovice-tl5k57.html">Popovice</a>, 2 102 m², 14 km</li><li>2 431 Kč/m² — <b>tenhle pozemek</b>, 1 028 m²</li><li>2 350 Kč/m² — <a href="pozemek-benesov-naceradec-vo9hn5.html">Načeradec</a>, 820 m², 17 km</li><li>2 329 Kč/m² — <a href="pozemek-kutna-hora-ledecko-1vtgibm.html">Ledečko</a>, 1 885 m², 10 km</li><li>1 637 Kč/m² — <a href="pozemek-kutna-hora-zbizuby-1qz55xd.html">Zbizuby</a>, 1 527 m², 11 km</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 1 028 m² — Libež, okres Benešov","description":"Na prodej · 2 499 000 Kč (2 431 Kč/m²) · 1 028 m² · Libež, okres Benešov. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-benesov-libez-16e1jha.html","address":{"@type":"PostalAddress","addressLocality":"Libež","addressRegion":"Benešov","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.7570978,"longitude":14.921187}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Benešov","item":"https://www.parcelaka.cz/pozemky-okres-benesov.html"},{"@type":"ListItem","position":4,"name":"Stavební pozemek 1 028 m² — Libež, okres Benešov","item":"https://www.parcelaka.cz/pozemek-benesov-libez-16e1jha.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Libež|—|Benešov|49.757|14.921","ll":[49.7570978,14.921187],"v":1028,"c":2499000,"r":"data/okres/benesov.json"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -593,6 +630,7 @@
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Benešov 17 km · Praha 51 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Libež jsou v nabídce ještě 4 pozemky","url":"index.html?obec=Libe%C5%BE\u0026okres=Bene%C5%A1ov"}</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 17 km je tenhle 2. nejdražší.","r":[{"s":"pozemek-benesov-popovice-tl5k57.html","o":"Popovice","vym":2102,"m":2854,"km":14},{"ja":1,"o":"Libež","vym":1028,"m":2431},{"s":"pozemek-benesov-naceradec-vo9hn5.html","o":"Načeradec","vym":820,"m":2350,"km":17},{"s":"pozemek-kutna-hora-ledecko-1vtgibm.html","o":"Ledečko","vym":1885,"m":2329,"km":10},{"s":"pozemek-kutna-hora-zbizuby-1qz55xd.html","o":"Zbizuby","vym":1527,"m":1637,"km":11}]}</script>
 <script type="application/json" id="pz-popis-data">"Nabízím k prodeji stavební pozemek o rozloze 1028 m², který je ve výlučném osobním vlastnictví a nachází se v tiché chatové oblasti Zahálka mezi zalesněnou strání a řekou Blanice u obce Libež. Tento rovinatý pozemek orientovaný na jižní stranu, je slunný a je vhodný pro výstavbu zděné patrové rekreační chaty. Na pozemku se nachází dřevěný srub na základech o velikosti 43 m2 s vlastním evidenčním číslem a je určený spíše k demolici."</script>
 </body>
 </html>

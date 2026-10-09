@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 3 892 m² — Bílá Lhota</h1><p><b>400 670 Kč</b> (103 Kč/m²) · 3 892 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>3 892 m²</dd><dt>Obec</dt><dd>Bílá Lhota</dd><dt>Okres</dt><dd><a href="pozemky-okres-olomouc.html">Olomouc</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Olomouc 23 km</dd></dl><p><a href="pozemek.html?p=B%C3%ADl%C3%A1%20Lhota%7C%E2%80%94%7COlomouc%7C49.722%7C16.999&amp;ll=49.721585,16.998594&amp;v=3892&amp;c=400670">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 3 892 m² — Bílá Lhota</h1><p><b>400 670 Kč</b> (103 Kč/m²) · 3 892 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>3 892 m²</dd><dt>Obec</dt><dd>Bílá Lhota</dd><dt>Okres</dt><dd><a href="pozemky-okres-olomouc.html">Olomouc</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Olomouc 23 km</dd></dl><p><a href="pozemek.html?p=B%C3%ADl%C3%A1%20Lhota%7C%E2%80%94%7COlomouc%7C49.722%7C16.999&amp;ll=49.721585,16.998594&amp;v=3892&amp;c=400670">Otevřít na mapě</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z čtyř nabídek do 24 km je tenhle nejdražší.</p><ul><li>103 Kč/m² — <b>tenhle pozemek</b>, 3 892 m²</li><li>75 Kč/m² — <a href="pozemek-prostejov-lipova-z26jy4.html">Lipová</a>, 4 204 m², 23 km</li><li>71 Kč/m² — <a href="pozemek-svitavy-borusov-5ofe5z.html">Borušov</a>, 2 793 m², 19 km</li><li>21 Kč/m² — <a href="pozemek-prostejov-ludmirov-vxqgx7.html">Ludmírov</a>, 1 834 m², 12 km</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Trvalý travní porost 3 892 m² — Bílá Lhota","description":"Na prodej · 400 670 Kč (103 Kč/m²) · 3 892 m² · Bílá Lhota, okres Olomouc. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-olomouc-bila-lhota-r36bbl.html","address":{"@type":"PostalAddress","addressLocality":"Bílá Lhota","addressRegion":"Olomouc","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.721585,"longitude":16.998594}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Olomouc","item":"https://www.parcelaka.cz/pozemky-okres-olomouc.html"},{"@type":"ListItem","position":4,"name":"Trvalý travní porost 3 892 m² — Bílá Lhota","item":"https://www.parcelaka.cz/pozemek-olomouc-bila-lhota-r36bbl.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Bílá Lhota|—|Olomouc|49.722|16.999","ll":[49.721585,16.998594],"v":3892,"c":400670,"r":"data/okres/olomouc.json","pc":"117/87"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -592,6 +629,7 @@
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Olomouc 23 km"</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z čtyř nabídek do 24 km je tenhle nejdražší.","r":[{"ja":1,"o":"Bílá Lhota","vym":3892,"m":103},{"s":"pozemek-prostejov-lipova-z26jy4.html","o":"Lipová","vym":4204,"m":75,"km":23},{"s":"pozemek-svitavy-borusov-5ofe5z.html","o":"Borušov","vym":2793,"m":71,"km":19},{"s":"pozemek-prostejov-ludmirov-vxqgx7.html","o":"Ludmírov","vym":1834,"m":21,"km":12}]}</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka - bez prostředníků a bez zbytečných výdajů navíc! k.ú. Řimice LV č. 293 o výměře 3892 m² • Parcela č. 117/87 - o výměře 3892 m² (Trvalý travní porost) Pomáháme lidem bezpečně investovat do pozemků - ať už hledáte stabilní investici, nebo půdu pro hospodaření. Přidejte se k těm, kteří vsadili na jistotu a zhodnocují své peníze tam, kde má investice pevné základy."</script>
 </body>
 </html>

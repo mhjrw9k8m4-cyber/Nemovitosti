@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Lesní pozemek 1 396 m² — Šemberova, okres Blansko</h1><p><b>35 000 Kč</b> (75 Kč/m²) · 1 396 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Lesní pozemek</dd><dt>Výměra</dt><dd>1 396 m²</dd><dt>Obec</dt><dd>Šemberova</dd><dt>Okres</dt><dd><a href="pozemky-okres-blansko.html">Blansko</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 1/3 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Blansko 15 km · Brno 34 km</dd></dl><p><a href="pozemek.html?p=%C5%A0emberova%7C%E2%80%94%7CBlansko%7C49.498%7C16.682&amp;ll=49.498398,16.681662&amp;v=1396&amp;c=35000">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Lesní pozemek 1 396 m² — Šemberova, okres Blansko</h1><p><b>35 000 Kč</b> (75 Kč/m²) · 1 396 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Lesní pozemek</dd><dt>Výměra</dt><dd>1 396 m²</dd><dt>Obec</dt><dd>Šemberova</dd><dt>Okres</dt><dd><a href="pozemky-okres-blansko.html">Blansko</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 1/3 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Blansko 15 km · Brno 34 km</dd></dl><p><a href="pozemek.html?p=%C5%A0emberova%7C%E2%80%94%7CBlansko%7C49.498%7C16.682&amp;ll=49.498398,16.681662&amp;v=1396&amp;c=35000">Otevřít na mapě</a></p><h2>Srovnatelné spoluvlastnické podíly v okolí</h2><p>Z pěti nabídek do 23 km je tenhle nejlevnější. Ceny jsou za metr, který kupujícímu připadne — výměra je celá parcela.</p><ul><li>1 120 Kč/m² — <a href="pozemek-blansko-nemcice-18ntxw1.html">Němčice</a>, 1 596 m², 6 km</li><li>804 Kč/m² — <a href="pozemek-prostejov-brodek-u-konice-6b1fst.html">Brodek u Konice</a>, 1 761 m², 14 km</li><li>312 Kč/m² — <a href="pozemek-blansko-petrov-1xmpres.html">Petrov</a>, 1 070 m², 13 km</li><li>156 Kč/m² — <a href="pozemek-blansko-svinosice-12v5oi2.html">Svinošice</a>, 771 m², 22 km</li><li>75 Kč/m² — <b>tenhle pozemek</b>, 1 396 m²</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Lesní pozemek 1 396 m² — Šemberova, okres Blansko","description":"Na prodej · 35 000 Kč (75 Kč/m²) · 1 396 m² · Šemberova, okres Blansko. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-blansko-semberova-1msnuf5.html","address":{"@type":"PostalAddress","addressLocality":"Šemberova","addressRegion":"Blansko","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.498398,"longitude":16.681662}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Blansko","item":"https://www.parcelaka.cz/pozemky-okres-blansko.html"},{"@type":"ListItem","position":4,"name":"Lesní pozemek 1 396 m² — Šemberova, okres Blansko","item":"https://www.parcelaka.cz/pozemek-blansko-semberova-1msnuf5.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Šemberova|—|Blansko|49.498|16.682","ll":[49.498398,16.681662],"v":1396,"c":35000,"r":"data/okres/blansko.json"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -592,6 +629,7 @@
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Blansko 15 km · Brno 34 km"</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 23 km je tenhle nejlevnější.","r":[{"s":"pozemek-blansko-nemcice-18ntxw1.html","o":"Němčice","vym":1596,"m":1120,"km":6},{"s":"pozemek-prostejov-brodek-u-konice-6b1fst.html","o":"Brodek u Konice","vym":1761,"m":804,"km":14},{"s":"pozemek-blansko-petrov-1xmpres.html","o":"Petrov","vym":1070,"m":312,"km":13},{"s":"pozemek-blansko-svinosice-12v5oi2.html","o":"Svinošice","vym":771,"m":156,"km":22},{"ja":1,"o":"Šemberova","vym":1396,"m":75}],"p":1}</script>
 <script type="application/json" id="pz-popis-data">"Již 10 let jsme vaše pravá ruka přes investice do pozemků. Připojte se i vy k celé řadě investorů, kteří v pozemcích našli stabilní a výnosnou investici. Nabízíme Vám ke koupi pozemek v katastrálním území Boskovice, LV 10025 a 2983, podíl 1/3 o výměře 1395 m2. Jedná se o prodej podílu, nikoliv 100% vlastnictví. ‌ Parcela č. 6615/38 - o výměře 1924m² (Orná půda) Parcela č. 6869/5 - o výměře 47m² (Zahrada) Parcela č."</script>
 </body>
 </html>

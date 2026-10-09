@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 977 m² — Zálezlice, okres Mělník</h1><p><b>3 500 000 Kč</b> (3 582 Kč/m²) · 977 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>977 m²</dd><dt>Obec</dt><dd>Zálezlice</dd><dt>Okres</dt><dd><a href="pozemky-okres-melnik.html">Mělník</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Mělník 5,3 km · Praha 25 km</dd></dl><p><a href="pozemek.html?p=Z%C3%A1lezlice%7C%E2%80%94%7CM%C4%9Bln%C3%ADk%7C50.308%7C14.438&amp;ll=50.3079227,14.4380423&amp;v=977&amp;c=3500000">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 977 m² — Zálezlice, okres Mělník</h1><p><b>3 500 000 Kč</b> (3 582 Kč/m²) · 977 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>977 m²</dd><dt>Obec</dt><dd>Zálezlice</dd><dt>Okres</dt><dd><a href="pozemky-okres-melnik.html">Mělník</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Mělník 5,3 km · Praha 25 km</dd></dl><p><a href="pozemek.html?p=Z%C3%A1lezlice%7C%E2%80%94%7CM%C4%9Bln%C3%ADk%7C50.308%7C14.438&amp;ll=50.3079227,14.4380423&amp;v=977&amp;c=3500000">Otevřít na mapě</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 22 km je tenhle nejlevnější.</p><ul><li>20 903 Kč/m² — <a href="pozemek-praha-na-kindlovce-1mt4sst.html">Na Kindlovce</a>, 1 239 m², 21 km</li><li>16 900 Kč/m² — <a href="pozemek-praha-zapad-roztoky-10srfgx.html">Roztoky</a>, 826 m², 17 km</li><li>14 155 Kč/m² — <a href="pozemek-praha-praha-zccdtj.html">Praha</a>, 491 m², 18 km</li><li>4 500 Kč/m² — <a href="pozemek-mlada-boleslav-kropacova-vrutice-1bqf5ho.html">Kropáčova Vrutice</a>, 812 m², 20 km</li><li>3 582 Kč/m² — <b>tenhle pozemek</b>, 977 m²</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 977 m² — Zálezlice, okres Mělník","description":"Na prodej · 3 500 000 Kč (3 582 Kč/m²) · 977 m² · Zálezlice, okres Mělník. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-melnik-zalezlice-1479uy4.html","address":{"@type":"PostalAddress","addressLocality":"Zálezlice","addressRegion":"Mělník","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.3079227,"longitude":14.4380423}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Mělník","item":"https://www.parcelaka.cz/pozemky-okres-melnik.html"},{"@type":"ListItem","position":4,"name":"Stavební pozemek 977 m² — Zálezlice, okres Mělník","item":"https://www.parcelaka.cz/pozemek-melnik-zalezlice-1479uy4.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Zálezlice|—|Mělník|50.308|14.438","ll":[50.3079227,14.4380423],"v":977,"c":3500000,"r":"data/okres/melnik.json"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -592,6 +629,7 @@
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Mělník 5,3 km · Praha 25 km"</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 22 km je tenhle nejlevnější.","r":[{"s":"pozemek-praha-na-kindlovce-1mt4sst.html","o":"Na Kindlovce","vym":1239,"m":20903,"km":21},{"s":"pozemek-praha-zapad-roztoky-10srfgx.html","o":"Roztoky","vym":826,"m":16900,"km":17},{"s":"pozemek-praha-praha-zccdtj.html","o":"Praha","vym":491,"m":14155,"km":18},{"s":"pozemek-mlada-boleslav-kropacova-vrutice-1bqf5ho.html","o":"Kropáčova Vrutice","vym":812,"m":4500,"km":20},{"ja":1,"o":"Zálezlice","vym":977,"m":3582}]}</script>
 <script type="application/json" id="pz-popis-data">"Nabízíme k prodeji slunný rovinatý stavební pozemek s výměrou 977 m2 ve venkovské zástavbě v Zálezlicích, části Kozárovice. Pozemek je mimo záplavovou oblast, přístupný po vlastní příjezdové cestě z málo frekventované a tiché komunikace. Je složen ze tří parcel (p. č. 1728, 1733 a st. 68/2). Osobní vlastnictví, žádné právní vady (žádná věcná břemena atd.)."</script>
 </body>
 </html>

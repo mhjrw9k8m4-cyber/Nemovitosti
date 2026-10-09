@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 1 798 m² — Vrbka, okres Kroměříž</h1><p><b>72 000 Kč</b> (40 Kč/m²) · 1 798 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>1 798 m²</dd><dt>Obec</dt><dd>Vrbka</dd><dt>Okres</dt><dd><a href="pozemky-okres-kromeriz.html">Kroměříž</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Kroměříž 9,1 km · Olomouc 44 km</dd></dl><p><a href="pozemek.html?p=Vrbka%7C%E2%80%94%7CKrom%C4%9B%C5%99%C3%AD%C5%BE%7C49.217%7C17.412&amp;ll=49.216713,17.412289&amp;v=1798&amp;c=72000">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 1 798 m² — Vrbka, okres Kroměříž</h1><p><b>72 000 Kč</b> (40 Kč/m²) · 1 798 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>1 798 m²</dd><dt>Obec</dt><dd>Vrbka</dd><dt>Okres</dt><dd><a href="pozemky-okres-kromeriz.html">Kroměříž</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Kroměříž 9,1 km · Olomouc 44 km</dd></dl><p><a href="pozemek.html?p=Vrbka%7C%E2%80%94%7CKrom%C4%9B%C5%99%C3%AD%C5%BE%7C49.217%7C17.412&amp;ll=49.216713,17.412289&amp;v=1798&amp;c=72000">Otevřít na mapě</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 6 km je tenhle nejlevnější.</p><ul><li>60 Kč/m² — <a href="pozemek-kromeriz-kromeriz-8yw0ov.html">Kroměříž</a>, 3 349 m², 4 km</li><li>50 Kč/m² — <a href="pozemek-kromeriz-lubna-o3fy6h.html">Lubná</a>, 5 000 m², 2 km</li><li>48 Kč/m² — <a href="pozemek-kromeriz-selesovice-odazu2.html">Šelešovice</a>, 2 910 m², 5 km</li><li>43 Kč/m² — <a href="pozemek-zlin-belov-i79r55.html">Bělov</a>, 2 254 m², 5 km</li><li>40 Kč/m² — <b>tenhle pozemek</b>, 1 798 m²</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 1 798 m² — Vrbka, okres Kroměříž","description":"Na prodej · 72 000 Kč (40 Kč/m²) · 1 798 m² · Vrbka, okres Kroměříž. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-kromeriz-vrbka-1nf13vj.html","address":{"@type":"PostalAddress","addressLocality":"Vrbka","addressRegion":"Kroměříž","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.216713,"longitude":17.412289}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Kroměříž","item":"https://www.parcelaka.cz/pozemky-okres-kromeriz.html"},{"@type":"ListItem","position":4,"name":"Orná půda 1 798 m² — Vrbka, okres Kroměříž","item":"https://www.parcelaka.cz/pozemek-kromeriz-vrbka-1nf13vj.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Vrbka|—|Kroměříž|49.217|17.412","ll":[49.216713,17.412289],"v":1798,"c":72000,"r":"data/okres/kromeriz.json"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -592,6 +629,7 @@
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Kroměříž 9,1 km · Olomouc 44 km"</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 6 km je tenhle nejlevnější.","r":[{"s":"pozemek-kromeriz-kromeriz-8yw0ov.html","o":"Kroměříž","vym":3349,"m":60,"km":4},{"s":"pozemek-kromeriz-lubna-o3fy6h.html","o":"Lubná","vym":5000,"m":50,"km":2},{"s":"pozemek-kromeriz-selesovice-odazu2.html","o":"Šelešovice","vym":2910,"m":48,"km":5},{"s":"pozemek-zlin-belov-i79r55.html","o":"Bělov","vym":2254,"m":43,"km":5},{"ja":1,"o":"Vrbka","vym":1798,"m":40}]}</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka - bez prostředníků a bez zbytečných výdajů navíc! k.ú. Vrbka u Sulimova LV č. 733 o výměře 1798 m² • Parcela č. 2109 - o výměře 1798 m² (Orná půda) Přístupová cesta je zajištěna přes pozemky obce a kraje. Pomáháme lidem bezpečně investovat do pozemků - ať už hledáte stabilní investici, nebo půdu pro hospodaření. Přidejte se k těm, kteří vsadili na jistotu a zhodnocují své peníze tam, kde má investice pevné základy."</script>
 </body>
 </html>

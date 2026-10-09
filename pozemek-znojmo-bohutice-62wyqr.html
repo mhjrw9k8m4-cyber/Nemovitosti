@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 1 112 m² — Bohutice, okres Znojmo</h1><p><b>1 990 000 Kč</b> (1 790 Kč/m²) · 1 112 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>1 112 m²</dd><dt>Obec</dt><dd>Bohutice</dd><dt>Okres</dt><dd><a href="pozemky-okres-znojmo.html">Znojmo</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Znojmo 28 km · Brno 29 km</dd></dl><p><a href="pozemek.html?p=Bohutice%7C%E2%80%94%7CZnojmo%7C48.994%7C16.360&amp;ll=48.994459973801,16.359513085114&amp;v=1112&amp;c=1990000">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 1 112 m² — Bohutice, okres Znojmo</h1><p><b>1 990 000 Kč</b> (1 790 Kč/m²) · 1 112 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>1 112 m²</dd><dt>Obec</dt><dd>Bohutice</dd><dt>Okres</dt><dd><a href="pozemky-okres-znojmo.html">Znojmo</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Znojmo 28 km · Brno 29 km</dd></dl><p><a href="pozemek.html?p=Bohutice%7C%E2%80%94%7CZnojmo%7C48.994%7C16.360&amp;ll=48.994459973801,16.359513085114&amp;v=1112&amp;c=1990000">Otevřít na mapě</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 19 km je tenhle 4. nejdražší.</p><ul><li>7 648 Kč/m² — <a href="pozemek-breclav-brod-nad-dyji-1whz7nj.html">Brod nad Dyjí</a>, 523 m², 18 km</li><li>5 766 Kč/m² — <a href="pozemek-brno-venkov-vojkovice-v0ox40.html">Vojkovice</a>, 2 428 m², 19 km</li><li>2 001 Kč/m² — <a href="pozemek-brno-venkov-dolni-kounice-1hult3v.html">Dolní Kounice</a>, 1 849 m², 12 km</li><li>1 790 Kč/m² — <b>tenhle pozemek</b>, 1 112 m²</li><li>1 155 Kč/m² — <a href="pozemek-brno-venkov-hrusovany-u-brna-14r7lxi.html">Hrušovany u Brna</a>, 2 415 m², 17 km</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 1 112 m² — Bohutice, okres Znojmo","description":"Na prodej · 1 990 000 Kč (1 790 Kč/m²) · 1 112 m² · Bohutice, okres Znojmo. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-znojmo-bohutice-62wyqr.html","address":{"@type":"PostalAddress","addressLocality":"Bohutice","addressRegion":"Znojmo","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":48.994459973801,"longitude":16.359513085114}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Znojmo","item":"https://www.parcelaka.cz/pozemky-okres-znojmo.html"},{"@type":"ListItem","position":4,"name":"Stavební pozemek 1 112 m² — Bohutice, okres Znojmo","item":"https://www.parcelaka.cz/pozemek-znojmo-bohutice-62wyqr.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Bohutice|—|Znojmo|48.994|16.360","ll":[48.994459973801,16.359513085114],"v":1112,"c":1990000,"r":"data/okres/znojmo.json"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -592,6 +629,7 @@
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Znojmo 28 km · Brno 29 km"</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 19 km je tenhle 4. nejdražší.","r":[{"s":"pozemek-breclav-brod-nad-dyji-1whz7nj.html","o":"Brod nad Dyjí","vym":523,"m":7648,"km":18},{"s":"pozemek-brno-venkov-vojkovice-v0ox40.html","o":"Vojkovice","vym":2428,"m":5766,"km":19},{"s":"pozemek-brno-venkov-dolni-kounice-1hult3v.html","o":"Dolní Kounice","vym":1849,"m":2001,"km":12},{"ja":1,"o":"Bohutice","vym":1112,"m":1790},{"s":"pozemek-brno-venkov-hrusovany-u-brna-14r7lxi.html","o":"Hrušovany u Brna","vym":2415,"m":1155,"km":17}]}</script>
 <script type="application/json" id="pz-popis-data">"Nabízím prodej stavebního pozemku o rozloze 1112 m², který se nachází v atraktivní lokalitě a je připraven pro budoucí stavební projekt. Pozemek se vyznačuje skvělou dostupností a příjemným okolím, což z něj činí ideální volbu pro investory i soukromé zájemce hledající místo pro svůj nový domov. V případě zájmu mě neváhejte kontaktovat skrze zprávy či komunikační platformu, kde rádi poskytnu bližší informace o této nabídce."</script>
 </body>
 </html>

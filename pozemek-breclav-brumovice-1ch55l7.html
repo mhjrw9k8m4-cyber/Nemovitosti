@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Vinice 14 781 m² — Brumovice, okres Břeclav</h1><p><b>685 053 Kč</b> (46 Kč/m²) · 14 781 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Vinice</dd><dt>Výměra</dt><dd>14 781 m²</dd><dt>Obec</dt><dd>Brumovice</dd><dt>Okres</dt><dd><a href="pozemky-okres-breclav.html">Břeclav</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Břeclav 21 km · Brno 34 km</dd></dl><p><a href="pozemek.html?p=Brumovice%7C%E2%80%94%7CB%C5%99eclav%7C48.947%7C16.883&amp;ll=48.94683,16.883111&amp;v=14781&amp;c=685053">Otevřít na mapě</a></p><p><a href="index.html?obec=Brumovice&amp;okres=B%C5%99eclav">V obci Brumovice je v nabídce ještě 7 pozemků</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Vinice 14 781 m² — Brumovice, okres Břeclav</h1><p><b>685 053 Kč</b> (46 Kč/m²) · 14 781 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Vinice</dd><dt>Výměra</dt><dd>14 781 m²</dd><dt>Obec</dt><dd>Brumovice</dd><dt>Okres</dt><dd><a href="pozemky-okres-breclav.html">Břeclav</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Břeclav 21 km · Brno 34 km</dd></dl><p><a href="pozemek.html?p=Brumovice%7C%E2%80%94%7CB%C5%99eclav%7C48.947%7C16.883&amp;ll=48.94683,16.883111&amp;v=14781&amp;c=685053">Otevřít na mapě</a></p><p><a href="index.html?obec=Brumovice&amp;okres=B%C5%99eclav">V obci Brumovice je v nabídce ještě 7 pozemků</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 22 km je tenhle nejlevnější.</p><ul><li>110 Kč/m² — <a href="pozemek-brno-venkov-zidlochovice-hxtc25.html">Židlochovice</a>, 7 721 m², 22 km</li><li>99 Kč/m² — <a href="pozemek-breclav-kobyli-xjbjsd.html">Kobylí</a>, 11 589 m², 3 km</li><li>64 Kč/m² — <a href="pozemek-breclav-sedlec-1mc0vkd.html">Sedlec</a>, 35 932 m², 21 km</li><li>55 Kč/m² — <a href="pozemek-hodonin-cejkovice-t2i7kx.html">Čejkovice</a>, 11 743 m², 7 km</li><li>46 Kč/m² — <b>tenhle pozemek</b>, 14 781 m²</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Vinice 14 781 m² — Brumovice, okres Břeclav","description":"Na prodej · 685 053 Kč (46 Kč/m²) · 14 781 m² · Brumovice, okres Břeclav. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-breclav-brumovice-1ch55l7.html","address":{"@type":"PostalAddress","addressLocality":"Brumovice","addressRegion":"Břeclav","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":48.94683,"longitude":16.883111}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Břeclav","item":"https://www.parcelaka.cz/pozemky-okres-breclav.html"},{"@type":"ListItem","position":4,"name":"Vinice 14 781 m² — Brumovice, okres Břeclav","item":"https://www.parcelaka.cz/pozemek-breclav-brumovice-1ch55l7.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Brumovice|—|Břeclav|48.947|16.883","ll":[48.94683,16.883111],"v":14781,"c":685053,"r":"data/okres/breclav.json"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -593,6 +630,7 @@
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Břeclav 21 km · Brno 34 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Brumovice je v nabídce ještě 7 pozemků","url":"index.html?obec=Brumovice\u0026okres=B%C5%99eclav"}</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 22 km je tenhle nejlevnější.","r":[{"s":"pozemek-brno-venkov-zidlochovice-hxtc25.html","o":"Židlochovice","vym":7721,"m":110,"km":22},{"s":"pozemek-breclav-kobyli-xjbjsd.html","o":"Kobylí","vym":11589,"m":99,"km":3},{"s":"pozemek-breclav-sedlec-1mc0vkd.html","o":"Sedlec","vym":35932,"m":64,"km":21},{"s":"pozemek-hodonin-cejkovice-t2i7kx.html","o":"Čejkovice","vym":11743,"m":55,"km":7},{"ja":1,"o":"Brumovice","vym":14781,"m":46}]}</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka - bez prostředníků a bez zbytečných výdajů navíc! k.ú. Brumovice LV č. 1889 o výměře 14781 m² • Parcela č. 1960/110 - o výměře 42 m² (Ostatní plocha) • Parcela č. 1960/111 - o výměře 14 m² (Ostatní plocha) • Parcela č. 1960/135 - o výměře 171 m² (Ostatní plocha) • Parcela č. 1960/16 - o výměře 56 m² (Vinice) • Parcela č. 1960/21 - o výměře 119 m² (Vinice) • Parcela č. 1960/26 - o výměře 30 m² (Vinice) • Parcela č."</script>
 </body>
 </html>

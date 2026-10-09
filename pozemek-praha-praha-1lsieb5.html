@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 5 802 m² — Praha, okres Praha</h1><p><b>5 799 000 Kč</b> (999 Kč/m²) · 5 802 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>5 802 m²</dd><dt>Obec</dt><dd>Praha</dd><dt>Okres</dt><dd><a href="pozemky-okres-praha.html">Praha</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Praha 10 km</dd></dl><p><a href="pozemek.html?p=Praha%7C%E2%80%94%7CPraha%7C50.024%7C14.530&amp;ll=50.023721,14.529916&amp;v=5802&amp;c=5799000">Otevřít na mapě</a></p><p><a href="index.html?obec=Praha&amp;okres=Praha">V okrese Praha je v nabídce ještě 16 pozemků</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 5 802 m² — Praha, okres Praha</h1><p><b>5 799 000 Kč</b> (999 Kč/m²) · 5 802 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>5 802 m²</dd><dt>Obec</dt><dd>Praha</dd><dt>Okres</dt><dd><a href="pozemky-okres-praha.html">Praha</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Praha 10 km</dd></dl><p><a href="pozemek.html?p=Praha%7C%E2%80%94%7CPraha%7C50.024%7C14.530&amp;ll=50.023721,14.529916&amp;v=5802&amp;c=5799000">Otevřít na mapě</a></p><p><a href="index.html?obec=Praha&amp;okres=Praha">V okrese Praha je v nabídce ještě 16 pozemků</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 24 km je tenhle nejdražší.</p><ul><li>999 Kč/m² — <b>tenhle pozemek</b>, 5 802 m²</li><li>265 Kč/m² — <a href="pozemek-praha-vychod-mirosovice-1wfe7yy.html">Mirošovice</a>, 11 933 m², 18 km</li><li>152 Kč/m² — <a href="pozemek-praha-zapad-bojanovice-14t8cea.html">Bojanovice</a>, 3 606 m², 23 km</li><li>150 Kč/m² — <a href="pozemek-praha-praha-xep0k3.html">Praha</a>, 5 394 m², 16 km</li><li>39 Kč/m² — <a href="pozemek-benesov-netvorice-nzbidt.html">Netvořice</a>, 6 305 m², 21 km</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Trvalý travní porost 5 802 m² — Praha, okres Praha","description":"Na prodej · 5 799 000 Kč (999 Kč/m²) · 5 802 m² · Praha, okres Praha. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-praha-praha-1lsieb5.html","address":{"@type":"PostalAddress","addressLocality":"Praha","addressRegion":"Praha","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.023721,"longitude":14.529916}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Praha","item":"https://www.parcelaka.cz/pozemky-okres-praha.html"},{"@type":"ListItem","position":4,"name":"Trvalý travní porost 5 802 m² — Praha, okres Praha","item":"https://www.parcelaka.cz/pozemek-praha-praha-1lsieb5.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Praha|—|Praha|50.024|14.530","ll":[50.023721,14.529916],"v":5802,"c":5799000,"r":"data/okres/praha.json"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -593,6 +630,7 @@
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Praha 10 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V okrese Praha je v nabídce ještě 16 pozemků","url":"index.html?obec=Praha\u0026okres=Praha"}</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 24 km je tenhle nejdražší.","r":[{"ja":1,"o":"Praha","vym":5802,"m":999},{"s":"pozemek-praha-vychod-mirosovice-1wfe7yy.html","o":"Mirošovice","vym":11933,"m":265,"km":18},{"s":"pozemek-praha-zapad-bojanovice-14t8cea.html","o":"Bojanovice","vym":3606,"m":152,"km":23},{"s":"pozemek-praha-praha-xep0k3.html","o":"Praha","vym":5394,"m":150,"km":16},{"s":"pozemek-benesov-netvorice-nzbidt.html","o":"Netvořice","vym":6305,"m":39,"km":21}]}</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka – bez prostředníků a bez zbytečných výdajů navíc! k.ú. Újezd u Průhonic LV č. 29 o výměře 5802 m² • Parcela č. 265/255 - o výměře 706 m² (Trvalý travní porost) • Parcela č. 265/257 - o výměře 331 m² (Ostatní plocha) • Parcela č. 265/259 - o výměře 255 m² (Ostatní plocha) • Parcela č. 265/260 - o výměře 637 m² (Trvalý travní porost) • Parcela č. 265/262 - o výměře 225 m² (Ostatní plocha) • Parcela č."</script>
 </body>
 </html>

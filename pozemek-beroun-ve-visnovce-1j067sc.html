@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 1 903 m² — Ve Višňovce, okres Beroun</h1><p><b>12 950 000 Kč</b> (6 805 Kč/m²) · 1 903 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>1 903 m²</dd><dt>Obec</dt><dd>Ve Višňovce</dd><dt>Okres</dt><dd><a href="pozemky-okres-beroun.html">Beroun</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Beroun 8,6 km · Praha 20 km</dd></dl><p><a href="pozemek.html?p=Ve%20Vi%C5%A1%C5%88ovce%7C%E2%80%94%7CBeroun%7C49.994%7C14.183&amp;ll=49.9937487,14.1828896&amp;v=1903&amp;c=12950000">Otevřít na mapě</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 1 903 m² — Ve Višňovce, okres Beroun</h1><p><b>12 950 000 Kč</b> (6 805 Kč/m²) · 1 903 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>1 903 m²</dd><dt>Obec</dt><dd>Ve Višňovce</dd><dt>Okres</dt><dd><a href="pozemky-okres-beroun.html">Beroun</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Beroun 8,6 km · Praha 20 km</dd></dl><p><a href="pozemek.html?p=Ve%20Vi%C5%A1%C5%88ovce%7C%E2%80%94%7CBeroun%7C49.994%7C14.183&amp;ll=49.9937487,14.1828896&amp;v=1903&amp;c=12950000">Otevřít na mapě</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 12 km je tenhle 2. nejdražší.</p><ul><li>13 652 Kč/m² — <a href="pozemek-praha-zapad-obloukova-1eygclu.html">Oblouková</a>, 805 m², 5 km</li><li>6 805 Kč/m² — <b>tenhle pozemek</b>, 1 903 m²</li><li>6 180 Kč/m² — <a href="pozemek-beroun-svinare-e1e80.html">Svinaře</a>, 801 m², 12 km</li><li>5 676 Kč/m² — <a href="pozemek-praha-zapad-ptice-12y73kn.html">Ptice</a>, 749 m², 7 km</li><li>5 336 Kč/m² — <a href="pozemek-beroun-svinare-a0fnr9.html">Svinaře</a>, 1 593 m², 10 km</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 1 903 m² — Ve Višňovce, okres Beroun","description":"Na prodej · 12 950 000 Kč (6 805 Kč/m²) · 1 903 m² · Ve Višňovce, okres Beroun. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-beroun-ve-visnovce-1j067sc.html","address":{"@type":"PostalAddress","addressLocality":"Ve Višňovce","addressRegion":"Beroun","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.9937487,"longitude":14.1828896}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Beroun","item":"https://www.parcelaka.cz/pozemky-okres-beroun.html"},{"@type":"ListItem","position":4,"name":"Stavební pozemek 1 903 m² — Ve Višňovce, okres Beroun","item":"https://www.parcelaka.cz/pozemek-beroun-ve-visnovce-1j067sc.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Ve Višňovce|—|Beroun|49.994|14.183","ll":[49.9937487,14.1828896],"v":1903,"c":12950000,"r":"data/okres/beroun.json","h":[["2026-09-15",13500000],["2026-10-05",12950000]]};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -592,6 +629,7 @@
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Beroun 8,6 km · Praha 20 km"</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 12 km je tenhle 2. nejdražší.","r":[{"s":"pozemek-praha-zapad-obloukova-1eygclu.html","o":"Oblouková","vym":805,"m":13652,"km":5},{"ja":1,"o":"Ve Višňovce","vym":1903,"m":6805},{"s":"pozemek-beroun-svinare-e1e80.html","o":"Svinaře","vym":801,"m":6180,"km":12},{"s":"pozemek-praha-zapad-ptice-12y73kn.html","o":"Ptice","vym":749,"m":5676,"km":7},{"s":"pozemek-beroun-svinare-a0fnr9.html","o":"Svinaře","vym":1593,"m":5336,"km":10}]}</script>
 <script type="application/json" id="pz-popis-data">"Hledáte místo, které nabídne soukromí, klid, přírodu a zároveň rychlou dostupnost do Prahy? Právě jste ho našli. Nabízíme k prodeji plně zasíťovaný stavební pozemek o výměře 1 903 m² v prestižní lokalitě Vysoký Újezd u Berouna. Jedná se o krajní svažitý pozemek přímo navazující na les (s dostatečným odstupem z hlediska ochranného pásma), situovaný v klidné ulici na okraji zástavby."</script>
 </body>
 </html>

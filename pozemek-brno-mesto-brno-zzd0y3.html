@@ -174,6 +174,43 @@
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
       line-height:1.62; color:var(--text-ondark);}
+    /* ===== SROVNATELNÉ POZEMKY ======================================
+       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
+       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
+       stojí mezi ostatními na svém místě a je podbarvený — tím je
+       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
+
+       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
+       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
+       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
+       najít — přesně to se stalo na stránce s cenami pozemků.
+
+       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
+    .srv{margin:0;}
+    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
+      line-height:1.6; color:var(--text-ondark);}
+    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+      align-items:center; column-gap:16px; row-gap:0;
+      padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
+    .srv-radek:first-child{border-top:0;}
+    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+      color:var(--text-ondark); text-decoration:none;}
+    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
+    a.srv-kde:hover{color:var(--copper-bright);}
+    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
+      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
+      font-size:16px; font-weight:700; color:var(--text-ondark);
+      font-variant-numeric:tabular-nums; white-space:nowrap;}
+    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
+       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
+       i pro toho, kdo barvy nerozliší. */
+    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
+    .srv-ja .srv-kde{font-weight:700;}
+    .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
+      line-height:1.55; color:var(--text-ondark-mute);}
     
 
     
@@ -537,7 +574,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Zahrada 631 m² — Brno, okres Brno-město</h1><p><b>2 500 000 Kč</b> (3 962 Kč/m²) · 631 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Zahrada</dd><dt>Výměra</dt><dd>631 m²</dd><dt>Obec</dt><dd>Brno</dd><dt>Okres</dt><dd><a href="pozemky-okres-brno-mesto.html">Brno-město</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Brno 4,1 km</dd></dl><p><a href="pozemek.html?p=Brno%7C%E2%80%94%7CBrno-m%C4%9Bsto%7C49.199%7C16.552&amp;ll=49.199115946162,16.552102644826&amp;v=631&amp;c=2500000">Otevřít na mapě</a></p><p><a href="index.html?obec=Brno&amp;okres=Brno-m%C4%9Bsto">V obci Brno je v nabídce ještě 16 pozemků</a></p></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Zahrada 631 m² — Brno, okres Brno-město</h1><p><b>2 500 000 Kč</b> (3 962 Kč/m²) · 631 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Zahrada</dd><dt>Výměra</dt><dd>631 m²</dd><dt>Obec</dt><dd>Brno</dd><dt>Okres</dt><dd><a href="pozemky-okres-brno-mesto.html">Brno-město</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Brno 4,1 km</dd></dl><p><a href="pozemek.html?p=Brno%7C%E2%80%94%7CBrno-m%C4%9Bsto%7C49.199%7C16.552&amp;ll=49.199115946162,16.552102644826&amp;v=631&amp;c=2500000">Otevřít na mapě</a></p><p><a href="index.html?obec=Brno&amp;okres=Brno-m%C4%9Bsto">V obci Brno je v nabídce ještě 16 pozemků</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 17 km je tenhle nejdražší.</p><ul><li>3 962 Kč/m² — <b>tenhle pozemek</b>, 631 m²</li><li>2 832 Kč/m² — <a href="pozemek-brno-mesto-brno-8zvlhn.html">Brno</a>, 1 130 m², 1 km</li><li>157 Kč/m² — <a href="pozemek-brno-mesto-slatina-afnvfy.html">Slatina</a>, 221 m², 11 km</li><li>127 Kč/m² — <a href="pozemek-brno-mesto-brnenske-ivanovice-okcquz.html">Brněnské Ivanovice</a>, 714 m², 8 km</li><li>17 Kč/m² — <a href="pozemek-brno-venkov-pravlov-df6tw3.html">Pravlov</a>, 1 207 m², 17 km</li></ul></article></div></div>
   </div>
 </main>
 
@@ -578,7 +615,7 @@
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Zahrada 631 m² — Brno, okres Brno-město","description":"Na prodej · 2 500 000 Kč (3 962 Kč/m²) · 631 m² · Brno, okres Brno-město. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-brno-mesto-brno-zzd0y3.html","address":{"@type":"PostalAddress","addressLocality":"Brno","addressRegion":"Brno-město","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.199115946162,"longitude":16.552102644826}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Brno-město","item":"https://www.parcelaka.cz/pozemky-okres-brno-mesto.html"},{"@type":"ListItem","position":4,"name":"Zahrada 631 m² — Brno, okres Brno-město","item":"https://www.parcelaka.cz/pozemek-brno-mesto-brno-zzd0y3.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Brno|—|Brno-město|49.199|16.552","ll":[49.199115946162,16.552102644826],"v":631,"c":2500000,"r":"data/okres/brno-mesto.json"};</script>
-<script src="js/min/pozemek.js?v=57b58e5d"></script>
+<script src="js/min/pozemek.js?v=01d7de18"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -593,6 +630,7 @@
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Brno 4,1 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Brno je v nabídce ještě 16 pozemků","url":"index.html?obec=Brno\u0026okres=Brno-m%C4%9Bsto"}</script>
+<script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 17 km je tenhle nejdražší.","r":[{"ja":1,"o":"Brno","vym":631,"m":3962},{"s":"pozemek-brno-mesto-brno-8zvlhn.html","o":"Brno","vym":1130,"m":2832,"km":1},{"s":"pozemek-brno-mesto-slatina-afnvfy.html","o":"Slatina","vym":221,"m":157,"km":11},{"s":"pozemek-brno-mesto-brnenske-ivanovice-okcquz.html","o":"Brněnské Ivanovice","vym":714,"m":127,"km":8},{"s":"pozemek-brno-venkov-pravlov-df6tw3.html","o":"Pravlov","vym":1207,"m":17,"km":17}]}</script>
 <script type="application/json" id="pz-popis-data">"Nabízím k prodeji pozemek o výměře 631 m² v zahrádkářské kolonii v Pisárkách, ideálně využitelný jako zahrada. Součástí pozemku je částečně podsklepená chatka o zast. ploše 11 m² k rekonstrukci. Vedení elektriky je na hranici pozemku, není zařízená přípojka. Voda je zatím potřeba řešit jímáním dešťové vody či dovážením. Dle územního plánu (ÚP) je v plánu vybudovat dálkový přivaděč vody opět podél hranice pozemku."</script>
 </body>
 </html>

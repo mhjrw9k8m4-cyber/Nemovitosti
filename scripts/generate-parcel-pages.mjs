@@ -23,6 +23,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import * as SROV from './srovnatelne.mjs';
 import { createRequire } from 'node:module';
 import { jsonVeStrance } from './json-do-stranky.mjs';
 /* Historie ceny jedné nabídky — z archivu, ne z posledního běhu robota.
@@ -564,6 +565,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
      skládání téhož textu by se rozešla. */
   const vzdalenosti = OKRUH.popisVzdalenosti(d);
   const vObec = vObciOdkaz(d);
+  const srov = srovnaniPro(d);
   const staticky =
     `<article class="pz-staticky">`
     + `<h1>${esc(titul)}</h1>`
@@ -588,6 +590,19 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     + `</dl>`
     + `<p><a href="pozemek.html?p=${encodeURIComponent(pkey(d))}&amp;ll=${d.lat},${d.lng}&amp;v=${d.area || 0}&amp;c=${d.price || 0}">Otevřít na mapě</a></p>`
     + (vObec ? `<p><a href="${esc(vObec.url)}">${esc(vObec.text)}</a></p>` : '')
+    /* SROVNÁNÍ I DO STATICKÉ ČÁSTI. Je to jediná část stránky, kterou
+       nejde opsat odjinud, a zároveň proveže 2 053 stránek pozemků
+       navzájem — dosud vedl z každé z nich jediný odkaz jinam (do
+       okresu). Pro vyhledávač je to cesta dovnitř webu, pro člověka
+       bez JavaScriptu plnohodnotný obsah. */
+    + (srov ? `<h2>${srov.p ? 'Srovnatelné spoluvlastnické podíly v okolí'
+      : 'Srovnatelné pozemky v okolí'}</h2><p>${esc(srov.v)}`
+      + (srov.p ? ' Ceny jsou za metr, který kupujícímu připadne — výměra je celá parcela.' : '')
+      + `</p><ul>`
+      + srov.r.map((x) => `<li>${fmt(x.m)} Kč/m² — `
+        + (x.ja ? `<b>tenhle pozemek</b>` : `<a href="${esc(x.s)}">${esc(x.o)}</a>`)
+        + `, ${fmt(x.vym)} m²${x.km ? ', ' + x.km + ' km' : ''}</li>`).join('')
+      + `</ul>` : '')
     + `</article>`;
   h = h.replace(/<div id="pz-detail">[\s\S]*?<\/div>/,
     `<div id="pz-detail">${staticky}</div>`);
@@ -635,6 +650,14 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
   if (vObec) {
     h = h.replace(/(<\/body>)/,
       `<script type="application/json" id="pz-obec-data">${jsonVeStrance(vObec)}</scr` + `ipt>\n$1`);
+  }
+  /* Hotový seznam, ne data k dopočítání: pořadí skládá jedno místo
+     (scripts/srovnatelne.mjs) a prohlížeč ho jen vypisuje. Názvy obcí
+     chodí z cizích inzerátů, proto přes jsonVeStrance a v prohlížeči
+     přes esc(). */
+  if (srov) {
+    h = h.replace(/(<\/body>)/,
+      `<script type="application/json" id="pz-srovnani-data">${jsonVeStrance(srov)}</scr` + `ipt>\n$1`);
   }
   const popisInzerenta = POPISY[klicNabidky(d)];
   if (popisInzerenta) {
@@ -709,6 +732,72 @@ export function vObciOdkaz(d) {
              : `V ${kde} je v nabídce ještě ${fmt(n)} pozemků`);
   return { text: text, url: 'index.html?obec=' + encodeURIComponent(d.place)
     + '&okres=' + encodeURIComponent(d.okres) };
+}
+
+/* ===== SROVNATELNÉ POZEMKY =========================================
+   Stránka uměla vynést verdikt („dražší než 98 % pozemků téhož druhu
+   v kraji") a neukázala k němu jediný důkaz. Kdo si ho chtěl ověřit,
+   musel odejít na mapu a hledat sám — a většina lidí si prostě vybere,
+   jestli webu věřit, nebo ne. Tohle to otáčí: pod verdiktem stojí čtyři
+   konkrétní nabídky, se kterými se tenhle pozemek porovnával, i s cenami
+   a s odkazy. Pořadí ve větě si každý může v tom seznamu přepočítat.
+
+   Pravidla výběru (týž druh, výměra ±3×, do 25 km) a hlavně jejich
+   zdůvodnění leží v scripts/srovnatelne.mjs; hlídá je
+   scripts/test-srovnatelne.mjs. Tenhle soubor jen dohledá, která
+   nabídka má kterou stránku, a složí z toho text.
+
+   MODEL SE STAVÍ Z TÝCHŽ DAT jako verdikt o kus výš, takže se nemůže
+   stát, aby stránka tvrdila „dražší než 98 %" a pod tím vypsala čtyři
+   dražší. A z porovnávaných nabídek vypadne všechno, čemu model sám
+   nevěří: spoluvlastnické podíly (cena je za zlomek, výměra za celou
+   parcelu) a ceny, u kterých stránka jinde hlásí „cena k ověření".
+   Srovnávat se špatně načtenou cenou je horší než nesrovnávat. */
+let SROVNANI = null;
+let SROVNANI_MODEL = null;
+export function pripravSrovnani(mapa) {
+  const polozky = [];
+  const MODEL = SROVNANI_MODEL || (SROVNANI_MODEL = CENY.postav(nabidky()));
+  for (const { d, soubor } of mapa.values()) {
+    if (!d || d.type !== 'sale' || poTerminu(d)) continue;
+    if (!(d.price > 0 && d.area >= 100 && d.area <= 500000)) continue;
+    if (!isFinite(d.lat) || !isFinite(d.lng)) continue;
+    if (MODEL.neduveryhodna && MODEL.neduveryhodna(d)) continue;
+    const m2 = CENY.zaMetr(d);
+    if (!(m2 > 0)) continue;
+    /* PODÍL SE SROVNÁVÁ JEN S PODÍLEM, a dělá to tahle jediná hvězdička
+       v klíči skupiny — tedy ne pravidlem, na které se dá zapomenout,
+       ale tím, že do sebe ty dvě hromádky prostě nezapadnou.
+       Nejdřív byly podíly z porovnávání vyhozené úplně. Jenže je jich
+       497 z 1 814 nabídek k prodeji, tedy víc než čtvrtina webu, a byly
+       to zrovna ty stránky, kde je člověk nejvíc ztracený: cena za metr
+       vypadá sedmkrát levněji, než je trh.
+       Porovnávat podíl s celou parcelou nejde (podíl se nedá oplotit
+       ani samostatně prodat, a trh to ocení), porovnat ho s jiným
+       podílem jde dobře. js/ceny.js u obou přepočítává cenu na metr,
+       KTERÝ KUPUJÍCÍMU PŘIPADNE, takže se srovnává totéž. Pokrytí
+       stránek tím vyskočilo z 855 na 1 131. */
+    polozky.push({ id: soubor, soubor, d, pk: pkey(d),
+      skupina: MODEL.druhGroup(d.druh) + (d.podil ? '|podíl' : ''),
+      podil: !!d.podil, area: d.area, m2: Math.round(m2), lat: d.lat, lng: d.lng });
+  }
+  SROVNANI = new Map();
+  for (const ja of polozky) {
+    const s = SROV.srovnatelne(ja, polozky);
+    if (!s) continue;
+    /* Do stránky jde hotový seznam VČETNĚ tohohle pozemku na svém místě.
+       Kdyby se vkládal až v prohlížeči, počítala by si pořadí dvě místa
+       a to druhé by se jednou spletlo. */
+    const radky = s.polozky.map((p) => ({ s: p.x.soubor, o: p.x.d.place,
+      vym: p.x.area, m: p.x.m2, km: Math.max(1, Math.round(p.km)) }));
+    radky.splice(s.poradi - 1, 0, { ja: 1, o: ja.d.place, vym: ja.area, m: ja.m2 });
+    SROVNANI.set(klicNabidky(ja.d),
+      Object.assign({ v: SROV.veta(s), r: radky }, ja.podil ? { p: 1 } : {}));
+  }
+  return SROVNANI;
+}
+export function srovnaniPro(d) {
+  return (SROVNANI && SROVNANI.get(klicNabidky(d))) || null;
 }
 
 /* KTERÉ NABÍDCE PATŘÍ KTERÁ STRÁNKA — a proč to bydlí tady.
@@ -789,6 +878,9 @@ export function generuj() {
   const vsechny = [...mapa.values()].map((x) => x.d);
   pripravRozliseni(vsechny);
   pripravRozliseniPopisu(vsechny);
+  /* Srovnání potřebuje vidět všechny stránky naráz (hledá se podle
+     vzdálenosti, ne podle okresu), takže taky dřív, než se začne psát. */
+  pripravSrovnani(mapa);
   for (const { d, soubor } of mapa.values()) {
     fs.writeFileSync(path.join(ROOT, soubor), stranka(sablona, d, soubor));
     hotove.push(soubor);
