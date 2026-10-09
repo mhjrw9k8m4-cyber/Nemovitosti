@@ -174,16 +174,30 @@ pravda('tabulka nemá sloupec, do kterého by šel uložit člověk',
    navstevnosti` jen pro service_role, tedy pro běh v CI, a z webu ho
    nepřečte ani přihlášený. Zapisovat musí umět i nepřihlášený, jinak
    by se měřili jen uživatelé s účtem a čísla by lhala. */
+/* VZOREK SE MUSÍ DRŽET V JEDNÉ VĚTĚ SQL, proto [^;]* a ne [\s\S]*?.
+   S [\s\S]*? hledání přeběhlo přes konec příkazu a sedlo na grant
+   NĚJAKÉ JINÉ funkce dál v souboru: zkusil jsem revoke u
+   prehled_navstevnosti zúžit na „from public" a kontrola prošla
+   zeleně, protože si našla „from public, anon, authenticated" až
+   u uklid_navstevnosti. Tutéž chybu měla i původní podoba téhle
+   odrážky, takže hlídala slabší věc, než o které mluvila. */
+const veta = (re) => {
+  const m = new RegExp(re.source + '[^;]*', re.flags).exec(sql);
+  return m ? m[0] : '';
+};
+const gZapis = veta(/grant execute on function zapis_navstevu/);
+const gPrehled = veta(/grant execute on function prehled_navstevnosti/);
+const rPrehled = veta(/revoke all on function prehled_navstevnosti/);
 pravda('zapsat návštěvu smí i nepřihlášený',
-  /grant execute on function zapis_navstevu[\s\S]*?to anon, authenticated/.test(sql),
-  'bez toho by se měřili jen přihlášení');
+  /\bto anon, authenticated\b/.test(gZapis),
+  'bez toho by se měřili jen přihlášení — ' + (gZapis || 'grant vůbec není'));
 pravda('souhrn nepřečte z prohlížeče nikdo — ani přihlášený',
-  /grant execute on function prehled_navstevnosti[\s\S]*?to service_role/.test(sql)
-  && !/grant execute on function prehled_navstevnosti[\s\S]*?to (anon|authenticated)/.test(sql),
-  'souhrn je dostupný z prohlížeče: ' + (/grant execute on function prehled_navstevnosti[^;]*/.exec(sql) || ['—'])[0]);
+  /\bto service_role\b/.test(gPrehled) && !/\b(anon|authenticated)\b/.test(gPrehled),
+  'souhrn je dostupný z prohlížeče: ' + (gPrehled || 'grant vůbec není'));
 pravda('a zákaz je vysloven proti všem třem rolím',
-  /revoke all on function prehled_navstevnosti[\s\S]*?from public, anon, authenticated/.test(sql),
-  'revoke jen od public nestačí — Supabase dává anon i authenticated přímý grant');
+  /from public, anon, authenticated/.test(rPrehled),
+  'revoke jen od public nestačí — Supabase dává anon i authenticated přímý grant: '
+  + (rPrehled || 'revoke vůbec není'));
 pravda('a je to v balíku supabase/00-vse.sql',
   fs.readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8').includes('zapis_navstevu'),
   'migrace by se při nasazení přeskočila');
