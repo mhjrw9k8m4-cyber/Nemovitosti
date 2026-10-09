@@ -18,6 +18,7 @@
 // lidé platí za nic.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 let ok = 0, chyb = 0;
@@ -83,5 +84,5 @@ if (!webhookDorucuje) {
 console.log('\nPlacené zvýraznění — za peníze se musí něco stát');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Platba: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Platba: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

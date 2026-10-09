@@ -34,6 +34,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:http';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 8310;
@@ -180,5 +181,5 @@ server.close();
 console.log('\nBarva u verdiktu o ceně');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Verdikt: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Verdikt: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

@@ -20,6 +20,7 @@
 // Proto se neměří ČÍSLA V CSS, ale VYKRESLENÝ TAH v prohlížeči —
 // jediná hodnota, kterou člověk doopravdy vidí.
 import { chromium } from 'playwright-core';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -85,7 +86,7 @@ if (vsechny.length < 40) {
   console.log('\nTah ikon');
   console.log(zpravy.join('\n'));
   console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-  console.log('::error::Tah ikon: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Tah ikon: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 
@@ -115,5 +116,5 @@ console.log(zpravy.join('\n'));
 console.log(`  (změřeno ${vsechny.length} ikon na ${STRANKY.length} stránkách, ` +
   `${velikosti.size} velikostí, ${sirky.size} různých stroke-width)`);
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Tah ikon: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Tah ikon: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

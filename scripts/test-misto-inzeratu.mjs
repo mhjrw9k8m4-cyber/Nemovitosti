@@ -14,6 +14,7 @@
 // přesně tak, jak to v tomhle repozitáři dopadlo u parsování dražeb
 // (viz nabidkyZDrazby a scripts/test-drazby-cevd.mjs).
 import { mistoZBezrealitky } from './fetch-opportunities.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0; const zpravy = [];
 function je(popis, vyslo, cekano) {
@@ -80,7 +81,7 @@ if (chyb) {
   for (const z of zpravy.filter((x) => x.indexOf('✕') >= 0).slice(0, 8)) {
     console.log('::error::Místo nabídky: ' + z.replace(/\s+/g, ' ').replace(/^ *✕ */, '').trim());
   }
-  console.log('::error::Místo nabídky: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Místo nabídky: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

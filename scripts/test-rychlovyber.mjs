@@ -15,6 +15,7 @@
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const R = createRequire(import.meta.url)(path.join(ROOT, 'js', 'rychlovyber.js'));
 
@@ -116,5 +117,5 @@ const P = (k) => ({ k: k, place: 'Obec ' + k });
 
 console.log(`\nRychlý výběr: ${ok + chyb} kontrol`);
 console.log(zpravy.join('\n'));
-if (chyb) { console.error(`\n::error::Rychlý výběr: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.error(`\n::error::Rychlý výběr: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 console.log(`\n${ok} v pořádku, 0 chyb\n`);

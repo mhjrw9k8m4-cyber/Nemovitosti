@@ -21,6 +21,7 @@
 // Výjimka se nezakazuje, jen se musí pojmenovat a odůvodnit níž v seznamu.
 // Dokud tam barva není, test ji nahlásí jménem i řádkem.
 import { readFileSync } from 'node:fs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const CESTA = new URL('../css/styles.css', import.meta.url);
 const zdroj = readFileSync(CESTA, 'utf8');
@@ -176,7 +177,7 @@ console.log(`\nzměřeno: ${nalezy.length} barev v pravidlech, z nich ${cerne.le
             `rodin v paletě ${rodiny.size}`);
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-  console.log('::error::Odstíny: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Odstíny: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

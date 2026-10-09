@@ -21,6 +21,7 @@ import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -122,7 +123,7 @@ console.log('\nOdvozené soubory a úlohy, které je spravují');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-  console.log('::error::Oprava: ' + chyb + ' kontrol neprošlo. Spusťte node scripts/oprav.mjs');
+  console.log('::error::Oprava: ' + chyb + ' kontrol neprošlo. Spusťte node scripts/oprav.mjs' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

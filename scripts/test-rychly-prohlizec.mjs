@@ -13,6 +13,7 @@
  *   · JDE TO I BEZ PRSTU. Kdo ovládá web klávesnicí, musí mít cestu.
  */
 import { chromium } from 'playwright-core';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 await import('./falesna-supabase-chat.mjs');
 
 const BASE = 'http://127.0.0.1:8310';
@@ -303,6 +304,6 @@ pravda('a nabízená karta není ani jeden z nich', nevraci.kolize === 0,
 await ctx.close(); await prohlizec.close();
 console.log(`\nRychlý výběr v prohlížeči: ${ok + chyb} kontrol`);
 console.log(zpravy.join('\n'));
-if (chyb) { console.error(`\n::error::Rychlý výběr: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.error(`\n::error::Rychlý výběr: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 console.log(`\n${ok} v pořádku, 0 chyb\n`);
 process.exit(0);

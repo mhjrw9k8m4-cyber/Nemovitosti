@@ -20,6 +20,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 let ok = 0, chyb = 0; const zpravy = [];
@@ -121,5 +122,5 @@ pravda('a bylo co prohledávat', SOUBORY.length >= 30, `souborů ${SOUBORY.lengt
 
 console.log(`\nSkloňování podle počtu: ${ok + chyb} kontrol`);
 console.log(zpravy.join('\n'));
-if (chyb) { console.error(`\n::error::Skloňování: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.error(`\n::error::Skloňování: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 console.log(`\n${ok} v pořádku, 0 chyb\n`);

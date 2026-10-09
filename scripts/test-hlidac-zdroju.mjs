@@ -20,6 +20,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { porovnejZdroje, PRAH_SLEDOVANI, PRAH_PROPADU,
   porovnejSHistorii, zapisDoHistorie, DNU_HISTORIE, PRAH_POKLESU, HISTORIE_MAX } from './fetch-opportunities.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN_H = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -186,5 +187,5 @@ pravda('první běh bez minulých čísel projde tiše',
 console.log('\nHlídač jednotlivých zdrojů');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Hlídač zdrojů: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Hlídač zdrojů: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

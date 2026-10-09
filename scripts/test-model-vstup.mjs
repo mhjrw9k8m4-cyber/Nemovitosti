@@ -26,6 +26,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require_ = createRequire(import.meta.url);
@@ -39,7 +40,7 @@ function hotovo() {
   console.log('\nVstup cenového modelu');
   console.log(zpravy.join('\n'));
   console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-  if (chyb) { console.log('::error::Vstup modelu: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+  if (chyb) { console.log('::error::Vstup modelu: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
   process.exit(0);
 }
 

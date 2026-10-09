@@ -29,6 +29,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { statistiky, zmenyCen, dny, nactiArchiv, MIN_KOHORTA, MIN_ZMEN } from './archiv-statistiky.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -246,5 +247,5 @@ je('stejný den je nula', dny('2026-05-05', '2026-05-05'), 0);
 
 console.log('\nStatistika z archivu: ' + (ok + chyb) + ' kontrol');
 console.log(zpravy.join('\n'));
-if (chyb) { console.error(`\n::error::Statistika z archivu: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.error(`\n::error::Statistika z archivu: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 console.log('\nVšechny prošly.\n');

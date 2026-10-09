@@ -15,6 +15,7 @@
 // že se nic nestalo.
 import { chromium } from 'playwright-core';
 import { readFileSync } from 'node:fs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const BASE = 'http://127.0.0.1:8310';
 let ok = 0, chyb = 0;
@@ -266,6 +267,6 @@ function hotovo() {
   console.log('\nPředvyplnění inzerátu z odkazu');
   console.log(zpravy.join('\n'));
   console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-  if (chyb) { console.log('::error::Předvyplnění: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+  if (chyb) { console.log('::error::Předvyplnění: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
   process.exit(0);
 }

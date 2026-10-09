@@ -37,6 +37,7 @@
 import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -265,10 +266,9 @@ if (chyb) {
   /* Do anotace v CI se dostane jen tenhle jediný řádek. Dokud na něm
      stál pouhý počet, nedalo se z něj poznat vůbec nic: osm kontrol
      padalo několik dní po sobě a z e-mailu šlo zjistit jen to, že jich
-     bylo osm. Teď nese první padlou kontrolu i s naměřenými čísly. */
-  const prvni = zpravy.find((z) => z.indexOf('✕') !== -1) || '';
-  console.log('::error::Tlačítko nahoru: ' + chyb + ' kontrol neprošlo. První: '
-    + prvni.replace(/\s+/g, ' ').replace(/^\s*✕\s*/, '').slice(0, 240));
+     bylo osm. Jmenovat padlé kontroly umí scripts/chyby-hlaska.mjs
+     pro všechny zkoušky stejně; tady to kdysi stálo zvlášť. */
+  console.log('::error::Tlačítko nahoru: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

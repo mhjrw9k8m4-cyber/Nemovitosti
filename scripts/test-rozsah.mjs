@@ -22,6 +22,7 @@
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 const ROOT = new URL('..', import.meta.url).pathname;
 const R = createRequire(import.meta.url)(path.join(ROOT, 'js', 'rozsah.js'));
 const DATA = JSON.parse(readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8')).opportunities;
@@ -127,5 +128,5 @@ for (const [jm, pole, jedn] of [['cena', DATA.map((d) => d.price), 'kc'],
 console.log('\nStupnice a histogram pro cenu a výměru');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Stupnice: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Stupnice: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

@@ -17,6 +17,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const BASE = 'http://127.0.0.1:8310';
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
@@ -169,5 +170,5 @@ await prohlizec.close();
 console.log('\nHierarchie tlačítek — co je tu hlavní?');
 console.log(zpravy.join('\n'));
 console.log('\n' + ok + ' v pořádku, ' + chyb + ' chyb\n');
-if (chyb) { console.log('::error::Hierarchie tlačítek: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Hierarchie tlačítek: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

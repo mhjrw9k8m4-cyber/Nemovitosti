@@ -18,6 +18,7 @@
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 const ROOT = new URL('..', import.meta.url).pathname;
 const P = createRequire(import.meta.url)(path.join(ROOT, 'js', 'poradi.js'));
 
@@ -261,5 +262,5 @@ console.log('\nPořadí nabídek — nic nezapadne, ale kvalita rozhoduje');
 
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Pořadí: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Pořadí: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

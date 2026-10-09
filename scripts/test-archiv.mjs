@@ -99,6 +99,7 @@ je('nabídka bez obce nebo okresu se nesleduje (nejde ji poznat)',
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ADR = path.join(KOREN, 'data', 'archiv');
 if (fs.existsSync(ADR)) {
@@ -201,5 +202,5 @@ if (fs.existsSync(ADR)) {
 
 console.log('\nArchiv nabídek: ' + (ok + chyb) + ' kontrol');
 console.log(zpravy.join('\n'));
-if (chyb) { console.error(`\n::error::Archiv: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.error(`\n::error::Archiv: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 console.log('\nVšechny prošly.\n');

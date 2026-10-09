@@ -26,6 +26,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const STUPNICE = ['-0.04em', '-0.03em', '-0.02em', '-0.01em', '0',
@@ -62,7 +63,7 @@ pravda('je co měřit — živé stránky a styly', zivych >= 50 && prostrkani.s
 if (!(zivych >= 50 && prostrkani.size > 0)) {
   console.log('\nTypografická stupnice'); console.log(zpravy.join('\n'));
   console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-  console.log('::error::Typografie: ' + chyb + ' kontrol neprošlo.'); process.exit(1);
+  console.log('::error::Typografie: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1);
 }
 
 /* ---- 1) prostrkání leží na stupnici ---- */
@@ -119,5 +120,5 @@ console.log(zpravy.join('\n'));
 console.log(`  (prostrkání: ${prostrkani.size} hodnot, velikostí písma: ${velikosti.size}, ` +
   `měřeno na ${zivych} souborech)`);
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Typografie: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Typografie: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

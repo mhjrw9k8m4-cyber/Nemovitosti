@@ -21,6 +21,7 @@
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 const ROOT = new URL('..', import.meta.url).pathname;
 const req = createRequire(import.meta.url);
 const P = req(path.join(ROOT, 'js', 'dotaz.js'));
@@ -575,5 +576,5 @@ function pravda(popis, vyslo, proc) {
 console.log('\nJedno políčko, které rozumí celé větě');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Dotaz: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Dotaz: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

@@ -26,6 +26,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -199,4 +200,4 @@ pravda('kontrola vypůjčeného titulku na zkušební dvojici vadu najde (jinak 
 console.log('\nNáhled odkazu patří k vlastní stránce');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log(`::error::Sdílení: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.log(`::error::Sdílení: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }

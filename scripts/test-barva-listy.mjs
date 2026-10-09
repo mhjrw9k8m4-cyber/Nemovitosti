@@ -21,6 +21,7 @@ import { chromium } from 'playwright-core';
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
 import path from 'node:path';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const PORT = 8310;
@@ -123,7 +124,7 @@ if (chyb) {
   for (const z of zpravy.filter((x) => x.indexOf('✕') >= 0).slice(0, 8)) {
     console.log('::error::Barva lišty: ' + z.replace(/\s+/g, ' ').replace(/^ *✕ */, '').trim());
   }
-  console.log('::error::Barva lišty: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Barva lišty: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

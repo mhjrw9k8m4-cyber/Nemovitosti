@@ -19,6 +19,7 @@
 // Investor pozná nesmysl za tři vteřiny a odejde. Běžný člověk ho nepozná,
 // klikne, zjistí, že kupuje šestinu pole — a nevrátí se. Proto tenhle test.
 import { readFileSync } from 'node:fs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -343,7 +344,7 @@ console.log('\nCo se doporučuje a co se má ověřit');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-  console.log('::error::Doporučení: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Doporučení: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

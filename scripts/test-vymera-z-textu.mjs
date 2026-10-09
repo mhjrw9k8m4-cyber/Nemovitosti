@@ -19,6 +19,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -31,7 +32,7 @@ function hotovo() {
   console.log('\nVýměra z textu inzerátu');
   console.log(zpravy.join('\n'));
   console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-  if (chyb) { console.log('::error::Výměra z textu: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+  if (chyb) { console.log('::error::Výměra z textu: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
   process.exit(0);
 }
 

@@ -24,6 +24,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const req = createRequire(import.meta.url);
@@ -206,7 +207,7 @@ if (chyb) {
   for (const z of zpravy.filter((x) => x.indexOf('✕') >= 0).slice(0, 8)) {
     console.log('::error::Strop ceny: ' + z.replace(/\s+/g, ' ').replace(/^ *✕ */, '').trim());
   }
-  console.log('::error::Strop ceny: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Strop ceny: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

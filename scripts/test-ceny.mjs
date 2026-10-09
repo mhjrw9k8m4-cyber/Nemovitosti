@@ -16,6 +16,7 @@
 //  · a vždy musí přiznat, z čeho počítal.
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -923,7 +924,7 @@ console.log(zpravy.join('\n'));
 
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-  console.log('::error::Cenový model: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Cenový model: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

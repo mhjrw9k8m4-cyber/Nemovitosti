@@ -28,6 +28,7 @@ import { execFileSync, execSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 let ok = 0, chyb = 0;
@@ -374,5 +375,5 @@ try {
 console.log('\nZaložení databáze na čistém PostgreSQL');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Databáze: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Databáze: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

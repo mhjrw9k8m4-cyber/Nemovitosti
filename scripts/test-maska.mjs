@@ -18,6 +18,7 @@
  *     události, nešlo by vybrat kraj — a mapa by byla mrtvá.
  */
 import { chromium } from 'playwright-core';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 await import('./falesna-supabase-chat.mjs');
 
 const BASE = 'http://127.0.0.1:8310';
@@ -96,6 +97,6 @@ pravda('a klepnutím jde pořád vybrat kraj', /kraj|Praha|Vysočina/i.test(vybr
 await ctx.close(); await prohlizec.close();
 console.log(`\nZtlumené okolí mapy: ${ok + chyb} kontrol`);
 console.log(zpravy.join('\n'));
-if (chyb) { console.error(`\n::error::Ztlumené okolí mapy: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.error(`\n::error::Ztlumené okolí mapy: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 console.log(`\n${ok} v pořádku, 0 chyb\n`);
 process.exit(0);

@@ -26,6 +26,7 @@ import { fileURLToPath } from 'node:url';
 import { mapaSouboru, klicNabidky, souborPro } from './generate-parcel-pages.mjs';
 import { createRequire } from 'node:module';
 import * as sklad from './mail-sklad.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 /* Odstranění duplicit TOUŽ funkcí, jakou používá rozesílač. */
@@ -465,4 +466,4 @@ console.log('\nRozesílač upozornění e-mailem');
 
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log(`::error::Rozesílač: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.log(`::error::Rozesílač: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }

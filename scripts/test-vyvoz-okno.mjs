@@ -20,6 +20,7 @@
      · okno se zavře Escapem i klepnutím mimo.
    ================================================================== */
 import { chromium } from 'playwright-core';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -40,7 +41,7 @@ function hotovo(spadlo) {
   if (spadlo) console.log('  ✕ zkouška spadla dřív, než dojela:\n      ' + String(spadlo).split('\n')[0]);
   console.log(`\n${ok} v pořádku, ${chyb + (spadlo ? 1 : 0)} chyb\n`);
   if (chyb || spadlo) {
-    console.log('::error::Okno stahování: ' + (chyb + (spadlo ? 1 : 0)) + ' kontrol neprošlo.');
+    console.log('::error::Okno stahování: ' + (chyb + (spadlo ? 1 : 0)) + ' kontrol neprošlo.' + pricinaChyb(zpravy));
     process.exit(1);
   }
   process.exit(0);

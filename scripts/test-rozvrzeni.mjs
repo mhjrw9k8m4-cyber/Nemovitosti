@@ -26,6 +26,7 @@
 import { chromium } from 'playwright-core';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 // Tentýž server jako ostatní testy: servíruje statické soubory na 8310.
 await import('./falesna-supabase-chat.mjs');
@@ -1682,7 +1683,7 @@ console.log('\nRozvržení a popisky stránek');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-  console.log('::error::Rozvržení: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Rozvržení: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

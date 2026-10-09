@@ -20,6 +20,7 @@
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 const ROOT = new URL('..', import.meta.url).pathname;
 const req = createRequire(import.meta.url);
 const D = req(path.join(ROOT, 'js', 'druh.js'));
@@ -120,5 +121,5 @@ je('jméno se škrtá bez ohledu na háčky',
 console.log('\nDruh pozemku z textu inzerátu');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb`);
-if (chyb) console.log('::error::Rozpoznávání druhu pozemku: ' + chyb + ' kontrol neprošlo.');
+if (chyb) console.log('::error::Rozpoznávání druhu pozemku: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
 process.exit(chyb ? 1 : 0);

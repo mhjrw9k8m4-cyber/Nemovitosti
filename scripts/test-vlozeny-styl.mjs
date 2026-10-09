@@ -21,6 +21,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -38,7 +39,7 @@ if (!m) {
   console.log('\nVložený styl na stránce pozemku');
   console.log(zpravy.join('\n'));
   console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-  console.log('::error::Vložený styl: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Vložený styl: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 const styl = m[1];
@@ -201,5 +202,5 @@ console.log(zpravy.join('\n'));
 console.log(`  (${kb.toFixed(1)} kB, ${(bez.match(/\{/g) || []).length} pravidel, ` +
   `${(bez.match(/var\(--/g) || []).length}× token)`);
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Vložený styl: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Vložený styl: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

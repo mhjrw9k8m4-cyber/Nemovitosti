@@ -21,6 +21,7 @@
 import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -1328,7 +1329,7 @@ if (chyb) {
   for (const z of zpravy.filter((x) => x.indexOf('✕') >= 0).slice(0, 12)) {
     console.log('::error::Našeptávač: ' + z.replace(/\s+/g, ' ').replace(/^ *✕ */, '').trim());
   }
-  console.log('::error::Našeptávač: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Našeptávač: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

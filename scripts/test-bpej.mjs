@@ -11,6 +11,7 @@
 // GML/XML (ČÚZK) a HTML tabulka (ArcGIS).
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const B = createRequire(import.meta.url)(path.join(ROOT, 'js', 'bpej.js'));
@@ -176,7 +177,7 @@ if (chyb) {
   for (const z of zpravy.filter((x) => x.indexOf('✕') >= 0).slice(0, 8)) {
     console.log('::error::BPEJ: ' + z.replace(/\s+/g, ' ').replace(/^ *✕ */, '').trim());
   }
-  console.log('::error::BPEJ: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::BPEJ: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

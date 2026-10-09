@@ -9,6 +9,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const Z = createRequire(import.meta.url)(path.join(ROOT, 'js', 'zlevneni.js'));
 
@@ -93,5 +94,5 @@ pravda('a prázdný vstup nespadne', Z.zmena(null) === null && Z.text(null) === 
 console.log('\nZměna ceny proti minulému běhu');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Změna ceny: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Změna ceny: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

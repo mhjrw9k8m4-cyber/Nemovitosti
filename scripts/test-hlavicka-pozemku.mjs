@@ -29,6 +29,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import http from 'node:http';
 import { chromium } from 'playwright-core';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -200,4 +201,4 @@ server.close();
 console.log('\nHlavička stránky pozemku');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb`);
-if (chyb) { console.log(`\n::error::Hlavička pozemku: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.log(`\n::error::Hlavička pozemku: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }

@@ -16,6 +16,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { okresPodleHranice } from './okres-podle-gps.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const pozadavek = createRequire(import.meta.url);
 
@@ -458,7 +459,7 @@ console.log('\nIntegrita datového souboru');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-console.log('::error::Data: ' + chyb + ' kontrol neprošlo.');
+console.log('::error::Data: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

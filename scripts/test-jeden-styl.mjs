@@ -21,6 +21,7 @@
 // Pravidlo: každé pravidlo, které určuje velikost h1, bere hodnotu
 // z některého z těch tří stupňů — nebo stojí v seznamu výjimek s důvodem.
 import { readFileSync } from 'node:fs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const zdroj = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
 const css = zdroj.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
@@ -211,7 +212,7 @@ console.log(`\nzměřeno: ${nalezy.length} pravidel určuje velikost h1`);
 nalezy.forEach((n) => console.log(`   r.${String(n.radek).padStart(4)}  ${n.hodnota.padEnd(20)} ${n.sel}`));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-  console.log('::error::Jeden styl: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Jeden styl: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

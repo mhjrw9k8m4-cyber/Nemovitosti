@@ -13,6 +13,7 @@
 // jestli z odpovědi vybereme správné jméno, a jestli se čtvrť dostane
 // až na obrazovku.
 import { readFileSync } from 'node:fs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -158,7 +159,7 @@ function hotovo() {
   console.log('\nČtvrť u nabídek, kde je místo jen celá obec');
   console.log(zpravy.join('\n'));
   console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-  if (chyb) { console.log('::error::Čtvrť: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+  if (chyb) { console.log('::error::Čtvrť: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
   process.exit(0);
 }
 hotovo();

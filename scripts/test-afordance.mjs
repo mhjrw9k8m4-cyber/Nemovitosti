@@ -20,6 +20,7 @@
  * neřeší; řeší, jestli to člověk pozná jako něco, na co se klepe.
  */
 import { chromium } from 'playwright-core';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -87,6 +88,6 @@ pravda('a bylo vůbec co měřit', nalezeno >= 12, `nalezeno ${nalezeno} prvků`
 
 console.log(`\nViditelnost ovládání: ${ok + chyb} kontrol`);
 console.log(zpravy.join('\n'));
-if (chyb) { console.error(`\n::error::Viditelnost ovládání: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.error(`\n::error::Viditelnost ovládání: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 console.log(`\n${ok} v pořádku, 0 chyb\n`);
 process.exit(0);

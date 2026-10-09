@@ -12,6 +12,7 @@
  * Proto se tu zkouší hlavně to, co se spárovat NESMÍ.
  */
 import { spojCeny, klicCeny, klicMista } from './fetch-opportunities.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -97,5 +98,5 @@ const N = (x) => Object.assign({ place: 'Kolín', okres: 'Kolín', parcel: '12/3
 console.log('\nHistorie ceny nabídky');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Historie ceny: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Historie ceny: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

@@ -21,6 +21,7 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -111,5 +112,5 @@ pravda('tabulka má datum, ke kterému platí', !!datum, 'chybí „## Stav k D.
 console.log('\nČísla v roadmapě');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Roadmapa: ' + chyb + ' kontrol neprošlo — přepište čísla v docs/roadmap.md.'); process.exit(1); }
+if (chyb) { console.log('::error::Roadmapa: ' + chyb + ' kontrol neprošlo — přepište čísla v docs/roadmap.md.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

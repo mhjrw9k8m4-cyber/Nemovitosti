@@ -20,6 +20,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { mapaSouboru, nabidky } from './generate-parcel-pages.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -126,4 +127,4 @@ for (const [kde, ber] of [['titulek', (x) => x.titulek], ['nadpis', (x) => x.h1]
 console.log('\nPodíl v názvu stránky');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb`);
-if (chyb) { console.log(`\n::error::Podíl v názvu: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.log(`\n::error::Podíl v názvu: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }

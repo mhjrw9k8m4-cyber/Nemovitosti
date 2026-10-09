@@ -24,6 +24,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const req = createRequire(import.meta.url);
@@ -178,6 +179,6 @@ await prohlizec.close();
 
 console.log('\nKarta vede na svůj pozemek: ' + (ok + chyb) + ' kontrol');
 console.log(zpravy.join('\n'));
-if (chyb) { console.error(`\n::error::Karta vede na svůj pozemek: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.error(`\n::error::Karta vede na svůj pozemek: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 console.log('\nVšechny prošly.\n');
 process.exit(0);

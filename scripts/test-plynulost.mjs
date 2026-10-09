@@ -43,6 +43,7 @@
    teprve tehdy, když je vůbec co měřit.
    ================================================================== */
 import { chromium } from 'playwright-core';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -64,7 +65,7 @@ function hotovo(spadlo) {
     for (const z of zpravy.filter((x) => x.indexOf('✕') >= 0)) {
       console.log('::error::Plynulost: ' + z.replace(/\s+/g, ' ').replace(/^ *✕ */, '').trim());
     }
-    console.log('::error::Plynulost: ' + (chyb + (spadlo ? 1 : 0)) + ' kontrol neprošlo.');
+    console.log('::error::Plynulost: ' + (chyb + (spadlo ? 1 : 0)) + ' kontrol neprošlo.' + pricinaChyb(zpravy));
     process.exit(1);
   }
   process.exit(0);

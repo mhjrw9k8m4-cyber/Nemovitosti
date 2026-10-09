@@ -17,6 +17,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { srovnatelne, patriKSobe, kmMezi, veta,
   OKRUH_KM, POMER_PLOCHY, MIN_SROVNATELNYCH, MAX_SROVNATELNYCH } from './srovnatelne.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -226,5 +227,5 @@ pravda(`vzdálenost sedí (Praha–Brno ${d.toFixed(0)} km)`, d > 180 && d < 190
 console.log('\nSrovnatelné pozemky');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Srovnatelné pozemky: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Srovnatelné pozemky: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

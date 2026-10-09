@@ -26,6 +26,7 @@
    ================================================================== */
 import { chromium } from 'playwright-core';
 import { UID_MAJITEL } from './falesna-supabase-chat.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 await new Promise((r) => setTimeout(r, 300));
 const BASE = 'http://127.0.0.1:8310';
@@ -107,5 +108,5 @@ await browser.close();
 console.log('\nProfil při výpadku serveru');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Profil při výpadku: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Profil při výpadku: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

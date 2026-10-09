@@ -14,6 +14,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { okresPodleGPS, okresPodleHranice, maHranice, nejblizsiOkresniMesto } from './okres-podle-gps.mjs';
 import { postavHrube } from './generate-okresy-hrube.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = new URL('..', import.meta.url).pathname;
 let ok = 0, chyb = 0;
@@ -242,5 +243,5 @@ if (existsSync(HRUBE_SOUBOR)) {
 console.log('\nZařazení pozemku do okresu');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Okresy: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Okresy: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

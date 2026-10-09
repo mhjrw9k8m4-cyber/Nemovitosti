@@ -18,6 +18,7 @@
 //   – popisky obcí musí zůstat čitelné (jinak jsme mapu vybělili do ztracena).
 import { chromium } from 'playwright-core';
 import { readFileSync } from 'node:fs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -120,7 +121,7 @@ console.log('\nMapový podklad — tlumený, ale ne vybělený');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-  console.log('::error::Podklad mapy: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Podklad mapy: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

@@ -16,6 +16,7 @@
  * až když je stránka hotová.
  */
 import { chromium } from 'playwright-core';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -112,7 +113,7 @@ await prohlizec.close();
 console.log('=== aria-cile ===');
 console.log(zpravy.join('\n'));
 console.log(`${ok} v pořádku, ${chyb} chyb`);
-if (chyb) { console.error(`::error::Vazby ARIA: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.error(`::error::Vazby ARIA: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 /* Falešný server drží smyčku událostí naživu — bez tohohle by test po
    dopsání výsledku visel, až dokud by ho dávka nezabila. */
 process.exit(0);

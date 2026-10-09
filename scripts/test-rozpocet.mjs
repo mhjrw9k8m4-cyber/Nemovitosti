@@ -17,6 +17,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { slozRez, skupinaDruhu, DRUHY } from './generate-rozpocet.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require2 = createRequire(import.meta.url);
@@ -147,5 +148,5 @@ pravda('druh se zařadí podle názvu z dat',
 console.log('\nNa co mám? — rozpočet proti skutečným nabídkám');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Na co mám?: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Na co mám?: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

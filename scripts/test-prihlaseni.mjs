@@ -20,6 +20,7 @@
 // Supabase — včetně toho, že obnovovací token použije jen jednou.
 import { chromium } from 'playwright-core';
 import { createServer } from 'node:http';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -328,7 +329,7 @@ console.log('\nPřihlášení — web nesmí odhlašovat sám od sebe');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-  console.log('::error::Přihlášení: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Přihlášení: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

@@ -20,6 +20,7 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import * as META from './regiony-meta.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -311,7 +312,7 @@ console.log('\nStatistika cen — čísla musí odpovídat skutečnosti');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-  console.log('::error::Statistika cen: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Statistika cen: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

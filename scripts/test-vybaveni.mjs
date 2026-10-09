@@ -23,6 +23,7 @@
 import { createRequire } from 'node:module';
 import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 const ROOT = new URL('..', import.meta.url).pathname;
 const V = createRequire(import.meta.url)(path.join(ROOT, 'js', 'vybaveni.js'));
 
@@ -299,5 +300,5 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
 console.log('\nCo je u pozemku — čtení z popisu nabídky');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Vybavení: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Vybavení: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

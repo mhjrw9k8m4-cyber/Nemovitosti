@@ -21,6 +21,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { kmVenZOkresu } from './okres-podle-gps.mjs';
 import { polohaSediSOkresem, prorezMezipamet } from './fetch-opportunities.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -114,5 +115,5 @@ pravda('a rozhoduje se i tam, kde kruh kolem středu okresu mlčel (jinak by opr
 console.log('\nPoloha vs okres — patří k sobě?');
 console.log(zpravy.join('\n'));
 console.log('\n' + ok + ' v pořádku, ' + chyb + ' chyb\n');
-if (chyb) { console.log('::error::Poloha vs okres: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Poloha vs okres: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

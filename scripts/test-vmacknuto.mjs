@@ -21,6 +21,7 @@
  * kdekoli psalo číslo.
  */
 import { chromium } from 'playwright-core';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -107,5 +108,5 @@ await prohlizec.close();
 console.log('\n=== vmáčknuté oblasti ===');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb`);
-if (chyb) { console.error(`::error::Vmáčknuto: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.error(`::error::Vmáčknuto: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 process.exit(0);

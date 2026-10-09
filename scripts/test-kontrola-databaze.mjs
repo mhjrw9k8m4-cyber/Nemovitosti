@@ -18,6 +18,7 @@
 import { readFileSync } from 'node:fs';
 import { zkontroluj, ocekavaneZeSQL, zeSpecifikace, bezKlicu, VEREJNE_TABULKY }
   from './kontrola-databaze.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -291,5 +292,5 @@ const chybyZ = (v) => v.nalezy.filter((n) => n.vaha === 'chyba');
 console.log('\nKontrola databáze (nad předstíranou Supabase)');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log('::error::Kontrola databáze: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::Kontrola databáze: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

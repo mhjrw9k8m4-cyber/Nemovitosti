@@ -29,6 +29,7 @@
         příští šipka zpět nezavřela nic a vypadala by zaseknutě.
    ================================================================== */
 import { chromium } from 'playwright-core';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -50,7 +51,7 @@ function hotovo(spadlo) {
     for (const z of zpravy.filter((x) => x.indexOf('✕') >= 0).slice(0, 10)) {
       console.log('::error::Šipka zpět: ' + z.replace(/\s+/g, ' ').replace(/^ *✕ */, '').trim());
     }
-    console.log('::error::Šipka zpět: ' + (chyb + (spadlo ? 1 : 0)) + ' kontrol neprošlo.');
+    console.log('::error::Šipka zpět: ' + (chyb + (spadlo ? 1 : 0)) + ' kontrol neprošlo.' + pricinaChyb(zpravy));
     process.exit(1);
   }
   process.exit(0);

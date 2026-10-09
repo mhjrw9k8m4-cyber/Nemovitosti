@@ -26,6 +26,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import os from 'node:os';
 import { ocisti, ocistiJs } from './minifikace.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -287,4 +288,4 @@ pravda('a ušetří to aspoň 100 kB', usetreno > 100 * 1024,
 console.log('\nOčištěný stylopis a skripty');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log(`::error::Očištěný stylopis a skripty: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.log(`::error::Očištěný stylopis a skripty: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }

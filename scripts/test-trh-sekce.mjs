@@ -30,6 +30,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { statistiky, nactiArchiv, MIN_ZMEN } from './archiv-statistiky.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -222,6 +223,6 @@ await prohlizec.close();
 
 console.log('\nSekce o chování trhu: ' + (ok + chyb) + ' kontrol');
 console.log(zpravy.join('\n'));
-if (chyb) { console.error(`\n::error::Sekce o chování trhu: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.error(`\n::error::Sekce o chování trhu: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 console.log('\nVšechny prošly.\n');
 process.exit(0);

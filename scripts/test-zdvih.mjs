@@ -24,6 +24,7 @@
  * a pro čtečku ovládání.
  */
 import { chromium } from 'playwright-core';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -167,7 +168,7 @@ await prohlizec.close();
 console.log('=== zdvih ===');
 console.log(zpravy.join('\n'));
 console.log(`${ok} v pořádku, ${chyb} chyb`);
-if (chyb) { console.error(`::error::Zdvih: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.error(`::error::Zdvih: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 /* Ukončit výslovně. Falešný server drží smyčku událostí naživu, takže
    by test po dopsání výsledku jen tiše visel — a dávka, která mu dává
    dvacet minut, by ho nakonec zabila a zelený běh nahlásila jako chybu. */

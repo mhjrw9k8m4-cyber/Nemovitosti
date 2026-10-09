@@ -426,6 +426,48 @@ dalším pushi zrušila dřív, než se k těm zkouškám dostala. Pomohlo
 teprve pustit **všech 101 prohlížečových zkoušek najednou** lokálně,
 kde je nic nezruší — 99 zelených, tyhle dvě červené.
 
+## 3p. ~~Všech 162 zkoušek psalo do CI tutéž nicneříkající větu~~ — *opraveno 9. 10.*
+
+Nález z vlastní práce, a stál mě dnes nejvíc času. Když zkouška
+spadne v CI, z celého výpisu se do přehledu a do e-mailu dostane
+jedině řádek `::error::`. A na něm stálo u všech zkoušek totéž:
+
+```
+::error::Stabilita: 1 kontrol neprošlo.
+```
+
+Která kontrola a proč, zůstalo ve výpisu běhu — a ten se u běhu,
+který přepsal další push, už nedá stáhnout (jde jen o anotace, a ty
+nesou právě tenhle jediný řádek). Diagnóza proto začínala tím, že se
+celý běh musel zopakovat místně. U zkoušky, která **místně projde**,
+nezačala vůbec: zrovna `test-stabilita` padla v CI a místně dala
+50 z 50 v pořádku padesátkrát za sebou.
+
+Přitom to v každé zkoušce leželo připravené. Pole `zpravy` nese
+u každé padlé kontroly jméno a hned pod ním naměřený důvod — jen se
+do hlášky nepsalo. Změřeno před opravou: **126 zkoušek** s touto
+hláškou, z toho **126** má pole `zpravy`, a v něm **126** značku ✕.
+Ani jedna výjimka, takže se to dalo opravit mechanicky.
+
+Nově `scripts/chyby-hlaska.mjs` složí z padlých kontrol jednu řádku
+(víc `::error::` neunese): čtyři jmenovitě, zbytek sečte, nad 900
+znaků zkrátí sám, ať to nedělá přehled CI bez varování. Z téhle
+sabotáže je vidět, co by to bylo ušetřilo:
+
+```
+::error::Okresy: 10 kontrol neprošlo. Co padlo: Holedeč → okres Louny
+vyšlo: Louny | Veselí nad Lužnicí → okres Tábor vyšlo: Tábor | …a dalších 6
+```
+
+Zapojeno ve **162 zkouškách** (těch 126 plus zkoušky, které hlášku
+píšou v jiném tvaru). `scripts/test-chybova-hlaska.mjs` hlídá jak
+funkci samu (10 kontrol), tak to, že si ji **všechny** zkoušky
+opravdu volají — jinak by se příští nová zkouška tiše vrátila
+k tomu, co se právě opravilo. Dvě sabotáže vyzkoušeny, obě padají.
+
+Vedlejší úklid: `test-nahoru` si tutéž věc psal zvlášť a ručně.
+Teď volá společnou funkci, takže je implementace jedna.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

@@ -17,6 +17,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.dirname(fileURLToPath(new URL('../x', import.meta.url)));
 let ok = 0, chyb = 0;
@@ -162,7 +163,7 @@ console.log(zpravy.join('\n'));
 console.log(`\nzkontrolováno ${dotazu} dotazů a ${volane.size} volaných funkcí proti ${tabulky.size} tabulkám`);
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-  console.log('::error::Sloupce v dotazech: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Sloupce v dotazech: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

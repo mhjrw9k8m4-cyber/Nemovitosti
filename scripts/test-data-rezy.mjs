@@ -19,6 +19,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { slug } from './generate-data-rezy.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -187,4 +188,4 @@ pravda(`největší řez je řádově menší než celek (${(bajtuNejvetsi / 102
 console.log('\nŘezy dat po okresech');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
-if (chyb) { console.log(`::error::Řezy dat: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.log(`::error::Řezy dat: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }

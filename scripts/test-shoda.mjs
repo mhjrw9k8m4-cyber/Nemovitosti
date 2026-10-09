@@ -18,6 +18,7 @@
 import { chromium } from 'playwright-core';
 import { readFileSync, existsSync } from 'node:fs';
 import pathMod from 'node:path';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -394,7 +395,7 @@ console.log(`  · porovnáno ${vysledek.pocet || 0} pozemků, kus po kuse`);
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-  console.log('::error::Shoda cen: ' + chyb + ' kontrol neprošlo.');
+  console.log('::error::Shoda cen: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

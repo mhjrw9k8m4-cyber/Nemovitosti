@@ -10,6 +10,7 @@
  * strany vidí věrohodný výpis, jen pokaždé jiný.
  */
 import { chromium } from 'playwright-core';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 await import('./falesna-supabase-chat.mjs');
 
 const BASE = 'http://127.0.0.1:8310';
@@ -151,6 +152,6 @@ await ctx4.close(); await ctx3.close(); await ctx2.close(); await ctx.close(); a
 
 console.log(`\nSdílený odkaz na stav mapy: ${zpravy.length} kontrol`);
 console.log(zpravy.join('\n'));
-if (chyb) { console.error(`\n::error::Sdílený odkaz: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.error(`\n::error::Sdílený odkaz: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 console.log(`\n${zpravy.length} v pořádku, 0 chyb\n`);
 process.exit(0);

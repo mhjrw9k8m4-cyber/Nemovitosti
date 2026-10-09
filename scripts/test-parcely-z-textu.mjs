@@ -30,6 +30,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { najdi, klicPopisu, STROP_POPISU, TOLERANCE } from './parcely-z-textu.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const req = createRequire(import.meta.url);
@@ -220,6 +221,6 @@ await prohlizec.close();
 
 console.log('\nParcelní číslo z inzerátu: ' + (ok + chyb) + ' kontrol');
 console.log(zpravy.join('\n'));
-if (chyb) { console.error(`\n::error::Parcelní číslo z inzerátu: ${chyb} kontrol neprošlo.`); process.exit(1); }
+if (chyb) { console.error(`\n::error::Parcelní číslo z inzerátu: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 console.log('\nVšechny prošly.\n');
 process.exit(0);

@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { stranka } from './generate-parcel-pages.mjs';
 import { jsonVeStrance } from './json-do-stranky.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -172,5 +173,5 @@ await prohlizec.close();
 console.log('\nJSON ve stránce — nejde rozbít cizím textem');
 console.log(zpravy.join('\n'));
 console.log('\n' + ok + ' v pořádku, ' + chyb + ' chyb\n');
-if (chyb) { console.log('::error::JSON ve stránce: ' + chyb + ' kontrol neprošlo.'); process.exit(1); }
+if (chyb) { console.log('::error::JSON ve stránce: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);
