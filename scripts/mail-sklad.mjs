@@ -77,9 +77,22 @@ export function popisNabidky(d) {
      pojmenovává na každé stránce. Mlčet o ní v poště by bylo horší než
      neposlat nic. */
   const podil = d.podil ? ` — spoluvlastnický podíl${d.podil_zlomek ? ` ${d.podil_zlomek}` : ''}` : '';
+  /* A CENA, KTERÉ WEB SÁM NEVĚŘÍ, SE MUSÍ ŘÍCT TAKY. Přiznaný podíl
+     výš je jen menší půlka problému: měřeno na ostrých datech, mezi
+     nabídkami pod 20 Kč/m² je přiznaný podíl JEDEN, kdežto cen, které
+     cenový model označuje za pochybné, je 93. Jsou to nepřiznané
+     podíly a chyby ve výměře — třeba „stavební pozemek 3 315 m²" za
+     tři koruny za metr, tedy celý pozemek za deset tisíc.
+     Na mapě i na stránce pozemku u nich stojí „cena k ověření". Poslat
+     je e-mailem jako čerstvý nález bez jediného slova by bylo totéž,
+     co web jinde pojmenovává jako past — a e-mail se nedá vzít zpátky.
+     Příznak nastavuje rozesílač z TÉHOŽ modelu, jaký počítá odznak na
+     webu (js/ceny.js); tenhle modul data nezná a jen je vypisuje. */
+  const overit = d.overit ? ' — cena k ověření' : '';
   const termin = terminText(d);
   return { nadpis: `${druh} ${v} — ${kde}`,
-    radek: `${c} · ${v}${podil}${termin ? ' · ' + termin : ''}`, podil: !!d.podil };
+    radek: `${c} · ${v}${podil}${overit}${termin ? ' · ' + termin : ''}`,
+    podil: !!d.podil, overit: !!d.overit };
 }
 
 /* Odkaz vede na VLASTNÍ stránku pozemku, ne na mapu s parametry: je to

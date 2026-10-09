@@ -418,6 +418,41 @@ console.log('\nRozesílač upozornění e-mailem');
   pravda('a termín se dostane do řádku e-mailu', /dražba za 3 dny/.test(radek), radek);
   pravda('u prodeje v řádku termín není', !/dražba/.test(sklad.popisNabidky(prodej).radek),
     sklad.popisNabidky(prodej).radek);
+}
+
+/* ===== CENA, KTERÉ WEB SÁM NEVĚŘÍ, SE MUSÍ ŘÍCT I V E-MAILU ==========
+   Přiznaný podíl už e-mail hlásil. Měřeno na ostrých datech je ale
+   mezi nabídkami pod 20 Kč/m² přiznaný podíl JEDEN a cen, které model
+   označuje za pochybné, 93 — tedy to varování chytalo jednu nabídku
+   z 94. Zbytek jsou nepřiznané podíly a chyby ve výměře; na webu u nich
+   stojí „cena k ověření", v poště nestálo nic. E-mail se nedá vzít
+   zpátky, takže je to horší místo než karta na mapě.
+   ==================================================================== */
+{
+  const zaklad = { druh: 'Orná půda', place: 'Zaliny', okres: 'České Budějovice',
+    area: 3766, price: 23725, type: 'sale', soubor: 'pozemek-x-1.html' };
+  const bez = sklad.popisNabidky(zaklad);
+  pravda('běžná nabídka žádné varování nenese', !/k ověření/.test(bez.radek) && !bez.overit,
+    bez.radek);
+  const s_overit = sklad.popisNabidky(Object.assign({}, zaklad, { overit: true }));
+  pravda('nabídka s pochybnou cenou ano', /cena k ověření/.test(s_overit.radek) && s_overit.overit,
+    s_overit.radek);
+  /* Obě výhrady naráz se nesmí přepsat jedna druhou — tutéž chybu
+     udělala o pár commitů dřív strukturovaná data u dražby, která je
+     zároveň podíl. */
+  const oboje = sklad.popisNabidky(Object.assign({}, zaklad, { overit: true, podil: true }));
+  pravda('a podíl i pochybná cena se v řádku objeví obě',
+    /spoluvlastnický podíl/.test(oboje.radek) && /cena k ověření/.test(oboje.radek), oboje.radek);
+
+  /* A hlavně: rozesílač ten příznak musí opravdu nastavovat. Kdyby ho
+     nenastavil, všechny kontroly výš projdou a do pošty nepůjde nic. */
+  const rozes = fs.readFileSync(new URL('./send-alerts.mjs', import.meta.url), 'utf8');
+  pravda('rozesílač si načítá cenový model', /CENY\.postav\(bezDuplicit\)/.test(rozes));
+  pravda('a příznak „k ověření" u každé nabídky nastavuje',
+    /d\.overit = !!\(\(MODEL\.neduveryhodna/.test(rozes),
+    'bez toho by mail-sklad neměl co vypsat');
+  pravda('a bez modelu radši skončí, než by mlčel',
+    /js\/ceny\.js se nenačetl — e-mail by mlčel/.test(rozes));
 
   /* Čeština má tři tvary. „2 nových pozemků" už tenhle web jednou
      opravoval v odznaku hlídání („1 nových"). */

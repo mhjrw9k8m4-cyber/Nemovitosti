@@ -58,6 +58,16 @@ Bylo 0 z 1 941. Teď nesou `Offer` s cenou v CZK a výměru jako
 Výhrada zůstává: Google pro pozemky nemá vyhrazený bohatý výsledek,
 takže se nedá slíbit, že se cena ve výsledcích ukáže.
 
+## 3b. ~~Upozornění mlčela o ceně, které web sám nevěří~~ — *hotovo 9. 10.*
+
+E-mail uměl pojmenovat přiznaný spoluvlastnický podíl. Měřeno ale:
+mezi nabídkami pod 20 Kč/m² je přiznaný podíl **jeden**, kdežto cen,
+které cenový model označuje za pochybné, **93** — to varování tedy
+chytalo jednu nabídku z 94. Zbytek jsou nepřiznané podíly a chyby ve
+výměře (v datech je „stavební pozemek 3 315 m²" za tři koruny za
+metr, tedy celý pozemek za deset tisíc). Rozesílač si teď načítá týž
+model jako web a řádek nese „cena k ověření".
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

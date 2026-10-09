@@ -129,9 +129,28 @@ async function main() {
      odkázat — a filtr o pár řádků níž ji odsud vyhodí. */
   const bezDuplicit = PKH.bezDuplicit(data);
   const STRANKY = mapaSouboru(bezDuplicit);
+  /* CENOVÝ MODEL SE NAČÍTÁ I SEM, a je to tentýž, jaký kreslí odznak
+     na mapě a na stránce pozemku. Bez něj by e-mail poslal „stavební
+     pozemek 3 315 m² za 9 945 Kč" jako čerstvý nález, zatímco web
+     u téže nabídky hlásí „cena k ověření". Měřeno: mezi nabídkami pod
+     20 Kč/m² je takových 93, kdežto přiznaných podílů jeden — tedy
+     varování, které e-mail uměl, chytalo jednu nabídku z 94.
+     js/ceny.js je skript pro prohlížeč, ne modul; spustí se a zapíše
+     se do globálu, stejně jako v generátorech stránek. */
+  new Function(fs.readFileSync(path.join(ROOT, 'js', 'ceny.js'), 'utf8'))();
+  const CENY = globalThis.PK_CENY;
+  if (!CENY || !CENY.postav) {
+    console.error('::error::js/ceny.js se nenačetl — e-mail by mlčel o cenách k ověření');
+    process.exit(1);
+  }
+  const MODEL = CENY.postav(bezDuplicit);
   for (const d of bezDuplicit) {
     const zapis = STRANKY.get(klicNabidky(d));
     d.soubor = zapis ? zapis.soubor : null;
+    /* Táž dvě síta jako všude jinde: hrubé (cena pod padesátinou
+       hladiny) i přísné (model sám slevu nepovažuje za uvěřitelnou). */
+    const odh = MODEL.odhad && MODEL.odhad(d);
+    d.overit = !!((MODEL.neduveryhodna && MODEL.neduveryhodna(d)) || (odh && odh.pochybna));
   }
   const bezStranky = bezDuplicit.filter((d) => !d.soubor).length;
   if (bezStranky) log(`${bezStranky} nabídek nemá vlastní stránku — do e-mailu nejdou`);
