@@ -386,6 +386,26 @@ stránky a porovnává je s daty. Hlídá i opačný směr — že se slovo
 „podíl" neobjevilo plošně i tam, kde žádný podíl není. Dvě sabotáže
 vyzkoušeny, obě padají.
 
+## 3n. ~~Rozcestník „Kam dál" přetáhl stránku přes mez délky~~ — *opraveno 9. 10.*
+
+Vlastní regres z bodu 3f, chycený zkouškou `test-poradi-pozemku`:
+stránka pozemku se má vejít do **4,2 obrazovky telefonu** (mez je
+naměřená proti stavu 4,7 před předěláním). Rozcestník přidal na
+telefonu 330 px a nadpis z bodu 3j vyrostl z jednoho řádku na tři —
+naměřeno **3 429 px = 4,3 obrazovky**.
+
+Mez jsem nezvedal: zvednout ji kvůli vlastnímu přírůstku znamená
+tiše zrušit pravidlo, které jsem porušil. Dlaždice jsou místo toho
+na úzkém displeji ve dvou sloupcích a bez podtitulků — jména („Okres
+Benešov", „Středočeský kraj") říkají, kam vedou, i bez nich; na
+širokém displeji podtitulky zůstávají. Blok ze **330 na 150 px**,
+stránka na **3 325 px = 4,16 obrazovky**.
+
+K tomu pojistka navíc: `test-kam-dal` teď kontroluje výšku dlaždice
+i v úzkém zobrazení, ne jen v základním pravidle. Zmenšovat se smí,
+ale ne pod dotykové minimum 44 px — a zrovna na telefonu se na ni
+klepe prstem.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

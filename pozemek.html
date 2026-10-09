@@ -224,8 +224,12 @@
        odkazy, ne tlačítka — proto obrys, ne výplň značky. Dlaždice je
        aspoň 48 px vysoká, aby se do ní dalo klepnout prstem; pod
        dvěma sloupci na šířku se mřížka sama zalomí pod sebe. */
+    /* Dva sloupce i na telefonu. Čtyři dlaždice pod sebou přidaly
+       stránce 330 px a celek přetekl mez „vejde se do 4,2 obrazovky"
+       (naměřeno 3 429 px = 4,3). Rozcestník je to poslední na stránce
+       a nemá stát za to, že se k němu nedoroluje. */
     .kd-mriz{display:grid; gap:8px; max-width:var(--m-text);
-      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));}
+      grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));}
     .kd-polozka{display:flex; flex-direction:column; justify-content:center;
       gap:2px; min-height:56px; padding:10px 14px; border-radius:var(--r-ovladani);
       background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka);
@@ -234,6 +238,17 @@
     .kd-polozka:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
     .kd-t{font-size:15px; font-weight:700; color:var(--text-ondark);}
     .kd-p{font-size:12px; line-height:1.4; color:var(--text-ondark-mute);}
+    /* NA TELEFONU JEN JMÉNA. Podtitulky („všechny pozemky v okrese")
+       jsou na širokém displeji užitečné, ale na telefonu z nich jsou
+       čtyři zalomené řádky navíc a celá stránka kvůli nim přetekla mez
+       „vejde se do 4,2 obrazovky" (scripts/test-poradi-pozemku.mjs).
+       Jména dlaždic — „Okres Benešov", „Středočeský kraj" — říkají, kam
+       vedou, i bez nich. */
+    @media (max-width:560px){
+      .kd-p{display:none;}
+      .kd-polozka{min-height:48px; padding:8px 12px;}
+      .pz-kamdal .pz-sect-h{margin-top:24px;}
+    }
     
 
     

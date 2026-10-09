@@ -262,6 +262,20 @@ if (pravidlo) {
   pravda('a je aspoň 44 px vysoká, aby se do ní dalo klepnout',
     !!mv && Number(mv[1]) >= 44, `min-height: ${mv ? mv[1] + 'px' : 'není'}`);
 }
+/* NA TELEFONU SE DLAŽDICE ZMENŠUJE — a právě tam se klepe prstem.
+   V úzkém zobrazení se jí ubírá podtitulek i výška, aby se stránka
+   vešla do 4,2 obrazovky; kdyby se při tom spadlo pod dotykové
+   minimum, zkouška výš by to nepoznala, protože čte jen základní
+   pravidlo. */
+{
+  const uzke = [...sabl.matchAll(/\.kd-polozka\{([^}]*)\}/g)]
+    .map((m) => m[1]).filter((t) => /min-height:(\d+)px/.test(t))
+    .map((t) => Number(t.match(/min-height:(\d+)px/)[1]));
+  pravda('je co měřit — výšky dlaždice se ve stylu opravdu nastavují',
+    uzke.length >= 1, `nalezeno ${uzke.length}`);
+  pravda('a žádná z nich (ani v úzkém zobrazení) není pod 44 px',
+    uzke.every((v) => v >= 44), `nalezené výšky: ${uzke.join(', ')} px`);
+}
 
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb`);

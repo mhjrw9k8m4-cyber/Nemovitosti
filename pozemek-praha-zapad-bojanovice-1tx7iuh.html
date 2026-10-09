@@ -115,11 +115,15 @@ a.srv-kde:hover{color:var(--copper-bright)}
 .srv-ja{background:rgba(44,113,80,0.10);border-radius:var(--r-plocha);box-shadow:inset 3px 0 0 var(--plocha-znacka)}
 .srv-ja .srv-kde{font-weight:700}
 .srv-pozn{max-width:var(--m-text);margin:10px 0 0;font-size:13px;line-height:1.55;color:var(--text-ondark-mute)}
-.kd-mriz{display:grid;gap:8px;max-width:var(--m-text);grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.kd-mriz{display:grid;gap:8px;max-width:var(--m-text);grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .kd-polozka{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:10px 14px;border-radius:var(--r-ovladani);background:var(--ink-soft);border:1.5px solid var(--obrys-tlacitka);text-decoration:none;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .kd-polozka:hover{border-color:var(--copper-bright);background:var(--ink-soft2);box-shadow:var(--e2)}
 .kd-t{font-size:15px;font-weight:700;color:var(--text-ondark)}
 .kd-p{font-size:12px;line-height:1.4;color:var(--text-ondark-mute)}
+@media (max-width:560px){.kd-p{display:none}
+.kd-polozka{min-height:48px;padding:8px 12px}
+.pz-kamdal .pz-sect-h{margin-top:24px}
+}
 .pz-feats{display:flex;flex-wrap:wrap;gap:8px}
 .pz-feat{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--text-ondark);background:var(--ink-soft);border:1px solid var(--line-strong);padding:8px 12px;border-radius:var(--r-plocha)}
 .pz-feat svg{width:17px;height:17px;stroke-width:2.12;color:var(--copper-bright)}
