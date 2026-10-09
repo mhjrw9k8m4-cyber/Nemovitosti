@@ -206,6 +206,25 @@ styl, takže by se vyplatilo je nepsat. Měří se teď hotová stránka
 (21,0 kB, strop 24) a zvlášť se hlídá, že se komentáře do hotových
 stránek opravdu nedostanou a že z předlohy nezmizí.
 
+## 3i. ~~Emodži z cizího inzerátu uprostřed věty~~ — *opraveno 9. 10.*
+
+Nahlásila to `scripts/test-pisma.mjs` po obnově dat: prohledá všechny
+zdroje webu (2 210 souborů, 160 různých znaků) a ověří, že každý
+znak leží v podřezané sadě písem. Jeden neležel — 📝 v popisu od
+inzerenta („📝 Popis nemovitosti"). Žádné textové písmo emodži nemá,
+takže by se vykreslil systémovým emodži písmem uprostřed věty, jinou
+velikostí i barvou, na webu, který jinak emodži nikde nepoužívá.
+
+Čistí se **při stahování** (`scripts/text-inzeratu.mjs`, volá
+`fetch-opportunities.mjs`), ne při skládání stránek: tam text do
+repozitáře vstupuje a je to jedno místo. Kdyby se čistil až
+v generátoru, zůstala by ozdoba v `data/popisy.json`, který se
+publikuje taky — a zkouška by pořád padala.
+
+Nemaže se víc, než je potřeba: °, ², ×, –, €, šipky i zaškrtnutí ✓
+v sadě jsou a zůstávají. Ze 1 620 popisů se změnily tři a žádný
+nezůstal prázdný.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

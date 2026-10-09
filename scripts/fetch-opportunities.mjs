@@ -24,6 +24,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import { createRequire } from 'node:module';
+import { bezEmodzi } from './text-inzeratu.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 /* Co je u pozemku zavedené a jestli nejde jen o podíl — vytahuje se z
    POPISU, který se u většiny zdrojů stahoval už dávno a jen se zahazoval
@@ -1531,7 +1532,14 @@ async function main() {
      si popis vezmou odtud; klíč počítá táž funkce, která pojmenovává jejich
      soubory, takže se nemohou rozejít. */
   const popisy = {};
-  for (const o of fresh) if (o._popis) popisy[klicNabidky(o)] = o._popis;
+  /* Ozdoby z cizího textu ven — jedno místo pro celý web, viz
+     scripts/text-inzeratu.mjs. Prázdný popis se nezapisuje: po úklidu
+     ze samých emodži nezbude nic. */
+  for (const o of fresh) {
+    if (!o._popis) continue;
+    const t = bezEmodzi(o._popis);
+    if (t) popisy[klicNabidky(o)] = t;
+  }
   writeFileSync(POPISY, JSON.stringify(popisy) + '\n', 'utf8');
   console.log(`Popisů od inzerentů: ${Object.keys(popisy).length} z ${fresh.length}.`);
 
