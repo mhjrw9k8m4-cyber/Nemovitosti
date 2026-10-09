@@ -66,9 +66,12 @@ const TRVALE = 'pk-trvale-v1';   // soubory s otiskem v adrese
 const DATA = 'pk-data-v1';       // data/*.json
 const STRANKY = 'pk-stranky-v1'; // HTML
 
-/* Strop, aby úložiště nerostlo donekonečna. Stránek je 2 130 a nabídky
-   se obnovují čtyřikrát denně, takže bez stropu by to u někoho, kdo web
-   používá denně, narostlo do stovek megabajtů. Cache API vrací klíče
+/* Strop, aby úložiště nerostlo donekonečna. Stránek jsou přes dva tisíce
+   a nabídky se obnovují čtyřikrát denně, takže bez stropu by to u někoho,
+   kdo web používá denně, narostlo do stovek megabajtů.
+   PŘESNÉ ČÍSLO TU SCHVÁLNĚ NENÍ — platí pro něj totéž, co stojí v hlavičce
+   tohoto souboru o pár desítek řádek výš: počet, který se mění sám od sebe,
+   se do komentáře psát nemá. Stálo tu „2 130" a mezitím jich bylo 2 207. Cache API vrací klíče
    v pořadí vložení, takže se zahazuje od nejstaršího. */
 const STROP = { [TRVALE]: 80, [DATA]: 40, [STRANKY]: 60 };
 

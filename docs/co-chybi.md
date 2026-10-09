@@ -617,6 +617,39 @@ schválně (vyvolávací cena není nabídka k prodeji, viz komentář
 v generátoru) a `pozemek-od-obce.html` je ručně psaná stránka, která
 se mi do měření připletla jménem.
 
+## 3t. ~~Pravidlo „nepiš do komentáře počet, který se mění sám" porušoval i soubor, kde je zapsané~~ — *opraveno 9. 10.*
+
+V hlavičce `sw.js` stojí:
+
+> *Číslo tu schválně nestojí. Stálo — „na 2 125 stránkách" — a za pár
+> týdnů jich bylo 2 158, protože stránek pozemku přibývá a ubývá
+> s nabídkami. Počet, který se mění sám od sebe, se do komentáře psát
+> nemá: nikdo ho neopraví a začne lhát.*
+
+O šedesát řádek níž v tomtéž souboru: *„Strop, aby úložiště nerostlo
+donekonečna. **Stránek je 2 130** a nabídky se obnovují čtyřikrát
+denně…"*. A v `js/hlavicka.js`: *„Proč skriptem a ne do HTML: **stránek
+je 2 105** a většina se generuje."*
+
+Skutečný počet: **2 207**. Obě čísla tedy lhala přesně tak, jak to ta
+hlavička předpovídá. Je to nejmenší z dnešních nálezů — nic se tím
+nerozbije — ale je to měřitelné a opravitelné, a hlavně se to dá
+uhlídat, aby se to nevracelo.
+
+Čísla jsou pryč; místo nich je odkaz na to, kde se počítají
+(`scripts/test-staticka.mjs` je vypisuje při každém běhu).
+
+Pojistka je tam, kde se ty stránky počítají. Hlídá se **jen přítomný
+čas s číslem** („stránek je 2 105"); naměřený stav v minulém čase
+(„na 2 105 stránkách", „naměřeno na 2 001 nabídkách") je něco jiného
+— ten se měnit NEMÁ, protože popisuje, co se tehdy změřilo.
+
+Lint při prvním běhu narazil na dvě místa typu *„z 2 014 nabídek je
+1 852 na prodej (92 %)"*. Správná odpověď byla **zúžit lint**, ne
+přepsat poctivě naměřené číslo: pravidlo je o počtu stránek, ne o větě,
+která říká, co se naměřilo. Sabotáž (vrátit do `sw.js` „Stránek je
+2 130") padá a jmenuje soubor i řádek.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

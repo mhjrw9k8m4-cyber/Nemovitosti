@@ -659,3 +659,52 @@ if (podezreni > 40) {
   }
   console.log(`Přeložitelnost: ${testy.length} skriptů ve scripts/ se načte.`);
 }
+
+/* ---- POČET, KTERÝ SE MĚNÍ SÁM OD SEBE, NEPATŘÍ DO KOMENTÁŘE -------
+   Pravidlo je zapsané v hlavičce sw.js: „Stálo tu — ‚na 2 125
+   stránkách' — a za pár týdnů jich bylo 2 158, protože stránek pozemku
+   přibývá a ubývá s nabídkami. Počet, který se mění sám od sebe, se do
+   komentáře psát nemá: nikdo ho neopraví a začne lhát."
+
+   Dodržené to nebylo ani v tom samém souboru. Naměřeno: dvě místa
+   tvrdila v přítomném čase „stránek je 2 130" (sw.js) a „stránek je
+   2 105" (js/hlavicka.js), zatímco jich bylo 2 207 — tedy obě lhala,
+   přesně jak ta hlavička předpovídá.
+
+   Hlídá se jen PŘÍTOMNÝ ČAS s číslem („stránek je 2 105"). Naměřený
+   stav v minulém čase („na 2 105 stránkách", „naměřeno na 2 001
+   nabídkách") je něco jiného: ten se měnit NEMÁ, protože popisuje, co
+   se tehdy změřilo. */
+{
+  const zdroje = [];
+  const projdi = (adresar) => {
+    for (const f of fs.readdirSync(path.join(ROOT, adresar), { withFileTypes: true })) {
+      if (f.isDirectory()) continue;
+      if (!/\.(js|mjs)$/.test(f.name)) continue;
+      if (/^test-/.test(f.name)) continue;
+      zdroje.push(path.join(adresar, f.name));
+    }
+  };
+  projdi('js'); projdi('scripts');
+  zdroje.push('sw.js');
+  /* Jen počet STRÁNEK, protože právě o něm to pravidlo je. U nabídek se
+     táž slova používají v naměřených větách („z 2 014 nabídek je 1 852
+     na prodej"), a ty se měnit nemají — lint na ně narazil hned při
+     prvním běhu a správná odpověď byla zúžit lint, ne přepisovat
+     poctivě naměřené číslo. */
+  const PRITOMNY = /(stránek|stránky) (je|jsou) [0-9][0-9\s\u00a0]{2,}/gi;
+  const lzi = [];
+  for (const rel of zdroje) {
+    let s;
+    try { s = fs.readFileSync(path.join(ROOT, rel), "utf8"); } catch (e) { continue; }
+    for (const m of s.matchAll(PRITOMNY)) {
+      lzi.push(`${rel}:${s.slice(0, m.index).split('\n').length} „${m[0].trim()}"`);
+    }
+  }
+  if (lzi.length) {
+    console.error('::error::Počet, který se mění sám od sebe, nepatří do komentáře: '
+      + lzi.slice(0, 4).join(' | '));
+    process.exit(1);
+  }
+  console.log(`Komentáře: ${zdroje.length} zdrojů, žádný netvrdí v přítomném čase počet, který se mění sám.`);
+}

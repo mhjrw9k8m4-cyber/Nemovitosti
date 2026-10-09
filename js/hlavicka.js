@@ -227,7 +227,11 @@
  * čím se vrátit: hlavička je sice pevná, ale při pohybu zhasíná, a
  * obsahový rozcestník rádců se na telefonu neukazuje vůbec.
  *
- * Proč skriptem a ne do HTML: stránek je 2 105 a většina se generuje.
+ * Proč skriptem a ne do HTML: stránek jsou přes dva tisíce a většina se
+ * generuje. (Přesné číslo tu nestojí schválně — mění se s nabídkami samo
+ * od sebe a nikdo by ho neopravoval; počítá ho scripts/test-staticka.mjs
+ * při každém běhu. Číslo 2 105 o řádek výš je naopak NAMĚŘENÝ stav z doby
+ * před touhle opravou, a ten se měnit nemá.)
  * V index.html tlačítko v HTML zůstává (najde se a použije), jinde se
  * dopíše — stránka bez skriptu tím nic neztratí, rolovat se dá pořád.
  *
