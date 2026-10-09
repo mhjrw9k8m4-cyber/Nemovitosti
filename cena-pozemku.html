@@ -31,7 +31,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=9cd76ea2">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=06d7eee8">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Ceny pozemků v ČR","inLanguage":"cs","description":"Orientační medián cen pozemků (Kč/m²) podle druhu a kraje z aktuálních nabídek.","mainEntityOfPage":"https://www.parcelaka.cz/cena-pozemku.html","publisher":{"@type":"Organization","name":"Parcelka"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Ceny pozemků","item":"https://www.parcelaka.cz/cena-pozemku.html"}]}]
   </script>
@@ -72,7 +72,11 @@
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Ceny pozemků · celá ČR</div>
       <h1>Kolik stojí pozemek?</h1>
-      <p class="sub">Co se dnes na trhu děje, kolik stojí půda u vás a jak se liší kraj od kraje.</p>
+      <!-- Podnadpis ODPOVÍDÁ na otázku z nadpisu, místo aby sliboval, co
+           je níž. Celostátní medián zemědělské půdy je to jediné číslo,
+           které platí všude — a kdo přišel z vyhledávače, má odpověď
+           dřív, než cokoli odroluje. -->
+      <p class="sub">Zemědělská půda u nás stojí obvykle <b>63 Kč/m²</b>. Kolik ve vašem okrese, zjistíte níž.</p>
     </div>
     </div>
   </section>
@@ -83,46 +87,40 @@
 
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
-          <h2 id="trh-nadpis">Jak dlouho se pozemek prodává a kdy jde cena dolů</h2>
-          <p class="rules-note" style="margin-top:0;">Sledujeme nabídky den po dni od <b>14. 9. 2026</b>, tedy 24 dní. Tohle není cena, ale <b>chování trhu</b> — a jde z toho poznat, jak silnou pozici má kupující při smlouvání.</p>
-          <h3 class="trh-podnadpis">Kolik nabídek je po N dnech pryč</h3>
+          <h2 id="trh-nadpis">Jak rychle nabídky mizí</h2>
+          <p class="rules-note" style="margin-top:0;">Sledováno den po dni od <b>14. 9. 2026</b>, tedy 24 dní.</p>
           <ul class="trh-seznam" aria-labelledby="trh-nadpis">
           <li class="trh-radek">
+            <b class="trh-cislo">4 %</b>
             <span class="trh-popis">do 3 dní</span>
             <span class="trh-pas" aria-hidden="true"><i style="width:4.0%"></i></span>
-            <b class="trh-cislo">4 %</b>
             <span class="trh-zkolika">42 z 997</span>
           </li>
           <li class="trh-radek">
+            <b class="trh-cislo">11 %</b>
             <span class="trh-popis">do 7 dní</span>
             <span class="trh-pas" aria-hidden="true"><i style="width:11.0%"></i></span>
-            <b class="trh-cislo">11 %</b>
             <span class="trh-zkolika">107 z 954</span>
           </li>
           <li class="trh-radek">
+            <b class="trh-cislo">17 %</b>
             <span class="trh-popis">do 14 dní</span>
             <span class="trh-pas" aria-hidden="true"><i style="width:17.0%"></i></span>
-            <b class="trh-cislo">17 %</b>
             <span class="trh-zkolika">120 z 708</span>
           </li>
           </ul>
-          <p class="rules-note">Do každého podílu jdou <b>jen nabídky, které jsme mohli sledovat celých N dní</b> — proto je u každého řádku napsané, z kolika. „Pryč" znamená, že nabídka zmizela ze zdroje; nemusí to znamenat prodáno, mohla být i stažena.</p>
-          <h3 class="trh-podnadpis">Kdo slevuje</h3>
-          <p class="trh-veta">Za sledovanou dobu <b>šla cena dolů u 120 nabídek</b>, obvykle o <b>9 %</b> po <b>11 dnech</b> na trhu. Opačným směrem, tedy zdražení, jsme viděli 14×.</p>
-          <div class="okr-stat" style="min-width:0;"><span>Nejčastěji se slevuje</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;"><a class="okr-place" href="pozemky-okres-hodonin.html" style="text-decoration:none;">Hodonín <b>11×</b></a><a class="okr-place" href="pozemky-okres-liberec.html" style="text-decoration:none;">Liberec <b>7×</b></a><a class="okr-place" href="pozemky-okres-praha-zapad.html" style="text-decoration:none;">Praha-západ <b>6×</b></a><a class="okr-place" href="pozemky-okres-semily.html" style="text-decoration:none;">Semily <b>6×</b></a><a class="okr-place" href="pozemky-okres-uherske-hradiste.html" style="text-decoration:none;">Uherské Hradiště <b>6×</b></a></div></div>
-          <details class="cen-metodika">
-            <summary>Proč tu není „průměrná doba prodeje"</summary>
-            <p class="rules-note">Protože by to byla nepravda. Okno je 24 dní a <b>1 948 nabídek na trhu pořád je</b> — u většiny z nich tedy ještě nevíme, jak dlouho tam nakonec budou. Kdybychom spočítali medián jen z těch, co už zmizely, vyšlo by krátké číslo: zmizely přece ty rychlé. Statistika tomu říká <b>cenzurování zprava</b>. Jediná poctivá podoba téže informace je ta tabulka výš, protože do každého řádku jdou jen nabídky, které měly šanci být sledované celou tu dobu. Až okno povyroste a většina sledovaných nabídek skončí, bude se dát spočítat i medián — do té doby ne.</p>
-            <p class="rules-note">Pracujeme s cenami <b>nabídkovými</b>. Za kolik se pozemek nakonec prodal, se z veřejných zdrojů zjistit nedá.</p>
-          </details>
+          <p class="trh-veta">Cena šla dolů u <b>120 nabídek</b>, obvykle o <b>9 %</b> po <b>11 dnech</b>. Nahoru u 14.</p>
         </div>
       </div>
 
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
           <h2 id="ceny-hledat-nadpis">Kolik stojí půda u vás</h2>
-          <p class="rules-note" style="margin-top:0;">Napište obec, město nebo okres. Ukážeme medián za okres — nejmenší celek, za který se dá něco tvrdit.</p>
-          <div class="cenh">
+          <!-- Žádný odstavec s návodem: co se má napsat, říká samo pole
+               („Třeba Benešov nebo Zdice"), a že je výsledek za celý
+               okres, stojí v metodice dole. Věta navíc tady znamenala
+               tři řádky textu nad jedním polem. -->
+          <div class="cenh" style="margin-top:14px;">
             <div class="cenh-pole">
               <svg class="cenh-lupa" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.2-4.2"/></svg>
               <input type="text" id="cenh-vstup" role="combobox" autocomplete="off"
@@ -143,95 +141,91 @@
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
           <h2 id="cenk-nadpis">Ceny po krajích</h2>
-          <p class="rules-note" style="margin-top:0;">Zemědělská půda v <b>Kč/m²</b>, od nejlevnějšího kraje. „Obvyklá" je <b>medián</b>; krajní čísla jsou čtvrtiny, mezi kterými leží prostřední polovina nabídek.</p>
+          <p class="rules-note cenk-uvod" style="margin-top:0;">Zemědělská půda v <b>Kč/m²</b>, od nejlevnějšího kraje. Velké číslo je obvyklá cena, pod ním rozpětí, ve kterém leží polovina nabídek.</p>
           <div class="cenk-tab" aria-labelledby="cenk-nadpis">
         <a class="cenk-radek" href="pozemky-plzensky-kraj.html">
           <span class="cenk-kraj">Plzeňský kraj</span>
-          <span class="cenk-c"><i>nejnižší</i>38</span>
-          <span class="cenk-c cenk-med"><i>obvyklá</i>42</span>
-          <span class="cenk-c"><i>nejvyšší</i>62</span>
+          <b class="cenk-med">42</b>
+          <span class="cenk-pasmo">38–62</span>
         </a>
         <a class="cenk-radek" href="pozemky-zlinsky-kraj.html">
           <span class="cenk-kraj">Zlínský kraj</span>
-          <span class="cenk-c"><i>nejnižší</i>38</span>
-          <span class="cenk-c cenk-med"><i>obvyklá</i>45</span>
-          <span class="cenk-c"><i>nejvyšší</i>74</span>
+          <b class="cenk-med">45</b>
+          <span class="cenk-pasmo">38–74</span>
         </a>
         <a class="cenk-radek" href="pozemky-vysocina-kraj.html">
           <span class="cenk-kraj">Kraj Vysočina</span>
-          <span class="cenk-c"><i>nejnižší</i>40</span>
-          <span class="cenk-c cenk-med"><i>obvyklá</i>46</span>
-          <span class="cenk-c"><i>nejvyšší</i>60</span>
+          <b class="cenk-med">46</b>
+          <span class="cenk-pasmo">40–60</span>
         </a>
         <a class="cenk-radek" href="pozemky-ustecky-kraj.html">
           <span class="cenk-kraj">Ústecký kraj</span>
-          <span class="cenk-c"><i>nejnižší</i>35</span>
-          <span class="cenk-c cenk-med"><i>obvyklá</i>53</span>
-          <span class="cenk-c"><i>nejvyšší</i>109</span>
+          <b class="cenk-med">53</b>
+          <span class="cenk-pasmo">35–109</span>
         </a>
         <a class="cenk-radek" href="pozemky-kralovehradecky-kraj.html">
           <span class="cenk-kraj">Královéhradecký kraj</span>
-          <span class="cenk-c"><i>nejnižší</i>45</span>
-          <span class="cenk-c cenk-med"><i>obvyklá</i>59</span>
-          <span class="cenk-c"><i>nejvyšší</i>105</span>
+          <b class="cenk-med">59</b>
+          <span class="cenk-pasmo">45–105</span>
         </a>
         <a class="cenk-radek" href="pozemky-moravskoslezsky-kraj.html">
           <span class="cenk-kraj">Moravskoslezský kraj</span>
-          <span class="cenk-c"><i>nejnižší</i>40</span>
-          <span class="cenk-c cenk-med"><i>obvyklá</i>62</span>
-          <span class="cenk-c"><i>nejvyšší</i>131</span>
+          <b class="cenk-med">62</b>
+          <span class="cenk-pasmo">40–131</span>
         </a>
         <a class="cenk-radek" href="pozemky-karlovarsky-kraj.html">
           <span class="cenk-kraj">Karlovarský kraj</span>
-          <span class="cenk-c"><i>nejnižší</i>35</span>
-          <span class="cenk-c cenk-med"><i>obvyklá</i>63</span>
-          <span class="cenk-c"><i>nejvyšší</i>175</span>
+          <b class="cenk-med">63</b>
+          <span class="cenk-pasmo">35–175</span>
         </a>
         <a class="cenk-radek" href="pozemky-jihomoravsky-kraj.html">
           <span class="cenk-kraj">Jihomoravský kraj</span>
-          <span class="cenk-c"><i>nejnižší</i>45</span>
-          <span class="cenk-c cenk-med"><i>obvyklá</i>64</span>
-          <span class="cenk-c"><i>nejvyšší</i>100</span>
+          <b class="cenk-med">64</b>
+          <span class="cenk-pasmo">45–100</span>
         </a>
         <a class="cenk-radek" href="pozemky-jihocesky-kraj.html">
           <span class="cenk-kraj">Jihočeský kraj</span>
-          <span class="cenk-c"><i>nejnižší</i>43</span>
-          <span class="cenk-c cenk-med"><i>obvyklá</i>65</span>
-          <span class="cenk-c"><i>nejvyšší</i>132</span>
+          <b class="cenk-med">65</b>
+          <span class="cenk-pasmo">43–132</span>
         </a>
         <a class="cenk-radek" href="pozemky-olomoucky-kraj.html">
           <span class="cenk-kraj">Olomoucký kraj</span>
-          <span class="cenk-c"><i>nejnižší</i>42</span>
-          <span class="cenk-c cenk-med"><i>obvyklá</i>65</span>
-          <span class="cenk-c"><i>nejvyšší</i>105</span>
+          <b class="cenk-med">65</b>
+          <span class="cenk-pasmo">42–105</span>
         </a>
         <a class="cenk-radek" href="pozemky-liberecky-kraj.html">
           <span class="cenk-kraj">Liberecký kraj</span>
-          <span class="cenk-c"><i>nejnižší</i>43</span>
-          <span class="cenk-c cenk-med"><i>obvyklá</i>68</span>
-          <span class="cenk-c"><i>nejvyšší</i>174</span>
+          <b class="cenk-med">68</b>
+          <span class="cenk-pasmo">43–174</span>
         </a>
         <a class="cenk-radek" href="pozemky-pardubicky-kraj.html">
           <span class="cenk-kraj">Pardubický kraj</span>
-          <span class="cenk-c"><i>nejnižší</i>47</span>
-          <span class="cenk-c cenk-med"><i>obvyklá</i>71</span>
-          <span class="cenk-c"><i>nejvyšší</i>118</span>
+          <b class="cenk-med">71</b>
+          <span class="cenk-pasmo">47–118</span>
         </a>
         <a class="cenk-radek" href="pozemky-stredocesky-kraj.html">
           <span class="cenk-kraj">Středočeský kraj</span>
-          <span class="cenk-c"><i>nejnižší</i>55</span>
-          <span class="cenk-c cenk-med"><i>obvyklá</i>85</span>
-          <span class="cenk-c"><i>nejvyšší</i>160</span>
+          <b class="cenk-med">85</b>
+          <span class="cenk-pasmo">55–160</span>
         </a>
           </div>
-          <p class="rules-note">Proč ne průměr a ne nejlevnější inzerát: průměr by nahoru vytáhlo pár přepálených nabídek a nejnižší cena v kraji bývá překlep ve zdroji. Ze stejného důvodu <b>nezapočítáváme spoluvlastnické podíly</b> — hranici neurčujeme od stolu, hledáme <b>mezeru v samotném rozdělení</b> cen.</p>
         </div>
       </div>
+
+
+          <details class="cen-metodika cen-samostatna">
+            <summary>Jak tahle čísla počítáme</summary>
+            <p class="rules-note">Pracujeme s cenami <b>nabídkovými</b>, z veřejně inzerovaných pozemků. Za kolik se pozemek nakonec prodal, se z veřejných zdrojů zjistit nedá.</p>
+            <p class="rules-note">„Obvyklá" cena je <b>medián</b>, ne průměr: jeden pozemek za 4 000 Kč/m² mezi stovkou polí po 20 Kč/m² průměr utrhne, s mediánem nepohne. Rozpětí pod ním jsou <b>čtvrtiny</b> (25. a 75. percentil), ne nejlevnější a nejdražší inzerát — ten bývá překlep ve zdroji a tvrdit o něm „nejnižší cena v kraji" by znamenalo tvrdit, že se za to dá koupit.</p>
+            <p class="rules-note">Do mediánů <b>nezapočítáváme spoluvlastnické podíly</b> (v inzerátu je výměra celé parcely, cena jen za zlomek). Hranici neurčujeme od stolu — hledáme <b>mezeru v samotném rozdělení</b> cen: u zemědělské půdy leží prázdné místo mezi shlukem podílů za pár korun a vlastním trhem. Kraje se počítají jen ze zemědělské půdy, aby se nemíchala s dražšími stavebními parcelami; vyhledávač výš ukazuje medián za celý okres, protože menší celek by byla hrstka nabídek.</p>
+            <p class="rules-note">Do podílu „po N dnech pryč" jdou <b>jen nabídky, které jsme mohli sledovat celých N dní</b> — proto je u každého čísla napsané, z kolika. „Pryč" znamená, že nabídka zmizela ze zdroje; nemusí to znamenat prodáno, mohla být i stažena.</p>
+            <p class="rules-note"><b>Průměrnou dobu prodeje tu nenajdete</b>, protože by to byla nepravda. Okno je 24 dní a 1 948 nabídek na trhu pořád je — u většiny z nich ještě nevíme, jak dlouho tam nakonec budou. Medián jen z těch, co už zmizely, by vyšel krátký: zmizely přece ty rychlé. Statistika tomu říká <b>cenzurování zprava</b>. Až okno povyroste a většina sledovaných nabídek skončí, bude se dát spočítat i medián — do té doby ne.</p>
+          </details>
 
       <div class="add-cross" style="margin-top:22px;">
         <div class="acx-copy">
           <h3>Najděte konkrétní pozemek</h3>
-          <p>Otevřete mapu a porovnejte ceny přímo v místě, které vás zajímá — s prokliky do katastru.</p>
+          <p>Ceny přímo v místě, které vás zajímá — s prokliky do katastru.</p>
         </div>
         <a href="index.html#mapa" class="btn-primary btn-glow">Otevřít mapu →</a>
       </div>

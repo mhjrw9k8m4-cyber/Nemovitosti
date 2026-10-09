@@ -156,15 +156,16 @@ pravda('stránka cen počítá jen z běžných nabídek k prodeji',
   pravda('převod názvu kraje na klíč se dal přečíst z generátoru',
     Object.keys(disp).length === 14, `přečteno ${Object.keys(disp).length} z 14`);
 
+  /* Pořadí skupin jde za podobou řádku: kraj, obvyklá cena velkým
+     písmem, pod ní rozpětí „od–do". Pomlčka je pomlčka (–), ne spojovník. */
   const RADEK = new RegExp(
     '<a class="cenk-radek" href="[^"]*">\\s*'
     + '<span class="cenk-kraj">([^<]+)</span>\\s*'
-    + '<span class="cenk-c"><i>nejnižší</i>([\\d\\s\\u00a0]+)</span>\\s*'
-    + '<span class="cenk-c cenk-med"><i>obvyklá</i>([\\d\\s\\u00a0]+)</span>\\s*'
-    + '<span class="cenk-c"><i>nejvyšší</i>([\\d\\s\\u00a0]+)</span>', 'g');
+    + '<b class="cenk-med">([\\d\\s\\u00a0]+)</b>\\s*'
+    + '<span class="cenk-pasmo">([\\d\\s\\u00a0]+)\\u2013([\\d\\s\\u00a0]+)</span>', 'g');
   const c = (x) => +String(x).replace(/[\s\u00a0]/g, '');
   const radky = [...stranka.matchAll(RADEK)]
-    .map((m) => ({ kraj: m[1].trim(), lo: c(m[2]), med: c(m[3]), hi: c(m[4]) }));
+    .map((m) => ({ kraj: m[1].trim(), med: c(m[2]), lo: c(m[3]), hi: c(m[4]) }));
   pravda('tabulka cen po krajích se dala přečíst', radky.length >= 10,
     `přečteno ${radky.length} řádků — změnila se podoba řádku?`);
 

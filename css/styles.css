@@ -4551,33 +4551,38 @@ body::after{
    musel by si čtenář vybrat, které z nich je „cena".
 
    Celý řádek je odkaz na kraj, proto má 44 px na dotek. */
-.cenk-tab{margin:14px 0 0;}
-.cenk-radek{display:grid; grid-template-columns:minmax(0,1fr) repeat(3, auto);
-  align-items:end; column-gap:16px; row-gap:0;
-  padding:11px 0; border-top:1px solid var(--line);
+/* Šířka se drží na míře řádku, ne na šířce karty: na širokém displeji
+   by mezi názvem kraje a číslem u pravého okraje zůstalo přes 400 px
+   prázdna a oko by ten pár nespojilo. Stejnou mez má i .trh-seznam,
+   aby obě sekce stály na jedné svislici. */
+.cenk-tab{margin:16px 0 0; max-width:560px;}
+/* Věta nad tabulkou končí tam, kde tabulka — jinak by text šel přes
+   celou kartu a tabulka pod ním byla o 400 px kratší, takže by to
+   vypadalo jako dva nesouvisející bloky. */
+.cenk-uvod{max-width:560px;}
+/* DVĚ VĚCI V ŘÁDKU, ne čtyři. Stála tu čtyři pole vedle sebe (název
+   a tři stejně velká čísla, každé s popiskem) a třináctkrát pod sebou
+   z toho byla zeď, ve které nebylo poznat, které číslo je ta cena.
+   Teď je vlevo kraj, vpravo obvyklá cena velkým písmem a pod ní
+   drobně rozpětí. Co která hodnota znamená, stojí jednou nad tabulkou
+   a podrobně v metodice dole — ne třináctkrát v každém řádku. */
+.cenk-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
+  align-items:center; column-gap:16px; row-gap:0;
+  padding:12px 0; border-top:1px solid var(--line);
   min-height:44px; text-decoration:none; color:inherit;}
 .cenk-radek:first-child{border-top:0;}
 .cenk-radek:hover .cenk-kraj{color:var(--copper-bright);}
-.cenk-kraj{font-size:16px; font-weight:600; color:var(--text-ondark);}
-/* Tabulková šířka číslic, ať se sloupec dá přejet okem shora dolů
-   (seznam je seřazený od nejlevnějšího kraje, takže se po něm jede). */
-.cenk-c{display:flex; flex-direction:column; align-items:flex-end;
-  font-size:16px; color:var(--text-ondark-mute);
+.cenk-kraj{grid-column:1; grid-row:1 / span 2; font-size:16px; font-weight:600;
+  color:var(--text-ondark);}
+/* Tabulková šířka číslic: sloupec se čte shora dolů, je seřazený. */
+.cenk-med{grid-column:2; grid-row:1; justify-self:end;
+  font-family:var(--font-display); font-weight:700; font-size:24px;
+  line-height:1.15; letter-spacing:-0.02em; color:var(--text-ondark);
   font-variant-numeric:tabular-nums; white-space:nowrap;}
-.cenk-c > i{font-style:normal; font-size:12px; font-weight:400;
-  letter-spacing:0.01em; color:var(--text-ondark-mute);}
-.cenk-med{font-family:var(--font-display); font-weight:700; font-size:20px;
-  line-height:1.2; letter-spacing:-0.02em; color:var(--text-ondark);}
-/* Na úzkém displeji se „Královéhradecký kraj" a tři čísla vedle sebe
-   nevejdou: název dostane celý první řádek a čísla se rozloží pod ním
-   na kraje a doprostřed, aby se daly porovnat mezi řádky. */
-@media (max-width:540px){
-  .cenk-radek{grid-template-columns:repeat(3, 1fr); align-items:start;}
-  .cenk-kraj{grid-column:1 / -1; grid-row:1; margin-bottom:6px;}
-  .cenk-c{align-items:flex-start;}
-  .cenk-c:nth-child(3){align-items:center;}
-  .cenk-c:last-child{align-items:flex-end;}
-}
+.cenk-pasmo{grid-column:2; grid-row:2; justify-self:end;
+  font-size:13px; color:var(--text-ondark-mute);
+  font-variant-numeric:tabular-nums; white-space:nowrap;}
+
 /* Metodika sbalená: odpověď napřed, podmínky na vyžádání. */
 .cen-metodika{margin-top:14px; border-top:1px solid var(--line); padding-top:10px;}
 .cen-metodika > summary{cursor:pointer; list-style:none; font-size:14px; font-weight:600;
@@ -4591,6 +4596,11 @@ body::after{
   transform:rotate(45deg) translate(-2px,-2px); transition:transform var(--cas-zakladni) var(--ease);}
 .cen-metodika[open] > summary::after{transform:rotate(-135deg) translate(-2px,-2px);}
 .cen-metodika > summary:hover{color:var(--copper-bright);}
+/* Metodika stojí od předělání sama na konci stránky, ne uvnitř karty.
+   Vlastní karta kolem jednoho sbaleného řádku vypadala jako nedodělek
+   — sto pixelů prázdné plochy kolem odkazu. Tady čte jako poznámka
+   pod čarou, čímž taky je: odpověď je nahoře, podmínky na vyžádání. */
+.cen-samostatna{margin-top:26px; padding-top:2px; border-top:0;}
 /* ===== JAK SE TRH CHOVÁ V ČASE =======================================
    Sekce „Jak dlouho se pozemek prodává" (generuje
    scripts/generate-region-pages.mjs z archivu). Jeden řádek = jedna
@@ -4601,33 +4611,38 @@ body::after{
    přesně naopak než data. Takhle je vidět prázdná část dráhy, a to je
    ta informace: za dva týdny nezmizí skoro nic.
    Pruh je ozdoba k číslu, které stojí hned vedle, proto aria-hidden. */
-.trh-podnadpis{margin:20px 0 0; font-size:16px; font-weight:600; color:var(--text-ondark);}
-.trh-seznam{list-style:none; margin:10px 0 0; padding:0;}
-.trh-radek{display:grid; grid-template-columns:auto minmax(0,1fr) auto;
-  align-items:center; column-gap:12px; row-gap:2px;
-  padding:10px 0; border-top:1px solid var(--line);}
-.trh-radek:first-child{border-top:0; padding-top:2px;}
-.trh-popis{font-size:14px; font-weight:600; color:var(--text-ondark);
+/* ===== JAK RYCHLE NABÍDKY MIZÍ ======================================
+   Tři kohorty, tři dlaždice. Dřív to byly tři husté řádky, každý se
+   čtyřmi věcmi vedle sebe (popis · dráha · procento · „42 z 997") —
+   dohromady dvanáct údajů v mřížce, ze které se dalo těžko přečíst to
+   jediné důležité: podíl. Ten je teď velký a první, zbytek je pod ním.
+
+   DRÁHA ZŮSTÁVÁ, jen zeštíhlená na 6 px. Stojí na stupnici 0–100 %,
+   ne na nejdelším řádku: prázdná část dráhy je ta informace, protože
+   za dva týdny nezmizí skoro nic. Přepočet na nejdelší řádek by ze tří
+   malých čísel udělal tři skoro stejné pruhy a obrázek by říkal přesný
+   opak dat. Je to ozdoba k číslu hned nad ní, proto aria-hidden.
+
+   TŘI SLOUPCE I NA TELEFONU: na 390 px vyjde dlaždice asi na 105 px
+   a všechno nejdelší, co v ní stojí („do 14 dní", „120 z 708"), se do
+   toho vejde. Pod sebou by z toho byl zase svitek. */
+.trh-seznam{list-style:none; margin:16px 0 0; padding:0; max-width:560px;
+  display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px;}
+.trh-radek{display:flex; flex-direction:column; gap:5px; min-width:0;}
+.trh-cislo{font-family:var(--font-display); font-weight:700; font-size:32px;
+  line-height:1.05; letter-spacing:-0.03em; color:var(--text-ondark);
+  font-variant-numeric:tabular-nums;}
+.trh-popis{font-size:13px; font-weight:600; color:var(--text-ondark);
   white-space:nowrap; font-variant-numeric:tabular-nums;}
-.trh-pas{position:relative; display:block; height:9px; border-radius:var(--r-pill);
+.trh-pas{position:relative; display:block; height:6px; border-radius:var(--r-pill);
   background:var(--plocha-jemna); box-shadow:inset 0 0 0 1px var(--line);}
 .trh-pas > i{position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill);
   background:var(--plocha-znacka); opacity:0.42;}
-.trh-cislo{font-family:var(--font-display); font-weight:700; font-size:20px;
-  line-height:1.2; letter-spacing:-0.02em; color:var(--text-ondark);
-  white-space:nowrap; font-variant-numeric:tabular-nums;}
-/* „53 z 852" patří pod pruh, ne za procento: je to velikost kohorty,
-   tedy poznámka k tomu číslu, a kdo ji nepotřebuje, přejede ji okem. */
-.trh-zkolika{grid-column:2 / -1; font-size:12.5px; color:var(--text-ondark-mute);
+/* „42 z 997" je velikost kohorty — poznámka k číslu nad ní, a zároveň
+   to, co ten podíl dělá poctivým (viz metodika na konci stránky). */
+.trh-zkolika{font-size:13px; color:var(--text-ondark-mute);
   font-variant-numeric:tabular-nums;}
-.trh-veta{margin:10px 0 0; font-size:14px; line-height:1.6; color:var(--text-ondark);}
-/* Na telefonu se popisek „do 14 dní" a pruh o 12px mezery nevejdou
-   vedle sebe s dvacetipixelovým číslem — pruh se posune pod ně. */
-@media (max-width:420px){
-  .trh-radek{grid-template-columns:1fr auto;}
-  .trh-pas{grid-column:1 / -1; grid-row:2; margin-top:4px;}
-  .trh-zkolika{grid-column:1 / -1; grid-row:3;}
-}
+.trh-veta{margin:18px 0 0; font-size:16px; line-height:1.6; color:var(--text-ondark);}
 
 /* Oddíly bez vnější karty — nadpis, linka, obsah. */
 .okr-blok{margin-top:32px; padding-top:24px; border-top:1px solid var(--line-strong);}

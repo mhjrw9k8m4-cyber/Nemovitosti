@@ -1217,8 +1217,6 @@ ${okresLinks ? `
      a s nabídkami, je na stránce každého okresu, na kterou vede
      vyhledávač lokality o kus výš. */
   const key = 'Zemědělská půda';
-  const okrLink = (ok) => (hasOkresPage.has(ok) ? okresFile(ok)
-    : 'index.html?kraj=' + encodeURIComponent((KRAJ_META[OKRES_KRAJ[ok]] || {}).mapName || '') + '#mapa');
 
   /* ===== CENY PO KRAJÍCH ==============================================
      Tři čísla v řádku, od nejlevnějšího kraje k nejdražšímu — ne podle
@@ -1249,25 +1247,24 @@ ${okresLinks ? `
     const disp = (KRAJ_META[x.k] || {}).disp || (x.k + ' kraj');
     const link = hasKrajPage.has(x.k) ? krajFile(x.k)
       : 'index.html?kraj=' + encodeURIComponent((KRAJ_META[x.k] || {}).mapName || x.k) + '#mapa';
-    /* Popisek u KAŽDÉHO čísla, ne hlavička tabulky. Hlavička se na
-       telefonu odroluje nahoru a pak je ve třech sloupcích čísel bez
-       toho, co které znamená. Takhle se řádek přečte sám. */
+    /* JEDNO VELKÉ ČÍSLO, rozpětí drobně pod ním. Byly tu tři stejně
+       velká čísla vedle sebe, každé s vlastním popiskem — třináctkrát
+       pod sebou z toho byla zeď textu a nebylo poznat, které z těch tří
+       je ta cena. Obvyklá cena je odpověď; rozpětí je poznámka k ní. */
     return `        <a class="cenk-radek" href="${link}">
           <span class="cenk-kraj">${esc(disp)}</span>
-          <span class="cenk-c"><i>nejnižší</i>${fmt(x.s.lo)}</span>
-          <span class="cenk-c cenk-med"><i>obvyklá</i>${fmt(x.s.med)}</span>
-          <span class="cenk-c"><i>nejvyšší</i>${fmt(x.s.hi)}</span>
+          <b class="cenk-med">${fmt(x.s.med)}</b>
+          <span class="cenk-pasmo">${fmt(x.s.lo)}\u2013${fmt(x.s.hi)}</span>
         </a>`;
   }).join('\n');
   const krajeSekce = !krajeRadky ? '' : `
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
           <h2 id="cenk-nadpis">Ceny po krajích</h2>
-          <p class="rules-note" style="margin-top:0;">Zemědělská půda v <b>Kč/m²</b>, od nejlevnějšího kraje. „Obvyklá" je <b>medián</b>; krajní čísla jsou čtvrtiny, mezi kterými leží prostřední polovina nabídek.</p>
+          <p class="rules-note cenk-uvod" style="margin-top:0;">Zemědělská půda v <b>Kč/m²</b>, od nejlevnějšího kraje. Velké číslo je obvyklá cena, pod ním rozpětí, ve kterém leží polovina nabídek.</p>
           <div class="cenk-tab" aria-labelledby="cenk-nadpis">
 ${krajeRadky}
           </div>
-          <p class="rules-note">Proč ne průměr a ne nejlevnější inzerát: průměr by nahoru vytáhlo pár přepálených nabídek a nejnižší cena v kraji bývá překlep ve zdroji. Ze stejného důvodu <b>nezapočítáváme spoluvlastnické podíly</b> — hranici neurčujeme od stolu, hledáme <b>mezeru v samotném rozdělení</b> cen.</p>
         </div>
       </div>`;
 
@@ -1293,35 +1290,49 @@ ${krajeRadky}
   /* Bez dvou kohort a bez dost změn ceny tu není co říct a sekce se
      celá vynechá. Prázdná karta s nadpisem je horší než žádná. */
   const maTrh = !!(AT && (AT.krivka.length >= 2 || (atZl && atZl.pocet >= MIN_ZMEN)));
+  /* TŘI VELKÁ ČÍSLA VEDLE SEBE, ne tři husté řádky. Dřív měl každý
+     řádek popis, dráhu, procento a „42 z 997" v jedné lince — čtyři
+     věci vedle sebe, třikrát pod sebou. Podíl je přitom to jediné,
+     co se čte; zbytek je poznámka pod ním.
+     DRÁHA ZŮSTÁVÁ, zúžená na 6 px: stojí na stupnici 0–100 %, takže
+     prázdná část je ta informace („za dva týdny nezmizí skoro nic").
+     Na nejdelší řádek se nepřepočítává — to by lhalo opačně. */
   const trhPruhy = maTrh ? AT.krivka.map((k) => `          <li class="trh-radek">
+            <b class="trh-cislo">${k.podil} %</b>
             <span class="trh-popis">do ${k.dni} dní</span>
             <span class="trh-pas" aria-hidden="true"><i style="width:${Math.max(1.5, k.podil).toFixed(1)}%"></i></span>
-            <b class="trh-cislo">${k.podil} %</b>
             <span class="trh-zkolika">${fmt(k.pryc)} z ${fmt(k.zKolika)}</span>
           </li>`).join('\n') : '';
-  const trhOkresy = (atZl && atZl.okresy.length)
-    ? atZl.okresy.map(([o, n]) => `<a class="okr-place" href="${okrLink(o)}" style="text-decoration:none;">${esc(o)} <b>${n}×</b></a>`).join('')
-    : '';
   const sekceTrhu = !maTrh ? '' : `
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
-          <h2 id="trh-nadpis">Jak dlouho se pozemek prodává a kdy jde cena dolů</h2>
-          <p class="rules-note" style="margin-top:0;">Sledujeme nabídky den po dni od <b>${esc(datumCesky(AT.okno.od))}</b>, tedy ${fmt(AT.okno.dni)} dní. Tohle není cena, ale <b>chování trhu</b> — a jde z toho poznat, jak silnou pozici má kupující při smlouvání.</p>
-${trhPruhy ? `          <h3 class="trh-podnadpis">Kolik nabídek je po N dnech pryč</h3>
-          <ul class="trh-seznam" aria-labelledby="trh-nadpis">
+          <h2 id="trh-nadpis">Jak rychle nabídky mizí</h2>
+          <p class="rules-note" style="margin-top:0;">Sledováno den po dni od <b>${esc(datumCesky(AT.okno.od))}</b>, tedy ${fmt(AT.okno.dni)} dní.</p>
+${trhPruhy ? `          <ul class="trh-seznam" aria-labelledby="trh-nadpis">
 ${trhPruhy}
-          </ul>
-          <p class="rules-note">Do každého podílu jdou <b>jen nabídky, které jsme mohli sledovat celých N dní</b> — proto je u každého řádku napsané, z kolika. „Pryč" znamená, že nabídka zmizela ze zdroje; nemusí to znamenat prodáno, mohla být i stažena.</p>` : ''}
-${atZl && atZl.pocet >= MIN_ZMEN ? `          <h3 class="trh-podnadpis">Kdo slevuje</h3>
-          <p class="trh-veta">Za sledovanou dobu <b>šla cena dolů u ${fmt(atZl.nabidek)} ${atZl.nabidek === 1 ? 'nabídky' : 'nabídek'}</b>${atZl.medianSleva !== null ? `, obvykle o <b>${atZl.medianSleva} %</b> po <b>${atZl.medianDni} dnech</b> na trhu` : ''}. Opačným směrem, tedy zdražení, jsme viděli ${fmt(atZl.zdrazeni)}×.</p>
-${trhOkresy ? `          <div class="okr-stat" style="min-width:0;"><span>Nejčastěji se slevuje</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${trhOkresy}</div></div>` : ''}` : ''}
-          <details class="cen-metodika">
-            <summary>Proč tu není „průměrná doba prodeje"</summary>
-            <p class="rules-note">Protože by to byla nepravda. Okno je ${fmt(AT.okno.dni)} dní a <b>${fmt(AT.sledovano.zivych)} nabídek na trhu pořád je</b> — u většiny z nich tedy ještě nevíme, jak dlouho tam nakonec budou. Kdybychom spočítali medián jen z těch, co už zmizely, vyšlo by krátké číslo: zmizely přece ty rychlé. Statistika tomu říká <b>cenzurování zprava</b>. Jediná poctivá podoba téže informace je ta tabulka výš, protože do každého řádku jdou jen nabídky, které měly šanci být sledované celou tu dobu. Až okno povyroste a většina sledovaných nabídek skončí, bude se dát spočítat i medián — do té doby ne.</p>
-            <p class="rules-note">Pracujeme s cenami <b>nabídkovými</b>. Za kolik se pozemek nakonec prodal, se z veřejných zdrojů zjistit nedá.</p>
-          </details>
+          </ul>` : ''}
+${atZl && atZl.pocet >= MIN_ZMEN ? `          <p class="trh-veta">Cena šla dolů u <b>${fmt(atZl.nabidek)} ${atZl.nabidek === 1 ? 'nabídky' : 'nabídek'}</b>${atZl.medianSleva !== null ? `, obvykle o <b>${atZl.medianSleva} %</b> po <b>${atZl.medianDni} dnech</b>` : ''}. Nahoru u ${fmt(atZl.zdrazeni)}.</p>` : ''}
         </div>
       </div>`;
+
+  /* ===== VŠECHNY VÝHRADY NA JEDNOM MÍSTĚ, SBALENÉ ======================
+     Výhrady k číslům byly rozsypané po celé stránce: odstavec pod
+     křivkou, odstavec pod tabulkou krajů, věta u vyhledávače a k tomu
+     sbalená metodika uvnitř první karty. Dohromady víc textu než čísel,
+     a čtenář, který jen chce vědět, kolik stojí pole, se jím musel
+     prokousat.
+     Nic z toho se nemaže — mazat výhrady a nechat čísla je přesně ta
+     nepoctivost, které se celý web vyhýbá. Jen stojí na jednom místě,
+     na konci a sbalené, kde si je přečte ten, koho zajímají. */
+  const metodika = `
+          <details class="cen-metodika cen-samostatna">
+            <summary>Jak tahle čísla počítáme</summary>
+            <p class="rules-note">Pracujeme s cenami <b>nabídkovými</b>, z veřejně inzerovaných pozemků. Za kolik se pozemek nakonec prodal, se z veřejných zdrojů zjistit nedá.</p>
+            <p class="rules-note">„Obvyklá" cena je <b>medián</b>, ne průměr: jeden pozemek za 4 000 Kč/m² mezi stovkou polí po 20 Kč/m² průměr utrhne, s mediánem nepohne. Rozpětí pod ním jsou <b>čtvrtiny</b> (25. a 75. percentil), ne nejlevnější a nejdražší inzerát — ten bývá překlep ve zdroji a tvrdit o něm „nejnižší cena v kraji" by znamenalo tvrdit, že se za to dá koupit.</p>
+            <p class="rules-note">Do mediánů <b>nezapočítáváme spoluvlastnické podíly</b> (v inzerátu je výměra celé parcely, cena jen za zlomek). Hranici neurčujeme od stolu — hledáme <b>mezeru v samotném rozdělení</b> cen: u zemědělské půdy leží prázdné místo mezi shlukem podílů za pár korun a vlastním trhem. Kraje se počítají jen ze zemědělské půdy, aby se nemíchala s dražšími stavebními parcelami; vyhledávač výš ukazuje medián za celý okres, protože menší celek by byla hrstka nabídek.</p>
+${maTrh ? `            <p class="rules-note">Do podílu „po N dnech pryč" jdou <b>jen nabídky, které jsme mohli sledovat celých N dní</b> — proto je u každého čísla napsané, z kolika. „Pryč" znamená, že nabídka zmizela ze zdroje; nemusí to znamenat prodáno, mohla být i stažena.</p>
+            <p class="rules-note"><b>Průměrnou dobu prodeje tu nenajdete</b>, protože by to byla nepravda. Okno je ${fmt(AT.okno.dni)} dní a ${fmt(AT.sledovano.zivych)} nabídek na trhu pořád je — u většiny z nich ještě nevíme, jak dlouho tam nakonec budou. Medián jen z těch, co už zmizely, by vyšel krátký: zmizely přece ty rychlé. Statistika tomu říká <b>cenzurování zprava</b>. Až okno povyroste a většina sledovaných nabídek skončí, bude se dát spočítat i medián — do té doby ne.</p>` : ''}
+          </details>`;
 
   const natZ = priceNational[key];
   const title = 'Ceny pozemků v ČR — kolik stojí m² půdy | Parcelka';
@@ -1343,7 +1354,11 @@ ${trhOkresy ? `          <div class="okr-stat" style="min-width:0;"><span>Nejča
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Ceny pozemků · celá ČR</div>
       <h1>Kolik stojí pozemek?</h1>
-      <p class="sub">Co se dnes na trhu děje, kolik stojí půda u vás a jak se liší kraj od kraje.</p>
+      <!-- Podnadpis ODPOVÍDÁ na otázku z nadpisu, místo aby sliboval, co
+           je níž. Celostátní medián zemědělské půdy je to jediné číslo,
+           které platí všude — a kdo přišel z vyhledávače, má odpověď
+           dřív, než cokoli odroluje. -->
+      <p class="sub">${natZ ? `Zemědělská půda u nás stojí obvykle <b>${fmt(natZ.med)} Kč/m²</b>. Kolik ve vašem okrese, zjistíte níž.` : 'Co se dnes na trhu děje, kolik stojí půda u vás a jak se liší kraj od kraje.'}</p>
     </div>
     </div>
   </section>
@@ -1356,8 +1371,11 @@ ${sekceTrhu}
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
           <h2 id="ceny-hledat-nadpis">Kolik stojí půda u vás</h2>
-          <p class="rules-note" style="margin-top:0;">Napište obec, město nebo okres. Ukážeme medián za okres — nejmenší celek, za který se dá něco tvrdit.</p>
-          <div class="cenh">
+          <!-- Žádný odstavec s návodem: co se má napsat, říká samo pole
+               („Třeba Benešov nebo Zdice"), a že je výsledek za celý
+               okres, stojí v metodice dole. Věta navíc tady znamenala
+               tři řádky textu nad jedním polem. -->
+          <div class="cenh" style="margin-top:14px;">
             <div class="cenh-pole">
               <svg class="cenh-lupa" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.2-4.2"/></svg>
               <input type="text" id="cenh-vstup" role="combobox" autocomplete="off"
@@ -1376,10 +1394,12 @@ ${sekceTrhu}
 
 ${krajeSekce}
 
+${metodika}
+
       <div class="add-cross" style="margin-top:22px;">
         <div class="acx-copy">
           <h3>Najděte konkrétní pozemek</h3>
-          <p>Otevřete mapu a porovnejte ceny přímo v místě, které vás zajímá — s prokliky do katastru.</p>
+          <p>Ceny přímo v místě, které vás zajímá — s prokliky do katastru.</p>
         </div>
         <a href="index.html#mapa" class="btn-primary btn-glow">Otevřít mapu →</a>
       </div>
