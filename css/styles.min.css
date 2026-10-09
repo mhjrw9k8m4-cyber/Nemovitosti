@@ -1629,6 +1629,9 @@ body::after{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;o
 .okr-hero .sub b{color:var(--pas-text)}
 @media (max-width:880px){.okr-band{padding:40px 0 32px}
 }
+main .okr-hero + .section{padding-top:16px}
+@media (max-width:880px){main .okr-hero + .section{padding-top:12px}
+}
 .okr-stats{gap:32px;margin:24px 0 16px}
 .okr-stat{background:none;border:0;border-radius:0;box-shadow:none;padding:0;min-width:0}
 .okr-stat b{font-family:var(--font-display);font-weight:700;font-size:clamp(30px,3.6vw,44px);line-height:0.95;letter-spacing:-0.03em;color:var(--text-ondark)}

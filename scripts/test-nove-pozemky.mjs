@@ -289,6 +289,21 @@ for (const odkud of ['pozemky-podle-okresu.html', 'pozemky-do-500-tisic.html', '
   pravda(`${odkud} na ni odkazuje`,
     readFileSync(U(odkud), 'utf8').includes(`href="${SOUBOR}"`));
 }
+/* ÚVODNÍ STRÁNKA ŘÍKÁ TOTÉŽ ČÍSLO. Dlaždice „Co je nového" nese počet
+   za posledních sedm dní a doplňuje ho týž generátor. Kdyby se ty dvě
+   cesty rozešly, slíbí úvod jiné číslo, než jaké pak člověk najde —
+   a je to první věc, kterou na webu uvidí. */
+{
+  const uvod = readFileSync(U('index.html'), 'utf8').replace(/\u00a0/g, ' ');
+  const m = /data-novinky="7">([\d\s]+) pozem/.exec(uvod);
+  pravda('úvodní stránka má dlaždici „Co je nového"', !!m,
+    'v index.html není span s data-novinky="7"');
+  if (m) pravda(`a uvádí týž počet za 7 dní (${n7})`, cislo(m[1]) === n7,
+    `úvod ${cislo(m[1])}, přepočítáno ${n7}`);
+  pravda('a dlaždice na tu stránku opravdu vede',
+    /href="nove-pozemky\.html"[^>]*>[\s\S]{0,120}Co je nového/.test(uvod));
+}
+
 pravda('stránka vede zpátky na hlídání i na regiony',
   h.includes('href="hlidani.html"') && h.includes('href="pozemky-podle-okresu.html"'));
 

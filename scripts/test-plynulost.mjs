@@ -18,10 +18,25 @@
 
    PROČ POMĚR A NE PEVNÉ ČÍSLO. Pevná mez v milisekundách měří stroj,
    na kterém zkouška zrovna běží — v CI by padala podle toho, jak je
-   servrovna vytížená. Poměr „nejdelší úloha ku všemu zablokovanému
-   času" je proti tomu bezrozměrný: když se práce rozpadne na tři
-   podobné díly, vyjde kolem třetiny; když se slije zpátky do jedné,
-   blíží se jedné. Naměřeno před opravou 0,66, po ní 0,28.
+   servrovna vytížená. Poměr „nejdelší úloha ku všemu" je proti tomu
+   bezrozměrný: když se práce rozpadne na podobné díly, vyjde kolem
+   třetiny; když se slije zpátky do jedné, blíží se jedné.
+
+   A POČÍTÁ SE Z `duration`, NE Z `blockingDuration` — tohle je oprava
+   a stála jednu červenou dávku v CI. `blockingDuration` je ta část
+   rámce, která přesahuje 50 ms; od KAŽDÉHO rámce tedy odečte padesát
+   milisekund. Na rychlejším stroji se krátké rámce pod tu hranici
+   propadnou celé (naměřeno při sabotáži: rámce 94 a 89 ms měly
+   blockingDuration 0), takže jmenovatel klesá rychleji než čitatel
+   a poměr roste, aniž by se na webu cokoli změnilo. V CI tak týž kód,
+   který tady měří 0,29, vyšel 0,49 a zkouška spadla.
+
+   Naměřeno na jednom stroji, týž kód, obě čísla naráz:
+     · zdravý stav:              z duration 0,23   z blockingDuration 0,29
+     · sabotáž (dechni nepustí
+       prohlížeč ke slovu):      z duration 0,56   z blockingDuration 0,72
+   Mez 0,40 leží mezi tím s rezervou na obě strany a nepohne se
+   s rychlostí stroje.
 
    POJISTKA PROTI PROCHÁZENÍ NAPRÁZDNO: na nesmyslně rychlém stroji by
    nebylo co dělit, a poměr by nic neznamenal. Kontrola se proto pouští
@@ -55,9 +70,10 @@ function hotovo(spadlo) {
   process.exit(0);
 }
 
-/* Mez poměru. Naměřeno 0,28 po rozdělení a 0,66 před ním — 0,45 je
-   mezi tím s rezervou na obě strany. */
-const MEZ_POMER = 0.45;
+/* Mez poměru nejdelšího rámce k součtu všech. Naměřeno 0,23 po
+   rozdělení a 0,56 při sabotáži — 0,40 je mezi tím s rezervou na obě
+   strany. Viz rozbor v hlavičce, proč se počítá z `duration`. */
+const MEZ_POMER = 0.40;
 /* Pod touhle hranicí se nedělí nic, co by stálo za řeč. */
 const DOST_PRACE = 300;
 
@@ -104,6 +120,7 @@ try {
     return { umi: window.__umi, ramcu: r.length, blok: Math.round(blok),
       nej: Math.round(nej), nejBlok: Math.round(nejBlok),
       dlouhych: r.filter((x) => x.d >= 50).length,
+      souctD: Math.round(r.reduce((a, x) => a + x.d, 0)),
       karet: document.querySelectorAll('.opp-item').length };
   });
 
@@ -111,16 +128,20 @@ try {
     'bez long-animation-frame zkouška nic nezměří')) { await ctx.close(); hotovo(); }
   pravda(`výpis se vykreslil (${v.karet} karet)`, v.karet > 0,
     'na prázdné stránce není co měřit');
-  pravda(`je co dělit (zablokováno ${v.blok} ms)`, v.blok >= DOST_PRACE,
-    `jen ${v.blok} ms — na tomhle stroji se start nestihne zaseknout, kontroly níž by prošly naprázdno`);
-  if (v.blok < DOST_PRACE) { await ctx.close(); hotovo(); }
+  pravda(`je co dělit (dlouhé rámce dohromady ${v.souctD} ms, z toho zablokováno ${v.blok} ms)`,
+    v.souctD >= DOST_PRACE,
+    `jen ${v.souctD} ms — na tomhle stroji se start nestihne zaseknout, kontroly níž by prošly naprázdno`);
+  if (v.souctD < DOST_PRACE) { await ctx.close(); hotovo(); }
 
   pravda(`start se dělí na víc úloh (dlouhých rámců ${v.dlouhych})`, v.dlouhych >= 3,
     'všechno se počítá najednou — prohlížeč mezitím nepřekreslí ani nepřijme dotek');
-  const pomer = v.nejBlok / v.blok;
-  pravda(`a žádná z nich nepobere většinu práce (nejdelší ${v.nejBlok} ms z ${v.blok} ms, poměr ${pomer.toFixed(2)})`,
+  const pomer = v.nej / v.souctD;
+  /* Pro případ, že by to někdy spadlo v CI, se tiskne i druhý poměr —
+     ať je z hlášky hned vidět, jestli se liší jen tím odečtem 50 ms. */
+  pravda(`a žádná z nich nepobere většinu práce (nejdelší ${v.nej} ms z ${v.souctD} ms, poměr ${pomer.toFixed(2)})`,
     pomer <= MEZ_POMER,
-    `poměr ${pomer.toFixed(2)} nad mezí ${MEZ_POMER} — start se slil zpátky do jedné dlouhé úlohy`);
+    `poměr ${pomer.toFixed(2)} nad mezí ${MEZ_POMER} — start se slil zpátky do jedné dlouhé úlohy`
+    + ` (pro srovnání z blockingDuration: ${(v.nejBlok / (v.blok || 1)).toFixed(2)})`);
 
   pravda('a nic se u toho nerozbilo', chybyJs.length === 0, chybyJs.slice(0, 2).join(' | '));
   await ctx.close();

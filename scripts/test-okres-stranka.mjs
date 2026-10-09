@@ -258,14 +258,17 @@ console.log('\nČísla na stránce okresu');
   const drazby = aktualni.filter((o) => o.type === 'drazba');
   pravda(`z dat vyšly nějaké dražby (${drazby.length})`, drazby.length > 0);
 
-  /* Dělení podle značky kategorie — kdyby se rozešlo s tvarem stránky,
-     vyšlo by nula řádků a shoda čísel by prošla naprázdno. Právě tohle
-     se mi při psaní téhle kontroly stalo: první vzor hledal <li>,
-     zatímco řádek je <div>, a „nula rozporů" nic neznamenalo. */
+  /* Druhý způsob, jak řádky spočítat — kdyby se vzor rozešel s tvarem
+     stránky, vyšla by nula a shoda čísel by prošla naprázdno. Právě
+     tohle se mi při psaní téhle kontroly stalo: první vzor hledal
+     <li>, zatímco řádek je <div>, a „nula rozporů" nic neznamenalo.
+     Počítají se NÁZVY MÍSTA, ne značky kategorie: ty na stránce, kde
+     mají všechny řádky týž typ, schválně nejsou (typ se říká jednou
+     nad výpisem), kdežto místo má každý řádek. */
   const radky = (h.match(/<div class="okr-item"/g) || []).length;
-  const znacek = (h.match(/class="okr-badge/g) || []).length;
-  pravda(`${f}: řádky se daly spočítat (${radky})`, radky > 0 && radky === znacek,
-    `řádků ${radky}, značek kategorie ${znacek}`);
+  const mist = (h.match(/class="okr-place"/g) || []).length;
+  pravda(`${f}: řádky se daly spočítat (${radky})`, radky > 0 && radky === mist,
+    `řádků ${radky}, názvů místa ${mist}`);
   pravda(`${f}: řádků je tolik, kolik je aktuálních dražeb`, radky === drazby.length,
     `stránka ${radky}, data ${drazby.length}`);
 

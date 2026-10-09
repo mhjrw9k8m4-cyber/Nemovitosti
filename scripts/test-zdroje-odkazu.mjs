@@ -97,13 +97,17 @@ let radkuCelkem = 0, slepych = 0, prvniSlepa = '';
 for (const f of stranky) {
   const h = readFileSync(path.join(ROOT, f), 'utf8');
   const radky = h.split(/<div class="okr-item"/).slice(1);
-  /* Počet řádků se ověřuje proti počtu značek kategorie — kdyby se
-     dělení rozešlo s tvarem stránky, vyšlo by nula řádků a celá
-     kontrola by prošla na prázdnu. Na tohle jsem u téhle stránky
-     narazil: první dělení našlo nula řádků z osmdesáti šesti. */
-  const znacek = (h.match(/class="okr-badge/g) || []).length;
-  if (radky.length !== znacek) {
-    pravda(`${f}: řádky se dají spočítat`, false, `dělení dalo ${radky.length}, značek kategorie je ${znacek}`);
+  /* Počet řádků se ověřuje proti počtu NÁZVŮ MÍSTA — kdyby se dělení
+     rozešlo s tvarem stránky, vyšlo by nula řádků a celá kontrola by
+     prošla na prázdnu. Na tohle jsem u téhle stránky narazil: první
+     dělení našlo nula řádků z osmdesáti šesti.
+     Dřív se počítaly značky kategorie („NA PRODEJ"). Ty ale na
+     stránce, kde mají všechny řádky týž typ, schválně nejsou — typ se
+     tam říká jednou nad výpisem. Název místa má každý řádek vždycky,
+     protože je to ta jediná věc, kvůli které řádek existuje. */
+  const mist = (h.match(/class="okr-place"/g) || []).length;
+  if (radky.length !== mist) {
+    pravda(`${f}: řádky se dají spočítat`, false, `dělení dalo ${radky.length}, názvů místa je ${mist}`);
     continue;
   }
   radkuCelkem += radky.length;

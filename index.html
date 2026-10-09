@@ -130,7 +130,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=88f94d2e">
+  <link rel="stylesheet" href="css/styles.min.css?v=3caa4afd">
 </head>
 <body>
 
@@ -508,6 +508,14 @@
         <a class="kraj-item" href="pozemky-zlinsky-kraj.html"><span class="kj-n">Zlínský</span><span class="kj-c mono" data-kraj="Zlínský">153 pozemků</span></a>
         <a class="kraj-item" href="pozemky-moravskoslezsky-kraj.html"><span class="kj-n">Moravskoslezský</span><span class="kj-c mono" data-kraj="Moravskoslezský">85 pozemků</span></a>
         <a class="kraj-item kraj-vse" href="pozemky-podle-okresu.html"><span class="kj-n">Všechny okresy</span><span class="kj-c mono">77 okresů</span></a>
+        <!-- DVĚ CESTY, KTERÉ ÚVOD NEMĚL. Obě stránky existují, obě na
+             sebe odkazuje devadesát dalších — a z úvodní stránky, kam
+             člověk přijde první, na ně nevedlo nic. Počet novinek
+             dopisuje robot při každém běhu (scripts/generate-region-pages.mjs),
+             stejně jako počty u krajů nad tím; napevno napsané číslo by
+             za den lhalo. -->
+        <a class="kraj-item kraj-vse" href="nove-pozemky.html"><span class="kj-n">Co je nového</span><span class="kj-c mono" data-novinky="7">86 pozemků za 7 dní</span></a>
+        <a class="kraj-item kraj-vse" href="na-co-mam-pozemek.html"><span class="kj-n">Podle rozpočtu</span><span class="kj-c mono">zadejte částku</span></a>
       </div>
     </div>
   </section>

@@ -4451,6 +4451,20 @@ body::after{
 .okr-hero .sub{color:var(--pas-text-mute); max-width:var(--m-text);}
 .okr-hero .sub b{color:var(--pas-text);}
 @media (max-width:880px){ .okr-band{padding:40px 0 32px;} }
+/* ČÍM ZAČÍNÁ PRVNÍ OBRAZOVKA. Mezi posledním řádkem úvodního pásu
+   a prvním číslem pod ním bylo 168 px prázdna na počítači a 136 px na
+   telefonu — změřeno na stránkách okresu, kraje, druhu i rozpočtu,
+   všude stejně. Skládalo se ze tří odsazení, která se sčítala: pás měl
+   zespodu 48 px, sekce pod ním shora 96 px a dlaždice ještě 24 px.
+   Každé z nich dává samo o sobě smysl, dohromady z toho byla díra.
+   Na telefonu to bylo 136 px z 844, tedy šestina první obrazovky — a to
+   zrovna na stránkách, kam lidé chodí z vyhledávačů a kde se rozhodují
+   za první vteřinu, jestli tu něco je.
+   Odsazení sekce se proto ruší JEN tam, kde hned navazuje na pás;
+   sekce uprostřed stránky si svých 96 px nechávají. Zbyde 88 px na
+   počítači a 68 na telefonu — pořád zřetelný předěl, ne díra. */
+main .okr-hero + .section{padding-top:16px;}
+@media (max-width:880px){ main .okr-hero + .section{padding-top:12px;} }
 
 /* Čísla: velké číslice, ne čtyři malé krabičky. Stejný jazyk jako na
    hlavní stránce — číslo je hodnota, ne odznak. */
