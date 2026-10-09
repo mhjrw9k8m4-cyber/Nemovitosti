@@ -18,7 +18,7 @@
 //  3. ŽE SE TO NESTÁVÁ DRUHÝM STYLOPISEM. Co platí pro celý web, patří
 //     do css/styles.css. Pravidlo napsané na obou místech se dřív nebo
 //     později rozejde — na tomhle webu se to u cen i u rádce už stalo.
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -44,17 +44,81 @@ if (!m) {
 const styl = m[1];
 const bez = styl.replace(/\/\*[\s\S]*?\*\//g, '');
 
-/* ---- 1) velikost ---- */
-/* Strop je 36 kB i s komentáři. Dnešní stav je 31,6 kB; čtyři kilobajty
-   rezervy jsou místo na úpravy, ne na nový oddíl. Komentáře se počítají
-   schválně — do stránek se vkládají taky. */
-const STROP_KB = 36;
-const kb = styl.length / 1024;
-pravda(`vložený styl se vejde do ${STROP_KB} kB`, kb <= STROP_KB,
-  `má ${kb.toFixed(1)} kB — každý kilobajt je ~2 MB napříč 1 995 stránkami`);
+/* ---- 1) velikost TOHO, CO SE OPRAVDU POSÍLÁ ----
+   Strop se dlouho měřil na předloze, tedy VČETNĚ KOMENTÁŘŮ, protože se
+   do stránek vkládaly i ony. To už neplatí: scripts/minifikace.mjs
+   čistí vložený styl ve vygenerovaných stránkách stejně jako
+   css/styles.css (naměřeno 37,9 kB → 21,5 kB na stránku, 32,9 MB
+   napříč 2 062 stránkami). Měřit dál předlohu by znamenalo hlídat
+   číslo, které nikdo nestahuje — a hlavně by komentáře zdražovaly styl,
+   takže by se vyplatilo je nepsat. Měří se proto hotová stránka.
+
+   Předloha se přesto měří taky, jen volněji: je to jediná stránka,
+   která vložený styl posílá i s komentáři (je to ZDROJ, nečistí se),
+   a chodí se na ni z mapy. */
+const STROP_KB = 24;        // dnešní stav 21,0 kB
+const STROP_PREDLOHY_KB = 40;
+
+const hotove = readdirSync(KOREN).filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f));
+pravda('je co měřit — vygenerované stránky pozemků se našly',
+  hotove.length >= 500, `našlo se ${hotove.length}`);
+
+let nejvetsi = { f: '', kb: 0 };
+let sKomentarem = [];
+for (const f of hotove) {
+  const h = readFileSync(path.join(KOREN, f), 'utf8');
+  const mm = h.match(/<style[^>]*>([\s\S]*?)<\/style>/);
+  if (!mm) continue;
+  const k = mm[1].length / 1024;
+  if (k > nejvetsi.kb) nejvetsi = { f, kb: k };
+  if (/\/\*/.test(mm[1])) sKomentarem.push(f);
+}
+pravda(`vložený styl na hotové stránce se vejde do ${STROP_KB} kB`,
+  nejvetsi.kb <= STROP_KB && nejvetsi.kb > 0,
+  `nejvíc má ${nejvetsi.f}: ${nejvetsi.kb.toFixed(1)} kB `
+  + '— každý kilobajt je ~2 MB napříč webem');
 /* A zároveň nesmí zmizet: kdyby ho někdo omylem vyprázdnil, detail by
    se rozsypal a kontrola výš by prošla s přehledem. */
-pravda('a není prázdný', kb > 10, `${kb.toFixed(1)} kB`);
+pravda('a není prázdný', nejvetsi.kb > 10, `${nejvetsi.kb.toFixed(1)} kB`);
+pravda('do hotových stránek se neposílají komentáře ze stylu',
+  sKomentarem.length === 0,
+  `${sKomentarem.length} stránek je má, např. ${sKomentarem.slice(0, 3).join(', ')} `
+  + '— běželo sestavení (scripts/oprav.mjs)?');
+
+const kb = styl.length / 1024;
+pravda(`předloha pozemek.html se vejde do ${STROP_PREDLOHY_KB} kB i s komentáři`,
+  kb <= STROP_PREDLOHY_KB, `má ${kb.toFixed(1)} kB`);
+/* Komentáře v předloze jsou to, podle čeho se styl upravuje. Kdyby je
+   někdo „zoptimalizoval" pryč, ušetří nula bajtů (na čtenáře se
+   nedostanou) a přijde se o jediný výklad těch pravidel. */
+pravda('a komentáře v předloze zůstávají — na čtenáře se stejně nedostanou',
+  styl.length - bez.length > 8000,
+  `komentářů je ${((styl.length - bez.length) / 1024).toFixed(1)} kB`);
+
+/* ---- 1b) očištění nesmí nic jiného změnit ----
+   Čistič je týž, jakým prochází css/styles.css — ale tohle je styl,
+   který drží celou stránku pozemku, a kdyby se na něm spletl, pozná se
+   to až na webu. Porovná se proto předloha s hotovou stránkou po
+   srovnání na stejný tvar: pryč komentáře, pryč mezery a pryč
+   středník před závorkou (ten čistič odstraňuje schválně a v CSS nic
+   neznamená). Co zbude, musí být ZNAK PO ZNAKU totéž. */
+{
+  const naStejno = (x) => x
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\s+/g, '')
+    .replace(/;\}/g, '}');
+  const vzorek = hotove.slice(0, 5);
+  const rozdilne = [];
+  for (const f of vzorek) {
+    const h = readFileSync(path.join(KOREN, f), 'utf8');
+    const mm = h.match(/<style[^>]*>([\s\S]*?)<\/style>/);
+    if (!mm) { rozdilne.push(`${f}: vložený styl chybí`); continue; }
+    if (naStejno(mm[1]) !== naStejno(styl)) rozdilne.push(f);
+  }
+  pravda('očištěný styl na stránce je týž jako v předloze — jen bez komentářů a mezer',
+    vzorek.length > 0 && rozdilne.length === 0,
+    `liší se: ${rozdilne.slice(0, 3).join(', ')}`);
+}
 
 /* ---- 2) barvy přes tokeny ---- */
 {

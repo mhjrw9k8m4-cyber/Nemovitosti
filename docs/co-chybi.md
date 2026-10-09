@@ -177,6 +177,35 @@ Při tom se našly a opravily tři další věci:
   nabídky — neznámý okres, druh bez stránky, cena nad nejvyšší mez,
   dražba. Teď sabotáž padá.
 
+## 3g. ~~Vložený styl posílal komentáře do 2 062 stránek~~ — *opraveno 9. 10.*
+
+Stránka pozemku si nese vlastní `<style>` přímo v HTML, a má to důvod:
+detail se otevírá z výsledků hledání a čeká se u něj na cenu, takže se
+nemá čekat ještě na druhý soubor. Jenže ten vložený styl se jako jediná
+cesta ke čtenáři **nečistil**. `css/styles.css` i `js/*.js` se zbavují
+komentářů už dávno (`scripts/minifikace.mjs`); vložený styl si je nesl
+do každé z 2 062 vygenerovaných stránek pozemků.
+
+Naměřeno: 37,9 kB vloženého stylu, z toho 16,5 kB komentářů. Napříč
+webem **32,9 MB**, které nikdo nikdy nepřečte — a přes drát 7,2 kB
+při každém otevření inzerátu (celá stránka gzipem 17,0 kB → 9,8 kB,
+tedy o 42 % méně). Je to zrovna ta stránka, na kterou lidé přicházejí
+z vyhledávače.
+
+Čistí se **jen vygenerované stránky**, ne předloha `pozemek.html` ani
+ručně psané stránky: předloha je zdroj a komentáře v ní jsou to, podle
+čeho se styl upravuje. Čistič je týž, jakým prochází `css/styles.css`,
+a výsledek je znak po znaku tentýž styl — ověřeno porovnáním po
+odstranění komentářů, mezer a středníku před závorkou.
+
+Strop velikosti v `scripts/test-vlozeny-styl.mjs` se tím musel
+přepsat: dosud měřil předlohu **i s komentáři** („do stránek se
+vkládají taky"), což přestalo platit. Měřit dál předlohu by znamenalo
+hlídat číslo, které nikdo nestahuje — a hlavně by komentáře zdražovaly
+styl, takže by se vyplatilo je nepsat. Měří se teď hotová stránka
+(21,0 kB, strop 24) a zvlášť se hlídá, že se komentáře do hotových
+stránek opravdu nedostanou a že z předlohy nezmizí.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

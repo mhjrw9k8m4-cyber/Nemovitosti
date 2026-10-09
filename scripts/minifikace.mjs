@@ -339,6 +339,53 @@ function minifikujJs(kontrolaJen) {
   return { chyby, pred, po, zapsano, kolik: zdroje.length, mimo: vsechny.length - zdroje.length };
 }
 
+/* VLOŽENÝ STYL VE VYGENEROVANÝCH STRÁNKÁCH POZEMKŮ.
+ *
+ * Naměřeno: stránka pozemku si nese vlastní <style> přímo v HTML
+ * (kvůli prvnímu vykreslení — zbytek webu má styl v souboru, který se
+ * dá uložit do mezipaměti, tenhle ne). Komentáře v něm se ale
+ * neočišťovaly: 37,9 kB vloženého stylu, z toho 16,5 kB komentářů,
+ * a to v každé z 2 062 vygenerovaných stránek pozemků — 27,2 MB
+ * komentářů na webu a 16 kB navíc při každém otevření inzerátu.
+ * Zdroj css/styles.css i js/*.js se přitom čistí už dávno; tahle
+ * jedna cesta ke čtenáři zůstala nedotčená.
+ *
+ * Čistí se JEN VYGENEROVANÉ stránky pozemků, ne předloha pozemek.html
+ * ani ručně psané stránky: předloha je ZDROJ a komentáře v ní jsou to,
+ * podle čeho se styl upravuje. Tentýž vzor jako jinde v repozitáři —
+ * jméno stránky pozemku končí otiskem klíče, takže se nechytne rádce
+ * „pozemek-od-obce.html".
+ *
+ * Opakovatelné: ocisti() nad už očištěným stylem vrací totéž
+ * (vyzkoušeno), takže sestavení smí běžet kolikrát chce.
+ */
+const VZOR_STRANKA_POZEMKU = /^pozemek-.+-[0-9a-z]{5,8}\.html$/;
+const VZOR_STYLU = /(<style[^>]*>)([\s\S]*?)(<\/style>)/g;
+
+function ocistiVlozeneStyly(kontrolaJen) {
+  const stranky = fs.readdirSync(KOREN).filter((f) => VZOR_STRANKA_POZEMKU.test(f));
+  let zmeneno = 0, pred = 0, po = 0;
+  const nezmenene = [];
+  for (const f of stranky) {
+    const cesta = path.join(KOREN, f);
+    const s = fs.readFileSync(cesta, 'utf8');
+    let doSlo = false;
+    const novy = s.replace(VZOR_STYLU, (celek, zacatek, telo, konec) => {
+      const cisty = ocisti(telo);
+      if (cisty === telo) return celek;
+      doSlo = true;
+      pred += Buffer.byteLength(telo);
+      po += Buffer.byteLength(cisty);
+      return zacatek + cisty + konec;
+    });
+    if (!doSlo) continue;
+    if (kontrolaJen) { nezmenene.push(f); continue; }
+    fs.writeFileSync(cesta, novy);
+    zmeneno++;
+  }
+  return { zmeneno, nezmenene, pred, po, stranek: stranky.length };
+}
+
 export function spust(kontrolaJen = false) {
   const zdroj = fs.readFileSync(ZDROJ, 'utf8');
   const mini = ocisti(zdroj);
@@ -353,12 +400,18 @@ export function spust(kontrolaJen = false) {
       chyby.push(`${nezmenene.length} stránek odkazuje na neočištěný zdroj: `
         + nezmenene.slice(0, 3).join(', '));
     }
+    const vlozene = ocistiVlozeneStyly(true);
+    if (vlozene.nezmenene.length) {
+      chyby.push(`${vlozene.nezmenene.length} stránek pozemků má ve vloženém stylu `
+        + `komentáře: ${vlozene.nezmenene.slice(0, 3).join(', ')}`);
+    }
     return { chyby, ubylo: 0 };
   }
 
   if (stare !== mini) fs.writeFileSync(CIL, mini);
   const js = minifikujJs(false);
   const { zmeneno } = prepisOdkazy(false);
+  const vlozene = ocistiVlozeneStyly(false);
   const ubylo = zdroj.length - mini.length;
   console.log(`Očištěný stylopis: ${(zdroj.length / 1024).toFixed(1)} kB → `
     + `${(mini.length / 1024).toFixed(1)} kB (o ${(ubylo / 1024).toFixed(1)} kB méně, `
@@ -367,6 +420,11 @@ export function spust(kontrolaJen = false) {
   console.log(`Očištěné skripty: ${js.kolik} souborů, ${(js.pred / 1024).toFixed(1)} kB → `
     + `${(js.po / 1024).toFixed(1)} kB (o ${Math.round((js.pred - js.po) * 100 / js.pred)} % méně)`
     + (js.zapsano ? `, přepsáno ${js.zapsano}` : ''));
+  if (vlozene.zmeneno) {
+    console.log(`Očištěný vložený styl: ${vlozene.zmeneno} stránek pozemků, `
+      + `${(vlozene.pred / 1024).toFixed(1)} kB → ${(vlozene.po / 1024).toFixed(1)} kB `
+      + `(o ${Math.round((vlozene.pred - vlozene.po) * 100 / vlozene.pred)} % méně)`);
+  }
   return { chyby: [], ubylo };
 }
 
