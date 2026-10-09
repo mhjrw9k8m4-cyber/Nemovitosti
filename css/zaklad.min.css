@@ -243,6 +243,9 @@ to{opacity:1;transform:none}
 }
 
 
+.opp-cd{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:var(--r-xs);background:var(--plocha-jemna);border:1px solid var(--line);color:var(--text-ondark-mute);letter-spacing:0.01em;white-space:nowrap}
+.opp-cd.soon{color:var(--c-drazba-ink);border-color:rgba(204,107,51,0.55)}
+.opp-cd.urg{color:var(--c-exekuce-ink);border-color:rgba(228,72,61,0.4)}
 @keyframes pruhNajed{from{width:0}
 to{width:var(--w)}
 }

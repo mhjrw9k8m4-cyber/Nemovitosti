@@ -678,6 +678,23 @@ function itemRow(o, skryjOkres, navic, skryjTyp){
      je termín, ne zdroj. */
   const portal = (o.extra && /^inzerát\s*[–—-]\s*(.+)$/.exec(o.extra.trim()) || [])[1] || '';
   if(o.extra && o.extra!=='—' && !portal && !jeSPU) bits.push(esc(T.zdrojText(o.extra)));
+  /* ODPOČET DO DRAŽBY. V řádku stálo „Dražba 12. 10. 2026" a kolik to
+     je do dneška, si musel čtenář spočítat sám. Přitom u dražby je
+     termín to rozhodující — cena se dá zvážit potřeba, datum ne: kdo
+     se dozví o dražbě den po ní, nedozvěděl se nic. Naměřeno na
+     dnešních 111 aktuálních dražbách: 6 je do tří dnů, 18 do týdne,
+     64 do čtrnácti dnů.
+     V mapě i na stránce pozemku se odpočet ukazuje odjakživa
+     (js/terminy.js, .opp-cd) — na statických výpisech, kam lidé chodí
+     z vyhledávačů, chyběl. Třída je TÁŽ, takže existuje jedna sada
+     barev a hlídá ji scripts/test-kontrast.mjs.
+     Přesné datum zůstává vedle: statická stránka se generuje čtyřikrát
+     denně, takže odpočet může být o pár hodin starý — datum platí
+     vždycky a rozhoduje ono. */
+  const dniDoTerminu = (o.type === 'drazba' || o.type === 'exekuce') ? T.daysUntil(o.extra) : null;
+  if (dniDoTerminu != null && dniDoTerminu >= 0) {
+    bits.push(`<span class="opp-cd${T.countdownClass(dniDoTerminu)}">${esc(T.countdownText(dniDoTerminu))}</span>`);
+  }
   /* Formulace musí zůstat opatrná: v popisech stojí „na hranici" stejně
      často jako „zavedeno", takže se tvrdí jen to, co inzerát uvádí. */
   if(o.site && o.site.length) bits.push('inzerát uvádí <b>'+esc(o.site.map(k=>VYB.nazev(k).toLowerCase()).join(', '))+'</b>');
@@ -1037,7 +1054,19 @@ ${rows}
 // ---------- DRAŽBY (národní přehled) ----------
 /* Celostátní přehled dražeb počítá z téže hromádky jako okresy — tedy
    bez těch, kterým termín už prošel. */
-const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>(a.price||1e15)-(b.price||1e15));
+/* ŘADÍ SE PODLE TERMÍNU, NE PODLE CENY. U běžného prodeje je nejlevnější
+   nabídka nahoře správně — čas neběží. U dražby je to naopak to první, co
+   člověk potřebuje vědět: dražba za tři dny a dražba za dva měsíce jsou
+   dvě úplně jiné situace a cena na tom nic nemění. Dražby bez termínu jdou
+   na konec (bez data se nedá nic naplánovat); v rámci jednoho dne pak
+   rozhoduje nižší vyvolávací cena. */
+const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>{
+  const da = T.daysUntil(a.extra), db = T.daysUntil(b.extra);
+  if (da == null && db == null) return (a.price||1e15)-(b.price||1e15);
+  if (da == null) return 1;
+  if (db == null) return -1;
+  return da - db || (a.price||1e15)-(b.price||1e15);
+});
 {
   const count = drazby.length;
   const priced = drazby.filter(o=>o.price>0).map(o=>o.price).sort((a,b)=>a-b);
@@ -1083,7 +1112,7 @@ const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>(a.price||1e15)
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
           <h2>Pozemky v dražbě</h2>
-          <p class="rules-note" style="margin-top:0;">${typJeden ? vetaOTypu(typJeden) + ' ' : ''}Seřazeno od nejnižší ceny. Údaje pocházejí z veřejné evidence dražeb a mohou se v čase měnit — konání, podmínky a aktuální stav vždy ověřte přímo v dražební vyhlášce a v katastru nemovitostí.</p>
+          <p class="rules-note" style="margin-top:0;">${typJeden ? vetaOTypu(typJeden) + ' ' : ''}Seřazeno <b>podle termínu</b> — nejdřív to, co se draží nejblíž. Údaje pocházejí z veřejné evidence dražeb a mohou se v čase měnit — konání, podmínky a aktuální stav vždy ověřte přímo v dražební vyhlášce a v katastru nemovitostí.</p>
 ${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}

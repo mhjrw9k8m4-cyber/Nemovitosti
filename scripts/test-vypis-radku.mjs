@@ -129,6 +129,69 @@ pravda(`je co měřit (${stranky.length} výpisových stránek, ${celkemRadku} �
   pravda(`a odkaz na nabídku SPÚ zůstal (${sOdkazem} řádků)`, sOdkazem > 100, String(sOdkazem));
 }
 
+// --- D) ODPOČET DO DRAŽBY -----------------------------------------
+/* U dražby je termín to rozhodující: kdo se o ní dozví den po ní,
+   nedozvěděl se nic. V mapě i na stránce pozemku se odpočet ukazuje
+   odjakživa, na statických výpisech chyběl. Hlídá se, že tam je, že
+   sedí na datum vedle sebe a že má správnou naléhavost — a že se
+   nelepí na obyčejný prodej, kde by nedával smysl. */
+{
+  new Function(readFileSync(path.join(KOREN, 'js', 'terminy.js'), 'utf8'))();
+  const T = globalThis.PK_TERMINY;
+  let sDatem = 0, bezOdpoctu = 0, spatnyText = [], spatnaTrida = [], uProdeje = [];
+  const dnes = new Date(); dnes.setHours(0, 0, 0, 0);
+  for (const s of stranky) {
+    /* Typ se pozná z odznaku, a kde odznak není (stránka s jediným
+       typem), tak z věty nad výpisem. Na první pokus jsem hledal
+       „· Dražba " v podrobnostech — jenže tam stojí to, co napsal
+       zdroj, tedy „dražba 12. 10. 2026 · OK dražby" s malým d.
+       Kontrola pak hlásila odpočet u „běžného prodeje" na stránce,
+       kde jsou samé dražby. */
+    const stranVDrazbe = /Všechny nabídky v tomhle výpisu jsou <b>(ve veřejné dražbě|v exekuční dražbě)<\/b>/.test(s.h);
+    for (const r of s.radky) {
+      const jeDrazba = stranVDrazbe
+        || /class="okr-badge t-(drazba|exekuce)"/.test(r)
+        || /\b(dražba|dražby|dražbě|exekuce|exekuční)\b/i.test(r.replace(/<a [^>]*>[\s\S]*?<\/a>/g, ''));
+      const md = /(\d{1,2})\. (\d{1,2})\. (\d{4})/.exec(r);
+      const mo = /<span class="opp-cd([^"]*)">([^<]+)<\/span>/.exec(r);
+      if (!jeDrazba) { if (mo) uProdeje.push(s.f); continue; }
+      if (!md) continue;
+      sDatem++;
+      if (!mo) { bezOdpoctu++; continue; }
+      const cil = new Date(+md[3], +md[2] - 1, +md[1]);
+      const dni = Math.round((cil - dnes) / 86400000);
+      if (mo[2].trim() !== T.countdownText(dni)) spatnyText.push(`${s.f}: „${mo[2]}" vs. ${T.countdownText(dni)} (${dni} dní)`);
+      if (mo[1].trim() !== T.countdownClass(dni).trim()) spatnaTrida.push(`${s.f}: „${mo[1]}" vs. „${T.countdownClass(dni)}"`);
+    }
+  }
+  pravda(`je co měřit — dražeb s termínem ve výpisech: ${sDatem}`, sDatem >= 50, String(sDatem));
+  pravda('každá dražba s termínem má odpočet', bezOdpoctu === 0, `${bezOdpoctu} bez odpočtu`);
+  pravda('odpočet sedí na datum vedle sebe', spatnyText.length === 0, spatnyText.slice(0, 4).join('; '));
+  pravda('a naléhavost (barva) sedí na počet dnů', spatnaTrida.length === 0, spatnaTrida.slice(0, 4).join('; '));
+  pravda('u běžného prodeje odpočet není', uProdeje.length === 0,
+    'prodej nemá termín, odpočet by si ho vymýšlel: ' + [...new Set(uProdeje)].slice(0, 3).join(', '));
+}
+
+// --- E) PŘEHLED DRAŽEB JE ŘAZENÝ PODLE TERMÍNU --------------------
+{
+  const f = 'drazby-pozemku-nabidky.html';
+  const s = stranky.find((x) => x.f === f);
+  if (!s) {
+    pravda(`${f} existuje`, false, 'celostátní přehled dražeb se negeneruje');
+  } else {
+    const dny = [];
+    for (const r of s.radky) {
+      const m = /(\d{1,2})\. (\d{1,2})\. (\d{4})/.exec(r);
+      if (m) dny.push(new Date(+m[3], +m[2] - 1, +m[1]).getTime());
+    }
+    pravda(`přehled dražeb má řádky s termínem (${dny.length})`, dny.length >= 20, String(dny.length));
+    const poradi = dny.every((d, i) => i === 0 || dny[i - 1] <= d);
+    pravda('a jsou seřazené od nejbližšího termínu', poradi,
+      'u dražby rozhoduje datum, ne cena — kdo se dozví den po dražbě, nedozvěděl se nic');
+    pravda('a stránka to u výpisu říká', /Seřazeno <b>podle termínu<\/b>/.test(s.h));
+  }
+}
+
 console.log('Řádky výpisu:');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);
