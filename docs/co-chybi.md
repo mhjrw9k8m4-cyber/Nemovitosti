@@ -708,6 +708,49 @@ Vedlejší zjištění, které stojí za zapsání: u mezí se vyžadovalo
 odhadu se kontrola zastavovat nemá, protože **žádné z tvrzení níž odhad
 nečte**; vypisuje se dál, jen se na něm neprochází.
 
+## 3v. Zkouška stability: dva pozorovatelé, kteří se rozešli — *rozpracováno 9. 10.*
+
+Přímé pokračování bodu 3p. Jmenovitá hláška v CI poprvé řekla, co
+`test-stabilita` vlastně nahlásila:
+
+```
+Stabilita: 1 kontrol neprošlo. Co padlo: monitor · hlidani.html:
+rozvržení neposkakuje (CLS 0.2426 ≤ 0.05) 86 ms, 0.243: DIV.wrap, ?, ?
+```
+
+Tedy: stránka hlídání, na monitoru, posun **0,2426** (mez je 0,05)
+v 86. milisekundě, a viník `DIV.wrap`. To je o celé řády víc, než
+čeho jsem se dopátral místně.
+
+**Co jsem vyzkoušel a nevyšlo.** Místně dává zkouška 50 z 50
+v pořádku. Postavil jsem si k tomu vlastní měření se zpomalením
+procesoru 1×, 4× a 8× (přes CDP `Emulation.setCPUThrottlingRate`):
+CLS vždy **0,0037**, vždy z téhož uzlu `DIV.wrap`, jen se posouvá čas
+(104 → 318 → 673 ms). **Rozdíl tedy není v rychlosti stroje.** Písma
+leží u nás v `fonts/` a přednačítají se, takže ani teorie „v CI dojede
+webfont a text přeteče" neplatí — v obou prostředích se berou ze
+stejného místa.
+
+**Co se ale opravit dalo, a je to nález sám pro sebe.** Pozorovatel
+posunů byl v tom souboru **dvakrát** a ty dvě kopie se už rozešly:
+jedna u uzlu vypisovala i třídu, druhá jen značku a id. Odtud ta
+nicneříkající část hlášky („`DIV.wrap, ?, ?`" — dva ze tří zdrojů bez
+jména). Teď je pozorovatel jeden a ke každému posunu připisuje
+**geometrii**: odkud kam se obdélník posunul a jak byl vysoký.
+
+Místně to vypadá takhle:
+
+```
+106 ms, 0.004: DIV.wrap [334/566→342/558]
+```
+
+Tedy posun o **8 px** dolů a o 8 px nižší blok. V CI z toho bude
+vidět, o kolik se to posunulo tam — a teprve pak se dá hledat příčina.
+Dokud na hlášce stál jen součet, nedalo se hádat vůbec.
+
+Zapsané jako **rozpracované**, ne opravené: vím, kde to padá a čím to
+NENÍ, ale ne ještě proč. Příští červený běh v CI by to měl doříct.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

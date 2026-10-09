@@ -26,6 +26,41 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
+/* JEDEN POZOROVATEL PRO OBĚ MĚŘENÍ.
+   Byl tu dvakrát, a ty dvě kopie se už rozešly: jedna vypisovala u uzlu
+   i třídu, druhá jen značku a id. Zpráva z CI pak zněla „DIV.wrap, ?, ?"
+   a víc se z ní nedalo vyčíst.
+
+   KDE SE TO ZASEKLO: `test-stabilita` padá v CI (CLS 0,2426 na
+   hlidani.html, monitor), ale místně dává 50 z 50 v pořádku —
+   i se zpomalením procesoru 8×, kde vyjde 0,0037 ze téhož uzlu
+   DIV.wrap. Rozdíl je tedy v prostředí, ne v rychlosti, a z jména uzlu
+   se to nepozná. Proto se ke každému posunu připisuje GEOMETRIE: odkud
+   kam se ten obdélník posunul a jak byl vysoký. Z toho už se dá poznat,
+   co se v CI vykreslilo jinak — bez toho se jen hádá. */
+const POZOROVATEL = () => {
+  window.__cls = 0; window.__kdo = [];
+  try {
+    const obd = (r) => r ? `${Math.round(r.top)}/${Math.round(r.height)}` : '—';
+    new PerformanceObserver((l) => {
+      for (const e of l.getEntries()) {
+        if (e.hadRecentInput) continue;
+        window.__cls += e.value;
+        window.__kdo.push(Math.round(e.startTime) + ' ms, ' + e.value.toFixed(3) + ': '
+          + (e.sources || []).map((s) => {
+            const n = s.node;
+            const jm = n ? (n.tagName || '?') + (n.id ? '#' + n.id : '')
+              + (typeof n.className === 'string' && n.className ? '.' + n.className.trim().split(/\s+/)[0] : '') : '?';
+            /* top/výška před → po; „neposunulo se" se tím pozná od
+               „posunulo se o 200 px". */
+            return jm + ' [' + obd(s.previousRect) + '→' + obd(s.currentRect) + ']';
+          }).join(', '));
+      }
+    }).observe({ type: 'layout-shift', buffered: true });
+  } catch (e) { /* prohlížeč to neumí — pozná se podle prázdného __kdo */ }
+};
+
+
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -91,23 +126,7 @@ for (const [sirka, vyska, jmeno] of [[390, 844, 'telefon'], [1280, 900, 'monitor
     const p = await ctx.newPage();
     /* Pozorovatel musí být nasazený DŘÍV, než se začne kreslit — proto
        init-skript, ne evaluate po načtení. */
-    await p.addInitScript(() => {
-      window.__cls = 0; window.__kdo = [];
-      try {
-        new PerformanceObserver((l) => {
-          for (const e of l.getEntries()) {
-            if (e.hadRecentInput) continue;
-            window.__cls += e.value;
-            window.__kdo.push(Math.round(e.startTime) + ' ms, ' + e.value.toFixed(3) + ': '
-              + (e.sources || []).map((s) => {
-                const n = s.node;
-                return n ? (n.tagName || '?') + (n.id ? '#' + n.id : '')
-                  + (typeof n.className === 'string' && n.className ? '.' + n.className.trim().split(/\s+/)[0] : '') : '?';
-              }).join(', '));
-          }
-        }).observe({ type: 'layout-shift', buffered: true });
-      } catch (e) { /* prohlížeč to neumí — pozná se podle prázdného __kdo */ }
-    });
+    await p.addInitScript(POZOROVATEL);
     await p.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' });
     await p.waitForTimeout(6000);
     const v = await p.evaluate((sel) => ({
@@ -145,22 +164,7 @@ for (const [sirka, vyska, jmeno] of [[390, 844, 'telefon'], [1280, 900, 'monitor
     await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
       body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
     const p = await ctx.newPage();
-    await p.addInitScript(() => {
-      window.__cls = 0; window.__kdo = [];
-      try {
-        new PerformanceObserver((l) => {
-          for (const e of l.getEntries()) {
-            if (e.hadRecentInput) continue;
-            window.__cls += e.value;
-            window.__kdo.push(Math.round(e.startTime) + ' ms, ' + e.value.toFixed(3) + ': '
-              + (e.sources || []).map((x) => {
-                const n = x.node;
-                return n ? (n.tagName || '?') + (n.id ? '#' + n.id : '') : '?';
-              }).join(', '));
-          }
-        }).observe({ type: 'layout-shift', buffered: true });
-      } catch (e) {}
-    });
+    await p.addInitScript(POZOROVATEL);
     /* Jiná stránka téhož původu, ať je kam uložit token. */
     await p.goto(`${BASE}/kontakt.html`, { waitUntil: 'domcontentloaded' });
     await p.evaluate(() => localStorage.setItem('pk_auth', JSON.stringify({
