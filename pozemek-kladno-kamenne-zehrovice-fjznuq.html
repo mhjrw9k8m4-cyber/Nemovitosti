@@ -45,7 +45,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/zaklad.min.css?v=c93b074a">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=45f55690">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -138,9 +138,6 @@
        hodně, nebo skoro uprostřed. */
     .pv-stred{position:absolute; left:50%; top:-3px; bottom:-3px; width:1.5px;
       background:rgba(20,35,28,0.3); transform:translateX(-50%); border-radius:2px;}
-    /* Pruh dojede na svou hodnotu. Barvu bere z --vc jako odznak. */
-    .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill); background:var(--vc);
-      width:var(--w); animation:pruhNajed .62s var(--ease) both;}
     /* Puntík je barevný podle verdiktu a má bílý prstenec, aby byl
        poznat i tam, kde leží na tmavší části lišty. Bílý puntík na
        světlé liště splýval. */
@@ -211,6 +208,22 @@
     .srv-ja .srv-kde{font-weight:700;}
     .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
       line-height:1.55; color:var(--text-ondark-mute);}
+
+    /* KAM DÁL — rozcestník na konci stránky. Naměřeno: z vykresleného
+       detailu nevedl ani jeden odkaz na okres, kraj ani druh. Jsou to
+       odkazy, ne tlačítka — proto obrys, ne výplň značky. Dlaždice je
+       aspoň 48 px vysoká, aby se do ní dalo klepnout prstem; pod
+       dvěma sloupci na šířku se mřížka sama zalomí pod sebe. */
+    .kd-mriz{display:grid; gap:8px; max-width:var(--m-text);
+      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));}
+    .kd-polozka{display:flex; flex-direction:column; justify-content:center;
+      gap:2px; min-height:56px; padding:10px 14px; border-radius:var(--r-ovladani);
+      background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka);
+      text-decoration:none; box-shadow:var(--e1);
+      transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
+    .kd-polozka:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
+    .kd-t{font-size:15px; font-weight:700; color:var(--text-ondark);}
+    .kd-p{font-size:12px; line-height:1.4; color:var(--text-ondark-mute);}
     
 
     
@@ -251,12 +264,6 @@
        Stav při najetí myší zkouška kontrastu nevidí; --c-drazba-ink je
        tatáž barva v tmavší čitelné variantě. */
     .pzd-odkaz:hover{background:var(--c-drazba-ink); color:#fff;}
-    .pz-term{display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--c-drazba-ink); background:rgba(204,107,51,0.13); border:1px solid rgba(204,107,51,0.44); padding:6px 12px; border-radius:var(--r-plocha); margin:14px 0 2px; white-space:nowrap;}
-    .pz-term svg{width:16px; height:16px; stroke-width:2.25; flex:none;}
-    /* Dražba po termínu: šedě a bez naléhavosti — už to není příležitost,
-       jen záznam. Oranžová „termín se blíží" by tu lhala. */
-    .pz-term.prosle{color:var(--text-ondark-mute); background:var(--ink-soft2);
-      border-color:var(--line-strong); white-space:normal;}
 
     .pz-cas{margin:10px 0 0; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
     .pz-cas b{color:var(--text-ondark); font-weight:600;}
@@ -574,7 +581,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 1 306 m² — Kamenné Žehrovice</h1><p><b>8 490 000 Kč</b> (6 501 Kč/m²) · 1 306 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>1 306 m²</dd><dt>Obec</dt><dd>Kamenné Žehrovice</dd><dt>Okres</dt><dd><a href="pozemky-okres-kladno.html">Kladno</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Kladno 5,9 km · Praha 29 km</dd></dl><p><a href="pozemek.html?p=Kamenn%C3%A9%20%C5%BDehrovice%7C%E2%80%94%7CKladno%7C50.128%7C14.026&amp;ll=50.127521076356,14.025558038459&amp;v=1306&amp;c=8490000">Otevřít na mapě</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 14 km je tenhle nejdražší.</p><ul><li>6 501 Kč/m² — <b>tenhle pozemek</b>, 1 306 m²</li><li>5 900 Kč/m² — <a href="pozemek-kladno-trebusice-qlapnc.html">Třebusice</a>, 1 036 m², 14 km</li><li>5 676 Kč/m² — <a href="pozemek-praha-zapad-ptice-12y73kn.html">Ptice</a>, 749 m², 12 km</li><li>5 300 Kč/m² — <a href="pozemek-rakovnik-msecke-zehrovice-1e7dyld.html">Mšecké Žehrovice</a>, 852 m², 9 km</li><li>4 903 Kč/m² — <a href="pozemek-kladno-hradecno-cevbsa.html">Hradečno</a>, 1 181 m², 7 km</li></ul></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 1 306 m² — Kamenné Žehrovice</h1><p><b>8 490 000 Kč</b> (6 501 Kč/m²) · 1 306 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>1 306 m²</dd><dt>Obec</dt><dd>Kamenné Žehrovice</dd><dt>Okres</dt><dd><a href="pozemky-okres-kladno.html">Kladno</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Kladno 5,9 km · Praha 29 km</dd></dl><p><a href="pozemek.html?p=Kamenn%C3%A9%20%C5%BDehrovice%7C%E2%80%94%7CKladno%7C50.128%7C14.026&amp;ll=50.127521076356,14.025558038459&amp;v=1306&amp;c=8490000">Otevřít na mapě</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 14 km je tenhle nejdražší.</p><ul><li>6 501 Kč/m² — <b>tenhle pozemek</b>, 1 306 m²</li><li>5 900 Kč/m² — <a href="pozemek-kladno-trebusice-qlapnc.html">Třebusice</a>, 1 036 m², 14 km</li><li>5 676 Kč/m² — <a href="pozemek-praha-zapad-ptice-12y73kn.html">Ptice</a>, 749 m², 12 km</li><li>5 300 Kč/m² — <a href="pozemek-rakovnik-msecke-zehrovice-1e7dyld.html">Mšecké Žehrovice</a>, 852 m², 9 km</li><li>4 903 Kč/m² — <a href="pozemek-kladno-hradecno-cevbsa.html">Hradečno</a>, 1 181 m², 7 km</li></ul><h2>Kam dál</h2><ul><li><a href="pozemky-okres-kladno.html">Okres Kladno</a> — všechny pozemky v okrese</li><li><a href="pozemky-stredocesky-kraj.html">Středočeský kraj</a> — přehled celého kraje</li><li><a href="pozemky-stavebni.html">Stavební pozemky</a> — týž druh pozemku po celé ČR</li></ul></article></div></div>
   </div>
 </main>
 
@@ -613,9 +620,9 @@
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
-<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 1 306 m² — Kamenné Žehrovice","description":"Na prodej · 8 490 000 Kč (6 501 Kč/m²) · 1 306 m² · Kamenné Žehrovice, okres Kladno. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-kladno-kamenne-zehrovice-fjznuq.html","address":{"@type":"PostalAddress","addressLocality":"Kamenné Žehrovice","addressRegion":"Kladno","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.127521076356,"longitude":14.025558038459},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":1306,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":8490000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-kladno-kamenne-zehrovice-fjznuq.html","itemOffered":{"@type":"Place","name":"Stavební pozemek 1 306 m² — Kamenné Žehrovice"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Kladno","item":"https://www.parcelaka.cz/pozemky-okres-kladno.html"},{"@type":"ListItem","position":4,"name":"Stavební pozemek 1 306 m² — Kamenné Žehrovice","item":"https://www.parcelaka.cz/pozemek-kladno-kamenne-zehrovice-fjznuq.html"}]}]</script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 1 306 m² — Kamenné Žehrovice","description":"Na prodej · 8 490 000 Kč (6 501 Kč/m²) · 1 306 m² · Kamenné Žehrovice, okres Kladno. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-kladno-kamenne-zehrovice-fjznuq.html","address":{"@type":"PostalAddress","addressLocality":"Kamenné Žehrovice","addressRegion":"Kladno","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.127521076356,"longitude":14.025558038459},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":1306,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":8490000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-kladno-kamenne-zehrovice-fjznuq.html","itemOffered":{"@type":"Place","name":"Stavební pozemek 1 306 m² — Kamenné Žehrovice"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Středočeský kraj","item":"https://www.parcelaka.cz/pozemky-stredocesky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Kladno","item":"https://www.parcelaka.cz/pozemky-okres-kladno.html"},{"@type":"ListItem","position":5,"name":"Stavební pozemek 1 306 m² — Kamenné Žehrovice","item":"https://www.parcelaka.cz/pozemek-kladno-kamenne-zehrovice-fjznuq.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Kamenné Žehrovice|—|Kladno|50.128|14.026","ll":[50.127521076356,14.025558038459],"v":1306,"c":8490000,"r":"data/okres/kladno.json","h":[["2026-09-25",8990000],["2026-09-27",8490000]]};</script>
-<script src="js/min/pozemek.js?v=01d7de18"></script>
+<script src="js/min/pozemek.js?v=4d723472"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -630,6 +637,7 @@
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Kladno 5,9 km · Praha 29 km"</script>
 <script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 14 km je tenhle nejdražší.","r":[{"ja":1,"o":"Kamenné Žehrovice","vym":1306,"m":6501},{"s":"pozemek-kladno-trebusice-qlapnc.html","o":"Třebusice","vym":1036,"m":5900,"km":14},{"s":"pozemek-praha-zapad-ptice-12y73kn.html","o":"Ptice","vym":749,"m":5676,"km":12},{"s":"pozemek-rakovnik-msecke-zehrovice-1e7dyld.html","o":"Mšecké Žehrovice","vym":852,"m":5300,"km":9},{"s":"pozemek-kladno-hradecno-cevbsa.html","o":"Hradečno","vym":1181,"m":4903,"km":7}]}</script>
+<script type="application/json" id="pz-kamdal-data">[{"t":"Okres Kladno","u":"pozemky-okres-kladno.html","p":"všechny pozemky v okrese"},{"t":"Středočeský kraj","u":"pozemky-stredocesky-kraj.html","p":"přehled celého kraje"},{"t":"Stavební pozemky","u":"pozemky-stavebni.html","p":"týž druh pozemku po celé ČR"}]</script>
 <script type="application/json" id="pz-popis-data">"Stavební pozemek 1 306 m² s trvalým výhledem do krajiny - Kamenné Žehrovice Představte si dům, kde ráno otevřete oči a místo do oken sousedů se díváte do otevřené krajiny. Nabízím k prodeji výjimečný stavební pozemek o výměře 1 306 m² na samém konci zástavby v Kamenných Žehrovicích (parcela č. 213/12). Pozemek přímo navazuje na volnou přírodu."</script>
 </body>
 </html>

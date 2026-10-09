@@ -132,6 +132,51 @@ Dvě chyby, které se při tom našly a opravily:
   `dnes − 7`). Na dnešních datech je v tom čtrnáct nabídek — číslo
   nadsazené ve vlastní prospěch.
 
+## 3f. ~~Ze stránky pozemku nevedl odkaz nikam do webu~~ — *opraveno 9. 10.*
+
+Naměřeno v prohlížeči na hotové stránce, ne ve zdroji — a jen tak se to
+dalo najít. Stránka pozemku má statickou část (pro vyhledávače a pro
+toho, kdo nemá JavaScript) a plný detail, který `js/pozemek.js` po
+načtení vykreslí **na její místo**: přepíše celý `#pz-detail`. Odkaz na
+okresní stránku stál jen v té statické části, takže ho viděl výhradně
+robot. Z vykresleného detailu nevedl **ani jeden** odkaz na okres, kraj
+ani druh pozemku — a přitom je stránka pozemku u 1 941 adres ta hlavní
+cesta dovnitř webu. Kdo přišel z vyhledávače na jednu parcelu, měl
+odsud na výběr mapu, obec v mapě a čtyři srovnatelné pozemky.
+
+Nově je na konci rozcestník **Kam dál**: okres, kraj, druh a nejnižší
+rozpočtová hladina, do které se cena vejde. 1 941 stránek ho má,
+z toho 1 416 se čtyřmi dlaždicemi, 449 se třemi a 76 se dvěma — podle
+toho, které regionální stránky dnes vznikly. Vnitřních odkazů na webu
+přibylo 7 163. Kraj se zároveň přidal do drobečků ve strukturovaných
+datech; hierarchie je Pozemky › kraj › okres › pozemek a krajský stupeň
+se dosud přeskakoval.
+
+Odkazuje se jen na soubory, které opravdu leží na disku (okresní
+stránka vzniká od tří nabídek, krajská od patnácti, druhová i
+rozpočtová od čtyřiceti). Počty nabídek v dlaždicích **schválně
+nejsou**: spočítat „35 nabídek v okrese" by znamenalo druhé místo,
+které to číslo počítá, a okresní stránka si ho počítá po svém.
+
+Při tom se našly a opravily tři další věci:
+
+* Tabulka krajů a tabulka druhových stránek ležely uvnitř generátoru
+  regionů. Jakmile na ně měla odkazovat i stránka pozemku, byly by to
+  dvě kopie téhož — jsou teď ve `scripts/regiony-meta.mjs`. Dvě
+  zkoušky si je přitom vytahovaly ze **zdroje** generátoru regulárním
+  výrazem; přestěhování jim vzorek rozbilo a obě to hlasitě ohlásily.
+  Čtou teď tentýž modul, ne text souboru.
+* Ve vloženém stylu stránky pozemku zůstala dvě mrtvá pravidla po
+  přejmenování (`.pv-fill` a `.pz-term`, k tomu osiřelé `@keyframes
+  pruhNajed` v `css/styles.css`) — 901 bajtů ve zdroji, který se
+  vkládá do každé z 1 941 stránek.
+* Pravidlo „neodkazuj na stránku, která neexistuje" se na dnešních
+  datech **vyzkoušet nedalo**: všech 77 okresů, ve kterých nějaký
+  pozemek je, svou stránku má, takže sabotáž (ověřování vypuštěno)
+  prošla zeleně. Zkouška proto skládá rozcestník i pro podstrčené
+  nabídky — neznámý okres, druh bez stránky, cena nad nejvyšší mez,
+  dražba. Teď sabotáž padá.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

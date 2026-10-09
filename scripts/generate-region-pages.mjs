@@ -24,6 +24,10 @@ import { kmMezi } from './srovnatelne.mjs';
    vyzkoušet: okno ten den vyloučí samo. Ve funkci se dá podstrčit
    vzorek, ve kterém ten den uvnitř okna leží. Viz komentář tam. */
 import * as NOV from './novinky-rez.mjs';
+/* Jména krajů, druhové stránky a názvy souborů: jedno místo pro tenhle
+   generátor i pro generátor stránek pozemků (scripts/regiony-meta.mjs). */
+import * as META from './regiony-meta.mjs';
+const { slug, krajFile, okresFile } = META;
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -90,29 +94,10 @@ const MIN_KRAJ = 15;    // kraj musí mít aspoň tolik nabídek pro vlastní st
    js/main.js svou kopii mít MUSÍ: hlidani.html a zpravy.html ho
    načítají bez js/ceny.js. Že se ty dvě nerozejdou, hlídá
    scripts/test-okres.mjs. */
-const KRAJ_ORDER = ['Praha','Středočeský','Jihočeský','Plzeňský','Karlovarský','Ústecký','Liberecký','Královéhradecký','Pardubický','Vysočina','Jihomoravský','Olomoucký','Zlínský','Moravskoslezský'];
-const KRAJ_META = {
- 'Praha':            { disp:'Praha',              loc:'v Praze',                 mapName:'Praha' },
- 'Středočeský':      { disp:'Středočeský kraj',   loc:'ve Středočeském kraji',   mapName:'Středočeský' },
- 'Jihočeský':        { disp:'Jihočeský kraj',     loc:'v Jihočeském kraji',      mapName:'Jihočeský' },
- 'Plzeňský':         { disp:'Plzeňský kraj',      loc:'v Plzeňském kraji',       mapName:'Plzeňský' },
- 'Karlovarský':      { disp:'Karlovarský kraj',   loc:'v Karlovarském kraji',    mapName:'Karlovarský' },
- 'Ústecký':          { disp:'Ústecký kraj',       loc:'v Ústeckém kraji',        mapName:'Ústecký' },
- 'Liberecký':        { disp:'Liberecký kraj',     loc:'v Libereckém kraji',      mapName:'Liberecký' },
- 'Královéhradecký':  { disp:'Královéhradecký kraj', loc:'v Královéhradeckém kraji', mapName:'Královéhradecký' },
- 'Pardubický':       { disp:'Pardubický kraj',    loc:'v Pardubickém kraji',     mapName:'Pardubický' },
- 'Vysočina':         { disp:'Kraj Vysočina',      loc:'na Vysočině',             mapName:'Vysočina' },
- 'Jihomoravský':     { disp:'Jihomoravský kraj',  loc:'v Jihomoravském kraji',   mapName:'Jihomoravský' },
- 'Olomoucký':        { disp:'Olomoucký kraj',     loc:'v Olomouckém kraji',      mapName:'Olomoucký' },
- 'Zlínský':          { disp:'Zlínský kraj',       loc:'ve Zlínském kraji',       mapName:'Zlínský' },
- 'Moravskoslezský':  { disp:'Moravskoslezský kraj', loc:'v Moravskoslezském kraji', mapName:'Moravskoslezský' }
-};
+const KRAJ_ORDER = META.KRAJ_ORDER;
+const KRAJ_META = META.KRAJ_META;
 const TYPE_LABEL = { sale:'Na prodej', drazba:'Dražba', exekuce:'Exekuce', obec:'Záměr obce', majitel:'Od majitele' };
 
-function slug(s){
-  const map={'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z'};
-  return String(s).toLowerCase().replace(/[áčďéěíňóřšťúůýž]/g,c=>map[c]||c).replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
-}
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 const attr = esc;
 function fmt(n){ return (typeof n==='number'&&isFinite(n)) ? n.toLocaleString('cs-CZ') : ''; }
@@ -133,8 +118,6 @@ function pluralPozemek(n){ return sklon(n, 'pozemek', 'pozemky', 'pozemků'); }
    „Zbývajících 2 pozemky". Velikost chyby je jedno slovo, ale je to
    přesně ten druh, který nikdo nehlásí a každý vidí. */
 function zbyvajici(n){ return sklon(n, 'Zbývající', 'Zbývající', 'Zbývajících'); }
-function krajFile(kraj){ return `pozemky-${slug(kraj)}-kraj.html`; }
-function okresFile(okres){ return `pozemky-okres-${slug(okres)}.html`; }
 function write(file, html){ fs.writeFileSync(path.join(ROOT, file), html); }
 
 const data = JSON.parse(fs.readFileSync(path.join(ROOT,'data','opportunities.json'),'utf8'));
@@ -1241,32 +1224,7 @@ ${rows}
    Bez něj padaly všechny druhové stránky na společný obrázek webu,
    takže odkaz na „les na prodej" vypadal ve zprávě jako odkaz na
    úvodní stránku. */
-const DRUH_STRANKY = [
-  { skupina: 'Orná půda', soubor: 'pozemky-orna-puda.html', og: 'druh-orna-puda.png',
-    jm: ['pozemek s ornou půdou','pozemky s ornou půdou','pozemků s ornou půdou'], nom: 'orná půda',
-    h1: 'Orná půda na prodej', mn: 'orné půdy', oznaceni: 'Orná půda',
-    rada: 'Orná půda je <b>zemědělský půdní fond</b>. Postavit na ní něco znamená změnu územního plánu a <b>vynětí ze ZPF</b>, za které se platí odvod — bývá to zdlouhavé a není na to nárok. Bez toho je to pořád investice nebo pacht, ne stavební parcela.' },
-  { skupina: 'Louka / travní porost', soubor: 'pozemky-louka.html', og: 'druh-louka.png',
-    jm: ['louka','louky a travní porosty','louk a travních porostů'], nom: 'louky a travní porosty',
-    h1: 'Louky a travní porosty na prodej', mn: 'louk', oznaceni: 'Louka / travní porost',
-    rada: 'Trvalý travní porost je taky <b>zemědělský půdní fond</b> — ke stavbě je potřeba změna územního plánu a vynětí ze ZPF. U louk se navíc častěji stává, že na nich běží <b>pacht</b>; zjistěte si, jestli je pozemek pronajatý a na jak dlouho.' },
-  { skupina: 'Stavební / zastavěná', soubor: 'pozemky-stavebni.html', og: 'druh-stavebni.png',
-    jm: ['stavební pozemek','stavební pozemky','stavebních pozemků'], nom: 'stavební pozemky',
-    h1: 'Stavební pozemky na prodej', mn: 'stavebních pozemků', oznaceni: 'Stavební / zastavěná',
-    rada: 'Zápis v katastru není totéž co <b>územní plán</b>: ten teprve rozhoduje, co a jak velké se tu smí postavit. Ověřte si ho na stavebním úřadě obce — a k tomu, jestli jsou v dosahu <b>sítě a příjezd</b>. Ze zápisu se ani jedno nepozná.' },
-  { skupina: 'Lesní pozemek', soubor: 'pozemky-lesni.html', og: 'druh-lesni.png',
-    jm: ['lesní pozemek','lesní pozemky','lesních pozemků'], nom: 'lesní pozemky',
-    h1: 'Lesní pozemky na prodej', mn: 'lesních pozemků', oznaceni: 'Lesní pozemek',
-    rada: 'Les je pod ochranou <b>lesního zákona</b>: výstavba je prakticky vyloučená a s lesem je spojená <b>povinnost hospodařit</b>. Rozdělení lesního pozemku pod jeden hektar navíc vyžaduje souhlas úřadu.' },
-  { skupina: 'Zahrada', soubor: 'pozemky-zahrada.html', og: 'druh-zahrada.png',
-    jm: ['zahrada','zahrady','zahrad'], nom: 'zahrady',
-    h1: 'Zahrady na prodej', mn: 'zahrad', oznaceni: 'Zahrada',
-    rada: 'Zahrada bývá v zastavěném území, ale <b>ne vždy je stavební</b> — ověřte si územní plán obce. U zahrad se taky častěji stává, že <b>nemají vlastní přístup z veřejné cesty</b>.' },
-  { skupina: 'Vinice / sad', soubor: 'pozemky-vinice-sady.html', og: 'druh-vinice-sady.png',
-    jm: ['vinice nebo sad','vinice a sady','vinic a sadů'], nom: 'vinice a sady',
-    h1: 'Vinice a sady na prodej', mn: 'vinic a sadů', oznaceni: 'Vinice / sad',
-    rada: 'Vinice i sad jsou <b>zemědělská kultura</b>: ke stavbě je potřeba změna využití a vynětí ze ZPF. U vinice se ptejte i na <b>stav výsadby a práva na produkci</b> — hodnota je ve keřích, ne jen v půdě.' },
-];
+const DRUH_STRANKY = META.DRUH_STRANKY;
 /* Úklid: co se letos nevygeneruje (druh spadl pod mez), nesmí na webu
    zůstat viset ze včerejška — stejně jako u okresů výš. */
 for (const d of DRUH_STRANKY) {
@@ -1408,12 +1366,8 @@ ${okresLinks ? `
  * model nevěří. Dražba má vyvolávací cenu, ne cenu — do „co koupím za
  * 200 tisíc" nepatří; u podílu je výměra celé parcely, ale cena jen za
  * zlomek, takže by řez zaplavila zdánlivě levná pole. */
-const ROZPOCTY = [
-  { strop:  200000, og: 'rozpocet-200-tisic.png', soubor: 'pozemky-do-200-tisic.html',  popis: '200 000 Kč', kratce: '200 tisíc' },
-  { strop:  500000, og: 'rozpocet-500-tisic.png', soubor: 'pozemky-do-500-tisic.html',  popis: '500 000 Kč', kratce: '500 tisíc' },
-  { strop: 1000000, og: 'rozpocet-1-milion.png', soubor: 'pozemky-do-1-milionu.html',  popis: '1 000 000 Kč', kratce: 'milion' },
-  { strop: 2000000, og: 'rozpocet-2-miliony.png', soubor: 'pozemky-do-2-milionu.html',  popis: '2 000 000 Kč', kratce: 'dva miliony' },
-];
+const ROZPOCTY = META.ROZPOCTY;
+
 const MIN_ROZPOCET = 40;      // pod tím to není přehled trhu, ale hrst inzerátů
 const STROP_ROZPOCET = 40;    // kolik nabídek se vypíše; zbytek je na mapě
 /* Úklid jako u druhů: co dnes nevznikne, nesmí na webu zůstat ze včerejška. */

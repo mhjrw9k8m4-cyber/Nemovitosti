@@ -397,6 +397,35 @@
       + '</section>';
   }
 
+  /* KAM DÁL. Naměřeno na hotové stránce: z vykresleného detailu nevedl
+     ani jeden odkaz na okres, kraj ani druh pozemku. Okresní odkaz ve
+     stránce byl, ale jen ve statické části, kterou tenhle skript při
+     načtení celou přepíše — takže ho viděl pouze vyhledávač.
+     Seznam přichází HOTOVÝ z generátoru (ostrůvek #pz-kamdal-data):
+     jen on ví, které regionální stránky dnes opravdu vznikly (okres má
+     mez tří nabídek, kraj patnácti, druh i rozpočet čtyřiceti), takže se
+     tady nemůže objevit odkaz do prázdna.
+     Jména obcí ani krajů sem nechodí z cizích inzerátů, ale přes esc()
+     jde všechno — ostrůvek je obyčejný text ve stránce. */
+  function kamDalHtml() {
+    var el = document.getElementById('pz-kamdal-data');
+    if (!el) return '';
+    var a = null;
+    try { a = JSON.parse(el.textContent || 'null'); } catch (e) { return ''; }
+    if (!a || !a.length) return '';
+    var dlazdice = a.filter(function (x) { return x && x.t && x.u; }).map(function (x) {
+      return '<a class="kd-polozka" href="' + esc(x.u) + '">'
+        + '<span class="kd-t">' + esc(x.t) + '</span>'
+        + (x.p ? '<span class="kd-p">' + esc(x.p) + '</span>' : '')
+        + '</a>';
+    }).join('');
+    if (!dlazdice) return '';
+    return '<nav class="pz-kamdal" aria-labelledby="pz-kamdal-h">'
+      + '<h2 class="pz-sect-h" id="pz-kamdal-h">Kam dál</h2>'
+      + '<div class="kd-mriz">' + dlazdice + '</div>'
+      + '</nav>';
+  }
+
   function pzVerdictHtml(d) {
     if (!MODEL || !hasArea(d) || !d.price) return '';
     /* Známý podíl dostane VLASTNÍ verdikt, ne mlčení. Bez něj by se
@@ -1455,7 +1484,11 @@
       '<div class="pz-actions">' +
         '<a class="pz-abtn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">' + PIN_SVG + 'Otevřít v katastru' + VEN + '</a>' +
         '<button class="pz-abtn" type="button" id="pz-share">' + SHARE_SVG + 'Sdílet</button>' +
-      '</div>';
+      '</div>' +
+
+      /* Rozcestník až nakonec: kdo odsud odchází, odchází dál do webu,
+         ne zpátky na mapu. */
+      kamDalHtml();
 
     var host = document.getElementById('pz-detail');
     host.innerHTML = html;

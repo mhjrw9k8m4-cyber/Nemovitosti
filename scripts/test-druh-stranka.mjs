@@ -13,6 +13,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import * as META from './regiony-meta.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const req = createRequire(import.meta.url);
@@ -40,12 +41,15 @@ function poTerminu(o) {
 }
 const aktualni = all.filter((o) => !poTerminu(o));
 
-/* Které stránky mají existovat, se čte ze ZDROJE generátoru — jinak by
-   zkouška hlídala jen ty, na které si vzpomenu. */
+/* Které stránky mají existovat, se čte z TÉŽE tabulky, ze které je
+   generátor vyrábí (scripts/regiony-meta.mjs) — jinak by zkouška
+   hlídala jen ty, na které si vzpomenu. Dřív se tabulka vytahovala
+   regulárním výrazem ze zdroje generátoru; přestěhováním do společného
+   modulu přestal vzorek sedět a zkouška to ohlásila. Modul se načte,
+   nehledá se v něm text: načtení se nemůže „skoro povést". */
 const gen = readFileSync(path.join(ROOT, 'scripts', 'generate-region-pages.mjs'), 'utf8');
-const definice = [...gen.matchAll(/\{ skupina: '([^']+)', soubor: '([^']+)',/g)]
-  .map((m) => ({ skupina: m[1], soubor: m[2] }));
-pravda('v generátoru jsou vypsané stránky podle druhu', definice.length >= 5,
+const definice = META.DRUH_STRANKY.map((x) => ({ skupina: x.skupina, soubor: x.soubor }));
+pravda('tabulka stránek podle druhu se načetla', definice.length >= 5,
   `${definice.length} definic`);
 
 const MIN_DRUH = Number((/const MIN_DRUH = (\d+)/.exec(gen) || [])[1] || 0);

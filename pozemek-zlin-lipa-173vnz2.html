@@ -45,7 +45,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/zaklad.min.css?v=c93b074a">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=45f55690">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -138,9 +138,6 @@
        hodně, nebo skoro uprostřed. */
     .pv-stred{position:absolute; left:50%; top:-3px; bottom:-3px; width:1.5px;
       background:rgba(20,35,28,0.3); transform:translateX(-50%); border-radius:2px;}
-    /* Pruh dojede na svou hodnotu. Barvu bere z --vc jako odznak. */
-    .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill); background:var(--vc);
-      width:var(--w); animation:pruhNajed .62s var(--ease) both;}
     /* Puntík je barevný podle verdiktu a má bílý prstenec, aby byl
        poznat i tam, kde leží na tmavší části lišty. Bílý puntík na
        světlé liště splýval. */
@@ -211,6 +208,22 @@
     .srv-ja .srv-kde{font-weight:700;}
     .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
       line-height:1.55; color:var(--text-ondark-mute);}
+
+    /* KAM DÁL — rozcestník na konci stránky. Naměřeno: z vykresleného
+       detailu nevedl ani jeden odkaz na okres, kraj ani druh. Jsou to
+       odkazy, ne tlačítka — proto obrys, ne výplň značky. Dlaždice je
+       aspoň 48 px vysoká, aby se do ní dalo klepnout prstem; pod
+       dvěma sloupci na šířku se mřížka sama zalomí pod sebe. */
+    .kd-mriz{display:grid; gap:8px; max-width:var(--m-text);
+      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));}
+    .kd-polozka{display:flex; flex-direction:column; justify-content:center;
+      gap:2px; min-height:56px; padding:10px 14px; border-radius:var(--r-ovladani);
+      background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka);
+      text-decoration:none; box-shadow:var(--e1);
+      transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
+    .kd-polozka:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
+    .kd-t{font-size:15px; font-weight:700; color:var(--text-ondark);}
+    .kd-p{font-size:12px; line-height:1.4; color:var(--text-ondark-mute);}
     
 
     
@@ -251,12 +264,6 @@
        Stav při najetí myší zkouška kontrastu nevidí; --c-drazba-ink je
        tatáž barva v tmavší čitelné variantě. */
     .pzd-odkaz:hover{background:var(--c-drazba-ink); color:#fff;}
-    .pz-term{display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--c-drazba-ink); background:rgba(204,107,51,0.13); border:1px solid rgba(204,107,51,0.44); padding:6px 12px; border-radius:var(--r-plocha); margin:14px 0 2px; white-space:nowrap;}
-    .pz-term svg{width:16px; height:16px; stroke-width:2.25; flex:none;}
-    /* Dražba po termínu: šedě a bez naléhavosti — už to není příležitost,
-       jen záznam. Oranžová „termín se blíží" by tu lhala. */
-    .pz-term.prosle{color:var(--text-ondark-mute); background:var(--ink-soft2);
-      border-color:var(--line-strong); white-space:normal;}
 
     .pz-cas{margin:10px 0 0; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
     .pz-cas b{color:var(--text-ondark); font-weight:600;}
@@ -574,7 +581,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Lesní pozemek 3 224 m² — Lípa, okres Zlín</h1><p><b>46 350 Kč</b> (1 265 Kč/m²) · 3 224 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Lesní pozemek</dd><dt>Výměra</dt><dd>3 224 m²</dd><dt>Obec</dt><dd>Lípa</dd><dt>Okres</dt><dd><a href="pozemky-okres-zlin.html">Zlín</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 9/792 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Zlín 9 km · Olomouc 59 km</dd></dl><p><a href="pozemek.html?p=L%C3%ADpa%7C%E2%80%94%7CZl%C3%ADn%7C49.193%7C17.785&amp;ll=49.192846,17.7846&amp;v=3224&amp;c=46350">Otevřít na mapě</a></p><p><a href="index.html?obec=L%C3%ADpa&amp;okres=Zl%C3%ADn">V obci Lípa jsou v nabídce ještě 3 pozemky</a></p><h2>Srovnatelné spoluvlastnické podíly v okolí</h2><p>Z pěti nabídek do 15 km je tenhle 3. nejdražší. Ceny jsou za metr, který kupujícímu připadne — výměra je celá parcela.</p><ul><li>3 678 Kč/m² — <a href="pozemek-zlin-luhacovice-ybimpx.html">Luhačovice</a>, 1 903 m², 13 km</li><li>1 269 Kč/m² — <a href="pozemek-zlin-lipa-11ztdjl.html">Lípa</a>, 2 300 m², 1 km</li><li>1 265 Kč/m² — <b>tenhle pozemek</b>, 3 224 m²</li><li>100 Kč/m² — <a href="pozemek-uherske-hradiste-castkov-mtsfmp.html">Částkov</a>, 4 783 m², 15 km</li><li>29 Kč/m² — <a href="pozemek-uherske-hradiste-rudice-1g2tek0.html">Rudice</a>, 1 976 m², 14 km</li></ul></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Lesní pozemek 3 224 m² — Lípa, okres Zlín</h1><p><b>46 350 Kč</b> (1 265 Kč/m²) · 3 224 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Lesní pozemek</dd><dt>Výměra</dt><dd>3 224 m²</dd><dt>Obec</dt><dd>Lípa</dd><dt>Okres</dt><dd><a href="pozemky-okres-zlin.html">Zlín</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 9/792 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Zlín 9 km · Olomouc 59 km</dd></dl><p><a href="pozemek.html?p=L%C3%ADpa%7C%E2%80%94%7CZl%C3%ADn%7C49.193%7C17.785&amp;ll=49.192846,17.7846&amp;v=3224&amp;c=46350">Otevřít na mapě</a></p><p><a href="index.html?obec=L%C3%ADpa&amp;okres=Zl%C3%ADn">V obci Lípa jsou v nabídce ještě 3 pozemky</a></p><h2>Srovnatelné spoluvlastnické podíly v okolí</h2><p>Z pěti nabídek do 15 km je tenhle 3. nejdražší. Ceny jsou za metr, který kupujícímu připadne — výměra je celá parcela.</p><ul><li>3 678 Kč/m² — <a href="pozemek-zlin-luhacovice-ybimpx.html">Luhačovice</a>, 1 903 m², 13 km</li><li>1 269 Kč/m² — <a href="pozemek-zlin-lipa-11ztdjl.html">Lípa</a>, 2 300 m², 1 km</li><li>1 265 Kč/m² — <b>tenhle pozemek</b>, 3 224 m²</li><li>100 Kč/m² — <a href="pozemek-uherske-hradiste-castkov-mtsfmp.html">Částkov</a>, 4 783 m², 15 km</li><li>29 Kč/m² — <a href="pozemek-uherske-hradiste-rudice-1g2tek0.html">Rudice</a>, 1 976 m², 14 km</li></ul><h2>Kam dál</h2><ul><li><a href="pozemky-okres-zlin.html">Okres Zlín</a> — všechny pozemky v okrese</li><li><a href="pozemky-zlinsky-kraj.html">Zlínský kraj</a> — přehled celého kraje</li><li><a href="pozemky-lesni.html">Lesní pozemky</a> — týž druh pozemku po celé ČR</li><li><a href="pozemky-do-200-tisic.html">Pozemky do 200 tisíc</a> — podobná cenová hladina</li></ul></article></div></div>
   </div>
 </main>
 
@@ -613,9 +620,9 @@
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
-<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Lesní pozemek 3 224 m² — Lípa, okres Zlín","description":"Na prodej · 46 350 Kč (1 265 Kč/m²) · 3 224 m² · Lípa, okres Zlín. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-zlin-lipa-173vnz2.html","address":{"@type":"PostalAddress","addressLocality":"Lípa","addressRegion":"Zlín","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.192846,"longitude":17.7846},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":3224,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":46350,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-zlin-lipa-173vnz2.html","itemOffered":{"@type":"Place","name":"Lesní pozemek 3 224 m² — Lípa, okres Zlín"},"availability":"https://schema.org/InStock","description":"Cena je za spoluvlastnický podíl; uvedená výměra patří celé parcele."}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Zlín","item":"https://www.parcelaka.cz/pozemky-okres-zlin.html"},{"@type":"ListItem","position":4,"name":"Lesní pozemek 3 224 m² — Lípa, okres Zlín","item":"https://www.parcelaka.cz/pozemek-zlin-lipa-173vnz2.html"}]}]</script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Lesní pozemek 3 224 m² — Lípa, okres Zlín","description":"Na prodej · 46 350 Kč (1 265 Kč/m²) · 3 224 m² · Lípa, okres Zlín. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-zlin-lipa-173vnz2.html","address":{"@type":"PostalAddress","addressLocality":"Lípa","addressRegion":"Zlín","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.192846,"longitude":17.7846},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":3224,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":46350,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-zlin-lipa-173vnz2.html","itemOffered":{"@type":"Place","name":"Lesní pozemek 3 224 m² — Lípa, okres Zlín"},"availability":"https://schema.org/InStock","description":"Cena je za spoluvlastnický podíl; uvedená výměra patří celé parcele."}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Zlínský kraj","item":"https://www.parcelaka.cz/pozemky-zlinsky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Zlín","item":"https://www.parcelaka.cz/pozemky-okres-zlin.html"},{"@type":"ListItem","position":5,"name":"Lesní pozemek 3 224 m² — Lípa, okres Zlín","item":"https://www.parcelaka.cz/pozemek-zlin-lipa-173vnz2.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Lípa|—|Zlín|49.193|17.785","ll":[49.192846,17.7846],"v":3224,"c":46350,"r":"data/okres/zlin.json"};</script>
-<script src="js/min/pozemek.js?v=01d7de18"></script>
+<script src="js/min/pozemek.js?v=4d723472"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -631,6 +638,7 @@
 <script type="application/json" id="pz-okoli-data">"Zlín 9 km · Olomouc 59 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Lípa jsou v nabídce ještě 3 pozemky","url":"index.html?obec=L%C3%ADpa\u0026okres=Zl%C3%ADn"}</script>
 <script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 15 km je tenhle 3. nejdražší.","r":[{"s":"pozemek-zlin-luhacovice-ybimpx.html","o":"Luhačovice","vym":1903,"m":3678,"km":13},{"s":"pozemek-zlin-lipa-11ztdjl.html","o":"Lípa","vym":2300,"m":1269,"km":1},{"ja":1,"o":"Lípa","vym":3224,"m":1265},{"s":"pozemek-uherske-hradiste-castkov-mtsfmp.html","o":"Částkov","vym":4783,"m":100,"km":15},{"s":"pozemek-uherske-hradiste-rudice-1g2tek0.html","o":"Rudice","vym":1976,"m":29,"km":14}],"p":1}</script>
+<script type="application/json" id="pz-kamdal-data">[{"t":"Okres Zlín","u":"pozemky-okres-zlin.html","p":"všechny pozemky v okrese"},{"t":"Zlínský kraj","u":"pozemky-zlinsky-kraj.html","p":"přehled celého kraje"},{"t":"Lesní pozemky","u":"pozemky-lesni.html","p":"týž druh pozemku po celé ČR"},{"t":"Pozemky do 200 tisíc","u":"pozemky-do-200-tisic.html","p":"podobná cenová hladina"}]</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka - bez prostředníků a bez zbytečných výdajů navíc! k.ú. Lípa nad Dřevnicí LV č. 346 o výměře 52 m², podíl 9/792 • Parcela č. 1301/3 - o výměře 205 m² (Ostatní plocha) • Parcela č. 938/3 - o výměře 6 m² (Ostatní plocha) • Parcela č. 958/3 - o výměře 285 m² (Ostatní plocha) • Parcela č. 959 - o výměře 4104 m² (Ostatní plocha) LV č. 2089 o výměře 35 m², podíl 9/792 • Parcela č."</script>
 </body>
 </html>

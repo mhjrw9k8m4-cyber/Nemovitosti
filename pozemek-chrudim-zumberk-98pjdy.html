@@ -45,7 +45,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/zaklad.min.css?v=c93b074a">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=45f55690">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -138,9 +138,6 @@
        hodně, nebo skoro uprostřed. */
     .pv-stred{position:absolute; left:50%; top:-3px; bottom:-3px; width:1.5px;
       background:rgba(20,35,28,0.3); transform:translateX(-50%); border-radius:2px;}
-    /* Pruh dojede na svou hodnotu. Barvu bere z --vc jako odznak. */
-    .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill); background:var(--vc);
-      width:var(--w); animation:pruhNajed .62s var(--ease) both;}
     /* Puntík je barevný podle verdiktu a má bílý prstenec, aby byl
        poznat i tam, kde leží na tmavší části lišty. Bílý puntík na
        světlé liště splýval. */
@@ -211,6 +208,22 @@
     .srv-ja .srv-kde{font-weight:700;}
     .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
       line-height:1.55; color:var(--text-ondark-mute);}
+
+    /* KAM DÁL — rozcestník na konci stránky. Naměřeno: z vykresleného
+       detailu nevedl ani jeden odkaz na okres, kraj ani druh. Jsou to
+       odkazy, ne tlačítka — proto obrys, ne výplň značky. Dlaždice je
+       aspoň 48 px vysoká, aby se do ní dalo klepnout prstem; pod
+       dvěma sloupci na šířku se mřížka sama zalomí pod sebe. */
+    .kd-mriz{display:grid; gap:8px; max-width:var(--m-text);
+      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));}
+    .kd-polozka{display:flex; flex-direction:column; justify-content:center;
+      gap:2px; min-height:56px; padding:10px 14px; border-radius:var(--r-ovladani);
+      background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka);
+      text-decoration:none; box-shadow:var(--e1);
+      transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
+    .kd-polozka:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
+    .kd-t{font-size:15px; font-weight:700; color:var(--text-ondark);}
+    .kd-p{font-size:12px; line-height:1.4; color:var(--text-ondark-mute);}
     
 
     
@@ -251,12 +264,6 @@
        Stav při najetí myší zkouška kontrastu nevidí; --c-drazba-ink je
        tatáž barva v tmavší čitelné variantě. */
     .pzd-odkaz:hover{background:var(--c-drazba-ink); color:#fff;}
-    .pz-term{display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--c-drazba-ink); background:rgba(204,107,51,0.13); border:1px solid rgba(204,107,51,0.44); padding:6px 12px; border-radius:var(--r-plocha); margin:14px 0 2px; white-space:nowrap;}
-    .pz-term svg{width:16px; height:16px; stroke-width:2.25; flex:none;}
-    /* Dražba po termínu: šedě a bez naléhavosti — už to není příležitost,
-       jen záznam. Oranžová „termín se blíží" by tu lhala. */
-    .pz-term.prosle{color:var(--text-ondark-mute); background:var(--ink-soft2);
-      border-color:var(--line-strong); white-space:normal;}
 
     .pz-cas{margin:10px 0 0; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
     .pz-cas b{color:var(--text-ondark); font-weight:600;}
@@ -574,7 +581,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 808 m² — Žumberk, okres Chrudim</h1><p><b>2 750 000 Kč</b> (3 403 Kč/m²) · 808 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>808 m²</dd><dt>Obec</dt><dd>Žumberk</dd><dt>Okres</dt><dd><a href="pozemky-okres-chrudim.html">Chrudim</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Chrudim 9,8 km · Pardubice 19 km</dd></dl><p><a href="pozemek.html?p=%C5%BDumberk%7C%E2%80%94%7CChrudim%7C49.873%7C15.858&amp;ll=49.8727158,15.8580806&amp;v=808&amp;c=2750000">Otevřít na mapě</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 23 km je tenhle 4. nejdražší.</p><ul><li>6 000 Kč/m² — <a href="pozemek-pardubice-raby-1flmffs.html">Ráby</a>, 1 152 m², 23 km</li><li>5 000 Kč/m² — <a href="pozemek-pardubice-sezemice-18emqkq.html">Sezemice</a>, 1 679 m², 22 km</li><li>3 819 Kč/m² — <a href="pozemek-chrudim-chrudim-19lpqnz.html">Chrudim</a>, 1 152 m², 10 km</li><li>3 403 Kč/m² — <b>tenhle pozemek</b>, 808 m²</li><li>1 522 Kč/m² — <a href="pozemek-chrudim-prosetin-1bd5sgk.html">Prosetín</a>, 2 300 m², 8 km</li></ul></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 808 m² — Žumberk, okres Chrudim</h1><p><b>2 750 000 Kč</b> (3 403 Kč/m²) · 808 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>808 m²</dd><dt>Obec</dt><dd>Žumberk</dd><dt>Okres</dt><dd><a href="pozemky-okres-chrudim.html">Chrudim</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Chrudim 9,8 km · Pardubice 19 km</dd></dl><p><a href="pozemek.html?p=%C5%BDumberk%7C%E2%80%94%7CChrudim%7C49.873%7C15.858&amp;ll=49.8727158,15.8580806&amp;v=808&amp;c=2750000">Otevřít na mapě</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 23 km je tenhle 4. nejdražší.</p><ul><li>6 000 Kč/m² — <a href="pozemek-pardubice-raby-1flmffs.html">Ráby</a>, 1 152 m², 23 km</li><li>5 000 Kč/m² — <a href="pozemek-pardubice-sezemice-18emqkq.html">Sezemice</a>, 1 679 m², 22 km</li><li>3 819 Kč/m² — <a href="pozemek-chrudim-chrudim-19lpqnz.html">Chrudim</a>, 1 152 m², 10 km</li><li>3 403 Kč/m² — <b>tenhle pozemek</b>, 808 m²</li><li>1 522 Kč/m² — <a href="pozemek-chrudim-prosetin-1bd5sgk.html">Prosetín</a>, 2 300 m², 8 km</li></ul><h2>Kam dál</h2><ul><li><a href="pozemky-okres-chrudim.html">Okres Chrudim</a> — všechny pozemky v okrese</li><li><a href="pozemky-pardubicky-kraj.html">Pardubický kraj</a> — přehled celého kraje</li><li><a href="pozemky-stavebni.html">Stavební pozemky</a> — týž druh pozemku po celé ČR</li></ul></article></div></div>
   </div>
 </main>
 
@@ -613,9 +620,9 @@
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
-<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 808 m² — Žumberk, okres Chrudim","description":"Na prodej · 2 750 000 Kč (3 403 Kč/m²) · 808 m² · Žumberk, okres Chrudim. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-chrudim-zumberk-98pjdy.html","address":{"@type":"PostalAddress","addressLocality":"Žumberk","addressRegion":"Chrudim","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.8727158,"longitude":15.8580806},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":808,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":2750000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-chrudim-zumberk-98pjdy.html","itemOffered":{"@type":"Place","name":"Stavební pozemek 808 m² — Žumberk, okres Chrudim"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Chrudim","item":"https://www.parcelaka.cz/pozemky-okres-chrudim.html"},{"@type":"ListItem","position":4,"name":"Stavební pozemek 808 m² — Žumberk, okres Chrudim","item":"https://www.parcelaka.cz/pozemek-chrudim-zumberk-98pjdy.html"}]}]</script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 808 m² — Žumberk, okres Chrudim","description":"Na prodej · 2 750 000 Kč (3 403 Kč/m²) · 808 m² · Žumberk, okres Chrudim. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-chrudim-zumberk-98pjdy.html","address":{"@type":"PostalAddress","addressLocality":"Žumberk","addressRegion":"Chrudim","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.8727158,"longitude":15.8580806},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":808,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":2750000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-chrudim-zumberk-98pjdy.html","itemOffered":{"@type":"Place","name":"Stavební pozemek 808 m² — Žumberk, okres Chrudim"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Pardubický kraj","item":"https://www.parcelaka.cz/pozemky-pardubicky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Chrudim","item":"https://www.parcelaka.cz/pozemky-okres-chrudim.html"},{"@type":"ListItem","position":5,"name":"Stavební pozemek 808 m² — Žumberk, okres Chrudim","item":"https://www.parcelaka.cz/pozemek-chrudim-zumberk-98pjdy.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Žumberk|—|Chrudim|49.873|15.858","ll":[49.8727158,15.8580806],"v":808,"c":2750000,"r":"data/okres/chrudim.json"};</script>
-<script src="js/min/pozemek.js?v=01d7de18"></script>
+<script src="js/min/pozemek.js?v=4d723472"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -630,6 +637,7 @@
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Chrudim 9,8 km · Pardubice 19 km"</script>
 <script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 23 km je tenhle 4. nejdražší.","r":[{"s":"pozemek-pardubice-raby-1flmffs.html","o":"Ráby","vym":1152,"m":6000,"km":23},{"s":"pozemek-pardubice-sezemice-18emqkq.html","o":"Sezemice","vym":1679,"m":5000,"km":22},{"s":"pozemek-chrudim-chrudim-19lpqnz.html","o":"Chrudim","vym":1152,"m":3819,"km":10},{"ja":1,"o":"Žumberk","vym":808,"m":3403},{"s":"pozemek-chrudim-prosetin-1bd5sgk.html","o":"Prosetín","vym":2300,"m":1522,"km":8}]}</script>
+<script type="application/json" id="pz-kamdal-data">[{"t":"Okres Chrudim","u":"pozemky-okres-chrudim.html","p":"všechny pozemky v okrese"},{"t":"Pardubický kraj","u":"pozemky-pardubicky-kraj.html","p":"přehled celého kraje"},{"t":"Stavební pozemky","u":"pozemky-stavebni.html","p":"týž druh pozemku po celé ČR"}]</script>
 <script type="application/json" id="pz-popis-data">"Jedinečná příležitost získat zcela unikátní pozemek pro výstavbu rodinného domu v původní zástavbě a bezprostřední blízkosti historických stavebních památek. Ideální jižní orientace, krásný výhled, klidná a tichá lokalita. Nabízíme k prodeji atraktivní pozemek o výměře 808 m² v klidné části městyse Žumberk, okres Chrudim. Pozemek parc. č. 63/2 v k. ú. Žumberk se podle platného územního plánu nachází ve **stabilizované ploše SV – smíšené obytné venkovské."</script>
 </body>
 </html>

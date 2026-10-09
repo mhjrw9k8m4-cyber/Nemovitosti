@@ -41,6 +41,9 @@ import { jsonVeStrance } from './json-do-stranky.mjs';
 import { najdi as najdiParcelu, klicPopisu } from './parcely-z-textu.mjs';
 import { historiePodleKlice } from './cenova-historie.mjs';
 import { nactiArchiv } from './archiv-statistiky.mjs';
+/* Jména krajů, druhové a rozpočtové stránky — jedna tabulka pro tenhle
+   generátor i pro generátor regionálních stránek. */
+import * as META from './regiony-meta.mjs';
 let _historie = null;
 let _popisy = null;
 /* Líně, až když se stránky staví: popisy mají 827 kB a při pouhém
@@ -500,6 +503,58 @@ export function ukoncenaStranka(obsah, den, podobne) {
   return h;
 }
 
+/* KAM DÁL ZE STRÁNKY POZEMKU.
+ *
+ * Naměřeno na hotové stránce v prohlížeči: z vykresleného detailu
+ * nevedl ANI JEDEN odkaz na okres, kraj ani druh pozemku. Okresní odkaz
+ * ve stránce byl — ale jen ve statické části, kterou js/pozemek.js při
+ * načtení přepíše celou, takže ho viděl pouze vyhledávač. Kdo přišel
+ * z vyhledávače na jednu parcelu (a to je u 1 941 stránek ta hlavní
+ * cesta dovnitř), měl na výběr mapu, obec v mapě a čtyři srovnatelné
+ * pozemky. „Všechny pozemky v okrese" si musel najít sám.
+ *
+ * Odkazuje se JEN NA STRÁNKY, KTERÉ OPRAVDU EXISTUJÍ: okresní vzniká od
+ * tří nabídek, krajská od patnácti, druhová od čtyřiceti a rozpočtová
+ * taky od čtyřiceti — a všechny se každé sestavení smažou a vyrobí
+ * znovu. Proto se tu nespoléhá na tabulku, ale na fs.existsSync:
+ * generátor regionů běží před tímhle krokem (scripts/oprav.mjs).
+ *
+ * POČTY NABÍDEK TU SCHVÁLNĚ NEJSOU. Spočítat „35 nabídek v okrese" by
+ * znamenalo druhé místo, které tohle číslo počítá — a okresní stránka
+ * si ho počítá po svém (bez proběhlých dražeb). Dvě čísla o téže věci
+ * se jednou rozejdou; podtitulek proto říká, co tam je, ne kolik.
+ */
+function jeSoubor(f) { return !!f && fs.existsSync(path.join(ROOT, f)); }
+function velkePrvni(s) { return String(s || '').charAt(0).toUpperCase() + String(s || '').slice(1); }
+
+export function kamDal(d) {
+  const ven = [];
+  const ok = d.okres ? META.okresFile(d.okres) : '';
+  if (jeSoubor(ok)) ven.push({ t: `Okres ${d.okres}`, u: ok, p: 'všechny pozemky v okrese' });
+
+  const kraj = (CENY && CENY.OKRES_KRAJ) ? CENY.OKRES_KRAJ[d.okres] : null;
+  const kf = kraj ? META.krajFile(kraj) : '';
+  if (kraj && jeSoubor(kf)) {
+    ven.push({ t: (META.KRAJ_META[kraj] || {}).disp || `${kraj} kraj`, u: kf, p: 'přehled celého kraje' });
+  }
+
+  const skupina = (CENY && CENY.druhGroup) ? CENY.druhGroup(d.druh) : '';
+  const df = META.druhFile(skupina);
+  const dm = META.DRUH_STRANKY.find((x) => x.soubor === df);
+  if (dm && jeSoubor(df)) ven.push({ t: velkePrvni(dm.nom), u: df, p: 'týž druh pozemku po celé ČR' });
+
+  /* Rozpočet jen u prodeje. U dražby je cena vyvolávací, takže „pozemky
+     do 500 tisíc" by slibovalo cenovou hladinu, kterou tahle nabídka
+     nemá — vydražit se může za trojnásobek. */
+  if (d.type === 'sale' && d.price > 0) {
+    const r = META.ROZPOCTY.find((x) => d.price <= x.strop);
+    if (r && jeSoubor(r.soubor)) {
+      ven.push({ t: `Pozemky do ${r.kratce}`, u: r.soubor, p: 'podobná cenová hladina' });
+    }
+  }
+  return ven;
+}
+
 export function stranka(sablona, d, soubor = souborPro(d)) {
   const { titul, popis, cena, zaM2, vym, druh } = textyPro(d);
   const url = `${WEB}/${soubor}`;
@@ -541,8 +596,20 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     { '@type': 'ListItem', position: 1, name: 'Pozemky', item: `${WEB}/` },
     { '@type': 'ListItem', position: 2, name: 'Pozemky podle okresů', item: `${WEB}/pozemky-podle-okresu.html` },
   ];
+  /* KRAJ DO CESTY. Hierarchie webu je Pozemky › kraj › okres › pozemek,
+     ale drobečky krajský stupeň přeskakovaly — ve výsledku vyhledávače
+     tedy z cesty nebylo poznat, ve které části země pozemek leží.
+     Přidá se jen tam, kde krajská stránka opravdu vznikla (mez patnácti
+     nabídek), aby cesta nevedla na nic. */
+  const krajNazev = (CENY && CENY.OKRES_KRAJ) ? CENY.OKRES_KRAJ[d.okres] : null;
+  const krajSoubor = krajNazev ? META.krajFile(krajNazev) : '';
+  if (krajNazev && krajSoubor && fs.existsSync(path.join(ROOT, krajSoubor))) {
+    drobecky.push({ '@type': 'ListItem', position: drobecky.length + 1,
+      name: (META.KRAJ_META[krajNazev] || {}).disp || `${krajNazev} kraj`,
+      item: `${WEB}/${krajSoubor}` });
+  }
   if (maOkres) {
-    drobecky.push({ '@type': 'ListItem', position: 3, name: `Okres ${d.okres}`, item: `${WEB}/${okresSoubor}` });
+    drobecky.push({ '@type': 'ListItem', position: drobecky.length + 1, name: `Okres ${d.okres}`, item: `${WEB}/${okresSoubor}` });
   }
   drobecky.push({ '@type': 'ListItem', position: drobecky.length + 1, name: titul, item: url });
 
@@ -616,6 +683,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
   const vzdalenosti = OKRUH.popisVzdalenosti(d);
   const vObec = vObciOdkaz(d);
   const srov = srovnaniPro(d);
+  const kamDalSem = kamDal(d);
   const staticky =
     `<article class="pz-staticky">`
     + `<h1>${esc(titul)}</h1>`
@@ -653,6 +721,17 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
         + (x.ja ? `<b>tenhle pozemek</b>` : `<a href="${esc(x.s)}">${esc(x.o)}</a>`)
         + `, ${fmt(x.vym)} m²${x.km ? ', ' + x.km + ' km' : ''}</li>`).join('')
       + `</ul>` : '')
+    /* Rozcestník i do statické části: pro vyhledávač je to cesta výš
+       (okres, kraj, druh, rozpočet), pro člověka bez JavaScriptu táž
+       čtyři místa jako v plném detailu. Skládá se z TÉŽE tabulky, kterou
+       dostane prohlížeč v ostrůvku — dvě různé nabídky odkazů na jedné
+       stránce by si odporovaly. */
+    + (kamDalSem.length
+      ? `<h2>Kam dál</h2><ul>`
+        + kamDalSem.map((x) => `<li><a href="${esc(x.u)}">${esc(x.t)}</a>`
+          + (x.p ? ` — ${esc(x.p)}` : '') + `</li>`).join('')
+        + `</ul>`
+      : '')
     + `</article>`;
   h = h.replace(/<div id="pz-detail">[\s\S]*?<\/div>/,
     `<div id="pz-detail">${staticky}</div>`);
@@ -708,6 +787,14 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
   if (srov) {
     h = h.replace(/(<\/body>)/,
       `<script type="application/json" id="pz-srovnani-data">${jsonVeStrance(srov)}</scr` + `ipt>\n$1`);
+  }
+  /* Hotový seznam odkazů, ne data k dopočítání: které regionální stránky
+     dnes existují, ví jen generátor (soubory se každé sestavení mažou
+     a vyrábějí znovu). Prohlížeč by to z vlastního HTML nezjistil
+     a odkazoval by do prázdna. */
+  if (kamDalSem.length) {
+    h = h.replace(/(<\/body>)/,
+      `<script type="application/json" id="pz-kamdal-data">${jsonVeStrance(kamDalSem)}</scr` + `ipt>\n$1`);
   }
   const popisInzerenta = POPISY[klicNabidky(d)];
   if (popisInzerenta) {

@@ -262,6 +262,25 @@
       + '</section>';
   }
 
+  function kamDalHtml() {
+    var el = document.getElementById('pz-kamdal-data');
+    if (!el) return '';
+    var a = null;
+    try { a = JSON.parse(el.textContent || 'null'); } catch (e) { return ''; }
+    if (!a || !a.length) return '';
+    var dlazdice = a.filter(function (x) { return x && x.t && x.u; }).map(function (x) {
+      return '<a class="kd-polozka" href="' + esc(x.u) + '">'
+        + '<span class="kd-t">' + esc(x.t) + '</span>'
+        + (x.p ? '<span class="kd-p">' + esc(x.p) + '</span>' : '')
+        + '</a>';
+    }).join('');
+    if (!dlazdice) return '';
+    return '<nav class="pz-kamdal" aria-labelledby="pz-kamdal-h">'
+      + '<h2 class="pz-sect-h" id="pz-kamdal-h">Kam dál</h2>'
+      + '<div class="kd-mriz">' + dlazdice + '</div>'
+      + '</nav>';
+  }
+
   function pzVerdictHtml(d) {
     if (!MODEL || !hasArea(d) || !d.price) return '';
 
@@ -940,7 +959,9 @@
       '<div class="pz-actions">' +
         '<a class="pz-abtn" href="' + katastrUrl(d) + '" target="_blank" rel="noopener">' + PIN_SVG + 'Otevřít v katastru' + VEN + '</a>' +
         '<button class="pz-abtn" type="button" id="pz-share">' + SHARE_SVG + 'Sdílet</button>' +
-      '</div>';
+      '</div>' +
+
+      kamDalHtml();
 
     var host = document.getElementById('pz-detail');
     host.innerHTML = html;

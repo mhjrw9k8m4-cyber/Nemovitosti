@@ -742,9 +742,6 @@ to{opacity:1;transform:none}
 .opp-cd.urg{color:var(--c-exekuce-ink);border-color:rgba(228,72,61,0.4)}
 .chip-n{display:inline-block;margin-left:6px;font-size:12px;font-weight:700;padding:0 6px;border-radius:var(--r-sm);background:var(--plocha-jemna-vic);color:var(--text-ondark-mute);min-width:16px;line-height:16px;text-align:center;vertical-align:middle}
 .filter-chip.active .chip-n{background:rgba(22,47,35,0.3);color:inherit}
-@keyframes pruhNajed{from{width:0}
-to{width:var(--w)}
-}
 @keyframes puntikNajed{from{left:0}
 to{left:var(--w)}
 }

@@ -45,7 +45,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/zaklad.min.css?v=c93b074a">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=45f55690">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -138,9 +138,6 @@
        hodně, nebo skoro uprostřed. */
     .pv-stred{position:absolute; left:50%; top:-3px; bottom:-3px; width:1.5px;
       background:rgba(20,35,28,0.3); transform:translateX(-50%); border-radius:2px;}
-    /* Pruh dojede na svou hodnotu. Barvu bere z --vc jako odznak. */
-    .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill); background:var(--vc);
-      width:var(--w); animation:pruhNajed .62s var(--ease) both;}
     /* Puntík je barevný podle verdiktu a má bílý prstenec, aby byl
        poznat i tam, kde leží na tmavší části lišty. Bílý puntík na
        světlé liště splýval. */
@@ -211,6 +208,22 @@
     .srv-ja .srv-kde{font-weight:700;}
     .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
       line-height:1.55; color:var(--text-ondark-mute);}
+
+    /* KAM DÁL — rozcestník na konci stránky. Naměřeno: z vykresleného
+       detailu nevedl ani jeden odkaz na okres, kraj ani druh. Jsou to
+       odkazy, ne tlačítka — proto obrys, ne výplň značky. Dlaždice je
+       aspoň 48 px vysoká, aby se do ní dalo klepnout prstem; pod
+       dvěma sloupci na šířku se mřížka sama zalomí pod sebe. */
+    .kd-mriz{display:grid; gap:8px; max-width:var(--m-text);
+      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));}
+    .kd-polozka{display:flex; flex-direction:column; justify-content:center;
+      gap:2px; min-height:56px; padding:10px 14px; border-radius:var(--r-ovladani);
+      background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka);
+      text-decoration:none; box-shadow:var(--e1);
+      transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
+    .kd-polozka:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
+    .kd-t{font-size:15px; font-weight:700; color:var(--text-ondark);}
+    .kd-p{font-size:12px; line-height:1.4; color:var(--text-ondark-mute);}
     
 
     
@@ -251,12 +264,6 @@
        Stav při najetí myší zkouška kontrastu nevidí; --c-drazba-ink je
        tatáž barva v tmavší čitelné variantě. */
     .pzd-odkaz:hover{background:var(--c-drazba-ink); color:#fff;}
-    .pz-term{display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--c-drazba-ink); background:rgba(204,107,51,0.13); border:1px solid rgba(204,107,51,0.44); padding:6px 12px; border-radius:var(--r-plocha); margin:14px 0 2px; white-space:nowrap;}
-    .pz-term svg{width:16px; height:16px; stroke-width:2.25; flex:none;}
-    /* Dražba po termínu: šedě a bez naléhavosti — už to není příležitost,
-       jen záznam. Oranžová „termín se blíží" by tu lhala. */
-    .pz-term.prosle{color:var(--text-ondark-mute); background:var(--ink-soft2);
-      border-color:var(--line-strong); white-space:normal;}
 
     .pz-cas{margin:10px 0 0; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
     .pz-cas b{color:var(--text-ondark); font-weight:600;}
@@ -574,7 +581,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 4 528 m² — Úvaly, okres Praha-východ</h1><p><b>9 000 000 Kč</b> (1 988 Kč/m²) · 4 528 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>4 528 m²</dd><dt>Obec</dt><dd>Úvaly</dd><dt>Okres</dt><dd><a href="pozemky-okres-praha-vychod.html">Praha-východ</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Praha 21 km</dd></dl><p><a href="pozemek.html?p=%C3%9Avaly%7C%E2%80%94%7CPraha-v%C3%BDchod%7C50.099%7C14.717&amp;ll=50.099021,14.716654&amp;v=4528&amp;c=9000000">Otevřít na mapě</a></p><p><a href="index.html?obec=%C3%9Avaly&amp;okres=Praha-v%C3%BDchod">V obci Úvaly je v nabídce ještě jeden pozemek</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 7 km je tenhle nejdražší.</p><ul><li>1 988 Kč/m² — <b>tenhle pozemek</b>, 4 528 m²</li><li>171 Kč/m² — <a href="pozemek-praha-vychod-kvetnice-1ej1jk4.html">Květnice</a>, 5 022 m², 5 km</li><li>81 Kč/m² — <a href="pozemek-praha-vychod-mochov-10h6216.html">Mochov</a>, 7 196 m², 6 km</li><li>10 Kč/m² — <a href="pozemek-praha-vychod-nehvizdy-146o2oc.html">Nehvizdy</a>, 6 736 m², 3 km</li><li>10 Kč/m² — <a href="pozemek-praha-vychod-nehvizdy-1k9e4r.html">Nehvizdy</a>, 6 859 m², 3 km</li></ul></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 4 528 m² — Úvaly, okres Praha-východ</h1><p><b>9 000 000 Kč</b> (1 988 Kč/m²) · 4 528 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>4 528 m²</dd><dt>Obec</dt><dd>Úvaly</dd><dt>Okres</dt><dd><a href="pozemky-okres-praha-vychod.html">Praha-východ</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Praha 21 km</dd></dl><p><a href="pozemek.html?p=%C3%9Avaly%7C%E2%80%94%7CPraha-v%C3%BDchod%7C50.099%7C14.717&amp;ll=50.099021,14.716654&amp;v=4528&amp;c=9000000">Otevřít na mapě</a></p><p><a href="index.html?obec=%C3%9Avaly&amp;okres=Praha-v%C3%BDchod">V obci Úvaly je v nabídce ještě jeden pozemek</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 7 km je tenhle nejdražší.</p><ul><li>1 988 Kč/m² — <b>tenhle pozemek</b>, 4 528 m²</li><li>171 Kč/m² — <a href="pozemek-praha-vychod-kvetnice-1ej1jk4.html">Květnice</a>, 5 022 m², 5 km</li><li>81 Kč/m² — <a href="pozemek-praha-vychod-mochov-10h6216.html">Mochov</a>, 7 196 m², 6 km</li><li>10 Kč/m² — <a href="pozemek-praha-vychod-nehvizdy-146o2oc.html">Nehvizdy</a>, 6 736 m², 3 km</li><li>10 Kč/m² — <a href="pozemek-praha-vychod-nehvizdy-1k9e4r.html">Nehvizdy</a>, 6 859 m², 3 km</li></ul><h2>Kam dál</h2><ul><li><a href="pozemky-okres-praha-vychod.html">Okres Praha-východ</a> — všechny pozemky v okrese</li><li><a href="pozemky-stredocesky-kraj.html">Středočeský kraj</a> — přehled celého kraje</li><li><a href="pozemky-orna-puda.html">Orná půda</a> — týž druh pozemku po celé ČR</li></ul></article></div></div>
   </div>
 </main>
 
@@ -613,9 +620,9 @@
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
-<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 4 528 m² — Úvaly, okres Praha-východ","description":"Na prodej · 9 000 000 Kč (1 988 Kč/m²) · 4 528 m² · Úvaly, okres Praha-východ. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-praha-vychod-uvaly-yy6xz8.html","address":{"@type":"PostalAddress","addressLocality":"Úvaly","addressRegion":"Praha-východ","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.099021,"longitude":14.716654},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":4528,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":9000000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-praha-vychod-uvaly-yy6xz8.html","itemOffered":{"@type":"Place","name":"Orná půda 4 528 m² — Úvaly, okres Praha-východ"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Praha-východ","item":"https://www.parcelaka.cz/pozemky-okres-praha-vychod.html"},{"@type":"ListItem","position":4,"name":"Orná půda 4 528 m² — Úvaly, okres Praha-východ","item":"https://www.parcelaka.cz/pozemek-praha-vychod-uvaly-yy6xz8.html"}]}]</script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 4 528 m² — Úvaly, okres Praha-východ","description":"Na prodej · 9 000 000 Kč (1 988 Kč/m²) · 4 528 m² · Úvaly, okres Praha-východ. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-praha-vychod-uvaly-yy6xz8.html","address":{"@type":"PostalAddress","addressLocality":"Úvaly","addressRegion":"Praha-východ","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.099021,"longitude":14.716654},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":4528,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":9000000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-praha-vychod-uvaly-yy6xz8.html","itemOffered":{"@type":"Place","name":"Orná půda 4 528 m² — Úvaly, okres Praha-východ"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Středočeský kraj","item":"https://www.parcelaka.cz/pozemky-stredocesky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Praha-východ","item":"https://www.parcelaka.cz/pozemky-okres-praha-vychod.html"},{"@type":"ListItem","position":5,"name":"Orná půda 4 528 m² — Úvaly, okres Praha-východ","item":"https://www.parcelaka.cz/pozemek-praha-vychod-uvaly-yy6xz8.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Úvaly|—|Praha-východ|50.099|14.717","ll":[50.099021,14.716654],"v":4528,"c":9000000,"r":"data/okres/praha-vychod.json","pc":"3348/39"};</script>
-<script src="js/min/pozemek.js?v=01d7de18"></script>
+<script src="js/min/pozemek.js?v=4d723472"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -631,6 +638,7 @@
 <script type="application/json" id="pz-okoli-data">"Praha 21 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Úvaly je v nabídce ještě jeden pozemek","url":"index.html?obec=%C3%9Avaly\u0026okres=Praha-v%C3%BDchod"}</script>
 <script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 7 km je tenhle nejdražší.","r":[{"ja":1,"o":"Úvaly","vym":4528,"m":1988},{"s":"pozemek-praha-vychod-kvetnice-1ej1jk4.html","o":"Květnice","vym":5022,"m":171,"km":5},{"s":"pozemek-praha-vychod-mochov-10h6216.html","o":"Mochov","vym":7196,"m":81,"km":6},{"s":"pozemek-praha-vychod-nehvizdy-146o2oc.html","o":"Nehvizdy","vym":6736,"m":10,"km":3},{"s":"pozemek-praha-vychod-nehvizdy-1k9e4r.html","o":"Nehvizdy","vym":6859,"m":10,"km":3}]}</script>
+<script type="application/json" id="pz-kamdal-data">[{"t":"Okres Praha-východ","u":"pozemky-okres-praha-vychod.html","p":"všechny pozemky v okrese"},{"t":"Středočeský kraj","u":"pozemky-stredocesky-kraj.html","p":"přehled celého kraje"},{"t":"Orná půda","u":"pozemky-orna-puda.html","p":"týž druh pozemku po celé ČR"}]</script>
 <script type="application/json" id="pz-popis-data">"Vlastníka Vám nabízíme pozemek ke koupi. k.ú. Úvaly u Prahy LV č. 2871 o celkové výměře 4 528 m² • Parcela č. 3348/39 - o výměře 4528 m² (Orná půda) Přístupová cesta je zajištěna přes pozemky obce. Pomáháme lidem bezpečně investovat do pozemků – ať už hledáte stabilní investici, nebo půdu pro hospodaření. Přidejte se k těm, kteří vsadili na jistotu a zhodnocují své peníze tam, kde má investice pevné základy."</script>
 </body>
 </html>

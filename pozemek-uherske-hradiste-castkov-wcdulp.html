@@ -45,7 +45,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/zaklad.min.css?v=c93b074a">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=45f55690">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -138,9 +138,6 @@
        hodně, nebo skoro uprostřed. */
     .pv-stred{position:absolute; left:50%; top:-3px; bottom:-3px; width:1.5px;
       background:rgba(20,35,28,0.3); transform:translateX(-50%); border-radius:2px;}
-    /* Pruh dojede na svou hodnotu. Barvu bere z --vc jako odznak. */
-    .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill); background:var(--vc);
-      width:var(--w); animation:pruhNajed .62s var(--ease) both;}
     /* Puntík je barevný podle verdiktu a má bílý prstenec, aby byl
        poznat i tam, kde leží na tmavší části lišty. Bílý puntík na
        světlé liště splýval. */
@@ -211,6 +208,22 @@
     .srv-ja .srv-kde{font-weight:700;}
     .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
       line-height:1.55; color:var(--text-ondark-mute);}
+
+    /* KAM DÁL — rozcestník na konci stránky. Naměřeno: z vykresleného
+       detailu nevedl ani jeden odkaz na okres, kraj ani druh. Jsou to
+       odkazy, ne tlačítka — proto obrys, ne výplň značky. Dlaždice je
+       aspoň 48 px vysoká, aby se do ní dalo klepnout prstem; pod
+       dvěma sloupci na šířku se mřížka sama zalomí pod sebe. */
+    .kd-mriz{display:grid; gap:8px; max-width:var(--m-text);
+      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));}
+    .kd-polozka{display:flex; flex-direction:column; justify-content:center;
+      gap:2px; min-height:56px; padding:10px 14px; border-radius:var(--r-ovladani);
+      background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka);
+      text-decoration:none; box-shadow:var(--e1);
+      transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
+    .kd-polozka:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
+    .kd-t{font-size:15px; font-weight:700; color:var(--text-ondark);}
+    .kd-p{font-size:12px; line-height:1.4; color:var(--text-ondark-mute);}
     
 
     
@@ -251,12 +264,6 @@
        Stav při najetí myší zkouška kontrastu nevidí; --c-drazba-ink je
        tatáž barva v tmavší čitelné variantě. */
     .pzd-odkaz:hover{background:var(--c-drazba-ink); color:#fff;}
-    .pz-term{display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--c-drazba-ink); background:rgba(204,107,51,0.13); border:1px solid rgba(204,107,51,0.44); padding:6px 12px; border-radius:var(--r-plocha); margin:14px 0 2px; white-space:nowrap;}
-    .pz-term svg{width:16px; height:16px; stroke-width:2.25; flex:none;}
-    /* Dražba po termínu: šedě a bez naléhavosti — už to není příležitost,
-       jen záznam. Oranžová „termín se blíží" by tu lhala. */
-    .pz-term.prosle{color:var(--text-ondark-mute); background:var(--ink-soft2);
-      border-color:var(--line-strong); white-space:normal;}
 
     .pz-cas{margin:10px 0 0; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
     .pz-cas b{color:var(--text-ondark); font-weight:600;}
@@ -574,7 +581,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 1 787 m² — Částkov</h1><p><b>45 000 Kč</b> (25 Kč/m²) · 1 787 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>1 787 m²</dd><dt>Obec</dt><dd>Částkov</dd><dt>Okres</dt><dd><a href="pozemky-okres-uherske-hradiste.html">Uherské Hradiště</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Uherské Hradiště 12 km · Olomouc 60 km</dd></dl><p><a href="pozemek.html?p=%C4%8C%C3%A1stkov%7C%E2%80%94%7CUhersk%C3%A9%20Hradi%C5%A1t%C4%9B%7C49.109%7C17.620&amp;ll=49.109251,17.619771&amp;v=1787&amp;c=45000">Otevřít na mapě</a></p><p><a href="index.html?obec=%C4%8C%C3%A1stkov&amp;okres=Uhersk%C3%A9%20Hradi%C5%A1t%C4%9B">V obci Částkov jsou v nabídce ještě 3 pozemky</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 15 km je tenhle 4. nejdražší.</p><ul><li>38 Kč/m² — <a href="pozemek-uherske-hradiste-zlamanec-zw3j46.html">Zlámanec</a>, 4 334 m², 2 km</li><li>30 Kč/m² — <a href="pozemek-zlin-napajedla-1tm2lfg.html">Napajedla</a>, 2 466 m², 13 km</li><li>30 Kč/m² — <a href="pozemek-zlin-petruvka-3hjy10.html">Petrůvka</a>, 4 867 m², 15 km</li><li>25 Kč/m² — <b>tenhle pozemek</b>, 1 787 m²</li><li>21 Kč/m² — <a href="pozemek-uherske-hradiste-castkov-wcduku.html">Částkov</a>, 1 352 m², 1 km</li></ul></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 1 787 m² — Částkov</h1><p><b>45 000 Kč</b> (25 Kč/m²) · 1 787 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>1 787 m²</dd><dt>Obec</dt><dd>Částkov</dd><dt>Okres</dt><dd><a href="pozemky-okres-uherske-hradiste.html">Uherské Hradiště</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Uherské Hradiště 12 km · Olomouc 60 km</dd></dl><p><a href="pozemek.html?p=%C4%8C%C3%A1stkov%7C%E2%80%94%7CUhersk%C3%A9%20Hradi%C5%A1t%C4%9B%7C49.109%7C17.620&amp;ll=49.109251,17.619771&amp;v=1787&amp;c=45000">Otevřít na mapě</a></p><p><a href="index.html?obec=%C4%8C%C3%A1stkov&amp;okres=Uhersk%C3%A9%20Hradi%C5%A1t%C4%9B">V obci Částkov jsou v nabídce ještě 3 pozemky</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 15 km je tenhle 4. nejdražší.</p><ul><li>38 Kč/m² — <a href="pozemek-uherske-hradiste-zlamanec-zw3j46.html">Zlámanec</a>, 4 334 m², 2 km</li><li>30 Kč/m² — <a href="pozemek-zlin-napajedla-1tm2lfg.html">Napajedla</a>, 2 466 m², 13 km</li><li>30 Kč/m² — <a href="pozemek-zlin-petruvka-3hjy10.html">Petrůvka</a>, 4 867 m², 15 km</li><li>25 Kč/m² — <b>tenhle pozemek</b>, 1 787 m²</li><li>21 Kč/m² — <a href="pozemek-uherske-hradiste-castkov-wcduku.html">Částkov</a>, 1 352 m², 1 km</li></ul><h2>Kam dál</h2><ul><li><a href="pozemky-okres-uherske-hradiste.html">Okres Uherské Hradiště</a> — všechny pozemky v okrese</li><li><a href="pozemky-zlinsky-kraj.html">Zlínský kraj</a> — přehled celého kraje</li><li><a href="pozemky-louka.html">Louky a travní porosty</a> — týž druh pozemku po celé ČR</li><li><a href="pozemky-do-200-tisic.html">Pozemky do 200 tisíc</a> — podobná cenová hladina</li></ul></article></div></div>
   </div>
 </main>
 
@@ -613,9 +620,9 @@
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
-<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Trvalý travní porost 1 787 m² — Částkov","description":"Na prodej · 45 000 Kč (25 Kč/m²) · 1 787 m² · Částkov, okres Uherské Hradiště. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-castkov-wcdulp.html","address":{"@type":"PostalAddress","addressLocality":"Částkov","addressRegion":"Uherské Hradiště","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.109251,"longitude":17.619771},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":1787,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":45000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-castkov-wcdulp.html","itemOffered":{"@type":"Place","name":"Trvalý travní porost 1 787 m² — Částkov"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Uherské Hradiště","item":"https://www.parcelaka.cz/pozemky-okres-uherske-hradiste.html"},{"@type":"ListItem","position":4,"name":"Trvalý travní porost 1 787 m² — Částkov","item":"https://www.parcelaka.cz/pozemek-uherske-hradiste-castkov-wcdulp.html"}]}]</script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Trvalý travní porost 1 787 m² — Částkov","description":"Na prodej · 45 000 Kč (25 Kč/m²) · 1 787 m² · Částkov, okres Uherské Hradiště. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-castkov-wcdulp.html","address":{"@type":"PostalAddress","addressLocality":"Částkov","addressRegion":"Uherské Hradiště","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.109251,"longitude":17.619771},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":1787,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":45000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-castkov-wcdulp.html","itemOffered":{"@type":"Place","name":"Trvalý travní porost 1 787 m² — Částkov"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Zlínský kraj","item":"https://www.parcelaka.cz/pozemky-zlinsky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Uherské Hradiště","item":"https://www.parcelaka.cz/pozemky-okres-uherske-hradiste.html"},{"@type":"ListItem","position":5,"name":"Trvalý travní porost 1 787 m² — Částkov","item":"https://www.parcelaka.cz/pozemek-uherske-hradiste-castkov-wcdulp.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Částkov|—|Uherské Hradiště|49.109|17.620","ll":[49.109251,17.619771],"v":1787,"c":45000,"r":"data/okres/uherske-hradiste.json","h":[["2026-09-19",55000],["2026-09-28",45000]]};</script>
-<script src="js/min/pozemek.js?v=01d7de18"></script>
+<script src="js/min/pozemek.js?v=4d723472"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -631,6 +638,7 @@
 <script type="application/json" id="pz-okoli-data">"Uherské Hradiště 12 km · Olomouc 60 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Částkov jsou v nabídce ještě 3 pozemky","url":"index.html?obec=%C4%8C%C3%A1stkov\u0026okres=Uhersk%C3%A9%20Hradi%C5%A1t%C4%9B"}</script>
 <script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 15 km je tenhle 4. nejdražší.","r":[{"s":"pozemek-uherske-hradiste-zlamanec-zw3j46.html","o":"Zlámanec","vym":4334,"m":38,"km":2},{"s":"pozemek-zlin-napajedla-1tm2lfg.html","o":"Napajedla","vym":2466,"m":30,"km":13},{"s":"pozemek-zlin-petruvka-3hjy10.html","o":"Petrůvka","vym":4867,"m":30,"km":15},{"ja":1,"o":"Částkov","vym":1787,"m":25},{"s":"pozemek-uherske-hradiste-castkov-wcduku.html","o":"Částkov","vym":1352,"m":21,"km":1}]}</script>
+<script type="application/json" id="pz-kamdal-data">[{"t":"Okres Uherské Hradiště","u":"pozemky-okres-uherske-hradiste.html","p":"všechny pozemky v okrese"},{"t":"Zlínský kraj","u":"pozemky-zlinsky-kraj.html","p":"přehled celého kraje"},{"t":"Louky a travní porosty","u":"pozemky-louka.html","p":"týž druh pozemku po celé ČR"},{"t":"Pozemky do 200 tisíc","u":"pozemky-do-200-tisic.html","p":"podobná cenová hladina"}]</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka – bez prostředníků a bez zbytečných výdajů navíc! k.ú. Částkov LV č. 233 o výměře 1787 m² • Parcela č. 183/63 - o výměře 1496 m² (Trvalý travní porost) • Parcela č. 189 - o výměře 291 m² (Trvalý travní porost) Už přes 20 let pomáháme lidem bezpečně investovat do pozemků – ať už hledáte stabilní investici, nebo půdu pro hospodaření."</script>
 </body>
 </html>

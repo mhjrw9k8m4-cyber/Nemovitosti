@@ -19,6 +19,7 @@
 // děje, že to dopadá věrohodně, a že se to na stránce přizná.
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import * as META from './regiony-meta.mjs';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -149,11 +150,14 @@ pravda('stránka cen počítá jen z běžných nabídek k prodeji',
    s „nejvyšší" jiného a kontrola by to odkývala. */
 {
   /* Název kraje na stránce („Kraj Vysočina") není klíč v datech
-     („Vysočina"). Převod se čte z generátoru, aby existoval jen jednou —
-     a kdyby se tam přestal najít, je to chyba, ne tichý průchod. */
+     („Vysočina"). Převod se bere z TÉŽE tabulky, ze které jména vyrábí
+     web (scripts/regiony-meta.mjs), aby existoval jen jednou. Dřív se
+     tabulka vytahovala regulárním výrazem ze zdroje generátoru —
+     přestěhováním do společného modulu vzorek přestal sedět a zkouška
+     to ohlásila. Načtení modulu se nemůže „skoro povést". */
   const disp = {};
-  for (const m of gen.matchAll(/^ '([^']+)':\s*\{ disp:'([^']+)'/gm)) disp[m[2]] = m[1];
-  pravda('převod názvu kraje na klíč se dal přečíst z generátoru',
+  for (const [klic, m] of Object.entries(META.KRAJ_META)) disp[m.disp] = klic;
+  pravda('převod názvu kraje na klíč se dal přečíst z tabulky krajů',
     Object.keys(disp).length === 14, `přečteno ${Object.keys(disp).length} z 14`);
 
   /* Pořadí skupin jde za podobou řádku: kraj, obvyklá cena velkým

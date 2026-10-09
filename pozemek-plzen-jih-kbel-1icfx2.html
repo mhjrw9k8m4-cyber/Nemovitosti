@@ -45,7 +45,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/zaklad.min.css?v=c93b074a">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=45f55690">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -138,9 +138,6 @@
        hodně, nebo skoro uprostřed. */
     .pv-stred{position:absolute; left:50%; top:-3px; bottom:-3px; width:1.5px;
       background:rgba(20,35,28,0.3); transform:translateX(-50%); border-radius:2px;}
-    /* Pruh dojede na svou hodnotu. Barvu bere z --vc jako odznak. */
-    .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill); background:var(--vc);
-      width:var(--w); animation:pruhNajed .62s var(--ease) both;}
     /* Puntík je barevný podle verdiktu a má bílý prstenec, aby byl
        poznat i tam, kde leží na tmavší části lišty. Bílý puntík na
        světlé liště splýval. */
@@ -211,6 +208,22 @@
     .srv-ja .srv-kde{font-weight:700;}
     .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
       line-height:1.55; color:var(--text-ondark-mute);}
+
+    /* KAM DÁL — rozcestník na konci stránky. Naměřeno: z vykresleného
+       detailu nevedl ani jeden odkaz na okres, kraj ani druh. Jsou to
+       odkazy, ne tlačítka — proto obrys, ne výplň značky. Dlaždice je
+       aspoň 48 px vysoká, aby se do ní dalo klepnout prstem; pod
+       dvěma sloupci na šířku se mřížka sama zalomí pod sebe. */
+    .kd-mriz{display:grid; gap:8px; max-width:var(--m-text);
+      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));}
+    .kd-polozka{display:flex; flex-direction:column; justify-content:center;
+      gap:2px; min-height:56px; padding:10px 14px; border-radius:var(--r-ovladani);
+      background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka);
+      text-decoration:none; box-shadow:var(--e1);
+      transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
+    .kd-polozka:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
+    .kd-t{font-size:15px; font-weight:700; color:var(--text-ondark);}
+    .kd-p{font-size:12px; line-height:1.4; color:var(--text-ondark-mute);}
     
 
     
@@ -251,12 +264,6 @@
        Stav při najetí myší zkouška kontrastu nevidí; --c-drazba-ink je
        tatáž barva v tmavší čitelné variantě. */
     .pzd-odkaz:hover{background:var(--c-drazba-ink); color:#fff;}
-    .pz-term{display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--c-drazba-ink); background:rgba(204,107,51,0.13); border:1px solid rgba(204,107,51,0.44); padding:6px 12px; border-radius:var(--r-plocha); margin:14px 0 2px; white-space:nowrap;}
-    .pz-term svg{width:16px; height:16px; stroke-width:2.25; flex:none;}
-    /* Dražba po termínu: šedě a bez naléhavosti — už to není příležitost,
-       jen záznam. Oranžová „termín se blíží" by tu lhala. */
-    .pz-term.prosle{color:var(--text-ondark-mute); background:var(--ink-soft2);
-      border-color:var(--line-strong); white-space:normal;}
 
     .pz-cas{margin:10px 0 0; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
     .pz-cas b{color:var(--text-ondark); font-weight:600;}
@@ -574,7 +581,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 8 744 m² — Kbel, okres Plzeň-jih</h1><p><b>349 000 Kč</b> (40 Kč/m²) · 8 744 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>8 744 m²</dd><dt>Obec</dt><dd>Kbel</dd><dt>Okres</dt><dd><a href="pozemky-okres-plzen-jih.html">Plzeň-jih</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Plzeň 28 km</dd></dl><p><a href="pozemek.html?p=Kbel%7C%E2%80%94%7CPlze%C5%88-jih%7C49.495%7C13.386&amp;ll=49.495311,13.385522&amp;v=8744&amp;c=349000">Otevřít na mapě</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 19 km je tenhle 3. nejdražší.</p><ul><li>52 Kč/m² — <a href="pozemek-klatovy-mysliv-1xh5vbn.html">Myslív</a>, 4 141 m², 18 km</li><li>42 Kč/m² — <a href="pozemek-plzen-jih-tojice-eobzus.html">Tojice</a>, 12 944 m², 17 km</li><li>40 Kč/m² — <b>tenhle pozemek</b>, 8 744 m²</li><li>39 Kč/m² — <a href="pozemek-klatovy-vreskovice-7rgmw0.html">Vřeskovice</a>, 3 050 m², 8 km</li><li>38 Kč/m² — <a href="pozemek-klatovy-jezovy-10agf19.html">Ježovy</a>, 9 634 m², 11 km</li></ul></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 8 744 m² — Kbel, okres Plzeň-jih</h1><p><b>349 000 Kč</b> (40 Kč/m²) · 8 744 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>8 744 m²</dd><dt>Obec</dt><dd>Kbel</dd><dt>Okres</dt><dd><a href="pozemky-okres-plzen-jih.html">Plzeň-jih</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Plzeň 28 km</dd></dl><p><a href="pozemek.html?p=Kbel%7C%E2%80%94%7CPlze%C5%88-jih%7C49.495%7C13.386&amp;ll=49.495311,13.385522&amp;v=8744&amp;c=349000">Otevřít na mapě</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 19 km je tenhle 3. nejdražší.</p><ul><li>52 Kč/m² — <a href="pozemek-klatovy-mysliv-1xh5vbn.html">Myslív</a>, 4 141 m², 18 km</li><li>42 Kč/m² — <a href="pozemek-plzen-jih-tojice-eobzus.html">Tojice</a>, 12 944 m², 17 km</li><li>40 Kč/m² — <b>tenhle pozemek</b>, 8 744 m²</li><li>39 Kč/m² — <a href="pozemek-klatovy-vreskovice-7rgmw0.html">Vřeskovice</a>, 3 050 m², 8 km</li><li>38 Kč/m² — <a href="pozemek-klatovy-jezovy-10agf19.html">Ježovy</a>, 9 634 m², 11 km</li></ul><h2>Kam dál</h2><ul><li><a href="pozemky-okres-plzen-jih.html">Okres Plzeň-jih</a> — všechny pozemky v okrese</li><li><a href="pozemky-plzensky-kraj.html">Plzeňský kraj</a> — přehled celého kraje</li><li><a href="pozemky-orna-puda.html">Orná půda</a> — týž druh pozemku po celé ČR</li><li><a href="pozemky-do-500-tisic.html">Pozemky do 500 tisíc</a> — podobná cenová hladina</li></ul></article></div></div>
   </div>
 </main>
 
@@ -613,9 +620,9 @@
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
-<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 8 744 m² — Kbel, okres Plzeň-jih","description":"Na prodej · 349 000 Kč (40 Kč/m²) · 8 744 m² · Kbel, okres Plzeň-jih. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-plzen-jih-kbel-1icfx2.html","address":{"@type":"PostalAddress","addressLocality":"Kbel","addressRegion":"Plzeň-jih","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.495311,"longitude":13.385522},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":8744,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":349000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-plzen-jih-kbel-1icfx2.html","itemOffered":{"@type":"Place","name":"Orná půda 8 744 m² — Kbel, okres Plzeň-jih"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Plzeň-jih","item":"https://www.parcelaka.cz/pozemky-okres-plzen-jih.html"},{"@type":"ListItem","position":4,"name":"Orná půda 8 744 m² — Kbel, okres Plzeň-jih","item":"https://www.parcelaka.cz/pozemek-plzen-jih-kbel-1icfx2.html"}]}]</script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 8 744 m² — Kbel, okres Plzeň-jih","description":"Na prodej · 349 000 Kč (40 Kč/m²) · 8 744 m² · Kbel, okres Plzeň-jih. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-plzen-jih-kbel-1icfx2.html","address":{"@type":"PostalAddress","addressLocality":"Kbel","addressRegion":"Plzeň-jih","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.495311,"longitude":13.385522},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":8744,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":349000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-plzen-jih-kbel-1icfx2.html","itemOffered":{"@type":"Place","name":"Orná půda 8 744 m² — Kbel, okres Plzeň-jih"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Plzeňský kraj","item":"https://www.parcelaka.cz/pozemky-plzensky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Plzeň-jih","item":"https://www.parcelaka.cz/pozemky-okres-plzen-jih.html"},{"@type":"ListItem","position":5,"name":"Orná půda 8 744 m² — Kbel, okres Plzeň-jih","item":"https://www.parcelaka.cz/pozemek-plzen-jih-kbel-1icfx2.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Kbel|—|Plzeň-jih|49.495|13.386","ll":[49.495311,13.385522],"v":8744,"c":349000,"r":"data/okres/plzen-jih.json"};</script>
-<script src="js/min/pozemek.js?v=01d7de18"></script>
+<script src="js/min/pozemek.js?v=4d723472"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -630,6 +637,7 @@
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Plzeň 28 km"</script>
 <script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 19 km je tenhle 3. nejdražší.","r":[{"s":"pozemek-klatovy-mysliv-1xh5vbn.html","o":"Myslív","vym":4141,"m":52,"km":18},{"s":"pozemek-plzen-jih-tojice-eobzus.html","o":"Tojice","vym":12944,"m":42,"km":17},{"ja":1,"o":"Kbel","vym":8744,"m":40},{"s":"pozemek-klatovy-vreskovice-7rgmw0.html","o":"Vřeskovice","vym":3050,"m":39,"km":8},{"s":"pozemek-klatovy-jezovy-10agf19.html","o":"Ježovy","vym":9634,"m":38,"km":11}]}</script>
+<script type="application/json" id="pz-kamdal-data">[{"t":"Okres Plzeň-jih","u":"pozemky-okres-plzen-jih.html","p":"všechny pozemky v okrese"},{"t":"Plzeňský kraj","u":"pozemky-plzensky-kraj.html","p":"přehled celého kraje"},{"t":"Orná půda","u":"pozemky-orna-puda.html","p":"týž druh pozemku po celé ČR"},{"t":"Pozemky do 500 tisíc","u":"pozemky-do-500-tisic.html","p":"podobná cenová hladina"}]</script>
 <script type="application/json" id="pz-popis-data">"Vlastníka Vám nabízíme pozemky ke koupi. k.ú. Kbel u Přeštic LV č. 477 o celkové výměře 8744 m² • Parcela č. 1166/101 - o výměře 12 m² (Vodní plocha) • Parcela č. 1166/89 - o výměře 27 m² (Trvalý travní porost) • Parcela č. 1180/3 - o výměře 79 m² (Trvalý travní porost) • Parcela č. 1244/1 - o výměře 5666 m² (Orná půda) • Parcela č. 1340/2 - o výměře 2782 m² (Orná půda) • Parcela č."</script>
 </body>
 </html>

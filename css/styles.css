@@ -2442,11 +2442,6 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    Hlídá to scripts/test-verdikt.mjs — ptá se prohlížeče, ne souboru. */
 /* Cena, která vypadá nepravděpodobně (zpravidla spoluvlastnický podíl).
    Varování, ne verdikt — proto jantar, ne červená. */
-/* Pruh dojede na svou hodnotu, místo aby tam rovnou stál. Je to jediný
-   údaj na kartě, který je MĚŘÍTKO — krátký pohyb řekne „tohle je škála a
-   tady na ní jsi" líp než jakýkoli popisek. Cílovou šířku nese proměnná
-   --w; kdo má vypnuté animace, dostane ji rovnou. */
-@keyframes pruhNajed{from{width:0;} to{width:var(--w);}}
 @keyframes puntikNajed{from{left:0;} to{left:var(--w);}}
 @media (prefers-reduced-motion:reduce){
 .pv-dot{animation:none;}

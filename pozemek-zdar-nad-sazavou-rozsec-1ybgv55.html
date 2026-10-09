@@ -45,7 +45,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/zaklad.min.css?v=c93b074a">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=45f55690">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -138,9 +138,6 @@
        hodně, nebo skoro uprostřed. */
     .pv-stred{position:absolute; left:50%; top:-3px; bottom:-3px; width:1.5px;
       background:rgba(20,35,28,0.3); transform:translateX(-50%); border-radius:2px;}
-    /* Pruh dojede na svou hodnotu. Barvu bere z --vc jako odznak. */
-    .pv-fill{position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill); background:var(--vc);
-      width:var(--w); animation:pruhNajed .62s var(--ease) both;}
     /* Puntík je barevný podle verdiktu a má bílý prstenec, aby byl
        poznat i tam, kde leží na tmavší části lišty. Bílý puntík na
        světlé liště splýval. */
@@ -211,6 +208,22 @@
     .srv-ja .srv-kde{font-weight:700;}
     .srv-pozn{max-width:var(--m-text); margin:10px 0 0; font-size:13px;
       line-height:1.55; color:var(--text-ondark-mute);}
+
+    /* KAM DÁL — rozcestník na konci stránky. Naměřeno: z vykresleného
+       detailu nevedl ani jeden odkaz na okres, kraj ani druh. Jsou to
+       odkazy, ne tlačítka — proto obrys, ne výplň značky. Dlaždice je
+       aspoň 48 px vysoká, aby se do ní dalo klepnout prstem; pod
+       dvěma sloupci na šířku se mřížka sama zalomí pod sebe. */
+    .kd-mriz{display:grid; gap:8px; max-width:var(--m-text);
+      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));}
+    .kd-polozka{display:flex; flex-direction:column; justify-content:center;
+      gap:2px; min-height:56px; padding:10px 14px; border-radius:var(--r-ovladani);
+      background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka);
+      text-decoration:none; box-shadow:var(--e1);
+      transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
+    .kd-polozka:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
+    .kd-t{font-size:15px; font-weight:700; color:var(--text-ondark);}
+    .kd-p{font-size:12px; line-height:1.4; color:var(--text-ondark-mute);}
     
 
     
@@ -251,12 +264,6 @@
        Stav při najetí myší zkouška kontrastu nevidí; --c-drazba-ink je
        tatáž barva v tmavší čitelné variantě. */
     .pzd-odkaz:hover{background:var(--c-drazba-ink); color:#fff;}
-    .pz-term{display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--c-drazba-ink); background:rgba(204,107,51,0.13); border:1px solid rgba(204,107,51,0.44); padding:6px 12px; border-radius:var(--r-plocha); margin:14px 0 2px; white-space:nowrap;}
-    .pz-term svg{width:16px; height:16px; stroke-width:2.25; flex:none;}
-    /* Dražba po termínu: šedě a bez naléhavosti — už to není příležitost,
-       jen záznam. Oranžová „termín se blíží" by tu lhala. */
-    .pz-term.prosle{color:var(--text-ondark-mute); background:var(--ink-soft2);
-      border-color:var(--line-strong); white-space:normal;}
 
     .pz-cas{margin:10px 0 0; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
     .pz-cas b{color:var(--text-ondark); font-weight:600;}
@@ -574,7 +581,7 @@
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 18 676 m² — Rozseč, okres Žďár nad Sázavou</h1><p><b>1 018 670 Kč</b> (55 Kč/m²) · 18 676 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>18 676 m²</dd><dt>Obec</dt><dd>Rozseč</dd><dt>Okres</dt><dd><a href="pozemky-okres-zdar-nad-sazavou.html">Žďár nad Sázavou</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Žďár nad Sázavou 30 km · Brno 34 km</dd></dl><p><a href="pozemek.html?p=Rozse%C4%8D%7C%E2%80%94%7C%C5%BD%C4%8F%C3%A1r%20nad%20S%C3%A1zavou%7C49.360%7C16.206&amp;ll=49.360467,16.206195&amp;v=18676&amp;c=1018670">Otevřít na mapě</a></p><p><a href="index.html?obec=Rozse%C4%8D&amp;okres=%C5%BD%C4%8F%C3%A1r%20nad%20S%C3%A1zavou">V obci Rozseč je v nabídce ještě 5 pozemků</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 7 km je tenhle 3. nejdražší.</p><ul><li>56 Kč/m² — <a href="pozemek-zdar-nad-sazavou-rozsec-v3a098.html">Rozseč</a>, 22 252 m², 1 km</li><li>56 Kč/m² — <a href="pozemek-zdar-nad-sazavou-rozsec-1jbfs5m.html">Rozseč</a>, 29 257 m², 1 km</li><li>55 Kč/m² — <b>tenhle pozemek</b>, 18 676 m²</li><li>54 Kč/m² — <a href="pozemek-zdar-nad-sazavou-rozsec-i1skay.html">Rozseč</a>, 21 042 m², 1 km</li><li>54 Kč/m² — <a href="pozemek-brno-venkov-katov-1askyaq.html">Katov</a>, 15 002 m², 7 km</li></ul></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 18 676 m² — Rozseč, okres Žďár nad Sázavou</h1><p><b>1 018 670 Kč</b> (55 Kč/m²) · 18 676 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>18 676 m²</dd><dt>Obec</dt><dd>Rozseč</dd><dt>Okres</dt><dd><a href="pozemky-okres-zdar-nad-sazavou.html">Žďár nad Sázavou</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Žďár nad Sázavou 30 km · Brno 34 km</dd></dl><p><a href="pozemek.html?p=Rozse%C4%8D%7C%E2%80%94%7C%C5%BD%C4%8F%C3%A1r%20nad%20S%C3%A1zavou%7C49.360%7C16.206&amp;ll=49.360467,16.206195&amp;v=18676&amp;c=1018670">Otevřít na mapě</a></p><p><a href="index.html?obec=Rozse%C4%8D&amp;okres=%C5%BD%C4%8F%C3%A1r%20nad%20S%C3%A1zavou">V obci Rozseč je v nabídce ještě 5 pozemků</a></p><h2>Srovnatelné pozemky v okolí</h2><p>Z pěti nabídek do 7 km je tenhle 3. nejdražší.</p><ul><li>56 Kč/m² — <a href="pozemek-zdar-nad-sazavou-rozsec-v3a098.html">Rozseč</a>, 22 252 m², 1 km</li><li>56 Kč/m² — <a href="pozemek-zdar-nad-sazavou-rozsec-1jbfs5m.html">Rozseč</a>, 29 257 m², 1 km</li><li>55 Kč/m² — <b>tenhle pozemek</b>, 18 676 m²</li><li>54 Kč/m² — <a href="pozemek-zdar-nad-sazavou-rozsec-i1skay.html">Rozseč</a>, 21 042 m², 1 km</li><li>54 Kč/m² — <a href="pozemek-brno-venkov-katov-1askyaq.html">Katov</a>, 15 002 m², 7 km</li></ul><h2>Kam dál</h2><ul><li><a href="pozemky-okres-zdar-nad-sazavou.html">Okres Žďár nad Sázavou</a> — všechny pozemky v okrese</li><li><a href="pozemky-vysocina-kraj.html">Kraj Vysočina</a> — přehled celého kraje</li><li><a href="pozemky-orna-puda.html">Orná půda</a> — týž druh pozemku po celé ČR</li><li><a href="pozemky-do-2-milionu.html">Pozemky do dva miliony</a> — podobná cenová hladina</li></ul></article></div></div>
   </div>
 </main>
 
@@ -613,9 +620,9 @@
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
-<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 18 676 m² — Rozseč, okres Žďár nad Sázavou","description":"Na prodej · 1 018 670 Kč (55 Kč/m²) · 18 676 m² · Rozseč, okres Žďár nad Sázavou. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-zdar-nad-sazavou-rozsec-1ybgv55.html","address":{"@type":"PostalAddress","addressLocality":"Rozseč","addressRegion":"Žďár nad Sázavou","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.360467,"longitude":16.206195},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":18676,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":1018670,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-zdar-nad-sazavou-rozsec-1ybgv55.html","itemOffered":{"@type":"Place","name":"Orná půda 18 676 m² — Rozseč, okres Žďár nad Sázavou"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Žďár nad Sázavou","item":"https://www.parcelaka.cz/pozemky-okres-zdar-nad-sazavou.html"},{"@type":"ListItem","position":4,"name":"Orná půda 18 676 m² — Rozseč, okres Žďár nad Sázavou","item":"https://www.parcelaka.cz/pozemek-zdar-nad-sazavou-rozsec-1ybgv55.html"}]}]</script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 18 676 m² — Rozseč, okres Žďár nad Sázavou","description":"Na prodej · 1 018 670 Kč (55 Kč/m²) · 18 676 m² · Rozseč, okres Žďár nad Sázavou. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-zdar-nad-sazavou-rozsec-1ybgv55.html","address":{"@type":"PostalAddress","addressLocality":"Rozseč","addressRegion":"Žďár nad Sázavou","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.360467,"longitude":16.206195},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":18676,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":1018670,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-zdar-nad-sazavou-rozsec-1ybgv55.html","itemOffered":{"@type":"Place","name":"Orná půda 18 676 m² — Rozseč, okres Žďár nad Sázavou"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Kraj Vysočina","item":"https://www.parcelaka.cz/pozemky-vysocina-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Žďár nad Sázavou","item":"https://www.parcelaka.cz/pozemky-okres-zdar-nad-sazavou.html"},{"@type":"ListItem","position":5,"name":"Orná půda 18 676 m² — Rozseč, okres Žďár nad Sázavou","item":"https://www.parcelaka.cz/pozemek-zdar-nad-sazavou-rozsec-1ybgv55.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Rozseč|—|Žďár nad Sázavou|49.360|16.206","ll":[49.360467,16.206195],"v":18676,"c":1018670,"r":"data/okres/zdar-nad-sazavou.json"};</script>
-<script src="js/min/pozemek.js?v=01d7de18"></script>
+<script src="js/min/pozemek.js?v=4d723472"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -631,6 +638,7 @@
 <script type="application/json" id="pz-okoli-data">"Žďár nad Sázavou 30 km · Brno 34 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Rozseč je v nabídce ještě 5 pozemků","url":"index.html?obec=Rozse%C4%8D\u0026okres=%C5%BD%C4%8F%C3%A1r%20nad%20S%C3%A1zavou"}</script>
 <script type="application/json" id="pz-srovnani-data">{"v":"Z pěti nabídek do 7 km je tenhle 3. nejdražší.","r":[{"s":"pozemek-zdar-nad-sazavou-rozsec-v3a098.html","o":"Rozseč","vym":22252,"m":56,"km":1},{"s":"pozemek-zdar-nad-sazavou-rozsec-1jbfs5m.html","o":"Rozseč","vym":29257,"m":56,"km":1},{"ja":1,"o":"Rozseč","vym":18676,"m":55},{"s":"pozemek-zdar-nad-sazavou-rozsec-i1skay.html","o":"Rozseč","vym":21042,"m":54,"km":1},{"s":"pozemek-brno-venkov-katov-1askyaq.html","o":"Katov","vym":15002,"m":54,"km":7}]}</script>
+<script type="application/json" id="pz-kamdal-data">[{"t":"Okres Žďár nad Sázavou","u":"pozemky-okres-zdar-nad-sazavou.html","p":"všechny pozemky v okrese"},{"t":"Kraj Vysočina","u":"pozemky-vysocina-kraj.html","p":"přehled celého kraje"},{"t":"Orná půda","u":"pozemky-orna-puda.html","p":"týž druh pozemku po celé ČR"},{"t":"Pozemky do dva miliony","u":"pozemky-do-2-milionu.html","p":"podobná cenová hladina"}]</script>
 <script type="application/json" id="pz-popis-data">"U nás nakupujete přímo od vlastníka - bez prostředníků a bez zbytečných výdajů navíc! k.ú. Rozseč LV č. 110 o výměře 18676 m² • Parcela č. 196 - o výměře 327 m² (Orná půda) • Parcela č. 197 - o výměře 5341 m² (Orná půda) • Parcela č. 198 - o výměře 111 m² (Orná půda) • Parcela č. 199 - o výměře 1378 m² (Orná půda) • Parcela č. 200 - o výměře 173 m² (Orná půda) • Parcela č. 201 - o výměře 86 m² (Orná půda) • Parcela č."</script>
 </body>
 </html>
