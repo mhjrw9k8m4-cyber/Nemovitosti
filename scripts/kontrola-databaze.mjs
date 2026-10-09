@@ -197,7 +197,12 @@ async function prihlas(url, anonKlic, email, heslo) {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const cfg = readFileSync(path.join(KOREN, 'js', 'config.js'), 'utf8');
-  const url = (/PK_SUPABASE_URL\s*=\s*'([^']+)'/.exec(cfg) || [])[1] || '';
+  /* Adresa se bere z js/config.js — není tajná a stojí tam pro každý
+     prohlížeč. Proměnná ji přebije, kdyby se kontrolovalo jiné prostředí;
+     je to tentýž postup jako v scripts/nasad-sql.mjs, ať si ty dva
+     nástroje nesahají na jiný projekt. */
+  const url = process.env.SUPABASE_URL
+    || (/PK_SUPABASE_URL\s*=\s*'([^']+)'/.exec(cfg) || [])[1] || '';
   const anonKlic = (/PK_SUPABASE_KEY\s*=\s*'([^']+)'/.exec(cfg) || [])[1] || '';
   const serviceKlic = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   const tajne = [serviceKlic, process.env.PK_TEST_HESLO || ''];

@@ -16,6 +16,7 @@ name: Nasadit databázi do Supabase
 # Potřebné tajné klíče (Settings → Secrets and variables → Actions):
 #   SUPABASE_PAT   — osobní přístupový token Supabase, viz
 #                    https://supabase.com/dashboard/account/tokens
+#   SUPABASE_SERVICE_ROLE_KEY — kvůli kontrole po nasazení (už v repozitáři je)
 #
 # Adresa projektu se NEVKLÁDÁ: není tajná a stojí v js/config.js, odkud
 # ji čte každý prohlížeč. Skript si ji vezme odtamtud. (Dá se přebít
@@ -59,3 +60,20 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PAT: ${{ secrets.SUPABASE_PAT }}
         run: node scripts/nasad-sql.mjs ${{ inputs.opravdu && '--opravdu' || '' }}
+
+      # Nasazení, o kterém se neví, jestli sedlo, je pořád jen doufání.
+      # Tenhle krok se databáze zeptá, co v ní po nasazení doopravdy je
+      # a kdo se k tomu dostane — a vypíše to sem do protokolu, takže se
+      # to dá přečíst i z telefonu.
+      #
+      # NESHODÍ BĚH. Nasazení a kontrola jsou dvě různé otázky: když SQL
+      # projde a kontrola něco najde, nemá to vypadat, jako by nasazení
+      # selhalo. Nález je potřeba přečíst, ne podle barvy puntíku hádat,
+      # co se nepovedlo.
+      - name: Zkontrolovat, co v databázi opravdu je
+        if: always()
+        continue-on-error: true
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/kontrola-databaze.mjs
