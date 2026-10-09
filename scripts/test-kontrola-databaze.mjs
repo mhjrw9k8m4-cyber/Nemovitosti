@@ -39,6 +39,25 @@ pravda('mezi tabulkami je navstevnost (bod 0 ze seznamu pro majitele)',
   ma.tabulky.indexOf('navstevnost') >= 0, ma.tabulky.join(', '));
 pravda('a mezi zakázanými je prehled_navstevnosti (díra, kvůli které to vzniklo)',
   ma.zavrene.indexOf('prehled_navstevnosti') >= 0, ma.zavrene.join(', '));
+/* KAŽDÝ ZÁKAZ MUSÍ VYJMENOVAT VŠECHNY ROLE, a stálo to dvě díry za
+   sebou. „revoke ... from public" zní jako „ode všech", jenže PUBLIC
+   je pseudorole: neodebere právo, které má role udělené PŘÍMO —
+   a Supabase anonovi i přihlášenému práva na funkce ve schématu
+   public rovnou dává. Po první opravě statistiky návštěvnosti tak
+   zůstala otevřená nepřihlášeným, tedy komukoli, což bylo horší než
+   stav před opravou. Tohle je ta kontrola, která to chytne ze
+   souboru, ještě než se někam nasadí. */
+{
+  const spatne = [];
+  for (const m of SQL.matchAll(/^revoke all on function ([a-z_][a-z0-9_]*)\s*\([^)]*\)\s*from ([^;]+);/gmi)) {
+    const role = m[2].split(',').map((x) => x.trim().toLowerCase());
+    for (const r of ['public', 'anon', 'authenticated']) {
+      if (role.indexOf(r) < 0) spatne.push(`${m[1]}: chybí ${r}`);
+    }
+  }
+  pravda('každý „revoke all on function" vyjmenovává public, anon i authenticated',
+    spatne.length === 0, spatne.join('; '));
+}
 pravda('a kontrola oprávnění sama sebe nepouští ke slovu nikomu',
   ma.zavrene.indexOf('kontrola_opravneni') >= 0,
   'vypisuje, jak je databáze zabezpečená — to je návod, kudy do ní');

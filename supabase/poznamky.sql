@@ -81,7 +81,7 @@ begin
 end;
 $$;
 
-revoke all on function poznamka_uloz(text, text) from public, anon;
+revoke all on function poznamka_uloz(text, text) from public, anon, authenticated;
 grant execute on function poznamka_uloz(text, text) to authenticated;
 
 -- ---------- Všechny moje poznámky ----------
@@ -99,5 +99,5 @@ as $$
    order by p.zmeneno desc;
 $$;
 
-revoke all on function moje_poznamky() from public, anon;
+revoke all on function moje_poznamky() from public, anon, authenticated;
 grant execute on function moje_poznamky() to authenticated;

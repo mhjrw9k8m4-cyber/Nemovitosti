@@ -96,7 +96,10 @@ begin
 end;
 $$;
 
-revoke all on function zapis_navstevu(text, text, text, boolean) from public;
+-- Tady se povoluje hned zpátky (viz řádek níž) — zapsat návštěvu musí
+-- umět i nepřihlášený, jinak by se nezměřilo nic. Vyjmenované role
+-- jsou i tak: ať je z řádku vidět, komu se co bere, a ne jen „všem".
+revoke all on function zapis_navstevu(text, text, text, boolean) from public, anon, authenticated;
 grant execute on function zapis_navstevu(text, text, text, boolean) to anon, authenticated;
 
 -- ---------------------------------------------------------------------
@@ -144,8 +147,16 @@ $$;
    Čte ji scripts/navstevnost.mjs se SUPABASE_SERVICE_ROLE_KEY, takže
    service_role stačí. Až bude web mít pojem majitele, přidá se jemu —
    do té doby ne. */
-revoke all on function prehled_navstevnosti(integer) from public;
-revoke all on function prehled_navstevnosti(integer) from authenticated;
+-- „from public" NESTAČÍ, a tohle je ta chyba podruhé. PUBLIC je
+-- pseudorole „všichni"; odebrat ji neodebere právo, které má role
+-- udělené PŘÍMO, a Supabase anonovi i přihlášenému práva na funkce
+-- ve schématu public rovnou dává. Po první opravě tedy zůstala
+-- statistika otevřená nepřihlášeným — tedy komukoli na internetu,
+-- což je horší stav než ten, který se opravoval.
+-- Každou roli je proto potřeba vyjmenovat. Že to platí i ve skutečné
+-- databázi, a ne jen v tomhle souboru, hlídá kontrola_opravneni()
+-- (supabase/kontrola-opravneni.sql) — ta tuhle díru taky našla.
+revoke all on function prehled_navstevnosti(integer) from public, anon, authenticated;
 grant execute on function prehled_navstevnosti(integer) to service_role;
 
 /* ÚKLID. Čítače za rok a víc nikdo nečte a tabulka nemá růst donekonečna.
@@ -161,4 +172,6 @@ as $$
   select count(*)::integer from smazano;
 $$;
 
-revoke all on function uklid_navstevnosti() from public;
+-- Totéž, a tady by to bolelo víc: tahle funkce data MAŽE. Spustit ji
+-- směl kdokoli, přihlášený i ne.
+revoke all on function uklid_navstevnosti() from public, anon, authenticated;
