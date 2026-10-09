@@ -1406,7 +1406,7 @@ ${metodika}
 
 ${razitkoCerstvosti}
 
-      <p class="okr-more" style="margin-top:22px;">Souvisí: <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> · <a href="stavebni-vs-zemedelsky-pozemek.html">stavební vs. zemědělský pozemek</a> · <a href="pozemky-podle-okresu.html">pozemky podle regionu</a>.</p>
+      <p class="okr-more" style="margin-top:22px;">Souvisí: <a href="na-co-mam-pozemek.html">na co mám podle rozpočtu</a> · <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> · <a href="stavebni-vs-zemedelsky-pozemek.html">stavební vs. zemědělský pozemek</a> · <a href="pozemky-podle-okresu.html">pozemky podle regionu</a>.</p>
 
     </div>
   </section>
@@ -1505,6 +1505,7 @@ const staticUrls=[
   {loc:'list-vlastnictvi-katastr.html',cf:'monthly',pr:'0.7'},
   {loc:'vecne-bremeno-pozemek.html',cf:'monthly',pr:'0.7'},
   {loc:'hypoteka-na-pozemek.html',cf:'monthly',pr:'0.7'},
+  {loc:'na-co-mam-pozemek.html',cf:'weekly',pr:'0.8'},
   {loc:'uzemni-plan-pozemek.html',cf:'monthly',pr:'0.7'},
   {loc:'cena-pozemku.html',cf:'weekly',pr:'0.8'},
   {loc:'data.html',cf:'daily',pr:'0.5'},

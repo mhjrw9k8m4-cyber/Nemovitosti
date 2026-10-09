@@ -4555,6 +4555,49 @@ body::after{
    by mezi názvem kraje a číslem u pravého okraje zůstalo přes 400 px
    prázdna a oko by ten pár nespojilo. Stejnou mez má i .trh-seznam,
    aby obě sekce stály na jedné svislici. */
+/* ===== NA CO MÁM? — pozemek podle rozpočtu ===========================
+   Čtyři pole nad sebou na telefonu, do mřížky na širším displeji.
+   Rozpočet je HLAVNÍ POLE a je tak i velké: zbylá tři jsou upřesnění
+   a dají se nechat prázdná. Kdyby byla všechna stejná, člověk by
+   nevěděl, čím začít.
+
+   Výsledek je žebříček okresů, takže se čte jako ostatní žebříčky na
+   webu (ceny po krajích, srovnatelné pozemky): vlevo místo, vpravo
+   číslo, pod ním drobně poznámka. Jedna soustava, ne tři. */
+.rz-pole{display:grid; grid-template-columns:1fr; gap:14px; margin:16px 0 0; max-width:560px;}
+.rz-vstup{display:flex; flex-direction:column; gap:6px;}
+.rz-vstup > span{font-size:13px; font-weight:600; color:var(--text-ondark-mute);}
+.rz-vstup input, .rz-vstup select{width:100%; min-height:48px; box-sizing:border-box;
+  padding:10px 14px; font:inherit; font-size:16px; color:var(--text-ondark);
+  background:var(--plocha-jemna); border:1px solid var(--line-strong);
+  border-radius:var(--r-plocha); font-variant-numeric:tabular-nums;}
+.rz-vstup input:focus-visible, .rz-vstup select:focus-visible{outline:2px solid var(--copper);
+  outline-offset:2px;}
+/* Rozpočet je ta otázka, ostatní jsou upřesnění — a je to vidět. */
+.rz-hlavni input{font-family:var(--font-display); font-weight:700; font-size:24px;
+  letter-spacing:-0.02em; min-height:56px;}
+@media (min-width:600px){
+  .rz-pole{grid-template-columns:1fr 1fr;}
+  .rz-hlavni{grid-column:1 / -1;}
+}
+.rz-shrnuti{margin:0 0 14px; font-size:16px; line-height:1.6; color:var(--text-ondark);}
+.rz-nic{margin:0; font-size:16px; line-height:1.6; color:var(--text-ondark); max-width:var(--m-text);}
+.rz-pozn{margin:10px 0 0; font-size:13px; line-height:1.55; color:var(--text-ondark-mute);
+  max-width:var(--m-text);}
+.rz-seznam{list-style:none; margin:0; padding:0; max-width:560px; counter-reset:rz;}
+.rz-radek{display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center;
+  column-gap:16px; row-gap:0; padding:11px 0; border-top:1px solid var(--line); min-height:44px;}
+.rz-radek:first-child{border-top:0;}
+.rz-okres{grid-column:1; grid-row:1; font-size:16px; font-weight:600; color:var(--text-ondark);
+  text-decoration:none;}
+a.rz-okres{text-decoration:underline; text-underline-offset:3px;}
+a.rz-okres:hover{color:var(--copper-bright);}
+.rz-pocet{grid-column:2; grid-row:1; justify-self:end; font-family:var(--font-display);
+  font-weight:700; font-size:20px; line-height:1.2; letter-spacing:-0.02em;
+  color:var(--text-ondark); font-variant-numeric:tabular-nums;}
+.rz-detail{grid-column:1 / -1; grid-row:2; font-size:13px; color:var(--text-ondark-mute);
+  font-variant-numeric:tabular-nums;}
+
 .cenk-tab{margin:16px 0 0; max-width:560px;}
 /* Věta nad tabulkou končí tam, kde tabulka — jinak by text šel přes
    celou kartu a tabulka pod ním byla o 400 px kratší, takže by to

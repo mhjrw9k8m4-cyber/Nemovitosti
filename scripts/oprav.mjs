@@ -36,6 +36,9 @@ const KROKY = [
      robotem a za archivem (scripts/archiv.mjs běží před oprav.mjs,
      viz .github/workflows/update-data.yml). */
   ['generate-zlevneni.mjs', 'které nabídky zlevnily (data/zlevneni.json)'],
+  /* Tenký řez pro stránku „Na co mám?". Až ZA regionálními stránkami:
+     bere z nich jméno okresní stránky, aby odkaz nevedl na 404. */
+  ['generate-rozpocet.mjs', 'řez pro stránku „Na co mám?" (data/rozpocet.json)'],
   ['generate-rss.mjs', 'kanály s novými pozemky (celostátní a krajské)'],
   ['generate-data-stranka.mjs', 'stránka s popisem dat (data.html)'],
   // Až po generátorech: česká sazba se dělá na HOTOVÉM textu, ať platí

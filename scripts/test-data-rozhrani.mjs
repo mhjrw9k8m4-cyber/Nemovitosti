@@ -211,6 +211,11 @@ const nabidky = D.opportunities || [];
     'data/ceny-mist.json': 'medián ceny podle místa — dopočítaný z opportunities.json',
     'data/historie-cen.json': 'cenové hladiny v čase, dopočítané z historie gitu',
     'data/mapove-vrstvy.json': 'nastavení mapových vrstev, ne data o pozemcích',
+    /* Tenký řez pro stránku „Na co mám?" — čtyři čísla na nabídku
+       (okres, druh, cena, výměra), nic, co by v opportunities.json
+       nebylo. Popisovat ho na data.html by znamenalo vydávat výtah
+       za další zdroj; kdo chce data, má celý soubor. */
+    'data/rozpocet.json': 'výtah z opportunities.json pro výpočet podle rozpočtu',
   };
   /* PROHLEDÁVAJÍ SE VŠECHNY SKRIPTY, ne vyjmenovaná hrstka. Nejdřív
      tu stál seznam deseti souborů a tři výjimky v tabulce výš se podle

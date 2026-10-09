@@ -68,6 +68,16 @@ výměře (v datech je „stavební pozemek 3 315 m²" za tři koruny za
 metr, tedy celý pozemek za deset tisíc). Rozesílač si teď načítá týž
 model jako web a řádek nese „cena k ověření".
 
+## 3c. ~~Web neuměl otázku „na co mám?"~~ — *přidáno 9. 10.*
+
+Uměl odpovědět „kolik stojí pozemek tady". Otázku, kterou má kupující
+první — *mám milion, kde za to něco koupím* — zadat nešlo.
+`na-co-mam-pozemek.html` z rozpočtu a výměry spočítá, ve kterých
+okresech se dnes dá koupit, a kolik jich tam je. Nic se nemodeluje:
+počítají se nabídky, které jsou právě na trhu, takže je výsledek
+ověřitelný fakt. Dražby, podíly a ceny, kterým web nevěří, se do toho
+nepočítají — a je to na stránce napsané.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se
