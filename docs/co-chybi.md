@@ -171,6 +171,24 @@ Dalo by se posílat nejdřív tenký řez a zbytek dotáhnout. Je to ale
 zásah do jádra aplikace a bez měření návštěvnosti (bod 4) se nedá
 poznat, jestli se tím někomu uleví — zatím tedy ne.
 
+**Nalezeno a odebráno 9. 10. — na STRÁNKÁCH, kam chodí lidé
+z vyhledávačů:**
+
+* `js/hlidani-logika.js` (11 kB očištěných) se načítalo na **126
+  stránkách** a `PKHlidani` na nich nevolal nikdo. Stálo tam kvůli
+  odznaku upozornění v nabídce, jenže ta funkce je z webu odebraná
+  a `#nav-zpravy` ani `#nav-hlidani` dnes neplní žádný skript.
+* `js/graf-cen.js` (8,4 kB) chodilo na všech 105 generovaných
+  stránkách, přestože graf je jen na 91 z nich (okresy a kraje).
+
+Dohromady 19,4 kB zdroje navíc, a nic z toho nespadlo ani by nespadlo.
+Změřeno v gzipu, co si stránka opravdu stahuje: stránka podle rozpočtu
+**13,0 → 6,0 kB skriptů** (o 54 % méně), stránka okresu 13,0 → 9,3 kB
+(o 29 % méně, graf na ní zůstává). Hlídá
+`scripts/test-skripty-na-strance.mjs`: skript vázaný na prvek se smí
+načítat jen tam, kde ten prvek je, a knihovna jen tam, kde její jméno
+někdo opravdu použije.
+
 ## 8. Platby a e-maily — *majitel*
 
 Hotové v kódu, čekají na účty: IČO a klíče Stripe (zvýraznění
@@ -178,6 +196,30 @@ inzerátu), potvrzená doména v Resendu (obnova hesla a upozornění na
 nové pozemky). Rozepsané je to v `docs/pred-vydanim.md`.
 
 ---
+
+## Zvážené a ZAMÍTNUTÉ, protože to data neunesou
+
+Ať je vidět i to, co se nepostavilo, a proč. Jinak se ten nápad po
+půl roce vrátí jako nový.
+
+**„Přejdi hranici okresu a ušetříš."** Sousedství okresů se z
+`data/okresy-hranice.json` spočítat dá — vyšlo 190 sousedních párů
+a kontrola na Benešovu i Praze sedí. Jenže aby se o dvou okresech dalo
+tvrdit, že se mezi nimi cena liší, musí mít OBA dost vzorků: při mezi
+25 nabídek (`CENY.DOST_NABIDEK`, tatáž, jakou web používá všude jinde)
+zůstanou ze 190 párů **čtyři** — a z nich tři mají rozdíl 2 až 5 %,
+tedy nic. Jediný opravdový je Břeclav proti Brnu-venkov (62 vs.
+81 Kč/m², o 23 % levněji). Stránka postavená na jednom páru by byla
+chytlavý nadpis nad jedním číslem; při snížení meze na 10 nabídek by
+párů bylo 63, ale ta mez už o okrese nic neříká. Až bude dat víc,
+spočítá se to znovu.
+
+**Vlastní stránka pro každou obec.** Obcí je v nabídce 1 067, ale
+nabídek na obec málo: aspoň deset má **čtrnáct** obcí, aspoň osm
+dvacet tři, dvacet a víc ani jedna. Stránka o osmi řádcích je thin
+content — proto má přehled podle druhu mez čtyřicet nabídek. Obce
+s aspoň dvěma nabídkami navíc už stojí jako rozcestník na stránce
+svého okresu, takže cesta k nim existuje.
 
 ## Co naopak nechybí
 

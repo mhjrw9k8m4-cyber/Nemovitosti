@@ -321,13 +321,21 @@
      mimo). Stránky okresů a krajů jsou nejčastější vstup z vyhledávače,
      takže těch 73 kB platil skoro každý návštěvník. -->
 <script src="js/min/menu.js?v=252f6284" defer></script>
-<!-- Upozornění v menu: nepřečtené zprávy a nové pozemky z hlídání. Musí
-     být i tady: tyhle stránky se generují znovu při každém běhu datového
-     robota, takže co není v šabloně, to příští běh smaže — a lidé
-     z vyhledávání chodí nejčastěji právě na stránky okresů. -->
+<!-- Stav přihlášení v nabídce (jméno v „Můj profil"). Musí být i tady:
+     tyhle stránky se generují znovu při každém běhu datového robota,
+     takže co není v šabloně, to příští běh smaže — a lidé z vyhledávání
+     chodí nejčastěji právě na stránky okresů.
+
+     JS/HLIDANI-LOGIKA.JS SE ODSUD ODEBRALO. Stálo tu kvůli odznaku
+     upozornění v nabídce (nepřečtené zprávy, nové pozemky z hlídání) —
+     jenže ta funkce je z webu odebraná a odznak nikdo nevyplňuje:
+     naměřeno, že #nav-zpravy ani #nav-hlidani neplní žádný skript
+     na webu. Zůstalo tedy 11 kB kódu, který se stahoval na 126
+     stránkách a nic na nich nedělal — a mezi nimi všechny vstupy
+     z vyhledávačů. Že se to nevrátí, hlídá
+     scripts/test-skripty-na-strance.mjs. -->
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=bec7a315" defer></script>
-<script src="js/min/hlidani-logika.js?v=404eb49d" defer></script>
 <script src="js/min/graf-cen.js?v=5fe809e3" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/mereni.js?v=b2023a39" defer></script>

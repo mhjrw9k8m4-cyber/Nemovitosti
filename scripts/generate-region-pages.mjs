@@ -62,7 +62,6 @@ const V = {
   css: razitko('css/styles.min.css'),
   config: razitko('js/config.js'),
   auth: razitko('js/auth.js'),
-  hlidani: razitko('js/hlidani-logika.js'),
   hlavicka: razitko('js/hlavicka.js'),
   grafCen: razitko('js/graf-cen.js'),
   offline: razitko('js/offline.js'),
@@ -587,7 +586,15 @@ ${sMapou ? `  <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?${V.le
 </header>
 ${crumbNav(crumbs)}`;
 }
-function footer(){
+/* `volby.graf` — načítat js/graf-cen.js. Graf cenové hladiny je jen na
+   stránkách okresů a krajů (nese ho prvek `data-graf-cen`), ale skript
+   se posílal na všech 105 generovaných stránek: čtrnáct z nich si
+   stahovalo 8,6 kB kódu, který na nich nemá co kreslit, a mezi nimi
+   zrovna ty nejnavštěvovanější vstupy z vyhledávače podle druhu
+   a rozpočtu. Že se ty dvě věci nerozejdou, hlídá
+   scripts/test-skripty-na-strance.mjs. */
+function footer(volby){
+  const graf = !!(volby && volby.graf);
   return `
 <footer>
   <div class="wrap foot-bottom">
@@ -608,15 +615,23 @@ function footer(){
      mimo). Stránky okresů a krajů jsou nejčastější vstup z vyhledávače,
      takže těch 73 kB platil skoro každý návštěvník. -->
 <script src="js/menu.js?${V.menu}" defer></script>
-<!-- Upozornění v menu: nepřečtené zprávy a nové pozemky z hlídání. Musí
-     být i tady: tyhle stránky se generují znovu při každém běhu datového
-     robota, takže co není v šabloně, to příští běh smaže — a lidé
-     z vyhledávání chodí nejčastěji právě na stránky okresů. -->
+<!-- Stav přihlášení v nabídce (jméno v „Můj profil"). Musí být i tady:
+     tyhle stránky se generují znovu při každém běhu datového robota,
+     takže co není v šabloně, to příští běh smaže — a lidé z vyhledávání
+     chodí nejčastěji právě na stránky okresů.
+
+     JS/HLIDANI-LOGIKA.JS SE ODSUD ODEBRALO. Stálo tu kvůli odznaku
+     upozornění v nabídce (nepřečtené zprávy, nové pozemky z hlídání) —
+     jenže ta funkce je z webu odebraná a odznak nikdo nevyplňuje:
+     naměřeno, že #nav-zpravy ani #nav-hlidani neplní žádný skript
+     na webu. Zůstalo tedy 11 kB kódu, který se stahoval na 126
+     stránkách a nic na nich nedělal — a mezi nimi všechny vstupy
+     z vyhledávačů. Že se to nevrátí, hlídá
+     scripts/test-skripty-na-strance.mjs. -->
 <script src="js/config.js?${V.config}" defer></script>
 <script src="js/auth.js?${V.auth}" defer></script>
-<script src="js/hlidani-logika.js?${V.hlidani}" defer></script>
-<script src="js/graf-cen.js?${V.grafCen}" defer></script>
-<script src="js/offline.js?${V.offline}" defer></script>
+${graf ? `<script src="js/graf-cen.js?${V.grafCen}" defer></script>
+` : ''}<script src="js/offline.js?${V.offline}" defer></script>
 <script src="js/mereni.js?${V.mereni}" defer></script>
 <script src="js/hlavicka.js?${V.hlavicka}" defer></script>
 </body>
@@ -878,7 +893,7 @@ ${sibLinks ? `
   </section>
 
 </main>
-` + footer();
+` + footer({ graf: true });   // graf cenové hladiny je jen tady
   write(file, html);
   okresPages.push({okres,kraj,file,count});
 }
@@ -979,7 +994,7 @@ ${rows}
   </section>
 
 </main>
-` + footer();
+` + footer({ graf: true });   // graf cenové hladiny je jen tady
   write(file, html);
   krajPages.push({kraj,file,count});
 }

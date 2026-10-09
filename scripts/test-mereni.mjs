@@ -167,10 +167,23 @@ const sql = fs.readFileSync(path.join(KOREN, 'supabase', 'navstevnost.sql'), 'ut
 pravda('tabulka nemá sloupec, do kterého by šel uložit člověk',
   !/\b(ip|ip_adresa|user_agent|user_id|email|session|cookie|fingerprint)\b/i.test(sql.split('create table')[1].split(');')[0]),
   'v tabulce je sloupec, který umí identifikovat návštěvníka');
-pravda('číst souhrn smí jen přihlášený, zapisovat i nepřihlášený',
-  /grant execute on function zapis_navstevu[\s\S]*?to anon, authenticated/.test(sql)
-  && /grant execute on function prehled_navstevnosti[\s\S]*?to authenticated/.test(sql),
-  'oprávnění nesedí');
+/* ZAPSAT SMÍ KDOKOLI, PŘEČÍST SOUHRN NIKDO Z PROHLÍŽEČE.
+   Tahle odrážka dřív hlídala „číst smí jen přihlášený" — a bylo to
+   málo: přihlásit se může kdokoli, takže statistiku návštěvnosti webu
+   si mohl přečíst každý, kdo si založil účet. Teď je `prehled_
+   navstevnosti` jen pro service_role, tedy pro běh v CI, a z webu ho
+   nepřečte ani přihlášený. Zapisovat musí umět i nepřihlášený, jinak
+   by se měřili jen uživatelé s účtem a čísla by lhala. */
+pravda('zapsat návštěvu smí i nepřihlášený',
+  /grant execute on function zapis_navstevu[\s\S]*?to anon, authenticated/.test(sql),
+  'bez toho by se měřili jen přihlášení');
+pravda('souhrn nepřečte z prohlížeče nikdo — ani přihlášený',
+  /grant execute on function prehled_navstevnosti[\s\S]*?to service_role/.test(sql)
+  && !/grant execute on function prehled_navstevnosti[\s\S]*?to (anon|authenticated)/.test(sql),
+  'souhrn je dostupný z prohlížeče: ' + (/grant execute on function prehled_navstevnosti[^;]*/.exec(sql) || ['—'])[0]);
+pravda('a zákaz je vysloven proti všem třem rolím',
+  /revoke all on function prehled_navstevnosti[\s\S]*?from public, anon, authenticated/.test(sql),
+  'revoke jen od public nestačí — Supabase dává anon i authenticated přímý grant');
 pravda('a je to v balíku supabase/00-vse.sql',
   fs.readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8').includes('zapis_navstevu'),
   'migrace by se při nasazení přeskočila');
