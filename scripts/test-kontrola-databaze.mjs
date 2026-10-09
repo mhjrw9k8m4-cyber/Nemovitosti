@@ -191,6 +191,28 @@ const chybyZ = (v) => v.nalezy.filter((n) => n.vaha === 'chyba');
     JSON.stringify(v.nalezy.map((x) => x.rada)));
 }
 
+{
+  /* NAŠLO SE AŽ OSTRÝM BĚHEM, a byla to moje chyba, ne chyba databáze:
+     skoro každá funkce se nejdřív zakáže všem a hned povolí zpátky té
+     roli, která ji má volat. zapis_navstevu() musí umět spustit
+     i nepřihlášený, jinak by se nezměřilo nic. */
+  const v = await spust({ opravneni: [
+    { funkce: 'zapis_navstevu', komu: 'anon', vychozi: false },
+  ] }, { sql: SQL_ZK + '\nrevoke all on function zapis_navstevu(text) from public, anon;'
+    + '\ngrant execute on function zapis_navstevu(text) to anon;' });
+  pravda('povolení zpátky téže roli není porušení zákazu',
+    chybyZ(v).length === 0, JSON.stringify(chybyZ(v)));
+}
+{
+  const v = await spust({ opravneni: [
+    { funkce: 'zapis_navstevu', komu: 'authenticated', vychozi: false },
+  ] }, { sql: SQL_ZK + '\nrevoke all on function zapis_navstevu(text) from public, anon;'
+    + '\ngrant execute on function zapis_navstevu(text) to anon;' });
+  pravda('ale povolení JINÉ roli porušení je',
+    chybyZ(v).some((n) => /zapis_navstevu → authenticated/.test(n.proc)),
+    JSON.stringify(v.nalezy));
+}
+
 /* ---- 4b) 401 na kořeni není totéž co nefunkční klíč ------------ */
 {
   /* TOHLE NAŠEL AŽ OSTRÝ BĚH. Kořenový výpis vrátil 401, celá otázka

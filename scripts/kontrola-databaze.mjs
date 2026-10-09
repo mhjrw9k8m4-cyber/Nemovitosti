@@ -57,8 +57,20 @@ export function ocekavaneZeSQL(sql) {
   const zavrene = [...sql.matchAll(/^revoke all on function ([a-z_][a-z0-9_]*)\s*\([^)]*\)\s*from ([^;]+);/gmi)]
     .filter((m) => /\banon\b|\bpublic\b/i.test(m[2]))
     .map((m) => m[1].toLowerCase());
+  /* ZÁKAZ A POVOLENÍ CHODÍ V PÁRU. Skoro každá funkce se tu nejdřív
+     zakáže všem a hned povolí zpátky té roli, která ji má volat —
+     zapis_navstevu() musí umět spustit i nepřihlášený, jinak by se
+     nezměřilo nic. Kontrola, která čte jen „revoke", tedy hlásí
+     poplach nad správně nastavenou databází; přesně to se stalo při
+     prvním ostrém běhu (pět nálezů, všechny moje chyba). */
+  const povolene = {};
+  for (const m of sql.matchAll(/^grant execute on function ([a-z_][a-z0-9_]*)\s*\([^)]*\)\s*to ([^;]+);/gmi)) {
+    const jm = m[1].toLowerCase();
+    povolene[jm] = povolene[jm] || new Set();
+    for (const r of m[2].split(',')) povolene[jm].add(r.trim().toLowerCase());
+  }
   return { tabulky: [...new Set(tabulky)], funkce: [...new Set(funkce)],
-    zavrene: [...new Set(zavrene)] };
+    zavrene: [...new Set(zavrene)], povolene };
 }
 
 /** Z OpenAPI, který PostgREST vydá danému klíči, vybere tabulky a RPC. */
@@ -204,10 +216,14 @@ export async function zkontroluj({ url, anonKlic, serviceKlic, sql, token = null
     for (const r of opr.json) {
       if (!r || !r.funkce) continue;
       if (r.vychozi) vychozi.add(r.funkce);
-      if (ma.zavrene.indexOf(r.funkce) >= 0 && VSEM.indexOf(r.komu) >= 0) {
-        if (!porusene.has(r.funkce)) porusene.set(r.funkce, []);
-        porusene.get(r.funkce).push(r.komu);
-      }
+      if (ma.zavrene.indexOf(r.funkce) < 0 || VSEM.indexOf(r.komu) < 0) continue;
+      /* Povolení zpátky TÉHOŽ role není porušení zákazu, je to jeho
+         druhá půlka. PUBLIC se nepovoluje nikdy, takže u něj je nález
+         vždycky. */
+      const smi = ma.povolene[r.funkce];
+      if (smi && smi.has(String(r.komu).toLowerCase())) continue;
+      if (!porusene.has(r.funkce)) porusene.set(r.funkce, []);
+      porusene.get(r.funkce).push(r.komu);
     }
     prehled.opravneniPrecteno = opr.json.length;
     if (porusene.size) {
@@ -430,8 +446,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       ? `u ${prehled.proNeprihlaseneTabulek} neveřejných tabulek ověřeno, že je`
         + ' nepřihlášený nepřečte'
       : 'POZOR: co vidí nepřihlášený, se ověřit nepodařilo';
+    /* Nadpis nálezu SÁM NESTAČÍ: „5 funkcí má zákaz, ale databáze je
+       pouští dál" se bez jmen nedá vyšetřit a protokol se přes API
+       nestáhne. Do souhrnu proto jde i podrobnost. */
     const shrnuti = chyby.length
-      ? `Kontrola databáze: ${chyby.length} nálezů — ` + chyby.map((n) => n.co).join('; ')
+      ? `Kontrola databáze: ${chyby.length} nálezů — `
+        + chyby.map((n) => `${n.co} (${n.proc})`).join(' | ')
       : `Databáze sedí: ${prehled.vDatabaziTabulek} tabulek, `
         + `${prehled.vDatabaziFunkci} funkcí. ${kdoVidi}`
         + (prehled.proPrihlaseneTabulek != null
