@@ -134,3 +134,14 @@
 {"k":"Karviná|—|Karviná|49.866|18.376#1rqu982","m":"Karviná","o":"Karviná","dr":"orná půda","t":"exekuce","v":0,"c":49800,"od":"2026-09-21","do":"2026-10-07","proc":"zmizela"}
 {"k":"Vsetín|—|Vsetín|49.284|17.999#1rqu997","m":"Vsetín","o":"Vsetín","dr":"trvalý travní porost","t":"exekuce","v":0,"c":382500,"od":"2026-09-16","do":"2026-10-07","proc":"zmizela"}
 {"k":"Brno-venkov|—|Brno-venkov|49.117|16.584#1rqu98z","m":"Brno-venkov","o":"Brno-venkov","dr":"zahrada","t":"exekuce","v":0,"c":25000,"od":"2026-09-21","do":"2026-10-07","proc":"zmizela"}
+{"k":"Pardubice|—|Pardubice|50.039|15.779#203et","m":"Pardubice","o":"Pardubice","dr":"zahrada","t":"sale","v":329,"c":850000,"od":"2026-09-28","do":"2026-10-08","proc":"cena"}
+{"k":"Záblatí|—|Jindřichův Hradec|49.106|14.647#1za5p","m":"Záblatí","o":"Jindřichův Hradec","dr":"trvalý travní porost","t":"sale","v":1258,"c":29000,"od":"2026-09-19","do":"2026-10-08","proc":"zmizela"}
+{"k":"Nekvasovy|—|Plzeň-jih|49.436|13.623#2qbag","m":"Nekvasovy","o":"Plzeň-jih","dr":"lesní pozemek","t":"sale","v":17029,"c":589000,"od":"2026-09-14","do":"2026-10-08","proc":"zmizela"}
+{"k":"Slatina|—|Klatovy|49.402|13.751#4sd9p","m":"Slatina","o":"Klatovy","dr":"lesní pozemek","t":"sale","v":16490,"c":595000,"od":"2026-09-19","do":"2026-10-08","proc":"zmizela"}
+{"k":"Mikulčice|—|Hodonín|48.822|17.071#i0fvo1","m":"Mikulčice","o":"Hodonín","dr":"orná půda","t":"sale","v":1713,"c":75000,"od":"2026-09-14","do":"2026-10-08","proc":"zmizela"}
+{"k":"Kovač|—|Jičín|50.387|15.471#i0fyfs","m":"Kovač","o":"Jičín","dr":"trvalý travní porost","t":"sale","v":1427,"c":65000,"od":"2026-09-14","do":"2026-10-08","proc":"zmizela"}
+{"k":"Plzeň|—|Plzeň-město|49.748|13.378#lcmd","m":"Plzeň","o":"Plzeň-město","dr":"stavební pozemek","t":"sale","v":200000,"c":20000000,"od":"2026-09-14","do":"2026-10-08","proc":"zmizela"}
+{"k":"Mníšek|—|Liberec|50.829|15.048#i0fv33","m":"Mníšek","o":"Liberec","dr":"lesní pozemek","t":"sale","v":7252,"c":875000,"od":"2026-09-19","do":"2026-10-08","proc":"zmizela"}
+{"k":"Dolní Hbity|627/5|Příbram|49.658|14.172#1encq6b","m":"Dolní Hbity","o":"Příbram","dr":"lesní pozemek","t":"drazba","v":810,"c":136564,"od":"2026-09-17","do":"2026-10-08","proc":"zmizela"}
+{"k":"Police nad Metují|1103/1|Náchod|50.533|16.237#1mbi72r","m":"Police nad Metují","o":"Náchod","dr":"trvalý travní porost","t":"drazba","v":2353,"c":1647100,"od":"2026-09-14","do":"2026-10-08","proc":"zmizela"}
+{"k":"Hodonín|—|Hodonín|48.806|17.093#1rqp5yp","m":"Hodonín","o":"Hodonín","dr":"lesní pozemek","t":"exekuce","v":547418,"c":42000,"od":"2026-09-30","do":"2026-10-08","proc":"zmizela"}
