@@ -208,6 +208,48 @@ export async function zkontroluj({ url, anonKlic, serviceKlic, sql, token = null
   return { nalezy, prehled };
 }
 
+/* ===== DOČASNÝ ÚČET MÍSTO CIZÍHO HESLA ==============================
+   Role „přihlášený uživatel" je ta, ve které tu jednou byla díra:
+   prehled_navstevnosti() si mohl zavolat každý, kdo si založil účet.
+   Projít se dá jedině s platným přihlášením — jenže uložit si kvůli
+   tomu někam HESLO SKUTEČNÉHO ČLOVĚKA je špatná výměna. Tajné
+   proměnné repozitáře si přečte každý, kdo smí upravit workflow,
+   a heslo k osobnímu e-mailu bývá totéž heslo ještě na deseti
+   místech.
+   Servisní klíč, který v repozitáři stejně je, umí účty zakládat
+   i maza. Vyrobí se proto jednorázový, projde se s ním kontrola
+   a hned se smaže. Heslo vzniká náhodně v běhu, nikam se nevypisuje
+   a nikdo ho nikdy nepotřebuje znát.
+   SMAZÁNÍ JE V „finally". Účet, který po spadlé kontrole zůstane
+   v databázi, je přesně ten nepořádek, kvůli kterému by se tahle
+   zkouška přestala pouštět. */
+export async function zalozZkusebniUcet(url, serviceKlic) {
+  const id = (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+  /* Doména .invalid je k tomuhle vyhrazená normou (RFC 2606) — nikomu
+     nepatří a nikdy patřit nebude, takže se nemůže stát, že by se
+     účet založil na cizí adresu. */
+  const email = `kontrola-${id}@parcelaka-kontrola.invalid`;
+  const heslo = 'K' + id + '!x';
+  const r = await fetch(url.replace(/\/+$/, '') + '/auth/v1/admin/users', {
+    method: 'POST',
+    headers: { apikey: serviceKlic, Authorization: 'Bearer ' + serviceKlic,
+      'content-type': 'application/json' },
+    body: JSON.stringify({ email, password: heslo, email_confirm: true }),
+  });
+  if (r.status !== 200 && r.status !== 201) return { chyba: `HTTP ${r.status}` };
+  const j = await r.json().catch(() => null);
+  return { id: j && j.id, email, heslo };
+}
+
+export async function smazZkusebniUcet(url, serviceKlic, idUzivatele) {
+  if (!idUzivatele) return false;
+  const r = await fetch(url.replace(/\/+$/, '') + '/auth/v1/admin/users/' + idUzivatele, {
+    method: 'DELETE',
+    headers: { apikey: serviceKlic, Authorization: 'Bearer ' + serviceKlic },
+  });
+  return r.status >= 200 && r.status < 300;
+}
+
 /* ---------- spuštění z příkazové řádky ---------- */
 async function prihlas(url, anonKlic, email, heslo) {
   const r = await fetch(url.replace(/\/+$/, '') + '/auth/v1/token?grant_type=password', {
@@ -244,9 +286,21 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   const sql = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
   let token = null;
+  let zkusebni = null;
   if (process.env.PK_TEST_EMAIL && process.env.PK_TEST_HESLO) {
     token = await prihlas(url, anonKlic, process.env.PK_TEST_EMAIL, process.env.PK_TEST_HESLO);
     if (!token) console.log('(Přihlášení zkušebním účtem neprošlo — ta část kontroly se vynechá.)');
+  } else if (process.argv.indexOf('--se-zkusebnim-uctem') >= 0) {
+    zkusebni = await zalozZkusebniUcet(url, serviceKlic);
+    if (zkusebni.chyba || !zkusebni.id) {
+      console.log(`(Dočasný účet se nepodařilo založit: ${zkusebni.chyba || 'bez id'}`
+        + ' — role „přihlášený" se nezkontroluje.)');
+      zkusebni = null;
+    } else {
+      tajne.push(zkusebni.heslo);
+      token = await prihlas(url, anonKlic, zkusebni.email, zkusebni.heslo);
+      if (!token) console.log('(Dočasný účet se nepodařilo přihlásit — role se nezkontroluje.)');
+    }
   }
 
   let vysledek;
@@ -254,7 +308,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     vysledek = await zkontroluj({ url, anonKlic, serviceKlic, sql, token });
   } catch (e) {
     console.error('Kontrola spadla: ' + bezKlicu(e && e.message, tajne));
+    await smazZkusebniUcet(url, serviceKlic, zkusebni && zkusebni.id);
     process.exit(1);
+  } finally {
+    if (zkusebni && zkusebni.id) {
+      const smazano = await smazZkusebniUcet(url, serviceKlic, zkusebni.id);
+      console.log(smazano ? '  (dočasný účet smazán)'
+        : '  ::warning::Dočasný účet se nepodařilo smazat — zkontrolujte Supabase → Authentication.');
+    }
   }
   const { nalezy, prehled } = vysledek;
 

@@ -18,6 +18,12 @@ name: Nasadit databázi do Supabase
 #                    https://supabase.com/dashboard/account/tokens
 #   SUPABASE_SERVICE_ROLE_KEY — kvůli kontrole po nasazení (už v repozitáři je)
 #
+# Druhý přepínač, „zkusebni_ucet", projde i roli přihlášeného uživatele —
+# tu, ve které tu jednou byla díra. Heslo skutečného člověka se k tomu
+# NEUKLÁDÁ: servisní klíč založí jednorázový účet na doméně .invalid
+# a hned po kontrole ho smaže. Je vypnutý schválně, protože jako jediný
+# krok téhle kontroly do databáze zapisuje.
+#
 # Adresa projektu se NEVKLÁDÁ: není tajná a stojí v js/config.js, odkud
 # ji čte každý prohlížeč. Skript si ji vezme odtamtud. (Dá se přebít
 # proměnnou SUPABASE_URL, kdyby se nasazovalo do jiného projektu.)
@@ -31,6 +37,11 @@ on:
     inputs:
       opravdu:
         description: 'Opravdu nasadit (bez zaškrtnutí jen zkontroluje)'
+        type: boolean
+        required: false
+        default: false
+      zkusebni_ucet:
+        description: 'Projít i roli přihlášeného (založí a hned smaže dočasný účet)'
         type: boolean
         required: false
         default: false
@@ -76,4 +87,4 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/kontrola-databaze.mjs
+        run: node scripts/kontrola-databaze.mjs ${{ inputs.zkusebni_ucet && '--se-zkusebnim-uctem' || '' }}
