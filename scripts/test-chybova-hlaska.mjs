@@ -70,6 +70,87 @@ pravda('zkoušek s počtem padlých kontrol je dost na to, aby to něco znamenal
 pravda('a všechny na svém `::error::` řádku jmenují, co padlo',
   bezHlasky.length === 0, `bez hlášky: ${bezHlasky.join(', ')}`);
 
+/* --- A ŽE JE HLÁŠKA, CO DO NÍ PŘIJDE -------------------------------
+   Důvod se do `::error::` dostane jako text. Když na jeho místě stojí
+   ČÍSLO, autor skoro jistě zamýšlel porovnání a druhý argument zůstal
+   počtem — a kontrola pak tvrdí OPAK své vlastní věty, protože každý
+   nenulový počet je pravda. Přesně tohle se stalo v
+   scripts/test-klic-ulozenych.mjs: `pravda(…, jinak.length, 0)`
+   procházelo právě tehdy, když vada byla, a spadlo, až když se
+   spravila. V celém repozitáři to byl jeden jediný výskyt, takže
+   stačí hlídat, aby zůstal nulový. */
+/* Komentáře se musí vyhodit, jinak si lint najde sám sebe: vysvětlení
+   nad ním ten špatný tvar cituje. Stav: kód / text v uvozovkách /
+   řádkový komentář / blokový komentář. */
+function bezKomentaru(text) {
+  let ven = ''; let i = 0; let uvozovka = null;
+  while (i < text.length) {
+    const c = text[i]; const d = text[i + 1];
+    if (uvozovka) {
+      ven += c;
+      if (c === '\\') { ven += d; i += 2; continue; }
+      if (c === uvozovka) uvozovka = null;
+      i++; continue;
+    }
+    if (c === "'" || c === '"' || c === '`') { uvozovka = c; ven += c; i++; continue; }
+    if (c === '/' && d === '/') { while (i < text.length && text[i] !== '\n') i++; continue; }
+    if (c === '/' && d === '*') {
+      i += 2;
+      while (i < text.length && !(text[i] === '*' && text[i + 1] === '/')) { if (text[i] === '\n') ven += '\n'; i++; }
+      i += 2; continue;
+    }
+    ven += c; i++;
+  }
+  return ven;
+}
+function argumenty(text, od) {
+  let hloubka = 1; let kus = ''; const ven = []; let i = od; let uvozovka = null;
+  while (i < text.length && hloubka > 0) {
+    const c = text[i];
+    if (uvozovka) {
+      kus += c;
+      if (c === '\\') { kus += text[i + 1]; i += 2; continue; }
+      if (c === uvozovka) uvozovka = null;
+      i++; continue;
+    }
+    if (c === "'" || c === '"' || c === '`') { uvozovka = c; kus += c; i++; continue; }
+    if (c === '(' || c === '[' || c === '{') { hloubka++; kus += c; i++; continue; }
+    if (c === ')' || c === ']' || c === '}') {
+      hloubka--;
+      if (hloubka === 0) { ven.push(kus); break; }
+      kus += c; i++; continue;
+    }
+    if (c === ',' && hloubka === 1) { ven.push(kus); kus = ''; i++; continue; }
+    kus += c; i++;
+  }
+  return ven.map((a) => a.trim());
+}
+{
+  const spatne = [];
+  let volani = 0;
+  for (const f of soubory) {
+    const s = bezKomentaru(readFileSync(path.join(KOREN, 'scripts', f), 'utf8'));
+    const re = /\bpravda\(/g;
+    let m;
+    while ((m = re.exec(s)) !== null) {
+      const a = argumenty(s, m.index + m[0].length);
+      if (a.length < 2) continue;
+      volani++;
+      const radek = s.slice(0, m.index).split('\n').length;
+      const vyslo = a[1].replace(/\s+/g, ' ');
+      const proc = a.length > 2 ? a[2].replace(/\s+/g, ' ') : null;
+      if (proc !== null && /^-?\d+(\.\d+)?$/.test(proc)) {
+        spatne.push(`${f}:${radek} důvod je číslo (${proc}), výsledek „${vyslo}"`);
+      } else if (/\.(length|size)$/.test(vyslo) && !/[=<>!&|?]/.test(vyslo)) {
+        spatne.push(`${f}:${radek} výsledek je počet „${vyslo}", ne pravda/nepravda`);
+      }
+    }
+  }
+  pravda('kontrol je dost na to, aby to něco znamenalo', volani > 2000, `nalezeno ${volani}`);
+  pravda('žádná kontrola nemá na místě důvodu číslo ani počet místo pravdy',
+    spatne.length === 0, spatne.slice(0, 4).join(' | '));
+}
+
 console.log('\nChybová hláška pro CI');
 console.log(zpravy.join('\n'));
 console.log(`\nZkoušek s jmenovitou hláškou: ${sHlaskou}`);

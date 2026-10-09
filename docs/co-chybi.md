@@ -529,6 +529,48 @@ celé stojí — že **každá nabídka má vlastní jméno stránky**. Právě 
 se v Bohumíně porušil. Sabotáž (data zpátky na stav před opravou)
 hlásí obě poslední kontroly a jmenuje konkrétní pozemky.
 
+## 3r. ~~Jedna kontrola tvrdila opak své vlastní věty — a byla zelená, protože vada existovala~~ — *opraveno 9. 10.*
+
+Tohle vyplavala oprava z bodu 3q a stojí za zapsání celá, protože
+ukazuje, jak se zkouška může obrátit proti smyslu, který má hlídat.
+
+Po sloučení dvojníků spadla v CI prohlížečová zkouška
+`test-klic-ulozenych` a anotace rovnou řekla, co padlo: *„a ty zbylé
+se liší jen cenou (jinak by to byl nedodělek)"*. Na tom řádku stálo:
+
+```js
+pravda('a ty zbylé se liší jen cenou (jinak by to byl nedodělek)', jinak.length, 0);
+```
+
+Druhý argument je **výsledek**, třetí **důvod**. Tady na místě
+výsledku stál POČET skupin, které se liší i jinak než cenou — a každý
+nenulový počet je pravda. Kontrola tedy procházela právě tehdy, když
+vada byla, a spadla ve chvíli, kdy se spravila. Nula na místě důvodu
+je ta druhá polovina téhož překlepu: autor (já) zamýšlel porovnání
+`=== 0` a napsal z něj dva argumenty.
+
+Je to tiší druh vady než rozbitý web: zkouška neřekne nic a vypadá
+zeleně, přičemž hlídá opak. Zvlášť nepříjemné je, že se chová jako
+pojistka proti vadě, kterou si **vyžaduje**.
+
+Opraveno na `jinak.length === 0` s čitelným důvodem. Sabotáž (vrátit
+bohumínského dvojníka do dat) teď hlásí „✕ a ty zbylé se liší jen
+cenou" — tedy správným směrem.
+
+**Přeměřeno, jestli je to jev nebo ojedinělý překlep.** Napsal jsem
+na to čtečku argumentů (ne regulární výraz — argumenty nesou vnořené
+závorky, šablonové texty a čárky uvnitř) a prošel všech 163 zkoušek,
+**2 300 volání** `pravda()`. Hledaly se dvě značky: číslo na místě
+důvodu a počet bez porovnání na místě výsledku. **Jediný výskyt
+v celém repozitáři** — ten výše.
+
+Pojistka je v `scripts/test-chybova-hlaska.mjs`, kde už kontrakt
+`pravda`/`zpravy` bydlí: důvod musí být text, protože jde do řádku
+`::error::`, a výsledek nesmí být holý počet. Komentáře se před
+hledáním vyhazují, jinak si lint najde sám sebe — vysvětlení nad ním
+ten špatný tvar cituje. Sabotáž (nasadit ten tvar do
+`test-okres.mjs`) padá.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

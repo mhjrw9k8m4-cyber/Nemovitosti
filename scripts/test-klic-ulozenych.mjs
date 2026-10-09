@@ -72,10 +72,16 @@ pravda(`na klicPozemku jich zbylo ${kolNovy.length} (${kolNovy.reduce((s, [, v])
   kolNovy.length < kolPkey.length / 3,
   `z ${kolPkey.length} na ${kolNovy.length} — to je málo muziky`);
 /* Ty zbylé se liší JEN cenou. Kdyby se lišily i jinak, byl by to
-   nedodělek, ne mez. */
+   nedodělek, ne mez.
+   POZOR NA TVAR: tady dřív stálo `pravda(…, jinak.length, 0)`, tedy
+   počet jako výsledek a nulu jako důvod. Kontrola tím tvrdila OPAK
+   své vlastní věty — procházela právě tehdy, když se zbylé lišily
+   i jinak než cenou, a spadla ve chvíli, kdy se to spravilo. */
 {
   const jinak = kolNovy.filter(([, v]) => new Set(v.map((d) => (d.druh || '') + '|' + Math.round(d.area || 0))).size > 1);
-  pravda('a ty zbylé se liší jen cenou (jinak by to byl nedodělek)', jinak.length, 0);
+  pravda('a ty zbylé se liší jen cenou (jinak by to byl nedodělek)',
+    jinak.length === 0,
+    jinak.slice(0, 3).map(([k, v]) => `${k} → ` + v.map((d) => `${d.druh} ${Math.round(d.area || 0)} m²`).join(' + ')).join(' | '));
 }
 
 /* největší kolizní skupina — na ní se to bude zkoušet v prohlížeči */
