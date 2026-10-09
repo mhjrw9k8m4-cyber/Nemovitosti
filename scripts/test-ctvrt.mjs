@@ -100,6 +100,7 @@ pravda('čtvrť jde do vlastního pole, ne do místa', /o\.cast = c;/.test(ROBOT
     'stránka pozemku (js/pozemek.js)': readFileSync(new URL('../js/pozemek.js', import.meta.url), 'utf8'),
   };
   const vysledky = {};
+  const funkce = {};
   for (const [kde, kod] of Object.entries(zdroje)) {
     const zac = kod.indexOf('function mistoRadek(');
     let telo = null;
@@ -114,6 +115,7 @@ pravda('čtvrť jde do vlastního pole, ne do místa', /o\.cast = c;/.test(ROBOT
       'funkce mistoRadek chybí — čtvrť se pak buď neukáže, nebo se to napíše dvakrát a rozejde se to'); continue; }
     const esc = (x) => String(x == null ? '' : x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const f = new Function('esc', telo + '; return mistoRadek;')(esc);
+    funkce[kde] = f;
     vysledky[kde] = [f({ okres: 'Praha' }), f({ okres: 'Praha', cast: 'Řepy' }), f({ cast: 'Řepy' }), f({}),
       f({ place: 'Brno-venkov', okres: 'Brno-venkov' }), f({ place: 'Brno-venkov', okres: 'Brno-venkov', cast: 'Šlapanice' })];
     je(`${kde}: bez čtvrti zůstane jen okres`, vysledky[kde][0], 'okres Praha');
@@ -130,6 +132,26 @@ pravda('čtvrť jde do vlastního pole, ne do místa', /o\.cast = c;/.test(ROBOT
   pravda('a mapa i stránka pozemku to skládají stejně',
     pary.length === 2 && JSON.stringify(pary[0]) === JSON.stringify(pary[1]),
     JSON.stringify(pary));
+
+  /* A JEDEN ROZDÍL, KTERÝ TAM PATŘÍ. Stránka pozemku má nad tímhle
+     řádkem nadpis, který u tří čtvrtin nabídek okres sám uvádí
+     („… — Luhačovice, okres Zlín") — rozlišení shodných titulků ho tam
+     přidá. Psát ho hned pod tím podruhé je totéž dvakrát pod sebou,
+     takže funkce na stránce pozemku umí nadpis dostat a okres vynechá.
+     Mapa ho nedostane nikdy: karta žádný takový nadpis nemá, a proto se
+     obě kopie na jednoparametrovém volání výš pořád musí shodovat. */
+  const fp = funkce['stránka pozemku (js/pozemek.js)'];
+  if (fp) {
+    je('okres z nadpisu se pod nadpisem neopakuje',
+      fp({ okres: 'Zlín', place: 'Luhačovice' },
+        'Trvalý travní porost 2 289 m² — Luhačovice, okres Zlín'), '');
+    je('ale čtvrť zůstane i tak',
+      fp({ okres: 'Zlín', place: 'Luhačovice', cast: 'Pozlovice' },
+        'Trvalý travní porost 2 289 m² — Luhačovice, okres Zlín'), 'Pozlovice');
+    je('a když nadpis okres neuvádí, řádek ho napíše',
+      fp({ okres: 'Zlín', place: 'Luhačovice' },
+        'Trvalý travní porost 2 289 m² — Luhačovice'), 'okres Zlín');
+  }
 }
 
 function hotovo() {

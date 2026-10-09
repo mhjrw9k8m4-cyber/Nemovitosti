@@ -818,6 +818,19 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
      dnes existují, ví jen generátor (soubory se každé sestavení mažou
      a vyrábějí znovu). Prohlížeč by to z vlastního HTML nezjistil
      a odkazoval by do prázdna. */
+  /* NADPIS SE SKLÁDÁ JEDNOU.
+     Stránka existuje ve dvou podobách: servírované (statická, pro
+     vyhledávače a pro toho, kdo nemá JavaScript) a vykreslené, kterou
+     js/pozemek.js postaví na její místo. Nadpisy se rozcházely —
+     servírovaný nesl „Trvalý travní porost 4 889 m² — Bystřice",
+     vykreslený jen „Bystřice". To druhé je jméno obce a sdílí ho víc
+     nabídek: 1 269 z 1 941 stránek (65 %) mělo po vykreslení nadpis
+     shodný s nějakou jinou, osmnáct se jich jmenovalo „Slatina".
+     A protože vyhledávač stránku vykresluje, počítá se ten horší.
+     Titul sem jde hotový, i s rozlišením shodných titulků
+     (ROZLISENI) — prohlížeč by si ho z vlastního HTML neposkládal. */
+  h = h.replace(/(<\/body>)/,
+    `<script type="application/json" id="pz-titul-data">${jsonVeStrance(titul)}</scr` + `ipt>\n$1`);
   if (kamDalSem.length) {
     h = h.replace(/(<\/body>)/,
       `<script type="application/json" id="pz-kamdal-data">${jsonVeStrance(kamDalSem)}</scr` + `ipt>\n$1`);

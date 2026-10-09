@@ -49,8 +49,10 @@
     return 'pozemek-' + pkSlug(d.okres) + '-' + pkSlug(d.place) + '-' + pkOtisk(pkeyPlny(d)) + '.html';
   }
 
-  function mistoRadek(d) {
-    var okr = d.okres ? 'okres ' + esc(d.okres) : '';
+  function mistoRadek(d, titul) {
+
+    var vNadpisu = !!d.okres && String(titul || '').indexOf(', okres ' + d.okres) >= 0;
+    var okr = (d.okres && !vNadpisu) ? 'okres ' + esc(d.okres) : '';
     if (d.cast) return esc(d.cast) + (okr ? ' · ' + okr : '');
 
     if (d.place && d.okres && String(d.place).trim() === String(d.okres).trim()) return '';
@@ -260,6 +262,13 @@
       + 'vzdušnou čarou do 25 km. Když se tolik srovnatelných nenajde, '
       + 'tahle část stránky není.</p>'
       + '</section>';
+  }
+
+  function titulStranky() {
+    var el = document.getElementById('pz-titul-data');
+    if (!el) return '';
+    try { var t = JSON.parse(el.textContent || '""'); return typeof t === 'string' ? t : ''; }
+    catch (e) { return ''; }
   }
 
   function kamDalHtml() {
@@ -861,8 +870,8 @@
       '<div class="pz-media">' + heroLayers(d) + '</div>' +
 
       '<div class="pz-head">' +
-        '<h1 class="pz-place">' + esc(d.place) + '</h1>' +
-        (mistoRadek(d) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d) + '</div>' : '') +
+        '<h1 class="pz-place">' + esc(titulStranky() || d.place) + '</h1>' +
+        (mistoRadek(d, titulStranky()) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d, titulStranky()) + '</div>' : '') +
         (dalkyText() ? '<div class="pz-dalky">vzdušnou čarou: ' + esc(dalkyText()) + '</div>' : '') +
         (vObciHtml() ? '<div class="pz-vobci">' + vObciHtml() + '</div>' : '') +
       '</div>' +
@@ -975,7 +984,11 @@
 
     try { pripravMapu(d); } catch (e) {}
 
-    try { document.title = d.place + ' — ' + fmt(d.price) + ' Kč · Parcelka'; } catch (e) {}
+    try {
+      var _t = titulStranky();
+      document.title = _t ? _t + ' | Parcelka'
+        : d.place + ' — ' + fmt(d.price) + ' Kč · Parcelka';
+    } catch (e) {}
 
     try { nastavKanonickou('https://www.parcelaka.cz/' + vlastniAdresa(d)); } catch (e) {}
 

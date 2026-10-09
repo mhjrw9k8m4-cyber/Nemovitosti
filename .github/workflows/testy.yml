@@ -504,6 +504,9 @@ jobs:
       - name: Ukončená stránka přežije i vykreslení
         run: node scripts/test-ukoncena-v-prohlizeci.mjs
 
+      - name: Hlavička pozemku (snímek, odznak, nadpis, místo)
+        run: node scripts/test-hlavicka-pozemku.mjs
+
       - name: Pohyb (odezva mapy a měřítka, i s vypnutými animacemi)
         run: node scripts/test-pohyb.mjs
 

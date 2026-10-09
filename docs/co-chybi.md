@@ -263,6 +263,32 @@ Nemaže se víc, než je potřeba: °, ², ×, –, €, šipky i zaškrtnutí �
 v sadě jsou a zůstávají. Ze 1 620 popisů se změnily tři a žádný
 nezůstal prázdný.
 
+## 3j. ~~Nadpis pozemku byl po vykreslení jen jméno obce~~ — *opraveno 9. 10.*
+
+Táž dvojí podoba stránky jako u bodu 3h, jen jinde. Servírovaný `<h1>`,
+`<title>` i strukturovaná data nesly jedinečný **„Trvalý travní porost
+4 889 m² — Bystřice"**. `js/pozemek.js` ale `#pz-detail` přepíše celý
+a nadpis skládal po svém: **„Bystřice"**. A protože vyhledávač stránku
+vykresluje, počítá se ten druhý.
+
+Naměřeno: **1 269 z 1 941** stránek (65 %) mělo po vykreslení nadpis
+shodný s nějakou jinou — osmnáct se jich jmenovalo „Slatina",
+sedmnáct „Brno", sedmnáct „Praha". Totéž u titulku: servírované
+„… | Parcelka" skript přepisoval na „Bystřice — 190 550 Kč ·
+Parcelka". Po opravě sdílí nadpis znění s jinou stránkou **0 %**;
+titul se skládá jedním místem (generátor, i s rozlišením shodných
+titulků) a do stránky jde ostrůvkem.
+
+Při tom vzniklo a hned se opravilo nové zdvojení: rozlišení přidává
+do nadpisu i okres (u 1 433 z 1 944 nabídek, aby se dvě stejně velké
+parcely v „Chlumu" daly rozeznat), takže pod nadpisem
+„… — Luhačovice, okres Zlín" stálo ještě jednou „okres Zlín". Řádek
+pod nadpisem okres vypíše, jen když v nadpisu není; čtvrť tam zůstává
+vždycky.
+
+Na telefonu (390 px) má nadpis dva řádky u mediánu a tři u nejdelších
+jmen — 97 px, cena pořád nad ohybem. Měřeno, ne odhadnuto.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

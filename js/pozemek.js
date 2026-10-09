@@ -82,8 +82,20 @@
      pozemku, a s ním v uložených oblíbených i ve sdílených adresách.
      Stejný výpočet má i mapa (js/main.js) — že se ty dva nerozejdou,
      hlídá scripts/test-ctvrt.mjs. */
-  function mistoRadek(d) {
-    var okr = d.okres ? 'okres ' + esc(d.okres) : '';
+  /* Titul se předává, nebere se z dokumentu: funkci vytahuje
+     a pouští scripts/test-ctvrt.mjs mimo prohlížeč (porovnává ji
+     s touž funkcí v js/main.js) a sáhnutí po #pz-titul-data by ji tam
+     shodilo. Bez titulu se chová jako dřív — a tak se chová i kopie
+     na mapě, kde žádný nadpis s okresem není. */
+  function mistoRadek(d, titul) {
+    /* OKRES JEN JEDNOU. Nadpis stránky nese u 1 433 z 1 944 nabídek
+       i okres — rozlišení shodných titulků ho tam přidá, aby se dvě
+       stejně velké parcely v „Chlumu" daly rozeznat. Řádek pod ním ho
+       pak psal podruhé: „… — Luhačovice, okres Zlín" a hned pod tím
+       „okres Zlín". Čtvrť (d.cast) tam ale pořád patří, ta v nadpisu
+       není. */
+    var vNadpisu = !!d.okres && String(titul || '').indexOf(', okres ' + d.okres) >= 0;
+    var okr = (d.okres && !vNadpisu) ? 'okres ' + esc(d.okres) : '';
     if (d.cast) return esc(d.cast) + (okr ? ' · ' + okr : '');
     /* Když je „místo" totéž co okres (zdroj nic bližšího neuvedl),
        stálo na kartě „Brno-venkov" a hned pod tím „okres Brno-venkov".
@@ -407,6 +419,22 @@
      tady nemůže objevit odkaz do prázdna.
      Jména obcí ani krajů sem nechodí z cizích inzerátů, ale přes esc()
      jde všechno — ostrůvek je obyčejný text ve stránce. */
+  /* NADPIS STRÁNKY. Chodí hotový z generátoru (ostrůvek
+     #pz-titul-data): „Trvalý travní porost 4 889 m² — Bystřice".
+     Tenhle skript tu dřív psal jen jméno obce — jenže detail přepisuje
+     celý #pz-detail, takže se servírovaný a vykreslený nadpis
+     rozcházely a ten vykreslený sdílelo 65 % stránek s jinou
+     (osmnáct se jmenovalo „Slatina"). Skládat titul i tady by byla
+     druhá kopie pravidla, které navíc umí rozlišit shodné titulky.
+     Když ostrůvek není (pozemek.html otevřený z mapy, inzerát od
+     majitele), zůstává jméno obce — lepší to odsud nejde. */
+  function titulStranky() {
+    var el = document.getElementById('pz-titul-data');
+    if (!el) return '';
+    try { var t = JSON.parse(el.textContent || '""'); return typeof t === 'string' ? t : ''; }
+    catch (e) { return ''; }
+  }
+
   function kamDalHtml() {
     var el = document.getElementById('pz-kamdal-data');
     if (!el) return '';
@@ -1294,8 +1322,8 @@
       '<div class="pz-media">' + heroLayers(d) + '</div>' +
 
       '<div class="pz-head">' +
-        '<h1 class="pz-place">' + esc(d.place) + '</h1>' +
-        (mistoRadek(d) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d) + '</div>' : '') +
+        '<h1 class="pz-place">' + esc(titulStranky() || d.place) + '</h1>' +
+        (mistoRadek(d, titulStranky()) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d, titulStranky()) + '</div>' : '') +
         (dalkyText() ? '<div class="pz-dalky">vzdušnou čarou: ' + esc(dalkyText()) + '</div>' : '') +
         (vObciHtml() ? '<div class="pz-vobci">' + vObciHtml() + '</div>' : '') +
       '</div>' +
@@ -1514,7 +1542,15 @@
     try { pripravMapu(d); } catch (e) {}
 
     // titulek stránky a vlastní adresa v kanonickém odkazu
-    try { document.title = d.place + ' — ' + fmt(d.price) + ' Kč · Parcelka'; } catch (e) {}
+    /* Titulek taky z ostrůvku, ať se servírovaná a vykreslená podoba
+       neliší ani tady: stránka se jmenovala „Bystřice — 190 550 Kč ·
+       Parcelka", zatímco v HTML stálo „Trvalý travní porost 4 889 m²
+       — Bystřice | Parcelka". Bez ostrůvku (z mapy) zůstává to starší. */
+    try {
+      var _t = titulStranky();
+      document.title = _t ? _t + ' | Parcelka'
+        : d.place + ' — ' + fmt(d.price) + ' Kč · Parcelka';
+    } catch (e) {}
     /* Kanonická adresa je VLASTNÍ stránka pozemku, ne obecná pozemek.html
        s dotazem. Sdílený odkaz tím vede tam, kde má každá nabídka svůj
        titulek, popis i náhled — přes „?p=…" viděl Facebook u všech 1 927
