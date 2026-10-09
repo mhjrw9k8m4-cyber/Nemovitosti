@@ -44,6 +44,10 @@ function pridejVybaveni(o, text) {
   return o;
 }
 const OUT = join(__dirname, '..', 'data', 'opportunities.json');
+/* Denní počty podle zdroje — paměť pro to pomalejší síto (viz
+   porovnejSHistorii). Vedle dat, ne v gitové historii: robot v CI má
+   plochý klon a do historie se podívat nemůže. */
+const HIST_ZDROJU = join(__dirname, '..', 'data', 'zdroje-historie.json');
 const OKRESY = join(__dirname, '..', 'data', 'okresy.json');
 const GEOCACHE = join(__dirname, '..', 'data', 'geocode-cache.json');
 /* Popisy od inzerentů. Zvlášť, aby je nemusela stahovat úvodní stránka.
@@ -600,6 +604,90 @@ export function ztratyZdroje(nazev) {
  */
 export const PRAH_SLEDOVANI = 20;     // menší zdroj kolísá sám od sebe
 export const PRAH_PROPADU = 0.5;
+
+/* ===== A JEŠTĚ TIŠŠÍ PŘÍPAD: POMALÉ VYKRVÁCENÍ =====================
+   Porovnání s MINULÝM během chytí skok. Nechytí ale zdroj, který
+   ubývá po kouscích: při 10 % za běh a čtyřech bězích denně se
+   zdroj za necelé dva dny zmenší na polovinu a ani jeden krok
+   nepřekročí PRAH_PROPADU. Web by beze slova přestal nosit nové
+   nabídky z jednoho portálu.
+
+   Proti tomu stojí druhé, pomalejší síto: dnešní počet se porovnává
+   s MEDIÁNEM posledních dnů. Zapisuje se do data/zdroje-historie.json,
+   protože robot v CI má plochý klon (actions/checkout bere jen
+   poslední commit) a do historie gitu se podívat nemůže.
+
+   PRÁH JE ZMĚŘENÝ, NE ODHADNUTÝ. Z 19 zapsaných dnů vyšlo, jak moc
+   zdroje kolísají samy od sebe: Bezrealitky 1 768–1 795, SPÚ 436
+   neměnně, Farmy 7–9, Dražby 65–92 (ale plynulým nárůstem), OK dražby
+   34–100. Největší denní pokles u kteréhokoli zdroje byl 6 %. Při
+   prahu 0,7 × medián sedmi dnů nevyhlásil plané poplachy ani jeden
+   zdroj v žádném ze 14 porovnatelných dnů — včetně skoku OK dražeb
+   z 34 na 100 a jejich pozdějšího poklesu z 95 na 84, což je
+   normální: dražba proběhne a z nabídky zmizí.
+
+   Pokles běh NEZASTAVUJE. Třicetiprocentní úbytek může být pravda
+   (vydražilo se), takže se hlasitě ohlásí a zapíše do dat; zastavuje
+   jen prázdno, které pravda být nemůže. */
+/* OKNO JE DLOUHÉ SCHVÁLNĚ. Zkusil jsem nejdřív sedm dnů a zkouška
+   to zamítla: u plynulého úbytku (100 → 95 → 90 → 86 → 81 → 77 → 73)
+   klesá i ten medián, takže zdroj na 59 % původního stavu neprošel
+   pod 0,7 × medián a hlídač mlčel. Krátké okno tedy chytá skok, ne
+   vykrvácení — a skok už hlídá porovnání s minulým během. Okno proto
+   sahá tak daleko, jak paměť dovolí (HISTORIE_MAX dnů): medián se za
+   den skoro nepohne, takže chytá obojí. */
+export const DNU_HISTORIE = 30;
+export const PRAH_POKLESU = 0.7;
+export const HISTORIE_MAX = 30;       // delší paměť nemá komu posloužit
+
+/** Medián. Prázdný vstup → null, ať se nepočítá z ničeho. */
+function median(cisla) {
+  const d = (cisla || []).filter((x) => typeof x === 'number' && isFinite(x)).sort((a, b) => a - b);
+  return d.length ? d[Math.floor(d.length / 2)] : null;
+}
+
+/**
+ * Dnešní počty proti mediánu posledních dnů.
+ *   historie — { dny: { 'YYYY-MM-DD': { zdroj: pocet } } }
+ *   ted      — pole zdrojů z tohohle běhu
+ *   dnes     — 'YYYY-MM-DD' (dnešek se do mediánu NEPOČÍTÁ)
+ */
+export function porovnejSHistorii(historie, ted, dnes) {
+  const dny = (historie && historie.dny) || {};
+  const klice = Object.keys(dny).filter((d) => d < dnes).sort().slice(-DNU_HISTORIE);
+  const nalezy = [];
+  /* Z JEDNOHO NEBO DVOU DNŮ SE MEDIÁN NEPOČÍTÁ. Na začátku, po přidání
+     zdroje nebo po výpadku by to byl náhodný jeden den proti dnešku.
+     Rozhoduje se to až u KAŽDÉHO ZDROJE (rada.length < 5), ne tady nad
+     celou historií: zdroj se mohl přidat nedávno nebo pár dnů nedojet,
+     takže počet dnů v souboru o něm nic neříká. Dřív tu stála i vnější
+     podmínka `klice.length < 5` — zahodil jsem ji, protože se nedala
+     prokázat sabotáží: po jejím vypnutí se nic nezměnilo, tu práci
+     zastávala ta vnitřní. Pravidlo, které nejde porušit tak, aby to
+     bylo vidět, je jen šum v kódu. */
+  for (const z of (ted || [])) {
+    if (!z || z.stav !== 'ok') continue;
+    const rada = klice.map((d) => dny[d][z.nazev]).filter((x) => typeof x === 'number');
+    if (rada.length < 5) continue;
+    const med = median(rada);
+    if (!(med >= PRAH_SLEDOVANI)) continue;
+    if (z.pocet < med * PRAH_POKLESU) {
+      nalezy.push({ nazev: z.nazev, druh: 'pokles', median: med, ted: z.pocet, dnu: rada.length });
+    }
+  }
+  return nalezy;
+}
+
+/** Dnešní počty do historie; starší než HISTORIE_MAX dnů se zahodí. */
+export function zapisDoHistorie(historie, ted, dnes) {
+  const dny = Object.assign({}, (historie && historie.dny) || {});
+  const dnesni = {};
+  for (const z of (ted || [])) if (z && z.nazev && z.stav === 'ok') dnesni[z.nazev] = +z.pocet || 0;
+  dny[dnes] = dnesni;
+  const klice = Object.keys(dny).sort();
+  for (const k of klice.slice(0, Math.max(0, klice.length - HISTORIE_MAX))) delete dny[k];
+  return { verze: 1, dny };
+}
 
 export function porovnejZdroje(minule, ted) {
   const predchozi = {};
@@ -1254,6 +1342,24 @@ async function main() {
     const z = zdroje.find((x) => x.nazev === n.nazev);
     if (z) z.stav = n.druh;                  // „prazdno" / „propad" se zapíše do dat
   }
+  /* A druhé, pomalejší síto: dnešek proti mediánu posledních dnů.
+     Historie se čte a zapisuje vedle dat, protože robot v CI historii
+     gitu nemá (plochý klon). */
+  const DNES = new Date().toISOString().slice(0, 10);
+  let historie = { verze: 1, dny: {} };
+  try { historie = JSON.parse(readFileSync(HIST_ZDROJU, 'utf8')); } catch { /* první běh */ }
+  for (const n of porovnejSHistorii(historie, zdroje, DNES)) {
+    const z = zdroje.find((x) => x.nazev === n.nazev);
+    /* Skok z minulého běhu je silnější nález — ten se nepřepisuje. */
+    if (z && z.stav === 'ok') z.stav = 'pokles';
+    console.error(`POZOR: zdroj ${n.nazev} přinesl ${n.ted} záznamů, medián posledních`
+      + ` ${n.dnu} dnů je ${n.median}. Není to skok, je to pomalý úbytek — podívejte se,`
+      + ' jestli parser nepřestal část stránky čist.');
+  }
+  try {
+    writeFileSync(HIST_ZDROJU, JSON.stringify(zapisDoHistorie(historie, zdroje, DNES)));
+  } catch (e) { console.error('Historii zdrojů nešlo zapsat: ' + e.message); }
+
   const prazdne = nalezy.filter((n) => n.druh === 'prazdno');
   if (prazdne.length) {
     console.error('CHYBA: ' + prazdne.map((n) => `zdroj ${n.nazev} nevrátil nic (minule ${n.drive})`).join('; ')
