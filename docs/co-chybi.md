@@ -650,6 +650,55 @@ přepsat poctivě naměřené číslo: pravidlo je o počtu stránek, ne o vět�
 která říká, co se naměřilo. Sabotáž (vrátit do `sw.js` „Stránek je
 2 130") padá a jmenuje soubor i řádek.
 
+## 3u. ~~Zkouška, která hlídá nejdražší chybu webu, po včerejší opravě přestala měřit~~ — *opraveno 9. 10.*
+
+`test-shoda` hlídá to, co kdysi proklouzlo na **310 stránek**: aby na
+stránce pozemku stálo procento z modelu BEZ duplicit, tedy totéž, co
+ukazuje mapa. Dělá to tak, že postaví model ze syrové i z očištěné
+hromádky, najde pozemky, kde se rozcházejí, a ty stránky **opravdu
+otevře** a přečte z nich větu.
+
+Po sloučení dvojníků (bod 3q) spadla. Anotace z CI řekla rovnou co:
+*„percentil jinak u 40, odhad u 0"* a *„našly se pozemky, u kterých se
+úroveň srovnání liší (0)"*.
+
+Přeměřeno na obou verzích dat:
+
+| | syrově → čistě | percentil jinak | jiná ÚROVEŇ | jiné ČÍSLO |
+|---|---|---|---|---|
+| před sloučením | 2 001 → 1 945 | 299 | **6** | 186 |
+| po sloučení | 1 989 → 1 944 | 40 | **0** | 33 |
+
+Zkouška si vybírala vzorky **jen podle rozdílu v úrovni** srovnání
+(okres × kraj) — a těch šest pozemků, na kterých to stálo, bylo mezi
+dvojníky. Zbylo třiatřicet pozemků, kde se při téže úrovni liší
+procento, a to stránka vypisuje jako „Levnější než 28 %". Zkouška se
+tím sama odřízla od jediného rozdílu, který v datech zůstal.
+
+Nově bere oba druhy rozdílu, úrovňové první (silnější signál). U procent
+je potřeba opatrnost navíc: u prostřední ceny stojí ve větě „zhruba
+uprostřed" bez čísla, a taková stránka se **nepočítá za změřenou** —
+jinak by kontrola prošla naprázdno.
+
+A při tom vyplavala **druhá vada, tentokrát v samotné kontrole**. Model
+vrací `cheaper` (kolik procent je levnějších) a `pct = 100 − cheaper`;
+stránka u výhodné ceny píše „Levnější než *cheaper* %", u vyšší „Dražší
+než *pct* %". Kontrola porovnávala vždycky s `cheaper`, takže na každé
+stránce s větou „Dražší" hlásila rozdíl, který tam není. Nikdo si toho
+nevšiml, protože vzorky dosud padaly jen na věty „Levnější" — první
+vzorek z nové sady to odhalil hned: Dolní Týnec, stránka *„Dražší než
+72 %"*, model `cheaper` 28. Totéž číslo, jen z druhé strany.
+
+Obě věci opravené, 27 kontrol prochází. Sabotáž: nechat kontrolu čekat
+číslo ze SYROVÉHO modelu — padá, tedy stránky opravdu berou ten
+očištěný.
+
+Vedlejší zjištění, které stojí za zapsání: u mezí se vyžadovalo
+`percentil jinak > 20 && odhad jinak > 20`. Odhad je dnes 0 — zbylých
+45 duplicit už neposune odhad obvyklé ceny ani u jedné nabídky. Na
+odhadu se kontrola zastavovat nemá, protože **žádné z tvrzení níž odhad
+nečte**; vypisuje se dál, jen se na něm neprochází.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

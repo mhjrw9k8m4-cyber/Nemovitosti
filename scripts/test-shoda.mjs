@@ -121,9 +121,16 @@ pravda('cenový model se v prohlížeči načetl', !vysledek.chyba, vysledek.chy
 if (!vysledek.chyba) {
   pravda(`v datech jsou duplicity (${vysledek.syrovych} syrově → ${vysledek.pocet} bez nich)`,
     vysledek.syrovych > vysledek.pocet, 'duplicity nejsou — kontroly níž by neměly co měřit');
-  pravda(`a na modelu je to vidět: percentil jinak u ${vysledek.rozdilPct}, odhad u ${vysledek.rozdilOdhad}`,
-    vysledek.rozdilPct > 20 && vysledek.rozdilOdhad > 20,
-    'syrová a očištěná hromádka dávají týž model — pak ale tvrzení níž nic nehlídají');
+  /* HLÍDÁ SE PERCENTIL, NE ODHAD. Dřív se tu vyžadovalo obojí
+     (`rozdilPct > 20 && rozdilOdhad > 20`) a po sloučení dvojníků
+     u zdroje to spadlo: zbylých 45 duplicit v souboru už neposune odhad
+     obvyklé ceny ani u jedné nabídky (naměřeno 0), zato percentil pořád
+     u čtyřiceti. Odhad tu byl navíc od začátku zbytečný — tvrzení níž
+     čtou ze stránky VĚTU O PERCENTILU, žádné z nich odhad neukazuje.
+     Číslo se dál vypisuje, jen se na něm kontrola nezastaví. */
+  pravda(`a na modelu je to vidět: percentil jinak u ${vysledek.rozdilPct} (odhad u ${vysledek.rozdilOdhad})`,
+    vysledek.rozdilPct > 20,
+    'syrová a očištěná hromádka dávají týž percentil — pak ale tvrzení níž nic nehlídají');
   pravda('mapa i stránka pozemku dají u všech pozemků stejný výsledek',
     vysledek.neshody.length === 0,
     `neshod: ${vysledek.neshody.length}, první: ${JSON.stringify(vysledek.neshody[0])}`);
@@ -262,12 +269,21 @@ if (podezrely) {
     for (const d of vstup.ciste) {
       const a = syrovy.percentil(d), b = cisty.percentil(d);
       if (!a || !b) continue;
-      /* Vybírají se pozemky, u kterých se liší ÚROVEŇ srovnání (okres vs
-         kraj). Číslo samo se na stránce nemusí objevit: u prostřední ceny
-         tam stojí „zhruba uprostřed" bez procent, takže by se na něm
-         nedalo měřit. Název úrovně ve větě je naopak vždycky. */
-      if (a.uroven === b.uroven && a.kde === b.kde) continue;
-      out.push({ place: d.place, parcel: d.parcel, okres: d.okres,
+      /* DVA DRUHY ROZDÍLU, A OBA JSOU NA STRÁNCE VIDĚT.
+         Nejsilnější je rozdíl v ÚROVNI srovnání (okres vs kraj): jméno
+         úrovně stojí ve větě vždycky. Těch ale po sloučení dvojníků
+         v datech nezbyl ani jeden — zato u 33 nabídek se při téže úrovni
+         liší PROCENTO, a to stránka vypisuje jako „Levnější než N %".
+         Tahle zkouška kdysi brala jen úrovně a tím se sama odřízla od
+         jediného rozdílu, který v datech zůstal. U procent je potřeba
+         jedna opatrnost navíc: u prostřední ceny stojí ve větě „zhruba
+         uprostřed" bez čísla, a na takové stránce by kontrola prošla
+         naprázdno — proto se dole nepočítá za změřenou. */
+      const jinaUroven = !(a.uroven === b.uroven && a.kde === b.kde);
+      const jineCislo = a.cheaper !== b.cheaper;
+      if (!jinaUroven && !jineCislo) continue;
+      out.push({ jak: jinaUroven ? 'uroven' : 'cislo',
+        place: d.place, parcel: d.parcel, okres: d.okres,
         lat: d.lat, lng: d.lng, area: d.area, price: d.price,
         syroveKde: a.kde, syroveUroven: a.uroven, syrove: a.cheaper,
         kde: b.kde, uroven: b.uroven, ciste: b.cheaper,
@@ -279,10 +295,13 @@ if (podezrely) {
         syroveFraze: window.PK_CENY.kdeText(a.uroven, a.kde),
         rozdil: Math.abs(a.cheaper - b.cheaper) });
     }
-    out.sort((x, y) => y.rozdil - x.rozdil);
+    /* Nejdřív rozdíly v úrovni (silnější signál), pak podle velikosti. */
+    out.sort((x, y) => (x.jak === y.jak ? y.rozdil - x.rozdil : (x.jak === 'uroven' ? -1 : 1)));
     return out;
   }, { ciste: CISTA, syrove: DATA });
-  pravda(`našly se pozemky, u kterých se úroveň srovnání liší (${vzorky.length})`,
+  pravda(`našly se pozemky, u kterých se srovnání liší (${vzorky.length}: `
+    + `${vzorky.filter((v) => v.jak === 'uroven').length} úrovní, `
+    + `${vzorky.filter((v) => v.jak === 'cislo').length} procentem)`,
     vzorky.length >= 3, `jen ${vzorky.length} — kontrola níž by neměla co měřit`);
 
   /* Jméno souboru stránky se skládá TOUŽ funkcí jako v generátoru, ať se
@@ -314,7 +333,20 @@ if (podezrely) {
     const maSyrove = v.syroveFraze !== v.fraze && text.indexOf(v.syroveFraze) !== -1;
     /* Když stránka procento vypisuje, musí být taky to očištěné. */
     const cislo = /(?:Levnější|Dražší) než (\d+) %/.exec(text);
-    const cisloSedi = !cislo || +cislo[1] === v.ciste;
+    /* U vzorku, který se liší JEN procentem, je to číslo celý signál.
+       Když ho stránka nevypisuje („zhruba uprostřed"), není tu co měřit
+       a vzorek se zahodí — jinak by kontrola prošla naprázdno. */
+    if (v.jak === 'cislo' && !cislo) continue;   // stránka je už zavřená výš
+    /* DVĚ VĚTY, DVĚ ČÍSLA Z TÉHOŽ MODELU. Model vrací `cheaper`
+       (kolik procent je levnějších) a `pct = 100 − cheaper`. Stránka
+       u výhodné ceny píše „Levnější než cheaper %", u vyšší „Dražší než
+       pct %". Kontrola porovnávala vždycky s `cheaper`, takže na každé
+       stránce s větou „Dražší" hlásila rozdíl, který tam není — čehož
+       si nikdo nevšiml, dokud vzorky padaly jen na věty „Levnější".
+       Naměřeno: Dolní Týnec, stránka „Dražší než 72 %", model
+       cheaper 28 — tedy TOTÉŽ číslo, jen z druhé strany. */
+    const drazsi = /Dražší než/.test(text);
+    const cisloSedi = !cislo || +cislo[1] === (drazsi ? 100 - v.ciste : v.ciste);
     if (!maCiste || maSyrove || !cisloSedi) {
       spatne.push(`${zapis.soubor}: čekáno srovnání „${v.fraze}" (${v.ciste} %), `
         + `syrový model dává „${v.syroveFraze}" (${v.syrove} %); `
