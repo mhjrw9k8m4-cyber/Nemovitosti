@@ -44,6 +44,8 @@ import { nactiArchiv } from './archiv-statistiky.mjs';
 /* Jména krajů, druhové a rozpočtové stránky — jedna tabulka pro tenhle
    generátor i pro generátor regionálních stránek. */
 import * as META from './regiony-meta.mjs';
+/* Čistič stylopisu — týž, jakým prochází css/styles.css. */
+import { ocisti as ocistiCss } from './minifikace.mjs';
 let _historie = null;
 let _popisy = null;
 /* Líně, až když se stránky staví: popisy mají 827 kB a při pouhém
@@ -555,6 +557,30 @@ export function kamDal(d) {
   return ven;
 }
 
+/* VLOŽENÝ STYL BEZ KOMENTÁŘŮ.
+ *
+ * Stránka pozemku si nese vlastní <style> přímo v HTML, protože se
+ * otevírá z výsledků hledání a nemá se čekat na druhý soubor. Předloha
+ * pozemek.html je ale ZDROJ: komentáře v ní jsou to, podle čeho se styl
+ * upravuje, a do stránek nepatří. Naměřeno 37,9 kB na stránku, z toho
+ * 16,5 kB komentářů — napříč 2 071 stránkami 33 MB, a 7,2 kB přes drát
+ * při každém otevření inzerátu.
+ *
+ * Čistí se TADY, při zápisu stránky, ne až v minifikaci: stránky
+ * pozemků pouští i zkoušky (scripts/test-ukonceno.mjs staví zkušební
+ * osiřelou stránku a generátor spustí), a kdyby úklid visel na pozdějším
+ * kroku, nechaly by po sobě strom, který se neshoduje se sestavením.
+ * Takhle platí, že co generátor zapíše, je hotové.
+ *
+ * Mění to jen komentáře, mezery a středník před závorkou — nic z toho
+ * v CSS nic neznamená. Hlídá scripts/test-vlozeny-styl.mjs porovnáním
+ * s předlohou znak po znaku.
+ */
+function bezKomentaruVeStylu(html) {
+  return html.replace(/(<style[^>]*>)([\s\S]*?)(<\/style>)/g,
+    (cele, zacatek, telo, konec) => zacatek + ocistiCss(telo) + konec);
+}
+
 export function stranka(sablona, d, soubor = souborPro(d)) {
   const { titul, popis, cena, zaM2, vym, druh } = textyPro(d);
   const url = `${WEB}/${soubor}`;
@@ -801,7 +827,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     h = h.replace(/(<\/body>)/,
       `<script type="application/json" id="pz-popis-data">${jsonVeStrance(popisInzerenta)}</scr` + `ipt>\n$1`);
   }
-  return h;
+  return bezKomentaruVeStylu(h);
 }
 
 /* Pravidlo pro duplicity je jedno pro celý web (js/hlidani-logika.js).

@@ -198,6 +198,15 @@ ručně psané stránky: předloha je zdroj a komentáře v ní jsou to, podle
 a výsledek je znak po znaku tentýž styl — ověřeno porovnáním po
 odstranění komentářů, mezer a středníku před závorkou.
 
+Úklid sedí v **generátoru**, ne až v minifikaci, a stálo to jeden
+pokus navíc. Napoprvé jsem ho dal do `scripts/minifikace.mjs` —
+a `scripts/test-oprav.mjs` pak spadl na 1 944 rozešlých stránkách.
+Důvod: generátor stránek pozemků pouští i jiné zkoušky
+(`scripts/test-ukonceno.mjs` staví zkušební osiřelou stránku), takže
+po nich zůstal strom, který se se sestavením neshoduje. Dnes v CI
+běží `test-oprav` dřív, takže by se to projevilo až při přeházení
+pořadí — tiše a jinde. Teď platí, že co generátor zapíše, je hotové.
+
 Strop velikosti v `scripts/test-vlozeny-styl.mjs` se tím musel
 přepsat: dosud měřil předlohu **i s komentáři** („do stránek se
 vkládají taky"), což přestalo platit. Měřit dál předlohu by znamenalo
