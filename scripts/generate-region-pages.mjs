@@ -18,6 +18,7 @@ import { mapaSouboru, klicNabidky } from './generate-parcel-pages.mjs';
    stránka si nic nepočítá sama, aby na dvou místech nevznikla dvě
    čísla. */
 import { statistiky, nactiArchiv, MIN_ZMEN } from './archiv-statistiky.mjs';
+import { kmMezi } from './srovnatelne.mjs';
 /* Řez „co je nového" má vlastní modul — a má ho proto, že jeho hlavní
    podmínka (vynechat první den evidence) se na dnešních datech nedá
    vyzkoušet: okno ten den vyloučí samo. Ve funkci se dá podstrčit
@@ -779,6 +780,73 @@ function vetaOTypu(typ) {
   return `Všechny nabídky v tomhle výpisu jsou <b>${esc(TYP_VETOU[typ] || (TYPE_LABEL[typ] || typ).toLowerCase())}</b>.`;
 }
 
+/* STŘEDY OKRESŮ — pro odkazy „Pozemky v okolí".
+   Dřív se do nich vybíraly okresy TÉHOŽ KRAJE seřazené podle počtu
+   nabídek. Kraj ale není okolí: naměřeno na 372 takových odkazech, že
+   95 z nich (26 %) vedlo přes šedesát kilometrů, devadesátý percentil
+   byl 73 km a nejdál mířil Kutná Hora → Rakovník, 111 km. Komu
+   v jeho okrese nic nesedlo, dostal nabídku z druhého konce kraje.
+   A naopak: okres za hranicí kraje se nenabídl, i když ležel blíž —
+   Benešovu chyběl Pelhřimov, Kutné Hoře Havlíčkův Brod.
+
+   Teď rozhoduje vzdálenost středů okresů. Výsledek: medián 38 km
+   místo 42, devadesátý percentil 52 místo 73, nejdál 76 místo 111
+   a přes šedesát kilometrů vede 20 odkazů místo 95.
+
+   POČÍTÁ SE Z HRANIC, KTERÉ UŽ WEB MÁ (data/okresy-hranice.json, tytéž,
+   ze kterých se dělá mapa). Střed je plošně vážené těžiště největšího
+   prstence — ne průměr vrcholů, ten by táhlo tam, kde je hranice
+   členitější. Vzdálenost se u odkazu PÍŠE, takže si ji čtenář může
+   ověřit; tvrdit „v okolí" bez čísla by bylo jen slovo.
+
+   Sousedství přes společnou hranici by bylo přesnější, ale nepoužívám
+   ho: v těch datech vyšlo 189 dvojic a jedna z nich (Cheb –
+   Plzeň-sever, 25 společných vrcholů) mi proti mapě nesedí. Dokud to
+   nemám z druhého zdroje, radši počítám vzdálenost, která je pouhá
+   aritmetika. */
+function stredyOkresu() {
+  let g;
+  try { g = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'okresy-hranice.json'), 'utf8')); }
+  catch (e) { return {}; }
+  const tezisteRingu = (r) => {
+    let a = 0, cx = 0, cy = 0;
+    for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+      const f = r[j][0] * r[i][1] - r[i][0] * r[j][1];
+      a += f; cx += (r[j][0] + r[i][0]) * f; cy += (r[j][1] + r[i][1]) * f;
+    }
+    a *= 0.5;
+    return a ? { lng: cx / (6 * a), lat: cy / (6 * a), plocha: Math.abs(a) } : null;
+  };
+  const ven = {};
+  for (const [jmeno, geo] of Object.entries(g)) {
+    if (!geo || !geo.coordinates) continue;
+    const prsteny = geo.type === 'Polygon' ? [geo.coordinates[0]] : geo.coordinates.map((x) => x[0]);
+    let nej = null;
+    for (const r of prsteny) {
+      const t = tezisteRingu(r);
+      if (t && (!nej || t.plocha > nej.plocha)) nej = t;
+    }
+    if (nej) ven[jmeno] = { lat: nej.lat, lng: nej.lng };
+  }
+  return ven;
+}
+const STREDY = stredyOkresu();
+/* Vzdušná čára se NEPÍŠE ZNOVU — půjčuje se z scripts/srovnatelne.mjs,
+   kde ji počítá srovnávání pozemků. Dvě kopie haversinu by se nerozešly
+   ve vzorci, ale v tom, co dělají s chybějící souřadnicí; a tahle
+   funkce rozhoduje o tom, co web nazve „okolím". */
+const kmMeziStredy = kmMezi;
+/* Nejbližší okresy, které mají vlastní stránku. Bez středu (chybějící
+   hranice) se vrátí prázdno — mrtvý odkaz je horší než žádný oddíl. */
+function okresyVOkoli(okres, kolik = 6) {
+  if (!STREDY[okres]) return [];
+  return eligibleOkres
+    .filter((x) => x !== okres && STREDY[x])
+    .map((x) => ({ okres: x, km: kmMeziStredy(STREDY[okres], STREDY[x]) }))
+    .sort((a, b) => a.km - b.km || a.okres.localeCompare(b.okres, 'cs'))
+    .slice(0, kolik);
+}
+
 const okresPages = [];
 const krajPages = [];
 
@@ -834,8 +902,9 @@ for(const okres of eligibleOkres){
   const rows = list.map((o)=>itemRow(o, true, null, !!typJeden)).join('\n');
   const mapName = (KRAJ_META[kraj]||{}).mapName || kraj;
   const krajLink = mapName ? `index.html?kraj=${encodeURIComponent(mapName)}#mapa` : 'index.html#mapa';
-  const siblings = eligibleOkres.filter(x=>x!==okres && OKRES_KRAJ[x]===kraj).sort((a,b)=>byOkres[b].length-byOkres[a].length).slice(0,6);
-  const sibLinks = siblings.map(x=>`<a href="${okresFile(x)}">Pozemky ${esc(x)} <span>${byOkres[x].length}</span></a>`).join('');
+  const siblings = okresyVOkoli(okres, 6);
+  const sibLinks = siblings.map(({ okres: x, km }) =>
+    `<a href="${okresFile(x)}">${esc(x)} <span>${Math.round(km)} km · ${byOkres[x].length}</span></a>`).join('');
   const krajBack = hasKrajPage.has(kraj) ? `<a href="${krajFile(kraj)}">Celý ${esc(dispK)} →</a>` : `<a href="pozemky-podle-okresu.html">Všechny okresy →</a>`;
   const crumbs = [
     {name:'Pozemky', href:'index.html', abs:SITE},
@@ -915,6 +984,7 @@ ${sibLinks ? `
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
           <h2>Pozemky v okolí</h2>
+          <p class="rules-note" style="margin-top:0;">Nejbližší okresy, které tu mají vlastní stránku — vzdušnou čarou mezi středy okresů, za ní počet nabídek. Hranice kraje v tom nerozhoduje: když je za ní blíž, patří sem.</p>
           <div class="okr-index-grid">
             ${sibLinks}
           </div>
