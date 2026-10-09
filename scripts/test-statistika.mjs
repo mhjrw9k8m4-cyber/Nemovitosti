@@ -137,139 +137,104 @@ pravda('stránka cen počítá jen z běžných nabídek k prodeji',
   pravda('a odhad u pozemku taky', /if \(d\.type !== 'sale'\) return;/.test(ceny),
     'js/ceny.js by srovnával dražby samy se sebou');
 }
-// A hlavně čísla: co je vytištěné na stránce, musí sedět s přepočtem z dat.
+/* ===== ČÍSLA V TABULCE KRAJŮ MUSÍ SEDĚT S PŘEPOČTEM Z DAT =============
+   Stránka cen se zúžila na tři věci (puls trhu, vyhledávač lokality,
+   tabulka krajů), takže zmizel i seznam „mediány podle druhu", na kterém
+   tahle kontrola dřív čísla přepočítávala. Přepočítávají se tedy tam, kde
+   čísla teď jsou — a je to lepší vzorek: čtrnáct krajů místo čtyř druhů,
+   a u každého tři čísla, ne jedno.
+
+   CELÝ ŘÁDEK SE ČTE JEDNÍM VZORKEM, ne třemi nezávislými hledáními:
+   jinak by se při změně pořadí sloupců spárovalo „nejnižší" jednoho kraje
+   s „nejvyšší" jiného a kontrola by to odkývala. */
 {
-  /* Řádek seznamu „ceny podle druhu": číslo a název čteme z jedné položky,
-     ne dvěma nezávislými hledáními — jinak by se při změně pořadí spárovalo
-     číslo jednoho druhu s názvem jiného a test by to odkýval. */
-  const dlazdice = [...stranka.matchAll(
-    /* „cen-druh" může nést i modifikátor (cen-siroke). Bez toho by řádek
-       s varováním z kontroly vypadl a jeho medián by se proti datům
-       neověřoval — kontrola by tiše přestala hlídat jeden druh. */
-    /* Název druhu je teď odkaz na přehled toho druhu (pozemky-lesni.html
-       a spol.), takže vzorek musí snést i tu značku uvnitř. Bez toho
-       nenašel nic a kontrola čísel tiše přestala platit. */
-    /<li class="cen-druh[^"]*"><span class="cen-nazev">(?:<a [^>]*>)?([^<]+)(?:<\/a>)?<\/span><b>([\d\s\u00a0]+)[\s\u00a0]Kč\/m²<\/b>/g)]
-    .map((m) => ({ med: +String(m[1]).replace(/\s|\u00a0/g, ''), druh: m[2].trim() }));
-  pravda('na stránce jsou vypsané mediány podle druhu', dlazdice.length >= 3,
-    'našel jsem jen ' + dlazdice.length);
-  /* Klíč v datech → název na stránce. „Stavební" se lidem píše jako
-     „Stavební pozemek", ať to není jediný přídavný jméno mezi podstatnými. */
-  const nazev = { 'Zemědělská půda': 'Zemědělská půda', 'Lesní pozemek': 'Lesní pozemek',
-    Zahrada: 'Zahrada', 'Stavební': 'Stavební pozemek' };
-  for (const d of dlazdice) {
-    const klic = Object.keys(nazev).find((k) => nazev[k] === d.druh);
-    if (!klic) continue;
-    /* Ořez SE POČÍTÁ JEN TAM, KDE HO POČÍTÁ I GENERÁTOR. Ten ho hledá
-       výhradně u zemědělské půdy a lesa (SE_ZKOUMA), protože jinde je
-       levná cena normální cena — hlídá to kontrola o kus výš. Kontrola
-       čísel ho ale aplikovala na VŠECHNY druhy, takže u zahrad porovnávala
-       stránku s jinak spočítaným číslem než tím, co stránka tiskne.
-       Dlouho to procházelo, protože ořez u zahrad nic neuřízl; jakmile se
-       data rozevřela (čtvrtiny 45 a 991 Kč/m²), uřízl levnou polovinu a
-       medián vyskočil ze 134 na 783 Kč/m². Padala zkouška, ne web. */
-    const SE_OREZAVA = ['Zemědělská půda', 'Lesní pozemek'];
-    const cely = podle[klic] || [];
-    const vzorek = SE_OREZAVA.indexOf(klic) === -1 ? cely : cely.filter((x) => x >= dolniMez(cely));
-    if (vzorek.length < 30) continue;
-    const spocteno = Math.round(med(vzorek));
-    pravda(`„${d.druh}": vytištěný medián sedí s přepočtem z dat (${d.med} Kč/m²)`,
-      Math.abs(spocteno - d.med) <= 1,
-      `na stránce ${d.med} Kč/m², z dat vychází ${spocteno} Kč/m² — stránka a odhad počítají každý z jiného vzorku`);
+  /* Název kraje na stránce („Kraj Vysočina") není klíč v datech
+     („Vysočina"). Převod se čte z generátoru, aby existoval jen jednou —
+     a kdyby se tam přestal najít, je to chyba, ne tichý průchod. */
+  const disp = {};
+  for (const m of gen.matchAll(/^ '([^']+)':\s*\{ disp:'([^']+)'/gm)) disp[m[2]] = m[1];
+  pravda('převod názvu kraje na klíč se dal přečíst z generátoru',
+    Object.keys(disp).length === 14, `přečteno ${Object.keys(disp).length} z 14`);
+
+  const RADEK = new RegExp(
+    '<a class="cenk-radek" href="[^"]*">\\s*'
+    + '<span class="cenk-kraj">([^<]+)</span>\\s*'
+    + '<span class="cenk-c"><i>nejnižší</i>([\\d\\s\\u00a0]+)</span>\\s*'
+    + '<span class="cenk-c cenk-med"><i>obvyklá</i>([\\d\\s\\u00a0]+)</span>\\s*'
+    + '<span class="cenk-c"><i>nejvyšší</i>([\\d\\s\\u00a0]+)</span>', 'g');
+  const c = (x) => +String(x).replace(/[\s\u00a0]/g, '');
+  const radky = [...stranka.matchAll(RADEK)]
+    .map((m) => ({ kraj: m[1].trim(), lo: c(m[2]), med: c(m[3]), hi: c(m[4]) }));
+  pravda('tabulka cen po krajích se dala přečíst', radky.length >= 10,
+    `přečteno ${radky.length} řádků — změnila se podoba řádku?`);
+
+  /* Vzorek po krajích se skládá TÝMŽ postupem jako v generátoru: okres →
+     kraj z js/ceny.js (jedno místo pro web i pro tuhle kontrolu), cena za
+     metr přes js/ceny.js (zná spoluvlastnický podíl), strop 500 Kč/m²
+     u zemědělské půdy a spodní mez z CELOSTÁTNÍCH dat — ne z kraje. Mez
+     z kraje by se v Praze hledala v hrstce nabídek a vyšla jinak než ta,
+     kterou stránka opravdu použila. */
+  const OK_KRAJ = (CENY_MODUL && CENY_MODUL.OKRES_KRAJ) || {};
+  pravda('mapa okres → kraj je v js/ceny.js', Object.keys(OK_KRAJ).length >= 70,
+    `${Object.keys(OK_KRAJ).length} okresů`);
+  const poKraji = {};
+  for (const d of DATA) {
+    if (d.type !== 'sale') continue;
+    if (!(d.price > 0 && d.area >= 100 && d.area <= 500000)) continue;
+    if (dg(d.druh) !== 'Zemědělská půda') continue;
+    const k = OK_KRAJ[d.okres]; if (!k) continue;
+    const pm = CENY_MODUL.zaMetr(d);
+    if (pm == null || pm > 500 || pm < mezZem) continue;
+    (poKraji[k] = poKraji[k] || []).push(pm);
   }
-}
-
-// --- 3) Výsledek na stránce je věrohodný -----------------------------
-const nejlevnejsi = [...stranka.matchAll(/Nejlevnější zemědělská půda[\s\S]{0,600}?<\/div>/g)][0];
-const cisla = nejlevnejsi ? [...nejlevnejsi[0].matchAll(/<b>([\d\s\u00a0]+)[\s\u00a0]Kč\/m²<\/b>/g)]
-  .map((m) => +String(m[1]).replace(/\s|\u00a0/g, '')) : [];
-pravda('na stránce jsou nejlevnější okresy vypsané', cisla.length >= 2, JSON.stringify(cisla));
-/* Tohle je to jádro. Zemědělská půda se v Česku obchoduje řádově za
-   desítky korun za metr; jednotky korun znamenají podíl, ne levné pole. */
-pravda('žádný okres nehlásí cenu pole pod 15 Kč/m²',
-  cisla.every((x) => x >= 15),
-  `nejnižší vypsaná hodnota je ${Math.min(...cisla)} Kč/m² — za tolik se pole neprodává`);
-// Čísla se vypisují s mezerou po tisících („1 273"), ne holá — jinak by
-// vedle „2 849 Kč/m²" stálo „1273" a vypadalo to jako dva různé weby.
-const cislo = (x) => +String(x).replace(/\s|\u00a0/g, '');
-/* Varování „ceny se liší násobky" musí sedět na těch druzích, kde se
-   čtvrtiny opravdu rozestoupí — a jen na nich. Mez se bere z js/ceny.js,
-   takže tahle kontrola zároveň hlídá, že si stránka nezavádí vlastní. */
-{
-  const mez = (PK_CENY && PK_CENY.MEZ_ROZPTYL) || 2;
-  /* Název druhu je odkaz na přehled toho druhu, takže vzorek musí snést
-     i tu značku uvnitř — stejně jako vzorek o kus výš. */
-  /* Mezi názvem a podrobnostmi stojí od předělání ještě pruh na společné
-     ose (.cen-pas). Je to obrázek k týmž číslům, takže vzorek ho jen
-     přeskočí — ale přeskočit ho MUSÍ, jinak kontrola tiše nenajde nic. */
-  const RADEK = /<li class="cen-druh( cen-siroke)?"><span class="cen-nazev">(?:<a [^>]*>)?([^<]+)(?:<\/a>)?<\/span><b>([\d\s]+)[\s\u00a0]Kč\/m²<\/b>(?:<span class="cen-pas"[^>]*>.*?<\/span>)?<span class="cen-detail">obvykle ([\d\s]+)–([\d\s]+)/g;
-  const radky = [...stranka.matchAll(RADEK)];
-  pravda('řádky s cenami se daly přečíst', radky.length >= 3, `přečteno ${radky.length}`);
-  const c = (x) => +String(x).replace(/\s/g, '');
-  const spatne = [];
-  for (const m of radky) {
-    /* Pořadí skupin jde za podobou řádku: od zúžení stojí název první
-       a cena za ním (viz generate-region-pages.mjs). */
-    const oznaceno = !!m[1], druh = m[2], med = c(m[3]), lo = c(m[4]), hi = c(m[5]);
-    const rozptyl = med ? (hi - lo) / med : 0;
-    if (rozptyl > mez && !oznaceno) spatne.push(`${druh}: rozptyl ${rozptyl.toFixed(1)}× a bez varování`);
-    if (rozptyl <= mez && oznaceno) spatne.push(`${druh}: rozptyl jen ${rozptyl.toFixed(1)}×, varování tam nepatří`);
-  }
-  pravda('a varování „liší se násobky" sedí na správných druzích', spatne.length === 0,
-    spatne.join('; '));
-}
-
-/* ===== GRAF NESMÍ ŘÍKAT NĚCO JINÉHO NEŽ ČÍSLA VEDLE NĚJ ===============
-   Čtyři ceny pod sebou se nedaly porovnat pohledem — les 48 Kč/m²
-   a stavební pozemek 2 904 měly stejně velké písmo, takže ten
-   šedesátinásobek nebyl vidět. Každý druh proto dostal pruh „obvykle
-   od–do" na společné logaritmické ose se značkou mediánu.
-   Jenže obrázek, který nesedí na čísla, je horší než holá tabulka: lže
-   rychleji, než se čte. Proto se tu neměří vzhled, ale SOULAD — pořadí
-   pruhů musí odpovídat pořadí cen a značka mediánu musí ležet uvnitř
-   vlastního rozpětí. Ten dopočet má generátor jen na jednom místě, takže
-   tahle kontrola chytí i překlep v něm. */
-{
-  const PAS = /<li class="cen-druh[^"]*">.*?<b>([\d\s\u00a0]+)[\s\u00a0]Kč\/m²<\/b>.*?<i class="cen-rozsah" style="left:([\d.]+)%;width:([\d.]+)%"><\/i><i class="cen-med" style="left:([\d.]+)%">/g;
-  const pasy = [...stranka.matchAll(PAS)].map((m) => ({
-    med: +String(m[1]).replace(/[\s\u00a0]/g, ''),
-    l: +m[2], w: +m[3], z: +m[4],
-  }));
-  pravda(`pruhy na společné ose se daly přečíst (${pasy.length})`, pasy.length >= 3,
-    `přečteno ${pasy.length} — změnila se podoba pruhu?`);
-
-  const mimo = pasy.filter((x) => x.z < x.l - 0.5 || x.z > x.l + x.w + 0.5);
-  pravda('značka mediánu leží uvnitř svého rozpětí', mimo.length === 0,
-    mimo.map((x) => `medián ${x.med}: značka ${x.z}% mimo ${x.l}–${(x.l + x.w).toFixed(1)}%`).join('; '));
-
-  const vOse = [...pasy].sort((a, b) => a.med - b.med);
-  const prohozene = [];
-  for (let i = 1; i < vOse.length; i++) {
-    if (vOse[i].z < vOse[i - 1].z) {
-      prohozene.push(`${vOse[i - 1].med} Kč/m² je na ose dál než ${vOse[i].med} Kč/m²`);
+  /* Čtvrtina se počítá TÍMŽ způsobem jako v generátoru (funkce pctl):
+     prvek na indexu floor(n·q), žádné proklá­dání mezi dvěma prvky.
+     Kdyby si tahle kontrola vybrala jinou definici percentilu, hlásila by
+     rozchod o korunu dvě u každého kraje — a nebyla by to chyba webu,
+     ale dvě různé definice. */
+  const pct = (a, q) => {
+    const v = a.slice().sort((x, y) => x - y);
+    return v[Math.max(0, Math.min(v.length - 1, Math.floor(v.length * q)))];
+  };
+  let overeno = 0;
+  const rozchod = [];
+  for (const r of radky) {
+    const klic = disp[r.kraj];
+    const v = klic ? (poKraji[klic] || []) : [];
+    if (v.length < 10) continue;          // generátor pod MIN_PRICE netiskne nic
+    overeno++;
+    const ceka = { lo: Math.round(pct(v, 0.25)), med: Math.round(med(v)), hi: Math.round(pct(v, 0.75)) };
+    for (const sl of ['lo', 'med', 'hi']) {
+      if (Math.abs(ceka[sl] - r[sl]) > 1) {
+        rozchod.push(`${r.kraj} ${sl}: na stránce ${r[sl]}, z dat ${ceka[sl]} (z ${v.length} nabídek)`);
+      }
     }
   }
-  pravda('a dražší druh stojí na ose vždycky vpravo od levnějšího',
-    prohozene.length === 0, prohozene.join('; '));
+  pravda(`vytištěná čísla se přepočítala u většiny krajů (${overeno})`, overeno >= 10,
+    `ověřeno jen ${overeno} ze ${radky.length} — kontrola by hlídala skoro nic`);
+  pravda('a všechna sedí s přepočtem z dat', rozchod.length === 0,
+    rozchod.slice(0, 6).join('\n      '));
 
-  /* Pojistka proti stupnici, která se zhroutí do jednoho bodu: kdyby se
-     osa spočítala špatně, všechny pruhy by seděly na sobě a obrázek by
-     neříkal nic — a všechny kontroly výš by přitom prošly. */
-  const rozpeti = Math.max(...pasy.map((x) => x.z)) - Math.min(...pasy.map((x) => x.z));
-  pravda(`osa je opravdu roztažená (mediány pokrývají ${rozpeti.toFixed(0)} % šířky)`,
-    rozpeti > 30, `jen ${rozpeti.toFixed(1)} % — pruhy leží na sobě`);
-}
+  /* Tři čísla v řádku musí být tři čísla téže věci: čtvrtina ≤ medián ≤
+     čtvrtina. Kdyby se sloupce v šabloně prohodily, čísla by dál „sedla"
+     s daty (jen jinak spárovaná) a kontrola výš by prošla. */
+  const prehozene = radky.filter((r) => !(r.lo <= r.med && r.med <= r.hi));
+  pravda('nejnižší ≤ obvyklá ≤ nejvyšší v každém řádku', prehozene.length === 0,
+    prehozene.map((r) => `${r.kraj}: ${r.lo} / ${r.med} / ${r.hi}`).join('; '));
 
-const nar0 = stranka.match(
-  /* Mezery ve vysázeném textu můžou být nezlomitelné (scripts/sazba.mjs),
-   tak ať je vzor snese obě — jinak kontrola tiše přestane cokoli najít. */
-  /Zemědělská půda(?:<\/a>)?<\/span>(?:<b>[^<]*<\/b>)?(?:<span class="cen-pas"[^>]*>.*?<\/span>)?<span class="cen-detail">obvykle ([\d\s\u00a0]+)–([\d\s\u00a0]+)[\s\u00a0]Kč\/m²[\s\u00a0]·[\s\u00a0]z[\s\u00a0]([\d\s\u00a0]+)[\s\u00a0]nabídek/);
-const nar = nar0 ? [nar0[0], cislo(nar0[1]), cislo(nar0[2]), cislo(nar0[3])] : null;
-pravda('celostátní rozpětí je vypsané', !!nar, 'nenalezeno');
-if (nar) {
-  pravda('a je v rozumných mezích', +nar[1] >= 20 && +nar[2] <= 150,
-    `rozpětí ${nar[1]}–${nar[2]} Kč/m²`);
-  pravda('počítá se z dost nabídek', +nar[3] >= 300, `jen ${nar[3]}`);
+  /* Seznam má smysl jen seřazený — kdo hledá levnou půdu, čte ho shora.
+     Abecední pořadí vypadá stejně a není k ničemu. */
+  const skoky = [];
+  for (let i = 1; i < radky.length; i++) {
+    if (radky[i].med < radky[i - 1].med) skoky.push(`${radky[i - 1].kraj} (${radky[i - 1].med}) před ${radky[i].kraj} (${radky[i].med})`);
+  }
+  pravda('kraje jsou seřazené od nejlevnějšího', skoky.length === 0, skoky.join('; '));
+
+  /* A jádro celého testu: za jednotky korun se u nás pole neprodává.
+     Takové číslo znamená spoluvlastnický podíl v mediánu, ne levný kraj. */
+  const podezrele = radky.filter((r) => r.lo < 15);
+  pravda('žádný kraj nehlásí cenu pole pod 15 Kč/m²', podezrele.length === 0,
+    podezrele.map((r) => `${r.kraj}: ${r.lo} Kč/m²`).join('; '));
 }
 
 // --- 4) Stránka se k tomu přizná -------------------------------------

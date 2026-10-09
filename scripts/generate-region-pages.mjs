@@ -218,7 +218,6 @@ const hasKrajPage  = new Set(eligibleKraj);
    v rámci jednoho druhu (stavební × pole × les), proto rozdělené podle druhu.
    Číslo se ukáže jen tam, kde je dost vzorků (MIN_PRICE), a vždy se uvádí počet. */
 const MIN_PRICE = 10;
-const DRUH_GROUPS = ['Zemědělská půda','Lesní pozemek','Zahrada','Stavební'];
 function druhGroup(s){
   s=(s||'').toLowerCase();
   if(/stav/.test(s)) return 'Stavební';
@@ -397,13 +396,6 @@ function odznakCeny(o) {
   if (od.podOdhadem >= 25 && !od.podil) return `<b class="okr-sleva">\u2212${od.podOdhadem} % proti okolí</b>`;
   return '';
 }
-/* Mez „ceny se liší násobky" se bere z js/ceny.js, ne z vlastního čísla.
-   Web už tenhle pojem má: u odhadu konkrétního pozemku hlásí „nejistý",
-   když (p75 − p25) / medián přeleze MEZ_ROZPTYL. Kdyby si stránka s cenami
-   držela vlastní hranici, mohla by u téhož druhu tvrdit něco jiného než
-   odhad o dva kliky dál. */
-const MEZ_ROZPTYL = CENY.MEZ_ROZPTYL || 2;
-
 const priceNational = priceStats(all);
 const priceByKraj = {}; for(const k of KRAJ_ORDER){ if(byKraj[k]) priceByKraj[k]=priceStats(byKraj[k]); }
 const priceByOkres = {}; for(const ok of Object.keys(byOkres)){ priceByOkres[ok]=priceStats(byOkres[ok]); }
@@ -1212,163 +1204,72 @@ ${okresLinks ? `
   write('data/ceny-mist.json', JSON.stringify(cenyMist));
 
   const file='cena-pozemku.html';
-  // Národní karty podle druhu (jen skupiny s dost vzorky).
-  /* Seřazeno od nejlevnějšího druhu k nejdražšímu. Dřív to šlo v pořadí,
-     v jakém jsou druhy vyjmenované v kódu (45, 35, 119, 2 771), takže se
-     čísla nedala porovnat pohledem — oko musí jít po stupnici.
 
-     A vlastní značkování místo .okr-stat: ty dlaždice jsou dělané na dvě
-     krátká čísla vedle sebe (22 pozemků | 22 na prodej) a oddělují se
-     svislou čárkou vlevo. Tady jsou popisky dlouhé, na telefonu se
-     dlaždice zalomí pod sebe — a z té čárky se stane odsazení, takže to
-     vypadalo, jako by lesy, zahrady a stavební parcely byly podpoložky
-     zemědělské půdy. Tohle je seznam sourozenců, ať se tak i čte. */
-  const NAZEV_DRUHU = { 'Stavební': 'Stavební pozemek' };
-  const natGroups = DRUH_GROUPS.filter(g=>priceNational[g])
-    .sort((a,b)=>priceNational[a].med - priceNational[b].med);
-  /* ===== SPOLEČNÁ OSA PRO VŠECHNY DRUHY ================================
-     Doteď to byl výpis čtyř čísel pod sebou, všechna stejně velká. Jenže
-     les stojí 48 Kč/m² a stavební pozemek 2 904 — šedesátinásobek — a na
-     stránce, která se jmenuje „Kolik stojí pozemek?", to byla ta úplně
-     nejdůležitější informace, kterou nebylo vidět. Kdo čte čísla pod
-     sebou, musí je v hlavě dělit; obrázek to řekne naráz.
-     Každý druh proto dostane svůj pruh „obvykle od–do" na JEDNÉ ose, se
-     značkou mediánu. Tím se zadarmo ukáže i druhá věc, kterou dřív musela
-     říkat věta: u zahrad je pruh přes půl osy, u pole úzký — tedy že
-     u zahrad medián skoro nic neznamená.
-     OSA JE LOGARITMICKÁ, a je to u ní napsané. Na lineární by se první tři
-     druhy slily do jedné čárky u levého okraje a obrázek by lhal o tom,
-     co je vidět. Meze se berou na celé řády kolem skutečných dat, ne od
-     stolu. */
-  const vsechnyLo = natGroups.map((g) => priceNational[g].lo).filter((x) => x > 0);
-  const vsechnyHi = natGroups.map((g) => priceNational[g].hi).filter((x) => x > 0);
-  const osaMin = vsechnyLo.length ? Math.pow(10, Math.floor(Math.log10(Math.min(...vsechnyLo)))) : 10;
-  const osaMax = vsechnyHi.length ? Math.pow(10, Math.ceil(Math.log10(Math.max(...vsechnyHi)))) : 10000;
-  const osaRozsah = Math.log10(osaMax) - Math.log10(osaMin);
-  const naOse = (v) => {
-    if (!(v > 0) || !(osaRozsah > 0)) return 0;
-    const t = (Math.log10(v) - Math.log10(osaMin)) / osaRozsah;
-    return Math.max(0, Math.min(100, t * 100));
-  };
-  const osaZnacky = [];
-  for (let d = Math.log10(osaMin); d <= Math.log10(osaMax) + 0.001; d++) {
-    const v = Math.pow(10, Math.round(d));
-    osaZnacky.push(`<span class="cen-osa-znacka" style="left:${naOse(v).toFixed(2)}%">${fmt(v)}</span>`);
-  }
+  /* ===== CO NA TÉHLE STRÁNCE JE A CO NE ===============================
+     Byly tu čtyři věci: logaritmická osa cen podle druhu, vyhledávač
+     lokality, seznam krajů, tabulka všech okresů a k tomu čipy
+     „nejlevnější / nejdražší okres". Na telefonu z toho byl svitek na
+     šest obrazovek a odpověď na otázku z nadpisu („kolik stojí
+     pozemek?") se v něm ztratila.
+     Zůstávají tři věci: co se na trhu děje (nahoře, protože je to
+     jediné číslo, které nikde jinde není), kolik stojí půda u vás, a
+     kraje. Okresní tabulka se nemaže ze světa — totéž, podrobněji
+     a s nabídkami, je na stránce každého okresu, na kterou vede
+     vyhledávač lokality o kus výš. */
+  const key = 'Zemědělská půda';
+  const okrLink = (ok) => (hasOkresPage.has(ok) ? okresFile(ok)
+    : 'index.html?kraj=' + encodeURIComponent((KRAJ_META[OKRES_KRAJ[ok]] || {}).mapName || '') + '#mapa');
 
-  const natCards = natGroups.map(g=>{
-    const s=priceNational[g];
-    /* Když se čtvrtiny rozestoupí o víc než násobek meze, není to „typická
-       cena", ale průměr dvou různých trhů. U zahrad to dělá 45–825 Kč/m²,
-       tedy osmnáctinásobek: zahrada na vsi a zahrada na kraji města nemají
-       společného skoro nic. Číslo se nezahazuje — jen se u něj řekne, že
-       je to hrubé vodítko, přesně jako u odhadu konkrétního pozemku. */
-    const rozptyl = s.med ? (s.hi - s.lo) / s.med : 0;
-    const siroke = rozptyl > MEZ_ROZPTYL;
-    /* Z ceny na nabídky. Karta říká „zemědělská půda 62 Kč/m²" a do teď
-       se z ní nedalo nikam kliknout — teď vede na přehled toho druhu,
-       pokud takovou stránku máme. Zemědělská půda je souhrn (orná +
-       louky), proto se u ní odkazuje na ornou půdu: je jí v ní víc. */
-    const DRUH_NA_STRANKU = { 'Zemědělská půda': 'Orná půda', 'Lesní pozemek': 'Lesní pozemek',
-      Zahrada: 'Zahrada', 'Stavební': 'Stavební / zastavěná' };
-    const cil = druhStranky.filter((x) => x.skupina === DRUH_NA_STRANKU[g])[0];
-    const nazevHtml = cil
-      ? `<span class="cen-nazev"><a href="${cil.soubor}">${esc(NAZEV_DRUHU[g] || g)}</a></span>`
-      : `<span class="cen-nazev">${esc(NAZEV_DRUHU[g] || g)}</span>`;
-    /* Pruh je OZDOBA, ne informace navíc: tatáž čísla stojí slovy hned
-       pod ním, takže se čtečce neříká dvakrát totéž. */
-    const l = naOse(s.lo), r = naOse(s.hi), m = naOse(s.med);
-    const pruh = (s.lo > 0 && s.hi > 0)
-      ? `<span class="cen-pas" aria-hidden="true">`
-        + `<i class="cen-rozsah" style="left:${l.toFixed(2)}%;width:${Math.max(0.8, r - l).toFixed(2)}%"></i>`
-        + `<i class="cen-med" style="left:${m.toFixed(2)}%"></i></span>`
-      : '';
-    /* Název a cena na JEDNOM řádku, cena vpravo. Čtyři obří čísla pod
-       sebou, každé na vlastním řádku, dělala z přehledu dlouhý seznam —
-       a sloupec čísel zarovnaný vpravo se dá přejet okem shora dolů. */
-    return `<li class="cen-druh${siroke ? ' cen-siroke' : ''}">`
-      + nazevHtml
-      + `<b>${fmt(s.med)} Kč/m²</b>`
-      + pruh
-      + `<span class="cen-detail">obvykle ${fmt(s.lo)}–${fmt(s.hi)} Kč/m² · z ${fmt(s.n)} nabídek`
-      + (siroke ? ` · <span class="cen-varovani">liší se násobky, berte jako hrubé vodítko</span>` : '')
-      + `</span></li>`;
-  }).join('\n        ');
+  /* ===== CENY PO KRAJÍCH ==============================================
+     Tři čísla v řádku, od nejlevnějšího kraje k nejdražšímu — ne podle
+     abecedy. Kdo hledá, kde je půda levná, čte sloupec shora.
 
-  // Kraje seřazené podle mediánu zemědělské půdy (nejvíc dat) – barevná „teplota".
-  const key='Zemědělská půda';
-  const rowsData = eligibleKraj
-    .map(k=>({k, s:priceByKraj[k] && priceByKraj[k][key]}))
-    .filter(x=>x.s)
-    .sort((a,b)=>b.s.med-a.s.med);
-  const meds = rowsData.map(x=>x.s.med);
-  const minM=Math.min.apply(null,meds), maxM=Math.max.apply(null,meds);
-  /* PODBARVENÍ ŘÁDKŮ: ZELENÁ ZE ZNAČKY, NE MODŘ.
-     Bylo tu rgba(91,184,214), tedy tyrkys o odstínu 196° — jediná
-     modrá plocha na zeleno-bílém webu, a ještě přes celý seznam krajů.
-     Teď je to značková zelená, takže seznam patří ke stránce.
+     PROSTŘEDNÍ ČÍSLO JE MEDIÁN, NE PRŮMĚR, a je to u něj napsané.
+     Průměr by v kraji s pár přepálenými inzeráty vyšel vyšší než cena,
+     za kterou se tam dá vůbec něco koupit: jeden pozemek za 4 000 Kč/m²
+     mezi stovkou polí po 20 Kč/m² průměr utrhne, s mediánem nepohne.
+     Slovo „obvyklá" je přesně to, co medián znamená.
 
-     JE TO KRYTÍ, NE JINÁ BARVA, a to schválně: v tmavém režimu
-     prosvítá pozadí, takže jedna barva s měnícím se krytím funguje
-     v obou režimech a nevznikne odstín, který by v jednom z nich
-     zmizel. */
-  function heat(v){
-    const t = maxM>minM ? (v-minM)/(maxM-minM) : 0.5;
-    return `background:rgba(44,113,80,${(0.06+t*0.20).toFixed(3)});`;
-  }
-  const krajRows = rowsData.map(x=>{
-    const les = priceByKraj[x.k] && priceByKraj[x.k]['Lesní pozemek'];
-    const disp = (KRAJ_META[x.k]||{}).disp || (x.k+' kraj');
-    const link = hasKrajPage.has(x.k) ? krajFile(x.k) : ('index.html?kraj='+encodeURIComponent((KRAJ_META[x.k]||{}).mapName||x.k)+'#mapa');
-    return `      <div class="okr-item" style="${heat(x.s.med)}">
-        <a class="okr-place" href="${link}" style="text-decoration:none;">${esc(disp)}</a>
-        <span class="okr-meta">Zemědělská půda <b>${fmt(x.s.med)} Kč/m²</b> · rozpětí ${fmt(x.s.lo)}–${fmt(x.s.hi)} · ${fmt(x.s.n)} nab.${les?` &nbsp;·&nbsp; les <b>${fmt(les.med)} Kč/m²</b> (${les.n})`:''}</span>
-      </div>`;
+     KRAJNÍ ČÍSLA JSOU ČTVRTINY (25. a 75. percentil), ne skutečné
+     minimum a maximum. Skutečné minimum bývá překlep ve zdroji (pole za
+     necelou korunu za m²) a skutečné maximum taky — ukázat je jako
+     „nejnižší cena v kraji" by znamenalo tvrdit, že se za to tam dá
+     koupit. Čtvrtiny říkají, kde leží prostřední polovina nabídek, a to
+     tvrdit můžeme. Je to u tabulky napsané.
+
+     JEDEN DRUH, A NAPSANÝ. Kdyby se do mediánu kraje smíchala
+     zemědělská půda se stavebními parcelami, vyšel by kraj s hodně
+     parcelami dráž — a porovnávaly by se jablka s hruškami. Zemědělská
+     půda je ten druh, kterého je v datech nejvíc. */
+  const krajeData = eligibleKraj
+    .map((k) => ({ k, s: priceByKraj[k] && priceByKraj[k][key] }))
+    .filter((x) => x.s)
+    .sort((a, b) => a.s.med - b.s.med);
+  const krajeRadky = krajeData.map((x) => {
+    const disp = (KRAJ_META[x.k] || {}).disp || (x.k + ' kraj');
+    const link = hasKrajPage.has(x.k) ? krajFile(x.k)
+      : 'index.html?kraj=' + encodeURIComponent((KRAJ_META[x.k] || {}).mapName || x.k) + '#mapa';
+    /* Popisek u KAŽDÉHO čísla, ne hlavička tabulky. Hlavička se na
+       telefonu odroluje nahoru a pak je ve třech sloupcích čísel bez
+       toho, co které znamená. Takhle se řádek přečte sám. */
+    return `        <a class="cenk-radek" href="${link}">
+          <span class="cenk-kraj">${esc(disp)}</span>
+          <span class="cenk-c"><i>nejnižší</i>${fmt(x.s.lo)}</span>
+          <span class="cenk-c cenk-med"><i>obvyklá</i>${fmt(x.s.med)}</span>
+          <span class="cenk-c"><i>nejvyšší</i>${fmt(x.s.hi)}</span>
+        </a>`;
   }).join('\n');
-
-  // Tabulka po okresech (zemědělská půda, jen kde dost vzorků), seřazeno od nejdražšího.
-  const okrData = Object.keys(priceByOkres)
-    .map(ok=>({ok, s:priceByOkres[ok] && priceByOkres[ok][key]}))
-    .filter(x=>x.s)
-    .sort((a,b)=>b.s.med-a.s.med);
-  const okrMeds = okrData.map(x=>x.s.med);
-  const okMin = okrMeds.length?Math.min.apply(null,okrMeds):0, okMax = okrMeds.length?Math.max.apply(null,okrMeds):1;
-  function heatOk(v){ const t = okMax>okMin ? (v-okMin)/(okMax-okMin) : 0.5; return `background:rgba(44,113,80,${(0.06+t*0.20).toFixed(3)});`; }
-  /* CENOVÁ MAPA: stejná čísla jako tabulka, protože ze stejného okrData.
-     Kdyby si mapa počítala vlastní medián, mohla by u téhož okresu
-     ukázat jinou cenu než řádek o kus níž — a to už se na tomhle webu
-     jednou stalo (mapa proti stránce pozemku, viz js/ceny.js). */
-  const cenMapaData = {};
-  for (const x of okrData) {
-    cenMapaData[x.ok] = { med: x.s.med, lo: x.s.lo, hi: x.s.hi, n: x.s.n,
-      odkaz: hasOkresPage.has(x.ok) ? okresFile(x.ok) : null };
-  }
-  const okresRows = okrData.map(x=>{
-    const link = hasOkresPage.has(x.ok) ? okresFile(x.ok) : ('index.html?kraj='+encodeURIComponent((KRAJ_META[OKRES_KRAJ[x.ok]]||{}).mapName||'')+'#mapa');
-    return `      <div class="okr-item" style="${heatOk(x.s.med)}">
-        <a class="okr-place" href="${link}" style="text-decoration:none;">${esc(x.ok)}</a>
-        <span class="okr-meta">Zemědělská půda <b>${fmt(x.s.med)} Kč/m²</b> · rozpětí ${fmt(x.s.lo)}–${fmt(x.s.hi)} · ${fmt(x.s.n)} nab.</span>
+  const krajeSekce = !krajeRadky ? '' : `
+      <div class="add-card" style="margin-top:22px;">
+        <div class="rules-sect">
+          <h2 id="cenk-nadpis">Ceny po krajích</h2>
+          <p class="rules-note" style="margin-top:0;">Zemědělská půda v <b>Kč/m²</b>, od nejlevnějšího kraje. „Obvyklá" je <b>medián</b>; krajní čísla jsou čtvrtiny, mezi kterými leží prostřední polovina nabídek.</p>
+          <div class="cenk-tab" aria-labelledby="cenk-nadpis">
+${krajeRadky}
+          </div>
+          <p class="rules-note">Proč ne průměr a ne nejlevnější inzerát: průměr by nahoru vytáhlo pár přepálených nabídek a nejnižší cena v kraji bývá překlep ve zdroji. Ze stejného důvodu <b>nezapočítáváme spoluvlastnické podíly</b> — hranici neurčujeme od stolu, hledáme <b>mezeru v samotném rozdělení</b> cen.</p>
+        </div>
       </div>`;
-  }).join('\n');
-
-  // Výrazný souhrn: nejlevnější a nejdražší okresy (zemědělská půda).
-  const cheapest = okrData.slice(-3).reverse();
-  const dearest  = okrData.slice(0,3);
-  const okrLink = ok => hasOkresPage.has(ok) ? okresFile(ok) : ('index.html?kraj='+encodeURIComponent((KRAJ_META[OKRES_KRAJ[ok]]||{}).mapName||'')+'#mapa');
-  /* Oddělovač NESMÍ být samostatný prvek: kontejner zalamuje a tečka pak
-     doputuje sama na konec řádku a visí tam bez ničeho. Přilepí se proto
-     pevnou mezerou k položce před sebou (viz .okr-place::after v CSS). */
-  const chips = list => list.map(x=>`<a class="okr-place" href="${okrLink(x.ok)}" style="text-decoration:none;">${esc(x.ok)} <b>${fmt(x.s.med)} Kč/m²</b></a>`).join('');
-  const highlight = (cheapest.length && dearest.length) ? `
-      <div class="okr-stats" style="gap:14px;">
-        <!-- POPISKY NEJSOU KATEGORIE. Stály tu modře a červeně, jenže modrá
-             na tomhle webu znamená „na prodej" a červená „exekuce" — ne
-             „levné" a „drahé". Kdo ty barvy zná z mapy a z odznaků, čte
-             tady něco jiného, než co je napsáno. Rozdíl mezi levným
-             a drahým nesou čísla pod popiskem; popisek je návěští. -->
-        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span>Nejlevnější zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(cheapest)}</div></div>
-        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span>Nejdražší zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;">${chips(dearest)}</div></div>
-      </div>` : '';
 
   /* ===== JAK SE TRH CHOVÁ V ČASE =================================
      Zbytek téhle stránky je fotka: kolik pozemek stojí DNES. To má
@@ -1440,9 +1341,9 @@ ${trhOkresy ? `          <div class="okr-stat" style="min-width:0;"><span>Nejča
   <section class="okr-hero">
     <div class="okr-band">
     <div class="wrap okr-wrap">
-      <div class="eyebrow"><span class="live-dot"></span>Cenový přehled · celá ČR</div>
+      <div class="eyebrow"><span class="live-dot"></span>Ceny pozemků · celá ČR</div>
       <h1>Kolik stojí pozemek?</h1>
-      <p class="sub">Jednoduchá odpověď na otázku, kterou si klade každý kupující: <b>kolik je metr čtvereční pozemku?</b> Spočítáme <b>orientační medián</b> z aktuálních nabídek na Parcelce — zvlášť pro pole, les i zahradu, protože cena za m² se u nich zásadně liší. Takový přehled zdarma nikde jinde nenajdete.</p>
+      <p class="sub">Co se dnes na trhu děje, kolik stojí půda u vás a jak se liší kraj od kraje.</p>
     </div>
     </div>
   </section>
@@ -1450,49 +1351,10 @@ ${trhOkresy ? `          <div class="okr-stat" style="min-width:0;"><span>Nejča
   <section class="section">
     <div class="wrap okr-wrap">
 
-      <div class="add-card">
-        <div class="rules-sect">
-          <h2>Medián ceny podle druhu (celá ČR)</h2>
-          ${natCards ? `<ul class="cen-druhy" style="--cen-kroku:${Math.max(1, Math.round(osaRozsah))}">
-        ${natCards}
-          </ul>
-          <div class="cen-osa" aria-hidden="true">${osaZnacky.join('')}</div>
-          <p class="cen-osa-pozn">Pruh je rozpětí obvyklých cen, čárka medián. Osa je <b>logaritmická</b> — každý krok desetinásobek.</p>` : '<p class="rules-note" style="margin:0;">Zatím není dost dat pro spolehlivý výpočet.</p>'}
-          <!-- VYSVĚTLIVKY SE SBALILY. Byly to tři odstavce drobného textu
-               hned pod přehledem, delší než samotná čísla — stránka pak
-               působila jako poznámkový aparát s grafem nahoře. Nic z toho
-               se nemaže: kdo se ptá „jak to počítáte", to rozbalí; kdo se
-               ptá „kolik stojí pozemek", dostane odpověď a nemusí ji
-               hledat nad hromadou podmínek. -->
-          <details class="cen-metodika">
-            <summary>Jak to počítáme</summary>
-            <p class="rules-note">Jde o <b>medián nabídkových cen</b> (ne realizovaných prodejů) z pozemků, u kterých známe cenu i výměru. Počítáme <b>jen běžné nabídky k prodeji</b> — vyvolávací cena dražby je pod trhem z podstaty věci a do ceny „kolik stojí pozemek" nepatří; stejně to počítá i odhad u konkrétního pozemku, aby web neříkal na dvou místech dvě čísla. Rozpětí ukazuje typické ceny (25.–75. percentil, tj. bez krajních výkyvů). Skutečná cena závisí na kvalitě půdy (BPEJ), přístupu, sítích i lokalitě — berte to jako orientaci, ne odhad konkrétního pozemku.</p>
-            <p class="rules-note">${ODFILTROVANO ? `Do výpočtu <b>nezapočítáváme ${ODFILTROVANO} ${ODFILTROVANO===1?'nabídku':(ODFILTROVANO<5?'nabídky':'nabídek')}</b>, u kterých cena za metr vychází hluboko pod trhem — bývají to <b>spoluvlastnické podíly</b> (v inzerátu je výměra celé parcely, ale prodává se jen zlomek) nebo špatně načtené ceny. Bez toho vycházel medián pole v některých okresech na 8 Kč/m², což není cena, za kterou se u nás pole prodává. Hranici nestanovujeme od stolu: hledá se mezera v samotném rozdělení cen, a kde žádná není (zahrady, stavební pozemky), nevyřazuje se nic.` : ''}</p>
-          </details>
-        </div>
-      </div>
-${highlight ? `
-      <div class="add-card" style="margin-top:22px;">
-        <div class="rules-sect">
-          <h2>Kde je půda nejlevnější a nejdražší</h2>
-${highlight}
-        </div>
-      </div>` : ''}
 ${sekceTrhu}
 
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
-          <!-- VYHLEDÁVAČ MÍSTO DVOU DLOUHÝCH SEZNAMŮ. Pod tímhle nadpisem
-               stál seznam 14 krajů, pod ním barevná mapa okresů a pod ní
-               seznam 36 okresů — tedy padesát řádků, ze kterých každého
-               zajímá jeden. Kdo chce vědět, kolik stojí půda u něj,
-               nechce procházet republiku; chce napsat jméno a dostat
-               odpověď.
-               HLEDÁ SE I PODLE OBCE, protože tak lidi přemýšlejí. Cena se
-               ale ukazuje za OKRES a je to u ní napsané: z 1 046 obcí
-               v nabídce by na vlastní medián jednoho druhu mělo dost dat
-               devět. Číslo z pěti nabídek v jedné vesnici není cena v té
-               vesnici, je to náhoda. -->
           <h2 id="ceny-hledat-nadpis">Kolik stojí půda u vás</h2>
           <p class="rules-note" style="margin-top:0;">Napište obec, město nebo okres. Ukážeme medián za okres — nejmenší celek, za který se dá něco tvrdit.</p>
           <div class="cenh">
@@ -1509,9 +1371,10 @@ ${sekceTrhu}
             </div>
             <div class="cenh-vysledek" id="cenh-vysledek" role="status" aria-live="polite"></div>
           </div>
-${razitkoCerstvosti}
         </div>
       </div>
+
+${krajeSekce}
 
       <div class="add-cross" style="margin-top:22px;">
         <div class="acx-copy">
@@ -1520,6 +1383,8 @@ ${razitkoCerstvosti}
         </div>
         <a href="index.html#mapa" class="btn-primary btn-glow">Otevřít mapu →</a>
       </div>
+
+${razitkoCerstvosti}
 
       <p class="okr-more" style="margin-top:22px;">Souvisí: <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> · <a href="stavebni-vs-zemedelsky-pozemek.html">stavební vs. zemědělský pozemek</a> · <a href="pozemky-podle-okresu.html">pozemky podle regionu</a>.</p>
 

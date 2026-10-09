@@ -31,7 +31,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=6c25d70e">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=9cd76ea2">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Ceny pozemků v ČR","inLanguage":"cs","description":"Orientační medián cen pozemků (Kč/m²) podle druhu a kraje z aktuálních nabídek.","mainEntityOfPage":"https://www.parcelaka.cz/cena-pozemku.html","publisher":{"@type":"Organization","name":"Parcelka"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Ceny pozemků","item":"https://www.parcelaka.cz/cena-pozemku.html"}]}]
   </script>
@@ -70,9 +70,9 @@
   <section class="okr-hero">
     <div class="okr-band">
     <div class="wrap okr-wrap">
-      <div class="eyebrow"><span class="live-dot"></span>Cenový přehled · celá ČR</div>
+      <div class="eyebrow"><span class="live-dot"></span>Ceny pozemků · celá ČR</div>
       <h1>Kolik stojí pozemek?</h1>
-      <p class="sub">Jednoduchá odpověď na otázku, kterou si klade každý kupující: <b>kolik je metr čtvereční pozemku?</b> Spočítáme <b>orientační medián</b> z aktuálních nabídek na Parcelce — zvlášť pro pole, les i zahradu, protože cena za m² se u nich zásadně liší. Takový přehled zdarma nikde jinde nenajdete.</p>
+      <p class="sub">Co se dnes na trhu děje, kolik stojí půda u vás a jak se liší kraj od kraje.</p>
     </div>
     </div>
   </section>
@@ -80,46 +80,6 @@
   <section class="section">
     <div class="wrap okr-wrap">
 
-      <div class="add-card">
-        <div class="rules-sect">
-          <h2>Medián ceny podle druhu (celá ČR)</h2>
-          <ul class="cen-druhy" style="--cen-kroku:3">
-        <li class="cen-druh"><span class="cen-nazev"><a href="pozemky-lesni.html">Lesní pozemek</a></span><b>48 Kč/m²</b><span class="cen-pas" aria-hidden="true"><i class="cen-rozsah" style="left:16.38%;width:16.95%"></i><i class="cen-med" style="left:22.71%"></i></span><span class="cen-detail">obvykle 31–100 Kč/m² · z 201 nabídek</span></li>
-        <li class="cen-druh"><span class="cen-nazev"><a href="pozemky-orna-puda.html">Zemědělská půda</a></span><b>63 Kč/m²</b><span class="cen-pas" aria-hidden="true"><i class="cen-rozsah" style="left:21.12%;width:14.37%"></i><i class="cen-med" style="left:26.64%"></i></span><span class="cen-detail">obvykle 43–116 Kč/m² · z 962 nabídek</span></li>
-        <li class="cen-druh cen-siroke"><span class="cen-nazev"><a href="pozemky-zahrada.html">Zahrada</a></span><b>156 Kč/m²</b><span class="cen-pas" aria-hidden="true"><i class="cen-rozsah" style="left:22.40%;width:46.45%"></i><i class="cen-med" style="left:39.77%"></i></span><span class="cen-detail">obvykle 47–1 163 Kč/m² · z 71 nabídek · <span class="cen-varovani">liší se násobky, berte jako hrubé vodítko</span></span></li>
-        <li class="cen-druh"><span class="cen-nazev"><a href="pozemky-stavebni.html">Stavební pozemek</a></span><b>2 844 Kč/m²</b><span class="cen-pas" aria-hidden="true"><i class="cen-rozsah" style="left:69.91%;width:21.00%"></i><i class="cen-med" style="left:81.80%"></i></span><span class="cen-detail">obvykle 1 251–5 336 Kč/m² · z 245 nabídek</span></li>
-          </ul>
-          <div class="cen-osa" aria-hidden="true"><span class="cen-osa-znacka" style="left:0.00%">10</span><span class="cen-osa-znacka" style="left:33.33%">100</span><span class="cen-osa-znacka" style="left:66.67%">1 000</span><span class="cen-osa-znacka" style="left:100.00%">10 000</span></div>
-          <p class="cen-osa-pozn">Pruh je rozpětí obvyklých cen, čárka medián. Osa je <b>logaritmická</b> — každý krok desetinásobek.</p>
-          <!-- VYSVĚTLIVKY SE SBALILY. Byly to tři odstavce drobného textu
-               hned pod přehledem, delší než samotná čísla — stránka pak
-               působila jako poznámkový aparát s grafem nahoře. Nic z toho
-               se nemaže: kdo se ptá „jak to počítáte", to rozbalí; kdo se
-               ptá „kolik stojí pozemek", dostane odpověď a nemusí ji
-               hledat nad hromadou podmínek. -->
-          <details class="cen-metodika">
-            <summary>Jak to počítáme</summary>
-            <p class="rules-note">Jde o <b>medián nabídkových cen</b> (ne realizovaných prodejů) z pozemků, u kterých známe cenu i výměru. Počítáme <b>jen běžné nabídky k prodeji</b> — vyvolávací cena dražby je pod trhem z podstaty věci a do ceny „kolik stojí pozemek" nepatří; stejně to počítá i odhad u konkrétního pozemku, aby web neříkal na dvou místech dvě čísla. Rozpětí ukazuje typické ceny (25.–75. percentil, tj. bez krajních výkyvů). Skutečná cena závisí na kvalitě půdy (BPEJ), přístupu, sítích i lokalitě — berte to jako orientaci, ne odhad konkrétního pozemku.</p>
-            <p class="rules-note">Do výpočtu <b>nezapočítáváme 137 nabídek</b>, u kterých cena za metr vychází hluboko pod trhem — bývají to <b>spoluvlastnické podíly</b> (v inzerátu je výměra celé parcely, ale prodává se jen zlomek) nebo špatně načtené ceny. Bez toho vycházel medián pole v některých okresech na 8 Kč/m², což není cena, za kterou se u nás pole prodává. Hranici nestanovujeme od stolu: hledá se mezera v samotném rozdělení cen, a kde žádná není (zahrady, stavební pozemky), nevyřazuje se nic.</p>
-          </details>
-        </div>
-      </div>
-
-      <div class="add-card" style="margin-top:22px;">
-        <div class="rules-sect">
-          <h2>Kde je půda nejlevnější a nejdražší</h2>
-
-      <div class="okr-stats" style="gap:14px;">
-        <!-- POPISKY NEJSOU KATEGORIE. Stály tu modře a červeně, jenže modrá
-             na tomhle webu znamená „na prodej" a červená „exekuce" — ne
-             „levné" a „drahé". Kdo ty barvy zná z mapy a z odznaků, čte
-             tady něco jiného, než co je napsáno. Rozdíl mezi levným
-             a drahým nesou čísla pod popiskem; popisek je návěští. -->
-        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span>Nejlevnější zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;"><a class="okr-place" href="pozemky-okres-klatovy.html" style="text-decoration:none;">Klatovy <b>39 Kč/m²</b></a><a class="okr-place" href="pozemky-okres-blansko.html" style="text-decoration:none;">Blansko <b>39 Kč/m²</b></a><a class="okr-place" href="pozemky-okres-plzen-jih.html" style="text-decoration:none;">Plzeň-jih <b>40 Kč/m²</b></a></div></div>
-        <div class="okr-stat" style="min-width:0;flex:1 1 240px;"><span>Nejdražší zemědělská půda</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 10px;font-size:14px;"><a class="okr-place" href="pozemky-okres-praha-vychod.html" style="text-decoration:none;">Praha-východ <b>160 Kč/m²</b></a><a class="okr-place" href="pozemky-okres-pardubice.html" style="text-decoration:none;">Pardubice <b>116 Kč/m²</b></a><a class="okr-place" href="pozemky-okres-pisek.html" style="text-decoration:none;">Písek <b>110 Kč/m²</b></a></div></div>
-      </div>
-        </div>
-      </div>
 
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
@@ -160,17 +120,6 @@
 
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
-          <!-- VYHLEDÁVAČ MÍSTO DVOU DLOUHÝCH SEZNAMŮ. Pod tímhle nadpisem
-               stál seznam 14 krajů, pod ním barevná mapa okresů a pod ní
-               seznam 36 okresů — tedy padesát řádků, ze kterých každého
-               zajímá jeden. Kdo chce vědět, kolik stojí půda u něj,
-               nechce procházet republiku; chce napsat jméno a dostat
-               odpověď.
-               HLEDÁ SE I PODLE OBCE, protože tak lidi přemýšlejí. Cena se
-               ale ukazuje za OKRES a je to u ní napsané: z 1 046 obcí
-               v nabídce by na vlastní medián jednoho druhu mělo dost dat
-               devět. Číslo z pěti nabídek v jedné vesnici není cena v té
-               vesnici, je to náhoda. -->
           <h2 id="ceny-hledat-nadpis">Kolik stojí půda u vás</h2>
           <p class="rules-note" style="margin-top:0;">Napište obec, město nebo okres. Ukážeme medián za okres — nejmenší celek, za který se dá něco tvrdit.</p>
           <div class="cenh">
@@ -187,7 +136,95 @@
             </div>
             <div class="cenh-vysledek" id="cenh-vysledek" role="status" aria-live="polite"></div>
           </div>
-<p class="okr-cerstvost mono">Zdroje naposledy zkontrolovány 8. 10. 2026 · robot je prochází každých 6 hodin</p>
+        </div>
+      </div>
+
+
+      <div class="add-card" style="margin-top:22px;">
+        <div class="rules-sect">
+          <h2 id="cenk-nadpis">Ceny po krajích</h2>
+          <p class="rules-note" style="margin-top:0;">Zemědělská půda v <b>Kč/m²</b>, od nejlevnějšího kraje. „Obvyklá" je <b>medián</b>; krajní čísla jsou čtvrtiny, mezi kterými leží prostřední polovina nabídek.</p>
+          <div class="cenk-tab" aria-labelledby="cenk-nadpis">
+        <a class="cenk-radek" href="pozemky-plzensky-kraj.html">
+          <span class="cenk-kraj">Plzeňský kraj</span>
+          <span class="cenk-c"><i>nejnižší</i>38</span>
+          <span class="cenk-c cenk-med"><i>obvyklá</i>42</span>
+          <span class="cenk-c"><i>nejvyšší</i>62</span>
+        </a>
+        <a class="cenk-radek" href="pozemky-zlinsky-kraj.html">
+          <span class="cenk-kraj">Zlínský kraj</span>
+          <span class="cenk-c"><i>nejnižší</i>38</span>
+          <span class="cenk-c cenk-med"><i>obvyklá</i>45</span>
+          <span class="cenk-c"><i>nejvyšší</i>74</span>
+        </a>
+        <a class="cenk-radek" href="pozemky-vysocina-kraj.html">
+          <span class="cenk-kraj">Kraj Vysočina</span>
+          <span class="cenk-c"><i>nejnižší</i>40</span>
+          <span class="cenk-c cenk-med"><i>obvyklá</i>46</span>
+          <span class="cenk-c"><i>nejvyšší</i>60</span>
+        </a>
+        <a class="cenk-radek" href="pozemky-ustecky-kraj.html">
+          <span class="cenk-kraj">Ústecký kraj</span>
+          <span class="cenk-c"><i>nejnižší</i>35</span>
+          <span class="cenk-c cenk-med"><i>obvyklá</i>53</span>
+          <span class="cenk-c"><i>nejvyšší</i>109</span>
+        </a>
+        <a class="cenk-radek" href="pozemky-kralovehradecky-kraj.html">
+          <span class="cenk-kraj">Královéhradecký kraj</span>
+          <span class="cenk-c"><i>nejnižší</i>45</span>
+          <span class="cenk-c cenk-med"><i>obvyklá</i>59</span>
+          <span class="cenk-c"><i>nejvyšší</i>105</span>
+        </a>
+        <a class="cenk-radek" href="pozemky-moravskoslezsky-kraj.html">
+          <span class="cenk-kraj">Moravskoslezský kraj</span>
+          <span class="cenk-c"><i>nejnižší</i>40</span>
+          <span class="cenk-c cenk-med"><i>obvyklá</i>62</span>
+          <span class="cenk-c"><i>nejvyšší</i>131</span>
+        </a>
+        <a class="cenk-radek" href="pozemky-karlovarsky-kraj.html">
+          <span class="cenk-kraj">Karlovarský kraj</span>
+          <span class="cenk-c"><i>nejnižší</i>35</span>
+          <span class="cenk-c cenk-med"><i>obvyklá</i>63</span>
+          <span class="cenk-c"><i>nejvyšší</i>175</span>
+        </a>
+        <a class="cenk-radek" href="pozemky-jihomoravsky-kraj.html">
+          <span class="cenk-kraj">Jihomoravský kraj</span>
+          <span class="cenk-c"><i>nejnižší</i>45</span>
+          <span class="cenk-c cenk-med"><i>obvyklá</i>64</span>
+          <span class="cenk-c"><i>nejvyšší</i>100</span>
+        </a>
+        <a class="cenk-radek" href="pozemky-jihocesky-kraj.html">
+          <span class="cenk-kraj">Jihočeský kraj</span>
+          <span class="cenk-c"><i>nejnižší</i>43</span>
+          <span class="cenk-c cenk-med"><i>obvyklá</i>65</span>
+          <span class="cenk-c"><i>nejvyšší</i>132</span>
+        </a>
+        <a class="cenk-radek" href="pozemky-olomoucky-kraj.html">
+          <span class="cenk-kraj">Olomoucký kraj</span>
+          <span class="cenk-c"><i>nejnižší</i>42</span>
+          <span class="cenk-c cenk-med"><i>obvyklá</i>65</span>
+          <span class="cenk-c"><i>nejvyšší</i>105</span>
+        </a>
+        <a class="cenk-radek" href="pozemky-liberecky-kraj.html">
+          <span class="cenk-kraj">Liberecký kraj</span>
+          <span class="cenk-c"><i>nejnižší</i>43</span>
+          <span class="cenk-c cenk-med"><i>obvyklá</i>68</span>
+          <span class="cenk-c"><i>nejvyšší</i>174</span>
+        </a>
+        <a class="cenk-radek" href="pozemky-pardubicky-kraj.html">
+          <span class="cenk-kraj">Pardubický kraj</span>
+          <span class="cenk-c"><i>nejnižší</i>47</span>
+          <span class="cenk-c cenk-med"><i>obvyklá</i>71</span>
+          <span class="cenk-c"><i>nejvyšší</i>118</span>
+        </a>
+        <a class="cenk-radek" href="pozemky-stredocesky-kraj.html">
+          <span class="cenk-kraj">Středočeský kraj</span>
+          <span class="cenk-c"><i>nejnižší</i>55</span>
+          <span class="cenk-c cenk-med"><i>obvyklá</i>85</span>
+          <span class="cenk-c"><i>nejvyšší</i>160</span>
+        </a>
+          </div>
+          <p class="rules-note">Proč ne průměr a ne nejlevnější inzerát: průměr by nahoru vytáhlo pár přepálených nabídek a nejnižší cena v kraji bývá překlep ve zdroji. Ze stejného důvodu <b>nezapočítáváme spoluvlastnické podíly</b> — hranici neurčujeme od stolu, hledáme <b>mezeru v samotném rozdělení</b> cen.</p>
         </div>
       </div>
 
@@ -198,6 +235,8 @@
         </div>
         <a href="index.html#mapa" class="btn-primary btn-glow">Otevřít mapu →</a>
       </div>
+
+<p class="okr-cerstvost mono">Zdroje naposledy zkontrolovány 8. 10. 2026 · robot je prochází každých 6 hodin</p>
 
       <p class="okr-more" style="margin-top:22px;">Souvisí: <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> · <a href="stavebni-vs-zemedelsky-pozemek.html">stavební vs. zemědělský pozemek</a> · <a href="pozemky-podle-okresu.html">pozemky podle regionu</a>.</p>
 
