@@ -268,12 +268,28 @@ if (import.meta.url === `file://${process.argv[1]}`) {
      stáhnout vůbec. Řádek ::error:: / ::notice:: skončí v souhrnu
      běhu, takže je vidět na první pohled i odtud. */
   if (process.env.GITHUB_ACTIONS) {
+    /* NEDOKONČENÁ KONTROLA NENÍ KONTROLA V POŘÁDKU. První běh vypsal
+       „nepřihlášený vidí undefined tabulek" a puntík byl přesto zelený:
+       dotaz veřejným klíčem neprošel, takže celá otázka „kdo co vidí" —
+       ta důležitější půlka — se vůbec nespočítala, a skončila jako
+       varování, které se do souhrnu nedostalo. Souhrn proto říká
+       ZVLÁŠŤ, co se ověřit nepodařilo, a nikdy netvrdí číslo, které
+       nemá. */
+    const kdoVidi = prehled.proNeprihlaseneTabulek != null
+      ? `nepřihlášený vidí ${prehled.proNeprihlaseneTabulek} tabulek`
+        + ` a ${prehled.proNeprihlaseneFunkci} funkcí`
+      : 'POZOR: co vidí nepřihlášený, se ověřit nepodařilo';
     const shrnuti = chyby.length
       ? `Kontrola databáze: ${chyby.length} nálezů — ` + chyby.map((n) => n.co).join('; ')
-      : `Kontrola databáze v pořádku: ${prehled.vDatabaziTabulek} tabulek, `
-        + `${prehled.vDatabaziFunkci} funkcí, nepřihlášený vidí `
-        + `${prehled.proNeprihlaseneTabulek} tabulek a ${prehled.proNeprihlaseneFunkci} funkcí.`;
+      : `Databáze sedí: ${prehled.vDatabaziTabulek} tabulek, `
+        + `${prehled.vDatabaziFunkci} funkcí. ${kdoVidi}.`;
     console.log(`::${chyby.length ? 'error' : 'notice'}::` + bezKlicu(shrnuti, tajne));
+    /* Varování taky do souhrnu — jinak se o nich člověk doví jen tak,
+       že si otevře protokol, což je přesně to, čemu se tenhle řádek
+       vyhýbá. */
+    for (const n of nalezy.filter((x) => x.vaha !== 'chyba')) {
+      console.log('::warning::' + bezKlicu(`${n.co} (${n.proc})`, tajne));
+    }
   }
   process.exit(chyby.length ? 1 : 0);
 }
