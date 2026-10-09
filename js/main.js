@@ -5670,8 +5670,16 @@
     /* „v" (výměra) rozliší dva pozemky, které sdílejí klíč — v datech
        je 21 takových dvojic a bez toho by odkaz otevřel tu první z nich,
        tedy cizí cenu i výměru. */
+    /* ROZLIŠOVAČE „v" A „c" PATŘÍ K SOBĚ. Dosud se posílala jen výměra
+       a u dvojic, které se liší POUZE cenou, to nestačí: v Stínavě jsou
+       dva lesní pozemky po 7 994 m² za 260 000 a 270 000 Kč. Změřeno
+       v prohlížeči: klepnutí na kartu za 270 000 otevřelo stránku
+       s 260 000 a tlačítko „Inzerát" na ní vedlo na inzerát toho
+       druhého pozemku. findTarget() v js/pozemek.js „c" umí odjakživa,
+       jen mu ho nikdo neposílal. */
     location.href = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng
       + (isFinite(d.area) ? '&v=' + Math.round(d.area) : '')
+      + (isFinite(d.price) ? '&c=' + Math.round(d.price) : '')
       + (d._lid ? '&l=' + encodeURIComponent(d._lid) : '');
   }
   // „Zobrazit na mapě" / sdílený odkaz: přiblíž mapu tak, aby byl pozemek

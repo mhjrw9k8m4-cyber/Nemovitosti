@@ -199,6 +199,23 @@
       var z = document.getElementById('sml-predvyplneno');
       if (z) z.hidden = false;
     }
+    /* PARCELNÍ ČÍSLO Z TEXTU INZERÁTU SE MUSÍ PŘIZNAT. Stránka pozemku
+       ho posílá s příznakem parcela_z=inzerat, protože ho nemá
+       z katastru, ale z popisu, který napsal prodávající. Podle
+       parcelního čísla se určuje, co se vlastně prodává — kdo ho
+       nezkontroluje, může podepsat smlouvu na jiný pozemek. */
+    if (q.get('parcela_z') === 'inzerat' && q.get('parcela')) {
+      var pole = document.getElementById('sml-parcela');
+      if (pole && pole.parentNode && !document.getElementById('sml-parcela-pozn')) {
+        var pozn = document.createElement('small');
+        pozn.id = 'sml-parcela-pozn';
+        pozn.className = 'sml-pozn-overit';
+        pozn.textContent = 'Číslo jsme přečetli z textu inzerátu, ne z katastru — ověřte ho,'
+          + ' než podklad použijete.';
+        pole.parentNode.appendChild(pozn);
+        pole.setAttribute('aria-describedby', 'sml-parcela-pozn');
+      }
+    }
   }());
 
   f.addEventListener('input', prekresli);

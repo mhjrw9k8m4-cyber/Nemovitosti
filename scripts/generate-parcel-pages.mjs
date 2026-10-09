@@ -586,7 +586,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
        nic. Je to vzdušná čára, tak se to i píše. */
     + (vzdalenosti ? `<dt>Vzdušnou čarou</dt><dd>${esc(vzdalenosti)}</dd>` : '')
     + `</dl>`
-    + `<p><a href="pozemek.html?p=${encodeURIComponent(pkey(d))}&amp;ll=${d.lat},${d.lng}&amp;v=${d.area || 0}">Otevřít na mapě</a></p>`
+    + `<p><a href="pozemek.html?p=${encodeURIComponent(pkey(d))}&amp;ll=${d.lat},${d.lng}&amp;v=${d.area || 0}&amp;c=${d.price || 0}">Otevřít na mapě</a></p>`
     + (vObec ? `<p><a href="${esc(vObec.url)}">${esc(vObec.text)}</a></p>` : '')
     + `</article>`;
   h = h.replace(/<div id="pz-detail">[\s\S]*?<\/div>/,

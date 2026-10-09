@@ -88,8 +88,12 @@
     var radky = nalezene.map(function (d, i) {
       var m2 = zaM2[i];
       var dni = dniDo(d);
+      /* Výměra i cena jako rozlišovač — bez nich otevře dvojice
+         pozemků se shodným klíčem tu první (viz js/main.js). */
       var odkaz = 'pozemek.html?p=' + encodeURIComponent(window.PKKlic.pkey(d))
-        + (typeof d.lat === 'number' ? '&ll=' + d.lat + ',' + d.lng : '');
+        + (typeof d.lat === 'number' ? '&ll=' + d.lat + ',' + d.lng : '')
+        + (isFinite(d.area) ? '&v=' + Math.round(d.area) : '')
+        + (isFinite(d.price) ? '&c=' + Math.round(d.price) : '');
       return '<tr>'
         /* POZNÁMKA PATŘÍ SEM. Na detailu si ji člověk napsal, ale
            rozhoduje se tady — v tabulce, kde vedle sebe vidí všechny

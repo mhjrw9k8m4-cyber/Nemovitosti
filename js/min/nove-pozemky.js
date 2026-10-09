@@ -54,6 +54,9 @@
             odkaz: (typeof d.lat === 'number' && typeof d.lng === 'number')
               ? 'pozemek.html?p=' + encodeURIComponent([d.place || '', d.parcel || '', d.okres || '',
                   d.lat.toFixed(3), d.lng.toFixed(3)].join('|')) + '&ll=' + d.lat + ',' + d.lng
+
+                  + (isFinite(d.area) ? '&v=' + Math.round(d.area) : '')
+                  + (isFinite(d.price) ? '&c=' + Math.round(d.price) : '')
               : ''
           };
         }),

@@ -169,6 +169,52 @@ for (const { f, o } of sPc.slice(0, 3)) {
   await page.close();
 }
 
+/* ---- D) CESTA DO PODKLADU PRO SMLOUVU ----
+   Podle parcelního čísla se určuje, co se prodává. Stránka pozemku ho
+   posílá do podkladu pro smlouvu, ale MUSÍ u toho říct, že je z textu
+   inzerátu — kdo ho nezkontroluje, může podepsat smlouvu na jiný
+   pozemek. Zkouší se celá cesta, ne jen jedna polovina: odkaz na
+   stránce pozemku, a pak co udělá stránka smlouvy. */
+{
+  const { f, o } = sPc[0];
+  const page = await ctx.newPage();
+  await page.goto(`http://127.0.0.1:8310/${f}`, { waitUntil: 'load' });
+  await page.waitForSelector('.pz-naklady a', { timeout: 10000 }).catch(() => {});
+  const odkaz = await page.evaluate(() => {
+    const a = [...document.querySelectorAll('.pz-naklady a')]
+      .find((x) => /kupni-smlouva/.test(x.getAttribute('href') || ''));
+    return a ? a.getAttribute('href') : null;
+  });
+  pravda('odkaz na podklad pro smlouvu je na stránce', !!odkaz, 'nenašel se');
+  pravda(`a nese parcelní číslo z inzerátu (${o.pc}) s příznakem, odkud je`,
+    !!odkaz && odkaz.indexOf('parcela=' + encodeURIComponent(o.pc)) !== -1
+    && odkaz.indexOf('parcela_z=inzerat') !== -1, 'odkaz: ' + odkaz);
+  await page.close();
+
+  if (odkaz) {
+    const p2 = await ctx.newPage();
+    await p2.goto(`http://127.0.0.1:8310/${odkaz}`, { waitUntil: 'load' });
+    await p2.waitForSelector('#sml-parcela', { timeout: 10000 }).catch(() => {});
+    await p2.waitForTimeout(400);
+    const r = await p2.evaluate(() => {
+      const e = document.getElementById('sml-parcela');
+      const pozn = document.getElementById('sml-parcela-pozn');
+      return { hodnota: e ? e.value : null,
+        pozn: pozn ? (pozn.textContent || '').trim() : null,
+        vidi: pozn ? !!(pozn.offsetWidth || pozn.offsetHeight) : false,
+        popsano: e ? e.getAttribute('aria-describedby') : null };
+    });
+    pravda(`podklad má parcelní číslo předvyplněné (${o.pc})`, r.hodnota === o.pc,
+      'v poli stojí „' + r.hodnota + '"');
+    pravda('a VEDLE POLE stojí, že je z inzerátu a má se ověřit',
+      !!r.pozn && /inzer/.test(r.pozn) && /ověř/.test(r.pozn), 'vysvětlivka: „' + r.pozn + '"');
+    pravda('vysvětlivka je doopravdy vidět, ne jen v DOM', r.vidi === true);
+    pravda('a odečítač obrazovky ji přečte u toho pole',
+      r.popsano === 'sml-parcela-pozn', 'aria-describedby = ' + r.popsano);
+    await p2.close();
+  }
+}
+
 await ctx.close();
 await prohlizec.close();
 

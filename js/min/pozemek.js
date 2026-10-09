@@ -874,6 +874,11 @@
         if (hasArea(d)) q.push('vymera=' + encodeURIComponent(String(Math.round(d.area))));
         if (d.druh) q.push('druh=' + encodeURIComponent(String(d.druh)));
         if (d.parcel && !/^[\s—-]*$/.test(String(d.parcel))) q.push('parcela=' + encodeURIComponent(String(d.parcel)));
+
+        else if (window.PK_POZEMEK && window.PK_POZEMEK.pc) {
+          q.push('parcela=' + encodeURIComponent(String(window.PK_POZEMEK.pc)));
+          q.push('parcela_z=inzerat');
+        }
         return '<p class="pz-naklady">'
           + '<a href="kolik-stoji-koupe-pozemku.html?cena=' + c + '">Kolik koupě stojí dohromady</a>'
           + ' · <a href="hypoteka-na-pozemek.html?cena=' + c + '">Spočítat splátku hypotéky</a>'

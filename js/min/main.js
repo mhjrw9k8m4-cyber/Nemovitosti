@@ -3828,6 +3828,7 @@
 
     location.href = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng
       + (isFinite(d.area) ? '&v=' + Math.round(d.area) : '')
+      + (isFinite(d.price) ? '&c=' + Math.round(d.price) : '')
       + (d._lid ? '&l=' + encodeURIComponent(d._lid) : '');
   }
 

@@ -62,8 +62,11 @@
     var radky = nalezene.map(function (d, i) {
       var m2 = zaM2[i];
       var dni = dniDo(d);
+
       var odkaz = 'pozemek.html?p=' + encodeURIComponent(window.PKKlic.pkey(d))
-        + (typeof d.lat === 'number' ? '&ll=' + d.lat + ',' + d.lng : '');
+        + (typeof d.lat === 'number' ? '&ll=' + d.lat + ',' + d.lng : '')
+        + (isFinite(d.area) ? '&v=' + Math.round(d.area) : '')
+        + (isFinite(d.price) ? '&c=' + Math.round(d.price) : '');
       return '<tr>'
 
         + '<th scope="row"><a href="' + odkaz + '">' + esc(d.place || 'Pozemek') + '</a>'

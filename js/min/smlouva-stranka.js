@@ -172,6 +172,19 @@
       var z = document.getElementById('sml-predvyplneno');
       if (z) z.hidden = false;
     }
+
+    if (q.get('parcela_z') === 'inzerat' && q.get('parcela')) {
+      var pole = document.getElementById('sml-parcela');
+      if (pole && pole.parentNode && !document.getElementById('sml-parcela-pozn')) {
+        var pozn = document.createElement('small');
+        pozn.id = 'sml-parcela-pozn';
+        pozn.className = 'sml-pozn-overit';
+        pozn.textContent = 'Číslo jsme přečetli z textu inzerátu, ne z katastru — ověřte ho,'
+          + ' než podklad použijete.';
+        pole.parentNode.appendChild(pozn);
+        pole.setAttribute('aria-describedby', 'sml-parcela-pozn');
+      }
+    }
   }());
 
   f.addEventListener('input', prekresli);

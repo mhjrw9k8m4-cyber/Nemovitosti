@@ -419,6 +419,9 @@ jobs:
       - name: Parcelní číslo z inzerátu — a kdy se o něm mlčí
         run: node scripts/test-parcely-z-textu.mjs
 
+      - name: Karta vede na svůj pozemek, ne na dvojče
+        run: node scripts/test-karta-vede-spravne.mjs
+
       - name: Profil při výpadku netvrdí, že inzeráty nemáte
         run: node scripts/test-profil-vypadek.mjs
 

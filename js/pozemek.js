@@ -1340,6 +1340,22 @@
         if (hasArea(d)) q.push('vymera=' + encodeURIComponent(String(Math.round(d.area))));
         if (d.druh) q.push('druh=' + encodeURIComponent(String(d.druh)));
         if (d.parcel && !/^[\s—-]*$/.test(String(d.parcel))) q.push('parcela=' + encodeURIComponent(String(d.parcel)));
+        /* A KDYŽ ČÍSLO ZE ZDROJE NENÍ, POŠLE SE TO Z TEXTU INZERÁTU —
+           ALE OZNAČENÉ. Parcelní číslo chybí u 86 % nabídek a bez něj
+           podklad nejde dokončit; z popisu ho umíme přečíst u 214
+           (pravidla v scripts/parcely-z-textu.mjs).
+           Zvažoval jsem, že se posílat nebude: komentář o pár řádků výš
+           říká „poslat obec jako katastrální území by byla nejhorší
+           možná chyba" a tohle číslo taky neznáme z katastru. Jenže ten
+           případ je jiný. Obec není katastrální území, zatímco tohle
+           číslo v inzerátu stojí a výměra u něj sedí na nabídku. A hlavně:
+           kdyby se neposlalo, člověk napíše TOTÉŽ číslo z TÉHOŽ inzerátu,
+           jen bez varování. Posílá se proto s příznakem, podle kterého
+           u pole stojí, odkud je a že se má ověřit. */
+        else if (window.PK_POZEMEK && window.PK_POZEMEK.pc) {
+          q.push('parcela=' + encodeURIComponent(String(window.PK_POZEMEK.pc)));
+          q.push('parcela_z=inzerat');
+        }
         return '<p class="pz-naklady">'
           + '<a href="kolik-stoji-koupe-pozemku.html?cena=' + c + '">Kolik koupě stojí dohromady</a>'
           + ' · <a href="hypoteka-na-pozemek.html?cena=' + c + '">Spočítat splátku hypotéky</a>'

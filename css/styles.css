@@ -5601,6 +5601,11 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 /* Vysvětlivka pod hodnotou v tabulce údajů (.pz-spec). Používá se
    u parcelního čísla vyčteného z textu inzerátu — musí být vidět, že
    není z katastru, ale nesmí přehlušit samo číslo. */
+/* Varování u předvyplněného parcelního čísla v podkladu pro smlouvu.
+   Táž barva jako odznak „k ověření" — není to chyba ani potvrzení, je
+   to pokyn něco zkontrolovat. */
+.sml-pozn-overit{display:block; margin-top:4px; font-size:12.5px; font-weight:400;
+  line-height:1.45; color:#7C5105;}
 .pz-spec-pozn{display:block; margin-top:2px; font-size:12.5px; font-weight:400;
   line-height:1.4; color:var(--text-ondark-mute);}
 .pz-historie{margin-top:14px; border-top:1px solid var(--line); padding-top:12px;}
