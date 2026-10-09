@@ -878,9 +878,9 @@
   }
 
   function odskryj(d) {
-    var i = skryte.indexOf(pkey(d));
-    if (i === -1) return false;
-    skryte.splice(i, 1);
+    var stary = PKKlic.klicVe(skryte, d);
+    if (stary === null) return false;
+    skryte.splice(skryte.indexOf(stary), 1);
     zapisUloz(SKRYTE_KLIC, skryte);
     return true;
   }

@@ -1354,10 +1354,20 @@
      co na tlačítku stojí: pozemek, který už v seznamu je, by znovu
      skryl. Vrací true, jen když opravdu něco vrátil — jinak není co
      překreslovat. */
+  /* A HLEDAT SE MUSÍ TÍMŽ KLÍČEM, JAKÝM SE UKLÁDÁ. Tahle funkce si
+     o kus výš sahala po HRUBÉM pkey, zatímco prepniSkryty ukládá
+     PKKlic.klicPozemku (pkey + výměra) — od chvíle, kdy se hrubý klíč
+     ukázal jako nedostatečný (jeden klíč v Jirnech označil pět různých
+     pozemků). Na odskryj se při té opravě zapomnělo, takže tlačítko
+     „Vrátit" nenašlo nic, vrátilo false a nestalo se NIC: pozemek
+     zůstal skrytý a seznam se ani nepřekreslil. Přitom to tlačítko
+     vzniklo právě proto, že lidem připadalo skrývání nevratné.
+     PKKlic.klicVe se ptá na obě podoby klíče (novou i starou), takže
+     se vrátí i to, co si člověk skryl dřív. */
   function odskryj(d) {
-    var i = skryte.indexOf(pkey(d));
-    if (i === -1) return false;
-    skryte.splice(i, 1);
+    var stary = PKKlic.klicVe(skryte, d);
+    if (stary === null) return false;
+    skryte.splice(skryte.indexOf(stary), 1);
     zapisUloz(SKRYTE_KLIC, skryte);
     return true;
   }

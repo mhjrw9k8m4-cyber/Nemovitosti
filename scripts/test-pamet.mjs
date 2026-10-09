@@ -206,10 +206,31 @@ pravda('„Vrátit" vrátí pozemek do výpisu', poVraceni.celkem === 5 && poVra
    pravý opak toho, co na něm stojí: pozemek, který už ve výpisu je, by
    znovu skrylo. Projde se tedy celá ta cesta: skrýt, vrátit jinudy,
    a teprve pak klepnout na staré „Vrátit". */
-await p.evaluate(() => {
-  const li = [...document.querySelectorAll('.opp-item')].find((x) => /Obec 5(\D|$)/.test(x.textContent));
-  li.querySelector('.opp-skryt').click();
-});
+/* Jedno místo pro „najdi kartu podle jména obce a klepni na tlačítko".
+   Vrací, co se opravdu stalo, ať se dá o tom napsat věta. */
+async function klepniNaKartu(obec, tlacitko) {
+  const v = await p.evaluate(([o, t]) => {
+    const vse = [...document.querySelectorAll('.opp-item')];
+    const li = vse.find((x) => new RegExp(o + '(\\D|$)').test(x.textContent));
+    if (!li) return { ok: false, duvod: 'karta není ve výpisu',
+      jsou: vse.map((x) => x.textContent.replace(/\s+/g, ' ').trim().slice(0, 30)) };
+    const b = li.querySelector(t);
+    if (!b) return { ok: false, duvod: 'karta je, ale tlačítko ' + t + ' na ní není' };
+    b.click();
+    return { ok: true };
+  }, [obec, tlacitko]);
+  pravda(`na kartě „${obec}" jde klepnout na ${tlacitko}`, v.ok === true,
+    `${v.duvod || ''}${v.jsou ? ' — ve výpisu je: ' + v.jsou.join(' / ') : ''}`);
+  return v.ok;
+}
+
+/* Karta se hledá přes klepni(), ne přímo: když ve výpisu není, musí
+   z toho být čitelná věta, ne výjimka. Chybějící karta tu totiž NENÍ
+   podivnost zkoušky — je to příznak vady o krok dřív (přesně tak se
+   projevilo rozbité „Vrátit") a vyhozená TypeError ten příznak
+   schová: všech čtrnáct kontrol, které do té chvíle proběhly, se
+   nevypíše a v CI zbyde jen „Cannot read properties of undefined". */
+await klepniNaKartu('Obec 5', '.opp-skryt');
 await p.waitForTimeout(400);
 const znovuSkryto = await p.evaluate(() => ({
   ulozeno: (JSON.parse(localStorage.getItem('pk_skryte_v1')) || []).length,
@@ -245,10 +266,13 @@ pravda('klepnutí na už zastaralé „Vrátit" pozemek NESKRYJE',
    splňuje jedině „Obec 1". Kdyby se omylem skryla ta, zbyl by po filtru
    prázdný výpis a kontrola by hlásila vadu webu, který se chová správně.
    Přesně tahle past tu už jednou byla, viz poznámka u prvního skrytí. */
-await p.evaluate(() => {
-  const li = [...document.querySelectorAll('.opp-item')].find((x) => /Obec 5(\D|$)/.test(x.textContent));
-  li.querySelector('.opp-skryt').click();
-});
+/* Karta se hledá přes klepni(), ne přímo: když ve výpisu není, musí
+   z toho být čitelná věta, ne výjimka. Chybějící karta tu totiž NENÍ
+   podivnost zkoušky — je to příznak vady o krok dřív (přesně tak se
+   projevilo rozbité „Vrátit") a vyhozená TypeError ten příznak
+   schová: všech čtrnáct kontrol, které do té chvíle proběhly, se
+   nevypíše a v CI zbyde jen „Cannot read properties of undefined". */
+await klepniNaKartu('Obec 5', '.opp-skryt');
 await p.waitForTimeout(400);
 await p.evaluate(() => document.getElementById('mc-skryte').click());
 await p.waitForTimeout(400);

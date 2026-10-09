@@ -317,6 +317,36 @@ Zkouška `scripts/test-hlavicka-pozemku.mjs` (9 kontrol) porovnává
 servírovanou a vykreslenou podobu v prohlížeči a měří hlavičku na
 telefonu. Šest sabotáží vyzkoušeno, všechny padají.
 
+## 3l. ~~Tlačítko „Vrátit" po skrytí pozemku nedělalo nic~~ — *opraveno 9. 10.*
+
+Ve výpisu jde pozemek křížkem skrýt. Tlačítko „Vrátit" v hlášce, která
+se po tom ukáže, vzniklo kvůli konkrétní stížnosti: *„klikám na
+pozemky a skrývají se mi a nevím proč, a nejdou dát pryč."* Jenže
+nefungovalo — pozemek zůstal skrytý a seznam se ani nepřekreslil.
+
+Je to chyba v klíči. `prepniSkryty` ukládá `PKKlic.klicPozemku`
+(pkey + výměra) od chvíle, kdy se **hrubý** pkey ukázal jako
+nedostatečný (jeden klíč v Jirnech označil pět různých pozemků za 6,6
+až 11,2 milionu). Na `odskryj` se při té opravě zapomnělo: hledala
+dál hrubý pkey, nenašla nic a vrátila `false`. Teď se ptá přes
+`PKKlic.klicVe`, který zná obě podoby klíče — takže se vrátí i to, co
+si člověk skryl pod starým tvarem.
+
+**Zkouška to hlásila celou dobu.** `scripts/test-pamet.mjs` na to má
+kontrolu. Jenže prohlížečová úloha v CI se při každém dalším pushi
+zrušila dřív, než se k ní dostala: v posledních devíti bězích je
+pětkrát `cancelled` a běhy, které doběhly, padaly na něčem dřívějším.
+Červená zkouška, ke které se nedoběhne, je stejně užitečná jako
+žádná.
+
+A zkouška sama měla vadu v hlášení: když karta ve výpisu nebyla,
+spadla na `TypeError: Cannot read properties of undefined` — takže
+v CI zbyla jen ta věta a všech čtrnáct kontrol, které předtím prošly,
+se nevypsalo. Hledání karty je teď v jedné funkci, která z chybějící
+karty udělá čitelnou větu i s výpisem toho, co ve výpisu opravdu je.
+Po sabotáži (klíč zpátky na hrubý) vyjde: „„Vrátit" vrátí pozemek do
+výpisu ✕" a hned pod tím proč.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se
