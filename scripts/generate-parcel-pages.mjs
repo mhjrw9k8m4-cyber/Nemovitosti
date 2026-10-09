@@ -154,11 +154,55 @@ const MEZ_TITULKU = 65;
    titulek („Ostatní plocha — Libochovice, dražba 20. 10. 2026" ×3).
    Datum tedy zůstává jen v popisku, kde je místa 165 znaků a kde
    shodné popisky spadly ze dvou na jeden. */
-function slozTitulek(druh, vym, place, okres) {
+/* PODÍL PATŘÍ DO NÁZVU, NE JEN DO TĚLA STRÁNKY.
+ *
+ * U 537 z 2 072 stránek (26 %) se neprodává pozemek, ale spoluvlastnický
+ * podíl: cena je za zlomek, výměra je celé parcely. Tělo stránky to říká
+ * jasně a strukturovaná data to mají ve výhradě u ceny — ale titulek,
+ * nadpis a popisek mlčely. Ani jedna z těch 537 stránek neměla slovo
+ * „podíl" v názvu.
+ *
+ * A je to zrovna ten nejhůř znějící případ: „Lesní pozemek 547 418 m²"
+ * za 42 000 Kč. Půl milionu metrů za čtyřicet tisíc. Ve výsledcích
+ * vyhledávače a ve sdíleném odkazu je vidět jen tohle — tedy přesně to
+ * tvrzení, kterému se celý web jinde vyhýbá. V generátoru u toho navíc
+ * stálo, že se „nabídka popíše jako podíl rovnou v názvu"; nepopisovala.
+ *
+ * Zlomek známe u 515 z 525 nabídek, takže se píše konkrétně. U zbylých
+ * deseti aspoň to, že jde o podíl.
+ */
+function textPodilu(d) {
+  if (!d || !d.podil) return '';
+  return d.zlomek ? `podíl ${d.zlomek}` : 'spoluvlastnický podíl';
+}
+/* Tvar na začátek titulku. Když se druh i podíl nevejdou, ustupuje
+   DRUH, ne podíl: „Podíl 1/2 — Mikulášovice, 120 000 Kč" říká o tom,
+   co se prodává, víc než „Trvalý travní porost — Mikulášovice". */
+function podilVelkym(d) {
+  const t = textPodilu(d);
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : '';
+}
+
+function slozTitulek(druh, vym, place, okres, podil) {
   const konec = ' | Parcelka';
+  /* Podíl ustupuje až jako předposlední — dřív se vzdá okres i výměra.
+     Je to nejdůležitější údaj o tom, CO se prodává. */
+  const p = podil ? ', ' + podil : '';
+  /* Když se zlomek i výměra nevejdou, ustupuje ZLOMEK, ne výměra:
+     „Orná půda 1 026 m², podíl — Strunkovice" pořád říká, že jde
+     o podíl, a zároveň odliší dvě sousední nabídky, které se liší
+     jenom tou výměrou (1 026 vs 1 017 m² ve Strunkovicích). Kdyby
+     ustoupila výměra, měly by obě tentýž titulek. */
+  const pk = podil ? ', podíl' : '';
   const varianty = [
-    `${druh}${vym ? ' ' + vym : ''} — ${place}, okres ${okres}`,
-    `${druh}${vym ? ' ' + vym : ''} — ${place}`,
+    `${druh}${vym ? ' ' + vym : ''}${p} — ${place}, okres ${okres}`,
+    `${druh}${vym ? ' ' + vym : ''}${p} — ${place}`,
+    ...(vym && pk ? [`${druh} ${vym}${pk} — ${place}, okres ${okres}`,
+      `${druh} ${vym}${pk} — ${place}`] : []),
+    `${druh}${p} — ${place}, okres ${okres}`,
+    `${druh}${p} — ${place}`,
+    ...(podil ? [`${podil.charAt(0).toUpperCase() + podil.slice(1)} — ${place}, okres ${okres}`,
+      `${podil.charAt(0).toUpperCase() + podil.slice(1)} — ${place}`] : []),
     `${druh} — ${place}`,
     `${druh} — okres ${okres}`,
     `${place}, okres ${okres}`,
@@ -190,7 +234,10 @@ function slozPopis(d, cena, zaM2, vym, navic) {
   const termin = (/(\d{4})-(\d{2})-(\d{2})/.test(d.extra || '') && (d.type === 'drazba' || d.type === 'exekuce'))
     ? ' Termín ' + lidskeDatum((/(\d{4}-\d{2}-\d{2})/.exec(d.extra) || [])[1]) + '.'
     : '';
-  const zaklad = `${TYP[d.type] || 'Nabídka'} · ${cena}${zaM2}${vym ? ' · ' + vym : ''}`
+  /* Podíl i do popisku: bez něj zní „42 000 Kč · 547 418 m²" jako
+     nabídka půl milionu metrů za čtyřicet tisíc. */
+  const pod = textPodilu(d) ? ', ' + textPodilu(d) : '';
+  const zaklad = `${TYP[d.type] || 'Nabídka'} · ${cena}${zaM2}${vym ? ' · ' + vym : ''}${pod}`
     + ` · ${d.place}, okres ${d.okres}.${termin}${navic || ''}`;
   const varianty = [
     ' Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.',
@@ -264,7 +311,7 @@ export function pripravRozliseni(polozky) {
   for (const d of polozky) {
     const druh = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : 'Pozemek';
     const vym = d.area ? `${fmt(d.area)} m²` : '';
-    const t = slozTitulek(druh, vym, d.place, d.okres);
+    const t = slozTitulek(druh, vym, d.place, d.okres, textPodilu(d));
     if (!podleTitulku.has(t)) podleTitulku.set(t, []);
     podleTitulku.get(t).push({ d, druh, vym });
   }
@@ -272,17 +319,25 @@ export function pripravRozliseni(polozky) {
   for (const skupina of podleTitulku.values()) {
     if (skupina.length < 2) continue;
     for (const { d, druh, vym } of skupina) {
+      const pod = textPodilu(d) ? ', ' + textPodilu(d) : '';
       const dat = datumDrazby(d), par = cisloParcely(d);
       const cena = d.price ? `${fmt(d.price)} Kč` : '';
       /* Pořadí podle užitečnosti pro člověka ve výsledcích hledání:
          termín dražby > číslo parcely > cena. Uvnitř každého se ustupuje
          nejdřív okresem, pak výměrou. */
       const varianty = [];
-      if (dat) varianty.push(`${druh}${vym ? ' ' + vym : ''} — ${d.place}, dražba ${dat}`,
+      const pv = podilVelkym(d);
+      if (dat) varianty.push(`${druh}${vym ? ' ' + vym : ''}${pod} — ${d.place}, dražba ${dat}`,
+        `${druh}${pod} — ${d.place}, dražba ${dat}`,
+        ...(pv ? [`${pv} — ${d.place}, dražba ${dat}`] : []),
         `${druh} — ${d.place}, dražba ${dat}`, `${d.place}, dražba ${dat}`);
-      if (par) varianty.push(`${druh}${vym ? ' ' + vym : ''} — ${d.place}, parc. ${par}`,
+      if (par) varianty.push(`${druh}${vym ? ' ' + vym : ''}${pod} — ${d.place}, parc. ${par}`,
+        `${druh}${pod} — ${d.place}, parc. ${par}`,
+        ...(pv ? [`${pv} — ${d.place}, parc. ${par}`] : []),
         `${druh} — ${d.place}, parc. ${par}`, `${d.place}, parc. ${par}`);
-      if (cena) varianty.push(`${druh}${vym ? ' ' + vym : ''} — ${d.place}, ${cena}`,
+      if (cena) varianty.push(`${druh}${vym ? ' ' + vym : ''}${pod} — ${d.place}, ${cena}`,
+        `${druh}${pod} — ${d.place}, ${cena}`,
+        ...(pv ? [`${pv} — ${d.place}, ${cena}`] : []),
         `${druh} — ${d.place}, ${cena}`, `${d.place}, ${cena}`);
       for (const v of varianty) {
         if ((v + konec).length <= MEZ_TITULKU) { ROZLISENI.set(klicNabidky(d), v); break; }
@@ -298,7 +353,7 @@ export function pripravRozliseni(polozky) {
 export function textyPro(d) {
   const druh = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : 'Pozemek';
   const vym = d.area ? `${fmt(d.area)} m²` : '';
-  const titul = ROZLISENI.get(klicNabidky(d)) || slozTitulek(druh, vym, d.place, d.okres);
+  const titul = ROZLISENI.get(klicNabidky(d)) || slozTitulek(druh, vym, d.place, d.okres, textPodilu(d));
   const cena = d.price ? `${fmt(d.price)} Kč` : 'cena neuvedena';
   /* CENA ZA METR Z VÝMĚRY, KTERÁ KUPUJÍCÍMU PŘIPADNE. Titulek, popis pro
      vyhledávač i náhled v chatu se skládaly dělením celé výměry —

@@ -74,6 +74,8 @@ jobs:
         run: node scripts/test-okoli-okresu.mjs
       - name: Rozcestník „Kam dál" na stránce pozemku
         run: node scripts/test-kam-dal.mjs
+      - name: U spoluvlastnického podílu to stojí v názvu
+        run: node scripts/test-podil-v-nazvu.mjs
 
       - name: Pořadí nabídek (nic nezapadne)
         run: node scripts/test-poradi.mjs

@@ -347,6 +347,45 @@ karty udělá čitelnou větu i s výpisem toho, co ve výpisu opravdu je.
 Po sabotáži (klíč zpátky na hrubý) vyjde: „„Vrátit" vrátí pozemek do
 výpisu ✕" a hned pod tím proč.
 
+## 3m. ~~U 537 stránek se prodává podíl a název o tom mlčel~~ — *opraveno 9. 10.*
+
+U čtvrtiny nabídek (525 z 2 001) se neprodává pozemek, ale
+**spoluvlastnický podíl**: cena je za zlomek, výměra je celé parcely.
+Tělo stránky to říká jasně a strukturovaná data to mají ve výhradě
+u ceny — ale titulek, nadpis, popisek ani jméno ve strukturovaných
+datech o tom neřekly nic. **Ani jedna z 537 stránek** neměla slovo
+„podíl" v názvu.
+
+Nejhůř to zní tam, kde je podíl malý: *„Lesní pozemek 547 418 m²"* za
+**42 000 Kč**. Půl milionu metrů za čtyřicet tisíc. Ve výsledku
+vyhledávače a ve sdíleném odkazu je přitom vidět jen tenhle řádek —
+tedy přesně to tvrzení, kterému se web všude jinde vyhýbá. V
+generátoru u toho navíc stálo, že se „nabídka popíše jako podíl rovnou
+v názvu"; nepopisovala.
+
+Nově: *„Lesní pozemek 547 418 m², podíl 1/88 — Hodonín, okres
+Hodonín"*. Zlomek známe u 515 z 525 nabídek, takže se píše konkrétně;
+u zbylých deseti aspoň „spoluvlastnický podíl". Podíl ustupuje
+z titulku až jako poslední — dřív se vzdá okres i výměra, a když ani
+to nestačí, i druh pozemku („Podíl 1/2 — Mikulášovice, 120 000 Kč").
+**521 z 521** živých stránek podílů ho teď v názvu má a žádný titulek
+nepřesáhl mez 65 znaků.
+
+Jednu výjimku si to vyžádalo a stojí za zapsání, protože vypadá jako
+ústupek a není: u 17 z 511 nabídek se zlomek **i výměra** do titulku
+nevejdou, a tam ustupuje zlomek. Důvod je ve Strunkovicích nad
+Blanicí — dvě nabídky, obě 29 900 Kč, obě podíl 1/10, liší se jedině
+výměrou (1 026 a 1 017 m²). Kdyby ustoupila výměra, měly by obě
+TÝŽ titulek a vyhledávač by jednu z nich zahodil. „Orná půda
+1 026 m², podíl — Strunkovice" říká to podstatné a zároveň odliší.
+
+Vedlejší zisk: stránek se shodným nadpisem ubylo ze 44 na **2**.
+
+Zkouška `scripts/test-podil-v-nazvu.mjs` (12 kontrol) čte hotové
+stránky a porovnává je s daty. Hlídá i opačný směr — že se slovo
+„podíl" neobjevilo plošně i tam, kde žádný podíl není. Dvě sabotáže
+vyzkoušeny, obě padají.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se
