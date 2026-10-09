@@ -386,9 +386,16 @@ pravda('každý okres má náhledový obrázek pro sdílení', bezNahledu.length
     const html = fs.readFileSync(path.join(ROOT, f), 'utf8');
     for (const m of html.matchAll(/<div class="okr-item"[^>]*>([\s\S]*?)<\/div>/g)) {
       const radek = m[1];
-      /* Týž tvar řádku nosí i dlaždice okresů v „Pozemky v okolí" — ty
-         odznak druhu nemají a na stránku pozemku vést nemají. */
-      if (radek.indexOf('okr-badge') < 0) continue;
+      /* Řádek nabídky se pozná podle NÁZVU MÍSTA, ne podle odznaku typu.
+         Dřív tu stálo `if (radek.indexOf('okr-badge') < 0) continue;`
+         s poznámkou, že týž tvar nosí i dlaždice okresů — jenže ty
+         `okr-item` nejsou (jsou to odkazy v `okr-index-grid`) a ověřeno
+         měřením: ze 2 820 bloků `okr-item` na webu nemá název místa ani
+         jeden. Zato odznak dnes nosí jen 228 z nich, protože se ukazuje
+         u výjimek, ne u pravidla — a kontrola tím tiše spadla z 2 820
+         kontrolovaných řádků na 167. Název místa je ta jediná věc,
+         kterou má řádek nabídky vždycky: je to to, kvůli čemu vzniká. */
+      if (radek.indexOf('okr-place') < 0) continue;
       radku++;
       const odkaz = radek.match(/<a class="okr-place" href="([^"]+)"/);
       if (!odkaz) continue;

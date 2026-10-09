@@ -80,36 +80,60 @@ pravda(`je co měřit (${stranky.length} výpisových stránek, ${celkemRadku} �
 }
 
 // --- B) ODZNAK TYPU ----------------------------------------------
+/* Odznak patří výjimce, ne pravidlu. Na 48 stránkách bylo 1 616
+   odznaků a 1 433 z nich jen opakovalo, co platí o většině řádků —
+   v okrese Hodonín 114× „NA PRODEJ" a mezi tím čtyři exekuce, které
+   se v tom ztratily. Po úpravě jich je 228.
+
+   A JEDNA VĚC, KTERÁ SE HLÍDÁ PŘÍSNĚJI NEŽ VŠECHNO OSTATNÍ: řádek bez
+   odznaku nesmí být dražba. Splést si dražbu s prodejem je ta
+   nejdražší chyba, kterou tu člověk může udělat — u dražby se platí
+   jistota předem a kupuje se, jak to stojí a leží. Mlčky se proto
+   vynechává jen „na prodej"; jedinou výjimkou je stránka, kde mají
+   VŠECHNY řádky týž typ a řekne se to celou větou. */
 {
-  const vyplne = [], zamlcene = [];
-  let skrytych = 0, sOdznaky = 0;
+  const bezVety = [], tichaDrazba = [], vyplne = [];
+  let odznaku = 0, bezOdznaku = 0, sVetouVsechny = 0, sVetouJinak = 0;
   for (const s of stranky) {
-    const typy = new Set();
-    let bezOdznaku = 0;
+    const vsechnyJeden = /Všechny nabídky v tomhle výpisu jsou <b>/.test(s.h);
+    /* Třetí povolený tvar věty. Rozpočtové stránky mají jen prodeje
+       už tím, jak je postavený řez, a říkají to konkrétněji: „V ceně
+       jsou jen prodeje — dražba má vyvolávací cenu, ne cenu…". Nutit
+       jim obecnou větu by znamenalo napsat totéž dvakrát. */
+    const jenProdeje = /V ceně jsou <b>jen prodeje<\/b>/.test(s.h);
+    const neniLiJinak = /Není-li u řádku uvedeno jinak, je nabídka <b>na prodej<\/b>/.test(s.h)
+      || jenProdeje;
+    if (vsechnyJeden || jenProdeje) sVetouVsechny++;
+    if (neniLiJinak) sVetouJinak++;
+    const typy = {};
+    let bez = 0;
     for (const r of s.radky) {
       const m = /class="okr-badge t-(\w+)"/.exec(r);
-      if (m) typy.add(m[1]); else bezOdznaku++;
+      if (m) { odznaku++; typy[m[1]] = (typy[m[1]] || 0) + 1; continue; }
+      bez++; bezOdznaku++;
+      /* Dražbu v řádku poznáme z podrobností (text zdroje) i z odpočtu. */
+      const vypadaJakoDrazba = /\b(dražba|dražby|dražbě|exekuce|exekuční)\b/i
+        .test(r.replace(/<a [^>]*>[\s\S]*?<\/a>/g, ''));
+      if (vypadaJakoDrazba && !vsechnyJeden) tichaDrazba.push(s.f);
     }
-    if (bezOdznaku === s.radky.length) {
-      skrytych++;
-      /* Když odznak není, typ MUSÍ stát nad výpisem slovy. */
-      const rekne = /Všechny nabídky v tomhle výpisu jsou <b>/.test(s.h)
-        || /V ceně jsou <b>jen prodeje<\/b>/.test(s.h);
-      if (!rekne) zamlcene.push(s.f);
-    } else if (bezOdznaku === 0) {
-      sOdznaky++;
-      if (typy.size === 1 && s.radky.length >= 10) vyplne.push(`${s.f}: ${s.radky.length}× ${[...typy][0]}`);
-    } else {
-      vyplne.push(`${s.f}: odznak má jen část řádků (${s.radky.length - bezOdznaku} z ${s.radky.length})`);
+    if (bez && !vsechnyJeden && !neniLiJinak) bezVety.push(s.f);
+    for (const t of Object.keys(typy)) {
+      if (typy[t] >= 10 && typy[t] === s.radky.length) vyplne.push(`${s.f}: ${typy[t]}× ${t}`);
     }
   }
-  pravda(`odznak se skrývá tam, kde nic nerozlišuje (${skrytych} stránek)`, skrytych > 0,
-    'kdyby se neskrýval nikde, tahle kontrola nic neměří');
-  pravda(`a nechává se tam, kde rozlišuje (${sOdznaky} stránek)`, sOdznaky > 0);
+  pravda(`odznaků zbylo jen na výjimkách (${odznaku} z ${odznaku + bezOdznaku} řádků)`,
+    odznaku > 0 && odznaku < (odznaku + bezOdznaku) / 4,
+    `odznaků ${odznaku}, řádků ${odznaku + bezOdznaku}`);
+  pravda(`a pořád někde jsou (jinak by se nehlídalo nic)`, odznaku >= 50, String(odznaku));
+  pravda(`stránky to říkají větou (${sVetouVsechny}× „všechny", ${sVetouJinak}× „není-li uvedeno jinak")`,
+    sVetouVsechny > 0 && sVetouJinak > 0, `${sVetouVsechny} / ${sVetouJinak}`);
+  pravda('kde odznak chybí, stojí nad výpisem, co to znamená', bezVety.length === 0,
+    bezVety.slice(0, 5).join(', '));
+  pravda('ŽÁDNÝ řádek bez odznaku nevypadá jako dražba', tichaDrazba.length === 0,
+    'splést si dražbu s prodejem je nejdražší chyba na tomhle webu: '
+    + [...new Set(tichaDrazba)].slice(0, 4).join(', '));
   pravda('žádná stránka nemá deset a víc řádků s jedním a týmž odznakem',
     vyplne.length === 0, vyplne.slice(0, 5).join('; '));
-  pravda('a kde odznak není, stojí typ nad výpisem slovy', zamlcene.length === 0,
-    'bez toho stránka zamlčí, jestli jsou nabídky na prodej, nebo v dražbě: ' + zamlcene.slice(0, 5).join(', '));
 }
 
 // --- C) TOTÉŽ DVAKRÁT V ŘÁDKU ------------------------------------

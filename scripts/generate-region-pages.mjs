@@ -655,13 +655,20 @@ ${graf ? `<script src="js/graf-cen.js?${V.grafCen}" defer></script>
    „Co je nového" pro změnu ceny („z 199 000 Kč, −46 %"). Řádek se tím
    nerozbije: je to další kus mezi ostatní, ne nový sloupec. */
 function itemRow(o, skryjOkres, navic, skryjTyp){
-  /* ODZNAK, KTERÝ MAJÍ VŠECHNY ŘÁDKY STEJNÝ, NENÍ ÚDAJ — je to výplň.
-     Změřeno: z 103 výpisových stránek jich má 55 ve všech řádcích týž
-     odznak (u čtyř rozpočtových stránek je to dané stavbou řezu: jsou
-     v něm jen prodeje). Čtyřicet odznaků „NA PRODEJ" pod sebou nic
-     nerozlišuje, jen ujídá levý sloupec. Typ se místo toho jednou
-     řekne nad výpisem. Táž úvaha jako u „okres Benešov" výš. */
-  const badge = skryjTyp ? '' : `<span class="okr-badge t-${esc(o.type)}">${esc(TYPE_LABEL[o.type]||o.type)}</span>`;
+  /* ODZNAK PATŘÍ VÝJIMCE, NE PRAVIDLU. Změřeno: na 48 stránkách bylo
+     1 616 odznaků a 1 433 z nich jen opakovalo, co platí o většině
+     řádků — v okrese Hodonín 114× „NA PRODEJ" a mezi tím čtyři
+     exekuce, které se v tom ztratily. Odznak se proto neukazuje
+     u PŘEVAŽUJÍCÍHO typu a zbydou jen ty, které něco říkají: ze 1 616
+     jich zůstane 183.
+     SKRÝT SE MLČKY SMÍ JEN PRODEJ. Kdyby se na stránce, kde převažují
+     dražby, mlčky vynechal odznak u dražeb, znamenal by prázdný
+     sloupec „dražba" — a splést si dražbu s prodejem je ta nejdražší
+     chyba, kterou tu člověk může udělat. Výjimka je stránka, kde mají
+     VŠECHNY řádky týž typ: tam se typ řekne celou větou nad výpisem.
+     Rozhoduje o tom typStrankyVypisu() níž. */
+  const badge = (skryjTyp && o.type === skryjTyp) ? ''
+    : `<span class="okr-badge t-${esc(o.type)}">${esc(TYPE_LABEL[o.type]||o.type)}</span>`;
   /* Státní půda se v řádku říkala DVAKRÁT: v podrobnostech stálo
      „prodej státní půdy (SPÚ, § 12)" a hned vedle odkaz „Nabídka SPÚ ↗".
      Změřeno na 523 řádcích z 2 820, tedy v každém pátém. Zůstává odkaz
@@ -778,6 +785,23 @@ const TYP_VETOU = { sale: 'na prodej', drazba: 've veřejné dražbě',
 function vetaOTypu(typ) {
   if (!typ) return '';
   return `Všechny nabídky v tomhle výpisu jsou <b>${esc(TYP_VETOU[typ] || (TYPE_LABEL[typ] || typ).toLowerCase())}</b>.`;
+}
+/* Co se ve výpisu smí vynechat z odznaků a co se za to musí říct.
+   Vrací { skryt, veta } — `skryt` je typ, u kterého se odznak
+   neukazuje (prázdné = ukazují se všechny), `veta` jde nad výpis.
+   Počítá se ze ŘÁDKŮ, KTERÉ JSOU VIDĚT: odznak je popisek toho, co má
+   člověk před očima, ne celého okresu. */
+function typStrankyVypisu(list) {
+  const pocty = {};
+  for (const o of list || []) pocty[o.type] = (pocty[o.type] || 0) + 1;
+  const typy = Object.keys(pocty);
+  if (!typy.length) return { skryt: '', veta: '' };
+  if (typy.length === 1) return { skryt: typy[0], veta: vetaOTypu(typy[0]) };
+  const hlavni = typy.sort((a, b) => pocty[b] - pocty[a])[0];
+  /* Mlčky se smí vynechat jen „na prodej" — viz itemRow. */
+  if (hlavni !== 'sale') return { skryt: '', veta: '' };
+  return { skryt: 'sale',
+    veta: 'Není-li u řádku uvedeno jinak, je nabídka <b>na prodej</b>.' };
 }
 
 /* STŘEDY OKRESŮ — pro odkazy „Pozemky v okolí".
@@ -898,8 +922,8 @@ for(const okres of eligibleOkres){
      hlídá to scripts/test-okres-stranka.mjs. */
   const obecLinks = obceVic.slice(0,12).map((m)=>
     `<a href="index.html?obec=${encodeURIComponent(m)}&amp;okres=${encodeURIComponent(okres)}#mapa">${esc(m)} <span>${poObci[m]}</span></a>`).join('');
-  const typJeden = jedinyTyp(list);
-  const rows = list.map((o)=>itemRow(o, true, null, !!typJeden)).join('\n');
+  const tS = typStrankyVypisu(list);
+  const rows = list.map((o)=>itemRow(o, true, null, tS.skryt)).join('\n');
   const mapName = (KRAJ_META[kraj]||{}).mapName || kraj;
   const krajLink = mapName ? `index.html?kraj=${encodeURIComponent(mapName)}#mapa` : 'index.html#mapa';
   const siblings = okresyVOkoli(okres, 6);
@@ -962,7 +986,7 @@ ${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(pod
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
           <h2>Nabídky pozemků v okrese ${esc(okres)}</h2>
-          <p class="rules-note" style="margin-top:0;">${typJeden ? vetaOTypu(typJeden) + ' ' : ''}Seřazeno od nejnižší ceny. Data pocházejí z veřejných zdrojů (inzertní portály, evidence dražeb, státní pozemkový úřad) a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
+          <p class="rules-note" style="margin-top:0;">${tS.veta ? tS.veta + ' ' : ''}Seřazeno od nejnižší ceny. Data pocházejí z veřejných zdrojů (inzertní portály, evidence dražeb, státní pozemkový úřad) a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
 ${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}
@@ -1037,8 +1061,8 @@ for(const kraj of eligibleKraj){
      ho tedy mělo 1 z 12 řádků; na celostátní stránce dražeb 1 z 84.
      Nespadlo nic, jen tam ten údaj nebyl. */
   const vypsane = list.slice(0, 12);
-  const typJeden = jedinyTyp(vypsane);
-  const rows = vypsane.map((o) => itemRow(o, false, null, !!typJeden)).join('\n');
+  const tS = typStrankyVypisu(vypsane);
+  const rows = vypsane.map((o) => itemRow(o, false, null, tS.skryt)).join('\n');
 
   const title = `Pozemky ${meta.disp} — prodej a dražby | Parcelka`;
   const desc = `Pozemky ${meta.loc} na jedné mapě — ${count} ${pluralPozemek(count)} z veřejných zdrojů: prodeje, dražby i exekuce.${minP?(' Ceny od '+fmt(minP)+' Kč.'):''}`;
@@ -1097,7 +1121,7 @@ ${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more" style="margin-to
       <div class="okr-blok">
         <div class="rules-sect">
           <h2>Nejlevnější pozemky ${esc(meta.loc)}</h2>
-          <p class="rules-note" style="margin-top:0;">${typJeden ? vetaOTypu(typJeden) + ' ' : ''}Ukázka nejnižších cen napříč krajem. Data z veřejných zdrojů se mohou měnit — aktuální stav ověřte u zdroje a v katastru.</p>
+          <p class="rules-note" style="margin-top:0;">${tS.veta ? tS.veta + ' ' : ''}Ukázka nejnižších cen napříč krajem. Data z veřejných zdrojů se mohou měnit — aktuální stav ověřte u zdroje a v katastru.</p>
 ${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}
@@ -1145,8 +1169,8 @@ const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>{
   /* Totéž co u krajů: `.map(itemRow)` schovával okres všude kromě
      prvního řádku — a na celostátním přehledu dražeb je okres jediné,
      co řádky od sebe místně odliší. */
-  const typJeden = jedinyTyp(drazby);
-  const rows = drazby.map((o) => itemRow(o, false, null, !!typJeden)).join('\n');
+  const tS = typStrankyVypisu(drazby);
+  const rows = drazby.map((o) => itemRow(o, false, null, tS.skryt)).join('\n');
   const title = `Dražby pozemků — aktuální nabídky v ČR | Parcelka`;
   const desc = `${count} ${sklon(count,'dražba pozemku','dražby pozemků','dražeb pozemků')} z celé ČR na jedné mapě, z veřejné evidence dražeb.${minP?(' Vyvolávací ceny od '+fmt(minP)+' Kč.'):''}`;
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Dražby pozemků v ČR","inLanguage":"cs","description":`Aktuální nabídky pozemků v dražbě z veřejné evidence dražeb.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":seznamNabidek(drazby, count)};
@@ -1182,7 +1206,7 @@ const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>{
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
           <h2>Pozemky v dražbě</h2>
-          <p class="rules-note" style="margin-top:0;">${typJeden ? vetaOTypu(typJeden) + ' ' : ''}Seřazeno <b>podle termínu</b> — nejdřív to, co se draží nejblíž. Údaje pocházejí z veřejné evidence dražeb a mohou se v čase měnit — konání, podmínky a aktuální stav vždy ověřte přímo v dražební vyhlášce a v katastru nemovitostí.</p>
+          <p class="rules-note" style="margin-top:0;">${tS.veta ? tS.veta + ' ' : ''}Seřazeno <b>podle termínu</b> — nejdřív to, co se draží nejblíž. Údaje pocházejí z veřejné evidence dražeb a mohou se v čase měnit — konání, podmínky a aktuální stav vždy ověřte přímo v dražební vyhlášce a v katastru nemovitostí.</p>
 ${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}
@@ -1263,8 +1287,8 @@ for (const d of DRUH_STRANKY) {
   const ceny = priceStats(list);
   const cenyRadka = priceLine(ceny);
   const vypsane = list.slice(0, STROP_RADKU);
-  const typJeden = jedinyTyp(vypsane);
-  const rows = vypsane.map((o) => itemRow(o, false, null, !!typJeden)).join('\n');
+  const tS = typStrankyVypisu(vypsane);
+  const rows = vypsane.map((o) => itemRow(o, false, null, tS.skryt)).join('\n');
   const zbyva = Math.max(0, count - STROP_RADKU);
   const mapaOdkaz = `index.html?druh=${encodeURIComponent(d.oznaceni)}#mapa`;
   /* Kde je toho druhu nejvíc. Odkazuje se jen na okresy, které vlastní
@@ -1331,7 +1355,7 @@ ${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(pod
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
           <h2>Nabídky — ${esc(d.nom)}</h2>
-          <p class="rules-note" style="margin-top:0;">${typJeden ? vetaOTypu(typJeden) + ' ' : ''}Seřazeno od nejnižší ceny${zbyva ? `, vypsáno prvních ${STROP_RADKU}` : ''}. Data pocházejí z veřejných zdrojů (inzertní portály, evidence dražeb, státní pozemkový úřad) a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
+          <p class="rules-note" style="margin-top:0;">${tS.veta ? tS.veta + ' ' : ''}Seřazeno od nejnižší ceny${zbyva ? `, vypsáno prvních ${STROP_RADKU}` : ''}. Data pocházejí z veřejných zdrojů (inzertní portály, evidence dražeb, státní pozemkový úřad) a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
 ${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}
@@ -1447,8 +1471,8 @@ for (const r of rozpocetVznikne) {
   const okresLinks = okresyNej.map((ok) =>
     `<a href="${okresFile(ok)}">${esc(ok)} <span>${poOkresu[ok]}</span></a>`).join('');
   const vypsane = list.slice(0, STROP_ROZPOCET);
-  const typJeden = jedinyTyp(vypsane);
-  const rows = vypsane.map((o) => itemRow(o, false, null, !!typJeden)).join('\n');
+  const tS = typStrankyVypisu(vypsane);
+  const rows = vypsane.map((o) => itemRow(o, false, null, tS.skryt)).join('\n');
   const zbyva = Math.max(0, count - STROP_ROZPOCET);
   /* Filtr ceny na mapě se jmenuje `maxc` (js/main.js, openFromUrl) — na
      mapě je pak v téhle ceně VŠECHNO, tedy i dražby a podíly, které jsou
@@ -1633,7 +1657,7 @@ let novychZaTyden = 0;
   /* Nově přidané po dnech. Datum je nadpis skupiny, ne další údaj
      v každém řádku — jinak by v šedesáti řádcích stálo šedesátkrát
      totéž a den by se v nich ztratil. */
-  const typNovinek = !!jedinyTyp(nove.slice(0, STROP_NOVYCH));
+  const tNov = typStrankyVypisu(nove.slice(0, STROP_NOVYCH));
   let noveBody = '', poslDen = null, vypsano = 0;
   for (const o of nove) {
     if (vypsano >= STROP_NOVYCH) break;
@@ -1642,7 +1666,7 @@ let novychZaTyden = 0;
       noveBody += `          <h3 class="okr-kraj-h">${esc(PKZ.lidsky(o.first_seen))}</h3>\n          <div class="okr-list">\n`;
       poslDen = o.first_seen;
     }
-    noveBody += itemRow(o, false, null, typNovinek) + '\n';
+    noveBody += itemRow(o, false, null, tNov.skryt) + '\n';
     vypsano++;
   }
   if (poslDen !== null) noveBody += '          </div>\n';
@@ -1697,7 +1721,7 @@ ${noveBody ? `
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
           <h2>Nově přidané</h2>
-          <p class="rules-note" style="margin-top:0;">${typNovinek ? vetaOTypu(jedinyTyp(nove.slice(0, STROP_NOVYCH))) + ' ' : ''}Od nejnovějšího dne${zbyvaNovych ? `, vypsáno prvních ${STROP_NOVYCH}` : ''}. Data pocházejí z veřejných zdrojů a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
+          <p class="rules-note" style="margin-top:0;">${tNov.veta ? tNov.veta + ' ' : ''}Od nejnovějšího dne${zbyvaNovych ? `, vypsáno prvních ${STROP_NOVYCH}` : ''}. Data pocházejí z veřejných zdrojů a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
 ${noveBody}
 ${zbyvaNovych ? `          <p class="okr-more" style="margin-top:14px;"><a href="index.html#mapa">${zbyvajici(zbyvaNovych)} ${fmt(zbyvaNovych)} ${pluralPozemek(zbyvaNovych)} najdete na mapě →</a></p>` : ''}
         </div>
