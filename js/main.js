@@ -6190,8 +6190,13 @@
     return neco;
   }
   function openFromUrl() {
-    // ?q=&druh=&maxc=&mina= — použij uložené hledání (odkaz ze stránky „Hlídání").
-    if (/[?&](q|druh|maxc|mina)=/.test(location.search)) {
+    /* ?q=&druh=&maxc=&mina=&zlevnene= — použij uložené hledání (odkaz ze
+       stránky „Hlídání") nebo odkaz z některé statické stránky.
+       `zlevnene` sem přibylo kvůli stránce „Co je nového": odkaz
+       „Všechny zlevněné na mapě" sliboval zapnutý filtr, a protože ho
+       adresa neznala, mapa se otevřela se VŠEMI nabídkami. Tichá lež
+       v odkazu — tatáž past jako u názvu filtru ceny (`maxc`). */
+    if (/[?&](q|druh|maxc|mina|zlevnene)=/.test(location.search)) {
       var gp = function (n) { var mm = new RegExp('[?&]' + n + '=([^&]*)').exec(location.search); try { return mm ? decodeURIComponent(mm[1]) : ''; } catch (e) { return mm ? mm[1] : ''; } };
       var qv = gp('q'), dv = gp('druh'), mc = parseInt(gp('maxc'), 10) || 0, ma = parseInt(gp('mina'), 10) || 0;
       if (qv && searchEl) { searchEl.value = qv; nastavHledani(qv); }
@@ -6212,6 +6217,11 @@
       dosad(areaEl, ma, 'od ' + ma.toLocaleString('cs-CZ') + '\u00a0m²');
       if (mc) maxPrice = mc;
       if (ma) minArea = ma;
+      /* Přepínač se zapíná klepnutím, ne přiřazením do proměnné: tlačítko
+         má vlastní vzhled i aria-pressed a stav se drží na třech místech.
+         Klepne se jen tehdy, když je filtr vypnutý — jinak by ho odkaz
+         vypnul. Stejně to dělá i obnova sdíleného stavu výš. */
+      if (/[?&]zlevnene=1/.test(location.search) && !zlevneneOnly && zlevneneEl) zlevneneEl.click();
       if (dv) {
         /* V odkazu smí být víc druhů oddělených čárkou. Srovnává se bez
            diakritiky: odkaz z hlídání může nést „orna puda" přepsané

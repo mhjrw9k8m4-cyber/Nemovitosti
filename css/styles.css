@@ -5196,6 +5196,16 @@ h1, h2, h3,
   /* Jméno kraje v rozcestníku mělo 24 px, i když je to jediný odkaz
      v celém řádku. */
   .okr-item .okr-place{min-height:44px; display:inline-flex; align-items:center;}
+  /* NALEZENO MĚŘENÍM: odkaz na zdroj („Zdroj ↗", „Nabídka SPÚ ↗") měl
+     21 px — necelou polovinu míry. Je to přitom jediná cesta z řádku
+     k původnímu inzerátu, a na okresních, krajských a druhových
+     stránkách je takový řádek 2 164×. Zkouška to neviděla, protože
+     v jejím vzorku nebyla ani jedna stránka, která výpis nabídek má
+     (rozcestník okresů má jen jména okresů) — vzorek je proto
+     doplněný v scripts/test-rozvrzeni.mjs.
+     Výška se dává odkazu, ne řádku: řádek se tím na telefonu zvedne
+     o pár pixelů, zato se dá trefit. */
+  .okr-item .okr-src{min-height:44px; display:inline-flex; align-items:center;}
   /* Zaškrtávací pilulky ve formuláři („Elektřina") měly 41 px. */
   .chip-check{min-height:44px;}
   /* Odznaky „Naposledy prohlédnuté" měly 31 px. Dosud to nikomu nevadilo,

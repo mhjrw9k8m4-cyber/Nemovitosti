@@ -81,9 +81,48 @@ function sablona(nadpis, nadtitul, pod) {
 </body></html>`;
 }
 
+/* TEMATICKÉ STRÁNKY. Devadesát jedna obrázků mělo kraje a okresy, ale
+   stránky, které se sdílejí nejspíš ze všech — „les na prodej",
+   „pozemky do 500 tisíc", „co je nového" — padaly na společný og.png.
+   Odkaz na ně tedy ve zprávě vypadal jako odkaz na úvodní stránku.
+   Počty na obrázcích nejsou schválně, ze stejného důvodu jako u krajů:
+   obrázek se vyrábí jednou, data se mění každých šest hodin, a Facebook
+   si náhled ukládá na týdny. */
+const TEMATA = [
+  { soubor: 'druh-orna-puda.png', nadpis: 'Orná půda', nadtitul: 'Na prodej v celé ČR',
+    pod: 'Zemědělský půdní fond — ke stavbě je potřeba vynětí ze ZPF.' },
+  { soubor: 'druh-louka.png', nadpis: 'Louky a pastviny', nadtitul: 'Na prodej v celé ČR',
+    pod: 'Trvalý travní porost — často na něm běží pacht.' },
+  { soubor: 'druh-stavebni.png', nadpis: 'Stavební pozemky', nadtitul: 'Na prodej v celé ČR',
+    pod: 'Zápis v katastru není totéž co územní plán obce.' },
+  { soubor: 'druh-lesni.png', nadpis: 'Lesní pozemky', nadtitul: 'Na prodej v celé ČR',
+    pod: 'Pod ochranou lesního zákona, s povinností hospodařit.' },
+  { soubor: 'druh-zahrada.png', nadpis: 'Zahrady', nadtitul: 'Na prodej v celé ČR',
+    pod: 'V zastavěném území, ale ne vždy stavební.' },
+  { soubor: 'druh-vinice-sady.png', nadpis: 'Vinice a sady', nadtitul: 'Na prodej v celé ČR',
+    pod: 'Zemědělská kultura — hodnota je i ve výsadbě.' },
+  { soubor: 'rozpocet-200-tisic.png', nadpis: 'Pozemky do 200 000 Kč', nadtitul: 'Podle rozpočtu',
+    pod: 'Kolik z nich jsou opravdu stavební pozemky — na stránce.' },
+  { soubor: 'rozpocet-500-tisic.png', nadpis: 'Pozemky do 500 000 Kč', nadtitul: 'Podle rozpočtu',
+    pod: 'Kolik z nich jsou opravdu stavební pozemky — na stránce.' },
+  { soubor: 'rozpocet-1-milion.png', nadpis: 'Pozemky do milionu', nadtitul: 'Podle rozpočtu',
+    pod: 'Kolik z nich jsou opravdu stavební pozemky — na stránce.' },
+  { soubor: 'rozpocet-2-miliony.png', nadpis: 'Pozemky do dvou milionů', nadtitul: 'Podle rozpočtu',
+    pod: 'Kolik z nich jsou opravdu stavební pozemky — na stránce.' },
+  { soubor: 'drazby.png', nadpis: 'Dražby pozemků', nadtitul: 'Celá ČR',
+    pod: 'Vyvolávací cena není cena — ale začíná se od ní.' },
+  { soubor: 'nove-pozemky.png', nadpis: 'Co je na trhu nového', nadtitul: 'Pohyb na trhu',
+    pod: 'Nově přidané pozemky a nabídky, u kterých klesla cena.' },
+  { soubor: 'na-co-mam.png', nadpis: 'Na co mám?', nadtitul: 'Z rozpočtu na místa',
+    pod: 'Zadejte částku a uvidíte, ve kterých okresech se za ni koupí.' },
+  { soubor: 'cena-pozemku.png', nadpis: 'Ceny pozemků v ČR', nadtitul: 'Obvyklé ceny',
+    pod: 'Medián za metr podle druhu a kraje, s rozpětím.' },
+];
+
 const ukoly = [
   ...KRAJE.map((k) => ({ soubor: `kraj-${slug(k)}.png`, nadpis: KRAJ_DISP[k] || `${k} kraj`, nadtitul: 'Pozemky v kraji' })),
   ...OKRESY.map((o) => ({ soubor: `okres-${slug(o)}.png`, nadpis: o, nadtitul: 'Pozemky v okrese' })),
+  ...TEMATA,
 ];
 
 /* IKONY APLIKACE. Web je tmavě zelený, ale ikony v repozitáři zůstaly
@@ -119,7 +158,7 @@ const ctx = await prohlizec.newContext({ viewport: { width: 1200, height: 630 },
 const p = await ctx.newPage();
 let hotovo = 0;
 for (const u of ukoly) {
-  await p.setContent(sablona(u.nadpis, u.nadtitul), { waitUntil: 'load' });
+  await p.setContent(sablona(u.nadpis, u.nadtitul, u.pod), { waitUntil: 'load' });
   await p.screenshot({ path: path.join(VEN, u.soubor), type: 'png' });
   hotovo++;
 }

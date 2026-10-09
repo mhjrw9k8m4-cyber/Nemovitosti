@@ -1849,6 +1849,7 @@ h1,h2,h3,.section-head h2,.add-hero h1,.okr-hero h1,.clanek .rules-sect h2{lette
 .foot-col a{min-height:44px;display:flex;align-items:center;margin-bottom:2px}
 .crumbs a{min-height:44px;display:inline-flex;align-items:center}
 .okr-item .okr-place{min-height:44px;display:inline-flex;align-items:center}
+.okr-item .okr-src{min-height:44px;display:inline-flex;align-items:center}
 .chip-check{min-height:44px}
 .rs-chip{min-height:44px}
 .mcv-btn{min-height:44px}

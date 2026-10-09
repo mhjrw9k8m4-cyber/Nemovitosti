@@ -20,6 +20,7 @@ const BASE = 'http://127.0.0.1:8310';
 // Místní kopie Leafletu — viz poznámka u ctx.route níž.
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const STRANKY = ['index.html', 'cena-pozemku.html', 'pozemky-okres-tabor.html',
+  'pozemky-do-500-tisic.html',
   /* Stránka upozornění je odebraná; místo ní stránka kraje — vzorek
      musí zůstat dost velký, jinak pojistka „změřilo se dost prvků"
      hlásí poplach a kontrola kontrastu nic neznamená. */

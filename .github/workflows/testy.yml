@@ -62,6 +62,10 @@ jobs:
 
       - name: „Na co mám?" — počty sedí na skutečné nabídky
         run: node scripts/test-rozpocet.mjs
+      - name: Stránky „Pozemky do X Kč" vypisují to, co tvrdí
+        run: node scripts/test-rozpocet-stranky.mjs
+      - name: „Co je nového" nevydává starou nabídku za novou
+        run: node scripts/test-nove-pozemky.mjs
 
       - name: Pořadí nabídek (nic nezapadne)
         run: node scripts/test-poradi.mjs

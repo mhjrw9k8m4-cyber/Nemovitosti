@@ -17,13 +17,13 @@
   <meta property="og:locale" content="cs_CZ">
   <meta property="og:site_name" content="Parcelka">
   <meta property="og:url" content="https://www.parcelaka.cz/na-co-mam-pozemek.html">
-  <meta property="og:image" content="https://www.parcelaka.cz/assets/og.png?v=5">
+  <meta property="og:image" content="https://www.parcelaka.cz/assets/og/na-co-mam.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Na co mám? Kde koupíte pozemek za svůj rozpočet">
   <meta name="twitter:description" content="Napište rozpočet a uvidíte, ve kterých okresech se za něj dnes dá koupit pozemek.">
-  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og.png?v=5">
+  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og/na-co-mam.png">
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
@@ -35,7 +35,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=85518ed2">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=7aa10426">
 
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebApplication","name":"Na co mám? — pozemek podle rozpočtu","applicationCategory":"FinanceApplication","operatingSystem":"Web","inLanguage":"cs","description":"Z rozpočtu a výměry spočítá, ve kterých okresech se dnes dá koupit pozemek. Počítá ze skutečných nabídek.","offers":{"@type":"Offer","price":0,"priceCurrency":"CZK"},"publisher":{"@type":"Organization","name":"Parcelka"},"url":"https://www.parcelaka.cz/na-co-mam-pozemek.html"}
@@ -132,6 +132,26 @@
         <p class="rules-note"><b>Ceny, kterým sami nevěříme.</b> V datech je „stavební pozemek 3 315 m²" za tři koruny za metr, tedy celý za deset tisíc. Je to chyba ve výměře nebo nepřiznaný podíl; jinde na webu u takových stojí „cena k ověření" a tady by z nich byl falešný nález.</p>
         <p class="rules-note">Počítá se tedy z <b>nabídek k prodeji</b>, které web považuje za důvěryhodné. Je to menšina ze všeho, co na mapě je — a je to ta část, o kterou se dá opřít rozhodnutí.</p>
       </details>
+
+      <!-- HOTOVÉ VÝPISY PRO NEJČASTĚJŠÍ ČÁSTKY.
+           Nástroj výš odpovídá na jakoukoli sumu, ale žije ve skriptu —
+           do vyhledávače se z něj nedostane nic, a „pozemky do 500
+           tisíc" se hledá pořád. Tyhle čtyři stránky generuje
+           scripts/generate-region-pages.mjs z téhož řezu dat a nesou
+           navíc číslo, které tady není: kolik z nabídek v té ceně jsou
+           opravdu stavební pozemky. -->
+      <div class="add-card" style="margin-top:22px;">
+        <div class="rules-sect">
+          <h2>Nejčastější rozpočty — hotové výpisy</h2>
+          <p class="rules-note" style="margin-top:0;">Celý seznam nabídek do dané ceny, s tím, kolik z nich jsou stavební pozemky a ve kterých okresech jich je nejvíc.</p>
+          <div class="okr-index-grid">
+            <a href="pozemky-do-200-tisic.html">Do 200 000 Kč</a>
+            <a href="pozemky-do-500-tisic.html">Do 500 000 Kč</a>
+            <a href="pozemky-do-1-milionu.html">Do 1 000 000 Kč</a>
+            <a href="pozemky-do-2-milionu.html">Do 2 000 000 Kč</a>
+          </div>
+        </div>
+      </div>
 
       <div class="add-cross" style="margin-top:22px;">
         <div class="acx-copy">

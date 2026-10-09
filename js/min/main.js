@@ -4258,7 +4258,7 @@
   }
   function openFromUrl() {
 
-    if (/[?&](q|druh|maxc|mina)=/.test(location.search)) {
+    if (/[?&](q|druh|maxc|mina|zlevnene)=/.test(location.search)) {
       var gp = function (n) { var mm = new RegExp('[?&]' + n + '=([^&]*)').exec(location.search); try { return mm ? decodeURIComponent(mm[1]) : ''; } catch (e) { return mm ? mm[1] : ''; } };
       var qv = gp('q'), dv = gp('druh'), mc = parseInt(gp('maxc'), 10) || 0, ma = parseInt(gp('mina'), 10) || 0;
       if (qv && searchEl) { searchEl.value = qv; nastavHledani(qv); }
@@ -4276,6 +4276,8 @@
       dosad(areaEl, ma, 'od ' + ma.toLocaleString('cs-CZ') + '\u00a0m²');
       if (mc) maxPrice = mc;
       if (ma) minArea = ma;
+
+      if (/[?&]zlevnene=1/.test(location.search) && !zlevneneOnly && zlevneneEl) zlevneneEl.click();
       if (dv) {
 
         var zname = DRUHY_VSE.concat(Object.keys(NADRAZENE));

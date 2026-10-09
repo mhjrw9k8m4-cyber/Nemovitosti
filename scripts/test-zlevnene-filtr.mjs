@@ -196,6 +196,34 @@ if (tlacitko) {
   }
 }
 
+/* ===== ODKAZ Z ADRESY ==============================================
+   Stránka „Co je nového" nabízí „Všechny zlevněné na mapě" a slibuje
+   tím zapnutý filtr. Dokud adresa `?zlevnene=1` neexistovala, mapa se
+   z toho odkazu otevřela se VŠEMI nabídkami a nebylo to poznat: žádná
+   chyba, jen jiný výsledek, než jaký odkaz sliboval. Měří se chování
+   v prohlížeči, ne přítomnost řádku v kódu. */
+{
+  const p2 = await ctx.newPage();
+  await p2.goto('http://127.0.0.1:8310/index.html?zlevnene=1#mapa', { waitUntil: 'load' });
+  await p2.waitForTimeout(2600);
+  const zapnuto = await p2.$eval('#map-zlevnene', (e) => e.getAttribute('aria-pressed')).catch(() => null);
+  pravda('?zlevnene=1 z adresy filtr zapne', zapnuto === 'true',
+    `aria-pressed je ${zapnuto}`);
+  const sFiltrem = await p2.$eval('#map-count', (e) => e.textContent.replace(/\D/g, '')).catch(() => '');
+  /* Srovnává se VYPNUTÍM na téže stránce, ne druhým načtením bez
+     parametru. Zkusil jsem to druhé a vyšla stejná čísla (59 a 59):
+     mapa si stav filtrů pamatuje v tomhle prohlížeči, takže druhá
+     stránka ve stejném okně filtr zdědila. Test by tak byl zelený
+     i tehdy, kdyby parametr nedělal nic. */
+  await p2.evaluate(() => { const b = document.getElementById('map-zlevnene'); if (b) b.click(); });
+  await p2.waitForTimeout(900);
+  const bezFiltru = await p2.$eval('#map-count', (e) => e.textContent.replace(/\D/g, '')).catch(() => '');
+  pravda('a je to vidět na počtu nabídek',
+    sFiltrem && bezFiltru && Number(sFiltrem) > 0 && Number(sFiltrem) < Number(bezFiltru),
+    `s filtrem ${sFiltrem}, po vypnutí ${bezFiltru}`);
+  await p2.close();
+}
+
 await ctx.close();
 await prohlizec.close();
 

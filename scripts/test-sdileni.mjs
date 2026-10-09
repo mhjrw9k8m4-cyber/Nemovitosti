@@ -55,6 +55,8 @@ for (const f of fs.readdirSync(ROOT).filter((x) => x.endsWith('.html')).sort()) 
     twTitulek: znacka(s, /<meta name="twitter:title" content="([^"]*)"/),
     canonical: znacka(s, /<link rel="canonical" href="([^"]*)"/),
     robots: znacka(s, /<meta name="robots" content="([^"]*)"/) || '',
+    ogObrazek: znacka(s, /<meta property="og:image" content="([^"]*)"/),
+    twObrazek: znacka(s, /<meta name="twitter:image" content="([^"]*)"/),
   });
 }
 const rucni = vse.filter((z) => z.druh === 'ruční');
@@ -89,6 +91,40 @@ const bezZnacek = indexovane.filter((z) => !z.ogTitulek || !z.ogPopis || !z.ogUr
 pravda(`indexovaná stránka má náhled celý (${indexovane.length} indexovaných)`,
   bezZnacek.length === 0,
   `${bezZnacek.length} bez úplného náhledu: ` + bezZnacek.slice(0, 4).map((z) => z.f).join(', '));
+
+/* 2a. OBRÁZEK V NÁHLEDU MUSÍ EXISTOVAT.
+   Je to nejtišší vada ze všech: na webu se obrázek pro sdílení nikde
+   neukazuje, takže překlep v názvu souboru se pozná teprve tak, že
+   odkaz poslaný do zprávy přijde bez obrázku. A protože generátor sahá
+   po `assets/og/<jméno>.png` a při chybějícím souboru mlčky použije
+   společný og.png, nepozná se ani to, že se zamýšlený obrázek
+   nepoužívá — jen bude celý web ve zprávách vypadat stejně. */
+{
+  const naSoubor = (u) => {
+    const m = /^https:\/\/www\.parcelaka\.cz\/(.+?)(?:[?#].*)?$/.exec(String(u || ''));
+    return m ? m[1] : null;
+  };
+  const obrazky = new Map();
+  for (const z of vse) {
+    for (const u of [z.ogObrazek, z.twObrazek]) {
+      const rel = naSoubor(u);
+      if (rel) obrazky.set(rel, (obrazky.get(rel) || 0) + 1);
+    }
+  }
+  pravda(`náhledové obrázky se našly (${obrazky.size} různých)`, obrazky.size >= 10,
+    `různých obrázků ${obrazky.size} — při jednom by to znamenalo, že si je stránky nerozlišují`);
+  const chybi = [...obrazky.keys()].filter((rel) => !fs.existsSync(path.join(ROOT, rel)));
+  pravda('každý náhledový obrázek v repozitáři existuje', chybi.length === 0,
+    chybi.slice(0, 5).join(', '));
+  /* A pojistka na druhou stranu: obrázek, který existuje, ale na který
+     neodkazuje ani jedna stránka, je zbytečný kus v repozitáři. */
+  const vAssets = fs.existsSync(path.join(ROOT, 'assets', 'og'))
+    ? fs.readdirSync(path.join(ROOT, 'assets', 'og')).filter((x) => x.endsWith('.png')) : [];
+  const osirele = vAssets.filter((x) => !obrazky.has('assets/og/' + x));
+  pravda(`žádný vyrobený náhled neleží ladem (${vAssets.length} v assets/og)`,
+    osirele.length === 0,
+    `${osirele.length} bez odkazu: ` + osirele.slice(0, 5).join(', '));
+}
 
 /* 2b. CO SE SMÍ INDEXOVAT, MÁ BÝT V MAPĚ WEBU.
    Seznam ručních stránek v sitemap.xml se píše rukou (scripts/

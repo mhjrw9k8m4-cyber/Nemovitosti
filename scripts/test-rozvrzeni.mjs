@@ -831,7 +831,13 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   const p2 = await ctx.newPage();
   const STRANKY = ['hlidani.html', 'zpravy.html', 'muj-inzerat.html',
     'pridat.html', 'pozemek.html?ll=50.02,15.20', 'pozemky-podle-okresu.html',
-    'kontakt.html', 'cena-pozemku.html'];
+    'kontakt.html', 'cena-pozemku.html',
+    /* STRÁNKA S VÝPISEM NABÍDEK TU CHYBĚLA, a je to nejčastější tvar
+       obsahu na webu (2 164 řádků na 92 stránkách). Rozcestník okresů
+       vypadá podobně, ale nese jen jména okresů — odkaz na zdroj,
+       odznak typu ani cena v něm nejsou. Díky tomu uniklo, že
+       „Zdroj ↗" měl 21 px. */
+    'pozemky-okres-kolin.html', 'pozemky-do-500-tisic.html'];
   const nalezy = [];
   const nalezyKlavesnice = [];
   for (const stranka of STRANKY) {

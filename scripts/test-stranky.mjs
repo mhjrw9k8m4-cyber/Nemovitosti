@@ -154,7 +154,13 @@ function sPozemkem() {
 const VZOREK = ['index.html', 'pozemek.html', sPozemkem(), 'pridat.html', 'hlidani.html', 'zpravy.html',
   'muj-inzerat.html', 'kontakt.html', 'cena-pozemku.html',
   'podminky.html', 'ochrana-udaju.html', 'pozemky-podle-okresu.html',
-  'pozemky-stredocesky-kraj.html', 'pozemky-okres-kolin.html', '404.html']
+  'pozemky-stredocesky-kraj.html', 'pozemky-okres-kolin.html',
+  /* Nové tvary stránek patří do vzorku, jinak se poprvé načtou až
+     u člověka: „Na co mám?" je jediná stránka s počítáním ve
+     prohlížeči a „do 500 tisíc" jediná, co vypisuje nabídky napříč
+     celou ČR podle ceny. */
+  'na-co-mam-pozemek.html', 'pozemky-do-500-tisic.html',
+  '404.html']
   .filter(Boolean)
   .filter((f) => existsSync(f.split('?')[0]));
 

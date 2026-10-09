@@ -48,6 +48,17 @@ fotka od makléře, a stránka pozemku už leteckou vrstvu má. Chybí
 v **kartě ve výpisu** a v náhledu při sdílení — ten je dnes obrázek
 okresu, tedy u všech pozemků v okrese stejný.
 
+**Posunuto 9. 10.:** náhledy pro sdílení mělo 91 stránek (kraje
+a okresy) a všechny ostatní padaly na jeden společný obrázek webu —
+odkaz na „les na prodej" nebo „pozemky do 500 tisíc" tedy ve zprávě
+vypadal jako odkaz na úvodní stránku. Tematických náhledů je teď 14
+dalších a `scripts/test-sdileni.mjs` hlídá obojí: že odkazovaný obrázek
+existuje (překlep v názvu se jinak pozná teprve z poslané zprávy) a že
+žádný vyrobený neleží ladem. U **jednotlivých pozemků** to pořád není
+— 2 062 vlastních obrázků by znamenalo desítky megabajtů v repozitáři
+a bez leteckého snímku by stejně nesly jen text, který už je v náhledu
+napsaný.
+
 ## 3. ~~Stránky pozemků nemají strukturovanou cenu~~ — *hotovo 9. 10.*
 
 Bylo 0 z 1 941. Teď nesou `Offer` s cenou v CZK a výměru jako
@@ -77,6 +88,49 @@ okresech se dnes dá koupit, a kolik jich tam je. Nic se nemodeluje:
 počítají se nabídky, které jsou právě na trhu, takže je výsledek
 ověřitelný fakt. Dražby, podíly a ceny, kterým web nevěří, se do toho
 nepočítají — a je to na stránce napsané.
+
+## 3d. ~~Rozpočet se nedal najít z vyhledávače~~ — *přidáno 9. 10.*
+
+Nástroj z bodu 3c odpovídá na jakoukoli částku, ale žije ve skriptu —
+do vyhledávače se z něj nedostane nic, a „pozemky do 500 tisíc" se
+hledá pořád. Vznikly čtyři statické výpisy (200 tisíc, půl milionu,
+milion, dva miliony) s vlastním obsahem, ne jedna šablona ve čtyřech
+adresách.
+
+Číslo, kvůli kterému ty stránky stojí za to: **do milionu korun je
+v celé nabídce jeden jediný stavební pozemek ze 768.** Do dvou milionů
+dvacet z 889. Kdo si myslí, že si za půl milionu koupí parcelu na dům,
+to má vědět z první obrazovky, ne po projití sta inzerátů. Hlídá
+`scripts/test-rozpocet-stranky.mjs` — 117 kontrol, každá přepočítaná
+z `data/opportunities.json`, ne z generátoru.
+
+## 3e. ~~Web neumí říct, co se na trhu POHNULO~~ — *přidáno 9. 10.*
+
+Uměl říct, co na trhu je. To, co se na něm změnilo — a to je jediná
+věc, pro kterou se člověk na takový web vrací — se dalo odebírat jen
+kanálem RSS po krajích. Stránka, kam se dá poslat odkaz, nebyla žádná.
+
+`nove-pozemky.html` má nově přidané po dnech, zlevněné (59),
+**zdražené (5)** a zvlášť skokové změny k ověření (1). Zdražení se
+neschovává záměrně: kdyby stránka ukazovala jen slevy, vypadal by trh
+jako jednosměrka dolů.
+
+Dvě věci, které tahle stránka musí přiznat, jinak je to lež, a obě
+přiznává nad seznamem: „nové" znamená **nové v naší evidenci** (prvního
+dne naskočilo naráz 1 600 nabídek, které na trhu byly dřív — ty se
+nepočítají), a změna pod 3 % není zpráva.
+
+Dvě chyby, které se při tom našly a opravily:
+
+* Řez se nedal prokázat. Podmínku „vynechat první den evidence" jsem
+  z generátoru zkusmo smazal a zkouška prošla **zeleně** — čtrnáctidenní
+  okno ten den vylučuje samo, takže se chování na dnešních datech
+  vyzkoušet nedá. Řez je proto ve `scripts/novinky-rez.mjs` jako
+  funkce a zkouška jí podstrčí vzorek, kde první den evidence leží
+  uvnitř okna. Teď sabotáž padá.
+* „Za posledních sedm dní" počítalo **osm** kalendářních dnů (od
+  `dnes − 7`). Na dnešních datech je v tom čtrnáct nabídek — číslo
+  nadsazené ve vlastní prospěch.
 
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
