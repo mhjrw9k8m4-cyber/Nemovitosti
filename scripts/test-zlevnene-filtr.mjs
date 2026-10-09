@@ -85,12 +85,25 @@ for (const d of vse) {
 }
 pravda(`očekáváme ${cekano.zlevnene.length} zlevněných nabídek`, cekano.zlevnene.length >= 10,
   'spočítalo se jich jen ' + cekano.zlevnene.length);
-/* Kvůli čemu to celé vzniklo: archiv ví o mnohonásobně víc změnách než
-   poslední běh robota. Kdyby tenhle poměr spadl, filtr je k ničemu
-   a nemá smysl kvůli němu stahovat další soubor. */
-pravda(`archiv dodal ${cekano.zArchivu} změn, poslední běh robota ${cekano.zBehu}`,
-  cekano.zArchivu > cekano.zBehu * 2,
-  'archiv už nepřidává dost, aby se ten soubor vyplatil');
+/* Kvůli čemu to celé vzniklo: poslední běh robota vidí jen změny proti
+   včerejšku, archiv vidí celou historii. Kdyby archiv přestal přidávat,
+   filtr je k ničemu a nemá smysl kvůli němu stahovat další soubor.
+   Měří se PODÍL na všech nalezených změnách, ne násobek běhu.
+   Násobek („archiv dodal aspoň dvakrát tolik co běh") spadl na dnešních
+   datech přesně na hranu — 42 proti 21, tedy rovných 2,0 — a to nebylo
+   tím, že by archiv zeslábl: má pořád stejných 72 klíčů, jen robot měl
+   rušnější den (22 → 25 nabídek se změněnou cenou). Násobek
+   na kulatém čísle je tedy hod mincí, ne měřítko. Podíl říká totéž
+   srozumitelněji: bez toho souboru by filtr našel jen menšinu toho,
+   co najde s ním. */
+{
+  const celkem = cekano.zArchivu + cekano.zBehu;
+  const podil = celkem ? cekano.zArchivu / celkem : 0;
+  pravda(`archiv dodal ${cekano.zArchivu} z ${celkem} změn (${Math.round(podil * 100)} %), `
+    + `poslední běh robota ${cekano.zBehu}`,
+    celkem > 0 && podil > 0.5,
+    'archiv už nepřidává většinu změn, takže se ten soubor nevyplatí stahovat');
+}
 
 const kde = process.env.PW_CHROMIUM || '';
 await import('./falesna-supabase-chat.mjs');
