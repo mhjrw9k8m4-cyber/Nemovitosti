@@ -259,5 +259,21 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   console.log(`\n${chyby.length} ${chyby.length === 1 ? 'chyba' : 'chyb'}, `
     + `${nalezy.length - chyby.length} k přečtení\n`);
+
+  /* ZÁVĚR I DO PŘEHLEDU BĚHU, ne jen do protokolu. Krok v
+     .github/workflows/nasad-sql.yml má continue-on-error — nasazení
+     a kontrola jsou dvě různé otázky — jenže tím přestane barva kroku
+     cokoli znamenat a výsledek se dá zjistit jen rozkliknutím
+     protokolu. Ten se na telefonu čte mizerně a přes API ho nejde
+     stáhnout vůbec. Řádek ::error:: / ::notice:: skončí v souhrnu
+     běhu, takže je vidět na první pohled i odtud. */
+  if (process.env.GITHUB_ACTIONS) {
+    const shrnuti = chyby.length
+      ? `Kontrola databáze: ${chyby.length} nálezů — ` + chyby.map((n) => n.co).join('; ')
+      : `Kontrola databáze v pořádku: ${prehled.vDatabaziTabulek} tabulek, `
+        + `${prehled.vDatabaziFunkci} funkcí, nepřihlášený vidí `
+        + `${prehled.proNeprihlaseneTabulek} tabulek a ${prehled.proNeprihlaseneFunkci} funkcí.`;
+    console.log(`::${chyby.length ? 'error' : 'notice'}::` + bezKlicu(shrnuti, tajne));
+  }
   process.exit(chyby.length ? 1 : 0);
 }
