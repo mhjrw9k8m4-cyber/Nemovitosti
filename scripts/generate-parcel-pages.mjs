@@ -519,6 +519,44 @@ export function migrujSkripty(sablona, h) {
   return out.replace(ZNACKA, blok);
 }
 
+const VETA_UKONCENO = 'Nabídka už není aktuální.';
+/* STROJOVÁ DATA UKONČENÉ STRÁNKY MUSÍ ŘÍKAT TOTÉŽ JAKO PRUH V NÍ.
+   Pruh nahoře říká „Tato nabídka už není aktuální", ale ve
+   strukturovaných datech zůstávalo `availability: InStock`, tedy
+   strojové tvrzení, že nabídka platí — a `description` začínala
+   „Na prodej · 210 000 Kč". Naměřeno na 127 ukončených stránkách:
+   u 7 to InStock tvrdilo, u jedné dražby nestálo nic, a zbylých 119
+   nabídku v datech vůbec nemá (cena 0). Těch sedm je dnešní stav;
+   roste to s každou skončenou nabídkou.
+   OutOfStock, ne SoldOut: nabídka zmizela ze zdroje, což neznamená,
+   že se prodala. `priceValidUntil` je ten den, kdy zmizela — po něm
+   už o té ceně nic netvrdíme. */
+export function migrujUkoncenaData(h, den) {
+  return h.replace(/(<script type="application\/ld\+json">)([\s\S]*?)(<\/script>)/g,
+    (cele, zacatek, telo, konec) => {
+      let data;
+      try { data = JSON.parse(telo); } catch (e) { return cele; }
+      let zmena = false;
+      const projdi = (x) => {
+        if (Array.isArray(x)) { x.forEach(projdi); return; }
+        if (!x || typeof x !== 'object') return;
+        if (x['@type'] === 'Offer') {
+          if (x.availability !== 'https://schema.org/OutOfStock') {
+            x.availability = 'https://schema.org/OutOfStock'; zmena = true;
+          }
+          if (den && x.priceValidUntil !== den) { x.priceValidUntil = den; zmena = true; }
+        }
+        if (x['@type'] === 'Place' && typeof x.description === 'string'
+          && x.description.indexOf(VETA_UKONCENO) !== 0) {
+          x.description = VETA_UKONCENO + ' ' + x.description; zmena = true;
+        }
+        for (const k of Object.keys(x)) projdi(x[k]);
+      };
+      projdi(data);
+      return zmena ? zacatek + JSON.stringify(data) + konec : cele;
+    });
+}
+
 export function ukoncenaStranka(obsah, den, podobne) {
   let h = obsah;
 
@@ -557,7 +595,8 @@ export function ukoncenaStranka(obsah, den, podobne) {
   if (!/class="pz-konec"/.test(h)) {
     h = h.replace(/(<div id="pz-detail">)/, `$1${pruh}`);
   }
-  return h;
+
+  return migrujUkoncenaData(h, den);
 }
 
 /* KAM DÁL ZE STRÁNKY POZEMKU.
@@ -1182,8 +1221,14 @@ export function generuj() {
       const stari = (Date.parse(dnes) - Date.parse(uz[1])) / 86400000;
       if (stari >= DNI_ARCHIV) { fs.unlinkSync(cesta); smazano++; continue; }
       /* Už ukončená a ještě ne stará: obsah se nepřepisuje. Jen přepisy,
-         které se musí dostat na KAŽDOU stránku webu, projdou i tudy. */
-      const migrovano = migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah))));
+         které se musí dostat na KAŽDOU stránku webu, projdou i tudy.
+         migrujUkoncenaData patří mezi ně: stránky, které skončily DŘÍV,
+         než se to pravidlo zavedlo, sem chodí jedinou cestou — kdyby se
+         opravilo jen v ukoncenaStranka(), zůstalo by sedm stránek, které
+         strojově tvrdí InStock, navždy. Datum se bere to zapsané, ne
+         dnešek: cena přestala platit tehdy. */
+      const migrovano = migrujUkoncenaData(
+        migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah)))), uz[1]);
       if (migrovano !== obsah) { fs.writeFileSync(cesta, migrovano); prepsano++; }
       continue;
     }

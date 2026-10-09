@@ -571,6 +571,52 @@ hledáním vyhazují, jinak si lint najde sám sebe — vysvětlení nad ním
 ten špatný tvar cituje. Sabotáž (nasadit ten tvar do
 `test-okres.mjs`) padá.
 
+## 3s. ~~Ukončená nabídka strojům tvrdila, že pořád platí~~ — *opraveno 9. 10.*
+
+Z přeměření strukturovaných dat na všech 2 072 stránkách pozemků:
+jestli se parsují, jestli cena v nich sedí s cenou na stránce, jestli
+drobečky jdou po sobě od jedničky a jestli dostupnost odpovídá tomu,
+co stránka říká.
+
+Nesedělo poslední. Na ukončené stránce stojí nahoře pruh **„Tato
+nabídka už není aktuální. Zmizela ze zdroje 4. 10. 2026."** — a pod
+ním ve strukturovaných datech zůstávalo `availability: InStock`,
+tedy strojové tvrzení, že nabídka platí. Popis pro stroje k tomu
+začínal „Na prodej · 210 000 Kč". Člověk se dozvěděl pravdu, stroj
+opak.
+
+Naměřeno na 127 ukončených stránkách: **7** to tvrdilo, u jedné
+dražby nestálo nic a zbylých 119 nabídku v datech vůbec nemá (cena 0).
+Sedm je dnešní stav, ale roste to s každou skončenou nabídkou — a
+skončí jich několik denně.
+
+`OutOfStock`, ne `SoldOut`: nabídka zmizela ze zdroje, což neznamená,
+že se prodala. `priceValidUntil` je ten den, kdy zmizela — po něm
+o té ceně nic netvrdíme. Popis dostane dopředu tutéž větu, jakou má
+pruh.
+
+**Oprava musela jít dvěma cestami, a tohle je na tom to podstatné.**
+`ukoncenaStranka()` se volá jen ve chvíli, kdy nabídka právě skončila.
+Stránky, které skončily dřív, chodí jinou cestou — migracemi, které
+se musí dostat na každou stránku webu. Kdyby se to opravilo jen v té
+první, zůstalo by těch sedm stránek tvrdit InStock navždy. Přepis je
+proto vlastní funkce `migrujUkoncenaData()` zapojená v obou.
+
+Zkouška v `scripts/test-ukonceno.mjs` (28 kontrol, dřív 18) měří
+obojí: na nasazené stránce cestu „nabídka právě skončila" (OutOfStock,
+`priceValidUntil`, věta v popisu, a že se druhým během nezdvojí)
+a pak celý hotový strom — 127 ukončených a 1 944 živých stránek:
+žádná ukončená strojově netvrdí, že platí, a **žádné živé se to
+pravidlo nerozlilo**. Sabotáž (vypnout migraci a vrátit jedné stránce
+InStock) hlásí „✕ ani jedna ukončená stránka strojově netvrdí, že
+nabídka platí" a jmenuje ji.
+
+Dvě věci, které z téhož měření vyšly jako **správné**, a tak je tu
+nehlásím jako nález: u 111 živých dražeb `availability` chybí
+schválně (vyvolávací cena není nabídka k prodeji, viz komentář
+v generátoru) a `pozemek-od-obce.html` je ručně psaná stránka, která
+se mi do měření připletla jménem.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

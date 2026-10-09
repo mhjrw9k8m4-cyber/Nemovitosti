@@ -28,6 +28,29 @@ function pravda(popis, vyslo, proc) {
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
 }
 
+/* Čtení strukturovaných dat ze stránky. Bloků může být víc (místo
+   a drobečky zvlášť) a každý může nést pole i jediný objekt. */
+function ldBloky(html) {
+  const ven = [];
+  for (const m of String(html).matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+    let j; try { j = JSON.parse(m[1]); } catch (e) { continue; }
+    ven.push(...(Array.isArray(j) ? j : [j]));
+  }
+  return ven;
+}
+function ldOffers(html) {
+  const ven = [];
+  const projdi = (x) => {
+    if (Array.isArray(x)) { x.forEach(projdi); return; }
+    if (!x || typeof x !== 'object') return;
+    if (x['@type'] === 'Offer') ven.push(x);
+    Object.keys(x).forEach((k) => projdi(x[k]));
+  };
+  projdi(ldBloky(html));
+  return ven;
+}
+function ldPlaces(html) { return ldBloky(html).filter((x) => x && x['@type'] === 'Place'); }
+
 /* Zkušební soubor musí mít v názvu SKUTEČNÝ okres, jinak se k němu
    nenajdou podobné pozemky a zkouška níž by mlčela o ničem. */
 const vzor = readdirSync(KOREN).find((f) => /^pozemek-benesov-.+\.html$/.test(f));
@@ -146,11 +169,35 @@ try {
     !readFileSync(path.join(KOREN, 'sitemap.xml'), 'utf8').includes(ZKOUSKA),
     'ukončená nabídka zůstala v mapě webu');
 
+  /* STROJOVÁ DATA MUSÍ ŘÍKAT TOTÉŽ JAKO TEN PRUH. Pruh říká „už není
+     aktuální", ale ve strukturovaných datech zůstávalo
+     availability: InStock — strojové tvrzení, že nabídka platí.
+     Naměřeno: 7 ze 127 ukončených stránek to tvrdilo. */
+  {
+    const nabidky = ldOffers(h);
+    pravda('ukončená stránka má v datech nabídku, na které se to dá měřit',
+      nabidky.length > 0, 'žádný Offer v ld+json — kontroly níž by měřily nic');
+    pravda('a ta nabídka hlásí OutOfStock, ne InStock',
+      nabidky.every((o) => o.availability === 'https://schema.org/OutOfStock'),
+      'availability: ' + nabidky.map((o) => o.availability || '—').join(', '));
+    pravda('a cena má napsané, do kdy platila',
+      nabidky.every((o) => /^\d{4}-\d{2}-\d{2}$/.test(String(o.priceValidUntil || ''))),
+      'priceValidUntil: ' + nabidky.map((o) => o.priceValidUntil || '—').join(', '));
+    const misto = ldPlaces(h);
+    pravda('a popis pro stroje začíná tím, že nabídka není aktuální',
+      misto.every((m) => typeof m.description !== 'string'
+        || m.description.indexOf('Nabídka už není aktuální.') === 0),
+      misto.map((m) => String(m.description || '').slice(0, 60)).join(' | '));
+  }
+
   // Druhý běh nesmí pruh zdvojit.
   generuj();
   const h2 = readFileSync(cesta, 'utf8');
   pravda('druhý běh pruh nezdvojí', (h2.match(/class="pz-konec"/g) || []).length === 1,
     'pruhů: ' + (h2.match(/class="pz-konec"/g) || []).length);
+  pravda('a ani větu o neaktuálnosti v datech',
+    ldPlaces(h2).every((m) => (String(m.description || '').match(/Nabídka už není aktuální\./g) || []).length <= 1),
+    'věta se zdvojila: ' + ldPlaces(h2).map((m) => String(m.description || '').slice(0, 70)).join(' | '));
 
   // Po lhůtě se teprve maže doopravdy.
   writeFileSync(cesta, h2.replace(/window\.PK_UKONCENO="[^"]*"/, 'window.PK_UKONCENO="2000-01-01"'));
@@ -159,6 +206,42 @@ try {
     'stránka stará přes 90 dnů zůstala — web by rostl donekonečna');
 } finally {
   uklid();
+}
+
+/* ---- A TOTÉŽ NA CELÉM HOTOVÉM STROMU ------------------------------
+   Nasazená stránka výš ověří cestu „nabídka právě skončila". Stránky,
+   které skončily DŘÍV než se pravidlo zavedlo, chodí jinou cestou
+   (migrace v generátoru), a právě tam zůstávalo sedm stránek tvrdících
+   InStock. Měří se obojí: že ukončené hlásí OutOfStock a že se to
+   přitom nerozlilo na živé. */
+{
+  let ukoncenych = 0, zivych = 0;
+  const zleUkoncene = [], zleZive = [];
+  for (const f of readdirSync(KOREN)) {
+    if (!/^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f)) continue;
+    const h = readFileSync(path.join(KOREN, f), 'utf8');
+    if (h.indexOf('window.PK_POZEMEK=') < 0) continue;
+    const konec = h.indexOf('class="pz-konec"') >= 0;
+    const nabidky = ldOffers(h);
+    if (konec) {
+      ukoncenych++;
+      if (nabidky.some((o) => o.availability && o.availability !== 'https://schema.org/OutOfStock')) {
+        zleUkoncene.push(f + ' → ' + nabidky.map((o) => o.availability).join(','));
+      }
+    } else {
+      zivych++;
+      if (nabidky.some((o) => o.availability === 'https://schema.org/OutOfStock')) zleZive.push(f);
+      if (ldPlaces(h).some((m) => String(m.description || '').indexOf('Nabídka už není aktuální.') === 0)) {
+        zleZive.push(f + ' (popis)');
+      }
+    }
+  }
+  pravda('ukončených i živých stránek je dost, aby to něco znamenalo',
+    ukoncenych >= 20 && zivych >= 500, `ukončených ${ukoncenych}, živých ${zivych}`);
+  pravda('ani jedna ukončená stránka strojově netvrdí, že nabídka platí',
+    zleUkoncene.length === 0, zleUkoncene.slice(0, 4).join(' | '));
+  pravda('a žádné živé stránce se to pravidlo nerozlilo',
+    zleZive.length === 0, zleZive.slice(0, 4).join(' | '));
 }
 
 hotovo();
