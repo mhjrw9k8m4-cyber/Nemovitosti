@@ -22,7 +22,7 @@
    z doby, kdy nabídka platila) a po 90 dnech mizí. Měřit na nich
    dnešní pravidla by znamenalo hlásit chybu za to, že archiv je archiv.
    ==================================================================== */
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -117,6 +117,48 @@ pravda('spoluvlastnický podíl se ve značkách přizná', zamlcenyPodil.length
   pravda('generátor nabídku opravdu skládá', /makesOffer/.test(gen));
   pravda('a dražbě nedává „skladem"', /jeProdej \? \{ availability/.test(gen),
     'bez té podmínky by se vyvolávací cena tvářila jako cena k zaplacení');
+}
+
+/* ===== VÝPISOVÉ STRÁNKY: SEZNAM NABÍDEK PRO VYHLEDÁVAČE ===========
+   Okresní, krajské, druhové a dražební stránky nesou ItemList —
+   ukázku toho, co na nich je. Krajské ho dlouho neměly vůbec, takže
+   o 14 stránkách s největším počtem nabídek vyhledávač věděl jen
+   tolik, co stálo v popisu.
+   Hlídá se to, co se na tom dá nejsnáz pokazit: že položka nese
+   ODKAZ a že ten odkaz vede na stránku, která opravdu existuje.
+   Jméno souboru se totiž nedá spočítat z klíče — na něm se nabídky
+   srážejí a odkaz by ukázal cizí pozemek. Táž vada se už jednou
+   opravovala v kanálech novinek i v rozesílači pošty. */
+{
+  const vypisy = readdirSync(KOREN).filter((f) =>
+    /^pozemky-okres-.+\.html$/.test(f) || /^pozemky-.+-kraj\.html$/.test(f)
+    || f === 'drazby-pozemku-nabidky.html');
+  let sSeznamem = 0, polozek = 0;
+  const bezOdkazu = [], mrtve = [], bezSeznamu = [];
+  for (const f of vypisy) {
+    const h = readFileSync(path.join(KOREN, f), 'utf8');
+    const m = /<script type="application\/ld\+json">([\s\S]*?)<\/scr/.exec(h);
+    let j = null;
+    try { j = JSON.parse(m[1]); } catch (e) { j = null; }
+    const sb = [].concat(j || []).find((x) => x && x['@type'] === 'CollectionPage');
+    const sez = sb && sb.mainEntity;
+    if (!sez || sez['@type'] !== 'ItemList' || !sez.itemListElement) { bezSeznamu.push(f); continue; }
+    sSeznamem++;
+    for (const p of sez.itemListElement) {
+      polozek++;
+      if (!p.url) { bezOdkazu.push(`${f}: ${p.name}`); continue; }
+      const soubor = String(p.url).replace('https://www.parcelaka.cz/', '');
+      if (!existsSync(path.join(KOREN, soubor))) mrtve.push(`${f} → ${soubor}`);
+    }
+  }
+  pravda(`výpisových stránek je dost na měření (${vypisy.length})`, vypisy.length >= 80,
+    String(vypisy.length));
+  pravda('každá nese seznam nabídek pro vyhledávače', bezSeznamu.length === 0,
+    bezSeznamu.slice(0, 5).join(', '));
+  pravda(`a položek je z čeho brát (${polozek})`, polozek >= 500, String(polozek));
+  pravda('každá položka nese odkaz', bezOdkazu.length === 0, bezOdkazu.slice(0, 5).join('; '));
+  pravda('a žádný odkaz nevede na neexistující stránku', mrtve.length === 0,
+    mrtve.slice(0, 5).join('; '));
 }
 
 console.log('\nCena ve strukturovaných datech');

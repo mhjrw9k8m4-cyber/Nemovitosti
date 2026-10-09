@@ -160,6 +160,31 @@ const all = PKH.bezDuplicit(vseSyrove);
 /* Vstup je týž (tentýž soubor, tatáž funkce na duplicity), takže mapování
    sedí na to, co generátor stránek pozemků opravdu vyrobí. */
 const STRANKY = mapaSouboru(all);
+/* SEZNAM NABÍDEK PRO VYHLEDÁVAČE — jedno místo pro okresy, kraje
+   i druhy. Dřív si ho dvě z těch tří stránek stavěly samy a třetí
+   (krajská) ho neměla vůbec, takže o nabídkách v kraji vyhledávač
+   věděl jen tolik, kolik stálo v popisu stránky.
+
+   KAŽDÁ POLOŽKA NESE ODKAZ. Bez `url` je ListItem jen jméno v poli —
+   vyhledávač z něj nepozná, že za každou položkou je vlastní stránka
+   s cenou a mapou. Adresa se bere z TÉŽE mapy jmen, podle které ty
+   stránky vznikly (mapaSouboru), ne z výpočtu: na holém klíči se
+   nabídky srážejí a odkaz by vedl na cizí pozemek — táž vada se už
+   jednou opravovala v kanálech novinek a v rozesílači pošty.
+
+   DVACET POLOŽEK STAČÍ. Je to ukázka, ne výpis celé stránky; celkový
+   počet nese numberOfItems vedle. */
+function seznamNabidek(list, celkem, kolik = 20) {
+  const items = [];
+  for (const o of list.slice(0, kolik)) {
+    const str = STRANKY.get(klicNabidky(o));
+    const polozka = { '@type': 'ListItem', position: items.length + 1,
+      name: `${o.place} — ${TYPE_LABEL[o.type] || o.type}${o.area ? ', ' + o.area + ' m²' : ''}` };
+    if (str && str.soubor) polozka.url = SITE + str.soubor;
+    items.push(polozka);
+  }
+  return { '@type': 'ItemList', numberOfItems: celkem, itemListElement: items };
+}
 if(vseSyrove.length !== all.length){
   console.log(`Duplicit odstraněno: ${vseSyrove.length - all.length} (zůstalo ${all.length}) — stejně jako v aplikaci.`);
 }
@@ -701,8 +726,7 @@ for(const okres of eligibleOkres){
   // z něj zbyl useknutý cár. Kratší tvar říká totéž a vejde se celý.
   const title = `Pozemky okres ${okres} — prodej a dražby | Parcelka`;
   const desc = `${count} ${pluralPozemek(count)} v okrese ${okres} na jedné mapě — prodeje, dražby i exekuce z veřejných zdrojů.${minP?(' Ceny od '+fmt(minP)+' Kč.'):''}`;
-  const items = list.slice(0,20).map((o,i)=>({"@type":"ListItem","position":i+1,"name":`${o.place} — ${TYPE_LABEL[o.type]||o.type}${o.area?', '+o.area+' m²':''}`}));
-  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky v okrese ${okres}`,"inLanguage":"cs","description":`Nabídky pozemků v okrese ${okres} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}};
+  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky v okrese ${okres}`,"inLanguage":"cs","description":`Nabídky pozemků v okrese ${okres} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":seznamNabidek(list, count)};
   /* KOLIK Z TOHO JSOU SPOLUVLASTNICKÉ PODÍLY. Je to čtvrtina celé
      nabídky webu (531 z 2 019) a u podílu je v inzerátu výměra CELÉ
      parcely, ale cena jen za ten zlomek — cena za metr proto vychází
@@ -831,7 +855,8 @@ ${sibLinks ? `
         <a href="${kanalKraje(kraj)}">Nové pozemky ${CENY.kdeText('kraj', kraj)} odebírejte kanálem</a>
         — bez účtu a bez e-mailu.</p>
 
-      <p class="okr-more" style="margin-top:22px;">Než koupíte, projděte si <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> a <a href="list-vlastnictvi-katastr.html">jak číst list vlastnictví</a>.</p>
+      <p class="okr-more" style="margin-top:22px;">Nevíte, kde hledat? <a href="na-co-mam-pozemek.html">Zadejte rozpočet</a> a uvidíte, ve kterých okresech se za něj dnes dá koupit.</p>
+      <p class="okr-more" style="margin-top:8px;">Než koupíte, projděte si <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> a <a href="list-vlastnictvi-katastr.html">jak číst list vlastnictví</a>.</p>
 
     </div>
   </section>
@@ -864,7 +889,7 @@ for(const kraj of eligibleKraj){
 
   const title = `Pozemky ${meta.disp} — prodej a dražby | Parcelka`;
   const desc = `Pozemky ${meta.loc} na jedné mapě — ${count} ${pluralPozemek(count)} z veřejných zdrojů: prodeje, dražby i exekuce.${minP?(' Ceny od '+fmt(minP)+' Kč.'):''}`;
-  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky ${meta.disp}`,"inLanguage":"cs","description":`Nabídky pozemků ${meta.loc} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"}};
+  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky ${meta.disp}`,"inLanguage":"cs","description":`Nabídky pozemků ${meta.loc} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":seznamNabidek(list, list.length)};
   const crumbs = [
     {name:'Pozemky', href:'index.html', abs:SITE},
     {name:'Pozemky podle okresů', href:'pozemky-podle-okresu.html', abs:SITE+'pozemky-podle-okresu.html'},
@@ -931,7 +956,8 @@ ${rows}
         <a href="${kanalKraje(kraj)}">Nové pozemky ${CENY.kdeText('kraj', kraj)} odebírejte kanálem</a>
         — bez účtu a bez e-mailu.</p>
 
-      <p class="okr-more" style="margin-top:22px;">Než koupíte, projděte si <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> nebo <a href="pozemky-podle-okresu.html">všechny kraje a okresy</a>.</p>
+      <p class="okr-more" style="margin-top:22px;">Nevíte, kde hledat? <a href="na-co-mam-pozemek.html">Zadejte rozpočet</a> a uvidíte, ve kterých okresech se za něj dnes dá koupit.</p>
+      <p class="okr-more" style="margin-top:8px;">Než koupíte, projděte si <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> nebo <a href="pozemky-podle-okresu.html">všechny kraje a okresy</a>.</p>
 
     </div>
   </section>
@@ -954,8 +980,7 @@ const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>(a.price||1e15)
   const rows = drazby.map(itemRow).join('\n');
   const title = `Dražby pozemků — aktuální nabídky v ČR | Parcelka`;
   const desc = `${count} ${sklon(count,'dražba pozemku','dražby pozemků','dražeb pozemků')} z celé ČR na jedné mapě, z veřejné evidence dražeb.${minP?(' Vyvolávací ceny od '+fmt(minP)+' Kč.'):''}`;
-  const items = drazby.slice(0,20).map((o,i)=>({"@type":"ListItem","position":i+1,"name":`${o.place} — dražba${o.area?', '+o.area+' m²':''}`}));
-  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Dražby pozemků v ČR","inLanguage":"cs","description":`Aktuální nabídky pozemků v dražbě z veřejné evidence dražeb.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":count,"itemListElement":items}};
+  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Dražby pozemků v ČR","inLanguage":"cs","description":`Aktuální nabídky pozemků v dražbě z veřejné evidence dražeb.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":seznamNabidek(drazby, count)};
   const crumbs = [
     {name:'Pozemky', href:'index.html', abs:SITE},
     {name:'Koupě v dražbě', href:'drazby-pozemku.html', abs:SITE+'drazby-pozemku.html'},
@@ -1081,12 +1106,10 @@ for (const d of DRUH_STRANKY) {
   const title = `${d.h1} — nabídky z celé ČR | Parcelka`;
   const desc = `${count} ${sklon(count, d.jm[0], d.jm[1], d.jm[2])} z celé ČR na jedné mapě — z veřejných zdrojů.`
     + (minP ? ` Ceny od ${fmt(minP)} Kč.` : '');
-  const items = list.slice(0, 20).map((o, i) => ({ "@type": "ListItem", position: i + 1,
-    name: `${o.place} — ${TYPE_LABEL[o.type] || o.type}${o.area ? ', ' + o.area + ' m²' : ''}` }));
   const jsonld = { "@context": "https://schema.org", "@type": "CollectionPage", name: d.h1,
     inLanguage: "cs", description: desc, mainEntityOfPage: SITE + d.soubor,
     publisher: { "@type": "Organization", name: "Parcelka" },
-    mainEntity: { "@type": "ItemList", numberOfItems: count, itemListElement: items } };
+    mainEntity: seznamNabidek(list, count) };
   const crumbs = [
     { name: 'Pozemky', href: 'index.html', abs: SITE },
     { name: 'Ceny pozemků', href: 'cena-pozemku.html', abs: SITE + 'cena-pozemku.html' },
@@ -1154,7 +1177,8 @@ ${okresLinks ? `
         </div>
       </div>` : ''}
 
-      <p class="okr-more" style="margin-top:22px;">Než koupíte, projděte si <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> a <a href="list-vlastnictvi-katastr.html">jak číst list vlastnictví</a>.</p>
+      <p class="okr-more" style="margin-top:22px;">Nevíte, kde hledat? <a href="na-co-mam-pozemek.html">Zadejte rozpočet</a> a uvidíte, ve kterých okresech se za něj dnes dá koupit.</p>
+      <p class="okr-more" style="margin-top:8px;">Než koupíte, projděte si <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> a <a href="list-vlastnictvi-katastr.html">jak číst list vlastnictví</a>.</p>
 
     </div>
   </section>
