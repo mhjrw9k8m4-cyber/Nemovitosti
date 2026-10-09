@@ -146,17 +146,33 @@ pravda(`vzdálenost sedí (Praha–Brno ${d.toFixed(0)} km)`, d > 180 && d < 190
      hvězdičky „|podíl" v klíči skupiny. Kdyby si ho tahle zkouška
      postavila po svém, hlídala by vlastní kopii pravidel. */
   const kand = [];
+  let pochybnych = 0;
   for (const o of DATA) {
     if (o.type !== 'sale') continue;
     if (!(o.price > 0 && o.area >= 100 && o.area <= 500000)) continue;
     if (!isFinite(o.lat) || !isFinite(o.lng)) continue;
     if (MODEL.neduveryhodna && MODEL.neduveryhodna(o)) continue;
+    const odh = MODEL.odhad && MODEL.odhad(o);
+    if (odh && odh.pochybna) { pochybnych++; continue; }
     const m2 = CENY.zaMetr(o);
     if (!(m2 > 0)) continue;
-    kand.push({ id: o.url || '', pk: KLIC.pkey(o),
+    kand.push({ id: o.url || '', pk: KLIC.pkey(o), pochybna: !!(odh && odh.pochybna),
       skupina: MODEL.druhGroup(o.druh) + (o.podil ? '|podíl' : ''),
       podil: !!o.podil, area: o.area, m2, lat: o.lat, lng: o.lng, okres: o.okres });
   }
+  /* CENA, PŘED KTEROU WEB JINDE VARUJE, SE NESMÍ STÁT DŮKAZEM.
+     Model má dvě síta. `neduveryhodna` je hrubé (cena pod padesátinou
+     hladiny) a chytá 3 nabídky z 1 817. `pochybna` je to přísné —
+     „takový rozdíl bývá spoluvlastnický podíl nebo jiná výměra,
+     ověřte si to" — a těch je 140. Ty se do seznamu srovnatelných
+     dostávaly jako obyčejný řádek: pět nabídek po 5–6 Kč/m² za ornou
+     půdu vedle sebe, prezentovaných jako stav trhu. Za tolik se pole
+     neprodává.
+     Stálo to 99 stránek ze 1 125, které o srovnání přišly. */
+  pravda(`model označuje část nabídek za pochybné (${pochybnych})`, pochybnych >= 50,
+    'bez nich by kontrola níž neměla co hlídat');
+  pravda('a žádná taková se nedostala mezi kandidáty na srovnání',
+    kand.every((k) => !k.pochybna), 'síto nefunguje');
   pravda('v datech jsou i spoluvlastnické podíly (jinak by se kontrola níž neměla o co opřít)',
     kand.filter((k) => k.podil).length >= 100, String(kand.filter((k) => k.podil).length));
   pravda('ostrých kandidátů je dost na měření', kand.length >= 1000, String(kand.length));

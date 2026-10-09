@@ -30,6 +30,12 @@ Chybí druhý velký zdroj. Nejlepší kandidát bez licenčních potíží je
 jsou veřejná a nikdo je pořádně neagreguje. Sreality by přidal
 `APIFY_TOKEN` (parser `fetchSreality` v kódu je), to je ale na majiteli.
 
+**Poznámka z 9. 10.:** zkusil jsem k tomu sáhnout a z téhle strany to
+nejde — ze sandboxu, kde pracuju, není vidět na internet vůbec (i
+`example.com` vrací HTTP 000). Parser cizí stránky bych psal naslepo,
+což je hádání, ne práce. Chce to nejdřív běh v CI, který tu stránku
+stáhne a ukáže.
+
 ## 2. Žádné fotky, a nejde to obejít přímo — *já, oklikou*
 
 U 1 998 stahovaných nabídek je fotek **nula**. Není to opomenutí:
@@ -42,16 +48,15 @@ fotka od makléře, a stránka pozemku už leteckou vrstvu má. Chybí
 v **kartě ve výpisu** a v náhledu při sdílení — ten je dnes obrázek
 okresu, tedy u všech pozemků v okrese stejný.
 
-## 3. Stránky pozemků nemají strukturovanou cenu — *já*
+## 3. ~~Stránky pozemků nemají strukturovanou cenu~~ — *hotovo 9. 10.*
 
-Měřeno: **0 z 1 941** živých stránek pozemků nese strukturovaná data
-o nabídce (`Offer`). Mají jen `Place` a drobečky. Cena, měna a stav
-nabídky tedy ve vyhledávači nejsou k dispozici, i když na stránce
-stojí.
+Bylo 0 z 1 941. Teď nesou `Offer` s cenou v CZK a výměru jako
+`QuantitativeValue`. Dražba dostává poznámku o vyvolávací ceně a
+žádnou dostupnost, podíl se přizná. Hlídá
+`scripts/test-nabidka-pro-stroje.mjs`.
 
-Poctivá výhrada: Google pro pozemky nemá vyhrazený bohatý výsledek,
-takže se nedá slíbit, že se cena ve výsledcích ukáže. Značkování je
-ale správné a stojí asi 200 bajtů na stránku.
+Výhrada zůstává: Google pro pozemky nemá vyhrazený bohatý výsledek,
+takže se nedá slíbit, že se cena ve výsledcích ukáže.
 
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 

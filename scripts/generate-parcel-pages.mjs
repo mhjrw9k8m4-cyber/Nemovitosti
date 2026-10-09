@@ -813,6 +813,21 @@ export function pripravSrovnani(mapa) {
     if (!(d.price > 0 && d.area >= 100 && d.area <= 500000)) continue;
     if (!isFinite(d.lat) || !isFinite(d.lng)) continue;
     if (MODEL.neduveryhodna && MODEL.neduveryhodna(d)) continue;
+    /* A TAKY TO, PŘED ČÍM WEB JINDE SÁM VARUJE. `neduveryhodna` je
+       hrubé síto (cena pod padesátinou hladiny) a chytilo 3 nabídky
+       z 1 817. Model má ale ještě druhé, přísnější: `pochybna` —
+       „takový rozdíl bývá spoluvlastnický podíl nebo jiná výměra,
+       ověřte si to". Tou je označených 140 nabídek, a ty se objevovaly
+       v seznamu srovnatelných jako obyčejný důkaz o trhu.
+       Vznikaly z toho stránky, které si odporovaly samy: odznak „−68 %
+       proti okolí" a hned pod ním pět nabídek po 5–6 Kč/m² za ornou
+       půdu, mezi nimiž byl ten pozemek nejdražší. Za tolik se pole
+       neprodává; jsou to podíly a chyby ve výměře.
+       Stojí to 99 stránek ze 1 125, které o srovnání přijdou (medián
+       okruhu 14 → 15 km). To je poctivá cena: tvrdit něco cenou, které
+       sám nevěřím, je horší než o tom mlčet. */
+    const odh = MODEL.odhad && MODEL.odhad(d);
+    if (odh && odh.pochybna) continue;
     const m2 = CENY.zaMetr(d);
     if (!(m2 > 0)) continue;
     /* PODÍL SE SROVNÁVÁ JEN S PODÍLEM, a dělá to tahle jediná hvězdička
