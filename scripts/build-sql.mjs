@@ -49,6 +49,9 @@ const PORADI = [
   // Taky na ničem nezávisí: vlastní tabulka čítačů, žádný cizí klíč,
   // žádná vazba na účet. Může být kdekoli, je tedy na konci.
   ['navstevnost.sql', 'vlastní měření návštěvnosti — čítače, bez cookies a bez IP'],
+  // Úplně na konci schválně: vypisuje oprávnění všech funkcí výš, takže
+  // má smysl teprve až jsou všechny založené.
+  ['kontrola-opravneni.sql', 'kdo smí spustit kterou funkci — a kde to zůstalo na výchozím'],
 ];
 
 const HLAVA = `-- =====================================================================

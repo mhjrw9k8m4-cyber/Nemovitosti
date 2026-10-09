@@ -39,6 +39,9 @@ pravda('mezi tabulkami je navstevnost (bod 0 ze seznamu pro majitele)',
   ma.tabulky.indexOf('navstevnost') >= 0, ma.tabulky.join(', '));
 pravda('a mezi zakázanými je prehled_navstevnosti (díra, kvůli které to vzniklo)',
   ma.zavrene.indexOf('prehled_navstevnosti') >= 0, ma.zavrene.join(', '));
+pravda('a kontrola oprávnění sama sebe nepouští ke slovu nikomu',
+  ma.zavrene.indexOf('kontrola_opravneni') >= 0,
+  'vypisuje, jak je databáze zabezpečená — to je návod, kudy do ní');
 pravda('veřejně čitelné jsou jen zveřejněné inzeráty',
   VEREJNE_TABULKY.length === 1 && VEREJNE_TABULKY[0] === 'listings',
   VEREJNE_TABULKY.join(', '));
@@ -77,6 +80,13 @@ function falesna(jak = {}) {
       const viditelne = role === 'prihlaseny'
         ? (jak.proPrihlaseneho || VEREJNA) : (jak.proAnon || VEREJNA);
       return { stav: 200, json: spec(viditelne) };
+    }
+    if (cesta === '/rest/v1/rpc/kontrola_opravneni') {
+      if (jak.opravneniChybi) return { stav: 404, json: null, telo: '' };
+      return { stav: 200, json: jak.opravneni || [
+        { funkce: 'my_listings', komu: 'authenticated', vychozi: false },
+        { funkce: 'prehled_navstevnosti', komu: 'service_role', vychozi: false },
+      ] };
     }
     const tab = (/^\/rest\/v1\/([a-z_]+)\?/.exec(cesta) || [])[1];
     if (role === 'sluzba') return { stav: 200, json: [{ id: 1 }] };
@@ -140,6 +150,45 @@ const chybyZ = (v) => v.nalezy.filter((n) => n.vaha === 'chyba');
   pravda('když databáze neodpoví, řekne to a nepředstírá úspěch',
     chybyZ(v).length === 1 && /neodpověděla/.test(chybyZ(v)[0].co),
     JSON.stringify(v.nalezy));
+}
+
+/* ---- 4a) skutečná oprávnění funkcí z katalogu ------------------ */
+{
+  /* Odpověď, kterou zvenku nejde zjistit: kdo doopravdy smí spustit
+     kterou funkci. Dřív se odhadovala z výpisu PostgRESTu a ten na
+     nové klíče vrací 401, takže se neověřila vůbec. */
+  const v = await spust({ opravneni: [
+    { funkce: 'prehled_navstevnosti', komu: 'authenticated', vychozi: false },
+  ] });
+  pravda('zákaz, který v databázi neplatí, je chyba',
+    chybyZ(v).some((n) => /zákaz, ale databáze/.test(n.co)
+      && /prehled_navstevnosti → authenticated/.test(n.proc)), JSON.stringify(v.nalezy));
+}
+{
+  const v = await spust({ opravneni: [
+    { funkce: 'my_listings', komu: 'PUBLIC', vychozi: true },
+  ] });
+  pravda('funkce na výchozím oprávnění je jen varování, ne chyba',
+    chybyZ(v).length === 0 && v.nalezy.some((n) => /na výchozím/.test(n.co)
+      && /my_listings/.test(n.proc)), JSON.stringify(v.nalezy));
+  pravda('a je u toho napsané, proč to nemusí být díra',
+    v.nalezy.some((n) => /auth\.uid/.test(n.rada)), JSON.stringify(v.nalezy.map((x) => x.rada)));
+}
+{
+  const v = await spust({ opravneni: [
+    { funkce: 'prehled_navstevnosti', komu: 'service_role', vychozi: false },
+  ] });
+  pravda('správně zavřená funkce nic nehlásí',
+    v.nalezy.every((n) => !/oprávněn|zákaz/.test(n.co)), JSON.stringify(v.nalezy.map((x) => x.co)));
+}
+{
+  const v = await spust({ opravneniChybi: true });
+  pravda('když kontrola_opravneni() v databázi není, řekne se to',
+    v.nalezy.some((n) => /oprávnění funkcí se nepodařilo přečíst/.test(n.co)),
+    JSON.stringify(v.nalezy.map((x) => x.co)));
+  pravda('a poradí nasadit SQL znovu',
+    v.nalezy.some((n) => /kontrola-opravneni\.sql/.test(n.rada)),
+    JSON.stringify(v.nalezy.map((x) => x.rada)));
 }
 
 /* ---- 4b) 401 na kořeni není totéž co nefunkční klíč ------------ */

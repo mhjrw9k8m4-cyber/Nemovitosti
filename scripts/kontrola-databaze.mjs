@@ -17,11 +17,16 @@
    PostgreSQL totiž nové funkci dává právo spuštění VŠEM, dokud se mu
    to výslovně nezakáže. Tenhle soubor se proto ptá databáze samotné.
 
-   CO SE TU NEDĚLÁ. Nic se nezapisuje a nevolá se jediná funkce: jen
-   GET dotazy. Seznam tabulek a funkcí vydá PostgREST sám (OpenAPI na
-   kořeni), a protože ho vydá KAŽDÉMU KLÍČI JINAK — podle toho, co ten
-   klíč smí — je to zároveň ta nejpoctivější zkouška oprávnění, jakou
-   jde udělat bez zásahu do dat.
+   CO SE TU NEDĚLÁ. Nic se nezapisuje. Volá se jediná funkce,
+   kontrola_opravneni() — ta jen čte katalog databáze a smí ji spustit
+   výhradně service_role (viz supabase/kontrola-opravneni.sql). Zbytek
+   jsou GET dotazy.
+
+   Seznam tabulek vydá PostgREST sám (OpenAPI na kořeni) a vydá ho
+   každému klíči jinak, podle toho, co ten klíč smí. U oprávnění FUNKCÍ
+   to ale nestačilo: na nové klíče „sb_publishable_…" vrací kořen 401,
+   takže zůstávalo u „ověřit se nepodařilo" — zrovna u té věci, kvůli
+   které tenhle soubor vznikl. Proto se databáze ptá přímo.
 
    SERVISNÍ KLÍČ SE NIKAM NEVYPISUJE. Obchází veškerá oprávnění, takže
    kdyby se objevil ve výpisu, stačí poslat snímek obrazovky a databáze
@@ -173,6 +178,52 @@ export async function zkontroluj({ url, anonKlic, serviceKlic, sql, token = null
         `V SQL chybí zapnuté RLS nebo pravidlo pro ${t}. Viz supabase/00-vse.sql.`);
     }
     prehled.proNeprihlaseneTabulek = overeno;
+  }
+
+  /* --- 2b) SKUTEČNÁ oprávnění funkcí, přímo z katalogu databáze ---
+     Tohle je jediné místo, které dává na otázku „kdo smí co spustit"
+     odpověď, a ne odhad. Čte ji funkce kontrola_opravneni() z pg_proc
+     — viz supabase/kontrola-opravneni.sql, kde je i rozepsané, proč
+     se čte proacl a ne has_function_privilege.
+
+     DVĚ RŮZNÉ VĚCI, DVĚ RŮZNÉ VÁHY:
+      · funkce, které SQL veřejnosti výslovně zakazuje a ona ji přesto
+        má — to znamená, že „revoke" neproběhl. Chyba.
+      · funkce, u kterých se o oprávnění nikdo nestaral (proacl je
+        prázdné, tedy výchozí PUBLIC) — varování. Naměřeno: takových
+        je 26 z 36 a ani jedna z nich díra není, protože si tělo hlídá
+        auth.uid() samo (jediná výjimka, my_listing, chce k tomu tajný
+        token v parametru a je pro anon povolená schválně). Dělat
+        z toho chybu by znamenalo hlásit 26 planých poplachů a nikdo
+        by tuhle kontrolu po třetím běhu nečetl. */
+  const opr = await g(url, '/rest/v1/rpc/kontrola_opravneni', serviceKlic);
+  if (opr.stav === 200 && Array.isArray(opr.json)) {
+    const VSEM = ['PUBLIC', 'anon', 'authenticated'];
+    const porusene = new Map();
+    const vychozi = new Set();
+    for (const r of opr.json) {
+      if (!r || !r.funkce) continue;
+      if (r.vychozi) vychozi.add(r.funkce);
+      if (ma.zavrene.indexOf(r.funkce) >= 0 && VSEM.indexOf(r.komu) >= 0) {
+        if (!porusene.has(r.funkce)) porusene.set(r.funkce, []);
+        porusene.get(r.funkce).push(r.komu);
+      }
+    }
+    prehled.opravneniPrecteno = opr.json.length;
+    if (porusene.size) {
+      chyba(`${porusene.size} funkcí má v SQL zákaz, ale databáze je pouští dál`,
+        [...porusene].map(([f, k]) => `${f} → ${k.join(', ')}`).join('; '),
+        'Řádky „revoke all on function" neproběhly. Nasadit supabase/00-vse.sql znovu.');
+    }
+    if (vychozi.size) {
+      varovani(`${vychozi.size} funkcí má oprávnění na výchozím (spustí je kdokoli)`,
+        [...vychozi].sort().join(', '),
+        'Není to samo o sobě díra, pokud si tělo hlídá auth.uid(). Ale rozhodnuté to není.');
+    }
+  } else {
+    varovani('skutečná oprávnění funkcí se nepodařilo přečíst',
+      `kontrola_opravneni() vrátila HTTP ${opr.stav}`,
+      'Chybí supabase/kontrola-opravneni.sql — nasaďte databázi znovu.');
   }
 
   /* --- 3) co uvidí přihlášený (jen když je čím se přihlásit) ------ */
