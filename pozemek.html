@@ -247,7 +247,11 @@
     @media (max-width:560px){
       .kd-p{display:none;}
       .kd-polozka{min-height:48px; padding:8px 12px;}
-      .pz-kamdal .pz-sect-h{margin-top:24px;}
+      /* 20, ne 24: odstupy na téhle stránce smí být jen ze slovníku
+         8/10/20/40 px a hlídá to scripts/test-parametry.mjs. Napsal jsem
+         24 „od oka" a plná dávka zkoušek to chytila — rozdíl čtyř pixelů
+         nikdo nepozná, rozsypaný slovník ano. */
+      .pz-kamdal .pz-sect-h{margin-top:20px;}
     }
     
 

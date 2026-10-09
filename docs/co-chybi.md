@@ -406,6 +406,15 @@ i v úzkém zobrazení, ne jen v základním pravidle. Zmenšovat se smí,
 ale ne pod dotykové minimum 44 px — a zrovna na telefonu se na ni
 klepe prstem.
 
+**Dodatek z 9. 10. večer, a je to druhý vlastní regres z téže opravy.**
+Odstup nadpisu rozcestníku jsem na úzkém displeji napsal „od oka" na
+**24 px**. Jenže odstupy na stránce pozemku smí být jen ze slovníku
+**8/10/20/40 px** a hlídá to `scripts/test-parametry.mjs`. Chytila to
+teprve **plná dávka** sta prohlížečových zkoušek — cílené dávky, které
+jsem u té opravy pouštěl (`test-kam-dal`, `test-poradi-pozemku`), na to
+nesahají. Změněno na 20 px; rozdíl čtyř pixelů nikdo nepozná,
+rozsypaný slovník ano.
+
 ## 3o. ~~Dvě zkoušky hlídaly klíč, který se před rokem změnil~~ — *opraveno 9. 10.*
 
 Vedlejší nález k bodu 3l. Commit, který zavedl klíč `pkey + výměra`
