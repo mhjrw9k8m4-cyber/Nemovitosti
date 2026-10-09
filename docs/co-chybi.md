@@ -289,6 +289,34 @@ vždycky.
 Na telefonu (390 px) má nadpis dva řádky u mediánu a tři u nejdelších
 jmen — 97 px, cena pořád nad ohybem. Měřeno, ne odhadnuto.
 
+Hlídá to `scripts/test-hlavicka-pozemku.mjs`: porovnává servírovanou
+a vykreslenou podobu v prohlížeči. Pět sabotáží vyzkoušeno, všechny
+padají.
+
+## 3k. ~~Odznak nad snímkem byl na telefonu 202 px vysoký~~ — *opraveno 9. 10.*
+
+Všimnul jsem si toho na snímku obrazovky při měření nadpisu výš.
+Odznak „Na prodej" nad náhledem pozemku měl na displeji 390 px
+**95 × 202 px místo 95 × 31** a protože má rozostřené pozadí
+(`backdrop-filter`), rozmazal popisku pod sebou: jméno obce i výměra
+byly nečitelné.
+
+Příčina je sdílené pravidlo. V úzkém zobrazení se odznak posouvá na
+`bottom:7px` — a to kvůli **kartám na mapě**, kde je náhled vysoký
+116 px a nahoře sedí záložka. Stránka pozemku mu dává `top:13px`
+(vyšší váha selektoru), jenže `bottom` nic nepřebíjelo, takže se
+odznak natáhl mezi oba okraje. Hero snímek na stránce pozemku je
+358 px široký; pravidla pro stopadesátipixelovou kartu na něj
+nepatří, teď se tedy ruší výslovně (`bottom:auto`, a u počtu fotek
+`display`).
+
+Na širokém displeji to bylo celou dobu v pořádku — kontrola, která se
+nepodívá na telefon, by to minula. Nová kontrola proto měří na 390 px.
+
+Zkouška `scripts/test-hlavicka-pozemku.mjs` (9 kontrol) porovnává
+servírovanou a vykreslenou podobu v prohlížeči a měří hlavičku na
+telefonu. Šest sabotáží vyzkoušeno, všechny padají.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se
@@ -370,6 +398,18 @@ tedy nic. Jediný opravdový je Břeclav proti Brnu-venkov (62 vs.
 chytlavý nadpis nad jedním číslem; při snížení meze na 10 nabídek by
 párů bylo 63, ale ta mez už o okrese nic neříká. Až bude dat víc,
 spočítá se to znovu.
+
+**„Jak dlouho je pozemek v nabídce" u jednotlivé parcely.** U každé
+nabídky máme `first_seen`, takže stáří spočítat jde — jenže znamená
+*kdy jsme ji poprvé viděli my*, ne kdy ji prodejce vystavil. Evidence
+začala 19. 9. 2026 a prvního dne naskočilo naráz všechno, co na trhu
+už bylo; poctivě se tedy dá počítat jen u nabídek, které přibyly
+potom. To je dnes **373 z 2 001 (19 %)** a nejstarší z nich má
+**19 dní**. Věta „v nabídce 9 dní" u pozemku, který se možná prodává
+rok, je horší než mlčení, a u čtyř pětin stránek by nebyla vůbec.
+Trh jako celek tu osu má (puls na `cena-pozemku.html`), kde se počítá
+z toho, co se za tu dobu POHNULO, a to zkreslené není. Až bude
+evidence stará aspoň půl roku, spočítá se to znovu.
 
 **Vlastní stránka pro každou obec.** Obcí je v nabídce 1 067, ale
 nabídek na obec málo: aspoň deset má **čtrnáct** obcí, aspoň osm

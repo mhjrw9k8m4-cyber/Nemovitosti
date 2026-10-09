@@ -1,8 +1,11 @@
-// Test: hlavička stránky pozemku — nadpis, titulek, řádek s místem.
+// Test: hlavička stránky pozemku — snímek, odznak, nadpis, místo.
 //
 // Spuštění: PW_CHROMIUM=… node scripts/test-hlavicka-pozemku.mjs
 //
-// Je to první obrazovka, kterou člověk z vyhledávače uvidí.
+// Je to první obrazovka, kterou člověk z vyhledávače uvidí, a sešly se
+// v ní dva nálezy z měření v prohlížeči: nadpis, který se po vykreslení
+// lišil od servírovaného, a odznak nad snímkem, který se na telefonu
+// natáhl přes celý náhled a svým rozostřením rozmazal popisku.
 //
 // NALEZENO MĚŘENÍM v prohlížeči. Stránka pozemku existuje ve dvou
 // podobách: ta servírovaná (statická, pro vyhledávače a pro toho, kdo
@@ -155,6 +158,41 @@ pravda('je co měřit — ve vzorku jsou nadpisy, které okres samy uvádějí',
   sOkresemVNadpisu >= 3, `${sOkresemVNadpisu} z ${vzorek.length}`);
 pravda('a okres pod nadpisem se neopakuje, když už v nadpisu je',
   dvakrat.length === 0, `${dvakrat.length}×, např. ${dvakrat.slice(0, 2).join(' || ')}`);
+
+// ---- 4) odznak nad snímkem: chip, ne pruh přes celý náhled -------
+/* NALEZENO MĚŘENÍM na telefonu (390 px): odznak „Na prodej" byl
+   95 × 202 px místo 95 × 31 a svým rozostřením (backdrop-filter)
+   rozmazal popisku pod sebou — jméno obce i výměra byly nečitelné.
+   Příčina: v úzkém zobrazení posouvá společné pravidlo odznak na
+   `bottom:7px` kvůli KARTÁM NA MAPĚ, kde je náhled vysoký 116 px;
+   stránka pozemku mu dává `top:13px`, ale `bottom` nepřebíjela, takže
+   se natáhl mezi oba okraje.
+   Měří se na úzkém displeji, protože na širokém to bylo v pořádku —
+   a kontrola, která se na telefon nepodívá, by to zase minula. */
+{
+  const uzky = await ctx.newPage();
+  await uzky.setViewportSize({ width: 390, height: 844 });
+  const spatne = [];
+  for (const f of vzorek.slice(0, 4)) {
+    await uzky.goto(`http://127.0.0.1:8310/${f}`, { waitUntil: 'load' });
+    await uzky.waitForTimeout(1200);
+    const m = await uzky.evaluate(() => {
+      const o = (e) => (e ? e.getBoundingClientRect() : null);
+      const b = o(document.querySelector('.pz-media .opp-badge'));
+      const p = o(document.querySelector('.pz-media .sn-popis'));
+      return { b: b && { v: Math.round(b.height), s: Math.round(b.width), y: b.bottom },
+        p: p && { y: p.top } };
+    });
+    if (!m.b) { spatne.push(`${f}: odznak na snímku není`); continue; }
+    if (m.b.v > 48) spatne.push(`${f}: odznak je ${m.b.s}×${m.b.v} px`);
+    if (m.p && m.b.y > m.p.y) {
+      spatne.push(`${f}: odznak sahá na popisku (končí ${Math.round(m.b.y)}, popiska začíná ${Math.round(m.p.y)})`);
+    }
+  }
+  pravda('odznak nad snímkem je na telefonu chip, ne pruh přes celý náhled',
+    spatne.length === 0, spatne.slice(0, 3).join(' | '));
+  await uzky.close();
+}
 
 await prohlizec.close();
 server.close();
