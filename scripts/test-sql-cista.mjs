@@ -140,6 +140,61 @@ try {
   pravda('my_listings vrací i výsledek noční kontroly',
     /kontrola_ok/.test(sloupce) && /kontrola_nalezy/.test(sloupce),
     `sloupce: ${sloupce}`);
+
+  /* ---- KOMU SE DÁ CO ZAVOLAT -------------------------------------
+     Že funkce vznikne, neznamená, že ji smí zavolat ten správný.
+     A pozor na to, jak se PostgreSQL chová: CREATE FUNCTION dává
+     EXECUTE roli PUBLIC, dokud to někdo neodebere. Z 59 funkcí se
+     `revoke all ... from public` dělá u jedenácti, takže ostatní smí
+     zavolat i nepřihlášený — a jestli to k něčemu je, rozhoduje až
+     jejich tělo.
+     Naměřeno: prehled_navstevnosti(integer), souhrn návštěvnosti
+     CELÉHO webu, byla dokonce grantovaná přímo roli authenticated.
+     V hlavičce scripts/navstevnost.mjs přitom stojí, že se z přehledu
+     NEDĚLÁ stránka právě proto, že web nemá pojem „majitel" a účet si
+     založí kdokoli. Kód si odporoval s vlastním odůvodněním a nebylo
+     to z čeho poznat. */
+  {
+    const jdeZavolat = (role, vyraz) => {
+      const out = psqlVse(['-d', 'zkouska', '-tAc',
+        `set role ${role}; select ${vyraz};`]);
+      return { ok: !/ERROR/i.test(out), vystup: out.replace(/\s+/g, ' ').trim().slice(0, 120) };
+    };
+
+    /* TOHLE JE TA KONKRÉTNÍ VĚC, KVŮLI KTERÉ TO VZNIKLO. */
+    for (const role of ['anon', 'authenticated']) {
+      const r = jdeZavolat(role, 'prehled_navstevnosti(7)');
+      pravda(`${role} nesmí přečíst statistiku návštěvnosti`, !r.ok,
+        'prošlo a vrátilo: ' + r.vystup);
+    }
+    /* A server smí — jinak by oprava jen rozbila vlastní nástroj. */
+    pravda('ale service_role ji přečte (jinak by si ji nepřečetl ani server)',
+      jdeZavolat('service_role', 'prehled_navstevnosti(7)').ok);
+
+    /* Zápis čítače naopak musí jít i nepřihlášenému: měří se návštěva. */
+    pravda('zápis návštěvy smí i nepřihlášený (to je jeho účel)',
+      jdeZavolat('anon', `zapis_navstevu('index.html', '', 'telefon', true)`).ok);
+
+    /* A SOUKROMÉ VĚCI. Tady rozhoduje auth.uid() v těle funkce, ne
+       grant: EXECUTE na většinu z nich má PUBLIC (tak to PostgreSQL
+       dělá samo) a `revoke ... from public` se používá u jedenácti
+       z 59. Nestačí tedy čist práva — musí se to ZAVOLAT a podívat se,
+       co to vrátí. Naměřeno: u všech desíti se nepřihlášený nedozví
+       nic, protože auth.uid() je prázdné. Platí to dnes a tahle
+       kontrola je tu proto, aby to platilo i po příští úpravě. */
+    for (const fn of ['moje_poznamky()', 'my_listings()', 'my_threads()', 'my_searches()',
+      'unread_count()', 'my_limit()', 'my_listing_quota()',
+      `save_search('x','x','x','x',0,0,'{}')`,
+      `send_message('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002','ahoj')`,
+      `thread_messages('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002')`]) {
+      const r = jdeZavolat('anon', fn);
+      /* Buď to spadne, nebo nevrátí žádné UUID — tedy žádný cizí
+         záznam. Prázdný výstup i chyba jsou obojí v pořádku. */
+      pravda(`anon nedostane nic z ${String(fn).replace(/\(.*/, '()')}`,
+        !r.ok || !/[0-9a-f]{8}-/.test(r.vystup), 'vrátilo: ' + r.vystup);
+    }
+  }
+
   /* ---- A TEĎ CELÝ PRŮCHOD NOVÝM ÚČTEM -----------------------------
      Že skript proběhne bez chyb, neznamená, že dělá, co má. Tohle je
      jediná ochrana proti podvodu „pošlete zálohu, pozemek je váš",

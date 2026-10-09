@@ -134,8 +134,19 @@ as $$
   );
 $$;
 
+/* ČTE TO JEN SERVER, NE PŘIHLÁŠENÝ ČLOVĚK. Nejdřív tu stálo
+   `to authenticated` — a odporovalo to tomu, co je napsané
+   v hlavičce scripts/navstevnost.mjs: že se z přehledu NEDĚLÁ stránka
+   právě proto, že web nemá pojem „majitel" a roli authenticated má
+   každý, kdo si založí účet. Grant tedy dával celou návštěvnost webu
+   komukoli, kdo se zaregistruje a zavolá si RPC sám; že na ni není
+   odkaz, nic neznamená.
+   Čte ji scripts/navstevnost.mjs se SUPABASE_SERVICE_ROLE_KEY, takže
+   service_role stačí. Až bude web mít pojem majitele, přidá se jemu —
+   do té doby ne. */
 revoke all on function prehled_navstevnosti(integer) from public;
-grant execute on function prehled_navstevnosti(integer) to authenticated;
+revoke all on function prehled_navstevnosti(integer) from authenticated;
+grant execute on function prehled_navstevnosti(integer) to service_role;
 
 /* ÚKLID. Čítače za rok a víc nikdo nečte a tabulka nemá růst donekonečna.
    Spouští se ručně nebo z rozesílače; nemaže nic, co by šlo potřebovat
