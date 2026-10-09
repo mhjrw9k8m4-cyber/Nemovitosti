@@ -214,7 +214,30 @@ pravda('a nabízená karta není ani jeden z nich', nevraci.kolize === 0,
    ní), že psaní nehne kartou, a že se při přechodu na další kartu
    nepřenese do cizí nabídky. */
 {
-  const klic = await p.evaluate(() => (document.getElementById('rv-karta') || { dataset: {} }).dataset.pk || '');
+  /* KLÍČ SE SKLÁDÁ Z OBOJÍHO: z pkey té karty (data-pk) a z výměry, kterou
+     karta ukazuje v řádku čísel. Prosté data-pk je HRUBÝ klíč — pod jedním
+     leží až pět různých pozemků — a poznámky se ukládají pod složený klíč
+     (window.PKKlic.klicPozemku), stejně jako to skládá scripts/test-poznamky.mjs.
+     Dokud se tu čekal hrubý klíč, zkouška hlásila vadu, která v aplikaci
+     není. */
+  const karta = await p.evaluate(() => {
+    const k = (document.getElementById('rv-karta') || { dataset: {} }).dataset.pk || '';
+    let v = 0;
+    for (const el of document.querySelectorAll('#rv-karta .rv-cislo')) {
+      const t = (el.textContent || '').replace(/[\s\u00a0]/g, '');
+      const m = t.match(/^(\d+)m²$/);
+      if (m) { v = Number(m[1]); break; }
+    }
+    return { pk: k, vymera: v };
+  });
+  /* HRUBÝ klíč slouží jen k poznání, že je to táž karta; poznámka se
+     ukládá pod složený. */
+  const pkHrube = karta.pk;
+  const klic = karta.pk ? karta.pk + '#v' + karta.vymera : '';
+  /* PŘEDPOKLAD: kdyby karta výměru neukazovala, složil by se klíč „#v0"
+     a kontrola níž by prošla na náhodě. */
+  pravda('karta ukazuje výměru, ze které se klíč skládá', karta.vymera > 0,
+    `karta ${karta.pk}, výměra ${karta.vymera}`);
   const start = await p.evaluate(() => ({
     vyzva: !!document.getElementById('rv-pozn-vyzva'),
     skryte: (document.getElementById('rv-pozn') || {}).hidden,
@@ -241,8 +264,8 @@ pravda('a nabízená karta není ani jeden z nich', nevraci.kolize === 0,
     await p.keyboard.press('ArrowRight');
     await p.waitForTimeout(500);
     const poSipce = await p.evaluate(() => (document.getElementById('rv-karta') || { dataset: {} }).dataset.pk || '');
-    pravda('šipka uprostřed psaní kartou nehne', poSipce === klic,
-      `před ${klic}, po ${poSipce}`);
+    pravda('šipka uprostřed psaní kartou nehne', poSipce === pkHrube,
+      `před ${pkHrube}, po ${poSipce}`);
     await p.evaluate(() => document.getElementById('rv-ne').click());
     await p.waitForTimeout(900);
     const dalsi = await p.evaluate(() => ({
@@ -250,7 +273,7 @@ pravda('a nabízená karta není ani jeden z nich', nevraci.kolize === 0,
       hodnota: (document.getElementById('rv-pozn') || { value: null }).value,
     }));
     pravda('a na další kartě je políčko prázdné (poznámka se nepřenese)',
-      dalsi.karta !== klic && !dalsi.hodnota, JSON.stringify(dalsi));
+      dalsi.karta !== pkHrube && !dalsi.hodnota, JSON.stringify(dalsi));
   }
 }
 

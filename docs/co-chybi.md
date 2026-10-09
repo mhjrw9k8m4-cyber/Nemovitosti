@@ -406,6 +406,26 @@ i v úzkém zobrazení, ne jen v základním pravidle. Zmenšovat se smí,
 ale ne pod dotykové minimum 44 px — a zrovna na telefonu se na ni
 klepe prstem.
 
+## 3o. ~~Dvě zkoušky hlídaly klíč, který se před rokem změnil~~ — *opraveno 9. 10.*
+
+Vedlejší nález k bodu 3l. Commit, který zavedl klíč `pkey + výměra`
+(aby jeden klíč neoznačoval pět různých pozemků), po sobě nechal tři
+věci: jednu skutečnou vadu — nefunkční „Vrátit" — a dvě zkoušky,
+které si dál sahaly pro **hrubý** klíč.
+
+`scripts/test-rychly-prohlizec.mjs` ověřoval, že se poznámka z
+rychlého výběru uloží pod klíč té karty. Četl `data-pk`, což je hrubý
+pkey, zatímco poznámky se ukládají pod `klicPozemku`. **V aplikaci to
+bylo celou dobu v pořádku** — poznámka se ukládá správně; zkouška to
+jen nedokázala ověřit a hlásila vadu, která tam není. Skládá teď klíč
+stejně jako `scripts/test-poznamky.mjs`, tedy z `data-pk` a výměry,
+kterou karta ukazuje.
+
+Proč se na to přišlo až teď: prohlížečová úloha v CI se při každém
+dalším pushi zrušila dřív, než se k těm zkouškám dostala. Pomohlo
+teprve pustit **všech 101 prohlížečových zkoušek najednou** lokálně,
+kde je nic nezruší — 99 zelených, tyhle dvě červené.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se
