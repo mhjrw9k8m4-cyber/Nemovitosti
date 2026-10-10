@@ -425,16 +425,29 @@
     if (!model) return '';
     var o = model.odhad(d);
 
-    if (!o || !o.podleVelikosti || o.podOdhadem < 15) return '';
+    if (!o || !o.podleVelikosti) return '';
     var kde = kdeText(o.uroven, o.kde);
     var coJe = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'exekuce' ? 'Uváděná cena' : 'Nabídková cena');
+
+    if (o.podil) {
+      return '<div class="md-odhad' + (volby.trida || '') + '">' +
+        '<div class="mo-rozdil mo-pochybna"><b>Srovnání s okolím tu neděláme</b> — v ceně je jen ' +
+        '<b>spoluvlastnický podíl</b>, kdežto výměra v inzerátu je celá parcela. ' +
+        'Rozdíl proti obvyklé ceně by byl ten zlomek, ne sleva.</div>' +
+        '<p class="mo-pozn">Kolik tu stojí <b>celé</b> pozemky: medián <b>' + fmt(Math.round(o.zaM2)) +
+        ' Kč/m²</b> — z <b>' + o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) +
+        ') a podobné výměry ' + kde + '. Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly' +
+        (volby.dlouhy ? ' — to ve veřejných zdrojích není. Berte to jako vodítko, ne jako odhad znalce.' : '.') +
+        '</p></div>';
+    }
+
+    if (o.podOdhadem < 15) return '';
     return '<div class="md-odhad' + (volby.trida || '') + '">' +
       '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
       '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">' + fmt(o.castka) + ' Kč</span></div>' +
 
-      '<div class="mo-rozdil' + (o.pochybna || o.nejisty || o.podil ? ' mo-pochybna' : '') + '"><b>o ' + o.podOdhadem + ' % níž</b>' +
-        (o.podil ? ' — jenže inzerát mluví o <b>spoluvlastnickém podílu</b>: v ceně je jen zlomek pozemku, kdežto výměra je celá. S celými pozemky se to srovnat nedá.'
-          : o.pochybna ? ' — takový rozdíl bývá spoluvlastnický podíl nebo jiná výměra, ověřte si to'
+      '<div class="mo-rozdil' + (o.pochybna || o.nejisty ? ' mo-pochybna' : '') + '"><b>o ' + o.podOdhadem + ' % níž</b>' +
+        (o.pochybna ? ' — takový rozdíl bývá spoluvlastnický podíl nebo jiná výměra, ověřte si to'
           : o.nejisty ? ' — ale ceny podobných pozemků ' + kde + ' se mezi sebou liší násobky, takže tohle číslo je jen hrubé vodítko'
                     : ', tedy zhruba o ' + fmt(o.rozdil) + '\u00a0Kč') + '</div>' +
       '<p class="mo-pozn">Spočítáno z mediánu <b>' + fmt(Math.round(o.zaM2)) + ' Kč/m²</b> — z <b>' +

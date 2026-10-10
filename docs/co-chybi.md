@@ -1248,6 +1248,64 @@ Sabotáž: změněné číslo na okresní stránce, změněné na krajské
 a neznámé slovo na dlaždici — každé shodí příslušnou kontrolu; bez nich
 11/11.
 
+## 3ac. NALEZENO: u spoluvlastnického podílu web tiskl slevu proti ceně CELÉ parcely — na 184 stránkách — *opraveno 10. 10.*
+
+Prohlížel jsem stránku pozemku na telefonu a narazil na tohle:
+
+```
+Uváděná cena                       28 000 Kč
+Obvyklá cena v okolí do 25 km     293 289 Kč
+o 90 % níž — jenže inzerát mluví o spoluvlastnickém podílu:
+             v ceně je jen zlomek pozemku, kdežto výměra je celá.
+```
+
+Těch 293 289 Kč je cena **celé parcely** (5 023 m² × 58 Kč/m²), kdežto
+28 000 Kč je cena za její **šestinu**. Rozdíl mezi nimi není sleva, je to
+ten zlomek. Text pod číslem to říká — jenže tučné „o 90 % níž" si oko
+přečte dřív než větu, která ho ruší, a obě čísla stojí vedle sebe
+v tabulce, jako by patřila k sobě.
+
+**Byla to jediná díra v jinak důsledném pravidle.** Odznak na kartě,
+percentil („dražší než 78 % podobných") i řazení podle slevy u podílu
+schválně mlčí — `nesrovnatelna(d)` je v `js/ceny.js` od začátku a
+`js/main.js` ji respektuje na šesti místech. Rádce v `js/radce.js` má pro
+podíl vlastní větev. Jen blok odhadu to číslo pořád tiskl.
+
+**Kolik toho bylo.** Blok se ukazuje u **544** nabídek a **184 z nich
+(34 %) je podíl**. Vytištěná „sleva" u nich má medián **30 %** a maximum
+**90 %**; u **třiceti** z nich web tvrdil slevu přes polovinu.
+
+**Proč se to nedá spravit přepočtem.** Nabízelo se počítat obvyklou cenu
+z výměry, která kupujícímu připadne (medián × plocha × zlomek). Změřeno
+na 457 podílech se známým zlomkem: medián by se z „10 % pod" překlopil na
+**−215 %**, tedy „dražší", a u podílu 9/792 z lesa by vyšlo **−4 244 %**.
+U 297 ze 457 (65 %) by se otočilo znaménko. Cena podílu prostě není cena
+pozemku krát zlomek — a vymýšlet si místo jednoho špatného čísla jiné
+špatné číslo nemá cenu.
+
+**Opraveno tím, že se netvrdí nic.** U podílu blok nově neukazuje ani
+celkovou obvyklou cenu, ani procento. Zůstává věta, co se doopravdy
+kupuje, a **hladina za metr** — údaj, který na stránce jinde není:
+
+```
+Srovnání s okolím tu neděláme — v ceně je jen spoluvlastnický podíl,
+kdežto výměra v inzerátu je celá parcela. Rozdíl proti obvyklé ceně
+by byl ten zlomek, ne sleva.
+
+Kolik tu stojí celé pozemky: medián 58 Kč/m² — z 10 nabídek stejného
+druhu (orná půda) a podobné výměry v okolí do 25 km.
+```
+
+Mez „aspoň 15 % pod odhadem" u podílu přestala platit: gatovala procento,
+které se už netiskne. Blok se proto u podílu ukáže vždycky, když je
+z čeho hladinu spočítat (430 nabídek místo dosavadních 184) — a tam, kde
+se dosud mlčelo, teď aspoň stojí, co se kupuje.
+
+Hlídá to `scripts/test-doporuceni.mjs` (38 kontrol): u podílu blok nesmí
+obsahovat „% níž" ani „Obvyklá cena", musí obsahovat hladinu v Kč/m², a —
+sabotáž naruby — u **celého** pozemku se srovnání tisknout musí dál, aby
+oprava neumlčela celý web. S vrácenou vadou padají tři kontroly.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

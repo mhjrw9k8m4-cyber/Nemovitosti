@@ -318,22 +318,43 @@ pravda('stránka pozemku bere blok s odhadem ze sdíleného modulu',
     slevoveVetve > 0 && sPodminkou === slevoveVetve,
     `větví ${slevoveVetve}, s podmínkou ${sPodminkou} — bez ní se u podílu zase objeví „−X % proti okolí"`);
 
-  /* Slovo se musí dostat i k člověku, ne zůstat v datech. Blok se
-     vykresluje až od 15 % pod odhadem (pod tím by to byla jen další
-     řádka s číslem u poloviny webu), takže se vybere podíl, u kterého
-     se opravdu ukáže. */
+  /* Slovo se musí dostat i k člověku, ne zůstat v datech. U podílu se
+     blok ukáže vždycky, když je z čeho spočítat hladinu — mez „aspoň
+     15 % pod odhadem" tam neplatí, protože se žádné procento netiskne. */
   const proBlok = sOdhadem.find((d) => {
     const o = M.odhad(d);
-    return o && o.podleVelikosti && o.podOdhadem >= 15;
+    return o && o.podleVelikosti;
   });
-  pravda('nějaký podíl se slevou v datech je', !!proBlok);
+  pravda('nějaký podíl s hladinou v datech je', !!proBlok);
   if (proBlok) {
-    const blok = C.blokOdhadu(M, proBlok, {});
+    const blok = C.blokOdhadu(M, proBlok, { fmt: (x) => String(x) });
+    const text = String(blok).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
     pravda('a blok s odhadem to řekne rovnou', /spoluvlastnick/i.test(blok) && /zlomek/i.test(blok),
-      `blok: ${String(blok).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 200)}`);
+      `blok: ${text.slice(0, 200)}`);
     /* Varovný text nesmí být vysázený jako radostná zpráva. */
     pravda('a je podaný tlumeně, ne jako sleva', /mo-rozdil mo-pochybna/.test(blok),
       'text varuje, ale styl by jásal');
+    /* A HLAVNĚ: ŽÁDNÉ SROVNÁNÍ. Dřív blok u podílu tiskl „Obvyklá cena
+       v okolí 293 289 Kč" a tučné „o 90 % níž" — jenže to byla cena CELÉ
+       parcely proti ceně její šestiny. Text to vzápětí popíral, ale tučné
+       číslo si oko přečte dřív. Naměřeno: blok se ukazuje u 544 nabídek
+       a 184 z nich byl podíl; medián vytištěné „slevy" 30 %, maximum 90 %. */
+    pravda('a NETVRDÍ žádné procento pod obvyklou cenou', !/% níž/.test(blok),
+      `blok u podílu pořád tiskne procento: ${text.slice(0, 160)}`);
+    pravda('ani celkovou „obvyklou cenu" za celou parcelu', !/Obvyklá cena/.test(blok),
+      'to je cena celé parcely proti ceně zlomku — rozdíl mezi nimi není sleva');
+    pravda('ale hladinu za metr řekne (ta na stránce jinde není)', /Kč\/m²/.test(blok),
+      text.slice(0, 160));
+    /* Sabotáž naruby: u NEpodílu se srovnání tisknout musí, jinak by
+       oprava umlčela celý web. */
+    const proCelek = DATA.find((d) => {
+      if (d.podil) return false;
+      const o = M.odhad(d);
+      return o && o.podleVelikosti && o.podOdhadem >= 15;
+    });
+    pravda('u celého pozemku se srovnání naopak tiskne dál',
+      !!proCelek && /% níž/.test(C.blokOdhadu(M, proCelek, { fmt: (x) => String(x) })),
+      'oprava u podílu umlčela i celé pozemky');
   }
   const pozemekJs = readFileSync(new URL('../js/pozemek.js', import.meta.url), 'utf8');
   pravda('stránka pozemku má pro podíl vlastní verdikt', /Prodává se podíl/.test(pozemekJs),
