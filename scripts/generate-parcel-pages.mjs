@@ -44,6 +44,7 @@ import { nactiArchiv } from './archiv-statistiky.mjs';
 /* Jména krajů, druhové a rozpočtové stránky — jedna tabulka pro tenhle
    generátor i pro generátor regionálních stránek. */
 import * as META from './regiony-meta.mjs';
+import * as BLOKY from './bloky.mjs';
 /* Čistič stylopisu — týž, jakým prochází css/styles.css. */
 import { ocisti as ocistiCss } from './minifikace.mjs';
 let _historie = null;
@@ -802,6 +803,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
      skládání téhož textu by se rozešla. */
   const vzdalenosti = OKRUH.popisVzdalenosti(d);
   const vObec = vObciOdkaz(d);
+  const blok = blokPro(d);
   const srov = srovnaniPro(d);
   const kamDalSem = kamDal(d);
   const staticky =
@@ -828,6 +830,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     + `</dl>`
     + `<p><a href="pozemek.html?p=${encodeURIComponent(pkey(d))}&amp;ll=${d.lat},${d.lng}&amp;v=${d.area || 0}&amp;c=${d.price || 0}">Otevřít na mapě</a></p>`
     + (vObec ? `<p><a href="${esc(vObec.url)}">${esc(vObec.text)}</a></p>` : '')
+    + (blok ? `<p>${esc(blok.text)}</p>` : '')
     /* SROVNÁNÍ I DO STATICKÉ ČÁSTI. Je to jediná část stránky, kterou
        nejde opsat odjinud, a zároveň proveže 2 053 stránek pozemků
        navzájem — dosud vedl z každé z nich jediný odkaz jinam (do
@@ -899,6 +902,10 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
   if (vObec) {
     h = h.replace(/(<\/body>)/,
       `<script type="application/json" id="pz-obec-data">${jsonVeStrance(vObec)}</scr` + `ipt>\n$1`);
+  }
+  if (blok) {
+    h = h.replace(/(<\/body>)/,
+      `<script type="application/json" id="pz-blok-data">${jsonVeStrance(blok)}</scr` + `ipt>\n$1`);
   }
   /* Hotový seznam, ne data k dopočítání: pořadí skládá jedno místo
      (scripts/srovnatelne.mjs) a prohlížeč ho jen vypisuje. Názvy obcí
@@ -1002,6 +1009,46 @@ export function vObciOdkaz(d) {
              : `V ${kde} je v nabídce ještě ${fmt(n)} pozemků`);
   return { text: text, url: 'index.html?obec=' + encodeURIComponent(d.place)
     + '&okres=' + encodeURIComponent(d.okres) };
+}
+
+/* ===== VÍC POZEMKŮ NA JEDNOM MÍSTĚ =================================
+   Kdo kupuje půdu, nekupuje tvar parcely, ale výměru na jednom místě.
+   Pět hektarů v jednom kuse je něco jiného než pět hektarů po okrese —
+   a z výpisu se to nepozná, protože každá parcela je samostatná řádka.
+   Pravidla shluku (do 300 m, tranzitivně, od tří nabídek) i to, co se
+   schválně netvrdí, leží v scripts/bloky.mjs. Tady se z čísel skládá
+   věta — a ta musí vzniknout JEN JEDNOU, proto se počítá pro všechny
+   nabídky naráz a ne pro každou stránku zvlášť. */
+let SOUSEDI = null;
+export function blokPro(d) {
+  if (!SOUSEDI) SOUSEDI = BLOKY.sousedi(nabidky().filter((o) => !poTerminu(o)));
+  const ost = SOUSEDI.get(BLOKY.klic(d));
+  const s = BLOKY.souhrn(d, ost);
+  if (!s) return null;
+  const dalsich = s.pocet - 1;
+  const ha = s.vymera / 10000;
+  const vymeraText = ha >= 1 ? `${ha.toFixed(ha >= 10 ? 1 : 2).replace('.', ',')} ha` : `${fmt(Math.round(s.vymera))} m²`;
+  /* ČESKY: „prodávají se ještě 2 další pozemky", ale „prodává se ještě
+     7 dalších pozemků" — od pěti výš jde podstatné jméno do 2. pádu
+     množného čísla a sloveso zpátky do jednotného. Dvojka s jednotným
+     slovesem („se prodává ještě 2 další pozemky") je ta chyba, které si
+     čtenář všimne dřív než čehokoli jiného na stránce. */
+  const kolik = dalsich < 5
+    ? `prodávají ještě ${dalsich} další pozemky`
+    : `prodává ještě ${fmt(dalsich)} dalších pozemků`;
+  let text = `V okruhu ${s.mez} m se ${kolik} — dohromady ${vymeraText}`;
+  if (s.cena !== null) text += ` za ${fmt(s.cena)} Kč`;
+  text += '.';
+  /* PODÍL SOUČET NAFUKUJE: v inzerátu je výměra celé parcely, ale kupuje
+     se zlomek. Když je ve shluku, musí to u součtu stát. */
+  if (s.podilu) {
+    text += s.podilu === 1
+      ? ' Jeden z nich je spoluvlastnický podíl, takže jeho výměra je za celou parcelu, ne za to, co se prodává.'
+      : ` ${fmt(s.podilu)} z nich jsou spoluvlastnické podíly, takže jejich výměra je za celé parcely, ne za to, co se prodává.`;
+  }
+  /* Netvrdí se, že parcely spolu SOUSEDÍ (na to by byly potřeba hranice
+     z katastru) ani že se dají koupit najednou — prodejců může být víc. */
+  return { text, pocet: s.pocet, vymera: s.vymera, cena: s.cena, podilu: s.podilu, mez: s.mez };
 }
 
 /* ===== SROVNATELNÉ POZEMKY =========================================

@@ -120,6 +120,24 @@
     if (!o || typeof o.text !== 'string' || typeof o.url !== 'string') return '';
     return '<a href="' + esc(o.url) + '">' + esc(o.text) + '</a>';
   }
+  /* VÍC POZEMKŮ NA JEDNOM MÍSTĚ. Věta i čísla přicházejí hotové ze
+     generátoru (ostrůvek #pz-blok-data) — stejně jako u obce a dálek:
+     číslo v té větě je slib a smí ho skládat jen jedno místo
+     (scripts/bloky.mjs → scripts/generate-parcel-pages.mjs). Přes
+     ostrůvek jde čistý text, značky se stavějí tady a přes esc(). */
+  function blokHtml() {
+    var el = document.getElementById('pz-blok-data');
+    if (!el) return '';
+    var o = null;
+    try { o = JSON.parse(el.textContent || 'null'); } catch (e) { return ''; }
+    if (!o || typeof o.text !== 'string' || !(o.pocet > 2)) return '';
+    return '<div class="pz-blok">'
+      + '<b>Nekupujete jen tuhle parcelu.</b> '
+      + esc(o.text)
+      + ' <span class="pz-blok-pozn">Jsou to vzdušné čáry mezi nabídkami, ne hranice parcel — '
+      + 'a každou může prodávat někdo jiný. Na mapě je uvidíte pohromadě.</span>'
+      + '</div>';
+  }
   function dalkyText() {
     var el = document.getElementById('pz-okoli-data');
     if (!el) return '';
@@ -1326,6 +1344,7 @@
         (mistoRadek(d, titulStranky()) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d, titulStranky()) + '</div>' : '') +
         (dalkyText() ? '<div class="pz-dalky">vzdušnou čarou: ' + esc(dalkyText()) + '</div>' : '') +
         (vObciHtml() ? '<div class="pz-vobci">' + vObciHtml() + '</div>' : '') +
+        blokHtml() +
       '</div>' +
 
       '<div class="pz-priceblock">' +

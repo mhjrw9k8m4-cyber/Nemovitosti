@@ -100,6 +100,9 @@
 .pv-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--text-ondark-mute);margin-top:6px}
 .pz-sect-h{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--popisek);margin:40px 0 10px;position:relative}
 .pz-sect-h::before{content:"";position:absolute;left:0;top:-14px;width:52px;height:2px;border-radius:2px;background:var(--grad-warm);opacity:.85}
+.pz-blok{margin:10px 0 0;padding:12px 14px;border-radius:var(--r-plocha);font-size:14px;line-height:1.55;background:linear-gradient(180deg,var(--ink-soft2),var(--ink-soft));border:1px solid var(--line);color:var(--text-ondark)}
+.pz-blok b{color:var(--copper-bright)}
+.pz-blok-pozn{display:block;margin-top:6px;font-size:13px;color:var(--text-ondark-mute)}
 .pz-naklady{margin:20px 0 0;font-size:14px;color:var(--text-ondark-mute)}
 .pz-naklady a{font-weight:600;color:var(--copper-bright);text-decoration:underline;text-underline-offset:3px}
 .pz-popis-inzerent{max-width:var(--m-text);margin:0 0 6px;font-size:16px;line-height:1.62;color:var(--text-ondark)}
@@ -311,7 +314,7 @@ body.pzm-cela-telo{overflow:hidden}
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 4 104 m² — Seninka, okres Vsetín</h1><p><b>123 120 Kč</b> (30 Kč/m²) · 4 104 m² · Dražba</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>4 104 m²</dd><dt>Obec</dt><dd>Seninka</dd><dt>Okres</dt><dd><a href="pozemky-okres-vsetin.html">Vsetín</a></dd><dt>Parcela</dt><dd>č. 1222</dd><dt>Stav / zdroj</dt><dd>dražba 12. 10. 2026 · OK dražby</dd><dt>Vzdušnou čarou</dt><dd>Vsetín 8,1 km · Olomouc 64 km</dd></dl><p><a href="pozemek.html?p=Seninka%7C1222%7CVset%C3%ADn%7C49.268%7C17.973&amp;ll=49.2678392,17.973175&amp;v=4104&amp;c=123120">Otevřít na mapě</a></p><p><a href="index.html?obec=Seninka&amp;okres=Vset%C3%ADn">V obci Seninka jsou v nabídce ještě 3 pozemky</a></p><h2>Kam dál</h2><ul><li><a href="pozemky-okres-vsetin.html">Okres Vsetín</a> — všechny pozemky v okrese</li><li><a href="pozemky-zlinsky-kraj.html">Zlínský kraj</a> — přehled celého kraje</li><li><a href="pozemky-louka.html">Louky a travní porosty</a> — týž druh pozemku po celé ČR</li></ul></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Trvalý travní porost 4 104 m² — Seninka, okres Vsetín</h1><p><b>123 120 Kč</b> (30 Kč/m²) · 4 104 m² · Dražba</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>4 104 m²</dd><dt>Obec</dt><dd>Seninka</dd><dt>Okres</dt><dd><a href="pozemky-okres-vsetin.html">Vsetín</a></dd><dt>Parcela</dt><dd>č. 1222</dd><dt>Stav / zdroj</dt><dd>dražba 12. 10. 2026 · OK dražby</dd><dt>Vzdušnou čarou</dt><dd>Vsetín 8,1 km · Olomouc 64 km</dd></dl><p><a href="pozemek.html?p=Seninka%7C1222%7CVset%C3%ADn%7C49.268%7C17.973&amp;ll=49.2678392,17.973175&amp;v=4104&amp;c=123120">Otevřít na mapě</a></p><p><a href="index.html?obec=Seninka&amp;okres=Vset%C3%ADn">V obci Seninka jsou v nabídce ještě 3 pozemky</a></p><p>V okruhu 300 m se prodávají ještě 3 další pozemky — dohromady 1,93 ha za 578 610 Kč.</p><h2>Kam dál</h2><ul><li><a href="pozemky-okres-vsetin.html">Okres Vsetín</a> — všechny pozemky v okrese</li><li><a href="pozemky-zlinsky-kraj.html">Zlínský kraj</a> — přehled celého kraje</li><li><a href="pozemky-louka.html">Louky a travní porosty</a> — týž druh pozemku po celé ČR</li></ul></article></div></div>
   </div>
 </main>
 
@@ -352,7 +355,7 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Trvalý travní porost 4 104 m² — Seninka, okres Vsetín","description":"Dražba · 123 120 Kč (30 Kč/m²) · 4 104 m² · Seninka, okres Vsetín. Termín 12. 10. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-vsetin-seninka-uqc1qm.html","address":{"@type":"PostalAddress","addressLocality":"Seninka","addressRegion":"Vsetín","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.2678392,"longitude":17.973175},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":4104,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":123120,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-vsetin-seninka-uqc1qm.html","itemOffered":{"@type":"Place","name":"Trvalý travní porost 4 104 m² — Seninka, okres Vsetín"},"description":"Vyvolávací cena ve veřejné dražbě, ne cena požadovaná prodávajícím."}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Zlínský kraj","item":"https://www.parcelaka.cz/pozemky-zlinsky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Vsetín","item":"https://www.parcelaka.cz/pozemky-okres-vsetin.html"},{"@type":"ListItem","position":5,"name":"Trvalý travní porost 4 104 m² — Seninka, okres Vsetín","item":"https://www.parcelaka.cz/pozemek-vsetin-seninka-uqc1qm.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Seninka|1222|Vsetín|49.268|17.973","ll":[49.2678392,17.973175],"v":4104,"c":123120,"r":"data/okres/vsetin.json"};</script>
-<script src="js/min/pozemek.js?v=e63fffe8"></script>
+<script src="js/min/pozemek.js?v=59c2e9af"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -367,6 +370,7 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Vsetín 8,1 km · Olomouc 64 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Seninka jsou v nabídce ještě 3 pozemky","url":"index.html?obec=Seninka\u0026okres=Vset%C3%ADn"}</script>
+<script type="application/json" id="pz-blok-data">{"text":"V okruhu 300 m se prodávají ještě 3 další pozemky — dohromady 1,93 ha za 578 610 Kč.","pocet":4,"vymera":19287,"cena":578610,"podilu":0,"mez":300}</script>
 <script type="application/json" id="pz-titul-data">"Trvalý travní porost 4 104 m² — Seninka, okres Vsetín"</script>
 <script type="application/json" id="pz-kamdal-data">[{"t":"Okres Vsetín","u":"pozemky-okres-vsetin.html","p":"všechny pozemky v okrese"},{"t":"Zlínský kraj","u":"pozemky-zlinsky-kraj.html","p":"přehled celého kraje"},{"t":"Louky a travní porosty","u":"pozemky-louka.html","p":"týž druh pozemku po celé ČR"}]</script>
 </body>

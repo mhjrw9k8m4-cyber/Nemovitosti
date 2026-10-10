@@ -55,6 +55,8 @@ jobs:
         run: node scripts/test-cisla-okresu.mjs
       - name: Změna ceny nesmí nabídce sebrat věk
         run: node scripts/test-prvni-videno.mjs
+      - name: Víc pozemků na jednom místě (shluky nabídek)
+        run: node scripts/test-bloky.mjs
       - name: Srovnatelné pozemky — pořadí sedí na vypsaný seznam
         run: node scripts/test-srovnatelne.mjs
 

@@ -191,6 +191,14 @@
        jak bude psaný — drží se proto na čtecí míře a odsazuje se jako
        odstavec, ne jako karta. Žádný rámeček: na stránce už tři jsou
        a čtvrtý by z ní udělal šuplíkový systém. */
+    /* VÍC POZEMKŮ NA JEDNOM MÍSTĚ. Stojí hned pod nadpisem a vzdálenostmi,
+       protože odpovídá na touž otázku „co tu vlastně je" — ne na otázku
+       o ceně. Tlumená deska, ne odznak: je to upozornění, ne nabídka. */
+    .pz-blok{margin:10px 0 0; padding:12px 14px; border-radius:var(--r-plocha); font-size:14px; line-height:1.55;
+      background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft));
+      border:1px solid var(--line); color:var(--text-ondark);}
+    .pz-blok b{color:var(--copper-bright);}
+    .pz-blok-pozn{display:block; margin-top:6px; font-size:13px; color:var(--text-ondark-mute);}
     .pz-naklady{margin:20px 0 0; font-size:14px; color:var(--text-ondark-mute);}
     .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
     .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 6px; font-size:16px;
@@ -672,7 +680,7 @@
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=404eb49d"></script>
-<script src="js/min/pozemek.js?v=e63fffe8"></script>
+<script src="js/min/pozemek.js?v=59c2e9af"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

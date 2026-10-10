@@ -1382,6 +1382,70 @@ evidence začíná 14. 9., takže by 1 192 pozemků z 1 988 hlásilo totéž
 dost dlouhé, data už budou v pořádku; dřív by to byla jen hezčí podoba
 téhož zkreslení.
 
+## 3ae. Nové: „Nekupujete jen tuhle parcelu" — shluky sousedících nabídek na 187 stránkách — *10. 10.*
+
+Kdo kupuje půdu, nekupuje tvar parcely, ale **výměru na jednom místě**.
+Pět hektarů v jednom kuse je něco úplně jiného než pět hektarů
+roztroušených po okrese — a z výpisu se to nepozná, protože každá
+parcela je v něm samostatná řádka.
+
+Web o okolí dosud říkal tři věci a ani jedna na tohle neodpovídala:
+
+| co už tam bylo | o čem to je |
+|---|---|
+| „Vzdušnou čarou: Benešov 25 km" | kde to je |
+| „V obci Slatina je v nabídce ještě 6 pozemků" | počet, ale přes celou obec a bez výměry |
+| „Srovnatelné pozemky v okolí" | **cena**, a bere se z celého okresu |
+
+Nově na stránce pozemku stojí:
+
+> **Nekupujete jen tuhle parcelu.** V okruhu 300 m se prodávají ještě
+> 2 další pozemky — dohromady 1,06 ha za 1 817 000 Kč.
+> *Jsou to vzdušné čáry mezi nabídkami, ne hranice parcel — a každou může
+> prodávat někdo jiný. Na mapě je uvidíte pohromadě.*
+
+**Jak se shluk pozná.** Spojují se nabídky do 300 m vzdušnou čarou,
+a to **tranzitivně**: A—B a B—C dá jeden shluk, i když A a C jsou dál.
+Tak se chová pás pozemků podél cesty, což je přesně ten případ, o který
+jde. Měřeno na 1 943 nabídkách bez duplicit: do 150 m je 17 shluků o třech
+a více nabídkách, do 300 m **47 shluků se 187 nabídkami (10 % webu)**,
+do 600 m už 85 shluků s 375 nabídkami. Mez 300 m je kompromis: dost na
+pás parcel, málo na „celá vesnice".
+
+Největší nalezené shluky: Újezd u Brna 12× (2,77 ha), Ústí nad Orlicí
+10× (jedna dražba rozdělená na deset položek), Podolí u Vsetína 8×,
+Mochov 8× (4,92 ha za 373 tis. Kč).
+
+**Co se schválně NETVRDÍ.** Že spolu parcely **sousedí** — na to by byly
+potřeba hranice z katastru, které web nemá; tvrdí se jen vzdálenost.
+Že se dají koupit **najednou** — prodejců může být víc. A shluk **pod tři
+nabídky se nehlásí vůbec**: „vedle je ještě jeden pozemek" už říká věta
+o obci a třetí odstavec o témže by stránku jen nafoukl.
+
+Dvě opatrnosti navíc, obě vynucené daty:
+- **cena se sčítá, jen když ji má každá nabídka ve shluku.** Součet, ve
+  kterém jedna chybí, by vypadal jako cena celého bloku a byl by nižší.
+- **spoluvlastnický podíl se u součtu přizná** („3 z nich jsou
+  spoluvlastnické podíly, takže jejich výměra je za celé parcely"):
+  v inzerátu je výměra celé parcely, ale kupuje se zlomek, takže podíl
+  součet výměry nafukuje.
+
+### Chyba, která mlčela
+
+První verze dala blok na **0 z 1 943 stránek** a generátor hlásil úspěch.
+Mapa shluků byla klíčovaná **objektem nabídky** — jenže `nabidky()`
+v generátoru čte `data/opportunities.json` z disku **znovu u každé
+stránky**, takže `Map.get(d)` dostával pokaždé jiný objekt a vracel
+`undefined`. Klíč je teď řetězec ze všeho, čím se nabídka od jiné liší,
+a zkouška to ověřuje kopií objektu, ne tímtéž objektem.
+
+Hlídá to `scripts/test-bloky.mjs` (16 kontrol): vzdálenost, mez,
+tranzitivita, nabídka bez souřadnic, klíč proti totožnosti objektu,
+souhrn, nesčítání neúplné ceny, podíl, čeština věty (dvojka musí mít
+sloveso v množném čísle) a čísla v ostrůvcích na hotových stránkách.
+Sabotáže: klíč zpět na objekt (2 kontroly padnou), sčítání neúplné ceny
+(1) a mez 3 000 m místo 300 (2).
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se
