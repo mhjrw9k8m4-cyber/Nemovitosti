@@ -49,6 +49,9 @@ const PORADI = [
   // Taky na ničem nezávisí: vlastní tabulka čítačů, žádný cizí klíč,
   // žádná vazba na účet. Může být kdekoli, je tedy na konci.
   ['navstevnost.sql', 'vlastní měření návštěvnosti — čítače, bez cookies a bez IP'],
+  // Až za watch-alerts.sql: zužuje pravidlo, které zakládá schema.sql
+  // a znovu potvrzuje watch-alerts.sql, takže musí běžet po obou.
+  ['hlidani-anon-uzce.sql', 'veřejný zápis do watch_subscriptions bez obejití potvrzení e-mailu'],
   // Úplně na konci schválně: vypisuje oprávnění všech funkcí výš, takže
   // má smysl teprve až jsou všechny založené.
   ['kontrola-opravneni.sql', 'kdo smí spustit kterou funkci — a kde to zůstalo na výchozím'],

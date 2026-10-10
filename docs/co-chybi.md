@@ -788,6 +788,61 @@ v minulosti. Sabotáž (vyjmout tu jednu řádku) hlásí všech pět.
 GPX se netýká: `xml()` escapuje `&`, `<`, `>` i uvozovku a ve wpt nemá
 vzorec co dělat.
 
+## 3x. ~~S veřejným klíčem šlo vložit už potvrzenou přihlášku k hlídání~~ — *opraveno v repozitáři 10. 10., čeká na spuštění v databázi*
+
+Prošel jsem si statickou kontrolou celý `supabase/00-vse.sql`: jestli má
+každá tabulka zapnutou řádkovou bezpečnost a co dovolují pravidla pro
+veřejný („publishable") klíč, který je — správně — v `js/config.js`.
+
+**RLS má všech 15 tabulek**, to je v pořádku. Zápis s veřejným klíčem
+dovolují dvě pravidla a jedno z nich znělo:
+
+```sql
+on watch_subscriptions for insert to anon with check (true)
+```
+
+`with check (true)` nehlídá **hodnoty**. Tabulka přitom má dvojí
+potvrzení (double opt-in) — sloupce `confirmed` a `confirm_token` —
+a u nich v `schema.sql` stojí *„zákon vyžaduje souhlas"*. Kdo má
+veřejný klíč, mohl tedy vložit řádek, který už má `confirmed = true`,
+nebo si zvolit vlastní `confirm_token` a poslat ho do veřejné funkce
+`confirm_watch()`. Obojí obejde potvrzení e-mailu, tedy přesně to, co
+ty sloupce zajišťují.
+
+**Poctivě k velikosti nálezu, protože to vypadá horší, než to je.**
+Z téhle tabulky se **žádná pošta neposílá**. Rozesílač
+(`scripts/send-alerts.mjs`) čte `saved_searches` přes
+`hlidani_k_odeslani()`, a ta vyžaduje `u.email_confirmed_at is not
+null`, tedy opravdu potvrzený účet v Supabase. `watch_subscriptions` je
+starší, nepoužívaná cesta — stojí to i v komentáři v `js/config.js`.
+Takže **tohle není „kdokoli rozešle mail komukoli"**; je to otevřená
+branka u mechanismu, který by se tím obešel, kdyby se někdy zapojil,
+a zatím volný zápis do cizí databáze.
+
+Pravidlo se neruší celé, a to kvůli jediné věci, která ho používá:
+tlačítko „Uložení hlídání" v `diagnostika.html`, kterým si majitel
+ověřuje, že zápis do databáze vůbec projde. Správná cesta zápisu vede
+funkcí `subscribe_watch()`, a ta je `security definer`, takže RLS
+obchází — pravidlo pro anon k přihlášení potřeba není.
+
+Nově (`supabase/hlidani-anon-uzce.sql`) smí vložit jen řádek, který
+**není potvrzený, nemá potvrzovací token**, je aktivní, nikomu nic
+neposlal a má rozumné délky. Takový řádek nikomu nic nepošle a nedá se
+sám potvrdit. Diagnostika posílá jen e-mail a okres, takže projde.
+
+`scripts/test-anon-zapis.mjs` (8 kontrol) čte **hotový balík** — to, co
+majitel opravdu spustí — a u každého pravidla bere jeho POSLEDNÍ podobu
+v souboru, protože pozdější `create policy` tu dřívější přepíše. Hlídá,
+že každý volný zápis má u sebe **napsaný důvod** (dnes jediný:
+`messages`, kontaktní formulář bez účtu, jehož čtení má jen majitel),
+a hlídá i opačný směr — že důvod nezůstal po pravidle, které už není.
+Sabotáž (vrátit podmínku na `true`) hlásí obě konkrétní kontroly.
+
+**Co zůstává na majiteli:** pustit `supabase/hlidani-anon-uzce.sql`
+v Supabase → SQL Editor. V repozitáři je to hotové a v balíku
+`00-vse.sql` taky, takže kdo databázi zakládá znovu, dostane ji už
+zúženou; v té dnes běžící je pravidlo pořád to staré.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

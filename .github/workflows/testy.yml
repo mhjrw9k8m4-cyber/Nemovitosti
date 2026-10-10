@@ -214,6 +214,9 @@ jobs:
       - name: Dvojníci (týž pozemek pod dvěma inzeráty)
         run: node scripts/test-dvojnici.mjs
 
+      - name: Zápis do databáze s veřejným klíčem
+        run: node scripts/test-anon-zapis.mjs
+
       - name: Sazba (jednoznaková slova na konci řádku)
         run: node scripts/test-sazba.mjs
 
