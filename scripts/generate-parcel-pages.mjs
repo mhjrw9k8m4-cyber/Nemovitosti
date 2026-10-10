@@ -1096,6 +1096,22 @@ export function pripravSrovnani(mapa) {
     if (!(d.price > 0 && d.area >= 100 && d.area <= 500000)) continue;
     if (!isFinite(d.lat) || !isFinite(d.lng)) continue;
     if (MODEL.neduveryhodna && MODEL.neduveryhodna(d)) continue;
+    /* ÚŘEDNÍ CENA NENÍ DŮKAZ O TRHU — ani vedle sebe, ani o sobě.
+       Státní pozemkový úřad prodává podle § 12 oprávněné osobě za cenu,
+       kterou nestanovil trh. Z VŠECH srovnávacích přihrádek v js/ceny.js
+       taková nabídka vypadává (viz spravniCena tam) a od 10. 10. nedostane
+       ani percentil, ani odznak „výhodná cena". Seznam srovnatelných
+       pozemků je ale taky přihrádka, jen vypsaná — a tam zůstávala.
+       Změřeno na ostrých datech: ze 204 nabídek s úřední cenou jich 51
+       projde sítem výš, 83 řádků ve 37 seznamech pak ukazovalo úřední cenu
+       jako stav trhu a 20 stránek § 12 dostalo vlastní pořadí proti trhu.
+       Nejhorší případ: pozemek za 36 Kč/m² byl „z čtyř nabídek nejdražší"
+       proti ceně 31 Kč/m², kterou stanovil úřad. Za tolik se louka
+       neprodává, to je cena pro oprávněnou osobu.
+       Stojí to 31 stránek z 913, které o sekci přijdou (z nich 20 jsou
+       ty § 12 samy), a okruh se neprotáhne ani o kilometr: medián
+       zůstává 16 km, devadesátý percentil 24 km. */
+    if (MODEL.spravniCena && MODEL.spravniCena(d)) continue;
     /* A TAKY TO, PŘED ČÍM WEB JINDE SÁM VARUJE. `neduveryhodna` je
        hrubé síto (cena pod padesátinou hladiny) a chytilo 3 nabídky
        z 1 817. Model má ale ještě druhé, přísnější: `pochybna` —

@@ -2123,6 +2123,99 @@ spadlo. Výběr „co se toho asi týká" tady nestačí: tahle zkouška čte
 `js/main.js` jako **text**, takže se jí může dotknout každá změna
 v něm. Před pushem teď jede celá dávka (101 prohlížečových zkoušek).
 
+## 3ao. NALEZENO: v „srovnatelných nabídkách v okolí" stála jako důkaz o trhu cena, kterou stanovil úřad — na 37 stránkách — *opraveno 10. 10.*
+
+Přímé pokračování bodu 3al. Tam se státní půda podle **§ 12** přestala
+chválit odznakem „výhodná cena" a přestala dostávat percentil. Jenže
+verdikt o trhu neříká web jen odznakem: stránka pozemku má sekci
+**Srovnatelné pozemky**, kde stojí věta „z pěti nabídek do 17 km je
+tenhle nejdražší" a pod ní všech pět i s cenami. A tam ta úřední cena
+zůstala.
+
+### Proč to je chyba
+
+Státní pozemkový úřad prodává podle § 12 **oprávněné osobě** za cenu,
+kterou nestanovil trh. Z VŠECH srovnávacích přihrádek v `js/ceny.js`
+taková nabídka vypadává — komentář u `spravniCena` to říká naplno:
+„Na to je cena, kterou stanovil úřad, špatné pozorování ve VŠECH
+přihrádkách, ne jen v té srovnávací." Vypsaný seznam srovnatelných je
+ale taky přihrádka, jen vidět. Síto v `generate-parcel-pages.mjs`
+vyhazovalo dražby (`type !== 'sale'`), podíly (hvězdička v klíči
+skupiny) i ceny, před kterými web sám varuje (`pochybna`) — na § 12 se
+zapomnělo, protože ta nabídka JE `sale`.
+
+### Jak velké to bylo
+
+Změřeno na datech z 10. 10. — a nejdřív nad sítem generátoru, pak
+ještě na hotovém HTML (ostrůvek `#pz-srovnani-data`), aby to nebylo
+jen tvrzení o kódu:
+
+| | |
+|---|---|
+| nabídek s úřední cenou | 204 |
+| z nich projde sítem do srovnávání | 51 |
+| stránek s aspoň jedním § 12 řádkem | **37** |
+| takových řádků | **82** |
+| stránek § 12, které dostaly vlastní pořadí proti trhu | **20** |
+
+Jak daleko je ta cena od trhu (medián Kč/m², jen nabídky k prodeji):
+
+| druh | trh | § 12 | poměr |
+|---|---|---|---|
+| Orná půda | 46 | 8 | 5,6× |
+| Zahrada | 696 | 57 | 12,1× |
+| Vinice / sad | 64 | 9 | 6,9× |
+| Louka / travní porost | 39 | 16 | 2,5× |
+
+Nejkřiklavější případ ze stránek: `pozemek-brno-mesto-brno-zzd0y3.html`
+tvrdila „Z pěti nabídek do 17 km je tenhle **nejdražší**" — a tři
+z těch pěti byly ceny od úřadu (157, 127 a 17 Kč/m²). Pozemek za
+36 Kč/m² byl jinde „z čtyř nejdražší" proti 31 Kč/m² od úřadu. Za
+tolik se louka neprodává; to je cena pro oprávněnou osobu.
+
+### Oprava a co stojí
+
+Jeden řádek v sítu generátoru (`if (MODEL.spravniCena(d)) continue;`),
+tedy stejné pravidlo jako všude jinde v modelu. Změřeno před a po:
+
+| | před | po |
+|---|---|---|
+| stránek se sekcí srovnatelných | 963 | 935 |
+| § 12 řádků | 82 | **0** |
+| stránek § 12 s pořadím proti trhu | 20 | **0** |
+| medián okruhu | 16 km | 16 km |
+| 90. percentil okruhu | 24 km | 24 km |
+
+Sekci tedy ztratí 28 stránek z 963 (−2,9 %) a z nich 20 jsou právě ty
+§ 12, které verdikt o trhu mít neměly. Okruh se neprotáhl ani
+o kilometr.
+
+Přestavba se na tom shodne do jedné stránky: změnilo se **39** souborů
+`pozemek-*.html` — 28 sekci ztratilo (přesně ten rozdíl 963 → 935)
+a 11 si ji nechalo s jinými řádky. Ověřeno proti HEAD, že **všech 39**
+tu sekci předtím mělo: nic jiného se tím nepohnulo.
+
+### Zkoušky — a proč jsou dvě
+
+`scripts/test-srovnatelne.mjs` má 35 → **42** kontrol, ve dvou
+vrstvách:
+
+1. **nad daty** — zrcadlí síto generátoru a hlídá, že se § 12 nedostane
+   mezi kandidáty ani do vypsaných řádků;
+2. **nad hotovým HTML** — projde všech 1 941 stránek, přečte ostrůvek
+   `#pz-srovnani-data` a změří totéž na tom, co se opravdu vygenerovalo.
+
+Druhá vrstva je tam proto, že první si pravidlo **opisuje**: kdyby
+někdo ten řádek z generátoru vyndal, zůstane zelená, protože měří svou
+kopii, ne web. K obojímu patří pojistka na pojistku („stránky s úřední
+cenou se dohledaly (204)", „seznamy se opravdu našly (935, 4 580
+řádků)"), bez kterých by nuly byly zelené i na prázdném vzorku.
+
+**Prokázáno sabotáží, obě vrstvy zvlášť:** s vrácenými stránkami
+z posledního commitu (stav před opravou) spadly obě kontroly nad HTML;
+s vyndaným sítem ze zkoušky spadly obě kontroly nad daty. Nic z toho
+neprošlo omylem.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

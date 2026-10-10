@@ -13,8 +13,11 @@
    daty. Nakonec totéž na OSTRÝCH datech, protože meze (25 km, ±3×)
    byly vybrané podle měření a mají se podle měření i hlídat.
    ================================================================== */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { souborPro } from './generate-parcel-pages.mjs';
 import { srovnatelne, patriKSobe, kmMezi, veta,
   OKRUH_KM, POMER_PLOCHY, MIN_SROVNATELNYCH, MAX_SROVNATELNYCH } from './srovnatelne.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -147,17 +150,21 @@ pravda(`vzdálenost sedí (Praha–Brno ${d.toFixed(0)} km)`, d > 180 && d < 190
      hvězdičky „|podíl" v klíči skupiny. Kdyby si ho tahle zkouška
      postavila po svém, hlídala by vlastní kopii pravidel. */
   const kand = [];
-  let pochybnych = 0;
+  let pochybnych = 0, uredních = 0;
   for (const o of DATA) {
     if (o.type !== 'sale') continue;
     if (!(o.price > 0 && o.area >= 100 && o.area <= 500000)) continue;
     if (!isFinite(o.lat) || !isFinite(o.lng)) continue;
     if (MODEL.neduveryhodna && MODEL.neduveryhodna(o)) continue;
+    /* Úřední cena podle § 12 — zrcadlí síto z generátoru. Kdyby se
+       tady vynechala, hlídala by zkouška jiná pravidla než web. */
+    if (MODEL.spravniCena && MODEL.spravniCena(o)) { uredních++; continue; }
     const odh = MODEL.odhad && MODEL.odhad(o);
     if (odh && odh.pochybna) { pochybnych++; continue; }
     const m2 = CENY.zaMetr(o);
     if (!(m2 > 0)) continue;
     kand.push({ id: o.url || '', pk: KLIC.pkey(o), pochybna: !!(odh && odh.pochybna),
+      urad: !!(MODEL.spravniCena && MODEL.spravniCena(o)),
       skupina: MODEL.druhGroup(o.druh) + (o.podil ? '|podíl' : ''),
       podil: !!o.podil, area: o.area, m2, lat: o.lat, lng: o.lng, okres: o.okres });
   }
@@ -174,12 +181,24 @@ pravda(`vzdálenost sedí (Praha–Brno ${d.toFixed(0)} km)`, d > 180 && d < 190
     'bez nich by kontrola níž neměla co hlídat');
   pravda('a žádná taková se nedostala mezi kandidáty na srovnání',
     kand.every((k) => !k.pochybna), 'síto nefunguje');
+  /* ÚŘEDNÍ CENA SE NESMÍ STÁT DŮKAZEM O TRHU. Cenu podle § 12 stanoví
+     Státní pozemkový úřad pro oprávněnou osobu, ne trh — proto taková
+     nabídka vypadává ze všech srovnávacích přihrádek v js/ceny.js
+     a nedostane ani percentil. Seznam srovnatelných pozemků je ale taky
+     přihrádka: před opravou v něm bylo 83 takových řádků ve 37 seznamech
+     a 20 stránek § 12 dostalo vlastní pořadí proti trhu.
+     První kontrola je ta důležitá: bez ní by druhá byla zelená i na
+     datech, kde žádná § 12 nabídka není, a nic by neznamenala. */
+  pravda(`model pozná nabídky s úřední cenou a síto je zahodilo (${uredních})`,
+    uredních >= 20, `jen ${uredních} — zkouška níž by neměla co hlídat`);
+  pravda('a žádná taková se nedostala mezi kandidáty na srovnání',
+    kand.every((k) => !k.urad), 'síto na § 12 nefunguje');
   pravda('v datech jsou i spoluvlastnické podíly (jinak by se kontrola níž neměla o co opřít)',
     kand.filter((k) => k.podil).length >= 100, String(kand.filter((k) => k.podil).length));
   pravda('ostrých kandidátů je dost na měření', kand.length >= 1000, String(kand.length));
 
   let maji = 0, ciziOkres = 0, spatnyDruh = 0, spatnaVelikost = 0, mimoOkruh = 0, rozchod = 0;
-  let pocetVypsanych = 0, michaPodily = 0, dvojcata = 0;
+  let pocetVypsanych = 0, michaPodily = 0, dvojcata = 0, uredniVypsane = 0;
   const vzdalenosti = [];
   for (const k of kand) {
     const s = srovnatelne(k, kand);
@@ -195,6 +214,7 @@ pravda(`vzdálenost sedí (Praha–Brno ${d.toFixed(0)} km)`, d > 180 && d < 190
          Tohle je ta nejdražší chyba, kterou tu jde udělat. */
       if (!!p.x.podil !== !!k.podil) michaPodily++;
       if (p.x.pk === k.pk) dvojcata++;
+      if (p.x.urad) uredniVypsane++;
       if (p.x.area > k.area * POMER_PLOCHY || p.x.area < k.area / POMER_PLOCHY) spatnaVelikost++;
       if (p.km > OKRUH_KM) mimoOkruh++;
       if (p.x.okres !== k.okres) ciziOkres++;
@@ -213,6 +233,8 @@ pravda(`vzdálenost sedí (Praha–Brno ${d.toFixed(0)} km)`, d > 180 && d < 190
     michaPodily === 0, `${michaPodily} takových řádků`);
   pravda('a žádná stránka nesrovnává pozemek s jeho vlastním dvojčetem',
     dvojcata === 0, `${dvojcata} takových řádků`);
+  pravda('ani nevypisuje jako důkaz o trhu cenu, kterou stanovil úřad',
+    uredniVypsane === 0, `${uredniVypsane} takových řádků`);
   vzdalenosti.sort((a, b) => a - b);
   const med = vzdalenosti[Math.floor(vzdalenosti.length / 2)];
   /* 15 km, protože naměřeno 13. Kdyby se mez povolila „ať to projde",
@@ -222,6 +244,54 @@ pravda(`vzdálenost sedí (Praha–Brno ${d.toFixed(0)} km)`, d > 180 && d < 190
   const vypsano = Math.max(1, spatnyDruh + spatnaVelikost + mimoOkruh + pocetVypsanych);
   zpravy.push(`  · pozn.: ${(100 * ciziOkres / vypsano).toFixed(0)} % vypsaných srovnání`
     + ' je z vedlejšího okresu — hranice okresu není hranice trhu, proto se nepoužívá');
+}
+
+/* ---- 8) A TOTÉŽ NA HOTOVÝCH STRÁNKÁCH --------------------------- */
+/* Kontroly výš si pravidlo o § 12 ZRCADLÍ — postaví si vzorek stejným
+   sítem jako generátor a změří ho. To je užitečné, ale kdyby někdo ten
+   řádek z generate-parcel-pages.mjs vyndal, zůstanou zelené: měří svou
+   kopii, ne web. Proto se totéž změří ještě na vygenerovaném HTML, kde
+   seznam leží hotový v ostrůvku #pz-srovnani-data. Změřeno před
+   opravou: 82 takových řádků na 37 stránkách a 20 stránek § 12 mělo
+   vlastní pořadí proti trhu; po opravě nula. */
+{
+  const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+  const require3 = createRequire(import.meta.url);
+  const PKH3 = require3('../js/hlidani-logika.js');
+  const syrova3 = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const D3 = PKH3.bezDuplicit(syrova3);
+  new Function(readFileSync(new URL('../js/ceny.js', import.meta.url), 'utf8'))();
+  const CENY3 = globalThis.PK_CENY;
+  const MODEL3 = CENY3.postav(D3);
+  const uredni = new Set();
+  for (const d of D3) if (MODEL3.spravniCena(d)) uredni.add(souborPro(d));
+  pravda(`stránky s úřední cenou se dohledaly (${uredni.size})`, uredni.size >= 20,
+    `jen ${uredni.size} — bez nich kontroly níž nic neznamenají`);
+
+  let sSekci = 0, sUradnimRadkem = 0, uradniSeSekci = 0, radku = 0, radkuUrad = 0;
+  const kde = [];
+  for (const f of readdirSync(ROOT).filter((x) => /^pozemek-.+\.html$/.test(x))) {
+    const h = readFileSync(path.join(ROOT, f), 'utf8');
+    const m = /<script type="application\/json" id="pz-srovnani-data">([\s\S]*?)<\/script>/.exec(h);
+    if (!m) continue;
+    let j;
+    try { j = JSON.parse(m[1]); } catch { continue; }
+    sSekci++;
+    if (uredni.has(f)) { uradniSeSekci++; if (kde.length < 3) kde.push(f + ' (§ 12 a má pořadí)'); }
+    const u = (j.r || []).filter((r) => r.s && uredni.has(r.s));
+    radku += (j.r || []).length; radkuUrad += u.length;
+    if (u.length && kde.length < 3) kde.push(f + ': „' + j.v + '"');
+    if (u.length) sUradnimRadkem++;
+  }
+  /* Pojistka na pojistku: kdyby se ostrůvek přejmenoval, nenašel by se
+     ani jeden seznam a všechny nuly níž by byly zelené omylem. */
+  pravda(`seznamy srovnatelných se na stránkách opravdu našly (${sSekci}, ${radku} řádků)`,
+    sSekci >= 500 && radku >= 2000, `${sSekci} seznamů, ${radku} řádků`);
+  pravda('žádná stránka nevypisuje jako srovnatelnou nabídku s úřední cenou',
+    sUradnimRadkem === 0 && radkuUrad === 0,
+    `${radkuUrad} řádků na ${sUradnimRadkem} stránkách: ${kde.join('; ')}`);
+  pravda('a žádná stránka s úřední cenou nedostala pořadí proti trhu',
+    uradniSeSekci === 0, `${uradniSeSekci} stránek: ${kde.join('; ')}`);
 }
 
 console.log('\nSrovnatelné pozemky');
