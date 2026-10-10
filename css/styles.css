@@ -4101,6 +4101,24 @@ body{background:var(--bg);}
 /* 6. Měděná linka nad nadpisem sekce je taky přechod, ne placka. */
 .section-head::before{background:var(--grad-warm);}
 
+/* 6b. ZNAČKA ODDÍLU DOJELA NA JEDNU STRÁNKU Z 2 207. Měděná vlasovka nad
+      nadpisem je v předloze (§5) hlavní značka oddílu — a třídu
+      `.section-head` nese jedinná stránka webu, index.html. Naměřeno:
+      ze zbylých stránek se k barevným přechodům dostal jen pás okresu,
+      tři desky `.add-card` a patička; nadpisy oddílů, kterých je na
+      okresní stránce tři a na stránce pozemku sedm, nenesly nic.
+      Nadpisy oddílů na přehledových stránkách (okres, kraj, druh,
+      rozpočet, ceny, novinky) jsou `.rules-sect > h2`, a dostanou TÝŽ
+      token a TÉŽ míry jako `.section-head::before` — žádná nová barva
+      a žádný nový rozměr. Odstup pod vlasovkou je 14 px, protože tolik
+      měl nadpis pod sebou už předtím (`.rules-sect h2{margin-bottom}`).
+      V článcích NE: tam oddíl značí číslo (`.clanek .rules-sect::before`)
+      a druhá značka by si s ním konkurovala. */
+.rules-sect > h2{position:relative;}
+.rules-sect > h2::before{content:""; display:block; width:52px; height:2px;
+  border-radius:2px; background:var(--grad-warm); opacity:.85; margin-bottom:14px;}
+.clanek .rules-sect > h2::before{display:none;}
+
 /* =====================================================================
    RYTMUS STRÁNKY
    Osm sekcí za sebou mělo naprosto stejnou stavbu: drobný nadpis, pod ním

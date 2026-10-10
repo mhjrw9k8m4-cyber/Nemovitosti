@@ -55,6 +55,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ocisti } from './minifikace.mjs';
+import { bezKomentaru } from './bez-komentaru.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ZDROJ = path.join(KOREN, 'css', 'styles.css');
@@ -171,8 +172,16 @@ export function tokenyStranky(html) {
     if (/^(?:https?:)?\/\//.test(u) || u.startsWith('/')) continue;
     for (const w of slovaSkriptu(u)) slova.add(w);
   }
-  for (const m of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)) for (const w of m[1].matchAll(/[\w-]+/g)) slova.add(w[0]);
-  for (const m of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)) for (const w of m[1].matchAll(/[\w-]+/g)) slova.add(w[0]);
+  /* KOMENTÁŘE SE NEPOČÍTAJÍ. Tokeny se tu sbírají jako SLOVA, protože
+     jméno třídy se do skriptu dostane i přes `classList.add('x')` nebo
+     slepením řetězců — na to se regulárním výrazem spolehlivě nepřijde.
+     Jenže slovo je slovo i ve VYSVĚTLENÍ: stačilo, aby komentář ve
+     vloženém stylu stránky pozemku citoval cizí pravidlo
+     (`.rail .section-head::before{display:none}`), a zkrácený stylopis
+     pro 2 202 stránek si kvůli tomu nechal sedm pravidel pro sloupcové
+     rozvržení, které nosí jedině index.html. Komentář není kód. */
+  for (const m of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)) for (const w of bezKomentaru(m[1]).matchAll(/[\w-]+/g)) slova.add(w[0]);
+  for (const m of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)) for (const w of bezKomentaru(m[1], { radkove: false }).matchAll(/[\w-]+/g)) slova.add(w[0]);
   return { tridy, idy, atributy, slova };
 }
 

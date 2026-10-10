@@ -45,7 +45,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/zaklad.min.css?v=45f55690">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=a0c310b5">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -98,7 +98,8 @@
 .pv-stred{position:absolute;left:50%;top:-3px;bottom:-3px;width:1.5px;background:rgba(20,35,28,0.3);transform:translateX(-50%);border-radius:2px}
 .pv-dot{position:absolute;top:50%;left:var(--w);width:15px;height:15px;border-radius:50%;background:var(--vc);border:3px solid #fff;box-shadow:var(--e1);transform:translate(-50%,-50%);animation:puntikNajed .62s var(--ease) both}
 .pv-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--text-ondark-mute);margin-top:6px}
-.pz-sect-h{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--popisek);margin:40px 0 10px}
+.pz-sect-h{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--popisek);margin:40px 0 10px;position:relative}
+.pz-sect-h::before{content:"";position:absolute;left:0;top:-14px;width:52px;height:2px;border-radius:2px;background:var(--grad-warm);opacity:.85}
 .pz-naklady{margin:20px 0 0;font-size:14px;color:var(--text-ondark-mute)}
 .pz-naklady a{font-weight:600;color:var(--copper-bright);text-decoration:underline;text-underline-offset:3px}
 .pz-popis-inzerent{max-width:var(--m-text);margin:0 0 6px;font-size:16px;line-height:1.62;color:var(--text-ondark)}
@@ -180,6 +181,7 @@ a.srv-kde:hover{color:var(--copper-bright)}
 .pz-gtk-sum::-webkit-details-marker{display:none}
 .pz-gtk-sum:hover{border-color:var(--copper-bright);box-shadow:var(--e2)}
 .pz-gtk-sum .pz-sect-h{margin:0;border:0;padding:0;font-size:15px;letter-spacing:0;text-transform:none;color:var(--copper-bright)}
+.pz-gtk-sum .pz-sect-h::before{display:none}
 .pz-gtk-kolik{margin-left:auto;font-size:13px;font-weight:700;white-space:nowrap;color:var(--copper-bright);background:var(--ink-soft);border:1px solid var(--line);padding:2px 8px;border-radius:var(--r-pill)}
 .pz-gtk-kolik:empty{display:none}
 .pz-gtk-akce{font-size:13px;font-weight:700;color:var(--copper-bright);white-space:nowrap}
@@ -190,7 +192,7 @@ a.srv-kde:hover{color:var(--copper-bright)}
 .pz-gtk-obal[open] .pz-gtk-sum{border-bottom-left-radius:0;border-bottom-right-radius:0;box-shadow:none}
 .pz-gtk-obal[open] .pz-gtk-sum::after{transform:rotate(-135deg) translate(-3px,-3px)}
 .pz-gtk-obal[open] .pz-gtk{border-top-left-radius:0;border-top-right-radius:0;border-top:0}
-.pz-gtk{background:var(--ink-soft);border:1px solid var(--line);border-radius:var(--r-md);padding:16px 16px}
+.pz-gtk{background:linear-gradient(180deg,var(--ink-soft2),var(--ink-soft));border:1px solid var(--line);border-radius:var(--r-md);padding:16px 16px}
 .pz-gtk .g-row{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-bottom:1px solid var(--line)}
 .pz-gtk .g-row:first-child{padding-top:0}
 .pz-gtk .g-row:last-of-type{border-bottom:none}
@@ -205,7 +207,7 @@ a.srv-kde:hover{color:var(--copper-bright)}
 .pz-gtk .g-ol li{font-size:14px;line-height:1.55;color:var(--text-ondark)}
 .pz-gtk .g-ol li::marker{font-family:var(--font-mono);font-size:12px;color:var(--accent-warm)}
 .pz-gtk .g-foot{font-size:12px;color:var(--text-ondark-mute);line-height:1.5;margin-top:12px;font-style:italic}
-.pzm{position:relative;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--ink-soft);box-shadow:var(--e2)}
+.pzm{position:relative;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:linear-gradient(180deg,var(--ink-soft2),var(--ink-soft));box-shadow:var(--e2)}
 .pzm-mapa{height:390px;width:100%;background:var(--ink)}
 .pzm-mapa{position:relative}
 .pzm-cela-btn{position:absolute;z-index:500;right:10px;top:10px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-sm);border:1px solid rgba(24,45,34,.25);background:rgba(255,255,255,.93);color:var(--copper-bright);cursor:pointer;padding:0;box-shadow:var(--e1);-webkit-tap-highlight-color:transparent}

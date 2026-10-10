@@ -12,6 +12,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { bezKomentaru } from './bez-komentaru.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0; let chyb = 0; const zpravy = [];
@@ -80,29 +81,8 @@ pravda('a všechny na svém `::error::` řádku jmenují, co padlo',
    spravila. V celém repozitáři to byl jeden jediný výskyt, takže
    stačí hlídat, aby zůstal nulový. */
 /* Komentáře se musí vyhodit, jinak si lint najde sám sebe: vysvětlení
-   nad ním ten špatný tvar cituje. Stav: kód / text v uvozovkách /
-   řádkový komentář / blokový komentář. */
-function bezKomentaru(text) {
-  let ven = ''; let i = 0; let uvozovka = null;
-  while (i < text.length) {
-    const c = text[i]; const d = text[i + 1];
-    if (uvozovka) {
-      ven += c;
-      if (c === '\\') { ven += d; i += 2; continue; }
-      if (c === uvozovka) uvozovka = null;
-      i++; continue;
-    }
-    if (c === "'" || c === '"' || c === '`') { uvozovka = c; ven += c; i++; continue; }
-    if (c === '/' && d === '/') { while (i < text.length && text[i] !== '\n') i++; continue; }
-    if (c === '/' && d === '*') {
-      i += 2;
-      while (i < text.length && !(text[i] === '*' && text[i + 1] === '/')) { if (text[i] === '\n') ven += '\n'; i++; }
-      i += 2; continue;
-    }
-    ven += c; i++;
-  }
-  return ven;
-}
+   nad ním ten špatný tvar cituje. Táž funkce slouží scripts/rozdel-styly.mjs,
+   proto stojí vedle v bez-komentaru.mjs. */
 function argumenty(text, od) {
   let hloubka = 1; let kus = ''; const ven = []; let i = od; let uvozovka = null;
   while (i < text.length && hloubka > 0) {

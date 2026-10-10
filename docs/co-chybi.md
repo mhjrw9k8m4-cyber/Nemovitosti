@@ -868,6 +868,178 @@ v Supabase → SQL Editor. V repozitáři je to hotové a v balíku
 `00-vse.sql` taky, takže kdo databázi zakládá znovu, dostane ji už
 zúženou; v té dnes běžící je pravidlo pořád to staré.
 
+## 3y. Graf na stránku „Ceny pozemků" — a nález, že graf a číslo nad ním počítá každé jinak — *částečně 10. 10.*
+
+Zadání bylo jednoduché: *„pořád tam nejsou ty grafy, jak jsme
+požadovali."* Zjištěný stav: graf cenové hladiny byl na **91 stránkách**
+(77 okresů, 14 krajů), ale na `cena-pozemku.html` — tedy na stránce,
+která je přímo o cenách — **nebyl**, a přitom data pro celostátní řadu
+v `data/historie-cen.json` ležela od začátku: osm řad podle druhu,
+z toho čtyři dost klidné na kreslení.
+
+**Proč se nekreslil.** Klíč řady je „úroveň|název|druh" a u celé ČR je
+prostřední část prázdná (`cr||Orná půda`). V `js/graf-cen.js` stála
+podmínka `if (!uroven || !nazev) return;`, takže celostátní graf
+propadl na prázdném jménu. Jméno se teď vyžaduje jen tam, kde ho klíč
+opravdu má. Hotovo: na stránce cen je graf *„Nabídková cena za m² —
+orná půda v celé ČR, 43,3 Kč/m², −0,7 % za 26 dní"* z 835 nabídek,
+týmž prvkem i skriptem jako na okresech, bez druhého výpočtu.
+
+### A u toho vyplavala větší věc
+
+V hero té stránky stojí **63 Kč/m²** (zemědělská půda) a graf pod tím
+kreslí čáru na **43,3**. Dvě čísla o téže věci vedle sebe — tedy přesně
+ta vada, které se tenhle web bojí nejvíc. **Přeměřeno na 17 okresních
+stránkách, kde je obojí:** medián rozdílu **−23 %**, nejvíc **−85 %** —
+Česká Lípa má na stránce 55 Kč/m² a graf čáru na **8 Kč/m²**. Písek 110
+proti 38,8.
+
+To osmikorunové číslo je přitom doslova to, které si generátor sám
+zakázal: v komentáři u dolní meze stojí *„Medián zemědělské půdy
+vycházel v některých okresech na 8 Kč/m². Tolik pole v Česku nestojí…
+Znojmo 8, Česká Lípa 8."* Stránka ho zahodila, graf ho kreslí dál.
+
+**Příčiny, obě změřené:**
+
+1. **Dolní mez uvěřitelnosti.** `priceStats` (stránka) odřízne nejnižší
+   shluk; dnes je mez **16,2 Kč/m²** a odřízne **137 z 1 096** nabídek
+   zemědělské půdy (13 %) — medián tím jde z 54,1 na **63,1**. Model,
+   ze kterého kreslí graf, žádnou takovou mez nemá.
+2. **Jiné škatulky.** Stránka slučuje druhy do čtyř hrubých skupin
+   (`Zemědělská půda`), graf má osm jemných (`Orná půda`, `Louka`…).
+
+Co příčinou **není**, i když to tak vypadá: spoluvlastnické podíly.
+Změřeno — bez nich jde celostátní orná z 43,3 jen na 45,5 a Česká Lípa
+zůstane na 7,9. Model je drží schválně a má to u sebe změřené.
+
+### Co je hotové a co ne
+
+Hotové: graf na stránce cen a u **všech 92 grafů** věta, co ta čára
+je — *„Čára je z hladiny, kterou web používá ke srovnávání nabídek;
+medián nad grafem se počítá přísněji (odřízne nejnižší shluk, který
+bývá spoluvlastnický podíl), takže bývá vyšší. Z grafu se proto čte
+tvar, ne výška."* Žádné číslo v té větě není schválně — mez se mění
+sama a do textu nepatří (viz bod 3t).
+
+**Nehotové, a je to příští krok:** ty dva výpočty mají být jeden.
+Správná cesta je vytáhnout `priceStats`, `spoctiMeze` a hrubé `druhGroup`
+z `scripts/generate-region-pages.mjs` do vlastního modulu (jako se to
+udělalo s `scripts/regiony-meta.mjs`) a stavět z něj i řady v
+`scripts/historie-cen.mjs`. Řady se tím změní, takže k tomu patří
+zvýšení `VERZE` a přepočet celé historie od začátku — na to je
+v tom skriptu připravený `--prepocitat`. **Vysvětlující věta je
+náplast, ne oprava**, a tohle je důvod, proč to tu stojí napsané.
+
+Zkouška `scripts/test-graf-cen.mjs` (38 kontrol, dřív 29) hlídá
+i celostátní graf: že na stránce cen je, že je to řada `cr|`, že mluví
+o celé ČR a ne o okrese, že má aspoň pět bodů a čísla i v tabulce.
+
+## 3z. Barevné přechody měl web popsané, otestované — a dojely na jednu stránku z 2 207 — *opraveno 10. 10.*
+
+Zadání: *„pořád web [nemá] ty grady, jak jsme požadoval."* Nejdřív jsem
+to přečetl jako „grafy" a dodělal graf na stránku cen (3y). Opraveno:
+*„Ne grady / Grady je české slovo."* Takže gradienty, barevné přechody.
+A na nich se dalo něco změřit.
+
+**Co web má.** `predloha.html` má celý oddíl „5. Barevné přechody"
+a `css/styles.css` k němu pět tokenů (`--grad-warm`, `--grad-warm-soft`,
+`--grad-cool-soft`, `--grad-predel`, `--brand-grad`) s vysvětlením,
+proč vycházejí ze dvou tónů a ne z osmi. Zkouška `test-kontrast.mjs` se
+kvůli nim naučila měřit kontrast i na přechodu.
+
+**Kam se dostaly.** Naměřeno na vykreslených stránkách (šířka 1280,
+počítají se jen plochy nad 12 000 px²; plocha se bere s gradientem,
+když ho má `background-image` nebo `::before`/`::after`):
+
+| stránka | ploch | z toho s přechodem |
+|---|---|---|
+| `index.html` | 544 | 52 (10 %) — a 48 z nich je týž přechod na 24 kartičkách |
+| `pozemky-okres-benesov.html` | 162 | **5** (3 %) |
+| `cena-pozemku.html` | 140 | 8 |
+| `pozemek-…-rsg5bb.html` | 105 | **4** (4 %) |
+
+Na stránce pozemku ty čtyři byly: záložka mapy, její popisek, souhrn
+rádce a patička. Vlastní tělo stránky — cena, verdikt, parametry,
+„Kam dál" — bylo celé plné placek.
+
+**Jedno číslo, které to vysvětluje.** Hlavní značka oddílu z předlohy je
+měděná vlasovka nad nadpisem, `.section-head::before` s tokenem
+`--grad-warm`. Třídu `.section-head` nese **jedna stránka webu**:
+
+```
+section-head   pozemek-*.html 0/2072 · pozemky-okres-*.html 0/77
+               pozemky-*kraj*.html 0/14 · cena-pozemku.html 0/1
+               nove-pozemky.html 0/1 · index.html 1/1
+```
+
+Stránka pozemku si nadpisy oddílů jmenuje `.pz-sect-h` (sedm na stránku)
+a přehledové stránky `.rules-sect > h2` (tři na okresní). Ani jedna ta
+třída značku neměla. Vizuální jazyk se nerozhodl špatně — jen nikdy
+nedojel za úvodní stránku.
+
+**Co je opravené.** Žádný nový token, žádná nová barva, žádný nový
+rozměr:
+
+- `.rules-sect > h2::before` — tatáž vlasovka 52×2 px s `--grad-warm`
+  na nadpisech oddílů 95 přehledových stránek (okres, kraj, druh,
+  rozpočet, ceny, novinky). V článcích ne: tam oddíl značí číslo
+  (`.clanek .rules-sect::before`) a dvě značky by si konkurovaly.
+- `.pz-sect-h::before` — táž vlasovka na stránkách pozemků. Stojí
+  **mimo tok** (`position:absolute; top:-14px`), a to po nálezu: nejdřív
+  byla v toku jako na úvodní stránce a odstup nadpisu jsem zkrátil o to,
+  co si vezme (26 + 2 + 12 = 40 px). Opticky souhlas, jenže
+  `test-parametry.mjs` nečte optiku, čte odstupy — ohlásil „navíc:
+  6, 26 px". Soustava 40/20/10/8 px má držet v číslech, ne v součtu.
+- V souhrnu rádce vlasovka není (`.pz-gtk-sum .pz-sect-h::before`) —
+  ten řádek se rozbaluje, značka oddílu by z něj dělala nadpis. Totéž
+  pravidlo, jaké má `.rail .section-head::before`.
+- `.pz-gtk` a `.pzm` (688×562 a 688×450 px, dvě největší placky na
+  stránce) nesou přelev shora dolů z `--ink-soft2` do `--ink-soft`,
+  stejný jako `.add-card` na přehledech.
+
+Po opravě: stránka pozemku **4 → 9** ploch s přechodem, okresní **5 → 8**,
+ceny **8 → 9**, novinky 12. Zelené: `test-kontrast`, `test-parametry`
+(33), `test-rozvrzeni` (149), `test-predloha`, `test-mapa-pozemku` (131),
+`test-stabilita` (50), `test-stranky`.
+
+### A vedlejší nález: komentář křísil mrtvá pravidla pro 2 202 stránek
+
+Když jsem k té vlasovce na stránce pozemku napsal vysvětlení, které
+citovalo cizí pravidlo `.rail .section-head::before{display:none}`,
+`css/zaklad.min.css` o **sedm pravidel povyrostlo** — zrovna o sloupcové
+rozvržení úvodní stránky, které na stránce pozemku nemá co dělat.
+
+Příčina je v `scripts/rozdel-styly.mjs`. Tokeny stránky se sbírají jako
+**slova** z `<style>` a `<script>`, a to je správně: jméno třídy se do
+skriptu dostane i přes `classList.add('x')` nebo slepením řetězců a na
+to se regulárním výrazem spolehlivě nepřijde (hlídá to bod 3 v
+`test-rozdel-styly.mjs`). Jenže slovo je slovo i ve **vysvětlení** —
+takže stačilo jméno třídy zmínit v komentáři a mrtvé pravidlo obživlo
+pro všech 2 202 stránek.
+
+Změřeno na celém webu: **15 pravidel, 3 030 B zdroje** drželo ve
+zkráceném stylopisu jedině to, že je někde zmínil komentář —
+
+- osm pravidel tmavé kontaktní sekce `#realitky`, protože komentář
+  v `muj-inzerat.html` napsal slovo „realitky" (vada, která tam byla
+  dřív než já),
+- sedm pravidel `.rail`, a to byl můj vlastní komentář.
+
+Opraveno vyhozením komentářů před sbíráním slov. Funkce `bezKomentaru`
+existovala už v `test-chybova-hlaska.mjs` (kde si bez ní lint našel sám
+sebe), takže je teď na jednom místě v `scripts/bez-komentaru.mjs` a
+slouží oběma. V CSS se `//` schválně nehledá — `url(//cdn/x.png)` by se
+jím sežral.
+
+Jako čtvrtý bod přibyl do `test-rozdel-styly.mjs` (30 kontrol), včetně
+sabotáže: stránka, která jméno třídy má jen v komentáři `<style>`,
+nesmí ten token mít, a zároveň třída ze skutečného kódu ve `<script>`
+ho mít musí — aby oprava bodu 4 nerozbila bod 3. S vrácenou vadou
+padají tři kontroly, bez ní je 30/30.
+
+`css/zaklad.min.css` je po obou změnách **o 316 B menší** než před nimi,
+a to včetně tří nových pravidel pro vlasovku.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

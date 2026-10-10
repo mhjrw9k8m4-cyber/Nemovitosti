@@ -1511,6 +1511,9 @@ body{background:var(--bg)}
 .sources::before{top:0}
 .sources::after{bottom:0}
 .section-head::before{background:var(--grad-warm)}
+.rules-sect>h2{position:relative}
+.rules-sect>h2::before{content:"";display:block;width:52px;height:2px;border-radius:2px;background:var(--grad-warm);opacity:.85;margin-bottom:14px}
+.clanek .rules-sect>h2::before{display:none}
 .sources{background:var(--ink-dark);color:var(--text-ondeep);padding:var(--oddil-y) 0}
 .sources::before,.sources::after{display:none}
 .src-stats{grid-template-columns:repeat(4,1fr);gap:28px;margin-bottom:40px}

@@ -45,7 +45,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/zaklad.min.css?v=45f55690">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=a0c310b5">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -172,7 +172,21 @@
          10 px — uvnitř skupiny, co patří k sobě (místo → cena → verdikt),
           8 px — poznámka pod blokem, ke kterému se váže.
        Kdo přidá další blok, ať si vybere z těchhle čtyř. */
-    .pz-sect-h{font-size:12px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--popisek); margin:40px 0 10px;}
+    .pz-sect-h{font-size:12px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--popisek); margin:40px 0 10px; position:relative;}
+    /* Měděná vlasovka nad nadpisem oddílu — táž značka, jakou má zbytek
+       webu u `.section-head::before`, týž token `--grad-warm`, tytéž
+       míry (52×2 px). Stránka pozemku ji neměla; z přechodů na ní byla
+       mapová záložka a patička, nic víc.
+       VLASOVKA STOJÍ MIMO TOK, a to schválně. Nejdřív jsem ji dal do
+       toku jako na úvodní stránce a odstup nadpisu zkrátil o to, co si
+       vezme (26 + 2 + 12 = 40 px). Opticky to souhlasilo, jenže
+       scripts/test-parametry.mjs nečte optiku, čte odstupy: ohlásil
+       „navíc: 6, 26 px" — soustava 40/20/10/8 px má držet v číslech,
+       ne v součtu. Odsazená vlasovka si z toku nebere nic, takže
+       nadpisu zůstává 40 px shora a značka se vykreslí 14 px nad
+       jeho textem, uvnitř té mezery. */
+    .pz-sect-h::before{content:""; position:absolute; left:0; top:-14px;
+      width:52px; height:2px; border-radius:2px; background:var(--grad-warm); opacity:.85;}
     /* Popis od inzerenta. Cizí text, u kterého nevíme, jak bude dlouhý ani
        jak bude psaný — drží se proto na čtecí míře a odsazuje se jako
        odstavec, ne jako karta. Žádný rámeček: na stránce už tři jsou
@@ -375,6 +389,10 @@
        osnově stránky, ale vypadá jako titulek ovládacího prvku. */
     .pz-gtk-sum .pz-sect-h{margin:0; border:0; padding:0; font-size:15px;
       letter-spacing:0; text-transform:none; color:var(--copper-bright);}
+    /* A proto tu nemá co dělat ani vlasovka oddílu: řádek se rozbaluje,
+       značka oddílu by z něj dělala nadpis. Totéž pravidlo jako
+       `.rail .section-head::before{display:none}` v css/styles.css. */
+    .pz-gtk-sum .pz-sect-h::before{display:none;}
     .pz-gtk-kolik{margin-left:auto; font-size:13px; font-weight:700; white-space:nowrap;
       color:var(--copper-bright); background:var(--ink-soft); border:1px solid var(--line);
       padding:2px 8px; border-radius:var(--r-pill);}
@@ -391,7 +409,12 @@
     .pz-gtk-obal[open] .pz-gtk-sum{border-bottom-left-radius:0; border-bottom-right-radius:0; box-shadow:none;}
     .pz-gtk-obal[open] .pz-gtk-sum::after{transform:rotate(-135deg) translate(-3px,-3px);}
     .pz-gtk-obal[open] .pz-gtk{border-top-left-radius:0; border-top-right-radius:0; border-top:0;}
-    .pz-gtk{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:16px 16px;}
+    /* Deska rádce a deska mapy nesou přelev shora dolů, stejný jako
+       `.add-card` na přehledových stránkách: z --ink-soft2 do --ink-soft.
+       Obě barvy web má, obě jsou plochy, žádná nová do palety nepřibyla.
+       Naměřeno: na stránce pozemku byly tyhle dvě desky (688×562
+       a 688×450 px) největší placky na stránce. */
+    .pz-gtk{background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border:1px solid var(--line); border-radius:var(--r-md); padding:16px 16px;}
     .pz-gtk .g-row{display:flex; flex-direction:column; gap:2px; padding:10px 0; border-bottom:1px solid var(--line);}
     .pz-gtk .g-row:first-child{padding-top:0;} .pz-gtk .g-row:last-of-type{border-bottom:none;}
     .pz-gtk .g-k{font-size:12px; font-weight:700; letter-spacing:0.02em; text-transform:uppercase; color:var(--text-ondark-mute);}
@@ -411,7 +434,7 @@
     /* MAPA S VRSTVAMI. Rám drží mapu a ovládání pohromadě jako jednu věc:
        přepínače patří k té mapě, ne ke stránce. Ovládání je POD mapou, ne
        přes ni — přes mapu by zakrývalo právě to místo, o které jde. */
-    .pzm{position:relative; border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; background:var(--ink-soft); box-shadow:var(--e2);}
+    .pzm{position:relative; border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); box-shadow:var(--e2);}
     .pzm-mapa{height:390px; width:100%; background:var(--ink);}
     /* Na celou obrazovku. Mapa se roztáhne přes okno, panel s přepínači
        zůstane pod ní — ovládání musí být po ruce i tam, jinak je

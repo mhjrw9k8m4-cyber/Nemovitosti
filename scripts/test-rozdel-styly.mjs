@@ -15,6 +15,15 @@
      3. SLOVO VE SKRIPTU. Třídu `hl-bez-pasu` nemá v HTML nikdo —
         přidává ji js/hlavicka.js. Kdyby se koukalo jen do HTML,
         přestala by se hlavička při posouvání chovat.
+     4. SLOVO V KOMENTÁŘI. Bod 3 má druhou stranu: slovo je slovo
+        i ve VYSVĚTLENÍ. Naměřeno — 15 pravidel (3 030 B zdroje)
+        drželo ve zkráceném stylopisu pro 2 202 stránek jedině to, že
+        je komentář někde zmínil: osm pravidel tmavé kontaktní sekce
+        `#realitky`, protože komentář v muj-inzerat.html napsal slovo
+        „realitky", a sedm pravidel sloupcového rozvržení `.rail`,
+        které nosí jedině index.html, protože komentář ve vloženém
+        stylu stránky pozemku citoval cizí pravidlo
+        `.rail .section-head::before{display:none}`.
 
    Ke každému bodu je tu případ, který při obrácení rozhodnutí spadne.
    ================================================================== */
@@ -24,6 +33,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { castiSelektoru, muzeZabrat, tokenyStranky, sloucTokeny, rozparsuj, rozdel, PLNY_STYLOPIS } from './rozdel-styly.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { bezKomentaru } from './bez-komentaru.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -70,6 +80,43 @@ const pozemek = tokenyStranky(fs.readFileSync(path.join(KOREN, 'pozemek.html'), 
 pravda('a slovo z vendor/leaflet (.leaflet-control-zoom na stránce pozemku)',
   muzeZabrat(castiSelektoru('.leaflet-control-zoom a'), pozemek),
   'cizí knihovna si třídy tvoří sama — musí se číst i vendor/*.js');
+
+/* ---- 2b) ale komentář kódem není ------------------------------ */
+/* Vysvětlení v <style> i <script> se před sbíráním slov zahazuje.
+   Bez toho stačí jméno třídy zmínit a mrtvé pravidlo obživne. */
+pravda('blokový komentář se zahodí, kód po něm zůstane',
+  bezKomentaru('a{x:1} /* .mrtva-trida */ b{y:2}').indexOf('mrtva-trida') === -1
+  && bezKomentaru('a{x:1} /* .mrtva-trida */ b{y:2}').indexOf('b{y:2}') !== -1,
+  'bezKomentaru: ' + bezKomentaru('a{x:1} /* .mrtva-trida */ b{y:2}'));
+pravda('řádkový komentář se v JS zahodí',
+  bezKomentaru('var a=1; // .mrtva-trida\nvar b=2;').indexOf('mrtva-trida') === -1,
+  'bezKomentaru: ' + bezKomentaru('var a=1; // .mrtva-trida\nvar b=2;'));
+pravda('ale v CSS ne — `url(//cdn/x.png)` není komentář',
+  bezKomentaru('a{background:url(//cdn/x.png)}', { radkove: false }).indexOf('cdn') !== -1,
+  'řádkové komentáře se v CSS nesmí hledat');
+pravda('jméno třídy v textu („/*" v uvozovkách) komentář nezačíná',
+  bezKomentaru('var s = "/* .ziva-trida */";').indexOf('ziva-trida') !== -1,
+  'automat neumí uvozovky');
+
+const SABOTAZ = '<style>/* .vymyslena-trida-xyz zmíněná jen ve vysvětlení */ .wrap{margin:0}</style>'
+  + '<script>document.body.classList.add("skutecna-trida-xyz");</script>';
+const sab = tokenyStranky(SABOTAZ);
+pravda('SABOTÁŽ: třída jen z komentáře ve <style> se do tokenů nedostane',
+  !muzeZabrat(castiSelektoru('.vymyslena-trida-xyz'), sab),
+  'tokeny se sbírají i z komentářů — mrtvá pravidla ožívají');
+pravda('a třída ze skutečného kódu ve <script> se dostane',
+  muzeZabrat(castiSelektoru('.skutecna-trida-xyz'), sab),
+  'bod 3 se opravou bodu 4 rozbil');
+
+/* Na hotovém webu: co drží komentář, ve zkráceném stylopisu být nesmí. */
+const zaklad = fs.existsSync(path.join(KOREN, 'css', 'zaklad.min.css'))
+  ? fs.readFileSync(path.join(KOREN, 'css', 'zaklad.min.css'), 'utf8') : '';
+pravda('a pravidla #realitky (tmavá sekce úvodní stránky) ve zkráceném nejsou',
+  zaklad.indexOf('#realitky') === -1,
+  'drží je slovo „realitky" z komentáře v muj-inzerat.html');
+pravda('ani pravidla .rail (sloupcové rozvržení úvodní stránky)',
+  !/[.#]rail\b/.test(zaklad),
+  'drží je citace cizího pravidla v komentáři stránky pozemku');
 
 /* ---- 3) vyjmutí nepřeskládá zbytek ---------------------------- */
 const zdroj = fs.readFileSync(path.join(KOREN, 'css', 'styles.css'), 'utf8');
