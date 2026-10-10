@@ -1573,6 +1573,63 @@ dvojicích bodů (111 m až 211 km): shoda do **1e-10 m**, takže kopie
 zmizela. (`js/ceny.js` si tu svou nechává schválně — načítá se na skoro
 dvou tisících stránkách a kvůli jednomu vzorci tam další skript nepůjde.)
 
+## 3ah. NALEZENO: rozsah ceny se četl obráceně — „500 tisíc – 1 milion" znamenalo „do 500 tisíc" — *opraveno 10. 10.*
+
+Druhé kolo probírání hledání skutečnými větami. Minule to vydalo mezery
+po tisících a ar; tentokrát dvě věci, z nichž jedna je horší než
+nenalezení.
+
+### 1. Rozsah od–do
+
+| věta | před | po |
+|---|---|---|
+| `500 tisíc – 1 milion` | ❌ **cenaDo 500 000** | ✅ 500 000–1 000 000 |
+| `mezi 500 a 800 tisíci` | ❌ cenaDo 800 000, „500" šlo hledat obec | ✅ 500 000–800 000 |
+| `od 500 do 900 tisíc` | ❌ cenaDo 900 000, „500" šlo hledat obec | ✅ 500 000–900 000 |
+| `od 1000 do 5000 m2` | ❌ | ✅ výměra 1 000–5 000 |
+| `1 – 2 ha` | ❌ | ✅ výměra 10 000–20 000 |
+
+První řádek není jen nenalezení: **dolní mez se stala stropem**, takže
+web vyloučil přesně to, co člověk chtěl jako minimum, a jako bonus
+poslal „1 milion" hledat obec.
+
+Rozsah se čte **před** jednosměrnými mezemi, jinak si „do 900 tisíc"
+vezme jednosměrná větev a dolní mez zůstane ležet. Jednotka smí stát
+jen u druhého čísla („od 500 do 900 tisíc") — pak platí pro obě,
+protože tak se česky mluví. „od 900 do 500" se nečte vůbec: to není
+rozsah, to je překlep.
+
+**Pomlčka se přepisuje na „až"**, ale jen tam, kde je to rozsah: musí mít
+kolem sebe mezery a před ní musí stát číslo nebo jednotka částky.
+Složené názvy mezery nemají („Praha-východ", „Frýdek-Místek"), takže se
+jich to nedotkne. Při psaní se to **rozbilo**: jednotky se porovnávaly
+jako podřetězec, takže se „ha" našlo na konci slova „praha" a z
+„Praha - 5" se stalo „praha az 5". Teď se shoduje celé slovo a je na to
+kontrola.
+
+### 2. Druh řečený dvakrát
+
+Web sám své druhy pojmenovává dvojslovně — „Louka / travní porost",
+„Vinice / sad" — takže je lidi tak i píšou. Rozpoznalo se první slovo
+a druhé zbylo na hledání **obce**:
+
+```
+orná pole Znojmo            → obec „pole znojmo"    ✗ → „znojmo"   ✓
+louka travní porost Vsetín  → obec „louka vsetin"   ✗ → „vsetin"   ✓
+les lesní pozemek Šumava    → obec „les sumava"     ✗ → „sumava"   ✓
+```
+
+Spotřebují se jen názvy **téhož** druhu: „louka les" zůstává loukou
+a slovo „les" nezmizí — o druhu už bylo rozhodnuto a zahodit jiný mlčky
+by bylo horší než ho nechat. Slova se zároveň dopisují do odznaku, aby
+je křížek uměl vyškrtnout z věty.
+
+### Zkoušky
+
+`scripts/test-dotaz.mjs` 155 → **177 kontrol**. Sabotáže: rozsahová
+větev pryč (8 kontrol padne), pomlčka se nepřepisuje (3), druh se
+podruhé nespotřebuje (4).
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

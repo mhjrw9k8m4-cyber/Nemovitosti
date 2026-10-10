@@ -5,8 +5,11 @@
   'use strict';
 
   function norm(s) {
+
     return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '')
-      .toLowerCase().replace(/[-‐-―]/g, ' ').replace(/\s+/g, ' ').trim();
+      .toLowerCase()
+      .replace(/(^|\s)(\d+|tis\w*|mil\w*|korun\w*|kc|czk|ha|hektar\w*|m2|ar|aru|ary)\s[-‐-―]\s(?=\d)/g, '$1$2 az ')
+      .replace(/[-‐-―]/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
   var DRUHY = [
@@ -191,6 +194,59 @@
         popis: 'do ' + slova[kpos] + ' km' });
     }
 
+    var ROZSAH_PRED = { od: 1, mezi: 1 };
+    var ROZSAH_SPOJ = { do: 1, a: 1, az: 1 };
+    function cteCislo(iw) {
+      var sk = cisloSkupiny(slova, iw);
+      if (sk) return { hodnota: sk.hodnota, slov: sk.slov };
+      var c1 = cislo(slova[iw] || '');
+      return c1 == null ? null : { hodnota: c1, slov: 1 };
+    }
+    function cteJednotku(iw) {
+      var j = slova[iw] || '';
+      for (var n2 = 0; n2 < NASOBEK.length; n2++) if (NASOBEK[n2][0].test(j)) {
+        return { nas: NASOBEK[n2], slov: 1 };
+      }
+      return null;
+    }
+    for (var ri = 0; ri < slova.length; ri++) {
+      if (vzato[ri]) continue;
+      var rPred = ROZSAH_PRED[slova[ri]] ? 1 : 0;
+      var aPos = ri + rPred;
+      var ra = cteCislo(aPos);
+      if (!ra) continue;
+      var rja = cteJednotku(aPos + ra.slov);
+      var spoj = aPos + ra.slov + (rja ? rja.slov : 0);
+      if (!ROZSAH_SPOJ[slova[spoj]]) continue;
+      var rb = cteCislo(spoj + 1);
+      if (!rb) continue;
+      var rjb = cteJednotku(spoj + 1 + rb.slov);
+      var rnas = rjb || rja;
+      if (!rnas) {
+
+        if (ra.hodnota < BEZ_JEDNOTKY_OD || rb.hodnota < BEZ_JEDNOTKY_OD) continue;
+        rnas = { nas: [null, 1, 'cena'], slov: 0 };
+      }
+      var nasA = rja ? rja.nas : rnas.nas;
+      var hodA = Math.round(ra.hodnota * nasA[1]);
+      var hodB = Math.round(rb.hodnota * rnas.nas[1]);
+      if (!(hodA < hodB)) continue;
+      var kam = rnas.nas[2];
+      if (kam === 'zaMetr') {
+        if (ven.zaMetrOd != null || ven.zaMetrDo != null) continue;
+        ven.zaMetrOd = hodA; ven.zaMetrDo = hodB;
+      } else if (kam === 'plocha') {
+        if (ven.plochaOd != null || ven.plochaDo != null) continue;
+        ven.plochaOd = hodA; ven.plochaDo = hodB;
+      } else {
+        if (ven.cenaOd != null || ven.cenaDo != null) continue;
+        ven.cenaOd = hodA; ven.cenaDo = hodB;
+      }
+      var rDelka = (spoj + 1 + rb.slov + (rjb ? rjb.slov : 0)) - ri;
+      zaber(ri, rDelka, { druh: kam, smer: 'rozsah', hodnota: hodB, hodnotaOd: hodA,
+        popis: usek(ri, rDelka) });
+    }
+
     var SMERY = { do: 'do', pod: 'do', max: 'do', od: 'od', nad: 'od', min: 'od' };
     for (var i = 0; i < slova.length; i++) {
       if (vzato[i]) continue;
@@ -281,6 +337,18 @@
       if (ven.druh) return false;
       ven.druh = z[0];
       zaber(i2, d, { druh: 'druh', hodnota: z[0], popis: z[0] });
+
+      var dalsi = vetsiPrvni(z[z.length - 1]);
+      for (var f2 = 0; f2 < dalsi.length; f2++) {
+        var casti2 = dalsi[f2].split(' ');
+        for (var j = 0; j < slova.length; j++) {
+          if (vzato[j] || !zkus(j, dalsi[f2])) continue;
+          for (var k = 0; k < casti2.length; k++) vzato[j + k] = true;
+
+          ven.casti[ven.casti.length - 1].slova =
+            ven.casti[ven.casti.length - 1].slova.concat(slova.slice(j, j + casti2.length));
+        }
+      }
       return true;
     });
 

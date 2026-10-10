@@ -622,6 +622,80 @@ function pravda(popis, vyslo, proc) {
   }
 }
 
+/* ===== ROZSAH OD–DO ===============================================
+   Nejhorší z nálezů: „500 tisíc – 1 milion" se přečetlo jako
+   „do 500 tisíc" — DOLNÍ mez se stala stropem, tedy přesný opak toho,
+   co člověk chtěl. „mezi 500 a 800 tisíci" a „od 500 do 900 tisíc"
+   dolní mez rovnou zahodily a číslo šlo hledat jako obec. */
+{
+  const rozsahy = [
+    ['500 tisíc - 1 milion', (r) => r.cenaOd === 500000 && r.cenaDo === 1000000],
+    ['500 tisíc – 1 milion', (r) => r.cenaOd === 500000 && r.cenaDo === 1000000],
+    ['mezi 500 a 800 tisíci', (r) => r.cenaOd === 500000 && r.cenaDo === 800000],
+    ['od 500 do 900 tisíc', (r) => r.cenaOd === 500000 && r.cenaDo === 900000],
+    ['500 tisíc až 1 milion', (r) => r.cenaOd === 500000 && r.cenaDo === 1000000],
+    ['od 1000 do 5000 m2', (r) => r.plochaOd === 1000 && r.plochaDo === 5000],
+    ['1 - 2 ha', (r) => r.plochaOd === 10000 && r.plochaDo === 20000],
+    ['les od 200 do 800 tisíc', (r) => r.cenaOd === 200000 && r.cenaDo === 800000 && r.druh === 'Lesní pozemek'],
+  ];
+  for (const [dotaz, sedi] of rozsahy) {
+    const r = P.rozeber(dotaz);
+    pravda(`„${dotaz}" je rozsah, ne strop`, sedi(r),
+      `cena ${r.cenaOd}–${r.cenaDo}, plocha ${r.plochaOd}–${r.plochaDo}, zbytek „${r.text}"`);
+  }
+  /* A JEDNOSMĚRNÉ MEZE SE TÍM NESMÍ ROZBÍT. */
+  const jednosmerne = [
+    ['do 900 tisíc', (r) => r.cenaDo === 900000 && r.cenaOd == null],
+    ['od 500 tisíc', (r) => r.cenaOd === 500000 && r.cenaDo == null],
+    ['do 30 km od Brna', (r) => r.okruh === 30],
+    ['mezi 5 a 8', (r) => r.cenaOd == null && r.cenaDo == null],
+    ['od 900 do 500 tisíc', (r) => r.cenaOd == null],
+  ];
+  for (const [dotaz, sedi] of jednosmerne) {
+    const r = P.rozeber(dotaz);
+    pravda(`„${dotaz}" se rozsahem nerozbije`, sedi(r),
+      `cena ${r.cenaOd}–${r.cenaDo}, okruh ${r.okruh}, zbytek „${r.text}"`);
+  }
+  /* POMLČKA SE PŘEPISUJE NA „až" JEN TAM, KDE JE TO ROZSAH. Složené
+     názvy ji mají bez mezer, a „Praha - 5" sice mezery má, ale „praha"
+     není jednotka. Při psaní se to rozbilo: „ha" se našlo na KONCI
+     slova „praha", takže se z „Praha - 5" stalo „praha az 5". */
+  const nazvy = [
+    ['Praha-východ', (r) => r.text === 'praha vychod'],
+    ['Frýdek-Místek', (r) => r.text === 'frydek mistek'],
+    ['Praha - 5', (r) => r.text === 'praha 5'],
+    ['Lhota - 3', (r) => r.text === 'lhota 3'],
+  ];
+  for (const [dotaz, sedi] of nazvy) {
+    const r = P.rozeber(dotaz);
+    pravda(`„${dotaz}" zůstane názvem místa`, sedi(r), `zbylo „${r.text}"`);
+  }
+}
+
+/* ===== DRUH ŘEČENÝ DVAKRÁT ========================================
+   Web sám své druhy pojmenovává dvojslovně („Louka / travní porost",
+   „Vinice / sad"), takže je lidi tak i píšou — a druhé slovo zbylo na
+   hledání OBCE, takže výpis byl prázdný. */
+{
+  const dvakrat = [
+    ['orná pole Znojmo', 'Orná půda', 'znojmo'],
+    ['louka travní porost Vsetín', 'Louka / travní porost', 'vsetin'],
+    ['les lesní pozemek Šumava', 'Lesní pozemek', 'sumava'],
+    ['vinice sad Znojmo', 'Vinice / sad', 'znojmo'],
+  ];
+  for (const [dotaz, druh, text] of dvakrat) {
+    const r = P.rozeber(dotaz);
+    pravda(`„${dotaz}" nechá na hledání obce jen „${text}"`,
+      r.druh === druh && r.text === text, `druh ${r.druh}, zbylo „${r.text}"`);
+  }
+  /* Spotřebují se jen názvy TÉHOŽ druhu: o druhu už bylo rozhodnuto
+     a zahodit jiný mlčky by bylo horší než ho nechat. */
+  const jiny = P.rozeber('louka les');
+  pravda('ale jiný druh se nespolkne („louka les")',
+    jiny.druh === 'Louka / travní porost' && jiny.text === 'les',
+    `druh ${jiny.druh}, zbylo „${jiny.text}"`);
+}
+
 /* ===== AR =========================================================
    U polí a zahrad je ar běžnější jednotka než hektar („prodám 20 arů")
    a web ji neznal — „50 arů" padalo celé do hledání obce. */

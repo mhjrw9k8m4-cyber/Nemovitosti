@@ -25,8 +25,22 @@
   'use strict';
 
   function norm(s) {
+    /* POMLČKA MEZI MEZERAMI PŘED ČÍSLEM JE ROZSAH, ne oddělovač slov.
+       „500 tisíc – 1 milion" se jinak rozpadlo na čtyři slova bez vazby
+       a z rozsahu zbyla jeho DOLNÍ mez jako strop: hledání vrátilo
+       „do 500 tisíc", tedy přesný opak toho, co člověk chtěl. Česky se
+       ten rozsah píše „až", takže se jím pomlčka nahradí.
+       KDY SE POMLČKA PŘEPÍŠE: musí mít kolem sebe mezery a před ní musí
+       stát číslo nebo jednotka částky. Složené názvy mezery nemají
+       („Praha-východ", „Brno-venkov", „Frýdek-Místek"), takže se jich
+       to nedotkne — a „Praha - 5" se psané s mezerami taky nerozbije,
+       protože „praha" není jednotka. Jednotka se přitom musí shodovat
+       jako CELÉ SLOVO: bez toho se „ha" našlo na konci slova „praha"
+       a z „Praha - 5" se stalo „praha az 5". Vyzkoušeno na obojím. */
     return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '')
-      .toLowerCase().replace(/[-‐-―]/g, ' ').replace(/\s+/g, ' ').trim();
+      .toLowerCase()
+      .replace(/(^|\s)(\d+|tis\w*|mil\w*|korun\w*|kc|czk|ha|hektar\w*|m2|ar|aru|ary)\s[-‐-―]\s(?=\d)/g, '$1$2 az ')
+      .replace(/[-‐-―]/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
   /* Slovník. Delší vazby stojí první — viz pravidlo 2. */
@@ -329,6 +343,70 @@
         popis: 'do ' + slova[kpos] + ' km' });
     }
 
+    /* --- 0b) ROZSAH OD–DO: „od 500 do 900 tisíc", „mezi 500 a 800 tisíci",
+       „500 tisíc až 1 milion".
+       Čte se PŘED jednosměrnými mezemi, jinak si „do 900 tisíc" vezme
+       jednosměrná větev a dolní mez zůstane na hledání obce. Naměřeno
+       před opravou:
+         500 tisíc – 1 milion   → cenaDo 500 000 (dolní mez jako STROP!)
+         mezi 500 a 800 tisíci  → cenaDo 800 000, „500" šlo hledat obec
+         od 500 do 900 tisíc    → cenaDo 900 000, „500" šlo hledat obec
+       Jednotka smí stát jen u druhého čísla („od 500 do 900 tisíc"):
+       pak platí pro obě, protože tak se česky mluví. */
+    var ROZSAH_PRED = { od: 1, mezi: 1 };
+    var ROZSAH_SPOJ = { do: 1, a: 1, az: 1 };
+    function cteCislo(iw) {
+      var sk = cisloSkupiny(slova, iw);
+      if (sk) return { hodnota: sk.hodnota, slov: sk.slov };
+      var c1 = cislo(slova[iw] || '');
+      return c1 == null ? null : { hodnota: c1, slov: 1 };
+    }
+    function cteJednotku(iw) {
+      var j = slova[iw] || '';
+      for (var n2 = 0; n2 < NASOBEK.length; n2++) if (NASOBEK[n2][0].test(j)) {
+        return { nas: NASOBEK[n2], slov: 1 };
+      }
+      return null;
+    }
+    for (var ri = 0; ri < slova.length; ri++) {
+      if (vzato[ri]) continue;
+      var rPred = ROZSAH_PRED[slova[ri]] ? 1 : 0;
+      var aPos = ri + rPred;
+      var ra = cteCislo(aPos);
+      if (!ra) continue;
+      var rja = cteJednotku(aPos + ra.slov);
+      var spoj = aPos + ra.slov + (rja ? rja.slov : 0);
+      if (!ROZSAH_SPOJ[slova[spoj]]) continue;
+      var rb = cteCislo(spoj + 1);
+      if (!rb) continue;
+      var rjb = cteJednotku(spoj + 1 + rb.slov);
+      var rnas = rjb || rja;
+      if (!rnas) {
+        /* Bez jednotky platí totéž, co u jednosměrné meze: pod deseti
+           tisíci se nic netipuje, aby „mezi 5 a 8" nebyla cena. */
+        if (ra.hodnota < BEZ_JEDNOTKY_OD || rb.hodnota < BEZ_JEDNOTKY_OD) continue;
+        rnas = { nas: [null, 1, 'cena'], slov: 0 };
+      }
+      var nasA = rja ? rja.nas : rnas.nas;
+      var hodA = Math.round(ra.hodnota * nasA[1]);
+      var hodB = Math.round(rb.hodnota * rnas.nas[1]);
+      if (!(hodA < hodB)) continue;            // „od 900 do 500" není rozsah
+      var kam = rnas.nas[2];
+      if (kam === 'zaMetr') {
+        if (ven.zaMetrOd != null || ven.zaMetrDo != null) continue;
+        ven.zaMetrOd = hodA; ven.zaMetrDo = hodB;
+      } else if (kam === 'plocha') {
+        if (ven.plochaOd != null || ven.plochaDo != null) continue;
+        ven.plochaOd = hodA; ven.plochaDo = hodB;
+      } else {
+        if (ven.cenaOd != null || ven.cenaDo != null) continue;
+        ven.cenaOd = hodA; ven.cenaDo = hodB;
+      }
+      var rDelka = (spoj + 1 + rb.slov + (rjb ? rjb.slov : 0)) - ri;
+      zaber(ri, rDelka, { druh: kam, smer: 'rozsah', hodnota: hodB, hodnotaOd: hodA,
+        popis: usek(ri, rDelka) });
+    }
+
     /* --- 1) Rozsahy s jednotkou: „do 1,5 mil", „nad 2 ha", „od 500 tis" --- */
     var SMERY = { do: 'do', pod: 'do', max: 'do', od: 'od', nad: 'od', min: 'od' };
     for (var i = 0; i < slova.length; i++) {
@@ -441,6 +519,29 @@
       if (ven.druh) return false;
       ven.druh = z[0];
       zaber(i2, d, { druh: 'druh', hodnota: z[0], popis: z[0] });
+      /* DRUH ŘEČENÝ DVAKRÁT SE SPOTŘEBUJE CELÝ.
+         Web sám své druhy pojmenovává dvojslovně („Louka / travní
+         porost", „Vinice / sad"), takže je lidi tak i píšou — a druhé
+         slovo zbylo na hledání OBCE a výpis byl prázdný. Naměřeno:
+           orná pole Znojmo            → obec „pole znojmo"   ✗
+           louka travní porost Vsetín  → obec „louka vsetin"  ✗
+           les lesní pozemek Šumava    → obec „les sumava"    ✗
+         Spotřebují se jen názvy TÉHOŽ druhu: „louka les" musí dál zůstat
+         loukou a slovo „les" nesmí zmizet, protože o druhu už bylo
+         rozhodnuto a zahodit ho mlčky by bylo horší než ho nechat. */
+      var dalsi = vetsiPrvni(z[z.length - 1]);
+      for (var f2 = 0; f2 < dalsi.length; f2++) {
+        var casti2 = dalsi[f2].split(' ');
+        for (var j = 0; j < slova.length; j++) {
+          if (vzato[j] || !zkus(j, dalsi[f2])) continue;
+          for (var k = 0; k < casti2.length; k++) vzato[j + k] = true;
+          /* Do odznaku se ta slova dopíšou, ať je křížek umí vyškrtnout
+             z věty — jinak by po zrušení odznaku zbylo „pole" a hledání
+             obce by se rozbilo podruhé. */
+          ven.casti[ven.casti.length - 1].slova =
+            ven.casti[ven.casti.length - 1].slova.concat(slova.slice(j, j + casti2.length));
+        }
+      }
       return true;
     });
     /* Kraje se čtou stejně jako druh, typ a sítě. Na pořadí tu nezáleží:
