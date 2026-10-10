@@ -2483,6 +2483,76 @@ jinak by kontroly běžely nad prázdnem.
 Žádná oprava kódu tu nebyla potřeba — chyběla pojistka. Zapsáno proto,
 že právě tyhle tiché dohody se rozcházejí nejdřív.
 
+## 3as. NALEZENO: „elektřina v dosahu" se na webu čtla jako pozemek s elektřinou — *opraveno 10. 10.*
+
+Štítky „Elektřina", „Voda", „Kanalizace", „Plyn" a „Příjezd" jsou po
+ceně to nejrozhodnější, co o pozemku web tvrdí — a dá se podle nich
+filtrovat. Vytahuje je `js/vybaveni.js` z textu inzerátu a modul se
+pečlivě brání dvěma pastem: **záporu** („bez elektřiny", „elektřina
+zavedena není") a **jinému druhu** („odpadní voda", „záplavová voda").
+
+Třetí past neznal. Mezi „elektřina je zavedena" a „elektřina tu není"
+leží ještě **„je někde poblíž"**:
+
+| věta v inzerátu | co web tvrdil |
+|---|---|
+| „obecní cesta je na hranici pozemku, **elektřina v dosahu**" | Elektřina |
+| „přípojky k inženýrským sítím (kanalizace, voda, elektřina, plyn), **které jsou v blízkosti hranice pozemku**" | Elektřina + Voda + Kanalizace + Plyn |
+
+Inzerát to přitom sám netvrdí — naopak se od toho distancuje. Kdo si
+podle štítku vybere, dozví se to až na místě.
+
+### Rozsah
+
+Změřeno na 1 617 skutečných popisech: z **895** tvrzení o sítích jich
+na téhle formulaci stojí **5 (0,6 %)**, ve dvou inzerátech (Ostředek
+na Benešovsku, Dubí na Teplicku).
+
+### Oprava a proč je vzor ÚZKÝ
+
+Přidala se třetí kategorie `jenVOkoli` — hledá `v dosahu`,
+`v blízkosti`, `v bezprostřední blízkosti`, `poblíže`, `nedaleko`
+v témže okně jako zápor.
+
+Zkoušel jsem k tomu přidat i **„možnost připojení"**, a vyjímá to 8
+tvrzení — jenže **4 z nich jsou z inzerátu, kde o dvě věty dřív stojí
+„Pozemek je plně zasíťovaný"**. Tam ta tvrzení platí, jen z jiné věty,
+a pravidlo by je zahodilo neprávem. Takže ne. (`nedaleko` ani
+„v bezprostřední blízkosti" naopak nepřidávají ani neubírají nic — 5
+ve všech variantách — takže jsou ve vzoru bez rizika.)
+
+**Výslovné tvrzení o přítomnosti má přednost.** Bez toho by věta „Voda
+je zavedena na pozemek, les je v dosahu" o tu vodu přišla — a to byla
+chyba, kterou jsem si do opravy nejdřív zavedl a odhalila ji vlastní
+kontrolní věta. Hledá se jen v nejbližší čárkové části na obě strany,
+a „možnost připojení" se za tvrzení o přítomnosti nebere (slovo
+„připojení" by jinak samo rozsvítilo celý výčet).
+
+### A oprava DAT, kde na to málem došlo k horší chybě
+
+Štítky čte web z **uloženého** `d.site` v `data/opportunities.json`, ne
+z textu, takže oprava modulu by se projevila až na dalším běhu robota.
+Chtěl jsem proto `site` přepočítat z `data/popisy.json` — a to by byla
+chyba: **přepočet chtěl změnit 385 nabídek**, vždy `[cesta] → []`.
+Důvod: robot měl k dispozici delší text než ten, který se do
+`popisy.json` ukládá, takže z něj „Příjezd" vyjde a z uloženého
+popisu ne.
+
+Správně se tedy opravilo jen to, za co může **změna modulu**: rozdíl
+staré a nové verze na tomtéž textu, a to jen směrem k odebrání. Ověřeno
+po zápisu: hlavička souboru shodná, 1 985 nabídek jako dřív, změněné
+přesně **dvě**.
+
+### Zkouška
+
+`scripts/test-vybaveni.mjs` má 94 → **102** kontrol, ve dvou
+polovinách: tři na to, co se vyjmout MÁ, a pět na to, co se vyjmout
+NESMÍ (včetně toho „plně zasíťovaný" inzerátu a staré kontroly, že
+zápor pořád drží).
+
+**Prokázáno dvěma sabotážemi:** vypnutí nového pravidla srazilo 3
+kontroly, vypnutí přednosti tvrzení o přítomnosti 2.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

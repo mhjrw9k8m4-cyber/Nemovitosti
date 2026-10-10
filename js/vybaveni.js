@@ -95,6 +95,51 @@
     return ZAPOR.test(zaKonec);
   }
 
+  /* 3. „V DOSAHU" NENÍ „NA POZEMKU" — a není to ani zápor.
+        Mezi „elektřina je zavedena" a „elektřina tu není" leží třetí
+        možnost, kterou modul neznal: síť je někde poblíž. Věta
+        „obecní cesta je na hranici pozemku, elektřina v dosahu" se
+        tím čtla jako pozemek S elektřinou, a „přípojky k inženýrským
+        sítím (kanalizace, voda, elektřina, plyn), které jsou
+        v blízkosti hranice pozemku" rozsvítila rovnou čtyři štítky.
+        Přitom to inzerát sám neříká — a kdo si podle štítku vybere,
+        dozví se to až na místě.
+        Změřeno na 1 617 popisech: z 895 tvrzení o sítích jich na téhle
+        formulaci stojí 5 (0,6 %), ve dvou inzerátech.
+        VZOR JE SCHVÁLNĚ ÚZKÝ. Zkoušel jsem k němu přidat i „možnost
+        připojení", a ta vyjímá 8 tvrzení — jenže 4 z nich jsou
+        z inzerátu, kde o dvě věty dřív stojí „Pozemek je plně
+        zasíťovaný". Tam ta tvrzení PLATÍ, jen z jiné věty, a pravidlo
+        by je zahodilo neprávem. „nedaleko" ani „v bezprostřední
+        blízkosti" naopak nepřidávají ani neubírají nic (5 v obou
+        případech), takže jsou ve vzoru bez rizika. */
+  var JEN_V_OKOLI = /\b(?:v dosahu|v blizkosti|v bezprostredni blizkosti|poblize|nedaleko)\b/;
+
+  /* VÝSLOVNÉ TVRZENÍ O PŘÍTOMNOSTI MÁ PŘEDNOST. Jinak by věta „Voda je
+     zavedena na pozemek, les je v dosahu" o tu vodu přišla — zmínka
+     o okolí je tam o něčem úplně jiném. Hledá se jen v nejbližší
+     čárkové části na obě strany, ne v celé větě.
+     „Možnost připojení" se přitom za tvrzení o přítomnosti NEBERE:
+     slovo „připojení" by jinak samo rozsvítilo celý výčet
+     u „možnost připojení k sítím (…), které jsou v blízkosti". */
+  var PRITOMNO = /\b(?:zaveden\w*|priveden\w*|pripojen\w*|vybudovan\w*|zasitovan\w*|zasiten\w*|na pozemku|na pozemek)\b/;
+  var MOZNOST = /\bmozn\w*\s+(?:pripojen|napojen|privest|privedeni|zavedeni)\w*/g;
+  function tvrdiPritomnost(usek) {
+    return PRITOMNO.test(String(usek).replace(MOZNOST, ' '));
+  }
+
+  /* Hledá se v témže okně jako zápor a nanejvýš do konce věty: „voda je
+     zavedena, les je v dosahu" nesmí shodit tu vodu. */
+  function jenVOkoli(text, od, do_) {
+    var predVeta = text.slice(Math.max(0, od - OKNO_PRED), od).split(/[.;!?]/).pop();
+    var zaVeta = text.slice(do_, do_ + OKNO_ZA).split(/[.;!?]/)[0];
+    if (!JEN_V_OKOLI.test(predVeta) && !JEN_V_OKOLI.test(zaVeta)) return false;
+    /* Nejbližší čárková část na obě strany — tam musí stát, že to tam je. */
+    if (tvrdiPritomnost(predVeta.split(',').pop())) return false;
+    if (tvrdiPritomnost(zaVeta.split(',')[0])) return false;
+    return true;
+  }
+
   /* Podíl. Tohle není odhad, ale to, co v inzerátu stojí černé na bílém:
      „spoluvlastnický podíl", „podíl o velikosti 1/2", „id. podíl". */
   /* Slovo „podíl" v tom přitom vůbec být nemusí. Dražby a listy
@@ -170,7 +215,9 @@
       def.re.lastIndex = 0;
       var m, ma = false;
       while ((m = def.re.exec(t)) !== null) {
-        if (!zaporny(t, m.index, m.index + m[0].length) && !mimoObor(def, t, m.index)) { ma = true; break; }
+        var konec = m.index + m[0].length;
+        if (!zaporny(t, m.index, konec) && !mimoObor(def, t, m.index)
+            && !jenVOkoli(t, m.index, konec)) { ma = true; break; }
         if (m.index === def.re.lastIndex) def.re.lastIndex++;   // pojistka proti zacyklení
       }
       if (ma) ven.push(def.klic);

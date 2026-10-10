@@ -298,6 +298,56 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
 }
 
 console.log('\nCo je u pozemku — čtení z popisu nabídky');
+/* ---- „V DOSAHU" NENÍ „NA POZEMKU" ------------------------------
+ *
+ * Třetí kategorie mezi tvrzením a záporem: síť je někde poblíž. Modul
+ * ji neznal, takže věta „obecní cesta je na hranici pozemku, elektřina
+ * v dosahu" dávala pozemek S elektřinou a „přípojky k inženýrským
+ * sítím (kanalizace, voda, elektřina, plyn), které jsou v blízkosti
+ * hranice pozemku" rozsvítila rovnou čtyři štítky.
+ * Změřeno na 1 617 skutečných popisech: z 895 tvrzení o sítích jich na
+ * téhle formulaci stojí 5 (0,6 %), ve dvou inzerátech.
+ *
+ * Druhá polovina kontrol hlídá, že se to nepřehnalo. Výslovné tvrzení
+ * o přítomnosti má přednost — jinak by „Voda je zavedena na pozemek,
+ * les je v dosahu" o tu vodu přišla. A „možnost připojení" se za
+ * tvrzení o přítomnosti nebere: slovo „připojení" by jinak samo
+ * rozsvítilo celý výčet u věty o sítích v blízkosti.
+ */
+{
+  pravda('„elektřina v dosahu" není pozemek s elektřinou',
+    site('obecní cesta je na hranici pozemku, elektřina v dosahu, cena k jednání') === '',
+    site('obecní cesta je na hranici pozemku, elektřina v dosahu, cena k jednání'));
+  pravda('ani „sítě, které jsou v blízkosti hranice pozemku" — a to u celého výčtu',
+    site('Možnost připojení k inženýrským sítím (kanalizace, voda, elektřina, plyn), '
+      + 'které jsou v blízkosti hranice pozemku.') === '',
+    site('Možnost připojení k inženýrským sítím (kanalizace, voda, elektřina, plyn), '
+      + 'které jsou v blízkosti hranice pozemku.'));
+  pravda('„studna poblíže" taky ne', site('Studna poblíže pozemku.') === '',
+    site('Studna poblíže pozemku.'));
+
+  /* A teď druhá strana: co se zahodit NESMÍ. */
+  pravda('„na hranici pozemku je zavedena elektřina" zůstává',
+    site('Na hranici pozemku je zavedena elektřina.') === 'elektrina',
+    site('Na hranici pozemku je zavedena elektřina.'));
+  pravda('„voda je zavedena na pozemek, les je v dosahu" o vodu nepřijde',
+    site('Voda je zavedena na pozemek, les je v dosahu.') === 'voda',
+    site('Voda je zavedena na pozemek, les je v dosahu.'));
+  pravda('ani „zavedena je voda i elektřina, les v dosahu"',
+    site('Zavedena je voda i elektřina, les v dosahu.') === 'elektrina,voda',
+    site('Zavedena je voda i elektřina, les v dosahu.'));
+  /* Tenhle případ rozhodl o tom, že vzor zůstal úzký: „možnost
+     připojení" samo o sobě štítek NESHAZUJE, protože o dvě věty dřív
+     může stát, že pozemek je zasíťovaný — a tam ta tvrzení platí. */
+  pravda('„plně zasíťovaný. Možnost připojení – elektřiny, plynu, vody, kanalizace" platí',
+    site('Pozemek je plně zasíťovaný. Možnost připojení - elektřiny, plynu, vody, kanalizace.')
+      === 'elektrina,kanalizace,plyn,voda',
+    site('Pozemek je plně zasíťovaný. Možnost připojení - elektřiny, plynu, vody, kanalizace.'));
+  pravda('a zápor pořád drží i vedle nového pravidla',
+    site('Na pozemku není zavedena elektřina, obchod je v dosahu.') === '',
+    site('Na pozemku není zavedena elektřina, obchod je v dosahu.'));
+}
+
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.log('::error::Vybavení: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }

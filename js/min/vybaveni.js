@@ -48,6 +48,24 @@
     return ZAPOR.test(zaKonec);
   }
 
+  var JEN_V_OKOLI = /\b(?:v dosahu|v blizkosti|v bezprostredni blizkosti|poblize|nedaleko)\b/;
+
+  var PRITOMNO = /\b(?:zaveden\w*|priveden\w*|pripojen\w*|vybudovan\w*|zasitovan\w*|zasiten\w*|na pozemku|na pozemek)\b/;
+  var MOZNOST = /\bmozn\w*\s+(?:pripojen|napojen|privest|privedeni|zavedeni)\w*/g;
+  function tvrdiPritomnost(usek) {
+    return PRITOMNO.test(String(usek).replace(MOZNOST, ' '));
+  }
+
+  function jenVOkoli(text, od, do_) {
+    var predVeta = text.slice(Math.max(0, od - OKNO_PRED), od).split(/[.;!?]/).pop();
+    var zaVeta = text.slice(do_, do_ + OKNO_ZA).split(/[.;!?]/)[0];
+    if (!JEN_V_OKOLI.test(predVeta) && !JEN_V_OKOLI.test(zaVeta)) return false;
+
+    if (tvrdiPritomnost(predVeta.split(',').pop())) return false;
+    if (tvrdiPritomnost(zaVeta.split(',')[0])) return false;
+    return true;
+  }
+
   var ZLOMEK = '(?:\\d+\\s*\\/\\s*\\d+|polovin\\w*|tretin\\w*|ctvrtin\\w*|petin\\w*|sestin\\w*|osmin\\w*|desetin\\w*)';
   var PODIL = new RegExp(
     'spoluvlastnick\\w*\\s+podil\\w*' +
@@ -91,7 +109,9 @@
       def.re.lastIndex = 0;
       var m, ma = false;
       while ((m = def.re.exec(t)) !== null) {
-        if (!zaporny(t, m.index, m.index + m[0].length) && !mimoObor(def, t, m.index)) { ma = true; break; }
+        var konec = m.index + m[0].length;
+        if (!zaporny(t, m.index, konec) && !mimoObor(def, t, m.index)
+            && !jenVOkoli(t, m.index, konec)) { ma = true; break; }
         if (m.index === def.re.lastIndex) def.re.lastIndex++;
       }
       if (ma) ven.push(def.klic);
