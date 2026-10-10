@@ -1085,6 +1085,50 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
     /spravniCena\(d\)/.test(teloHot) && /pochybna \|\| o\.nejisty/.test(teloHot),
     'pojistka u hotIds o úřední ceně nevěděla');
 }
+/* ---- VÝMĚRA, KTERÁ UŽ JE PODÍLOVÁ ------------------------------
+ *
+ * `vymeraVCene` dělila `area × zlomek` vždycky. U jednoho zdroje je
+ * ale uložená výměra UŽ ta podílová (inzerát vypíše parcely zvlášť
+ * a ty jsou větší), takže se dělilo dvakrát: u podílu 1/2 vyšla cena
+ * za metr dvojnásobná, u 3/20 sedminásobná. Doloženo aritmeticky na
+ * 219 z 308 podílů s neuříznutým výpisem parcel; příznak
+ * `vymera_podilu` nasazuje robot jen tam, kde to text dokazuje
+ * (359 z 522 podílů v datech z 10. 10.).
+ */
+{
+  const podil = { place: 'P', okres: 'Cheb', type: 'sale', druh: 'lesní pozemek',
+    area: 1976, price: 29000, podil: true, zlomek: '1/2' };
+  pravda('bez příznaku se cena za metr pořád dělí zlomkem (29 Kč/m²)',
+    Math.round(PK_CENY.zaMetr(podil)) === 29, String(PK_CENY.zaMetr(podil)));
+  pravda('s příznakem se nedělí a vyjde 15 Kč/m²',
+    Math.round(PK_CENY.zaMetr({ ...podil, vymera_podilu: true })) === 15,
+    String(PK_CENY.zaMetr({ ...podil, vymera_podilu: true })));
+  pravda('výměra v ceně je pak ta uložená, ne její polovina',
+    PK_CENY.vymeraVCene({ ...podil, vymera_podilu: true }) === 1976
+    && PK_CENY.vymeraVCene(podil) === 988,
+    `${PK_CENY.vymeraVCene({ ...podil, vymera_podilu: true })} / ${PK_CENY.vymeraVCene(podil)}`);
+  /* A věta pod číslem nesmí tvrdit, že se přepočítávalo. */
+  const popisS = PK_CENY.zaMetrPopis({ ...podil, vymera_podilu: true });
+  const popisBez = PK_CENY.zaMetrPopis(podil);
+  pravda('a vysvětlení u příznaku netvrdí, že se přepočítávalo',
+    !/Přepočteno/.test(popisS) && /podílová/.test(popisS), popisS);
+  pravda('kdežto bez příznaku to tvrdí dál', /Přepočteno/.test(popisBez), popisBez);
+  /* Na ostrých datech: příznak tam je a ceny za metr spadly. Data se
+     čtou tady vlastním načtením — blok s SYR2 je o kus níž a zkouška
+     si nemá zavádět závislost na tom, v jakém pořadí bloky stojí. */
+  const OSTRA = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const sPriznakem = OSTRA.filter((o) => o.vymera_podilu);
+  pravda(`v datech ten příznak je (${sPriznakem.length})`, sPriznakem.length >= 100,
+    `jen ${sPriznakem.length} — kontrola níž by neměla co měřit`);
+  const chybne = sPriznakem.filter((o) => {
+    const z = /^(\d+)\/(\d+)$/.exec(String(o.zlomek || ''));
+    if (!z) return true;
+    return Math.round(PK_CENY.vymeraVCene(o)) !== o.area;
+  });
+  pravda('a u všech se výměra v ceně rovná uložené výměře',
+    chybne.length === 0, `${chybne.length} výjimek`);
+}
+
 /* ---- SMLOUVA MEZI ROBOTEM A WEBEM O ZNAČCE „§ 12" ----------------
  *
  * Celé zacházení s úředně stanovenou cenou stojí na jedné větě, kterou

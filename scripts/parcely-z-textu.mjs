@@ -138,3 +138,68 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   console.log();
 }
+
+/* JE ULOŽENÁ VÝMĚRA UŽ PODÍLOVÁ?
+   ==================================================================
+   Tohle je druhá otázka, na kterou týž text odpovídá — a bydlí tady
+   proto, že jedině tenhle modul už umí ze struktury inzerátu přečíst
+   „Parcela č. … o výměře X m²". Jinde by se to muselo psát podruhé.
+
+   PROČ TO VŮBEC VZNIKLO. js/ceny.js počítá cenu za metr jako
+   `price / (area × zlomek)` a komentář u toho říká „výměra v inzerátu
+   je celá parcela". U jednoho zdroje to ale neplatí:
+
+     „k.ú. Rudice LV č. 65 o výměře 1976 m², podíl 1/2
+      • Parcela č. 3591 - o výměře 3952 m² (Lesní pozemek)"
+
+   Parcela má 3 952 m², podíl je polovina — a uložená `area` je 1 976,
+   tedy UŽ TA POLOVINA. Model ji pak dělí dvojkou ještě jednou a tiskne
+   29 Kč/m² místo 15. U podílu 3/20 je to sedminásobek.
+
+   Model tuhle nejednoznačnost sám přiznával („nevíme, které z těch
+   dvou čísel v inzerátu je špatně — jestli je cena za celou parcelu,
+   nebo je výměra už jen podílová"). Text inzerátu na to u části nabídek
+   odpovídá, a odpověď se dá spočítat, ne hádat.
+
+   DVĚ NEZÁVISLÉ DŮKAZNÍ CESTY — stačí jedna, obě musí mít známý zlomek:
+
+     A) SOUČET VYPSANÝCH PARCEL × ZLOMEK ≈ `area` (do 1 %).
+        Naměřeno: u 219 z 308 podílů s neuříznutým výpisem to sedne na
+        setinu procenta, i u zlomku 3/20 nebo 2/3.
+     B) Inzerát uvádí „LV č. N o výměře X" se X ≈ `area` A ZÁROVEŇ je
+        aspoň jedna vypsaná parcela VĚTŠÍ než `area`. Kdyby `area` byla
+        celá parcela (nebo součet parcel), nemohla by ji žádná jediná
+        parcela přesáhnout. Tohle zachytí i uříznuté výpisy, kde se
+        součet spočítat nedá.
+
+   Když ani jedna cesta neprojde, vrací se false a model počítá jako
+   dosud. Lepší nechat starý výpočet než příznak nasadit podle dohadu.
+   ================================================================== */
+const LV_VYMERA = /LV\s*č\.?\s*\d+\s*o\s*v[ýy]m[ěe]ře\s*([\d\s ]+)\s*m\s*²?/i;
+const PARCELA_VYMERA = /Parcela\s*č\.\s*[\d/]+\s*-\s*o\s*v[ýy]m[ěe]ře\s*([\d\s ]+)\s*m\s*²?/gi;
+/** Zlomek „1/2" → 0.5, jinak null. */
+export function zlomekCislo(z) {
+  const m = /^(\d+)\s*\/\s*(\d+)$/.exec(String(z == null ? '' : z).trim());
+  if (!m || !+m[2]) return null;
+  return +m[1] / +m[2];
+}
+/** Uložená `area` je už výměra podílu? (viz komentář výš) */
+export function vymeraJePodilova(text, o) {
+  if (!text || !o || !o.podil || !(o.area > 0)) return false;
+  const z = zlomekCislo(o.zlomek);
+  if (!z) return false;
+  const s = String(text).replace(/\s+/g, ' ');
+  const cislo = (x) => +String(x).replace(/[\s ]/g, '');
+  const parcely = [...s.matchAll(PARCELA_VYMERA)].map((m) => cislo(m[1])).filter((x) => x > 0);
+  if (!parcely.length) return false;
+  /* A) součet × zlomek sedí na uloženou výměru */
+  const soucet = parcely.reduce((a, b) => a + b, 0);
+  if (Math.abs(soucet * z - o.area) <= Math.max(1, o.area * TOLERANCE)) return true;
+  /* B) LV sedí na uloženou výměru a jedna parcela je větší */
+  const lv = LV_VYMERA.exec(s);
+  if (!lv) return false;
+  const lvCislo = cislo(lv[1]);
+  if (!(lvCislo > 0)) return false;
+  if (Math.abs(lvCislo - o.area) > Math.max(2, o.area * 0.005)) return false;
+  return parcely.some((p) => p > o.area);
+}

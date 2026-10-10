@@ -29,7 +29,8 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { najdi, klicPopisu, STROP_POPISU, TOLERANCE } from './parcely-z-textu.mjs';
+import { najdi, klicPopisu, STROP_POPISU, TOLERANCE,
+  vymeraJePodilova, zlomekCislo } from './parcely-z-textu.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -214,6 +215,54 @@ for (const { f, o } of sPc.slice(0, 3)) {
       r.popsano === 'sml-parcela-pozn', 'aria-describedby = ' + r.popsano);
     await p2.close();
   }
+}
+
+/* ---- JE ULOŽENÁ VÝMĚRA UŽ PODÍLOVÁ? -----------------------------
+ *
+ * js/ceny.js dělil cenu `area × zlomek` a komentář u toho tvrdil, že
+ * „výměra v inzerátu je celá parcela". U jednoho zdroje to neplatí:
+ * inzerát vypíše parcely zvlášť a uložená výměra je už ta podílová,
+ * takže se dělilo dvakrát a cena za metr vyšla násobně vyšší (u 1/2
+ * dvakrát, u 3/20 sedmkrát).
+ *
+ * Příznak se nasazuje jen tam, kde to text DOKAZUJE. Kontroly níž
+ * jsou proto ve dvou polovinách: co se poznat MÁ, a co se poznat
+ * NESMÍ — tam je ta cena, protože nasazený příznak na nabídce, kde
+ * výměra podílová není, by tiskl cenu za metr NIŽŠÍ, než je.
+ */
+{
+  const rudice = 'k.ú. Rudice LV č. 65 o výměře 1976 m², podíl 1/2 '
+    + '• Parcela č. 3591 - o výměře 3952 m² (Lesní pozemek)';
+  pravda('zlomek se přečte', zlomekCislo('3/20') === 0.15 && zlomekCislo('x') === null);
+  pravda('součet parcel krát zlomek sedí na výměru → výměra je podílová',
+    vymeraJePodilova(rudice, { podil: true, zlomek: '1/2', area: 1976 }) === true);
+  pravda('a sedí to i u zlomku, který není polovina',
+    vymeraJePodilova('LV č. 1 o výměře 1144 m², podíl 3/20 '
+      + '• Parcela č. 3121/5 - o výměře 7628 m²',
+      { podil: true, zlomek: '3/20', area: 1144 }) === true);
+  /* Uříznutý výpis: součet nejde spočítat, ale LV sedí a jedna parcela
+     je větší než uložená výměra — to samo dokazuje, že výměra není
+     celá parcela. */
+  pravda('uříznutý výpis rozhodne druhá cesta (LV sedí, parcela je větší)',
+    vymeraJePodilova('LV č. 492 o výměře 2939 m², podíl 1/4 '
+      + '• Parcela č. 3132/6 - o výměře 8096 m² (Trvalý travní porost) • Parcela č.',
+      { podil: true, zlomek: '1/4', area: 2939 }) === true);
+
+  /* ---- a co se poznat NESMÍ ---- */
+  pravda('bez vypsaných parcel se nic nenasazuje',
+    vymeraJePodilova('Prodám podíl 1/2 na pozemku o výměře 1976 m².',
+      { podil: true, zlomek: '1/2', area: 1976 }) === false);
+  pravda('bez známého zlomku taky ne',
+    vymeraJePodilova(rudice, { podil: true, area: 1976 }) === false);
+  pravda('a u nabídky, která podíl není, vůbec',
+    vymeraJePodilova(rudice, { area: 1976 }) === false);
+  /* Výměra, která je OPRAVDU celá parcela: součet parcel se rovná
+     uložené výměře, ne jejímu zlomku. Tam se příznak nasadit nesmí —
+     cena za metr by vyšla nižší, než je. */
+  pravda('když součet parcel ROVNÁ uložené výměře, příznak se nenasadí',
+    vymeraJePodilova('LV č. 7 o výměře 3952 m², podíl 1/2 '
+      + '• Parcela č. 1 - o výměře 1952 m² • Parcela č. 2 - o výměře 2000 m²',
+      { podil: true, zlomek: '1/2', area: 3952 }) === false);
 }
 
 await ctx.close();

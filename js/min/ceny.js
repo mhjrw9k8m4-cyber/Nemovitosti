@@ -15,6 +15,8 @@
 
   function vymeraVCene(d) {
     if (!hasArea(d)) return null;
+
+    if (d.vymera_podilu) return d.area;
     var z = zlomekPodilu(d);
     return z == null ? null : d.area * z;
   }
@@ -32,6 +34,12 @@
     if (!d || !d.podil) return '';
     var z = zlomekPodilu(d);
     if (z == null) return '';
+
+    if (d.vymera_podilu) {
+      return 'Jde o spoluvlastnický podíl' + (d.zlomek ? ' ' + d.zlomek : '') +
+        '. Výměra je ta podílová, tedy ta, která vám připadne — '
+        + 'celá parcela je větší.';
+    }
     return 'Přepočteno na spoluvlastnický podíl' + (d.zlomek ? ' ' + d.zlomek : '') +
       ' — tolik platíte za metr, který vám připadne. Výměra v inzerátu je celá parcela.';
   }

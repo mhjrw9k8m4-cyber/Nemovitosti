@@ -2553,6 +2553,115 @@ zápor pořád drží).
 **Prokázáno dvěma sabotážemi:** vypnutí nového pravidla srazilo 3
 kontroly, vypnutí přednosti tvrzení o přítomnosti 2.
 
+## 3at. NALEZENO: u 359 podílů se cena za metr dělila zlomkem DVAKRÁT — u 3/20 vyšla sedminásobná — *opraveno 10. 10.*
+
+Tohle je nejdražší chyba, jakou web dnes měl, a ležela v místě, které
+`js/ceny.js` sám označil za nejisté.
+
+### Nejednoznačnost, kterou model přiznával
+
+Model počítá cenu za metr jako `price / (area × zlomek)` a komentář
+u toho tvrdí: *„Výměra v inzerátu je celá parcela."* O pár řádků níž
+ale u stropu uvěřitelnosti stojí: *„Nevíme, které z těch dvou čísel
+v inzerátu je špatně — jestli je cena za celou parcelu, nebo je
+**výměra už jen podílová**."* Dvě tvrzení, která se vylučují.
+
+Text inzerátu na to u jednoho zdroje odpovídá černé na bílém:
+
+```
+k.ú. Rudice LV č. 65 o výměře 1976 m², podíl 1/2
+• Parcela č. 3591 - o výměře 3952 m² (Lesní pozemek)
+```
+
+Parcela má **3 952 m²**, podíl je polovina, a uložená `area` je
+**1 976** — tedy **už ta polovina**. Model ji dělil dvojkou ještě
+jednou a tiskl **29 Kč/m² místo 15**.
+
+### Jak se to ověřilo — aritmetikou, ne výkladem
+
+Pro podíl 2/3 inzerát vypisuje parcely 1 629 + 73 + 4 398 = **6 100**;
+krát 2/3 = **4 067** — a `area` je 4 067. Změřeno hromadně:
+
+| | |
+|---|---|
+| podílů s neuříznutým výpisem parcel | 308 |
+| z nich **součet parcel × zlomek ≈ `area`** (do 1 %) | **219** |
+| nesedí (většinou uříznutý výpis) | 89 |
+
+Sedne to i u zlomků jako 3/20 nebo 2/3, takže o shodu náhodou nejde.
+
+### Jak velká byla ta chyba
+
+| nabídka | web tiskl | správně |
+|---|---|---|
+| Trpín 1/3 | 40 Kč/m² | **13** |
+| Úštěk 1/3 | 35 Kč/m² | **12** |
+| Rudice 1/2 | 29 Kč/m² | **15** |
+| Velká nad Veličkou 3/20 | 146 Kč/m² | **22** |
+
+Násobek je přesně `1/zlomek`: u poloviny dvojnásobek, u 3/20
+sedminásobek. Model si té chyby byl částečně vědom — právě tyhle
+nabídky mu lezly nad strop uvěřitelnosti (ten komentář jmenuje podíl
+1/73 s 370 703 Kč/m²).
+
+### Oprava
+
+Příznak **`vymera_podilu`** v datech. Nasazuje ho robot a **jen tam,
+kde to inzerát dokazuje** — dvě nezávislé cesty, stačí jedna, obě
+vyžadují známý zlomek:
+
+* **A)** součet vypsaných parcel × zlomek ≈ `area` (do 1 %);
+* **B)** inzerát uvádí „LV č. N o výměře X" se X ≈ `area` **a zároveň**
+  je aspoň jedna vypsaná parcela větší než `area`. Kdyby `area` byla
+  celá parcela, nemohla by ji žádná jediná parcela přesáhnout. Tahle
+  cesta zachytí i uříznuté výpisy.
+
+Kde se to dokázat nedá, zůstává starý výpočet. V datech z 10. 10. má
+příznak **359 z 522** podílů (69 %).
+
+`vymeraVCene()` pak u takové nabídky vrací `area` beze změny, a věta
+pod číslem přestala tvrdit, že se přepočítávalo.
+
+### Co se tím NEPOHNULO — a je to změřené
+
+| | |
+|---|---|
+| změněná cena za metr | **359** |
+| překlopených verdiktů „pochybná cena" | **0** |
+| změněných hodnot „% pod odhadem" | **0** |
+| medián okresu, kraje, percentily | **beze změny** |
+
+Důvod je v kódu: srovnávací přihrádky i percentil počítají `price/area`
+**surově** (řádek 357 v `js/ceny.js`), ne přes `zaMetr`. Oprava se tedy
+dotkla čísla, které člověk čte, a ničeho jiného. Ověřeno porovnáním
+staré a nové verze modelu nad všemi nabídkami.
+
+### A druhá kopie, kterou našly zkoušky
+
+Totéž počítá podruhé `js/hlidani-logika.js` (hlídání musí fungovat i bez
+`ceny.js`). Změnil jsem jen `ceny.js` — a `scripts/test-strop-ceny.mjs`
+spolu s `scripts/test-hlidani.mjs` to okamžitě ohlásily: *„zaMetr: obě
+kopie dávají na všech datech totéž"* spadlo a vypsalo
+`Úštěk: ceny.js 11,54 × hlidani-logika.js 34,62`. Tohle je ta pojistka,
+která se vyplatila; doplněno na obou místech.
+
+### Zkoušky
+
+* `scripts/test-parcely-z-textu.mjs` — osm nových kontrol na detektor,
+  ve dvou polovinách: co se poznat **má** (obě cesty, i zlomek 3/20)
+  a co se poznat **nesmí** (bez vypsaných parcel, bez zlomku, u nabídky
+  bez podílu, a hlavně když se součet parcel **rovná** uložené výměře —
+  tam je výměra opravdu celá parcela a příznak by cenu podstřelil).
+* `scripts/test-ceny.mjs` 144 → **151** kontrol: cena s příznakem
+  i bez, výměra v ceně, vysvětlení pod číslem, a na ostrých datech, že
+  příznak v datech je a u všech 359 se výměra v ceně rovná uložené.
+* `data/pole.json` pole popisuje (zkouška spadne, kdyby chybělo), a
+  popis u `podil` se opravil — tvrdil, že výměra je vždy celá parcela.
+
+**Prokázáno sabotáží:** když model příznak ignoruje, spadnou 3 kontroly;
+když detektor přijme i nabídku bez vypsaných parcel, spadne ta na to
+určená.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

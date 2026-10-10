@@ -95,17 +95,22 @@
     "site": {
       "typ": "pole",
       "vzdy": false,
-      "popis": "Sítě a příjezd vyčtené z popisu inzerátu (elektrina, voda, plyn, kanalizace, cesta). Co není uvedeno, NENÍ totéž co „není“."
+      "popis": "Sítě a příjezd vyčtené z popisu inzerátu (elektrina, voda, plyn, kanalizace, cesta). Co není uvedeno, NENÍ totéž co „není“. A „v dosahu“ ani „v blízkosti“ se za uvedenou síť nepočítá."
     },
     "podil": {
       "typ": "boolean",
       "vzdy": false,
-      "popis": "true = prodává se spoluvlastnický podíl. POZOR: cena je za zlomek, ale výměra za celou parcelu, takže cena za metr vychází nízko sama od sebe."
+      "popis": "true = prodává se spoluvlastnický podíl. Cena je za zlomek. Jestli je výměra za celou parcelu, nebo už za ten podíl, říká pole „vymera_podilu“ — bez něj platí to první, a cena za metr pak vychází nízko sama od sebe."
     },
     "zlomek": {
       "typ": "string",
       "vzdy": false,
       "popis": "Velikost podílu, například „1/66“."
+    },
+    "vymera_podilu": {
+      "typ": "boolean",
+      "vzdy": false,
+      "popis": "true = pole „area“ u tohohle podílu NENÍ výměra celé parcely, ale už jen toho podílu — tedy to, co kupujícímu připadne. Nasazuje se jen tam, kde to text inzerátu dokazuje (součet vypsaných parcel krát zlomek sedí na výměru, nebo je aspoň jedna parcela větší než ona). Cena za metr se u takové nabídky zlomkem už nepřepočítává."
     },
     "cast": {
       "typ": "string",

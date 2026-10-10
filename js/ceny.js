@@ -47,6 +47,23 @@
   /** Výměra, která kupujícímu opravdu připadne. null = nevíme. */
   function vymeraVCene(d) {
     if (!hasArea(d)) return null;
+    /* U ČÁSTI PODÍLŮ UŽ JE ULOŽENÁ VÝMĚRA TA PODÍLOVÁ — a dělit ji
+       zlomkem podruhé znamená tisknout cenu za metr násobně vyšší.
+       Komentář o pár řádků níž (u MEZ_NEUVERITELNA) tuhle
+       nejednoznačnost přiznával: „nevíme, které z těch dvou čísel
+       v inzerátu je špatně — jestli je cena za celou parcelu, nebo je
+       výměra už jen podílová". U jednoho zdroje to text inzerátu říká,
+       a dá se to SPOČÍTAT:
+         „k.ú. Rudice LV č. 65 o výměře 1976 m², podíl 1/2
+          • Parcela č. 3591 - o výměře 3952 m²"
+       Parcela 3 952 m², podíl polovina, uložená výměra 1 976 — tedy už
+       ta polovina. Web tiskl 29 Kč/m², správně je 15. U podílu 3/20
+       to byl sedminásobek.
+       Příznak `vymera_podilu` nasazuje robot a jen tam, kde to inzerát
+       DOKAZUJE (dvě nezávislé cesty, viz scripts/parcely-z-textu.mjs).
+       Naměřeno na datech z 10. 10.: 359 z 522 podílů. Kde se to
+       dokázat nedá, zůstává starý výpočet. */
+    if (d.vymera_podilu) return d.area;
     var z = zlomekPodilu(d);
     return z == null ? null : d.area * z;
   }
@@ -92,6 +109,13 @@
     if (!d || !d.podil) return '';
     var z = zlomekPodilu(d);
     if (z == null) return '';
+    /* U nabídek, kde je uložená výměra už podílová, se nic
+       nepřepočítává — a věta to nesmí tvrdit. */
+    if (d.vymera_podilu) {
+      return 'Jde o spoluvlastnický podíl' + (d.zlomek ? ' ' + d.zlomek : '') +
+        '. Výměra je ta podílová, tedy ta, která vám připadne — '
+        + 'celá parcela je větší.';
+    }
     return 'Přepočteno na spoluvlastnický podíl' + (d.zlomek ? ' ' + d.zlomek : '') +
       ' — tolik platíte za metr, který vám připadne. Výměra v inzerátu je celá parcela.';
   }

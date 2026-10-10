@@ -52,6 +52,12 @@
   }
   function vymeraVCene(d) {
     if (!d || typeof d.area !== 'number' || !(d.area > 0)) return null;
+    /* Příznak `vymera_podilu` znamená, že uložená výměra UŽ je podílová
+       a zlomkem se nedělí (celé odůvodnění i měření jsou u téže funkce
+       v js/ceny.js). Tady to musí být taky: scripts/test-strop-ceny.mjs
+       hlídá, že obě kopie dávají na všech datech totéž — a přesně to
+       tuhle vynechanou polovinu odhalilo. */
+    if (d.vymera_podilu) return d.area;
     var z = zlomekPodilu(d);
     return z == null ? null : d.area * z;
   }

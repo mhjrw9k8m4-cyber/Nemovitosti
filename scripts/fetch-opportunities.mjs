@@ -20,6 +20,7 @@ import { okresPodleGPS, okresPodleHranice, maHranice, kmVenZOkresu } from './okr
 /* Klíč nabídky počítá generátor stránek pozemků — a počítá ho jen on,
    aby se popis a stránka nemohly rozejít. */
 import { klicNabidky } from './generate-parcel-pages.mjs';
+import { vymeraJePodilova } from './parcely-z-textu.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -42,6 +43,12 @@ function pridejVybaveni(o, text) {
      (viz js/vybaveni.js). Půlka pozemku a jedna šestnáctina jsou ale
      úplně jiná nabídka, takže se vyplatí ji ukázat. */
   if (v.zlomek) o.zlomek = v.zlomek;
+  /* JE ULOŽENÁ VÝMĚRA UŽ PODÍLOVÁ? U jednoho zdroje ano a cenový model
+     ji pak dělil zlomkem podruhé (viz vymeraVCene v js/ceny.js).
+     Rozhoduje se to z textu a jen když to inzerát dokazuje — pravidla
+     i měření jsou v scripts/parcely-z-textu.mjs. Musí to být TEĎ,
+     protože `zlomek` se nasadil o řádek výš. */
+  if (o.podil && vymeraJePodilova(text, o)) o.vymera_podilu = true;
   return o;
 }
 /* ====================================================================

@@ -18,6 +18,8 @@
   }
   function vymeraVCene(d) {
     if (!d || typeof d.area !== 'number' || !(d.area > 0)) return null;
+
+    if (d.vymera_podilu) return d.area;
     var z = zlomekPodilu(d);
     return z == null ? null : d.area * z;
   }
