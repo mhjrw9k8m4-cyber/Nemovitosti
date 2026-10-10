@@ -2216,6 +2216,72 @@ z posledního commitu (stav před opravou) spadly obě kontroly nad HTML;
 s vyndaným sítem ze zkoušky spadly obě kontroly nad daty. Nic z toho
 neprošlo omylem.
 
+## 3ap. NALEZENO: rádce u státní půdy hádal tři špatné důvody, zatímco web ten pravý zná — na 151 stránkách — *opraveno 10. 10.*
+
+Třetí plocha ve téže věci (po bodech 3al a 3ao). Cenový blok na stránce
+pozemku od rána říká u § 12 naplno „**Se trhem to nesrovnáváme** — tuhle
+cenu nestanovil trh, ale úřad" a komentář u něj dodává, že staré
+vysvětlení bylo **nepravdivé**: „ověřovat tu není co". Hned pod ním ale
+stojí rádce (`js/radce.js`, sekce „Co říká cena") — a ten to staré
+vysvětlení tiskl dál. Stránka si odporovala sama se sebou.
+
+### Co přesně stránky tvrdily
+
+Změřeno na ostrých datech, všech 204 nabídek s úřední cenou:
+
+| co rádce říkal | nabídek |
+|---|---|
+| „Takový rozdíl už nebývá sleva: nejčastěji je v inzerátu výměra **celé parcely**, ale prodává se jen **spoluvlastnický podíl**, nebo jde o dražbu s jinou výměrou, případně o chybu v ceně. **Ověřte si to na listu vlastnictví**" | **136** |
+| „Cena za m² je **hluboko pod** obvyklou… To bývá nejčastěji spoluvlastnický podíl… **nebo je to chyba v inzerátu**" | 11 |
+| „**Může to být příležitost**" | **2** |
+| „o 50 % pod obvyklou" | 2 |
+| bez cenové rady (odhad nevznikl) | 53 |
+
+Dohromady **151 ze 204** (74 %) tvrdilo o té ceně něco, co neplatí —
+a dvě stránky ji rovnou chválily, tedy právě to, co se dnes odebralo
+odznaku na kartě. Ukázka: Velké Výkleky (orná půda) — „Cena je o 82 %
+pod obvyklou… Vychází to na 9 Kč/m² proti obvyklým 49 Kč/m². Takový
+rozdíl už nebývá sleva: nejčastěji je v inzerátu výměra celé parcely,
+ale prodává se jen spoluvlastnický podíl… Ověřte si to na listu
+vlastnictví." Žádný podíl to není, dražba taky ne a chyba v ceně už
+vůbec — je to § 12 a web to v témže bloku ví.
+
+### Oprava
+
+V `cena()` stojí nová větev **jako první**, dřív než obě stará
+varování. Říká, co to je, že rozdíl není sleva — a hlavně to jediné
+použitelné: že se tu neověřuje cena, ale **kupující**. Oprávněná osoba
+je podmínka, kterou stránka nikde jinde v jedné větě nemá.
+
+Protože ta větev nepotřebuje odhad, dostane vysvětlení i těch **53
+nabídek, které dřív mlčely** — všech 204 tedy místo hádání dostane
+totéž, co říká blok nad rádcem.
+
+Ověřeno, že se změna nerozlezla jinam: porovnáním textu cenové rady
+u **všech 1 940** nabídek proti verzi z gitu se změnilo přesně **204**
+rad, a všechny jsou § 12. Nikde jinde ani jedna.
+
+### Zkoušky
+
+`scripts/test-radce.mjs` má 61 → **69** kontrol. Nad vymyšleným vzorkem
+se hlídá, že se řekne § 12, že se **nehádá** podíl, dražba ani chyba
+v inzerátu, že se nechválí příležitost a že se ověřuje kupující —
+a vzorek je schválně takový, že by bez té větve spadl do varování
+o pochybné ceně, aby se poznalo, že nová větev stojí **dřív** než
+staré. K tomu kontrola, že tatáž nabídka **bez** zmínky o SPÚ dostane
+starou radu beze změny.
+
+Na ostrých datech přibyla výjimka k pravidlu „u vyčísleného rozdílu
+musí stát i cena za metr a z kolika nabídek". § 12 je druhá výjimka
+z téhož důvodu jako podíl: srovnání se nedá udělat, takže se o něm
+nemluví, a čísla o trhu tiskne blok NAD rádcem. Výjimka je pojištěná,
+aby nebyla plošná: hlídá se, že vyjímá dost nabídek, aby se projevila,
+**a zároveň ne všechny** (140 ze 436), a že u všech vyjmutých rádce
+opravdu říká tu správnou věc.
+
+**Prokázáno sabotáží:** s vypnutou větví (`if (false && …)`) spadly
+všechny čtyři nové kontroly i ta na ostrých datech.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

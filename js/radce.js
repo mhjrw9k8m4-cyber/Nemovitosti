@@ -169,6 +169,37 @@
          rádce a cenový verdikt nikdy neříkaly každý něco jiného. ------ */
   function cena(d, model) {
     if (!model || !maVymeru(d) || !d.price) return null;
+    /* ÚŘEDNÍ CENA SE NEVYSVĚTLUJE HÁDÁNÍM — a stojí to tady PRVNÍ.
+       U prodeje státní půdy podle § 12 stanoví cenu Státní pozemkový
+       úřad, ne trh. Cenový blok nad rádcem to od 10. 10. říká naplno
+       („Se trhem to nesrovnáváme") a komentář u něj dodává, že staré
+       vysvětlení bylo nepravdivé: „ověřovat tu není co". Rádce ho ale
+       tiskl dál a stránka si tím odporovala sama se sebou.
+       Změřeno na ostrých datech, 204 nabídek s úřední cenou:
+         136  „Takový rozdíl už nebývá sleva: nejčastěji je v inzerátu
+              výměra celé parcely, ale prodává se jen spoluvlastnický
+              podíl… Ověřte si to na listu vlastnictví" — tři hádané
+              důvody, a web přitom ten pravý zná;
+          11  „Cena za m² je hluboko pod obvyklou… To bývá nejčastěji
+              spoluvlastnický podíl… nebo je to chyba v inzerátu";
+           2  „Může to být příležitost" — pochvala ceny, kterou stanovil
+              úřad (tedy přesně to, co se odznaku na kartě odebralo);
+           2  „o 50 % pod obvyklou";
+          53  bez cenové rady (odhad nevznikl).
+       Dohromady 151 ze 204 stránek (74 %) tvrdilo o ceně něco, co
+       neplatí. Teď dostanou všechny totéž vysvětlení, a protože tahle
+       větev nepotřebuje odhad, dostane ho i těch 53, které dřív mlčely.
+       Co se tu říká navíc proti bloku nad rádcem: že se na té ceně
+       neověřuje cena, ale KUPUJÍCÍ. To je jediná použitelná rada, která
+       na stránce nikde jinde není. */
+    if (model.spravniCena && model.spravniCena(d)) {
+      return { lvl: 'mid', txt: 'Cenu tady <b>nestanovil trh, ale úřad</b>: '
+        + 'Státní pozemkový úřad prodává podle <b>§ 12</b> oprávněné osobě. '
+        + 'Rozdíl proti cenám podobných pozemků v okolí proto <b>není sleva</b> '
+        + 'a ověřovat na něm není co. Ověřit je potřeba něco jiného: '
+        + '<b>jestli oprávněná osoba jste</b> — za tuhle cenu se komukoli '
+        + 'neprodává. Podmínky i postup stojí v nabídce Státního pozemkového úřadu.' };
+    }
     if (model.neduveryhodna(d)) {
       return { lvl: 'warn', txt: 'Cena za m² je <b>hluboko pod</b> obvyklou u tohoto druhu pozemku v okolí. To bývá nejčastěji <b>spoluvlastnický podíl</b> (kupujete jen část, ne celou parcelu), pozemek <b>bez přístupu z veřejné cesty</b>, zatížený <b>věcným břemenem</b> — nebo je to chyba v inzerátu. Ověřte si to dřív, než cokoli podepíšete.' };
     }

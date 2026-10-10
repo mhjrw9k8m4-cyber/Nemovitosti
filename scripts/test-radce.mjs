@@ -103,6 +103,38 @@ pravda('bez cenového modelu se řádek o ceně prostě neukáže',
   !klice(PK_RADCE.rady(PODIL)).includes('Co říká cena'),
   'rádce si cenu domýšlí i bez modelu');
 
+/* ÚŘEDNÍ CENA (§ 12): RÁDCE NESMÍ HÁDAT DŮVOD, KTERÝ WEB ZNÁ.
+   U prodeje státní půdy stanoví cenu úřad, ne trh — cenový blok nad
+   rádcem to říká naplno. Rádce ale tiskl dál „nejčastěji je v inzerátu
+   výměra celé parcely, ale prodává se jen spoluvlastnický podíl…
+   ověřte si to na listu vlastnictví" a u dvou nabídek rovnou „může to
+   být příležitost". Změřeno na ostrých datech: 151 ze 204 stránek
+   (74 %) tvrdilo o té ceně něco, co neplatí.
+   Vzorek je schválně takový, že by BEZ té větve spadl do varování
+   o pochybné ceně — jinak by kontrola neukázala, že nová větev stojí
+   dřív než ty staré. */
+const SPU = { place: 'Státní', okres: 'Cheb', type: 'sale', druh: 'stavební pozemek',
+  area: 1000, price: 150000, extra: 'prodej státní půdy (SPÚ, § 12)' };
+const modelSPU = PK_CENY.postav([...BEZNE, SPU]);
+pravda('vzorek § 12 model opravdu pozná', !!PK_CENY.spravniCena(SPU),
+  'spravniCena na něm nesedí — kontroly níž by neznamenaly nic');
+const tSPU = (PK_RADCE.rady(SPU, modelSPU).radky.find((x) => x.klic === 'Co říká cena') || {}).txt || '';
+pravda('u úřední ceny se řekne, že ji stanovil úřad podle § 12',
+  /nestanovil trh, ale úřad/.test(tSPU) && /§ 12/.test(tSPU), tSPU.slice(0, 160));
+pravda('a nehádá se u ní podíl, dražba ani chyba v inzerátu',
+  !/spoluvlastnický podíl/.test(tSPU) && !/chyba v inzerátu/.test(tSPU)
+  && !/list[uě] vlastnictví/i.test(tSPU), tSPU.slice(0, 160));
+pravda('ani se nechválí jako příležitost', !/příležitost/.test(tSPU), tSPU.slice(0, 160));
+pravda('a místo ceny se ověřuje kupující (oprávněná osoba)',
+  /oprávněná osoba jste/.test(tSPU), tSPU.slice(0, 160));
+/* A že se ta větev nerozlezla jinam: tatáž nabídka bez zmínky o SPÚ
+   musí dostat starou radu. */
+const tBezSPU = (PK_RADCE.rady({ ...SPU, extra: '' },
+  PK_CENY.postav([...BEZNE, { ...SPU, extra: '' }])).radky
+  .find((x) => x.klic === 'Co říká cena') || {}).txt || '';
+pravda('bez zmínky o SPÚ zůstává rada o ceně beze změny',
+  !/nestanovil trh, ale úřad/.test(tBezSPU) && /pod/.test(tBezSPU), tBezSPU.slice(0, 160));
+
 // --- 5) Otázky se řídí druhem i kategorií ----------------------------
 pravda('u zemědělské půdy se ptá na pacht', /pacht/i.test(PK_RADCE.rady(orna).otazky.join(' ')));
 pravda('u stavebního pozemku na přípojky', /přípojky/i.test(PK_RADCE.rady(stavebni).otazky.join(' ')));
@@ -200,10 +232,25 @@ for (const f of ['../js/main.js', '../js/pozemek.js']) {
      Konkrétní čísla v ní ale být musí taky. Podíl s neznámým zlomkem
      je výjimka: cenu za metr z něj spočítat nejde a rádce to říká
      rovnou, místo aby si číslo vymyslel. */
-  const cele = sOdhadem.filter((d) => !d.podil);
+  /* DRUHÁ VÝJIMKA JE ÚŘEDNÍ CENA (§ 12), a je ze stejného důvodu jako
+     podíl: srovnávat se nedá, takže rádce o srovnání nemluví. Čísla
+     o trhu u ní nechybí — tiskne je cenový blok NAD rádcem (medián
+     Kč/m² i velikost vzorku), a rádce má říkat to, co na stránce jinde
+     není. Výjimka musí být ČÁSTEČNÁ: kontrola níž hlídá, že těch
+     nabídek je dost na to, aby se projevila, a zároveň že po jejich
+     odečtení zůstane dost celých nabídek k měření. */
+  const uredni = sOdhadem.filter((d) => PK_CENY.spravniCena(d));
+  const cele = sOdhadem.filter((d) => !d.podil && !PK_CENY.spravniCena(d));
   const podily = sOdhadem.filter((d) => d.podil && PK_CENY.zaMetr(d) != null);
   pravda(`a je z čeho měřit (${cele.length} celých, ${podily.length} podílů)`,
     cele.length >= 10 && podily.length >= 5);
+  pravda(`výjimka na § 12 něco vyjímá, a ne všechno (${uredni.length} z ${sOdhadem.length})`,
+    uredni.length >= 10 && uredni.length < sOdhadem.length,
+    `${uredni.length} z ${sOdhadem.length}`);
+  pravda('a u úřední ceny rádce o srovnání s okolím nemluví',
+    uredni.every((d) => /nestanovil trh, ale úřad/.test(blok(d, 'Co říká cena'))),
+    uredni.filter((d) => !/nestanovil trh, ale úřad/.test(blok(d, 'Co říká cena')))
+      .slice(0, 2).map((d) => d.place).join(', '));
   const bezCisel = cele.filter((d) => {
     const t = blok(d, 'Co říká cena');
     return !(/Kč\/m²/.test(t) && /srovnáno s \d+/.test(t));

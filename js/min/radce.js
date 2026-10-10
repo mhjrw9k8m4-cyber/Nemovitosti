@@ -108,6 +108,15 @@
 
   function cena(d, model) {
     if (!model || !maVymeru(d) || !d.price) return null;
+
+    if (model.spravniCena && model.spravniCena(d)) {
+      return { lvl: 'mid', txt: 'Cenu tady <b>nestanovil trh, ale úřad</b>: '
+        + 'Státní pozemkový úřad prodává podle <b>§ 12</b> oprávněné osobě. '
+        + 'Rozdíl proti cenám podobných pozemků v okolí proto <b>není sleva</b> '
+        + 'a ověřovat na něm není co. Ověřit je potřeba něco jiného: '
+        + '<b>jestli oprávněná osoba jste</b> — za tuhle cenu se komukoli '
+        + 'neprodává. Podmínky i postup stojí v nabídce Státního pozemkového úřadu.' };
+    }
     if (model.neduveryhodna(d)) {
       return { lvl: 'warn', txt: 'Cena za m² je <b>hluboko pod</b> obvyklou u tohoto druhu pozemku v okolí. To bývá nejčastěji <b>spoluvlastnický podíl</b> (kupujete jen část, ne celou parcelu), pozemek <b>bez přístupu z veřejné cesty</b>, zatížený <b>věcným břemenem</b> — nebo je to chyba v inzerátu. Ověřte si to dřív, než cokoli podepíšete.' };
     }
