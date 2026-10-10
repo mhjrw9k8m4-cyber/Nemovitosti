@@ -44,6 +44,73 @@ function pridejVybaveni(o, text) {
   if (v.zlomek) o.zlomek = v.zlomek;
   return o;
 }
+/* ====================================================================
+   KDY BYLA NABÍDKA VIDĚT POPRVÉ
+   --------------------------------------------------------------------
+   Datum se přenáší z minulého souboru podle otisku; co se nenajde,
+   dostane dnešek. Otisk musí odpovídat keyOf() v js/hlidani-logika.js,
+   jinak by se pozemky „obnovovaly" při každém běhu.
+
+   ZMĚNA CENY NESMÍ NABÍDCE SEBRAT VĚK. Otisk nese i cenu, takže jakmile
+   prodejce zlevnil, nabídka se v minulém souboru nenašla a dostala
+   dnešek. Naměřeno na ostrých datech: všech 25 nabídek se zaznamenanou
+   změnou ceny mělo first_seen přesně ten den, kdy se cena změnila —
+   25 z 25. Na stránce „Co je nového" z toho bylo vidět 14 pozemků
+   zároveň v „Nově přidané" i v „Zlevněné", což je protimluv: nově
+   přidaná nabídka nemá co zlevnit.
+
+   Druhé kolo proto páruje otiskem BEZ ceny — ale jen tam, kde je ta
+   shoda JEDNOZNAČNÁ na obou stranách. Jinak by si dvě různé nabídky
+   téže výměry ve stejném katastru vyměnily datum. Změřeno: vypuštění
+   ceny přidá v dnešních datech tři kolize z 1 988 nabídek, a právě ty
+   tohle pravidlo přeskočí.
+   ==================================================================== */
+const bezDiakritiky = (x) => String(x == null ? '' : x)
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+export function otiskNabidky(o) {
+  return [o.type || '', bezDiakritiky(o.okres), bezDiakritiky(o.place),
+    o.parcel || '', o.price || '', o.area || ''].join('|').slice(0, 240);
+}
+/** Týž otisk bez ceny — nabídka je táž, i když prodejce zlevnil. */
+export function otiskNabidkyBezCeny(o) {
+  return [o.type || '', bezDiakritiky(o.okres), bezDiakritiky(o.place),
+    o.parcel || '', o.area || ''].join('|').slice(0, 240);
+}
+/** Doplní `first_seen` do `fresh` podle `drive`. Mění předaná data. */
+export function prirazPrvniVideni(fresh, drive, dnesISO) {
+  const podleOtisku = new Map();
+  for (const o of (drive || [])) if (o && o.first_seen) podleOtisku.set(otiskNabidky(o), o.first_seen);
+  const bezData = [];
+  for (const o of fresh) {
+    const d = podleOtisku.get(otiskNabidky(o));
+    if (d) o.first_seen = d; else { delete o.first_seen; bezData.push(o); }
+  }
+  let poZmeneCeny = 0;
+  if (bezData.length && (drive || []).length) {
+    const pouzite = new Set(fresh.filter((o) => o.first_seen).map((o) => otiskNabidky(o)));
+    const stareVolne = new Map();
+    for (const o of drive) {
+      if (!o || !o.first_seen || pouzite.has(otiskNabidky(o))) continue;
+      const k = otiskNabidkyBezCeny(o);
+      if (!stareVolne.has(k)) stareVolne.set(k, []);
+      stareVolne.get(k).push(o);
+    }
+    const novePocty = new Map();
+    for (const o of bezData) {
+      const k = otiskNabidkyBezCeny(o);
+      novePocty.set(k, (novePocty.get(k) || 0) + 1);
+    }
+    for (const o of bezData) {
+      const k = otiskNabidkyBezCeny(o);
+      const st = stareVolne.get(k);
+      if (novePocty.get(k) === 1 && st && st.length === 1) { o.first_seen = st[0].first_seen; poZmeneCeny++; }
+    }
+  }
+  let novych = 0;
+  for (const o of bezData) if (!o.first_seen) { o.first_seen = dnesISO; novych++; }
+  return { novych, poZmeneCeny };
+}
+
 const OUT = join(__dirname, '..', 'data', 'opportunities.json');
 /* Denní počty podle zdroje — paměť pro to pomalejší síto (viz
    porovnejSHistorii). Vedle dat, ne v gitové historii: robot v CI má
@@ -1618,24 +1685,14 @@ async function main() {
   // Datum se přenáší ze starého souboru podle otisku; co tam nebylo, dostane
   // dnešek. Otisk musí být shodný s keyOf() v js/hlidani-logika.js a
   // js/hlidani-logika.js, jinak by se pozemky „obnovovaly" při každém běhu.
-  const bezDiakritiky = (x) => String(x == null ? '' : x)
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-  const otisk = (o) => [o.type || '', bezDiakritiky(o.okres), bezDiakritiky(o.place),
-    o.parcel || '', o.price || '', o.area || ''].join('|').slice(0, 240);
-  let drive = new Map();
-  try {
-    for (const o of (JSON.parse(readFileSync(OUT, 'utf8')).opportunities || [])) {
-      if (o.first_seen) drive.set(otisk(o), o.first_seen);
-    }
-  } catch { /* první běh — všechno je nové */ }
   const dnesISO = new Date().toISOString().slice(0, 10);
-  let novych = 0;
-  for (const o of fresh) {
-    const d = drive.get(otisk(o));
-    if (d) { o.first_seen = d; } else { o.first_seen = dnesISO; novych++; }
-  }
-  console.log(`Poprvé viděno dnes: ${novych} z ${fresh.length}` +
-    (drive.size ? '' : ' (první běh se značkováním — všechno dostalo dnešek)'));
+  let driveVse = [];
+  try { driveVse = (JSON.parse(readFileSync(OUT, 'utf8')).opportunities || []).filter((o) => o.first_seen); }
+  catch { /* první běh — všechno je nové */ }
+  const vysledek = prirazPrvniVideni(fresh, driveVse, dnesISO);
+  if (vysledek.poZmeneCeny) console.log(`Věk zachován i po změně ceny: ${vysledek.poZmeneCeny} nabídek.`);
+  console.log(`Poprvé viděno dnes: ${vysledek.novych} z ${fresh.length}` +
+    (driveVse.length ? '' : ' (první běh se značkováním — všechno dostalo dnešek)'));
 
   /* Zlevnil majitel? Porovná se s cenami z minulého běhu — ještě než se
      soubor přepíše. „Majitel sám šel dolů o 25 %" je fakt, kdežto odhad

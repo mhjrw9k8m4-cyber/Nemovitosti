@@ -1306,6 +1306,82 @@ obsahovat „% níž" ani „Obvyklá cena", musí obsahovat hladinu v Kč/m², 
 sabotáž naruby — u **celého** pozemku se srovnání tisknout musí dál, aby
 oprava neumlčela celý web. S vrácenou vadou padají tři kontroly.
 
+## 3ad. NALEZENO: zlevnění smazalo nabídce věk — 14 pozemků stálo zároveň v „Nově přidané" i „Zlevněné" — *opraveno 10. 10.*
+
+Hledal jsem, jestli se dá na stránce pozemku ukázat, jak dlouho nabídka
+visí (pro kupujícího je to po ceně to druhé nejužitečnější). Data na to
+mají pole `first_seen`. Při měření se ukázalo, že to pole lže.
+
+### Co se našlo
+
+Robot přenáší `first_seen` z minulého souboru podle otisku:
+
+```js
+const otisk = (o) => [o.type, okres, place, o.parcel, o.price, o.area].join('|')
+```
+
+V otisku je **cena**. Jakmile tedy prodejce zlevní, nabídka se v minulém
+souboru nenajde — a dostane dnešek. **Přijde o svůj věk.**
+
+Změřeno: všech **25 z 25** nabídek se zaznamenanou změnou ceny mělo
+`first_seen` přesně ten den, kdy se cena změnila. Bylo to vidět na
+stránce „Co je nového": **14 pozemků** stálo zároveň v sekci „Nově
+přidané" **i** v „Zlevněné" — 23 % té první sekce. Je to protimluv: nově
+přidaná nabídka nemá co zlevnit. A stránka přitom v metodice slibuje
+„Co přišlo potom, je skutečně nové".
+
+### Oprava v robotovi
+
+Druhé kolo párování otiskem **bez ceny** — ale jen tam, kde je shoda
+jednoznačná na obou stranách. Jinak by si dvě různé nabídky téže výměry
+ve stejném katastru vyměnily věk. Změřeno: vypuštění ceny přidá
+v dnešních datech **tři kolize z 1 988** nabídek, a právě ty se tím
+pravidlem přeskočí.
+
+Párování je teď vyvedené jako `prirazPrvniVideni()`, aby šlo zkoušet bez
+sítě.
+
+### A oprava dat, která už o datum přišla
+
+Robot to od teď dělá správně, ale nabídky, kterým datum zmizelo dřív, se
+samy neopraví. `data/opportunities.json` má ale v gitu **104 verzí** a
+každá nese `updated` — takže se dá pro každý otisk bez ceny najít
+nejstarší den, kdy v datech byl. Dělá to `scripts/prvni-videno.mjs`
+(`--zapsat`), stejnou úvahou, jakou používá `scripts/historie-cen.mjs`
+na cenové řady.
+
+Dopočet dostal dřívější datum **1 292 z 1 988 nabídek (65 %)** a nejstarší
+den se posunul z 19. 9. na **14. 9.** Datum se nikdy neposouvá dopředu.
+
+**Co to neumí:** starší, než je první commit, se nedostaneme — nabídka
+mohla viset měsíce předtím, než ji robot poprvé uviděl. Dopočtené datum
+je tedy **spodní mez**, ne skutečné stáří inzerátu.
+
+### Výsledek
+
+| | před | po |
+|---|---|---|
+| nabídek se změnou ceny, které měly `first_seen` v den změny | **25 z 25** | **1 z 25** |
+| pozemků zároveň v „Nově přidané" i „Zlevněné" | **14** | **2** |
+| „nových za 14 dní" na stránce novinek | 274 | 174 |
+
+Obě zbylá překrytí jsou oprávněná: u jednoho (Dubí) zdroj uvedl
+předchozí cenu hned při prvním spatření — ověřeno procházkou celou
+historií, nabídka se 5. 10. opravdu objevila poprvé.
+
+Hlídá to `scripts/test-prvni-videno.mjs` (17 kontrol): otisky, přenos
+data po zlevnění, **nepřenos** u dvojznačné shody, že dopočet posouvá jen
+dozadu, a na ostrých datech že „first_seen = den změny" je nejvýš
+hrstka. Sabotáž (zpět na jednokolové párování) shodí tři kontroly.
+
+### Co z toho zatím NEPLYNE
+
+Ukázat na stránce pozemku „na trhu už N dní" pořád nejde poctivě:
+evidence začíná 14. 9., takže by 1 192 pozemků z 1 988 hlásilo totéž
+číslo — a bylo by to stáří naší evidence, ne inzerátu. Až bude okno
+dost dlouhé, data už budou v pořádku; dřív by to byla jen hezčí podoba
+téhož zkreslení.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

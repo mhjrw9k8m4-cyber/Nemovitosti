@@ -53,6 +53,8 @@ jobs:
         run: node scripts/test-statistika.mjs
       - name: Čísla na okresních stránkách se přepočítají z dat
         run: node scripts/test-cisla-okresu.mjs
+      - name: Změna ceny nesmí nabídce sebrat věk
+        run: node scripts/test-prvni-videno.mjs
       - name: Srovnatelné pozemky — pořadí sedí na vypsaný seznam
         run: node scripts/test-srovnatelne.mjs
 
