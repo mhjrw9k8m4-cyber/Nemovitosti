@@ -57,6 +57,8 @@ jobs:
         run: node scripts/test-prvni-videno.mjs
       - name: Víc pozemků na jednom místě (shluky nabídek)
         run: node scripts/test-bloky.mjs
+      - name: Co o webu ví vyhledávač (sirotci, indexovatelnost)
+        run: node scripts/test-vyhledavac.mjs
       - name: Srovnatelné pozemky — pořadí sedí na vypsaný seznam
         run: node scripts/test-srovnatelne.mjs
 

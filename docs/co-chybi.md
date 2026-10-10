@@ -1446,6 +1446,75 @@ sloveso v množném čísle) a čísla v ostrůvcích na hotových stránkách.
 Sabotáže: klíč zpět na objekt (2 kontroly padnou), sčítání neúplné ceny
 (1) a mez 3 000 m místo 300 (2).
 
+## 3af. Nová stránka „Víc pozemků pohromadě" — a dva nálezy, na které u ní došlo — *10. 10.*
+
+### Stránka
+
+Shluky, které od minula zná stránka pozemku, teď mají vlastní výpis:
+**`pozemky-pohromade.html`** — 15 lokalit, 91 nabídek, dohromady **59 ha**,
+seřazeno od největší celkové výměry. Mez je tu **čtyři** nabídky, ne tři
+jako u jednotlivého pozemku: trojic je 32 ze 47 a stránka by z nich byla
+seznam drobností, ve kterém by se Doksy (15,8 ha) a Bakov (14,4 ha)
+ztratily.
+
+Co stránka říká o sobě, je stejně důležité jako výpis: měří se **vzdušná
+čára mezi nabídkami, ne hranice parcel**, netvrdí se, že spolu pozemky
+sousedí ani že se dají koupit najednou, a u skupiny s podílem je
+napsané, že jeho výměra je za celou parcelu.
+
+### Nález 1: dva články na webu, na které nevedl odkaz odnikud
+
+Při kontrole, jestli na novou stránku vede odkaz, jsem to projel pro
+celý web. Výsledek: **sirotci byli dva** — nová stránka a
+**`pozemek-od-obce.html`** („Jak koupit pozemek od obce"), hotový článek,
+který je **v sitemap**, takže ho web nabízí vyhledávačům, ale žádná
+stránka na něj neodkazuje. Čtenář se na něj nedostane.
+
+Důvod je poučný: rádce na stránce pozemku na články odkazuje **podmíněně
+podle druhu nabídky** — a nabídek typu „od obce" je v datech **nula**,
+takže ta větev nikdy nenastane. *Odkaz, který závisí na datech, není
+odkaz.* (`kupni-smlouva-pozemek.html` na tom byl podobně: jediný statický
+odkaz na něj vedl z toho sirotka.)
+
+Opraveno kartou **„Než něco podepíšete"** na rozcestníku
+`pozemky-podle-okresu.html` (195 příchozích odkazů) — deset článků
+pohromadě, včetně obou osiřelých.
+
+### Nález 2: vzor stránky pozemku se nabízel k zaindexování
+
+`pozemek.html` je **vzor, ne stránka**: bez `?p=` v adrese je na něm
+jediná věta „Načítám pozemek…". Přitom měl `robots: index,follow`
+a `canonical` sám na sebe — takže web zval vyhledávač k zaindexování
+prázdné skořápky, na kterou navíc míří odkaz „Otevřít na mapě"
+z každé z 1 944 stránek pozemků.
+
+Vzor je nově `noindex,follow` (odkazy ven se sledovat mají) a generátor
+to hotovým stránkám **otáčí zpátky** na `index,follow`. Po opravě:
+vzor neindexovaný, **1 944 živých stránek indexovaných**, 129 ukončených
+neindexovaných.
+
+### Zkouška
+
+`scripts/test-vyhledavac.mjs` (11 kontrol) hlídá obojí: že na každou
+stránku ze sitemap vede statický odkaz, že odkazovaná indexovatelná
+stránka v sitemap nechybí, a indexovatelnost **z obou stran** — protože
+obrátit tu dvojici naruby by potichu odindexovalo celý web a na číslech
+návštěvnosti by se to projevilo za týdny, ne hned.
+
+Počítají se jen odkazy ve **statickém HTML**. Odkaz, který vykreslí až
+skript, vyhledávač ani čtenář s vypnutým JavaScriptem nevidí — a je to
+přesně ten případ, který tuhle chybu dělal nenápadnou.
+
+Sabotáže: vzor zpět na `index` (2 kontroly padnou), generátor neotáčí
+robots zpátky (1), odkaz na sirotka pryč (1).
+
+### A jedna moje chyba, kterou chytila stará zkouška
+
+Odkazy na pozemky v nové stránce jsem psal jako `${str}`, jenže
+`STRANKY` mapuje na **záznam**, ne na jméno souboru — do stránky se tím
+vepsalo `href="[object Object]"` 91×. Ohlásil to `test-staticka`
+(„Odkaz na [object Object] nikam nevede"), ne prohlížeč a ne oko.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

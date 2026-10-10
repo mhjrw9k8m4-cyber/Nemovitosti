@@ -13,6 +13,7 @@ import { jsonVeStrance } from './json-do-stranky.mjs';
    PŮJČUJE. Spočítat si ho tu podruhé by znamenalo dvě pravdy o jednom
    názvu souboru a odkazy na 404, jakmile se rozejdou. */
 import { mapaSouboru, klicNabidky } from './generate-parcel-pages.mjs';
+import * as BLOKY from './bloky.mjs';
 /* Archiv: jediné místo na webu, které ví, jak se trh chová v ČASE.
    Co se z něj smí a nesmí tvrdit, řeší scripts/archiv-statistiky.mjs —
    stránka si nic nepočítá sama, aby na dvou místech nevznikla dvě
@@ -2047,6 +2048,39 @@ ${okresBody}
         </div>
       </div>
 
+      <div class="add-card" style="margin-top:22px;">
+        <div class="rules-sect">
+          <h2>Celky, ne jednotlivé parcely</h2>
+          <p class="rules-note" style="margin-top:0;">Pět hektarů v jednom kuse je něco jiného než pět hektarů po okrese. <a href="pozemky-pohromade.html">Víc pozemků pohromadě</a> — místa, kde je zrovna na prodej několik nabídek do ${BLOKY.MEZ_METRU} metrů od sebe.</p>
+        </div>
+      </div>
+
+      <!-- NEŽ NĚCO PODEPÍŠETE. Tyhle články na webu byly, ale nevedl na
+           ně odkaz odnikud: „Jak koupit pozemek od obce" měl nula
+           příchozích odkazů a přitom stál v sitemap, takže ho web
+           nabízel vyhledávačům a vlastním návštěvníkům ne. Rádce na
+           stránce pozemku na část z nich odkazuje, jenže jen podmíněně
+           podle druhu nabídky — a nabídek typu „od obce" je v datech
+           dnes nula, takže ta větev nikdy nenastane. -->
+      <div class="add-card" style="margin-top:22px;">
+        <div class="rules-sect">
+          <h2>Než něco podepíšete</h2>
+          <p class="rules-note" style="margin-top:0;">Co si u pozemku ověřit a kolik koupě doopravdy stojí.</p>
+          <div class="okr-index-grid">
+            <a href="kolik-stoji-koupe-pozemku.html">Kolik stojí koupě <span>daň, poplatky, vklad</span></a>
+            <a href="list-vlastnictvi-katastr.html">List vlastnictví <span>co na něm hledat</span></a>
+            <a href="kupni-smlouva-pozemek.html">Kupní smlouva <span>podklad a návrh na vklad</span></a>
+            <a href="pozemek-od-obce.html">Pozemek od obce <span>záměr, lhůta, nabídka</span></a>
+            <a href="pristupova-cesta-pozemek.html">Přístupová cesta <span>bez ní se nestaví</span></a>
+            <a href="vecne-bremeno-pozemek.html">Věcné břemeno <span>co omezuje užívání</span></a>
+            <a href="uzemni-plan-pozemek.html">Územní plán <span>co se tam smí</span></a>
+            <a href="stavebni-vs-zemedelsky-pozemek.html">Stavební, nebo zemědělský <span>a co to znamená</span></a>
+            <a href="hypoteka-na-pozemek.html">Hypotéka na pozemek <span>kdy ji banka dá</span></a>
+            <a href="exekuce-pozemku.html">Exekuce a dražba <span>jak to probíhá</span></a>
+          </div>
+        </div>
+      </div>
+
 ${rozpocetGrid ? `      <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
           <h2>Podle rozpočtu</h2>
@@ -2063,6 +2097,115 @@ ${rozpocetGrid}          </div>
 </main>
 ` + footer();
 write('pozemky-podle-okresu.html', idxHtml);
+
+/* ---------- VÍC POZEMKŮ POHROMADĚ ---------------------------------
+   Kdo kupuje půdu, nekupuje tvar parcely, ale výměru na jednom místě.
+   Stránka pozemku to u sebe říká (ostrůvek pz-blok-data), ale projít
+   kvůli tomu dva tisíce stránek nikdo nebude — tahle stránka ta místa
+   vypisuje najednou, od největší celkové výměry.
+
+   MEZ JSOU ČTYŘI NABÍDKY, ne tři jako na stránce pozemku. Tam je blok
+   poznámka u konkrétní parcely a trojice stojí za zmínku; tady je to
+   celý výpis a trojic je 32 ze 47 — stránka by z nich byla seznam
+   drobností a to podstatné (Doksy 15,8 ha, Bakov 14,4 ha) by se v nich
+   ztratilo. Naměřeno na dnešních datech: shluků o 3+ je 47, o 4+ je 15.
+
+   SE SLOVY SE TU ŠETŘÍ: netvrdí se, že parcely spolu sousedí (na to by
+   byly potřeba hranice z katastru) ani že se dají koupit najednou. */
+const CELKY_NEJMENE = 4;
+const celky = BLOKY.shluky(aktualni)
+  .filter((g) => g.length >= CELKY_NEJMENE)
+  .map((g) => {
+    const vymera = g.reduce((x, o) => x + (o.area > 0 ? o.area : 0), 0);
+    const cena = g.every((o) => o.price > 0) ? g.reduce((x, o) => x + o.price, 0) : null;
+    const obce = [...new Set(g.map((o) => o.place))];
+    const typy = [...new Set(g.map((o) => o.type))];
+    return { g, vymera, cena, obce, typy, okres: g[0].okres,
+      podilu: g.filter((o) => o.podil).length };
+  })
+  .sort((a, b) => b.vymera - a.vymera);
+
+if (celky.length) {
+  const haText = (m2) => (m2 >= 10000
+    ? `${(m2 / 10000).toFixed(m2 >= 100000 ? 1 : 2).replace('.', ',')} ha`
+    : `${fmt(Math.round(m2))} m²`);
+  let karty = '';
+  for (const c of celky) {
+    const nadpis = c.obce.length === 1 ? c.obce[0] : `${c.obce[0]} a okolí`;
+    const radky = c.g.slice().sort((a, b) => (b.area || 0) - (a.area || 0)).map((o) => {
+      /* STRANKY mapuje na ZÁZNAM, ne na jméno souboru — `${str}` by do
+         odkazu vepsalo „[object Object]". Chytil to test-staticka. */
+      const str = STRANKY.get(klicNabidky(o));
+      const popis = `${o.druh || 'pozemek'} · ${o.area ? fmt(o.area) + ' m²' : 'výměra neuvedena'}`
+        + (o.price > 0 ? ` · ${fmt(o.price)} Kč` : '')
+        + (o.podil ? ' · podíl' : '');
+      return (str && str.soubor)
+        ? `              <li><a href="${attr(str.soubor)}">${esc(o.place)}</a> — ${esc(popis)}</li>`
+        : `              <li>${esc(o.place)} — ${esc(popis)}</li>`;
+    }).join('\n');
+    karty += `      <div class="add-card" style="margin-top:22px;">
+        <div class="rules-sect">
+          <h2>${esc(nadpis)} — ${c.g.length} ${pluralPozemek(c.g.length)} do ${BLOKY.MEZ_METRU} m od sebe</h2>
+          <p class="rules-note" style="margin-top:0;">Okres <a href="pozemky-okres-${slug(c.okres)}.html">${esc(c.okres)}</a> · dohromady <b>${esc(haText(c.vymera))}</b>${c.cena !== null ? ` za <b>${fmt(c.cena)} Kč</b>` : ' (u některé z nabídek chybí cena, takže se nesčítá)'}${c.podilu ? ` · ${fmt(c.podilu)} z nich ${c.podilu === 1 ? 'je spoluvlastnický podíl' : 'jsou spoluvlastnické podíly'}, takže ${c.podilu === 1 ? 'jeho výměra je' : 'jejich výměry jsou'} za celé parcely` : ''}.</p>
+          <ul class="rule-list">
+${radky}
+          </ul>
+        </div>
+      </div>
+`;
+  }
+  const celkemNabidek = celky.reduce((x, c) => x + c.g.length, 0);
+  const celkemHa = celky.reduce((x, c) => x + c.vymera, 0) / 10000;
+  const cTitle = 'Víc pozemků pohromadě — kde se prodává celý blok | Parcelka';
+  const cDesc = `Místa, kde je na prodej několik pozemků do ${BLOKY.MEZ_METRU} metrů od sebe — ${celky.length} lokalit, `
+    + `${celkemNabidek} nabídek, dohromady ${celkemHa.toFixed(0)} ha. Z veřejných zdrojů.`;
+  const cJson = {"@context":"https://schema.org","@type":"CollectionPage","name":"Víc pozemků pohromadě","inLanguage":"cs",
+    description: cDesc, mainEntityOfPage: SITE + 'pozemky-pohromade.html',
+    publisher:{"@type":"Organization","name":"Parcelka"}};
+  const cCrumbs = [{ name:'Pozemky', href:'index.html', abs:SITE },
+    { name:'Víc pozemků pohromadě', abs: SITE + 'pozemky-pohromade.html' }];
+  const cHtml = head(cTitle, cDesc, 'pozemky-pohromade.html', cJson, cCrumbs) + `
+<main id="obsah">
+
+  <section class="okr-hero">
+    <div class="okr-band">
+    <div class="wrap okr-wrap">
+      <div class="eyebrow"><span class="live-dot"></span>Celky, ne jednotlivé parcely</div>
+      <h1>Víc pozemků pohromadě.</h1>
+      <p class="sub">Pět hektarů v jednom kuse je něco jiného než pět hektarů roztroušených po okrese. Tady jsou místa, kde je zrovna na prodej <b>několik pozemků do ${BLOKY.MEZ_METRU} metrů od sebe</b> — ${fmt(celky.length)} ${sklon(celky.length, 'lokalita', 'lokality', 'lokalit')}, ${fmt(celkemNabidek)} ${pluralPozemek(celkemNabidek)}, dohromady <b>${celkemHa.toFixed(0)} ha</b>.</p>
+    </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap okr-wrap">
+
+      <div class="add-card" style="margin-top:0;">
+        <div class="rules-sect">
+          <h2>Co tenhle seznam je a co není</h2>
+          <p class="rules-note" style="margin-top:0;">Měří se <b>vzdušná čára mezi nabídkami</b>, ne hranice parcel — ty bychom museli mít z katastru a nemáme je. <b>Netvrdíme tedy, že spolu pozemky sousedí</b>, ani že se dají koupit najednou: každý může prodávat někdo jiný a každý za svých podmínek.</p>
+          <p class="rules-note">Nabídky se spojují do ${BLOKY.MEZ_METRU} m, a to <b>řetězově</b>: když A a B dělí 200 m a B a C taky, je to jedna lokalita, i když od A k C je 400 m. Tak se chová pás parcel podél cesty. Vypisují se lokality, kde jsou aspoň <b>${CELKY_NEJMENE} nabídky</b>.</p>
+          <p class="rules-note">U <b>spoluvlastnického podílu</b> je v inzerátu výměra celé parcely, ale kupuje se zlomek — kde je ve skupině podíl, je to u součtu napsané. Celková cena se sčítá, jen když ji má <b>každá</b> nabídka ve skupině.</p>
+        </div>
+      </div>
+
+${karty}
+      <div class="add-cross" style="margin-top:22px;">
+        <div class="acx-copy">
+          <h3>Chcete vidět, kde přesně leží?</h3>
+          <p>Na mapě jsou všechny nabídky pohromadě — můžete si kolem nich rovnou obkreslit výběr.</p>
+        </div>
+        <a href="index.html#mapa" class="btn-primary btn-glow">Otevřít mapu →</a>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+` + footer();
+  write('pozemky-pohromade.html', cHtml);
+  console.log(`  Víc pozemků pohromadě: ${celky.length} lokalit, ${celkemNabidek} nabídek, ${celkemHa.toFixed(0)} ha.`);
+}
 
 // ---------- SITEMAP ----------
 const staticUrls=[
@@ -2084,6 +2227,7 @@ const staticUrls=[
   /* Mění se při každém běhu robota (čtyřikrát denně) — proto `daily`
      a vysoká priorita: je to nejčerstvější obsah na webu. */
   {loc:'nove-pozemky.html',cf:'daily',pr:'0.8'},
+  {loc:'pozemky-pohromade.html',cf:'daily',pr:'0.7'},
   {loc:'uzemni-plan-pozemek.html',cf:'monthly',pr:'0.7'},
   {loc:'cena-pozemku.html',cf:'weekly',pr:'0.8'},
   {loc:'data.html',cf:'daily',pr:'0.5'},

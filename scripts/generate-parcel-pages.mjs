@@ -686,6 +686,22 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
   h = h.replace(/<title>[^<]*<\/title>/, `<title>${esc(titul)} | Parcelka</title>`);
   h = h.replace(/(<meta name="description" content=")[^"]*(">)/, `$1${esc(popis)}$2`);
   h = h.replace(/(<link rel="canonical" href=")[^"]*(">)/, `$1${esc(url)}$2`);
+  /* VZOR POZEMEK.HTML SE NEINDEXUJE, TAHLE STRÁNKA ANO.
+     Vzor je prázdná skořápka: bez `?p=` v adrese je na ní jediná věta
+     „Načítám pozemek…". Přitom měl `robots: index,follow`, takže web
+     vyhledávačům nabízel k zaindexování stránku bez obsahu — a zároveň
+     na ni z každé z 1 943 stránek pozemků míří odkaz „Otevřít na mapě".
+     Vzor je proto nově `noindex,follow` (odkazy ven se sledovat mají)
+     a tady se to pro hotovou stránku otočí zpátky: ty obsah mají a jsou
+     to právě ony, co má vyhledávač v indexu mít.
+     Hlídá to scripts/test-vyhledavac.mjs — a to z obou stran,
+     protože obrátit tuhle dvojici naruby by potichu odindexovalo
+     celý web. */
+  if (/<meta name="robots"/.test(h)) {
+    h = h.replace(/(<meta name="robots" content=")[^"]*(">)/, '$1index,follow$2');
+  } else {
+    h = h.replace(/(<\/title>)/, '$1\n  <meta name="robots" content="index,follow">');
+  }
   h = h.replace(/(<meta property="og:type" content=")[^"]*(">)/, '$1article$2');
   h = h.replace(/(<meta property="og:title" content=")[^"]*(">)/, `$1${esc(titul)}$2`);
   h = h.replace(/(<meta property="og:description" content=")[^"]*(">)/, `$1${esc(popis)}$2`);
