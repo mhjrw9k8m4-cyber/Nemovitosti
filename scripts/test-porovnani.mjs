@@ -299,6 +299,51 @@ pravda('a při ničem z toho stránka nespadla', chyby.length === 0, chyby.join(
   await mob.close();
 }
 
+/* 5) ÚŘEDNÍ CENA (§ 12) MUSÍ BÝT V TABULCE POZNAT.
+   U prodeje státní půdy stanoví cenu úřad, ne trh. Web to označuje na
+   kartě, v bloku i rádcem na stránce pozemku a v krajských výpisech —
+   tahle tabulka byla jediné místo, kde taková nabídka vyšla jako
+   obyčejné „Na prodej". A zeleně se v ní doporučuje nejnižší cena za
+   metr: změřeno, že ze 282 skupin okres|druh by ji v 51 dostala právě
+   cena od úřadu.
+   Zelená zůstává (ta cena za metr opravdu nejnižší je), přidal se
+   údaj, ČÍ ta cena je. Vzorek je schválně smíšený — jedna § 12 a jedna
+   běžná — aby se poznalo i to, že se odznak nerozlezl na všechny
+   řádky. */
+{
+  const uredni = D.filter((d) => CENY.spravniCena && CENY.spravniCena(d)
+    && d.price > 0 && d.area > 0 && zaMetrM(d) != null);
+  const bezne = D.filter((d) => !(CENY.spravniCena && CENY.spravniCena(d))
+    && !d.podil && d.price > 0 && d.area > 0 && zaMetrM(d) != null);
+  pravda(`v datech je úřední i běžná cena (${uredni.length} a ${bezne.length})`,
+    uredni.length >= 10 && bezne.length >= 10,
+    `§ 12: ${uredni.length}, běžných: ${bezne.length}`);
+  if (uredni.length && bezne.length) {
+    const dvojice = [uredni[0], bezne[0]];
+    await p.evaluate((k) => localStorage.setItem('pk_fav_v1', JSON.stringify(k)), dvojice.map(klic));
+    await p.reload({ waitUntil: 'domcontentloaded' });
+    await p.waitForTimeout(2500);
+    const v = await p.evaluate(() => {
+      const rad = [...document.querySelectorAll('.por-tab tbody tr')];
+      return rad.map((r) => ({
+        obec: (r.querySelector('th a') || {}).textContent || '',
+        urad: !!r.querySelector('.por-urad'),
+        titulek: (r.querySelector('.por-urad') || {}).title || '',
+      }));
+    });
+    pravda('oba uložené pozemky jsou v tabulce', v.length === 2, `řádků ${v.length}`);
+    const rUrad = v.find((r) => r.obec.trim() === (dvojice[0].place || '').trim());
+    const rBezny = v.find((r) => r.obec.trim() === (dvojice[1].place || '').trim());
+    pravda('u úřední ceny stojí v tabulce odznak § 12',
+      !!(rUrad && rUrad.urad), JSON.stringify(v));
+    pravda('a jeho popisek říká, že cenu stanovil úřad, ne trh',
+      !!(rUrad && /úřad|§ 12/.test(rUrad.titulek) && /oprávněné osobě/.test(rUrad.titulek)),
+      (rUrad || {}).titulek || '');
+    pravda('u běžné nabídky ten odznak není',
+      !!(rBezny && !rBezny.urad), JSON.stringify(v));
+  }
+}
+
 await prohlizec.close();
 console.log('\nPorovnání uložených pozemků');
 console.log(zpravy.join('\n'));

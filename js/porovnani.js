@@ -109,7 +109,25 @@
         + '<td' + (nejM2 != null && m2 === nejM2 ? ' class="por-nej"' : '') + '>'
           + (m2 != null ? fmt(m2) + ' Kč' : '—') + '</td>'
         + '<td>' + esc(d.druh || '—') + '</td>'
-        + '<td>' + esc(TYPY[d.type] || d.type || '—') + '</td>'
+        /* ÚŘEDNÍ CENA SE MUSÍ POZNAT I TADY. U prodeje státní půdy podle
+           § 12 stanoví cenu úřad, ne trh — a web to označuje všude:
+           odznakem na kartě, blokem i rádcem na stránce pozemku
+           a tučným odznakem v krajských výpisech. Tahle tabulka byla
+           jediné místo, kde taková nabídka vyšla jako obyčejné
+           „Na prodej".
+           Změřeno na ostrých datech: ze 282 skupin okres|druh jich 42
+           míchá úřední cenu s trhem a v 51 by zelenou značku „nejnižší
+           cena za m²" dostala právě cena od úřadu. Nejhorší je Česká
+           Lípa / orná půda, kde je 24 z 26 nabídek od SPÚ.
+           ZELENÁ ZŮSTÁVÁ, a je to rozhodnutí, ne opomenutí: ta cena
+           za metr opravdu nejnižší JE a značka o sobě tvrdí přesně
+           tohle („Zeleně je nejnižší cena za m²", ne „nejvýhodnější").
+           Co chybělo, nebylo číslo, ale ČÍ ta cena je — a to se teď
+           píše do sloupce vedle. */
+        + '<td>' + esc(TYPY[d.type] || d.type || '—')
+          + ((window.PK_CENY && window.PK_CENY.spravniCena && window.PK_CENY.spravniCena(d))
+            ? ' <b class="por-urad" title="Cenu stanovil úřad podle § 12 zákona o Státním pozemkovém úřadu, ne trh — za tuhle cenu prodává SPÚ oprávněné osobě. S cenami na trhu se neporovnává.">úřední cena (§ 12)</b>'
+            : '') + '</td>'
         + '<td>' + (dni == null ? '—' : (dni < 0 ? 'proběhlo' : (dni === 0 ? 'dnes' : dni === 1 ? 'zítra' : 'za ' + dni + (dni < 5 ? ' dny' : ' dní')))) + '</td>'
         + '</tr>';
     }).join('');

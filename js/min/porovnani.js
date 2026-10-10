@@ -79,7 +79,11 @@
         + '<td' + (nejM2 != null && m2 === nejM2 ? ' class="por-nej"' : '') + '>'
           + (m2 != null ? fmt(m2) + ' Kč' : '—') + '</td>'
         + '<td>' + esc(d.druh || '—') + '</td>'
-        + '<td>' + esc(TYPY[d.type] || d.type || '—') + '</td>'
+
+        + '<td>' + esc(TYPY[d.type] || d.type || '—')
+          + ((window.PK_CENY && window.PK_CENY.spravniCena && window.PK_CENY.spravniCena(d))
+            ? ' <b class="por-urad" title="Cenu stanovil úřad podle § 12 zákona o Státním pozemkovém úřadu, ne trh — za tuhle cenu prodává SPÚ oprávněné osobě. S cenami na trhu se neporovnává.">úřední cena (§ 12)</b>'
+            : '') + '</td>'
         + '<td>' + (dni == null ? '—' : (dni < 0 ? 'proběhlo' : (dni === 0 ? 'dnes' : dni === 1 ? 'zítra' : 'za ' + dni + (dni < 5 ? ' dny' : ' dní')))) + '</td>'
         + '</tr>';
     }).join('');

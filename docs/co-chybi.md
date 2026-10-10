@@ -2282,6 +2282,77 @@ opravdu říká tu správnou věc.
 **Prokázáno sabotáží:** s vypnutou větví (`if (false && …)`) spadly
 všechny čtyři nové kontroly i ta na ostrých datech.
 
+## 3aq. NALEZENO: porovnávací tabulka byla poslední místo, kde úřední cena vyšla jako obyčejné „Na prodej" — *opraveno 10. 10.*
+
+Čtvrtá a poslední plocha téže věci (po 3al, 3ao a 3ap). Po třech
+opravách jsem všechna místa, která o ceně něco tvrdí, prošel
+soustavně — a jedno zbylo: tabulka na `porovnani.html`.
+
+### Co tam bylo
+
+Tabulka má sloupec „Kategorie", kde se tiskne typ nabídky. U státní
+půdy podle § 12 tam stálo prostě **„Na prodej"**. A ve sloupci „Cena za
+m²" tabulka **zeleně označuje nejnižší hodnotu** — takže cena, kterou
+stanovil úřad, mohla zelenou dostat vedle cen z trhu, bez jediné
+známky, že je z jiného světa.
+
+Změřeno na ostrých datech:
+
+| | |
+|---|---|
+| skupin okres\|druh s aspoň dvěma nabídkami | 282 |
+| z nich míchá úřední cenu s trhem | **42** |
+| skupin, kde by zelenou „nejnižší cena za m²" dostala úřední cena | **51** |
+| nejhorší případ | Česká Lípa / orná půda: **24 z 26** nabídek od SPÚ |
+
+Jedna věc je naopak v pořádku, a ověřil jsem si ji: **živá ukázka**,
+kterou vidí nový návštěvník bez uložených pozemků, dnes § 12 neobsahuje
+— vybírá se největší skupina téhož okresu a druhu a dnes vyhrává
+Praha-východ / stavební pozemek, kde není ani jedna. Je to ale vlastnost
+dat, ne pravidlo, takže se na to nedá spoléhat.
+
+### Oprava — a co se NEzměnilo
+
+Do sloupce „Kategorie" se k typu připisuje **úřední cena (§ 12)**,
+stejným tónem jako odznak v krajských výpisech, s popiskem shodným
+s odznakem na kartě.
+
+**Zelená značka zůstává, a je to rozhodnutí, ne opomenutí.** Ta cena za
+metr opravdu nejnižší JE a značka o sobě tvrdí přesně tohle — pod
+tabulkou stojí „Zeleně je **nejnižší cena za m²**… Který pozemek je
+nejlepší, z tabulky nevyplývá". Odebrat zelenou pravdivě nejnižšímu
+číslu by tabulka lhala na druhou stranu. Co chybělo, nebylo číslo, ale
+**čí ta cena je** — a to se teď píše vedle.
+
+### Zkouška
+
+`scripts/test-porovnani.mjs` má 27 → **32** kontrol. Uloží se schválně
+**smíšená** dvojice (jedna § 12, jedna běžná), aby se poznalo i to, že
+se odznak nerozlezl na všechny řádky: hlídá se, že u úřední ceny odznak
+je, že jeho popisek mluví o úřadu a oprávněné osobě, a že u běžné
+nabídky **není**. K tomu pojistka, že v datech je obojího dost.
+
+**Prokázáno sabotáží:** s vypnutou podmínkou (`if (false && …)`) spadly
+obě kontroly na odznak.
+
+### Tím je ta série uzavřená
+
+Všechna místa, která na webu něco tvrdí o ceně, § 12 teď poznají:
+
+| plocha | stav |
+|---|---|
+| odznak na kartě, percentil, blok s odhadem | 3al |
+| řádek v krajských a okresních výpisech | 3al |
+| srovnatelné pozemky na stránce pozemku | 3ao |
+| rádce („Co říká cena") | 3ap |
+| porovnávací tabulka | **3aq** |
+| grafy a mediány historie cen | už dřív (VERZE 3) |
+| `data/model.json` a řezy dat | už dřív |
+| zlevnění | netýká se — 0 z 204 má starou cenu |
+| rozesílané hlídání | netýká se — o ceně netvrdí nic |
+
+Poslední dvě řádky jsou změřené negativní výsledky, ne domněnky.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
