@@ -120,7 +120,19 @@ if (best) pravda('to, co nabídne, je uvěřitelné', bo.podOdhadem < M.MEZ_POCH
   `${best.place} −${bo.podOdhadem} %`);
 
 // --- 4) Karta i rádce musí říkat totéž -------------------------------
-const mainKarta = main.slice(main.indexOf('var _od = MODEL ? MODEL.odhad(d) : null;'));
+/* KOTVA JE VZOR, NE OPIS ŘÁDKU — A MUSÍ SE NAJÍT.
+   Stál tu doslovný opis `var _od = MODEL ? MODEL.odhad(d) : null;`.
+   Když do té podmínky přibylo vyřazení úředně stanovené ceny
+   (`var _od = (MODEL && !_uredni) ? …`), indexOf vrátil −1 a slice(−1)
+   uřízl POSLEDNÍ ZNAK souboru. Kontrola pak padla — ne proto, že by se
+   web zhoršil, ale proto, že se v něm hnulo. A kdyby vzor níž byl
+   shovívavější, spadla by hůř: prošla by naprázdno.
+   Proto dvě věci: kotva se hledá vzorem a zvlášť se tvrdí, že se
+   NAŠLA. */
+const kotva = /var _od = [^\n]*MODEL\.odhad\(d\)[^\n]*;/.exec(main);
+pravda('kotva na odznaky karty se v js/main.js našla', !!kotva,
+  'bez ní by se kontrola níž dívala do prázdna, ne na kartu');
+const mainKarta = kotva ? main.slice(kotva.index) : '';
 pravda('karta u pochybné ceny nenabízí slevu, ale ověření',
   /_od\.pochybna[\s\S]{0,400}ověřit cenu/.test(mainKarta),
   'zelený odznak „−91 % proti okolí" na kartě, která je skoro jistě podíl');

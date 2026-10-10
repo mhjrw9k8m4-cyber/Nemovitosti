@@ -2035,6 +2035,40 @@ kontrol), že vysvětlení v popisku je, a že typ projde i u změny
 **dopočítané z archivu** (pole `h`) — právě odtud ji bere stránka
 pozemku, takže ta cesta se dá rozbít zvlášť.
 
+## 3an. MŮJ REGRES: zkouška se kotvila doslovným opisem řádku, a já ten řádek změnil — *opraveno 10. 10.*
+
+Tohle je chyba moje, ne webova, a patří sem stejně jako ostatní.
+
+`scripts/test-doporuceni.mjs` si bral kus `js/main.js` od doslovného
+opisu řádku:
+
+```js
+const mainKarta = main.slice(main.indexOf('var _od = MODEL ? MODEL.odhad(d) : null;'));
+```
+
+Když do té podmínky přibylo vyřazení úředně stanovené ceny (nález 3al),
+řádek začal znít `var _od = (MODEL && !_uredni) ? MODEL.odhad(d) : null;`
+— `indexOf` vrátil **−1** a `slice(-1)` uřízl **poslední znak souboru**.
+Kontrola pak spadla na tom, že se v jednom znaku nenašlo varování
+„ověřit cenu". Ne proto, že by se web zhoršil; proto, že se v něm hnulo.
+
+**A kdyby byl vzor pod tím shovívavější, dopadlo by to hůř: prošla by
+naprázdno.** To je přesně ten druh tiché kontroly, který tenhle
+dokument jinde popisuje jako horší než žádnou.
+
+**Oprava.** Kotva je teď vzor (`/var _od = [^\n]*MODEL\.odhad\(d\)[^\n]*;/`)
+a zvlášť se tvrdí, že se **našla** — takže se příště ozve chybou „kotva
+se nenašla", ne záhadným propadem o kus dál. Dvě sabotáže, obě chycené:
+přejmenování proměnné shodí kontrolu kotvy i tu pod ní, a odebrání
+varování z karty shodí jen tu druhou.
+
+**Jak to uteklo a co s tím.** Po nálezu 3al jsem pustil jen čtyři
+prohlížečové zkoušky, kterých se změna podle mě týkala — ne celou
+dávku. Nespadlo nic a pushnul jsem to; CI pak na `v-prohlizeci`
+spadlo. Výběr „co se toho asi týká" tady nestačí: tahle zkouška čte
+`js/main.js` jako **text**, takže se jí může dotknout každá změna
+v něm. Před pushem teď jede celá dávka (101 prohlížečových zkoušek).
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
