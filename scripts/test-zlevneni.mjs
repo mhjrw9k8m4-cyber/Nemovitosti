@@ -91,6 +91,56 @@ pravda('a prázdný vstup nespadne', Z.zmena(null) === null && Z.text(null) === 
     Z.krok(0, 100, '') === null && Z.krok(100, 0, '') === null && Z.krok(100, 100, '') === null);
 }
 
+/* --- U DRAŽBY NIKDO NEZLEVNIL -----------------------------------------
+ *
+ * Prodávající cenu nesnížil: v opakované dražbě se vypisuje nižší
+ * VYVOLÁVACÍ cena a od té se znovu přihazuje. Stránka „Co je na trhu
+ * nového" to pod seznamem říká (`drazebVZlevneni`
+ * v scripts/generate-region-pages.mjs), kdežto odznak na kartě
+ * a řádek na stránce pozemku psaly „Zlevněno o N %" jako u každé jiné
+ * nabídky — a to je jediný údaj na webu, který si člověk nemůže ověřit
+ * jinde. Číslo bylo pravdivé, věta o něm ne.
+ *
+ * Hlídá se, že typ nabídky věta nese, a že se u běžného prodeje
+ * nezměnila. */
+{
+  const dole = (typ) => Z.zmena({ price: 700000, cena_drive: 1000000, cena_zmena: '2026-10-05', type: typ });
+  const prodej = dole('sale');
+  pravda('u prodeje věta zůstává „Zlevněno o 30 %"', Z.text(prodej) === 'Zlevněno o 30 %', Z.text(prodej));
+  pravda('a nic o dražbě v popisku nepřibylo',
+    !/vyvolávací|exekutor/i.test(Z.popis(prodej, fmt)), Z.popis(prodej, fmt));
+  const drazba = dole('drazba');
+  pravda('u dražby se slovo „Zlevněno" nepoužije',
+    !/[Zz]levněno/.test(Z.text(drazba)), Z.text(drazba));
+  pravda('a stojí tam, že jde o vyvolávací cenu',
+    Z.text(drazba) === 'Vyvolávací cena −30 %', Z.text(drazba));
+  pravda('popisek vysvětlí, že to není sleva od prodávajícího',
+    /Není to sleva od prodávajícího/.test(Z.popis(drazba, fmt))
+    && /přihazuje/.test(Z.popis(drazba, fmt)), Z.popis(drazba, fmt));
+  const exekuce = dole('exekuce');
+  pravda('u exekuce se jmenuje „Uváděná cena"',
+    Z.text(exekuce) === 'Uváděná cena −30 %', Z.text(exekuce));
+  pravda('a vysvětlení mluví o exekutorovi, ne o dražbě',
+    /exekutor/.test(Z.popis(exekuce, fmt)) && !/přihazuje/.test(Z.popis(exekuce, fmt)),
+    Z.popis(exekuce, fmt));
+  /* ZDRAŽENÍ U DRAŽBY SE NEVYSVĚTLUJE — věta o opakované dražbě by tam
+     neplatila (vyvolávací cena se v dalším kole nezvedá). */
+  const nahoru = Z.zmena({ price: 1300000, cena_drive: 1000000, cena_zmena: '2026-10-05', type: 'drazba' });
+  pravda('u dražby směrem nahoru se o opakované dražbě nemluví',
+    Z.text(nahoru) === 'Vyvolávací cena +30 %' && !/přihazuje/.test(Z.popis(nahoru, fmt)),
+    Z.text(nahoru) + ' | ' + Z.popis(nahoru, fmt));
+  /* A podezřelý skok si drží svou vlastní větu — ta má přednost, protože
+     tam se netvrdí sleva vůbec. */
+  const skok = Z.zmena({ price: 300000, cena_drive: 1000000, cena_zmena: '2026-10-05', type: 'drazba' });
+  pravda('podezřelý skok má dál svou vlastní větu',
+    /ověřit/.test(Z.text(skok)) && !/Vyvolávací/.test(Z.text(skok)), Z.text(skok));
+  /* Typ se musí dostat do kroku i z archivní historie (pole `h`), ne jen
+     z `cena_drive` — na stránce pozemku se bere právě odtud. */
+  const zH = Z.zmena({ price: 700000, type: 'drazba', h: [['2026-09-01', 1000000], ['2026-10-05', 700000]] });
+  pravda('typ se nese i u změny dopočítané z archivu',
+    zH && Z.text(zH) === 'Vyvolávací cena −30 %', zH ? Z.text(zH) : 'null');
+}
+
 console.log('\nZměna ceny proti minulému běhu');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

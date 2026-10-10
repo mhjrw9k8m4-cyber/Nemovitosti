@@ -1940,6 +1940,54 @@ cena (§ 12)" a varování tam stát **nesmí**; u všech ostatních se vyžaduj
 dál. Zkouška navíc hlásí, že výjimka platí pro **část** (4 ze 14), ne pro
 všechny nebo pro nikoho — jinak by nic neměřila.
 
+## 3am. NALEZENO: odznak „Zlevněno o 30 %" u dražby — tam ale nikdo nezlevnil — *opraveno 10. 10.*
+
+Třetí nález téhož druhu jako 3ai a 3ak: **web si o téže věci na dvou
+místech protiřečil, a to místo, které se čte víc, mělo nepravdu.**
+
+Stránka „Co je na trhu nového" pod seznamem zlevněných píše: *„U N z nich
+jde o dražbu: tam nikdo nic nezlevnil, jen soud nebo dražebník vypsal
+nižší vyvolávací cenu v opakované dražbě."* V kódu k tomu stojí komentář
+„Číslo je pravdivé, věta o něm nebyla" — a opravila se tehdy jen ta jedna
+stránka. **Odznak na kartě** a **řádek na stránce pozemku** dál psaly
+„Zlevněno o 30 %", protože větu skládá `js/zlevneni.js`, který typ
+nabídky neznal.
+
+A je to zrovna ten údaj, u kterého si člověk nemá jak pomoct: minulou
+cenu pozemku **nevidí nikde jinde než u nás**.
+
+**Změřeno:** změn ceny je dnes 20 (15 zlevnění, 3 zdražení, 1 podezřelý
+skok u prodeje) a **jedna** z nich je dražba — Ondřejov, okres
+Praha-východ, −30 %. Na tom čísle nález nestojí; stojí na tom, že ta věta
+je u dražby nepravdivá bez ohledu na to, kolikrát se zobrazí.
+
+**Oprava v jednom místě.** `krok()` si teď s sebou nese typ nabídky,
+takže všechna místa dostanou správné znění zdarma:
+
+| typ | odznak | popisek navíc |
+|---|---|---|
+| prodej | `Zlevněno o 30 %` | — (nezměněno) |
+| dražba | `Vyvolávací cena −30 %` | „Není to sleva od prodávajícího: u dražby se v opakovaném kole vypisuje nižší vyvolávací cena a od té se znovu přihazuje." |
+| exekuce | `Uváděná cena −30 %` | „…u exekuce tohle číslo uvádí exekutor a může ho v dalším kole snížit, prodejní cena se tím neslibuje." |
+
+U **zdražení** se nic nevysvětluje: věta o opakované dražbě by tam
+neplatila, vyvolávací cena se v dalším kole nezvedá. Podezřelý skok si
+drží svou vlastní větu („Cena se změnila o N % — ověřit"), ta má přednost.
+
+**Co to stojí v pixelech, změřeno, ne odhadnuto.** Nové znění je o šest
+znaků delší (21 proti 15) a `.opp-zlevneno` nemá `white-space:nowrap`,
+takže se text zlomí. Na té jedné dražbě, které se to dnes týká, při
+šířkách 320 / 360 / 414 / 768 px: odznak **nikde nevyčuhuje z karty**
+a karta vyroste **jen při 360 px**, z 226 na 245 px (jedna řádka odznaků
+navíc). Kratší „Vyvolávací −30 %" by těch 19 px ušetřilo za cenu věty,
+která nic neříká — proto zůstává to delší.
+
+**Pojistky** (`scripts/test-zlevneni.mjs`, 31 kontrol, tři sabotáže,
+všechny chycené): že typ do kroku doopravdy vstoupí (bez něj padne sedm
+kontrol), že vysvětlení v popisku je, a že typ projde i u změny
+**dopočítané z archivu** (pole `h`) — právě odtud ji bere stránka
+pozemku, takže ta cesta se dá rozbít zvlášť.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
