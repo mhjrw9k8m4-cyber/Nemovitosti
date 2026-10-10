@@ -179,6 +179,23 @@
     return KRAJ_KDE[nazev] || ('v kraji ' + nazev);
   }
 
+  /* S ČÍM SE TA CENA SROVNÁVALA — a není to vždycky trh.
+     Percentil („levnější než 78 %") se počítá v přihrádce
+     `type|druh|okres`, tedy JEN proti nabídkám téhož typu: dražba se
+     srovnává s dražbami, prodej s prodeji. U dražby je to vyvolávací
+     cena proti vyvolávacím cenám, ne proti tomu, za kolik se pozemky
+     prodávají — a to je docela jiné tvrzení. Stránka pozemku to říkala
+     („pozemků téhož druhu V DRAŽBĚ v okrese Litoměřice"), karta na mapě
+     a tipy na úvodní stránce ne: tam stálo jen „pozemků téhož druhu
+     v okrese Litoměřice". Týž pozemek tak o sobě na dvou místech webu
+     tvrdil dvě různé věci a to na kartě bylo to nepravdivé.
+     Větu skládá tohle jedno místo, aby se ta tři znovu nerozešla. */
+  function skupinaText(type) {
+    if (type === 'drazba') return 'v dražbě';
+    if (type === 'exekuce') return 'v nabídce';
+    return 'v prodeji';
+  }
+
   function median(serazene) {
     if (!serazene.length) return null;
     var n = serazene.length, p = Math.floor(n / 2);
@@ -996,7 +1013,7 @@
 
   root.PK_CENY = { DOST_NABIDEK: DOST_NABIDEK,
     postav: postav, rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
-    kdeText: kdeText, blokOdhadu: blokOdhadu,
+    kdeText: kdeText, skupinaText: skupinaText, blokOdhadu: blokOdhadu,
     zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis,
     /* Ven kvůli generátoru stránek: kdo vydává „obvyklou cenu", musí
        úředně stanovenou cenu vynechat týmž pravidlem jako model. */

@@ -93,6 +93,12 @@
     return KRAJ_KDE[nazev] || ('v kraji ' + nazev);
   }
 
+  function skupinaText(type) {
+    if (type === 'drazba') return 'v dražbě';
+    if (type === 'exekuce') return 'v nabídce';
+    return 'v prodeji';
+  }
+
   function median(serazene) {
     if (!serazene.length) return null;
     var n = serazene.length, p = Math.floor(n / 2);
@@ -461,7 +467,7 @@
 
   root.PK_CENY = { DOST_NABIDEK: DOST_NABIDEK,
     postav: postav, rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
-    kdeText: kdeText, blokOdhadu: blokOdhadu,
+    kdeText: kdeText, skupinaText: skupinaText, blokOdhadu: blokOdhadu,
     zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis,
 
     spravniCena: spravniCena,

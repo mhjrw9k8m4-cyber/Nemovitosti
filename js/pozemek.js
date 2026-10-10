@@ -498,7 +498,9 @@
     var pc = MODEL.percentil(d);
     if (!pc) return odhadHtml(d);
     var pct = pc.pct;
-    var typeWord = d.type === 'sale' ? 'v prodeji' : (d.type === 'drazba' ? 'v dražbě' : 'v nabídce');
+    /* Jedno místo pro všechny tři výpisy — viz skupinaText v js/ceny.js. */
+    var typeWord = (window.PK_CENY && window.PK_CENY.skupinaText)
+      ? window.PK_CENY.skupinaText(d.type) : 'v prodeji';
     var cls, badge, text;
     /* KDE se to srovnávalo, musí být vidět. „Dražší než 78 % podobných
        pozemků" si každý přečte jako „než pozemky v okolí" — a dokud se

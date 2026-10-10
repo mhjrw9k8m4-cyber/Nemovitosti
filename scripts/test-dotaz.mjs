@@ -473,6 +473,36 @@ function pravda(popis, vyslo, proc) {
      text, takže zkouška spadla ve chvíli, kdy se do políčka přidal
      okruh („do 30 km od Brna") — tedy přesně tehdy, když popisek začal
      o možnostech políčka říkat víc, ne méně. */
+  /* KAŽDÝ FILTR, KTERÝ VĚTA UMÍ POZNAT, MUSÍ BÝT ZAPOJENÝ.
+     Kontroly výše jsou ruční výčet — a ten se s parserem rozejde tak,
+     že si toho nikdo nevšimne: kdo do js/dotaz.js přidá nový klíč,
+     rozebranou větu o něj obohatí, ale js/main.js o něm neví, takže
+     filtr nic neudělá. Člověk přitom vidí odznak, že to web pochopil.
+     Tiché nic je horší než chybová hláška. Proto se tu seznam klíčů
+     bere ze ZDROJE parseru a každý se musí v mapě objevit — buď jako
+     `dotazFiltr.<klíč>` (filtr nad nabídkami), nebo jako `r.<klíč>`
+     (zpracování hned po rozebrání, tak se používá okruhMisto).
+     `casti` a `text` jsou výjimka jen v tom, že nefiltrují nabídky;
+     zapojené být musí taky, a jsou (odznaky a hledání místa). */
+  const telo = (/var ven = \{([\s\S]*?)\};/.exec(
+    readFileSync(path.join(ROOT, 'js', 'dotaz.js'), 'utf8')) || ['', ''])[1];
+  const klice = [...new Set((telo.match(/([a-zA-Z][a-zA-Z0-9]*)\s*:/g) || [])
+    .map((m) => m.replace(/\s*:$/, '')))];
+  pravda('seznam klíčů parseru se opravdu přečetl', klice.length >= 15,
+    `přečteno ${klice.length} klíčů — vzor na „var ven = {…}" v js/dotaz.js nesedí, `
+    + 'kontrola by měřila prázdno');
+  const nezapojene = klice.filter((k) => !new RegExp('(?:dotazFiltr|r)\\.' + k + '\\b').test(main));
+  pravda('každý klíč rozebrané věty mapa někde použije',
+    nezapojene.length === 0,
+    `js/main.js nezná: ${nezapojene.join(', ')} — věta by se podle nich tvářila, že filtruje, `
+    + 'a nefiltrovala by');
+  /* A naopak: klíče se musí shodovat se zálohou v main.js, aby se filtr
+     choval stejně, i když se js/dotaz.js nenačte. */
+  for (const k of klice) {
+    if (k === 'casti' || k === 'text') continue;
+    pravda(`klíč „${k}" je zapojený`, new RegExp('(?:dotazFiltr|r)\\.' + k + '\\b').test(main));
+  }
+
   const vstup = (/<input[^>]*id="map-search"[^>]*>/.exec(idx) || [''])[0];
   const popisek = (/placeholder="([^"]*)"/.exec(vstup) || ['', ''])[1];
   const zminky = ['obec', 'druh', 'cena', 'km'].filter((w) => popisek.toLowerCase().indexOf(w) >= 0);

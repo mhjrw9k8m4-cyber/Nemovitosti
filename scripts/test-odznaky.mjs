@@ -46,7 +46,7 @@ function pravda(popis, vyslo, proc) {
    stránce existuje — ať odznak stojí na ploše, na jaké stojí doopravdy. */
 const ODZNAKY = [
   { stranka: 'index.html', trida: 'opp-overit', rodic: ['.opp-card', '.deal-card', '.card', 'main'], text: 'cena k ověření' },
-  { stranka: 'index.html', trida: 'opp-deal', rodic: ['.opp-card', '.deal-card', '.card', 'main'], text: 'levnější než 98 % podobných' },
+  { stranka: 'index.html', trida: 'opp-deal', rodic: ['.opp-card', '.deal-card', '.card', 'main'], text: 'levnější než 98 % pozemků v prodeji' },
   { stranka: 'index.html', trida: 'deal-badge', rodic: ['.deal-card', '.deals-sec', '.card', 'main'], text: 'nejvýhodnější' },
   { stranka: 'index.html', trida: 'ob-kratky', rodic: ['.opp-card', '.card', 'main'], text: 'Dražba' },
   { stranka: 'pozemky-okres-tabor.html', trida: 'okr-badge', rodic: ['.okr-item', '.okr-list', 'main'], text: 'Na prodej' },

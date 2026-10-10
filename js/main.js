@@ -5270,10 +5270,22 @@
            vzorek menší než dvacet. V popisku to nic nestojí, protože
            ten se stejně rozbaluje až pod prstem. */
         var _zKolika = (_di && _di.sample > 0) ? ' (' + _di.sample + ' ' + (_di.sample < 5 ? 'nabídky' : 'nabídek') + ')' : '';
+        /* S ČÍM SE SROVNÁVALO, PATŘÍ DO VĚTY — A JE TO JEN TÝŽ TYP.
+           Percentil se počítá v přihrádce `type|druh|okres`, takže
+           u dražby je to vyvolávací cena proti vyvolávacím cenám, ne
+           proti tomu, za kolik se pozemky prodávají. Stránka pozemku to
+           psala („…pozemků téhož druhu V DRAŽBĚ v okrese Litoměřice"),
+           karta ne — a byla to tedy ta nepravdivá z obou vět o témže
+           pozemku. Kolik karet se to týká: tahle větev je v řadě až
+           čtvrtá, takže se do ní mimo prodej dostane 129 nabídek a jen
+           u dvou z nich by věta nesla procento; zbylých 127 má obecnější
+           tvar „patří k nejnižším", kterému typ chyběl stejně. */
+        var _skup = (window.PK_CENY && window.PK_CENY.skupinaText)
+          ? ' ' + window.PK_CENY.skupinaText(d.type) : '';
         chips.push('<span class="opp-deal" data-kde="' + esc(kdeKarty) + '" title="' +
           (_di && _di.cheaper >= 70
-            ? 'Levnější než ' + _di.cheaper + ' % pozemků téhož druhu ' + esc(kdeKarty || 'v okolí') + _zKolika
-            : 'Cena za m² patří k nejnižším u pozemků téhož druhu ' + esc(kdeKarty || 'v okolí')) + '">' +
+            ? 'Levnější než ' + _di.cheaper + ' % pozemků téhož druhu' + _skup + ' ' + esc(kdeKarty || 'v okolí') + _zKolika
+            : 'Cena za m² patří k nejnižším u pozemků téhož druhu' + _skup + ' ' + esc(kdeKarty || 'v okolí')) + '">' +
           (_di && _di.cheaper >= 70 ? 'levnější než ' + _di.cheaper + ' %' : 'výhodná cena') + '</span>');
       }
       /* Podíl patří na kartu, ne až do detailu. Bez něj vypadá cena za
@@ -6372,8 +6384,15 @@
            u odznaku na mapě" — nespravilo. Ten odznak byl v panelu, který
            se nikdy neotevřel, takže oprava platila v mrtvém kódu. Živé
            místo, kde se to tvrdilo bez místa, byly právě tyhle tipy.) */
-        '<div class="deal-badge">levnější než ' + o.di.cheaper + ' % podobných' +
-          (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +
+        /* „Podobných" ještě neznamená „na trhu": percentil srovnává jen
+           v rámci téhož typu, takže u dražby jde o vyvolávací ceny.
+           Mezi tipy se dražba dostat může (dnes tam není ani jedna, ale
+           nic ji nebrání), a pak by „levnější než 92 % podobných"
+           znamenalo něco jiného, než co si člověk přečte. */
+        '<div class="deal-badge">levnější než ' + o.di.cheaper + ' % pozemků'
+          + (window.PK_CENY && window.PK_CENY.skupinaText
+            ? ' ' + window.PK_CENY.skupinaText(d.type) : '')
+          + (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +
         '<div class="deal-place"><span class="deal-dot" style="background:' + t.color + '"></span>' + d.place + '</div>' +
         /* Výměra patří k druhu pozemku, ne k ceně: „orná půda · 15 752 m²"
            je popis toho, co se prodává. V ceně zůstává jen cena a cena za

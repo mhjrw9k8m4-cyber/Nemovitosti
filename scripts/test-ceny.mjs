@@ -943,6 +943,78 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
   }
 }
 
+/* --- S ČÍM SE PERCENTIL SROVNÁVAL, MUSÍ STÁT VE VĚTĚ -----------------
+ *
+ * Přihrádka percentilu je `type|druh|okres` — tedy JEN týž typ nabídky.
+ * U dražby to znamená vyvolávací cenu proti vyvolávacím cenám, ne proti
+ * tomu, za kolik se pozemky v okolí prodávají. Je to jiné tvrzení a web
+ * ho na dvou místech vyslovoval jako to první:
+ *
+ *     stránka pozemku  „levnější než 78 % pozemků téhož druhu
+ *                       V DRAŽBĚ v okrese Litoměřice (53 nabídek)"
+ *     karta na mapě    „levnější než 78 % pozemků téhož druhu
+ *                       v okrese Litoměřice (53 nabídek)"
+ *
+ * Naměřeno na ostrých datech: percentil z přihrádky dražeb dostane 62
+ * nabídek, všech 62 v jediném okrese — na Litoměřicku, kde je dražeb
+ * nejvíc. Týž pozemek tak o sobě na kartě a na své vlastní stránce
+ * tvrdil dvě různé věci.
+ *
+ * Hlídají se obě strany: že je přihrádka opravdu podle typu (jinak by
+ * ta věta být nemusela) a že ji všechna tři místa pojmenovávají jedním
+ * společným kusem kódu. */
+{
+  const SYR = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const M = PK_CENY.postav(SYR);
+  const dg = PK_CENY.druhGroup;
+  let mimoProdej = 0, prvni = null;
+  for (const o of SYR) {
+    if (o.type === 'sale') continue;
+    const pc = M.percentil(o);
+    if (!pc || pc.uroven !== 'okres') continue;
+    mimoProdej++;
+    if (!prvni) prvni = { o, pc };
+  }
+  pravda(`percentil mimo prodej se opravdu počítá (${mimoProdej} nabídek)`,
+    mimoProdej >= 5,
+    'bez nich kontrola níž neměří nic — pak se musí vzorek najít jinde, ne zkouška smazat');
+  if (prvni) {
+    const { o, pc } = prvni;
+    let tehoTypu = 0, vsechTypu = 0;
+    for (const x of SYR) {
+      if (!(x.area > 0) || !x.price) continue;
+      if (dg(x.druh) !== dg(o.druh) || x.okres !== o.okres) continue;
+      vsechTypu++;
+      if (x.type === o.type) tehoTypu++;
+    }
+    pravda(`vzorek je jen z nabídek téhož typu (${o.type}: ${pc.sample} z ${vsechTypu})`,
+      pc.sample === tehoTypu && tehoTypu < vsechTypu,
+      `vzorek ${pc.sample}, téhož typu ${tehoTypu}, všech typů ${vsechTypu} — `
+      + 'kdyby se srovnávalo přes typy, je věta „v dražbě" naopak zavádějící');
+  }
+  const cen = readFileSync(new URL('../js/ceny.js', import.meta.url), 'utf8');
+  const mn = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
+  const pz = readFileSync(new URL('../js/pozemek.js', import.meta.url), 'utf8');
+  pravda('skupinu pojmenovává jedno místo (PK_CENY.skupinaText)',
+    /function skupinaText/.test(cen) && /skupinaText: skupinaText/.test(cen));
+  pravda('a dražbu i exekuci rozlišuje',
+    PK_CENY.skupinaText('drazba') === 'v dražbě' && PK_CENY.skupinaText('sale') === 'v prodeji'
+    && PK_CENY.skupinaText('exekuce') === 'v nabídce',
+    `vyšlo ${PK_CENY.skupinaText('drazba')} / ${PK_CENY.skupinaText('sale')} / ${PK_CENY.skupinaText('exekuce')}`);
+  for (const [jmeno, txt, kolik] of [['js/main.js', mn, 2], ['js/pozemek.js', pz, 1]]) {
+    const n = (txt.match(/PK_CENY\.skupinaText\(/g) || []).length;
+    pravda(`${jmeno} ji použije u každého verdiktu (${n}×)`, n >= kolik,
+      `nalezeno ${n}, čekáno nejméně ${kolik} — verdikt bez skupiny tvrdí o dražbě něco, co neplatí`);
+  }
+  /* Přesné staré znění: „% podobných" bez typu. Kdyby se vrátilo, čte se
+     jako srovnání s trhem. */
+  for (const [jmeno, txt] of [['js/main.js', mn], ['js/pozemek.js', pz]]) {
+    pravda(`${jmeno} už neříká jen „% podobných"`,
+      !/%\s*podobných/.test(txt.replace(/\/\*[\s\S]*?\*\//g, ' ')),
+      'bez typu nabídky je to u dražby nepravda');
+  }
+}
+
 console.log(zpravy.join('\n'));
 
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

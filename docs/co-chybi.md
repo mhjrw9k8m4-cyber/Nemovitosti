@@ -1757,6 +1757,79 @@ content — proto má přehled podle druhu mez čtyřicet nabídek. Obce
 s aspoň dvěma nabídkami navíc už stojí jako rozcestník na stránce
 svého okresu, takže cesta k nim existuje.
 
+## 3ai. NALEZENO: karta tvrdila „levnější než 78 % pozemků v okrese" o dražbě, kde se srovnávaly jen dražby — *opraveno 10. 10.*
+
+Verdikt o ceně („Výhodná cena — levnější než 78 % pozemků téhož druhu")
+se počítá jako percentil v přihrádce **`typ | druh | okres`**. To slovo
+`typ` je podstatné: dražba se srovnává **jen s dražbami**, prodej jen
+s prodeji. U dražby to tedy je vyvolávací cena proti vyvolávacím cenám
+— ne proti tomu, za kolik se v okolí pozemky prodávají. Je to jiné
+tvrzení a jen jedno ze tří míst na webu ho vyslovovalo správně:
+
+| kde | věta před opravou |
+|---|---|
+| stránka pozemku | „levnější než 78 % pozemků téhož druhu **v dražbě** v okrese Litoměřice (53 nabídek)" ✅ |
+| karta na mapě | „levnější než 78 % pozemků téhož druhu v okrese Litoměřice (53 nabídek)" ❌ |
+| tipy na úvodní stránce | „levnější než 92 % **podobných** v okrese Litoměřice" ❌ |
+
+Týž pozemek tak o sobě na kartě a na své vlastní stránce tvrdil dvě
+různé věci — a to na kartě bylo to nepravdivé. Ověřeno v prohlížeči na
+`pozemek-litomerice-vinne-114ei4a.html`: stránka tiskne „Levnější než
+97 % pozemků téhož druhu **v dražbě** v okrese Litoměřice (29
+nabídek)".
+
+**Změřeno na ostrých datech.** Percentil mimo prodej dostane **62
+nabídek**, všech 62 v jediném okrese: na Litoměřicku, kde jsou dvě
+přihrádky dražeb dost velké (ostatní plocha 53 nabídek, orná půda 11)
+— nikde jinde v republice dražeb tolik není.
+
+Kolik z toho je vidět na kartě, je potřeba říct přesně, protože **první
+číslo, které jsem naměřil (19 karet), neplatilo**: odznaky na kartě
+jsou řada `else if` a větev s percentilem je v ní až čtvrtá — před ní
+se chytají tři větve odhadu („ověřit cenu", „cena k ověření", „−N %
+proti okolí"). Mimo prodej se tedy do ní dostane **129 nabídek** a jen
+u **dvou** by věta nesla procento; zbylých 127 má obecnější tvar „cena
+za m² patří k nejnižším u pozemků téhož druhu", kterému typ chyběl
+stejně. Mezi dnešními čtyřmi tipy na úvodní stránce dražba není, ale
+nic jí v tom nebrání: tipy se vybírají ze všech nabídek bez ohledu na
+typ.
+
+**Oprava.** Větu o skupině skládá jedno místo, `PK_CENY.skupinaText`
+v `js/ceny.js` (`v prodeji` / `v dražbě` / `v nabídce`), a používají ho
+všechna tři místa. Dřív to znění existovalo jen v `js/pozemek.js`,
+takže se ta tři místa rozešla, aniž by se to dalo poznat.
+
+**Pojistky** (`scripts/test-ceny.mjs`, prověřeno sabotáží):
+
+* přihrádka percentilu je opravdu podle typu — měří se na skutečných
+  datech, že vzorek dražby (53) je menší než všechny typy téže
+  přihrádky (57). Kdyby se přihrádka rozšířila na všechny typy,
+  kontrola spadne — a zároveň by ta věta „v dražbě" začala být naopak
+  zavádějící, takže hlídá i opačný regres.
+* `js/main.js` i `js/pozemek.js` musí `skupinaText` volat, a staré
+  znění „% podobných" se do nich nesmí vrátit.
+* že je co měřit: kontrola nejdřív ohlásí, kolik nabídek mimo prodej
+  percentil vůbec dostane, a pod pěti spadne. Jinak by po změně dat
+  tiše procházela naprázdno.
+
+## 3aj. Pojistka: každý filtr, který věta umí pojmenovat, musí být zapojený
+
+Jedno políčko rozebírá celou větu do sedmnácti klíčů (`druh`, `cenaOd`,
+`okruh`, `jenCelek`, …). Ruční výčet kontrol v `scripts/test-dotaz.mjs`
+hlídal jedenáct z nich — a s parserem se rozejde tak, že si toho nikdo
+nevšimne: kdo přidá nový klíč, rozebranou větu o něj obohatí (člověk
+dokonce uvidí odznak, že to web pochopil), ale mapa o něm neví a filtr
+neudělá nic. **Tiché nic je horší než chybová hláška.**
+
+Kontrola teď bere seznam klíčů ze **zdroje parseru** (`var ven = {…}`
+v `js/dotaz.js`) a každý musí být v `js/main.js` někde použitý — buď
+jako `dotazFiltr.<klíč>`, nebo jako `r.<klíč>` (tak se zpracovává
+`okruhMisto`, ze kterého se počítá střed okruhu). Měřeno: všech
+sedmnáct zapojených je, tedy dnes žádná mezera — kontrola je tu proti
+té příští. Sabotáží prověřeno obojí: přidaný nezapojený klíč shodí
+kontrolu, a rozbité čtení seznamu shodí pojistku „seznam se opravdu
+přečetl" (bez ní by kontrola měřila prázdno).
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

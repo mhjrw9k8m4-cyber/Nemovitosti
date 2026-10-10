@@ -327,7 +327,9 @@
     var pc = MODEL.percentil(d);
     if (!pc) return odhadHtml(d);
     var pct = pc.pct;
-    var typeWord = d.type === 'sale' ? 'v prodeji' : (d.type === 'drazba' ? 'v dražbě' : 'v nabídce');
+
+    var typeWord = (window.PK_CENY && window.PK_CENY.skupinaText)
+      ? window.PK_CENY.skupinaText(d.type) : 'v prodeji';
     var cls, badge, text;
 
     var kdeTxt = (window.PK_CENY && window.PK_CENY.kdeText && pc.uroven)

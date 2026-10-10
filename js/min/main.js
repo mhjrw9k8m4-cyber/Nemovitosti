@@ -3533,10 +3533,13 @@
         kdeKarty = kdeSrovnani(_di);
 
         var _zKolika = (_di && _di.sample > 0) ? ' (' + _di.sample + ' ' + (_di.sample < 5 ? 'nabídky' : 'nabídek') + ')' : '';
+
+        var _skup = (window.PK_CENY && window.PK_CENY.skupinaText)
+          ? ' ' + window.PK_CENY.skupinaText(d.type) : '';
         chips.push('<span class="opp-deal" data-kde="' + esc(kdeKarty) + '" title="' +
           (_di && _di.cheaper >= 70
-            ? 'Levnější než ' + _di.cheaper + ' % pozemků téhož druhu ' + esc(kdeKarty || 'v okolí') + _zKolika
-            : 'Cena za m² patří k nejnižším u pozemků téhož druhu ' + esc(kdeKarty || 'v okolí')) + '">' +
+            ? 'Levnější než ' + _di.cheaper + ' % pozemků téhož druhu' + _skup + ' ' + esc(kdeKarty || 'v okolí') + _zKolika
+            : 'Cena za m² patří k nejnižším u pozemků téhož druhu' + _skup + ' ' + esc(kdeKarty || 'v okolí')) + '">' +
           (_di && _di.cheaper >= 70 ? 'levnější než ' + _di.cheaper + ' %' : 'výhodná cena') + '</span>');
       }
 
@@ -4393,8 +4396,10 @@
       var perM2 = zaMetr(d);
       return '<button type="button" class="deal-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
 
-        '<div class="deal-badge">levnější než ' + o.di.cheaper + ' % podobných' +
-          (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +
+        '<div class="deal-badge">levnější než ' + o.di.cheaper + ' % pozemků'
+          + (window.PK_CENY && window.PK_CENY.skupinaText
+            ? ' ' + window.PK_CENY.skupinaText(d.type) : '')
+          + (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +
         '<div class="deal-place"><span class="deal-dot" style="background:' + t.color + '"></span>' + d.place + '</div>' +
 
         '<div class="deal-sub">' + t.label + ' · ' + (d.druh || 'pozemek') + ' · ' + fmt(d.area) + ' m² · okres ' + d.okres + '</div>' +
