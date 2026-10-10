@@ -376,6 +376,13 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
           mamJi: !!JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}')[k],
           vSchrance: Object.keys(JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}')).length,
           znacek: znacky.length,
+          /* KTERÉ KARTY značku nesou. Počet sám o sobě nic neříká (viz
+             kontrola níž), ale „na kartě BEZ poznámky" je chyba vždy. */
+          znackyBezPoznamky: znacky.map((x) => {
+            const l = x.closest('li');
+            return l ? l.getAttribute('data-pk') : null;
+          }).filter((kl) => !kl
+            || !JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}')[kl]),
           text: z ? z.textContent.trim() : null,
           titulek: z ? z.getAttribute('title') : null,
           naSpravneKarte: li ? li.getAttribute('data-pk') === k : false,
@@ -387,8 +394,26 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
 
       pravda('po načtení s prázdnou schránkou se poznámka stáhne z účtu',
         v.mamJi === true, `klíčů ve schránce: ${v.vSchrance}, ta naše mezi nimi: ${v.mamJi}`);
-      pravda('a ve výpisu je u toho pozemku vidět značka',
-        v.znacek === 1, `značek: ${v.znacek} (čekala se právě jedna)`);
+      /* POČET ZNAČEK SE TU NEPOČÍTÁ, a je to oprava křehké kontroly.
+         Stávalo tu `v.znacek === 1`, zatímco komentář o pár řádků výš
+         sám říká, že na účtu leží i poznámka z bloku 5. Kolik značek
+         se opravdu vykreslí, pak závisí na dvou věcech, které tahle
+         zkouška neřídí: kolik poznámek se na společném falešném účtu
+         nasbíralo a které z těch pozemků jsou právě ve výpisu vidět.
+         Naměřeno 10. 10.: v CI tři značky (zkouška spadla), místně při
+         témže spuštění dvě poznámky ve schránce a jedna značka
+         (zkouška prošla). Pravidlo tedy měřilo něco jiného, než mělo.
+         CO SE HLÍDAT MUSÍ, je ta stará chyba, pro kterou tu ta
+         kontrola vznikla: značka nesmí prolézt na SOUSEDNÍ kartu
+         (uložení jednoho pozemku kdysi označilo všechny jeho sousedy).
+         To se teď hlídá přímo: každá vykreslená značka musí sedět na
+         kartě, která poznámku opravdu má — a naše karta je mezi nimi
+         (kontrola o řádek níž). */
+      pravda('a ve výpisu je značka vidět', v.znacek >= 1,
+        `značek: ${v.znacek} (čekala se aspoň jedna)`);
+      pravda('a žádná značka nevisí na kartě, která poznámku nemá',
+        v.znackyBezPoznamky.length === 0,
+        `cizí karty se značkou: ${JSON.stringify(v.znackyBezPoznamky)}`);
       pravda('a visí na SPRÁVNÉ kartě, ne na kterékoli', v.naSpravneKarte === true);
       pravda('a nese slovo, ne jen ikonu, ať na kartě plné odznaků nezapadne',
         /Poznámka/i.test(v.text || ''), `text: „${v.text}"`);

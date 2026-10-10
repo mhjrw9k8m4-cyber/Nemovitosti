@@ -2741,6 +2741,50 @@ hlavní kontrola zelená o prázdnu).
 **Prokázáno sabotáží:** vrácením cesty pro nově ukončené stránky do
 původního stavu kontrola spadla.
 
+## 3av. NALEZENO: kontrola poznámek počítala značky, a tím měřila něco jiného, než měla — *opraveno 10. 10.*
+
+CI spadla na kroku „Soukromá poznámka k pozemku": *„a ve výpisu je
+u toho pozemku vidět značka — značek: 3 (čekala se právě jedna)"*.
+
+### Proč to byla chyba v kontrole, ne na webu
+
+Ta kontrola žádala `v.znacek === 1`, ale **komentář o pár řádků výš
+v té samé zkoušce** říká: *„Na účtu leží i poznámka z bloku 5 (tentýž
+účet, tentýž falešný server), takže se nečeká „právě jedna"."* Dvě
+věci, které si odporují — a ta spodní rozhodovala.
+
+Kolik značek se opravdu vykreslí, závisí na dvou věcech, které ta
+zkouška neřídí: kolik poznámek se na společném falešném účtu nasbíralo
+a které z těch pozemků jsou právě ve výpisu **vidět**. Změřeno 10. 10.
+s doplněným výpisem do zkoušky:
+
+| | |
+|---|---|
+| v CI | 3 značky → spadlo |
+| místně při témže spuštění | 2 poznámky ve schránce, **1** značka → prošlo |
+
+Takže pravidlo bylo křehké z podstaty. Přispěla k tomu i moje dnešní
+oprava cen u podílů — změnila cenu za metr u 405 nabídek, a tím
+i pořadí ve výpisu, tedy které karty jsou vidět. Ty dvě příčiny od sebe
+oddělit nejdu; podstatné je, že počet značek nikdy nebyl vlastnost, na
+které by se mělo stavět.
+
+### Co se hlídat MUSÍ
+
+Ta kontrola tam vznikla kvůli skutečné staré chybě (bod ze seznamu:
+*„uložení jednoho pozemku označí všechny jeho sousedy"*). To se teď
+hlídá **přímo**: každá vykreslená značka musí sedět na kartě, která
+poznámku opravdu má — a naše karta je mezi nimi. Počet se nepočítá, jen
+„aspoň jedna".
+
+`scripts/test-poznamky.mjs` má 53 → **54** kontrol.
+
+**Prokázáno sabotáží:** nechal jsem značku prolézt na každou kartu
+(podmínka `PKPoznamky.text(d)` nahrazená „má účet aspoň jednu
+poznámku") a nová kontrola to ohlásila: *„žádná značka nevisí na kartě,
+která poznámku nemá"* spadlo. Stará kontrola by přitom takovou chybu
+poznala jen náhodou — podle toho, kolik karet je zrovna vidět.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
