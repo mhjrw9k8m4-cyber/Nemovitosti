@@ -776,6 +776,60 @@ Zapsané jako **rozpracované**, ne opravené: vím, kde to padá, čím to
 NENÍ, a kde to dál hledat. Příští červený běh v CI má teď v hlášce
 geometrii posunu, a teprve z té se dá rozhodnout.
 
+### Co k tomu přibylo 10. 10. večer: historie běhů
+
+Geometrie v hlášce už něco vynesla. Prošel jsem **historii běhů CI** a
+porovnal ji s místním měřením:
+
+1. **Není to pokaždé.** Z běhů, které se k tomuhle kroku vůbec
+   dostaly, **pětkrát spadl, čtyřikrát prošel**. Zbytek (16) se k němu
+   nedostal, protože úloha skončila dřív na jiné zkoušce — tím se
+   vysvětluje, proč to vypadalo jako „padá to pořád".
+2. **Když spadne, je to pokaždé TOTÉŽ ČÍSLO** — 0,2426 na čtyři
+   desetinná místa, a tytéž obdélníky. Žádné kolísání podle rychlosti
+   stroje: ten posun se buď započítá celý, nebo vůbec.
+3. **Týž posun se děje i místně.** `DIV.wrap [334/566→342/558]` vyjde
+   místně v 155 ms úplně stejně — ale s hodnotou **0,004**.
+4. **Rozdíl jsou dva další zdroje v témže posunu**, které má jen CI:
+   `? [192/45→192/45]` a `? [166/20→192/20]`. Ty dva dělají z 0,004
+   hodnotu 0,243.
+5. **Zpoždění písem to místně nevysvětlí.** Zdržel jsem soubory
+   `fonts/*.woff2` o 0, 150, 400 a 1 200 ms: 0,243 se neobjeví ani
+   jednou (vyjde 0,0073 a jiné uzly).
+
+### A oprava vlastního tvrzení
+
+Nejdřív jsem si k bodu 4 napsal, že ty dva „?" jsou **textové uzly**.
+To ale nebylo měření, jen domněnka: starý výpis psal „?" stejně u
+textového uzlu (nemá `tagName`) jako u uzlu, který už v DOM není
+(prohlížeč pak vrátí `null`). Změřeno oběma směry na podstrčené
+stránce, kde posun nastane na zavolání:
+
+* text posunutý rostoucím inline-blokem dá zdroj s **nezměněným**
+  obdélníkem `[6/17→6/17]` — tedy přesně tvar prvního „?" z CI;
+* odebraný prvek se naopak pořád hlásí jménem (`DIV#z`), takže
+  `null` je ta vzácnější možnost.
+
+Textové uzly jsou tedy pravděpodobnější, **ale potvrzené to není** —
+rozhodne až běh CI s novými jmény.
+
+### Co se proto měří navíc
+
+Dvě věci, obě vyzkoušené na té podstrčené stránce (bez toho bych
+posílal do CI řádek, o kterém jen doufám, že se vykreslí):
+
+* **textový uzel se pojmenuje podle rodiče** — vypíše se `text v BODY`
+  místo „?", a „?" pak zbude jen na uzel, který v DOM není; ty dvě
+  možnosti se tím od sebe konečně poznají;
+* **ke každému posunu se připíše stav písem** — `[písma loading]`
+  nebo `[písma loaded]`. Jedno slovo, a rozhodne mezi dvěma výklady,
+  které by se jinak jen hádaly. (Místně vychází u toho posunu
+  `loading`.)
+
+Pořád **rozpracované**. Příští červený běh v CI už ale musí říct, co ty
+dva zdroje jsou — a to je ta chybějící informace, bez které se dál
+nedostanu.
+
 ## 3w. ~~Stažená tabulka mohla v cizím Excelu spustit vzorec~~ — *zavřeno 10. 10.*
 
 Excel, LibreOffice i Google Tabulky berou buňku, která začíná **`=`,

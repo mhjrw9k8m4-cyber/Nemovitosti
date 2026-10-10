@@ -37,7 +37,41 @@ import { pricinaChyb } from './chyby-hlaska.mjs';
    DIV.wrap. Rozdíl je tedy v prostředí, ne v rychlosti, a z jména uzlu
    se to nepozná. Proto se ke každému posunu připisuje GEOMETRIE: odkud
    kam se ten obdélník posunul a jak byl vysoký. Z toho už se dá poznat,
-   co se v CI vykreslilo jinak — bez toho se jen hádá. */
+   co se v CI vykreslilo jinak — bez toho se jen hádá.
+
+   CO SE Z TOHO ZATÍM ZJISTILO (10. 10., z historie běhů CI):
+
+   1. NENÍ TO POKAŽDÉ. Z běhů, které se k tomuhle kroku vůbec dostaly:
+      pětkrát spadl, čtyřikrát prošel. Zbytek se k němu nedostal, protože
+      úloha skončila dřív na jiné zkoušce.
+   2. KDYŽ SPADNE, JE TO POKAŽDÉ TOTÉŽ ČÍSLO — 0,2426 na čtyři desetinná
+      místa, a tytéž obdélníky: DIV.wrap [334/566→342/558]. Tedy žádné
+      kolísání podle rychlosti stroje; buď se ten posun započítá, nebo ne.
+   3. TÝŽ POSUN SE DĚJE I MÍSTNĚ. Při měření s podstrčeným config.js
+      (jako to dělá tahle zkouška) vyjde místně v 155 ms přesně
+      `DIV.wrap [334/566→342/558]` — ale s hodnotou 0,004.
+   4. ROZDÍL JSOU DVA DALŠÍ ZDROJE V TÉMŽE POSUNU, které má jen CI:
+      `? [192/45→192/45]` a `? [166/20→192/20]`. Ten druhý se posune
+      o 26 px dolů — a právě ty dva dělají z 0,004 hodnotu 0,243.
+      CO TO JE, SE Z TOHO NEPOZNÁ, a nejdřív jsem si sem napsal, že to
+      jsou textové uzly. To bylo tvrzení, ne měření: starý výpis psal
+      „?" jak u textového uzlu (nemá tagName), tak u uzlu, který už
+      v DOM není (prohlížeč pak vrátí null). Změřeno oběma směry na
+      podstrčené stránce: text posunutý rostoucím inline-blokem dá
+      zdroj s NEZMĚNĚNÝM obdélníkem `[6/17→6/17]` — tedy stejný tvar
+      jako ten první „?" z CI — a odebraný prvek se naopak pořád hlásí
+      jménem (`DIV#z`), takže null je ta vzácnější možnost. Pravda to
+      ale pořád není; rozhodne až běh CI s novými jmény.
+   5. Zpoždění písem to místně nevysvětlí: ani při 150, 400 nebo 1 200 ms
+      zdržení souborů woff2 se 0,243 neobjeví (vyjde 0,0073 a jiné uzly).
+
+   PROTO SE TEĎ MĚŘÍ DVĚ VĚCI NAVÍC. Textový uzel se pojmenuje podle
+   svého RODIČE — pak „?" zbude jen na uzel, který v DOM není, a ty dvě
+   možnosti se od sebe konečně poznají. A ke každému posunu se připíše,
+   jestli už byla načtená písma. Obojí je vyzkoušené na podstrčené
+   stránce, kde posun nastane na zavolání: vypíše se `text v BODY`,
+   respektive `[písma loading]` / `[písma loaded]`. Bez toho by další
+   běh CI skončil u stejného „?" jako ten minulý. */
 const POZOROVATEL = () => {
   window.__cls = 0; window.__kdo = [];
   try {
@@ -46,11 +80,25 @@ const POZOROVATEL = () => {
       for (const e of l.getEntries()) {
         if (e.hadRecentInput) continue;
         window.__cls += e.value;
-        window.__kdo.push(Math.round(e.startTime) + ' ms, ' + e.value.toFixed(3) + ': '
+        /* STAV PÍSEM K OKAMŽIKU POSUNU. „loaded" znamená, že doskočení
+           písma už posun způsobit nemohlo; „loading" naopak. Je to jedno
+           slovo a rozhodne mezi dvěma výklady, které by se jinak jen
+           hádaly. */
+        const pisma = (document.fonts && document.fonts.status) || '?';
+        window.__kdo.push(Math.round(e.startTime) + ' ms, ' + e.value.toFixed(3)
+          + ' [písma ' + pisma + ']: '
           + (e.sources || []).map((s) => {
             const n = s.node;
-            const jm = n ? (n.tagName || '?') + (n.id ? '#' + n.id : '')
-              + (typeof n.className === 'string' && n.className ? '.' + n.className.trim().split(/\s+/)[0] : '') : '?';
+            /* TEXTOVÝ UZEL SE POJMENUJE PODLE RODIČE. Dřív z něj byl
+               holý „?" a zpráva z CI se o něm nedala nic dozvědět —
+               přitom zrovna ty dva „?" dělají rozdíl mezi 0,004 a 0,243. */
+            const popis = (uzel) => (uzel.tagName || '?')
+              + (uzel.id ? '#' + uzel.id : '')
+              + (typeof uzel.className === 'string' && uzel.className
+                ? '.' + uzel.className.trim().split(/\s+/)[0] : '');
+            const jm = !n ? '?'
+              : n.tagName ? popis(n)
+              : (n.parentElement ? 'text v ' + popis(n.parentElement) : 'text');
             /* top/výška před → po; „neposunulo se" se tím pozná od
                „posunulo se o 200 px". */
             return jm + ' [' + obd(s.previousRect) + '→' + obd(s.currentRect) + ']';
