@@ -3349,7 +3349,8 @@
     var body = 0;
     var o = MODEL ? MODEL.odhad(d) : null;
 
-    if (o && o.podleVelikosti && !o.pochybna && !o.nejisty && !o.podil && o.podOdhadem >= MEZ_SLEVA) {
+    if (o && o.podleVelikosti && !o.pochybna && !o.nejisty && !o.podil && o.podOdhadem >= MEZ_SLEVA
+        && !(MODEL.spravniCena && MODEL.spravniCena(d))) {
 
       body = Math.min(45, Math.round((o.podOdhadem - MEZ_SLEVA) * 45 / 35));
     }
@@ -3425,6 +3426,8 @@
 
       vis.slice()
         .filter(function (d) { var o = MODEL ? MODEL.odhad(d) : null; return !(o && (o.pochybna || o.nejisty)); })
+
+        .filter(function (d) { return !(MODEL && MODEL.spravniCena && MODEL.spravniCena(d)); })
         .sort(function (a, b) { return demand(b) - demand(a); }).slice(0, 1)
         .forEach(function (d) { hotIds[d._id] = true; });
     }
@@ -3505,11 +3508,15 @@
         return !!(x && x.podleVelikosti && (x.pochybna || x.nejisty));
       })();
 
-      var varujemeOCene = !!(MODEL && MODEL.neduveryhodna(d) && !_odhadPochybny && !d.podil);
+      var _uredni = !!(MODEL && MODEL.spravniCena && MODEL.spravniCena(d));
+      var varujemeOCene = !!(MODEL && MODEL.neduveryhodna(d) && !_odhadPochybny && !d.podil && !_uredni);
+      if (_uredni) {
+        chips.push('<span class="opp-urad" title="Cenu stanovil úřad podle § 12 zákona o Státním pozemkovém úřadu, ne trh — za tuhle cenu prodává SPÚ oprávněné osobě. S cenami na trhu se neporovnává.">úřední cena (§ 12)</span>');
+      }
       if (varujemeOCene) {
         chips.push('<span class="opp-overit" title="Cena za m² je hluboko pod obvyklou — bývá to spoluvlastnický podíl, pozemek bez přístupu nebo chyba v inzerátu">cena k ověření</span>');
       }
-      var _od = MODEL ? MODEL.odhad(d) : null;
+      var _od = (MODEL && !_uredni) ? MODEL.odhad(d) : null;
 
       if (_od && _od.podleVelikosti && _od.pochybna) {
         chips.push('<span class="opp-overit" title="Cena je o ' + _od.podOdhadem +
@@ -3526,7 +3533,7 @@
         kdeKarty = kdeSrovnani(_od);
         chips.push('<span class="opp-deal" data-kde="' + esc(kdeKarty) + '" title="Cena je o ' + _od.podOdhadem +
           ' % pod obvyklou cenou podobných pozemků ' + esc(kdeKarty || 'v okolí') + '">−' + _od.podOdhadem + ' % proti okolí</span>');
-      } else if (perM2 && dealMax && perM2 <= dealMax && !varujemeOCene) {
+      } else if (perM2 && dealMax && perM2 <= dealMax && !varujemeOCene && !_uredni) {
 
         var _di = dealInfo(d);
         srovnaniModel = _di ? { uroven: _di.uroven, kde: _di.kde } : null;

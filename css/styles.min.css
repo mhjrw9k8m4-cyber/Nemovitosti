@@ -1430,6 +1430,7 @@ to{opacity:1;transform:none}
 .okr-item .okr-cena{display:block;white-space:nowrap;line-height:1.25}
 .okr-item .okr-cena b{font-size:16px;font-weight:700;color:var(--text-ondark,#12241A)}
 .okr-item .okr-zametr{display:block;font-size:12px;font-weight:600;color:var(--text-ondark-mute)}
+.okr-item .okr-urad{font-weight:700;color:var(--text-ondark-mute)}
 .okr-item .okr-bezceny{font-size:13px;color:var(--text-ondark-mute);font-style:italic}
 .okr-item .okr-place{font-weight:600;color:var(--text-ondark,#12241A);font-size:16px}
 .okr-item a.okr-place{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:var(--line-ui)}
@@ -1931,7 +1932,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper)}
 .gtk-ol li{font-size:14px;line-height:1.55;color:var(--text-ondark)}
 .gtk-ol li::marker{font-family:var(--font-mono);font-size:12px;color:var(--accent-warm)}
 .opp-overit{display:inline-block;font-size:12px;font-weight:700;color:#7C5105;background:rgba(232,179,65,0.16);border:1px solid rgba(124,81,5,0.3);border-radius:var(--r-xs);padding:2px 8px;white-space:nowrap}
-.opp-podil{display:inline-block;font-size:12px;font-weight:700;color:var(--text-ondark-mute);background:rgba(30,66,48,0.08);border:1px solid rgba(30,66,48,0.22);border-radius:var(--r-xs);padding:2px 8px;white-space:nowrap}
+.opp-podil,.opp-urad{display:inline-block;font-size:12px;font-weight:700;color:var(--text-ondark-mute);background:rgba(30,66,48,0.08);border:1px solid rgba(30,66,48,0.22);border-radius:var(--r-xs);padding:2px 8px;white-space:nowrap}
 .src-stav{margin-left:8px;padding:1px 6px;border-radius:var(--r-pill);font-family:var(--font-mono);font-size:12px;font-variant-numeric:tabular-nums;background:rgba(255,255,255,0.12);color:var(--text-ondeep-mute)}
 .src-stav.src-zle{background:rgba(140,47,30,0.4);color:#FBDCD4}
 .opp-cd.opp-proběhlo{background:var(--ink-soft2);color:var(--text-ondark-mute);border:1px solid var(--line-strong);font-weight:600}

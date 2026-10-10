@@ -711,6 +711,7 @@ to{opacity:1;transform:none}
 .okr-item .okr-cena{display:block;white-space:nowrap;line-height:1.25}
 .okr-item .okr-cena b{font-size:16px;font-weight:700;color:var(--text-ondark,#12241A)}
 .okr-item .okr-zametr{display:block;font-size:12px;font-weight:600;color:var(--text-ondark-mute)}
+.okr-item .okr-urad{font-weight:700;color:var(--text-ondark-mute)}
 .okr-item .okr-bezceny{font-size:13px;color:var(--text-ondark-mute);font-style:italic}
 .okr-item .okr-place{font-weight:600;color:var(--text-ondark,#12241A);font-size:16px}
 .okr-item a.okr-place{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:var(--line-ui)}

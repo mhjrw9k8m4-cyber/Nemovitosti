@@ -354,6 +354,22 @@ function priceStats(list){
 const MODEL = CENY.postav ? CENY.postav(all) : null;
 
 function odznakCeny(o) {
+  /* ÚŘEDNĚ STANOVENÁ CENA NENÍ ANI VAROVÁNÍ, ANI SLEVA.
+     U státní půdy podle § 12 stanoví cenu úřad, ne trh, a je proto
+     zlomkem tržní — web to sám na cena-pozemku.html vysvětluje (u orné
+     půdy medián 8 Kč/m² proti 74 na trhu, u zahrady 40 proti 791).
+     Řádek z toho přitom dělal poplach: naměřeno na vygenerovaných
+     stránkách 340 řádků SPÚ, z nich 248 s odznakem „cena k ověření"
+     a 3 s „−N % proti okolí". Ověřovat tu není co — cena je taková ze
+     zákona — a sleva to není, protože ten rozdíl nevznikl na trhu.
+     Říká se to tedy rovnou, stejným neutrálním způsobem jako u podílu.
+     Mapa (js/main.js, odznak `opp-urad`) i stránka pozemku (blokOdhadu
+     v js/ceny.js) to po téhle opravě říkají týmiž slovy. */
+  if (MODEL && MODEL.spravniCena && MODEL.spravniCena(o)) {
+    return '<b class="okr-urad" title="Cenu stanovil úřad podle § 12 zákona o Státním pozemkovém úřadu,'
+      + ' ne trh — za tuhle cenu prodává SPÚ oprávněné osobě. S cenami na trhu se neporovnává.">'
+      + 'úřední cena (§ 12)</b>';
+  }
   const od = MODEL && MODEL.odhad ? MODEL.odhad(o) : null;
   /* NEDŮVĚRYHODNOU CENU MUSÍ OHLÁSIT I TAHLE STRÁNKA.
      js/ceny.js má vlastní pojem „nedůvěryhodná nabídka": cena za metr pod

@@ -3825,6 +3825,10 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .okr-item .okr-cena{display:block; white-space:nowrap; line-height:1.25;}
 .okr-item .okr-cena b{font-size:16px; font-weight:700; color:var(--text-ondark, #12241A);}
 .okr-item .okr-zametr{display:block; font-size:12px; font-weight:600; color:var(--text-ondark-mute);}
+/* „úřední cena (§ 12)" v řádku výpisu. Fakt o tom, za co se prodává —
+   ne varování (jantar) ani sleva (zelená). Proto jen zvýrazněný text
+   v téže barvě jako ostatní podrobnosti řádku. */
+.okr-item .okr-urad{font-weight:700; color:var(--text-ondark-mute);}
 /* Nabídka bez ceny se nesmí tvářit jako levná ani se schovat — sloupec
    zůstane, jen v něm stojí, že cena není. */
 .okr-item .okr-bezceny{font-size:13px; color:var(--text-ondark-mute); font-style:italic;}
@@ -5469,7 +5473,11 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    se prodává — proto neutrální šedomodrá, ne jantar jako u „ceny
    k ověření". Musí být čitelný, ale nesmí přetahovat pozornost odznakům,
    které opravdu volají po pozornosti. */
-.opp-podil{display:inline-block; font-size:12px; font-weight:700;
+/* „Úřední cena (§ 12)" u státní půdy je týž druh údaje jako „podíl":
+   ne varování, ne výhoda — fakt o tom, za co se prodává. Proto tentýž
+   neutrální styl, ne jantar jako u „ceny k ověření". */
+.opp-podil,
+.opp-urad{display:inline-block; font-size:12px; font-weight:700;
   color:var(--text-ondark-mute); background:rgba(30,66,48,0.08);
   border:1px solid rgba(30,66,48,0.22);
   border-radius:var(--r-xs); padding:2px 8px; white-space:nowrap;}

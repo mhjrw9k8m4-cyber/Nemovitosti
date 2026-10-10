@@ -173,6 +173,17 @@ pravda('žádná vysázená cena za metr není nad mezí', nad.length === 0, nad
   pravda('cenový model se postavil', !!(MODEL && MODEL.neduveryhodna && MODEL.odhad));
   if (MODEL && MODEL.neduveryhodna) {
     const ndv = aktualni.filter((o) => CENY.zaMetr(o) !== null && MODEL.neduveryhodna(o) && !o.podil);
+    /* ÚŘEDNÍ CENA JE VÝJIMKA — A POČÍTÁ SE, KOLIK JICH JE.
+       U státní půdy podle § 12 je cena za metr nízká ze zákona, ne kvůli
+       chybě v inzerátu, takže odznak „cena k ověření" tvrdí nepravdu:
+       jeho vlastní popisek říká „bývá to spoluvlastnický podíl, pozemek
+       bez přístupu nebo chyba v inzerátu". Řádek proto nese „úřední cena
+       (§ 12)" — údaj přesnější, ne mlčení. Výjimka platí JEN pro ně:
+       u všech ostatních se varování vyžaduje dál. */
+    const spuNdv = ndv.filter((o) => MODEL.spravniCena(o));
+    pravda(`z nedůvěryhodných je část státní půda (${spuNdv.length} z ${ndv.length})`,
+      spuNdv.length > 0 && spuNdv.length < ndv.length,
+      `${spuNdv.length} z ${ndv.length} — výjimka níž by platila pro všechny nebo pro nikoho`);
     /* Kdyby data přestala nedůvěryhodné nabídky obsahovat, kontrola pod
        tím by neměla co měřit a tiše by procházela. */
     pravda(`model nějaké nabídky za nedůvěryhodné má (${ndv.length})`, ndv.length > 0);
@@ -192,11 +203,19 @@ pravda('žádná vysázená cena za metr není nad mezí', nad.length === 0, nad
       const radek = radky.find((r) => vzor.test(r));
       if (!radek) { chybi.push(`${f}: řádek s ${o.price} Kč se nenašel (${radky.length} řádků)`); continue; }
       nalezeno++;
-      if (radek.indexOf('okr-overit') === -1) chybi.push(`${f}: ${o.place} ${o.price} Kč bez odznaku`);
+      const ceka = MODEL.spravniCena(o) ? 'okr-urad' : 'okr-overit';
+      if (radek.indexOf(ceka) === -1) {
+        chybi.push(`${f}: ${o.place} ${o.price} Kč bez odznaku (čekáno ${ceka})`);
+      }
+      /* A naopak: u státní půdy tam to varování stát NESMÍ. */
+      if (MODEL.spravniCena(o) && radek.indexOf('okr-overit') !== -1) {
+        chybi.push(`${f}: ${o.place} ${o.price} Kč — úřední cena, a přesto varování`);
+      }
     }
     pravda(`řádky nedůvěryhodných nabídek se na stránkách našly (${nalezeno} z ${ndv.length})`,
       nalezeno === ndv.length, chybi.slice(0, 3).join(' | '));
-    pravda('u každé nedůvěryhodné nabídky stojí „cena k ověření"', chybi.length === 0,
+    pravda('u každé nedůvěryhodné nabídky stojí „cena k ověření" (u státní půdy „úřední cena")',
+      chybi.length === 0,
       chybi.slice(0, 4).join(' | '));
   }
 }

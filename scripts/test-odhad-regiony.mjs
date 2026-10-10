@@ -72,6 +72,13 @@ function cekano(o) {
      `if (!od || !od.podleVelikosti) return ''` pod tím ji spolehlivě
      spolkl a kontrola čekala u těch nabídek prázdno. Generátor to dělal
      stejně, takže se obě strany mýlily shodně a nic nepadalo. */
+  /* ÚŘEDNĚ STANOVENÁ CENA JE PRVNÍ PRAVIDLO — PŘED VŠEMI VAROVÁNÍMI.
+     U státní půdy podle § 12 stanoví cenu úřad, ne trh, takže je zlomkem
+     tržní z podstaty věci. Varování „cena k ověření" tam tvrdí, že je
+     s inzerátem něco v nepořádku; není, a web to sám jinde vysvětluje.
+     Naměřeno před opravou: ze 340 řádků SPÚ jich 248 varovalo a 3
+     tvrdily slevu. */
+  if (MODEL.spravniCena(o)) return 'urad';
   const odhadPochybny = !!(od && od.podleVelikosti && (od.pochybna || od.nejisty));
   if (MODEL.neduveryhodna(o) && !odhadPochybny && !o.podil) return 'overit';
   if (!od || !od.podleVelikosti) return '';
@@ -90,7 +97,7 @@ let radkuCelkem = 0, sleva = 0, overit = 0;
 /* Kolik řádků má odkaz na pozemek a kolik z nich se podařilo PŘEČÍST.
    Když se vzor na cenu rozejde s tím, co generátor tiskne, řádky z téhle
    kontroly tiše vypadnou — a mez „prošly se stovky řádků" to nepozná. */
-let sOdkazem = 0, sCenou = 0;
+let sOdkazem = 0, sCenou = 0, urad = 0;
 const spatne = [];
 for (const f of stranky) {
   const html = fs.readFileSync(path.join(ROOT, f), 'utf8');
@@ -113,9 +120,11 @@ for (const f of stranky) {
     const o = podleUdaju.get(klic(place, druh, area, price));
     if (!o) continue;
     radkuCelkem++;
-    const je = /okr-sleva/.test(r) ? 'sleva' : (/okr-overit/.test(r) ? 'overit' : '');
+    const je = /okr-urad/.test(r) ? 'urad'
+      : /okr-sleva/.test(r) ? 'sleva' : (/okr-overit/.test(r) ? 'overit' : '');
     if (je === 'sleva') sleva++;
     if (je === 'overit') overit++;
+    if (je === 'urad') urad++;
     const ma = cekano(o);
     if (je !== ma) spatne.push(`${f} → ${m[1]}: je „${je || '—'}", má být „${ma || '—'}"`);
   }
@@ -129,6 +138,34 @@ pravda(`u každého řádku s odkazem se cena opravdu přečetla (${sCenou} z ${
   `přečteno ${sCenou} z ${sOdkazem} — vzor na cenu nesedí s tím, co generátor tiskne`);
 pravda('a aspoň někde se sleva opravdu ukazuje', sleva > 0, `slev ${sleva}`);
 pravda('a aspoň někde stojí varování „cena k ověření"', overit > 0, `varování ${overit}`);
+/* --- ÚŘEDNĚ STANOVENÁ CENA SE NESMÍ TVÁŘIT JAKO SLEVA ANI JAKO ZÁVADA -
+ * Naměřeno před opravou: 340 řádků státní půdy (SPÚ, § 12) na okresních
+ * a druhových stránkách, z nich 248 s odznakem „cena k ověření" a 3
+ * s „−N % proti okolí". Ověřovat tam není co — tu cenu stanovil úřad —
+ * a slevou to není, protože rozdíl proti trhu nevznikl na trhu. */
+pravda(`a u státní půdy stojí „úřední cena (§ 12)" (${urad} řádků)`, urad > 100,
+  `${urad} řádků — pod sto by to neplatilo o ničem`);
+{
+  const spu = vsechny.filter((o) => MODEL.spravniCena(o));
+  pravda(`nabídek se správní cenou je dost na měření (${spu.length})`, spu.length >= 50,
+    `jen ${spu.length}`);
+  pravda('žádná z nich nedostane slevu ani varování',
+    spu.every((o) => cekano(o) === 'urad'),
+    `výjimky: ${spu.filter((o) => cekano(o) !== 'urad').length}`);
+  /* A že to je opravdu PRVNÍ pravidlo: bez něj by většina z nich
+     varovala. Měří se tím, co by řekla pravidla BEZ té výjimky. */
+  const bezVyjimky = spu.filter((o) => {
+    const od = MODEL.odhad(o);
+    const poch = !!(od && od.podleVelikosti && (od.pochybna || od.nejisty));
+    if (MODEL.neduveryhodna(o) && !poch && !o.podil) return true;
+    if (!od || !od.podleVelikosti) return false;
+    return od.pochybna || (od.nejisty && od.podOdhadem >= 25 && !od.podil)
+      || (od.podOdhadem >= 25 && !od.podil);
+  });
+  pravda(`bez té výjimky by varovala nebo slevila většina (${bezVyjimky.length} z ${spu.length})`,
+    bezVyjimky.length > spu.length / 2,
+    `${bezVyjimky.length} — pak výjimka nic neřeší a tohle měření je mylné`);
+}
 pravda('žádný řádek se nerozchází s cenovým modelem', spatne.length === 0,
   spatne.slice(0, 4).join(' | '));
 

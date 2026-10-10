@@ -4936,7 +4936,13 @@
        jiné číslo, takže doporučovat podle něj nemůžeme. */
     // Podíl body za slevu nedostane — viz podObvyklou. Bez toho bylo mezi
     // bodovanými 110 podílů z 280 a web je sám doporučoval nahoru.
-    if (o && o.podleVelikosti && !o.pochybna && !o.nejisty && !o.podil && o.podOdhadem >= MEZ_SLEVA) {
+    /* Státní půda podle § 12 body za slevu nedostane ze stejného důvodu
+       jako podíl: rozdíl proti trhu u ní nevznikl na trhu, cenu stanovil
+       úřad. Naměřeno: dvě takové nabídky měly plných 45 bodů, tedy mezi
+       vším viditelným nejvíc — „Doporučujeme" se dává jedné nabídce na
+       výřez, takže by to byly právě ony. */
+    if (o && o.podleVelikosti && !o.pochybna && !o.nejisty && !o.podil && o.podOdhadem >= MEZ_SLEVA
+        && !(MODEL.spravniCena && MODEL.spravniCena(d))) {
       // 15 % → 0 bodů, 50 % a výš → plných 45.
       body = Math.min(45, Math.round((o.podOdhadem - MEZ_SLEVA) * 45 / 35));
     }
@@ -5074,6 +5080,8 @@
          označujeme za pochybnou. Doporučit a zároveň varovat nejde. */
       vis.slice()
         .filter(function (d) { var o = MODEL ? MODEL.odhad(d) : null; return !(o && (o.pochybna || o.nejisty)); })
+        /* A nikdy na úředně stanovenou cenu — viz demand(). */
+        .filter(function (d) { return !(MODEL && MODEL.spravniCena && MODEL.spravniCena(d)); })
         .sort(function (a, b) { return demand(b) - demand(a); }).slice(0, 1)
         .forEach(function (d) { hotIds[d._id] = true; });
     }
@@ -5202,11 +5210,25 @@
       /* U známého podílu se obecné „cena k ověření" nepřidává: odznak
          „podíl" níž říká totéž, jen přesně a jedním slovem. Dva odznaky
          o téže věci jen zabírají řádek. */
-      var varujemeOCene = !!(MODEL && MODEL.neduveryhodna(d) && !_odhadPochybny && !d.podil);
+      /* ÚŘEDNĚ STANOVENÁ CENA NENÍ ANI VAROVÁNÍ, ANI VÝHODA — JE TO FAKT.
+         U státní půdy podle § 12 stanoví cenu úřad, ne trh, a je proto
+         zlomkem tržní (u orné půdy medián 8 Kč/m² proti 74, u zahrady 40
+         proti 791 — web to sám uvádí na cena-pozemku.html). Karta z toho
+         dělala poplach: naměřeno na ostrých datech, že ze 204 takových
+         nabídek dostalo 136 odznak „ověřit cenu" („to už nebývá sleva,
+         ale spoluvlastnický podíl… chyba v inzerátu") a dalších 11
+         „cena k ověření". Ověřovat tu není co; cena je taková ze zákona.
+         Odznak to proto říká rovnou, a to týmž neutrálním stylem jako
+         „podíl" — taky fakt o tom, co a za co se prodává. */
+      var _uredni = !!(MODEL && MODEL.spravniCena && MODEL.spravniCena(d));
+      var varujemeOCene = !!(MODEL && MODEL.neduveryhodna(d) && !_odhadPochybny && !d.podil && !_uredni);
+      if (_uredni) {
+        chips.push('<span class="opp-urad" title="Cenu stanovil úřad podle § 12 zákona o Státním pozemkovém úřadu, ne trh — za tuhle cenu prodává SPÚ oprávněné osobě. S cenami na trhu se neporovnává.">úřední cena (§ 12)</span>');
+      }
       if (varujemeOCene) {
         chips.push('<span class="opp-overit" title="Cena za m² je hluboko pod obvyklou — bývá to spoluvlastnický podíl, pozemek bez přístupu nebo chyba v inzerátu">cena k ověření</span>');
       }
-      var _od = MODEL ? MODEL.odhad(d) : null;
+      var _od = (MODEL && !_uredni) ? MODEL.odhad(d) : null;
       /* Sleva se tvrdí jen tam, kde se srovnávalo s podobně velkými pozemky
          (jinak by každý dvanáctihektarový vyšel jako trhák) A ZÁROVEŇ kde
          je uvěřitelná. „−91 % proti okolí" není sleva, je to varování:
@@ -5239,7 +5261,12 @@
         kdeKarty = kdeSrovnani(_od);
         chips.push('<span class="opp-deal" data-kde="' + esc(kdeKarty) + '" title="Cena je o ' + _od.podOdhadem +
           ' % pod obvyklou cenou podobných pozemků ' + esc(kdeKarty || 'v okolí') + '">−' + _od.podOdhadem + ' % proti okolí</span>');
-      } else if (perM2 && dealMax && perM2 <= dealMax && !varujemeOCene) {
+      } else if (perM2 && dealMax && perM2 <= dealMax && !varujemeOCene && !_uredni) {
+        /* `!_uredni`: u státní půdy podle § 12 je cena za metr nejnižší
+           na webu z podstaty věci, takže by tahle větev („patří k těm
+           nejlevnějším na obrazovce") označila za výhodné právě ty
+           nabídky, u kterých cena o trhu nevypovídá. Odznak „úřední cena
+           (§ 12)" výš říká, co to je. */
         /* NA JEDNÉ KARTĚ NESMÍ STÁT „CENA K OVĚŘENÍ" A „VÝHODNÁ CENA" ZÁROVEŇ.
            Tahle větev se chytá jen podle ceny za metr — je to „tři
            nejlevnější na obrazovce" — a tři podmínky nad ní, které hlídají

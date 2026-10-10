@@ -1015,6 +1015,77 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
   }
 }
 
+/* --- O ÚŘEDNĚ STANOVENÉ CENĚ SE VERDIKT NEVYNÁŠÍ ---------------------
+ *
+ * Do srovnávacích přihrádek se státní půda podle § 12 nedostane (to tu
+ * hlídá scripts/test-statistika.mjs) — ale POČÍTAT se pro ni verdikt
+ * dal dál, a vycházel z toho nesmysl: cenu, kterou stanovil úřad,
+ * srovnanou s nabídkovými cenami na trhu. Naměřeno před opravou na
+ * ostrých datech:
+ *
+ *     percentil („Výhodná cena, levnější než 98 %")    162 z 204
+ *     blok odhadu s tučným „o N % níž"                 154
+ *     karta na mapě „ověřit cenu" / „cena k ověření"   136 + 11
+ *     body za slevu v doporučení (plných 45)             2
+ *
+ * Ověřeno v prohlížeči: pozemek-nymburk-velke-vykleky-1ahu3b2.html
+ * tiskl „Výhodná cena — levnější než 98 % pozemků téhož druhu v prodeji
+ * v okrese Nymburk", k tomu „Nabídková cena 5 057 Kč" a „o 82 % níž —
+ * takový rozdíl bývá spoluvlastnický podíl nebo jiná výměra, ověřte si
+ * to". Ani jedna z těch tří vět nebyla pravda a web si přitom na
+ * cena-pozemku.html sám vysvětluje, proč. */
+{
+  const SYR2 = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const M2 = PK_CENY.postav(SYR2);
+  const spu = SYR2.filter((o) => PK_CENY.spravniCena(o));
+  pravda(`nabídek se správní cenou je dost na měření (${spu.length})`, spu.length >= 50,
+    `jen ${spu.length} — kontroly níž by neměřily nic`);
+  pravda('žádná z nich nedostane percentil', spu.every((o) => M2.percentil(o) === null),
+    `s percentilem: ${spu.filter((o) => M2.percentil(o)).length}`);
+  /* A že to NENÍ tím, že by percentil nefungoval vůbec. */
+  const beznePct = SYR2.filter((o) => o.type === 'sale' && !PK_CENY.spravniCena(o) && M2.percentil(o));
+  pravda(`u běžných nabídek percentil dál funguje (${beznePct.length})`, beznePct.length > 500,
+    `jen ${beznePct.length} — výjimka zasáhla i trh`);
+  /* Blok odhadu se u nich ukazuje, ale JINAK: řekne, co ta cena je, a že
+     se s trhem nesrovnává. Tučné „o N % níž" v něm stát nesmí. */
+  const fmt = (x) => String(x);
+  const bloky = spu.map((o) => PK_CENY.blokOdhadu(M2, o, { fmt, esc: (x) => x, dlouhy: true })).filter(Boolean);
+  pravda(`blok odhadu se u státní půdy pořád ukazuje (${bloky.length})`, bloky.length >= 50,
+    `jen ${bloky.length} — mlčet by znamenalo nenapsat ani to, co je na trhu`);
+  pravda('ale netiskne tučnou slevu', bloky.every((b) => !/<b>o \d+ % níž<\/b>/.test(b)),
+    `se slevou: ${bloky.filter((b) => /<b>o \d+ % níž<\/b>/.test(b)).length}`);
+  pravda('a řekne, že cenu stanovil úřad podle § 12',
+    bloky.every((b) => /§ 12/.test(b) && /nestanovil trh/.test(b)));
+  pravda('cena se v něm nejmenuje „nabídková"',
+    bloky.every((b) => /Cena stanovená úředně/.test(b) && !/Nabídková cena/.test(b)));
+  /* Karta na mapě a řádek výpisu to musí říkat taky — a jedním jménem. */
+  const mn2 = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
+  const gen2 = readFileSync(new URL('./generate-region-pages.mjs', import.meta.url), 'utf8');
+  pravda('karta na mapě má odznak „úřední cena (§ 12)"',
+    /opp-urad/.test(mn2) && /úřední cena \(§ 12\)/.test(mn2));
+  pravda('a řádek výpisu taky', /okr-urad/.test(gen2) && /úřední cena \(§ 12\)/.test(gen2));
+  /* DOPORUČENÍ SE HLÍDÁ NA DVOU MÍSTECH ZVLÁŠŤ, A KAŽDÉ VE SVÉM TĚLE.
+     Původně tu stála jedna podmínka na celý js/main.js — a ta prošla
+     i se sabotáží, protože výraz `MODEL.spravniCena(d)` zůstal na tom
+     DRUHÉM místě. Kontrola, která projde s rozbitým kódem, je horší než
+     žádná, takže se každé tělo vyřízne a prohlíží samo. */
+  function telo(zdroj, zacatek) {
+    const i = zdroj.indexOf(zacatek);
+    if (i < 0) return '';
+    return zdroj.slice(i, i + 2600);
+  }
+  const teloDemand = telo(mn2, 'function demand(d) {');
+  pravda('tělo demand() se našlo', /podOdhadem >= MEZ_SLEVA/.test(teloDemand),
+    'bez něj by kontrola níž měřila prázdno');
+  pravda('body za slevu se úřední ceně nedávají',
+    /spravniCena\(d\)/.test(teloDemand.slice(0, teloDemand.indexOf('podOdhadem >= MEZ_SLEVA') + 200)),
+    'bez té podmínky měly dvě takové nabídky plných 45 bodů, tedy mezi vším viditelným nejvíc');
+  const teloHot = telo(mn2, 'var hotIds = {};');
+  pravda('a štítek „Doporučujeme" na ni nesedne ani přes pojistku',
+    /spravniCena\(d\)/.test(teloHot) && /pochybna \|\| o\.nejisty/.test(teloHot),
+    'pojistka u hotIds o úřední ceně nevěděla');
+}
+
 console.log(zpravy.join('\n'));
 
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

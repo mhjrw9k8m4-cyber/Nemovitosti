@@ -316,6 +316,8 @@
 
     function percentil(d) {
       if (!hasArea(d) || !d.price || neduveryhodna(d) || nesrovnatelna(d)) return null;
+
+      if (spravniCena(d)) return null;
       var g = druhGroup(d.druh);
       var zdroje = [
         { pole: typOkres[d.type + '|' + g + '|' + d.okres], uroven: 'okres', kde: d.okres },
@@ -433,7 +435,10 @@
 
     if (!o || !o.podleVelikosti) return '';
     var kde = kdeText(o.uroven, o.kde);
-    var coJe = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'exekuce' ? 'Uváděná cena' : 'Nabídková cena');
+
+    var coJe = model.spravniCena && model.spravniCena(d) ? 'Cena stanovená úředně'
+      : d.type === 'drazba' ? 'Vyvolávací cena'
+      : (d.type === 'exekuce' ? 'Uváděná cena' : 'Nabídková cena');
 
     if (o.podil) {
       return '<div class="md-odhad' + (volby.trida || '') + '">' +
@@ -441,6 +446,19 @@
         '<b>spoluvlastnický podíl</b>, kdežto výměra v inzerátu je celá parcela. ' +
         'Rozdíl proti obvyklé ceně by byl ten zlomek, ne sleva.</div>' +
         '<p class="mo-pozn">Kolik tu stojí <b>celé</b> pozemky: medián <b>' + fmt(Math.round(o.zaM2)) +
+        ' Kč/m²</b> — z <b>' + o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) +
+        ') a podobné výměry ' + kde + '. Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly' +
+        (volby.dlouhy ? ' — to ve veřejných zdrojích není. Berte to jako vodítko, ne jako odhad znalce.' : '.') +
+        '</p></div>';
+    }
+
+    if (model.spravniCena && model.spravniCena(d)) {
+      return '<div class="md-odhad' + (volby.trida || '') + '">' +
+        '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
+        '<div class="mo-rozdil mo-pochybna"><b>Se trhem to nesrovnáváme</b> — tuhle cenu nestanovil trh, ' +
+        'ale úřad: Státní pozemkový úřad prodává podle <b>§ 12</b> oprávněné osobě. ' +
+        'Rozdíl proti obvyklé ceně proto není sleva.</div>' +
+        '<p class="mo-pozn">Kolik tu stojí pozemky <b>na trhu</b>: medián <b>' + fmt(Math.round(o.zaM2)) +
         ' Kč/m²</b> — z <b>' + o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) +
         ') a podobné výměry ' + kde + '. Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly' +
         (volby.dlouhy ? ' — to ve veřejných zdrojích není. Berte to jako vodítko, ne jako odhad znalce.' : '.') +

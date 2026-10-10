@@ -1865,6 +1865,81 @@ splněná i bez nich. A vypadly by právě dražby, kvůli kterým ten popisek
 vznikl. Zkouška teď hlásí, u kolika řádků se cena **opravdu přečetla**
 (2 411 z 2 411), takže se to podruhé nestane tiše.
 
+## 3al. NALEZENO: o státní půdě za úřední cenu web tvrdil „Výhodná cena" a zároveň „ověřte si to" — na 204 nabídkách — *opraveno 10. 10.*
+
+Desetina všech nabídek na webu je **státní půda prodávaná podle § 12**:
+cenu u ní nestanovil trh, ale Státní pozemkový úřad, a prodává ji
+oprávněné osobě. Web to **sám vysvětluje** na `cena-pozemku.html` —
+„do mediánů nezapočítáváme ceny, které nestanovil trh… u orné půdy
+medián 8 Kč/m² proti 74 Kč/m² na trhu, u zahrady 40 proti 791". Do
+srovnávacích přihrádek se takové nabídky opravdu nedostanou. Jenže
+**verdikt se pro ně pořád počítal** — a tak se cena stanovená úřadem
+porovnávala s nabídkovými cenami na trhu.
+
+Co z toho vzniklo, ověřeno v prohlížeči na
+`pozemek-nymburk-velke-vykleky-1ahu3b2.html` (orná půda, 9 Kč/m²):
+
+> **Výhodná cena** · Levnější než **98 %** pozemků téhož druhu v prodeji
+> v okrese Nymburk (11 nabídek).
+> **Nabídková cena** 5 057 Kč · **Obvyklá cena v okolí do 25 km**
+> 28 125 Kč · **o 82 % níž** — takový rozdíl bývá spoluvlastnický podíl
+> nebo jiná výměra, ověřte si to
+
+Nepravdivé jsou všechny tři věty: výhodná není (za tu cenu nekoupí
+kdokoli), nabídková ta cena není (stanovil ji úřad) a ověřovat není co
+(podíl to není, výměra je správná — cena je taková ze zákona). A hned
+vedle **„ověřte si to" a „Výhodná cena" o témže čísle**, tedy varování
+i doporučení zároveň.
+
+**Změřeno na ostrých datech (204 nabídek se správní cenou):**
+
+| kde | co tam stálo | kolikrát |
+|---|---|---|
+| stránka pozemku | percentil „Výhodná cena / levnější než N %" | **162** |
+| stránka pozemku | blok s tučným „o N % níž" | **154** |
+| karta na mapě | „ověřit cenu" („bývá to spoluvlastnický podíl… chyba v inzerátu") | **136** |
+| karta na mapě | „cena k ověření" | **11** |
+| okresní a druhové výpisy | „cena k ověření" (ze 340 řádků SPÚ) | **248** |
+| okresní a druhové výpisy | „−N % proti okolí" | **3** |
+| doporučení | plných 45 bodů za „slevu", tedy mezi vším viditelným nejvíc | **2** |
+
+**Oprava — jedno pravidlo, čtyři místa.** Úředně stanovená cena
+nedostane verdikt o trhu:
+
+* `percentil()` pro ni vrací `null` (162 → 0; u běžných nabídek jich
+  dál funguje 942),
+* blok na stránce pozemku se ukazuje dál, ale **jinak**: cena se jmenuje
+  **„Cena stanovená úředně"** a místo tučné slevy stojí „Se trhem to
+  nesrovnáváme — tuhle cenu nestanovil trh, ale úřad: SPÚ prodává podle
+  § 12 oprávněné osobě". Pod tím zůstane, kolik tu stojí pozemky **na
+  trhu** — to je údaj, který na stránce jinde není,
+* karta na mapě i řádek výpisu říkají **„úřední cena (§ 12)"**, a to
+  týmž neutrálním stylem jako „podíl": není to varování ani výhoda, je
+  to fakt o tom, za co se prodává (340 → 340 správně popsaných řádků,
+  248 falešných varování pryč),
+* „Doporučujeme" na ni nesedne — ani bodováním, ani přes pojistku
+  u výběru.
+
+**Pojistky** (`scripts/test-ceny.mjs` a `scripts/test-odhad-regiony.mjs`,
+pět sabotáží, všechny chycené). Jedna z nich **neprošla hned**: kontrola
+na doporučení se ptala celého `js/main.js`, jestli v něm někde stojí
+`MODEL.spravniCena(d)` — a to je splněné i po vyřazení podmínky
+z bodování, protože výraz zůstal na tom druhém místě. Kontrola se teď
+dívá do **vyříznutého těla** `demand()` a zvlášť do výběru
+`hotIds`; po té opravě sabotáž padá na obou.
+
+Zkoušky navíc hlásí, kolik toho přečetly (204 nabídek, 365 řádků), a že
+**bez té výjimky by varovala nebo slevila většina** (151 z 204) — kdyby
+to číslo spadlo, výjimka nic neřeší a měření je mylné.
+
+A ještě jedna zkouška se k tomu ozvala sama: `scripts/test-strop-ceny.mjs`
+hlídá, že **každá** nabídka, kterou model považuje za nedůvěryhodnou,
+nese v řádku varování — a čtyři ze čtrnácti takových jsou právě státní
+půda. Výjimka tam je teď napsaná adresně: u státní půdy se čeká „úřední
+cena (§ 12)" a varování tam stát **nesmí**; u všech ostatních se vyžaduje
+dál. Zkouška navíc hlásí, že výjimka platí pro **část** (4 ze 14), ne pro
+všechny nebo pro nikoho — jinak by nic neměřila.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

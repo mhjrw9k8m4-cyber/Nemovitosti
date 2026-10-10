@@ -719,6 +719,18 @@
        odhad, a ze stejného důvodu. */
     function percentil(d) {
       if (!hasArea(d) || !d.price || neduveryhodna(d) || nesrovnatelna(d)) return null;
+      /* ÚŘEDNĚ STANOVENÁ CENA NEDOSTANE VERDIKT O TRHU.
+         Do srovnávacích přihrádek se takové nabídky nedostanou (viz
+         spravniCena výš) — ale POČÍTAT se percentil pro ně dal dál,
+         a vyšel z toho nesmysl: cena, kterou stanovil úřad podle § 12,
+         srovnaná s nabídkovými cenami na trhu. Naměřeno na ostrých
+         datech: 162 ze 204 takových nabídek dostalo verdikt a u orné
+         půdy to bylo „Výhodná cena — levnější než 98 % pozemků téhož
+         druhu V PRODEJI v okrese Nymburk". Výhodná není: za tu cenu
+         prodá Státní pozemkový úřad jen oprávněné osobě a s trhem se
+         neporovnává. Web to přitom na cena-pozemku.html sám vysvětluje
+         — tenhle verdikt mu odporoval. */
+      if (spravniCena(d)) return null;
       var g = druhGroup(d.druh);
       var zdroje = [
         { pole: typOkres[d.type + '|' + g + '|' + d.okres], uroven: 'okres', kde: d.okres },
@@ -938,7 +950,13 @@
        trhák vždycky — a nebyla by to pravda. */
     if (!o || !o.podleVelikosti) return '';
     var kde = kdeText(o.uroven, o.kde);
-    var coJe = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'exekuce' ? 'Uváděná cena' : 'Nabídková cena');
+    /* Nabídková, vyvolávací, uváděná — nebo úředně stanovená. U státní
+       půdy podle § 12 to není cena, kterou si někdo řekl; stanovil ji
+       úřad. Říct jí „nabídková" je nepřesné i v tom nejsmířlivějším
+       čtení. */
+    var coJe = model.spravniCena && model.spravniCena(d) ? 'Cena stanovená úředně'
+      : d.type === 'drazba' ? 'Vyvolávací cena'
+      : (d.type === 'exekuce' ? 'Uváděná cena' : 'Nabídková cena');
 
     /* U SPOLUVLASTNICKÉHO PODÍLU SE SROVNÁNÍ NETISKNE VŮBEC.
      *
@@ -974,6 +992,28 @@
         '<b>spoluvlastnický podíl</b>, kdežto výměra v inzerátu je celá parcela. ' +
         'Rozdíl proti obvyklé ceně by byl ten zlomek, ne sleva.</div>' +
         '<p class="mo-pozn">Kolik tu stojí <b>celé</b> pozemky: medián <b>' + fmt(Math.round(o.zaM2)) +
+        ' Kč/m²</b> — z <b>' + o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) +
+        ') a podobné výměry ' + kde + '. Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly' +
+        (volby.dlouhy ? ' — to ve veřejných zdrojích není. Berte to jako vodítko, ne jako odhad znalce.' : '.') +
+        '</p></div>';
+    }
+    /* U ÚŘEDNĚ STANOVENÉ CENY SE SLEVA NETISKNE — ZE STEJNÉHO DŮVODU
+       JAKO U PODÍLU. Rozdíl proti trhu je tu obrovský (u orné půdy
+       medián 8 Kč/m² proti 74 na trhu, u zahrady 40 proti 791), ale není
+       to sleva: za tu cenu prodává Státní pozemkový úřad oprávněné
+       osobě podle § 12. Tučné „o 82 % níž" si oko přečte dřív než
+       cokoli pod ním, a vysvětlení, které se pod tím tisklo („takový
+       rozdíl bývá spoluvlastnický podíl nebo jiná výměra, ověřte si
+       to"), bylo navíc nepravdivé: ověřovat tu není co.
+       Co tu stojí celé pozemky na trhu, se řekne dál — to je údaj,
+       který na stránce jinde není. */
+    if (model.spravniCena && model.spravniCena(d)) {
+      return '<div class="md-odhad' + (volby.trida || '') + '">' +
+        '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
+        '<div class="mo-rozdil mo-pochybna"><b>Se trhem to nesrovnáváme</b> — tuhle cenu nestanovil trh, ' +
+        'ale úřad: Státní pozemkový úřad prodává podle <b>§ 12</b> oprávněné osobě. ' +
+        'Rozdíl proti obvyklé ceně proto není sleva.</div>' +
+        '<p class="mo-pozn">Kolik tu stojí pozemky <b>na trhu</b>: medián <b>' + fmt(Math.round(o.zaM2)) +
         ' Kč/m²</b> — z <b>' + o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) +
         ') a podobné výměry ' + kde + '. Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly' +
         (volby.dlouhy ? ' — to ve veřejných zdrojích není. Berte to jako vodítko, ne jako odhad znalce.' : '.') +
