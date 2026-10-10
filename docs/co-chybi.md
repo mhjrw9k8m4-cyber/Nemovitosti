@@ -751,6 +751,43 @@ Dokud na hlášce stál jen součet, nedalo se hádat vůbec.
 Zapsané jako **rozpracované**, ne opravené: vím, kde to padá a čím to
 NENÍ, ale ne ještě proč. Příští červený běh v CI by to měl doříct.
 
+## 3w. ~~Stažená tabulka mohla v cizím Excelu spustit vzorec~~ — *zavřeno 10. 10.*
+
+Excel, LibreOffice i Google Tabulky berou buňku, která začíná **`=`,
+`+` nebo `@`** (a taky tabulátorem nebo CR), jako **vzorec**, ne jako
+text. Stažená tabulka se přitom otevírá na cizím počítači — tedy
+u člověka, který si jen stáhl výpis pozemků.
+
+`pole()` v `js/vyvoz.js` uvozoval správně podle RFC 4180 (středník,
+uvozovka, nová řádka), ale vedoucí rovnítko neřešil.
+
+**Odkud by se tam vzalo.** Obec, okres a druh u inzerátu od majitele
+píše člověk a živé inzeráty se zveřejňují samy. Formulář i server
+u obce hlídají délku, číslice a odkaz (`js/kontrola.js`, `obec()`;
+`supabase/listings-prvni-kontrola.sql`), ale *„=SUM(…)Lhota"* obsahuje
+písmena, takže projde oběma. Branka `js/cisteni.js` zahazuje `<`, `>`
+a uvozovku — rovnítko ne, a v HTML ho zahazovat netřeba.
+
+**Poctivě k velikosti nálezu:** v dnešních datech taková hodnota není
+ani jedna (změřeno na všech 1 988 nabídkách, polích
+`place`/`okres`/`druh`/`extra`/`parcel`/`access`/`zlomek`/`cast`/`url`)
+a inzerátů od majitelů je zatím nula. **Zavírám cestu, nehlásím
+nalezenou vadu** — a píšu to takhle schválně, aby se z toho za měsíc
+nestal „nalezený exploit".
+
+Nově se před takovou buňku dá apostrof. **Čísla se nechávají být:**
+„−12" je počet dnů do dražby u termínu, který už minul, a v tabulce se
+podle něj třídí — apostrof by z čísla udělal text. Pomlčka se proto
+neutralizuje jen tam, kde za ní nestojí číslo.
+
+`scripts/test-vyvoz.mjs` (53 kontrol, dřív 44) zkouší pět vedoucích
+znaků a k nim i opačný směr — že výměra, cena a záporný počet dnů
+zůstaly čísly, včetně kontroly předpokladu, že ten termín je opravdu
+v minulosti. Sabotáž (vyjmout tu jednu řádku) hlásí všech pět.
+
+GPX se netýká: `xml()` escapuje `&`, `<`, `>` i uvozovku a ve wpt nemá
+vzorec co dělat.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

@@ -47,8 +47,31 @@
 
   /* Pole se uzavírá do uvozovek jen tam, kde je to nutné — jinak by se
      tabulka četla hůř i v obyčejném textovém editoru. */
+  /* VZOREC V CIZÍ TABULCE. Excel, LibreOffice i Google Tabulky berou
+     buňku, která začíná „=", „+" nebo „@" (a taky tabulátorem nebo CR),
+     jako VZOREC, ne jako text. Stažená tabulka se otevírá na cizím
+     počítači, takže text z našich dat tam nesmí být nic, co se dá
+     spustit.
+
+     ODKUD BY SE TAM VZAL: obec, okres a druh u inzerátu od majitele
+     píše člověk a živé inzeráty se zveřejňují samy. Formulář i server
+     u obce hlídají délku, číslice a odkaz (js/kontrola.js, obec();
+     supabase/listings-prvni-kontrola.sql), ale „=SUM(…)Lhota" obsahuje
+     písmena, takže projde. Branka js/cisteni.js zahazuje „<", „>"
+     a uvozovku — rovnítko ne, a v HTML ho zahazovat netřeba.
+     V dnešních datech taková hodnota není ani jedna (změřeno na všech
+     1 988 nabídkách, polích place/okres/druh/extra/parcel/access/
+     zlomek/cast/url); tohle zavírá cestu, ne nalezenou vadu.
+
+     ČÍSLA SE NECHÁVAJÍ BÝT. „-12" je počet dnů do dražby u termínu,
+     který už minul, a má se podle něj dát třídit; apostrof před ním by
+     z čísla udělal text. Pomlčka se proto neutralizuje jen tam, kde za
+     ní nestojí číslo. */
+  var VZOREC = /^[=+@\t\r]/;
+  var CISLO = /^-?\d+([.,]\d+)?$/;
   function pole(x) {
     var s = (x == null) ? '' : String(x);
+    if (VZOREC.test(s) || (s.charAt(0) === '-' && !CISLO.test(s))) s = "'" + s;
     if (!/[";\n\r]/.test(s)) return s;
     return '"' + s.replace(/"/g, '""') + '"';
   }

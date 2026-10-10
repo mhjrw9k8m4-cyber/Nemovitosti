@@ -250,6 +250,36 @@ const STARE_SLOUPCE = 'Obec;Okres;Druh;Kategorie;Výměra (m²);Cena (Kč);'
     V.nazev('', new Date(2026, 9, 7)));
 }
 
+/* --- 9) Vzorec v cizí tabulce ---------------------------------------
+   Excel, LibreOffice i Google Tabulky berou buňku, která začíná „=",
+   „+" nebo „@", jako VZOREC. Stažená tabulka se otevírá na cizím
+   počítači, takže nic z našich dat tam nesmí být spustitelné. Obec,
+   okres a druh u inzerátu od majitele píše člověk, a „=SUM(…)Lhota"
+   projde jak formulářem, tak serverem (obsahuje písmena).
+   Zároveň se nesmí pokazit čísla: záporný počet dnů do dražby je číslo,
+   podle kterého se v tabulce třídí. */
+{
+  const cti = (d) => V.csv([d], pomocne).trim().split('\r\n')[1].split(';');
+  for (const [co, hodnota] of [['rovnítkem', '=1+1'], ['plusem', '+1'], ['zavináčem', '@SUM(A1)'],
+    ['tabulátorem', '\tLhota'], ['pomlčkou a textem', '-HYPERLINK(1)']]) {
+    const b = cti({ place: hodnota, okres: 'X', druh: 'les', type: 'sale', area: 10, price: 10 })[0];
+    pravda(`buňka začínající ${co} se nestane vzorcem`,
+      b.charAt(0) === "'" || b.indexOf('"\'') === 0, `vyšlo ${JSON.stringify(b)}`);
+  }
+  /* A OPAČNÝM SMĚREM: čísla se nesmí pokazit. */
+  const cisla = cti({ place: 'Kolín', okres: 'Kolín', druh: 'les', type: 'drazba',
+    area: 1000, price: 100000, extra: 'dražba 2020-01-01' });
+  pravda('výměra zůstala číslem', cisla[4] === '1000', `vyšlo ${JSON.stringify(cisla[4])}`);
+  pravda('cena zůstala číslem', cisla[5] === '100000', `vyšlo ${JSON.stringify(cisla[5])}`);
+  const dni = cisla[cisla.length - 4];
+  pravda('a záporný počet dnů do dražby zůstal číslem (jde podle něj třídit)',
+    /^-\d+$/.test(dni), `vyšlo ${JSON.stringify(dni)} (celý řádek: ${cisla.join(';')})`);
+  /* PŘEDPOKLAD: kdyby ten sloupec nebyl záporný, kontrola výš nic
+     neznamená. */
+  pravda('a ten termín je opravdu v minulosti (jinak se nic neměří)',
+    Number(dni) < 0, `dní ${dni}`);
+}
+
 console.log('\nVývoz do tabulky');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

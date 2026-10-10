@@ -13,8 +13,11 @@
   var KATEGORIE = { sale: 'Na prodej', drazba: 'Dražba', exekuce: 'Exekuce',
     obec: 'Obecní záměr', majitel: 'Přímo od majitele' };
 
+  var VZOREC = /^[=+@\t\r]/;
+  var CISLO = /^-?\d+([.,]\d+)?$/;
   function pole(x) {
     var s = (x == null) ? '' : String(x);
+    if (VZOREC.test(s) || (s.charAt(0) === '-' && !CISLO.test(s))) s = "'" + s;
     if (!/[";\n\r]/.test(s)) return s;
     return '"' + s.replace(/"/g, '""') + '"';
   }
