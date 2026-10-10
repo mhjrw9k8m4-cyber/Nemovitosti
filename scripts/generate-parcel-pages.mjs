@@ -1314,7 +1314,19 @@ export function generuj() {
 
     const okres = (f.match(/^pozemek-([a-z0-9-]+?)-[a-z0-9-]+-[0-9a-z]{5,8}\.html$/) || [])[1] || '';
     const podobne = (podleOkresu.get(okres) || []).slice(0, 3);
-    fs.writeFileSync(cesta, ukoncenaStranka(obsah, dnes, podobne));
+    /* PŘEPISY, KTERÉ PATŘÍ NA KAŽDOU STRÁNKU, MUSÍ PROJÍT I TUDY.
+       Větev výš (už ukončená stránka) pouští migrujSkripty
+       i migrujPredvykresleni, tahle je nepouštěla — a tím se strom
+       po každém ukončení nabídky na jeden běh rozešel s tím, co
+       generátory spočítají. Naměřeno 10. 10.: robot ukončil dvě
+       nabídky (Domousnice, Žalany), poslal je s blokem skriptů
+       v jiném pořadí a `scripts/test-oprav.mjs` to ohlásil až při
+       příštím lidském commitu — úloha s daty zkoušky nepouští.
+       Žádný skript nechyběl, jen byly přeskládané; na druhý běh si to
+       větev výš srovnala sama. Je to tedy tiché, opakované rozcházení,
+       ne rozbitá stránka. */
+    fs.writeFileSync(cesta, ukoncenaStranka(
+      migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah)), dnes, podobne));
     ukonceno++;
   }
   return { hotove, smazano, ukonceno, prepsano };

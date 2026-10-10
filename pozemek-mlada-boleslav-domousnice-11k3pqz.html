@@ -345,13 +345,20 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/snimek.js?v=d4e40486"></script>
 <script src="js/min/terminy.js?v=cf102557"></script>
 <script src="js/min/ceny.js?v=4f85ad6b"></script>
-  <script src="js/min/zlevneni.js?v=024f8a64" defer></script>
+<script src="js/min/zlevneni.js?v=024f8a64" defer></script>
 <script src="js/min/vybaveni.js?v=8e3b34f9"></script>
 <script src="js/min/radce.js?v=679cccb9"></script>
 <script src="js/min/klic.js?v=4a04bc24"></script>
 <script src="js/min/videno.js?v=e21d5bf3"></script>
 <script src="js/min/poznamky.js?v=070e8c0d"></script>
-<!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
+<script src="js/min/hlidani-logika.js?v=3c8ae080"></script>
+<script src="js/min/pozemek.js?v=89d8a35a"></script>
+<script src="js/min/config.js?v=8ba36013" defer></script>
+<script src="js/min/auth.js?v=bec7a315" defer></script>
+<script src="js/min/hlavicka.js?v=8249999c" defer></script>
+<script src="js/min/offline.js?v=16a48df3" defer></script>
+<script src="js/min/mereni.js?v=b2023a39" defer></script>
+  <!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
      než js/pozemek.js postaví cenový model: staví ho z téže hromádky
      jako mapa, tedy bez duplicit. Proto tu tenhle modul stojí jako
      obyčejný skript PŘED ním, a ne v odložené skupině níž — odložené
@@ -359,11 +366,9 @@ body.pzm-cela-telo{overflow:hidden}
      postavit z 2 018 nabídek místo 1 995. Pozdější spotřebitelé
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
-<script src="js/min/hlidani-logika.js?v=3c8ae080"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Pozemek 2 612 m² — Domousnice, okres Mladá Boleslav","description":"Nabídka už není aktuální. Na prodej · 4 962 800 Kč (1 900 Kč/m²) · 2 612 m² · Domousnice, okres Mladá Boleslav. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-mlada-boleslav-domousnice-11k3pqz.html","address":{"@type":"PostalAddress","addressLocality":"Domousnice","addressRegion":"Mladá Boleslav","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.3940748,"longitude":15.1027324},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":2612,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":4962800,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-mlada-boleslav-domousnice-11k3pqz.html","itemOffered":{"@type":"Place","name":"Pozemek 2 612 m² — Domousnice, okres Mladá Boleslav"},"availability":"https://schema.org/OutOfStock","priceValidUntil":"2026-10-10"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Středočeský kraj","item":"https://www.parcelaka.cz/pozemky-stredocesky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Mladá Boleslav","item":"https://www.parcelaka.cz/pozemky-okres-mlada-boleslav.html"},{"@type":"ListItem","position":5,"name":"Pozemek 2 612 m² — Domousnice, okres Mladá Boleslav","item":"https://www.parcelaka.cz/pozemek-mlada-boleslav-domousnice-11k3pqz.html"}]}]</script>
 <script>window.PK_UKONCENO="2026-10-10";</script>
 <script>window.PK_POZEMEK={"k":"Domousnice|—|Mladá Boleslav|50.394|15.103","ll":[50.3940748,15.1027324],"v":2612,"c":4962800,"r":"data/okres/mlada-boleslav.json"};</script>
-<script src="js/min/pozemek.js?v=89d8a35a"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -371,11 +376,6 @@ body.pzm-cela-telo{overflow:hidden}
    říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
    na nasazení u Vercelu. */
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
-<script src="js/min/config.js?v=8ba36013" defer></script>
-<script src="js/min/auth.js?v=bec7a315" defer></script>
-<script src="js/min/hlavicka.js?v=8249999c" defer></script>
-<script src="js/min/offline.js?v=16a48df3" defer></script>
-<script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Mladá Boleslav 14 km · Liberec 42 km"</script>
 <script type="application/json" id="pz-titul-data">"Pozemek 2 612 m² — Domousnice, okres Mladá Boleslav"</script>
 <script type="application/json" id="pz-kamdal-data">[{"t":"Okres Mladá Boleslav","u":"pozemky-okres-mlada-boleslav.html","p":"všechny pozemky v okrese"},{"t":"Středočeský kraj","u":"pozemky-stredocesky-kraj.html","p":"přehled celého kraje"}]</script>

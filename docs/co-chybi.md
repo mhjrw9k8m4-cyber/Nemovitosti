@@ -2692,6 +2692,55 @@ která se vyplatila; doplněno na obou místech.
 když detektor přijme i nabídku bez vypsaných parcel, spadne ta na to
 určená.
 
+## 3au. NALEZENO: po každém ukončení nabídky se strom na jeden běh rozešel s tím, co generátory spočítají — *opraveno 10. 10.*
+
+Našlo se to tak, že robot v podvečer poslal čerstvá data a hned po nich
+spadla zkouška `scripts/test-oprav.mjs` („repozitář se rovná tomu, co
+generátory spočítají"). Při opakování prošla — protože ta zkouška
+generátory **sama spustí**, takže si rozdíl prvním během opravila. To
+samo o sobě je poučení: zelená při druhém pokusu ještě neznamená, že
+tam nic nebylo.
+
+### Co to bylo
+
+Generátor má na ukončené stránky **dvě cesty**:
+
+| stránka | čím projde |
+|---|---|
+| **už ukončená** | `migrujUkoncenaData(migrujPredvykresleni(šablona, migrujSkripty(šablona, …)))` |
+| **nově ukončená** | `ukoncenaStranka()` — a ta `migrujSkripty` ani `migrujPredvykresleni` nepouštěla |
+
+Takže stránka, kterou robot právě ukončil, dostala blok skriptů v tom
+pořadí, v jakém ho měla, a plná přestavba ho pak srovnala jinak.
+Změřeno: robot ukončil dvě nabídky (Domousnice, Žalany) a obě se lišily
+osmnácti řádky v bloku skriptů. **Žádný skript nechyběl** — `pozemek.js`
+i `hlidani-logika.js` tam byly a ve správném pořadí, jen byly jinak
+přeskládané. Takže to nebyla rozbitá stránka, ale tiché, **opakované**
+rozcházení: stávalo se to po každém ukončení nabídky, znovu a znovu.
+
+Druhý důvod, proč to nikdo neviděl: **úloha s daty zkoušky nepouští.**
+Na robotově commitu běží jen `build`, `deploy` a `report-build-status`,
+ne `testy` ani `v-prohlizeci`. Rozdíl tedy čekal na příští lidský
+commit.
+
+### Oprava
+
+Nově ukončená stránka projde týmiž dvěma přepisy jako ta už ukončená.
+Ověřeno na obou skutečných stránkách z robotova commitu: po doplnění
+přepisů **vyjde přesně to**, co dává plná přestavba.
+
+### Pojistka — na vlastnost, ne na zápis
+
+`scripts/test-stranky-pozemku.mjs` má 33 → **36** kontrol. Hlídá se, že
+**ukončení stránky je idempotentní**: vezme se živá stránka pozemku,
+ukončí se první cestou, a na výsledek se pustí druhá cesta — ta už ho
+nesmí změnit. K tomu dvě pojistky: že se živá stránka vůbec našla,
+a že ukončená stránka opravdu dostala `noindex` i datum (jinak by byla
+hlavní kontrola zelená o prázdnu).
+
+**Prokázáno sabotáží:** vrácením cesty pro nově ukončené stránky do
+původního stavu kontrola spadla.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

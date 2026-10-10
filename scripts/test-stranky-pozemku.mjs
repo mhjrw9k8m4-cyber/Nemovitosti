@@ -19,7 +19,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { souborPro, souborProDalsi, pkey, textyPro, slug, mapaSouboru, nabidky, pripravRozliseni, pripravRozliseniPopisu } from './generate-parcel-pages.mjs';
+import { souborPro, souborProDalsi, pkey, textyPro, slug, mapaSouboru, nabidky, pripravRozliseni, pripravRozliseniPopisu,
+  ukoncenaStranka, migrujSkripty, migrujPredvykresleni, migrujRezDat, migrujLeaflet, migrujUkoncenaData } from './generate-parcel-pages.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0; const zpravy = [];
@@ -601,6 +602,50 @@ console.log('\nStránky jednotlivých pozemků');
     }
     pravda(`žádné dvě rozlišitelné nabídky nemají týž ${co}`, spatne.length === 0,
       spatne.slice(0, 4).join(' | '));
+  }
+}
+
+/* ---- UKONČENÍ STRÁNKY MUSÍ BÝT IDEMPOTENTNÍ ---------------------
+ *
+ * Generátor má na ukončené stránky DVĚ cesty: nově ukončená jde přes
+ * `ukoncenaStranka()`, už ukončená přes `migrujUkoncenaData(
+ * migrujPredvykresleni(sablona, migrujSkripty(sablona, …)))`. Ta druhá
+ * pouští dva přepisy, které ta první nepouštěla — a tím se strom po
+ * každém ukončení nabídky na jeden běh rozešel s tím, co generátory
+ * spočítají.
+ * Naměřeno 10. 10.: robot ukončil dvě nabídky a poslal je s blokem
+ * skriptů v jiném pořadí; `scripts/test-oprav.mjs` to ohlásil až při
+ * příštím lidském commitu, protože úloha s daty zkoušky nepouští.
+ * Žádný skript nechyběl, jen byly přeskládané, a na druhý běh si to
+ * druhá cesta srovnala sama.
+ *
+ * Hlídá se proto VLASTNOST, ne zápis: co vyjde z první cesty, musí
+ * druhá cesta nechat na pokoji. */
+{
+  const sablona = fs.readFileSync(path.join(ROOT, 'pozemek.html'), 'utf8');
+  const zive = fs.readdirSync(ROOT)
+    .filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f))
+    .find((f) => {
+      const h = fs.readFileSync(path.join(ROOT, f), 'utf8');
+      return h.indexOf('window.PK_POZEMEK=') >= 0 && h.indexOf('window.PK_UKONCENO=') < 0;
+    });
+  pravda('našla se živá stránka pozemku, na které to jde zkusit', !!zive,
+    'všechny stránky jsou ukončené — kontrola níž by neměla co měřit');
+  if (zive) {
+    const obsah = fs.readFileSync(path.join(ROOT, zive), 'utf8');
+    const DEN = '2026-01-02';
+    /* 1) nově ukončená — přesně jak to dělá generátor */
+    const nove = ukoncenaStranka(
+      migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah)), DEN, []);
+    /* 2) a teď na výsledek cesta pro UŽ ukončené stránky */
+    const znovu = migrujUkoncenaData(
+      migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(nove)))), DEN);
+    pravda(`ukončení stránky je idempotentní (${zive})`, znovu === nove,
+      'druhý průchod stránku ještě změnil — strom se po ukončení nabídky '
+      + 'rozejde s tím, co generátory spočítají (viz test-oprav)');
+    pravda('a ukončená stránka má noindex i datum', /noindex,follow/.test(nove)
+      && nove.indexOf('window.PK_UKONCENO="' + DEN + '"') >= 0,
+      'ukoncenaStranka() nedělá to, co má — kontrola výš by byla zelená o prázdnu');
   }
 }
 
