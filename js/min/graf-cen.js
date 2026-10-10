@@ -41,16 +41,18 @@
       }
       if (bodu < 5) continue;
       if (!nej || bodu > nej.bodu || (bodu === nej.bodu && vzorek > nej.vzorek)) {
-        nej = { klic: k, druh: c[2], r: r, bodu: bodu, vzorek: vzorek };
+        nej = { klic: k, druh: c[2], uroven: c[0], r: r, bodu: bodu, vzorek: vzorek };
       }
     }
     return nej;
   }
 
-  function maloVzorku(H, vzorek) {
+  function maloVzorku(H, vzorek, uroven) {
     var dost = H && typeof H.dost === 'number' ? H.dost : 0;
     if (!dost || vzorek >= dost) return '';
-    return 'Na cenu celého okresu je to málo — berte to jako hrubé vodítko. ';
+
+    var kde = uroven === 'kraj' ? 'celého kraje' : (uroven === 'cr' ? 'celé ČR' : 'celého okresu');
+    return 'Na cenu ' + kde + ' je to málo — berte to jako hrubé vodítko. ';
   }
 
   function kresli(el, H, vyber, kde) {
@@ -113,8 +115,11 @@
           '<span>' + esc(denKratce(posledni.den)) + '</span></div>' +
         '<p class="gc-pozn">Medián <b>nabídkové</b> ceny z <b>' + vyber.vzorek + '</b> nabídek ' +
           esc(kde) + ' — ne ceny, za které se pozemky prodaly; ty ve veřejných zdrojích nejsou. ' +
-          maloVzorku(H, vyber.vzorek) +
+          maloVzorku(H, vyber.vzorek, vyber.uroven) +
           'Hladina se mění i tím, že nabídky přibývají a mizí. ' +
+
+          'Nad grafem stojí medián za celou skupinu druhů, kdežto čára je ' +
+          'za ten jeden druh, který je v nadpisu — proto se čísla nerovnají. ' +
           'Svislá osa je v rozpětí ' + cislo(min) + '–' + cislo(max) + ' Kč/m², ne od nuly.</p>' +
         '<details class="gc-tab"><summary>Čísla v tabulce</summary>' +
           '<table><caption class="visually-hidden">' + esc(nadpis) + '</caption>' +
@@ -167,9 +172,10 @@
 
   function postav(el) {
     var uroven = el.getAttribute('data-uroven');
-    var nazev = el.getAttribute('data-nazev');
+
+    var nazev = el.getAttribute('data-nazev') || '';
     var kde = el.getAttribute('data-kde') || nazev;
-    if (!uroven || !nazev) return;
+    if (!uroven || (uroven !== 'cr' && !nazev)) return;
     nacti().then(function (H) {
       if (!H || !H.rady) return;
       var v = vyberRadu(H, uroven, nazev);

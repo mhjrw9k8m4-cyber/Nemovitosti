@@ -1040,6 +1040,140 @@ padají tři kontroly, bez ní je 30/30.
 `css/zaklad.min.css` je po obou změnách **o 316 B menší** než před nimi,
 a to včetně tří nových pravidel pro vlasovku.
 
+## 3aa. NALEZENO: „obvyklá cena" se počítala ze dvou různých světů — a obrana proti tomu stála na premise, kterou data vyvrací — *opraveno 10. 10.*
+
+Šel jsem sjednotit dva cenové výpočty (slíbeno v 3y) a cestou narazil na
+něco většího.
+
+### Co se našlo
+
+Generátor stránek měl „spodní mez uvěřitelnosti": heuristiku, která
+v rozdělení cen hledala mezeru a nejlevnější shluk odřízla. Odůvodnění
+stálo v kódu i v zkoušce černé na bílém — ten shluk jsou prý
+spoluvlastnické podíly. Tak jsem to změřil **jmenovitě na tom, co ta
+heuristika odřízla**:
+
+```
+Ořez nejlevnějšího shluku — Zemědělská půda: mez 16,2 Kč/m², odříznuto 137,
+z toho spoluvlastnický podíl 0 (0 %) — nejvíc Česká Lípa 23×, Brno-venkov 19×,
+Znojmo 12×
+```
+
+**Nula ze 137.** A nemohlo to být jinak: podíly přepočítává `CENY.zaMetr`
+dřív, než se ořez spustí, takže jejich cena za metr je dávno srovnaná —
+a jejich medián je 150 Kč/m², tedy **nad** trhem, ne pod ním. Premisa byla
+obrácená.
+
+Co v tom shluku opravdu bylo: ze 135 nabídek zemědělské půdy pod mezí
+16,2 Kč/m² bylo **132 prodejem státní půdy podle § 12** zákona
+č. 503/2012. SPÚ prodává oprávněné osobě za cenu **stanovenou úředně**.
+To není nabídková cena a nikdy nebyla.
+
+### Jak velké to bylo
+
+Nabídek SPÚ je 204 z 1 988 (**10 %**), všechny vedené jako běžný prodej.
+Medián Kč/m² (1 943 nabídek bez duplicit):
+
+| druh | SPÚ | trh | dohromady | rozdíl |
+|---|---|---|---|---|
+| orná půda | **8** (127) | 74 (685) | 62 | 9,3× |
+| zahrada | **40** (26) | **791** (47) | **157** | **19,8×** |
+| ostatní plocha | 19 (14) | 67 (43) | 53 | 3,5× |
+| louka | 14 (26) | 50 (277) | 48 | 3,6× |
+| vinice / sad | 9 (6) | 102 (55) | 89 | 11,3× |
+
+U zahrady web vydával za obvyklou cenu **157 Kč/m²** — číslo, které
+neplatí ani pro stát (40), ani pro trh (791). A heuristika u zahrad
+schválně nehledala nic („u zahrady je levná cena normální cena"), takže
+tam nehlídala vůbec: 26 úředních cen ze 73 šlo do mediánu bez jakékoli
+výhrady.
+
+Dohad podle tvaru rozdělení se přitom mýlil **na obě strany**: tři
+skutečné tržní nabídky uřízl, 21 nabídek SPÚ nad mezí 16,2 nechal projít,
+a na 7 okresních stránkách utnul vzorek pod deset nabídek, takže stránka
+o ceně **mlčela** (Brno-město, Kladno, Kutná Hora, Nymburk, Náchod,
+Znojmo, České Budějovice).
+
+### A netrefovalo to jen stránky s cenami
+
+Tatáž hromádka je i srovnávací hladina u konkrétního pozemku. Změřeno na
+1 632 nabídkách, kde odhad vyjde v obou případech:
+
+- hladina se posunula o **>10 % u 271 nabídek (17 %)**, o >50 % u 143,
+- nejvíc u Nehvizd (orná půda): hladina **8 → 126 Kč/m², tedy 16,6×**,
+- a u **31 nabídek (1,9 %) se verdikt otočil**: Česká Lípa, orná půda, ze
+  „182 % nad obvyklou cenou" na „51 % pod ní". Web kupujícímu tvrdil
+  přesný opak.
+
+### Jak je to opravené
+
+Jmenovitou výjimkou, na jednom místě — `CENY.spravniCena(d)` v
+`js/ceny.js` — stejně jako se jmenovitě vynechává vyvolávací cena dražby.
+Jmenovitou výjimku si čtenář může ověřit; tvar rozdělení je dohad.
+
+- **`js/ceny.js`**: úřední cena se vynechává hned u vstupu do modelu, ne
+  až u srovnávací hladiny. Kdyby se vynechávala níž, počítal by se z ní
+  percentil („dražší než 78 % podobných") — a ten by u zahrad srovnával
+  trh s cenami dvacetkrát nižšími.
+- **`scripts/generate-region-pages.mjs`**: `jeBeznaNabidka` se ptá
+  `CENY.spravniCena`; `dolniMez`, `MEZE_DRUHU`, `spoctiMeze` a mrtvý
+  počítač `ODFILTROVANO`, který si nikdo nikdy nepřečetl, jsou pryč.
+- **`scripts/generate-data-rezy.mjs`**: `data/model.json` tyhle nabídky
+  už nevozí. Musí se vynechat už tam, protože sloupcový formát nenese
+  pole `extra`, takže by je prohlížeč rozpoznat nemohl — a model z malého
+  souboru by dal jiné číslo než z plných dat. Soubor je o 6 kB menší.
+- **`scripts/historie-cen.mjs`**: `VERZE` 2 → 3 a řada přepočítaná od
+  začátku, takže v grafu nevznikne schod.
+- **Metodika na `cena-pozemku.html`** tvrdila „nezapočítáváme
+  spoluvlastnické podíly … hledáme mezeru v samotném rozdělení". Obojí
+  byla nepravda (podíly se počítají, jen přepočtené). Teď tam stojí, co se
+  opravdu děje, včetně čísel 8 proti 74.
+
+### Co se tím změnilo na webu
+
+Vytištěná čísla: zahrada **157 → 791 Kč/m²**, Česká Lípa 55 → 43,
+Liberecký kraj 70 → 77, celostátní zemědělská půda 63 → 69; Jablonec nad
+Nisou po vynechání SPÚ nemá deset tržních nabídek, takže cenu neuvádí.
+
+Graf a číslo nad ním se k sobě přiblížily: největší rozdíl na 27
+stránkách, kde stojí obojí, spadl z **6,88× na 2,81×** a Česká Lípa z
+6,88× (55 proti 8) na 1,23× (43 proti 35). Zbytek už není rozdíl ve
+výpočtu — obě strany počítají z téže hromádky — ale v tom, **o čem** to
+číslo je: nad grafem stojí medián za hrubou skupinu („zemědělská půda" =
+orná i louky), graf kreslí jeden konkrétní druh. To je teď u grafu
+napsané.
+
+### Dvě zkoušky, které měřily vedle
+
+- **`scripts/test-statistika.mjs`** heuristiku hlídala a její odůvodnění
+  citovala. Přepsaná: hlídá jmenovitou výjimku, že heuristika je pryč,
+  a že se ty dva světy v datech opravdu liší (kdyby se srovnaly, nebylo
+  by proč výjimku držet). 29 kontrol.
+- **`scripts/test-ceny.mjs`** chtěla po modelu, aby uhodl **úředně
+  stanovenou cenu**. Takový odhad se musí mýlit o stovky procent a padal
+  do hromádky „jistých", čímž smazal rozdíl mezi jistými a nejistými
+  odhady: poměr 1,67 proti prahu 1,7. Měří se teď jen to, co model
+  modeluje.
+- A ten **práh 1,7 byl sám příliš těsný**. Stál na dnu 1,90, naměřeném
+  ze tří rozdělení. Na osmi rozděleních téhož pravidla vychází
+  1,81 · 1,77 · 1,69 · 1,91 · 1,65 · 1,55 · 1,87 · 1,65, tedy dno **1,55**
+  — práh ležel nad ním a test padal na losu, ne na vadě. Sabotáž (příznak
+  „nejistý" si hodí korunou) dává na týchž rozděleních strop **1,01**.
+  Práh je proto **1,3**: 1,29× nad stropem rozbité, 1,19× pod dnem
+  funkční. Model se přitom nezhoršil — medián chyby všech odhadů klesl
+  z 23,8 na 23,5 %.
+
+Sabotáž obou oprav: s vrácenou vadou padá pět kontrol v `test-statistika`
+a jedna v `test-model-vstup` (ta přímo na tom, že model z malého souboru
+dá jinde jiné číslo), bez ní je 29/29 a 14/14.
+
+### Co zbývá
+
+Hrubé skupiny (`druhGroup` v generátoru slučuje ornou a louky do
+„zemědělské půdy", kdežto `js/ceny.js` je drží zvlášť) jsou poslední
+rozdíl mezi číslem a grafem. Je to volba, ne vada — ale jedno slovo
+„medián" u dvou různých věcí na jedné obrazovce je pořád past.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

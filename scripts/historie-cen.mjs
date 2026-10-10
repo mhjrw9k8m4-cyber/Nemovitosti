@@ -35,8 +35,17 @@ const ZDROJ = 'data/opportunities.json';
    co zbude — řada v grafu tedy popisovala jinou hromádku než čísla pod
    ním. Naměřeno na dnešním snímku: 2 018 nabídek syrově proti 1 995 bez
    duplicit, a model se tím rozešel u 315 percentilů a 405 odhadů.
+
+   VERZE 3: do hladiny už nejde cena, kterou nestanovil trh. Prodej státní
+   půdy podle § 12 je v datech vedený jako běžný prodej, ale cenu u něj
+   stanoví úřad — a je to jiný svět: u orné půdy medián 8 Kč/m² proti
+   74 na trhu, u zahrady 40 proti 791. Graf tím kreslil čáru, která v ně-
+   kterých okresech popisovala ceny Státního pozemkového úřadu, ne trhu:
+   v České Lípě ležel na 8 Kč/m², zatímco stránka nad ním psala 55.
+   Vynechání je v js/ceny.js (spravniCena), takže graf, odhad u pozemku
+   i čísla na stránkách okresů vycházejí z jedné hromádky.
    Zvýšení čísla přepočítá celou řadu, takže v ní nevznikne schod. */
-const VERZE = 2;          // zvýšit, když se změní pravidlo výpočtu → řada se přepočítá
+const VERZE = 3;          // zvýšit, když se změní pravidlo výpočtu → řada se přepočítá
 /* Od jakého denního skoku už řada nepopisuje ceny, ale výměnu nabídek.
    Tři procenta za den jsou u půdy nereálná: celostátní řady s velkým
    vzorkem se drží do 0,6 %, a i nejklidnější okresní do 2,6 %. */

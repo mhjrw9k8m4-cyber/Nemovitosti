@@ -298,5 +298,55 @@ async function otevri(okres, sirka) {
     'poznámka je v obou případech stejná — podstrčený soubor se nepoužil');
 }
 
+/* ---- CELOSTÁTNÍ GRAF NA STRÁNCE „CENY POZEMKŮ" -------------------
+   Klíč řady je „úroveň|název|druh" a u celé ČR je prostřední část
+   prázdná (`cr||Orná půda`). Podmínka `!nazev` v js/graf-cen.js takový
+   graf zahazovala, takže data pro něj v souboru ležela a nikdo je
+   nevykreslil. Měří se tedy obojí: že graf na té stránce je, a že mluví
+   o celé ČR, ne o okrese. */
+{
+  const p = await kontext.newPage();
+  await p.setViewportSize({ width: 1100, height: 900 });
+  const chybyJs = [];
+  p.on('pageerror', (e) => chybyJs.push(String(e)));
+  await p.goto(`${BASE}/cena-pozemku.html`, { waitUntil: 'load' });
+  const misto = await p.$('[data-graf-cen]');
+  pravda('stránka „Ceny pozemků" má místo pro graf', !!misto,
+    'prvek [data-graf-cen] tam není');
+  if (misto) await misto.scrollIntoViewIfNeeded();
+  await p.waitForTimeout(2500);
+  const v = await p.evaluate(() => {
+    const f = document.querySelector('figure.gc');
+    if (!f) return { je: false };
+    return { je: true, rada: f.getAttribute('data-rada'),
+      nadpis: f.querySelector('.gc-hlava b').textContent,
+      tecek: f.querySelectorAll('.gc-bod').length,
+      radku: f.querySelectorAll('.gc-tab tbody tr').length,
+      pozn: f.querySelector('.gc-pozn').textContent.replace(/\s+/g, ' '),
+      cesta: (f.querySelector('path.gc-cara') || f.querySelector('path') || {}).getAttribute
+        ? (f.querySelector('path.gc-cara') || f.querySelector('path')).getAttribute('d') : null };
+  });
+  pravda('a graf se na ní opravdu vykreslil', v.je === true,
+    'figure.gc na stránce není — celostátní řada se nenakreslila');
+  if (v.je) {
+    pravda('je to celostátní řada (klíč začíná „cr|")',
+      /^cr\|/.test(String(v.rada)), `data-rada = ${v.rada}`);
+    pravda('a mluví o celé ČR, ne o okrese',
+      /v celé ČR/.test(v.nadpis + ' ' + v.pozn) && !/okres/i.test(v.nadpis),
+      `nadpis „${v.nadpis}"`);
+    pravda('má nakreslenou čáru aspoň z pěti bodů', v.tecek >= 5, `bodů ${v.tecek}`);
+    pravda('a čísla jsou i v tabulce pod ním', v.radku === v.tecek,
+      `tečky ${v.tecek}, řádky ${v.radku}`);
+    pravda('poznámka přiznává, že jsou to ceny nabídkové',
+      /nabídkové/.test(v.pozn), v.pozn.slice(0, 160));
+    /* Výhrada o malém vzorku se u celostátní řady psát NEMÁ (vzorek jsou
+       stovky nabídek) — a kdyby se psala, nesmí mluvit o okrese. */
+    pravda('a nepíše výhradu o okrese (ta se u celé ČR nehodí)',
+      !/celého okresu/.test(v.pozn), v.pozn.slice(0, 200));
+  }
+  pravda('a stránka při tom nehlásí chybu skriptu', chybyJs.length === 0, chybyJs.join(' | '));
+  await p.close();
+}
+
 await prohlizec.close();
 hotovo();

@@ -61,7 +61,7 @@
       }
       if (bodu < 5) continue;   // ze čtyř bodů se čára kreslit nemá
       if (!nej || bodu > nej.bodu || (bodu === nej.bodu && vzorek > nej.vzorek)) {
-        nej = { klic: k, druh: c[2], r: r, bodu: bodu, vzorek: vzorek };
+        nej = { klic: k, druh: c[2], uroven: c[0], r: r, bodu: bodu, vzorek: vzorek };
       }
     }
     return nej;
@@ -79,10 +79,14 @@
      Mez se neopisuje, bere se ze souboru s historií (pole `dost`), kam ji
      zapsal scripts/historie-cen.mjs z js/ceny.js. Chybí-li (starší soubor),
      výhrada se nepíše: radši nic než mez, kterou si graf vymyslel sám. */
-  function maloVzorku(H, vzorek) {
+  function maloVzorku(H, vzorek, uroven) {
     var dost = H && typeof H.dost === 'number' ? H.dost : 0;
     if (!dost || vzorek >= dost) return '';
-    return 'Na cenu celého okresu je to málo — berte to jako hrubé vodítko. ';
+    /* Výhrada musí mluvit o tom, co graf ukazuje. Stálo tu „celého
+       okresu" i pro kraj, a od chvíle, co je graf i na celé ČR, by to
+       znělo rovnou nesmyslně. */
+    var kde = uroven === 'kraj' ? 'celého kraje' : (uroven === 'cr' ? 'celé ČR' : 'celého okresu');
+    return 'Na cenu ' + kde + ' je to málo — berte to jako hrubé vodítko. ';
   }
 
   function kresli(el, H, vyber, kde) {
@@ -169,8 +173,22 @@
           '<span>' + esc(denKratce(posledni.den)) + '</span></div>' +
         '<p class="gc-pozn">Medián <b>nabídkové</b> ceny z <b>' + vyber.vzorek + '</b> nabídek ' +
           esc(kde) + ' — ne ceny, za které se pozemky prodaly; ty ve veřejných zdrojích nejsou. ' +
-          maloVzorku(H, vyber.vzorek) +
+          maloVzorku(H, vyber.vzorek, vyber.uroven) +
           'Hladina se mění i tím, že nabídky přibývají a mizí. ' +
+          /* PROČ SE ČÁRA NESHODUJE S MEDIÁNEM NAD GRAFEM. Nejsou to dvě
+             verze téhož čísla — a od opravy úředně stanovených cen už
+             to není ani rozdíl ve VÝPOČTU: obě strany počítají z téže
+             hromádky (js/ceny.js vynechává prodej státní půdy stejně
+             jako ho vynechává generátor stránek). Zbývá rozdíl
+             v TOM, O ČEM to číslo je: nad grafem stojí medián za hrubou
+             skupinu (celá „zemědělská půda", tedy orná i louky), kdežto
+             graf kreslí jeden konkrétní druh — ten, který je nejlépe
+             doložený, a je napsaný v nadpisu grafu.
+             Naměřeno na 27 stránkách, kde stojí obojí: po opravě je
+             největší rozdíl 2,8× (dřív 6,9×) a Česká Lípa, kde číslo
+             stálo na 55 a čára na 8 Kč/m², je dnes 43 proti 35. */
+          'Nad grafem stojí medián za celou skupinu druhů, kdežto čára je ' +
+          'za ten jeden druh, který je v nadpisu — proto se čísla nerovnají. ' +
           'Svislá osa je v rozpětí ' + cislo(min) + '–' + cislo(max) + ' Kč/m², ne od nuly.</p>' +
         '<details class="gc-tab"><summary>Čísla v tabulce</summary>' +
           '<table><caption class="visually-hidden">' + esc(nadpis) + '</caption>' +
@@ -226,9 +244,15 @@
 
   function postav(el) {
     var uroven = el.getAttribute('data-uroven');
-    var nazev = el.getAttribute('data-nazev');
+    /* CELÁ ČR NEMÁ JMÉNO. Klíč řady je „úroveň|název|druh" a u celostátní
+       řady je prostřední část prázdná (`cr||Orná půda`) — tak to píše
+       scripts/historie-cen.mjs. Podmínka `!nazev` tedy celostátní graf
+       zahazovala: data pro něj v souboru ležela od začátku (osm řad, z toho
+       čtyři klidné), ale nakreslit se nedal a žádná stránka ho nežádala.
+       Jméno se proto vyžaduje jen tam, kde ho klíč opravdu má. */
+    var nazev = el.getAttribute('data-nazev') || '';
     var kde = el.getAttribute('data-kde') || nazev;
-    if (!uroven || !nazev) return;
+    if (!uroven || (uroven !== 'cr' && !nazev)) return;
     nacti().then(function (H) {
       if (!H || !H.rady) return;
       var v = vyberRadu(H, uroven, nazev);

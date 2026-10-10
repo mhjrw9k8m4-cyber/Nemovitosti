@@ -288,60 +288,28 @@ function pctl(a,p){ if(!a.length) return 0; a=a.slice().sort((x,y)=>x-y); return
  *
  * Mediány okresů a krajů tím stoupnou (zemědělská půda 45 → 62 Kč/m²,
  * les 35 → 48). Není to zdražení, jen přestalo tlačit dolů číslo, které
- * do výpočtu nepatřilo. Spodní mez uvěřitelnosti zůstává: i po přepočtu
- * najde v datech tutéž mezeru (16,2 místo 16,8 Kč/m²) a odřízne 137
- * nabídek místo 140, takže ty nejlevnější shluky nejsou jen podíly. */
+ * do výpočtu nepatřilo.
+ *
+ * ZDE BÝVALA „SPODNÍ MEZ UVĚŘITELNOSTI" — heuristika, která v rozdělení
+ * hledala mezeru a nejlevnější shluk odřízla. Odůvodnění znělo, že ten
+ * shluk jsou spoluvlastnické podíly. NENÍ. Změřeno jmenovitě na
+ * odříznutých nabídkách: ze 137 odříznutých má pole `podil` PRÁVĚ NULA.
+ * A nemůže mít — podíly přepočítává zaMetrPoctive o pár řádků výš, takže
+ * než se ořez spustí, jsou dávno srovnané (jejich medián je 150 Kč/m²,
+ * tedy NAD trhem, ne pod ním).
+ *
+ * Co v tom shluku opravdu je: ze 135 nabídek zemědělské půdy pod mezí
+ * 16,2 Kč/m² je 132 prodej státní půdy podle § 12. To není nabídková
+ * cena, ale cena stanovená úředně — a vynechává se proto jmenovitě
+ * (CENY.spravniCena v js/ceny.js), stejně jako se jmenovitě vynechává
+ * vyvolávací cena dražby. Jmenovitá výjimka je ověřitelná; tvar
+ * rozdělení je dohad, a tenhle dohad se mýlil na obě strany: tři
+ * skutečné tržní nabídky uřízl, dvacet jedna nabídek SPÚ nad mezí
+ * nechal, a u zahrad a ostatní plochy (42 nabídek SPÚ) nehlídal nic,
+ * protože se tam záměrně nespouštěl. */
 function zaMetrPoctive(o){
   const v = CENY.zaMetr(o);
   return (v == null || !isFinite(v)) ? null : v;
-}
-function dolniMez(v){
-  const n=v.length;
-  if(n<60) return 0;                       // z hrstky se tvar rozdělení poznat nedá
-  const m=median(v); if(!(m>0)) return 0;
-  const krok=m/20, konec=m*0.7;
-  const bin=[]; for(let a=0;a<konec;a+=krok) bin.push(v.filter(x=>x>=a&&x<a+krok).length);
-  let maxDosud=0, podNim=0;
-  for(let i=0;i<bin.length;i++){
-    if(bin[i]>maxDosud) maxDosud=bin[i];
-    podNim+=bin[i];
-    // Shluk musí být znát (2 % vzorku), pod mezerou musí něco ležet (3 %)
-    // a mezera musí být aspoň dva koše skoro prázdné.
-    if(maxDosud>=n*0.02 && podNim>=n*0.03 && bin[i]<=maxDosud*0.12 && (bin[i+1]??99)<=maxDosud*0.12){
-      return (i+2)*krok;
-    }
-  }
-  return 0;
-}
-/* Meze se počítají JEDNOU z celostátních dat a pak platí i pro kraje a okresy.
- * V okrese s devatenácti nabídkami by se tvar rozdělení hledat nedal — a přitom
- * právě tam ty podíly nejvíc škodí. */
-const MEZE_DRUHU = {};
-let ODFILTROVANO = 0;
-function spoctiMeze(list){
-  const b={};
-  for(const o of list){
-    if(!jeBeznaNabidka(o)) continue;   // stejný vzorek jako priceStats
-    if(!(o.price>0 && o.area>=100 && o.area<=500000)) continue;
-    const g=druhGroup(o.druh); if(g==='Ostatní') continue;
-    const perm2=zaMetrPoctive(o);
-    if(perm2==null) continue;
-    if((g==='Zemědělská půda' || g==='Lesní pozemek') && perm2>500) continue;
-    (b[g]=b[g]||[]).push(perm2);
-  }
-  /* Ořez se hledá JEN u zemědělské půdy a lesa. Tam je shluk za pár korun
-     za metr spolehlivě spoluvlastnický podíl, ne levné pole — a právě kvůli
-     tomu celý mechanismus vznikl.
-     U zahrad a stavebních pozemků je levná cena normální cena, a hledat
-     v nich „mezeru" je nebezpečné: v datech z 22. 9. 2026 by heuristika
-     u zahrad uřízla 37 z 86 nabídek (všechno pod ~45 Kč/m²) a vyhlášený
-     medián zahrady by tím vyskočil o polovinu. Číslo, které web vydává za
-     obvyklou cenu, se nesmí opírat o dvě třetiny trhu. */
-  const SE_ZKOUMA = ['Zemědělská půda', 'Lesní pozemek'];
-  for(const g of Object.keys(b)){
-    MEZE_DRUHU[g] = SE_ZKOUMA.indexOf(g) === -1 ? 0 : dolniMez(b[g]);
-    ODFILTROVANO += b[g].filter(x=>x<MEZE_DRUHU[g]).length;
-  }
 }
 /* Do ceny se počítají JEN běžné nabídky k prodeji.
    Vyvolávací cena dražby ani odhad u exekuce není nabídková cena: první je
@@ -350,7 +318,7 @@ function spoctiMeze(list){
    stránka cen hlásila u zahrady 140 Kč/m², kdežto odhad u pozemku počítal
    se 110 Kč/m² (ten dražby vynechával odjakživa, viz js/ceny.js). U ostatní
    plochy dělal ten rozpor 41 %. Obě strany teď počítají z téhož. */
-function jeBeznaNabidka(o){ return o.type === 'sale'; }
+function jeBeznaNabidka(o){ return o.type === 'sale' && !CENY.spravniCena(o); }
 function priceStats(list){
   const buckets={};
   for(const o of list){
@@ -362,7 +330,6 @@ function priceStats(list){
     // Pole/les nad 500 Kč/m² jsou fakticky stavební parcely (jen vedené jako „orná"),
     // do ceny zemědělské půdy/lesa nepatří — jinak by zkreslily medián okresu nahoru.
     if((g==='Zemědělská půda' || g==='Lesní pozemek') && perm2>500) continue;
-    if(perm2 < (MEZE_DRUHU[g]||0)) continue;   // pod mezerou v rozdělení = nejspíš podíl
     (buckets[g]=buckets[g]||[]).push(perm2);
   }
   const out={};
@@ -372,7 +339,7 @@ function priceStats(list){
   }
   return out;
 }
-spoctiMeze(all);                 // meze napřed, ať platí všude stejné
+/* Ořez nejlevnějšího shluku už tu není — proč, stojí u zaMetrPoctive výš. */
 
 /* ODHAD CENY PATŘÍ I SEM. Mapa i stránka pozemku u každé nabídky říkají,
    jak je drahá proti okolí — na okresních, krajských a druhových
@@ -1899,7 +1866,8 @@ ${atZl && atZl.pocet >= MIN_ZMEN ? `          <p class="trh-veta">Cena šla dol�
             <summary>Jak tahle čísla počítáme</summary>
             <p class="rules-note">Pracujeme s cenami <b>nabídkovými</b>, z veřejně inzerovaných pozemků. Za kolik se pozemek nakonec prodal, se z veřejných zdrojů zjistit nedá.</p>
             <p class="rules-note">„Obvyklá" cena je <b>medián</b>, ne průměr: jeden pozemek za 4 000 Kč/m² mezi stovkou polí po 20 Kč/m² průměr utrhne, s mediánem nepohne. Rozpětí pod ním jsou <b>čtvrtiny</b> (25. a 75. percentil), ne nejlevnější a nejdražší inzerát — ten bývá překlep ve zdroji a tvrdit o něm „nejnižší cena v kraji" by znamenalo tvrdit, že se za to dá koupit.</p>
-            <p class="rules-note">Do mediánů <b>nezapočítáváme spoluvlastnické podíly</b> (v inzerátu je výměra celé parcely, cena jen za zlomek). Hranici neurčujeme od stolu — hledáme <b>mezeru v samotném rozdělení</b> cen: u zemědělské půdy leží prázdné místo mezi shlukem podílů za pár korun a vlastním trhem. Kraje se počítají jen ze zemědělské půdy, aby se nemíchala s dražšími stavebními parcelami; vyhledávač výš ukazuje medián za celý okres, protože menší celek by byla hrstka nabídek.</p>
+            <p class="rules-note">Do mediánů <b>nezapočítáváme ceny, které nestanovil trh</b>: vyvolávací cenu dražby, odhad u exekuce ani <b>prodej státní půdy podle § 12</b> — tam prodává Státní pozemkový úřad oprávněné osobě za cenu stanovenou úředně. Je to desetina všech nabídek a cena je jinde: u orné půdy medián 8 Kč/m² proti 74 Kč/m² na trhu, u zahrady 40 proti 791. Smíchané by vyšlo číslo, které neplatí ani pro stát, ani pro trh. Ty nabídky na webu zůstávají, jen neurčují „obvyklou cenu".</p>
+            <p class="rules-note"><b>Spoluvlastnické podíly se započítávají</b>, ale přepočtené: cena se dělí výměrou, která kupujícímu připadne, ne celou parcelou. U podílu 1/6 je tedy cena za metr šestkrát vyšší než při naivním dělení. Když velikost podílu inzerát neuvádí, nabídka se do mediánu nedostane vůbec — vymyslet si ji nelze. Kraje se počítají jen ze zemědělské půdy, aby se nemíchala s dražšími stavebními parcelami; vyhledávač výš ukazuje medián za celý okres, protože menší celek by byla hrstka nabídek.</p>
 ${maTrh ? `            <p class="rules-note">Do podílu „po N dnech pryč" jdou <b>jen nabídky, které jsme mohli sledovat celých N dní</b> — proto je u každého čísla napsané, z kolika. „Pryč" znamená, že nabídka zmizela ze zdroje; nemusí to znamenat prodáno, mohla být i stažena.</p>
             <p class="rules-note"><b>Průměrnou dobu prodeje tu nenajdete</b>, protože by to byla nepravda. Okno je ${fmt(AT.okno.dni)} dní a ${fmt(AT.sledovano.zivych)} nabídek na trhu pořád je — u většiny z nich ještě nevíme, jak dlouho tam nakonec budou. Medián jen z těch, co už zmizely, by vyšel krátký: zmizely přece ty rychlé. Statistika tomu říká <b>cenzurování zprava</b>. Až okno povyroste a většina sledovaných nabídek skončí, bude se dát spočítat i medián — do té doby ne.</p>` : ''}
           </details>`;
@@ -1935,6 +1903,22 @@ ${maTrh ? `            <p class="rules-note">Do podílu „po N dnech pryč" jdo
 
   <section class="section">
     <div class="wrap okr-wrap">
+
+      <!-- GRAF CENOVÉ HLADINY ZA CELOU ČR. Byl na 91 stránkách okresů
+           a krajů, ale na stránce, která je přímo o cenách, chyběl — a to
+           je ta nejpodivnější díra: data pro celostátní řadu v
+           data/historie-cen.json ležela od začátku (osm řad podle druhu,
+           z toho čtyři dost klidné na kreslení), jen je nikdo nežádal.
+           Je to TENTÝŽ prvek i skript jako na okresech, žádný druhý
+           výpočet; řadu si vybere js/graf-cen.js sám podle toho, která je
+           nejlépe doložená, a když by žádná klidná nebyla, nenakreslí nic
+           — ani prázdný rámeček. Stojí hned pod podnadpisem, protože ten
+           říká dnešní hladinu a graf k ní dodává, kam se hýbe. -->
+      <div class="add-card" style="margin-top:22px;">
+        <div class="rules-sect">
+          <div data-graf-cen data-uroven="cr" data-kde="v celé ČR"></div>
+        </div>
+      </div>
 
 ${sekceTrhu}
 
@@ -1982,7 +1966,7 @@ ${razitkoCerstvosti}
   </section>
 
 </main>
-` + footer() + `<script src="js/hledani.js?${V.hledani}" defer></scr` + `ipt>
+` + footer({ graf: true }) + `<script src="js/hledani.js?${V.hledani}" defer></scr` + `ipt>
 <script src="js/ceny-hledani.js?${V.cenyHledani}" defer></scr` + `ipt>
 `;
   write(file, html);

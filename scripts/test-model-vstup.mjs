@@ -71,8 +71,21 @@ pravda(`celek se přečetl (${syrove.length} nabídek, bez duplicit ${plne.lengt
   plne.length > 500, `nabídek ${plne.length}`);
 pravda('malý soubor se rozbalil', Array.isArray(rozbaleno), 'rozbalModel vrátil null');
 if (!Array.isArray(rozbaleno)) hotovo();
-pravda(`a nese tolik nabídek jako celek bez duplicit (${rozbaleno.length})`,
-  rozbaleno.length === plne.length, `malý ${rozbaleno.length}, celek ${plne.length}`);
+/* ÚŘEDNĚ STANOVENÁ CENA SE DO MODELU NEVOZÍ, a tak tu čísla nejsou
+   stejná — jsou stejná po vynechání téhož. Prodej státní půdy podle § 12
+   stanoví úřad, ne trh; js/ceny.js ho do modelu nepouští (spravniCena)
+   a malý soubor ho proto ani neveze (sloupcový formát pole `extra`
+   nenese, takže by to rozpoznat nemohl). Porovnává se tedy s počtem
+   nabídek, které do modelu opravdu patří. */
+const doModelu = plne.filter((o) => !CENY.spravniCena(o));
+pravda(`úřední ceny jsou v celku a malý soubor je nemá (${plne.length - doModelu.length})`,
+  plne.length - doModelu.length > 50,
+  'kdyby v datech žádná nebyla, tahle kontrola by neměřila nic');
+pravda(`a malý soubor nese tolik nabídek, kolik do modelu patří (${rozbaleno.length})`,
+  rozbaleno.length === doModelu.length, `malý ${rozbaleno.length}, do modelu ${doModelu.length}`);
+pravda('a žádnou úředně stanovenou cenu mezi nimi není',
+  rozbaleno.every((o) => !CENY.spravniCena(o)),
+  'rozbalený model nese nabídku, kterou model vynechává');
 
 /* Malý soubor musí být opravdu MALÝ — jinak nemá smysl. */
 const bCelek = fs.statSync(cestaCelek).size, bMaly = fs.statSync(cestaModel).size;

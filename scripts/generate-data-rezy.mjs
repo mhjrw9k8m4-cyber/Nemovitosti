@@ -200,7 +200,13 @@ export async function spust() {
      byla skutečně zaplacená. Vyhodit ji by znamenalo zahazovat data bez
      důvodu. Model proto čte `bezDuplicit`, ne `vse`. */
   const modelVstup = (() => {
-    const proModel = bezDuplicit;
+    /* ÚŘEDNĚ STANOVENÁ CENA SE DO MODELU NEVOZÍ. Prodej státní půdy podle
+       § 12 je v datech vedený jako běžný prodej, ale cenu u něj stanoví
+       úřad — js/ceny.js ho proto do modelu nepouští (spravniCena). Malý
+       soubor je sloupcový a pole `extra` nenese, takže by to rozpoznat
+       nemohl; vynechává se tedy už tady, aby model z malého souboru dal
+       totéž co z plných dat. Hlídá to scripts/test-model-vstup.mjs. */
+    const proModel = bezDuplicit.filter((o) => !CENY.spravniCena(o));
     const okresy = [...new Set(proModel.map((o) => o.okres || ''))].sort();
     const druhy = [...new Set(proModel.map((o) => o.druh || ''))].sort();
     const typy = [...new Set(proModel.map((o) => o.type || ''))].sort();
@@ -222,7 +228,7 @@ export async function spust() {
       la.push(Math.round((x.lat || 0) * 1e4)); lo.push(Math.round((x.lng || 0) * 1e4));
     }
     return Object.assign({}, hlavicka, {
-      rez: { uroven: 'model', nazev: null, soubor: 'data/model.json', pocet: bezDuplicit.length },
+      rez: { uroven: 'model', nazev: null, soubor: 'data/model.json', pocet: proModel.length },
       popis: 'Vstup cenového modelu: pole, která z uložených nabídek čte js/ceny.js. '
         + 'Sloupcově a se slovníky, ať je to malé. Pole o/d/t jsou indexy do okresy/druhy/typy, '
         + 'a je výměra v m², c cena v Kč, la/lo souřadnice ×10 000 (celá čísla).',
@@ -231,7 +237,7 @@ export async function spust() {
   })();
   const bajtuModel = zapis('data/model.json', modelVstup);
   rejstrik.rezy.push({ uroven: 'model', nazev: null, soubor: 'data/model.json',
-    pocet: bezDuplicit.length, bajtu: bajtuModel });
+    pocet: modelVstup.rez.pocet, bajtu: bajtuModel });
 
   const prazdnych = uklid('okres', ziveOkres, 'okres');
 

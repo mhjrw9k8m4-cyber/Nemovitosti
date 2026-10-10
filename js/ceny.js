@@ -96,6 +96,28 @@
       ' — tolik platíte za metr, který vám připadne. Výměra v inzerátu je celá parcela.';
   }
 
+  /* CENA, KTEROU NESTANOVIL TRH.
+   *
+   * Do srovnávací hladiny patří jen běžné nabídky — proto se vynechávají
+   * dražby (vyvolávací cena je pod trhem z podstaty věci) a exekuce.
+   * Prodej státní půdy podle § 12 zákona č. 503/2012 je ale taky `sale`,
+   * a přitom to nabídková cena není: SPÚ prodává oprávněné osobě za cenu
+   * stanovenou úředně, ne za cenu, na které se shodnou dva lidé na trhu.
+   *
+   * Změřeno na 1 988 nabídkách: SPÚ jich je 204 (10 %), všechny vedené
+   * jako `sale`. Zemědělská půda od SPÚ má medián 8,3 Kč/m², zbytek trhu
+   * 44,7 Kč/m² — PĚTINÁSOBNÝ rozdíl. Když se to počítá dohromady, je
+   * medián okresu průměrem dvou různých světů, a v okrese, kde SPÚ nabízí
+   * zrovna hodně, spadne na svoje číslo: Česká Lípa 8,3 Kč/m² (23 z 26
+   * nabídek orné půdy je od SPÚ), Znojmo 8,2, České Budějovice 6,3.
+   *
+   * Nabídky samotné na webu zůstávají — jsou to skutečné příležitosti
+   * a mají i svůj odkaz „Nabídka SPÚ ↗". Jen neurčují, co je „obvyklá
+   * cena", přesně jako to neurčuje vyvolávací cena dražby. */
+  function spravniCena(d) {
+    return !!d && /SPÚ|státní půd/i.test(d.extra || '');
+  }
+
   function druhGroup(s) {
     s = (s || '').toLowerCase();
     if (s.indexOf('les') !== -1) return 'Lesní pozemek';
@@ -279,6 +301,18 @@
 
     DATA.forEach(function (d) {
       if (!hasArea(d) || !d.price) return;
+      /* ÚŘEDNĚ STANOVENÁ CENA SE DO MODELU NEDOSTANE VŮBEC — ani do
+         percentilu. Model odpovídá na jedinou otázku: „kolik tady
+         pozemky stojí". Na to je cena, kterou stanovil úřad, špatné
+         pozorování ve VŠECH přihrádkách, ne jen v té srovnávací. Kdyby
+         se vynechávala až o kus níž, počítal by se z ní percentil
+         („dražší než 78 % podobných") — a ten by u zahrad srovnával trh
+         s cenami dvacetkrát nižšími. Viz spravniCena výš.
+         Zároveň to drží data/model.json a plná data v souladu: malý
+         soubor je sloupcový a pole `extra` nenese, takže tyhle nabídky
+         vůbec neveze — kdyby je plná data počítala, dal by každý jiný
+         výsledek a scripts/test-model-vstup.mjs by to ohlásil. */
+      if (spravniCena(d)) return;
       var g = druhGroup(d.druh), m2 = d.price / d.area;
       (podleTypu[d.type + '|' + g] = podleTypu[d.type + '|' + g] || []).push(m2);
       if (d.okres) {
@@ -410,7 +444,7 @@
     (function () {
       var podleDruhu = {};
       DATA.forEach(function (d) {
-        if (!hasArea(d) || !d.price || d.type !== 'sale') return;
+        if (!hasArea(d) || !d.price || d.type !== 'sale' || spravniCena(d)) return;
         var g = druhGroup(d.druh);
         (podleDruhu[g] = podleDruhu[g] || []).push({ a: d.area, m: d.price / d.area });
       });
@@ -831,6 +865,7 @@
 
     return {
       druhGroup: druhGroup,
+      spravniCena: spravniCena,
       hladinaMista: hladinaMista,
       MIN_VZOREK: MIN_VZOREK,
       MEZ_POCHYBNA: MEZ_POCHYBNA,
@@ -904,6 +939,9 @@
     postav: postav, rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     kdeText: kdeText, blokOdhadu: blokOdhadu,
     zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis,
+    /* Ven kvůli generátoru stránek: kdo vydává „obvyklou cenu", musí
+       úředně stanovenou cenu vynechat týmž pravidlem jako model. */
+    spravniCena: spravniCena,
     /* Ven kvůli scripts/test-strop-ceny.mjs: zkouška přeměřuje, jestli
        je mez pořád dost daleko od skutečných cen. */
     MEZ_NEUVERITELNA: MEZ_NEUVERITELNA };

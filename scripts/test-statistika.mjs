@@ -3,20 +3,33 @@
 // Spuštění: node scripts/test-statistika.mjs
 //
 // Web tvrdil, že nejlevnější zemědělská půda je ve Znojmě za 8 Kč/m²
-// a v České Lípě taky za 8. Za tolik se u nás pole neprodává. Byly to
-// spoluvlastnické podíly (v inzerátu je výměra celé parcely, ale prodává se
-// jen zlomek) a špatně načtené ceny. V okrese s devatenácti nabídkami jich
-// stačí pár a medián strhnou.
+// a v České Lípě taky za 8. Za tolik se u nás pole na trhu neprodává —
+// jenže ta čísla nebyla chyba výpočtu, byla to CENA Z JINÉHO SVĚTA.
 //
-// Nejde to utnout jedním číslem pro všechno. Změřeno na datech: u zemědělské
-// půdy je rozdělení DVOUVRCHOLOVÉ — těsný shluk na 5–10 Kč/m², pak skoro
-// prázdno na 12–17 a teprve od 20 výš vlastní trh. U zahrad a stavebních
-// pozemků je rozdělení plynulé a levné kusy jsou skutečné; plošný práh by
-// tam smazal poctivé nabídky a medián vyhnal nahoru. Co je u pole nesmysl,
-// je u zahrady normální cena.
+// Nejdřív se to vysvětlovalo spoluvlastnickými podíly a řešilo heuristikou,
+// která v rozdělení hledala mezeru a nejlevnější shluk odřízla. Změřeno
+// jmenovitě na tom, co ta heuristika odřízla: ze 137 odříznutých nabídek
+// byla podílem PRÁVĚ NULA. Podíly totiž přepočítává js/ceny.js dřív (jejich
+// medián je 150 Kč/m², tedy NAD trhem). Ten shluk je něco jiného: ze 135
+// nabídek zemědělské půdy pod mezí 16,2 Kč/m² bylo 132 prodejem státní půdy
+// podle § 12 zákona č. 503/2012 — tedy cenou stanovenou úředně, ne cenou,
+// na které se shodli dva lidé na trhu.
 //
-// Proto se hledá mezera v samotném rozdělení. Tenhle test hlídá, že se to
-// děje, že to dopadá věrohodně, a že se to na stránce přizná.
+// Změřeno po druzích (1 943 nabídek bez duplicit, medián Kč/m²):
+//     orná půda     SPÚ   8  ·  trh  74   (127 / 685 nabídek)
+//     zahrada       SPÚ  40  ·  trh 791   ( 26 /  47)   ← dvacetinásobek
+//     ostatní pl.   SPÚ  19  ·  trh  67   ( 14 /  43)
+// Dohromady vyšla u zahrady „obvyklá cena" 157 Kč/m² — číslo, které
+// neplatí ani pro stát (40), ani pro trh (791). A heuristika u zahrad
+// schválně nehledala nic, takže tam nehlídala vůbec.
+//
+// Úředně stanovená cena se proto vynechává JMENOVITĚ (CENY.spravniCena),
+// stejně jako se jmenovitě vynechává vyvolávací cena dražby. Jmenovitá
+// výjimka se dá ověřit; tvar rozdělení je dohad — a tenhle se mýlil na obě
+// strany: tři tržní nabídky uřízl, dvacet jednu nabídku SPÚ nad mezí nechal.
+//
+// Tenhle test hlídá, že se obě strany webu (stránka cen i odhad u pozemku)
+// drží téhož vzorku, a přepočítává vytištěná čísla z dat.
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import * as META from './regiony-meta.mjs';
@@ -45,15 +58,15 @@ const stranka = readFileSync(new URL('../cena-pozemku.html', import.meta.url), '
 new Function(readFileSync(new URL('../js/ceny.js', import.meta.url), 'utf8'))();
 const PK_CENY = globalThis.PK_CENY;
 
-// --- 1) Generátor mezeru hledá, nenastavuje ji od stolu ---------------
-pravda('generátor hledá spodní mez v rozdělení', /function dolniMez\(/.test(gen));
-pravda('a používá ji při výpočtu mediánů', /perm2 < \(MEZE_DRUHU\[g\]\|\|0\)/.test(gen));
-pravda('meze se počítají z celostátních dat, ne z okresu',
-  /spoctiMeze\(all\)/.test(gen),
-  'v okrese s devatenácti nabídkami se tvar rozdělení najít nedá — a zrovna tam ty podíly nejvíc škodí');
-pravda('mez se nehledá v hrstce nabídek', /if\(n<60\) return 0/.test(gen));
+// --- 1) Vynechává se JMENOVITĚ, ne podle tvaru rozdělení -------------
+pravda('generátor vynechává úředně stanovenou cenu jmenovitě',
+  /function jeBeznaNabidka\(o\)\{ return o\.type === 'sale' && !CENY\.spravniCena\(o\); \}/.test(gen),
+  'do „obvyklé ceny" by se počítal prodej státní půdy podle § 12');
+pravda('a heuristika hledající mezeru v rozdělení je pryč',
+  !/function dolniMez\(/.test(gen) && !/MEZE_DRUHU/.test(gen),
+  'dohad podle tvaru rozdělení se mýlil na obě strany — viz hlavička');
 
-// --- 2) Mez padne tam, kde je v datech mezera -------------------------
+// --- 2) Oba světy se v datech opravdu liší ---------------------------
 function dg(s) {
   s = (s || '').toLowerCase();
   if (/stav/.test(s)) return 'Stavební';
@@ -63,28 +76,21 @@ function dg(s) {
   return 'Ostatní';
 }
 const med = (a) => { a = a.slice().sort((x, y) => x - y); const n = a.length; return n % 2 ? a[(n - 1) / 2] : (a[n / 2 - 1] + a[n / 2]) / 2; };
-function dolniMez(v) {
-  const n = v.length;
-  if (n < 60) return 0;
-  const m = med(v); if (!(m > 0)) return 0;
-  const krok = m / 20, konec = m * 0.7;
-  const bin = []; for (let a = 0; a < konec; a += krok) bin.push(v.filter((x) => x >= a && x < a + krok).length);
-  let maxDosud = 0, podNim = 0;
-  for (let i = 0; i < bin.length; i++) {
-    if (bin[i] > maxDosud) maxDosud = bin[i];
-    podNim += bin[i];
-    if (maxDosud >= n * 0.02 && podNim >= n * 0.03 && bin[i] <= maxDosud * 0.12 && (bin[i + 1] ?? 99) <= maxDosud * 0.12) return (i + 2) * krok;
-  }
-  return 0;
-}
 /* js/ceny.js se tu spouští, ne jen čte: potřebujeme z něj cenu za metr,
-   která zná spoluvlastnický podíl. */
+   která zná spoluvlastnický podíl, a rozpoznání úředně stanovené ceny. */
 new Function(readFileSync(new URL('../js/ceny.js', import.meta.url), 'utf8'))();
 const CENY_MODUL = globalThis.PK_CENY;
 if (!CENY_MODUL || !CENY_MODUL.zaMetr) {
   console.error('js/ceny.js se nenačetl — kontrola by počítala jinak než web.');
   process.exit(1);
 }
+pravda('js/ceny.js umí poznat úředně stanovenou cenu',
+  typeof CENY_MODUL.spravniCena === 'function'
+  && CENY_MODUL.spravniCena({ extra: 'prodej státní půdy (SPÚ, § 12)' }) === true
+  && CENY_MODUL.spravniCena({ extra: 'inzerát – Bezrealitky' }) === false
+  && CENY_MODUL.spravniCena(null) === false,
+  'rozpoznání se musí dát ověřit, ne odhadnout z tvaru rozdělení');
+
 const podle = {};
 for (const d of DATA) {
   // Jen běžné nabídky k prodeji — stejně jako generátor i js/ceny.js.
@@ -100,28 +106,23 @@ for (const d of DATA) {
   const pm = CENY_MODUL.zaMetr(d);
   if (pm == null) continue;
   if ((g === 'Zemědělská půda' || g === 'Lesní pozemek') && pm > 500) continue;
-  (podle[g] = podle[g] || []).push(pm);
+  const kam = (podle[g] = podle[g] || { spu: [], trh: [] });
+  kam[CENY_MODUL.spravniCena(d) ? 'spu' : 'trh'].push(pm);
 }
-const mezZem = dolniMez(podle['Zemědělská půda'] || []);
-pravda('u zemědělské půdy se mezera opravdu najde', mezZem > 0,
-  'shluk podílů na 5–10 Kč/m² by zůstal v mediánu');
-pravda('a leží tam, kde je rozdělení prázdné', mezZem >= 12 && mezZem <= 22,
-  `mez vyšla na ${mezZem.toFixed(1)} Kč/m²`);
-/* A hlavně: ostatní druhy se tím nesmí osekat. Nestačí doufat, že u nich
-   heuristika mezeru nenajde — najde. V datech z 22. 9. 2026 by u zahrad
-   uřízla 37 z 86 nabídek a medián zahrady by vyskočil o polovinu. Ořez se
-   proto vůbec nehledá jinde než u zemědělské půdy a lesa, kde je shluk za
-   pár korun spolehlivě spoluvlastnický podíl. */
-pravda('ořez se hledá jen u zemědělské půdy a lesa',
-  /SE_ZKOUMA\s*=\s*\['Zemědělská půda',\s*'Lesní pozemek'\]/.test(gen),
-  'u zahrad a stavebních pozemků je levná cena normální cena — tam se osekávat nesmí');
-for (const g of ['Zahrada', 'Stavební']) {
-  const v = podle[g] || [];
-  if (v.length < 60) continue;
-  const pad = v.filter((x) => x < dolniMez(v)).length;
-  if (pad > 0) {
-    zpravy.push(`  · pozn.: u druhu „${g}" by heuristika uřízla ${pad} z ${v.length} — proto se tam nepouští`);
-  }
+/* Kdyby se oba světy v datech přestaly lišit, celá výjimka by byla
+   zbytečná — a tahle kontrola by hlídala prázdno. Proto se MĚŘÍ. */
+const zem = podle['Zemědělská půda'] || { spu: [], trh: [] };
+pravda(`státní půda je v datech (${zem.spu.length} nabídek zemědělské půdy)`,
+  zem.spu.length >= 20, 'bez ní tahle kontrola neměří nic');
+const medSpu = zem.spu.length ? med(zem.spu) : 0, medTrh = zem.trh.length ? med(zem.trh) : 0;
+pravda(`a je jinde než trh (${medSpu.toFixed(0)} proti ${medTrh.toFixed(0)} Kč/m²)`,
+  medTrh > medSpu * 2,
+  'kdyby se ta dvě čísla srovnala, výjimku by nebylo proč držet');
+const zahr = podle['Zahrada'] || { spu: [], trh: [] };
+if (zahr.spu.length >= 10 && zahr.trh.length >= 10) {
+  const a = med(zahr.spu.concat(zahr.trh)), b = med(zahr.trh);
+  zpravy.push(`  · pozn.: u zahrady by smíchání dávalo ${a.toFixed(0)} Kč/m², `
+    + `samotný trh ${b.toFixed(0)} (${zahr.spu.length} nabídek SPÚ ze ${zahr.spu.length + zahr.trh.length})`);
 }
 
 /* --- Obě strany webu počítají z téhož ------------------------------
@@ -132,12 +133,19 @@ for (const g of ['Zahrada', 'Stavební']) {
    se to rozcházelo o 41 %. Čísla musí vycházet ze stejného vzorku, jinak
    si web protiřečí a nikdo nepozná, které z nich platí. */
 pravda('stránka cen počítá jen z běžných nabídek k prodeji',
-  /function jeBeznaNabidka\(o\)\{ return o\.type === 'sale'; \}/.test(gen),
-  'do mediánu by se počítaly i vyvolávací ceny dražeb');
+  /return o\.type === 'sale' && !CENY\.spravniCena\(o\);/.test(gen),
+  'do mediánu by se počítaly vyvolávací ceny dražeb nebo úřední ceny SPÚ');
 {
   const ceny = readFileSync(new URL('../js/ceny.js', import.meta.url), 'utf8');
-  pravda('a odhad u pozemku taky', /if \(d\.type !== 'sale'\) return;/.test(ceny),
-    'js/ceny.js by srovnával dražby samy se sebou');
+  pravda('a odhad u pozemku taky — týmž pravidlem',
+    /if \(spravniCena\(d\)\) return;/.test(ceny) && /if \(d\.type !== 'sale'\) return;/.test(ceny),
+    'js/ceny.js by srovnával dražby samy se sebou nebo měřil trh úřední cenou');
+  pravda('a vynechává ji už u VSTUPU do modelu, ne až u hladiny',
+    /if \(spravniCena\(d\)\) return;\n      var g = druhGroup/.test(ceny),
+    'z úřední ceny by se počítal percentil „dražší než N % podobných"');
+  pravda('a sklon ceny s výměrou se učí taky jen z trhu',
+    /d\.type !== 'sale' \|\| spravniCena\(d\)\) return;\n        var g = druhGroup/.test(ceny),
+    'SKLON by se učil na cenách, které trh nestanovil');
 }
 /* ===== ČÍSLA V TABULCE KRAJŮ MUSÍ SEDĚT S PŘEPOČTEM Z DAT =============
    Stránka cen se zúžila na tři věci (puls trhu, vyhledávač lokality,
@@ -177,9 +185,7 @@ pravda('stránka cen počítá jen z běžných nabídek k prodeji',
   /* Vzorek po krajích se skládá TÝMŽ postupem jako v generátoru: okres →
      kraj z js/ceny.js (jedno místo pro web i pro tuhle kontrolu), cena za
      metr přes js/ceny.js (zná spoluvlastnický podíl), strop 500 Kč/m²
-     u zemědělské půdy a spodní mez z CELOSTÁTNÍCH dat — ne z kraje. Mez
-     z kraje by se v Praze hledala v hrstce nabídek a vyšla jinak než ta,
-     kterou stránka opravdu použila. */
+     u zemědělské půdy a vynechání úředně stanovené ceny (§ 12). */
   const OK_KRAJ = (CENY_MODUL && CENY_MODUL.OKRES_KRAJ) || {};
   pravda('mapa okres → kraj je v js/ceny.js', Object.keys(OK_KRAJ).length >= 70,
     `${Object.keys(OK_KRAJ).length} okresů`);
@@ -189,8 +195,9 @@ pravda('stránka cen počítá jen z běžných nabídek k prodeji',
     if (!(d.price > 0 && d.area >= 100 && d.area <= 500000)) continue;
     if (dg(d.druh) !== 'Zemědělská půda') continue;
     const k = OK_KRAJ[d.okres]; if (!k) continue;
+    if (CENY_MODUL.spravniCena(d)) continue;   // úředně stanovená cena není nabídková
     const pm = CENY_MODUL.zaMetr(d);
-    if (pm == null || pm > 500 || pm < mezZem) continue;
+    if (pm == null || pm > 500) continue;
     (poKraji[k] = poKraji[k] || []).push(pm);
   }
   /* Čtvrtina se počítá TÍMŽ způsobem jako v generátoru (funkce pctl):
@@ -246,8 +253,18 @@ pravda('stránka cen počítá jen z běžných nabídek k prodeji',
 // --- 4) Stránka se k tomu přizná -------------------------------------
 pravda('stránka říká, že se něco nezapočítává', /nezapočítáváme/.test(stranka),
   'vyřazovat nabídky a neříct to je horší než je nevyřazovat');
-pravda('a vysvětluje proč', /spoluvlastnick/.test(stranka));
-pravda('i to, že hranice není odhadem od stolu', /mezer[au][\s\u00a0]v[\s\u00a0]samotném rozdělení/.test(stranka));
+pravda('a jmenuje to: prodej státní půdy podle § 12',
+  /§[\s\u00a0]12/.test(stranka) && /Státní[\s\u00a0]pozemkový[\s\u00a0]úřad/.test(stranka),
+  'výjimku, kterou čtenář nemůže ověřit, je lepší nemít');
+pravda('a říká, o kolik se ty dva světy liší', /8[\s\u00a0]Kč\/m² proti 74/.test(stranka),
+  'bez čísla je to tvrzení k věření, ne k ověření');
+pravda('a nelže o podílech: ty se započítávají, jen přepočtené',
+  /[Ss]poluvlastnické[\s\u00a0]podíly[\s\u00a0]se[\s\u00a0]započítávají/.test(stranka)
+  && !/nezapočítáváme[\s\u00a0]<b>spoluvlastnické/.test(stranka),
+  'stránka tvrdila, že podíly vynechává — přitom je přepočítává a počítá');
+pravda('a netvrdí už, že hranici hledá v rozdělení',
+  !/mezer[au][\s\u00a0]v[\s\u00a0]samotném rozdělení/.test(stranka),
+  'ta heuristika je pryč — a popis, který ji slibuje, je nepravda');
 
 // --- 5) Medián z hrstky nabídek se nesmí tvářit jako změřená cena ----
 /* Na okresní stránce stálo „Medián ceny (stavební): 17 467 Kč/m²

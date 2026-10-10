@@ -455,7 +455,18 @@ for (const f of ['../js/main.js', '../js/pozemek.js', '../js/radce.js']) {
     `${zNichNejistych} z ${sStitkem} — to už by nebylo upozornění, ale šum`);
 
   /* Jen celé pozemky na prodej — viz úvodní komentář. */
-  const MERENE = new Set(DATA.filter((d) => d.type === 'sale' && !d.podil && d.price > 0 && d.area > 0));
+  /* MĚŘÍ SE JEN TO, CO MODEL MODELUJE. Prodej státní půdy podle § 12 má
+     cenu stanovenou úředně a model ho proto do sebe vůbec nepouští
+     (js/ceny.js, spravniCena). Chtít po něm, aby takovou cenu uhodl, je
+     měření jiné věci: u orné půdy je úřední cena 8 Kč/m² proti 74 na
+     trhu, takže odhad se nutně „mýlí" o stovky procent — a protože tyhle
+     nabídky spadnou do hromádky „jistých", shrne se tím rozdíl mezi
+     jistými a nejistými odhady do nicoty. Naměřeno: s nimi v cíli vyšel
+     poměr 1,67 (a test padal), bez nich 1,97 — a medián chyby VŠECH
+     odhadů je přitom po vynechání státní půdy z modelu nižší (23,5 proti
+     23,8 %), tedy model se nezhoršil, jen se přestalo měřit, co nemodeluje. */
+  const MERENE = new Set(DATA.filter((d) => d.type === 'sale' && !d.podil
+    && d.price > 0 && d.area > 0 && !PK_CENY.spravniCena(d)));
   /* Rozdělení do desetin: jedno podle pořadí v datech, dvě podle obsahu
      nabídky. Obsahové proto, aby se výsledek neopíral o jedno jediné
      rozdělení — a hash se bere po tisícovkách, ne po dvojkách: nejnižší
@@ -489,11 +500,23 @@ for (const f of ['../js/main.js', '../js/pozemek.js', '../js/radce.js']) {
     const mN = med(chybyN), mJ = med(chybyJ);
     POMERY.push({ posun, mN, mJ, pomer: mN && mJ ? mN / mJ : 0, pocet: chybyN.length });
   }
-  /* Práh 1,7 leží mezi naměřeným dnem správné hranice (1,90) a stropem
-     nejhoršího případu u rozbité (1,26) — odstup na obě strany. */
+  /* PRÁH PŘEMĚŘEN, A BYL PŘÍLIŠ TĚSNÝ. Stál na 1,7 a odůvodnění znělo, že
+     leží mezi dnem správné hranice (1,90) a stropem rozbité (1,26). To dno
+     ale bylo z TŘÍ rozdělení — a poměr dvou mediánů se mezi rozděleními
+     pohybuje víc. Naměřeno na osmi rozděleních téhož pravidla:
+         1,81 · 1,77 · 1,69 · 1,91 · 1,65 · 1,55 · 1,87 · 1,65   → dno 1,55
+     Práh 1,7 tedy ležel NAD skutečným dnem, takže test padal na losu
+     rozdělení, ne na vadě. (Objevilo se to, až když vynechání úředně
+     stanovených cen hromádky trochu přeskládalo; samo to vada nebyla —
+     medián chyby VŠECH odhadů se tím zlepšil z 23,8 na 23,5 %.)
+     Sabotáž: když příznak „nejistý" přestane cokoli znamenat (hodí si
+     korunou podle rozptylu), vyjde na týchž osmi rozděleních
+         0,64 · 0,84 · 0,90 · 1,01 · 0,82 · 0,75 · 0,98 · 0,75   → strop 1,01
+     Práh 1,3 má tedy odstup na obě strany: 1,29× nad stropem rozbité
+     a 1,19× pod dnem funkční. */
   const nejhorsi = POMERY.reduce((a, b) => (a.pomer < b.pomer ? a : b));
-  pravda('nejisté odhady se od zadržené ceny mýlí nejmíň 1,7krát víc než jisté',
-    nejhorsi.pomer >= 1.7,
+  pravda('nejisté odhady se od zadržené ceny mýlí nejmíň 1,3krát víc než jisté',
+    nejhorsi.pomer >= 1.3,
     `nejhůř vyšlo rozdělení ${nejhorsi.posun}: nejisté ${nejhorsi.mN && nejhorsi.mN.toFixed(0)} %, `
     + `jisté ${nejhorsi.mJ && nejhorsi.mJ.toFixed(0)} % (poměr ${nejhorsi.pomer.toFixed(2)}, `
     + `${nejhorsi.pocet} označených) — příznak „nejistý" pak neodděluje spolehlivé odhady od nespolehlivých; `

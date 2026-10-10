@@ -36,6 +36,10 @@
       ' — tolik platíte za metr, který vám připadne. Výměra v inzerátu je celá parcela.';
   }
 
+  function spravniCena(d) {
+    return !!d && /SPÚ|státní půd/i.test(d.extra || '');
+  }
+
   function druhGroup(s) {
     s = (s || '').toLowerCase();
     if (s.indexOf('les') !== -1) return 'Lesní pozemek';
@@ -138,6 +142,8 @@
 
     DATA.forEach(function (d) {
       if (!hasArea(d) || !d.price) return;
+
+      if (spravniCena(d)) return;
       var g = druhGroup(d.druh), m2 = d.price / d.area;
       (podleTypu[d.type + '|' + g] = podleTypu[d.type + '|' + g] || []).push(m2);
       if (d.okres) {
@@ -179,7 +185,7 @@
     (function () {
       var podleDruhu = {};
       DATA.forEach(function (d) {
-        if (!hasArea(d) || !d.price || d.type !== 'sale') return;
+        if (!hasArea(d) || !d.price || d.type !== 'sale' || spravniCena(d)) return;
         var g = druhGroup(d.druh);
         (podleDruhu[g] = podleDruhu[g] || []).push({ a: d.area, m: d.price / d.area });
       });
@@ -397,6 +403,7 @@
 
     return {
       druhGroup: druhGroup,
+      spravniCena: spravniCena,
       hladinaMista: hladinaMista,
       MIN_VZOREK: MIN_VZOREK,
       MEZ_POCHYBNA: MEZ_POCHYBNA,
@@ -443,6 +450,8 @@
     postav: postav, rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     kdeText: kdeText, blokOdhadu: blokOdhadu,
     zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis,
+
+    spravniCena: spravniCena,
 
     MEZ_NEUVERITELNA: MEZ_NEUVERITELNA };
 }(typeof window !== 'undefined' ? window : globalThis));
