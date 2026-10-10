@@ -748,8 +748,33 @@ Tedy posun o **8 px** dolů a o 8 px nižší blok. V CI z toho bude
 vidět, o kolik se to posunulo tam — a teprve pak se dá hledat příčina.
 Dokud na hlášce stál jen součet, nedalo se hádat vůbec.
 
-Zapsané jako **rozpracované**, ne opravené: vím, kde to padá a čím to
-NENÍ, ale ne ještě proč. Příští červený běh v CI by to měl doříct.
+**Co k tomu přibylo 10. 10.** Změřeno na pomalé lince (400 kb/s,
+odezva 300 ms), protože na místní rychlosti se nic nehne:
+
+* úvodní stránka: CLS **0,0212**, zdroj výpis
+  (`UL.opp-list [579/265→637/207]`, lišta nad ním `525→547`);
+* stránka hlídání: CLS **0,0377** (mez je 0,05, tedy blízko), a to ze
+  dvou posunů — `DIV.wrap [381/463→389/455]` v 2,6 s a větší
+  `0,0325` ve 3,15 s, kde se hýbou prvky u horního kraje
+  (`A [60/44]`, dva už odstraněné uzly `190→188` a `215→238`).
+
+**Dvě hypotézy vyvrácené měřením, ať se k nim nikdo nevrací:**
+pozdě dojeté písmo (CLS 0,0212 se přednačtením ext i bez něj naprosto
+stejně — viz zamítnuté nápady níž) a hlavička (`js/hlavicka.js`
+zablokovaný: CLS zůstal 0,0377 do znaku stejný).
+
+Co zůstalo jako kandidát a **nedá se zatím potvrdit**: rezerva místa
+pro obsah, který dojde skriptem (`.hl-load{min-height}` na stránce
+hlídání). Jednou mi vyšlo, že hotový obsah má 911 px proti rezervě
+862/880, jinde zase 911 proti 911 — kostra je tak brzo přepsaná, že se
+nedá spolehlivě změřit. **Ladit rezervu podle takhle rozkmitaného
+čísla nebudu:** přesně tím se dnešní hodnoty 862/880 dostaly tam, kde
+jsou (komentář u nich vypisuje kroky 296 → 340 → 370 px), a znovu by
+to byla jen jiná náhodná čísla.
+
+Zapsané jako **rozpracované**, ne opravené: vím, kde to padá, čím to
+NENÍ, a kde to dál hledat. Příští červený běh v CI má teď v hlášce
+geometrii posunu, a teprve z té se dá rozhodnout.
 
 ## 3w. ~~Stažená tabulka mohla v cizím Excelu spustit vzorec~~ — *zavřeno 10. 10.*
 
@@ -912,6 +937,32 @@ nové pozemky). Rozepsané je to v `docs/pred-vydanim.md`.
 
 Ať je vidět i to, co se nepostavilo, a proč. Jinak se ten nápad po
 půl roce vrátí jako nový.
+
+**Přednačítat i rozšířené řezy písem.** Změřeno, že to neplatí za to.
+Přednačítají se dva soubory ze čtyř (`inter-latin`, `fraunces-latin`),
+rozšířené řezy (`-ext`, nesou č, ě, ř, š, ž, ů) se najdou až ze
+stylopisu. Přitom **všech 2 207 stránek** má ve viditelném textu
+aspoň jeden znak z Latin Extended-A — ty soubory se tedy stahují
+vždycky, takže jejich přednačtení nestojí ani bajt navíc. Vypadá to
+jako zdarma.
+
+Naměřeno na úvodní stránce, telefon 390 px, linka 400 kb/s a odezva
+300 ms, čtyři běhy proti čtyřem:
+
+| | první vykreslení (FCP) | písma hotová |
+|---|---|---|
+| dnešní stav | **4 680–4 712 ms** | 9 021 ms |
+| s přednačtením ext | 4 860–5 352 ms | **7 529 ms** |
+
+Tedy **−1 492 ms na dojetí písem, ale +180 ms na první vykreslení** —
+a to opakovaně, ne jako rozptyl. Čtyři přednačtená písma soutěží
+o linku se stylopisem, který vykreslení blokuje. První vykreslení
+platí každý; pozdější výměna písma je kosmetická. Zamítnuto.
+
+Vedlejší zjištění z téhož měření: **posun rozvržení to nezpůsobuje.**
+CLS vyšel 0,0212 v obou variantách do znaku stejně, a zdrojem byl
+výpis (`UL.opp-list [579/265→637/207]`), ne text. Hypotéza „v CI dojede
+písmo pozdě a text přeteče" je tím vyvrácená — viz bod 3v.
 
 **„Přejdi hranici okresu a ušetříš."** Sousedství okresů se z
 `data/okresy-hranice.json` spočítat dá — vyšlo 190 sousedních párů
