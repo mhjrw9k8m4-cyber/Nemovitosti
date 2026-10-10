@@ -11,7 +11,7 @@ Takový plán je horší než žádný: podle něj se nedá poznat, co ještě c
 
 <!-- PK-STAV-OD: přepočítá scripts/generate-roadmap-cisla.mjs -->
 
-## Stav k 9. 10. 2026
+## Stav k 10. 10. 2026
 
 | Co | Jak to je |
 |---|---|

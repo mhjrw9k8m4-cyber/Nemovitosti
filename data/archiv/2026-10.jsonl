@@ -145,3 +145,23 @@
 {"k":"Dolní Hbity|627/5|Příbram|49.658|14.172#1encq6b","m":"Dolní Hbity","o":"Příbram","dr":"lesní pozemek","t":"drazba","v":810,"c":136564,"od":"2026-09-17","do":"2026-10-08","proc":"zmizela"}
 {"k":"Police nad Metují|1103/1|Náchod|50.533|16.237#1mbi72r","m":"Police nad Metují","o":"Náchod","dr":"trvalý travní porost","t":"drazba","v":2353,"c":1647100,"od":"2026-09-14","do":"2026-10-08","proc":"zmizela"}
 {"k":"Hodonín|—|Hodonín|48.806|17.093#1rqp5yp","m":"Hodonín","o":"Hodonín","dr":"lesní pozemek","t":"exekuce","v":547418,"c":42000,"od":"2026-09-30","do":"2026-10-08","proc":"zmizela"}
+{"k":"Liteň|—|Beroun|49.904|14.149#203es","m":"Liteň","o":"Beroun","dr":"lesní pozemek","t":"sale","v":5973,"c":389000,"od":"2026-09-27","do":"2026-10-09","proc":"cena"}
+{"k":"Korno|—|Beroun|49.921|14.134#203fo","m":"Korno","o":"Beroun","dr":"lesní pozemek","t":"sale","v":22542,"c":1100000,"od":"2026-09-27","do":"2026-10-09","proc":"cena"}
+{"k":"Horní Bečva|—|Vsetín|49.436|18.279#48ag2","m":"Horní Bečva","o":"Vsetín","dr":"lesní pozemek","t":"sale","v":1646,"c":240000,"od":"2026-09-19","do":"2026-10-09","proc":"cena"}
+{"k":"Konice|—|Prostějov|49.588|16.868#4s6kt","m":"Konice","o":"Prostějov","dr":"orná půda","t":"sale","v":9848,"c":739000,"od":"2026-09-14","do":"2026-10-09","proc":"cena"}
+{"k":"Dětkovice|—|Vyškov|49.274|17.142#i21l14","m":"Dětkovice","o":"Vyškov","dr":"stavební pozemek","t":"sale","v":1018,"c":4490000,"od":"2026-09-14","do":"2026-10-09","proc":"cena"}
+{"k":"Veselí nad Lužnicí|—|Tábor|49.151|14.689#i0go8k","m":"Veselí nad Lužnicí","o":"Tábor","dr":"ostatní plocha","t":"sale","v":3732,"c":39000,"od":"2026-09-27","do":"2026-10-09","proc":"zmizela"}
+{"k":"Trpín|—|Svitavy|49.593|16.392#2n87a","m":"Trpín","o":"Svitavy","dr":"orná půda","t":"sale","v":1138,"c":15000,"od":"2026-09-27","do":"2026-10-09","proc":"zmizela"}
+{"k":"Božice|—|Znojmo|48.859|16.307#hxq6c9","m":"Božice","o":"Znojmo","dr":"vinice","t":"sale","v":1980,"c":65000,"od":"2026-09-22","do":"2026-10-09","proc":"zmizela"}
+{"k":"Uherské Hradiště|—|Uherské Hradiště|49.063|17.508#43gpu","m":"Uherské Hradiště","o":"Uherské Hradiště","dr":"orná půda","t":"sale","v":777,"c":27000,"od":"2026-09-28","do":"2026-10-09","proc":"zmizela"}
+{"k":"Golčův Jeníkov|—|Havlíčkův Brod|49.798|15.444#3e6w9","m":"Golčův Jeníkov","o":"Havlíčkův Brod","dr":"orná půda","t":"sale","v":11681,"c":509000,"od":"2026-09-19","do":"2026-10-09","proc":"zmizela"}
+{"k":"Slabce|—|Rakovník|49.974|13.703#23bcd","m":"Slabce","o":"Rakovník","dr":"orná půda","t":"sale","v":2611,"c":130000,"od":"2026-10-08","do":"2026-10-09","proc":"zmizela"}
+{"k":"Kamenný Újezd|—|Rokycany|49.728|13.613#42tye","m":"Kamenný Újezd","o":"Rokycany","dr":"orná půda","t":"sale","v":11010,"c":549000,"od":"2026-09-14","do":"2026-10-09","proc":"zmizela"}
+{"k":"Kobylí|—|Břeclav|48.930|16.928#3e3eu","m":"Kobylí","o":"Břeclav","dr":"ovocný sad","t":"sale","v":880,"c":45000,"od":"2026-09-14","do":"2026-10-09","proc":"zmizela"}
+{"k":"Mělčany|—|Brno-venkov|49.086|16.496#5h349","m":"Mělčany","o":"Brno-venkov","dr":"orná půda","t":"sale","v":3857,"c":210000,"od":"2026-09-14","do":"2026-10-09","proc":"zmizela"}
+{"k":"Františkovy Lázně|—|Cheb|50.124|12.364#i22v4m","m":"Františkovy Lázně","o":"Cheb","dr":"orná půda","t":"sale","v":3625,"c":299000,"od":"2026-09-14","do":"2026-10-09","proc":"zmizela"}
+{"k":"Turnov|—|Semily|50.601|15.165#1zj0m","m":"Turnov","o":"Semily","dr":"trvalý travní porost","t":"sale","v":1668,"c":199000,"od":"2026-09-27","do":"2026-10-09","proc":"zmizela"}
+{"k":"Bohumín|—|Karviná|49.887|18.327#kmjr","m":"Bohumín","o":"Karviná","dr":"stavební pozemek","t":"sale","v":1370,"c":999000,"od":"2026-09-19","do":"2026-10-09","proc":"zmizela"}
+{"k":"Ústí nad Labem|—|Ústí nad Labem|50.672|14.057#19z7r","m":"Ústí nad Labem","o":"Ústí nad Labem","dr":"stavební pozemek","t":"sale","v":860,"c":3850000,"od":"2026-09-14","do":"2026-10-09","proc":"zmizela"}
+{"k":"Tišnov|St. 1692|Brno-venkov|49.350|16.429#1encorx","m":"Tišnov","o":"Brno-venkov","dr":"zastavěná plocha a nádvoří","t":"drazba","v":582,"c":5100000,"od":"2026-09-14","do":"2026-10-09","proc":"zmizela"}
+{"k":"Hodonín|—|Hodonín|48.810|17.092#1rqp5yq","m":"Hodonín","o":"Hodonín","dr":"lesní pozemek","t":"exekuce","v":547418,"c":42000,"od":"2026-09-30","do":"2026-10-09","proc":"zmizela"}
