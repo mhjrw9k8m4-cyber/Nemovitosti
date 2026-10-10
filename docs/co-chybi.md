@@ -2353,6 +2353,75 @@ Všechna místa, která na webu něco tvrdí o ceně, § 12 teď poznají:
 
 Poslední dvě řádky jsou změřené negativní výsledky, ne domněnky.
 
+## 3ar. Pojistka: celá značka „§ 12" stojí na jedné větě, na které se robot a web nikde nedohodli — *doplněno 10. 10.*
+
+Po čtyřech opravách (3al, 3ao, 3ap, 3aq) jsem si položil otázku, na čem
+to všechno vlastně stojí — a odpověď byla nepříjemně tenká.
+
+### Co se změřilo
+
+Nejdřív dobrá zpráva. Hledal jsem planý poplach: `spravniCena` je
+regulární výraz nad polem `extra`, a to bývá volný text z cizího
+inzerátu, takže by stačilo, aby někdo v popisu napsal „sousedí se
+státní půdou". Změřeno: **všech 204** shod pochází z jediného
+doslovného řetězce, a ten si **robot píše sám**:
+
+```
+prodej státní půdy (SPÚ, § 12)      ← scripts/fetch-opportunities.mjs
+```
+
+Unikátních textů `extra` mezi těmi 204 nabídkami: **jeden**. Planý
+poplach tedy nehrozí.
+
+### Čím se za to platí
+
+Je to **dohoda na slovo, kterou nikdo nehlídal.** Kdyby robot začal
+psát „SPU" bez diakritiky nebo „Státní pozemkový úřad", přestane web na
+204 nabídkách poznávat, že cenu stanovil úřad — a tiše se vrátí
+všechno, co se dnes opravovalo: odznak „výhodná cena", percentil,
+srovnatelné pozemky, rádce i porovnávací tabulka. A **nic by
+nespadlo**: zkoušky té značky si ten řetězec **opisují u sebe**
+(`test-statistika.mjs`, `test-radce.mjs`), takže by zůstaly zelené nad
+vlastní kopií.
+
+K tomu druhá slabina: ten výraz je na webu ve **čtyřech kopiích**.
+
+| soubor | k čemu |
+|---|---|
+| `js/ceny.js` (`spravniCena`) | cenu stanovil úřad |
+| `js/pozemek.js` (`isSPU`) | odkaz „Nabídka SPÚ ↗" |
+| `js/radce.js` | rada o dosavadních pachtýřích |
+| `scripts/generate-region-pages.mjs` (`jeSPU`) | odkaz v krajském výpisu |
+
+Dvě z nich odpovídají na jinou otázku (má se odkázat na nabídku SPÚ),
+takže sloučit do jedné funkce je nejde — ale **shodný výraz v nich
+zůstat musí**, jinak stránka označí cenu za úřední a odkaz povede
+jinam. Je to týž tvar, jaký se už jednou rozešel u tabulky okres → kraj
+(a u dvou pozorovatelů v `test-stabilita`).
+
+### Pojistka
+
+`scripts/test-ceny.mjs` má 136 → **144** kontrol. Čte se znění
+**přímo z robota** (`extra:` na větvi SPÚ), ne opsané, a zkouší se, že:
+
+* výraz na úřední cenu se najde ve všech čtyřech souborech,
+* všechny čtyři kopie jsou **shodné**,
+* model pozná to, co robot opravdu píše,
+* a pozná to i každá ze těch čtyř kopií zvlášť.
+
+K tomu pojistka, že se v robotovi vůbec nějaké takové `extra:` našlo —
+jinak by kontroly běžely nad prázdnem.
+
+**Prokázáno dvěma sabotážemi:**
+
+* robotovi jsem změnil znění na „prodej pozemku SPU podle paragrafu 12"
+  → **5 kontrol spadlo** (model ani jedna ze čtyř kopií to nepozná);
+* jedné kopii výrazu jsem ubral alternativu („státní půd")
+  → **2 kontroly spadly** a hláška pojmenovala ten soubor.
+
+Žádná oprava kódu tu nebyla potřeba — chyběla pojistka. Zapsáno proto,
+že právě tyhle tiché dohody se rozcházejí nejdřív.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

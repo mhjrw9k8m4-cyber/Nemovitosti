@@ -1085,6 +1085,65 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
     /spravniCena\(d\)/.test(teloHot) && /pochybna \|\| o\.nejisty/.test(teloHot),
     'pojistka u hotIds o úřední ceně nevěděla');
 }
+/* ---- SMLOUVA MEZI ROBOTEM A WEBEM O ZNAČCE „§ 12" ----------------
+ *
+ * Celé zacházení s úředně stanovenou cenou stojí na jedné větě, kterou
+ * si robot SÁM píše do pole `extra`, a na výrazu, kterým ji web pak
+ * poznává. Změřeno: všech 204 shod pochází z jediného doslovného
+ * řetězce `prodej státní půdy (SPÚ, § 12)` ze scripts/fetch-opportunities.mjs
+ * — takže žádný planý poplach z cizího inzertního textu nehrozí.
+ *
+ * ZA TO SE ALE PLATÍ TÍM, ŽE TO JE DOHODA NA SLOVO. Kdyby robot začal
+ * psát třeba „SPU" bez diakritiky nebo „Státní pozemkový úřad", přestane
+ * web na 204 nabídkách poznávat, že cenu stanovil úřad — a tiše se
+ * vrátí všechno, co se 10. 10. opravovalo: odznak „výhodná cena",
+ * percentil, srovnatelné pozemky, rádce i porovnávací tabulka. Nic
+ * z toho by nespadlo: zkoušky té značky si ten řetězec OPISUJÍ u sebe
+ * (např. scripts/test-statistika.mjs), takže by zůstaly zelené.
+ *
+ * Proto se tu čte řetězec PŘÍMO Z ROBOTA a zkouší se na všech kopiích
+ * toho výrazu, které web má. Kopií je víc než jedna schválně: `isSPU`
+ * v js/pozemek.js a `jeSPU` v generátoru odpovídají na jinou otázku
+ * (má se odkázat na nabídku SPÚ), ale shodný výraz v nich zůstat musí,
+ * jinak by stránka označila cenu za úřední a odkaz vedl jinam.
+ */
+{
+  const vyrazy = [
+    ['js/ceny.js', 'spravniCena'],
+    ['js/pozemek.js', 'isSPU'],
+    ['js/radce.js', 'rada o pachtýřích'],
+    ['scripts/generate-region-pages.mjs', 'jeSPU'],
+  ];
+  const nalezene = [];
+  for (const [soubor, kde] of vyrazy) {
+    const src = readFileSync(new URL('../' + soubor, import.meta.url), 'utf8');
+    const m = /\/((?:SP[ÚU]|)[^/\n]*st[áa]tn[íi] p[ůu]d[^/\n]*)\/i/.exec(src);
+    nalezene.push({ soubor, kde, vyraz: m ? m[1] : null });
+  }
+  pravda(`výraz na úřední cenu se našel ve všech ${vyrazy.length} souborech`,
+    nalezene.every((x) => x.vyraz),
+    nalezene.filter((x) => !x.vyraz).map((x) => x.soubor).join(', '));
+  const unikaty = [...new Set(nalezene.map((x) => x.vyraz))];
+  pravda('a všechny kopie toho výrazu jsou shodné',
+    unikaty.length === 1, JSON.stringify(nalezene));
+
+  /* A teď to hlavní: ZNĚNÍ, KTERÉ ROBOT OPRAVDU PÍŠE. */
+  const robot = readFileSync(new URL('../scripts/fetch-opportunities.mjs', import.meta.url), 'utf8');
+  const znaceni = [...robot.matchAll(/extra:\s*'([^']*(?:SP[ÚU]|st[áa]tn[íi] p[ůu]d)[^']*)'/g)]
+    .map((m) => m[1]);
+  pravda(`v robotovi se našlo, co píše o státní půdě (${znaceni.length})`,
+    znaceni.length >= 1, 'žádné `extra:` se zmínkou o SPÚ — kontrola níž by neměla co zkoušet');
+  for (const text of znaceni) {
+    pravda(`model pozná, co robot píše: „${text}"`,
+      PK_CENY.spravniCena({ extra: text }) === true, 'spravniCena na tom nesedí');
+    for (const x of nalezene) {
+      if (!x.vyraz) continue;
+      pravda(`a pozná to i ${x.kde} (${x.soubor})`,
+        new RegExp(x.vyraz, 'i').test(text), `výraz ${x.vyraz} na „${text}" nesedí`);
+    }
+  }
+}
+
 
 console.log(zpravy.join('\n'));
 
