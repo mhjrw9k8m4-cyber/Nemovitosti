@@ -123,6 +123,20 @@ const ctx = await browser.newContext({
   viewport: { width: 390, height: 844 },
   serviceWorkers: 'block',
 });
+/* PÍSMA SE V OBOU NAČTENÍCH ZAHAZUJÍ — jinak tahle zkouška neměří
+   stylopis, ale časování.
+   Od přechodu na `font-display: optional` (viz bod 3v v docs/co-chybi.md)
+   platí, že vlastní písmo se použije jen tehdy, když dojede do asi
+   100 ms od začátku vykreslování. To je u každého načtení jinak, takže
+   se stávalo, že jedno načtení vykreslilo Interem a druhé záložním
+   písmem — a šířky textu se rozešly o desetiny pixelu. V CI to spadlo
+   na `zpravy.html`: „a.btn-primary.header-cta: inline-size = 74px
+   zkrácený / 73.4531px plný". Se stylopisem to nemělo nic společného.
+   Zahozením obou souborů woff2 kreslí obě načtení týmž záložním
+   písmem. Rozdíl ve stylopisu to nezakryje: kdyby zkrácený stylopis
+   přišel o @font-face nebo o font-family, vlastnost `font-family` se
+   v porovnání rozejde jako kterákoli jiná. */
+await ctx.route('**/*.woff2', (r) => r.abort());
 const page = await ctx.newPage();
 
 /* Že se vůbec měří zkrácený stylopis, a ne omylem plný. */

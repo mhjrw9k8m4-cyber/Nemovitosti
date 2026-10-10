@@ -891,6 +891,36 @@ vykreslení (`test-stabilita`, `test-naseptavac`, `test-uvod`,
 `test-mapa-pozemku`). **Jestli je zelená i v CI, ukáže až běh po tomhle
 commitu** — místně ta vada nikdy nespadla, takže to tady dokázat nejde.
 
+### Běh CI to potvrdil — a hned poslal účet
+
+Krok `test-stabilita` v CI **prošel** (a celý běh byl zelený), takže
+oprava funguje tam, kde se vada projevovala. Zároveň ale `optional`
+něco stojí a zaplatilo se to o commit později: `test-rozdeleni-stylu`
+spadlo na `zpravy.html` s hláškou
+
+```
+a.btn-primary.header-cta: inline-size = „74px" zkrácený / „73.4531px" plný
+```
+
+Ta zkouška načte tutéž stránku **dvakrát** (raz se zkráceným
+stylopisem, raz s podstrčeným plným) a porovnává vypočtené vlastnosti
+prvek po prvku. U `swap` se vlastní písmo použilo vždycky, takže obě
+načtení kreslila stejně. U `optional` se použije jen tehdy, když dojede
+do asi 100 ms — a to je u každého načtení jinak. Jedno načtení tedy
+kreslilo Interem, druhé záložním písmem, a šířky se rozešly o desetiny
+pixelu. **Se stylopisem to nemělo nic společného.**
+
+Opraveno v té zkoušce: v obou načteních se soubory `woff2` zahazují,
+takže obě kreslí týmž záložním písmem. Rozdíl ve stylopisu to nezakryje
+— kdyby zkrácený stylopis přišel o `@font-face` nebo o `font-family`,
+ta vlastnost se v porovnání rozejde jako kterákoli jiná.
+**Prokázáno sabotáží:** po úpravě jsem ze zkráceného stylopisu vyndal
+pravidlo `.wrap{max-width…}` a zkouška spadla na třech stránkách.
+
+Poučení, které platí dál: `optional` znamená, že vykreslení **není mezi
+dvěma načteními zaručeně shodné**. Zkouška, která žádá přesnou shodu,
+si proto musí stav písem postavit sama.
+
 ## 3w. ~~Stažená tabulka mohla v cizím Excelu spustit vzorec~~ — *zavřeno 10. 10.*
 
 Excel, LibreOffice i Google Tabulky berou buňku, která začíná **`=`,
