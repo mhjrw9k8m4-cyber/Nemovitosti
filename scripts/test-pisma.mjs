@@ -133,6 +133,21 @@ pravda('a každý z nich leží v podřezané sadě',
 const css = fs.readFileSync(path.join(KOREN, 'css', 'styles.css'), 'utf8');
 const faces = [...css.matchAll(/@font-face\{([^}]*)\}/g)].map((m) => m[1]);
 pravda(`v stylopisu jsou čtyři @font-face (${faces.length})`, faces.length === 4, `${faces.length}`);
+/* FONT-DISPLAY MUSÍ BÝT „OPTIONAL", NE „SWAP". `swap` vykreslí
+   záložním písmem a po dojetí vlastního ho vymění — a ta výměna
+   PŘELÁME TEXT. Zkouška scripts/test-stabilita.mjs na to padala v CI
+   (hlidani.html, CLS 0,2426) a pojmenované uzly to ukázaly přesně:
+   `text v B [166/20→192/20]`, tedy první řádek úvodního odstavce
+   o jeden řádek níž, a u posunu „[písma loading]".
+   Naměřeno na hlidani.html se zdrženými woff2: swap dává 0,0073,
+   optional 0 — a vlastní písmo se při optional pořád použije, protože
+   je přednačtené, vlastní a má 22 kB.
+   Vrácení na `swap` by tu vadu vrátilo, a je to změna o jedno slovo,
+   kterou by si nikdo nevšiml. Proto tahle kontrola. */
+const zobrazeni = faces.map((f) => (/font-display:\s*([a-z]+)/.exec(f) || [, '(chybí)'])[1]);
+pravda(`všechna čtyři písma mají font-display: optional (${[...new Set(zobrazeni)].join(', ')})`,
+  zobrazeni.length === 4 && zobrazeni.every((x) => x === 'optional'),
+  `nalezeno: ${zobrazeni.join(', ')} — „swap" přelomí text po dojetí písma (viz test-stabilita)`);
 const spatnaVaha = faces.filter((f) => !/font-weight:400 800/.test(f));
 pravda('a každý hlásí tu osu váhy, kterou soubory nesou (400 800)',
   spatnaVaha.length === 0, `${spatnaVaha.length} jiných — soubory mají osu 400–800`);

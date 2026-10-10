@@ -708,7 +708,7 @@ Vedlejší zjištění, které stojí za zapsání: u mezí se vyžadovalo
 odhadu se kontrola zastavovat nemá, protože **žádné z tvrzení níž odhad
 nečte**; vypisuje se dál, jen se na něm neprochází.
 
-## 3v. Zkouška stability: dva pozorovatelé, kteří se rozešli — *rozpracováno 9. 10.*
+## 3v. Zkouška stability: dva pozorovatelé, kteří se rozešli — a příčinou byla výměna písma — *opraveno 10. 10.*
 
 Přímé pokračování bodu 3p. Jmenovitá hláška v CI poprvé řekla, co
 `test-stabilita` vlastně nahlásila:
@@ -826,9 +826,70 @@ posílal do CI řádek, o kterém jen doufám, že se vykreslí):
   které by se jinak jen hádaly. (Místně vychází u toho posunu
   `loading`.)
 
-Pořád **rozpracované**. Příští červený běh v CI už ale musí říct, co ty
-dva zdroje jsou — a to je ta chybějící informace, bez které se dál
-nedostanu.
+### A běh CI to řekl — příčina je výměna písma
+
+Příští červený běh přišel a jmenovaná hláška odpověděla na obojí:
+
+```
+85 ms, 0.243 [písma loading]: DIV.wrap [334/566→342/558],
+                              text v P.sub [192/45→192/45],
+                              text v B [166/20→192/20]
+```
+
+Tedy:
+
+1. Ty dva „?" **byly textové uzly**, ne uzly mimo DOM — a jsou to přesně
+   ty, které jsem našel místně: úvodní odstavec hrdiny na stránce
+   hlídání (`<p class="sub"><b>Hlídejte si nové pozemky.</b> …`).
+2. `text v B` klesne ze 166 na 192 px, tedy **o 26 px = přesně jeden
+   řádek**. Ten odstavec se přelomí.
+3. U posunu stojí **`[písma loading]`** — v tu chvíli ještě písma nebyla
+   načtená.
+
+Příčina je tedy `font-display: swap`: prohlížeč vykreslí záložním
+písmem a po dojetí vlastního ho vymění — a výměna přeláme řádky.
+Místně se to nereprodukovalo proto, že tady záložní písmo (Liberation
+Sans přes alias Arialu) láme řádky shodně jako Inter; kontejner CI má
+jiná písma. Tím se vysvětluje i to, proč to „není pokaždé": záleží na
+tom, jestli se výměna stihne před prvním vykreslením, nebo po něm.
+
+### Oprava — `optional` místo `swap`
+
+Naměřeno na `hlidani.html` se zdrženými soubory woff2 (bez zdržení
+dojedou dřív než první vykreslení a nic se neprojeví):
+
+| režim | zdržení | CLS | písma se použila? |
+|---|---|---|---|
+| `swap` | 0 ms | 0,0037 | ano |
+| `swap` | 300 ms | **0,0073** (mezi zdroji zas `text v B`) | ano |
+| `swap` | 1 500 ms | **0,0073** | ano |
+| `optional` | 300 ms | **0** | ano |
+| `optional` | 1 500 ms | **0** | ano |
+
+Po změně ve stylopisu změřeno znovu na opravdu přestavěném stromu:
+**CLS 0** při 300 i 1 500 ms zdržení, a Fraunces i Inter se načtou
+a použijí (h1 31 px, úvodní odstavec 76 px — shodně se `swap`).
+
+**Co se za to platí, poctivě:** `optional` vlastní písmo po prvním
+vykreslení už nevyměňuje, takže na velmi pomalém připojení může celé
+načtení proběhnout v záložním písmu. Při přednačtení na všech
+stránkách, vlastním serveru a 22 kB na soubor se to ale stihne. Stabilní
+rozvržení za cenu, kterou skoro nikdo nezaplatí, je lepší obchod než
+přelomený text u každého návštěvníka s prázdnou cache.
+
+Zbývající posun `DIV.wrap [334/566→342/558]` (0,004) tím nezmizí — ten
+nedělá písmo, ale skript, a je dvanáctkrát pod mezí. Byl tam i dřív.
+
+### Pojistka
+
+`scripts/test-pisma.mjs` má 14 → **15** kontrol: hlídá, že všechna čtyři
+`@font-face` mají `font-display: optional`. Vrácení na `swap` je změna
+o jedno slovo, které by si nikdo nevšiml — a vrátilo by to celou vadu.
+
+Místně je zelených 11 prohlížečových zkoušek včetně těch, které měří
+vykreslení (`test-stabilita`, `test-naseptavac`, `test-uvod`,
+`test-mapa-pozemku`). **Jestli je zelená i v CI, ukáže až běh po tomhle
+commitu** — místně ta vada nikdy nespadla, takže to tady dokázat nejde.
 
 ## 3w. ~~Stažená tabulka mohla v cizím Excelu spustit vzorec~~ — *zavřeno 10. 10.*
 
