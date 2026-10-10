@@ -5,15 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
-  <title>Lesní pozemek 547 418 m² — Hodonín, okres Hodonín | Parcelka</title>
-  <meta name="description" content="Exekuce · 42 000 Kč (7 Kč/m²) · 547 418 m² · Hodonín, okres Hodonín. Termín 11. 11. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
+  <title>Lesní pozemek 547 418 m², podíl 1/88 — Hodonín | Parcelka</title>
+  <meta name="description" content="Exekuce · 42 000 Kč (7 Kč/m²) · 547 418 m², podíl 1/88 · Hodonín, okres Hodonín. Termín 11. 11. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
   <meta name="theme-color" content="#F9FAF9">
-  <meta name="robots" content="noindex,follow">
+  <!-- TENHLE SOUBOR JE VZOR, NE STRÁNKA. Bez `?p=` v adrese je na něm
+       jediná věta „Načítám pozemek…" — obsah dodá až skript z dat. Dávat
+       takovou skořápku vyhledávači do indexu znamená nabízet mu prázdnou
+       stránku; obsah mají statické stránky pozemek-*.html, které z tohohle
+       vzoru vznikají, a těm generátor `index,follow` vrací zpátky
+       (scripts/generate-parcel-pages.mjs). `follow` zůstává: odkazy
+       z téhle stránky ven se sledovat mají. -->
+  <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html">
   <link rel="alternate" type="application/rss+xml" title="Parcelka — nové pozemky" href="novinky.xml">
   <meta property="og:type" content="article">
-  <meta property="og:title" content="Lesní pozemek 547 418 m² — Hodonín, okres Hodonín">
-  <meta property="og:description" content="Exekuce · 42 000 Kč (7 Kč/m²) · 547 418 m² · Hodonín, okres Hodonín. Termín 11. 11. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
+  <meta property="og:title" content="Lesní pozemek 547 418 m², podíl 1/88 — Hodonín">
+  <meta property="og:description" content="Exekuce · 42 000 Kč (7 Kč/m²) · 547 418 m², podíl 1/88 · Hodonín, okres Hodonín. Termín 11. 11. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
   <meta property="og:locale" content="cs_CZ">
   <meta property="og:site_name" content="Parcelka">
   <meta property="og:url" content="https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html">
@@ -21,8 +28,8 @@
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Lesní pozemek 547 418 m² — Hodonín, okres Hodonín">
-  <meta name="twitter:description" content="Exekuce · 42 000 Kč (7 Kč/m²) · 547 418 m² · Hodonín, okres Hodonín. Termín 11. 11. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
+  <meta name="twitter:title" content="Lesní pozemek 547 418 m², podíl 1/88 — Hodonín">
+  <meta name="twitter:description" content="Exekuce · 42 000 Kč (7 Kč/m²) · 547 418 m², podíl 1/88 · Hodonín, okres Hodonín. Termín 11. 11. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
   <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og/okres-hodonin.png">
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -61,7 +68,7 @@
 .pz-back:hover{color:var(--text-ondark)}
 .pz-back svg{width:16px;height:16px;stroke-width:2.25}
 .pz-media{position:relative;width:100%;aspect-ratio:16/10;max-height:400px;border-radius:var(--r-obraz);overflow:hidden;background:var(--ink-soft2);border:1px solid var(--line);box-shadow:var(--e2)}
-.pz-media .opp-badge{position:absolute;top:13px;left:13px;z-index:3;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:0.02em;padding:6px 12px 6px 10px;border-radius:var(--r-sm);color:#fff;background:rgba(12,26,18,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.pz-media .opp-badge{position:absolute;top:13px;left:13px;bottom:auto;z-index:3;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:0.02em;padding:6px 12px 6px 10px;border-radius:var(--r-sm);color:#fff;background:rgba(12,26,18,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .pz-media .opp-badge::before{content:"";width:8px;height:8px;border-radius:50%;flex:none}
 .opp-badge.sale::before{background:var(--c-sale)}
 .opp-badge.drazba::before{background:var(--c-drazba)}
@@ -71,7 +78,7 @@
 .pz-gallery{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;z-index:1}
 .pz-gallery::-webkit-scrollbar{display:none}
 .pz-shot{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:center;scroll-snap-stop:always;display:block;user-select:none}
-.pz-media .opp-count{position:absolute;right:13px;bottom:13px;left:auto;z-index:3}
+.pz-media .opp-count{position:absolute;right:13px;bottom:13px;left:auto;z-index:3;display:inline-flex}
 .pz-head{margin:20px 0 0}
 .pz-place{font-family:var(--font-display);font-size:28px;font-weight:700;letter-spacing:-0.01em;color:var(--text-ondark);line-height:1.15}
 .pz-okres{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--text-ondark-mute);margin-top:6px}
@@ -98,7 +105,11 @@
 .pv-stred{position:absolute;left:50%;top:-3px;bottom:-3px;width:1.5px;background:rgba(20,35,28,0.3);transform:translateX(-50%);border-radius:2px}
 .pv-dot{position:absolute;top:50%;left:var(--w);width:15px;height:15px;border-radius:50%;background:var(--vc);border:3px solid #fff;box-shadow:var(--e1);transform:translate(-50%,-50%);animation:puntikNajed .62s var(--ease) both}
 .pv-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--text-ondark-mute);margin-top:6px}
-.pz-sect-h{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--popisek);margin:40px 0 10px}
+.pz-sect-h{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--popisek);margin:40px 0 10px;position:relative}
+.pz-sect-h::before{content:"";position:absolute;left:0;top:-14px;width:52px;height:2px;border-radius:2px;background:var(--grad-warm);opacity:.85}
+.pz-blok{margin:10px 0 0;padding:12px 14px;border-radius:var(--r-plocha);font-size:14px;line-height:1.55;background:linear-gradient(180deg,var(--ink-soft2),var(--ink-soft));border:1px solid var(--line);color:var(--text-ondark)}
+.pz-blok b{color:var(--copper-bright)}
+.pz-blok-pozn{display:block;margin-top:6px;font-size:13px;color:var(--text-ondark-mute)}
 .pz-naklady{margin:20px 0 0;font-size:14px;color:var(--text-ondark-mute)}
 .pz-naklady a{font-weight:600;color:var(--copper-bright);text-decoration:underline;text-underline-offset:3px}
 .pz-popis-inzerent{max-width:var(--m-text);margin:0 0 6px;font-size:16px;line-height:1.62;color:var(--text-ondark)}
@@ -115,11 +126,15 @@ a.srv-kde:hover{color:var(--copper-bright)}
 .srv-ja{background:rgba(44,113,80,0.10);border-radius:var(--r-plocha);box-shadow:inset 3px 0 0 var(--plocha-znacka)}
 .srv-ja .srv-kde{font-weight:700}
 .srv-pozn{max-width:var(--m-text);margin:10px 0 0;font-size:13px;line-height:1.55;color:var(--text-ondark-mute)}
-.kd-mriz{display:grid;gap:8px;max-width:var(--m-text);grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.kd-mriz{display:grid;gap:8px;max-width:var(--m-text);grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .kd-polozka{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:10px 14px;border-radius:var(--r-ovladani);background:var(--ink-soft);border:1.5px solid var(--obrys-tlacitka);text-decoration:none;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .kd-polozka:hover{border-color:var(--copper-bright);background:var(--ink-soft2);box-shadow:var(--e2)}
 .kd-t{font-size:15px;font-weight:700;color:var(--text-ondark)}
 .kd-p{font-size:12px;line-height:1.4;color:var(--text-ondark-mute)}
+@media (max-width:560px){.kd-p{display:none}
+.kd-polozka{min-height:48px;padding:8px 12px}
+.pz-kamdal .pz-sect-h{margin-top:20px}
+}
 .pz-feats{display:flex;flex-wrap:wrap;gap:8px}
 .pz-feat{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--text-ondark);background:var(--ink-soft);border:1px solid var(--line-strong);padding:8px 12px;border-radius:var(--r-plocha)}
 .pz-feat svg{width:17px;height:17px;stroke-width:2.12;color:var(--copper-bright)}
@@ -176,6 +191,7 @@ a.srv-kde:hover{color:var(--copper-bright)}
 .pz-gtk-sum::-webkit-details-marker{display:none}
 .pz-gtk-sum:hover{border-color:var(--copper-bright);box-shadow:var(--e2)}
 .pz-gtk-sum .pz-sect-h{margin:0;border:0;padding:0;font-size:15px;letter-spacing:0;text-transform:none;color:var(--copper-bright)}
+.pz-gtk-sum .pz-sect-h::before{display:none}
 .pz-gtk-kolik{margin-left:auto;font-size:13px;font-weight:700;white-space:nowrap;color:var(--copper-bright);background:var(--ink-soft);border:1px solid var(--line);padding:2px 8px;border-radius:var(--r-pill)}
 .pz-gtk-kolik:empty{display:none}
 .pz-gtk-akce{font-size:13px;font-weight:700;color:var(--copper-bright);white-space:nowrap}
@@ -186,7 +202,7 @@ a.srv-kde:hover{color:var(--copper-bright)}
 .pz-gtk-obal[open] .pz-gtk-sum{border-bottom-left-radius:0;border-bottom-right-radius:0;box-shadow:none}
 .pz-gtk-obal[open] .pz-gtk-sum::after{transform:rotate(-135deg) translate(-3px,-3px)}
 .pz-gtk-obal[open] .pz-gtk{border-top-left-radius:0;border-top-right-radius:0;border-top:0}
-.pz-gtk{background:var(--ink-soft);border:1px solid var(--line);border-radius:var(--r-md);padding:16px 16px}
+.pz-gtk{background:linear-gradient(180deg,var(--ink-soft2),var(--ink-soft));border:1px solid var(--line);border-radius:var(--r-md);padding:16px 16px}
 .pz-gtk .g-row{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-bottom:1px solid var(--line)}
 .pz-gtk .g-row:first-child{padding-top:0}
 .pz-gtk .g-row:last-of-type{border-bottom:none}
@@ -201,7 +217,7 @@ a.srv-kde:hover{color:var(--copper-bright)}
 .pz-gtk .g-ol li{font-size:14px;line-height:1.55;color:var(--text-ondark)}
 .pz-gtk .g-ol li::marker{font-family:var(--font-mono);font-size:12px;color:var(--accent-warm)}
 .pz-gtk .g-foot{font-size:12px;color:var(--text-ondark-mute);line-height:1.5;margin-top:12px;font-style:italic}
-.pzm{position:relative;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--ink-soft);box-shadow:var(--e2)}
+.pzm{position:relative;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:linear-gradient(180deg,var(--ink-soft2),var(--ink-soft));box-shadow:var(--e2)}
 .pzm-mapa{height:390px;width:100%;background:var(--ink)}
 .pzm-mapa{position:relative}
 .pzm-cela-btn{position:absolute;z-index:500;right:10px;top:10px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-sm);border:1px solid rgba(24,45,34,.25);background:rgba(255,255,255,.93);color:var(--copper-bright);cursor:pointer;padding:0;box-shadow:var(--e1);-webkit-tap-highlight-color:transparent}
@@ -305,7 +321,7 @@ body.pzm-cela-telo{overflow:hidden}
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><div class="pz-konec" role="status"><b>Tato nabídka už není aktuální.</b> <span>Zmizela ze zdroje 9. 10. 2026. Stránku necháváme dostupnou, aby uložené odkazy vedly někam, ale pozemek už takhle koupit nejde.</span><p>Podobné pozemky ve stejném okrese:</p><ul><li><a href="pozemek-hodonin-lovcice-5fr3l2.html">Lovčice — 1 710 m²</a></li><li><a href="pozemek-hodonin-louka-zp19rj.html">Louka — 5 254 m²</a></li><li><a href="pozemek-hodonin-velka-nad-velickou-1oofao8.html">Velká nad Veličkou — 2 939 m²</a></li></ul><p><a href="index.html#mapa">Zpět na mapu všech pozemků</a></p></div><article class="pz-staticky"><h1>Lesní pozemek 547 418 m² — Hodonín, okres Hodonín</h1><p><b>42 000 Kč</b> (7 Kč/m²) · 547 418 m² · Exekuce</p><dl><dt>Druh pozemku</dt><dd>Lesní pozemek</dd><dt>Výměra</dt><dd>547 418 m²</dd><dt>Obec</dt><dd>Hodonín</dd><dt>Okres</dt><dd><a href="pozemky-okres-hodonin.html">Hodonín</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 1/88 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>nucená dražba 11. 11. 2026 · OK dražby</dd><dt>Vzdušnou čarou</dt><dd>Hodonín 5,8 km · Brno 56 km</dd></dl><p><a href="pozemek.html?p=Hodon%C3%ADn%7C%E2%80%94%7CHodon%C3%ADn%7C48.810%7C17.092&amp;ll=48.809662,17.09211&amp;v=547418&amp;c=42000">Otevřít na mapě</a></p><p><a href="index.html?obec=Hodon%C3%ADn&amp;okres=Hodon%C3%ADn">V okrese Hodonín jsou v nabídce ještě 2 pozemky</a></p><h2>Kam dál</h2><ul><li><a href="pozemky-okres-hodonin.html">Okres Hodonín</a> — všechny pozemky v okrese</li><li><a href="pozemky-jihomoravsky-kraj.html">Jihomoravský kraj</a> — přehled celého kraje</li><li><a href="pozemky-lesni.html">Lesní pozemky</a> — týž druh pozemku po celé ČR</li></ul></article></div></div>
+    <div id="pz-detail"><article class="pz-staticky"><h1>Lesní pozemek 547 418 m², podíl 1/88 — Hodonín</h1><p><b>42 000 Kč</b> (7 Kč/m²) · 547 418 m² · Exekuce</p><dl><dt>Druh pozemku</dt><dd>Lesní pozemek</dd><dt>Výměra</dt><dd>547 418 m²</dd><dt>Obec</dt><dd>Hodonín</dd><dt>Okres</dt><dd><a href="pozemky-okres-hodonin.html">Hodonín</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 1/88 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>nucená dražba 11. 11. 2026 · OK dražby</dd><dt>Vzdušnou čarou</dt><dd>Hodonín 5,8 km · Brno 56 km</dd></dl><p><a href="pozemek.html?p=Hodon%C3%ADn%7C%E2%80%94%7CHodon%C3%ADn%7C48.810%7C17.092&amp;ll=48.809662,17.09211&amp;v=547418&amp;c=42000">Otevřít na mapě</a></p><p><a href="index.html?obec=Hodon%C3%ADn&amp;okres=Hodon%C3%ADn">V okrese Hodonín jsou v nabídce ještě 2 pozemky</a></p><h2>Kam dál</h2><ul><li><a href="pozemky-okres-hodonin.html">Okres Hodonín</a> — všechny pozemky v okrese</li><li><a href="pozemky-jihomoravsky-kraj.html">Jihomoravský kraj</a> — přehled celého kraje</li><li><a href="pozemky-lesni.html">Lesní pozemky</a> — týž druh pozemku po celé ČR</li></ul></article></div></div>
   </div>
 </main>
 
@@ -329,20 +345,13 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/snimek.js?v=d4e40486"></script>
 <script src="js/min/terminy.js?v=cf102557"></script>
 <script src="js/min/ceny.js?v=4f85ad6b"></script>
-<script src="js/min/zlevneni.js?v=024f8a64" defer></script>
+  <script src="js/min/zlevneni.js?v=024f8a64" defer></script>
 <script src="js/min/vybaveni.js?v=8e3b34f9"></script>
 <script src="js/min/radce.js?v=679cccb9"></script>
 <script src="js/min/klic.js?v=4a04bc24"></script>
 <script src="js/min/videno.js?v=e21d5bf3"></script>
 <script src="js/min/poznamky.js?v=070e8c0d"></script>
-<script src="js/min/hlidani-logika.js?v=3c8ae080"></script>
-<script src="js/min/pozemek.js?v=89d8a35a"></script>
-<script src="js/min/config.js?v=8ba36013" defer></script>
-<script src="js/min/auth.js?v=bec7a315" defer></script>
-<script src="js/min/hlavicka.js?v=8249999c" defer></script>
-<script src="js/min/offline.js?v=16a48df3" defer></script>
-<script src="js/min/mereni.js?v=b2023a39" defer></script>
-  <!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
+<!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
      než js/pozemek.js postaví cenový model: staví ho z téže hromádky
      jako mapa, tedy bez duplicit. Proto tu tenhle modul stojí jako
      obyčejný skript PŘED ním, a ne v odložené skupině níž — odložené
@@ -350,9 +359,10 @@ body.pzm-cela-telo{overflow:hidden}
      postavit z 2 018 nabídek místo 1 995. Pozdější spotřebitelé
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
-<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Lesní pozemek 547 418 m² — Hodonín, okres Hodonín","description":"Nabídka už není aktuální. Exekuce · 42 000 Kč (7 Kč/m²) · 547 418 m² · Hodonín, okres Hodonín. Termín 11. 11. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html","address":{"@type":"PostalAddress","addressLocality":"Hodonín","addressRegion":"Hodonín","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":48.809662,"longitude":17.09211},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":547418,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":42000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html","itemOffered":{"@type":"Place","name":"Lesní pozemek 547 418 m² — Hodonín, okres Hodonín"},"description":"Vyvolávací cena ve veřejné dražbě, ne cena požadovaná prodávajícím. Cena je za spoluvlastnický podíl; uvedená výměra patří celé parcele.","availability":"https://schema.org/OutOfStock","priceValidUntil":"2026-10-09"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Jihomoravský kraj","item":"https://www.parcelaka.cz/pozemky-jihomoravsky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Hodonín","item":"https://www.parcelaka.cz/pozemky-okres-hodonin.html"},{"@type":"ListItem","position":5,"name":"Lesní pozemek 547 418 m² — Hodonín, okres Hodonín","item":"https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html"}]}]</script>
-<script>window.PK_UKONCENO="2026-10-09";</script>
+<script src="js/min/hlidani-logika.js?v=3c8ae080"></script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Lesní pozemek 547 418 m², podíl 1/88 — Hodonín","description":"Exekuce · 42 000 Kč (7 Kč/m²) · 547 418 m², podíl 1/88 · Hodonín, okres Hodonín. Termín 11. 11. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html","address":{"@type":"PostalAddress","addressLocality":"Hodonín","addressRegion":"Hodonín","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":48.809662,"longitude":17.09211},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":547418,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":42000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html","itemOffered":{"@type":"Place","name":"Lesní pozemek 547 418 m², podíl 1/88 — Hodonín"},"description":"Vyvolávací cena ve veřejné dražbě, ne cena požadovaná prodávajícím. Cena je za spoluvlastnický podíl; uvedená výměra patří celé parcele."}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Jihomoravský kraj","item":"https://www.parcelaka.cz/pozemky-jihomoravsky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Hodonín","item":"https://www.parcelaka.cz/pozemky-okres-hodonin.html"},{"@type":"ListItem","position":5,"name":"Lesní pozemek 547 418 m², podíl 1/88 — Hodonín","item":"https://www.parcelaka.cz/pozemek-hodonin-hodonin-194gce1.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Hodonín|—|Hodonín|48.810|17.092","ll":[48.809662,17.09211],"v":547418,"c":42000,"r":"data/okres/hodonin.json"};</script>
+<script src="js/min/pozemek.js?v=89d8a35a"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -360,8 +370,14 @@ body.pzm-cela-telo{overflow:hidden}
    říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
    na nasazení u Vercelu. */
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
+<script src="js/min/config.js?v=8ba36013" defer></script>
+<script src="js/min/auth.js?v=bec7a315" defer></script>
+<script src="js/min/hlavicka.js?v=8249999c" defer></script>
+<script src="js/min/offline.js?v=16a48df3" defer></script>
+<script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Hodonín 5,8 km · Brno 56 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V okrese Hodonín jsou v nabídce ještě 2 pozemky","url":"index.html?obec=Hodon%C3%ADn\u0026okres=Hodon%C3%ADn"}</script>
+<script type="application/json" id="pz-titul-data">"Lesní pozemek 547 418 m², podíl 1/88 — Hodonín"</script>
 <script type="application/json" id="pz-kamdal-data">[{"t":"Okres Hodonín","u":"pozemky-okres-hodonin.html","p":"všechny pozemky v okrese"},{"t":"Jihomoravský kraj","u":"pozemky-jihomoravsky-kraj.html","p":"přehled celého kraje"},{"t":"Lesní pozemky","u":"pozemky-lesni.html","p":"týž druh pozemku po celé ČR"}]</script>
 </body>
 </html>
