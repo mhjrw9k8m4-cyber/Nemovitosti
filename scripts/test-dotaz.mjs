@@ -573,6 +573,76 @@ function pravda(popis, vyslo, proc) {
   pravda('a „Praha 5" taky', praha.text === 'praha 5', `zbylo „${praha.text}"`);
 }
 
+/* ===== ČÁSTKA PSANÁ PO TISÍCÍCH ===================================
+   Věta se rozebírá po slovech, takže „1 500 000" byla tři slova a
+   z prvního vyšla jednička — ta je pod mezí, od které se bez jednotky
+   tipuje cena, takže celé „do 1 500 000" spadlo do hledání obce
+   a výpis byl prázdný. Přitom mezera po tisících je český pravopis
+   a web sám všechna čísla tiskne takhle („28 000 Kč"), takže kdo si
+   částku odtud zkopíruje, dostal nulu. Naměřeno před opravou:
+     do 1500000 ✓ · do 1 500 000 ✗ · do 1 500 000 Kč ✗ ·
+     od 500 000 ✗ · do 900 000 korun ✗ */
+{
+  const po = [
+    ['do 1 500 000', (r) => r.cenaDo === 1500000],
+    ['do 1 500 000 Kč', (r) => r.cenaDo === 1500000],
+    ['od 500 000', (r) => r.cenaOd === 500000],
+    ['do 900 000 korun', (r) => r.cenaDo === 900000],
+    ['pozemek do 1 200 000', (r) => r.cenaDo === 1200000],
+    ['stavební parcela do 1 500 000', (r) => r.cenaDo === 1500000 && r.druh === 'Stavební / zastavěná'],
+    ['nad 2 000 m2', (r) => r.plochaOd === 2000],
+  ];
+  for (const [dotaz, sedi] of po) {
+    const r = P.rozeber(dotaz);
+    pravda(`„${dotaz}" se přečte i s mezerami po tisících`, sedi(r),
+      `cena ${r.cenaOd}–${r.cenaDo}, plocha ${r.plochaOd}–${r.plochaDo}, zbytek „${r.text}"`);
+  }
+  /* A NESMÍ SE TÍM SLEPIT, CO SLEPIT NEJDE. Skupina musí mít přesně tři
+     číslice, jinak by se z „Praha 5 100" stalo pět tisíc sto. */
+  const neslepit = [
+    ['769/2', (r) => r.text === '769/2'],
+    ['Praha 5', (r) => r.text === 'praha 5'],
+    ['do 1,5 milionu', (r) => r.cenaDo === 1500000],
+    ['do 30 km od Brna', (r) => r.okruh === 30],
+    ['parcela 12 34', (r) => r.cenaDo == null && r.plochaDo == null],
+    /* PŘÍMO NA PRAVIDLO, ne na větu. Skupina po tisících má PŘESNĚ tři
+       číslice — jinak by se slepilo, co k sobě nepatří. Zkoušel jsem to
+       podchytit běžnou větou a nešlo to: povolit skupinám jednu až čtyři
+       číslice neshodilo ani jednu ze 153 kontrol, protože všechny
+       realistické věty vyjdou stejně tak i tak. Tahle dvojice slov
+       realistická není — je to kontrola pravidla, a jako taková tu stojí
+       místo sabotáže, kterou jsem nenašel. */
+    ['do 5 1000', (r) => r.cenaDo == null],
+    ['do 5 10 000', (r) => r.cenaDo == null],
+  ];
+  for (const [dotaz, sedi] of neslepit) {
+    const r = P.rozeber(dotaz);
+    pravda(`„${dotaz}" se slepováním nerozbije`, sedi(r),
+      `cena ${r.cenaOd}–${r.cenaDo}, plocha ${r.plochaOd}–${r.plochaDo}, okruh ${r.okruh}, zbytek „${r.text}"`);
+  }
+}
+
+/* ===== AR =========================================================
+   U polí a zahrad je ar běžnější jednotka než hektar („prodám 20 arů")
+   a web ji neznal — „50 arů" padalo celé do hledání obce. */
+{
+  const ary = [
+    ['50 arů', (r) => r.plochaOd === 3750 && r.plochaDo === 6250],
+    ['pozemek do 30 arů', (r) => r.plochaDo === 3000],
+    ['nad 10 arů', (r) => r.plochaOd === 1000],
+  ];
+  for (const [dotaz, sedi] of ary) {
+    const r = P.rozeber(dotaz);
+    pravda(`„${dotaz}" je výměra, ne text`, sedi(r),
+      `plocha ${r.plochaOd}–${r.plochaDo}, zbytek „${r.text}"`);
+  }
+  /* Samotné „a" je v české větě spojka, ne jednotka. */
+  const spojka = P.rozeber('pozemek 50 a les');
+  pravda('samotné „a" se jako ar nebere („pozemek 50 a les")',
+    spojka.plochaOd == null && spojka.druh === 'Lesní pozemek',
+    `plocha ${spojka.plochaOd}–${spojka.plochaDo}, druh ${spojka.druh}`);
+}
+
 console.log('\nJedno políčko, které rozumí celé větě');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

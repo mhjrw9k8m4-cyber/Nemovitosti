@@ -27,20 +27,29 @@
  * se dají koupit najednou: prodejců může být víc a každý svůj.
  * ==================================================================== */
 
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+
 /** Do kolika metrů se nabídky počítají k sobě. */
 export const MEZ_METRU = 300;
 /** Od kolika nabídek (včetně té prohlížené) se o shluku mluví. */
 export const NEJMENE = 3;
 
-const R_ZEME = 6371000;
-const rad = (x) => x * Math.PI / 180;
+/* VZDÁLENOST SE TU NEPOČÍTÁ ZNOVU. js/okruh.js má haversine, kterým
+   měří mapa, okruh z věty i řazení „nejblíž ke mně" — a stojí u něj
+   výslovně, že je jeden pro celou mapu. Vlastní kopie tady by byla
+   čtvrtá; napsal jsem ji a pak přeměřil: na čtyřech dvojicích bodů
+   (111 m, 400 m, 185 km, 211 km) se obě shodly do 1e-10 m, takže
+   nebyl důvod ji držet. (js/ceny.js si svou kopii nechává schválně —
+   načítá se na skoro dvou tisících stránkách a kvůli jednomu vzorci
+   tam další skript nepůjde. Tady v Node to nic nestojí.) */
+const PKOkruh = createRequire(import.meta.url)(
+  path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'js', 'okruh.js'));
 
-/** Vzdušná čára v metrech. Týž haversine jako js/okruh.js, jen v metrech. */
+/** Vzdušná čára v metrech — js/okruh.js počítá v kilometrech. */
 export function metry(a, b) {
-  const dla = rad(b.lat - a.lat), dlo = rad(b.lng - a.lng);
-  const x = Math.sin(dla / 2) ** 2
-    + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dlo / 2) ** 2;
-  return 2 * R_ZEME * Math.asin(Math.sqrt(Math.min(1, x)));
+  return PKOkruh.km(a, b) * 1000;
 }
 
 const maSouradnice = (o) => o && typeof o.lat === 'number' && typeof o.lng === 'number'

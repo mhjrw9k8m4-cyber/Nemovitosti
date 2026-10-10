@@ -75,6 +75,8 @@
     [/^(?:tis|tis\.|tisic\w*|k)$/, 1000, 'cena'],
     [/^(?:kc|korun\w*|czk)$/, 1, 'cena'],
     [/^(?:ha|hektar\w*)$/, 10000, 'plocha'],
+
+    [/^(?:ar|aru|ary|arech|arů)$/, 100, 'plocha'],
     [/^(?:m2|m²|metru|metry|metr)$/, 1, 'plocha'],
   ];
 
@@ -110,6 +112,14 @@
     var c = s.replace(/\s/g, '').replace(',', '.');
     if (!/^\d+(\.\d+)?$/.test(c)) return null;
     return parseFloat(c);
+  }
+
+  function cisloSkupiny(slova, i) {
+    if (!/^\d{1,3}$/.test(slova[i] || '')) return null;
+    var slov = 1;
+    while (/^\d{3}$/.test(slova[i + slov] || '')) slov++;
+    if (slov < 2) return null;
+    return { hodnota: parseFloat(slova.slice(i, i + slov).join('')), slov: slov };
   }
 
   function vetsiPrvni(pole) {
@@ -186,26 +196,30 @@
       if (vzato[i]) continue;
       var smer = SMERY[slova[i]];
       if (!smer) continue;
-      var c = cislo(slova[i + 1] || '');
+
+      var sk = cisloSkupiny(slova, i + 1);
+      var slovCisla = sk ? sk.slov : 1;
+      var c = sk ? sk.hodnota : cislo(slova[i + 1] || '');
       if (c == null) continue;
-      var jed = slova[i + 2] || '';
+      var jp = i + 1 + slovCisla;
+      var jed = slova[jp] || '';
       var delkaJed = 1;
 
       for (var zf = 0; zf < ZA_METR_FRAZE.length; zf++) {
         var f3 = ZA_METR_FRAZE[zf];
-        if (slova[i + 2] === f3[0] && slova[i + 3] === f3[1] && slova[i + 4] === f3[2]) {
+        if (slova[jp] === f3[0] && slova[jp + 1] === f3[1] && slova[jp + 2] === f3[2]) {
           jed = 'kc/m2'; delkaJed = 3; break;
         }
       }
       var nas = null;
       for (var n = 0; n < NASOBEK.length; n++) if (NASOBEK[n][0].test(jed)) { nas = NASOBEK[n]; break; }
 
-      var delka = 2 + delkaJed;
+      var delka = 1 + slovCisla + delkaJed;
       var delkaJedZapsana = true;
       if (!nas) {
         if (c < BEZ_JEDNOTKY_OD) continue;
         nas = [null, 1, 'cena'];
-        delka = 2;
+        delka = 1 + slovCisla;
         jed = 'Kč';
         delkaJedZapsana = false;
       }

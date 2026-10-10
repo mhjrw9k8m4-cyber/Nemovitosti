@@ -137,6 +137,11 @@
     [/^(?:tis|tis\.|tisic\w*|k)$/, 1000, 'cena'],
     [/^(?:kc|korun\w*|czk)$/, 1, 'cena'],
     [/^(?:ha|hektar\w*)$/, 10000, 'plocha'],
+    /* AR je u polí a zahrad běžnější jednotka než hektar („prodám 20 arů")
+       a web ji neznal: „50 arů" padalo celé do hledání obce. Samotné „a"
+       se tu schválně NEBERE — v české větě je to spojka, ne jednotka,
+       a „pozemek 50 a les" by se přečetlo jako padesát arů. */
+    [/^(?:ar|aru|ary|arech|arů)$/, 100, 'plocha'],
     [/^(?:m2|m²|metru|metry|metr)$/, 1, 'plocha'],
   ];
   /* „Kč za metr" jsou tři slova, ne jedno — než se sáhne po jednotce,
@@ -196,6 +201,32 @@
     var c = s.replace(/\s/g, '').replace(',', '.');
     if (!/^\d+(\.\d+)?$/.test(c)) return null;
     return parseFloat(c);
+  }
+
+  /* ČÍSLO PSANÉ PO TISÍCÍCH, tedy „1 500 000".
+   *
+   * Věta se rozebírá po SLOVECH, takže částka s mezerami byla tři slova
+   * a z prvního („1") vyšla jednička — ta je pod mezí, od které se bez
+   * jednotky tipuje cena, takže celé „do 1 500 000" spadlo do hledání
+   * obce a výpis byl prázdný. Naměřeno:
+   *     do 1500000        → cena 1 500 000   ✓
+   *     do 1 500 000      → text „1 500 000" ✗
+   *     do 1 500 000 Kč   → text             ✗
+   *     od 500 000        → text             ✗
+   * Přitom mezera po tisících je český pravopis a web sám všechna čísla
+   * tiskne takhle („28 000 Kč"). Kdo si částku odtud zkopíruje, dostal
+   * prázdný výpis.
+   *
+   * Co se za jedno číslo POVAŽUJE: první skupina jedna až tři číslice,
+   * každá další přesně tři. Dvě skupiny a víc — jedna skupina je obyčejné
+   * číslo a to umí cislo() výš. Desetinné číslo („1,5") sem nespadne
+   * (není to samá číslice) a parcela („769/2") taky ne. */
+  function cisloSkupiny(slova, i) {
+    if (!/^\d{1,3}$/.test(slova[i] || '')) return null;
+    var slov = 1;
+    while (/^\d{3}$/.test(slova[i + slov] || '')) slov++;
+    if (slov < 2) return null;
+    return { hodnota: parseFloat(slova.slice(i, i + slov).join('')), slov: slov };
   }
 
   function vetsiPrvni(pole) {
@@ -304,14 +335,19 @@
       if (vzato[i]) continue;
       var smer = SMERY[slova[i]];
       if (!smer) continue;
-      var c = cislo(slova[i + 1] || '');
+      /* Číslo může být psané po tisících („do 1 500 000"), a pak zabere
+         víc než jedno slovo — jednotka se hledá až za ním. */
+      var sk = cisloSkupiny(slova, i + 1);
+      var slovCisla = sk ? sk.slov : 1;
+      var c = sk ? sk.hodnota : cislo(slova[i + 1] || '');
       if (c == null) continue;
-      var jed = slova[i + 2] || '';
+      var jp = i + 1 + slovCisla;              // kde může začínat jednotka
+      var jed = slova[jp] || '';
       var delkaJed = 1;
       /* „Kč za metr" — tři slova, jedna jednotka. */
       for (var zf = 0; zf < ZA_METR_FRAZE.length; zf++) {
         var f3 = ZA_METR_FRAZE[zf];
-        if (slova[i + 2] === f3[0] && slova[i + 3] === f3[1] && slova[i + 4] === f3[2]) {
+        if (slova[jp] === f3[0] && slova[jp + 1] === f3[1] && slova[jp + 2] === f3[2]) {
           jed = 'kc/m2'; delkaJed = 3; break;
         }
       }
@@ -322,12 +358,12 @@
          prázdný. Statisícové číslo je v téhle větě vždycky cena
          v korunách. Malá čísla zůstávají textem: „do 5" může být
          cokoli a tipovat se nebude. */
-      var delka = 2 + delkaJed;
+      var delka = 1 + slovCisla + delkaJed;
       var delkaJedZapsana = true;
       if (!nas) {
         if (c < BEZ_JEDNOTKY_OD) continue;
         nas = [null, 1, 'cena'];
-        delka = 2;
+        delka = 1 + slovCisla;
         jed = 'Kč';
         delkaJedZapsana = false;
       }

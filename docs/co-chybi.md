@@ -1515,6 +1515,64 @@ Odkazy na pozemky v nové stránce jsem psal jako `${str}`, jenže
 vepsalo `href="[object Object]"` 91×. Ohlásil to `test-staticka`
 („Odkaz na [object Object] nikam nevede"), ne prohlížeč a ne oko.
 
+## 3ag. NALEZENO: částka napsaná česky („do 1 500 000") hledání nenašlo — a web ji sám všude tak tiskne — *opraveno 10. 10.*
+
+Zkoušel jsem na hledání pětadvacet vět, jaké lidi opravdu píšou, a dvě
+třídy z nich selhaly.
+
+### 1. Mezera po tisících
+
+Věta se rozebírá **po slovech**, takže „1 500 000" byla tři slova a
+z prvního vyšla jednička — ta je pod mezí, od které se bez jednotky
+tipuje cena. Celé „do 1 500 000" tedy spadlo do hledání **obce**
+a výpis byl prázdný.
+
+| věta | před | po |
+|---|---|---|
+| `do 1500000` | ✅ 1 500 000 Kč | ✅ |
+| `do 1 500 000` | ❌ text | ✅ |
+| `do 1 500 000 Kč` | ❌ text | ✅ |
+| `od 500 000` | ❌ text | ✅ |
+| `do 900 000 korun` | ❌ text | ✅ |
+| `stavební parcela do 1 500 000` | ❌ jen druh | ✅ druh + cena |
+
+Přitom **mezera po tisících je český pravopis** a web sám všechna čísla
+tiskne takhle: „28 000 Kč", „1 817 000 Kč". Kdo si částku zkopíruje
+z vlastní stránky webu a vloží ji do hledání, dostal nulu.
+
+Opraveno funkcí `cisloSkupiny`: první skupina jedna až tři číslice,
+každá další **přesně tři**, aspoň dvě skupiny. Jedna skupina je obyčejné
+číslo a to umí `cislo()`; desetinné „1,5" sem nespadne a parcela „769/2"
+taky ne.
+
+### 2. Ar
+
+U polí a zahrad je **ar** (100 m²) běžnější jednotka než hektar —
+„prodám 20 arů". Web ji neznal, takže „50 arů" padalo celé do hledání
+obce. Samotné „a" se schválně nebere: v české větě je to spojka
+a „pozemek 50 a les" by se přečetlo jako padesát arů.
+
+### Zkoušky — a sabotáž, kterou jsem nenašel
+
+`scripts/test-dotaz.mjs` 137 → 155 kontrol. Sabotáž „slepování pryč"
+shodí sedm kontrol, sabotáž „ar pryč" tři.
+
+Třetí sabotáž ale **prošla**: povolit skupinám jednu až čtyři číslice
+místo přesně tří neshodilo ani jednu ze 153 kontrol — všechny
+realistické věty vyjdou stejně tak i tak. Místo abych si tu volnost
+nechal projít jako „nehlídané, ale asi v pořádku", přidal jsem dvě
+kontroly **přímo na pravidlo** (`do 5 1000` se nesmí přečíst jako
+51 000). Nejsou to realistické věty a je to u nich napsané; stojí tam
+místo sabotáže, která nebyla.
+
+### A při tom úklid
+
+`scripts/bloky.mjs` si psal vlastní haversine. `js/okruh.js` už jeden
+má a stojí u něj, že je jeden pro celou mapu. Přeměřeno na čtyřech
+dvojicích bodů (111 m až 211 km): shoda do **1e-10 m**, takže kopie
+zmizela. (`js/ceny.js` si tu svou nechává schválně — načítá se na skoro
+dvou tisících stránkách a kvůli jednomu vzorci tam další skript nepůjde.)
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se
