@@ -1658,16 +1658,63 @@ plán obce.
 licencí. Stránka pozemku dnes aspoň odkazuje na úřad a na katastr —
 dál se bez dat jít nedá, a tipovat se to nesmí.
 
-## 7. První načtení mapy stáhne 256 kB — *já*
+## 7. První načtení mapy stáhne 461 kB — *já*
 
-Změřeno v gzipu: data nabídek 79 kB, `js/min/main.js` 60 kB, mapová
-knihovna 41 kB, stylopis 37 kB, stránka 23 kB, hranice krajů 15 kB.
-Není to špatné číslo, ale největší položka jsou data, ze kterých je na
-první obrazovce vidět pár desítek bodů.
+**OPRAVA ČÍSLA 10. 10.: dřív tu stálo 256 kB a byla to nepravda.**
+Výčet pod tím sečetl šest největších položek (data 79 + `main.js` 60 +
+Leaflet 41 + stylopis 37 + stránka 23 + kraje 15 = 255 kB) a **vynechal
+písma i zbývajících 27 skriptů**. Změřeno znovu v prohlížeči, všechno
+v gzipu, co si úvodní stránka opravdu stáhne (42 požadavků):
 
-Dalo by se posílat nejdřív tenký řez a zbytek dotáhnout. Je to ale
-zásah do jádra aplikace a bez měření návštěvnosti (bod 4) se nedá
-poznat, jestli se tím někomu uleví — zatím tedy ne.
+| skupina | gzip | podíl |
+|---|---|---|
+| **písma** (4 soubory woff2) | **149,4 kB** | **32 %** |
+| skripty `js/min/*` (27) | 109,4 kB | 24 % |
+| data (nabídky 77,5 + kraje 15,1 + zlevnění 2,5) | 95,1 kB | 21 % |
+| Leaflet (js + css) | 44,9 kB | 10 % |
+| stylopis | 37,3 kB | 8 % |
+| stránka | 23,1 kB | 5 % |
+| ikony | 1,5 kB | 0 % |
+
+Největší položka tedy **nejsou data**, ale **písma** — a právě o nich
+ten odstavec mlčel, takže úvahy o zeštíhlení mířily jinam, než kde jsou
+bajty. (Dlaždice mapy se nepočítají: jdou z cizího serveru.)
+
+**Písma už podřezaná jsou** (253 → 149 kB, viz komentář v `css/styles.css`).
+Co z nich ještě jde a co by to stálo, **změřeno**: Fraunces nese osu
+optické velikosti (`opsz` 9–144). Připnout ji na jednu hodnotu ušetří
+**49,5 kB** (105,2 → 55,7 kB, tedy o 53 % méně) — jenže je to záměr:
+`font-optical-sizing:auto` je výchozí, takže se dnes řez mění s velikostí
+písma, a Fraunces se na webu používá od **12 px do 68 px**. Porovnání
+snímků nadpisu (50 px, 2× zvětšení) ukazuje, že rozdíl **vidět je**:
+15,8 % bajtů obrázku se liší, průměrně o 174 ze 255. Při `opsz` 9 je
+nadpis znatelně tučnější a rozmáchlejší. Za 49,5 kB by se tedy platilo
+typografií; je to **rozhodnutí majitele, ne oprava**, a tady je oceněné.
+
+**Co se 10. 10. opravdu odebralo:** `js/min/radce.js` (6,1 kB gzip) se
+stahoval na `index.html`, kde `PK_RADCE` nevolá nikdo. Je to čistá
+knihovna — ani jeden dotek s DOM, sítí nebo časem — takže sama od sebe
+nedělá nic; volá ji jen `js/pozemek.js`, a ten na úvodní stránce není.
+Zůstal tam po zrušeném panelu detailu nad mapou (komentáře v
+`js/main.js` o něm mluví v minulém čase). Naměřeno: 466,9 → **460,9 kB**
+a o jeden požadavek méně.
+
+A hlavně: **pravidlo se přestalo psát ručně.** `scripts/test-skripty-na-strance.mjs`
+mělo výčet knihoven o jedné položce (`hlidani-logika`), takže na `radce`
+nemohlo přijít. Teď se knihovny **hledají**: modul, který vystaví
+globální `PK…` a přitom nesahá na DOM, síť ani čas, nemá jak něco udělat
+sám od sebe — a stránka, která ho načte, musí jeho jméno použít. Najde
+se jich **24** a kontrola projde všech **2 209 stránek**. Dvě sabotáže:
+vrácení mrtvého skriptu na úvodní stránku kontrolu shodí, a rozbité
+hledání knihoven shodí pojistku „našlo se jich dost" (jinak by kontrola
+tiše měřila prázdno).
+
+Zbývající velká položka jsou pořád **data**: dalo by se posílat nejdřív
+tenký řez a zbytek dotáhnout. Je to ale zásah do jádra aplikace a bez
+měření návštěvnosti (bod 4) se nedá poznat, jestli se tím někomu uleví —
+zatím tedy ne. (Změřeno i to malé: zkrátit souřadnice na pět desetinných
+míst ušetří 3,1 kB ze 77,5, na čtyři 5,6 kB. Za to nestojí riskovat, že
+se změní klíče, podle kterých mají lidé uložené pozemky.)
 
 **Nalezeno a odebráno 9. 10. — na STRÁNKÁCH, kam chodí lidé
 z vyhledávačů:**

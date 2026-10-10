@@ -81,9 +81,31 @@ for (const par of PARY) {
    Pravidlo: stránka, která knihovnu načte, musí její jméno použít —
    buď ve vlastním kódu na stránce, nebo v jiném skriptu, který si
    tatáž stránka načítá. */
-const KNIHOVNY = [
-  { skript: 'hlidani-logika', global: 'PKHlidani', co: 'logika hlídání' },
-];
+/* SEZNAM SE NEPÍŠE RUČNĚ. Stál tu výčet o jedné položce
+   (hlidani-logika) — a proto se na nic dalšího nepřišlo: js/radce.js
+   (6,1 kB gzip, čistá knihovna bez jediného doteku s DOM) se stahoval
+   na index.html, kde `PK_RADCE` nevolá nikdo. Volá ho jen
+   js/pozemek.js, a ten na úvodní stránce není; mapa svůj panel
+   s rádcem dávno nemá (komentáře v js/main.js o něm mluví v minulém
+   čase). Ruční výčet je tedy druhá kopie znalosti, která se s kódem
+   rozejde beze slova — stejná chyba jako u odznaků ve větě hledání.
+
+   Knihovny se proto HLEDAJÍ: modul, který vystaví globální `PK…`
+   a přitom nesahá na DOM, na síť ani na čas, nemá jak něco udělat sám
+   od sebe. Dokud ho někdo nezavolá, je to jen stažený bajt. */
+const SPINAVE = /\bdocument\b|addEventListener|\bfetch\s*\(|setTimeout|setInterval|requestAnimationFrame|localStorage|sessionStorage|navigator\./;
+const VYVOZ = /\b(?:root|koren|window|self|globalThis)\.(PK[A-Za-z_0-9]*)\s*=/g;
+const KNIHOVNY = (() => {
+  const out = [];
+  for (const f of readdirSync(path.join(KOREN, 'js')).filter((x) => x.endsWith('.js'))) {
+    const src = readFileSync(path.join(KOREN, 'js', f), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+    const g = [...new Set([...src.matchAll(VYVOZ)].map((m) => m[1]))];
+    if (!g.length || SPINAVE.test(src)) continue;
+    out.push({ skript: f.slice(0, -3), global: g[0], globaly: g, co: 'knihovna ' + f.slice(0, -3) });
+  }
+  return out;
+})();
 {
   const zdroje = new Map();
   for (const f of readdirSync(path.join(KOREN, 'js')).filter((x) => x.endsWith('.js'))) {
@@ -93,6 +115,17 @@ const KNIHOVNY = [
      a právě na nich PKHlidani opravdu potřeba JE (js/pozemek.js) —
      kdyby se vynechaly, kontrola by neukázala, že rozdíl pozná. */
   const vsechny = readdirSync(KOREN).filter((f) => f.endsWith('.html')).sort();
+  /* POJISTKY PROTI MĚŘENÍ NAPRÁZDNO. Kdyby se hledání knihoven rozbilo
+     (jiný tvar zápisu, jiné jméno proměnné v uzávěru), vrátí prázdný
+     seznam a všechny kontroly níž by prošly, aniž by cokoli změřily.
+     Jmenovitě se proto vyžadují ty dvě, kvůli kterým tahle kontrola
+     vznikla. */
+  pravda(`knihoven se našlo dost (${KNIHOVNY.length})`, KNIHOVNY.length >= 10,
+    `jen ${KNIHOVNY.length} — vzor na výstup knihovny nejspíš nesedí`);
+  for (const jm of ['hlidani-logika', 'radce']) {
+    pravda(`mezi nimi je ${jm}`, KNIHOVNY.some((k) => k.skript === jm),
+      'právě na téhle se pravidlo poprvé chytlo');
+  }
   for (const k of KNIHOVNY) {
     const nactene = [], zbytecne = [];
     for (const f of vsechny) {
@@ -102,18 +135,19 @@ const KNIHOVNY = [
       nactene.push(f);
       /* Vlastní kód stránky = HTML bez značek <script src=…>. */
       const vlastni = h.replace(/<script src="[^"]*"[^>]*><\/script>/g, '');
-      let pouzito = vlastni.includes(k.global);
+      let pouzito = k.globaly.some((g) => vlastni.includes(g));
       if (!pouzito) {
         for (const m of moduly) {
           if (m === k.skript) continue;
-          if ((zdroje.get(m) || '').includes(k.global)) { pouzito = true; break; }
+          const t = zdroje.get(m) || '';
+          if (k.globaly.some((g) => t.includes(g))) { pouzito = true; break; }
         }
       }
       if (!pouzito) zbytecne.push(f);
     }
     const p2 = path.join(KOREN, 'js', 'min', k.skript + '.js');
     const kB = existsSync(p2) ? Math.round(statSync(p2).size / 102.4) / 10 : 0;
-    pravda(`${k.co}: načítá ji aspoň jedna stránka (${nactene.length})`, nactene.length > 0);
+    if (!nactene.length) continue;   // knihovna, kterou žádná stránka nenačítá, se tu neřeší
     pravda(`${k.co}: a každá z nich ${k.global} opravdu používá (${kB} kB)`,
       zbytecne.length === 0,
       `${zbytecne.length} stránek ji stahuje pro nic: ` + zbytecne.slice(0, 6).join(', '));
