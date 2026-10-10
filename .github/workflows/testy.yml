@@ -51,6 +51,8 @@ jobs:
 
       - name: Statistika cen (čísla odpovídají skutečnosti)
         run: node scripts/test-statistika.mjs
+      - name: Čísla na okresních stránkách se přepočítají z dat
+        run: node scripts/test-cisla-okresu.mjs
       - name: Srovnatelné pozemky — pořadí sedí na vypsaný seznam
         run: node scripts/test-srovnatelne.mjs
 

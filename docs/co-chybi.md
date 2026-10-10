@@ -1174,6 +1174,80 @@ Hrubé skupiny (`druhGroup` v generátoru slučuje ornou a louky do
 rozdíl mezi číslem a grafem. Je to volba, ne vada — ale jedno slovo
 „medián" u dvou různých věcí na jedné obrazovce je pořád past.
 
+## 3ab. Tři stovky čísel na přehledových stránkách nikdo nepřepočítával — a pokus „spravit" podíly v hladině skončil o dvě třetiny horším odhadem — *10. 10.*
+
+Dvě měření, jedno s nálezem a jedno bez. Obě stojí za zápis.
+
+### A) ZMĚŘENO A ZAMÍTNUTO: přepočítat podíly v srovnávací hladině
+
+`js/ceny.js` má u srovnávací hladiny poznámku, že spoluvlastnické podíly
+v ní **zůstávají surové** (cena dělená celou výměrou), a dvě změřené
+varianty: nechat je tak, nebo je vynechat. Vynechat je horší, protože
+z okresu zmizí 28 % vzorku.
+
+Jenže je tam **třetí možnost, kterou to měření nemělo**: nechat je, ale
+přepočítané přes `zaMetr` — tedy cenou za metr, který kupujícímu opravdu
+připadne. Zní to jako nejlepší ze všech: vzorek se neztratí a zkreslení
+se spraví. Změřeno (tři desetinásobná rozdělení, cílem jsou celé pozemky):
+
+| varianta | medián chyby odhadu |
+|---|---|
+| A surové (dnešní stav) | 23,1 · 23,6 · **22,5 %** |
+| B podíly vynechat | 23,2 · 25,0 · 23,9 % |
+| C přepočítané | **39,3 · 39,5 · 41,0 %** |
+
+Přepočet je **o dvě třetiny horší** než nedělat nic. Důvod stojí o pár
+desítek řádků výš v témže souboru, u stropu uvěřitelnosti: přepočtené
+podíly mají medián 150 Kč/m² proti 54 u celých pozemků, tedy skoro
+trojnásobek. Nejsou „správnější", jsou **jinak pokřivené** — u podílu se
+nedá věřit vztahu ceny a výměry v inzerátu. Surové číslo je aspoň
+pokřivené dolů u všech stejně a medián to unese.
+
+Měření je zapsané do komentáře v `js/ceny.js`, aby ten třetí sloupec
+nikdo nemusel hledat znovu.
+
+### B) Tři stovky čísel, které nikdo nepřepočítával
+
+Okresních stránek je 77, krajských 14 a každá o sobě tvrdí čtyři až šest
+čísel: kolik pozemků evidujeme, od kolika do kolika korun jsou ceny,
+a dlaždice s rozpadem podle typu („35 na prodej · 1 exekuce · 8 dražeb").
+Dohromady **348 tvrzení** — a žádné z nich nikdo nepřepočítával.
+
+Přepočítal jsem je všechna z dat: **0 rozporů**. Čísla na stránkách jsou
+v pořádku. Vada to tedy není — ale 348 čísel bez jediné pojistky je
+místo, kde se jednou tiše něco rozejde (stačí zaměnit filtr, zapomenout
+na řez po termínu nebo spočítat typ z jiné hromádky), a okem se to
+nepozná: „v okrese Benešov evidujeme 36 pozemků" vypadá správně vždycky.
+
+Nová zkouška `scripts/test-cisla-okresu.mjs` (11 kontrol) je proto
+přepočítává při každém běhu.
+
+**Jak se ta zkouška brání vlastní prázdnotě.** Kontrola, která čte čísla
+regulárním výrazem, umí tiše přestat měřit. Při psaní se mi to stalo
+**dvakrát**:
+
+- `pozemk\w+` nesedne na „pozemků", protože `\w` české písmeno není,
+- `dražb\w*` nesedne na „dražba" ze stejného důvodu — čtyřicet dlaždic
+  s dražbami se přeskočilo a kontrola hlásila nula rozporů,
+- a jméno kraje se nedá brát z `<h1>`: tam stojí skloněné („v Jihočeském
+  kraji", „na Vysočině", „v Praze"), kdežto klíč v datech je „Jihočeský" —
+  první pokus dal čtrnáct falešných rozchodů. Převod má jedno místo,
+  `scripts/regiony-meta.mjs`, odkud jména vyrábí i generátor.
+
+Zkouška proto nejdřív ověří, **kolik** se toho přečetlo (77 počtů,
+154 mezí, 75 dlaždic, 14 krajů, 28 krajských mezí), a každá dlaždice
+s neznámým slovem je **chyba**, ne přeskočení.
+
+A ještě jedna poctivost: `poTerminu` (řez na proběhlé dražby) dnes
+neodřezává **nic** — vyzkoušeno sabotáží, bez filtru projde všech 348
+čísel stejně. Filtr v zkoušce zůstává, protože ho má i generátor a až
+nějaká proběhlá dražba v datech bude, musí se obě strany shodnout; ale
+nedělá se z něj zásluha — vypisuje se, kolik odřízl.
+
+Sabotáž: změněné číslo na okresní stránce, změněné na krajské
+a neznámé slovo na dlaždici — každé shodí příslušnou kontrolu; bez nich
+11/11.
+
 ## 4. Nevíme, co lidé na webu dělají — *čeká na data, ne na práci*
 
 Měření návštěvnosti je nasazené teprve od 9. 10. 2026. Do té doby se

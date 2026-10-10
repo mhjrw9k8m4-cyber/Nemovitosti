@@ -344,6 +344,23 @@
        *     bez podílů je odhad blíž u 350, DÁL u 415, stejně u 330
        *     a 53 nabídek by o odhad přišlo úplně (vzorek klesne pod mez)
        *
+       * A JEŠTĚ TŘETÍ MOŽNOST, kterou tohle měření původně nemělo:
+       * nechat je v hladině, ale PŘEPOČÍTANÉ přes zaMetr, tedy cenou za
+       * metr, který kupujícímu opravdu připadne. Zní to jako nejlepší ze
+       * všech — vzorek se neztratí a zkreslení se spraví. Změřeno (tři
+       * desetinásobná rozdělení, cílem jsou celé pozemky):
+       *
+       *     A surové (dnes)     medián chyby 23,1 · 23,6 · 22,5 %
+       *     B podíly vynechat   medián chyby 23,2 · 25,0 · 23,9 %
+       *     C přepočítané       medián chyby 39,3 · 39,5 · 41,0 %
+       *
+       * Přepočet je tedy o dvě třetiny HORŠÍ než nedělat nic. Důvod je
+       * vidět pár desítek řádků výš u stropu uvěřitelnosti: přepočtené
+       * podíly mají medián 150 Kč/m² proti 54 u celých pozemků, tedy
+       * skoro trojnásobek. Nejsou „správnější", jsou jinak pokřivené —
+       * u podílu se nedá věřit vztahu ceny a výměry v inzerátu. Surové
+       * číslo je aspoň pokřivené dolů stejně u všech a medián to unese.
+       *
        * Vynechat je tedy odhad ZHORŠÍ. Medián je proti jednotlivým
        * pokřiveným číslům odolný, kdežto ztráta 28 % vzorku v okrese už
        * odolná není. Hezká úvaha proti měření prohrála; nechávat se tu
