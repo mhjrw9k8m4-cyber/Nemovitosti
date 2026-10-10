@@ -626,11 +626,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-kolin-cesky-brod-luj8w9.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-mlada-boleslav-jizerni-vtelno-1keun3x.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -7196,11 +7191,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-liberec-liberec-l909i7.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-novy-jicin-koprivnice-1cty2v7.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -7927,11 +7917,6 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-blansko-blansko-1t5qpmf.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-novy-jicin-verovicka-1jxtjlz.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9861,17 +9846,17 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-vsetin-seninka-1pjzlmt.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-vsetin-seninka-4qt20z.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-vsetin-seninka-uqc1qm.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-vsetin-seninka-1pjzlmt.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -10271,12 +10256,12 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-hodonin-hodonin-6c7y1d.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-kolin-prisimasy-1bwxxh3.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-kolin-prisimasy-1bwxxh3.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-hodonin-hodonin-6c7y1d.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
