@@ -381,7 +381,34 @@ function odznakCeny(o) {
   if (!od || !od.podleVelikosti) return '';
   if (od.pochybna) return '<b class="okr-overit">cena k ověření</b>';
   if (od.nejisty && od.podOdhadem >= 25 && !od.podil) return '<b class="okr-overit">cena k ověření</b>';
-  if (od.podOdhadem >= 25 && !od.podil) return `<b class="okr-sleva">\u2212${od.podOdhadem} % proti okolí</b>`;
+  if (od.podOdhadem >= 25 && !od.podil) {
+    /* U DRAŽBY TO NENÍ SLEVA, JE TO VYVOLÁVACÍ CENA.
+       Hladina, proti které se tu měří, je z běžných nabídek na prodej
+       (js/ceny.js plní okolí i okres a kraj až za `type !== 'sale'`), což
+       je správná srovnávací skupina. Jenže číslo, které se s ní srovnává,
+       u dražby není cena, za kterou se pozemek prodává — je to vyvolávací
+       cena, od které se přihazuje. „−37 % proti okolí" se čte jako sleva
+       a slibuje něco, co dražba teprve rozhodne.
+
+       Naměřeno na vygenerovaných stránkách: 2 194 řádků, z toho 205
+       dražeb a exekucí, a 14 z nich tenhle odznak nese — na stránce
+       dražeb a na okresech Beroun a Litoměřice. Stránka pozemku je
+       u téhož pozemku opatrná („Vyvolávací cena 1 875 000 Kč" a „o 37 %
+       níž — takový rozdíl bývá…"); okresní stránka slovo „vyvolávací"
+       nenapsala ani jednou, a přitom je to ta, na kterou se chodí
+       z vyhledávačů.
+
+       Zůstává to v řádku jako údaj — jen pojmenované. Zahodit by
+       znamenalo vzít čtenáři jedinou informaci o tom, jak ta vyvolávací
+       cena vypadá proti okolí. */
+    const vyv = o.type === 'drazba' ? 'vyvolávací' : (o.type === 'exekuce' ? 'uváděná' : '');
+    if (vyv) {
+      return `<b class="okr-sleva" title="Srovnává se ${vyv} cena s obvyklou cenou běžných nabídek v okolí.`
+        + ` U dražby to není sleva — je to cena, od které se přihazuje.">\u2212${od.podOdhadem} % proti okolí`
+        + ` (${vyv} cena)</b>`;
+    }
+    return `<b class="okr-sleva">\u2212${od.podOdhadem} % proti okolí</b>`;
+  }
   return '';
 }
 const priceNational = priceStats(all);
@@ -705,8 +732,19 @@ function itemRow(o, skryjOkres, navic, skryjTyp){
   /* U podílu se k číslu dopíše, proč je takové — tutéž větu má mapa
      i stránka pozemku (js/ceny.js). */
   const zmPopis = CENY.zaMetrPopis ? CENY.zaMetrPopis(o) : '';
+  /* CO TO ČÍSLO VLASTNĚ JE. U prodeje je to cena nabídková, u dražby
+     vyvolávací (přihazuje se od ní) a u exekuce uváděná odhadní. Stránka
+     pozemku to nad číslem píše celým slovem (js/ceny.js, `coJe`);
+     okresní stránka tiskla jen číslo a slovo „vyvolávací" se na ní
+     neobjevilo ani jednou — a je to ta stránka, na kterou lidé chodí
+     z vyhledávačů. Vizuální řádek se nemění (`.okr-cena` má
+     `white-space:nowrap`, delší text by se na mobilu neměl kam zlomit),
+     tohle je popisek: vezme ho odečítač obrazovky i myš. */
+  const coJeCena = o.type === 'drazba'
+    ? 'Vyvolávací cena — od ní se v dražbě přihazuje, konečná cena bývá vyšší.'
+    : (o.type === 'exekuce' ? 'Cena uváděná v nabídce exekutora, ne cena nabídková.' : '');
   const cena = o.price
-    ? `<span class="okr-cena"><b>${fmt(o.price)} Kč</b>` +
+    ? `<span class="okr-cena"${coJeCena ? ` title="${attr(coJeCena)}"` : ''}><b>${fmt(o.price)} Kč</b>` +
       (zaMetr ? `<span class="okr-zametr"${zmPopis ? ` title="${attr(zmPopis)}"` : ''}>${fmt(zaMetr)} Kč/m²</span>` : '') + `</span>`
     : `<span class="okr-cena okr-bezceny">cena neuvedena</span>`;
   const strankaPozemku = STRANKY.get(klicNabidky(o));

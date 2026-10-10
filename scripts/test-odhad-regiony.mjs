@@ -87,6 +87,10 @@ const stranky = fs.readdirSync(ROOT).filter((f) =>
 pravda('našly se regionální a druhové stránky', stranky.length > 50, `nalezeno ${stranky.length}`);
 
 let radkuCelkem = 0, sleva = 0, overit = 0;
+/* Kolik řádků má odkaz na pozemek a kolik z nich se podařilo PŘEČÍST.
+   Když se vzor na cenu rozejde s tím, co generátor tiskne, řádky z téhle
+   kontroly tiše vypadnou — a mez „prošly se stovky řádků" to nepozná. */
+let sOdkazem = 0, sCenou = 0;
 const spatne = [];
 for (const f of stranky) {
   const html = fs.readFileSync(path.join(ROOT, f), 'utf8');
@@ -98,7 +102,14 @@ for (const f of stranky) {
     const meta = (/class="okr-meta"[^>]*>([\s\S]*?)<\/span>/.exec(r) || [, ''])[1];
     const druh = meta.split('·')[0].replace(/<[^>]*>/g, '').trim();
     const area = cislo((/<b>([\d\s\u00a0]+)\s*m²<\/b>/.exec(r) || [, ''])[1]);
-    const price = cislo((/class="okr-cena"><b>([^<]*)<\/b>/.exec(r) || [, ''])[1]);
+    /* Vzor musí snést ATRIBUTY na `.okr-cena`. U dražby a exekuce k ní
+       přibyl popisek, co to číslo vlastně je („vyvolávací cena"), a vzor
+       bez `[^>]*` o ty řádky tiše přišel — 122 ze 2 111. Mlčky, protože
+       mez „prošly se stovky řádků" je splněná i bez nich, a zmizely by
+       přitom právě dražby, kvůli kterým ten popisek vznikl. */
+    const price = cislo((/class="okr-cena"[^>]*><b>([^<]*)<\/b>/.exec(r) || [, ''])[1]);
+    sOdkazem++;
+    if (price > 0) sCenou++;
     const o = podleUdaju.get(klic(place, druh, area, price));
     if (!o) continue;
     radkuCelkem++;
@@ -113,10 +124,66 @@ for (const f of stranky) {
 /* Pojistky proti měření na prázdnu: bez řádků, bez jediné slevy a bez
    jediného varování by tvrzení níž neplatilo o ničem. */
 pravda('prošly se stovky řádků', radkuCelkem > 300, `řádků ${radkuCelkem}`);
+pravda(`u každého řádku s odkazem se cena opravdu přečetla (${sCenou} z ${sOdkazem})`,
+  sOdkazem > 1000 && sCenou === sOdkazem,
+  `přečteno ${sCenou} z ${sOdkazem} — vzor na cenu nesedí s tím, co generátor tiskne`);
 pravda('a aspoň někde se sleva opravdu ukazuje', sleva > 0, `slev ${sleva}`);
 pravda('a aspoň někde stojí varování „cena k ověření"', overit > 0, `varování ${overit}`);
 pravda('žádný řádek se nerozchází s cenovým modelem', spatne.length === 0,
   spatne.slice(0, 4).join(' | '));
+
+/* --- U DRAŽBY TO NENÍ SLEVA, JE TO VYVOLÁVACÍ CENA ------------------
+ *
+ * Hladina, proti které se „−37 % proti okolí" měří, je z běžných nabídek
+ * na prodej — správná srovnávací skupina. Jenže číslo, které se s ní
+ * srovnává, u dražby není cena, za kterou se pozemek prodává: je to
+ * vyvolávací cena, od které se přihazuje. „−37 % proti okolí" se čte
+ * jako sleva a slibuje něco, co dražba teprve rozhodne.
+ *
+ * Naměřeno na vygenerovaných stránkách: 2 194 řádků, z toho 205 dražeb
+ * a exekucí, a 14 z nich ten odznak nese (stránka dražeb a okresy Beroun
+ * a Litoměřice). Stránka pozemku je u téhož pozemku opatrná
+ * („Vyvolávací cena 1 875 000 Kč"); `pozemky-okres-beroun.html` slovo
+ * „vyvolávací" neobsahovala ani jednou.
+ *
+ * Hlídá se, že na řádku mimo prodej je u ceny napsáno, co to číslo je,
+ * a že odznak slevy u takového řádku tu cenu pojmenuje. */
+{
+  const vsechnyStranky = stranky.concat(['drazby-pozemku-nabidky.html']
+    .filter((f) => fs.existsSync(path.join(ROOT, f))));
+  let mimoProdej = 0, bezPopisku = 0, slevaBezNazvu = 0;
+  const ukazky = [];
+  for (const f of vsechnyStranky) {
+    const html = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    for (const r of html.split('<div class="okr-item">').slice(1)) {
+      const typ = (/class="okr-badge t-([a-z]+)"/.exec(r) || [, ''])[1];
+      const meta = (/class="okr-meta"[^>]*>([\s\S]*?)<\/span>/.exec(r) || [, ''])[1];
+      /* Typ se v řádku neopakuje u PŘEVAŽUJÍCÍHO typu (viz itemRow), takže
+         na stránce dražeb odznak chybí — tam se typ pozná z podrobností. */
+      const jeMimoProdej = typ === 'drazba' || typ === 'exekuce'
+        || (!typ && /dražba\s|exekuce/.test(meta));
+      if (!jeMimoProdej) continue;
+      mimoProdej++;
+      const cenaCast = (/class="okr-cena"([^>]*)>/.exec(r) || [, ''])[1];
+      if (!/vyvolávací|uváděná|bezceny/i.test(cenaCast)) {
+        bezPopisku++;
+        if (ukazky.length < 3) ukazky.push(`${f}: u ceny nestojí, co to číslo je`);
+      }
+      const odznak = (/<b class="okr-sleva"[^>]*>([\s\S]*?)<\/b>/.exec(r) || [, ''])[1];
+      if (odznak && !/vyvolávací|uváděná/i.test(odznak)) {
+        slevaBezNazvu++;
+        if (ukazky.length < 3) ukazky.push(`${f}: „${odznak.replace(/\s+/g, ' ')}" bez názvu ceny`);
+      }
+    }
+  }
+  pravda(`našly se řádky dražeb a exekucí (${mimoProdej})`, mimoProdej >= 50,
+    `jen ${mimoProdej} — kontroly níž by neměly co měřit`);
+  pravda('u každého stojí, co to číslo je (vyvolávací / uváděná cena)',
+    bezPopisku === 0, `${bezPopisku} řádků bez popisku: ${ukazky.join(' | ')}`);
+  pravda('a odznak „−N % proti okolí" tu cenu pojmenuje',
+    slevaBezNazvu === 0,
+    `${slevaBezNazvu} řádků tvrdí slevu z vyvolávací ceny: ${ukazky.join(' | ')}`);
+}
 
 /* A ta nejdůležitější opatrnost zvlášť, ať je vidět i v názvu kontroly. */
 const podilySeSlevou = vsechny.filter((o) => o.podil && cekano(o) === 'sleva');

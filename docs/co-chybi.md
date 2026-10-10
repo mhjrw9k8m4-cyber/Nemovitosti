@@ -1830,6 +1830,41 @@ té příští. Sabotáží prověřeno obojí: přidaný nezapojený klíč sho
 kontrolu, a rozbité čtení seznamu shodí pojistku „seznam se opravdu
 přečetl" (bez ní by kontrola měřila prázdno).
 
+## 3ak. NALEZENO: řádek dražby tvrdil „−37 % proti okolí" — sleva z ceny, od které se teprve přihazuje — *opraveno 10. 10.*
+
+Hladina, proti které se ten odznak měří, je z běžných nabídek na prodej
+— to je správná srovnávací skupina. Jenže číslo, které se s ní srovnává,
+u dražby není cena, za kterou se pozemek prodává: je to **vyvolávací
+cena**, od níž se přihazuje. „−37 % proti okolí" se čte jako sleva
+a slibuje něco, co dražba teprve rozhodne.
+
+**Změřeno na vygenerovaných stránkách:** 2 194 řádků, z toho 205 dražeb
+a exekucí; odznak nese **14** z nich — na stránce dražeb a na okresech
+Beroun a Litoměřice. Stránka pozemku je u téhož pozemku opatrná
+(„Vyvolávací cena 1 875 000 Kč" a „o 37 % níž — takový rozdíl bývá…"),
+ale `pozemky-okres-beroun.html` neobsahovala slovo „vyvolávací" **ani
+jednou** — a je to ta stránka, na kterou se chodí z vyhledávačů.
+
+**Oprava.** Odznak teď u dražby i exekuce cenu pojmenuje
+(`−37 % proti okolí (vyvolávací cena)`) a u všech 205 řádků mimo prodej
+stojí u čísla popisek, co to číslo je. Odznak se nezahazuje: bez něj by
+čtenář o vztahu vyvolávací ceny k okolí nevěděl nic.
+
+**Pojistky** (`scripts/test-odhad-regiony.mjs`, všechny tři prověřené
+sabotáží):
+
+* řádky mimo prodej se opravdu našly (216) — jinak by kontroly níž
+  neměřily nic,
+* u každého stojí, co to číslo je,
+* a odznak slevy tu cenu pojmenuje.
+
+Přitom se našla **tichá chyba v té zkoušce samotné**: vzor na cenu zněl
+`class="okr-cena"><b>` a přidaný popisek ho rozbil — 122 z 2 111 řádků
+z kontroly beze slova vypadlo, protože mez „prošly se stovky řádků" je
+splněná i bez nich. A vypadly by právě dražby, kvůli kterým ten popisek
+vznikl. Zkouška teď hlásí, u kolika řádků se cena **opravdu přečetla**
+(2 411 z 2 411), takže se to podruhé nestane tiše.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
