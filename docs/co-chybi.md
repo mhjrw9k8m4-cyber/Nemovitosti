@@ -3254,6 +3254,90 @@ Zůstává tím nepopsaný důvod, proč ten bod v tvém seznamu je. Je dost
 možné, že jsem se nedíval na tu stránku, na kterou ses díval ty — kdyby
 se to dalo doplnit (která stránka, které číslo), doměřím to.
 
+## 3bc. NALEZENO (z tvého průchodu webem): obě právní stránky tvrdily „Poslední úprava: srpen 2026" — *opraveno 11. 10.*
+
+Na konci zásad soukromí i podmínek použití stála věta **„Poslední
+úprava: srpen 2026."** Změřeno v gitu: `ochrana-udaju.html` se od té
+doby změnila ve **229 commitech** a `podminky.html` ve **227**,
+naposledy **10. října**. Mezitím do textu přibyl offline režim,
+upozornění do telefonu, měření návštěvnosti, mapové vrstvy úřadů i
+Nominatim — tedy nové zpracovatele a nové kategorie údajů.
+
+Kdo si to datum přečetl, musel si myslet, že od srpna se nic nezměnilo.
+U dokumentu, podle kterého se někdo rozhoduje, jestli svěřit svoje
+údaje, je to zbytečná lež — a navíc taková, kterou nelze odhalit
+klikáním.
+
+### Proč se datum nebere z gitu
+
+Vypadá to lákavě, ale je to past ve dvou krocích:
+
+1. kdyby datum zapisoval generátor, **změnil by tím soubor**, takže by
+   gitové datum toho souboru bylo zase o commit vedle;
+2. „poslední úprava" u právního textu znamená úpravu **ZNĚNÍ** — ne
+   přesun uzávorkování nebo přejmenování třídy v HTML.
+
+Místo toho drží nová zkouška **otisk viditelného textu** (bez značek,
+bez komentářů a bez té věty s datem) vedle zapsaného data. Změní-li se
+znění, otisk se rozejde a zkouška řekne: uprav datum a zapiš nový
+otisk. Kosmetická úprava značek projde, změna znění ne.
+
+### Co ještě přibylo do zásad
+
+Obchodní sdělení má vlastní zákon a ten žádá tři věci: **předchozí
+souhlas, poznat odesílatele a snadné odhlášení**. Všechny tři tu platily
+od začátku (přepínač je ve výchozím stavu vypnutý, v každém e-mailu je
+odhlášení na jedno kliknutí), ale nebylo to napsané, takže se to nedalo
+ověřit přečtením. Teď u té odrážky stojí **zákon č. 480/2004 Sb. (§ 7)**
+a k tomu, že reklamu třetích stran neposíláme a adresu nikomu nedáváme.
+
+### Zkouška
+
+Nová `scripts/test-pravni-stranky.mjs` — **14 kontrol**: datum a otisk
+znění u obou stránek, jmenovaný provozovatel a kontakt, dozorový úřad
+i s odkazem na `uoou.gov.cz`, odkaz na nařízení 2016/679, zákon
+480/2004 a všechny tři jeho požadavky, přiznaný přenos mimo EU — a
+**že si zásady nevymýšlejí IČO** ani obchodní firmu (provozovatel je
+fyzická osoba nepodnikající, takže IČO nemá; napsat ho by byla horší
+vada než to, že tam není).
+
+**Prokázáno sabotáží — šesti:** změna znění bez změny data (1), vrácené
+staré datum (1), smazaný dozorový úřad (1), vymyšlené IČO (2), zmizelý
+zákon o obchodních sděleních (2) a přepínač e-mailů prý zapnutý (2).
+
+Dvě sabotáže přitom napoprvé **nespadly a ukázaly chybu ve zkoušce**:
+
+* vzorek na „jen s vaším předchozím souhlasem" hledal obyčejnou mezeru,
+  kdežto `scripts/sazba.mjs` po jednoznakové předložce vkládá
+  nezlomitelnou (U+00A0). To není „text zmizel", to je „text se
+  vysázel" — vzorky teď počítají s obojím;
+* vzorek na „480/2004" prošel i po přepsání té věty, protože totéž
+  číslo stálo v HTML **komentáři** nad ní. Komentář nikdo nečte, takže
+  se próza teď hlídá na **viditelném textu**, ne ve zdroji; odkazy a
+  značky dál ve zdroji, protože ve viditelném textu nejsou.
+
+### Co na tobě pořád zůstává: jméno provozovatele
+
+GDPR čl. 13 odst. 1 písm. a) žádá **totožnost a kontaktní údaje
+správce**. Na stránce dnes stojí jen „soukromá osoba — fyzická osoba
+nepodnikající" a e-mail. To je u fyzické osoby **málo**: totožnost
+znamená jméno.
+
+Vymyslet ho nemůžu a tvoje jméno ani adresu do veřejné stránky bez
+tvého slova nenapíšu. Až to řekneš, je to jeden řádek — v
+`ochrana-udaju.html` v oddílu „Kdo údaje spravuje" a v `podminky.html`
+u provozovatele. Dvě možnosti, jak to obvykle řeší fyzická osoba
+nepodnikající:
+
+1. **Plné uvedení:** „Provozovatelem webu Parcelka (parcelaka.cz) je
+   *Jméno Příjmení*, *adresa*. Kontakt: info@parcelaka.cz."
+2. **Jen jméno, adresa na vyžádání:** „Provozovatelem je *Jméno
+   Příjmení*, fyzická osoba nepodnikající; adresu sdělíme na vyžádání
+   na info@parcelaka.cz."
+
+Druhá možnost je slabší, ale pořád o řád lepší než dnešní stav. Jakmile
+bude jméno na stránce, přidám k tomu i kontrolu, že tam zůstane.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
