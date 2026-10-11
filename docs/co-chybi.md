@@ -2997,6 +2997,108 @@ A hlavně: **sbírat obecní záměry je pořád nedodělek**, ne vyřešená v�
 Zapsaný je v bodu o chybějících zdrojích výš (ÚZSVM a obecní úřední
 desky). Tohle byla oprava toho, že se web tvářil, že je sbírá.
 
+## 3az. NALEZENO (z tvého průchodu webem): web psal „stavební pozemek" o pozemku, o kterém tentýž inzerát říká, že je v katastru travní porost — *opraveno 11. 10.*
+
+Ve Vysokém Mýtě (okres Ústí nad Orlicí) stál na webu pozemek jako
+**stavební**. Inzerát k němu začíná takto:
+
+> „Nabízím k prodeji pozemek o výměře 3974 m², **vedený v katastru jako
+> trvalý travní porost**. … Pozemek tvoří udržovaná louka s rovinatým
+> terénem …"
+
+Druh se poznává z textu inzerátu (`js/druh.js`) a dosud to bylo
+**výhradně hádání podle klíčových slov s pevnou předností**: stavební →
+lesní → vinice → sad → zahrada → orná → travní porost. Kdekoli v textu
+padlo slovo o stavbě, vyhrálo — i proti větě, ve které inzerent cituje
+katastr.
+
+### Dvě měření na ostrých datech
+
+**Citace větou** („vedený v katastru jako…", „druh pozemku: …"): takových
+inzerátů je 6, web souhlasil u 3 a u 3 ne — **vždy** tím, že napsal
+„stavební pozemek".
+
+**Výpis z listu vlastnictví**, kde je druh za každou parcelou v závorce:
+
+> „k.ú. Cotkytle LV č. 561 o celkové výměře 97502 m²
+> • Parcela č. 5010 - o výměře 70654 m² (Lesní pozemek)
+> • Parcela č. 5011 - o výměře 26848 m² (Orná půda)"
+
+| | počet |
+| --- | --- |
+| inzerátů s druhem v závorce | 1 292 |
+| z toho **jediný** druh (jednoznačné) | 730 |
+| z nich web souhlasil | 701 |
+| **rozpor** | **29** |
+| z toho **směs** druhů | 562 |
+| u nichž by podle PLOCHY vyšel jiný druh | **200 (36 %)** |
+
+Ta druhá polovina je ta zajímavější: web ze směsi vybíral podle
+přednosti klíčových slov, ne podle toho, čeho je víc. Jedna malá lesní
+parcela v balíku polí dělala z celého balíku les — 62× „lesní pozemek"
+místo orné půdy a 53× místo travního porostu, dohromady **115 nabídek**.
+A podle druhu se filtruje, počítá obvyklá cena a staví statistiky
+77 okresů.
+
+### Co se změnilo
+
+`js/druh.js` se teď nejdřív podívá, jestli inzerát katastr **cituje**:
+
+1. výpis parcel s plochami → vyhrává druh s **největší plochou**
+   (při rovnosti ten první v textu, ať je výsledek na témž textu
+   vždycky stejný),
+2. druhy v závorkách bez ploch → bere se jen tehdy, je-li **jediný**;
+   ze směsi bez ploch se nehádá,
+3. věta „vedený v katastru jako …" / „druh pozemku: …".
+
+Teprve když nic z toho v textu není, rozhoduje jako dosud hádání.
+
+Obsah závorky musí být **přesně** jeden z druhů, ne věta, která ho
+obsahuje — „(mimo lesní pozemek)" ani „(lesní pozemek sousedí)" citace
+nejsou.
+
+A jedna věc, která z toho plyne sama: **citace nikdy nevrátí „stavební
+pozemek"**. Katastr takový druh nezná, vyhláška jich zná deset. Jestli
+se na pozemku dá stavět, je věc územního plánu — to je samostatný
+nedodělek a plést to do druhu by znamenalo tvrdit o katastru něco, co
+v něm nestojí.
+
+### Uložená data se ZÁMĚRNĚ nepřepisují
+
+Nové pravidlo by na uložených datech změnilo druh u **233 nabídek
+z 1 616** s popisem (14,4 %), z toho 12× pryč od „stavebního pozemku".
+Přesto se tu nic nepřepisuje, a to z měřeného důvodu: `data/popisy.json`
+drží popis **zkrácený na 460 znaků** (`cistyPopis`), kdežto robot
+rozpoznává druh z **celého** textu inzerátu. Přepočet z uloženého textu
+by u inzerátů s delším výpisem parcel utnul seznam v polovině a
+„největší plocha" by se spočítala z části — tedy přepsal bych správný
+druh na špatný. Totéž už se tu jednou stalo u štítků „cesta", kde by
+naivní přepočet smazal 385 správných.
+
+Robot běží každých 6 hodin a druh **nepřenáší ze starých dat** —
+počítá ho při každém běhu znovu z plného textu. Data se tím srovnají
+sama při nejbližším běhu, i s tím, co moje měření ze zkráceného popisu
+vidět nemohlo.
+
+### Zkouška
+
+`scripts/test-druh.mjs` má 37 → **55** kontrol. Kromě pravidel výš se
+hlídá i to, co citace dělat nesmí: vybrat „stavební" nebo „zemědělský
+pozemek" (katastr je nezná), vzít závorku, která druh jen obsahuje,
+nebo hádat ze směsi bez ploch. Zkouška se opírá o **skutečný text** toho
+inzerátu z Vysokého Mýta, ne o vymyšlený.
+
+**Prokázáno sabotáží — třemi:** (A) když se citace přestane ptát, spadnou
+4 kontroly; (B) když se ze směsi bere první místo největšího, spadne ta
+o lesní parcele v balíku polí; (C) když stačí, že závorka druh obsahuje,
+spadnou obě kontroly o „(mimo lesní pozemek)".
+
+Napoprvé přitom sabotáž (A) chytila jen 2 kontroly ze 4: zkušební větu
+jsem si vymyslel („určena k zastavění") a hádání na ni nereaguje —
+pravidlo zná „k výstavbě" a „určen k stavbě", ne „k zastavění". Zkouška
+tím neprokazovala nic. Teprve s větou o stavebním povolení, která
+hádání opravdu spustí, začala měřit to, co měla.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

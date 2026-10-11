@@ -94,7 +94,77 @@ je('lesní pozemek v Kostelci nad Černými lesy se pozná',
 je('jméno se škrtá bez ohledu na háčky',
   D.zTextu('Prodej pozemku, LOUKA', ['louka']), null);
 
-/* ---------- 6. je to doopravdy zapojené? ----------
+/* ---------- 6. citace katastru má přednost před hádáním ----------
+
+   Část inzerátů druh neříká mezi řečí, ale CITUJE katastr — buď větou
+   („vedený v katastru jako…“), nebo výpisem z listu vlastnictví, kde
+   je druh za každou parcelou v závorce. Hádání z klíčových slov proti
+   tomu prohrávalo: v inzerátu z Vysokého Mýta stálo v jedné větě
+   „vedený v katastru jako trvalý travní porost“ a ve druhé „dle
+   územního plánu určena k zastavění“ — a protože „stavební pozemek“ má
+   v pravidlech přednost, web napsal „stavební pozemek“ o pozemku,
+   o kterém tentýž inzerát říká, že je v katastru travní porost.
+
+   U smíšených listů se navíc vybíralo podle přednosti klíčových slov,
+   ne podle PLOCHY: jedna malá lesní parcela v balíku polí z celého
+   balíku dělala les (naměřeno 115 takových nabídek). */
+{
+  /* Začátek je skutečný text toho inzerátu z Vysokého Mýta (zkrácený);
+     věta o stavebním povolení zastupuje tu část, kterou robot vidí a
+     uložený popis už ne (ukládá se jen 460 znaků). Bez té věty by
+     hádání vrátilo travní porost samo a zkouška by nic neprokázala —
+     ověřeno sabotáží. */
+  const vysokeMyto = 'Nabízím k prodeji pozemek o výměře 3974 m², vedený v katastru '
+    + 'jako trvalý travní porost. Parcela č. 3975 se nachází v klidné části '
+    + 'Vysokého Mýta zvané Jangelec. Pozemek tvoří udržovaná louka s rovinatým '
+    + 'terénem a je na něj vydané stavební povolení.';
+  je('citace katastru přebije „stavební povolení"', D.zTextu(vysokeMyto), 'trvalý travní porost');
+  je('a bez citace by vyšel stavební pozemek',
+    D.zTextu('Pozemek v klidné části obce. Je na něj vydané stavební povolení.'),
+    'stavební pozemek');
+  je('výpis parcel přebije „stavební pozemek" v názvu',
+    D.zTextu('Prodej stavebního pozemku. LV č. 1 • Parcela č. 1 - o výměře 800 m² (Orná půda)'),
+    'orná půda');
+
+  const lv = 'k.ú. Cotkytle LV č. 561 o celkové výměře 97502 m² '
+    + '• Parcela č. 5010 - o výměře 70654 m² (Lesní pozemek) '
+    + '• Parcela č. 5011 - o výměře 26848 m² (Orná půda)';
+  je('ze smíšeného listu vyhrává větší plocha (les)', D.zTextu(lv), 'lesní pozemek');
+  const lv2 = 'LV č. 1 • Parcela č. 1 - o výměře 100 m² (Lesní pozemek) '
+    + '• Parcela č. 2 - o výměře 9000 m² (Orná půda)';
+  je('a malá lesní parcela z balíku polí nedělá les', D.zTextu(lv2), 'orná půda');
+  je('na pořadí v textu to nezávisí',
+    D.zTextu('LV • Parcela č. 2 - o výměře 9000 m² (Orná půda) '
+      + '• Parcela č. 1 - o výměře 100 m² (Lesní pozemek)'), 'orná půda');
+  je('při shodné ploše rozhodne první v textu',
+    D.zTextu('LV • Parcela č. 1 - o výměře 500 m² (Vinice) '
+      + '• Parcela č. 2 - o výměře 500 m² (Orná půda)'), 'vinice');
+  je('dvojka za m nemusí být ²',
+    D.zTextu('LV • Parcela č. 1 - o výměře 800 m2 (Zahrada)'), 'zahrada');
+
+  /* Závorka bez plochy: jediný druh se bere, ze směsi se nehádá. */
+  je('jediný druh v závorce se bere', D.zTextu('Parcela č. 7 (Ovocný sad) na kraji obce'), 'ovocný sad');
+  je('ze směsi v závorkách bez ploch se nehádá',
+    D.zKatastru(D.srovnej('Parcela č. 7 (Ovocný sad), parcela č. 8 (Vinice)')), null);
+
+  /* Obsah závorky musí být PŘESNĚ druh, ne věta, která ho obsahuje. */
+  je('„(mimo lesní pozemek)" není citace', D.zKatastru(D.srovnej('Pozemek (mimo lesní pozemek)')), null);
+  je('a ani „(lesní pozemek sousedí)"',
+    D.zKatastru(D.srovnej('Pozemek (lesní pozemek sousedí)')), null);
+
+  /* Katastr nezná druh „stavební pozemek" — vyhláška jich zná deset.
+     Citace ho proto vrátit nesmí; hádání z textu ano, to je jiná věc. */
+  je('katastr „stavební pozemek" nezná', D.katastrovyDruh('stavební pozemek'), null);
+  je('a ani „zemědělský pozemek"', D.katastrovyDruh('zemědělský pozemek'), null);
+  je('deset druhů podle vyhlášky', D.KATASTR.length, 10);
+  je('každý z nich se pozná', D.KATASTR.filter((d) => D.katastrovyDruh(d) !== d), []);
+
+  /* Bez citace se nic nemění — hádání zůstává. */
+  je('bez citace rozhoduje dál text', D.zTextu('Prodej stavebního pozemku 800 m2'), 'stavební pozemek');
+  je('a co se nepozná, zůstává null', D.zKatastru(D.srovnej('Prodej pozemku v obci')), null);
+}
+
+/* ---------- 7. je to doopravdy zapojené? ----------
    Modul může být sebelíp napsaný — když ho robot nevolá, nebo mu
    nepředá jména míst, nezmění se nic. Ověřeno sabotáží: bez tohohle
    oddílu prošel test i s původním seznamem kousků slov. */

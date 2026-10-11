@@ -68,6 +68,104 @@
     { druh: 'zemědělský pozemek', re: /\bzemedelsk\w*\b/g },
   ];
 
+  /* ---------------------------------------------------------------
+     CITACE KATASTRU MÁ PŘEDNOST PŘED HÁDÁNÍM Z KLÍČOVÝCH SLOV.
+
+     Pravidla výš hádají druh z toho, jaká slova v inzerátu padla, a
+     berou první nález podle PŘEDNOSTI (stavební → lesní → …). Jenže
+     část inzerátů druh neříká mezi řečí — CITUJE katastr:
+
+       „Nabízím k prodeji pozemek o výměře 3974 m², vedený v katastru
+        jako trvalý travní porost. Parcela č. 3975 … dle územního plánu
+        určena k zastavění …"
+
+     Tady hádání prohrálo s vlastním textem: slovo o zastavění je
+     v inzerátu taky, „stavební pozemek" má přednost — a web napsal
+     „stavební pozemek" o pozemku, o kterém tentýž inzerát říká, že je
+     v katastru travní porost. Naměřeno na ostrých datech: 6 inzerátů
+     cituje katastr větou a u 3 z nich web uváděl jiný druh, VŽDY
+     „stavební pozemek".
+
+     Druhý, mnohem častější obrat je výpis z listu vlastnictví, kde je
+     druh za každou parcelou v závorce:
+
+       „k.ú. Cotkytle LV č. 561 o celkové výměře 97502 m²
+        • Parcela č. 5010 - o výměře 70654 m² (Lesní pozemek)
+        • Parcela č. 5011 - o výměře 26848 m² (Orná půda)"
+
+     Takových je 1 292. U 730 je v závorkách jediný druh a tam web
+     souhlasil v 701 případech — a 29× ne. U zbylých 556 je to SMĚS
+     a web z ní vybíral podle přednosti klíčových slov, ne podle toho,
+     čeho je víc: ve 200 případech (36 %) by podle PLOCHY vyšel jiný
+     druh, nejčastěji „lesní pozemek" → orná půda (62×) nebo travní
+     porost (53×). Jedna malá lesní parcela v balíku polí tak z celého
+     balíku dělala les — a podle druhu se filtruje, počítá obvyklá cena
+     i staví statistiky okresů.
+
+     Proto: když inzerát katastr cituje, věří se citaci; ze směsi se
+     bere druh s NEJVĚTŠÍ plochou. Hádání zůstává až pro inzeráty,
+     které nic takového neříkají.
+
+     Co citace nikdy nevrátí: „stavební pozemek". Katastr takový druh
+     nezná — vyhláška jich zná deset a všechny jsou v KATASTR níž.
+     Jestli se na pozemku dá stavět, je věc územního plánu, ne druhu;
+     to je samostatný nedodělek a plést to do druhu by znamenalo
+     tvrdit o katastru něco, co v něm nestojí. */
+  var KATASTR = ['zastavěná plocha a nádvoří', 'trvalý travní porost', 'ostatní plocha',
+    'lesní pozemek', 'vodní plocha', 'ovocný sad', 'orná půda', 'zahrada', 'vinice', 'chmelnice'];
+  var KATASTR_SROV = {};
+  for (var _i = 0; _i < KATASTR.length; _i++) KATASTR_SROV[srovnej(KATASTR[_i])] = KATASTR[_i];
+
+  /* Obsah závorky (nebo konec věty) musí být PŘESNĚ jeden z druhů —
+     nestačí, že ho obsahuje. „(mimo lesní pozemek)" nebo „(lesní
+     pozemek sousedí)" by se jinak počítaly jako citace. */
+  function katastrovyDruh(s) {
+    var k = srovnej(s).replace(/[.,;:–-]+$/, '').trim();
+    return Object.prototype.hasOwnProperty.call(KATASTR_SROV, k) ? KATASTR_SROV[k] : null;
+  }
+
+  /* „o výměře 70654 m² (Lesní pozemek)" — plocha a druh v jednom obratu.
+     Dvojka za m se psát nemusí jako ², proto obě podoby. */
+  var PAR_S_PLOCHOU = /o\s+vymere\s+([\d\s.,]+)\s*m(?:²|2)\s*\(([^)]{3,48})\)/g;
+  var PAR = /\(([^)]{3,48})\)/g;
+  var VETA = /(?:ved\w*\s+v\s+katastru(?:\s+nemovitosti)?(?:\s+jako)?|v\s+katastru(?:\s+nemovitosti)?\s+ved\w*(?:\s+jako)?|druh\s+pozemku)\s*:?\s*([^.;\n(]{3,48})/;
+
+  function zKatastru(t) {
+    var m, druh;
+    /* 1) Výpis parcel s plochami → vyhrává největší plocha. Při rovnosti
+          ten, který je v textu první: výsledek musí být na témž textu
+          vždycky stejný, ne závislý na pořadí v objektu. */
+    var soucty = {}, poradi = [];
+    PAR_S_PLOCHOU.lastIndex = 0;
+    while ((m = PAR_S_PLOCHOU.exec(t)) !== null) {
+      druh = katastrovyDruh(m[2]);
+      if (!druh) continue;
+      var plocha = parseFloat(String(m[1]).replace(/[\s.]/g, '').replace(',', '.'));
+      if (!(plocha > 0)) continue;
+      if (!Object.prototype.hasOwnProperty.call(soucty, druh)) { soucty[druh] = 0; poradi.push(druh); }
+      soucty[druh] += plocha;
+    }
+    if (poradi.length) {
+      var nej = poradi[0];
+      for (var i = 1; i < poradi.length; i++) if (soucty[poradi[i]] > soucty[nej]) nej = poradi[i];
+      return nej;
+    }
+    /* 2) Druhy v závorkách bez ploch → jen když je jediný. Ze směsi bez
+          ploch se vybrat nedá a hádat se nebude. */
+    var vzavorkach = [];
+    PAR.lastIndex = 0;
+    while ((m = PAR.exec(t)) !== null) {
+      druh = katastrovyDruh(m[1]);
+      if (druh && vzavorkach.indexOf(druh) === -1) vzavorkach.push(druh);
+    }
+    if (vzavorkach.length === 1) return vzavorkach[0];
+    if (vzavorkach.length > 1) return null;
+    /* 3) Věta „vedený v katastru jako …" / „druh pozemku: …" */
+    m = VETA.exec(t);
+    if (m) { druh = katastrovyDruh(m[1]); if (druh) return druh; }
+    return null;
+  }
+
   /* Je nález opravdu o tomhle pozemku? */
   function platny(text, zac, kon, pravidlo) {
     var pred = text.slice(Math.max(0, zac - 40), zac);
@@ -104,6 +202,9 @@
   function zTextu(text, jmenaMist) {
     var t = bezJmen(srovnej(text), jmenaMist);
     if (!t) return null;
+    /* Citace katastru napřed — viz dlouhá poznámka u zKatastru. */
+    var zapsany = zKatastru(t);
+    if (zapsany) return zapsany;
     for (var i = 0; i < PRAVIDLA.length; i++) {
       var p = PRAVIDLA[i];
       p.re.lastIndex = 0;
@@ -116,5 +217,6 @@
     return null;
   }
 
-  return { zTextu: zTextu, srovnej: srovnej, bezJmen: bezJmen, PRAVIDLA: PRAVIDLA };
+  return { zTextu: zTextu, zKatastru: zKatastru, katastrovyDruh: katastrovyDruh,
+    srovnej: srovnej, bezJmen: bezJmen, PRAVIDLA: PRAVIDLA, KATASTR: KATASTR };
 });
