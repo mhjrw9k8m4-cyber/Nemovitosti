@@ -2683,7 +2683,12 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .status-list{list-style:none; display:flex; flex-direction:column; gap:8px; margin:0;}
 .status-list li{position:relative; padding-left:20px; font-size:14px; line-height:1.5; color:var(--text-ondark-mute);}
 .status-list li::before{content:""; position:absolute; left:2px; top:8px; width:6px; height:6px; border-radius:50%; background:var(--copper-bright); opacity:0.85;}
-.status-list li b{color:var(--text-ondark);}/* Alert form */
+.status-list li b{color:var(--text-ondark);}
+/* Odkaz v odrážce musí být poznat: a{color:inherit} ho jinak udělá
+   k nerozeznání od textu. Je tu jediný — u obecních záměrů, které
+   nesbíráme a místo nich ukazujeme cestu, jak je najít sám. */
+.status-list a{color:var(--copper-bright); text-decoration:underline; text-underline-offset:2px;}
+/* Alert form */
 
 /* Embed */
 

@@ -2908,6 +2908,95 @@ formuláře ukazuje přihlašovací karta, takže obal `.add-grid` má
 přihlášený a formulář se rozbalí, lepení smysl má. Nic se tu
 neopravuje, jen je dobré to vědět, než to někdo bude „opravovat".
 
+## 3ay. NALEZENO (z tvého průchodu webem): web sliboval obecní záměry „z úřední desky", do které se nikdy nepodíval — *opraveno 11. 10.*
+
+Na úvodní stránce stojí pět kategorií příležitostí a u každé svítí živý
+počet. U „Obecního záměru" stála odrážka **„Z úřední desky — přihlásit
+se jde ve lhůtě"** a pod ní štítek **„zatím žádné"**.
+
+Obojí bylo zavádějící. V datech je `obec` **nula** a nula to bude i do
+budoucna, protože **úřední desky obcí nemáme zapojené ani jednu** —
+každá obec má svou vlastní. Změřeno na ostrých datech:
+
+| kategorie | v datech | zdroj |
+| --- | --- | --- |
+| `sale` | 1 829 | Bezrealitky, Farmy, SPÚ |
+| `drazba` | 127 | CEVD, OK dražby |
+| `exekuce` | 28 | tytéž evidence |
+| `obec` | **0** | **žádný** |
+| `majitel` | 0 | lidé, kteří vloží inzerát (zatím nikdo) |
+
+### Proč je to vada, a ne jen prázdná kategorie
+
+Nula má **dva různé důvody** a web pro ně měl jeden text:
+
+* „zatím žádné" = *zdroj máme, zeptali jsme se, nic nenašel.* To platí
+  pro pozemky od majitelů.
+* „nesbíráme" = *nebylo koho se zeptat.* To platí pro obecní záměry.
+
+Kdo si u obecních záměrů přečetl „zatím žádné" a nad tím „Z úřední
+desky", mohl si poctivě odvodit, že obce teď nic neprodávají. To není
+pravda — obce prodávají pořád, jen my o tom nevíme. Lhalo se číslem,
+aniž cokoli spadlo.
+
+### Co je na webu teď
+
+Karta přiznává, co je, a místo slibu dává člověku cestu:
+
+> **Obecní záměr** · *zatím nesbíráme*
+> · Obec oznámila **záměr prodat** pozemek, přihlásit se jde **ve lhůtě**
+> · **Tyhle zatím nesbíráme** — každá obec má svou úřední desku a ani
+>   jednu nemáme zapojenou. [Jak takový pozemek najít sám →](../pozemek-od-obce.html)
+
+Ten odkaz vede na `pozemek-od-obce.html`, stránku, která přesně tohle
+vysvětluje — a z úvodní stránky na ni dosud nevedl **žádný** odkaz.
+
+Štítek se počítá v `js/main.js`: karta, která o sobě ví, že zdroj nemá,
+to má napsané v `data-bez-zdroje` a dostane „zatím nesbíráme". Jakmile
+data dorazí, štítek ukáže počet jako u ostatních — značka počet
+nepřehluší.
+
+Poctivé je i README: slibovalo „dražby, exekuce, prodeje a obecní
+záměry". Teď jmenuje tři a o páté říká, že je v kódu hotová a nesbírá se.
+
+### Zkouška
+
+`scripts/test-sliby.mjs` má 35 → **42** kontrol. Hlídá se:
+
+1. každá **prázdná** kategorie na úvodní stránce přiznává, proč je
+   prázdná (výjimka je jmenovitě `majitel` — zdroj „lidé" je skutečný,
+   i když zatím nikdo nevložil),
+2. a opačný směr: značka **nesmí** zůstat na kategorii, která už data
+   má — jinak by web zapíral vlastní nabídky,
+3. přiznání je v **textu** karty, ne jen v atributu,
+4. karta **neslibuje zdroj**, do kterého se web nedívá (odrážka
+   začínající „Z úřední desky"),
+5. ve vykreslené stránce se ty dva stavy opravdu **liší** („zatím
+   nesbíráme" u obce × „zatím žádné" u majitelů × „1 829 teď na mapě"
+   u prodeje),
+6. a s **podstrčeným** záměrem obce štítek ukáže počet, ne „nesbíráme".
+
+Kvůli bodu 6 umí `host()` v té zkoušce podstrčit i nabídky od robota —
+cesta pro inzeráty od lidí to neumí, ta všemu vnutí `type:'majitel'`.
+
+**Prokázáno sabotáží — šest různých:** sundaná značka (spadly 3
+kontroly), značka nasazená na kategorii s daty (2), z textu zmizelé
+přiznání (1), vrácená původní odrážka o úřední desce (1), zrušená
+větev ve skriptu (2) a štítek, který by přehlušil i skutečný počet (1).
+Bez sabotáže 42 z 42.
+
+### Co se tím NEŘEŠÍ
+
+Nadpis sekce pořád říká „Pět druhů příležitostí — každý svou barvou."
+To zůstává: pět druhů web opravdu rozlišuje a každý má svou barvu, a
+hned pod nadpisem si každá karta řekne sama, jak na tom je. Dynamický
+počet druhů by znamenal číslo, které se dopočítá až skriptem — tedy
+poskočení rozvržení kvůli jednomu slovu.
+
+A hlavně: **sbírat obecní záměry je pořád nedodělek**, ne vyřešená věc.
+Zapsaný je v bodu o chybějících zdrojích výš (ÚZSVM a obecní úřední
+desky). Tohle byla oprava toho, že se web tvářil, že je sbírá.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

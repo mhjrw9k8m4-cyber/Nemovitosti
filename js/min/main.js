@@ -433,7 +433,8 @@
     document.querySelectorAll('.status-n').forEach(function (el) {
       var n = byType[el.getAttribute('data-type')] || 0;
 
-      el.textContent = n ? (fmt(n) + ' teď na mapě') : 'zatím žádné';
+      var bezZdroje = el.closest && el.closest('[data-bez-zdroje]');
+      el.textContent = n ? (fmt(n) + ' teď na mapě') : (bezZdroje ? 'zatím nesbíráme' : 'zatím žádné');
       if (!n) el.classList.add('is-zero');
     });
   })();

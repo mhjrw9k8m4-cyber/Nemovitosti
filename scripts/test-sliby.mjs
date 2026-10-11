@@ -294,7 +294,7 @@ const PRAZDNA = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 
 /** Prohlížeč bez jediného přihlášení — přesně tak, jak web slibuje. */
-async function host(inzeraty) {
+async function host(inzeraty, prilezitosti) {
   const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 },
     locale: 'cs-CZ', permissions: [], reducedMotion: 'reduce' });
   await ctx.route('**/*', (r) => {
@@ -313,6 +313,15 @@ async function host(inzeraty) {
   if (inzeraty) {
     await ctx.route('**/rest/v1/rpc/public_listings*', (r) => r.fulfill({ status: 200,
       contentType: 'application/json', body: JSON.stringify(inzeraty) }));
+  }
+  /* Druhý volitelný vstup: nabídky od ROBOTA (data/opportunities.json).
+     Přes `inzeraty` se podstrčit nedají — ty jdou cestou pro inzeráty od
+     lidí a dostanou type:'majitel'. Kategorie jako obecní záměr tedy jinak
+     než tudy do stránky nepropadne. */
+  if (prilezitosti) {
+    await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(Object.assign({}, data, { opportunities: prilezitosti })) }));
   }
   await ctx.route(`${BASE}/index.html`, async (r) => {
     const o = await r.fetch();
@@ -434,6 +443,101 @@ async function host(inzeraty) {
     've výpisu: ' + v.karty.join(' | '));
   pravda('a je u něj poznat, že je přímo od majitele', v.odznak,
     'web slibuje, že se ukáže jako „Přímo od majitele"');
+  await ctx.close();
+}
+
+/* ---- 12) „Pět druhů příležitostí" — a dva z nich jsou prázdné ----
+
+   Na úvodní stránce stojí pět kategorií a u každé svítí živý počet.
+   Nula má přitom DVA různé důvody, které se zvenčí nedají rozeznat:
+
+     · „zatím žádné" — zdroj máme, zeptali jsme se a nic nenašel.
+       To je případ pozemků od majitelů: vkládají je lidé a zatím
+       nikdo nevložil.
+     · „zatím nesbíráme" — nebylo koho se zeptat. To je případ
+       obecních záměrů: každá obec má svou úřední desku a ani jednu
+       nemáme zapojenou.
+
+   Dřív měly oba stavy stejný text „zatím žádné" a karta obecních
+   záměrů k tomu slibovala „Z úřední desky" — tedy zdroj, do kterého
+   se web nikdy nepodíval. Kdo si přečetl „zatím žádné", mohl si
+   odvodit, že obce teď prostě nic neprodávají; a to je lež číslem.
+
+   Hlídá se obojí: že karta bez zdroje to o sobě říká, a že to
+   přestane říkat, jakmile data dorazí. */
+{
+  const bezZdroje = [...idx.matchAll(/<div class="status-card[^>]*data-bez-zdroje="([^"]+)"[\s\S]*?<\/ul><\/div>/g)];
+  const kategorie = [...idx.matchAll(/<span class="status-n" data-type="([^"]+)"/g)].map((m) => m[1]);
+  const pocet = {};
+  for (const o of nabidky) pocet[o.type] = (pocet[o.type] || 0) + 1;
+
+  /* Kategorie, která nemá ani jednu nabídku, musí být označená jako
+     nesbíraná, nebo mít skutečný zdroj. Zdroj „lidé, kteří vloží
+     inzerát" je skutečný, i když zatím nikdo nevložil — proto je
+     výjimka jmenovitá a krátká. */
+  const maZdrojIKdyzPrazdna = ['majitel'];
+  const znackou = bezZdroje.map((m) => m[1]);
+  const prazdneBezPriznani = kategorie.filter((t) => !pocet[t]
+    && znackou.indexOf(t) === -1 && maZdrojIKdyzPrazdna.indexOf(t) === -1);
+  pravda('každá prázdná kategorie na úvodní stránce přiznává, proč je prázdná',
+    prazdneBezPriznani.length === 0,
+    'bez přiznání: ' + prazdneBezPriznani.join(', '));
+
+  /* A opačný směr: značka nesmí zůstat na kategorii, která už data má.
+     Jinak by web zapíral vlastní nabídky. */
+  const lzeOpacne = znackou.filter((t) => pocet[t]);
+  pravda('a žádná kategorie se neoznačuje za nesbíranou, když už data má',
+    lzeOpacne.length === 0,
+    'označené, přesto s daty: ' + lzeOpacne.map((t) => t + ' (' + pocet[t] + ')').join(', '));
+
+  /* Text karty musí být napsaný, ne jen označený atributem. */
+  for (const m of bezZdroje) {
+    pravda('karta „' + m[1] + '" má v textu napsané, že se nesbírá',
+      /nesbíráme/.test(m[0]), 'v kartě to napsané není');
+    /* Odrážka, která ZAČÍNÁ „Z úřední desky", je tvrzení o tom, odkud
+       data bereme. Zmínka o úřední desce uvnitř věty („každá obec má
+       svou úřední desku") je naopak vysvětlení, proč je nemáme, a tou
+       se tahle kontrola nesmí nechat zmást. */
+    pravda('a neslibuje zdroj, do kterého se web nedívá',
+      !/<li>\s*Z[\s\u00a0]+úředn/i.test(m[0]),
+      'karta pořád tvrdí, že data bere z úřední desky');
+  }
+}
+
+/* ---- 12b) a ten rozdíl musí být vidět ve vykreslené stránce ---- */
+{
+  const { ctx, p } = await host(null);
+  const stitky = await p.evaluate(() => {
+    const out = {};
+    document.querySelectorAll('.status-n[data-type]').forEach((el) => {
+      out[el.getAttribute('data-type')] = el.textContent.trim();
+    });
+    return out;
+  });
+  pravda('obecní záměry se ve štítku hlásí jako nesbírané',
+    stitky.obec === 'zatím nesbíráme', 'štítek říká „' + stitky.obec + '"');
+  pravda('zatímco prázdná kategorie se zdrojem říká něco jiného',
+    stitky.majitel === 'zatím žádné' && stitky.majitel !== stitky.obec,
+    'u majitelů štítek říká „' + stitky.majitel + '"');
+  pravda('a kategorie s daty hlásí počet',
+    /teď na mapě/.test(stitky.sale || ''), 'u „na prodej" štítek říká „' + stitky.sale + '"');
+  await ctx.close();
+}
+
+/* ---- 12c) až záměr obce jednou přijde, štítek ho spočítá ---- */
+{
+  const zamer = {
+    id: 'zk-obec-1', place: 'Zkušební Obec', okres: 'Kolín', druh: 'stavební pozemek',
+    type: 'obec', price: 400000, area: 800, lat: 50.02, lng: 15.20,
+    extra: 'záměr obce — úřední deska', url: 'https://example.invalid/zamer',
+  };
+  const { ctx, p } = await host(null, nabidky.concat([zamer]));
+  const stitek = await p.evaluate(() => {
+    const el = document.querySelector('.status-n[data-type="obec"]');
+    return el ? el.textContent.trim() : null;
+  });
+  pravda('se podstrčeným záměrem obce štítek ukáže počet, ne „nesbíráme"',
+    /teď na mapě/.test(stitek || ''), 'štítek říká „' + stitek + '"');
   await ctx.close();
 }
 

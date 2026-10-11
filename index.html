@@ -130,7 +130,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=f4e63e85">
+  <link rel="stylesheet" href="css/styles.min.css?v=4181845a">
 </head>
 <body>
 
@@ -577,7 +577,7 @@
         <div class="status-card reveal" style="--c-druh:var(--c-sale)"><div class="status-top"><svg class="ic" style="color:var(--c-sale)"><use href="#i-tag"/></svg>Na prodej<span class="status-n" data-type="sale"></span></div><ul class="status-list"><li>Aktivně nabízené k prodeji</li><li>Proklik přímo na inzerát</li></ul></div>
         <div class="status-card reveal" style="--c-druh:var(--c-drazba)"><div class="status-top"><svg class="ic" style="color:var(--c-drazba)"><use href="#i-gavel"/></svg>Dražba<span class="status-n" data-type="drazba"></span></div><ul class="status-list"><li>Nadcházející veřejné dražby</li><li>Často <b>pod tržní cenou</b></li></ul></div>
         <div class="status-card reveal" style="--c-druh:var(--c-exekuce)"><div class="status-top"><svg class="ic" style="color:var(--c-exekuce)"><use href="#i-alert"/></svg>Exekuce<span class="status-n" data-type="exekuce"></span></div><ul class="status-list"><li>Pozemky v exekuci</li><li><b>Signál budoucího prodeje</b></li></ul></div>
-        <div class="status-card reveal" style="--c-druh:var(--c-obec)"><div class="status-top"><svg class="ic" style="color:var(--c-obec)"><use href="#i-building"/></svg>Obecní záměr<span class="status-n" data-type="obec"></span></div><ul class="status-list"><li>Obec oznámila <b>záměr prodat</b> pozemek</li><li>Z úřední desky — <b>přihlásit se jde ve lhůtě</b></li></ul></div>
+        <div class="status-card reveal" data-bez-zdroje="obec" style="--c-druh:var(--c-obec)"><div class="status-top"><svg class="ic" style="color:var(--c-obec)"><use href="#i-building"/></svg>Obecní záměr<span class="status-n" data-type="obec"></span></div><ul class="status-list"><li>Obec oznámila <b>záměr prodat</b> pozemek, přihlásit se jde <b>ve lhůtě</b></li><li><b>Tyhle zatím nesbíráme</b> — každá obec má svou úřední desku a ani jednu nemáme zapojenou. <a href="pozemek-od-obce.html">Jak takový pozemek najít sám →</a></li></ul></div>
         <div class="status-card reveal" style="--c-druh:var(--c-majitel)"><div class="status-top"><svg class="ic" style="color:var(--c-majitel)"><use href="#i-user"/></svg>Přímo od majitele<span class="status-n" data-type="majitel"></span></div><ul class="status-list"><li>Majitel vložil inzerát <b>přímo na Parcelce</b></li><li>Jednáte napřímo — <b>bez realitky a provize</b></li></ul></div>
       </div>
     </div>
@@ -834,7 +834,7 @@
      člověk něco poznamenal. Soubor má 1,5 kB po minifikaci. -->
 <script src="js/min/poznamky.js?v=070e8c0d"></script>
 <script src="js/min/mapove-vrstvy.js?v=3aa2d8b2" defer></script>
-<script src="js/min/main.js?v=f8ffb508" defer></script>
+<script src="js/min/main.js?v=9a8da89c" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

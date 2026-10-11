@@ -1,8 +1,13 @@
 # Parcelka
 
 Web pro **Parcelku** — mapa příležitostí u pozemků. Na jedné interaktivní mapě
-ukazuje pozemky, kde se něco děje: **dražby, exekuce, prodeje a obecní záměry**,
-sbírané z veřejných zdrojů. Klik na bod → detail + proklik do katastru.
+ukazuje pozemky, kde se něco děje: **dražby, exekuce a prodeje**, sbírané
+z veřejných zdrojů. Klik na bod → detail + proklik do katastru.
+
+Pátá kategorie, **obecní záměry**, je v kódu hotová (barva, filtr, legenda,
+`scripts/test-obec.mjs`), ale **nesbírá se**: každá obec má svou úřední desku
+a ani jednu nemáme zapojenou. Úvodní stránka to u té kategorie píše
+(„zatím nesbíráme") a hlídá to `scripts/test-sliby.mjs`.
 
 ## Struktura
 
@@ -49,7 +54,8 @@ Web soubor `data/opportunities.json` načítá přes `fetch` a má bezpečnou z�
 }
 ```
 
-`type` ∈ `sale` (na prodej) · `drazba` · `exekuce` · `obec` (obecní záměr).
+`type` ∈ `sale` (na prodej) · `drazba` · `exekuce` · `obec` (obecní záměr — zatím
+bez zdroje, viz výš) · `majitel` (inzerát vložený na Parcelce).
 `lat`/`lng` jsou nepovinné — když chybí, robot je doplní podle `okres`.
 
 ### Jak zapojit reálný zdroj

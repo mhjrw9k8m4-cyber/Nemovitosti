@@ -633,7 +633,15 @@
          tu chodilo rovnou z délky pole, zatímco úvodní nadpis o kus výš
          používá fmt() — na jedné obrazovce tak stálo „1 991 pozemků"
          a pod tím „1841 teď na mapě". */
-      el.textContent = n ? (fmt(n) + ' teď na mapě') : 'zatím žádné';
+      /* NULA MÁ DVA RŮZNÉ DŮVODY a dřív pro ně byl jeden text. „Zatím
+         žádné" znamená „zdroj jsme se zeptali a nic nenašel" — to platí
+         pro pozemky od majitelů (vkládají je lidé, zatím nikdo). Jenže
+         u obecních záměrů nebylo koho se zeptat: úřední desky obcí nemáme
+         zapojené ani jednu, takže tam nula neříkala „nic tam není", ale
+         „nesbíráme to". Karta, která to o sobě ví, to má napsané
+         v data-bez-zdroje a dostane svůj vlastní text. */
+      var bezZdroje = el.closest && el.closest('[data-bez-zdroje]');
+      el.textContent = n ? (fmt(n) + ' teď na mapě') : (bezZdroje ? 'zatím nesbíráme' : 'zatím žádné');
       if (!n) el.classList.add('is-zero');
     });
   })();
