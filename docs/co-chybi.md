@@ -2832,6 +2832,82 @@ zmizí.
 
 **Prokázáno sabotáží:** s vypnutým tlačítkem kontrola spadla.
 
+## 3ax. NEPOTVRZENO (z tvého průchodu webem): „hlavička při rolování prosvítá a překrývá tlačítko Přidat" — *změřeno 11. 10.*
+
+Dvě tvrzení v jednom bodě, obě se daly změřit, a ani jedno nevyšlo.
+
+### 1. Prosvítání
+
+Hlavička je lepivá a **na monitoru záměrně poloprůhledná** (0,85 bílé
++ `blur(10px)`), na dotykovém zařízení ale **úplně krycí**: pravidlo
+`@media (hover:none)` jí dává `--plocha-plovouci-plna` a blur vypíná.
+Naměřeno na třech stránkách ve dvou sestavách:
+
+| sestava | krytí | pozadí | blur |
+| --- | --- | --- | --- |
+| telefon (dotyk) | 1 | `rgb(245,250,247)` | žádný |
+| monitor | 0,85 | `rgba(255,255,255,0.85)` | `blur(10px)` |
+
+Zůstává tedy otázka, jestli to na monitoru nevadí čitelnosti. Změřeno
+složením: obsah pod hlavičkou se vyfotil **bez** hlavičky (je vyňatá
+z toku, takže se tím nic neposune), spočítala se průměrná barva pásu
+za textem (rozmazání 10 px je právě zprůměrování okolí) a složila se
+s `rgba(255,255,255,0.85)`. Proti výsledku se spočítal kontrast textu.
+Nejhorší hodnota z pěti stránek a všech poloh rolování:
+
+| stránka | nejhorší kontrast | co bylo pod hlavičkou |
+| --- | --- | --- |
+| `pozemek-…-rsg5bb.html` | **5,58 : 1** | `rgb(16,32,23)` — tmavý pás |
+| `index.html` | 5,61 : 1 | `rgb(18,36,26)` — tmavý pás |
+| `cena-pozemku.html` | 6,99 : 1 | světlý obsah |
+| `nove-pozemky.html` | 7,09 : 1 | světlý obsah |
+| `porovnani.html` | 7,23 : 1 | světlý obsah |
+
+Ta hranice navíc platí **pro jakýkoli obsah**, ne jen pro změřené
+stránky: při krytí 0,85 je nejtmavší možné složení `0,85 × 255 = 217`,
+tedy `rgb(217,217,217)` — a proti barvě odkazů v hlavičce to dává
+právě těch ~5,5 : 1. Pod čtyři a půl (hranice AA pro běžný text) se
+hlavička dostat nemůže, ani kdyby pod ní projel čistě černý obrázek.
+
+Co z toho zůstává: **vzhledová** námitka (že obsah je skrz hlavičku
+vidět) je oprávněná a je to záměr — matné sklo. Čitelnost to neohrožuje.
+
+### 2. „Překrývá tlačítko Přidat"
+
+Hlavička je `position:fixed`, takže si pod ni stránka drží místo sama
+(`body{padding-top:--vyska-hlavicky}`, 85 px na monitoru, 119 px na
+úzkém displeji, kde má dvě řady). Změřeno na 13 šířkách od 360 do
+1600 px na třech stránkách:
+
+* výška hlavičky **nikdy nepřekročila** vyhrazené místo (117,11 px
+  proti 119 na úzkém, 85,11 proti 85 na širokém — těch 0,11 px je
+  spodní linka),
+* na souřadnicích tlačítka „Přidat" dostane klik **samo tlačítko**
+  (`document.elementFromPoint` vrací prvek uvnitř něj) ve všech
+  sestavách, kde je tlačítko vidět,
+* nikde nic nepřetéká do strany.
+
+A třetí čtení té stížnosti — že se pod hlavičku dostane něco
+**lepivého** na stránce — taky neplatí: při skutečném rolování po
+pěti stránkách ve dvou sestavách nevyjela horní hrana žádného prvku
+s `position:sticky` pod spodní hranu viditelné hlavičky.
+
+**Prokázáno sabotáží:** s `.add-aside, .obsah { top:0 }` kontrola
+překryv ohlásila (683,8 px na `aside.add-aside`, 85,1 px na
+`nav.obsah`). Bez sabotáže mlčí. Napoprvé přitom mlčela i se
+sabotáží — vzorky se brály 90 ms po posunu, kdy je hlavička ještě
+zhasnutá (`header.hl-zhasnuta` při rolování), takže měření nekoukalo
+na nic. Teprve s 550 ms začalo vidět (0 zhasnutých vzorků z 19–57).
+
+### Vedlejší nález, který není vada
+
+`.add-aside` na `pridat.html` má `position:sticky; top:96px`, ale
+**nelepí se** — a je to v pořádku. Odhlášenému se místo dlouhého
+formuláře ukazuje přihlašovací karta, takže obal `.add-grid` má
+583 px a panel sám 570: na lepení zbývá 13 px. Jakmile je člověk
+přihlášený a formulář se rozbalí, lepení smysl má. Nic se tu
+neopravuje, jen je dobré to vědět, než to někdo bude „opravovat".
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
