@@ -2785,6 +2785,53 @@ poznámku") a nová kontrola to ohlásila: *„žádná značka nevisí na kart�
 která poznámku nemá"* spadlo. Stará kontrola by přitom takovou chybu
 poznala jen náhodou — podle toho, kolik karet je zrovna vidět.
 
+## 3aw. NALEZENO (z tvého průchodu webem): u nefunkční vrstvy web sliboval, že to zkusí „až příště" — a tlačítko nedal — *opraveno 11. 10.*
+
+Z tvého seznamu bod 1. Potvrzeno v kódu: stránka pozemku vypsala
+
+> Vrstvy Územní plán, Záplavy teď neodpovídají — zkusíme to znovu, až
+> sem přijdete příště.
+
+a žádné tlačítko u toho nebylo. Ta věta byla doslova pravdivá: mrtvá
+vrstva se pamatuje v `sessionStorage` **na půl hodiny**
+(`js/mapove-vrstvy.js`), aby se u každého dalšího pozemku nečekalo
+znovu pět vteřin na službu, která stejně neodpoví. Jenže výpadky těch
+služeb bývají krátké, takže komu zrovna spadl územní plán, ten neměl
+jak si ho vyžádat.
+
+### Oprava
+
+Tlačítko **Zkusit znovu** u té hlášky. Opakování je **přídavné**:
+zapomene se paměť, dozkouší se všechno, a přepínače, které už na
+panelu jsou, se přeskočí — jinak by měl člověk dvojí katastr a zapnutá
+vrstva by se odpojila od svého tlačítka. `zapomen()` byl dosud jen šev
+pro zkoušky (`_zapomen`); teď je to část rozhraní, staré jméno zůstalo.
+
+### A co z toho vypadlo: strop vloženého stylu je skoro plný
+
+Dvě nová pravidla pro to tlačítko přetáhla předlohu `pozemek.html`
+o **79 znaků** přes strop 40 kB a `scripts/test-vlozeny-styl.mjs` to
+ohlásil. Ten strop má důvod: vložený styl jde do 1 941 stránek.
+Tlačítko proto **žádný vlastní vzhled nedostalo** — používá `pzm-z`,
+drobné tlačítko, které v ovládání mapy už existuje a sem se hodí
+(je to podnět, ne hlavní akce). Třída `pzm-znovu` zůstává bez
+pravidla, jen jako úchyt pro zkoušku.
+
+Stojí za zapsání, že **volného místa je 190 znaků**: další pravidlo se
+tam nevejde a bude se muset nejdřív něco uvolnit.
+
+### Zkouška
+
+`scripts/test-mapa-pozemku.mjs` má 131 → **138** kontrol. Modul vrstev
+se v ní **podstrkuje**: napoprvé jsou všechny mrtvé, po zapomenutí
+paměti jedna naskočí — jinak by zkouška záležela na tom, jestli zrovna
+odpovídá cizí server. Hlídá se, že tlačítko je, že hláška už neslibuje
+„až příště", že kliknutí paměť zapomene a zeptá se znovu, že se živá
+vrstva objeví jako přepínač (jeden, ne dva) a že hláška i s tlačítkem
+zmizí.
+
+**Prokázáno sabotáží:** s vypnutým tlačítkem kontrola spadla.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

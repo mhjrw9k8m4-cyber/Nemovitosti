@@ -1373,6 +1373,103 @@ if (DRAZBA) {
    okraje stojí samo, takže není s čím kolidovat; že nesedí na obsahu,
    hlídá scripts/test-nahoru.mjs. */
 
+/* ---- „ZKUSIT ZNOVU" U NEFUNKČNÍ VRSTVY ---------------------------
+ *
+ * Mrtvá vrstva se pamatuje v sessionStorage na půl hodiny, takže hláška
+ * dřív končila slovy „zkusíme to znovu, až sem přijdete příště" — a kdo
+ * zrovna potřeboval územní plán, neměl jak si ho vyžádat. Výpadky těch
+ * služeb bývají krátké.
+ *
+ * Modul vrstev se tu PODSTRKUJE: napoprvé jsou všechny mrtvé, po
+ * zapomenutí paměti jedna naskočí. Jinak by zkouška záležela na tom,
+ * jestli zrovna odpovídá cizí server.
+ */
+{
+  const ctxV = await prohlizec.newContext({ viewport: { width: 390, height: 844 } });
+  await ctxV.route('**/*', (r) => {
+    const u = new URL(r.request().url());
+    if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
+    return r.abort();
+  });
+  await ctxV.route('**/mapove-vrstvy.js*', (r) => r.fulfill({
+    status: 200, contentType: 'text/javascript',
+    body: `(function (g) {
+      var kolikrat = 0;
+      g.__pkPokusy = function () { return kolikrat; };
+      g.PK_VRSTVY = {
+        zapomen: function () { g.__pkZapomenuto = (g.__pkZapomenuto || 0) + 1; },
+        pripravene: function (stred, naVrstvu) {
+          kolikrat++;
+          if (kolikrat === 1) {
+            var prazdno = [];
+            prazdno.mrtve = ['Územní plán', 'Záplavy'];
+            return Promise.resolve(prazdno);
+          }
+          var def = { id: 'uzemni', nazev: 'Územní plán' };
+          var zapis = { def: def, sluzba: { url: 'http://127.0.0.1:1/x', vrstvy: 'a' } };
+          if (typeof naVrstvu === 'function') naVrstvu(zapis);
+          var ziva = [zapis];
+          ziva.mrtve = [];
+          return Promise.resolve(ziva);
+        },
+        leafletVrstva: function () { return { addTo: function () { return this; }, setOpacity: function () {}, remove: function () {} }; },
+        legendaAdresa: function () { return ''; }
+      };
+    })(window);`,
+  }));
+  /* Mapa se staví až ve chvíli, kdy je vidět — bez doscrollování by se
+     `pripravene` nezavolalo vůbec a kontroly níž by měřily prázdno.
+     Tentýž postup používá `rovnouKMape` výš. */
+  await ctxV.addInitScript(() => {
+    const t = setInterval(() => {
+      const e = document.getElementById('pzm');
+      if (e) { clearInterval(t); e.scrollIntoView({ block: 'center' }); }
+    }, 50);
+    setTimeout(() => clearInterval(t), 8000);
+  });
+  const pv = await ctxV.newPage();
+  await pv.goto(`${BASE}/${CIL.url}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
+  await pv.waitForTimeout(3000);
+
+  const pred = await pv.evaluate(() => {
+    const vr = document.getElementById('pzm-vr');
+    const b = vr ? vr.querySelector('.pzm-znovu') : null;
+    return {
+      text: vr ? (vr.textContent || '').replace(/\s+/g, ' ').trim() : '',
+      maTlacitko: !!b,
+      prepinacu: vr ? vr.querySelectorAll('.pzm-v').length : -1,
+      pokusy: window.__pkPokusy ? window.__pkPokusy() : -1,
+    };
+  });
+  pravda(`modul vrstev se podstrčil a jednou se zeptal (${pred.pokusy})`, pred.pokusy === 1,
+    `pokusů ${pred.pokusy} — bez toho kontroly níž nic neznamenají`);
+  pravda('u nefunkčních vrstev je tlačítko „Zkusit znovu"', pred.maTlacitko, pred.text);
+  pravda('a hláška už neslibuje, že se to zkusí „až příště"',
+    !/p[řr][íi]št[ěe]/i.test(pred.text), pred.text);
+
+  if (pred.maTlacitko) {
+    await pv.click('#pzm-vr .pzm-znovu');
+    await pv.waitForTimeout(1200);
+    const po = await pv.evaluate(() => {
+      const vr = document.getElementById('pzm-vr');
+      return {
+        zapomenuto: window.__pkZapomenuto || 0,
+        pokusy: window.__pkPokusy ? window.__pkPokusy() : -1,
+        prepinacu: vr ? vr.querySelectorAll('.pzm-v').length : -1,
+        maTlacitko: !!(vr && vr.querySelector('.pzm-znovu')),
+        text: vr ? (vr.textContent || '').replace(/\s+/g, ' ').trim() : '',
+      };
+    });
+    pravda('kliknutí zapomene paměť mrtvých vrstev', po.zapomenuto === 1, `zapomenuto ${po.zapomenuto}×`);
+    pravda('a zeptá se znovu', po.pokusy === 2, `pokusů ${po.pokusy}`);
+    pravda('vrstva, která už odpovídá, se objeví jako přepínač',
+      po.prepinacu === 1, `přepínačů ${po.prepinacu}`);
+    pravda('a hláška i s tlačítkem zmizí, když je všechno živé',
+      !po.maTlacitko && !/neodpov/i.test(po.text), po.text);
+  }
+  await ctxV.close();
+}
+
 await prohlizec.close();
 console.log('\nMapa v detailu pozemku');
 console.log(zpravy.join('\n'));

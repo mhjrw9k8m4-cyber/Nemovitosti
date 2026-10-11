@@ -201,15 +201,28 @@
     }, nast));
   }
 
+  /* ZAPOMENUTÍ PAMĚTI. Co se jednou ukázalo jako mrtvé, se v tomhle
+     sezení nezkouší znovu — jinak by člověk u každého dalšího pozemku
+     čekal pět vteřin na službu, která stejně neodpoví. Tlačítko
+     „Zkusit znovu" na stránce pozemku ale musí mít jak tu paměť
+     smazat, jinak by nic nezkusilo. Je to tedy ČÁST ROZHRANÍ, ne jen
+     šev pro zkoušky; `_zapomen` zůstává pod starým jménem, aby se
+     nerozbily zkoušky, které ho volají. */
+  function zapomen() {
+    nactene = null;
+    try { sessionStorage.removeItem(PAMET); } catch (e) {}
+  }
+
   global.PK_VRSTVY = {
     nacti: nacti,
     pripravene: pripravene,
+    zapomen: zapomen,
     leafletVrstva: leafletVrstva,
     legendaAdresa: legendaAdresa,
     // ——— švy pro testy ———
     _zkus: zkus,
     _bbox3857: bbox3857,
     _zkusebniAdresa: zkusebniAdresa,
-    _zapomen: function () { nactene = null; try { sessionStorage.removeItem(PAMET); } catch (e) {} }
+    _zapomen: zapomen
   };
 })(window);

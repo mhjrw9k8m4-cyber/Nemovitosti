@@ -144,15 +144,21 @@
     }, nast));
   }
 
+  function zapomen() {
+    nactene = null;
+    try { sessionStorage.removeItem(PAMET); } catch (e) {}
+  }
+
   global.PK_VRSTVY = {
     nacti: nacti,
     pripravene: pripravene,
+    zapomen: zapomen,
     leafletVrstva: leafletVrstva,
     legendaAdresa: legendaAdresa,
 
     _zkus: zkus,
     _bbox3857: bbox3857,
     _zkusebniAdresa: zkusebniAdresa,
-    _zapomen: function () { nactene = null; try { sessionStorage.removeItem(PAMET); } catch (e) {} }
+    _zapomen: zapomen
   };
 })(window);

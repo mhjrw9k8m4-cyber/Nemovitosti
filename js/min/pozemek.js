@@ -628,6 +628,8 @@
 
     function pridejPrepinac(zapis) {
       var def = zapis.def;
+
+      if (vrstvy.querySelector('.pzm-v[data-id="' + def.id + '"]')) return;
       if (!pridano++) vrstvy.innerHTML = '';
       var b = document.createElement('button');
       b.type = 'button';
@@ -669,27 +671,57 @@
       if (def.id === 'katastr' && !zive[def.id]) prepni();
     }
 
-    if (global.PK_VRSTVY) {
+    function poznamkaPryc() {
+      var st = vrstvy.querySelectorAll('.pzm-nic');
+      for (var i = 0; i < st.length; i++) st[i].parentNode.removeChild(st[i]);
+    }
+    function pozn(text, lzeZnovu) {
+      var s = document.createElement('span');
+      s.className = 'pzm-nic';
+      s.textContent = text;
+      if (lzeZnovu) {
+        var b = document.createElement('button');
+        b.type = 'button';
+
+        b.className = 'pzm-z pzm-znovu';
+        b.textContent = 'Zkusit znovu';
+        b.addEventListener('click', function () {
+          b.disabled = true;
+          b.textContent = 'Zkouším…';
+          if (global.PK_VRSTVY.zapomen) global.PK_VRSTVY.zapomen();
+          nabidniVrstvy();
+        });
+        s.appendChild(document.createTextNode(' '));
+        s.appendChild(b);
+      }
+      vrstvy.appendChild(s);
+    }
+    function nabidniVrstvy() {
       global.PK_VRSTVY.pripravene({ lat: d.lat, lng: d.lng }, pridejPrepinac).then(function (vse) {
         var mrtve = (vse && vse.mrtve) || [];
+        poznamkaPryc();
         if (!vse.length) {
 
-          vrstvy.innerHTML = '<span class="pzm-nic">Vrstvy úřadů teď neodpovídají. Mapa i tak funguje; územní plán obce najdete odkazem pod mapou.</span>';
+          if (!pridano) vrstvy.innerHTML = '';
+          pozn('Vrstvy úřadů teď neodpovídají. Mapa i tak funguje; územní'
+            + ' plán obce najdete odkazem pod mapou.', true);
           return;
         }
 
         if (mrtve.length) {
-          var pozn = document.createElement('span');
-          pozn.className = 'pzm-nic';
 
-          pozn.textContent = mrtve.length === 1
-            ? 'Vrstva ' + mrtve[0] + ' teď neodpovídá — zkusíme to znovu, až sem přijdete příště.'
-            : 'Vrstvy ' + mrtve.join(', ') + ' teď neodpovídají — zkusíme to znovu, až sem přijdete příště.';
-          vrstvy.appendChild(pozn);
+          pozn(mrtve.length === 1
+            ? 'Vrstva ' + mrtve[0] + ' teď neodpovídá.'
+            : 'Vrstvy ' + mrtve.join(', ') + ' teď neodpovídají.', true);
         }
       }).catch(function () {
-        vrstvy.innerHTML = '';
+        poznamkaPryc();
+        if (!pridano) vrstvy.innerHTML = '';
       });
+    }
+
+    if (global.PK_VRSTVY) {
+      nabidniVrstvy();
     } else {
       vrstvy.innerHTML = '';
     }

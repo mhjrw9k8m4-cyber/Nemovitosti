@@ -917,6 +917,11 @@
 
     function pridejPrepinac(zapis) {
       var def = zapis.def;
+      /* PŘI OPAKOVÁNÍ SE UŽ PŘIDANÁ VRSTVA PŘESKAKUJE. „Zkusit znovu"
+         dozkouší všechny vrstvy, i ty, které vyšly napoprvé — kdyby se
+         jejich přepínač přidal podruhé, měl by člověk na panelu dvojí
+         katastr a zapnutá vrstva by se odpojila od svého tlačítka. */
+      if (vrstvy.querySelector('.pzm-v[data-id="' + def.id + '"]')) return;
       if (!pridano++) vrstvy.innerHTML = '';
       var b = document.createElement('button');
       b.type = 'button';
@@ -978,32 +983,78 @@
       if (def.id === 'katastr' && !zive[def.id]) prepni();
     }
 
-    if (global.PK_VRSTVY) {
+    /* ZKUSIT ZNOVU, MÍSTO ČEKÁNÍ NA PŘÍŠTÍ NÁVŠTĚVU.
+       Mrtvá vrstva se pamatuje v sessionStorage na půl hodiny
+       (js/mapove-vrstvy.js), aby se u každého dalšího pozemku nečekalo
+       znovu pět vteřin na službu, která stejně neodpoví. Hláška to ale
+       říkala doslova — „zkusíme to znovu, až sem přijdete příště" —
+       a člověk, kterému zrovna spadl územní plán, neměl jak si ho
+       vyžádat. Výpadky těch služeb bývají krátké, takže tlačítko
+       většinou stačí.
+       Opakování je PŘÍDAVNÉ: paměť se zapomene, dozkouší se všechno
+       a přepínače, které na panelu už jsou, se přeskočí (viz
+       pridejPrepinac). Zapnutá vrstva tím o nic nepřijde. */
+    function poznamkaPryc() {
+      var st = vrstvy.querySelectorAll('.pzm-nic');
+      for (var i = 0; i < st.length; i++) st[i].parentNode.removeChild(st[i]);
+    }
+    function pozn(text, lzeZnovu) {
+      var s = document.createElement('span');
+      s.className = 'pzm-nic';
+      s.textContent = text;
+      if (lzeZnovu) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        /* VLASTNÍ VZHLED NEDOSTÁVÁ. Vložený styl předlohy jde do 1 941
+           stránek a jeho strop (40 kB zdroje) je skoro plný — dvě nová
+           pravidla ho přetáhla o 79 znaků a zkouška scripts/test-vlozeny-styl.mjs
+           to ohlásila. `pzm-z` je drobné tlačítko, které v ovládání mapy
+           už existuje, a sedí sem: je to podnět, ne hlavní akce.
+           `pzm-znovu` zůstává bez pravidla, jen jako úchyt pro zkoušku. */
+        b.className = 'pzm-z pzm-znovu';
+        b.textContent = 'Zkusit znovu';
+        b.addEventListener('click', function () {
+          b.disabled = true;
+          b.textContent = 'Zkouším…';
+          if (global.PK_VRSTVY.zapomen) global.PK_VRSTVY.zapomen();
+          nabidniVrstvy();
+        });
+        s.appendChild(document.createTextNode(' '));
+        s.appendChild(b);
+      }
+      vrstvy.appendChild(s);
+    }
+    function nabidniVrstvy() {
       global.PK_VRSTVY.pripravene({ lat: d.lat, lng: d.lng }, pridejPrepinac).then(function (vse) {
         var mrtve = (vse && vse.mrtve) || [];
+        poznamkaPryc();
         if (!vse.length) {
           /* Nula vrstev. Mlčet by bylo horší než to říct: člověk by čekal
              přepínače, které nikdy nepřijdou. Věta říká, co se stalo, a ne
              že je něco s jeho pozemkem. */
-          vrstvy.innerHTML = '<span class="pzm-nic">Vrstvy úřadů teď neodpovídají. Mapa i tak funguje; územní plán obce najdete odkazem pod mapou.</span>';
+          if (!pridano) vrstvy.innerHTML = '';
+          pozn('Vrstvy úřadů teď neodpovídají. Mapa i tak funguje; územní'
+            + ' plán obce najdete odkazem pod mapou.', true);
           return;
         }
         /* Něco jede, něco ne. Když se z pěti přepínačů ukáže jeden a nikde
            nestojí proč, vypadá nabídka náhodně — a člověk neví, jestli
            územní plán neumíme, nebo jestli se právě něco pokazilo. */
         if (mrtve.length) {
-          var pozn = document.createElement('span');
-          pozn.className = 'pzm-nic';
           /* Celá slova, ne lepení koncovky: „neodpovídá" + „jí" dalo
              „neodpovídájí". Čeština se koncovkami nedolepuje. */
-          pozn.textContent = mrtve.length === 1
-            ? 'Vrstva ' + mrtve[0] + ' teď neodpovídá — zkusíme to znovu, až sem přijdete příště.'
-            : 'Vrstvy ' + mrtve.join(', ') + ' teď neodpovídají — zkusíme to znovu, až sem přijdete příště.';
-          vrstvy.appendChild(pozn);
+          pozn(mrtve.length === 1
+            ? 'Vrstva ' + mrtve[0] + ' teď neodpovídá.'
+            : 'Vrstvy ' + mrtve.join(', ') + ' teď neodpovídají.', true);
         }
       }).catch(function () {
-        vrstvy.innerHTML = '';
+        poznamkaPryc();
+        if (!pridano) vrstvy.innerHTML = '';
       });
+    }
+
+    if (global.PK_VRSTVY) {
+      nabidniVrstvy();
     } else {
       vrstvy.innerHTML = '';
     }
