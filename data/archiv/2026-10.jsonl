@@ -165,3 +165,10 @@
 {"k":"Ústí nad Labem|—|Ústí nad Labem|50.672|14.057#19z7r","m":"Ústí nad Labem","o":"Ústí nad Labem","dr":"stavební pozemek","t":"sale","v":860,"c":3850000,"od":"2026-09-14","do":"2026-10-09","proc":"zmizela"}
 {"k":"Tišnov|St. 1692|Brno-venkov|49.350|16.429#1encorx","m":"Tišnov","o":"Brno-venkov","dr":"zastavěná plocha a nádvoří","t":"drazba","v":582,"c":5100000,"od":"2026-09-14","do":"2026-10-09","proc":"zmizela"}
 {"k":"Hodonín|—|Hodonín|48.810|17.092#1rqp5yq","m":"Hodonín","o":"Hodonín","dr":"lesní pozemek","t":"exekuce","v":547418,"c":42000,"od":"2026-09-30","do":"2026-10-09","proc":"zmizela"}
+{"k":"Korno|—|Beroun|49.921|14.134#203fo","m":"Korno","o":"Beroun","dr":"lesní pozemek","t":"sale","v":28515,"c":1397235,"od":"2026-10-10","do":"2026-10-10","proc":"cena"}
+{"k":"Český Brod|—|Kolín|50.068|14.846#2te26","m":"Český Brod","o":"Kolín","dr":"stavební pozemek","t":"sale","v":3315,"c":11000,"od":"2026-10-05","do":"2026-10-10","proc":"zmizela"}
+{"k":"Liberec|—|Liberec|50.801|15.035#2q7xk","m":"Liberec","o":"Liberec","dr":"pozemek","t":"sale","v":19506,"c":10900000,"od":"2026-10-05","do":"2026-10-10","proc":"zmizela"}
+{"k":"Žalany|—|Teplice|50.585|13.918#hzu5g5","m":"Žalany","o":"Teplice","dr":"stavební pozemek","t":"sale","v":1737,"c":1268010,"od":"2026-09-14","do":"2026-10-10","proc":"zmizela"}
+{"k":"Domousnice|—|Mladá Boleslav|50.394|15.103#2si23","m":"Domousnice","o":"Mladá Boleslav","dr":"pozemek","t":"sale","v":2612,"c":4962800,"od":"2026-09-14","do":"2026-10-10","proc":"zmizela"}
+{"k":"Veřovická|—|Nový Jičín|49.706|18.061#4ri13","m":"Veřovická","o":"Nový Jičín","dr":"stavební pozemek","t":"sale","v":833,"c":2000000,"od":"2026-09-14","do":"2026-10-10","proc":"zmizela"}
+{"k":"Trubín|487|Beroun|49.950|14.001#1rqu983","m":"Trubín","o":"Beroun","dr":"lesní pozemek","t":"drazba","v":62499,"c":1875000,"od":"2026-09-14","do":"2026-10-10","proc":"zmizela"}
