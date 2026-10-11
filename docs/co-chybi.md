@@ -3099,6 +3099,100 @@ pravidlo zná „k výstavbě" a „určen k stavbě", ne „k zastavění". Zko
 tím neprokazovala nic. Teprve s větou o stavebním povolení, která
 hádání opravdu spustí, začala měřit to, co měla.
 
+## 3ba. NALEZENO (z tvého průchodu webem): 465 starých nabídek vypadalo mladších, než jsou — a web z toho hlásil o 29 % víc novinek — *opraveno 11. 10.*
+
+Stránka „Co je nového" tvrdila: **„Za posledních sedm dní přišlo 54
+pozemků."** Po opravě jich je **42**. Za čtrnáct dní 174 → **158**.
+
+### Proč to lhalo
+
+`first_seen` (kdy robot nabídku poprvé uviděl) se přenáší z minulého
+souboru podle **otisku** — a ten otisk stojí na `type | okres | obec |
+parcela | cena | výměra`. Jsou to ale přesně ta pole, která si web sám
+občas přepočítá:
+
+* 21. 9. se zpřesnilo určení okresu podle **skutečné hranice** okresu
+  (dřív se bral první stejnojmenný),
+* 5. 10. se opravilo čtení **obce z adresy** inzerátu.
+
+Po každé takové opravě se otisk rozešel s tím, co jsme o nabídce věděli
+z minula, nabídka se v minulém souboru nenašla — a dostala **dnešek**.
+Stará nabídka tím na webu zestárla naopak: objevila se mezi novinkami.
+
+### Měření
+
+Průchodem **celé gitové historie** souboru `data/opportunities.json`
+(112 verzí) se dá pro každý inzerát najít nejstarší den, kdy v datech
+byl. Proti tomu:
+
+| | |
+| --- | --- |
+| nabídek s odkazem na inzerát | 1 765 |
+| z nich **vypadalo mladších, než jsou** | **455 (26 %)** |
+| z toho v datech od prvního dne (14. 9.), ale nesly 19. 9. | 405 |
+
+### Čím se to opravilo
+
+Identitou, kterou si web **nemůže sám přepočítat**: číslem inzerátu
+u jeho zdroje. Párování má teď tři kola od nejspolehlivějšího
+k nejslabšímu — (0) podle **čísla inzerátu**, (1) podle otisku s cenou,
+(2) podle otisku bez ceny (prodejce zlevnil) — a každou starou nabídku
+smí „darovat" datum jen **jedno** kolo a jen **jednou**.
+
+Proč číslo inzerátu a ne celá adresa: Bezrealitky u běžícího inzerátu
+mění konec adresy. Z `985306-nabidka-prodej-pozemku` se jednoho dne
+stane `985306-nabidka-prodej-pozemku-luhacovice`. Změřeno: **u 63
+z 1 918 inzerátů** se adresa takhle změnila, zatímco číslo zůstalo. Na
+celou adresu by tedy právě těch 63 o věk přišlo — táž chyba, jen o řád
+menší. Odkaz nemá každá nabídka (219 z 1 984 je bez něj — SPÚ a část
+dražeb) a pro ty zůstávají otisky jedinou cestou.
+
+### Uložená data se tentokrát opravit DALI
+
+Na rozdíl od druhu pozemku (bod 3az) tady přepočet z historie nic
+nehádá: čte skutečné staré verze souboru, ne zkrácený popis. Dopočet
+`scripts/prvni-videno.mjs --zapsat` vrátil dřívější datum **465
+nabídkám z 1 984** — všech 465 podle čísla inzerátu, ani jednu podle
+otisku. Rozložení po dnech se tím srovnalo:
+
+| den | dřív | teď |
+| --- | --- | --- |
+| 14. 9. (první den evidence, nepočítá se do novinek) | 1 186 | **1 634** |
+| 19. 9. | **442** | 17 |
+| 21. 9. | 40 | 21 |
+| ostatní dny | 13–71 | 4–23 |
+
+Těch 442 z 19. 9. nebyl pohyb na trhu — byl to den, kdy se zpřesňoval
+okres. Teď dávají jednotlivé dny 4–23 nabídek, což **vypadá jako trh**,
+a první den evidence stránka přiznává (1 632 nabídek, přímo v textu).
+
+Dopočet navíc u nabídky, která odkaz **má**, otisk už vůbec nepoužije:
+když ji historie pod jejím číslem nezná, nikdy jsme ji neviděli a shoda
+otisku by byla shoda s **jiným** inzerátem téže výměry v témže
+katastru. U robota ta pojistka být nemusí (páruje dva po sobě jdoucí
+běhy a kontroluje jednoznačnost na obou stranách), kdežto dopočet
+prohledává 112 verzí a sedl by na cokoli, co kdy existovalo.
+
+### Zkouška
+
+`scripts/test-prvni-videno.mjs` má 17 → **33** kontrol. Nově se hlídá:
+zpřesněný okres a obec neberou nabídce věk; doplněné jméno obce
+v adrese nic nemění (a je to vidět i na tom, že klíč je `br|985306`,
+ne celá adresa); dva pozemky pod jedním odkazem si datum nevezmou (ani
+když ten odkaz měly dvě staré nabídky); stará nabídka nedaruje datum
+dvakrát; rozbitá verze v historii dopočet neshodí; a nabídka s jiným
+odkazem si cizí věk nevezme.
+
+**Prokázáno sabotáží — pěti:** zrušené kolo podle odkazu (spadly 4
+kontroly), identita z celé adresy místo čísla (4), stará nabídka smí
+darovat víckrát (1), dopočet beroucí otisk i tam, kde zná odkaz (1),
+a zrušená kontrola jednoznačnosti odkazu (1).
+
+Jedna z těch sabotáží byla napsaná špatně a **nespadla vůbec** —
+smazala deklaraci `let m`, takže zkouška skončila chybou ReferenceError
+a žádná kontrola neproběhla. To není „sabotáž prošla", to je „zkouška
+se nespustila"; napsaná znovu správně chytila 4 kontroly.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

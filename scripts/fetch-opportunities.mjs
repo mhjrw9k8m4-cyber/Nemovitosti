@@ -83,21 +83,96 @@ export function otiskNabidkyBezCeny(o) {
   return [o.type || '', bezDiakritiky(o.okres), bezDiakritiky(o.place),
     o.parcel || '', o.area || ''].join('|').slice(0, 240);
 }
-/** Doplní `first_seen` do `fresh` podle `drive`. Mění předaná data. */
+/** Identita inzerátu, kterou si web NEMŮŽE sám přepočítat: jeho odkaz.
+
+    Otisky výš stojí na okresu, obci a výměře — a to jsou přesně ta pole,
+    která si web sám občas přepočítá. Když se zpřesní geokódování, změní
+    se okres; když se opraví čtení adresy, změní se obec. Otisk se tím
+    rozejde se vším, co o té nabídce víme z minula, a stará nabídka
+    dostane dnešek: web pak tvrdí, že přišla dnes, a pozná se to až na
+    stránce „Co je nového".
+
+    Naměřeno na ostrých datech průchodem celé gitové historie (112 verzí
+    souboru): podle odkazu by dřívější datum dostalo 455 z 1 765 nabídek
+    s odkazem, tedy 26 %. Z toho 405 nabídek bylo v datech od prvního
+    dne (14. 9.), ale nesly 19. 9. — den, kdy se zpřesňoval okres podle
+    skutečné hranice a obec podle adresy inzerátu.
+
+    Odkaz je naproti tomu identita inzerátu u jeho zdroje a žádný náš
+    přepočet s ním nehne. Nemá ho ale každá nabídka: 219 z 1 984 (SPÚ
+    a část dražeb) je bez odkazu, a pro ty zůstávají otisky jediná
+    cesta. */
+export function otiskOdkazu(o) {
+  const u = o && typeof o.url === 'string' ? o.url : '';
+  if (!u) return '';
+  /* CELÁ ADRESA BY NESTAČILA. Bezrealitky mění u běžícího inzerátu
+     konec adresy (slug): „985306-nabidka-prodej-pozemku" se jednoho dne
+     stane „985306-nabidka-prodej-pozemku-luhacovice". Změřeno na celé
+     gitové historii: u 63 z 1 918 inzerátů se adresa takhle změnila,
+     zatímco číslo inzerátu zůstalo. Na celou adresu by tedy právě těch
+     63 o věk přišlo — tedy znovu táž chyba, jen o řád menší.
+     Číslo inzerátu je identita u zdroje; adresa je jen cesta k němu. */
+  let m = /bezrealitky\.cz\/[^?#]*?\/(\d{4,})-/.exec(u);   if (m) return 'br|' + m[1];
+  m = /farmy\.cz[^?#]*[?&]nab=(\d+)/.exec(u);                if (m) return 'fa|' + m[1];
+  m = /sreality\.cz\/detail\/[^?#]*?\/(\d{5,})/.exec(u);  if (m) return 'sr|' + m[1];
+  /* Neznámý zdroj: adresa je pořád lepší identita než otisk z okresu
+     a výměry, jen se na ni nedá spolehnout tak jako na číslo. */
+  return 'url|' + u;
+}
+
+/** Doplní `first_seen` do `fresh` podle `drive`. Mění předaná data.
+ *
+ *  Tři kola, od nejspolehlivějšího k nejslabšímu:
+ *    0) podle ODKAZU — identita u zdroje, náš přepočet s ní nehne,
+ *    1) podle otisku S CENOU — nabídka beze změny,
+ *    2) podle otisku BEZ CENY — nabídka, u které prodejce zlevnil.
+ *
+ *  Každé kolo bere jen JEDNOZNAČNÉ shody a každou starou nabídku smí
+ *  použít jen jednou; co se nespáruje, dostane dnešek. */
 export function prirazPrvniVideni(fresh, drive, dnesISO) {
+  /* Ve vstupu ze stahovačů first_seen nikdy není; kdyby se tam přes
+     zkoušku nebo cizí volání dostalo, nesmí se s ním počítat. */
+  for (const o of fresh) delete o.first_seen;
+  const stare = (drive || []).filter((o) => o && o.first_seen);
+  /* Starou nabídku smí „darovat" datum jen jedno kolo a jen jednou. */
+  const spotrebovane = new Set();
+
+  /* ---- 0) podle odkazu ---- */
+  let podleOdkazu = 0;
+  {
+    const pocetStarych = new Map(), pocetNovych = new Map();
+    for (const o of stare) { const u = otiskOdkazu(o); if (u) pocetStarych.set(u, (pocetStarych.get(u) || 0) + 1); }
+    for (const o of fresh) { const u = otiskOdkazu(o); if (u) pocetNovych.set(u, (pocetNovych.get(u) || 0) + 1); }
+    /* Dvě nabídky pod jedním odkazem se rozlišit nedají (jeden inzerát
+       rozepsaný na víc parcel), a tam se datum přenášet nesmí. */
+    const darci = new Map();
+    for (const o of stare) { const u = otiskOdkazu(o); if (u && pocetStarych.get(u) === 1) darci.set(u, o); }
+    for (const o of fresh) {
+      const u = otiskOdkazu(o);
+      if (!u || pocetNovych.get(u) !== 1) continue;
+      const star = darci.get(u);
+      if (!star) continue;
+      o.first_seen = star.first_seen; spotrebovane.add(star); podleOdkazu++;
+    }
+  }
+
+  /* ---- 1) podle otisku s cenou ---- */
   const podleOtisku = new Map();
-  for (const o of (drive || [])) if (o && o.first_seen) podleOtisku.set(otiskNabidky(o), o.first_seen);
+  for (const o of stare) if (!spotrebovane.has(o)) podleOtisku.set(otiskNabidky(o), o);
   const bezData = [];
   for (const o of fresh) {
-    const d = podleOtisku.get(otiskNabidky(o));
-    if (d) o.first_seen = d; else { delete o.first_seen; bezData.push(o); }
+    if (o.first_seen) continue;
+    const star = podleOtisku.get(otiskNabidky(o));
+    if (star && !spotrebovane.has(star)) { o.first_seen = star.first_seen; spotrebovane.add(star); }
+    else bezData.push(o);
   }
+
+  /* ---- 2) podle otisku bez ceny (prodejce zlevnil) ---- */
   let poZmeneCeny = 0;
-  if (bezData.length && (drive || []).length) {
-    const pouzite = new Set(fresh.filter((o) => o.first_seen).map((o) => otiskNabidky(o)));
+  if (bezData.length && stare.length) {
     const stareVolne = new Map();
-    for (const o of drive) {
-      if (!o || !o.first_seen || pouzite.has(otiskNabidky(o))) continue;
+    for (const o of stare) {
+      if (spotrebovane.has(o)) continue;
       const k = otiskNabidkyBezCeny(o);
       if (!stareVolne.has(k)) stareVolne.set(k, []);
       stareVolne.get(k).push(o);
@@ -110,12 +185,15 @@ export function prirazPrvniVideni(fresh, drive, dnesISO) {
     for (const o of bezData) {
       const k = otiskNabidkyBezCeny(o);
       const st = stareVolne.get(k);
-      if (novePocty.get(k) === 1 && st && st.length === 1) { o.first_seen = st[0].first_seen; poZmeneCeny++; }
+      if (novePocty.get(k) === 1 && st && st.length === 1) {
+        o.first_seen = st[0].first_seen; spotrebovane.add(st[0]); poZmeneCeny++;
+      }
     }
   }
+
   let novych = 0;
   for (const o of bezData) if (!o.first_seen) { o.first_seen = dnesISO; novych++; }
-  return { novych, poZmeneCeny };
+  return { novych, poZmeneCeny, podleOdkazu };
 }
 
 const OUT = join(__dirname, '..', 'data', 'opportunities.json');
@@ -1697,6 +1775,7 @@ async function main() {
   try { driveVse = (JSON.parse(readFileSync(OUT, 'utf8')).opportunities || []).filter((o) => o.first_seen); }
   catch { /* první běh — všechno je nové */ }
   const vysledek = prirazPrvniVideni(fresh, driveVse, dnesISO);
+  if (vysledek.podleOdkazu) console.log(`Věk podle odkazu na inzerát: ${vysledek.podleOdkazu} nabídek.`);
   if (vysledek.poZmeneCeny) console.log(`Věk zachován i po změně ceny: ${vysledek.poZmeneCeny} nabídek.`);
   console.log(`Poprvé viděno dnes: ${vysledek.novych} z ${fresh.length}` +
     (driveVse.length ? '' : ' (první běh se značkováním — všechno dostalo dnešek)'));

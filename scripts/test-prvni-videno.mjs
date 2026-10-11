@@ -21,8 +21,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { prirazPrvniVideni, otiskNabidky, otiskNabidkyBezCeny } from './fetch-opportunities.mjs';
-import { opravData, otiskBezCeny } from './prvni-videno.mjs';
+import { prirazPrvniVideni, otiskNabidky, otiskNabidkyBezCeny, otiskOdkazu } from './fetch-opportunities.mjs';
+import { opravData, otiskBezCeny, nejstarsiZHistorie } from './prvni-videno.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -98,6 +98,91 @@ pravda('a diakritika v názvu otisk nerozhodí',
     `dostaly ${nove.map((o) => o.first_seen).join(', ')}`);
 }
 
+/* ---- 2b) ODKAZ JE SILNĚJŠÍ IDENTITA NEŽ OTISK ------------------
+   Otisk stojí na okresu, obci a výměře — a to jsou pole, která si web
+   sám občas přepočítá: zpřesní se geokódování a změní se okres, opraví
+   se čtení adresy a změní se obec. Otisk se tím rozejde s minulým
+   souborem a stará nabídka dostane dnešek, tedy se na stránce „Co je
+   nového" objeví jako nová.
+
+   Naměřeno průchodem celé gitové historie (112 verzí dat): 455 z 1 765
+   nabídek s odkazem vypadalo mladších, než jsou — 26 %. Z toho 405
+   bylo v datech od prvního dne (14. 9.), ale neslo 19. 9., tedy den,
+   kdy se zpřesňoval okres podle skutečné hranice. */
+{
+  pravda('bez odkazu není co párovat', otiskOdkazu(N({})) === '', otiskOdkazu(N({})));
+  pravda('s odkazem je identita jeho', otiskOdkazu(N({ url: 'https://x.invalid/a' })) === 'url|https://x.invalid/a',
+    otiskOdkazu(N({ url: 'https://x.invalid/a' })));
+  /* ZMĚNA KONCE ADRESY NESMÍ NIC ZNAMENAT. Bezrealitky u běžícího
+     inzerátu doplní do adresy jméno obce. Naměřeno na celé gitové
+     historii: stalo se to u 63 z 1 918 inzerátů. */
+  const bezObce = 'https://www.bezrealitky.cz/nemovitosti-byty-domy/985306-nabidka-prodej-pozemku';
+  const sObci = bezObce + '-luhacovice';
+  pravda('doplněné jméno obce v adrese inzerát nezmění',
+    otiskOdkazu(N({ url: bezObce })) === otiskOdkazu(N({ url: sObci })),
+    `${otiskOdkazu(N({ url: bezObce }))} × ${otiskOdkazu(N({ url: sObci }))}`);
+  pravda('a je to číslo inzerátu, ne celá adresa',
+    otiskOdkazu(N({ url: sObci })) === 'br|985306', otiskOdkazu(N({ url: sObci })));
+  pravda('jiný inzerát je jiná identita',
+    otiskOdkazu(N({ url: bezObce.replace('985306', '985307') })) === 'br|985307',
+    otiskOdkazu(N({ url: bezObce.replace('985306', '985307') })));
+  pravda('Farmy.cz mají číslo v parametru',
+    otiskOdkazu(N({ url: 'https://www.farmy.cz/nabidka_detail?nab=12345' })) === 'fa|12345',
+    otiskOdkazu(N({ url: 'https://www.farmy.cz/nabidka_detail?nab=12345' })));
+}
+{
+  const U = 'https://www.bezrealitky.cz/nemovitosti/975585';
+  const stare = [N({ url: U, okres: 'Benešov', place: 'Bystřice', first_seen: '2026-09-14' })];
+  /* Týž inzerát, ale web si mezitím zpřesnil okres i obec. */
+  const nove = [N({ url: U, okres: 'Beroun', place: 'Zdice' })];
+  const v = prirazPrvniVideni(nove, stare, '2026-10-10');
+  pravda('zpřesněný okres a obec neberou nabídce věk',
+    nove[0].first_seen === '2026-09-14', `dostala ${nove[0].first_seen}`);
+  pravda('a je to vidět ve statistice jako „podle odkazu"',
+    v.podleOdkazu === 1 && v.novych === 0, JSON.stringify(v));
+}
+{
+  const bez = 'https://www.bezrealitky.cz/nemovitosti-byty-domy/985306-nabidka-prodej-pozemku';
+  const stare = [N({ url: bez, first_seen: '2026-09-14' })];
+  const nove = [N({ url: bez + '-luhacovice' })];     // zdroj doplnil obec do adresy
+  const v = prirazPrvniVideni(nove, stare, '2026-10-10');
+  pravda('doplněná obec v adrese nebere nabídce věk ani u robota',
+    nove[0].first_seen === '2026-09-14' && v.podleOdkazu === 1, JSON.stringify(v));
+}
+{
+  /* Jeden inzerát rozepsaný na dvě parcely — který je který, se
+     poznat nedá, takže se datum nepřenáší. */
+  const U = 'https://x.invalid/jeden';
+  const stare = [N({ url: U, parcel: '1', first_seen: '2026-09-14' })];
+  const nove = [N({ url: U, parcel: '1', area: 111 }), N({ url: U, parcel: '2', area: 222 })];
+  const v = prirazPrvniVideni(nove, stare, '2026-10-10');
+  pravda('dva pozemky pod jedním odkazem si datum nevezmou',
+    nove.every((o) => o.first_seen === '2026-10-10') && v.podleOdkazu === 0,
+    `dostaly ${nove.map((o) => o.first_seen).join(', ')}`);
+}
+{
+  /* A totéž ze strany starých dat. */
+  const U = 'https://x.invalid/dvakrat';
+  const stare = [N({ url: U, parcel: '1', first_seen: '2026-09-14' }),
+    N({ url: U, parcel: '2', first_seen: '2026-09-20' })];
+  const nove = [N({ url: U, parcel: '9', area: 999 })];
+  const v = prirazPrvniVideni(nove, stare, '2026-10-10');
+  pravda('ani když ten odkaz měly dvě staré nabídky',
+    nove[0].first_seen === '2026-10-10' && v.podleOdkazu === 0, JSON.stringify(v));
+}
+{
+  /* Jedna stará nabídka smí darovat datum jen JEDNOU. Kdyby ne, dala
+     by ho napřed podle odkazu a pak ještě podruhé v kole bez ceny —
+     a druhá, úplně jiná nabídka by se tím tvářila stará. */
+  const stare = [N({ url: 'https://x.invalid/a', price: 500000, first_seen: '2026-09-14' })];
+  const nove = [N({ url: 'https://x.invalid/a', okres: 'Beroun' }),   // týž inzerát, jiný okres
+    N({ price: 400000 })];                                           // jiná nabídka, zlevněná
+  const v = prirazPrvniVideni(nove, stare, '2026-10-10');
+  pravda('stará nabídka nedaruje svoje datum dvakrát',
+    nove[0].first_seen === '2026-09-14' && nove[1].first_seen === '2026-10-10',
+    `dostaly ${nove.map((o) => o.first_seen).join(', ')} (odkaz ${v.podleOdkazu}, cena ${v.poZmeneCeny})`);
+}
+
 /* ---- 3) Dopočet z historie nikdy neposune datum dopředu ---------- */
 {
   const nab = [N({ first_seen: '2026-09-14' }), N({ parcel: '7', first_seen: '2026-10-01' })];
@@ -106,6 +191,39 @@ pravda('a diakritika v názvu otisk nerozhodí',
   pravda('dopočet posune jen dozadu, nikdy dopředu',
     zmeny.length === 1 && zmeny[0].ma === '2026-09-15',
     zmeny.map((z) => `${z.bylo} → ${z.ma}`).join(', '));
+}
+
+/* ---- 3b) Dopočet z historie: odkaz má přednost před otiskem ------ */
+{
+  const verze = [
+    JSON.stringify({ updated: '2026-09-14', opportunities: [
+      { type: 'sale', okres: 'Benešov', place: 'Bystřice', parcel: '—', area: 5023, price: 500000,
+        url: 'https://x.invalid/a' }] }),
+    JSON.stringify({ updated: '2026-09-20', opportunities: [
+      { type: 'sale', okres: 'Beroun', place: 'Zdice', parcel: '—', area: 5023, price: 450000,
+        url: 'https://x.invalid/a' }] }),
+    'tohle není JSON a nesmí nic shodit',
+  ];
+  const { nejdriv, podleOdkazu, precteno } = nejstarsiZHistorie(function* () { yield* verze; });
+  pravda('rozbitá verze v historii dopočet neshodí', precteno === 2, `přečteno ${precteno}`);
+  pravda('podle odkazu je nejstarší den ten první',
+    podleOdkazu.get('url|https://x.invalid/a') === '2026-09-14',
+    String(podleOdkazu.get('url|https://x.invalid/a')));
+  /* Dnešní nabídka má datum z druhé verze — a z odkazu se dozví, že
+     ji web viděl už týden předtím, jen pod jiným okresem. */
+  const nab = [{ type: 'sale', okres: 'Beroun', place: 'Zdice', parcel: '—', area: 5023,
+    price: 450000, url: 'https://x.invalid/a', first_seen: '2026-09-20' }];
+  const zmeny = opravData(nab, nejdriv, podleOdkazu);
+  pravda('a dopočet jí ten věk vrátí',
+    zmeny.length === 1 && zmeny[0].ma === '2026-09-14' && zmeny[0].podle === 'odkaz',
+    JSON.stringify(zmeny.map((z) => [z.bylo, z.ma, z.podle])));
+  /* Kolize otisku se odkazem nepřebije: jiný inzerát téže výměry
+     v témže katastru má svoje datum a cizí si nebere. */
+  const kolize = [{ type: 'sale', okres: 'Beroun', place: 'Zdice', parcel: '—', area: 5023,
+    price: 999000, url: 'https://x.invalid/jiny', first_seen: '2026-10-01' }];
+  const zmenyK = opravData(kolize, nejdriv, podleOdkazu);
+  pravda('a nabídka s jiným odkazem si cizí věk nevezme', zmenyK.length === 0,
+    JSON.stringify(zmenyK.map((z) => [z.bylo, z.ma, z.podle])));
 }
 
 /* ---- 4) A jak to dopadlo na ostrých datech ----------------------- */
