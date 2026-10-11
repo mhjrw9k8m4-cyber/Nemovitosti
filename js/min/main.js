@@ -2108,7 +2108,7 @@
     }, 420);
     var kolik = DATA.filter(function (d) { return kmOd(mojeMisto, d) <= km; }).length;
     showToast(kolik
-      ? ('V okolí do ' + km + ' km ' + (kolik === 1 ? 'je 1 pozemek' : (kolik < 5 ? 'jsou ' + kolik + ' pozemky' : 'je ' + kolik + ' pozemků')) + '.')
+      ? ('V okolí do ' + km + ' km ' + (kolik === 1 ? 'je 1 pozemek' : (kolik >= 2 && kolik <= 4 ? 'jsou ' + kolik + ' pozemky' : 'je ' + kolik + ' pozemků')) + '.')
       : ('Do ' + km + ' km tu zatím nic není — zkuste větší okruh.'));
   }
 
@@ -3540,7 +3540,7 @@
         srovnaniModel = _di ? { uroven: _di.uroven, kde: _di.kde } : null;
         kdeKarty = kdeSrovnani(_di);
 
-        var _zKolika = (_di && _di.sample > 0) ? ' (' + _di.sample + ' ' + (_di.sample < 5 ? 'nabídky' : 'nabídek') + ')' : '';
+        var _zKolika = (_di && _di.sample > 0) ? ' (' + _di.sample + ' ' + (_di.sample >= 2 && _di.sample <= 4 ? 'nabídky' : 'nabídek') + ')' : '';
 
         var _skup = (window.PK_CENY && window.PK_CENY.skupinaText)
           ? ' ' + window.PK_CENY.skupinaText(d.type) : '';
@@ -3630,7 +3630,7 @@
     var tlacitka = '';
     var novych = pocetNovych();
     if (novych) pripisky += ' <span class="mc-nove">' + fmt(novych) + ' ' +
-      (novych === 1 ? 'nový od minule' : (novych < 5 ? 'nové od minule' : 'nových od minule')) + '</span>';
+      (novych === 1 ? 'nový od minule' : (novych >= 2 && novych <= 4 ? 'nové od minule' : 'nových od minule')) + '</span>';
 
     if (favOnly) pripisky += ' <span class="mc-pozn">uloženo jen v tomhle prohlížeči</span>';
 
@@ -3706,7 +3706,7 @@
         emptyMsg = 'Do ' + km0 + ' km od vašeho místa' +
           (mojeMisto.nazev ? ' (' + esc(mojeMisto.nazev) + ')' : '') + ' teď nic není.' +
           (navrh ? ' Do ' + navrh.km + ' km ' + (navrh.kolik === 1 ? 'je 1 pozemek' :
-            (navrh.kolik < 5 ? 'jsou ' + navrh.kolik + ' pozemky' : 'je ' + navrh.kolik + ' pozemků')) + '.'
+            (navrh.kolik >= 2 && navrh.kolik <= 4 ? 'jsou ' + navrh.kolik + ' pozemky' : 'je ' + navrh.kolik + ' pozemků')) + '.'
             : ' Ani ve větším okruhu zatím nic.');
         listEl.innerHTML = '<li class="map-count" style="padding:20px 6px; text-transform:none; font-weight:400; line-height:1.6;">' + emptyMsg +
           (navrh ? '<br><button type="button" id="okoli-vic" class="reset-btn">Zvětšit okruh na ' + navrh.km + ' km</button>' : '') +
@@ -4391,7 +4391,7 @@
     if (rn) {
       rn.textContent = String(top.length);
       var rl = rn.nextElementSibling;
-      if (rl) rl.textContent = top.length === 1 ? 'tip dnes' : (top.length < 5 ? 'tipy dnes' : 'tipů dnes');
+      if (rl) rl.textContent = top.length === 1 ? 'tip dnes' : (top.length >= 2 && top.length <= 4 ? 'tipy dnes' : 'tipů dnes');
     }
 
     try {
@@ -5038,7 +5038,7 @@
       if (p.vymazEl) p.vymazEl.hidden = !nejakyVyber;
       if (!nejakyVyber) vybranych = hodnoty.length;
       p.hotovoEl.textContent = 'Hotovo · ' + fmt(vybranych) + ' ' +
-        (vybranych === 1 ? 'nabídka' : (vybranych < 5 ? 'nabídky' : 'nabídek'));
+        (vybranych === 1 ? 'nabídka' : (vybranych >= 2 && vybranych <= 4 ? 'nabídky' : 'nabídek'));
     });
   }
 
@@ -5225,7 +5225,7 @@
     if (akceZadne) akceZadne.hidden = true;
     if (akceMam) akceMam.hidden = false;
     if (n.nove > 0) {
-      hl.textContent = 'Od minule přibyl' + (n.nove === 1 ? ' 1 pozemek' : (n.nove < 5 ? 'y ' + n.nove + ' pozemky' : 'o ' + n.nove + ' pozemků')) + ' ve vašem okolí';
+      hl.textContent = 'Od minule přibyl' + (n.nove === 1 ? ' 1 pozemek' : (n.nove >= 2 && n.nove <= 4 ? 'y ' + n.nove + ' pozemky' : 'o ' + n.nove + ' pozemků')) + ' ve vašem okolí';
       mistoPruh.classList.add('ma-novinky');
     } else {
       hl.textContent = 'Ve vašem okolí od minule nic nového';
@@ -5234,7 +5234,7 @@
 
     pod.textContent = (n.nazev !== 'vašeho místa' ? 'Hlídané místo: ' + n.nazev + ' · ' : 'Hlídané místo · ') +
       'okolí do ' + n.okruh + ' km · je tu ' + n.celkem + ' ' +
-      (n.celkem === 1 ? 'pozemek' : (n.celkem < 5 ? 'pozemky' : 'pozemků'));
+      (n.celkem === 1 ? 'pozemek' : (n.celkem >= 2 && n.celkem <= 4 ? 'pozemky' : 'pozemků'));
     if (mistoKmEl) mistoKmEl.value = String(n.okruh);
   }
   if (mistoKmEl) mistoKmEl.addEventListener('change', function () {

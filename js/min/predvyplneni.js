@@ -114,7 +114,7 @@
 
     var uvod = '';
     if (co.pocet > 1) {
-      uvod = 'Tenhle odkaz vede na ' + (co.pocet === 1 ? '1 pozemek' : co.pocet < 5 ? co.pocet + ' pozemky' : co.pocet + ' pozemků') +
+      uvod = 'Tenhle odkaz vede na ' + (co.pocet === 1 ? '1 pozemek' : co.pocet >= 2 && co.pocet <= 4 ? co.pocet + ' pozemky' : co.pocet + ' pozemků') +
         ' v jedné dražbě, takže doplňujeme jen to, co mají společné. ';
     }
     if (!co.nazvy.length) {

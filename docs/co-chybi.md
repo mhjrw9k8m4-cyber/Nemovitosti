@@ -3338,6 +3338,69 @@ nepodnikající:
 Druhá možnost je slabší, ale pořád o řád lepší než dnešní stav. Jakmile
 bude jméno na stránce, přidám k tomu i kontrolu, že tam zůstane.
 
+## 3bd. NALEZENO (z tvého průchodu webem): „0 inzeráty" — a týž tvar byl v kódu na dvaceti místech — *opraveno 11. 10.*
+
+Na stránce s daty stálo o statickém odrazu inzerátů od majitelů:
+
+> „Statický odraz schválených inzerátů je v `data/user-listings.json`
+> (teď **0 inzeráty**)."
+
+Čeština má u počtu tři tvary: 1 pozemek, 2–4 pozemky, 0 a 5+ pozemků.
+**Nula patří k té třetí skupině.** Podmínka byla ale napsaná takhle:
+
+```js
+n === 1 ? 'inzerát' : (n < 5 ? 'inzeráty' : 'inzerátů')
+```
+
+a nula je menší než pět, takže spadla do tvaru pro dvě až čtyři.
+
+### Nebyla to jedna věta, byl to tvar
+
+Změřeno průchodem všech zdrojů: týž tvar `n < 5 ?` byl v kódu na
+**20 místech**. U většiny z nich se nula stát nemohla, protože ji
+odchytilo něco dřív (`if (!n) return ''`, `if (novych)`, `pc.sample > 0`,
+`n === 0 ? … :`). U **tří** ale mohla:
+
+| kde | co by stálo na obrazovce | kdy |
+| --- | --- | --- |
+| rychlý výběr | „Hotovo · **0 nabídky**" | rozsah, do kterého nic nespadne — stačí „cena od sta milionů" |
+| hlídané místo | „je tu **0 pozemky**" | okolí bez nabídek |
+| odznak zpráv (popisek pro čtečku) | „**0 nepřečtené zprávy**" | počítá se i při nule |
+
+Všech dvacet míst je proto přepsaných na tvar, který nulu zvládne sám:
+
+```js
+n === 1 ? 'inzerát' : (n >= 2 && n <= 4 ? 'inzeráty' : 'inzerátů')
+```
+
+Je to táž práce, jen se na ní nedá zapomenout. Arity ani slova se
+nemění — mění se jen podmínka, takže nic jiného než chování pro nulu.
+
+### Zkouška
+
+Nová `scripts/test-mnozstvi.mjs` — **6 kontrol**. Hlídá tvar, ne text:
+v kódu, který mluví k lidem (2 318 souborů včetně HTML), nesmí být
+`n < 5 ?`. Kdyby někdy vznikl případ, kde to s množným číslem nemá nic
+společného, patří do seznamu `VYJIMKY` s napsaným důvodem — dnes je
+prázdný a to je cíl.
+
+Zákaz tvaru by sám nestačil: kdo tu podmínku smaže celou (třeba ji
+vytáhne do pomocné funkce, která bude špatná), zákazem projde. Tři
+místa, kde se nula na obrazovku dostane, se proto hlídají **jmenovitě**,
+a nakonec se kontroluje výsledek — ta jediná věta na `data.html`, která
+vadu ukázala: tvar slova musí sedět k tomu, co v ní zrovna stojí za
+číslo.
+
+**Prokázáno sabotáží — čtyřmi:** vrácený tvar `< 5` (spadly 2 kontroly),
+„0 inzeráty" na hotové stránce (1), rychlý výběr přepsaný na pomocnou
+funkci (1) a rozbité hlídané místo (1).
+
+Jedna sabotáž napoprvé nešla ani spustit: hledal jsem v `data.html`
+řetězec „teď 0 inzerátů" s obyčejnými mezerami, kdežto sazba tam dává
+nezlomitelné. Tatáž past jako u právních stránek o pár bodů výš — a
+důvod, proč tahle zkouška hledá číslo i slovo vzorkem, který obě
+podoby mezery připouští.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

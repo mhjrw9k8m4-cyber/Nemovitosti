@@ -1021,7 +1021,7 @@ export function vObciOdkaz(d) {
   if (!n) return null;
   const kde = (d.place === d.okres ? 'okrese ' : 'obci ') + d.place;
   const text = n === 1 ? `V ${kde} je v nabídce ještě jeden pozemek`
-    : (n < 5 ? `V ${kde} jsou v nabídce ještě ${n} pozemky`
+    : (n >= 2 && n <= 4 ? `V ${kde} jsou v nabídce ještě ${n} pozemky`
              : `V ${kde} je v nabídce ještě ${fmt(n)} pozemků`);
   return { text: text, url: 'index.html?obec=' + encodeURIComponent(d.place)
     + '&okres=' + encodeURIComponent(d.okres) };
@@ -1049,8 +1049,7 @@ export function blokPro(d) {
      množného čísla a sloveso zpátky do jednotného. Dvojka s jednotným
      slovesem („se prodává ještě 2 další pozemky") je ta chyba, které si
      čtenář všimne dřív než čehokoli jiného na stránce. */
-  const kolik = dalsich < 5
-    ? `prodávají ještě ${dalsich} další pozemky`
+  const kolik = dalsich >= 2 && dalsich <= 4 ? `prodávají ještě ${dalsich} další pozemky`
     : `prodává ještě ${fmt(dalsich)} dalších pozemků`;
   let text = `V okruhu ${s.mez} m se ${kolik} — dohromady ${vymeraText}`;
   if (s.cena !== null) text += ` za ${fmt(s.cena)} Kč`;

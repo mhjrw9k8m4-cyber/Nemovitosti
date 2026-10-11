@@ -130,7 +130,7 @@ export function spust() {
         do tohohle souboru to nepatří — chodí to z naší databáze a může
         se to měnit každou minutou. Statický odraz schválených inzerátů
         je v <code>data/user-listings.json</code> (teď ${fmt(majitelu)}
-        ${majitelu === 1 ? 'inzerát' : (majitelu < 5 ? 'inzeráty' : 'inzerátů')});
+        ${majitelu === 1 ? 'inzerát' : (majitelu >= 2 && majitelu <= 4 ? 'inzeráty' : 'inzerátů')});
         ve stažených nabídkách jsou jen pozemky z veřejných zdrojů.</li>
     </ul>
   </section>

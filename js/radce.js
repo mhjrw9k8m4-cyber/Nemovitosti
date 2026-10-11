@@ -217,7 +217,7 @@
       var cisla = (muj && o.zaM2)
         ? ' Vychází to na <b>' + cis(muj) + ' Kč/m²</b> proti obvyklým <b>' + cis(o.zaM2) +
           ' Kč/m²</b> (srovnáno s ' + o.vzorek + ' ' +
-          (o.vzorek === 1 ? 'nabídkou' : (o.vzorek < 5 ? 'nabídkami' : 'nabídkami')) + ').'
+          (o.vzorek === 1 ? 'nabídkou' : (o.vzorek >= 2 && o.vzorek <= 4 ? 'nabídkami' : 'nabídkami')) + ').'
         : '';
       /* PODÍL SE ŘEŠÍ DŘÍV NEŽ „POCHYBNÁ CENA". U podílu se procento
          počítá z ceny CELÉ parcely, ale cena za metr z výměry PODÍLU —
@@ -293,7 +293,7 @@
       return { lvl: 'warn', txt: '<b>Termín dražby už minul</b> (' + (-n) + ' dní zpátky). Záznam tu zůstává kvůli historii — u dražebníka si ověřte, jestli se vydražilo, nebo bude další kolo.' };
     }
     if (n <= 7) {
-      var kdy = n === 0 ? 'Dražba je dnes' : (n === 1 ? 'Dražba je zítra' : 'Do dražby zbývá ' + n + (n < 5 ? ' dny' : ' dní'));
+      var kdy = n === 0 ? 'Dražba je dnes' : (n === 1 ? 'Dražba je zítra' : 'Do dražby zbývá ' + n + (n >= 2 && n <= 4 ? ' dny' : ' dní'));
       return { lvl: 'warn', txt: '<b>' + kdy + '.</b> Na prohlídku, ověření v katastru a složení dražební jistoty už je <b>málo času</b> — jistota musí být připsaná před zahájením, ne v den dražby.' };
     }
     if (n <= 30) {

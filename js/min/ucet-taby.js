@@ -34,7 +34,7 @@
     ODZNAK.textContent = n > 99 ? '99+' : String(n);
 
     ODZNAK.setAttribute('aria-label', n === 1 ? '1 nepřečtená zpráva'
-      : (n < 5 ? n + ' nepřečtené zprávy' : n + ' nepřečtených zpráv'));
+      : (n >= 2 && n <= 4 ? n + ' nepřečtené zprávy' : n + ' nepřečtených zpráv'));
   }
 
   function sectiVlakna(rows) {

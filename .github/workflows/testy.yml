@@ -306,6 +306,9 @@ jobs:
       - name: Právní stránky (datum poslední úpravy a co v nich být musí)
         run: node scripts/test-pravni-stranky.mjs
 
+      - name: České množné číslo u počtů (nula se chová jako pět)
+        run: node scripts/test-mnozstvi.mjs
+
       - name: Konec nabídky není konec adresy
         run: node scripts/test-ukonceno.mjs
 

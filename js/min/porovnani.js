@@ -84,7 +84,7 @@
           + ((window.PK_CENY && window.PK_CENY.spravniCena && window.PK_CENY.spravniCena(d))
             ? ' <b class="por-urad" title="Cenu stanovil úřad podle § 12 zákona o Státním pozemkovém úřadu, ne trh — za tuhle cenu prodává SPÚ oprávněné osobě. S cenami na trhu se neporovnává.">úřední cena (§ 12)</b>'
             : '') + '</td>'
-        + '<td>' + (dni == null ? '—' : (dni < 0 ? 'proběhlo' : (dni === 0 ? 'dnes' : dni === 1 ? 'zítra' : 'za ' + dni + (dni < 5 ? ' dny' : ' dní')))) + '</td>'
+        + '<td>' + (dni == null ? '—' : (dni < 0 ? 'proběhlo' : (dni === 0 ? 'dnes' : dni === 1 ? 'zítra' : 'za ' + dni + (dni >= 2 && dni <= 4 ? ' dny' : ' dní')))) + '</td>'
         + '</tr>';
     }).join('');
 

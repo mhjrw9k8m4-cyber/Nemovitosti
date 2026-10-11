@@ -60,7 +60,7 @@
     ODZNAK.textContent = n > 99 ? '99+' : String(n);
     /* Pro čtečku to musí být věta, ne holé číslo u slova „Zprávy". */
     ODZNAK.setAttribute('aria-label', n === 1 ? '1 nepřečtená zpráva'
-      : (n < 5 ? n + ' nepřečtené zprávy' : n + ' nepřečtených zpráv'));
+      : (n >= 2 && n <= 4 ? n + ' nepřečtené zprávy' : n + ' nepřečtených zpráv'));
   }
 
   /** Součet nepřečtených ze seznamu vláken, jak ho vrací my_threads. */

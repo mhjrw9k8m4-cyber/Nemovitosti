@@ -219,7 +219,7 @@
     var hlava = prosle ? slovo + ' už proběhla'
       : (days === 0 ? slovo + ' je dnes'
         : (days === 1 ? slovo + ' je zítra'
-          : slovo + ' za ' + days + ' ' + (days < 5 ? 'dny' : 'dní')));
+          : slovo + ' za ' + days + ' ' + (days >= 2 && days <= 4 ? 'dny' : 'dní')));
     var cenaSlovo = d.type === 'drazba' ? 'Vyvolávací cena' : 'Odhadní cena';
     var deep = d.url && isDeepLink(d.url);
     return '<div class="pz-drazba' + (prosle ? ' prosle' : (blizko ? ' blizko' : '')) + '">' +
@@ -335,7 +335,7 @@
     var kdeTxt = (window.PK_CENY && window.PK_CENY.kdeText && pc.uroven)
       ? ' ' + window.PK_CENY.kdeText(pc.uroven, pc.kde) : '';
 
-    var zKolika = (pc.sample > 0) ? ' (' + pc.sample + ' ' + (pc.sample < 5 ? 'nabídky' : 'nabídek') + ')' : '';
+    var zKolika = (pc.sample > 0) ? ' (' + pc.sample + ' ' + (pc.sample >= 2 && pc.sample <= 4 ? 'nabídky' : 'nabídek') + ')' : '';
     if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + pc.cheaper + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
     else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
     else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
@@ -354,7 +354,7 @@
     try { n = (window.PK_RADCE.rady(d, MODEL).radky || []).length; } catch (e) { n = 0; }
     if (!n) return '';
 
-    return n + ' ' + (n === 1 ? 'věc' : (n < 5 ? 'věci' : 'věcí'));
+    return n + ' ' + (n === 1 ? 'věc' : (n >= 2 && n <= 4 ? 'věci' : 'věcí'));
   }
 
   function ukazCasDat(updated) {
