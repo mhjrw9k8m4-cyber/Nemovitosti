@@ -3193,6 +3193,67 @@ smazala deklaraci `let m`, takže zkouška skončila chybou ReferenceError
 a žádná kontrola neproběhla. To není „sabotáž prošla", to je „zkouška
 se nespustila"; napsaná znovu správně chytila 4 kontroly.
 
+## 3bb. Z tvého průchodu webem: tři body, které se NEPOTVRDILY (a jeden, který vyřešila jiná oprava) — *změřeno 11. 10.*
+
+Poctivost v obou směrech: tyhle body jsem změřil a vada v nich není.
+
+### „Mikroparcely v dražbách se ukazují jako Výhodná cena" — už opraveno 5. 10.
+
+Příčina existovala a byla horší, než jak to vypadalo zvenčí: **tatáž
+dražba ležela v datech dvakrát**, protože přichází ze dvou zdrojů —
+z evidence CEVD (s parcelním číslem a výměrou JEDNÉ parcely) a z OK
+dražeb (bez čísla, ale s výměrou CELÉ dražby). Vyvolávací cena přitom
+platí pro celou dražbu, takže ta s menší výměrou dávala cenu za metr
+několikanásobně vyšší. Změřeno dnes v surových datech:
+**44 dražeb z 81 rozpoznaných leží dvakrát** (88 řádků), cena je v nich
+ve všech 44 případech shodná a výměra se liší u 24.
+
+Spojuje je `bezDuplicit` v `js/hlidani-logika.js` podle **adresy
+zdroje** (po srovnání `www.` a protokolu) a z dvojice bere tu s větší
+výměrou. Všech 155 řádků se tím scvrkne na **110 skutečných dražeb**
+a prochází tím i každý generátor stránek. Ověřeno: pro dražbu 28338
+(Úštěk × Kalovice) existuje **jedna** stránka pozemku, ne dvě.
+
+Co z toho plyne pro ten odznak, změřeno dnes na sjednocených datech:
+
+* na kartách se zapnutým filtrem „Dražba" padne „Výhodná cena" na
+  **3 dražby** a nejmenší z nich má **1 259 m²**,
+* na stránce pozemku dostane „Výhodná cena" **9 dražeb ze 110**
+  (78 nedostane verdikt vůbec) a nejmenší z nich má **547 m²**,
+* na stránkách `drazby-pozemku*.html` není ten odznak **ani jednou**.
+
+Mikroparcela (do 200 m² je jich v datech 26) tedy „Výhodná cena"
+nedostane žádná.
+
+Ještě jedna věc se k tomu nabízela a taky nepotvrdila: těch 9 verdiktů
+stojí na vzorku 29 dražeb téhož druhu v okrese Litoměřice, což by mohly
+být jen sestry z jedné dražební položky. Změřeno: je v nich **deset
+různých dražebních termínů**, nejvíc pět na jeden den. Není to srovnání
+se sebou samým a stránka velikost vzorku přiznává („29 nabídek").
+
+### „Nově přidané a zároveň zlevněné v jeden den (Dubí, Svinaře)"
+
+Tenhle protimluv vyřešila oprava věku nabídek (bod 3ba). Po dopočtu
+z historie **není v datech ani jedna** nabídka, která by měla
+`first_seen` v den změny ceny — dřív jich bylo 25 z 25, po první
+opravě 1 z 24, teď 0 z 24. Dubí: poprvé viděno 22. 9., cena se změnila
+5. 10. Svinaře: čtyři nabídky z prvního dne evidence, bez změny ceny.
+
+### „Újezd u Brna je odlehlá hodnota"
+
+Jev v datech je: v Újezdu u Brna je **14 nabídek a 13 z nich je státní
+půda podle § 12** za 7–11 Kč/m², zatímco ta čtrnáctá (inzerát) stojí
+686 Kč/m². Úřední cena o trhu nevypovídá a web ji proto do modelu
+nepouští (`spravniCena`) — opravené 10. 10. v bodech 3ao/3ap/3aq.
+Ověřeno na té jedné tržní nabídce: „Srovnatelné pozemky v okolí" jí
+ukazují 274, 81, 76 a 73 Kč/m² a věta nad nimi říká „Z pěti nabídek do
+6 km je tenhle nejdražší" — tedy žádná desetikoruna za metr mezi nimi.
+Místo, kde by ta úřední cena pokazila číslo, jsem nenašel.
+
+Zůstává tím nepopsaný důvod, proč ten bod v tvém seznamu je. Je dost
+možné, že jsem se nedíval na tu stránku, na kterou ses díval ty — kdyby
+se to dalo doplnit (která stránka, které číslo), doměřím to.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
