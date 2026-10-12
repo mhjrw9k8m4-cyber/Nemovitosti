@@ -3886,10 +3886,15 @@ nedá splést „pojistka zabrala" s „na data nebylo dost vzorku".
 **Prokázáno sabotáží:** návrat meze na `pct >= 65` shodí 2 kontroly,
 z toho jedna vypíše všech 39 skutečných nabídek i s jejich čísly.
 
-Vedlejší nález: `scripts/test-shoda.mjs` měl mez „percentil dostane víc
-než polovina nabídek". 942 z 1 939 je 48,6 %, takže mez spadla. Není to
-regres modelu — mez má poznat, kdyby verdikt zmizel skoro všem, a na to
-45 % stačí. Napsáno to je u ní.
+**Vedlejší nález, a ten je vlastní chyba.** `scripts/test-shoda.mjs` měl
+mez „percentil dostane víc než polovina nabídek". V CI spadla sama od
+sebe ještě **před** touhle opravou (948 z 1 942, tedy 48,8 %) — jen tím,
+že robot přisypal data. Mez naladěná na dnešní poměr je stejná chyba jako
+dotaz „les Praha do 10 tis" v §3bj: číslo z hlavy místo z toho, co mez má
+hlídat. Má poznat, kdyby verdikt zmizel SKORO VŠEM, a na to stačí
+třetina. Nová mez je **0,35**, zbytek je rezerva na pohyb dat; proč, to
+u ní stojí napsané. Že pořád měří, je ověřeno: s mezí 0,99 kontrola
+spadne.
 
 ## Co naopak nechybí
 
