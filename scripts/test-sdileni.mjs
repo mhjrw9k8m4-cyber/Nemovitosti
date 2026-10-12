@@ -75,7 +75,17 @@ pravda('a mají značky pro sdílení (jinak se nic nekontroluje)',
    KONČÍ na „data.html", takže s endsWith by vada v data.html prošla.
    Právě tak jsem si první verzi téhle kontroly rozbil. */
 const uzel = (u) => String(u || '').replace(/[?#].*$/, '').replace(/\/+$/, '').split('/').pop();
-const jinam = vse.filter((z) => z.ogUrl && uzel(z.ogUrl) !== (z.f === 'index.html' ? 'www.parcelaka.cz' : z.f));
+/* VÝJIMKA: stránka, která za kanonickou označuje JINOU, má tam ukazovat
+   i og:url — tak to říká i specifikace Open Graphu („the canonical URL")
+   a hlídá to kontrola 2 níž („og:url a canonical se nerozcházejí"). Kdyby
+   tady platilo bezvýhradné „ukazuje na ni samu", obě kontroly by si
+   protiřečily a jedna z nich by musela padnout.
+   Dnes je taková jedna: `pozemky-praha-kraj.html` ukazuje na okresní
+   stránku Prahy, protože Praha je kraj i okres naráz a obě stránky
+   popisují totéž území. */
+const jinam = vse.filter((z) => z.ogUrl
+  && uzel(z.ogUrl) !== (z.f === 'index.html' ? 'www.parcelaka.cz' : z.f)
+  && !(z.canonical && uzel(z.canonical) === uzel(z.ogUrl)));
 pravda('og:url každé stránky ukazuje na ni samu',
   jinam.length === 0,
   `${jinam.length} stránek ukazuje jinam: ` + jinam.slice(0, 4).map((z) => `${z.f} → ${uzel(z.ogUrl)}`).join(', '));

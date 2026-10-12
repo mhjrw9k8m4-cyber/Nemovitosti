@@ -64,15 +64,35 @@ pravda('na každou stránku ze sitemap vede odkaz', sirotci.length === 0,
    a která existuje — jinak ji vyhledávač najde až náhodou. Výjimky
    jsou stránky, které se schválně neindexují. */
 const neindexovat = new Set();
+/* A DRUHÁ VÝJIMKA: stránka, která sama ukazuje na JINOU jako kanonickou.
+   Ta do sitemapy nepatří — vyhledávači by se z ní dostala adresa,
+   o které mu táž stránka vzápětí řekne „kanonická je jiná". Dnes je
+   taková jedna: `pozemky-praha-kraj.html` ukazuje na okresní stránku
+   Prahy, protože Praha je kraj i okres naráz a obě stránky popisují
+   totéž území (viz poznámka u `kanon` v generate-region-pages.mjs).
+   Bez téhle výjimky tahle zkouška tu opravu hlásila jako vadu. */
+const kanonJinam = new Set();
 for (const f of strany) {
   const h = fs.readFileSync(path.join(KOREN, f), 'utf8');
   if (/name="robots"[^>]*noindex|content="noindex/.test(h)) neindexovat.add(f);
+  const k = /<link rel="canonical" href="https:\/\/www\.parcelaka\.cz\/([^"]*)"/.exec(h);
+  if (k && k[1] && k[1] !== f) kanonJinam.add(f);
 }
 pravda(`neindexované stránky jsou poznat (${neindexovat.size})`, neindexovat.size > 0,
   'bez nich by další kontrola hlásila falešné chybějící');
+/* Kanonická adresa, na kterou se ukazuje, ale musí být SAMA v sitemapě —
+   jinak se tím jen zametlo, že stránku vyhledávač nikde nedostane. */
 const vSitemapuSet = new Set(vSitemapu);
+const osirelyKanon = [...kanonJinam].filter((f) => {
+  const h = fs.readFileSync(path.join(KOREN, f), 'utf8');
+  const k = /<link rel="canonical" href="https:\/\/www\.parcelaka\.cz\/([^"]*)"/.exec(h);
+  return k && !vSitemapuSet.has(k[1]) && !neindexovat.has(f);
+});
+pravda(`stránka ukazující kanonickou jinam ji má v sitemapě (${kanonJinam.size} takových)`,
+  osirelyKanon.length === 0,
+  'kanonická adresa chybí v sitemap u: ' + osirelyKanon.slice(0, 5).join(', '));
 const chybi = [...odkazovane].filter((u) => strany.includes(u)
-  && !vSitemapuSet.has(u) && !neindexovat.has(u));
+  && !vSitemapuSet.has(u) && !neindexovat.has(u) && !kanonJinam.has(u));
 pravda('a odkazovaná indexovatelná stránka v sitemap nechybí', chybi.length === 0,
   chybi.slice(0, 10).join(', '));
 

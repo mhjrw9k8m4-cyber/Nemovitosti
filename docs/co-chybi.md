@@ -3635,6 +3635,70 @@ Ta poslední sabotáž přitom **dvakrát neprošla** a kontrola byla slepá:
    past, kterou mají popsanou `js/vybaveni.js` i `js/druh.js` — a potřetí
    jsem na ni šlápl ve zkoušce, která měla hlídat něco jiného.
 
+## 3bh. NALEZENO (ze tvého seznamu, část o vyhledávačích): Praha měla dvě stránky o jednom území a obě se prohlašovaly za kanonickou — *opraveno 12. 10.*
+
+Praha je **kraj i okres naráz** a web z toho udělal dvě stránky:
+
+| | listuje nabídek | kanonická byla | co píše |
+| --- | --- | --- | --- |
+| `pozemky-praha-kraj.html` | 12 | sama sebou | „Aktuálně evidujeme 23 pozemků v Praze" |
+| `pozemky-okres-praha.html` | 23 | sama sebou | „Aktuálně evidujeme 23 pozemků v okrese Praha" |
+
+Změřeno: těch 12 nabídek na krajské stránce je **podmnožinou** těch 23
+na okresní (shoda 12 z 12). Je to tedy jedno území, dvě stránky, dvě
+sebe-kanonické adresy — pro vyhledávač dvě stránky o jedné věci, které
+si berou váhu navzájem.
+
+Krajská stránka teď ukazuje jako kanonickou **tu okresní** (nese všech
+23 nabídek, kdežto krajská je rozcestník na jediný okres — sama na
+sebe), a tím pádem taky nepatří do sitemapy: vyhledávač by z ní dostal
+adresu, o které mu táž stránka vzápětí řekne „kanonická je jiná".
+Člověku zůstává obojí, krajská stránka funguje dál.
+
+Pravidlo je **obecné, ne „když Praha"**: platí pro kterýkoli kraj, který
+má jediný okres téhož jména. Jiný takový dnes není, ale kdyby přišel,
+chová se stejně.
+
+### Co se u toho NEPOTVRDILO
+
+| ohlášeno | změřeno |
+| --- | --- |
+| „canonical říká `/data.html`, ale servíruje se `/data`" | Na ostrém webu ne. `vercel.json` má `cleanUrls: true`, takže na Vercelu `/data.html` přesměruje na `/data` — ale veřejný web běží na **GitHub Pages** pod vlastní doménou (stojí to v komentáři u analytiky v `index.html`) a tam se servíruje `/data.html`, tedy přesně to, co říká canonical. Platí to jen pro vercelový náhled. |
+| „stránky chybí v sitemapě" | 150 stránek v sitemapě není a **u všech je to správně**: 138 ukončených nabídek (noindex) a 12 aplikačních stránek (hlídání, profil, moje data, odhlášení, diagnostika, 404 — všechny noindex). Změřeno i naopak: v sitemapě není ani jedna adresa, pro kterou by soubor neexistoval. |
+| „odkazy s `?kraj=` a `?obec=` množí adresy" | Odkazů je hodně (1 641 `?obec=`, 91 `?kraj=`), ale všechny vedou na `index.html`, jehož canonical je `https://www.parcelaka.cz/`. Právě na tohle canonical je — všechny ty varianty se sloučí do jedné adresy. |
+| „odkazy na `/index.html`" | 2 317 odkazů na 2 211 stránkách. Není to vada: `index.html` má canonical na `/`, takže se obě adresy slijí. Jako úklid by to smysl mělo (jeden přesměrovaný klik méně), ale je to 2 211 stránek změn za nulový rozdíl v tom, co člověk uvidí — nechávám a zapisuji. |
+
+### A jeden vedlejší nález
+
+`pozemky-od-lidi.html` má `noindex,follow` **a** canonical na
+`index.html#mapa`. Dvě věci naráz: noindex a canonical jsou protichůdné
+signály (Google canonical na neindexované stránce ignoruje) a ten
+canonical navíc vede na `index.html`, který má canonical na `/` — tedy
+řetězec. Nechávám to být, protože noindex je ten silnější a zamýšlený
+signál a stránka je mimo index tak jako tak; zapisuji, aby to nevypadalo
+nedoměřené.
+
+### Zkoušky
+
+Obě úpravy nahlodaly pravidla, na kterých stály dvě existující zkoušky —
+a to je ta zajímavější část:
+
+* `scripts/test-vyhledavac.mjs` hlídá „odkazovaná indexovatelná stránka
+  nesmí chybět v sitemapě". Krajská stránka Prahy je odkazovaná,
+  indexovatelná (noindex nemá) a v sitemapě teď **není** — zkouška to
+  ohlásila jako vadu. Pravidlo dostalo druhou výjimku (stránka, která
+  ukazuje kanonickou jinam) **a k ní protiváhu**: ta kanonická adresa
+  musí být sama v sitemapě, jinak by se tím jen zametlo, že stránku
+  vyhledávač nikde nedostane. 11 → **12** kontrol.
+* `scripts/test-sdileni.mjs` hlídá „og:url ukazuje na vlastní stránku" —
+  jenže specifikace Open Graphu žádá **kanonickou** adresu a táž zkouška
+  o dva řádky dál hlídá, že se og:url a canonical nerozcházejí. Bez
+  výjimky by si ty dvě kontroly protiřečily. 13 → **14** kontrol.
+
+**Prokázáno sabotáží — čtyřmi:** kanonická adresa Prahy vyhozená ze
+sitemapy (spadly 3 kontroly), krajská stránka vrácená sama na sebe (1),
+og:url ukazující na třetí stránku (2).
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

@@ -1078,7 +1078,26 @@ for(const kraj of eligibleKraj){
     {name:meta.disp, abs:SITE+file},
   ];
 
-  const html = head(title,desc,file,jsonld,crumbs,`kraj-${slug(kraj)}.png`,kanalKraje(kraj),kanalNazevKraje(kraj)) + `
+  /* PRAHA JE KRAJ I OKRES NARÁZ — a web z toho dělal dvě stránky.
+     Nahlášeno z průchodu webem a změřeno: `pozemky-praha-kraj.html`
+     a `pozemky-okres-praha.html` popisují TOTÉŽ území, obě píšou
+     „Aktuálně evidujeme 23 pozemků v Praze" a obě se prohlašovaly za
+     kanonické (každá sama sebou). Těch dvanáct nabídek, které vypisuje
+     krajská stránka, je navíc podmnožinou těch 23 na okresní.
+
+     Pro vyhledávač jsou to dvě stránky o jedné věci, které si berou
+     váhu navzájem. Krajská stránka proto ukazuje jako kanonickou tu
+     OKRESNÍ — ta nese všech 23 nabídek, kdežto krajská je rozcestník
+     na jediný okres (sama na sebe). Člověku zůstane obojí: krajská
+     stránka funguje dál, jen se o pozici v hledání nehádá se svým
+     dvojčetem.
+
+     Pravidlo je obecné, ne „když Praha": platí pro kterýkoli kraj,
+     který má jediný okres téhož jména. Jiný takový dnes není, ale
+     kdyby přišel, chová se stejně. */
+  const jedinyOkresTehozJmena = okresList.length === 1 && okresList[0] === kraj && hasOkresPage.has(kraj);
+  const kanon = jedinyOkresTehozJmena ? okresFile(kraj) : file;
+  const html = head(title,desc,kanon,jsonld,crumbs,`kraj-${slug(kraj)}.png`,kanalKraje(kraj),kanalNazevKraje(kraj)) + `
 <main id="obsah">
 
   <section class="okr-hero">
@@ -1147,7 +1166,7 @@ ${rows}
 </main>
 ` + footer({ graf: true });   // graf cenové hladiny je jen tady
   write(file, html);
-  krajPages.push({kraj,file,count});
+  krajPages.push({kraj,file,count,kanon});
 }
 
 // ---------- DRAŽBY (národní přehled) ----------
@@ -2330,7 +2349,14 @@ const staticUrls=[
 ];
 let sm='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 for(const u of staticUrls) sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${u.loc}</loc>\n    <changefreq>${u.cf}</changefreq>\n    <priority>${u.pr}</priority>\n  </url>\n`;
-for(const p of krajPages) sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${p.file}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
+/* V sitemapě patří jen KANONICKÉ adresy. Krajská stránka Prahy ukazuje
+   jako kanonickou tu okresní (viz poznámka u `kanon` výš), takže by
+   vyhledávač z sitemapy dostal adresu, o které mu táž stránka vzápětí
+   řekne „kanonická je jiná". Jedna věc řečená dvakrát a jinak. */
+for(const p of krajPages){
+  if(p.kanon && p.kanon !== p.file) continue;
+  sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${p.file}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
+}
 for(const p of okresPages) sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${p.file}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
 /* Stránky podle druhu pozemku. Priorita jako u krajů: je to vstup
    z vyhledávače („les na prodej"), ne odbočka. */
