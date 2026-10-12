@@ -172,3 +172,7 @@
 {"k":"Domousnice|—|Mladá Boleslav|50.394|15.103#2si23","m":"Domousnice","o":"Mladá Boleslav","dr":"pozemek","t":"sale","v":2612,"c":4962800,"od":"2026-09-14","do":"2026-10-10","proc":"zmizela"}
 {"k":"Veřovická|—|Nový Jičín|49.706|18.061#4ri13","m":"Veřovická","o":"Nový Jičín","dr":"stavební pozemek","t":"sale","v":833,"c":2000000,"od":"2026-09-14","do":"2026-10-10","proc":"zmizela"}
 {"k":"Trubín|487|Beroun|49.950|14.001#1rqu983","m":"Trubín","o":"Beroun","dr":"lesní pozemek","t":"drazba","v":62499,"c":1875000,"od":"2026-09-14","do":"2026-10-10","proc":"zmizela"}
+{"k":"Ejpovice|—|Rokycany|49.749|13.538#od2a","m":"Ejpovice","o":"Rokycany","dr":"stavební pozemek","t":"sale","v":2304,"c":3600000,"od":"2026-09-14","do":"2026-10-11","proc":"zmizela"}
+{"k":"Strakonice|—|Strakonice|49.261|13.903#od42","m":"Strakonice","o":"Strakonice","dr":"zahrada","t":"sale","v":900,"c":1490000,"od":"2026-09-14","do":"2026-10-11","proc":"zmizela"}
+{"k":"Ostrov u Macochy|—|Blansko|49.382|16.763#ed4liq","m":"Ostrov u Macochy","o":"Blansko","dr":"pozemek","t":"sale","v":1059,"c":4500750,"od":"2026-09-14","do":"2026-10-11","proc":"zmizela"}
+{"k":"Třebusice|—|Kladno|50.201|14.183#2slcx","m":"Třebusice","o":"Kladno","dr":"stavební pozemek","t":"sale","v":1036,"c":6112400,"od":"2026-09-14","do":"2026-10-11","proc":"zmizela"}
