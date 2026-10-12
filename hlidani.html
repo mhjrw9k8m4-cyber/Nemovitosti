@@ -891,13 +891,21 @@
            i „jen celé pozemky", dozvěděl se jen o mezích a o druhé
            volbě vůbec nic. Člověk má vědět, co mu v databázi doopravdy
            leží, ne polovinu. */
+        /* ZPRÁVA PRO ČLOVĚKA, NE POZNÁMKA PRO VÝVOJÁŘE. Stálo tu
+           „Hlídání uloženo, ale cena od / výměra do / cena za m² se
+           zatím neuložily — databáze je ještě neumí." Dvě věci na tom
+           byly špatně: „databáze je ještě neumí" je naše potíž, ne jeho
+           (a zní to, jako by se web přiznával k rozestavěnosti), a
+           políčka se jmenovala jinak než na obrazovce, oddělená
+           lomítky jako výpis z kódu. Jmenují se teď tak, jak jsou
+           popsaná ve formuláři, a věta říká, co z jeho zadání platí. */
         var nepropsano = [];
-        if (!jeSiroke && (k.min_price || k.max_area || k.max_perm2)) nepropsano.push('cena od / výměra do / cena za m²');
-        if (v.uroven !== 'celek' && v.uroven !== 'bezOkruhu' && k.jen_celek) nepropsano.push('volba „jen celé pozemky"');
-        if (v.uroven !== 'celek' && k.okruh_km) nepropsano.push('okruh od místa (hlídá se celý okres)');
+        if (!jeSiroke && (k.min_price || k.max_area || k.max_perm2)) nepropsano.push('„cenu od", „výměru do" a „nejvýš za metr čtvereční"');
+        if (v.uroven !== 'celek' && v.uroven !== 'bezOkruhu' && k.jen_celek) nepropsano.push('volbu „jen celé pozemky"');
+        if (v.uroven !== 'celek' && k.okruh_km) nepropsano.push('okolí vašeho místa — hlídá se celý okres');
         if (nepropsano.length) {
-          var text = 'Hlídání uloženo, ale ' + nepropsano.join(' ani ')
-            + ' se zatím neuložily — databáze je ještě neumí.';
+          var text = 'Hlídání jsme uložili, ale ' + nepropsano.join(' ani ')
+            + ' zatím hlídat neumíme. Ostatní podmínky platí a nové pozemky vám podle nich najdeme.';
           msg.textContent = text;
           msg.className = 'hl-msg err';
           // a hlavně: ať to přežije přepnutí záložky hned za chvíli

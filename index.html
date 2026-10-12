@@ -542,7 +542,15 @@
       <p class="data-updated mono" id="data-updated" aria-live="polite"></p>
       <div class="source-row">
         <div class="source-chip" data-zdroj="Dražby"><span class="s-dot tv-kosoctverec" style="background:var(--c-drazba);"></span>Centrální evidence veřejných dražeb</div>
-        <div class="source-chip" data-zdroj="OK dražby"><span class="s-dot tv-trojuhelnik" style="background:var(--c-exekuce);"></span>Nucené dražby (exekuce)</div>
+        <!-- POJMENOVÁNÍ MUSÍ SEDĚT S TÍM, CO ZDROJ DODÁVÁ, A S TÍM, CO
+             STOJÍ U NABÍDKY. Stálo tu „Nucené dražby (exekuce)" — a bylo to
+             špatně dvakrát. Za prvé: ten zdroj je portál OK dražby a
+             naměřeno dnes přináší 81 nabídek, z toho 53 BĚŽNÝCH dražeb a
+             jen 28 nucených; dvě třetiny tedy čip pojmenoval opačně. Za
+             druhé: u nabídky samotné stojí „dražba 26. 10. 2026 · OK
+             dražby", takže návštěvník čte o témže zdroji dvě různá jména
+             a jedno z nich je zkratka, kterou nikde nepotká. -->
+        <div class="source-chip" data-zdroj="OK dražby"><span class="s-dot tv-trojuhelnik" style="background:var(--c-exekuce);"></span>Dražby a exekuce (OK dražby)</div>
         <div class="source-chip" data-zdroj="SPÚ"><span class="s-dot tv-kruh" style="background:var(--c-sale);"></span>Státní pozemkový úřad (§ 12)</div>
         <div class="source-chip" data-zdroj="Bezrealitky"><span class="s-dot tv-kruh" style="background:var(--c-sale);"></span>Inzeráty Bezrealitky</div>
         <div class="source-chip" data-zdroj="Farmy"><span class="s-dot tv-kruh" style="background:var(--c-sale);"></span>Inzeráty Farmy.cz</div>

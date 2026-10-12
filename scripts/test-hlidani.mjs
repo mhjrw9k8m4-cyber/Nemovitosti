@@ -838,6 +838,46 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   je('dražby', 'a v surových datech jich opravdu bylo (jinak se nic neměří)', predtim > 0, true);
 }
 
+/* ---- JAK HLÍDÁNÍ MLUVÍ, KDYŽ SE ULOŽÍ JEN PŮLKA ZADÁNÍ ----
+
+   Databáze nemusí umět všechna políčka (migrace `hlidani-anon-uzce.sql`
+   čeká na nasazení), takže formulář ukládá postupně na méně a méně
+   sloupců a co se nepropsalo, vypíše. To je správně — ale ta hláška
+   dlouho zněla takhle:
+
+     „Hlídání uloženo, ale cena od / výměra do / cena za m² se zatím
+      neuložily — databáze je ještě neumí."
+
+   Dvě věci na tom byly špatně. „Databáze je ještě neumí" je NAŠE potíž,
+   ne jeho, a zní to, jako by se web přiznával k rozestavěnosti.
+   A políčka se jmenovala jinak než na obrazovce, oddělená lomítky jako
+   výpis z kódu.
+
+   Hláška se nikde nezkoušela, takže mohla zestárnout bez povšimnutí.
+   Teď se hlídá: že existuje, že neobviňuje databázi, že řekne, co platí,
+   a že políčka jmenuje tak, jak jsou popsaná ve formuláři. */
+{
+  const hl = readFileSync(new URL('../hlidani.html', import.meta.url), 'utf8');
+  /* Komentáře ven — ten starý text je v nich schválně citovaný jako
+     vysvětlení, a kontrola by na něj jinak sedla. */
+  const kod = hl.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/<!--[\s\S]*?-->/g, ' ');
+  je('hláška', 'hláška o částečném uložení existuje',
+    /Hlídání jsme uložili, ale/.test(kod), true);
+  je('hláška', 'a neobviňuje databázi', /databáze je ještě neumí/.test(kod), false);
+  je('hláška', 'a říká, co z zadání platí dál',
+    /Ostatní podmínky platí/.test(kod), true);
+  for (const policko of ['„cenu od"', '„výměru do"', '„nejvýš za metr čtvereční"',
+    'volbu „jen celé pozemky"', 'okolí vašeho místa']) {
+    je('hláška', `jmenuje políčko ${policko} lidsky`, kod.indexOf(policko) !== -1, true);
+  }
+  /* A ty názvy musí odpovídat tomu, co je u políčka napsané. */
+  for (const [vKod, vFormulari] of [['„cenu od"', 'Cena od'], ['„výměru do"', 'Výměra do'],
+    ['„nejvýš za metr čtvereční"', 'Nejvýš za metr čtvereční']]) {
+    je('hláška', `${vKod} se na obrazovce jmenuje „${vFormulari}"`,
+      hl.indexOf(vFormulari) !== -1, true);
+  }
+}
+
 console.log(`\nHlídání lokality: ${bezi} testů`);
 if (spadlo) {
   console.log(vysledky.join('\n'));

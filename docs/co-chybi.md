@@ -3547,6 +3547,94 @@ a obě tam byly:
 Obě chyby byly ve zkoušce, ne na webu — a jsou tu zapsané proto, že
 právě takhle vzniká zelená zkouška, která nic nehlídá.
 
+## 3bg. NALEZENO (z tvého průchodu webem): hlídání se omlouvalo databází a zdroj dražeb měl na webu dvě různá jména — *opraveno 12. 10.*
+
+Dva body z tvého seznamu, oba o tom, jak web mluví.
+
+### „Databáze je ještě neumí"
+
+Když se hlídání uloží jen částečně (migrace `supabase/hlidani-anon-uzce.sql`
+čeká na nasazení, takže formulář ukládá postupně na méně a méně sloupců),
+vypíše se, co se nepropsalo. Správné chování — jenže hláška zněla:
+
+> „Hlídání uloženo, ale **cena od / výměra do / cena za m²** se zatím
+> neuložily — **databáze je ještě neumí**."
+
+Dvě věci na tom byly špatně. „Databáze je ještě neumí" je **naše** potíž,
+ne jeho, a zní to, jako by se web přiznával k rozestavěnosti. A políčka
+se jmenovala jinak než na obrazovce, oddělená lomítky jako výpis z kódu.
+
+Teď hláška zní:
+
+> „Hlídání jsme uložili, ale **„cenu od", „výměru do" a „nejvýš za metr
+> čtvereční"** zatím hlídat neumíme. **Ostatní podmínky platí** a nové
+> pozemky vám podle nich najdeme."
+
+### Zdroj dražeb měl na webu dvě jména, a jedno z nich bylo opačné
+
+Na úvodní stránce se zdroj jmenoval **„Nucené dražby (exekuce)"**, kdežto
+u nabídky stojí **„dražba 26. 10. 2026 · OK dražby"**. Dvě jména pro
+jeden zdroj, a to druhé je zkratka, kterou návštěvník nikde nepotká.
+
+Hlavně ale: to první jméno **není pravda**. Změřeno v datech — zdroj
+dodává **81** nabídek:
+
+| | |
+| --- | --- |
+| běžné dražby | **53** |
+| nucené (exekuce) | 28 |
+
+Dvě třetiny toho zdroje tedy čip pojmenoval opačně; kdo hledá běžnou
+dražbu a přečte si „nucené dražby (exekuce)", ten zdroj přeskočí. Čip
+se jmenuje **„Dražby a exekuce (OK dražby)"** — říká, co v něm je, a
+jméno sedí s tím, co stojí u nabídky.
+
+Mimochodem, při tom měření vyšlo ještě jedno číslo: zdroj **CEVD**
+(Centrální evidence veřejných dražeb) má v datech po odstranění duplicit
+**0** nabídek. Není to vada — jsou to tytéž dražby, které dodává i OK
+dražby, a z dvojice vítězí ta s výměrou celé dražby (viz bod 3bb). Čip
+CEVD přitom ukazuje, kolik záznamů zdroj naposledy vrátil (88×), takže
+nelže; jen je dobré vědět, že ani jedna nabídka na webu jeho značku
+nenese.
+
+### Co se naopak NEPOTVRDILO: tykání a vykání
+
+Ohlášené míchání tykání a vykání jsem **nenašel**. Změřeno vzorkem na
+neformální tvary (tvůj, máš, můžeš, klikni, napiš, zadej, vyber, uvidíš,
+najdeš…) ve **viditelném textu 30 ručně psaných stránek** a ve
+**všech řetězcích v `js/`** (komentáře vynechané): **0 nálezů**.
+A opačným směrem: honorifikum uprostřed věty taky nikde — 105 výskytů
+„vám/vaše/vás" malým písmenem, 11 velkým, a všech 11 je na začátku věty
+(„Vaše soukromí bereme vážně.") nebo štítek políčka („Vaše obec"), kde
+velké písmeno patří.
+
+### Zkoušky
+
+`scripts/test-hlidani.mjs` 173 → **189** kontrol: hláška o částečném
+uložení existuje, neobviňuje databázi, říká, co platí dál, a políčka
+jmenuje přesně tak, jak jsou popsaná ve formuláři (to se ověřuje proti
+textu `hlidani.html`, ne proti seznamu v hlavě).
+
+`scripts/test-sliby.mjs` 42 → **44** kontrol: jméno čipu zdroje nesmí
+**zúžit** to, co zdroj dodává. Hlídá se to jen u zdrojů, které se
+v datech podepisují (dnes 4 ze 5), a je to tak napsané, aby se to
+nedalo splést s „prošlo to".
+
+**Prokázáno sabotáží — čtyřmi:** vrácená stará hláška (3 kontroly),
+políčka zpátky jako výpis z kódu (3), vrácený čip „Nucené dražby
+(exekuce)" (1).
+
+Ta poslední sabotáž přitom **dvakrát neprošla** a kontrola byla slepá:
+
+1. napsal jsem podmínku jako „jméno musí zmínit dražby **i** exekuce" —
+   a „Nucené dražby (exekuce)" obě slova obsahuje. Vadí **přívlastek**:
+   „nucené dražby" běžné dražby vylučuje, i když slovo „dražby" ve
+   jméně je;
+2. opravený vzorek `nucen\w*\s+dražb` nesedl na „nucené", protože `\w`
+   v JavaScriptu zná jen anglickou abecedu a „é" do něj nepatří. Táž
+   past, kterou mají popsanou `js/vybaveni.js` i `js/druh.js` — a potřetí
+   jsem na ni šlápl ve zkoušce, která měla hlídat něco jiného.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

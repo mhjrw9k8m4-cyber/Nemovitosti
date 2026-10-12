@@ -74,6 +74,40 @@ const nabidky = data.opportunities || [];
   const neznam = klice.filter((k) => vData.indexOf(k) === -1);
   pravda('a ten klíč v datech opravdu existuje', neznam.length === 0,
     `web se ptá na zdroje ${neznam.join(', ')}, data znají ${vData.join(', ')}`);
+
+  /* JMÉNO ČIPU NESMÍ ZÚŽIT TO, CO ZDROJ OPRAVDU DODÁVÁ.
+     U čipu zdroje „OK dražby" stálo „Nucené dražby (exekuce)". Naměřeno:
+     ten zdroj dodává 81 nabídek, z toho 53 BĚŽNÝCH dražeb a 28 nucených
+     — dvě třetiny tedy čip pojmenoval opačně. Kdo hledá dražbu a přečte
+     si „nucené dražby (exekuce)", ten zdroj přeskočí.
+
+     Hlídá se to jen u zdrojů, které se dají v datech poznat (jejich
+     jméno stojí v poli `extra`). Zdroj, který se v datech nepodepisuje,
+     tahle kontrola přeskočí — a je to tak napsané, aby se to nedalo
+     splést s „prošlo to". */
+  const cipText = {};
+  for (const m of rada.matchAll(/data-zdroj="([^"]+)"[^>]*>(?:<[^>]*>)*([^<]*)/g)) cipText[m[1]] = m[2];
+  let hlidano = 0;
+  for (const [zdroj, popis] of Object.entries(cipText)) {
+    const sve = nabidky.filter((o) => String(o.extra || '').indexOf(zdroj) !== -1);
+    if (!sve.length) continue;                      // zdroj se v datech nepodepisuje
+    hlidano++;
+    const typy = new Set(sve.map((o) => o.type));
+    const p = popis.toLowerCase();
+    if (typy.has('drazba') && typy.has('exekuce')) {
+      const bezna = sve.filter((o) => o.type === 'drazba').length;
+      /* POZOR NA SLOVO, KTERÉ ZUŽUJE. Napoprvé tu stálo „jméno musí
+         zmínit obojí" — a to původní „Nucené dražby (exekuce)" obě
+         slova obsahuje, takže sabotáž prošla a kontrola byla slepá.
+         Vadí přívlastek: „NUCENÉ dražby" běžné dražby vylučuje, i když
+         se slovo „dražby" ve jméně vyskytuje. */
+      pravda(`čip „${popis.trim()}" nezamlčuje běžné dražby (${bezna} z ${sve.length})`,
+        /dražb/.test(p) && !/nucen[^\s]*[\s\u00a0]+dražb/.test(p),
+        'zdroj dodává i běžné dražby, ale jméno čipu je zužuje na nucené');
+    }
+  }
+  pravda(`u kolika zdrojů se to dalo změřit: ${hlidano}`, hlidano >= 1,
+    'žádný zdroj se v datech nepodepisuje — kontrola jmen čipů neměří nic');
 }
 
 /* ---- 2) „Pokrýváme celou Českou republiku" ---- */
