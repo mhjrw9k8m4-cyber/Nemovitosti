@@ -185,34 +185,54 @@ pravda('<body> ani <html> neořezávají do stran',
   !/\bbody\{[^}]*overflow-x:\s*(clip|hidden)/.test(css) && !/\bhtml\{overflow-x:\s*(clip|hidden)/.test(css),
   'overflow-x na kořeni nebo na body dělá ořezávající rámec nad hlavičkou');
 
-// --- 4) Nabídka je vidět bez otevírání a vejde se do hlavičky -------
-/* Tady se dřív otevíral panel pod křížkem a měřilo se, že sedá dnem
-   na spodní hranu okna. Panel i křížek jsou pryč: nabídka je vodorovný
-   pás odkazů přímo v hlavičce, protože navigace, kterou nikdo
-   neotevře, je navigace, která není. Měří se tedy to, co teď platí. */
+// --- 4) Hlavička na telefonu: tlačítko nabídky a nic navíc ----------
+/* Tahle část prošla třemi podobami webu. Nejdřív se tu otevíral panel
+   pod křížkem a měřilo se, že sedá dnem na spodní hranu okna. Pak byl
+   panel zrušený a nabídka byla vodorovný pás odkazů přímo v hlavičce.
+   Teď je to zase vysouvací panel — na výslovné přání majitele, protože
+   v pásu byly na 390 px vidět dva odkazy z šesti.
+   Co se tu měří, je proto JINÁ věc než dřív: že hlavička zůstala
+   jednořádková a že je v ní čím nabídku otevřít. Co umí ten panel,
+   hlídá test-menu; dvakrát totéž by znamenalo dvě místa k opravě. */
 {
   const { ctx, p } = await otevri(TELEFON, 'index.html');
   await p.waitForTimeout(400);
   const v = await p.evaluate(() => {
     const n = document.getElementById('nav');
     const h = document.getElementById('header');
-    const r = n.getBoundingClientRect(), hr = h.getBoundingClientRect();
-    const a = [...n.querySelectorAll('a')].filter((x) => x.getClientRects().length);
-    return { odkazu: a.length, vHlavicce: !!n.closest('header'),
-      navDole: Math.round(r.bottom), hlavDole: Math.round(hr.bottom),
+    const b = document.querySelector('.nav-burger');
+    const hr = h.getBoundingClientRect();
+    const br = b ? b.getBoundingClientRect() : null;
+    const a = [...n.querySelectorAll('a')];
+    return { odkazu: a.length, maBurger: !!b, burgerVHlavicce: !!(b && b.closest('header')),
+      burgerS: br ? Math.round(br.width) : 0, burgerV: br ? Math.round(br.height) : 0,
+      burgerX: br ? Math.round(br.left) : 0, logoX: Math.round(document.querySelector('header .logo').getBoundingClientRect().left),
       hlavVyska: Math.round(hr.height), okno_v: innerHeight,
-      jednaRada: new Set(a.map((x) => Math.round(x.getBoundingClientRect().top))).size };
+      promenna: Math.round(parseFloat(getComputedStyle(document.documentElement)
+        .getPropertyValue('--vyska-hlavicky'))) };
   });
-  pravda('nabídka je vidět bez otevírání', v.odkazu >= 5, `vidět je ${v.odkazu} odkazů`);
-  pravda('a je v hlavičce', v.vHlavicce && v.navDole <= v.hlavDole + 1,
-    `v hlavičce: ${v.vHlavicce}, dno pásu ${v.navDole}, dno hlavičky ${v.hlavDole}`);
-  pravda('pás je jedna řada (posouvá se do strany, nezalamuje se)', v.jednaRada === 1,
-    `odkazy jsou ve ${v.jednaRada} řadách`);
-  /* Hlavička je lepivá, takže každý její pixel chybí obsahu. S pásem
-     má dvě řady; naměřeno 119 px na 390×844 (bez něj 82). Mez 150 px
-     je tam, kam se nedá dostat omylem. */
-  pravda(`a nepřeroste (${v.hlavVyska} px z ${v.okno_v})`, v.hlavVyska <= 150,
+  pravda('nabídka má v hlavičce čím se otevřít', v.maBurger && v.burgerVHlavicce,
+    `hamburger: ${v.maBurger}, v hlavičce: ${v.burgerVHlavicce}`);
+  pravda(`a dá se trefit prstem (${v.burgerS}×${v.burgerV})`,
+    v.burgerS >= 44 && v.burgerV >= 44, `${v.burgerS}×${v.burgerV} px`);
+  /* Vlevo, vedle jména. Když jsem hlavičku přestavoval, zůstalo v ní
+     justify-content:space-between a jméno odletělo k pravému kraji —
+     naměřeno x = 250 z 390, mezi ním a hamburgerem 186 px prázdna. */
+  pravda('hamburger stojí vlevo, hned vedle jména', v.burgerX < v.logoX && v.logoX - v.burgerX < 90,
+    `hamburger na x ${v.burgerX}, jméno na x ${v.logoX}`);
+  pravda('a všech šest cílů i s účtem je v nabídce k dispozici', v.odkazu >= 6,
+    `odkazů v nabídce: ${v.odkazu}`);
+  /* Hlavička je lepivá, takže každý její pixel chybí obsahu. Bez pásu
+     odkazů je jednořádková: naměřeno 65 px na 390×844 (s pásem to bylo
+     119). Mez 90 px je tam, kam se nedá dostat omylem. */
+  pravda(`a nepřeroste (${v.hlavVyska} px z ${v.okno_v})`, v.hlavVyska <= 90,
     `${v.hlavVyska} px — lepivá hlavička bere obsahu každý pixel`);
+  /* A PROMĚNNÁ MUSÍ SEDĚT NA SKUTEČNOU VÝŠKU. Web si pod lepivou
+     hlavičkou drží odstup přes --vyska-hlavicky; když jsem ji nechal
+     na 85 px u hlavičky vysoké 65, byl pod hlavičkou prázdný pruh. */
+  pravda(`--vyska-hlavicky (${v.promenna}) sedí na skutečnou výšku (${v.hlavVyska})`,
+    Math.abs(v.promenna - v.hlavVyska) <= 2,
+    `proměnná ${v.promenna} px, hlavička ${v.hlavVyska} px — rozdíl se projeví jako pruh nebo překryv`);
   await ctx.close();
 }
 

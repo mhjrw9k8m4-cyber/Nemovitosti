@@ -84,8 +84,8 @@ function chod(dir) {
 chod(KOREN);
 pravda(`prohledal se repozitář (${souboru} souborů, ${tokeny.slova.size} slov)`,
   souboru > 2000 && tokeny.slova.size > 20000, `${souboru} souborů, ${tokeny.slova.size} slov`);
-pravda('a vidí i třídy, které přidává JavaScript (hl-bez-pasu)',
-  tokeny.slova.has('hl-bez-pasu'), 'skripty se nenačetly — kontrola by hlásila mrtvé všechno');
+pravda('a vidí i třídy, které přidává JavaScript (hl-zhasnuta)',
+  tokeny.slova.has('hl-zhasnuta'), 'skripty se nenačetly — kontrola by hlásila mrtvé všechno');
 pravda('i třídy cizí knihovny (leaflet-container z vendor/)',
   tokeny.slova.has('leaflet-container'), 'vendor/ se nenačetl');
 

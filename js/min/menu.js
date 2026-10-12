@@ -19,11 +19,75 @@
 
   }
 
+  var BURGER_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"' +
+    ' stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+  var KRIZEK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"' +
+    ' stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+  function postavPanel(d, nav) {
+    if (nav.getAttribute('data-panel') === 'ano') return;
+    nav.setAttribute('data-panel', 'ano');
+    var wrap = nav.parentNode;
+    if (!wrap) return;
+
+    var burger = d.createElement('button');
+    burger.type = 'button';
+    burger.className = 'nav-burger';
+    burger.setAttribute('aria-controls', 'nav');
+    burger.setAttribute('aria-expanded', 'false');
+    burger.setAttribute('aria-label', 'Otevřít nabídku');
+    burger.innerHTML = BURGER_SVG;
+
+    wrap.insertBefore(burger, wrap.firstChild);
+
+    var stin = d.createElement('div');
+    stin.className = 'nav-stin';
+    stin.hidden = true;
+    wrap.appendChild(stin);
+
+    var zavrit = d.createElement('button');
+    zavrit.type = 'button';
+    zavrit.className = 'nav-zavrit';
+    zavrit.setAttribute('aria-label', 'Zavřít nabídku');
+    zavrit.innerHTML = KRIZEK_SVG;
+    nav.insertBefore(zavrit, nav.firstChild);
+
+    function otevreno() { return d.body.classList.contains('nav-otevreno'); }
+    function prepni(na) {
+      d.body.classList.toggle('nav-otevreno', na);
+      burger.setAttribute('aria-expanded', na ? 'true' : 'false');
+      burger.setAttribute('aria-label', na ? 'Zavřít nabídku' : 'Otevřít nabídku');
+      stin.hidden = !na;
+
+      if (na) { try { zavrit.focus(); } catch (e) {   } }
+      else { try { burger.focus(); } catch (e) {   } }
+    }
+
+    burger.addEventListener('click', function () { prepni(!otevreno()); });
+    zavrit.addEventListener('click', function () { prepni(false); });
+    stin.addEventListener('click', function () { prepni(false); });
+    d.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && otevreno()) prepni(false);
+    });
+    nav.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest && e.target.closest('a[href]');
+      if (a && otevreno()) prepni(false);
+    });
+
+    if (root.matchMedia) {
+      var mq = root.matchMedia('(min-width:1041px)');
+      var hlid = function (ev) { if (ev.matches && otevreno()) prepni(false); };
+      if (mq.addEventListener) mq.addEventListener('change', hlid);
+      else if (mq.addListener) mq.addListener(hlid);
+    }
+  }
+
   function napoj(doc) {
     var d = doc || document;
     var nav = d.getElementById('nav');
     if (!nav) return false;
     oznacStranku(d, nav);
+    postavPanel(d, nav);
     return true;
   }
 

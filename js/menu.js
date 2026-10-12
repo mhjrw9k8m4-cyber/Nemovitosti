@@ -22,12 +22,20 @@
    js/pridat.js, tedy 73,4 kB formulářové logiky k přidání pozemku —
    na stránce, kde žádný takový formulář není. Tohle má pod 2 kB.
 
-   A PAK UŽ NENÍ CO OTEVÍRAT. Panel pod křížkem je zrušený: na úzkém
-   displeji je nabídka spodní lišta (vidět pořád), na širokém vodorovná
-   navigace v hlavičce. S panelem zmizela i celá jeho obsluha —
-   přepínač, Escape, klepnutí mimo, tah dolů — a tlačítko „hamburger"
-   je odebrané i ze značky 2 178 stránek, protože se po té změně
-   nezobrazovalo nikde.
+   A PANEL JE ZPÁTKY — NA VÝSLOVNÉ PŘÁNÍ. Mezitím byla nabídka na
+   telefonu vodorovný pás pilulek v hlavičce, který se posouval prstem.
+   Majitel na něj řekl: „menu na mobilu jezdí nahoře, je to strašné."
+   Má pravdu i měřitelně: pás je 44 px vysoký pruh, do kterého se
+   z šesti odkazů vejdou dva a zbytek se musí odjet do strany, takže
+   o existenci ostatních se člověk nedozví. Místo něj je tedy
+   VYSOUVACÍ PANEL — hamburger vlevo, panel přes většinu obrazovky,
+   v něm všechny odkazy pod sebou a velké.
+
+   TLAČÍTKO SI SKRIPT POSTAVÍ SÁM. Značku hlavičky má 2 212 stránek
+   a většinu z nich píše generátor; vkládat hamburger do všech by
+   znamenalo přegenerovat celý web kvůli jednomu tlačítku a hlavně
+   mít ten prvek na 2 212 místech místo na jednom. Panel i tlačítko
+   proto vznikají tady, z toho, co v hlavičce už je.
 
    Nic se tu nespouští, když na stránce nabídka není: bez #nav se
    funkce vrátí a neudělá nic. */
@@ -63,16 +71,89 @@
 
   }
 
-  /* NAPOJENÍ. Přepínač „hamburger" tu býval a s ním otevírání, zavírání
-     Escapem, klepnutím mimo i tahem dolů. Všechno zmizelo s panelem:
-     na úzkém displeji je nabídka spodní lišta, která je vidět pořád,
-     Není co otevírat, takže není co obsluhovat — a tlačítko, které se
-     nikde nezobrazí, je odebrané i ze značky (bylo na 2 178 stránkách). */
+  var BURGER_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"' +
+    ' stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+  var KRIZEK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"' +
+    ' stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+  /* VYSOUVACÍ PANEL.
+     ------------------------------------------------------------------
+     Postaví hamburger, zatmívací plochu a zavírací křížek v panelu.
+     Odkazy zůstávají ty, co v #nav už jsou — nic se nekopíruje, takže
+     se nemá co rozejít (to byla ta chyba z úvodu souboru, jedenáct
+     kopií v jedenácti podobách).
+
+     ZAVÍRÁ SE PĚTI ZPŮSOBY, a každý z nich někdo opravdu použije:
+     tlačítkem, křížkem, Escapem, klepnutím na odkaz (jinak panel
+     zůstane přes novou stránku) a klepnutím mimo. */
+  function postavPanel(d, nav) {
+    if (nav.getAttribute('data-panel') === 'ano') return;
+    nav.setAttribute('data-panel', 'ano');
+    var wrap = nav.parentNode;
+    if (!wrap) return;
+
+    var burger = d.createElement('button');
+    burger.type = 'button';
+    burger.className = 'nav-burger';
+    burger.setAttribute('aria-controls', 'nav');
+    burger.setAttribute('aria-expanded', 'false');
+    burger.setAttribute('aria-label', 'Otevřít nabídku');
+    burger.innerHTML = BURGER_SVG;
+    /* Hamburger patří PŘED logo, k levému kraji: tam ho palec čeká
+       a tam ho má i Sreality, Seznam i všechno ostatní na telefonu. */
+    wrap.insertBefore(burger, wrap.firstChild);
+
+    var stin = d.createElement('div');
+    stin.className = 'nav-stin';
+    stin.hidden = true;
+    wrap.appendChild(stin);
+
+    var zavrit = d.createElement('button');
+    zavrit.type = 'button';
+    zavrit.className = 'nav-zavrit';
+    zavrit.setAttribute('aria-label', 'Zavřít nabídku');
+    zavrit.innerHTML = KRIZEK_SVG;
+    nav.insertBefore(zavrit, nav.firstChild);
+
+    function otevreno() { return d.body.classList.contains('nav-otevreno'); }
+    function prepni(na) {
+      d.body.classList.toggle('nav-otevreno', na);
+      burger.setAttribute('aria-expanded', na ? 'true' : 'false');
+      burger.setAttribute('aria-label', na ? 'Zavřít nabídku' : 'Otevřít nabídku');
+      stin.hidden = !na;
+      /* Když je panel otevřený, je co zavírat — a focus má jít do něj,
+         ne zůstat na tlačítku za zatmívací plochou. */
+      if (na) { try { zavrit.focus(); } catch (e) { /* nevadí */ } }
+      else { try { burger.focus(); } catch (e) { /* nevadí */ } }
+    }
+
+    burger.addEventListener('click', function () { prepni(!otevreno()); });
+    zavrit.addEventListener('click', function () { prepni(false); });
+    stin.addEventListener('click', function () { prepni(false); });
+    d.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && otevreno()) prepni(false);
+    });
+    nav.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest && e.target.closest('a[href]');
+      if (a && otevreno()) prepni(false);
+    });
+    /* Po otočení na šířku nebo na velkém displeji panel neexistuje —
+       ale zámek rolování na <body> by po něm zůstal a stránka by se
+       nedala posunout. Naměřeno dřív u jiného překryvu, proto rovnou. */
+    if (root.matchMedia) {
+      var mq = root.matchMedia('(min-width:1041px)');
+      var hlid = function (ev) { if (ev.matches && otevreno()) prepni(false); };
+      if (mq.addEventListener) mq.addEventListener('change', hlid);
+      else if (mq.addListener) mq.addListener(hlid);
+    }
+  }
+
   function napoj(doc) {
     var d = doc || document;
     var nav = d.getElementById('nav');
     if (!nav) return false;
     oznacStranku(d, nav);
+    postavPanel(d, nav);
     return true;
   }
 

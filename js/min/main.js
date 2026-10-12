@@ -1170,8 +1170,7 @@
   function odznakDruhu(d) {
     var t = TYPE[d.type] || {};
     return '<span class="opp-badge ' + d.type + '" style="--c-druh:' + (t.color || '') + '">' +
-      '<span class="ob-dlouhy">' + esc(t.label || '') + '</span>' +
-      '<span class="ob-kratky">' + esc(t.zkratka || t.label || '') + '</span></span>';
+      esc(t.label || '') + '</span>';
   }
 
   var selPoly = null;
@@ -3673,7 +3672,8 @@
       + fmt(matched) + ')</button>';
 
     if (matched >= 5) tlacitka += '<button type="button" class="mc-skryte" id="mc-rychly">Rychlý výběr</button>';
-    countEl.innerHTML = headLabel + (matched ? ' · <span class="mc-sub">' + fmt(matched) + ' na mapě</span>' : '')
+
+    countEl.innerHTML = headLabel + (matched ? '<span class="mc-sub"> · ' + fmt(matched) + ' na mapě</span>' : '')
       + pripisky;
 
     var akceEl = document.getElementById('mc-akce') || countEl;

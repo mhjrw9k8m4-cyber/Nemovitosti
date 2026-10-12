@@ -126,41 +126,83 @@ try {
         ikona: getComputedStyle(x, '::before').backgroundImage !== 'none' };
     });
     return { vHlavicce: !!n.closest('header'), poz: s.position,
+      viditelnost: s.visibility, x: Math.round(r.left), s: Math.round(r.width), oknoS: innerWidth,
       hlavicka: Math.round(h.height), v: Math.round(r.height), okno: innerHeight,
       posuvny: n.scrollWidth > n.clientWidth + 1, radku: new Set(a.map((x) => x.v && x.x >= 0 ? Math.round(x.v) : 0)).size,
       ySad: new Set(a.map((x) => Math.round(x.v))).size, a };
   });
 
+  /* NABÍDKA JE VYSOUVACÍ PANEL, NE PÁS V HLAVIČCE.
+     Pás tu byl předtím a tahle zkouška ho hlídala řádek po řádku.
+     Majitel ho odmítl („menu na mobilu jezdí nahoře, je to strašné")
+     a měl pravdu i měřitelně: z šesti odkazů byly na 390 px vidět dva.
+     Kontroly se tím nezjednodušily — jen se ptají na správnou věc:
+     zavřený panel nesmí být vidět, otevřený musí nabídnout VŠECHNY
+     cíle a musí jít zavřít. */
+  const zavreny = await pas();
+  pravda('zavřená nabídka není na obrazovce vidět',
+    !!zavreny && (zavreny.viditelnost === 'hidden' || zavreny.x + zavreny.s <= 0),
+    `visibility:${zavreny && zavreny.viditelnost}, levý okraj ${zavreny && zavreny.x}`);
+  const burger = await p.$('.nav-burger');
+  pravda('hamburger je v hlavičce', !!burger && await p.evaluate((e) => !!e.closest('header'), burger),
+    'tlačítko nabídky v hlavičce není — nemá se čím otevřít');
+  const rb = burger ? await burger.boundingBox() : null;
+  pravda(`a dá se trefit prstem (${rb ? Math.round(rb.width) + '×' + Math.round(rb.height) : '—'})`,
+    !!rb && rb.width >= 44 && rb.height >= 44, JSON.stringify(rb));
+  pravda('a říká odečítači, že je zavřený',
+    (await p.getAttribute('.nav-burger', 'aria-expanded')) === 'false',
+    'aria-expanded není „false"');
+
+  await p.click('.nav-burger');
+  await p.waitForTimeout(500);
   const l = await pas();
-  pravda('nabídka je vidět hned, bez jediného klepnutí', !!l && l.a.length > 0,
-    'v hlavičce žádné odkazy nejsou');
+  pravda('po klepnutí je nabídka vidět', !!l && l.a.length > 0 && l.viditelnost !== 'hidden' && l.x >= 0,
+    `odkazů ${l && l.a.length}, visibility:${l && l.viditelnost}, levý okraj ${l && l.x}`);
   if (!l) hotovo();
-  /* NAHOŘE, NE DOLE. Majitel webu nabídku u spodní hrany odmítl; pás
-     je součástí hlavičky a jde s ní. */
-  pravda('a je v hlavičce, ne u spodní hrany', l.vHlavicce && l.poz !== 'fixed',
-    `v hlavičce: ${l.vHlavicce}, position:${l.poz}`);
-  pravda(`hlavička s pásem zůstává nízká (${l.hlavicka} px)`, l.hlavicka <= 140,
-    `${l.hlavicka} px z ${l.okno} — s pásem ve dvou řadách to bylo 175`);
-  pravda(`pás je jedna řada (${l.v} px)`, l.v <= 60,
-    `${l.v} px — odkazy se zalomily do víc řad`);
+  pravda('a říká odečítači, že je otevřený',
+    (await p.getAttribute('.nav-burger', 'aria-expanded')) === 'true',
+    'aria-expanded není „true"');
+  /* NA PANEL JE MÍSTA DOST — proto v něm nemá být nic namačkané.
+     Pás měl na šest cílů 44px pruh; panel má přes polovinu obrazovky. */
+  pravda(`panel zabere pořádný kus obrazovky (${l.s} z ${l.oknoS} px)`,
+    l.s >= l.oknoS * 0.6, `${l.s} px — na úzký panel se dlouhé popisky nevejdou`);
+  pravda(`hlavička sama zůstává nízká (${l.hlavicka} px)`, l.hlavicka <= 90,
+    `${l.hlavicka} px z ${l.okno} — bez pásu odkazů má být jednořádková`);
   /* VŠECHNY CÍLE V NĚM ZŮSTÁVAJÍ. Zprávy a Hlídání jsem v jedné verzi
      schoval nepřihlášeným, protože obě stránky vedou na přihlašovací
      okénko. Bylo to špatně: kdo hlídá pozemky, potřebuje se k nim
      dostat na jedno klepnutí, ne přes profil. */
   const kam = l.a.map((x) => x.kam);
   for (const cil of ['#mapa', 'cena-pozemku.html', 'zpravy.html', 'hlidani.html', 'kontakt.html', 'muj-inzerat.html']) {
-    pravda(`v pásu je ${cil}`, kam.some((h) => (h || '').endsWith(cil)), 'chybí: ' + kam.join(', '));
+    pravda(`v nabídce je ${cil}`, kam.some((h) => (h || '').endsWith(cil)), 'chybí: ' + kam.join(', '));
   }
-  pravda('každý odkaz má ikonu', l.a.every((x) => x.ikona),
-    JSON.stringify(l.a.filter((x) => !x.ikona).map((x) => x.kam)));
+  /* Ikonu nese každý cíl KROMĚ účtu (dvouřádkový blok se jménem a
+     stavem přihlášení, kde by ikona stála vedle obou řádků) a kromě
+     tlačítka „Přidat pozemek", které je akce, ne položka seznamu. */
+  const bezIkony = l.a.filter((x) => !x.ikona && !/muj-inzerat|pridat/.test(x.kam || ''));
+  pravda('každý cíl v nabídce má ikonu', bezIkony.length === 0,
+    JSON.stringify(bezIkony.map((x) => x.kam)));
   /* Mez 44 px si web klade sám (hlídá ji test-rozvrzeni i test-dotyk);
-     pilulky měly 40 a zkoušky to okamžitě našly. */
-  pravda('a dá se trefit prstem (44 px na výšku)', l.a.every((x) => x.v >= 44),
+     v panelu je místa na víc, takže se čeká 52. */
+  pravda('a dá se trefit prstem (52 px na výšku)', l.a.every((x) => x.v >= 52),
     JSON.stringify(l.a.map((x) => [x.kam, x.v])));
-  /* Že se dá posunout, musí být POZNAT: poslední odkaz nesmí končit
-     přesně na kraji, jinak to vypadá, že pás končí tam. */
-  pravda('je poznat, že pás pokračuje za okrajem', l.posuvny,
-    'všechno se vejde — pak ale žádný posuv není potřeba');
+
+  /* ZAVÍRÁNÍ. Panel, který se nedá zavřít, je horší než žádný —
+     a dřívější kopie téhle obsluhy neuměly ani Escape, ani zavření
+     po klepnutí na odkaz (viz komentář v js/menu.js). */
+  await p.keyboard.press('Escape');
+  await p.waitForTimeout(400);
+  const poEsc = await pas();
+  pravda('Escape nabídku zavře',
+    poEsc.viditelnost === 'hidden' || poEsc.x + poEsc.s <= 0,
+    `visibility:${poEsc.viditelnost}, levý okraj ${poEsc.x}`);
+  await p.click('.nav-burger');
+  await p.waitForTimeout(450);
+  await p.click('#nav a[href$="kontakt.html"]');
+  await p.waitForTimeout(600);
+  const poOdkazu = await p.evaluate(() => document.body.classList.contains('nav-otevreno'));
+  pravda('a klepnutí na odkaz taky (jinak zůstane přes novou stránku)',
+    poOdkazu === false, 'na body zůstala třída nav-otevreno');
 
   pravda('a nic se u toho nerozbilo', chybyJs.length === 0, chybyJs.slice(0, 2).join(' | '));
   await ctx.close();

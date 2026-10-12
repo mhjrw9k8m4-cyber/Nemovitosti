@@ -99,22 +99,19 @@
     }());
   }
 
-  /* PÁS NAVIGACE NENÍ LEPIVÝ. Hlavička po zastavení rolování zase
-     svítí (to je záměr: kdo přestal, chce vědět, kde je) — jenže
-     s vodorovným pásem odkazů má 119 px místo dřívějších 85 a tím
-     přebije obsah, který pod ní zrovna je. Naměřeno na úvodní stránce
-     při posunu o 60 px: hlavička zakryla vyhledávací pole o 29 px.
-     Pás je navigace, ne něco, co člověk potřebuje uprostřed rolování.
-     Mimo vrchol stránky se proto schová a z hlavičky zbude jen logo
-     s tlačítkem — tedy zhruba to, co měla předtím. Odsazení pod
-     hlavičkou se nemění: počítá se z její podoby na vrcholu, kde pás
-     vidět je. */
-  function pasPodleVrcholu() {
-    try { h.classList.toggle('hl-bez-pasu', !uVrcholu()); } catch (e) {}
-  }
+  /* TŘÍDA PRO SCHOVANÝ PÁS NAVIGACE TU BYLA A JE PRYČ i se jménem.
+     (Jméno tu schválně nestojí: zkoušky hledají jména tříd i ve
+     skriptech, takže zmínka v komentáři by tu třídu držela „živou"
+     a kontrola mrtvých stylů by si jí všimla jako existující.)
+     Schovávala při rolování
+     vodorovný pás odkazů v hlavičce, protože s ním měla hlavička
+     119 px místo 85 a přebíjela obsah pod sebou (naměřeno: při posunu
+     o 60 px zakryla vyhledávací pole o 29 px). Pás nahradil vysouvací
+     panel — ten je position:fixed mimo hlavičku, hlavička je zase
+     jednořádková, a není tedy co schovávat. Zůstat by tu smělo jen
+     jako mrtvý přepínač třídy, kterou nic nekreslí. */
 
   function pohyb() {
-    pasPodleVrcholu();
     if (uVrcholu()) {
       // Úplně nahoře nemá co překážet a nemá co ujet — svítí hned.
       clearTimeout(casovac);
@@ -128,7 +125,6 @@
     casovac = setTimeout(azPoKlidu, PAUZA);
   }
 
-  pasPodleVrcholu();
   window.addEventListener('scroll', pohyb, { passive: true });
   /* Lišta Safari se sbaluje bez scroll události — tohle je ta část, která
      tu dřív chyběla úplně. */

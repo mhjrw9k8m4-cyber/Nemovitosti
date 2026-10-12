@@ -49,7 +49,8 @@ const ODZNAKY = [
   { stranka: 'index.html', trida: 'opp-deal', rodic: ['.opp-card', '.deal-card', '.card', 'main'], text: 'levnější než 98 % pozemků v prodeji' },
   { stranka: 'index.html', trida: 'opp-urad', rodic: ['.opp-card', '.deal-card', '.card', 'main'], text: 'úřední cena (§ 12)' },
   { stranka: 'index.html', trida: 'deal-badge', rodic: ['.deal-card', '.deals-sec', '.card', 'main'], text: 'nejvýhodnější' },
-  { stranka: 'index.html', trida: 'ob-kratky', rodic: ['.opp-card', '.card', 'main'], text: 'Dražba' },
+  // Zkrácený popisek odznaku je zrušený (vejde se plný) — měří se odznak sám.
+  { stranka: 'index.html', trida: 'opp-badge', rodic: ['.opp-card', '.card', 'main'], text: 'Dražba' },
   { stranka: 'pozemky-okres-tabor.html', trida: 'okr-badge', rodic: ['.okr-item', '.okr-list', 'main'], text: 'Na prodej' },
   { stranka: 'pozemky-okres-tabor.html', trida: 'okr-sleva', rodic: ['.okr-item', '.okr-list', 'main'], text: 'zlevněno o 12 %' },
   { stranka: 'pozemky-okres-tabor.html', trida: 'okr-overit', rodic: ['.okr-item', '.okr-list', 'main'], text: 'cena k ověření' },

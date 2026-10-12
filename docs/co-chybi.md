@@ -3919,6 +3919,121 @@ a **žádné jméno políčka ve výčtu nesmí obsahovat pomlčku s vysvětlen�
 vyříznutí věty spadnou dvě kontroly, jedna z nich v prohlížeči na
 skutečné hlášce po neúspěšném uložení.
 
+## 3bn. NA PŘÁNÍ: web na telefonu podle Sreality — velké fotky, širší karty, vysouvací nabídka — *12. 10.*
+
+Zadání od majitele, zkráceně: *fotky roztáhnout a zvětšit, celou kartu
+roztáhnout víc do stran, hledání neukazovat celé (jen po rozkliknutí),
+a menu udělat jako normální vysouvací panel — „menu na mobilu jezdí
+nahoře, je to strašné".* Tři ze čtyř věcí jsou hotové a změřené.
+Čtvrtá (sbalené hledání) je **vrácená** a níž stojí proč.
+
+### 1. Karty: fotka přes celou šířku
+
+Karta byla na telefonu vodorovný řádek — náhled 116 × 128 px vlevo,
+údaje vpravo. Důvod byl poctivý a platí dál (svislá karta zabere skoro
+celou obrazovku), ale je to rozhodnutí vlastníka webu a je zapsané jako
+jeho, ne jako závěr z měření.
+
+| | před | po |
+|---|---|---|
+| náhled | 116 × 128 px | **356 × 223 px** (5,7× plocha) |
+| šířka karty | 318 px | **358 px** |
+| výška karty | ~148 px | ~390 px |
+| karet na obrazovku | ~5 | ~2 |
+
+Karta se roztáhla do stran tím, že na telefonu zmizelo trojí odsazení
+(20 px u `.map-wide`, 16 px u `.map-side`, rámeček `.map-app`), které
+na displeji přes celou šířku nic neohraničovalo.
+
+**Co z toho vyplynulo samo:** zkrácené popisky odznaků (`Záměr obce`
+místo `Obecní záměr`) existovaly jen proto, že se do náhledu 116 px
+nevešly plné. Do 356 px se vejde i nejdelší (94 px), takže zkrácená
+podoba se nikde nevykreslovala — a popisek, který nikdo neuvidí, je
+mrtvá značka na každé kartě. Je pryč i s pravidly ve stylopisu.
+
+### 2. Nabídka: vysouvací panel
+
+Čtvrtá podoba za tenhle rok, a je to rozhodnutí majitele proti číslu,
+které jsem sem sám citoval (navigace použitá v 57 % úkolů pod
+hamburgerem proti 86 %, když část zůstala vidět — NN/g podle
+designstudiouiux.com, u zdroje neověřeno). Jenže ten pás, který měl
+„zůstat vidět", ukázal z šesti odkazů dva; zbytek se musel odjet
+prstem, takže o něm nikdo nevěděl. Panel je zleva, přes 88 % šířky,
+odkazy po 56 px s ikonami, účet se stavem přihlášení nahoře a „Přidat
+pozemek" dole. Hlavička spadla ze 119 na **65 px**.
+
+**Tlačítko ani panel nejsou ve značce ani jedné stránky** — staví je
+`js/menu.js` z toho, co v hlavičce už je. Jinak by hamburger musel do
+2 212 souborů a stál by na 2 212 místech místo na jednom.
+
+### 3. Sbalené hledání: ZKOUŠENO A VRÁCENO
+
+Udělané to bylo: lišta s tlačítkem „Upravit hledání" a počtem výsledků,
+panel přes obrazovku, „Hotovo". Vrátil jsem to, protože jsem si předem
+neujasnil jednu věc — **v tom panelu nejsou jen filtry.** Jsou v něm
+i našeptávač obcí, odznaky „co web z tvé věty pochopil" a tlačítko
+„Pozemky v okolí", tedy věci, které musí být vidět i po zavření.
+
+Každá oprava toho překryvu si vyžádala další: zavírání klepnutím mimo
+otevřelo pod panelem inzerát → zatmívací plocha → ta skončila nad
+panelem (panel leží ve vlastním vrstvícím kontextu, `.map-wide` má
+`z-index:1`) → po přesunu ležela na tlačítku „Zobrazit i podobné
+názvy" → Escape zavíral celé hledání místo našeptávače → výběr obce
+panel nezavíral, protože našeptávač si událost zastavuje. A nakonec si
+dvě kontroly začaly odporovat o to, jak vysoko smí hledání být.
+
+**Jak to udělat příště:** rozdělit panel na „hledání" a „filtry".
+V liště zůstane hledací pole, našeptávač, odznaky rozpoznaných filtrů
+a „Pozemky v okolí"; schová se jen druh, cena, výměra a řazení — tedy
+to, co se nastaví jednou. Pak nemá co s čím kolidovat.
+
+### Co se přitom našlo (vlastní chyby z téhle přestavby)
+
+1. **Panel vyjel 20 px za levý kraj obrazovky.** Po pásu odkazů zbylo
+   pravidlo `#nav{margin:0 -20px}`. Naměřeno x = −20.
+2. **Pod hlavičkou zel prázdný pruh 20 px.** `--vyska-hlavicky` jsem
+   nechal na 85 px, skutečná výška jednořádkové hlavičky je 65. Hlídá
+   to teď `test-hlavicka` — proměnná se musí shodovat se změřenou
+   výškou.
+3. **Jméno „Parcelka" odletělo k pravému kraji** a mezi ním
+   a hamburgerem bylo 186 px prázdna (`justify-content:space-between`
+   se dvěma prvky).
+4. **Zprávy a Hlídání z nabídky zmizely.** `display:contents` na
+   `<details>` rozbije jeho vykreslování — v repozitáři o tom byl
+   komentář z minula a stejně jsem do toho spadl znovu.
+5. **Odkazy v panelu neměly ikony** a místo nich zůstala prázdná
+   22px mezera.
+6. **Odznak kategorie si sedl na křížek „skrýt".** Posunul jsem ho
+   nahoru doleva, jenže přesně tam na dotykových zařízeních sedí
+   křížek. Shodila to `test-rozvrzeni` na všech 24 kartách.
+7. **Rozvržení poskakovalo: CLS 0,184 proti dovoleným 0,05.** Výpis je
+   chvíli prázdný a oddíl „14 krajů" pod ním stál na 689 px; po
+   dokreslení karet spadl na 10 636 px, tedy skok o 9 947 px. Dřív to
+   nevadilo, protože nad výpisem stálo 512 px ovládání a ten oddíl
+   začínal pod ohybem. Výpis si teď drží výšku obrazovky dopředu.
+8. **Čtyři barvy a dva stíny mimo paletku** a jeden rozměr písma
+   o pixel vedle. Vymyslel jsem si jména tokenů (`--text`, `--znacka`,
+   `--text-mute`), která v tomhle webu nikdy neexistovala.
+9. **Odstup nad hledáním je sevřený ze dvou stran.** Hlavička se dřív
+   při rolování zmenšovala (pás odkazů z ní mizel) a uhýbala tak sama;
+   jednořádková hlavička se uhnout nemá čím, takže to místo musí být
+   nad hledáním: 50 px, protože `test-pod-hlavickou` chce aspoň tolik
+   a `test-rozvrzeni` nedovolí víc než 64. U obou je to napsané.
+
+### Zkoušky
+
+`test-menu` 20 → **30** kontrol a měří něco jiného: zavřený panel
+nesmí být vidět, otevřený musí nabídnout všech šest cílů, musí jít
+zavřít Escapem i klepnutím na odkaz, a hamburger musí být v hlavičce
+vlevo a mít 44 px. `test-hlavicka` 60 → **63**, nově včetně shody
+`--vyska-hlavicky` se skutečnou výškou. `test-rozvrzeni` a
+`test-odznaky` přepsané na jeden popisek odznaku.
+
+A jedna kontrola se opravila sama od sebe: „tlačítko Nahoru nezakrývá
+text v kartách" porovnávala obdélníky blokových prvků, tedy i prázdno
+za koncem krátkého řádku. U úzkých karet to nevadilo, u širokých začala
+hlásit překryv ničeho. Měří teď obdélníky samotných písmen (Range).
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

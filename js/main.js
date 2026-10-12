@@ -1807,18 +1807,21 @@
      proměnné jako tečka na mapě (TYPE[].color čte --c-*). Dřív ji vypisovalo
      CSS kategorii po kategorii — a na pátou se zapomnělo.
 
-     Popisek jde do odznaku dvakrát. Na mobilu je náhled 116 px široký
-     a má overflow:hidden, takže „Přímo od majitele" se v něm ořízlo
-     doprostřed slova — bez výpustky, takže to vypadalo jako vada
-     vykreslení, ne jako zkratka. Širší odznak nepomůže: stín přes celý
-     náhled by zakryl, co je na něm vidět. Který popisek se ukáže,
-     rozhoduje CSS podle šířky náhledu; druhý je display:none, takže ho
-     nepřečte ani odečítač. */
+     POPISEK BYL V ODZNAKU DVAKRÁT — PLNÝ A ZKRÁCENÝ — A UŽ NENÍ PROČ.
+     Důvod byl poctivý: na telefonu měl náhled 116 px a „Přímo od
+     majitele" se v něm ořízlo doprostřed slova bez výpustky, takže to
+     vypadalo jako vada vykreslení. Od přestavby karet na výšku má
+     náhled celou šířku karty (naměřeno 356 px na displeji 390 px) a
+     nejdelší popisek měří 94 px, tedy čtvrtinu. Zkrácená podoba se
+     proto nikde nevykresluje — a popisek, který nikdo neuvidí, je
+     mrtvá značka na každé kartě.
+     `zkratka` zůstává v tabulce TYPE: je to vlastnost kategorie, ne
+     tohohle jednoho vykreslení, a kdyby se karty někdy zase zúžily,
+     je odkud ji vzít. */
   function odznakDruhu(d) {
     var t = TYPE[d.type] || {};
     return '<span class="opp-badge ' + d.type + '" style="--c-druh:' + (t.color || '') + '">' +
-      '<span class="ob-dlouhy">' + esc(t.label || '') + '</span>' +
-      '<span class="ob-kratky">' + esc(t.zkratka || t.label || '') + '</span></span>';
+      esc(t.label || '') + '</span>';
   }
 
 
@@ -4988,6 +4991,26 @@
   var posledniOtiskFiltru = null;
   // Ukazatel u „Cena, výměra a řazení" — kolik doplňkových filtrů je aktivních,
   // ať uživatel pozná, že něco filtruje, i když je panel sbalený.
+  /* OTEVÍRÁNÍ HLEDÁNÍ NA TELEFONU.
+     Panel je na úzkém displeji překryv přes celou obrazovku; tady se
+     jen přepíná třída na <body>, zbytek je styl. Zavírá se čtyřmi
+     způsoby — tlačítkem „Hotovo", Escapem, druhým klepnutím na
+     „Upravit hledání" a klepnutím mimo panel; výsledky se překreslují
+     průběžně, takže „Hotovo" nic nepotvrzuje, jen zavírá. */
+  /* SBALOVÁNÍ HLEDÁNÍ NA TELEFONU — ZKOUŠENO A ZATÍM VRÁCENO.
+     Panel se otevíral tlačítkem „Upravit hledání" a zavíral „Hotovem".
+     Narazilo to na jednu věc, kterou jsem napoprvé přehlédl: v panelu
+     nejsou jen filtry, ale i našeptávač obcí, odznaky rozpoznaných
+     filtrů a tlačítko „Pozemky v okolí" — tedy věci, které musí být
+     vidět i po zavření. Každá oprava toho překryvu si vyžádala další
+     (zatmívací plocha, vrstvy, Escape, zavírání po výběru obce) a
+     nebralo to konce; dvě zkoušky si navíc začaly odporovat o to,
+     jak vysoko smí hledání být.
+     Dělá se to jinak a ve vlastním kroku: hledací pole, našeptávač,
+     odznaky a okolí ZŮSTANOU vidět; schovají se jen druh, cena,
+     výměra a řazení — tedy to, co se nastaví jednou. */
+
+
   var msfBadge = document.getElementById('msf-badge');
   /* Číslo v odznaku u zavřeného panelu.
      Dřív mělo VLASTNÍ ruční výčet a rozcházelo se se skutečností:
@@ -5505,7 +5528,10 @@
     /* RYCHLÝ VÝBĚR. Nabízí se jen tehdy, když je co třídit — pod pěti
        nabídkami je rychlejší projít seznam než pouštět vrstvu. */
     if (matched >= 5) tlacitka += '<button type="button" class="mc-skryte" id="mc-rychly">Rychlý výběr</button>';
-    countEl.innerHTML = headLabel + (matched ? ' · <span class="mc-sub">' + fmt(matched) + ' na mapě</span>' : '')
+    /* ODDĚLOVAČ PATŘÍ DOVNITŘ ZNAČKY. Na telefonu se tahle část
+       schovává (číslo stojí v liště nad výpisem), a kdyby „ · " stálo
+       venku, zbyla by za nadpisem osamocená tečka. */
+    countEl.innerHTML = headLabel + (matched ? '<span class="mc-sub"> · ' + fmt(matched) + ' na mapě</span>' : '')
       + pripisky;
     /* Tlačítka do VLASTNÍHO obalu, ne do hlavičky. Vedle nich stojí
        „Uložené" a rozbalovač řazení, které se nepřekreslují — kdyby se

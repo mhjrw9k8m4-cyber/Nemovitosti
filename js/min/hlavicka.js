@@ -60,12 +60,7 @@
     }());
   }
 
-  function pasPodleVrcholu() {
-    try { h.classList.toggle('hl-bez-pasu', !uVrcholu()); } catch (e) {}
-  }
-
   function pohyb() {
-    pasPodleVrcholu();
     if (uVrcholu()) {
 
       clearTimeout(casovac);
@@ -79,7 +74,6 @@
     casovac = setTimeout(azPoKlidu, PAUZA);
   }
 
-  pasPodleVrcholu();
   window.addEventListener('scroll', pohyb, { passive: true });
 
   if (vv) {

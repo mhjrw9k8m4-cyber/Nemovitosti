@@ -161,8 +161,14 @@ const KOTVY = [
     const odsazeniPx = Math.max(parseFloat(v.odsazeni) || 0, parseFloat(v.odsazeniKorene) || 0);
     if (v.top < v.hlavicka - 1) {
       podHlavickou.push(`${stranka}${kotva} <${v.znacka}>: vrch ${v.top} px, hlavička ${v.hlavicka} px`);
-    } else if (odsazeniPx < 85) {
-      podHlavickou.push(`${stranka}${kotva} <${v.znacka}>: odsazení jen ${odsazeniPx} px, hlavička měří až 85 px`);
+    } else if (odsazeniPx < v.hlavicka) {
+      /* MĚŘENÁ VÝŠKA, NE NAPSANÉ ČÍSLO. Dřív tu stálo `< 85` — výška
+         hlavičky z doby, kdy ji psali. Když se hlavička na telefonu
+         zmenšila na 65 px, odsazení kotev se zmenšilo s ní (počítá se
+         z --vyska-hlavicky) a kontrola spadla, přestože kotva skončila
+         přesně tam, kde má. Číslo naladěné na včerejší rozvržení
+         nehlídá rozvržení, hlídá to číslo. */
+      podHlavickou.push(`${stranka}${kotva} <${v.znacka}>: odsazení jen ${odsazeniPx} px, hlavička měří ${v.hlavicka} px`);
     }
     await p.close();
   }

@@ -31,7 +31,7 @@
        se nechává VŽDY. Typy a pseudotřídy se neřeší.
 
    CO SE POČÍTÁ JAKO „PŘÍTOMNO NA STRÁNCE". Nejen to, co je v HTML:
-   třídy přidává i JavaScript (`hl-bez-pasu`, `active`) a Leaflet si
+   třídy přidává i JavaScript (`hl-zhasnuta`, `active`) a Leaflet si
    své `.leaflet-*` tvoří sám. Proto se k tokenům stránky přičtou
    všechna slova ze VŠECH skriptů, které si stránka tahá — `js/min/*`
    i `vendor/leaflet/leaflet.js` — a z jejích vložených <script>/<style>.

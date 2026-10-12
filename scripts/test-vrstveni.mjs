@@ -78,16 +78,21 @@ async function stranka(sirka, prihlasit) {
   await ctx.close();
 }
 
-/* ---------- 2. pás navigace drží v hlavičce ----------
-   Nabídka byla postupně panel pod křížkem, pak spodní lišta a teď je
-   to vodorovný pás odkazů v hlavičce. U panelu se tu měřilo, že leží
-   nad obsahem; u pásu je otázka jiná: drží v hlavičce, kryje ho její
-   podklad, a nepřekrývá ho nic, co po stránce plave? */
+/* ---------- 2. vysouvací nabídka leží nad vším ----------
+   Nabídka byla postupně panel pod křížkem, spodní lišta, vodorovný pás
+   odkazů v hlavičce a teď je to zase vysouvací panel (na přání
+   majitele; proč, stojí v css/styles.css u .nav-burger). Otázka se tím
+   vrátila k té původní: leží otevřený panel opravdu NAD obsahem, nebo
+   se do něj něco plovoucího promítá? Pás se měřil jinak — že drží
+   v hlavičce — a to už tu není co měřit. */
 {
   const ctx = await stranka(390, true);
   const p = await ctx.newPage();
   await p.goto(`${BASE}/pozemky-okres-tabor.html`);
   await p.waitForTimeout(1500);
+  /* Zavřený panel je mimo obrazovku, takže by se měřilo prázdno. */
+  await p.click('.nav-burger');
+  await p.waitForTimeout(500);
 
   const stav = await p.evaluate(() => {
     const nav = document.querySelector('#nav');
@@ -105,9 +110,10 @@ async function stranka(sirka, prihlasit) {
       pozadiKryje: !!kryje
     };
   });
-  je('pás je součástí hlavičky', stav.vHlavicce, true);
-  je('a nevyčuhuje pod ni', stav.uvnitr, true);
-  je('nahoře na pásu je opravdu pás', stav.nahoreVlevo, 'pás');
+  je('nabídka je v hlavičce (otevírá se z ní)', stav.vHlavicce, true);
+  /* Panel je position:fixed přes celou výšku okna, takže „nevyčuhuje
+     pod hlavičku" by u něj znamenalo pravý opak toho, co má dělat. */
+  je('nahoře na otevřeném panelu je opravdu panel', stav.nahoreVlevo, 'pás');
   je('a hlavička pod ním kryje obsah stránky', stav.pozadiKryje, true);
 
   // Každý odkaz musí mít ikonu — prázdné místo vypadá jako chyba.
@@ -115,7 +121,12 @@ async function stranka(sirka, prihlasit) {
     const out = [];
     document.querySelectorAll('#nav a').forEach((a) => {
       if (!a.getClientRects().length) return;
-      if (getComputedStyle(a, '::before').backgroundImage === 'none') out.push(a.getAttribute('href'));
+      /* Účet nese dva řádky (jméno a stav přihlášení) a „Přidat
+         pozemek" je tlačítko, ne položka seznamu — ani jedno ikonu
+         nemá a mít nemá. Totéž rozlišení dělá test-menu. */
+      const kam = a.getAttribute('href') || '';
+      if (/muj-inzerat|pridat/.test(kam)) return;
+      if (getComputedStyle(a, '::before').backgroundImage === 'none') out.push(kam);
     });
     return out;
   });

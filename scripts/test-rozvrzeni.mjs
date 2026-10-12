@@ -278,7 +278,17 @@ async function otevri(soubor, sirka, vyska) {
       ? Math.round(hledani.getBoundingClientRect().top - hlavicka.getBoundingClientRect().bottom) : null;
     return { nadHledanim };
   });
-  pravda('nad hledáním nezůstal prázdný pruh', v.nadHledanim !== null && v.nadHledanim <= 60,
+  /* MEZ JE 64, NE 60 — A TO ČÍSLO MÁ DRUHOU STRANU.
+     Zespoda ho drží test-pod-hlavickou: hledání musí po posunu o 60 px
+     zůstat pod lepivou hlavičkou vidět, tedy začínat aspoň na 125 px.
+     Při hlavičce 65 px z toho vychází 61 px odstupu — o jediný pixel
+     přes dřívější mez 60. Nerovná se to tím, že by se povolilo
+     prázdno: ten pruh je místo, které si bere lepivá hlavička, aby
+     první ovládání zůstalo po ruce i při rolování. Dokud byla hlavička
+     dvouřádková a pás odkazů z ní při rolování mizel, uhýbala si sama;
+     s jednořádkovou hlavičkou se uhnout nemá čím.
+     Víc než 64 px je zase ukradená obrazovka a kontrola to má chytit. */
+  pravda('nad hledáním nezůstal prázdný pruh', v.nadHledanim !== null && v.nadHledanim <= 64,
     `nad hledáním je ${v.nadHledanim} px prázdna — na telefonu je to ukradený kus obrazovky`);
   await ctx.close();
 }
@@ -295,12 +305,21 @@ async function otevri(soubor, sirka, vyska) {
     const r = b.getBoundingClientRect();
     // Který text karty leží pod tlačítkem?
     const pod = [];
+    /* MĚŘÍ SE NAPSANÝ TEXT, NE CELÝ ŘÁDEK. Prvky jako „okres Blansko"
+       jsou blokové, takže jejich obdélník jde přes celou šířku karty,
+       i když písmena končí v první třetině. Při úzkých kartách to
+       nevadilo (text stál v levém sloupci a tlačítko vpravo mimo něj),
+       po rozšíření karet na celou šířku displeje začala kontrola hlásit
+       překryv prázdna. Rozsah (Range) vrátí obdélníky samotných
+       písmen, takže se porovnává to, co je opravdu vidět. */
+    const protina = (t) => t.right > r.left && t.left < r.right && t.bottom > r.top && t.top < r.bottom;
     for (const e of document.querySelectorAll('.opp-item *')) {
       if (e.children.length || !e.textContent.trim()) continue;
-      const t = e.getBoundingClientRect();
-      if (t.right > r.left && t.left < r.right && t.bottom > r.top && t.top < r.bottom) {
-        pod.push(e.textContent.trim().slice(0, 24));
-      }
+      const rng = document.createRange();
+      rng.selectNodeContents(e);
+      const radky = [...rng.getClientRects()].filter((t) => t.width > 0 && t.height > 0);
+      rng.detach && rng.detach();
+      if (radky.some(protina)) pod.push(e.textContent.trim().slice(0, 24));
     }
     return { sirka: Math.round(r.width), pod };
   });
@@ -488,7 +507,13 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   };
   const bezUctu = await zalozky(false);
   const sUctem = await zalozky(true);
-  pravda(`pás má šest cílů (${bezUctu.join(', ')})`, bezUctu.length === 6,
+  /* SEDM, NE ŠEST: šest cílů a k nim „Přidat pozemek".
+     V pásu pilulek akce nebyla — stála jako tlačítko v hlavičce
+     a dvakrát totéž vedle sebe v jedné liště je zmatek. Ve vysouvacím
+     panelu je to naopak hlavní věc, kterou tu prodávající hledá, a
+     tlačítko v hlavičce na telefonu není (viz .header-cta). */
+  pravda(`nabídka má šest cílů a akci „Přidat pozemek" (${bezUctu.join(', ')})`,
+    bezUctu.length === 7 && bezUctu[bezUctu.length - 1].endsWith('pridat.html'),
     `je jich ${bezUctu.length}: ${bezUctu.join(', ')}`);
   pravda('a přihlášení s nimi nehýbe', JSON.stringify(sUctem) === JSON.stringify(bezUctu),
     `nepřihlášený ${bezUctu.join(', ')} | přihlášený ${sUctem.join(', ')}`);
@@ -1525,17 +1550,11 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
         document.querySelectorAll('.opp-item').forEach((li) => {
           const bg = li.querySelector('.opp-badge'), md = li.querySelector('.opp-media');
           if (!bg || !md) return;
-          const dl = bg.querySelector('.ob-dlouhy'), kr = bg.querySelector('.ob-kratky');
+          /* ODZNAK MÁ JEDEN POPISEK. Dřív nesl plný i zkrácený a CSS
+             podle šířky náhledu vybíralo; od přestavby karet na výšku
+             má náhled celou šířku karty a plný popisek se vejde všude,
+             takže zkrácená podoba zanikla (js/main.js, odznakDruhu). */
           const rb = bg.getBoundingClientRect(), rm = md.getBoundingClientRect();
-          const zmer = (prvek) => {
-            const puvod = [dl.style.display, kr.style.display];
-            dl.style.display = prvek === 'dl' ? 'inline' : 'none';
-            kr.style.display = prvek === 'kr' ? 'inline' : 'none';
-            const r = bg.getBoundingClientRect();
-            const sir = r.width, pres = r.right - rm.right;
-            dl.style.display = puvod[0]; kr.style.display = puvod[1];
-            return { sir, pres };
-          };
           // Co všechno v náhledu leží nad snímkem a může odznak překreslit.
           const ovladani = [];
           md.querySelectorAll('.opp-fav, .opp-skryt, .opp-count').forEach((e) => {
@@ -1547,15 +1566,11 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
           out.push({
             druh: (bg.className.match(/opp-badge\s+(\w+)/) || [])[1] || '?',
             videt: bg.innerText.trim(),
-            maDl: !!dl, maKr: !!kr,
-            vidDl: dl ? getComputedStyle(dl).display !== 'none' : false,
-            vidKr: kr ? getComputedStyle(kr).display !== 'none' : false,
             presah: Math.round((rb.right - rm.right) * 10) / 10,
             vyska: Math.round(rb.height),
             nahled: Math.round(rm.width),
             ovladani: ovladani.length,
             koliduje: ovladani.filter((o) => prekryv(rb, o.r)).map((o) => o.jm),
-            plny: dl && kr ? zmer('dl') : null,
           });
         });
         return out;
@@ -1563,10 +1578,8 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
       pravda(`${sirka} px: vykreslily se odznaky všech kategorií`, v.length >= DRUHY.length,
         `odznaků ${v.length}, kategorií ${DRUHY.length}`);
       if (!v.length) { await ctx.close(); continue; }
-      pravda(`${sirka} px: každý odznak nese plný popisek i zkratku`,
-        v.every((o) => o.maDl && o.maKr), 'některý odznak má jen jeden popisek');
-      pravda(`${sirka} px: vidět je právě jeden z nich`,
-        v.every((o) => o.vidDl !== o.vidKr), 'odznak ukazuje oba popisky, nebo žádný');
+      pravda(`${sirka} px: každý odznak má na sobě napsáno, co je zač`,
+        v.every((o) => o.videt.length > 2), 'některý odznak je prázdný');
       // Hlavní kontrola: odznak se musí vejít do náhledu s rezervou,
       // a na jeden řádek (zalomený odznak je taky vada, jen tišší).
       const orez = v.filter((o) => o.presah > -1);
@@ -1582,19 +1595,15 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
       const zalomene = v.filter((o) => o.vyska > 30);
       pravda(`${sirka} px: a žádný se nezalomil na dva řádky`, zalomene.length === 0,
         zalomene.map((o) => `${o.druh} „${o.videt}" vysoký ${o.vyska} px`).join('; '));
-      if (sirka <= 1040) {
-        pravda(`${sirka} px: v úzkém náhledu se ukazuje zkratka`,
-          v.every((o) => o.vidKr), 'ukazuje se plný popisek');
-        // Pojistka proti bezzubé kontrole: kdyby se plný popisek vešel,
-        // nebylo by tu co řešit a záměna by byla jen zbytečná složitost.
-        const nevesel = v.filter((o) => o.plny && o.plny.pres > -1);
-        pravda(`${sirka} px: a aspoň jeden plný popisek by se do náhledu nevešel`,
-          nevesel.length > 0,
-          'všechny plné popisky se vejdou — záměnu za zkratku už není proč mít');
-      } else {
-        pravda(`${sirka} px: v širokém náhledu se ukazuje plný popisek`,
-          v.every((o) => o.vidDl), 'ukazuje se zkratka i na desktopu');
-      }
+      /* PLNÝ POPISEK VŠUDE. Zkrácená podoba zanikla s tím, jak náhled
+         na telefonu vyrostl ze 116 px na celou šířku karty; že se plný
+         popisek opravdu vejde, hlídá kontrola „žádný odznak nesahá až
+         na hranu náhledu" výš — tady se jen ověří, že se doopravdy
+         ukazuje ten plný, ne nějaký ořez. */
+      const PLNE = ['Na prodej', 'Dražba', 'Exekuce', 'Obecní záměr', 'Přímo od majitele'];
+      const divne = v.filter((o) => PLNE.indexOf(o.videt) === -1);
+      pravda(`${sirka} px: na odznaku stojí plný popisek kategorie`, divne.length === 0,
+        divne.map((o) => `${o.druh} ukazuje „${o.videt}"`).join('; '));
       await ctx.close();
     }
   }
