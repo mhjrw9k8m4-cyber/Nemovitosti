@@ -3478,6 +3478,75 @@ klíč v `data/archiv/stav.json` se jmenuje `nabidky`, já napsal `zive`,
 a kontrola tím tiše neměřila nic (0 živých → podmínka se přeskočila).
 Poznalo se to tak, že nic nevypsala.
 
+## 3bf. NALEZENO (z tvého průchodu webem): v žebříčku „Ceny po krajích" chyběla Praha a stránka o tom neřekla slovo — *opraveno 12. 10.*
+
+Na `cena-pozemku.html` stojí žebříček **„Ceny po krajích — zemědělská
+půda v Kč/m², od nejlevnějšího kraje."** Krajů je čtrnáct, v žebříčku
+jich bylo **třináct**. Kdo je z Prahy, prohlédl celý seznam a nenašel
+sebe — bez vysvětlení to vypadá jako vada výpisu.
+
+### Proč tam nebyla
+
+Není to vada výpočtu, je to **správné pravidlo s nepřiznaným
+následkem**. `priceStats` nepočítá do ceny zemědělské půdy nabídky nad
+**500 Kč/m²**: pole za takovou cenu je fakticky stavební parcela vedená
+v katastru jako „orná" a medián kraje by vytáhlo nahoru. Na obvyklou
+cenu je pak potřeba aspoň **10** nabídek téhož druhu.
+
+Naměřeno pro Prahu:
+
+| | |
+| --- | --- |
+| nabídek celkem | 23 |
+| z toho zemědělská půda | 10 |
+| …s cenou a výměrou v rozsahu | 10 |
+| **…do 500 Kč/m²** | **6** |
+| mez pro žebříček | 10 |
+
+Kč/m² těch deseti: 104, 114, 150, 204, 225, 295, 359, **660, 910,
+1 326**. Čtyři nejdražší pravidlo vyřadí — a tím spadne i celá Praha.
+V Praze je to tak správně: pole za 1 326 Kč/m² není cena zemědělské
+půdy. Pravidlo se proto nemění.
+
+### Co se změnilo
+
+Pod žebříčkem teď stojí věta, která to přizná a dá cestu dál:
+
+> **Jeden kraj tu není:** [Praha](../pozemky-praha-kraj.html).
+> Zemědělské půdy je v nabídce málo na to, aby z ní vyšla obvyklá cena —
+> potřebujeme aspoň 10 nabídek, u kterých cena za metr nepřekročí
+> 500 Kč. Dražší pole už je fakticky stavební parcela (viz „Jak tahle
+> čísla počítáme" pod tabulkou), a v Praze je takových většina. Vlastní
+> stránku ten kraj má.
+
+Jméno kraje je **odkaz** na jeho stránku: kdo se v žebříčku nenašel, má
+jít jedním klepnutím tam, kde nabídky toho kraje opravdu jsou. Seznam se
+nepíše ručně, dopočítá se z týchž dat jako žebříček, takže se s ním
+nemůže rozejít — a až Praha jednou mez překročí, věta zmizí sama.
+
+### Zkouška
+
+`scripts/test-ceny.mjs` má 151 → **154** kontrol. Hlídá se **vztah**, ne
+konkrétní počet: každý kraj, který má na webu vlastní stránku, musí být
+**buď v žebříčku, nebo jmenovitě ve větě o tom, kdo v něm není** — a
+u chybějících musí být napsané proč (mez 10 nabídek a 500 Kč/m²).
+
+**Prokázáno sabotáží — třemi:** smazaná věta o chybějících krajích (1
+kontrola), věta bez důvodu (1) a další kraj vypadlý ze žebříčku (1).
+
+Zkouška přitom napoprvé hlásila jako chybějící i **Vysočinu a Prahu** —
+a obě tam byly:
+
+* `vetaChybi[1].split('.')` rozseklo větu na „pozemky-praha-kraj**.**html",
+  takže jméno kraje z odkazu vypadlo. Značky se teď odstraňují **dřív**,
+  než se věta dělí na tečce.
+* kraje se píšou třemi způsoby („Ústecký kraj", „**Kraj** Vysočina",
+  „Praha"), takže srovnání muselo slovo „kraj" odstranit z obou stran,
+  ne jen z konce.
+
+Obě chyby byly ve zkoušce, ne na webu — a jsou tu zapsané proto, že
+právě takhle vzniká zelená zkouška, která nic nehlídá.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

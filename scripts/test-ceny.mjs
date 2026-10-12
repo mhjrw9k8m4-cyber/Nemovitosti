@@ -1189,6 +1189,62 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
 }
 
 
+/* ---- ŽEBŘÍČEK KRAJŮ MUSÍ BÝT ÚPLNÝ, NEBO PŘIZNAT, KDO V NĚM NENÍ ----
+
+   Nahlášeno z průchodu webem: v žebříčku „Ceny po krajích" na
+   cena-pozemku.html stálo třináct krajů ze čtrnácti a Praha chyběla,
+   aniž by stránka řekla slovo. Kdo je z Prahy, prohlédl celý seznam
+   a nenašel sebe.
+
+   Důvod je správné pravidlo: zemědělská půda nad 500 Kč/m² se do ceny
+   zemědělské půdy nepočítá (fakticky je to stavební parcela vedená jako
+   „orná") a v Praze je takových většina — naměřeno 10 nabídek, z toho
+   6 pod mezí, a na obvyklou cenu je potřeba aspoň 10. Pravidlo zůstává;
+   co chybělo, bylo přiznání.
+
+   Hlídá se tedy vztah, ne konkrétní počet: každý kraj, který má na webu
+   vlastní stránku, musí být BUĎ v žebříčku, NEBO jmenovitě ve větě
+   o tom, kdo v něm není. Kraj, který není ani tam, ani tam, je ta
+   vada. */
+{
+  const htmlCeny = readFileSync(new URL('../cena-pozemku.html', import.meta.url), 'utf8');
+  const bezZnacek = htmlCeny.replace(/<!--[\s\S]*?-->/g, ' ');
+  const vZebricku = [...bezZnacek.matchAll(/class="cenk-kraj">([^<]+)</g)].map((m) => m[1].trim());
+  const vetaChybi = /(?:Jeden kraj tu není|Tyhle kraje tu nejsou):<\/b>([\s\S]*?)<\/p>/.exec(bezZnacek);
+  /* ZNAČKY VEN DŘÍV, než se věta dělí na tečce. Napoprvé jsem dělil
+     rovnou — a v odkazu na kraj je „pozemky-praha-kraj.html", takže se
+     věta rozsekla na „.html" a jméno kraje z ní vypadlo. Zkouška pak
+     hlásila, že Praha nikde není, přitom byla. */
+  const priznane = vetaChybi
+    ? vetaChybi[1].replace(/<[^>]+>/g, '').split('.')[0].split(',').map((x) => x.trim()).filter(Boolean)
+    : [];
+  const stranky = [...htmlCeny.matchAll(/href="(pozemky-[a-z0-9-]+-kraj\.html)"/g)].map((m) => m[1]);
+  pravda(`žebříček krajů má řádky (${vZebricku.length})`, vZebricku.length >= 10,
+    'v tabulce „Ceny po krajích" nejsou kraje: ' + vZebricku.join(', '));
+  /* Jména se píšou třemi způsoby: „Ústecký kraj", „Kraj Vysočina"
+     a „Praha". Porovnává se proto jméno bez slova „kraj" na obou
+     stranách — bez toho zkouška hlásila jako chybějící i Vysočinu,
+     která v žebříčku je. */
+  const prvni = (x) => String(x).replace(/^kraj\s+/i, '').replace(/\s*kraj$/i, '').trim().toLowerCase();
+  const pokryte = new Set([...vZebricku, ...priznane].map(prvni));
+  const KRAJE = ['Praha', 'Středočeský', 'Jihočeský', 'Plzeňský', 'Karlovarský', 'Ústecký',
+    'Liberecký', 'Královéhradecký', 'Pardubický', 'Vysočina', 'Jihomoravský', 'Olomoucký',
+    'Zlínský', 'Moravskoslezský'];
+  const mimo = KRAJE.filter((k) => {
+    const soubor = 'pozemky-' + k.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-') + '-kraj.html';
+    if (!stranky.includes(soubor)) return false;      // kraj bez vlastní stránky sem nepatří
+    return !pokryte.has(prvni(k));
+  });
+  pravda('každý kraj s vlastní stránkou je v žebříčku, nebo se přiznává, že v něm není',
+    mimo.length === 0, 'ani v žebříčku, ani ve větě o chybějících: ' + mimo.join(', '));
+  if (priznane.length) {
+    pravda('a u chybějících je napsané PROČ',
+      /aspoň \d+ nabídek/.test(vetaChybi[1]) && /500/.test(vetaChybi[1]),
+      'věta o chybějících krajích neříká, jaká mez to způsobila');
+  }
+}
+
 console.log(zpravy.join('\n'));
 
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

@@ -1849,6 +1849,31 @@ ${kOvereni.slice(0, STROP_ZMEN).map(radekZmeny).join('\n')}
           <span class="cenk-pasmo">${fmt(x.s.lo)}\u2013${fmt(x.s.hi)}</span>
         </a>`;
   }).join('\n');
+  /* KTERÝ KRAJ V ŽEBŘÍČKU NENÍ A PROČ.
+     Nahlášeno z průchodu webem: v žebříčku „Ceny po krajích" stálo
+     třináct krajů ze čtrnácti a Praha chyběla, aniž by stránka řekla
+     slovo. Kdo je z Prahy, prohlédl celý seznam a nenašel sebe.
+
+     Důvod je v pravidle o kus výš (`priceStats`): zemědělská půda nad
+     500 Kč/m² se do ceny zemědělské půdy nepočítá, protože to fakticky
+     je stavební parcela vedená jako „orná". V Praze je to většina —
+     naměřeno: 10 nabídek zemědělské půdy, z toho jen 6 pod 500 Kč/m²,
+     a na obvyklou cenu je potřeba aspoň 10. Pravidlo je správné a
+     nemění se; co chybělo, je přiznání, že kvůli němu jeden kraj
+     v žebříčku není.
+
+     Seznam se nepíše ručně: dopočítá se z dat, takže se nemůže rozejít
+     s tím, co se vypsalo nad ním. */
+  const chybiKraje = KRAJ_ORDER
+    .filter((k) => byKraj[k] && byKraj[k].length && !krajeData.some((x) => x.k === k))
+    /* Odkaz, ne jen jméno: kdo se v žebříčku nenašel, má jít jedním
+       klepnutím tam, kde nabídky toho kraje opravdu jsou. */
+    .map((k) => {
+      const disp = (KRAJ_META[k] || {}).disp || (k + ' kraj');
+      return hasKrajPage.has(k) ? `<a href="${krajFile(k)}">${esc(disp)}</a>` : esc(disp);
+    });
+  const krajeChybiVeta = !chybiKraje.length ? '' : `
+          <p class="rules-note" style="margin-bottom:0;"><b>${chybiKraje.length === 1 ? 'Jeden kraj tu není' : 'Tyhle kraje tu nejsou'}:</b> ${chybiKraje.join(', ')}. Zemědělské půdy je v nabídce málo na to, aby z ní vyšla obvyklá cena — potřebujeme aspoň ${MIN_PRICE} nabídek, u kterých cena za metr nepřekročí 500&nbsp;Kč. Dražší pole už je fakticky stavební parcela (viz „Jak tahle čísla počítáme" pod tabulkou), a v Praze je takových většina. Vlastní stránku ${chybiKraje.length === 1 ? 'ten kraj' : 'ty kraje'} ${chybiKraje.length === 1 ? 'má' : 'mají'}.</p>`;
   const krajeSekce = !krajeRadky ? '' : `
       <div class="add-card" style="margin-top:22px;">
         <div class="rules-sect">
@@ -1856,7 +1881,7 @@ ${kOvereni.slice(0, STROP_ZMEN).map(radekZmeny).join('\n')}
           <p class="rules-note cenk-uvod" style="margin-top:0;">Zemědělská půda v <b>Kč/m²</b>, od nejlevnějšího kraje. Velké číslo je obvyklá cena, pod ním rozpětí, ve kterém leží polovina nabídek.</p>
           <div class="cenk-tab" aria-labelledby="cenk-nadpis">
 ${krajeRadky}
-          </div>
+          </div>${krajeChybiVeta}
         </div>
       </div>`;
 
