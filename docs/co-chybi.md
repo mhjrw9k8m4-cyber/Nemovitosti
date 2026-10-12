@@ -3896,6 +3896,29 @@ třetina. Nová mez je **0,35**, zbytek je rezerva na pohyb dat; proč, to
 u ní stojí napsané. Že pořád měří, je ověřeno: s mezí 0,99 kontrola
 spadne.
 
+## 3bm. VLASTNÍ CHYBA (CI): jméno políčka si s sebou vezlo vysvětlení a věta se rozsypala — *opraveno 12. 10.*
+
+Při přepisu hlášky o částečném uložení hlídání (§3bg) se do výčtu
+nepropsaných políček dostalo `'okolí vašeho místa — hlídá se celý
+okres'`. Výčet se vkládá doprostřed věty, takže na obrazovce stálo:
+
+> Hlídání jsme uložili, ale **okolí vašeho místa — hlídá se celý okres**
+> zatím hlídat neumíme.
+
+Chytla to `scripts/test-okruh-hlidani.mjs` v CI (hledala v hlášce slovo
+„okruh", které tím přepisem zmizelo) — tedy zkouška, která tu už byla,
+ne nová. Místní dávka to nechytla proto, že jsem po té opravě pustil jen
+zkoušky kolem hlídání ve formuláři, ne tuhle.
+
+**Oprava.** Políčko se jmenuje `„okruh" kolem vašeho místa` a co se
+hlídá místo něj, je vlastní věta: *„Místo okruhu hlídáme celý okres."*
+
+Dvě nové kontroly v `scripts/test-hlidani.mjs`: ta věta musí existovat,
+a **žádné jméno políčka ve výčtu nesmí obsahovat pomlčku s vysvětlením**
+— to je ta past, do které jsem spadl. **Prokázáno sabotáží:** po
+vyříznutí věty spadnou dvě kontroly, jedna z nich v prohlížeči na
+skutečné hlášce po neúspěšném uložení.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

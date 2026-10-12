@@ -867,9 +867,17 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   je('hláška', 'a říká, co z zadání platí dál',
     /Ostatní podmínky platí/.test(kod), true);
   for (const policko of ['„cenu od"', '„výměru do"', '„nejvýš za metr čtvereční"',
-    'volbu „jen celé pozemky"', 'okolí vašeho místa']) {
+    'volbu „jen celé pozemky"', '„okruh" kolem vašeho místa']) {
     je('hláška', `jmenuje políčko ${policko} lidsky`, kod.indexOf(policko) !== -1, true);
   }
+  /* A JMÉNO POLÍČKA MUSÍ DO VĚTY ZAPADNOUT. Jednou tu stálo „okolí
+     vašeho místa — hlídá se celý okres", takže na obrazovce vyšlo
+     „ale okolí vašeho místa — hlídá se celý okres zatím hlídat
+     neumíme". Co se hlídá MÍSTO okruhu, patří do vlastní věty. */
+  je('hláška', 'a co se hlídá místo okruhu, stojí ve vlastní větě',
+    /Místo okruhu hlídáme celý okres\./.test(kod), true);
+  je('hláška', 'a žádné jméno políčka neveze pomlčku s vysvětlením',
+    /nepropsano\.push\('[^']*—/.test(kod), false);
   /* A ty názvy musí odpovídat tomu, co je u políčka napsané. */
   for (const [vKod, vFormulari] of [['„cenu od"', 'Cena od'], ['„výměru do"', 'Výměra do'],
     ['„nejvýš za metr čtvereční"', 'Nejvýš za metr čtvereční']]) {

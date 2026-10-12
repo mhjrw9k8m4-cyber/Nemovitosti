@@ -902,10 +902,18 @@
         var nepropsano = [];
         if (!jeSiroke && (k.min_price || k.max_area || k.max_perm2)) nepropsano.push('„cenu od", „výměru do" a „nejvýš za metr čtvereční"');
         if (v.uroven !== 'celek' && v.uroven !== 'bezOkruhu' && k.jen_celek) nepropsano.push('volbu „jen celé pozemky"');
-        if (v.uroven !== 'celek' && k.okruh_km) nepropsano.push('okolí vašeho místa — hlídá se celý okres');
+        /* NÁZEV POLÍČKA MUSÍ DO VĚTY ZAPADNOUT. Dřív se sem vkládalo
+           „okolí vašeho místa — hlídá se celý okres", takže na obrazovce
+           stálo „ale okolí vašeho místa — hlídá se celý okres zatím
+           hlídat neumíme". Co se hlídá MÍSTO okruhu, patří do vlastní
+           věty, ne doprostřed výčtu. */
+        var misoOkruhu = (v.uroven !== 'celek' && k.okruh_km);
+        if (misoOkruhu) nepropsano.push('„okruh" kolem vašeho místa');
         if (nepropsano.length) {
           var text = 'Hlídání jsme uložili, ale ' + nepropsano.join(' ani ')
-            + ' zatím hlídat neumíme. Ostatní podmínky platí a nové pozemky vám podle nich najdeme.';
+            + ' zatím hlídat neumíme.'
+            + (misoOkruhu ? ' Místo okruhu hlídáme celý okres.' : '')
+            + ' Ostatní podmínky platí a nové pozemky vám podle nich najdeme.';
           msg.textContent = text;
           msg.className = 'hl-msg err';
           // a hlavně: ať to přežije přepnutí záložky hned za chvíli
