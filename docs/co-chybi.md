@@ -3816,6 +3816,46 @@ Zapsáno i proto, že je to **druhá** zkouška v tomhle repozitáři, která
 se opírala o náhodu v datech (první byla mez 220 px naladěná na místní
 vykreslení). Vzor je stejný: číslo nebo dotaz z hlavy místo z dat.
 
+## 3bk. NALEZENO (ze tvého seznamu, bod 26): zkratka „vyplnit z odkazu" nikde neřekla, že pozemek smí vložit jen majitel — *opraveno 12. 10.*
+
+Ve formuláři na `pridat.html` je pole „Vložte odkaz na svůj inzerát".
+Vloží se adresa, web ji najde ve vlastních datech (`js/predvyplneni.js`)
+a doplní obec, okres, výměru, cenu, druh a sítě. **Nic se neověřuje** —
+stačí odkaz na *kterýkoli* inzerát, který náš robot kdy stáhl, tedy
+1 939 cizích nabídek z Bezrealitek, Farmy.cz, státní půdy a dražebních
+portálů. Hotová nabídka se pak na mapě objeví s odznakem **„Přímo od
+majitele"** (`pridat.html`, `.ul-verified`).
+
+Hláška, kterou zkratka napsala, končila větou *„Zkontrolujte to
+a připište popis — ten za vás vymýšlet nebudeme."* O tom, kdo pozemek
+vložit smí, neřekla nic. Web tím mlčky vedl k tomu, že někdo vezme cizí
+inzerát, proklikne čtyři políčka a jeho pozemek se tu zveřejní jako
+„přímo od majitele". Ověřit vlastnictví neumíme (k tomu by byl potřeba
+výpis z katastru) — ale **říct to umíme**, a dokud to tam nestálo,
+nedalo se nikomu vyčítat, že to nevěděl.
+
+**Oprava.** `js/predvyplneni.js` má teď jednu věc navíc — větu, která
+se připojí ke **každé** hlášce o doplnění:
+
+> Vložit pozemek smí jen jeho majitel nebo ten, kdo k tomu má jeho
+> souhlas — na mapě se objeví jako „Přímo od majitele".
+
+Připojuje se na obou cestách: i když se nedoplnilo nic (odkaz vedl na
+víc pozemků a údaje se rozcházejí), formulář se dál vyplňuje a výsledek
+bude pořád „Přímo od majitele".
+
+**Co se nezměnilo:** nic se nezakazuje ani neblokuje. Vlastnictví
+neověřujeme, takže tvrdit „zkontrolovali jsme to" by byla lež; první
+nabídku z nového účtu si tak jako tak projdeme ručně (to na stránce
+stojí). Tahle oprava jen doplňuje, co na obrazovce chybělo.
+
+49 → **53** kontrol v `scripts/test-predvyplneni.mjs`. **Prokázáno
+sabotáží:** když se věta ze zdroje i z `js/min/` vyřízne a nahradí
+neutrálním „Hotovo.", spadnou **4 kontroly** — tři na modulu (obě cesty
+hlášky i zmínka o odznaku) a jedna **v prohlížeči**, na textu, který
+je po vložení skutečného odkazu z dat vidět nad formulářem. Ta poslední
+je ta důležitá: hlídá, že věta došla na obrazovku, ne jen do modulu.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

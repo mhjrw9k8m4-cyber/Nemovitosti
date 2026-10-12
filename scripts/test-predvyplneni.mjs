@@ -75,6 +75,11 @@ pravda('modul se načetl', !!(P && P.najdiPodleOdkazu));
   const nic = P.coDoplnit([C, D]);
   je('když se rozchází všechno, nedoplní se nic', Object.keys(nic.hodnoty), []);
   pravda('a řekne se to', /rozcházejí/.test(P.hlaska(nic)), P.hlaska(nic));
+  /* I na téhle cestě (nedoplnilo se nic, jen se řeklo, že se údaje
+     rozcházejí) se formulář dál vyplňuje a výsledek bude „Přímo od
+     majitele" — věta o vlastnictví tu tedy chybět nesmí. */
+  pravda('a o vlastnictví se mlčí ani tady', /Vložit pozemek smí jen jeho majitel/.test(P.hlaska(nic)),
+    P.hlaska(nic));
 
   /* A totéž na SKUTEČNÝCH datech. Vícepozemkové dražby tam být nemusí
      (záleží, co robot ten den našel), takže se z jejich nepřítomnosti
@@ -129,6 +134,14 @@ je('a prázdno taky ne', P.normalizujOdkaz(''), '');
   pravda('pomlčka místo parcelního čísla se nepřenáší', !('p-parcela' in co.hodnoty),
     'do formuláře by se dostala „—" jako parcelní číslo');
   pravda('a je řečeno, co se doplnilo', /obec/.test(P.hlaska(co)) && /popis/.test(P.hlaska(co)),
+    P.hlaska(co));
+  /* Předvyplňuje se z CIZÍHO zveřejněného inzerátu: stačí jeho adresa a nic
+     se neověřuje. Hotový inzerát se přitom na mapě objeví s odznakem
+     „Přímo od majitele". Hláška proto musí říct, kdo pozemek vložit smí —
+     jinak web mlčky vede k tomu, že se cizí pozemek vydá za svůj. */
+  pravda('hláška řekne, kdo pozemek vložit smí', /Vložit pozemek smí jen jeho majitel/.test(P.hlaska(co)),
+    P.hlaska(co));
+  pravda('a že se objeví jako „Přímo od majitele"', /„Přímo od majitele"/.test(P.hlaska(co)),
     P.hlaska(co));
 }
 
@@ -254,6 +267,11 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
   pravda('formulář už nenabízí pole, do kterého by se odkaz zahodil',
     po.odkazovePole === false, 'pole p-odkaz je zpátky, a pořád nikam nevede');
   pravda('a je napsané, co se doplnilo', /Doplnili jsme/.test(po.hlaska), po.hlaska.trim().slice(0, 90));
+  /* A to hlavní musí být na OBRAZOVCE, ne jen v modulu: odkaz vedl na cizí
+     inzerát a hotová nabídka se ukáže jako „Přímo od majitele". */
+  pravda('a na obrazovce stojí, kdo pozemek vložit smí',
+    /Vložit pozemek smí jen jeho majitel/.test(po.hlaska) && /Přímo od majitele/.test(po.hlaska),
+    po.hlaska.trim().slice(-160));
   /* Popis se nevymýšlí — a nesmí se stát, že ho zkratka vyplní za člověka. */
   const popis = await p.evaluate(() => (document.getElementById('p-popis') || {}).value || '');
   pravda('popis zůstane prázdný', popis === '', `zkratka napsala popis: „${popis.slice(0, 60)}"`);

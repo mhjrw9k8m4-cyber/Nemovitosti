@@ -109,6 +109,8 @@
     return ven;
   }
 
+  var VLASTNICTVI = ' Vložit pozemek smí jen jeho majitel nebo ten, kdo k tomu má jeho souhlas — na mapě se objeví jako „Přímo od majitele".';
+
   function hlaska(co) {
     if (!co) return '';
 
@@ -118,7 +120,7 @@
         ' v jedné dražbě, takže doplňujeme jen to, co mají společné. ';
     }
     if (!co.nazvy.length) {
-      return uvod ? uvod + 'Údaje se u nich rozcházejí, vyplňte je prosím podle svého pozemku.' : '';
+      return uvod ? uvod + 'Údaje se u nich rozcházejí, vyplňte je prosím podle svého pozemku.' + VLASTNICTVI : '';
     }
     var n = co.nazvy.slice();
     var posledni = n.pop();
@@ -132,7 +134,7 @@
         (r.length ? ' se u nich rozcházejí' : ' se u nich rozchází') +
         ' — doplňte prosím podle svého pozemku.';
     }
-    return veta + ' Zkontrolujte to a připište popis — ten za vás vymýšlet nebudeme.';
+    return veta + ' Zkontrolujte to a připište popis — ten za vás vymýšlet nebudeme.' + VLASTNICTVI;
   }
 
   global.PKPredvyplneni = {
