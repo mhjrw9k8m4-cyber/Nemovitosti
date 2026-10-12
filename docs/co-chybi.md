@@ -3856,6 +3856,41 @@ hlášky i zmínka o odznaku) a jedna **v prohlížeči**, na textu, který
 je po vložení skutečného odkazu z dat vidět nad formulářem. Ta poslední
 je ta důležitá: hlídá, že věta došla na obrazovku, ne jen do modulu.
 
+## 3bl. NALEZENO (ze tvého seznamu, body 7 a 22): na jedné kartě stálo „cena je zhruba uprostřed" a hned pod tím „o 69 % níž" — *opraveno 12. 10.*
+
+Na stránce pozemku jsou dvě srovnání pod sebou: verdikt (percentil ceny
+za m²) a blok odhadu obvyklé ceny. Verdikt bere všechny výměry, odhad jen
+podobné — a protože cena za metr s výměrou klesá, mohou vyjít jinak.
+Pojistka proti tomu v `js/ceny.js` existovala, ale hlídala jen krajní
+verdikt („Vyšší cena"). Prostřední jí propadl. Naměřeno na 1 987
+nabídkách: u **39 z 981** verdiktů byl na obrazovce tenhle rozpor
+(Koloveč, okres Domažlice, stavební pozemek 1 161 m²):
+
+> Průměrná cena · Cena za m² je zhruba **uprostřed** pozemků téhož druhu
+> v prodeji v Plzeňském kraji (10 nabídek).
+> Nabídková cena 1 295 000 Kč · Obvyklá cena v Plzeňském kraji
+> 4 122 087 Kč · **o 69 % níž**
+
+Obě věty se odvolávají na týž kraj a týž druh. Medián rozdílu u těch 39
+je 27 %, maximum 71 %.
+
+**Oprava.** Pravidlo je teď jedno a platí pro celou stupnici: když odhad
+tiskne slevu (≥ 15 %), smí nad ní stát jen ten nízký verdikt. Cena: 981 →
+**942** verdiktů (−4 %). Číslo se nezahazuje — blok odhadu zůstává a je
+to to konkrétnější tvrzení (srovnává s podobně velkými pozemky).
+
+154 → **159** kontrol v `scripts/test-ceny.mjs`. Zkouška je **párová**:
+týž pozemek na 43. percentilu dvakrát, jen cena podobně velkých sousedů
+se liší. S drahými sousedy verdikt zmizí, s levnými zůstane — takže se
+nedá splést „pojistka zabrala" s „na data nebylo dost vzorku".
+**Prokázáno sabotáží:** návrat meze na `pct >= 65` shodí 2 kontroly,
+z toho jedna vypíše všech 39 skutečných nabídek i s jejich čísly.
+
+Vedlejší nález: `scripts/test-shoda.mjs` měl mez „percentil dostane víc
+než polovina nabídek". 942 z 1 939 je 48,6 %, takže mez spadla. Není to
+regres modelu — mez má poznat, kdyby verdikt zmizel skoro všem, a na to
+45 % stačí. Napsáno to je u ní.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

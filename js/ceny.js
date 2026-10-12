@@ -777,10 +777,35 @@
            případy ze 16 na 11 z 1 400. Zbytek se neukáže vůbec: verdikt,
            který si stránka o dva odstavce níž sama vyvrátí, je horší než
            žádný. Číslo se tím nezahazuje — rada pod ním ho řekne dál,
-           a s konkrétními korunami. */
+           a s konkrétními korunami.
+
+           PRVNÍ PODOBA TÉHLE POJISTKY HLÍDALA JEN KRAJNÍ VERDIKT, a tím
+           jí propadl ten prostřední. Naměřeno na 1 987 nabídkách: u 39
+           z 981 verdiktů stálo na jedné obrazovce tohle (Koloveč,
+           okres Domažlice, stavební pozemek 1 161 m²):
+
+               Průměrná cena · Cena za m² je zhruba UPROSTŘED pozemků
+               téhož druhu v prodeji v Plzeňském kraji (10 nabídek).
+               Nabídková cena              1 295 000 Kč
+               Obvyklá cena v Plzeňském kraji  4 122 087 Kč
+               o 69 % NÍŽ
+
+           Obě věty se odvolávají na týž kraj a týž druh a čtou se jako
+           odpověď na tutéž otázku, přitom jedna říká „uprostřed" a druhá
+           „o 69 % níž". Rozdíl mezi nimi je jediný a na obrazovce
+           nenápadný: percentil bere všechny výměry, odhad jen podobné.
+           Medián rozdílu u těch 39 je 27 %, maximum 71 %.
+
+           Pravidlo je proto jedno a platí pro celou stupnici: když odhad
+           tiskne slevu (pod −15 %), smí verdikt být jen ten nízký.
+           Všechno ostatní, včetně „Průměrné ceny", si s tiskanou slevou
+           odporuje. Cena: 981 → 942 verdiktů (−4 %). Opačný směr se
+           nehlídá podle viditelnosti, ale podle pravdivosti: odhad nad
+           cenou se netiskne vůbec, a přesto se „Výhodná cena" nesmí
+           ukázat, když pozemek je pro svou velikost drahý. */
         var od = odhad(d);
         if (od && od.podleVelikosti && !od.podil) {
-          if (pct >= 65 && od.podOdhadem >= 15) return null;
+          if (pct > 35 && od.podOdhadem >= 15) return null;
           if (pct <= 35 && od.podOdhadem <= -15) return null;
         }
         return { pct: pct, cheaper: 100 - pct, sample: arr.length,

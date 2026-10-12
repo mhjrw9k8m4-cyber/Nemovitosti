@@ -139,8 +139,14 @@ if (!vysledek.chyba) {
   pravda('štítek „k ověření" dostane jen hrstka nabídek, ne polovina webu',
     vysledek.kOvereni > 0 && vysledek.kOvereni < vysledek.pocet * 0.05,
     `označeno ${vysledek.kOvereni} z ${vysledek.pocet}`);
-  pravda('percentil se spočítá u většiny nabídek',
-    vysledek.sPercentilem > vysledek.pocet * 0.5,
+  /* MEZ JE 0,45, NE 0,5. Verdikt se schválně nedává tam, kde by si
+     odporoval s odhadem pro danou velikost (js/ceny.js), a když se ta
+     pojistka rozšířila i na prostřední verdikt, spadl podíl z 981 na 942
+     z 1 939 — tedy pod polovinu. Mez tu není kvůli kráse čísla: má
+     poznat, kdyby verdikt zmizel skoro všem (rozbitý model, prázdné
+     přihrádky). Na to 45 % stačí a 48,6 % se do toho vejde. */
+  pravda('percentil se spočítá u velké části nabídek',
+    vysledek.sPercentilem > vysledek.pocet * 0.45,
     `spočítán u ${vysledek.sPercentilem} z ${vysledek.pocet}`);
   pravda('odhad obvyklé ceny vznikne u podstatné části, ale ne u všech',
     vysledek.sOdhadem > 100 && vysledek.sOdhadem < vysledek.pocet,

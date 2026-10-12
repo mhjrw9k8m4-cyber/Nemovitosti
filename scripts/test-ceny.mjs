@@ -233,6 +233,53 @@ pravda('nejlevnější nabídka je v dolní části žebříčku', !!pc && pc.ch
     !!odBP && odBP.podOdhadem < 25, JSON.stringify(odBP));
 }
 
+// --- 7c) „Průměrná cena" nad vytištěnou slevou -----------------------
+/* Na stránce pozemku stojí verdikt a hned pod ním blok odhadu. Verdikt
+   srovnává cenu za metr se všemi výměrami, odhad jen s podobnými — a tím
+   si ta dvě čísla mohou odporovat. Krajní verdikt („Vyšší cena") už
+   pojistka hlídala, prostřední ne, a tak na webu stálo tohle (Koloveč,
+   okres Domažlice, stavební pozemek 1 161 m², naměřeno 12. 10. na
+   1 987 nabídkách u 39 z 981 verdiktů):
+
+       Průměrná cena · Cena za m² je zhruba UPROSTŘED pozemků téhož
+       druhu v prodeji v Plzeňském kraji (10 nabídek).
+       Obvyklá cena v Plzeňském kraji   4 122 087 Kč
+       o 69 % NÍŽ
+
+   Obě věty mluví o témže kraji a témže druhu, a říkají opak.
+
+   Zkouška je PÁROVÁ a liší se jedinou věcí: cenou podobně velkých
+   sousedů. Pozemek je v obou případech na 43. percentilu, takže kdyby
+   verdikt zmizel kvůli datům (málo vzorku, malý rozptyl), zmizel by
+   v obou — a to je přesně to, co by jinak nešlo rozpoznat. */
+{
+  const VELKE = pole(5, (i) => ({ place: 'V' + i, okres: 'Cheb', type: 'sale',
+    druh: 'stavební pozemek', area: 20000, price: 6000000 + i * 10000 }));   // 300 Kč/m²
+  const sousedi = (zaM2) => pole(8, (i) => ({ place: 'M' + i, okres: 'Cheb', type: 'sale',
+    druh: 'stavební pozemek', area: 1000, price: zaM2 * 1000 + i * 10000 }));
+  const CIL = { place: 'Cíl', okres: 'Cheb', type: 'sale', druh: 'stavební pozemek',
+    area: 1000, price: 1000000 };                                            // 1 000 Kč/m²
+
+  // A) sousedé stejné velikosti za 3 500 Kč/m² → blok odhadu vytiskne slevu.
+  const mA = PK_CENY.postav([...VELKE, ...sousedi(3500), CIL], OKRES_KRAJ);
+  const odA = mA.odhad(CIL);
+  pravda('kontrolní podmínka: odhad podle velikosti slevu opravdu tiskne',
+    !!odA && odA.podleVelikosti && odA.podOdhadem >= 15 && !odA.podil,
+    `podleVelikosti ${odA && odA.podleVelikosti}, pod odhadem ${odA && odA.podOdhadem} % — bez vytištěné slevy by zkouška nic neměřila`);
+  je('verdikt „Průměrná cena" se nad vytištěnou slevou neukáže', mA.percentil(CIL), null);
+
+  // D) tíž sousedé za 1 100 Kč/m² → sleva vyjde 12 %, blok ji netiskne.
+  const mD = PK_CENY.postav([...VELKE, ...sousedi(1100), CIL], OKRES_KRAJ);
+  const odD = mD.odhad(CIL), pcD = mD.percentil(CIL);
+  pravda('kontrolní podmínka: bez drahých sousedů se sleva netiskne',
+    !!odD && odD.podleVelikosti && odD.podOdhadem < 15,
+    `pod odhadem ${odD && odD.podOdhadem} %`);
+  pravda('a tentýž pozemek pak verdikt dostane — pojistka není plošná',
+    !!pcD && pcD.pct > 35 && pcD.pct < 65,
+    pcD ? `percentil ${pcD.pct} %` : 'verdikt zmizel i tam, kde si nic neodporuje');
+  je('a je to týž 43. percentil jako v případě A', pcD && pcD.pct, 43);
+}
+
 // --- 8) Skloňování krajů ---------------------------------------------
 // Vlastní chyba, která se objevila hned na třech místech: web psal
 // „v Středočeský kraji", „v Vysočina kraji". Českému čtenáři to okamžitě
@@ -801,11 +848,15 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
   const odporuje = sOdznakem.filter((d) => {
     const p2 = M.percentil(d), o = M.odhad(d);
     if (!o || !o.podleVelikosti || o.podil) return false;
-    const drazsi = p2.pct >= 65;
+    /* NEJEN „Vyšší cena". Dřív tu stálo `>= 65`, a tím kontrole propadl
+       prostřední verdikt: „Cena je zhruba uprostřed" a pod tím „o 69 %
+       níž" je na jedné obrazovce týž rozpor. Když odhad tiskne slevu,
+       smí nad ní stát jen ten nízký verdikt. */
+    const neniLevny = p2.pct > 35;
     const podObvyklou = o.podOdhadem >= 15;
-    return drazsi && podObvyklou;
+    return neniLevny && podObvyklou;
   });
-  je('odznak „Vyšší cena" nestojí nad radou „pod obvyklou"' +
+  je('žádný verdikt kromě „Výhodné ceny" nestojí nad radou „pod obvyklou"' +
     (odporuje.length ? ' — ' + odporuje.slice(0, 3).map((d) => `${d.place} (${d.okres}): percentil ${M.percentil(d).pct} %, pod odhadem ${M.odhad(d).podOdhadem} %`).join(' | ') : ''),
     odporuje.length, 0);
 

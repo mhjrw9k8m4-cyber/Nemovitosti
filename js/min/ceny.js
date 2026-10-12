@@ -341,7 +341,7 @@
 
         var od = odhad(d);
         if (od && od.podleVelikosti && !od.podil) {
-          if (pct >= 65 && od.podOdhadem >= 15) return null;
+          if (pct > 35 && od.podOdhadem >= 15) return null;
           if (pct <= 35 && od.podOdhadem <= -15) return null;
         }
         return { pct: pct, cheaper: 100 - pct, sample: arr.length,
