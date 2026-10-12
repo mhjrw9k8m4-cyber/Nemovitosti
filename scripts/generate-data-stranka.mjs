@@ -6,6 +6,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+
+const req = createRequire(import.meta.url);
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const esc = (s) => String(s == null ? '' : s)
@@ -16,6 +19,25 @@ export function spust() {
   const popis = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'pole.json'), 'utf8'));
   const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8'));
   const nabidek = (data.opportunities || []).length;
+  /* PODÍLY DVĚMA ZPŮSOBY, PROTOŽE JSOU TO DVĚ RŮZNÁ ČÍSLA.
+     Tady stálo jen „522 nabídek" spočítaných ze souboru, kdežto na mapě
+     jich filtr „podíl" ukazuje 521 — a kdo si obě čísla přečetl, musel
+     si myslet, že se web někde počítá špatně. Přitom obě platí: v
+     souboru je 522 ŘÁDKŮ, ale jeden z nich je tatáž nabídka vypsaná
+     dvakrát ze dvou zdrojů. Stránka to tedy řekne naplno, místo aby
+     jedno z těch čísel zamlčela. Je to tentýž případ jako u celkového
+     počtu o kus výš (viz poznámka u `duplicit`) — jen u podílů se na to
+     zapomnělo.
+     Počítá se touž funkcí, jakou k tomu používá web, ne vlastní kopií:
+     dvě kopie pravidla se dřív nebo později rozejdou. */
+  const podiluVSouboru = (data.opportunities || []).filter((o) => o.podil).length;
+  const podiluNaWebu = (() => {
+    try {
+      const H = req(path.join(ROOT, 'js', 'hlidani-logika.js'));
+      const C = req(path.join(ROOT, 'js', 'cisteni.js'));
+      return H.bezDuplicit(C.pozemky((data.opportunities || []).slice())).filter((o) => o.podil).length;
+    } catch (e) { return podiluVSouboru; }
+  })();
   /* KOLIK Z TOHO JSOU DUPLICITY. Bez tohohle čísla si stránka
      odporovala sama se zbytkem webu: tady stálo „2 018 nabídek",
      kdežto stránka okresu Hodonín 119 a řez 121. Číslo se nepočítá
@@ -110,7 +132,7 @@ export function spust() {
       <li><b>Nejsou to prodejní ceny.</b> Jsou to ceny <b>nabídkové</b> — za kolik se pozemek
         nabízí, ne za kolik se prodal. Skutečné prodejní ceny ve veřejných zdrojích nejsou.</li>
       <li><b>Nejsou to všechny pozemky v ČR</b>, jen ty, které jsou právě někde nabízené.</li>
-      <li><b>U spoluvlastnického podílu</b> (<code>podil: true</code>, ${fmt((data.opportunities || []).filter((o) => o.podil).length)} nabídek)
+      <li><b>U spoluvlastnického podílu</b> (<code>podil: true</code>, ${fmt(podiluVSouboru)} ${podiluVSouboru === 1 ? 'řádek' : (podiluVSouboru >= 2 && podiluVSouboru <= 4 ? 'řádky' : 'řádků')} v souboru${podiluNaWebu !== podiluVSouboru ? `, na webu ${fmt(podiluNaWebu)} po odstranění duplicit` : ''})
         je cena za zlomek, ale výměra za celou parcelu. Kdo dělí jedno druhým bez ohledu na
         <code>zlomek</code>, dostane číslo, které neplatí pro nikoho.</li>
       <li><b>Co není v poli <code>site</code>, není totéž co „není".</b> Sítě se čtou z popisu

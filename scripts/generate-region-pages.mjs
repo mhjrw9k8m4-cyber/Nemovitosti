@@ -1915,7 +1915,20 @@ ${atZl && atZl.pocet >= MIN_ZMEN ? `          <p class="trh-veta">Cena šla dol�
      prokousat.
      Nic z toho se nemaže — mazat výhrady a nechat čísla je přesně ta
      nepoctivost, které se celý web vyhýbá. Jen stojí na jednom místě,
-     na konci a sbalené, kde si je přečte ten, koho zajímají. */
+     na konci a sbalené, kde si je přečte ten, koho zajímají.
+
+     SLOVO „SLEDOVANÝCH" V TÉ VĚTĚ O CENZUROVÁNÍ NENÍ OZDOBA. Bez něj
+     tam stálo „1 940 nabídek na trhu pořád je", kdežto stránka s daty
+     ve stejnou chvíli psala „na stránkách najdete 1 939 pozemků" — a
+     ta jednička rozdílu vypadá jako chyba v počítání. Obě čísla přitom
+     platí, jen počítají jiné množiny: 1 939 je dnešní soubor po
+     odstranění duplicit, 1 940 je ARCHIV, tedy množina, kterou web
+     sleduje v čase. Naměřeno: archiv zná 2 nabídky, které v dnešním
+     souboru už nejsou (zmizely ze zdroje a archiv je zavírá až dalším
+     během), a nezná 1, která dnes přibyla. 1 939 + 2 − 1 = 1 940.
+     Kdo tu větu bude někdy přepisovat: ta jednička není vada
+     k opravení, je to vlastnost archivu, a slovo „sledovaných" je to,
+     co z rozporu dělá informaci. */
   const metodika = `
           <details class="cen-metodika cen-samostatna">
             <summary>Jak tahle čísla počítáme</summary>
@@ -1924,7 +1937,7 @@ ${atZl && atZl.pocet >= MIN_ZMEN ? `          <p class="trh-veta">Cena šla dol�
             <p class="rules-note">Do mediánů <b>nezapočítáváme ceny, které nestanovil trh</b>: vyvolávací cenu dražby, odhad u exekuce ani <b>prodej státní půdy podle § 12</b> — tam prodává Státní pozemkový úřad oprávněné osobě za cenu stanovenou úředně. Je to desetina všech nabídek a cena je jinde: u orné půdy medián 8 Kč/m² proti 74 Kč/m² na trhu, u zahrady 40 proti 791. Smíchané by vyšlo číslo, které neplatí ani pro stát, ani pro trh. Ty nabídky na webu zůstávají, jen neurčují „obvyklou cenu".</p>
             <p class="rules-note"><b>Spoluvlastnické podíly se započítávají</b>, ale přepočtené: cena se dělí výměrou, která kupujícímu připadne, ne celou parcelou. U podílu 1/6 je tedy cena za metr šestkrát vyšší než při naivním dělení. Když velikost podílu inzerát neuvádí, nabídka se do mediánu nedostane vůbec — vymyslet si ji nelze. Kraje se počítají jen ze zemědělské půdy, aby se nemíchala s dražšími stavebními parcelami; vyhledávač výš ukazuje medián za celý okres, protože menší celek by byla hrstka nabídek.</p>
 ${maTrh ? `            <p class="rules-note">Do podílu „po N dnech pryč" jdou <b>jen nabídky, které jsme mohli sledovat celých N dní</b> — proto je u každého čísla napsané, z kolika. „Pryč" znamená, že nabídka zmizela ze zdroje; nemusí to znamenat prodáno, mohla být i stažena.</p>
-            <p class="rules-note"><b>Průměrnou dobu prodeje tu nenajdete</b>, protože by to byla nepravda. Okno je ${fmt(AT.okno.dni)} dní a ${fmt(AT.sledovano.zivych)} nabídek na trhu pořád je — u většiny z nich ještě nevíme, jak dlouho tam nakonec budou. Medián jen z těch, co už zmizely, by vyšel krátký: zmizely přece ty rychlé. Statistika tomu říká <b>cenzurování zprava</b>. Až okno povyroste a většina sledovaných nabídek skončí, bude se dát spočítat i medián — do té doby ne.</p>` : ''}
+            <p class="rules-note"><b>Průměrnou dobu prodeje tu nenajdete</b>, protože by to byla nepravda. Okno je ${fmt(AT.okno.dni)} dní a ${fmt(AT.sledovano.zivych)} <b>sledovaných</b> nabídek na trhu pořád je — u většiny z nich ještě nevíme, jak dlouho tam nakonec budou. Medián jen z těch, co už zmizely, by vyšel krátký: zmizely přece ty rychlé. Statistika tomu říká <b>cenzurování zprava</b>. Až okno povyroste a většina sledovaných nabídek skončí, bude se dát spočítat i medián — do té doby ne.</p>` : ''}
           </details>`;
 
   const natZ = priceNational[key];

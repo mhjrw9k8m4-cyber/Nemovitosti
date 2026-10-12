@@ -3401,6 +3401,83 @@ nezlomitelné. Tatáž past jako u právních stránek o pár bodů výš — a
 důvod, proč tahle zkouška hledá číslo i slovo vzorkem, který obě
 podoby mezery připouští.
 
+## 3be. NALEZENO (z tvého průchodu webem): dvě stránky o témže řekly 1 939 a 1 940, a jiné dvě 522 a 521 — *opraveno 12. 10.*
+
+Dvě dvojice čísel, které si na webu odporovaly o jedničku. Oba případy
+byly zvenčí stejné („web neumí počítat") a vevnitř úplně jiné.
+
+### 1 939 proti 1 940
+
+| stránka | co psala |
+| --- | --- |
+| `data.html` | „…takže na stránkách najdete **1 939** pozemků." |
+| `cena-pozemku.html` | „Okno je 27 dní a **1 940** nabídek na trhu pořád je." |
+
+Obě čísla platila, jen počítala jiné množiny. 1 939 je dnešní soubor po
+odstranění duplicit. 1 940 je **archiv** — množina, kterou web sleduje
+v čase. Změřeno porovnáním klíčů:
+
+* archiv vede jako živé **2** nabídky, které v dnešním souboru už nejsou
+  (zmizely ze zdroje a archiv je zavírá až dalším během),
+* a **nezná 1**, která dnes přibyla.
+* 1 939 + 2 − 1 = **1 940**.
+
+Ta jednička tedy není chyba v počítání, je to vlastnost archivu — a
+přesně proto se nedala nechat bez vysvětlení. Věta na stránce s cenami
+teď říká „1 940 **sledovaných** nabídek na trhu pořád je": jedno slovo,
+které z rozporu dělá informaci. Statistika, kterou ta věta zdůvodňuje
+(cenzurování zprava), se navíc o sledovanou množinu opírá, takže je to
+i přesnější.
+
+### 522 proti 521
+
+| stránka | co psala |
+| --- | --- |
+| `data.html` | „U spoluvlastnického podílu (`podil: true`, **522** nabídek)…" |
+| mapa (filtr „podíl") | **521** |
+
+Tady je důvod triviální: v souboru je 522 **řádků** s `podil: true`, ale
+jeden z nich je tatáž nabídka vypsaná dvakrát ze dvou zdrojů. Stránka
+s daty to u celkového počtu přiznává od začátku („z toho je 45 duplicit
+… na stránkách najdete 1 939"), jen u podílů se na to zapomnělo. Teď
+tam stojí **„522 řádků v souboru, na webu 521 po odstranění duplicit"**
+a počítá se to **touž funkcí**, jakou k tomu používá web
+(`PKHlidani.bezDuplicit`), ne vlastní kopií pravidla.
+
+### Co se naopak nepotvrdilo
+
+Hledal jsem i třetí ohlášený rozpor — tři různé počty změn cen.
+Změřeno: stránka „Co je nového" i mapa dávají **55** zlevněných, a to
+týmž pravidlem (`PKZlevneni.zmena`) nad týmiž daty; z toho 20 z
+posledního běhu robota a 45 z archivu, 7 zdražení a 3 podezřelé změny
+jdou mimo. Třetí číslo jsem nenašel. V datech je ještě 24 nabídek
+s polem `cena_zmena`, ale to je údaj z posledního běhu a na žádné
+stránce jako „počet zlevněných" nestojí.
+
+A ještě jedna věc, která vypadala jako rozpor a není: na úvodní stránce
+jsou ve zdroji čísla 1 955, 2 017 a 2 004. Všechna tři jsou
+v **HTML komentářích** (poznámky k historii oprav), takže je návštěvník
+nikdy neuvidí.
+
+### Zkouška
+
+`scripts/test-sliby-data.mjs` má 8 → **11** kontrol:
+
+1. číslo na stránce s daty je opravdu soubor **po** odstranění duplicit,
+2. větě o cenzurování zůstalo slovo „sledovaných",
+3. archiv se od dnešního souboru **nerozešel** — živých může být o pár
+   víc (zmizelé se zavírají až dalším během), ale ne o 5 % a víc; to už
+   by nebyla vlastnost, ale vada.
+
+**Prokázáno sabotáží — třemi:** smazané slovo „sledovaných" (1 kontrola),
+počet před odstraněním duplicit na stránce s daty (1) a archiv rozešlý
+o 120 podstrčených nabídek (1).
+
+Čtvrtá sabotáž nebyla potřeba — kontrola archivu se **přiznala sama**:
+klíč v `data/archiv/stav.json` se jmenuje `nabidky`, já napsal `zive`,
+a kontrola tím tiše neměřila nic (0 živých → podmínka se přeskočila).
+Poznalo se to tak, že nic nevypsala.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

@@ -23,7 +23,10 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+
+const req = createRequire(import.meta.url);
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -90,6 +93,62 @@ pravda('text zmiňuje, že část věcí zůstává jen v prohlížeči',
 pravda('text říká, jak uplatnit práva podle GDPR',
   /GDPR/.test(text) && /(výmaz|opravu|přístup)/.test(text),
   'v zásadách chybí poučení o právech');
+
+/* ---- POČTY NABÍDEK NA RŮZNÝCH STRÁNKÁCH SI NESMÍ ODPOROVAT ----
+
+   Takhle to prasklo: stránka s daty psala „na stránkách najdete 1 939
+   pozemků", kdežto stránka s cenami ve stejnou chvíli „1 940 nabídek na
+   trhu pořád je". Jednička rozdílu vypadá jako chyba v počítání a
+   podrývá všechna ostatní čísla na webu, i ta správná.
+
+   Obě přitom platily, jen počítaly jiné množiny: 1 939 je dnešní soubor
+   po odstranění duplicit, 1 940 je ARCHIV — množina, kterou web sleduje
+   v čase a která zavírá zmizelé nabídky až dalším během.
+
+   Hlídá se proto obojí: (1) že číslo na stránce s daty opravdu je ten
+   soubor po odstranění duplicit, (2) že větě o archivu zůstalo slovo
+   „sledovaných", které z rozporu dělá informaci, a (3) že archiv se od
+   dnešního souboru nerozešel o víc než o pár nabídek — větší rozdíl už
+   není vlastnost, ale vada. */
+{
+  const data = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8'));
+  const H = req(path.join(KOREN, 'js', 'hlidani-logika.js'));
+  const C = req(path.join(KOREN, 'js', 'cisteni.js'));
+  const K = req(path.join(KOREN, 'js', 'klic.js')).PKKlic;
+  const bezDup = H.bezDuplicit(C.pozemky((data.opportunities || []).slice()));
+  const cis = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '[\\s\u00a0]');
+
+  const dataHtml = readFileSync(path.join(KOREN, 'data.html'), 'utf8');
+  pravda(`stránka s daty uvádí počet po odstranění duplicit (${bezDup.length})`,
+    new RegExp('najdete[\\s\u00a0]*<b>' + cis(bezDup.length) + '</b>').test(dataHtml),
+    'na stránce stojí: ' + ((/najdete <b>[^<]*<\/b>/.exec(dataHtml) || ['(nic)'])[0]));
+
+  const cenyHtml = readFileSync(path.join(KOREN, 'cena-pozemku.html'), 'utf8');
+  if (/na trhu pořád je/.test(cenyHtml)) {
+    pravda('věta o cenzurování říká, že jde o SLEDOVANÉ nabídky',
+      /<b>sledovaných<\/b>[\s\u00a0]*nabídek[\s\u00a0]*na trhu pořád je/.test(cenyHtml),
+      'bez toho slova si ten počet odporuje s počtem na stránce s daty');
+  }
+
+  let zive = 0;
+  try {
+    const stav = JSON.parse(readFileSync(path.join(KOREN, 'data', 'archiv', 'stav.json'), 'utf8'));
+    /* Klíč se jmenuje `nabidky` — `zive` jsem si vymyslel a kontrola
+       pak tiše neměřila nic (0 živých = podmínka se přeskočila).
+       Našlo se to až tím, že kontrola nic nevypsala. */
+    zive = Object.keys(stav.nabidky || {}).length;
+  } catch (e) { /* archiv ještě není */ }
+  if (zive) {
+    const kliceDnes = new Set(bezDup.map((o) => K.klicArchivu(o)));
+    const stav = JSON.parse(readFileSync(path.join(KOREN, 'data', 'archiv', 'stav.json'), 'utf8'));
+    const navic = Object.keys(stav.nabidky || {}).filter((k) => !kliceDnes.has(k)).length;
+    /* Jeden běh robota (6 hodin) přinese i odebere řádově desítky
+       nabídek; víc než 5 % rozdílu znamená, že se archiv rozešel. */
+    const strop = Math.max(50, Math.round(bezDup.length * 0.05));
+    pravda(`archiv se od dnešního souboru nerozešel (živých ${zive}, dnes ${bezDup.length}, navíc ${navic})`,
+      navic <= strop, `nabídek, které archiv vede jako živé a v datech nejsou: ${navic} (strop ${strop})`);
+  }
+}
 
 console.log('\nSliby o datech — co web tvrdí, to taky dělá');
 console.log(zpravy.join('\n'));
