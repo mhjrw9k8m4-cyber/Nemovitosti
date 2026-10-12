@@ -606,8 +606,44 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
      věty. Když se vyčistilo celé políčko, spadly s ním i druh a cena —
      slíbené číslo pak bylo vždycky celá databáze a „hledaný text"
      vyhrál pokaždé, ať za to mohl, nebo ne. */
-  const c = await prazdno('les Praha do 10 tis');
-  pravda('u volného textu se hlásí text', /Nejvíc omezuje/.test(c.zprava) && /hledaný text/.test(c.zprava),
+  /* DOTAZ SE SKLÁDÁ Z DAT, NE Z HLAVY — jinak zkouška měří náhodu.
+     Stálo tu natvrdo „les Praha do 10 tis" a prošlo to, dokud v datech
+     byl aspoň jeden les pod deset tisíc. Robot takovou nabídku jednou
+     v noci přinesl a podruhé nepřinesl: dnes není levnější les než
+     26 500 Kč, takže dotaz nevrátil nic ANI po zrušení místa — a
+     protože se tím nedá ukázat, který filtr to způsobil, web správně
+     napsal obecnou hlášku a zkouška spadla. Vada byla ve zkoušce.
+
+     Scénář teď stojí na dvou číslech z dat: nejlevnější les (aby mez
+     „do X tis" aspoň jeden pustila) a obec, ve které les není ani
+     jeden (aby to nejvíc omezovalo právě místo). Když takovou obec
+     v datech nenajdeme, zkouška to řekne — mlčící kontrola je horší
+     než žádná. */
+  const lesy = DATA.filter((d) => /les/i.test(d.druh || '') && d.price > 0);
+  const nejlevnejsiLes = Math.min(...lesy.map((d) => d.price));
+  const mezTis = Math.ceil(nejlevnejsiLes / 1000);
+  const obceSLesem = new Set(lesy.map((d) => norm(d.place)));
+  const obecBezLesa = Object.entries(pocty)
+    .map(([k, n]) => ({ obec: k.split('|')[0], n }))
+    .filter((x) => !obceSLesem.has(norm(x.obec)))
+    .sort((a2, b2) => b2.n - a2.n)[0];
+  /* A rovnou se ověří, že scénář OPRAVDU drží — obě podmínky, na
+     kterých stojí. Bez toho by stačilo, aby se obec vybrala jinak, a
+     zkouška by měřila něco jiného, než si myslí (vyzkoušeno sabotáží:
+     obec, která lesy MÁ, prošla taky, protože je nemusí mít pod mezí). */
+  const podMezi = lesy.filter((d) => d.price <= mezTis * 1000);
+  const podMeziVObci = obecBezLesa
+    ? podMezi.filter((d) => norm(d.place) === norm(obecBezLesa.obec)).length : 0;
+  pravda(`scénář se dal z dat složit (nejlevnější les ${nejlevnejsiLes} Kč, obec ${obecBezLesa && obecBezLesa.obec})`,
+    !!(lesy.length && obecBezLesa && mezTis > 0),
+    `lesů ${lesy.length}, obec ${JSON.stringify(obecBezLesa)}`);
+  pravda(`a drží: pod mezí ${mezTis} tis je ${podMezi.length} lesů, v té obci ${podMeziVObci}`,
+    podMezi.length > 0 && podMeziVObci === 0,
+    'scénář nedrží — po zrušení místa by nezbylo nic, a pak nelze říct, který filtr omezuje');
+  const dotaz = `les ${obecBezLesa.obec} do ${mezTis} tis`;
+  const c = await prazdno(dotaz);
+  pravda(`u volného textu se hlásí text (dotaz „${dotaz}")`,
+    /Nejvíc omezuje/.test(c.zprava) && /hledaný text/.test(c.zprava),
     `zpráva: „${c.zprava}"`);
   {
     const slib = parseInt(((c.zprava.match(/bez tohoto filtru by (?:jich bylo|zbyla)\s*([\d\s\u00a0]+)/) || [])[1] || '0').replace(/\D/g, ''), 10);

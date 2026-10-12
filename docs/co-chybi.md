@@ -3699,6 +3699,123 @@ a to je ta zajímavější část:
 sitemapy (spadly 3 kontroly), krajská stránka vrácená sama na sebe (1),
 og:url ukazující na třetí stránku (2).
 
+## 3bi. NALEZENO (z tvého průchodu webem): jako jméno obce stála věta z inzerátu — a byla i v adrese stránky — *opraveno 12. 10.*
+
+Ve výpisu stála nabídka jménem
+
+> „**Vráž je známá pro svoje lázeňské sanatorium zaměřené na léčb**"
+
+a web z toho udělal i adresu stránky, nadpis, titulek a řádek
+v sitemapě:
+
+```
+pozemek-pisek-vraz-je-znama-pro-svoje-lazenske-sanatorium-zamerene-na-lecb-gdahk1.html
+```
+
+Příčina: u Farmy.cz se obec bere vzorkem „Obec … Okres" z textu
+stránky. Když mezi těmi dvěma slovy leží věta, vezme se celá věta —
+a `slice(0, 60)` ji jen zkrátil doprostřed slova („na léčb").
+
+### Měření
+
+Prohlédnuto **všech 1 041 různých jmen** v datech. Pokažená jsou tři,
+každé jinak:
+
+| jméno | zdroj | co s ním |
+| --- | --- | --- |
+| „Vráž je známá pro svoje lázeňské sanatorium zaměřené na léčb" | Farmy.cz | → **Vráž** |
+| „Žeravice u Kyjova a k.ú. Syrovín" | OK dražby | → **Žeravice u Kyjova** (dvě katastrální území slepená v jedno) |
+| „V Hlubokém" | Bezrealitky | nezlomitelná mezera (U+00A0) → obyčejná |
+
+A čtyři jména ulic z Bezrealitky („Dr. E. Beneše", „Padlých hrdinů",
+„Černá cesta", „Hořanská cesta") se **neopravují**: ulice je sice taky
+špatně v poli pro obec, ale je to skutečné místo, ne věta — a která část
+adresy je obec, se dá poznat jen z adresy samotné (to řeší
+`mistoZBezrealitky`, opravené 5. 10. pro případy, které se dokázat
+dají). Vymyslet si k ulici obec by bylo horší než ji tam nechat.
+
+### Čím se to opravilo
+
+Nová `jmenoObce()` v `scripts/fetch-opportunities.mjs`: řetězec se
+ukrojí tam, kde začíná **próza** (slovo, které v názvu obce nikdy
+nestojí — *je, jsou, pro, svoje, která, kde, nachází, známá*…) nebo
+**slepenec** („a k.ú."), mezery se srovnají a co zbude, musí vypadat
+jako jméno obce (do 45 znaků, do pěti slov). Jinak se vrátí `null` a
+volající si doplní okres — a hlavně se to **ohlásí** do protokolu běhu.
+
+Pět slov je naměřená mez, ne odhad: moje první, přísnější verze (čtyři
+slova a velká písmena) zamítla osm existujících jmen, mezi nimi
+„Rychnov u Jablonce nad Nisou" a „Doksy u Máchova jezera".
+
+Zapojeno je to **na jednom místě** — jedním průchodem přes `fresh`, ne
+v každém stahovači zvlášť: pokazit jméno umí tři zdroje třemi způsoby a
+tři kopie pravidla by se rozešly.
+
+### Uložená data a tři stránky, které zmizely
+
+Na rozdíl od druhu pozemku (bod 3az) tady přepočet nic nehádá —
+`jmenoObce` je čistá funkce nad řetězcem, který už v datech leží — takže
+se data opravila hned. Tím se ale **změnil i otisk** nabídky, a s ním
+jméno souboru: vznikly tři nové stránky se správnou adresou a tři staré
+osiřely.
+
+Osiřelé stránky archivář sám překlopil na „Nabídka už neplatí" — a to
+by byla **lež**: ta nabídka platí dál, jen je na jiné adrese. Smazal
+jsem je proto (ověřeno, že je další sestavení nevzkřísí). Je to jediné
+místo na webu, kde se stránka pozemku maže, a důvod je úzký: ta adresa
+nikdy neměla vzniknout a nevede na ni nic než naše vlastní (přestavěné)
+rozcestníky. Na věku nabídek se to neprojevilo — ten se od včerejška
+páruje podle **čísla inzerátu** (bod 3ba), ne podle otisku, takže
+přejmenování obce ho nepohne.
+
+### Zkouška
+
+`scripts/test-misto-inzeratu.mjs` má 15 → **31** kontrol: oba pokažené
+řetězce se ukrojí správně, osm existujících jmen zůstane, nezlomitelná
+mezera se srovná, z prázdna nevznikne nic — a na ostrých datech už není
+co očišťovat (s pojistkou, že se opravdu měří na 1 987 nabídkách).
+Nakonec statická kontrola, že očištění je v robotovi zapojené u všech
+zdrojů naráz.
+
+**Prokázáno sabotáží — pěti:** vypnuté ukrajování prózy (1 kontrola),
+vypnuté ukrajování „k.ú." (1), přísnější mez na čtyři slova (2),
+nezapojené očištění v robotovi (1) a věta vrácená do dat (1).
+
+## 3bj. NALEZENO (CI): našeptávač spadl v prohlížečové dávce na scénáři, který si vymyslel autor zkoušky — *opraveno 12. 10.*
+
+Dávka `v-prohlizeci` byla na mém commitu **červená** — a nebyla to moje
+změna. `scripts/test-naseptavac.mjs` měl v sobě dotaz napsaný natvrdo:
+
+```
+les Praha do 10 tis
+```
+
+a čekal, že web odpoví „Nejvíc omezuje **hledaný text**". Prošlo to,
+dokud v datech byl aspoň jeden les pod deset tisíc. Robot takovou
+nabídku jednou v noci přinesl a podruhé ne: **dnes není levnější les než
+12 000 Kč**, takže dotaz nevrátil nic ani po zrušení místa — a protože
+se tím nedá ukázat, který filtr prázdno způsobil, web správně napsal
+obecnou hlášku a zkouška spadla.
+
+Vada byla ve **zkoušce**, ne na webu. Dotaz se teď skládá z dat (táž
+zásada, jakou tenhle test už používá na jméno obce): nejlevnější les
+určí mez „do X tis" a vybere se obec, ve které les není ani jeden.
+Dnes z toho vyjde „les Újezd u Brna do 12 tis".
+
+A hlavně: scénář se **sám ověří**, než se podle něj něco tvrdí — pod
+mezí musí být aspoň jeden les a v té obci ani jeden. Bez té pojistky
+zkouška procházela i tehdy, když se obec vybrala špatně (vyzkoušeno
+sabotáží: obec, která lesy má, prošla taky, protože je nemusí mít pod
+mezí).
+
+15 → **143** kontrol celkem (3 nové). **Prokázáno sabotáží:** s mezí
+pod cenou nejlevnějšího lesa spadly 3 kontroly — a první z nich rovnou
+řekne, že scénář nedrží, místo aby se to poznalo až na podivné hlášce.
+
+Zapsáno i proto, že je to **druhá** zkouška v tomhle repozitáři, která
+se opírala o náhodu v datech (první byla mez 220 px naladěná na místní
+vykreslení). Vzor je stejný: číslo nebo dotaz z hlavy místo z dat.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

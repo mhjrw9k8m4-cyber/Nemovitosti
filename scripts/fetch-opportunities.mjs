@@ -51,6 +51,52 @@ function pridejVybaveni(o, text) {
   if (o.podil && vymeraJePodilova(text, o)) o.vymera_podilu = true;
   return o;
 }
+/* JMÉNO OBCE, NEBO VĚTA Z INZERÁTU?
+   ====================================================================
+   Nahlášeno z průchodu webem: ve výpisu stála „nabídka" jménem
+
+     „Vráž je známá pro svoje lázeňské sanatorium zaměřené na léčb"
+
+   a web z toho udělal i adresu stránky
+   (`pozemek-pisek-vraz-je-znama-pro-svoje-lazenske-sanatorium-zamerene-na-lecb-…`),
+   nadpis, titulek a řádek v sitemapě. Příčina: u Farmy.cz se obec bere
+   vzorkem „Obec … Okres" z textu stránky, a když mezi těmi dvěma slovy
+   leží věta, vezme se celá věta. Slice na 60 znaků ji jen zkrátil.
+
+   Změřeno na všech 1 041 různých jménech v datech: takhle pokažená jsou
+   dvě — ta věta z Farmy.cz a „Žeravice u Kyjova a k.ú. Syrovín"
+   z OK dražeb (dvě katastrální území slepená do jednoho jména).
+   U obou se správné jméno z toho řetězce dá přečíst.
+
+   Co se tu NEOPRAVUJE: čtyři jména ulic z Bezrealitky („Dr. E. Beneše",
+   „Padlých hrdinů", „Černá cesta", „Hořanská cesta"). Ulice je sice taky
+   špatně v poli pro obec, ale je to skutečné místo, ne věta — a
+   rozpoznat, která část adresy je obec, se dá jen z adresy samotné
+   (viz mistoZBezrealitky výš, opraveno 5. 10. pro případy, které se
+   dokázat dají). Vymyslet si k ulici obec by bylo horší.
+
+   Pravidlo je proto úzké a dokazatelné: řetězec se ukrojí tam, kde
+   začíná PROZA (slovo, které v názvu obce nikdy nestojí) nebo slepenec
+   („a k.ú."), a co zbude, musí vypadat jako jméno obce — jinak se
+   vrátí null a volající si doplní, co má po ruce. */
+const PROZA = /\s(?:je|jsou|byl|byla|bylo|bude|pro|svoje|svůj|svoji|své|která|který|které|kde|co|nachází|nabízíme|nabízí|prodáme|leží|patří|známá|známý)\s/i;
+const SLEPENEC = /\s(?:a\s+)?k\.ú\.|\s+a\s+katastrální/i;
+/** Jméno obce z řetězce, nebo null, když se nic rozumného nedá přečíst. */
+export function jmenoObce(s) {
+  let t = String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
+  if (!t) return null;
+  const slep = SLEPENEC.exec(t);
+  if (slep) t = t.slice(0, slep.index).trim();
+  const proza = PROZA.exec(' ' + t + ' ');
+  if (proza) t = (' ' + t + ' ').slice(1, proza.index).trim();
+  t = t.replace(/[,;:.\-\s]+$/, '').trim();
+  /* Co zbylo, musí vypadat jako jméno místa: ne moc dlouhé, ne moc slov
+     a bez věty uprostřed. Pět slov kvůli „Rychnov u Jablonce nad Nisou". */
+  if (t.length < 2 || t.length > 45) return null;
+  if (t.split(' ').length > 5) return null;
+  return t;
+}
+
 /* ====================================================================
    KDY BYLA NABÍDKA VIDĚT POPRVÉ
    --------------------------------------------------------------------
@@ -1669,6 +1715,25 @@ async function main() {
     ...exekuce.slice(0, CAP.exekuce),
     ...(byType.obec || []).slice(0, CAP.obec),
   ];
+
+  /* JMÉNO OBCE SE OČISTÍ NA JEDNOM MÍSTĚ, ne v každém stahovači zvlášť.
+     Pokazit ho umí tři různé zdroje třemi různými způsoby (viz jmenoObce
+     výš), a kdyby si to každý řešil sám, rozejdou se. */
+  let ocistenoMist = 0;
+  for (const o of fresh) {
+    const lepsi = jmenoObce(o.place);
+    if (lepsi && lepsi !== o.place) {
+      console.log(`Jméno obce očištěno: ${JSON.stringify(o.place)} → ${JSON.stringify(lepsi)}`);
+      o.place = lepsi; ocistenoMist++;
+    } else if (!lepsi) {
+      /* Dnes se to nestane ani jednou z 1 041 jmen; kdyby se to stalo,
+         je lepší okres než věta z inzerátu — a hlavně se to ohlásí. */
+      console.error(`POZOR: z ${JSON.stringify(o.place)} se nedalo přečíst jméno obce,`
+        + ` beru okres (${o.okres}).`);
+      o.place = String(o.okres || 'Pozemek');
+    }
+  }
+  if (ocistenoMist) console.log(`Očištěných jmen obcí: ${ocistenoMist}.`);
 
   if (fresh.length === 0) {
     console.log('Žádný zdroj zatím nevrací data — ponechávám stávající soubor beze změny.');
