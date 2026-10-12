@@ -24,6 +24,7 @@
 // 4) TITULKY DELŠÍ NEŽ VÝPIS GOOGLU. Osmnáct stránek mělo titulek přes
 //    65 znaků a osmnáct popisek přes 165 — ve výsledcích z nich zbyl cár.
 import { chromium } from 'playwright-core';
+import { rozbalHledani } from './rozbal-hledani.mjs';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -205,6 +206,7 @@ async function otevri(soubor, sirka, vyska) {
   // Krok po 20 px přes celé sporné pásmo i kus nad ním.
   for (const w of [360, 700, 860, 881, 900, 940, 980, 1020, 1040, 1041, 1100, 1280, 1440]) {
     const { ctx, p } = await otevri('drazby-pozemku.html', w, 700);
+  await rozbalHledani(p);
     const v = await p.evaluate(() => {
       const nav = document.getElementById('nav');
       const logo = document.querySelector('.logo');
@@ -259,6 +261,7 @@ async function otevri(soubor, sirka, vyska) {
      nic neříká a místo bere stejně. Text je proto zpátky a místo se
      ušetřilo na odsazeních. */
   const { ctx, p } = await otevri('index.html', 360, 640);
+  await rozbalHledani(p);
   await p.waitForTimeout(2200);
   const v = await p.evaluate(() => {
     const vidno = (id) => { const e = document.getElementById(id) || document.querySelector(id);
@@ -296,6 +299,7 @@ async function otevri(soubor, sirka, vyska) {
 // --- 3) „Nahoru" nesedí na obsahu ------------------------------------
 {
   const { ctx, p } = await otevri('index.html', 390, 844);
+  await rozbalHledani(p);
   await p.waitForTimeout(2600);
   await p.evaluate(() => scrollTo(0, 1400));
   await p.waitForTimeout(900);
@@ -373,6 +377,7 @@ async function otevri(soubor, sirka, vyska) {
    nedodělané. */
 {
   const { ctx, p } = await otevri('pozemky-okres-kolin.html', 430, 932);
+  await rozbalHledani(p);
   await p.waitForTimeout(900);
   const v = await p.evaluate(() => {
     const radek = document.querySelector('.okr-item .okr-place');
@@ -399,6 +404,7 @@ async function otevri(soubor, sirka, vyska) {
 
 for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   const { ctx, p } = await otevri('index.html', w, h);
+  await rozbalHledani(p);
   await p.waitForTimeout(1600);
   const otevrelo = await p.evaluate(() => {
     const t = document.querySelector('[data-info]');
@@ -446,6 +452,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
    čtyři různé části webu. */
 {
   const { ctx, p } = await otevri('kontakt.html', 1440, 900);
+  await rozbalHledani(p);
   const v = await p.evaluate(() => {
     const vidno = (e) => { if (!e) return false; const s = getComputedStyle(e);
       return s.display !== 'none' && s.visibility !== 'hidden' && e.getClientRects().length > 0; };
@@ -492,6 +499,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
      ze stavů choval jinak. */
   const zalozky = async (prihlasen) => {
     const { ctx, p } = await otevri('kontakt.html', 390, 844);
+  await rozbalHledani(p);
     if (prihlasen) {
       await p.evaluate(() => {
         try { localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok', refresh_token: 'ref',
@@ -535,6 +543,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
  * vyjmenované i s důvodem; kdo přidá další výjimku, musí důvod napsat. */
 {
   const { ctx, p } = await otevri('index.html', 390, 844);
+  await rozbalHledani(p);
   await p.waitForTimeout(2600);
   /* PRUH „NAPOSLEDY PROHLÉDNUTÉ" DO TOHO PATŘÍ TAKY. Jeho odznaky měly
      31 px a nikdo si toho nevšiml, protože se pruh nikdy neukázal:
@@ -770,6 +779,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
  */
 {
   const { ctx, p } = await otevri('index.html', 390, 844);
+  await rozbalHledani(p);
   await p.waitForTimeout(2200);
   const klice = (() => {
     const d = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
@@ -948,6 +958,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
  */
 {
   const { ctx, p: p5 } = await otevri('index.html', 390, 844);
+  await rozbalHledani(p5);
   await p5.waitForTimeout(3000);
   await p5.fill('#map-search', 'Kol');
   await p5.waitForTimeout(1200);
@@ -1029,6 +1040,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
  */
 {
   const { ctx, p: p3 } = await otevri('index.html', 390, 844);
+  await rozbalHledani(p3);
   await p3.waitForTimeout(3200);
   const jeTlacitko = await p3.evaluate(() => !!document.querySelector('.map-near-btn'));
   pravda('tlačítko „Pozemky v okolí" na úvodní stránce je', jeTlacitko,
@@ -1172,6 +1184,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
    k poslednímu. */
 for (const [w, h] of [[320, 568], [375, 667], [390, 844]]) {
   const { ctx, p } = await otevri('index.html', w, h);
+  await rozbalHledani(p);
   await p.waitForTimeout(2200);
   const v = await p.evaluate(() => {
     const e = document.getElementById('map-search');
@@ -1278,6 +1291,7 @@ for (const [w, h] of [[320, 568], [375, 667], [390, 844]]) {
  */
 for (const [w, h] of [[390, 844], [360, 780]]) {
   const { ctx, p } = await otevri('pridat.html', w, h);
+  await rozbalHledani(p);
   /* Formulář je za přihlášením — bez sezení by se neukázal a kontrola
      by měřila prázdnou stránku. */
   await ctx.addInitScript(() => {
@@ -1313,6 +1327,7 @@ for (const [w, h] of [[390, 844], [360, 780]]) {
    se přesouvání jen posunulo do formuláře a panel zůstal prázdný. */
 {
   const { ctx, p } = await otevri('pridat.html', 1280, 900);
+  await rozbalHledani(p);
   await ctx.addInitScript(() => {
     try {
       localStorage.setItem('pk_auth', JSON.stringify({ access_token: 't', refresh_token: 'r',
@@ -1339,6 +1354,7 @@ for (const [w, h] of [[390, 844], [360, 780]]) {
    kartu, když jich je nad mřížkou víc. */
 for (const [w, h] of [[1440, 900], [1280, 900], [1100, 900], [1024, 900], [820, 900]]) {
   const { ctx, p } = await otevri('index.html', w, h);
+  await rozbalHledani(p);
   await p.waitForTimeout(2600);
   const v = await p.evaluate(() => {
     const g = document.getElementById('deals-grid');
@@ -1368,6 +1384,7 @@ for (const [w, h] of [[1440, 900], [1280, 900], [1100, 900], [1024, 900], [820, 
    tam nevešlo. */
 for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
   const { ctx, p } = await otevri('index.html', w, h);
+  await rozbalHledani(p);
   await p.waitForTimeout(2600);
   const v = await p.evaluate(() => {
     const sp = document.querySelector('.odl-empty span'), bt = document.querySelector('.odl-empty-btn');
@@ -1406,6 +1423,7 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
     let bezObsahu = [], prekryv = [], jinaSvislice = [], malo = [], mrtvyOdkaz = [];
     for (const s of CLANKY) {
       const { ctx, p } = await otevri(s, sirka, 900);
+  await rozbalHledani(p);
       await p.waitForTimeout(500);
       const v = await p.evaluate(() => {
         const o = document.querySelector('.obsah');
@@ -1448,6 +1466,7 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
    nadpisu stránky sedí na to, co stojí v šabloně. */
 {
   const { ctx, p } = await otevri('predloha.html', 1280, 900);
+  await rozbalHledani(p);
   await p.waitForTimeout(700);
   const v = await p.evaluate(() => {
     const mista = [...document.querySelectorAll('[data-mera]')];
@@ -1631,6 +1650,7 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
   for (const sirka of [320, 390]) {
     for (const soubor of STRANKY) {
       const { ctx, p } = await otevri(soubor, sirka, 900);
+  await rozbalHledani(p);
       const v = await p.evaluate(() => {
         const out = { vice: 0, dlouha: 0, radky: [] };
         for (const e of document.querySelectorAll('.okr-place')) {
@@ -1669,6 +1689,7 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
      oprava a právě to se dá pokazit. */
   {
     const { ctx, p } = await otevri('pozemky-okres-hodonin.html', 320, 900);
+  await rozbalHledani(p);
     const v = await p.evaluate(() => {
       const it = document.querySelector('.okr-item');
       const pl = document.querySelector('.okr-place');

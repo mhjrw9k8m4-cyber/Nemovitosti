@@ -25,6 +25,7 @@
 // Obojí je typ chyby, který nikde nespadne a žádný jiný test nechytí:
 // web funguje, jen mlčí.
 import { chromium } from 'playwright-core';
+import { rozbalHledani } from './rozbal-hledani.mjs';
 import { createRequire } from 'node:module';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -88,6 +89,8 @@ async function telefon(poloha) {
 
 /** Otevře celoobrazovkový výběr místa a počká, až je mapa opravdu na světě. */
 async function otevriVybirac(p, spoustec) {
+  // Na telefonu je spouštěč ve sbaleném hledání — viz rozbal-hledani.mjs.
+  await rozbalHledani(p);
   // Chybějící tlačítko má skončit poctivým ✕ u kontroly, ne pádem testu.
   await p.locator(spoustec).scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {});
   await p.locator(spoustec).click({ timeout: 4000 }).catch(() => {});
@@ -878,6 +881,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
     ` (v souboru ${surova.length}, z toho ${surova.length - zive.length} po termínu)`);
 
   // Okruh se dá změnit a seznam na to zareaguje.
+  await rozbalHledani(p);
   await p.locator('#misto-km').scrollIntoViewIfNeeded();
   await p.selectOption('#misto-km', '50');
   await p.waitForTimeout(1600);
@@ -916,7 +920,9 @@ const stavVybiraku = (p) => p.evaluate(() => {
   }
 
   // A dá se vrátit na celou republiku.
+  await rozbalHledani(p);
   await p.locator('#misto-zapnout').scrollIntoViewIfNeeded();
+  await rozbalHledani(p);
   await p.locator('#misto-zapnout').click();
   await p.waitForTimeout(1500);
   const zpet = await p.evaluate(() => {
@@ -939,7 +945,9 @@ const stavVybiraku = (p) => p.evaluate(() => {
   });
   await p.reload({ waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(4200);
+  await rozbalHledani(p);
   await p.locator('#misto-zapnout').scrollIntoViewIfNeeded();
+  await rozbalHledani(p);
   await p.locator('#misto-zapnout').click();
   await p.waitForTimeout(1800);
   const v = await p.evaluate(() => ({
@@ -1085,8 +1093,10 @@ const stavVybiraku = (p) => p.evaluate(() => {
 // --- 3) Bez polohy se web neodmlčí -----------------------------------
 {
   const { ctx, p } = await telefon(null);
+  await rozbalHledani(p);
   await p.locator('#map-near').scrollIntoViewIfNeeded();
   const t0 = Date.now();
+  await rozbalHledani(p);
   await p.locator('#map-near').click();
   // Odezva musí přijít HNED, ne až po vypršení limitu.
   await p.waitForTimeout(250);

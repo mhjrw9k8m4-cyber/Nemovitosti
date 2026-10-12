@@ -4997,18 +4997,45 @@
      způsoby — tlačítkem „Hotovo", Escapem, druhým klepnutím na
      „Upravit hledání" a klepnutím mimo panel; výsledky se překreslují
      průběžně, takže „Hotovo" nic nepotvrzuje, jen zavírá. */
-  /* SBALOVÁNÍ HLEDÁNÍ NA TELEFONU — ZKOUŠENO A ZATÍM VRÁCENO.
-     Panel se otevíral tlačítkem „Upravit hledání" a zavíral „Hotovem".
-     Narazilo to na jednu věc, kterou jsem napoprvé přehlédl: v panelu
-     nejsou jen filtry, ale i našeptávač obcí, odznaky rozpoznaných
-     filtrů a tlačítko „Pozemky v okolí" — tedy věci, které musí být
-     vidět i po zavření. Každá oprava toho překryvu si vyžádala další
-     (zatmívací plocha, vrstvy, Escape, zavírání po výběru obce) a
-     nebralo to konce; dvě zkoušky si navíc začaly odporovat o to,
-     jak vysoko smí hledání být.
-     Dělá se to jinak a ve vlastním kroku: hledací pole, našeptávač,
-     odznaky a okolí ZŮSTANOU vidět; schovají se jen druh, cena,
-     výměra a řazení — tedy to, co se nastaví jednou. */
+  /* ROZBALENÍ HLEDÁNÍ NA TELEFONU.
+     ------------------------------------------------------------------
+     Vidět je pořád jen pole s lupou; okolí, druhy nabídek a „Druh,
+     cena, výměra a další" se ukážou, až se do pole klepne. Zavírá se
+     tlačítkem „Hotovo" pod nimi.
+
+     PRVNÍ POKUS BYL PŘEKRYV PŘES OBRAZOVKU a byla to chyba v návrhu,
+     ne v provedení: do panelu patří i našeptávač obcí, odznaky
+     rozpoznaných filtrů a „Pozemky v okolí", tedy věci, které musí
+     být vidět i po zavření. Každá oprava toho překryvu si vyžádala
+     další (zatmívací plocha → vrstvy → Escape → zavírání po výběru
+     obce). Tohle je rozbalení V TOKU: blok se objeví pod polem a
+     odsune výpis, takže nemá co překrýt a nic z toho neplatí.
+
+     ROZBALUJE SE I ZAMĚŘENÍM, ne jen klepnutím: kdo se do pole dostane
+     tabulátorem nebo mu ho vyplní prohlížeč, má mít filtry po ruce
+     stejně jako ten, kdo klepl. */
+  (function rozbaleniHledani() {
+    var pole = document.getElementById('map-search');
+    var blok = document.getElementById('ms-rozsirene');
+    if (!pole || !blok) return;
+    function prepni(na) {
+      document.body.classList.toggle('hledani-rozbalene', na);
+      pole.setAttribute('aria-expanded', na ? 'true' : 'false');
+    }
+    ['click', 'focus'].forEach(function (typ) {
+      pole.addEventListener(typ, function () { prepni(true); });
+    });
+    /* Lupa je jen obrázek vedle pole, ale je to terč, do kterého se
+       prstem trefí každý druhý — ať dělá totéž co pole. */
+    var lupa = document.querySelector('.map-controls-panel .ms-lupa');
+    if (lupa) lupa.addEventListener('click', function () { prepni(true); try { pole.focus(); } catch (e) {} });
+    var hotovo = document.getElementById('msr-hotovo');
+    if (hotovo) hotovo.addEventListener('click', function () {
+      prepni(false);
+      /* Zaměření zpátky na pole by blok hned zase rozbalilo. */
+      try { hotovo.blur(); } catch (e) {}
+    });
+  }());
 
 
   var msfBadge = document.getElementById('msf-badge');
@@ -5171,12 +5198,15 @@
       var cd = days == null ? ''
         : (days < 0 ? '<span class="opp-cd opp-proběhlo">proběhlo</span>'
                     : '<span class="opp-cd' + countdownClass(days) + '">' + countdownText(days) + '</span>');
-      // Podřádek „co to je": druh (s velkým písmenem) · parcela — jeden řádek, ořízne se
+      /* DRUH JE NADPIS KARTY, PARCELA PATŘÍ K MÍSTU.
+         Dřív stály vedle sebe v jednom podřádku („Ostatní plocha ·
+         parc. 123/4"), což je dohromady věta o ničem: druh říká, CO se
+         prodává, parcelní číslo KDE to je. Druh je proto nadpis — jako
+         na Sreality, kde v nadpisu stojí typ a výměra — a parcela stojí
+         na řádku s obcí a okresem, kde se podle ní dá dohledat
+         v katastru. */
       var druhCap = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '';
-      var subParts = [];
-      if (druhCap) subParts.push(druhCap);
-      if (hasParcel(d)) subParts.push('parc. ' + d.parcel);
-      var sub = subParts.join(' · ');
+      var sub = hasParcel(d) ? 'parc. ' + d.parcel : '';
       // Řádek s výměrou a Kč/m² (cena je zvlášť, velká, nahoře v těle karty)
       var figs =
         /* U PODÍLU JE VÝMĚRA CELÉ PARCELY, ALE CENA JEN ZA ZLOMEK.
@@ -5382,18 +5412,38 @@
           '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
           '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '">' + (jeSkryty(d) ? '↩' : '✕') + '</button>' +
         '</div>' +
+        /* ROZVRŽENÍ TEXTU POD FOTKOU — TŘI ŘÁDKY, NE PĚT.
+           Karta měla pod velkým náhledem pět samostatných odstavců za
+           sebou (cena / název / okres / druh / výměra) a každý jiné
+           písmo i jiný odstup. Naměřeno na 390px displeji: 218 px textu
+           pod 222px fotkou, z toho pět zalomení. Teď:
+           · název místa je NADPIS karty (oko po výpisu jede přes místo),
+           · okres a druh jsou jeden jemný řádek oddělený tečkou,
+           · cena a čísla (výměra, Kč/m², vzdálenost) stojí na účaří
+             v jednom řádku — velké číslo vlevo, drobná čísla za ním.
+           Cena přitom zůstává největším písmem na kartě, jen už není
+           první shora: nad ní je to, podle čeho se pozemek pozná. */
         '<div class="opp-body">' +
+          /* 1. ŘÁDEK — CO SE PRODÁVÁ A KOLIK TOHO JE. Druh tučně, za ním
+             výměra, cena za metr a vzdálenost jemně. */
+          '<div class="opp-nadpis">' +
+            '<b class="opp-druh">' + esc(druhCap || 'Pozemek') + '</b>' +
+            '<span class="opp-figures">' + figs + '</span>' +
+          '</div>' +
+          /* 2. ŘÁDEK — KDE TO JE. „Už otevřeno" stojí u NÁZVU MÍSTA, ne
+             u ceny: oko po kartách jede přes místo. Je to potlačený
+             štítek, ne varování — neznamená „prodáno" ani „nezajímavé",
+             jen „tenhle jsi už viděl", aby se nemuselo klepat podruhé. */
+          '<div class="opp-meta">' +
+            '<span class="opp-place">' + d.place +
+              (jeVidene ? '<i class="opp-videne" title="Tenhle pozemek jste už otevřeli">už otevřeno</i>' : '') +
+            '</span>' +
+            (mistoRadek(d) ? '<span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
+            (sub ? '<span class="opp-sub">' + sub + '</span>' : '') +
+          '</div>' +
+          /* 3. ŘÁDEK — CENA. Největší písmo na kartě a až pod tím, co se
+             prodává a kde: podle ceny se rozhoduje, podle zbytku vybírá. */
           '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
-          /* „Už otevřeno" stojí u NÁZVU MÍSTA, ne u ceny: oko po kartách
-             jede přes místo. Je to potlačený štítek, ne varování —
-             neznamená „prodáno" ani „nezajímavé", jen „tenhle jsi už
-             viděl", aby se nemuselo klepat podruhé. */
-          '<span class="opp-place">' + d.place +
-            (jeVidene ? '<i class="opp-videne" title="Tenhle pozemek jste už otevřeli">už otevřeno</i>' : '') +
-          '</span>' +
-          (mistoRadek(d) ? '<div class="opp-loc">' + mistoRadek(d) + '</div>' : '') +
-          (sub ? '<div class="opp-sub">' + sub + '</div>' : '') +
-          '<div class="opp-figures">' + figs + '</div>' +
           (chips.length ? '<div class="opp-chips">' + chips.join('') + '</div>' : '') +
         '</div>';
       // Ťuknutí kamkoli na kartu (i na snímek) → samostatná stránka inzerátu.
@@ -5527,7 +5577,23 @@
       + fmt(matched) + ')</button>';
     /* RYCHLÝ VÝBĚR. Nabízí se jen tehdy, když je co třídit — pod pěti
        nabídkami je rychlejší projít seznam než pouštět vrstvu. */
-    if (matched >= 5) tlacitka += '<button type="button" class="mc-skryte" id="mc-rychly">Rychlý výběr</button>';
+    /* RYCHLÝ VÝBĚR MÁ ŘÍCT, PROČ DO NĚJ LEZT.
+       Bylo to šesté stejně vypadající tlačítko v řadě a stálo na něm
+       jen jméno funkce. „Rychlý výběr" přitom může znamenat uložený
+       filtr, přednastavené hledání, cokoli — a co dělá doopravdy (jedna
+       nabídka přes celou obrazovku, doprava uložit, doleva schovat) se
+       člověk dozvěděl až UVNITŘ, tedy poté, co to otevřel. Kdo
+       neotevřel, nedozvěděl se nic.
+       Teď je to pruh přes celou šířku a nese důvod: kolik nabídek by
+       jinak musel prolistovat a co se s nimi stane. Počet stojí
+       v nadpisu, protože právě on je ten důvod — u pěti pozemků žádný
+       není, a tam se taky nenabízí. */
+    if (matched >= 5) tlacitka = '<button type="button" class="mc-rychly" id="mc-rychly">'
+      + '<span class="mcr-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3h11a2 2 0 0 1 2 2v11"/>'
+      + '<rect x="3" y="7" width="14" height="14" rx="2"/></svg></span>'
+      + '<span class="mcr-txt"><b class="mcr-nadpis">Projít ' + fmt(matched) + ' ' + plPozemek(matched) + ' po jednom</b>'
+      + '<span class="mcr-popis">Dvacet karet přes celou obrazovku — doprava uložit, doleva schovat.</span></span>'
+      + '<span class="mcr-sip" aria-hidden="true">›</span></button>' + tlacitka;
     /* ODDĚLOVAČ PATŘÍ DOVNITŘ ZNAČKY. Na telefonu se tahle část
        schovává (číslo stojí v liště nad výpisem), a kdyby „ · " stálo
        venku, zbyla by za nadpisem osamocená tečka. */

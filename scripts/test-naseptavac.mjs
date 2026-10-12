@@ -19,6 +19,7 @@
 //   6. seznam návrhů se vešel nad vyjetou klávesnici,
 //   7. překlep našeptávač nezavře — ukáže opravu i názvy k ní.
 import { chromium } from 'playwright-core';
+import { rozbalHledani } from './rozbal-hledani.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -89,6 +90,7 @@ for (const d of DATA) if (d.place) {
 const HODNE = Object.entries(podleZacatku).sort((a, b) => b[1].size - a[1].size)[0][0];
 
 const { ctx, p } = await otevri(TELEFON);
+  await rozbalHledani(p);
 const pole = p.locator('#map-search');
 const seznam = p.locator('#map-search-navrhy');
 
@@ -383,6 +385,7 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
  * co se vybralo, propíše do výpisu i zpátky do souhrnu. */
 {
   const { ctx: ctx2, p: p2 } = await otevri(TELEFON, 'index.html');
+  await rozbalHledani(p2);
   // Panel s filtry je na telefonu sbalený — rozbalíme ho, jako by na něj
   // člověk klepl. Bez toho Playwright třicet vteřin čeká na neviditelné
   // tlačítko a test spadne výjimkou místo čitelné hlášky.
@@ -528,6 +531,7 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
    kraj" dřív spadlo do hledání OBCE a vracelo nulu. */
 {
   const { ctx: c3, p: p3 } = await otevri({ viewport: { width: 1280, height: 900 } });
+  await rozbalHledani(p3);
   async function pocet() {
     return p3.$eval('#map-count', (e) => {
       const m = e.textContent.match(/([\d\s\u00a0]+)\s*na mapě/);
@@ -579,6 +583,7 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
    pět a stačilo povolit cenu. */
 {
   const { ctx: c4, p: p4 } = await otevri({ viewport: { width: 1280, height: 900 } });
+  await rozbalHledani(p4);
   async function prazdno(q) {
     await p4.fill('#map-search', q);
     await p4.waitForTimeout(900);
@@ -694,6 +699,7 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
    počítá z týchž odznaků. */
 {
   const { ctx, p } = await otevri(TELEFON);
+  await rozbalHledani(p);
   const st = () => p.evaluate(() => ({
     odznaky: [...document.querySelectorAll('#ms-chipy .msch')].map((x) => x.textContent.replace('✕', '').trim()),
     cislo: (document.getElementById('msf-badge') || {}).hidden ? 0
@@ -783,6 +789,7 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
    pojmenovaný a hlídaný. */
 {
   const { ctx, p } = await otevri(TELEFON);
+  await rozbalHledani(p);
   await p.evaluate(() => { document.getElementById('ms-filters').open = true; });
   await p.waitForTimeout(700);
 
@@ -845,6 +852,7 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
    ukazovalo jen u PRÁZDNÉHO výpisu — tedy až když bylo pozdě. */
 {
   const { ctx, p } = await otevri(TELEFON);
+  await rozbalHledani(p);
   await p.evaluate(() => { document.getElementById('ms-filters').open = true; });
   await p.waitForTimeout(400);
 
@@ -1002,6 +1010,7 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
  */
 {
   const { ctx, p } = await otevri(TELEFON);
+  await rozbalHledani(p);
   await p.evaluate(() => { document.getElementById('ms-filters').open = true; });
   await p.waitForTimeout(500);
   const kolik = () => p.evaluate(() => {
@@ -1093,6 +1102,7 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
  */
 {
   const { ctx, p } = await otevri(TELEFON);
+  await rozbalHledani(p);
   await p.evaluate(() => { document.getElementById('ms-filters').open = true; });
   await p.waitForTimeout(600);
   const v = await p.evaluate(() => {
@@ -1223,6 +1233,7 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
     };
   };
   const { ctx: k, p: q } = await otevri(TELEFON, PODSTRC);
+  await rozbalHledani(q);
   const kPole = q.locator('#map-search');
   const kSeznam = q.locator('#map-search-navrhy');
 

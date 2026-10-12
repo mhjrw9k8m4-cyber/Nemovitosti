@@ -21,6 +21,7 @@
  */
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { rozbalHledani } from './rozbal-hledani.mjs';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -44,7 +45,13 @@ for (const s of STRANKY) {
   const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 }, locale: 'cs-CZ' });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${s}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
+  /* NA ÚVODNÍ STRÁNCE JSOU ČIPY SCHOVANÉ, DOKUD SE NEKLEPNE DO HLEDÁNÍ.
+     Hledání se na telefonu rozbaluje až klepnutím (viz docs/co-chybi.md,
+     oddíl o přestavbě podle Sreality), takže filtrovací čipy mají nulový
+     obdélník a měřit by nebylo co — kontrola „a bylo vůbec co měřit"
+     tohle přesně hlídá a taky to ohlásila. */
   await p.waitForTimeout(900);
+  await rozbalHledani(p).catch(() => {});
   const nalezy = await p.evaluate((sel) => {
     const pruhledna = (c) => !c || c === 'transparent' || /rgba\([^)]*,\s*0(\.0+)?\s*\)/.test(c);
     const out = [];

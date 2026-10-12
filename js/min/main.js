@@ -3364,6 +3364,28 @@
   var stranka = 0;
   var posledniOtiskFiltru = null;
 
+  (function rozbaleniHledani() {
+    var pole = document.getElementById('map-search');
+    var blok = document.getElementById('ms-rozsirene');
+    if (!pole || !blok) return;
+    function prepni(na) {
+      document.body.classList.toggle('hledani-rozbalene', na);
+      pole.setAttribute('aria-expanded', na ? 'true' : 'false');
+    }
+    ['click', 'focus'].forEach(function (typ) {
+      pole.addEventListener(typ, function () { prepni(true); });
+    });
+
+    var lupa = document.querySelector('.map-controls-panel .ms-lupa');
+    if (lupa) lupa.addEventListener('click', function () { prepni(true); try { pole.focus(); } catch (e) {} });
+    var hotovo = document.getElementById('msr-hotovo');
+    if (hotovo) hotovo.addEventListener('click', function () {
+      prepni(false);
+
+      try { hotovo.blur(); } catch (e) {}
+    });
+  }());
+
   var msfBadge = document.getElementById('msf-badge');
 
   function pocetFiltru() {
@@ -3469,10 +3491,7 @@
                     : '<span class="opp-cd' + countdownClass(days) + '">' + countdownText(days) + '</span>');
 
       var druhCap = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '';
-      var subParts = [];
-      if (druhCap) subParts.push(druhCap);
-      if (hasParcel(d)) subParts.push('parc. ' + d.parcel);
-      var sub = subParts.join(' · ');
+      var sub = hasParcel(d) ? 'parc. ' + d.parcel : '';
 
       var figs =
 
@@ -3574,15 +3593,23 @@
           '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
           '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '">' + (jeSkryty(d) ? '↩' : '✕') + '</button>' +
         '</div>' +
-        '<div class="opp-body">' +
-          '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
 
-          '<span class="opp-place">' + d.place +
-            (jeVidene ? '<i class="opp-videne" title="Tenhle pozemek jste už otevřeli">už otevřeno</i>' : '') +
-          '</span>' +
-          (mistoRadek(d) ? '<div class="opp-loc">' + mistoRadek(d) + '</div>' : '') +
-          (sub ? '<div class="opp-sub">' + sub + '</div>' : '') +
-          '<div class="opp-figures">' + figs + '</div>' +
+        '<div class="opp-body">' +
+
+          '<div class="opp-nadpis">' +
+            '<b class="opp-druh">' + esc(druhCap || 'Pozemek') + '</b>' +
+            '<span class="opp-figures">' + figs + '</span>' +
+          '</div>' +
+
+          '<div class="opp-meta">' +
+            '<span class="opp-place">' + d.place +
+              (jeVidene ? '<i class="opp-videne" title="Tenhle pozemek jste už otevřeli">už otevřeno</i>' : '') +
+            '</span>' +
+            (mistoRadek(d) ? '<span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
+            (sub ? '<span class="opp-sub">' + sub + '</span>' : '') +
+          '</div>' +
+
+          '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
           (chips.length ? '<div class="opp-chips">' + chips.join('') + '</div>' : '') +
         '</div>';
 
@@ -3671,7 +3698,12 @@
     if (matched) tlacitka += '<button type="button" class="mc-skryte" id="mc-vyvoz">Stáhnout výběr ('
       + fmt(matched) + ')</button>';
 
-    if (matched >= 5) tlacitka += '<button type="button" class="mc-skryte" id="mc-rychly">Rychlý výběr</button>';
+    if (matched >= 5) tlacitka = '<button type="button" class="mc-rychly" id="mc-rychly">'
+      + '<span class="mcr-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3h11a2 2 0 0 1 2 2v11"/>'
+      + '<rect x="3" y="7" width="14" height="14" rx="2"/></svg></span>'
+      + '<span class="mcr-txt"><b class="mcr-nadpis">Projít ' + fmt(matched) + ' ' + plPozemek(matched) + ' po jednom</b>'
+      + '<span class="mcr-popis">Dvacet karet přes celou obrazovku — doprava uložit, doleva schovat.</span></span>'
+      + '<span class="mcr-sip" aria-hidden="true">›</span></button>' + tlacitka;
 
     countEl.innerHTML = headLabel + (matched ? '<span class="mc-sub"> · ' + fmt(matched) + ' na mapě</span>' : '')
       + pripisky;

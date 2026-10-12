@@ -556,7 +556,15 @@ img, svg, table, pre{max-width:100%;}
 a:focus-visible, button:focus-visible, select:focus-visible, [role="button"]:focus-visible, [tabindex]:focus-visible, summary:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px; border-radius:var(--r-xs);}/* Grid/flex sloupce se musí umět zmenšit — jinak vytlačí stránku do stran */
 
 .map-app > *, .foot-grid > *, .steps > *, .status-grid > *, .glossary > *{min-width:0;}
-.opp-list{min-width:0; max-width:100%;}
+/* VÝPIS SE NESMÍ POSUNOUT DO STRANY. Výpis si drží `margin:0 -6px` +
+   `padding:0 6px`, aby zdvih karty pod myší neodřízl `overflow-y:auto`.
+   Proti tomu tu stálo `max-width:100%`: šířka se srazila na šířku
+   rodiče, ale záporný okraj vlevo platil dál — a ten vpravo se jako
+   přebytečný zahodil. Naměřeno na 390px displeji: karta 10 → 368 px,
+   tedy 10 px mezera vlevo a 22 px vpravo. Karta stála nakřivo o 12 px
+   a vypadalo to jako rozbitá grafika, protože to rozbitá grafika byla.
+   Mez proto počítá s oběma okraji. */
+.opp-list{min-width:0; max-width:calc(100% + 12px);}
 .wrap{max-width:var(--m-wrap); margin:0 auto; padding:0 32px;}
 /* Třída se jmenuje .mono po písmu, které tu bývalo. Jeho jediná práce,
    kvůli které se používalo, byla SVISLÁ ZÁVORA U ČÍSEL: v tabulce cen
@@ -1426,6 +1434,9 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .map-side{grid-column:1; grid-row:2; display:flex; flex-direction:column; background:transparent; border:0; border-right:1px solid var(--line); border-radius:0; padding:16px 16px; min-height:0;}
 .map-holder{grid-column:2; grid-row:2;}
 .map-controls-panel .map-search{margin-top:0;}
+/* Tlačítko „Hotovo" sbaluje rozšířené hledání — jen na telefonu.
+   Na širokém displeji se nic nesbaluje, takže by nemělo co zavírat. */
+.msr-hotovo{display:none;}
 /* LUPA A VĚTŠÍ PÍSMO. Pole říkalo, co do něj jde psát, dlouhou větou
    („Obec, druh, cena, do 30 km od Brna…"). Vešla se sice všude — měřeno
    252 px textu do 272 px místa i na nejužším telefonu, takže se nic
@@ -2134,7 +2145,18 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    náhledem mapy jako „fotkou" a odznakem kategorie přímo na náhledu. */
 /* Karta ve stylu realitního portálu (Sreality): náhled mapy nahoře přes celou
    šířku jako fotka, pod ním velká cena a detaily. */
-.opp-item{position:relative; display:block; padding:0; border:1px solid var(--line-strong); border-radius:var(--r-plocha); overflow:hidden; margin-bottom:14px; cursor:pointer; background:var(--ink-soft); box-shadow:var(--e2); transition:border-color var(--cas-zakladni) var(--ease), transform var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
+/* KARTA BEZ RÁMU A BEZ BÍLÉ PLOCHY — JAKO NA SREALITY.
+   Karta byla bílý obdélník s barevným rámečkem podle druhu (prodej
+   zeleně, dražba oranžově…) a stínem. Čtyři takové pod sebou vypadaly
+   jako čtyři okna, ne jako výpis: oko muselo pokaždé přeskočit rám,
+   stín i barvu, než se dostalo k tomu, co se prodává. Sreality nemá
+   kolem inzerátu nic — zaoblená fotka, pod ní text na podkladu stránky
+   a mezera do další. Barvu druhu nese dál odznak na fotce, takže se
+   zrušením rámečku nic neztratilo; to, co rámeček říkal barvou, stojí
+   na odznaku slovem.
+   Zdvih pod myší zůstává (hlídá test-zdvih), jen se nehýbe rám, ale
+   celá karta. */
+.opp-item{position:relative; display:block; padding:0; border:0; background:none; box-shadow:none; margin-bottom:22px; cursor:pointer; transition:transform var(--cas-zakladni) var(--ease), opacity var(--cas-zakladni) var(--ease);}
 /* OBTAŽENÍ PODLE DRUHU. Karta nesla barvu druhu jen v odznaku na rohu
    snímku; ve výpisu plném karet se tím druh poznal až po přečtení.
    Okraj ho řekne dřív, než člověk začne číst — a je to právě okraj,
@@ -2151,17 +2173,13 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    a .is-featured), takže tohle nic nového nezavádí.
    Fallback: color-mix neumí starý prohlížeč, ten nechá neutrální okraj
    z pravidla výš — karta pak vypadá jako dřív, nerozbije se nic. */
-.opp-item.sale{border-color:color-mix(in srgb, var(--c-sale) 45%, transparent);}
-.opp-item.drazba{border-color:color-mix(in srgb, var(--c-drazba) 57%, transparent);}
-.opp-item.exekuce{border-color:color-mix(in srgb, var(--c-exekuce) 38%, transparent);}
-.opp-item.obec{border-color:color-mix(in srgb, var(--c-obec) 47%, transparent);}
-.opp-item.majitel{border-color:color-mix(in srgb, var(--c-majitel) 45%, transparent);}
 /* Zvednutí karty bylo dřív jen posunutí — stín zůstal stejný, takže se karta
    nezvedla, jen poskočila. Teď se zvedne i stínem. */
-.opp-item:hover, .opp-item.hl{border-color:var(--copper-bright); transform:translateY(-2px); box-shadow:var(--e3);}
-.opp-item.is-hot{border-color:rgba(204,107,51,0.4);}
+.opp-item:hover, .opp-item.hl{transform:translateY(-2px);}
+.opp-item:hover .opp-media, .opp-item.hl .opp-media{box-shadow:var(--e3);}
+
 /* Náhled mapy jako fotka inzerátu */
-.opp-media{position:relative; width:100%; aspect-ratio:16/10; min-height:150px; overflow:hidden; background:var(--ink-soft2) linear-gradient(135deg, rgba(110,150,130,0.12), rgba(110,150,130,0) 60%);}
+.opp-media{position:relative; width:100%; aspect-ratio:16/10; min-height:150px; overflow:hidden; border-radius:var(--r-plocha); background:var(--ink-soft2) linear-gradient(135deg, rgba(110,150,130,0.12), rgba(110,150,130,0) 60%); box-shadow:var(--e1); transition:box-shadow var(--cas-zakladni) var(--ease);}
 /* Vrstvy náhledu nechytají klik — ťuknutí projde na celou kartu (jinak na iOS obrázek „spolkne" klik) */
 /* Záložní plán parcely (prosvítá, když se nenačte satelit) */
 
@@ -2198,8 +2216,13 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .opp-media .opp-fav svg{width:18px; height:18px; stroke-width:2.0;}
 .opp-media .opp-fav:hover, .opp-media .opp-fav.on{color:var(--copper-bright);}
 /* Tělo karty pod fotkou */
-.opp-body{padding:10px 14px 12px;}
-.opp-price{font-family:var(--font-ui); font-weight:700; font-size:24px; line-height:1.1; letter-spacing:-0.02em; color:var(--text-ondark); font-variant-numeric:tabular-nums; margin-bottom:2px;}
+/* TEXT POD FOTKOU V POŘADÍ SREALITY: co to je → kde to je → za kolik.
+   Odsazení je nulové, protože karta nemá plochu, do které by se dalo
+   odsazovat — text stojí přesně pod levým krajem fotky. */
+.opp-body{padding:10px 0 0;}
+.opp-nadpis{display:flex; align-items:baseline; flex-wrap:wrap; gap:1px 9px;}
+.opp-druh{font-family:var(--font-ui); font-size:16px; font-weight:700; letter-spacing:-0.01em; color:var(--text-ondark);}
+.opp-price{font-family:var(--font-ui); font-weight:700; font-size:22px; line-height:1.15; letter-spacing:-0.02em; color:var(--text-ondark); font-variant-numeric:tabular-nums; margin-top:5px;}
 
 .opp-more{list-style:none; text-align:center; padding:14px 6px 6px; font-size:13px; color:var(--copper-bright); font-weight:600;}
 /* „Zobrazit dalších 12" — nejdřív se dá seznam dočíst, až pak se odchází
@@ -2413,19 +2436,43 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 
 .reset-btn{display:inline-block; margin-top:12px; padding:8px 16px; font-size:13px; font-weight:600; color:var(--ink); background:var(--copper-bright); border:0; border-radius:var(--r-sm); cursor:pointer;}
 .reset-btn:hover{background:var(--copper);}
-.opp-place{display:block; font-family:var(--font-ui); font-size:16px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:-0.01em; color:var(--text-ondark); margin-bottom:2px;}/* Barevná odrážka podle kategorie (prodej/dražba/exekuce…) — rychlá orientace v seznamu */
+/* NÁZEV OBCE UŽ NENÍ NADPIS KARTY. Nadpis je druh pozemku (co se
+   prodává), obec a okres jsou řádek pod ním — tak to má Sreality a dává
+   to smysl i tady: ve výpisu jednoho okresu stálo dvacetkrát pod sebou
+   totéž jméno obce vysázené jako nadpis. */
+.opp-place{font-family:var(--font-ui); font-size:13.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:0; color:var(--text-ondark); max-width:100%;}/* Barevná odrážka podle kategorie (prodej/dražba/exekuce…) — rychlá orientace v seznamu */
 
 /* Podřádek „co to je" — jeden řádek, konzistentní, ořízne se tečkami */
 /* Řádek s okresem (poloha) — víc informací, jemně pod názvem */
-/* Špendlík má tutéž barvu jako text, ke kterému patří. */
-.opp-loc{display:flex; align-items:center; gap:4px; font-size:12px; color:var(--text-ondark-mute); margin:1px 0 4px;}
-.opp-loc::before{content:""; width:12px; height:12px; flex:none; background-size:contain; background-repeat:no-repeat; background-position:center; opacity:0.85; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234A5750' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");}
+/* Řádek s obcí a okresem. Špendlík před okresem tu byl, dokud byl
+   řádek sám; v řadě oddělené tečkami z něj byla třetí značka na čtyři
+   slova, tak je pryč. */
+.opp-loc{font-size:12px; color:var(--text-ondark-mute);}
 /* Jeden řádek s tvrdým ořezem tu vyráběl „Stavební pozemek · parc….",
    což je useknuté uprostřed slova a nic to neřekne. Dva řádky se vejdou
    a číslo parcely zůstane čitelné; delší text se ořízne až pod nimi. */
 .opp-sub{font-size:13px; color:var(--text-ondark-mute); margin-bottom:8px;
   display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
   line-clamp:2; overflow:hidden; overflow-wrap:anywhere;}
+/* OKRES A DRUH NA JEDNOM ŘÁDKU. Byly to dva odstavce pod sebou, každý
+   jiné písmo — dva řádky na dvě tři slova. Oddělovač kreslí stylopis,
+   ne skript: když druh chybí (a chybí u pozemků bez uvedené kultury),
+   nesmí řádek začínat tečkou. */
+.opp-meta{display:flex; align-items:baseline; flex-wrap:wrap; gap:1px 7px; margin:2px 0 0;}
+.opp-meta .opp-loc{margin:0; font-size:13px;}
+.opp-meta .opp-sub{margin:0; font-size:13px; -webkit-line-clamp:1; line-clamp:1;}
+/* Oddělovač kreslí stylopis, ne skript: když okres nebo parcela chybí,
+   nesmí řádek začínat tečkou ani jí končit. */
+.opp-meta > * + *::before{content:"·"; margin-right:7px; color:var(--line-strong);}
+/* Čísla (výměra, Kč/m², vzdálenost) stojí na účaří hned za druhem —
+   zarovnání na účaří, ne na střed, drží základní linku obojího v jedné
+   přímce, i když má každé jinou velikost písma. Zalomení je povolené:
+   na úzkém displeji čísla spadnou pod druh místo přetečení z karty. */
+.opp-nadpis .opp-figures{display:inline-flex; margin:0;}
+/* Cena za metr je v nadpisu holé číslo, ne orámovaný štítek. Jako
+   štítek vypadala jako druhé tlačítko hned vedle názvu druhu a táhla
+   oko na sebe — přitom je to doplněk k výměře, ne samostatný údaj. */
+.opp-nadpis .opp-perm2{background:none; border:0; padding:0; font-weight:400;}
 /* Hodnotový řádek — cena, výměra, Kč/m² zarovnané na účaří */
 .opp-figures{display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin-top:8px; margin-bottom:2px;}
 .opp-figures .m{font-size:13px; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
@@ -2433,10 +2480,12 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .opp-perm2{align-self:center; font-size:12px; font-weight:600; color:var(--text-ondark-mute); background:var(--plocha-jemna); border:1px solid var(--line); border-radius:var(--r-xs); padding:2px 8px; font-variant-numeric:tabular-nums; white-space:nowrap;}
 /* Řádek odznaků — všechny stavy pohromadě, stejný tvar */
 .opp-chips{display:flex; flex-wrap:wrap; gap:6px;}
-.opp-hot{display:inline-block; font-size:12px; font-weight:700; letter-spacing:var(--odznak-proklad); color:var(--popisek); background:var(--plocha-jemna); border:1px solid var(--line); border-radius:var(--r-xs); padding:1px 8px; text-transform:uppercase;}
+.opp-price + .opp-chips{margin-top:9px;}
+.opp-hot{display:inline-block; font-size:12px; font-weight:700; letter-spacing:0; color:var(--popisek); background:var(--plocha-jemna); border:1px solid var(--line); border-radius:var(--r-xs); padding:1px 8px;}
 /* Zvýrazněný (placený) inzerát — prémiový plný odznak + jemné orámování karty */
 .opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#fff; background:var(--plocha-znacka); border:0; border-radius:var(--r-sm); padding:2px 8px; letter-spacing:0.02em; text-transform:uppercase; box-shadow:var(--e1);}
-.opp-item.is-featured{border-color:rgba(31,81,56,0.55); box-shadow:inset 0 0 0 1px rgba(31,81,56,0.3);}
+/* Zvýrazněný inzerát pozná člověk podle odznaku .opp-feat, ne podle
+   rámečku: rámeček karta po vzoru Sreality nemá. */
 /* Odpočet do termínu dražby (reálné datum) */
 .opp-cd{display:inline-block; font-size:12px; font-weight:700; padding:1px 8px; border-radius:var(--r-xs); background:var(--plocha-jemna); border:1px solid var(--line); color:var(--text-ondark-mute); letter-spacing:0.01em; white-space:nowrap;}
 /* Odpočet do termínu. Světlé odstíny tu zbyly z doby, kdy byly karty tmavé —
@@ -3082,6 +3131,26 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
      a že nad ním zůstane vidět kus výpisu — je pak poznat, do čeho
      se tím zasahuje. */
   .map-controls-panel{order:0; border-right:0; border-bottom:1px solid var(--line);}
+
+  /* HLEDÁNÍ SE ROZBALÍ AŽ NA KLEPNUTÍ.
+     ------------------------------------------------------------------
+     Vidět zůstává jen pole s lupou (a odznaky toho, co web z napsané
+     věty pochopil). Okolí, druhy nabídek a „Druh, cena, výměra a další"
+     se ukážou, až se do pole klepne — naměřeno, ušetří to nad výpisem
+     365 px z 844, tedy 43 % obrazovky.
+     Je to ROZBALENÍ V TOKU: blok se jen objeví pod polem a odsune
+     výpis. Překryv přes obrazovku (první pokus) musel řešit zatmívací
+     plochu, vrstvy, Escape i zavírání po výběru obce; blok v toku nemá
+     co překrýt, takže z toho nezbylo nic. */
+  .ms-rozsirene{display:none;}
+  body.hledani-rozbalene .ms-rozsirene{display:block;}
+  /* Když je rozbaleno, je u toho čím to zavřít. Na širokém displeji
+     se tenhle blok nikdy neschovává, takže tam tlačítko nesvítí. */
+  .msr-hotovo{display:block; width:100%; margin-top:12px; padding:12px;
+    border:1px solid var(--obrys-tlacitka); border-radius:var(--r-ovladani);
+    background:var(--panel); color:var(--plocha-znacka);
+    font-family:var(--font-ui); font-size:16px; font-weight:700; cursor:pointer;}
+  .msr-hotovo:active{background:rgba(31,81,56,0.08);}
   .map-side{order:2; border-right:0; max-height:none;}
   .map-holder{order:3; height:74vh; height:74dvh; max-height:640px; min-height:460px;}
   .map-canvas{flex:1; min-height:0;}
@@ -3122,14 +3191,33 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   /* 38 px: dotykové minimum je 36, a na velké fotce smí být terč větší. */
   .opp-media .opp-fav{width:38px; height:38px; top:10px; right:10px;}
   .opp-media .opp-fav svg{width:18px; height:18px; stroke-width:2.1;}
-  .opp-body{padding:12px 14px 14px;}
+  .opp-body{padding:11px 0 0;}
   .opp-chips{gap:5px;}
   .opp-chips > span{font-size:12.5px; padding:3px 8px;}
-  .opp-figures{gap:6px 10px; margin-top:8px;}
-  /* Cena je to první, co se na kartě čte — na širší kartě je na ni
-     místo, tak je větší než v řádkové podobě (20 px). */
-  .opp-price{font-size:22px;}
-  .opp-place{font-size:16px;}
+  .opp-figures{gap:6px 10px;}
+  /* Cena je největší písmo na kartě — na širší kartě je na ni místo,
+     tak je větší než v řádkové podobě (20 px). */
+  .opp-price{font-size:24px; margin-top:6px;}
+  /* Na širší kartě je místo na větší nadpis i na větší cenu. */
+  .opp-druh{font-size:17px;}
+  .opp-place{font-size:14px;}
+  .opp-meta{margin-top:3px;}
+  .opp-meta .opp-loc, .opp-meta .opp-sub{font-size:13.5px;}
+  /* VÝPIS BEZ ZÁPORNÝCH OKRAJŮ. Jsou tam jen proto, aby `overflow-y:auto`
+     neodřízl zdvih karty pod myší — a tady výpis nic neřeže (má
+     `overflow:visible` a `flex:none`, viz výš). Bez nich má karta celou
+     šířku panelu a hlavně souměrné odsazení 10 px z obou stran. */
+  .opp-list{margin:0; padding:0;}
+
+  /* TOTÉŽ ČÍSLO DVAKRÁT NA JEDNÉ OBRAZOVCE. V přepínači nad výpisem
+     stojí „Seznam (1 938)" a hned 50 px pod ním „· 1 938 na mapě" —
+     naměřeno na 390px displeji. Jedno z nich je navíc, a to druhé:
+     přepínač tam je pořád, hlavička výpisu se překresluje. Zůstává
+     samotný název řezu („Doporučené příležitosti"). */
+  .mc-sub{display:none;}
+  /* Bez čísla vedle sebe by poznámka dosedla za nadpis a splynula
+     s ním v jednu dlouhou větu. Má vlastní řádek. */
+  .map-count .mc-pozn{display:block; margin-top:2px; white-space:normal;}
 
   /* KARTA DO STRAN. Výpis stál v odsazení třikrát za sebou: 20 px
      u .map-wide, 16 px u .map-side a k tomu rámeček .map-app. Na
@@ -5309,6 +5397,31 @@ h1, h2, h3,
   display:inline-flex; align-items:center; white-space:nowrap;
   transition:border-color var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
 .mc-skryte:hover{color:var(--copper); border-color:var(--copper-bright);}
+
+/* RYCHLÝ VÝBĚR: PRUH S DŮVODEM, NE ŠESTÁ PILULKA V ŘADĚ.
+   Bylo to tlačítko jako ostatně pět vedle a stálo na něm jen jméno
+   funkce — co dělá, se člověk dozvěděl až po otevření. Tenhle pruh
+   má celou šířku výpisu, vlastní řádek a dvě úrovně textu: nadpis
+   s počtem (to je ten důvod) a větu, co se stane doprava a doleva.
+   Okraj je --obrys-tlačítka, ne --line: proti výplní musí být vidět
+   aspoň 3 : 1 (hlídá test-okraje). */
+.mc-rychly{flex:1 1 100%; display:flex; align-items:center; gap:12px; width:100%;
+  font:inherit; text-align:left; cursor:pointer; padding:11px 12px;
+  color:var(--text-ondark); background:var(--plocha-jemna);
+  border:1px solid var(--obrys-tlacitka); border-radius:var(--r-sm);
+  transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
+.mc-rychly:hover{border-color:var(--copper-bright); background:var(--plocha-plovouci);}
+.mcr-ic{flex:none; display:flex; align-items:center; justify-content:center; width:34px; height:34px;
+  border-radius:var(--r-xs); background:var(--plocha-znacka); color:#fff;}
+.mcr-ic svg{width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.8;
+  stroke-linecap:round; stroke-linejoin:round;}
+.mcr-txt{flex:1 1 auto; min-width:0;}
+.mcr-nadpis{display:block; font-size:14px; font-weight:700; letter-spacing:-0.01em;}
+.mcr-popis{display:block; margin-top:1px; font-size:12px; font-weight:400; line-height:1.4;
+  color:var(--text-ondark-mute);}
+/* Šipka říká „otevře se okno", ne „přepne se přepínač" — je to jediný
+   prvek v téhle liště, který odvede jinam. */
+.mcr-sip{flex:none; font-size:22px; line-height:1; color:var(--text-ondark-mute);}
 
 /* =====================================================================
    PRSTEM SE TREFÍTE JEN DO TOHO, CO MÁ ASPOŇ 44 px

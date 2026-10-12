@@ -43,6 +43,25 @@ const stav = () => p.evaluate(() => {
 });
 
 pravda('na telefonu je tlačítko rychlého výběru vidět', await p.isVisible('#mc-rychly'));
+
+/* --- A ŘEKNE, PROČ DO NĚJ LEZT, JEŠTĚ NEŽ SE OTEVŘE ----------------
+   Stálo na něm jen „Rychlý výběr" — jméno funkce, které může
+   znamenat uložený filtr nebo přednastavené hledání. Co to dělá, se
+   člověk dozvěděl až uvnitř (oddíl níž to kontroluje), tedy poté,
+   co se odvážil klepnout. Kdo neklepl, nedozvěděl se nic.
+   Hlídá se tedy TEXT PŘED otevřením: počet (to je ten důvod — projit
+   seznamu po jednom dává smysl u tisíce nabídek, ne u pěti) a oba
+   směry, aby bylo předem jasné, co se s pozemky stane. */
+{
+  const t = await p.evaluate(() => {
+    const e = document.getElementById('mc-rychly');
+    return e ? e.innerText.replace(/\s+/g, ' ').trim() : '';
+  });
+  pravda('a předem řekne, kolik nabídek by se jinak muselo prolistovat',
+    /\d/.test(t), `na tlačítku stojí „${t}"`);
+  pravda('a co se stane doprava i doleva, ještě než se otevře',
+    /doprava/i.test(t) && /doleva/i.test(t), `na tlačítku stojí „${t}"`);
+}
 await p.click('#mc-rychly');
 await p.waitForTimeout(800);
 

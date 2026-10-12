@@ -21,6 +21,7 @@
 //  • Odmítnutá poloha něco ŘEKNE. Dřív se jen rozsvítilo tlačítko a
 //    člověk nevěděl, jestli se něco děje.
 import { chromium } from 'playwright-core';
+import { rozbalHledani } from './rozbal-hledani.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 await import('./falesna-supabase-chat.mjs');
@@ -64,6 +65,8 @@ async function otevri(ctx) {
   p.on('pageerror', (e) => chybyJs.push(String(e)));
   await p.goto(BASE + '/index.html', { waitUntil: 'load' });
   await p.waitForTimeout(2500);
+  // Na telefonu je tlačítko ve sbaleném hledání — viz rozbal-hledani.mjs.
+  await rozbalHledani(p);
   const otevirac = await p.$('#map-near');
   if (!otevirac) return { p, chybyJs, otevreno: false };
   await otevirac.scrollIntoViewIfNeeded();

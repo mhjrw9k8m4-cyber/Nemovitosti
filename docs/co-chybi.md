@@ -3919,13 +3919,13 @@ a **žádné jméno políčka ve výčtu nesmí obsahovat pomlčku s vysvětlen�
 vyříznutí věty spadnou dvě kontroly, jedna z nich v prohlížeči na
 skutečné hlášce po neúspěšném uložení.
 
-## 3bn. NA PŘÁNÍ: web na telefonu podle Sreality — velké fotky, širší karty, vysouvací nabídka — *12. 10.*
+## 3bn. NA PŘÁNÍ: web na telefonu podle Sreality — velké fotky, širší karty, sbalené hledání, vysouvací nabídka — *12. 10.*
 
 Zadání od majitele, zkráceně: *fotky roztáhnout a zvětšit, celou kartu
 roztáhnout víc do stran, hledání neukazovat celé (jen po rozkliknutí),
 a menu udělat jako normální vysouvací panel — „menu na mobilu jezdí
-nahoře, je to strašné".* Tři ze čtyř věcí jsou hotové a změřené.
-Čtvrtá (sbalené hledání) je **vrácená** a níž stojí proč.
+nahoře, je to strašné".* Všechny čtyři jsou hotové a změřené; u sbaleného hledání stojí níž
+i to, jak jsem ho napoprvé udělal špatně.
 
 ### 1. Karty: fotka přes celou šířku
 
@@ -3951,7 +3951,7 @@ nevešly plné. Do 356 px se vejde i nejdelší (94 px), takže zkrácená
 podoba se nikde nevykreslovala — a popisek, který nikdo neuvidí, je
 mrtvá značka na každé kartě. Je pryč i s pravidly ve stylopisu.
 
-### 2. Nabídka: vysouvací panel
+### 4. Nabídka: vysouvací panel
 
 Čtvrtá podoba za tenhle rok, a je to rozhodnutí majitele proti číslu,
 které jsem sem sám citoval (navigace použitá v 57 % úkolů pod
@@ -3966,26 +3966,76 @@ pozemek" dole. Hlavička spadla ze 119 na **65 px**.
 `js/menu.js` z toho, co v hlavičce už je. Jinak by hamburger musel do
 2 212 souborů a stál by na 2 212 místech místo na jednom.
 
-### 3. Sbalené hledání: ZKOUŠENO A VRÁCENO
+### 3. Sbalené hledání: napoprvé špatně, napodruhé dobře
 
-Udělané to bylo: lišta s tlačítkem „Upravit hledání" a počtem výsledků,
-panel přes obrazovku, „Hotovo". Vrátil jsem to, protože jsem si předem
-neujasnil jednu věc — **v tom panelu nejsou jen filtry.** Jsou v něm
-i našeptávač obcí, odznaky „co web z tvé věty pochopil" a tlačítko
-„Pozemky v okolí", tedy věci, které musí být vidět i po zavření.
+**Napoprvé** to byla lišta s tlačítkem „Upravit hledání" a panel přes
+celou obrazovku. Nevyšlo to, a chyba byla v návrhu, ne v provedení:
+**v tom panelu nejsou jen filtry.** Je v něm i našeptávač obcí, odznaky
+„co web z tvé věty pochopil" a „Pozemky v okolí", tedy věci, které musí
+být vidět i po zavření. Každá oprava toho překryvu si vyžádala další:
+zavírání klepnutím mimo otevřelo pod panelem inzerát → zatmívací plocha
+→ ta skončila nad panelem (panel leží ve vlastním vrstvícím kontextu,
+`.map-wide` má `z-index:1`) → po přesunu ležela na tlačítku „Zobrazit
+i podobné názvy" → Escape zavíral celé hledání místo našeptávače →
+výběr obce panel nezavíral, protože našeptávač si událost zastavuje.
+Zahodil jsem to.
 
-Každá oprava toho překryvu si vyžádala další: zavírání klepnutím mimo
-otevřelo pod panelem inzerát → zatmívací plocha → ta skončila nad
-panelem (panel leží ve vlastním vrstvícím kontextu, `.map-wide` má
-`z-index:1`) → po přesunu ležela na tlačítku „Zobrazit i podobné
-názvy" → Escape zavíral celé hledání místo našeptávače → výběr obce
-panel nezavíral, protože našeptávač si událost zastavuje. A nakonec si
-dvě kontroly začaly odporovat o to, jak vysoko smí hledání být.
+**Napodruhé** je to rozbalení **v toku**, ne překryv, a schovává se jen
+to, co se nastaví jednou:
 
-**Jak to udělat příště:** rozdělit panel na „hledání" a „filtry".
-V liště zůstane hledací pole, našeptávač, odznaky rozpoznaných filtrů
-a „Pozemky v okolí"; schová se jen druh, cena, výměra a řazení — tedy
-to, co se nastaví jednou. Pak nemá co s čím kolidovat.
+| vidět pořád | rozbalí se po klepnutí do pole |
+|---|---|
+| pole s lupou + našeptávač | Pozemky v okolí |
+| odznaky rozpoznaných filtrů | druhy nabídek (Vše / Prodej / Dražba / Exekuce) |
+| | Druh, cena, výměra a řazení |
+
+Naměřeno na 390 px: nad výpisem ubylo **278 px** a první karta se
+posunula z 697 na 419 px. Zavírá se „Hotovem" pod rozbaleným blokem.
+Rozbalí se i zaměřením pole, ne jen klepnutím — kdo se do něj dostane
+tabulátorem, má mít filtry po ruce stejně.
+
+A z té celé řady potíží nezbylo nic: blok v toku nemá co překrýt, takže
+není potřeba zatmívací plocha, nemá se co prát o vrstvy a Escape nemá
+co zavírat. Ve zkouškách stačí **jedno** klepnutí do pole na stránku
+(`scripts/rozbal-hledani.mjs`) — u překryvu jich bylo potřeba dvacet
+a i to byl signál, že je špatně návrh.
+
+### 4b. Karta stála nakřivo o 12 px a text pod fotkou měl pět řádků
+
+Na snímku z telefonu bylo vidět, že karta nesedí v panelu rovně, a že
+pod velkým náhledem je sloupec drobných odstavců. Obojí byla skutečná
+chyba, ne dojem.
+
+**Nakřivo.** Výpis `.opp-list` si drží `margin:0 -6px` + `padding:0 6px`,
+aby `overflow-y:auto` neodřízl zdvih karty pod myší. Proti tomu ale
+stálo `max-width:100%`: šířka se srazila na šířku rodiče, levý záporný
+okraj platil dál a pravý se jako přebytečný zahodil. Naměřeno na 390px
+displeji: karta **10 → 368 px**, tedy 10 px vlevo a 22 px vpravo. Mez
+teď počítá s oběma okraji (`calc(100% + 12px)`) a na mobilu, kde výpis
+nic neřeže, záporné okraje odpadly úplně. Karta stojí **10 → 380 px**
+a je o 12 px širší.
+
+**Text.** Pod fotkou stálo pět samostatných odstavců: cena, název,
+okres, druh, čísla — každý jiné písmo a jiný odstup, dohromady 218 px.
+Teď jsou tři řádky:
+
+| | dřív | teď |
+|---|---|---|
+| pořadí | cena, název, okres, druh, čísla | **název**, okres · druh, **cena** + čísla |
+| řádků textu | 5 | 3 |
+| výška těla karty | 218 px | **153 px** |
+| výška celé karty | 443 px | **385 px** |
+| odznaky | dva řádky (60 px) | jeden (28 px) |
+
+Název místa je nadpis karty — podle něj se pozemek ve výpisu pozná, tak
+stojí první a je tučnější. Okres a druh se vešly na jeden jemný řádek;
+oddělovač kreslí stylopis, ne skript, aby řádek nezačínal tečkou, když
+druh chybí. Cena zůstává největším písmem, jen už není první shora, a
+čísla (výměra, Kč/m², vzdálenost) stojí na účaří hned za ní. Zalomení
+je povolené: „379 320 000 Kč" je samo 150 px široké, takže na úzkém
+displeji čísla spadnou pod cenu místo přetečení z karty.
+
+Cena za to: nic. Karta je o 58 px nižší a o 12 px širší zároveň.
 
 ### Co se přitom našlo (vlastní chyby z téhle přestavby)
 
