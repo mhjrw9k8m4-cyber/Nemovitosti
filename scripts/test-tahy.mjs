@@ -46,7 +46,19 @@ const nezmereno = [];
 
 for (const url of STRANKY) {
   await p.goto(BASE + url, { waitUntil: 'load' });
-  await p.waitForTimeout(1800);
+  /* POČKAT, AŽ SE STRÁNKA DOKRESLÍ, NE JEN ODTIKAT 1 800 ms.
+     Výpisy se dopisují ze skriptu a stroj v CI je pomalejší než tenhle:
+     naměřilo se tam 29 ikon proti 56 tady, tedy ani ne polovina, a
+     zkouška spadla na vlastní pojistce „je co měřit". Plochý odpočet
+     tvrdí, kolik to trvá; tohle se ptá, jestli už je hotovo — čeká, až
+     se počet ikon mezi dvěma pohledy přestane měnit. */
+  await p.waitForFunction(() => {
+    const n = document.querySelectorAll('svg').length;
+    const stejne = window.__tahyPocet === n;
+    window.__tahyPocet = n;
+    return stejne && n > 0;
+  }, { timeout: 20000, polling: 700 }).catch(() => {});
+  await p.waitForTimeout(600);
   const r = await p.evaluate(() => {
     const out = [], mimo = [];
     for (const sv of document.querySelectorAll('svg')) {
@@ -80,8 +92,10 @@ await prohlizec.close();
 /* PŘEDPOKLAD: bez naměřených ikon by všechny kontroly prošly naprázdno.
    Čtyřicet je bezpečně pod skutečností (naměřeno 47 na pěti stránkách)
    a zároveň dost nad nulou, aby zachytilo rozbité načítání. */
+/* Když jich je málo, musí být vidět KDE — jinak se hledá naslepo. */
+const poStrankach = STRANKY.map((u) => `${u}: ${vsechny.filter((x) => x.kde === u).length}`).join(', ');
 pravda(`je co měřit — ikon s tahem na ${STRANKY.length} stránkách`, vsechny.length >= 40,
-  `naměřeno jen ${vsechny.length} ikon — kontroly níž by prošly naprázdno`);
+  `naměřeno jen ${vsechny.length} ikon — kontroly níž by prošly naprázdno (${poStrankach})`);
 if (vsechny.length < 40) {
   console.log('\nTah ikon');
   console.log(zpravy.join('\n'));
