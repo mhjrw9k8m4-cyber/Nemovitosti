@@ -48,8 +48,11 @@ function hotovo() {
 }
 
 /* ---- 1) soubory a jejich velikost ---- */
-const SOUBORY = ['inter-latin.woff2', 'inter-latin-ext.woff2',
-  'fraunces-latin.woff2', 'fraunces-latin-ext.woff2'];
+/* DVĚ PÍSMA, NE ČTYŘI. Patkové nadpisové písmo (Fraunces) je zrušené —
+   celý web jede na jednom bezpatkovém, jak to mají Hemnet, Idealista
+   i Zillow. Odešly s ním dva soubory (105 kB) a jeden <link rel=preload>
+   na 2 228 stránkách; kontrola na preload níž proto hlídá jen Inter. */
+const SOUBORY = ['inter-latin.woff2', 'inter-latin-ext.woff2'];
 const STROP = 70 * 1024;   // plné soubory měly 47–83 kB; podřezané 15–61 kB
 let bajtu = 0;
 const chybi = [], velke = [];
@@ -60,10 +63,10 @@ for (const f of SOUBORY) {
   bajtu += v;
   if (v > STROP) velke.push(`${f} má ${(v / 1024).toFixed(0)} kB`);
 }
-pravda('všechna čtyři písma jsou na disku', chybi.length === 0, chybi.join(', '));
+pravda('obě písma jsou na disku', chybi.length === 0, chybi.join(', '));
 if (chybi.length) hotovo();
-pravda(`dohromady váží ${(bajtu / 1024).toFixed(0)} kB (plná písma měla 253 kB)`,
-  bajtu < 180 * 1024, `${(bajtu / 1024).toFixed(0)} kB — podřezání se nejspíš ztratilo`);
+pravda(`dohromady váží ${(bajtu / 1024).toFixed(0)} kB (čtyři plná písma měla 253 kB)`,
+  bajtu < 60 * 1024, `${(bajtu / 1024).toFixed(0)} kB — podřezání se nejspíš ztratilo`);
 pravda('a žádné samo není větší než podřezané být má', velke.length === 0, velke.join('; '));
 
 /* ---- 2) sada znaků je napsaná v fonts/PUVOD.md ---- */
@@ -132,7 +135,14 @@ pravda('a každý z nich leží v podřezané sadě',
 /* ---- 4) stylopis musí souhlasit se soubory ---- */
 const css = fs.readFileSync(path.join(KOREN, 'css', 'styles.css'), 'utf8');
 const faces = [...css.matchAll(/@font-face\{([^}]*)\}/g)].map((m) => m[1]);
-pravda(`v stylopisu jsou čtyři @font-face (${faces.length})`, faces.length === 4, `${faces.length}`);
+/* DVA @font-face, PO JEDNOM NA SOUBOR. Byly čtyři, dokud měly nadpisy
+   vlastní patkové písmo; to je zrušené (viz výš a fonts/PUVOD.md).
+   Počet se váže na SOUBORY, ne na pevné číslo: každý podřezaný soubor
+   musí mít v stylopisu svůj zápis s vlastním unicode-range, jinak si
+   o něj prohlížeč buď neřekne vůbec, nebo si o něj řekne u znaku,
+   který v něm není. */
+pravda(`v stylopisu je @font-face na každý soubor (${faces.length} ku ${SOUBORY.length})`,
+  faces.length === SOUBORY.length, `${faces.length} zápisů proti ${SOUBORY.length} souborům`);
 /* FONT-DISPLAY MUSÍ BÝT „OPTIONAL", NE „SWAP". `swap` vykreslí
    záložním písmem a po dojetí vlastního ho vymění — a ta výměna
    PŘELÁME TEXT. Zkouška scripts/test-stabilita.mjs na to padala v CI
@@ -145,8 +155,8 @@ pravda(`v stylopisu jsou čtyři @font-face (${faces.length})`, faces.length ===
    Vrácení na `swap` by tu vadu vrátilo, a je to změna o jedno slovo,
    kterou by si nikdo nevšiml. Proto tahle kontrola. */
 const zobrazeni = faces.map((f) => (/font-display:\s*([a-z]+)/.exec(f) || [, '(chybí)'])[1]);
-pravda(`všechna čtyři písma mají font-display: optional (${[...new Set(zobrazeni)].join(', ')})`,
-  zobrazeni.length === 4 && zobrazeni.every((x) => x === 'optional'),
+pravda(`každý zápis má font-display: optional (${[...new Set(zobrazeni)].join(', ')})`,
+  zobrazeni.length === SOUBORY.length && zobrazeni.every((x) => x === 'optional'),
   `nalezeno: ${zobrazeni.join(', ')} — „swap" přelomí text po dojetí písma (viz test-stabilita)`);
 const spatnaVaha = faces.filter((f) => !/font-weight:400 800/.test(f));
 pravda('a každý hlásí tu osu váhy, kterou soubory nesou (400 800)',

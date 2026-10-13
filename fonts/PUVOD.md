@@ -1,6 +1,6 @@
 # Písma — odkud jsou a jak jsou podřezaná
 
-Dvě rodiny, obě na **vlastním serveru**, ne z Google Fonts: přes cizí CDN
+Jedna rodina, na **vlastním serveru**, ne z Google Fonts: přes cizí CDN
 by každé načtení stránky hlásilo návštěvníka třetí straně a do
 `ochrana-udaju.html` by musel přijít další zpracovatel. Leží vedle
 stylopisu a stránky je předepisují (`<link rel="preload">`), takže dojedou
@@ -9,12 +9,20 @@ souběžně se stylem, ne až po něm.
 | Soubor | Rodina | Licence |
 |---|---|---|
 | `inter-latin.woff2`, `inter-latin-ext.woff2` | [Inter](https://rsms.me/inter/) | SIL Open Font License 1.1 |
-| `fraunces-latin.woff2`, `fraunces-latin-ext.woff2` | [Fraunces](https://fraunces.undercase.xyz/) | SIL Open Font License 1.1 |
 
-Obě jsou **proměnná** písma (jedna osa váhy, Fraunces navíc osu optické
-velikosti). Fraunces se v nadpisu sama zúží a zostří, v drobném textu
-povolí — `font-optical-sizing:auto` je výchozí, takže to stylopis nemusí
-nikde nastavovat.
+Je to **proměnné** písmo (jedna osa váhy, 400–800), takže nadpis o váze
+700 i text o váze 400 jdou z téhož souboru.
+
+## Patkové nadpisové písmo je zrušené
+
+Nadpisy měly vlastní rodinu (`fraunces-latin.woff2`,
+`fraunces-latin-ext.woff2`, 105 kB). Odešla při přebarvení webu do
+čistého vzhledu: velké realitní weby — Hemnet, Idealista, Zillow,
+Rightmove, Immobiliare — jedou všechny na jednom bezpatkovém a rozdíl
+mezi nadpisem a textem u nich dělá váha, velikost a prostrkání, ne
+výměna písma. Ušetřily se tím dva soubory, 105 kB a jeden
+`<link rel="preload">` na 2 228 stránkách. Kdyby se někdy měla vrátit,
+je jediné místo, kde se to dělá: `--font-display` ve `css/styles.css`.
 
 ## Proč jsou podřezaná
 

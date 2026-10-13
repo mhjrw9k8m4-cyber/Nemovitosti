@@ -25,7 +25,7 @@ import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const PORT = 8310;
-const SVETLA = '#F9FAF9';
+const SVETLA = '#FFFFFF';
 let ok = 0, chyb = 0; const zpravy = [];
 function pravda(popis, v, proc) {
   if (v) { ok++; zpravy.push('  ✓ ' + popis); }

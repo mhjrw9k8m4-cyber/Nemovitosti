@@ -4183,6 +4183,107 @@ text v kartách" porovnávala obdélníky blokových prvků, tedy i prázdno
 za koncem krátkého řádku. U úzkých karet to nevadilo, u širokých začala
 hlásit překryv ničeho. Měří teď obdélníky samotných písmen (Range).
 
+## 3bo. NA PŘÁNÍ: celý web předělaný vizuálně — jedna bílá, jedno písmo, žádná textura — *13. 10.*
+
+Zadání znělo: nechat všechny informace, předělat jen vzhled, vzít si
+příklad z nějakého obrovského realitního webu, propojit dva návrhy
+a udělat to extrémně čistě. Vzal jsem si **Hemnet** (švédský, největší
+v zemi) a **Idealistu** (španělský). Co mají společného a co jsem
+odtud vzal: neutrální téměř bílá stránka, čistě bílé karty, téměř černé
+písmo, barva značky jen jako akcent — a jedno bezpatkové písmo na všechno.
+
+### 1. Paletka: ze zelenošedé do neutrální
+
+Stránka byla laděná dozelena (`--bg:#F2F5F2`, plochy s nádechem),
+protože web je o pozemcích. Jenže zelená ve VŠEM nedovolí zelené
+znamenat něco konkrétního. Teď je podklad `#F2F4F3`, karty `#FFFFFF`,
+text `#101513` — a zelená zbyla jen na značku, hlavní tlačítko a odkazy.
+
+### 2. Hlavička: jedna neprůhledná barva, žádné sklo
+
+Hlavička byla na monitoru průsvitná s rozmazaným pozadím
+(`backdrop-filter`). Tři důvody, proč je pryč:
+
+* **Barva.** Průsvitná hlavička mění barvu podle toho, co se pod ní
+  zrovna roluje. Lišta prohlížeče (`meta theme-color`) je přitom jedna
+  pevná hodnota, takže se nahoře nikdy netrefí a je vidět šev.
+* **`position:fixed` uvnitř.** `backdrop-filter` dělá vztažný rámec,
+  takže se pevně umístěné potomky polohují podle hlavičky, ne podle okna.
+* **Jednota.** Na dotyku sklo nebylo (kvůli iOS), na monitoru ano. Web
+  tedy vypadal na každém zařízení jinak.
+
+`test-hlavicka` hlídala **pravý opak** („na monitoru sklo zůstalo") —
+přepsal jsem tu kontrolu na to, co teď platí: neprůhledná všude.
+
+### 3. Zrno přes celou stránku — zrušené
+
+Přes celý web ležela vrstva velmi jemného šumu (`body::after`,
+`mix-blend-mode:multiply`). Měla dělat plochy méně skelné. Co stála:
+
+* **Barvu.** Násobením ztmavila všechno pod sebou. Naměřeno: bílá
+  hlavička `#FFFFFF` se vykreslila jako `#FAFAFA`. Obcházelo se to tím,
+  že se do `theme-color` psala ta ztmavená hodnota — tedy barva, která
+  se nerovnala ničemu ve stylopisu.
+* **Plynulost na iOS.** Míchaná celoobrazovková vrstva nad hlavičkou
+  nutí prohlížeč u každého snímku počítat, co je pod ní. Proto už dřív
+  nebyla na dotyku vůbec.
+* **Čistotu.** Velké realitní weby jedou na plochých bílých kartách.
+
+Nová pojistka v `test-hlavicka`: *pevná vrstva přes celé okno nesmí mít
+`mix-blend-mode`*. Ověřeno sabotáží — s vrácenou vrstvou spadly tři
+kontroly, bez ní je zelená.
+
+### 4. Jedno písmo místo dvou
+
+Nadpisy byly patkové (Fraunces). Hemnet, Idealista, Zillow, Rightmove
+i Immobiliare jedou **všechny** na jednom bezpatkovém a rozdíl mezi
+nadpisem a textem u nich dělá váha, velikost a prostrkání. Fraunces je
+tedy pryč a s ní:
+
+* dva soubory písem, **105 kB**,
+* jeden `<link rel="preload">` na **2 228 stránkách**,
+* a jedno načítání písma, které mělo dojet před prvním vykreslením nadpisu.
+
+Při té příležitosti odešel i přepis prostrkání nadpisů na −0,01 em —
+ta hodnota byla povolená kvůli patkám, u Interu ve 32 a 42 px dělá
+rozsypaný nadpis. Nadpisy jsou zpátky na −0,03 em, které si nesou samy.
+
+`test-pisma` počítala natvrdo „čtyři @font-face" a „všechna čtyři písma".
+Přepsal jsem obě kontroly na počet SOUBORŮ, takže si při další změně
+sednou samy. Ověřeno sabotáží: po smazání jednoho `@font-face` hlásí
+„1 ku 2".
+
+### 5. NALEZENO při tom: lišta nad mapou měla na monitoru 570 × 128 px prázdna
+
+Tohle je vlastní starší chyba, kterou odhalila až prohlídka hotového
+vzhledu. Lišta nad mapou má na širokém displeji mřížku s pojmenovanými
+plochami: nahoře hledání, okolí a filtry, dole rychlé filtry. Jenže
+když kvůli telefonu přibyl obal `.ms-rozsirene` (schová všechno kromě
+pole s lupou), přestaly být ty prvky přímými dětmi lišty — selektory
+s `>` je minuly a všechny spadly do **jedné** buňky.
+
+Naměřeno na 1440×900 před opravou:
+
+| | před | po |
+|---|---|---|
+| výška lišty | 174 px | **105 px** |
+| pole hledání | 570 px, samo v levé polovině | **660 px** |
+| rychlé filtry | 512 px ve sloupci vpravo | **1 102 px** přes celou šířku |
+| prázdno v liště | 570 × 128 px | **žádné** |
+
+Opraveno jedním řádkem (`display:contents` na obalu, jen nad 1041 px)
+a přepsáním čtyř selektorů z přímých na potomkové — `display:contents`
+mění vykreslování, ne strom, takže `>` by dál nesedělo.
+
+### Zkoušky
+
+Celá dávka z CI na hotovém stromu: **97 neprohlížečových** kontrol
+zelených, prohlížečová dávka **102** kontrol zelená. Tři kontroly
+musely změnit, co měří, a u každé je v souboru napsané proč:
+`test-hlavicka` (sklo na monitoru → neprůhledná všude, + nová pojistka
+na míchanou vrstvu), `test-pisma` (čtyři písma → počet souborů),
+`test-barva-listy` (konstanta světlé barvy `#F9FAF9` → `#FFFFFF`).
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

@@ -8,12 +8,8 @@
  *     písmem a pak PŘESKOČÍ do pravého — stránka se při načtení hýbe,
  *   • návštěvníkova IP adresa chodila Googlu při každém otevření, což
  *     je u českého webu věc, kterou nikdo nechce vysvětlovat.
- * Teď jsou dvě rodiny, leží vedle stylopisu a jsou v HTML předepsané
- * (<link rel=preload>), takže dojedou souběžně se stylem, ne až po něm.
- *
- * Fraunces má osu optické velikosti: v nadpisu se sama zúží a zostří,
- * v drobném textu povolí. `font-optical-sizing:auto` (výchozí) to řeší
- * bez jediného čísla navíc.
+ * Teď je jedna rodina, leží vedle stylopisu a je v HTML předepsaná
+ * (<link rel=preload>), takže dojede souběžně se stylem, ne až po něm.
  *
  * Rozsahy znaků jsou doslova ty, které dává Google — latin a latin-ext.
  * České háčky a kroužky jsou v latin-ext; bez něj by se ř, ě, ů a ž
@@ -68,15 +64,11 @@
    nevyměňuje, takže na velmi pomalém připojení může celé načtení
    proběhnout v záložním písmu. Při přednačtení (`rel=preload` na všech
    stránkách, hlídá scripts/test-pisma.mjs), vlastním serveru a 22 kB
-   na soubor se to ale stihne: v měření výš se Fraunces i Inter načetly
-   a použily ve všech případech (h1 31 px, úvodní odstavec 76 px —
+   na soubor se to ale stihne: v měření výš se Inter načetl
+   a použil ve všech případech (h1 31 px, úvodní odstavec 76 px —
    shodně se swap). Stabilní rozvržení za cenu, kterou skoro nikdo
    nezaplatí, je lepší obchod než přelomený text u každého návštěvníka
    s prázdnou cache. */
-@font-face{font-family:'Fraunces'; src:url('../fonts/fraunces-latin-ext.woff2') format('woff2');
-  font-weight:400 800; font-style:normal; font-display:optional; unicode-range:U+0100-017F, U+0304, U+0308, U+2020, U+20A0-20BF, U+2113;}
-@font-face{font-family:'Fraunces'; src:url('../fonts/fraunces-latin.woff2') format('woff2');
-  font-weight:400 800; font-style:normal; font-display:optional; unicode-range:U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
 @font-face{font-family:'Inter'; src:url('../fonts/inter-latin-ext.woff2') format('woff2');
   font-weight:400 800; font-style:normal; font-display:optional; unicode-range:U+0100-017F, U+0304, U+0308, U+2020, U+20A0-20BF, U+2113;}
 @font-face{font-family:'Inter'; src:url('../fonts/inter-latin.woff2') format('woff2');
@@ -86,25 +78,27 @@
   /* Neutrály — vrstvená hloubka ploch (architektura + stínování).
      Modrošedá navy: důvěra a profesionalita, sladěný kontrast. */
   /* ---------------------------------------------------------------
-     TŘI PÍSMA — jak to mají velké realitní weby (Compass a spol.):
-     patkové na nadpisy (vážnost a tvář), bezpatkové na text a ovládání
-     (čitelnost), strojové na čísla a štítky (data). Dvě písma dělají
-     web korektní; teprve třetí mu dá charakter.
+     JEDNO PÍSMO NA CELÝ WEB — Inter, a nic jiného.
+     Nadpisy byly patkové (Fraunces). Na webu o penězích a katastru to
+     působilo jako pohádková knížka, a hlavně: velké realitní weby —
+     Hemnet, Idealista, Zillow, Rightmove, Immobiliare — jedou všechny
+     na jednom bezpatkovém. Rozdíl mezi nadpisem a textem tam nedělá
+     výměna rodiny, ale VÁHA, VELIKOST a PROSTRKÁNÍ. Přesně to tu je:
+     nadpisy 700–800 s prostrkáním -0.03em, text 400 s 0.
+     Co to ušetřilo: dva soubory a 105 kB písem, jeden <link rel=preload>
+     na 2 228 stránkách a jedno celé načítání písma, které mělo dojet
+     před prvním vykreslením nadpisu.
+     Token --font-display zůstává — jako JEDNO místo, kde se případné
+     nadpisové písmo vymění, a aby 33 pravidel nemuselo lhát o tom, co
+     je nadpis a co ovládání.
      --------------------------------------------------------------- */
-  /* JEDNO PÍSMO PRO CELÝ WEB — Archivo.
-     Fraunces byla měkká patková antikva s velkým kontrastem a hravou
-     kurzívou; na webu o penězích a katastru působila jako pohádková
-     knížka. Archivo je grotesk s proměnnou ŠÍŘKOU (75–125): nadpisy jdou
-     rozšířit a přitáhnout k sobě, a z toho vzniká ta autorita, kterou
-     mají zpravodajské a datové weby. Jedna rodina místo dvou, rozdíl
-     dělá váha a šířka — ne výměna písma. */
-  /* Dvě rodiny místo tří. Třetí (IBM Plex Mono) držela popisky verzálkami
-     s velkým prostrkáním — a právě ty dělaly z webu plakátovací plochu:
-     nad každým oddílem jeden, v každé kartě další. Data, která se mají
-     svisle srovnat (ceny, počty), teď drží `font-variant-numeric:tabular-nums`
+  /* Mono rodina je taky Inter. Třetí písmo (IBM Plex Mono) držela popisky
+     verzálkami s velkým prostrkáním — a právě ty dělaly z webu plakátovací
+     plochu: nad každým oddílem jeden, v každé kartě další. Data, která se
+     mají svisle srovnat (ceny, počty), drží `font-variant-numeric:tabular-nums`
      v Interu; to je přesně to, kvůli čemu se mono používalo, a nestojí to
      ani jeden stažený soubor. */
-  --font-display:'Fraunces','Source Serif 4','Iowan Old Style','Georgia',serif;
+  --font-display:'Inter','Helvetica Neue',Arial,sans-serif;
   --font-ui:'Inter','Helvetica Neue',Arial,sans-serif;
   --font-mono:'Inter','Helvetica Neue',Arial,sans-serif;
 
@@ -128,8 +122,22 @@
      devíti jednotkách světlosti:
        text 24 · značka 37,5 · akcent tmavý 42 · akcent 51 · linka 60
      Bílý text na značkové zeleni má 9,72 : 1, na akcentu 8,03 : 1. */
-  --bg:#E3EFE7;                 /* plocha stránky — jedna barva, ta, kterou přechod ukazoval nejvíc */
-  --ink:#EEF6F1;                /* zapuštěná plocha: vstupy, pole — stejná rodina jako plocha, ne teplá */
+  /* ===================================================================
+     PŘEMALOVÁNÍ NA ČISTO (na přání: „vem si za vzor velký realitní web
+     a udělej to extrémně čistě").
+     Vzor jsou dva: HEMNET drží plochy skoro bílé a nechává mluvit
+     fotky a čísla, IDEALISTA staví obsah na vlásečnicové linky místo
+     rámečků a stínů. Obojí má jedno společné — podklad neurčuje barvu,
+     jen ustoupí. Náš podklad byl zelený (#E3EFE7) a zeleň se tím
+     dostala všude: do karet, polí, odznaků i do fotek, protože oko
+     porovnává s okolím. Zeleň zůstává, ale jako ZNAČKA (tlačítka, logo,
+     odkazy), ne jako plocha.
+     Kontrasty po přemalování (měří test-kontrast): text 18,6 : 1 na
+     kartě, tlumený 6,8 : 1, značková zeleň 7,6 : 1. Všechny stouply,
+     protože nejvyšší plocha je nově čistá bílá.
+     =================================================================== */
+  --bg:#F2F4F3;                 /* plocha stránky — jedna barva, ta, kterou přechod ukazoval nejvíc */
+  --ink:#EDEFEE;                /* zapuštěná plocha: vstupy, pole — stejná rodina jako plocha, ne teplá */
   /* ZVÝŠENÁ PLOCHA: karty a panely. Byla čistě bílá, a byla tím jediná
      v celé rodině ploch bez zeleně: --ink je #EEF6F1 a --ink-soft2
      #F5FAF7, obě zelenkavé. Přitom je ze všech největší — změřeno na
@@ -138,8 +146,8 @@
      bílá se stopou zeleně: pořád čte jako bílá, ale do rodiny patří.
      Kontrast skoro beze změny: #12241A 15,9 : 1 (bylo 16,1),
      --muted 7,4 : 1 (7,58), zástupný text 5,3 : 1 (5,44). */
-  --ink-soft:#F9FDFB;
-  --ink-soft2:#F5FAF7;          /* nejvyšší plocha: hover, aktivní */
+  --ink-soft:#FFFFFF;
+  --ink-soft2:#F7F8F8;          /* nejvyšší plocha: hover, aktivní */
   /* Tmavý pás. Web byl celý světlý, takže neměl rytmus — jedna dlouhá
      plocha bez nádechu. Tmavá sekce je to, čím velké weby dělají předěl. */
   --ink-dark:#12241A;
@@ -153,11 +161,11 @@
      text na bílém překryvu, tedy přesně --text-ondark (#12241A): o něco
      tmavší, poměr 14,76 : 1 místo 13,42 : 1, a o jednu skoro stejnou
      barvu v paletě míň. */
-  --text-ondark:#12241A;        /* hlavní text — hluboká inkoustová s náznakem brandu */
+  --text-ondark:#101513;        /* hlavní text — hluboká inkoustová s náznakem brandu */
   /* Tlumený text. Dřív #565F72 → 4,79 : 1 na světlém čipu, tedy pod normou
      a hlavně opticky vybledle. Teď 5,7 : 1 na čipu a 6,5 : 1 na stránce. */
-  --text-ondark-mute:#4A5750;
-  --muted:#4A5750;
+  --text-ondark-mute:#585F5B;
+  --muted:#585F5B;
   /* Primární značková modrá. Dřív #26694A — jenže drobný text v téhle
      barvě měl na světlém pozadí jen 3,7–4,5 : 1, tedy POD normou WCAG AA
      (4,5 pro běžný text). Na mobilu na slunci se to nepřečte a web působí
@@ -332,10 +340,10 @@
      ukazatele síly hesla byla prázdná. Inkoustová s nízkou průhledností
      dělá to, co ta barva měla dělat: o stupeň jiná plocha než karta pod
      ní, ať je ta karta bílá nebo zelenkavá. */
-  --plocha-jemna: rgba(20,35,28,0.05);
-  --plocha-jemna-vic: rgba(20,35,28,0.075);
-  --line: rgba(20,35,28,0.16);
-  --line-strong: rgba(20,35,28,0.3);
+  --plocha-jemna: rgba(16,21,19,0.05);
+  --plocha-jemna-vic: rgba(16,21,19,0.075);
+  --line: rgba(16,21,19,0.14);
+  --line-strong: rgba(16,21,19,0.28);
   /* Okraj ovládacího prvku. Políčko, seznam nebo tlačítko musí být od plochy
      pod sebou odlišené poměrem aspoň 3:1 (WCAG 2.1, pravidlo 1.4.11) — jinak
      to vypadá, že tam žádné políčko není. Slabší linky výš na to nestačí:
@@ -343,7 +351,7 @@
      scripts/test-okraje.mjs. */
   /* Zeleň je světlejší než původní navy, takže stejné krytí dalo jen
      2,96 : 1 a test okrajů spadl. Zesíleno na 0,54. */
-  --line-ui: rgba(20,35,28,0.55);
+  --line-ui: rgba(16,21,19,0.55);
   --panel:#fff;
   /* PLOVOUCÍ PANEL nad mapou a záhlaví. Psalo se to jako
      rgba(255,255,255,0.95) na deseti místech — a právě tahle bílá
@@ -361,7 +369,7 @@
      proti rgb(249,250,249) v liště. Zkouška to neviděla, protože
      měřila bez dotyku, kde platí průsvitná varianta; hlídá to teď
      v obou (scripts/test-barva-listy.mjs). */
-  --plocha-plovouci-plna:#F9FAF9;
+  --plocha-plovouci-plna:#FFFFFF;
   --plocha-plovouci-tlum:rgba(255,255,255,0.85);
   /* PÁSY: úvodní plocha stránky a patička.
      Byl to druhý barevný systém vedle světlého webu — tmavě zelený pás
@@ -427,7 +435,7 @@
      stejné tlumené šedi jako běžný vedlejší text, a protože jsou malé a
      prostrkané, z té šedi zmizely úplně. O stupeň tmavší: pořád tiché, ale
      přečtou se. 10,2 : 1 na bílé kartě, 9,1 : 1 na béžovém čipu. */
-  --popisek:#37443D;
+  --popisek:#3A403D;
 
   /* Obrys vedlejšího tlačítka na světlém podkladu. Jedno místo pro
      všechna čtyři (.btn-secondary, .lp-btn, .map-near-btn, .to-top) —
@@ -1089,7 +1097,15 @@ body.vm-otevreno{overflow:hidden;}
    pak přes logo a přes „Přidat pozemek" prosvítalo měřítko, uvedení
    zdrojů i tlačítka zoomu. Vyšší vrstvy zůstávají nad hlavičkou tam, kde
    to dává smysl: mapa na celou obrazovku 1200, výběr okolí 5000. */
-header{border-bottom:1px solid var(--line); padding:20px 0; position:fixed; top:0; left:0; right:0; z-index:1100; background:var(--plocha-plovouci-tlum); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:padding var(--cas-zakladni) var(--ease);}
+/* HLAVIČKA JE JEDNA BARVA, A TO TATÁŽ, KTEROU HLÁSÍ theme-color.
+   Byla průsvitná s rozmazáním pozadí (85 % bílé), takže se její barva
+   měnila podle toho, co se pod ni zrovna posunulo — na monitoru vyšla
+   #FAFAFA proti #FFFFFF v liště prohlížeče a nahoře byla hrana.
+   Rozmazání navíc dělalo z hlavičky obalový blok pro position:fixed,
+   takže vysouvací nabídka uvnitř ní se umisťovala vůči hlavičce, ne
+   vůči oknu. Na dotykových zařízeních se obojí vypínalo už dřív — teď
+   to platí všude. Hlídá scripts/test-barva-listy.mjs. */
+header{border-bottom:1px solid var(--line); padding:20px 0; position:fixed; top:0; left:0; right:0; z-index:1100; background:var(--plocha-plovouci-plna); transition:padding var(--cas-zakladni) var(--ease);}
 /* PŘICHÁZÍ POMALU, ODCHÁZÍ RYCHLE — každý směr má svůj vlastní čas.
    Objevit se z ničeho nic za desetinu vteřiny působí jako cvaknutí:
    hlavička „připlave rychlostí světla" a člověk nestihne pochopit, odkud.
@@ -1147,7 +1163,7 @@ header:focus-within{opacity:1 !important; pointer-events:auto !important;}
    (Proměnná --vyska-hlavicky je tu kvůli čitelnosti; nikdo ji nenastavuje.) */
 body{padding-top:var(--vyska-hlavicky, 85px);}
 /* Mobil: silnější podklad + slabší blur = plynulejší scroll na iPhonu */
-@media (max-width:768px){ header{background:var(--plocha-plovouci); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);} }
+
 header.shrink{padding:12px 0;}
 /* Rozmazané pozadí (backdrop-filter) je na lepivé hlavičce hezké na
    monitoru, ale na iPhonu je to hlavní příčina toho, že hlavička při
@@ -1166,7 +1182,8 @@ header.shrink{padding:12px 0;}
      proměnná. Nechytilo se to proto, že tmavý režim se zkoušel na
      monitoru (hover:hover) a dotyk ve světlém — ta jediná kombinace,
      ve které vada je, se neměřila. */
-  header{background:var(--plocha-plovouci-plna); backdrop-filter:none; -webkit-backdrop-filter:none;}
+  /* (Barvu i vypnuté rozmazání má hlavička nově v základním pravidle,
+     takže tu nezbylo co přepisovat.) */
 }
 header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .logo{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.02em; font-size:24px; display:flex; align-items:center; gap:10px; text-decoration:none;}
@@ -3089,27 +3106,42 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
     grid-template-areas:
       "hledani okoli  filtry"
       "rychle  rychle rychle";}
+  /* OBAL ROZBALOVÁNÍ TU NESMÍ BÝT VIDĚT. `.ms-rozsirene` přibylo kvůli
+     telefonu (schová všechno kromě pole s lupou) a tiše rozbilo tuhle
+     mřížku: okolí, rychlé filtry a „Druh, cena, výměra a další" přestaly
+     být přímými dětmi lišty, spadly do JEDNÉ buňky a srovnaly se pod
+     sebe. Naměřeno na 1440×900: pole s lupou 570×46 stálo samo v levé
+     polovině lišty vysoké 174 px — 570 × 128 px prázdna — a tři ovládací
+     prvky se tísnily ve sloupci 512 px vpravo. `display:contents` obal
+     z vykreslování vyjme a jeho děti se do mřížky vrátí.
+     Selektory proto musí být potomkové, ne přímé: `display:contents`
+     mění vykreslování, ne strom, takže `>` by dál nesedělo. */
+  .ms-rozsirene{display:contents;}
   .map-controls-panel > .map-search{grid-area:hledani;}
-  .map-controls-panel > .map-okoli{grid-area:okoli;}
-  .map-controls-panel > .ms-filters{grid-area:filtry; justify-self:stretch;}
-  .map-controls-panel > .ms-group{grid-area:rychle;}
+  .map-controls-panel .map-okoli{grid-area:okoli;}
+  .map-controls-panel .ms-filters{grid-area:filtry; justify-self:stretch;}
+  .map-controls-panel .ms-group{grid-area:rychle;}
+  /* Tlačítko zavírání patří jen telefonu — na širokém displeji se nic
+     neschovává, takže by to byl pátý prvek v liště bez práce. */
+  .map-controls-panel .msr-hotovo{display:none;}
   /* Rozpoznané odznaky a pruh hlídaného místa jsou věty, ne tlačítka:
      dostanou vlastní řádek pod lištou, přes celou šířku. */
-  .map-controls-panel > .ms-chipy, .map-controls-panel > .misto-pruh{grid-column:1 / -1;}
+  .map-controls-panel .ms-chipy, .map-controls-panel .misto-pruh{grid-column:1 / -1;}
   /* A KDYŽ SE OBJEVÍ, PŘIDÁ SI APLIKACE NA VÝŠKU. Jinak by ten řádek
      navíc ukrojil ze seznamu: lišta roste ze 111 px na 144 (odznaky),
      153 (hlídané místo) nebo 186 px (obojí), a na notebooku 1280×700,
      kde se uplatní spodní mez 600 px, spadl výpis z 399 px na 324 —
      pod výšku jedné karty (362 px). Na vyšších displejích se nic
      nemění, tam 76 dvh tu mez převýší. */
-  .map-app:has(.map-controls-panel > :is(.ms-chipy, .misto-pruh):not([hidden])){min-height:660px;}
-  .map-app:has(.map-controls-panel > .ms-chipy:not([hidden])):has(.map-controls-panel > .misto-pruh:not([hidden])){min-height:700px;}
+  .map-app:has(.map-controls-panel :is(.ms-chipy, .misto-pruh):not([hidden])){min-height:660px;}
+  .map-app:has(.map-controls-panel .ms-chipy:not([hidden])):has(.map-controls-panel .misto-pruh:not([hidden])){min-height:700px;}
   /* V liště nestojí nic na sobě, takže odsazení shora (14 px, 12 px, 8 px)
      by jen rozhodila svislé zarovnání. */
-  .map-controls-panel > *{margin-top:0;}
+  .map-controls-panel > *,
+  .map-controls-panel .ms-rozsirene > *{margin-top:0;}
   .map-controls-panel > .map-search{min-width:0;}
   .map-controls-panel .map-near-btn{margin-top:0; width:auto; white-space:nowrap;}
-  .map-controls-panel > .ms-group{min-width:0;}
+  .map-controls-panel .ms-group{min-width:0;}
   /* Rozpoznané odznaky i rychlé filtry na jeden řádek: v liště nesmí
      druhý řádek odznaků zvednout celou lištu a ukrojit ze seznamu. */
   .map-controls-panel .map-filters, .map-controls-panel .ms-chipy{flex-wrap:nowrap;
@@ -4544,33 +4576,26 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
 }
 
 /* =====================================================================
-   ZRNO
-   Plochy byly dokonale hladké, a to je právě to, co působí digitálně
-   a mrtvě. Papír, plátno ani mapa hladké nejsou. Tohle je velmi jemné
-   zrno přes celou stránku — tak slabé, že se na něj nedá zaostřit;
-   pozná se jen tím, že plocha přestane vypadat jako sklo.
+   ZRNO JE ZRUŠENÉ — a tady je napsané proč, aby se nevrátilo.
+   Přes celou stránku byla vrstva velmi jemného šumu (body::after,
+   position:fixed, z-index 9999, mix-blend-mode:multiply). Měla dělat
+   plochy méně skelné. Stála ale tři věci:
 
-   Je to jeden generovaný obrázek v CSS (žádný soubor navíc), připnutý
-   k oknu, bez animace a bez zachytávání kliknutí.
+   1) BARVU. Násobením ztmavila všechno pod sebou o pár jednotek, takže
+      bílá hlavička se vykreslila jako #FAFAFA. Lišta prohlížeče
+      (meta theme-color) je jedna pevná hodnota a vrstvu nenásobí —
+      nahoře byl proto vidět šev. Dřív se to obcházelo tím, že se do
+      theme-color psala ta ztmavená hodnota; to je ale obrácený postup,
+      barva lišty se pak nerovnala ničemu ve stylopisu.
+   2) PLYNULOST na iOS. Míchaná celoobrazovková vrstva nad hlavičkou nutí
+      prohlížeč u každého snímku počítat, co je pod ní; překreslování
+      pevně umístěné hlavičky se tím rozjelo a nad ní prosvítal pruh
+      obsahu. Proto už dřív nebyla na dotyku vůbec (@media (hover:none)),
+      čímž web vypadal na telefonu a na monitoru jinak.
+   3) ČISTOTU. Velké realitní weby jedou na plochých bílých kartách bez
+      textury. Zrno bylo ozdoba proti tomu, co má návrh dělat.
    ===================================================================== */
-body::after{
-  content:""; position:fixed; inset:0; z-index:9999; pointer-events:none; opacity:.30;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='z'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23z)' opacity='0.5'/%3E%3C/svg%3E");
-  mix-blend-mode:multiply;}
-/* Na tmavých plochách by zrno dělalo špínu, tam se rozjasňuje jinak. */
-@media (prefers-reduced-motion:reduce){ body::after{opacity:.22;} }
-/* NA DOTYKU ŽÁDNÉ ZRNO.
-   Tohle je ČTVRTÁ příčina té mezery nad hlavičkou na iPhonu — a jiná než
-   tři, které tu jsou popsané výš. Zrno je celoobrazovková vrstva, která je
-   1) position:fixed, 2) přes celé okno, 3) nad hlavičkou (z-index 9999) a
-   4) míchaná s pozadím (mix-blend-mode). Kvůli tomu míchání musí Safari
-   při každém snímku spočítat, co je pod ní — tedy celou stránku i hlavičku
-   — a tím se překreslování fixních prvků při rolování rozjede. Hlavička
-   pak na okamžik zůstane nakreslená na starém místě a nad ní prosvítá pruh
-   obsahu. Na počítači se to neprojeví, protože tam se roluje jinak.
-   Na telefonu je zrno při třicetiprocentní průhlednosti stejně sotva vidět,
-   takže se tím nic neztrácí. */
-@media (hover:none){ body::after{display:none;} }
+
 
 /* =====================================================================
    JAK TO FUNGUJE — redakční číslovaná osa, ne tři dlaždice.
@@ -5308,27 +5333,18 @@ body > main{flex:1 0 auto;}
 body > footer{flex:none;}
 
 /* =====================================================================
-   PÍSMO NADPISŮ — Source Serif 4
-   Archivo je poctivý grotesk, ale na nadpisech vypadá jako systémové
-   písmo — a právě to dělalo dojem šablony. Velké pozemkové a statkové
-   kanceláře v zahraničí (Knight Frank, Hall and Hall, Strutt & Parker)
-   jdou na nadpisy do patkové antikvy; patky na webu o půdě, katastru
-   a smlouvách znamenají úřad a stáří, ne ozdobu.
-   Source Serif 4 je ale JINÝ druh patkového písma než Fraunces, která tu
-   byla předtím: Fraunces je měkká, s velkým kontrastem tahů a hravými
-   zakončeními — odtud ta „pohádka". Source Serif má nízký kontrast,
-   rovné patky a stojí zpříma. Je to písmo vědeckých a úředních tisků.
-   Text, ovládání a čísla zůstávají v Archivu — patky patří nadpisům.
-
-   Prostrkání se musí povolit: hodnoty kolem −0,03 em byly nastavené pro
-   grotesk. U antikvy se tím patky slepí a nadpis zhoustne v šedou masu.
+   PÍSMO NADPISŮ — ŽÁDNÉ ZVLÁŠTNÍ. Celý web je Inter.
+   Tady stávalo patkové písmo na nadpisy (nejdřív Fraunces, pak
+   Source Serif 4) a s ním i povolené prostrkání: hodnoty kolem
+   −0,03 em jsou dělané pro grotesk a antikvě by slepily patky.
+   Nadpisy jsou zpátky bezpatkové, takže ten přepis prostrkání musel
+   odejít s nimi — jinak by nadpisy zůstaly rozsypané na −0,01 em,
+   což je u Interu ve 32 a 42 px vidět jako volný, laciný nadpis.
+   Prostrkání si teď každý nadpis nese sám (h1 −0,03em, oddílové h2
+   −0,03em, vložené h1 nad obsahem −0,02em) a hlídá to scripts/
+   test-typografie.mjs — ta drží jedenáctistupňovou řadu, takže
+   do ní nejde napsat libovolné číslo.
    ------------------------------------------------------------------ */
-h1, h2, h3,
-.section-head h2,
-.add-hero h1,
-.okr-hero h1,
-.clanek .rules-sect h2{letter-spacing:-0.01em;}
-.rail-mark .rm-n{font-family:var(--font-display);}
 
 /* =====================================================================
    TVARY DRUHŮ PŘÍLEŽITOSTI

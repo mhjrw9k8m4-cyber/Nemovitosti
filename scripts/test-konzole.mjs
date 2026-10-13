@@ -143,7 +143,7 @@ async function projdi(sirka, popisSirky) {
          písmo vykreslit, když si o to řekneme? */
       try {
         await document.fonts.load('600 16px Inter', CES);
-        await document.fonts.load('700 32px Fraunces', CES);
+        await document.fonts.load('700 32px Inter', CES);
       } catch (e) {}
       await document.fonts.ready;
       /* Stránka bez našeho stylopisu (404.html) žádné @font-face nemá —
@@ -155,18 +155,22 @@ async function projdi(sirka, popisSirky) {
         return Math.round(c.measureText(CES).width);
       };
       return {
+        /* JEDNO PÍSMO. Nadpisové patkové (Fraunces) je zrušené, takže
+           se měří jen Inter — a to ve dvou velikostech, protože nadpisy
+           i text jedou z téže rodiny a pokrytí znaků se u nich nesmí
+           rozejít. */
         inter: document.fonts.check('600 16px Inter', CES),
-        fraunces: document.fonts.check('700 32px Fraunces', CES),
+        interNadpis: document.fonts.check('700 32px Inter', CES),
         interPouzito: sirka('600 16px Inter, serif') !== sirka('600 16px serif'),
-        frauncesPouzito: sirka('700 32px Fraunces, monospace') !== sirka('700 32px monospace'),
+        interNadpisPouzito: sirka('700 32px Inter, monospace') !== sirka('700 32px monospace'),
       };
     });
     if (pisma.preskoc) {
       /* nic: stránka bez @font-face */
-    } else if (!pisma.inter || !pisma.fraunces) {
-      sBezPisma.push(`${s}: neumí celou českou větu (Inter ${pisma.inter}, Fraunces ${pisma.fraunces})`);
-    } else if (!pisma.interPouzito || !pisma.frauncesPouzito) {
-      sBezPisma.push(`${s}: písmo se nepoužilo (Inter ${pisma.interPouzito}, Fraunces ${pisma.frauncesPouzito})`);
+    } else if (!pisma.inter || !pisma.interNadpis) {
+      sBezPisma.push(`${s}: neumí celou českou větu (text ${pisma.inter}, nadpis ${pisma.interNadpis})`);
+    } else if (!pisma.interPouzito || !pisma.interNadpisPouzito) {
+      sBezPisma.push(`${s}: písmo se nepoužilo (text ${pisma.interPouzito}, nadpis ${pisma.interNadpisPouzito})`);
     }
 
     const pretek = await p.evaluate(() => {

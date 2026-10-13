@@ -23,7 +23,9 @@
 //    snímek počítat, co je pod tou vrstvou — tedy celou stránku i hlavičku —
 //    a překreslování fixních prvků se tím rozjede. Tohle byla ta příčina,
 //    kterou tři předchozí opravy minuly, protože se hledalo na hlavičce
-//    samotné, a ne nad ní.
+//    samotné, a ne nad ní. Ta vrstva je dneska zrušená úplně, na všech
+//    zařízeních (dřív jen na dotyku), a kontrola níž hlídá, že se
+//    nevrátí: žádná celoobrazovková míchaná vrstva nad hlavičkou.
 //
 // A jedna příčina, která není v CSS, ale v logice (js/hlavicka.js):
 // „přestaly chodit scroll události" NEZNAMENÁ „obraz stojí". Na iPhonu
@@ -31,8 +33,8 @@
 // Safari neudělá scroll událost vůbec — posune se jenom visualViewport.
 // Hlavička se pak rozsvítila uprostřed pohybu na starém místě.
 //
-// Poslední bod má i pojistku navíc: na dotyku je hlavička NEPRŮHLEDNÁ.
-// I kdyby prohlížeč překreslil pozdě, není čím prosvítat.
+// Poslední bod má i pojistku navíc: hlavička je NEPRŮHLEDNÁ, a to všude,
+// ne jen na dotyku. I kdyby prohlížeč překreslil pozdě, není čím prosvítat.
 import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -140,15 +142,26 @@ for (const [jm, opt, stranka] of [['telefon', TELEFON, 'index.html'], ['monitor'
     'background-attachment:fixed dělá na iOS přeskoky při rolování');
   await ctx.close();
 }
-// Na monitoru sklo zůstává — kvůli tomu se to celé dělá jen pro dotyk.
+/* TADY SE HLÍDALO, ŽE NA MONITORU ROZMAZANÉ SKLO ZŮSTÁVÁ. Teď se hlídá
+   pravý opak: hlavička má JEDNU neprůhlednou barvu na všech zařízeních.
+   Dvě věci to rozhodly. Průsvitná hlavička mění barvu podle toho, co se
+   pod ní právě roluje, takže se nikdy neshodne s barvou lišty prohlížeče
+   (meta theme-color je jedna hodnota) — a právě ten rozdíl byl vidět jako
+   šev mezi lištou a stránkou. A backdrop-filter dělá vztažný rámec pro
+   position:fixed potomky, kvůli čemuž se #nav polohoval podle hlavičky,
+   a ne podle okna. Neprůhledná hlavička obojí ruší. */
 {
   const { ctx, p } = await otevri(MONITOR, 'index.html');
   const v = await p.evaluate(() => {
     const c = getComputedStyle(document.getElementById('header'));
-    return { rozmazani: c.backdropFilter || 'none' };
+    const m = (c.backgroundColor.match(/[\d.]+/g) || []).map(Number);
+    return { barva: c.backgroundColor, pruhlednost: m.length >= 4 ? m[3] : 1,
+      rozmazani: c.backdropFilter || 'none' };
   });
-  pravda('monitor: rozmazané sklo zůstalo', v.rozmazani !== 'none',
-    'omezení pro dotyk se omylem rozlilo i na monitor');
+  pravda('monitor: hlavička je neprůhledná', v.pruhlednost >= 0.99,
+    `krytí ${v.pruhlednost} (${v.barva}) — pod poloprůhlednou se barva mění podle obsahu a rozejde se s lištou prohlížeče`);
+  pravda('monitor: bez rozmazaného pozadí', v.rozmazani === 'none',
+    `backdrop-filter: ${v.rozmazani} — dělá vztažný rámec pro position:fixed potomky`);
   await ctx.close();
 }
 
@@ -181,6 +194,18 @@ pravda('rezerva pod lepivou hlavičkou je napsaná proměnnou, ne natvrdo',
   'bez proměnné se rezerva a skutečná výška rozejdou při první změně hlavičky');
 /* Ořezávající rodič je na Safari past u lepivých i pevných prvků a kvůli
    bočnímu posuvu ho tu nepotřebujeme (změřeno: 282 zkoušek, 0 nálezů). */
+/* ŽÁDNÁ MÍCHANÁ CELOOBRAZOVKOVÁ VRSTVA. To je ta čtvrtá příčina z úvodu
+   a zároveň důvod, proč se barva hlavičky rozcházela s barvou lišty:
+   mix-blend-mode:multiply ztmaví všechno pod sebou, ale lišta prohlížeče
+   je jedna pevná hodnota a nic nenásobí. Hlídá se tedy obojí v jednom:
+   pevná vrstva přes celé okno nesmí mít mix-blend-mode. */
+{
+  const smesi = [...css.matchAll(/([^{}]+)\{([^}]*mix-blend-mode[^}]*)\}/g)]
+    .filter((m) => /position:\s*fixed/.test(m[2]) && /inset:\s*0|top:\s*0/.test(m[2]))
+    .map((m) => m[1].trim().split('\n').pop().trim());
+  pravda('nad hlavičkou není míchaná celoobrazovková vrstva', smesi.length === 0,
+    'míchá se s pozadím: ' + smesi.join(', ') + ' — kvůli tomu se na iOS rozjede překreslování hlavičky a barva se rozejde s lištou prohlížeče');
+}
 pravda('<body> ani <html> neořezávají do stran',
   !/\bbody\{[^}]*overflow-x:\s*(clip|hidden)/.test(css) && !/\bhtml\{overflow-x:\s*(clip|hidden)/.test(css),
   'overflow-x na kořeni nebo na body dělá ořezávající rámec nad hlavičkou');

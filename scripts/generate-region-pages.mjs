@@ -524,7 +524,7 @@ function head(title, desc, canonicalPath, ld, crumbs, ogSoubor, kanal, kanalNaze
   <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${esc(title)}</title>
   <meta name="description" content="${attr(desc)}">
-  <meta name="theme-color" content="#F9FAF9">
+  <meta name="theme-color" content="#FFFFFF">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://www.parcelaka.cz/${canonicalPath}">
 <link rel="alternate" type="application/rss+xml" title="${attr(kanalNazev || 'Parcelka — nové pozemky')}" href="${kanal || 'novinky.xml'}">
@@ -549,7 +549,6 @@ function head(title, desc, canonicalPath, ld, crumbs, ogSoubor, kanal, kanalNaze
        souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
-  <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
   <link rel="stylesheet" href="css/styles.min.css?${V.css}">
 ${sMapou ? `  <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?${V.leafletJs}">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?${V.leafletCss}">\n` : ''}${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\n' : ''}</head>
