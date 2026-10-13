@@ -4481,6 +4481,92 @@ Jedna poznámka k poctivosti měření: první běh dávky hlásil osmnáct
 pádů v řadě. Nebyla to regrese — běžely dvě dávky najednou a praly se
 o port 8310 (`EADDRINUSE`). Po úklidu a čistém běhu je zelená celá.
 
+## 3br. Stránka pozemku na monitoru: dva sloupce — a tři vady, které to vytáhlo na světlo — *13. 10.*
+
+Byla to poslední stránka mimo společnou svislici: jeden vystředěný
+sloupec 720 px, který na 1440px okně začínal na **376 px**, zatímco
+hlavička a všechny ostatní stránky na 152.
+
+### Co se udělalo
+
+Obal má teď míru stránky a obsah si čtecí míru (720 px) nese sám.
+Vpravo tím zbylo místo, které velké realitní weby používají na jednu
+věc: **cenu, která zůstane na očích i po odrolování k popisu**. Cenový
+blok dostal v js/pozemek.js vlastní nádobu (`.pz-bok`) — mřížka umí do
+sloupce posadit jen souvislý prvek, dva sourozence z různých míst stromu
+do jednoho připnutého pruhu nespojí. Na telefonu má ta nádoba
+`display:contents`, takže se tváří, že tam není, a **pořadí bloků
+zůstalo do puntíku takové, jaké bylo**.
+
+Vedlejší nález při tom: `#pz-detail > *{grid-column:1}` je selektor
+s ID a přebil `.pz-bok{grid-column:2}` — cenový pruh skončil v levém
+sloupci nad mapou. Pravidlo musí mít tutéž váhu, tedy taky přes ID.
+
+### Tři vady, které se tím vyloupnuly
+
+**1. Vložený styl se na ukončené stránky nedostával.** Ukončená stránka
+se schválně nepřepisuje celá (obsah nabídky už neplatí a má zůstat).
+Jenže `<style>` není obsah, je to vzhled — a tak **167 stránek** viselo
+na starém rozvržení, dokud nezestárnou a nesmažou se. Ohlásil to
+`test-vlozeny-styl` hned, jakmile se v předloze změnila míra obalu.
+Styl se proto migruje i tam, jako skripty a předvykreslení — a čistí se
+od komentářů stejně jako u živé stránky.
+
+**2. Ukončené stránky stahovaly celá data — 639 kB místo 12 kB.**
+Stránka pozemku si nese ostrůvek `window.PK_POZEMEK={…,"r":"data/okres/
+blansko.json"}` a podle něj sáhne po ŘEZU svého okresu. Na ukončených
+stránkách se ale ostrůvek octl **až za** blokem skriptů (ten se vkládá
+na místo prvního vyjmutého skriptu, a to je nad ním). Když skript běžel,
+proměnná ještě neexistovala, takže použil zálohu: `data/opportunities.json`.
+Naměřeno `test-data-stranky`, jakmile se mu do vzorku dostala ukončená
+stránka. Pořadí se teď rovná i tudy.
+
+**3. Dvě zkoušky stály na prazích, které zestárly s daty.**
+* `test-cisla-okresu` chtěl „aspoň 60 dlaždic podle typu". Po dávce dat
+  13. 10. jich bylo 55 — ne proto, že by se něco pokazilo, ale protože
+  v okresech ubyly dražby a exekuce. Práh, který se hýbe s daty, nehlídá
+  web, ale náladu trhu. Počítá se teď, kolik dlaždic má z dat vzniknout,
+  a porovnává se to s tím, kolik jich na stránkách je (**55 ku 55**).
+  Ověřeno sabotáží: po vypnutí dlaždice exekucí v generátoru hlásí
+  „42 ku 55".
+* `test-ceny` bral okresy od **12** nabídek, kdežto model počítá
+  percentil z okresu až od **25** (`PK_CENY.DOST_NABIDEK`) — pod tím
+  sáhne po kraji. Zkouška si tak mohla vybrat okres, pro který model
+  vlastní hladinu nemá, a porovnávala tutéž křivku se sebou: Česká Lípa
+  82 % vs Brno-město 83 %, tedy opačně, než má vyjít. Práh se srovnal
+  s modelem a navíc se ověřuje, že oba percentily opravdu stojí na
+  vlastním okrese (`uroven === 'okres'`).
+
+### A tři věci, které spadly až na hotovém
+
+**`test-stabilita`: CLS 0,0556 proti dovoleným 0,05.** Mřížku jsem
+nejdřív dal na obal `.pz-wrap` a `#pz-detail` nechal `display:contents`.
+Vypadalo to správně, ale obal s `display:contents` zmizí z toku, takže
+se po dojetí písem přepočítávala celá mřížka i s patičkou pod ní
+(naměřeno: `FOOTER [850/50→0/0]`). Mřížka přímo na `#pz-detail` je
+o vrstvu jednodušší — a CLS je zpátky na nule. Ověřeno obojí:
+s vypnutou mřížkou zkouška prošla, s mřížkou na obalu padala.
+
+**`test-parametry`: mezera 93 px, která na stránce nebyla vidět.**
+Zkouška měří odstupy mezi bloky stránky a bere je jako přímé děti
+jednoho obalu. Jenže cenový blok se přestěhoval do `.pz-bok`, který má
+na telefonu `display:contents` — tedy nemá vlastní rozměr. Zkouška ten
+blok přeskočila a mezeru mezi jeho sousedy naměřila jako jednu velkou.
+Měří teď to, co je VIDĚT: obaly s `display:contents` se rozbalí.
+
+**`test-shoda` padala na stavu trhu, ne webu.** Tvrdila „v datech je
+podíl se známou velikostí" — a v dávce z 13. 10. nebyl ani jeden
+spoluvlastnický podíl se zlomkem do 1/2, známou výměrou, cenou
+a parcelním číslem. Zkouška teď řekne, že neměla co měřit, a mlčí;
+zbytek měří dál. (Třetí případ téhož druhu v jednom dni — spolu
+s prahem dlaždic a prahem okresů u cen.)
+
+### Zkoušky
+
+**97 neprohlížečových** a **102 prohlížečových** kontrol zelených.
+Obě chyby, které předtím shodily CI (`testy` i `v-prohlizeci`), jsou
+opravené u kořene, ne obejité.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

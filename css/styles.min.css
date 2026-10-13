@@ -2271,7 +2271,12 @@ header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-za
 .pz-spec:last-child .k,.pz-spec:last-child .v{border-bottom:none}
 .pz-spec .k{color:var(--text-ondark-mute);font-size:15px}
 .pz-spec .v{color:var(--text-ondark);font-weight:600;font-size:15px;text-align:left;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere;line-height:1.4}
-.pz-spec .pz-pozn{display:block;margin-top:2px;font-size:12px;line-height:1.5;font-style:italic;color:var(--text-ondark-mute)}
 @media (max-width:560px){.pz-spec:has(.pz-sour) .k{grid-column:1 / -1;padding-bottom:0;border-bottom:none}
 .pz-spec:has(.pz-sour) .v{grid-column:1 / -1;padding-left:14px;padding-top:6px}
+}
+.pz-bok{display:contents}
+@media (min-width:1100px){.pz-wrap{padding-left:32px;padding-right:32px}
+#pz-detail{display:grid;grid-template-columns:minmax(0,var(--m-sloupec)) minmax(0,340px);column-gap:40px;align-items:start}
+#pz-detail>*{grid-column:1;min-width:0}
+#pz-detail>.pz-bok{display:block;grid-column:2;grid-row:1 / span 99;position:sticky;top:calc(var(--vyska-hlavicky,85px) + 20px);background:var(--plocha-plovouci-plna);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--e1);padding:16px}
 }

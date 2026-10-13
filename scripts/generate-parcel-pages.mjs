@@ -477,6 +477,50 @@ export function migrujPredvykresleni(sablona, h) {
   return ve ? h.replace(ve[0], '') : h;
 }
 
+/* VLOŽENÝ STYL PATŘÍ NA KAŽDOU STRÁNKU, I NA UKONČENOU.
+   Ukončená stránka se schválně nepřepisuje celá — obsah nabídky už
+   neplatí a má zůstat, jak byl. Jenže vložený <style> není obsah, je to
+   vzhled: když se v předloze změní, 167 ukončených stránek zůstane
+   viset na starém rozvržení, dokud nezestárnou a nesmažou se. A hned
+   to ohlásí scripts/test-vlozeny-styl.mjs, který porovnává KAŽDOU
+   stránku pozemku s předlohou — naměřeno při změně míry obalu
+   .pz-wrap: 167 stránek proti 1 934.
+   Styl se tedy přepisuje i tudy, jako skripty a předvykreslení. */
+/* OSTRŮVEK S DATY MUSÍ STÁT PŘED SKRIPTY.
+   Stránka pozemku si nese ostrůvek `window.PK_POZEMEK={…,"r":"data/okres/
+   blansko.json"}` a podle něj si js/pozemek.js vezme ŘEZ okresu místo
+   celých dat. Jenže na ukončených stránkách se ostrůvek octl AŽ ZA
+   blokem skriptů — migrujSkripty vkládá celý blok na místo prvního
+   vyjmutého skriptu, a to je nad ostrůvkem. Když skript běží, proměnná
+   ještě neexistuje, takže sáhne po záloze: data/opportunities.json.
+   Naměřeno: 639 kB místo 12 kB řezu, a to při každém otevření takové
+   stránky. Ohlásila to scripts/test-data-stranky.mjs, jakmile se jí do
+   vzorku dostala ukončená stránka.
+   Pořadí se proto rovná i tudy: ostrůvek se přesune nad první skript
+   z js/. */
+export function migrujOstrovNahoru(h) {
+  const ostrov = /<script>window\.PK_POZEMEK=\{[^<]*?\};<\/script>\n?/.exec(h);
+  if (!ostrov) return h;
+  const prvni = /<script src="js\/(?:min\/)?[A-Za-z0-9_-]+\.js(?:\?v=[A-Za-z0-9]+)?"[^>]*><\/script>/.exec(h);
+  if (!prvni || prvni.index > ostrov.index) return h;
+  const bez = h.slice(0, ostrov.index) + h.slice(ostrov.index + ostrov[0].length);
+  const kam = bez.indexOf(prvni[0]);
+  if (kam < 0) return h;
+  return bez.slice(0, kam) + ostrov[0] + bez.slice(kam);
+}
+
+export function migrujStyl(sablona, h) {
+  const VZOR = /<style>[\s\S]*?<\/style>/;
+  const zPredlohy = VZOR.exec(sablona);
+  if (!zPredlohy) throw new Error('migrujStyl: v předloze není <style> — změnil se zápis?');
+  if (!VZOR.test(h)) return h;
+  /* Bez komentářů, stejně jako u živé stránky — jinak by ukončené
+     stránky nesly 16 kB komentářů navíc a hned by to ohlásila
+     kontrola „do hotových stránek se neposílají komentáře ze stylu". */
+  const cisty = bezKomentaruVeStylu(zPredlohy[0]);
+  return h.replace(VZOR, () => cisty);
+}
+
 export function migrujSkripty(sablona, h) {
   const VZOR = /<script src="(js\/(?:min\/)?([A-Za-z0-9_-]+)\.js)(?:\?v=[A-Za-z0-9]+)?"([^>]*)><\/script>\n?/g;
   const zPredlohy = [...sablona.matchAll(VZOR)].map((m) => ({ cela: m[0].replace(/\n$/, ''), jmeno: m[2] }));
@@ -1306,7 +1350,7 @@ export function generuj() {
          strojově tvrdí InStock, navždy. Datum se bere to zapsané, ne
          dnešek: cena přestala platit tehdy. */
       const migrovano = migrujUkoncenaData(
-        migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah)))), uz[1]);
+        migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah)))))), uz[1]);
       if (migrovano !== obsah) { fs.writeFileSync(cesta, migrovano); prepsano++; }
       continue;
     }
@@ -1325,7 +1369,7 @@ export function generuj() {
        větev výš srovnala sama. Je to tedy tiché, opakované rozcházení,
        ne rozbitá stránka. */
     fs.writeFileSync(cesta, ukoncenaStranka(
-      migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah)), dnes, podobne));
+      migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah)))), dnes, podobne));
     ukonceno++;
   }
   return { hotove, smazano, ukonceno, prepsano };

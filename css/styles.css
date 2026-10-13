@@ -6663,7 +6663,55 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
      datum na „8. / 10. 2026". Radši nechat viset poslední slovo než
      přetrhnout číslo. */
   line-height:1.4;}
-.pz-spec .pz-pozn{display:block; margin-top:2px; font-size:12px; line-height:1.5; font-style:italic; color:var(--text-ondark-mute);}
+/* TADY STÁLO `.pz-spec .pz-pozn`. Taková dvojice tříd na webu není —
+   poznámka u údaje se jmenuje `pz-spec-pozn` a má své pravidlo jinde.
+   Pravidlo nikdy na nic nesedlo; všimla si toho až kontrola mrtvých
+   stylů, když se ukončeným stránkám přestal posílat starý vložený styl,
+   ve kterém se ten řetězec ještě vyskytoval. */
 @media (max-width:560px){
   .pz-spec:has(.pz-sour) .k{grid-column:1 / -1; padding-bottom:0; border-bottom:none;}
   .pz-spec:has(.pz-sour) .v{grid-column:1 / -1; padding-left:14px; padding-top:6px;}}
+
+
+/* =====================================================================
+   STRÁNKA POZEMKU NA ŠIROKÉM DISPLEJI — DVA SLOUPCE
+   Stránka inzerátu byla jeden vystředěný sloupec 720 px: na 1 440px
+   okně začínala na 376 px, zatímco hlavička a všechny ostatní stránky
+   webu na 152. Byla to poslední stránka mimo společnou svislici.
+   Obal má proto míru stránky (pozemek.html) a obsah si čtecí míru nese
+   sám — 720 px, vlevo. Vpravo tím zbyde místo, které velké realitní
+   weby (Idealista, Zillow, Hemnet) používají na jednu věc: cenu, která
+   zůstane na očích i po odrolování k popisu.
+   `display:contents` na #pz-detail je tu proto, že bloky stránky skládá
+   skript do jednoho obalu; bez něj by se do mřížky dostal jen ten obal
+   a sloupce by neměly co rozdělit. Na telefonu se nic z toho neděje —
+   .pz-bok je tam taky `display:contents`, takže pořadí bloků zůstává
+   přesně takové, jaké bylo.
+   ===================================================================== */
+.pz-bok{display:contents;}
+@media (min-width:1100px){
+  /* Boční odsazení 32 px jako u ostatních stránek (.wrap): předloha má
+     ve vloženém stylu 16 px kvůli telefonu a obsah by tím na monitoru
+     začínal na 136 px místo 152. Píše se po stranách zvlášť
+     (padding-left/right), ne zkratkou — zkratku `padding` má předloha
+     a test-vlozeny-styl hlídá, aby tatáž vlastnost nebyla na dvou
+     místech. */
+  .pz-wrap{padding-left:32px; padding-right:32px;}
+  /* MŘÍŽKA STOJÍ NA #pz-detail, NE NA OBALU. Nejdřív jsem ji dal na
+     .pz-wrap a #pz-detail nechal `display:contents`. Fungovalo to, ale
+     scripts/test-stabilita.mjs naměřil CLS 0,0556 proti dovoleným 0,05:
+     obal s `display:contents` zmizí z toku, takže se po dojetí písem
+     přepočítávala celá mřížka i s patičkou pod ní. Mřížka přímo na
+     #pz-detail je o jednu vrstvu jednodušší a nic se v ní neruší. */
+  #pz-detail{display:grid; grid-template-columns:minmax(0, var(--m-sloupec)) minmax(0, 340px);
+    column-gap:40px; align-items:start;}
+  #pz-detail > *{grid-column:1; min-width:0;}
+  /* Cenový pruh jde doprava a drží se pod hlavičkou. Rozpětí přes
+     mnoho řádků je to, co mu dá výšku, ve které se má přilepit —
+     `grid-row:1 / -1` by v mřížce bez předepsaných řádků znamenalo
+     jediný řádek. */
+  #pz-detail > .pz-bok{display:block; grid-column:2; grid-row:1 / span 99;
+    position:sticky; top:calc(var(--vyska-hlavicky, 85px) + 20px);
+    background:var(--plocha-plovouci-plna); border:1px solid var(--line);
+    border-radius:var(--r-md); box-shadow:var(--e1); padding:16px;}
+}

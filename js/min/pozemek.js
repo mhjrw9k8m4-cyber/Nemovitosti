@@ -926,12 +926,14 @@
         blokHtml() +
       '</div>' +
 
+      '<div class="pz-bok">' +
       '<div class="pz-priceblock">' +
         '<div class="pz-pl">' + priceLabel + '</div>' +
         '<div class="pz-price"><span class="pv">' + fmt(d.price) + ' Kč</span>' +
           (perM2 ? '<span class="pm"' + (perM2Pozn ? ' title="' + esc(perM2Pozn) + '"' : '') + '>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
 
         pzZmenaCenyHtml(d) +
+      '</div>' +
       '</div>' +
 
       pzHistorieHtml() +

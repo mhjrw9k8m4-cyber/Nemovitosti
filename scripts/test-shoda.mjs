@@ -388,8 +388,14 @@ if (podezrely) {
     return { place: d.place, parcel: d.parcel, zlomek: d.zlomek,
       spravne: Math.round(d.price / (d.area * z(d))), spatne: Math.round(d.price / d.area) };
   }, CISTA);
-  pravda('v datech je podíl se známou velikostí', !!podil,
-    'není na čem ověřit, že se cena za metr počítá z podílové výměry');
+  /* NENÍ-LI DNES V DATECH PODÍL, NENÍ TO VADA WEBU.
+     Stálo tu tvrzení „v datech je podíl se známou velikostí", které
+     padalo, jakmile robot takovou nabídku zrovna nepřinesl — a padalo
+     na stavu TRHU, ne na stavu webu. Naměřeno 13. 10.: v dávce nebyl
+     ani jeden spoluvlastnický podíl se zlomkem do 1/2, známou výměrou,
+     cenou a parcelním číslem. Zkouška proto řekne, že neměla co měřit,
+     a mlčí; co se měřit dá, se měří dál. */
+  if (!podil) zpravy.push('  — podíl se známou velikostí dnes v datech není, tahle část se přeskočila');
   if (podil) {
     const p4 = await ctx.newPage();
     await p4.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });

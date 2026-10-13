@@ -1406,6 +1406,15 @@
         blokHtml() +
       '</div>' +
 
+      /* BOČNÍ SLOUPEC. Na širokém displeji se z téhle jedné nádoby stane
+         připnutý pruh vpravo (css/styles.css, @media min-width:1100px) —
+         cena zůstane na očích, i když člověk roluje popisem. Na telefonu
+         má `display:contents`, takže se tváří, že tu není, a pořadí bloků
+         zůstává do puntíku takové, jaké bylo. Jedna nádoba je potřeba
+         proto, že mřížka umí do sloupce posadit jen SOUVISLÝ prvek —
+         dva sourozence z různých míst stromu do jednoho připnutého
+         pruhu nespojí. */
+      '<div class="pz-bok">' +
       '<div class="pz-priceblock">' +
         '<div class="pz-pl">' + priceLabel + '</div>' +
         '<div class="pz-price"><span class="pv">' + fmt(d.price) + ' Kč</span>' +
@@ -1416,6 +1425,7 @@
            ověřit jinde — minulou cenu vidí jen od nás — tak ať je aspoň
            úplný. Větu skládá js/zlevneni.js, stejně jako pro kartu. */
         pzZmenaCenyHtml(d) +
+      '</div>' +
       '</div>' +
 
       /* HISTORIE POD CENOU, NE MEZI PORADAMI. Celá sekce se vynechá,

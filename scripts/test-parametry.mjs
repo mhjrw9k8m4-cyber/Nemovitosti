@@ -171,7 +171,22 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
     const h = [...document.querySelectorAll('h2')].find((x) => /Parametry pozemku/i.test(x.textContent));
     if (!h) return { chyba: 'nadpis „Parametry pozemku" nenalezen' };
     const sloupec = h.parentElement;
-    const deti = [...sloupec.children].filter((c) => c.getBoundingClientRect().height > 2);
+    /* OBALY S `display:contents` SE MUSÍ ROZBALIT. Takový obal nemá
+       vlastní rámeček ani rozměr — jeho děti se chovají, jako by byly
+       přímo tady. Když se nerozbalí, zkouška jeden blok přeskočí
+       a mezeru mezi jeho sousedy naměří jako jednu velkou: po přibytí
+       obalu `.pz-bok` (připnutý cenový pruh na monitoru) hlásila
+       93 px tam, kde se na stránce vizuálně nic nezměnilo.
+       Měří se tedy to, co je vidět, ne to, co je ve stromu. */
+    const viditelne = (prvek) => {
+      const ven = [];
+      for (const c of prvek.children) {
+        if (getComputedStyle(c).display === 'contents') { ven.push(...viditelne(c)); continue; }
+        ven.push(c);
+      }
+      return ven;
+    };
+    const deti = viditelne(sloupec).filter((c) => c.getBoundingClientRect().height > 2);
     const mez = [];
     for (let i = 1; i < deti.length; i++) {
       const a = deti[i - 1].getBoundingClientRect(), c = deti[i].getBoundingClientRect();

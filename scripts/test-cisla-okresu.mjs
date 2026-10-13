@@ -72,6 +72,11 @@ const TYP = {
 const cislo = (x) => +String(x).replace(/[\s ]/g, '');
 const rozchody = [];
 let stranek = 0, pocty = 0, meze = 0, dlazdic = 0, neznamych = 0;
+/* Kolik dlaždic podle typu MÁ na stránkách být, se počítá z dat —
+   generátor ji vypisuje jen tam, kde má okres víc než jeden druh
+   a ten druh v něm opravdu je (viz generate-region-pages.mjs). */
+let ocekavanoDlazdic = 0;
+const DRUHY_DLAZDIC = ['sale', 'drazba', 'exekuce', 'obec'];
 
 for (const f of fs.readdirSync(KOREN).sort()) {
   if (!/^pozemky-okres-.*\.html$/.test(f)) continue;
@@ -99,6 +104,10 @@ for (const f of fs.readdirSync(KOREN).sort()) {
     }
   }
 
+  {
+    const druhy = new Set(list.map((o) => o.type));
+    if (druhy.size > 1) ocekavanoDlazdic += DRUHY_DLAZDIC.filter((t) => druhy.has(t)).length;
+  }
   for (const mm of h.matchAll(/<div class="okr-stat"><b>([\d\s]+)<\/b><span>([^<]*)<\/span>/g)) {
     const slovo = mm[2];
     if (/^pozemk/.test(slovo)) continue;            // celkový počet se měří výš
@@ -120,8 +129,17 @@ pravda(`okresních stránek se našlo dost (${stranek})`, stranek >= 70, `jen ${
 pravda(`počet pozemků se přečetl skoro všude (${pocty} ze ${stranek})`, pocty >= stranek - 2,
   `přečteno ${pocty} — změnila se podoba podnadpisu?`);
 pravda(`rozsah cen se přečetl (${meze} mezí)`, meze >= 140, `jen ${meze} — změnil se zápis „Ceny od … do …"?`);
-pravda(`dlaždic podle typu se přepočítalo dost (${dlazdic})`, dlazdic >= 60,
-  `jen ${dlazdic} — změnila se podoba dlaždice, nebo české slovo, které kontrola nezná`);
+/* TADY STÁL PRÁH „aspoň 60 dlaždic". Zestárl tiše: po dávce dat
+   13. 10. jich bylo 55 a zkouška spadla, aniž by se na stránkách cokoli
+   pokazilo — jen v okresech ubyly dražby a exekuce. Práh, který se hýbe
+   s daty, nehlídá web, ale náladu trhu. Počítá se tedy, kolik dlaždic
+   má podle dat vzniknout, a porovnává se to s tím, kolik jich na
+   stránkách je. Když generátor přestane dlaždice psát, je rozdíl vidět
+   hned; když jich trh ubere, zkouška mlčí. */
+pravda(`dlaždic podle typu je tolik, kolik jich z dat vychází (${dlazdic} ku ${ocekavanoDlazdic})`,
+  dlazdic + neznamych === ocekavanoDlazdic,
+  `na stránkách ${dlazdic} známých a ${neznamych} neznámých, z dat vychází ${ocekavanoDlazdic}`);
+pravda('a je co měřit (aspoň jedna dlaždice)', dlazdic > 0, 'žádná dlaždice podle typu');
 pravda('a žádná dlaždice se nepřeskočila kvůli neznámému slovu', neznamych === 0,
   `přeskočeno ${neznamych} — doplňte slovo do tabulky TYP`);
 

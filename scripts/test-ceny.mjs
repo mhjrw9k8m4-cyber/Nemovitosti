@@ -821,7 +821,15 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
       if (PK_CENY.druhGroup(d.druh) !== g || !d.okres) return;
       (pom[d.okres] = pom[d.okres] || []).push(d.price / d.area);
     });
-    const hladiny = Object.keys(pom).filter((o) => pom[o].length >= 12)
+    /* PRÁH MUSÍ BÝT TEN, KTERÝ POUŽÍVÁ MODEL. Stálo tu 12, kdežto model
+       počítá percentil z okresu až od PK_CENY.DOST_NABIDEK (25) nabídek —
+       pod tím sáhne po kraji nebo po celé ČR. Zkouška si tedy mohla
+       vybrat okres, pro který model žádnou vlastní hladinu nemá, a pak
+       porovnávala tutéž rozdělovací křivku se sebou. Přesně to se stalo
+       13. 10.: Česká Lípa 82 % vs Brno-město 83 %, tedy opačně, než má
+       vyjít — ne proto, že by model lhal, ale protože Brno-město má
+       v tomhle druhu míň nabídek, než model potřebuje. */
+    const hladiny = Object.keys(pom).filter((o) => pom[o].length >= PK_CENY.DOST_NABIDEK)
       .map((o) => { const a2 = pom[o].slice().sort((x, y) => x - y); return { okres: o, med: a2[a2.length >> 1] }; })
       .sort((x, y) => x.med - y.med);
     if (hladiny.length >= 2) {
@@ -836,7 +844,10 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
       const vDrahem = M.percentil(Object.assign({}, vzor, { okres: drahy.okres }));
       je('tentýž pozemek v levném a v drahém okrese dostane jiný percentil',
         !!(vLevnem && vDrahem) && vLevnem.pct !== vDrahem.pct, true);
-      if (vLevnem && vDrahem) {
+      /* A ještě jednou totéž na výsledku: oba percentily musí stát na
+         vlastním okrese. Kdyby jeden spadl na kraj, porovnávalo by se
+         jablko s týmž jablkem. */
+      if (vLevnem && vDrahem && vLevnem.uroven === 'okres' && vDrahem.uroven === 'okres') {
         je(`a v levnějším okrese vyjde dráž (${levny.okres} ${vLevnem.pct} % vs ${drahy.okres} ${vDrahem.pct} %)`,
           vLevnem.pct > vDrahem.pct, true);
       }

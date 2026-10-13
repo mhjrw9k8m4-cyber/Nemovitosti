@@ -44,7 +44,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/zaklad.min.css?v=16647d47">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=402df32b">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -55,12 +55,12 @@
        prohlížeč si ji vezme z ostrůvku window.PK_POZEMEK dole. -->
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>#obsah{background:var(--bg)}
-.pz-wrap{max-width:var(--m-sloupec);margin:0 auto;padding:20px 16px 56px;color:var(--text-ondark);font-family:var(--font-ui)}
+.pz-wrap{max-width:var(--m-wrap);margin:0 auto;padding:20px 16px 56px;color:var(--text-ondark);font-family:var(--font-ui)}
 .pz-back{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--text-ondark-mute);text-decoration:none;margin-bottom:16px}
 .pz-back:hover{color:var(--text-ondark)}
 .pz-back svg{width:16px;height:16px;stroke-width:2.25}
 .pz-media{position:relative;width:100%;aspect-ratio:16/10;max-height:400px;border-radius:var(--r-obraz);overflow:hidden;background:var(--ink-soft2);border:1px solid var(--line);box-shadow:var(--e2)}
-.pz-media .opp-badge{position:absolute;top:13px;left:13px;z-index:3;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:0.02em;padding:6px 12px 6px 10px;border-radius:var(--r-sm);color:#fff;background:rgba(12,26,18,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.pz-media .opp-badge{position:absolute;top:13px;left:13px;bottom:auto;z-index:3;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:0.02em;padding:6px 12px 6px 10px;border-radius:var(--r-sm);color:#fff;background:rgba(12,26,18,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .pz-media .opp-badge::before{content:"";width:8px;height:8px;border-radius:50%;flex:none}
 .opp-badge.sale::before{background:var(--c-sale)}
 .opp-badge.drazba::before{background:var(--c-drazba)}
@@ -70,9 +70,12 @@
 .pz-gallery{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;z-index:1}
 .pz-gallery::-webkit-scrollbar{display:none}
 .pz-shot{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:center;scroll-snap-stop:always;display:block;user-select:none}
-.pz-media .opp-count{position:absolute;right:13px;bottom:13px;left:auto;z-index:3}
+.pz-media .opp-count{position:absolute;right:13px;bottom:13px;left:auto;z-index:3;display:inline-flex}
 .pz-head{margin:20px 0 0}
-.pz-place{font-family:var(--font-display);font-size:28px;font-weight:700;letter-spacing:-0.01em;color:var(--text-ondark);line-height:1.15}
+.pz-place{font-family:var(--font-ui);font-size:28px;font-weight:700;letter-spacing:-0.02em;color:var(--text-ondark);line-height:1.15}
+@media (max-width:560px){.pz-place{font-size:24px}
+}
+.pz-place{text-wrap:balance}
 .pz-okres{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--text-ondark-mute);margin-top:6px}
 .pz-okres svg{width:16px;height:16px;stroke-width:2.25}
 .pz-dalky{font-size:12px;letter-spacing:0.02em;color:var(--text-ondark-mute);margin-top:4px;opacity:.85}
@@ -81,13 +84,13 @@
 .pz-priceblock{margin:10px 0 0}
 .pz-pl{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--popisek);margin-bottom:4px}
 .pz-price{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.pz-price .pv{font-family:var(--font-display);font-size:38px;font-weight:700;letter-spacing:-0.01em;color:var(--text-ondark);font-variant-numeric:tabular-nums;line-height:1}
+.pz-price .pv{font-family:var(--font-ui);font-size:38px;font-weight:700;letter-spacing:-0.03em;color:var(--text-ondark);font-variant-numeric:tabular-nums;line-height:1}
 .pz-price .pm{font-size:15px;font-weight:600;color:var(--text-ondark-mute);font-variant-numeric:tabular-nums}
-.pz-verdict{--vc:var(--copper-bright);--vt:#fff;margin:10px 0 0;padding:14px 16px;border-radius:var(--r-plocha);border:1px solid}
-.pz-verdict.good{--vc:var(--c-ok-ink);background:rgba(75,169,125,0.12);border-color:rgba(75,169,125,0.42)}
-.pz-verdict.mid{--vc:var(--c-drazba-ink);background:rgba(204,107,51,0.12);border-color:rgba(204,107,51,0.46)}
-.pz-verdict.bad{--vc:var(--c-exekuce);background:rgba(140,47,30,0.11);border-color:rgba(140,47,30,0.42)}
-.pz-verdict.warn{--vc:var(--accent-warm);border-color:rgba(138,85,18,0.3);background:rgba(138,85,18,0.08)}
+.pz-verdict{--vc:var(--copper-bright);--vt:#fff;margin:20px 0 0;padding:16px;border-radius:var(--r-plocha);background:#fff;border:1px solid var(--line);border-left:3px solid var(--vc);box-shadow:var(--e1)}
+.pz-verdict.good{--vc:var(--c-ok-ink)}
+.pz-verdict.mid{--vc:var(--c-drazba-ink)}
+.pz-verdict.bad{--vc:var(--c-exekuce)}
+.pz-verdict.warn{--vc:var(--accent-warm)}
 .pv-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
 .pv-badge{font-size:13px;font-weight:700;padding:2px 10px;border-radius:999px;background:var(--vc);color:var(--vt)}
 .pv-cmp{font-size:12px;color:var(--text-ondark-mute);font-weight:600}
@@ -95,24 +98,49 @@
 .pv-text b{color:var(--text-ondark)}
 .pv-track{position:relative;height:8px;border-radius:var(--r-pill);margin-top:10px;background:rgba(20,35,28,0.13);box-shadow:inset 0 1px 2px rgba(24,45,34,0.07)}
 .pv-stred{position:absolute;left:50%;top:-3px;bottom:-3px;width:1.5px;background:rgba(20,35,28,0.3);transform:translateX(-50%);border-radius:2px}
-.pv-fill{position:absolute;left:0;top:0;bottom:0;border-radius:var(--r-pill);background:var(--vc);width:var(--w);animation:pruhNajed .62s var(--ease) both}
 .pv-dot{position:absolute;top:50%;left:var(--w);width:15px;height:15px;border-radius:50%;background:var(--vc);border:3px solid #fff;box-shadow:var(--e1);transform:translate(-50%,-50%);animation:puntikNajed .62s var(--ease) both}
 .pv-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--text-ondark-mute);margin-top:6px}
-.pz-sect-h{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--popisek);margin:40px 0 10px}
+.pz-sect-h{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--popisek);margin:40px 0 10px;position:relative}
+.pz-sect-h::before{content:"";position:absolute;left:0;top:-14px;width:52px;height:2px;border-radius:2px;background:var(--grad-warm);opacity:.85}
+.pz-blok{margin:10px 0 0;padding:12px 14px;border-radius:var(--r-plocha);font-size:14px;line-height:1.55;background:linear-gradient(180deg,var(--ink-soft2),var(--ink-soft));border:1px solid var(--line);color:var(--text-ondark)}
+.pz-blok b{color:var(--copper-bright)}
+.pz-blok-pozn{display:block;margin-top:6px;font-size:13px;color:var(--text-ondark-mute)}
 .pz-naklady{margin:20px 0 0;font-size:14px;color:var(--text-ondark-mute)}
 .pz-naklady a{font-weight:600;color:var(--copper-bright);text-decoration:underline;text-underline-offset:3px}
 .pz-popis-inzerent{max-width:var(--m-text);margin:0 0 6px;font-size:16px;line-height:1.62;color:var(--text-ondark)}
+.srv{margin:0}
+.srv-veta{max-width:var(--m-text);margin:0 0 12px;font-size:16px;line-height:1.6;color:var(--text-ondark)}
+.srv-seznam{list-style:none;margin:0;padding:0;max-width:var(--m-text)}
+.srv-radek{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:16px;row-gap:0;padding:10px 12px;border-top:1px solid var(--line);min-height:44px}
+.srv-radek:first-child{border-top:0}
+.srv-kde{grid-column:1;grid-row:1;font-size:15px;font-weight:600;color:var(--text-ondark);text-decoration:none}
+a.srv-kde{text-decoration:underline;text-underline-offset:3px}
+a.srv-kde:hover{color:var(--copper-bright)}
+.srv-detail{grid-column:1;grid-row:2;font-size:13px;color:var(--text-ondark-mute);font-variant-numeric:tabular-nums}
+.srv-c{grid-column:2;grid-row:1 / span 2;justify-self:end;font-size:16px;font-weight:700;color:var(--text-ondark);font-variant-numeric:tabular-nums;white-space:nowrap}
+.srv-ja{background:rgba(44,113,80,0.10);border-radius:var(--r-plocha);box-shadow:inset 3px 0 0 var(--plocha-znacka)}
+.srv-ja .srv-kde{font-weight:700}
+.srv-pozn{max-width:var(--m-text);margin:10px 0 0;font-size:13px;line-height:1.55;color:var(--text-ondark-mute)}
+.kd-mriz{display:grid;gap:8px;max-width:var(--m-text);grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kd-polozka{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:10px 14px;border-radius:var(--r-ovladani);background:var(--ink-soft);border:1.5px solid var(--obrys-tlacitka);text-decoration:none;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
+.kd-polozka:hover{border-color:var(--copper-bright);background:var(--ink-soft2);box-shadow:var(--e2)}
+.kd-t{font-size:15px;font-weight:700;color:var(--text-ondark)}
+.kd-p{font-size:12px;line-height:1.4;color:var(--text-ondark-mute)}
+@media (max-width:560px){.kd-p{display:none}
+.kd-polozka{min-height:48px;padding:8px 12px}
+.pz-kamdal .pz-sect-h{margin-top:20px}
+}
 .pz-feats{display:flex;flex-wrap:wrap;gap:8px}
 .pz-feat{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--text-ondark);background:var(--ink-soft);border:1px solid var(--line-strong);padding:8px 12px;border-radius:var(--r-plocha)}
 .pz-feat svg{width:17px;height:17px;stroke-width:2.12;color:var(--copper-bright)}
 .pz-feat-acc svg{color:var(--text-ondark-mute)}
 .pz-feat-zdroj{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--text-ondark-mute)}
-.pz-popis{padding:14px 16px;background:var(--ink-soft);border:1px solid var(--line);border-radius:var(--r-md)}
+.pz-popis{padding:16px;background:#fff;border:1px solid var(--line);border-radius:var(--r-plocha);box-shadow:var(--e1)}
 .pz-popis p{margin:0 0 10px;font-size:15px;line-height:1.62;color:var(--text-ondark)}
 .pz-popis p:last-child{margin-bottom:0}
-.pz-drazba{margin:14px 0 2px;padding:12px 14px;border-radius:var(--r-plocha);background:rgba(204,107,51,0.11);border:1.5px solid rgba(204,107,51,0.44)}
-.pz-drazba.blizko{background:rgba(204,107,51,0.17);border-color:var(--c-drazba)}
-.pz-drazba.prosle{background:var(--ink-soft2);border-color:var(--line-ui)}
+.pz-drazba{margin:20px 0 2px;padding:16px;border-radius:var(--r-plocha);background:#fff;border:1px solid var(--line);border-left:3px solid var(--c-drazba-ink);box-shadow:var(--e1)}
+.pz-drazba.blizko{border-left-width:5px}
+.pz-drazba.prosle{border-left-color:var(--line-ui);background:var(--ink-soft2);box-shadow:none}
 .pzd-hlava{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;color:var(--c-drazba-ink)}
 .pz-drazba.prosle .pzd-hlava{color:var(--text-ondark-mute)}
 .pzd-hlava svg{width:17px;height:17px;stroke-width:2.1;flex:none}
@@ -120,11 +148,8 @@
 .pzd-kdy{font-size:13px;font-weight:600;color:var(--text-ondark-mute)}
 .pzd-pozn{margin:6px 0 0;font-size:13px;line-height:1.55;color:var(--text-ondark-mute)}
 .pzd-pozn b{color:var(--text-ondark)}
-.pzd-odkaz{display:inline-flex;align-items:center;min-height:40px;margin-top:10px;padding:0 14px;border-radius:var(--r-ovladani);background:var(--ink-soft);border:1.5px solid var(--c-drazba);color:var(--c-drazba-ink);font-size:14px;font-weight:700;text-decoration:none}
-.pzd-odkaz:hover{background:var(--c-drazba-ink);color:#fff}
-.pz-term{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--c-drazba-ink);background:rgba(204,107,51,0.13);border:1px solid rgba(204,107,51,0.44);padding:6px 12px;border-radius:var(--r-plocha);margin:14px 0 2px;white-space:nowrap}
-.pz-term svg{width:16px;height:16px;stroke-width:2.25;flex:none}
-.pz-term.prosle{color:var(--text-ondark-mute);background:var(--ink-soft2);border-color:var(--line-strong);white-space:normal}
+.pzd-odkaz{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-top:12px;padding:0 16px;border-radius:var(--r-ovladani);background:#fff;border:1px solid var(--obrys-tlacitka);color:var(--text-ondark);font-size:14px;font-weight:700;text-decoration:none}
+.pzd-odkaz:hover{border-color:var(--copper-bright);color:var(--copper)}
 .pz-cas{margin:10px 0 0;font-size:13px;line-height:1.5;color:var(--text-ondark-mute)}
 .pz-cas b{color:var(--text-ondark);font-weight:600}
 .pz-cas.je-stara{color:var(--c-exekuce-ink)}
@@ -135,7 +160,7 @@
 .pz-konec ul{margin:0;padding-left:20px}
 .pz-konec li{margin:2px 0}
 .pz-konec a{display:inline-flex;align-items:center;min-height:44px;color:var(--copper);text-underline-offset:3px}
-.pz-btn{flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:var(--r-ovladani);font-weight:700;font-size:15px;text-decoration:none;cursor:pointer;border:1px solid transparent}
+.pz-btn{flex:1 1 140px;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:var(--r-ovladani);font-weight:700;font-size:15px;text-decoration:none;cursor:pointer;border:1px solid transparent}
 .pz-btn svg{width:19px;height:19px;stroke-width:1.89;flex:none}
 .pz-btn.primary{background:var(--plocha-znacka);color:#fff;box-shadow:var(--glow)}
 .pz-btn.primary:hover{filter:brightness(1.06)}
@@ -147,8 +172,8 @@
 .pz-btn.ulozit.on{color:var(--copper-bright);border-color:var(--copper-bright)}
 .pz-actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
 .pz-actions .pz-abtn{flex:1 1 0;min-width:0}
-.pz-actions .pz-abtn:first-child{flex-basis:100%;background:rgba(31,81,56,0.10);border-color:var(--copper);border-width:1.5px;color:var(--copper);font-weight:700}
-.pz-actions .pz-abtn:first-child svg{color:var(--copper-bright)}
+.pz-actions .pz-abtn:first-child{flex-basis:100%;background:var(--plocha-znacka);border-color:transparent;color:#fff;font-weight:700;box-shadow:var(--e2)}
+.pz-actions .pz-abtn:first-child svg{color:#fff}
 .pz-abtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 16px;border-radius:var(--r-ovladani);background:var(--ink-soft);border:1.5px solid var(--obrys-tlacitka);color:var(--text-ondark);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),transform var(--cas-rychly) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .pz-abtn:hover{border-color:var(--copper-bright);background:var(--ink-soft2);box-shadow:var(--e2)}
 .pz-abtn:active{transform:scale(.98)}
@@ -157,10 +182,11 @@
 .pz-abtn.on svg{color:#fff}
 .pz-pozor{margin:10px 0 0;padding:12px 14px;border-radius:var(--r-sm);font-size:13px;line-height:1.6;background:rgba(232,179,65,.14);border:1px solid rgba(124,81,5,.34);color:var(--accent-warm)}
 .pz-gtk-obal{margin:20px 0 0}
-.pz-gtk-sum{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;padding:14px 14px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--grad-cool-soft);box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
+.pz-gtk-sum{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;padding:14px 16px;border:1px solid var(--line);border-radius:var(--r-plocha);background:#fff;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .pz-gtk-sum::-webkit-details-marker{display:none}
 .pz-gtk-sum:hover{border-color:var(--copper-bright);box-shadow:var(--e2)}
 .pz-gtk-sum .pz-sect-h{margin:0;border:0;padding:0;font-size:15px;letter-spacing:0;text-transform:none;color:var(--copper-bright)}
+.pz-gtk-sum .pz-sect-h::before{display:none}
 .pz-gtk-kolik{margin-left:auto;font-size:13px;font-weight:700;white-space:nowrap;color:var(--copper-bright);background:var(--ink-soft);border:1px solid var(--line);padding:2px 8px;border-radius:var(--r-pill)}
 .pz-gtk-kolik:empty{display:none}
 .pz-gtk-akce{font-size:13px;font-weight:700;color:var(--copper-bright);white-space:nowrap}
@@ -171,7 +197,7 @@
 .pz-gtk-obal[open] .pz-gtk-sum{border-bottom-left-radius:0;border-bottom-right-radius:0;box-shadow:none}
 .pz-gtk-obal[open] .pz-gtk-sum::after{transform:rotate(-135deg) translate(-3px,-3px)}
 .pz-gtk-obal[open] .pz-gtk{border-top-left-radius:0;border-top-right-radius:0;border-top:0}
-.pz-gtk{background:var(--ink-soft);border:1px solid var(--line);border-radius:var(--r-md);padding:16px 16px}
+.pz-gtk{background:#fff;border:1px solid var(--line);border-radius:var(--r-plocha);padding:16px}
 .pz-gtk .g-row{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-bottom:1px solid var(--line)}
 .pz-gtk .g-row:first-child{padding-top:0}
 .pz-gtk .g-row:last-of-type{border-bottom:none}
@@ -186,7 +212,7 @@
 .pz-gtk .g-ol li{font-size:14px;line-height:1.55;color:var(--text-ondark)}
 .pz-gtk .g-ol li::marker{font-family:var(--font-mono);font-size:12px;color:var(--accent-warm)}
 .pz-gtk .g-foot{font-size:12px;color:var(--text-ondark-mute);line-height:1.5;margin-top:12px;font-style:italic}
-.pzm{position:relative;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--ink-soft);box-shadow:var(--e2)}
+.pzm{position:relative;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:linear-gradient(180deg,var(--ink-soft2),var(--ink-soft));box-shadow:var(--e2)}
 .pzm-mapa{height:390px;width:100%;background:var(--ink)}
 .pzm-mapa{position:relative}
 .pzm-cela-btn{position:absolute;z-index:500;right:10px;top:10px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-sm);border:1px solid rgba(24,45,34,.25);background:rgba(255,255,255,.93);color:var(--copper-bright);cursor:pointer;padding:0;box-shadow:var(--e1);-webkit-tap-highlight-color:transparent}
@@ -307,6 +333,7 @@ body.pzm-cela-telo{overflow:hidden}
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
+<script>window.PK_POZEMEK={"k":"Louka|—|Hodonín|48.927|17.490","ll":[48.927232,17.490454],"v":8228,"c":329000,"r":"data/okres/hodonin.json"};</script>
 <script src="js/min/menu.js?v=e897102e" defer></script>
 <script src="js/min/mapove-vrstvy.js?v=3aa2d8b2" defer></script>
 <script src="js/min/bpej.js?v=6050e644" defer></script>
@@ -321,7 +348,7 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/videno.js?v=e21d5bf3"></script>
 <script src="js/min/poznamky.js?v=070e8c0d"></script>
 <script src="js/min/hlidani-logika.js?v=3c8ae080"></script>
-<script src="js/min/pozemek.js?v=77c1b71c"></script>
+<script src="js/min/pozemek.js?v=c37d662e"></script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=bec7a315" defer></script>
 <script src="js/min/hlavicka.js?v=bf85dd50" defer></script>
@@ -337,7 +364,6 @@ body.pzm-cela-telo{overflow:hidden}
      obyčejné skripty běží před odloženými. -->
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 8 228 m² — Louka, okres Hodonín","description":"Nabídka už není aktuální. Na prodej · 329 000 Kč (40 Kč/m²) · 8 228 m² · Louka, okres Hodonín. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-hodonin-louka-1tuf0zr.html","address":{"@type":"PostalAddress","addressLocality":"Louka","addressRegion":"Hodonín","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":48.927232,"longitude":17.490454}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Okres Hodonín","item":"https://www.parcelaka.cz/pozemky-okres-hodonin.html"},{"@type":"ListItem","position":4,"name":"Orná půda 8 228 m² — Louka, okres Hodonín","item":"https://www.parcelaka.cz/pozemek-hodonin-louka-1tuf0zr.html"}]}]</script>
 <script>window.PK_UKONCENO="2026-10-07";</script>
-<script>window.PK_POZEMEK={"k":"Louka|—|Hodonín|48.927|17.490","ll":[48.927232,17.490454],"v":8228,"c":329000,"r":"data/okres/hodonin.json"};</script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

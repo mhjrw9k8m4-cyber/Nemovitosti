@@ -51,7 +51,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/zaklad.min.css?v=16647d47">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=402df32b">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -62,7 +62,7 @@
        prohlížeč si ji vezme z ostrůvku window.PK_POZEMEK dole. -->
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>#obsah{background:var(--bg)}
-.pz-wrap{max-width:var(--m-sloupec);margin:0 auto;padding:20px 16px 56px;color:var(--text-ondark);font-family:var(--font-ui)}
+.pz-wrap{max-width:var(--m-wrap);margin:0 auto;padding:20px 16px 56px;color:var(--text-ondark);font-family:var(--font-ui)}
 .pz-back{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--text-ondark-mute);text-decoration:none;margin-bottom:16px}
 .pz-back:hover{color:var(--text-ondark)}
 .pz-back svg{width:16px;height:16px;stroke-width:2.25}
@@ -167,7 +167,7 @@ a.srv-kde:hover{color:var(--copper-bright)}
 .pz-konec ul{margin:0;padding-left:20px}
 .pz-konec li{margin:2px 0}
 .pz-konec a{display:inline-flex;align-items:center;min-height:44px;color:var(--copper);text-underline-offset:3px}
-.pz-btn{flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:var(--r-ovladani);font-weight:700;font-size:15px;text-decoration:none;cursor:pointer;border:1px solid transparent}
+.pz-btn{flex:1 1 140px;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:var(--r-ovladani);font-weight:700;font-size:15px;text-decoration:none;cursor:pointer;border:1px solid transparent}
 .pz-btn svg{width:19px;height:19px;stroke-width:1.89;flex:none}
 .pz-btn.primary{background:var(--plocha-znacka);color:#fff;box-shadow:var(--glow)}
 .pz-btn.primary:hover{filter:brightness(1.06)}
@@ -179,8 +179,8 @@ a.srv-kde:hover{color:var(--copper-bright)}
 .pz-btn.ulozit.on{color:var(--copper-bright);border-color:var(--copper-bright)}
 .pz-actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
 .pz-actions .pz-abtn{flex:1 1 0;min-width:0}
-.pz-actions .pz-abtn:first-child{flex-basis:100%;background:rgba(31,81,56,0.10);border-color:var(--copper);border-width:1.5px;color:var(--copper);font-weight:700}
-.pz-actions .pz-abtn:first-child svg{color:var(--copper-bright)}
+.pz-actions .pz-abtn:first-child{flex-basis:100%;background:var(--plocha-znacka);border-color:transparent;color:#fff;font-weight:700;box-shadow:var(--e2)}
+.pz-actions .pz-abtn:first-child svg{color:#fff}
 .pz-abtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 16px;border-radius:var(--r-ovladani);background:var(--ink-soft);border:1.5px solid var(--obrys-tlacitka);color:var(--text-ondark);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),transform var(--cas-rychly) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .pz-abtn:hover{border-color:var(--copper-bright);background:var(--ink-soft2);box-shadow:var(--e2)}
 .pz-abtn:active{transform:scale(.98)}
@@ -340,6 +340,7 @@ body.pzm-cela-telo{overflow:hidden}
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
+<script>window.PK_POZEMEK={"k":"Seninka|1242|Vsetín|49.271|17.966","ll":[49.27114,17.96604],"v":118,"c":142950,"r":"data/okres/vsetin.json"};</script>
 <script src="js/min/menu.js?v=e897102e" defer></script>
 <script src="js/min/mapove-vrstvy.js?v=3aa2d8b2" defer></script>
 <script src="js/min/bpej.js?v=6050e644" defer></script>
@@ -354,7 +355,7 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/videno.js?v=e21d5bf3"></script>
 <script src="js/min/poznamky.js?v=070e8c0d"></script>
 <script src="js/min/hlidani-logika.js?v=3c8ae080"></script>
-<script src="js/min/pozemek.js?v=77c1b71c"></script>
+<script src="js/min/pozemek.js?v=c37d662e"></script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=bec7a315" defer></script>
 <script src="js/min/hlavicka.js?v=bf85dd50" defer></script>
@@ -370,7 +371,6 @@ body.pzm-cela-telo{overflow:hidden}
      obyčejné skripty běží před odloženými. -->
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Ostatní plocha 118 m² — Seninka, okres Vsetín","description":"Nabídka už není aktuální. Dražba · 142 950 Kč (1 211 Kč/m²) · 118 m² · Seninka, okres Vsetín. Termín 12. 10. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-vsetin-seninka-1mgg9qc.html","address":{"@type":"PostalAddress","addressLocality":"Seninka","addressRegion":"Vsetín","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.27114,"longitude":17.96604},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":118,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":142950,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-vsetin-seninka-1mgg9qc.html","itemOffered":{"@type":"Place","name":"Ostatní plocha 118 m² — Seninka, okres Vsetín"},"description":"Vyvolávací cena ve veřejné dražbě, ne cena požadovaná prodávajícím.","availability":"https://schema.org/OutOfStock","priceValidUntil":"2026-10-13"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Zlínský kraj","item":"https://www.parcelaka.cz/pozemky-zlinsky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Vsetín","item":"https://www.parcelaka.cz/pozemky-okres-vsetin.html"},{"@type":"ListItem","position":5,"name":"Ostatní plocha 118 m² — Seninka, okres Vsetín","item":"https://www.parcelaka.cz/pozemek-vsetin-seninka-1mgg9qc.html"}]}]</script>
 <script>window.PK_UKONCENO="2026-10-13";</script>
-<script>window.PK_POZEMEK={"k":"Seninka|1242|Vsetín|49.271|17.966","ll":[49.27114,17.96604],"v":118,"c":142950,"r":"data/okres/vsetin.json"};</script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
