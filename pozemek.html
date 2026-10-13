@@ -357,7 +357,11 @@
     /* Lišta s cenou a akcí u spodního okraje tu byla a je pryč — viz
        js/pozemek.js. S ní odešlo i pravidlo, které kvůli ní zvedalo
        kolečko „Nahoru" o její výšku. */
-    .pz-btn{flex:1 1 200px; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; border-radius:var(--r-ovladani); font-weight:700; font-size:15px; text-decoration:none; cursor:pointer; border:1px solid transparent;}
+    /* Dvě vedlejší cesty ven se vejdou vedle sebe i na telefonu: při
+       základu 200 px (plus mezera) chtěly 410 a na 390px displeji je
+       zbývalo 358, takže se každá roztáhla přes celý řádek a stránka
+       z nich měla sloupec plný pilulek. Při 140 px se dvě vejdou. */
+    .pz-btn{flex:1 1 140px; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; border-radius:var(--r-ovladani); font-weight:700; font-size:15px; text-decoration:none; cursor:pointer; border:1px solid transparent;}
     .pz-btn svg{width:19px; height:19px; stroke-width:1.89; flex:none;}
     .pz-btn.primary{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
     .pz-btn.primary:hover{filter:brightness(1.06);}
@@ -376,9 +380,9 @@
        linka a stejná váha písma jako u popisků. Je to přitom odkaz,
        kterým se ověřuje vlastník — na téhle stránce jedna z mála věcí,
        co má člověk opravdu udělat. */
-    .pz-actions .pz-abtn:first-child{flex-basis:100%; background:rgba(31,81,56,0.10);
-      border-color:var(--copper); border-width:1.5px; color:var(--copper); font-weight:700;}
-    .pz-actions .pz-abtn:first-child svg{color:var(--copper-bright);}
+    .pz-actions .pz-abtn:first-child{flex-basis:100%; background:var(--plocha-znacka);
+      border-color:transparent; color:#fff; font-weight:700; box-shadow:var(--e2);}
+    .pz-actions .pz-abtn:first-child svg{color:#fff;}
     .pz-abtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:48px; padding:0 16px; border-radius:var(--r-ovladani); background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka); color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; box-shadow:var(--e1); transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
     .pz-abtn:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
     .pz-abtn:active{transform:scale(.98);}

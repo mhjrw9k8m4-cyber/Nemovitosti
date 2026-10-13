@@ -4064,6 +4064,19 @@ se člověk dozvěděl až uvnitř. Teď je to pruh přes celou šířku s počt
 (to je ten důvod — u pěti pozemků žádný není a tam se taky nenabízí)
 a s větou o tom, co se stane doprava a doleva.
 
+### 6. Dole na inzerátu stál sloupec pilulek
+
+Čtyři tlačítka pod sebou, každé přes celou šířku: Mapy.cz, panorama,
+katastr, sdílet. Nebyl to záměr — `.pz-btn` má základ 200 px a dvě
+takové chtějí 410, kdežto na 390px displeji zbývá 358, takže se každá
+roztáhla na vlastní řádek. Při základu 140 px se dvě vejdou vedle sebe.
+
+A „Otevřít v katastru" — jediná věc, kterou má člověk na té stránce
+opravdu udělat, totiž ověřit si vlastníka — byla vybarvená na deset
+procent zelené, což vypadalo jako vypnuté tlačítko. Je teď plná tmavá
+zeleň s bílým textem, tedy jediné plné tlačítko na stránce. Spodek
+inzerátu je o 62 px kratší.
+
 ### Co našly zkoušky (a co z toho byla moje chyba)
 
 Z plné dávky 102 prohlížečových zkoušek jich osm zčervenalo:
