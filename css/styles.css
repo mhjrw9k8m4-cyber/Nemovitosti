@@ -4034,6 +4034,32 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
   font-family:var(--font-mono); font-size:12px; font-weight:700; line-height:1;}
 .rule-list.no li::before{background:var(--c-exekuce) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 7l10 10M17 7L7 17' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") center/11px 11px no-repeat;
   box-shadow:var(--e1);}
+/* =====================================================================
+   ČTECÍ SLOUPEC — kde se text láme, aby se dal číst
+   ---------------------------------------------------------------------
+   Změřeno 13. 10. na monitoru 1440 px: délka řádku odstavců byla
+   91 až 187 znaků. Čitelné maximum je kolem 75; nad 90 oko na konci
+   řádku ztrácí, kde začít další, a čte tentýž řádek dvakrát.
+   Nejhorší místa: poznámka pod metodikou cen měla 13px písmo přes
+   1136 px šířky, tedy 187 ZNAKŮ NA ŘÁDEK — dvakrát a půl víc, než
+   se dá číst. Text článků měl 720 px při 16 px, tedy 91–98.
+
+   Token --m-text:62ch existoval už dřív a byl použitý na dvaceti
+   místech — jen ne na textu, který se opravdu táhl. Tohle není nové
+   rozhodnutí, je to dotažení toho starého.
+
+   PROČ 62ch A NE PIXELY. `ch` i `em` se počítají z písma TOHO prvku,
+   na kterém jsou. Jedna hodnota tím dává stejný počet znaků u 13px
+   poznámky i u 16px odstavce (484 px, resp. 595 px) — v pixelech by
+   to musely být dvě různá čísla, která si nikdo neudrží.
+
+   max-width je STROP, ne šířka: krátký odstavec se nezúží a zarovnání
+   vlevo se nemění, takže svislice obsahu zůstává, kde byla.
+   ------------------------------------------------------------------ */
+.rules-note, .okr-more, .gc-pozn, .dt-cisla, .md-pozn,
+.rules-sect > p, .rule-list > li, .sml-seznam > li,
+.por-prazdno p, .wrap > p{max-width:var(--m-text);}
+
 .rules-note{font-size:13px; color:var(--text-ondark-mute); line-height:1.6; margin-top:8px;}
 .rules-note a{color:var(--copper-bright);}/* ---------- Stránka „Pozemky od lidí" ---------- */
 

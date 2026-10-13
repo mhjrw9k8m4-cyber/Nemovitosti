@@ -4563,7 +4563,7 @@ s prahem dlaždic a prahem okresů u cen.)
 
 ### Zkoušky
 
-**101 neprohlížečových** a **103 prohlížečových** kontrol zelených.
+**100 neprohlížečových** a **104 prohlížečových** kontrol zelených.
 Obě chyby, které předtím shodily CI (`testy` i `v-prohlizeci`), jsou
 opravené u kořene, ne obejité.
 
@@ -4922,6 +4922,89 @@ Ohlásila to slovy „bez hlášky: test-vrstvy.mjs".
 Opraveny tři: `test-vrstvy`, `test-soustava` a `test-odstupy` (ta
 `::error::` neměla vůbec). Teď říkají například:
 `::error::Odstupy: 1 mimo stupnici. Co padlo: css/styles.css:4316 13px`.
+
+## 3by. NALEZENO: řádky textu měly 91 až 187 znaků — čtecí sloupec existoval a nebyl použitý — *opraveno 13. 10.*
+
+Tohle je ten nejpodstatnější nález z celé kompozice, protože se **nedá
+poznat ze snímku.** Délka řádku je jediná typografická míra, která se
+dá splést s velkorysostí: čím širší sloupec, tím „vzdušněji" návrh
+vypadá — a tím hůř se čte. Nad devadesát znaků oko na konci řádku
+ztrácí, kde začít další, a čte tentýž řádek dvakrát. Čitelné optimum
+je 60–75.
+
+### Změřeno
+
+Monitor 1440 px, 33 stránek, střední šířka znaku změřená v canvasu
+**v tom písmu, které ten odstavec má** (ne odhad z font-size):
+
+| stránka | medián | maximum |
+|---|---|---|
+| na-co-mam-pozemek | **183** | 187 |
+| cena-pozemku | **179** | 187 |
+| pozemky-stredocesky-kraj | 172 | 186 |
+| pozemky-okres-tabor | 164 | 173 |
+| nove-pozemky | 138 | 143 |
+| moje-data | — | 180 |
+| data | 83 | 170 |
+| uzemni-plan-pozemek | 95 | 96 |
+| kolik-stoji-koupe-pozemku | 94 | 97 |
+| …a dalších 12 rádcovských stránek | 90–92 | 94–100 |
+
+Nejhorší jednotlivost: **poznámka pod metodikou cen — 13px písmo přes
+1136 px šířky, tedy 187 znaků na řádek.** Dvakrát a půl víc, než se dá
+číst. Text rádcovských a právních stránek měl 720 px při 16 px, tedy
+91 až 98.
+
+### Příčina: token existoval, jen nebyl použitý
+
+`--m-text:62ch` je v paletě odjakživa a byl použitý na **dvaceti
+místech** — `.sources-four`, `.faq-item p`, `.add-hero .sub`,
+`.om-pozn` a dalších. Jen ne na textu, který se opravdu táhl. Tohle
+tedy není nové rozhodnutí o vzhledu; je to **dotažení toho starého**
+na jedenáct dalších selektorů: `.rules-note`, `.okr-more`, `.gc-pozn`,
+`.dt-cisla`, `.md-pozn`, `.rules-sect > p`, `.rule-list > li`,
+`.sml-seznam > li`, `.por-prazdno p` a `.wrap > p`.
+
+(Pátý případ téhož druhu za dva dny: práh dlaždic, práh okresů u cen,
+existence podílu u shody, pět stránek z třiceti dvou u dotykových
+terčů — a teď token, který existoval a nebyl použitý.)
+
+### Proč 62ch a ne pixely
+
+`ch` i `em` se počítají z písma **toho prvku**, na kterém jsou. Jedna
+hodnota tím dává stejný počet znaků u 13px poznámky (484 px) i u 16px
+odstavce (595 px). V pixelech by to musela být dvě různá čísla, která
+si nikdo neudrží a která se při změně velikosti písma rozejdou.
+
+`max-width` je **strop, ne šířka**: krátký odstavec se nezúží
+a zarovnání vlevo se nemění, takže svislice obsahu z bodu 3bq zůstává,
+kde byla.
+
+### Po opravě
+
+| | před | po |
+|---|---|---|
+| medián | 51–183 | **72–85** |
+| maximum | 187 | **89** |
+| odstavců nad 90 znaků | 160 | **0** |
+
+### Pojistka
+
+`scripts/test-mira.mjs` (nová, v CI, prohlížečová) měří délku řádku na
+26 stránkách s dlouhým textem. Strop je **90** — není to optimum (to
+je 75), je to hranice, za kterou čtení měřitelně trpí; mediány po
+opravě sedí na 80, takže mez má rezervu a nepadne na jednom slově
+navíc.
+
+Zkouška má i **předpoklad o sobě**: kdyby se stránky nenačetly nebo se
+změnila značka odstavců, hlásila by „všechno v pořádku" a přitom by se
+na žádný odstavec nepodívala. Proto padne, když změří méně než 100
+odstavců nebo méně než 15 stránek. (Teď měří **305 odstavců na 26
+stránkách**.)
+
+Ověřeno sabotáží: celé pravidlo čtecího sloupce ze stylopisu pryč,
+přestavět — zkouška spadla a vypsala `187 znaků .rules-note (13px,
+1136px) · cena-pozemku.html` a dalších šest. Po vrácení zelená.
 
 ## Co naopak nechybí
 
