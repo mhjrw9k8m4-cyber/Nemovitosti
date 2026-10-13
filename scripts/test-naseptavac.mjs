@@ -1267,6 +1267,20 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
     await kPole.click();
     await kPole.fill('');
     await q.evaluate(([a, b]) => window.__klavesnice(a, b), [h, t || 0]);
+    /* POLE SE POSTAVÍ TAM, KDE STOJÍ, KDYŽ ČLOVĚK HLEDÁ.
+       Oddíl měří jedinou věc: že se seznam vejde nad klávesnici. K tomu
+       potřebuje pole v ustálené poloze — jinak se měří rozvržení
+       stránky, ne našeptávač. Dřív pole leželo 115 px od horní hrany
+       samo od sebe; od chvíle, co je nad hledáním rozcestník, leží na
+       312 a při volné výšce 300 px by bylo celé POD klávesnicí. V tom
+       stavu se seznam nemá kam vejít (je přilepený k poli) a v
+       prohlížeči nenastane, protože ten si zaostřené pole přiroluje.
+       Stránka se proto posune na týchž 115 px — a kontroly níž měří
+       zase našeptávač. */
+    await q.evaluate(() => {
+      const r = document.getElementById('map-search').getBoundingClientRect();
+      scrollBy(0, Math.round(r.top - 115));
+    });
     await kPole.fill(text);
     await q.waitForTimeout(450);
     return zmer();
