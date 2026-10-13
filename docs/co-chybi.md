@@ -4275,11 +4275,35 @@ Opraveno jedním řádkem (`display:contents` na obalu, jen nad 1041 px)
 a přepsáním čtyř selektorů z přímých na potomkové — `display:contents`
 mění vykreslování, ne strom, takže `>` by dál nesedělo.
 
+### 6. NALEZENO: tlačítka a pole měla čtyři různá zaoblení
+
+Změřeno na sedmi stránkách ve dvou šířkách, na vykreslených prvcích
+(ne na zápisu v stylopisu): ovládací prvky se kreslily ve **čtyřech**
+zaobleních — 6 px (kontaktní formulář), 10 px (hledání nad mapou,
+řazení, souhrn filtrů, záložky přihlášení), 14 px (hlavní tlačítko,
+přihlašovací pole, „Pozemky v okolí") a pilulka.
+
+Jednotlivě si toho nikdo nevšimne. Vedle sebe v jedné řadě ano: nad
+mapou stálo pole hledání na 10 px, hned vedle „Pozemky v okolí" na 14
+a za ním souhrn filtrů zase na 10. To je přesně ten pocit „je to skoro
+hotové", který se nedá ukázat prstem.
+
+Pravidlo je teď jedno a je napsané u tokenu `--r-ovladani`:
+
+* co se **ovládá** (tlačítko, pole, rozbalovač) → `--r-ovladani`,
+* **pilulka** zůstává odznakům (zapínatelný filtr) a kulatým tlačítkům
+  s ikonou — tam netvrdí, že je to pole,
+* **nula** je v pořádku u prvků bez vlastní plochy a bez okraje:
+  zaoblení ničeho není vidět.
+
+Hlídá to nová `scripts/test-zaobleni.mjs` (95 změřených prvků).
+Ověřeno sabotáží: po vrácení řazení na 10 px hlásí `map-select (10 px) ×2`.
+
 ### Zkoušky
 
 Celá dávka z CI na hotovém stromu: **97 neprohlížečových** kontrol
-zelených, prohlížečová dávka **102** kontrol zelená. Tři kontroly
-musely změnit, co měří, a u každé je v souboru napsané proč:
+zelených, prohlížečová dávka **102** kontrol zelená (plus nová `test-zaobleni`,
+takže v CI je jich 103). Tři kontroly musely změnit, co měří, a u každé je v souboru napsané proč:
 `test-hlavicka` (sklo na monitoru → neprůhledná všude, + nová pojistka
 na míchanou vrstvu), `test-pisma` (čtyři písma → počet souborů),
 `test-barva-listy` (konstanta světlé barvy `#F9FAF9` → `#FFFFFF`).

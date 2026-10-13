@@ -562,6 +562,9 @@ jobs:
       - name: Barva lišty prohlížeče (theme-color sedí s hlavičkou)
         run: node scripts/test-barva-listy.mjs
 
+      - name: Zaoblení (co se ovládá, má jedno zaoblení)
+        run: node scripts/test-zaobleni.mjs
+
       - name: Prázdno pod obsahem a kotvy pod hlavičkou
         run: node scripts/test-prazdno.mjs
 
