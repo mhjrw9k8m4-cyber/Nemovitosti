@@ -707,7 +707,7 @@ button, a, [role="button"], select, summary, .btn-primary, .lp-btn, input[type="
 /* Textové tlačítko uvnitř hlášky (např. „Začít znovu" u vráceného konceptu) */
 .link-btn{background:none; border:0; padding:0; margin:0; font:inherit; font-weight:600;
   color:var(--copper-bright); text-decoration:underline; cursor:pointer;}
-.link-btn:hover{opacity:.85;}
+.link-btn:hover{opacity:0.85;}
 .link-btn:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px; border-radius:3px;}/* Setrvačné (momentum) rolování uvnitř posuvných oblastí */
 
 .opp-list, .okr-list{ -webkit-overflow-scrolling:touch; }
@@ -832,7 +832,7 @@ html.pk-prihlasen #prodej-card[hidden], html.pk-prihlasen #mi-panel[hidden]{disp
 /* Rozmazané poletující skvrny na pozadí jsou to, co působí „futuristicky".
    Nemažou se — drží hloubku —, ale ztlumily se na polovinu a jedna z nich
    je teplá, aby pozadí nebylo jen studené. */
-.aurora span{position:absolute; border-radius:50%; filter:blur(80px); opacity:0.085; transform:translateZ(0); will-change:transform;}
+.aurora span{position:absolute; border-radius:50%; filter:blur(80px); opacity:0.1; transform:translateZ(0); will-change:transform;}
 .aurora .a1{width:420px; height:420px; background:radial-gradient(circle, rgba(79,165,122,0.3), transparent 70%); top:-120px; right:-80px; animation:float1 14s ease-in-out infinite;}
 .aurora .a2{width:360px; height:360px; background:radial-gradient(circle, rgba(60,140,100,0.22), transparent 70%); bottom:-140px; left:-100px; animation:float2 18s ease-in-out infinite;}
 .aurora .a3{width:300px; height:300px; background:radial-gradient(circle, rgba(138,85,18,0.22), transparent 70%); top:40%; left:40%; animation:float1 16s ease-in-out infinite reverse;}
@@ -841,7 +841,7 @@ html.pk-prihlasen #prodej-card[hidden], html.pk-prihlasen #mi-panel[hidden]{disp
 /* Mobil: animované rozmazané „aurora" koule žraly výkon a scroll sekal —
    na dotykových displejích je necháme staticky (vzhled zůstane, sekání zmizí). */
 @media (max-width:768px){
-  .aurora span{animation:none !important; will-change:auto; filter:blur(70px); opacity:0.12;}
+  .aurora span{animation:none !important; will-change:auto; filter:blur(70px); opacity:0.1;}
 }
 .hero{position:relative; overflow:hidden;}
 
@@ -921,7 +921,7 @@ body.vm-otevreno{overflow:hidden;}
   color:var(--text-ondark); cursor:pointer;
   transition:border-color var(--cas-zakladni) var(--ease);}
 .vm-gps:hover{border-color:var(--copper-bright);}
-.vm-gps:disabled{opacity:.6; cursor:progress;}
+.vm-gps:disabled{opacity:0.6; cursor:progress;}
 .vm-gps svg{width:18px; height:18px; flex:none; fill:none; stroke:currentColor;
   stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
 /* Na úzké obrazovce by se popisek tlačítka a pole praly o místo. */
@@ -1189,7 +1189,7 @@ header.hl-zhasnuta{opacity:0; pointer-events:none; transition:opacity var(--cas-
    říká to, co je pravda: nic se nepřesunulo, jen se to vrátilo do
    viditelna. */
 @keyframes hlPrijezd{from{opacity:0;} to{opacity:1;}}
-header.hl-prijezd{animation:hlPrijezd .42s ease-out;}
+header.hl-prijezd{animation:hlPrijezd var(--cas-pomaly) ease-out;}
 /* Komu vadí pohyb, tomu se nabídne KRATŠÍ prolnutí — ne přepnutí.
 
    Tohle je JEDINÁ výjimka z plošného pravidla nahoře (řádek s
@@ -1204,7 +1204,7 @@ header.hl-prijezd{animation:hlPrijezd .42s ease-out;}
    Náhradou za prolnutí tady navíc není klid, ale prvek, který se
    koutkem oka zjeví z ničeho nic; to je rušivější, ne klidnější.
    Zkrácené na dvě desetiny vteřiny, ať je to opravdu jen náznak. */
-@media (prefers-reduced-motion:reduce){ header.hl-prijezd{animation:hlPrijezd .2s ease-out !important;} }
+@media (prefers-reduced-motion:reduce){ header.hl-prijezd{animation:hlPrijezd var(--cas-zakladni) ease-out !important;} }
 /* Kdo je v hlavičce klávesnicí, o ni nesmí přijít ani při rolování. */
 header:focus-within{opacity:1 !important; pointer-events:auto !important;}
 @media (prefers-reduced-motion:reduce){ header{transition:none;} }
@@ -1310,7 +1310,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
   color:var(--text-ondark-mute); font-size:14px; font-weight:500; transition:color var(--cas-zakladni) var(--ease);}
 .nav-moje > summary::-webkit-details-marker{display:none;}
 .nav-moje > summary::after{content:""; width:7px; height:7px; flex:none;
-  border-right:1.6px solid currentColor; border-bottom:1.6px solid currentColor;
+  border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor;
   transform:translateY(-2px) rotate(45deg); transition:transform var(--cas-zakladni) var(--ease);}
 .nav-moje[open] > summary::after{transform:translateY(1px) rotate(-135deg);}
 .nav-moje > summary:hover, .nav-moje[open] > summary{color:var(--text-ondark);}
@@ -1331,7 +1331,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 /* Stav účtu pod položkou „Můj profil". Doplňuje ho js/hlavicka.js;
    v HTML je „Nepřihlášeno", aby i bez skriptu stálo něco pravdivého. */
 .nav-stav{display:block; width:100%; font-size:12px; font-weight:500; line-height:1.3;
-  color:var(--text-ondark-mute); opacity:.85; letter-spacing:0;
+  color:var(--text-ondark-mute); opacity:0.85; letter-spacing:0;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 /* Řádek účtu je dvouřádkový (název + stav), ale ikona a šipka mají zůstat
    svisle uprostřed na jednom řádku. S flex-wrap šipka spadla pod e-mail
@@ -1613,7 +1613,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   border:1px solid var(--line-ui); border-radius:var(--r-sm); box-shadow:var(--e2);}
 .msn-oprava[hidden]{display:none;}
 .msn-oprava b{color:var(--text-ondark);}
-@media (prefers-reduced-motion:no-preference){ .ms-navrhy{animation:msnPrijed .12s ease-out;} }
+@media (prefers-reduced-motion:no-preference){ .ms-navrhy{animation:msnPrijed var(--cas-rychly) ease-out;} }
 @keyframes msnPrijed{from{opacity:0; transform:translateY(-3px);} to{opacity:1; transform:none;}}
 /* Odznaky toho, co web z napsané věty pochopil. Bez nich by filtrování
    probíhalo potají: člověk napíše „stavební beroun do 1 mil" a najednou
@@ -1624,7 +1624,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   cursor:pointer; min-height:30px; padding:4px 8px 4px 10px; border-radius:var(--r-pill);
   border:1px solid transparent; background:var(--plocha-znacka); color:#fff;}
 .msch:hover{filter:brightness(1.08);}
-.msch .msch-x{font-size:13px; line-height:1; opacity:.8;}
+.msch .msch-x{font-size:13px; line-height:1; opacity:0.8;}
 .msch[data-druh="cena"], .msch[data-druh="plocha"]{background:var(--accent-warm); }
 .msch[data-druh="sit"]{background:var(--copper-bright);}
 /* Nápadné tlačítko „pozemky ve vašem okolí" (geolokace) */
@@ -1650,25 +1650,25 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   opacity:0; animation:pkRadar 2.6s cubic-bezier(.22,.61,.36,1) infinite;}
 .pk-radar span:nth-child(2){animation-delay:1.3s;}
 @keyframes pkRadar{
-  0%   {transform:scale(.55); opacity:.85;}
-  70%  {opacity:.14;}
+  0%   {transform:scale(.55); opacity:0.85;}
+  70%  {opacity:0.15;}
   100% {transform:scale(3.1); opacity:0;}
 }
 /* Kdo si vypnul animace, nemá se na co dívat — ať aspoň vidí kroužek. */
 @media (prefers-reduced-motion:reduce){
-  .pk-radar span{animation:none; opacity:.5; transform:scale(1.9);}
+  .pk-radar span{animation:none; opacity:0.5; transform:scale(1.9);}
   .pk-radar span:nth-child(2){display:none;}
 }
 .vm-napred{color:var(--text-ondark-mute); font-size:13px; line-height:1.4;}
 /* Potvrdit nejde, dokud není okruh vidět — ať je to poznat i pohledem. */
-.vm-ok[disabled]{opacity:.45; cursor:not-allowed; box-shadow:none;}
+.vm-ok[disabled]{opacity:0.45; cursor:not-allowed; box-shadow:none;}
 /* Jediná akce. Nejdřív tu byly dvě stejně velká tlačítka („Pozemky v okolí"
    a „Vybrat na mapě"), pak tlačítko a pod ním odkaz — obojí byly dvě cesty
    k témuž. Teď tlačítko rovnou otevře mapu, na které se místo ukáže, takže
    druhá cesta nemá co nabídnout. */
 .map-okoli{display:flex; flex-direction:column; align-items:center;}
 .map-okoli .map-near-btn{width:100%;}
-.map-near-btn[disabled]{opacity:.78; cursor:progress;}
+.map-near-btn[disabled]{opacity:0.8; cursor:progress;}
 .mnb-ceka{width:15px; height:15px; flex:none; border-radius:50%;
   border:2px solid rgba(255,255,255,0.4); border-top-color:#fff;
   animation:mnbTocSe .8s linear infinite;}
@@ -1885,7 +1885,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    schovaná možnost vypadá, jako by neexistovala; takhle je vidět, že
    existuje a je prázdná. Kliknout na něj jde dál: sám o sobě filtr
    rozšiřuje, takže se po něm může něco objevit. */
-/* PRŮHLEDNOST BYLA ŠPATNÝ NÁSTROJ. opacity:.5 na textu --text-ondark
+/* PRŮHLEDNOST BYLA ŠPATNÝ NÁSTROJ. opacity:0.5 na textu --text-ondark
    nad bílou dává kolem 2,3 : 1, a to je popisek volby, ne ozdoba —
    norma žádá 4,5. Ztlumí se tedy jen to, co je opravdu prázdné: počet
    a okraj. Popisek zůstává čitelný. */
@@ -2029,7 +2029,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    nestihne pochopit, odkud to přišlo. Dialog je ale svižnější než
    hlavička (0,26 s proti 0,42 s) — čeká se na něj, ne mimochodem. */
 @keyframes rzPrijezd{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;}}
-.rz-ov:not([hidden]){animation:rzPrijezd .26s cubic-bezier(.22,.61,.36,1);}
+.rz-ov:not([hidden]){animation:rzPrijezd var(--cas-zakladni) cubic-bezier(.22,.61,.36,1);}
 @media (prefers-reduced-motion:reduce){ .rz-ov:not([hidden]){animation:none;} }
 .rz-hlava{display:flex; align-items:center; justify-content:space-between; gap:10px;
   padding:14px 14px 10px; font-family:var(--font-display); font-size:16px; color:var(--text-ondark);}
@@ -2050,7 +2050,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    které funguje i pro barvoslepé a na slunci. */
 .rz-graf button{padding-bottom:4px; border-bottom:3px solid transparent;}
 .rz-graf button i{display:block; width:100%; border-radius:3px 3px 0 0; background:var(--line-strong);
-  opacity:.45; transition:opacity var(--cas-rychly) var(--ease), background var(--cas-rychly) var(--ease);}
+  opacity:0.45; transition:opacity var(--cas-rychly) var(--ease), background var(--cas-rychly) var(--ease);}
 .rz-graf button.rz-uvnitr{border-bottom-color:var(--plocha-znacka);}
 .rz-graf button.rz-uvnitr i{background:var(--plocha-znacka); opacity:1;}
 .rz-graf button:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px; border-radius:var(--r-xs);}
@@ -2134,7 +2134,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .cdd.open>.cdd-btn{border-color:var(--copper-bright); background:var(--ink-soft2, var(--ink-soft));}
 .cdd-panel{position:fixed; z-index:2500; display:none; padding:6px;
   background:var(--ink); border:1px solid var(--line-strong); border-radius:var(--r-sm); box-shadow:var(--e3);
-  max-height:280px; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; animation:cddIn .14s ease both;}
+  max-height:280px; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; animation:cddIn var(--cas-rychly) ease both;}
 @keyframes cddIn{from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:none;}}
 .cdd-opt{display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:none; border:0; cursor:pointer;
   color:var(--text-ondark); font-family:inherit; font-size:13px; font-weight:600; padding:10px 10px; border-radius:var(--r-sm); line-height:1.2;
@@ -2403,7 +2403,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   font-variant-numeric:tabular-nums; color:var(--text-ondark-mute); white-space:nowrap;}
 .rv-bilance:empty{display:none;}
 .rv-bilance .rvb-ano{color:var(--copper);}
-.rv-bilance .zmena{animation:rvPocet .42s var(--ease);}
+.rv-bilance .zmena{animation:rvPocet var(--cas-pomaly) var(--ease);}
 @keyframes rvPocet{0%{transform:scale(1);} 40%{transform:scale(1.28);} 100%{transform:scale(1);}}
 .rv-zavrit{min-height:44px; padding:0 16px; border-radius:var(--r-pill); cursor:pointer;
   border:1.5px solid var(--line-strong); background:var(--ink-soft); color:var(--text-ondark);
@@ -2429,7 +2429,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .rv-duch{position:absolute; inset:0; border-radius:var(--r-md); background:var(--ink-soft);
   border:1px solid var(--line); box-shadow:var(--e1); transform-origin:bottom center;}
 .rv-duch1{transform:translateY(9px) scaleX(0.955); opacity:0.6;}
-.rv-duch2{transform:translateY(18px) scaleX(0.91); opacity:0.32;}
+.rv-duch2{transform:translateY(18px) scaleX(0.91); opacity:0.3;}
 .rv-karta{position:relative; width:100%; height:100%; background:var(--ink-soft); border:1px solid var(--line);
   border-radius:var(--r-md); box-shadow:var(--e2); overflow:hidden; display:flex; flex-direction:column;
   touch-action:pan-y; animation:rvPrichod var(--cas-pomaly) var(--ease);}
@@ -2437,8 +2437,8 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* ODLET KARTY. Bez něj se karta jen tiše vyměnila za jinou a nebylo
    poznat, že se něco stalo — natož co. Směr nese význam: doprava
    uložené, doleva schované. */
-.rv-karta.odlet-vpravo{animation:rvPrycVpravo .34s var(--ease) forwards;}
-.rv-karta.odlet-vlevo{animation:rvPrycVlevo .34s var(--ease) forwards;}
+.rv-karta.odlet-vpravo{animation:rvPrycVpravo var(--cas-pomaly) var(--ease) forwards;}
+.rv-karta.odlet-vlevo{animation:rvPrycVlevo var(--cas-pomaly) var(--ease) forwards;}
 @keyframes rvPrycVpravo{to{transform:translateX(130%) rotate(14deg); opacity:0;}}
 @keyframes rvPrycVlevo{to{transform:translateX(-130%) rotate(-14deg); opacity:0;}}
 
@@ -2523,11 +2523,11 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   transition:transform var(--cas-zakladni) var(--ease);}
 .rv-btn:active{transform:scale(0.94);}
 .rv-btn .rv-popis{font-size:11px; font-weight:700; letter-spacing:0.02em;}
-.rv-btn:disabled{opacity:.42; cursor:default;}
+.rv-btn:disabled{opacity:0.4; cursor:default;}
 .rv-ne{color:var(--c-exekuce-ink); border-color:var(--c-exekuce-ink);}
 .rv-ano{color:var(--copper); border-color:var(--copper-bright); background:rgba(31,81,56,0.12);}
 /* Srdíčko při uložení poskočí — to je ta odezva, která chyběla. */
-.rv-ano.zabralo .rv-znak{animation:rvSrdce .5s var(--ease);}
+.rv-ano.zabralo .rv-znak{animation:rvSrdce var(--cas-pomaly) var(--ease);}
 @keyframes rvSrdce{0%{transform:scale(1);} 35%{transform:scale(1.45);} 70%{transform:scale(0.92);} 100%{transform:scale(1);}}
 .rv-zpet{min-width:54px; min-height:54px; font-size:18px;}
 
@@ -2565,7 +2565,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Vypnuté tlačítko se nesmí tvářit jako klikatelné — ale ani zmizet:
    když je vidět, že „Předchozí" je zašedlé, člověk pozná, že je na
    začátku, místo aby hledal, kam se tlačítko podělo. */
-.ops-btn:disabled{opacity:.42; cursor:default;}
+.ops-btn:disabled{opacity:0.4; cursor:default;}
 .ops-kde{font-size:14px; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums; white-space:nowrap;}
 .ops-kde b{color:var(--text-ondark);}
 @media (max-width:380px){ .opp-strany{gap:6px;} .ops-btn{padding:0 12px;} }
@@ -3144,8 +3144,8 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 /* Plynulý příchod okna + jemné vizuální doladění */
 @keyframes locOvIn{from{opacity:0}to{opacity:1}}
 @keyframes locCardIn{from{opacity:0; transform:translateY(18px) scale(.95)}to{opacity:1; transform:none}}
-.loc-ov{animation:locOvIn .2s ease both;}
-.loc-card{animation:locCardIn .34s cubic-bezier(.2,.9,.3,1.25) both;}
+.loc-ov{animation:locOvIn var(--cas-zakladni) ease both;}
+.loc-card{animation:locCardIn var(--cas-pomaly) cubic-bezier(.2,.9,.3,1.25) both;}
 .loc-ic{background:linear-gradient(135deg,rgba(31,81,56,0.16),rgba(138,85,18,0.12)); box-shadow:var(--glow);}
 .loc-btn{transition:transform var(--cas-rychly) var(--ease), filter var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
 .loc-btn:active{transform:scale(.975);}
@@ -3588,7 +3588,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
     border-radius:0; box-shadow:var(--e3);
     overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch;
     transform:translateX(-101%); visibility:hidden;
-    transition:transform .22s var(--ease), visibility 0s linear .22s;}
+    transition:transform var(--cas-zakladni) var(--ease), visibility 0s linear var(--cas-zakladni);}
   body.nav-otevreno #nav{transform:none; visibility:visible; transition-delay:0s;}
   body.nav-otevreno{overflow:hidden;}
   #nav::after, #nav::before{content:none;}
@@ -3922,7 +3922,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    Dva pixely nikoho netrápí, ale stylopis tvrdil dvě různé věci.
    Tohle pravidlo říká nahlas, co se opravdu děje. */
 .add-msg.auth-msg{margin:0;}
-.auth-sent{text-align:center; animation:authFade .3s ease both;}
+.auth-sent{text-align:center; animation:authFade var(--cas-zakladni) ease both;}
 .auth-sent-ico{width:60px; height:60px; margin:2px auto 14px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(126,196,157,0.12); border:1px solid var(--line-strong);}
 .auth-sent-ico svg{width:30px; height:30px; color:var(--text-ondark);}
 .auth-sent h3{font-family:var(--font-ui); font-size:20px; font-weight:600; color:var(--text-ondark); margin:0 0 8px;}
@@ -4117,7 +4117,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
   background:radial-gradient(circle at 50% 38%, #22493A, var(--ink) 88%);}
 .ul-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
 .ul-thumb .ph{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--text-ondark-mute);}
-.ul-thumb .ph svg{width:32px; height:32px; opacity:.45; stroke:currentColor; fill:none; stroke-width:1.125;}
+.ul-thumb .ph svg{width:32px; height:32px; opacity:0.45; stroke:currentColor; fill:none; stroke-width:1.125;}
 .ul-topline{display:flex; align-items:center; justify-content:space-between; gap:8px;}
 .ul-verified{display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:var(--c-ok-ink);}
 .ul-verified svg{width:13px; height:13px; stroke-width:2.77; stroke:currentColor; fill:none; }
@@ -4132,7 +4132,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .add-chips span{font-size:13px; font-weight:600; color:var(--copper-bright); background:rgba(44,113,80,0.12);
   border:1px solid rgba(44,113,80,0.3); border-radius:var(--r-lg); padding:6px 14px;}
 /* Vstupní animace karet */
-.add-card, .add-aside > .aside-card{animation:addfade .5s var(--ease) both;}
+.add-card, .add-aside > .aside-card{animation:addfade var(--cas-pomaly) var(--ease) both;}
 .add-aside > .aside-card:nth-child(2){animation-delay:.09s;}
 @keyframes addfade{from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:none;}}
 /* Karta živého náhledu */
@@ -4212,14 +4212,14 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .tips-list li::before{content:""; position:absolute; left:0; top:5px; width:9px; height:9px; border-radius:50%; border:2px solid var(--copper-bright);}
 
 /* Oslavné potvrzení po odeslání */
-.add-success{background:var(--ink-soft); border:1px solid rgba(95,176,126,0.4); border-radius:var(--r-lg); padding:40px 28px; text-align:center; box-shadow:var(--e3); animation:addfade .45s var(--ease) both;}
+.add-success{background:var(--ink-soft); border:1px solid rgba(95,176,126,0.4); border-radius:var(--r-lg); padding:40px 28px; text-align:center; box-shadow:var(--e3); animation:addfade var(--cas-pomaly) var(--ease) both;}
 .add-success[hidden]{display:none;}
 .add-success h2{font-family:var(--font-display); font-weight:700; font-size:28px; letter-spacing:-0.02em; margin:16px 0 8px; color:var(--parchment);}
 .add-success p{font-size:16px; color:var(--text-ondark-mute); line-height:1.6; max-width:var(--m-karta); margin:0 auto 20px;}
 .asx-check{width:72px; height:72px; margin:0 auto; border-radius:50%; background:rgba(95,176,126,0.16); display:grid; place-items:center;}
 .asx-check svg{width:52px; height:52px; fill:none; stroke:#5FB07E; stroke-width:3.5; stroke-linecap:round; stroke-linejoin:round;}
-.asx-check circle{stroke:rgba(95,176,126,0.55); stroke-dasharray:151; stroke-dashoffset:151; animation:asxCircle .5s var(--ease) forwards;}
-.asx-check path{stroke-dasharray:44; stroke-dashoffset:44; animation:asxCheck .35s var(--ease) .45s forwards;}
+.asx-check circle{stroke:rgba(95,176,126,0.55); stroke-dasharray:151; stroke-dashoffset:151; animation:asxCircle var(--cas-pomaly) var(--ease) forwards;}
+.asx-check path{stroke-dasharray:44; stroke-dashoffset:44; animation:asxCheck var(--cas-pomaly) var(--ease) var(--cas-pomaly) forwards;}
 @keyframes asxCircle{to{stroke-dashoffset:0;}}
 @keyframes asxCheck{to{stroke-dashoffset:0;}}
 .asx-actions{display:flex; flex-wrap:wrap; gap:10px; justify-content:center;}
@@ -4400,7 +4400,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    Nenápadné, ale je to náš tvar, ne kulatý obdélník jako u všech. */
 .s-rohy{position:relative;}
 .s-rohy::before, .s-rohy::after{content:""; position:absolute; width:14px; height:14px; pointer-events:none;
-  border-color:var(--line-strong); border-style:solid; opacity:.9;}
+  border-color:var(--line-strong); border-style:solid; opacity:0.9;}
 .s-rohy::before{top:7px; left:7px; border-width:1.5px 0 0 1.5px; border-top-left-radius:3px;}
 .s-rohy::after{bottom:7px; right:7px; border-width:0 1.5px 1.5px 0; border-bottom-right-radius:3px;}
 .s-rohy-med::before, .s-rohy-med::after{border-color:var(--accent-warm); opacity:1;}
@@ -4416,7 +4416,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
   -webkit-mask-image:radial-gradient(ellipse 78% 68% at 50% 42%, #000 35%, transparent 100%);
           mask-image:radial-gradient(ellipse 78% 68% at 50% 42%, #000 35%, transparent 100%);}/* Měděná vlasová linka jako předěl sekce — jeden akcent, ne ozdoba. */
 
-@media (prefers-reduced-motion:reduce){ .s-mrizka::before{opacity:.6;} }
+@media (prefers-reduced-motion:reduce){ .s-mrizka::before{opacity:0.6;} }
 
 /* =====================================================================
    NASAZENÍ MOTIVŮ NA WEB
@@ -4440,7 +4440,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    oko podle ní pozná, kde sekce začíná, bez dalšího rámečku. */
 .section-head{position:relative;}
 .section-head::before{content:""; display:block; width:52px; height:2px; border-radius:2px;
-  background:var(--accent-warm); opacity:.85; margin-bottom:16px;}
+  background:var(--accent-warm); opacity:0.85; margin-bottom:16px;}
 .section-head[style*="center"]::before, .section-head.stred::before{margin-left:auto; margin-right:auto;}
 
 /* Rohová značka na kartě s příležitostí — náš tvar. Jen na kartě, ne na
@@ -4451,7 +4451,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .opp-item, .okr-item{position:relative;}
 .opp-item::after, .okr-item::after{content:""; position:absolute; top:8px; right:8px; width:13px; height:13px;
   border:1.5px solid var(--line-strong); border-left:0; border-bottom:0; border-top-right-radius:3px;
-  pointer-events:none; opacity:.85; transition:border-color var(--cas-zakladni) var(--ease);}
+  pointer-events:none; opacity:0.85; transition:border-color var(--cas-zakladni) var(--ease);}
 .opp-item:hover::after, .okr-item:hover::after{border-color:var(--accent-warm); opacity:1;}/* =====================================================================
    TMAVÝ PÁS
    Web byl celý světlý — jedna dlouhá plocha bez nádechu. Tmavá sekce je
@@ -4564,7 +4564,7 @@ body{background:var(--bg);}
       a druhá značka by si s ním konkurovala. */
 .rules-sect > h2{position:relative;}
 .rules-sect > h2::before{content:""; display:block; width:52px; height:2px;
-  border-radius:2px; background:var(--grad-warm); opacity:.85; margin-bottom:14px;}
+  border-radius:2px; background:var(--grad-warm); opacity:0.85; margin-bottom:14px;}
 .clanek .rules-sect > h2::before{display:none;}
 
 /* =====================================================================
@@ -4778,7 +4778,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
 .step .icon-badge{display:none;}
 .step .idx{display:block; font-family:var(--font-display); font-weight:700;
   font-size:58px; line-height:0.9; letter-spacing:-0.04em;
-  color:var(--accent-warm); opacity:0.32; margin:0 0 12px;}
+  color:var(--accent-warm); opacity:0.3; margin:0 0 12px;}
 /* ZKOUŠEL JSEM SEM DÁT ZNAČKOVÝ PŘECHOD OŘEZANÝ TEXTEM — nejde to a je
    dobře. Číslice mají o kus níž „background:var(--bg)", kterým prorážejí
    díru do vlásové linky, co drží tři kroky pohromadě. Ořezání přechodu
@@ -5188,7 +5188,7 @@ a.rz-okres:hover{color:var(--copper-bright);}
 .trh-pas{position:relative; display:block; height:6px; border-radius:var(--r-pill);
   background:var(--plocha-jemna); box-shadow:inset 0 0 0 1px var(--line);}
 .trh-pas > i{position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill);
-  background:var(--plocha-znacka); opacity:0.42;}
+  background:var(--plocha-znacka); opacity:0.4;}
 /* „42 z 997" je velikost kohorty — poznámka k číslu nad ní, a zároveň
    to, co ten podíl dělá poctivým (viz metodika na konci stránky). */
 .trh-zkolika{font-size:13px; color:var(--text-ondark-mute);
@@ -5222,14 +5222,14 @@ a.rz-okres:hover{color:var(--copper-bright);}
 .mapa-nedojela .btn-primary{margin-top:4px;}
 /* Šipka u odkazu ven. „→" vypadá jako „další stránka"; šikmá šipka je
    zavedená značka pro „odcházíš z webu". */
-.okr-src .ext-ikona, .ext-ikona{display:inline-block; margin-left:4px; font-size:0.9em; opacity:.75;}
+.okr-src .ext-ikona, .ext-ikona{display:inline-block; margin-left:4px; font-size:0.9em; opacity:0.75;}
 /* Odkaz, který vede pryč z webu, se musel poznat až po klepnutí. Šikmá
    šipka je na to zavedená značka. Vynechané jsou odkazy, které si ji
    dávají samy (.okr-src na krajských stránkách) a tlačítka, kde by se
    pletla do popisku. */
 a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::after{
   content:"\2197"; display:inline-block; margin-left:4px; font-size:0.9em;
-  opacity:.7; text-decoration:none;}
+  opacity:0.7; text-decoration:none;}
 
 /* Výběr okresu: rejstřík, ne dlaždice. Stejný zápis jako rozcestník krajů
    na hlavní stránce — web se tím čte jako jeden dokument, ne jako sbírka
@@ -6130,8 +6130,8 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    nadpis volně na ploše, ostrý řez mezi mapou a patičkou, pět rozsypaných
    pilulek okruhu. Tvary, hierarchie a přechody z toho dělají jeden kus.
    ===================================================================== */
-.vm-ov{animation:vmStmiv .2s ease both;}
-.vm-panel{animation:vmPrijezd .26s var(--ease) both;}
+.vm-ov{animation:vmStmiv var(--cas-zakladni) ease both;}
+.vm-panel{animation:vmPrijezd var(--cas-zakladni) var(--ease) both;}
 @keyframes vmStmiv{from{opacity:0;} to{opacity:1;}}
 @keyframes vmPrijezd{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
 @media (prefers-reduced-motion: reduce){

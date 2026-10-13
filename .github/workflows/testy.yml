@@ -261,6 +261,9 @@ jobs:
       - name: Vrstvy (z-index) mají vypsaný pořádek
         run: node scripts/test-vrstvy.mjs
 
+      - name: Soustava — průhlednost, linky, čas nájezdu
+        run: node scripts/test-soustava.mjs
+
       - name: Vložený styl na stránce pozemku
         run: node scripts/test-vlozeny-styl.mjs
 

@@ -17,6 +17,7 @@
    nejblizší hodnotu, která tam je. Stupnice má cenu jen potud, pokud se
    nerozšiřuje. */
 import { readFileSync, readdirSync } from 'node:fs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 export const STUPNICE = new Set([0, 1, 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 128]);
 const VLASTNOSTI = /(^|[;{\s])(margin|padding|gap|row-gap|column-gap)(-top|-right|-bottom|-left)?\s*:\s*([^;}]+)/g;
@@ -57,6 +58,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   for (const f of readdirSync('scripts')) if (f.endsWith('.mjs') && !f.startsWith('test-') && !MIMO.has(f)) soubory.push('scripts/' + f);
 
   let chyb = 0;
+  const zpravy = [];
   for (const f of soubory) {
     let text;
     try { text = readFileSync(f, 'utf8'); } catch { continue; }
@@ -64,8 +66,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (!n.length) continue;
     console.log(`\u2715 ${f}: ${n.length} odstup\u016f mimo stupnici`);
     for (const x of n) console.log(`   ${f}:${x.radek}  ${x.px}px  ${x.kde}`);
+    /* Do hl\u00e1\u0161ky pro CI jen prvn\u00ed n\u00e1lez z ka\u017ed\u00e9ho souboru — `::error::`
+       je jedno\u0159\u00e1dkov\u00fd a jm\u00e9no souboru s \u010d\u00edslem \u0159\u00e1dku sta\u010d\u00ed k nalezen\u00ed. */
+    zpravy.push(`\u2715 ${f}: ${n.length} mimo stupnici\n   ${f}:${n[0].radek} ${n[0].px}px`);
     chyb += n.length;
   }
-  if (chyb) { console.log(`\nMimo stupnici: ${chyb}. Vyber nejbli\u017e\u0161\u00ed hodnotu ze stupnice, neroz\u0161i\u0159uj ji.`); process.exit(1); }
+  if (chyb) {
+    console.log(`\nMimo stupnici: ${chyb}. Vyber nejbli\u017e\u0161\u00ed hodnotu ze stupnice, neroz\u0161i\u0159uj ji.`);
+    console.error(`::error::Odstupy: ${chyb} mimo stupnici.` + pricinaChyb(zpravy));
+    process.exit(1);
+  }
   console.log(`Jedna stupnice odstup\u016f dr\u017e\u00ed: ${soubory.length} souborů, ${STUPNICE.size} dovolených hodnot.`);
 }

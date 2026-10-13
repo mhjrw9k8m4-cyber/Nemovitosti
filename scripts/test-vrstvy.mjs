@@ -23,6 +23,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -124,8 +125,8 @@ console.log(zpravy.join('\n'));
 console.log(`  (vrstev ${VRSTVY.length}, z-indexů nalezeno ${nalezeno}, místní pořadí do ${MISTNI} se nehlídá)`);
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-  console.error(`::error::Vrstvy: ${chyb} kontrol neprošlo. Nové číslo z-indexu `
-    + 'nepřidávej — vyber vrstvu, do které to patří, nebo ji dopiš do VRSTVY '
-    + 'i do komentáře ve styles.css a napiš, co je nad čím a proč.');
+  console.error(`::error::Vrstvy: ${chyb} kontrol neprošlo.` + pricinaChyb(zpravy)
+    + ' Nové číslo z-indexu nepřidávej — vyber vrstvu, do které to patří, nebo ji'
+    + ' dopiš do VRSTVY i do komentáře ve styles.css a napiš, co je nad čím a proč.');
   process.exit(1);
 }

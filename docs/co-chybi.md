@@ -4563,7 +4563,7 @@ s prahem dlaždic a prahem okresů u cen.)
 
 ### Zkoušky
 
-**100 neprohlížečových** a **103 prohlížečových** kontrol zelených.
+**101 neprohlížečových** a **103 prohlížečových** kontrol zelených.
 Obě chyby, které předtím shodily CI (`testy` i `v-prohlizeci`), jsou
 opravené u kořene, ne obejité.
 
@@ -4842,6 +4842,86 @@ Ověřeno sabotáží jedním zásahem: `z-index:900` → `999` shodilo **obě**
 kontroly — `✕ žádný není mimo vypsaný pořádek` (999 v tabulce není)
 a `✕ žádná vypsaná vrstva není mrtvá` (900 se tím přestalo používat).
 Po vrácení 4 v pořádku, 0 chyb.
+
+## 3bx. Zbylé osy soustavy: průhlednost, vlasová linka, čas nájezdu — a jeden poctivý negativní nález — *13. 10.*
+
+Šestá a poslední osa. Tři věci, které svou zkoušku neměly, a jedna
+věc, u které se ukázalo, že chyba nebyla, kde jsem ji čekal.
+
+### Průhlednost: osm hodnot zapsaných dvakrát
+
+24 hodnot `opacity` — a **osm z nich byla táž hodnota dvěma způsoby**:
+`.42` vedle `0.42`, `.45` vedle `0.45`, a stejně `.5`, `.6`, `.7`,
+`.75`, `.8`, `.85`. To nepozná ani oko, ani hledání: `grep opacity:0.85`
+našel **tři z devíti** míst.
+
+Je to přesně ta vada, na kterou už `test-typografie` hlídá prostrkání
+(„.03em vedle -0.03em se nepozná") — a která je tam i vysvětlená.
+Jen u průhlednosti nikdo nehlídal. Zápis je teď jeden (s vedoucí
+nulou, 21 míst přepsáno) a hodnoty leží na **dvacetinové mřížce**:
+krok 0,05 je nejmenší rozdíl, který na ploše ještě jde poznat. Mimo
+mřížku bylo 0.085, 0.12, 0.14, 0.32, 0.42 a 0.78 — devět výskytů.
+
+### Vlasová linka: 1,6 px vedle 1,5 px
+
+1 px (217×), 1.5 px (19×), 2 px (13×), 3 px (7×) — a jedno **1.6 px**
+u šipky v nabídce. Šestnáct setin pixelu vedle patnácti nikdo
+nerozhodl. Dovolené jsou čtyři šířky a každá má svou práci: 1 linka,
+1,5 obrys ovladače, 2 zaměření, 3 barevný pruh na kartě.
+
+### Čas: NEGATIVNÍ NÁLEZ, a pak jeden skutečný
+
+Začal jsem s tím, že „trvání má 29 různých hodnot". **Po doměření to
+není pravda tak, jak to vypadalo.** `transition:` mělo surové trvání
+na **jediném místě z celého stylopisu** — všude jinde už brala
+přechody čas z tokenů `--cas-rychly`, `--cas-zakladni`,
+`--cas-pomaly`. Zbylých 28 čísel byly **animace**, a tam je rozdíl
+skutečný:
+
+- radar na mapě pulsuje 2,6 s, pink 1,7 s, třpyt 1,4 s — to je rytmus,
+  ne doba nájezdu,
+- tři obláčky na pozadí mají 14, **18** a 16 s **záměrně různě**, aby
+  se nesesynchronizovaly,
+- `.reveal` má žebřík zpoždění 0.09 / 0.18 / 0.27 / 0.36 s — jedna
+  soustava (0,09 × n), ne čtyři náhody.
+
+Nic z toho se sjednocovat nemá a nesjednotilo se.
+
+**Co je ale skutečný nález:** rodina **nájezdů a odezev** — „panel se
+objevil", „číslo se přepočítalo", „karta odletěla". Jedna a tatáž
+práce, a devět trvání: .12, .14, .2, .26, .3, .34, .42, .45, .5. Osmnáct
+míst je teď na třech tokenech. Nejhezčí jednotlivost: fajfka po
+odeslání inzerátu měla `animation:asxCheck .35s … .45s` — kreslí se po
+kolečku a čekala 0,45 s, protože kolečko trvalo 0,5. Teď čeká
+`var(--cas-pomaly)`, tedy přesně dokud se kolečko kreslí: **„začni, až
+to druhé skončí" místo dvou čísel, která si musí odpovídat.**
+
+### Pojistka
+
+`scripts/test-soustava.mjs` (nová, v CI) hlídá šest věcí: zápis
+průhlednosti s vedoucí nulou, průhlednost na mřížce, čtyři šířky
+linek, žádné surové trvání v `transition`, žádné v nájezdových
+animacích — a **že žádná vypsaná výjimka není mrtvá.** Deset animací
+s vlastním rytmem je v seznamu `VLASTNI_CAS`, každá s napsaným
+důvodem, a zkouška ověří, že ta animace opravdu existuje; bez toho by
+se ze seznamu výjimek stalo smetiště.
+
+Ověřeno sabotáží jedním zásahem naráz — `opacity:.85`, `opacity:0.72`,
+`border:1.7px`, `animation:locOvIn .2s` — a zkouška ohlásila všechny
+čtyři s čísly řádků (710, 825, 1426, 3147). Po vrácení 6 v pořádku,
+0 chyb.
+
+### A ještě jedna věc, kterou našel projekt sám na mně
+
+Commit `8d9415c105` shodil v CI `testy`, a bylo to poučné:
+`test-chybova-hlaska` je metazkouška, která hlídá, že **každá zkouška
+na svém `::error::` řádku jmenuje, co padlo** — jinak se z přehledu CI
+nedá nic vyčíst. Moje nová `test-vrstvy.mjs` psala jen obecnou radu.
+Ohlásila to slovy „bez hlášky: test-vrstvy.mjs".
+
+Opraveny tři: `test-vrstvy`, `test-soustava` a `test-odstupy` (ta
+`::error::` neměla vůbec). Teď říkají například:
+`::error::Odstupy: 1 mimo stupnici. Co padlo: css/styles.css:4316 13px`.
 
 ## Co naopak nechybí
 
