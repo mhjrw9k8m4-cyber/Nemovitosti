@@ -2142,7 +2142,12 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    a popis, vpravo cena pod sebou. Jedna věc má vypadat jako jedna věc. */
 .deal-card{text-align:left; font:inherit; cursor:pointer; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:16px 16px;
   display:grid; grid-template-columns:minmax(0,1fr) auto;
-  grid-template-areas:"znak znak" "misto cena" "podrob cena";
+  /* DŮKAZ AŽ POD TVRZENÍM. Zelený odznak („levnější než 97 % pozemků
+     v prodeji v Ústeckém kraji") stál NAD jménem obce, takže se karta
+     četla odzadu: nejdřív křik, pak teprve co to je a za kolik. Teď je
+     pořadí místo → popis → cena a odůvodnění pod tím, jako poznámka
+     pod tvrzením. */
+  grid-template-areas:"misto cena" "podrob cena" "znak znak";
   column-gap:14px; row-gap:5px; align-items:baseline;
   transition:border-color var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
 .deal-card .deal-badge{grid-area:znak; justify-self:start;}
@@ -2151,7 +2156,17 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .deal-card .deal-figs{grid-area:cena; justify-self:end; align-self:start; text-align:right;}
 .deal-card:hover{border-color:var(--c-ok); transform:translateY(-2px); box-shadow:var(--e2);}
 .deal-card:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px;}
-.deal-badge{align-self:flex-start; font-size:12px; font-weight:700; color:var(--text-ondark); background:linear-gradient(135deg, #6FD79A, var(--c-ok)); border-radius:var(--r-pill); padding:4px 10px; letter-spacing:0.01em; box-shadow:var(--e1);}
+/* ODZNAK NEKŘIČÍ. Byl to sytý zelený přechod se stínem přes půl karty —
+   na bílé stránce ta nejhlasitější plocha v celém oddílu, a nesl přitom
+   vedlejší informaci. Zůstává zelený (je to dobrá zpráva), ale jen
+   textem na světlé podložce, bez přechodu a bez stínu. */
+.deal-badge{align-self:flex-start; margin-top:4px; font-size:12px; font-weight:600;
+  color:var(--copper-bright); background:rgba(44,113,80,0.08);
+  border:1px solid rgba(44,113,80,0.22); border-radius:var(--r-pill);
+  /* 4 px, ne 3: trojka by byla jediná v celé úvodní stránce a slovník
+     odstupů má strop 22 hodnot (test-jazyk). Čtyřku už používá odznak
+     na kartě výpisu, takže se nic nepřidává. */
+  padding:4px 10px; letter-spacing:0; box-shadow:none;}
 .deal-place{display:flex; align-items:flex-start; gap:8px; font-family:var(--font-ui); font-size:20px; font-weight:600; line-height:1.25; color:var(--text-ondark); margin-top:2px;}
 .deal-dot{width:9px; height:9px; border-radius:50%; flex:none; margin-top:6px;}
 .deal-sub{font-size:13px; color:var(--text-ondark-mute); line-height:1.4;}
@@ -2165,7 +2180,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    zarovnaná vpravo, aby se dala projet očima stejně jako na široké. */
 @media (max-width:560px){
   .deal-card{grid-template-columns:minmax(0,1fr);
-    grid-template-areas:"znak" "misto" "podrob" "cena";}
+    grid-template-areas:"misto" "podrob" "cena" "znak";}
   .deal-card .deal-figs{justify-self:start; text-align:left;}
 }
 /* Naposledy prohlédnuté — vodorovný pásek pro rychlý návrat k parcelám */
@@ -2849,7 +2864,10 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 #realitky .realtor-contact{margin-top:0; background:none; border:0; padding:0;}
 #realitky .rct-copy h2{color:var(--text-ondeep);}
 #realitky .rct-copy p{color:var(--text-ondeep-mute);}
-#realitky .eyebrow{color:var(--accent-warm-bright);}
+/* Štítek oddílu je teď ve sloupci se značkou (.rail-mark), ne v nadřádku
+   nad nadpisem — a na tmavé ploše si musí vzít světlou barvu i světlou
+   linku, jinak je to tmavě šedý text na tmavě zelené. */
+#realitky .rail-mark .rm-l{color:var(--text-ondeep-mute); border-top-color:rgba(255,255,255,0.22);}
 #realitky .kt-mail{background:var(--plocha-jemna); border-color:var(--line);}
 #realitky .kt-mail:hover{background:var(--plocha-jemna-vic); border-color:var(--accent-warm-bright);}
 #realitky .kt-txt small{color:var(--text-ondeep-mute);}
@@ -3102,6 +3120,61 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
    mapu i seznam, ne do sloupce s výsledky. */
 @media (min-width:1041px){
   .map-app{position:relative;}
+
+  /* ===================================================================
+     NÁSTROJ JE STRÁNKA, NE OBRÁZEK VE STRÁNCE.
+     Mapa se seznamem stála jako zaoblená deska 1 136 px uprostřed
+     1 440px okna: 152 px prázdna vlevo, 152 vpravo a sloupec s kartami
+     380 px, do kterého se vešla jedna karta a kousek. Nástroj, kvůli
+     kterému sem člověk jde, tak dostal 62 % plochy obrazovky a tvářil
+     se jako ukázka nástroje.
+     Zillow, Idealista, Hemnet i Rightmove to mají stejně: mapový pohled
+     jde od kraje ke kraji a je přesně na jednu obrazovku, takže se
+     v něm roluje seznamem, ne stránkou. Tady proto:
+       • deska jde přes celou šířku (bez okrajů, bez zaoblení, bez stínu
+         — není co odstínit, nemá hranu),
+       • je vysoká přesně na zbytek obrazovky pod hlavičkou,
+       • sloupec s výpisem roste s oknem (min(34vw, 460px)), takže na
+         širokém displeji ukáže kartu celou a ne půl druhé.
+     Navazuje to rovnou na hlavičku, bez mezery: dvě vodorovné linky
+     (spodek hlavičky, spodek ovládací lišty) nad sebou v 20px odstupu
+     dělaly schod, kterého si člověk všimne dřív než mapy. */
+  .hero-map .map-wide{max-width:none; padding:0; margin-top:48px;}
+  /* Horní rámeček taky pryč: nad deskou je 48px mezera a pod ní končí
+     hlavička svou linkou — dvě vodorovné linky 48 px od sebe dělají
+     schod, kterého si oko všimne dřív než mapy. Spodní rámeček zůstává,
+     ten odděluje nástroj od oddílů pod ním. */
+  .hero-map .map-app, .map-app{border-left:0; border-right:0; border-top:0;
+    border-radius:0; box-shadow:none;
+    grid-template-columns:min(34vw, 460px) minmax(0, 1fr);
+    height:calc(100dvh - var(--vyska-hlavicky, 85px) - 48px);
+    max-height:none; min-height:620px;}
+  /* Lišta ovládání je teď přes celé okno, takže si vezme okraj stránky,
+     ne okraj desky: 16 px by na 1 920 px vypadalo jako překlep.
+
+     MEZERA NAD DESKOU ZŮSTÁVÁ, A JE NAMĚŘENÁ. Zkoušel jsem desku
+     nalepit rovnou pod hlavičku. Vypadá to líp, ale rozbije to vstup:
+     stačí odrolovat 60 px a pole hledání vjede pod připíchnutou
+     hlavičku. Naměřeno na 1280×900 — pole na y 36–82, hlavička přes ně
+     sahá 33 px: horní třetina pole je VIDĚT, ale klepnutí na ni trefí
+     hlavičku. Přesně tohle hlídá test-pod-hlavickou („na co je vidět,
+     na to se dá klepnout").
+     Zkoušel jsem i druhou cestu — nechat lištu přilepenou (sticky) pod
+     hlavičkou. Ovládání pak drží, ale mapa se pod lištu podsune
+     i s vlastními tlačítky („Celá ČR", „Kreslit výběr", „Podle ceny"),
+     takže zmizí ta. Změřeno: po 60 px rolování ležela všechna tři pod
+     lištou. Jedna vada za druhou není oprava.
+     Platí tedy totéž, co na telefonu (viz --vyska-hlavicky níž): nad
+     prvním ovládáním musí být místo. 48 px, protože tolik má spodní
+     odsazení celého oddílu (.hero-map) — mezera nad deskou a pod ní je
+     pak táž a nepřidá do stránky další číslo (test-jazyk hlídá, že se
+     slovník odstupů úvodní stránky nerozroste přes 22 hodnot; 50 px
+     z něj udělalo 24). Výška desky si těch 48 px odečte, takže pořád
+     končí přesně na spodní hraně okna. */
+  /* 20 px, ne 24: slovník odstupů úvodní stránky má strop 22 hodnot
+     (test-jazyk) a 24 px v něm žádný jiný prvek nepoužívá — bylo by to
+     jedno číslo navíc za rozdíl, který nikdo nezměří. */
+  .map-controls-panel{padding:12px 20px;}
   /* Lišta má dva řádky záměrně, a jsou vyskládané, ne zlomené. Těch pět
      prvků potřebuje na jeden řádek 1 425 px a lišta má 1 102. Při
      samovolném zlomu (flex-wrap) se dole octne jen pravý ostrůvek
@@ -3111,10 +3184,16 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
      a filtry, dole rychlé filtry vlevo a pohled na výsledky vpravo. */
   .map-controls-panel{position:relative; display:grid; align-items:center;
     gap:8px 10px; padding:10px 16px;
-    grid-template-columns:minmax(220px, 1fr) auto auto;
+    /* POLE HLEDÁNÍ SE NEROZTAHUJE PŘES CELÉ OKNO. Po přechodu na desku
+       přes celou šířku z něj bylo na 1 440 px pole široké 1 340 px —
+       jedna řádka na celou obrazovku, do které se píše jméno obce.
+       Vyhledávání má míru: ohraničí se na 520 px a zbytek řádku zůstane
+       prázdný (čtvrtý, nepojmenovaný sloupec). Tak to má Idealista
+       i Zillow — ovládání je vlevo, vpravo je vzduch, ne natažené pole. */
+    grid-template-columns:minmax(220px, 520px) auto auto minmax(0, 1fr);
     grid-template-areas:
-      "hledani okoli  filtry"
-      "rychle  rychle rychle";}
+      "hledani okoli  filtry ."
+      "rychle  rychle rychle rychle";}
   /* OBAL ROZBALOVÁNÍ TU NESMÍ BÝT VIDĚT. `.ms-rozsirene` přibylo kvůli
      telefonu (schová všechno kromě pole s lupou) a tiše rozbilo tuhle
      mřížku: okolí, rychlé filtry a „Druh, cena, výměra a další" přestaly
@@ -4657,19 +4736,37 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
    čtyři obdélníky. Barva je proto teď silná svislá čára u hrany a číslo
    stojí vedle nadpisu jako hodnota, ne jako odznak.
    ===================================================================== */
-.status-grid{grid-template-columns:repeat(2,1fr); gap:0 40px;}
+/* Mezera je JEDNO číslo, svisle i vodorovně: slovník odstupů úvodní
+   stránky má strop 22 různých hodnot (test-jazyk) a vodorovných 24 px
+   z něj udělalo 23. Mřížka nepotřebuje dvě různá čísla, aby držela. */
+.status-grid{grid-template-columns:repeat(2,1fr); gap:20px; align-items:stretch;}
 /* Barvu nese karta sama (--c-druh v atributu style), ne pořadí v mřížce.
    Dřív se barvila podle nth-child(2..4) — takže vložení pátého druhu
-   doprostřed by tiše přebarvilo všechny za ním. */
-.status-card{background:none; border:0;
-  background-image:linear-gradient(90deg,
-    color-mix(in srgb, var(--c-druh, var(--accent-warm)) 14%, transparent),
-    transparent 240px);
-  border-radius:0 var(--r-md) var(--r-md) 0;
-  border-left:3px solid var(--c-druh, var(--accent-warm)); padding:12px 16px 16px; margin-bottom:20px;}
-/* Lichý poslední (dnes pátý druh) by v dvousloupcové mřížce zůstal sám
-   v řádku s prázdnem vedle sebe. Roztáhne se tedy přes oba sloupce. */
-.status-grid > .status-card:nth-child(odd):last-child{grid-column:1 / -1;}
+   doprostřed by tiše přebarvilo všechny za ním.
+
+   PŘECHOD DO PRŮHLEDNA ODEŠEL. Karta měla barevný přechod, který končil
+   na pevných 240 px — takže ať byla karta široká 380 nebo 1 160 px,
+   obarvená byla pořád jen ta levá čtvrtina a zbytek mizel do stránky.
+   Vedle bílých karet s rámečkem, ze kterých je celý zbytek webu, to
+   nevypadalo jako záměr, ale jako nedokreslená plocha. Karta je teď
+   bílá s rámečkem a barevnou linkou u levé hrany — stejná součástka
+   jako posudek ceny na stránce pozemku. Barva sdělení drží, plocha má
+   hranu a pět karet v mřížce má konečně stejnou výšku (gap místo
+   margin-bottom, align-items:stretch). */
+/* Odsazení je JEDNO číslo dokola. Napsal jsem sem nejdřív 16/18/18 a
+   test-jazyk to hned ohlásil: úvodní stránka má strop 22 různých odstupů
+   a tenhle rozpis z ní udělal 23. Slovník mezer je společný majetek
+   stránky, ne věc jedné kartičky. */
+.status-card{background:var(--plocha-plovouci-plna); border:1px solid var(--line);
+  border-radius:var(--r-md); box-shadow:var(--e1);
+  border-left:3px solid var(--c-druh, var(--accent-warm)); padding:16px; margin-bottom:0;}
+/* LICHÝ POSLEDNÍ UŽ SE NEROZTAHUJE. Dokud byly karty barevné přechody
+   bez hrany, nebylo poznat, že je pátá přes oba sloupce. Jako skutečná
+   karta s rámečkem to poznat je — a čte se to jako „tahle je důležitější",
+   což není pravda, jen jich je lichý počet. Dvě bulletové řádky ve dvakrát
+   širší kartě navíc nechají půl plochy prázdné. Zůstane tedy v šířce
+   ostatních a vedle ní je vzduch; prázdné pole v mřížce je klid,
+   nafouknutá karta je tvrzení. */
 .status-card .status-top{font-size:16px;}
 .status-card .status-top .ic{display:none;}   /* barvu nese čára, ikonka je navíc */
 .status-n{background:none; border:0; padding:0; color:var(--text-ondark-mute);

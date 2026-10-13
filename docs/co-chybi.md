@@ -4308,6 +4308,114 @@ takže v CI je jich 103). Tři kontroly musely změnit, co měří, a u každé 
 na míchanou vrstvu), `test-pisma` (čtyři písma → počet souborů),
 `test-barva-listy` (konstanta světlé barvy `#F9FAF9` → `#FFFFFF`).
 
+## 3bp. NA PŘÁNÍ: kompozice a logické uspořádání — nástroj je stránka, oddíly jdou po tom, co člověk potřebuje — *13. 10.*
+
+Zadání: „extrémně změnit vizuál na lepší kompozici, na větší čistotu
+a hlavně logické uspořádání". Tohle je ta vrstva nad barvou a písmem —
+kde co stojí a jak velké to je.
+
+### 1. Nástroj byl obrázek ve stránce. Teď je to stránka.
+
+Mapa se seznamem stála jako zaoblená deska **1 136 px uprostřed 1 440px
+okna**: 152 px prázdna vlevo, 152 vpravo, sloupec s kartami 380 px —
+vešla se do něj jedna karta a kousek. Nástroj, kvůli kterému sem člověk
+jde, dostal 62 % plochy a tvářil se jako jeho ukázka.
+
+Zillow, Idealista, Hemnet i Rightmove to mají stejně: mapový pohled jde
+od kraje ke kraji a je na jednu obrazovku. Naměřeno po přestavbě
+(1440×900):
+
+| | před | po |
+|---|---|---|
+| šířka desky | 1 136 px | **1 440 px** (celé okno) |
+| výška desky | 684 px | **767 px** (přesně zbytek obrazovky) |
+| sloupec s výpisem | 380 px | **460 px** — karta se vejde celá |
+| pole hledání | 570 px | **520 px** (strop, ne roztažení přes okno) |
+
+Pole hledání má strop schválně: bez něj z něj na 1 440 px bylo
+**1 340 px široké pole na jméno obce**. Ovládání je vlevo, vpravo vzduch.
+
+### 2. Mezera nad deskou — dvě slepé uličky a jedno měření
+
+Deska nejdřív začínala rovnou pod hlavičkou (hezké). Jenže stačilo
+odrolovat 60 px a pole hledání vjelo pod připíchnutou hlavičku:
+naměřeno na 1280×900 — pole na y 36–82, hlavička přes ně sahá 33 px.
+Horní třetina pole je **vidět**, ale klepnutí na ni trefí hlavičku;
+přesně to hlídá `test-pod-hlavickou`.
+
+Druhý pokus: nechat lištu ovládání přilepenou (`sticky`) pod hlavičkou.
+Ovládání drží, ale mapa se pod ni podsune i s vlastními tlačítky —
+změřeno: po 60 px rolování ležela „Celá ČR", „Kreslit výběr" i „Podle
+ceny" pod lištou. Jedna vada za druhou není oprava.
+
+Platí tedy totéž co na telefonu: nad prvním ovládáním musí být místo.
+**48 px**, protože tolik má spodní odsazení celého oddílu — mezera nad
+deskou a pod ní je pak táž a nepřidá do stránky další číslo.
+
+### 3. Pořadí oddílů: podle toho, co člověk zrovna potřebuje
+
+Bylo: kraje → tipy → *zdroje* → jak to funguje → druhy → od majitelů →
+*kontaktní formulář* → slovníček → dotazy. Tedy velká tmavá deska
+o zdrojích dat hned po procházení, vysvětlení toho, co člověk na mapě
+viděl, až čtvrté — a kontaktní formulář uprostřed stránky.
+
+Teď: **tipy → kraje → druhy příležitostí → jak to funguje → zdroje →
+od majitelů → slovníček → dotazy → kontakt.** Tedy: nabídky, procházení,
+porozumění, postup, důvěra (odpověď na otázku, kterou postup vyvolá),
+pro majitele, příručka, kontakt na konci. Kotvy zůstaly, odkazy drží.
+
+### 4. Kartičky druhů byly nedokreslená plocha
+
+Pět kartiček „Pět druhů příležitostí" mělo barevný přechod, který končil
+na **pevných 240 px** — ať byla kartička široká 380 nebo 1 160 px,
+obarvená byla pořád jen levá čtvrtina a zbytek mizel do stránky. Vedle
+bílých karet s rámečkem, ze kterých je zbytek webu, to nevypadalo jako
+záměr. Teď je to bílá karta s rámečkem a barevnou linkou u levé hrany —
+táž součástka jako posudek ceny na stránce pozemku. Pátá kartička se
+přestala roztahovat přes oba sloupce: jako skutečná karta to říkalo
+„tahle je důležitější", což není pravda, jen jich je lichý počet.
+
+### 5. Tipy na dobrou koupi se četly odzadu
+
+Sytý zelený odznak („levnější než 97 % pozemků v prodeji v Ústeckém
+kraji") stál **nad** jménem obce a byl to nejhlasitější prvek v oddílu —
+přitom nese vedlejší informaci. Pořadí je teď místo → popis → cena
+a odůvodnění pod tím, jako poznámka pod tvrzením; odznak zůstal zelený,
+ale bez přechodu a bez stínu.
+
+### 6. Drobnosti, které rozhodily řádek
+
+* Čtveřice obřích čísel v tmavém pásu: „**4× denně**" se zalomilo na dva
+  řádky a popisky pod čísly si přestaly sedět na jednu linku. Hodnota je
+  teď „4×", zbytek je popisek.
+* Nadpis „Ozvěte se nám." začínal o 220 px vlevo proti nadpisům nad ním,
+  protože jediný neměl sloupec se značkou. Štítek „Kontakt" se
+  přestěhoval z vlastní řádky do toho sloupce — táž informace na místě,
+  kde ji stránka už má.
+* Mezi hlavičkou a deskou zůstávaly dvě vodorovné linky 48 px od sebe;
+  horní rámeček desky odešel, schod zmizel.
+
+### Vlastní chyby, které zkoušky z téhle přestavby vytáhly
+
+1. **`#realitky .eyebrow` zůstalo jako mrtvé pravidlo** po přesunu
+   štítku — a `test-rozdel-styly` to ohlásil oklikou: pravidlo se
+   objevilo ve zkráceném stylopisu, protože slovo „realitky" drží
+   komentář na jiné stránce.
+2. **Štítek na tmavé ploše měl kontrast 1,53 : 1** (nutné 4,5). Vzal si
+   barvu z paletky pro světlý podklad. Našel `test-kontrast`.
+3. **Slovník odstupů úvodní stránky přetekl z 22 na 24 hodnot** —
+   přidal jsem 50 px (mezera nad deskou), 24 px (odsazení lišty) a 3 px
+   (odznak tipu). Všechny tři nahrazeny čísly, která stránka už má
+   (48, 20, 4). Našel `test-jazyk`.
+4. **`test-barvy` hlídal přesně ten přechod, který jsem zrušil.**
+   Kontrola se přepsala na to, co barvu nese teď: tloušťku svislé čáry
+   (≥ 3 px) a vlastní bílou plochu kartičky.
+
+### Zkoušky
+
+Celá dávka z CI na hotovém stromu: **97 neprohlížečových** a **102
+prohlížečových** kontrol zelených.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

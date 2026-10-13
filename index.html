@@ -129,7 +129,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/styles.min.css?v=5fc13334">
+  <link rel="stylesheet" href="css/styles.min.css?v=70cd67c1">
 </head>
 <body>
 
@@ -518,8 +518,36 @@
 
     </div>
   </section>
+  <!-- ===================================================================
+       POŘADÍ ODDÍLŮ POD NÁSTROJEM — a proč je takové.
+       Bylo: kraje, tipy, zdroje, jak to funguje, druhy, od majitelů,
+       kontakt, slovníček, dotazy. Tedy: procházení, pak rovnou velká
+       tmavá deska o zdrojích dat, pak teprve vysvětlení toho, co člověk
+       na mapě viděl — a kontaktní formulář uprostřed stránky.
+       Teď jde pořadí po tom, co člověk zrovna potřebuje:
+         1. NABÍDKY   — tipy na dobrou koupi (konkrétní pozemky),
+         2. PROCHÁZENÍ — podle kraje,
+         3. POROZUMĚNÍ — pět druhů příležitostí (co znamenají barvy),
+         4. POSTUP     — jak najdete pozemek ve třech krocích,
+         5. DŮVĚRA     — odkud data jsou (odpověď na otázku, kterou
+                         postup vyvolá),
+         6. PRO MAJITELE — pozemky přímo od lidí,
+         7. PŘÍRUČKA   — slovníček a časté dotazy,
+         8. KONTAKT    — na konci, kam formulář patří.
+       Kotvy (#kraje, #zdroje, #realitky…) se nezměnily, takže odkazy
+       zvenčí i z menu drží.
+       =================================================================== -->
+  <!-- 1 · TIPY NA DOBROU KOUPI (konkrétní nabídky, schované když nejsou) -->
+  <section class="section pt-0 deals-sec rail" id="vyhodne" hidden>
+    <div class="wrap">
+      <div class="rail-mark reveal"><span class="rm-n" id="deals-n">4</span><span class="rm-l">tipy dnes</span></div>
+      <div class="section-head reveal"><h2>Tipy na dobrou koupi.</h2></div>
+      <div class="deals-grid" id="deals-grid"></div>
+    </div>
+  </section>
 
-  <!-- 2a · PODLE KRAJE — rozcestník pro toho, kdo nechce hledat v mapě.
+
+  <!-- 2 · PODLE KRAJE — rozcestník pro toho, kdo nechce hledat v mapě.
        Krajské stránky do téhle chvíle existovaly, ale z úvodní stránky na
        ně nevedl jediný odkaz. -->
   <section class="section pt-0 kraje-sec rail" id="kraje">
@@ -556,23 +584,45 @@
     </div>
   </section>
 
-  <!-- 2b · NEJVÝHODNĚJŠÍ (přidaná hodnota ukázaná čísly) -->
-  <section class="section pt-0 deals-sec rail" id="vyhodne" hidden>
+  <!-- 3 · CO UVIDÍTE NA MAPĚ (vysvětlení barev hned po procházení) -->
+  <section class="section pt-0 rail" id="stavy">
     <div class="wrap">
-      <div class="rail-mark reveal"><span class="rm-n" id="deals-n">4</span><span class="rm-l">tipy dnes</span></div>
-      <div class="section-head reveal"><h2>Tipy na dobrou koupi.</h2></div>
-      <div class="deals-grid" id="deals-grid"></div>
+      <div class="rail-mark reveal"><span class="rm-n">5</span><span class="rm-l">druhů příležitostí</span></div>
+      <div class="section-head reveal"><h2>Pět druhů příležitostí — každý svou barvou.</h2></div>
+      <div class="status-grid">
+        <div class="status-card reveal" style="--c-druh:var(--c-sale)"><div class="status-top"><svg class="ic" style="color:var(--c-sale)"><use href="#i-tag"/></svg>Na prodej<span class="status-n" data-type="sale"></span></div><ul class="status-list"><li>Aktivně nabízené k prodeji</li><li>Proklik přímo na inzerát</li></ul></div>
+        <div class="status-card reveal" style="--c-druh:var(--c-drazba)"><div class="status-top"><svg class="ic" style="color:var(--c-drazba)"><use href="#i-gavel"/></svg>Dražba<span class="status-n" data-type="drazba"></span></div><ul class="status-list"><li>Nadcházející veřejné dražby</li><li>Často <b>pod tržní cenou</b></li></ul></div>
+        <div class="status-card reveal" style="--c-druh:var(--c-exekuce)"><div class="status-top"><svg class="ic" style="color:var(--c-exekuce)"><use href="#i-alert"/></svg>Exekuce<span class="status-n" data-type="exekuce"></span></div><ul class="status-list"><li>Pozemky v exekuci</li><li><b>Signál budoucího prodeje</b></li></ul></div>
+        <div class="status-card reveal" data-bez-zdroje="obec" style="--c-druh:var(--c-obec)"><div class="status-top"><svg class="ic" style="color:var(--c-obec)"><use href="#i-building"/></svg>Obecní záměr<span class="status-n" data-type="obec"></span></div><ul class="status-list"><li>Obec oznámila <b>záměr prodat</b> pozemek, přihlásit se jde <b>ve lhůtě</b></li><li><b>Tyhle zatím nesbíráme</b> — každá obec má svou úřední desku a ani jednu nemáme zapojenou. <a href="pozemek-od-obce.html">Jak takový pozemek najít sám →</a></li></ul></div>
+        <div class="status-card reveal" style="--c-druh:var(--c-majitel)"><div class="status-top"><svg class="ic" style="color:var(--c-majitel)"><use href="#i-user"/></svg>Přímo od majitele<span class="status-n" data-type="majitel"></span></div><ul class="status-list"><li>Majitel vložil inzerát <b>přímo na Parcelce</b></li><li>Jednáte napřímo — <b>bez realitky a provize</b></li></ul></div>
+      </div>
     </div>
   </section>
 
-  <!-- 3 · ZDROJE (důvěra + hodnota v číslech) -->
+  <!-- 4 · JAK TO FUNGUJE -->
+  <section class="section rail" id="jak-funguje">
+    <div class="wrap">
+      <div class="rail-mark reveal"><span class="rm-n">3</span><span class="rm-l">kroky</span></div>
+      <div class="section-head reveal"><h2>Jak najdete pozemek — ve třech krocích.</h2></div>
+      <div class="steps">
+        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-map"/></svg></div><div class="idx mono">01</div><h3>Otevřete mapu</h3><p>Sbíráme data z veřejných zdrojů a spojíme je na jednu mapu. Jsou tam jen pozemky, kde se něco děje — barva napoví druh příležitosti.</p></div>
+        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-click"/></svg></div><div class="idx mono">02</div><h3>Klikněte na příležitost</h3><p>Detail ukáže výměru, druh a termín. Proklik rovnou do katastru pro ověření, nebo na inzerát.</p></div>
+        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-bell"/></svg></div><div class="idx mono">03</div><h3>Nechte si hlídat lokalitu</h3><p>Uložíte si hledání — okres, druh, cenu. Nové pozemky, které mu sedí, se pak vypíšou přímo v <a href="hlidani.html">Hlídání</a>, aniž byste hledali znovu.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · ZDROJE (důvěra + hodnota v číslech — odpověď na „odkud to máte") -->
   <section class="sources" id="zdroje">
     <div class="wrap">
       <div class="src-stats reveal">
         <div class="src-stat"><b id="stat-count">—</b><span>příležitostí na mapě</span></div>
         <div class="src-stat"><b id="stat-okres">—</b><span>okresů po celé ČR</span></div>
         <div class="src-stat"><b>5</b><span>veřejných zdrojů</span></div>
-        <div class="src-stat"><b>4× denně</b><span>obnovuje robot</span></div>
+        <!-- Hodnota je ČÍSLO, ne věta: ve čtveřici obřích číslic se
+             „4× denně" zalomilo na dva řádky a popisky pod ním si
+             přestaly sedět na jednu linku. -->
+        <div class="src-stat"><b>4×</b><span>denně obnovuje robot</span></div>
       </div>
       <p class="sources-lead">Tyhle zdroje jsou roztroušené po internetu i úředních deskách obcí — my je každý den projdeme a dáme na jednu mapu. Nic tajného, vše dohledatelné:</p>
       <p class="data-updated mono" id="data-updated" aria-live="polite"></p>
@@ -599,35 +649,7 @@
     </div>
   </section>
 
-  <!-- 6 · JAK TO FUNGUJE -->
-  <section class="section rail" id="jak-funguje">
-    <div class="wrap">
-      <div class="rail-mark reveal"><span class="rm-n">3</span><span class="rm-l">kroky</span></div>
-      <div class="section-head reveal"><h2>Jak najdete pozemek — ve třech krocích.</h2></div>
-      <div class="steps">
-        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-map"/></svg></div><div class="idx mono">01</div><h3>Otevřete mapu</h3><p>Sbíráme data z veřejných zdrojů a spojíme je na jednu mapu. Jsou tam jen pozemky, kde se něco děje — barva napoví druh příležitosti.</p></div>
-        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-click"/></svg></div><div class="idx mono">02</div><h3>Klikněte na příležitost</h3><p>Detail ukáže výměru, druh a termín. Proklik rovnou do katastru pro ověření, nebo na inzerát.</p></div>
-        <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-bell"/></svg></div><div class="idx mono">03</div><h3>Nechte si hlídat lokalitu</h3><p>Uložíte si hledání — okres, druh, cenu. Nové pozemky, které mu sedí, se pak vypíšou přímo v <a href="hlidani.html">Hlídání</a>, aniž byste hledali znovu.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 7 · CO UVIDÍTE NA MAPĚ -->
-  <section class="section pt-0 rail" id="stavy">
-    <div class="wrap">
-      <div class="rail-mark reveal"><span class="rm-n">5</span><span class="rm-l">druhů příležitostí</span></div>
-      <div class="section-head reveal"><h2>Pět druhů příležitostí — každý svou barvou.</h2></div>
-      <div class="status-grid">
-        <div class="status-card reveal" style="--c-druh:var(--c-sale)"><div class="status-top"><svg class="ic" style="color:var(--c-sale)"><use href="#i-tag"/></svg>Na prodej<span class="status-n" data-type="sale"></span></div><ul class="status-list"><li>Aktivně nabízené k prodeji</li><li>Proklik přímo na inzerát</li></ul></div>
-        <div class="status-card reveal" style="--c-druh:var(--c-drazba)"><div class="status-top"><svg class="ic" style="color:var(--c-drazba)"><use href="#i-gavel"/></svg>Dražba<span class="status-n" data-type="drazba"></span></div><ul class="status-list"><li>Nadcházející veřejné dražby</li><li>Často <b>pod tržní cenou</b></li></ul></div>
-        <div class="status-card reveal" style="--c-druh:var(--c-exekuce)"><div class="status-top"><svg class="ic" style="color:var(--c-exekuce)"><use href="#i-alert"/></svg>Exekuce<span class="status-n" data-type="exekuce"></span></div><ul class="status-list"><li>Pozemky v exekuci</li><li><b>Signál budoucího prodeje</b></li></ul></div>
-        <div class="status-card reveal" data-bez-zdroje="obec" style="--c-druh:var(--c-obec)"><div class="status-top"><svg class="ic" style="color:var(--c-obec)"><use href="#i-building"/></svg>Obecní záměr<span class="status-n" data-type="obec"></span></div><ul class="status-list"><li>Obec oznámila <b>záměr prodat</b> pozemek, přihlásit se jde <b>ve lhůtě</b></li><li><b>Tyhle zatím nesbíráme</b> — každá obec má svou úřední desku a ani jednu nemáme zapojenou. <a href="pozemek-od-obce.html">Jak takový pozemek najít sám →</a></li></ul></div>
-        <div class="status-card reveal" style="--c-druh:var(--c-majitel)"><div class="status-top"><svg class="ic" style="color:var(--c-majitel)"><use href="#i-user"/></svg>Přímo od majitele<span class="status-n" data-type="majitel"></span></div><ul class="status-list"><li>Majitel vložil inzerát <b>přímo na Parcelce</b></li><li>Jednáte napřímo — <b>bez realitky a provize</b></li></ul></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 8 · POZEMKY OD LIDÍ (přímo od majitelů) -->
+  <!-- 6 · POZEMKY OD LIDÍ (přímo od majitelů) -->
   <section class="section pt-0 rail" id="od-lidi">
     <div class="wrap">
       <div class="rail-mark reveal"><span class="rm-n">0 %</span><span class="rm-l">provize</span></div>
@@ -641,27 +663,7 @@
   </section>
 
 
-  <!-- KONTAKT -->
-  <section class="section pt-0" id="realitky">
-    <div class="wrap">
-      <div class="realtor-contact reveal">
-        <div class="rct-copy">
-          <div class="eyebrow"><span class="live-dot"></span>Kontakt</div>
-          <h2>Ozvěte se nám.</h2>
-          <p>Máte dotaz, nápad na zlepšení, nebo zájem o spolupráci — třeba mapu pro obec, realitní kancelář či firmu? Napište nám přímo na e-mail a ozveme se. Bez závazku.</p>
-        </div>
-        <div class="rct-form">
-          <a class="kt-mail" href="mailto:info@parcelaka.cz">
-            <span class="kt-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
-            <span class="kt-txt"><small>Napište nám</small><b>info@parcelaka.cz</b></span>
-          </a>
-          <p class="rules-note" style="margin-top:12px;">Víc kontaktních možností najdete na <a href="kontakt.html">stránce Kontakt</a>.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 13 · SLOVNÍČEK -->
+  <!-- 7a · SLOVNÍČEK -->
   <section class="section pt-0 rail" id="slovnicek">
     <div class="wrap">
       <div class="rail-mark reveal"><span class="rm-n">18</span><span class="rm-l">pojmů</span></div>
@@ -689,7 +691,7 @@
     </div>
   </section>
 
-  <!-- 14 · FAQ -->
+  <!-- 7b · ČASTÉ DOTAZY -->
   <section class="section pt-0 rail" id="faq">
     <div class="wrap">
       <div class="rail-mark reveal"><span class="rm-n">9</span><span class="rm-l">otázek</span></div>
@@ -712,6 +714,31 @@
       </div>
     </div>
   </section>
+  <!-- 8 · KONTAKT (na konci stránky, ne uprostřed) -->
+  <!-- Oddíl má sloupec se značkou jako ostatní, jen bez čísla: nadpis
+       tím stojí na téže svislici jako nadpisy nad ním. Dřív začínal
+       o 220 px vlevo a mezi oddíly se tak nadpisy klikatily. Štítek
+       „Kontakt" se přestěhoval z vlastní řádky nad nadpisem do toho
+       sloupce — je to táž informace na místě, kde ji stránka už má. -->
+  <section class="section pt-0 rail" id="realitky">
+    <div class="wrap">
+      <div class="rail-mark reveal"><span class="rm-l">kontakt</span></div>
+      <div class="realtor-contact reveal">
+        <div class="rct-copy">
+          <h2>Ozvěte se nám.</h2>
+          <p>Máte dotaz, nápad na zlepšení, nebo zájem o spolupráci — třeba mapu pro obec, realitní kancelář či firmu? Napište nám přímo na e-mail a ozveme se. Bez závazku.</p>
+        </div>
+        <div class="rct-form">
+          <a class="kt-mail" href="mailto:info@parcelaka.cz">
+            <span class="kt-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            <span class="kt-txt"><small>Napište nám</small><b>info@parcelaka.cz</b></span>
+          </a>
+          <p class="rules-note" style="margin-top:12px;">Víc kontaktních možností najdete na <a href="kontakt.html">stránce Kontakt</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
 
   </main>
 

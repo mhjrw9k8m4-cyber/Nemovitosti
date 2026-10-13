@@ -562,21 +562,21 @@ to{opacity:1;transform:none}
 .deals-grid:has(>:nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))}
 @media (max-width:760px){.deals-grid:has(>:nth-child(4)){grid-template-columns:minmax(0,1fr)}
 }
-.deal-card{text-align:left;font:inherit;cursor:pointer;background:var(--ink-soft);border:1px solid var(--line);border-radius:var(--r-md);padding:16px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"znak znak" "misto cena" "podrob cena";column-gap:14px;row-gap:5px;align-items:baseline;transition:border-color var(--cas-zakladni) var(--ease),transform var(--cas-rychly) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
+.deal-card{text-align:left;font:inherit;cursor:pointer;background:var(--ink-soft);border:1px solid var(--line);border-radius:var(--r-md);padding:16px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"misto cena" "podrob cena" "znak znak";column-gap:14px;row-gap:5px;align-items:baseline;transition:border-color var(--cas-zakladni) var(--ease),transform var(--cas-rychly) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .deal-card .deal-badge{grid-area:znak;justify-self:start}
 .deal-card .deal-place{grid-area:misto}
 .deal-card .deal-sub{grid-area:podrob}
 .deal-card .deal-figs{grid-area:cena;justify-self:end;align-self:start;text-align:right}
 .deal-card:hover{border-color:var(--c-ok);transform:translateY(-2px);box-shadow:var(--e2)}
 .deal-card:focus-visible{outline:2px solid var(--copper-bright);outline-offset:2px}
-.deal-badge{align-self:flex-start;font-size:12px;font-weight:700;color:var(--text-ondark);background:linear-gradient(135deg,#6FD79A,var(--c-ok));border-radius:var(--r-pill);padding:4px 10px;letter-spacing:0.01em;box-shadow:var(--e1)}
+.deal-badge{align-self:flex-start;margin-top:4px;font-size:12px;font-weight:600;color:var(--copper-bright);background:rgba(44,113,80,0.08);border:1px solid rgba(44,113,80,0.22);border-radius:var(--r-pill);padding:4px 10px;letter-spacing:0;box-shadow:none}
 .deal-place{display:flex;align-items:flex-start;gap:8px;font-family:var(--font-ui);font-size:20px;font-weight:600;line-height:1.25;color:var(--text-ondark);margin-top:2px}
 .deal-dot{width:9px;height:9px;border-radius:50%;flex:none;margin-top:6px}
 .deal-sub{font-size:13px;color:var(--text-ondark-mute);line-height:1.4}
 .deal-figs{display:block;white-space:nowrap;line-height:1.25;font-variant-numeric:tabular-nums}
 .deal-figs b{display:block;font-size:16px;font-weight:700;color:var(--copper-bright)}
 .deal-figs span{display:block;font-size:12px;font-weight:600;color:var(--text-ondark-mute)}
-@media (max-width:560px){.deal-card{grid-template-columns:minmax(0,1fr);grid-template-areas:"znak" "misto" "podrob" "cena"}
+@media (max-width:560px){.deal-card{grid-template-columns:minmax(0,1fr);grid-template-areas:"misto" "podrob" "cena" "znak"}
 .deal-card .deal-figs{justify-self:start;text-align:left}
 }
 .recent-strip{margin:-2px 0 14px;padding:12px 12px 10px;background:var(--plocha-jemna);border:1px solid var(--line);border-radius:var(--r-sm)}
@@ -901,7 +901,7 @@ to{left:var(--w)}
 #realitky .realtor-contact{margin-top:0;background:none;border:0;padding:0}
 #realitky .rct-copy h2{color:var(--text-ondeep)}
 #realitky .rct-copy p{color:var(--text-ondeep-mute)}
-#realitky .eyebrow{color:var(--accent-warm-bright)}
+#realitky .rail-mark .rm-l{color:var(--text-ondeep-mute);border-top-color:rgba(255,255,255,0.22)}
 #realitky .kt-mail{background:var(--plocha-jemna);border-color:var(--line)}
 #realitky .kt-mail:hover{background:var(--plocha-jemna-vic);border-color:var(--accent-warm-bright)}
 #realitky .kt-txt small{color:var(--text-ondeep-mute)}
@@ -1021,7 +1021,10 @@ to{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.loc-ov,.loc-card{animation-duration:.01ms}
 }
 @media (min-width:1041px){.map-app{position:relative}
-.map-controls-panel{position:relative;display:grid;align-items:center;gap:8px 10px;padding:10px 16px;grid-template-columns:minmax(220px,1fr) auto auto;grid-template-areas:"hledani okoli filtry" "rychle rychle rychle"}
+.hero-map .map-wide{max-width:none;padding:0;margin-top:48px}
+.hero-map .map-app,.map-app{border-left:0;border-right:0;border-top:0;border-radius:0;box-shadow:none;grid-template-columns:min(34vw,460px) minmax(0,1fr);height:calc(100dvh - var(--vyska-hlavicky,85px) - 48px);max-height:none;min-height:620px}
+.map-controls-panel{padding:12px 20px}
+.map-controls-panel{position:relative;display:grid;align-items:center;gap:8px 10px;padding:10px 16px;grid-template-columns:minmax(220px,520px) auto auto minmax(0,1fr);grid-template-areas:"hledani okoli filtry ." "rychle rychle rychle rychle"}
 .ms-rozsirene{display:contents}
 .map-controls-panel>.map-search{grid-area:hledani}
 .map-controls-panel .map-okoli{grid-area:okoli}
@@ -1610,9 +1613,8 @@ footer a:focus-visible{outline-color:var(--pas-nadpis)}
 .step .idx{font-size:44px;margin-bottom:6px}
 .step h3{font-size:20px}
 }
-.status-grid{grid-template-columns:repeat(2,1fr);gap:0 40px}
-.status-card{background:none;border:0;background-image:linear-gradient(90deg,color-mix(in srgb,var(--c-druh,var(--accent-warm)) 14%,transparent),transparent 240px);border-radius:0 var(--r-md) var(--r-md) 0;border-left:3px solid var(--c-druh,var(--accent-warm));padding:12px 16px 16px;margin-bottom:20px}
-.status-grid>.status-card:nth-child(odd):last-child{grid-column:1 / -1}
+.status-grid{grid-template-columns:repeat(2,1fr);gap:20px;align-items:stretch}
+.status-card{background:var(--plocha-plovouci-plna);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--e1);border-left:3px solid var(--c-druh,var(--accent-warm));padding:16px;margin-bottom:0}
 .status-card .status-top{font-size:16px}
 .status-card .status-top .ic{display:none}
 .status-n{background:none;border:0;padding:0;color:var(--text-ondark-mute);font-family:var(--font-mono);font-size:12px;font-weight:500}

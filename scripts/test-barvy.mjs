@@ -231,7 +231,8 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
       const zn = e.querySelector('.status-n');
       return { druh: zn && zn.getAttribute('data-type'),
         cara: getComputedStyle(e).borderLeftColor,
-        zavan: getComputedStyle(e).backgroundImage };
+        caraSiroka: parseFloat(getComputedStyle(e).borderLeftWidth) || 0,
+        plocha: getComputedStyle(e).backgroundColor };
     });
     const vTabulce = window.PK_TVARY ? Object.keys(window.PK_TVARY) : [];
     const nadpis = (document.querySelector('#stavy h2') || {}).textContent || '';
@@ -251,10 +252,19 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
     if (!k.druh || !uvod.tok[k.druh]) continue;
     pravda(`čára u kartičky „${k.druh}" má barvu z palety`, k.cara === naRgb(uvod.tok[k.druh]),
       `je ${k.cara}, má být ${naRgb(uvod.tok[k.druh])}`);
-    /* Závan barvy se míchá z téže proměnné. Kdyby se color-mix nepovedl,
-       nebyl by přechod vůbec — a kartička by ztratila polovinu výrazu. */
-    pravda(`a závan barvy u „${k.druh}" se vykreslil`, /gradient/.test(k.zavan),
-      `background-image je „${k.zavan}"`);
+    /* TADY SE MĚŘIL BAREVNÝ PŘECHOD PŘES KARTIČKU. Je zrušený: končil na
+       pevných 240 px, takže ať byla kartička široká 380 nebo 1 160 px,
+       obarvená byla pořád jen levá čtvrtina a zbytek mizel do stránky —
+       vedle bílých karet s rámečkem to vypadalo jako nedokreslená plocha.
+       Barvu druhu teď nese jen ta svislá čára, takže se hlídá, že je
+       DOST TLUSTÁ na to, aby ji bylo vidět; samotná barva se měří výš.
+       Kdyby čára spadla na vlas, sdělení „každý druh svou barvou" by
+       zmizelo stejně, jako by zmizelo se zrušeným přechodem. */
+    pravda(`a čára u „${k.druh}" je vidět (${k.caraSiroka} px)`, k.caraSiroka >= 3,
+      `je ${k.caraSiroka} px — pod 3 px se barva druhu ztratí`);
+    pravda(`a kartička „${k.druh}" stojí na vlastní ploše`,
+      /^rgb\(255, 255, 255\)$/.test(k.plocha),
+      `plocha je „${k.plocha}" — bez ní karta nemá hranu a text leží rovnou na stránce`);
   }
   pravda('číslo v nadpisu sedí s počtem druhů',
     new RegExp('^' + ['', 'Jeden', 'Dva', 'Tři', 'Čtyři', 'Pět', 'Šest'][v.vTabulce.length] + ' ', 'i').test(v.nadpis),
