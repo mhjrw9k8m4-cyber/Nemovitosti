@@ -160,7 +160,7 @@ export function html(skupiny, token) {
   if (!skupiny.length || !skupiny.some((g) => g.nove.length)) throw new Error('prázdný e-mail se neposílá');
   const kusy = [
     '<div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;'
-    + 'font-size:15px;line-height:1.55;color:#14231C;max-width:600px">',
+    + 'font-size:15px;line-height:1.6;color:#14231C;max-width:600px">',
     '<p>Dobrý den,</p>',
     '<p>v tom, co máte na Parcelce uložené, přibylo:</p>',
   ];

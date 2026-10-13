@@ -4563,7 +4563,7 @@ s prahem dlaždic a prahem okresů u cen.)
 
 ### Zkoušky
 
-**98 neprohlížečových** a **103 prohlížečových** kontrol zelených.
+**100 neprohlížečových** a **103 prohlížečových** kontrol zelených.
 Obě chyby, které předtím shodily CI (`testy` i `v-prohlizeci`), jsou
 opravené u kořene, ne obejité.
 
@@ -4734,6 +4734,114 @@ protože měří všechny živé stránky, ne jen `css/styles.css`.
 
 Ověřeno sabotáží: 13px zpátky na 12,5px → `✕ velikosti písma jsou celé
 pixely … 12.5px`. Po vrácení 7 v pořádku, 0 chyb.
+
+## 3bv. Řádkování po desetinách: 28 hodnot → 9, a každý krok má svou práci — *13. 10.*
+
+Čtvrtá osa téže soustavy. Řádkování bylo psané od ruky stejně jako
+odstupy: **28 různých hodnot na 190 deklarací** —
+
+```
+0.82  0.92  0.95  1  1.03  1.04  1.05  1.1  1.12  1.15  1.18
+1.2  1.22  1.25  1.3  1.35  1.4  1.45  1.5  1.55  1.58  1.6
+1.62  1.65  1.68
+```
+
+Mezi 1.5 a 1.55 je na šestnáctipixelovém písmu **0,8 px na řádek**.
+To nikdo nepozná — a nikdo to taky nerozhodl. Takhle se doladí jedno
+místo, protože se tam text zdál hustý, a kdo pak přidává pravidlo,
+opíše hodnotu od sousedního. Nejlepší důkaz: `body` měl `1.58`,
+a vedle něj existovalo `1.5`, `1.55`, `1.6`, `1.62`, `1.65` a `1.68`.
+Šest způsobů, jak napsat „normální text".
+
+### Stupnice
+
+Po desetinách, a **každý krok má svou práci** — to je ten rozdíl mezi
+stupnicí a seznamem čísel:
+
+| krok | na co |
+|---|---|
+| **0.9** | velké číslice na dlaždicích (aby blok nebyl zbytečně vysoký) |
+| **1** | jednořádkové terče a ikony |
+| **1.1** | velké nadpisy |
+| **1.2** | podnadpisy |
+| **1.3** | krátké věty na kartě |
+| **1.4** | rozhraní a popisky |
+| **1.5** | běžný text |
+| **1.6** | text na čtení — odstavce, články, pravidla |
+
+Přepsáno **83 deklarací v 7 souborech**. Nadpisový trs (1.03 / 1.04 /
+1.05) a podnadpisový (1.12 až 1.25) se sjednotily **úmyslně** na 1.1
+a 1.2, ne zaokrouhlením: stejná práce má mít stejnou hodnotu. Zbytek
+je nejbližší krok na stupnici, při remíze nahoru — víc vzduchu se čte
+lépe.
+
+`build-og.mjs` je venku ze stejného důvodu jako u odstupů: kreslí
+náhled pro sdílení 1200×630 px s písmem 96 px, kde `1.03` dává smysl
+a se stupnicí stránky nemá co dělat.
+
+### Pojistka
+
+Nová věta v `test-typografie.mjs`: „každé řádkování je na stupnici
+(9 kroků po desetinách)", se jmény souborů u každé hodnoty mimo.
+Měří se jen řádkování **bez jednotky** — `line-height:44px` je výška
+řádku pro vystředění ikony, ne řádkování textu.
+
+Hned při prvním spuštění zkouška ohlásila, že na 2 101 stránkách
+pozemků je pořád `1.15`, `1.45`, `1.55` a `1.62` — správně, protože
+jsem ještě nepřestavěl a ty stránky si nesou vložený styl z
+`pozemek.html`. Po `node scripts/oprav.mjs` zelená.
+
+Ověřeno sabotáží: `1.6` zpátky na `1.55` → `✕ každé řádkování je na
+stupnici`. Po vrácení 8 v pořádku, 0 chyb.
+
+## 3bw. Vrstvy (z-index): 29 čísel beze soustavy — pořádek je teď vypsaný a hlídaný — *13. 10.*
+
+Pátá osa. Ve stylopisu bylo **29 různých hodnot z-indexu**: −1, 0, 1, 2,
+3, 4, 5, 20, 21, 40, 41, 45, 90, 91, 100, 450, 500, 590, 600, 900, 1100,
+1200, 1300, 2500, 3000, 4000, 5000.
+
+Čísla sama nejsou chyba. Chyba je, že **nikde nestálo, co je nad čím
+a proč**, takže kdo přidával vrstvu, napsal číslo o kus větší než to, co
+mu právě překrývalo panel. Takhle vzniklo 4000 vedle 5000 vedle 2500.
+
+### Co jsem NEUDĚLAL a proč
+
+**Nepřečísloval jsem je.** Přečíslovat vrstvy znamená změnit, co je nad
+čím, a to se zkouškou spolehlivě neověří: překryv nastává jen
+v určitých okamžicích — otevřená nabídka nad otevřeným našeptávačem nad
+mapou, hlášení nad modálním oknem, závoj při kreslení výběru. Mám 201
+kontrol a ani jedna nepokrývá všechny páry. Měnit pořadí naslepo
+a doufat, že se to nikde neprojeví, je přesně to, co tu dvě stě
+kontrol má zabránit.
+
+Čísla tedy zůstávají, jak jsou. Pořadí se nezměnilo ani o pixel.
+
+### Co jsem udělal
+
+Pořádek je **vypsaný na jednom místě** — tabulka v `css/styles.css`,
+kde má každá hodnota jméno a práci: od našeptávače (20) přes vysunutou
+nabídku (91), ovladače nad mapou (500–600), hlavičku (1100), vysouvací
+vrstvy (1200–1300), modální okno (3000) a hlášení (4000) až po
+celoobrazovkové překrytí (5000). Místní pořadí uvnitř součástky
+(−1 až 9) se vědomě nehlídá: tam jde o to, jestli je odznak nad fotkou,
+ne o pořádek na stránce.
+
+### Pojistka
+
+`scripts/test-vrstvy.mjs` (nová, v CI) hlídá tři věci:
+
+1. vypsaný pořádek je **rostoucí** — tabulka sama je platné pořadí,
+2. ve stylopisu ani na ručních stránkách **není jiné číslo** než
+   vypsané (nad místní hranicí 9),
+3. **žádná vypsaná vrstva není mrtvá** — co je v tabulce, se používá.
+
+Třetí bod je tam proto, aby tabulka nezůstala pozadu za webem: kdyby
+někdo vrstvu zrušil a tabulku nechal, zkouška to ohlásí.
+
+Ověřeno sabotáží jedním zásahem: `z-index:900` → `999` shodilo **obě**
+kontroly — `✕ žádný není mimo vypsaný pořádek` (999 v tabulce není)
+a `✕ žádná vypsaná vrstva není mrtvá` (900 se tím přestalo používat).
+Po vrácení 4 v pořádku, 0 chyb.
 
 ## Co naopak nechybí
 

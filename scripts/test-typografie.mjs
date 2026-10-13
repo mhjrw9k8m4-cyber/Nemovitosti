@@ -41,6 +41,25 @@ function pravda(popis, vyslo, proc) {
 const soubory = ['css/styles.css', ...readdirSync(KOREN).filter((f) => /\.html$/.test(f))];
 const prostrkani = new Map();   // hodnota → [kde]
 const velikosti = new Map();
+const radkovani = new Map();
+/* ŘÁDKOVÁNÍ PO DESETINÁCH. Bylo jich 28 různých na 190 deklarací:
+   1.03 vedle 1.04 a 1.05, 1.12 vedle 1.15 a 1.18, 1.5 vedle 1.55
+   a 1.58 a 1.6 a 1.62 a 1.65 a 1.68. Mezi 1.5 a 1.55 je na
+   šestnáctipixelovém písmu 0,8 px na řádek — to nikdo nepozná a nikdo
+   to nerozhodl; takhle se doladí jedno místo a opíše se to dál.
+   Stupnice jde po desetinách a každý krok má svou práci:
+     0.9  velké číslice na dlaždicích (aby blok nebyl zbytečně vysoký)
+     1    jednořádkové terče a ikony
+     1.1  velké nadpisy
+     1.2  podnadpisy
+     1.3  krátké věty na kartě
+     1.4  rozhraní a popisky
+     1.5  běžný text
+     1.6  text na čtení (odstavce, články, pravidla)
+   Nadpisový trs (1.03/1.04/1.05) a podnadpisový (1.12–1.25) se
+   sjednotil úmyslně na 1.1 a 1.2, ne zaokrouhlením — stejná práce má
+   mít stejnou hodnotu. */
+const RADKOVANI = ['0', '0.9', '1', '1.1', '1.2', '1.3', '1.4', '1.5', '1.6'];
 let zivych = 0, archivu = 0;
 for (const f of soubory) {
   let t;
@@ -54,6 +73,12 @@ for (const f of soubory) {
   for (const m of t.matchAll(/font-size:\s*([0-9.]+)px/g)) {
     if (!velikosti.has(m[1])) velikosti.set(m[1], []);
     if (velikosti.get(m[1]).length < 3) velikosti.get(m[1]).push(f);
+  }
+  /* Řádkování bez jednotky. S jednotkou (px) je to výška řádku pro
+     vystředění ikony, ne řádkování textu — to se neměří. */
+  for (const m of t.matchAll(/line-height:\s*([0-9.]+)(?![0-9a-z%])/g)) {
+    if (!radkovani.has(m[1])) radkovani.set(m[1], []);
+    if (radkovani.get(m[1]).length < 3) radkovani.get(m[1]).push(f);
   }
 }
 
@@ -116,6 +141,12 @@ for (let i = 1; i < cisla.length; i++) {
 pravda('žádné dvě velikosti nadpisů se neliší o jediný pixel',
   blizke.length === 0, blizke.join('\n      '));
 
+/* ---- 3b) řádkování je na stupnici po desetinách ---- */
+const mimoRadky = [...radkovani.keys()].filter((v) => RADKOVANI.indexOf(v) < 0);
+pravda(`každé řádkování je na stupnici (${RADKOVANI.length} kroků po desetinách)`,
+  mimoRadky.length === 0,
+  mimoRadky.slice(0, 8).map((v) => `${v} — ${radkovani.get(v).join(', ')}`).join('\n      '));
+
 /* ---- 4) šest hlavních velikostí pořád nese většinu ---- */
 let celkem = 0, hlavni = 0;
 for (const f of soubory) {
@@ -132,7 +163,7 @@ pravda('a drtivou většinu písma nesou běžné velikosti (ne rozsypaná stupn
 
 console.log('\nTypografická stupnice');
 console.log(zpravy.join('\n'));
-console.log(`  (prostrkání: ${prostrkani.size} hodnot, velikostí písma: ${velikosti.size}, ` +
+console.log(`  (prostrkání: ${prostrkani.size} hodnot, velikostí písma: ${velikosti.size}, řádkování: ${radkovani.size}, ` +
   `měřeno na ${zivych} souborech)`);
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.log('::error::Typografie: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
