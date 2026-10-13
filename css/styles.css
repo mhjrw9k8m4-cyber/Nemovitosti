@@ -5416,7 +5416,12 @@ h1, h2, h3,
 .mc-rychly:hover{border-color:var(--copper-bright); background:var(--plocha-plovouci);}
 .mcr-ic{flex:none; display:flex; align-items:center; justify-content:center; width:36px; height:36px;
   border-radius:var(--r-xs); background:var(--plocha-znacka); color:#fff;}
-.mcr-ic svg{width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.8;
+/* TAH MUSÍ VYJÍT NA 1,5 px NA OBRAZOVCE. Ikona je kreslená do viewBoxu
+   24 a zmenšuje se, takže se s ní zmenšuje i tah: vykreslený tah je
+   šířka × stroke-width ÷ 24. U 19px ikony to dělá 1,5 ÷ 19 × 24 = 1,89.
+   Napsal jsem tam 1,8 a vyšlo 1,43 — test-tahy i test-ikony to chytly,
+   protože ikona vedle ostatních vypadala o vlas tenčí. */
+.mcr-ic svg{width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.89;
   stroke-linecap:round; stroke-linejoin:round;}
 .mcr-txt{flex:1 1 auto; min-width:0;}
 .mcr-nadpis{display:block; font-size:14px; font-weight:700; letter-spacing:-0.01em;}
@@ -5445,7 +5450,7 @@ h1, h2, h3,
   .mc-rychly{padding:8px 10px; gap:10px;}
   .mc-rychly .mcr-popis{display:none;}
   .mcr-ic{width:30px; height:30px;}
-  .mcr-ic svg{width:17px; height:17px;}
+  .mcr-ic svg{width:17px; height:17px; stroke-width:2.12;}   /* 1,5 ÷ 17 × 24 */
   .mc-akce{gap:6px;}
   .mc-skryte{min-height:32px; padding:0 10px; font-size:12.5px;}
 }

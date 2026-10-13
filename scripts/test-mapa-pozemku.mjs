@@ -94,7 +94,18 @@ function najdi(filtr) {
   return d ? adresaPozemku(d) : null;
 }
 function pozemekUrl() { return najdi(() => true); }
-const DRAZBA = najdi((x) => x.type === 'drazba' && /\d{4}-\d{2}-\d{2}/.test(x.extra || ''));
+/* DRAŽBA MUSÍ MÍT TERMÍN V BUDOUCNU. Brala se první dražba s datem —
+   jenže ta nejstarší jednou proběhne a blok pak ukazuje jinou větev
+   („Záznam tu zůstává kvůli historii"), ve které vyvolávací cena ani
+   odkaz na vyhlášku nejsou. Zkouška tím spadla ze dne na den, aniž se
+   v kódu cokoli změnilo: 12. 10. ještě procházela, 13. 10. už ne.
+   Vybírá se proto termín, který teprve bude. */
+const DNES = new Date().toISOString().slice(0, 10);
+const DRAZBA = najdi((x) => {
+  if (x.type !== 'drazba') return false;
+  const m = /\d{4}-\d{2}-\d{2}/.exec(x.extra || '');
+  return !!m && m[0] >= DNES;
+});
 const CIL = pozemekUrl();
 if (!CIL) {
   console.log('Mapa v detailu pozemku\n  ✕ v datech není ani jeden pozemek s polohou a cenou');
@@ -610,6 +621,10 @@ const HOST = {
  * o ní musí říct, kde je, místo aby se odhadla. Odhadnutá jistota by
  * byla horší než žádná: podle ní se posílají peníze.
  */
+/* Pojistka: bez dražby s budoucím termínem by celý oddíl mlčky
+   vynechal a zkouška by o detailu dražby netvrdila nic. */
+pravda('v datech je aspoň jedna dražba s termínem v budoucnu', !!DRAZBA,
+  'žádná — oddíl o detailu dražby by se přeskočil a nic by neověřil');
 if (DRAZBA) {
   const { ctx, p } = await detail({ zivi: [HOST.katastr], cil: DRAZBA.url });
   const v = await p.evaluate(() => {

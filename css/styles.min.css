@@ -1866,7 +1866,7 @@ h1,h2,h3,.section-head h2,.add-hero h1,.okr-hero h1,.clanek .rules-sect h2{lette
 .mc-rychly{flex:1 1 100%;display:flex;align-items:center;gap:12px;width:100%;font:inherit;text-align:left;cursor:pointer;padding:12px;color:var(--text-ondark);background:var(--plocha-jemna);border:1px solid var(--obrys-tlacitka);border-radius:var(--r-sm);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease)}
 .mc-rychly:hover{border-color:var(--copper-bright);background:var(--plocha-plovouci)}
 .mcr-ic{flex:none;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:var(--r-xs);background:var(--plocha-znacka);color:#fff}
-.mcr-ic svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mcr-ic svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.89;stroke-linecap:round;stroke-linejoin:round}
 .mcr-txt{flex:1 1 auto;min-width:0}
 .mcr-nadpis{display:block;font-size:14px;font-weight:700;letter-spacing:-0.01em}
 .mcr-popis{display:block;margin-top:2px;font-size:12px;font-weight:400;line-height:1.4;color:var(--text-ondark-mute)}
@@ -1876,7 +1876,7 @@ h1,h2,h3,.section-head h2,.add-hero h1,.okr-hero h1,.clanek .rules-sect h2{lette
 .mc-rychly{padding:8px 10px;gap:10px}
 .mc-rychly .mcr-popis{display:none}
 .mcr-ic{width:30px;height:30px}
-.mcr-ic svg{width:17px;height:17px}
+.mcr-ic svg{width:17px;height:17px;stroke-width:2.12}
 .mc-akce{gap:6px}
 .mc-skryte{min-height:32px;padding:0 10px;font-size:12.5px}
 }
