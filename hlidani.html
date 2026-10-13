@@ -42,10 +42,13 @@
        souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=58b324c6">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=16647d47">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
-    .hl-wrap{max-width:var(--m-uzky); margin:0 auto;}
+    /* Vlevo, ne na střed: vystředěný sloupec 560 px začínal na 440 px,
+       zatímco nadpis a pás záložek nad ním na 152. Tři svislice na
+       jedné stránce. */
+    .hl-wrap{max-width:var(--m-uzky); margin:0;}
     .hl-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--e1); margin-bottom:14px;}
     /* PŘEPÍNAČ MEZI NOVÝM A ULOŽENÝM.
        Uložená hlídání ležela pod celým formulářem nového: na telefonu
@@ -80,10 +83,13 @@
     /* Odznak s počtem zůstává značkový i na zapnuté záložce — jezdec je
        teď světlý, takže bílá na bílé by zmizela. */
     .hl-tab.je .hl-tab-n{background:var(--plocha-znacka); color:#fff;}
-    .hl-auth{padding:20px; max-width:var(--m-karta); margin:8px auto;}
+    /* Vlevo, ne na střed: karta se středila ve sloupci, takže začínala
+       na 212 px, zatímco nadpis stránky a pás záložek na 152. Svislice
+       se musí shodovat, jinak to vypadá jako posunutá sazba. */
+    .hl-auth{padding:20px; max-width:var(--m-karta); margin:8px 0;}
     /* Ukázka pod přihlášením: stejná šířka jako okénko, ať to drží jednu
        osu, a čísla v jednom sloupci, aby šla porovnat očima. */
-    .hl-ukazka{padding:20px; max-width:var(--m-karta); margin:8px auto;}
+    .hl-ukazka{padding:20px; max-width:var(--m-karta); margin:8px 0;}
     /* Prázdné místo pro kartu, než se dopočítá. Výška je naměřená
        z hotové karty (531 px na širokém displeji), ať patička nemusí
        nikam skákat. */

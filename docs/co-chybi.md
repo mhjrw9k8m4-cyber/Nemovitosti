@@ -4416,6 +4416,71 @@ ale bez přechodu a bez stínu.
 Celá dávka z CI na hotovém stromu: **97 neprohlížečových** a **102
 prohlížečových** kontrol zelených.
 
+## 3bq. NA PŘÁNÍ: jedna svislice na celý web — vnitřní stránky přestaly uhýbat — *13. 10.*
+
+Předchozí kolo spravilo kompozici úvodní stránky. Tohle je zbytek webu:
+stránky cen, hlídání, přidání pozemku, profilu, zpráv, rádců a výpisů.
+
+### Co se změřilo
+
+Projel jsem levé hrany hlavních bloků na dvanácti stránkách (1440×900)
+a spočítal, kolik RŮZNÝCH svislic každá stránka má:
+
+| stránka | před | po |
+|---|---|---|
+| `hlidani.html` | **5** (392 nadpis · 152 záložky · 440 karta) | **1** (152) |
+| `pridat.html` | **5** (392 nadpis a dotazy · 152 formulář · 264 karta) | **1** (152) |
+| `porovnani.html` | **5** (392 proti 232) | **1** (152) |
+| `cena-pozemku.html` | 3 (232) | **1** (152) |
+| `zpravy.html`, `muj-inzerat.html` | 4 (centrovaná karta na 440 a 500) | **1** (152) |
+| `drazby-pozemku.html` a další rádci | 2 (234 osnova · 518 text) | **152 · 372** (osnova a text, jako oddíly úvodu) |
+
+### Proč to tak bylo
+
+Obaly si braly **tři různé míry** — `--m-wrap` (1200), `--m-siroky`
+(1040) a `--m-sloupec` (720) — a každý se ve své vystředil. Různě široké
+vystředěné obaly nemůžou mít stejnou levou hranu. K tomu se tatáž
+součástka (přihlašovací karta) na třech stránkách středila ve třech
+různých sloupcích: 212 px na Hlídání, 264 na Přidat pozemek, 500 na
+Můj profil.
+
+### Co se udělalo
+
+* **Obal má jednu míru** (`--m-wrap`), čtecí míru si nese OBSAH:
+  `.add-wrap > *` do 720 px. Řádek textu se tím nenatáhne přes celou
+  obrazovku a levá hrana je všude táž.
+* **Stránky okresů, krajů a cen** (`.okr-wrap`) dostaly tutéž míru.
+* **Přihlašovací karta se nestředí**, drží levou hranu — na všech třech
+  stránkách stejně.
+* **Osnova článku** (rádci) se opírá o levou hranu stránky místo o střed:
+  byla na 234 px, text na 518.
+* **Postranní sloupec je jeden na celý web**: osnova článku měla 180 + 72,
+  oddíly úvodní stránky 172 + 48. Dvaatřicet pixelů, které nikdo
+  nepojmenuje, ale při přechodu z úvodu na článek je vidět, že se
+  stránka pohnula. Teď jsou to tatáž čísla.
+
+### A co se tím uvolnilo
+
+Karty na stránce cen byly po sjednocení 1 136 px široké, ale obsah
+v nich zůstával v levé polovině:
+
+* **Ceny po krajích** — třináct krajů pod sebou v pruhu 560 px, vedle
+  nich 576 px prázdna. Teď dva sloupce po 560; pár „kraj — číslo"
+  zůstane sevřený (to byl původní důvod té meze) a karta se využije.
+* **Jak rychle nabídky mizí** — čtyři údaje ve třech sloupcích, takže
+  čtvrtý visel sám na druhém řádku. Teď čtyři sloupce, jedna řada.
+
+Stránka `cena-pozemku.html` se tím zkrátila z **3 359 na 2 813 px**
+(o 16 %), aniž by z ní cokoli zmizelo.
+
+### Zkoušky
+
+**97 neprohlížečových** a **102 prohlížečových** kontrol z CI zelených.
+
+Jedna poznámka k poctivosti měření: první běh dávky hlásil osmnáct
+pádů v řadě. Nebyla to regrese — běžely dvě dávky najednou a praly se
+o port 8310 (`EADDRINUSE`). Po úklidu a čistém běhu je zelená celá.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

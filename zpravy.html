@@ -42,13 +42,14 @@
        souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=58b324c6">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=16647d47">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
-    .zp-wrap{max-width:var(--m-uzky); margin:0 auto;}
+    /* Vlevo, ne na střed — jedna svislice se zbytkem stránky. */
+    .zp-wrap{max-width:var(--m-uzky); margin:0;}
     .zp-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--e1);}
     /* Přihlášení */
-    .zp-auth{padding:20px; max-width:var(--m-karta); margin:8px auto;}
+    .zp-auth{padding:20px; max-width:var(--m-karta); margin:8px 0;}
     .zp-auth h2{font-size:17px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
     .zp-auth p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
     .zp-in{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:17px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:8px; outline:none;}

@@ -468,7 +468,13 @@
   /* Boční sloupec s obsahem rádce a mezera k sazbě. Mezera musí být
      větší než odsazení čísla oddílu (72 px), jinak číslo zajede do
      obsahu. */
-  --obsah-s:180px; --obsah-mezera:72px;
+  /* JEDEN POSTRANNÍ SLOUPEC NA CELÝ WEB. Oddíly úvodní stránky mají
+     sloupec se značkou 172 px a mezeru 48 (nadpis začíná na 372 px);
+     osnova článku měla 180 a 72, takže text článku začínal na 404.
+     Dvaatřicet pixelů, které nikdo nedokáže pojmenovat, ale po
+     přechodu z úvodu na článek je vidět, že se stránka pohnula.
+     Teď jsou to tatáž čísla. */
+  --obsah-s:172px; --obsah-mezera:48px;
 
   /* JEDEN HLAS PRO DROBNÉ POPISKY. „RÁDCE · FINANCOVÁNÍ", „TIPY DNES",
      „OBSAH" — tyhle drobnosti nesou charakter webu víc než nadpisy,
@@ -3654,7 +3660,23 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
    úvodní stránky pak působily jako jiný web. */
 .add-hero h1{font-family:var(--font-display); font-weight:700; line-height:1.12; letter-spacing:-0.02em; max-width:var(--m-sloupec);}
 .add-hero .sub{font-size:16px; color:var(--text-ondark-mute); margin-top:16px; max-width:var(--m-text);}
-.add-wrap{max-width:var(--m-sloupec);}
+/* =====================================================================
+   JEDNA SVISLICE NA STRÁNKU.
+   Změřeno na 1440×900, levé hrany hlavních bloků:
+     hlidani.html  — 392 (nadpis), 152 (pás záložek), 440 (karta): PĚT
+                     různých svislic na jedné stránce,
+     pridat.html   — 392 (nadpis a dotazy) proti 152 (formulář): nadpis
+                     a formulář pod ním začínaly 240 px od sebe,
+     porovnani.html— 392 proti 232.
+   Příčina byla jednoduchá a tichá: obaly si braly TŘI různé míry —
+   --m-wrap (1200), --m-siroky (1040) a --m-sloupec (720) — a každý
+   se vystředil ve svém. Různě široké vystředěné obaly nemůžou mít
+   stejnou levou hranu; stránka se pak při rolování klikatí.
+   Obal má teď jednu míru (--m-wrap) a čtecí míru si nese OBSAH, ne
+   obal: `> *` do 720 px. Levá hrana je tím na všech stránkách táž
+   (152 px na 1440) a řádek textu se nenatáhne přes celou obrazovku. */
+.add-wrap{max-width:var(--m-wrap);}
+.add-wrap > *{max-width:var(--m-sloupec);}
 /* JEDEN PROFIL, TŘI ZÁLOŽKY.
    Zprávy, Hlídání a Můj profil jsou tři stránky jednoho účtu. Každá
    začínala sloganem a odstavcem, který vysvětluje, k čemu ta funkce je —
@@ -3814,7 +3836,12 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .add-check.err{color:var(--c-exekuce-ink);}
 
 /* ---------- Přihlášení / registrace: prémiová karta ---------- */
-.auth-card{position:relative; z-index:1; max-width:var(--m-karta); margin:0 auto; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border:1px solid var(--line-strong); border-radius:var(--r-lg); padding:32px 28px 24px; box-shadow:var(--shadow-lg);}
+/* PŘIHLAŠOVACÍ KARTA DRŽÍ LEVOU HRANU, NESTŘEDÍ SE. Středila se ve svém
+   sloupci, takže na „Můj profil" začínala na 500 px, v mřížce na stránce
+   Přidat pozemek na 264 a na Hlídání na 212 — zatímco nadpis stránky
+   a všechno ostatní na 152. Tři stránky, tři různé svislice pro tutéž
+   součástku. Levá hrana je jedna a platí i tady. */
+.auth-card{position:relative; z-index:1; max-width:var(--m-karta); margin:0; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border:1px solid var(--line-strong); border-radius:var(--r-lg); padding:32px 28px 24px; box-shadow:var(--shadow-lg);}
 .auth-tabs{display:flex; gap:6px; padding:4px; background:var(--ink); border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:20px;}
 .auth-tab{flex:1; padding:10px 8px; border:0; border-radius:var(--r-ovladani); background:none; color:var(--text-ondark-mute); font:inherit; font-size:16px; font-weight:700; cursor:pointer; transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
 .auth-tab.active{background:var(--plocha-znacka); color:#fff;}
@@ -4825,7 +4852,11 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
    prázdné plochy. A pod ním rámeček v rámečku: karta, v ní mřížka dalších
    orámovaných dlaždic.
    ===================================================================== */
-.okr-wrap{max-width:var(--m-siroky);}
+/* Táž svislice i pro stránky okresů, krajů a cen: 1040px obal se
+   středil o 80 px jinam než 1200px obal nad ním. Obsah těchhle stránek
+   jsou mřížky a výpisy, takže si šířku vezme celou — čtecí míru řeší
+   jednotlivé odstavce, ne obal. */
+.okr-wrap{max-width:var(--m-wrap);}
 
 /* Úvod krajské stránky: táž plocha s mapovou mřížkou jako úvod ostatních
    stránek — web tím drží pohromadě. Barvu i mřížku bere z tokenů pásu,
@@ -5010,6 +5041,17 @@ a.rz-okres:hover{color:var(--copper-bright);}
   font-variant-numeric:tabular-nums;}
 
 .cenk-tab{margin:16px 0 0; max-width:560px;}
+/* DVA SLOUPCE NA ŠIROKÉM DISPLEJI. Mez 560 px má svůj důvod (jméno
+   kraje a číslo se nesmí od sebe vzdálit přes celou kartu), jenže karta
+   je po sjednocení svislic 1 136 px široká — třináct krajů pod sebou
+   v levé polovině nechalo 576 px prázdna a stránka kvůli tomu byla
+   o 300 px delší. Dvojice sloupců řeší obojí: pár „kraj — číslo"
+   zůstane sevřený a karta se využije. Čte se po řádcích, jako kraje
+   na úvodní stránce. */
+@media (min-width:900px){
+  .cenk-tab{max-width:none; display:grid;
+    grid-template-columns:repeat(2, minmax(0, 560px)); column-gap:40px;}
+}
 /* Věta nad tabulkou končí tam, kde tabulka — jinak by text šel přes
    celou kartu a tabulka pod ním byla o 400 px kratší, takže by to
    vypadalo jako dva nesouvisející bloky. */
@@ -5082,6 +5124,13 @@ a.rz-okres:hover{color:var(--copper-bright);}
    toho vejde. Pod sebou by z toho byl zase svitek. */
 .trh-seznam{list-style:none; margin:16px 0 0; padding:0; max-width:560px;
   display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px;}
+/* ČTYŘI ÚDAJE, ČTYŘI SLOUPCE. Ve třech sloupcích zbyl čtvrtý sám na
+   druhém řádku: tři velká čísla vedle sebe a jedno pod nimi vypadá jako
+   nedopsaný řádek, ne jako čtveřice. Na širokém displeji je karta dost
+   široká na všechny čtyři. */
+@media (min-width:900px){
+  .trh-seznam{max-width:none; grid-template-columns:repeat(4, minmax(0,1fr)); gap:16px;}
+}
 .trh-radek{display:flex; flex-direction:column; gap:5px; min-width:0;}
 .trh-cislo{font-family:var(--font-display); font-weight:700; font-size:32px;
   line-height:1.05; letter-spacing:-0.03em; color:var(--text-ondark);
@@ -5360,7 +5409,12 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   body:has(.clanek) .add-hero > .add-wrap{
     display:grid; grid-template-columns:var(--obsah-s) minmax(0, var(--m-sloupec));
     column-gap:var(--obsah-mezera);
-    max-width:calc(var(--obsah-s) + var(--obsah-mezera) + var(--m-sloupec));
+    /* Obal drží stránkovou míru, ne součet sloupců: vystředěný součet
+       (988 px) posadil osnovu na 234 px a text na 518, zatímco všechny
+       ostatní stránky začínají na 152. Mřížka se teď opírá o levou
+       hranu stránky a vpravo zbyde vzduch — jako u oddílů s číslem
+       na úvodní stránce. */
+    max-width:var(--m-wrap);
     align-items:start;}
   /* Úvodní pás musí stát na TÉŽE svislici jako text pod ním. Bez tohohle
      začínal nadpis na 312 px a článek na 438 — skok o 126 px uprostřed
