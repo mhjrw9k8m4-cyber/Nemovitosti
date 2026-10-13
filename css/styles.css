@@ -1231,7 +1231,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
   .uvod-dlazdice a{display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:4px; min-height:56px; padding:6px 4px; border-radius:var(--r-plocha);
     background:var(--ink-soft); border:1px solid var(--obrys-tlacitka);
-    color:var(--text-ondark); font-size:12.5px; font-weight:700; text-decoration:none;
+    color:var(--text-ondark); font-size:13px; font-weight:700; text-decoration:none;
     box-shadow:var(--e1); transition:border-color var(--cas-zakladni) var(--ease);}
   .uvod-dlazdice a:hover{border-color:var(--copper-bright);}
   /* Tah 1,5 px na obrazovce: 1,5 ÷ 22 × 24 (hlídá test-tahy). */
@@ -2540,7 +2540,7 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    prodává), obec a okres jsou řádek pod ním — tak to má Sreality a dává
    to smysl i tady: ve výpisu jednoho okresu stálo dvacetkrát pod sebou
    totéž jméno obce vysázené jako nadpis. */
-.opp-place{font-family:var(--font-ui); font-size:13.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:0; color:var(--text-ondark); max-width:100%;}/* Barevná odrážka podle kategorie (prodej/dražba/exekuce…) — rychlá orientace v seznamu */
+.opp-place{font-family:var(--font-ui); font-size:14px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:0; color:var(--text-ondark); max-width:100%;}/* Barevná odrážka podle kategorie (prodej/dražba/exekuce…) — rychlá orientace v seznamu */
 
 /* Podřádek „co to je" — jeden řádek, konzistentní, ořízne se tečkami */
 /* Řádek s okresem (poloha) — víc informací, jemně pod názvem */
@@ -3366,7 +3366,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
      je to jediný roh, který není ani u srdíčka, ani ve středu fotky,
      kam míří prst (celé zdůvodnění je u .opp-skryt níž). Dole vlevo
      se nebije s ničím a je to i to, co na snímku z telefonu stojí. */
-  .opp-badge{top:auto; bottom:9px; left:9px; font-size:12.5px; padding:4px 10px 4px 8px; gap:4px;}
+  .opp-badge{top:auto; bottom:9px; left:9px; font-size:13px; padding:4px 10px 4px 8px; gap:4px;}
   .opp-badge::before{width:7px; height:7px;}
   .opp-count{display:inline-flex;}     /* počet fotek se do velkého náhledu vejde */
   /* 38 px: dotykové minimum je 36, a na velké fotce smí být terč větší. */
@@ -3374,7 +3374,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   .opp-media .opp-fav svg{width:18px; height:18px; stroke-width:2.1;}
   .opp-body{padding:12px 0 0;}
   .opp-chips{gap:4px;}
-  .opp-chips > span{font-size:12.5px; padding:4px 8px;}
+  .opp-chips > span{font-size:13px; padding:4px 8px;}
   .opp-figures{gap:6px 10px;}
   /* Cena je největší písmo na kartě — na širší kartě je na ni místo,
      tak je větší než v řádkové podobě (20 px). */
@@ -3383,7 +3383,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   .opp-druh{font-size:17px;}
   .opp-place{font-size:14px;}
   .opp-meta{margin-top:2px;}
-  .opp-meta .opp-loc, .opp-meta .opp-sub{font-size:13.5px;}
+  .opp-meta .opp-loc, .opp-meta .opp-sub{font-size:14px;}
   /* VÝPIS BEZ ZÁPORNÝCH OKRAJŮ. Jsou tam jen proto, aby `overflow-y:auto`
      neodřízl zdvih karty pod myší — a tady výpis nic neřeže (má
      `overflow:visible` a `flex:none`, viz výš). Bez nich má karta celou
@@ -5684,7 +5684,7 @@ body > footer{flex:none;}
   .mcr-ic{width:30px; height:30px;}
   .mcr-ic svg{width:17px; height:17px; stroke-width:2.12;}   /* 1,5 ÷ 17 × 24 */
   .mc-akce{gap:6px;}
-  .mc-skryte{min-height:32px; padding:0 10px; font-size:12.5px;}
+  .mc-skryte{min-height:32px; padding:0 10px; font-size:13px;}
 }
 
 /* =====================================================================
@@ -6189,9 +6189,9 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 /* Varování u předvyplněného parcelního čísla v podkladu pro smlouvu.
    Táž barva jako odznak „k ověření" — není to chyba ani potvrzení, je
    to pokyn něco zkontrolovat. */
-.sml-pozn-overit{display:block; margin-top:4px; font-size:12.5px; font-weight:400;
+.sml-pozn-overit{display:block; margin-top:4px; font-size:13px; font-weight:400;
   line-height:1.45; color:#7C5105;}
-.pz-spec-pozn{display:block; margin-top:2px; font-size:12.5px; font-weight:400;
+.pz-spec-pozn{display:block; margin-top:2px; font-size:13px; font-weight:400;
   line-height:1.4; color:var(--text-ondark-mute);}
 .pz-historie{margin-top:14px; border-top:1px solid var(--line); padding-top:12px;}
 .pz-hist-nadpis{margin:0; font-size:14px; font-weight:600; color:var(--text-ondark);}
@@ -6210,7 +6210,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 .pz-hist-zmena.dolu{color:var(--c-ok-ink);}
 .pz-hist-zmena.nahoru{color:var(--c-drazba-ink);}
 .pz-hist-zmena.overit{color:#7C5105;}
-.pz-hist-pozn{margin:8px 0 0; font-size:12.5px; line-height:1.5; color:var(--text-ondark-mute);}
+.pz-hist-pozn{margin:8px 0 0; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
 .opp-zlevneno{color:var(--c-ok-ink); border:1px solid currentColor;}
 .opp-zdrazeno{color:var(--c-drazba-ink); border:1px solid currentColor;}
 .por-pozn{font-size:13px; line-height:1.55; color:var(--text-ondark-mute);
@@ -6292,10 +6292,10 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 .sml-upozorneni h2{font-family:var(--font-display); font-size:22px; line-height:1.2; margin:0 0 10px;}
 .sml-upozorneni p{font-size:15px; line-height:1.6; margin:0 0 10px; max-width:var(--m-text);}
 .sml-upozorneni p:last-child{margin-bottom:0;}
-.sml-soukromi{font-size:13.5px; color:var(--text-ondark-mute);}
+.sml-soukromi{font-size:14px; color:var(--text-ondark-mute);}
 
 .sml-karta-form{margin-bottom:20px;}
-.sml-predvypln{font-size:13.5px; line-height:1.55; margin:0 0 20px; padding:10px 12px;
+.sml-predvypln{font-size:14px; line-height:1.55; margin:0 0 20px; padding:10px 12px;
   border-radius:var(--r-ovladani); background:var(--surface-2); color:var(--text-ondark-mute);}
 .sml-blok{border:0; padding:0; margin:0 0 24px;}
 .sml-blok:last-child{margin-bottom:0;}

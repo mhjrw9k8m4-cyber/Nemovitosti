@@ -4694,6 +4694,47 @@ a tím ji nedokázalo:
   `130×39 .btn-primary „Otevřít mapu" · porovnani.html`.
 - Po vrácení oprav zase zelená, obojí.
 
+## 3bu. NALEZENO: dvanáct půlpixelových velikostí písma — a pravidlo, které je nemohlo vidět — *opraveno 13. 10.*
+
+Třetí věc ze stejného auditu, a stejného druhu: `test-typografie.mjs`
+hlídá, že **se žádné dvě velikosti písma neliší o jediný pixel** — s tím,
+že platí jen od 20 px výš, protože pod tím jsou sousední hodnoty
+(12/13/14) chtěné a smysluplné. To je správná úvaha. Jen má dno:
+v té dovolené oblasti sedělo
+
+- **12,5 px** — 7× (nabídka v hlavičce, odznak na kartě, štítky, poznámka
+  u ověření, poznámka u parametru, poznámka u historie ceny, „skryté" na
+  mapě),
+- **13,5 px** — 4× (místo na kartě, místo a podtitul ve výpisu,
+  soukromí a předvyplnění u kupní smlouvy),
+- **14,5 px** — 1× (vložený styl v `predloha.html`).
+
+Mezi 12 a 13 tedy byla třetí velikost o půl pixelu, a mezi 13 a 14 taky.
+**Půlpixel nikdo nerozhodl** — takhle se dolaďuje jedno místo, když se
+někomu zdá 12 malé a 13 velké, a kdo pak přidává pravidlo, opíše to dál.
+Pravidlo o jednom pixelu to nezachytilo, protože hlídá rozdíl **rovný
+jednomu** a až od dvaceti.
+
+Velikost písma je od teď **celé číslo pixelů**: 12,5 → 13, 13,5 → 14,
+14,5 → 15. Posun o půl pixelu, nic se nepřeskládalo.
+
+**Relativní velikosti tím nejsou dotčené** a je to v komentáři napsané:
+`.ext-ikona` má `font-size:0.9em`, protože šipka ↗ má růst s písmem
+svého odkazu — vyjde z toho 11,7 px a mobilní sonda to ohlásila jako
+drobný text. Je to jedna dekorativní značka s `aria-hidden`, ne
+velikost v soustavě. Zůstává.
+
+### Pojistka
+
+Nová věta v `test-typografie.mjs`: „velikosti písma jsou celé pixely
+(půlpixel je vždycky nehoda)", se seznamem souborů u každé hodnoty.
+Hned při prvním spuštění našla **dvanáctou** velikost, kterou jsem ve
+stylopisu minul — `14.5px` ve vloženém stylu `predloha.html` —
+protože měří všechny živé stránky, ne jen `css/styles.css`.
+
+Ověřeno sabotáží: 13px zpátky na 12,5px → `✕ velikosti písma jsou celé
+pixely … 12.5px`. Po vrácení 7 v pořádku, 0 chyb.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

@@ -87,7 +87,22 @@ const duplicity = [...podleCisla.values()].filter((a) => a.length > 1);
 pravda('a žádné číslo není v souboru dvakrát v jiné podobě',
   duplicity.length === 0, duplicity.map((a) => a.join(' = ')).join(' | '));
 
-/* ---- 3) velikosti písma: žádné dvě o pixel od sebe ---- */
+/* ---- 3) velikosti písma: celé pixely a žádné dvě o pixel od sebe ----
+   PŮLPIXEL NENÍ ROZHODNUTÍ. Pravidlo o jednom pixelu níž platilo až od
+   20 px — pod tím jsou sousední hodnoty (12/13/14) v pořádku a chtěné.
+   Jenže právě v té dovolené oblasti sedělo 12,5px (7×) a 13,5px (4×):
+   mezi 12 a 13 byla třetí velikost o půl pixelu a mezi 13 a 14 taky.
+   To nikdo nerozhodl — tak se dolaďuje jedno místo, když se někomu zdá
+   12 malé a 13 velké, a kdo pak přidává pravidlo, opíše to dál.
+   Velikost písma je proto celé číslo pixelů. Relativní velikosti (em)
+   tím nejsou dotčené: .ext-ikona má 0.9em, protože šipka ↗ má růst
+   s písmem svého odkazu, a vyjde z toho 11,7 px — to je jedna
+   dekorativní značka s aria-hidden, ne velikost v soustavě. */
+const necele = [...velikosti.keys()].filter((v) => !Number.isInteger(Number(v)));
+pravda('velikosti písma jsou celé pixely (půlpixel je vždycky nehoda)',
+  necele.length === 0,
+  necele.map((v) => `${v}px (${velikosti.get(v).join(', ')})`).join('\n      '));
+
 const cisla = [...velikosti.keys()].map(Number).sort((a, b) => a - b);
 const blizke = [];
 for (let i = 1; i < cisla.length; i++) {
