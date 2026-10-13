@@ -166,7 +166,7 @@ export function html(skupiny, token) {
   ];
   for (const g of skupiny) {
     if (!g.nove.length) continue;
-    kusy.push(`<h2 style="font-size:17px;margin:22px 0 8px">${esc(g.label || 'Uložené hledání')} `
+    kusy.push(`<h2 style="font-size:17px;margin:20px 0 8px">${esc(g.label || 'Uložené hledání')} `
       + `<span style="font-weight:400;color:#4A5750">(${g.celkem})</span></h2>`);
     for (const d of g.nove.slice(0, MAX_V_MAILU)) {
       const p = popisNabidky(d);

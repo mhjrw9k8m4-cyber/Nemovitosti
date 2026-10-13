@@ -4563,9 +4563,79 @@ s prahem dlaždic a prahem okresů u cen.)
 
 ### Zkoušky
 
-**97 neprohlížečových** a **102 prohlížečových** kontrol zelených.
+**98 neprohlížečových** a **103 prohlížečových** kontrol zelených.
 Obě chyby, které předtím shodily CI (`testy` i `v-prohlizeci`), jsou
 opravené u kořene, ne obejité.
+
+## 3bs. NA PŘÁNÍ (pokračování): jedna stupnice odstupů — osmnáct vymyšlených hodnot pryč — *13. 10.*
+
+Tohle není nález z obrazovky, ale ze zdroje. Hledal jsem v mobilním
+auditu, co kde přetéká, a při tom se ukázalo něco horšího než
+přetečení: **odstupy na webu neměly žádnou soustavu.**
+
+### Co se naměřilo
+
+V `css/styles.css` bylo 29 různých hodnot odstupu, z toho **18 mimo
+jakoukoli stupnici** — 3, 5, 7, 9, 11, 13, 15, 18, 22, 26, 30, 34, 38,
+42, 44, 50, 52 a 128 px, celkem **77 výskytů**. Ve vložených stylech
+a v `style="…"` na ručních stránkách a v generátorech dalších **32**.
+
+Na obrazovce je rozdíl mezi 18 a 20 px nepostřehnutelný. Problém není
+vidět, je v hlavě: **když má odstup libovolnou hodnotu, nejde se při
+psaní stylu o nic opřít** — každé nové místo si vymyslí vlastní číslo
+a po pár měsících má web 29 druhů mezery, kterou nikdo neumí
+pojmenovat. Proto ty hodnoty vznikly: ne rozhodnutím, ale doladěním
+jednoho místa bez ohledu na ostatní.
+
+### Stupnice
+
+Po dvou px dole, kde je rozdíl vidět, po čtyřech a osmi nahoře, kde
+už ne:
+
+```
+0  1  2  4  6  8  10  12  14  16  20  24  28  32  40  48  56  64  80  96  128
+```
+
+1 px je vlasová linka (rámeček, podtržení), ne odstup. Hodnoty uvnitř
+`var(--x, 85px)` jsou rozměry — výška hlavičky — a nepočítají se.
+
+Všech 109 výskytů mimo stupnici je přepsaných na nejbližší hodnotu,
+která v ní je. Největší posun je 2 px, většina 1 px — nic se
+nepřeskládalo, jen se to dá od teď číst.
+
+### Dva vedlejší nálezy, které z toho vypadly
+
+**Poznámky pod nadpisy stály 2 px vedle.** `.okr-more` měla
+`margin:12px 2px 0` a stejný stranový posun měly čtyři vložené styly.
+Mobilní sonda to změřila jako třetí svislici obsahu: **0, 20 a 22 px**
+místo dvou. Na pěti typech stránek — ceny, kraje, okresy, dražby,
+novinky — se tedy jedna věta pod nadpisem lišila o 2 px od všeho
+ostatního. Stranový posun je pryč, svislice jsou dvě.
+
+**Porovnávací tabulka nepřetéká — MYLNÝ NÁLEZ.** Sonda ohlásila
+`.por-tab 21..793` na 390px okně, což vypadalo jako 772px tabulka
+vystrčená ze stránky. Doměřeno: `document.scrollWidth` je 390 =
+`clientWidth`, tabulka sedí v `.por-tab-obal` s `overflow-x:auto`
+a prvním přilepeným sloupcem. Chyba byla v sondě, ne na webu — sonda
+hlásila každý prvek, který kouká z okna, i když ho drží posuvný
+kontejner. Opraveno v sondě; **na webu nebylo co opravovat.** Žádná
+z 32 kontrolovaných stránek dokument nepřetéká.
+
+### Pojistka
+
+`scripts/test-odstupy.mjs` čte stylopis, ruční stránky (vložený styl
+i `style="…"`) a generátory HTML — 83 souborů — a padne na každé
+hodnotě mimo stupnici, s číslem řádku. `build-og.mjs` je venku a je
+u toho napsané proč: kreslí náhled pro sdílení 1200×630 px, kde jsou
+odstupy ve vlastní soustavě.
+
+Ověřeno sabotáží: do `.okr-more` jsem vložil `margin:17px` a zkouška
+ohlásila `css/styles.css:4268  17px  margin:17px 2px 0`. Po vrácení
+zase zelená.
+
+V komentáři zkoušky je napsané to hlavní: **když nový odstup do
+stupnice nepatří, nepřidávej ho tam** — vyber nejbližší hodnotu, která
+tam je. Stupnice má cenu jen potud, pokud se nerozšiřuje.
 
 ## Co naopak nechybí
 
