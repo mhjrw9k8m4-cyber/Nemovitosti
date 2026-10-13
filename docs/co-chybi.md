@@ -4637,6 +4637,63 @@ V komentáři zkoušky je napsané to hlavní: **když nový odstup do
 stupnice nepatří, nepřidávej ho tam** — vyber nejbližší hodnotu, která
 tam je. Stupnice má cenu jen potud, pokud se nerozšiřuje.
 
+## 3bt. NALEZENO: zkouška dotykových terčů měřila 5 stránek z 32 — na zbylých bylo pět terčů pod mezí — *opraveno 13. 10.*
+
+Ten samý mobilní audit. `scripts/test-dotyk.mjs` existuje dávno a mez
+má správnou — **44 px, tedy normu, ne slevu z ní**, a je u toho
+napsané, proč tam dřív stála 36. Jenže měřila `index.html`,
+`pridat.html`, `pozemky-okres-tabor.html`, `kontakt.html`
+a `hlidani.html`. **Pět stránek z třiceti dvou.**
+
+Doměřeno sondou se stejnou logikou (stejné selektory, stejná mez,
+stejný terč u zaškrtávátek) na všech ručních stránkách:
+
+| terč | rozměr | stránka |
+|---|---|---|
+| „Přidat druhého prodávajícího" | 211×33 | kupni-smlouva-pozemek.html |
+| „Přidat druhého kupujícího" | 191×33 | kupni-smlouva-pozemek.html |
+| zaškrtávátko „Zástavní právo" | 292×22 | kupni-smlouva-pozemek.html |
+| „Odhlásit" | 42×44 | muj-inzerat.html |
+| „Otevřít mapu" | 130×39 | porovnani.html |
+
+**Pět terčů, a ani jeden na stránce, na kterou se ta zkouška kdy
+podívala.** Mez byla pravdivá, jen slepá — čtvrtý případ téhož druhu
+za dva dny (práh dlaždic, práh okresů u cen, existence podílu u shody).
+
+### Příčina u kořene, ne pět záplat
+
+Tři z pěti mají jednu příčinu: **`.btn-primary` ani `.btn-secondary`
+neměly `min-height` vůbec.** Výška vycházela z 10px odsazení a řádku,
+tedy 39 a 41 px, a jakmile někde kleslo písmo nebo odsazení
+(`.sml-akce .btn-secondary` má 13px/10px), spadl terč na 33. Výška
+tlačítka je součást tlačítka, ne výsledek odsazení — obě teď mají
+`min-height:44px` a `.btn-primary` k tomu zarovnání na střed, aby
+text uprostřed té výšky seděl.
+
+Zbylé dva:
+
+- **Zaškrtávátka u kupní smlouvy.** Terč je celý `<label>`, ne 20px
+  vstup uvnitř — a `.sml-volba` byla 22 px vysoká. Teď 44.
+- **„Odhlásit" na mém inzerátu.** Výška se tu kdysi spravila
+  (`@media (pointer: coarse)` → `min-height:44px`), **šířka ne**: pod
+  480 px se skrývá text a zůstane jen ikona, takže terč měl 42×44.
+  Mez platí pro obě strany.
+
+### Pojistka
+
+Seznam stránek v `test-dotyk.mjs` je rozšířený z 5 na **34** — všechny
+ruční stránky a po jedné z každého druhu vyrobených (okres, kraj,
+rozpočet, rozcestník); mezi sebou se liší jen daty.
+
+Ověřeno sabotáží dvakrát, protože první kolo jednu opravu nevrátilo
+a tím ji nedokázalo:
+
+- Vráceny tři opravy → zkouška ohlásila `211×33`, `191×33`, `292×22`
+  a `42×44` s názvy stránek.
+- Vrácena zvlášť jen `.btn-primary` → zkouška ohlásila
+  `130×39 .btn-primary „Otevřít mapu" · porovnani.html`.
+- Po vrácení oprav zase zelená, obojí.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

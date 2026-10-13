@@ -1358,7 +1358,15 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    vyskakovalo přes obsah uprostřed čtení a říkalo totéž, co je vidět
    v hlavičce. Upozornění patří nahoru, ne doprostřed obrazovky. */
 
-.btn-primary{background:var(--brand-grad); background-color:var(--plocha-znacka); color:#fff; font-weight:700; font-size:14px; padding:10px 20px; border-radius:var(--r-ovladani); text-decoration:none; border:1px solid rgba(31,81,56,0.55); box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease); white-space:nowrap; cursor:pointer;}
+/* VÝŠKA TLAČÍTKA JE SOUČÁST TLAČÍTKA, ne výsledek odsazení.
+   .btn-primary a .btn-secondary dřív neměly min-height vůbec: výška
+   vycházela z 10px odsazení a řádku, tedy 39 a 41 px. Jakmile někde
+   kleslo písmo nebo odsazení (.sml-akce .btn-secondary má 13px/10px),
+   spadl terč na 33 px — a test dotykových terčů to nehlásil, protože
+   měřil pět stránek z třiceti dvou. 44 px je mez, kterou si ten test
+   drží; tady je napsaná jednou pro všechna tlačítka. */
+.btn-primary{background:var(--brand-grad); background-color:var(--plocha-znacka); color:#fff; font-weight:700; font-size:14px; padding:10px 20px; border-radius:var(--r-ovladani);
+  display:inline-flex; align-items:center; justify-content:center; min-height:44px; text-decoration:none; border:1px solid rgba(31,81,56,0.55); box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease); white-space:nowrap; cursor:pointer;}
 .btn-primary:hover{filter:brightness(1.06); box-shadow:var(--glow-lg);}
 /* Obrysy ovládacích prvků drží alfu 0,6. Při 0,4 vyjde proti bílé kontrast
    2,07:1 a při 0,28 dokonce 1,66:1 — a u tlačítka, které je bílé na bílém,
@@ -1374,7 +1382,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    primary/ghost). Tady je pro celý web: plná zelená pro jednu hlavní akci,
    obrys pro tu vedlejší. */
 .btn-secondary{display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  background:#fff; color:var(--copper-bright); font-weight:700; font-size:14px; padding:10px 20px;
+  min-height:44px; background:#fff; color:var(--copper-bright); font-weight:700; font-size:14px; padding:10px 20px;
   border-radius:var(--r-ovladani); text-decoration:none; border:1.5px solid var(--obrys-tlacitka);
   box-shadow:var(--e1); cursor:pointer; white-space:nowrap;
   transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
@@ -6306,7 +6314,8 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   background:var(--plocha-plovouci-plna); color:inherit;}
 .sml-pole input:focus-visible, .sml-pole select:focus-visible{
   outline:2px solid var(--copper-bright); outline-offset:2px;}
-.sml-volba{display:flex; align-items:center; gap:10px; font-size:14px;}
+/* Terč je celý <label>, ne jen 20px zaškrtávátko — a ten měl 22 px. */
+.sml-volba{display:flex; align-items:center; gap:10px; font-size:14px; min-height:44px;}
 .sml-volba input[type=checkbox]{width:20px; height:20px; accent-color:var(--copper-bright); cursor:pointer;}
 .sml-napoveda{font-size:13px; line-height:1.55; color:var(--text-ondark-mute);
   margin:4px 0 0; max-width:var(--m-text);}

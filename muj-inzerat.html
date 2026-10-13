@@ -38,7 +38,7 @@
        souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=a74422bc">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=b19d29ca">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:var(--r-lg); padding:24px 20px 20px;
@@ -166,7 +166,9 @@
        Platí jen na dotykových displejích, aby se na počítači nic
        nezvětšovalo zbytečně. */
     @media (pointer: coarse) {
-      .pf-logout{min-height:44px;}
+      /* I ŠÍŘKA. Výška se tu spravila, šířka ne: pod 480 px je vidět jen
+         ikona (span se skrývá) a terč měl 42×44. Mez platí pro obě strany. */
+      .pf-logout{min-height:44px; min-width:44px; justify-content:center;}
     }
       /* Rezerva viz komentář u #mi-dole v těle stránky. */
     #mi-dole{min-height:354px;}

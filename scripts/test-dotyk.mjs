@@ -20,8 +20,28 @@ const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 /* hlidani.html je tu kvůli přepínači „Posílat e-mailem": vykresluje se
    jen přihlášenému a jen se zapnutou vlajkou, takže by se bez obojího
    nikdy nezměřil — a právě on byl pod normou. */
-const STRANKY = ['index.html', 'pridat.html', 'pozemky-okres-tabor.html',
-  'kontakt.html', 'hlidani.html'];
+/* VŠECHNY RUČNÍ STRÁNKY, ne pět vybraných. Pět jich tu stálo od začátku
+   a mez 44 px držely — jen se nikdy nezměřilo zbylých dvacet sedm.
+   Doměřeno sondou 13. 10.: pod mezí bylo pět terčů, všechny na
+   stránkách, na které se tenhle test nikdy nepodíval — „Přidat druhého
+   prodávajícího" 211×33 a „Přidat druhého kupujícího" 191×33
+   (.btn-secondary bez vlastní výšky), zaškrtávátko zástav 292×22 (terč
+   je celý <label>, a ten měl 22 px), „Odhlásit" 42×44 (výška se kdysi
+   spravila, šířka ne) a „Otevřít mapu" 130×39 (.btn-primary bez vlastní
+   výšky). Mez byla pravdivá, jen slepá. Z vyrobených stránek stačí po
+   jedné z každého druhu — mezi sebou se liší jen daty. */
+const STRANKY = ['index.html', 'pridat.html', 'kontakt.html', 'hlidani.html',
+  '404.html', 'cena-pozemku.html', 'data.html', 'drazby-pozemku.html',
+  'drazby-pozemku-nabidky.html', 'exekuce-pozemku.html', 'hypoteka-na-pozemek.html',
+  'inzerce.html', 'kolik-stoji-koupe-pozemku.html', 'kupni-smlouva-pozemek.html',
+  'list-vlastnictvi-katastr.html', 'moje-data.html', 'muj-inzerat.html',
+  'na-co-mam-pozemek.html', 'nove-pozemky.html', 'ochrana-udaju.html',
+  'odhlasit-maily.html', 'podminky.html', 'porovnani.html', 'pozemek.html',
+  'pravidla-inzerce.html', 'pristupova-cesta-pozemek.html',
+  'stavebni-vs-zemedelsky-pozemek.html', 'uzemni-plan-pozemek.html',
+  'vecne-bremeno-pozemek.html', 'zpravy.html',
+  'pozemky-okres-tabor.html', 'pozemky-stredocesky-kraj.html',
+  'pozemky-do-500-tisic.html', 'pozemky-podle-okresu.html'];
 /* MEZ JE 44 — tedy norma, ne sleva z ní. Stála tu 36 s poznámkou
    „nižší než doporučených 44, ale vyšší než dnešní stav": ráčna nasazená
    proto, aby aspoň něco držela, dokud se web nespraví.
