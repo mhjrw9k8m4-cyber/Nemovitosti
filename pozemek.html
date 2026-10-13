@@ -91,15 +91,11 @@
     .pz-media .opp-count{position:absolute; right:13px; bottom:13px; left:auto; z-index:3; display:inline-flex;}
 
     .pz-head{margin:20px 0 0;}
-    /* NADPIS A CENA BEZPATKOVĚ. Patkové písmo + pastelové desky dávaly
-       dohromady dojem časopisu o přírodě, ne inzerátu s nemovitostí.
-       Velké zahraniční weby (Zillow, Rightmove, Idealista) sázejí celý
-       inzerát jedním bezpatkovým písmem a rozdíl dělají velikostí
-       a tučností, ne druhou rodinou. */
+    /* Nadpis i cena bezpatkově: patkové písmo s pastelovými deskami
+       dávalo časopis o přírodě, ne inzerát. Rozdíl dělá velikost
+       a tučnost, ne druhá rodina písma. */
     .pz-place{font-family:var(--font-ui); font-size:28px; font-weight:700; letter-spacing:-0.02em; color:var(--text-ondark); line-height:1.15;}
-    /* Nadpis je dlouhý („Ostatní plocha 14 272 m² — Lukavec u Lovosic")
-       a na telefonu se lámal mezi číslo a jednotku. Zalomení se rozloží
-       do vyrovnaných řádků a na úzkém displeji je o dva stupně menší. */
+    /* Dlouhý nadpis se na telefonu lámal mezi číslo a jednotku. */
     @media (max-width:560px){ .pz-place{font-size:24px;} }
     .pz-place{text-wrap:balance;}
     .pz-okres{display:flex; align-items:center; gap:6px; font-size:15px; color:var(--text-ondark-mute); margin-top:6px;}
@@ -114,38 +110,24 @@
     .pz-price .pv{font-family:var(--font-ui); font-size:38px; font-weight:700; letter-spacing:-0.03em; color:var(--text-ondark); font-variant-numeric:tabular-nums; line-height:1;}
     .pz-price .pm{font-size:15px; font-weight:600; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
 
-    /* BARVU VERDIKTU NESE KARTA, ne seznam u každého prvku zvlášť.
-       Odznak i pruh stupnice ji měly vypsanou každý po svém — a obojí
-       vyjmenovávalo good/mid/bad a na „warn" (cena k ověření) zapomnělo.
-       Změřeno: odznak i pruh u warn měly pozadí rgba(0, 0, 0, 0).
-       Text jde s barvou, protože tmavý text na modré „Výhodné ceně"
-       dával 3,11 : 1 proti normě 4,5 pro drobné tučné písmo. Naměřené
-       kontrasty: sale #4361B8 s bílou 5,77 · drazba #CC6B33 s tmavou
-       4,88 · exekuce #8C2F1E s bílou 8,27 · warn #8A5512 s bílou 6,20. */
-    /* DESKA JE BÍLÁ, BARVU NESE PROUŽEK A ODZNAK.
-       Panely byly vybarvené naplocho (zelená pro výhodnou cenu,
-       oranžová pro dražbu) a pod sebou z toho byla barevná skládanka.
-       Tohle je tvar, který mají velké zahraniční weby: bílá karta,
-       tenká šedá linka kolem a svislý proužek v barvě významu. Barva
-       tím nezmizela, jen přestala přebíjet text — a kontrast textu
-       stoupl, protože dark-on-white je nejvyšší, jaký jde mít. */
+    /* BARVU VERDIKTU NESE KARTA, ne každý prvek zvlášť: odznak i pruh
+       si ji vypisovaly po svém a na „warn" obě zapomněly (pozadí
+       rgba(0,0,0,0)). Text jde s barvou — tmavý na modré dával 3,11 : 1
+       proti normě 4,5. Kontrasty s bílou: sale 5,77 · exekuce 8,27 ·
+       warn 6,20. */
+    /* DESKA JE BÍLÁ, BARVU NESE PROUŽEK A ODZNAK. Vybarvené panely pod
+       sebou dělaly barevnou skládanku. Barva nezmizela, jen přestala
+       přebíjet text — a kontrast stoupl na nejvyšší možný. */
     .pz-verdict{--vc:var(--copper-bright); --vt:#fff;
       margin:20px 0 0; padding:16px; border-radius:var(--r-plocha);
       background:#fff; border:1px solid var(--line); border-left:3px solid var(--vc); box-shadow:var(--e1);}
-    /* VERDIKT O CENĚ NENÍ KATEGORIE. „Výhodná cena" tu nosila --c-sale,
-       tedy MODROU, kterou má na mapě i v odznaku význam „na prodej" —
-       a v paletce u ní stojí výslovně: zelená = „v pořádku", NE kategorie
-       „na prodej". Panel kolem byl přitom celou dobu zelený (tón
-       75,169,125), takže si odznak a jeho vlastní deska protiřečily.
+    /* VERDIKT O CENĚ NENÍ KATEGORIE: „Výhodná cena" nosila --c-sale,
+       tedy modrou, která jinde znamená „na prodej". Zelená = v pořádku.
        Bílá na #13663E dává 7,01 : 1 (dřív 5,77 na modré). */
     .pz-verdict.good{--vc:var(--c-ok-ink);}
-    /* ODZNAK JE PODKLAD, NE TEXT. Oranžová --c-drazba je kategorijní barva
-       pro dražbu; jako POZADÍ drobného odznaku nestačí ani s nejtmavším
-       inkoustem (#CC6B33 + #14231C = 4,44 : 1, norma žádá 4,5). Dřív to
-       držel napevno zapsaný odstín #0c1a12 (4,88), tedy barva mimo paletu
-       — a při převodu na token o pět setin spadl pod normu. Správné
-       řešení je totéž, co u „good": na podklad jde tmavší odstín z řady
-       (--c-drazba-ink) a text zůstane bílý (8,25 : 1). */
+    /* ODZNAK JE PODKLAD, NE TEXT. Oranžová --c-drazba jako pozadí
+       drobného odznaku nestačí ani s nejtmavším inkoustem (4,44 : 1,
+       norma 4,5). Na podklad jde --c-drazba-ink, text bílý (8,25 : 1). */
     .pz-verdict.mid{--vc:var(--c-drazba-ink);}
     .pz-verdict.bad{--vc:var(--c-exekuce);}
     /* Přestěhováno z css/styles.css: tatáž třída ze dvou souborů se
@@ -322,8 +304,7 @@
        dnů se zesílí, po termínu zšedne. */
     .pz-drazba{margin:20px 0 2px; padding:16px; border-radius:var(--r-plocha);
       background:#fff; border:1px solid var(--line); border-left:3px solid var(--c-drazba-ink); box-shadow:var(--e1);}
-    /* Do sedmi dnů proužek zesílí, po termínu zšedne. Naléhavost nese
-       tloušťka a barva proužku, ne vybarvení celé desky. */
+    /* Naléhavost nese tloušťka a barva proužku, ne vybarvení desky. */
     .pz-drazba.blizko{border-left-width:5px;}
     .pz-drazba.prosle{border-left-color:var(--line-ui); background:var(--ink-soft2); box-shadow:none;}
     .pzd-hlava{display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; color:var(--c-drazba-ink);}
@@ -333,8 +314,8 @@
     .pzd-kdy{font-size:13px; font-weight:600; color:var(--text-ondark-mute);}
     .pzd-pozn{margin:6px 0 0; font-size:13px; line-height:1.55; color:var(--text-ondark-mute);}
     .pzd-pozn b{color:var(--text-ondark);}
-    /* Tlačítko je neutrální, ne oranžové: oranžová na stránce znamená
-       „dražba", a když ji nese i tlačítko, tváří se jako výstraha. */
+    /* Neutrální, ne oranžové: oranžová tu znamená „dražba" a na
+       tlačítku by se tvářila jako výstraha. */
     .pzd-odkaz{display:inline-flex; align-items:center; gap:8px; min-height:44px; margin-top:12px;
       padding:0 16px; border-radius:var(--r-ovladani); background:#fff;
       border:1px solid var(--obrys-tlacitka); color:var(--text-ondark);
@@ -450,9 +431,7 @@
        Obě barvy web má, obě jsou plochy, žádná nová do palety nepřibyla.
        Naměřeno: na stránce pozemku byly tyhle dvě desky (688×562
        a 688×450 px) největší placky na stránce. */
-    /* Deska je bílá, ne přelitá do zelena: barevné plochy pod sebou dělaly
-       ze stránky skládanku. Jeden podklad pro všechny oddíly, rozdíl
-       dělá linka a odstup. */
+    /* Jeden podklad pro všechny oddíly, rozdíl dělá linka a odstup. */
     .pz-gtk{background:#fff; border:1px solid var(--line); border-radius:var(--r-plocha); padding:16px;}
     .pz-gtk .g-row{display:flex; flex-direction:column; gap:2px; padding:10px 0; border-bottom:1px solid var(--line);}
     .pz-gtk .g-row:first-child{padding-top:0;} .pz-gtk .g-row:last-of-type{border-bottom:none;}

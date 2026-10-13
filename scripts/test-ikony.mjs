@@ -13,6 +13,7 @@
 // nakonec vyleze na obrazovku — ne co je napsané v CSS.
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { readFileSync } from 'node:fs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -25,7 +26,20 @@ function pravda(popis, vyslo, proc) {
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
 }
 
-const STRANKY = ['index.html', 'pozemek.html?p=Police%7C6242%7CVset%C3%ADn&ll=48.97,15.63',
+/* ADRESA POZEMKU SE BERE Z DAT, NE NAPEVNO. Stála tu konkrétní parcela
+   (Police 6242 m² na Vsetínsku) a ta se jednoho dne z nabídek ztratila —
+   stránka se vykreslila prázdná, špendlíky nebyly a zkouška spadla, aniž
+   se v kódu cokoli změnilo. Bere se proto první pozemek, který má polohu
+   i cenu; pojistka níž hlídá, že vůbec nějaký je. */
+function adresaPrvnihoPozemku() {
+  const d = (JSON.parse(readFileSync('data/opportunities.json', 'utf8')).opportunities || [])
+    .find((x) => typeof x.lat === 'number' && typeof x.lng === 'number' && x.price > 0);
+  if (!d) return null;
+  const klic = [d.place || '', d.parcel || '', d.okres || '', d.lat.toFixed(3), d.lng.toFixed(3)].join('|');
+  return `pozemek.html?p=${encodeURIComponent(klic)}&ll=${d.lat},${d.lng}`;
+}
+const POZEMEK = adresaPrvnihoPozemku();
+const STRANKY = ['index.html', POZEMEK || 'pozemek.html',
   'kontakt.html', 'zpravy.html', 'muj-inzerat.html'];
 
 const PRAZDNA = Buffer.from(
@@ -88,6 +102,8 @@ pravda('všechny ikony mají na obrazovce zhruba stejnou stopu', rozpeti <= 0.2,
 pravda('a ta stopa není ani vlasová, ani tučná', min >= 1.2 && max <= 1.9,
   `rozsah ${min}–${max} px`);
 
+pravda('v datech je pozemek, na kterém jde stránka inzerátu otevřít', !!POZEMEK,
+  'žádný pozemek s polohou a cenou — kontrola špendlíků by měřila prázdno');
 // Typický případ ze stránky pozemku: tentýž špendlík na dvou místech.
 const poz = vsechny.filter((i) => i.stranka === 'pozemek.html');
 const spendliky = poz.filter((i) => i.kdo === 'pz-okres' || i.kdo === 'pz-abtn');
