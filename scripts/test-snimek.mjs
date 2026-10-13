@@ -19,11 +19,14 @@
 import { chromium } from 'playwright-core';
 import { readFileSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { adresaPozemku } from './adresa-pozemku.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
 const BASE = 'http://127.0.0.1:8310';
+
+const POZEMEK = adresaPozemku((x) => x.area > 0);
 let ok = 0, chyb = 0;
 const zpravy = [];
 function pravda(popis, vyslo, proc) {
@@ -76,7 +79,9 @@ await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 't
 const p = await ctx.newPage();
 const chyby = [];
 p.on('pageerror', (e) => chyby.push(String(e)));
-await p.goto(`${BASE}/pozemek.html?p=Police%7C6242%7CVset%C3%ADn&ll=48.97,15.63`, { waitUntil: 'domcontentloaded' });
+pravda('v datech je pozemek s polohou, cenou i výměrou', !!POZEMEK,
+  'žádný — kontroly snímku by měřily prázdnou stránku');
+await p.goto(`${BASE}/${POZEMEK ? POZEMEK.url : 'pozemek.html'}`, { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(3200);
 const v = await p.evaluate(() => {
   const s = document.querySelector('.pz-media svg.opp-map');
@@ -106,8 +111,12 @@ pravda('do snímku se nekreslí nic, co by vypadalo jako hranice pozemku',
 pravda('špendlík na přesném bodě zůstal', v.spendlik === true);
 pravda('pod snímkem stojí, kde je přesný obrys',
   /katastr/.test(v.popisText || ''), `popisek: „${v.popisText}"`);
+/* Jméno obce se bere z TOHO pozemku, který se otevřel — napevno
+   napsané „Police" platilo jen do chvíle, než se ta parcela z nabídek
+   ztratila. */
 pravda('a je v něm název místa i výměra',
-  /Police/.test(v.popisText || '') && /ha|m²/.test(v.popisText || ''), v.popisText);
+  !!POZEMEK && v.popisText.indexOf(POZEMEK.d.place) >= 0 && /ha|m²/.test(v.popisText || ''),
+  `popisek „${v.popisText}", čekané místo „${POZEMEK ? POZEMEK.d.place : '—'}"`);
 pravda('popisek se odečítači obrazovky nečte dvakrát', v.popisSkryty === true,
   'název místa je hned pod snímkem v nadpisu — nemá znít dvakrát');
 pravda('při vykreslení snímku nespadl žádný skript', chyby.length === 0, chyby[0]);

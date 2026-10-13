@@ -25,6 +25,7 @@ import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { adresaPozemku } from './adresa-pozemku.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -41,7 +42,9 @@ function pravda(popis, vyslo, proc) {
 // stejné šablony, takže stačí vzorek.
 const STRANKY = [
   'index.html',
-  'pozemek.html?p=Police%7C6242%7CVset%C3%ADn&ll=48.97,15.63',
+  /* Adresa z dat (scripts/adresa-pozemku.mjs): parcela napsaná napevno
+     se jednou z nabídek ztratí a stránka se vykreslí prázdná. */
+  (adresaPozemku() || {}).url || 'pozemek.html',
   'pridat.html', 'hlidani.html', 'zpravy.html',
   'muj-inzerat.html', 'kontakt.html', 'cena-pozemku.html',
   'hypoteka-na-pozemek.html', 'podminky.html', 'pravidla-inzerce.html',

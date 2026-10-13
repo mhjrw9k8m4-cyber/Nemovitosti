@@ -17,6 +17,7 @@ import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { adresaPozemku } from './adresa-pozemku.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -127,7 +128,13 @@ pravda('nějaké barevné puntíky se vůbec vykreslily', uvod.pocetDot > 0,
 pravda('každý puntík má barvu z palety, ne opsanou', cizi.length === 0,
   cizi.map(([k, v]) => `${k} má ${v}`).slice(0, 5).join(', ') + '\n      povolené: ' + [...povolene].join(', '));
 
-const poz = await zjisti(`${BASE}/pozemek.html?p=Police%7C6242%7CVset%C3%ADn&ll=48.97,15.63`);
+/* Adresa z dat, ne napevno: parcela napsaná v adrese se jednou
+   z nabídek ztratí a stránka se vykreslí prázdná (viz
+   scripts/adresa-pozemku.mjs). */
+const POZEMEK = adresaPozemku();
+pravda('v datech je pozemek, na kterém jde stránka inzerátu otevřít', !!POZEMEK,
+  'žádný — kontrola barev na inzerátu by měřila prázdnou stránku');
+const poz = await zjisti(`${BASE}/${POZEMEK ? POZEMEK.url : 'pozemek.html'}`);
 pravda('stránka pozemku čte tytéž proměnné',
   KATEGORIE.every((k) => poz.tok[k] === uvod.tok[k]),
   JSON.stringify(poz.tok) + ' × ' + JSON.stringify(uvod.tok));
