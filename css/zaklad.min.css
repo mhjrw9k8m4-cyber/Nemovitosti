@@ -269,7 +269,7 @@ to{left:var(--w)}
 .gtk-foot{margin:2px 0 0;font-size:12px;line-height:1.45;color:var(--text-ondark-mute);font-style:italic}
 
 .sn-popis{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;flex-direction:column;gap:1px;padding:32px 16px 12px;pointer-events:none;color:#fff;background:linear-gradient(180deg,rgba(12,26,18,0) 0%,rgba(12,26,18,0.55) 55%,rgba(12,26,18,0.85) 100%)}
-.sn-popis b{font-family:var(--font-display);font-size:20px;font-weight:700;line-height:1.15;letter-spacing:-0.01em}
+.sn-popis b{font-family:var(--font-ui);font-size:20px;font-weight:700;line-height:1.15;letter-spacing:-0.02em}
 .sn-popis i{font-style:normal;font-size:13px;color:rgba(255,255,255,0.85)}
 .sn-popis u{text-decoration:none;font-size:12px;letter-spacing:0.02em;color:rgba(255,255,255,0.7);margin-top:2px}
 @media (max-width:560px){.sn-popis{padding:24px 12px 10px}
@@ -1036,6 +1036,7 @@ h1,h2,h3,.section-head h2,.add-hero h1,.okr-hero h1,.clanek .rules-sect h2{lette
 .pz-odhad .mo-rozdil.mo-pochybna{color:var(--text-ondark-mute)}
 .pz-odhad .mo-pozn{color:var(--text-ondark-mute)}
 .pz-odhad .mo-pozn b{color:var(--text-ondark)}
+
 @media (pointer:coarse){.header-cta{min-height:44px}
 .foot-col a{min-height:44px;display:flex;align-items:center;margin-bottom:2px}
 .crumbs a{min-height:44px;display:inline-flex;align-items:center}

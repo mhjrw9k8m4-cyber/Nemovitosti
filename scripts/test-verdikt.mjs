@@ -105,7 +105,13 @@ const barvy = await p.evaluate(() => {
     document.body.appendChild(d);
     const bs = getComputedStyle(d.querySelector('.pv-badge'));
     const ds = getComputedStyle(d);
-    out[cls] = { odznak: bs.backgroundColor, text: bs.color, panel: ds.backgroundColor };
+    /* Deska je nově bílá u všech verdiktů (karta po vzoru velkých
+       inzertních webů: bílý podklad, tenká linka, barevný proužek
+       vlevo). Barvu verdiktu proto nese PROUŽEK, ne výplň — a měří se
+       tedy obojí: proužek jako nositel významu, výplň jen pro doklad,
+       že deska zůstala neutrální. */
+    out[cls] = { odznak: bs.backgroundColor, text: bs.color, panel: ds.backgroundColor,
+      pruh: ds.borderLeftColor, pruhSirka: parseFloat(ds.borderLeftWidth) || 0 };
     d.remove();
   }
   return out;
@@ -145,8 +151,8 @@ pravda('odznak „Vyšší cena" není zelený', !(b[1] > b[0] + 20),
    výš znamená něco jiného.
    Měří se obojí: karta i odznak. Kdyby se odznak vrátil ke kategorii,
    zelená složka přestane převažovat a kontrola spadne. */
-const g = rgb(barvy.good.panel);
-pravda('karta „Výhodná cena" je zelená', g[1] > g[0] + 20,
+const g = rgb(barvy.good.pruh);
+pravda('proužek u „Výhodné ceny" je zelený', g[1] > g[0] + 20,
   `podklad ${barvy.good.panel}`);
 const go = rgb(barvy.good.odznak);
 pravda('a odznak „Výhodná cena" je zelený taky, ne modrý jako kategorie',
@@ -167,13 +173,22 @@ const zaklad = await p.evaluate(() => {
   const d = document.createElement('div');
   d.className = 'pz-verdict';
   document.body.appendChild(d);
-  const v = getComputedStyle(d).backgroundColor;
+  const s = getComputedStyle(d);
+  const v = { panel: s.backgroundColor, pruh: s.borderLeftColor };
   d.remove();
   return v;
 });
+/* Deska musí zůstat u všech stejná a neutrální — kdyby se někomu
+   vrátila barevná výplň, je ze stránky zase skládanka. */
 for (const cls of ['good', 'mid', 'bad', 'warn']) {
-  pravda(`karta „${cls}" má vlastní podklad, ne výchozí`, barvy[cls].panel !== zaklad,
-    `podklad ${barvy[cls].panel} je stejný jako výchozí ${zaklad} — pravidlo se neuplatnilo`);
+  pravda(`deska „${cls}" zůstává neutrální jako výchozí`, barvy[cls].panel === zaklad.panel,
+    `podklad ${barvy[cls].panel}, výchozí ${zaklad.panel}`);
+  pravda(`a proužek „${cls}" je dost silný, aby šel vidět`, barvy[cls].pruhSirka >= 3,
+    `šířka ${barvy[cls].pruhSirka} px`);
+}
+for (const cls of ['good', 'mid', 'bad', 'warn']) {
+  pravda(`karta „${cls}" má vlastní proužek, ne výchozí`, barvy[cls].pruh !== zaklad.pruh,
+    `proužek ${barvy[cls].pruh} je stejný jako výchozí ${zaklad.pruh} — pravidlo se neuplatnilo`);
 }
 
 await prohlizec.close();

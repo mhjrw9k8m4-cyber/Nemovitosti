@@ -918,7 +918,8 @@
       '<div class="pz-media">' + heroLayers(d) + '</div>' +
 
       '<div class="pz-head">' +
-        '<h1 class="pz-place">' + esc(titulStranky() || d.place) + '</h1>' +
+
+        '<h1 class="pz-place">' + esc(titulStranky() || d.place).replace(/(\d)\s+(m²|ha)\b/g, '$1\u00a0$2') + '</h1>' +
         (mistoRadek(d, titulStranky()) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d, titulStranky()) + '</div>' : '') +
         (dalkyText() ? '<div class="pz-dalky">vzdušnou čarou: ' + esc(dalkyText()) + '</div>' : '') +
         (vObciHtml() ? '<div class="pz-vobci">' + vObciHtml() + '</div>' : '') +

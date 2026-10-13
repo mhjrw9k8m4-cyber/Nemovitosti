@@ -1393,7 +1393,13 @@
       '<div class="pz-media">' + heroLayers(d) + '</div>' +
 
       '<div class="pz-head">' +
-        '<h1 class="pz-place">' + esc(titulStranky() || d.place) + '</h1>' +
+        /* NADPIS SE NESMÍ ZLOMIT MEZI ČÍSLO A JEDNOTKU. Na 390px
+           displeji stálo „Ostatní plocha 14 272" na prvním řádku a
+           „m² — Lukavec u Lovosic" na druhém. Mezeru před jednotkou
+           proto nahrazuje nezlomitelná — sazba to dělá všude jinde,
+           tady šel titulek mimo ni (skládá ho generátor do ostrůvku
+           s daty). */
+        '<h1 class="pz-place">' + esc(titulStranky() || d.place).replace(/(\d)\s+(m²|ha)\b/g, '$1\u00a0$2') + '</h1>' +
         (mistoRadek(d, titulStranky()) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d, titulStranky()) + '</div>' : '') +
         (dalkyText() ? '<div class="pz-dalky">vzdušnou čarou: ' + esc(dalkyText()) + '</div>' : '') +
         (vObciHtml() ? '<div class="pz-vobci">' + vObciHtml() + '</div>' : '') +

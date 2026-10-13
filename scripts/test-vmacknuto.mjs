@@ -77,8 +77,17 @@ for (const [w, h] of SIRKY) {
             + ` (obsah ${Math.round(e.scrollHeight)} px)`);
         }
       }
+      /* Posouvat se může SEZNAM, nebo CELÝ SLOUPEC, ve kterém stojí.
+         Na širokém displeji se posouvá sloupec: dokud měl vlastní
+         posuvník jen seznam, ukrajovalo mu ovládání nad ním z výšky
+         natvrdo a nevešla se do něj ani jedna celá karta (naměřeno
+         246 px proti kartě 275 px). Zkoušce jde o to, že se výpis
+         doopravdy posouvá — ne o to, který obal to zařizuje. */
       const seznam = document.getElementById('opp-list');
-      const vypisPosuvny = !!seznam && seznam.scrollHeight > seznam.clientHeight + 4;
+      const posuvny = (e) => !!e && e.scrollHeight > e.clientHeight + 4;
+      const sloupec = seznam && seznam.closest('.map-side');
+      const vypisPosuvny = (posuvny(seznam) || posuvny(sloupec))
+        && !!seznam && seznam.getBoundingClientRect().height > 100;
       return { out, nalezeno, vypisPosuvny };
     });
 

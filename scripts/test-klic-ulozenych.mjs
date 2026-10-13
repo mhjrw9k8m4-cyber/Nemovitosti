@@ -114,7 +114,12 @@ async function sUlozenymi(klice) {
   await page.waitForTimeout(1200);
   const out = await page.evaluate(() => {
     const k = [...document.querySelectorAll('#opp-list > li')].filter((li) => li.querySelector('.opp-body'));
-    return { pocet: k.length, ceny: k.map((x) => (x.innerText.match(/[\d\s ]+Kč/) || [''])[0].trim()) };
+    /* Cena se čte z .opp-price, ne z textu celé karty. Hledání prvního
+       „… Kč" v innerText přestalo platit ve chvíli, kdy karta dostala
+       pořadí podle velkých inzertních webů: nad cenou stojí řádek
+       s výměrou a cenou za metr, takže se napřed trefilo „25 Kč/m²". */
+    return { pocet: k.length,
+      ceny: k.map((x) => ((x.querySelector('.opp-price') || {}).textContent || '').trim()) };
   });
   await ctx.close();
   return out;

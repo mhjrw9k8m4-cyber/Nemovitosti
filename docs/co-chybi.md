@@ -4037,6 +4037,56 @@ displeji čísla spadnou pod cenu místo přetečení z karty.
 
 Cena za to: nic. Karta je o 58 px nižší a o 12 px širší zároveň.
 
+### 5. Inzerát a lišta nad výpisem podle velkých zahraničních webů
+
+Na přání: „máme super informace, ale vypadá to jako dětská appka".
+Seděla v tom pravda a šla pojmenovat: barevné plochy. Stránka pozemku
+měla oranžovou desku u dražby, zelenou u ceny, zelený přeliv u rádce —
+pod sebou z toho byla skládanka a text se v ní ztrácel. K tomu patkové
+písmo v nadpisu i u ceny, které spolu s pastelem dělá časopis o přírodě.
+
+Co se změnilo:
+
+| | dřív | teď |
+|---|---|---|
+| desky | vybarvené naplocho (zelená, oranžová, přeliv) | bílé, tenká šedá linka, **barevný proužek vlevo** |
+| písmo nadpisu a ceny | patkové (Fraunces) | totéž bezpatkové jako zbytek |
+| odkaz na dražebníka | oranžové tlačítko | neutrální, oranžová zůstala významu „dražba" |
+| nadpis na telefonu | 28 px, lámal se mezi „14 272" a „m²" | 24 px, nezlomitelná mezera před jednotkou |
+
+Barva nezmizela, jen přestala přebíjet text — a kontrast stoupl, protože
+tmavý text na bílé je nejvyšší, jaký jde mít.
+
+**Rychlý výběr dostal důvod, proč do něj lézt.** Byl to šestý stejně
+vypadající knoflík v řadě a stálo na něm jen jméno funkce; co dělá
+(jedna nabídka přes celou obrazovku, doprava uložit, doleva schovat),
+se člověk dozvěděl až uvnitř. Teď je to pruh přes celou šířku s počtem
+(to je ten důvod — u pěti pozemků žádný není a tam se taky nenabízí)
+a s větou o tom, co se stane doprava a doleva.
+
+### Co našly zkoušky (a co z toho byla moje chyba)
+
+Z plné dávky 102 prohlížečových zkoušek jich osm zčervenalo:
+
+1. **`test-vmacknuto` našel skutečný regres.** Na 1280 px sebrala lišta
+   nad výpisem tolik místa, že do seznamu nezbylo ani na jednu celou
+   kartu: 246 px proti kartě 275 px. Posouvá se proto celý sloupec, ne
+   jen seznam uvnitř něj — a ovládání odjede nahoru s ním.
+2. **Dvě kontroly hlídaly přesně to, co jsem zrušil** (`test-barvy`
+   obtažení karty barvou druhu, `test-verdikt` zelenou desku verdiktu).
+   Obě tvrdily něco, co platí dál, jen to nese něco jiného: odznak na
+   fotce a proužek u desky. Přepsány na to, měří teď silněji než dřív
+   (51 a 30 kontrol).
+3. **`test-klic-ulozenych` četl cenu jako první „… Kč" v textu karty** —
+   a po přerovnání se napřed trefil do „25 Kč/m²". Čte ji z `.opp-price`.
+4. **Dvě moje nedbalosti:** odstupy mimo slovník webu (`test-jazyk`,
+   `test-parametry`) a zapomenutý pomocný server na portu 8399, přes
+   který `test-prihlaseni` nemohl nastartovat ten svůj.
+5. **Jeden můj nápad zkoušky zamítly a měly pravdu:** schoval jsem na
+   telefonu počet v hlavičce výpisu jako zdvojený (v přepínači nad ním
+   stojí „Seznam (1 938)"). Shodilo to osm kontrol ve třech souborech —
+   hlavička je místo, odkud se počet čte. Vráceno.
+
 ### Co se přitom našlo (vlastní chyby z téhle přestavby)
 
 1. **Panel vyjel 20 px za levý kraj obrazovky.** Po pásu odkazů zbylo
