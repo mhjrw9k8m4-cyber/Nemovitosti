@@ -4563,7 +4563,7 @@ s prahem dlaždic a prahem okresů u cen.)
 
 ### Zkoušky
 
-**100 neprohlížečových** a **104 prohlížečových** kontrol zelených.
+**102 neprohlížečových** a **103 prohlížečových** kontrol z CI zelených.
 Obě chyby, které předtím shodily CI (`testy` i `v-prohlizeci`), jsou
 opravené u kořene, ne obejité.
 
@@ -5005,6 +5005,96 @@ stránkách**.)
 Ověřeno sabotáží: celé pravidlo čtecího sloupce ze stylopisu pryč,
 přestavět — zkouška spadla a vypsala `187 znaků .rules-note (13px,
 1136px) · cena-pozemku.html` a dalších šest. Po vrácení zelená.
+
+## 3bz. NALEZENO: 95 stránek mělo přeskočenou úroveň nadpisu — a jedna si nesla patičku, kterou nikdo jiný nemá — *opraveno 13. 10.*
+
+Poslední věc z kompozice, a jediná, která je **doslova** „logické
+uspořádání": osnova nadpisů. Nadpisy nejsou velikost písma, jsou
+**obsah**. Podle nich se po stránce pohybuje čtečka pro nevidomé (skok
+na další oddíl) i vyhledávač, který z nich bere, o čem stránka je. Když
+osnova přeskočí úroveň, čtečka ohlásí „oddíl třetí úrovně" tam, kde
+žádný druhý není.
+
+### Změřeno: 95 z 2 064 živých stránek
+
+**1. Krajské a okresní výpisy: `h1 → h3 → h2`** (91 stránek, plus výpis
+dražeb a rozcestník podle okresů). Blok s odkazem na mapu —
+„Prohlédněte si okres Tábor na mapě" — stál hned za h1 a měl h3.
+První skutečný oddíl stránky (h2, „Nabídky pozemků v okrese Tábor") se
+tím tvářil jako **nadřazený** tomu, co bylo nad ním. Osnova šla
+1 → 3 → 2.
+
+Příčina: nadpis v tom bloku byl **vždycky** h3, protože blok obvykle
+stojí uvnitř oddílu — na `cena-pozemku`, `nove-pozemky` nebo
+`drazby-pozemku` je h3 správně. Jen na čtyřech typech stránek stojí
+jako první věc za titulkem. **Úroveň určuje osnova stránky, ne vzhled**
+— selektor je teď `:is(h2, h3)` a vypadá to stejně, takže značka smí
+jít za osnovou.
+
+**2. Úvodní stránka: `h2 → h4`, a to osmnáctkrát.** Každý pojem ve
+slovníčku byl `<summary><h4>` pod oddílem h2 „Nevyznáte se v pojmech?".
+Na vzhled to nemělo vliv ani před opravou — `.gl-item summary h3` má
+`font:inherit`, tedy bere písmo od `<summary>`.
+
+**3. `pozemek-od-obce.html`: `h3 → h5`** — a tenhle nález byl
+nejzajímavější, protože ta přeskočená úroveň byla jen **příznak**.
+
+### Jedna stránka si nesla starou patičku
+
+Hledal jsem, odkud se na jedné stránce vzalo h5, a našel jsem, že
+`pozemek-od-obce.html` je **jediná živá stránka na webu, která má ještě
+starou sloupcovou patičku**: značku s claimem, tagline, tři navigační
+sloupce („Produkt", „Rádce", „Právní") a hlavičky sloupců v h5. Všech
+ostatních 2 063 živých stránek má jednoduchou patičku — copyright a tři
+právní odkazy.
+
+Zůstala tam při úklidu patiček (bod ze seznamu „Odebrat patičku") a dva
+měsíce si nikdo nevšiml, protože vypadá dobře — jen jinak než celý
+zbytek webu. Teď má tu samou patičku jako všechno ostatní (1 385 znaků
+→ 728) a osnova je 1,2,2,…,2,3.
+
+**Mrtvý styl z toho nevznikl, a je to ověřené:** `test-mrtve-styly`
+zůstala zelená, protože `.foot-grid`, `.foot-col`, `.foot-brand-col`
+a `.foot-tag` dál potřebuje **69 archivních stránek** — ty se záměrně
+negenerují znovu a drží si podobu z doby, kdy nabídka platila.
+
+### Po opravě
+
+| | před | po |
+|---|---|---|
+| stránek s přeskočenou úrovní | **95** | **0** |
+| živých stránek bez jednoho h1 | 0 (po odečtení doložených) | 0 |
+
+### Pojistka
+
+`scripts/test-osnova.mjs` (nová, v CI) čte 2 064 živých stránek
+(5 609 nadpisů) a hlídá dvě věci: **právě jeden h1** a **žádná
+přeskočená úroveň**. Archiv přeskakuje — stránka ukončené nabídky se
+záměrně nepředělává.
+
+Čtyři stránky h1 ve značkách mít nemají a mají **doloženou výjimku**:
+`pozemek.html` (předloha, h1 vkládá `js/pozemek.js`), `inzerce.html`
+a `pozemky-od-lidi.html` (přesměrování), `predloha.html` (vzorník,
+ukazuje podobu h1 jako exponát). **Výjimka se nevěří na slovo:**
+zkouška u každé ověří, že značka, kvůli které výjimka je, na stránce
+pořád je.
+
+### A jeden omyl mé vlastní sondy, který stojí za zapsání
+
+První sonda hlásila, že **úvodní stránka má dva h1**. Nemá. Nad tím
+nadpisem stojí komentář, který začíná slovy „Jediný `<h1>`, co úvodní…"
+— a sonda počítala i ten. Zkouška proto komentáře, `<script>` i
+`<style>` **vybílí** (ne smaže, aby čísla řádků dál ukazovala na
+opravdový řádek). Zkouška, která hlásí chyby, jež na stránce nejsou, je
+horší než žádná: přestane se jí věřit.
+
+Ověřeno sabotáží dvakrát:
+
+- jeden pojem ve slovníčku zpátky na h4 → `✕ žádná nepřeskočí úroveň`,
+- v `pozemek.html` přepsána značka `PK_POZEMEK` → `✕ výjimka tvrdí
+  „h1 vkládá js/pozemek.js", ale značka PK_POZEMEK na stránce není`.
+
+Po vrácení obojího 3 v pořádku, 0 chyb.
 
 ## Co naopak nechybí
 

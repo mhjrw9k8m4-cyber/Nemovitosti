@@ -154,7 +154,11 @@ function chibiPrazdne(a) { return a.length === 0; }
 {
   const usek = idx.slice(idx.indexOf('id="slovnicek"'));
   const slovnik = usek.slice(0, usek.indexOf('</section>'));
-  const hesla = [...slovnik.matchAll(/<h4>([^<]+)<\/h4>/g)].map((m) => m[1].toLowerCase());
+  /* Úroveň nadpisu se tu nesmí hádat: pojmy byly h4, od 13. 10. jsou h3
+     (osnova úvodní stránky skákala h2 → h4). Zkouška hledá HESLO, ne
+     úroveň, takže bere h2 až h4 — jinak by při každém srovnání osnovy
+     ohlásila, že slovníček pojmy nevysvětluje, a přitom vysvětluje. */
+  const hesla = [...slovnik.matchAll(/<h([2-4])>([^<]+)<\/h\1>/g)].map((m) => m[2].toLowerCase());
   const zdroje = ['index.html', 'js/radce.js', 'js/main.js', 'js/pozemek.js'].map(cti).join(' ').toLowerCase();
   // Odborné výrazy, které web sám používá v textech pro lidi.
   const vyrazy = [
@@ -183,10 +187,10 @@ function chibiPrazdne(a) { return a.length === 0; }
 {
   const zInsolvence = nabidky.filter((o) => /insolven/i.test(JSON.stringify(o))).length;
   const usek = idx.slice(idx.indexOf('id="slovnicek"'));
-  const heslo = /<h4>Insolvence<\/h4>\s*<p>([^<]*)<\/p>/.exec(usek.slice(0, usek.indexOf('</section>')));
+  const heslo = /<h([2-4])>Insolvence<\/h\1>\s*<p>([^<]*)<\/p>/.exec(usek.slice(0, usek.indexOf('</section>')));
   if (heslo && zInsolvence === 0) {
     pravda('slovníček přiznává, že insolvenční rejstřík neprocházíme',
-      /neprochází|nesledujeme|mezi zdroji není/i.test(heslo[1]),
+      /neprochází|nesledujeme|mezi zdroji není/i.test(heslo[2]),   // [1] je číslo úrovně, text je [2]
       'insolvence je vysvětlená jako by to byl jeden z druhů nabídek, ale ani jedna taková v datech není a rejstřík mezi zdroji nestojí');
   }
 }

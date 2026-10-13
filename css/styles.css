@@ -2977,7 +2977,10 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
 /* Název pojmu zůstává NADPISEM i uvnitř rozbalovače — čtečka obrazovky
    podle nadpisů prochází stránku a vyhledávač podle nich pozná, o čem
    heslo je. Vizuálně ho nese summary, tak h4 jen nedělá vlastní odstup. */
-.gl-item summary h4{margin:0; font:inherit; color:inherit;}
+/* h3, ne h4: oddíl slovníčku je h2, takže pojmy pod ním patří na h3.
+   Dřív to byla h4 a osnova úvodní stránky skákala h2 → h4 osmnáctkrát.
+   Na vzhled to nemá vliv — font:inherit bere písmo od <summary>. */
+.gl-item summary h3{margin:0; font:inherit; color:inherit;}
 .gl-item summary::-webkit-details-marker{display:none;}
 .gl-item summary::after{content:"+"; font-family:var(--font-mono); color:var(--copper-bright);
   font-size:16px; line-height:1; transition:transform var(--cas-zakladni) var(--ease);}
@@ -3979,7 +3982,13 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .acx-vse:hover{color:var(--copper-bright);}
 .add-cross{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
   margin-top:28px; padding:20px 20px; background:var(--ink-soft2); border:1px solid var(--line-strong); border-radius:var(--r-md);}
-.add-cross .acx-copy h3{font-size:16px; margin-bottom:4px;}
+/* ÚROVEŇ URČUJE OSNOVA STRÁNKY, NE VZHLED. Nadpis v tomhle bloku byl
+   vždycky h3 — i na stránkách, kde blok stojí hned za h1 a žádné h2
+   nad ním není. Osnova tam pak šla h1 → h3 → h2, tedy přeskočená
+   úroveň a první oddíl zanořený pod nic (91 krajských a okresních
+   stránek, výpis dražeb a rozcestník podle okresů). Vzhled je tady
+   stejný pro h2 i h3, takže značka smí jít za osnovou. */
+.add-cross .acx-copy :is(h2, h3){font-size:16px; margin-bottom:4px;}
 .add-cross .acx-copy p{font-size:14px; color:var(--text-ondark-mute); line-height:1.5; max-width:var(--m-karta);}
 .add-cross .btn-primary{white-space:nowrap;}
 @media (max-width:640px){

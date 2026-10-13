@@ -924,7 +924,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex;justify-content:spac
 .glossary{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .gl-item{background:var(--ink-soft2);border:1px solid var(--line);border-radius:var(--r-md);padding:0;overflow:hidden}
 .gl-item summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;font-family:var(--font-ui);font-size:16px;font-weight:600;color:var(--copper-bright)}
-.gl-item summary h4{margin:0;font:inherit;color:inherit}
+.gl-item summary h3{margin:0;font:inherit;color:inherit}
 .gl-item summary::-webkit-details-marker{display:none}
 .gl-item summary::after{content:"+";font-family:var(--font-mono);color:var(--copper-bright);font-size:16px;line-height:1;transition:transform var(--cas-zakladni) var(--ease)}
 .gl-item[open] summary::after{transform:rotate(45deg)}
@@ -1288,7 +1288,7 @@ to{opacity:1;transform:none}
 .acx-vse{font-size:14px;font-weight:600;color:var(--copper);text-decoration:underline;text-underline-offset:3px;display:inline-flex;align-items:center;min-height:44px}
 .acx-vse:hover{color:var(--copper-bright)}
 .add-cross{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;padding:20px 20px;background:var(--ink-soft2);border:1px solid var(--line-strong);border-radius:var(--r-md)}
-.add-cross .acx-copy h3{font-size:16px;margin-bottom:4px}
+.add-cross .acx-copy:is(h2,h3){font-size:16px;margin-bottom:4px}
 .add-cross .acx-copy p{font-size:14px;color:var(--text-ondark-mute);line-height:1.5;max-width:var(--m-karta)}
 .add-cross .btn-primary{white-space:nowrap}
 @media (max-width:640px){.add-hero{padding:96px 0 12px}

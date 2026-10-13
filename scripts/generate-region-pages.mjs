@@ -978,7 +978,7 @@ ${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(pod
 
       <div class="add-cross" style="margin-top:0;">
         <div class="acx-copy">
-          <h3>Prohlédněte si okres ${esc(okres)} na mapě</h3>
+          <h2>Prohlédněte si okres ${esc(okres)} na mapě</h2>
           <p>Interaktivní mapa s filtrováním podle ceny, výměry i druhu pozemku — a odkazy do katastru na ověření.</p>
         </div>
         <div class="acx-akce">
@@ -1123,7 +1123,7 @@ ${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more" style="margin-to
 
       <div class="add-cross" style="margin-top:0;">
         <div class="acx-copy">
-          <h3>Otevřít ${esc(meta.disp)} na mapě</h3>
+          <h2>Otevřít ${esc(meta.disp)} na mapě</h2>
           <p>Celý kraj na interaktivní mapě — filtrujte podle ceny, výměry i druhu pozemku a proklikněte se do katastru.</p>
         </div>
         <div class="acx-akce">
@@ -1220,7 +1220,7 @@ const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>{
 
       <div class="add-cross" style="margin-top:0;">
         <div class="acx-copy">
-          <h3>Nevíte, jak dražba funguje?</h3>
+          <h2>Nevíte, jak dražba funguje?</h2>
           <p>Dražební jistota, vyvolávací cena, příklep i lhůty — vysvětlujeme srozumitelně krok za krokem.</p>
         </div>
         <a href="drazby-pozemku.html" class="btn-primary btn-glow">Jak koupit v dražbě →</a>
@@ -2137,7 +2137,7 @@ const idxHtml = head(idxTitle,idxDesc,'pozemky-podle-okresu.html',idxJsonld,idxC
 
       <div class="add-cross" style="margin-top:0;">
         <div class="acx-copy">
-          <h3>Nechcete vybírat region?</h3>
+          <h2>Nechcete vybírat region?</h2>
           <p>Otevřete celou mapu Česka a filtrujte podle ceny, výměry i druhu pozemku.</p>
         </div>
         <a href="index.html#mapa" class="btn-primary btn-glow">Otevřít mapu →</a>

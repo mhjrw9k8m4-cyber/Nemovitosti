@@ -258,6 +258,9 @@ jobs:
       - name: Jedna stupnice odstupů
         run: node scripts/test-odstupy.mjs
 
+      - name: Osnova nadpisů (jeden h1, žádný přeskok)
+        run: node scripts/test-osnova.mjs
+
       - name: Vrstvy (z-index) mají vypsaný pořádek
         run: node scripts/test-vrstvy.mjs
 
