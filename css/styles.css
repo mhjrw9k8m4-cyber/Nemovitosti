@@ -353,8 +353,15 @@
   --plocha-plovouci:rgba(255,255,255,0.95);
   /* NEPRŮHLEDNÁ obdoba. Na dotykových zařízeních se u lepivé hlavičky
      vypíná rozmazání pozadí (viz @media (hover:none) níž), takže pod ní
-     nesmí prosvítat obsah — musí to být plná barva, ne průsvitná. */
-  --plocha-plovouci-plna:#F5FAF7;
+     nesmí prosvítat obsah — musí to být plná barva, ne průsvitná.
+     MUSÍ SE ROVNAT theme-color (#F9FAF9), jinak je nahoře na telefonu
+     vidět šev: prohlížeč si tou hodnotou obarví lištu s adresou a hned
+     pod ní začíná hlavička. Bylo tu #F5FAF7, tedy o čtyři jednotky
+     jinde — naměřeno na dotykovém zobrazení 390 px rgb(245,250,247)
+     proti rgb(249,250,249) v liště. Zkouška to neviděla, protože
+     měřila bez dotyku, kde platí průsvitná varianta; hlídá to teď
+     v obou (scripts/test-barva-listy.mjs). */
+  --plocha-plovouci-plna:#F9FAF9;
   --plocha-plovouci-tlum:rgba(255,255,255,0.85);
   /* PÁSY: úvodní plocha stránky a patička.
      Byl to druhý barevný systém vedle světlého webu — tmavě zelený pás
@@ -1165,6 +1172,44 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .logo{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.02em; font-size:24px; display:flex; align-items:center; gap:10px; text-decoration:none;}
 .logo-mark{width:29px; height:29px; border-radius:var(--r-sm); background:url("../assets/logo-mark.svg?v=11") center/contain no-repeat; box-shadow:var(--glow);}
 .logo-mark.small{width:16px; height:18px;}
+
+/* ROZCESTNÍK NA ÚVODU — JEN NA TELEFONU.
+   Velká značka, jedna věta a šest dlaždic. Na širokém displeji se
+   nezobrazuje: tam zabírá mapa půl obrazovky a rozcestník by ji jen
+   odsouval. Dlaždice vedou na stránky, které už web má, takže to není
+   nové rozhraní, jen zkratka k tomu, co lidé hledají nejčastěji.
+   VÝŠKA JE TU ROZPOČET, NE DETAIL. Napoprvé měl rozcestník 288 px
+   (dva sloupce, tři řádky, vodorovné dlaždice) a hledání tím spadlo na
+   malém telefonu pod 60 % obrazovky — na 320×568 na 73 %. Zkouška
+   test-rozvrzeni to shodila a měla pravdu: kdo přijde hledat, nemá
+   kvůli rozcestníku rolovat. Tři sloupce, dva řádky a ikona nad
+   popiskem dávají 205 px a hledání je zpátky nahoře. */
+.uvod-rozcestnik{display:none;}
+@media (max-width:1040px){
+  .uvod-rozcestnik{display:block; padding:14px 10px 0; text-align:center;}
+  .uvod-logo{display:flex; align-items:center; justify-content:center; gap:10px; margin:0;
+    font-family:var(--font-ui); font-size:26px; font-weight:800; letter-spacing:-0.03em;
+    line-height:1.1; color:var(--text-ondark);}
+  /* Značka je tu o třetinu větší než v liště (38 px proti 29) — je to
+     jediné místo, kde má na sebe upozornit. */
+  .uvod-logo .logo-mark{width:38px; height:38px;}
+  .uvod-claim{margin:4px 0 0; font-family:var(--font-ui); font-size:14px; font-weight:400;
+    letter-spacing:0; color:var(--text-ondark-mute);}
+  .uvod-dlazdice{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:10px;}
+  .uvod-dlazdice a{display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:4px; min-height:56px; padding:6px 4px; border-radius:var(--r-plocha);
+    background:var(--ink-soft); border:1px solid var(--obrys-tlacitka);
+    color:var(--text-ondark); font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:var(--e1); transition:border-color var(--cas-zakladni) var(--ease);}
+  .uvod-dlazdice a:hover{border-color:var(--copper-bright);}
+  /* Tah 1,5 px na obrazovce: 1,5 ÷ 22 × 24 (hlídá test-tahy). */
+  .uvd-ic{flex:none; width:22px; height:22px; fill:none; stroke:var(--plocha-znacka);
+    stroke-width:1.64; stroke-linecap:round; stroke-linejoin:round;}
+  /* Odstup nad hledáním si bere lepivá hlavička, aby první ovládání
+     zůstalo po rolování vidět. Pod rozcestníkem ho ale drží rozcestník
+     sám, takže tady stačí dvacítka místo padesátky. */
+  .uvod-rozcestnik + .hero-map .map-wide{margin-top:20px;}
+}
 /* HAMBURGER, ZATMÍVACÍ PLOCHA A KŘÍŽEK JSOU JEN PRO TELEFON.
    Staví je js/menu.js do každé stránky (viz komentář tam), takže na
    širokém displeji, kde je navigace vodorovná a nic se neotevírá, by

@@ -72,37 +72,69 @@ await new Promise((r) => srv.listen(PORT, '127.0.0.1', r));
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 } });
-await ctx.route('**/*', (r) => {
-  const u = new URL(r.request().url());
-  return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();
-});
-const p = await ctx.newPage();
-await p.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'load' });
-await p.waitForTimeout(700);
-const stav = await p.evaluate(() => {
-  const m = document.querySelector('meta[name="theme-color"]');
-  const r = document.getElementById('header').getBoundingClientRect();
-  return { hlasi: m ? m.getAttribute('content') : null, h: Math.max(1, Math.round(r.height)) };
-});
-const png = (await p.screenshot({ clip: { x: 0, y: 0, width: 390, height: stav.h } })).toString('base64');
-const mereni = await p.evaluate(async (b64) => {
-  const im = new Image();
-  await new Promise((r) => { im.onload = r; im.src = 'data:image/png;base64,' + b64; });
-  const c = document.createElement('canvas'); c.width = im.width; c.height = im.height;
-  const g = c.getContext('2d'); g.drawImage(im, 0, 0);
-  const d = g.getImageData(0, 0, c.width, c.height).data;
-  const pocty = new Map();
-  for (let i = 0; i < d.length; i += 4) {
-    const k = d[i] + ',' + d[i + 1] + ',' + d[i + 2];
-    pocty.set(k, (pocty.get(k) || 0) + 1);
+
+/* MĚŘÍ SE V OBOU SVĚTECH, PROTOŽE V KAŽDÉM PLATÍ JINÉ PRAVIDLO.
+   Na dotykovém zařízení se hlavičce vypíná rozmazání pozadí a bere
+   neprůhlednou barvu (@media (hover:none)); bez dotyku zůstává
+   průsvitná. Zkouška dlouho měřila jen to druhé — a to první, tedy
+   přesně ten telefon, kvůli kterému theme-color existuje, nikdy.
+   Naměřeno: bez dotyku rgb(249,250,249) (sedělo), s dotykem
+   rgb(245,250,247), tedy o čtyři jednotky vedle: nahoře byl vidět šev
+   mezi lištou prohlížeče a hlavičkou. */
+async function zmer(popis, dotyk, odrolovat) {
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    hasTouch: dotyk, isMobile: dotyk });
+  await ctx.route('**/*', (r) => {
+    const u = new URL(r.request().url());
+    return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();
+  });
+  const p = await ctx.newPage();
+  await p.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'load' });
+  await p.waitForTimeout(odrolovat ? 2500 : 700);
+  if (odrolovat) {
+    await p.evaluate((y) => scrollTo(0, y), odrolovat);
+    /* Hlavička při rolování schválně zhasíná (js/hlavicka.js) a rozsvítí
+       se, až se stránka utiší. Měřit v půlce toho přechodu nemá smysl —
+       naměřilo by se, jak přes ni prosvítá mapa. Čeká se tedy, až zase
+       plně svítí; jde o to, jakou barvu má v klidu, protože tu hlásí
+       lišta prohlížeče. */
+    await p.waitForFunction(() => getComputedStyle(document.getElementById('header')).opacity === '1',
+      { timeout: 8000 }).catch(() => {});
+    await p.waitForTimeout(400);
   }
-  const [klic, n] = [...pocty.entries()].sort((a, b) => b[1] - a[1])[0];
-  return { barva: klic.split(',').map(Number), podil: n / (c.width * c.height), pixelu: c.width * c.height };
-}, png);
-await ctx.close();
+  const stav = await p.evaluate(() => {
+    const m = document.querySelector('meta[name="theme-color"]');
+    const h = document.getElementById('header');
+    const r = h.getBoundingClientRect();
+    return { hlasi: m ? m.getAttribute('content') : null, h: Math.max(1, Math.round(r.height)),
+      podleStylopisu: getComputedStyle(h).backgroundColor };
+  });
+  const png = (await p.screenshot({ clip: { x: 0, y: 0, width: 390, height: stav.h } })).toString('base64');
+  const mereni = await p.evaluate(async (b64) => {
+    const im = new Image();
+    await new Promise((r) => { im.onload = r; im.src = 'data:image/png;base64,' + b64; });
+    const c = document.createElement('canvas'); c.width = im.width; c.height = im.height;
+    const g = c.getContext('2d'); g.drawImage(im, 0, 0);
+    const d = g.getImageData(0, 0, c.width, c.height).data;
+    const pocty = new Map();
+    for (let i = 0; i < d.length; i += 4) {
+      const k = d[i] + ',' + d[i + 1] + ',' + d[i + 2];
+      pocty.set(k, (pocty.get(k) || 0) + 1);
+    }
+    const [klic, n] = [...pocty.entries()].sort((a, b) => b[1] - a[1])[0];
+    return { barva: klic.split(',').map(Number), podil: n / (c.width * c.height), pixelu: c.width * c.height };
+  }, png);
+  await ctx.close();
+  return { popis, stav, mereni };
+}
+
+const mereni2 = [
+  await zmer('na monitoru', false, 0),
+  await zmer('na dotykovém zařízení', true, 0),
+];
 await prohlizec.close();
 srv.close();
+const { stav, mereni } = mereni2[0];
 
 const hex = (rgb) => '#' + rgb.map((x) => x.toString(16).padStart(2, '0')).join('').toUpperCase();
 const naHex = (s) => [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16));
@@ -113,9 +145,28 @@ const odchylka = (a, b) => Math.max(...a.map((x, i) => Math.abs(x - b[i])));
 pravda(`hlavička má co měřit (${mereni.pixelu} pixelů)`, mereni.pixelu >= 20000, 'jen ' + mereni.pixelu);
 pravda(`převládající barva opravdu převládá (${(100 * mereni.podil).toFixed(1)} %)`,
   mereni.podil >= 0.10, 'jen ' + (100 * mereni.podil).toFixed(1) + ' %');
-pravda(`lišta hlásí ${stav.hlasi}, hlavička je ${hex(mereni.barva)}`,
-  stav.hlasi && odchylka(naHex(stav.hlasi), mereni.barva) <= 3,
-  'odchylka ' + (stav.hlasi ? odchylka(naHex(stav.hlasi), mereni.barva) : '—') + ' jednotek na kanál');
+/* ODROLOVANOU HLAVIČKU TU NEMĚŘÍM, A MÁ TO DŮVOD. Při rolování
+   schválně zhasíná (js/hlavicka.js, nápad od Airbnb) a v tu chvíli pod
+   ní prosvítá mapa — naměřeno #0F1F16. Není to vada: lišta prohlížeče
+   drží svou barvu a hlavička je pryč, protože má být pryč. Tvrzení,
+   které platí vždycky, je tohle: DOKUD JE HLAVIČKA VIDĚT, má barvu
+   lišty. Měří se proto v klidu, a k tomu zvlášť i to, jakou barvu má
+   podle stylopisu — ta se nesmí rozejít ani ve stavu, který snímek
+   nezachytí. */
+const naRgb = (s) => (String(s).match(/\d+/g) || []).slice(0, 3).map(Number);
+for (const m of mereni2) {
+  pravda(`${m.popis}: lišta hlásí ${m.stav.hlasi}, hlavička je ${hex(m.mereni.barva)}`,
+    m.stav.hlasi && odchylka(naHex(m.stav.hlasi), m.mereni.barva) <= 3,
+    'odchylka ' + (m.stav.hlasi ? odchylka(naHex(m.stav.hlasi), m.mereni.barva) : '—') + ' jednotek na kanál');
+  /* A totéž na úrovni stylopisu, ne jen namalovaných pixelů: průsvitnou
+     barvu sem počítat nejde, tak se kontroluje jen tam, kde je plná. */
+  const dekl = naRgb(m.stav.podleStylopisu);
+  if (!/rgba/.test(m.stav.podleStylopisu)) {
+    pravda(`${m.popis}: a stylopis hlavičce předepisuje tutéž barvu (${hex(dekl)})`,
+      odchylka(naHex(m.stav.hlasi), dekl) <= 3,
+      `stylopis ${m.stav.podleStylopisu}, lišta ${m.stav.hlasi}`);
+  }
+}
 
 console.log('\nBarva lišty prohlížeče (theme-color)');
 console.log(zpravy.join('\n'));

@@ -275,10 +275,21 @@ async function otevri(soubor, sirka, vyska) {
        které sem člověk jde — nad polem „Hledat obec". Smysl je týž:
        na telefonu nesmí nahoře zůstat ukradený pruh. Měří se od spodní
        hrany hlavičky, protože ta je přilepená a místo nebere. */
-    const hledani = document.getElementById('map-search');
+    /* MĚŘÍ SE PRÁZDNO, NE VZDÁLENOST. Dřív se bral odstup hlavičky
+       k poli „Hledat obec" — jenže nad polem teď na telefonu stojí
+       rozcestník (velká značka a šest dlaždic), a ten prázdný pruh
+       není: je to obsah, kvůli kterému tam je. Kontrola se tím
+       nezměkčuje, jen se ptá na to, na co se ptala vždycky: kolik
+       místa pod hlavičkou nenese NIC. Že hledání nespadlo moc nízko,
+       hlídá zvlášť pravidlo „v horních 60 % obrazovky" níž. */
     const hlavicka = document.querySelector('header');
-    const nadHledanim = (hledani && hlavicka)
-      ? Math.round(hledani.getBoundingClientRect().top - hlavicka.getBoundingClientRect().bottom) : null;
+    const prvni = [...document.querySelectorAll('main > *, main > * > *')]
+      .map((e) => ({ e, r: e.getBoundingClientRect() }))
+      .filter((x) => x.r.height > 4 && x.r.width > 4
+        && getComputedStyle(x.e).visibility !== 'hidden' && (x.e.textContent || '').trim())
+      .sort((a, b) => a.r.top - b.r.top)[0];
+    const nadHledanim = (prvni && hlavicka)
+      ? Math.round(prvni.r.top - hlavicka.getBoundingClientRect().bottom) : null;
     return { nadHledanim };
   });
   /* MEZ JE 64, NE 60 — A TO ČÍSLO MÁ DRUHOU STRANU.

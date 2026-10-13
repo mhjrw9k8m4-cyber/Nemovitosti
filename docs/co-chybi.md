@@ -4077,6 +4077,42 @@ procent zelené, což vypadalo jako vypnuté tlačítko. Je teď plná tmavá
 zeleň s bílým textem, tedy jediné plné tlačítko na stránce. Spodek
 inzerátu je o 62 px kratší.
 
+### 7. Šev mezi lištou prohlížeče a hlavičkou — a rozcestník na úvodu
+
+**Šev.** Na snímku ze Seznamu je vidět, že lišta prohlížeče přechází do
+stránky bez čáry. U nás čára byla a šlo ji změřit: na dotykovém
+zařízení se hlavičce vypíná rozmazání pozadí a bere neprůhlednou barvu
+`#F5FAF7`, kdežto `theme-color`, kterým si prohlížeč obarví lištu, je
+`#F9FAF9`. Čtyři jednotky na červeném kanálu — málo na to, aby to člověk
+pojmenoval, dost na to, aby viděl hranu.
+
+Horší je, proč to neohlásila zkouška, která přesně tohle hlídá:
+`test-barva-listy` měřila **bez dotyku**, tedy v jediném zobrazení, kde
+platí průsvitná varianta a kde to sedělo. Měří teď obě a navíc porovnává
+i to, co hlavičce předepisuje stylopis. Sabotáží ověřeno: se starou
+hodnotou kontrola spadne.
+
+(Co se naopak ukázalo jako *ne*-vada: při rolování hlavička schválně
+zhasíná a pod ní prosvítá mapa — naměřeno `#0F1F16`. Zkouška to zprvu
+hlásila jako chybu; tvrzení, které platí vždycky, je „dokud je hlavička
+vidět, má barvu lišty", a tak je i zapsané.)
+
+**Rozcestník.** Na přání a podle Sreality: na telefonu je pod hlavičkou
+velká značka (38px znak proti 29 v liště), jedna věta a šest dlaždic —
+Stavební, Zahrady, Dražby, Exekuce, Nové, Okresy. Každá vede na stránku,
+kterou web už má. Na širokém displeji se nezobrazuje, tam zabírá mapa
+půl obrazovky.
+
+Napoprvé měl 288 px ve dvou sloupcích a `test-rozvrzeni` to shodil:
+hledání spadlo na 320×568 na 73 % obrazovky, tedy pod ohyb. Tři sloupce
+a dva řádky dávají 216 px a hledání je na 55 % (375×667: 47 %,
+390×844: 37 %).
+
+A jedna kontrola z toho vyšla přesnější: „nad hledáním nezůstal prázdný
+pruh" měřila vzdálenost hlavičky k poli, jenže nad polem teď stojí
+obsah, kvůli kterému tam je. Ptá se proto na to, na co se ptala vždycky
+— kolik místa pod hlavičkou nenese **nic** (naměřeno 0 px).
+
 ### Co našly zkoušky (a co z toho byla moje chyba)
 
 Z plné dávky 102 prohlížečových zkoušek jich osm zčervenalo:
