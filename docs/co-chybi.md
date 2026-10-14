@@ -5317,9 +5317,15 @@ zdroje dat má web vlastního hlídače), obsah `<script>` a komentářů
 (záměrně se nepřegenerovává) a kotva na stránku, která sama neexistuje
 (hlásí to první kontrola, ať se jedna vada nepočítá dvakrát).
 
-Ověřeno sabotáží: `podminky.html` → `podminkyy.html` a `index.html#mapa`
-→ `index.html#mapaa` v jediném souboru → zkouška ohlásila
-`podminkyy.html ← kontakt.html` a `index.html#mapaa ← kontakt.html`.
+Ověřeno sabotáží: v `kontakt.html` jsem odkazu na podmínky přidal
+jedno „y" do jména souboru a kotvě `#mapa` jedno „a" — zkouška oboje
+ohlásila i s tím, odkud ten odkaz vede.
+
+(A hned nato našla druhou vadu, tentokrát v tomhle textu: `test-staticka`
+hlídá, že **dokumentace nejmenuje soubory, které neexistují**, a já tu
+původně ten přepsaný název napsal jako cestu. Správný nález — do
+dokumentace nepatří jméno, které v repozitáři nic nemá, i když je
+myšlené jako ukázka chyby.)
 
 ## Co naopak nechybí
 

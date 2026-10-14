@@ -17,7 +17,7 @@
  * CO SE NEMĚŘÍ A PROČ:
  *  • cizí adresy (http, mailto, tel) — o jejich dostupnosti tahle
  *    zkouška nic neví a síť do CI nepatří; na zdroje dat má web
- *    vlastního hlídače (scripts/hlidac-zdroju.mjs),
+ *    vlastního hlídače (scripts/test-hlidac-zdroju.mjs),
  *  • obsah <script> a komentářů — tam bývají ukázky a šablony, ne
  *    odkazy, na které jde kliknout,
  *  • archivované stránky ukončených nabídek — záměrně se
