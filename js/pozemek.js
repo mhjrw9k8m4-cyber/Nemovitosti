@@ -376,10 +376,22 @@
      přes JSON.parse z <script type="application/json">, takže uvozovky
      ani lomená závorka v textu nemohou rozbít stránku. */
   function pzPopisInzerentaHtml() {
-    var el = document.getElementById('pz-popis-data');
-    if (!el) return '';
     var t = '';
-    try { t = String(JSON.parse(el.textContent) || ''); } catch (e) { return ''; }
+    /* POPIS JE OD 14. 10. PŘÍMO V HTML. Dřív ležel jen v datovém
+       ostrůvku pro skript, takže stránku bez JavaScriptu (a vyhledávač,
+       který ji nevykreslí) míjelo to jediné, čím se liší od dvou tisíc
+       ostatních. Teď ho generátor píše do statického článku a tady se
+       jen přečte — žádná druhá kopie v dokumentu není.
+       Ostrůvek se pořád umí přečíst kvůli ARCHIVU: ukončené stránky se
+       záměrně nepřegenerovávají a drží si podobu z doby, kdy nabídka
+       platila. */
+    var vHtml = document.getElementById('pz-popis-text');
+    if (vHtml) t = String(vHtml.textContent || '');
+    else {
+      var el = document.getElementById('pz-popis-data');
+      if (!el) return '';
+      try { t = String(JSON.parse(el.textContent) || ''); } catch (e) { return ''; }
+    }
     t = t.trim();
     if (t.length < 60) return '';
     return '<h2 class="pz-sect-h">Co o pozemku píše inzerent</h2>'

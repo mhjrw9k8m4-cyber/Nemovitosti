@@ -35,6 +35,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { bezCiziho, pocetCizich } from './cizi-text.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0; const zpravy = [];
@@ -51,7 +52,7 @@ const viditelny = (s) => s
 const stranky = readdirSync(ROOT).filter((f) => f.endsWith('.html'));
 let spravne = 0; const spatne = [];
 for (const f of stranky) {
-  const t = viditelny(readFileSync(path.join(ROOT, f), 'utf8'));
+  const t = viditelny(bezCiziho(readFileSync(path.join(ROOT, f), 'utf8')));
   for (const m of t.matchAll(/(?<![\wÀ-ž])([aikosuvz])( | )(?=[\wÀ-ž(„])/g)) {
     if (m[2] === ' ') spravne++;
     else spatne.push(`${f}: …${t.slice(Math.max(0, m.index - 34), m.index + 36).replace(/\0/g, '|').replace(/\s+/g, ' ').trim()}…`);
@@ -61,7 +62,7 @@ for (const f of stranky) {
 /* ---- uvozovky ---- */
 let uvozPary = 0; const uvozVadne = []; const uvozNepar = [];
 for (const f of stranky) {
-  const t = viditelny(readFileSync(path.join(ROOT, f), 'utf8'));
+  const t = viditelny(bezCiziho(readFileSync(path.join(ROOT, f), 'utf8')));
   /* Vadný pár: otevírací „ a pak rovná uvozovka (znak nebo entita),
      a mezi nimi žádná jiná uvozovka. \0 je zbytek po značce, uvnitř
      citace běžně stojí odkaz nebo zvýraznění. */
@@ -86,7 +87,7 @@ const tisiceSpatne = [], datumSpatne = [], paragrafSpatne = [], cisloSpatne = []
 for (const f of stranky) {
   /* Entita je totéž co znak; kdyby se někde objevila, nesmí se počítat
      jako obyčejná mezera. */
-  const t = viditelny(readFileSync(path.join(ROOT, f), 'utf8')).replace(/&nbsp;/g, '\u00a0');
+  const t = viditelny(bezCiziho(readFileSync(path.join(ROOT, f), 'utf8'))).replace(/&nbsp;/g, '\u00a0');
   const kousek = (i) => `${f}: …${t.slice(Math.max(0, i - 28), i + 30).replace(/\0/g, '|').replace(/\s+/g, ' ').trim()}…`;
   tisiceOk += (t.match(/\d\u00a0\d{3}/g) || []).length;
   datumOk += (t.match(/\d{1,2}\.\u00a0\d{1,2}\./g) || []).length;
@@ -103,6 +104,14 @@ for (const f of stranky) {
 /* Předpoklady. Bez nich by „žádná obyčejná mezera" mohla být pravda
    o prázdnu — třeba kdyby se rozbilo čištění značek nebo seznam
    stránek. Obojí se mi už jednou povedlo. */
+/* VÝJIMKA NESMÍ ZMRTVĚT. Cizí citace se z měření vynechávají
+   (scripts/cizi-text.mjs) — kdyby se přestaly v HTML vyskytovat,
+   vynechávalo by se nic a zkouška by o tom mlčela. */
+let ciziCitaci = 0;
+for (const f of stranky) ciziCitaci += pocetCizich(readFileSync(path.join(ROOT, f), 'utf8'));
+pravda(`cizí citace, které se neměří, na webu opravdu jsou (${ciziCitaci})`,
+  ciziCitaci >= 500, `nalezeno jen ${ciziCitaci} — vynechávka je mrtvá, nebo popisy ze stránek zmizely`);
+
 pravda(`stránek je z čeho brát (${stranky.length})`, stranky.length >= 2000,
   'našlo se jen ' + stranky.length);
 pravda(`a nezlomitelné mezery se opravdu našly (${spravne})`, spravne >= 5000,

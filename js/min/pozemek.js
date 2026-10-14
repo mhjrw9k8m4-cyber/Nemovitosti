@@ -240,10 +240,15 @@
   var SHARE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>';
 
   function pzPopisInzerentaHtml() {
-    var el = document.getElementById('pz-popis-data');
-    if (!el) return '';
     var t = '';
-    try { t = String(JSON.parse(el.textContent) || ''); } catch (e) { return ''; }
+
+    var vHtml = document.getElementById('pz-popis-text');
+    if (vHtml) t = String(vHtml.textContent || '');
+    else {
+      var el = document.getElementById('pz-popis-data');
+      if (!el) return '';
+      try { t = String(JSON.parse(el.textContent) || ''); } catch (e) { return ''; }
+    }
     t = t.trim();
     if (t.length < 60) return '';
     return '<h2 class="pz-sect-h">Co o pozemku píše inzerent</h2>'

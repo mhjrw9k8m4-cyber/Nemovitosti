@@ -5660,6 +5660,65 @@ v prohlížeči: všechny popisky mají `rgb(88, 95, 91)`, všechny hodnoty
 `rgb(16, 21, 19)`, pozadí bílé. Byl to artefakt zmenšeniny. Mezi
 „vidím to na obrázku" a „změřil jsem to" je pořád tentýž rozdíl.
 
+## 3ch. NALEZENO: stránce pozemku zbylo bez JavaScriptu 23 % textu — *opraveno 14. 10.*
+
+Změřeno v prohlížeči s vypnutým JavaScriptem: ze stránky pozemku
+zbylo **699 znaků z 3 101**, tedy 23 %, a 2 nadpisy z 8. Pro srovnání
+výpis okresu má 100 %, rádcovská stránka 79 %, mapová 51 % (tam je
+to z povahy věci).
+
+**Nejdřív oprava mého vlastního závěru.** Vypadalo to, že stránka bez
+skriptu nemá nic. Nemá to tak: generátor do ní píše statický
+`<article>` se seznamem faktů, srovnatelnými pozemky a rozcestníkem —
+506 znaků, a je to tam zdůvodněné. Chyběl v něm ale ten nejdelší
+a jediný nezaměnitelný kus textu: **popis od inzerenta**. Ležel jen
+v datovém ostrůvku `<script type="application/json">`, odkud ho bere
+skript. Pro vyhledávač, který stránku nevykreslí, je to přitom to
+jediné, čím se tahle stránka liší od dvou tisíc ostatních.
+
+### Oprava: text jde do HTML, ostrůvek se ruší
+
+Popis teď píše generátor přímo do statického článku
+(`<p id="pz-popis-text">`), prohnaný `esc()` — je to cizí text, takže
+se do stránky nedostane holá lomená závorka ani uvozovka.
+`js/pozemek.js` ho čte odtamtud. Datový ostrůvek se u živých stránek
+**ruší**, aby týž text nebyl v dokumentu dvakrát; archiv si ho drží
+dál (ukončené stránky se záměrně nepřegenerovávají), a čtení z něj
+proto ve skriptu zůstává.
+
+| | před | po |
+|---|---|---|
+| text bez JavaScriptu | 699 znaků (23 %) | **1 187 znaků (38 %)** |
+| nadpisů bez JavaScriptu | 2 z 8 | 3 z 8 |
+
+Na webu: **1 628 z 1 928 živých stránek** má popis v HTML, dohromady
+664 247 znaků, průměrně 408 na stránku. Živá stránka se starým
+ostrůvkem: **0**. Archivovaných se starým ostrůvkem: 80 — a tak to má
+být.
+
+### Co to rozbilo a co se z toho naučilo
+
+Cizí text se tím dostal pod **naše** jazykové kontroly a dvě z nich
+hned spadly. Všechny čtyři nálezy byly uvnitř toho, co napsal
+prodávající:
+
+* „…o rozlohách 1044m²a 909m²" — chybí mezera, předložka se nedá
+  poznat,
+* „110 000m2,z 80 % kvalitní pole" — čárka bez mezery,
+* „4 pozemků" tam, kde čeština chce „4 pozemky",
+* inzerát se dvěma otevíracími uvozovkami a žádnou zavírací.
+
+Opravit to nejde — znamenalo by to přepisovat cizí větu. Vznikl proto
+`scripts/cizi-text.mjs`: citace se z jazykových měření **vybílí**
+(nahradí mezerami, aby čísla řádků v hlášení zůstala pravdivá), ne
+smaže. Typografie na ten text pořád platí: nezlomitelná mezera nic
+nepřepisuje, jen nedovolí zlom.
+
+A protože vynechávka je oslabení kontroly, hlídá se i ona:
+`test-sazba` počítá, kolik cizích citací na webu je, a pod pěti sty
+hlásí chybu. Prokázáno sabotáží v obou směrech — vada v **našem**
+textu se přes vynechávku pořád najde, a mrtvá vynechávka se ohlásí.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

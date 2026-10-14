@@ -16,6 +16,7 @@
 // plané poplachy. („na Parcelku" je čtvrtý pád a je správně — „přidat
 // pozemek na Parcelku" — proto se hlídá jen tvar „Parcelka".)
 import { readFileSync, readdirSync } from 'node:fs';
+import { bezCiziho } from './cizi-text.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
@@ -45,7 +46,7 @@ const PREDLOZKA_A_PRVNI_PAD = /\b(na|o|v|ve|po|při|k|ke|s|se|z|ze|za|do|od|u|pr
 
 const spatne = [];
 for (const f of stranky) {
-  const t = text(readFileSync(new URL(f, KOREN), 'utf8'));
+  const t = text(bezCiziho(readFileSync(new URL(f, KOREN), 'utf8')));
   for (const m of t.matchAll(PREDLOZKA_A_PRVNI_PAD)) spatne.push(`${f}: „${m[0]}"`);
 }
 pravda('název webu se za předložkou skloňuje (na Parcelce, ne „na Parcelka")',
@@ -99,7 +100,7 @@ function zkontroluj(f, cislo, slovo, ukazka) {
   if (ma !== klic) tvary.push(`${f}: „${ukazka}" → má být „${n} ${ma}"`);
 }
 for (const f of stranky) {
-  const html = readFileSync(new URL(f, KOREN), 'utf8')
+  const html = bezCiziho(readFileSync(new URL(f, KOREN), 'utf8'))
     .replace(/<(script|style)\b[\s\S]*?<\/\1>/g, ' ');
   // 1) uvnitř jedné věty (jeden textový uzel, žádné přeskakování značek)
   for (const uzel of html.split(/<[^>]+>/)) {
@@ -140,7 +141,7 @@ const PRED = new Map();
 for (const t of PRIDAVNA) for (const tvar of t) PRED.set(tvar, t);
 const pridavna = [];
 for (const f of stranky) {
-  const html = readFileSync(new URL(f, KOREN), 'utf8')
+  const html = bezCiziho(readFileSync(new URL(f, KOREN), 'utf8'))
     .replace(/<(script|style)\b[\s\S]*?<\/\1>/g, ' ');
   for (const uzel of html.split(/<[^>]+>/)) {
     const t = uzel.replace(/&nbsp;/g, '\u00a0').replace(/&[a-z]+;/g, ' ');
@@ -161,7 +162,7 @@ for (const f of stranky) {
    dvojic vůbec prošlo rukama. */
 let nalezenoDvojic = 0;
 for (const f of stranky) {
-  const html = readFileSync(new URL(f, KOREN), 'utf8');
+  const html = bezCiziho(readFileSync(new URL(f, KOREN), 'utf8'));
   for (const t of PRED.keys()) {
     const re = new RegExp(t + '[\\s\\u00a0]+[0-9]', 'gi');
     nalezenoDvojic += (html.match(re) || []).length;

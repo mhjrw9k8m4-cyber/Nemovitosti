@@ -914,6 +914,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
   const blok = blokPro(d);
   const srov = srovnaniPro(d);
   const kamDalSem = kamDal(d);
+  const popisInzerenta = POPISY[klicNabidky(d)];
   const staticky =
     `<article class="pz-staticky">`
     + `<h1>${esc(titul)}</h1>`
@@ -937,6 +938,20 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     + (vzdalenosti ? `<dt>Vzdušnou čarou</dt><dd>${esc(vzdalenosti)}</dd>` : '')
     + `</dl>`
     + `<p><a href="pozemek.html?p=${encodeURIComponent(pkey(d))}&amp;ll=${d.lat},${d.lng}&amp;v=${d.area || 0}&amp;c=${d.price || 0}">Otevřít na mapě</a></p>`
+    /* POPIS OD INZERENTA DO STATICKÉ ČÁSTI. Změřeno 14. 10. v prohlížeči
+       s vypnutým JavaScriptem: ze stránky pozemku zbylo 699 znaků
+       z 3 101, tedy 23 %. Statický článek tu byl, ale nejdelší a jediný
+       nezaměnitelný kus textu v něm chyběl — popis od inzerenta, který
+       ležel jen v datovém ostrůvku pro skript. Pro vyhledávač je to
+       přitom to jediné, čím se tahle stránka liší od dvou tisíc
+       ostatních.
+       Text je cizí, takže prochází esc() — holá lomená závorka ani
+       uvozovka z inzerátu se do stránky nedostane. Ostrůvek se u živých
+       stránek ruší, aby týž text nebyl v dokumentu dvakrát; archiv si
+       ho drží dál a js/pozemek.js umí obojí. */
+    + (popisInzerenta && String(popisInzerenta).trim().length >= 60
+      ? `<h2>Co o pozemku píše inzerent</h2><p id="pz-popis-text">${esc(String(popisInzerenta).trim())}</p>`
+      : '')
     + (vObec ? `<p><a href="${esc(vObec.url)}">${esc(vObec.text)}</a></p>` : '')
     + (blok ? `<p>${esc(blok.text)}</p>` : '')
     /* SROVNÁNÍ I DO STATICKÉ ČÁSTI. Je to jediná část stránky, kterou
@@ -1043,11 +1058,6 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
   if (kamDalSem.length) {
     h = h.replace(/(<\/body>)/,
       `<script type="application/json" id="pz-kamdal-data">${jsonVeStrance(kamDalSem)}</scr` + `ipt>\n$1`);
-  }
-  const popisInzerenta = POPISY[klicNabidky(d)];
-  if (popisInzerenta) {
-    h = h.replace(/(<\/body>)/,
-      `<script type="application/json" id="pz-popis-data">${jsonVeStrance(popisInzerenta)}</scr` + `ipt>\n$1`);
   }
   return bezKomentaruVeStylu(h);
 }

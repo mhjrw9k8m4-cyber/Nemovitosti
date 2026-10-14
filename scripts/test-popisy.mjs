@@ -68,22 +68,40 @@ const bylo = fs.existsSync(POPISY) ? fs.readFileSync(POPISY, 'utf8') : null;
 /* Generátor čte popisy při načtení modulu, takže se zkouší obojí stav
    přes stránku vyrobenou TEĎ a přes tu, která leží na disku. */
 const h = stranka(sablona, vzor);
-const maOstrov = /<script type="application\/json" id="pz-popis-data">/.test(h);
+const maOstrov = /<p id="pz-popis-text">/.test(h);
 const popisProVzor = (() => {
   try { return JSON.parse(fs.readFileSync(POPISY, 'utf8'))[klicNabidky(vzor)]; } catch { return undefined; }
 })();
-pravda('stránka pozemku nese ostrůvek s popisem právě tehdy, když popis existuje',
-  maOstrov === !!popisProVzor, `ostrůvek ${maOstrov}, popis v souboru ${!!popisProVzor}`);
+/* POPIS JE OD 14. 10. V HTML, NE V DATOVÉM OSTRŮVKU. Změřeno
+   v prohlížeči s vypnutým JavaScriptem: ze stránky pozemku zbylo
+   699 znaků z 3 101 (23 %), a nejdelší nezaměnitelný kus textu — právě
+   popis — v tom nebyl. Hlídá se tedy totéž co dřív, jen na jiném
+   místě: že tam je právě tehdy, když popis existuje, a že se z cizího
+   textu nedostane do stránky holá lomená závorka. */
+pravda('stránka pozemku nese popis v HTML právě tehdy, když popis existuje',
+  maOstrov === !!(popisProVzor && String(popisProVzor).trim().length >= 60),
+  `v HTML ${maOstrov}, popis v souboru ${!!popisProVzor}`);
 if (popisProVzor) {
   /* Text v ostrůvku nesmí obsahovat holé „<" — jinak by lomená závorka
      z cizího inzerátu mohla ukončit skript. */
-  const m = h.match(/<script type="application\/json" id="pz-popis-data">([\s\S]*?)<\/script>/);
-  pravda('text v ostrůvku nenese holou lomenou závorku ani &',
-    !!m && !/[<>&]/.test(m[1]), m ? m[1].slice(0, 80) : 'ostrůvek nenalezen');
-  pravda('a dá se přečíst jako JSON', (() => { try { return typeof JSON.parse(m[1]) === 'string'; } catch { return false; } })());
+  const m = h.match(/<p id="pz-popis-text">([\s\S]*?)<\/p>/);
+  pravda('text v HTML nenese holou lomenou závorku', !!m && !/[<>]/.test(m[1]),
+    m ? m[1].slice(0, 80) : 'popis v HTML nenalezen');
+  /* Ampersand tu BÝT SMÍ — ale jen jako entita. Holý by rozbil zápis
+     stejně jako lomená závorka. */
+  pravda('a ampersand je v něm jen jako entita',
+    !!m && !/&(?!(amp|lt|gt|quot|#\d+|#x[0-9a-f]+);)/i.test(m[1]), m ? m[1].slice(0, 80) : '');
+  pravda('a stejný text je i v datech', !!m
+    && m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/[\s\u00a0]+/g, ' ').trim()
+       === String(popisProVzor).replace(/[\s\u00a0]+/g, ' ').trim(),
+    'text v HTML se rozešel s data/popisy.json');
 }
 const pz = fs.readFileSync(path.join(ROOT, 'js', 'pozemek.js'), 'utf8');
-pravda('stránka ten ostrůvek opravdu čte', pz.indexOf("getElementById('pz-popis-data')") !== -1);
+pravda('stránka ten popis opravdu čte z HTML', pz.indexOf("getElementById('pz-popis-text')") !== -1);
+/* Archiv se záměrně nepřegenerovává, takže ukončené stránky si drží
+   starý datový ostrůvek — čtení z něj proto musí zůstat. */
+pravda('a umí přečíst i starý ostrůvek kvůli archivu',
+  pz.indexOf("getElementById('pz-popis-data')") !== -1);
 pravda('a vypisuje ho jinou funkcí než popis od majitele (stejné jméno by jednu z nich tiše smazalo)',
   pz.indexOf('function pzPopisInzerentaHtml') !== -1 && pz.indexOf('function pzPopisHtml') !== -1);
 if (bylo === null && fs.existsSync(POPISY)) fs.unlinkSync(POPISY);
