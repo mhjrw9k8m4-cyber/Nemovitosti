@@ -5758,6 +5758,50 @@ zvlášť od **přítomnosti**.
 Obojí prokázáno sabotáží: slepený tvar i chybějící termín se ohlásí
 i s názvem stránky.
 
+## 3cj. Jak je web poskládaný pro vyhledávač: čtyři měření, tři čisté a jedna otázka na majitele — *14. 10.*
+
+Po nálezu s dražbami (3ci) jsem doměřil zbytek téhle rodiny. Zapisuju
+i to, co vyšlo dobře, aby to nikdo neměřil znovu.
+
+**Kanonické adresy — čisté.** 2 236 stránek, u všech právě jedna
+kanonická adresa, všechny absolutní `https` na téže doméně. Bez
+kanonické jsou tři (404, diagnostika, předloha) a všechny tři jsou
+`noindex`. Jinam než na sebe ukazují tři a všechny tři jsou záměrné
+přesměrovací patníky po starých adresách.
+
+**Doména souhlasí všude.** Mapa webu, `og:url`, kanonické adresy,
+`robots.txt` i kanály — všude `https://www.parcelaka.cz`, bez jediné
+výjimky.
+
+**Hloubka od úvodní stránky — nejvýš tři kliknutí.** 1 stránka v nule,
+30 na první úrovni, 456 na druhé, 1 570 na třetí, a dál už nic.
+**Ani jedna adresa z mapy webu není odkazem nedosažitelná.** Sedm
+živých stránek nemá statický odkaz odnikud a všech sedm je buď
+`noindex` (404, diagnostika, předloha, odhlašovací stránka), nebo
+patník po staré adrese; `porovnani.html` otevírá appka z uložených
+pozemků, takže ji statický průchod odkazů ani vidět nemůže. To je
+mez téhle metody a patří ji přiznat.
+
+**Mimo mapu webu je 13 živých stránek** a dvanáct z nich je `noindex`,
+tedy správně. Třináctá (`pozemky-praha-kraj.html`) je indexovatelná,
+ale má kanonickou adresu na okresní stránku — Praha je okres, ne kraj,
+takže by to byla tatáž stránka dvakrát. Kombinovat `noindex`
+s kanonickou adresou se naopak nedoporučuje (jsou to protichůdné
+pokyny), takže tenhle tvar je v pořádku.
+
+### A jedna věc, kterou odsud rozhodnout nejde
+
+**V repozitáři není soubor `CNAME`** a nikdy nebyl. Vlastní doména je
+tedy nastavená jen v nastavení GitHub Pages. Dokud se na nastavení
+nesáhne, funguje to; při přepnutí způsobu nasazení ale bývá tohle
+přesně to, co tiše spadne, a v repozitáři o doméně není ani řádka.
+
+Přidat `CNAME` je oprava na jeden řádek — jenže **špatný řádek shodí
+web**, a já odsud nepoznám, jestli je nastavená doména `parcelaka.cz`,
+nebo `www.parcelaka.cz`. Celý web (kanonické adresy, mapa webu,
+`og:url`) mluví o `www`. **Pro majitele:** v nastavení repozitáře →
+Pages stojí jedna z těch dvou; stačí ji říct a soubor doplním.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
