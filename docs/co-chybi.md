@@ -4563,7 +4563,7 @@ s prahem dlaždic a prahem okresů u cen.)
 
 ### Zkoušky
 
-**104 neprohlížečových** a **104 prohlížečových** kontrol zelených.
+**105 neprohlížečových** a **104 prohlížečových** kontrol zelených.
 Obě chyby, které předtím shodily CI (`testy` i `v-prohlizeci`), jsou
 opravené u kořene, ne obejité.
 
@@ -5215,6 +5215,76 @@ Ověřeno sabotáží třikrát: datum sestavení všude → padnou kontroly 4 a
 (`všech 2051 adres má 2026-10-14`); jedné adrese datum pryč → padne 1
 s její adresou; datum 2027-01-01 → padne 3 se jménem stránky. Po
 vrácení 6 v pořádku, 0 chyb.
+
+## 3cb. NALEZENO: šest pražských stránek tvrdilo obec, která neexistuje — *opraveno 14. 10.*
+
+Měřil jsem, jestli web nevystavuje nesmyslné ceny. **Nevystavuje** —
+rozsah 5 Kč/m² u orné půdy až 23 000 Kč/m² u pražských stavebních
+parcel je věrohodný, žádná cena za korunu ani v miliardách. Při tom
+měření ale vypadlo něco jiného: mezi 1 024 místy stojí **názvy ulic**.
+
+### Změřeno
+
+V okrese Praha je **23 nabídek** a jejich místa jsou:
+
+```
+Praha | Ke Korunce | Devonská | Na Chvalce | Borovská | Ibišková | Na Kindlovce
+```
+
+Šest ze sedmi jsou **ulice**. Titulek i nadpis z toho skládaly
+
+> Stavební pozemek 778 m² — **Ibišková, okres Praha**
+
+tedy tvrdily obec, která neexistuje. Kdo hledá pozemek v Praze, takový
+titulek nenajde; kdo ho najde, přečte si z něj nepravdu.
+
+**Není to dohad.** Zdrojové adresy inzerátů jsou tvaru
+`…/prodej-pozemku-ke-korunce-praha` — portál sám ulici a město
+rozlišuje, jen do pole obce posílá ulici.
+
+### Oprava
+
+Pravidlo platí **právě a jen pro okres Praha**, protože tam je obec
+vždy Praha. Jinde je `place` opravdu obec a nemění se nic. Nadpis teď
+čte město, pak ulici:
+
+> Pozemek 10 442 m² — **Praha, Ke Korunce**
+
+a „okres Praha" se nepřidává, protože Praha už v tom řádku je.
+
+**Data se nemění**, a je to v komentáři napsané proč: `place` je
+v klíči pozemku i v názvu souboru (`pozemek-praha-devonska-…`), takže
+přepsat ho by znamenalo zahodit adresy, na které už vedou odkazy.
+Mění se jen to, co stránka říká — titulek, nadpis i popisek pro
+vyhledávač, všechny z jedné funkce `mistoFraze()`.
+
+### Pojistka
+
+`scripts/test-misto-prahy.mjs` (nová, v CI) hlídá obě strany: že se
+u Prahy skládá „Praha, ulice", a že se **mimo Prahu nic nerozlilo** —
+že tam nadpis pořád jmenuje okres a nikde se neobjeví „okres Praha".
+Má i předpoklad o sobě: padne, kdyby v datech žádná pražská nabídka
+s ulicí nebyla, protože pak by všechny kontroly prošly naprázdno.
+
+Ověřeno sabotáží: pravidlo vypnuto → `✕ vyšlo „Devonská, okres Praha"`
+a `✕ pozemek-praha-borovska-wgv9wp.html (h1): „Borovská, okres Praha"`.
+
+### A dvě chyby, které si ta zkouška napsala sama na sebe
+
+Při prvním spuštění ohlásila **šest chyb, které na webu nejsou**:
+
+1. Vzor `^pozemek-praha-` bere i **Prahu-východ a Prahu-západ** — a to
+   jsou opravdové okresy s opravdovými obcemi (Jirny, Jevany, Hrusice).
+   Navíc `okres Praha` se shoduje s předponou `okres Praha-východ`.
+   Obojí je teď vyloučené: ve vzoru i v hledání (`Praha(?![-\wÀ-ž])`).
+2. Čekala okres v nadpisu u **všech** stránek mimo Prahu a ohlásila
+   „22 z 34". Jenže okres v titulku **ustupuje záměrně**, když se
+   nevejde do meze délky — to je napsané u `slozTitulek`. Chyba byla
+   v mém očekávání, ne na webu.
+
+Oba omyly jsou v komentáři zkoušky zapsané, protože jsou poučné: vzor
+na jméno souboru je tak dobrý, jak dobře zná výjimky, a kontrola, která
+nezná záměr, hlásí jako chybu právě ten záměr.
 
 ## Co naopak nechybí
 

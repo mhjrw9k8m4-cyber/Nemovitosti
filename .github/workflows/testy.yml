@@ -264,6 +264,9 @@ jobs:
       - name: Mapa webu — datum u každé adresy, a pravdivé
         run: node scripts/test-mapa-webu.mjs
 
+      - name: Místo u pražských nabídek (ulice není obec)
+        run: node scripts/test-misto-prahy.mjs
+
       - name: Vrstvy (z-index) mají vypsaný pořádek
         run: node scripts/test-vrstvy.mjs
 

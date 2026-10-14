@@ -208,8 +208,32 @@ function podilVelkym(d) {
   return t ? t.charAt(0).toUpperCase() + t.slice(1) : '';
 }
 
+/* PRAHA: `place` NENÍ OBEC, JE TO ULICE.
+   Změřeno 14. 10.: v okrese Praha je 23 nabídek a mezi jejich místy
+   stojí „Ke Korunce", „Devonská", „Na Chvalce", „Borovská",
+   „Ibišková", „Na Kindlovce". Titulek z toho skládal „Stavební pozemek
+   778 m² — Ibišková, okres Praha", tedy TVRDIL OBEC, KTERÁ NEEXISTUJE.
+   Není to dohad: zdrojové adresy inzerátů jsou tvaru
+   „…/prodej-pozemku-ke-korunce-praha" — portál sám rozlišuje ulici
+   a město, jen do pole obce posílá ulici.
+   Pravidlo platí právě a jen pro okres Praha, protože tam je obec vždy
+   Praha; jinde je `place` opravdu obec a nic se nemění. Čte se to pak
+   „Praha, Devonská" — město, pak ulice — a žádné „okres Praha" se
+   nepřidává, protože Praha už je v tom řádku.
+   Data se NEMĚNÍ: `place` je v klíči pozemku i v názvu souboru
+   (pozemek-praha-devonska-…), takže přepsat ho by znamenalo zahodit
+   adresy, na které už vedou odkazy. Mění se jen to, co stránka říká. */
+export function mistoFraze(place, okres) {
+  if (okres === 'Praha' && place && place !== 'Praha') {
+    const f = `Praha, ${place}`;
+    return { dlouhe: f, kratke: f };
+  }
+  return { dlouhe: `${place}, okres ${okres}`, kratke: `${place}` };
+}
+
 function slozTitulek(druh, vym, place, okres, podil) {
   const konec = ' | Parcelka';
+  const M = mistoFraze(place, okres);
   /* Podíl ustupuje až jako předposlední — dřív se vzdá okres i výměra.
      Je to nejdůležitější údaj o tom, CO se prodává. */
   const p = podil ? ', ' + podil : '';
@@ -220,17 +244,17 @@ function slozTitulek(druh, vym, place, okres, podil) {
      ustoupila výměra, měly by obě tentýž titulek. */
   const pk = podil ? ', podíl' : '';
   const varianty = [
-    `${druh}${vym ? ' ' + vym : ''}${p} — ${place}, okres ${okres}`,
-    `${druh}${vym ? ' ' + vym : ''}${p} — ${place}`,
-    ...(vym && pk ? [`${druh} ${vym}${pk} — ${place}, okres ${okres}`,
-      `${druh} ${vym}${pk} — ${place}`] : []),
-    `${druh}${p} — ${place}, okres ${okres}`,
-    `${druh}${p} — ${place}`,
-    ...(podil ? [`${podil.charAt(0).toUpperCase() + podil.slice(1)} — ${place}, okres ${okres}`,
-      `${podil.charAt(0).toUpperCase() + podil.slice(1)} — ${place}`] : []),
-    `${druh} — ${place}`,
+    `${druh}${vym ? ' ' + vym : ''}${p} — ${M.dlouhe}`,
+    `${druh}${vym ? ' ' + vym : ''}${p} — ${M.kratke}`,
+    ...(vym && pk ? [`${druh} ${vym}${pk} — ${M.dlouhe}`,
+      `${druh} ${vym}${pk} — ${M.kratke}`] : []),
+    `${druh}${p} — ${M.dlouhe}`,
+    `${druh}${p} — ${M.kratke}`,
+    ...(podil ? [`${podil.charAt(0).toUpperCase() + podil.slice(1)} — ${M.dlouhe}`,
+      `${podil.charAt(0).toUpperCase() + podil.slice(1)} — ${M.kratke}`] : []),
+    `${druh} — ${M.kratke}`,
     `${druh} — okres ${okres}`,
-    `${place}, okres ${okres}`,
+    `${M.dlouhe}`,
   ];
   for (const v of varianty) if ((v + konec).length <= MEZ_TITULKU) return v;
   return varianty[varianty.length - 1].slice(0, MEZ_TITULKU - konec.length - 1) + '…';
@@ -263,7 +287,7 @@ function slozPopis(d, cena, zaM2, vym, navic) {
      nabídka půl milionu metrů za čtyřicet tisíc. */
   const pod = textPodilu(d) ? ', ' + textPodilu(d) : '';
   const zaklad = `${TYP[d.type] || 'Nabídka'} · ${cena}${zaM2}${vym ? ' · ' + vym : ''}${pod}`
-    + ` · ${d.place}, okres ${d.okres}.${termin}${navic || ''}`;
+    + ` · ${mistoFraze(d.place, d.okres).dlouhe}.${termin}${navic || ''}`;
   const varianty = [
     ' Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.',
     ' Poloha na mapě a srovnání s obvyklou cenou.',
