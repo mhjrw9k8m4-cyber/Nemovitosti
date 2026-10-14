@@ -1404,43 +1404,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    Rozsah média to řeší najisto — na telefonu to pravidlo neexistuje. */
 @media (min-width:1041px){
   #nav a:not(.btn-primary).active{color:var(--text-ondark);}
-  /* =====================================================================
-     ODKAZY V LIŠTĚ MAJÍ 44 PX NA VÝŠKU, NE 22
-     =====================================================================
-     Naměřeno na každé stránce webu: „Můj profil" 63×22, „Hledat pozemek"
-     108×22, „Ceny pozemků" 100×22, „Kontakt" 51×22, „Moje" 45×22,
-     položky rozbalovače 172×38. Jediné, co mez drželo, bylo tlačítko
-     „Přidat pozemek" (146×44).
-     Dvaadvacet pixelů je půlka meze 44 px, kterou si web sám drží jinde
-     (hlídá scripts/test-dotyk.mjs), a je to pod 24 px, které žádá
-     WCAG 2.2 „Target Size (Minimum)" bez ohledu na druh ukazatele.
-     Týká se to i myši: na 22px terč se míří hůř než na 44px.
-     Terč roste jen dolů a nahoru kolem textu, ne na šířku, takže se
-     rozestupy v liště nemění a hlavička (85 px) má na 44px terč místo.
-     ===================================================================== */
-  #nav > a:not(#nav-ucet){display:inline-flex; align-items:center; min-height:44px;}
-  #nav #nav-ucet{min-height:44px;}
-  .nav-moje > summary{min-height:44px;}
-  .nav-moje-panel a{min-height:44px;}
-  /* Podtržení aktivní položky viselo 6 px POD odkazem. Se čtyřiačtyřicet
-     pixelů vysokým terčem by spadlo o jedenáct pixelů níž a odlepilo se
-     od textu, ke kterému patří — proto se počítá od spodku terče
-     nahoru. 5 px: text stojí ve středu terče, tedy na y 11–33, a čára
-     tak leží 6 px pod účařím stejně jako dřív. */
-  /* ZNAČKA „TADY JSI" POZNÁ OBOJE ZNAČENÍ, NE JEN `.active`.
-     Změřeno na šesti stránkách: podtržení se kreslilo na JEDINÉ z nich.
-     Úvodní stránka si aktivní položku značí třídou `active`, kdežto
-     108 dalších stránek (ceny, kontakt, účet…) má v kódu
-     `aria-current="page"` — a ten tenhle selektor nebral, takže v liště
-     nebylo poznat, kde člověk je. Výsuvná nabídka na telefonu přitom
-     `aria-current` zná odjakživa (viz pravidlo v @media níž), takže se
-     telefon a monitor rozcházely.
-     Značení se NESJEDNOCUJE na jedno: `aria-current` je ta správná
-     značka pro čtečku obrazovky a `active` nese úvodní stránka pro
-     případ „jsem na mapě", kde se adresa liší kotvou. Rozumí se tedy
-     obojímu. */
-  #nav a:not(.btn-primary).active::after,
-  #nav a:not(.btn-primary)[aria-current="page"]::after{content:""; position:absolute; left:0; right:0; bottom:5px; height:2px; background:var(--copper-bright); border-radius:2px;}
+  #nav a:not(.btn-primary).active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--copper-bright); border-radius:2px;}
 }
 /* NA TELEFONU ŽÁDNÉ PODTRŽENÍ. Pruh pod aktivní položkou (pravidlo výš)
    dává smysl ve vodorovné navigaci na počítači. Ve spodní liště je

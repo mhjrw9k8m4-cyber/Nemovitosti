@@ -685,9 +685,6 @@ jobs:
       - name: Stránky účtu (obsah na středu, ne přilepený vlevo)
         run: node scripts/test-stranky-uctu.mjs
 
-      - name: Horní lišta (terče 44 px, značka „tady jsi")
-        run: node scripts/test-lista-nahore.mjs
-
       - name: Vyhledávač cen podle lokality
         run: node scripts/test-ceny-hledani.mjs
 
