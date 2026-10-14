@@ -84,7 +84,12 @@ pravda('špendlík leží uvnitř snímku', spatnyPin.length === 0,
 /* ATRIBUCE. Esri ji vyžaduje všude, kde se jeho dlaždice kreslí. Píše ji
    stylopis (`.okr-list::after`), takže se hledá v TOM souboru, který si
    stránky opravdu stahují — zdrojové css/styles.css to není. */
-const bundly = ['css/zaklad.min.css', 'css/styles.min.css']
+/* Který balík si která stránka bere, se od 14. 10. liší podle rodiny
+   (scripts/rozdel-styly.mjs). Seznam se proto NEOPISUJE: vezme se
+   z vlastních stránek s výpisem, tedy z těch, kterých se to týká. */
+const bundly = [...new Set(stranky
+  .map((x) => (/href="(css\/[a-z]+\.min\.css)/.exec(x.t) || [])[1])
+  .filter(Boolean))]
   .map((rel) => ({ rel, t: readFileSync(path.join(KOREN, rel), 'utf8') }));
 const sAtribuci = bundly.filter((b) => /Letecké snímky © Esri/.test(b.t));
 pravda(`atribuce snímků je ve stylopisu, který si stránky stahují (${sAtribuci.length} ze ${bundly.length})`,

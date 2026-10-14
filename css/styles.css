@@ -4741,6 +4741,15 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
   .okr-item .okr-foto .okr-badge{font-size:12px; padding:2px 8px; left:8px; top:8px;}
 }
 
+/* Výchozí barva verdiktu o ceně. Skutečnou hodnotu nasazuje vložený
+   styl v pozemek.html podle toho, jak nabídka vyšla (.pz-verdict.good
+   a jeho sourozenci), a ta tuhle přebije — je o kus hloub v kaskádě.
+   Stojí tu ze dvou důvodů: aby token nebyl nikde nedeklarovaný (hlídá
+   test-predloha: nedeklarovanou proměnnou prohlížeč tiše zahodí a nikde
+   se to neprojeví) a aby graf měl barvu i tam, kde by se jednou
+   vykreslil bez té stránky. */
+:root{ --vc:var(--copper-bright); }
+
 /* =====================================================================
    GRAF ROZDĚLENÍ CEN U POZEMKU
    =====================================================================

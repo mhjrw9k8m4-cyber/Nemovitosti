@@ -26,6 +26,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import os from 'node:os';
 import { ocisti, ocistiJs, BEZ_SAZBY } from './minifikace.mjs';
+import { BALIKY } from './rozdel-styly.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -113,13 +114,18 @@ pravda(`a stejně mnoho deklarací (${dZdroj})`, dZdroj === dMini,
 
 /* 4) Stránky na ni odkazují, a na zdroj už ne. */
 const stranky = fs.readdirSync(KOREN).filter((f) => f.endsWith('.html'));
-/* Očištěné kopie jsou dvě: plná (index.html, kde stojí mapa) a zkrácená
-   css/zaklad.min.css pro zbytek webu — viz scripts/rozdel-styly.mjs.
-   Tady se hlídá jen to, že se nikde neservíruje NEočištěný zdroj. */
+/* Očištěných kopií je čtvero: plná (index.html, kde stojí mapa) a tři
+   zkrácené podle rodiny stránek — viz scripts/rozdel-styly.mjs. Jména
+   se sem neopisují, berou se odtamtud: když přibyly třetí a čtvrtý
+   balík, hlásila tahle kontrola „jen 24 stránek odkazuje na očištěnou
+   kopii", protože znala dvě jména ze čtyř.
+   Hlídá se jen to, že se nikde neservíruje NEočištěný zdroj. */
+const VZOR_MINI = new RegExp('(?:href|src)="(?:'
+  + BALIKY.map((b) => b.soubor.replace(/\//g, '\\/').replace(/\./g, '\\.')).join('|') + ')');
 let naMini = 0; const naZdroj = [];
 for (const f of stranky) {
   const s = fs.readFileSync(path.join(KOREN, f), 'utf8');
-  if (/(?:href|src)="css\/(?:styles|zaklad)\.min\.css/.test(s)) naMini++;
+  if (VZOR_MINI.test(s)) naMini++;
   if (/(?:href|src)="css\/styles\.css/.test(s)) naZdroj.push(f);
 }
 pravda(`stránky odkazují na očištěnou kopii (${naMini})`, naMini > 2000, `jen ${naMini}`);

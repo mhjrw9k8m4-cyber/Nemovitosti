@@ -9,6 +9,7 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { BALIKY } from './rozdel-styly.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -50,12 +51,16 @@ const RUCNI = (f) => f.endsWith('.html') &&
    očištění zavedlo, tahle kontrola hlásila 624 odchylek: podle jména
    usoudila, že paletku nevidí ŽÁDNÁ stránka. Platí obě jména —
    rozhoduje, že stránka stylopis vůbec načítá.
-   A JMÉNA JSOU DNES TŘI: po rozdělení (scripts/rozdel-styly.mjs) si
-   2 182 stránek bere css/zaklad.min.css. Paletka (`:root`) je v obou
-   kopiích — pravidlo bez tříd a id se nikdy nevyjímá. Když jsem to
-   jméno zapomněl doplnit, nahlásila kontrola 567 odchylek. */
+   A JMEN JE DNES PĚT: po rozdělení na rodiny (scripts/rozdel-styly.mjs)
+   si stránky pozemků berou css/pozemek.min.css, přehledy
+   css/region.min.css a zbytek css/zaklad.min.css. Paletka (`:root`) je
+   ve všech — pravidlo bez tříd a id se nikdy nevyjímá. Když jsem jedno
+   jméno zapomněl doplnit, nahlásila kontrola 567 odchylek, podruhé 265.
+   Seznam se proto NEOPISUJE: bere se z rozdělovače, takže až přibude
+   další balík, doplní se sem sám. */
+const JMENA_BALIKU = BALIKY.map((b) => b.soubor.replace(/^css\//, '').replace(/\.css$/, '').replace(/\./g, '\\.'));
 const MA_PALETKU = (html) =>
-  /<link[^>]+href="[^"]*css\/(?:styles(?:\.min)?|zaklad\.min)\.css/.test(html);
+  new RegExp('<link[^>]+href="[^"]*css\\/(?:styles|' + JMENA_BALIKU.join('|') + ')\\.css').test(html);
 const zdroje = [{ jmeno: 'css/styles.css', css, maPaletku: true }];
 for (const f of readdirSync(ROOT).filter(RUCNI).sort()) {
   const syrove = readFileSync(path.join(ROOT, f), 'utf8');

@@ -101,10 +101,19 @@ const SBER = () => {
   return { jmena, prvky: out, vynechano };
 };
 
-async function zmer(page, stranka, plny) {
-  await page.unroute('**/css/zaklad.min.css*').catch(() => {});
+/* Který balík si stránka bere. Od 14. 10. nejsou balíky dva, ale
+   čtyři (plný pro mapu, pozemek, region, zbytek) — zkouška proto
+   nehlídá jedno jméno souboru, ale čte ho ze stránky. */
+function balikStranky(stranka) {
+  const html = fs.readFileSync(path.join(KOREN, stranka), 'utf8');
+  const m = /href="(css\/[a-z]+\.min\.css)/.exec(html);
+  return m ? m[1] : null;
+}
+
+async function zmer(page, stranka, plny, balik) {
+  await page.unroute('**/css/*.min.css*').catch(() => {});
   if (plny) {
-    await page.route('**/css/zaklad.min.css*', (r) =>
+    await page.route('**/' + balik + '*', (r) =>
       r.fulfill({ status: 200, contentType: 'text/css', body: PLNY }));
   }
   await page.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
@@ -141,19 +150,26 @@ const page = await ctx.newPage();
 
 /* Že se vůbec měří zkrácený stylopis, a ne omylem plný. */
 pravda(`zástupci rodin stránek se našli (${STRANKY.length})`, STRANKY.length >= 10, `jen ${STRANKY.length}`);
-pravda('zkrácený stylopis je menší než plný',
-  fs.statSync(path.join(KOREN, 'css', 'zaklad.min.css')).size * 1.2
-    < fs.statSync(path.join(KOREN, 'css', 'styles.min.css')).size,
-  'zaklad.min.css není ani o pětinu menší — rozdělení nic nedělá');
+/* Každý zkrácený balík musí být opravdu menší. Kdyby rozdělovač
+   přestal dělit, soubory by tu dál byly — jen by v každém bylo
+   všechno, a tahle zkouška by to jinak nepoznala. */
+const PLNY_B = fs.statSync(path.join(KOREN, 'css', 'styles.min.css')).size;
+for (const jm of ['zaklad', 'pozemek', 'region']) {
+  const c = path.join(KOREN, 'css', jm + '.min.css');
+  pravda(`${jm}.min.css je aspoň o pětinu menší než plný stylopis`,
+    fs.existsSync(c) && fs.statSync(c).size * 1.2 < PLNY_B,
+    fs.existsSync(c) ? `${(fs.statSync(c).size / 1024).toFixed(1)} kB proti ${(PLNY_B / 1024).toFixed(1)} kB`
+      : 'soubor neexistuje');
+}
 
 for (const stranka of STRANKY) {
-  const html = fs.readFileSync(path.join(KOREN, stranka), 'utf8');
-  if (!/href="css\/zaklad\.min\.css/.test(html)) {
-    pravda(`${stranka} si bere zkrácený stylopis`, false, 'odkazuje na něco jiného');
+  const balik = balikStranky(stranka);
+  if (!balik || balik === 'css/styles.min.css') {
+    pravda(`${stranka} si bere zkrácený stylopis`, false, `odkazuje na ${balik || 'nic'}`);
     continue;
   }
-  const a = await zmer(page, stranka, false);   /* zkrácený */
-  const b = await zmer(page, stranka, true);    /* plný */
+  const a = await zmer(page, stranka, false, balik);   /* zkrácený */
+  const b = await zmer(page, stranka, true, balik);    /* plný */
 
   if (a.prvky.length !== b.prvky.length) {
     pravda(`${stranka}: stejný strom`, false,

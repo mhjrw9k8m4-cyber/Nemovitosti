@@ -1525,6 +1525,7 @@ to{opacity:1;transform:none}
 .okr-item .okr-foto{width:100%;aspect-ratio:16/10;margin-bottom:2px}
 .okr-item .okr-foto .okr-badge{font-size:12px;padding:2px 8px;left:8px;top:8px}
 }
+:root{--vc:var(--copper-bright)}
 .pvg{margin:14px 0 0}
 .pvg-pas{position:relative;min-height:54px;margin:0 8px;padding:14px 0;touch-action:pan-y;cursor:crosshair}
 .pvg-kurzor{position:absolute;top:8px;bottom:8px;width:1px;background:var(--vc);opacity:0.45;transform:translateX(-50%);pointer-events:none}
