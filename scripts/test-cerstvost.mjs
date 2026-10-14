@@ -101,7 +101,12 @@ async function otevri(data) {
       return { text: c.textContent.trim(), stav: z ? z.textContent : null, zle: z ? z.classList.contains('src-zle') : false };
     }),
   }));
-  pravda('čerstvost se uvádí i s časem, ne jen datem', /dnes v 7:00/.test(v.hlavicka),
+  /* MEZERA MŮŽE BÝT NEZLOMITELNÁ. Od 14. 10. sází krok sazby i texty,
+     které skládá prohlížeč, takže se ve větě objeví „v\u00a0…". Vzor
+     hlídá SLOVA, ne tvar mezery — tahle past dostala za jedno
+     odpoledne pět zkoušek, a pokaždé měla pravdu o smyslu a mýlila se
+     o zápisu. */
+  pravda('čerstvost se uvádí i s časem, ne jen datem', /dnes v[\s\u00a0]7:00/.test(v.hlavicka),
     `vyšlo „${v.hlavicka}"`);
   const sesStavem = v.znacky.filter((z) => z.stav);
   pravda('u zdrojů je vidět, kolik naposledy přinesly', sesStavem.length >= 2,

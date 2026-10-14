@@ -35,7 +35,7 @@ const stav = () => p.evaluate(() => {
   return {
     otevreno: !(document.getElementById('rv-vrstva') || {}).hidden,
     karta: (document.querySelector('.rv-misto') || { textContent: '' }).textContent.trim(),
-    zbyva: (document.getElementById('rv-zbyva') || { textContent: '' }).textContent,
+    zbyva: ((document.getElementById('rv-zbyva') || { textContent: '' }).textContent || '').replace(/\s+/g, ' '),
     stalo: (document.getElementById('rv-stalo') || { textContent: '' }).textContent,
     zpetVyp: !!(document.getElementById('rv-zpet') || {}).disabled,
     ulozene: cti('pk_fav_v1').length, skryte: cti('pk_skryte_v1').length,
@@ -168,7 +168,15 @@ pravda('a v hlavičce je vidět, kolik toho člověk uložil', /♥\s*\d/.test(b
    Napoprvé se sypal celý výpis: v hlavičce stálo „Zbývá 1 955" a konec
    byl po dvou tisících rozhodnutích, tedy nikdy. Teď se nabízí dvacet
    karet a je vidět, kolikátá je na řadě. */
-const hlavicka = await p.evaluate(() => (document.getElementById('rv-zbyva') || {}).textContent || '');
+/* MEZERY SE SJEDNOTÍ UŽ PŘI ČTENÍ — a tahle zkouška je důkaz, proč.
+   Hlavička říká „Karta 3 z 20" a česká sazba do ní správně vloží
+   nezlomitelnou mezeru („z\u00a020"). Vzor `/z (\d+)/` s obyčejnou
+   mezerou pak nenašel nic, `davka` vyšla NULA, smyčka níž stiskla
+   jednu šipku místo jedenadvaceti, dávka nikdy neskončila a zkouška
+   spadla až na kliku do tlačítka, které se nikdy neobjevilo —
+   `page.click: Timeout 30000ms exceeded`. Z jednoho vzoru kaskáda,
+   která vypadala jako rozbitý web. Byl v pořádku. */
+const hlavicka = await p.evaluate(() => ((document.getElementById('rv-zbyva') || {}).textContent || '').replace(/\s+/g, ' ') || '');
 pravda('hlavička říká, kolikátá karta z dávky je na řadě (ne „zbývá 1 955")',
   /^Karta \d+ z \d+$/.test(hlavicka.trim()) && !/1\s*9\d\d/.test(hlavicka),
   `v hlavičce stojí „${hlavicka}"`);
@@ -192,14 +200,14 @@ await p.waitForTimeout(600);
 const konec = await p.evaluate(() => ({
   text: (document.querySelector('.rv-konec') || { textContent: '' }).textContent.replace(/\s+/g, ' ').trim(),
   dalsi: !!document.getElementById('rv-dalsi'),
-  hlavicka: (document.getElementById('rv-zbyva') || {}).textContent,
+  hlavicka: ((document.getElementById('rv-zbyva') || {}).textContent || '').replace(/\s+/g, ' '),
 }));
 pravda('dávka opravdu skončí', /Dávka hotová/.test(konec.text), JSON.stringify(konec));
 pravda('a konec řekne, kde uložené pozemky najdu', /Uložené/.test(konec.text), konec.text.slice(0, 160));
 pravda('a nabídne další dávku, ne nekonečné sypání karet', konec.dalsi, konec.text.slice(0, 160));
 await p.click('#rv-dalsi'); await p.waitForTimeout(700);
 const po = await p.evaluate(() => ({
-  hlavicka: (document.getElementById('rv-zbyva') || {}).textContent,
+  hlavicka: ((document.getElementById('rv-zbyva') || {}).textContent || '').replace(/\s+/g, ' '),
   karta: (document.querySelector('.rv-misto') || { textContent: '' }).textContent.trim(),
 }));
 pravda('„Projít dalších" naloží novou dávku', /^Karta 1 z/.test((po.hlavicka || '').trim()) && po.karta.length > 0,

@@ -138,7 +138,11 @@ const stavVybiraku = (p) => p.evaluate(() => {
     okno: `${innerWidth}×${innerHeight}`,
     panelCela: (() => { const e = document.querySelector('.vm-panel'); if (!e) return false; const r = e.getBoundingClientRect();
       return r.width >= innerWidth - 1 && r.height >= innerHeight - 1; })(),
-    pocet: (document.getElementById('vm-pocet') || {}).textContent || '',
+    /* MEZERY SE SJEDNOTÍ UŽ TADY. Věta v panelu projde českou sazbou,
+       takže v ní stojí „u\u00a0obce" — a vzor s obyčejnou mezerou ji
+       nenajde. `\s` v JavaScriptu nezlomitelnou mezeru zahrnuje, takže
+       jedno nahrazení na místě čtení udělá všechny vzory níž odolné. */
+    pocet: ((document.getElementById('vm-pocet') || {}).textContent || '').replace(/\s+/g, ' '),
     /* Výběr místa je jen mapa. Žádné psaní obce ani seznam krajů — člověk
        ukáže prstem, kde to má být. Kdyby se hledání vrátilo, je to zpátky
        formulář, a přesně tomu se tu chceme vyhnout. */

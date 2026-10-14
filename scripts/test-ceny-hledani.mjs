@@ -151,8 +151,13 @@ try {
        vlastní medián jednoho druhu mělo dost dat devět. */
     pravda('u obce je napsané, že ceny jsou za celý okres',
       /za celý okres/i.test(text), text.replace(/\s+/g, ' ').slice(0, 140));
+    /* MEZERA MŮŽE BÝT NEZLOMITELNÁ. Od 14. 10. sází krok sazby i texty,
+       které skládá prohlížeč, takže se ve větě objeví „v\u00a0…". Vzor
+       hlídá SLOVA, ne tvar mezery — tahle past dostala za jedno
+       odpoledne pět zkoušek, a pokaždé měla pravdu o smyslu a mýlila se
+       o zápisu. */
     pravda('a je u ní vidět, kolik nabídek má ta obec sama',
-      /v nabídce/i.test(text), text.replace(/\s+/g, ' ').slice(0, 140));
+      /v[\s\u00a0]nabídce/i.test(text), text.replace(/\s+/g, ' ').slice(0, 140));
   }
 
   /* --- 5) neznámá lokalita nesmí mlčet --------------------------- */
@@ -163,8 +168,13 @@ try {
     navrhu: document.querySelectorAll('.cenh-navrh').length,
     text: (document.getElementById('cenh-vysledek') || {}).innerText || '',
   }));
+  /* MEZERA MŮŽE BÝT NEZLOMITELNÁ. Od 14. 10. sází krok sazby i texty,
+     které skládá prohlížeč, takže se ve větě objeví „v\u00a0…". Vzor
+     hlídá SLOVA, ne tvar mezery — tahle past dostala za jedno
+     odpoledne pět zkoušek, a pokaždé měla pravdu o smyslu a mýlila se
+     o zápisu. */
   pravda('neznámá obec nevrátí ticho, ale větu',
-    prazdno.navrhu === 0 && /nemáme v nabídce/i.test(prazdno.text),
+    prazdno.navrhu === 0 && /nemáme v[\s\u00a0]nabídce/i.test(prazdno.text),
     `návrhů ${prazdno.navrhu}, text „${prazdno.text.replace(/\s+/g, ' ').slice(0, 120)}"`);
 
   /* --- 6) píše se bez háčků -------------------------------------- */

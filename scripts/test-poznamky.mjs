@@ -286,8 +286,10 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
   await p.waitForTimeout(2400);
 
+  /* Mezery se sjednotí už při čtení: věta prošla českou sazbou, takže
+     v ní stojí „k\u00a0vašemu účtu". Zkouška se ptá na SLOVA. */
   const slib = await p.evaluate(() =>
-    (document.querySelector('#pz-pozn-kde') || {}).textContent || '');
+    ((document.querySelector('#pz-pozn-kde') || {}).textContent || '').replace(/\s+/g, ' '));
   pravda('přihlášenému u pole stojí, že se uloží k ÚČTU',
     /k vašemu účtu/i.test(slib), `věta: „${slib.slice(0, 100)}"`);
   pravda('a NESLIBUJE se mu přitom, že se nikam neodesílá',

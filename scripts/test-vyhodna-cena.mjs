@@ -108,7 +108,9 @@ async function karta(jmeno) {
     const el = karty.find((e) => (e.textContent || '').indexOf(jm) >= 0);
     if (!el) return null;
     return {
-      chipy: Array.from(el.querySelectorAll('.opp-deal, .opp-overit')).map((c) => (c.textContent || '').trim()),
+      /* Mezery se sjednotí už tady: odznak „cena k\u00a0ověření" prošel
+         českou sazbou a vzor s obyčejnou mezerou by ho nenašel. */
+      chipy: Array.from(el.querySelectorAll('.opp-deal, .opp-overit')).map((c) => (c.textContent || '').replace(/\s+/g, ' ').trim()),
       vysledku: karty.length,
     };
   }, jmeno);

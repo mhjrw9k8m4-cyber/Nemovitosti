@@ -5539,6 +5539,78 @@ polovina hlášení, takže se nezlomitelná mezera ve výpisu ukazuje jako
   se na ní v měření ani jednou neobjevil, tak jsem seznam nerozšiřoval
   jen podle dohadu.
 
+## 3cf. A co ta oprava stála: osm zkoušek mělo pravdu o smyslu a mýlilo se o zápisu — *14. 10.*
+
+Sazba do textu skládaného v prohlížeči (3ce) měla následek, který jsem
+měl předvídat a nepředvídal: **osm zkoušek porovnávalo vykreslenou
+českou větu přes literální mezeru.** Jak jen v té větě stála
+jednopísmenná předložka, přestalo to sedět.
+
+| zkouška | co nesedělo |
+|---|---|
+| `test-ukonceno` | vzor na lidské datum `\d{1,2}\. \d{1,2}\. \d{4}` |
+| `test-stranky-pozemku` | jméno obce „Čistá **u** Horek" |
+| `test-cerstvost` | `/dnes v 7:00/` |
+| `test-ceny-hledani` | `/v nabídce/`, `/nemáme v nabídce/` |
+| `test-mapa-pozemku` | nadpis „Sítě **a** vybavení", `/z textu inzerátu/` |
+| `test-okoli` | `/u obce \s*\S/` |
+| `test-poznamky` | `/k vašemu účtu/` |
+| `test-vyhodna-cena` | odznak „cena **k** ověření" |
+| `test-rychly-prohlizec` | `/z (\d+)/` v hlavičce — a to je vlastní kapitola |
+
+### Oprava je na místě čtení, ne v každém vzoru
+
+U prvních dvou jsem látal vzor. Pak mi došlo, že to je špatně
+položená otázka: zkouška se ptá na **slova**, ne na tvar mezery.
+Takže se mezery sjednotí **už tam, kde se text ze stránky čte** —
+jedno `.replace(/\s+/g, ' ')` a všechny kontroly pod tím jsou odolné.
+`\s` v JavaScriptu nezlomitelnou mezeru zahrnuje, takže to nic
+nestojí. U `test-mapa-pozemku` to bylo vidět nejlíp: `chips` se
+takhle čtou odjakživa, a právě proto ta jediná kontrola nepadla.
+
+### Jedna kaskáda, která vypadala jako rozbitý web
+
+`test-rychly-prohlizec` nespadl na kontrole, ale na
+`page.click: Timeout 30000ms exceeded`. Řetěz byl tenhle:
+
+1. hlavička říká „Karta 3 **z** 20" a sazba tam správně vloží
+   nezlomitelnou mezeru,
+2. zkouška z ní čte velikost dávky vzorem `/z (\d+)/` — s obyčejnou
+   mezerou, takže nenajde nic a `davka` vyjde **nula**,
+3. smyčka `for (i = 0; i < davka + 1; i++)` tedy stiskne **jednu**
+   šipku místo jedenadvaceti,
+4. dávka nikdy nedojede, konec se nevykreslí, tlačítko „Projít
+   dalších 20" nikdy nevznikne,
+5. klik do něj po třiceti sekundách vyprší.
+
+Z jednoho vzoru pět kroků, a na konci hlášení, které o příčině
+neříká nic. **Web byl celou dobu v pořádku.**
+
+### Jak jsem to hledal — a jedna slepá ulička
+
+Postup: dávka to ohlásila, zopakoval jsem to samo (takže ne výpadek),
+pak jsem **vrátil `js/min` před svou změnu** — 45 z 45 v pořádku —
+a s vysázenými kopiemi spadlo. Tím bylo prokázané, že je to **můj**
+regres a ne cizí. Po souborech vyšlo, že je to `js/min/main.js`.
+
+Slepá ulička: v `js/main.js` je záložní datová tabulka a v ní
+`extra:'v exekuci'`, ze kterého sazba udělala `'v exekuci'`.
+Vypadalo to jako jistá příčina — vysázená **data**, ne text. Ověřil
+jsem to a je to planý poplach: `extra` se nikde neporovnává
+s literálem, prohání se funkcí `daysUntil()`, která z něj zkouší
+vyčíst datum, a nezlomitelná mezera na tom nemění nic. Zapisuju to
+sem schválně: byl to nejpravděpodobnější podezřelý a nebyl to on.
+
+### Co z toho zůstává jako poučení
+
+Sázet řetězce v kódu je bezpečné jen do té míry, do jaké jde poznat
+text od dat — a poznat to **podle tvaru** nelze úplně. Dnešní
+pravidlo („diakritika, nebo dvě slova a žádná číslice", plus
+jmenovitá výjimka) prošlo přes 1 398 řetězců a nerozbilo ani jeden,
+což je změřené, ne odhadnuté. Ale je to pravidlo s předpokladem,
+a ten předpoklad je napsaný u `jeVeta` v `scripts/minifikace.mjs`,
+ať je po ruce tomu, kdo tam bude přidávat další.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

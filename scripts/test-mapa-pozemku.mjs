@@ -885,11 +885,20 @@ if (DRAZBA) {
   if (seSitemi) {
     const { ctx, p } = await detail({ cil: seSitemi.url });
     await p.waitForTimeout(1200);
-    const v = await p.evaluate(() => ({
-      nadpisy: [...document.querySelectorAll('.pz-sect-h')].map((h) => h.textContent.trim()),
-      chips: [...document.querySelectorAll('.pz-feat')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
-      zdroj: ((document.querySelector('.pz-feat-zdroj') || {}).textContent || '').trim(),
-    }));
+    /* MEZERY SE SJEDNOTÍ UŽ PŘI ČTENÍ. Nadpis „Sítě a vybavení" i věta
+       o zdroji projdou českou sazbou, takže v nich stojí nezlomitelná
+       mezera — a `includes('Sítě a vybavení')` ji nenajde. Zkouška se
+       ptá na SLOVA; `\s` v JavaScriptu nezlomitelnou mezeru zahrnuje,
+       takže stačí jedno nahrazení na místě, kde se text čte. U `chips`
+       to tu bylo odjakživa, a právě proto ta kontrola nepadla. */
+    const v = await p.evaluate(() => {
+      const t = (e) => ((e || {}).textContent || '').replace(/\s+/g, ' ').trim();
+      return {
+        nadpisy: [...document.querySelectorAll('.pz-sect-h')].map(t),
+        chips: [...document.querySelectorAll('.pz-feat')].map(t),
+        zdroj: t(document.querySelector('.pz-feat-zdroj')),
+      };
+    });
     const ocekavane = seSitemi.d.site.map((k) => ({ elektrina: 'Elektřina', voda: 'Voda',
       kanalizace: 'Kanalizace', plyn: 'Plyn', cesta: 'Příjezd' }[k] || k));
     pravda('stránka pozemku má sekci „Sítě a vybavení"', v.nadpisy.includes('Sítě a vybavení'),
