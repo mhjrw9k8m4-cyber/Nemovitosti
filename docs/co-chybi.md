@@ -5856,6 +5856,99 @@ Mezi kontrolními znaky je proto teď schválně i velké `E` a `S`: právě
 na nich se ta slepota pozná. Hotová zkouška hlásí sabotáž na všech
 osmnácti znacích a na čistém webu nehlásí nic.
 
+## 3cl. Připnutý pruh měl cenu, ale ne akci — a tři sabotáže, které nic nedokázaly — *14. 10.*
+
+Na širokém displeji je od předělávky vpravo **připnutý pruh s cenou**:
+roluje se popisem, cena zůstane na očích. Chyběla v něm ale ta jediná
+věc, kvůli které se na stránku chodí — **odkaz na nabídku**. „Inzerát"
+a „Uložit" ležely v levém sloupci a po odrolování zmizely, takže
+rozhodnutí podle ceny v pruhu znamenalo rolovat zpátky nahoru.
+
+Změřeno na 1440×900 (`pozemek-benesov-benesov-1sjtz7b.html`): po
+odrolování o 2 200 px byl hlavní odkaz na `top −1 284 px`, tedy
+mimo obrazovku, zatímco cena stála na `top 195 px`.
+
+### Proč to nešlo udělat stylem
+`.pz-akce-hlavni` a `.pz-bok` jsou **dva různé uzly stromu** a pruh
+zabírá `grid-row:1 / span 99`. Mřížka do jednoho připnutého prvku dva
+sourozence z různých míst nespojí; `position:fixed` by se při rolování
+od ceny odlepil a druhé vykreslení bloku by znamenalo **dvakrát
+`id="pz-fav"`** — tedy „Uložit", které se hlásí jen napoprvé.
+
+Řešení je proto přesun **jednoho a téhož uzlu** (js/pozemek.js,
+`pripniAkce`), řízený `matchMedia('(min-width:1100px)')`, s komentářem
+jako kotvou pro cestu zpátky. Komentář schválně: prázdný `<div>` by
+v levém sloupci po přesunu nechal mezeru.
+
+Naměřeno po opravě: 1440 px → akce v pruhu, po odrolování o 2 200 px
+`top 256 px` (vidět); 390 px → nic se nezměnilo, pořadí `rádce 749 px
+< akce 826 px` jako dřív; 1024 px → mimo pruh; zúžení okna za chodu
+vrátí blok pod rádce.
+
+### A teď to podstatné: tři sabotáže, které NIC nedokázaly
+Zkoušku jsem po zelené napsal sabotovat — jak se to tady dělá vždycky.
+Vyřadil jsem volání přesunu, pak jsem přesun udělal bezpodmínečný, pak
+jsem místo přesunu udělal kopii. **Všechny tři sabotáže prošly
+17 z 17 kontrol.** Vypadalo to na slepou zkoušku.
+
+Nebylo. Sabotoval jsem `js/pozemek.js` a `css/styles.css` — tedy
+**zdroje**. Vygenerovaná stránka pozemku si ale bere `js/min/pozemek.js`
+a `css/zaklad.min.css`. Prohlížeč můj vandalismus nikdy neviděl.
+
+Po zopakování na skutečně servírovaných souborech chytla zkouška
+všechny čtyři:
+
+| sabotáž (v servírovaném souboru) | spadlo kontrol |
+|---|---|
+| přesun se nevolá | 2 |
+| přesouvá se vždy, i na 900 px | 4 |
+| místo přesunu kopie (dvě `#pz-fav`) | 3 |
+| pruh se odlepí (`sticky` → `static`) | 1 |
+
+**Poučení, které si tu nechávám napsané:** sabotáž zdroje nedokazuje
+nic, dokud zdrojem neprojde `node scripts/oprav.mjs`. Na tomhle webu
+se servíruje `js/min/*.js` a `css/zaklad.min.css`, ne to, co edituju.
+Málem jsem z toho udělal opačný závěr — že zkouška je slepá — a zahodil
+funkční pojistku.
+
+### A ještě jedna cizí pojistka mě chytla při téže opravě
+Pravidlo pro pruh jsem napsal do `css/styles.css`. Spadlo
+`test-vlozeny-styl.mjs`:
+
+```
+pz-btn: width
+pz-akce-hlavni: display, gap, margin
+(dvě místa pro tutéž vlastnost se rozejdou)
+```
+
+Mělo pravdu: `.pz-akce-hlavni` se celá řídí **vloženým stylem**
+v `pozemek.html`, takže tytéž vlastnosti by si od té chvíle odporovaly
+ze dvou souborů. Pravidlo se proto přestěhovalo k ní a nese jen vlastní
+třídu `.pz-akce-v-boku` — žádné `@media`, protože mez 1100 px drží
+skript a dvě místa pro touž mez by se zase rozešla.
+
+### Strop na předlohu měl 18 bajtů rezervy
+Při stěhování spadla druhá kontrola: `pozemek.html` se má vejít do
+40 kB **i s komentáři**, protože je to jediná stránka, která je
+zároveň zdroj i servírovaná stránka (generované stránky si komentáře
+čistí, viz 3bz). Jenže naměřeno **40 942 B z 40 960** — osmnáct bajtů
+rezervy. To není rozpočet, to je zmrazení dnešní velikosti: neprojde
+ani jedna věta komentáře.
+
+Co s tím bylo uděláno, a říkám to rovnou, protože zvednout strop kvůli
+vlastní změně je podezřelé:
+1. Dvě **mrtvá pravidla** pryč (`.g-ok`, `.g-warn` — změřeno, že je
+   nevyrábí žádný skript ani generátor): −105 B.
+2. Druhé nové pravidlo (`width:100%` na tlačítka) **zrušeno jako
+   zbytečné** — v mřížce se prvky do sloupce natáhnou samy; ověřeno
+   měřením, šířky zůstaly 306/306 px.
+3. Strop zvednut na **41 kB**, s důvodem napsaným přímo u čísla.
+
+Skutečná oprava je jinde a zůstává k udělání: oddělit předlohu od
+výstupu, aby i `pozemek.html` servírovala styl bez těch **16,5 kB
+komentářů**. Pak může strop spadnout hluboko pod 40.
+
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

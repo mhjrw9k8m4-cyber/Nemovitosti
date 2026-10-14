@@ -1268,6 +1268,40 @@
     return !!document.querySelector('.pz-konec');
   }
 
+  /* PŘESUN HLAVNÍCH AKCÍ DO PŘIPNUTÉHO PRUHU (jen ≥1100 px).
+     Proč skriptem a ne stylem: `.pz-akce-hlavni` a `.pz-bok` jsou dva
+     různé uzly stromu a pruh vpravo zabírá `grid-row:1 / span 99` —
+     mřížka do jednoho připnutého prvku dva sourozence z různých míst
+     nespojí a `position:fixed` by se při rolování odlepil od ceny.
+     Kotva je komentář, ne prázdný <div>: komentář nic nekreslí, takže
+     se v levém sloupci po přesunu nedělá mezera navíc.
+     Přesun běží ve stejném úkolu jako vykreslení, tedy před prvním
+     vykreslením obrazovky — nic se tím neposouvá a CLS se nemění
+     (hlídá scripts/test-stabilita.mjs). */
+  function pripniAkce(host) {
+    var akce = host.querySelector('.pz-akce-hlavni');
+    var bok = host.querySelector('.pz-bok');
+    if (!akce || !bok || !global.matchMedia) return;
+    var kotva = document.createComment('akce');
+    akce.parentNode.insertBefore(kotva, akce);
+    var siroko = global.matchMedia('(min-width:1100px)');
+    function uloz() {
+      var vpravo = !!siroko.matches;
+      if (vpravo) { if (akce.parentNode !== bok) bok.appendChild(akce); }
+      else if (akce.parentNode === bok && kotva.parentNode) {
+        kotva.parentNode.insertBefore(akce, kotva.nextSibling);
+      }
+      akce.classList.toggle('pz-akce-v-boku', vpravo);
+    }
+    uloz();
+    /* Změna šířky okna (i otočení tabletu) musí blok vrátit zpátky do
+       toku — jinak by na telefonu po zúžení zůstal v pruhu, který tam
+       není. addListener je kvůli starším Safari, kde `change` na
+       MediaQueryList ještě nebyl. */
+    if (siroko.addEventListener) siroko.addEventListener('change', uloz);
+    else if (siroko.addListener) siroko.addListener(uloz);
+  }
+
   function render(d) {
     if (strankaUkoncena()) return;
     var t = TYPE[d.type];
@@ -1634,6 +1668,16 @@
 
     var host = document.getElementById('pz-detail');
     host.innerHTML = html;
+    /* AKCE K CENĚ, KDYŽ JE NA TO MÍSTO. Na širokém displeji je pravý pruh
+       připnutý — cena zůstane na očích i po odrolování k popisu — ale
+       rozhodnout se podle něj nešlo: „Inzerát" a „Uložit" ležely v levém
+       sloupci a při rolování zmizely, takže člověk musel rolovat zpátky
+       nahoru k tomu, kvůli čemu na stránku šel. Přesouvá se JEDEN A TÝŽ
+       prvek, ne jeho kopie: kopií by na stránce bylo dvakrát
+       id="pz-fav" a „Uložit" by se přestalo hlásit ke kliknutí.
+       Na telefonu se nedělá nic — blok zůstane přesně tam, kde byl, a
+       pořadí bloků hlídá scripts/test-poradi-pozemku.mjs na 360 px. */
+    try { pripniAkce(host); } catch (e) {}
     try { zapisNaposledy(d); } catch (e) {}
     try { zapocitejZhlednuti(d); } catch (e) {}
 

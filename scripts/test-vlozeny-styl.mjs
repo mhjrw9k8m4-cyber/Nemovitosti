@@ -58,7 +58,17 @@ const bez = styl.replace(/\/\*[\s\S]*?\*\//g, '');
    která vložený styl posílá i s komentáři (je to ZDROJ, nečistí se),
    a chodí se na ni z mapy. */
 const STROP_KB = 24;        // dnešní stav 21,0 kB
-const STROP_PREDLOHY_KB = 40;
+/* 41, ne 40 — a tohle je důvod, ať to příště někdo nemusí hádat.
+   Při čtyřiceti zbývalo nad dnešním stavem 18 BAJTŮ (40 942 z 40 960).
+   To už není rozpočet, to je zmrazení dnešní velikosti: neprošel by
+   ani jeden nový řádek stylu, ani jedna věta komentáře — a komentáře
+   jsou přesně to, čím tenhle web vysvětluje sám sebe. Strop zůstává,
+   jen má zase k čemu sloužit; 41 kB dává přes tisíc bajtů místa.
+   SKUTEČNÁ OPRAVA JE JINDE a je zapsaná v docs/co-chybi.md: pozemek.html
+   je jediná stránka, která čtenáři posílá 16,5 kB komentářů ve stylu,
+   protože je zároveň zdroj i servírovaná stránka. Až se předloha
+   oddělí od výstupu, tenhle strop může spadnout hluboko. */
+const STROP_PREDLOHY_KB = 41;
 
 const hotove = readdirSync(KOREN).filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f));
 pravda('je co měřit — vygenerované stránky pozemků se našly',

@@ -845,6 +845,27 @@
     return !!document.querySelector('.pz-konec');
   }
 
+  function pripniAkce(host) {
+    var akce = host.querySelector('.pz-akce-hlavni');
+    var bok = host.querySelector('.pz-bok');
+    if (!akce || !bok || !global.matchMedia) return;
+    var kotva = document.createComment('akce');
+    akce.parentNode.insertBefore(kotva, akce);
+    var siroko = global.matchMedia('(min-width:1100px)');
+    function uloz() {
+      var vpravo = !!siroko.matches;
+      if (vpravo) { if (akce.parentNode !== bok) bok.appendChild(akce); }
+      else if (akce.parentNode === bok && kotva.parentNode) {
+        kotva.parentNode.insertBefore(akce, kotva.nextSibling);
+      }
+      akce.classList.toggle('pz-akce-v-boku', vpravo);
+    }
+    uloz();
+
+    if (siroko.addEventListener) siroko.addEventListener('change', uloz);
+    else if (siroko.addListener) siroko.addListener(uloz);
+  }
+
   function render(d) {
     if (strankaUkoncena()) return;
     var t = TYPE[d.type];
@@ -1036,6 +1057,8 @@
 
     var host = document.getElementById('pz-detail');
     host.innerHTML = html;
+
+    try { pripniAkce(host); } catch (e) {}
     try { zapisNaposledy(d); } catch (e) {}
     try { zapocitejZhlednuti(d); } catch (e) {}
 

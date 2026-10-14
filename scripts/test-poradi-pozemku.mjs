@@ -140,6 +140,63 @@ try {
   pravda('ale odkaz na rozepsané náklady koupě zůstal',
     await p.evaluate(() => !!document.querySelector('.pz-naklady a[href*="kolik-stoji-koupe"]')),
     'odkaz na náklady koupě se ztratil i s kalkulačkou');
+
+  /* 6) NA ŠIROKÉM DISPLEJI AKCE K CENĚ ------------------------------
+     Na monitoru je vpravo připnutý pruh s cenou, ale rozhodnout se
+     podle něj nešlo: „Inzerát" a „Uložit" zůstaly v levém sloupci a po
+     odrolování zmizely. Skript je proto nad 1100 px přesouvá do pruhu
+     (js/pozemek.js, pripniAkce). Tahle část hlídá obojí: že se to
+     opravdu stane, a hlavně že se to NEDĚJE na užším okně — tam by to
+     vyhodilo tlačítka nad rádce „Co byste měli vědět", tedy přesně
+     proti tomu, co kontroluje oddíl 2. */
+  const vBoku = async (stranka) => stranka.evaluate(() => {
+    const akce = document.querySelector('.pz-akce-hlavni');
+    const bok = document.querySelector('.pz-bok');
+    return !!(akce && bok && bok.contains(akce));
+  });
+  const sirokyCtx = await prohlizec.newContext({
+    viewport: { width: 1440, height: 900 }, serviceWorkers: 'block', locale: 'cs-CZ',
+  });
+  const w = await sirokyCtx.newPage();
+  await w.goto(BASE + STRANKA, { waitUntil: 'load' });
+  await w.waitForSelector('.pz-priceblock', { timeout: 20000 });
+  await w.waitForTimeout(2000);
+  pravda('na 1440 px stojí hlavní akce v připnutém pruhu u ceny', await vBoku(w),
+    'tlačítka zůstala v levém sloupci — přesun se nepovedl');
+  /* Přesouvá se jeden a týž prvek. Kdyby ho někdo „pro jistotu"
+     vykreslil na obě místa, byla by na stránce dvě id="pz-fav"
+     a klikalo by jen to první. */
+  pravda('a je na stránce jen jedno tlačítko „Uložit"',
+    (await w.evaluate(() => document.querySelectorAll('#pz-fav').length)) === 1,
+    'id="pz-fav" je na stránce vícekrát — někdo blok zkopíroval místo přesunu');
+  /* Celý smysl přesunu: po odrolování k popisu je akce pořád vidět. */
+  await w.evaluate(() => scrollTo(0, 2200));
+  await w.waitForTimeout(400);
+  const vidno = await w.evaluate(() => {
+    const e = document.querySelector('.pz-akce-hlavni .pz-btn.primary');
+    if (!e) return null;
+    const r = e.getBoundingClientRect();
+    return { top: Math.round(r.top), v: r.top >= 0 && r.bottom <= innerHeight };
+  });
+  pravda('a po odrolování o 2 200 px je odkaz na nabídku pořád na obrazovce',
+    !!(vidno && vidno.v), JSON.stringify(vidno));
+  /* A pruh se smí zúžit zpátky: kdo si na notebooku zmenší okno,
+     nesmí zůstat s tlačítky viset v pruhu, který už není. */
+  await w.setViewportSize({ width: 900, height: 800 });
+  await w.waitForTimeout(400);
+  pravda('po zúžení okna na 900 px se akce vrátí do toku stránky',
+    !(await vBoku(w)), 'blok zůstal v pruhu, i když pruh na téhle šířce není');
+  const poradi = await w.evaluate(() => {
+    const y = (sel) => {
+      const e = document.querySelector(sel);
+      return e ? Math.round(e.getBoundingClientRect().top + window.scrollY) : null;
+    };
+    return { radce: y('details.pz-gtk-obal:not(.pz-nav-obal)'), akce: y('.pz-akce-hlavni') };
+  });
+  pravda('a vrátí se na SVÉ místo — pod rádce, ne na začátek stránky',
+    je(poradi.radce) && je(poradi.akce) && poradi.akce > poradi.radce,
+    `rádce ${poradi.radce} px, akce ${poradi.akce} px`);
+  await sirokyCtx.close();
 } catch (e) {
   try { await prohlizec.close(); } catch (e2) {}
   hotovo(e);
