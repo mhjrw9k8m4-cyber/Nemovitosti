@@ -1,6 +1,7 @@
 // Test celé pravidelné kontroly — od načtení inzerátů po zápis výsledků.
 //
-// Proti čemu: proti zkušebnímu serveru (scripts/test-server.mjs), který
+// Proti čemu: proti zkušebnímu serveru
+// (scripts/falesny-server-kontroly.mjs), který
 // předstírá Supabase i cizí weby. Jeden odkaz na něm dvakrát po sobě shodí
 // spojení a teprve potřetí odpoví — tím se ověří to podstatné: že se
 // každá adresa zkouší několikrát a jeden výpadek sítě nikoho neodsoudí.
@@ -19,7 +20,7 @@ function tvrdi(popis, podminka, detail) {
   if (!podminka) { spadlo++; console.log(`  ✕ ${popis}${detail ? '\n      ' + detail : ''}`); }
 }
 
-const server = spawn(process.execPath, [path.join(ROOT, 'scripts', 'test-server.mjs')], { cwd: ROOT, stdio: 'ignore' });
+const server = spawn(process.execPath, [path.join(ROOT, 'scripts', 'falesny-server-kontroly.mjs')], { cwd: ROOT, stdio: 'ignore' });
 await spi(1200);
 
 let vypis = '';

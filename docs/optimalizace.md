@@ -114,12 +114,26 @@ znovu stáhnout celý balík. Rozdělit podle funkcí (mapa, výpis, filtry,
 rychlý výběr, vývoz) — ale až po položce 2, aby se to dělilo podle
 měření, ne podle dojmu.
 
-## 4. Mrtvá pravidla ve stylopisu
+## 4. Mrtvá pravidla ve stylopisu — *HOTOVO 14. 10., a našlo se u toho víc*
 
-Pět tříd se nevyskytuje nikde — ani v HTML, ani ve skriptech, ani
-v generátorech: `foot-grid`, `foot-tag`, `foot-brand-col` (zbytky po
-čtyřsloupcové patičce, kterou majitel odmítl), `reviews`, `no-ext`.
-Z 857 tříd je to málo; uklidí se to, ale je to drobnost.
+Hledání mrtvých tříd vyplavilo něco horšího než pár kilobajtů:
+**69 stránek pořád neslo čtyřsloupcovou patičku, kterou majitel
+odmítl.** Nebyly to zapomenuté soubory — jsou to ukončené nabídky
+a generátor je schválně nepřepisuje, aby zůstal zachovaný obsah
+inzerátu. Jenže patička není obsah, je to rám stránky: kdo na takovou
+stránku přišel z vyhledávače, viděl jiný web než na zbylých 2 178.
+
+Patička se proto skládá na jednom místě (`scripts/paticka.mjs`) a krok
+při sestavení ji vepíše do každé stránky — **táž úprava, jakou už má
+lišta**. Změřeno po ní: podob patičky byly čtyři, teď jsou dvě (kánon
+a kánon + odkaz na kanál novinek na dvou stránkách, kde má co
+nabídnout).
+
+Teprve pak šla pravidla pryč: `.foot-grid`, `.foot-col`, `.foot-brand`,
+`.foot-brand-col`, `.foot-tag` a zbytky po `.reviews` — **1 409 B ze
+zdroje**, doloženo měřením 0 z 2 249 stránek. `.no-ext` zůstává: je to
+záchranka v `:not(.no-ext)`, tedy způsob, jak u odkazu vypnout šipku
+„ven z webu". Rozdělovač obsah `:not()` ignoruje, takže nic nestojí.
 
 ## 5. Drobná duplicita v generátorech
 
@@ -127,7 +141,12 @@ Z 857 tříd je to málo; uklidí se to, ale je to drobnost.
 sám. Riziko není ve velikosti, ale v tom, že se dvě kopie rozejdou —
 na tomhle webu se to u cen i u rad už stalo.
 
-## 6. Zkoušek je 218, v CI běží 212
+## 6. Zkoušek je 218, v CI běží 212 — *MYLNÝ POPLACH, ale něco z toho bylo*
 
-Šest souborů se tedy nepouští. Zjistit které a proč: zkouška, která
-neběží, je horší než žádná — tváří se jako pojistka.
+Chybějící soubor byl jediný a nebyla to zkouška: `scripts/test-server.mjs`
+je falešný server, který si startuje `test-kontrola-e2e`. Jenže
+jmenoval se `test-…`, takže vypadal jako zkouška, která v CI neběží —
+a tahle položka vznikla právě z toho. Přejmenován na
+`scripts/falesny-server-kontroly.mjs`; od té chvíle platí jednoduché
+pravidlo: **co se jmenuje `scripts/test-*.mjs`, to v CI běží.**
+Ověřeno: 217 z 217.

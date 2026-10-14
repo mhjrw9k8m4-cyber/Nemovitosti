@@ -206,7 +206,11 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
   const zbytecneProh = [...vProh].filter((c) => !chceProhlizec(c) && !PATRI_K_PROHLIZECI.has(c));
   const dvakrat = [...new Set(vsechny.filter((x, i) => vsechny.indexOf(x) !== i))];
   // Pomocný server není zkouška, jen kulisa pro scripts/test-kontrola-e2e.mjs.
-  const POMOCNE = new Set(['scripts/test-server.mjs']);
+  /* Pomocné soubory, které se nespouštějí samy. Tenhle se kdysi jmenoval
+     test-server.mjs a bylo to past: vypadal jako zkouška, která v CI
+     neběží. Jméno se srovnalo (falesny-…), seznam zůstává jako pojistka
+     pro další takový případ. */
+  const POMOCNE = new Set([]);
   const zapomenute = fs.readdirSync('scripts')
     .filter((f) => /^test-[a-z0-9-]+\.mjs$/.test(f))
     .map((f) => 'scripts/' + f)

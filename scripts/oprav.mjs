@@ -45,6 +45,7 @@ const KROKY = [
      sazbou i razítkováním: vkládá text, který se má vysázet, a odkazy,
      které se razítkují. */
   ['sjednot-hlavicku.mjs', 'jedna lišta pro celý web'],
+  ['sjednot-paticku.mjs', 'jedna patička pro celý web'],
   // Až po generátorech: česká sazba se dělá na HOTOVÉM textu, ať platí
   // stejně pro ručně psané stránky i pro 1 995 generovaných.
   ['sazba.mjs', 'nezlomitelné mezery (předložky, čísla s jednotkou)'],

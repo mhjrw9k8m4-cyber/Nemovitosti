@@ -603,7 +603,7 @@ img, svg, table, pre{max-width:100%;}
 /* Přístupnost: čistý focus rámeček při ovládání klávesnicí (nezobrazí se u myši/dotyku) */
 a:focus-visible, button:focus-visible, select:focus-visible, [role="button"]:focus-visible, [tabindex]:focus-visible, summary:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px; border-radius:var(--r-xs);}/* Grid/flex sloupce se musí umět zmenšit — jinak vytlačí stránku do stran */
 
-.map-app > *, .foot-grid > *, .steps > *, .status-grid > *, .glossary > *{min-width:0;}
+.map-app > *, .steps > *, .status-grid > *, .glossary > *{min-width:0;}
 /* VÝPIS SE NESMÍ POSUNOUT DO STRANY. Výpis si drží `margin:0 -6px` +
    `padding:0 6px`, aby zdvih karty pod myší neodřízl `overflow-y:auto`.
    Proti tomu tu stálo `max-width:100%`: šířka se srazila na šířku
@@ -676,8 +676,8 @@ path.leaflet-interactive:focus, path.leaflet-interactive:focus-visible{ outline:
 .reveal{opacity:0; transform:translateY(22px); transition:opacity var(--cas-pomaly) var(--ease), transform var(--cas-pomaly) var(--ease);}
 .reveal.in{opacity:1; transform:none;}
 /* Postupné nabíhání karet (stagger) */
-.steps>.reveal:nth-child(2), .features>.reveal:nth-child(2), .status-grid>.reveal:nth-child(2), .reviews>.reveal:nth-child(2){transition-delay:.09s;}
-.steps>.reveal:nth-child(3), .features>.reveal:nth-child(3), .status-grid>.reveal:nth-child(3), .reviews>.reveal:nth-child(3){transition-delay:.18s;}
+.steps>.reveal:nth-child(2), .features>.reveal:nth-child(2), .status-grid>.reveal:nth-child(2){transition-delay:.09s;}
+.steps>.reveal:nth-child(3), .features>.reveal:nth-child(3), .status-grid>.reveal:nth-child(3){transition-delay:.18s;}
 .status-grid>.reveal:nth-child(4){transition-delay:.27s;}
 .status-grid>.reveal:nth-child(5){transition-delay:.36s;}
 
@@ -3030,12 +3030,12 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 
 /* Footer */
 footer{border-top:1px solid var(--line); padding:28px 0;}
-/* Pozor na sílu pravidla: „footer .wrap" přebíjí .foot-grid i .foot-bottom,
+/* Pozor na sílu pravidla: „footer .wrap" přebíjí .foot-bottom,
    takže se mřížka patičky nikdy nevykreslila jako mřížka — sloupce se jen
    vystředily vedle sebe a patička působila slitě. Tohle je zbytek po staré
    jednořádkové patičce; ať platí jen tam, kam patří. */
-footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--text-ondark-mute); flex-wrap:wrap; gap:16px;}
-.foot-brand{display:flex; align-items:center; gap:8px; font-family:var(--font-ui); font-size:16px; color:var(--text-ondark);}/* ===== Oznamovací lišta (jemná, ne křiklavá) ===== *//* Velké tlačítko */
+footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--text-ondark-mute); flex-wrap:wrap; gap:16px;}
+/* ===== Oznamovací lišta (jemná, ne křiklavá) ===== *//* Velké tlačítko */
 
 /* Trust line + social proof */
 
@@ -3081,8 +3081,11 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
    neprochází — všechno, co v něm stálo, vede i z menu v hlavičce.
    Zůstaly právní odkazy: web zakládá účty, posílá e-maily a zpracovává
    osobní údaje, takže na zásady, podmínky a kontakt musí jít dosáhnout.
-   Pravidla .foot-grid a .foot-col níž zůstávají pro stránky, které si
-   vlastní rozcestník drží (rozcestník okresů), ne pro patičku. */
+   Pravidla pro čtyři sloupce (.foot-grid, .foot-col, .foot-brand…) tu
+   do 14. 10. zůstávala — potřebovalo je 69 archivních stránek, které
+   se schválně negenerují znovu. Od chvíle, kdy patičku skládá
+   scripts/paticka.mjs do VŠECH stránek, je nepotřebuje nikdo:
+   naměřeno 0 z 2 249 stránek. Jsou tedy pryč. */
 .foot-pravni{display:flex; flex-wrap:wrap; align-items:center; gap:2px 20px;}
 /* 44 px na výšku i tady: jsou to samostatné odkazy, ne slova ve větě,
    a prstem se na ně míří stejně jako na cokoli jiného. Podtržení drží
@@ -3091,13 +3094,6 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   color:var(--text-ondark-mute); text-decoration:none; border-bottom:1px solid var(--line-strong);
   line-height:1.2; padding-bottom:1px;}
 .foot-pravni a:hover{color:var(--copper); border-bottom-color:var(--copper);}
-.foot-grid{display:grid; grid-template-columns:1.6fr repeat(4, minmax(0,1fr)); gap:32px 28px; padding-bottom:28px; border-bottom:1px solid var(--line); align-items:start;}
-.foot-brand{display:flex; align-items:center; gap:8px; font-family:var(--font-ui); font-size:16px; color:var(--text-ondark); margin-bottom:12px;}
-.foot-tag{font-size:13px; color:var(--text-ondark-mute); max-width:260px;}
-.foot-col h5{font-family:var(--font-mono); font-size:12px; text-transform:uppercase;
-  letter-spacing:var(--popisek-proklad); color:var(--popisek); margin-bottom:14px; font-weight:600;}
-.foot-col a{display:block; font-size:14px; color:var(--text-ondark-mute); text-decoration:none; margin-bottom:8px;}
-.foot-col a:hover{color:var(--text-ondark);}
 /* MÍSTO PRO PLOVOUCÍ TLAČÍTKO „Zpět nahoru". Knoflík visí v pravém
    dolním rohu OKNA, kdežto copyright stál v pravém dolním rohu
    STRÁNKY — a na konci dlouhé stránky je to totéž místo. Změřeno na
@@ -3584,8 +3580,6 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   #leaflet-map{position:absolute; inset:0;}
   .status-grid{grid-template-columns:repeat(2,1fr);}
   .glossary{grid-template-columns:repeat(2,1fr);}
-  .foot-grid{grid-template-columns:repeat(2, minmax(0,1fr)); gap:28px 24px;}
-  .foot-brand-col{grid-column:1 / -1;}
 }
 /* Přepnutí na tlačítko s menu. Zlom je 1040, ne 880. Mezi 881 a 960 px se
    plná navigace nevešla na jeden řádek: „Ceny pozemků" a „Můj profil" se
@@ -3853,7 +3847,7 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   :root{ --oddil-y:80px; }     /* o stupeň míň, ale pořád víc než dřívějších 64 */
   /* h1 už velikost nemění skokem, nese ji --h1-stranka. */
   .section-head h2{font-size:28px;}
-  footer .wrap:not(.foot-grid):not(.foot-bottom){flex-direction:column; align-items:flex-start;}
+  footer .wrap:not(.foot-bottom){flex-direction:column; align-items:flex-start;}
 }
 /* (Zkrácená podoba CTA pro úzké telefony už není potřeba — v liště žádné
    CTA není. Samotný text „Přidat" zůstává v HTML pro široké displeje.) */
@@ -5052,7 +5046,6 @@ body{background:var(--bg);}
    do jednoho odstavce („MapaCeny pozemků"). Zůstávají tedy bloky, jen široké
    přesně na text. */
 @media (max-width:880px){
-  .foot-col a{padding:4px 0; display:block; width:fit-content;}
   .crumbs a{padding:2px 0; display:inline-block;}
 }
 
@@ -5085,16 +5078,10 @@ footer::after{content:""; position:absolute; inset:0; z-index:-1; pointer-events
    zůstává --accent-warm-bright. Měděná barva zůstává jako druhá barva
    webu, jen v tom odstínu, který na dané ploše obstojí. */
 footer .wrap{color:var(--pas-text-mute);}
-.foot-grid{border-bottom-color:var(--pas-linka);}
 /* JMÉNO ZNAČKY MÁ JEDNO PÍSMO. V hlavičce bylo bezpatkové (.logo →
    --font-ui), v patičce patkové — tedy dvakrát na téže stránce, pokaždé
    jinak. Rozhoduje hlavička: to je ten výskyt, který člověk vidí na
    každé stránce a pořád. */
-.foot-brand{color:var(--pas-text); font-family:var(--font-ui); font-weight:700; font-size:16px; letter-spacing:-0.02em;}
-.foot-tag{color:var(--pas-text-mute);}
-.foot-col h5{color:var(--pas-nadpis);}
-.foot-col a{color:var(--pas-text-mute);}
-.foot-col a:hover{color:var(--pas-text);}
 .foot-bottom{color:var(--pas-text-mute); border-top:0;}
 footer a:focus-visible{outline-color:var(--pas-nadpis);}
 
@@ -6262,7 +6249,6 @@ body > footer{flex:none;}
      navigace (Pozemky, Ceny, Přidat pozemek, Můj profil…), ne text ve
      větě, takže mez platí i na ně. Odsazení se zmenší, ať z toho není
      o 150 px delší patička — rozestup vyjde na 46 px místo 40. */
-  .foot-col a { min-height:44px; display:flex; align-items:center; margin-bottom:2px; }
   /* Drobečková cesta (Pozemky > Ceny pozemků) je plnohodnotná
      navigace, ne text ve větě — 27 px na ni bylo málo. */
   .crumbs a{min-height:44px; display:inline-flex; align-items:center;}
