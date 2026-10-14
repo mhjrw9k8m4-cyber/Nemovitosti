@@ -6012,6 +6012,45 @@ k ní přibyla zvlášť mez na výšku pruhu nástrojů — 110 px, a je to
 počítané číslo: 98 dnes, 144 s vrácenou větou.
 
 
+## 3cn. NALEZENO: výpis měl 460 px při okně 1440 i 1920 — *opraveno 14. 10.*
+
+Druhá polovina téže otázky jako 3cm, jen z druhé strany: **kolik nabídek
+je vidět bez rolování.** Naměřeno na úvodní stránce:
+
+| okno | sloupec s výpisem | mapa |
+|---|---|---|
+| 1440 px | 460 px | 980 px |
+| 1920 px | **460 px** | **1 460 px** |
+
+Strop `min(34vw, 460px)` se zarazil už kolem 1 350 px okna. Od té chvíle
+rostla jen mapa — o 480 px, tedy o celou šířku dalšího výpisu — a na
+obrazovce byla pořád jedna a půl nabídky, ať byl monitor jakkoli velký.
+Mapa tím dostala na jednu nabídku víc místa než nabídka sama.
+
+### Co se změnilo
+Od 1 600 px si sloupec vezme `min(46vw, 900px)` a karty se do něj
+skládají **po dvou**. Mapa má pořád přes polovinu okna.
+
+| okno | sloupec | mapa | celých karet bez rolování |
+|---|---|---|---|
+| 1440 px | 460 px (beze změny) | 980 px | 1 |
+| 1680 px | 773 px | 907 px | 2 |
+| 1920 px | 883 px | 1 037 px | 4 |
+
+Dvojice, ne trojice: při třech sloupcích spadne karta pod 280 px
+a titulek „Trvalý travní porost 14 272 m²" se láme na tři řádky.
+
+### Zkouška a dvě sabotáže
+Přibyla do `scripts/test-prvni-obrazovka.mjs` — je to tatáž otázka, jen
+na jiné šířce. Hlídá se **výsledek, ne zápis**: že druhá karta začíná
+vpravo od první, ne že v CSS stojí `repeat(2, …)`.
+
+| sabotáž (v servírovaném `css/styles.min.css`) | spadlo |
+|---|---|
+| strop sloupce zpátky na 460 px | 1 |
+| `display:grid` → `display:block` na výpisu | 1 |
+
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

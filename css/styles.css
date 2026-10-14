@@ -3239,6 +3239,27 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
     grid-template-columns:min(34vw, 460px) minmax(0, 1fr);
     height:calc(100dvh - var(--vyska-hlavicky, 85px) - 48px);
     max-height:none; min-height:620px;}
+  /* NA VELKÉM MONITORU DVA SLOUPCE NABÍDEK, NE JEDEN A PŮL MAPY NAVÍC.
+     Naměřeno: výpis měl 460 px při 1440 px okna i při 1920 — strop
+     `min(34vw, 460px)` se zarazil už kolem 1 350 px okna. Mapa mezitím
+     rostla z 980 na 1 460 px, tedy o celou šířku dalšího výpisu, a
+     dostala tím na jednu nabídku víc místa než nabídka sama.
+     Od 1 600 px si proto sloupec vezme 46 vw (nejvýš 900 px) a karty
+     se do něj skládají po dvou. Mapa má pořád přes polovinu okna.
+     Dvojice, ne trojice: při třech sloupcích by karta spadla pod 280 px
+     a titulek „Trvalý travní porost 14 272 m²" by se lámal na tři
+     řádky — zkoušeno. */
+  @media (min-width:1600px){
+    .hero-map .map-app, .map-app{grid-template-columns:min(46vw, 900px) minmax(0, 1fr);}
+    .map-side .opp-list{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:20px; align-content:start;}
+    /* Odstup řeší mřížka, vlastní okraj karty by se s ní sčítal. */
+    .map-side .opp-list > .opp-item{margin-bottom:0;}
+    /* Kostry při načítání se skládají stejně, jinak by prvních 300 ms
+       stál sloupec úplně jinak než po dojetí dat (poskakování měří
+       test-stabilita). */
+    .map-side .opp-list > .opp-skel{margin-bottom:0;}
+  }
   /* Lišta ovládání je teď přes celé okno, takže si vezme okraj stránky,
      ne okraj desky: 16 px by na 1 920 px vypadalo jako překlep.
 

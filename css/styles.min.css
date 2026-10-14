@@ -1023,6 +1023,11 @@ to{opacity:1;transform:none}
 @media (min-width:1041px){.map-app{position:relative}
 .hero-map .map-wide{max-width:none;padding:0;margin-top:48px}
 .hero-map .map-app,.map-app{border-left:0;border-right:0;border-top:0;border-radius:0;box-shadow:none;grid-template-columns:min(34vw,460px) minmax(0,1fr);height:calc(100dvh - var(--vyska-hlavicky,85px) - 48px);max-height:none;min-height:620px}
+@media (min-width:1600px){.hero-map .map-app,.map-app{grid-template-columns:min(46vw,900px) minmax(0,1fr)}
+.map-side .opp-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-content:start}
+.map-side .opp-list>.opp-item{margin-bottom:0}
+.map-side .opp-list>.opp-skel{margin-bottom:0}
+}
 .map-controls-panel{padding:12px 20px}
 .map-controls-panel{position:relative;display:grid;align-items:center;gap:8px 10px;padding:10px 16px;grid-template-columns:minmax(220px,520px) auto auto minmax(0,1fr);grid-template-areas:"hledani okoli filtry ." "rychle rychle rychle rychle"}
 .ms-rozsirene{display:contents}

@@ -39,7 +39,7 @@ function pravda(popis, vyslo, proc) {
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
 }
 function hotovo(spadlo) {
-  console.log('\nPrvní obrazovka telefonu');
+  console.log("\nCo je vidět bez rolování");
   console.log(zpravy.join('\n'));
   if (spadlo) console.log('  ✕ zkouška spadla dřív, než dojela:\n      ' + String(spadlo).split('\n')[0]);
   console.log(`\n${ok} v pořádku, ${chyb + (spadlo ? 1 : 0)} chyb\n`);
@@ -115,6 +115,41 @@ try {
   pravda('pruh nástrojů nad výpisem se vejde do 110 px',
     je(m.nastroje) && m.nastroje <= 110, `má ${m.nastroje} px`);
   await ctx.close();
+
+  /* ---- A TOTÉŽ NA VELKÉM MONITORU --------------------------------
+     Druhá polovina téže otázky: kolik nabídek je vidět bez rolování.
+     Naměřeno před opravou: sloupec s výpisem měl 460 px při okně 1440
+     i 1920 — strop min(34vw, 460px) se zarazil kolem 1 350 px okna —
+     zatímco mapa rostla z 980 na 1 460. Na obrazovce byla jedna a půl
+     nabídky, ať byl monitor jakkoli velký. */
+  const sirokyCtx = await prohlizec.newContext({
+    viewport: { width: 1920, height: 1080 }, serviceWorkers: 'block', locale: 'cs-CZ',
+  });
+  const w = await sirokyCtx.newPage();
+  await w.goto(BASE + '/index.html', { waitUntil: 'load' });
+  await w.waitForSelector('#opp-list .opp-item', { timeout: 25000 });
+  await w.waitForTimeout(2500);
+  const s = await w.evaluate(() => {
+    const side = document.querySelector('.map-side');
+    const karty = Array.from(document.querySelectorAll('#opp-list .opp-item')).slice(0, 2)
+      .map((e) => Math.round(e.getBoundingClientRect().left));
+    /* Kolik karet je celých nad spodkem okna. Nepočítá se „začíná“,
+       ale „je celá vidět" — půlka karty není nabídka. */
+    const cele = Array.from(document.querySelectorAll('#opp-list .opp-item'))
+      .filter((e) => { const r = e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= window.innerHeight; }).length;
+    return { sirka: side ? Math.round(side.getBoundingClientRect().width) : null, karty, cele };
+  });
+  pravda('na monitoru 1920 px je sloupec s výpisem širší než 700 px',
+    je(s.sirka) && s.sirka > 700, `má ${s.sirka} px`);
+  /* Dvě karty vedle sebe poznám podle toho, že druhá začíná vpravo od
+     první — ne podle počtu sloupců v CSS, to by hlídalo zápis, ne
+     výsledek. */
+  pravda('a karty se skládají po dvou vedle sebe',
+    s.karty.length === 2 && s.karty[1] > s.karty[0] + 100,
+    `levé okraje prvních dvou karet: ${JSON.stringify(s.karty)}`);
+  pravda('takže bez rolování jsou vidět aspoň dvě celé nabídky',
+    s.cele >= 2, `celých karet na obrazovce: ${s.cele}`);
+  await sirokyCtx.close();
 } catch (e) {
   try { await prohlizec.close(); } catch (e2) {}
   hotovo(e);
