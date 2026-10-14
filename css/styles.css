@@ -3806,6 +3806,34 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .add-hero.app-hero h1{font-size:var(--h1-nastroj); font-weight:600; max-width:var(--m-uzky);}
 .add-hero.app-hero .sub{font-size:16px; margin-top:10px; max-width:var(--m-uzky);}
 .section.app-section{padding:16px 0 48px;}
+/* CELÝ SLOUPEC ÚČTU NA STŘED, NE PŘILEPENÝ VLEVO.
+   Naměřeno na 1440 px: na „Můj profil", „Zprávy" i „Hlídání" stála
+   hlavní karta na x 152–592 a napravo od ní zbývalo 696 px prázdné
+   stránky. Vedle ní přitom NIC není — změřeno: nula prvků za x 640 —
+   takže to nebyl dvousloupcový rozvrh, ale telefonní stránka roztažená
+   na monitor.
+   Středí se všichni potomci obalu, ne jen karta: jinak se vystředí
+   přihlášení a nadpis se záložkami zůstane vlevo, což vypadá hůř než
+   původní stav (vyzkoušeno).
+   `:not(:has(.add-aside))` je pojistka pro případ, že by na stránku
+   účtu někdy přibyl postranní panel jako na „Přidat pozemek" — tam se
+   sloupec středit nemá, patří k hornímu rohu panelu vedle. */
+.section.app-section:not(:has(.add-aside)) > .add-wrap > *,
+.app-hero > .add-wrap > *{margin-inline:auto;}
+/* Pás záložek se středí jako CELEK, ne každá záložka zvlášť. S
+   `margin-inline:auto` na potomcích se tři záložky rozlezly po celé
+   šířce (naměřeno 297, 671 a 1044 px) — je to vodorovný flex, takže
+   automatický okraj si mezi ně rozdělil všechno volné místo.
+   `justify-content` se nasazuje jen tam, kde se pás vejde: při
+   přetečení (`overflow-x:auto`) by vystředěný obsah ukrojil začátek
+   seznamu a první záložka by byla mimo dosah posuvníku. */
+.uc-taby .wrap{justify-content:safe center;}
+/* Nadpis, úvod i pás záložek se středí SPOLU s kartou, ne každý jinak.
+   Zkoušel jsem napřed vystředit jen kartu v `.app-section` a vypadalo
+   to hůř než původní stav: nadpis „Můj profil", úvodní věta a záložky
+   zůstaly u levého okraje a stránka se rozpůlila. Tyhle tři bloky jsou
+   na stránce ve třech různých oddílech (`.app-hero`, `.uc-taby`,
+   `.app-section`), proto tři selektory a ne jeden. */
 @media (max-width:600px){ .add-hero.app-hero{padding:20px 0 2px;} .add-hero.app-hero h1{font-size:24px;} }
 
 /* Pruh se záložkami účtu. Mezi těmi čtyřmi stránkami se dalo přecházet jen
@@ -3946,6 +3974,19 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    Přidat pozemek na 264 a na Hlídání na 212 — zatímco nadpis stránky
    a všechno ostatní na 152. Tři stránky, tři různé svislice pro tutéž
    součástku. Levá hrana je jedna a platí i tady. */
+/* PŘIHLAŠOVACÍ KARTA STOJÍ NA STŘEDU, NE PŘILEPENÁ VLEVO.
+   Naměřeno na 1440 px: karta ležela na x 152–592 a napravo od ní
+   zbývalo 696 px prázdné stránky — tedy skoro polovina okna. Na
+   „Můj profil", „Zprávy" a „Hlídání" přitom vpravo NIC není (změřeno:
+   nula prvků za x 640), takže to nebyl dvousloupcový rozvrh, ale
+   telefonní stránka roztažená na monitor.
+   Vystředění NEŘEŠÍ tahle třída, ale `.app-section` níž — a stálo mě to
+   dva pokusy. Napoprvé jsem dal `margin-inline:auto` rovnou sem s úvahou,
+   že na „Přidat pozemek" je sloupec přesně široký jako karta, takže se
+   nic nehne; měření to vyvrátilo (karta se posunula ze 152 na 263 px,
+   sloupec má 662, ne 440). Napodruhé jsem středil jen kartu — a nadpis,
+   úvod i záložky zůstaly vlevo, takže stránka vypadala rozpůlená.
+   Středí se proto celý sloupec, viz `.section.app-section` níž. */
 .auth-card{position:relative; z-index:1; max-width:var(--m-karta); margin:0; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border:1px solid var(--line-strong); border-radius:var(--r-lg); padding:32px 28px 24px; box-shadow:var(--shadow-lg);}
 .auth-tabs{display:flex; gap:6px; padding:4px; background:var(--ink); border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:20px;}
 .auth-tab{flex:1; padding:10px 8px; border:0; border-radius:var(--r-ovladani); background:none; color:var(--text-ondark-mute); font:inherit; font-size:16px; font-weight:700; cursor:pointer; transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}

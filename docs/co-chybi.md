@@ -6163,6 +6163,60 @@ jim přeteče do textu — přibyla proto druhá kontrola, že pravý okraj
 odznaku nepřesáhne levý okraj názvu.
 
 
+## 3cq. NALEZENO: stránky účtu byly telefon roztažený na monitor — *opraveno 14. 10.*
+
+Majitel řekl, ať nechám vstupní stránky a podívám se na inzeráty, funkce
+a menu. Měl pravdu, že jsem se zasekl u jedné rodiny stránek. Změřeno
+na 1440 px:
+
+| stránka | hlavní blok | prázdno vpravo | prvků vedle |
+|---|---|---|---|
+| Můj profil | x 152–592 | **696 px** | **0** |
+| Zprávy | x 152–592 | **696 px** | **0** |
+| Hlídání | x 152–592 | **696 px** | **0** |
+| Přidat pozemek | x 152–592 | 696 px | 24 (panel s tipy) |
+| Inzerce | x 152–592 | 696 px | 24 (panel s tipy) |
+
+Rozdíl je v posledním sloupci. „Přidat pozemek" a „Inzerce" mají vpravo
+panel s tipy, takže je karta vlevo správně. **Na „Můj profil",
+„Zprávy" a „Hlídání" vedle ní nestojí nic** — nula prvků za x 640. Tedy
+ne dvousloupcový rozvrh, ale telefonní stránka roztažená na monitor:
+přihlašovací karta přilepená k levému okraji a vedle ní půl obrazovky
+prázdna.
+
+### Dva pokusy, které měření shodilo
+1. **`margin-inline:auto` rovnou na `.auth-card`.** Úvaha byla, že na
+   „Přidat pozemek" je sloupec přesně široký jako karta, takže se nic
+   nehne. Měření: karta se tam posunula ze 152 na **263 px** — sloupec
+   má 662 px, ne 440.
+2. **Vystředit jen kartu.** Nadpis „Můj profil", úvodní věta i pás
+   záložek zůstaly vlevo a stránka vypadala rozpůlená — **hůř než
+   původní stav.**
+
+Platí proto, že se středí **celý sloupec** (nadpis, úvod, záložky
+i karta) a jen tam, kde vedle nic nestojí: `:not(:has(.add-aside))`.
+A pás záložek se středí jako celek, ne po jedné: s `margin-inline:auto`
+na potomcích se tři záložky rozlezly na x 297, 671 a 1044 px, protože
+je to vodorovný flex a automatický okraj si rozdělil volné místo.
+
+### Zkouška a tři sabotáže
+`scripts/test-stranky-uctu.mjs` se neptá na pevná čísla, ale jestli je
+prázdno vlevo a vpravo zhruba stejné — a zvlášť hlídá, že „Přidat
+pozemek" vystředěné NENÍ.
+
+| sabotáž | spadlo |
+|---|---|
+| oddíl účtu zpátky vlevo | 1 |
+| sloupec zpráv zpátky vlevo (vložený styl) | 1 |
+| vystředit i „Přidat pozemek" (přestřelená oprava) | 1 |
+
+První a třetí napoprvé „prošly" — zase kvůli tomu, že jsem sabotoval
+nesprávný zápis selektoru. Minifikace spojila dvě pravidla do jednoho
+(`…>.add-wrap>*,.app-hero>.add-wrap>*`), takže se hledaný řetězec
+nenašel a soubor se vůbec nezměnil. **Assert na počet výskytů to
+odhalil; bez něj bych ohlásil slepou zkoušku.**
+
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

@@ -43,13 +43,20 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=ec2998ac">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=c5b0a141">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed: vystředěný sloupec 560 px začínal na 440 px,
        zatímco nadpis a pás záložek nad ním na 152. Tři svislice na
        jedné stránce. */
-    .hl-wrap{max-width:var(--m-uzky); margin:0;}
+    /* CELÝ SLOUPEC NA STŘED, NE PŘILEPENÝ VLEVO. Naměřeno na 1440 px:
+       sloupec měl 560 px a stál na x 152–712, takže napravo od něj
+       zbývalo 576 px prázdné stránky. Vedle něj přitom nic není
+       (změřeno: nula prvků za x 640) — nebyl to dvousloupcový rozvrh,
+       ale telefonní stránka roztažená na monitor. Středí se sloupec,
+       ne jen karta v něm: jinak by se vystředilo přihlášení a seznam
+       pod ním by zůstal vlevo. */
+    .hl-wrap{max-width:var(--m-uzky); margin-inline:auto;}
     .hl-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--e1); margin-bottom:14px;}
     /* PŘEPÍNAČ MEZI NOVÝM A ULOŽENÝM.
        Uložená hlídání ležela pod celým formulářem nového: na telefonu
@@ -90,7 +97,9 @@
     .hl-auth{padding:20px; max-width:var(--m-karta); margin:8px 0;}
     /* Ukázka pod přihlášením: stejná šířka jako okénko, ať to drží jednu
        osu, a čísla v jednom sloupci, aby šla porovnat očima. */
-    .hl-ukazka{padding:20px; max-width:var(--m-karta); margin:8px 0;}
+    /* Vystředěná, ne přilepená vlevo: vpravo od ní nic není (měřeno
+       na 1440 px, 696 px prázdna). Viz .auth-card v css/styles.css. */
+    .hl-ukazka{padding:20px; max-width:var(--m-karta); margin:8px auto;}
     /* Prázdné místo pro kartu, než se dopočítá. Výška je naměřená
        z hotové karty (531 px na širokém displeji), ať patička nemusí
        nikam skákat. */
