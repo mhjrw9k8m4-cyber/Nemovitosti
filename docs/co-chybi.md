@@ -6217,6 +6217,77 @@ nenašel a soubor se vůbec nezměnil. **Assert na počet výskytů to
 odhalil; bez něj bych ohlásil slepou zkoušku.**
 
 
+## 3cr. NALEZENO: odkazy v horní liště měly 22 px a „tady jsi" svítilo na jediné stránce — *opraveno 14. 10.*
+
+Majitel řekl, ať se podívám na menu. Změřeno v okně 1440 px:
+
+| položka lišty | rozměr |
+|---|---|
+| Můj profil | 63 × **22** |
+| Hledat pozemek | 108 × **22** |
+| Ceny pozemků | 100 × **22** |
+| Kontakt | 51 × **22** |
+| Moje | 45 × **22** |
+| položky rozbalovače | 172 × **38** |
+| Přidat pozemek | 146 × 44 ✓ |
+
+Mez drželo **jediné tlačítko ze sedmi**. Dvaadvacet pixelů je půlka
+meze 44 px, kterou si web drží jinde (hlídá `test-dotyk.mjs`), a je to
+pod 24 px, které žádá WCAG 2.2 „Target Size (Minimum)" **bez ohledu na
+druh ukazatele** — takže to není jen věc dotyku, na 22px terč se hůř
+míří i myší. Terč teď roste jen nahoru a dolů kolem textu: vodorovné
+polohy položek se nezměnily (654, 741, 874, 1066, 1142 px před i po)
+a hlavička zůstala 85 px.
+
+### A při tom vypadl druhý nález
+Změřeno na šesti stránkách, jestli je v liště poznat, kde člověk je:
+
+| stránka | značení | nakreslená čára |
+|---|---|---|
+| index | `class="active"` | **ano** |
+| cena-pozemku | `aria-current="page"` | **ne** |
+| kontakt | `aria-current="page"` | **ne** |
+| muj-inzerat | `aria-current="page"` | **ne** |
+| pozemky-stavebni | žádné | — |
+| drazby-pozemku | žádné | — |
+
+Podtržení se kreslilo **na jediné stránce webu**. Selektor znal jen
+třídu `active`, kterou má úvodní stránka; dalších **108 stránek** má
+v kódu `aria-current="page"` a ten nebral. Výsuvná nabídka na telefonu
+přitom `aria-current` zná odjakživa — telefon a monitor se tedy
+rozcházely.
+
+Značení se **nesjednocuje na jedno**: `aria-current` je správná značka
+pro čtečku obrazovky, `active` nese úvodní stránka pro případ „jsem na
+mapě", kde se adresa liší jen kotvou. Pravidlo rozumí obojímu.
+
+### Zkouška a tři sabotáže
+| sabotáž | spadlo |
+|---|---|
+| terče zpátky na 22 px | 1 |
+| položky rozbalovače zpátky na 38 px | 1 |
+| značka zná zase jen `.active` | 1 |
+
+### Cizí pojistka mě chytla a měla půl pravdy
+`test-rozvrzeni` po té změně ohlásil „zalomil se odkaz" u čtyř položek
+na všech šířkách. Nelámaly se. Kontrola poznávala zlom podle toho, že
+je rámeček odkazu vyšší než 1,6 × řádkování — a terč 44 px kolem
+jednořádkového textu tenhle práh překročí sám od sebe.
+
+Opravilo se **měření, ne pravidlo**: zlom se teď počítá přes `Range`
+a `getClientRects()`, který vrátí jeden obdélník na každý řádek textu.
+Rámeček smí být vyšší než text schválně; zalomení je, když víc místa
+zabere sám text. Ověřeno sabotáží (`max-width:62px` na odkazy lišty):
+kontrola skutečný zlom pořád hlásí, a to na všech čtyřech šířkách.
+
+### A jedna věc, kterou jsem NEUDĚLAL
+Nejslabší prvek webu je patička: jeden řádek a tři odkazy, na 2 248
+stránkách. Chystal jsem se z ní udělat rozcestník se sloupci — a pak
+si přečetl `scripts/test-paticka.mjs`: **přesně to tam už bylo a majitel
+to opakovaně odmítl**, zkouška od té doby hlídá, aby se sloupce
+nevrátily. Nechal jsem ji být.
+
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

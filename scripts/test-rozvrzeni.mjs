@@ -226,11 +226,24 @@ async function otevri(soubor, sirka, vyska) {
       // Kolik různých řádků odkazy zabírají a jaká je mezera za logem.
       const radku = new Set(odkazy.map((a) => Math.round(a.getBoundingClientRect().top))).size;
       const mezera = Math.round(odkazy[0].getBoundingClientRect().left - logo.getBoundingClientRect().right);
-      // Odkaz, který se sám zalomil na dva řádky (kromě tlačítka s výplní).
+      /* Odkaz, který se sám zalomil na dva řádky (kromě tlačítka s výplní).
+         MĚŘÍ SE TEXT, NE RÁMEČEK. Dřív se porovnávala výška odkazu
+         s řádkováním — a od chvíle, kdy odkazy v liště dostaly terč
+         44 px (jeden řádek textu uprostřed), hlásila tahle kontrola
+         zalomení u čtyř odkazů, které se nikde nelámou. Rámeček smí
+         být vyšší než text schválně; zalomení je, když text sám zabere
+         víc než jeden řádek.
+         Počítá se přes Range: `getClientRects()` vrátí jeden obdélník
+         na každý řádek textu, takže dvojka a víc znamená zlom — bez
+         ohledu na odsazení, výplň a výšku terče. */
       const sirsi = odkazy.filter((a) => {
         if (a.classList.contains('btn-primary') || a.classList.contains('header-cta')) return false;
-        const r = a.getBoundingClientRect();
-        return r.height > parseFloat(getComputedStyle(a).lineHeight) * 1.6;
+        const rozsah = document.createRange();
+        rozsah.selectNodeContents(a);
+        const radky = new Set([...rozsah.getClientRects()]
+          .filter((r) => r.width > 1 && r.height > 1)
+          .map((r) => Math.round(r.top)));
+        return radky.size > 1;
       }).map((a) => a.textContent.trim());
       return { menuVidno, radku, mezera, sirsi };
     });
