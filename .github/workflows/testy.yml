@@ -676,6 +676,9 @@ jobs:
       - name: První obrazovka telefonu (je vidět nabídka, ne jen ovládání)
         run: node scripts/test-prvni-obrazovka.mjs
 
+      - name: Hlavička vstupní stránky (nadpis vlevo, čísla vpravo)
+        run: node scripts/test-hlavicka-stranky.mjs
+
       - name: Vyhledávač cen podle lokality
         run: node scripts/test-ceny-hledani.mjs
 

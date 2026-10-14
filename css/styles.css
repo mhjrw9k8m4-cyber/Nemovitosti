@@ -5016,6 +5016,47 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
 .okr-hero .sub{color:var(--pas-text-mute); max-width:var(--m-text);}
 .okr-hero .sub b{color:var(--pas-text);}
 @media (max-width:880px){ .okr-band{padding:40px 0 32px;} }
+
+/* =====================================================================
+   HLAVIČKA STRÁNKY VE DVOU SLOUPCÍCH — NADPIS VLEVO, ČÍSLA VPRAVO
+   =====================================================================
+   Naměřeno na devíti vstupních stránkách v okně 1440 px: úvodní odstavec
+   měl 565 px uvnitř obsahu širokého 1 136 — vpravo od každého úvodu tedy
+   zbývalo 571 px prázdna. Nebylo to ani jednotné: šest stránek sráželo
+   text doleva na x 152, dvě ho měly na střed na x 372.
+   Čísla („239 pozemků", „71 okresů") přitom ležela pod hlavičkou,
+   v dalším oddíle — to jediné, co návštěvníka ze search enginu zajímá
+   do první vteřiny, bylo až za zlomem.
+   Markup přesouvá scripts/generate-region-pages.mjs (dvousloupcovaHlavicka)
+   při zápisu stránky, aby to platilo i pro šablony, které vzniknou příště.
+
+   Mez je 1040 px, ne 880: pod ní má obsah pod 700 px a dva sloupce by
+   z nadpisu udělaly sloupeček o třech slovech na řádek. Do té šířky
+   zůstává všechno pod sebou přesně jako dřív.
+   Zarovnání je na SPODEK (`align-items:end`): čísla tím stojí na téže
+   účaří jako poslední řádek úvodu, ne u stropu nad nadpisem.
+   ===================================================================== */
+@media (min-width:1040px){
+  .okr-hero .okr-wrap{display:grid; grid-template-columns:minmax(0, var(--m-text)) minmax(0, 1fr);
+    column-gap:56px; align-items:end;}
+  .okr-hero .okr-wrap > *{grid-column:1;}
+  /* Panel zabírá druhý sloupec po celé výšce hlavičky. `span 9` je
+     rozpětí přes řádky, které mřížka bez předepsaných řádků má —
+     `1 / -1` by v ní znamenalo jediný řádek. */
+  .okr-hero .okr-panel{grid-column:2; grid-row:1 / span 9; justify-self:end;
+    align-self:end; min-width:0;}
+  /* Čísla pod sebou, ne vedle sebe: vpravo je na ně sloupec, ne řádek,
+     a pod sebou se dají přečíst okem shora dolů jako tabulka. */
+  .okr-hero .okr-panel .okr-stats{flex-direction:column; align-items:flex-end;
+    gap:20px; margin:0; text-align:right;}
+  /* Svislice mezi čísly platila pro řádek. Ve sloupci dělí vodorovně. */
+  .okr-hero .okr-panel .okr-stat + .okr-stat{padding-left:0; padding-top:20px;
+    border-left:0; border-top:1px solid var(--line-strong); width:100%;}
+}
+/* Pod 1040 px zůstává hlavička jednosloupcová, ale čísla jsou teď
+   UVNITŘ pásu — potřebují proto odstup od úvodního odstavce, který jim
+   dřív dával oddíl pod pásem. */
+.okr-hero .okr-panel .okr-stats{margin-top:24px;}
 /* ČÍM ZAČÍNÁ PRVNÍ OBRAZOVKA. Mezi posledním řádkem úvodního pásu
    a prvním číslem pod ním bylo 168 px prázdna na počítači a 136 px na
    telefonu — změřeno na stránkách okresu, kraje, druhu i rozpočtu,

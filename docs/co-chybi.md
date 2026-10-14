@@ -6051,6 +6051,66 @@ vpravo od první, ne že v CSS stojí `repeat(2, …)`.
 | `display:grid` → `display:block` na výpisu | 1 |
 
 
+## 3co. NALEZENO: vpravo od každého úvodu leželo 571 px prázdna — *opraveno 14. 10.*
+
+Majitel řekl, že spravuju jednu sekci po druhé a že má jít o celý web.
+Měl pravdu, tak jsem si místo další sekce změřil **devět vstupních
+stránek naráz** v okně 1440 px:
+
+| stránka | nadpis x..x | úvodní odstavec x..x | obsah |
+|---|---|---|---|
+| cena-pozemku | 152..1288 | 152..717 (565 px) | 1 136 px |
+| pozemky-stavebni | 152..1288 | 152..717 | 1 136 px |
+| nove-pozemky | 152..1288 | 152..717 | 1 136 px |
+| na-co-mam-pozemek | 152..1288 | 152..717 | 1 136 px |
+| pozemky-stredocesky-kraj | 152..1288 | 152..717 | 1 136 px |
+| drazby-pozemku | 372..979 | 372..937 | 1 136 px |
+| podminky | 372..979 | 372..937 | 1 136 px |
+
+Dvě věci naráz:
+1. **Vpravo od každého úvodu zbývalo 571 px prázdna** — a bylo to tak
+   na celém webu, ne na jedné stránce.
+2. **Nebylo to ani jednotné:** sedm stránek sráželo text doleva na
+   x 152, dvě ho měly na střed na x 372.
+
+A tvrdá čísla — „239 pozemků", „71 okresů", tedy to jediné, co člověka
+z vyhledávače zajímá do první vteřiny — ležela **až pod hlavičkou**,
+v dalším oddíle, za zlomem obrazovky.
+
+### Co se změnilo
+Hlavička je od 1 040 px **dvousloupcová**: nadpis a úvod vlevo v čtecí
+míře, čísla vpravo u okraje obsahu, zarovnaná na spodek úvodu. Pod
+1 040 px zůstává všechno pod sebou, jen jsou čísla nově uvnitř pásu
+hlavičky, ne pod ním.
+
+Markup se **nepřepisoval v devíti šablonách**. Přesouvá ho jedna funkce
+`dvousloupcovaHlavicka()` v `scripts/generate-region-pages.mjs` při
+zápisu stránky — šablon je devět, čísla má pět z nich, takže by se
+změna psala pětkrát a šestá by se zapomněla. Takhle platí i pro šablonu,
+která vznikne příště. **Dopadlo to na 102 stránek.**
+
+Je to **stěhování, ne kopie**: kdyby čísla zůstala i dole, stála by na
+stránce dvakrát. A když stránka čísla nemá (rozcestník dražeb), panel
+se nevyrobí — prázdný rámeček vpravo by byl horší než prázdné místo.
+
+### Sabotáž našla slepé místo v mé vlastní zkoušce
+`scripts/test-hlavicka-stranky.mjs` měří výsledek, ne zápis. Napoprvé
+se ptal jen vodorovně: *leží levý okraj panelu za pravým okrajem
+odstavce?* Sabotáž „zruš mřížku" tím **prošla** — čísla spadla pod
+úvod, ale zůstala u pravého okraje, protože se zarovnávají doprava sama
+od sebe. Vodorovně to sedělo, vedle textu to nestálo a uprostřed
+hlavičky zela díra přes půl obrazovky.
+
+Přibyla proto svislá podmínka: panel musí začínat **dřív, než úvodní
+odstavec skončí**. Teprve pak zkouška chytá všechny tři:
+
+| sabotáž | spadlo kontrol |
+|---|---|
+| mřížka hlavičky zrušena (`display:grid` → `block`) | 1 |
+| přesun v generátoru vypnutý | 2 |
+| kopie místo stěhování (čísla zůstanou i dole) | 1 |
+
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

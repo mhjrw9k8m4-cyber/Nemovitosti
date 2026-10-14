@@ -119,7 +119,49 @@ function pluralPozemek(n){ return sklon(n, 'pozemek', 'pozemky', 'pozemků'); }
    „Zbývajících 2 pozemky". Velikost chyby je jedno slovo, ale je to
    přesně ten druh, který nikdo nehlásí a každý vidí. */
 function zbyvajici(n){ return sklon(n, 'Zbývající', 'Zbývající', 'Zbývajících'); }
-function write(file, html){ fs.writeFileSync(path.join(ROOT, file), html); }
+/* HLAVIČKA STRÁNKY JE DVOUSLOUPCOVÁ — A SKLÁDÁ SE AŽ TADY, PŘI ZÁPISU.
+   ====================================================================
+   Naměřeno na devíti vstupních stránkách v okně 1440 px: nadpis i úvodní
+   odstavec stály v levém sloupci širokém 565 px uvnitř obsahu širokého
+   1 136 — vpravo od každého úvodu tedy zbývalo 571 px prázdna. A nebylo
+   to ani jednotné: šest stránek sráželo text doleva na x 152, dvě ho
+   měly na střed na x 372. Tvrdá čísla („239 pozemků", „71 okresů"),
+   tedy to jediné, co návštěvníka na vstupní stránce opravdu zajímá,
+   přitom ležela AŽ POD hlavičkou, v dalším oddíle.
+
+   Tahle funkce je přesune nahoru do pravého sloupce hlavičky. Dělá se to
+   při zápisu, a ne v devíti šablonách, ze dvou důvodů: šablon je devět
+   a pět z nich čísla má, takže by se změna psala pětkrát a šestá by se
+   zapomněla; a hlavně tím platí i pro šablonu, která vznikne příště.
+
+   Je to STĚHOVÁNÍ, ne kopie: kdyby čísla zůstala i dole, stála by na
+   stránce dvakrát. Když stránka čísla nemá (třeba rozcestník dražeb),
+   nepřesouvá se nic a hlavička zůstane jednosloupcová — a tak to má být,
+   prázdný rámeček vpravo by byl horší než prázdné místo.
+
+   Hlídá scripts/test-hlavicka-stranky.mjs. */
+/* Prázdné řádky mezi dlaždicemi jsou v pořádku: šablona má podmíněné
+   dlaždice (`${…?'<div…>':''}`), takže se v okresech, kde je jen jeden
+   druh nabídky, zapíše čtyřikrát prázdný řetězec a po něm odřádkování.
+   Vzor je proto propouští — bez toho se čísla přesunula jen na devíti
+   stránkách ze 107 a na okresech ne. */
+const VZOR_STATY = /^[ \t]*<div class="okr-stats">\n(?:[ \t]*(?:<div class="okr-stat">.*<\/div>)?\n)+[ \t]*<\/div>\n/m;
+/* Panel se vkládá na KONEC hlavičky, ne za první `</div>`, který najde —
+   tím byl uvnitř `.eyebrow` a čísla skončila v odstavci s kategorií. */
+const VZOR_HLAVICKA = /(<section class="okr-hero">[\s\S]*?)(\s*<\/div>\s*<\/div>\s*<\/section>)/;
+export function dvousloupcovaHlavicka(html) {
+  if (html.indexOf('okr-hero') < 0) return html;
+  const staty = html.match(VZOR_STATY);
+  if (!staty) return html;
+  const bezStatu = html.replace(VZOR_STATY, '');
+  const vysledek = bezStatu.replace(VZOR_HLAVICKA, (cele, hlavicka, zavirani) =>
+    hlavicka + '\n      <div class="okr-panel">\n' + staty[0] + '      </div>' + zavirani);
+  /* Když se hlavička nenašla, čísla by se ztratila úplně — to je horší
+     než nepřesunout nic. Radši se vrátí nezměněná stránka. */
+  return vysledek === bezStatu ? html : vysledek;
+}
+
+function write(file, html){ fs.writeFileSync(path.join(ROOT, file), dvousloupcovaHlavicka(html)); }
 
 const data = JSON.parse(fs.readFileSync(path.join(ROOT,'data','opportunities.json'),'utf8'));
 /* Kdy robot naposledy zdroje procházel. Časté dotazy slibují „u každé
