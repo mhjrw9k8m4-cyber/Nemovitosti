@@ -60,6 +60,30 @@ function parcelaZTextu(d) {
   const v = najdiParcelu(_popisy[klicPopisu(d, pkey)], d);
   return v.cislo || null;
 }
+/* KDY SE TAHLE STRÁNKA NAPOSLED ZMĚNILA — pro <lastmod> v mapě webu.
+   Mapa webu měla 2 051 adres, u všech `changefreq` a u žádné `lastmod`.
+   Google `changefreq` IGNORUJE (říká to v dokumentaci) a řídí se
+   `lastmod` — takže vyhledávač neměl z čeho poznat, která z dvou tisíc
+   stránek se dnes změnila. U webu, kde se data obnovují 4× denně,
+   to je ta jediná informace, která tam patří.
+   Datum se bere ze STEJNÉHO archivu jako historie ceny, ne z mtime
+   souboru: každé sestavení přepíše všech 2 102 stránek, takže mtime je
+   vždycky „dnes" u všech — a `lastmod`, který se u všech adres mění
+   každý den, je lež, kterou se vyhledávač naučí přehlížet.
+   Pravda o téhle stránce je: kdy se nabídka objevila (`first_seen`),
+   a pokud se od té doby změnila cena, tak kdy se změnila naposled. */
+export function naposledZmeneno(d) {
+  const dny = [];
+  if (typeof d.first_seen === 'string' && /^\d{4}-\d{2}-\d{2}/.test(d.first_seen)) dny.push(d.first_seen.slice(0, 10));
+  const h = historieCeny(d);
+  if (h) for (const [den] of h) if (typeof den === 'string' && /^\d{4}-\d{2}-\d{2}/.test(den)) dny.push(den.slice(0, 10));
+  if (!dny.length) return null;
+  const nej = dny.sort()[dny.length - 1];
+  /* Datum z budoucnosti je vždycky chyba v datech, ne zpráva pro
+     vyhledávač — ten by ji pak nejspíš ignoroval u celé mapy webu. */
+  const dnes = new Date().toISOString().slice(0, 10);
+  return nej > dnes ? dnes : nej;
+}
 function historieCeny(d) {
   if (_historie === null) {
     try { const a = nactiArchiv(); _historie = historiePodleKlice(a.uzavrene, a.stav); }
@@ -1279,6 +1303,12 @@ export function nabidky() {
 export function generuj() {
   const sablona = fs.readFileSync(path.join(ROOT, 'pozemek.html'), 'utf8');
   const hotove = [];
+  /* Datum poslední změny jde VEDLE seznamu jmen, ne místo něj: `hotove`
+     se níž používá jako `new Set(hotove)` k poznání, které stránky na
+     disku už v datech nejsou. Když jsem tam dal objekty, nesedlo ani
+     jedno jméno a generátor označil za ukončené všech 2 102 stránek —
+     ohlásilo to šest zkoušek naráz. */
+  const datumy = new Map();
   const mapa = mapaSouboru(nabidky());
   /* Rozlišení shodných titulků potřebuje vidět všechny stránky naráz,
      takže se spočítá dřív, než se začne psát. */
@@ -1291,6 +1321,7 @@ export function generuj() {
   for (const { d, soubor } of mapa.values()) {
     fs.writeFileSync(path.join(ROOT, soubor), stranka(sablona, d, soubor));
     hotove.push(soubor);
+    datumy.set(soubor, naposledZmeneno(d));
   }
   /* KONEC NABÍDKY NENÍ KONEC ADRESY.
      Tohle místo stránky zmizelých nabídek MAZALO. Znělo to rozumně —
@@ -1372,7 +1403,7 @@ export function generuj() {
       migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah)))), dnes, podobne));
     ukonceno++;
   }
-  return { hotove, smazano, ukonceno, prepsano };
+  return { hotove, datumy, smazano, ukonceno, prepsano };
 }
 
 /* Mapa webu. Sitemap staví generátor regionálních stránek a přepisuje ji
@@ -1391,16 +1422,23 @@ export function doMapyWebu(soubory) {
      podle kterého se výš poznávají soubory ke smazání: jméno stránky
      pozemku končí otiskem klíče. */
   sm = sm.replace(/  <url>\s*<loc>https:\/\/www\.parcelaka\.cz\/pozemek-[^<]*-[0-9a-z]{5,8}\.html<\/loc>[\s\S]*?<\/url>\n/g, '');
-  const bloky = soubory.map((f) =>
-    `  <url>\n    <loc>${WEB}/${f}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.5</priority>\n  </url>\n`).join('');
+  const bloky = soubory.map((z) => {
+    /* Snese i prosté jméno souboru — kdyby tuhle funkci zavolal někdo
+       jiný bez data, nesmí z toho být `<lastmod>undefined</lastmod>`. */
+    const f = typeof z === 'string' ? z : z.soubor;
+    const lm = typeof z === 'string' ? null : z.lastmod;
+    return `  <url>\n    <loc>${WEB}/${f}</loc>\n`
+      + (lm ? `    <lastmod>${lm}</lastmod>\n` : '')
+      + `    <changefreq>weekly</changefreq>\n    <priority>0.5</priority>\n  </url>\n`;
+  }).join('');
   sm = sm.replace('</urlset>', bloky + '</urlset>');
   fs.writeFileSync(cesta, sm);
   return soubory.length;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const { hotove, smazano, prepsano } = generuj();
-  const vMape = doMapyWebu(hotove);
+  const { hotove, datumy, smazano, prepsano } = generuj();
+  const vMape = doMapyWebu(hotove.map((f) => ({ soubor: f, lastmod: datumy.get(f) || null })));
   console.log(`Stránek pozemků: ${hotove.length}${smazano ? `, smazáno zrušených: ${smazano}` : ''}`
     + `, v mapě webu: ${vMape}`
     + (prepsano ? `, přepsáno ukončených: ${prepsano}` : ''));

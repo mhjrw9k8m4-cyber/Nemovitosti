@@ -2346,24 +2346,91 @@ const staticUrls=[
   {loc:'ochrana-udaju.html',cf:'yearly',pr:'0.3'},
   {loc:'kontakt.html',cf:'yearly',pr:'0.3'},
 ];
+/* <lastmod> DO MAPY WEBU.
+   Mapa webu měla 2 051 adres, u všech `changefreq` a u žádné `lastmod`.
+   Google `changefreq` ignoruje (píše to v dokumentaci) a řídí se
+   `lastmod` — vyhledávač tedy neměl z čeho poznat, která z dvou tisíc
+   stránek se dnes změnila.
+
+   Datum musí být PRAVDA o té stránce, ne čas sestavení. Kdyby se u všech
+   adres měnilo každý den, je to lež, kterou se vyhledávač naučí
+   přehlížet — a mapa webu pak neříká nic, i když vypadá bohatěji.
+   Proto dva různé zdroje:
+
+   • VÝPISOVÉ stránky (kraje, okresy, druhy, rozpočty, dražby,
+     rozcestníky) se opravdu mění s každou dávkou dat, protože vypisují
+     nabídky. Jejich datum je den té dávky — `data.updated`.
+   • RUČNÍ stránky (rádce, právní, kontakt) se mění, jen když je někdo
+     přepíše. Jejich datum je den posledního commitu, který ten soubor
+     změnil. V CI je klon zkrácený, takže se historie nemusí sahat
+     dost hluboko — pak se datum vynechá, protože vynechané `lastmod`
+     je přípustné, zatímco vymyšlené ne. */
+const DAVKA = String(data.updated || '').slice(0, 10) || null;
+/* DATUM RUČNÍ STRÁNKY. Nejdřív jsem ho bral z `git log -1 --format=%cs`
+   — a `test-oprav` to vzápětí odhalila: ta zkouška zkopíruje repozitář
+   do dočasné složky, pustí tam generátory a porovná výsledek. V kopii
+   žádný `.git` není, takže se datum nevyplnilo a mapa webu se
+   rozcházela. Správně: výstup generátoru nesmí záležet na tom, jestli
+   stojí v klonu.
+   Datum se proto drží v `data/zmeny-stranek.json` vedle OTISKU obsahu
+   té stránky. Při sestavení se otisk přepočítá: když se liší, stránka
+   se opravdu změnila a datum je dnešní; když ne, zůstává to staré.
+   Soubor se commituje, takže v dočasné kopii vyjde totéž.
+   Z otisku se vyřezávají verzovací přívěsky `?v=…`: ty se mění, kdykoli
+   se změní jakýkoli styl nebo skript, a to není změna TÉHLE stránky —
+   jinak by se po každé úpravě stylopisu rozsvítilo třicet dat naráz. */
+const ZMENY = path.join(ROOT, 'data', 'zmeny-stranek.json');
+let _zmeny = null, _zmenyPsat = false;
+function otiskStranky(soubor){
+  try{
+    const t = fs.readFileSync(path.join(ROOT, soubor), 'utf8').replace(/\?v=[0-9a-z]+/g, '');
+    return createHash('sha1').update(t).digest('hex').slice(0, 12);
+  }catch(e){ return null; }
+}
+function lastmodRucni(soubor){
+  if(_zmeny === null){
+    try{ _zmeny = JSON.parse(fs.readFileSync(ZMENY, 'utf8')); }catch(e){ _zmeny = {}; }
+  }
+  const h = otiskStranky(soubor);
+  if(!h) return null;
+  const dnes = new Date().toISOString().slice(0,10);
+  const stare = _zmeny[soubor];
+  if(!stare || stare.h !== h){ _zmeny[soubor] = { h, d: dnes }; _zmenyPsat = true; return dnes; }
+  return stare.d || dnes;
+}
+function dopisZmeny(){
+  if(!_zmenyPsat || !_zmeny) return;
+  const srovnane = {};
+  for(const k of Object.keys(_zmeny).sort()) srovnane[k] = _zmeny[k];
+  fs.writeFileSync(ZMENY, JSON.stringify(srovnane, null, 1) + '\n');
+}
+const lm = (d) => (d ? `    <lastmod>${d}</lastmod>\n` : '');
 let sm='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-for(const u of staticUrls) sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${u.loc}</loc>\n    <changefreq>${u.cf}</changefreq>\n    <priority>${u.pr}</priority>\n  </url>\n`;
+for(const u of staticUrls){
+  /* Úvodní stránka a výpisy se mění s daty, i když je soubor v gitu
+     starý: vypisují nabídky. Ostatní ruční stránky jdou podle gitu. */
+  const podleDat = u.loc === '' || /^(index|nove-pozemky|pozemky-|drazby-pozemku|exekuce-pozemku|data|cena-pozemku|na-co-mam-pozemek)/.test(u.loc);
+  sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${u.loc}</loc>\n`
+    + lm(podleDat ? DAVKA : lastmodRucni(u.loc))
+    + `    <changefreq>${u.cf}</changefreq>\n    <priority>${u.pr}</priority>\n  </url>\n`;
+}
 /* V sitemapě patří jen KANONICKÉ adresy. Krajská stránka Prahy ukazuje
    jako kanonickou tu okresní (viz poznámka u `kanon` výš), takže by
    vyhledávač z sitemapy dostal adresu, o které mu táž stránka vzápětí
    řekne „kanonická je jiná". Jedna věc řečená dvakrát a jinak. */
 for(const p of krajPages){
   if(p.kanon && p.kanon !== p.file) continue;
-  sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${p.file}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
+  sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${p.file}</loc>\n`+lm(DAVKA)+`    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
 }
-for(const p of okresPages) sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${p.file}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+for(const p of okresPages) sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${p.file}</loc>\n`+lm(DAVKA)+`    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
 /* Stránky podle druhu pozemku. Priorita jako u krajů: je to vstup
    z vyhledávače („les na prodej"), ne odbočka. */
-for(const p of druhStranky) sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${p.soubor}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
+for(const p of druhStranky) sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${p.soubor}</loc>\n`+lm(DAVKA)+`    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
 /* Stránky podle rozpočtu („pozemky do 500 tisíc"). Taky vstup z vyhledávače,
    proto táž priorita jako kraje a druhy. */
-for(const p of rozpocetStranky) sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${p.soubor}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
+for(const p of rozpocetStranky) sm+=`  <url>\n    <loc>https://www.parcelaka.cz/${p.soubor}</loc>\n`+lm(DAVKA)+`    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
 sm+='</urlset>\n';
+dopisZmeny();
 write('sitemap.xml', sm);
 
 console.log(`Vygenerováno: ${okresPages.length} okresních + ${krajPages.length} krajských + ${druhStranky.length} podle druhu + ${rozpocetStranky.length} podle rozpočtu + dražby (${drazby.length}) + rozcestník. Sitemap: ${staticUrls.length+krajPages.length+okresPages.length+druhStranky.length+rozpocetStranky.length} URL.`);

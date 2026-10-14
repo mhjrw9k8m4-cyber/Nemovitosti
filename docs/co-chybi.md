@@ -4563,7 +4563,7 @@ s prahem dlaždic a prahem okresů u cen.)
 
 ### Zkoušky
 
-**102 neprohlížečových** a **103 prohlížečových** kontrol z CI zelených.
+**104 neprohlížečových** a **104 prohlížečových** kontrol zelených.
 Obě chyby, které předtím shodily CI (`testy` i `v-prohlizeci`), jsou
 opravené u kořene, ne obejité.
 
@@ -5127,6 +5127,94 @@ Ověřeno sabotáží dvakrát:
   „h1 vkládá js/pozemek.js", ale značka PK_POZEMEK na stránce není`.
 
 Po vrácení obojího 3 v pořádku, 0 chyb.
+
+## 3ca. NALEZENO: mapa webu měla 2 051 adres a u žádné datum — a „doplnit polícko" by bylo horší než nic — *opraveno 14. 10.*
+
+`sitemap.xml` měla u každé adresy `changefreq` a `priority`, a u žádné
+`lastmod`. **Google `changefreq` ignoruje** — píše to ve své
+dokumentaci — a řídí se `lastmod`. Vyhledávač tedy neměl z čeho poznat,
+která z dvou tisíc stránek se dnes změnila. U webu, kde se data
+obnovují čtyřikrát denně, to je zrovna ta jediná informace, která tam
+patří.
+
+### Proč to není „doplnit polícko"
+
+Nejsnazší by bylo napsat všude datum sestavení. Jenže to by znamenalo
+tvrdit, že se každý den změnilo všech 2 051 stránek — a to není pravda.
+**Takový `lastmod` se vyhledávač naučí přehlížet** a mapa webu pak
+neříká nic, i když vypadá bohatěji. Datum proto musí být pravda o té
+konkrétní stránce, a každý druh stránky má svůj zdroj:
+
+| co | odkud datum | proč
+|---|---|---|
+| 2 102 stránek pozemků | **z archivu** — den, kdy se nabídka objevila (`first_seen`), nebo kdy se naposled změnila cena | obsah stránky se mění přesně tím |
+| 91 krajských a okresních výpisů, druhy, rozpočty, dražby | **den datové dávky** | vypisují nabídky, mění se s každou dávkou |
+| 30 ručních stránek (rádce, právní, kontakt) | **den, kdy se změnil jejich obsah** | mění se, jen když je někdo přepíše |
+
+Datum se bere ze **stejného archivu** jako historie ceny na stránce
+pozemku, ne z `mtime` souboru: každé sestavení přepíše všech 2 102
+stránek, takže `mtime` je vždycky dnešní u všech.
+
+Výsledek: **31 různých dat**, nejčastější 2026-09-14 u 1 561 adres (den,
+odkdy archiv vidí trh), nejnovější dnešní u 124.
+
+### Dvě vady, na které mě přivedly zkoušky
+
+**1. Rozbil jsem generátor a šest zkoušek to naráz ohlásilo.** Datum
+jsem nejdřív přidal tak, že jsem místo jmen souborů začal do seznamu
+hotových stránek dávat objekty `{soubor, lastmod}`. O pár řádků níž se
+ten seznam používá jako `new Set(hotove)` k poznání, které stránky na
+disku už v datech nejsou — a objekty se jménům nerovnají. Generátor
+proto **označil za ukončené všech 2 102 stránek**. Hlásily to
+`test-oprav`, `test-nabidka-pro-stroje`, `test-stranky-pozemku`,
+`test-nove-pozemky`, `test-ukonceno` a `test-vyhledavac`. Datum jde
+teď vedle, v samostatné mapě.
+
+**2. `test-oprav` odhalila, že datum z gitu není reprodukovatelné.**
+Ruční stránky jsem nejdřív datoval podle `git log -1 --format=%cs`.
+Ta zkouška zkopíruje repozitář do dočasné složky, pustí tam generátory
+a porovná výsledek — a v kopii žádný `.git` není, takže se datum
+nevyplnilo a mapa webu se rozcházela. Je to správný nález, ne
+nepohodlí zkoušky: **výstup generátoru nesmí záležet na tom, jestli
+stojí v klonu.**
+
+Datum ručních stránek se proto drží v `data/zmeny-stranek.json` vedle
+**otisku obsahu** té stránky. Při sestavení se otisk přepočítá: liší-li
+se, stránka se opravdu změnila a datum je dnešní; neliší-li se,
+zůstává staré. Soubor se commituje, takže v dočasné kopii vyjde totéž.
+Z otisku se vyřezávají verzovací přívěsky `?v=…` — ty se mění, kdykoli
+se změní jakýkoli styl, a to není změna *téhle* stránky; jinak by se po
+každé úpravě stylopisu rozsvítilo třicet dat naráz.
+
+Ověřeno: dvě sestavení za sebou dají **týž otisk** `sitemap.xml`
+i `zmeny-stranek.json`.
+
+**3. A ještě jedna zkouška byla příliš doslovná** — `test-nove-pozemky`
+hlídala `nove-pozemky.html</loc>\s*<changefreq>daily`, tedy že ty dvě
+značky stojí hned za sebou. Vložené `<lastmod>` to rozbilo. Hlídá teď,
+co měla hlídat od začátku: že je ta stránka ohlášená jako denně se
+měnící.
+
+### Pojistka
+
+`scripts/test-mapa-webu.mjs` (nová, v CI) nehlídá, že tam datum **je**,
+ale že **nelže**:
+
+1. každá adresa má `<lastmod>` (bloky se čtou celé, ne po značkách —
+   jinak by prošel i stav, kdy jedna adresa má data dvě a druhá žádné),
+2. je zapsané jako `YYYY-MM-DD`,
+3. není z budoucnosti,
+4. data nejsou všechna stejná,
+5. **a nejčastější z nich není dnešní** — tedy mapa webu nevydává
+   sestavení za změnu.
+
+Pátý bod je ten podstatný a je **bez libovolné mezní hodnoty**: neříká
+„nejvýš tolik procent", říká „nevydávej sestavení za změnu".
+
+Ověřeno sabotáží třikrát: datum sestavení všude → padnou kontroly 4 a 5
+(`všech 2051 adres má 2026-10-14`); jedné adrese datum pryč → padne 1
+s její adresou; datum 2027-01-01 → padne 3 se jménem stránky. Po
+vrácení 6 v pořádku, 0 chyb.
 
 ## Co naopak nechybí
 

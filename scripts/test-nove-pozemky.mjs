@@ -282,7 +282,10 @@ if (/index\.html\?zlevnene=1#mapa/.test(h)) {
 const sm = readFileSync(U('sitemap.xml'), 'utf8');
 pravda('sitemap zná nove-pozemky.html', sm.includes('/' + SOUBOR));
 pravda('a hlásí ji jako denně se měnící',
-  new RegExp('/' + SOUBOR + '</loc>\\s*<changefreq>daily').test(sm),
+  /* Mezi <loc> a <changefreq> smí stát <lastmod> (přidané 14. 10.).
+     Zkouška hlídá, že je stránka ohlášená jako denně se měnící, ne že
+     ty dvě značky stojí hned za sebou. */
+  new RegExp('/' + SOUBOR + '</loc>(?:\\s*<lastmod>[^<]*</lastmod>)?\\s*<changefreq>daily').test(sm),
   'robot ji obchází čtyřikrát denně — weekly by znamenalo, že si pro novinky nikdo nepřijde');
 for (const odkud of ['pozemky-podle-okresu.html', 'pozemky-do-500-tisic.html', 'pozemky-okres-kolin.html']) {
   if (!existsSync(U(odkud))) continue;

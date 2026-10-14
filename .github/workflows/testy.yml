@@ -261,6 +261,9 @@ jobs:
       - name: Osnova nadpisů (jeden h1, žádný přeskok)
         run: node scripts/test-osnova.mjs
 
+      - name: Mapa webu — datum u každé adresy, a pravdivé
+        run: node scripts/test-mapa-webu.mjs
+
       - name: Vrstvy (z-index) mají vypsaný pořádek
         run: node scripts/test-vrstvy.mjs
 
