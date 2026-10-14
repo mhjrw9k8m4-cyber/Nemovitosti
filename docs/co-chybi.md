@@ -5949,6 +5949,69 @@ výstupu, aby i `pozemek.html` servírovala styl bez těch **16,5 kB
 komentářů**. Pak může strop spadnout hluboko pod 40.
 
 
+## 3cm. NALEZENO: na telefonu stálo před prvním pozemkem 634 px ovládání — *opraveno 14. 10.*
+
+Majitel řekl, že na webu nevidí žádnou změnu. Tak jsem se přestal dívat
+do kódu a otevřel si úvodní stránku na telefonu 390×844. Naměřeno:
+
+| co | výška |
+|---|---|
+| lišta | 65 px |
+| rozcestník (značka „Parcelka" **podruhé**, nadpis, 6 dlaždic 3×2) | 218 px |
+| hledání + přepínač Seznam/Mapa | 135 px |
+| nadpis výsledků + řazení | 88 px |
+| pruh „Projít … po jednom" + „Stáhnout výběr" | 136 px |
+| **první nabídka začíná na** | **y 699 z 844** |
+
+Kdo přišel koupit pozemek, neviděl po otevření ani jeden. A značka
+„Parcelka" stála dvakrát pod sebou — v liště a čtrnáct pixelů pod ní
+ještě jednou, s písmem 26 px.
+
+Zvlášť se vyplatí podívat se na ten poslední řádek: pruh nástrojů se
+**na monitoru** odjakživa smršťoval (`@media (min-width:1041px)`
+schovává vysvětlující větu a zmenšuje ikonu), kdežto na telefonu se
+zobrazoval celý. Šetřilo se místem přesně tam, kde ho je nejvíc.
+
+### Co se změnilo
+1. Druhá značka pryč (`.uvod-logo{display:none}` pod 1040 px). Důvod,
+   co u ní byl napsaný — „jediné místo, kde má značka na sebe
+   upozornit" — neplatil: tím místem je lišta o 14 px výš.
+2. Šest dlaždic ve dvou řadách → **jeden vodorovný pás pilulek** s ikonou
+   vedle popisku. Terč má 44 px, tedy mez z `test-dotyk`.
+3. Pruh nástrojů se na telefonu smršťuje stejně jako na monitoru.
+   Ztrácí se tím věta „Dvacet karet přes celou obrazovku — doprava
+   uložit, doleva schovat."; nadpis tlačítka s počtem zůstává a na
+   tabletu i monitoru se věta čte dál.
+
+**Naměřeno po opravě: první nabídka na y 505 místo 699 a na první
+obrazovce je vidět i cena** (dřív tam nezačala ani karta).
+
+### A černý obdélník místo fotky? MYLNÝ NÁLEZ
+Na snímku vypadal náhled u každé nabídky jako nenačtená fotka — velký
+skoro černý obdélník. Málem jsem to šel „opravit". Je to SVG s podkladem
+`#12241A` a přes něj čtyři dlaždice leteckého snímku ze
+`server.arcgisonline.com`; v sandboxu padají na `ERR_TUNNEL_CONNECTION_FAILED`,
+takže zbude jen podklad. **Na webu se snímek načte.** Měření: 112
+obrázkových požadavků, 48 selhalo, všechny na tunelu proxy.
+
+### Nová zkouška a tři sabotáže
+`scripts/test-prvni-obrazovka.mjs` se neptá, jak to vypadá, ale na jednu
+věcnou otázku: *uvidí člověk hned po otevření aspoň jednu nabídku i s
+cenou?* Sabotáže (opět v **servírovaném** `css/styles.min.css`, ne ve
+zdroji — viz poučení v 3cl):
+
+| sabotáž | spadlo kontrol |
+|---|---|
+| vrátit druhou značku | 2 |
+| vrátit dlaždice do mřížky 3×2 | 1 |
+| vrátit vysvětlivku do pruhu nástrojů | 1 |
+
+Ta třetí napoprvé **neprošla ani jednou kontrolou**: mez na začátek
+první karty je volná schválně a 46 px navíc se v ní ztratilo. Proto
+k ní přibyla zvlášť mez na výšku pruhu nástrojů — 110 px, a je to
+počítané číslo: 98 dnes, 144 s vrácenou větou.
+
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

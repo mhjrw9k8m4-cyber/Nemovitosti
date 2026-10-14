@@ -1034,6 +1034,7 @@ body>footer{flex:none}
 .pz-odhad .mo-pozn{color:var(--text-ondark-mute)}
 .pz-odhad .mo-pozn b{color:var(--text-ondark)}
 
+
 @media (pointer:coarse){.header-cta{min-height:44px}
 .foot-col a{min-height:44px;display:flex;align-items:center;margin-bottom:2px}
 .crumbs a{min-height:44px;display:inline-flex;align-items:center}

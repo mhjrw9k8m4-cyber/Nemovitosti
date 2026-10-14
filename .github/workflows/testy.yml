@@ -673,6 +673,9 @@ jobs:
       - name: Pořadí na stránce pozemku (důležité nahoře)
         run: node scripts/test-poradi-pozemku.mjs
 
+      - name: První obrazovka telefonu (je vidět nabídka, ne jen ovládání)
+        run: node scripts/test-prvni-obrazovka.mjs
+
       - name: Vyhledávač cen podle lokality
         run: node scripts/test-ceny-hledani.mjs
 

@@ -1266,24 +1266,50 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 .uvod-rozcestnik{display:none;}
 @media (max-width:1040px){
   .uvod-rozcestnik{display:block; padding:14px 10px 0; text-align:center;}
-  .uvod-logo{display:flex; align-items:center; justify-content:center; gap:10px; margin:0;
-    font-family:var(--font-ui); font-size:26px; font-weight:800; letter-spacing:-0.03em;
-    line-height:1.1; color:var(--text-ondark);}
-  /* Značka je tu o třetinu větší než v liště (38 px proti 29) — je to
-     jediné místo, kde má na sebe upozornit. */
-  .uvod-logo .logo-mark{width:38px; height:38px;}
-  .uvod-claim{margin:4px 0 0; font-family:var(--font-ui); font-size:14px; font-weight:400;
-    letter-spacing:0; color:var(--text-ondark-mute);}
-  .uvod-dlazdice{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:10px;}
-  .uvod-dlazdice a{display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:4px; min-height:56px; padding:6px 4px; border-radius:var(--r-plocha);
+  /* ZNAČKA PODRUHÉ, 10 PX POD TOU PRVNÍ — PRYČ.
+     Stálo tu „Parcelka" s písmem 26 px a značkou 38 px, a přímo nad tím
+     v liště totéž jméno s touž značkou; mezi spodkem lišty (65 px) a
+     vrchem téhle řádky (79 px) bylo čtrnáct pixelů. Důvod, co tu byl
+     napsaný — „jediné místo, kde má značka na sebe upozornit" — neplatil
+     už ve chvíli, kdy ho někdo psal: tím místem je lišta.
+     Naměřeno na 390×844: první pozemek začínal na y 699 z 844, tedy pod
+     obrazovkou, a tahle řádka z toho brala 48 px. Zbytek si vzaly
+     dlaždice a pruh nástrojů, viz níž.
+     Prvek v kódu ZŮSTÁVÁ: na širším displeji (1040 px a výš) rozcestník
+     celý mizí, takže tohle pravidlo nic jiného nepřekrývá. */
+  .uvod-logo{display:none;}
+  /* NADPIS ZŮSTÁVÁ VE STROMĚ, NE NA OBRAZOVCE. Oddíl se na něj odkazuje
+     přes aria-labelledby, takže smazat ho nejde — ale šest popsaných
+     dlaždic se bez věty „Vyberte si podle toho, co hledáte" obejde.
+     Odečtové čtečce zůstává, očím ne. */
+  .uvod-claim{position:absolute; width:1px; height:1px; margin:-1px; padding:0;
+    overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0;}
+  /* ŠEST DLAŽDIC VE DVOU ŘADÁCH → JEDEN VODOROVNÝ PÁS.
+     Mřížka 3×2 brala 120 px plus nadpis plus značku, dohromady 218 px
+     nad hledáním. Pás je jedna řada vysoká 44 px: první čtyři kategorie
+     jsou vidět, zbytek dojede prstem. Je to týž pohyb, jakým se na
+     telefonu listuje čímkoli jiným, a dělají to tak i velké inzertní
+     aplikace. Ikona jde vedle popisku, ne nad něj — na výšku je to
+     o polovinu méně.
+     Pás se roluje za okraj stránky (záporné okraje a odsazení), takže
+     poslední dlaždice není uťatá o hranu, ale mizí pod ní. */
+  .uvod-dlazdice{display:flex; gap:6px; margin:0 -10px; padding:2px 10px 2px;
+    overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;}
+  .uvod-dlazdice::-webkit-scrollbar{display:none;}
+  /* Terč má 44 px na výšku, tedy přesně mez z test-dotyk, a nejmíň
+     90 px na šířku. `flex:none` je tu proto, aby se dlaždice
+     nesmrskly do nečitelných proužků, až jich bude šest v řadě. */
+  .uvod-dlazdice a{flex:none; display:inline-flex; flex-direction:row; align-items:center;
+    justify-content:center; gap:8px; min-height:44px; padding:0 12px; border-radius:var(--r-pill);
     background:var(--ink-soft); border:1px solid var(--obrys-tlacitka);
     color:var(--text-ondark); font-size:13px; font-weight:700; text-decoration:none;
-    box-shadow:var(--e1); transition:border-color var(--cas-zakladni) var(--ease);}
+    white-space:nowrap; box-shadow:var(--e1);
+    transition:border-color var(--cas-zakladni) var(--ease);}
   .uvod-dlazdice a:hover{border-color:var(--copper-bright);}
-  /* Tah 1,5 px na obrazovce: 1,5 ÷ 22 × 24 (hlídá test-tahy). */
-  .uvd-ic{flex:none; width:22px; height:22px; fill:none; stroke:var(--plocha-znacka);
-    stroke-width:1.64; stroke-linecap:round; stroke-linejoin:round;}
+  /* Tah 1,5 px na obrazovce: 1,5 ÷ 18 × 24 (hlídá test-tahy). */
+  .uvd-ic{flex:none; width:18px; height:18px; fill:none; stroke:var(--plocha-znacka);
+    stroke-width:2.0; stroke-linecap:round; stroke-linejoin:round;}
   /* Odstup nad hledáním si bere lepivá hlavička, aby první ovládání
      zůstalo po rolování vidět. Pod rozcestníkem ho ale drží rozcestník
      sám, takže tady stačí dvacítka místo padesátky. */
@@ -5767,6 +5793,35 @@ body > footer{flex:none;}
   .mcr-ic svg{width:17px; height:17px; stroke-width:2.12;}   /* 1,5 ÷ 17 × 24 */
   .mc-akce{gap:6px;}
   .mc-skryte{min-height:32px; padding:0 10px; font-size:13px;}
+}
+
+/* =====================================================================
+   PRUH NÁSTROJŮ NAD VÝPISEM — NA TELEFONU STEJNĚ ÚSPORNĚ JAKO NA MONITORU
+   =====================================================================
+   Tohle bylo obráceně, než má být. Pravidlo o dva odstavce výš
+   (@media min-width:1041px) schovává vysvětlující řádek u „Projít …
+   po jednom" a zmenšuje ikonu — tedy ŠETŘÍ MÍSTO TAM, KDE HO JE NEJVÍC.
+   Na telefonu, kde ho je nejmíň, se zobrazoval celý dvouřádkový pruh.
+
+   Naměřeno na 390×844: mezi hlavičkou a první nabídkou leželo 634 px
+   ovládání a první karta začínala na y 699 z 844 — tedy pod obrazovkou.
+   Z toho si tenhle pruh bral 136 px, nejvíc ze všech.
+
+   Co se tím ztrácí, říkám rovnou: věta „Dvacet karet přes celou
+   obrazovku — doprava uložit, doleva schovat." Zůstává nadpis tlačítka
+   s počtem („Projít 1 934 pozemků po jednom"), který nese to hlavní,
+   a na tabletu i monitoru se věta čte dál. Šestina obrazovky telefonu
+   za jednu vysvětlivku nad nabídkami je moc.
+   ===================================================================== */
+@media (max-width:720px){
+  .mc-rychly{padding:8px 10px; gap:10px;}
+  .mc-rychly .mcr-popis{display:none;}
+  .mcr-ic{width:30px; height:30px;}
+  .mcr-ic svg{width:17px; height:17px; stroke-width:2.12;}   /* 1,5 ÷ 17 × 24 */
+  .mc-akce{gap:6px; margin-top:8px;}
+  /* Terč zůstává nad mezí 44 px i s okolní mezerou (hlídá test-dotyk):
+     36 px plochy a 8 px mezery nad i pod. */
+  .mc-skryte{min-height:36px; padding:0 10px; font-size:13px;}
 }
 
 /* =====================================================================
