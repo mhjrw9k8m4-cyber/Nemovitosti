@@ -78,7 +78,9 @@ try {
       hlavicka: hlavicka ? Math.round(hlavicka.getBoundingClientRect().height) : null,
       cenaSpodek: cr ? Math.round(cr.top + window.scrollY + cr.height) : null,
       cenaText: cena ? cena.textContent.replace(/\s+/g, ' ').trim().slice(0, 30) : null,
-      /* Značka v liště a značka v rozcestníku: dvě tatáž jména pod sebou. */
+      /* Značka smí být na stránce jednou — v liště. Rozcestník, který ji
+         nosil podruhé, je na přání majitele celý pryč; kontrola zůstává
+         jako past, aby se druhá značka nevrátila odjinud. */
       znacek: Array.from(document.querySelectorAll('.logo, .uvod-logo'))
         .filter((e) => e.getBoundingClientRect().height > 4).length,
       /* Pruh nástrojů („Projít … po jednom", „Stáhnout výběr") nad

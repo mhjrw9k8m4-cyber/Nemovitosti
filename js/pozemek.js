@@ -540,15 +540,92 @@
     return '<div class="pz-verdict ' + cls + '">' +
       '<div class="pv-top"><span class="pv-badge">' + badge + '</span><span class="pv-cmp">Cena za m²</span></div>' +
       '<div class="pv-text">' + text + '</div>' +
-      /* STUPNICE, NE VYPÍNAČ. Dřív se lišta od kraje po puntík
-         vybarvovala, zbytek byl průhledný — a protože neobarvená část
-         nebyla na světlém podkladu vidět, zůstal na obrazovce jen
-         barevný pahýl. Četlo se to jako přepínač v poloze „zapnuto",
-         ne jako místo na škále. Teď je vidět celá lišta, uprostřed má
-         rysku (tam je průměr) a na ní sedí jeden puntík. */
-      '<div class="pv-track"><span class="pv-stred"></span><span class="pv-dot" style="--w:' + pct + '%"></span></div>' +
-      '<div class="pv-scale"><span>levné</span><span>drahé</span></div>' +
+      /* Cena za metr SE TU NEPOČÍTÁ. Vlastní dělení cenou a výměrou
+         lže u spoluvlastnických podílů (v ceně je zlomek, výměra celá)
+         — proto ho hlídá scripts/test-ceny.mjs a proto se bere z modelu
+         stejně jako nad cenou v pruhu. */
+      pvGrafHtml(pc, (window.PK_CENY && window.PK_CENY.zaMetr) ? window.PK_CENY.zaMetr(d) : null) +
       '</div>' + odhadHtml(d);
+  }
+
+  /* =====================================================================
+     GRAF ROZDĚLENÍ CEN — JEDNA TEČKA JE JEDNA NABÍDKA, OSA JE POŘADÍ
+     =====================================================================
+     Místo proužku s jedním puntíkem. Proužek říkal „jsi na 7 %", ale
+     neukázal, Z ČEHO to vyšlo: kolik nabídek to je, jak jsou rozsazené
+     a jestli je ta naše na kraji hloučku, nebo osamocená.
+
+     PROČ TEČKY A NE SLOUPCE. Změřeno na ostrých datech: přihrádek
+     s aspoň deseti nabídkami je 49 a medián jejich velikosti je
+     16 nabídek. Histogram by z toho dělal dva kusy na sloupec — šum
+     ve tvaru grafu. Tečka na nabídku je při takhle malém vzorku
+     poctivější: je vidět i to, že jich je málo, a dá se spočítat.
+
+     PROČ JE OSA POŘADÍ, A NE KORUNY. Zkoušel jsem koruny a nešlo to:
+     u 15 z těch 49 přihrádek (31 %) je nejdražší nabídka víc než
+     trojnásobek devadesátého percentilu, u dražeb ostatních ploch na
+     Litoměřicku je medián 104 Kč/m², p90 1 077 a maximum 17 071.
+     Naměřeno i na konkrétní stránce: pozemek za 314 Kč/m² proti
+     mediánu 42 odsunul všech jedenáct ostatních teček do levé desetiny
+     grafu. Osa v korunách tedy u třetiny přihrádek neukáže nic.
+     Pořadí je navíc TOTÉŽ, co tvrdí věta nad grafem („levnější než
+     93 %"): graf a věta se tím nemůžou rozejít. Kolik to dělá korun,
+     se nezamlčuje — skutečné ceny stojí pod osou u obou krajů,
+     u mediánu i u téhle nabídky.
+
+     PROČ HTML A NE SVG. První podoba kreslila kružnice do SVG
+     roztaženého přes šířku karty (`preserveAspectRatio="none"`) — a to
+     roztáhne i je, takže z teček byly ovály. Naměřeno na snímku.
+     Polohované <span>y zůstanou kulaté v každé šířce.
+     ===================================================================== */
+  function pvGrafHtml(pc, nase) {
+    var vals = pc && pc.hodnoty;
+    if (!vals || vals.length < 10 || !nase || !isFinite(nase)) return '';
+    /* Pole je sdílené a setříděné vzestupně — čte se, nesahá se do něj. */
+    var n = vals.length, i;
+    var kv = function (p) { return vals[Math.max(0, Math.min(n - 1, Math.round(p * (n - 1))))]; };
+    var min = vals[0], max = vals[n - 1], med = kv(0.5);
+    if (!(max > min)) return '';
+    /* Vodorovně = pořadí v seřazeném seznamu. Tečky tím sedí v pravidelných
+       rozestupech a kraje grafu jsou nejlevnější a nejdražší nabídka. */
+    var X = function (poradi) { return (n === 1) ? 50 : (poradi / (n - 1)) * 100; };
+    var tecky = '';
+    for (i = 0; i < n; i++) {
+      tecky += '<span class="pvg-t" style="left:' + X(i).toFixed(2) + '%" title="'
+        + esc(fmt(Math.round(vals[i])) + ' Kč/m²') + '"></span>';
+    }
+    /* Kde na té ose stojíme my: tolik nabídek je levnějších nebo stejných.
+       Počítá se ZNOVU z pole, ne z pc.pct — ten je oříznutý na 2–98 %,
+       aby věta nehlásila nulu, a puntík by pak stál jinde než data. */
+    var podNami = 0;
+    for (i = 0; i < n; i++) { if (vals[i] <= nase) podNami++; }
+    var xNase = X(Math.max(0, Math.min(n - 1, podNami - 1)));
+    var xMed = X(Math.floor((n - 1) / 2));
+    /* HUSTOTA. Při 74 nabídkách na 322px kartě vycházejí na tečku
+       4,3 px, takže se sedmipixelové tečky slijí v pruh a je po sdělení
+       „jedna tečka = jedna nabídka". Velikost se proto řídí počtem;
+       měřeno na kartě 322 px, nejhustší přihrádka má 74 nabídek. */
+    var hustota = (n > 45) ? ' je-husty' : (n > 22 ? ' je-stredni' : '');
+    return '<figure class="pvg">' +
+      '<div class="pvg-pas' + hustota + '" role="img" aria-label="' + esc('Pořadí ceny za m² mezi '
+        + n + ' nabídkami v okolí: tento pozemek ' + fmt(Math.round(nase))
+        + ' Kč/m², medián ' + fmt(Math.round(med)) + ' Kč/m², nejlevnější '
+        + fmt(Math.round(min)) + ', nejdražší ' + fmt(Math.round(max)) + ' Kč/m².') + '">' +
+        '<span class="pvg-osa"></span>' +
+        '<span class="pvg-med" style="left:' + xMed.toFixed(2) + '%"></span>' +
+        tecky +
+        '<span class="pvg-nase" style="left:' + xNase.toFixed(2) + '%" title="'
+          + esc('tento pozemek · ' + fmt(Math.round(nase)) + ' Kč/m²') + '"></span>' +
+      '</div>' +
+      '<figcaption class="pvg-pop">' +
+        '<span>nejlevnější <b>' + fmt(Math.round(min)) + '</b></span>' +
+        '<span>medián <b>' + fmt(Math.round(med)) + '</b></span>' +
+        '<span>nejdražší <b>' + fmt(Math.round(max)) + '</b></span>' +
+      '</figcaption>' +
+      '<p class="pvg-vys"><span class="pvg-klic nase"></span>tento pozemek <b>'
+        + fmt(Math.round(nase)) + ' Kč/m²</b><span class="pvg-klic ost"></span>'
+        + n + ' nabídek v okolí, seřazeno od nejlevnější</p>' +
+    '</figure>';
   }
   /* Kolik rad k tomuhle pozemku je — ať je ze souhrnu poznat, že se pod ním
      něco skrývá, a kolik toho je. */

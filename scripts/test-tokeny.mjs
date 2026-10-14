@@ -60,7 +60,12 @@ pravda(`a odvolávky taky (${new Set(pouzite).size} různých)`, new Set(pouzite
 const ZJS = {
   '--c-druh': 'barva druhu pozemku na odznaku nabídky',
   '--sh': 'barva shluku na mapě',
-  '--w': 'šířka pruhu v animaci najetí',
+  /* '--w' tu býval pro najížděcí animaci puntíku na cenovém proužku.
+     Proužek nahradil graf rozdělení cen (pvGrafHtml v js/pozemek.js),
+     ten se nenajíždí a polohu teček píše rovnou do `left`. Token se
+     tedy nikde nenastavuje — a protože zkouška tuhle tabulku ověřuje
+     proti skutečnosti, musel ze seznamu ven, ne v něm zůstat jako
+     památka. */
 };
 const ZDROJE = [];
 for (const d of ['js', '.']) {

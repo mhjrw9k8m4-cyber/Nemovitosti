@@ -344,8 +344,9 @@
           if (pct > 35 && od.podOdhadem >= 15) return null;
           if (pct <= 35 && od.podOdhadem <= -15) return null;
         }
+
         return { pct: pct, cheaper: 100 - pct, sample: arr.length,
-          uroven: zdroje[z].uroven, kde: zdroje[z].kde };
+          uroven: zdroje[z].uroven, kde: zdroje[z].kde, hodnoty: arr };
       }
       return null;
     }

@@ -6240,6 +6240,58 @@ součásti webu (lišta, patička, navigace), hledám napřed v
 `docs/co-chybi.md` a ve zkouškách, jestli se o ní už nerozhodlo.
 
 
+## 3ct. Místo proužku s puntíkem skutečný graf rozdělení cen — *14. 10.*
+
+U verdiktu o ceně byl proužek „levné → drahé" s jedním puntíkem. Říkal
+„jsi na 7 %", ale neukázal, **z čeho to vyšlo**: kolik nabídek to je,
+jak jsou rozsazené a jestli je ta naše na kraji hloučku, nebo osamocená.
+Data na to přitom byla celou dobu v prohlížeči — model si pole cen za m²
+drží (počítá z něj ten percentil) a stránka ho zahazovala.
+
+### Dvě slepé uličky, obě shozené měřením
+**Histogram.** Změřeno na ostrých datech: přihrádek s aspoň deseti
+nabídkami je **49** a medián jejich velikosti je **16 nabídek**.
+Histogram by z toho dělal dva kusy na sloupec — šum ve tvaru grafu.
+
+**Osa v korunách.** U **15 ze 49 přihrádek (31 %)** je nejdražší nabídka
+víc než trojnásobek p90; u dražeb ostatních ploch na Litoměřicku je
+medián 104 Kč/m², p90 1 077 a maximum **17 071**. Naměřeno i na
+konkrétní stránce: pozemek za 314 Kč/m² proti mediánu 42 odsunul všech
+jedenáct ostatních teček do levé desetiny grafu.
+
+### Co z toho je
+**Jedna tečka = jedna nabídka, vodorovně seřazené podle ceny.** Osa je
+tedy pořadí — totéž, co tvrdí věta nad grafem („levnější než 93 %"),
+takže se graf a věta nemůžou rozejít, a žádný extrém ho nerozmáčkne.
+Koruny se nezamlčují: pod osou stojí nejlevnější, medián a nejdražší,
+a u značky naše cena. Tečky se zmenšují podle hustoty (nad 22 a nad 45
+nabídek), ať se při 74 neslijí v pruh.
+
+**HTML, ne SVG.** První podoba kreslila kružnice do SVG roztaženého přes
+šířku karty (`preserveAspectRatio="none"`) — a to roztáhne i je, takže
+z teček byly ovály. Vidět na snímku, opraveno polohovanými `<span>`y.
+
+### Čtyři cizí pojistky mě chytly při jedné změně
+| zkouška | co řekla |
+|---|---|
+| `test-ceny` | „v js/pozemek.js se zase někde dělí cena celou výměrou" — počítal jsem si cenu za metr sám; u spoluvlastnických podílů to lže, patří to z modelu |
+| `test-odstupy` | `margin:0 7px` je mimo stupnici odstupů |
+| `test-tokeny` | `--w` zůstal v seznamu výjimek, ale po zrušení proužku ho nikdo nenastavuje |
+| `test-vlozeny-styl` | předloha přes strop o 127 B |
+
+### Zkouška a tři sabotáže
+`test-pohyb.mjs` měřil, jak puntík najíždí. Puntík není, ale měřit je co:
+graf se schválně **nenajíždí** (tečky jsou data, ne efekt), takže se
+ptá na opak — a navíc na to, že **nakreslí tolik teček, kolik nabídek
+slibuje věta nad ním**.
+
+| sabotáž | spadlo |
+|---|---|
+| graf kreslí jen deset teček místo všech | 1 |
+| model přestane posílat hodnoty (graf zmizí) | 3 |
+| značka dostane najížděcí animaci | 1 |
+
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

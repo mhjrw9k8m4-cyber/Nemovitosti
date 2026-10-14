@@ -227,75 +227,74 @@ async function kontext(pohybVypnut) {
   await ctx.close();
 }
 
-// --- 2) Pruh s cenou dojede na svou hodnotu --------------------------
-// Pozemek, u kterého se cenové měřítko opravdu vykreslí (má dost srovnatelných
-// nabídek v okolí). U pozemku bez verdiktu by tu nebylo co měřit.
+// --- 2) Graf rozdělení cen se vykreslí a NEhýbe se -------------------
+// Pozemek, u kterého se cenové srovnání opravdu vykreslí (má dost
+// srovnatelných nabídek v okolí). U pozemku bez verdiktu není co měřit.
+//
+// DŘÍV TU BYL PUNTÍK NA PROUŽKU a měřilo se, že dojede zleva na svou
+// hodnotu. Proužek nahradil graf rozdělení (viz pvGrafHtml
+// v js/pozemek.js) a ten se schválně NENAJÍŽDÍ: tečky jsou data, ne
+// efekt, a po dojetí by stejně skončily tam, kde jsou hned. Měří se
+// proto opak — že stojí a nepřeskakuje.
 const ADRESA = `${BASE}/pozemek.html?p=Vala%C5%A1sk%C3%A1%20Senice%7C%E2%80%94%7CVset%C3%ADn&ll=49.238051,18.105773`;
+const kdeJeZnacka = (p) => p.evaluate(() => {
+  const g = document.querySelector('.pvg');
+  if (!g) return null;
+  const pas = g.querySelector('.pvg-pas'), z = g.querySelector('.pvg-nase');
+  if (!pas || !z) return null;
+  const t = pas.getBoundingClientRect(), r = z.getBoundingClientRect();
+  const st = getComputedStyle(z);
+  return { posun: (r.left + r.width / 2) - t.left, stopa: t.width,
+    tecek: g.querySelectorAll('.pvg-t').length,
+    anim: st.animationName, prechod: st.transitionProperty };
+});
 {
   const ctx = await kontext(false);
   const p = await ctx.newPage();
   await p.goto(ADRESA, { waitUntil: 'domcontentloaded' });
-  /* MĚŘÍ SE PUNTÍK, NE VYBARVENÁ ČÁST. Lišta se dřív vybarvovala od
-     kraje k puntíku a měřila se ta šířka — jenže tím vypadala jako
-     přepínač v poloze „zapnuto", ne jako místo na škále, a vybarvování
-     zmizelo. Pohyb dělá puntík: jede zleva na svou hodnotu (--w). */
-  await p.waitForSelector('.pv-dot', { timeout: 6000 }).catch(() => {});
-  const kdeJePuntik = () => p.evaluate(() => {
-    const d = document.querySelector('.pv-dot');
-    if (!d) return null;
-    const t = d.parentElement.getBoundingClientRect(), r = d.getBoundingClientRect();
-    return { posun: (r.left + r.width / 2) - t.left, stopa: t.width,
-      cil: getComputedStyle(d).getPropertyValue('--w').trim() };
-  });
-  const hned = await kdeJePuntik();
+  await p.waitForSelector('.pvg-nase', { timeout: 8000 }).catch(() => {});
+  const hned = await kdeJeZnacka(p);
   await p.waitForTimeout(1200);
-  const potom = await kdeJePuntik();
-  pravda('pruh s cenou se na stránce vykreslí', !!potom, 'element .pv-dot se nenašel');
+  const potom = await kdeJeZnacka(p);
+  pravda('graf rozdělení cen se na stránce vykreslí', !!potom, 'element .pvg-nase se nenašel');
   if (potom) {
-    pravda('puntík se hýbe, ne že tam rovnou stojí', hned && hned.posun < potom.posun - 1,
-      `hned ${hned && hned.posun.toFixed(1)} px, potom ${potom.posun.toFixed(1)} px`);
-    const chtena = parseFloat(potom.cil) / 100 * potom.stopa;
-    pravda('a dojede přesně tam, kam má', Math.abs(potom.posun - chtena) < 2,
-      `skončil na ${potom.posun.toFixed(1)} px, mělo být ${chtena.toFixed(1)} px (${potom.cil})`);
-    /* A lišta pod ním musí být vidět celá — bez toho je z ní zase
-       vypínač. Měří se proti pozadí karty. */
-    const vidnoLista = await p.evaluate(() => {
-      const t = document.querySelector('.pv-track');
-      if (!t) return null;
-      const rgb = (x) => { const m = /rgba?\(([^)]+)\)/.exec(x); if (!m) return null;
-        const c = m[1].split(',').map(parseFloat); return { r: c[0], g: c[1], b: c[2], a: c.length > 3 ? c[3] : 1 }; };
-      const b2 = rgb(getComputedStyle(t).backgroundColor);
-      return b2 ? b2.a : 0;
+    /* Tečka na nabídku: musí jich být tolik, kolik věta nad grafem
+       slibuje. Bez tohohle by graf mohl kreslit tři tečky a nikdo by
+       se to nedozvěděl. */
+    const kolikSlibuje = await p.evaluate(() => {
+      const m = /\((\d+)\s+nab/.exec(document.querySelector('.pv-text').textContent || '');
+      return m ? parseInt(m[1], 10) : null;
     });
-    pravda('a lišta pod puntíkem je vidět celá, ne jen po puntík',
-      vidnoLista !== null && vidnoLista > 0.05, `průhlednost podkladu lišty ${vidnoLista}`);
+    pravda('a nakreslí tolik teček, kolik nabídek slibuje věta nad ním',
+      kolikSlibuje !== null && potom.tecek === kolikSlibuje,
+      `teček ${potom.tecek}, věta slibuje ${kolikSlibuje}`);
+    pravda('značka naší nabídky stojí a nenajíždí',
+      Math.abs(hned.posun - potom.posun) < 1 && potom.anim === 'none',
+      `hned ${hned.posun.toFixed(1)} px, potom ${potom.posun.toFixed(1)} px, animace ${potom.anim}`);
+    pravda('a leží uvnitř grafu, ne za jeho krajem',
+      potom.posun >= -1 && potom.posun <= potom.stopa + 1,
+      `${potom.posun.toFixed(1)} px ze stopy ${potom.stopa.toFixed(1)} px`);
   }
   await ctx.close();
 }
 
-// --- 3) Kdo má vypnuté animace, nevidí ŽÁDNÝ pohyb -------------------
-// A pořád vidí správné číslo — vypnutá animace nesmí znamenat prázdný pruh.
+// --- 3) Kdo má vypnuté animace, vidí přesně totéž --------------------
+// U grafu je to snadné: nenajíždí ani s animacemi zapnutými. Kontrola
+// tu zůstává jako past — kdyby někdo graf „oživil", musí to projít
+// i přes vypnuté animace.
 {
   const ctx = await kontext(true);
   const p = await ctx.newPage();
   await p.goto(ADRESA, { waitUntil: 'domcontentloaded' });
-  await p.waitForSelector('.pv-dot', { timeout: 6000 }).catch(() => {});
-  const kde = () => p.evaluate(() => {
-    const d = document.querySelector('.pv-dot');
-    if (!d) return null;
-    const t = d.parentElement.getBoundingClientRect(), r = d.getBoundingClientRect();
-    return { posun: (r.left + r.width / 2) - t.left, stopa: t.width,
-      cil: getComputedStyle(d).getPropertyValue('--w').trim(), anim: getComputedStyle(d).animationName };
-  });
-  const hned = await kde();
+  await p.waitForSelector('.pvg-nase', { timeout: 8000 }).catch(() => {});
+  const hned = await kdeJeZnacka(p);
   await p.waitForTimeout(900);
-  const potom = await kde();
-  pravda('s vypnutými animacemi se nic nehýbe',
-    hned && potom && Math.abs(hned.posun - potom.posun) < 1 && hned.anim === 'none',
-    `hned ${hned && hned.posun.toFixed(1)} px (animace ${hned && hned.anim}), potom ${potom && potom.posun.toFixed(1)} px`);
-  pravda('ale hodnota na měřítku je správná i tak',
-    potom && Math.abs(potom.posun - parseFloat(potom.cil) / 100 * potom.stopa) < 2,
-    potom ? `${potom.posun.toFixed(1)} px místo ${potom.cil}` : '');
+  const potom = await kdeJeZnacka(p);
+  pravda('s vypnutými animacemi se v grafu nic nehýbe',
+    hned && potom && Math.abs(hned.posun - potom.posun) < 1 && potom.anim === 'none',
+    `hned ${hned && hned.posun.toFixed(1)} px, potom ${potom && potom.posun.toFixed(1)} px (animace ${potom && potom.anim})`);
+  pravda('a graf je i tak celý vykreslený',
+    potom && potom.tecek >= 10, potom ? `teček ${potom.tecek}` : 'graf se nenašel');
   await ctx.close();
 }
 

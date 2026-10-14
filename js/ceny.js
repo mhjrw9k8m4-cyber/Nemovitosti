@@ -808,8 +808,17 @@
           if (pct > 35 && od.podOdhadem >= 15) return null;
           if (pct <= 35 && od.podOdhadem <= -15) return null;
         }
+        /* CELÉ POLE CEN VEN, NE JEN PROCENTO. Model ho má v ruce
+           (počítá z něj `below`) a stránka z něj uměla vykreslit jen
+           jeden puntík na proužku. Z týchž čísel jde nakreslit, jak
+           ceny v okrese doopravdy leží — kolik nabídek je kde, kde je
+           medián a jak daleko je ta naše.
+           Posílá se ODKAZ na sdílené pole, ne kopie: je setříděné
+           a sdílí ho všechny nabídky v přihrádce, takže kdo ho dostane,
+           NESMÍ do něj sahat. Kopírovat ho pro každou z 1 957 nabídek
+           by bylo plýtvání pamětí za nic. */
         return { pct: pct, cheaper: 100 - pct, sample: arr.length,
-          uroven: zdroje[z].uroven, kde: zdroje[z].kde };
+          uroven: zdroje[z].uroven, kde: zdroje[z].kde, hodnoty: arr };
       }
       return null;
     }

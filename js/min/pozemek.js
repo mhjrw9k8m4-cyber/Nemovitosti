@@ -348,9 +348,52 @@
       '<div class="pv-top"><span class="pv-badge">' + badge + '</span><span class="pv-cmp">Cena za m²</span></div>' +
       '<div class="pv-text">' + text + '</div>' +
 
-      '<div class="pv-track"><span class="pv-stred"></span><span class="pv-dot" style="--w:' + pct + '%"></span></div>' +
-      '<div class="pv-scale"><span>levné</span><span>drahé</span></div>' +
+      pvGrafHtml(pc, (window.PK_CENY && window.PK_CENY.zaMetr) ? window.PK_CENY.zaMetr(d) : null) +
       '</div>' + odhadHtml(d);
+  }
+
+  function pvGrafHtml(pc, nase) {
+    var vals = pc && pc.hodnoty;
+    if (!vals || vals.length < 10 || !nase || !isFinite(nase)) return '';
+
+    var n = vals.length, i;
+    var kv = function (p) { return vals[Math.max(0, Math.min(n - 1, Math.round(p * (n - 1))))]; };
+    var min = vals[0], max = vals[n - 1], med = kv(0.5);
+    if (!(max > min)) return '';
+
+    var X = function (poradi) { return (n === 1) ? 50 : (poradi / (n - 1)) * 100; };
+    var tecky = '';
+    for (i = 0; i < n; i++) {
+      tecky += '<span class="pvg-t" style="left:' + X(i).toFixed(2) + '%" title="'
+        + esc(fmt(Math.round(vals[i])) + ' Kč/m²') + '"></span>';
+    }
+
+    var podNami = 0;
+    for (i = 0; i < n; i++) { if (vals[i] <= nase) podNami++; }
+    var xNase = X(Math.max(0, Math.min(n - 1, podNami - 1)));
+    var xMed = X(Math.floor((n - 1) / 2));
+
+    var hustota = (n > 45) ? ' je-husty' : (n > 22 ? ' je-stredni' : '');
+    return '<figure class="pvg">' +
+      '<div class="pvg-pas' + hustota + '" role="img" aria-label="' + esc('Pořadí ceny za m² mezi '
+        + n + ' nabídkami v okolí: tento pozemek ' + fmt(Math.round(nase))
+        + ' Kč/m², medián ' + fmt(Math.round(med)) + ' Kč/m², nejlevnější '
+        + fmt(Math.round(min)) + ', nejdražší ' + fmt(Math.round(max)) + ' Kč/m².') + '">' +
+        '<span class="pvg-osa"></span>' +
+        '<span class="pvg-med" style="left:' + xMed.toFixed(2) + '%"></span>' +
+        tecky +
+        '<span class="pvg-nase" style="left:' + xNase.toFixed(2) + '%" title="'
+          + esc('tento pozemek · ' + fmt(Math.round(nase)) + ' Kč/m²') + '"></span>' +
+      '</div>' +
+      '<figcaption class="pvg-pop">' +
+        '<span>nejlevnější <b>' + fmt(Math.round(min)) + '</b></span>' +
+        '<span>medián <b>' + fmt(Math.round(med)) + '</b></span>' +
+        '<span>nejdražší <b>' + fmt(Math.round(max)) + '</b></span>' +
+      '</figcaption>' +
+      '<p class="pvg-vys"><span class="pvg-klic nase"></span>tento pozemek <b>'
+        + fmt(Math.round(nase)) + ' Kč/m²</b><span class="pvg-klic ost"></span>'
+        + n + ' nabídek v okolí, seřazeno od nejlevnější</p>' +
+    '</figure>';
   }
 
   function pzGtkKolik(d) {

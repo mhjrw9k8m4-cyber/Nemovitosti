@@ -52,7 +52,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/zaklad.min.css?v=c5b0a141">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=20171439">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -104,10 +104,21 @@
 .pv-cmp{font-size:12px;color:var(--text-ondark-mute);font-weight:600}
 .pv-text{font-size:14px;color:var(--text-ondark-mute);line-height:1.5}
 .pv-text b{color:var(--text-ondark)}
-.pv-track{position:relative;height:8px;border-radius:var(--r-pill);margin-top:10px;background:rgba(20,35,28,0.13);box-shadow:inset 0 1px 2px rgba(24,45,34,0.07)}
-.pv-stred{position:absolute;left:50%;top:-3px;bottom:-3px;width:1.5px;background:rgba(20,35,28,0.3);transform:translateX(-50%);border-radius:2px}
-.pv-dot{position:absolute;top:50%;left:var(--w);width:15px;height:15px;border-radius:50%;background:var(--vc);border:3px solid #fff;box-shadow:var(--e1);transform:translate(-50%,-50%);animation:puntikNajed .62s var(--ease) both}
-.pv-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--text-ondark-mute);margin-top:6px}
+.pvg{margin:14px 0 0}
+.pvg-pas{position:relative;height:26px;margin:0 8px}
+.pvg-osa{position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line-strong);transform:translateY(-50%)}
+.pvg-med{position:absolute;top:2px;bottom:2px;width:1px;background:var(--line-strong);transform:translateX(-50%)}
+.pvg-t{position:absolute;top:50%;width:7px;height:7px;border-radius:50%;background:var(--text-ondark-mute);opacity:0.45;border:1px solid var(--plocha-plovouci-plna);transform:translate(-50%,-50%)}
+.pvg-pas.je-stredni .pvg-t{width:6px;height:6px}
+.pvg-pas.je-husty .pvg-t{width:5px;height:5px;opacity:0.55}
+.pvg-nase{position:absolute;top:50%;width:15px;height:15px;border-radius:50%;background:var(--vc);border:3px solid var(--plocha-plovouci-plna);box-shadow:var(--e1);transform:translate(-50%,-50%);z-index:2}
+.pvg-pop{display:flex;justify-content:space-between;gap:8px;margin:2px 0 0;font-size:11px;color:var(--text-ondark-mute);font-variant-numeric:tabular-nums}
+.pvg-pop b{color:var(--text-ondark);font-weight:600}
+.pvg-vys{margin:8px 0 0;font-size:12px;color:var(--text-ondark-mute);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pvg-vys b{color:var(--text-ondark)}
+.pvg-klic{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block}
+.pvg-klic.nase{background:var(--vc)}
+.pvg-klic.ost{background:var(--text-ondark-mute);opacity:0.45;margin-left:8px}
 .pz-sect-h{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--popisek);margin:40px 0 10px;position:relative}
 .pz-sect-h::before{content:"";position:absolute;left:0;top:-14px;width:52px;height:2px;border-radius:2px;background:var(--grad-warm);opacity:.85}
 .pz-blok{margin:10px 0 0;padding:12px 14px;border-radius:var(--r-plocha);font-size:14px;line-height:1.6;background:linear-gradient(180deg,var(--ink-soft2),var(--ink-soft));border:1px solid var(--line);color:var(--text-ondark)}
@@ -346,7 +357,7 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/cisteni.js?v=e1a692c2"></script>
 <script src="js/min/snimek.js?v=395045ad"></script>
 <script src="js/min/terminy.js?v=cf102557"></script>
-<script src="js/min/ceny.js?v=58fe7e4e"></script>
+<script src="js/min/ceny.js?v=4934b598"></script>
   <script src="js/min/zlevneni.js?v=6ff63d26" defer></script>
 <script src="js/min/vybaveni.js?v=8e3b34f9"></script>
 <script src="js/min/radce.js?v=565dda2c"></script>
@@ -364,7 +375,7 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/hlidani-logika.js?v=3c8ae080"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 6 748 m², podíl 1/3 — Luštěnice","description":"Na prodej · 265 000 Kč (39 Kč/m²) · 6 748 m², podíl 1/3 · Luštěnice, okres Mladá Boleslav. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-mlada-boleslav-lustenice-1t2v2md.html","address":{"@type":"PostalAddress","addressLocality":"Luštěnice","addressRegion":"Mladá Boleslav","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.334064,"longitude":14.923508},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":6748,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":265000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-mlada-boleslav-lustenice-1t2v2md.html","itemOffered":{"@type":"Place","name":"Orná půda 6 748 m², podíl 1/3 — Luštěnice"},"availability":"https://schema.org/InStock","description":"Cena je za spoluvlastnický podíl; uvedená výměra patří celé parcele."}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Středočeský kraj","item":"https://www.parcelaka.cz/pozemky-stredocesky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Mladá Boleslav","item":"https://www.parcelaka.cz/pozemky-okres-mlada-boleslav.html"},{"@type":"ListItem","position":5,"name":"Orná půda 6 748 m², podíl 1/3 — Luštěnice","item":"https://www.parcelaka.cz/pozemek-mlada-boleslav-lustenice-1t2v2md.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Luštěnice|—|Mladá Boleslav|50.334|14.924","ll":[50.334064,14.923508],"v":6748,"c":265000,"r":"data/okres/mlada-boleslav.json"};</script>
-<script src="js/min/pozemek.js?v=68fbb1e8"></script>
+<script src="js/min/pozemek.js?v=255d6905"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
