@@ -60,6 +60,13 @@ pravda(`a odvolávky taky (${new Set(pouzite).size} různých)`, new Set(pouzite
 const ZJS = {
   '--c-druh': 'barva druhu pozemku na odznaku nabídky',
   '--sh': 'barva shluku na mapě',
+  /* Barva verdiktu o ceně. Nastavuje ji vložený styl v pozemek.html
+     (`.pz-verdict.good{--vc:…}` a jeho sourozenci) podle toho, jak
+     nabídka vyšla; pravidla grafu, která ji čtou, se 14. 10.
+     přestěhovala do css/styles.css, protože graf kreslí skript až po
+     dopočtení ceny a v každé z 1 995 stránek pozemků ležela zbytečně.
+     Doloženo: zkouška si to ověří v souborech níž. */
+  '--vc': 'barva verdiktu o ceně (pozemek.html)',
   /* '--w' tu býval pro najížděcí animaci puntíku na cenovém proužku.
      Proužek nahradil graf rozdělení cen (pvGrafHtml v js/pozemek.js),
      ten se nenajíždí a polohu teček píše rovnou do `left`. Token se

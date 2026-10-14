@@ -578,6 +578,12 @@
      roztáhne i je, takže z teček byly ovály. Naměřeno na snímku.
      Polohované <span>y zůstanou kulaté v každé šířce.
      ===================================================================== */
+  /* Co poslední graf nakreslil. Drží to uzávěr, ne atribut ve značce:
+     stránka pozemku je jedna a graf na ní taky jeden, kdežto `data-`
+     s osmdesáti čísly by se musel pokaždé poskládat do textu a zpátky
+     rozebrat. Čte to `pvGrafOziv` hned po vložení značky do stránky. */
+  var PVG = null;
+
   function pvGrafHtml(pc, nase) {
     var vals = pc && pc.hodnoty;
     if (!vals || vals.length < 10 || !nase || !isFinite(nase)) return '';
@@ -591,8 +597,10 @@
     var X = function (poradi) { return (n === 1) ? 50 : (poradi / (n - 1)) * 100; };
     var tecky = '';
     for (i = 0; i < n; i++) {
-      tecky += '<span class="pvg-t" style="left:' + X(i).toFixed(2) + '%" title="'
-        + esc(fmt(Math.round(vals[i])) + ' Kč/m²') + '"></span>';
+      /* Bez `title`: hodnotu ukazuje bublina, kterou kreslíme sami.
+         Nativní popisek by se k ní na myši přidal jako druhý (a na
+         dotyku se neukáže vůbec, což byl ten starý problém). */
+      tecky += '<span class="pvg-t" style="left:' + X(i).toFixed(2) + '%"></span>';
     }
     /* Kde na té ose stojíme my: tolik nabídek je levnějších nebo stejných.
        Počítá se ZNOVU z pole, ne z pc.pct — ten je oříznutý na 2–98 %,
@@ -606,6 +614,7 @@
        „jedna tečka = jedna nabídka". Velikost se proto řídí počtem;
        měřeno na kartě 322 px, nejhustší přihrádka má 74 nabídek. */
     var hustota = (n > 45) ? ' je-husty' : (n > 22 ? ' je-stredni' : '');
+    PVG = { vals: vals, n: n, podNami: podNami };
     return '<figure class="pvg">' +
       '<div class="pvg-pas' + hustota + '" role="img" aria-label="' + esc('Pořadí ceny za m² mezi '
         + n + ' nabídkami v okolí: tento pozemek ' + fmt(Math.round(nase))
@@ -614,8 +623,8 @@
         '<span class="pvg-osa"></span>' +
         '<span class="pvg-med" style="left:' + xMed.toFixed(2) + '%"></span>' +
         tecky +
-        '<span class="pvg-nase" style="left:' + xNase.toFixed(2) + '%" title="'
-          + esc('tento pozemek · ' + fmt(Math.round(nase)) + ' Kč/m²') + '"></span>' +
+        '<span class="pvg-nase" style="left:' + xNase.toFixed(2) + '%"></span>' +
+        '<span class="pvg-kurzor" hidden></span><span class="pvg-bub" hidden></span>' +
       '</div>' +
       '<figcaption class="pvg-pop">' +
         '<span>nejlevnější <b>' + fmt(Math.round(min)) + '</b></span>' +
@@ -626,6 +635,95 @@
         + fmt(Math.round(nase)) + ' Kč/m²</b><span class="pvg-klic ost"></span>'
         + n + ' nabídek v okolí, seřazeno od nejlevnější</p>' +
     '</figure>';
+  }
+
+  /* =====================================================================
+     DOTYK: GRAF SE DÁ PROJET PRSTEM
+     =====================================================================
+     Tečky měly `title`, tedy popisek, který na telefonu NEEXISTUJE —
+     a graf je přitom nejhustší právě tam, kde se na něj klepe. Teď je
+     celý pás jeden terč: prst (nebo myš) jede po ose, nad nejbližší
+     tečkou vyskočí bublina s cenou a s tím, kolikátá v pořadí je.
+
+     PÁS, NE TEČKY. Tečka má 5 až 7 px; dotykový terč má mít 44.
+     Sedmdesát čtyřicetičtyřpixelových terčů se na kartu nevejde, a i
+     kdyby, trefit mezi nimi tu pravou nejde. Jeden pás, který si
+     dopočítá nejbližší tečku, je v tomhle případě přesnější nástroj
+     než sedmdesát malých tlačítek — a je to i to, co dělá graf
+     v mobilních aplikacích velkých realitních webů.
+
+     `touch-action:pan-y` ve stylu je nutnost, ne ozdoba: bez něj by
+     prst jedoucí po grafu přestal rolovat stránku a člověk by měl
+     pocit, že se web zasekl.
+
+     NIC SE TÍM NESKRÝVÁ ZA GESTO. Celé sdělení (tento pozemek, medián,
+     nejlevnější, nejdražší, počet nabídek) stojí v textu kolem grafu
+     a v popisku pro odečítač obrazovky; bublina je navíc, ne místo
+     toho. Proto taky nemá klávesovou obsluhu: nenese nic, co by se
+     jinde nedalo přečíst.
+     ===================================================================== */
+  function pvGrafOziv(host) {
+    var pas = host && host.querySelector ? host.querySelector('.pvg-pas') : null;
+    var d = PVG;
+    if (!pas || !d || !d.n) return;
+    var kur = pas.querySelector('.pvg-kurzor');
+    var bub = pas.querySelector('.pvg-bub');
+    var tecky = pas.querySelectorAll('.pvg-t');
+    if (!kur || !bub) return;
+    var vybrana = -1, odpocet = 0;
+
+    function ukaz(i) {
+      var x = (d.n === 1) ? 50 : (i / (d.n - 1)) * 100;
+      kur.style.left = x.toFixed(2) + '%';
+      kur.hidden = false;
+      /* Bublina se u krajů zarazí, ať nevyleze z karty ven. Čára
+         kurzoru zůstává na svém místě — ta ukazuje, kde jsme.
+         SROVNÁVÁ SE PO VYKRESLENÍ, ne pevným procentem: bublina je
+         jednou „13 Kč/m² tento pozemek" a podruhé „4 Kč/m² 2. z 61",
+         takže její šířka se mění a žádná pevná mez neplatí pro obě.
+         S pevnými 16 % přečuhovala u levého kraje o 3 px z karty ven —
+         naměřeno, chytla to zkouška v test-pohyb. */
+      bub.style.left = x.toFixed(2) + '%';
+      var jeNase = (i === d.podNami - 1);
+      bub.innerHTML = '<b>' + esc(fmt(Math.round(d.vals[i]))) + ' Kč/m²</b><i>'
+        + (jeNase ? 'tento pozemek' : esc(String(i + 1)) + '. z ' + d.n) + '</i>';
+      bub.hidden = false;
+      var rb = bub.getBoundingClientRect(), rp = pas.getBoundingClientRect();
+      var posun = (rb.left < rp.left) ? (rp.left - rb.left)
+        : (rb.right > rp.right) ? (rp.right - rb.right) : 0;
+      if (posun) bub.style.left = 'calc(' + x.toFixed(2) + '% + ' + Math.round(posun) + 'px)';
+      if (vybrana >= 0 && tecky[vybrana]) tecky[vybrana].className = 'pvg-t';
+      if (tecky[i]) tecky[i].className = 'pvg-t je-vyb';
+      vybrana = i;
+    }
+    function schovej() {
+      kur.hidden = true; bub.hidden = true;
+      if (vybrana >= 0 && tecky[vybrana]) tecky[vybrana].className = 'pvg-t';
+      vybrana = -1;
+    }
+    function indexZ(e) {
+      var r = pas.getBoundingClientRect();
+      var podil = (e.clientX - r.left) / Math.max(1, r.width);
+      return Math.max(0, Math.min(d.n - 1, Math.round(podil * (d.n - 1))));
+    }
+    pas.addEventListener('pointerdown', function (e) {
+      clearTimeout(odpocet);
+      try { pas.setPointerCapture(e.pointerId); } catch (x) {}
+      ukaz(indexZ(e));
+    });
+    pas.addEventListener('pointermove', function (e) {
+      /* Myš sleduje i bez stisku, prst jen když se opravdu dotýká. */
+      if (e.pointerType === 'mouse' || e.buttons) ukaz(indexZ(e));
+    });
+    pas.addEventListener('pointerup', function (e) {
+      /* Na dotyku bublina chvíli zůstane — prst ji při zvednutí
+         odkrývá a přečíst ji jde až potom. Na myši ji schová odchod. */
+      if (e.pointerType !== 'mouse') { clearTimeout(odpocet); odpocet = setTimeout(schovej, 2500); }
+    });
+    pas.addEventListener('pointerleave', function (e) {
+      if (e.pointerType === 'mouse') schovej();
+    });
+    pas.addEventListener('pointercancel', schovej);
   }
   /* Kolik rad k tomuhle pozemku je — ať je ze souhrnu poznat, že se pod ním
      něco skrývá, a kolik toho je. */
@@ -2159,7 +2257,13 @@
 
   function fillVerdict(d) {
     var el = document.getElementById('pz-verdict');
-    if (el) el.innerHTML = pzVerdictHtml(d);
+    if (!el) return;
+    el.innerHTML = pzVerdictHtml(d);
+    /* Obsluha se věší AŽ TEĎ, na čerstvou značku. Volá se to pokaždé
+       (rychlé vykreslení z úložiště i to pozdější z dat), a protože
+       innerHTML celý blok nahradí, staré posluchače to nedrží — nemá
+       se na čem nasčítat. */
+    pvGrafOziv(el);
   }
 
   // 1) OKAMŽITĚ vykresli z předaného pozemku (sessionStorage) — bez čekání na data.

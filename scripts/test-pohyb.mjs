@@ -278,6 +278,58 @@ const kdeJeZnacka = (p) => p.evaluate(() => {
   await ctx.close();
 }
 
+// --- 2b) GRAF SE DÁ PROJET PRSTEM ----------------------------------
+// Tečky měly `title` — popisek, který na telefonu NEEXISTUJE. Teď je
+// celý pás jeden terč: prst jede po ose a nad nejbližší tečkou vyskočí
+// bublina s cenou a pořadím. Měří se čtyři věci, a každá je past na
+// jinou chybu:
+//   • terč má aspoň 44 px (jinak se do něj prstem nedá trefit),
+//   • klepnutí opravdu ukáže bublinu s číslem, ne prázdnou,
+//   • bublina zůstane uvnitř karty i u kraje osy,
+//   • `touch-action` nechá stránku rolovat — bez toho by prst na grafu
+//     přestal hýbat stránkou a web by působil zaseknutě.
+{
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    hasTouch: true, isMobile: true });
+  const p = await ctx.newPage();
+  await p.goto(ADRESA, { waitUntil: 'domcontentloaded' });
+  await p.waitForSelector('.pvg-nase', { timeout: 12000 }).catch(() => {});
+  await p.waitForTimeout(2200);          // ať je po druhém vykreslení z dat
+  const pas = await p.evaluate(() => {
+    const e = document.querySelector('.pvg-pas');
+    if (!e) return null;
+    const r = e.getBoundingClientRect();
+    return { x: r.x, y: r.y, w: r.width, h: r.height, ta: getComputedStyle(e).touchAction };
+  });
+  pravda('graf na telefonu stojí', !!pas, 'element .pvg-pas se nenašel');
+  if (pas) {
+    pravda(`a jeho dotykový terč má aspoň 44 px na výšku (${Math.round(pas.h)})`,
+      pas.h >= 44, `${pas.h.toFixed(1)} px`);
+    pravda('stránka se dá přes graf dál rolovat', /pan-y/.test(pas.ta || ''),
+      `touch-action je „${pas.ta}"`);
+    /* Klepnutí u levého kraje: tam se pozná i to, jestli bublina
+       nevyleze z karty ven. */
+    await p.touchscreen.tap(pas.x + pas.w * 0.04, pas.y + pas.h / 2);
+    await p.waitForTimeout(200);
+    const v = await p.evaluate(() => {
+      const bub = document.querySelector('.pvg-bub');
+      const karta = document.querySelector('.pz-verdict');
+      if (!bub || !karta) return null;
+      const rb = bub.getBoundingClientRect(), rk = karta.getBoundingClientRect();
+      return { skryta: bub.hidden, txt: (bub.textContent || '').trim(),
+        vybranych: document.querySelectorAll('.pvg-t.je-vyb').length,
+        vlevo: Math.round(rb.left - rk.left), vpravo: Math.round(rk.right - rb.right) };
+    });
+    pravda('klepnutí na graf ukáže bublinu s cenou za metr',
+      !!v && !v.skryta && /\d/.test(v.txt) && /Kč\/m/.test(v.txt), JSON.stringify(v));
+    pravda('a zvýrazní právě jednu tečku', !!v && v.vybranych === 1,
+      `zvýrazněných teček: ${v && v.vybranych}`);
+    pravda('bublina zůstane uvnitř karty i u kraje osy',
+      !!v && v.vlevo >= 0 && v.vpravo >= 0, JSON.stringify(v));
+  }
+  await ctx.close();
+}
+
 // --- 3) Kdo má vypnuté animace, vidí přesně totéž --------------------
 // U grafu je to snadné: nenajíždí ani s animacemi zapnutými. Kontrola
 // tu zůstává jako past — kdyby někdo graf „oživil", musí to projít

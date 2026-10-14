@@ -1525,6 +1525,26 @@ to{opacity:1;transform:none}
 .okr-item .okr-foto{width:100%;aspect-ratio:16/10;margin-bottom:2px}
 .okr-item .okr-foto .okr-badge{font-size:12px;padding:2px 8px;left:8px;top:8px}
 }
+.pvg{margin:14px 0 0}
+.pvg-pas{position:relative;min-height:54px;margin:0 8px;padding:14px 0;touch-action:pan-y;cursor:crosshair}
+.pvg-kurzor{position:absolute;top:8px;bottom:8px;width:1px;background:var(--vc);opacity:0.45;transform:translateX(-50%);pointer-events:none}
+.pvg-t.je-vyb{opacity:1;background:var(--text-ondark);transform:translate(-50%,-50%) scale(1.6)}
+.pvg-bub{position:absolute;bottom:calc(100% - 26px);transform:translateX(-50%);z-index:3;pointer-events:none;white-space:nowrap;padding:4px 8px;border-radius:var(--r-xs);background:var(--text-ondark);color:var(--plocha-plovouci-plna);font-size:12px;line-height:1.4;box-shadow:var(--e2)}
+.pvg-bub b{font-weight:700}
+.pvg-bub i{font-style:normal;opacity:0.7;margin-left:6px}
+.pvg-osa{position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line-strong);transform:translateY(-50%)}
+.pvg-med{position:absolute;top:2px;bottom:2px;width:1px;background:var(--line-strong);transform:translateX(-50%)}
+.pvg-t{position:absolute;top:50%;width:7px;height:7px;border-radius:50%;background:var(--text-ondark-mute);opacity:0.45;border:1px solid var(--plocha-plovouci-plna);transform:translate(-50%,-50%)}
+.pvg-pas.je-stredni .pvg-t{width:6px;height:6px}
+.pvg-pas.je-husty .pvg-t{width:5px;height:5px;opacity:0.55}
+.pvg-nase{position:absolute;top:50%;width:15px;height:15px;border-radius:50%;background:var(--vc);border:3px solid var(--plocha-plovouci-plna);box-shadow:var(--e1);transform:translate(-50%,-50%);z-index:2}
+.pvg-pop{display:flex;justify-content:space-between;gap:8px;margin:2px 0 0;font-size:11px;color:var(--text-ondark-mute);font-variant-numeric:tabular-nums}
+.pvg-pop b{color:var(--text-ondark);font-weight:600}
+.pvg-vys{margin:8px 0 0;font-size:12px;color:var(--text-ondark-mute);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pvg-vys b{color:var(--text-ondark)}
+.pvg-klic{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block}
+.pvg-klic.nase{background:var(--vc)}
+.pvg-klic.ost{background:var(--text-ondark-mute);opacity:0.45;margin-left:8px}
 .s-rohy{position:relative}
 .s-rohy::before,.s-rohy::after{content:"";position:absolute;width:14px;height:14px;pointer-events:none;border-color:var(--line-strong);border-style:solid;opacity:0.9}
 .s-rohy::before{top:7px;left:7px;border-width:1.5px 0 0 1.5px;border-top-left-radius:3px}

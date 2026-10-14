@@ -352,6 +352,8 @@
       '</div>' + odhadHtml(d);
   }
 
+  var PVG = null;
+
   function pvGrafHtml(pc, nase) {
     var vals = pc && pc.hodnoty;
     if (!vals || vals.length < 10 || !nase || !isFinite(nase)) return '';
@@ -364,8 +366,8 @@
     var X = function (poradi) { return (n === 1) ? 50 : (poradi / (n - 1)) * 100; };
     var tecky = '';
     for (i = 0; i < n; i++) {
-      tecky += '<span class="pvg-t" style="left:' + X(i).toFixed(2) + '%" title="'
-        + esc(fmt(Math.round(vals[i])) + ' Kč/m²') + '"></span>';
+
+      tecky += '<span class="pvg-t" style="left:' + X(i).toFixed(2) + '%"></span>';
     }
 
     var podNami = 0;
@@ -374,6 +376,7 @@
     var xMed = X(Math.floor((n - 1) / 2));
 
     var hustota = (n > 45) ? ' je-husty' : (n > 22 ? ' je-stredni' : '');
+    PVG = { vals: vals, n: n, podNami: podNami };
     return '<figure class="pvg">' +
       '<div class="pvg-pas' + hustota + '" role="img" aria-label="' + esc('Pořadí ceny za m² mezi '
         + n + ' nabídkami v okolí: tento pozemek ' + fmt(Math.round(nase))
@@ -382,8 +385,8 @@
         '<span class="pvg-osa"></span>' +
         '<span class="pvg-med" style="left:' + xMed.toFixed(2) + '%"></span>' +
         tecky +
-        '<span class="pvg-nase" style="left:' + xNase.toFixed(2) + '%" title="'
-          + esc('tento pozemek · ' + fmt(Math.round(nase)) + ' Kč/m²') + '"></span>' +
+        '<span class="pvg-nase" style="left:' + xNase.toFixed(2) + '%"></span>' +
+        '<span class="pvg-kurzor" hidden></span><span class="pvg-bub" hidden></span>' +
       '</div>' +
       '<figcaption class="pvg-pop">' +
         '<span>nejlevnější <b>' + fmt(Math.round(min)) + '</b></span>' +
@@ -394,6 +397,63 @@
         + fmt(Math.round(nase)) + ' Kč/m²</b><span class="pvg-klic ost"></span>'
         + n + ' nabídek v okolí, seřazeno od nejlevnější</p>' +
     '</figure>';
+  }
+
+  function pvGrafOziv(host) {
+    var pas = host && host.querySelector ? host.querySelector('.pvg-pas') : null;
+    var d = PVG;
+    if (!pas || !d || !d.n) return;
+    var kur = pas.querySelector('.pvg-kurzor');
+    var bub = pas.querySelector('.pvg-bub');
+    var tecky = pas.querySelectorAll('.pvg-t');
+    if (!kur || !bub) return;
+    var vybrana = -1, odpocet = 0;
+
+    function ukaz(i) {
+      var x = (d.n === 1) ? 50 : (i / (d.n - 1)) * 100;
+      kur.style.left = x.toFixed(2) + '%';
+      kur.hidden = false;
+
+      bub.style.left = x.toFixed(2) + '%';
+      var jeNase = (i === d.podNami - 1);
+      bub.innerHTML = '<b>' + esc(fmt(Math.round(d.vals[i]))) + ' Kč/m²</b><i>'
+        + (jeNase ? 'tento pozemek' : esc(String(i + 1)) + '. z ' + d.n) + '</i>';
+      bub.hidden = false;
+      var rb = bub.getBoundingClientRect(), rp = pas.getBoundingClientRect();
+      var posun = (rb.left < rp.left) ? (rp.left - rb.left)
+        : (rb.right > rp.right) ? (rp.right - rb.right) : 0;
+      if (posun) bub.style.left = 'calc(' + x.toFixed(2) + '% + ' + Math.round(posun) + 'px)';
+      if (vybrana >= 0 && tecky[vybrana]) tecky[vybrana].className = 'pvg-t';
+      if (tecky[i]) tecky[i].className = 'pvg-t je-vyb';
+      vybrana = i;
+    }
+    function schovej() {
+      kur.hidden = true; bub.hidden = true;
+      if (vybrana >= 0 && tecky[vybrana]) tecky[vybrana].className = 'pvg-t';
+      vybrana = -1;
+    }
+    function indexZ(e) {
+      var r = pas.getBoundingClientRect();
+      var podil = (e.clientX - r.left) / Math.max(1, r.width);
+      return Math.max(0, Math.min(d.n - 1, Math.round(podil * (d.n - 1))));
+    }
+    pas.addEventListener('pointerdown', function (e) {
+      clearTimeout(odpocet);
+      try { pas.setPointerCapture(e.pointerId); } catch (x) {}
+      ukaz(indexZ(e));
+    });
+    pas.addEventListener('pointermove', function (e) {
+
+      if (e.pointerType === 'mouse' || e.buttons) ukaz(indexZ(e));
+    });
+    pas.addEventListener('pointerup', function (e) {
+
+      if (e.pointerType !== 'mouse') { clearTimeout(odpocet); odpocet = setTimeout(schovej, 2500); }
+    });
+    pas.addEventListener('pointerleave', function (e) {
+      if (e.pointerType === 'mouse') schovej();
+    });
+    pas.addEventListener('pointercancel', schovej);
   }
 
   function pzGtkKolik(d) {
@@ -1374,7 +1434,10 @@
 
   function fillVerdict(d) {
     var el = document.getElementById('pz-verdict');
-    if (el) el.innerHTML = pzVerdictHtml(d);
+    if (!el) return;
+    el.innerHTML = pzVerdictHtml(d);
+
+    pvGrafOziv(el);
   }
 
   var quick = null;

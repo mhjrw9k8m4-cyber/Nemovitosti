@@ -6505,6 +6505,55 @@ jak daleko ve výpisu člověk došel.
 | špendlík posazený mimo snímek | 1 |
 | atribuce Esri vymazaná ze stylopisu | 1 (a jmenovala oba balíky stylů) |
 
+## 3cy. Graf cen se dá projet prstem — a vyhubl o 1,3 kB na stránku — *14. 10.*
+
+Tečky v grafu měly `title`, tedy popisek, **který na telefonu
+neexistuje**. Hodnota jednotlivé nabídky se tak dala přečíst jedině
+myší; na dotyku byl graf jen obrázek.
+
+### Pás je jeden terč, ne sedmdesát malých
+Tečka má 5 až 7 px, dotykový terč má mít 44. Sedmdesát
+čtyřicetičtyřpixelových terčů se na kartu nevejde a i kdyby, trefit
+mezi nimi tu pravou nejde. Celý pás je proto jeden terč (54 px na
+výšku): prst jede po ose, nad nejbližší tečkou vyskočí bublina
+s cenou a pořadím („14 Kč/m² · 4. z 13", u naší nabídky „tento
+pozemek"), tečka se zvětší a projde jí svislice.
+
+`touch-action:pan-y` je nutnost, ne ozdoba — bez něj by prst jedoucí
+po grafu přestal rolovat stránku a web by působil zaseknutě. Na myši
+bublina sleduje kurzor a zmizí s odchodem, na dotyku zůstane 2,5 s,
+aby se dala přečíst poté, co ji prst odkryje.
+
+**Za gesto se nic neschovalo.** Vše (tento pozemek, medián, nejlevnější,
+nejdražší, počet nabídek) dál stojí v textu kolem grafu a v popisku pro
+odečítač obrazovky; bublina je navíc, ne místo toho.
+
+### Osa zůstala pořadím
+Na dotaz „ať to vypadá jako na Sreality" jsem **neměnil osu na koruny**
+a je to měřené rozhodnutí, ne lenost: u 15 ze 49 přihrádek je nejdražší
+nabídka víc než trojnásobek devadesátého percentilu (u dražeb na
+Litoměřicku medián 113 Kč/m², maximum 17 071), takže v korunách by se
+všechny ostatní tečky slily u levého kraje. Pořadí navíc říká totéž co
+věta nad grafem, takže se graf a věta nemůžou rozejít.
+
+### Vedlejší nález: 1,3 kB na každé z 1 995 stránek
+Pravidla grafu ležela ve **vloženém** stylu pozemek.html. Ten tam je
+kvůli tomu, co se kreslí hned — jenže graf skládá `js/pozemek.js` až po
+dopočtení ceny, tedy dávno po tom, co stylopis dorazil. Přestěhoval se
+proto do `css/styles.css`; rozdělovač stylopisu ho v základním balíku
+nechá, protože k tokenům stránky přičítá slova ze všech skriptů, které
+si stránka tahá. Vložený styl předlohy spadl z 42,0 na 39,5 kB.
+
+| sabotáž | spadlo |
+|---|---|
+| obsluha dotyku se nepověsí | 3 (bublina, zvýrazněná tečka, poloha bubliny) |
+| pás se zmenší zpátky na 26 px bez `touch-action` | 2 (terč 26 px, rolování) |
+
+A jeden nález z vlastní zkoušky: bublina s pevným ořezem na 16–84 %
+přečuhovala u levého kraje **3 px z karty ven** — šířka bubliny se mění
+podle textu, takže se musí srovnat až po vykreslení, ne pevným
+procentem.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

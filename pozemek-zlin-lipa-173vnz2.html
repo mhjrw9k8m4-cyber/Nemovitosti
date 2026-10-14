@@ -52,7 +52,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/zaklad.min.css?v=c6fea67a">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=cd31c752">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -104,21 +104,6 @@
 .pv-cmp{font-size:12px;color:var(--text-ondark-mute);font-weight:600}
 .pv-text{font-size:14px;color:var(--text-ondark-mute);line-height:1.5}
 .pv-text b{color:var(--text-ondark)}
-.pvg{margin:14px 0 0}
-.pvg-pas{position:relative;height:26px;margin:0 8px}
-.pvg-osa{position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line-strong);transform:translateY(-50%)}
-.pvg-med{position:absolute;top:2px;bottom:2px;width:1px;background:var(--line-strong);transform:translateX(-50%)}
-.pvg-t{position:absolute;top:50%;width:7px;height:7px;border-radius:50%;background:var(--text-ondark-mute);opacity:0.45;border:1px solid var(--plocha-plovouci-plna);transform:translate(-50%,-50%)}
-.pvg-pas.je-stredni .pvg-t{width:6px;height:6px}
-.pvg-pas.je-husty .pvg-t{width:5px;height:5px;opacity:0.55}
-.pvg-nase{position:absolute;top:50%;width:15px;height:15px;border-radius:50%;background:var(--vc);border:3px solid var(--plocha-plovouci-plna);box-shadow:var(--e1);transform:translate(-50%,-50%);z-index:2}
-.pvg-pop{display:flex;justify-content:space-between;gap:8px;margin:2px 0 0;font-size:11px;color:var(--text-ondark-mute);font-variant-numeric:tabular-nums}
-.pvg-pop b{color:var(--text-ondark);font-weight:600}
-.pvg-vys{margin:8px 0 0;font-size:12px;color:var(--text-ondark-mute);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.pvg-vys b{color:var(--text-ondark)}
-.pvg-klic{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block}
-.pvg-klic.nase{background:var(--vc)}
-.pvg-klic.ost{background:var(--text-ondark-mute);opacity:0.45;margin-left:8px}
 .pz-sect-h{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--popisek);margin:40px 0 10px;position:relative}
 .pz-sect-h::before{content:"";position:absolute;left:0;top:-14px;width:52px;height:2px;border-radius:2px;background:var(--grad-warm);opacity:.85}
 .pz-blok{margin:10px 0 0;padding:12px 14px;border-radius:var(--r-plocha);font-size:14px;line-height:1.6;background:linear-gradient(180deg,var(--ink-soft2),var(--ink-soft));border:1px solid var(--line);color:var(--text-ondark)}
@@ -395,7 +380,7 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/hlidani-logika.js?v=3c8ae080"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Lesní pozemek 3 224 m², podíl 9/792 — Lípa, okres Zlín","description":"Na prodej · 46 350 Kč (14 Kč/m²) · 3 224 m², podíl 9/792 · Lípa, okres Zlín. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-zlin-lipa-173vnz2.html","address":{"@type":"PostalAddress","addressLocality":"Lípa","addressRegion":"Zlín","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.192846,"longitude":17.7846},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":3224,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":46350,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-zlin-lipa-173vnz2.html","itemOffered":{"@type":"Place","name":"Lesní pozemek 3 224 m², podíl 9/792 — Lípa, okres Zlín"},"availability":"https://schema.org/InStock","description":"Cena je za spoluvlastnický podíl; uvedená výměra patří celé parcele."}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Zlínský kraj","item":"https://www.parcelaka.cz/pozemky-zlinsky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Zlín","item":"https://www.parcelaka.cz/pozemky-okres-zlin.html"},{"@type":"ListItem","position":5,"name":"Lesní pozemek 3 224 m², podíl 9/792 — Lípa, okres Zlín","item":"https://www.parcelaka.cz/pozemek-zlin-lipa-173vnz2.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Lípa|—|Zlín|49.193|17.785","ll":[49.192846,17.7846],"v":3224,"c":46350,"r":"data/okres/zlin.json"};</script>
-<script src="js/min/pozemek.js?v=255d6905"></script>
+<script src="js/min/pozemek.js?v=90541aff"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
