@@ -614,7 +614,7 @@ ${sMapou ? `  <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?${V.le
       <!-- „Hledat pozemek", ne „Pozemky": podstatné jméno tu neřekne nic. -->
       <a href="index.html#mapa">Hledat pozemek</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
+      <details class="nav-sk"><summary id="nav-sk-ucet">Moje</summary><div class="nav-sk-panel"><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>

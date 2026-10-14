@@ -5597,7 +5597,7 @@
     /* ODDĚLOVAČ PATŘÍ DOVNITŘ ZNAČKY. Na telefonu se tahle část
        schovává (číslo stojí v liště nad výpisem), a kdyby „ · " stálo
        venku, zbyla by za nadpisem osamocená tečka. */
-    countEl.innerHTML = headLabel + (matched ? '<span class="mc-sub"> · ' + fmt(matched) + ' na mapě</span>' : '')
+    countEl.innerHTML = headLabel + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')
       + pripisky;
     /* Tlačítka do VLASTNÍHO obalu, ne do hlavičky. Vedle nich stojí
        „Uložené" a rozbalovač řazení, které se nepřekreslují — kdyby se

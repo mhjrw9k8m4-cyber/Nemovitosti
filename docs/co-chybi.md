@@ -6223,7 +6223,9 @@ Oddíl 3cr popisoval dva nálezy v horní liště (terče 22 px a značka
 „tady jsi", která svítila na jediné stránce) a jejich opravu.
 **Majitel změnu odmítl: menu dělal sám a o zásah nestál.** Commit je
 celý vrácený, lišta měří zase 63×22, 108×22, 100×22, 51×22, 45×22
-a 146×44 jako předtím, zkouška `test-lista-nahore.mjs` je smazaná
+a 146×44 jako předtím, zkouška test-lista-nahore.mjs je smazaná (schválně bez zpětných
+uvozovek: zkouška test-staticka hlídá, že každý soubor jmenovaný
+v dokumentaci opravdu existuje, a tenhle existovat nemá)
 i s krokem v CI a `test-rozvrzeni` má zpátky původní poznávání
 zalomeného odkazu.
 
@@ -6231,6 +6233,12 @@ Nález tu zůstává zapsaný **jako odmítnutý, ne jako chyba k opravě** —
 stejně jako čtyřsloupcová patička v `test-paticka.mjs`. Je to rozhodnutí
 majitele o jeho webu, ne nedopatření, a příště (ani mnou) se nemá
 „opravovat" znovu.
+
+**Dodatek téhož dne:** majitel pokyn sám otočil — „to menu ještě pořád
+předělej, hodně to předělej, extrémní změnu to chce, koukni na velké
+realitky a předělej to podle nich". Co z toho vzniklo, je v oddílu 3cu.
+To, co je např psané níž, tím neztrácí platnost: do společné součásti webu
+se sáhne, když o to majitel řekne, ne když si myslím, že by to chtěla.
 
 **Poučení pro mě:** obě věci, do kterých jsem dnes sáhl a neměl —
 patička a menu — mají jedno společné: majitel je už jednou řešil. U
@@ -6290,6 +6298,89 @@ slibuje věta nad ním**.
 | graf kreslí jen deset teček místo všech | 1 |
 | model přestane posílat hodnoty (graf zmizí) | 3 |
 | značka dostane najížděcí animaci | 1 |
+
+
+## 3cu. Nabídka podle velkých realitních webů — a úvodní stránka bez prázdného pruhu — *14. 10.*
+
+Zadání znělo: *„to menu ještě pořád předělej, hodně to předělej,
+extrémní změnu to chce, koukni na velké realitky a předělej to podle
+nich — i ten design na úvodní stránce, ať je to čisté a úderné."*
+
+### Nejdřív nález, který se nedal přehlédnout: lišta měla tři podoby
+
+Navěšená v každé stránce zvlášť: **2 141 stránek jednu, 106 druhou
+a `index.html` třetí**. Jakákoli změna navigace znamenala upravit tři
+šablony a doufat, že se na čtvrtou nezapomnělo. Teď je kánon jediný
+(`scripts/hlavicka.mjs`) a krok `sjednot-hlavicku.mjs` ho při sestavení
+vepíše do všech 2 248 stránek naráz.
+
+### Co se změnilo
+
+**Na monitoru** místo plochého seznamu sedmi odkazů čtyři skupiny tak,
+jak to mají velké inzertní weby: vlevo *Pozemky ▾ · Příležitosti ▾ ·
+Ceny pozemků · Rádce ▾ · Kontakt*, svislá čárka, vpravo *Můj profil ▾*
+a jediné tlačítko s výplní. Levá půlka odpovídá na „co tu najdu",
+pravá na „co tu můžu udělat".
+
+**Na telefonu** je z téže značky šuplik rozdělený na oddíly: účet
+s jménem a stavem, pak POZEMKY, PŘÍLEŽITOSTI, Ceny pozemků, RÁDCE,
+Kontakt a dole akce. Nadpis oddílu nese ikonu, řádky v oddílu jsou
+o stupeň nižší a zarovnané pod jeho text.
+
+### Tři vady, které to vyplavilo (všechny naměřené, ne hádané)
+
+| co | číslo |
+|---|---|
+| nadpisy oddílů v šuplíku byly neviditelné | starší pravidlo `.nav-sk > summary{display:none}` stálo v souboru níž, takže přebíjelo nové; šuplik byl jeden seznam sedmnácti řádků bez pořádku |
+| tlačítko „Přidat pozemek" mělo 44 px místo 66 | šuplik je svislý flex s pevnou výškou a přetékající položky se **smršťují** — sedlo si přesně na svoje `min-height`; `#nav > *{flex:none}` |
+| tečka „jsi přihlášený" svítila schovaná v panelu | kreslila se na `#nav-ucet`, a ten je od přestavby odkaz *uvnitř* rozbalovače; přesunuta na nadpis skupiny |
+
+### Zkoušky: dvě nové kontroly místo jedné zastaralé
+
+`test-menu` chtěl „ikonu u každého cíle". To platilo pro plochou
+šestičlennou nabídku; při sedmnácti cílech by to byla hromada obrázků
+a každý nový odkaz by zkoušku shodil. Místo toho se hlídá to, **kvůli
+čemu to pravidlo vzniklo**: nikde nesmí zůstat prázdné místo po ikoně
+(`::before`, který nic nekreslí) a každý oddíl musí mít obrázek
+u nadpisu.
+
+| sabotáž | spadlo |
+|---|---|
+| řádkům v oddílu se vrátí prázdný `::before` | 1 (jmenovitě 23 řádků) |
+| nadpis „Rádce" přijde o ikonu | 1 (vypsalo, který ze čtyř) |
+| tečka přihlášení se vrátí na `#nav-ucet` | 1 (`obsah:none, šířka 0`) |
+
+### Úvodní stránka: dva prázdné pruhy a nadpis, který nebyl nadpis
+
+**Pruh pod hlavičkou.** Komentář u pravidla tvrdil „navazuje to rovnou
+na hlavičku, bez mezery" a hned pod ním stálo `margin-top:48px`.
+Naměřeno na 1440×900: hlavička končí na y 85, aplikace začínala na
+y 133 a mezi tím byl přes celou šířku prázdný šedý pruh — tedy přesně
+ten schod, před kterým komentář varuje, jen o 28 px vyšší.
+
+**Na telefonu je těch 48 px nosných** (hlídá `test-pod-hlavickou`:
+65 + 50 + 10 = 125, aby hledání po odrolování nezmizelo pod lepivou
+hlavičkou), takže se tam nemazaly — jen se z nich stalo **odsazení
+uvnitř bílé desky** místo odstupu venku. Stejné místo, jiná barva:
+vzduch nad hledáním, ne šedý pruh. Ovládání se nehnulo ani o pixel.
+
+**Nadpis výpisu** měl 14 px/600 — přesně tolik, co popisky tlačítek pod
+ním, takže první obrazovka byla pět stejně hlasitých řádků, než začala
+první nabídka. Teď je 17 px/700, číslo a poznámka jsou tišší přípona
+a vedle nadpisu stojí řazení.
+
+| 1440×900 | před | po |
+|---|---|---|
+| začátek aplikace | y 133 | y 85 |
+| hlavička výpisu (výška) | 192 px | 145 px |
+| první nabídka | y 450 | y 383 |
+
+**Past, do které jsem při tom šlápl:** `flex:1 1 200px` na nadpisu je
+v řádku šířka, ale na telefonu má taž sestava hlavní osu svislou —
+takže z téhož zápisu byla **výška 200 px**: nadpis se nafoukl z 63 na
+200, řádky se v něm rozprostřely (zalomený flex roztahuje své řádky)
+a první nabídka spadla o 165 px níž. Vidět na snímku, opraveno
+omezením pravidla na šířky, kde je řada vodorovná.
 
 
 ## Co naopak nechybí

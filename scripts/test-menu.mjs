@@ -123,9 +123,17 @@ try {
       const q = x.getBoundingClientRect();
       return { kam: x.getAttribute('href'), txt: x.textContent.trim(),
         s: Math.round(q.width), v: Math.round(q.height), x: Math.round(q.left),
-        ikona: getComputedStyle(x, '::before').backgroundImage !== 'none' };
+        ikona: getComputedStyle(x, '::before').backgroundImage !== 'none',
+        /* Prázdné místo po ikoně: ::before v řádku JE (má obsah i šířku),
+           ale nekreslí nic — text je pak odstrčený o nic. */
+        dira: getComputedStyle(x, '::before').content !== 'none'
+          && getComputedStyle(x, '::before').backgroundImage === 'none'
+          && parseFloat(getComputedStyle(x, '::before').width) > 0 };
     });
-    return { vHlavicce: !!n.closest('header'), poz: s.position,
+    const odd = [...n.querySelectorAll('.nav-sk > summary')].filter((x) => x.getClientRects().length)
+      .map((x) => ({ t: (x.querySelector('.nav-ucet-t') || x).textContent.trim().slice(0, 20),
+        ikona: getComputedStyle(x, '::before').backgroundImage !== 'none' }));
+    return { odd, vHlavicce: !!n.closest('header'), poz: s.position,
       viditelnost: s.visibility, x: Math.round(r.left), s: Math.round(r.width), oknoS: innerWidth,
       hlavicka: Math.round(h.height), v: Math.round(r.height), okno: innerHeight,
       posuvny: n.scrollWidth > n.clientWidth + 1, radku: new Set(a.map((x) => x.v && x.x >= 0 ? Math.round(x.v) : 0)).size,
@@ -176,12 +184,20 @@ try {
   for (const cil of ['#mapa', 'cena-pozemku.html', 'zpravy.html', 'hlidani.html', 'kontakt.html', 'muj-inzerat.html']) {
     pravda(`v nabídce je ${cil}`, kam.some((h) => (h || '').endsWith(cil)), 'chybí: ' + kam.join(', '));
   }
-  /* Ikonu nese každý cíl KROMĚ účtu (dvouřádkový blok se jménem a
-     stavem přihlášení, kde by ikona stála vedle obou řádků) a kromě
-     tlačítka „Přidat pozemek", které je akce, ne položka seznamu. */
-  const bezIkony = l.a.filter((x) => !x.ikona && !/muj-inzerat|pridat/.test(x.kam || ''));
-  pravda('každý cíl v nabídce má ikonu', bezIkony.length === 0,
-    JSON.stringify(bezIkony.map((x) => x.kam)));
+  /* IKONY NESOU NADPISY ODDÍLŮ, NE KAŽDÝ ŘÁDEK. Dřív se tu žádalo
+     „ikonu má každý cíl" — to platilo, dokud byla nabídka plochý seznam
+     šesti odkazů. Od chvíle, kdy je rozdělená na oddíly, by to
+     znamenalo sedmnáct obrázků a každý nový odkaz by zkoušku shodil.
+     Hlídá se proto to, kvůli čemu to pravidlo vzniklo: nikde nesmí
+     zůstat prázdné místo po ikoně (::before, který nic nekreslí), a
+     každý oddíl musí mít u nadpisu obrázek — jinak je nadpis holý text
+     a nabídka se rozpadne na jednolitý seznam. */
+  const diry = l.a.filter((x) => x.dira);
+  pravda('žádný řádek nemá prázdné místo po ikoně', diry.length === 0,
+    JSON.stringify(diry.map((x) => x.kam)));
+  pravda(`každý oddíl nabídky má u nadpisu ikonu (${l.odd.length} oddílů)`,
+    l.odd.length >= 4 && l.odd.every((x) => x.ikona),
+    JSON.stringify(l.odd));
   /* Mez 44 px si web klade sám (hlídá ji test-rozvrzeni i test-dotyk);
      v panelu je místa na víc, takže se čeká 52. */
   pravda('a dá se trefit prstem (52 px na výšku)', l.a.every((x) => x.v >= 52),

@@ -457,47 +457,79 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   await ctx.close();
 }
 
-// --- 6) Menu: čtyři „moje" položky pod jednou -------------------------
-/* V liště stály vedle sebe Upozornění, Zprávy, Hlídání a Můj profil.
-   Všechny patří jednomu účtu, ale zabíraly čtyři místa a vypadaly jako
-   čtyři různé části webu. */
+// --- 6) Lišta: čtyři skupiny, nic nevisí dolů --------------------------
+/* Lišta bývala plochý seznam, v němž stály vedle sebe položky jednoho účtu
+   i sedm rozcestníků. Teď je rozdělená na skupiny jako u velkých inzertních
+   webů: vlevo Pozemky, Příležitosti, Ceny, Rádce, Kontakt, vpravo účet
+   a jediné tlačítko s výplní. Z TÉŽE značky se na telefonu stane šuplik
+   s oddíly — to hlídá test-menu. */
 {
   const { ctx, p } = await otevri('kontakt.html', 1440, 900);
   await rozbalHledani(p);
   const v = await p.evaluate(() => {
     const vidno = (e) => { if (!e) return false; const s = getComputedStyle(e);
       return s.display !== 'none' && s.visibility !== 'hidden' && e.getClientRects().length > 0; };
-    const det = document.querySelector('.nav-moje');
+    const ucet = document.querySelector('.nav-ucet-sk');
     return {
-      skupina: !!det,
-      otevrena: det ? det.open : null,
+      skupin: document.querySelectorAll('#nav > details.nav-sk').length,
+      ucet: !!ucet,
       polozekVListe: [...document.querySelectorAll('#nav > a, #nav > details')].filter(vidno).length,
-      odkazyUvnitr: [...document.querySelectorAll('.nav-moje-panel a')].map((a) => a.textContent.trim()),
-      vidnoZavrene: [...document.querySelectorAll('.nav-moje-panel a')].filter(vidno).length,
-      ucetNahore: !!document.querySelector('#nav > a#nav-ucet'),
+      odkazyUctu: ucet ? [...ucet.querySelectorAll('.nav-sk-panel a')].map((a) => a.textContent.trim()) : [],
+      stavVSummary: !!(ucet && ucet.querySelector('summary #nav-stav')),
+      vidnoZavrene: [...document.querySelectorAll('.nav-sk-panel a')].filter(vidno).length,
     };
   });
-  pravda('osobní položky jsou pod jednou skupinou', v.skupina, 'skupina .nav-moje v liště chybí');
-  /* Ve skupině jsou dvě: zprávy a hlídání — samá činnost. Bývaly tři,
-     ale Upozornění se na přání majitele odebrala celá.
-     Účet z ní odešel nahoru jako samostatný první řádek, protože byl
-     schovaný až čtvrtý a nešlo z nabídky poznat, jestli je člověk
-     přihlášený. Že je nahoře a nese stav, hlídá test-data.mjs. */
-  pravda('a jsou v ní obě',
-    v.odkazyUvnitr.length === 2 && /Zprávy/.test(v.odkazyUvnitr.join(' ')) && /Hlídání/.test(v.odkazyUvnitr.join(' ')),
-    v.odkazyUvnitr.join(' | '));
-  pravda('účet je mimo ni, nahoře a se stavem', v.ucetNahore,
-    'v liště chybí #nav-ucet jako samostatná položka');
-  pravda('v liště tím ubylo položek', v.polozekVListe <= 6, `v liště je ${v.polozekVListe} položek`);
+  pravda(`lišta je rozdělená na skupiny (${v.skupin})`, v.skupin >= 4,
+    'v liště nejsou aspoň čtyři skupiny .nav-sk');
+  /* Účet je skupina sám o sobě: v jeho rozbalovači jsou tři činnosti a stav
+     přihlášení nese rovnou její nadpis. Bývaly dvě a účet stál v liště
+     samostatně — jenže z toho se dalo poznat jméno, ne co pod ním je.
+     (Že se stav opravdu dopisuje, hlídá test-data.mjs.) */
+  pravda('účet je vlastní skupina', v.ucet, 'skupina .nav-ucet-sk v liště chybí');
+  pravda('a jsou v ní všechny tři osobní stránky',
+    v.odkazyUctu.length === 3 && /Moje inzeráty/.test(v.odkazyUctu.join(' '))
+      && /Zprávy/.test(v.odkazyUctu.join(' ')) && /Hlídání/.test(v.odkazyUctu.join(' ')),
+    v.odkazyUctu.join(' | '));
+  /* Stav přihlášení visí na NADPISU skupiny, ne na odkazu uvnitř panelu:
+     v šupliků na telefonu se čte celý (e-mail), na monitoru je schovaný
+     (nevejde se na jeden řádek lišty) a místo něj svítí tečka — vizte níž. */
+  pravda('stav přihlášení visí na nadpisu skupiny účtu', v.stavVSummary,
+    'v nadpisu skupiny účtu není #nav-stav');
+  /* Osm je strop, ne cíl: čtyři skupiny, Ceny, Kontakt, tlačítko
+     a oddělovač. Devátá položka by se na 1440 px začala lámat do druhé
+     řady — a lišta, která se láme, přestává být lišta. */
+  pravda('a dohromady se jich v liště drží osm nejvýš', v.polozekVListe <= 8,
+    `v liště je ${v.polozekVListe} položek`);
   pravda('zavřená nabídka nevisí pod lištou', v.vidnoZavrene === 0,
     `zavřeno, ale vidět je ${v.vidnoZavrene} odkazů`);
   // Rozbalit se musí dát. (Chybějící skupina má skončit poctivým ✕
   // u kontroly výš, ne pádem celého testu.)
-  await p.click('#nav-moje-sum', { timeout: 4000 }).catch(() => {});
+  await p.click('#nav-sk-ucet', { timeout: 4000 }).catch(() => {});
   await p.waitForTimeout(400);
-  const po = await p.evaluate(() => [...document.querySelectorAll('.nav-moje-panel a')]
+  const po = await p.evaluate(() => [...document.querySelectorAll('.nav-ucet-sk .nav-sk-panel a')]
     .filter((e) => e.getClientRects().length > 0).length);
-  pravda('po klepnutí se rozbalí', po === 2, `vidět je ${po} ze dvou`);
+  pravda('po klepnutí se rozbalí', po === 3, `vidět je ${po} ze tří`);
+  /* TEČKA PŘIHLÁŠENÍHO MUSÍ BÝT V LIŠTĚ, NE V PANELU. Je to na monitoru
+     jediná známka toho, že jsem přihlášený (e-mail se do lišty nevejde).
+     Kreslila se na #nav-ucet — a ten je od přestavby lišty odkaz „Moje
+     inzeráty" UVNITŘ rozbalovače, takže tečka svítila schovaná v panelu. */
+  await p.evaluate(() => {
+    try { localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok', refresh_token: 'ref',
+      user: { id: 'u1', email: 'jan@test.cz' } })); } catch (e) {}
+  });
+  await p.reload({ waitUntil: 'load' });
+  await p.waitForTimeout(900);
+  const t = await p.evaluate(() => {
+    const sk = document.querySelector('.nav-ucet-sk');
+    const sum = sk && sk.querySelector(':scope > summary');
+    if (!sum) return null;
+    const b = getComputedStyle(sum, '::before');
+    const r = sum.getBoundingClientRect();
+    return { trida: sk.classList.contains('prihlasen'), obsah: b.content,
+      sirka: parseFloat(b.width) || 0, barva: b.backgroundColor, x: Math.round(r.left) };
+  });
+  pravda('přihlášení poznám z lišty podle tečky u „Můj profil"',
+    !!t && t.trida && t.obsah !== 'none' && t.sirka >= 4, JSON.stringify(t));
   await ctx.close();
 }
 {
@@ -526,13 +558,16 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   };
   const bezUctu = await zalozky(false);
   const sUctem = await zalozky(true);
-  /* SEDM, NE ŠEST: šest cílů a k nim „Přidat pozemek".
-     V pásu pilulek akce nebyla — stála jako tlačítko v hlavičce
-     a dvakrát totéž vedle sebe v jedné liště je zmatek. Ve vysouvacím
-     panelu je to naopak hlavní věc, kterou tu prodávající hledá, a
-     tlačítko v hlavičce na telefonu není (viz .header-cta). */
-  pravda(`nabídka má šest cílů a akci „Přidat pozemek" (${bezUctu.join(', ')})`,
-    bezUctu.length === 7 && bezUctu[bezUctu.length - 1].endsWith('pridat.html'),
+  /* DVACET NEJMÉNĚ, A „Přidat pozemek" NAKONEC.
+     Bylo tu pevných sedm (šest cílů a akce) z doby, kdy byla nabídka
+     plochý seznam. Teď je rozdělená na oddíly a cílů je přes dvacet;
+     pevné číslo by hlídalo jen to, že nikdo nepřidal odkaz. Hlídá se
+     proto to, co je na tom podstatné: že se nabídka nescvrkla (podlaha)
+     a že akce stojí až za vším — v hlavičce na telefonu tlačítko není
+     (viz .header-cta), takže je to jediné místo, kde prodávající začne.
+     Co je uvnitř po oddílech, měří test-menu. */
+  pravda(`nabídka má všechny cíle a akci „Přidat pozemek" nakonec (${bezUctu.length})`,
+    bezUctu.length >= 20 && bezUctu[bezUctu.length - 1].endsWith('pridat.html'),
     `je jich ${bezUctu.length}: ${bezUctu.join(', ')}`);
   pravda('a přihlášení s nimi nehýbe', JSON.stringify(sUctem) === JSON.stringify(bezUctu),
     `nepřihlášený ${bezUctu.join(', ')} | přihlášený ${sUctem.join(', ')}`);

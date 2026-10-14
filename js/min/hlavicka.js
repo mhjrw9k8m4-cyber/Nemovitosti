@@ -103,7 +103,7 @@
       k.toggle('pk-prihlasen', prihlasen);
       k.toggle('pk-odhlasen', !prihlasen);
     } catch (e) {}
-    var skupina = odkaz.closest ? odkaz.closest('.nav-moje') : null;
+    var skupina = odkaz.closest ? odkaz.closest('.nav-sk') : null;
     if (skupina) skupina.classList.toggle('prihlasen', prihlasen);
     if (!prihlasen) { stav.textContent = 'Nepřihlášeno'; return; }
     var mail = (A.email && A.email()) || '';

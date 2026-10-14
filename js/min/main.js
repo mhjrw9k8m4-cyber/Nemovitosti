@@ -3705,7 +3705,7 @@
       + '<span class="mcr-popis">Dvacet karet přes celou obrazovku — doprava uložit, doleva schovat.</span></span>'
       + '<span class="mcr-sip" aria-hidden="true">›</span></button>' + tlacitka;
 
-    countEl.innerHTML = headLabel + (matched ? '<span class="mc-sub"> · ' + fmt(matched) + ' na mapě</span>' : '')
+    countEl.innerHTML = headLabel + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')
       + pripisky;
 
     var akceEl = document.getElementById('mc-akce') || countEl;

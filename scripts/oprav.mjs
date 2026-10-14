@@ -41,6 +41,10 @@ const KROKY = [
   ['generate-rozpocet.mjs', 'řez pro stránku „Na co mám?" (data/rozpocet.json)'],
   ['generate-rss.mjs', 'kanály s novými pozemky (celostátní a krajské)'],
   ['generate-data-stranka.mjs', 'stránka s popisem dat (data.html)'],
+  /* Až ZA generátory (zapisují stránky s vlastní podobou lišty) a PŘED
+     sazbou i razítkováním: vkládá text, který se má vysázet, a odkazy,
+     které se razítkují. */
+  ['sjednot-hlavicku.mjs', 'jedna lišta pro celý web'],
   // Až po generátorech: česká sazba se dělá na HOTOVÉM textu, ať platí
   // stejně pro ručně psané stránky i pro 1 995 generovaných.
   ['sazba.mjs', 'nezlomitelné mezery (předložky, čísla s jednotkou)'],

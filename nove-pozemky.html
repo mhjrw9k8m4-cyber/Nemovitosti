@@ -31,7 +31,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=20171439">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=391735ad">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Nové pozemky a změny cen","inLanguage":"cs","description":"67 pozemků přišlo za posledních 7 dní, u 56 nabídek klesla cena. Přehled z veřejných zdrojů, aktualizovaný čtyřikrát denně.","mainEntityOfPage":"https://www.parcelaka.cz/nove-pozemky.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":120,"itemListElement":[{"@type":"ListItem","position":1,"name":"Medvědice — Dražba, 948 m²","url":"https://www.parcelaka.cz/pozemek-litomerice-medvedice-wx3yxn.html"},{"@type":"ListItem","position":2,"name":"Horní Nětčice — Na prodej, 3026 m²","url":"https://www.parcelaka.cz/pozemek-prerov-horni-netcice-ae60bz.html"},{"@type":"ListItem","position":3,"name":"Vysoké Pole — Na prodej, 4425 m²","url":"https://www.parcelaka.cz/pozemek-zlin-vysoke-pole-gm1n8j.html"},{"@type":"ListItem","position":4,"name":"Čachovice — Na prodej, 5469 m²","url":"https://www.parcelaka.cz/pozemek-mlada-boleslav-cachovice-11hdzyn.html"},{"@type":"ListItem","position":5,"name":"Suchá Loz — Na prodej, 3809 m²","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-sucha-loz-1p94fk7.html"},{"@type":"ListItem","position":6,"name":"Čejkovice — Na prodej, 7706 m²","url":"https://www.parcelaka.cz/pozemek-hodonin-cejkovice-f5im5d.html"},{"@type":"ListItem","position":7,"name":"Čejkovice — Na prodej, 7431 m²","url":"https://www.parcelaka.cz/pozemek-hodonin-cejkovice-1fxyve4.html"},{"@type":"ListItem","position":8,"name":"Kololeč — Dražba, 15855 m²","url":"https://www.parcelaka.cz/pozemek-litomerice-kololec-4c3ip9.html"},{"@type":"ListItem","position":9,"name":"Lomnička — Na prodej, 8887 m²","url":"https://www.parcelaka.cz/pozemek-brno-venkov-lomnicka-1qwz4jx.html"},{"@type":"ListItem","position":10,"name":"Kašnice — Na prodej, 22331 m²","url":"https://www.parcelaka.cz/pozemek-breclav-kasnice-8fsbqo.html"},{"@type":"ListItem","position":11,"name":"Všejany — Na prodej, 21675 m²","url":"https://www.parcelaka.cz/pozemek-mlada-boleslav-vsejany-1hscovz.html"},{"@type":"ListItem","position":12,"name":"Čachovice — Na prodej, 24073 m²","url":"https://www.parcelaka.cz/pozemek-mlada-boleslav-cachovice-h0nejr.html"},{"@type":"ListItem","position":13,"name":"Čachovice — Na prodej, 30538 m²","url":"https://www.parcelaka.cz/pozemek-mlada-boleslav-cachovice-52nqg.html"},{"@type":"ListItem","position":14,"name":"Ledce — Na prodej, 45597 m²","url":"https://www.parcelaka.cz/pozemek-hradec-kralove-ledce-15knozm.html"},{"@type":"ListItem","position":15,"name":"Ledce — Na prodej, 114119 m²","url":"https://www.parcelaka.cz/pozemek-hradec-kralove-ledce-1w473wg.html"},{"@type":"ListItem","position":16,"name":"Plzeň — Na prodej, 1069 m²","url":"https://www.parcelaka.cz/pozemek-plzen-mesto-plzen-1nzramd.html"},{"@type":"ListItem","position":17,"name":"Zbuzany — Na prodej, 1342 m²","url":"https://www.parcelaka.cz/pozemek-praha-zapad-zbuzany-1jpdbwz.html"},{"@type":"ListItem","position":18,"name":"Lovosice — Dražba, 23 m²","url":"https://www.parcelaka.cz/pozemek-litomerice-lovosice-174itbf.html"},{"@type":"ListItem","position":19,"name":"Roudnice nad Labem — Dražba, 370 m²","url":"https://www.parcelaka.cz/pozemek-litomerice-roudnice-nad-labem-fofl6k.html"},{"@type":"ListItem","position":20,"name":"Němčičky — Na prodej, 2710 m²","url":"https://www.parcelaka.cz/pozemek-breclav-nemcicky-1xqvyqn.html"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Co je nového","item":"https://www.parcelaka.cz/nove-pozemky.html"}]}]
   </script>
@@ -46,17 +46,40 @@
     <a class="logo" href="index.html" aria-label="Parcelka — domů"><span class="logo-mark" aria-hidden="true"></span>Parcelka</a>
     <a href="pridat.html" class="btn-primary header-cta"><span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
     <nav id="nav" aria-label="Hlavní navigace">
-      <!-- Pořadí: nejdřív KDO jsem, pak KAM jdu. Účet je samostatný první
-           řádek a nese stav přihlášení (doplní ho js/hlavicka.js); hned pod
-           ním je hlavní věc celého webu. Dřív byl účet schovaný až čtvrtý ve
-           skupině „Moje", a když jsem nahoru posunul celou skupinu, spadlo
-           hledání pozemků na páté místo. Obojí bylo špatně. -->
-      <a href="muj-inzerat.html" id="nav-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></a>
-      <!-- „Hledat pozemek", ne „Pozemky": podstatné jméno tu neřekne nic. -->
-      <a href="index.html#mapa">Hledat pozemek</a>
+      <details class="nav-sk nav-sk-pozemky"><summary>Pozemky</summary><div class="nav-sk-panel">
+        <a href="index.html#mapa">Hledat na mapě</a>
+        <a href="pozemky-stavebni.html">Stavební</a>
+        <a href="pozemky-zahrada.html">Zahrady</a>
+        <a href="pozemky-lesni.html">Lesní</a>
+        <a href="pozemky-orna-puda.html">Orná půda</a>
+        <a href="pozemky-louka.html">Louky</a>
+        <a href="pozemky-vinice-sady.html">Vinice a sady</a>
+        <a href="pozemky-podle-okresu.html">Podle okresu</a>
+      </div></details>
+      <details class="nav-sk nav-sk-sance"><summary>Příležitosti</summary><div class="nav-sk-panel">
+        <a href="drazby-pozemku.html">Dražby</a>
+        <a href="exekuce-pozemku.html">Exekuce</a>
+        <a href="nove-pozemky.html">Nové na trhu</a>
+        <a href="na-co-mam-pozemek.html">Na co mám?</a>
+      </div></details>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <details class="nav-moje"><summary id="nav-moje-sum">Moje</summary><div class="nav-moje-panel"><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
-      <a href="kontakt.html">Kontakt</a>
+      <details class="nav-sk nav-sk-radce"><summary>Rádce</summary><div class="nav-sk-panel">
+        <a href="uzemni-plan-pozemek.html">Územní plán</a>
+        <a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a>
+        <a href="pristupova-cesta-pozemek.html">Přístupová cesta</a>
+        <a href="list-vlastnictvi-katastr.html">List vlastnictví</a>
+        <a href="kupni-smlouva-pozemek.html">Kupní smlouva</a>
+        <a href="kolik-stoji-koupe-pozemku.html">Náklady koupě</a>
+        <a href="hypoteka-na-pozemek.html">Hypotéka</a>
+        <a href="vecne-bremeno-pozemek.html">Věcné břemeno</a>
+      </div></details>
+      <a href="kontakt.html" class="nav-kontakt">Kontakt</a>
+      <span class="nav-del" aria-hidden="true"></span>
+      <details class="nav-sk nav-ucet-sk"><summary id="nav-sk-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></summary><div class="nav-sk-panel">
+        <a href="muj-inzerat.html" id="nav-ucet">Moje inzeráty</a>
+        <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
+        <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
+      </div></details>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
       <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
     </nav>
@@ -974,6 +997,6 @@
 <script src="js/min/auth.js?v=bec7a315" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/mereni.js?v=b2023a39" defer></script>
-<script src="js/min/hlavicka.js?v=bf85dd50" defer></script>
+<script src="js/min/hlavicka.js?v=52634b3e" defer></script>
 </body>
 </html>

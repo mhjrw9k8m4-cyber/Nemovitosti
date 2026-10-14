@@ -462,11 +462,17 @@
   --m-sloupec:720px;   /* sloupec článku i s kraji */
   --m-uzky:560px;      /* formuláře, boční panely */
   --m-karta:440px;     /* karty a okna */
-  /* IKONY NABÍDKY JEDNOU, NE DVAKRÁT. Kreslí je výsuvný šuplík na
-     telefonu i rozbalovač „Moje" na monitoru; vepsané na obou místech
-     by se rozešly při první změně. */
-  --ikona-zpravy:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");
-  --ikona-hlidani:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E");
+  /* IKONY NABÍDKY JEDNOU, NE DVAKRÁT. Kreslí je nadpisy oddílů ve
+     výsuvném šuplíku na telefonu. (Ikony Zpráv a Hlídání tu byly taky,
+     dokud měl rozbalovač na monitoru u každého řádku obrázek — od chvíle,
+     kdy je v panelech sedmnáct odkazů a obrázek by měly dva, je
+     v rozbalovači holý text a ty dva tokeny už nikdo nekreslil.) */
+  --ikona-profil:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E");
+  --ikona-mapa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");
+  --ikona-sance:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2 4 14h7l-1 8 9-12h-7z'/%3E%3C/svg%3E");
+  --ikona-radce:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/%3E%3Cpath d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/%3E%3C/svg%3E");
+  --ikona-cena:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-8-8V3h9.6l8.4 8.4a2 2 0 0 1 0 2.8z'/%3E%3Cline x1='7.5' y1='7.5' x2='7.51' y2='7.5'/%3E%3C/svg%3E");
+  --ikona-posta:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2'/%3E%3Cpath d='m3 7 9 6 9-6'/%3E%3C/svg%3E");
   /* Čtecí sloupec. 62ch dávalo 80 znaků v mediánu a 89 v nejhorším
      místě — pořád za hranicí 75, kde se text čte nejlépe, a na strop 90
      ve zkoušce to nechávalo jediný znak rezervy. Jeden znak není
@@ -1290,20 +1296,20 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    Je to <details>, ne vlastní skript: rozbalení tím umí prohlížeč sám,
    včetně klávesnice a čtečky obrazovky, a funguje i bez JavaScriptu.
    ===================================================================== */
-.nav-moje{position:relative;}
-.nav-moje > summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:4px;
+.nav-sk{position:relative;}
+.nav-sk > summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:4px;
   color:var(--text-ondark-mute); font-size:14px; font-weight:500; transition:color var(--cas-zakladni) var(--ease);}
-.nav-moje > summary::-webkit-details-marker{display:none;}
-.nav-moje > summary::after{content:""; width:7px; height:7px; flex:none;
+.nav-sk > summary::-webkit-details-marker{display:none;}
+.nav-sk > summary::after{content:""; width:7px; height:7px; flex:none;
   border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor;
   transform:translateY(-2px) rotate(45deg); transition:transform var(--cas-zakladni) var(--ease);}
-.nav-moje[open] > summary::after{transform:translateY(1px) rotate(-135deg);}
-.nav-moje > summary:hover, .nav-moje[open] > summary{color:var(--text-ondark);}
-.nav-moje > summary:focus-visible{outline:2px solid var(--copper); outline-offset:3px; border-radius:3px;}
+.nav-sk[open] > summary::after{transform:translateY(1px) rotate(-135deg);}
+.nav-sk > summary:hover, .nav-sk[open] > summary{color:var(--text-ondark);}
+.nav-sk > summary:focus-visible{outline:2px solid var(--copper); outline-offset:3px; border-radius:3px;}
 /* display:flex níž přebíjí to, čím prohlížeč schovává obsah zavřeného
    <details> — panel by pak visel pod lištou pořád. Zavřený se schová
    výslovně. */
-.nav-moje:not([open]) > .nav-moje-panel{display:none;}
+.nav-sk:not([open]) > .nav-sk-panel{display:none;}
 /* PANEL VISÍ POD „MOJE", NE POD CIZÍMI POLOŽKAMI.
    Naměřeno na 1440 px: „Moje" stojí na x 997–1042, ale panel ležel na
    852–1042 — pravým okrajem sedl na svůj ovladač, levým ale sahal
@@ -1314,24 +1320,50 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    na 837, panel začínal na 852. Změřeno, ne odhadnuto.)
    Zarovnává se proto zleva. Ven z okna to nejde ani na nejužší šířce,
    kde je lišta vodorovná: při 1041 px končí panel na 908 px. */
-.nav-moje-panel{position:absolute; top:calc(100% + 12px); left:0; right:auto; z-index:20;
+.nav-sk-panel{position:absolute; top:calc(100% + 12px); left:0; right:auto; z-index:20;
   display:flex; flex-direction:column; gap:2px; min-width:190px; padding:8px;
   background:var(--ink-soft); border:1px solid var(--line-strong);
   border-radius:var(--r-md); box-shadow:var(--e3);}
-.nav-moje-panel a{padding:8px 10px; border-radius:var(--r-ovladani); white-space:nowrap;}
-.nav-moje-panel a:hover{background:var(--ink-soft2); color:var(--text-ondark);}
+.nav-sk-panel a{padding:8px 10px; border-radius:var(--r-ovladani); white-space:nowrap;}
+.nav-sk-panel a:hover{background:var(--ink-soft2); color:var(--text-ondark);}
 /* Odznak s počtem visí u odkazu vpravo, ne hned za textem — v panelu pod
    sebou by jinak skákal podle délky slova. */
-.nav-moje-panel a{display:flex; align-items:center; gap:8px;}
-/* TÝŽ ŘÁDEK JAKO V ŠUPLÍKU NA TELEFONU: ikona a za ní popisek.
-   Na telefonu měla každá položka nabídky svou ikonu, na monitoru stál
-   v rozbalovači holý text — tatáž nabídka vypadala na dvou zařízeních
-   jako dvě různé věci. Obrázek se bere z téhož tokenu, takže se obě
-   podoby nemůžou rozejít. */
-.nav-moje-panel a::before{content:""; flex:none; width:22px; height:22px;
-  background-repeat:no-repeat; background-position:center; background-size:22px 22px; opacity:0.8;}
-.nav-moje-panel a[href$="zpravy.html"]::before{background-image:var(--ikona-zpravy);}
-.nav-moje-panel a[href$="hlidani.html"]::before{background-image:var(--ikona-hlidani);}
+.nav-sk-panel a{display:flex; align-items:center; gap:8px;}
+/* V ROZBALOVAČI NA MONITORU JE HOLÝ TEXT, NE IKONA U KAŽDÉHO ŘÁDKU.
+   Dřív tu ikona byla — rozbalovač měl tři položky účtu a všechny tři
+   svůj obrázek. Po přestavbě lišty jich je v panelech sedmnáct a
+   obrázek mají dva; ::before je přitom v řádku vždycky, takže
+   z ostatních patnácti byl text odstrčený o dvaadvacet pixelů
+   prázdného místa. Ikony v nabídce teď nese nadpis oddílu v šuplíku
+   na telefonu, kde jsou čtyři. */
+
+/* =====================================================================
+   LIŠTA PODLE VELKÝCH INZERTNÍCH WEBŮ
+   =====================================================================
+   Vlevo to, co se hledá (Pozemky, Příležitosti, Ceny, Rádce), vpravo
+   účet a jediné tlačítko s výplní. Levá půlka odpovídá na „co tu
+   najdu", pravá na „co tu můžu udělat".
+   Skupin je nově víc než jedna, takže pravidla psaná kdysi pro jedinou
+   „Moje" platí pro všechny — třída se proto jmenuje `.nav-sk`.
+   Značku skládá scripts/hlavicka.mjs do všech 2 248 stránek naráz.
+   ===================================================================== */
+/* Oddělovač mezi obsahem a účtem. Jen na monitoru — v šuplíku dělí
+   oddíly nadpisy. */
+.nav-del{display:none;}
+@media (min-width:1041px){
+  .nav-del{display:block; width:1px; align-self:stretch; margin:0 4px;
+    background:var(--line-strong); opacity:0.6;}
+  /* Panel skupiny se otevírá pod svou položkou (zleva), ne od pravého
+     okraje — jinak visí pod sousedy. U účtu vpravo je to obráceně, tam
+     by zleva vyjel z okna. */
+  .nav-sk-panel{left:0; right:auto;}
+  .nav-ucet-sk .nav-sk-panel{left:auto; right:0;}
+  /* Šířka podle nejdelší položky, ne pevných 190 px: „Stavební vs.
+     zemědělský" je delší a lámalo by se. */
+  .nav-sk-panel{min-width:max-content;}
+  /* Dvě skupiny otevřené naráz by se překryly; prohlížeč to sám
+     neřeší, protože každý <details> je svůj. Řeší to js/hlavicka.js. */
+}
 /* Stav účtu pod položkou „Můj profil". Doplňuje ho js/hlavicka.js;
    v HTML je „Nepřihlášeno", aby i bez skriptu stálo něco pravdivého. */
 .nav-stav{display:block; width:100%; font-size:12px; font-weight:500; line-height:1.3;
@@ -1351,20 +1383,30 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 #nav #nav-ucet .nav-stav{grid-column:2; grid-row:2;}
 #nav #nav-ucet::after{grid-column:3; grid-row:1 / span 2; align-self:center;}
 /* V liště na počítači je účet jedna položka mezi ostatními — e-mail by ji
-   roztáhl přes půl lišty. Stav tam ukazuje tečka u „Moje"; celý e-mail je
-   ve výsuvné nabídce na telefonu a na profilu. */
+   roztáhl přes půl lišty. Stav tam ukazuje tečka u jména; celý e-mail je
+   ve výsuvné nabídce na telefonu a na profilu.
+   MÍŘÍ TO NA `summary`, NE NA `#nav-ucet`. Od chvíle, kdy je účet
+   skupina s rozbalovačem, je `#nav-ucet` odkaz UVNITŘ panelu a jméno
+   se stavem sedí v `summary` — staré pravidlo tedy nemělo na co sáhnout
+   a v liště svítilo „Můj profil Nepřihlášeno" na dva řádky. Naměřeno
+   na snímku. */
 @media (min-width:1041px){
   #nav #nav-ucet{display:inline; }
-  #nav #nav-ucet .nav-stav{display:none;}
+  #nav .nav-ucet-sk > summary .nav-stav{display:none;}
+  #nav .nav-ucet-sk > summary .nav-ucet-t{white-space:nowrap;}
 }
 #nav-ucet.je-prihlasen .nav-stav{color:var(--copper-bright);}
-/* Tečka patří k účtu, ne ke skupině „Moje": účet je v liště samostatná
-   položka a e-mail je tam skrytý, takže jinak by na počítači nebylo stav
-   poznat vůbec. Jen v liště — ve výsuvné nabídce mluví sám e-mail. */
+/* TEČKA U „MŮJ PROFIL". V liště na počítači je e-mail schovaný (nevešel
+   by se na jeden řádek), takže bez ní by nebylo poznat vůbec nic.
+   Ve výsuvné nabídce na telefonu mluví sám e-mail, tam tečka není.
+   SEDÍ NA NADPISU SKUPINY, ne na #nav-ucet. Od přestavby lišty je
+   #nav-ucet odkaz „Moje inzeráty" UVNITŘ rozbalovače — tečka by tedy
+   svítila schovaná v panelu, kde ji nikdo neuvidí, a v liště by nebyla.
+   Třídu `prihlasen` dává skupině js/hlavicka.js. */
 @media (min-width:1041px){
-  #nav #nav-ucet.je-prihlasen{position:relative;}
-  #nav #nav-ucet.je-prihlasen::before{content:""; position:absolute; left:-11px; top:50%;
-    width:6px; height:6px; margin-top:-2px; border-radius:50%;
+  #nav .nav-ucet-sk.prihlasen > summary{position:relative;}
+  #nav .nav-ucet-sk.prihlasen > summary::before{content:""; position:absolute; left:-11px; top:50%;
+    width:6px; height:6px; transform:translateY(-50%); border-radius:50%;
     background:var(--copper-bright); background-image:none;}
 }
 /* PODTRŽENÍ AKTIVNÍ POLOŽKY JEN NA POČÍTAČI. Kreslí se jako ::after
@@ -1929,8 +1971,12 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .mcv-btn.on .mcp-v::after, .mc-prep.on .mcp-v::after{content:""; position:absolute; left:5.5px; top:2px; width:4px; height:9px;
   border:solid var(--plocha-znacka); border-width:0 2px 2px 0; transform:rotate(43deg);}
 
-/* Řada nad výsledky: počet, „Uložené" a řazení. */
-.ms-vysledky{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 12px; margin-bottom:10px;}
+/* Řada nad výsledky: počet, „Uložené" a řazení.
+   NAHOŘE ZAROVNANÉ, ne na střed: nadpis má pod sebou ještě poznámku
+   („pořadí se střídá každý den"), takže je vyšší než ovládání — na
+   střed se tím rozbalovač řazení posadil doprostřed dvouřádkového
+   nadpisu a řádek vypadal rozsypaně. */
+.ms-vysledky{display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:8px 12px; margin-bottom:10px;}
 /* Zůstal v něm jen počet; jeho vlastní odsazení dolů by se s odsazením
    skupiny sčítalo na 22 px. */
 .ms-vysledky .map-count{margin-bottom:0;}
@@ -2163,7 +2209,34 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Zelená #2E8F5F dávala na vlastním světle zeleném podkladu jen 3,54 : 1,
    tedy pod normou pro drobné písmo. Ztmaveno na 5,6 : 1; odstín zůstává. */
 .opp-deal{display:inline-block; font-size:12px; font-weight:700; color:#13663E; background:rgba(31,163,99,0.12); border:1px solid rgba(19,102,62,0.3); border-radius:var(--r-xs); padding:2px 8px; letter-spacing:0; white-space:nowrap; font-variant-numeric:tabular-nums;}
-.map-count{font-size:14px; color:var(--text-ondark); font-weight:600; letter-spacing:0.01em; margin-bottom:12px;}
+/* NADPIS, ČÍSLO A POZNÁMKA JSOU TŘI DÍLKY V JEDNÉ MŘÍŽCE, ne jedna
+   dlouhá věta. Dokud to byl plynulý text, lámal se, kde zrovna došla
+   šířka, a 440px sloupec z něj udělal tři nestejně odsazené řádky.
+   Takhle se zalamuje po dílcích: nadpis, za ním číslo, a poznámka
+   spadne celá na další řádek. Oddělovač „ · " se tím stává zbytečným
+   (odstup dělá mezera mřížky) — ve ZNAČCE ale zůstává, jen schovaný:
+   čte ho osm zkoušek přes textContent a bez něj by se slily dva údaje
+   v jedno slovo. */
+.map-count{display:flex; flex-wrap:wrap; align-content:flex-start; align-items:baseline;
+  column-gap:10px; row-gap:2px;}
+.mc-sep{display:none;}
+/* Nadpis se smí zúžit, aby se vedle něj vešlo řazení. Bez toho si bral
+   celou šířku sloupce a ovládání padalo na vlastní řádek — pět stejně
+   hlasitých řádků, než začne první nabídka.
+   JEN TAM, KDE JE ŘADA VODOROVNÁ. Na telefonu má .ms-vysledky hlavní
+   osu svislou, takže z „1 1 200px" by nebyla šířka, ale VÝŠKA: naměřeno
+   na 390×844 dostal nadpis 200 px místo 63, řádky se v té výšce
+   rozprostřely (zalomený flex roztahuje své řádky), mezi nadpisem
+   a poznámkou zelo 81 px prázdna a první nabídka spadla o 165 px níž. */
+@media (min-width:561px){
+  .ms-vysledky .map-count{flex:1 1 200px; min-width:0;}
+}
+/* NADPIS VÝPISU JE NADPIS, NE POPISEK. Stálo tu 14 px/600 — tedy
+   přesně tolik, co popisky tlačítek pod ním, a první obrazovka byla
+   pět stejně hlasitých řádků nad první nabídkou. Velké realitní weby
+   mají nad výpisem jeden zřetelný nadpis a vedle něj řazení; číslo
+   k němu patří jako tišší přípona (.mc-sub). */
+.map-count{font-size:17px; color:var(--text-ondark); font-weight:700; letter-spacing:-0.01em; margin-bottom:12px;}
 /* Nejvýhodnější — přidaná hodnota ukázaná čísly */
 .deals-sec[hidden]{display:none;}
 .deals-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap:14px; margin-top:24px;}
@@ -2251,8 +2324,13 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .recent-strip{margin:-2px 0 14px; padding:12px 12px 10px; background:var(--plocha-jemna);
   border:1px solid var(--line); border-radius:var(--r-sm);}
 .recent-strip[hidden]{display:none;}
-.recent-strip .rs-head{display:flex; align-items:center; gap:8px; font-size:13px; letter-spacing:0.1em;
-  text-transform:uppercase; color:var(--text-ondark); font-weight:700; margin-bottom:10px;}
+/* TÝŽ HLAS JAKO NADPIS VÝPISU POD NÍM. Verzálky s prostrkáním a 13 px
+   byly „štítek police"; jenže nadpis výpisu vedle vyrostl na 17 px
+   a pruh byl zase ten tišší z obou — přesně ta stížnost, kvůli které
+   tenhle oddíl vznikl („chce to nějak zvýraznit"). Hlídá to zkouška
+   v test-rozvrzeni: nadpis pruhu nesmí být menší než nadpis výpisu. */
+.recent-strip .rs-head{display:flex; align-items:center; gap:8px; font-size:17px;
+  letter-spacing:-0.01em; color:var(--text-ondark); font-weight:700; margin-bottom:10px;}
 /* Kolik jich je. Řádek se posouvá do strany a posuvník je schovaný, takže
    ze čtyř byly vidět dvě a nic o zbytku neřeklo. */
 .rs-head .rs-pocet{display:inline-flex; align-items:center; justify-content:center; min-width:20px;
@@ -3199,12 +3277,24 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
          širokém displeji ukáže kartu celou a ne půl druhé.
      Navazuje to rovnou na hlavičku, bez mezery: dvě vodorovné linky
      (spodek hlavičky, spodek ovládací lišty) nad sebou v 20px odstupu
-     dělaly schod, kterého si člověk všimne dřív než mapy. */
-  .hero-map .map-wide{max-width:none; padding:0; margin-top:48px;}
-  /* Horní rámeček taky pryč: nad deskou je 48px mezera a pod ní končí
-     hlavička svou linkou — dvě vodorovné linky 48 px od sebe dělají
-     schod, kterého si oko všimne dřív než mapy. Spodní rámeček zůstává,
-     ten odděluje nástroj od oddílů pod ním. */
+     dělaly schod, kterého si člověk všimne dřív než mapy.
+     TĚCH 48 PX JE NOSNÝCH, ALE NESMÍ BÝT ŠEDÝCH. Komentář tvrdil „bez
+     mezery" a pod ním stálo margin-top:48px — naměřeno na 1440×900:
+     hlavička končí na y 85, deska začínala na y 133 a mezi tím byl přes
+     celou šířku prázdný šedý pruh. Tedy ten schod, před kterým komentář
+     varuje, jen o 28 px vyšší.
+     Smazat se ale nedají: drží místo, aby ovládání (hledání, „Pozemky
+     v okolí", filtry) nezmizelo po odrolování pod lepivou hlavičkou —
+     zkusil jsem to a test-pod-hlavickou ukázal na 1280×900 překryv
+     32 až 34 px u tří ovladačů naráz.
+     Zůstávají tedy na místě, jen jako ODSAZENÍ UVNITŘ bílé desky místo
+     odstupu venku: stejné místo, ale vzduch nad hledáním, ne šedý pruh.
+     (Totéž a ze stejného důvodu na telefonu, viz blok do 560 px.) */
+  .hero-map .map-wide{max-width:none; padding:48px 0 0; margin-top:0;
+    background:var(--panel);}
+  /* Horní rámeček taky pryč: deska navazuje na hlavičku a ta končí
+     vlastní linkou — druhá hned pod ní by dělala dvojitou čáru.
+     Spodní rámeček zůstává, ten odděluje nástroj od oddílů pod ním. */
   .hero-map .map-app, .map-app{border-left:0; border-right:0; border-top:0;
     border-radius:0; box-shadow:none;
     grid-template-columns:min(34vw, 460px) minmax(0, 1fr);
@@ -3647,62 +3737,116 @@ footer .wrap:not(.foot-grid):not(.foot-bottom){display:flex; justify-content:spa
   #nav a:not(.btn-primary).active, #nav a:not(.btn-primary)[aria-current="page"]{
     color:var(--plocha-znacka); background:rgba(31,81,56,0.07); box-shadow:inset 3px 0 0 var(--copper-bright);}
 
-  /* ÚČET STOJÍ PRVNÍ A NESE STAV PŘIHLÁŠENÍ. V pásu se stav nevešel
-     a schovával se; v panelu je na něj místo, a je to ta jediná věc,
-     kterou se z nabídky dá poznat, jestli jsem přihlášený. */
-  #nav #nav-ucet{order:0; display:flex; flex-direction:column; align-items:flex-start;
-    justify-content:center; gap:2px; min-height:68px; padding:10px 20px;
-    background:rgba(31,81,56,0.05); border-bottom:1px solid var(--line);}
-  #nav #nav-ucet .nav-ucet-t{font-size:17px;}
-  #nav #nav-ucet .nav-stav{display:block; font-size:13px; font-weight:500; color:var(--text-ondark-mute);}
-  #nav #nav-ucet[aria-current="page"], #nav #nav-ucet.active{
-    color:var(--plocha-znacka); box-shadow:inset 3px 0 0 var(--copper-bright);}
-  /* Ikona účtu by v dvouřádkovém bloku stála vedle obou řádků a text
-     by se jí musel vyhýbat; jméno samo stačí. */
-  #nav #nav-ucet::before{content:none;}
+  /* =================================================================
+     ŠUPLÍK JE ROZDĚLENÝ NA ODDÍLY, NE JEDEN SEZNAM SEDMNÁCTI ŘÁDKŮ.
+     =================================================================
+     Dokud měla lišta šest odkazů, byl plochý seznam správně. Po
+     přestavbě do skupin je odkazů sedmnáct a plochý seznam z nich
+     udělal hromadu: na snímku z telefonu stály pod sebou „Ceny
+     pozemků", „Hledat na mapě" a „Stavební" bez jakéhokoli rozdílu
+     a bez pořádku.
+     Velké realitní aplikace mají v šuplíku oddíly s nadpisem — a týž
+     <details>, co je na monitoru rozbalovač, tu je přímo ten oddíl:
+     `summary` dělá nadpis, panel zůstává rozbalený. Jedna značka
+     slouží oběma podobám.
 
-  /* SKUPINA „MOJE" SE V PANELU NEZANOŘUJE: Zprávy a Hlídání jsou plné
-     řádky jako ostatní. Rozklikávací podskupina v nabídce, která se
-     celá vejde na obrazovku, je jen klepnutí navíc.
-
-     TŘI VĚCI, KTERÉ SE MUSÍ UDĚLAT NAJEDNOU, jinak oba odkazy zmizí:
-     1. skupina zůstává SKUTEČNÝM boxem (display:contents na <details>
-        rozbije jeho vykreslovací mašinerii — zkoušeno a naměřeno:
-        v pásu se Zprávy a Hlídání vykreslily na sobě, v panelu
-        zmizely úplně),
-     2. panel se ukazuje i se zavřeným <details>,
+     TŘI VĚCI, KTERÉ SE MUSÍ UDĚLAT NAJEDNOU, jinak odkazy v oddílech
+     zmizí: 1. skupina zůstává SKUTEČNÝM boxem (display:contents na
+     <details> rozbije jeho vykreslovací mašinerii — zkoušeno
+     a naměřeno), 2. panel se ukazuje i se zavřeným <details>,
      3. ::details-content se musí odemknout, jinak ho prohlížeč drží
-        schovaný bez ohledu na display. Bod 3 jsem při přestavbě
-        vynechal a na snímku z telefonu nebyly Zprávy ani Hlídání. */
-  .nav-moje{display:flex; flex-direction:column; order:3; min-width:0;}
-  .nav-moje > summary{display:none;}
-  .nav-moje-panel, .nav-moje:not([open]) > .nav-moje-panel{
+     schovaný bez ohledu na display. Bod 3 jsem při přestavbě vynechal
+     a na snímku z telefonu nebyly Zprávy ani Hlídání. */
+  .nav-sk{display:flex; flex-direction:column; min-width:0;}
+  .nav-sk-panel, .nav-sk:not([open]) > .nav-sk-panel{
     display:flex; flex-direction:column; position:static; min-width:0;
     padding:0; background:none; border:0; border-radius:0; box-shadow:none;}
-  .nav-moje::details-content{content-visibility:visible; block-size:auto;}
+  .nav-sk::details-content{content-visibility:visible; block-size:auto;}
 
-  /* Pořadí: kdo jsem, kde hledám, čím to poměřím, co mi chodí,
-     co hlídám, kontakt. */
-  #nav a[href$="#mapa"]{order:1;}
-  #nav a[href$="cena-pozemku.html"]{order:2;}
-  #nav a[href$="kontakt.html"]{order:6;}
+  /* NADPIS ODDÍLU: ikona a za ní popisek verzálkami. Nic se tu
+     nerozbaluje, tak nemá ukazovátko ani šipku; pointer-events:none
+     z něj dělá nadpis, na který se nedá klepnout (a tedy ani omylem
+     oddíl zavřít). */
+  .nav-sk > summary{display:flex; align-items:center; gap:14px; list-style:none;
+    cursor:default; pointer-events:none; padding:20px 20px 8px;
+    font-family:var(--font-ui); font-size:11px; font-weight:700; letter-spacing:0.09em;
+    text-transform:uppercase; color:var(--text-ondark-mute);}
+  .nav-sk > summary::after{content:none;}
+  .nav-sk > summary::-webkit-details-marker{display:none;}
+  .nav-sk > summary::before{content:""; flex:none; width:22px; height:22px;
+    background-repeat:no-repeat; background-position:center; background-size:22px 22px;
+    opacity:0.8;}
+  /* ŘÁDKY V ODDÍLU jsou o stupeň nižší než samostatné položky a BEZ
+     IKONY: ikonu nese nadpis oddílu a text řádku se zarovnává pod jeho
+     text (20 px odsazení + 22 px ikona + 14 px mezera = 56). Sedmnáct
+     ikon by znamenalo sedmnáct obrázků v CSS — a prázdné dvaadvacet
+     pixelů široké místo u každého řádku, který bych nenakreslil.
+     Padesát dva pixelů na výšku, ne osmačtyřicet: mez si web klade sám
+     (hlídá ji test-menu) a nesnižuju ji kvůli tomu, že je řádků víc.
+     (#nav v selektoru není ozdoba: `#nav a:not(.btn-primary)` výš má
+     identifikátor, takže by samotné třídy prohrály — naměřeno, řádky
+     zůstaly vysoké 56 px a prázdné místo po ikoně v nich bylo.) */
+  #nav .nav-sk > .nav-sk-panel > a{min-height:52px; padding:0 20px 0 56px;
+    font-size:16px; font-weight:500;}
+  #nav .nav-sk > .nav-sk-panel > a::before{content:none;}
 
-  /* IKONY PODLE CÍLE ODKAZU, bez zásahu do značky 2 212 stránek.
+  /* ÚČET STOJÍ PRVNÍ A JEHO NADPIS NESE STAV PŘIHLÁŠENÍ — je to ta
+     jediná věc, kterou se z nabídky dá poznat, jestli jsem přihlášený.
+     Dvouřádkový, takže ne verzálky, a ikona svisle uprostřed obou
+     řádků (mřížka; s flexem spadla šipka pod e-mail — naměřeno). */
+  .nav-ucet-sk > summary{display:grid; grid-template-columns:auto 1fr;
+    column-gap:14px; row-gap:1px; align-items:center; min-height:68px;
+    padding:10px 20px; font-size:17px; font-weight:600; letter-spacing:-0.01em;
+    text-transform:none; color:var(--text-ondark);
+    background:rgba(31,81,56,0.05); border-bottom:1px solid var(--line);}
+  .nav-ucet-sk > summary::before{grid-column:1; grid-row:1 / span 2;
+    align-self:center; background-image:var(--ikona-profil);}
+  .nav-ucet-sk > summary .nav-ucet-t{grid-column:2; grid-row:1;}
+  .nav-ucet-sk > summary .nav-stav{grid-column:2; grid-row:2; display:block;
+    font-size:13px; font-weight:500; text-transform:none; letter-spacing:0;
+    color:var(--text-ondark-mute);}
+  /* „Moje inzeráty" (#nav-ucet) je tu obyčejný řádek oddílu, ne ten
+     dvouřádkový blok se stavem: od přestavby lišty je to odkaz UVNITŘ
+     panelu a jméno se stavem sedí v `summary`. Staré pravidlo mířilo
+     na #nav-ucet a dvouřádkový blok se stavem tím udělalo z „Mojich
+     inzerátů" — naměřeno na snímku. */
+
+  /* POŘADÍ: kdo jsem, kde hledám, co je příležitost, čím to poměřím,
+     co si mám přečíst, komu zavolat, co tu můžu udělat. „Ceny pozemků"
+     a „Kontakt" jsou samostatné položky, ne oddíly. */
+  .nav-ucet-sk{order:0;}
+  .nav-sk-pozemky{order:1;}
+  .nav-sk-sance{order:2;}
+  #nav a[href$="cena-pozemku.html"]{order:3;}
+  .nav-sk-radce{order:4;}
+  #nav a[href$="kontakt.html"]{order:5;}
+
+  /* IKONY PODLE CÍLE ODKAZU, bez zásahu do značky 2 248 stránek.
      Nejsou to ozdoby: ::before je v řádku vždycky (drží odsazení
      textu), takže bez obrázku by to byla prázdná dvaadvacetipixelová
      mezera — přesně to bylo na prvním snímku přestavěného panelu. */
-  #nav a[href$="#mapa"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");}
-  #nav a[href$="cena-pozemku.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-8-8V3h9.6l8.4 8.4a2 2 0 0 1 0 2.8z'/%3E%3Cline x1='7.5' y1='7.5' x2='7.51' y2='7.5'/%3E%3C/svg%3E");}
-  #nav a[href$="kontakt.html"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2'/%3E%3Cpath d='m3 7 9 6 9-6'/%3E%3C/svg%3E");}
-  #nav a[href$="zpravy.html"]::before{background-image:var(--ikona-zpravy);}
-  #nav a[href$="hlidani.html"]::before{background-image:var(--ikona-hlidani);}
+  .nav-sk-pozemky > summary::before{background-image:var(--ikona-mapa);}
+  .nav-sk-sance > summary::before{background-image:var(--ikona-sance);}
+  .nav-sk-radce > summary::before{background-image:var(--ikona-radce);}
+  #nav a[href$="cena-pozemku.html"]::before{background-image:var(--ikona-cena);}
+  #nav a[href$="kontakt.html"]::before{background-image:var(--ikona-posta);}
 
   /* „Přidat pozemek" v panelu JE — dole, jako tlačítko. V pásu nebylo
      schválně (dvě stejná tlačítka vedle sebe v jedné liště), ale
      v panelu stojí o obrazovku níž než to v hlavičce a je to hlavní
      věc, kterou tu prodávající hledá. Pod ním věta, proč to udělat. */
+  /* FLEX:NONE NA VŠECHNO. Šuplík je svislý flex s pevnou výškou a obsah
+     je vyšší než obrazovka — a přetékající flexové položky se SMRŠŤUJÍ.
+     Odkazy to nepotkalo (mají flex:none o kus výš), ale tlačítko
+     „Přidat pozemek" ano: naměřeno 44 px místo 66, tedy přesně na svoje
+     min-height. Vypadalo to jako špatné odsazení a hodinu jsem hledal
+     pravidlo, které ho přebíjí — žádné nebylo, smrštil ho flexbox. */
+  #nav > *{flex:none;}
+  /* 16 px nahoře a dole, ne 14: řádky nabídky kolem tlačítka mají 52
+     a 56 px. Mez 52 si web klade sám (hlídá ji test-menu) a hlavní akce
+     v nabídce nemá být ten nejhůř trefitelný cíl ze všech. */
   #nav a.btn-primary{order:7; display:block; margin:20px 20px 8px; text-align:center;
-    padding:14px 20px; font-size:16px;}
+    padding:16px; font-size:16px;}
   .nav-cta-note{order:8; display:block; padding:0 20px; font-size:13px; line-height:1.5;
     color:var(--text-ondark-mute);}
   .steps{grid-template-columns:1fr;}
@@ -5377,7 +5521,10 @@ a.rz-okres:hover{color:var(--copper-bright);}
    krajských a okresních stránkách nebylo čím podepřít. */
 .okr-cerstvost{margin-top:8px; font-size:13px; color:var(--text-ondark-mute); letter-spacing:0.01em;}
 /* Poznámka v hlavičce seznamu — drobná, ale musí být čitelná. */
-.mc-pozn{font-size:12px; color:var(--text-ondark-mute); white-space:nowrap;}
+/* Váha 500 výslovně: od chvíle, kdy je nadpis výpisu 700, by si ji
+   poznámka vzala po něm a „pořadí se střídá každý den" by křičelo
+   stejně jako nadpis nad ním. */
+.mc-pozn{font-size:12px; font-weight:500; color:var(--text-ondark-mute); white-space:nowrap;}
 /* Když mapová knihovna nedojede. Dřív tu zůstala prázdná plocha a žádné
    vysvětlení; prázdná stránka bez slova je horší než chybová hláška. */
 .mapa-nedojela{display:flex; flex-direction:column; align-items:flex-start; gap:10px;
@@ -5452,8 +5599,17 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      y = 65 a první ovládání začínalo až na y = 86.
      Pojistka proti původní chybě tím nezmizí — hlídá ji test-uvod
      (první ovládání nesmí být pod hlavičkou) a drží ji odsazení
-     <body>, ne tenhle okraj. */
-  .hero-map .map-wide{margin-top:48px;}
+     <body>, ne tenhle okraj.
+     (Těch 48 px si pak vyžádal test-pod-hlavickou — viz počet
+     65 + 50 + 10 = 125 u pravidla v bloku do 1040 px.)
+
+     ODSAZENÍ UVNITŘ, NE ODSTUP VENKU. Stejné místo, jiná barva:
+     s margin-topem to byl prázdný ŠEDÝ pruh přes celou šířku mezi
+     hlavičkou a aplikací — na snímku z telefonu první věc, které si
+     oko všimne, a nic v ní není. Jako odsazení uvnitř bílé desky je
+     z téhož místa vzduch nad hledáním. Ovládání se nehne ani o pixel
+     (obě kontroly měří jeho y a ty sedí dál). */
+  .hero-map .map-wide{margin-top:0; padding-top:48px; background:var(--panel);}
 }
 
 /* =====================================================================
@@ -6165,7 +6321,7 @@ body.vybiram-misto .misto-pruh{border-style:solid; border-color:var(--copper);
 body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 
 /* =====================================================================
-   SESKUPENÍ MENU NA POČÍTAČI — zrušeno, viz .nav-moje výš.
+   SESKUPENÍ MENU NA POČÍTAČI — zrušeno, viz .nav-sk výš.
    Byl tu pokus poznat skupinu osobních stránek v liště: svislá linka
    před „Upozorněním" a užší mezery uvnitř. Jenže osm položek zůstalo
    osmi položkami — čtyři z nich vypadaly jako čtyři různé části webu,
