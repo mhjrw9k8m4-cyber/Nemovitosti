@@ -549,6 +549,7 @@ function head(title, desc, canonicalPath, ld, crumbs, ogSoubor, kanal, kanalNaze
        souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
   <link rel="stylesheet" href="css/styles.min.css?${V.css}">
 ${sMapou ? `  <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?${V.leafletJs}">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?${V.leafletCss}">\n` : ''}${jsonld ? '  <script type="application/ld+json">\n  '+jsonld+'\n  </'+'script>\n' : ''}</head>

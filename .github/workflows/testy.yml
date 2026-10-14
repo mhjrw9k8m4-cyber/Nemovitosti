@@ -455,6 +455,9 @@ jobs:
       - name: Míra sazby (znaků na řádku)
         run: node scripts/test-mira.mjs
 
+      - name: Česká písmena a podřezané písmo
+        run: node scripts/test-ceska-pismena.mjs
+
       - name: Dotykové terče na mobilu
         run: node scripts/test-dotyk.mjs
 

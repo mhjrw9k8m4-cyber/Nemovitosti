@@ -194,10 +194,20 @@ pravda('a rozsahy v @font-face neslibují znaky mimo podřezanou sadu',
     const s = fs.readFileSync(path.join(KOREN, f), 'utf8');
     if (!/<link[^>]+rel="stylesheet"[^>]+css\/(?:styles|zaklad)/.test(s)) continue;
     sPreload++;
-    if (!/<link[^>]+rel="preload"[^>]+as="font"[^>]+fonts\//.test(s)) bez.push(f);
+    /* OBA SOUBORY, NE JEDEN. Tahle kontrola tu byla a ptala se jen na
+       to, jestli stránka přednačítá NĚJAKÉ písmo — a jedno stačilo.
+       Jenže latinka a latinka rozšířená jsou dva soubory a české
+       č ď ě ň ř š ť ů ž leží v tom druhém. Ten se nepřednačítal,
+       takže nestihl první vykreslení, a při `font-display:optional`
+       se pak už nepoužije vůbec: devět českých písmen kreslilo
+       systémové písmo uprostřed slov. Změřeno 14. 10. v prohlížeči
+       (9 znaků z 19); po doplnění druhého přednačtení 0 z 19. */
+    for (const soubor of SOUBORY) {
+      if (!s.includes(`as="font"`) || !s.includes(soubor)) { bez.push(`${f} (chybí ${soubor})`); break; }
+    }
   }
   pravda(`stránky se stylopisem se našly (${sPreload})`, sPreload > 2000, `jen ${sPreload}`);
-  pravda('a každá písma přednačítá (jinak si je prohlížeč objedná o kolo později)',
+  pravda(`a každá přednačítá OBA soubory písma (${SOUBORY.join(', ')})`,
     bez.length === 0, `${bez.length}: ` + bez.slice(0, 3).join(', '));
 }
 

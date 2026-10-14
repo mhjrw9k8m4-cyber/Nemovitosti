@@ -5802,6 +5802,60 @@ nebo `www.parcelaka.cz`. Celý web (kanonické adresy, mapa webu,
 `og:url`) mluví o `www`. **Pro majitele:** v nastavení repozitáře →
 Pages stojí jedna z těch dvou; stačí ji říct a soubor doplním.
 
+## 3ck. NALEZENO: devět českých písmen kreslilo systémové písmo uprostřed slov — *opraveno 14. 10.*
+
+Z měření skutečného načtení stránky vypadlo, že `inter-latin.woff2` se
+stahuje **před** událostí `load`, kdežto `inter-latin-ext.woff2` **až
+po ní**. A v tom druhém souboru leží zrovna **č ď ě ň ř š ť ů ž**.
+
+Změřeno v prohlížeči: **9 znaků z 19 kreslilo náhradní písmo.** Na
+českém webu to znamená dvě písma v jednom slově — „pří**š**tí" mělo tři
+znaky z Interu a jeden ze systémového.
+
+### Příčina není v tom souboru, ale v tom, kdy dojede
+
+Nejdřív jsem podezíral podřezání písem: že se při zužování ztratily
+glyfy. Ověřil jsem to tak, že jsem oba soubory načetl mimo stylopis
+a změřil přímo z nich — **ext soubor má všechny české glyfy**, od `ě`
+po `Ř`. Dokumentace ve `fonts/PUVOD.md` nelhala.
+
+Vadilo tohle: stránky přednačítaly (`<link rel="preload">`) jen latinku.
+Rozšířenou si prohlížeč objednal až při vykreslování, nestihla okno —
+a protože je u obou `font-display: optional`, prohlížeč ji pak
+**nepoužil vůbec**. `optional` je přitom správná volba, drží CLS;
+chyboval ten chybějící řádek.
+
+| | před | po |
+|---|---|---|
+| českých znaků v náhradním písmu | **9 z 19** | **0 z 19** |
+| stránek s oběma přednačteními | 0 | **2 235** |
+
+Oprava je jeden `<link>` na stránku (16 kB navíc na kritické cestě).
+
+### Pojistka, která tu byla a byla slepá
+
+`test-pisma` hlídal, že stránka přednačítá **nějaké** písmo — a jedno
+stačilo. Je to ta nejčastější podoba slepé kontroly: správná, a přitom
+vadu mine. Teď se ptá na **oba** soubory jmenovitě.
+
+### A moje vlastní zkouška to musela zkusit třikrát
+
+1. **Šířka proti `sans-serif`.** Ohlásila, že náhradní písmo kreslí
+   i znaky, které Inter má. Měření bylo rozbité, ne web.
+2. **Obraz glyfu v canvasu.** Vypadalo to neprůstřelně — jenže canvas
+   si písmo vyhodnotí ZNOVU a `font-display:optional` v něm neplatí.
+   Zkouška prošla i tehdy, když jsem přednačtení schválně odstranil
+   ze všech šesti stránek. Sabotáž odhalila slepou pojistku.
+3. **Šířka proti TŘEM náhradám** (`monospace`, `serif`, `sans-serif`).
+   Když znak kreslí Inter, vyjdou všechny tři stejně; když chybí,
+   rozejdou se. Na náhodnou shodu dvou šířek to nenaletí — a právě ta
+   mi v druhé podobě vyrobila **vymyšlený nález** (velké `Ě` prý chybí;
+   nechybí, Inter má u `E` skoro tutéž šířku jako monospace).
+
+Mezi kontrolními znaky je proto teď schválně i velké `E` a `S`: právě
+na nich se ta slepota pozná. Hotová zkouška hlásí sabotáž na všech
+osmnácti znacích a na čistém webu nehlásí nic.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

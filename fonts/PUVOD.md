@@ -6,6 +6,14 @@ by každé načtení stránky hlásilo návštěvníka třetí straně a do
 stylopisu a stránky je předepisují (`<link rel="preload">`), takže dojedou
 souběžně se stylem, ne až po něm.
 
+**Přednačítat se musí OBA soubory.** Dlouho se přednačítal jen
+`inter-latin.woff2`. Ten druhý si prohlížeč objednal až při vykreslování,
+nestihl okno, a protože je u obou `font-display: optional`, NEPOUŽIL ho
+pak vůbec — devět českých písmen (č ď ě ň ř š ť ů ž) kreslilo systémové
+písmo uprostřed slov. Změřeno 14. 10.: 9 znaků z 19; po doplnění druhého
+přednačtení 0 z 19. Hlídá to `scripts/test-ceska-pismena.mjs` (v prohlížeči)
+a `scripts/test-pisma.mjs` (že ten `<link>` na stránkách je).
+
 | Soubor | Rodina | Licence |
 |---|---|---|
 | `inter-latin.woff2`, `inter-latin-ext.woff2` | [Inter](https://rsms.me/inter/) | SIL Open Font License 1.1 |
