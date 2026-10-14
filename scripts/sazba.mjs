@@ -34,14 +34,58 @@ const VZOR_JEDNOTKA = /(\d)[ \t]+(Kč|m²|ha|km|%|×)(?![\wÁ-Žá-ž])/g;
 
 const PRESKOCIT = /^(script|style|pre|code|textarea)$/i;
 
+/* ČESKÁ UVOZOVKA SE MUSÍ ZAVŘÍT ČESKY.
+   Změřeno 14. 10. na 2 064 živých stránkách: text otevírá správně „
+   (U+201E), ale ZAVÍRÁ ROVNOU " — 52 párů z 63, jen deset bylo
+   správně. Vypadá to takhle: „Obvyklá" cena, „Cena do", „jak stojí
+   a leží". Čtenář to nepojmenuje, ale vidí: levá uvozovka je dole
+   a vpravo visí kolmá čárka jako na psacím stroji.
+   Pravidlo je úzké schválně: rovná uvozovka se změní na “ (U+201C)
+   JEN když je nějaká „ otevřená. Rovná uvozovka, před kterou nic
+   otevřeno není, se nechá být — může to být palec, citace kódu nebo
+   cokoli, o čem tahle sazba nic neví.
+   Stav se drží přes značky, protože uvozovka běžně obklopuje odkaz
+   nebo zvýraznění („Jak tahle čísla <b>počítáme</b>"), a zahazuje se
+   na blokové značce: přes odstavec uvozovka nepokračuje a kdyby se
+   někde zapomnělo zavřít, nesmí to otrávit celou stránku. */
+const BLOKOVE = /^<\/?\s*(p|div|section|article|header|footer|main|nav|aside|ul|ol|li|dl|dt|dd|table|thead|tbody|tr|td|th|h[1-6]|blockquote|figure|figcaption|form|fieldset|label|details|summary|option)\b/i;
+
+/* Rovná uvozovka napsaná jako entita. V data.html stálo
+   „majitel&quot; — pro prohlížeč je to totéž co ", ale znakový průchod
+   tam vidí šest nevinných znaků a uvozovku by nechal otevřenou. */
+const ENTITA = /^&(?:quot|#34|#x22);/i;
+
+function sazUvozovky(text, stav) {
+  if (text.indexOf('\u201e') === -1 && text.indexOf('"') === -1 && text.indexOf('&') === -1) return text;
+  let out = '';
+  for (let i = 0; i < text.length; i++) {
+    const z = text[i];
+    if (z === '\u201e') { stav.otevreno = true; out += z; continue; }
+    if (z === '\u201c') { stav.otevreno = false; out += z; continue; }
+    if (z === '"' && stav.otevreno) { stav.otevreno = false; out += '\u201c'; continue; }
+    if (z === '&') {
+      const m = ENTITA.exec(text.slice(i, i + 7));
+      if (m) {
+        if (stav.otevreno) { stav.otevreno = false; out += '\u201c'; }
+        else out += m[0];
+        i += m[0].length - 1;
+        continue;
+      }
+    }
+    out += z;
+  }
+  return out;
+}
+
 export function osaz(html) {
   let vysledek = '';
   let i = 0;
   let preskakuj = null;          // název značky, jejíž obsah se nesází
+  const uvoz = { otevreno: false };
   while (i < html.length) {
     const zacatek = html.indexOf('<', i);
     if (zacatek === -1) {
-      vysledek += preskakuj ? html.slice(i) : sazTextem(html.slice(i));
+      vysledek += preskakuj ? html.slice(i) : sazUvozovky(sazTextem(html.slice(i)), uvoz);
       break;
     }
     const text = html.slice(i, zacatek);
@@ -50,7 +94,7 @@ export function osaz(html) {
     } else {
       const konecDalsi = html.indexOf('>', zacatek);
       const dalsiZnacka = konecDalsi === -1 ? '' : html.slice(zacatek, konecDalsi + 1);
-      vysledek += sazPredZnackou(sazTextem(text), dalsiZnacka);
+      vysledek += sazUvozovky(sazPredZnackou(sazTextem(text), dalsiZnacka), uvoz);
     }
 
     /* Komentář se přenáší beze změny — jsou v něm vysvětlivky, ne sazba. */
@@ -67,6 +111,7 @@ export function osaz(html) {
     vysledek += znacka;
     i = konecZnacky + 1;
 
+    if (BLOKOVE.test(znacka)) uvoz.otevreno = false;
     const jmeno = (znacka.match(/^<\/?\s*([a-zA-Z0-9-]+)/) || [])[1] || '';
     if (preskakuj) {
       if (znacka.startsWith('</') && jmeno.toLowerCase() === preskakuj) preskakuj = null;

@@ -43,8 +43,14 @@ function pravda(popis, vyslo, proc) {
 /* Datum a otisk znění patří k sobě: kdo mění jedno, musí sáhnout
    i na druhé, a právě to je ta pojistka. */
 const CEKANO = {
-  'ochrana-udaju.html': { datum: 'říjen 2026', otisk: '2c73c0a77f011864' },
-  'podminky.html': { datum: 'říjen 2026', otisk: '97f9d59a5a3b0a27' },
+  /* Otisky přepočítané 14. 10., když se do porovnání přestal počítat
+     tvar uvozovky (viz viditelnyText). DATUM SE NEMĚNILO A NESMĚLO:
+     ověřeno znak po znaku, že se znění obou stránek proti předchozímu
+     commitu nezměnilo ani o slovo — změnil se jeden znak za tiskárnu.
+     Upravit „Poslední úprava" by znamenalo tvrdit, že se podmínky
+     změnily, a to je u právního textu lež, ne kosmetika. */
+  'ochrana-udaju.html': { datum: 'říjen 2026', otisk: 'd1650f99e4ae7466' },
+  'podminky.html': { datum: 'říjen 2026', otisk: '913f998ff0b2f004' },
 };
 
 /** Viditelný text stránky: bez skriptů, stylů, komentářů a značek. */
@@ -54,6 +60,16 @@ export function viditelnyText(html) {
     .replace(/<!--[\s\S]*?-->/g, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/g, ' ')
+    /* TVAR UVOZOVKY NENÍ ZMĚNA ZNĚNÍ. Otisk má hlídat, co je napsáno,
+       ne jak je to vysázeno. Když 14. 10. krok sazby začal zavírat
+       české uvozovky česky („Obvyklá" → „Obvyklá“), rozešel se otisk
+       obou právních stránek — a zkouška chtěla upravit „Poslední
+       úprava". To by byla lež: podmínky se nezměnily, změnil se jeden
+       znak za tiskárnu. Všechny podoby dvojité uvozovky se proto před
+       otiskem sjednotí na jednu; každá skutečná úprava znění otisk
+       rozejde dál. */
+    .replace(/&quot;|&#34;|&#x22;/gi, '"')
+    .replace(/[\u201e\u201c\u201d\u201f\u00ab\u00bb]/g, '"')
     .replace(/Poslední úprava:[^.]*\./g, ' ')   // právě tu větu ne
     .replace(/\s+/g, ' ')
     .trim();

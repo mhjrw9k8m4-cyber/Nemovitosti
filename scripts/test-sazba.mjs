@@ -21,6 +21,16 @@
 //
 // VELKÁ PÍSMENA SE NEHLÍDAJÍ: „Část A — Vlastník" je označení oddílu
 // listu vlastnictví, ne předložka, a nezlomitelnou mezeru mít nemá.
+//
+// DRUHÉ PRAVIDLO TÉŽE SAZBY: česká uvozovka se musí zavřít česky.
+// Změřeno 14. 10.: text otevíral správně „ (U+201E), ale ZAVÍRAL
+// ROVNOU " — 52 párů z 63, správně jen deset. „Obvyklá" cena,
+// „Cena do", „jak stojí a leží". Čtenář to nepojmenuje, ale vidí:
+// levá uvozovka je dole a vpravo visí kolmá čárka jako z psacího
+// stroje. Jedno místo to zavíralo dokonce entitou (`&quot;`), což
+// vypadá v prohlížeči stejně a ve zdroji se hledá jinak.
+// Zavírá se teď v kroku sazby, takže to platí i pro 2 102 vyrobených
+// stránek a pro text, který teprve někdo napíše.
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -48,6 +58,22 @@ for (const f of stranky) {
   }
 }
 
+/* ---- uvozovky ---- */
+let uvozPary = 0; const uvozVadne = []; const uvozNepar = [];
+for (const f of stranky) {
+  const t = viditelny(readFileSync(path.join(ROOT, f), 'utf8'));
+  /* Vadný pár: otevírací „ a pak rovná uvozovka (znak nebo entita),
+     a mezi nimi žádná jiná uvozovka. \0 je zbytek po značce, uvnitř
+     citace běžně stojí odkaz nebo zvýraznění. */
+  for (const m of t.matchAll(/\u201e(?:(?!\u201e|\u201c|")[\s\S])*?(?:"|&quot;)/g)) {
+    uvozVadne.push(`${f}: …${m[0].replace(/\0/g, '|').replace(/\s+/g, ' ').slice(0, 70)}…`);
+  }
+  const o = (t.match(/\u201e/g) || []).length;
+  const z = (t.match(/\u201c/g) || []).length;
+  uvozPary += Math.min(o, z);
+  if (o !== z) uvozNepar.push(`${f}: otevíracích ${o}, zavíracích ${z}`);
+}
+
 /* Předpoklady. Bez nich by „žádná obyčejná mezera" mohla být pravda
    o prázdnu — třeba kdyby se rozbilo čištění značek nebo seznam
    stránek. Obojí se mi už jednou povedlo. */
@@ -58,7 +84,14 @@ pravda(`a nezlomitelné mezery se opravdu našly (${spravne})`, spravne >= 5000,
 pravda('po žádné jednoznakové předložce nestojí obyčejná mezera', spatne.length === 0,
   spatne.slice(0, 8).join('\n      ') + (spatne.length > 8 ? `\n      … a dalších ${spatne.length - 8}` : ''));
 
-console.log('\nSazba — jednoznaková slova na konci řádku');
+pravda(`a uvozovek je z čeho brát (${uvozPary} párů)`, uvozPary >= 20,
+  `nalezeno jen ${uvozPary} — čištění značek nebo hledání je rozbité`);
+pravda('žádná česká uvozovka se nezavírá rovnou', uvozVadne.length === 0,
+  uvozVadne.slice(0, 6).join('\n      ') + (uvozVadne.length > 6 ? `\n      … a dalších ${uvozVadne.length - 6}` : ''));
+pravda('a na žádné stránce nezůstala uvozovka nepárová', uvozNepar.length === 0,
+  uvozNepar.slice(0, 6).join('\n      '));
+
+console.log('\nSazba — jednoznaková slova na konci řádku a uvozovky');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.log('::error::Sazba: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }

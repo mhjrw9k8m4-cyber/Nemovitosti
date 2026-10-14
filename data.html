@@ -94,7 +94,7 @@
       <li><b>U spoluvlastnického podílu</b> (<code>podil: true</code>, 515 řádků v souboru)
         je cena za zlomek, ale výměra za celou parcelu. Kdo dělí jedno druhým bez ohledu na
         <code>zlomek</code>, dostane číslo, které neplatí pro nikoho.</li>
-      <li><b>Co není v poli <code>site</code>, není totéž co „není".</b> Sítě se čtou z popisu
+      <li><b>Co není v poli <code>site</code>, není totéž co „není“.</b> Sítě se čtou z popisu
         inzerátu; chybějící údaj znamená, že o tom inzerát mlčel.</li>
       <li><b>Výměra může být <code>null</code></b> — zdroj ji neuvedl a z textu se nedala
         bezpečně přečíst. Raději nic než cizí číslo.</li>
@@ -137,7 +137,7 @@
       <tbody>
 <tr><td><code>place</code></td><td>string</td><td>vždy</td><td>Obec nebo katastrální území.</td></tr>
 <tr><td><code>okres</code></td><td>string</td><td>vždy</td><td>Okres. Jeden ze 77 okresů ČR.</td></tr>
-<tr><td><code>type</code></td><td>string</td><td>vždy</td><td>Druh nabídky. „majitel&quot; tady nebývá — inzeráty od lidí leží v databázi a vidíte je na mapě, do tohohle souboru se nedávají. <b>Hodnoty:</b> <code>sale</code>, <code>drazba</code>, <code>exekuce</code>, <code>obec</code></td></tr>
+<tr><td><code>type</code></td><td>string</td><td>vždy</td><td>Druh nabídky. „majitel“ tady nebývá — inzeráty od lidí leží v databázi a vidíte je na mapě, do tohohle souboru se nedávají. <b>Hodnoty:</b> <code>sale</code>, <code>drazba</code>, <code>exekuce</code>, <code>obec</code></td></tr>
 <tr><td><code>parcel</code></td><td>string</td><td>vždy</td><td>Parcelní číslo. Pomlčka „—“ znamená, že ho zdroj neuvedl.</td></tr>
 <tr><td><code>druh</code></td><td>string</td><td>vždy</td><td>Druh pozemku tak, jak ho uvádí zdroj (orná půda, les, stavební…).</td></tr>
 <tr><td><code>area</code></td><td>number|null</td><td>vždy</td><td>Výměra v m². null = zdroj ji neuvedl a z textu se nedala bezpečně přečíst.</td></tr>
@@ -191,7 +191,7 @@
         druhá kopie týchž dat při každé ze čtyř denních obnov. Které okresy do kterého kraje
         patří, stojí v rozcestníku pod <code>kraje</code>.</li>
       <li><b>Okres bez nabídek</b> má řez taky — prázdný. Vrátit 404 by znamenalo, že si
-        každý musí ošetřit rozdíl mezi „nic tam není" a „spletl jsem adresu".</li>
+        každý musí ošetřit rozdíl mezi „nic tam není“ a „spletl jsem adresu“.</li>
     </ul>
     <p class="dt-pozn">Je to obyčejný soubor na obyčejném serveru: cachovatelný, bez klíče,
       bez limitu dotazů a bez aplikační vrstvy, která by mohla spadnout.</p>
@@ -219,7 +219,7 @@
         do tohohle souboru nepatří — na mapě by se nikdy nepoužila.</li>
       <li><b>Změnu pod 3 % nehlásíme</b> ani tady, ani na stránkách: bývá to zaokrouhlení
         nebo přepis u zdroje, ne sleva.</li>
-      <li><b>Pozor na to, co to NEZNAMENÁ.</b> Jsou to pořád ceny nabídkové. „Cena spadla"
+      <li><b>Pozor na to, co to NEZNAMENÁ.</b> Jsou to pořád ceny nabídkové. „Cena spadla“
         neznamená, že se pozemek prodal pod původní cenou — znamená, že prodávající změnil,
         za kolik ho nabízí.</li>
       <li><b>Nejdřív je 14. 9. 2026.</b> Dřív si nabídky nikdo nezapisoval, takže o starších

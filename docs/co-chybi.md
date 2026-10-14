@@ -5327,6 +5327,88 @@ původně ten přepsaný název napsal jako cestu. Správný nález — do
 dokumentace nepatří jméno, které v repozitáři nic nemá, i když je
 myšlené jako ukázka chyby.)
 
+## 3cd. NALEZENO: česká uvozovka se zavírala rovnou — 52 párů z 63 — *opraveno 14. 10.*
+
+Přečetl jsi první stránku a chválíš text. Šel jsem se tedy podívat na
+to, co se na textu dá změřit — a našel jsem vadu, kterou čtenář
+nepojmenuje, ale vidí ji.
+
+### Změřeno
+
+Na 2 064 živých stránkách:
+
+| | počet |
+|---|---|
+| otevíracích `„` (U+201E) | 63 |
+| zavíracích správných `"` (U+201C) | **10** |
+| párů zavřených **rovnou** `"` | **52** |
+
+Levá uvozovka je dole, jak se v češtině patří — a vpravo visí kolmá
+čárka jako z psacího stroje: „Obvyklá" cena, „Cena do", „jak stojí
+a leží", „nic tam není". Na dvaceti stránkách, nejvíc na cenách
+pozemků a na stránce s daty.
+
+Jedno místo zavíralo dokonce **entitou** `&quot;` — v prohlížeči to
+vypadá stejně, ve zdroji se to hledá jinak, a hrubé hledání znaku `"`
+ho mine.
+
+### Oprava je v kroku sazby, ne v textech
+
+`scripts/sazba.mjs` už existuje právě pro tuhle třídu věcí — zavírá
+jednopísmenné předložky nezlomitelnou mezerou a drží číslo s jednotkou
+pohromadě. Má v komentáři napsané proč: *„pravidlo musí platit i pro
+generované stránky a pro text, který teprve někdo napíše. Jedno místo,
+jedno pravidlo."* Uvozovka patří tam.
+
+**Pravidlo je úzké schválně:** rovná uvozovka se změní na `"` jen
+tehdy, když je nějaká `„` otevřená. Rovná uvozovka, před kterou nic
+otevřeno není, se nechá být — může to být palec (`1"`), citace kódu
+nebo cokoli, o čem sazba nic neví. Ověřeno na pěti případech, mezi
+nimi `<pre>` (nesází se vůbec) a dva samostatné odstavce (uvozovka
+jednoho nepokračuje do druhého).
+
+Stav se drží **přes značky**, protože uvozovka běžně obklopuje odkaz
+nebo zvýraznění („Jak tahle čísla **počítáme**"), a zahazuje se na
+blokové značce: kdyby se někde zapomnělo zavřít, nesmí to otrávit
+zbytek stránky.
+
+Po opravě: **63 otevíracích, 63 zavíracích, nula vadných, žádná
+stránka s nepárovou uvozovkou.**
+
+### Pojistka
+
+Rozšířená `test-sazba` — je to pravidlo téže sazby, tak patří do téže
+zkoušky. Tři nové věty: uvozovek je z čeho brát (63 párů), žádná se
+nezavírá rovnou, a na žádné stránce nezůstala nepárová.
+
+Ověřeno sabotáží dvakrát: jedna zavírací `"` zpátky na rovnou →
+`✕ index.html: …„bez elektřiny"…` a zároveň `✕ otevíracích 2,
+zavíracích 1`; smazaná zavírací uvozovka → `✕ data.html: otevíracích
+13, zavíracích 12`.
+
+### A jeden tvrdý nález navíc: otisk právních stránek
+
+Oprava uvozovek shodila `test-pravni-stranky`. Ta zkouška drží **otisk
+znění** zásad soukromí a podmínek, aby nikdo nezměnil text bez toho,
+že upraví „Poslední úprava" — dobrá pojistka. Jenže teď chtěla, abych
+to datum upravil kvůli **jednomu znaku za tiskárnu.**
+
+To by byla lež: podmínky se nezměnily. Správná oprava není v datu, ale
+v otisku — **má sledovat, co je napsáno, ne jak je to vysázeno.**
+Všechny podoby dvojité uvozovky (včetně `&quot;`) se proto před
+otiskem sjednotí.
+
+Než jsem nové otisky zapsal, **ověřil jsem znak po znaku**, že se
+znění obou stránek proti předchozímu commitu nezměnilo ani o slovo:
+`ZNĚNÍ SHODNÉ — změna byla jen v sazbě`. Datum zůstává „říjen 2026".
+
+A že pojistka nepřestala platit, je ověřené taky: po změně jedné věty
+v podmínkách zkouška hlásí `otisk a2f5132c5e74e5b0 ≠ zapsaný`.
+(První pokus o sabotáž byl naprázdno — vybral jsem frázi „jak stojí
+a leží" a nenašel ji, protože po sazbě je v ní nezlomitelná mezera.
+Málem jsem z toho usoudil, že je pojistka rozbitá; byla to moje
+záměna, ne její vada.)
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
