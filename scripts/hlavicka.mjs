@@ -13,6 +13,27 @@
    PRVNÍ položka mezi obsahem — účet se tím pletl do cesty každému,
    kdo přišel hledat pozemek.
 
+   KOLIK TOHO V NÍ JE: deset odkazů, ne dvacet pět. Majitel: „to menu
+   chce zredukovat, je tam toho moc, nech tam jen to důležité." Co z ní
+   odešlo, se neztratilo — bylo to změřené, ne odhadnuté. Počty
+   odkazů MIMO lištu a patičku:
+
+     orná půda 920 · louky 421 · stavební 257 · lesní 100 · zahrady 79
+     · vinice a sady 61 — druhy pozemků vedou z každé stránky pozemku
+       toho druhu, takže je lišta nosit nemusí (zůstává „Stavební"
+       jako nejhledanější a „Podle okresu" jako rozcestník),
+     na co mám? 106 · podle okresu 105 · nové na trhu 97 · ceny 68,
+     rádci: náklady koupě 112 · list vlastnictví 92 · přístupová
+       cesta 12 · stavební vs. zemědělský 9 · územní plán 8 ·
+       hypotéka 4 · věcné břemeno 4 · kupní smlouva 1.
+
+   U RÁDCŮ TO BYLO NEJTĚSNĚJŠÍ, a proto zůstali tři, ne jeden: každý
+   rádce odkazuje na všech osm ostatních, takže jeden odkaz v liště
+   stačí, aby se k nim člověk dostal. Tři jsou tam proto, že pokrývají
+   tři otázky, které má kupující v tomhle pořadí: smím tu stavět
+   (územní plán), jak se to převádí (kupní smlouva), co to stojí nad
+   rámec ceny (náklady koupě).
+
    SKUPINY JSOU <details>, NE VLASTNÍ SKRIPT. Rozbalení umí prohlížeč
    sám, včetně klávesnice a čtečky, a funguje i bez JavaScriptu.
    A hlavně: na telefonu se z TÉHOŽ kódu stane oddíl šuplíku — panel se
@@ -34,29 +55,18 @@ export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
       <details class="nav-sk nav-sk-pozemky"><summary>Pozemky</summary><div class="nav-sk-panel">
         <a href="${NAV_MAPA}">Hledat na mapě</a>
         <a href="pozemky-stavebni.html">Stavební</a>
-        <a href="pozemky-zahrada.html">Zahrady</a>
-        <a href="pozemky-lesni.html">Lesní</a>
-        <a href="pozemky-orna-puda.html">Orná půda</a>
-        <a href="pozemky-louka.html">Louky</a>
-        <a href="pozemky-vinice-sady.html">Vinice a sady</a>
         <a href="pozemky-podle-okresu.html">Podle okresu</a>
       </div></details>
       <details class="nav-sk nav-sk-sance"><summary>Příležitosti</summary><div class="nav-sk-panel">
         <a href="drazby-pozemku.html">Dražby</a>
         <a href="exekuce-pozemku.html">Exekuce</a>
         <a href="nove-pozemky.html">Nové na trhu</a>
-        <a href="na-co-mam-pozemek.html">Na co mám?</a>
       </div></details>
       <a href="cena-pozemku.html">Ceny pozemků</a>
       <details class="nav-sk nav-sk-radce"><summary>Rádce</summary><div class="nav-sk-panel">
         <a href="uzemni-plan-pozemek.html">Územní plán</a>
-        <a href="stavebni-vs-zemedelsky-pozemek.html">Stavební vs. zemědělský</a>
-        <a href="pristupova-cesta-pozemek.html">Přístupová cesta</a>
-        <a href="list-vlastnictvi-katastr.html">List vlastnictví</a>
         <a href="kupni-smlouva-pozemek.html">Kupní smlouva</a>
         <a href="kolik-stoji-koupe-pozemku.html">Náklady koupě</a>
-        <a href="hypoteka-na-pozemek.html">Hypotéka</a>
-        <a href="vecne-bremeno-pozemek.html">Věcné břemeno</a>
       </div></details>
       <a href="kontakt.html" class="nav-kontakt">Kontakt</a>
       <span class="nav-del" aria-hidden="true"></span>

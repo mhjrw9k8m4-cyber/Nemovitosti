@@ -558,16 +558,20 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   };
   const bezUctu = await zalozky(false);
   const sUctem = await zalozky(true);
-  /* DVACET NEJMÉNĚ, A „Přidat pozemek" NAKONEC.
+  /* DVANÁCT NEJMÉNĚ, A „Přidat pozemek" NAKONEC.
      Bylo tu pevných sedm (šest cílů a akce) z doby, kdy byla nabídka
      plochý seznam. Teď je rozdělená na oddíly a cílů je přes dvacet;
      pevné číslo by hlídalo jen to, že nikdo nepřidal odkaz. Hlídá se
      proto to, co je na tom podstatné: že se nabídka nescvrkla (podlaha)
      a že akce stojí až za vším — v hlavičce na telefonu tlačítko není
      (viz .header-cta), takže je to jediné místo, kde prodávající začne.
-     Co je uvnitř po oddílech, měří test-menu. */
+     Co je uvnitř po oddílech, měří test-menu.
+     PODLAHA SPADLA Z DVACETI NA DVANÁCT: 14. 10. se nabídka na přání
+     majitele zúžila z 25 odkazů na 14 („je tam toho moc, nech tam jen
+     to důležité"). Dvanáct je mez, pod kterou by z nabídky zmizelo
+     něco, co jinde na webu není — účet, mapa, ceny, kontakt a akce. */
   pravda(`nabídka má všechny cíle a akci „Přidat pozemek" nakonec (${bezUctu.length})`,
-    bezUctu.length >= 20 && bezUctu[bezUctu.length - 1].endsWith('pridat.html'),
+    bezUctu.length >= 12 && bezUctu[bezUctu.length - 1].endsWith('pridat.html'),
     `je jich ${bezUctu.length}: ${bezUctu.join(', ')}`);
   pravda('a přihlášení s nimi nehýbe', JSON.stringify(sUctem) === JSON.stringify(bezUctu),
     `nepřihlášený ${bezUctu.join(', ')} | přihlášený ${sUctem.join(', ')}`);

@@ -143,9 +143,12 @@ na tomhle webu se to u cen i u rad už stalo.
 
 ## 6. Zkoušek je 218, v CI běží 212 — *MYLNÝ POPLACH, ale něco z toho bylo*
 
-Chybějící soubor byl jediný a nebyla to zkouška: `scripts/test-server.mjs`
-je falešný server, který si startuje `test-kontrola-e2e`. Jenže
-jmenoval se `test-…`, takže vypadal jako zkouška, která v CI neběží —
+Chybějící soubor byl jediný a nebyla to zkouška: falešný server, který
+si startuje `test-kontrola-e2e`. Jenže jmenoval se „test-server" —
+schválně bez přípony a bez zpětných uvozovek, protože ten soubor už
+neexistuje a `test-staticka` hlídá, že dokumentace jmenuje jen to, co
+na disku opravdu je. Takže
+vypadal jako zkouška, která v CI neběží —
 a tahle položka vznikla právě z toho. Přejmenován na
 `scripts/falesny-server-kontroly.mjs`; od té chvíle platí jednoduché
 pravidlo: **co se jmenuje `scripts/test-*.mjs`, to v CI běží.**

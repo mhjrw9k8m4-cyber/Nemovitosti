@@ -6554,6 +6554,48 @@ přečuhovala u levého kraje **3 px z karty ven** — šířka bubliny se měn�
 podle textu, takže se musí srovnat až po vykreslení, ne pevným
 procentem.
 
+## 3cz. Nabídka zúžená z 25 odkazů na 14 — *14. 10.*
+
+Majitel: *„to menu chce zredukovat, je tam toho moc, nech tam jen to
+důležité."* Ze šuplíku na telefonu to bylo vidět nejlíp — 25 odkazů
+ve čtyřech oddílech, skoro dvě obrazovky rolování.
+
+**Co odešlo, bylo změřené, ne odhadnuté.** U každého cíle jsem spočítal,
+z kolika stránek na něj vede odkaz **mimo lištu a patičku**:
+
+| cíl | odkazů mimo lištu | zůstává v liště? |
+|---|---|---|
+| orná půda | 920 | ne |
+| louky | 421 | ne |
+| stavební | 257 | **ano** (nejhledanější druh) |
+| náklady koupě | 112 | **ano** |
+| na co mám? | 106 | ne |
+| podle okresu | 105 | **ano** (rozcestník) |
+| nové na trhu | 97 | **ano** |
+| list vlastnictví | 92 | ne |
+| zahrady 79, vinice 61, lesní 100 | | ne |
+| ceny pozemků | 68 | **ano** |
+| přístupová cesta 12, stavební vs. zemědělský 9, územní plán 8 | | územní plán **ano** |
+| dražby 5, hypotéka 4, věcné břemeno 4, exekuce 3, kupní smlouva 1 | | dražby, exekuce, kupní smlouva **ano** |
+
+Druhy pozemků vedou z každé stránky pozemku toho druhu, takže je lišta
+nosit nemusí. U rádců to bylo nejtěsnější — proto zůstali **tři, ne
+jeden**: každý rádce odkazuje na všech osm ostatních, takže jeden
+odkaz v liště stačí, aby se k nim člověk dostal, a tři jsou tam proto,
+že pokrývají tři otázky kupujícího v tom pořadí, v jakém přicházejí:
+*smím tu stavět* (územní plán), *jak se to převádí* (kupní smlouva),
+*co to stojí nad rámec ceny* (náklady koupě).
+
+| | před | po |
+|---|---|---|
+| odkazů v nabídce | 25 | **14** |
+| výška šuplíku na 390×844 | ~2 000 px | **1 195 px** |
+| oddílů | 4 | 4 |
+
+Podlaha v `test-rozvrzeni` spadla z dvaceti cílů na dvanáct — pod
+dvanáct by z nabídky zmizelo něco, co jinde na webu není (účet, mapa,
+ceny, kontakt, akce).
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
