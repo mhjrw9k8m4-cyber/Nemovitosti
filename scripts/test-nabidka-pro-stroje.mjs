@@ -38,6 +38,7 @@ function pravda(popis, vyslo, proc) {
 const soubory = readdirSync(KOREN).filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f));
 let zive = 0, archiv = 0, sNabidkou = 0, bezCeny = 0, pocetDrazeb = 0, pocetPodilu = 0;
 const rozchod = [], spatnaDrazba = [], zamlcenyPodil = [], spatnaMena = [];
+const bezTerminu = [], spatnyTermin = [];
 
 for (const f of soubory) {
   const h = readFileSync(path.join(KOREN, f), 'utf8');
@@ -81,6 +82,17 @@ for (const f of soubory) {
     pocetDrazeb++;
     if (nabidka.availability) spatnaDrazba.push(`${f}: dražba označená jako ${nabidka.availability}`);
     if (!/vyvol/i.test(popisNabidky)) spatnaDrazba.push(`${f}: dražba bez poznámky o vyvolávací ceně`);
+    /* DO KDY TA NABÍDKA PLATÍ. Dražba nemá „availability" (schema.org
+       nemá hodnotu, která by ji popsala poctivě), takže bez termínu
+       zůstávala strojově platná navždy. Změřeno 14. 10.: 86 živých
+       stránek s cenou a bez jediného údaje o platnosti.
+       Tvar se hlídá zvlášť, a z dobrého důvodu: napoprvé jsem tam
+       poslal slepené „20261022" z js/terminy.js a vyšlo to na všech
+       86 stránek. Jméno funkce nestačí, musí se číst výsledek. */
+    if (!nabidka.validThrough) bezTerminu.push(f);
+    else if (!/^\d{4}-\d{2}-\d{2}$/.test(String(nabidka.validThrough))) {
+      spatnyTermin.push(`${f}: validThrough „${nabidka.validThrough}" není ISO datum`);
+    }
   }
 
   // C) podíl se přizná
@@ -89,6 +101,13 @@ for (const f of soubory) {
     if (!/podíl/i.test(popisNabidky)) zamlcenyPodil.push(f);
   }
 }
+
+pravda(`každá dražba říká i strojově, do kdy nabídka platí (${pocetDrazeb} dražeb)`,
+  pocetDrazeb > 0 && bezTerminu.length === 0,
+  pocetDrazeb === 0 ? 'žádná dražba — pak tahle kontrola měří prázdno'
+    : `bez termínu: ${bezTerminu.length} — např. ${bezTerminu.slice(0, 4).join(', ')}`);
+pravda('a ten termín je ISO datum, ne slepené číslo', spatnyTermin.length === 0,
+  spatnyTermin.slice(0, 4).join('\n      '));
 
 pravda(`je co měřit — živé stránky pozemků (${zive}, archivu přeskočeno ${archiv})`,
   zive >= 500, 'bez stránek by všechny kontroly níž prošly naprázdno');

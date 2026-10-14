@@ -5719,6 +5719,45 @@ A protože vynechávka je oslabení kontroly, hlídá se i ona:
 hlásí chybu. Prokázáno sabotáží v obou směrech — vada v **našem**
 textu se přes vynechávku pořád najde, a mrtvá vynechávka se ohlásí.
 
+## 3ci. NALEZENO: 86 dražeb mělo cenu a žádnou platnost — a jak mě při opravě chytil vlastní výstup — *opraveno 14. 10.*
+
+Po nálezu o JavaScriptu (3ch) jsem prošel strukturovaná data, která se
+posílají vyhledávačům. Nejdřív co je v pořádku, ať je to poctivě
+v obou směrech: **všech 2 222 bloků** se přečte jako JSON, nabídek je
+2 003 a všechny mají kladnou cenu v CZK; **cena ve strukturovaných
+datech se u žádné stránky nerozchází s cenou ve viditelném textu.**
+
+Nález je jeden: **86 živých stránek s dražbou mělo cenu, ale žádný
+údaj o tom, do kdy platí.**
+
+### Proč u dražby chybí „availability" — a proč je to správně
+
+Vypadá to jako opomenutí a sám jsem to tak napoprvé přečetl. Je to
+záměr: u dražby by `InStock` byla nepravda, protože pozemek si
+nekoupíte, musíte přihodit v termínu. Schema.org nemá hodnotu, která
+by dražbu popsala poctivě, tak se raději neuvádí nic. Teď je to
+u toho řádku napsané, aby to příště nikdo „neopravil".
+
+Jenže tím zůstávala nabídka strojově platná **navždy**, i když dražba
+dávno proběhla. Termín přitom známe — stojí v datech a na stránce
+z něj jde odpočet ve výpisu.
+
+### Oprava a jedna past, do které jsem spadl
+
+Do nabídky jde `validThrough` s termínem dražby. Datum čte tentýž
+modul jako odpočet (`js/terminy.js`, `auctionYMD`), aby se nedalo
+vyčíst dvěma způsoby.
+
+A teď ta past: `auctionYMD` vrací **slepený tvar „20261022"**, ne ISO
+datum. Poslal jsem to tam tak, jak to z funkce vypadlo, a vyšlo to na
+**všech 86 stránek** — neplatná hodnota. Chytlo to až přečtení
+vygenerovaného souboru, ne jméno té funkce. Převod na `2026-10-22` je
+proto ve vlastní funkci se zdůvodněním, a zkouška hlídá **tvar**
+zvlášť od **přítomnosti**.
+
+Obojí prokázáno sabotáží: slepený tvar i chybějící termín se ohlásí
+i s názvem stránky.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

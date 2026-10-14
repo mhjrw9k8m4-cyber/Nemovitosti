@@ -162,6 +162,20 @@ const TYP = { sale: 'Na prodej', drazba: 'Dražba', exekuce: 'Exekuce', obec: 'O
    nedodělek a nikdo ho na první pohled nepřečte. Web to řeší v js/terminy.js
    (zdrojText); tady musí platit totéž, jinak by si stránka pozemku
    odporovala se sebou samou podle toho, jestli běží skript. */
+/** Termín dražby jako ISO datum pro strojová data (2026-10-22).
+ *
+ * Čte ho tentýž modul jako odpočet ve výpisu (js/terminy.js), aby se
+ * datum nedalo vyčíst dvěma způsoby. `auctionYMD` ale vrací slepený
+ * tvar „20261022" — do `validThrough` patří ISO, jinak je to neplatná
+ * hodnota. Napoprvé jsem tam ten slepený tvar poslal a vyšlo to na
+ * 86 stránek; chytlo to až přečtení vygenerovaného souboru, ne jméno
+ * té funkce.
+ */
+function terminISO(extra) {
+  const y = TERM && TERM.auctionYMD ? TERM.auctionYMD(extra) : null;
+  return /^\d{8}$/.test(String(y || '')) ? `${y.slice(0, 4)}-${y.slice(4, 6)}-${y.slice(6, 8)}` : null;
+}
+
 export function lidskeDatum(t) {
   return String(t == null ? '' : t)
     .replace(/(\d{4})-(\d{2})-(\d{2})/g, (_, r, m, den) => `${+den}. ${+m}. ${r}`);
@@ -878,7 +892,18 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
       '@type': 'Offer', price: d.price, priceCurrency: 'CZK', url,
       itemOffered: { '@type': 'Place', name: titul },
     },
+    /* AVAILABILITY JEN U PRODEJE, A JE TO ZÁMĚR. U dražby by „InStock"
+       byla nepravda: pozemek si nekoupíte, musíte přihodit v termínu.
+       Schema.org nemá hodnotu, která by dražbu popsala poctivě, a tak
+       se raději neuvádí nic. (Psáno proto, že to vypadá jako
+       opomenutí — sám jsem to tak napoprvé přečetl.) */
     jeProdej ? { availability: 'https://schema.org/InStock' } : {},
+    /* DO KDY NABÍDKA PLATÍ. U dražby je to termín, a ten známe —
+       stojí v `extra` a čte ho tentýž modul jako odpočet ve výpisu
+       (js/terminy.js, auctionYMD). Bez něj zůstávala nabídka strojově
+       platná navždy, i když dražba dávno proběhla. Změřeno 14. 10.:
+       86 živých stránek s cenou a bez jediného údaje o platnosti. */
+    (!jeProdej && terminISO(d.extra) ? { validThrough: terminISO(d.extra) } : {}),
     vyhrady.length ? { description: vyhrady.join(' ') } : {}
   ) : null;
 
