@@ -6111,6 +6111,58 @@ odstavec skončí**. Teprve pak zkouška chytá všechny tři:
 | kopie místo stěhování (čísla zůstanou i dole) | 1 |
 
 
+## 3cp. NALEZENO: názvy obcí v seznamu se rozjížděly o 78 px — *opraveno 14. 10.*
+
+Naměřeno na `pozemky-stavebni.html`, prvních 14 řádků výpisu: levý okraj
+názvu obce měl **tři různé hodnoty — 195, 266 a 273 px**. Pod sebou
+stálo „Jizerní Vtelno" na 195 a o dva řádky níž odsazené „Lovosice"
+na 273.
+
+Příčina: každý řádek je **vlastní mřížka** a sloupec s odznakem byl
+`auto`. Řádek bez odznaku ho zúžil na nulu, s „Dražba" na 71 px,
+s „Exekuce" na 78 — a mřížky spolu nemluví, takže je nikdo nesrovná.
+Na stránkách s jedním druhem nabídky to vidět nebylo (odznak mají buď
+všechny řádky, nebo žádný); vylézalo to přesně na přehledech, kde se
+druhy míchají — a těch je většina (stavební: 3 řádky s odznakem z 60).
+
+Oprava je jedno pravidlo a nepotřebovala ani řádek v generátoru:
+`.okr-list:has(.okr-badge) .okr-item{grid-template-columns:78px …}`.
+Seznam, který odznaky obsahuje, drží sloupec na 78 px (šířka nejširšího
+odznaku); seznam bez odznaků si nechává `auto`, tedy nulu, a neplýtvá
+místem. `:has()` je tu zavedené — ve stylopisu už bylo osmnáctkrát.
+
+### A potřetí za jeden den tatáž past
+Sabotáž „pravidlo pryč" **prošla**. Pak i druhá. Vypadalo to na slepou
+zkoušku — jenže jsem zase sabotoval soubor, který si ta stránka nebere.
+Tentokrát `css/styles.min.css`, zatímco vstupní stránky čtou
+`css/zaklad.min.css`.
+
+Změřeno, ať to příště nemusím hádat — **který stylopis si která stránka
+bere:**
+
+| stránka | stylopis |
+|---|---|
+| `index.html` | `styles.min.css` |
+| **všechno ostatní** (pozemek, okres, kraj, druh, rozpočet, ceny) | `zaklad.min.css` |
+
+A je to pohyblivé: `rozdel-styly.mjs` přiřazuje stránky podle toho, jaké
+třídy používají, takže se stránka může mezi balíky přesunout, když jí
+přibude pravidlo. **Pravidlo pro příště: před sabotáží si v té stránce
+přečíst `<link rel="stylesheet">`, ne předpokládat.**
+
+Po zopakování ve správném souboru zkouška chytla obojí:
+
+| sabotáž (v `css/zaklad.min.css`) | spadlo |
+|---|---|
+| pravidlo pryč (sloupec zpátky `auto`) | 1 |
+| sloupec 60 px, tedy užší než slovo „Exekuce" | 1 |
+
+Druhá sabotáž napoprvé taky prošla a měla pravdu: zarovnání a překrývání
+jsou dvě různé otázky. Užší sloupec nechá názvy na svislici a odznak
+jim přeteče do textu — přibyla proto druhá kontrola, že pravý okraj
+odznaku nepřesáhne levý okraj názvu.
+
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

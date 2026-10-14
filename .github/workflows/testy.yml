@@ -679,6 +679,9 @@ jobs:
       - name: Hlavička vstupní stránky (nadpis vlevo, čísla vpravo)
         run: node scripts/test-hlavicka-stranky.mjs
 
+      - name: Seznam nabídek (názvy obcí na jedné svislici)
+        run: node scripts/test-seznam-nabidek.mjs
+
       - name: Vyhledávač cen podle lokality
         run: node scripts/test-ceny-hledani.mjs
 

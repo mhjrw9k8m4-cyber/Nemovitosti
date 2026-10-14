@@ -4337,6 +4337,29 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
   padding:12px 14px; background:var(--surface-2,#1b2b22);
   border:1px solid var(--line,#2C3F35); border-radius:var(--r-md);}
 .okr-item .okr-badge{grid-area:znak; align-self:start; justify-self:start;}
+/* =====================================================================
+   NÁZVY OBCÍ V SEZNAMU STOJÍ NA JEDNÉ SVISLICI
+   =====================================================================
+   Naměřeno na pozemky-stavebni.html, prvních 14 řádků: levý okraj názvu
+   měl TŘI různé hodnoty — 195, 266 a 273 px. Rozdíl 78 px, a to uvnitř
+   jednoho seznamu, kde pod sebou stojí „Jizerní Vtelno" a o dva řádky
+   níž odsazené „Lovosice".
+   Příčina: každý řádek je vlastní mřížka a sloupec s odznakem je `auto`.
+   Řádek bez odznaku ho tedy zúží na nulu, řádek s „Dražba" na 71 px
+   a s „Exekuce" na 78 — a protože mřížky spolu nemluví, nikdo je
+   nesrovná. Na stránkách s jedním druhem nabídky (okres, dražby) to
+   vidět není, protože tam mají odznak všechny řádky nebo žádný; vylézá
+   to právě na přehledech, kde se druhy míchají.
+
+   Sloupec se proto v seznamu, který odznaky OBSAHUJE, drží na pevných
+   78 px — šířka nejširšího odznaku („Exekuce", naměřeno 78; „Dražba"
+   má 71). Seznam bez odznaků si nechává `auto`, tedy nulu, a neplýtvá
+   místem. Rozhoduje o tom `:has()`, ne třída od generátoru: pravidlo
+   tím platí i pro seznamy, které vzniknou jinde a jinak.
+
+   Hlídá scripts/test-seznam-nabidek.mjs.
+   ===================================================================== */
+.okr-list:has(.okr-badge) .okr-item{grid-template-columns:78px minmax(0,1fr) auto;}
 /* JMÉNO OBCE SE NA ÚZKÉ OBRAZOVCE LÁMALO AŽ NA TŘI ŘÁDKY.
    Naměřeno při 320 px: 35 jmen přes dva řádky a „Blatnice pod Svatým
    Antonínkem" i „Žeravice u Kyjova a k.ú. Syrovín" přes tři. Zlomené
